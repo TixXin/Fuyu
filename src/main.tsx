@@ -1,3 +1,5 @@
+// Before every other import: the settings from before the rename (D17).
+import "./lib/copyRenamedKeys";
 import React from "react";
 import ReactDOM from "react-dom/client";
 import "./styles/tokens.css";

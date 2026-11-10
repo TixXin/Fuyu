@@ -3,7 +3,7 @@
 use crate::user_error::UserError;
 use keyring::{Entry, Error as KeyringError};
 
-const CREDENTIAL_SERVICE: &str = "com.focusd.island.qq-mail";
+const CREDENTIAL_SERVICE: &str = "com.tixxin.fuyu.qq-mail";
 
 pub(super) fn credential(email: &str) -> Result<Entry, UserError> {
     Entry::new(CREDENTIAL_SERVICE, email).map_err(|_| UserError::new("credential.open", "Could not open Windows Credential Manager."))

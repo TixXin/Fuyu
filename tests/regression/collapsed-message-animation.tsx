@@ -38,7 +38,7 @@ async function update(action: () => void | Promise<void>) {
   if (automated) await act(action);
   else await action();
 }
-const keys = ["focusd-island-qq-notifications-enabled", "focusd-island-wechat-reminders-enabled", "focusd-island-qq-notification-access-requested", "focusd-island-qq-mail-settings"];
+const keys = ["fuyu-qq-notifications-enabled", "fuyu-wechat-reminders-enabled", "fuyu-qq-notification-access-requested", "fuyu-qq-mail-settings"];
 const originals = keys.map((key) => localStorage.getItem(key));
 keys.forEach((key) => localStorage.removeItem(key));
 function restoreStorage() {

@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 
 /** Plugin ids the user starred in the market, kept on this computer only (issue #16). */
-export const MARKET_FAVORITES_KEY = "focusd-island-plugin-market-favorites";
+export const MARKET_FAVORITES_KEY = "fuyu-plugin-market-favorites";
 
 /** The saved ids; anything that is not a list of strings reads as none. */
 export function loadMarketFavorites(): string[] {

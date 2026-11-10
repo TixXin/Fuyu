@@ -12,7 +12,7 @@ export const VERSION_FILES = {
 };
 
 /** The crate whose entry in Cargo.lock carries the app version. */
-const CRATE = "focusd-island";
+const CRATE = "fuyu";
 const SEMVER = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/;
 
 const PATTERNS = {

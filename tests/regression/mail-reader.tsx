@@ -15,7 +15,7 @@ Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
 const params = new URLSearchParams(location.search);
 const state = params.get("state") ?? "qq";
 const now = Date.now();
-const keys = ["focusd-island-qq-mail-settings", "focusd-island-qq-mail-remote-images", "focusd-island-qq-notifications-enabled", "focusd-island-wechat-reminders-enabled", "focusd-island-qq-notification-access-requested"];
+const keys = ["fuyu-qq-mail-settings", "fuyu-qq-mail-remote-images", "fuyu-qq-notifications-enabled", "fuyu-wechat-reminders-enabled", "fuyu-qq-notification-access-requested"];
 const original = keys.map(key => localStorage.getItem(key));
 keys.forEach(key => localStorage.removeItem(key));
 const calls: { command: string; args: Record<string, unknown> }[] = [];
@@ -114,7 +114,7 @@ try {
     await click("显示图片");
     const remoteImage = body.querySelector("img");
     check(remoteImage?.getAttribute("src") === "https://tracking.example.com/pixel" && remoteImage.getAttribute("referrerpolicy") === "no-referrer" && !remoteImage.hasAttribute("onerror"), "允许后远程图片保留但禁止外发 referrer 并剔除事件属性");
-    check(!document.querySelector(".qq-mail-remote") && localStorage.getItem("focusd-island-qq-mail-remote-images") === "true", "放行后隐藏提示并记住开关选择");
+    check(!document.querySelector(".qq-mail-remote") && localStorage.getItem("fuyu-qq-mail-remote-images") === "true", "放行后隐藏提示并记住开关选择");
     check(!body.querySelector('a[href^="javascript"]'), "邮件不能执行危险链接");
     check(!Reflect.get(window, "readerPwned"), "邮件脚本没有执行");
     const reportLink = body.querySelector<HTMLAnchorElement>('a[href="https://example.com/report"]')!;

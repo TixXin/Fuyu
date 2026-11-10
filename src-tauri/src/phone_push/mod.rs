@@ -12,7 +12,7 @@ use crate::{
     win32::session_notifications,
 };
 
-const CREDENTIAL_SERVICE: &str = "com.focusd.island.bark";
+const CREDENTIAL_SERVICE: &str = "com.tixxin.fuyu.bark";
 const CREDENTIAL_USER: &str = "device-key";
 /// Bark's own server; a self-hosted bark-server works the same.
 const DEFAULT_SERVER: &str = "https://api.day.app";

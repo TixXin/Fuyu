@@ -3,7 +3,7 @@
 // main checkout or any lane, without asking the user to close the island.
 //
 // Windows refuses to overwrite a running exe but lets it be renamed, so a
-// running focusd-island.exe is moved aside to focusd-island.exe.old-<time>; the
+// running fuyu.exe is moved aside to fuyu.exe.old-<time>; the
 // island keeps running from it, and the next start runs the new build. Moved
 // files are deleted by later builds once nothing runs them. If the build fails,
 // the old exe goes back in place.
@@ -19,7 +19,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { mainCheckout, targetDir } from "./build-dirs.mjs";
 
-export const EXE_NAME = "focusd-island.exe";
+export const EXE_NAME = "fuyu.exe";
 const OLD_PREFIX = `${EXE_NAME}.old-`;
 
 /** True when the file exists and something (a running island) keeps it from being written. */
@@ -101,15 +101,15 @@ function takeLock(lock) {
   }
 }
 
-/** The PowerShell that points the desktop's island shortcuts at `exe`, or creates fly-island.lnk. */
+/** The PowerShell that points the desktop's island shortcuts at `exe`, or creates Fuyu.lnk. */
 export function shortcutScript(exe) {
   const quoted = `'${exe.replace(/'/g, "''")}'`;
   return [
     `$exe = ${quoted}`,
     "$desk = [Environment]::GetFolderPath('Desktop')",
     "$shell = New-Object -ComObject WScript.Shell",
-    "$links = @(Get-ChildItem $desk -Filter *.lnk | Where-Object { $_.Name -match 'focusd|fly-island' -or $shell.CreateShortcut($_.FullName).TargetPath -match 'focusd-island\\.exe$' })",
-    "if ($links.Count -eq 0) { $links = @([pscustomobject]@{ FullName = Join-Path $desk 'fly-island.lnk' }) }",
+    "$links = @(Get-ChildItem $desk -Filter *.lnk | Where-Object { $_.Name -match 'focusd|fly-island|fuyu' -or $shell.CreateShortcut($_.FullName).TargetPath -match '(focusd-island|fuyu)\\.exe$' })",
+    "if ($links.Count -eq 0) { $links = @([pscustomobject]@{ FullName = Join-Path $desk 'Fuyu.lnk' }) }",
     "foreach ($link in $links) {",
     "  $s = $shell.CreateShortcut($link.FullName); $s.TargetPath = $exe; $s.WorkingDirectory = Split-Path $exe; $s.IconLocation = \"$exe,0\"; $s.Save()",
     "  $check = $shell.CreateShortcut($link.FullName)",

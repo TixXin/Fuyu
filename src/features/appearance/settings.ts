@@ -6,7 +6,7 @@ import { DEFAULT_SETTINGS } from "./settingsDefaults.ts";
 import { MAX_CUSTOM_SETTING_PRESETS } from "./settingsLimits.ts";
 import type { IslandPreset, IslandSettings, LegacyIslandSettings } from "./types";
 
-// Island settings (focusd-island-settings): limits in settingsLimits.ts, first-launch values in
+// Island settings (fuyu-settings): limits in settingsLimits.ts, first-launch values in
 // settingsDefaults.ts, and reading saved ones in normalize*Settings.ts by area. New settings go in
 // those files; this one keeps the entry points other code imports.
 export * from "./settingsLimits.ts";

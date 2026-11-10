@@ -33,7 +33,7 @@ const UNAVAILABLE_MEDIA: MediaState = {
   repeatMode: "unknown", canRepeat: false, volume: -1, sourceApp: null, activeSessionId: null,
   sessions: [], updatedAt: 0,
 };
-const keys = ["focusd-island-qq-notifications-enabled", "focusd-island-wechat-reminders-enabled", "focusd-island-qq-mail-settings"];
+const keys = ["fuyu-qq-notifications-enabled", "fuyu-wechat-reminders-enabled", "fuyu-qq-mail-settings"];
 const originals = keys.map((key) => localStorage.getItem(key));
 keys.forEach((key) => localStorage.removeItem(key));
 window.addEventListener("beforeunload", () => {
@@ -154,9 +154,9 @@ async function runChecks() {
       "仪表槽位在会话数之前");
     // The user's order (Appearance > Collapsed bar), followed through the storage event as from the settings window.
     const arrange = (items: unknown[] | null) => act(async () => {
-      if (items) localStorage.setItem("focusd-island-collapsed-items", JSON.stringify({ version: 1, items }));
-      else localStorage.removeItem("focusd-island-collapsed-items");
-      window.dispatchEvent(new StorageEvent("storage", { key: "focusd-island-collapsed-items" }));
+      if (items) localStorage.setItem("fuyu-collapsed-items", JSON.stringify({ version: 1, items }));
+      else localStorage.removeItem("fuyu-collapsed-items");
+      window.dispatchEvent(new StorageEvent("storage", { key: "fuyu-collapsed-items" }));
     });
     const lightBox = bar().querySelector(".island__pulse")!.getBoundingClientRect();
     const textLeft = bar().querySelector(".island__open-button")!.getBoundingClientRect().left;

@@ -20,6 +20,7 @@ mod phone_push;
 mod plugin_host;
 mod mail;
 mod qq_notifications;
+mod rename_migration;
 mod settings_window;
 mod ssh_tunnel;
 mod system;
@@ -53,6 +54,11 @@ pub fn run() {
     if let Some(lane) = dev_lane::lane() {
         context.config_mut().identifier = dev_lane::identifier(lane);
     }
+    // Data from before the rename must be in place before any WebView opens it.
+    let migrate = context.config().identifier == rename_migration::NEW_IDENTIFIER;
+    if migrate {
+        rename_migration::before_start();
+    }
     let result = tauri::Builder::default()
         .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
             let _ = island::show_island(app);
@@ -82,7 +88,10 @@ pub fn run() {
             // Native Acrylic/Region is intentionally not reapplied on DPI
             // changes. Liquid glass is rendered inside the island element.
         })
-        .setup(|app| {
+        .setup(move |app| {
+            if migrate {
+                rename_migration::after_start();
+            }
             tray::build_tray(app)?;
             if let Err(error) = clipboard_history::init(app.handle()) {
                 eprintln!("failed to initialize clipboard history: {error}");

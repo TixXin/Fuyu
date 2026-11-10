@@ -3,10 +3,10 @@ import { createTodoId } from "../todos/index.ts";
 import { DEFAULT_SETTINGS, getDefaultSettingPresets, mergeWithDefaultSettingPresets, normalizeSettings } from "./settings.ts";
 import type { IslandPreset, IslandSettings } from "./types";
 
-export const STORAGE_KEY = "focusd-island-settings";
+export const STORAGE_KEY = "fuyu-settings";
 export const COLLAPSED_TEXT_DEFAULT_MIGRATION_KEY =
-  "focusd-island-collapsed-text-default-v1";
-export const SETTINGS_PRESETS_STORAGE_KEY = "focusd-island-setting-presets";
+  "fuyu-collapsed-text-default-v1";
+export const SETTINGS_PRESETS_STORAGE_KEY = "fuyu-setting-presets";
 
 export function loadSettings(): IslandSettings {
   const stored = window.localStorage.getItem(STORAGE_KEY);

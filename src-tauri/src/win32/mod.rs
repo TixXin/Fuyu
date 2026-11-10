@@ -7,6 +7,7 @@ pub(crate) mod brightness;
 pub(crate) mod chinese;
 pub(crate) mod clipboard;
 pub(crate) mod com;
+pub(crate) mod credentials;
 pub(crate) mod devnode;
 pub(crate) mod hotkey;
 pub(crate) mod icon;

@@ -26,7 +26,7 @@ use super::sessions::parse_timestamp_ms;
 use super::usage::{AgentUsage, UsageSource, UsageWindow};
 use crate::claude_usage::{UsageError, UsageErrorKind};
 
-const CREDENTIAL_SERVICE: &str = "com.focusd.island.plan-usage";
+const CREDENTIAL_SERVICE: &str = "com.tixxin.fuyu.plan-usage";
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(15);
 /// A read within this long of the last request gets the same answer.
 const CACHE_MS: i64 = 60_000;

@@ -15,9 +15,9 @@ import { commands, keybindingCalls, mailCalls, marketInstalls, openedUrls, REPLY
 const query = new URLSearchParams(location.search);
 const automated = query.has("test");
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: automated });
-const original = new Map(Object.entries(localStorage).filter(([key]) => key.startsWith("focusd-island-")));
+const original = new Map(Object.entries(localStorage).filter(([key]) => key.startsWith("fuyu-")));
 const restore = () => {
-  for (const key of Object.keys(localStorage).filter(key => key.startsWith("focusd-island-"))) {
+  for (const key of Object.keys(localStorage).filter(key => key.startsWith("fuyu-"))) {
     if (!original.has(key)) localStorage.removeItem(key);
   }
   for (const [key, value] of original) localStorage.setItem(key, value);
@@ -26,10 +26,10 @@ window.addEventListener("beforeunload", restore);
 
 localStorage.setItem(LOCALE_STORAGE_KEY, query.get("locale") === "en" ? "en" : "zh-CN");
 // The checks below expect a customized look plus a General page choice that a reset must keep.
-if (automated) localStorage.setItem("focusd-island-settings", JSON.stringify({ opacity: 60, carryOverIncompleteTodos: false }));
-else localStorage.removeItem("focusd-island-settings");
-localStorage.setItem("focusd-island-save-directory", "");
-localStorage.setItem("focusd-island-qq-notification-access-requested", "true");
+if (automated) localStorage.setItem("fuyu-settings", JSON.stringify({ opacity: 60, carryOverIncompleteTodos: false }));
+else localStorage.removeItem("fuyu-settings");
+localStorage.setItem("fuyu-save-directory", "");
+localStorage.setItem("fuyu-qq-notification-access-requested", "true");
 
 
 const root = createRoot(document.getElementById("root")!);
@@ -152,13 +152,13 @@ if (!automated) {
     const starredName = star?.closest(".plugin-market__item")?.querySelector(".plugin-market__title strong")?.textContent ?? "";
     await act(async () => { star?.click(); });
     check(star?.getAttribute("aria-pressed") === "true" && star.getAttribute("aria-label") === `取消收藏 ${starredName}`
-      && JSON.parse(localStorage.getItem("focusd-island-plugin-market-favorites") ?? "[]").length === 1, "The star on a card saves the plugin on this computer");
+      && JSON.parse(localStorage.getItem("fuyu-plugin-market-favorites") ?? "[]").length === 1, "The star on a card saves the plugin on this computer");
     await act(async () => { categoryButton("收藏")?.click(); });
     check(categoryButton("收藏")?.textContent === "收藏 1" && document.querySelectorAll(".plugin-market__item").length === 1
       && document.querySelector(".plugin-market__title strong")?.textContent === starredName, "Starred shows just the starred plugin, with the count on the button");
     await act(async () => { document.querySelector<HTMLButtonElement>(".plugin-market__favorite")?.click(); });
     await act(async () => { categoryButton("全部")?.click(); });
-    check(localStorage.getItem("focusd-island-plugin-market-favorites") === null, "Unstarring the last plugin clears the saved list");
+    check(localStorage.getItem("fuyu-plugin-market-favorites") === null, "Unstarring the last plugin clears the saved list");
     const likeButtons = [...document.querySelectorAll<HTMLButtonElement>(".plugin-market__like")];
     check(likeButtons.map((button) => button.textContent).sort().join("|") === "12|3" && likeButtons.some((button) => button.getAttribute("aria-label") === "新插件：12 个赞，在 GitHub 上点赞")
       && document.querySelector(".plugin-market__sort"), "Cards show the likes from GitHub, and a sort menu appears with them (E14)");
@@ -190,13 +190,13 @@ if (!automated) {
     check(keybindingCalls.length === 1 && keybindingCalls[0].id === "dev.example.todo-sync" && keybindingCalls[0].command === "sync-now" && keybindingCalls[0].keybinding === "",
       "Turning a plugin shortcut off saves an empty shortcut for that command");
 
-    const storedSettings = () => JSON.parse(localStorage.getItem("focusd-island-settings") ?? "{}") as { opacity?: number; carryOverIncompleteTodos?: boolean };
+    const storedSettings = () => JSON.parse(localStorage.getItem("fuyu-settings") ?? "{}") as { opacity?: number; carryOverIncompleteTodos?: boolean };
     check(!document.querySelector(".appearance-reset"), "Reset appearance is not offered outside the theme page");
     await openPage("appearance");
     check(document.querySelector(".collapsed-items") && !document.querySelector(".preset-name-input"),
       "Appearance keeps sizes and the collapsed bar; the look and the saved themes moved to Theme (C26)");
     const layoutReset = () => [...document.querySelectorAll<HTMLButtonElement>(".appearance-reset")].find((button) => button.textContent === "恢复默认外观");
-    const stored = () => JSON.parse(localStorage.getItem("focusd-island-settings") ?? "{}") as { opacity?: number; showTitle?: boolean };
+    const stored = () => JSON.parse(localStorage.getItem("fuyu-settings") ?? "{}") as { opacity?: number; showTitle?: boolean };
     const before = stored();
     await act(async () => { layoutReset()!.click(); });
     await click(".appearance-reset--danger");
@@ -218,7 +218,7 @@ if (!automated) {
     // Items on the collapsed bar (C12): the default layout, then moving, hiding and resetting.
     const zoneRows = (name: string) => [...(document.querySelector(`.collapsed-items__zone[aria-label="${name}"]`)?.querySelectorAll(".plugin-pages__name") ?? [])].map((row) => row.textContent);
     const itemButton = (label: string) => document.querySelector<HTMLButtonElement>(`.collapsed-items button[aria-label="${label}"]`);
-    const savedItems = () => JSON.parse(localStorage.getItem("focusd-island-collapsed-items") ?? "null") as { items: { id: string; zone: string; hidden?: boolean }[] } | null;
+    const savedItems = () => JSON.parse(localStorage.getItem("fuyu-collapsed-items") ?? "null") as { items: { id: string; zone: string; hidden?: boolean }[] } | null;
     check(zoneRows("左侧").join("|") === "Agent 状态灯" && zoneRows("右侧")[0] === "新邮件提醒" && zoneRows("右侧").includes("待办同步示例")
       && zoneRows("右侧")[zoneRows("右侧").length - 1] === "会话数 / 会话环" && savedItems() === null, "The collapsed bar items list the default layout, plugin status items included, without saving anything");
     await act(async () => { itemButton("移到左侧：会话数 / 会话环")!.click(); });
@@ -237,13 +237,13 @@ if (!automated) {
     check(document.querySelectorAll(".theme-market__item").length === 2 && card("focusd.midnight").querySelector(".island-preview--compact")
       && card("focusd.midnight").querySelector(".plugin-market__badge--official") && card("someone.dusk").textContent?.includes("作者 someone"),
       "The theme market lists each theme with a preview, Official for the island's own");
-    const scaleBefore = JSON.parse(localStorage.getItem("focusd-island-settings") ?? "{}").collapsedScale;
+    const scaleBefore = JSON.parse(localStorage.getItem("fuyu-settings") ?? "{}").collapsedScale;
     await act(async () => { cardButton("someone.dusk", "应用")!.click(); });
-    const afterApply = JSON.parse(localStorage.getItem("focusd-island-settings") ?? "{}") as { islandBackgroundColor?: string; collapsedScale?: number };
+    const afterApply = JSON.parse(localStorage.getItem("fuyu-settings") ?? "{}") as { islandBackgroundColor?: string; collapsedScale?: number };
     check(afterApply.islandBackgroundColor === "#1b1020" && afterApply.collapsedScale === scaleBefore && cardButton("someone.dusk", "使用中")?.disabled,
       "Apply changes the look, not the size, and the card says it is in use");
     await act(async () => { cardButton("focusd.midnight", "保存到我的主题")!.click(); });
-    check(cardButton("focusd.midnight", "已保存")?.disabled && (localStorage.getItem("focusd-island-setting-presets") ?? "").includes("午夜蓝"),
+    check(cardButton("focusd.midnight", "已保存")?.disabled && (localStorage.getItem("fuyu-setting-presets") ?? "").includes("午夜蓝"),
       "Save adds the theme to the saved themes");
 
     // Settings → Music: the music wave switch is the collapsed bar's "music" item.
@@ -255,7 +255,7 @@ if (!automated) {
     check(waveSwitch()?.checked === false && savedItems()?.items.find((item) => item.id === "music")?.hidden === true, "Turning the music wave off hides the bar's music item");
     await act(async () => { waveSwitch()!.click(); });
     check(waveSwitch()?.checked === true && !savedItems()?.items.find((item) => item.id === "music")?.hidden, "Turning it on shows it again");
-    localStorage.removeItem("focusd-island-collapsed-items");
+    localStorage.removeItem("fuyu-collapsed-items");
 
     await openPage("behavior");
     // Issue #29: what keeps the island out of the idle tuck, under the auto-tuck switch.
@@ -268,7 +268,7 @@ if (!automated) {
     const tuckedHoverButton = (label: string) => [...(tuckedHover?.querySelectorAll<HTMLButtonElement>("button") ?? [])].find((button) => button.textContent === label);
     check(tuckedHoverButton("只露出岛屿")?.getAttribute("aria-pressed") === "true", "Hovering a tucked island only slides it out by default");
     await act(async () => { tuckedHoverButton("展开面板")?.click(); });
-    check((JSON.parse(localStorage.getItem("focusd-island-settings") ?? "{}") as { tuckedHoverAction?: string }).tuckedHoverAction === "expand"
+    check((JSON.parse(localStorage.getItem("fuyu-settings") ?? "{}") as { tuckedHoverAction?: string }).tuckedHoverAction === "expand"
       && tuckedHoverButton("展开面板")?.getAttribute("aria-pressed") === "true",
       "Choosing to open the panel from a tucked island is saved");
     check(tuckedHover && tuckedHover.scrollWidth <= tuckedHover.clientWidth, "The tucked-hover choice fits its row");
@@ -279,8 +279,8 @@ if (!automated) {
     check(agentPolls() === pollsAway, "Agent status is not polled while its page is closed");
 
     await act(async () => {
-      localStorage.setItem("focusd-island-settings-focus", JSON.stringify({ section: "savePath", requestedAt: Date.now() }));
-      window.dispatchEvent(new StorageEvent("storage", { key: "focusd-island-settings-focus", newValue: "x", storageArea: localStorage }));
+      localStorage.setItem("fuyu-settings-focus", JSON.stringify({ section: "savePath", requestedAt: Date.now() }));
+      window.dispatchEvent(new StorageEvent("storage", { key: "fuyu-settings-focus", newValue: "x", storageArea: localStorage }));
     });
     check(element(".settings-sidebar__item[data-category='todos']").getAttribute("aria-current") === "page", "A save path request from the island opens the todos page");
     check(document.querySelector(".editor-panel .save-path-panel--attention"), "A save path request from the island highlights the save path");
@@ -308,7 +308,7 @@ if (!automated) {
     await act(async () => { element<HTMLButtonElement>(".mail-settings__form button[type='submit']").click(); });
     check(mailCalls.some((call) => call.command === "connect_qq_mail" && call.args.host === "imap.example.edu.cn") && rows().length === 2,
       "Adding a mailbox sends the typed server and lists it");
-    const saved = JSON.parse(localStorage.getItem("focusd-island-qq-mail-settings") ?? "{}") as { accounts?: { email: string; host: string }[] };
+    const saved = JSON.parse(localStorage.getItem("fuyu-qq-mail-settings") ?? "{}") as { accounts?: { email: string; host: string }[] };
     check(saved.accounts?.some((account) => account.email === "new@example.edu.cn" && account.host === "imap.example.edu.cn"),
       "The typed server is saved with the mailbox");
 
@@ -338,15 +338,15 @@ if (!automated) {
     check(element(".settings-sidebar__item[data-category='agentConnect']").getAttribute("aria-current") === "page", "The hooks notice on the sessions page opens the connection page");
     await openPage("agents");
     const filterGroup = () => [...document.querySelectorAll<HTMLElement>(".settings-group")].find((group) => group.textContent?.includes("隐藏会话"))!;
-    localStorage.removeItem("focusd-island-agent-session-filters");
+    localStorage.removeItem("fuyu-agent-session-filters");
     const filterInput = filterGroup().querySelector<HTMLInputElement>(".session-filter__form input")!;
     await type(filterInput, "E:\\Projects\\scratch");
     await act(async () => { filterGroup().querySelector<HTMLFormElement>(".session-filter__form")!.requestSubmit(); });
-    const savedFilters = JSON.parse(localStorage.getItem("focusd-island-agent-session-filters") ?? "[]") as { kind: string; value: string }[];
+    const savedFilters = JSON.parse(localStorage.getItem("fuyu-agent-session-filters") ?? "[]") as { kind: string; value: string }[];
     check(savedFilters.length === 1 && savedFilters[0].kind === "folder" && savedFilters[0].value === "E:\\Projects\\scratch" && filterInput.value === ""
       && filterGroup().querySelector(".session-filter__value")?.textContent === "E:\\Projects\\scratch", "Adding a hide-sessions rule saves and lists it");
     await act(async () => { filterGroup().querySelector<HTMLButtonElement>(".session-filter__remove")!.click(); });
-    check(localStorage.getItem("focusd-island-agent-session-filters") === "[]" && !filterGroup().querySelector(".session-filter__value"), "Removing the rule clears it");
+    check(localStorage.getItem("fuyu-agent-session-filters") === "[]" && !filterGroup().querySelector(".session-filter__value"), "Removing the rule clears it");
 
     await openPage("about");
     const aboutLink = (label: string) =>

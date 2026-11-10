@@ -21,8 +21,8 @@ export type TranslationSettings = {
   /** Translate after the source has stopped changing, while the window is open. */
   autoTranslate: boolean;
 };
-export const STORAGE_KEY = "focusd-island-translation-settings";
-const HANDOFF_KEY = "focusd-island-translation-handoff";
+export const STORAGE_KEY = "fuyu-translation-settings";
+const HANDOFF_KEY = "fuyu-translation-handoff";
 const LEGACY_DEFAULT_SHORTCUTS = new Set(["Alt+Space", "Alt+C"]);
 const DEFAULT_SELECTION_SHORTCUT = "Ctrl+Alt+T";
 const HANDOFF_OPEN_MS = 5_000;

@@ -5,7 +5,29 @@ use std::{os::windows::process::CommandExt, process::Command};
 use super::CREATE_NO_WINDOW;
 
 pub(super) const STARTUP_REGISTRY_KEY: &str = r"HKCU\Software\Microsoft\Windows\CurrentVersion\Run";
-pub(super) const STARTUP_REGISTRY_VALUE: &str = "FocuSD Island";
+pub(super) const STARTUP_REGISTRY_VALUE: &str = "Fuyu";
+/// The value before the rename (D17).
+const LEGACY_STARTUP_REGISTRY_VALUE: &str = "FocuSD Island";
+
+fn reg(args: &[&str]) -> Result<bool, String> {
+    Command::new("reg")
+        .creation_flags(CREATE_NO_WINDOW)
+        .args(args)
+        .status()
+        .map(|status| status.success())
+        .map_err(|error| format!("Failed to run reg: {error}"))
+}
+
+/// Launch at startup turned on before the rename now starts this executable
+/// under the new value; the old value is removed. `Ok(false)` when it was off.
+pub(crate) fn migrate_legacy_value() -> Result<bool, String> {
+    if !reg(&["query", STARTUP_REGISTRY_KEY, "/v", LEGACY_STARTUP_REGISTRY_VALUE])? {
+        return Ok(false);
+    }
+    set_launch_at_startup(true)?;
+    reg(&["delete", STARTUP_REGISTRY_KEY, "/v", LEGACY_STARTUP_REGISTRY_VALUE, "/f"])?;
+    Ok(true)
+}
 
 #[tauri::command]
 pub fn get_launch_at_startup() -> Result<bool, String> {

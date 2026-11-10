@@ -1,6 +1,6 @@
 import { readJson, writeJson } from "../../../lib/storage.ts";
 
-export const AGENT_PUSH_STORAGE_KEY = "focusd-island-agent-push";
+export const AGENT_PUSH_STORAGE_KEY = "fuyu-agent-push";
 
 /** What a session did that can go to the phone. */
 export const AGENT_PUSH_EVENTS = ["waiting", "completed", "failed"] as const;

@@ -1,5 +1,5 @@
 [package]
-name = "focusd-island"
+name = "fuyu"
 version = "0.3.5-beta.4"
 description = "A compact floating island shell for Windows."
 authors = ["you"]
@@ -12,7 +12,7 @@ license = "GPL-3.0-or-later"
 # The `_lib` suffix may seem redundant but it is necessary
 # to make the lib name unique and wouldn't conflict with the bin name.
 # This seems to be only an issue on Windows, see https://github.com/rust-lang/cargo/issues/8519
-name = "focusd_island_lib"
+name = "fuyu_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
@@ -50,7 +50,7 @@ tauri-plugin-updater = { version = "2", default-features = false, features = ["r
 tiny_http = "0.12"
 webview2-com = "0.38"
 window-vibrancy = "0.6"
-windows = { version = "0.61", features = ["ApplicationModel", "Data_Xml_Dom", "Foundation", "Foundation_Collections", "Graphics_Imaging", "Media", "Media_Control", "Networking_Connectivity", "Media_Ocr", "Storage_Streams", "UI_Notifications_Management", "Win32_Devices_DeviceAndDriverInstallation", "Win32_Devices_FunctionDiscovery", "Win32_Devices_Properties", "Win32_Foundation", "Win32_Globalization", "Win32_Graphics_Gdi", "Win32_Media_Audio", "Win32_Media_Audio_Endpoints", "Win32_Security", "Win32_System_Com", "Win32_System_Com_StructuredStorage", "Win32_System_DataExchange", "Win32_System_Diagnostics_Debug", "Win32_System_Diagnostics_ToolHelp", "Win32_System_JobObjects", "Win32_System_LibraryLoader", "Win32_System_Memory", "Win32_System_Ole", "Win32_System_Power", "Win32_System_ProcessStatus", "Win32_System_Registry", "Win32_System_RemoteDesktop", "Win32_System_SystemInformation", "Win32_System_Threading", "Win32_System_Variant", "Win32_System_Wmi", "Win32_System_WinRT", "Win32_UI_Accessibility", "Win32_UI_Input_KeyboardAndMouse", "Win32_UI_Shell", "Win32_UI_Shell_PropertiesSystem", "Win32_UI_WindowsAndMessaging", "Wdk_System_Threading"] }
+windows = { version = "0.61", features = ["ApplicationModel", "Data_Xml_Dom", "Foundation", "Foundation_Collections", "Graphics_Imaging", "Media", "Media_Control", "Networking_Connectivity", "Media_Ocr", "Storage_Streams", "UI_Notifications_Management", "Win32_Devices_DeviceAndDriverInstallation", "Win32_Devices_FunctionDiscovery", "Win32_Devices_Properties", "Win32_Foundation", "Win32_Globalization", "Win32_Graphics_Gdi", "Win32_Media_Audio", "Win32_Media_Audio_Endpoints", "Win32_Security", "Win32_Security_Credentials", "Win32_System_Com", "Win32_System_Com_StructuredStorage", "Win32_System_DataExchange", "Win32_System_Diagnostics_Debug", "Win32_System_Diagnostics_ToolHelp", "Win32_System_JobObjects", "Win32_System_LibraryLoader", "Win32_System_Memory", "Win32_System_Ole", "Win32_System_Power", "Win32_System_ProcessStatus", "Win32_System_Registry", "Win32_System_RemoteDesktop", "Win32_System_SystemInformation", "Win32_System_Threading", "Win32_System_Variant", "Win32_System_Wmi", "Win32_System_WinRT", "Win32_UI_Accessibility", "Win32_UI_Input_KeyboardAndMouse", "Win32_UI_Shell", "Win32_UI_Shell_PropertiesSystem", "Win32_UI_WindowsAndMessaging", "Wdk_System_Threading"] }
 windows-future = { version = "0.2", features = ["std"] }
 zip = { version = "9.3.0", default-features = false, features = ["deflate"] }
 

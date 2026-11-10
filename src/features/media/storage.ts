@@ -3,7 +3,7 @@ export type KnownMediaSource = {
   label: string;
 };
 
-export const MUSIC_SOURCE_PRIORITY_STORAGE_KEY = "focusd-island-music-sources";
+export const MUSIC_SOURCE_PRIORITY_STORAGE_KEY = "fuyu-music-sources";
 
 export function loadMusicSourcePriority(): KnownMediaSource[] {
   try {

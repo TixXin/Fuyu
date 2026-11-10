@@ -10,7 +10,7 @@ use keyring::{Entry, Error as KeyringError};
 use serde::{Deserialize, Serialize};
 
 pub(super) const FILE_NAME: &str = "calendar-sources.json";
-const CREDENTIAL_SERVICE: &str = "com.focusd.island.calendar";
+const CREDENTIAL_SERVICE: &str = "com.tixxin.fuyu.calendar";
 /// Calendars kept at most.
 pub(super) const MAX_SOURCES: usize = 8;
 

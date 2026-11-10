@@ -82,7 +82,7 @@ ${enAbout}
 
 ## Downloads
 
-- \`fly-island_${version}_x64-setup.exe\`: Windows x64 EXE installer.
+- \`Fuyu_${version}_x64-setup.exe\`: Windows x64 EXE installer.
 - \`*.msi\`: Windows x64 MSI installer${beta ? " (its internal MSI version is numeric, because MSI versions must be)" : ""}.
 - \`SHA256SUMS.txt\`: SHA-256 checksums for both installers.
 `;

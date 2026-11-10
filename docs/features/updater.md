@@ -9,12 +9,12 @@
 - **自动更新**（D18）：「只提醒」「自动下载，手动安装」（默认）「自动下载，空闲时安装」。自动下载时主窗口在发现新版本后立刻下载（`updater_download`，下载时校验签名），按流量计费、漫游或超出流量上限的网络不下载，跳过的版本不下载，下载失败的版本这次运行里不再重试、仍可手动安装。下载好的安装包只在内存里，重启岛屿后要重新下载。下载好后关于页显示「已下载」和「立即安装」，点了直接安装，不再等进度条。
 - **空闲时安装**：每 30 秒看一次，同时满足才安装：锁屏或 10 分钟没有键鼠操作；岛屿没有展开；没有 Agent 会话在运行或等你（安装会让岛屿重启，审批端口和提醒会中断）；前台没有全屏程序（`windows/island/useIslandAutoUpdate.ts`）。安装器装完会重新打开岛屿。
 - **诊断信息**：关于页的链接区先预览、再复制一段白名单文本（应用版本、系统版本与架构、更新通道、自动检查与频率、上次成功检查、更新状态），用于反馈问题；不含路径、账号等信息。
-- 以上偏好存在 `focusd-island-update-preferences`。
+- 以上偏好存在 `fuyu-update-preferences`。
 实现基于 Tauri 2 的 `tauri-plugin-updater`，所有更新包都用 minisign 签名，App 内置公钥校验，签名不符的包不会被安装。
 
 ## 更新通道
 
-「更新」页的「更新通道」可选**稳定版**或**测试版（beta）**，保存在 `focusd-island-update-channel`。没选过时，beta 版本的程序默认测试版（是用户特意装的），其他版本默认稳定版，所以**不主动选测试版的用户永远收不到 beta**：
+「更新」页的「更新通道」可选**稳定版**或**测试版（beta）**，保存在 `fuyu-update-channel`。没选过时，beta 版本的程序默认测试版（是用户特意装的），其他版本默认稳定版，所以**不主动选测试版的用户永远收不到 beta**：
 
 - **稳定版**读 `plugins.updater.endpoints`，即 `releases/latest/download/latest.json`。GitHub 的 latest 永远不会是 Pre-release，而 beta 版都发成 Pre-release。0.3.0 及更早的客户端没有通道设置，也只读这里。
 - **测试版**读同一组镜像下的 `releases/download/beta-channel/latest.json`（由 `src-tauri/src/system/update_channel.rs` 从稳定端点换算），全部取不到时再退回稳定版端点，所以 beta 清单缺失或下载失败时，测试版用户仍能收到正式版。`beta-channel` 是一个固定的 Pre-release，只放这份清单，**不要删除**。
@@ -140,7 +140,7 @@ pnpm tauri signer generate -w $env:USERPROFILE\.tauri\fly-island.key
    - 生成两种安装包的 `SHA256SUMS.txt`；
    - 创建指向当前提交的 Release 草稿，上传安装包、`.sig`、`latest.json` 与校验文件；
    - 比较 GitHub 上每个文件的 SHA-256 与本地产物，一致后才公开并设为最新版本；已存在的版本会被拒绝，避免覆盖用户正在下载的更新包；
-   - 把刚发布的 `focusd-island.exe` 复制到主工作区的 `src-tauri/target/release`，并把桌面快捷方式指过去（和 `pnpm build:exe` 一样：正在运行的旧 exe 先改名挪开，等它的构建锁）。本机跑的就是用户拿到的那一份，不用再花几分钟重编；复制失败只打印提示，不影响发布；
+   - 把刚发布的 `fuyu.exe` 复制到主工作区的 `src-tauri/target/release`，并把桌面快捷方式指过去（和 `pnpm build:exe` 一样：正在运行的旧 exe 先改名挪开，等它的构建锁）。本机跑的就是用户拿到的那一份，不用再花几分钟重编；复制失败只打印提示，不影响发布；
    - 刷新 beta 通道的清单；
    - 用 `gh` 读回两个通道的 `latest.json`（直接用 curl 访问下载地址，GitHub 有时返回 504），确认正式版两个通道都是新版本，测试版只有 beta 通道是新版本、稳定通道不是。GitHub 切换 Latest 可能要几秒，读不对时隔 5 秒重试，最多 4 次，还不对就报错并指向下面的「撤回有问题的版本」；
    - 找出这次发布的提交范围里完成的任务（任务文件的 `issue` 字段和「提交」列表），在对应的 GitHub issue 下留言「已随 vX.Y.Z 发布」，附 Release 地址和任务文档。每个 issue 每个版本只留一次（留言里有标记），所以重跑不会重复。不想留言时加 `--no-issue-comments`。

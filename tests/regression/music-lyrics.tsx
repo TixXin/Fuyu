@@ -116,7 +116,7 @@ try {
   check(!view() && !hint(), "已经开着酷狗和网易云还找不到时不提示");
 
   // A translation shows under its line; this song's own offset sits by the settings button.
-  localStorage.removeItem("focusd-island-lyrics-offsets");
+  localStorage.removeItem("fuyu-lyrics-offsets");
   await render(track("Yesterday", 2000), { ...ONLINE, lyricsChinese: true } as typeof ONLINE);
   const yesterday = queries[queries.length - 1];
   check(yesterday.chinese === true && yesterday.trackId === null, "打开中文来源时一起查酷狗和网易云");
@@ -127,10 +127,10 @@ try {
   await act(async () => offsetButtons[2].click());
   await act(async () => offsetButtons[2].click());
   check(offsetButtons[1].textContent === "+1.5s" && lines()[1] === "♪", "推后 1.5 秒后，2 秒时还没到第一句");
-  check(JSON.parse(localStorage.getItem("focusd-island-lyrics-offsets") ?? "{}")[Object.keys(JSON.parse(localStorage.getItem("focusd-island-lyrics-offsets") ?? "{}"))[0]] === 1500, "这首歌的调整按歌存下来");
+  check(JSON.parse(localStorage.getItem("fuyu-lyrics-offsets") ?? "{}")[Object.keys(JSON.parse(localStorage.getItem("fuyu-lyrics-offsets") ?? "{}"))[0]] === 1500, "这首歌的调整按歌存下来");
   await act(async () => offsetButtons[1].click());
   check(offsetButtons[1].textContent === "0s" && lines()[1] === "Oh I believe", "点中间的数字恢复为 0");
-  localStorage.removeItem("focusd-island-lyrics-offsets");
+  localStorage.removeItem("fuyu-lyrics-offsets");
 
   // Word-timed lines (Kugou KRC, enhanced LRC) fill word by word.
   await render(track("Believe", 1500));

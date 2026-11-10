@@ -26,11 +26,11 @@ function memoryStorage(initial = []) {
 test("strings round-trip and missing keys read as null", () => {
   const storage = memoryStorage();
   withWindow({ localStorage: storage }, () => {
-    assert.equal(readString("focusd-island-test"), null);
-    assert.equal(writeString("focusd-island-test", "value"), true);
-    assert.equal(readString("focusd-island-test"), "value");
-    assert.equal(removeItem("focusd-island-test"), true);
-    assert.equal(readString("focusd-island-test"), null);
+    assert.equal(readString("fuyu-test"), null);
+    assert.equal(writeString("fuyu-test", "value"), true);
+    assert.equal(readString("fuyu-test"), "value");
+    assert.equal(removeItem("fuyu-test"), true);
+    assert.equal(readString("fuyu-test"), null);
   });
 });
 
@@ -38,17 +38,17 @@ test("JSON is stored in the same format as JSON.stringify and parsed as unknown"
   const storage = memoryStorage();
   withWindow({ localStorage: storage }, () => {
     const value = { enabled: true, items: [1, "两", null] };
-    assert.equal(writeJson("focusd-island-test", value), true);
-    assert.equal(storage.values.get("focusd-island-test"), JSON.stringify(value));
-    assert.deepEqual(readJson("focusd-island-test"), value);
-    assert.equal(readJson("focusd-island-missing"), undefined);
+    assert.equal(writeJson("fuyu-test", value), true);
+    assert.equal(storage.values.get("fuyu-test"), JSON.stringify(value));
+    assert.deepEqual(readJson("fuyu-test"), value);
+    assert.equal(readJson("fuyu-missing"), undefined);
   });
 });
 
 test("corrupted JSON reads as undefined instead of throwing", () => {
-  const storage = memoryStorage([["focusd-island-test", "{not json"]]);
+  const storage = memoryStorage([["fuyu-test", "{not json"]]);
   withWindow({ localStorage: storage }, () => {
-    assert.equal(readJson("focusd-island-test"), undefined);
+    assert.equal(readJson("fuyu-test"), undefined);
   });
 });
 
@@ -57,9 +57,9 @@ test("values that cannot be serialized are rejected without writing", () => {
   const cyclic = {};
   cyclic.self = cyclic;
   withWindow({ localStorage: storage }, () => {
-    assert.equal(writeJson("focusd-island-test", cyclic), false);
-    assert.equal(writeJson("focusd-island-test", undefined), false);
-    assert.equal(storage.values.has("focusd-island-test"), false);
+    assert.equal(writeJson("fuyu-test", cyclic), false);
+    assert.equal(writeJson("fuyu-test", undefined), false);
+    assert.equal(storage.values.has("fuyu-test"), false);
   });
 });
 

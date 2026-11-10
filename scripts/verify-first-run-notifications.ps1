@@ -6,25 +6,25 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $taskRepository = Split-Path -Parent $PSScriptRoot
-$taskProductionExecutable = (Resolve-Path -LiteralPath (Join-Path $taskRepository 'src-tauri\target\release\focusd-island.exe')).Path
+$taskProductionExecutable = (Resolve-Path -LiteralPath (Join-Path $taskRepository 'src-tauri\target\release\fuyu.exe')).Path
 $taskExecutable = if ($ExecutablePath) { (Resolve-Path -LiteralPath $ExecutablePath).Path } else { $taskProductionExecutable }
 $taskRunId = [Guid]::NewGuid().ToString('N')
 $taskRunDirectory = Join-Path $taskRepository ('src-tauri\target\first-run-verification\' + $taskRunId)
 $taskProfile = Join-Path $taskRunDirectory 'WebView2'
-$taskIdentifier = 'com.focusd.island.verification.' + $taskRunId
+$taskIdentifier = 'com.tixxin.fuyu.verification.' + $taskRunId
 $taskReportPath = Join-Path ([IO.Path]::GetTempPath()) ('FocuSD-notification-verification\' + $taskRunId + '.json')
 foreach ($taskRoot in @([Environment]::GetFolderPath('ApplicationData'), [Environment]::GetFolderPath('LocalApplicationData'))) {
     if (Test-Path -LiteralPath (Join-Path $taskRoot $taskIdentifier)) { throw 'Verification application data already exists.' }
 }
 if (Test-Path -LiteralPath $taskProfile) { throw 'Verification WebView2 profile already exists.' }
 $null = New-Item -ItemType Directory -Path $taskRunDirectory
-$taskCopy = Join-Path $taskRunDirectory 'focusd-island.exe'
+$taskCopy = Join-Path $taskRunDirectory 'fuyu.exe'
 Copy-Item -LiteralPath $taskExecutable -Destination $taskCopy
 $taskSourceHash = (Get-FileHash -LiteralPath $taskExecutable -Algorithm SHA256).Hash
 if ((Get-FileHash -LiteralPath $taskCopy -Algorithm SHA256).Hash -ne $taskSourceHash) { throw 'Copied executable does not match the release build.' }
 $taskLoader = Join-Path (Split-Path -Parent $taskExecutable) 'WebView2Loader.dll'
 if (Test-Path -LiteralPath $taskLoader) { Copy-Item -LiteralPath $taskLoader -Destination $taskRunDirectory }
-$taskOriginalProcesses = @(Get-CimInstance Win32_Process -Filter "Name = 'focusd-island.exe'" | Where-Object { $_.ExecutablePath -eq $taskProductionExecutable })
+$taskOriginalProcesses = @(Get-CimInstance Win32_Process -Filter "Name = 'fuyu.exe'" | Where-Object { $_.ExecutablePath -eq $taskProductionExecutable })
 $taskProcess = $null
 $taskLatest = $null
 try {

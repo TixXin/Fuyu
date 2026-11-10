@@ -11,10 +11,10 @@ import { mainCheckout } from "../build-dirs.mjs";
 const ID = "dev.focusd.dev-tasks";
 const here = path.dirname(fileURLToPath(import.meta.url));
 
-/** The island's plugin folder: %APPDATA%\com.focusd.island\plugins. */
+/** The island's plugin folder: %APPDATA%\com.tixxin.fuyu\plugins. */
 export function pluginsDir(env = process.env) {
   if (!env.APPDATA) throw new Error("APPDATA is not set; this installs into the Windows FocuSD Island only.");
-  return path.join(env.APPDATA, "com.focusd.island", "plugins");
+  return path.join(env.APPDATA, "com.tixxin.fuyu", "plugins");
 }
 
 function main() {

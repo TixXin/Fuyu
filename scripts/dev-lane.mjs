@@ -3,7 +3,7 @@
 // 1420, which the main checkout's dev server uses. The preview instead:
 //   - serves Vite on 1500 + <lane number>;
 //   - builds into src-tauri/target/lane-<N> of the main checkout;
-//   - runs as com.focusd.island.lane-<N> (FOCUSD_DEV_LANE, src-tauri/src/dev_lane.rs),
+//   - runs as com.tixxin.fuyu.lane-<N> (FOCUSD_DEV_LANE, src-tauri/src/dev_lane.rs),
 //     with its own data, and without touching focusd:// links, launch at
 //     startup or the agents' status hooks.
 // It starts with empty data; the user's island keeps running.

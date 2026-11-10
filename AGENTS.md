@@ -98,10 +98,10 @@ FocuSD Island（仓库名 fly-island）是 Windows 优先的桌面效率工具�
 
 下列标识会被已安装用户的数据、配置或外部程序引用。纯重构提交中**一律不得改变**：
 
-- `localStorage` key（`focusd-island-*`，完整清单见 [contracts.md](docs/architecture/contracts.md)）及其存储的数据格式
+- `localStorage` key（`fuyu-*`，改名前是 `focusd-island-*`，完整清单见 [contracts.md](docs/architecture/contracts.md)）及其存储的数据格式
 - Tauri 命令名（即 Rust 函数名）、参数名，以及事件名
 - 窗口 label（`main` / `translation` / `clipboard` / `settings`）和 `?window=` 参数值
-- 应用标识 `com.focusd.island`、开机自启注册表值 `FocuSD Island`、凭据管理器条目、应用数据目录下的文件名（如 `agent-status.json`）
+- 应用标识 `com.tixxin.fuyu`、开机自启注册表值 `Fuyu`（改名前是 `com.focusd.island`、`FocuSD Island`，D17）、凭据管理器条目、应用数据目录下的文件名（如 `agent-status.json`）
 - 更新端点和 `latest.json` 格式
 
 确实需要变更时，必须在同一个提交里同步修改前后端，提供旧数据的迁移或兼容读取，并在提交说明中写明。
@@ -143,9 +143,9 @@ FocuSD Island（仓库名 fly-island）是 Windows 优先的桌面效率工具�
 
 ## 本机更新与桌面快捷方式
 
-- 每次完成应用更新后运行 `pnpm build:exe`。构建成功后它会自动把当前用户桌面上的岛屿快捷方式（名字含 FocuSD / fly-island，或目标是 `focusd-island.exe` 的；都没有时新建 `fly-island.lnk`）指向本次构建的 `src-tauri/target/release/focusd-island.exe`，并重新读取确认，输出里会列出改了哪几个；仅文档改动不需要重新构建。`pnpm release` 发布成功后会用同样的方式把刚发布的 exe 放到这里，发布之后不用再跑 `build:exe`。
-- 优先更新已有的 FocuSD / fly-island 快捷方式；不存在时创建 `fly-island.lnk`。使用 Windows 当前用户的实际桌面目录，不硬编码用户名或桌面路径。
-- 快捷方式目标应指向当前仓库的 `src-tauri/target/release/focusd-island.exe` 绝对路径，工作目录设为该程序所在目录，图标使用该可执行文件。不得指向 debug 程序、旧备份或临时构建目录。
+- 每次完成应用更新后运行 `pnpm build:exe`。构建成功后它会自动把当前用户桌面上的岛屿快捷方式（名字含 FocuSD / fly-island / Fuyu，或目标是 `fuyu.exe` 或改名前的 `focusd-island.exe` 的；都没有时新建 `Fuyu.lnk`）指向本次构建的 `src-tauri/target/release/fuyu.exe`，并重新读取确认，输出里会列出改了哪几个；仅文档改动不需要重新构建。`pnpm release` 发布成功后会用同样的方式把刚发布的 exe 放到这里，发布之后不用再跑 `build:exe`。
+- 优先更新已有的 FocuSD / fly-island / Fuyu 快捷方式；不存在时创建 `Fuyu.lnk`。使用 Windows 当前用户的实际桌面目录，不硬编码用户名或桌面路径。
+- 快捷方式目标应指向当前仓库的 `src-tauri/target/release/fuyu.exe` 绝对路径，工作目录设为该程序所在目录，图标使用该可执行文件。不得指向 debug 程序、旧备份或临时构建目录。
 - 构建失败时不切换快捷方式。更新后重新读取快捷方式，确认目标文件存在、目标路径与本次成功构建产物一致，再报告完成；不要修改其他应用的快捷方式。
 
 ## Git 与协作
@@ -159,7 +159,7 @@ FocuSD Island（仓库名 fly-island）是 Windows 优先的桌面效率工具�
   - 在 lane 里开发、验证、提交。验证用 `pnpm verify`（和 land 时跑的检查相同：`pnpm check`，改到 Rust 相关文件时加 `cargo test`；只改 Markdown 文档时只跑文档检查）；通过的代码树会被记住，land 时同一棵树不再重跑。一个功能单元完成并提交后，在 lane 里运行 `pnpm mq:land`，不用问用户。它会排队、rebase 到 `origin/main`、跑 `scripts/land-check.mjs`（`pnpm check`，改到 Rust 相关文件时再加 `cargo test`），然后推送 `origin/main`，并把主工作区快进到新的 `main`。land 成功后会自动把 fork 的 `dev` 推到同一提交（旧版本岛屿从 `dev` 读插件市场），结果记在 `.git/land-sync-dev.log`。
   - land 失败不算完成：rebase 冲突时它会自动中止，自己 `git fetch origin main && git rebase origin/main` 解决冲突后重新 land；检查失败就修好再 land。如果输出里已经有 `landed`，只是后面的快进主工作区失败了，不要重复 land，在主工作区运行 `pnpm mq:sync`。
   - `release` 可执行文件构建（`pnpm build:exe`）不在队列里，按"验证"一节在 land 之后另外做；它会同步桌面快捷方式，多个 lane 同时构建时后来的会等前一个做完（`target/release/.build-exe.lock`）。不要为了构建让用户关掉岛屿或 dev：`build:exe` 会把正在运行的 exe 改名挪开再写新的（Windows 允许改名正在运行的 exe），下次启动就是新版本。
-  - **预览**：用户想看某个 lane 的效果时，在那个 lane 里运行 `pnpm dev:lane`。它起一个和用户的岛屿并排的预览岛屿：Vite 端口 1500+lane 编号，应用标识 `com.focusd.island.lane-<N>`（数据、WebView 存储、单实例都和用户的分开，开始时没有数据），不注册 focusd:// 链接，不能改开机自启，也不能安装 AI 代理状态 hook。不要在 lane 里直接跑 `pnpm tauri dev`：它会先关掉所有正在运行的岛屿，还要占用主工作区的 1420 端口。只看界面时也可以起 lane 的 Vite，打开 `tests/regression/*.html`。
+  - **预览**：用户想看某个 lane 的效果时，在那个 lane 里运行 `pnpm dev:lane`。它起一个和用户的岛屿并排的预览岛屿：Vite 端口 1500+lane 编号，应用标识 `com.tixxin.fuyu.lane-<N>`（数据、WebView 存储、单实例都和用户的分开，开始时没有数据），不注册 focusd:// 链接，不能改开机自启，也不能安装 AI 代理状态 hook。不要在 lane 里直接跑 `pnpm tauri dev`：它会先关掉所有正在运行的岛屿，还要占用主工作区的 1420 端口。只看界面时也可以起 lane 的 Vite，打开 `tests/regression/*.html`。
   - 主工作区留给用户（例如运行 `pnpm tauri dev`），必须保持干净并停在 `main` 上，代理不要在里面改文件或提交。`main` 只通过 land 或在 GitHub 上合入 PR 移动，不手动推送：`.githooks/pre-push`（`git config core.hooksPath .githooks`）会拒绝直接推送 `main`，紧急情况才设 `CLAUDE_CODE_MERGE_QUEUE_EMERGENCY_PUSH=1`。
   - **外部 PR 例外**（协作者的 PR 由仓库管理员来合时也一样）：别人提的 PR 不走 land。land 推送前会 rebase，PR 的提交号随之改变，GitHub 认不出 PR 已合并（#10 就是这样，只能手动关闭）。做法：
     1. 在 lane 里 `git fetch origin pull/<编号>/head:pr-<编号>`，用 `git merge --no-ff pr-<编号>` 合到最新的 `origin/main` 上，跑 `pnpm check`、`cargo test`、clippy 和 `pnpm test:regression`（范围按「验证」一节）。这一步只用来检查，lane 里的合并提交不推送。

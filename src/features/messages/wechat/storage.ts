@@ -1,6 +1,6 @@
-export const ENABLED_KEY = "focusd-island-wechat-reminders-enabled";
+export const ENABLED_KEY = "fuyu-wechat-reminders-enabled";
 
-export const EXPOSE_UI_KEY = "focusd-island-wechat-expose-ui";
+export const EXPOSE_UI_KEY = "fuyu-wechat-expose-ui";
 
 /** Off unless the user turned it on: it changes a byte in the running WeChat. */
 export function isWeChatExposeUiEnabled() {
@@ -11,7 +11,7 @@ export function saveWeChatExposeUiEnabled(enabled: boolean) {
   window.localStorage.setItem(EXPOSE_UI_KEY, String(enabled));
 }
 
-export const HIDE_TASKBAR_BUTTON_KEY = "focusd-island-wechat-hide-taskbar-button";
+export const HIDE_TASKBAR_BUTTON_KEY = "fuyu-wechat-hide-taskbar-button";
 
 /** On unless the user turned it off: closed to the tray, WeChat's chat list cannot be read. */
 export function isWeChatHideTaskbarButtonEnabled() {

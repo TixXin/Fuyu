@@ -8,7 +8,7 @@
 export type CollapsedZone = "left" | "right";
 export type CollapsedPlacement = { id: string; zone: CollapsedZone; hidden?: boolean };
 
-export const COLLAPSED_ITEMS_KEY = "focusd-island-collapsed-items";
+export const COLLAPSED_ITEMS_KEY = "fuyu-collapsed-items";
 const LAYOUT_VERSION = 1;
 
 /**

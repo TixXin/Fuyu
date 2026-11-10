@@ -14,7 +14,7 @@ pub fn verification_identifier() -> Option<String> {
     if run_id.len() != 32 || !run_id.bytes().all(|byte| byte.is_ascii_hexdigit()) {
         return None;
     }
-    Some(format!("com.focusd.island.verification.{run_id}"))
+    Some(format!("com.tixxin.fuyu.verification.{run_id}"))
 }
 
 pub fn start(app: &AppHandle) -> Result<(), String> {

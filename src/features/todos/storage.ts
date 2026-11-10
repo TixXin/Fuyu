@@ -20,29 +20,32 @@ export { createTodoId, normalizeTodo };
 // only ever holds what the island would have read back from localStorage.
 
 // Todos planned for later days (ScheduledTodo[]); added for upstream issue #30.
-export const SCHEDULED_TODOS_STORAGE_KEY = "focusd-island-scheduled-todos";
-export const TODOS_STORAGE_KEY = "focusd-island-todos";
-export const ACTIVE_TODO_STORAGE_KEY = "focusd-island-active-todo";
-export const TODO_DATE_STORAGE_KEY = "focusd-island-current-date";
-export const TODO_ARCHIVE_STORAGE_KEY = "focusd-island-archives";
-export const DAILY_NOTE_STORAGE_KEY = "focusd-island-daily-note";
+export const SCHEDULED_TODOS_STORAGE_KEY = "fuyu-scheduled-todos";
+export const TODOS_STORAGE_KEY = "fuyu-todos";
+export const ACTIVE_TODO_STORAGE_KEY = "fuyu-active-todo";
+export const TODO_DATE_STORAGE_KEY = "fuyu-current-date";
+export const TODO_ARCHIVE_STORAGE_KEY = "fuyu-archives";
+export const DAILY_NOTE_STORAGE_KEY = "fuyu-daily-note";
 /** Set once the todo keys were moved to todos.json: `{ at }`. */
-export const TODOS_MIGRATED_STORAGE_KEY = "focusd-island-todos-migrated-v1";
+export const TODOS_MIGRATED_STORAGE_KEY = "fuyu-todos-migrated-v1";
 // Settings for exporting archives; they stay in localStorage.
-export const TODO_SAVE_DIRECTORY_STORAGE_KEY = "focusd-island-save-directory";
+export const TODO_SAVE_DIRECTORY_STORAGE_KEY = "fuyu-save-directory";
 export const TODO_LAST_SAVED_SIGNATURE_STORAGE_KEY =
-  "focusd-island-last-saved-signature";
+  "fuyu-last-saved-signature";
 
-/** The stored text of every migrated key, for migrate_todos. */
+/**
+ * The stored text of every migrated key, for migrate_todos. The command names
+ * them by their keys from before the rename (D17), which it was written for.
+ */
 export function readLocalTodoKeys(): LocalTodoKeys {
   return {
-    [TODOS_STORAGE_KEY]: readString(TODOS_STORAGE_KEY),
-    [TODO_ARCHIVE_STORAGE_KEY]: readString(TODO_ARCHIVE_STORAGE_KEY),
-    [SCHEDULED_TODOS_STORAGE_KEY]: readString(SCHEDULED_TODOS_STORAGE_KEY),
-    [DAILY_NOTE_STORAGE_KEY]: readString(DAILY_NOTE_STORAGE_KEY),
-    [ACTIVE_TODO_STORAGE_KEY]: readString(ACTIVE_TODO_STORAGE_KEY),
-    [TODO_DATE_STORAGE_KEY]: readString(TODO_DATE_STORAGE_KEY),
-  } as LocalTodoKeys;
+    "focusd-island-todos": readString(TODOS_STORAGE_KEY),
+    "focusd-island-archives": readString(TODO_ARCHIVE_STORAGE_KEY),
+    "focusd-island-scheduled-todos": readString(SCHEDULED_TODOS_STORAGE_KEY),
+    "focusd-island-daily-note": readString(DAILY_NOTE_STORAGE_KEY),
+    "focusd-island-active-todo": readString(ACTIVE_TODO_STORAGE_KEY),
+    "focusd-island-current-date": readString(TODO_DATE_STORAGE_KEY),
+  };
 }
 
 export function markTodosMigrated() {

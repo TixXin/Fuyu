@@ -1,7 +1,7 @@
 import { readJson, writeJson } from "../../../lib/storage.ts";
 import { AGENT_SOUND_EVENTS, type AgentSoundEvent } from "./events.ts";
 
-export const AGENT_SOUNDS_STORAGE_KEY = "focusd-island-agent-sounds";
+export const AGENT_SOUNDS_STORAGE_KEY = "fuyu-agent-sounds";
 
 /** The sounds that ship with the island; any other value is an imported pack's id. */
 export const BUILTIN_PACK = "builtin";

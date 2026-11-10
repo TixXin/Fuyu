@@ -169,7 +169,7 @@ pub fn copy_translation_result(text: String) -> Result<(), UserError> {
 
 // One key per provider. DeepSeek keeps the "deepseek" entry older versions created.
 fn entry(provider: &Provider) -> Result<Entry, UserError> {
-    Entry::new("com.focusd.island.translation", provider.id).map_err(credential::open)
+    Entry::new("com.tixxin.fuyu.translation", provider.id).map_err(credential::open)
 }
 
 fn read_secret(provider: &Provider) -> Result<Option<String>, UserError> {
