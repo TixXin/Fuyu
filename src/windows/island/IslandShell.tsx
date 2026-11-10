@@ -24,6 +24,8 @@ import { useGlassPointer } from "./useGlassPointer";
 import { useIslandPreparing } from "./useIslandPreparing";
 import { usePageFadeIn } from "./usePageFadeIn";
 import "./IslandShell.css";
+// After the shell: the light island's glass overrides it (C33.4).
+import "./IslandGlassLight.css";
 
 type IslandShellProps = {
   qqMail: MailController;

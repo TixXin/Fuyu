@@ -19,7 +19,8 @@ const ALLOWED = [
   /features\/todos\/TodoDatePicker\.css$/, // a light chip
   /features\/agent-status\/approvals\//, // white on the filled green buttons
   /features\/calendar\/(CalendarMonth|CalendarPanel|MeetingLine)\.css$/, // white on the accent, ink via --calendar-ink
-  /windows\/island\/(IslandShell|IslandTopEdge|IslandApp)\.css$/, // liquid glass, C33.4
+  /windows\/island\/(IslandShell|IslandTopEdge|IslandApp)\.css$/, // the dark liquid glass; IslandGlassLight.css is its light version
+  /windows\/island\/IslandGlassLight\.css$/, // white highlights on a light island, on purpose (C33.4)
 ];
 const WHITE = /rgba\(\s*255\s*,\s*255\s*,\s*255\s*,|color:\s*#fff(fff)?\s*;/g;
 
