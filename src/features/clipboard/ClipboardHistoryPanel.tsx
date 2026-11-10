@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ClipboardList } from "lucide-react";
 import { useTranslation } from "../../i18n";
 import type { ClipboardCopyAs, ClipboardHistorySnapshot } from "./api";
+import { ClipboardActionPanel } from "./ClipboardActionPanel";
 import { ClipboardFilters } from "./ClipboardFilters";
 import { ClipboardHistoryItemRow } from "./ClipboardHistoryItemRow";
 import { ClipboardPanelHeader } from "./ClipboardPanelHeader";
@@ -9,7 +10,10 @@ import { useClipboardConfirmations } from "./useClipboardConfirmations";
 import { topTags, useClipboardHistoryList } from "./useClipboardHistoryList";
 import { useClipboardNoteEditor } from "./useClipboardNoteEditor";
 import "../../components/list/IslandList.css";
+import "./ClipboardPopupPanels.css";
 import "./ClipboardHistoryPanel.css";
+
+type Tools = { id: string; page: "transforms" | "ai" };
 
 // "5 分钟前" moves on while the page stays open.
 const CLOCK_MS = 30_000;
@@ -32,10 +36,12 @@ export function ClipboardHistoryPanel({
   const t = useTranslation();
   const [now, setNow] = useState(() => Date.now());
   const [menuItemId, setMenuItemId] = useState<string | null>(null);
+  const [tools, setTools] = useState<Tools | null>(null);
   const { query, setQuery, clipboardView, setClipboardView, favoriteItems, filteredItems, itemElementsRef } = useClipboardHistoryList(snapshot.items);
   const { confirmDeleteId, isConfirmingClear, dismissConfirmations, handleDeleteItem, handleClear } = useClipboardConfirmations(snapshot.items, onDeleteItem, onClear);
   const {
     copiedItemId,
+    showCopiedState,
     editingNoteId,
     noteDraft,
     setNoteDraft,
@@ -56,6 +62,16 @@ export function ClipboardHistoryPanel({
   const showTag = (tag: string) => {
     setClipboardView("all");
     setQuery(query.trim().toLowerCase() === `#${tag.toLowerCase()}` ? "" : `#${tag}`);
+  };
+
+  const toolsItem = tools ? snapshot.items.find((item) => item.id === tools.id) : undefined;
+  // The island is not a place to paste into, so a transformed or rewritten text is copied (C43);
+  // the history records it like any other copy.
+  const copyResult = (id: string, value: string) => {
+    void navigator.clipboard.writeText(value).then(
+      () => showCopiedState(id),
+      (error: unknown) => console.error("Failed to copy the result", error),
+    );
   };
 
   const empty = snapshot.items.length === 0;
@@ -112,8 +128,25 @@ export function ClipboardHistoryPanel({
               onCancelEditNote={cancelEditingNote}
               onDelete={handleDeleteItem}
               onTag={showTag}
+              onTools={(page) => setTools({ id: item.id, page })}
             />
           ))}
+        </div>
+      )}
+      {tools && toolsItem && (
+        <div className="clipboard-island-tools">
+          <ClipboardActionPanel
+            key={`${tools.id}-${tools.page}`}
+            item={toolsItem}
+            actions={[]}
+            page={tools.page}
+            aiPrompts={snapshot.settings.aiPrompts}
+            copy
+            onPage={(page) => setTools(page === "transforms" || page === "ai" ? { id: tools.id, page } : null)}
+            onClose={() => setTools(null)}
+            onPasteText={(value) => copyResult(tools.id, value)}
+            onSaveNote={() => {}}
+          />
         </div>
       )}
     </section>

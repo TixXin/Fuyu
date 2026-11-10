@@ -31,9 +31,10 @@ type Result =
  * first Enter (or click) asks, and the answer shows as it is written; the second pastes it.
  * Nothing is sent before that first Enter.
  */
-export function ClipboardAiList({ item, prompts = [], onPaste }: { item: ClipboardHistoryItem; prompts?: readonly ClipboardAiPrompt[]; onPaste: (text: string) => void }) {
+export function ClipboardAiList({ item, prompts = [], copy = false, onPaste }: { item: ClipboardHistoryItem; prompts?: readonly ClipboardAiPrompt[]; copy?: boolean; onPaste: (text: string) => void }) {
   const t = useTranslation();
-  const text = t.clipboard.popup.actions;
+  const actions = t.clipboard.popup.actions;
+  const text = copy ? { ...actions, ...actions.copy } : actions;
   const errorText = useErrorText();
   const choices: Choice[] = [
     ...TASKS.map((task) => ({ key: task, task, label: text.aiTasks[task], own: false })),

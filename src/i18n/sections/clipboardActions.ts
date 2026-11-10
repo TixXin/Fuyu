@@ -70,6 +70,8 @@ export type ClipboardActionsText = {
   linkOffline: string;
   colorPick: string;
   failed: string;
+  /** The transform and AI pages on the island's clipboard page (C43), which copy instead. */
+  copy: Pick<ClipboardActionsText, "transform" | "transformTitle" | "ai" | "aiHint" | "aiPasteAgain" | "result" | "resultNative">;
 };
 
 export const zhCN: ClipboardActionsText = {
@@ -160,6 +162,15 @@ export const zhCN: ClipboardActionsText = {
   linkOffline: "标题和图标要联网读，在 设置 → 剪贴板 里打开",
   colorPick: "点一种写法直接粘贴",
   failed: "没做成，再试一次",
+  copy: {
+    transform: "转换后复制…",
+    transformTitle: "转换后复制",
+    ai: "AI 改写后复制…",
+    aiHint: "按 Enter 把这条发给快捷翻译设置的服务（用它的 Key 和模型），结果出来后再按 Enter 复制。",
+    aiPasteAgain: "再按 Enter 复制",
+    result: "复制的会是",
+    resultNative: "复制时由 Windows 转换",
+  },
 };
 
 export const en: ClipboardActionsText = {
@@ -250,4 +261,13 @@ export const en: ClipboardActionsText = {
   linkOffline: "Titles and icons need the network; turn them on in Settings → Clipboard",
   colorPick: "Click a form to paste it",
   failed: "That did not work; try again",
+  copy: {
+    transform: "Copy transformed…",
+    transformTitle: "Copy transformed",
+    ai: "Rewrite with AI, then copy…",
+    aiHint: "Enter sends this entry to the service set up for quick translation (its key and model); Enter again copies the answer.",
+    aiPasteAgain: "Enter again copies",
+    result: "This will copy",
+    resultNative: "Windows converts it on copy",
+  },
 };

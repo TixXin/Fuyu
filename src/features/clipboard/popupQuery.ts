@@ -44,7 +44,7 @@ export type PinyinOf = (text: string) => { full: string; initials: string };
 let pinyinOf: PinyinOf | null = null;
 let loading: Promise<PinyinOf | null> | null = null;
 
-/** Loads the pinyin table once (about 300 KB, only in the clipboard window). */
+/** Loads the pinyin table once (about 300 KB; the island's page loads it on its first search). */
 export function loadPinyin(): Promise<PinyinOf | null> {
   loading ??= import("pinyin-pro")
     .then(({ pinyin }) => {

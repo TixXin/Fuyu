@@ -103,6 +103,7 @@ export function useClipboardNoteEditor(
 
   return {
     copiedItemId,
+    showCopiedState,
     editingNoteId,
     noteDraft,
     setNoteDraft,

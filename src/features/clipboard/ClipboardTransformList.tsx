@@ -18,9 +18,10 @@ export async function transformText(transform: Transform, input: TransformInput)
  * this text greyed out with why, and what the picked one would paste. ↑↓ pick, Enter or a click
  * pastes, 1–9 paste that one.
  */
-export function ClipboardTransformList({ item, query, onPaste }: { item: ClipboardHistoryItem; query: string; onPaste: (text: string) => void }) {
+export function ClipboardTransformList({ item, query, copy = false, onPaste }: { item: ClipboardHistoryItem; query: string; copy?: boolean; onPaste: (text: string) => void }) {
   const t = useTranslation();
-  const text = t.clipboard.popup.actions;
+  const actions = t.clipboard.popup.actions;
+  const text = useMemo(() => (copy ? { ...actions, ...actions.copy } : actions), [actions, copy]);
   const input = useMemo<TransformInput>(() => ({ text: item.text ?? item.preview, html: item.html }), [item]);
   const rows = useMemo(() => {
     const needle = query.trim().toLowerCase();

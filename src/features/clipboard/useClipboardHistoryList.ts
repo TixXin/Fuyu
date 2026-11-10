@@ -1,6 +1,6 @@
-import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { ClipboardHistoryItem } from "./api";
-import { matchesClipboardQuery } from "./clipboardSearch";
+import { loadPinyin, matchesPopupQuery, parsePopupQuery } from "./popupQuery";
 
 export type ClipboardView = "all" | "favorites" | "images" | "files";
 
@@ -29,13 +29,25 @@ export function useClipboardHistoryList(items: ClipboardHistoryItem[]) {
     [items],
   );
   const viewedItems = useMemo(() => (clipboardView === "favorites" ? favoriteItems : items.filter((item) => inView(item, clipboardView))), [clipboardView, favoriteItems, items]);
+  // The same search as the clipboard window (C43): pinyin and its initials, and "/" rules.
+  const [pinyinReady, setPinyinReady] = useState(false);
+  useEffect(() => {
+    if (!normalizedQuery || pinyinReady) return;
+    let cancelled = false;
+    void loadPinyin().then((pinyin) => { if (!cancelled) setPinyinReady(pinyin !== null); });
+    return () => { cancelled = true; };
+  }, [normalizedQuery, pinyinReady]);
   const filteredItems = useMemo(() => {
     if (!normalizedQuery) {
       return viewedItems;
     }
 
-    return viewedItems.filter((item) => matchesClipboardQuery(item, normalizedQuery));
-  }, [normalizedQuery, viewedItems]);
+    const parsed = parsePopupQuery(normalizedQuery);
+    const now = Date.now();
+    return viewedItems.filter((item) => matchesPopupQuery(item, parsed, now));
+    // pinyinReady: matching by pinyin starts once its table has loaded.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [normalizedQuery, viewedItems, pinyinReady]);
 
   useLayoutEffect(() => {
     const visibleIds = new Set(filteredItems.map((item) => item.id));

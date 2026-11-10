@@ -21,7 +21,7 @@ export type PanelPage = "actions" | "transforms" | "note" | "ai";
  * everything the island's page can do with an entry, transforms, and pausing the history. Typing
  * narrows the actions; ↑↓ and Enter pick one; Esc goes back a page, then closes.
  */
-export function ClipboardActionPanel({ item, actions, page, aiPrompts, onPage, onClose, onPasteText, onSaveNote }: {
+export function ClipboardActionPanel({ item, actions, page, aiPrompts, copy = false, onPage, onClose, onPasteText, onSaveNote }: {
   item?: ClipboardHistoryItem;
   actions: readonly PopupAction[];
   page: PanelPage;
@@ -30,9 +30,12 @@ export function ClipboardActionPanel({ item, actions, page, aiPrompts, onPage, o
   onPasteText: (text: string) => void;
   onSaveNote: (id: string, note: string) => void;
   aiPrompts?: readonly ClipboardAiPrompt[];
+  /** On the island's page (C43): the transform and AI pages copy the result instead of pasting it. */
+  copy?: boolean;
 }) {
   const t = useTranslation();
-  const text = t.clipboard.popup.actions;
+  const popupText = t.clipboard.popup.actions;
+  const text = copy ? { ...popupText, ...popupText.copy } : popupText;
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState(0);
   const [note, setNote] = useState(() => [item?.note ?? "", ...(item?.tags ?? []).map((tag) => `#${tag}`)].join(" ").trim());
@@ -116,9 +119,9 @@ export function ClipboardActionPanel({ item, actions, page, aiPrompts, onPage, o
           <kbd>Esc</kbd>
         </div>
         {page === "ai" && item ? (
-          <ClipboardAiList item={item} prompts={aiPrompts} onPaste={(result) => { onClose(); onPasteText(result); }} />
+          <ClipboardAiList item={item} prompts={aiPrompts} copy={copy} onPaste={(result) => { onClose(); onPasteText(result); }} />
         ) : page === "transforms" && item ? (
-          <ClipboardTransformList item={item} query={query} onPaste={(result) => { onClose(); onPasteText(result); }} />
+          <ClipboardTransformList item={item} query={query} copy={copy} onPaste={(result) => { onClose(); onPasteText(result); }} />
         ) : page === "actions" ? (
           <ul className="clipboard-panel__list" role="listbox" aria-label={text.panelTitle}>
             {shown.length === 0 && <li className="clipboard-panel__none">{text.noActions}</li>}

@@ -16,6 +16,8 @@ const automated = new URLSearchParams(location.search).has("test");
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: automated });
 localStorage.setItem(LOCALE_STORAGE_KEY, "zh-CN");
 mockIPC(() => null);
+const copiedTexts: string[] = [];
+Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText: async (value: string) => { copiedTexts.push(value); } } });
 
 const now = Date.now();
 const minute = 60_000;
@@ -30,6 +32,8 @@ const ITEMS: ClipboardHistoryItem[] = [
   { ...base, id: "t4", kind: "text", copiedAt: now - 20 * minute, preview: "ghp_8f3a••••••••••••••••", masked: true },
   { ...base, id: "f1", kind: "files", copiedAt: now - 70 * minute, preview: "release-notes-0.3.5.md", files: ["a", "b", "c"], source: { path: "C:\\explorer.exe", name: "资源管理器" } },
   { ...base, id: "i2", kind: "image", copiedAt: now - 26 * 60 * minute, preview: "1352 x 1114 image", note: "设置窗口参考", image: { width: 1352, height: 1114, byteSize: 1, originalPath: "", thumbnailPath: "", thumbnailDataUrl: thumb("#0d1424", "#1d2f54") } },
+  { ...base, id: "c1", kind: "text", copiedAt: now - 27 * 60 * minute, preview: "#3b82f6", source: { path: "C:\\figma.exe", name: "Figma" } },
+  { ...base, id: "l1", kind: "text", copiedAt: now - 28 * 60 * minute, preview: "https://github.com/TixXin/fuyu/pull/26", source: { path: "C:\\weixin.exe", name: "微信" } },
 ];
 const SHELF: FileShelfItem[] = [
   { id: "s1", path: "D:\\Work\\Design\\设计稿-v3.fig", name: "设计稿-v3.fig", isDir: false, size: 18_400_000, addedAt: now, pinned: true, missing: false, unreachable: false },
@@ -123,6 +127,37 @@ async function runChecks() {
     check(menuItem("再点一次删除") && !calls.includes("delete:t1"), "删除先要再点一次确认");
     await click(menuItem("再点一次删除"));
     check(calls.includes("delete:t1") && !row(clip, "t1"), "确认后删除");
+
+    // C43: what the clipboard window recognises, searches and transforms, on the island too.
+    const color = row(clip, "c1")!;
+    check($(".clipboard-swatch", color) && $(".island-list-row__meta", color)?.textContent?.startsWith("颜色"), "颜色：行首是色块，第二行标「颜色」");
+    check($(".island-list-row__main", row(clip, "l1")!)?.textContent === "github.com › TixXin/fuyu › pull/26", "链接写成「域名 › 路径」");
+    const search = $<HTMLInputElement>(".island-list-search input", clip)!;
+    const type = (value: string) => act(async () => {
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(search, value);
+      search.dispatchEvent(new Event("input", { bubbles: true }));
+      await new Promise((resolve) => setTimeout(resolve, 300));
+    });
+    await type("kzz");
+    check($$(".island-list-row", clip).length === 1 && $$(".island-list-row", clip)[0].textContent?.includes("「扩展」组"), "拼音首字母 kzz 搜到「扩展」组");
+    await type("/app:微信");
+    check($$(".island-list-row", clip).length === 2, "/app:微信 只看微信复制的");
+    await type("/color");
+    check($$(".island-list-row", clip).length === 1, "/color 只看颜色");
+    await type("");
+
+    const command = row(clip, "t2")!;
+    await click($('button[aria-haspopup="menu"]', command));
+    check(menuItem("转换后复制") && menuItem("AI 改写后复制"), "文字的「⋯」有转换和 AI 改写");
+    await click(menuItem("转换后复制"));
+    check($(".clipboard-island-tools .clipboard-panel__result span", clip)?.textContent === "复制的会是", "转换页盖在列表上，写「复制的会是」");
+    await click($$(".clipboard-panel__action", clip).find((button) => button.textContent?.includes("全部大写")));
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 30)); });
+    check(copiedTexts.includes("PNPM TEST:REGRESSION CLIPBOARD && GIT STATUS --SHORT") && !$(".clipboard-island-tools", clip), "选一个转换就复制结果并关掉");
+    check($(".island-list-row__meta--accent", row(clip, "t2")!)?.textContent === "已复制", "复制后这一行显示「已复制」");
+    await click($('button[aria-haspopup="menu"]', row(clip, "t4")!));
+    check(menuItem("转换后复制") && !menuItem("AI 改写后复制"), "打码的密钥不能发给 AI");
+    await click($('button[aria-haspopup="menu"]', row(clip, "t4")!));
 
     const shelfPage = document.getElementById("shelf-dark")!;
     const desk = row(shelfPage, "s2")!;

@@ -1,9 +1,10 @@
-import { Check, Copy, FileImage, ImageIcon, Pencil, ScanText, SquareTerminal, Star, Trash2, X } from "lucide-react";
+import { Braces, Check, Copy, FileImage, ImageIcon, Link2, Pencil, ScanText, Sparkles, SquareTerminal, Star, Trash2, WandSparkles, X } from "lucide-react";
 import { RowMenu, type RowMenuItem } from "../../components/list/RowMenu";
 import { formatAgo } from "../../components/list/formatAgo";
 import { useTranslation } from "../../i18n";
 import type { ClipboardCopyAs, ClipboardHistoryItem } from "./api";
 import { ClipboardEntryIcon } from "./ClipboardEntryIcon";
+import { contentKind, linkLabel } from "./contentKind";
 
 /**
  * One entry on the island's clipboard page (IslandList.css): click it to copy it back; star and
@@ -28,6 +29,7 @@ export function ClipboardHistoryItemRow({
   onCancelEditNote,
   onDelete,
   onTag,
+  onTools,
 }: {
   item: ClipboardHistoryItem;
   now: number;
@@ -49,13 +51,19 @@ export function ClipboardHistoryItemRow({
   onDelete: (id: string) => void;
   /** A tag was clicked: filter by it (C24.5). */
   onTag?: (tag: string) => void;
+  /** Opens the transforms or the AI rewrites for this entry (C43). */
+  onTools?: (page: "transforms" | "ai") => void;
 }) {
   const t = useTranslation();
   const text = t.clipboard;
+  const copyText = text.popup.actions.copy;
   const image = item.kind === "image" ? item.image : undefined;
-  const main = item.kind === "image" && image ? text.imageLabel(image.width, image.height) : item.preview;
+  // Links, colours and JSON are recognised as in the clipboard window (C38, C43).
+  const kind = contentKind(item);
+  const main = item.kind === "image" && image ? text.imageLabel(image.width, image.height) : kind?.kind === "link" ? linkLabel(kind.url) : item.preview;
   const extraFiles = item.kind === "files" && item.files && item.files.length > 1 ? item.files.length - 1 : 0;
   const meta = [
+    kind ? text.popup.actions.kinds[kind.kind] : null,
     item.source?.name,
     formatAgo(item.copiedAt, now, t.common.ago),
     extraFiles > 0 ? text.moreFiles(extraFiles) : null,
@@ -66,6 +74,12 @@ export function ClipboardHistoryItemRow({
   // as an image (C22.1).
   const menu: RowMenuItem[] = [
     { key: "note", label: text.noteAction, icon: <Pencil size={14} strokeWidth={2} />, onSelect: () => onStartEditNote(item) },
+    ...(item.kind === "text" && onTools
+      ? [
+          { key: "transforms", label: copyText.transform, icon: <WandSparkles size={14} strokeWidth={2} />, onSelect: () => onTools("transforms") },
+          ...(item.masked ? [] : [{ key: "ai", label: copyText.ai, icon: <Sparkles size={14} strokeWidth={2} />, onSelect: () => onTools("ai") }]),
+        ]
+      : []),
     ...(item.kind === "image"
       ? [
           { key: "file", label: text.copyAsFile, icon: <FileImage size={14} strokeWidth={2} />, onSelect: () => onCopy(item.id, "file") },
@@ -90,12 +104,18 @@ export function ClipboardHistoryItemRow({
       <span className="island-list-row__lead" aria-hidden="true">
         {item.kind === "image" ? (
           image?.thumbnailDataUrl ? <img src={image.thumbnailDataUrl} alt="" /> : <ImageIcon size={16} strokeWidth={1.8} />
+        ) : kind?.kind === "color" ? (
+          <span className="clipboard-swatch" style={{ background: `rgba(${kind.color.r}, ${kind.color.g}, ${kind.color.b}, ${kind.color.a})` }} />
+        ) : kind?.kind === "link" ? (
+          <Link2 size={16} strokeWidth={1.8} />
+        ) : kind?.kind === "json" ? (
+          <Braces size={16} strokeWidth={1.8} />
         ) : (
           <ClipboardEntryIcon item={item} />
         )}
       </span>
       <span className="island-list-row__text">
-        <span className={`island-list-row__main${item.masked ? " island-list-row__main--mono" : ""}`}>{main}</span>
+        <span className={`island-list-row__main${item.masked || kind?.kind === "color" || kind?.kind === "json" ? " island-list-row__main--mono" : ""}`}>{main}</span>
         {isEditingNote ? (
           <form
             className="island-list-row__editor"
