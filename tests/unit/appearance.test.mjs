@@ -177,15 +177,15 @@ test("normalizing saved settings keeps the first-launch defaults", () => {
 
 test("first launch uses the maintainer's layout, while saved settings missing a field keep older behavior", () => {
   assert.equal(DEFAULT_SETTINGS.appearanceMode, "classic");
-  assert.equal(DEFAULT_SETTINGS.islandBackgroundColor, "#000000");
-  assert.equal(DEFAULT_SETTINGS.islandCornerRadius, 16);
+  assert.equal(DEFAULT_SETTINGS.islandBackgroundColor, "#030303");
+  assert.equal(DEFAULT_SETTINGS.islandCornerRadius, 32);
   assert.equal(DEFAULT_SETTINGS.collapsedScale, 1);
   assert.equal(DEFAULT_SETTINGS.expandedScale, 1);
   // Saved settings keep their own scale and radius; only a missing radius falls back.
   assert.equal(normalizeSettings({ collapsedScale: 0.96, expandedScale: 1.05, islandCornerRadius: 16 }).expandedScale, 1.05);
   assert.equal(normalizeSettings({ collapsedScale: 0.96, expandedScale: 1.05, islandCornerRadius: 16 }).islandCornerRadius, 16);
   assert.equal(DEFAULT_SETTINGS.expandTrigger, "hover");
-  assert.equal(DEFAULT_SETTINGS.autoTuck, true);
+  assert.equal(DEFAULT_SETTINGS.autoTuck, false);
   assert.equal(DEFAULT_SETTINGS.minimizeAction, "tuck");
   assert.equal(DEFAULT_SETTINGS.translationTarget, "island");
 
@@ -196,6 +196,25 @@ test("first launch uses the maintainer's layout, while saved settings missing a 
   assert.equal(older.translationTarget, "window");
   assert.equal(older.shelfShowCount, false);
   assert.equal(older.hoverCollapseDelayMs, 400);
+});
+
+test("first launch takes the maintainer's settings of 0.3.5-beta.5; saved settings without a field keep the earlier default", () => {
+  const changed = {
+    topFilletRadius: [8, 8], islandCornerRadius: [32, 30], maxPanelHeight: [360, 490], panelWidth: [800, 560],
+    pulseBrightness: [160, 100], islandBackgroundColor: ["#030303", "#000000"], collapsedDark: [false, false],
+    agentAlertSeconds: [3, 5], agentRemindSeconds: [0, 60], carryOverIncompleteTodos: [false, true],
+    autoTuck: [false, false], autoTuckSeconds: [120, 30], messageNotice: ["panel", "line"], hoverSwitchPage: [true, false],
+    agentLightStyle: ["dot", "mark"], lyricsOnline: [true, false], lyricsOnIsland: [true, false],
+  };
+  const older = normalizeSettings({ opacity: 95 });
+  for (const [key, [first, earlier]] of Object.entries(changed)) {
+    assert.equal(DEFAULT_SETTINGS[key], first, `first launch ${key}`);
+    assert.equal(older[key], earlier, `saved without ${key}`);
+  }
+  // The scales stay 1: any other resamples the island's text and 1px lines.
+  assert.equal(DEFAULT_SETTINGS.collapsedScale, 1);
+  assert.equal(DEFAULT_SETTINGS.lyricsOffsetMs, 0);
+  assert.deepEqual(normalizeSettings(DEFAULT_SETTINGS), DEFAULT_SETTINGS);
 });
 
 test("legacy default presets are dropped and custom presets are capped", () => {

@@ -1516,6 +1516,17 @@
     {
       "page": "messages",
       "zh-CN": {
+        "group": "新消息提示",
+        "title": "面板停留时间"
+      },
+      "en": {
+        "group": "New messages",
+        "title": "Panel stays for"
+      }
+    },
+    {
+      "page": "messages",
+      "zh-CN": {
         "group": "QQ 通知",
         "title": "接收 QQ 消息"
       },

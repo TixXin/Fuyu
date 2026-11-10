@@ -1,4 +1,5 @@
 import { readJson, writeJson } from "../../../lib/storage.ts";
+import { islandRanBefore } from "../../appearance/installState.ts";
 import { AGENT_SOUND_EVENTS, type AgentSoundEvent } from "./events.ts";
 
 export const AGENT_SOUNDS_STORAGE_KEY = "fuyu-agent-sounds";
@@ -18,22 +19,33 @@ export type AgentSoundSettings = {
   quietHours: { enabled: boolean; start: string; end: string };
 };
 
+/** A new install plays every event, the terminal in front or not. */
 export const DEFAULT_AGENT_SOUND_SETTINGS: AgentSoundSettings = {
   enabled: true,
   volume: 70,
   pack: BUILTIN_PACK,
-  // Starting a session and sending a prompt happen at the keyboard; a sound there is opt-in.
-  // A finished session left unread is highlighted on the Agent page already; its sound is opt-in too.
-  events: { start: false, complete: true, error: true, approval: true, question: true, ack: false, compact: true, idle: false, quotaLow: true, quotaReset: true },
-  quietWhenInFront: true,
+  events: { start: true, complete: true, error: true, approval: true, question: true, ack: true, compact: true, idle: true, quotaLow: true, quotaReset: true },
+  quietWhenInFront: false,
   quietHours: { enabled: false, start: "22:00", end: "08:00" },
+};
+
+/**
+ * What islands that ran before 0.3.5-beta.5 had, for their saved settings' missing fields and for
+ * islands from before sounds: starting a session, sending a prompt and an unread finished session
+ * stayed quiet, and so did a session whose terminal was in front.
+ */
+const EARLIER_AGENT_SOUND_SETTINGS: AgentSoundSettings = {
+  ...DEFAULT_AGENT_SOUND_SETTINGS,
+  events: { ...DEFAULT_AGENT_SOUND_SETTINGS.events, start: false, ack: false, idle: false },
+  quietWhenInFront: true,
 };
 
 const CLOCK = /^\d{1,2}:\d{2}$/;
 
+/** Saved settings with missing or malformed fields as earlier islands had them; nothing saved is a new install's default. */
 export function normalizeAgentSoundSettings(value: unknown): AgentSoundSettings {
-  const fallback = DEFAULT_AGENT_SOUND_SETTINGS;
-  if (!value || typeof value !== "object") return fallback;
+  if (!value || typeof value !== "object") return DEFAULT_AGENT_SOUND_SETTINGS;
+  const fallback = EARLIER_AGENT_SOUND_SETTINGS;
   const raw = value as Record<string, unknown>;
   const bool = (input: unknown, otherwise: boolean) => (typeof input === "boolean" ? input : otherwise);
   const rawEvents = raw.events && typeof raw.events === "object" ? (raw.events as Record<string, unknown>) : {};
@@ -54,7 +66,9 @@ export function normalizeAgentSoundSettings(value: unknown): AgentSoundSettings 
 }
 
 export function loadAgentSoundSettings(): AgentSoundSettings {
-  return normalizeAgentSoundSettings(readJson(AGENT_SOUNDS_STORAGE_KEY));
+  const saved = readJson(AGENT_SOUNDS_STORAGE_KEY);
+  if (saved === undefined && islandRanBefore()) return EARLIER_AGENT_SOUND_SETTINGS;
+  return normalizeAgentSoundSettings(saved);
 }
 
 export function saveAgentSoundSettings(settings: AgentSoundSettings) {

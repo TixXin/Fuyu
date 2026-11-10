@@ -21,7 +21,7 @@ export function normalizeBehaviorSettings(settings: LegacyIslandSettings | null 
     carryOverIncompleteTodos:
       typeof settings?.carryOverIncompleteTodos === "boolean"
         ? settings.carryOverIncompleteTodos
-        : DEFAULT_SETTINGS.carryOverIncompleteTodos,
+        : LEGACY_FALLBACKS.carryOverIncompleteTodos,
     enableTodoReorder:
       typeof settings?.enableTodoReorder === "boolean"
         ? settings.enableTodoReorder
@@ -33,7 +33,7 @@ export function normalizeBehaviorSettings(settings: LegacyIslandSettings | null 
     autoTuck: settings?.autoTuck === true,
     autoTuckSeconds: typeof settings?.autoTuckSeconds === "number" && Number.isFinite(settings.autoTuckSeconds)
       ? clamp(Math.round(settings.autoTuckSeconds), 1, 3_600)
-      : DEFAULT_SETTINGS.autoTuckSeconds,
+      : LEGACY_FALLBACKS.autoTuckSeconds,
     autoTuckHoldTodo: settings?.autoTuckHoldTodo !== false,
     autoTuckHoldAgent: settings?.autoTuckHoldAgent !== false,
     autoTuckHoldMusic: settings?.autoTuckHoldMusic === true,
@@ -42,7 +42,7 @@ export function normalizeBehaviorSettings(settings: LegacyIslandSettings | null 
       ? clamp(Math.round(settings.autoTuckRetractDelayMs), MIN_AUTO_TUCK_RETRACT_DELAY_MS, MAX_AUTO_TUCK_RETRACT_DELAY_MS)
       : DEFAULT_SETTINGS.autoTuckRetractDelayMs,
     revealOnMessage: settings?.revealOnMessage !== false,
-    messageNotice: oneOf(MESSAGE_NOTICES, settings?.messageNotice, DEFAULT_SETTINGS.messageNotice),
+    messageNotice: oneOf(MESSAGE_NOTICES, settings?.messageNotice, LEGACY_FALLBACKS.messageNotice),
     messagePanelSeconds: oneOf(MESSAGE_PANEL_SECONDS, settings?.messagePanelSeconds, DEFAULT_SETTINGS.messagePanelSeconds),
     expandTrigger: settings?.expandTrigger === "hover" ? "hover" : "click",
     hoverExpandDelayMs: typeof settings?.hoverExpandDelayMs === "number" && Number.isFinite(settings.hoverExpandDelayMs)

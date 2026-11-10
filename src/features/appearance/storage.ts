@@ -1,9 +1,10 @@
 import type { Translations } from "../../i18n";
 import { createTodoId } from "../todos/index.ts";
 import { DEFAULT_SETTINGS, getDefaultSettingPresets, mergeWithDefaultSettingPresets, normalizeSettings } from "./settings.ts";
+import { ISLAND_SETTINGS_KEY } from "./installState.ts";
 import type { IslandPreset, IslandSettings } from "./types";
 
-export const STORAGE_KEY = "fuyu-settings";
+export const STORAGE_KEY = ISLAND_SETTINGS_KEY;
 export const COLLAPSED_TEXT_DEFAULT_MIGRATION_KEY =
   "fuyu-collapsed-text-default-v1";
 export const SETTINGS_PRESETS_STORAGE_KEY = "fuyu-setting-presets";

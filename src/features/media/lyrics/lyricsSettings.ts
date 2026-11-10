@@ -50,13 +50,16 @@ function systemLanguages(): (string | undefined)[] {
   return [navigator?.language, ...(navigator?.languages ?? [])];
 }
 
-/** No folder, nothing asked online until the user turns it on, no offset, not on the collapsed island. */
+/**
+ * No folder, lyrics found online and shown on the collapsed island, no offset. Saved settings
+ * without the online and on-island switches keep them off, as islands before them had.
+ */
 export const DEFAULT_LYRICS_SETTINGS: LyricsSettingValues = {
   lyricsFolder: "",
-  lyricsOnline: false,
+  lyricsOnline: true,
   lyricsChinese: chineseLyricsByDefault(systemLanguages()),
   lyricsOffsetMs: 0,
-  lyricsOnIsland: false,
+  lyricsOnIsland: true,
   lyricsIslandPriority: "lyrics",
   lyricsKaraoke: true,
   lyricsKaraokeFallback: "line",
