@@ -37,6 +37,25 @@
 
 中文叫法：现在的中文 README 标题也是英文（Fly Island），正文里叫「岛」，新名字可以照旧只用英文名。想要中文名的话，Skyholm 直译是「空岛」：GitHub 上有 262 条结果，几乎都是「森空岛」的签到脚本和 Minecraft 的空岛玩法，没有同类产品。它是通用词，单独搜搜不到我们，要和 Skyholm 一起出现。更少见的是「天屿」和「云渚」，都没有同名项目，但「X屿」已经很多，「渚」字偏生僻。
 
+### 2026-11-10 补充：三个名字的中文名，和 fuyu-island
+
+用户问三个推荐名各自的中文名，并要求把 `fuyu-island` 加进候选。
+
+| 英文名 | 中文名 | 中文名的查重 |
+|---|---|---|
+| Skyholm | 空岛（直译） | 没有同类产品叫这个；是通用词，结果里几乎都是「森空岛」和 Minecraft 空岛 |
+| Enisle | 登岛 | 直译是「上岛」，但「上岛」是这类软件的通用说法，当不了名字；「登岛」完全匹配的只有 4 条，都无关。「栖岛」不能用：[windlively/IsleNest](https://github.com/windlively/IsleNest)「栖岛 IsleNest」是 macOS 菜单栏 / 刘海的效率岛 |
+| Hoverholm | 悬屿 | 直译「悬浮岛」「悬岛」「浮岛」都有同类项目在用；「悬屿」没有同名项目 |
+| fuyu-island | 浮屿 | 两个 Windows 同类项目已经叫「浮屿」，见「已经被同类项目用掉的名字」 |
+
+`fuyu-island` 的查重结果：GitHub 上名字里含 `fuyu-island` 或 `fuyuisland` 的仓库都是 0 个；npm 的 `fuyu-island`、`fuyu-island-plugin`、`create-fuyu-island-plugin`，crates.io 的 `fuyu-island`，GitHub 账号 `fuyu-island` 都没人用。英文这串字母没有重名，但不建议用，原因有三个：
+
+1. 它的中文名只能是「浮屿」，而 [John4874314/islet](https://github.com/John4874314/islet)「浮屿 Islet」和 [yanhaoran01/FloatIsland](https://github.com/yanhaoran01/FloatIsland)「浮屿 FloatIsland」做的是同一种东西。两个都很小（1 star 和 0 star），但中文用户搜「浮屿」会同时搜到三家。
+2. 它属于上面第 1 类「某某 Island」，和 30 多个同类项目是同一种写法；和现在的 `fly-island` 只差两个字母，看起来像是上游名字的变体，而改名的目的正是和上游分开。
+3. 单独的 `fuyu` 已有别的含义：npm 包 `fuyu` 已被占，GitHub 上有 Adept 的 Fuyu 模型的实现（[kyegomez/Fuyu](https://github.com/kyegomez/Fuyu)，24 star）。
+
+如果就是喜欢「浮屿」这个中文名，比较稳妥的做法是英文名另取（例如 Hoverholm），中文名的重名问题仍然存在。
+
 ### 名字定下来后要改的地方
 
 以 Skyholm 为例。右边一列只是示意，具体写法在改名计划里定。
