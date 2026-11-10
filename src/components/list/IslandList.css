@@ -179,6 +179,9 @@
   flex: 1;
   min-height: 0;
   display: grid;
+  /* Each row as tall as its content. With "auto" rows, once the list scrolls they shrink to a
+     minimum that undercounts a two-line clamped preview, which then spills onto its neighbours. */
+  grid-auto-rows: max-content;
   align-content: start;
   gap: 1px;
   margin-right: -6px;
