@@ -35,8 +35,8 @@ const STATUS_LINES: [&str; 10] = [
 ];
 const MUTED_LINES: [&str; 3] = ["消息免打扰", "免打扰", "静音"];
 const PINNED_LINES: [&str; 2] = ["已置顶", "置顶聊天"];
-/// A status line of its own or a `[有人@我]` in front of the message, so looked for inside lines.
-const MENTION_MARKS: [&str; 2] = ["@我", "@所有人"];
+/// WeChat's own marks: a status line of its own, or in brackets in front of the message.
+const MENTION_MARKS: [&str; 3] = ["有人@我", "@我", "@所有人"];
 const SERVICE_ACCOUNTS: &str = "服务号";
 
 pub(super) fn parse(automation_id: &str, name: &str) -> Option<Session> {
@@ -78,10 +78,16 @@ pub(super) fn parse(automation_id: &str, name: &str) -> Option<Session> {
         preview: preview.map_or_else(String::new, |line| line.to_string()),
         unread,
         muted: lines.iter().any(|line| MUTED_LINES.contains(line)),
-        mentioned: lines[1..end]
-            .iter()
-            .any(|line| MENTION_MARKS.iter().any(|mark| line.contains(mark))),
+        mentioned: lines[1..end].iter().any(|line| is_mention(line)),
         pinned: lines.iter().any(|line| PINNED_LINES.contains(line)),
+    })
+}
+
+/// Only the mark itself counts: "有事@我" inside a message is not a mention.
+fn is_mention(line: &str) -> bool {
+    MENTION_MARKS.iter().any(|mark| {
+        let bracketed = line.strip_prefix('[').and_then(|rest| rest.strip_prefix(mark));
+        line == *mark || bracketed.is_some_and(|rest| rest.starts_with(']'))
     })
 }
 
@@ -318,6 +324,21 @@ mod tests {
             assert!(!muted_changed(&before, &now), "{name}");
         }
         assert!(!before[0].mentioned);
+    }
+
+    #[test]
+    fn at_me_inside_a_message_of_a_muted_chat_does_not_count() {
+        let before = [parse("session_item_g", "项目群\n消息免打扰\n张三: 收到\n昨天").unwrap()];
+        for name in [
+            "项目群\n[2条]\n李四: 有事@我\n12:41\n消息免打扰",
+            "项目群\n李四: @我们组的同学 开会\n12:41\n消息免打扰",
+            "项目群\n李四: 记得@所有人\n12:41\n消息免打扰",
+        ] {
+            let now = [parse("session_item_g", name).unwrap()];
+            assert!(now[0].muted && !now[0].mentioned, "{name}");
+            assert!(new_messages(&before, &now).is_empty(), "{name}");
+            assert!(muted_changed(&before, &now), "{name}");
+        }
     }
 
     #[test]

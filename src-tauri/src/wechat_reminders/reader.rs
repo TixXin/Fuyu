@@ -168,7 +168,11 @@ impl<L: FnMut() -> Listing> ChatReader<L> {
                     self.due = None;
                     return Some(Flash::Plain(Some(PlainReason::Unreadable)));
                 }
-                PlainReason::Unreadable
+                if self.muted_changed {
+                    PlainReason::Muted
+                } else {
+                    PlainReason::Unreadable
+                }
             }
         };
         self.reads += 1;
@@ -285,6 +289,13 @@ mod tests {
         // A muted chat changed on the first read only: still the reason after the last one.
         let muted = || Listing::Rows(vec![row("a", "hi", false), row("m", "new", true)]);
         looks.borrow_mut().extend([muted(), muted(), muted()]);
+        assert_eq!(
+            flash(&mut reader, start),
+            (Flash::Plain(Some(PlainReason::Muted)), READS)
+        );
+        // Nor does WeChat falling silent after that read change the reason.
+        let newer = Listing::Rows(vec![row("a", "hi", false), row("m", "newer", true)]);
+        looks.borrow_mut().push_back(newer);
         assert_eq!(
             flash(&mut reader, start),
             (Flash::Plain(Some(PlainReason::Muted)), READS)
