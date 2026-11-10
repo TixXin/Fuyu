@@ -32,6 +32,8 @@ export function useSelection(session: ScreenshotSession | null, bounds: Size | n
   const [pointer, setPointer] = useState<Point | null>(null);
   const [dragging, setDragging] = useState<Drag["kind"] | null>(null);
   const drag = useRef<Drag | null>(null);
+  /** The highlighted window or control (C41.2), which a click selects; set by the overlay. */
+  const hovered = useRef<PixelRect | null>(null);
 
   const id = session?.id ?? null;
   const whole = session?.mode === "fullscreen" && session.underPointer && bounds ? bounds : null;
@@ -93,12 +95,18 @@ export function useSelection(session: ScreenshotSession | null, bounds: Size | n
 
   const onPointerUp = () => {
     if (drag.current?.kind === "draw") {
-      // A click selects nothing (picking the window under it comes with C41.2).
-      setSelection((rect) => (rect && isSelection(rect) ? rect : null));
+      // A click (no real drag) selects the highlighted window or control.
+      const picked = hovered.current;
+      setSelection((rect) => (rect && isSelection(rect) ? rect : picked));
     }
     drag.current = null;
     setDragging(null);
   };
 
-  return { selection, setSelection, pointer, dragging, onPointerDown, onPointerMove, onPointerUp };
+  /** The pointer went to another monitor: this overlay highlights nothing. */
+  const onPointerLeave = () => {
+    if (!drag.current) setPointer(null);
+  };
+
+  return { selection, setSelection, pointer, dragging, hovered, onPointerDown, onPointerMove, onPointerUp, onPointerLeave };
 }

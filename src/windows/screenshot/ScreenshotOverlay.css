@@ -49,6 +49,15 @@ body:has(.screenshot-overlay) {
   box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.42);
 }
 
+/* The window or control a click would select: outlined, the rest dimmed like a selection. */
+.screenshot-overlay__target {
+  position: absolute;
+  box-sizing: border-box;
+  border: 2px solid var(--color-accent, #74d6ff);
+  box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.42);
+  pointer-events: none;
+}
+
 .screenshot-overlay__handle {
   position: absolute;
   width: 8px;

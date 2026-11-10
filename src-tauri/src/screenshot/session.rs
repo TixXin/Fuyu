@@ -17,6 +17,7 @@ use std::{
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter, Manager, Monitor, PhysicalPosition, PhysicalSize, WebviewUrl, WebviewWindow, WebviewWindowBuilder};
 
+use super::targets::{self, LocalTarget, Target};
 use crate::win32;
 
 /// Overlay windows are `screenshot-<monitor index>`.
@@ -59,6 +60,8 @@ pub(crate) struct PixelRect {
 /// One monitor's frozen picture.
 struct Frame {
     label: String,
+    /// The monitor's top-left on the virtual screen.
+    origin: (i32, i32),
     width: u32,
     height: u32,
     rgba: Vec<u8>,
@@ -69,6 +72,8 @@ struct Session {
     mode: Mode,
     frames: Vec<Frame>,
     pointer_label: String,
+    /// What the selection snaps to (C41.2): windows first, controls added as they are read.
+    targets: Vec<Target>,
 }
 
 static SESSION: Mutex<Option<Session>> = Mutex::new(None);
@@ -112,8 +117,10 @@ fn open(app: &AppHandle, mode: Mode) -> Result<(), String> {
         if pointer.is_some_and(|point| contains(monitor, point)) {
             pointer_label = Some(label(index));
         }
-        frames.push(Frame { label: label(index), width: size.width, height: size.height, rgba });
+        frames.push(Frame { label: label(index), origin: (position.x, position.y), width: size.width, height: size.height, rgba });
     }
+    // Right after the capture, so the windows are where the picture shows them.
+    let (window_targets, window_handles) = targets::windows_on_screen();
     let Some(first) = frames.first() else {
         return Err("no monitor could be captured".to_string());
     };
@@ -125,7 +132,8 @@ fn open(app: &AppHandle, mode: Mode) -> Result<(), String> {
         .iter()
         .map(|frame| (frame.label.clone(), overlay_session(id, mode, frame, &pointer_label)))
         .collect();
-    *session() = Some(Session { id, mode, frames, pointer_label });
+    *session() = Some(Session { id, mode, frames, pointer_label, targets: window_targets });
+    targets::read_controls(app, id, window_handles);
     // An overlay that is still loading misses this; it asks with `current` once it has loaded.
     for (label, announcement) in announcements {
         let _ = app.emit_to(label.as_str(), SESSION_EVENT, announcement);
@@ -205,6 +213,28 @@ pub(crate) fn current(label: &str) -> Option<OverlaySession> {
     let session = guard.as_ref()?;
     let frame = session.frames.iter().find(|frame| frame.label == label)?;
     Some(overlay_session(session.id, session.mode, frame, &session.pointer_label))
+}
+
+/// What the overlay `label` can snap to, in its picture's pixels.
+pub(crate) fn targets_for(label: &str) -> Vec<LocalTarget> {
+    let guard = session();
+    let Some(session) = guard.as_ref() else {
+        return Vec::new();
+    };
+    session
+        .frames
+        .iter()
+        .find(|frame| frame.label == label)
+        .map(|frame| targets::localize(&session.targets, frame.origin, (frame.width, frame.height)))
+        .unwrap_or_default()
+}
+
+/// Adds controls read for screenshot `id`; the overlays to tell, or `None` once it is closed.
+pub(super) fn add_targets(id: u64, more: Vec<Target>) -> Option<Vec<String>> {
+    let mut guard = session();
+    let session = guard.as_mut().filter(|session| session.id == id)?;
+    session.targets.extend(more);
+    Some(session.frames.iter().map(|frame| frame.label.clone()).collect())
 }
 
 /// The picture of the overlay `label`'s monitor, RGBA rows top to bottom.

@@ -2,11 +2,14 @@ import { invoke } from "@tauri-apps/api/core";
 import { emit, listen, type EventCallback } from "@tauri-apps/api/event";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import type { PixelRect } from "./selection";
+import type { Target } from "./targets";
 
 /** Mirrored by SESSION_EVENT in src-tauri/src/screenshot/session.rs. */
 export const SCREENSHOT_SESSION_EVENT = "screenshot-session";
 /** Mirrored by ENDED_EVENT in src-tauri/src/screenshot/session.rs. */
 export const SCREENSHOT_ENDED_EVENT = "screenshot-ended";
+/** Mirrored by TARGETS_EVENT in src-tauri/src/screenshot/targets.rs; the payload is the session id. */
+export const SCREENSHOT_TARGETS_EVENT = "screenshot-targets";
 /** Between the overlays only: one started a selection, so the others drop theirs. */
 export const SCREENSHOT_SELECTING_EVENT = "screenshot-selecting";
 
@@ -37,6 +40,15 @@ export function getScreenshotSession() {
 /** This overlay's monitor picture: RGBA rows, `width` × `height` from the session. */
 export function getScreenshotFrame() {
   return invoke<ArrayBuffer>("screenshot_frame");
+}
+
+/** What this overlay can snap to: windows, then controls once they are read. */
+export function getScreenshotTargets() {
+  return invoke<Target[]>("screenshot_targets");
+}
+
+export function listenScreenshotTargets(handler: EventCallback<number>) {
+  return listen<number>(SCREENSHOT_TARGETS_EVENT, handler);
 }
 
 export function screenshotOverlayReady(session: number) {

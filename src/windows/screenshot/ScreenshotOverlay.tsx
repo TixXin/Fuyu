@@ -8,16 +8,19 @@ import {
   handlePosition,
   hexColor,
   hitTest,
+  isSelection,
   pixelAt,
   pixelScale,
   toCss,
   type Point,
   type Size,
 } from "../../features/screenshot/selection";
+import { layersAt, layersKey, stepLayer } from "../../features/screenshot/targets";
 import { useTranslation } from "../../i18n";
 import { getErrorMessage } from "../../utils/error";
 import { pictureContext, useScreenshotFrame } from "./useScreenshotFrame";
 import { useSelection } from "./useSelection";
+import { useTargets } from "./useTargets";
 import "./ScreenshotOverlay.css";
 
 function useViewSize(): Size {
@@ -38,7 +41,9 @@ function colorAt(canvas: HTMLCanvasElement | null, pixel: Point): string {
 /**
  * A screenshot overlay (`?window=screenshot`, one per monitor): the frozen picture of its monitor,
  * dimmed outside the selection, the selection's handles and size, a toolbar once it is chosen, and
- * the magnifier by the pointer. Enter or a double click copies, Esc or a right click with nothing
+ * the magnifier by the pointer. Before anything is selected, the window or control under the pointer
+ * is outlined (the wheel steps out to its parents and back) and a click selects it. Enter or a
+ * double click copies, Esc or a right click with nothing
  * selected leaves, C copies the colour under the pointer.
  */
 export function ScreenshotOverlay() {
@@ -47,11 +52,21 @@ export function ScreenshotOverlay() {
   const view = useViewSize();
   const bounds = session && ready ? { width: session.width, height: session.height } : null;
   const scale = bounds ? pixelScale(bounds, view) : 1;
-  const { selection, setSelection, pointer, dragging, onPointerDown, onPointerMove, onPointerUp } = useSelection(session, bounds, scale);
+  const { selection, setSelection, pointer, dragging, hovered, onPointerDown, onPointerMove, onPointerUp, onPointerLeave } = useSelection(session, bounds, scale);
   const [notice, setNotice] = useState<string | null>(null);
+  const targets = useTargets(ready ? session?.id ?? null : null);
+  const [level, setLevel] = useState({ key: "", value: 0 });
 
   const pixel = pointer && bounds ? pixelAt(pointer, bounds) : null;
   const color = pixel ? colorAt(canvasRef.current, pixel) : null;
+  // Until a region is chosen, the window or control under the pointer is what a click takes.
+  const choosing = !(selection && isSelection(selection));
+  const layers = choosing && pixel && bounds ? layersAt(targets, pixel, bounds) : [];
+  const key = layersKey(layers);
+  const target = layers[Math.min(level.key === key ? level.value : 0, layers.length - 1)] ?? null;
+  useEffect(() => {
+    hovered.current = target;
+  });
 
   const copy = useCallback(() => {
     if (!selection) return;
@@ -78,11 +93,17 @@ export function ScreenshotOverlay() {
     else void cancelScreenshot();
   };
 
+  const onWheel = (event: React.WheelEvent) => {
+    if (layers.length > 1) setLevel({ key, value: stepLayer(level.key === key ? level.value : 0, event.deltaY, layers.length) });
+  };
+
   const area = selection ? toCss(selection, scale) : null;
+  const outline = !selection && !dragging && target ? toCss(target, scale) : null;
   const grabbed = selection && pointer && !dragging ? hitTest(selection, pointer, 6 * scale) : null;
   const cursor = dragging === "move" || grabbed === "inside" ? "move" : grabbed ? handleCursor(grabbed) : "crosshair";
   const cssPointer = pointer ? { x: pointer.x / scale, y: pointer.y / scale } : null;
-  const lines = [pixel ? `${pixel.x}, ${pixel.y}` : "", selection ? `${selection.width} × ${selection.height}` : "", t.copyColorHint].filter(Boolean);
+  const shown = selection ?? target;
+  const lines = [pixel ? `${pixel.x}, ${pixel.y}` : "", shown ? `${shown.width} × ${shown.height}` : "", t.copyColorHint].filter(Boolean);
 
   return (
     <div
@@ -91,6 +112,8 @@ export function ScreenshotOverlay() {
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
+      onPointerLeave={onPointerLeave}
+      onWheel={onWheel}
       onDoubleClick={() => grabbed === "inside" && copy()}
       onContextMenu={onContextMenu}
     >
@@ -103,6 +126,12 @@ export function ScreenshotOverlay() {
           })}
           <span className={`screenshot-overlay__size${area.y < 28 ? " screenshot-overlay__size--inside" : ""}`}>
             {selection?.width} × {selection?.height}
+          </span>
+        </div>
+      ) : outline && target ? (
+        <div className="screenshot-overlay__target" style={{ left: outline.x, top: outline.y, width: outline.width, height: outline.height }}>
+          <span className={`screenshot-overlay__size${outline.y < 28 ? " screenshot-overlay__size--inside" : ""}`}>
+            {target.width} × {target.height}
           </span>
         </div>
       ) : (

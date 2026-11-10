@@ -16,7 +16,7 @@ export const zhCN: ScreenshotText = {
   cancel: "取消（Esc）",
   copyColorHint: "按 C 复制颜色",
   colorCopied: (hex) => `已复制 ${hex}`,
-  selectHint: "拖动选择区域 · 右键或 Esc 退出",
+  selectHint: "单击选中窗口或控件，拖动选择区域 · 滚轮切换层级 · 右键或 Esc 退出",
 };
 
 export const en: ScreenshotText = {
@@ -25,5 +25,5 @@ export const en: ScreenshotText = {
   cancel: "Cancel (Esc)",
   copyColorHint: "Press C to copy the colour",
   colorCopied: (hex) => `Copied ${hex}`,
-  selectHint: "Drag to select · Right-click or Esc to exit",
+  selectHint: "Click a window or control, or drag a region · Scroll to step out or in · Right-click or Esc to exit",
 };

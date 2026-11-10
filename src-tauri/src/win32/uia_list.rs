@@ -78,7 +78,7 @@ pub(crate) fn shows_qt_controls(window: HWND) -> bool {
 ///
 /// # Safety
 /// COM must be initialized on the calling thread.
-unsafe fn automation() -> windows::core::Result<IUIAutomation> {
+pub(super) unsafe fn automation() -> windows::core::Result<IUIAutomation> {
     // SAFETY: COM is initialized on this thread (the caller's contract).
     unsafe {
         let automation: IUIAutomation =

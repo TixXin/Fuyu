@@ -4,6 +4,7 @@
 mod hotkeys;
 mod output;
 mod session;
+mod targets;
 #[cfg(test)]
 mod tests;
 
@@ -11,6 +12,7 @@ use tauri::{AppHandle, WebviewWindow};
 
 pub(crate) use session::WINDOW_PREFIX;
 use session::{OverlaySession, PixelRect};
+use targets::LocalTarget;
 
 pub(crate) fn init(app: &AppHandle) {
     hotkeys::start(app);
@@ -44,6 +46,12 @@ pub async fn screenshot_frame(window: WebviewWindow) -> Result<tauri::ipc::Respo
         .ok_or_else(|| "No screenshot is open.".to_string())
 }
 
+/// What the calling overlay can snap to: windows, then controls once they are read.
+#[tauri::command]
+pub fn screenshot_targets(window: WebviewWindow) -> Vec<LocalTarget> {
+    session::targets_for(window.label())
+}
+
 /// The calling overlay has drawn screenshot `session`'s picture and can be shown.
 #[tauri::command]
 pub fn screenshot_overlay_ready(window: WebviewWindow, session: u64) {
@@ -69,6 +77,7 @@ macro_rules! tauri_commands {
             crate::screenshot::screenshot_configure,
             crate::screenshot::screenshot_session,
             crate::screenshot::screenshot_frame,
+            crate::screenshot::screenshot_targets,
             crate::screenshot::screenshot_overlay_ready,
             crate::screenshot::screenshot_copy,
             crate::screenshot::screenshot_cancel,
