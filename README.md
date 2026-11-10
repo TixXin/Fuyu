@@ -67,4 +67,4 @@ pnpm tauri build    # 打包安装程序
 
 ## 开源协议
 
-[GPL-3.0](LICENSE)（0.3.5 起；之前的版本是 MIT）。插件 SDK、脚手架、PowerShell 模块和示例插件（`packages/`、`plugins/`）仍是 MIT，插件作者可以自己选协议。第三方依赖和内置资源遵循各自的许可证，内置字体见[字体说明](src/assets/fonts/README.md)。
+[GPL-3.0](LICENSE)。插件作者可以自己选协议。第三方依赖和内置资源遵循各自的许可证，内置字体见[字体说明](src/assets/fonts/README.md)。
