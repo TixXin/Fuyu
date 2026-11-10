@@ -60,6 +60,8 @@ export type IslandSettings = CalendarSettingValues & {
   islandCornerRadius: number;
   islandCornerShape: IslandCornerShape;
   themeMode: ThemeMode;
+  /** A light island still shows dark while collapsed, to blend into the screen's top edge (C33.2). */
+  collapsedDark: boolean;
   /** Height (px) of every expanded page (C27); longer content scrolls inside. */
   maxPanelHeight: number;
   /** Width (px, before the scale) of the expanded panel's usual pages (C25). */

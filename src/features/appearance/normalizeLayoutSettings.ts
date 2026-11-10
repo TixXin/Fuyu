@@ -81,6 +81,7 @@ export function normalizeLayoutSettings(settings: LegacyIslandSettings | null | 
       DEFAULT_SETTINGS.islandBackgroundColor,
     ),
     themeMode: oneOf(THEME_MODES, settings?.themeMode, LEGACY_FALLBACKS.themeMode),
+    collapsedDark: typeof settings?.collapsedDark === "boolean" ? settings.collapsedDark : LEGACY_FALLBACKS.collapsedDark,
     showTitle:
       typeof settings?.showTitle === "boolean"
         ? settings.showTitle

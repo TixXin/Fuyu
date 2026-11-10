@@ -1,6 +1,7 @@
 import { SettingsChoice } from "../../components/settings/SettingsChoice";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsRow } from "../../components/settings/SettingsRow";
+import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
 import { useTranslation } from "../../i18n";
 import { THEME_MODES } from "./themeMode";
 import type { IslandSettings, ThemeMode } from "./types";
@@ -24,6 +25,12 @@ export function ThemeModeSection({ settings, onSettingsChange }: {
             onChange={(themeMode) => onSettingsChange({ ...settings, themeMode })}
           />
         }
+      />
+      <SettingsToggleRow
+        title={text.collapsedDark}
+        description={text.collapsedDarkHint}
+        checked={settings.collapsedDark}
+        onChange={(collapsedDark) => onSettingsChange({ ...settings, collapsedDark })}
       />
     </SettingsGroup>
   );

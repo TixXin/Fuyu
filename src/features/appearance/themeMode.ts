@@ -1,5 +1,6 @@
 // Light, dark or the system's choice (C31): two built-in colour sets the island can use instead of
 // the colours picked by hand. Pure functions; useResolvedTheme.ts follows the system setting.
+import { isLightIsland } from "../../utils/color.ts";
 import type { IslandSettings, ThemeMode } from "./types";
 
 export const THEME_MODES = ["dark", "light", "system", "custom"] as const satisfies readonly ThemeMode[];
@@ -27,6 +28,15 @@ export function themeColorsFor(mode: ThemeMode, systemDark: boolean): ThemeColor
 export function resolveThemeColors(settings: IslandSettings, systemDark: boolean): IslandSettings {
   const colors = themeColorsFor(settings.themeMode, systemDark);
   return colors ? { ...settings, ...colors } : settings;
+}
+
+/**
+ * The colours the collapsed island shows (C33.2): with "keep dark when collapsed" on, a light
+ * island collapses into the dark theme's colours, so the small island still blends into the
+ * screen's black top edge and notch; the open panel keeps the light ones.
+ */
+export function collapsedThemeColors(settings: IslandSettings): IslandSettings {
+  return settings.collapsedDark && isLightIsland(settings.islandBackgroundColor) ? { ...settings, ...THEME_COLORS.dark } : settings;
 }
 
 /**

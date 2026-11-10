@@ -53,6 +53,7 @@ export const DEFAULT_SETTINGS: IslandSettings = {
   pulseColor: "#3ae489",
   pulseBrightness: 100,
   islandBackgroundColor: "#000000",
+  collapsedDark: true,
   themeMode: "dark",
   showTitle: false,
   showCollapsedText: true,
@@ -111,6 +112,8 @@ export const DEFAULT_SETTINGS: IslandSettings = {
 export const LEGACY_FALLBACKS = {
   // Settings from before the theme modes keep the colours their user picked.
   themeMode: "custom" as const,
+  // A light colour picked before this stays light when collapsed too.
+  collapsedDark: false,
   topFilletRadius: 8,
   islandCornerRadius: 30,
   hoverExpandDelayMs: 300,

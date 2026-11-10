@@ -46,10 +46,12 @@
   /* A stacking context, as the island had while it scaled with a transform. No will-change: a
      layer of its own is resampled while it resizes and blurs the text. */
   isolation: isolate;
+  /* background-color: a light island kept dark while collapsed (C33.2) turns light as it opens. */
   transition:
     width 560ms cubic-bezier(0.16, 1, 0.3, 1),
     height 560ms cubic-bezier(0.16, 1, 0.3, 1),
-    border-radius 560ms cubic-bezier(0.16, 1, 0.3, 1);
+    border-radius 560ms cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 360ms ease;
 }
 
 .island__surface {

@@ -440,6 +440,19 @@
     {
       "page": "theme",
       "zh-CN": {
+        "group": "浅色和深色",
+        "title": "收起时保持深色",
+        "description": "岛是浅色时，收起的小岛仍然是黑色，和屏幕顶边、刘海融在一起；展开后才变浅色。"
+      },
+      "en": {
+        "group": "Light and dark",
+        "title": "Stay dark when collapsed",
+        "description": "With a light island, the collapsed island stays black so it blends into the screen's top edge and notch; it turns light when it opens."
+      }
+    },
+    {
+      "page": "theme",
+      "zh-CN": {
         "group": "风格",
         "title": "外观模式",
         "options": [

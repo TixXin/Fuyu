@@ -32,3 +32,14 @@ test("new installs start dark; older settings keep their own colours", () => {
   assert.equal(normalizeSettings({ themeMode: "light" }).themeMode, "light");
   assert.equal(normalizeSettings({ themeMode: "sepia" }).themeMode, "custom");
 });
+
+test("a light island can stay dark while collapsed (C33.2)", async () => {
+  const { collapsedThemeColors } = await import("../../src/features/appearance/themeMode.ts");
+  const light = resolveThemeColors({ ...DEFAULT_SETTINGS, themeMode: "light", collapsedDark: true }, false);
+  assert.equal(collapsedThemeColors(light).islandBackgroundColor, THEME_COLORS.dark.islandBackgroundColor);
+  assert.equal(collapsedThemeColors({ ...light, collapsedDark: false }).islandBackgroundColor, THEME_COLORS.light.islandBackgroundColor);
+  const dark = resolveThemeColors({ ...DEFAULT_SETTINGS, themeMode: "dark" }, false);
+  assert.equal(collapsedThemeColors(dark), dark);
+  assert.equal(DEFAULT_SETTINGS.collapsedDark, true);
+  assert.equal(normalizeSettings({ opacity: 95 }).collapsedDark, false, "older settings keep their picked light colour when collapsed");
+});
