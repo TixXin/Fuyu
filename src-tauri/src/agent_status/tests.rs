@@ -1307,7 +1307,7 @@ fn the_extension_is_packaged_as_a_vsix_with_its_manifest() {
     }
     let mut manifest = String::new();
     std::io::Read::read_to_string(&mut archive.by_name("extension.vsixmanifest").unwrap(), &mut manifest).unwrap();
-    assert!(manifest.contains(r#"Id="fuyu""#) && manifest.contains(r#"Publisher="tixxin""#));
+    assert!(manifest.contains(r#"Id="fuyu""#) && manifest.contains(r#"Publisher="TixXin""#));
     assert!(manifest.contains("<DisplayName>Fuyu</DisplayName>"));
 }
 

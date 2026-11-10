@@ -3,7 +3,7 @@
   "displayName": "Fuyu",
   "description": "Lets Fuyu switch to the terminal running a Claude Code or Codex session when you click it on the island.",
   "version": "0.2.0",
-  "publisher": "tixxin",
+  "publisher": "TixXin",
   "license": "MIT",
   "icon": "icon.png",
   "repository": {
