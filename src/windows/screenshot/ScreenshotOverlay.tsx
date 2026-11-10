@@ -106,7 +106,9 @@ export function ScreenshotOverlay() {
           </span>
         </div>
       ) : (
-        <div className="screenshot-overlay__dim" />
+        // Only once the picture is up, and new for each screenshot so it eases in each time; the
+        // hidden window's last painted frame then has nothing on it (see session.rs, transparent).
+        ready && <div key={session?.id} className="screenshot-overlay__dim" />
       )}
       {!area && ready && session?.underPointer && <div className="screenshot-overlay__hint">{t.selectHint}</div>}
       {area && !dragging && (

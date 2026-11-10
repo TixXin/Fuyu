@@ -168,6 +168,10 @@ fn overlay_window(app: &AppHandle, label: &str) -> Result<WebviewWindow, String>
     }
     WebviewWindowBuilder::new(app, label, WebviewUrl::App("index.html?window=screenshot".into()))
         .title("Fuyu")
+        // A hidden WebView stops painting, so the first frame after `show` can be the last one it
+        // painted (blank). Transparent, that frame shows the real screen, which the frozen
+        // picture matches, so nothing flashes.
+        .transparent(true)
         .decorations(false)
         .resizable(false)
         .always_on_top(true)

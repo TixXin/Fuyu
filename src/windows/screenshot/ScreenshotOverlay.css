@@ -1,8 +1,9 @@
+/* Transparent, like its window: until the picture is painted the real screen shows through. */
 html:has(.screenshot-overlay),
 body:has(.screenshot-overlay) {
   margin: 0;
   overflow: hidden;
-  background: #000;
+  background: transparent;
 }
 
 .screenshot-overlay {
@@ -24,6 +25,20 @@ body:has(.screenshot-overlay) {
   position: absolute;
   inset: 0;
   background: rgba(0, 0, 0, 0.42);
+  /* Eases in so the screen does not snap darker. */
+  animation: screenshot-dim-in 120ms ease-out both;
+}
+
+@keyframes screenshot-dim-in {
+  from {
+    background: rgba(0, 0, 0, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .screenshot-overlay__dim {
+    animation: none;
+  }
 }
 
 /* The selection stays clear; its huge shadow dims everything around it. */
