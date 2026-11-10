@@ -107,8 +107,20 @@ try {
   check(calls.includes("add"), "回车添加");
   check(($("light", ".todo-island__composer input") as HTMLInputElement).placeholder === "添加 2026-11-10 的待办"
     && $("light", ".todo-date-picker__button--later"), "选了以后的日子：提示写日期，日期按钮变紫");
-  await click($("today", ".todo-island__save"));
-  check(calls.includes("save") && $("light", ".todo-island__save--needs-path")?.getAttribute("aria-label")?.includes("保存位置"), "保存按钮按状态换图标和说明");
+  check(!$("today", ".todo-island__save") && $("today", ".todo-island__progress")?.textContent === "今天完成 1/3", "平时右上角是今天的进度，不放保存按钮");
+  const menuItem = (label: string) => [...document.querySelectorAll<HTMLElement>(".row-menu__item")].find((item) => item.textContent?.includes(label)) ?? null;
+  await click($("today", 'button[aria-haspopup="menu"]'));
+  await click(menuItem("保存今天的清单"));
+  check(calls.includes("save"), "「⋯」里保存今天");
+  await click($("today", 'button[aria-haspopup="menu"]'));
+  await click(menuItem("清除已完成（1 件）"));
+  check(calls.includes("delete:c") && !calls.includes("delete:a"), "「⋯」里清除已完成，只删做完的");
+  check($("light", ".todo-island__save--needs-path")?.getAttribute("aria-label")?.includes("保存位置"), "保存有话要说时（没设位置、失败、保存中、刚保存好）按钮出现在「⋯」旁边");
+  const fold = $("today", ".todo-island__done-fold button")!;
+  check(fold.textContent === "已完成 1" && fold.getAttribute("aria-expanded") === "true", "做完的收在「已完成」下面");
+  await click(fold);
+  check($$("today", ".todo-list [data-todo-id]").length === 2 && fold.getAttribute("aria-expanded") === "false", "「已完成」可以折叠");
+  await click(fold);
 
   const text = (frame: string) => getComputedStyle($(frame, ".todo-island-row__title")!).color;
   check(text("today") !== text("light") && text("light").startsWith("rgba(28, 27, 31"), "文字颜色跟着岛屿底色：浅底深字");
@@ -122,7 +134,7 @@ try {
   check(days.length === 3 && days[0].textContent?.includes("写") === false && days[0].textContent?.includes("整理桌面") && days[0].textContent?.includes("2/3"), "每天显示第一件没做完的和完成数");
   await click(days[1]);
   check(calls.includes("select:2026-11-07"), "点某一天打开它");
-  check($("review", ".todo-island__back")?.textContent === "2026-11-08" && $("review", ".todo-island__meta")?.textContent === "完成 2/3", "回看某一天：返回按钮、日期和完成数");
+  check($("review", ".todo-island__back")?.textContent === "2026-11-08" && $("review", ".todo-island__progress")?.textContent === "完成 2/3", "回看某一天：返回按钮、日期和完成数");
   check(!$("review", ".todo-island__composer") && !$("review", ".todo-island-row__action"), "回看时只读，没有输入框和操作");
   await click($("review", ".todo-island__back"));
   check(calls.filter((call) => call === "archive").length === 2, "返回归档");

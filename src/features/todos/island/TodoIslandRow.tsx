@@ -64,6 +64,20 @@ export function TodoIslandRow({
 
   return (
     <div className={className} role="listitem" data-todo-id={todo.id} style={{ "--todo-title-lines": getTodoTitleLineCount(todo.title) } as CSSProperties}>
+      {canReorder && (
+        <button
+          className="todo-island-row__grip"
+          type="button"
+          aria-label={t.todo.reorderTask(todo.title)}
+          disabled={isEditing}
+          onPointerDown={(event) => onDragStart(event, todo.id)}
+          onPointerMove={onDragMove}
+          onPointerUp={onDragEnd}
+          onPointerCancel={onDragCancel}
+        >
+          <GripVertical {...ICON} />
+        </button>
+      )}
       <button
         className="todo-island-row__check"
         type="button"
@@ -74,26 +88,28 @@ export function TodoIslandRow({
       >
         {todo.completed && <Check size={12} strokeWidth={2.5} aria-hidden="true" />}
       </button>
-      {editable && isEditing ? (
-        <input
-          className="todo-island-row__input"
-          value={titleDraft}
-          aria-label={t.todo.editTitle}
-          autoFocus
-          onChange={(event) => onTitleDraftChange(event.currentTarget.value)}
-          onBlur={onCommitEdit}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") onCommitEdit();
-            if (event.key === "Escape") onCancelEdit();
-          }}
-        />
-      ) : editable ? (
-        <button className="todo-island-row__title todo-island-row__title--editable" type="button" onClick={() => onStartEdit(todo)}>
-          {todo.title}
-        </button>
-      ) : (
-        <span className="todo-island-row__title">{todo.title}</span>
-      )}
+      <span className="todo-island-row__text">
+        {editable && isEditing ? (
+          <input
+            className="todo-island-row__input"
+            value={titleDraft}
+            aria-label={t.todo.editTitle}
+            autoFocus
+            onChange={(event) => onTitleDraftChange(event.currentTarget.value)}
+            onBlur={onCommitEdit}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") onCommitEdit();
+              if (event.key === "Escape") onCancelEdit();
+            }}
+          />
+        ) : editable ? (
+          <button className="todo-island-row__title todo-island-row__title--editable" type="button" onClick={() => onStartEdit(todo)}>
+            {todo.title}
+          </button>
+        ) : (
+          <span className="todo-island-row__title">{todo.title}</span>
+        )}
+      </span>
       {editable && (
         <span className="todo-island-row__actions">
           {isActive ? (
@@ -113,20 +129,6 @@ export function TodoIslandRow({
           <button className="todo-island-row__action todo-island-row__action--delete" type="button" aria-label={t.todo.deleteTask(todo.title)} onClick={() => onDelete(todo.id)}>
             <Trash2 {...ICON} />
           </button>
-          {canReorder && (
-            <button
-              className="todo-island-row__action todo-island-row__grip"
-              type="button"
-              aria-label={t.todo.reorderTask(todo.title)}
-              disabled={isEditing}
-              onPointerDown={(event) => onDragStart(event, todo.id)}
-              onPointerMove={onDragMove}
-              onPointerUp={onDragEnd}
-              onPointerCancel={onDragCancel}
-            >
-              <GripVertical {...ICON} />
-            </button>
-          )}
         </span>
       )}
     </div>

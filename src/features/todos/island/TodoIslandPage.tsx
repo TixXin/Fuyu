@@ -5,6 +5,7 @@ import type { TodoPageProps } from "../types";
 import { TodoIslandArchive } from "./TodoIslandArchive";
 import { TodoIslandHeader } from "./TodoIslandHeader";
 import { TodoIslandTasks } from "./TodoIslandTasks";
+import "../../../components/list/IslandList.css";
 import "./TodoIslandPage.css";
 import "./TodoIslandRow.css";
 
@@ -23,6 +24,7 @@ export function TodoIslandPage(props: TodoPageProps) {
       <TodoIslandHeader
         pageMode={pageMode}
         openCount={todos.filter((todo) => !todo.completed).length}
+        doneCount={todos.filter((todo) => todo.completed).length}
         scheduledCount={props.scheduledTodos.length}
         saveState={props.saveState}
         selectedArchive={selectedArchive}
@@ -31,6 +33,7 @@ export function TodoIslandPage(props: TodoPageProps) {
         onShowUpcoming={props.onShowUpcoming}
         onShowArchive={props.onShowArchive}
         onSaveToday={props.onSaveToday}
+        onClearDone={() => todos.filter((todo) => todo.completed).forEach((todo) => props.onDeleteTodo(todo.id))}
       />
       {(pageMode === "today" || isReview) && (
         <TodoIslandTasks

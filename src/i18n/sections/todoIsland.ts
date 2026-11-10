@@ -21,6 +21,12 @@ export type TodoIslandText = {
   noArchives: string;
   noArchiveTasks: string;
   inProgress: string;
+  /** The progress on the Today header. */
+  todayDone: (done: number, total: number) => string;
+  /** In the header's ⋯ menu. */
+  clearDone: (count: number) => string;
+  /** The fold under the open todos. */
+  doneSection: (count: number) => string;
 };
 
 export const zhCN: TodoIslandText = {
@@ -48,6 +54,9 @@ export const zhCN: TodoIslandText = {
   noArchives: "还没有保存过的清单",
   noArchiveTasks: "这天没有记下待办",
   inProgress: "进行中",
+  todayDone: (done, total) => `今天完成 ${done}/${total}`,
+  clearDone: (count) => (count > 0 ? `清除已完成（${count} 件）` : "清除已完成"),
+  doneSection: (count) => `已完成 ${count}`,
 };
 
 export const en: TodoIslandText = {
@@ -75,4 +84,7 @@ export const en: TodoIslandText = {
   noArchives: "No saved lists yet",
   noArchiveTasks: "No tasks were written down",
   inProgress: "In progress",
+  todayDone: (done, total) => `${done} of ${total} done today`,
+  clearDone: (count) => (count > 0 ? `Clear done (${count})` : "Clear done"),
+  doneSection: (count) => `Done ${count}`,
 };

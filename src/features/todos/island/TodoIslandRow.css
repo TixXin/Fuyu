@@ -1,6 +1,8 @@
 /*
- * A todo row. A row with its gap is 46px (TODO_ROW_HEIGHT in layout.ts) and each further title
- * line adds 19px (getTodoTitleLineCount), so the island grows with long titles.
+ * A todo row, drawn like the island's other list rows (IslandList.css): no fill until the cursor
+ * rests on it, its actions only then. A row with its gap is 46px (TODO_ROW_HEIGHT in layout.ts)
+ * and each further title line adds 19px (getTodoTitleLineCount), so the island grows with long
+ * titles.
  */
 .todo-island__list {
   min-height: 0;
@@ -15,25 +17,29 @@
 .todo-island-row {
   position: relative;
   min-height: max(42px, calc(var(--todo-title-lines, 1) * 19px + 23px));
-  display: grid;
-  grid-template-columns: 18px minmax(0, 1fr) auto;
-  align-items: start;
+  display: flex;
+  align-items: flex-start;
   gap: 10px;
   padding: 11px 6px 0 10px;
-  border-radius: var(--todo-radius);
-  corner-shape: var(--island-corner-shape, round);
-  transition: background 140ms ease, opacity 140ms ease;
+  border-radius: 10px;
+  transition: background 140ms ease, box-shadow 140ms ease, opacity 140ms ease;
 }
 
 .todo-island-row:hover,
 .todo-island-row:focus-within {
-  background: var(--todo-surface);
+  background: rgba(var(--todo-ink), 0.07);
+  box-shadow: inset 0 0 0 1px rgba(var(--todo-ink), 0.09);
+}
+
+.todo-island-row:hover {
+  transition-delay: 80ms;
 }
 
 /* The todo being worked on: a tint and an accent bar on its left edge. */
 .todo-island-row--active,
 .todo-island-row--active:hover {
-  background: rgba(116, 214, 255, 0.1);
+  background: rgba(var(--todo-accent-rgb), 0.1);
+  box-shadow: none;
 }
 
 .todo-island-row--active::before {
@@ -43,7 +49,7 @@
   top: 9px;
   bottom: 9px;
   width: 3px;
-  background: var(--color-accent);
+  background: rgb(var(--todo-accent-rgb));
   border-radius: var(--radius-pill);
 }
 
@@ -52,10 +58,43 @@
 }
 
 .todo-island-row--drag-over {
-  box-shadow: inset 0 2px 0 var(--color-accent);
+  box-shadow: inset 0 2px 0 rgb(var(--todo-accent-rgb));
+}
+
+/* Drag handle on the left, out of the way until the cursor is on the row. */
+.todo-island-row__grip {
+  flex: none;
+  width: 14px;
+  height: 20px;
+  margin: 0 -6px 0 -8px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  color: var(--text-3);
+  background: transparent;
+  border: 0;
+  border-radius: 4px;
+  opacity: 0;
+  cursor: grab;
+  touch-action: none;
+  transition: opacity 140ms ease;
+}
+
+.todo-island-row:hover .todo-island-row__grip,
+.todo-island-row:focus-within .todo-island-row__grip {
+  opacity: 1;
+}
+
+.todo-island-row__grip:active {
+  cursor: grabbing;
+}
+
+.todo-island-row__grip:disabled {
+  cursor: default;
 }
 
 .todo-island-row__check {
+  flex: none;
   width: 18px;
   height: 18px;
   margin-top: 1px;
@@ -81,6 +120,13 @@
 
 .todo-island-row__check:disabled {
   cursor: default;
+}
+
+.todo-island-row__text {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 2px;
 }
 
 .todo-island-row__title {
@@ -115,8 +161,8 @@
   padding: 0 8px;
   color: var(--text-1);
   background: rgba(var(--todo-ink), 0.08);
-  border: 1px solid rgba(116, 214, 255, 0.55);
-  border-radius: var(--radius-sm);
+  border: 1px solid rgba(var(--todo-accent-rgb), 0.55);
+  border-radius: 6px;
   outline: none;
   font: inherit;
   font-size: 14px;
@@ -125,6 +171,7 @@
 
 /* Actions: shown on hover or keyboard focus; the stop button stays while a todo is in progress. */
 .todo-island-row__actions {
+  flex: none;
   display: inline-flex;
   align-items: center;
   gap: 2px;
@@ -140,7 +187,7 @@
   color: var(--text-3);
   background: transparent;
   border: 0;
-  border-radius: var(--radius-sm);
+  border-radius: 8px;
   opacity: 0;
   cursor: pointer;
   transition: opacity 140ms ease, color 140ms ease, background 140ms ease;
@@ -153,24 +200,11 @@
 
 .todo-island-row__action:hover {
   color: var(--text-1);
-  background: var(--todo-line);
+  background: rgba(var(--todo-ink), 0.08);
 }
 
 .todo-island-row__action--delete:hover {
   color: var(--color-light-needs);
-}
-
-.todo-island-row__grip {
-  cursor: grab;
-  touch-action: none;
-}
-
-.todo-island-row__grip:active {
-  cursor: grabbing;
-}
-
-.todo-island-row__grip:disabled {
-  cursor: default;
 }
 
 .todo-island-row__stop {
@@ -178,9 +212,9 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 0 9px;
+  padding: 0 10px;
   color: var(--todo-accent);
-  background: rgba(116, 214, 255, 0.16);
+  background: rgba(var(--todo-accent-rgb), 0.16);
   border: 0;
   border-radius: var(--radius-pill);
   font: inherit;
@@ -205,9 +239,41 @@
   background: rgba(255, 69, 58, 0.14);
 }
 
+/* "已完成 2": folds what is done under the open todos. */
+.todo-island__done-fold {
+  margin-top: 6px;
+}
+
+.todo-island__done-fold button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
+  color: var(--text-3);
+  background: transparent;
+  border: 0;
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.todo-island__done-fold button::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: rgba(var(--todo-ink), 0.08);
+}
+
+.todo-island__done-fold button:hover {
+  color: var(--text-1);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .todo-island-row,
   .todo-island-row__action,
+  .todo-island-row__grip,
   .todo-island-row__check {
     transition: none;
   }

@@ -1,4 +1,5 @@
-import { AlertCircle, Check, ChevronLeft, Download, LoaderCircle } from "lucide-react";
+import { AlertCircle, Check, ChevronLeft, Download, ListX, LoaderCircle } from "lucide-react";
+import { RowMenu, type RowMenuItem } from "../../../components/list/RowMenu";
 import { useTranslation } from "../../../i18n";
 import type { SaveState, TodoArchive, TodoPageMode } from "../types";
 
@@ -7,14 +8,27 @@ type Tab = "today" | "daily" | "upcoming" | "archive";
 /** Which tab a page belongs to: a saved day is opened from the archive. */
 const tabOf = (mode: TodoPageMode): Tab => (mode === "review" ? "archive" : mode);
 
+/** "今天完成 2/6" with a thin bar; nothing for an empty list. */
+function Progress({ done, total, label }: { done: number; total: number; label: string }) {
+  if (total === 0) return null;
+  return (
+    <span className="todo-island__progress" aria-label={label}>
+      <span className="todo-island__progress-track" aria-hidden="true"><span style={{ width: `${(done / total) * 100}%` }} /></span>
+      <span aria-hidden="true">{label}</span>
+    </span>
+  );
+}
+
 /**
- * The todo page's header: named tabs for the four pages, and on the right what belongs to the
- * page (saving on Today, a saved day's
- * progress while reading it).
+ * The todo page's header, like the clipboard and shelf pages' toolbar: chips for the four pages,
+ * and on the right today's progress and "⋯" (save today, clear what is done). While saving says
+ * something (saving, saved, needs a folder, failed) its button shows next to "⋯". A saved day
+ * shows the way back and how much of it got done.
  */
 export function TodoIslandHeader({
   pageMode,
   openCount,
+  doneCount,
   scheduledCount,
   saveState,
   selectedArchive,
@@ -23,9 +37,11 @@ export function TodoIslandHeader({
   onShowUpcoming,
   onShowArchive,
   onSaveToday,
+  onClearDone,
 }: {
   pageMode: TodoPageMode;
   openCount: number;
+  doneCount: number;
   scheduledCount: number;
   saveState: SaveState;
   selectedArchive: TodoArchive | null;
@@ -34,19 +50,21 @@ export function TodoIslandHeader({
   onShowUpcoming: () => void;
   onShowArchive: () => void;
   onSaveToday: () => void;
+  onClearDone: () => void;
 }) {
-  const text = useTranslation().todoIsland;
+  const t = useTranslation();
+  const text = t.todoIsland;
   const active = tabOf(pageMode);
 
   if (pageMode === "review" && selectedArchive) {
     const done = selectedArchive.todos.filter((todo) => todo.completed).length;
     return (
       <div className="todo-island__header">
-        <button className="todo-island__back" type="button" onClick={onShowArchive} aria-label={text.backToArchive}>
-          <ChevronLeft size={16} strokeWidth={1.5} absoluteStrokeWidth aria-hidden="true" />
+        <button className="island-list-chip todo-island__back" type="button" aria-pressed="true" onClick={onShowArchive} aria-label={text.backToArchive}>
+          <ChevronLeft size={14} strokeWidth={2} aria-hidden="true" />
           <span>{selectedArchive.date}</span>
         </button>
-        {selectedArchive.todos.length > 0 && <span className="todo-island__meta">{text.doneOf(done, selectedArchive.todos.length)}</span>}
+        <Progress done={done} total={selectedArchive.todos.length} label={text.doneOf(done, selectedArchive.todos.length)} />
       </div>
     );
   }
@@ -58,17 +76,23 @@ export function TodoIslandHeader({
     ...(scheduledCount > 0 || active === "upcoming" ? [{ id: "upcoming" as const, label: text.upcoming, count: scheduledCount, open: onShowUpcoming }] : []),
     { id: "archive", label: text.archive, open: onShowArchive },
   ];
+  const total = openCount + doneCount;
+  const menu: RowMenuItem[] = [
+    { key: "save", label: text.save.idle, icon: <Download size={14} strokeWidth={2} />, onSelect: onSaveToday },
+    { key: "clear", label: text.clearDone(doneCount), icon: <ListX size={14} strokeWidth={2} />, disabled: doneCount === 0, onSelect: onClearDone },
+  ];
 
   return (
     <div className="todo-island__header">
-      <div className="todo-island__tabs" role="tablist" aria-label={text.tabsLabel}>
+      <div className="island-list-chips todo-island__tabs" role="tablist" aria-label={text.tabsLabel}>
         {tabs.map((tab) => (
           <button
             key={tab.id}
-            className={tab.id === active ? "todo-island__tab todo-island__tab--active" : "todo-island__tab"}
+            className="island-list-chip todo-island__tab"
             type="button"
             role="tab"
             aria-selected={tab.id === active}
+            aria-pressed={tab.id === active}
             aria-label={tab.id === "today" ? `${tab.label}, ${text.openCount(openCount)}` : undefined}
             onClick={tab.open}
           >
@@ -77,18 +101,25 @@ export function TodoIslandHeader({
           </button>
         ))}
       </div>
-      {active === "today" && <SaveButton state={saveState} onSave={onSaveToday} />}
+      {active === "today" && (
+        <>
+          <Progress done={doneCount} total={total} label={text.todayDone(doneCount, total)} />
+          {saveState !== "idle" && <SaveStatus state={saveState} onSave={onSaveToday} />}
+          <RowMenu label={t.common.more} items={menu} />
+        </>
+      )}
     </div>
   );
 }
 
-function SaveButton({ state, onSave }: { state: SaveState; onSave: () => void }) {
+/** Saving, saved, or what went wrong; clicking it saves again (or asks for a folder). */
+function SaveStatus({ state, onSave }: { state: SaveState; onSave: () => void }) {
   const text = useTranslation().todoIsland.save;
-  const label = state === "saving" ? text.saving : state === "saved" ? text.saved : state === "needs-path" ? text.needsPath : state === "error" ? text.error : text.idle;
-  const Icon = state === "saving" ? LoaderCircle : state === "saved" ? Check : state === "needs-path" || state === "error" ? AlertCircle : Download;
+  const label = state === "saving" ? text.saving : state === "saved" ? text.saved : state === "needs-path" ? text.needsPath : text.error;
+  const Icon = state === "saving" ? LoaderCircle : state === "saved" ? Check : AlertCircle;
   return (
-    <button className={`todo-island__save todo-island__save--${state}`} type="button" aria-label={label} onClick={onSave}>
-      <Icon size={16} strokeWidth={1.5} absoluteStrokeWidth aria-hidden="true" />
+    <button className={`island-list-icon-button todo-island__save todo-island__save--${state}`} type="button" aria-label={label} title={label} onClick={onSave}>
+      <Icon size={15} strokeWidth={2} aria-hidden="true" />
     </button>
   );
 }
