@@ -8,6 +8,7 @@ mod dev_lane;
 mod device_events;
 mod device_use;
 mod file_shelf;
+mod fs_write;
 mod island;
 mod local_api;
 mod lyrics;
@@ -125,11 +126,16 @@ pub fn run() {
                 eprintln!("failed to initialize notification diagnostics: {error}");
             }
             if let Ok(window) = island::main_window(app.handle()) {
-                if let Err(error) = island::apply_stage_geometry(
-                    &window,
-                    island::IslandWindowState::default(),
-                    false,
-                ) {
+                // The window is not in the runtime's window list until setup returns, so sizing
+                // it here failed with "failed to receive message from webview"; size it once the
+                // event loop runs instead.
+                let stage = window.clone();
+                let sized = app.handle().run_on_main_thread(move || {
+                    if let Err(error) = island::apply_stage_geometry(&stage, island::IslandWindowState::default(), false) {
+                        eprintln!("failed to size and position island window: {error}");
+                    }
+                });
+                if let Err(error) = sized {
                     eprintln!("failed to size and position island window: {error}");
                 }
                 island::start_monitor_follow_loop(window.clone());

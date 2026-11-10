@@ -434,7 +434,7 @@ impl ClipboardHistoryService {
         };
         let content = serde_json::to_string_pretty(&history)
             .map_err(|error| format!("Failed to serialize clipboard history: {error}"))?;
-        fs::write(&self.history_path, content)
+        crate::fs_write::replace_file(&self.history_path, content.as_bytes())
             .map_err(|error| format!("Failed to write clipboard history: {error}"))
     }
 
