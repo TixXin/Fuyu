@@ -95,8 +95,11 @@ Tauri 的 NSIS 安装包用 `productName` 决定安装目录（`%LOCALAPPDATA%\<
 - [x] **第 5 步：仓库和地址。** 需要用户本人在 GitHub 上操作或确认：`TixXin/fly-island` → `TixXin/fuyu`，`TixXin/focusd-plugins` → `TixXin/fuyu-plugins`。之后把更新地址、市场地址（index、themes、stars、discussions）、README 链接、发布脚本、`land-sync-dev.mjs` 改成新地址；本地 `origin` 改成新地址。先实测旧地址经 GitHub 重定向和 `ghfast.top`、`gh-proxy.com` 两个代理还能拿到 `latest.json` 和市场索引，拿不到就在旧仓库名下留一份（例如保留一个只放 `latest.json` 的发布）。
   - 2026-11-10 用户改好两个仓库名。实测旧地址的 `latest.json`（直连和两个代理）、市场的 `index.json`、`.sig`、`themes.json`、`stars.json`、`revoked.json`，以及旧的 `plugins/index.json`（`main`、`dev`），都经重定向拿到和新地址一样的内容，所以不用在旧名字下留文件。新版的更新端点、市场、主题、点赞改用新地址；点赞地址新旧前缀都认。`land-sync-dev.mjs` 只用 `origin`，不用改；本地 `origin` 已改。给旧版岛屿的 `plugins/index.json`、示例插件和市场登记是签过名的，保持原样。
   - 留下的：**市场仓库 `TixXin/fuyu-plugins` 自己的脚本**还写着旧名字（例如 `scripts/update-stars.mjs` 的 `NAME = "focusd-plugins"`），而且点赞地址取自 GitHub 讨论，改名后会变成 `fuyu-plugins/discussions/…`，旧版岛屿只认 `focusd-plugins` 前缀。那个仓库要另外改：查询用新名字，`stars.json` 里的地址写成旧前缀（新旧岛屿都认、GitHub 会重定向）。
-- [ ] **第 6 步：发布和实机验收（需要用户）。** 在装了旧版本的电脑上走一遍应用内更新（和 [D5](/docs/tasks/D/D5.md) 一起做）：更新后只剩一个安装项，开机自启、设置、待办、剪贴板历史、邮箱和翻译的凭据、已装的插件、Agent hook 都还在且能用，`focusd://` 和 `fuyu://` 链接都能打开。
-- [ ] **第 7 步：收尾。** `AGENTS.md`、`src/AGENTS.md`、`src-tauri/AGENTS.md`、[overview.md](overview.md)、[contracts.md](contracts.md)、`build-exe.mjs` 找快捷方式的规则、lane 文件夹名（`../fly-island-lanes`，改的话同步合并队列配置和钩子）里的旧名字；历史文档（发布说明、做完的任务、调研）不改。
+- [x] **第 6 步：发布和实机验收（需要用户）。** 在装了旧版本的电脑上走一遍应用内更新（和 [D5](/docs/tasks/D/D5.md) 一起做）：更新后只剩一个安装项，开机自启、设置、待办、剪贴板历史、邮箱和翻译的凭据、已装的插件、Agent hook 都还在且能用，`focusd://` 和 `fuyu://` 链接都能打开。
+  - 2026-11-10 发 v0.3.5-beta.5（测试版通道），用户在旧版电脑上走应用内更新，逐项验收通过。第 3 步留下的两件（卸载旧版失败的提示、用户自建的旧快捷方式）验收时没遇到，不补。
+- [x] **第 7 步：收尾。** `AGENTS.md`、`src/AGENTS.md`、`src-tauri/AGENTS.md`、[overview.md](overview.md)、[contracts.md](contracts.md)、`build-exe.mjs` 找快捷方式的规则、lane 文件夹名（`../fly-island-lanes`，改的话同步合并队列配置和钩子）里的旧名字；历史文档（发布说明、做完的任务、调研）不改。
+  - 做法：AGENTS.md、src-tauri/AGENTS.md、overview.md、contracts.md 和几份功能、插件文档里给人看的名字换成浮屿 / Fuyu；`build-exe.mjs` 找快捷方式新旧名字都认，跳过快捷方式的环境变量新增 `FUYU_SKIP_SHORTCUT`（旧的 `FOCUSD_SKIP_SHORTCUT` 照常认）。
+  - 不改的：**lane 文件夹名 `../fly-island-lanes` 和主工作区 `fly-island` 文件夹**，它们只在本机、不给用户看，改名要同时搬走其他会话正在用的 lane；内置和示例插件的 id（`focusd.*`、`dev.focusd.*`）、示例插件的 `lib/focusd.ps1`（签过名）；编译进程序的 hook 脚本里的注释（改了会让已装的 hook 显示要修复）。
 
 ## 风险
 

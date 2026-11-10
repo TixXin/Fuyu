@@ -121,7 +121,7 @@ export function shortcutScript(exe) {
 
 /** Points the desktop shortcut at the new build (AGENTS.md, "本机更新与桌面快捷方式"); Windows only. */
 function syncShortcut(exe) {
-  if (process.platform !== "win32" || process.env.FOCUSD_SKIP_SHORTCUT === "1") return;
+  if (process.platform !== "win32" || process.env.FUYU_SKIP_SHORTCUT === "1" || process.env.FOCUSD_SKIP_SHORTCUT === "1") return;
   const result = spawnSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-Command", shortcutScript(exe)], { encoding: "utf8" });
   if (result.status === 0) console.log(`[build:exe] desktop shortcut → ${exe}: ${result.stdout.trim().split(/\r?\n/).join(", ")}`);
   else console.error(`[build:exe] could not update the desktop shortcut: ${result.stderr.trim()}`);

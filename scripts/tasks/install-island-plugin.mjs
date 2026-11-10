@@ -1,5 +1,5 @@
 // `pnpm tasks:plugin`: installs the dev task board plugin (island-plugin/) into
-// this computer's FocuSD Island plugin folder, with the PowerShell helpers of the
+// this computer's Fuyu plugin folder, with the PowerShell helpers of the
 // example plugins and the main checkout recorded as its repository. It is not
 // on the plugin market: it is only useful while developing this repo. Then, in
 // Settings > Plugins: allow third-party plugins, reload, enable "开发任务看板".
@@ -13,7 +13,7 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 
 /** The island's plugin folder: %APPDATA%\com.tixxin.fuyu\plugins. */
 export function pluginsDir(env = process.env) {
-  if (!env.APPDATA) throw new Error("APPDATA is not set; this installs into the Windows FocuSD Island only.");
+  if (!env.APPDATA) throw new Error("APPDATA is not set; this installs into the Windows Fuyu only.");
   return path.join(env.APPDATA, "com.tixxin.fuyu", "plugins");
 }
 

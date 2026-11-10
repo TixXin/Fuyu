@@ -1,12 +1,12 @@
 # 和 VS Code 插件系统的对比
 
-本文对比的是 **现在已经落地的** FocuSD Island 插件（见 [编写插件](README.md)），不是 [架构提案](../architecture/plugins/v1-design.md) 里尚未实现的部分。VS Code 一侧依据其扩展 API：扩展跑在独立的 Extension Host 进程里，通过 `package.json` 的 `contributes` 声明能力，用 `vscode` 模块调用编辑器。
+本文对比的是 **现在已经落地的** 浮屿插件（见 [编写插件](README.md)），不是 [架构提案](../architecture/plugins/v1-design.md) 里尚未实现的部分。VS Code 一侧依据其扩展 API：扩展跑在独立的 Extension Host 进程里，通过 `package.json` 的 `contributes` 声明能力，用 `vscode` 模块调用编辑器。
 
 两边相同的只有一件事：插件不跑在画界面的那个进程里，所以一个插件卡死或崩溃，不至于直接拖垮主界面。其余都不一样。VS Code 是一个可编程的编辑器平台；岛屿是一条很窄的协议。
 
 ## 对照
 
-| | FocuSD Island | VS Code |
+| | 浮屿 | VS Code |
 |---|---|---|
 | 插件是什么 | 岛屿启动的一个子进程。`.exe`、`.ps1`，或本机已安装的 Node 运行的 `.js` / `.mjs` / `.cjs`。不支持 `.cmd` / `.bat` | 加载进 Extension Host 的 JavaScript。扩展可以再拉起自己的进程，但扩展入口本身是 JS |
 | 进程 | 一个插件一个进程。启用后立刻启动，没有“激活事件” | 本机扩展共用一个 Node 进程（另外还有 Web、远程等 Extension Host）。按激活事件懒加载，例如打开某种语言、执行某个命令 |
