@@ -6,9 +6,12 @@ import "./ResetAppearanceButton.css";
 // An unanswered confirmation falls back so a stray click later cannot reset.
 const CONFIRM_TIMEOUT_MS = 4_000;
 
-/** Resets the appearance after an inline confirmation step. */
-export function ResetAppearanceButton({ onReset }: { onReset: () => void }) {
+/** Resets the theme (or, with `layout`, the sizes and display) after an inline confirmation step. */
+export function ResetAppearanceButton({ onReset, layout = false }: { onReset: () => void; layout?: boolean }) {
   const t = useTranslation();
+  const text = t.settings.resetAppearance;
+  const label = layout ? text.layoutLabel : text.label;
+  const hint = layout ? text.layoutHint : text.hint;
   const [confirming, setConfirming] = useState(false);
 
   useEffect(() => {
@@ -28,13 +31,13 @@ export function ResetAppearanceButton({ onReset }: { onReset: () => void }) {
         onClick={() => setConfirming(true)}
       >
         <RotateCcw size={13} strokeWidth={2.4} aria-hidden="true" />
-        <span>{t.settings.resetAppearance.label}</span>
+        <span>{label}</span>
       </button>
     );
   }
 
   return (
-    <div className="appearance-reset__confirm" role="group" aria-label={t.settings.resetAppearance.hint}>
+    <div className="appearance-reset__confirm" role="group" aria-label={hint}>
       <button
         className="appearance-reset appearance-reset--danger"
         type="button"

@@ -1,13 +1,13 @@
 // Appearance theme files: one style preset as a file, to share or move to another computer.
 // Pure; useSettingPresets saves the file and turns an imported one into a preset.
 
-import { APPEARANCE_SETTING_KEYS, normalizeSettings, withAppearanceFrom } from "./settings.ts";
+import { THEME_SETTING_KEYS, normalizeSettings, withThemeFrom } from "./settings.ts";
 import type { IslandSettings } from "./types";
 
 /** Longer names are cut; the preset list shows one line anyway. */
 export const MAX_THEME_NAME_LENGTH = 60;
 
-type AppearanceKey = (typeof APPEARANCE_SETTING_KEYS)[number];
+type ThemeKey = (typeof THEME_SETTING_KEYS)[number];
 
 export type ThemeFile = {
   app: "fly-island";
@@ -15,15 +15,16 @@ export type ThemeFile = {
   version: 1;
   name: string;
   exportedAt: string;
-  appearance: Pick<IslandSettings, AppearanceKey>;
+  /** The look only (THEME_SETTING_KEYS). Files written before C26 also carry sizes, which are ignored. */
+  appearance: Pick<IslandSettings, ThemeKey>;
 };
 
 export type ThemeProblem = "notJson" | "notTheme" | "newerVersion";
 
-/** The theme file of a preset: its name and appearance settings, nothing else. */
+/** The theme file of a preset: its name and its look, nothing else. */
 export function buildTheme(name: string, settings: IslandSettings, now: Date): ThemeFile {
   const appearance = Object.fromEntries(
-    APPEARANCE_SETTING_KEYS.map((key) => [key, settings[key]]),
+    THEME_SETTING_KEYS.map((key) => [key, settings[key]]),
   ) as ThemeFile["appearance"];
   return { app: "fly-island", kind: "theme", version: 1, name, exportedAt: now.toISOString(), appearance };
 }
@@ -36,8 +37,8 @@ export function themeFileName(now: Date) {
 }
 
 /**
- * The name and settings of a theme file's text, or why it cannot be imported. Only appearance
- * fields are read, over `current`, and every value goes through normalizeSettings, so a file
+ * The name and settings of a theme file's text, or why it cannot be imported. Only the theme
+ * fields are read (sizes in older files are left alone), over `current`, and every value goes through normalizeSettings, so a file
  * edited by hand cannot carry anything the appearance page would not allow.
  */
 export function parseTheme(
@@ -58,9 +59,9 @@ export function parseTheme(
   if (typeof file.version !== "number" || file.version > 1) return { problem: "newerVersion" };
   const source = file.appearance as Record<string, unknown>;
   const picked = Object.fromEntries(
-    APPEARANCE_SETTING_KEYS.filter((key) => key in source).map((key) => [key, source[key]]),
+    THEME_SETTING_KEYS.filter((key) => key in source).map((key) => [key, source[key]]),
   );
-  const settings = withAppearanceFrom(current, normalizeSettings({ ...current, ...picked }));
+  const settings = withThemeFrom(current, normalizeSettings({ ...current, ...picked }));
   const name = typeof file.name === "string" ? file.name.trim().slice(0, MAX_THEME_NAME_LENGTH) : "";
   return { name, settings };
 }

@@ -13,41 +13,50 @@ export * from "./settingsLimits.ts";
 export { DEFAULT_SETTINGS } from "./settingsDefaults.ts";
 
 /**
- * Settings that belong to the appearance page. Resetting the appearance or applying a
- * preset changes only these, so todo and tuck behavior chosen on the general page survive.
- * The top margin (general page) and the idle todo count (todos page) are not among them,
- * so presets saved with those values no longer move the island or change the count.
+ * What the island looks like (Settings → Theme): what a theme file and a saved theme carry, and
+ * what applying one or Reset theme changes. Since C26 the sizes and what the bar shows are not
+ * part of a theme, so someone else's theme does not change your layout.
  */
-export const APPEARANCE_SETTING_KEYS = [
+export const THEME_SETTING_KEYS = [
   "appearanceMode",
   "fontFamily",
   "glassIntensity",
   "opacity",
-  "collapsedScale",
-  "expandedScale",
   "topFilletRadius",
   "islandCornerRadius",
   "islandCornerShape",
-  "maxPanelHeight",
-  "panelWidth",
   "taskTextColor",
   "pulseColor",
   "pulseBrightness",
   "islandBackgroundColor",
   "todoBackgroundColor",
+] as const satisfies readonly (keyof IslandSettings)[];
+
+/**
+ * Sizes and what the collapsed bar shows (Settings → Appearance), reset by its own button. The
+ * top margin (general page) and the idle todo count (todos page) are in neither list.
+ */
+export const LAYOUT_SETTING_KEYS = [
+  "collapsedScale",
+  "expandedScale",
+  "maxPanelHeight",
+  "panelWidth",
   "showTitle",
   "showCollapsedText",
 ] as const satisfies readonly (keyof IslandSettings)[];
 
-type AppearanceSettings = Pick<IslandSettings, (typeof APPEARANCE_SETTING_KEYS)[number]>;
+function withKeysFrom(keys: readonly (keyof IslandSettings)[], settings: IslandSettings, source: IslandSettings): IslandSettings {
+  return { ...settings, ...Object.fromEntries(keys.map((key) => [key, source[key]])) };
+}
 
-/** `settings` with its appearance fields taken from `source`. */
-export function withAppearanceFrom(settings: IslandSettings, source: IslandSettings): IslandSettings {
-  const appearance = Object.fromEntries(
-    APPEARANCE_SETTING_KEYS.map((key) => [key, source[key]]),
-  ) as AppearanceSettings;
+/** `settings` with its theme fields taken from `source`. */
+export function withThemeFrom(settings: IslandSettings, source: IslandSettings): IslandSettings {
+  return withKeysFrom(THEME_SETTING_KEYS, settings, source);
+}
 
-  return { ...settings, ...appearance };
+/** `settings` with its size and display fields taken from `source`. */
+export function withLayoutFrom(settings: IslandSettings, source: IslandSettings): IslandSettings {
+  return withKeysFrom(LAYOUT_SETTING_KEYS, settings, source);
 }
 
 export const LEGACY_DEFAULT_PRESET_IDS = new Set(["default-white", "default-khaki"]);

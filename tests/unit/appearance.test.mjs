@@ -8,7 +8,8 @@ import {
   isSameSettings,
   mergeWithDefaultSettingPresets,
   normalizeSettings,
-  withAppearanceFrom,
+  withLayoutFrom,
+  withThemeFrom,
 } from "../../src/features/appearance/settings.ts";
 import {
   COLLAPSED_TEXT_DEFAULT_MIGRATION_KEY,
@@ -264,11 +265,16 @@ test("taking the appearance from other settings keeps todo and tuck behavior", (
     marginY: 48,
     showIdleTodoCount: false,
   };
-  const next = withAppearanceFrom(current, DEFAULT_SETTINGS);
+  const next = withThemeFrom(current, DEFAULT_SETTINGS);
 
   assert.equal(next.opacity, DEFAULT_SETTINGS.opacity);
   assert.equal(next.pulseColor, DEFAULT_SETTINGS.pulseColor);
-  assert.equal(next.showTitle, DEFAULT_SETTINGS.showTitle);
+  // Reset theme leaves what the bar shows to Reset appearance (C26).
+  assert.equal(next.showTitle, true);
+  const layout = withLayoutFrom(current, DEFAULT_SETTINGS);
+  assert.equal(layout.showTitle, DEFAULT_SETTINGS.showTitle);
+  assert.equal(layout.opacity, 60);
+  assert.equal(layout.pulseColor, "#123456");
   assert.equal(next.carryOverIncompleteTodos, true);
   assert.equal(next.rotateTodos, true);
   assert.equal(next.todoRotationSeconds, 12);
@@ -277,7 +283,8 @@ test("taking the appearance from other settings keeps todo and tuck behavior", (
   // Shown on the general and todos pages, so presets and Reset appearance leave them.
   assert.equal(next.marginY, 48);
   assert.equal(next.showIdleTodoCount, false);
-  assert.deepEqual(withAppearanceFrom(DEFAULT_SETTINGS, DEFAULT_SETTINGS), DEFAULT_SETTINGS);
+  assert.deepEqual(withThemeFrom(DEFAULT_SETTINGS, DEFAULT_SETTINGS), DEFAULT_SETTINGS);
+  assert.deepEqual(withLayoutFrom(DEFAULT_SETTINGS, DEFAULT_SETTINGS), DEFAULT_SETTINGS);
 });
 
 test("clipboard visible rows default to three for older settings and stay in range", () => {

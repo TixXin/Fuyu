@@ -193,8 +193,14 @@ if (!automated) {
     const storedSettings = () => JSON.parse(localStorage.getItem("focusd-island-settings") ?? "{}") as { opacity?: number; carryOverIncompleteTodos?: boolean };
     check(!document.querySelector(".appearance-reset"), "Reset appearance is not offered outside the theme page");
     await openPage("appearance");
-    check(!document.querySelector(".appearance-reset") && document.querySelector(".collapsed-items") && !document.querySelector(".preset-name-input"),
+    check(document.querySelector(".collapsed-items") && !document.querySelector(".preset-name-input"),
       "Appearance keeps sizes and the collapsed bar; the look and the saved themes moved to Theme (C26)");
+    const layoutReset = () => [...document.querySelectorAll<HTMLButtonElement>(".appearance-reset")].find((button) => button.textContent === "恢复默认外观");
+    const stored = () => JSON.parse(localStorage.getItem("focusd-island-settings") ?? "{}") as { opacity?: number; showTitle?: boolean };
+    const before = stored();
+    await act(async () => { layoutReset()!.click(); });
+    await click(".appearance-reset--danger");
+    check(stored().opacity === before.opacity && stored().showTitle === DEFAULT_SETTINGS.showTitle, "Appearance has its own reset, for sizes and display only");
     await openPage("theme");
     await click(".appearance-reset");
     check(storedSettings().opacity === 60, "The first reset click only asks for confirmation");

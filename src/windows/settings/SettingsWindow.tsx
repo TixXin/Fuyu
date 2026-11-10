@@ -22,7 +22,7 @@ import { SETTINGS_FOCUS_STORAGE_KEY, takeFocusRequest } from "./storage";
 import { showSettingsWindow } from "./api";
 import { TodosSettingsPage } from "./TodosSettingsPage";
 import { TranslationSettingsPage } from "./TranslationSettingsPage";
-import { DEFAULT_SETTINGS, isSameSettings, withAppearanceFrom } from "../../features/appearance/settings";
+import { DEFAULT_SETTINGS, isSameSettings, withLayoutFrom, withThemeFrom } from "../../features/appearance/settings";
 import { STORAGE_KEY, loadSettings, saveSettings } from "../../features/appearance/storage";
 import { ResetAppearanceButton } from "../../features/appearance/ResetAppearanceButton";
 import type { IslandSettings } from "../../features/appearance/types";
@@ -119,7 +119,7 @@ export function SettingsWindow() {
   }, [focusRequestedSection]);
 
   const resetAppearance = useCallback(() => {
-    setSettings((current) => withAppearanceFrom(current, DEFAULT_SETTINGS));
+    setSettings((current) => withThemeFrom(current, DEFAULT_SETTINGS));
   }, []);
 
   const openShortcuts = () => setCategory("shortcuts");
@@ -139,7 +139,11 @@ export function SettingsWindow() {
       <LayoutEditor
         category={category}
         onCategoryChange={changeCategory}
-        titleAction={category === "theme" && <ResetAppearanceButton onReset={resetAppearance} />}
+        titleAction={
+          category === "theme" ? <ResetAppearanceButton onReset={resetAppearance} />
+          : category === "appearance" ? <ResetAppearanceButton layout onReset={() => setSettings((current) => withLayoutFrom(current, DEFAULT_SETTINGS))} />
+          : null
+        }
       >
         {category === "general" && (
           <GeneralSettingsPage

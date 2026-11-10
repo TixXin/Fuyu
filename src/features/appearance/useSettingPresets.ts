@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "../../i18n";
 import { createTodoId } from "../todos";
-import { LEGACY_DEFAULT_PRESET_NAMES, isDefaultSettingPreset, mergeWithDefaultSettingPresets, normalizeSettings, withAppearanceFrom } from "./settings";
+import { LEGACY_DEFAULT_PRESET_NAMES, isDefaultSettingPreset, mergeWithDefaultSettingPresets, normalizeSettings, withThemeFrom } from "./settings";
 import { loadSettingPresets, saveSettingPresets } from "./storage";
 import { saveThemeFile } from "./api";
 import { buildTheme, parseTheme, themeFileName, type ThemeProblem } from "./theme.ts";
@@ -46,7 +46,7 @@ export function useSettingPresets(
       const preset = presets.find((item) => item.id === presetId);
 
       if (preset) {
-        onSettingsChange(withAppearanceFrom(settings, normalizeSettings(preset.settings)));
+        onSettingsChange(withThemeFrom(settings, normalizeSettings(preset.settings)));
       }
     },
     [presets, settings, onSettingsChange],
