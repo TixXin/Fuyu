@@ -8,10 +8,10 @@ use std::{
     thread,
     time::Duration,
 };
-use tauri::{AppHandle, Emitter, Manager, PhysicalPosition, Position, WebviewWindow};
+use tauri::{AppHandle, Emitter, Manager, PhysicalPosition, PhysicalSize, Position, Size, WebviewWindow};
 use windows::Win32::Foundation::HWND;
 
-use super::{service, ClipboardHistoryItemKind, CopyAs, PopupPosition};
+use super::{service, ClipboardHistoryItemKind, CopyAs, PopupLayout, PopupPosition};
 use crate::win32;
 
 pub(crate) const WINDOW_LABEL: &str = "clipboard";
@@ -19,6 +19,14 @@ pub(crate) const WINDOW_LABEL: &str = "clipboard";
 const OPENED_EVENT: &str = "clipboard-popup-opened";
 /// Gap between the pointer and the window's corner.
 const POINTER_GAP: i32 = 12;
+/// The window's logical size per layout; tauri.conf.json declares the standard one.
+pub(super) fn popup_size(layout: PopupLayout) -> (f64, f64) {
+    match layout {
+        PopupLayout::Standard => (380.0, 500.0),
+        PopupLayout::Wide => (640.0, 500.0),
+    }
+}
+
 /// Time for the window that gets the focus back to take keys again before Ctrl+V arrives.
 const FOCUS_SETTLE: Duration = Duration::from_millis(70);
 
@@ -70,7 +78,7 @@ fn popup_window(app: &AppHandle) -> Result<WebviewWindow, String> {
 }
 
 /// Shows the popup, remembering the window in front to paste into later; the shortcut again closes it.
-pub(super) fn toggle(app: &AppHandle, position: PopupPosition) -> Result<(), String> {
+pub(super) fn toggle(app: &AppHandle, position: PopupPosition, layout: PopupLayout) -> Result<(), String> {
     let window = popup_window(app)?;
     if window.is_visible().unwrap_or(false) {
         return hide(app);
@@ -83,8 +91,6 @@ pub(super) fn toggle(app: &AppHandle, position: PopupPosition) -> Result<(), Str
         *target = (!foreground.is_invalid() && foreground.0 as isize != own).then_some(foreground.0 as isize);
     }
 
-    let size = window.outer_size().map_err(|error| error.to_string())?;
-    let size = (size.width as i32, size.height as i32);
     let pointer = win32::window::cursor_position().map(|point| (point.x, point.y));
     let monitor = match pointer {
         Some((x, y)) => app.monitor_from_point(f64::from(x), f64::from(y)).ok().flatten(),
@@ -100,6 +106,10 @@ pub(super) fn toggle(app: &AppHandle, position: PopupPosition) -> Result<(), Str
             work.position.y + work.size.height as i32,
         );
         let scale = monitor.scale_factor();
+        // Sized for the screen it opens on, before it is placed, so a wide window fits too.
+        let (width, height) = popup_size(layout);
+        let size = ((width * scale).round() as i32, (height * scale).round() as i32);
+        let _ = window.set_size(Size::Physical(PhysicalSize::new(size.0 as u32, size.1 as u32)));
         let (x, y) = match (position, pointer) {
             (PopupPosition::Cursor, Some(pointer)) => place_by_pointer(pointer, size, area, (f64::from(POINTER_GAP) * scale) as i32),
             _ => (area.0 + (area.2 - area.0 - size.0) / 2, area.1 + (area.3 - area.1 - size.1) / 3),

@@ -13,6 +13,8 @@ export type ClipboardHistorySettings = {
   /** Where the shortcut opens the history (C22): its own window, or the island's page. */
   openIn: ClipboardOpenIn;
   popupPosition: ClipboardPopupPosition;
+  /** The list alone, or with the picked entry beside it; missing before. */
+  popupLayout?: ClipboardPopupLayout;
   /** Picking an entry in the window pastes it into the window that was in front. */
   autoPaste: boolean;
   /** An image pasted into a terminal goes as its file path (Claude Code takes it as an image). */
@@ -40,6 +42,7 @@ export type ClipboardSource = { path: string; name: string };
 
 export type ClipboardOpenIn = "window" | "island";
 export type ClipboardPopupPosition = "cursor" | "center";
+export type ClipboardPopupLayout = "standard" | "wide";
 
 export type ClipboardHistoryImage = {
   width: number;
@@ -153,6 +156,11 @@ export function importClipboardHistory(content: string) {
 
 export function revealExportedFile(path: string) {
   return revealItemInDir(path);
+}
+
+/** A larger copy of an image entry for the window's side pane, as a data URL; null otherwise. */
+export function getClipboardImagePreview(id: string) {
+  return invoke<string | null>("get_clipboard_image_preview", { id });
 }
 
 export function hideClipboardPopup() {

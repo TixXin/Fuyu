@@ -11,6 +11,9 @@ export type SettingsClipboardText = {
   openInOptions: Record<"window" | "island", string>;
   popupPosition: string;
   popupPositionOptions: Record<"cursor" | "center", string>;
+  popupLayout: string;
+  popupLayoutHint: string;
+  popupLayoutOptions: Record<"standard" | "wide", string>;
   autoPaste: string;
   autoPasteHint: string;
   terminalImagePath: string;
@@ -75,6 +78,9 @@ export const zhCN: SettingsClipboardText = {
   openInOptions: { window: "独立窗口", island: "岛上页面" },
   popupPosition: "弹出位置",
   popupPositionOptions: { cursor: "鼠标旁", center: "屏幕中间" },
+  popupLayout: "窗口宽度",
+  popupLayoutHint: "宽版右边显示选中这条的完整内容、大图和来源，粘贴前能看清是不是要的那条。",
+  popupLayoutOptions: { standard: "标准", wide: "宽版" },
   autoPaste: "选中后自动粘贴",
   autoPasteHint: "关掉时只复制，回到原来的窗口自己按 Ctrl+V。",
   terminalImagePath: "粘贴图片到终端时贴文件路径",
@@ -139,6 +145,9 @@ export const en: SettingsClipboardText = {
   openInOptions: { window: "A window", island: "The island page" },
   popupPosition: "Where it appears",
   popupPositionOptions: { cursor: "By the pointer", center: "Screen centre" },
+  popupLayout: "Window width",
+  popupLayoutHint: "Wide shows the picked entry in full beside the list, with a large image and where it came from.",
+  popupLayoutOptions: { standard: "Standard", wide: "Wide" },
   autoPaste: "Paste what you pick",
   autoPasteHint: "Off: it is only copied, and you press Ctrl+V back in your window.",
   terminalImagePath: "Paste images into terminals as their path",

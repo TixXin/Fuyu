@@ -1,159 +1,230 @@
-/* The clipboard window (C22.2): a dark rounded panel like the island, filling its window. */
+/*
+ * The clipboard window (C22.2), drawn like the island's clipboard page (IslandList.css): one
+ * rounded panel filling its window, rows without a fill until picked, the clipboard's pink only
+ * for what is picked. Ink follows light and dark: --overlay-rgb is set on a light window
+ * (.island-light in tokens.css).
+ */
 .clipboard-popup {
-  position: fixed;
-  inset: 6px;
+  --pop-ink: var(--overlay-rgb, 241, 240, 246);
+  --pop-accent: 244, 167, 196;
+  --pop-accent-text: color-mix(in srgb, rgb(var(--pop-accent)) 62%, rgb(var(--pop-ink)));
+  --pop-fill: #111114;
+  height: 100vh;
   display: flex;
   flex-direction: column;
-  gap: var(--space-md);
-  padding: var(--space-lg);
-  border-radius: 18px;
-  background: rgba(17, 17, 18, 0.96);
-  box-shadow:
-    0 10px 28px rgba(0, 0, 0, 0.42),
-    inset 0 0 0 1px var(--color-white-a10);
-  color: var(--text-1);
+  overflow: hidden;
+  color: rgba(var(--pop-ink), 0.95);
+  background: var(--pop-fill);
+  border: 1px solid rgba(var(--pop-ink), 0.1);
+  border-radius: 16px;
   font-family: var(--font-ui);
+  font-size: 13px;
+}
+
+.island-light .clipboard-popup {
+  --pop-fill: #f6f6f8;
+}
+
+.clipboard-popup kbd {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  padding: 1px 5px;
+  font: 600 10px/1.3 var(--font-mono, ui-monospace, Consolas, monospace);
+  color: rgba(var(--pop-ink), 0.7);
+  background: rgba(var(--pop-ink), 0.08);
+  border-radius: 4px;
 }
 
 .clipboard-popup__top {
-  display: flex;
-  align-items: center;
-  gap: var(--space-md);
-}
-
-.clipboard-popup__tabs {
-  display: flex;
-  flex: 0 0 auto;
-  gap: 2px;
-  padding: 2px;
-  border-radius: var(--radius-lg);
-  background: var(--color-white-a06);
-}
-
-.clipboard-popup__tab {
-  min-height: 28px;
-  padding: 0 10px;
-  border: 0;
-  border-radius: var(--radius-md);
-  background: transparent;
-  color: var(--text-3);
-  font: inherit;
-  font-size: 12px;
-  cursor: pointer;
-}
-
-.clipboard-popup__tab--active {
-  background: var(--color-white-a12);
-  color: var(--text-1);
-}
-
-/* Picked for a sequence (C24.7): its place shows in the number column. */
-.clipboard-popup__item--queued .clipboard-popup__index {
-  color: var(--color-accent);
-  font-weight: 700;
+  flex: none;
+  display: grid;
+  gap: 8px;
+  padding: 10px 10px 6px;
 }
 
 .clipboard-popup__search {
-  flex: 1;
-  min-width: 0;
   display: flex;
   align-items: center;
-  gap: var(--space-md);
-  min-height: 34px;
-  padding: 0 var(--space-lg);
-  border-radius: var(--radius-lg);
-  background: var(--color-white-a06);
-  color: var(--text-3);
+  gap: 8px;
+  height: 34px;
+  padding: 0 10px;
+  color: rgba(var(--pop-ink), 0.45);
+  background: rgba(var(--pop-ink), 0.07);
+  border-radius: 10px;
 }
 
 .clipboard-popup__search:focus-within {
-  box-shadow: inset 0 0 0 1px var(--color-focus-ring-soft);
+  box-shadow: inset 0 0 0 1px rgba(var(--pop-accent), 0.5);
 }
 
 .clipboard-popup__search input {
   flex: 1;
   min-width: 0;
-  border: 0;
-  outline: 0;
-  background: transparent;
-  color: var(--text-1);
+  padding: 0;
+  color: rgba(var(--pop-ink), 0.95);
   font: inherit;
-  font-size: 13px;
+  background: transparent;
+  border: 0;
+  outline: none;
 }
 
 .clipboard-popup__search input::placeholder {
-  color: var(--text-placeholder);
+  color: rgba(var(--pop-ink), 0.42);
+}
+
+.clipboard-popup__chips {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.clipboard-popup__chip {
+  flex: none;
+  max-width: 96px;
+  padding: 3px 9px;
+  overflow: hidden;
+  color: rgba(var(--pop-ink), 0.55);
+  font: inherit;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: transparent;
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.clipboard-popup__chip:hover {
+  color: rgba(var(--pop-ink), 0.95);
+}
+
+.clipboard-popup__chip[aria-selected="true"] {
+  color: rgba(var(--pop-ink), 0.95);
+  font-weight: 600;
+  background: rgba(var(--pop-ink), 0.09);
+}
+
+.clipboard-popup__chip--tag {
+  color: var(--pop-accent-text);
+}
+
+.clipboard-popup__tab-key {
+  margin-left: auto;
+  flex: none;
+}
+
+.clipboard-popup__body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
 }
 
 .clipboard-popup__list {
   flex: 1;
-  min-height: 0;
+  min-width: 0;
+  display: grid;
+  align-content: start;
+  gap: 1px;
   margin: 0;
-  padding: 0;
+  padding: 2px 6px 6px;
   overflow-y: auto;
   list-style: none;
   scrollbar-width: thin;
+  scrollbar-color: rgba(var(--pop-ink), 0.2) transparent;
+}
+
+.clipboard-popup--wide .clipboard-popup__list {
+  flex: 0 0 330px;
+  border-right: 1px solid rgba(var(--pop-ink), 0.07);
+}
+
+.clipboard-popup__section {
+  margin: 4px 8px 2px;
+  color: rgba(var(--pop-ink), 0.42);
+  font-size: 11px;
+  font-weight: 600;
 }
 
 .clipboard-popup__item {
+  position: relative;
   display: flex;
   align-items: center;
-  border-radius: var(--radius-lg);
+  border-radius: 10px;
 }
 
 .clipboard-popup__item--selected {
-  background: var(--color-white-a10);
+  background: rgba(var(--pop-accent), 0.15);
+  box-shadow: inset 0 0 0 1px rgba(var(--pop-accent), 0.4);
 }
 
 .clipboard-popup__row {
-  display: flex;
   flex: 1;
-  align-items: center;
-  gap: var(--space-md);
   min-width: 0;
-  min-height: 40px;
-  padding: var(--space-sm) var(--space-sm) var(--space-sm) var(--space-xs);
-  border: 0;
-  background: transparent;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 44px;
+  padding: 5px 4px 5px 8px;
   color: inherit;
   font: inherit;
   text-align: left;
+  background: transparent;
+  border: 0;
   cursor: pointer;
 }
 
 .clipboard-popup__index {
-  flex: 0 0 16px;
-  color: var(--text-3);
-  font-size: 11px;
-  font-variant-numeric: tabular-nums;
-  text-align: center;
-}
-
-.clipboard-popup__icon {
-  flex: 0 0 auto;
-  color: var(--text-3);
-}
-
-.clipboard-popup__thumb {
+  flex: none;
+  width: 18px;
+  height: 18px;
   display: grid;
-  flex: 0 0 36px;
-  height: 28px;
-  overflow: hidden;
   place-items: center;
-  border-radius: var(--radius-sm);
-  background: var(--color-white-a06);
-  color: var(--text-3);
+  color: rgba(var(--pop-ink), 0.45);
+  font: 600 10.5px var(--font-mono, ui-monospace, Consolas, monospace);
+  background: rgba(var(--pop-ink), 0.06);
+  border-radius: 5px;
 }
 
-.clipboard-popup__thumb img {
+.clipboard-popup__index:empty {
+  background: transparent;
+}
+
+.clipboard-popup__item--queued .clipboard-popup__index {
+  color: #1a0d14;
+  background: rgb(var(--pop-accent));
+}
+
+.clipboard-popup__lead {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  color: rgba(var(--pop-ink), 0.68);
+  background: rgba(var(--pop-ink), 0.07);
+  border-radius: 7px;
+}
+
+.clipboard-popup__lead img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
+.clipboard-popup__lead .clipboard-entry-icon,
+.clipboard-popup__lead .clipboard-entry-icon__app {
+  width: 18px;
+  height: 18px;
+}
+
 .clipboard-popup__text {
-  display: grid;
+  flex: 1;
   min-width: 0;
+  display: grid;
   gap: 1px;
 }
 
@@ -166,53 +237,219 @@
 
 .clipboard-popup__preview {
   font-size: 13px;
-  line-height: 18px;
+  line-height: 1.35;
+}
+
+.clipboard-popup__preview--mono {
+  font-family: var(--font-mono, ui-monospace, Consolas, monospace);
+  font-size: 12px;
 }
 
 .clipboard-popup__note {
-  color: var(--text-3);
+  color: rgba(var(--pop-ink), 0.45);
   font-size: 11px;
-  line-height: 15px;
+}
+
+.clipboard-popup__tag {
+  margin-right: 4px;
+  padding: 0 5px;
+  color: rgba(var(--pop-ink), 0.95);
+  background: rgba(var(--pop-accent), 0.22);
+  border-radius: 999px;
+}
+
+.clipboard-popup__end {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding-right: 6px;
+}
+
+.clipboard-popup__enter {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--pop-accent-text);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.clipboard-popup__enter kbd {
+  color: inherit;
+  background: rgba(var(--pop-accent), 0.2);
 }
 
 .clipboard-popup__star {
+  width: 22px;
+  height: 22px;
   display: grid;
-  flex: 0 0 28px;
-  height: 28px;
-  margin-right: var(--space-xs);
   place-items: center;
-  border: 0;
-  border-radius: var(--radius-md);
+  padding: 0;
+  color: rgba(var(--pop-ink), 0.45);
   background: transparent;
-  color: var(--text-3);
-  opacity: 0;
+  border: 0;
+  border-radius: 6px;
   cursor: pointer;
 }
 
-.clipboard-popup__item--selected .clipboard-popup__star,
-.clipboard-popup__star--on {
-  opacity: 1;
-}
-
-.clipboard-popup__star--on {
-  color: var(--color-warning);
-}
-
 .clipboard-popup__star:hover {
-  background: var(--color-white-a08);
+  background: rgba(var(--pop-ink), 0.08);
+}
+
+.clipboard-popup__star--on {
+  color: var(--pop-accent-text);
 }
 
 .clipboard-popup__empty {
   flex: 1;
-  margin: 0;
-  padding-top: 40px;
-  color: var(--text-3);
-  font-size: 13px;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 6px;
+  padding: 0 30px;
+  color: rgba(var(--pop-ink), 0.5);
+  font-size: 12px;
   text-align: center;
 }
 
+.clipboard-popup__empty strong {
+  color: rgba(var(--pop-ink), 0.85);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* The wide window's right side: the picked entry in full. */
+.clipboard-popup__pane {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 10px;
+  padding: 10px 14px 12px;
+}
+
+.clipboard-popup__pane-head {
+  color: rgba(var(--pop-ink), 0.6);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.clipboard-popup__pane-body {
+  min-height: 0;
+  margin: 0;
+  padding: 10px 12px;
+  overflow: auto;
+  font-size: 12.5px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  background: rgba(var(--pop-ink), 0.05);
+  border-radius: 10px;
+  user-select: text;
+  scrollbar-width: thin;
+}
+
+.clipboard-popup__pane-body--mono {
+  font-family: var(--font-mono, ui-monospace, Consolas, monospace);
+}
+
+.clipboard-popup__pane-note {
+  margin: 8px 0 0;
+  color: rgba(var(--pop-ink), 0.5);
+  font-family: var(--font-ui);
+  font-size: 11.5px;
+}
+
+.clipboard-popup__pane-files {
+  list-style: none;
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  font-family: var(--font-mono, ui-monospace, Consolas, monospace);
+  font-size: 11.5px;
+}
+
+.clipboard-popup__pane-image {
+  min-height: 0;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.clipboard-popup__pane-image img {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  object-fit: contain;
+  background: rgba(var(--pop-ink), 0.05);
+  border-radius: 10px;
+}
+
+.clipboard-popup__pane-image p {
+  max-height: 72px;
+  margin: 0;
+  overflow: auto;
+  color: rgba(var(--pop-ink), 0.75);
+  font-size: 11.5px;
+  line-height: 1.5;
+  user-select: text;
+}
+
+.clipboard-popup__pane-image p b {
+  margin-right: 6px;
+  color: rgba(var(--pop-ink), 0.5);
+  font-weight: 600;
+}
+
+.clipboard-popup__pane-meta {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 3px 10px;
+  margin: 0;
+  color: rgba(var(--pop-ink), 0.5);
+  font-size: 11.5px;
+}
+
+.clipboard-popup__pane-meta dd {
+  margin: 0;
+  overflow: hidden;
+  color: rgba(var(--pop-ink), 0.8);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .clipboard-popup__hint {
-  color: var(--text-3);
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 7px 12px;
+  overflow: hidden;
+  color: rgba(var(--pop-ink), 0.5);
   font-size: 11px;
-  text-align: center;
+  white-space: nowrap;
+  border-top: 1px solid rgba(var(--pop-ink), 0.07);
+}
+
+.clipboard-popup__hint > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.clipboard-popup__hint-end {
+  margin-left: auto;
+}
+
+.clipboard-popup__hint--sequence {
+  color: rgba(var(--pop-ink), 0.95);
+  background: rgba(var(--pop-accent), 0.14);
+  border-top-color: rgba(var(--pop-accent), 0.3);
+}
+
+.clipboard-popup__hint--sequence > span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }

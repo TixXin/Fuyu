@@ -28,6 +28,28 @@ export type ClipboardText = {
     noSnippets: string;
     snippetHint: string;
     sequenceHint: (count: number) => string;
+    filters: string;
+    paste: string;
+    plain: string;
+    pickSequence: string;
+    sequenceCount: (count: number) => string;
+    sequenceStart: string;
+    cancel: string;
+    noMatch: (query: string) => string;
+    noMatchHint: string;
+    snippetsLabel: string;
+    preview: {
+      label: string;
+      text: (chars: number) => string;
+      image: (width: number, height: number, kilobytes: number) => string;
+      files: (count: number) => string;
+      masked: string;
+      source: string;
+      copiedAt: string;
+      tags: string;
+      ocr: string;
+      none: string;
+    };
   };
   /** An image as its file: chat apps and Explorer paste the file. */
   copyAsFile: string;
@@ -88,6 +110,28 @@ export const zhCN: ClipboardText = {
     noSnippets: "还没有片段，在 设置 → 剪贴板 里添加",
     snippetHint: "Enter 粘贴 · Tab 切换 · Esc 关闭",
     sequenceHint: (count) => `已选 ${count} 条 · Enter 开始顺序粘贴 · Esc 取消`,
+    filters: "筛选剪贴记录",
+    paste: "粘贴",
+    plain: "纯文本",
+    pickSequence: "点击 顺序粘贴",
+    sequenceCount: (count) => `已选 ${count} 条`,
+    sequenceStart: "开始，之后每次 Ctrl+V 贴下一条",
+    cancel: "取消",
+    noMatch: (query) => `没有匹配「${query}」的记录`,
+    noMatchHint: "搜内容、备注、来源程序，或用 #标签",
+    snippetsLabel: "常用片段 · 粘贴时填好日期和剪贴板",
+    preview: {
+      label: "选中这条的完整内容",
+      text: (chars) => `文字 · ${chars} 字`,
+      image: (width, height, kilobytes) => `图片 ${width}×${height} · ${kilobytes} KB`,
+      files: (count) => `${count} 个文件`,
+      masked: "疑似密钥，已打码；粘贴时是原文",
+      source: "来源",
+      copiedAt: "复制于",
+      tags: "标签",
+      ocr: "识别出的文字",
+      none: "—",
+    },
   },
   copyAsFile: "复制为文件（聊天软件、资源管理器里粘贴成文件）",
   copyPath: "复制图片路径（贴到 Claude Code 等终端里会当成图片）",
@@ -144,6 +188,28 @@ export const en: ClipboardText = {
     noSnippets: "No snippets yet; add them in Settings → Clipboard",
     snippetHint: "Enter paste · Tab switch · Esc close",
     sequenceHint: (count) => `${count} picked · Enter starts pasting them in turn · Esc cancels`,
+    filters: "Filter clipboard entries",
+    paste: "Paste",
+    plain: "Plain text",
+    pickSequence: "click: paste in order",
+    sequenceCount: (count) => `${count} picked`,
+    sequenceStart: "start, then each Ctrl+V pastes the next",
+    cancel: "Cancel",
+    noMatch: (query) => `Nothing matches “${query}”`,
+    noMatchHint: "Search text, notes, the program, or #tags",
+    snippetsLabel: "Snippets · dates and the clipboard filled in on paste",
+    preview: {
+      label: "The picked entry in full",
+      text: (chars) => `Text · ${chars} characters`,
+      image: (width, height, kilobytes) => `Image ${width}×${height} · ${kilobytes} KB`,
+      files: (count) => (count === 1 ? "1 file" : `${count} files`),
+      masked: "Looks like a key, so it is masked; it pastes as it is",
+      source: "From",
+      copiedAt: "Copied",
+      tags: "Tags",
+      ocr: "Text in the image",
+      none: "—",
+    },
   },
   copyAsFile: "Copy as a file (chat apps and Explorer paste the file)",
   copyPath: "Copy the image's path (Claude Code and other terminals take it as an image)",

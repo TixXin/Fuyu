@@ -1,0 +1,157 @@
+// pnpm dev, then open /tests/regression/clipboard-popup.html (demo) or ?test=1 (checks). The
+// clipboard window (C22.2) with made-up entries: standard and wide, dark and light.
+import { act, StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import { mockIPC } from "@tauri-apps/api/mocks";
+import "../../src/styles/tokens.css";
+import "../../src/styles/fonts.css";
+import { I18nProvider, LOCALE_STORAGE_KEY } from "../../src/i18n";
+import { ClipboardPopup } from "../../src/features/clipboard/ClipboardPopup";
+import type { ClipboardHistoryItem, ClipboardSnippet } from "../../src/features/clipboard/api";
+
+const automated = new URLSearchParams(location.search).has("test");
+Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: automated });
+localStorage.setItem(LOCALE_STORAGE_KEY, "zh-CN");
+const calls: string[] = [];
+const BIG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='120'%3E%3Crect width='600' height='120' fill='%23c75b7a'/%3E%3C/svg%3E";
+mockIPC((command, args) => {
+  if (command === "get_clipboard_image_preview") {
+    calls.push(`preview:${(args as { id: string }).id}`);
+    return BIG;
+  }
+  return null;
+});
+
+const now = Date.now();
+const minute = 60_000;
+const thumb = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Crect width='40' height='40' fill='%232a3350'/%3E%3C/svg%3E";
+const base = { hash: "", createdAt: now, favorite: false } as const;
+const ITEMS: ClipboardHistoryItem[] = [
+  { ...base, id: "t1", kind: "text", copiedAt: now - 20_000, preview: "主题从此不包含尺寸和显示内容，可以吗", text: "主题从此不包含尺寸和显示内容，可以吗", source: { path: "C:\\code.exe", name: "VS Code" } },
+  { ...base, id: "t2", kind: "text", copiedAt: now - 2 * minute, preview: "pnpm test:regression clipboard && git status --short", favorite: true, source: { path: "C:\\wt.exe", name: "终端" } },
+  { ...base, id: "i1", kind: "image", copiedAt: now - 5 * minute, preview: "770 x 148 image", ocrText: "已不在", image: { width: 770, height: 148, byteSize: 43_000, originalPath: "", thumbnailPath: "", thumbnailDataUrl: thumb }, source: { path: "C:\\weixin.exe", name: "微信" } },
+  { ...base, id: "t3", kind: "text", copiedAt: now - 12 * minute, preview: "题市场放在「扩展」组和插件市场挨着，还是放在「基础」组紧跟「主题」？", tags: ["设置"], source: { path: "C:\\msedge.exe", name: "Edge" } },
+  { ...base, id: "t4", kind: "text", copiedAt: now - 20 * minute, preview: "ghp_8f3a••••••••••••••••", masked: true, text: "ghp_8f3aSECRETSECRETSECRET" },
+  { ...base, id: "f1", kind: "files", copiedAt: now - 70 * minute, preview: "release-notes-0.3.5.md", files: ["C:\\a\\release-notes-0.3.5.md", "C:\\a\\b.md", "C:\\a\\c.md"], source: { path: "C:\\explorer.exe", name: "资源管理器" } },
+];
+const SNIPPETS: ClipboardSnippet[] = [{ id: "s1", title: "日报模板", text: "{date} {weekday}\n今天完成：" }, { id: "s2", title: "邮箱签名", text: "tixxin · Fuyu" }];
+
+const FRAMES = [
+  { id: "dark", caption: "标准宽度", wide: false, light: false },
+  { id: "light", caption: "浅色", wide: false, light: true },
+  { id: "wide", caption: "宽版", wide: true, light: false },
+];
+const host = document.getElementById("frames")!;
+for (const frame of FRAMES) {
+  const wrap = document.createElement("div");
+  wrap.innerHTML = `<p class="caption">${frame.caption}</p>`;
+  const box = document.createElement("div");
+  box.className = `frame frame--${frame.wide ? "wide" : "standard"}${frame.light ? " island-light" : ""}`;
+  box.id = `frame-${frame.id}`;
+  wrap.append(box);
+  host.append(wrap);
+  const root = createRoot(box);
+  const render = () => root.render(
+    <StrictMode><I18nProvider>
+      <ClipboardPopup
+        items={ITEMS}
+        snippets={SNIPPETS}
+        openCount={0}
+        wide={frame.wide}
+        onPaste={(id, plain) => calls.push(`paste:${id}${plain ? ":plain" : ""}`)}
+        onPasteSnippet={(id) => calls.push(`snippet:${id}`)}
+        onPasteSequence={(ids) => calls.push(`sequence:${ids.join()}`)}
+        onClose={() => calls.push("close")}
+        onToggleFavorite={(id) => calls.push(`star:${id}`)}
+      />
+    </I18nProvider></StrictMode>,
+  );
+  if (automated) await act(async () => render());
+  else render();
+}
+
+const messages: string[] = [];
+function check(condition: unknown, label: string) {
+  if (!condition) throw new Error(label);
+  messages.push(`PASS ${label}`);
+}
+const $ = <T extends HTMLElement = HTMLElement>(frame: string, selector: string) => document.querySelector<T>(`#frame-${frame} ${selector}`);
+const $$ = (frame: string, selector: string) => [...document.querySelectorAll<HTMLElement>(`#frame-${frame} ${selector}`)];
+const key = (frame: string, init: KeyboardEventInit) => act(async () => {
+  $(frame, "input")!.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, cancelable: true, ...init }));
+});
+const type = (frame: string, value: string) => act(async () => {
+  const input = $<HTMLInputElement>(frame, "input")!;
+  Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(input, value);
+  input.dispatchEvent(new Event("input", { bubbles: true }));
+});
+const rows = (frame: string) => $$(frame, ".clipboard-popup__item");
+const chips = (frame: string) => $$(frame, ".clipboard-popup__chip").map((chip) => chip.textContent).join("|");
+const selectedChip = (frame: string) => $(frame, '.clipboard-popup__chip[aria-selected="true"]')?.textContent;
+const ctrlClick = (frame: string, index: number) => act(async () => {
+  rows(frame)[index].querySelector<HTMLElement>(".clipboard-popup__row")!.dispatchEvent(new MouseEvent("click", { bubbles: true, ctrlKey: true }));
+});
+
+async function runChecks() {
+  try {
+    check(chips("dark") === "全部|收藏|图片|文件|片段|#设置", "筛选胶囊：全部、收藏、图片、文件、片段，再加常用标签");
+    check(rows("dark").length === ITEMS.length && rows("dark")[0].classList.contains("clipboard-popup__item--selected"), "每条一行，打开时第 1 条选中");
+    check($("dark", ".clipboard-popup__item--selected .clipboard-popup__enter")?.textContent === "粘贴", "选中的那行写着「↵ 粘贴」");
+    check(rows("dark")[0].querySelector(".clipboard-popup__note")?.textContent?.startsWith("VS Code · 刚刚"), "第二行写来源程序和时间");
+    check(rows("dark")[2].querySelector(".clipboard-popup__preview")?.textContent === "图片 770×148" && rows("dark")[2].querySelector("img"), "图片写成「图片 宽×高」，行首是缩略图");
+    check(rows("dark")[3].querySelector(".clipboard-popup__tag")?.textContent === "#设置", "标签在第二行开头");
+    check(rows("dark")[1].querySelector(".clipboard-popup__star--on"), "收藏过的行尾有星");
+
+    await key("dark", { key: "Tab" });
+    check(selectedChip("dark") === "收藏" && rows("dark").length === 1, "Tab 切到下一个胶囊：收藏");
+    await key("dark", { key: "Tab", shiftKey: true });
+    await key("dark", { key: "Tab", shiftKey: true });
+    check(selectedChip("dark") === "#设置" && rows("dark").length === 1, "Shift+Tab 往回，从全部绕到最后一个标签");
+    await key("dark", { key: "Tab" });
+    await key("dark", { key: "ArrowDown" });
+    await key("dark", { key: "Enter", shiftKey: true });
+    check(calls.includes("paste:t2:plain"), "↓ 选第 2 条，Shift+Enter 粘贴为纯文本");
+    await key("dark", { key: "3" });
+    check(calls.includes("paste:i1"), "数字键直接粘贴那一行");
+
+    await ctrlClick("dark", 0);
+    await ctrlClick("dark", 3);
+    check($("dark", ".clipboard-popup__hint--sequence")?.textContent?.includes("已选 2 条") && rows("dark")[3].querySelector(".clipboard-popup__index")?.textContent === "2", "Ctrl+点击挑两条：底栏变色，行首是顺序号");
+    await key("dark", { key: "Enter" });
+    check(calls.includes("sequence:t1,t3"), "Enter 开始顺序粘贴");
+    await key("dark", { key: "Escape" });
+    check(!$("dark", ".clipboard-popup__hint--sequence") && !calls.includes("close"), "Esc 先取消挑选，不关窗口");
+
+    await type("dark", "发票");
+    check($("dark", ".clipboard-popup__empty strong")?.textContent === "没有匹配「发票」的记录", "没搜到时写出搜的词");
+    await type("dark", "");
+
+    await act(async () => { $$("dark", ".clipboard-popup__chip").find((chip) => chip.textContent === "片段")!.click(); });
+    check($("dark", ".clipboard-popup__section") && rows("dark").length === 2 && rows("dark")[0].querySelector(".clipboard-popup__note")?.textContent?.includes("⏎"), "片段页：每个片段一行，第二行是内容");
+    await key("dark", { key: "Enter" });
+    check(calls.includes("snippet:s1"), "片段页 Enter 粘贴片段");
+
+    check(getComputedStyle($("light", ".clipboard-popup")!).backgroundColor === "rgb(246, 246, 248)", "浅色：浅底");
+
+    check($("wide", ".clipboard-popup__pane-body")?.textContent === ITEMS[0].text, "宽版：右边是选中这条的完整内容");
+    await key("wide", { key: "ArrowDown" });
+    await key("wide", { key: "ArrowDown" });
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 30)); });
+    check(calls.includes("preview:i1") && $<HTMLImageElement>("wide", ".clipboard-popup__pane-image img")?.src === BIG && $("wide", ".clipboard-popup__pane-image p")?.textContent?.includes("已不在"), "宽版选中图片：读大图，下面是识别出的文字");
+    await key("wide", { key: "ArrowDown" });
+    await key("wide", { key: "ArrowDown" });
+    check($("wide", ".clipboard-popup__pane-body")?.textContent?.startsWith("ghp_8f3a••") && !$("wide", ".clipboard-popup__pane")?.textContent?.includes("SECRET"), "宽版：打码的密钥不露原文");
+    await key("wide", { key: "ArrowDown" });
+    check($$("wide", ".clipboard-popup__pane-files li").length === 3, "宽版：文件逐个列出");
+
+    results.textContent = `${messages.join("\n")}\n\n全部 ${messages.length} 项检查通过。`;
+    results.dataset.result = "passed";
+  } catch (error) {
+    results.textContent = `${messages.join("\n")}\nFAIL ${String(error)}`;
+    results.dataset.result = "failed";
+  }
+}
+
+const results = document.getElementById("results")!;
+if (automated) void runChecks();
+else results.textContent = "演示：剪贴板窗口（标准、浅色、宽版）。加 ?test=1 运行检查。";

@@ -464,7 +464,7 @@ impl ClipboardHistoryService {
         // The clipboard window (C22.2), unless the settings ask for the island's page.
         let settings = self.state.lock().map(|state| state.settings.clone()).ok();
         if let Some(settings) = settings.filter(|settings| settings.open_in == super::OpenIn::Window) {
-            if let Err(error) = super::popup::toggle(&self.app, settings.popup_position) {
+            if let Err(error) = super::popup::toggle(&self.app, settings.popup_position, settings.popup_layout) {
                 eprintln!("failed to open the clipboard window: {error}");
             }
             return;
