@@ -6,6 +6,8 @@ pub(crate) mod settings_backup;
 pub(crate) mod startup;
 pub(crate) mod todo_export;
 pub(crate) mod update_channel;
+pub(crate) mod update_runtime;
+pub(crate) mod update_notifications;
 pub(crate) mod updater;
 
 use std::{env, path::PathBuf};
@@ -42,6 +44,9 @@ macro_rules! tauri_commands {
             crate::system::updater::updater_configured,
             crate::system::update_channel::updater_check,
             crate::system::update_channel::updater_install,
+            crate::system::update_runtime::updater_state,
+            crate::system::update_notifications::updater_notify,
+            crate::system::update_notifications::updater_diagnostics,
             crate::system::settings_backup::save_settings_backup,
             crate::system::settings_backup::restart_island,
         ] $($rest)*)

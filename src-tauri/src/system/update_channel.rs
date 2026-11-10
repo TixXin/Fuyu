@@ -4,7 +4,10 @@
 //! separate manifest that the release script keeps on the `beta-channel`
 //! release, so only users who opt in are offered pre-releases.
 
-use std::{sync::Mutex, time::Duration};
+use std::time::Duration;
+
+use super::update_runtime::{change, Stage};
+use crate::user_error::UserError;
 
 use serde::Serialize;
 use tauri::{ipc::Channel, AppHandle, Url};
@@ -14,9 +17,6 @@ const STABLE_MANIFEST: &str = "releases/latest/download/latest.json";
 const BETA_MANIFEST: &str = "releases/download/beta-channel/latest.json";
 const CHECK_TIMEOUT: Duration = Duration::from_secs(20);
 const DOWNLOAD_TIMEOUT: Duration = Duration::from_secs(600);
-
-/// The update found by the last check, kept for `updater_install`.
-static PENDING: Mutex<Option<Update>> = Mutex::new(None);
 
 #[derive(Serialize)]
 pub struct UpdateInfo {
@@ -78,17 +78,8 @@ fn configured_endpoints(app: &AppHandle) -> Result<Vec<Url>, String> {
         .map_err(|error| error.to_string())
 }
 
-fn pending() -> Result<std::sync::MutexGuard<'static, Option<Update>>, String> {
-    PENDING.lock().map_err(|_| "The update state is unavailable".to_string())
-}
-
-#[tauri::command]
-pub async fn updater_check(
-    app: AppHandle,
-    channel: String,
-    proxy: Option<String>,
-) -> Result<Option<UpdateInfo>, String> {
-    let endpoints = channel_endpoints(&configured_endpoints(&app)?, &channel)?;
+async fn check(app: &AppHandle, channel: &str, proxy: Option<String>) -> Result<Option<Update>, String> {
+    let endpoints = channel_endpoints(&configured_endpoints(app)?, channel)?;
     let mut builder = app
         .updater_builder()
         .endpoints(endpoints)
@@ -97,30 +88,76 @@ pub async fn updater_check(
     if let Some(proxy) = proxy {
         builder = builder.proxy(Url::parse(&proxy).map_err(|error| error.to_string())?);
     }
-    let found = builder
-        .build()
-        .map_err(|error| error.to_string())?
-        .check()
-        .await
-        .map_err(|error| error.to_string())?;
-
-    let info = found.as_ref().map(|update| UpdateInfo {
-        version: update.version.clone(),
-        body: update.body.clone(),
-    });
-    *pending()? = found;
-    Ok(info)
+    builder.build().map_err(|error| error.to_string())?
+        .check().await.map_err(|error| error.to_string())
 }
 
 #[tauri::command]
-pub async fn updater_install(on_event: Channel<DownloadEvent>) -> Result<(), String> {
-    let mut update = pending()?.take().ok_or("No update to install")?;
-    update.timeout = Some(DOWNLOAD_TIMEOUT);
+pub async fn updater_check(
+    app: AppHandle,
+    channel: String,
+    proxy: Option<String>,
+) -> Result<Option<UpdateInfo>, UserError> {
+    if channel != "stable" && channel != "beta" {
+        return Err(format!("Unknown update channel: {channel}").into());
+    }
+    change(&app, |runtime| runtime.begin_check(&channel))?;
+    // This operation belongs to the application, not the invoking webview.
+    let task_app = app.clone();
+    let result = tauri::async_runtime::spawn(async move {
+        match check(&task_app, &channel, proxy).await {
+            Ok(found) => {
+                let info = found.as_ref().map(|update| UpdateInfo {
+                    version: update.version.clone(),
+                    body: update.body.clone(),
+                });
+                change(&task_app, |runtime| {
+                    runtime.complete_check(found.map(|update| {
+                        let version = update.version.clone();
+                        let notes = update.body.clone().unwrap_or_default();
+                        (update, version, notes)
+                    }));
+                    Ok(())
+                })?;
+                Ok(info)
+            }
+            Err(error) => {
+                change(&task_app, |runtime| { runtime.fail(&error, true); Ok(()) })?;
+                Err(UserError::from(error))
+            }
+        }
+    }).await;
+    match result {
+        Ok(result) => result,
+        Err(error) => {
+            let detail = error.to_string();
+            change(&app, |runtime| { runtime.fail(&detail, true); Ok(()) })?;
+            Err(detail.into())
+        }
+    }
+}
 
-    let mut started = false;
-    update
-        .download_and_install(
+#[tauri::command]
+pub async fn updater_install(
+    app: AppHandle,
+    on_event: Channel<DownloadEvent>,
+    expected_version: Option<String>,
+    expected_channel: Option<String>,
+) -> Result<(), UserError> {
+    let mut update = change(&app, |runtime| {
+        runtime.begin_install(expected_version.as_deref(), expected_channel.as_deref())
+    })?;
+    update.timeout = Some(DOWNLOAD_TIMEOUT);
+    let task_app = app.clone();
+    let result = tauri::async_runtime::spawn(async move {
+        let mut started = false;
+        let result = update.download_and_install(
             |chunk_length, content_length| {
+                let _ = change(&task_app, |runtime| {
+                    if !started { runtime.snapshot.total = content_length.unwrap_or(0); }
+                    runtime.snapshot.downloaded = runtime.snapshot.downloaded.saturating_add(chunk_length);
+                    Ok(())
+                });
                 if !started {
                     started = true;
                     let _ = on_event.send(DownloadEvent::Started { content_length });
@@ -128,11 +165,27 @@ pub async fn updater_install(on_event: Channel<DownloadEvent>) -> Result<(), Str
                 let _ = on_event.send(DownloadEvent::Progress { chunk_length });
             },
             || {
+                let _ = change(&task_app, |runtime| { runtime.snapshot.stage = Stage::Installing; Ok(()) });
                 let _ = on_event.send(DownloadEvent::Finished);
             },
-        )
-        .await
-        .map_err(|error| error.to_string())
+        ).await.map_err(|error| error.to_string());
+        change(&task_app, |runtime| {
+            match &result {
+                Ok(()) => runtime.snapshot.stage = Stage::Done,
+                Err(error) => runtime.fail(error, false),
+            }
+            Ok(())
+        })?;
+        result.map_err(UserError::from)
+    }).await;
+    match result {
+        Ok(result) => result,
+        Err(error) => {
+            let detail = error.to_string();
+            change(&app, |runtime| { runtime.fail(&detail, false); Ok(()) })?;
+            Err(detail.into())
+        }
+    }
 }
 
 #[cfg(test)]
