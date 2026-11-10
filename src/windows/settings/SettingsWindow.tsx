@@ -36,6 +36,8 @@ import { AboutSettingsPage } from "./AboutSettingsPage";
 import { PluginsSettingsPage } from "./PluginsSettingsPage";
 import { PluginMarketSection } from "../../features/plugins/PluginMarketSection";
 import { useLocale, useTranslation } from "../../i18n";
+import { activeTone } from "../../features/appearance/themeMode";
+import { useSystemDark } from "../../features/appearance/useResolvedTheme";
 import "./SettingsWindow.css";
 
 export function SettingsWindow() {
@@ -44,6 +46,7 @@ export function SettingsWindow() {
   const qqNotifications = useQQNotifications(false);
   const wechatReminders = useWeChatReminders(false);
   const [settings, setSettings] = useState<IslandSettings>(loadSettings);
+  const systemDark = useSystemDark();
   const presets = useSettingPresets(settings, setSettings);
   const saveDirectory = useSaveDirectorySetting();
   const [category, setCategory] = useState<SettingsCategory>(DEFAULT_SETTINGS_CATEGORY);
@@ -136,8 +139,11 @@ export function SettingsWindow() {
     setCategory("plugins");
   };
 
+  // Light or dark as the island is (C33.6): its light tokens (.island-light) and the window's own.
+  const light = activeTone(settings.themeMode, systemDark) === "light";
+
   return (
-    <main className={`settings-stage stage--font-${settings.fontFamily}`}>
+    <main className={`settings-stage stage--font-${settings.fontFamily}${light ? " island-light settings-stage--light" : ""}`}>
       <LayoutEditor
         category={category}
         onCategoryChange={changeCategory}

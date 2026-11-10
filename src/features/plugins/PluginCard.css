@@ -15,7 +15,7 @@
 }
 
 .plugin-card--openable:hover {
-  border-color: var(--color-white-a16, rgba(255, 255, 255, 0.16));
+  border-color: var(--color-white-a16, rgba(var(--overlay-rgb, 255, 255, 255), 0.16));
 }
 
 .plugin-card__header {
@@ -65,7 +65,7 @@
 }
 
 .plugin-card__hint--warn {
-  color: #f2d27a;
+  color: var(--warning-text, #f2d27a);
 }
 
 .plugin-card__status {
@@ -88,16 +88,16 @@
 }
 
 .plugin-card__status--running {
-  color: #98d4bb;
+  color: var(--mint-text, #98d4bb);
 }
 
 .plugin-card__status--restarting,
 .plugin-card__status--starting {
-  color: #f2d27a;
+  color: var(--warning-text, #f2d27a);
 }
 
 .plugin-card__status--crashed {
-  color: #ffb4a8;
+  color: var(--error-text, #ffb4a8);
 }
 
 /* The switch sits beside the name; its label stays for screen readers only. */
@@ -175,7 +175,7 @@
 }
 
 .plugin-card__permissions--sensitive summary {
-  color: #f2d27a;
+  color: var(--warning-text, #f2d27a);
 }
 
 .plugin-card__permissions ul {
@@ -195,13 +195,13 @@
 }
 
 .plugin-card__permissions li.plugin-card__permission--sensitive {
-  color: #f2d27a;
+  color: var(--warning-text, #f2d27a);
   background: rgba(242, 210, 122, 0.12);
 }
 
 .plugin-card__error {
   margin: 0;
-  color: #ffb4a8;
+  color: var(--error-text, #ffb4a8);
   font-size: 12px;
   line-height: 1.5;
   overflow-wrap: anywhere;
@@ -254,17 +254,17 @@
 }
 
 .plugin-card__button--quiet:hover {
-  color: #ffb4a8;
+  color: var(--error-text, #ffb4a8);
   background: rgba(255, 180, 168, 0.08);
 }
 
 .plugin-card__button--danger {
-  color: #ffb4a8;
+  color: var(--error-text, #ffb4a8);
   border-color: rgba(255, 180, 168, 0.5);
 }
 
 .plugin-card__log summary {
-  color: rgba(248, 246, 240, 0.62);
+  color: rgba(var(--overlay-rgb, 248, 246, 240), 0.62);
   cursor: pointer;
   font-size: 12px;
   font-weight: 700;

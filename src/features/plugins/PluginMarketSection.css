@@ -50,7 +50,7 @@
 
 .plugin-market__item:hover,
 .plugin-market__item--open {
-  border-color: var(--color-white-a16, rgba(255, 255, 255, 0.16));
+  border-color: var(--color-white-a16, rgba(var(--overlay-rgb, 255, 255, 255), 0.16));
 }
 
 .plugin-market__item--open {
@@ -241,7 +241,7 @@
 }
 
 .plugin-market__state--revoked {
-  color: #ff9d8a;
+  color: var(--error-text, #ff9d8a);
 }
 
 /* Spaced like the panel it sits in, so wrapping the items does not change the layout. */
@@ -322,11 +322,11 @@
 
 .plugin-market__favorite:hover {
   color: var(--color-text-strong);
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(var(--overlay-rgb, 255, 255, 255), 0.06);
 }
 
 .plugin-market__favorite[aria-pressed="true"] {
-  color: #f5c84c;
+  color: var(--warning-text, #f5c84c);
 }
 
 /* The like count follows the star, and the two stay on the left. */
@@ -353,7 +353,7 @@
 
 .plugin-market__like:hover {
   color: var(--color-text-strong);
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(var(--overlay-rgb, 255, 255, 255), 0.06);
 }
 
 .plugin-market__like:focus-visible,
@@ -370,7 +370,7 @@
 
 .plugin-market__category[aria-pressed="true"] {
   color: var(--color-text-strong);
-  border-color: rgba(248, 246, 240, 0.42);
+  border-color: rgba(var(--overlay-rgb, 248, 246, 240), 0.42);
 }
 
 .plugin-market__state {

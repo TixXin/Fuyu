@@ -1,9 +1,22 @@
 .settings-stage {
   --settings-card: #1b1d22;
-  --settings-card-line: rgba(255, 255, 255, 0.07);
+  --settings-card-line: rgba(var(--overlay-rgb, 255, 255, 255), 0.07);
   height: 100%;
   color: var(--color-page-text);
   background: #131417;
+}
+
+/* The light window: the same layout, a pale base and white cards. */
+.settings-stage--light {
+  --settings-card: #ffffff;
+  --settings-card-line: rgba(0, 0, 0, 0.08);
+  background: #eceef2;
+}
+
+/* Cards white on the pale base, a step up like the sidebar card, not a grey wash. */
+.settings-stage--light :is(.settings-group__card, .settings-section:not(.settings-section--list), .plugin-card, .plugin-market__item, .theme-market__item) {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.08);
 }
 
 .settings-stage select {
