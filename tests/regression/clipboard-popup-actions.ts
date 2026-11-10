@@ -92,11 +92,20 @@ export async function checkSecondRound(check: Check, calls: string[]) {
   await key("dark", { key: "i", ctrlKey: true });
   check($("dark", ".clipboard-panel__result pre")?.textContent?.includes("快捷翻译") && !calls.some((call) => call.startsWith("ipc:rewrite_text")), "Ctrl+I：AI 改写，按 Enter 之前什么都不发");
   await keyOn(panelInput("dark"), { key: "Enter" });
+  check($("dark", ".clipboard-panel__result pre")?.textContent === "AI:", "AI 的回答边生成边显示");
   await settle();
   check(calls.some((call) => call.startsWith("ipc:rewrite_text:") && call.includes('"task":"summarize"')) && $("dark", ".clipboard-panel__result pre")?.textContent === "AI:summarize", "Enter 用快捷翻译的服务总结，结果先显示");
   await keyOn(panelInput("dark"), { key: "Enter" });
   await settle();
   check(pasted("AI:summarize") && !$("dark", ".clipboard-panel"), "再按 Enter 粘贴 AI 的结果");
+
+  await key("dark", { key: "i", ctrlKey: true });
+  check($$("dark", ".clipboard-panel__group").some((group) => group.textContent === "自己的提示词") && $$("dark", ".clipboard-panel__action").some((row) => row.textContent?.includes("正式邮件")), "设置里写的提示词列在 AI 改写里");
+  for (let step = 0; step < 4; step += 1) await keyOn(panelInput("dark"), { key: "ArrowDown" });
+  await keyOn(panelInput("dark"), { key: "Enter" });
+  await settle();
+  check(calls.some((call) => call.startsWith("ipc:rewrite_text:") && call.includes('"task":"custom"') && call.includes("改成正式的邮件语气")), "选自己的提示词，按它改写");
+  await keyOn(panelInput("dark"), { key: "Escape" });
 
   await key("dark", { key: "ArrowDown" });
   await key("dark", { key: "ArrowDown" });

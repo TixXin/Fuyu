@@ -26,6 +26,7 @@ export const DEFAULT_CLIPBOARD_HISTORY: ClipboardHistorySnapshot = {
     linkPreview: false,
     flattenTerminalCommands: false,
     localApiRead: false,
+    aiPrompts: [],
   },
   items: [],
 };
@@ -67,5 +68,6 @@ export function normalizeClipboardSettings(
     linkPreview: settings.linkPreview === true,
     flattenTerminalCommands: settings.flattenTerminalCommands === true,
     localApiRead: settings.localApiRead === true,
+    aiPrompts: Array.isArray(settings.aiPrompts) ? settings.aiPrompts.filter((prompt) => prompt && typeof prompt.title === "string" && typeof prompt.prompt === "string") : [],
   };
 }

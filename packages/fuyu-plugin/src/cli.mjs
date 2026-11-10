@@ -3,6 +3,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { runDev } from "./dev.mjs";
+import { runMcp } from "./mcp.mjs";
 import { createZip, packageFiles, readManifest, sha256 } from "./pack.mjs";
 import { rotateKey } from "./rotate.mjs";
 import { runTests } from "./run-tests.mjs";
@@ -41,6 +42,11 @@ Commands:
   test       Run test/*.test.mjs with node --test, or without tests start the plugin
              under the mock host, run each command, open each view and check it
              answered without errors
+  mcp        Run an MCP server on stdin/stdout for AI tools (Claude Code, Cursor):
+             read-only tools for the clipboard history, today's todos and the note,
+             through the island's local API. Add it with
+             claude mcp add fuyu -- npx -y fuyu-plugin mcp
+             --config <file>  local-api.json of another island data folder
   publish    Pack (--sign to sign it too) and print how to publish a release and
              submit it to the plugin market (TixXin/fuyu-plugins)
   help       Show this text
@@ -166,6 +172,8 @@ export async function main(argv = process.argv.slice(2)) {
     }
     case "dev":
       return runDev(dir, { config: typeof options.config === "string" ? options.config : undefined });
+    case "mcp":
+      return runMcp({ config: typeof options.config === "string" ? path.resolve(options.config) : undefined });
     case "test":
       return runTests(dir);
     case "publish":

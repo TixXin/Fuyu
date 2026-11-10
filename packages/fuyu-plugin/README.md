@@ -18,6 +18,14 @@ updates on the key it first saw. Keep the key (`~/.fuyu-plugin/signing.key`, or
 `FUYU_PLUGIN_SIGNING_KEY` with the PEM text) backed up: a version signed with another key needs every
 user's confirmation.
 
+## MCP server
+
+`fuyu-plugin mcp` runs an MCP server on stdin / stdout that gives AI tools read-only access to the running island through its local API: `clipboard_history` (needs Settings → Clipboard → "Let the local API read the history"), `todos_today` and `daily_note`.
+
+```sh
+claude mcp add fuyu -- npx -y fuyu-plugin mcp
+```
+
 ## SDK
 
 ```js

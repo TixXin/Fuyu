@@ -4,7 +4,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useTranslation } from "../../i18n";
-import type { ClipboardHistoryItem } from "./api";
+import type { ClipboardAiPrompt, ClipboardHistoryItem } from "./api";
 import { ClipboardAiList } from "./ClipboardAiList";
 import { ClipboardTransformList } from "./ClipboardTransformList";
 import { filterActions, type ActionIcon, type PopupAction } from "./popupActions";
@@ -21,7 +21,7 @@ export type PanelPage = "actions" | "transforms" | "note" | "ai";
  * everything the island's page can do with an entry, transforms, and pausing the history. Typing
  * narrows the actions; ↑↓ and Enter pick one; Esc goes back a page, then closes.
  */
-export function ClipboardActionPanel({ item, actions, page, onPage, onClose, onPasteText, onSaveNote }: {
+export function ClipboardActionPanel({ item, actions, page, aiPrompts, onPage, onClose, onPasteText, onSaveNote }: {
   item?: ClipboardHistoryItem;
   actions: readonly PopupAction[];
   page: PanelPage;
@@ -29,6 +29,7 @@ export function ClipboardActionPanel({ item, actions, page, onPage, onClose, onP
   onClose: () => void;
   onPasteText: (text: string) => void;
   onSaveNote: (id: string, note: string) => void;
+  aiPrompts?: readonly ClipboardAiPrompt[];
 }) {
   const t = useTranslation();
   const text = t.clipboard.popup.actions;
@@ -115,7 +116,7 @@ export function ClipboardActionPanel({ item, actions, page, onPage, onClose, onP
           <kbd>Esc</kbd>
         </div>
         {page === "ai" && item ? (
-          <ClipboardAiList item={item} onPaste={(result) => { onClose(); onPasteText(result); }} />
+          <ClipboardAiList item={item} prompts={aiPrompts} onPaste={(result) => { onClose(); onPasteText(result); }} />
         ) : page === "transforms" && item ? (
           <ClipboardTransformList item={item} query={query} onPaste={(result) => { onClose(); onPasteText(result); }} />
         ) : page === "actions" ? (

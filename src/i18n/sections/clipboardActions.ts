@@ -24,6 +24,8 @@ export type ClipboardActionsText = {
   aiService: string;
   aiLoading: string;
   aiPasteAgain: string;
+  aiOwn: string;
+  aiOwnHint: string;
   pasteAs: (format: string) => string;
   pasteTextFile: string;
   pastePath: string;
@@ -93,6 +95,8 @@ export const zhCN: ClipboardActionsText = {
   aiService: "用快捷翻译的服务",
   aiLoading: "正在请求…",
   aiPasteAgain: "再按 Enter 粘贴",
+  aiOwn: "自己的提示词",
+  aiOwnHint: "在 设置 → 剪贴板 → AI 提示词 里添加自己的",
   pasteAs: (format) => `粘贴为 ${format}`,
   pasteTextFile: "粘贴为 .txt 文件",
   pastePath: "粘贴图片路径",
@@ -181,6 +185,8 @@ export const en: ClipboardActionsText = {
   aiService: "Uses the quick translation's service",
   aiLoading: "Asking…",
   aiPasteAgain: "Enter again pastes",
+  aiOwn: "Your prompts",
+  aiOwnHint: "Add your own in Settings → Clipboard → AI prompts",
   pasteAs: (format) => `Paste as ${format}`,
   pasteTextFile: "Paste as a .txt file",
   pastePath: "Paste the image's path",

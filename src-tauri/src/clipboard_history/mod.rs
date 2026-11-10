@@ -152,6 +152,47 @@ pub struct ClipboardHistorySettings {
     /// The local API's GET /v1/clipboard may read the history, for AI tools (C38).
     #[serde(default)]
     local_api_read: bool,
+    /// The user's own prompts for "Rewrite with AI" (C43).
+    #[serde(default)]
+    ai_prompts: Vec<AiPrompt>,
+}
+
+/// A prompt of the user's own for the clipboard window's AI rewrites (C43).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AiPrompt {
+    id: String,
+    title: String,
+    prompt: String,
+}
+
+const MAX_AI_PROMPTS: usize = 20;
+const MAX_AI_PROMPT_TITLE: usize = 24;
+const MAX_AI_PROMPT_CHARACTERS: usize = 2_000;
+
+/// Prompts with a title and text, both cut to their limits, ids unique, at most MAX_AI_PROMPTS.
+fn normalized_ai_prompts(prompts: &[AiPrompt]) -> Vec<AiPrompt> {
+    let mut kept: Vec<AiPrompt> = Vec::new();
+    for prompt in prompts {
+        let title: String = prompt.title.trim().chars().take(MAX_AI_PROMPT_TITLE).collect();
+        let text: String = prompt.prompt.trim().chars().take(MAX_AI_PROMPT_CHARACTERS).collect();
+        let id = prompt.id.trim().chars().take(64).collect::<String>();
+        if title.is_empty() || text.is_empty() || id.is_empty() || kept.iter().any(|kept| kept.id == id) || kept.len() == MAX_AI_PROMPTS {
+            continue;
+        }
+        kept.push(AiPrompt { id, title, prompt: text });
+    }
+    kept
+}
+
+#[cfg(test)]
+#[test]
+fn ai_prompts_need_a_title_and_text_and_stay_few() {
+    let prompt = |id: &str, title: &str, text: &str| AiPrompt { id: id.into(), title: title.into(), prompt: text.into() };
+    let kept = normalized_ai_prompts(&[prompt("a", " 邮件 ", " 改成正式邮件 "), prompt("a", "dup", "x"), prompt("b", "", "x"), prompt("c", "t", "  ")]);
+    assert_eq!(kept, [prompt("a", "邮件", "改成正式邮件")]);
+    let many: Vec<AiPrompt> = (0..30).map(|index| prompt(&index.to_string(), "t", "x")).collect();
+    assert_eq!(normalized_ai_prompts(&many).len(), MAX_AI_PROMPTS);
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
@@ -229,6 +270,7 @@ impl Default for ClipboardHistorySettings {
             link_preview: false,
             flatten_terminal_commands: false,
             local_api_read: false,
+            ai_prompts: Vec::new(),
         }
     }
 }
@@ -238,6 +280,7 @@ impl ClipboardHistorySettings {
         self.max_items = self.max_items.clamp(MIN_MAX_ITEMS, MAX_MAX_ITEMS);
         self.retention_days = self.retention_days.min(MAX_RETENTION_DAYS);
         self.excluded_apps = normalized_app_names(&self.excluded_apps);
+        self.ai_prompts = normalized_ai_prompts(&self.ai_prompts);
         // The default parses to its own label (see hotkey tests), so falling back
         // to the constant matches falling back to its parsed binding.
         self.shortcut = parse_shortcut_binding(&self.shortcut)

@@ -18,7 +18,16 @@ const BIG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width=
 mockIPC((command, args) => {
   calls.push(`ipc:${command}:${JSON.stringify(args ?? {})}`);
   if (command === "read_clipboard_image_qr") return "https://qr.example";
-  if (command === "rewrite_text") return `AI:${(args as { task: string }).task}`;
+  if (command === "rewrite_text") {
+    // The answer arrives in two pieces through the channel, then the command resolves.
+    const { task, onChunk } = args as { task: string; onChunk: { id: number } };
+    const internals = (window as unknown as { __TAURI_INTERNALS__: { runCallback: (id: number, data: unknown) => void } }).__TAURI_INTERNALS__;
+    internals.runCallback(onChunk.id, { index: 0, message: "AI:" });
+    return new Promise((resolve) => setTimeout(() => {
+      internals.runCallback(onChunk.id, { index: 1, message: task });
+      resolve(`AI:${task}`);
+    }, 20));
+  }
   if (command === "get_clipboard_image_preview") {
     calls.push(`preview:${(args as { id: string }).id}`);
     return BIG;
@@ -67,6 +76,7 @@ for (const frame of FRAMES) {
         snippets={SNIPPETS}
         openCount={0}
         wide={frame.wide}
+        aiPrompts={[{ id: "p1", title: "正式邮件", prompt: "改成正式的邮件语气" }]}
         capture={frame.id === "paused" ? { paused: true, pausedUntil: now + 14 * minute, ignoreNext: false } : undefined}
         onPaste={(id, plain, options) => calls.push(`paste:${id}${plain ? ":plain" : ""}${options?.enter ? ":enter" : ""}${options?.copyAs ? `:${options.copyAs}` : ""}`)}
         onPasteSnippet={(id) => calls.push(`snippet:${id}`)}

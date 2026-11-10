@@ -33,7 +33,7 @@
 - 带 `Origin` 头的请求（来自网页）一律拒绝，返回 403。
 - `Host` 必须是 `127.0.0.1:<端口>` 或 `localhost:<端口>`，用来防止 DNS 重绑定攻击。
 - 请求体最大 64 KB。
-- 只开放待办、每日笔记和 AI Agent 状态灯，剪贴板、邮件、消息、凭据都不开放。
+- 只开放待办、每日笔记和 AI Agent 状态灯。剪贴板历史默认不开放，要在「设置 → 剪贴板」打开「允许本地接口读取历史」才能读（只读文字记录，打码的密钥只给打码后的样子，C38）。邮件、消息、凭据都不开放。
 
 ## 接口
 
@@ -83,6 +83,16 @@ Invoke-RestMethod "$api/agent-status/aider" -Method Put -Headers $headers -Conte
   -Body ([Text.Encoding]::UTF8.GetBytes((@{ phase = "running"; name = "Aider"; title = "重构解析器" } | ConvertTo-Json)))
 Invoke-RestMethod "$api/agent-status/aider" -Method Put -Headers $headers -ContentType "application/json" -Body '{"phase":"completed"}'
 ```
+
+## 给 AI 工具用：MCP
+
+`fuyu-plugin mcp`（C43）是一个 MCP 服务器，走标准输入输出，通过本地接口给 Claude Code、Cursor 这类工具三个只读工具：`clipboard_history`（最近的文字记录，可按文字筛选，需要上面那个剪贴板开关）、`todos_today`、`daily_note`。端口和令牌每次都从 `local-api.json` 读，岛屿换了端口也不用改配置。
+
+```sh
+claude mcp add fuyu -- npx -y fuyu-plugin mcp
+```
+
+其他工具在 MCP 配置里写命令 `npx`、参数 `["-y", "fuyu-plugin", "mcp"]`。代码在 `packages/fuyu-plugin/src/mcp.mjs`。
 
 ## 示例
 

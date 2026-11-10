@@ -63,6 +63,7 @@ export function ClipboardWindow() {
         wide={clipboardHistory.settings.popupLayout === "wide"}
         capture={clipboardHistory.capture}
         linkPreview={clipboardHistory.settings.linkPreview === true}
+        aiPrompts={clipboardHistory.settings.aiPrompts}
       />
     </div>
   );

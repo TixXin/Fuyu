@@ -1,4 +1,4 @@
-import { invoke } from "@tauri-apps/api/core";
+import { Channel, invoke } from "@tauri-apps/api/core";
 import { listen, type EventCallback } from "@tauri-apps/api/event";
 import type { TranslationProvider } from "./providers";
 import type { Direction } from "./storage";
@@ -83,9 +83,13 @@ export function listenTranslationIslandShortcut(handler: EventCallback<unknown>)
 }
 
 /** What the clipboard window's AI transforms ask for (C38). */
-export type RewriteTask = "summarize" | "polish" | "grammar" | "translate";
+export type RewriteTask = "summarize" | "polish" | "grammar" | "translate" | "custom";
 
-/** Rewrites text with the translation's service, key and model (C38). */
-export function rewriteText(text: string, task: RewriteTask, service: TranslationService) {
-  return invoke<string>("rewrite_text", { text, task, ...service });
+/**
+ * Rewrites text with the translation's service, key and model (C38): `prompt` for a "custom" task,
+ * `onChunk` gets the answer as it is written (C43); resolves to the whole answer.
+ */
+export function rewriteText(text: string, task: RewriteTask, service: TranslationService, options: { prompt?: string; onChunk?: (piece: string) => void } = {}) {
+  const onChunk = new Channel<string>(options.onChunk);
+  return invoke<string>("rewrite_text", { text, task, prompt: options.prompt ?? null, ...service, onChunk });
 }

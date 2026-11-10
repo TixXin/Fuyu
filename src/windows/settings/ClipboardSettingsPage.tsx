@@ -1,3 +1,4 @@
+import { ClipboardAiPromptSettings } from "../../features/clipboard/ClipboardAiPromptSettings";
 import { ClipboardSettingsSection } from "../../features/clipboard/ClipboardSettingsSection";
 import { ClipboardSnippetSettings } from "../../features/clipboard/ClipboardSnippetSettings";
 import { ClipboardTransferSettings } from "../../features/clipboard/ClipboardTransferSettings";
@@ -25,6 +26,7 @@ export function ClipboardSettingsPage({ onOpenShortcuts }: { onOpenShortcuts: ()
         />
       )}
       {clipboardSettings.enabled && <ClipboardSnippetSettings />}
+      {clipboardSettings.enabled && <ClipboardAiPromptSettings clipboardSettings={clipboardSettings} onChange={updateClipboardSettings} />}
       {clipboardSettings.enabled && <ClipboardTransferSettings />}
       {clipboardSettings.enabled && <ShortcutsLinkSection onOpen={onOpenShortcuts} />}
     </>

@@ -41,7 +41,12 @@ export type ClipboardHistorySettings = {
   flattenTerminalCommands?: boolean;
   /** The local API's GET /v1/clipboard may read the history (C38). */
   localApiRead?: boolean;
+  /** The user's own prompts for "Rewrite with AI" (C43); missing before. */
+  aiPrompts?: ClipboardAiPrompt[];
 };
+
+/** A prompt of the user's own for the clipboard window's AI rewrites (C43). */
+export type ClipboardAiPrompt = { id: string; title: string; prompt: string };
 
 /** Whether copies are recorded right now (C38). */
 export type ClipboardCaptureStatus = { paused: boolean; pausedUntil?: number | null; ignoreNext: boolean };

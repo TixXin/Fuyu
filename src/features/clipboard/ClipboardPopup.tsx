@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { Search } from "lucide-react";
 import { useTranslation } from "../../i18n";
-import type { ClipboardCaptureStatus, ClipboardCopyAs, ClipboardHistoryItem, ClipboardSnippet } from "./api";
+import type { ClipboardAiPrompt, ClipboardCaptureStatus, ClipboardCopyAs, ClipboardHistoryItem, ClipboardSnippet } from "./api";
 import { ClipboardActionPanel, type PanelPage } from "./ClipboardActionPanel";
 import { ClipboardEditor } from "./ClipboardEditor";
 import { ClipboardPauseBar, ClipboardPopupFooter, pausedNow, type MergeSeparator } from "./ClipboardPopupFooter";
@@ -30,13 +30,14 @@ type Mode = "list" | "panel" | "look" | "edit";
  * Ctrl+Enter merged. `wide` shows the picked entry beside the list. `openCount` changes each time
  * the window is shown, which starts afresh.
  */
-export function ClipboardPopup({ items, snippets, openCount, wide, capture, linkPreview = false, onPaste, onPasteSnippet, onPasteSequence, onClose, onToggleFavorite }: {
+export function ClipboardPopup({ items, snippets, openCount, wide, capture, linkPreview = false, aiPrompts, onPaste, onPasteSnippet, onPasteSequence, onClose, onToggleFavorite }: {
   items: readonly ClipboardHistoryItem[];
   snippets: readonly ClipboardSnippet[];
   openCount: number;
   wide: boolean;
   capture?: ClipboardCaptureStatus;
   linkPreview?: boolean;
+  aiPrompts?: readonly ClipboardAiPrompt[];
   onPaste: (id: string, plain: boolean, options?: { enter?: boolean; copyAs?: ClipboardCopyAs }) => void;
   onPasteSnippet: (id: string) => void;
   onPasteSequence: (ids: string[]) => void;
@@ -314,6 +315,7 @@ export function ClipboardPopup({ items, snippets, openCount, wide, capture, link
             onClose={backToList}
             onPasteText={pasteText}
             onSaveNote={saveNote}
+            aiPrompts={aiPrompts}
           />
         )}
       </div>
