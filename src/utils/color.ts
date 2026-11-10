@@ -20,6 +20,11 @@ export function relativeLuminance(hex: string) {
  * RGB channels ("r, g, b") for text drawn straight on `background`: near-white on dark colours,
  * near-black on light ones. 0.18 is where white and black text have about the same contrast.
  */
+/** Whether text on `background` should be dark: a light island (C31 restyles the island for it). */
+export function isLightIsland(background: string) {
+  return relativeLuminance(background) > 0.18;
+}
+
 export function inkOn(background: string) {
   return relativeLuminance(background) > 0.18 ? "24, 24, 30" : "241, 240, 246";
 }

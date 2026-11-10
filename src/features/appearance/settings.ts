@@ -18,6 +18,7 @@ export { DEFAULT_SETTINGS } from "./settingsDefaults.ts";
  * part of a theme, so someone else's theme does not change your layout.
  */
 export const THEME_SETTING_KEYS = [
+  "themeMode",
   "appearanceMode",
   "fontFamily",
   "glassIntensity",

@@ -53,6 +53,7 @@ export const DEFAULT_SETTINGS: IslandSettings = {
   pulseColor: "#3ae489",
   pulseBrightness: 100,
   islandBackgroundColor: "#000000",
+  themeMode: "dark",
   showTitle: false,
   showCollapsedText: true,
   showIdleTodoCount: true,
@@ -105,6 +106,8 @@ export const DEFAULT_SETTINGS: IslandSettings = {
 // What versions before these fields existed showed. A saved setting without the
 // field loads as this, not as the first-launch default, so an upgrade keeps the look.
 export const LEGACY_FALLBACKS = {
+  // Settings from before the theme modes keep the colours their user picked.
+  themeMode: "custom" as const,
   topFilletRadius: 8,
   islandCornerRadius: 30,
   hoverExpandDelayMs: 300,

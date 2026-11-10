@@ -7,6 +7,8 @@ import {
   MIN_ISLAND_CORNER_RADIUS, MIN_MAX_PANEL_HEIGHT, MIN_TOP_FILLET_RADIUS,
   MAX_PANEL_WIDTH, MIN_PANEL_WIDTH,
 } from "./settingsLimits.ts";
+import { THEME_MODES } from "./themeMode.ts";
+import { oneOf } from "./settingsLimits.ts";
 import type { IslandSettings, LegacyIslandSettings } from "./types";
 
 /** The look and size: scales, margin, corners, panel height, colours, what the bar shows. */
@@ -78,6 +80,7 @@ export function normalizeLayoutSettings(settings: LegacyIslandSettings | null | 
       settings?.islandBackgroundColor,
       DEFAULT_SETTINGS.islandBackgroundColor,
     ),
+    themeMode: oneOf(THEME_MODES, settings?.themeMode, LEGACY_FALLBACKS.themeMode),
     showTitle:
       typeof settings?.showTitle === "boolean"
         ? settings.showTitle

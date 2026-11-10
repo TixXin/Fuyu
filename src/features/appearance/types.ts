@@ -11,6 +11,8 @@ export type AppearanceMode = "classic" | "liquidGlass";
 export type IslandFont = "system" | "pixel";
 /** Shape of the island's corners: CSS `corner-shape: squircle`, or a circular arc. */
 export type IslandCornerShape = "squircle" | "round";
+/** Built-in colours (C31): dark, light, whichever Windows uses, or the colours picked by hand. */
+export type ThemeMode = "dark" | "light" | "system" | "custom";
 /** Which monitor the island sits on: the primary one, or it follows the pointer or the foreground window there. */
 export type IslandMonitor = "primary" | "cursor" | "foreground";
 /** How the collapsed island opens: a click, or resting the pointer on it. */
@@ -57,6 +59,7 @@ export type IslandSettings = CalendarSettingValues & {
   /** Bottom corner radius (px) of the expanded island; the collapsed, detached and inner panel radii follow it. */
   islandCornerRadius: number;
   islandCornerShape: IslandCornerShape;
+  themeMode: ThemeMode;
   /** Height (px) of every expanded page (C27); longer content scrolls inside. */
   maxPanelHeight: number;
   /** Width (px, before the scale) of the expanded panel's usual pages (C25). */

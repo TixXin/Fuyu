@@ -68,3 +68,33 @@
   --space-xl: 12px;
   --space-2xl: 14px;
 }
+
+/*
+ * A light island (C31: the light theme, or a light colour picked by hand): the same tokens, as dark
+ * ink and dark translucent overlays, so text and surfaces on the island stay readable. Only inside
+ * the island window's stage; the settings window keeps its dark look.
+ */
+.stage--light {
+  --color-text: #18181e;
+  --color-text-strong: rgba(24, 24, 30, 0.88);
+  --color-text-muted: rgba(24, 24, 30, 0.72);
+  --color-text-subtle: rgba(24, 24, 30, 0.56);
+  --color-page-text: #18181e;
+  --text-1: rgba(24, 24, 30, 0.94);
+  --text-2: rgba(24, 24, 30, 0.7);
+  --text-3: rgba(24, 24, 30, 0.56);
+  --text-placeholder: rgba(24, 24, 30, 0.44);
+  --color-white-a04: rgba(0, 0, 0, 0.04);
+  --color-white-a06: rgba(0, 0, 0, 0.05);
+  --color-white-a08: rgba(0, 0, 0, 0.06);
+  --color-white-a09: rgba(0, 0, 0, 0.07);
+  --color-white-a10: rgba(0, 0, 0, 0.08);
+  --color-white-a12: rgba(0, 0, 0, 0.09);
+  --color-white-a16: rgba(0, 0, 0, 0.12);
+  --color-white-a18: rgba(0, 0, 0, 0.14);
+  --color-accent: #0a7fd1;
+  --color-warning: #b7791f;
+  --color-focus-ring: rgba(10, 127, 209, 0.8);
+  --color-focus-ring-soft: rgba(10, 127, 209, 0.6);
+  color: var(--text-1);
+}

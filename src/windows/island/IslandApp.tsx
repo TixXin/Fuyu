@@ -41,6 +41,8 @@ import { useIslandMessagePanel } from "./useIslandMessagePanel";
 import { useIslandPopup } from "./useIslandPopup";
 import { panelIslandWidth } from "./layout";
 import { useIslandResize } from "./useIslandResize";
+import { useResolvedTheme } from "../../features/appearance/useResolvedTheme";
+import { isLightIsland } from "../../utils/color";
 import { MessageBanner } from "../../features/messages/banner/MessageBanner";
 import { PluginPageButtons } from "./PluginPageButtons";
 import { useCollapsedSlots } from "./useCollapsedSlots";
@@ -63,7 +65,9 @@ export function IslandApp() {
   const navigation = useIslandNavigation();
   const { mode, isTucked, page, setPage, collapseIsland, tuckIsland, revealIsland, minimizeToEdge, openIslandPage, toggleClipboardHistory } = navigation;
   const pluginPages = usePluginPages(page);
-  const [settings, setSettings] = useIslandSettings();
+  const [storedSettings, saveSettings] = useIslandSettings();
+  // Dark, light or the system's colours (C31) in place of the picked ones.
+  const [settings, setSettings] = useResolvedTheme(storedSettings, saveSettings);
   // Quiet while a full-screen app (usually a game) is in front, if game mode asks for it.
   const game = useGameMode(settings, { mode, isTucked, collapseIsland, tuckIsland, revealIsland });
   const notices = useIslandNotices(settings, { mode, isTucked, quiet: game.quiet });
@@ -231,7 +235,7 @@ export function IslandApp() {
   );
 
   return (
-    <main className={`stage stage--font-${settings.fontFamily}`} style={stageStyle}>
+    <main className={`stage stage--font-${settings.fontFamily}${isLightIsland(settings.islandBackgroundColor) ? " stage--light" : ""}`} style={stageStyle}>
       <IslandShell
         qqMail={qqMail}
         qqNotifications={qqNotifications}
