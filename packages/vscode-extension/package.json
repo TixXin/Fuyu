@@ -1,8 +1,8 @@
 {
-  "name": "focusd-island",
-  "displayName": "FocuSD Island",
-  "description": "Lets FocuSD Island switch to the terminal running a Claude Code or Codex session when you click it on the island.",
-  "version": "0.1.0",
+  "name": "fuyu",
+  "displayName": "Fuyu",
+  "description": "Lets Fuyu switch to the terminal running a Claude Code or Codex session when you click it on the island.",
+  "version": "0.2.0",
   "publisher": "tixxin",
   "license": "MIT",
   "icon": "icon.png",
@@ -16,7 +16,7 @@
     "vscode": "^1.75.0"
   },
   "categories": ["Other"],
-  "keywords": ["claude code", "codex", "terminal", "focusd"],
+  "keywords": ["claude code", "codex", "terminal", "fuyu"],
   "extensionKind": ["ui", "workspace"],
   "activationEvents": ["onUri"],
   "main": "./extension.js",

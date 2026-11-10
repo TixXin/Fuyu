@@ -64,7 +64,7 @@ fn generate_token() -> Result<String, String> {
 }
 
 /// The token an SSH remote computer's hooks carry (remote_setup.rs), told from the island's own
-/// by its `X-FocuSD-Remote` host: one leaked from a shared server names only that server.
+/// by its `X-Fuyu-Remote` host (`X-FocuSD-Remote` before the rename): one leaked from a shared server names only that server.
 pub(super) fn remote_token(token: &str, host: &str) -> String {
     Sha256::digest(format!("focusd-remote:{host}:{token}")).iter().map(|byte| format!("{byte:02x}")).collect()
 }

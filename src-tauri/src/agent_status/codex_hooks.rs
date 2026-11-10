@@ -4,11 +4,13 @@ use std::{fs, path::Path};
 
 use super::{
     claude_hooks::APPROVAL_HOOK_TIMEOUT_SECONDS, write_text_file, AGENT_APPROVAL_SCRIPT_FILE_NAME,
-    AGENT_RUNNING_NOTIFICATION_ARG, AGENT_SESSION_SCRIPT_FILE_NAME, FOCUSD_AGENT_HOOK_SIGNATURE,
+    AGENT_RUNNING_NOTIFICATION_ARG, AGENT_SESSION_SCRIPT_FILE_NAME,
 };
 
-pub(super) const FOCUSD_AGENT_HOOK_BLOCK_BEGIN: &str = "# BEGIN FocuSD Agent Status Hooks";
-pub(super) const FOCUSD_AGENT_HOOK_BLOCK_END: &str = "# END FocuSD Agent Status Hooks";
+pub(super) const FOCUSD_AGENT_HOOK_BLOCK_BEGIN: &str = "# BEGIN Fuyu Agent Status Hooks";
+pub(super) const FOCUSD_AGENT_HOOK_BLOCK_END: &str = "# END Fuyu Agent Status Hooks";
+/// The block's markers before the rename (D17); such a block is removed like the island's own.
+const LEGACY_HOOK_BLOCK: (&str, &str) = ("# BEGIN FocuSD Agent Status Hooks", "# END FocuSD Agent Status Hooks");
 
 pub(super) fn install_codex_status_hooks(
     config_path: &Path,
@@ -110,18 +112,25 @@ timeout = {approval_timeout}
 }
 
 pub(super) fn remove_managed_codex_hook_block(content: &str) -> String {
+    let current = remove_hook_blocks(content, FOCUSD_AGENT_HOOK_BLOCK_BEGIN, FOCUSD_AGENT_HOOK_BLOCK_END);
+    let (legacy_begin, legacy_end) = LEGACY_HOOK_BLOCK;
+    remove_legacy_codex_focusd_hooks(&remove_hook_blocks(&current, legacy_begin, legacy_end))
+}
+
+/// `content` without the blocks from `begin` to `end` (and the line break after each).
+fn remove_hook_blocks(content: &str, begin: &str, end_marker: &str) -> String {
     let mut remaining = content;
     let mut next_content = String::new();
 
-    while let Some(start) = remaining.find(FOCUSD_AGENT_HOOK_BLOCK_BEGIN) {
+    while let Some(start) = remaining.find(begin) {
         next_content.push_str(&remaining[..start]);
         let after_begin = &remaining[start..];
-        let Some(end) = after_begin.find(FOCUSD_AGENT_HOOK_BLOCK_END) else {
+        let Some(end) = after_begin.find(end_marker) else {
             remaining = "";
             break;
         };
 
-        remaining = &after_begin[end + FOCUSD_AGENT_HOOK_BLOCK_END.len()..];
+        remaining = &after_begin[end + end_marker.len()..];
         if let Some(stripped) = remaining.strip_prefix("\r\n") {
             remaining = stripped;
         } else if let Some(stripped) = remaining.strip_prefix('\n') {
@@ -130,7 +139,7 @@ pub(super) fn remove_managed_codex_hook_block(content: &str) -> String {
     }
 
     next_content.push_str(remaining);
-    remove_legacy_codex_focusd_hooks(&next_content)
+    next_content
 }
 
 pub(super) fn remove_legacy_codex_focusd_hooks(content: &str) -> String {
@@ -165,7 +174,7 @@ pub(super) fn remove_legacy_codex_focusd_hooks(content: &str) -> String {
                 }
 
                 let child_block = lines[child_start..index].join("\n");
-                if child_block.contains(FOCUSD_AGENT_HOOK_SIGNATURE) {
+                if super::is_island_hook_text(&child_block) {
                     removed_managed_child = true;
                 } else {
                     kept_child_ranges.push(child_start..index);
@@ -267,7 +276,7 @@ mod tests {
             r#"command = "cmd.exe /d /s /c \"\"C:\\a b\\focusd-agent-running.cmd\" codex notification\"""#
         ));
         assert!(block.contains("[[hooks.SessionStart]]") && block.contains("[[hooks.PermissionRequest]]"));
-        assert!(block.contains(r#"focusd-agent-session.ps1\" codex start"#));
+        assert!(block.contains(r#"fuyu-agent-session.ps1\" codex start"#));
         assert_eq!(
             agent_running_command(Path::new(r"C:\s.cmd"), "codex"),
             r#"cmd.exe /d /s /c ""C:\s.cmd" codex""#

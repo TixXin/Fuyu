@@ -1,4 +1,4 @@
-// Handles <editor>://tixxin.focusd-island/focus?pids=...&title=... links that FocuSD Island opens
+// Handles <editor>://tixxin.fuyu/focus?pids=...&title=... links that Fuyu opens
 // after bringing this window forward, and shows the terminal running the clicked session.
 const vscode = require("vscode");
 const { parseQuery, pickTerminal } = require("./match.js");

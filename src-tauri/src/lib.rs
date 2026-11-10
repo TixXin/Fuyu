@@ -89,9 +89,6 @@ pub fn run() {
             // changes. Liquid glass is rendered inside the island element.
         })
         .setup(move |app| {
-            if migrate {
-                rename_migration::after_start();
-            }
             tray::build_tray(app)?;
             if let Err(error) = clipboard_history::init(app.handle()) {
                 eprintln!("failed to initialize clipboard history: {error}");
@@ -105,6 +102,9 @@ pub fn run() {
             }
             if let Err(error) = agent_approval::init(app.handle()) {
                 eprintln!("failed to start the agent approval endpoint: {error}");
+            }
+            if migrate {
+                rename_migration::after_start(app.handle().clone());
             }
             if let Err(error) = local_api::init(app.handle()) {
                 eprintln!("failed to initialize the local API: {error}");

@@ -102,7 +102,7 @@ if (!automated) {
     const syncCard = [...document.querySelectorAll<HTMLElement>(".plugin-card")].find((card) => card.textContent?.includes("待办同步示例"));
     await act(async () => { [...(syncCard?.querySelectorAll<HTMLButtonElement>(".plugin-card__button") ?? [])].find((button) => button.textContent === "设置")?.click(); });
     const sensitiveRows = [...document.querySelectorAll<HTMLElement>(".plugin-detail__sensitive li")];
-    const linkRow = sensitiveRows.find((row) => row.textContent?.includes("focusd:// 链接"));
+    const linkRow = sensitiveRows.find((row) => row.textContent?.includes("fuyu:// 链接"));
     check(sensitiveRows.length === 2 && linkRow?.querySelector("em")?.textContent === "已允许", "A plugin that lists onUri shows the remembered answer for links next to its sensitive permissions");
     await act(async () => { linkRow?.querySelector("button")?.click(); });
     check(revokedPermissions.includes("uri"), "Revoking the link answer forgets it like a sensitive permission");

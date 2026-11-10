@@ -6,7 +6,8 @@
 //!   folders (data_dirs.rs). The old ones stay, for going back to an old version.
 //! - `after_start`, in the background: copies the saved credentials to the new
 //!   service names once, moves launch at startup to the new registry value, and
-//!   has an installed copy remove the old installed copy (legacy.rs).
+//!   has an installed copy remove the old installed copy (legacy.rs). The agents' status hooks
+//!   the user had are written again, as they point at the old folder (step 4).
 //!
 //! Lane previews and notification checks run under identifiers of their own and
 //! migrate nothing.
@@ -37,6 +38,8 @@ struct MigrationState {
     copied_at: u64,
     /// The credentials were copied to the new service names.
     credentials: bool,
+    /// The AI agents' status hooks were written again for the new folder (or none were installed).
+    hooks: bool,
     /// How removing the old installed copy went: "removed", or why it failed.
     old_install: Option<String>,
 }
@@ -74,7 +77,8 @@ pub(crate) fn before_start() {
 }
 
 /// The rest of the migration, on a thread of its own.
-pub(crate) fn after_start() {
+/// Runs once the approval endpoint is up: the reinstalled Claude Code hooks need its address.
+pub(crate) fn after_start(app: tauri::AppHandle) {
     let Some(dir) = roaming_dir().map(|roaming| roaming.join(NEW_IDENTIFIER)) else {
         return;
     };
@@ -89,6 +93,15 @@ pub(crate) fn after_start() {
                     state.credentials = true;
                 }
                 Err(error) => eprintln!("could not copy the credentials: {error}"),
+            }
+        }
+        if let Some(state) = state.as_mut().filter(|state| !state.hooks) {
+            match crate::agent_status::reinstall_hooks_after_rename(&app) {
+                Ok(reinstalled) => {
+                    eprintln!("agent status hooks {}", if reinstalled { "reinstalled for the new folder" } else { "were not installed" });
+                    state.hooks = true;
+                }
+                Err(error) => eprintln!("could not reinstall the agent status hooks: {error}"),
             }
         }
         // A build run from the repository (`pnpm tauri dev`) leaves the user's startup entry alone.

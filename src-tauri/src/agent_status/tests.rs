@@ -1260,31 +1260,35 @@ fn tab_selection_gives_up_on_a_window_that_does_not_exist() {
 
 #[test]
 fn editor_terminals_are_asked_for_through_the_extension_link() {
-    use super::editor_terminal::{editor_of_app, extension_installed, focus_link, show_session_terminal, EditorTerminal};
+    use super::editor_terminal::{editor_of_app, focus_link, installed_extension, show_session_terminal, EditorTerminal};
 
     assert_eq!(editor_of_app("code"), Some(("vscode", ".vscode")));
     assert_eq!(editor_of_app("cursor"), Some(("cursor", ".cursor")));
     assert_eq!(editor_of_app("windowsterminal"), None);
     assert_eq!(
-        focus_link("vscode", &[120, 88], Some("✳ 修复 a&b")),
+        focus_link("vscode", "tixxin.focusd-island", &[120, 88], Some("✳ 修复 a&b")),
         "vscode://tixxin.focusd-island/focus?pids=120,88&title=%E2%9C%B3%20%E4%BF%AE%E5%A4%8D%20a%26b"
     );
-    assert_eq!(focus_link("cursor", &[], None), "cursor://tixxin.focusd-island/focus?pids=");
+    assert_eq!(focus_link("cursor", "tixxin.fuyu", &[], None), "cursor://tixxin.fuyu/focus?pids=");
 
     let home = std::env::temp_dir().join(format!("focusd-editor-ext-{}", std::process::id()));
     let extensions = home.join(".vscode").join("extensions");
     fs::create_dir_all(extensions.join("tixxin.focusd-island-tools-1.0.0")).unwrap();
-    assert!(!extension_installed(&extensions));
+    assert_eq!(installed_extension(&extensions), None);
     assert_eq!(show_session_terminal(&home, "code", &[1], None), Some(EditorTerminal::NoExtension));
     assert_eq!(show_session_terminal(&home, "windowsterminal", &[1], None), None);
     fs::create_dir_all(extensions.join("tixxin.focusd-island-0.1.0")).unwrap();
-    assert!(extension_installed(&extensions));
+    assert_eq!(installed_extension(&extensions), Some("tixxin.focusd-island"));
     // Nothing to identify the terminal by: no link is opened.
     assert_eq!(show_session_terminal(&home, "code", &[], Some("")), Some(EditorTerminal::Failed));
     // Uninstalled but not yet removed by the editor.
     fs::write(extensions.join(".obsolete"), r#"{"tixxin.focusd-island-0.1.0":true}"#).unwrap();
-    assert!(!extension_installed(&extensions));
-    assert!(!extension_installed(&home.join("missing")));
+    assert_eq!(installed_extension(&extensions), None);
+    assert_eq!(installed_extension(&home.join("missing")), None);
+    // The extension under its name after the rename (D17) is preferred.
+    fs::create_dir_all(extensions.join("tixxin.fuyu-0.2.0")).unwrap();
+    fs::write(extensions.join(".obsolete"), "{}").unwrap();
+    assert_eq!(installed_extension(&extensions), Some("tixxin.fuyu"));
     fs::remove_dir_all(&home).unwrap();
 }
 
@@ -1647,4 +1651,39 @@ fn a_background_task_waking_the_session_is_not_a_prompt() {
     let parsed = parse_claude_tail(&transcript);
     assert_eq!(parsed.last_prompt.as_deref(), Some("跑一遍测试"));
     assert_eq!(parsed.turn_started_at, Some(1_793_948_400_000 + 600_000));
+}
+
+#[test]
+fn hooks_from_before_the_rename_count_as_outdated_and_are_replaced() {
+    use super::claude_hooks::{claude_code_hook_entries, install_claude_code_hook_events};
+    use super::codex_hooks::{build_codex_hook_block, remove_managed_codex_hook_block};
+    use super::hooks_state::{claude_code_hooks_state, codex_hooks_state, HookInstallState};
+
+    let old_running = Path::new(r"C:\Users\me\AppData\Roaming\com.focusd.island\focusd-agent-running.cmd");
+    let old_status = Path::new(r"C:\Users\me\AppData\Roaming\com.focusd.island\focusd-agent-status.ps1");
+    let running = Path::new(r"C:\Users\me\AppData\Roaming\com.tixxin.fuyu\fuyu-agent-running.cmd");
+    let status = Path::new(r"C:\Users\me\AppData\Roaming\com.tixxin.fuyu\fuyu-agent-status.ps1");
+
+    // Codex: the old block, under its old markers, is the island's and goes away whole.
+    let old_block = build_codex_hook_block(old_running, old_status, false)
+        .replace("# BEGIN Fuyu Agent Status Hooks", "# BEGIN FocuSD Agent Status Hooks")
+        .replace("# END Fuyu Agent Status Hooks", "# END FocuSD Agent Status Hooks");
+    let config = format!("model = \"x\"\n\n{old_block}\n[profiles.mine]\nmodel = \"y\"\n");
+    assert_eq!(codex_hooks_state(Some(&config), running, status, None), HookInstallState::Outdated);
+    let cleaned = remove_managed_codex_hook_block(&config);
+    assert!(!cleaned.contains("focusd-agent-") && !cleaned.contains("FocuSD Agent Status Hooks"), "{cleaned}");
+    assert!(cleaned.contains("[profiles.mine]") && cleaned.starts_with("model = \"x\""));
+
+    // Claude Code: entries with the old signature are outdated, and installing replaces them
+    // while the user's own hook stays.
+    let mut hooks = serde_json::Map::new();
+    let users = json!({ "hooks": [{ "type": "command", "command": "notify-send hi" }] });
+    hooks.insert("Stop".into(), json!([users.clone()]));
+    install_claude_code_hook_events(&mut hooks, claude_code_hook_entries(old_running, old_status));
+    let settings = json!({ "hooks": hooks.clone() }).to_string();
+    assert_eq!(claude_code_hooks_state(Some(&settings), running, status, None), HookInstallState::Outdated);
+    install_claude_code_hook_events(&mut hooks, claude_code_hook_entries(running, status));
+    let text = serde_json::Value::Object(hooks.clone()).to_string();
+    assert!(!text.contains("focusd-agent-") && text.contains("fuyu-agent-"), "{text}");
+    assert!(hooks["Stop"].as_array().unwrap().contains(&users));
 }

@@ -98,6 +98,6 @@ fn credentials_move_to_the_new_service_names_and_others_stay_put() {
 fn the_state_file_reads_what_older_or_newer_builds_wrote() {
     let state: MigrationState = serde_json::from_str(r#"{"from":"com.focusd.island","copiedAt":5,"later":1}"#).expect("state");
     assert_eq!(state, MigrationState { from: OLD.into(), copied_at: 5, ..Default::default() });
-    let text = serde_json::to_string(&MigrationState { credentials: true, old_install: Some("removed".into()), ..Default::default() }).expect("json");
+    let text = serde_json::to_string(&MigrationState { credentials: true, hooks: true, old_install: Some("removed".into()), ..Default::default() }).expect("json");
     assert!(text.contains("\"credentials\":true") && text.contains("\"oldInstall\":\"removed\""));
 }
