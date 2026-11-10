@@ -68,7 +68,7 @@ test("plugins/index.json and plugins/packages match the plugin sources (run pnpm
 });
 
 test("every official package is signed by the official author key (run pnpm plugins:index)", async () => {
-  const { verifyPackage } = await import("../../packages/fly-island-plugin/src/sign.mjs");
+  const { verifyPackage } = await import("../../packages/fuyu-plugin/src/sign.mjs");
   const key = JSON.parse(readFileSync(path.join(root, "plugins/author-key.json"), "utf8"));
   const zips = readdirSync(path.join(root, "plugins/packages")).filter((name) => name.endsWith(".zip"));
   assert.ok(zips.length > 0);

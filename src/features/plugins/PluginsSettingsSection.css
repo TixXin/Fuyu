@@ -46,7 +46,7 @@
 }
 
 .plugin-updates__trusted > span {
-  color: rgba(248, 246, 240, 0.62);
+  color: rgba(var(--overlay-rgb, 248, 246, 240), 0.62);
   font-size: 12px;
   font-weight: 700;
 }

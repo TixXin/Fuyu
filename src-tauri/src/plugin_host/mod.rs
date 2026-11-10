@@ -1,4 +1,4 @@
-//! Plugin host: finds plugins in `plugins/<id>/focusd-plugin.json` under the app
+//! Plugin host: finds plugins in `plugins/<id>/fuyu-plugin.json` under the app
 //! data folder, keeps the user's choices in `plugins.json`, and runs the enabled
 //! ones as child processes. Design: docs/architecture/plugins/v1-design.md; guide for
 //! plugin authors: docs/plugins/README.md.

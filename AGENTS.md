@@ -41,7 +41,7 @@ FocuSD Island（仓库名 fly-island）是 Windows 优先的桌面效率工具�
 │   ├── capabilities/    # Tauri 权限能力配置
 │   └── tauri.conf.json  # 窗口、更新、打包配置
 ├── tests/               # unit/ 前端单元测试、scripts/ 脚本测试（node:test，*.test.mjs）；regression/ 浏览器回归页（*.html + *.tsx）
-├── packages/            # 插件开发者工具（pnpm workspace）：fly-island-plugin（Node SDK、CLI、模拟宿主）、create-fly-island-plugin（脚手架）、powershell/FlyIsland.Plugin；vscode-extension（切到会话终端的 VS Code 扩展，不在 workspace 里，`pnpm dlx @vscode/vsce package --no-dependencies` 打包）；不进入岛屿的发布产物
+├── packages/            # 插件开发者工具（pnpm workspace）：fuyu-plugin（Node SDK、CLI、模拟宿主）、create-fuyu-plugin（脚手架）、powershell/Fuyu.Plugin；vscode-extension（切到会话终端的 VS Code 扩展，不在 workspace 里，`pnpm dlx @vscode/vsce package --no-dependencies` 打包）；不进入岛屿的发布产物
 ├── plugins/             # 插件市场：examples/ 示例插件源码（PowerShell，含 lib/focusd.ps1），schema/ 协议描述，sdk/ 单文件 SDK（pnpm sdk:build 从 packages/ 生成），packages/ 打包好的 zip，index.json 与 index.json.sig 给切换前的旧版岛屿的市场索引（pnpm plugins:index 生成；新版岛屿读 TixXin/focusd-plugins），signing-keys.json 可信公钥（编译进岛屿）；不进入发布产物
 ├── scripts/             # release/ 发布、签名与 latest.json 生成；plugins/ 插件索引、签名与 SDK 生成；根目录放开发流程脚本：合并队列的检查（land-check.mjs）与 dev 同步（land-sync-dev.mjs）、行数检查、浏览器回归页运行器（run-regression.mjs）、dev 前停止运行中的岛屿
 ├── .githooks/           # pre-push：合并队列的推送保护与检查；commit-msg：拒绝 Claude 署名行（只管本仓库自己的提交，合入的外部 PR 可以带；core.hooksPath 指向这里）
@@ -143,7 +143,7 @@ FocuSD Island（仓库名 fly-island）是 Windows 优先的桌面效率工具�
 
 ## 本机更新与桌面快捷方式
 
-- 每次完成应用更新后运行 `pnpm build:exe`。构建成功后它会自动把当前用户桌面上的岛屿快捷方式（名字含 FocuSD / fly-island，或目标是 `focusd-island.exe` 的；都没有时新建 `fly-island.lnk`）指向本次构建的 `src-tauri/target/release/focusd-island.exe`，并重新读取确认，输出里会列出改了哪几个；仅文档改动不需要重新构建。
+- 每次完成应用更新后运行 `pnpm build:exe`。构建成功后它会自动把当前用户桌面上的岛屿快捷方式（名字含 FocuSD / fly-island，或目标是 `focusd-island.exe` 的；都没有时新建 `fly-island.lnk`）指向本次构建的 `src-tauri/target/release/focusd-island.exe`，并重新读取确认，输出里会列出改了哪几个；仅文档改动不需要重新构建。`pnpm release` 发布成功后会用同样的方式把刚发布的 exe 放到这里，发布之后不用再跑 `build:exe`。
 - 优先更新已有的 FocuSD / fly-island 快捷方式；不存在时创建 `fly-island.lnk`。使用 Windows 当前用户的实际桌面目录，不硬编码用户名或桌面路径。
 - 快捷方式目标应指向当前仓库的 `src-tauri/target/release/focusd-island.exe` 绝对路径，工作目录设为该程序所在目录，图标使用该可执行文件。不得指向 debug 程序、旧备份或临时构建目录。
 - 构建失败时不切换快捷方式。更新后重新读取快捷方式，确认目标文件存在、目标路径与本次成功构建产物一致，再报告完成；不要修改其他应用的快捷方式。

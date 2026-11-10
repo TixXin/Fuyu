@@ -8,5 +8,5 @@
     "noEmit": true,
     "types": []
   },
-  "include": ["fly-island-plugin/src/**/*.d.mts", "fly-island-plugin/test/types.check.mts"]
+  "include": ["fuyu-plugin/src/**/*.d.mts", "fuyu-plugin/test/types.check.mts"]
 }

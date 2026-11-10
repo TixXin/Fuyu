@@ -38,9 +38,9 @@
 
 .island-preview__island--glass {
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, calc(0.04 + var(--preview-glass) * 0.1)), transparent),
+    linear-gradient(180deg, rgba(var(--overlay-rgb, 255, 255, 255), calc(0.04 + var(--preview-glass) * 0.1)), transparent),
     var(--preview-fill);
-  border: 1px solid rgba(255, 255, 255, calc(0.1 + var(--preview-glass) * 0.18));
+  border: 1px solid rgba(var(--overlay-rgb, 255, 255, 255), calc(0.1 + var(--preview-glass) * 0.18));
   border-top: 0;
   backdrop-filter: blur(calc(10px + var(--preview-glass) * 9px)) saturate(1.4);
 }
@@ -75,7 +75,7 @@
 }
 
 .island-preview__island--glass.island-preview__island--detached {
-  border-top: 1px solid rgba(255, 255, 255, calc(0.1 + var(--preview-glass) * 0.18));
+  border-top: 1px solid rgba(var(--overlay-rgb, 255, 255, 255), calc(0.1 + var(--preview-glass) * 0.18));
 }
 
 .island-preview__island--detached.island-preview__island--collapsed {
@@ -137,7 +137,7 @@
   padding: 2px 8px;
   border-radius: var(--radius-pill);
   background: rgba(0, 0, 0, 0.36);
-  color: rgba(255, 255, 255, 0.86);
+  color: rgba(var(--overlay-rgb, 255, 255, 255), 0.86);
   font-size: 11px;
 }
 

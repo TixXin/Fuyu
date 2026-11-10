@@ -6,7 +6,7 @@ import { copyFileSync, cpSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } f
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { startMockHost } from "../../packages/fly-island-plugin/src/test/index.mjs";
+import { startMockHost } from "../../packages/fuyu-plugin/src/test/index.mjs";
 
 const ROOT = path.resolve(import.meta.dirname, "../..");
 // Under the pre-push hook git sets GIT_DIR and friends, which would point the fixture's

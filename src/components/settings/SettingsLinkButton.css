@@ -24,7 +24,7 @@
 }
 
 .settings-link-button--danger {
-  color: #ff8a9a;
+  color: var(--error-text, #ff8a9a);
 }
 
 .settings-link-button:focus-visible {

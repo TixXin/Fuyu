@@ -102,7 +102,7 @@ pub(super) fn route(method: &str, url: &str, body: &[u8]) -> Result<ApiCall, Api
             params.insert("source".into(), Value::String((*source).to_string()));
             Ok(call("agentStatus.clear", Value::Object(params), true))
         }
-        // Development mode (plugin_host/dev.rs), for `fly-island-plugin dev`.
+        // Development mode (plugin_host/dev.rs), for `fuyu-plugin dev`.
         // Loading runs code from any folder, so it also needs "allow changes".
         ("POST", ["v1", "dev", "plugins"]) => Ok(call("dev.load", body_object(body)?, true)),
         ("POST", ["v1", "dev", "plugins", id, "reload"]) => Ok(call("dev.reload", json!({ "id": id }), true)),

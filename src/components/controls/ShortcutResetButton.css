@@ -14,8 +14,8 @@
 }
 
 .shortcut-reset-button:hover:not(:disabled) {
-  color: var(--color-white);
-  background: rgba(255, 255, 255, 0.15);
+  color: var(--color-text);
+  background: rgba(var(--overlay-rgb, 255, 255, 255), 0.15);
 }
 
 .shortcut-reset-button:focus-visible {

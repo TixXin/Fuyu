@@ -1,5 +1,5 @@
 /**
- * The `when` clause of a plugin command's keybinding (focusd-plugin.json), e.g.
+ * The `when` clause of a plugin command's keybinding (fuyu-plugin.json), e.g.
  * `island.expanded && island.page == todo` or `!todos.hasActive`.
  *
  * Grammar: `||` binds looser than `&&`, `!` negates, parentheses group. A bare name is

@@ -264,6 +264,18 @@ mod market_tests {
     }
 
     #[test]
+    fn the_manifest_is_read_under_its_new_name_or_the_old_one() {
+        use super::super::manifest::read_manifest_text;
+        let dir = temp_dir("manifest-names");
+        assert_eq!(read_manifest_text(&dir).expect_err("none").kind(), std::io::ErrorKind::NotFound);
+        std::fs::write(dir.join("focusd-plugin.json"), "old").expect("write");
+        assert_eq!(read_manifest_text(&dir).expect("old name"), "old");
+        std::fs::write(dir.join("fuyu-plugin.json"), "new").expect("write");
+        assert_eq!(read_manifest_text(&dir).expect("new name wins"), "new");
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
     fn the_repository_index_parses_and_its_package_checks_out() {
         let entry = example_entry();
         let download: serde_json::Value = serde_json::to_value(&entry).expect("json")["download"].clone();
@@ -1214,13 +1226,15 @@ mod webview_tests {
         let script = init_script(&json!({ "done": 1 }), "fr", None);
         assert!(script.contains(r#"let state = {"done":1};"#) && script.contains(r#"locale: "en""#));
         assert!(script.contains("RTCPeerConnection") && !script.contains("__STATE__") && !script.contains("__THEME__"));
-        assert!(script.contains("--focusd-text:#f8f6f0") && script.contains("color-scheme:dark"));
+        assert!(script.contains("--fuyu-text:#f8f6f0") && script.contains("color-scheme:dark"));
+        // Pages written before the rename keep their API and colors.
+        assert!(script.contains(r#"["acquireFuyuApi", "acquireFocusdApi"]"#) && script.contains("--focusd-text:#f8f6f0"));
         // A page without the card on a light island gets the island's dark ink.
         let light = init_script(&json!(null), "zh-CN", Some("24, 24, 30"));
-        assert!(light.contains("color-scheme:light") && light.contains("--focusd-text:rgb(24,24,30)"));
-        assert!(init_script(&json!(null), "en", Some("241, 240, 246")).contains("color-scheme:dark;--focusd-text:rgb(241,240,246)"));
+        assert!(light.contains("color-scheme:light") && light.contains("--fuyu-text:rgb(24,24,30)") && light.contains("--focusd-text:rgb(24,24,30)"));
+        assert!(init_script(&json!(null), "en", Some("241, 240, 246")).contains("color-scheme:dark;--fuyu-text:rgb(241,240,246)"));
         for bad in ["24,24", "a,b,c", "300,0,0", "1,2,3,4", "');alert(1);('"] {
-            assert!(init_script(&json!(null), "en", Some(bad)).contains("--focusd-text:#f8f6f0"), "{bad}");
+            assert!(init_script(&json!(null), "en", Some(bad)).contains("--fuyu-text:#f8f6f0"), "{bad}");
         }
     }
 }

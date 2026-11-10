@@ -71,9 +71,9 @@ importers:
         specifier: ^7.3.7
         version: 7.3.7
 
-  packages/create-fly-island-plugin: {}
+  packages/create-fuyu-plugin: {}
 
-  packages/fly-island-plugin: {}
+  packages/fuyu-plugin: {}
 
 packages:
 

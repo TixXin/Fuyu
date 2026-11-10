@@ -1,4 +1,4 @@
-# 编写 FocuSD Island 插件
+# 编写浮屿插件
 
 插件是一个由岛屿启动的程序。它通过 stdin / stdout 与岛屿通信，可以按授予的权限读写待办和每日笔记，并在设置页里提供按钮。设计背景见 [架构提案](../architecture/plugins/v1-design.md)，和 VS Code 的差别见 [和 VS Code 插件系统的对比](vscode.md)，后续计划见 [插件平台第 2 版](../architecture/plugins/v2-platform.md)。
 
@@ -46,12 +46,29 @@
 
 ```text
 plugins/<插件 id>/        # 文件夹名必须等于插件 id
-├── focusd-plugin.json    # 清单
+├── fuyu-plugin.json      # 清单
 ├── main.ps1              # runtime.command 指向的程序
 └── ...                   # 其他文件随意
 ```
 
-## 清单 `focusd-plugin.json`
+### 改名前的名字
+
+岛屿原来叫 FocuSD Island，2026-11 改名为浮屿 / Fuyu。改名前写的插件不用改，下面这些旧名字岛屿和 SDK 都还认，至少保留到插件 API 的下一个大版本。新插件用新名字。
+
+| 新名字 | 改名前 |
+|---|---|
+| 清单 `fuyu-plugin.json` | `focusd-plugin.json`（两个都有时用新的） |
+| 忽略文件 `.fuyuignore` | `.focusdignore` |
+| 环境变量 `FUYU_PLUGIN_ID` 等 | `FOCUSD_PLUGIN_ID` 等，岛屿两组都设置 |
+| 页面接口 `acquireFuyuApi()` | `acquireFocusdApi()`，两个名字共用一次调用机会 |
+| CSS 变量 `--fuyu-*` | `--focusd-*`，两组值相同 |
+| PowerShell 函数 `*-Fuyu*`，SDK 文件 `lib/fuyu.ps1` | `*-Focusd*`（新 SDK 里是别名），`lib/focusd.ps1` |
+| npm 包 `fuyu-plugin`、`create-fuyu-plugin`，PowerShell 模块 `Fuyu.Plugin` | `fly-island-plugin`、`create-fly-island-plugin`、`FlyIsland.Plugin`（不再更新） |
+| 签名私钥 `~/.fuyu-plugin/signing.key`、`FUYU_PLUGIN_SIGNING_KEY` | `~/.fly-island-plugin/signing.key`（只有它时继续用它）、`FLY_ISLAND_PLUGIN_SIGNING_KEY` |
+
+`fuyu-plugin pack` 打包时会把 `fuyu-plugin.json` 再以 `focusd-plugin.json` 的名字放进 zip，改名前的岛屿也能安装。插件 id、`focusd://` 链接和签名格式不变。
+
+## 清单 `fuyu-plugin.json`
 
 ```json
 {
@@ -83,7 +100,7 @@ plugins/<插件 id>/        # 文件夹名必须等于插件 id
 | `description` | | 中英文说明。 |
 | `version` | ✅ | 1–32 个字符。 |
 | `apiVersion` | ✅ | `1` 或 `2`，见下文的「API 版本」。新插件请写 `2`。 |
-| `minAppVersion` | | 需要的最低 FocuSD Island 版本，版本不够时插件显示为"无法加载"。 |
+| `minAppVersion` | | 需要的最低浮屿版本，版本不够时插件显示为"无法加载"。 |
 | `activationEvents` | | 第 2 版：什么时候启动插件进程，见下文的「按需启动」。不写时随岛屿一直运行。 |
 | `experimentalApis` | | 申请还在设计中的 API（最多 10 个名称，如 `views.chart`）。只有以开发模式加载的插件能用，装在插件目录里的插件写了它就无法使用，见下文的「调试」。目前岛屿没有实验 API。 |
 | `author`、`homepage` | | 主页只显示 `https://` 链接。 |
@@ -177,13 +194,13 @@ plugins/<插件 id>/        # 文件夹名必须等于插件 id
 - 页面不在岛屿自己的网页里，而是一个单独的 WebView2：页面里**没有**岛屿的任何接口（`__TAURI__` 之类都不存在），只能和自己的插件进程通信。页面在无痕模式下运行，关掉后不留下 `localStorage` 之类的数据。
 - 页面不能联网：岛屿拦截页面和其中所有框架、Worker 的每一个请求，只回答插件文件夹里的文件，其他一律拒绝；离开插件来源的跳转、新窗口、下载和权限请求（摄像头等）都会被拒绝，WebRTC 不可用。每个文件都带固定的 CSP：`default-src 'none'`，允许本插件的脚本（含内联脚本）、样式、图片和字体，`connect-src 'self'`（只能 `fetch` 自己的文件），禁止 `eval`、Worker、表单提交。页面可以用 `<meta>` 再加限制，不能放宽。
 - 页面来源是 `https://<插件 id>.plugin.focusd.invalid`，用相对路径引用文件即可。
-- 页面脚本调用 `acquireFocusdApi()`（每个页面只能调用一次）拿到：
+- 页面脚本调用 `acquireFuyuApi()`（每个页面只能调用一次）拿到：
   - `postMessage(message)`：发给插件进程，插件收到通知 `webview.message { viewId, message }`（不超过 256 KB）；
   - `onMessage(listener)`：收插件用 `webview.postMessage { viewId, message }` 发来的消息，返回取消函数；
   - `getState()` / `setState(state)`：岛屿运行期间为这个页面保存的一小段数据（不超过 64 KB），页面关掉再打开时能马上拿到；
   - `locale`：岛屿当前语言，`"zh-CN"` 或 `"en"`。
 - 页面打开时才创建，离开屏幕就关闭。`webview.postMessage` 返回 `{ shown }`，页面不在屏幕上时为 `false`，消息被丢弃；页面脚本还没运行时发的消息也会丢失，所以让页面加载后先发一条"准备好了"，插件收到再发数据（示例 `dev.focusd.todo-ring` 就是这样）。
-- 主题：页面里有岛屿的颜色变量 `--focusd-text`、`--focusd-text-muted`、`--focusd-accent`、`--focusd-surface`、`--focusd-border`、`--focusd-success`、`--focusd-warning`、`--focusd-danger`、`--focusd-radius`、`--focusd-font`。页面背景默认透明，下面是岛屿的页面底色。套卡片的页面始终是深色主题；`frame: "none"` 的页面（0.3.4 起）的 `--focusd-text` 等跟着岛屿底色：浅色岛屿上是深色文字，`color-scheme` 也是 `light`，所以页面里可以用 `light-dark()` 给图表配两套颜色。主题在页面打开时定下，岛屿换了底色，下次打开页面才生效。
+- 主题：页面里有岛屿的颜色变量 `--fuyu-text`、`--fuyu-text-muted`、`--fuyu-accent`、`--fuyu-surface`、`--fuyu-border`、`--fuyu-success`、`--fuyu-warning`、`--fuyu-danger`、`--fuyu-radius`、`--fuyu-font`。页面背景默认透明，下面是岛屿的页面底色。套卡片的页面始终是深色主题；`frame: "none"` 的页面（0.3.4 起）的 `--fuyu-text` 等跟着岛屿底色：浅色岛屿上是深色文字，`color-scheme` 也是 `light`，所以页面里可以用 `light-dark()` 给图表配两套颜色。主题在页面打开时定下，岛屿换了底色，下次打开页面才生效。
 - 开发模式加载的插件，页面可以右键打开开发者工具（F12）；其他插件没有右键菜单和浏览器快捷键。
 - 插件市场会给带自定义界面的插件加上"自定义界面"标签，安装前值得多看一眼。
 - `initialize.capabilities` 含 `webview` 时岛屿支持这个模板。不支持的旧版本岛屿无法安装带 `webview` 页面的插件（清单校验不通过），发布这样的插件时最好写上 `minAppVersion`。
@@ -203,7 +220,7 @@ await plugin.status.update("bar", "CPU 23% · GPU 81°", {
 });
 ```
 
-PowerShell：`Update-FocusdStatus 'bar' 'CPU 23%' -Cells @(@{ label = 'CPU'; value = '23%' }) -Ring 0.23`。
+PowerShell：`Update-FuyuStatus 'bar' 'CPU 23%' -Cells @(@{ label = 'CPU'; value = '23%' }) -Ring 0.23`。
 
 ### Agent 页的强度名称
 
@@ -323,7 +340,7 @@ QQ 邮箱授权码、翻译服务密钥这类凭据，任何权限都拿不到�
 
 标着"敏感"的权限，启用插件时照常授予，但插件**第一次实际使用**（调用方法或订阅事件）时，岛上还会弹出一行确认："<插件名> 想读取剪贴板历史 [允许] [本次] [拒绝]"。
 
-- 插件的这次请求会一直等到用户回答，最多 30 秒。所以插件的请求超时要设得比 30 秒长（Node.js SDK 不限时；PowerShell 示例 `dev.focusd.now-playing` 里的 `lib/focusd.ps1` 等 40 秒）。
+- 插件的这次请求会一直等到用户回答，最多 30 秒。所以插件的请求超时要设得比 30 秒长（Node.js SDK 不限时；PowerShell 示例 `dev.focusd.now-playing` 里的 `lib/fuyu.ps1` 等 40 秒）。
 - **允许** / **拒绝**：记在 `plugins.json` 里，以后不再询问。拒绝时插件收到 `-32001`。
 - **本次**：这次允许，插件进程重启后会再问。
 - 30 秒没有回答：这次按拒绝处理（`-32001`），不记下来，下次使用再问。
@@ -338,7 +355,7 @@ QQ 邮箱授权码、翻译服务密钥这类凭据，任何权限都拿不到�
 - 没有获准就调用需要它的方法或订阅事件，返回 `-32001`，错误信息提示先调用 `permissions.request`。
 - 答案的记法和敏感权限相同：允许和拒绝记在 `plugins.json`，本次允许到插件进程重启为止。记下的拒绝不会再弹出询问，`permissions.request` 直接把它放进 `denied`，直到用户在设置页撤销这个回答。
 - `initialize.permissions` 是插件现在能用的权限（`permissions` 加上已获准的可选权限），`initialize.optionalPermissions` 是清单里的可选权限。宿主有这项功能时，`initialize.capabilities` 里有 `permissions`。
-- SDK：Node `plugin.permissions.request("clipboard:read")`、`plugin.permissions.has(name)`；PowerShell `Request-FocusdPermission 'clipboard:read'`；模拟宿主的 `deny` 选项同样决定可选权限的回答。
+- SDK：Node `plugin.permissions.request("clipboard:read")`、`plugin.permissions.has(name)`；PowerShell `Request-FuyuPermission 'clipboard:read'`；模拟宿主的 `deny` 选项同样决定可选权限的回答。
 - 第 1 版清单里的 `optionalPermissions` 会被忽略。
 
 ### 调用记录
@@ -354,7 +371,7 @@ QQ 邮箱授权码、翻译服务密钥这类凭据，任何权限都拿不到�
 
 ### API 版本
 
-清单的 `apiVersion` 是插件按哪一版 API 编写的。岛屿支持第 1 版和第 2 版，`initialize`、`host.info` 和环境变量 `FOCUSD_PLUGIN_API_VERSION` 里的 `apiVersion` 就是清单里写的版本。
+清单的 `apiVersion` 是插件按哪一版 API 编写的。岛屿支持第 1 版和第 2 版，`initialize`、`host.info` 和环境变量 `FUYU_PLUGIN_API_VERSION` 里的 `apiVersion` 就是清单里写的版本。
 
 - `initialize.capabilities` 列出岛屿为这个插件提供的能力。第 2 版插件收到 `["events", "notifications", "storage", "secrets", "views", "status"]`，第 1 版插件收到空列表。以后的岛屿可能增加能力；插件应先查这个列表，再调用对应的方法。
 
@@ -470,8 +487,8 @@ QQ 邮箱授权码、翻译服务密钥这类凭据，任何权限都拿不到�
 - `actions` 最多 2 个按钮：`{ id, title }`，`id` 为 1–32 个字母、数字或 `-`，`title` 最长 16 个字符。用户点了按钮，插件收到 `notification.action { id }`。
 - 每个插件每分钟最多 6 条，超过返回 `-32000`、状态 429。
 - 用户可以在插件设置页关掉这个插件的提示。关掉后调用仍然成功，但什么也不显示，结果是 `{ muted: true }`。
-- **提示的样式**（能力 `notifyStyle`）：`icon: "media"` 把插件图标换成正在播放的音乐软件的图标（读不到时仍用插件图标）；`layout: "inline"` 让这条提示在新消息「展开面板」里只有它一条时，不显示「新消息」标题和卡片，整个岛就是这条提示（有别的消息时照常是一张卡片）。旧版岛屿会忽略这两个字段，照常显示文字，所以不用先判断能力。不认识的值按默认处理（`"plugin"`、`"card"`）。SDK：Node `plugin.notify(title, { body, icon: "media", layout: "inline" })`，PowerShell `Show-FocusdNotification -Icon media -Layout inline`。
-- **播放按钮**（能力 `notifyControls`）：`controls: "media"` 在提示右侧放上一首、播放/暂停、下一首三个按钮，由岛屿自己控制正在播放的软件，插件不需要 `media:control` 权限，也收不到按钮的点击。按钮只在新消息「展开面板」里显示，横幅和收起条的预览不显示；点按钮不会关掉面板，面板照常按设置的时长收起。旧版岛屿忽略这个字段。SDK：Node `plugin.notify(title, { controls: "media" })`，PowerShell `Show-FocusdNotification -Controls media`。
+- **提示的样式**（能力 `notifyStyle`）：`icon: "media"` 把插件图标换成正在播放的音乐软件的图标（读不到时仍用插件图标）；`layout: "inline"` 让这条提示在新消息「展开面板」里只有它一条时，不显示「新消息」标题和卡片，整个岛就是这条提示（有别的消息时照常是一张卡片）。旧版岛屿会忽略这两个字段，照常显示文字，所以不用先判断能力。不认识的值按默认处理（`"plugin"`、`"card"`）。SDK：Node `plugin.notify(title, { body, icon: "media", layout: "inline" })`，PowerShell `Show-FuyuNotification -Icon media -Layout inline`。
+- **播放按钮**（能力 `notifyControls`）：`controls: "media"` 在提示右侧放上一首、播放/暂停、下一首三个按钮，由岛屿自己控制正在播放的软件，插件不需要 `media:control` 权限，也收不到按钮的点击。按钮只在新消息「展开面板」里显示，横幅和收起条的预览不显示；点按钮不会关掉面板，面板照常按设置的时长收起。旧版岛屿忽略这个字段。SDK：Node `plugin.notify(title, { controls: "media" })`，PowerShell `Show-FuyuNotification -Controls media`。
 
 ### 存储与秘密（第 2 版）
 
@@ -493,9 +510,9 @@ QQ 邮箱授权码、翻译服务密钥这类凭据，任何权限都拿不到�
 
 | 变量 | 说明 |
 |---|---|
-| `FOCUSD_PLUGIN_ID` | 插件 id |
-| `FOCUSD_PLUGIN_DATA_DIR` | 插件私有的数据目录 `%APPDATA%\com.focusd.island\plugins-data\<id>\`，已经创建好。插件的数据请存在这里，不要写进插件目录，否则更新插件时会被覆盖。 |
-| `FOCUSD_PLUGIN_API_VERSION` | 清单里的 `apiVersion`（`1` 或 `2`） |
+| `FUYU_PLUGIN_ID` | 插件 id |
+| `FUYU_PLUGIN_DATA_DIR` | 插件私有的数据目录 `%APPDATA%\com.focusd.island\plugins-data\<id>\`，已经创建好。插件的数据请存在这里，不要写进插件目录，否则更新插件时会被覆盖。 |
+| `FUYU_PLUGIN_API_VERSION` | 清单里的 `apiVersion`（`1` 或 `2`） |
 
 工作目录是插件文件夹，进程不会显示控制台窗口。
 
@@ -539,25 +556,25 @@ QQ 邮箱授权码、翻译服务密钥这类凭据，任何权限都拿不到�
 - 只有 `activationEvents` 里写了 `onUri` 的插件能收到链接；按需启动的插件会被唤醒。插件收到 `uri { uri, path, query }`：`path` 是插件 id 后面的部分（以 `/` 开头，没有时为空），`query` 是 `?` 后面、`#` 前面的部分，仍是百分号编码。整个链接最长 2048 个字符，不能有空白。
 - 任何网页都能放这种链接，所以插件第一次收到链接前，岛上会像敏感权限一样询问用户（允许 / 本次 / 拒绝）。答案记在插件的「敏感权限」里，可以撤销。插件被关闭、没写 `onUri` 或用户拒绝时，链接被丢弃。
 - 把链接里的数据当成不可信的输入：检查格式，不要直接执行；做登录回调时用 `state` 参数核对是自己发起的请求。
-- Node SDK：`plugin.onUri(({ path, query }) => ...)`；模拟宿主：`host.openUri("/auth", "code=1")`。PowerShell：在 `Invoke-FocusdLoop` 的处理函数表里加 `uri`。
+- Node SDK：`plugin.onUri(({ path, query }) => ...)`；模拟宿主：`host.openUri("/auth", "code=1")`。PowerShell：在 `Invoke-FuyuLoop` 的处理函数表里加 `uri`。
 - 注册写在 `HKCU\Software\Classes\focusd`，指向最近一次启动的岛屿程序；卸载岛屿不会删除它。
 
 ## SDK
 
-SDK 的源码在 [`packages/`](../../packages/)：npm 包 `fly-island-plugin`（Node.js SDK、命令行工具和模拟宿主）、脚手架 `create-fly-island-plugin` 和 PowerShell 模块 `FlyIsland.Plugin`。供直接复制的单文件版本在 [`plugins/sdk/`](../../plugins/sdk/)，由 `pnpm sdk:build` 从源码生成（`pnpm test` 检查是否最新），不要手改。两个 npm 包推送 `sdk-v<版本>` 标签后由 CI 发布，见 [发布插件 SDK](sdk-release.md)。
+SDK 的源码在 [`packages/`](../../packages/)：npm 包 `fuyu-plugin`（Node.js SDK、命令行工具和模拟宿主）、脚手架 `create-fuyu-plugin` 和 PowerShell 模块 `Fuyu.Plugin`。供直接复制的单文件版本在 [`plugins/sdk/`](../../plugins/sdk/)，由 `pnpm sdk:build` 从源码生成（`pnpm test` 检查是否最新），不要手改。两个 npm 包推送 `sdk-v<版本>` 标签后由 CI 发布，见 [发布插件 SDK](sdk-release.md)。
 
 ### PowerShell（不需要用户安装任何东西）
 
-[`plugins/sdk/powershell/focusd.ps1`](../../plugins/sdk/powershell/focusd.ps1) 适用于 Windows 自带的 PowerShell 5.1，复制到插件的 `lib/` 里使用。除了下面的基本函数，还有 `Invoke-FocusdLoop`（按通知名分派处理函数）、事件、提示、页面、状态文字、存储和秘密的辅助函数，见 [快速开始](quickstart.md#6-其他写法)。示例插件里的 `lib/focusd.ps1` 是较早的版本（已发布的插件包不能改），只有下面这几个基本函数。完整用法见示例的 [`main.ps1`](../../plugins/examples/dev.focusd.todo-digest/main.ps1)。
+[`plugins/sdk/powershell/fuyu.ps1`](../../plugins/sdk/powershell/fuyu.ps1) 适用于 Windows 自带的 PowerShell 5.1，复制到插件的 `lib/` 里使用。除了下面的基本函数，还有 `Invoke-FuyuLoop`（按通知名分派处理函数）、事件、提示、页面、状态文字、存储和秘密的辅助函数，见 [快速开始](quickstart.md#6-其他写法)。示例插件里的 `lib/focusd.ps1` 是改名前的较早版本（已发布的插件包不能改），只有下面这几个基本函数。完整用法见示例的 [`main.ps1`](../../plugins/examples/dev.focusd.todo-digest/main.ps1)。
 
 ```powershell
-. "$PSScriptRoot\lib\focusd.ps1"
+. "$PSScriptRoot\lib\fuyu.ps1"
 
 while ($true) {
-    $message = Receive-FocusdNotification 1000   # 1 秒内没有消息时返回 $null，可以借机做定时任务
+    $message = Receive-FuyuNotification 1000   # 1 秒内没有消息时返回 $null，可以借机做定时任务
     if ($message.method -eq 'command' -and $message.params.id -eq 'sync-now') {
-        $todos = @((Invoke-FocusdMethod 'todos.list').todos)
-        Write-FocusdLog "$($todos.Count) todos"
+        $todos = @((Invoke-FuyuMethod 'todos.list').todos)
+        Write-FuyuLog "$($todos.Count) todos"
     }
 }
 ```
@@ -565,14 +582,14 @@ while ($true) {
 注意：
 
 - 函数返回数组时，PowerShell 会把只有一个元素的数组展开成单个对象，所以调用处要用 `@(...)` 包起来再取 `.Count`。
-- stdin 关闭时，`Read-FocusdLine` 会让插件自动退出。
+- stdin 关闭时，`Read-FuyuLine` 会让插件自动退出。
 
 ### Node.js（需要用户安装 Node.js）
 
-[`plugins/sdk/node/focusd.mjs`](../../plugins/sdk/node/focusd.mjs) 是一个没有任何依赖的 SDK，可以直接复制到你的插件里使用（同目录的 `focusd.d.mts`、`protocol.d.mts` 是它的类型）。它还封装了事件（`onEvent`）、提示（`notify`）、页面（`views.*`）、状态文字（`status.*`）、`storage`、`secrets`、`keepAlive` 等，见 [API 参考](api.md) 和类型定义：
+[`plugins/sdk/node/fuyu.mjs`](../../plugins/sdk/node/fuyu.mjs) 是一个没有任何依赖的 SDK，可以直接复制到你的插件里使用（同目录的 `fuyu.d.mts`、`protocol.d.mts` 是它的类型）。它还封装了事件（`onEvent`）、提示（`notify`）、页面（`views.*`）、状态文字（`status.*`）、`storage`、`secrets`、`keepAlive` 等，见 [API 参考](api.md) 和类型定义：
 
 ```js
-import { createPlugin } from "./lib/focusd.mjs";
+import { createPlugin } from "./lib/fuyu.mjs";
 
 const plugin = createPlugin();
 plugin.onReady(async () => {
@@ -592,7 +609,7 @@ plugin.onCommand("sync-now", async () => {
 
 ### 许可证
 
-插件用什么许可证由你自己定，可以开源也可以闭源。岛屿本体是 GPL-3.0，但插件是单独运行的程序，只通过 JSON-RPC 和岛屿通信，不受 GPL 约束。SDK（`fly-island-plugin`、`plugins/sdk/`）、脚手架 `create-fly-island-plugin`、PowerShell 模块和示例插件都是 MIT，拿来写插件不会给你的插件带来任何许可要求。插件市场目前要求源码公开，以便审核。
+插件用什么许可证由你自己定，可以开源也可以闭源。岛屿本体是 GPL-3.0，但插件是单独运行的程序，只通过 JSON-RPC 和岛屿通信，不受 GPL 约束。SDK（`fuyu-plugin`、`plugins/sdk/`）、脚手架 `create-fuyu-plugin`、PowerShell 模块和示例插件都是 MIT，拿来写插件不会给你的插件带来任何许可要求。插件市场目前要求源码公开，以便审核。
 
 ### 只在这台电脑上用
 
@@ -602,7 +619,7 @@ plugin.onCommand("sync-now", async () => {
 
 市场列表来自 [`TixXin/focusd-plugins`](https://github.com/TixXin/focusd-plugins) 仓库根目录的 `index.json`。插件包放在**你自己仓库的 GitHub Release** 里，市场仓库只记录插件在哪里；它的 CI 每小时检查一次新版本，校验后重建索引并签名。完整步骤见那里的 [CONTRIBUTING.md](https://github.com/TixXin/focusd-plugins/blob/main/CONTRIBUTING.md)，简要来说：
 
-1. 用 `npx fly-island-plugin validate` 检查，`npx fly-island-plugin pack` 打包，得到 `<id>-<version>.zip`。
+1. 用 `npx fuyu-plugin validate` 检查，`npx fuyu-plugin pack` 打包，得到 `<id>-<version>.zip`。
 2. 在自己的仓库发布 GitHub Release：标签是清单的 `version`（可以带 `v`），附件是这个 zip，文件名不能改。
 3. 向 `focusd-plugins` 开 pull request，只新增 `plugins/<插件 id>.json`（见下文）。PR 会自动检查所有权、下载并校验插件包；维护者阅读源码后合并，一小时内插件出现在 **设置 → 插件市场**。
 4. 以后发新版本只要在自己的仓库发新的 Release。申请新权限、第一次加入自定义网页界面或换了运行时的版本不会自动上架，要等维护者审核。
@@ -631,7 +648,7 @@ plugin.onCommand("sync-now", async () => {
 - `tagPrefix`：一个仓库放多个插件时的标签前缀，例如 `clock-`（标签 `clock-v1.2.0`）。
 - `domain`：可选，用来成为已验证发布者的域名（见下文）。
 - `path`：插件在仓库里的文件夹，例如 `plugins/clock`，默认仓库根目录。
-- **说明和版本历史**：插件的 `README.md` 和 `CHANGELOG.md` 会写进索引（各最多 16 KB），在插件市场的详情里显示。先在插件包里找；包里没有（写进了 `.focusdignore`）时，读仓库里 Release 标签处 `path` 文件夹中的同名文件。它们跟着版本走，改了要发新版本才会更新。支持标题、段落、列表、引用、代码块、粗体、斜体和 http(s) 链接；HTML 和图片不显示（图片只显示替代文字）。`CHANGELOG.md` 建议每个版本一节、最新的在最前（`## 1.2.0`）。
+- **说明和版本历史**：插件的 `README.md` 和 `CHANGELOG.md` 会写进索引（各最多 16 KB），在插件市场的详情里显示。先在插件包里找；包里没有（写进了 `.fuyuignore`）时，读仓库里 Release 标签处 `path` 文件夹中的同名文件。它们跟着版本走，改了要发新版本才会更新。支持标题、段落、列表、引用、代码块、粗体、斜体和 http(s) 链接；HTML 和图片不显示（图片只显示替代文字）。`CHANGELOG.md` 建议每个版本一节、最新的在最前（`## 1.2.0`）。
 
 **已验证发布者**：市场在发布者名字旁显示「已验证 · GitHub 组织」或「已验证 · <域名>」，说明发布者确实是它的名字所指的组织或个人，不代表插件安全。在 GitHub 上验证过域名的组织自动得到；其他发布者在提交里写 `"domain": "example.com"`，并让 `https://example.com/.well-known/focusd-publisher.json` 返回 `{ "github": "<publisher>" }`。市场每小时重新检查一次。
 
@@ -641,8 +658,8 @@ plugin.onCommand("sync-now", async () => {
 
 可选。签了名，用户的岛屿才会**自动更新**你的插件；岛屿还会记下第一次看到的密钥，之后换了密钥的版本要用户确认才装。这样即使你的 GitHub 账号或仓库被盗，攻击者发的新版本也不会悄悄装到用户电脑上。设计见 [plugin-author-signing.md](../architecture/plugins/author-signing.md)。
 
-1. 只需一次：`npx fly-island-plugin keygen` 生成签名密钥。私钥存在 `~/.fly-island-plugin/signing.key`（Windows 上用 DPAPI 加密，只有当前 Windows 账户能解开），也可以用环境变量 `FLY_ISLAND_PLUGIN_SIGNING_KEY`（PEM 文本）提供。它打印的 `{ keyId, publicKey }` 写进 `focusd-plugins` 里你的提交 `plugins/<插件 id>.json` 的 `"signingKeys": [ ... ]`。
-2. 每次发版：`npx fly-island-plugin pack --sign`，把 `<id>-<version>.zip` 和 `<id>-<version>.zip.sig` 一起附到 Release。已经打好的包可以用 `npx fly-island-plugin sign <zip>` 补签。
+1. 只需一次：`npx fuyu-plugin keygen` 生成签名密钥。私钥存在 `~/.fuyu-plugin/signing.key`（Windows 上用 DPAPI 加密，只有当前 Windows 账户能解开），也可以用环境变量 `FUYU_PLUGIN_SIGNING_KEY`（PEM 文本）提供。它打印的 `{ keyId, publicKey }` 写进 `focusd-plugins` 里你的提交 `plugins/<插件 id>.json` 的 `"signingKeys": [ ... ]`。
+2. 每次发版：`npx fuyu-plugin pack --sign`，把 `<id>-<version>.zip` 和 `<id>-<version>.zip.sig` 一起附到 Release。已经打好的包可以用 `npx fuyu-plugin sign <zip>` 补签。
 3. 登记了 `signingKeys` 之后，没有签名或签名不对的版本不会上架，维护者也不能放行。
 
 岛屿这一侧：
@@ -654,7 +671,7 @@ plugin.onCommand("sync-now", async () => {
 
 签名对象是 `focusd-plugin-package/1`、插件 id、版本和 zip 的 SHA-256 四行文本（Ed25519），所以签名不能挪到别的插件或别的版本上。**备份私钥**：丢了只能换新密钥，而换密钥后的第一个版本要每个用户手动确认。最安全的做法是在自己电脑上签名再上传，不要把私钥放进仓库的 CI。
 
-**换密钥**（旧密钥还在时）：`npx fly-island-plugin keys rotate`（在插件文件夹里运行；一把密钥签多个插件时加 `--ids a,b`）。它把旧密钥改名为 `<密钥文件>.<旧 keyId>.old` 保留下来，在原位置生成新密钥，并打印每个插件要加进 `signingKeys` 的新条目，里面的 `endorsedBy` 是旧密钥对“插件 id + 新密钥”的签名。把新条目加在旧密钥**后面**（旧密钥先别删）开 PR，合并后用新密钥签名发版。岛屿看到新密钥有已记下的密钥的证明（可以一环接一环），就当作同一个作者，照常自动更新，并改记新密钥。证明只对写在里面的插件 id 有效。丢了旧密钥就做不出证明，只能按 [设计](../architecture/plugins/author-signing.md#35-换密钥与丢失密钥) 里的“丢了密钥”处理，用户要手动确认。
+**换密钥**（旧密钥还在时）：`npx fuyu-plugin keys rotate`（在插件文件夹里运行；一把密钥签多个插件时加 `--ids a,b`）。它把旧密钥改名为 `<密钥文件>.<旧 keyId>.old` 保留下来，在原位置生成新密钥，并打印每个插件要加进 `signingKeys` 的新条目，里面的 `endorsedBy` 是旧密钥对“插件 id + 新密钥”的签名。把新条目加在旧密钥**后面**（旧密钥先别删）开 PR，合并后用新密钥签名发版。岛屿看到新密钥有已记下的密钥的证明（可以一环接一环），就当作同一个作者，照常自动更新，并改记新密钥。证明只对写在里面的插件 id 有效。丢了旧密钥就做不出证明，只能按 [设计](../architecture/plugins/author-signing.md#35-换密钥与丢失密钥) 里的“丢了密钥”处理，用户要手动确认。
 
 ### 官方插件
 
@@ -699,7 +716,7 @@ plugin.onCommand("sync-now", async () => {
 
 - **算法**：Ed25519。签名对象是 LF 换行的 `index.json`（`revoked.json` 同理）。签名文件的格式为 `{ "keyId", "signature" }`，或者这种对象的数组（多把密钥各签一份，例如换密钥的过渡期）；数组中任一由可信公钥做出的有效签名即可通过。
 - **公钥**：放在 `plugins/signing-keys.json` 中，编译时嵌入岛屿；`focusd-plugins` 的 `keys/trusted.json` 与它一致。如果要换密钥，需要先把新公钥加进这个文件并发布一个新版本的岛屿。
-- **私钥**：有两把。`focusd-plugins` 的市场索引由 CI 签名（密钥 `e862885af5bba3dc`，存在该仓库 `release` 环境的 secret 里，只有 `main` 分支能用）。本仓库给旧版岛屿的 `plugins/index.json` 用较早的密钥签名：由 `pnpm plugins:keygen` 生成，保存在 `~/.tauri/fly-island/plugin-index-signing.key`，用 Windows DPAPI 加密，只有生成它的 Windows 账户能解开；也可以用环境变量 `FOCUSD_PLUGIN_SIGNING_KEY`（PEM 文本）提供。
+- **私钥**：有两把。`focusd-plugins` 的市场索引由 CI 签名（密钥 `e862885af5bba3dc`，存在该仓库 `release` 环境的 secret 里，只有 `main` 分支能用）。本仓库给旧版岛屿的 `plugins/index.json` 用较早的密钥签名：由 `pnpm plugins:keygen` 生成，保存在 `~/.tauri/fly-island/plugin-index-signing.key`，用 Windows DPAPI 加密，只有生成它的 Windows 账户能解开；也可以用环境变量 `FUYU_PLUGIN_SIGNING_KEY`（PEM 文本）提供。
 - **备份私钥**：私钥丢失后，已经安装的岛屿不会接受用新密钥签名的索引，只能随新版岛屿换密钥。DPAPI 加密的文件换了电脑或账户就解不开，所以备份时要另外导出一份明文 PEM，放在安全的地方。
 - **下载方式**：岛屿先通过 GitHub API 查出 `focusd-plugins` 的 `main` 分支最新的提交号，再按提交号下载 `index.json`、`revoked.json` 和它们的签名。这样两个文件一定来自同一次提交，也不会读到 CDN 的旧缓存。GitHub API 不可用时，退回按分支名下载；这时如果刚好赶上 CDN 缓存，可能短暂出现"签名不匹配"，稍等几分钟再刷新即可。
 
@@ -724,5 +741,5 @@ plugin.onCommand("sync-now", async () => {
 
 - 设置 → 插件扩展 → 展开插件卡片上的 **日志**。启动失败的原因（例如找不到 Node.js）也会显示在卡片上。
 - **开发模式**：设置 → 插件扩展 → **开发者**（默认收起）→ 打开 **开发模式**。之后可以从任意文件夹加载插件（文件夹名不必等于插件 id），不需要打开"允许运行第三方插件"；开发中的插件卡片标着"开发中"，自动获得清单里申请的全部权限（敏感权限第一次使用时仍会询问），可以使用 `experimentalApis`，和插件目录里同 id 的插件同时存在时以开发中的为准。选中一个开发中的插件可以看到最近 200 行原始 JSON-RPC 收发记录，也可以手动给它发一个事件（不管有没有订阅）。开发模式只在内存里，岛屿重启后需要重新打开、重新加载。
-- **命令行**：`npx fly-island-plugin dev` 通过[本地 API](../features/local-api.md#开发模式) 让岛屿加载当前文件夹，文件变化后自动重启插件，并在终端打印插件日志。需要打开本地 API 插件和它的"允许修改"，以及开发模式。
-- **不启动岛屿**：`npx fly-island-plugin test` 用模拟宿主运行插件，或在自己的测试里用 `fly-island-plugin/test` 的 `startMockHost`，见 [快速开始](quickstart.md#4-测试不用启动岛屿)。
+- **命令行**：`npx fuyu-plugin dev` 通过[本地 API](../features/local-api.md#开发模式) 让岛屿加载当前文件夹，文件变化后自动重启插件，并在终端打印插件日志。需要打开本地 API 插件和它的"允许修改"，以及开发模式。
+- **不启动岛屿**：`npx fuyu-plugin test` 用模拟宿主运行插件，或在自己的测试里用 `fuyu-plugin/test` 的 `startMockHost`，见 [快速开始](quickstart.md#4-测试不用启动岛屿)。

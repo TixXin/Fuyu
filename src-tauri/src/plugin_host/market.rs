@@ -15,7 +15,7 @@ use std::{
 
 use super::author_signing::{self, AuthorKey, AuthorSignature};
 use super::lock;
-use super::manifest::{compare_versions, parse_manifest, supports_api_version, version_at_least, LocalizedText, MANIFEST_FILE_NAME};
+use super::manifest::{compare_versions, parse_manifest, read_manifest_text, supports_api_version, version_at_least, LocalizedText, MANIFEST_FILE_NAME};
 use super::revocations::{parse_revoked, Revocation};
 use super::signature::{verify_file, verify_index, TRUSTED_KEYS};
 use crate::system::updater::get_updater_proxy;
@@ -481,7 +481,7 @@ pub(super) fn install_package(plugins_dir: &Path, entry: &MarketEntry, bytes: &[
 /// The unpacked manifest must be the plugin and version the index described,
 /// asking for no permission the index did not list (those are what the user saw).
 fn check_unpacked(dir: &Path, entry: &MarketEntry, app_version: &str) -> Result<(), String> {
-    let text = fs::read_to_string(dir.join(MANIFEST_FILE_NAME))
+    let text = read_manifest_text(dir)
         .map_err(|_| format!("The package has no {MANIFEST_FILE_NAME} at its top level."))?;
     let manifest = parse_manifest(&text, &entry.id, app_version)?;
     if manifest.version != entry.version {

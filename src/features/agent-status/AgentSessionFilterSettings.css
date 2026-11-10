@@ -18,7 +18,7 @@
 
 .session-filter__remove:hover {
   color: var(--text-1);
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(var(--overlay-rgb, 255, 255, 255), 0.08);
 }
 
 .session-filter__remove:focus-visible {
