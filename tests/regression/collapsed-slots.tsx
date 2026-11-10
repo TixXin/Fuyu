@@ -48,7 +48,7 @@ mockIPC((command) => {
   }];
 }, { shouldMockEvents: true });
 
-type State = { slots?: CollapsedSlots; task: string | null; agents: boolean; count: number; agentTitle?: string; lyric?: string; karaoke?: KaraokeLine; status?: PluginStatusEntry[] };
+type State = { slots?: CollapsedSlots; task: string | null; todoCount?: number | null; agents: boolean; count: number; agentTitle?: string; lyric?: string; karaoke?: KaraokeLine; status?: PluginStatusEntry[] };
 const STATUS: PluginStatusEntry = { pluginId: "dev.test.monitor", itemId: "bar", priority: 0, text: "CPU 23% · 内存 61%", tooltip: null, tone: "neutral" };
 const usageRing = <MiniRing rings={[{ value: 0.62, color: "#7ccfff" }, { value: 0.28, color: "#b9a6ff" }]} ariaLabel="5 小时 62%，7 天 28%" title="5 小时 62%，7 天 28%" />;
 const sessionRing = <MiniRing segments={[{ value: 0.5, color: "#5ad19a" }, { value: 0.25, color: "#f5c46b" }, { value: 0.25, color: "#ff8a80" }]} size={22} label="4" ariaLabel="4 个会话" title="4 个会话：2 运行，1 等待，1 出错" />;
@@ -70,7 +70,7 @@ function Fixture() {
   return <div className="stage" style={{ "--collapsed-island-width": "300px" } as CSSProperties}>
     <IslandShell deviceUse={{ camera: [], microphone: [] }} qqNotifications={qq} wechatReminders={wechat} qqMail={qqMail} pluginNotifications={NO_PLUGIN_NOTIFICATIONS} preview={preview}
       mode="collapsed" page="todo" isTucked={false} isDetached={true} showTitle={false}
-      showCollapsedText={true} collapsedTaskTitle={state.task} collapsedTodoCount={null} agentSession={state.agentTitle ? { provider: "codex", label: "Codex", title: state.agentTitle } : null} activeAgentSessionCount={state.count}
+      showCollapsedText={true} collapsedTaskTitle={state.task} collapsedTodoCount={state.todoCount ?? null} agentSession={state.agentTitle ? { provider: "codex", label: "Codex", title: state.agentTitle } : null} activeAgentSessionCount={state.count}
       lyricLine={state.lyric ? { text: state.lyric, index: 3, longest: state.lyric, ...(state.karaoke && { karaoke: state.karaoke }) } : null}
       appearanceMode="classic" nativeGlassState="disabled" agentVisualState="idle" agentStatusLabel="AI Agent 空闲或已完成"
       mediaState={UNAVAILABLE_MEDIA}
@@ -133,6 +133,16 @@ async function runChecks() {
 
     await set({ agents: false, count: 0, slots: { center: <span className="test-center">中</span> } });
     check(!bar().querySelector(".island__center-slot"), "有待办摘要时不显示中心槽位");
+    // Only the pending count: the pattern stays, in front of the count, not in the centre slot.
+    await set({ task: null, todoCount: 5 });
+    await settle();
+    const count = bar().querySelector<HTMLElement>(".island__todo-count")!;
+    const [patternBox, countBox] = [count.querySelector(".test-center")!.getBoundingClientRect(), count.getBoundingClientRect()];
+    check(count.textContent?.includes("5") && !bar().querySelector(".island__center-slot") && patternBox.left - countBox.left < 1 && patternBox.right <= countBox.right,
+      "只有剩余待办数时，中心图案排在待办数前面");
+    await set({ slots: {} });
+    check(!bar().querySelector(".island__todo-center"), "中心图案关着时待办数前面没有空位");
+    await set({ todoCount: null, slots: { center: <span className="test-center">中</span> } });
     // With rings and the session count on the right, the pattern centres in the space left between them.
     await set({ task: null, agents: true, count: 2, slots: { center: <span className="test-center">中</span>, gauges: [{ id: "usage:claudeCode", node: <span className="test-gauge" style={{ display: "block", width: 42, height: 20 }} /> }] } });
     const box = (selector: string) => bar().querySelector(selector)!.getBoundingClientRect();
