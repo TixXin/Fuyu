@@ -1,10 +1,11 @@
 // `fuyu-plugin`: validate, pack, dev, test and publish Fuyu plugins.
 // Guide: docs/plugins/README.md (快速开始) in the Fuyu repository.
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
+import { installAi } from "./ai.mjs";
 import { runDev } from "./dev.mjs";
 import { runMcp } from "./mcp.mjs";
-import { createZip, packageFiles, readManifest, sha256 } from "./pack.mjs";
+import { createZip, LEGACY_MANIFEST_FILE, MANIFEST_FILE, packageFiles, readManifest, sha256 } from "./pack.mjs";
 import { rotateKey } from "./rotate.mjs";
 import { runTests } from "./run-tests.mjs";
 import { DEFAULT_KEY_FILE, generateSigningKey, loadSigningKey, parsePackageName, writePackageSignature } from "./sign.mjs";
@@ -49,6 +50,11 @@ Commands:
              --config <file>  local-api.json of another island data folder
   publish    Pack (--sign to sign it too) and print how to publish a release and
              submit it to the plugin market (TixXin/fuyu-plugins)
+  skill      Teach AI coding assistants to build this plugin: add the fuyu-plugin
+             skill (.claude/skills/fuyu-plugin/, read by Claude Code) and an
+             AGENTS.md (Codex and others), and leave both out of the zip. Then ask
+             your assistant, e.g. "add a page listing my GitHub stars".
+             Files you changed are kept; --force replaces them
   help       Show this text
 
 The folder defaults to the current one.`;
@@ -127,6 +133,23 @@ add its entry to "signingKeys" next to the old key and open a pull request:`);
   return 0;
 }
 
+const hasManifest = (dir) => [MANIFEST_FILE, LEGACY_MANIFEST_FILE].some((name) => existsSync(path.join(dir, name)));
+
+function skill(dir, force) {
+  if (!hasManifest(dir)) {
+    console.error(`${dir} has no fuyu-plugin.json. Run it in a plugin folder, or create one with: npm create fuyu-plugin@latest`);
+    return 1;
+  }
+  const { results, ignoreFile } = installAi(dir, { force });
+  for (const { file, result } of results) console.log(`${result.padEnd(9)} ${file}`);
+  if (ignoreFile) console.log(`${"updated".padEnd(9)} ${ignoreFile} (the zip leaves them out)`);
+  const kept = results.filter((item) => item.result === "kept").length;
+  if (kept > 0) console.log(`\n${kept} file(s) you changed were kept; --force replaces them with this version.`);
+  console.log(`\nAsk your AI assistant for what you want, e.g. "add a page that lists my GitHub stars" -
+Claude Code picks up the skill by itself; other assistants read AGENTS.md.`);
+  return 0;
+}
+
 function publish(dir, signWith) {
   const packed = pack(dir, undefined, console, signWith);
   if (!packed) return 1;
@@ -178,6 +201,8 @@ export async function main(argv = process.argv.slice(2)) {
       return runTests(dir);
     case "publish":
       return publish(dir, options.sign ? loadSigningKey({ file: keyFile(options) }) : null);
+    case "skill":
+      return skill(dir, Boolean(options.force));
     case "--version":
     case "version":
       console.log(JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")).version);

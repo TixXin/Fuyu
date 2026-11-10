@@ -9,10 +9,12 @@ import path from "node:path";
 import test, { after } from "node:test";
 import { fileURLToPath } from "node:url";
 import ts from "typescript";
+import { aiFiles as installedAiFiles } from "../../fuyu-plugin/src/ai.mjs";
+import { packageFiles } from "../../fuyu-plugin/src/pack.mjs";
 import { validatePlugin } from "../../fuyu-plugin/src/validate.mjs";
 import { nodeTest } from "../src/node-templates.mjs";
 import { psText } from "../src/powershell-templates.mjs";
-import { LANGUAGES, TEMPLATES, idProblem, normalizeOptions, scaffold } from "../src/scaffold.mjs";
+import { LANGUAGES, TEMPLATES, aiFiles, idProblem, normalizeOptions, scaffold } from "../src/scaffold.mjs";
 
 const sdkPackage = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../fuyu-plugin");
 const workDir = mkdtempSync(path.join(os.tmpdir(), "fuyu-scaffold-"));
@@ -79,4 +81,17 @@ test("every language and template validates and passes its own test", { concurre
       t.test(`${language} / ${template}`, { skip: language === "powershell" && process.platform !== "win32" }, () => checkTemplate(language, template)),
     ),
   );
+});
+
+test("new plugins carry the AI assistant skill, the same files fuyu-plugin skill installs, left out of the zip", () => {
+  const dir = path.join(workDir, "tester.with-skill");
+  const { written } = scaffold({ dir, id: "tester.with-skill", language: "javascript", template: "blank", author: "Tester" });
+  const installed = installedAiFiles();
+  assert.equal(aiFiles().size, installed.size);
+  for (const [file, text] of installed) {
+    assert.ok(written.includes(file), file);
+    assert.equal(readFileSync(path.join(dir, file), "utf8").replaceAll("\r\n", "\n"), text, file);
+  }
+  const packed = packageFiles(dir).map(([name]) => name);
+  assert.ok(!packed.some((name) => name.startsWith(".claude/") || name === "AGENTS.md"), packed.join(", "));
 });

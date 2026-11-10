@@ -11,12 +11,17 @@ npx fuyu-plugin pack              # .package/<id>-<version>.zip, byte-for-byte r
 npx fuyu-plugin keygen            # once: your signing key; prints the public key for the market submission
 npx fuyu-plugin pack --sign       # also <id>-<version>.zip.sig, to attach to the release
 npx fuyu-plugin keys rotate       # new key vouched for by the old one; prints the new signingKeys entry
+npx fuyu-plugin skill             # teach AI coding assistants to build this plugin (see below)
 ```
 
 Signing is optional, but only signed plugins update by themselves on users' islands, and the island keeps
 updates on the key it first saw. Keep the key (`~/.fuyu-plugin/signing.key`, or
 `FUYU_PLUGIN_SIGNING_KEY` with the PEM text) backed up: a version signed with another key needs every
 user's confirmation.
+
+## Let an AI assistant build it
+
+`fuyu-plugin skill` adds the `fuyu-plugin` skill to a plugin folder (`.claude/skills/fuyu-plugin/`, which Claude Code picks up by itself) and an `AGENTS.md` for Codex and other assistants, and adds both to `.fuyuignore` so the zip leaves them out. The skill teaches the workflow (scaffold, mock-host tests, `dev`, `validate`, `pack`), the manifest, the API and the rules that trip plugins up. Then just ask: "add a page that lists my GitHub stars". Plugins made with `npm create fuyu-plugin` already carry it. Run it again after updating `fuyu-plugin` to get the newer skill; files you changed are kept unless you pass `--force`.
 
 ## MCP server
 

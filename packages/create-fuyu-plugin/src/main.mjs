@@ -75,5 +75,7 @@ export async function main(argv = process.argv.slice(2)) {
   if (options.language === "typescript") next.push("npm run watch   (in a second terminal)");
   next.push("npx fuyu-plugin dev");
   console.log(`\nNext (README.md has the details):\n  ${next.join("\n  ")}`);
+  console.log(`\nOr let an AI assistant build it: open the folder in Claude Code or Codex and say what the plugin should do.
+It comes with the fuyu-plugin skill (.claude/skills/fuyu-plugin) and AGENTS.md, which teach the assistant the API and the tools.`);
   return 0;
 }

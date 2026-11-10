@@ -1,6 +1,7 @@
 // Writes a new plugin folder from the chosen language and template.
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { nodeMain, nodeTest } from "./node-templates.mjs";
 import { powershellMain } from "./powershell-templates.mjs";
 import { fuyuIgnore, gitIgnore, license, manifest, packageJson, readme, tsconfig, workflow } from "./project-files.mjs";
@@ -9,6 +10,8 @@ export const LANGUAGES = ["powershell", "typescript", "javascript"];
 export const TEMPLATES = ["command", "list", "status", "blank"];
 export const ID_PATTERN = /^[a-z0-9][a-z0-9.-]{2,63}$/;
 const SDK_DIR = new URL("../sdk/", import.meta.url);
+/** The AI assistant skill, generated from packages/fuyu-plugin/ai (pnpm sdk:build). */
+const AI_DIR = new URL("../ai/", import.meta.url);
 
 /** The SDK version new plugins depend on: this package's own version. */
 export function sdkVersion() {
@@ -67,6 +70,20 @@ export function pluginFiles(options) {
   return files;
 }
 
+/**
+ * The skill that teaches AI coding assistants to build a Fuyu plugin, as
+ * `fuyu-plugin skill` installs it: .claude/skills/fuyu-plugin/ and AGENTS.md.
+ */
+export function aiFiles(dir = fileURLToPath(AI_DIR)) {
+  const walk = (sub) =>
+    readdirSync(path.join(dir, sub), { withFileTypes: true })
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .flatMap((entry) => (entry.isDirectory() ? walk(`${sub}${entry.name}/`) : [`${sub}${entry.name}`]));
+  const files = new Map(walk("skill/").map((name) => [`.claude/skills/fuyu-plugin/${name.slice("skill/".length)}`, readFileSync(path.join(dir, name), "utf8")]));
+  files.set("AGENTS.md", readFileSync(path.join(dir, "AGENTS.md"), "utf8"));
+  return files;
+}
+
 /** The SDK files a plugin carries in lib/, so it needs nothing installed to run. */
 function sdkFiles(language) {
   return language === "powershell" ? ["fuyu.ps1"] : ["fuyu.mjs", "fuyu.d.mts", "protocol.d.mts"];
@@ -79,7 +96,7 @@ export function scaffold(input) {
     throw new Error(`${options.dir} is not empty.`);
   }
   const written = [];
-  for (const [name, text] of pluginFiles(options)) {
+  for (const [name, text] of [...pluginFiles(options), ...aiFiles()]) {
     const target = path.join(options.dir, name);
     mkdirSync(path.dirname(target), { recursive: true });
     writeFileSync(target, text);

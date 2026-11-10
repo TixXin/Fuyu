@@ -129,12 +129,22 @@ npx fuyu-plugin pack --sign  # 同时写出 <id>-<version>.zip.sig，和 zip 一
 
 发布：提高 `fuyu-plugin.json` 的 `version`，提交后推送同名标签（例如 `0.2.0`），脚手架生成的 GitHub Actions 工作流会检查、测试、打包，并把 zip 附到 GitHub Release 上。第一次上架时向 [`TixXin/fuyu-plugins`](https://github.com/TixXin/fuyu-plugins) 开 PR，新增 `plugins/<插件 id>.json`（见 [放进插件市场](README.md#放进插件市场)），之后发新的 Release 一小时内就会出现在市场里。用户也可以把 zip 解压到插件目录下名为插件 id 的文件夹里手动安装。`npx fuyu-plugin publish`（加 `--sign` 同时签名）会打包并打印这些步骤。
 
-## 6. 其他写法
+## 6. 让 AI 帮你写
+
+脚手架建的插件自带一份给 AI 编程助手看的说明：`.claude/skills/fuyu-plugin/`（Claude Code 的 skill，会自动加载）和 `AGENTS.md`（Codex 等助手读它）。它们讲清楚了从测试到打包的流程、清单字段、API、权限和容易踩的坑，打包时不会放进 zip。所以在插件文件夹里打开 Claude Code 或 Codex，直接说要什么就行，例如：
+
+> 加一个页面，列出我在 GitHub 上 star 过的仓库，点一下在浏览器里打开；每小时刷新一次。
+
+它会改清单和代码、写测试，跑 `npx fuyu-plugin test` 和 `validate` 确认没问题；岛屿开着开发模式时还能用 `npx fuyu-plugin dev` 加载进去给你看。发布（推标签、向插件市场提 PR）它会先问你。
+
+改名前或不用脚手架建的插件，在插件文件夹里运行一次 `npx fuyu-plugin skill` 装上同样的文件。更新 `fuyu-plugin` 后再运行一次就能拿到新版说明；你改过的文件会保留，加 `--force` 才覆盖。
+
+## 7. 其他写法
 
 - **PowerShell**：脚手架复制的 `lib/fuyu.ps1` 是 PowerShell 模块 `Fuyu.Plugin` 的单文件版本，`. "$PSScriptRoot\lib\fuyu.ps1"` 引入后可用 `Invoke-FuyuLoop`（按通知名分派处理函数）、`Register-FuyuEvent`、`Show-FuyuNotification`、`Update-FuyuView`、`Update-FuyuStatus`、`Get-/Set-/Remove-FuyuStorage`、`Get-/Set-/Remove-FuyuSecret`、`Set-FuyuKeepAlive` 等函数。脚本文件要保持 ASCII，中文用 `ConvertFrom-FuyuEscape` 加 `\u` 转义写。
 - **Node.js，不用脚手架**：复制 [`plugins/sdk/node/fuyu.mjs`](../../plugins/sdk/node/fuyu.mjs)（以及同目录的 `.d.mts` 类型）到插件里。
 - **其他语言**：只要在 stdin / stdout 上按 [API 参考](api.md) 收发 JSON-RPC 即可，岛屿按扩展名启动 `.exe`、`.ps1`、`.js` / `.mjs` / `.cjs`。
 
-## 7. 实验 API
+## 8. 实验 API
 
 还在设计中的 API 先作为实验 API 提供。插件在清单里写 `"experimentalApis": ["<名称>"]` 申请；只有以开发模式加载的插件能用，岛屿拒绝加载装在插件目录里的这类插件，`validate` 和插件市场也拒收。`initialize.experimentalApis` 告诉插件岛屿实际提供了哪些。**目前岛屿还没有实验 API**，这个通道是为以后的新 API 准备的。

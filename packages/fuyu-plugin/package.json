@@ -1,6 +1,6 @@
 {
   "name": "fuyu-plugin",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "SDK, CLI (validate, pack, dev, test) and mock host for Fuyu plugins",
   "keywords": ["fuyu", "plugin", "sdk"],
   "license": "MIT",
@@ -25,7 +25,7 @@
     },
     "./package.json": "./package.json"
   },
-  "files": ["bin", "src", "schema", "README.md", "LICENSE"],
+  "files": ["ai", "bin", "src", "schema", "README.md", "LICENSE"],
   "engines": {
     "node": ">=20"
   },

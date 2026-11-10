@@ -581,7 +581,7 @@ SDK 的源码在 [`packages/`](../../packages/)：npm 包 `fuyu-plugin`（Node.j
 
 ### PowerShell（不需要用户安装任何东西）
 
-[`plugins/sdk/powershell/fuyu.ps1`](../../plugins/sdk/powershell/fuyu.ps1) 适用于 Windows 自带的 PowerShell 5.1，复制到插件的 `lib/` 里使用。除了下面的基本函数，还有 `Invoke-FuyuLoop`（按通知名分派处理函数）、事件、提示、页面、状态文字、存储和秘密的辅助函数，见 [快速开始](quickstart.md#6-其他写法)。示例插件里的 `lib/focusd.ps1` 是改名前的较早版本（已发布的插件包不能改），只有下面这几个基本函数。完整用法见示例的 [`main.ps1`](../../plugins/examples/dev.focusd.todo-digest/main.ps1)。
+[`plugins/sdk/powershell/fuyu.ps1`](../../plugins/sdk/powershell/fuyu.ps1) 适用于 Windows 自带的 PowerShell 5.1，复制到插件的 `lib/` 里使用。除了下面的基本函数，还有 `Invoke-FuyuLoop`（按通知名分派处理函数）、事件、提示、页面、状态文字、存储和秘密的辅助函数，见 [快速开始](quickstart.md#7-其他写法)。示例插件里的 `lib/focusd.ps1` 是改名前的较早版本（已发布的插件包不能改），只有下面这几个基本函数。完整用法见示例的 [`main.ps1`](../../plugins/examples/dev.focusd.todo-digest/main.ps1)。
 
 ```powershell
 . "$PSScriptRoot\lib\fuyu.ps1"

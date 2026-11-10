@@ -4,6 +4,12 @@
 
 下面几批改动都还没有随正式版岛屿发布（2026-11-05 时最新的正式版是 0.2.14），发布时补上版本号。
 
+## 让 AI 帮你写插件（npm 包 0.6.0）
+
+- 新命令 `fuyu-plugin skill`：把给 AI 编程助手看的 `fuyu-plugin` skill（`.claude/skills/fuyu-plugin/`，Claude Code 自动加载）和 `AGENTS.md`（Codex 等）装进插件文件夹，并写进 `.fuyuignore`，不进 zip。你改过的文件保留，`--force` 覆盖。见 [快速开始](quickstart.md#6-让-ai-帮你写)。
+- `create-fuyu-plugin` 建的新插件自带这两样，`.fuyuignore` 里也排除了它们。
+- skill 的源文件在 `packages/fuyu-plugin/ai/`，脚手架带的是 `pnpm sdk:build` 生成的副本，测试保证两边一致。
+
 ## 折叠条上的电池
 
 - `status.update` 多了可选的 `batteries`（最多 4 个 `{ level, tone? }`，`level` 是 0–1），折叠条画成并排立着的小电池，代替文字和 `cells`，能力 `statusBatteries`。没写 `tone` 的电池按位置上色，`warning` / `danger` 是黄色 / 红色。旧版岛屿忽略这个字段。SDK：Node `StatusOptions.batteries`、PowerShell `Update-FuyuStatus -Batteries`；模拟宿主会校验并记在 `statuses` 里。见 [README](README.md)。

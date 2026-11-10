@@ -52,7 +52,7 @@ export function manifest(options) {
 }
 
 export function fuyuIgnore(options) {
-  const lines = ["# Left out of the plugin's zip (fuyu-plugin pack).", ".github/", ".gitignore", "test/", "node_modules/", "package.json", "package-lock.json"];
+  const lines = ["# Left out of the plugin's zip (fuyu-plugin pack).", ".github/", ".gitignore", ".claude/", "AGENTS.md", "test/", "node_modules/", "package.json", "package-lock.json"];
   if (options.language === "typescript") lines.push("src/", "tsconfig.json");
   return `${lines.join("\n")}\n`;
 }
