@@ -31,15 +31,18 @@ export function saveUpdateChannel(channel: UpdateChannel) {
 export const CHECK_INTERVAL_HOURS = [1, 6, 12, 24] as const;
 export type CheckIntervalHours = (typeof CHECK_INTERVAL_HOURS)[number];
 export type UpdateReminderMode = "badge" | "notification";
+/** "download": fetch new versions in the background; "install": and install them when idle (D18). */
+export type AutoUpdateMode = "off" | "download" | "install";
 
 export function normalizeCheckInterval(value: unknown): CheckIntervalHours {
-  return CHECK_INTERVAL_HOURS.find((hours) => hours === value) ?? 6;
+  return CHECK_INTERVAL_HOURS.find((hours) => hours === value) ?? 1;
 }
 
 export type UpdatePreferences = {
   autoCheck: boolean;
   checkIntervalHours: CheckIntervalHours;
   reminderMode: UpdateReminderMode;
+  autoUpdate: AutoUpdateMode;
   notificationUnavailable: boolean;
   /** channel:version, so reopening the app does not repeat a system notification. */
   lastNotifiedKey: string | null;
@@ -50,8 +53,9 @@ export type UpdatePreferences = {
 
 export const DEFAULT_UPDATE_PREFERENCES: UpdatePreferences = {
   autoCheck: true,
-  checkIntervalHours: 6,
+  checkIntervalHours: 1,
   reminderMode: "badge",
+  autoUpdate: "download",
   notificationUnavailable: false,
   lastNotifiedKey: null,
   skippedVersion: null,
@@ -65,6 +69,7 @@ export function normalizeUpdatePreferences(stored: unknown): UpdatePreferences {
     autoCheck: value.autoCheck !== false,
     checkIntervalHours: normalizeCheckInterval(value.checkIntervalHours),
     reminderMode: value.reminderMode === "notification" ? "notification" : "badge",
+    autoUpdate: value.autoUpdate === "off" || value.autoUpdate === "install" ? value.autoUpdate : "download",
     notificationUnavailable: value.notificationUnavailable === true,
     lastNotifiedKey: typeof value.lastNotifiedKey === "string" ? value.lastNotifiedKey : null,
     skippedVersion: typeof value.skippedVersion === "string" && value.skippedVersion ? value.skippedVersion : null,

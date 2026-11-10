@@ -18,6 +18,8 @@ pub(super) enum Stage {
     Latest,
     Available,
     Downloading,
+    /// Downloaded and checked against its signature; installs when asked (or idle, by setting).
+    Ready,
     Installing,
     Done,
     Error,
@@ -44,6 +46,8 @@ pub(super) struct Runtime<T> {
     pub snapshot: UpdateSnapshot,
     pub pending: Option<T>,
     pub pending_channel: Option<String>,
+    /// The installer of `pending`, downloaded in the background; in memory only.
+    pub ready: Option<Vec<u8>>,
     checking_channel: Option<String>,
 }
 
@@ -66,6 +70,7 @@ impl<T> Runtime<T> {
             },
             pending: None,
             pending_channel: None,
+            ready: None,
             checking_channel: None,
         }
     }
@@ -96,14 +101,20 @@ impl<T> Runtime<T> {
         self.snapshot.downloaded = 0;
         self.snapshot.total = 0;
         if let Some((update, version, notes)) = found {
+            // The same version on the same channel keeps its downloaded installer.
+            let same = self.ready.is_some() && version == self.snapshot.next_version && self.pending_channel == self.snapshot.channel;
             self.pending = Some(update);
+            if !same {
+                self.ready = None;
+            }
             self.pending_channel.clone_from(&self.snapshot.channel);
             self.snapshot.next_version = version;
             self.snapshot.notes = notes;
-            self.snapshot.stage = Stage::Available;
+            self.snapshot.stage = if self.ready.is_some() { Stage::Ready } else { Stage::Available };
         } else {
             self.pending = None;
             self.pending_channel = None;
+            self.ready = None;
             self.snapshot.next_version.clear();
             self.snapshot.notes.clear();
             self.snapshot.stage = Stage::Latest;
@@ -119,20 +130,58 @@ impl<T> Runtime<T> {
         }
     }
 
-    pub fn begin_install(&mut self, version: Option<&str>, channel: Option<&str>) -> Result<T, UserError> {
-        self.ensure_idle()?;
+    fn check_target(&self, version: Option<&str>, channel: Option<&str>) -> Result<(), UserError> {
         if version.is_some_and(|v| v != self.snapshot.next_version)
             || channel.is_some_and(|c| Some(c) != self.pending_channel.as_deref())
         {
             return Err(UserError::new("updater.targetChanged", "The update target changed. Check the version and try again"));
         }
-        let update = self.pending.take().ok_or("No update to install")?;
+        Ok(())
+    }
+
+    /// Takes the candidate to download in the background; it comes back with
+    /// `finish_download` or `download_failed`.
+    pub fn begin_download(&mut self, version: &str, channel: &str) -> Result<T, UserError> {
+        self.ensure_idle()?;
+        self.check_target(Some(version), Some(channel))?;
+        if self.ready.is_some() {
+            return Err(UserError::new("updater.busy", "The update is already downloaded"));
+        }
+        let update = self.pending.take().ok_or("No update to download")?;
         self.snapshot.stage = Stage::Downloading;
-        self.snapshot.channel.clone_from(&self.pending_channel);
         self.snapshot.downloaded = 0;
         self.snapshot.total = 0;
         self.snapshot.detail.clear();
         Ok(update)
+    }
+
+    pub fn finish_download(&mut self, update: T, bytes: Vec<u8>) {
+        self.pending = Some(update);
+        self.ready = Some(bytes);
+        self.snapshot.stage = Stage::Ready;
+    }
+
+    /// A failed background download leaves the update to install by hand, as before.
+    pub fn download_failed(&mut self, update: T, error: &str) {
+        self.pending = Some(update);
+        self.snapshot.stage = Stage::Available;
+        self.snapshot.detail = error.chars().take(240).collect();
+    }
+
+    /// The candidate and, when it was downloaded already, its installer.
+    pub fn begin_install(&mut self, version: Option<&str>, channel: Option<&str>) -> Result<(T, Option<Vec<u8>>), UserError> {
+        self.ensure_idle()?;
+        self.check_target(version, channel)?;
+        let update = self.pending.take().ok_or("No update to install")?;
+        let bytes = self.ready.take();
+        self.snapshot.stage = if bytes.is_some() { Stage::Installing } else { Stage::Downloading };
+        self.snapshot.channel.clone_from(&self.pending_channel);
+        if bytes.is_none() {
+            self.snapshot.downloaded = 0;
+            self.snapshot.total = 0;
+        }
+        self.snapshot.detail.clear();
+        Ok((update, bytes))
     }
 }
 
@@ -193,7 +242,7 @@ mod tests {
         assert!(runtime.begin_install(Some("1.1.0"), Some("stable")).is_err());
         assert!(runtime.begin_install(Some("1.2.0"), Some("beta")).is_err());
         assert_eq!(runtime.pending, Some(1));
-        assert_eq!(runtime.begin_install(Some("1.2.0"), Some("stable")), Ok(1));
+        assert_eq!(runtime.begin_install(Some("1.2.0"), Some("stable")), Ok((1, None)));
         assert!(runtime.begin_check("beta").is_err());
         assert!(runtime.begin_install(None, None).is_err());
     }
@@ -224,6 +273,37 @@ mod tests {
         assert_eq!(runtime.snapshot.check_failures, 0);
         assert_eq!(runtime.snapshot.stage, Stage::Error);
         runtime.begin_check("stable").unwrap();
+    }
+
+    #[test]
+    fn a_background_download_keeps_its_installer_until_installed() {
+        let mut runtime = available();
+        assert!(runtime.begin_download("1.1.0", "stable").is_err());
+        let update = runtime.begin_download("1.2.0", "stable").unwrap();
+        assert!(runtime.begin_check("stable").is_err());
+        runtime.finish_download(update, vec![7]);
+        assert_eq!(runtime.snapshot.stage, Stage::Ready);
+        // Checking again finds the same version: the installer stays.
+        runtime.begin_check("stable").unwrap();
+        runtime.complete_check(Some((2, "1.2.0".into(), "Notes".into())));
+        assert_eq!(runtime.snapshot.stage, Stage::Ready);
+        assert_eq!(runtime.begin_install(Some("1.2.0"), Some("stable")), Ok((2, Some(vec![7]))));
+        assert_eq!(runtime.snapshot.stage, Stage::Installing);
+    }
+
+    #[test]
+    fn a_newer_version_or_a_failed_download_drops_back_to_available() {
+        let mut runtime = available();
+        let update = runtime.begin_download("1.2.0", "stable").unwrap();
+        runtime.finish_download(update, vec![7]);
+        runtime.begin_check("stable").unwrap();
+        runtime.complete_check(Some((3, "1.3.0".into(), String::new())));
+        assert_eq!(runtime.snapshot.stage, Stage::Available);
+        assert!(runtime.ready.is_none());
+        let update = runtime.begin_download("1.3.0", "stable").unwrap();
+        runtime.download_failed(update, "offline");
+        assert_eq!(runtime.snapshot.stage, Stage::Available);
+        assert_eq!(runtime.pending, Some(3));
     }
 
     #[test]

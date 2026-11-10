@@ -2,14 +2,14 @@ import { getVersion } from "@tauri-apps/api/app";
 import { isNativeError } from "../../i18n/nativeError.ts";
 import { isTauri } from "@tauri-apps/api/core";
 import {
-  checkUpdate, downloadAndInstallUpdate, getNativeUpdateState, getUpdaterProxy,
+  checkUpdate, downloadAndInstallUpdate, downloadUpdate, getNativeUpdateState, isNetworkMetered, getUpdaterProxy,
   isUpdaterConfigured, listenUpdateState, notifyUpdate, type UpdateSnapshot,
 } from "./api";
 import { nextUpdateCheckAt } from "./checkSchedule";
 import {
   CHANNEL_KEY, UPDATE_PREFERENCES_KEY, loadUpdateChannel, loadUpdatePreferences,
   normalizeCheckInterval, saveUpdateChannel, saveUpdatePreferences,
-  type UpdateChannel, type UpdatePreferences, type UpdateReminderMode,
+  type AutoUpdateMode, type UpdateChannel, type UpdatePreferences, type UpdateReminderMode,
 } from "./storage";
 
 export type UpdateStage = UpdateSnapshot["stage"] | "disabled";
@@ -162,6 +162,34 @@ export function setReminderMode(reminderMode: UpdateReminderMode) {
 }
 export function skipVersion(version: string | null) {
   setState(saveUpdatePreferences({ skippedVersion: version }));
+}
+export function setAutoUpdate(autoUpdate: AutoUpdateMode) {
+  setState(saveUpdatePreferences({ autoUpdate }));
+}
+
+// Versions this run already tried to download, so a failed one is not fetched over and over.
+const downloadTried = new Set<string>();
+
+/**
+ * Downloads a found update in the background when automatic updates allow it (main window only):
+ * not a skipped version, once per version a run, never on a metered connection.
+ */
+export async function downloadInBackground() {
+  await initialize();
+  reloadPreferences();
+  const version = state.nextVersion;
+  const key = `${state.channel}:${version}`;
+  if (state.autoUpdate === "off" || state.stage !== "available" || !version || version === state.skippedVersion
+    || commandRunning || downloadTried.has(key)) return false;
+  if (await isNetworkMetered().catch(() => false)) return false;
+  downloadTried.add(key);
+  try {
+    await downloadUpdate(version, state.channel);
+  } catch {
+    // The update stays available to install by hand.
+  }
+  try { applyUpdateSnapshot(await getNativeUpdateState()); } catch { /* the next event catches up */ }
+  return getUpdateState().stage === "ready";
 }
 
 /** A system notification is additional to the island marker, never a replacement. */

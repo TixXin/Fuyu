@@ -12,7 +12,7 @@ const transpile = (path) => ts.transpileModule(readFileSync(new URL(path, import
 const source = transpile("../../src/features/updater/updaterController.ts");
 const apiSource = transpile("../../src/features/updater/api.ts");
 
-export function runtime({ check = async () => null, install = async () => {}, notify = async () => true, preferences = {} } = {}) {
+export function runtime({ check = async () => null, install = async () => {}, notify = async () => true, download = async () => {}, metered = false, preferences = {} } = {}) {
   const subscribers = new Set();
   const windows = new Set();
   let prefs = storage.normalizeUpdatePreferences(preferences);
@@ -31,6 +31,14 @@ export function runtime({ check = async () => null, install = async () => {}, no
     calls.push({ command, args });
     if (command === "updater_state") return { ...snapshot };
     if (command === "updater_notify") return notify(args);
+    if (command === "updater_metered") return metered;
+    if (command === "updater_download") {
+      if (snapshot.stage !== "available") throw { code: "updater.busy", message: "busy" };
+      emit({ stage: "downloading", downloaded: 0, total: 0 });
+      try { await download(args); emit({ stage: "ready" }); }
+      catch (error) { emit({ stage: "available", detail: String(error) }); throw error; }
+      return;
+    }
     if (command === "updater_check") {
       if (["checking", "downloading", "installing"].includes(snapshot.stage)) throw { code: "updater.busy", message: "busy" };
       emit({ stage: "checking", lastAttemptAt: Date.now() });

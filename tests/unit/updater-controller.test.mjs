@@ -5,7 +5,7 @@ import { nextUpdateCheckAt } from "../../src/features/updater/checkSchedule.ts";
 import { runtime } from "./updaterTestRuntime.mjs";
 
 const hour = 3_600_000;
-const schedule = (extra = {}) => ({ ...DEFAULT_UPDATE_PREFERENCES, stage: "latest", startedAt: 1000,
+const schedule = (extra = {}) => ({ ...DEFAULT_UPDATE_PREFERENCES, checkIntervalHours: 6, stage: "latest", startedAt: 1000,
   lastCheckedAt: hour, lastAttemptAt: hour, checkFailures: 0, ...extra });
 
 test("legacy preferences retain the switch, skipped version and successful timestamp", () => {
@@ -13,7 +13,7 @@ test("legacy preferences retain the switch, skipped version and successful times
   const old = normalizeUpdatePreferences({ autoCheck: false, skippedVersion: "0.3.1", lastCheckedAt: 5 });
   assert.deepEqual(old, { ...DEFAULT_UPDATE_PREFERENCES, autoCheck: false, skippedVersion: "0.3.1", lastCheckedAt: 5 });
   for (const value of [0, -1, 2, "6", NaN, Infinity]) {
-    assert.equal(normalizeUpdatePreferences({ checkIntervalHours: value }).checkIntervalHours, 6);
+    assert.equal(normalizeUpdatePreferences({ checkIntervalHours: value }).checkIntervalHours, 1);
   }
   for (const value of [1, 6, 12, 24]) assert.equal(normalizeUpdatePreferences({ checkIntervalHours: value }).checkIntervalHours, value);
   for (const value of [-1, Infinity, Date.now() + hour]) assert.equal(normalizeUpdatePreferences({ lastCheckedAt: value }).lastCheckedAt, null);
@@ -176,4 +176,47 @@ test("failed channel switch preserves stored channel", async () => {
   await app.setUpdateChannel("beta");
   assert.equal(app.getUpdateState().channel, "stable");
   assert.deepEqual(channels, ["stable", "beta"]);
+});
+
+test("new installs check every hour and download updates in the background by default", () => {
+  assert.equal(DEFAULT_UPDATE_PREFERENCES.checkIntervalHours, 1);
+  assert.equal(DEFAULT_UPDATE_PREFERENCES.autoUpdate, "download");
+  // A saved interval stays as it was; an unknown auto-update value falls back to downloading.
+  assert.equal(normalizeUpdatePreferences({ checkIntervalHours: 6 }).checkIntervalHours, 6);
+  assert.equal(normalizeUpdatePreferences({ autoUpdate: "install" }).autoUpdate, "install");
+  assert.equal(normalizeUpdatePreferences({ autoUpdate: "always" }).autoUpdate, "download");
+});
+
+test("a found update downloads once in the background, but not when off, skipped or metered", async () => {
+  const found = async () => ({ version: "0.3.6", body: "" });
+  const fresh = runtime({ check: found });
+  const window = await fresh.controller();
+  await window.checkForUpdate();
+  assert.equal(await window.downloadInBackground(), true);
+  assert.equal(fresh.snapshot().stage, "ready");
+  assert.equal(await window.downloadInBackground(), false);
+  assert.equal(fresh.calls.filter((call) => call.command === "updater_download").length, 1);
+
+  for (const [label, options] of [
+    ["off", { preferences: { autoUpdate: "off" } }],
+    ["skipped", { preferences: { skippedVersion: "0.3.6" } }],
+    ["metered", { metered: true }],
+  ]) {
+    const held = runtime({ check: found, ...options });
+    const other = await held.controller();
+    await other.checkForUpdate();
+    assert.equal(await other.downloadInBackground(), false, label);
+    assert.equal(held.snapshot().stage, "available", label);
+  }
+});
+
+test("a failed background download is not retried in the same run and stays installable", async () => {
+  const failing = runtime({ check: async () => ({ version: "0.3.6", body: "" }), download: async () => { throw new Error("offline"); } });
+  const window = await failing.controller();
+  await window.checkForUpdate();
+  assert.equal(await window.downloadInBackground(), false);
+  assert.equal(failing.snapshot().stage, "available");
+  assert.equal(window.getUpdateState().commandError, null);
+  assert.equal(await window.downloadInBackground(), false);
+  assert.equal(failing.calls.filter((call) => call.command === "updater_download").length, 1);
 });

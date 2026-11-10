@@ -2,6 +2,7 @@
 //! export, full-screen app detection, settings backups.
 
 pub(crate) mod fullscreen;
+pub(crate) mod network_cost;
 pub(crate) mod settings_backup;
 pub(crate) mod startup;
 pub(crate) mod todo_export;
@@ -44,6 +45,8 @@ macro_rules! tauri_commands {
             crate::system::updater::updater_configured,
             crate::system::update_channel::updater_check,
             crate::system::update_channel::updater_install,
+            crate::system::update_channel::updater_download,
+            crate::system::network_cost::updater_metered,
             crate::system::update_runtime::updater_state,
             crate::system::update_notifications::updater_notify,
             crate::system::update_notifications::updater_diagnostics,

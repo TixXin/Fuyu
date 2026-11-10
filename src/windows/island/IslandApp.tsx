@@ -24,6 +24,7 @@ import { useGameMode } from "./useGameMode";
 import { useIslandKeyboard } from "./useIslandKeyboard";
 import { useIslandFeatures } from "./useIslandFeatures";
 import { useIslandAgentAlerts } from "./useIslandAgentAlerts";
+import { useIslandAutoUpdate } from "./useIslandAutoUpdate";
 import { useIslandAgents } from "./useIslandAgents";
 import { useQuotaAlert } from "../../features/agent-status/useQuotaAlert";
 import { AgentArrangeButton } from "../../features/agent-status/AgentArrangeButton";
@@ -81,6 +82,8 @@ export function IslandApp() {
   const media = useMediaState(settings.musicEnabled);
   const { agentStatus, agentSessions, listedAgentSessions, activeAgentSessionCount, unseenAgentSessions, agentRemoval, agentSession: namedAgent, agentInterjection, agentActivity, agentUsages } =
     useIslandAgents(settings);
+  // Downloads updates in the background and installs them when idle (D18).
+  useIslandAutoUpdate({ mode, sessions: agentSessions });
   const quotaAlert = useQuotaAlert(agentUsages, settings.agentStatusEnabled ? settings.agentQuotaAlertPercent : 0, {
     quiet: game.quiet,
     canPopUp: !game.quiet && mode === "collapsed" && !isTucked,

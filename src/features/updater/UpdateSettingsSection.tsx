@@ -5,7 +5,7 @@ import { SettingsSelect } from "../../components/settings/SettingsSelect";
 import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
 import { useLocale, useTranslation } from "../../i18n";
 import { CHECK_INTERVAL_HOURS } from "./storage";
-import { getUpdateState, setAutoCheck, setCheckInterval, setReminderMode, subscribeToUpdate } from "./updaterController";
+import { getUpdateState, setAutoCheck, setAutoUpdate, setCheckInterval, setReminderMode, subscribeToUpdate } from "./updaterController";
 import { UpdatePanel } from "./UpdatePanel";
 
 export function UpdateSettingsSection() {
@@ -13,7 +13,7 @@ export function UpdateSettingsSection() {
   const { locale } = useLocale();
   const text = t.settings.project.update;
   const state = useSyncExternalStore(subscribeToUpdate, getUpdateState);
-  const { stage, autoCheck, lastCheckedAt, nextCheckAt, checkIntervalHours, reminderMode } = state;
+  const { stage, autoCheck, lastCheckedAt, nextCheckAt, checkIntervalHours, reminderMode, autoUpdate } = state;
   const [online, setOnline] = useState(navigator.onLine);
   useEffect(() => {
     const sync = () => setOnline(navigator.onLine);
@@ -52,6 +52,13 @@ export function UpdateSettingsSection() {
             <SettingsSelect value={reminderMode} options={[
               { value: "badge", label: text.reminderBadge }, { value: "notification", label: text.reminderNotification },
             ]} ariaLabel={text.reminderMode} onChange={setReminderMode} />
+          } />
+          <SettingsRow indent title={text.autoUpdate} description={text.autoUpdateHint} control={
+            <SettingsSelect value={autoUpdate} options={[
+              { value: "off", label: text.autoUpdateOff },
+              { value: "download", label: text.autoUpdateDownload },
+              { value: "install", label: text.autoUpdateInstall },
+            ]} ariaLabel={text.autoUpdate} onChange={setAutoUpdate} />
           } />
         </>}
       </>}

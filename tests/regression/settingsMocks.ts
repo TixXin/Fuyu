@@ -68,6 +68,8 @@ mockIPC((command, payload) => {
     case "updater_check":
     case "updater_install":
     case "updater_notify":
+    case "updater_download":
+    case "updater_metered":
     case "updater_diagnostics": return updateRuntimeMock(command, args, demoUpdate);
     case "get_cached_plugin_market": return null;
     case "list_plugin_views": return { views: [], status: [], statusItems: [{ pluginId: "dev.example.todo-sync", pluginName: { "zh-CN": "待办同步示例", en: "Todo sync example" }, itemId: "count" }] };

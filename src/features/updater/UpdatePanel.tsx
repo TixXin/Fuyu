@@ -21,7 +21,7 @@ export function UpdatePanel() {
   const t = useTranslation();
   const errorText = useErrorText();
   const { locale } = useLocale();
-  const { stage, version, channel, nextVersion, notes, downloaded, total, detail, skippedVersion, commandError } = useSyncExternalStore(
+  const { stage, version, channel, nextVersion, notes, downloaded, total, detail, skippedVersion, commandError, autoUpdate } = useSyncExternalStore(
     subscribeToUpdate,
     getUpdateState,
   );
@@ -66,6 +66,10 @@ export function UpdatePanel() {
       : t.settings.project.update.downloading(percent);
     action = t.settings.project.update.download;
     onAction = () => installUpdate(nextVersion, channel);
+  } else if (stage === "ready") {
+    status = autoUpdate === "install" ? t.settings.project.update.readyIdle(nextVersion) : t.settings.project.update.ready(nextVersion);
+    action = t.settings.project.update.installNow;
+    onAction = () => installUpdate(nextVersion, channel);
   } else if (stage === "installing") {
     status = t.settings.project.update.installing;
   } else if (stage === "done") {
@@ -95,7 +99,7 @@ export function UpdatePanel() {
       </button>
       {commandError !== null && <p className="update-panel__detail" role="alert">{errorText(commandError)}</p>}
       {stage === "available" && <button className="update-panel__skip-button" type="button" onClick={() => void checkForUpdate()}>{t.settings.project.update.title}</button>}
-      {stage === "available" && (
+      {(stage === "available" || stage === "ready") && (
         <div className="update-panel__skip">
           <span>
             {skippedVersion === nextVersion
@@ -122,7 +126,7 @@ export function UpdatePanel() {
           <span className="update-panel__fill" style={{ width: `${percent}%` }} />
         </div>
       )}
-      {noteLines.length > 0 && (stage === "available" || stage === "downloading") && (
+      {noteLines.length > 0 && (stage === "available" || stage === "downloading" || stage === "ready") && (
         <div className="update-panel__notes" aria-label={t.settings.project.update.notesTitle(nextVersion)}>
           <p className="update-panel__notes-title">{t.settings.project.update.notesTitle(nextVersion)}</p>
           {noteLines.map((line, index) =>

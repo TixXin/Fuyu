@@ -68,6 +68,16 @@ export type SettingsProjectText = {
     reminderHint: string;
     reminderBadge: string;
     reminderNotification: string;
+    autoUpdate: string;
+    autoUpdateHint: string;
+    autoUpdateOff: string;
+    autoUpdateDownload: string;
+    autoUpdateInstall: string;
+    /** Downloaded, waiting for the user's click. */
+    ready: (version: string) => string;
+    /** Downloaded, installs by itself when the computer is idle. */
+    readyIdle: (version: string) => string;
+    installNow: string;
     nextCheck: (time: string) => string;
     retryCheck: (time: string) => string;
     schedulePaused: string;
@@ -152,6 +162,14 @@ export const zhCN: SettingsProjectText = {
     reminderHint: "发现新版本后如何提醒；同一版本的系统通知只发送一次。",
     reminderBadge: "仅岛上标记",
     reminderNotification: "岛上标记与系统通知",
+    autoUpdate: "自动更新",
+    autoUpdateHint: "发现新版本后在后台下载（按流量计费的网络不下载）。空闲时安装：锁屏或 10 分钟没有操作、没有 Agent 在运行或等你、前台没有全屏程序时安装并重启岛屿。",
+    autoUpdateOff: "只提醒",
+    autoUpdateDownload: "自动下载，手动安装",
+    autoUpdateInstall: "自动下载，空闲时安装",
+    ready: (version) => `v${version} 已下载，点击安装`,
+    readyIdle: (version) => `v${version} 已下载，空闲时自动安装`,
+    installNow: "立即安装",
     nextCheck: (time) => `下次检查：${time}`,
     retryCheck: (time) => `下次重试：${time}`,
     schedulePaused: "下载或安装期间暂停自动检查",
@@ -236,6 +254,14 @@ export const en: SettingsProjectText = {
     reminderHint: "Choose how new versions are announced. Each version gets at most one system notification.",
     reminderBadge: "Island markers only",
     reminderNotification: "Markers and system notifications",
+    autoUpdate: "Automatic updates",
+    autoUpdateHint: "New versions download in the background (not on a metered connection). Installing when idle: with the screen locked or 10 minutes without input, no agent running or waiting on you and no full-screen app in front, the island installs and restarts.",
+    autoUpdateOff: "Remind only",
+    autoUpdateDownload: "Download, install by hand",
+    autoUpdateInstall: "Download, install when idle",
+    ready: (version) => `v${version} is downloaded; click to install`,
+    readyIdle: (version) => `v${version} is downloaded and installs when the computer is idle`,
+    installNow: "Install now",
     nextCheck: (time) => `Next check: ${time}`,
     retryCheck: (time) => `Next retry: ${time}`,
     schedulePaused: "Automatic checks pause during download and installation",

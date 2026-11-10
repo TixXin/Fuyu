@@ -98,6 +98,7 @@ async function runChecks() {
 
     const settingsText = () => document.getElementById("settings")!.textContent ?? "";
     check(settingsText().includes("检查频率") && settingsText().includes("更新提醒方式"), "自动检查下面有检查频率和提醒方式");
+    check(settingsText().includes("自动更新") && settingsText().includes("自动下载，手动安装"), "自动更新默认是自动下载、手动安装");
     check(settingsText().includes("上次成功检查"), "脚注显示上次成功检查的时间");
     await update(() => setAutoCheck(false));
     check(!settingsText().includes("检查频率") && !settingsText().includes("更新提醒方式"), "关掉自动检查后两行设置收起");

@@ -16,7 +16,7 @@ export type UpdateInfo = { version: string; body: string | null };
 /** Mirrors the shared native updater snapshot. */
 export type UpdateSnapshot = {
   revision: number;
-  stage: "idle" | "checking" | "latest" | "available" | "downloading" | "installing" | "done" | "error";
+  stage: "idle" | "checking" | "latest" | "available" | "downloading" | "ready" | "installing" | "done" | "error";
   channel: UpdateChannel | null;
   nextVersion: string;
   notes: string;
@@ -56,6 +56,16 @@ export function downloadAndInstallUpdate(expectedVersion: string, expectedChanne
   // Runtime events are authoritative; keep the legacy channel contract for the command.
   channel.onmessage = () => {};
   return invoke<void>("updater_install", { onEvent: channel, expectedVersion, expectedChannel });
+}
+
+/** Downloads the found update in the background to install later (stage "ready"). */
+export function downloadUpdate(expectedVersion: string, expectedChannel: UpdateChannel) {
+  return invoke<void>("updater_download", { expectedVersion, expectedChannel });
+}
+
+/** Whether the internet connection is metered, roaming or over its limit. */
+export function isNetworkMetered() {
+  return invoke<boolean>("updater_metered");
 }
 
 export function notifyUpdate(version: string, title: string, body: string) {

@@ -138,6 +138,71 @@ pub async fn updater_check(
     }
 }
 
+/// Downloads `update`, checking it against its signature, and moves the shared progress along.
+/// Every change is an event to each window and a download comes in thousands of chunks, so the
+/// shared progress moves at most every PROGRESS_EVERY (`on_event` still gets each chunk).
+async fn download(app: &AppHandle, update: &Update, on_event: Option<&Channel<DownloadEvent>>) -> Result<Vec<u8>, String> {
+    let mut started = false;
+    let mut pending: usize = 0;
+    let mut reported = Instant::now();
+    update.download(
+        |chunk_length, content_length| {
+            pending = pending.saturating_add(chunk_length);
+            if !started || reported.elapsed() >= PROGRESS_EVERY {
+                let bytes = std::mem::take(&mut pending);
+                reported = Instant::now();
+                let _ = change(app, |runtime| {
+                    if !started { runtime.snapshot.total = content_length.unwrap_or(0); }
+                    runtime.snapshot.downloaded = runtime.snapshot.downloaded.saturating_add(bytes);
+                    Ok(())
+                });
+            }
+            if !started {
+                started = true;
+                if let Some(channel) = on_event { let _ = channel.send(DownloadEvent::Started { content_length }); }
+            }
+            if let Some(channel) = on_event { let _ = channel.send(DownloadEvent::Progress { chunk_length }); }
+        },
+        || {
+            let _ = change(app, |runtime| {
+                // Chunks held back since the last report: the download is whole now.
+                if runtime.snapshot.total > 0 {
+                    runtime.snapshot.downloaded = usize::try_from(runtime.snapshot.total).unwrap_or(usize::MAX);
+                }
+                Ok(())
+            });
+            if let Some(channel) = on_event { let _ = channel.send(DownloadEvent::Finished); }
+        },
+    ).await.map_err(|error| error.to_string())
+}
+
+fn join_error(app: &AppHandle, error: impl std::fmt::Display) -> UserError {
+    let detail = error.to_string();
+    let _ = change(app, |runtime| { runtime.fail(&detail, false); Ok(()) });
+    UserError::from(detail)
+}
+
+/// Downloads the update the island found, in the background, and keeps it to install later
+/// (Stage::Ready). A failure leaves it to install by hand.
+#[tauri::command]
+pub async fn updater_download(app: AppHandle, expected_version: String, expected_channel: String) -> Result<(), UserError> {
+    let mut update = change(&app, |runtime| runtime.begin_download(&expected_version, &expected_channel))?;
+    update.timeout = Some(DOWNLOAD_TIMEOUT);
+    let task_app = app.clone();
+    let result = tauri::async_runtime::spawn(async move {
+        match download(&task_app, &update, None).await {
+            Ok(bytes) => change(&task_app, |runtime| { runtime.finish_download(update, bytes); Ok(()) }),
+            Err(error) => {
+                change(&task_app, |runtime| { runtime.download_failed(update, &error); Ok(()) })?;
+                Err(UserError::from(error))
+            }
+        }
+    }).await;
+    result.unwrap_or_else(|error| Err(join_error(&app, error)))
+}
+
+/// Installs the update: the installer downloaded earlier, or downloaded now. Windows runs the
+/// installer and this process exits.
 #[tauri::command]
 pub async fn updater_install(
     app: AppHandle,
@@ -145,47 +210,23 @@ pub async fn updater_install(
     expected_version: Option<String>,
     expected_channel: Option<String>,
 ) -> Result<(), UserError> {
-    let mut update = change(&app, |runtime| {
+    let (mut update, ready) = change(&app, |runtime| {
         runtime.begin_install(expected_version.as_deref(), expected_channel.as_deref())
     })?;
     update.timeout = Some(DOWNLOAD_TIMEOUT);
     let task_app = app.clone();
     let result = tauri::async_runtime::spawn(async move {
-        let mut started = false;
-        // Every change is an event to each window; a download comes in thousands of chunks, so
-        // the shared progress moves at most every PROGRESS_EVERY (the channel still gets each one).
-        let mut pending: usize = 0;
-        let mut reported = Instant::now();
-        let result = update.download_and_install(
-            |chunk_length, content_length| {
-                pending = pending.saturating_add(chunk_length);
-                if !started || reported.elapsed() >= PROGRESS_EVERY {
-                    let bytes = std::mem::take(&mut pending);
-                    reported = Instant::now();
-                    let _ = change(&task_app, |runtime| {
-                        if !started { runtime.snapshot.total = content_length.unwrap_or(0); }
-                        runtime.snapshot.downloaded = runtime.snapshot.downloaded.saturating_add(bytes);
-                        Ok(())
-                    });
+        let result = async {
+            let bytes = match ready {
+                Some(bytes) => {
+                    let _ = on_event.send(DownloadEvent::Finished);
+                    bytes
                 }
-                if !started {
-                    started = true;
-                    let _ = on_event.send(DownloadEvent::Started { content_length });
-                }
-                let _ = on_event.send(DownloadEvent::Progress { chunk_length });
-            },
-            || {
-                let _ = change(&task_app, |runtime| {
-                    // Chunks held back since the last report: the download is whole now.
-                    if runtime.snapshot.total > 0 {
-                        runtime.snapshot.downloaded = usize::try_from(runtime.snapshot.total).unwrap_or(usize::MAX);
-                    }
-                    runtime.snapshot.stage = Stage::Installing;
-                    Ok(())
-                });
-                let _ = on_event.send(DownloadEvent::Finished);
-            },
-        ).await.map_err(|error| error.to_string());
+                None => download(&task_app, &update, Some(&on_event)).await?,
+            };
+            let _ = change(&task_app, |runtime| { runtime.snapshot.stage = Stage::Installing; Ok(()) });
+            update.install(bytes).map_err(|error| error.to_string())
+        }.await;
         change(&task_app, |runtime| {
             match &result {
                 Ok(()) => runtime.snapshot.stage = Stage::Done,
@@ -195,14 +236,7 @@ pub async fn updater_install(
         })?;
         result.map_err(UserError::from)
     }).await;
-    match result {
-        Ok(result) => result,
-        Err(error) => {
-            let detail = error.to_string();
-            change(&app, |runtime| { runtime.fail(&detail, false); Ok(()) })?;
-            Err(detail.into())
-        }
-    }
+    result.unwrap_or_else(|error| Err(join_error(&app, error)))
 }
 
 #[cfg(test)]

@@ -15,6 +15,12 @@ async function update(patch: Partial<UpdateSnapshot>) {
 export async function updateRuntimeMock(command: string, args: Record<string, unknown>, demo: boolean) {
   if (command === "updater_state") return { ...snapshot };
   if (command === "updater_notify") return true;
+  if (command === "updater_metered") return false;
+  if (command === "updater_download") {
+    await update({ stage: "downloading", downloaded: 0, total: 0 });
+    await update({ stage: "ready" });
+    return null;
+  }
   if (command === "updater_diagnostics") return { osVersion: "Windows build 26100.1", architecture: "x86_64" };
   if (command === "updater_check") {
     if (["checking", "downloading", "installing"].includes(snapshot.stage)) throw { code: "updater.busy", message: "busy" };
