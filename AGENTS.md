@@ -152,7 +152,7 @@ FocuSD Island（仓库名 fly-island）是 Windows 优先的桌面效率工具�
 
 - **谁怎么合入 `main`，看 GitHub 权限**。`main` 上有 GitHub 规则集 `main protection`（仓库 Settings → Rules）：必须通过 PR 合入，CI 的 `check` 必须通过，PR 必须基于最新的 `main`（落后时点 "Update branch" 或 rebase，CI 重跑），禁止强推和删除。仓库管理员（TixXin）可以绕过这些规则。
   - **仓库管理员的会话**：用下面的 lane + `pnpm mq:land`。land 先 rebase 到最新的 `origin/main`，再检查、推送；检查期间要是别人往 `main` 推了提交，这次推送不是快进，会被 git 拒绝，`main` 不会被覆盖，重新 land 即可。
-  - **协作者（Write 权限，目前是 ShengLin1001）和外部贡献者**：不用 `pnpm mq:land`，跑了也会被规则集拒绝。在自己的分支上开发，推到本仓库的分支或自己的 fork，然后提 PR；CI 通过、分支跟上最新 `main` 后再合入。协作者可以自己合，也可以等仓库管理员按下面「外部 PR」的做法合。合入用 merge 或 squash，不改写别人已经推送的分支。
+  - **协作者（Write 权限，目前是 ShengLin1001）和外部贡献者**：不用 `pnpm mq:land`，跑了也会被规则集拒绝。在自己的分支上开发。协作者把分支直接推到本仓库（`TixXin/fly-island`）再提 PR；外部贡献者从本仓库 fork 后提 PR。本仓库 2026-11-10 起已脱离 `flyl1u/fly-island` 的 fork 网络，从上游 fork 出来的仓库不能再向本仓库提 PR。不要从上游同步或合并提交；CI 通过、分支跟上最新 `main` 后再合入。协作者可以自己合，也可以等仓库管理员按下面「外部 PR」的做法合。合入用 merge 或 squash，不改写别人已经推送的分支。
   - 开发期间不要求分支一直跟着 `main`：开工前、land 或合入前各同步一次，开发时间长的分支隔天同步一次。不管哪种方式，合入那一刻都基于最新的 `main`，这一点由 land 的 rebase 和规则集保证。
 - **每个代理会话在自己的 lane（worktree + 分支）上工作，经合并队列合入 `main`**（工具是 [claude-code-merge-queue](https://github.com/funador/claude-code-merge-queue)，配置在 `claude-code-merge-queue.config.mjs`）：
   - 开 lane：用 `claude -w <任务名>` 启动，或在会话里调用 EnterWorktree。本机 `.claude/settings.json` 的 WorktreeCreate 钩子会分配 `lane/N` 分支，并在 `../fly-island-lanes/N` 建 worktree（所有 lane 都在这一个文件夹里）。钩子不可用时，手动 `git worktree add ../fly-island-lanes/<N> -b lane/<N> origin/main`，`<N>` 选一个 `../fly-island-lanes/<N>` 文件夹和 `lane/<N>` 分支都不存在的编号：往已有文件夹里建会先建出分支、再因为文件夹非空而失败，留下没有 worktree 的孤儿分支。钩子建 lane 时会自动 `pnpm install`；手动建的 lane 自己运行一次。
