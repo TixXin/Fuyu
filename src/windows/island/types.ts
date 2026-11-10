@@ -22,6 +22,7 @@ export type CollapsedSlots = {
    * In the summary's place, only while the bar shows no summary (message, translation, agent
    * title, todo, name): centred between the status light and the items on the right. Inside
    * the bar's open button, so phrasing content only (span, svg) and no buttons of its own.
+   * While the summary is only the pending todo count, it stands in front of the count instead.
    */
   center?: ReactNode;
   /**

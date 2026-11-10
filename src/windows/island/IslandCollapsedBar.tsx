@@ -285,6 +285,8 @@ export function IslandCollapsedBar({
           {showCollapsedText && !agentSession && !lyric && !collapsedTaskTitle && collapsedTodoCount !== null && (
             <span className="island__todo-count">
               {showTitle ? "· " : ""}
+              {/* The count is all the bar says while idle, so the pattern keeps showing, in front of it. */}
+              {slots.center && <span className="island__todo-center">{slots.center}</span>}
               {t.island.pendingTodos(collapsedTodoCount)}
             </span>
           )}
