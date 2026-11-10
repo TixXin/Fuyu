@@ -2,6 +2,7 @@ import type { SettingsFileShelfText } from "./fileShelf";
 import type { SettingsModulesText } from "./modules";
 import type { SettingsMessageSourcesText } from "./messageSources";
 import type { SettingsCollapsedItemsText } from "./collapsedItems";
+import type { SettingsThemeMarketText } from "./themeMarket";
 import type { SettingsResetAppearanceText } from "./resetAppearance";
 import type { SettingsCategoriesText } from "./categories";
 import type { SettingsBehaviorText } from "./behavior";
@@ -34,6 +35,7 @@ import * as fileShelf from "./fileShelf.ts";
 import * as modules from "./modules.ts";
 import * as messageSources from "./messageSources.ts";
 import * as collapsedItems from "./collapsedItems.ts";
+import * as themeMarket from "./themeMarket.ts";
 import * as resetAppearance from "./resetAppearance.ts";
 import * as categories from "./categories.ts";
 import * as behavior from "./behavior.ts";
@@ -67,6 +69,7 @@ export type SettingsText = {
   fileShelf: SettingsFileShelfText;
   messageSources: SettingsMessageSourcesText;
   collapsedItems: SettingsCollapsedItemsText;
+  themeMarket: SettingsThemeMarketText;
 
   modules: SettingsModulesText;
   title: string;
@@ -122,6 +125,7 @@ export const zhCN: SettingsText = {
   fileShelf: fileShelf.zhCN,
   messageSources: messageSources.zhCN,
   collapsedItems: collapsedItems.zhCN,
+  themeMarket: themeMarket.zhCN,
 
   modules: modules.zhCN,
   title: "设置",
@@ -177,6 +181,7 @@ export const en: SettingsText = {
   fileShelf: fileShelf.en,
   messageSources: messageSources.en,
   collapsedItems: collapsedItems.en,
+  themeMarket: themeMarket.en,
 
   modules: modules.en,
   title: "Settings",

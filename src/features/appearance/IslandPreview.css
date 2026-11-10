@@ -146,3 +146,13 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* The theme market's cards: the collapsed island on its wallpaper, nothing else. */
+.island-preview--compact {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.island-preview--compact .island-preview__desktop {
+  min-height: 72px;
+  padding-bottom: 0;
+}

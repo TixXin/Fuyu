@@ -62,7 +62,7 @@ try {
   check(groupRows().map((row) => row.dataset.group).join() === "basics,features,agents,extensions"
     && groupRows().every((row) => row.getAttribute("aria-expanded") === "true"),
     "Every group is a row that folds, and all start unfolded");
-  check(listed().length === 21, "Every page is listed at first");
+  check(listed().length === 22, "Every page is listed at first");
   check(host.querySelector(".settings-sidebar__footer [data-category='about']"), "About is pinned below the page list");
   check(element(".settings-sidebar__item--active").dataset.category === "general", "The open page is marked");
 
@@ -70,7 +70,7 @@ try {
   check(group("features").getAttribute("aria-expanded") === "false" && !listed().includes("todos") && listed().includes("agents"),
     "Folding Features hides only its pages");
   await act(async () => { group("basics").click(); });
-  check(listed().filter((item) => ["general", "behavior", "appearance", "theme", "shortcuts"].includes(item)).join() === "general",
+  check(listed().filter((item) => ["general", "behavior", "appearance", "theme", "themeMarket", "shortcuts"].includes(item)).join() === "general",
     "A folded group keeps the open page listed");
   check(group("basics").getAttribute("aria-label") === "展开「基础」", "The row says what clicking it does");
 
@@ -87,7 +87,7 @@ try {
   check(search().value === "" && group("features").getAttribute("aria-expanded") === "false", "Escape clears the search; folded groups stay folded");
   await act(async () => { group("features").click(); });
   await act(async () => { group("basics").click(); });
-  check(listed().length === 21, "Unfolding shows the pages again");
+  check(listed().length === 22, "Unfolding shows the pages again");
 
   document.documentElement.dataset.testResult = "passed";
 } catch (error) {

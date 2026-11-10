@@ -67,6 +67,7 @@ mockIPC((command, payload) => {
     case "updater_install": return playDemoDownload(args.onEvent);
     case "get_cached_plugin_market": return null;
     case "list_plugin_views": return { views: [], status: [], statusItems: [{ pluginId: "dev.example.todo-sync", pluginName: { "zh-CN": "待办同步示例", en: "Todo sync example" }, itemId: "count" }] };
+    case "get_theme_market": return [{ id: "focusd.midnight", name: { "zh-CN": "午夜蓝", en: "Midnight" }, author: "TixXin", appearance: { islandBackgroundColor: "#0f1a2e", islandCornerRadius: 28 } }, { id: "someone.dusk", name: { "zh-CN": "黄昏", en: "Dusk" }, description: { "zh-CN": "一句话", en: "One line" }, author: "someone", appearance: { islandBackgroundColor: "#1b1020", collapsedScale: 1.3 } }];
     case "get_plugin_market_likes": return { "dev.example.new": { count: 12, url: "https://github.com/TixXin/focusd-plugins/discussions/9" }, "dev.example.todo-sync": { count: 3, url: "https://github.com/TixXin/focusd-plugins/discussions/8" } };
     case "get_plugin_market": return {
       indexUrl: "https://raw.githubusercontent.com/TixXin/focusd-plugins/main/index.json",

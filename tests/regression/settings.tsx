@@ -229,6 +229,23 @@ if (!automated) {
     await act(async () => { [...document.querySelectorAll<HTMLButtonElement>(".collapsed-items__reset")][0].click(); });
     check(savedItems() === null && zoneRows("左侧").join("|") === "Agent 状态灯", "Reset to default clears the saved order");
 
+    // Settings → Theme market (C26): a card per theme, Apply changes the look only, Save adds a saved theme.
+    await openPage("themeMarket");
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 30)); });
+    const card = (id: string) => document.querySelector<HTMLElement>(`.theme-market__item[data-theme-id="${id}"]`)!;
+    const cardButton = (id: string, label: string) => [...card(id).querySelectorAll<HTMLButtonElement>("button")].find((button) => button.textContent === label);
+    check(document.querySelectorAll(".theme-market__item").length === 2 && card("focusd.midnight").querySelector(".island-preview--compact")
+      && card("focusd.midnight").querySelector(".plugin-market__badge--official") && card("someone.dusk").textContent?.includes("作者 someone"),
+      "The theme market lists each theme with a preview, Official for the island's own");
+    const scaleBefore = JSON.parse(localStorage.getItem("focusd-island-settings") ?? "{}").collapsedScale;
+    await act(async () => { cardButton("someone.dusk", "应用")!.click(); });
+    const afterApply = JSON.parse(localStorage.getItem("focusd-island-settings") ?? "{}") as { islandBackgroundColor?: string; collapsedScale?: number };
+    check(afterApply.islandBackgroundColor === "#1b1020" && afterApply.collapsedScale === scaleBefore && cardButton("someone.dusk", "使用中")?.disabled,
+      "Apply changes the look, not the size, and the card says it is in use");
+    await act(async () => { cardButton("focusd.midnight", "保存到我的主题")!.click(); });
+    check(cardButton("focusd.midnight", "已保存")?.disabled && (localStorage.getItem("focusd-island-setting-presets") ?? "").includes("午夜蓝"),
+      "Save adds the theme to the saved themes");
+
     // Settings → Music: the music wave switch is the collapsed bar's "music" item.
     await openPage("music");
     const waveRow = [...document.querySelectorAll<HTMLElement>(".settings-row")].find((row) => row.querySelector(".settings-row__title")?.textContent === "在收起的岛上显示音乐波形");

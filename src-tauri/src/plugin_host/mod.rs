@@ -42,6 +42,7 @@ mod lifecycle;
 mod manifest;
 mod market;
 mod market_likes;
+mod market_themes;
 mod menus;
 mod view_specs;
 mod views;
@@ -73,6 +74,7 @@ pub(crate) use uri::{find_link, open as open_link};
 pub use dev::*;
 pub use effort_labels::*;
 pub use market_likes::*;
+pub use market_themes::*;
 pub use updates::*;
 pub use webviews::*;
 pub(crate) use dev::answer_local_api as answer_dev_api;
@@ -197,6 +199,7 @@ macro_rules! tauri_commands {
             crate::plugin_host::get_plugin_market,
             crate::plugin_host::get_cached_plugin_market,
             crate::plugin_host::get_plugin_market_likes,
+            crate::plugin_host::get_theme_market,
             crate::plugin_host::install_market_plugin,
             crate::plugin_host::uninstall_plugin,
             crate::plugin_host::run_plugin_notification_action,

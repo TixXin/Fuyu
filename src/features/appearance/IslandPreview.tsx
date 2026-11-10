@@ -14,7 +14,11 @@ import "./IslandPreview.css";
  * page (AgentPagePreview). A drawing with sample content, not the island itself; the variables
  * mirror windows/island/stageStyle.ts, which features cannot import.
  */
-export function IslandPreview({ settings }: { settings: IslandSettings }) {
+export function IslandPreview({ settings, compact = false }: {
+  settings: IslandSettings;
+  /** Only the collapsed island, without captions: the theme market's cards. */
+  compact?: boolean;
+}) {
   const text = useTranslation().settings.appearance.preview;
   const glass = settings.appearanceMode === "liquidGlass";
   const style = {
@@ -39,7 +43,7 @@ export function IslandPreview({ settings }: { settings: IslandSettings }) {
 
   return (
     <figure
-      className={`island-preview island-preview--font-${settings.fontFamily}`}
+      className={`island-preview island-preview--font-${settings.fontFamily}${compact ? " island-preview--compact" : ""}`}
       style={style}
       aria-label={text.label}
     >
@@ -50,14 +54,14 @@ export function IslandPreview({ settings }: { settings: IslandSettings }) {
           {settings.showCollapsedText && <span className="island-preview__task">{text.sessions.needs.title}</span>}
           <span className="island-preview__ring">1</span>
         </div>
-        <figcaption className="island-preview__caption">{text.collapsed}</figcaption>
+        {compact ? null : <figcaption className="island-preview__caption">{text.collapsed}</figcaption>}
       </div>
-      <div className="island-preview__desktop">
+      {compact ? null : <div className="island-preview__desktop">
         <div className={`${islandClass} island-preview__island--expanded`}>
           <AgentPagePreview />
         </div>
         <figcaption className="island-preview__caption">{text.expanded}</figcaption>
-      </div>
+      </div>}
     </figure>
   );
 }

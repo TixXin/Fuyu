@@ -11,7 +11,7 @@ export type SettingsCategoriesText = {
   collapse: (group: string) => string;
   /** Words that also find a page in the sidebar search, besides its name. */
   keywords: Record<
-    | "general" | "behavior" | "appearance" | "theme" | "shortcuts" | "todos" | "calendar" | "music" | "translation" | "clipboard"
+    | "general" | "behavior" | "appearance" | "theme" | "themeMarket" | "shortcuts" | "todos" | "calendar" | "music" | "translation" | "clipboard"
     | "shelf" | "messages" | "agents" | "agentRemote" | "agentAlerts" | "sounds" | "agentApprovals" | "agentConnect"
     | "plugins" | "market" | "about",
     string
@@ -28,6 +28,8 @@ export type SettingsCategoriesText = {
   appearance: string;
   /** What the island looks like: style, colours, corners and saved themes. */
   theme: string;
+  /** Themes others made, from TixXin/focusd-plugins. */
+  themeMarket: string;
   shortcuts: string;
   /** QQ, WeChat and Mail on one page. */
   messages: string;
@@ -66,6 +68,7 @@ export const zhCN: SettingsCategoriesText = {
     behavior: "展开 悬停 收起 贴边 隐藏 全屏 游戏 勿扰 音量 亮度 耳机 蓝牙 电量 电源 摄像头 麦克风",
     appearance: "尺寸 大小 缩放 面板高度 显示内容 收起条 项目 排序 预览",
     theme: "颜色 背景 透明 不透明度 液态玻璃 字体 像素 圆角 预设 样式 导入 导出 亮点",
+    themeMarket: "主题 皮肤 配色 下载 应用 分享",
     shortcuts: "按键 组合键 热键 翻页",
     todos: "任务 笔记 归档 保存路径 导出 Markdown",
     calendar: "日程 会议 CalDAV ICS 订阅 节假日",
@@ -94,6 +97,7 @@ export const zhCN: SettingsCategoriesText = {
   behavior: "行为",
   appearance: "外观",
   theme: "主题",
+  themeMarket: "主题市场",
   shortcuts: "快捷键",
   messages: "消息",
   mail: "邮箱",
@@ -128,6 +132,7 @@ export const en: SettingsCategoriesText = {
     behavior: "expand hover collapse tuck hide fullscreen game quiet volume brightness headphones bluetooth battery charger camera microphone",
     appearance: "size scale panel height display collapsed bar items order preview",
     theme: "colour color background opacity transparency glass font pixel corner preset style import export pulse",
+    themeMarket: "themes skins colours colors download apply share",
     shortcuts: "keys hotkey keyboard page",
     todos: "tasks notes archive save folder export markdown",
     calendar: "events meeting caldav ics subscription holidays",
@@ -156,6 +161,7 @@ export const en: SettingsCategoriesText = {
   behavior: "Behavior",
   appearance: "Appearance",
   theme: "Theme",
+  themeMarket: "Theme market",
   shortcuts: "Shortcuts",
   messages: "Messages",
   mail: "Mail",

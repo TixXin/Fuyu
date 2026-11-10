@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Bell, Blocks, Bot, CalendarDays, ChevronRight, ClipboardList, Inbox, Info, Keyboard, Languages, LayoutGrid, LayoutTemplate, ListTodo, MousePointerClick, MessageCircle, MessagesSquare, Music, Palette, Plug, Puzzle, Search, Server, Settings2, ShieldCheck, Store, SlidersHorizontal, Volume2, X, type LucideIcon } from "lucide-react";
+import { Bell, Blocks, Brush, Bot, CalendarDays, ChevronRight, ClipboardList, Inbox, Info, Keyboard, Languages, LayoutGrid, LayoutTemplate, ListTodo, MousePointerClick, MessageCircle, MessagesSquare, Music, Palette, Plug, Puzzle, Search, Server, Settings2, ShieldCheck, Store, SlidersHorizontal, Volume2, X, type LucideIcon } from "lucide-react";
 import { LOCALE_CODES, useLocale, useTranslation } from "../../i18n";
 import { SETTINGS_GROUPS, searchCategories, type SettingsCategory, type SettingsGroup } from "./categories";
 import searchIndex from "./searchIndex.json";
@@ -11,6 +11,7 @@ const CATEGORY_ICONS: Record<SettingsCategory, LucideIcon> = {
   behavior: MousePointerClick,
   appearance: LayoutTemplate,
   theme: Palette,
+  themeMarket: Brush,
   shortcuts: Keyboard,
   messages: MessageCircle,
   todos: ListTodo,

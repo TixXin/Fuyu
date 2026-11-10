@@ -1,0 +1,61 @@
+/* Settings → Theme market: a card per theme, the collapsed island drawn at the top. */
+.theme-market__grid {
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+}
+
+.theme-market__item {
+  min-width: 0;
+  display: grid;
+  gap: 8px;
+  padding: 8px;
+  background: var(--color-white-a05, rgba(255, 255, 255, 0.05));
+  border: 1px solid var(--color-white-a08);
+  border-radius: var(--radius-lg, 12px);
+}
+
+.theme-market__text {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+  padding: 0 2px;
+}
+
+.theme-market__title {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.theme-market__title strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.theme-market__author,
+.theme-market__description {
+  color: var(--color-text-muted);
+  font-size: 11px;
+}
+
+.theme-market__description {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.theme-market__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.theme-market__apply[aria-pressed="true"] {
+  cursor: default;
+  opacity: 0.7;
+}

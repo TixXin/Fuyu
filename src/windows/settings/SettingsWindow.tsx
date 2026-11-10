@@ -3,6 +3,8 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import { AppearanceSettingsPage } from "./AppearanceSettingsPage";
 import { BehaviorSettingsPage } from "./BehaviorSettingsPage";
 import { ThemeSettingsPage } from "./ThemeSettingsPage";
+import { ThemeMarketPage } from "../../features/theme-market/ThemeMarketPage";
+import { buildTheme } from "../../features/appearance/theme";
 import { DEFAULT_SETTINGS_CATEGORY, type SettingsCategory } from "./categories";
 import { GeneralSettingsPage } from "./GeneralSettingsPage";
 import { AgentSettingsPage } from "./AgentSettingsPage";
@@ -156,6 +158,14 @@ export function SettingsWindow() {
         {category === "behavior" && <BehaviorSettingsPage settings={settings} onSettingsChange={setSettings} />}
         {category === "appearance" && <AppearanceSettingsPage settings={settings} onSettingsChange={setSettings} />}
         {category === "theme" && <ThemeSettingsPage settings={settings} presets={presets} onSettingsChange={setSettings} />}
+        {category === "themeMarket" && (
+          <ThemeMarketPage
+            settings={settings}
+            onSettingsChange={setSettings}
+            // Saved the way an imported theme file is, so it lands among the Theme page's saved themes.
+            onSave={(theme, look) => void presets.onImportPreset(JSON.stringify(buildTheme(theme.name[locale], look, new Date())))}
+          />
+        )}
         {category === "shortcuts" && <ShortcutsSettingsPage settings={settings} onSettingsChange={setSettings} />}
         {category === "todos" && (
           <TodosSettingsPage
