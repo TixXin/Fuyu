@@ -1,8 +1,8 @@
 //! System tray icon and menu. The menu follows the island's language, which the
 //! island window reports with `set_tray_language` (Chinese until it does, the
 //! interface's own fallback), and has one item that shows or hides the island,
-//! named for what it will do: the visibility is checked whenever the cursor
-//! reaches the tray icon, before the menu opens.
+//! named for what it will do, and "Quick translate", greyed out while translation is off:
+//! both are checked whenever the cursor reaches the tray icon, before the menu opens.
 
 use std::sync::{Mutex, PoisonError};
 
@@ -12,7 +12,7 @@ use tauri::{
     App, AppHandle, Manager, Wry,
 };
 
-use crate::{island, settings_window};
+use crate::{island, settings_window, translation};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum TrayLanguage {
@@ -41,12 +41,22 @@ pub(crate) fn labels(language: TrayLanguage, island_visible: bool) -> [&'static 
     }
 }
 
+/// The "Quick translate" item's text: the way into translation when its button is not on the
+/// island (translation opening in its own window).
+pub(crate) fn translate_label(language: TrayLanguage) -> &'static str {
+    match language {
+        TrayLanguage::Chinese => "快捷翻译",
+        TrayLanguage::English => "Quick Translate",
+    }
+}
+
 struct TrayMenu {
     toggle: MenuItem<Wry>,
+    translate: MenuItem<Wry>,
     settings: MenuItem<Wry>,
     quit: MenuItem<Wry>,
-    /// The language and visibility the texts were last set for.
-    shown: Mutex<(TrayLanguage, bool)>,
+    /// The language, visibility and translation switch the items were last set for.
+    shown: Mutex<(TrayLanguage, bool, bool)>,
 }
 
 fn island_visible(app: &AppHandle) -> bool {
@@ -60,12 +70,14 @@ fn refresh(app: &AppHandle, language: Option<TrayLanguage>) {
     let Some(menu) = app.try_state::<TrayMenu>() else { return };
     let visible = island_visible(app);
     let mut shown = menu.shown.lock().unwrap_or_else(PoisonError::into_inner);
-    let next = (language.unwrap_or(shown.0), visible);
+    let next = (language.unwrap_or(shown.0), visible, translation::is_enabled());
     if *shown == next {
         return;
     }
     let [toggle, settings, quit] = labels(next.0, next.1);
     let _ = menu.toggle.set_text(toggle);
+    let _ = menu.translate.set_text(translate_label(next.0));
+    let _ = menu.translate.set_enabled(next.2);
     let _ = menu.settings.set_text(settings);
     let _ = menu.quit.set_text(quit);
     *shown = next;
@@ -82,8 +94,9 @@ pub(crate) fn build_tray(app: &App) -> tauri::Result<()> {
     let toggle = MenuItem::with_id(app, "toggle", toggle_text, true, None::<&str>)?;
     let settings = MenuItem::with_id(app, "settings", settings_text, true, None::<&str>)?;
     let quit = MenuItem::with_id(app, "quit", quit_text, true, None::<&str>)?;
-    let menu = Menu::with_items(app, &[&toggle, &settings, &quit])?;
-    app.manage(TrayMenu { toggle, settings, quit, shown: Mutex::new((TrayLanguage::Chinese, true)) });
+    let translate = MenuItem::with_id(app, "translate", translate_label(TrayLanguage::Chinese), true, None::<&str>)?;
+    let menu = Menu::with_items(app, &[&toggle, &translate, &settings, &quit])?;
+    app.manage(TrayMenu { toggle, translate, settings, quit, shown: Mutex::new((TrayLanguage::Chinese, true, true)) });
 
     let mut tray = TrayIconBuilder::new()
         .tooltip("Fuyu")
@@ -98,6 +111,7 @@ pub(crate) fn build_tray(app: &App) -> tauri::Result<()> {
                 }
                 refresh(app, None);
             }
+            "translate" => translation::open_translator(app),
             "settings" => {
                 if let Err(error) = settings_window::open(app) {
                     eprintln!("failed to open settings window: {error}");
@@ -139,7 +153,7 @@ pub(crate) use tauri_commands;
 
 #[cfg(test)]
 mod tests {
-    use super::{labels, TrayLanguage};
+    use super::{labels, translate_label, TrayLanguage};
 
     #[test]
     fn the_menu_follows_the_language_and_names_what_the_toggle_will_do() {
@@ -151,5 +165,7 @@ mod tests {
         assert_eq!(labels(TrayLanguage::Chinese, true)[0], "隐藏岛屿");
         assert_eq!(labels(TrayLanguage::English, false), ["Show Island", "Settings", "Quit"]);
         assert_eq!(labels(TrayLanguage::English, true)[0], "Hide Island");
+        assert_eq!(translate_label(TrayLanguage::Chinese), "快捷翻译");
+        assert_eq!(translate_label(TrayLanguage::English), "Quick Translate");
     }
 }

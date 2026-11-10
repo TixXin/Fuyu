@@ -147,7 +147,18 @@ export function TranslationWindow() {
   useAutoTranslate(settings.autoTranslate && hasSecret && !isLoading, input, autoTranslateKey, skipAutoSource, submit);
 
   const openSettings = () => openSettingsWindow("translation");
-  const close = () => { requestId.current += 1; clipboardRequestId.current += 1; void hideTranslationWindow(); };
+  const close = useCallback(() => { requestId.current += 1; clipboardRequestId.current += 1; void hideTranslationWindow(); }, []);
+  // Esc closes the window, as it does the clipboard window; not while the IME is choosing a word,
+  // and not when something inside (a menu) already used the key.
+  useEffect(() => {
+    const handleEscape = (event: globalThis.KeyboardEvent) => {
+      if (event.key !== "Escape" || event.isComposing || event.defaultPrevented) return;
+      event.preventDefault();
+      close();
+    };
+    window.addEventListener("keydown", handleEscape);
+    return () => window.removeEventListener("keydown", handleEscape);
+  }, [close]);
   const startWindowDrag = (event: PointerEvent<HTMLElement>) => {
     if (event.button !== 0 || (event.target as HTMLElement).closest("button")) return;
     void getCurrentWindow().startDragging().catch((failure) => console.error("Cannot drag translation window", failure));

@@ -428,21 +428,36 @@ fn apply_binding_change(
     let _ = sender.send(result);
 }
 
+/// Whether translation is switched on in settings.
+pub(crate) fn is_enabled() -> bool {
+    ENABLED.load(Ordering::SeqCst)
+}
+
+/// What the translation shortcut and the tray's "Quick translate" do: toggle the translation
+/// window, or bring the island forward and ask it to toggle its translation page. Nothing while
+/// translation is off.
+pub(crate) fn open_translator(app: &AppHandle) {
+    if !is_enabled() {
+        return;
+    }
+    if OPENS_IN_ISLAND.load(Ordering::SeqCst) {
+        if let Some(window) = app.get_webview_window(MAIN_WINDOW_LABEL) {
+            let _ = window.show();
+            crate::island::focus::focus_island_for_shortcut(&window);
+        }
+        let _ = app.emit(TRANSLATION_ISLAND_SHORTCUT_EVENT, ());
+    } else {
+        let _ = toggle_translation_window(app.clone());
+    }
+}
+
 struct TranslationHotkeyWindow;
 
 impl WindowMessages for TranslationHotkeyWindow {
     fn handle(hwnd: HWND, message: u32, wparam: WPARAM, _: LPARAM) -> Option<LRESULT> {
         if message == WM_HOTKEY && wparam.0 == HOTKEY_ID as usize {
-            if let Some(app) = APP.get().filter(|_| ENABLED.load(Ordering::SeqCst)) {
-                if OPENS_IN_ISLAND.load(Ordering::SeqCst) {
-                    if let Some(window) = app.get_webview_window(MAIN_WINDOW_LABEL) {
-                        let _ = window.show();
-                        crate::island::focus::focus_island_for_shortcut(&window);
-                    }
-                    let _ = app.emit(TRANSLATION_ISLAND_SHORTCUT_EVENT, ());
-                } else {
-                    let _ = toggle_translation_window(app.clone());
-                }
+            if let Some(app) = APP.get() {
+                open_translator(app);
             }
             return Some(LRESULT(0));
         }

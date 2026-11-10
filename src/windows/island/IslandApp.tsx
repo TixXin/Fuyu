@@ -287,7 +287,8 @@ export function IslandApp() {
         onResetPosition={resetIslandPosition}
         minimizesToTray={settings.minimizeAction === "tray"}
         onMinimize={settings.minimizeAction === "tray" ? minimizeIsland : minimizeToEdge}
-        onOpenTranslator={settings.translationEnabled ? openTranslator : null}
+        // In its own window, translation opens from its shortcut or the tray; the button is for the page.
+        onOpenTranslator={settings.translationEnabled && settings.translationTarget === "island" ? openTranslator : null}
         translationPeek={translationPeek}
         onOpenTranslationPeek={openTranslationPeek}
         onOpenSettings={openSettingsWindow}
