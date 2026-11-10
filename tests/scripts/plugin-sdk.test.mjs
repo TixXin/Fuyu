@@ -17,12 +17,12 @@ test("the generated SDK files match their sources (run pnpm sdk:build)", () => {
 });
 
 test("the PowerShell module exports every function and stays ASCII", () => {
-  const module = read("packages/powershell/FlyIsland.Plugin/FlyIsland.Plugin.psm1");
-  const manifest = read("packages/powershell/FlyIsland.Plugin/FlyIsland.Plugin.psd1");
+  const module = read("packages/powershell/Fuyu.Plugin/Fuyu.Plugin.psm1");
+  const manifest = read("packages/powershell/Fuyu.Plugin/Fuyu.Plugin.psd1");
   const functions = [...module.matchAll(/^function ([\w-]+)/gm)].map((match) => match[1]).sort();
   const exported = [...manifest.matchAll(/'([A-Za-z]+-Focusd\w*)'/g)].map((match) => match[1]).sort();
   assert.deepEqual(exported, functions);
-  assert.ok([...module].every((char) => char.charCodeAt(0) < 128), "FlyIsland.Plugin.psm1 must be ASCII for PowerShell 5.1");
+  assert.ok([...module].every((char) => char.charCodeAt(0) < 128), "Fuyu.Plugin.psm1 must be ASCII for PowerShell 5.1");
   assert.ok([...read("plugins/sdk/powershell/focusd.ps1")].every((char) => char.charCodeAt(0) < 128));
 });
 
@@ -67,11 +67,11 @@ test("the PowerShell SDK's wait for a message times out, and reads UTF-8", { ski
 });
 
 test("the npm packages publish what they reference", () => {
-  for (const name of ["fly-island-plugin", "create-fly-island-plugin"]) {
+  for (const name of ["fuyu-plugin", "create-fuyu-plugin"]) {
     const pkg = JSON.parse(read(`packages/${name}/package.json`));
     for (const target of Object.values(pkg.bin)) assert.ok(pkg.files.includes(target.split("/")[0]), `${name}: ${target}`);
     assert.deepEqual(Object.keys(pkg.dependencies ?? {}), [], `${name} has no runtime dependencies`);
   }
-  const versions = ["fly-island-plugin", "create-fly-island-plugin"].map((name) => JSON.parse(read(`packages/${name}/package.json`)).version);
+  const versions = ["fuyu-plugin", "create-fuyu-plugin"].map((name) => JSON.parse(read(`packages/${name}/package.json`)).version);
   assert.equal(versions[0], versions[1], "create-fly-island-plugin makes plugins depend on its own version of fly-island-plugin");
 });

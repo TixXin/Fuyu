@@ -1,5 +1,5 @@
 @{
-    RootModule = 'FlyIsland.Plugin.psm1'
+    RootModule = 'Fuyu.Plugin.psm1'
     ModuleVersion = '0.1.0'
     GUID = '6180e14e-88a5-4497-8ed0-4bbbb5c4954d'
     Author = 'FocuSD'
@@ -23,7 +23,7 @@
         PSData = @{
             Tags = @('FocuSD', 'FlyIsland', 'plugin', 'Windows')
             LicenseUri = 'https://github.com/TixXin/fly-island/blob/main/packages/powershell/LICENSE'
-            ProjectUri = 'https://github.com/TixXin/fly-island/tree/main/packages/powershell/FlyIsland.Plugin'
+            ProjectUri = 'https://github.com/TixXin/fly-island/tree/main/packages/powershell/Fuyu.Plugin'
         }
     }
 }

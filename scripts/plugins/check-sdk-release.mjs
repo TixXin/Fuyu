@@ -10,7 +10,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-export const SDK_PACKAGES = ["packages/fly-island-plugin", "packages/create-fly-island-plugin"];
+export const SDK_PACKAGES = ["packages/fuyu-plugin", "packages/create-fuyu-plugin"];
 const VERSION = /^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$/;
 
 /** The version a tag names, or null when it is not sdk-v<version>. */

@@ -1,5 +1,5 @@
-# Publishes the plugin SDK packages (packages/fly-island-plugin and
-# packages/create-fly-island-plugin) to npm when a tag like sdk-v0.2.1 is
+# Publishes the plugin SDK packages (packages/fuyu-plugin and
+# packages/create-fuyu-plugin) to npm when a tag like sdk-v0.2.1 is
 # pushed. It uses npm Trusted Publishing (OIDC): no npm token is stored
 # anywhere; npmjs.com trusts this workflow file in this repository. Setup and
 # the release steps: docs/plugins/sdk-release.md.
@@ -50,7 +50,7 @@ jobs:
 
       - name: Publish
         run: |
-          for dir in packages/fly-island-plugin packages/create-fly-island-plugin; do
+          for dir in packages/fuyu-plugin packages/create-fuyu-plugin; do
             name=$(node -p "require('./$dir/package.json').name")
             version=$(node -p "require('./$dir/package.json').version")
             if npm view "$name@$version" version >/dev/null 2>&1; then

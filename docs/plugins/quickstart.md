@@ -2,7 +2,7 @@
 
 本文带你从零做出一个 FocuSD Island 插件，并完成调试、测试和打包。协议细节见 [README.md](README.md)，所有方法和事件见 [API 参考](api.md)，各版本新增了什么见 [更新日志](changelog.md)。
 
-> 开发者工具的 npm 包 `fly-island-plugin`、`create-fly-island-plugin` 和 PowerShell 模块 `FlyIsland.Plugin` 还没有发布到 npm / PowerShell Gallery。发布之前请在本仓库里用 `node packages/create-fly-island-plugin/bin/create-fly-island-plugin.mjs` 和 `node packages/fly-island-plugin/bin/fly-island-plugin.mjs` 代替下文的 `npm create` / `npx` 命令。
+> 开发者工具的 npm 包 `fly-island-plugin`、`create-fly-island-plugin` 和 PowerShell 模块 `FlyIsland.Plugin` 还没有发布到 npm / PowerShell Gallery。发布之前请在本仓库里用 `node packages/create-fuyu-plugin/bin/create-fly-island-plugin.mjs` 和 `node packages/fuyu-plugin/bin/fly-island-plugin.mjs` 代替下文的 `npm create` / `npx` 命令。
 
 ## 1. 准备
 

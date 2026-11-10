@@ -9,7 +9,7 @@ import path from "node:path";
 import test, { after } from "node:test";
 import { fileURLToPath } from "node:url";
 import ts from "typescript";
-import { validatePlugin } from "../../fly-island-plugin/src/validate.mjs";
+import { validatePlugin } from "../../fuyu-plugin/src/validate.mjs";
 import { nodeTest } from "../src/node-templates.mjs";
 import { psText } from "../src/powershell-templates.mjs";
 import { LANGUAGES, TEMPLATES, idProblem, normalizeOptions, scaffold } from "../src/scaffold.mjs";

@@ -8,7 +8,7 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/TixXin/fly-island.git",
-    "directory": "packages/create-fly-island-plugin"
+    "directory": "packages/create-fuyu-plugin"
   },
   "homepage": "https://github.com/TixXin/fly-island/tree/main/docs/plugins",
   "bin": {

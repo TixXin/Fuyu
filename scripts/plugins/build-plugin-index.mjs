@@ -15,8 +15,8 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSy
 import { homedir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { createZip, listFiles, packFolder, readPackedFile, sha256 } from "../../packages/fly-island-plugin/src/pack.mjs";
-import { loadSigningKey, publicKeyOf, writePackageSignature } from "../../packages/fly-island-plugin/src/sign.mjs";
+import { createZip, listFiles, packFolder, readPackedFile, sha256 } from "../../packages/fuyu-plugin/src/pack.mjs";
+import { loadSigningKey, publicKeyOf, writePackageSignature } from "../../packages/fuyu-plugin/src/sign.mjs";
 import { loadPrivateKey, signIndex } from "./plugin-signing.mjs";
 
 export { createZip, listFiles, readPackedFile, sha256 };

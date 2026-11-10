@@ -4,8 +4,8 @@
 # writes the generated SDK files). Checking them out with LF too keeps a build or
 # a regeneration from leaving them modified under core.autocrlf, which blocks land.
 src-tauri/Cargo.toml text eol=lf
-packages/fly-island-plugin/schema/*.json text eol=lf
-packages/fly-island-plugin/src/protocol.d.mts text eol=lf
-packages/create-fly-island-plugin/sdk/* text eol=lf
+packages/fuyu-plugin/schema/*.json text eol=lf
+packages/fuyu-plugin/src/protocol.d.mts text eol=lf
+packages/create-fuyu-plugin/sdk/* text eol=lf
 plugins/sdk/** text eol=lf
 docs/plugins/api.md text eol=lf
