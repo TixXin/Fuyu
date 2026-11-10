@@ -41,7 +41,7 @@ fn is_discussion(url: &str) -> bool {
 fn parse_likes(text: &str) -> Result<BTreeMap<String, MarketLike>, String> {
     let file: LikesFile = serde_json::from_str(text).map_err(|error| format!("stars.json is not valid: {error}"))?;
     if file.version != LIKES_VERSION {
-        return Err(format!("stars.json has format {}; this FocuSD Island reads format {LIKES_VERSION}.", file.version));
+        return Err(format!("stars.json has format {}; this Fuyu reads format {LIKES_VERSION}.", file.version));
     }
     Ok(file
         .plugins

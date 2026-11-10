@@ -29,7 +29,7 @@ export const zhCN: SettingsBackupText = {
   restart: "立即重启岛屿",
   problems: {
     notJson: "这个文件不是有效的 JSON，无法恢复。",
-    notBackup: "这不是 fly-island 导出的设置文件。",
+    notBackup: "这不是浮屿导出的设置文件。",
     newerVersion: "这个设置文件来自更新的版本，请先把岛屿更新到最新版。",
     empty: "这个文件里没有可以恢复的设置。",
   },
@@ -49,7 +49,7 @@ export const en: SettingsBackupText = {
   restart: "Restart the island",
   problems: {
     notJson: "This file is not valid JSON and cannot be restored.",
-    notBackup: "This is not a settings file exported by fly-island.",
+    notBackup: "This is not a settings file exported by Fuyu.",
     newerVersion: "This settings file comes from a newer version. Update the island first.",
     empty: "This file has no settings to restore.",
   },

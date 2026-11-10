@@ -25,7 +25,7 @@ pub struct MarketPlugin {
     #[serde(flatten)]
     entry: market::MarketEntry,
     installed_version: Option<String>,
-    /// Why this FocuSD Island cannot install it, if it cannot.
+    /// Why this Fuyu cannot install it, if it cannot.
     incompatible: Option<String>,
     /// This version was taken off the market (revoked.json), and why.
     revoked: Option<LocalizedText>,
@@ -110,7 +110,7 @@ fn market_snapshot(data: market::MarketData) -> Result<MarketSnapshot, String> {
 #[tauri::command]
 pub async fn install_market_plugin(id: String, accept_key_change: Option<bool>) -> Result<PluginsSnapshot, String> {
     if builtin::is_builtin(&id) {
-        return Err("This plugin is built into FocuSD Island.".into());
+        return Err("This plugin is built into Fuyu.".into());
     }
     let host = host()?;
     let version = app_version(&host.app);

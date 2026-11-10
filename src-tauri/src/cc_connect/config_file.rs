@@ -84,7 +84,7 @@ pub(super) fn toml_string(value: &str) -> String {
 /// The `[[projects]]` block for `project`, dated `today`.
 pub(super) fn project_block(project: &NewProject, today: &str) -> String {
     let mut block = format!(
-        "\n# Added by FocuSD Island on {today}.\n[[projects]]\nname = {}\n\n[projects.agent]\ntype = \"claudecode\"\n\n\
+        "\n# Added by Fuyu on {today}.\n[[projects]]\nname = {}\n\n[projects.agent]\ntype = \"claudecode\"\n\n\
          [projects.agent.options]\nwork_dir = {}\nmode = \"default\"\n\n[[projects.platforms]]\ntype = {}\n\n[projects.platforms.options]\n",
         toml_string(project.name),
         toml_string(project.work_dir),
@@ -136,7 +136,7 @@ pub(super) fn add_project(path: &Path, project: &NewProject, today: &str, stamp:
             fs::write(&backup, text).map_err(|error| UserError::new("file.backup", format!("Could not back up {}.", path.display())).arg("path", path.display().to_string()).detail(error))?;
             text.trim_end().to_string()
         }
-        None => "# cc-connect configuration, started by FocuSD Island. `cc-connect config example` prints every option.".to_string(),
+        None => "# cc-connect configuration, started by Fuyu. `cc-connect config example` prints every option.".to_string(),
     };
     text.push('\n');
     text.push_str(&project_block(project, today));

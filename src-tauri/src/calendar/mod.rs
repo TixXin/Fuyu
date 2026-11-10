@@ -78,7 +78,7 @@ async fn fetch_ics(link: &str) -> Result<String, UserError> {
     let url = sources::ics_url(link)?;
     let client = reqwest::Client::builder()
         .timeout(Duration::from_secs(15))
-        .user_agent(concat!("FocuSD-Island/", env!("CARGO_PKG_VERSION")))
+        .user_agent(concat!("Fuyu/", env!("CARGO_PKG_VERSION")))
         .build()
         .map_err(|error| UserError::new("http.client", "Could not set up the connection.").detail(error))?;
     let response = client.get(url).send().await.map_err(|error| UserError::new("calendar.unreachable", "Could not reach the calendar.").detail(error))?;

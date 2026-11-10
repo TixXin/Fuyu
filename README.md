@@ -1,7 +1,7 @@
 <div align="center">
-  <img src="src-tauri/icons/mark.svg" alt="Fly Island logo" width="96" height="96">
+  <img src="src-tauri/icons/mark.svg" alt="浮屿 Fuyu logo" width="96" height="96">
 
-  <h1>Fly Island</h1>
+  <h1>浮屿 Fuyu</h1>
 
   <p><a href="README.en.md">English</a> · 中文</p>
 
@@ -21,11 +21,11 @@
 </div>
 
 > [!NOTE]
-> 本项目由 [TixXin](https://github.com/TixXin) 和 [ShengLin1001](https://github.com/ShengLin1001) 独立维护。原作者 [flyl1u](https://github.com/flyl1u/fly-island) 偏向于精简的灵动岛界面；为了进一步丰富灵动岛的功能，让更多用户把自己 DIY 的功能放上岛，本项目开始独立维护，并发展出了插件市场模式。欢迎大家把自己的组件上传到[插件市场](https://github.com/TixXin/focusd-plugins)，或者在本地安装自己的插件（见[插件文档](docs/plugins/README.md)）。
+> 本项目由 [TixXin](https://github.com/TixXin) 和 [ShengLin1001](https://github.com/ShengLin1001) 独立维护，2026 年 11 月由 fly-island 改名为浮屿。原作者 [flyl1u](https://github.com/flyl1u/fly-island) 偏向于精简的灵动岛界面；为了进一步丰富灵动岛的功能，让更多用户把自己 DIY 的功能放上岛，本项目开始独立维护，并发展出了插件市场模式。欢迎大家把自己的组件上传到[插件市场](https://github.com/TixXin/focusd-plugins)，或者在本地安装自己的插件（见[插件文档](docs/plugins/README.md)）。
 
 ## 这是什么
 
-Fly Island 是一座轻量、无边框、始终置顶的悬浮岛。平时收在屏幕顶部，需要时展开，用完自动收回。常用的东西都放在岛上，不用为了看一眼信息来回切窗口。
+浮屿（Fuyu）是一座轻量、无边框、始终置顶的悬浮岛。平时收在屏幕顶部，需要时展开，用完自动收回。常用的东西都放在岛上，不用为了看一眼信息来回切窗口。
 
 ## 功能
 

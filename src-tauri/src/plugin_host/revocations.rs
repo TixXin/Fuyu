@@ -65,7 +65,7 @@ struct RevokedFile {
 pub(super) fn parse_revoked(text: &str) -> Result<Vec<Revocation>, String> {
     let file: RevokedFile = serde_json::from_str(text).map_err(|error| format!("The revocation list is not valid: {error}"))?;
     if file.version != REVOKED_VERSION {
-        return Err(format!("The revocation list has format {}; update FocuSD Island.", file.version));
+        return Err(format!("The revocation list has format {}; update Fuyu.", file.version));
     }
     Ok(file
         .revoked

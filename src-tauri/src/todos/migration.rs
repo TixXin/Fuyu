@@ -55,7 +55,7 @@ impl LocalTodoKeys {
 }
 
 /// SHA-256 (hex) of the keys' text in a fixed order; tells whether an older
-/// FocuSD Island changed localStorage after the migration.
+/// Fuyu changed localStorage after the migration.
 pub(crate) fn source_hash(keys: &LocalTodoKeys) -> String {
     let canonical = json!([
         keys.todos,

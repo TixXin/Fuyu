@@ -20,7 +20,7 @@ const PLUGIN_NAME: &str = "InfLink-rs";
 const FILE_NAME: &str = "InfLink-rs.plugin";
 const LATEST_RELEASE: &str = "https://api.github.com/repos/apoint123/InfLink-rs/releases/latest";
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(20);
-const USER_AGENT: &str = concat!("FocuSD-Island/", env!("CARGO_PKG_VERSION"), " (https://github.com/TixXin/fly-island)");
+const USER_AGENT: &str = concat!("Fuyu/", env!("CARGO_PKG_VERSION"), " (https://github.com/TixXin/fly-island)");
 /// The 3.4.0 package is 1.6 MB; anything far larger is not the plugin.
 const MAX_PACKAGE_BYTES: u64 = 32 * 1024 * 1024;
 

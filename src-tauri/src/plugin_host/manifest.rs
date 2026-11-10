@@ -204,7 +204,7 @@ fn empty_text() -> LocalizedText {
 pub(super) fn parse_manifest(text: &str, folder_name: &str, app_version: &str) -> Result<PluginManifest, String> {
     let manifest = parse_any_manifest(text, folder_name, app_version)?;
     if manifest.runtime == PluginRuntime::Builtin {
-        return Err("Only plugins that come with FocuSD Island can use runtime \"builtin\".".into());
+        return Err("Only plugins that come with Fuyu can use runtime \"builtin\".".into());
     }
     Ok(manifest)
 }
@@ -232,13 +232,13 @@ fn parse_any_manifest(text: &str, folder_name: &str, app_version: &str) -> Resul
     }
     if !supports_api_version(manifest.api_version) {
         return Err(format!(
-            "The plugin needs plugin API version {}; this FocuSD Island supports versions {MIN_API_VERSION}-{HOST_API_VERSION}.",
+            "The plugin needs plugin API version {}; this Fuyu supports versions {MIN_API_VERSION}-{HOST_API_VERSION}.",
             manifest.api_version
         ));
     }
     if let Some(min) = manifest.min_app_version.as_deref() {
         if !version_at_least(app_version, min) {
-            return Err(format!("The plugin needs FocuSD Island {min} or later."));
+            return Err(format!("The plugin needs Fuyu {min} or later."));
         }
     }
     if !manifest.name.is_filled() {

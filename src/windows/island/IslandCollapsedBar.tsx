@@ -251,7 +251,7 @@ export function IslandCollapsedBar({
             <MeetingLine meeting={meeting.upcoming} showTitle={meeting.showTitle} />
           ) : <>
           {showCollapsedText && showTitle && (
-            <span className="island__brand">fly-island</span>
+            <span className="island__brand">{t.island.appName}</span>
           )}
           {showCollapsedText && agentSession && (
             <span className="island__agent-session" key={`${agentSession.label}:${agentSession.title}`}>

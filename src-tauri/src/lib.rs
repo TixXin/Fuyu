@@ -188,7 +188,7 @@ pub fn run() {
             })
         });
     if let Err(error) = result {
-        eprintln!("error while running FocuSD Island: {error}");
+        eprintln!("error while running Fuyu: {error}");
         std::process::exit(1);
     }
 }

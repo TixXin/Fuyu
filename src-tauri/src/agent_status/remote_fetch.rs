@@ -329,7 +329,7 @@ const LEFT_OUT: [&str; 21] = [
 // shortcut: values are written back as `ssh -G` prints them, so a path with a space in it (a key
 // file under such a folder) breaks; quote such values if one turns up.
 pub(super) fn island_config(resolved: &str, forward_port: Option<u16>) -> String {
-    let mut config = String::from("# Written by fly-island from `ssh -G` each time it connects; changes here are lost.\nHost *\n");
+    let mut config = String::from("# Written by Fuyu from `ssh -G` each time it connects; changes here are lost.\nHost *\n");
     for line in resolved.lines().map(str::trim).filter(|line| !line.is_empty()) {
         let (key, value) = line.split_once(' ').unwrap_or((line, ""));
         let key = key.to_ascii_lowercase();

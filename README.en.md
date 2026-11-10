@@ -1,7 +1,7 @@
 <div align="center">
-  <img src="src-tauri/icons/mark.svg" alt="Fly Island logo" width="96" height="96">
+  <img src="src-tauri/icons/mark.svg" alt="Fuyu logo" width="96" height="96">
 
-  <h1>Fly Island</h1>
+  <h1>Fuyu</h1>
 
   <p>English · <a href="README.md">中文</a></p>
 
@@ -21,11 +21,11 @@
 </div>
 
 > [!NOTE]
-> This project is maintained independently by [TixXin](https://github.com/TixXin) and [ShengLin1001](https://github.com/ShengLin1001). The original author, [flyl1u](https://github.com/flyl1u/fly-island), prefers a lean, minimal island. To give the island more to do, and to let more people put their own DIY features on it, this project became independently maintained and grew a plugin market. You are welcome to publish your own components to the [plugin market](https://github.com/TixXin/focusd-plugins), or install your own plugins locally (see the [plugin docs](docs/plugins/README.md)).
+> This project is maintained independently by [TixXin](https://github.com/TixXin) and [ShengLin1001](https://github.com/ShengLin1001); it was renamed from fly-island to Fuyu in November 2026. The original author, [flyl1u](https://github.com/flyl1u/fly-island), prefers a lean, minimal island. To give the island more to do, and to let more people put their own DIY features on it, this project became independently maintained and grew a plugin market. You are welcome to publish your own components to the [plugin market](https://github.com/TixXin/focusd-plugins), or install your own plugins locally (see the [plugin docs](docs/plugins/README.md)).
 
 ## What is this?
 
-Fly Island is a lightweight, borderless, always-on-top floating island. It sits at the top of the screen, expands when you need it and tucks away when you are done, so the things you use all day are one glance away instead of one window switch away.
+Fuyu (浮屿, "floating islet") is a lightweight, borderless, always-on-top floating island. It sits at the top of the screen, expands when you need it and tucks away when you are done, so the things you use all day are one glance away instead of one window switch away.
 
 ## Features
 

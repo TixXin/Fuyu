@@ -68,7 +68,7 @@ pub(super) fn verify_file(text: &str, signature: &str, trusted_keys: &str, what:
     if any_trusted {
         Err(refused)
     } else {
-        Err(format!("The {what} is signed with a key this FocuSD Island does not trust. Update FocuSD Island."))
+        Err(format!("The {what} is signed with a key this Fuyu does not trust. Update Fuyu."))
     }
 }
 

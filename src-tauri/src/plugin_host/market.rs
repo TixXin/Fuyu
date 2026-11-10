@@ -224,7 +224,7 @@ pub(super) fn split_index(text: &str) -> Result<(Vec<MarketEntry>, Vec<MarketEnt
         serde_json::from_str(text).map_err(|error| format!("The plugin index is not valid: {error}"))?;
     if index.version != INDEX_VERSION {
         return Err(format!(
-            "The plugin index has format {}; this FocuSD Island reads format {INDEX_VERSION}. Update FocuSD Island.",
+            "The plugin index has format {}; this Fuyu reads format {INDEX_VERSION}. Update Fuyu.",
             index.version
         ));
     }
@@ -266,7 +266,7 @@ pub(super) fn incompatibility(entry: &MarketEntry, app_version: &str) -> Option<
         return Some(format!("Needs plugin API version {}.", entry.api_version));
     }
     match entry.min_app_version.as_deref() {
-        Some(min) if !version_at_least(app_version, min) => Some(format!("Needs FocuSD Island {min} or later.")),
+        Some(min) if !version_at_least(app_version, min) => Some(format!("Needs Fuyu {min} or later.")),
         _ => None,
     }
 }
@@ -274,7 +274,7 @@ pub(super) fn incompatibility(entry: &MarketEntry, app_version: &str) -> Option<
 pub(super) fn client() -> Result<reqwest::Client, String> {
     let mut builder = reqwest::Client::builder()
         .timeout(REQUEST_TIMEOUT)
-        .user_agent(concat!("FocuSD-Island/", env!("CARGO_PKG_VERSION")));
+        .user_agent(concat!("Fuyu/", env!("CARGO_PKG_VERSION")));
     // Same proxy as the updater: env vars first, then the Windows system proxy.
     if let Some(proxy) = get_updater_proxy() {
         let proxy = reqwest::Proxy::all(&proxy).map_err(|error| format!("Invalid proxy {proxy}: {error}"))?;

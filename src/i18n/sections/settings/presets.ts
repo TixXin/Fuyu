@@ -37,7 +37,7 @@ export const zhCN: SettingsPresetsText = {
   imported: (name) => `已导入「${name}」，点「启用」应用它。`,
   problems: {
     notJson: "这个文件不是有效的 JSON，无法导入。",
-    notTheme: "这不是 fly-island 导出的主题文件。完整的设置备份请在 通用 → 备份与恢复 里恢复。",
+    notTheme: "这不是浮屿导出的主题文件。完整的设置备份请在 通用 → 备份与恢复 里恢复。",
     newerVersion: "这个主题文件来自更新的版本，请先把岛屿更新到最新版。",
   },
 };
@@ -60,7 +60,7 @@ export const en: SettingsPresetsText = {
   imported: (name) => `Imported "${name}". Click Apply to use it.`,
   problems: {
     notJson: "This file is not valid JSON and cannot be imported.",
-    notTheme: "This is not a theme file exported by fly-island. Restore a full settings backup under General → Backup and restore.",
+    notTheme: "This is not a theme file exported by Fuyu. Restore a full settings backup under General → Backup and restore.",
     newerVersion: "This theme file comes from a newer version. Update the island first.",
   },
 };

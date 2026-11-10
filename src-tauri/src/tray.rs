@@ -86,7 +86,7 @@ pub(crate) fn build_tray(app: &App) -> tauri::Result<()> {
     app.manage(TrayMenu { toggle, settings, quit, shown: Mutex::new((TrayLanguage::Chinese, true)) });
 
     let mut tray = TrayIconBuilder::new()
-        .tooltip("fly-island")
+        .tooltip("Fuyu")
         .menu(&menu)
         .show_menu_on_left_click(true)
         .on_menu_event(|app, event| match event.id.as_ref() {

@@ -186,8 +186,8 @@ export function IslandShell({
       ? t.messages.collapsedTask(collapsedTaskTitle)
       : collapsedTodoCount !== null
         ? t.island.pendingTodos(collapsedTodoCount)
-        : "fly-island"
-    : "fly-island";
+        : t.island.appName
+    : t.island.appName;
 
   return (
     <section

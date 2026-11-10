@@ -58,7 +58,7 @@ export function useCollapsedTodo(
         (lyricWidthText !== null ? AGENT_ICON_TEXT + lyricWidthText : null) ??
         collapsedTaskTitle ?? (collapsedTodoCount !== null
         ? t.island.pendingTodos(collapsedTodoCount)
-        : settings.showTitle ? "fly-island" : "")
+        : settings.showTitle ? t.island.appName : "")
       : "";
     const iconWidth = settings.showCollapsedText && agentTitle !== null ? agentIconWidth : 0;
     // The same condition as the centre slot on the collapsed bar.

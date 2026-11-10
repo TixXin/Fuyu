@@ -88,7 +88,7 @@ pub async fn send_bark_push(server: String, title: String, body: String, group: 
     let url = push_url(&server)?;
     let client = reqwest::Client::builder()
         .timeout(Duration::from_secs(10))
-        .user_agent(concat!("FocuSD-Island/", env!("CARGO_PKG_VERSION")))
+        .user_agent(concat!("Fuyu/", env!("CARGO_PKG_VERSION")))
         .build()
         .map_err(|error| UserError::new("http.client", "Could not set up the connection.").detail(error))?;
     let response = client

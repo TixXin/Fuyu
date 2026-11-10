@@ -145,7 +145,7 @@ pub(super) fn load(path: &str) -> DevResult<String> {
     let dir = PathBuf::from(dir.display().to_string().trim_start_matches(r"\\?\"));
     let manifest = read_manifest(&dir, &app_version(&host.app)).map_err(|error| (400, error))?;
     if builtin::is_builtin(&manifest.id) {
-        return Err((400, "This id belongs to a plugin built into FocuSD Island.".into()));
+        return Err((400, "This id belongs to a plugin built into Fuyu.".into()));
     }
     let id = manifest.id;
     lock(&DEV).plugins.insert(id.clone(), dir);

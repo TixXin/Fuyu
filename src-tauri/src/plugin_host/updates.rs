@@ -253,7 +253,7 @@ pub async fn set_plugin_publisher_trusted(publisher: String, trusted: bool) -> R
         return Err("A publisher is a GitHub user or organization name.".into());
     }
     if publisher == OFFICIAL_PUBLISHER {
-        return Err("FocuSD Island's own plugins are always trusted.".into());
+        return Err("Fuyu's own plugins are always trusted.".into());
     }
     update_state(|state, _| {
         state.trusted_publishers.retain(|name| *name != publisher);

@@ -40,7 +40,7 @@ export const zhCN: SettingsAppearanceText = {
     collapsed: "折叠",
     expanded: "展开",
     sessions: {
-      needs: { project: "fly-island", title: "设置页切换动画" },
+      needs: { project: "Fuyu", title: "设置页切换动画" },
       yourTurn: { project: "notes", title: "整理周报大纲" },
       done: { project: "api-server", title: "修复登录超时" },
     },
@@ -62,7 +62,7 @@ export const en: SettingsAppearanceText = {
     collapsed: "Collapsed",
     expanded: "Expanded",
     sessions: {
-      needs: { project: "fly-island", title: "Settings page transition" },
+      needs: { project: "Fuyu", title: "Settings page transition" },
       yourTurn: { project: "notes", title: "Weekly report outline" },
       done: { project: "api-server", title: "Fix the login timeout" },
     },

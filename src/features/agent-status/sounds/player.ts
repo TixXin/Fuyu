@@ -13,7 +13,7 @@ import type { AgentSoundEvent } from "./events";
 import { isQuietTime } from "./quietHours";
 import { BUILTIN_PACK, type AgentSoundSettings } from "./storage";
 
-/** The island's own sounds ("thumb piano"), synthesized for fly-island; see assets/sounds/README.md. */
+/** The island's own sounds ("thumb piano"), synthesized for Fuyu; see assets/sounds/README.md. */
 const BUILTIN_SOUNDS: Record<AgentSoundEvent, string> = {
   start, complete, error, approval, question, ack, compact, idle, quotaLow, quotaReset,
 };

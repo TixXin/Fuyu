@@ -103,7 +103,7 @@ pub(super) fn parse_multistatus(xml: &str) -> Vec<DavResponse> {
 fn client() -> Result<reqwest::Client, UserError> {
     let mut builder = reqwest::Client::builder()
         .timeout(Duration::from_secs(15))
-        .user_agent(concat!("FocuSD-Island/", env!("CARGO_PKG_VERSION")));
+        .user_agent(concat!("Fuyu/", env!("CARGO_PKG_VERSION")));
     if let Some(proxy) = get_updater_proxy() {
         builder = builder.proxy(reqwest::Proxy::all(&proxy).map_err(|error| UserError::new("net.proxy", format!("Invalid proxy {proxy}.")).arg("proxy", proxy.as_str()).detail(error))?);
     }

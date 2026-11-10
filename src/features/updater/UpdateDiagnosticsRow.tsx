@@ -21,7 +21,7 @@ export function UpdateDiagnosticsRow() {
       const system = await getUpdateDiagnostics();
       const state = getUpdateState();
       setReport([
-        `${text.version}: fly-island ${state.version}`,
+        `${text.version}: Fuyu ${state.version}`,
         `${text.system}: ${system.osVersion}`,
         `${text.architecture}: ${system.architecture}`,
         `${text.channel}: ${state.channel === "beta" ? t.update.channelBeta : t.update.channelStable}`,

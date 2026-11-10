@@ -79,7 +79,9 @@ Tauri 的 NSIS 安装包用 `productName` 决定安装目录（`%LOCALAPPDATA%\<
 
 每一步都要能单独验证并合入。第 3 步到第 5 步必须在同一个版本里发布，中间不发版。
 
-- [ ] **第 1 步：显示名。** README（中英文）、界面文案（`src/i18n`）、窗口标题、托盘提示、Rust 里给用户看的报错和提示、User-Agent、文档标题改成浮屿 / Fuyu。不碰任何标识、文件名和 `productName`。验证：`pnpm check`、`pnpm build`、`pnpm test:regression`、`cargo test`。
+- [x] **第 1 步：显示名。** README（中英文）、界面文案（`src/i18n`）、窗口标题、托盘提示、Rust 里给用户看的报错和提示、User-Agent 改成浮屿 / Fuyu。不碰任何标识、文件名和 `productName`。验证：`pnpm check`、`pnpm build`、`pnpm test:regression`、`cargo test`。
+  - 中文界面叫「浮屿」，英文界面叫「Fuyu」；岛上收起条和标题栏的品牌字两种语言都用「Fuyu」（像素字体只有拉丁字母）。
+  - 留到后面的：回复状态标记写进用户规则文件的说明文字（第 4 步，和标记版本一起升级）、本地接口 `/v1/` 返回的 `"app": "FocuSD Island"`（第 3 步，属于接口格式）、开机自启和链接协议在注册表里的名字（第 3、4 步）、插件开发包和示例插件里的名字（第 2 步）。
 - [ ] **第 2 步：插件开发工具和插件协议的新名字。** 包目录改名（`packages/fuyu-plugin`、`packages/create-fuyu-plugin`、`packages/powershell/Fuyu.Plugin`），先做纯搬迁的提交，再做改名的提交。宿主同时认新旧清单名、忽略文件、环境变量、JS 接口和 CSS 变量；PowerShell SDK 加新函数名，旧名字做别名；示例插件改用新名字（id 不变）。npm 新包由用户发布，旧包标记弃用。
 - [ ] **第 3 步：数据迁移。** 上面「迁移要解决的三件事」的 1、2 两件，连同新的 `identifier`、`productName`、可执行文件名、注册表值、凭据服务名、localStorage key 一起改，写进 [contracts.md](contracts.md) 的变更记录和 [data-storage.md](data-storage.md)。迁移逻辑要有单元测试（在临时目录里造旧目录、半成品、已迁移三种情况）。
 - [ ] **第 4 步：hook、回复标记、SSH 远程目录、链接协议。** 第三件事。验证要实际装一次 Claude Code 和 Codex 的 hook，确认旧块被替换、状态能更新。

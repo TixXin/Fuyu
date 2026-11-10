@@ -29,7 +29,7 @@ fn is_theme_id(value: &Value) -> bool {
 fn parse_themes(text: &str) -> Result<Vec<Value>, String> {
     let file: ThemesFile = serde_json::from_str(text).map_err(|error| format!("themes.json is not valid: {error}"))?;
     if file.version != THEMES_VERSION {
-        return Err(format!("themes.json has format {}; this FocuSD Island reads format {THEMES_VERSION}. Update FocuSD Island.", file.version));
+        return Err(format!("themes.json has format {}; this Fuyu reads format {THEMES_VERSION}. Update Fuyu.", file.version));
     }
     Ok(file
         .themes

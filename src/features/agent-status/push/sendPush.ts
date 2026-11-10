@@ -7,7 +7,7 @@ import { ccConnectText, pushBody, takeoverCommands } from "./pushText";
 import type { AgentPushSettings } from "./storage";
 
 /** Groups the pushes on the phone. */
-export const PUSH_GROUP = "FocuSD Island";
+export const PUSH_GROUP = "Fuyu";
 
 export type PushLabels = {
   kinds: Record<Exclude<AgentAlertKind, "started">, (agent: string) => string>;

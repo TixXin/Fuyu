@@ -150,7 +150,7 @@ fn scan_folder(plugins_dir: &PathBuf, app_version: &str) -> Vec<InstalledPlugin>
             let folder = entry.file_name().to_string_lossy().into_owned();
             let dir = entry.path();
             let manifest = if builtin::is_builtin(&folder) {
-                Err("This id belongs to a plugin built into FocuSD Island.".to_string())
+                Err("This id belongs to a plugin built into Fuyu.".to_string())
             } else {
                 fs::read_to_string(dir.join(MANIFEST_FILE_NAME))
                     .map_err(|error| format!("Could not read {MANIFEST_FILE_NAME}: {error}"))

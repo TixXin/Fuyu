@@ -13,7 +13,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "fly-island",
+        "title": "Fuyu",
         "width": 820,
         "height": 460,
         "decorations": false,
@@ -26,7 +26,7 @@
       },
       {
         "label": "translation",
-        "title": "fly-island 翻译",
+        "title": "浮屿 翻译",
         "url": "index.html?window=translation",
         "width": 480,
         "height": 640,
@@ -42,7 +42,7 @@
       },
       {
         "label": "clipboard",
-        "title": "fly-island 剪贴板",
+        "title": "浮屿 剪贴板",
         "url": "index.html?window=clipboard",
         "width": 380,
         "height": 500,
@@ -57,7 +57,7 @@
       {
         "label": "settings",
         "create": false,
-        "title": "fly-island",
+        "title": "Fuyu",
         "url": "index.html?window=settings",
         "width": 1080,
         "height": 860,

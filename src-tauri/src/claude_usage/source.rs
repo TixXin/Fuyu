@@ -212,7 +212,7 @@ pub(super) async fn fetch_api(proxy: Option<&str>, now_ms: u64) -> Result<Limits
         .proxy(proxy_setting)
         // A redirect could lead the token somewhere else.
         .redirect(reqwest::redirect::Policy::none())
-        .user_agent(concat!("FocuSD-Island/", env!("CARGO_PKG_VERSION")))
+        .user_agent(concat!("Fuyu/", env!("CARGO_PKG_VERSION")))
         .build()
         .map_err(|error| {
             FetchError::new(

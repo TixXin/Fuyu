@@ -94,7 +94,7 @@ export type SettingsProjectText = {
 
 export const zhCN: SettingsProjectText = {
   title: "关于小岛",
-  appName: "fly-island",
+  appName: "浮屿",
   versionChip: (version) => `v${version}`,
   description: "在屏幕顶部集中待办、剪贴板、音乐、快捷翻译、AI 状态和消息提醒。",
   versionTitle: "版本",
@@ -176,7 +176,7 @@ export const zhCN: SettingsProjectText = {
     offline: "当前离线，联网后检查已到期的更新",
     pendingCheck: "已到检查时间，等待后台检查",
     notificationUnavailable: "系统通知不可用或被系统关闭，仍会显示岛上标记。",
-    notificationTitle: "fly-island 有新版本",
+    notificationTitle: "浮屿有新版本",
     notificationBody: (version) => `发现 v${version}，点击打开关于页面查看更新。`,
     lastChecked: (time) => `上次成功检查：${time}`,
     neverChecked: "还没有检查过",
@@ -186,7 +186,7 @@ export const zhCN: SettingsProjectText = {
 
 export const en: SettingsProjectText = {
   title: "About the island",
-  appName: "fly-island",
+  appName: "Fuyu",
   versionChip: (version) => `v${version}`,
   description: "Todos, clipboard, music, quick translation, AI status, and message alerts, gathered at the top of the screen.",
   versionTitle: "Version",
@@ -268,7 +268,7 @@ export const en: SettingsProjectText = {
     offline: "Offline. Overdue updates will be checked when the connection returns",
     pendingCheck: "Check due; waiting for the background check",
     notificationUnavailable: "System notifications are unavailable or disabled. Island markers still appear.",
-    notificationTitle: "A new fly-island version is available",
+    notificationTitle: "A new Fuyu version is available",
     notificationBody: (version) => `Version v${version} is available. Click to open About and see the update.`,
     lastChecked: (time) => `Last successful check: ${time}`,
     neverChecked: "Not checked yet",

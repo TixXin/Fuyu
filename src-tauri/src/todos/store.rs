@@ -18,7 +18,7 @@ pub(crate) enum LoadError {
     Unreadable(String),
     /// Not valid JSON, or data normalize.ts would never produce.
     Damaged(String),
-    /// Written by a newer FocuSD Island.
+    /// Written by a newer Fuyu.
     Newer(String),
 }
 
@@ -42,7 +42,7 @@ pub(crate) fn load(path: &Path) -> Result<Option<TodosFile>, LoadError> {
     let version = value.get("version").and_then(serde_json::Value::as_u64).unwrap_or(0);
     if version > u64::from(FILE_VERSION) {
         return Err(LoadError::Newer(format!(
-            "{} was written by a newer FocuSD Island (format {version}).",
+            "{} was written by a newer Fuyu (format {version}).",
             path.display()
         )));
     }
