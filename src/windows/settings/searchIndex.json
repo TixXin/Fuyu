@@ -1566,6 +1566,45 @@
       }
     },
     {
+      "page": "screenshot",
+      "zh-CN": {
+        "group": "",
+        "title": "启用截图",
+        "description": "关闭后，岛上不再显示这个功能的入口，后台也停止运行；已有数据会保留。"
+      },
+      "en": {
+        "group": "",
+        "title": "Enable screenshots",
+        "description": "When off, the island hides this module and stops its background work. Your data is kept."
+      }
+    },
+    {
+      "page": "screenshot",
+      "zh-CN": {
+        "group": "快捷键",
+        "title": "截图",
+        "description": "屏幕定格后拖动选择区域，按 Enter 复制到剪贴板，Esc 取消；放大镜下按 C 复制颜色。"
+      },
+      "en": {
+        "group": "Shortcuts",
+        "title": "Screenshot",
+        "description": "The screen freezes; drag to select, Enter copies to the clipboard, Esc cancels. Under the magnifier, C copies the colour."
+      }
+    },
+    {
+      "page": "screenshot",
+      "zh-CN": {
+        "group": "快捷键",
+        "title": "截取整个屏幕",
+        "description": "选中鼠标所在的显示器，按 Enter 复制。"
+      },
+      "en": {
+        "group": "Shortcuts",
+        "title": "Whole screen",
+        "description": "Selects the monitor under the pointer; Enter copies it."
+      }
+    },
+    {
       "page": "messages",
       "zh-CN": {
         "group": "新消息提示",

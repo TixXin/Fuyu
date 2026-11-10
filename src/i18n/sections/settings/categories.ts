@@ -12,7 +12,7 @@ export type SettingsCategoriesText = {
   /** Words that also find a page in the sidebar search, besides its name. */
   keywords: Record<
     | "general" | "behavior" | "appearance" | "theme" | "themeMarket" | "shortcuts" | "todos" | "calendar" | "music" | "translation" | "clipboard"
-    | "shelf" | "messages" | "agents" | "agentSessions" | "agentRemote" | "agentAlerts" | "sounds" | "agentApprovals" | "agentConnect"
+    | "shelf" | "screenshot" | "messages" | "agents" | "agentSessions" | "agentRemote" | "agentAlerts" | "sounds" | "agentApprovals" | "agentConnect"
     | "plugins" | "market" | "about",
     string
   >;
@@ -40,6 +40,7 @@ export type SettingsCategoriesText = {
   clipboard: string;
   translation: string;
   shelf: string;
+  screenshot: string;
   calendar: string;
   /** The AI Agent group's pages: what shows on the collapsed island, then the Agent page's list. */
   agents: string;
@@ -77,6 +78,7 @@ export const zhCN: SettingsCategoriesText = {
     translation: "翻译服务 模型 密钥 API 语言",
     clipboard: "复制 粘贴 历史 图片",
     shelf: "文件 拖放 拖拽 清理",
+    screenshot: "截屏 截图 快捷键 选区 放大镜 取色 全屏",
     messages: "QQ 微信 邮箱 邮件 通知 IMAP 授权码",
     agents: "Claude Code Codex 会话标题 状态灯 收起条",
     agentSessions: "会话 卡片 用量 隐藏会话 筛选",
@@ -108,6 +110,7 @@ export const zhCN: SettingsCategoriesText = {
   clipboard: "剪贴板",
   translation: "翻译",
   shelf: "文件中转",
+  screenshot: "截图",
   calendar: "日历",
   agents: "岛上显示",
   agentSessions: "会话列表",
@@ -143,6 +146,7 @@ export const en: SettingsCategoriesText = {
     translation: "service model key api language",
     clipboard: "copy paste history images",
     shelf: "files drag drop cleanup",
+    screenshot: "screen capture snip region magnifier colour picker fullscreen",
     messages: "qq wechat mail email notifications imap",
     agents: "claude code codex session title status light collapsed bar",
     agentSessions: "sessions cards usage hide filter",
@@ -174,6 +178,7 @@ export const en: SettingsCategoriesText = {
   clipboard: "Clipboard",
   translation: "Translation",
   shelf: "File shelf",
+  screenshot: "Screenshot",
   calendar: "Calendar",
   agents: "On the island",
   agentSessions: "Session list",

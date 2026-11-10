@@ -1,4 +1,5 @@
 import type { SettingsFileShelfText } from "./fileShelf";
+import type { SettingsScreenshotText } from "./screenshot";
 import type { SettingsModulesText } from "./modules";
 import type { SettingsMessageSourcesText } from "./messageSources";
 import type { SettingsCollapsedItemsText } from "./collapsedItems";
@@ -33,6 +34,7 @@ import type { SettingsSaveText } from "./save";
 import type { SettingsPluginsText } from "./plugins";
 import type { SettingsSoundsText } from "./sounds";
 import * as fileShelf from "./fileShelf.ts";
+import * as screenshot from "./screenshot.ts";
 import * as modules from "./modules.ts";
 import * as messageSources from "./messageSources.ts";
 import * as collapsedItems from "./collapsedItems.ts";
@@ -69,6 +71,7 @@ import * as sounds from "./sounds.ts";
 
 export type SettingsText = {
   fileShelf: SettingsFileShelfText;
+  screenshot: SettingsScreenshotText;
   messageSources: SettingsMessageSourcesText;
   collapsedItems: SettingsCollapsedItemsText;
   themeMarket: SettingsThemeMarketText;
@@ -126,6 +129,7 @@ export type SettingsText = {
 
 export const zhCN: SettingsText = {
   fileShelf: fileShelf.zhCN,
+  screenshot: screenshot.zhCN,
   messageSources: messageSources.zhCN,
   collapsedItems: collapsedItems.zhCN,
   themeMarket: themeMarket.zhCN,
@@ -183,6 +187,7 @@ export const zhCN: SettingsText = {
 
 export const en: SettingsText = {
   fileShelf: fileShelf.en,
+  screenshot: screenshot.en,
   messageSources: messageSources.en,
   collapsedItems: collapsedItems.en,
   themeMarket: themeMarket.en,

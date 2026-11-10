@@ -9,6 +9,7 @@ export type SettingsModulesText = {
   calendar: string;
   translation: string;
   clipboard: string;
+  screenshot: string;
 };
 
 export const zhCN: SettingsModulesText = {
@@ -22,6 +23,7 @@ export const zhCN: SettingsModulesText = {
   calendar: "启用日历",
   translation: "启用快捷翻译",
   clipboard: "启用剪贴板历史",
+  screenshot: "启用截图",
 };
 
 export const en: SettingsModulesText = {
@@ -35,4 +37,5 @@ export const en: SettingsModulesText = {
   calendar: "Enable the calendar",
   translation: "Enable quick translation",
   clipboard: "Enable clipboard history",
+  screenshot: "Enable screenshots",
 };

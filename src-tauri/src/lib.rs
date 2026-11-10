@@ -21,6 +21,7 @@ mod plugin_host;
 mod mail;
 mod qq_notifications;
 mod rename_migration;
+mod screenshot;
 mod settings_window;
 mod ssh_tunnel;
 mod system;
@@ -32,7 +33,7 @@ mod user_error;
 mod wechat_reminders;
 mod win32;
 
-use tauri::WindowEvent;
+use tauri::{Manager, WindowEvent};
 
 /// Chains each module's `tauri_commands!` list into a single `generate_handler!`.
 macro_rules! collect_commands {
@@ -77,6 +78,13 @@ pub fn run() {
                 }
                 return;
             }
+            if window.label().starts_with(screenshot::WINDOW_PREFIX) {
+                if let WindowEvent::CloseRequested { api, .. } = event {
+                    api.prevent_close();
+                    screenshot::cancel(window.app_handle());
+                }
+                return;
+            }
             if window.label() != island::WINDOW_LABEL {
                 return;
             }
@@ -94,6 +102,7 @@ pub fn run() {
                 eprintln!("failed to initialize clipboard history: {error}");
             }
             translation::init(app.handle());
+            screenshot::init(app.handle());
             if let Err(error) = file_shelf::init(app.handle()) {
                 eprintln!("failed to initialize the file shelf: {error}");
             }
@@ -178,6 +187,7 @@ pub fn run() {
             lyrics;
             clipboard_history;
             translation;
+            screenshot;
             settings_window;
             ssh_tunnel;
             phone_push;

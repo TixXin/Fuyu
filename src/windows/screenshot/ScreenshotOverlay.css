@@ -1,0 +1,122 @@
+html:has(.screenshot-overlay),
+body:has(.screenshot-overlay) {
+  margin: 0;
+  overflow: hidden;
+  background: #000;
+}
+
+.screenshot-overlay {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  user-select: none;
+  touch-action: none;
+}
+
+.screenshot-overlay__picture {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.screenshot-overlay__dim {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.42);
+}
+
+/* The selection stays clear; its huge shadow dims everything around it. */
+.screenshot-overlay__selection {
+  position: absolute;
+  box-sizing: border-box;
+  border: 1px solid var(--color-accent, #74d6ff);
+  box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.42);
+}
+
+.screenshot-overlay__handle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  margin: -4px 0 0 -4px;
+  background: #fff;
+  border: 1px solid var(--color-accent, #74d6ff);
+  border-radius: 50%;
+}
+
+.screenshot-overlay__size {
+  position: absolute;
+  left: -1px;
+  bottom: calc(100% + 6px);
+  padding: 2px 6px;
+  font: 12px/1.5 ui-monospace, "Cascadia Mono", Consolas, monospace;
+  color: #fff;
+  white-space: nowrap;
+  background: rgba(20, 20, 24, 0.86);
+  border-radius: 4px;
+}
+
+.screenshot-overlay__size--inside {
+  top: 6px;
+  bottom: auto;
+  left: 6px;
+}
+
+.screenshot-overlay__hint {
+  position: absolute;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 6px 12px;
+  font: 13px/1.5 var(--font-ui, system-ui, sans-serif);
+  color: #fff;
+  background: rgba(20, 20, 24, 0.86);
+  border-radius: 8px;
+  pointer-events: none;
+}
+
+.screenshot-overlay__toolbar {
+  position: absolute;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  background: rgba(20, 20, 24, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  cursor: default;
+}
+
+.screenshot-overlay__button {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  color: #f5f5f7;
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.screenshot-overlay__button:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.screenshot-overlay__button:focus-visible {
+  outline: 2px solid var(--color-focus-ring, #74d6ff);
+  outline-offset: 1px;
+}
+
+.screenshot-overlay__button--primary {
+  color: var(--color-accent, #74d6ff);
+}
+
+.screenshot-overlay__notice {
+  padding: 0 6px;
+  font: 12px/1.5 var(--font-ui, system-ui, sans-serif);
+  color: rgba(245, 245, 247, 0.8);
+  white-space: nowrap;
+}

@@ -25,6 +25,7 @@ pub(crate) mod process_memory;
 pub(crate) mod process_times;
 pub(crate) mod process_tree;
 pub(crate) mod registry;
+pub(crate) mod screen_capture;
 pub(crate) mod session_notifications;
 pub(crate) mod shell_hook;
 pub(crate) mod taskbar;

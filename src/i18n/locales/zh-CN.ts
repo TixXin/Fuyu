@@ -17,6 +17,7 @@ import * as calendar from "../sections/calendar.ts";
 import * as todo from "../sections/todo.ts";
 import * as clipboard from "../sections/clipboard.ts";
 import * as fileShelf from "../sections/fileShelf.ts";
+import * as screenshot from "../sections/screenshot.ts";
 import * as pluginViews from "../sections/pluginViews.ts";
 import * as settings from "../sections/settings/index.ts";
 import * as errors from "../sections/errors.ts";
@@ -54,6 +55,7 @@ const zhCN: Translations = {
   clipboard: clipboard.zhCN,
 
   fileShelf: fileShelf.zhCN,
+  screenshot: screenshot.zhCN,
 
   pluginViews: pluginViews.zhCN,
   settings: settings.zhCN,

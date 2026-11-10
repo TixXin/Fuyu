@@ -10,6 +10,7 @@ import { TodosGate } from "./windows/island/TodosGate";
 import { TranslationWindow } from "./windows/translation/TranslationWindow";
 import { SettingsWindow } from "./windows/settings/SettingsWindow";
 import { ClipboardWindow } from "./windows/clipboard/ClipboardWindow";
+import { ScreenshotOverlay } from "./windows/screenshot/ScreenshotOverlay";
 import { I18nProvider } from "./i18n";
 import { trackIslandTopEdge } from "./windows/island/topEdge";
 
@@ -46,6 +47,8 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
         <SettingsWindow />
       ) : windowKind === "clipboard" ? (
         <ClipboardWindow />
+      ) : windowKind === "screenshot" ? (
+        <ScreenshotOverlay />
       ) : (
         <TodosGate>
           <IslandApp />

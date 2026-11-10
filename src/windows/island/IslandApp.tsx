@@ -34,6 +34,7 @@ import { useIslandTodos } from "./useIslandTodos";
 import { useIslandTucking } from "./useIslandTucking";
 import { holdsTuck } from "./tuckHold";
 import { useIslandShelf } from "./useIslandShelf";
+import { useIslandScreenshot } from "./useIslandScreenshot";
 import { useIslandHover } from "./useIslandHover";
 import { useIslandTranslation } from "./useIslandTranslation";
 import { usePluginPages } from "./usePluginPages";
@@ -196,6 +197,7 @@ export function IslandApp() {
   );
 
   const { fileShelf, isShelfDropping } = useIslandShelf(settings, navigation);
+  useIslandScreenshot(settings.screenshotEnabled);
 
   const {
     isPositionDetached,

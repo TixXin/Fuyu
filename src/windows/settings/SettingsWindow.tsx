@@ -19,6 +19,7 @@ import { LayoutEditor } from "./LayoutEditor";
 import { MusicSettingsPage } from "./MusicSettingsPage";
 import { CalendarSettingsPage } from "./CalendarSettingsPage";
 import { ShelfSettingsPage } from "./ShelfSettingsPage";
+import { ScreenshotSettingsPage } from "./ScreenshotSettingsPage";
 import { ShortcutsSettingsPage } from "./ShortcutsSettingsPage";
 import { MessagesSettingsPage } from "./MessagesSettingsPage";
 import { SETTINGS_FOCUS_STORAGE_KEY, takeFocusRequest } from "./storage";
@@ -203,6 +204,7 @@ export function SettingsWindow() {
         {category === "clipboard" && <ClipboardSettingsPage onOpenShortcuts={openShortcuts} />}
         {category === "music" && <MusicSettingsPage settings={settings} onSettingsChange={setSettings} />}
         {category === "shelf" && <ShelfSettingsPage settings={settings} onSettingsChange={setSettings} />}
+        {category === "screenshot" && <ScreenshotSettingsPage settings={settings} onSettingsChange={setSettings} />}
         {category === "calendar" && <CalendarSettingsPage settings={settings} onSettingsChange={setSettings} />}
         {category === "agents" && <AgentSettingsPage settings={settings} onSettingsChange={setSettings} onOpenConnect={() => setCategory("agentConnect")} />}
         {category === "agentRemote" && <AgentRemoteHostsSettings />}

@@ -169,6 +169,11 @@ export type IslandSettings = CalendarSettingValues & {
   translationEnabled: boolean;
   /** Where translation opens: its own window, or a page of the expanded island. */
   translationTarget: TranslationTarget;
+  /**
+   * Screenshots (C41): on registers the Ctrl+Shift+digit shortcuts. Off unless turned on while
+   * the module is being built (docs/architecture/screenshot-plan.md).
+   */
+  screenshotEnabled: boolean;
   /** Dragging files onto a collapsed or tucked island opens the shelf as a drop zone. */
   shelfExpandOnDrop: boolean;
   /** Days after which shelf entries leave the list (0 keeps them). */

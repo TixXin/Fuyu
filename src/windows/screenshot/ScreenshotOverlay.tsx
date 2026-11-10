@@ -1,0 +1,142 @@
+import { useCallback, useEffect, useState } from "react";
+import { Check, X } from "lucide-react";
+import { Magnifier } from "../../features/screenshot/Magnifier";
+import { cancelScreenshot, copyScreenshot } from "../../features/screenshot/api";
+import {
+  HANDLES,
+  handleCursor,
+  handlePosition,
+  hexColor,
+  hitTest,
+  pixelAt,
+  pixelScale,
+  toCss,
+  type Point,
+  type Size,
+} from "../../features/screenshot/selection";
+import { useTranslation } from "../../i18n";
+import { getErrorMessage } from "../../utils/error";
+import { pictureContext, useScreenshotFrame } from "./useScreenshotFrame";
+import { useSelection } from "./useSelection";
+import "./ScreenshotOverlay.css";
+
+function useViewSize(): Size {
+  const [view, setView] = useState<Size>({ width: window.innerWidth, height: window.innerHeight });
+  useEffect(() => {
+    const update = () => setView({ width: window.innerWidth, height: window.innerHeight });
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+  return view;
+}
+
+function colorAt(canvas: HTMLCanvasElement | null, pixel: Point): string {
+  const data = pictureContext(canvas)?.getImageData(pixel.x, pixel.y, 1, 1).data;
+  return data ? hexColor(data[0], data[1], data[2]) : "#000000";
+}
+
+/**
+ * A screenshot overlay (`?window=screenshot`, one per monitor): the frozen picture of its monitor,
+ * dimmed outside the selection, the selection's handles and size, a toolbar once it is chosen, and
+ * the magnifier by the pointer. Enter or a double click copies, Esc or a right click with nothing
+ * selected leaves, C copies the colour under the pointer.
+ */
+export function ScreenshotOverlay() {
+  const t = useTranslation().screenshot;
+  const { session, ready, canvasRef } = useScreenshotFrame();
+  const view = useViewSize();
+  const bounds = session && ready ? { width: session.width, height: session.height } : null;
+  const scale = bounds ? pixelScale(bounds, view) : 1;
+  const { selection, setSelection, pointer, dragging, onPointerDown, onPointerMove, onPointerUp } = useSelection(session, bounds, scale);
+  const [notice, setNotice] = useState<string | null>(null);
+
+  const pixel = pointer && bounds ? pixelAt(pointer, bounds) : null;
+  const color = pixel ? colorAt(canvasRef.current, pixel) : null;
+
+  const copy = useCallback(() => {
+    if (!selection) return;
+    copyScreenshot(selection).catch((error: unknown) => setNotice(getErrorMessage(error)));
+  }, [selection]);
+
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") void cancelScreenshot();
+      else if (event.key === "Enter") copy();
+      else if ((event.key === "c" || event.key === "C") && !event.ctrlKey && color) {
+        void navigator.clipboard.writeText(color).then(() => setNotice(t.colorCopied(color)));
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [color, copy, t]);
+
+  useEffect(() => setNotice(null), [session?.id]);
+
+  const onContextMenu = (event: React.MouseEvent) => {
+    event.preventDefault();
+    if (selection) setSelection(null);
+    else void cancelScreenshot();
+  };
+
+  const area = selection ? toCss(selection, scale) : null;
+  const grabbed = selection && pointer && !dragging ? hitTest(selection, pointer, 6 * scale) : null;
+  const cursor = dragging === "move" || grabbed === "inside" ? "move" : grabbed ? handleCursor(grabbed) : "crosshair";
+  const cssPointer = pointer ? { x: pointer.x / scale, y: pointer.y / scale } : null;
+  const lines = [pixel ? `${pixel.x}, ${pixel.y}` : "", selection ? `${selection.width} × ${selection.height}` : "", t.copyColorHint].filter(Boolean);
+
+  return (
+    <div
+      className="screenshot-overlay"
+      style={{ cursor }}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onDoubleClick={() => grabbed === "inside" && copy()}
+      onContextMenu={onContextMenu}
+    >
+      <canvas ref={canvasRef} className="screenshot-overlay__picture" />
+      {area ? (
+        <div className="screenshot-overlay__selection" style={{ left: area.x, top: area.y, width: area.width, height: area.height }}>
+          {!dragging && HANDLES.map((handle) => {
+            const at = handlePosition({ x: 0, y: 0, width: area.width, height: area.height }, handle);
+            return <span key={handle} className="screenshot-overlay__handle" style={{ left: at.x, top: at.y }} />;
+          })}
+          <span className={`screenshot-overlay__size${area.y < 28 ? " screenshot-overlay__size--inside" : ""}`}>
+            {selection?.width} × {selection?.height}
+          </span>
+        </div>
+      ) : (
+        <div className="screenshot-overlay__dim" />
+      )}
+      {!area && ready && session?.underPointer && <div className="screenshot-overlay__hint">{t.selectHint}</div>}
+      {area && !dragging && (
+        <div
+          className="screenshot-overlay__toolbar"
+          style={{
+            right: Math.max(4, view.width - area.x - area.width),
+            // Below the selection, or above it when there is no room below; inside it when neither fits.
+            ...(area.y + area.height + 48 <= view.height ? { top: area.y + area.height + 8 }
+              : area.y >= 48 ? { bottom: view.height - area.y + 8 }
+              : { bottom: view.height - area.y - area.height + 8 }),
+          }}
+          role="toolbar"
+          aria-label={t.toolbar}
+          onPointerDown={(event) => event.stopPropagation()}
+          onDoubleClick={(event) => event.stopPropagation()}
+        >
+          <button type="button" className="screenshot-overlay__button" aria-label={t.cancel} title={t.cancel} onClick={() => void cancelScreenshot()}>
+            <X size={18} />
+          </button>
+          <button type="button" className="screenshot-overlay__button screenshot-overlay__button--primary" aria-label={t.copy} title={t.copy} onClick={copy}>
+            <Check size={18} />
+          </button>
+          {notice && <span className="screenshot-overlay__notice">{notice}</span>}
+        </div>
+      )}
+      {!area && notice && <div className="screenshot-overlay__hint">{notice}</div>}
+      {ready && pixel && cssPointer && color && dragging !== "move" && (
+        <Magnifier picture={canvasRef.current} pixel={pixel} pointer={cssPointer} view={view} color={color} lines={lines} />
+      )}
+    </div>
+  );
+}

@@ -84,7 +84,8 @@
 
 ## 其他
 
-- 窗口 label：`main`、`translation`、`clipboard`（2026-11-09 起，剪贴板独立窗口）、`settings`；前端分发参数为 `?window=translation`、`?window=clipboard`、`?window=settings`。
+- 窗口 label：`main`、`translation`、`clipboard`（2026-11-09 起，剪贴板独立窗口）、`settings`、`screenshot-<显示器序号>`（2026-11-10 起，截图时每个显示器一个，运行时创建）；前端分发参数为 `?window=translation`、`?window=clipboard`、`?window=settings`、`?window=screenshot`。
+- 截图（C41.1，2026-11-10 起）：`fuyu-settings` 新增 `screenshotEnabled`（缺省 `false`）；开着时注册全局快捷键 `Ctrl+Shift+1`（截图）、`Ctrl+Shift+7`（全屏），主键盘用 `RegisterHotKey`，小键盘由低级键盘钩子认；Tauri 命令 `screenshot_configure`（`enabled`）、`screenshot_session`、`screenshot_frame`（返回原始 RGBA 字节）、`screenshot_overlay_ready`（`session`）、`screenshot_copy`（`rect`：`{ x, y, width, height }`，物理像素）、`screenshot_cancel`；事件 `screenshot-session`（发给各截图窗口：`{ id, mode: "region" | "fullscreen", width, height, underPointer }`）、`screenshot-ended`（无载荷）、`screenshot-selecting`（截图窗口之间，载荷是开始选区的窗口 label）。
 - 强调色（C33.5，2026-11-10 起）：`fuyu-settings` 和主题文件新增 `accentMode`（`default` / `windows` / `pick`）、`accentColor`；Tauri 命令 `get_windows_accent_color`（读 `HKCU\Software\Microsoft\Windows\DWM` 的 `AccentColor`，返回 `#rrggbb` 或 null）。
 - 深色、浅色两套颜色（C33.2–C33.3，2026-11-10 起）：`fuyu-settings` 和主题文件新增 `collapsedDark`、`darkBackgroundColor` / `darkTextColor` / `darkPulseColor`、`lightBackgroundColor` / `lightTextColor` / `lightPulseColor`；`themeMode` 只剩 `dark` / `light` / `system`。旧设置和旧主题文件（没有这六个字段）把 `islandBackgroundColor`、`taskTextColor`、`pulseColor` 按亮度放进其中一套（`themeSetsFromSingleColors`）；这三个字段保留，是正在用那套的副本。
 - 浅色和深色（C31，2026-11-10 起）：`fuyu-settings` 和主题文件新增 `themeMode`（`dark` / `light` / `system` / `custom`；新装 `dark`，旧设置和旧主题文件缺省为 `custom`）。

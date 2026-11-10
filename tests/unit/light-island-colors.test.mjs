@@ -15,6 +15,7 @@ const ALLOWED = [
   /Settings[^/]*\.css$/,
   /features\/(clipboard|file-shelf)\//, // C29 redesign, on --island-ink-rgb
   /features\/center-pattern\//, // drawn on its own fill
+  /features\/screenshot\//, // the screenshot overlay's dark boxes over the frozen screen, not the island
   /features\/media\/MusicWaveButton\.css$/, // a glass bubble on the collapsed island
   /features\/todos\/TodoDatePicker\.css$/, // a light chip
   /features\/agent-status\/approvals\//, // white on the filled green buttons

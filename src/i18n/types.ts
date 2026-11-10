@@ -16,6 +16,7 @@ import type { CalendarText } from "./sections/calendar";
 import type { TodoText } from "./sections/todo";
 import type { ClipboardText } from "./sections/clipboard";
 import type { FileShelfText } from "./sections/fileShelf";
+import type { ScreenshotText } from "./sections/screenshot";
 import type { PluginViewsText } from "./sections/pluginViews";
 import type { SettingsText } from "./sections/settings/index";
 import type { ErrorsText } from "./sections/errors";
@@ -54,6 +55,8 @@ export type Translations = {
   clipboard: ClipboardText;
 
   fileShelf: FileShelfText;
+
+  screenshot: ScreenshotText;
 
   /** Pages and status texts plugins put on the island (drawn from templates). */
   pluginViews: PluginViewsText;

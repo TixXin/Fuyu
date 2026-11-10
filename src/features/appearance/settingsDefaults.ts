@@ -99,6 +99,7 @@ export const DEFAULT_SETTINGS: IslandSettings = {
   shelfEnabled: true,
   translationEnabled: true,
   translationTarget: "island",
+  screenshotEnabled: false,
   shelfExpandOnDrop: true,
   shelfAutoCleanupDays: 0,
   shelfRemoveMissing: true,

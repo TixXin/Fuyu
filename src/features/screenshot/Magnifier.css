@@ -1,0 +1,38 @@
+.screenshot-magnifier {
+  position: fixed;
+  z-index: 3;
+  width: 132px;
+  padding: 6px;
+  font: 12px/1.5 var(--font-ui, system-ui, sans-serif);
+  color: #f5f5f7;
+  background: rgba(20, 20, 24, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 8px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+}
+
+.screenshot-magnifier__zoom {
+  display: block;
+  border-radius: 4px;
+}
+
+.screenshot-magnifier__color {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+
+.screenshot-magnifier__swatch {
+  width: 12px;
+  height: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 3px;
+}
+
+.screenshot-magnifier__line {
+  color: rgba(245, 245, 247, 0.72);
+  white-space: nowrap;
+}
