@@ -36,8 +36,8 @@
 }
 
 .message-sources button[aria-pressed="true"] {
-  color: #fff;
-  background: rgba(255, 255, 255, .07);
+  color: rgb(var(--overlay-rgb, 255, 255, 255));
+  background: rgba(var(--overlay-rgb, 255, 255, 255), .07);
 }
 
 .message-sources button:focus-visible {
@@ -57,7 +57,7 @@
   height: 5px;
   flex: 0 0 auto;
   border-radius: var(--radius-circle);
-  background: #a9e6ca;
+  background: var(--mint, #a9e6ca);
 }
 
 .wechat-reminder-state--pending {

@@ -74,7 +74,7 @@
  * ink and dark translucent overlays, so text and surfaces on the island stay readable. Only inside
  * the island window's stage; the settings window keeps its dark look.
  */
-.stage--light {
+.island-light {
   --color-text: #18181e;
   --color-text-strong: rgba(24, 24, 30, 0.88);
   --color-text-muted: rgba(24, 24, 30, 0.72);
@@ -96,5 +96,17 @@
   --color-warning: #b7791f;
   --color-focus-ring: rgba(10, 127, 209, 0.8);
   --color-focus-ring-soft: rgba(10, 127, 209, 0.6);
+  /* Neutral overlays, borders and text written as rgba(var(--overlay-rgb, 255, 255, 255), a): unset
+     on a dark island, so the white literal stays as it was. */
+  --overlay-rgb: 24, 24, 30;
+  /* The pale pinks and yellows of error and warning text are unreadable on light grey. */
+  --error-text: #c0283f;
+  --warning-text: #9a6700;
+  /* Menus and notices that float over the page. */
+  --popover-fill: rgba(252, 252, 254, 0.97);
+  /* The messages page's pale mint (on, unread, connected). */
+  --mint: #2fae74;
+  --mint-text: #1f8a5b;
+  --mint-border: rgba(47, 174, 116, 0.45);
   color: var(--text-1);
 }

@@ -3,5 +3,5 @@
   min-height: 0;
   min-width: 0;
   border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(var(--overlay-rgb, 255, 255, 255), 0.03);
 }

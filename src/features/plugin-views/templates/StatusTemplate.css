@@ -1,6 +1,6 @@
 /* The status template of plugin pages: large text and a progress bar. */
 .plugin-status {
-  --plugin-status-tone: rgba(241, 240, 246, 0.92);
+  --plugin-status-tone: rgba(var(--overlay-rgb, 241, 240, 246), 0.92);
   min-height: 0;
   min-width: 0;
   display: grid;
@@ -18,7 +18,7 @@
 }
 
 .plugin-status--danger {
-  --plugin-status-tone: rgba(255, 150, 168, 0.95);
+  --plugin-status-tone: var(--error-text, rgba(255, 150, 168, 0.95));
 }
 
 .plugin-status__text {

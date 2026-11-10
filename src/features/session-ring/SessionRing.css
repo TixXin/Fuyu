@@ -44,7 +44,7 @@
 .session-grid__cell {
   width: var(--cell);
   height: var(--cell);
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(var(--overlay-rgb, 255, 255, 255), 0.1);
   border-radius: 2px;
   transition: background 200ms ease, box-shadow 200ms ease;
 }
@@ -59,8 +59,8 @@
 /* Past nine sessions the last cell is a small plus. */
 .session-grid__cell[data-state="more"] {
   background:
-    linear-gradient(rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.75)) center / 4px 1px no-repeat,
-    linear-gradient(rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.75)) center / 1px 4px no-repeat;
+    linear-gradient(rgba(var(--overlay-rgb, 255, 255, 255), 0.75), rgba(var(--overlay-rgb, 255, 255, 255), 0.75)) center / 4px 1px no-repeat,
+    linear-gradient(rgba(var(--overlay-rgb, 255, 255, 255), 0.75), rgba(var(--overlay-rgb, 255, 255, 255), 0.75)) center / 1px 4px no-repeat;
   box-shadow: none;
 }
 
@@ -113,7 +113,7 @@
 
 .session-signal__bar {
   height: calc(var(--signal-bar) * 1px);
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(var(--overlay-rgb, 255, 255, 255), 0.1);
   transition: background 200ms ease, box-shadow 200ms ease;
   /* The collapsed island's corners (Appearance → Corners) scaled from its 38px height to the bar's. */
   border-radius: min(calc(var(--signal-bar) * 0.5px), calc(var(--island-radius-collapsed, 22px) * var(--signal-bar) / 38));

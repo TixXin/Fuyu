@@ -241,7 +241,7 @@ export function IslandApp() {
   );
 
   return (
-    <main className={`stage stage--font-${settings.fontFamily}${isLightIsland(settings.islandBackgroundColor) ? " stage--light" : ""}`} style={stageStyle}>
+    <main className={`stage stage--font-${settings.fontFamily}${isLightIsland(settings.islandBackgroundColor) ? " island-light" : ""}`} style={stageStyle}>
       <IslandShell
         qqMail={qqMail}
         qqNotifications={qqNotifications}

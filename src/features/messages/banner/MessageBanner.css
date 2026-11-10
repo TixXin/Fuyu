@@ -142,7 +142,7 @@
 .message-banner__main:focus-visible,
 .message-banner__close:focus-visible,
 .message-banner__action:focus-visible {
-  outline: 2px solid rgba(255, 255, 255, 0.6);
+  outline: 2px solid rgba(var(--overlay-rgb, 255, 255, 255), 0.6);
   outline-offset: -2px;
 }
 

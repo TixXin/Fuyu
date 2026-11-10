@@ -87,12 +87,12 @@
 }
 
 .plugin-status-chip--warning {
-  color: rgba(255, 228, 160, 0.95);
+  color: var(--warning-text, rgba(255, 228, 160, 0.95));
   background: rgba(255, 209, 102, 0.14);
 }
 
 .plugin-status-chip--danger {
-  color: rgba(255, 196, 206, 0.95);
+  color: var(--error-text, rgba(255, 196, 206, 0.95));
   background: rgba(199, 80, 101, 0.2);
 }
 

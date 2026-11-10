@@ -33,7 +33,7 @@
 .plugin-list__error {
   margin: 0;
   padding: 6px 10px;
-  color: rgba(255, 210, 218, 0.95);
+  color: var(--error-text, rgba(255, 210, 218, 0.95));
   background: rgba(199, 80, 101, 0.18);
   border-radius: var(--radius-md);
   font-size: 11px;
@@ -59,7 +59,7 @@
   place-items: center;
   padding: var(--space-xl);
   color: var(--text-3);
-  border: 1px dashed rgba(255, 255, 255, 0.14);
+  border: 1px dashed rgba(var(--overlay-rgb, 255, 255, 255), 0.14);
   border-radius: var(--radius-lg);
   font-size: 12px;
   font-weight: 600;

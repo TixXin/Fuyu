@@ -9,7 +9,7 @@
   padding: 12px 16px 14px;
   color: var(--text-1);
   background:
-    linear-gradient(145deg, var(--color-white-a09), rgba(255, 255, 255, 0.018)),
+    linear-gradient(145deg, var(--color-white-a09), rgba(var(--overlay-rgb, 255, 255, 255), 0.018)),
     rgba(20, 20, 25, 0.88);
   border-radius: var(--island-panel-radius, 10px);
   corner-shape: var(--island-corner-shape, round);
@@ -65,7 +65,7 @@
   gap: var(--space-md);
   padding: var(--space-xl);
   color: var(--text-3);
-  border: 1px dashed rgba(255, 255, 255, 0.14);
+  border: 1px dashed rgba(var(--overlay-rgb, 255, 255, 255), 0.14);
   border-radius: var(--radius-lg);
   font-size: 12px;
   font-weight: 600;
@@ -74,7 +74,7 @@
 }
 
 .plugin-view__state--stopped strong {
-  color: rgba(255, 196, 206, 0.92);
+  color: var(--error-text, rgba(255, 196, 206, 0.92));
 }
 
 .plugin-view__state--stopped span {
