@@ -98,6 +98,9 @@ async function runChecks() {
     const image = $$(".island-list-row", clip)[2];
     check($(".island-list-row__main", image)?.textContent === "图片 770×148" && $("img", image), "图片写成「图片 宽×高」，行首是缩略图");
     check($(".island-list-search kbd", clip)?.textContent === "Ctrl+Shift+W", "搜索框一直显示，带打开剪贴板的快捷键");
+    const list = $(".island-list", clip)!;
+    const short = $$(".island-list-row", clip).filter((item) => item.getBoundingClientRect().height + 0.5 < $(".island-list-row__text", item)!.getBoundingClientRect().height + 14);
+    check(list.scrollHeight > list.clientHeight && short.length === 0, "列表要滚动时，两行的记录也不被压矮、不压到相邻的行");
 
     await click($(".island-list-row__hit", first));
     check(calls.includes("copy:t1"), "点一行就复制");
