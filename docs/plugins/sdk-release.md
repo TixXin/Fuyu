@@ -11,7 +11,7 @@ npm 包 `fuyu-plugin`（SDK、命令行工具、模拟宿主）和 `create-fuyu-
 1. 登录 [npmjs.com](https://www.npmjs.com)，打开包页面 → **Settings**。
 2. **Trusted Publisher** 一栏选 **GitHub Actions**，填：
    - Organization or user：`TixXin`
-   - Repository：`fly-island`
+   - Repository：`fuyu`（2026-11-10 改名前是 `fly-island`；旧包上按旧名字配的不再生效）
    - Workflow filename：`publish-sdk.yml`
    - Environment name：`npm`
 3. 保存。确认工作流能发布以后，同一页的 **Publishing access** 可以改成 "Require two-factor authentication and disallow tokens"，以后只有这个工作流能发布新版本。

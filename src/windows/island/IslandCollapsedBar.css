@@ -228,8 +228,8 @@
   align-items: center;
   gap: 3px;
   padding: 0 7px;
-  color: rgba(190, 240, 225, 0.88);
-  background: rgba(110, 231, 200, 0.12);
+  color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
   border: 0;
   border-radius: var(--radius-pill);
   font-size: 11px;
@@ -271,5 +271,5 @@
 
 .island-shelf-count:hover {
   color: var(--color-white);
-  background: rgba(110, 231, 200, 0.22);
+  background: color-mix(in srgb, var(--color-accent) 22%, transparent);
 }

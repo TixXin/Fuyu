@@ -27,6 +27,7 @@ import { TodosSettingsPage } from "./TodosSettingsPage";
 import { TranslationSettingsPage } from "./TranslationSettingsPage";
 import { DEFAULT_SETTINGS, isSameSettings, withLayoutFrom, withThemeFrom } from "../../features/appearance/settings";
 import { STORAGE_KEY, loadSettings, saveSettings } from "../../features/appearance/storage";
+import { useWindowAccent } from "../../features/appearance/useWindowAccent";
 import { ResetAppearanceButton } from "../../features/appearance/ResetAppearanceButton";
 import type { IslandSettings } from "../../features/appearance/types";
 import { useSettingPresets } from "../../features/appearance/useSettingPresets";
@@ -51,6 +52,8 @@ export function SettingsWindow() {
   const qqNotifications = useQQNotifications(false);
   const wechatReminders = useWeChatReminders(false);
   const [settings, setSettings] = useState<IslandSettings>(loadSettings);
+  // The accent being picked shows here at once, before the island saves it.
+  useWindowAccent(settings);
   const systemDark = useSystemDark();
   const presets = useSettingPresets(settings, setSettings);
   const saveDirectory = useSaveDirectorySetting();

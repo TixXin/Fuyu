@@ -63,8 +63,8 @@
 .calendar-form__add {
   align-self: flex-end;
   padding: 7px 16px;
-  color: #fff;
-  background: rgba(255, 138, 101, 0.85);
+  color: var(--color-on-accent);
+  background: color-mix(in srgb, var(--color-accent) 85%, transparent);
   border: 0;
   border-radius: var(--radius-pill);
   font: inherit;

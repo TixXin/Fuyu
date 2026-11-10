@@ -1,7 +1,7 @@
 // Light, dark or the system's choice (C31, C33.3): the island keeps two colour sets, one for dark
 // and one for light, each adjustable, and uses one of them. Pure functions; useResolvedTheme.ts
 // follows the system setting.
-import { getColorSetting, isLightIsland } from "../../utils/color.ts";
+import { getColorSetting, inkOn, isLightIsland } from "../../utils/color.ts";
 import type { IslandSettings, ThemeMode } from "./types";
 
 export const THEME_MODES = ["dark", "light", "system"] as const satisfies readonly ThemeMode[];
@@ -109,5 +109,7 @@ export function accentVariables(accent: string | null): Record<string, string> {
     "--color-accent": accent,
     "--color-focus-ring": `rgba(${red}, ${green}, ${blue}, 0.88)`,
     "--color-focus-ring-soft": `rgba(${red}, ${green}, ${blue}, 0.72)`,
+    // Dark text on a light accent, light on a dark one.
+    "--color-on-accent": `rgb(${inkOn(accent)})`,
   };
 }

@@ -89,9 +89,7 @@
   outline-offset: -5px;
 }
 
-/* Built-in page buttons: grey icons; the open page's turns its own colour on a tint of it.
-   The colours are the pages' accents (todo blue, music purple, calendar orange, clipboard pink,
-   shelf mint), shown only on the open page so the row stays quiet. */
+/* Built-in page buttons: grey icons; the open page's takes the theme's accent on a tint of it. */
 .dot-button {
   --page-color: var(--color-accent);
   flex: 0 0 auto;
@@ -127,22 +125,9 @@
   outline-offset: 1px;
 }
 
-.dot-button--music {
-  --page-color: #b69cff;
-}
 
-.dot-button--calendar {
-  --page-color: #ff9a76;
-}
 
-.dot-button--clipboard {
-  /* Pink, not yellow: yellow means "needs attention" (agent status). */
-  --page-color: #f4a7c4;
-}
 
-.dot-button--shelf {
-  --page-color: #6ee7c8;
-}
 
 .window-actions {
   display: inline-flex;

@@ -48,6 +48,7 @@
 | DELETE | `/v1/todos/{id}` | — | 删除 |
 | GET | `/v1/note` | — | `{ date, note }` |
 | PUT | `/v1/note` | `{ "note": "..." }` 或 `{ "append": "..." }` | `note` 整体替换；`append` 追加一行 |
+| GET | `/v1/clipboard?limit=20` | — | `{ items: [{ id, text, truncated, copiedAt, favorite }] }`：最近的文字记录（最多 50 条，每条最多 4000 字），打码的密钥只给打码后的样子。**默认关**，要在「设置 → 剪贴板」打开「允许本地接口读取历史」，否则 403（C38） |
 | PUT | `/v1/agent-status/{source}` | `{ "phase": "running", "name"?: "Aider", "title"?: "...", "taskId"?: "...", "host"?: "dev-box", "agent"?: "claudeCode", "cwd"?: "..." }` | 上报一个 AI Agent 的状态，见下文 |
 | DELETE | `/v1/agent-status/{source}` | — | 移除这个来源 |
 

@@ -6,12 +6,12 @@
  */
 .island-list-page {
   --list-ink: var(--island-ink-rgb, 241, 240, 246);
-  --list-accent: 244, 167, 196;
+  --list-accent: var(--color-accent);
   --text-1: rgba(var(--list-ink), 0.95);
   --text-2: rgba(var(--list-ink), 0.68);
   --text-3: rgba(var(--list-ink), 0.48);
   /* Accent text leans toward the ink, so it stays readable on a light island too. */
-  --list-accent-text: color-mix(in srgb, rgb(var(--list-accent)) 62%, rgb(var(--list-ink)));
+  --list-accent-text: color-mix(in srgb, var(--list-accent) 62%, rgb(var(--list-ink)));
   position: relative;
   height: 100%;
   min-width: 0;
@@ -220,8 +220,8 @@
 
 .island-list-row--selected,
 .island-list-row--selected:hover {
-  background: rgba(var(--list-accent), 0.14);
-  box-shadow: inset 0 0 0 1px rgba(var(--list-accent), 0.45);
+  background: color-mix(in srgb, var(--list-accent) 14%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--list-accent) 45%, transparent);
 }
 
 .island-list-row__hit {
@@ -236,7 +236,7 @@
 }
 
 .island-list-row__hit:focus-visible {
-  outline: 2px solid rgba(var(--list-accent), 0.8);
+  outline: 2px solid color-mix(in srgb, var(--list-accent) 80%, transparent);
   outline-offset: -2px;
 }
 
@@ -326,7 +326,7 @@
   color: inherit;
   font: inherit;
   color: var(--text-1);
-  background: rgba(var(--list-accent), 0.22);
+  background: color-mix(in srgb, var(--list-accent) 22%, transparent);
   border: 0;
   border-radius: var(--radius-pill);
   cursor: pointer;
@@ -385,7 +385,7 @@
   font: inherit;
   font-size: 12px;
   background: rgba(var(--list-ink), 0.08);
-  border: 1px solid rgba(var(--list-accent), 0.5);
+  border: 1px solid color-mix(in srgb, var(--list-accent) 50%, transparent);
   border-radius: 6px;
   outline: none;
 }
@@ -408,7 +408,7 @@
   display: grid;
   place-items: center;
   color: var(--list-accent-text);
-  background: rgba(var(--list-accent), 0.12);
+  background: color-mix(in srgb, var(--list-accent) 12%, transparent);
   border-radius: 14px;
 }
 

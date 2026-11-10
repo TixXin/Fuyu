@@ -48,6 +48,6 @@
 
 .plugin-todo-menu__item:hover,
 .plugin-todo-menu__item:focus-visible {
-  background: rgba(110, 231, 200, 0.16);
+  background: color-mix(in srgb, var(--color-accent) 16%, transparent);
   outline: none;
 }

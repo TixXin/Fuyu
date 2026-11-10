@@ -101,7 +101,7 @@
   background:
     radial-gradient(
       circle at var(--glass-pointer-x) var(--glass-pointer-y),
-      rgba(var(--glass-page-accent), var(--glass-panel-accent-alpha)),
+      color-mix(in srgb, var(--glass-page-accent) calc(var(--glass-panel-accent-alpha) * 100%), transparent),
       transparent 36%
     ),
     linear-gradient(145deg, rgba(255, 255, 255, 0.105), rgba(255, 255, 255, 0.025)),
@@ -117,7 +117,7 @@
 
 .island--appearance-liquidGlass.island--glass-css-fallback .editor-panel {
   background:
-    radial-gradient(circle at 82% 12%, rgba(var(--glass-page-accent), 0.13), transparent 34%),
+    radial-gradient(circle at 82% 12%, color-mix(in srgb, var(--glass-page-accent) 13%, transparent), transparent 34%),
     linear-gradient(145deg, rgba(255, 255, 255, 0.105), rgba(255, 255, 255, 0.03)),
     rgba(9, 11, 15, 0.78);
 }
