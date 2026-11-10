@@ -1172,6 +1172,12 @@ fn editor_titles_match_through_their_markers_and_parent_folders() {
     let repo = [window("README.md - fly-island-lanes - Visual Studio Code")];
     assert_eq!(best_window(&repo, &hints("3", &above)), Some(0));
     assert_eq!(best_window(&repo, &hints("3", &[])), None);
+    // A session on an SSH computer, in an editor window connected to it with a folder above open.
+    assert_eq!(bare_segment("app (workspace) [ssh: dev-box]"), "app");
+    assert_eq!(bare_segment("notes [draft]"), "notes [draft]");
+    let home = ["mywork".to_string(), "louis".to_string(), "home".to_string()];
+    let remote = [window("mep.pdf - louis [SSH: dev-box] - Visual Studio Code")];
+    assert_eq!(best_window(&remote, &hints("au_n2p2", &home)), Some(0));
 }
 
 #[test]
