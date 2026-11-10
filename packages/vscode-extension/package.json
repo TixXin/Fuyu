@@ -8,10 +8,10 @@
   "icon": "icon.png",
   "repository": {
     "type": "git",
-    "url": "https://github.com/TixXin/fly-island.git",
+    "url": "https://github.com/TixXin/fuyu.git",
     "directory": "packages/vscode-extension"
   },
-  "homepage": "https://github.com/TixXin/fly-island/blob/main/docs/features/agent-status-hooks.md",
+  "homepage": "https://github.com/TixXin/fuyu/blob/main/docs/features/agent-status-hooks.md",
   "engines": {
     "vscode": "^1.75.0"
   },

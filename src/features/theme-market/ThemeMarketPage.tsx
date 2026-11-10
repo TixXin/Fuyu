@@ -16,7 +16,7 @@ const OFFICIAL = "TixXin";
 let lastThemes: MarketTheme[] | null = null;
 
 /**
- * Settings → Theme market (C26): themes from TixXin/focusd-plugins, each a card with the collapsed
+ * Settings → Theme market (C26): themes from TixXin/fuyu-plugins, each a card with the collapsed
  * island drawn in it over the user's own sizes. Apply changes the look at once; Save adds it to
  * the Theme page's saved themes (`onSave` takes a theme file's text, as an import does).
  */

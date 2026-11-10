@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/TixXin/fly-island/plugins/schema/manifest.schema.json",
+  "$id": "https://github.com/TixXin/fuyu/plugins/schema/manifest.schema.json",
   "title": "Fuyu plugin manifest (fuyu-plugin.json; focusd-plugin.json before the rename)",
   "description": "Checked again by the island (src-tauri/src/plugin_host/manifest.rs), which also enforces rules a schema cannot: the folder name must equal id, runtime.command must stay inside the plugin folder, setting keys must be unique, minAppVersion is compared with the running island.",
   "type": "object",

@@ -617,7 +617,7 @@ plugin.onCommand("sync-now", async () => {
 
 ### 放进插件市场
 
-市场列表来自 [`TixXin/focusd-plugins`](https://github.com/TixXin/focusd-plugins) 仓库根目录的 `index.json`。插件包放在**你自己仓库的 GitHub Release** 里，市场仓库只记录插件在哪里；它的 CI 每小时检查一次新版本，校验后重建索引并签名。完整步骤见那里的 [CONTRIBUTING.md](https://github.com/TixXin/focusd-plugins/blob/main/CONTRIBUTING.md)，简要来说：
+市场列表来自 [`TixXin/fuyu-plugins`](https://github.com/TixXin/fuyu-plugins) 仓库根目录的 `index.json`。插件包放在**你自己仓库的 GitHub Release** 里，市场仓库只记录插件在哪里；它的 CI 每小时检查一次新版本，校验后重建索引并签名。完整步骤见那里的 [CONTRIBUTING.md](https://github.com/TixXin/fuyu-plugins/blob/main/CONTRIBUTING.md)，简要来说：
 
 1. 用 `npx fuyu-plugin validate` 检查，`npx fuyu-plugin pack` 打包，得到 `<id>-<version>.zip`。
 2. 在自己的仓库发布 GitHub Release：标签是清单的 `version`（可以带 `v`），附件是这个 zip，文件名不能改。
@@ -679,7 +679,7 @@ plugin.onCommand("sync-now", async () => {
 
 1. 修改插件并提高 `version`，在本机运行 `pnpm plugins:index`（需要旧签名私钥，见下文；以及官方作者密钥 `~/.tauri/fly-island/plugin-author-signing.key`，公钥在 `plugins/author-key.json`）。脚本把插件打成 `plugins/packages/<id>-<version>.zip` 并写出作者签名 `<zip>.sig`，重写并签名本仓库的 `plugins/index.json` 和 `plugins/revoked.json`。文本文件打包时统一成 LF，时间戳固定，所以同一份源码每次得到同一个哈希。
 2. 提交并 land。
-3. 在 `focusd-plugins` 里把 `plugins/<id>.json` 的 `package` 改成新 zip 的地址（`https://raw.githubusercontent.com/TixXin/fly-island/main/plugins/packages/<id>-<version>.zip`），合并后 CI 更新市场索引。
+3. 在 `focusd-plugins` 里把 `plugins/<id>.json` 的 `package` 改成新 zip 的地址（`https://raw.githubusercontent.com/TixXin/fuyu/main/plugins/packages/<id>-<version>.zip`），合并后 CI 更新市场索引。
 
 本仓库的 `plugins/index.json` 只给切换到 `focusd-plugins` 之前发布的岛屿（它们读 `main`，更早的读 `dev`，`dev` 与 `main` 保持同一个提交），只含官方插件。
 

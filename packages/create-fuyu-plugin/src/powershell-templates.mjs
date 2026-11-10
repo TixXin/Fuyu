@@ -21,7 +21,7 @@ const both = (zh, en) => `(New-FuyuText ${psText(zh)} ${psText(en)})`;
 
 function header(options) {
   return `# ${options.name.en}: a Fuyu plugin for Windows PowerShell 5.1.
-# Protocol and API: https://github.com/TixXin/fly-island/blob/main/docs/plugins/README.md
+# Protocol and API: https://github.com/TixXin/fuyu/blob/main/docs/plugins/README.md
 # Keep this file ASCII; write other languages with ConvertFrom-FuyuEscape.
 . "$PSScriptRoot${BACKSLASH}lib${BACKSLASH}fuyu.ps1"
 `;

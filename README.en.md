@@ -8,20 +8,20 @@
   <p>A desktop island for Windows: tasks, clipboard, messages, translation, music and AI status on one small island at the top of your screen.</p>
 
   <p>
-    <a href="https://github.com/TixXin/fly-island/releases/latest">Download</a>
+    <a href="https://github.com/TixXin/fuyu/releases/latest">Download</a>
     ·
-    <a href="https://github.com/TixXin/fly-island/issues">Report an issue</a>
+    <a href="https://github.com/TixXin/fuyu/issues">Report an issue</a>
   </p>
 
   <p>
-    <img alt="Version" src="https://img.shields.io/github/v/release/TixXin/fly-island?label=version">
+    <img alt="Version" src="https://img.shields.io/github/v/release/TixXin/fuyu?label=version">
     <img alt="Platform" src="https://img.shields.io/badge/platform-Windows-0078D4">
     <img alt="Tauri" src="https://img.shields.io/badge/Tauri-2-24C8DB">
   </p>
 </div>
 
 > [!NOTE]
-> This project is maintained independently by [TixXin](https://github.com/TixXin) and [ShengLin1001](https://github.com/ShengLin1001); it was renamed from fly-island to Fuyu in November 2026. The original author, [flyl1u](https://github.com/flyl1u/fly-island), prefers a lean, minimal island. To give the island more to do, and to let more people put their own DIY features on it, this project became independently maintained and grew a plugin market. You are welcome to publish your own components to the [plugin market](https://github.com/TixXin/focusd-plugins), or install your own plugins locally (see the [plugin docs](docs/plugins/README.md)).
+> This project is maintained independently by [TixXin](https://github.com/TixXin) and [ShengLin1001](https://github.com/ShengLin1001); it was renamed from fly-island to Fuyu in November 2026. The original author, [flyl1u](https://github.com/flyl1u/fly-island), prefers a lean, minimal island. To give the island more to do, and to let more people put their own DIY features on it, this project became independently maintained and grew a plugin market. You are welcome to publish your own components to the [plugin market](https://github.com/TixXin/fuyu-plugins), or install your own plugins locally (see the [plugin docs](docs/plugins/README.md)).
 
 ## What is this?
 
@@ -45,7 +45,7 @@ Collapsed and idle with no music playing (default settings, no plugins): about 1
 
 ## Getting started
 
-1. Download and install from [Releases](https://github.com/TixXin/fly-island/releases/latest). The installers are not code-signed; if SmartScreen warns, choose "More info → Run anyway".
+1. Download and install from [Releases](https://github.com/TixXin/fuyu/releases/latest). The installers are not code-signed; if SmartScreen warns, choose "More info → Run anyway".
 2. Move the pointer onto the island at the top of the screen to expand it; the gear button or the tray icon opens Settings.
 3. Mail, translation and AI agents need a one-time setup in Settings. See [mail](docs/features/mail.md), [AI agents](docs/features/agent-status-hooks.md), [QQ](docs/features/qq-notifications.md) and [WeChat](docs/features/wechat-reminders.md) (in Chinese).
 
@@ -56,7 +56,7 @@ To write your own plugin, see the [plugin docs](docs/plugins/README.md).
 You need Windows 10/11, Node.js, pnpm, Rust, Visual Studio C++ Build Tools and WebView2 Runtime.
 
 ```powershell
-git clone https://github.com/TixXin/fly-island.git
+git clone https://github.com/TixXin/fuyu.git
 cd fly-island
 pnpm install
 pnpm tauri dev      # development

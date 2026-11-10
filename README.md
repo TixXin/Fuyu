@@ -8,20 +8,20 @@
   <p>Windows 上的桌面灵动岛：待办、剪贴板、消息、翻译、音乐和 AI 状态，都在屏幕顶部的一座小岛上。</p>
 
   <p>
-    <a href="https://github.com/TixXin/fly-island/releases/latest">下载</a>
+    <a href="https://github.com/TixXin/fuyu/releases/latest">下载</a>
     ·
-    <a href="https://github.com/TixXin/fly-island/issues">反馈问题</a>
+    <a href="https://github.com/TixXin/fuyu/issues">反馈问题</a>
   </p>
 
   <p>
-    <img alt="Version" src="https://img.shields.io/github/v/release/TixXin/fly-island?label=version">
+    <img alt="Version" src="https://img.shields.io/github/v/release/TixXin/fuyu?label=version">
     <img alt="Platform" src="https://img.shields.io/badge/platform-Windows-0078D4">
     <img alt="Tauri" src="https://img.shields.io/badge/Tauri-2-24C8DB">
   </p>
 </div>
 
 > [!NOTE]
-> 本项目由 [TixXin](https://github.com/TixXin) 和 [ShengLin1001](https://github.com/ShengLin1001) 独立维护，2026 年 11 月由 fly-island 改名为浮屿。原作者 [flyl1u](https://github.com/flyl1u/fly-island) 偏向于精简的灵动岛界面；为了进一步丰富灵动岛的功能，让更多用户把自己 DIY 的功能放上岛，本项目开始独立维护，并发展出了插件市场模式。欢迎大家把自己的组件上传到[插件市场](https://github.com/TixXin/focusd-plugins)，或者在本地安装自己的插件（见[插件文档](docs/plugins/README.md)）。
+> 本项目由 [TixXin](https://github.com/TixXin) 和 [ShengLin1001](https://github.com/ShengLin1001) 独立维护，2026 年 11 月由 fly-island 改名为浮屿。原作者 [flyl1u](https://github.com/flyl1u/fly-island) 偏向于精简的灵动岛界面；为了进一步丰富灵动岛的功能，让更多用户把自己 DIY 的功能放上岛，本项目开始独立维护，并发展出了插件市场模式。欢迎大家把自己的组件上传到[插件市场](https://github.com/TixXin/fuyu-plugins)，或者在本地安装自己的插件（见[插件文档](docs/plugins/README.md)）。
 
 ## 这是什么
 
@@ -45,7 +45,7 @@
 
 ## 上手
 
-1. 从 [Releases](https://github.com/TixXin/fly-island/releases/latest) 下载安装包并安装（安装包没有代码签名，SmartScreen 提示时点「更多信息 → 仍要运行」）。
+1. 从 [Releases](https://github.com/TixXin/fuyu/releases/latest) 下载安装包并安装（安装包没有代码签名，SmartScreen 提示时点「更多信息 → 仍要运行」）。
 2. 鼠标移到屏幕顶部的岛上即可展开，点齿轮或托盘图标打开设置。
 3. 邮箱、翻译和 AI Agent 需要先在设置里配置一次，具体见各自的说明：[邮箱](docs/features/mail.md)、[AI Agent](docs/features/agent-status-hooks.md)、[QQ 通知](docs/features/qq-notifications.md)、[微信提醒](docs/features/wechat-reminders.md)。
 
@@ -56,7 +56,7 @@
 需要 Windows 10/11、Node.js、pnpm、Rust、Visual Studio C++ Build Tools 和 WebView2 Runtime。
 
 ```powershell
-git clone https://github.com/TixXin/fly-island.git
+git clone https://github.com/TixXin/fuyu.git
 cd fly-island
 pnpm install
 pnpm tauri dev      # 开发模式

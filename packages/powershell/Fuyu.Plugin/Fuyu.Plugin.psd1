@@ -30,8 +30,8 @@
     PrivateData = @{
         PSData = @{
             Tags = @('Fuyu', 'plugin', 'Windows')
-            LicenseUri = 'https://github.com/TixXin/fly-island/blob/main/packages/powershell/LICENSE'
-            ProjectUri = 'https://github.com/TixXin/fly-island/tree/main/packages/powershell/Fuyu.Plugin'
+            LicenseUri = 'https://github.com/TixXin/fuyu/blob/main/packages/powershell/LICENSE'
+            ProjectUri = 'https://github.com/TixXin/fuyu/tree/main/packages/powershell/Fuyu.Plugin'
         }
     }
 }

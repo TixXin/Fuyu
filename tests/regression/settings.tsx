@@ -164,7 +164,7 @@ if (!automated) {
       && document.querySelector(".plugin-market__sort"), "Cards show the likes from GitHub, and a sort menu appears with them (E14)");
     const opensBefore = openedUrls.length;
     await act(async () => { likeButtons.find((button) => button.textContent === "12")?.click(); });
-    check(openedUrls.length === opensBefore + 1 && openedUrls[openedUrls.length - 1] === "https://github.com/TixXin/focusd-plugins/discussions/9", "The like button opens the plugin's discussion");
+    check(openedUrls.length === opensBefore + 1 && openedUrls[openedUrls.length - 1] === "https://github.com/TixXin/fuyu-plugins/discussions/9", "The like button opens the plugin's discussion");
     check(document.querySelector(".plugin-market__status")?.textContent?.startsWith("共 ") && !document.querySelector(".plugin-market__header > span:only-child"), "A status line with the plugin count takes the place of a second Plugin market title");
     const officialBadges = document.querySelectorAll(".plugin-market__badge--official");
     check(officialBadges.length > 0 && [...document.querySelectorAll(".plugin-market__meta")].every((meta) => !meta.textContent?.includes("· 官方")), "Official plugins carry one small mark instead of a publisher line");
