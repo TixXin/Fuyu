@@ -36,6 +36,12 @@ mockIPC((command, payload) => {
   }
   switch (command) {
     case "get_reply_marker_state": return replyMarker();
+    case "get_editor_extension_states":
+      return [
+        { app: "code", name: "VS Code", installed: true, canInstall: true },
+        { app: "cursor", name: "Cursor", installed: false, canInstall: true },
+      ];
+    case "install_editor_extension": return null;
     case "set_reply_marker": replyMarkerCalls.push(replyMarkerOn = Boolean(args.enabled)); return replyMarker();
     case "get_launch_at_startup": return false;
     case "set_launch_at_startup": return null;

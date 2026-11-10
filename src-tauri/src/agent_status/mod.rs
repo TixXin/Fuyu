@@ -4,6 +4,7 @@ pub(crate) mod approval_hotkeys;
 mod background_tasks;
 mod claude_hooks;
 mod codex_hooks;
+mod editor_extension;
 mod editor_terminal;
 mod external;
 mod hooks_state;
@@ -46,7 +47,7 @@ mod window_focus;
 use serde::Serialize;
 use serde_json::{json, Value};
 use std::{fs, path::Path};
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Emitter, Manager};
 
 use crate::system::windows_home_dir;
 
@@ -488,11 +489,36 @@ pub async fn focus_agent_window(
     session_id: Option<String>,
 ) -> Result<bool, String> {
     let app_dir = app.path().app_data_dir().ok();
-    tauri::async_runtime::spawn_blocking(move || {
+    let focused = tauri::async_runtime::spawn_blocking(move || {
         focus::focus_session(app_dir.as_deref(), &provider, cwd.as_deref(), title.as_deref(), session_id.as_deref())
     })
     .await
-    .map_err(|error| format!("Failed to join the window focus task: {error}"))
+    .map_err(|error| format!("Failed to join the window focus task: {error}"))?;
+    if let Some(editor) = focused.missing_extension {
+        let name = editor_extension::editor_name(&editor).unwrap_or(&editor).to_string();
+        let payload = json!({ "app": editor, "name": name });
+        let _ = app.emit_to(crate::island::WINDOW_LABEL, EDITOR_EXTENSION_MISSING_EVENT, payload);
+    }
+    Ok(focused.found)
+}
+
+/// Sent to the island when a clicked session's editor lacks the extension that switches to its
+/// terminal: `{ app, name }` (`code`, `VS Code`).
+const EDITOR_EXTENSION_MISSING_EVENT: &str = "agent-editor-extension-missing";
+
+/// The editors built on VS Code on this computer and whether each has the island's extension.
+#[tauri::command]
+pub async fn get_editor_extension_states() -> Vec<editor_extension::EditorExtensionState> {
+    tauri::async_runtime::spawn_blocking(editor_extension::states).await.unwrap_or_default()
+}
+
+/// Installs the island's extension into the editor `app` (its executable name, as listed by
+/// `get_editor_extension_states`).
+#[tauri::command]
+pub async fn install_editor_extension(app: String) -> Result<(), crate::user_error::UserError> {
+    tauri::async_runtime::spawn_blocking(move || editor_extension::install(&app))
+        .await
+        .map_err(|error| crate::user_error::UserError::new("internal", "Something went wrong inside the island.").detail(error))?
 }
 
 /// Which of `sessions` have their window in front (focus.rs); the Agent page counts those as
@@ -696,6 +722,8 @@ macro_rules! tauri_commands {
             crate::agent_status::install_agent_status_hooks,
             crate::agent_status::get_agent_hooks_state,
             crate::agent_status::focus_agent_window,
+            crate::agent_status::get_editor_extension_states,
+            crate::agent_status::install_editor_extension,
             crate::agent_status::agent_sessions_in_front,
             crate::agent_status::get_agent_host_icon,
             crate::agent_status::list_agent_sessions,

@@ -162,6 +162,17 @@ export type SettingsAgentText = {
     outdated: string;
     preview: string;
   };
+  /** Installing the island's extension into VS Code and editors built on it (task A9). */
+  editorExtension: {
+    title: string;
+    hint: string;
+    none: string;
+    installed: string;
+    install: string;
+    installing: string;
+    noCli: string;
+    done: (editor: string) => string;
+  };
   hooksOutdated: string;
   hooksMissing: string;
   remoteResult: (host: string, error: string | null) => string;
@@ -321,6 +332,16 @@ export const zhCN: SettingsAgentText = {
     outdated: "说明是旧版本，或者还在旧位置 CLAUDE.md 里；关掉再打开即可更新并移到规则文件。",
     preview: "查看将写入的内容",
   },
+  editorExtension: {
+    title: "编辑器扩展",
+    hint: "会话跑在 VS Code（或 Cursor、Windsurf 等）的终端里时，岛屿只能把编辑器窗口调到前面。装上岛屿的扩展后，点会话还会打开终端面板并切到这个会话的终端。扩展只处理岛屿打开的链接，不向任何地方发送数据。",
+    none: "没有找到 VS Code 或基于它的编辑器。",
+    installed: "已安装",
+    install: "安装",
+    installing: "正在安装…",
+    noCli: "找不到命令行，先打开这个编辑器",
+    done: (editor) => `已装进 ${editor}。已经打开的 ${editor} 窗口要重新加载（命令面板 → Reload Window）后才生效。`,
+  },
   hooksOutdated: "已安装的钩子是旧版本，“等待确认”状态等新功能不会生效。请点“安装/修复”，然后重启 Codex 和 Claude Code。",
   hooksMissing: "还没有安装钩子。点“安装/修复”后重启 Codex 和 Claude Code，状态灯和会话标题才会工作。",
   remoteResult: (host, error) => (error ? `SSH 远程 ${host}：失败，${error}` : `SSH 远程 ${host}：已完成`),
@@ -479,6 +500,16 @@ export const en: SettingsAgentText = {
     hint: (path) => `When on, the island creates a Claude Code user rule, ${path}, which every session reads (your CLAUDE.md stays untouched), asking Claude Code to end every reply with one symbol on its own line: ↩ your turn, ⋯ waiting on a background task it started, ✓ done. The island uses it to tell "your turn" from "done": on the Agent page, the session ring, and in alerts and sounds (your turn pops up as waiting for you, with the question sound; waiting on a background task neither pops up nor sounds). The line shows in the terminal's replies. Computers switched on under SSH remote get the same file. It applies to sessions started from then on; switching off deletes the file.`,
     outdated: "The instruction is an older version, or still in CLAUDE.md where older versions put it; switch off and on again to update it and move it to the rules file.",
     preview: "See what will be written",
+  },
+  editorExtension: {
+    title: "Editor extension",
+    hint: "When a session runs in a terminal inside VS Code (or Cursor, Windsurf and the like), the island can only bring the editor window forward. With the island's extension installed, clicking the session also opens the terminal panel and switches to that session's terminal. The extension only handles links the island opens and sends nothing anywhere.",
+    none: "No VS Code or editor built on it was found.",
+    installed: "Installed",
+    install: "Install",
+    installing: "Installing…",
+    noCli: "Command line not found; open this editor first",
+    done: (editor) => `Installed in ${editor}. ${editor} windows already open need a reload (Command Palette → Reload Window) first.`,
   },
   hooksOutdated: "The installed hooks are from an older version, so newer features such as the waiting-for-you state won't work. Click Install/repair, then restart Codex and Claude Code.",
   hooksMissing: "No hooks installed yet. Click Install/repair, then restart Codex and Claude Code, for the status light and session titles to work.",

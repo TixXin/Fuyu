@@ -51,6 +51,12 @@ export type AgentText = {
     };
     removed: string;
     undo: string;
+    /** Offered once per editor after clicking a session whose editor lacks the extension (task A9). */
+    extensionHint: (editor: string) => string;
+    extensionInstall: string;
+    extensionInstalling: string;
+    extensionDone: string;
+    extensionDismiss: string;
     /** A finished session whose reply ends on the "your turn" marker. */
     yourTurn: string;
     /** A session compacting its context (PreCompact hook); it can take a minute or two. */
@@ -146,6 +152,11 @@ export const zhCN: AgentText = {
     },
     removed: "已归档",
     undo: "撤销",
+    extensionHint: (editor) => `装上扩展，点会话能直接切到 ${editor} 里它的终端`,
+    extensionInstall: "安装",
+    extensionInstalling: "正在安装…",
+    extensionDone: "已安装，重新加载编辑器窗口后生效",
+    extensionDismiss: "不再提示",
     yourTurn: "等你回复",
     compacting: "正在压缩上下文",
   },
@@ -237,6 +248,11 @@ export const en: AgentText = {
     },
     removed: "Archived",
     undo: "Undo",
+    extensionHint: (editor) => `Add the extension to jump straight to the session's terminal in ${editor}`,
+    extensionInstall: "Install",
+    extensionInstalling: "Installing…",
+    extensionDone: "Installed; reload the editor window to use it",
+    extensionDismiss: "Don't ask again",
     yourTurn: "Your turn",
     compacting: "Compacting context",
   },

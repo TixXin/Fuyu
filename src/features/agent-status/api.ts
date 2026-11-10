@@ -1,4 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 import type { AgentEffortLabels } from "./effortLabels";
 
 // 与 src-tauri/src/agent_status/snapshot.rs 中的 AgentTaskStatus、AgentStatusSnapshot，以及 agent_status/mod.rs 中的 AgentHooksInstallResult 对应。
@@ -224,6 +225,37 @@ export function setAgentRemoteHosts(hosts: string[]) {
  */
 export function focusAgentWindow(provider: AgentProvider, cwd: string | null, title: string | null, sessionId: string) {
   return invoke<boolean>("focus_agent_window", { provider, cwd, title, sessionId });
+}
+
+/** Mirrors EditorExtensionState in src-tauri/src/agent_status/editor_extension.rs. */
+export type EditorExtensionState = {
+  /** The editor's executable name ("code"), which installEditorExtension takes. */
+  app: string;
+  /** Shown to the user ("VS Code"). */
+  name: string;
+  installed: boolean;
+  /** Its command line was found, so the island can install the extension. */
+  canInstall: boolean;
+};
+
+/** The editors built on VS Code on this computer and whether each has the island's extension. */
+export function getEditorExtensionStates() {
+  return invoke<EditorExtensionState[]>("get_editor_extension_states");
+}
+
+/** Installs the island's extension into the editor `app` through its command line. */
+export function installEditorExtension(app: string) {
+  return invoke<void>("install_editor_extension", { app });
+}
+
+/** Mirrors EDITOR_EXTENSION_MISSING_EVENT in src-tauri/src/agent_status/mod.rs. */
+const EDITOR_EXTENSION_MISSING_EVENT = "agent-editor-extension-missing";
+
+/** A clicked session's editor lacks the extension: its executable name and the name shown. */
+export type EditorExtensionMissing = { app: string; name: string };
+
+export function listenEditorExtensionMissing(onMissing: (editor: EditorExtensionMissing) => void) {
+  return listen<EditorExtensionMissing>(EDITOR_EXTENSION_MISSING_EVENT, (event) => onMissing(event.payload));
 }
 
 /** Session ids among `sessions` whose window is in front (agent_sessions_in_front). */

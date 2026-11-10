@@ -34,6 +34,7 @@
 | `fuyu-agent-approval`（`{ onIsland, whenInFront }`：Agent 的权限请求在岛上审批，默认关；`whenInFront` 为会话窗口在前台时也弹卡片，默认关，旧数据缺这个字段按关处理；开着时岛屿让审批端点挂起请求） | `features/agent-status/approvals/storage.ts` |
 | `fuyu-agent-push`（`{ enabled, server, events: { waiting, completed, failed }, awayMinutes, channel, ccConnect: { project, chats } }`：推送到手机，默认关；`server` 空为 Bark 官方服务器；`awayMinutes` 为 0 / 2 / 5 / 10，默认 5；2026-11-09 起 `channel` 为 `bark`（默认，旧数据没有时按它读）/ `ccConnect`，`ccConnect.project` 是 cc-connect 的项目名、`chats` 是会话键（`<平台>:<聊天>:<用户>`，最多 20 个）。设备 Key 不在这里，在凭据 `com.tixxin.fuyu.bark`） | `features/agent-status/push/storage.ts` |
 | `fuyu-agent-hidden-sessions`（`{ "<provider>:<sessionId>": updatedAt }`：在 Agent 页手动移除的会话，只隐藏不删记录；值是移除时那一轮的开始时间（以前存的是最后写入时间），开始新一轮才自动回来，最多 200 条） | `features/agent-status/hiddenSessions.ts` |
+| `fuyu-agent-editor-extension-dismissed`（`string[]`，编辑器的可执行文件名如 `code`、`cursor`，最多 20 个：Agent 页“装上扩展”提示点了“不再提示”的编辑器，A9） | `features/agent-status/useEditorExtensionHint.ts` |
 | `fuyu-agent-seen-turns`（`{ "<provider>:<sessionId>": 轮次 }`：在 Agent 页看过的会话，轮次是这一轮的开始时间，卡在半路时是最后写入时间；重启岛屿后看过的不再提醒，最多 300 条） | `features/agent-status/unseen.ts` |
 | `fuyu-agent-session-filters`（`[{ kind: "folder" | "prompt", value }]`，最多 50 条：按所在目录（含子目录，不分大小写和斜杠方向）或标题 / 最近提示词包含的文字隐藏会话，B6.4.3；读取时丢掉格式不对、为空和重复的条目；设置备份包含它） | `features/agent-status/sessionFilters.ts` |
 | 设置备份文件（`fuyu-settings-<日期时间>.json`（改名前是 `fly-island-settings-*`），写到「下载」文件夹；`{ app: "fuyu"（改名前的文件是 "fly-island"，照样能导入，旧 key 名换成新的）, version: 1, exportedAt, keys }`，`keys` 只含 `features/settings-backup/backup.ts` 的 `BACKUP_KEYS`：不含待办、窗口位置、凭据和一次性请求；恢复时只写这些 key，未知 key 和非字符串值丢弃） | `features/settings-backup/` |
@@ -71,6 +72,7 @@
 | `translation-island-shortcut`（翻译设为「岛内页面」时按下翻译快捷键：先唤出主窗口，再让它切换翻译页） | `translation/mod.rs` | 广播 |
 | `agent-approval-requested`（载荷 `{ id, agent, kind, sessionId, cwd, toolName, toolInput, permissionSuggestions, receivedAt }`：一个会话等你在岛上审批的工具调用（`kind: "permission"`），或要你回答的 AskUserQuestion（`kind: "question"`，`toolInput.questions`），同一会话同时只发一条） | `agent_approval/mod.rs` | 广播 |
 | `agent-approval-closed`（载荷 `{ id, reason }`，`reason` 为 `decided` / `timeout` / `disconnected` / `handedBack` / `shutdown`） | `agent_approval/mod.rs` | 广播 |
+| `agent-editor-extension-missing`（载荷 `{ app, name }`：点会话跳到的编辑器（`code` / `cursor` …，显示名 `VS Code` …）没装岛屿的扩展，Agent 页提示安装，A9） | `agent_status/mod.rs` | `main` |
 | `local-api-request`（载荷 `{ id, method, params }`，前端用 `answer_local_api_request` 回复） | `local_api/bridge.rs` | `main` |
 | `plugin-host-event`（载荷 `{ name, payload }`：插件可订阅的变化，由 Rust 合并后转给订阅的插件；`name` 见 `plugins/schema/rpc.json` 的 `events`） | 主窗口 `windows/island/usePluginHostEvents.ts` | Rust（`plugin_host/events.rs`） |
 | `plugin-notification`（载荷 `{ pluginId, pluginName, title, body, durationMs, actions }`：插件的 `island.notify`，按钮用 `run_plugin_notification_action` 回复） | `plugin_host/notify.rs` | `main` |

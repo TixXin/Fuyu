@@ -130,14 +130,23 @@ fn orca_handle(lookup: &Lookup, chain: &[u32], seen: Option<&SeenSession>, log: 
     found("orca-folder", by_folder, log)
 }
 
-/// Finds and brings forward the window of a session; false when no window could be found.
+/// What came of clicking a session.
+pub(super) struct Focused {
+    /// Whether a window was found and brought forward (or flashed).
+    pub(super) found: bool,
+    /// The editor (executable name) the session's window belongs to when it lacks the extension
+    /// that switches to the session's terminal; the Agent page offers to install it.
+    pub(super) missing_extension: Option<String>,
+}
+
+/// Finds and brings forward the window of a session.
 pub(super) fn focus_session(
     app_dir: Option<&Path>,
     provider: &str,
     cwd: Option<&str>,
     title: Option<&str>,
     session_id: Option<&str>,
-) -> bool {
+) -> Focused {
     let is_codex = provider == "codex";
     let session_id = session_id.filter(|id| !id.is_empty());
     let mut log = Attempt::new(provider, session_id);
@@ -170,7 +179,7 @@ pub(super) fn focus_session(
     }
     let Some(focused) = focused else {
         log.finish(app_dir, "not found");
-        return false;
+        return Focused { found: false, missing_extension: None };
     };
     log.note(format!("window={}", focused.app));
     if let Some(handle) = handle.filter(|_| focused.app == orca::ORCA_APP) {
@@ -187,18 +196,22 @@ pub(super) fn focus_session(
         let selected = window_focus::select_terminal_tab(&focused, title);
         log.note(if selected { "wt-tab=selected" } else { "wt-tab=none" });
     }
+    let mut missing_extension = None;
     // The link goes to the editor window used last, so only once the session's window is in front.
     if let (true, Ok(home_dir)) = (focused.in_front, windows_home_dir()) {
         let shown = editor_terminal::show_session_terminal(&home_dir, &focused.app, &chain, title);
         match shown {
             Some(EditorTerminal::Sent) => log.note("editor-terminal=sent"),
-            Some(EditorTerminal::NoExtension) => log.note("editor-terminal=no-extension"),
+            Some(EditorTerminal::NoExtension) => {
+                log.note("editor-terminal=no-extension");
+                missing_extension = Some(focused.app.clone());
+            }
             Some(EditorTerminal::Failed) => log.note("editor-terminal=failed"),
             None => {}
         }
     }
     log.finish(app_dir, if focused.in_front { "focused" } else { "found, flashed (Windows kept it behind)" });
-    true
+    Focused { found: true, missing_extension }
 }
 
 /// A session asked about by `sessions_in_front`.

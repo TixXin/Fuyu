@@ -1293,6 +1293,53 @@ fn editor_terminals_are_asked_for_through_the_extension_link() {
 }
 
 #[test]
+fn the_extension_is_packaged_as_a_vsix_with_its_manifest() {
+    use super::editor_extension::{build_vsix, Package};
+
+    // What gets installed is the id the island looks for first (editor_terminal.rs).
+    assert_eq!(Package::read().id(), "tixxin.fuyu");
+
+    let vsix = build_vsix().unwrap();
+    let mut archive = zip::ZipArchive::new(std::io::Cursor::new(vsix)).unwrap();
+    let names = archive.file_names().map(|name| name.unwrap().to_string()).collect::<Vec<_>>();
+    for name in ["[Content_Types].xml", "extension.vsixmanifest", "extension/package.json", "extension/extension.js", "extension/match.js"] {
+        assert!(names.iter().any(|entry| entry == name), "{name} missing from {names:?}");
+    }
+    let mut manifest = String::new();
+    std::io::Read::read_to_string(&mut archive.by_name("extension.vsixmanifest").unwrap(), &mut manifest).unwrap();
+    assert!(manifest.contains(r#"Id="fuyu""#) && manifest.contains(r#"Publisher="tixxin""#));
+    assert!(manifest.contains("<DisplayName>Fuyu</DisplayName>"));
+}
+
+#[test]
+fn an_editors_command_line_is_found_next_to_it_on_path_or_in_its_install_folder() {
+    use super::editor_extension::find_cli;
+
+    let root = std::env::temp_dir().join(format!("focusd-editor-cli-{}", std::process::id()));
+    let running = root.join("running");
+    fs::create_dir_all(running.join("bin")).unwrap();
+    fs::write(running.join("bin").join("code.cmd"), "").unwrap();
+    let exe = running.join("Code.exe");
+    assert_eq!(find_cli("code", Some(&exe), &[], &[]), Some(running.join("bin").join("code.cmd")));
+
+    let on_path = root.join("path");
+    fs::create_dir_all(&on_path).unwrap();
+    fs::write(on_path.join("cursor.cmd"), "").unwrap();
+    assert_eq!(find_cli("cursor", None, std::slice::from_ref(&on_path), &[]), Some(on_path.join("cursor.cmd")));
+
+    // Installed per user, its script named differently: the only script in its bin folder.
+    let programs = root.join("Programs");
+    let bin = programs.join("Kiro").join("bin");
+    fs::create_dir_all(&bin).unwrap();
+    fs::write(bin.join("kiro-cli.cmd"), "").unwrap();
+    assert_eq!(find_cli("kiro", None, &[], std::slice::from_ref(&programs)), Some(bin.join("kiro-cli.cmd")));
+
+    assert_eq!(find_cli("windsurf", None, &[on_path], &[programs]), None);
+    assert_eq!(find_cli("windowsterminal", Some(&exe), &[], &[]), None);
+    fs::remove_dir_all(&root).unwrap();
+}
+
+#[test]
 fn focus_attempts_log_their_steps_without_titles() {
     use super::focus_log::Attempt;
 
