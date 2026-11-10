@@ -1,5 +1,7 @@
 # 项目改名：同类产品的名字和候选名查重
 
+> **2026-11-10 用户定名：浮屿 / Fuyu**，英文不带 `-island`。没有采用下面「推荐」一节的结论，取舍和定名后的查重见文末「定名」一节和 [D17](/docs/tasks/D/D17.md)。
+
 > 日期：2026-11-09。问题：`fly-island` 和 `FocuSD` 都是上游的名字，项目要重新取名；先看 GitHub 上同类产品都叫什么，新名字不能和它们重名。范围：GitHub 仓库搜索（`gh search repos`，关键词 `dynamic island`、`dynamic island windows`、`灵动岛`、`桌面 灵动岛`、`topic:dynamic-island`，以及名字里带 `island` 或 `notch`、150 star 以上的仓库）；89 个拉丁字母候选名逐个查 GitHub 仓库名、npm、crates.io 和 GitHub 账号名；18 个中文候选名查 GitHub 仓库的名字和简介；入围的名字再查域名和网页搜索。相关任务：[D17](/docs/tasks/D/D17.md)
 >
 > star 数、创建时间和各项占用情况都是 2026-11-09 查到的。商标只做了网页搜索，没有查商标局的数据库。
@@ -285,6 +287,26 @@ GitHub 搜中文时按单个字匹配，搜「空岛」会把只含「空」和�
 - **域名**：用 RDAP 查的（`.com` 查 Verisign，`.app` 和 `.dev` 查 Google Registry），返回 404 记作没注册。只查了三个推荐名。
 - **Microsoft Store、winget、PowerShell Gallery**：没有查。
 - **GitHub 搜索的覆盖面**：仓库搜索只匹配名字、简介和主题，README 里才提到名字的项目搜不到；star 很少的新项目每天都在冒出来，定名当天要再搜一次。
+
+## 定名（2026-11-10）
+
+用户定为 **浮屿 / Fuyu**，英文就是 `Fuyu`，不带 `-island`。
+
+定名当天查的（「空」表示没人用）：
+
+| 用途 | 名字 | 结果 |
+|---|---|---|
+| GitHub 仓库 | `TixXin/fuyu`、`TixXin/fuyu-plugins` | 都不存在，可以改名过去 |
+| npm 插件包 | `fuyu-plugin`、`create-fuyu-plugin` | 空 |
+| npm 单名 | `fuyu` | 已被占，所以 npm 包要带后缀 |
+| crates.io | `fuyu` | 空 |
+| 域名 | `fuyu.com`、`fuyu.app`、`fuyu.dev` | 都已注册 |
+
+用这个名字要接受的几点（前面「详细」里都有出处）：
+
+- 中文「浮屿」已有两个 Windows 小项目在用：「浮屿 Islet」（1 star）和「浮屿 FloatIsland」（0 star）。
+- 单独搜 `fuyu` 会搜到很多无关的东西：GitHub 上名字含 fuyu 的仓库有一千多个，包括 Adept 的 Fuyu 多模态模型的实现。README 和仓库简介里要把「浮屿 Fuyu」和「灵动岛」「Windows」写在一起，方便被搜到。
+- 自己的域名要另想，三个常见后缀都已被注册。
 
 ## 来源
 
