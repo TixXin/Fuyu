@@ -57,10 +57,12 @@ export function ClipboardWindow() {
         onPasteSnippet={(id) => void pasteClipboardSnippet(id).catch(reportError("paste a snippet"))}
         onPasteSequence={(ids) => void pasteClipboardSequence(ids).catch(reportError("start a paste sequence"))}
         openCount={openCount}
-        onPaste={(id, plain) => void pasteClipboardItem(id, plain).catch((error: unknown) => console.error("Failed to paste a clipboard entry", error))}
+        onPaste={(id, plain, options) => void pasteClipboardItem(id, plain, options).catch((error: unknown) => console.error("Failed to paste a clipboard entry", error))}
         onClose={close}
         onToggleFavorite={(id) => void toggleClipboardHistoryFavorite(id)}
         wide={clipboardHistory.settings.popupLayout === "wide"}
+        capture={clipboardHistory.capture}
+        linkPreview={clipboardHistory.settings.linkPreview === true}
       />
     </div>
   );

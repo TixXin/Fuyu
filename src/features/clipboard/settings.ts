@@ -22,6 +22,10 @@ export const DEFAULT_CLIPBOARD_HISTORY: ClipboardHistorySnapshot = {
     captureFiles: true,
     captureHtml: true,
     ocr: true,
+    hideFromCapture: true,
+    linkPreview: false,
+    flattenTerminalCommands: false,
+    localApiRead: false,
   },
   items: [],
 };
@@ -59,5 +63,9 @@ export function normalizeClipboardSettings(
     captureFiles: settings.captureFiles !== false,
     captureHtml: settings.captureHtml !== false,
     ocr: settings.ocr !== false,
+    hideFromCapture: settings.hideFromCapture !== false,
+    linkPreview: settings.linkPreview === true,
+    flattenTerminalCommands: settings.flattenTerminalCommands === true,
+    localApiRead: settings.localApiRead === true,
   };
 }

@@ -94,6 +94,33 @@ export function ClipboardSettingsSection({ clipboardSettings, onClipboardSetting
             onChange={(terminalImagePath) => change({ terminalImagePath })}
           />
         )}
+        {inWindow && clipboardSettings.autoPaste && (
+          <SettingsToggleRow
+            indent
+            title={text.flattenTerminalCommands}
+            description={text.flattenTerminalCommandsHint}
+            checked={clipboardSettings.flattenTerminalCommands === true}
+            onChange={(flattenTerminalCommands) => change({ flattenTerminalCommands })}
+          />
+        )}
+        {inWindow && (
+          <SettingsToggleRow
+            indent
+            title={text.hideFromCapture}
+            description={text.hideFromCaptureHint}
+            checked={clipboardSettings.hideFromCapture !== false}
+            onChange={(hideFromCapture) => change({ hideFromCapture })}
+          />
+        )}
+        {inWindow && (
+          <SettingsToggleRow
+            indent
+            title={text.linkPreview}
+            description={text.linkPreviewHint}
+            checked={clipboardSettings.linkPreview === true}
+            onChange={(linkPreview) => change({ linkPreview })}
+          />
+        )}
         {children}
       </SettingsGroup>
       <ClipboardRecordSettings clipboardSettings={clipboardSettings} onChange={change} />

@@ -36,6 +36,14 @@ export type SettingsClipboardText = {
   secretsOptions: Record<"mask" | "skip" | "keep", string>;
   excludedApps: string;
   excludedAppsHint: string;
+  flattenTerminalCommands: string;
+  flattenTerminalCommandsHint: string;
+  hideFromCapture: string;
+  hideFromCaptureHint: string;
+  linkPreview: string;
+  linkPreviewHint: string;
+  localApiRead: string;
+  localApiReadHint: string;
   transfer: {
     title: string;
     export: string;
@@ -103,6 +111,14 @@ export const zhCN: SettingsClipboardText = {
   secretsOptions: { mask: "打码", skip: "不记录", keep: "照常" },
   excludedApps: "不记录这些程序复制的内容",
   excludedAppsHint: "填程序名，逗号分隔，比如 keepass.exe。每条记录旁边会显示它来自哪个程序。",
+  flattenTerminalCommands: "多行命令贴到终端时合成一行",
+  flattenTerminalCommandsHint: "带 \ 续行的多行命令粘贴到终端时去掉续行，合成一行；剪贴板窗口的「转换后粘贴」里也能手动选。",
+  hideFromCapture: "共享屏幕时隐藏",
+  hideFromCaptureHint: "开会共享屏幕、录屏、截图时，剪贴板窗口显示为空白，不露出历史。",
+  linkPreview: "读取链接标题和图标",
+  linkPreviewHint: "宽版里显示复制的链接对应网页的标题和图标。会访问那个网址，默认关。",
+  localApiRead: "允许本地接口读取历史",
+  localApiReadHint: "开了以后，AI 工具可以通过本地接口 GET /v1/clipboard 读取最近的文字记录（打码的仍是打码）。默认关。",
   transfer: {
     title: "导入导出",
     export: "导出剪贴板历史",
@@ -170,6 +186,14 @@ export const en: SettingsClipboardText = {
   secretsOptions: { mask: "Mask", skip: "Skip", keep: "Keep" },
   excludedApps: "Do not record copies from these programs",
   excludedAppsHint: "Program names separated by commas, such as keepass.exe. Each entry shows the program it came from.",
+  flattenTerminalCommands: "Paste multi-line commands into terminals as one line",
+  flattenTerminalCommandsHint: "A command continued over lines with \ goes into a terminal as one line. Also available by hand under \"Paste transformed\" in the clipboard window.",
+  hideFromCapture: "Hide while sharing the screen",
+  hideFromCaptureHint: "Screen sharing, recordings and screenshots show the clipboard window as blank.",
+  linkPreview: "Read link titles and icons",
+  linkPreviewHint: "The wide window shows a copied link's page title and icon. This visits the address; off by default.",
+  localApiRead: "Let the local API read the history",
+  localApiReadHint: "AI tools can read recent text entries with GET /v1/clipboard on the local API (masked keys stay masked). Off by default.",
   transfer: {
     title: "Import and export",
     export: "Export the clipboard history",

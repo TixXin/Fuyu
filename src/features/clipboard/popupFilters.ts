@@ -1,10 +1,11 @@
 import type { ClipboardHistoryItem } from "./api";
-import { matchesClipboardQuery } from "./clipboardSearch.ts";
+import { contentKind } from "./contentKind.ts";
+import { matchesPopupQuery, type PopupQuery } from "./popupQuery.ts";
 
 /** The clipboard window's filter chips: kinds of entry, the snippets, then the most used tags. */
-export type PopupFilter = "all" | "favorites" | "images" | "files" | "snippets" | `#${string}`;
+export type PopupFilter = "all" | "favorites" | "images" | "files" | "links" | "colors" | "snippets" | `#${string}`;
 
-const KINDS: readonly PopupFilter[] = ["all", "favorites", "images", "files", "snippets"];
+const KINDS: readonly PopupFilter[] = ["all", "favorites", "images", "files", "links", "colors", "snippets"];
 
 /** The tags used most, the most used first; at most `limit`. */
 export function popupTags(items: readonly ClipboardHistoryItem[], limit = 3): string[] {
@@ -24,13 +25,16 @@ export function nextPopupFilter(filters: readonly PopupFilter[], current: PopupF
   return filters[(index + (back ? -1 : 1) + filters.length) % filters.length];
 }
 
-/** The history entries a chip and a lower-case search leave. */
-export function filterPopupItems(items: readonly ClipboardHistoryItem[], filter: PopupFilter, needle: string): ClipboardHistoryItem[] {
+/** The history entries a chip and the search (parsePopupQuery) leave. */
+export function filterPopupItems(items: readonly ClipboardHistoryItem[], filter: PopupFilter, query: PopupQuery, now = Date.now()): ClipboardHistoryItem[] {
+  const empty = query.words.length === 0 && query.rules.length === 0;
   return items.filter((item) => {
     if (filter === "favorites" && !item.favorite) return false;
     if (filter === "images" && item.kind !== "image") return false;
     if (filter === "files" && item.kind !== "files") return false;
+    if (filter === "links" && contentKind(item)?.kind !== "link") return false;
+    if (filter === "colors" && contentKind(item)?.kind !== "color") return false;
     if (filter.startsWith("#") && !(item.tags ?? []).some((tag) => tag.toLowerCase() === filter.slice(1).toLowerCase())) return false;
-    return !needle || matchesClipboardQuery(item, needle);
+    return empty || matchesPopupQuery(item, query, now);
   });
 }

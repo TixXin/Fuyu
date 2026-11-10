@@ -8,6 +8,7 @@ import "../../src/styles/fonts.css";
 import { I18nProvider, LOCALE_STORAGE_KEY } from "../../src/i18n";
 import { ClipboardPopup } from "../../src/features/clipboard/ClipboardPopup";
 import type { ClipboardHistoryItem, ClipboardSnippet } from "../../src/features/clipboard/api";
+import { checkSecondRound } from "./clipboard-popup-actions";
 
 const automated = new URLSearchParams(location.search).has("test");
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: automated });
@@ -15,6 +16,8 @@ localStorage.setItem(LOCALE_STORAGE_KEY, "zh-CN");
 const calls: string[] = [];
 const BIG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='120'%3E%3Crect width='600' height='120' fill='%23c75b7a'/%3E%3C/svg%3E";
 mockIPC((command, args) => {
+  calls.push(`ipc:${command}:${JSON.stringify(args ?? {})}`);
+  if (command === "read_clipboard_image_qr") return "https://qr.example";
   if (command === "get_clipboard_image_preview") {
     calls.push(`preview:${(args as { id: string }).id}`);
     return BIG;
@@ -33,6 +36,10 @@ const ITEMS: ClipboardHistoryItem[] = [
   { ...base, id: "t3", kind: "text", copiedAt: now - 12 * minute, preview: "题市场放在「扩展」组和插件市场挨着，还是放在「基础」组紧跟「主题」？", tags: ["设置"], source: { path: "C:\\msedge.exe", name: "Edge" } },
   { ...base, id: "t4", kind: "text", copiedAt: now - 20 * minute, preview: "ghp_8f3a••••••••••••••••", masked: true, text: "ghp_8f3aSECRETSECRETSECRET" },
   { ...base, id: "f1", kind: "files", copiedAt: now - 70 * minute, preview: "release-notes-0.3.5.md", files: ["C:\\a\\release-notes-0.3.5.md", "C:\\a\\b.md", "C:\\a\\c.md"], source: { path: "C:\\explorer.exe", name: "资源管理器" } },
+  { ...base, id: "c1", kind: "text", copiedAt: now - 80 * minute, preview: "#E86A92", text: "#E86A92", source: { path: "C:\\figma.exe", name: "Figma" } },
+  { ...base, id: "l1", kind: "text", copiedAt: now - 90 * minute, preview: "https://github.com/TixXin/fuyu/pull/26?utm_source=chat", text: "https://github.com/TixXin/fuyu/pull/26?utm_source=chat" },
+  { ...base, id: "s9", kind: "text", copiedAt: now - 100 * minute, preview: "cargo test \\ --quiet", text: "cargo test \\\n  --quiet", source: { path: "C:\\wt.exe", name: "终端" } },
+  { ...base, id: "m1", kind: "text", copiedAt: now - 110 * minute, preview: "下午三点的会议改到四点", text: "下午三点的会议改到四点", source: { path: "C:\\weixin.exe", name: "微信" } },
 ];
 const SNIPPETS: ClipboardSnippet[] = [{ id: "s1", title: "日报模板", text: "{date} {weekday}\n今天完成：" }, { id: "s2", title: "邮箱签名", text: "tixxin · Fuyu" }];
 
@@ -40,6 +47,7 @@ const FRAMES = [
   { id: "dark", caption: "标准宽度", wide: false, light: false },
   { id: "light", caption: "浅色", wide: false, light: true },
   { id: "wide", caption: "宽版", wide: true, light: false },
+  { id: "paused", caption: "暂停记录", wide: false, light: false },
 ];
 const host = document.getElementById("frames")!;
 for (const frame of FRAMES) {
@@ -58,7 +66,8 @@ for (const frame of FRAMES) {
         snippets={SNIPPETS}
         openCount={0}
         wide={frame.wide}
-        onPaste={(id, plain) => calls.push(`paste:${id}${plain ? ":plain" : ""}`)}
+        capture={frame.id === "paused" ? { paused: true, pausedUntil: now + 14 * minute, ignoreNext: false } : undefined}
+        onPaste={(id, plain, options) => calls.push(`paste:${id}${plain ? ":plain" : ""}${options?.enter ? ":enter" : ""}${options?.copyAs ? `:${options.copyAs}` : ""}`)}
         onPasteSnippet={(id) => calls.push(`snippet:${id}`)}
         onPasteSequence={(ids) => calls.push(`sequence:${ids.join()}`)}
         onClose={() => calls.push("close")}
@@ -94,7 +103,7 @@ const ctrlClick = (frame: string, index: number) => act(async () => {
 
 async function runChecks() {
   try {
-    check(chips("dark") === "全部|收藏|图片|文件|片段|#设置", "筛选胶囊：全部、收藏、图片、文件、片段，再加常用标签");
+    check(chips("dark") === "全部|收藏|图片|文件|链接|颜色|片段|#设置", "筛选胶囊：全部、收藏、图片、文件、链接、颜色、片段，再加常用标签");
     check(rows("dark").length === ITEMS.length && rows("dark")[0].classList.contains("clipboard-popup__item--selected"), "每条一行，打开时第 1 条选中");
     check($("dark", ".clipboard-popup__item--selected .clipboard-popup__enter")?.textContent === "粘贴", "选中的那行写着「↵ 粘贴」");
     check(rows("dark")[0].querySelector(".clipboard-popup__note")?.textContent?.startsWith("VS Code · 刚刚"), "第二行写来源程序和时间");
@@ -143,6 +152,8 @@ async function runChecks() {
     check($("wide", ".clipboard-popup__pane-body")?.textContent?.startsWith("ghp_8f3a••") && !$("wide", ".clipboard-popup__pane")?.textContent?.includes("SECRET"), "宽版：打码的密钥不露原文");
     await key("wide", { key: "ArrowDown" });
     check($$("wide", ".clipboard-popup__pane-files li").length === 3, "宽版：文件逐个列出");
+
+    await checkSecondRound(check, calls);
 
     results.textContent = `${messages.join("\n")}\n\n全部 ${messages.length} 项检查通过。`;
     results.dataset.result = "passed";

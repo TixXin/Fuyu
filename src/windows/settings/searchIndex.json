@@ -1277,6 +1277,45 @@
     {
       "page": "clipboard",
       "zh-CN": {
+        "group": "打开方式",
+        "title": "多行命令贴到终端时合成一行",
+        "description": "带 续行的多行命令粘贴到终端时去掉续行，合成一行；剪贴板窗口的「转换后粘贴」里也能手动选。"
+      },
+      "en": {
+        "group": "Opening",
+        "title": "Paste multi-line commands into terminals as one line",
+        "description": "A command continued over lines with goes into a terminal as one line. Also available by hand under \"Paste transformed\" in the clipboard window."
+      }
+    },
+    {
+      "page": "clipboard",
+      "zh-CN": {
+        "group": "打开方式",
+        "title": "共享屏幕时隐藏",
+        "description": "开会共享屏幕、录屏、截图时，剪贴板窗口显示为空白，不露出历史。"
+      },
+      "en": {
+        "group": "Opening",
+        "title": "Hide while sharing the screen",
+        "description": "Screen sharing, recordings and screenshots show the clipboard window as blank."
+      }
+    },
+    {
+      "page": "clipboard",
+      "zh-CN": {
+        "group": "打开方式",
+        "title": "读取链接标题和图标",
+        "description": "宽版里显示复制的链接对应网页的标题和图标。会访问那个网址，默认关。"
+      },
+      "en": {
+        "group": "Opening",
+        "title": "Read link titles and icons",
+        "description": "The wide window shows a copied link's page title and icon. This visits the address; off by default."
+      }
+    },
+    {
+      "page": "clipboard",
+      "zh-CN": {
         "group": "剪贴板历史",
         "title": "记录图片"
       },
@@ -1371,6 +1410,19 @@
         "group": "Clipboard history",
         "title": "Do not record copies from these programs",
         "description": "Program names separated by commas, such as keepass.exe. Each entry shows the program it came from."
+      }
+    },
+    {
+      "page": "clipboard",
+      "zh-CN": {
+        "group": "剪贴板历史",
+        "title": "允许本地接口读取历史",
+        "description": "开了以后，AI 工具可以通过本地接口 GET /v1/clipboard 读取最近的文字记录（打码的仍是打码）。默认关。"
+      },
+      "en": {
+        "group": "Clipboard history",
+        "title": "Let the local API read the history",
+        "description": "AI tools can read recent text entries with GET /v1/clipboard on the local API (masked keys stay masked). Off by default."
       }
     },
     {

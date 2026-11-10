@@ -25,11 +25,26 @@ pub(crate) fn plugin_history(params: &Value) -> Result<Value, (u16, String)> {
     if !snapshot.settings.enabled {
         return Err((409, "Clipboard history is switched off.".into()));
     }
-    Ok(json!({ "items": text_items(&snapshot.items, limit) }))
+    Ok(json!({ "items": text_items(&snapshot.items, limit, false) }))
 }
 
-/// The newest `limit` text items as plugins see them.
-pub(super) fn text_items(items: &[ClipboardHistoryItem], limit: usize) -> Vec<Value> {
+/// `GET /v1/clipboard?limit=` on the local API (C38), for AI tools: like `clipboard.history`, but
+/// only while "let the local API read the history" is on, and a masked key stays masked.
+pub(crate) fn local_api_history(params: &Value) -> Result<Value, (u16, String)> {
+    let snapshot = service().map_err(|error| (503, error))?.snapshot().map_err(|error| (500, error))?;
+    if !snapshot.settings.local_api_read {
+        return Err((403, "Reading the clipboard history is off in Fuyu settings (Clipboard, Local API).".into()));
+    }
+    if !snapshot.settings.enabled {
+        return Err((409, "Clipboard history is switched off.".into()));
+    }
+    let limit = params.get("limit").and_then(Value::as_u64).and_then(|limit| usize::try_from(limit).ok()).filter(|&limit| limit > 0).unwrap_or(DEFAULT_LIMIT).min(MAX_LIMIT);
+    Ok(json!({ "items": text_items(&snapshot.items, limit, true) }))
+}
+
+/// The newest `limit` text items as plugins see them; with `hide_masked`, a masked key gives its
+/// masked preview.
+pub(super) fn text_items(items: &[ClipboardHistoryItem], limit: usize, hide_masked: bool) -> Vec<Value> {
     let mut texts: Vec<&ClipboardHistoryItem> = items
         .iter()
         .filter(|item| item.kind == ClipboardHistoryItemKind::Text && item.text.is_some())
@@ -39,7 +54,7 @@ pub(super) fn text_items(items: &[ClipboardHistoryItem], limit: usize) -> Vec<Va
         .into_iter()
         .take(limit)
         .map(|item| {
-            let text = item.text.as_deref().unwrap_or_default();
+            let text = if hide_masked && item.masked { item.preview.as_str() } else { item.text.as_deref().unwrap_or_default() };
             let truncated = text.chars().count() > MAX_TEXT_CHARS;
             json!({
                 "id": item.id,
@@ -60,7 +75,7 @@ pub(crate) fn plugin_item(id: &str) -> Option<Value> {
     if !snapshot.settings.enabled {
         return None;
     }
-    text_items(&snapshot.items, usize::MAX).into_iter().find(|item| item["id"] == id)
+    text_items(&snapshot.items, usize::MAX, false).into_iter().find(|item| item["id"] == id)
 }
 
 /// Tells subscribed plugins the history changed, if it is on.
@@ -91,11 +106,11 @@ mod tests {
             item("img", "image", 9, None),
             item("new", "text", 5, Some("x".repeat(MAX_TEXT_CHARS + 10))),
         ];
-        let seen = text_items(&items, 10);
+        let seen = text_items(&items, 10, false);
         assert_eq!(seen.iter().map(|item| item["id"].as_str().unwrap_or("")).collect::<Vec<_>>(), vec!["new", "old"]);
         assert_eq!(seen[0]["truncated"], true);
         assert_eq!(seen[0]["text"].as_str().map(|text| text.chars().count()), Some(MAX_TEXT_CHARS));
         assert_eq!(seen[1]["truncated"], false);
-        assert_eq!(text_items(&items, 1).len(), 1);
+        assert_eq!(text_items(&items, 1, false).len(), 1);
     }
 }
