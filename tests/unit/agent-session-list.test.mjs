@@ -70,15 +70,13 @@ test("the Agent page follows the AI Agent switch", () => {
   assert.equal(resolveIslandPage("todo", onlyAgents), "agents");
 });
 
-test("the Agent page fits the session rows set in Settings", async () => {
+test("Agent page rows and the Agent settings", async () => {
   const { getAgentPageExpandedHeight } = await import("../../src/windows/island/layout.ts");
-  const { normalizeSettings, DEFAULT_SETTINGS, MIN_AGENT_VISIBLE_ROWS, MAX_AGENT_VISIBLE_ROWS } = await import("../../src/features/appearance/settings.ts");
+  const { normalizeSettings, DEFAULT_SETTINGS } = await import("../../src/features/appearance/settings.ts");
   // Flat rows: three full rows take far less room than the old cards (429px).
   assert.equal(getAgentPageExpandedHeight(3), 316);
   // Each extra session adds one full row and its gap.
   assert.equal(getAgentPageExpandedHeight(4) - getAgentPageExpandedHeight(3), 80);
-  // The tallest choice still fits the native window (656px).
-  assert.ok(getAgentPageExpandedHeight(MAX_AGENT_VISIBLE_ROWS) <= 656);
   // Cards (62px, 6px apart) and compact rows (34px, 4px apart) size the page by their own rows.
   assert.equal(getAgentPageExpandedHeight(4, 0, "cards") - getAgentPageExpandedHeight(3, 0, "cards"), 68);
   assert.equal(getAgentPageExpandedHeight(4, 0, "compact") - getAgentPageExpandedHeight(3, 0, "compact"), 38);
@@ -100,13 +98,8 @@ test("the Agent page fits the session rows set in Settings", async () => {
   assert.equal(normalizeSettings({ agentCardEffects: "sparkle" }).agentCardEffects, "sparkle");
   assert.equal(normalizeSettings({ agentCardEffects: "rainbow" }).agentCardEffects, "off");
 
-  assert.equal(DEFAULT_SETTINGS.agentVisibleRows, 2);
-  // Settings saved before this was a setting keep the old three rows.
-  assert.equal(normalizeSettings({}).agentVisibleRows, 3);
-  assert.equal(normalizeSettings({ agentVisibleRows: 99 }).agentVisibleRows, MAX_AGENT_VISIBLE_ROWS);
-  assert.equal(normalizeSettings({ agentVisibleRows: 0 }).agentVisibleRows, MIN_AGENT_VISIBLE_ROWS);
-  assert.equal(normalizeSettings({ agentVisibleRows: 3.6 }).agentVisibleRows, 4);
-  assert.equal(normalizeSettings({ agentVisibleRows: "4" }).agentVisibleRows, 3);
+  // The row count setting is gone (C27): the page is the panel's height and scrolls.
+  assert.equal("agentVisibleRows" in normalizeSettings({ agentVisibleRows: 4 }), false);
 
   // Running time is off unless turned on.
   assert.equal(DEFAULT_SETTINGS.agentShowElapsed, false);

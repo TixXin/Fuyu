@@ -9,7 +9,7 @@ import {
   pageShortcutOrder,
   resolveIslandPage,
 } from "../../src/windows/island/features.ts";
-import { getPluginPageExpandedHeight, maxExpandedIslandWidth, pageIslandWidth, panelIslandWidth, pluginPageIslandWidth } from "../../src/windows/island/layout.ts";
+import { maxExpandedIslandWidth, panelIslandWidth } from "../../src/windows/island/layout.ts";
 
 const all = { agents: true, todo: true, music: true, clipboard: true, shelf: true, qq: true, wechat: false, qqMail: false, translation: false };
 const board = "plugin:dev.example.board/board";
@@ -49,18 +49,6 @@ test("a plugin page is on while its plugin lists it; otherwise the island falls 
   assert.equal(resolveIslandPage("todo", onlyPlugin), board);
 });
 
-test("plugin pages get a height by template, within the panel limit", () => {
-  assert.equal(getPluginPageExpandedHeight("status", 1000), 260);
-  assert.equal(getPluginPageExpandedHeight("list", 1000), 400);
-  assert.equal(getPluginPageExpandedHeight("list", 320), 320);
-  assert.equal(getPluginPageExpandedHeight(null, 1000), 400);
-  // A list grows with its rows between 2 and 8, then scrolls.
-  assert.equal(getPluginPageExpandedHeight("list", 1000, 0), getPluginPageExpandedHeight("list", 1000, 2));
-  assert.equal(getPluginPageExpandedHeight("list", 1000, 4) - getPluginPageExpandedHeight("list", 1000, 3), 40);
-  assert.equal(getPluginPageExpandedHeight("list", 1000, 50), getPluginPageExpandedHeight("list", 1000, 8));
-  assert.equal(getPluginPageExpandedHeight("list", 300, 8), 300);
-});
-
 test("the collapsed bar shows each status text, highest priority first, first plugin on ties", async () => {
   const { shownStatusEntries } = await import("../../src/features/plugin-views/statusItems.ts");
   const entry = (pluginId, priority, text = "x") => ({ pluginId, itemId: "t", priority, text, tooltip: null, tone: "neutral" });
@@ -93,22 +81,8 @@ test("plugin page preferences order and hide pages, and bad stored data means de
   assert.deepEqual(ids(visiblePluginViews(views, setPluginPageHidden(prefs, "plugin:a.one/x", false))), ["a.one/x", "c.three/z", "b.two/y"]);
 });
 
-test("a webview page can ask for a wider island and drop its card (E15)", () => {
-  assert.equal(pluginPageIslandWidth(undefined, 1), null);
-  assert.equal(pluginPageIslandWidth(760, 1), 800);
-  // Never narrower than usual, and never past the island window at a large scale.
-  assert.equal(pluginPageIslandWidth(400, 1), 560);
-  assert.equal(pluginPageIslandWidth(860, 1.4), maxExpandedIslandWidth(1.4));
-  assert.equal(pageIslandWidth("calendar", undefined, 1), 680, "the calendar page is wider");
-  assert.equal(pageIslandWidth("calendar", undefined, 1.4), maxExpandedIslandWidth(1.4), "as far as it fits at a large scale");
-  assert.equal(pageIslandWidth("todo", undefined, 1), null);
-  assert.ok(maxExpandedIslandWidth(1.4) * 1.4 <= 820);
-  // The panel width setting (C25) widens the usual pages and is the floor for wider ones.
+test("every page, plugin pages too, has the panel width, as far as it fits (C25, C27)", () => {
   assert.equal(panelIslandWidth(640, 1), 640);
   assert.equal(panelIslandWidth(800, 1.4), maxExpandedIslandWidth(1.4));
-  assert.equal(pageIslandWidth("calendar", undefined, 1, 720), 720);
-  assert.equal(pluginPageIslandWidth(400, 1, 640), 640);
-  // Without the card and its title, the page sits right under the island header.
-  assert.equal(getPluginPageExpandedHeight("webview", 600, null, 250, true), 336);
-  assert.equal(getPluginPageExpandedHeight("webview", 600, null, 250), 386);
+  assert.ok(maxExpandedIslandWidth(1.4) * 1.4 <= 820);
 });

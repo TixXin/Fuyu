@@ -332,12 +332,12 @@
       "zh-CN": {
         "group": "尺寸",
         "title": "面板宽度",
-        "description": "也可以按住 Alt 拖动展开面板的左右边缘或底边来调。高度是待办、消息这类会变长的页面最高能到多少；日历和插件页需要时会更宽。"
+        "description": "所有页面都用这个宽度和高度，内容多了在页面里滚动。也可以按住 Alt 拖动展开面板的左右边缘或底边来调。"
       },
       "en": {
         "group": "Size",
         "title": "Panel width",
-        "description": "Or hold Alt and drag the open panel's side or bottom edge. The height is how tall growing pages such as todos and messages may get; the calendar and plugin pages are wider when they need it."
+        "description": "Every page has this width and height and scrolls inside when it holds more. Or hold Alt and drag the open panel's side or bottom edge."
       }
     },
     {
@@ -1056,17 +1056,6 @@
     {
       "page": "clipboard",
       "zh-CN": {
-        "group": "打开方式",
-        "title": "展开后显示条数"
-      },
-      "en": {
-        "group": "Opening",
-        "title": "Entries shown when open"
-      }
-    },
-    {
-      "page": "clipboard",
-      "zh-CN": {
         "group": "剪贴板历史",
         "title": "记录图片"
       },
@@ -1438,19 +1427,6 @@
           "Island mark",
           "Dot"
         ]
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "会话列表",
-        "title": "展开后显示条数",
-        "description": "岛屿展开后的 Agent 页一次显示的会话数，更多的会话可以滚动查看。"
-      },
-      "en": {
-        "group": "Session list",
-        "title": "Entries shown when open",
-        "description": "How many sessions the island's Agent page shows at once; scroll for the rest."
       }
     },
     {

@@ -43,23 +43,16 @@ export const MAX_AUTO_TUCK_RETRACT_DELAY_MS = 3_000;
 // Tallest panel before the todo list and other long pages scroll. The default is the
 // height the todo page reached before this was a setting (six rows).
 export const DEFAULT_MAX_PANEL_HEIGHT = 490;
-// The todo page's height with no rows below its two fixed ones.
-export const MIN_MAX_PANEL_HEIGHT = 306;
-// The tallest expanded height the native window accepts.
-export const MAX_MAX_PANEL_HEIGHT = 546;
+// Every page is this tall (C27): low enough for a compact panel, tall enough that the translation
+// and music pages still fit.
+export const MIN_MAX_PANEL_HEIGHT = 360;
+// Below the tallest expanded height the native window accepts (656).
+export const MAX_MAX_PANEL_HEIGHT = 640;
 // Expanded panel width (C25), before the scale; wider pages (calendar, plugin pages) stay wider.
 // The widest also has to fit the island window at the scale (maxExpandedIslandWidth in layout.ts).
 export const DEFAULT_PANEL_WIDTH = 560;
 export const MIN_PANEL_WIDTH = 480;
 export const MAX_PANEL_WIDTH = 800;
-export const DEFAULT_CLIPBOARD_VISIBLE_ROWS = 6;
-export const MIN_CLIPBOARD_VISIBLE_ROWS = 2;
-// Six rows is the tallest clipboard page the native window accepts (656px).
-export const MAX_CLIPBOARD_VISIBLE_ROWS = 6;
-export const DEFAULT_AGENT_VISIBLE_ROWS = 2;
-export const MIN_AGENT_VISIBLE_ROWS = 2;
-// Five sessions is the tallest Agent page the native window accepts (627px of 656px).
-export const MAX_AGENT_VISIBLE_ROWS = 5;
 // File shelf cap; matches MAX_ITEMS and MIN / MAX_MAX_ITEMS in src-tauri/src/file_shelf/store.rs.
 export const DEFAULT_SHELF_ITEMS = 100;
 export const MIN_SHELF_ITEMS = 20;

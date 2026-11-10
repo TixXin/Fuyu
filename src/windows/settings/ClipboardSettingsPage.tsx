@@ -2,22 +2,12 @@ import { ClipboardSettingsSection } from "../../features/clipboard/ClipboardSett
 import { ClipboardSnippetSettings } from "../../features/clipboard/ClipboardSnippetSettings";
 import { ClipboardTransferSettings } from "../../features/clipboard/ClipboardTransferSettings";
 import { useClipboardSettings } from "../../features/clipboard/useClipboardSettings";
-import { SettingsNumberRow } from "../../components/settings/SettingsNumberRow";
-import { MAX_CLIPBOARD_VISIBLE_ROWS, MIN_CLIPBOARD_VISIBLE_ROWS } from "../../features/appearance/settings";
-import type { IslandSettings } from "../../features/appearance/types";
 import { useTranslation } from "../../i18n";
 import { ModuleSwitchSection } from "./ModuleSwitchSection";
 import { ShortcutsLinkSection } from "./ShortcutsSettingsPage";
 
-export function ClipboardSettingsPage({
-  settings,
-  onSettingsChange,
-  onOpenShortcuts,
-}: {
-  settings: IslandSettings;
-  onSettingsChange: (settings: IslandSettings) => void;
-  onOpenShortcuts: () => void;
-}) {
+/** Settings → Clipboard. Its page on the island has the panel's size like every page (C27). */
+export function ClipboardSettingsPage({ onOpenShortcuts }: { onOpenShortcuts: () => void }) {
   const t = useTranslation();
   const [clipboardSettings, updateClipboardSettings] = useClipboardSettings();
 
@@ -32,15 +22,7 @@ export function ClipboardSettingsPage({
         <ClipboardSettingsSection
           clipboardSettings={clipboardSettings}
           onClipboardSettingsChange={updateClipboardSettings}
-        >
-          <SettingsNumberRow
-            title={t.settings.clipboard.visibleRows}
-            value={settings.clipboardVisibleRows}
-            min={MIN_CLIPBOARD_VISIBLE_ROWS}
-            max={MAX_CLIPBOARD_VISIBLE_ROWS}
-            onChange={(clipboardVisibleRows) => onSettingsChange({ ...settings, clipboardVisibleRows })}
-          />
-        </ClipboardSettingsSection>
+        />
       )}
       {clipboardSettings.enabled && <ClipboardSnippetSettings />}
       {clipboardSettings.enabled && <ClipboardTransferSettings />}

@@ -3,7 +3,7 @@ import { DEFAULT_LYRICS_SETTINGS } from "../media/lyrics/lyricsSettings.ts";
 import { DEFAULT_CALENDAR_SETTINGS } from "../calendar/calendarSettings.ts";
 import { DEFAULT_PAGE_DIGIT_MODIFIERS, DEFAULT_PAGE_NEXT_SHORTCUT, DEFAULT_PAGE_PREVIOUS_SHORTCUT } from "./pageShortcuts.ts";
 import {
-  DEFAULT_AGENT_VISIBLE_ROWS, DEFAULT_AUTO_TUCK_RETRACT_DELAY_MS, DEFAULT_CLIPBOARD_VISIBLE_ROWS, DEFAULT_HOVER_COLLAPSE_DELAY_MS,
+  DEFAULT_AUTO_TUCK_RETRACT_DELAY_MS, DEFAULT_HOVER_COLLAPSE_DELAY_MS,
   DEFAULT_HOVER_EXPAND_DELAY_MS, DEFAULT_HOVER_SWITCH_DELAY_MS, DEFAULT_ISLAND_CORNER_RADIUS, DEFAULT_MAX_PANEL_HEIGHT, DEFAULT_PANEL_WIDTH, DEFAULT_SHELF_ITEMS, DEFAULT_TASK_TEXT_COLOR,
 } from "./settingsLimits.ts";
 import type { IslandSettings } from "./types";
@@ -26,8 +26,6 @@ export const DEFAULT_SETTINGS: IslandSettings = {
   islandCornerShape: "squircle",
   maxPanelHeight: DEFAULT_MAX_PANEL_HEIGHT,
   panelWidth: DEFAULT_PANEL_WIDTH,
-  clipboardVisibleRows: DEFAULT_CLIPBOARD_VISIBLE_ROWS,
-  agentVisibleRows: DEFAULT_AGENT_VISIBLE_ROWS,
   agentHostDisplay: "icon",
   agentSessionView: "list",
   agentSessionSort: "status",
@@ -111,8 +109,6 @@ export const DEFAULT_SETTINGS: IslandSettings = {
 export const LEGACY_FALLBACKS = {
   topFilletRadius: 8,
   islandCornerRadius: 30,
-  clipboardVisibleRows: 3,
-  agentVisibleRows: 3,
   hoverExpandDelayMs: 300,
   hoverCollapseDelayMs: 400,
 } as const satisfies Partial<IslandSettings>;

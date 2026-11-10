@@ -1,5 +1,4 @@
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
-import { SettingsNumberRow } from "../../components/settings/SettingsNumberRow";
 import { SettingsRow } from "../../components/settings/SettingsRow";
 import { SettingsSelect } from "../../components/settings/SettingsSelect";
 import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
@@ -9,8 +8,6 @@ import {
   AGENT_CARD_EFFECTS,
   AGENT_SESSION_HOURS,
   AGENT_SESSION_VIEWS,
-  MAX_AGENT_VISIBLE_ROWS,
-  MIN_AGENT_VISIBLE_ROWS,
 } from "../appearance/settings";
 import type { AgentArchiveMotion, AgentCardEffects, AgentHostDisplay, AgentSessionView, IslandSettings } from "../appearance/types";
 import { useTranslation } from "../../i18n";
@@ -33,14 +30,6 @@ export function AgentSessionListSettings({
   return (
     <>
       <SettingsGroup title={text.sessionPageSection}>
-        <SettingsNumberRow
-          title={text.sessionVisibleRows}
-          description={text.sessionPageHint}
-          value={settings.agentVisibleRows}
-          min={MIN_AGENT_VISIBLE_ROWS}
-          max={MAX_AGENT_VISIBLE_ROWS}
-          onChange={(agentVisibleRows) => update({ agentVisibleRows })}
-        />
         <SettingsRow
           title={text.sessionHours}
           description={text.sessionHoursHint}

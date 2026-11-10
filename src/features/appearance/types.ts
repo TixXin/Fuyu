@@ -58,14 +58,10 @@ export type IslandSettings = CalendarSettingValues & {
   /** Bottom corner radius (px) of the expanded island; the collapsed, detached and inner panel radii follow it. */
   islandCornerRadius: number;
   islandCornerShape: IslandCornerShape;
-  /** Tallest expanded panel (px) before the todo list, clipboard and messages scroll. */
+  /** Height (px) of every expanded page (C27); longer content scrolls inside. */
   maxPanelHeight: number;
   /** Width (px, before the scale) of the expanded panel's usual pages (C25). */
   panelWidth: number;
-  /** Clipboard history rows the expanded clipboard page shows before it scrolls. */
-  clipboardVisibleRows: number;
-  /** Agent sessions the expanded Agent page shows before it scrolls. */
-  agentVisibleRows: number;
   agentHostDisplay: AgentHostDisplay;
   agentSessionView: AgentSessionView;
   agentSessionSort: AgentSessionSort;

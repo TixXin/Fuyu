@@ -16,8 +16,6 @@ export const EXPANDED_ISLAND_WIDTH = 560;
 export const POPUP_ISLAND_WIDTH = 400;
 /** The island window's width (STAGE_WINDOW_WIDTH in src-tauri/src/island/geometry.rs). */
 const STAGE_WINDOW_WIDTH = 820;
-/** The island's side padding around a page, both sides together. */
-const EXPANDED_SIDE_PADDING = 40;
 
 /**
  * The widest the expanded island may be at `scale` and still fit the island window (2px spare
@@ -27,25 +25,7 @@ export function maxExpandedIslandWidth(scale: number) {
   return Math.max(EXPANDED_ISLAND_WIDTH, Math.floor((STAGE_WINDOW_WIDTH - 4) / scale));
 }
 
-/** The calendar page: the day list beside the month view (CalendarMonth.css), as far as it fits. */
-export const CALENDAR_ISLAND_WIDTH = 680;
-
-/**
- * The expanded island's width (before its scale) for `page`, or null for the usual width: the
- * calendar page is wider, as is a plugin page asking for more (`pluginWidth`, E15).
- */
-export function pageIslandWidth(page: string, pluginWidth: number | null | undefined, scale: number, panelWidth = EXPANDED_ISLAND_WIDTH) {
-  if (page === "calendar") return Math.min(Math.max(CALENDAR_ISLAND_WIDTH, panelWidth), maxExpandedIslandWidth(scale));
-  return pluginPageIslandWidth(pluginWidth, scale, panelWidth);
-}
-
-/** The island's width for a plugin page asking for `pageWidth` (E15), or null for the usual width. */
-export function pluginPageIslandWidth(pageWidth: number | null | undefined, scale: number, panelWidth = EXPANDED_ISLAND_WIDTH) {
-  if (typeof pageWidth !== "number") return null;
-  return Math.min(Math.max(pageWidth + EXPANDED_SIDE_PADDING, panelWidth), maxExpandedIslandWidth(scale));
-}
-
-/** The usual pages' width (C25): the panel width setting, as far as it fits at `scale`. */
+/** Every page's width (C25, C27): the panel width setting, as far as it fits at `scale`. */
 export function panelIslandWidth(panelWidth: number, scale: number) {
   return Math.min(panelWidth, maxExpandedIslandWidth(scale));
 }
@@ -53,20 +33,6 @@ export function panelIslandWidth(panelWidth: number, scale: number) {
 export const POPUP_HEADER_SAVING = 58;
 /** An Agent alert popup also drops the list's 4px top padding (AgentSessionsPanel.css). */
 export const AGENT_POPUP_LIST_SAVING = 4;
-export const TODO_ARCHIVE_EXPANDED_ISLAND_HEIGHT = 352;
-/**
- * The calendar page: the month view's six weeks at 44px a row, below its title and weekdays
- * (CalendarMonth.css), within the island's padding and header. A lower panel height limit
- * squeezes the rows, which then drop their lunar line.
- */
-export const CALENDAR_EXPANDED_ISLAND_HEIGHT = 404;
-export const MUSIC_EXPANDED_ISLAND_HEIGHT = 320;
-// Expanded island around an empty clipboard list: island padding, header and gap (86),
-// then the panel's padding, title, tabs, search and their gaps (158).
-const CLIPBOARD_CHROME_HEIGHT = 244;
-// One history row (62) plus the gap below it.
-const CLIPBOARD_ROW_PITCH = 70;
-const CLIPBOARD_ROW_GAP = 8;
 export const TODO_ROW_HEIGHT = 46;
 export const TODO_GROW_START_ROWS = 2;
 /** Collapsed width for the summary `text`, plus `extraWidth` px for plugin slots, up to the widest. */
@@ -169,41 +135,3 @@ export function getAgentAlertExpandedHeight(rowHeight: number) {
   return AGENT_PAGE_CHROME_HEIGHT + rowHeight;
 }
 
-/** Expanded height that fits exactly `rows` clipboard history rows. */
-export function getClipboardExpandedHeight(rows: number) {
-  return CLIPBOARD_CHROME_HEIGHT + rows * CLIPBOARD_ROW_PITCH - CLIPBOARD_ROW_GAP;
-}
-
-// Plugin pages by template, before the panel height limit.
-const PLUGIN_PAGE_HEIGHT = { list: 400, detail: 380, form: 400, status: 260, webview: 376 } as const;
-
-// The island's padding and header around a page with no card of its own (a frameless webview).
-const PLUGIN_FRAMELESS_CHROME_HEIGHT = 86;
-// A plugin list: island padding and header (86), the page's padding and title (50),
-// then one row (36) plus the gap below it per item, group title or search box.
-const PLUGIN_LIST_CHROME_HEIGHT = 136;
-const PLUGIN_LIST_ROW_PITCH = 40;
-const PLUGIN_LIST_MIN_ROWS = 2;
-// Longer lists scroll, as the clipboard page does.
-const PLUGIN_LIST_MAX_ROWS = 8;
-
-/**
- * Height of the expanded island on a plugin page; a list grows with its rows,
- * and a webview page is as tall as its manifest asks (below the same chrome).
- */
-export function getPluginPageExpandedHeight(
-  template: keyof typeof PLUGIN_PAGE_HEIGHT | null | undefined,
-  maxPanelHeight: number,
-  listRows?: number | null,
-  webviewHeight?: number | null,
-  frameless = false,
-) {
-  if (template === "webview" && typeof webviewHeight === "number") {
-    return Math.min((frameless ? PLUGIN_FRAMELESS_CHROME_HEIGHT : PLUGIN_LIST_CHROME_HEIGHT) + webviewHeight, maxPanelHeight);
-  }
-  if (template === "list" && typeof listRows === "number") {
-    const rows = clamp(listRows, PLUGIN_LIST_MIN_ROWS, PLUGIN_LIST_MAX_ROWS);
-    return Math.min(PLUGIN_LIST_CHROME_HEIGHT + rows * PLUGIN_LIST_ROW_PITCH, maxPanelHeight);
-  }
-  return Math.min(PLUGIN_PAGE_HEIGHT[template ?? "list"], maxPanelHeight);
-}

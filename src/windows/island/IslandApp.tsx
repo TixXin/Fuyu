@@ -28,7 +28,6 @@ import { useIslandAgents } from "./useIslandAgents";
 import { useQuotaAlert } from "../../features/agent-status/useQuotaAlert";
 import { AgentArrangeButton } from "../../features/agent-status/AgentArrangeButton";
 import { useAgentIndicator } from "./useAgentIndicator";
-import { usageLineCount } from "../../features/agent-status/usage";
 import { useIslandNavigation } from "./useIslandNavigation";
 import { useIslandTodos } from "./useIslandTodos";
 import { useIslandTucking } from "./useIslandTucking";
@@ -40,7 +39,7 @@ import { useMessageView } from "./useMessageView";
 import { useIslandBanner } from "./useIslandBanner";
 import { useIslandMessagePanel } from "./useIslandMessagePanel";
 import { useIslandPopup } from "./useIslandPopup";
-import { pageIslandWidth, panelIslandWidth } from "./layout";
+import { panelIslandWidth } from "./layout";
 import { useIslandResize } from "./useIslandResize";
 import { MessageBanner } from "../../features/messages/banner/MessageBanner";
 import { PluginPageButtons } from "./PluginPageButtons";
@@ -91,7 +90,7 @@ export function IslandApp() {
     onOpenAgents: openAgentsPage,
     markLight: settings.agentLightStyle === "mark",
   });
-  const { todos, activeTodoId, todoPageMode, notebookProps } = useIslandTodos({ settings, mode, page, agentStatus, collapseIsland });
+  const { todos, activeTodoId, notebookProps } = useIslandTodos({ settings, mode, page, agentStatus, collapseIsland });
 
   const translationPeek = useQuickTranslation(settings.translationEnabled);
   const { lyrics, lyricLine: currentLyric } = useIslandLyrics(settings, media.mediaState, {
@@ -159,30 +158,18 @@ export function IslandApp() {
   const { popup, expandedIslandWidth } = useIslandPopup(
     mode,
     messagePanel.arrivals !== null || alertPopup,
-    pageIslandWidth(page, pluginPages.entry?.width, settings.expandedScale, settings.panelWidth),
+    // One width for every page (C27); a popup is narrower.
+    null,
     panelIslandWidth(settings.panelWidth, settings.expandedScale),
   );
   // Alt + dragging the panel's edges (C25); a height drag shows the panel at the height being set.
   const resizingHeight = useIslandResize(settings, setSettings);
   const pageIslandHeight = getExpandedIslandHeight({
     page,
-    todoPageMode,
-    todos,
-    hasMediaCommandError: Boolean(media.mediaCommandError),
-    messageSource,
-    isReadingMail: qqMail.wantsTallPanel,
     maxPanelHeight: settings.maxPanelHeight,
-    clipboardVisibleRows: settings.clipboardVisibleRows,
-    agentVisibleRows: settings.agentVisibleRows,
-    agentSessionView: settings.agentSessionView,
-    agentUsageLines: settings.agentShowUsage ? usageLineCount(agentUsages) : 0,
     agentAlertRowHeight: agentCardHeight,
     messageArrivalsHeight: messagePanel.arrivals ? messagePanel.height : undefined,
     popup,
-    pluginTemplate: pluginPages.entry?.template,
-    pluginListRows: pluginPages.rows,
-    pluginWebviewHeight: pluginPages.entry?.height,
-    pluginFrameless: pluginPages.entry?.frame === "none",
   });
   const expandedIslandHeight = resizingHeight && !popup ? settings.maxPanelHeight : pageIslandHeight;
   const stageStyle = useMemo(

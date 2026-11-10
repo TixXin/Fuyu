@@ -17,8 +17,6 @@ export type SettingsAgentText = {
   lightStyleHint: string;
   lightStyleOptions: { mark: string; dot: string };
   sessionPageSection: string;
-  sessionVisibleRows: string;
-  sessionPageHint: string;
   hostDisplay: string;
   hostDisplayOptions: { both: string; icon: string; name: string; off: string };
   sessionView: string;
@@ -188,8 +186,6 @@ export const zhCN: SettingsAgentText = {
   lightStyleHint: "收起条上 Agent 状态灯的样子。悬岛：应用图标的白胶囊，和条上的环一样高；绿点呼吸，运行时短横换成三个依次亮起的点，等你确认时变黄闪烁，失败或可能中断时变红，跑完打勾。圆点：原来的小圆点。",
   lightStyleOptions: { mark: "悬岛", dot: "圆点" },
   sessionPageSection: "会话列表",
-  sessionVisibleRows: "展开后显示条数",
-  sessionPageHint: "岛屿展开后的 Agent 页一次显示的会话数，更多的会话可以滚动查看。",
   hostDisplay: "会话来源",
   hostDisplayOptions: { both: "图标和名称", icon: "只显示图标", name: "只显示名称", off: "不显示" },
   sessionView: "显示方式",
@@ -349,8 +345,6 @@ export const en: SettingsAgentText = {
   lightStyleHint: "How the Agent status light looks on the collapsed bar. Island mark: the app icon's white pill, as tall as the rings on the bar; its light breathes, three dots take the dash's place while running, it turns yellow and blinks while waiting for you, red when failed or possibly stopped, and shows a tick when done. Dot: the original small dot.",
   lightStyleOptions: { mark: "Island mark", dot: "Dot" },
   sessionPageSection: "Session list",
-  sessionVisibleRows: "Entries shown when open",
-  sessionPageHint: "How many sessions the island's Agent page shows at once; scroll for the rest.",
   hostDisplay: "Session source",
   hostDisplayOptions: { both: "Icon and name", icon: "Icon only", name: "Name only", off: "Hidden" },
   sessionView: "Layout",

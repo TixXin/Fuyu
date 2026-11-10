@@ -129,8 +129,8 @@ test("expand trigger, hover delays and max panel height default for older settin
   assert.equal(normalizeSettings({ autoTuckRetractDelayMs: -1 }).autoTuckRetractDelayMs, 0);
   assert.equal(normalizeSettings({ hoverCollapseDelayMs: 9_000 }).hoverCollapseDelayMs, 2_000);
   assert.equal(normalizeSettings({ hoverCollapseDelayMs: 0 }).hoverCollapseDelayMs, 0);
-  assert.equal(normalizeSettings({ maxPanelHeight: 100 }).maxPanelHeight, 306);
-  assert.equal(normalizeSettings({ maxPanelHeight: 999 }).maxPanelHeight, 546);
+  assert.equal(normalizeSettings({ maxPanelHeight: 100 }).maxPanelHeight, 360);
+  assert.equal(normalizeSettings({ maxPanelHeight: 999 }).maxPanelHeight, 640);
   assert.equal(normalizeSettings({ maxPanelHeight: 400.6 }).maxPanelHeight, 401);
   assert.equal(normalizeSettings({}).panelWidth, 560, "settings from before C25 keep the 560px panel");
   assert.equal(normalizeSettings({ panelWidth: 100 }).panelWidth, 480);
@@ -188,7 +188,6 @@ test("first launch uses the maintainer's layout, while saved settings missing a 
   assert.equal(DEFAULT_SETTINGS.autoTuck, true);
   assert.equal(DEFAULT_SETTINGS.minimizeAction, "tuck");
   assert.equal(DEFAULT_SETTINGS.translationTarget, "island");
-  assert.equal(DEFAULT_SETTINGS.clipboardVisibleRows, 6);
 
   const older = normalizeSettings({ opacity: 95 });
   assert.equal(older.expandTrigger, "click");
@@ -196,8 +195,6 @@ test("first launch uses the maintainer's layout, while saved settings missing a 
   assert.equal(older.minimizeAction, "tray");
   assert.equal(older.translationTarget, "window");
   assert.equal(older.shelfShowCount, false);
-  assert.equal(older.clipboardVisibleRows, 3);
-  assert.equal(older.agentVisibleRows, 3);
   assert.equal(older.hoverCollapseDelayMs, 400);
 });
 
@@ -287,12 +284,14 @@ test("taking the appearance from other settings keeps todo and tuck behavior", (
   assert.deepEqual(withLayoutFrom(DEFAULT_SETTINGS, DEFAULT_SETTINGS), DEFAULT_SETTINGS);
 });
 
-test("clipboard visible rows default to three for older settings and stay in range", () => {
-  assert.equal(normalizeSettings({}).clipboardVisibleRows, 3);
-  assert.equal(normalizeSettings({ clipboardVisibleRows: 1 }).clipboardVisibleRows, 2);
-  assert.equal(normalizeSettings({ clipboardVisibleRows: 9 }).clipboardVisibleRows, 6);
-  assert.equal(normalizeSettings({ clipboardVisibleRows: 4.4 }).clipboardVisibleRows, 4);
-  assert.equal(normalizeSettings({ clipboardVisibleRows: "5" }).clipboardVisibleRows, 3);
+test("every page has the panel's height; only the cards that open by themselves fit their rows (C27)", async () => {
+  const { getExpandedIslandHeight } = await import("../../src/windows/island/expandedHeight.ts");
+  for (const page of ["todo", "music", "clipboard", "agents", "calendar", "shelf", "qq", "plugin:a.b/c"]) {
+    assert.equal(getExpandedIslandHeight({ page, maxPanelHeight: 420 }), 420, page);
+  }
+  assert.ok(getExpandedIslandHeight({ page: "qq", maxPanelHeight: 420, messageArrivalsHeight: 100, popup: true }) < 200);
+  assert.ok(getExpandedIslandHeight({ page: "agents", maxPanelHeight: 420, agentAlertRowHeight: 60, popup: true }) < 200);
+  assert.equal("clipboardVisibleRows" in normalizeSettings({ clipboardVisibleRows: 4 }), false);
 });
 
 test("file shelf settings default for older settings and only take known values", () => {

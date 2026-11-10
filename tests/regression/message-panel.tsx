@@ -96,8 +96,7 @@ function Fixture() {
   });
   const { popup, expandedIslandWidth } = useIslandPopup(mode, panel.arrivals !== null);
   const height = getExpandedIslandHeight({
-    page, todoPageMode: "today", todos: [], hasMediaCommandError: false, messageSource: "qq", isReadingMail: false,
-    maxPanelHeight: 490, clipboardVisibleRows: 3, agentVisibleRows: 3, agentUsageLines: 0,
+    page, maxPanelHeight: 490,
     messageArrivalsHeight: panel.arrivals ? panel.height : undefined,
     popup,
   });

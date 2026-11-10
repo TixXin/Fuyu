@@ -4,7 +4,6 @@ import {
   MAX_COLLAPSED_ISLAND_WIDTH,
   MIN_COLLAPSED_ISLAND_WIDTH,
   alignCollapsedIslandWidth,
-  getClipboardExpandedHeight,
   getCollapsedIslandWidth,
   getTodoScrollStartRows,
   getTodoVisualRows,
@@ -40,10 +39,8 @@ test("plugin slots widen the collapsed island by the width they need, up to the 
 test("the todo list scrolls after as many rows as fit under the max panel height", () => {
   // 490px is the default and keeps the six rows the todo page always had.
   assert.equal(getTodoScrollStartRows(490), 6);
-  assert.equal(getTodoScrollStartRows(306), 2);
   assert.equal(getTodoScrollStartRows(351), 2);
   assert.equal(getTodoScrollStartRows(352), 3);
-  assert.equal(getTodoScrollStartRows(546), 7);
 });
 
 test("the collapsed width is nudged so the centred island starts on a whole device pixel", () => {
@@ -128,11 +125,6 @@ test("Alt+number follows the header from left to right and skips modules that ar
   assert.equal(pageCycleDirection({ ...down, key: "Tab", code: "Tab", altKey: false, ctrlKey: true }, "Ctrl+Tab", "Ctrl+Shift+Tab"), 1);
   assert.equal(pageCycleDirection({ ...down, key: "Tab", code: "Tab", altKey: false, ctrlKey: true, shiftKey: true }, "Ctrl+Tab", "Ctrl+Shift+Tab"), -1);
   assert.equal(pageCycleDirection({ ...down, key: "Tab", code: "Tab" }, "Ctrl+Tab", "Ctrl+Shift+Tab"), null);
-});
-
-test("the clipboard page fits whole rows and six rows stay within the native height limit", () => {
-  assert.equal(getClipboardExpandedHeight(3) - getClipboardExpandedHeight(2), 70);
-  assert.equal(getClipboardExpandedHeight(6), 656);
 });
 
 test("the translation page comes last in the page shortcuts, and only when it is an island page", async () => {

@@ -3,8 +3,8 @@ import { clamp } from "../../utils/number.ts";
 import { getColorSetting } from "../../utils/color.ts";
 import { DEFAULT_SETTINGS, LEGACY_FALLBACKS } from "./settingsDefaults.ts";
 import {
-  MAX_CLIPBOARD_VISIBLE_ROWS, MAX_ISLAND_CORNER_RADIUS, MAX_MAX_PANEL_HEIGHT, MAX_TOP_FILLET_RADIUS,
-  MIN_CLIPBOARD_VISIBLE_ROWS, MIN_ISLAND_CORNER_RADIUS, MIN_MAX_PANEL_HEIGHT, MIN_TOP_FILLET_RADIUS,
+  MAX_ISLAND_CORNER_RADIUS, MAX_MAX_PANEL_HEIGHT, MAX_TOP_FILLET_RADIUS,
+  MIN_ISLAND_CORNER_RADIUS, MIN_MAX_PANEL_HEIGHT, MIN_TOP_FILLET_RADIUS,
   MAX_PANEL_WIDTH, MIN_PANEL_WIDTH,
 } from "./settingsLimits.ts";
 import type { IslandSettings, LegacyIslandSettings } from "./types";
@@ -64,9 +64,6 @@ export function normalizeLayoutSettings(settings: LegacyIslandSettings | null | 
     panelWidth: typeof settings?.panelWidth === "number" && Number.isFinite(settings.panelWidth)
       ? clamp(Math.round(settings.panelWidth), MIN_PANEL_WIDTH, MAX_PANEL_WIDTH)
       : DEFAULT_SETTINGS.panelWidth,
-    clipboardVisibleRows: typeof settings?.clipboardVisibleRows === "number" && Number.isFinite(settings.clipboardVisibleRows)
-      ? clamp(Math.round(settings.clipboardVisibleRows), MIN_CLIPBOARD_VISIBLE_ROWS, MAX_CLIPBOARD_VISIBLE_ROWS)
-      : LEGACY_FALLBACKS.clipboardVisibleRows,
     taskTextColor,
     pulseColor: getColorSetting(
       settings?.pulseColor,
