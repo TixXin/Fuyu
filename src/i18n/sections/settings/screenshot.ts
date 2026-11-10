@@ -14,7 +14,7 @@ export type SettingsScreenshotText = {
 export const zhCN: SettingsScreenshotText = {
   whileCapturingTitle: "截图时",
   guides: "显示辅助线",
-  guidesHint: "一横一竖两条线跟着鼠标贯穿整个屏幕，方便对齐边缘；选好区域后隐藏。",
+  guidesHint: "虚线贯穿整个屏幕，方便对齐边缘：一横一竖跟着鼠标（选好区域后隐藏），选区的四条边也各延长一条。",
   shortcutsTitle: "快捷键",
   region: "截图",
   regionHint: "屏幕定格后，单击选中鼠标下的窗口或控件（滚轮切换到外层或内层），或拖动选择区域；按 Enter 复制到剪贴板，Esc 取消；放大镜下按 C 复制颜色。",
@@ -26,7 +26,7 @@ export const zhCN: SettingsScreenshotText = {
 export const en: SettingsScreenshotText = {
   whileCapturingTitle: "While capturing",
   guides: "Show guide lines",
-  guidesHint: "A horizontal and a vertical line follow the pointer across the screen, for lining up edges; hidden once a region is chosen.",
+  guidesHint: "Dashed lines across the screen for lining up edges: one each way through the pointer (hidden once a region is chosen), and one along each edge of the selection.",
   shortcutsTitle: "Shortcuts",
   region: "Screenshot",
   regionHint: "The screen freezes; click the window or control under the pointer (scroll to step out or in) or drag a region, then Enter copies to the clipboard and Esc cancels. Under the magnifier, C copies the colour.",

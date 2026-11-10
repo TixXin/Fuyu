@@ -58,12 +58,12 @@ body:has(.screenshot-overlay) {
   pointer-events: none;
 }
 
-/* Guide lines through the pointer, across the whole monitor. */
+/* Dashed guide lines across the whole monitor: through the pointer, and along the selection's edges. */
 .screenshot-overlay__guide {
+  --guide-color: var(--color-accent, #74d6ff);
   position: absolute;
   z-index: 1;
-  background: var(--color-accent, #74d6ff);
-  opacity: 0.7;
+  opacity: 0.75;
   pointer-events: none;
 }
 
@@ -71,12 +71,14 @@ body:has(.screenshot-overlay) {
   left: 0;
   right: 0;
   height: 1px;
+  background: repeating-linear-gradient(to right, var(--guide-color) 0 6px, transparent 6px 10px);
 }
 
 .screenshot-overlay__guide--v {
   top: 0;
   bottom: 0;
   width: 1px;
+  background: repeating-linear-gradient(to bottom, var(--guide-color) 0 6px, transparent 6px 10px);
 }
 
 .screenshot-overlay__handle {

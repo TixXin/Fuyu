@@ -175,6 +175,15 @@ export function ScreenshotOverlay() {
           <div className="screenshot-overlay__guide screenshot-overlay__guide--v" style={{ left: cssPointer.x }} />
         </>
       )}
+      {guides && area && (
+        // The selection's four edges carried across the monitor, on its 1px border.
+        <>
+          <div className="screenshot-overlay__guide screenshot-overlay__guide--h" style={{ top: area.y }} />
+          <div className="screenshot-overlay__guide screenshot-overlay__guide--h" style={{ top: area.y + area.height - 1 }} />
+          <div className="screenshot-overlay__guide screenshot-overlay__guide--v" style={{ left: area.x }} />
+          <div className="screenshot-overlay__guide screenshot-overlay__guide--v" style={{ left: area.x + area.width - 1 }} />
+        </>
+      )}
       {ready && pixel && cssPointer && color && dragging !== "move" && (
         <Magnifier picture={canvasRef.current} pixel={pixel} pointer={cssPointer} view={view} color={color} lines={lines} />
       )}

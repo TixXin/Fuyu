@@ -1583,12 +1583,12 @@
       "zh-CN": {
         "group": "截图时",
         "title": "显示辅助线",
-        "description": "一横一竖两条线跟着鼠标贯穿整个屏幕，方便对齐边缘；选好区域后隐藏。"
+        "description": "虚线贯穿整个屏幕，方便对齐边缘：一横一竖跟着鼠标（选好区域后隐藏），选区的四条边也各延长一条。"
       },
       "en": {
         "group": "While capturing",
         "title": "Show guide lines",
-        "description": "A horizontal and a vertical line follow the pointer across the screen, for lining up edges; hidden once a region is chosen."
+        "description": "Dashed lines across the screen for lining up edges: one each way through the pointer (hidden once a region is chosen), and one along each edge of the selection."
       }
     },
     {

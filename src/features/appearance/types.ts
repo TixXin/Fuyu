@@ -174,7 +174,7 @@ export type IslandSettings = CalendarSettingValues & {
    * the module is being built (docs/architecture/screenshot-plan.md).
    */
   screenshotEnabled: boolean;
-  /** A horizontal and a vertical line through the pointer across the screenshot, for lining up edges. */
+  /** Dashed lines across the screenshot for lining up edges: through the pointer and along the selection's edges. */
   screenshotGuides: boolean;
   /** Dragging files onto a collapsed or tucked island opens the shelf as a drop zone. */
   shelfExpandOnDrop: boolean;
