@@ -1,59 +1,43 @@
 import { Search, X } from "lucide-react";
 import { useTranslation } from "../../i18n";
-import "./ClipboardFilters.css";
+import { normalizeClipboardShortcut } from "./shortcut";
 
+/** The search box, always shown, with the shortcut that opens the clipboard at its end. */
 export function ClipboardFilters({
-  view,
   query,
-  onViewChange,
+  shortcut,
   onQueryChange,
 }: {
-  view: "all" | "favorites";
   query: string;
-  onViewChange: (view: "all" | "favorites") => void;
+  /** Shown while the shortcut is on; null hides it. */
+  shortcut: string | null;
   onQueryChange: (query: string) => void;
 }) {
   const t = useTranslation();
 
   return (
-    <>
-      <div className="clipboard-segments" aria-label={t.clipboard.segments}>
-        <button
-          className={view === "all" ? "clipboard-segment--active" : ""}
-          type="button"
-          aria-pressed={view === "all"}
-          onClick={() => onViewChange("all")}
-        >
-          {t.clipboard.all}
+    <label className="island-list-search">
+      <Search size={15} strokeWidth={2.1} aria-hidden="true" />
+      <input
+        type="search"
+        value={query}
+        placeholder={t.clipboard.searchPlaceholder}
+        aria-label={t.clipboard.searchLabel}
+        onChange={(event) => onQueryChange(event.currentTarget.value)}
+        onKeyDown={(event) => {
+          if (event.key === "Escape" && query) {
+            event.stopPropagation();
+            onQueryChange("");
+          }
+        }}
+      />
+      {query ? (
+        <button type="button" aria-label={t.clipboard.clearSearch} onClick={() => onQueryChange("")}>
+          <X size={14} strokeWidth={2.4} />
         </button>
-        <button
-          className={view === "favorites" ? "clipboard-segment--active" : ""}
-          type="button"
-          aria-pressed={view === "favorites"}
-          onClick={() => onViewChange("favorites")}
-        >
-          {t.clipboard.favorites}
-        </button>
-      </div>
-
-      <label className="clipboard-search">
-        <Search size={15} strokeWidth={2.2} />
-        <input
-          value={query}
-          placeholder={t.clipboard.searchPlaceholder}
-          aria-label={t.clipboard.searchLabel}
-          onChange={(event) => onQueryChange(event.currentTarget.value)}
-        />
-        {query && (
-          <button
-            type="button"
-            aria-label={t.clipboard.clearSearch}
-            onClick={() => onQueryChange("")}
-          >
-            <X size={14} strokeWidth={2.4} />
-          </button>
-        )}
-      </label>
-    </>
+      ) : shortcut ? (
+        <kbd title={t.clipboard.expandShortcut}>{normalizeClipboardShortcut(shortcut)}</kbd>
+      ) : null}
+    </label>
   );
 }

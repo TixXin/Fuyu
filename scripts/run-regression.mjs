@@ -44,6 +44,7 @@ export const PAGES = [
   "ssh-tunnel.html",
   "tucked-hover.html",
   "update-reminder.html?test=1",
+  "list-pages.html?test=1",
   "todo-island.html",
 ];
 

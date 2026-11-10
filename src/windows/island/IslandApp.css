@@ -97,7 +97,6 @@
   border: 0;
 }
 
-.island--appearance-liquidGlass .clipboard-panel,
 .island--appearance-liquidGlass .editor-panel {
   background:
     radial-gradient(
@@ -116,7 +115,6 @@
   -webkit-backdrop-filter: blur(var(--glass-panel-blur)) saturate(1.12);
 }
 
-.island--appearance-liquidGlass.island--glass-css-fallback .clipboard-panel,
 .island--appearance-liquidGlass.island--glass-css-fallback .editor-panel {
   background:
     radial-gradient(circle at 82% 12%, rgba(var(--glass-page-accent), 0.13), transparent 34%),

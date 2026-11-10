@@ -1,28 +1,34 @@
 import { useEffect, useState } from "react";
-import { Check, Copy, Inbox, Search, Trash2, X } from "lucide-react";
+import { Copy, Search, Trash2, X } from "lucide-react";
+import { RowMenu } from "../../components/list/RowMenu";
 import { useTranslation } from "../../i18n";
-import "./FileShelfHeader.css";
 
 // A first click on Clear arms it; it disarms again if not confirmed in time.
 const CLEAR_CONFIRM_MS = 3_000;
 
-/** Title, count, search and Clear, plus the bar acting on a multi-entry selection. */
+export type ShelfView = "all" | "pinned";
+
+/** Filters, count and "⋯" (clear), the search box, and the bar acting on a multi-entry selection. */
 export function FileShelfHeader({
+  view,
   count,
   noticeKey,
   query,
   selectedCount,
+  onViewChange,
   onQueryChange,
   onClear,
   onCopySelected,
   onRemoveSelected,
   onClearSelection,
 }: {
+  view: ShelfView;
   count: number;
   /** Changes each time a drop added only files already on the shelf; null hides the notice. */
   noticeKey: number | null;
   query: string;
   selectedCount: number;
+  onViewChange: (view: ShelfView) => void;
   onQueryChange: (query: string) => void;
   onClear: () => void;
   onCopySelected: () => void;
@@ -30,6 +36,7 @@ export function FileShelfHeader({
   onClearSelection: () => void;
 }) {
   const t = useTranslation();
+  const text = t.fileShelf;
   const [confirmingClear, setConfirmingClear] = useState(false);
 
   useEffect(() => {
@@ -38,69 +45,76 @@ export function FileShelfHeader({
     return () => window.clearTimeout(timer);
   }, [confirmingClear]);
 
+  const views: [ShelfView, string][] = [["all", text.all], ["pinned", text.pinned]];
   return (
     <>
-      <header className="shelf-panel__header">
-        <div className="shelf-panel__title">
-          <Inbox size={16} strokeWidth={2.2} />
-          <span>{t.fileShelf.title}</span>
-          <strong>{count}</strong>
-          {noticeKey !== null && (
-            <em key={noticeKey} className="shelf-panel__notice" role="status">
-              {t.fileShelf.alreadyOnShelf}
-            </em>
-          )}
+      <header className="island-list-bar">
+        <div className="island-list-chips" role="group" aria-label={text.title}>
+          {views.map(([key, label]) => (
+            <button key={key} className="island-list-chip" type="button" aria-pressed={view === key} onClick={() => onViewChange(key)}>
+              {label}
+            </button>
+          ))}
         </div>
-        {(count > 0 || query) && (
-          <label className="shelf-search">
-            <Search size={13} strokeWidth={2.3} aria-hidden="true" />
-            <input
-              type="search"
-              value={query}
-              placeholder={t.fileShelf.searchPlaceholder}
-              aria-label={t.fileShelf.searchLabel}
-              onChange={(event) => onQueryChange(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === "Escape" && query) {
-                  event.stopPropagation();
-                  onQueryChange("");
-                }
-              }}
-            />
-            {query && (
-              <button type="button" aria-label={t.fileShelf.clearSearch} onClick={() => onQueryChange("")}>
-                <X size={12} strokeWidth={2.4} />
-              </button>
-            )}
-          </label>
+        {noticeKey !== null && (
+          <em key={noticeKey} className="island-list-notice" role="status">{text.alreadyOnShelf}</em>
         )}
-        <button
-          className={`shelf-clear-button${confirmingClear ? " shelf-clear-button--confirming" : ""}`}
-          type="button"
-          disabled={count === 0}
-          aria-label={confirmingClear ? t.fileShelf.confirmClear : t.fileShelf.clear}
-          onClick={() => {
-            if (confirmingClear) {
-              setConfirmingClear(false);
-              onClear();
-            } else {
-              setConfirmingClear(true);
+        <span className="island-list-count">{count}</span>
+        <RowMenu
+          label={t.common.more}
+          items={[
+            {
+              key: "clear",
+              label: confirmingClear ? text.confirmClear : text.clear,
+              icon: <Trash2 size={14} strokeWidth={2} />,
+              danger: true,
+              disabled: count === 0,
+              keepOpen: !confirmingClear,
+              onSelect: () => {
+                if (confirmingClear) {
+                  setConfirmingClear(false);
+                  onClear();
+                } else {
+                  setConfirmingClear(true);
+                }
+              },
+            },
+          ]}
+        />
+      </header>
+      <label className="island-list-search">
+        <Search size={15} strokeWidth={2.1} aria-hidden="true" />
+        <input
+          type="search"
+          value={query}
+          placeholder={text.searchPlaceholder}
+          aria-label={text.searchLabel}
+          onChange={(event) => onQueryChange(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Escape" && query) {
+              event.stopPropagation();
+              onQueryChange("");
             }
           }}
-        >
-          {confirmingClear ? <Check size={14} strokeWidth={2.7} /> : <Trash2 size={14} strokeWidth={2.2} />}
-        </button>
-      </header>
+        />
+        {query && (
+          <button type="button" aria-label={text.clearSearch} onClick={() => onQueryChange("")}>
+            <X size={14} strokeWidth={2.4} />
+          </button>
+        )}
+      </label>
       {selectedCount > 1 && (
-        <div className="shelf-selection-bar" role="toolbar" aria-label={t.fileShelf.selectedCount(selectedCount)}>
-          <span>{t.fileShelf.selectedCount(selectedCount)}</span>
-          <button type="button" aria-label={t.fileShelf.copySelected} onClick={onCopySelected}>
-            <Copy size={13} strokeWidth={2.2} />
+        <div className="shelf-selection-bar" role="toolbar" aria-label={text.selectedCount(selectedCount)}>
+          <span>{text.selectedCount(selectedCount)}</span>
+          <button type="button" aria-label={text.copySelected} onClick={onCopySelected}>
+            <Copy size={13} strokeWidth={2.2} aria-hidden="true" />
+            {text.copy}
           </button>
-          <button type="button" aria-label={t.fileShelf.removeSelected} onClick={onRemoveSelected}>
-            <Trash2 size={13} strokeWidth={2.2} />
+          <button type="button" aria-label={text.removeSelected} onClick={onRemoveSelected}>
+            <Trash2 size={13} strokeWidth={2.2} aria-hidden="true" />
+            {text.remove}
           </button>
-          <button type="button" aria-label={t.fileShelf.clearSelection} onClick={onClearSelection}>
+          <button type="button" aria-label={text.clearSelection} onClick={onClearSelection}>
             <X size={13} strokeWidth={2.4} />
           </button>
         </div>

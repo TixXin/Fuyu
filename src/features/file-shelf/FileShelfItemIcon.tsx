@@ -49,8 +49,8 @@ export function FileShelfItemIcon({
   }, [available, id, kind]);
 
   return (
-    <span className={`shelf-item__icon${thumbnail ? " shelf-item__icon--thumbnail" : ""}`} aria-hidden="true">
-      {thumbnail ? <img src={thumbnail} alt="" draggable={false} /> : <Icon size={20} strokeWidth={1.9} />}
+    <span className={`island-list-row__lead shelf-item__icon shelf-item__icon--${kind}`} aria-hidden="true">
+      {thumbnail ? <img src={thumbnail} alt="" draggable={false} /> : <Icon size={16} strokeWidth={1.9} />}
     </span>
   );
 }

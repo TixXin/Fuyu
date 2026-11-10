@@ -48,6 +48,15 @@ export type ClipboardText = {
   editNoteLabel: string;
   addNoteLabel: string;
   noteFallback: string;
+  images: string;
+  files: string;
+  /** An image entry's first line. */
+  imageLabel: (width: number, height: number) => string;
+  /** More files than the one named. */
+  moreFiles: (count: number) => string;
+  emptyHint: string;
+  noteAction: string;
+  confirmDelete: string;
 };
 
 export const zhCN: ClipboardText = {
@@ -60,7 +69,7 @@ export const zhCN: ClipboardText = {
   segments: "剪贴板栏目",
   all: "全部",
   favorites: "收藏",
-  searchPlaceholder: "搜索内容或备注",
+  searchPlaceholder: "搜索内容、备注或 #标签",
   searchLabel: "搜索剪贴板内容或备注",
   clearSearch: "清除搜索",
   emptyAll: "复制文本或图片后会出现在这里",
@@ -97,6 +106,13 @@ export const zhCN: ClipboardText = {
   editNoteLabel: "添加剪贴记录备注",
   addNoteLabel: "添加剪贴记录备注",
   noteFallback: "备注",
+  images: "图片",
+  files: "文件",
+  imageLabel: (width, height) => `图片 ${width}×${height}`,
+  moreFiles: (count) => `+${count} 个文件`,
+  emptyHint: "复制的文字、图片和文件都会记在这里，点一条就复制回去。",
+  noteAction: "写备注 / 标签",
+  confirmDelete: "再点一次删除",
 };
 
 export const en: ClipboardText = {
@@ -109,7 +125,7 @@ export const en: ClipboardText = {
   segments: "Clipboard tabs",
   all: "All",
   favorites: "Starred",
-  searchPlaceholder: "Search content or note",
+  searchPlaceholder: "Search content, notes or #tags",
   searchLabel: "Search clipboard content or note",
   clearSearch: "Clear search",
   emptyAll: "Copied text and images show up here",
@@ -146,4 +162,11 @@ export const en: ClipboardText = {
   editNoteLabel: "Add note to clipboard entry",
   addNoteLabel: "Add note to clipboard entry",
   noteFallback: "Note",
+  images: "Images",
+  files: "Files",
+  imageLabel: (width, height) => `Image ${width}×${height}`,
+  moreFiles: (count) => `+${count} files`,
+  emptyHint: "Text, images and files you copy are kept here; click one to copy it back.",
+  noteAction: "Note / tags",
+  confirmDelete: "Click again to delete",
 };

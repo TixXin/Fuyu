@@ -22,13 +22,20 @@ export type FileShelfText = {
   copySelected: string;
   removeSelected: string;
   clearSelection: string;
+  all: string;
+  pinned: string;
+  emptyHint: string;
+  open: string;
+  /** The selection bar's short "remove from shelf". */
+  remove: string;
+  copy: string;
 };
 
 export const zhCN: FileShelfText = {
   title: "文件中转",
   clear: "清空文件中转",
   confirmClear: "确认清空（不会删除文件）",
-  empty: "把文件拖到岛上，就会暂存在这里",
+  empty: "把文件拖到岛上暂存",
   dropHint: "松开鼠标，加入文件中转",
   folder: "文件夹",
   missing: "已失效",
@@ -48,6 +55,12 @@ export const zhCN: FileShelfText = {
   copySelected: "复制所选文件",
   removeSelected: "从文件中转移除所选（不会删除文件）",
   clearSelection: "取消选择",
+  all: "全部",
+  pinned: "置顶",
+  emptyHint: "换到别的窗口后再拖出去、复制或打开。只存路径，不复制文件。",
+  open: "打开",
+  remove: "移除",
+  copy: "复制",
 };
 
 export const en: FileShelfText = {
@@ -74,4 +87,10 @@ export const en: FileShelfText = {
   copySelected: "Copy selected files",
   removeSelected: "Remove selected from shelf (files are kept)",
   clearSelection: "Clear selection",
+  all: "All",
+  pinned: "Pinned",
+  emptyHint: "Switch windows, then drag them out, copy or open them. Only the paths are kept; files are not copied.",
+  open: "Open",
+  remove: "Remove",
+  copy: "Copy",
 };

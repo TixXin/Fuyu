@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent } from "react";
-import { Check, Copy, FolderOpen, Pin, PinOff, X } from "lucide-react";
+import { Check, Copy, ExternalLink, FolderOpen, Pin, PinOff, X } from "lucide-react";
+import { RowMenu } from "../../components/list/RowMenu";
 import { useTranslation } from "../../i18n";
 import type { FileShelfItem } from "./api";
 import { formatFileSize } from "./fileShelf";
 import { FileShelfItemIcon } from "./FileShelfItemIcon";
 import type { SelectMode } from "./selection";
-import "./FileShelfItemRow.css";
 
 // Movement (px) that turns a press on a row into a drag, so double-clicks still open.
 const DRAG_THRESHOLD_PX = 4;
@@ -16,13 +16,26 @@ function selectMode(event: ReactMouseEvent): SelectMode {
   return event.ctrlKey || event.metaKey ? "toggle" : "single";
 }
 
+/** The folder an entry sits in, from its path and name. */
+function folderOf(item: FileShelfItem) {
+  const folder = item.path.slice(0, Math.max(0, item.path.length - item.name.length)).replace(/[\\/]+$/, "");
+  return folder || item.path;
+}
+
+/**
+ * One entry on the shelf page (IslandList.css): click selects (Ctrl / Shift for more), a double
+ * click opens, a drag takes it out; pin and copy show on hover, the rest is under "⋯".
+ */
 export function FileShelfItemRow({
   item,
   isRecent,
   isSelected,
+  menuOpen,
+  onMenuOpenChange,
   onSelect,
   onDragOut,
   onOpen,
+  onOpenFile,
   onCopy,
   onReveal,
   onTogglePin,
@@ -32,16 +45,21 @@ export function FileShelfItemRow({
   /** Just added (or moved to the top) by a drop. */
   isRecent: boolean;
   isSelected: boolean;
+  menuOpen: boolean;
+  onMenuOpenChange: (open: boolean) => void;
   onSelect: (id: string, mode: SelectMode) => void;
   /** Drags this entry out, with the rest of the selection when it is selected. */
   onDragOut: (id: string) => void;
   onOpen: (id: string) => void;
+  /** "Open" in the menu: always opens, whatever a double click does. */
+  onOpenFile: (id: string) => void;
   onCopy: (id: string) => Promise<boolean>;
   onReveal: (id: string) => void;
   onTogglePin: (id: string) => void;
   onRemove: (id: string) => void;
 }) {
   const t = useTranslation();
+  const text = t.fileShelf;
   const [copied, setCopied] = useState(false);
   const pressRef = useRef<{ x: number; y: number } | null>(null);
   const isAvailable = !item.missing && !item.unreachable;
@@ -66,22 +84,24 @@ export function FileShelfItemRow({
     pressRef.current = null;
     onDragOut(item.id);
   };
+  const copy = () => void onCopy(item.id).then((ok) => setCopied(ok));
 
-  const status = item.missing ? t.fileShelf.missing : item.unreachable ? t.fileShelf.unreachable : null;
+  const status = item.missing ? text.missing : item.unreachable ? text.unreachable : null;
   const className = [
+    "island-list-row",
     "shelf-item",
     item.missing ? "shelf-item--missing" : "",
-    item.unreachable ? "shelf-item--unreachable" : "",
-    item.pinned ? "shelf-item--pinned" : "",
-    isSelected ? "shelf-item--selected" : "",
+    isSelected ? "island-list-row--selected" : "",
+    menuOpen ? "island-list-row--menu" : "",
     isRecent ? "shelf-item--recent" : "",
   ].filter(Boolean).join(" ");
 
   return (
     <article className={className} role="listitem" aria-selected={isSelected} data-shelf-id={item.id}>
       <button
-        className="shelf-item__main"
+        className="island-list-row__hit"
         type="button"
+        aria-label={item.name}
         onPointerDown={press}
         onPointerMove={move}
         onPointerUp={() => {
@@ -94,54 +114,48 @@ export function FileShelfItemRow({
         onKeyDown={(event) => {
           if (event.key === "Enter" && isAvailable) onOpen(item.id);
         }}
-      >
-        <FileShelfItemIcon id={item.id} name={item.name} isDir={item.isDir} available={isAvailable} />
-        <span className="shelf-item__body">
-          <span className="shelf-item__name">{item.name}</span>
-          <span className="shelf-item__meta">
-            {status ?? (item.isDir ? t.fileShelf.folder : formatFileSize(item.size))}
+      />
+      <FileShelfItemIcon id={item.id} name={item.name} isDir={item.isDir} available={isAvailable} />
+      <span className="island-list-row__text">
+        <span className="island-list-row__main shelf-item__name">{item.name}</span>
+        {copied ? (
+          <span className="island-list-row__meta island-list-row__meta--accent" role="status"><span>{text.copied}</span></span>
+        ) : (
+          <span className="island-list-row__meta">
+            <span>{folderOf(item)}</span>
+            <span className={status ? "island-list-row__warn" : undefined}>{`· ${status ?? (item.isDir ? text.folder : formatFileSize(item.size))}`}</span>
           </span>
-        </span>
-      </button>
-      <div className="shelf-item__actions">
-        {isAvailable && (
-          <>
-            <button
-              className={`shelf-copy-button${copied ? " shelf-copy-button--copied" : ""}`}
-              type="button"
-              aria-label={copied ? t.fileShelf.copied : t.fileShelf.copyItem}
-              onClick={() => {
-                void onCopy(item.id).then((ok) => setCopied(ok));
-              }}
-            >
-              {copied ? <Check size={14} strokeWidth={2.6} /> : <Copy size={14} strokeWidth={2.2} />}
-            </button>
-            <button
-              type="button"
-              aria-label={t.fileShelf.reveal}
-              onClick={() => onReveal(item.id)}
-            >
-              <FolderOpen size={14} strokeWidth={2.2} />
-            </button>
-          </>
         )}
+      </span>
+      {item.pinned && (
+        <span className="island-list-row__mark" aria-hidden="true"><Pin size={14} strokeWidth={2.2} /></span>
+      )}
+      <span className="island-list-row__actions">
         <button
-          className={`shelf-pin-button${item.pinned ? " shelf-pin-button--active" : ""}`}
+          className={`island-list-icon-button${item.pinned ? " island-list-icon-button--on" : ""}`}
           type="button"
-          aria-label={item.pinned ? t.fileShelf.unpin : t.fileShelf.pin}
+          aria-label={item.pinned ? text.unpin : text.pin}
+          title={item.pinned ? text.unpin : text.pin}
           aria-pressed={item.pinned}
           onClick={() => onTogglePin(item.id)}
         >
           {item.pinned ? <PinOff size={14} strokeWidth={2.2} /> : <Pin size={14} strokeWidth={2.2} />}
         </button>
-        <button
-          type="button"
-          aria-label={t.fileShelf.removeItem}
-          onClick={() => onRemove(item.id)}
-        >
-          <X size={14} strokeWidth={2.4} />
-        </button>
-      </div>
+        {isAvailable && (
+          <button className="island-list-icon-button" type="button" aria-label={copied ? text.copied : text.copyItem} title={text.copyItem} onClick={copy}>
+            {copied ? <Check size={14} strokeWidth={2.6} /> : <Copy size={14} strokeWidth={2.2} />}
+          </button>
+        )}
+        <RowMenu
+          label={t.common.more}
+          onOpenChange={onMenuOpenChange}
+          items={[
+            { key: "open", label: text.open, icon: <ExternalLink size={14} strokeWidth={2} />, disabled: !isAvailable, onSelect: () => onOpenFile(item.id) },
+            { key: "reveal", label: text.reveal, icon: <FolderOpen size={14} strokeWidth={2} />, disabled: !isAvailable, onSelect: () => onReveal(item.id) },
+            { key: "remove", label: text.removeItem, icon: <X size={14} strokeWidth={2.2} />, danger: true, onSelect: () => onRemove(item.id) },
+          ]}
+        />
+      </span>
     </article>
   );
 }

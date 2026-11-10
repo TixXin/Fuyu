@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="zh-CN">
+  <meta charset="UTF-8" />
+  <title>剪贴板与文件中转页检查</title>
+  <style>
+    html body { margin: 0; background: linear-gradient(160deg, #0d1a33, #2b5fd6); font: 14px "Segoe UI", "Microsoft YaHei", sans-serif; color: #f1f0f6; }
+    main { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; padding: 20px; }
+    .frame { width: 560px; height: 420px; padding: 14px 18px 16px; box-sizing: border-box; border-radius: 26px; display: flex; flex-direction: column; }
+    .frame--dark { background: #000; --island-ink-rgb: 241, 240, 246; --island-background-color: #000; }
+    .frame--light { background: #f3f3f6; --island-ink-rgb: 28, 28, 34; --island-background-color: #f3f3f6; }
+    #results { max-width: 1160px; margin: 0 auto 24px; padding: 0 24px; font-size: 13px; line-height: 1.8; white-space: pre-wrap; }
+  </style>
+  <main>
+    <div class="frame frame--dark" id="clip-dark"></div>
+    <div class="frame frame--light" id="clip-light"></div>
+    <div class="frame frame--dark" id="shelf-dark"></div>
+    <div class="frame frame--light" id="shelf-light"></div>
+    <div class="frame frame--dark" id="shelf-empty"></div>
+  </main>
+  <pre id="results" role="status">准备检查…</pre>
+  <script type="module" src="./list-pages.tsx"></script>
+</html>
