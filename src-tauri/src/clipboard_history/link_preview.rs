@@ -22,15 +22,11 @@ pub struct LinkPreview {
 
 pub(super) async fn fetch(url: &str) -> Result<LinkPreview, String> {
     let url = Url::parse(url).map_err(|error| format!("Not a link: {error}"))?;
-    if !matches!(url.scheme(), "http" | "https") {
-        return Err("Only http and https links are read.".into());
+    // Never this computer or the local network (C42).
+    if !super::link_guard::allowed_url(&url) {
+        return Err("Only links to public websites are read.".into());
     }
-    let client = reqwest::Client::builder()
-        .timeout(TIMEOUT)
-        .redirect(reqwest::redirect::Policy::limited(5))
-        .user_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) Fuyu")
-        .build()
-        .map_err(|error| error.to_string())?;
+    let client = super::link_guard::client(TIMEOUT, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Fuyu")?;
     let (page, final_url) = read(&client, url.clone(), MAX_PAGE_BYTES).await?;
     let html = String::from_utf8_lossy(&page.0);
     let title = page_title(&html);
@@ -49,6 +45,10 @@ pub(super) async fn fetch(url: &str) -> Result<LinkPreview, String> {
 
 /// The body (cut at `limit`), its content type, and the address after redirects.
 async fn read(client: &reqwest::Client, url: Url, limit: usize) -> Result<((Vec<u8>, Option<String>), Url), String> {
+    // The icon's address comes from the page, so it is checked like the link.
+    if !super::link_guard::allowed_url(&url) {
+        return Err("Only public websites are read.".into());
+    }
     let mut response = client.get(url).send().await.map_err(|error| error.to_string())?;
     if !response.status().is_success() {
         return Err(format!("HTTP {}", response.status().as_u16()));

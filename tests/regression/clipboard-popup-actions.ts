@@ -67,9 +67,9 @@ export async function checkSecondRound(check: Check, calls: string[]) {
 
   await key("dark", { key: "End" });
   await key("dark", { key: "Delete" });
-  check(rows("dark").length === 9 && $("dark", ".clipboard-popup__hint--toast")?.textContent?.includes("已删除"), "Del 删除：这条先藏起来，底栏能撤销");
+  check(rows("dark").length === 9 && $("dark", ".clipboard-popup__hint--toast")?.textContent?.includes("已删除") && calls.some((call) => call.startsWith("ipc:delete_clipboard_history_item:")), "Del 删除：马上删掉（退出应用也算数），底栏能撤销");
   await key("dark", { key: "z", ctrlKey: true });
-  check(rows("dark").length === 10 && !calls.some((call) => call.startsWith("ipc:delete_clipboard_history_item")), "Ctrl+Z 撤销，记录没被删");
+  check(rows("dark").length === 10 && calls.some((call) => call.startsWith("ipc:restore_clipboard_history_item:")), "Ctrl+Z 撤销：把这条放回去");
 
   await act(async () => { rows("dark")[0].querySelector<HTMLElement>(".clipboard-popup__row")!.dispatchEvent(new MouseEvent("click", { bubbles: true, ctrlKey: true })); });
   await act(async () => { rows("dark")[6].querySelector<HTMLElement>(".clipboard-popup__row")!.dispatchEvent(new MouseEvent("click", { bubbles: true, ctrlKey: true })); });

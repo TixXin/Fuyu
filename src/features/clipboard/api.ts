@@ -244,6 +244,11 @@ export function deleteClipboardItem(id: string) {
   return invoke<ClipboardHistorySnapshot>("delete_clipboard_history_item", { id });
 }
 
+/** Puts the entry deleted last back, within a few seconds of deleting it (C42). */
+export function restoreClipboardItem(id: string) {
+  return invoke<ClipboardHistorySnapshot>("restore_clipboard_history_item", { id });
+}
+
 export function clearClipboardHistory() {
   return invoke<ClipboardHistorySnapshot>("clear_clipboard_history");
 }

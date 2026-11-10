@@ -40,7 +40,17 @@ pub fn add_clipboard_history_text(text: String) -> Result<ClipboardHistorySnapsh
 /// Stops recording copies for `minutes`, or until resumed when none.
 #[tauri::command]
 pub fn pause_clipboard_capture(minutes: Option<u32>) -> Result<ClipboardHistorySnapshot, String> {
-    capture_pause::pause(minutes.map(|minutes| minutes.clamp(1, 24 * 60)), current_unix_millis());
+    let minutes = minutes.map(|minutes| minutes.clamp(1, 24 * 60));
+    capture_pause::pause(minutes, current_unix_millis());
+    // A timed pause tells the windows when it ends, so the pause bar goes at once (C42).
+    if let Some(minutes) = minutes {
+        std::thread::spawn(move || {
+            std::thread::sleep(std::time::Duration::from_secs(u64::from(minutes) * 60 + 1));
+            if !capture_pause::paused() {
+                let _ = changed();
+            }
+        });
+    }
     changed()
 }
 

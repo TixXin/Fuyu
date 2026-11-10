@@ -5,6 +5,7 @@ mod capture_pause;
 mod clipboard_io;
 mod command_text;
 mod hotkey;
+mod link_guard;
 mod link_preview;
 mod listener;
 mod plugin_view;
@@ -385,6 +386,8 @@ struct ClipboardHistoryState {
     items: Vec<ClipboardHistoryItem>,
     snippets: Vec<snippets::ClipboardSnippet>,
     last_capture_hash: Option<String>,
+    /// The entry deleted last and where it was, while it can be undone (C42).
+    recently_deleted: Option<(ClipboardHistoryItem, usize)>,
 }
 
 struct ClipboardHistoryService {
@@ -515,6 +518,12 @@ pub fn delete_clipboard_history_item(id: String) -> Result<ClipboardHistorySnaps
     service()?.delete_item(&id)
 }
 
+/// Undoes the last delete, while it can be (C42).
+#[tauri::command]
+pub fn restore_clipboard_history_item(id: String) -> Result<ClipboardHistorySnapshot, String> {
+    service()?.restore_item(&id)
+}
+
 #[tauri::command]
 pub fn clear_clipboard_history() -> Result<ClipboardHistorySnapshot, String> {
     service()?.clear()
@@ -536,6 +545,12 @@ pub fn init(app: &AppHandle) -> Result<(), String> {
         .map_err(|error| format!("Failed to create clipboard history directory: {error}"))?;
 
     let persisted = load_history(&history_path);
+    // Images of an entry deleted just before the app last quit (C42). Never with an empty list: a
+    // history that failed to load must not take the images with it.
+    if !persisted.items.is_empty() {
+        let (dir, items) = (image_dir.clone(), persisted.items.clone());
+        std::thread::spawn(move || service::remove_unreferenced_images(&dir, &items));
+    }
     let service = ClipboardHistoryService {
         app: app.clone(),
         history_path,
@@ -545,6 +560,7 @@ pub fn init(app: &AppHandle) -> Result<(), String> {
             items: persisted.items,
             snippets: persisted.snippets,
             last_capture_hash: None,
+            recently_deleted: None,
         }),
     };
 
@@ -590,6 +606,7 @@ macro_rules! tauri_commands {
             crate::clipboard_history::toggle_clipboard_history_favorite,
             crate::clipboard_history::set_clipboard_history_item_note,
             crate::clipboard_history::delete_clipboard_history_item,
+            crate::clipboard_history::restore_clipboard_history_item,
             crate::clipboard_history::clear_clipboard_history,
             crate::clipboard_history::get_clipboard_image_preview,
             crate::clipboard_history::actions::paste_clipboard_text,

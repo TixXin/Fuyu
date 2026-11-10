@@ -31,6 +31,43 @@ pub(super) fn is_expired(copied_at: i64, cutoff: i64) -> bool {
     copied_at < cutoff
 }
 
+/// How long a deleted entry's image is kept for undo; the clipboard window offers undo for 6 s.
+const UNDO_WINDOW: Duration = Duration::from_secs(10);
+
+/// How long a "paste as .txt file" file is kept (C42).
+const TEXT_FILE_KEEP: Duration = Duration::from_secs(60 * 60);
+
+/// Deletes the files in `dir` last changed more than `age` ago.
+pub(super) fn remove_files_older_than(dir: &Path, age: Duration) {
+    let Ok(entries) = fs::read_dir(dir) else { return };
+    for entry in entries.flatten() {
+        let old = entry.metadata().ok().filter(|meta| meta.is_file()).and_then(|meta| meta.modified().ok()).and_then(|time| time.elapsed().ok()).is_some_and(|elapsed| elapsed > age);
+        if old {
+            let _ = fs::remove_file(entry.path());
+        }
+    }
+}
+
+/// The image files in `dir` no entry refers to: left by an entry deleted just before the app quit,
+/// before its undo time ran out (C42).
+pub(super) fn remove_unreferenced_images(dir: &Path, items: &[ClipboardHistoryItem]) {
+    // By file name: the app data folder may have moved since the paths were saved (D17).
+    let name = |path: &str| Path::new(path).file_name().map(|name| name.to_string_lossy().to_lowercase());
+    let kept: std::collections::HashSet<String> = items
+        .iter()
+        .filter_map(|item| item.image.as_ref())
+        .flat_map(|image| [name(&image.original_path), name(&image.thumbnail_path)])
+        .flatten()
+        .collect();
+    let Ok(entries) = fs::read_dir(dir) else { return };
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if path.extension().is_some_and(|ext| ext.eq_ignore_ascii_case("png")) && !path.file_name().is_some_and(|file| kept.contains(&file.to_string_lossy().to_lowercase())) {
+            let _ = fs::remove_file(path);
+        }
+    }
+}
+
 /// Long enough for the listener to see the path written by "copy path" and skip it.
 const PATH_CAPTURE_PAUSE: Duration = Duration::from_millis(800);
 
@@ -185,14 +222,51 @@ impl ClipboardHistoryService {
         let mut state = self.state.lock().map_err(|error| error.to_string())?;
         if let Some(index) = state.items.iter().position(|item| item.id == id) {
             let item = state.items.remove(index);
-            self.remove_item_files(&item);
+            // Gone from the saved history at once; its image stays a moment for undo (C42).
+            if let Some((earlier, _)) = state.recently_deleted.replace((item, index)) {
+                self.remove_item_files(&earlier);
+            }
             self.persist_locked(&state)?;
+            let id = id.to_string();
+            std::thread::spawn(move || {
+                std::thread::sleep(UNDO_WINDOW);
+                if let Ok(service) = super::service() {
+                    service.forget_deleted(&id);
+                }
+            });
         }
         let snapshot = Self::snapshot_locked(&state);
         drop(state);
 
         self.emit_changed();
         Ok(snapshot)
+    }
+
+    /// Puts the entry deleted last back where it was, while it can still be undone (C42).
+    pub(super) fn restore_item(&self, id: &str) -> Result<ClipboardHistorySnapshot, String> {
+        let mut state = self.state.lock().map_err(|error| error.to_string())?;
+        if state.recently_deleted.as_ref().is_some_and(|(item, _)| item.id == id) {
+            if let Some((item, index)) = state.recently_deleted.take() {
+                let index = index.min(state.items.len());
+                state.items.insert(index, item);
+                self.persist_locked(&state)?;
+            }
+        }
+        let snapshot = Self::snapshot_locked(&state);
+        drop(state);
+
+        self.emit_changed();
+        Ok(snapshot)
+    }
+
+    /// The undo time is over: the deleted entry's image goes too.
+    fn forget_deleted(&self, id: &str) {
+        let Ok(mut state) = self.state.lock() else { return };
+        if state.recently_deleted.as_ref().is_some_and(|(item, _)| item.id == id) {
+            if let Some((item, _)) = state.recently_deleted.take() {
+                self.remove_item_files(&item);
+            }
+        }
     }
 
     pub(super) fn clear(&self) -> Result<ClipboardHistorySnapshot, String> {
@@ -210,10 +284,12 @@ impl ClipboardHistoryService {
     }
 
     /// Writes a text entry to `<app data>/clipboard-text/<first words>.txt`, replacing the file
-    /// an earlier paste left there, for pasting into chat apps as a file (C38).
+    /// an earlier paste left there, for pasting into chat apps as a file (C38). Files older than
+    /// an hour go first: the program pasted into has read them by then (C42).
     fn write_text_file(&self, text: &str) -> Result<std::path::PathBuf, String> {
         let dir = self.image_dir.with_file_name("clipboard-text");
         fs::create_dir_all(&dir).map_err(|error| format!("Failed to create the text file folder: {error}"))?;
+        remove_files_older_than(&dir, TEXT_FILE_KEEP);
         let path = dir.join(format!("{}.txt", text_file_stem(text)));
         fs::write(&path, text).map_err(|error| format!("Failed to write the text file: {error}"))?;
         Ok(path)
@@ -557,4 +633,25 @@ fn excluded_apps_match_by_executable_name() {
 fn entries_expire_after_the_retention_cutoff() {
     assert!(is_expired(999, 1000));
     assert!(!is_expired(1000, 1000));
+}
+
+#[cfg(test)]
+#[test]
+fn only_images_no_entry_refers_to_are_swept() {
+    let dir = std::env::temp_dir().join(format!("fuyu-clip-sweep-{}", std::process::id()));
+    fs::create_dir_all(&dir).expect("dir");
+    for name in ["kept.png", "kept-thumb.png", "orphan.png", "notes.txt"] {
+        fs::write(dir.join(name), b"x").expect("file");
+    }
+    // Saved under another folder (the app data folder moved): matched by file name.
+    let item: ClipboardHistoryItem = serde_json::from_value(serde_json::json!({
+        "id": "a", "kind": "image", "hash": "a", "createdAt": 0, "copiedAt": 0, "preview": "p", "text": null,
+        "image": { "width": 1, "height": 1, "byteSize": 1, "originalPath": r"C:\old\Kept.png", "thumbnailPath": r"C:\old\kept-thumb.png" }
+    }))
+    .expect("item");
+    remove_unreferenced_images(&dir, &[item]);
+    let mut left: Vec<String> = fs::read_dir(&dir).expect("read").flatten().map(|entry| entry.file_name().to_string_lossy().into_owned()).collect();
+    left.sort();
+    let _ = fs::remove_dir_all(&dir);
+    assert_eq!(left, ["kept-thumb.png", "kept.png", "notes.txt"]);
 }

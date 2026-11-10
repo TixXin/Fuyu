@@ -1,41 +1,40 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ClipboardHistoryItem } from "./api";
 
-/** How long a deleted entry can be brought back. */
+/** How long the footer offers to bring a deleted entry back; the native side keeps it a little longer. */
 const UNDO_MS = 6_000;
 
 /**
- * Deleting with undo (C38): the entry is hidden at once and deleted for good only after UNDO_MS,
- * when another one is deleted, or on `flush` (the window opening again), so Ctrl+Z can bring it
- * back with its image. `commit` does the real deletion.
+ * Deleting with undo (C38, C42): `commit` deletes the entry at once, so quitting the app keeps it
+ * deleted; for UNDO_MS, or until another one is deleted or the window opens again (`flush`),
+ * Ctrl+Z calls `restore`, which puts it back where it was with its image.
  */
-export function usePendingDelete(commit: (id: string) => void) {
+export function usePendingDelete(commit: (id: string) => void, restore: (id: string) => void) {
   const [pending, setPending] = useState<ClipboardHistoryItem | null>(null);
   const pendingRef = useRef<ClipboardHistoryItem | null>(null);
   const timer = useRef<number | undefined>(undefined);
-  const commitRef = useRef(commit);
-  commitRef.current = commit;
+  const actions = useRef({ commit, restore });
+  actions.current = { commit, restore };
 
   const flush = useCallback(() => {
     window.clearTimeout(timer.current);
-    const item = pendingRef.current;
     pendingRef.current = null;
     setPending(null);
-    if (item) commitRef.current(item.id);
   }, []);
 
   const remove = useCallback((item: ClipboardHistoryItem) => {
     flush();
     pendingRef.current = item;
     setPending(item);
+    actions.current.commit(item.id);
     timer.current = window.setTimeout(flush, UNDO_MS);
   }, [flush]);
 
   const undo = useCallback(() => {
-    window.clearTimeout(timer.current);
-    pendingRef.current = null;
-    setPending(null);
-  }, []);
+    const item = pendingRef.current;
+    flush();
+    if (item) actions.current.restore(item.id);
+  }, [flush]);
 
   useEffect(() => flush, [flush]);
   return { pending, remove, undo, flush };
