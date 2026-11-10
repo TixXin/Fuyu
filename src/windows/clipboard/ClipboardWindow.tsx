@@ -5,6 +5,7 @@ import { useClipboardHistory } from "../../features/clipboard/useClipboardHistor
 import { activeTone } from "../../features/appearance/themeMode";
 import { STORAGE_KEY, loadSettings } from "../../features/appearance/storage";
 import { useSystemDark } from "../../features/appearance/useResolvedTheme";
+import { useWindowAccent } from "../../features/appearance/useWindowAccent";
 import "./ClipboardWindow.css";
 
 const NO_SHORTCUT = () => {};
@@ -28,6 +29,7 @@ export function ClipboardWindow() {
     return () => window.removeEventListener("storage", sync);
   }, []);
   const light = activeTone(themeMode, systemDark) === "light";
+  useWindowAccent();
 
   const close = useCallback(() => {
     void hideClipboardPopup().catch((error: unknown) => console.error("Failed to hide the clipboard window", error));

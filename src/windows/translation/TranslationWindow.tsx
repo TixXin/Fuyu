@@ -6,6 +6,7 @@ import { hasTranslationSecret, hideTranslationWindow, listenTranslationWindowOpe
 import { takeTranslationHandoff, type Direction } from "../../features/translation/storage";
 import { DEFAULT_PROVIDER_MODELS } from "../../features/translation/providers";
 import { useTranslationSettings } from "../../features/translation/useTranslationSettings";
+import { useWindowAccent } from "../../features/appearance/useWindowAccent";
 import { openSettingsWindow } from "../settings/api";
 import { useAutoTranslate } from "../../features/translation/useAutoTranslate";
 import { useTranslationRequest } from "../../features/translation/useTranslationRequest";
@@ -15,6 +16,7 @@ export function TranslationWindow() {
   const t = useTranslation();
   const errorText = useErrorText();
   const [settings, setSettings] = useTranslationSettings();
+  useWindowAccent();
   const [input, setInput] = useState("");
   const [clipboardPreview, setClipboardPreview] = useState("");
   const [output, setOutput] = useState("");

@@ -1,7 +1,4 @@
-/* The shelf page's accent, the mint of its page button. Rows and the toolbar are IslandList.css. */
-.shelf-page {
-  --list-accent: 110, 231, 200;
-}
+/* Rows, the toolbar and the accent (the theme's) are IslandList.css. */
 
 .shelf-page__error {
   flex: none;
@@ -33,7 +30,7 @@
 @keyframes shelfItemArrive {
   0%,
   45% {
-    background: rgba(110, 231, 200, 0.16);
+    background: color-mix(in srgb, var(--color-accent) 16%, transparent);
   }
 }
 
@@ -44,7 +41,7 @@
   gap: 6px;
   padding: 4px 4px 4px 10px;
   font-size: 12.5px;
-  background: rgba(var(--list-accent), 0.12);
+  background: color-mix(in srgb, var(--list-accent) 12%, transparent);
   border-radius: 10px;
 }
 
@@ -89,9 +86,9 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  color: rgb(var(--list-accent));
-  background: rgba(var(--list-accent), 0.1);
-  border: 1.5px dashed rgba(var(--list-accent), 0.7);
+  color: var(--list-accent);
+  background: color-mix(in srgb, var(--list-accent) 10%, transparent);
+  border: 1.5px dashed color-mix(in srgb, var(--list-accent) 70%, transparent);
   border-radius: 16px;
   font-size: 13px;
   font-weight: 600;

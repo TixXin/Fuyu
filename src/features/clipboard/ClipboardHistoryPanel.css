@@ -1,7 +1,4 @@
-/* The clipboard page's accent, the pink of its page button. The rest is IslandList.css. */
-.clipboard-page {
-  --list-accent: 244, 167, 196;
-}
+/* Rows, toolbar and the accent (the theme's) are IslandList.css. */
 
 /* The program's icon fills the lead square. */
 .clipboard-page .island-list-row__lead .clipboard-entry-icon,

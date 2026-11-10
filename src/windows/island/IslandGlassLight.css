@@ -36,7 +36,7 @@
 .island-light .island__glass-refraction {
   border-color: rgba(30, 40, 60, calc(var(--glass-border-alpha) * 0.5));
   box-shadow:
-    inset 0 0 14px rgba(var(--glass-page-accent), calc(var(--glass-inner-accent-alpha) * 1.6)),
+    inset 0 0 14px color-mix(in srgb, var(--glass-page-accent) calc(calc(var(--glass-inner-accent-alpha) * 1.6) * 100%), transparent),
     inset 0 0 2px rgba(255, 255, 255, 0.7);
 }
 
@@ -48,7 +48,7 @@
   background:
     radial-gradient(
       circle at var(--glass-pointer-x) var(--glass-pointer-y),
-      rgba(var(--glass-page-accent), calc(var(--glass-panel-accent-alpha) * 1.4)),
+      color-mix(in srgb, var(--glass-page-accent) calc(calc(var(--glass-panel-accent-alpha) * 1.4) * 100%), transparent),
       transparent 36%
     ),
     linear-gradient(145deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.25)),
@@ -62,7 +62,7 @@
 
 .island-light .island--appearance-liquidGlass.island--glass-css-fallback .editor-panel {
   background:
-    radial-gradient(circle at 82% 12%, rgba(var(--glass-page-accent), 0.16), transparent 34%),
+    radial-gradient(circle at 82% 12%, color-mix(in srgb, var(--glass-page-accent) 16%, transparent), transparent 34%),
     linear-gradient(145deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.3)),
     rgba(250, 250, 252, 0.8);
 }
