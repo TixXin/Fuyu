@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { AppearanceSettingsPage } from "./AppearanceSettingsPage";
+import { BehaviorSettingsPage } from "./BehaviorSettingsPage";
+import { ThemeSettingsPage } from "./ThemeSettingsPage";
 import { DEFAULT_SETTINGS_CATEGORY, type SettingsCategory } from "./categories";
 import { GeneralSettingsPage } from "./GeneralSettingsPage";
 import { AgentSettingsPage } from "./AgentSettingsPage";
@@ -137,7 +139,7 @@ export function SettingsWindow() {
       <LayoutEditor
         category={category}
         onCategoryChange={changeCategory}
-        titleAction={category === "appearance" && <ResetAppearanceButton onReset={resetAppearance} />}
+        titleAction={category === "theme" && <ResetAppearanceButton onReset={resetAppearance} />}
       >
         {category === "general" && (
           <GeneralSettingsPage
@@ -147,13 +149,9 @@ export function SettingsWindow() {
             onSettingsChange={setSettings}
           />
         )}
-        {category === "appearance" && (
-          <AppearanceSettingsPage
-            settings={settings}
-            presets={presets}
-            onSettingsChange={setSettings}
-          />
-        )}
+        {category === "behavior" && <BehaviorSettingsPage settings={settings} onSettingsChange={setSettings} />}
+        {category === "appearance" && <AppearanceSettingsPage settings={settings} onSettingsChange={setSettings} />}
+        {category === "theme" && <ThemeSettingsPage settings={settings} presets={presets} onSettingsChange={setSettings} />}
         {category === "shortcuts" && <ShortcutsSettingsPage settings={settings} onSettingsChange={setSettings} />}
         {category === "todos" && (
           <TodosSettingsPage

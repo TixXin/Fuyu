@@ -11,7 +11,7 @@ export type SettingsCategoriesText = {
   collapse: (group: string) => string;
   /** Words that also find a page in the sidebar search, besides its name. */
   keywords: Record<
-    | "general" | "appearance" | "shortcuts" | "todos" | "calendar" | "music" | "translation" | "clipboard"
+    | "general" | "behavior" | "appearance" | "theme" | "shortcuts" | "todos" | "calendar" | "music" | "translation" | "clipboard"
     | "shelf" | "messages" | "agents" | "agentRemote" | "agentAlerts" | "sounds" | "agentApprovals" | "agentConnect"
     | "plugins" | "market" | "about",
     string
@@ -23,7 +23,11 @@ export type SettingsCategoriesText = {
     extensions: string;
   };
   general: string;
+  /** How the island reacts: opening, tucking, games and passing popups. */
+  behavior: string;
   appearance: string;
+  /** What the island looks like: style, colours, corners and saved themes. */
+  theme: string;
   shortcuts: string;
   /** QQ, WeChat and Mail on one page. */
   messages: string;
@@ -58,8 +62,10 @@ export const zhCN: SettingsCategoriesText = {
   expand: (group) => `展开「${group}」`,
   collapse: (group) => `折叠「${group}」`,
   keywords: {
-    general: "开机 自启 语言 展开 悬停 收起 贴边 隐藏 全屏 游戏 勿扰 位置 显示器 屏幕 音量 亮度 耳机 蓝牙 电量 电源 摄像头 麦克风 备份 恢复",
-    appearance: "颜色 背景 透明 不透明度 液态玻璃 字体 像素 圆角 尺寸 大小 缩放 预设 样式 预览 亮点",
+    general: "开机 自启 语言 最小化 托盘 位置 显示器 屏幕 备份 恢复",
+    behavior: "展开 悬停 收起 贴边 隐藏 全屏 游戏 勿扰 音量 亮度 耳机 蓝牙 电量 电源 摄像头 麦克风",
+    appearance: "尺寸 大小 缩放 面板高度 显示内容 收起条 项目 排序 预览",
+    theme: "颜色 背景 透明 不透明度 液态玻璃 字体 像素 圆角 预设 样式 导入 导出 亮点",
     shortcuts: "按键 组合键 热键 翻页",
     todos: "任务 笔记 归档 保存路径 导出 Markdown",
     calendar: "日程 会议 CalDAV ICS 订阅 节假日",
@@ -85,7 +91,9 @@ export const zhCN: SettingsCategoriesText = {
     extensions: "扩展",
   },
   general: "通用",
+  behavior: "行为",
   appearance: "外观",
+  theme: "主题",
   shortcuts: "快捷键",
   messages: "消息",
   mail: "邮箱",
@@ -116,8 +124,10 @@ export const en: SettingsCategoriesText = {
   expand: (group) => `Expand ${group}`,
   collapse: (group) => `Collapse ${group}`,
   keywords: {
-    general: "startup launch language expand hover collapse tuck hide fullscreen game quiet position display monitor volume brightness headphones bluetooth battery charger camera microphone backup restore",
-    appearance: "colour color background opacity transparency glass font pixel corner size scale preset style preview pulse",
+    general: "startup launch language minimise minimize tray position display monitor backup restore",
+    behavior: "expand hover collapse tuck hide fullscreen game quiet volume brightness headphones bluetooth battery charger camera microphone",
+    appearance: "size scale panel height display collapsed bar items order preview",
+    theme: "colour color background opacity transparency glass font pixel corner preset style import export pulse",
     shortcuts: "keys hotkey keyboard page",
     todos: "tasks notes archive save folder export markdown",
     calendar: "events meeting caldav ics subscription holidays",
@@ -143,7 +153,9 @@ export const en: SettingsCategoriesText = {
     extensions: "Extensions",
   },
   general: "General",
+  behavior: "Behavior",
   appearance: "Appearance",
+  theme: "Theme",
   shortcuts: "Shortcuts",
   messages: "Messages",
   mail: "Mail",

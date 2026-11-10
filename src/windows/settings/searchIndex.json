@@ -47,212 +47,6 @@
     {
       "page": "general",
       "zh-CN": {
-        "group": "展开",
-        "title": "展开方式",
-        "options": [
-          "点击",
-          "鼠标悬停"
-        ]
-      },
-      "en": {
-        "group": "Opening",
-        "title": "Open the island by",
-        "options": [
-          "Click",
-          "Hover"
-        ]
-      }
-    },
-    {
-      "page": "general",
-      "zh-CN": {
-        "group": "展开",
-        "title": "悬停多久后展开"
-      },
-      "en": {
-        "group": "Opening",
-        "title": "Hover time before opening"
-      }
-    },
-    {
-      "page": "general",
-      "zh-CN": {
-        "group": "展开",
-        "title": "鼠标移开后收起前等待"
-      },
-      "en": {
-        "group": "Opening",
-        "title": "Wait before closing after leaving"
-      }
-    },
-    {
-      "page": "general",
-      "zh-CN": {
-        "group": "展开",
-        "title": "悬停切换页面",
-        "description": "鼠标停在展开后顶部的页面圆点上，就切到那一页，不用点击"
-      },
-      "en": {
-        "group": "Opening",
-        "title": "Switch pages on hover",
-        "description": "Resting the pointer on a page dot at the top of the open island opens that page, no click needed"
-      }
-    },
-    {
-      "page": "general",
-      "zh-CN": {
-        "group": "展开",
-        "title": "悬停多久后切换"
-      },
-      "en": {
-        "group": "Opening",
-        "title": "Hover time before switching"
-      }
-    },
-    {
-      "page": "general",
-      "zh-CN": {
-        "group": "贴边隐藏",
-        "title": "闲置时贴边隐藏",
-        "description": "一段时间没有操作后，岛屿贴到屏幕顶部，只露出一条边。"
-      },
-      "en": {
-        "group": "Tuck to edge",
-        "title": "Tuck to the edge when idle",
-        "description": "After a while without use, the island slides up to the top of the screen and shows only an edge."
-      }
-    },
-    {
-      "page": "general",
-      "zh-CN": {
-        "group": "贴边隐藏",
-        "title": "闲置多久后隐藏"
-      },
-      "en": {
-        "group": "Tuck to edge",
-        "title": "Idle time"
-      }
-    },
-    {
-      "page": "general",
-      "zh-CN": {
-        "group": "贴边隐藏",
-        "title": "鼠标移开后再次隐藏"
-      },
-      "en": {
-        "group": "Tuck to edge",
-        "title": "Tuck again when the pointer leaves"
-      }
-    },
-    {
-      "page": "general",
-      "zh-CN": {
-        "group": "贴边隐藏",
-        "title": "再次隐藏前等待"
-      },
-      "en": {
-        "group": "Tuck to edge",
-        "title": "Wait before tucking again"
-      }
-    },
-    {
-      "page": "general",
-      "zh-CN": {
-        "group": "露出",
-        "title": "鼠标移到隐藏的岛上",
-        "options": [
-          "只露出岛屿",
-          "展开面板"
-        ]
-      },
-      "en": {
-        "group": "Sliding out",
-        "title": "Pointer on a tucked island",
-        "options": [
-          "Slides it out",
-          "Opens the panel"
-        ]
-      }
-    },
-    {
-      "page": "general",
-      "zh-CN": {
-        "group": "露出",
-        "title": "有新消息时露出"
-      },
-      "en": {
-        "group": "Sliding out",
-        "title": "Slide out for new messages"
-      }
-    },
-    {
-      "page": "general",
-      "zh-CN": {
-        "group": "游戏模式",
-        "title": "游戏勿扰",
-        "description": "不悬停展开，不抢键盘焦点，不弹消息预览，已展开的面板会收起。消息照常接收。"
-      },
-      "en": {
-        "group": "Game mode",
-        "title": "Do not disturb in games",
-        "description": "No opening on hover, no taking the keyboard focus, no message pop-ups, and an open panel closes. Messages still arrive."
-      }
-    },
-    {
-      "page": "general",
-      "zh-CN": {
-        "group": "游戏模式",
-        "title": "游戏时贴边隐藏",
-        "description": "全屏程序占住岛所在的屏幕时贴到顶部，退出后自动露出。"
-      },
-      "en": {
-        "group": "Game mode",
-        "title": "Tuck away during games",
-        "description": "Tucks to the top edge while a full-screen app fills the island's screen, and slides back out afterwards."
-      }
-    },
-    {
-      "page": "general",
-      "zh-CN": {
-        "group": "音量与亮度",
-        "title": "调节时在小岛上显示",
-        "description": "用键盘、任务栏或其他程序调音量或屏幕亮度时，收起的小岛显示当前大小，1.5 秒后恢复。亮度只支持笔记本自带的屏幕。"
-      },
-      "en": {
-        "group": "Volume and brightness",
-        "title": "Show changes on the island",
-        "description": "When the volume or screen brightness changes, from the keyboard, the taskbar or another app, the collapsed island shows the new level for 1.5 seconds. Brightness works for a laptop's built-in screen only."
-      }
-    },
-    {
-      "page": "general",
-      "zh-CN": {
-        "group": "耳机与充电",
-        "title": "在小岛上提示",
-        "description": "耳机或蓝牙音频设备连接、断开时，收起的小岛显示 3 秒，蓝牙设备带电量；蓝牙设备电量降到 20% 和 10% 时各提醒一次；笔记本插上或拔掉电源时也会提示。蓝牙电量要设备自己报告给 Windows 才有。"
-      },
-      "en": {
-        "group": "Headphones and charging",
-        "title": "Show on the island",
-        "description": "When headphones or Bluetooth audio connect or disconnect, the collapsed island says so for 3 seconds, with the battery level of Bluetooth devices. A Bluetooth device warns once at 20% and again at 10%, and a laptop says when its charger is plugged in or pulled out. Bluetooth battery levels show only for devices that report them to Windows."
-      }
-    },
-    {
-      "page": "general",
-      "zh-CN": {
-        "group": "隐私提示",
-        "title": "摄像头和麦克风使用提示",
-        "description": "有程序在用摄像头或麦克风时，在小岛上显示绿色摄像头或橙色麦克风图标，点击打开系统的隐私设置。"
-      },
-      "en": {
-        "group": "Privacy",
-        "title": "Camera and microphone in use",
-        "description": "While an app uses the camera or the microphone, the island shows a green camera or an orange microphone; click it to open Windows' privacy settings."
-      }
-    },
-    {
-      "page": "general",
-      "zh-CN": {
         "group": "位置",
         "title": "显示在"
       },
@@ -306,107 +100,209 @@
       }
     },
     {
-      "page": "appearance",
+      "page": "behavior",
       "zh-CN": {
-        "group": "风格",
-        "title": "外观模式",
+        "group": "展开",
+        "title": "展开方式",
         "options": [
-          "经典",
-          "液态玻璃"
+          "点击",
+          "鼠标悬停"
         ]
       },
       "en": {
-        "group": "Style",
-        "title": "Appearance",
+        "group": "Opening",
+        "title": "Open the island by",
         "options": [
-          "Classic",
-          "Liquid glass"
-        ]
-      }
-    },
-    {
-      "page": "appearance",
-      "zh-CN": {
-        "group": "风格",
-        "title": "字体",
-        "options": [
-          "默认字体",
-          "像素字体"
-        ]
-      },
-      "en": {
-        "group": "Style",
-        "title": "Font",
-        "options": [
-          "System",
-          "Pixel"
+          "Click",
+          "Hover"
         ]
       }
     },
     {
-      "page": "appearance",
+      "page": "behavior",
       "zh-CN": {
-        "group": "风格",
-        "title": "不透明度"
+        "group": "展开",
+        "title": "悬停多久后展开"
       },
       "en": {
-        "group": "Style",
-        "title": "Opacity"
+        "group": "Opening",
+        "title": "Hover time before opening"
       }
     },
     {
-      "page": "appearance",
+      "page": "behavior",
       "zh-CN": {
-        "group": "颜色",
-        "title": "岛屿背景"
+        "group": "展开",
+        "title": "鼠标移开后收起前等待"
       },
       "en": {
-        "group": "Colors",
-        "title": "Island background"
+        "group": "Opening",
+        "title": "Wait before closing after leaving"
       }
     },
     {
-      "page": "appearance",
+      "page": "behavior",
       "zh-CN": {
-        "group": "颜色",
-        "title": "任务/待办字样"
+        "group": "展开",
+        "title": "悬停切换页面",
+        "description": "鼠标停在展开后顶部的页面圆点上，就切到那一页，不用点击"
       },
       "en": {
-        "group": "Colors",
-        "title": "Task text"
+        "group": "Opening",
+        "title": "Switch pages on hover",
+        "description": "Resting the pointer on a page dot at the top of the open island opens that page, no click needed"
       }
     },
     {
-      "page": "appearance",
+      "page": "behavior",
       "zh-CN": {
-        "group": "颜色",
-        "title": "亮点颜色"
+        "group": "展开",
+        "title": "悬停多久后切换"
       },
       "en": {
-        "group": "Colors",
-        "title": "Accent"
+        "group": "Opening",
+        "title": "Hover time before switching"
       }
     },
     {
-      "page": "appearance",
+      "page": "behavior",
       "zh-CN": {
-        "group": "颜色",
-        "title": "待办纸张"
+        "group": "贴边隐藏",
+        "title": "闲置时贴边隐藏",
+        "description": "一段时间没有操作后，岛屿贴到屏幕顶部，只露出一条边。"
       },
       "en": {
-        "group": "Colors",
-        "title": "Task paper"
+        "group": "Tuck to edge",
+        "title": "Tuck to the edge when idle",
+        "description": "After a while without use, the island slides up to the top of the screen and shows only an edge."
       }
     },
     {
-      "page": "appearance",
+      "page": "behavior",
       "zh-CN": {
-        "group": "颜色",
-        "title": "亮点亮度"
+        "group": "贴边隐藏",
+        "title": "闲置多久后隐藏"
       },
       "en": {
-        "group": "Colors",
-        "title": "Accent brightness"
+        "group": "Tuck to edge",
+        "title": "Idle time"
+      }
+    },
+    {
+      "page": "behavior",
+      "zh-CN": {
+        "group": "贴边隐藏",
+        "title": "鼠标移开后再次隐藏"
+      },
+      "en": {
+        "group": "Tuck to edge",
+        "title": "Tuck again when the pointer leaves"
+      }
+    },
+    {
+      "page": "behavior",
+      "zh-CN": {
+        "group": "贴边隐藏",
+        "title": "再次隐藏前等待"
+      },
+      "en": {
+        "group": "Tuck to edge",
+        "title": "Wait before tucking again"
+      }
+    },
+    {
+      "page": "behavior",
+      "zh-CN": {
+        "group": "露出",
+        "title": "鼠标移到隐藏的岛上",
+        "options": [
+          "只露出岛屿",
+          "展开面板"
+        ]
+      },
+      "en": {
+        "group": "Sliding out",
+        "title": "Pointer on a tucked island",
+        "options": [
+          "Slides it out",
+          "Opens the panel"
+        ]
+      }
+    },
+    {
+      "page": "behavior",
+      "zh-CN": {
+        "group": "露出",
+        "title": "有新消息时露出"
+      },
+      "en": {
+        "group": "Sliding out",
+        "title": "Slide out for new messages"
+      }
+    },
+    {
+      "page": "behavior",
+      "zh-CN": {
+        "group": "游戏模式",
+        "title": "游戏勿扰",
+        "description": "不悬停展开，不抢键盘焦点，不弹消息预览，已展开的面板会收起。消息照常接收。"
+      },
+      "en": {
+        "group": "Game mode",
+        "title": "Do not disturb in games",
+        "description": "No opening on hover, no taking the keyboard focus, no message pop-ups, and an open panel closes. Messages still arrive."
+      }
+    },
+    {
+      "page": "behavior",
+      "zh-CN": {
+        "group": "游戏模式",
+        "title": "游戏时贴边隐藏",
+        "description": "全屏程序占住岛所在的屏幕时贴到顶部，退出后自动露出。"
+      },
+      "en": {
+        "group": "Game mode",
+        "title": "Tuck away during games",
+        "description": "Tucks to the top edge while a full-screen app fills the island's screen, and slides back out afterwards."
+      }
+    },
+    {
+      "page": "behavior",
+      "zh-CN": {
+        "group": "音量与亮度",
+        "title": "调节时在小岛上显示",
+        "description": "用键盘、任务栏或其他程序调音量或屏幕亮度时，收起的小岛显示当前大小，1.5 秒后恢复。亮度只支持笔记本自带的屏幕。"
+      },
+      "en": {
+        "group": "Volume and brightness",
+        "title": "Show changes on the island",
+        "description": "When the volume or screen brightness changes, from the keyboard, the taskbar or another app, the collapsed island shows the new level for 1.5 seconds. Brightness works for a laptop's built-in screen only."
+      }
+    },
+    {
+      "page": "behavior",
+      "zh-CN": {
+        "group": "耳机与充电",
+        "title": "在小岛上提示",
+        "description": "耳机或蓝牙音频设备连接、断开时，收起的小岛显示 3 秒，蓝牙设备带电量；蓝牙设备电量降到 20% 和 10% 时各提醒一次；笔记本插上或拔掉电源时也会提示。蓝牙电量要设备自己报告给 Windows 才有。"
+      },
+      "en": {
+        "group": "Headphones and charging",
+        "title": "Show on the island",
+        "description": "When headphones or Bluetooth audio connect or disconnect, the collapsed island says so for 3 seconds, with the battery level of Bluetooth devices. A Bluetooth device warns once at 20% and again at 10%, and a laptop says when its charger is plugged in or pulled out. Bluetooth battery levels show only for devices that report them to Windows."
+      }
+    },
+    {
+      "page": "behavior",
+      "zh-CN": {
+        "group": "隐私提示",
+        "title": "摄像头和麦克风使用提示",
+        "description": "有程序在用摄像头或麦克风时，在小岛上显示绿色摄像头或橙色麦克风图标，点击打开系统的隐私设置。"
+      },
+      "en": {
+        "group": "Privacy",
+        "title": "Camera and microphone in use",
+        "description": "While an app uses the camera or the microphone, the island shows a green camera or an orange microphone; click it to open Windows' privacy settings."
       }
     },
     {
@@ -458,47 +354,6 @@
     {
       "page": "appearance",
       "zh-CN": {
-        "group": "圆角",
-        "title": "圆角样式",
-        "options": [
-          "方圆",
-          "圆角"
-        ]
-      },
-      "en": {
-        "group": "Corners",
-        "title": "Corner style",
-        "options": [
-          "Squircle",
-          "Round"
-        ]
-      }
-    },
-    {
-      "page": "appearance",
-      "zh-CN": {
-        "group": "圆角",
-        "title": "岛屿圆角"
-      },
-      "en": {
-        "group": "Corners",
-        "title": "Island corner radius"
-      }
-    },
-    {
-      "page": "appearance",
-      "zh-CN": {
-        "group": "圆角",
-        "title": "贴顶圆角"
-      },
-      "en": {
-        "group": "Corners",
-        "title": "Top-edge corner radius"
-      }
-    },
-    {
-      "page": "appearance",
-      "zh-CN": {
         "group": "显示内容",
         "title": "显示折叠岛屿文字"
       },
@@ -516,6 +371,151 @@
       "en": {
         "group": "Display",
         "title": "Show island name"
+      }
+    },
+    {
+      "page": "theme",
+      "zh-CN": {
+        "group": "风格",
+        "title": "外观模式",
+        "options": [
+          "经典",
+          "液态玻璃"
+        ]
+      },
+      "en": {
+        "group": "Style",
+        "title": "Appearance",
+        "options": [
+          "Classic",
+          "Liquid glass"
+        ]
+      }
+    },
+    {
+      "page": "theme",
+      "zh-CN": {
+        "group": "风格",
+        "title": "字体",
+        "options": [
+          "默认字体",
+          "像素字体"
+        ]
+      },
+      "en": {
+        "group": "Style",
+        "title": "Font",
+        "options": [
+          "System",
+          "Pixel"
+        ]
+      }
+    },
+    {
+      "page": "theme",
+      "zh-CN": {
+        "group": "风格",
+        "title": "不透明度"
+      },
+      "en": {
+        "group": "Style",
+        "title": "Opacity"
+      }
+    },
+    {
+      "page": "theme",
+      "zh-CN": {
+        "group": "颜色",
+        "title": "岛屿背景"
+      },
+      "en": {
+        "group": "Colors",
+        "title": "Island background"
+      }
+    },
+    {
+      "page": "theme",
+      "zh-CN": {
+        "group": "颜色",
+        "title": "任务/待办字样"
+      },
+      "en": {
+        "group": "Colors",
+        "title": "Task text"
+      }
+    },
+    {
+      "page": "theme",
+      "zh-CN": {
+        "group": "颜色",
+        "title": "亮点颜色"
+      },
+      "en": {
+        "group": "Colors",
+        "title": "Accent"
+      }
+    },
+    {
+      "page": "theme",
+      "zh-CN": {
+        "group": "颜色",
+        "title": "待办纸张"
+      },
+      "en": {
+        "group": "Colors",
+        "title": "Task paper"
+      }
+    },
+    {
+      "page": "theme",
+      "zh-CN": {
+        "group": "颜色",
+        "title": "亮点亮度"
+      },
+      "en": {
+        "group": "Colors",
+        "title": "Accent brightness"
+      }
+    },
+    {
+      "page": "theme",
+      "zh-CN": {
+        "group": "圆角",
+        "title": "圆角样式",
+        "options": [
+          "方圆",
+          "圆角"
+        ]
+      },
+      "en": {
+        "group": "Corners",
+        "title": "Corner style",
+        "options": [
+          "Squircle",
+          "Round"
+        ]
+      }
+    },
+    {
+      "page": "theme",
+      "zh-CN": {
+        "group": "圆角",
+        "title": "岛屿圆角"
+      },
+      "en": {
+        "group": "Corners",
+        "title": "Island corner radius"
+      }
+    },
+    {
+      "page": "theme",
+      "zh-CN": {
+        "group": "圆角",
+        "title": "贴顶圆角"
+      },
+      "en": {
+        "group": "Corners",
+        "title": "Top-edge corner radius"
       }
     },
     {

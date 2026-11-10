@@ -191,8 +191,11 @@ if (!automated) {
       "Turning a plugin shortcut off saves an empty shortcut for that command");
 
     const storedSettings = () => JSON.parse(localStorage.getItem("focusd-island-settings") ?? "{}") as { opacity?: number; carryOverIncompleteTodos?: boolean };
-    check(!document.querySelector(".appearance-reset"), "Reset appearance is not offered outside the appearance page");
+    check(!document.querySelector(".appearance-reset"), "Reset appearance is not offered outside the theme page");
     await openPage("appearance");
+    check(!document.querySelector(".appearance-reset") && document.querySelector(".collapsed-items") && !document.querySelector(".preset-name-input"),
+      "Appearance keeps sizes and the collapsed bar; the look and the saved themes moved to Theme (C26)");
+    await openPage("theme");
     await click(".appearance-reset");
     check(storedSettings().opacity === 60, "The first reset click only asks for confirmation");
     await click(".appearance-reset__confirm .appearance-reset:not(.appearance-reset--danger)");
@@ -202,6 +205,10 @@ if (!automated) {
     check(storedSettings().opacity === DEFAULT_SETTINGS.opacity, "Confirming resets the appearance");
     check(storedSettings().carryOverIncompleteTodos === false, "Resetting the appearance keeps todo settings");
     check(!document.querySelector(".island-preview__island--glass"), "The island preview starts classic");
+    const glassButton = [...document.querySelectorAll<HTMLButtonElement>(".editor-panel button")].find((button) => button.textContent === "液态玻璃");
+    await act(async () => { glassButton!.click(); });
+    check(document.querySelectorAll(".island-preview__island--glass").length === 2, "Choosing liquid glass shows on both preview islands");
+    await openPage("appearance");
     // Items on the collapsed bar (C12): the default layout, then moving, hiding and resetting.
     const zoneRows = (name: string) => [...(document.querySelector(`.collapsed-items__zone[aria-label="${name}"]`)?.querySelectorAll(".plugin-pages__name") ?? [])].map((row) => row.textContent);
     const itemButton = (label: string) => document.querySelector<HTMLButtonElement>(`.collapsed-items button[aria-label="${label}"]`);
@@ -215,9 +222,6 @@ if (!automated) {
     check(savedItems()?.items.find((item) => item.id === "status-light")?.hidden === true, "The status light can be hidden");
     await act(async () => { [...document.querySelectorAll<HTMLButtonElement>(".collapsed-items__reset")][0].click(); });
     check(savedItems() === null && zoneRows("左侧").join("|") === "Agent 状态灯", "Reset to default clears the saved order");
-    const glassButton = [...document.querySelectorAll<HTMLButtonElement>(".editor-panel button")].find((button) => button.textContent === "液态玻璃");
-    await act(async () => { glassButton!.click(); });
-    check(document.querySelectorAll(".island-preview__island--glass").length === 2, "Choosing liquid glass shows on both preview islands");
 
     // Settings → Music: the music wave switch is the collapsed bar's "music" item.
     await openPage("music");
@@ -230,7 +234,7 @@ if (!automated) {
     check(waveSwitch()?.checked === true && !savedItems()?.items.find((item) => item.id === "music")?.hidden, "Turning it on shows it again");
     localStorage.removeItem("focusd-island-collapsed-items");
 
-    await openPage("general");
+    await openPage("behavior");
     const tuckedHover = [...document.querySelectorAll<HTMLElement>(".settings-row")].find((row) => row.querySelector(".settings-row__title")?.textContent === "鼠标移到隐藏的岛上");
     const tuckedHoverButton = (label: string) => [...(tuckedHover?.querySelectorAll<HTMLButtonElement>("button") ?? [])].find((button) => button.textContent === label);
     check(tuckedHoverButton("只露出岛屿")?.getAttribute("aria-pressed") === "true", "Hovering a tucked island only slides it out by default");

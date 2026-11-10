@@ -9,35 +9,33 @@ import type { IslandCornerShape, IslandSettings } from "./types";
 const scale = (value: number) => `${value.toFixed(2)}x`;
 const pixels = (value: number) => `${Math.round(value)} px`;
 
-/**
- * Appearance → Size, then Corners: the island's scales, the panel's width and height (also set by
- * Alt + dragging the panel's edges, C25), and its corner shape and radii.
- */
-export function LayoutSettingsSection({
-  settings,
-  onSettingsChange,
-  onPreviewIsland,
-}: {
+type LayoutSectionProps = {
   settings: IslandSettings;
   onSettingsChange: (settings: IslandSettings) => void;
   /** Called while a slider moves with the island state it changes: expanded or not. */
   onPreviewIsland?: (expanded: boolean) => void;
-}) {
-  const t = useTranslation();
-  const text = t.settings.layout;
-  const change = (next: IslandSettings, previewExpanded?: boolean) => {
+};
+
+/** Saves the change and, when it shows on one island state, opens that state to preview it. */
+function changeWith({ onSettingsChange, onPreviewIsland }: LayoutSectionProps) {
+  return (next: IslandSettings, previewExpanded?: boolean) => {
     onSettingsChange(next);
     if (previewExpanded !== undefined) {
       onPreviewIsland?.(previewExpanded);
     }
   };
-  const shapes = [
-    { value: "squircle", label: text.cornerShapeSquircle },
-    { value: "round", label: text.cornerShapeRound },
-  ] as const;
+}
+
+/**
+ * Appearance → Size: the island's scale, collapsed and open, and the panel's width and height
+ * (also set by Alt + dragging the panel's edges, C25).
+ */
+export function SizeSettingsSection(props: LayoutSectionProps) {
+  const { settings } = props;
+  const text = useTranslation().settings.layout;
+  const change = changeWith(props);
 
   return (
-    <>
       <SettingsGroup title={text.sizeTitle}>
         <SettingsSliderRow
           title={text.collapsedScale}
@@ -85,6 +83,20 @@ export function LayoutSettingsSection({
           onChange={(maxPanelHeight) => change({ ...settings, maxPanelHeight }, true)}
         />
       </SettingsGroup>
+  );
+}
+
+/** Theme → Corners: the island's corner shape and radii. */
+export function CornerSettingsSection(props: LayoutSectionProps) {
+  const { settings } = props;
+  const text = useTranslation().settings.layout;
+  const change = changeWith(props);
+  const shapes = [
+    { value: "squircle", label: text.cornerShapeSquircle },
+    { value: "round", label: text.cornerShapeRound },
+  ] as const;
+
+  return (
       <SettingsGroup title={text.cornersTitle}>
         <SettingsRow
           title={text.islandCornerShape}
@@ -120,6 +132,5 @@ export function LayoutSettingsSection({
           onChange={(topFilletRadius) => change({ ...settings, topFilletRadius })}
         />
       </SettingsGroup>
-    </>
   );
 }
