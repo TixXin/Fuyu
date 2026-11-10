@@ -22,7 +22,7 @@
     PrivateData = @{
         PSData = @{
             Tags = @('FocuSD', 'FlyIsland', 'plugin', 'Windows')
-            LicenseUri = 'https://github.com/TixXin/fly-island/blob/main/LICENSE'
+            LicenseUri = 'https://github.com/TixXin/fly-island/blob/main/packages/powershell/LICENSE'
             ProjectUri = 'https://github.com/TixXin/fly-island/tree/main/packages/powershell/FlyIsland.Plugin'
         }
     }

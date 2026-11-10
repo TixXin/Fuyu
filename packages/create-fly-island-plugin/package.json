@@ -14,7 +14,7 @@
   "bin": {
     "create-fly-island-plugin": "bin/create-fly-island-plugin.mjs"
   },
-  "files": ["bin", "src", "sdk", "README.md"],
+  "files": ["bin", "src", "sdk", "README.md", "LICENSE"],
   "engines": {
     "node": ">=20"
   },

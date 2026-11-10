@@ -4,6 +4,37 @@ FocuSD Island includes material derived from the following projects. Their licen
 
 本项目包含源自以下项目的内容，这些内容适用各自的许可证。
 
+## fly-island (flyl1u)
+
+- Used in: the whole app; this project started from fly-island 0.2.14.
+- 用于：整个应用；本项目最初基于 fly-island 0.2.14。
+- License: MIT. The original notice, kept as the license requires / 按许可要求保留的原声明：
+
+```text
+MIT License
+
+Copyright (c) 2026 flyl1u and contributors
+Copyright (c) 2026 TixXin
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
 ## wechatauto-replica
 
 - Used in: `src-tauri/src/wechat_reminders/gate.rs` — the approach of switching on WeChat 4.x's Qt accessibility by setting one byte in `Weixin.dll`, and the instruction pattern used to find that byte (from `wake_uia.py`).

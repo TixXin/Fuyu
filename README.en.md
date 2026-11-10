@@ -67,4 +67,4 @@ Built with Tauri 2, React 19 + TypeScript and Rust. Releases and in-app updates 
 
 ## License
 
-[MIT](LICENSE). Third-party dependencies and bundled assets keep their own licenses; see the [font notices](src/assets/fonts/README.md) for bundled fonts.
+[GPL-3.0](LICENSE) (from 0.3.5; earlier versions are MIT). The plugin SDK, scaffold, PowerShell module and example plugins (`packages/`, `plugins/`) stay MIT, so plugin authors choose their own license. Third-party dependencies and bundled assets keep their own licenses; see the [font notices](src/assets/fonts/README.md) for bundled fonts.
