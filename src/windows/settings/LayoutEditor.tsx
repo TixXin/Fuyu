@@ -26,9 +26,9 @@ export function LayoutEditor({
     // No Windows title bar: the window's top edge, the card's top and the whole title row drag the
     // window (data-tauri-drag-region counts only clicks on the element itself, not its children).
     <div className="settings-layout" data-tauri-drag-region>
-      {/* The sidebar is its own card, with the window buttons on top. */}
+      <WindowControls style="windows" />
+      {/* The sidebar is its own card. */}
       <div className="settings-sidebar-card" data-tauri-drag-region>
-        <WindowControls />
         <SettingsSidebar
           category={category}
           onCategoryChange={onCategoryChange}

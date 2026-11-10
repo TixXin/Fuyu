@@ -13,7 +13,8 @@
 /* The title row above the page, in line with the page and as wide. */
 .settings-stage .settings-page__header {
   max-width: 908px;
-  padding: 4px 28px 0 24px;
+  /* Clear of the window buttons at the top right (WindowControls.css, 3 × 46px). */
+  padding: 4px 146px 0 24px;
 }
 
 /* Pages stop at a readable width in a wide window; the rest stays empty on the right. */

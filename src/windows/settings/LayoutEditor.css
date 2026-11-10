@@ -1,5 +1,6 @@
 /* The window is one base panel; the sidebar card floats on it, 8px in from its edges. */
 .settings-layout {
+  position: relative;
   height: 100%;
   display: grid;
   grid-template-columns: 212px minmax(0, 1fr);
