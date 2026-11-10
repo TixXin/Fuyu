@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { Check, X } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState, type PointerEvent } from "react";
 import { Magnifier } from "../../features/screenshot/Magnifier";
-import { cancelScreenshot, copyScreenshot } from "../../features/screenshot/api";
+import { textSize } from "../../features/screenshot/annotations";
+import { cancelScreenshot, copyScreenshot, copyScreenshotPixels } from "../../features/screenshot/api";
+import { composeSelection } from "../../features/screenshot/drawAnnotations";
 import {
   HANDLES,
   handleCursor,
@@ -12,6 +13,7 @@ import {
   pixelAt,
   pixelScale,
   toCss,
+  toPixels,
   type Point,
   type Size,
 } from "../../features/screenshot/selection";
@@ -19,8 +21,12 @@ import { layersAt, layersKey, stepLayer } from "../../features/screenshot/target
 import { loadSettings } from "../../features/appearance/storage";
 import { useTranslation } from "../../i18n";
 import { getErrorMessage } from "../../utils/error";
+import { AnnotationLayer } from "./AnnotationLayer";
+import { AnnotationTextInput } from "./AnnotationTextInput";
+import { ScreenshotToolbar } from "./ScreenshotToolbar";
+import { useAnnotations } from "./useAnnotations";
 import { pictureContext, useScreenshotFrame } from "./useScreenshotFrame";
-import { useSelection } from "./useSelection";
+import { capturePointer, GRAB, useSelection } from "./useSelection";
 import { useTargets } from "./useTargets";
 import "./ScreenshotOverlay.css";
 
@@ -43,9 +49,10 @@ function colorAt(canvas: HTMLCanvasElement | null, pixel: Point): string {
  * A screenshot overlay (`?window=screenshot`, one per monitor): the frozen picture of its monitor,
  * dimmed outside the selection, the selection's handles and size, a toolbar once it is chosen, and
  * the magnifier by the pointer. Before anything is selected, the window or control under the pointer
- * is outlined (the wheel steps out to its parents and back) and a click selects it. Enter or a
- * double click copies, Esc or a right click with nothing
- * selected leaves, C copies the colour under the pointer.
+ * is outlined (the wheel steps out to its parents and back) and a click selects it. With an
+ * annotation tool on, a drag inside the selection draws (its handles still resize it); Ctrl+Z / Ctrl+Y
+ * undo and redo. Enter or a double click copies, with the annotations; Esc or a right click with
+ * nothing selected leaves, C copies the colour under the pointer.
  */
 export function ScreenshotOverlay() {
   const t = useTranslation().screenshot;
@@ -60,11 +67,13 @@ export function ScreenshotOverlay() {
   const sessionId = session?.id;
   // Read again for each screenshot, so a change in the settings window shows on the next one.
   const guides = useMemo(() => (sessionId === undefined ? false : loadSettings().screenshotGuides), [sessionId]);
+  const annotations = useAnnotations(sessionId, scale);
 
   const pixel = pointer && bounds ? pixelAt(pointer, bounds) : null;
   const color = pixel ? colorAt(canvasRef.current, pixel) : null;
   // Until a region is chosen, the window or control under the pointer is what a click takes.
-  const choosing = !(selection && isSelection(selection));
+  const chosen = selection && isSelection(selection) ? selection : null;
+  const choosing = chosen === null;
   const layers = choosing && pixel && bounds ? layersAt(targets, pixel, bounds) : [];
   const key = layersKey(layers);
   const target = layers[Math.min(level.key === key ? level.value : 0, layers.length - 1)] ?? null;
@@ -72,28 +81,77 @@ export function ScreenshotOverlay() {
     hovered.current = target;
   });
 
+  // Annotations belong to the selection they were drawn on; a new one starts clean.
+  const { reset: resetAnnotations } = annotations;
+  useEffect(() => {
+    if (choosing) resetAnnotations();
+  }, [choosing, resetAnnotations]);
+
+  const { items } = annotations;
   const copy = useCallback(() => {
-    if (!selection) return;
-    copyScreenshot(selection).catch((error: unknown) => setNotice(getErrorMessage(error)));
-  }, [selection]);
+    if (!chosen) return;
+    const picture = canvasRef.current;
+    const composed = items.length > 0 && picture ? composeSelection(picture, chosen, items) : null;
+    (composed ? copyScreenshotPixels(composed) : copyScreenshot(chosen)).catch((error: unknown) => setNotice(getErrorMessage(error)));
+  }, [chosen, items, canvasRef]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") void cancelScreenshot();
+      // Typing a text annotation: its box has the keys.
+      if (event.target instanceof HTMLTextAreaElement || annotations.editing) return;
+      const ctrl = event.ctrlKey || event.metaKey;
+      const letter = event.key.toLowerCase();
+      if (ctrl && letter === "z") {
+        event.preventDefault();
+        if (event.shiftKey) annotations.redo();
+        else annotations.undo();
+      } else if (ctrl && letter === "y") {
+        event.preventDefault();
+        annotations.redo();
+      } else if (event.key === "Escape") void cancelScreenshot();
       else if (event.key === "Enter") copy();
-      else if ((event.key === "c" || event.key === "C") && !event.ctrlKey && color) {
+      else if (letter === "c" && !ctrl && color) {
         void navigator.clipboard.writeText(color).then(() => setNotice(t.colorCopied(color)));
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [color, copy, t]);
+  }, [annotations, color, copy, t]);
 
-  useEffect(() => setNotice(null), [session?.id]);
+  useEffect(() => setNotice(null), [sessionId]);
+
+  const at = (event: PointerEvent) => toPixels({ x: event.clientX, y: event.clientY }, scale);
+  const grabbedAt = (point: Point) => (chosen ? hitTest(chosen, point, GRAB * scale) : null);
+
+  const handlePointerDown = (event: PointerEvent<HTMLElement>) => {
+    if (annotations.tool && chosen && event.button === 0) {
+      const point = at(event);
+      const grab = grabbedAt(point);
+      if (grab === "inside") {
+        capturePointer(event);
+        annotations.begin(point);
+        return;
+      }
+      // Outside the selection a tool draws nothing; its handles still resize it.
+      if (grab === null) return;
+    }
+    onPointerDown(event);
+  };
+
+  const handlePointerMove = (event: PointerEvent<HTMLElement>) => {
+    onPointerMove(event);
+    annotations.extend(at(event));
+  };
+
+  const handlePointerUp = () => {
+    if (!annotations.finish()) onPointerUp();
+  };
 
   const onContextMenu = (event: React.MouseEvent) => {
     event.preventDefault();
-    if (selection) setSelection(null);
+    if (annotations.editing) return;
+    if (annotations.tool) annotations.clearTool();
+    else if (selection) setSelection(null);
     else void cancelScreenshot();
   };
 
@@ -103,8 +161,10 @@ export function ScreenshotOverlay() {
 
   const area = selection ? toCss(selection, scale) : null;
   const outline = !selection && !dragging && target ? toCss(target, scale) : null;
-  const grabbed = selection && pointer && !dragging ? hitTest(selection, pointer, 6 * scale) : null;
-  const cursor = dragging === "move" || grabbed === "inside" ? "move" : grabbed ? handleCursor(grabbed) : "crosshair";
+  const grabbed = selection && pointer && !dragging ? hitTest(selection, pointer, GRAB * scale) : null;
+  const drawingCursor = annotations.tool === "text" ? "text" : "crosshair";
+  const cursor = annotations.tool && grabbed === "inside" ? drawingCursor
+    : dragging === "move" || grabbed === "inside" ? "move" : grabbed ? handleCursor(grabbed) : "crosshair";
   const cssPointer = pointer ? { x: pointer.x / scale, y: pointer.y / scale } : null;
   const shown = selection ?? target;
   const lines = [pixel ? `${pixel.x}, ${pixel.y}` : "", shown ? `${shown.width} × ${shown.height}` : "", t.copyColorHint].filter(Boolean);
@@ -113,20 +173,21 @@ export function ScreenshotOverlay() {
     <div
       className="screenshot-overlay"
       style={{ cursor }}
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={onPointerUp}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
       onPointerLeave={onPointerLeave}
       onWheel={onWheel}
-      onDoubleClick={() => grabbed === "inside" && copy()}
+      onDoubleClick={() => !annotations.tool && grabbed === "inside" && copy()}
       onContextMenu={onContextMenu}
     >
       <canvas ref={canvasRef} className="screenshot-overlay__picture" />
+      {bounds && <AnnotationLayer picture={canvasRef} bounds={bounds} items={annotations.items} draft={annotations.draft} selection={chosen} />}
       {area ? (
         <div className="screenshot-overlay__selection" style={{ left: area.x, top: area.y, width: area.width, height: area.height }}>
-          {!dragging && HANDLES.map((handle) => {
-            const at = handlePosition({ x: 0, y: 0, width: area.width, height: area.height }, handle);
-            return <span key={handle} className="screenshot-overlay__handle" style={{ left: at.x, top: at.y }} />;
+          {!dragging && !annotations.drafting && HANDLES.map((handle) => {
+            const spot = handlePosition({ x: 0, y: 0, width: area.width, height: area.height }, handle);
+            return <span key={handle} className="screenshot-overlay__handle" style={{ left: spot.x, top: spot.y }} />;
           })}
           <span className={`screenshot-overlay__size${area.y < 28 ? " screenshot-overlay__size--inside" : ""}`}>
             {selection?.width} × {selection?.height}
@@ -141,32 +202,22 @@ export function ScreenshotOverlay() {
       ) : (
         // Only once the picture is up, and new for each screenshot so it eases in each time; the
         // hidden window's last painted frame then has nothing on it (see session.rs, transparent).
-        ready && <div key={session?.id} className="screenshot-overlay__dim" />
+        ready && <div key={sessionId} className="screenshot-overlay__dim" />
       )}
       {!area && ready && session?.underPointer && <div className="screenshot-overlay__hint">{t.selectHint}</div>}
-      {area && !dragging && (
-        <div
-          className="screenshot-overlay__toolbar"
-          style={{
-            right: Math.max(4, view.width - area.x - area.width),
-            // Below the selection, or above it when there is no room below; inside it when neither fits.
-            ...(area.y + area.height + 48 <= view.height ? { top: area.y + area.height + 8 }
-              : area.y >= 48 ? { bottom: view.height - area.y + 8 }
-              : { bottom: view.height - area.y - area.height + 8 }),
-          }}
-          role="toolbar"
-          aria-label={t.toolbar}
-          onPointerDown={(event) => event.stopPropagation()}
-          onDoubleClick={(event) => event.stopPropagation()}
-        >
-          <button type="button" className="screenshot-overlay__button" aria-label={t.cancel} title={t.cancel} onClick={() => void cancelScreenshot()}>
-            <X size={18} />
-          </button>
-          <button type="button" className="screenshot-overlay__button screenshot-overlay__button--primary" aria-label={t.copy} title={t.copy} onClick={copy}>
-            <Check size={18} />
-          </button>
-          {notice && <span className="screenshot-overlay__notice">{notice}</span>}
-        </div>
+      {area && chosen && !dragging && !annotations.drafting && (
+        <ScreenshotToolbar area={area} view={view} annotations={annotations} notice={notice} onCancel={() => void cancelScreenshot()} onCopy={copy} />
+      )}
+      {annotations.editing && (
+        <AnnotationTextInput
+          key={`${annotations.editing.x},${annotations.editing.y}`}
+          at={{ x: annotations.editing.x / scale, y: annotations.editing.y / scale }}
+          color={annotations.style.color}
+          size={textSize(annotations.style.level, 1)}
+          placeholder={t.textPlaceholder}
+          onCommit={annotations.commitText}
+          onCancel={annotations.cancelText}
+        />
       )}
       {!area && notice && <div className="screenshot-overlay__hint">{notice}</div>}
       {guides && ready && cssPointer && (choosing || dragging === "draw" || dragging === "resize") && (
@@ -184,7 +235,8 @@ export function ScreenshotOverlay() {
           <div className="screenshot-overlay__guide screenshot-overlay__guide--v" style={{ left: area.x + area.width - 1 }} />
         </>
       )}
-      {ready && pixel && cssPointer && color && dragging !== "move" && (
+      {/* While annotating the magnifier would only be in the way. */}
+      {ready && pixel && cssPointer && color && dragging !== "move" && !annotations.tool && (
         <Magnifier picture={canvasRef.current} pixel={pixel} pointer={cssPointer} view={view} color={color} lines={lines} />
       )}
     </div>

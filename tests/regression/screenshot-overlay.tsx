@@ -1,0 +1,134 @@
+// pnpm dev, then open /tests/regression/screenshot-overlay.html.
+// The screenshot overlay (C41.1–C41.3) with the Tauri boundary mocked: a grey frozen picture the
+// size of the page, choosing a region, the annotation tools, undo / redo and what copying sends.
+import { act, StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import { mockIPC, mockWindows } from "@tauri-apps/api/mocks";
+import "../../src/styles/tokens.css";
+import { I18nProvider } from "../../src/i18n";
+import { ScreenshotOverlay } from "../../src/windows/screenshot/ScreenshotOverlay";
+
+Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
+
+const WIDTH = window.innerWidth;
+const HEIGHT = window.innerHeight;
+const calls: { command: string; payload: unknown }[] = [];
+mockIPC((command, payload) => {
+  calls.push({ command, payload });
+  switch (command) {
+    case "screenshot_session": return { id: 1, mode: "region", width: WIDTH, height: HEIGHT, underPointer: true };
+    // Opaque grey, as the native capture is (win32/screen_capture.rs makes every alpha 255).
+    case "screenshot_frame": return new Uint8Array(WIDTH * HEIGHT * 4).map((_, index) => (index % 4 === 3 ? 255 : 128)).buffer;
+    case "screenshot_targets": return [];
+    default: return null;
+  }
+}, { shouldMockEvents: true });
+mockWindows("screenshot-0");
+
+createRoot(document.getElementById("root")!).render(
+  <StrictMode>
+    <I18nProvider>
+      <ScreenshotOverlay />
+    </I18nProvider>
+  </StrictMode>,
+);
+
+const results = document.getElementById("results")!;
+const messages: string[] = [];
+const check = (condition: unknown, message: string) => {
+  if (!condition) throw new Error(message);
+  messages.push(`PASS ${message}`);
+};
+const wait = (ms: number) => act(async () => { await new Promise((resolve) => setTimeout(resolve, ms)); });
+const overlay = () => document.querySelector<HTMLElement>(".screenshot-overlay")!;
+const pointer = (type: string, x: number, y: number, button = 0) =>
+  act(async () => { overlay().dispatchEvent(new PointerEvent(type, { bubbles: true, clientX: x, clientY: y, button, pointerId: 1, isPrimary: true })); });
+const drag = async (from: [number, number], to: [number, number]) => {
+  await pointer("pointerdown", ...from);
+  await pointer("pointermove", (from[0] + to[0]) / 2, (from[1] + to[1]) / 2);
+  await pointer("pointermove", ...to);
+  await pointer("pointerup", ...to);
+};
+const key = (init: KeyboardEventInit, target: EventTarget = window) => act(async () => { target.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, cancelable: true, ...init })); });
+const button = (label: string) => document.querySelector<HTMLButtonElement>(`.screenshot-overlay__toolbar button[aria-label="${label}"]`);
+const click = (label: string) => act(async () => { button(label)!.click(); });
+const layerPixel = (x: number, y: number) => {
+  const data = document.querySelector<HTMLCanvasElement>(".screenshot-overlay__annotations")!.getContext("2d")!.getImageData(x, y, 1, 1).data;
+  return [data[0], data[1], data[2], data[3]];
+};
+const isRed = ([r, g, b, a]: number[]) => a > 200 && r > 200 && g < 90 && b < 90;
+const last = (command: string) => [...calls].reverse().find((call) => call.command === command);
+const typeInto = (box: HTMLTextAreaElement, text: string) => act(async () => {
+  Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, "value")!.set!.call(box, text);
+  box.dispatchEvent(new Event("input", { bubbles: true }));
+});
+
+async function runChecks() {
+  try {
+    for (let tries = 0; tries < 50 && !calls.some((call) => call.command === "screenshot_overlay_ready"); tries += 1) await wait(20);
+    check(document.querySelector<HTMLCanvasElement>(".screenshot-overlay__picture")?.width === WIDTH, "The frozen picture is drawn at the monitor's size, then the overlay says it is ready");
+
+    await drag([40, 40], [240, 200]);
+    check(document.querySelectorAll(".screenshot-overlay__toolbar button[aria-pressed]").length === 8, "A chosen region gets the toolbar with the eight annotation tools");
+    check(button("撤销（Ctrl+Z）")?.disabled && button("重做（Ctrl+Y）")?.disabled, "Undo and redo start disabled");
+    await key({ key: "Enter" });
+    const plain = last("screenshot_copy")?.payload as { rect?: unknown } | undefined;
+    check(JSON.stringify(plain?.rect) === JSON.stringify({ x: 40, y: 40, width: 200, height: 160 }), "Without annotations Enter copies the region from the native picture");
+
+    await click("矩形");
+    check(button("矩形")?.getAttribute("aria-pressed") === "true" && document.querySelectorAll(".screenshot-overlay__swatch").length === 8, "Choosing the rectangle shows the colours and thicknesses");
+    const bar = document.querySelector<HTMLElement>(".screenshot-overlay__toolbar")!.getBoundingClientRect();
+    check(bar.left >= 0 && bar.right <= WIDTH, "The toolbar, wider than this small selection, stays on the monitor");
+    await drag([60, 60], [120, 120]);
+    check(isRed(layerPixel(60, 90)), "A drag inside the selection draws a red rectangle");
+    check(document.querySelector(".screenshot-overlay__selection")?.getAttribute("style")?.includes("left: 40px"), "…without moving the selection");
+    check(!isRed(layerPixel(20, 20)), "Nothing is drawn outside the selection");
+
+    await key({ key: "z", ctrlKey: true });
+    check(layerPixel(60, 90)[3] === 0, "Ctrl+Z takes the rectangle away");
+    await key({ key: "y", ctrlKey: true });
+    check(isRed(layerPixel(60, 90)), "Ctrl+Y brings it back");
+
+    await click("文字");
+    await pointer("pointerdown", 100, 150);
+    await pointer("pointerup", 100, 150);
+    await wait(10);
+    const box = document.querySelector<HTMLTextAreaElement>(".screenshot-overlay__text-input");
+    check(box, "A click with the text tool opens a text box there");
+    await typeInto(box!, "截图");
+    await key({ key: "Enter" }, box!);
+    check(!document.querySelector(".screenshot-overlay__text-input"), "Enter keeps the text and closes the box");
+    let drawn = false;
+    for (let x = 100; x < 140 && !drawn; x += 1) drawn = isRed(layerPixel(x, 160));
+    check(drawn, "…and the text is drawn where the box was");
+
+    await pointer("pointerdown", 150, 175);
+    await pointer("pointerup", 150, 175);
+    await wait(10);
+    const second = document.querySelector<HTMLTextAreaElement>(".screenshot-overlay__text-input");
+    await key({ key: "Escape" }, second!);
+    check(!document.querySelector(".screenshot-overlay__text-input") && !last("screenshot_cancel"), "Esc in a text box drops it without leaving the screenshot");
+
+    await click("序号");
+    await pointer("pointerdown", 210, 70);
+    await pointer("pointerup", 210, 70);
+    check(isRed(layerPixel(205, 70)), "A click with the number tool places a badge");
+
+    await act(async () => { overlay().dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true, clientX: 150, clientY: 150 })); });
+    check(!document.querySelector('.screenshot-overlay__toolbar button[aria-pressed="true"]') && document.querySelector(".screenshot-overlay__selection"), "A right click turns the tool off and keeps the selection");
+
+    await key({ key: "Enter" });
+    const composed = last("screenshot_copy_pixels")?.payload as Uint8Array | undefined;
+    check(composed instanceof Uint8Array && composed.byteLength === 200 * 160 * 4, "With annotations Enter sends the composed region as raw pixels");
+    const at = (x: number, y: number) => Array.from(composed!.slice((y * 200 + x) * 4, (y * 200 + x) * 4 + 4));
+    check(isRed(at(20, 50)) && at(5, 5).join() === "128,128,128,255", `…the rectangle drawn on the frozen picture (${at(20, 50).join()} / ${at(5, 5).join()})`);
+
+    results.textContent = `${messages.join("\n")}\n\n全部 ${messages.length} 项检查通过。`;
+    results.dataset.result = "passed";
+  } catch (error) {
+    results.textContent = `${messages.join("\n")}\nFAIL ${String(error)}`;
+    results.dataset.result = "failed";
+  }
+}
+
+void runChecks();

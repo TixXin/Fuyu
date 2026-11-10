@@ -23,6 +23,15 @@ fn a_selection_past_the_edge_is_clipped_and_one_outside_is_nothing() {
 }
 
 #[test]
+fn composed_pixels_must_match_their_size() {
+    use super::pixels_fit;
+    assert!(pixels_fit(2 * 3 * 4, 2, 3));
+    assert!(!pixels_fit(2 * 3 * 4 - 1, 2, 3));
+    assert!(!pixels_fit(0, 0, 3));
+    assert!(!pixels_fit(usize::MAX, u32::MAX, u32::MAX));
+}
+
+#[test]
 fn targets_are_clipped_to_each_monitor_and_moved_into_its_pixels() {
     use super::targets::{localize, target};
     // A window across two monitors: the left one at (-1920, 0), the right one at (0, 0).

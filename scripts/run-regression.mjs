@@ -46,6 +46,7 @@ export const PAGES = [
   "update-reminder.html?test=1",
   "list-pages.html?test=1",
   "clipboard-popup.html?test=1",
+  "screenshot-overlay.html",
   "todo-island.html",
 ];
 

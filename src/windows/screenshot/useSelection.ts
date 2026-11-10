@@ -14,7 +14,16 @@ import {
 } from "../../features/screenshot/selection";
 
 /** How close to an edge a press grabs it, in CSS pixels. */
-const GRAB = 6;
+export const GRAB = 6;
+
+/** Keeps the pointer's moves coming while it is dragged off the overlay; a pointer the browser no longer tracks is left alone. */
+export function capturePointer(event: PointerEvent<HTMLElement>) {
+  try {
+    event.currentTarget.setPointerCapture(event.pointerId);
+  } catch {
+    // Not an active pointer (already released): nothing to capture.
+  }
+}
 
 type Drag =
   | { kind: "draw"; origin: Point }
@@ -69,7 +78,7 @@ export function useSelection(session: ScreenshotSession | null, bounds: Size | n
 
   const onPointerDown = (event: PointerEvent<HTMLElement>) => {
     if (event.button !== 0 || !bounds) return;
-    event.currentTarget.setPointerCapture(event.pointerId);
+    capturePointer(event);
     const point = at(event);
     const grabbed = selection ? hitTest(selection, point, GRAB * scale) : null;
     if (selection && grabbed === "inside") start({ kind: "move", origin: point, start: selection });

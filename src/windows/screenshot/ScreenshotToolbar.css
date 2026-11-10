@@ -1,0 +1,79 @@
+/* The screenshot toolbar's rows (ScreenshotToolbar.tsx); the box and buttons are in ScreenshotOverlay.css. */
+.screenshot-overlay__toolbar-row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.screenshot-overlay__button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.screenshot-overlay__button:disabled:hover {
+  background: transparent;
+}
+
+.screenshot-overlay__button--active,
+.screenshot-overlay__button--active:hover {
+  color: var(--color-accent, #74d6ff);
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.screenshot-overlay__separator {
+  width: 1px;
+  height: 20px;
+  margin: 0 4px;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.screenshot-overlay__size-dot {
+  display: block;
+  background: currentColor;
+  border-radius: 50%;
+}
+
+.screenshot-overlay__swatch {
+  width: 20px;
+  height: 20px;
+  margin: 0 3px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.screenshot-overlay__swatch--active {
+  outline: 2px solid var(--color-accent, #74d6ff);
+  outline-offset: 2px;
+}
+
+.screenshot-overlay__swatch:focus-visible {
+  outline: 2px solid var(--color-focus-ring, #74d6ff);
+  outline-offset: 2px;
+}
+
+/* Annotations over the frozen picture; the pointer goes through to the overlay. */
+.screenshot-overlay__annotations {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* The box a text annotation is typed in, drawn where the text will be. */
+.screenshot-overlay__text-input {
+  position: absolute;
+  z-index: 3;
+  min-width: 2em;
+  margin: -1px 0 0 -1px;
+  padding: 0;
+  overflow: hidden;
+  resize: none;
+  white-space: pre;
+  background: transparent;
+  border: 1px dashed var(--color-accent, #74d6ff);
+  border-radius: 0;
+  outline: none;
+}

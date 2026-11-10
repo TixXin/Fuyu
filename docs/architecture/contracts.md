@@ -23,6 +23,7 @@
 | `fuyu-position` | `windows/island/storage.ts` |
 | `fuyu-music-sources` | `features/media/storage.ts` |
 | `fuyu-settings-focus`（主窗口 → 设置窗口的跳转请求） | `windows/settings/storage.ts` |
+| `fuyu-screenshot-annotation`（截图标注上次用的颜色和粗细：`{ color, level }`，C41.3） | `features/screenshot/storage.ts` |
 | `fuyu-position-reset`（设置窗口 → 主窗口：让岛回到主屏顶部居中，`{ requestedAt }`，超过 5 秒的请求忽略） | `windows/settings/storage.ts` |
 | `fuyu-panel-preview`（设置窗口 → 主窗口：拖动尺寸滑块时让岛展开或收起预览，`{ mode, requestedAt }`，超过 2 秒的请求忽略） | `windows/settings/storage.ts` |
 | `fuyu-qq-mail-settings` | `features/messages/mail/storage.ts`（`{ accounts: [{ email, host, enabled }] }`，兼容读取旧的单账户 `{ email, enabled }`，解析在 `mailAccounts.ts`） |
@@ -85,7 +86,7 @@
 ## 其他
 
 - 窗口 label：`main`、`translation`、`clipboard`（2026-11-09 起，剪贴板独立窗口）、`settings`、`screenshot-<显示器序号>`（2026-11-10 起，截图时每个显示器一个，运行时创建）；前端分发参数为 `?window=translation`、`?window=clipboard`、`?window=settings`、`?window=screenshot`。
-- 截图（C41.1，2026-11-10 起）：`fuyu-settings` 新增 `screenshotEnabled`（缺省 `false`）；开着时注册全局快捷键 `Ctrl+Shift+1`（截图）、`Ctrl+Shift+7`（全屏），主键盘用 `RegisterHotKey`，小键盘由低级键盘钩子认；Tauri 命令 `screenshot_configure`（`enabled`）、`screenshot_session`、`screenshot_frame`（返回原始 RGBA 字节）、`screenshot_overlay_ready`（`session`）、`screenshot_copy`（`rect`：`{ x, y, width, height }`，物理像素）、`screenshot_cancel`；C41.2 起还有 `screenshot_targets`（返回 `[{ window, element, x, y, width, height }]`，窗口在屏幕上的位置和其中控件的位置，物理像素，`window` 是窗口的上下层次，0 在最上）；事件 `screenshot-targets`（发给各截图窗口，载荷是截图 id，表示又读到了一批控件）、`screenshot-session`（发给各截图窗口：`{ id, mode: "region" | "fullscreen", width, height, underPointer }`）、`screenshot-ended`（无载荷）、`screenshot-selecting`（截图窗口之间，载荷是开始选区的窗口 label）。
+- 截图（C41.1，2026-11-10 起）：`fuyu-settings` 新增 `screenshotEnabled`（缺省 `false`）；开着时注册全局快捷键 `Ctrl+Shift+1`（截图）、`Ctrl+Shift+7`（全屏），主键盘用 `RegisterHotKey`，小键盘由低级键盘钩子认；Tauri 命令 `screenshot_configure`（`enabled`）、`screenshot_session`、`screenshot_frame`（返回原始 RGBA 字节）、`screenshot_overlay_ready`（`session`）、`screenshot_copy`（`rect`：`{ x, y, width, height }`，物理像素）、`screenshot_cancel`；C41.2 起还有 `screenshot_targets`（返回 `[{ window, element, x, y, width, height }]`，窗口在屏幕上的位置和其中控件的位置，物理像素，`window` 是窗口的上下层次，0 在最上）；C41.3 起还有 `screenshot_copy_pixels`（请求体是原始 RGBA 字节，`x-width`、`x-height` 两个请求头给尺寸；有标注时前端合成后用它复制，没有标注时仍用 `screenshot_copy`）；事件 `screenshot-targets`（发给各截图窗口，载荷是截图 id，表示又读到了一批控件）、`screenshot-session`（发给各截图窗口：`{ id, mode: "region" | "fullscreen", width, height, underPointer }`）、`screenshot-ended`（无载荷）、`screenshot-selecting`（截图窗口之间，载荷是开始选区的窗口 label）。
 - 强调色（C33.5，2026-11-10 起）：`fuyu-settings` 和主题文件新增 `accentMode`（`default` / `windows` / `pick`）、`accentColor`；Tauri 命令 `get_windows_accent_color`（读 `HKCU\Software\Microsoft\Windows\DWM` 的 `AccentColor`，返回 `#rrggbb` 或 null）。
 - 深色、浅色两套颜色（C33.2–C33.3，2026-11-10 起）：`fuyu-settings` 和主题文件新增 `collapsedDark`、`darkBackgroundColor` / `darkTextColor` / `darkPulseColor`、`lightBackgroundColor` / `lightTextColor` / `lightPulseColor`；`themeMode` 只剩 `dark` / `light` / `system`。旧设置和旧主题文件（没有这六个字段）把 `islandBackgroundColor`、`taskTextColor`、`pulseColor` 按亮度放进其中一套（`themeSetsFromSingleColors`）；这三个字段保留，是正在用那套的副本。
 - 浅色和深色（C31，2026-11-10 起）：`fuyu-settings` 和主题文件新增 `themeMode`（`dark` / `light` / `system` / `custom`；新装 `dark`，旧设置和旧主题文件缺省为 `custom`）。

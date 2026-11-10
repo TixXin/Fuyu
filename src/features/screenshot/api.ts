@@ -60,6 +60,17 @@ export function copyScreenshot(rect: PixelRect) {
   return invoke<void>("screenshot_copy", { rect });
 }
 
+/**
+ * Copies a picture the overlay composed (the selection with its annotations) and closes the
+ * screenshot. The pixels go as raw RGBA, not JSON.
+ */
+export function copyScreenshotPixels(image: ImageData) {
+  const bytes = new Uint8Array(image.data.buffer, image.data.byteOffset, image.data.byteLength);
+  return invoke<void>("screenshot_copy_pixels", bytes, {
+    headers: { "x-width": String(image.width), "x-height": String(image.height) },
+  });
+}
+
 export function cancelScreenshot() {
   return invoke<void>("screenshot_cancel");
 }

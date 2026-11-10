@@ -126,7 +126,8 @@ body:has(.screenshot-overlay) {
   position: absolute;
   z-index: 2;
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-end;
   gap: 4px;
   padding: 4px;
   background: rgba(20, 20, 24, 0.94);
