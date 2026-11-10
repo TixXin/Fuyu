@@ -10,8 +10,11 @@
 //
 // One build at a time across lanes (a lock file in target/release), and a
 // successful build points the desktop shortcut at the new exe.
+//
+// `pnpm release` puts the exe it just published in place the same way
+// (installExe), so a release needs no second build.
 import { spawnSync } from "node:child_process";
-import { closeSync, existsSync, mkdirSync, openSync, readFileSync, readdirSync, renameSync, rmSync, unlinkSync, writeFileSync } from "node:fs";
+import { closeSync, copyFileSync, existsSync, mkdirSync, openSync, readFileSync, readdirSync, renameSync, rmSync, unlinkSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { mainCheckout, targetDir } from "./build-dirs.mjs";
@@ -124,15 +127,47 @@ function syncShortcut(exe) {
   else console.error(`[build:exe] could not update the desktop shortcut: ${result.stderr.trim()}`);
 }
 
-function main() {
+/** Runs `work(releaseDir)` holding the lock on the main checkout's target/release. */
+function withReleaseDir(work) {
   const releaseDir = targetDir(mainCheckout(), "release");
   const lock = path.join(releaseDir, ".build-exe.lock");
   takeLock(lock);
   try {
-    return build(releaseDir);
+    return work(releaseDir);
   } finally {
     rmSync(lock, { force: true });
   }
+}
+
+/**
+ * Copies an exe built elsewhere (a lane's release build) into target/release and points the
+ * desktop shortcut at it. Returns where it went; throws when the copy fails, with the previous
+ * exe back in place.
+ */
+export function installExe(source) {
+  return withReleaseDir((releaseDir) => {
+    const exe = path.join(releaseDir, EXE_NAME);
+    if (path.resolve(source).toLowerCase() === exe.toLowerCase()) {
+      // Built in the main checkout itself: already in place.
+      syncShortcut(exe);
+      return exe;
+    }
+    removeOldExes(releaseDir);
+    const aside = moveAsideIfRunning(exe);
+    try {
+      copyFileSync(source, exe);
+    } catch (error) {
+      if (aside && !existsSync(exe)) renameSync(aside, exe);
+      throw error;
+    }
+    removeOldExes(releaseDir);
+    syncShortcut(exe);
+    return exe;
+  });
+}
+
+function main() {
+  return withReleaseDir(build);
 }
 
 function build(releaseDir) {

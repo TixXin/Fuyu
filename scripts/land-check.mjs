@@ -3,6 +3,8 @@
 // test` too when the landing touches files the Rust build or its tests read.
 // Two shortcuts keep the queue (locked while this runs) moving:
 //   - a landing that only changes Markdown docs runs the quick doc checks;
+//   - Rust files changed only in the app version (a release bump) do not
+//     call for cargo test;
 //   - a tree that already passed (in the lane, or a land that failed to push)
 //     is not checked again: passes are recorded by tree hash in the git dir.
 // The release build stays a manual step (AGENTS.md).
@@ -11,6 +13,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { mainCheckout, targetDir } from "./build-dirs.mjs";
+import { readVersion, VERSION_FILES, writeVersion } from "./release/versions.mjs";
 
 /** src-tauri itself (including the scripts it embeds with include_str!) and plugins/ (keys, index and schema its tests read). */
 const RUST_INPUTS = ["src-tauri/", "plugins/"];
@@ -40,8 +43,22 @@ export function attributedCommits(commits, ownEmail = "") {
     .map(({ subject }) => subject);
 }
 
-export function needsRust(files) {
-  return files.some((file) => RUST_INPUTS.some((prefix) => file.startsWith(prefix)));
+/**
+ * Whether the Rust side needs testing. `versionOnly(file)` says a file changed in nothing but the
+ * app version (`pnpm release:version`): the tests read no version, so those files do not count.
+ */
+export function needsRust(files, versionOnly = () => false) {
+  return files.some((file) => RUST_INPUTS.some((prefix) => file.startsWith(prefix)) && !versionOnly(file));
+}
+
+/** True when `after` is `before` with only the app version changed; `file` is a repo path. */
+export function versionOnlyChange(file, before, after) {
+  const kind = Object.keys(VERSION_FILES).find((key) => VERSION_FILES[key] === file);
+  if (!kind || before === null || after === null) return false;
+  const normalize = (text) => text.replace(/\r\n/g, "\n");
+  const version = readVersion(kind, after);
+  if (version === null || readVersion(kind, before) === null) return false;
+  return normalize(writeVersion(kind, before, version)) === normalize(after);
 }
 
 /** Every file is Markdown that no test generates or reads. */
@@ -50,9 +67,9 @@ export function docsOnly(files) {
 }
 
 /** The checks a landing of `files` needs; `files` null (unknown) needs all of them. */
-export function checksFor(files) {
+export function checksFor(files, versionOnly = () => false) {
   if (files && docsOnly(files)) return { frontend: "docs", rust: false };
-  return { frontend: "full", rust: !files || needsRust(files) };
+  return { frontend: "full", rust: !files || needsRust(files, versionOnly) };
 }
 
 /** `passes` with `tree` marked as having passed `kinds`, oldest trees dropped past MAX_PASSES. */
@@ -74,6 +91,19 @@ function changedFiles() {
   } catch {
     return null;
   }
+}
+
+/** Whether `file` differs from origin/main only in the app version (the working copy is what gets checked). */
+function versionBumpOnly(file) {
+  let before = null;
+  let after = null;
+  try {
+    before = git(["show", `origin/main:${file}`]);
+    after = readFileSync(file, "utf8").trim();
+  } catch {
+    return false;
+  }
+  return versionOnlyChange(file, before, after);
 }
 
 /** HEAD's tree when no tracked file has uncommitted changes (only then is it what gets checked). */
@@ -134,7 +164,7 @@ function main() {
   // Tasks marked done must name real commits; the lane's open claims get a reminder.
   if (run("node scripts/tasks/tasks.mjs landing") !== 0) return 1;
   const files = changedFiles();
-  const { frontend, rust } = checksFor(files);
+  const { frontend, rust } = checksFor(files, versionBumpOnly);
   const tree = cleanTree();
   const passed = tree ? readPasses()[tree] ?? {} : {};
   const record = (kind) => {

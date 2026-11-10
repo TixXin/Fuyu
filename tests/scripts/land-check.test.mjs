@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { attributedCommits, checksFor, docsOnly, needsRust, recordPass } from "../../scripts/land-check.mjs";
+import { attributedCommits, checksFor, docsOnly, needsRust, recordPass, versionOnlyChange } from "../../scripts/land-check.mjs";
 
 test("a landing of Markdown docs alone runs the doc checks, except generated docs", () => {
   assert.equal(docsOnly(["docs/tasks/F1.md", "AGENTS.md"]), true);
@@ -49,4 +49,31 @@ test("cargo test runs only when a landing touches what the Rust side reads", () 
   assert.equal(needsRust(["scripts/release/release.mjs"]), false);
   assert.equal(needsRust(["plugins/index.json"]), true);
   assert.equal(needsRust([]), false);
+});
+
+test("a release bump that changes only the app version does not call for cargo test", () => {
+  const bump = ["package.json", "src-tauri/tauri.conf.json", "src-tauri/Cargo.toml", "src-tauri/Cargo.lock", "docs/releases/v0.3.6.md"];
+  const versionOnly = (file) => file !== "src-tauri/src/lib.rs";
+  assert.equal(needsRust(bump, versionOnly), false);
+  assert.equal(needsRust([...bump, "src-tauri/src/lib.rs"], versionOnly), true);
+  assert.deepEqual(checksFor(bump, versionOnly), { frontend: "full", rust: false });
+});
+
+test("a version file counts as version-only when nothing but the app version changed", () => {
+  const toml = (version, extra = "") => `[package]\nname = "focusd-island"\nversion = "${version}"\n${extra}\n[dependencies]\nserde = "1"\n`;
+  assert.equal(versionOnlyChange("src-tauri/Cargo.toml", toml("0.3.5"), toml("0.3.6-beta.1")), true);
+  assert.equal(versionOnlyChange("src-tauri/Cargo.toml", toml("0.3.5"), toml("0.3.6").replace(/\n/g, "\r\n")), true);
+  assert.equal(versionOnlyChange("src-tauri/Cargo.toml", toml("0.3.5"), toml("0.3.6", 'edition = "2024"')), false);
+  assert.equal(versionOnlyChange("src-tauri/Cargo.toml", toml("0.3.5"), toml("0.3.6").replace('serde = "1"', 'serde = "2"')), false);
+
+  const lock = (app, dep) => `[[package]]\nname = "focusd-island"\nversion = "${app}"\n\n[[package]]\nname = "serde"\nversion = "${dep}"\n`;
+  assert.equal(versionOnlyChange("src-tauri/Cargo.lock", lock("0.3.5", "1.0.1"), lock("0.3.6", "1.0.1")), true);
+  assert.equal(versionOnlyChange("src-tauri/Cargo.lock", lock("0.3.5", "1.0.1"), lock("0.3.6", "1.0.2")), false);
+
+  const conf = (version, name = "fly-island") => `{\n  "productName": "${name}",\n  "version": "${version}"\n}\n`;
+  assert.equal(versionOnlyChange("src-tauri/tauri.conf.json", conf("0.3.5"), conf("0.3.6")), true);
+  assert.equal(versionOnlyChange("src-tauri/tauri.conf.json", conf("0.3.5"), conf("0.3.6", "x")), false);
+
+  assert.equal(versionOnlyChange("src-tauri/src/lib.rs", "a", "a"), false);
+  assert.equal(versionOnlyChange("src-tauri/Cargo.toml", null, toml("0.3.6")), false);
 });
