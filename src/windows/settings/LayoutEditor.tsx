@@ -5,6 +5,7 @@ import { SettingsSidebar } from "./SettingsSidebar";
 import { useFoundRow, type FoundRow } from "./useFoundRow";
 import { WindowControls } from "./WindowControls";
 import "./LayoutEditor.css";
+import "./SettingsSidebarNarrow.css";
 
 export function LayoutEditor({
   category,
