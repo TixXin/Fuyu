@@ -16,6 +16,11 @@ export type SettingsProjectText = {
   quitAction: string;
   website: string;
   websiteHint: string;
+  /** The logo call: the empty logo spot and the credit line under the description lead to it. */
+  logoCall: string;
+  logoCredit: string;
+  logoOpen: string;
+  logoCallUrl: string;
   releases: string;
   releasesHint: string;
   issues: string;
@@ -111,6 +116,10 @@ export const zhCN: SettingsProjectText = {
   quitAction: "退出",
   website: "官网",
   websiteHint: "fuyu.tix.xin：功能介绍和下载",
+  logoCall: "Logo 征集中，被采用的设计者署名在这里",
+  logoCredit: "Logo 设计：",
+  logoOpen: "征集中，来画一个 →",
+  logoCallUrl: "https://fuyu.tix.xin/logo/",
   releases: "版本发布",
   releasesHint: "查看更新说明，或手动下载安装包",
   issues: "反馈问题",
@@ -205,6 +214,10 @@ export const en: SettingsProjectText = {
   quitAction: "Quit",
   website: "Website",
   websiteHint: "fuyu.tix.xin: features and downloads",
+  logoCall: "Logo call is open: the chosen designer is credited here",
+  logoCredit: "Logo by",
+  logoOpen: "open call, draw one →",
+  logoCallUrl: "https://fuyu.tix.xin/en/logo/",
   releases: "Releases",
   releasesHint: "Read the notes, or download a build by hand",
   issues: "Report a problem",

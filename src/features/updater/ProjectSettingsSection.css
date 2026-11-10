@@ -6,10 +6,52 @@
   min-width: 0;
 }
 
-.about-identity__mark {
+/* The logo's spot while the logo call is open: an empty dashed tile in the call's violet. */
+.about-identity__slot {
+  --about-logo-call: #9b7bff;
+  display: grid;
+  place-items: center;
   width: 48px;
   height: 48px;
   flex: 0 0 auto;
+  border: 1.5px dashed color-mix(in srgb, var(--about-logo-call) 65%, transparent);
+  border-radius: 14px;
+  corner-shape: squircle;
+  background: color-mix(in srgb, var(--about-logo-call) 10%, transparent);
+  color: var(--about-logo-call);
+  font: 600 22px/1 Georgia, "Times New Roman", serif;
+  text-decoration: none;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.about-identity__slot:hover,
+.about-identity__slot:focus-visible {
+  border-color: var(--about-logo-call);
+  background: color-mix(in srgb, var(--about-logo-call) 18%, transparent);
+}
+
+.about-identity__credit {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  margin-top: 2px;
+  color: var(--color-text-muted);
+  font-size: 11.5px;
+  text-decoration: none;
+}
+
+.about-identity__credit svg,
+.about-identity__credit strong {
+  color: #9b7bff;
+}
+
+.about-identity__credit strong {
+  font-weight: 600;
+}
+
+.about-identity__credit:hover strong {
+  text-decoration: underline;
 }
 
 .about-identity__body {

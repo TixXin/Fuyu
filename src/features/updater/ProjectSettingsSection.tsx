@@ -1,30 +1,55 @@
 import { useSyncExternalStore } from "react";
-import { CircleHelp, Globe, Star, Tag } from "lucide-react";
+import { CircleHelp, Globe, Sparkles, Star, Tag } from "lucide-react";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { useTranslation } from "../../i18n";
-import markUrl from "../../../src-tauri/icons/mark.svg";
 import { UpdateDiagnosticsRow } from "./UpdateDiagnosticsRow";
 import { ProjectLink } from "./ProjectLink";
+import { useOpenInBrowser } from "./useOpenInBrowser";
 import { PROJECT_ISSUES_URL, PROJECT_RELEASES_URL, PROJECT_REPO_URL, PROJECT_WEBSITE_URL } from "./projectLinks";
 import { getUpdateState, subscribeToUpdate } from "./updaterController";
 import "./ProjectSettingsSection.css";
 import "./UpdatePanel.css";
 
-/** Settings → About, first: the island's mark, name, version and what it does. */
+/**
+ * Settings → About, first: the island's name, version and what it does. Fuyu has no
+ * logo yet: its spot is an empty slot that, like the credit line under the
+ * description, leads to the logo call on the website. The chosen design and its
+ * designer's name go here.
+ */
 export function ProjectIdentitySection() {
   const t = useTranslation();
   const { version } = useSyncExternalStore(subscribeToUpdate, getUpdateState);
+  const { failed, onClick } = useOpenInBrowser();
+  const text = t.settings.project;
 
   return (
     <SettingsGroup>
       <div className="about-identity">
-        <img className="about-identity__mark" src={markUrl} alt="" width={48} height={48} />
+        <a
+          className="about-identity__slot"
+          href={text.logoCallUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={onClick}
+          aria-label={text.logoCall}
+          title={text.logoCall}
+        >
+          <span aria-hidden="true">?</span>
+        </a>
         <div className="about-identity__body">
           <div className="about-identity__heading">
-            <p className="about-identity__name">{t.settings.project.appName}</p>
-            {version && <span className="about-identity__version">{t.settings.project.versionChip(version)}</span>}
+            <p className="about-identity__name">{text.appName}</p>
+            {version && <span className="about-identity__version">{text.versionChip(version)}</span>}
           </div>
-          <p className="about-identity__description">{t.settings.project.description}</p>
+          <p className="about-identity__description">{text.description}</p>
+          <a className="about-identity__credit" href={text.logoCallUrl} target="_blank" rel="noopener noreferrer" onClick={onClick}>
+            <Sparkles size={12} strokeWidth={1.8} aria-hidden="true" />
+            <span>{text.logoCredit}</span>
+            <strong>{text.logoOpen}</strong>
+          </a>
+          {failed && (
+            <p className="project-link-error" role="alert">{text.openFailed}</p>
+          )}
         </div>
       </div>
     </SettingsGroup>

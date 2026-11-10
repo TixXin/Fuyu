@@ -1,8 +1,7 @@
-import { useState, type MouseEvent as ReactMouseEvent, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { ExternalLink } from "lucide-react";
-import { isTauri } from "@tauri-apps/api/core";
-import { openUrl } from "@tauri-apps/plugin-opener";
 import { useTranslation } from "../../i18n";
+import { useOpenInBrowser } from "./useOpenInBrowser";
 
 /** A settings card that opens a project page. In the app, the system browser opens it. */
 export function ProjectLink({
@@ -19,20 +18,7 @@ export function ProjectLink({
   tone?: "star" | "release";
 }) {
   const t = useTranslation();
-  const [failed, setFailed] = useState(false);
-
-  const open = async (event: ReactMouseEvent<HTMLAnchorElement>) => {
-    if (!isTauri()) return;
-
-    event.preventDefault();
-    setFailed(false);
-    try {
-      await openUrl(event.currentTarget.href);
-    } catch (error) {
-      console.error("Failed to open project link", error);
-      setFailed(true);
-    }
-  };
+  const { failed, onClick } = useOpenInBrowser();
 
   return (
     <>
@@ -41,7 +27,7 @@ export function ProjectLink({
         href={href}
         target="_blank"
         rel="noopener noreferrer"
-        onClick={(event) => void open(event)}
+        onClick={onClick}
       >
         {icon}
         <span className="project-link__copy">
