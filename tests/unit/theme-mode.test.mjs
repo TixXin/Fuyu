@@ -52,3 +52,16 @@ test("a light island can stay dark while collapsed, in the dark set's colours (C
   assert.equal(DEFAULT_SETTINGS.collapsedDark, true);
   assert.equal(normalizeSettings({ opacity: 95 }).collapsedDark, false, "older settings keep a picked light colour when collapsed");
 });
+
+test("the accent ships as it was, and can follow Windows or be picked (C33.5)", async () => {
+  const { accentVariables } = await import("../../src/features/appearance/themeMode.ts");
+  assert.equal(DEFAULT_SETTINGS.accentMode, "default");
+  assert.equal(normalizeSettings({}).accentMode, "default");
+  assert.equal(normalizeSettings({ accentMode: "windows" }).accentMode, "windows");
+  assert.equal(normalizeSettings({ accentMode: "neon", accentColor: "red" }).accentColor, DEFAULT_SETTINGS.accentColor);
+  // No accent: the stage leaves --color-accent to the default and the light island's own.
+  assert.deepEqual(accentVariables(null), {});
+  const style = accentVariables("#0078d4");
+  assert.equal(style["--color-accent"], "#0078d4");
+  assert.equal(style["--color-focus-ring"], "rgba(0, 120, 212, 0.88)");
+});

@@ -13,6 +13,7 @@ export type IslandFont = "system" | "pixel";
 export type IslandCornerShape = "squircle" | "round";
 /** Which colour set the island uses (C31, C33.3): dark, light, or whichever Windows uses. */
 export type ThemeMode = "dark" | "light" | "system";
+export type AccentMode = "default" | "windows" | "pick";
 /** Which monitor the island sits on: the primary one, or it follows the pointer or the foreground window there. */
 export type IslandMonitor = "primary" | "cursor" | "foreground";
 /** How the collapsed island opens: a click, or resting the pointer on it. */
@@ -69,6 +70,10 @@ export type IslandSettings = CalendarSettingValues & {
   lightPulseColor: string;
   /** A light island still shows dark while collapsed, to blend into the screen's top edge (C33.2). */
   collapsedDark: boolean;
+  /** The accent (focus rings, the open page's icon, links) (C33.5): as it ships, Windows', or picked. */
+  accentMode: AccentMode;
+  /** The picked accent, used with accentMode "pick". */
+  accentColor: string;
   /** Height (px) of every expanded page (C27); longer content scrolls inside. */
   maxPanelHeight: number;
   /** Width (px, before the scale) of the expanded panel's usual pages (C25). */

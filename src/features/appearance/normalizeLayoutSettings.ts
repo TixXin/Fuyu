@@ -82,6 +82,8 @@ export function normalizeLayoutSettings(settings: LegacyIslandSettings | null | 
     ),
     ...normalizeThemeSets(settings),
     collapsedDark: typeof settings?.collapsedDark === "boolean" ? settings.collapsedDark : LEGACY_FALLBACKS.collapsedDark,
+    accentMode: oneOf(["default", "windows", "pick"] as const, settings?.accentMode, DEFAULT_SETTINGS.accentMode),
+    accentColor: getColorSetting(settings?.accentColor, DEFAULT_SETTINGS.accentColor),
     showTitle:
       typeof settings?.showTitle === "boolean"
         ? settings.showTitle

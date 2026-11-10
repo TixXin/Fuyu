@@ -97,3 +97,17 @@ function flatten(tone: ThemeTone, colors: ThemeColors): Partial<IslandSettings> 
   const keys = THEME_COLOR_KEYS[tone];
   return Object.fromEntries(COLOR_NAMES.map((name) => [keys[name], colors[name]]));
 }
+
+/**
+ * The CSS variables for an accent (C33.5): the accent and the focus rings made from it; none for
+ * null, which leaves the default and the light island's own (tokens.css) to apply.
+ */
+export function accentVariables(accent: string | null): Record<string, string> {
+  if (!accent) return {};
+  const [red, green, blue] = [1, 3, 5].map((start) => Number.parseInt(accent.slice(start, start + 2), 16));
+  return {
+    "--color-accent": accent,
+    "--color-focus-ring": `rgba(${red}, ${green}, ${blue}, 0.88)`,
+    "--color-focus-ring-soft": `rgba(${red}, ${green}, ${blue}, 0.72)`,
+  };
+}

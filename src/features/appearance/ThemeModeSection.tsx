@@ -4,6 +4,7 @@ import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton
 import { SettingsRow } from "../../components/settings/SettingsRow";
 import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
 import { useTranslation } from "../../i18n";
+import { AccentSettingsRow } from "./AccentSettingsRow";
 import { THEME_COLORS, THEME_MODES, withThemeColors, type ThemeTone } from "./themeMode";
 import type { IslandSettings, ThemeMode } from "./types";
 
@@ -61,6 +62,7 @@ export function ThemeModeSection({ settings, editing, onEditingChange, onSetting
         checked={settings.collapsedDark}
         onChange={(collapsedDark) => onSettingsChange({ ...settings, collapsedDark })}
       />
+      <AccentSettingsRow settings={settings} onSettingsChange={onSettingsChange} />
     </SettingsGroup>
   );
 }

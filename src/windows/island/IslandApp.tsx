@@ -45,6 +45,7 @@ import { panelIslandWidth } from "./layout";
 import { useIslandResize } from "./useIslandResize";
 import { useResolvedTheme } from "../../features/appearance/useResolvedTheme";
 import { collapsedThemeColors } from "../../features/appearance/themeMode";
+import { useAccentColor } from "../../features/appearance/useAccentColor";
 import { isLightIsland } from "../../utils/color";
 import { MessageBanner } from "../../features/messages/banner/MessageBanner";
 import { PluginPageButtons } from "./PluginPageButtons";
@@ -188,9 +189,10 @@ export function IslandApp() {
   const expandedIslandHeight = resizingHeight && !popup ? settings.maxPanelHeight : pageIslandHeight;
   // The colours the island shows now: a light island may stay dark while collapsed (C33.2).
   const look = useMemo(() => (mode === "collapsed" ? collapsedThemeColors(settings) : settings), [mode, settings]);
+  const accent = useAccentColor(settings);
   const stageStyle = useMemo(
-    () => getIslandStageStyle(look, mode, collapsedIslandWidth, expandedIslandHeight, expandedIslandWidth),
-    [collapsedIslandWidth, expandedIslandHeight, expandedIslandWidth, mode, look],
+    () => getIslandStageStyle(look, mode, collapsedIslandWidth, expandedIslandHeight, expandedIslandWidth, accent),
+    [collapsedIslandWidth, expandedIslandHeight, expandedIslandWidth, mode, look, accent],
   );
 
   const { fileShelf, isShelfDropping } = useIslandShelf(settings, navigation);

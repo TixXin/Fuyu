@@ -472,6 +472,29 @@
     {
       "page": "theme",
       "zh-CN": {
+        "group": "浅色和深色",
+        "title": "强调色",
+        "description": "焦点框、当前页的图标、链接用的颜色。跟随 Windows 用「设置 → 个性化 → 颜色」里的主题色。",
+        "options": [
+          "默认",
+          "跟随 Windows",
+          "自选"
+        ]
+      },
+      "en": {
+        "group": "Light and dark",
+        "title": "Accent",
+        "description": "The color of focus rings, the open page's icon and links. Windows uses the accent from Settings > Personalization > Colors.",
+        "options": [
+          "Default",
+          "Windows",
+          "Pick"
+        ]
+      }
+    },
+    {
+      "page": "theme",
+      "zh-CN": {
         "group": "风格",
         "title": "外观模式",
         "options": [

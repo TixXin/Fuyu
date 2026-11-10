@@ -81,6 +81,7 @@
 ## 其他
 
 - 窗口 label：`main`、`translation`、`clipboard`（2026-11-09 起，剪贴板独立窗口）、`settings`；前端分发参数为 `?window=translation`、`?window=clipboard`、`?window=settings`。
+- 强调色（C33.5，2026-11-10 起）：`focusd-island-settings` 和主题文件新增 `accentMode`（`default` / `windows` / `pick`）、`accentColor`；Tauri 命令 `get_windows_accent_color`（读 `HKCU\Software\Microsoft\Windows\DWM` 的 `AccentColor`，返回 `#rrggbb` 或 null）。
 - 深色、浅色两套颜色（C33.2–C33.3，2026-11-10 起）：`focusd-island-settings` 和主题文件新增 `collapsedDark`、`darkBackgroundColor` / `darkTextColor` / `darkPulseColor`、`lightBackgroundColor` / `lightTextColor` / `lightPulseColor`；`themeMode` 只剩 `dark` / `light` / `system`。旧设置和旧主题文件（没有这六个字段）把 `islandBackgroundColor`、`taskTextColor`、`pulseColor` 按亮度放进其中一套（`themeSetsFromSingleColors`）；这三个字段保留，是正在用那套的副本。
 - 浅色和深色（C31，2026-11-10 起）：`focusd-island-settings` 和主题文件新增 `themeMode`（`dark` / `light` / `system` / `custom`；新装 `dark`，旧设置和旧主题文件缺省为 `custom`）。
 - 岛屿 Alt 拖动（C25，2026-11-10 起）：`focusd-island-settings` 新增 `panelWidth`（480–800，缺省 560）；事件 `island-move-armed-changed` 的载荷由布尔改为 `"none"` / `"move"` / `"width"` / `"height"` / `"both"`（前后端同一提交改），新增事件 `island-hold-changed`（布尔：按住 Alt 或正在调大小）、`island-resize`（`{ width, height, done }`：本次拖动让面板宽高各变了多少）；`start_island_modifier_drag` 由检查 Ctrl 改为检查 Alt。

@@ -2,6 +2,7 @@ import type { CSSProperties } from "react";
 import { hexToRgba } from "../../features/appearance/settings";
 import type { IslandSettings } from "../../features/appearance/types";
 import { inkOn } from "../../utils/color";
+import { accentVariables } from "../../features/appearance/themeMode";
 import type { IslandMode } from "./types";
 
 /** CSS custom properties for the island stage, derived from the appearance settings and current size. */
@@ -11,6 +12,8 @@ export function getIslandStageStyle(
   collapsedIslandWidth: number,
   expandedIslandHeight: number,
   expandedIslandWidth: number,
+  /** The accent from the theme (C33.5), or null for the default and the light island's own. */
+  accent: string | null = null,
 ) {
   const glassStrength = settings.glassIntensity / 100;
   const glassMaskOpacity = settings.opacity / 100;
@@ -35,6 +38,8 @@ export function getIslandStageStyle(
     "--task-text-color": settings.taskTextColor,
     "--island-pulse-color": settings.pulseColor,
     "--island-pulse-glow-color": hexToRgba(settings.pulseColor, 0.72),
+    // Inline, so it wins over the default and .island-light's; left out, those apply.
+    ...accentVariables(accent),
     "--island-pulse-brightness": `${settings.pulseBrightness}%`,
     "--island-background-color": settings.islandBackgroundColor,
     // Text drawn straight on the island (the Agent page) flips to dark on a light background.
