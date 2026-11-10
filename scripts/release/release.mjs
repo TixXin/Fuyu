@@ -14,7 +14,9 @@
 // when the release notes file is missing or still a draft, or when the working
 // tree has uncommitted changes. Published versions are never overwritten.
 // Once public, it reads both channels back and tells the GitHub issues whose
-// tasks shipped (after-release.mjs; --no-issue-comments skips that).
+// tasks shipped (after-release.mjs; --no-issue-comments skips that). The
+// published exe also replaces this machine's release build (installExe in
+// build-exe.mjs), so no `pnpm build:exe` is needed afterwards.
 //
 // A pre-release version (0.3.1-beta.1) is published as a GitHub pre-release,
 // so the stable channel (GitHub's "latest" release) never offers it. Every
@@ -30,11 +32,13 @@ import { baseTag, DRAFT_MARKER } from "./notes-draft.mjs";
 import { readVersion, VERSION_FILES } from "./versions.mjs";
 import { msiNames, msiVersion } from "./msi-version.mjs";
 import { loadSigningEnvironment } from "./release-signing.mjs";
+import { EXE_NAME, installExe } from "../build-exe.mjs";
 
 const CONFIG = "src-tauri/tauri.conf.json";
 const OVERLAY = "src-tauri/tauri.release.conf.json";
 const BUNDLE_DIR = "src-tauri/target/release/bundle/nsis";
 const MSI_DIR = "src-tauri/target/release/bundle/msi";
+const EXE = `src-tauri/target/release/${EXE_NAME}`;
 const MSI_OVERLAY = "src-tauri/target/release/msi-version.conf.json";
 const BETA_CHANNEL_DIR = "src-tauri/target/release/beta-channel";
 const CHECK_DIR = "src-tauri/target/release/channel-check";
@@ -176,9 +180,24 @@ run("gh", [
 ]);
 console.log(`\n✓ Published ${tag}${prerelease ? " as a pre-release (beta channel only)" : ""}.`);
 
+installLocally();
+
 updateBetaChannel(revision);
 verifyChannels();
 if (issueComments) tellShippedIssues(revision);
+
+/**
+ * Puts the exe just published where the desktop shortcut runs it (what `pnpm build:exe` would
+ * otherwise rebuild for minutes). A failure here does not touch the release.
+ */
+function installLocally() {
+  try {
+    const exe = installExe(EXE);
+    console.log(`✓ This machine now runs ${tag}: ${exe}`);
+  } catch (error) {
+    console.error(`  Could not put ${tag}'s exe in place (${error.message}); run pnpm build:exe instead.`);
+  }
+}
 
 function updateBetaChannel(target) {
   const dir = BETA_CHANNEL_DIR;

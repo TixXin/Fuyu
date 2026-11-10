@@ -1,5 +1,5 @@
 //! Development mode: plugins loaded from any folder (Settings > Plugins >
-//! Developer, or `fly-island-plugin dev` through the local API's /v1/dev routes).
+//! Developer, or `fuyu-plugin dev` through the local API's /v1/dev routes).
 //! It lives in memory only, so after a restart the user turns it on again.
 //! Development plugins run without "allow third-party plugins", get every
 //! permission they ask for (sensitive ones are still confirmed on first use),
@@ -18,7 +18,7 @@ use super::{
     app_version, builtin,
     grants::stop_plugin,
     host, lock,
-    manifest::{parse_manifest, PluginManifest, MANIFEST_FILE_NAME},
+    manifest::{parse_manifest, read_manifest_text, PluginManifest, MANIFEST_FILE_NAME},
     registry::rescan,
     runtime::TraceEntry,
 };
@@ -64,7 +64,7 @@ pub(super) fn plugins() -> Vec<(String, PathBuf)> {
 
 /// Reads a development plugin's manifest. Its folder may have any name.
 pub(super) fn read_manifest(dir: &Path, app_version: &str) -> Result<PluginManifest, String> {
-    let text = fs::read_to_string(dir.join(MANIFEST_FILE_NAME))
+    let text = read_manifest_text(dir)
         .map_err(|error| format!("Could not read {MANIFEST_FILE_NAME} in {}: {error}", dir.display()))?;
     let id = serde_json::from_str::<Value>(&text)
         .ok()
@@ -150,7 +150,7 @@ pub(super) fn load(path: &str) -> DevResult<String> {
     let id = manifest.id;
     lock(&DEV).plugins.insert(id.clone(), dir);
     // A running copy (installed, or loaded before) starts again from this folder,
-    // with a fresh log and trace (`fly-island-plugin dev` prints the log from the start).
+    // with a fresh log and trace (`fuyu-plugin dev` prints the log from the start).
     stop_plugin(&id).map_err(internal)?;
     lock(&host.runtimes).remove(&id);
     rescan().map_err(internal)?;

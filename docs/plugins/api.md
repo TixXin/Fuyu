@@ -126,7 +126,7 @@
 | `view.action` | 2 | { viewId, actionId, itemId?, checked? }: the user clicked an action or an item, or a check box (checked) |
 | `view.submit` | 2 | { viewId, values }: the user submitted the form |
 | `view.search` | 2 | { viewId, query }: the user typed in the list's search box (only if the model asks for searchMode remote) |
-| `webview.message` | 2 | { viewId, message }: the plugin's webview page called acquireFocusdApi().postMessage(message) (max 256 KB) |
+| `webview.message` | 2 | { viewId, message }: the plugin's webview page called acquireFuyuApi().postMessage(message) (max 256 KB) |
 | `shutdown` | 1 | {} |
 
 ## 插件发给岛屿的通知

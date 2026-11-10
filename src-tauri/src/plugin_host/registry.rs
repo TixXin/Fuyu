@@ -10,7 +10,7 @@ use super::{
     app_version, builtin, dev,
     grants::sync_processes,
     host, keybindings, lock,
-    manifest::{parse_manifest, runtime_requirement, LocalizedText, PluginCommand, PluginRuntime, MANIFEST_FILE_NAME},
+    manifest::{parse_manifest, read_manifest_text, runtime_requirement, LocalizedText, PluginCommand, PluginRuntime, MANIFEST_FILE_NAME},
     market,
     permissions::missing_permissions,
     runtime::{self, CallRecord, Resources, RuntimeStatus},
@@ -152,7 +152,7 @@ fn scan_folder(plugins_dir: &PathBuf, app_version: &str) -> Vec<InstalledPlugin>
             let manifest = if builtin::is_builtin(&folder) {
                 Err("This id belongs to a plugin built into Fuyu.".to_string())
             } else {
-                fs::read_to_string(dir.join(MANIFEST_FILE_NAME))
+                read_manifest_text(&dir)
                     .map_err(|error| format!("Could not read {MANIFEST_FILE_NAME}: {error}"))
                     .and_then(|text| parse_manifest(&text, &folder, app_version))
                     .and_then(dev::check_installed)

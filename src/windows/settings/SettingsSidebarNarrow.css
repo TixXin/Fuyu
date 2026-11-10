@@ -1,0 +1,92 @@
+/*
+ * A narrow settings window (under 760px): the sidebar card is a 52px column of page icons. With
+ * the cursor or keyboard focus on it, it opens to its full width over the page, names, search and
+ * folding included, and closes again when they leave; so no tooltips are needed (user-approved
+ * preview, 2026-11-10).
+ */
+@media (max-width: 759px) {
+  .settings-layout {
+    grid-template-columns: 52px minmax(0, 1fr);
+  }
+
+  .settings-sidebar-card {
+    position: relative;
+    z-index: 4;
+    width: 52px;
+    overflow: hidden;
+    transition: width 160ms ease, box-shadow 160ms ease;
+  }
+
+  /* Opens after a short rest, so passing over the column on the way to the page does nothing. */
+  .settings-sidebar-card:is(:hover, :has(:focus-visible)) {
+    width: 212px;
+    box-shadow:
+      0 0 0 1px var(--settings-card-line),
+      0 12px 32px rgba(0, 0, 0, 0.32);
+    transition-delay: 120ms;
+  }
+
+  .settings-sidebar-card:not(:hover, :has(:focus-visible)) .settings-sidebar {
+    width: 52px;
+    padding: 0 8px 8px;
+  }
+
+  /* The search box shrinks to its icon. */
+  .settings-sidebar-card:not(:hover, :has(:focus-visible)) .settings-sidebar__search {
+    margin: 0 0 6px;
+  }
+
+  .settings-sidebar-card:not(:hover, :has(:focus-visible)) .settings-sidebar__search input {
+    padding: 0;
+    color: transparent;
+  }
+
+  .settings-sidebar-card:not(:hover, :has(:focus-visible)) .settings-sidebar__search input::placeholder {
+    color: transparent;
+  }
+
+  .settings-sidebar-card:not(:hover, :has(:focus-visible)) .settings-sidebar__search > svg {
+    left: 11px;
+  }
+
+  /* Names, chevrons and the guide line go; each page is a centred icon. */
+  .settings-sidebar-card:not(:hover, :has(:focus-visible)) :is(.settings-sidebar__item, .settings-sidebar__folder) > span,
+  .settings-sidebar-card:not(:hover, :has(:focus-visible)) .settings-sidebar__chevron,
+  .settings-sidebar-card:not(:hover, :has(:focus-visible)) .settings-sidebar__hits {
+    display: none;
+  }
+
+  .settings-sidebar-card:not(:hover, :has(:focus-visible)) :is(.settings-sidebar__item, .settings-sidebar__folder) {
+    justify-content: center;
+    padding: 0;
+  }
+
+  .settings-sidebar-card:not(:hover, :has(:focus-visible)) .settings-sidebar .settings-sidebar__children {
+    margin: 0;
+    padding: 0;
+    border-left: 0;
+  }
+
+  .settings-sidebar-card:not(:hover, :has(:focus-visible)) .settings-sidebar__item--nested.settings-sidebar__item--active::before {
+    left: 0;
+  }
+
+  /* An open group needs no row of its own: a short rule above it marks where it starts. A folded
+     group keeps its icon, which opens it. */
+  .settings-sidebar-card:not(:hover, :has(:focus-visible)) .settings-sidebar__folder[aria-expanded="true"] {
+    display: none;
+  }
+
+  .settings-sidebar-card:not(:hover, :has(:focus-visible)) .settings-sidebar__group + .settings-sidebar__group {
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid var(--color-white-a08);
+  }
+}
+
+@media (max-width: 759px) and (prefers-reduced-motion: reduce) {
+  .settings-sidebar-card,
+  .settings-sidebar-card:is(:hover, :has(:focus-visible)) {
+    transition: none;
+  }
+}

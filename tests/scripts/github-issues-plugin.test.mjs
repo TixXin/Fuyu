@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { createServer } from "node:http";
 import path from "node:path";
 import test from "node:test";
-import { startMockHost } from "../../packages/fly-island-plugin/src/test/index.mjs";
+import { startMockHost } from "../../packages/fuyu-plugin/src/test/index.mjs";
 
 const PLUGIN = path.resolve("plugins/examples/dev.focusd.github-issues");
 

@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "fly-island",
-  "version": "0.3.5-beta.3",
+  "version": "0.3.5-beta.4",
   "identifier": "com.focusd.island",
   "build": {
     "beforeDevCommand": "node scripts/stop-running-island.mjs && pnpm dev",
@@ -65,8 +65,10 @@
         "minHeight": 420,
         "center": true,
         "resizable": true,
+        "decorations": false,
+        "shadow": true,
         "theme": "Dark",
-        "backgroundColor": "#17191d"
+        "backgroundColor": "#131417"
       }
     ],
     "security": {

@@ -59,7 +59,7 @@
   min-width: 0;
   padding: 10px 12px;
   color: var(--color-text-strong);
-  background: rgba(255, 255, 255, 0.055);
+  background: rgba(var(--overlay-rgb, 255, 255, 255), 0.055);
   border: 1px solid var(--color-white-a08);
   border-radius: var(--radius-lg);
   text-decoration: none;
@@ -79,7 +79,7 @@
 .project-link__icon,
 .project-link__arrow {
   flex: 0 0 auto;
-  color: rgba(248, 246, 240, 0.52);
+  color: rgba(var(--overlay-rgb, 248, 246, 240), 0.52);
 }
 
 .project-link--star .project-link__icon {
@@ -116,13 +116,13 @@
 }
 
 .project-link__copy > span {
-  color: rgba(248, 246, 240, 0.62);
+  color: rgba(var(--overlay-rgb, 248, 246, 240), 0.62);
   font-size: 11px;
 }
 
 .project-link-error {
   margin: 0;
-  color: #ffd8df;
+  color: var(--error-text, #ffd8df);
   font-size: 12px;
   line-height: 1.5;
 }
@@ -145,7 +145,7 @@
 }
 
 .settings-group__card > .project-link:hover {
-  background: var(--color-white-a06, rgba(255, 255, 255, 0.06));
+  background: var(--color-white-a06, rgba(var(--overlay-rgb, 255, 255, 255), 0.06));
 }
 
 .settings-group__card > .project-link:focus-visible {

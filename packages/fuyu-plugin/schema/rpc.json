@@ -1,0 +1,343 @@
+{
+  "$comment": "The Fuyu plugin protocol: JSON-RPC 2.0 over stdio, one message per line. A permission marked sensitive is confirmed by the user on the island the first time it is used (refused: -32001). This file is the source of truth; src-tauri/src/plugin_host/tests.rs checks the host against it and docs/plugins/README.md describes it for people. 'since' is the plugin API version (manifest apiVersion) that introduced the item; 'capability' names the entry in initialize.capabilities that says the host has it.",
+  "apiVersions": { "min": 1, "current": 2 },
+  "capabilities": [
+    { "name": "events", "since": 2, "meaning": "events.subscribe / events.unsubscribe and the 'event' notification." },
+    { "name": "notifications", "since": 2, "meaning": "island.notify and the 'notification.action' notification." },
+    { "name": "storage", "since": 2, "meaning": "storage.get / set / delete / keys." },
+    { "name": "secrets", "since": 2, "meaning": "secrets.get / set / delete." },
+    { "name": "views", "since": 2, "meaning": "contributes.views drawn on the island; view.update / view.patch and the view.action / view.submit / view.search / view.visible notifications." },
+    { "name": "status", "since": 2, "meaning": "contributes.statusItems on the collapsed bar; status.update." },
+    { "name": "webview", "since": 2, "meaning": "contributes.views with template 'webview' (the plugin's own HTML page); webview.postMessage and the 'webview.message' notification." },
+    { "name": "permissions", "since": 2, "meaning": "manifest optionalPermissions and permissions.request; initialize.optionalPermissions." },
+    { "name": "openView", "since": 2, "meaning": "island.openView: a plugin opens its own page right after the user used it." },
+    { "name": "statusCells", "since": 2, "meaning": "status.update draws 'cells' (label-over-value columns) and a 'ring' (0-1). Islands without it ignore both and show the text." },
+    { "name": "notifyStyle", "since": 2, "meaning": "island.notify takes 'icon' ('media': the icon of the app playing media) and 'layout' ('inline': alone in the new-messages popup, the island is the message, with no title row or card). Islands without it ignore both." },
+    { "name": "notifyControls", "since": 2, "meaning": "island.notify takes 'controls' ('media': the island draws previous, play / pause and next beside the message and runs them itself; the plugin needs no media:control). Islands without it ignore it." }
+  ],
+  "permissions": [
+    { "name": "todos:read", "since": 1 },
+    { "name": "todos:write", "since": 1 },
+    { "name": "notes:read", "since": 1 },
+    { "name": "notes:write", "since": 1 },
+    { "name": "agent-status:read", "since": 2 },
+    { "name": "agent-status:write", "since": 1 },
+    { "name": "island:notify", "since": 2 },
+    { "name": "secrets", "since": 2 },
+    { "name": "clipboard:read", "since": 2, "sensitive": true },
+    { "name": "messages:read", "since": 2, "sensitive": true },
+    { "name": "media:read", "since": 2, "sensitive": true },
+    { "name": "media:control", "since": 2 },
+    { "name": "shelf:read", "since": 2, "sensitive": true },
+    { "name": "shelf:write", "since": 2, "sensitive": true }
+  ],
+  "events": [
+    { "name": "todos.changed", "permission": "todos:read", "since": 2, "payload": "{ date }; call todos.list for the todos" },
+    { "name": "note.changed", "permission": "notes:read", "since": 2, "payload": "{ date }; call note.get for the text" },
+    { "name": "agentStatus.changed", "permission": "agent-status:read", "since": 2, "payload": "{ agents: [{ id, name, phase, title? }] }" },
+    { "name": "island.expanded", "permission": null, "since": 2, "payload": "{}" },
+    { "name": "island.collapsed", "permission": null, "since": 2, "payload": "{}" },
+    { "name": "app.locale.changed", "permission": null, "since": 2, "payload": "{ locale }" },
+    { "name": "clipboard.changed", "permission": "clipboard:read", "since": 2, "payload": "{}; call clipboard.history. Only while clipboard history is on." },
+    { "name": "messages.received", "permission": "messages:read", "since": 2, "payload": "One entry as in messages.list: { source, id, sender, preview, receivedAt, unread? }" },
+    { "name": "media.changed", "permission": "media:read", "since": 2, "payload": "Same as media.nowPlaying; sent when the track, player or play state changes (checked every 2 s while subscribed), not for the position." },
+    { "name": "shelf.changed", "permission": "shelf:read", "since": 2, "payload": "{ count }: the file shelf changed (by the user or a plugin); call shelf.list for the entries." },
+    { "name": "system.locked", "permission": null, "since": 2, "payload": "{}: the user locked the session (Win+L, or away)." },
+    { "name": "system.unlocked", "permission": null, "since": 2, "payload": "{}: the session was unlocked." },
+    { "name": "system.suspended", "permission": null, "since": 2, "payload": "{}: the computer is going to sleep; there is little time left to save." },
+    { "name": "system.resumed", "permission": null, "since": 2, "payload": "{}: the computer woke up." },
+    { "name": "system.idle", "permission": null, "since": 2, "payload": "{ idleSeconds }: no keyboard or mouse input for 5 minutes (checked every 5 s); sent once until input comes back." },
+    { "name": "system.active", "permission": null, "since": 2, "payload": "{}: input again after system.idle." }
+  ],
+  "methods": [
+    {
+      "name": "host.info",
+      "permission": null,
+      "since": 1,
+      "params": null,
+      "result": "Same as the initialize params."
+    },
+    {
+      "name": "settings.get",
+      "permission": null,
+      "since": 1,
+      "params": null,
+      "result": "Every declared setting with its current value (defaults filled in)."
+    },
+    {
+      "name": "settings.set",
+      "permission": null,
+      "since": 2,
+      "params": { "values": "{ key: value }: settings from the manifest's contributes.settings, each of its declared type" },
+      "result": "{ settings }: every setting afterwards. All or none: an unknown key or a wrong type is status 400 and changes nothing. The settings page shows the new values; the plugin gets no settings.changed for its own change."
+    },
+    {
+      "name": "ui.setInfo",
+      "permission": null,
+      "since": 1,
+      "params": { "items": "[{ label: LocalizedText, value: string (max 500 chars), copy?: boolean, secret?: boolean }] (max 10; empty clears)" },
+      "result": "{}"
+    },
+    {
+      "name": "events.subscribe",
+      "permission": null,
+      "since": 2,
+      "params": { "events": "[string] (max 16; each needs the event's permission; all are checked before any is applied)" },
+      "result": "{ events }: every event the plugin is subscribed to, sorted"
+    },
+    {
+      "name": "events.unsubscribe",
+      "permission": null,
+      "since": 2,
+      "params": { "events": "[string] (max 16)" },
+      "result": "{ events }"
+    },
+    {
+      "name": "view.update",
+      "permission": null,
+      "since": 2,
+      "params": { "viewId": "one of the plugin's contributes.views", "model": "object for the view's template (see docs/plugins/README.md); max 256 KB as JSON, else status 413" },
+      "result": "{}. The island shows at most 10 changes a second per view (later ones are merged) and only while the page is on screen."
+    },
+    {
+      "name": "webview.postMessage",
+      "permission": null,
+      "since": 2,
+      "params": { "viewId": "one of the plugin's views with template webview", "message": "any JSON value; max 256 KB" },
+      "result": "{ shown }: false when the page is not on screen (the message is dropped). Messages sent before the page's script runs are lost too, so wait for the page to post that it is ready."
+    },
+    {
+      "name": "view.patch",
+      "permission": null,
+      "since": 2,
+      "params": { "viewId": "string", "items?": "[{ id, ... }]: replace the items with these ids in model.items and model.groups[].items", "remove?": "[id]: delete the items with these ids", "add?": "[{ item: { id, ... }, before?: id, group?: number }]: insert before the item `before`, else at the end of model.groups[group].items, else at the end of model.items; an id already in the view is status 400" },
+      "result": "{ missing: [id] }: ids not found (an add whose `before` is missing goes at the end). At least one of items, remove and add. Status 409 before the first view.update."
+    },
+    {
+      "name": "status.update",
+      "permission": null,
+      "since": 2,
+      "params": { "itemId": "one of the plugin's contributes.statusItems", "text": "string, max 24 characters; empty clears the item", "tooltip?": "string, max 200", "tone?": "neutral | accent | warning | danger", "cells?": "[{ label: string max 6, value: string max 8, tone?: as above }], at most 4; drawn instead of the text (capability statusCells)", "ring?": "number 0-1: a small progress ring in the item's tone before the text or cells (capability statusCells)" },
+      "result": "{}"
+    },
+    {
+      "name": "storage.get",
+      "permission": null,
+      "since": 2,
+      "params": { "key": "string (1-128 chars)" },
+      "result": "{ value }: null when the key is not set"
+    },
+    {
+      "name": "storage.set",
+      "permission": null,
+      "since": 2,
+      "params": { "key": "string (1-128 chars)", "value": "any JSON (max 64 KB as JSON; the plugin's whole storage max 1 MB, else status 413)" },
+      "result": "{}"
+    },
+    {
+      "name": "storage.delete",
+      "permission": null,
+      "since": 2,
+      "params": { "key": "string" },
+      "result": "{ deleted }"
+    },
+    {
+      "name": "storage.keys",
+      "permission": null,
+      "since": 2,
+      "params": null,
+      "result": "{ keys }"
+    },
+    {
+      "name": "permissions.request",
+      "permission": null,
+      "since": 2,
+      "params": { "permissions": "[name]: 1-14 names from the manifest's optionalPermissions (or permissions)" },
+      "result": "{ granted: [name], denied: [name] }. The island asks the user about each optional permission not answered yet (allow, allow once, deny; at most 30 s each, no answer is a denial that is asked again next time). A remembered deny is not asked again until the user revokes it in the plugin's settings. A name the manifest does not list is status 400."
+    },
+    {
+      "name": "host.keepAlive",
+      "permission": null,
+      "since": 2,
+      "params": { "reason": "string (1-100 chars) shown on the plugin page; null lets the plugin stop when idle again" },
+      "result": "{}. Only matters for on-demand plugins (activationEvents), which otherwise stop after 60 s with nothing to do."
+    },
+    {
+      "name": "island.openView",
+      "permission": null,
+      "since": 2,
+      "capability": "openView",
+      "params": { "viewId": "one of the plugin's contributes.views" },
+      "result": "{}. Shows the island and opens that page. Only within 15 s of the user using the plugin (a command or its shortcut, an island.notify button, a focusd:// link, an action, form or webview message on one of its pages), else status 403; a view the plugin does not declare is status 404."
+    },
+    {
+      "name": "todos.list",
+      "permission": "todos:read",
+      "since": 1,
+      "params": { "date?": "YYYY-MM-DD (since 2); missing means today" },
+      "result": "{ date, todos, scheduled, activeTodoId }. A past date reads that day's archive ({ ..., archived: true }; status 404 when nothing was archived for it); a later date gives the todos scheduled for it in 'scheduled'."
+    },
+    {
+      "name": "todos.days",
+      "permission": "todos:read",
+      "since": 2,
+      "params": { "from": "YYYY-MM-DD", "to": "YYYY-MM-DD" },
+      "result": "{ days: [{ date, total, completed, hasNote, archived }] }: today and every archived day from 'from' to 'to' (inclusive), oldest first."
+    },
+    {
+      "name": "todos.add",
+      "permission": "todos:write",
+      "since": 1,
+      "params": { "title": "string", "date?": "YYYY-MM-DD; later than today goes to the 'later' list" },
+      "result": "The new todo."
+    },
+    {
+      "name": "todos.update",
+      "permission": "todos:write",
+      "since": 1,
+      "params": { "id": "string", "title?": "string", "completed?": "boolean" },
+      "result": "The changed todo."
+    },
+    {
+      "name": "todos.remove",
+      "permission": "todos:write",
+      "since": 1,
+      "params": { "id": "string" },
+      "result": "{ id }"
+    },
+    {
+      "name": "note.get",
+      "permission": "notes:read",
+      "since": 1,
+      "params": { "date?": "YYYY-MM-DD (since 2); missing means today" },
+      "result": "{ date, note }. A past date reads that day's archived note ({ ..., archived: true }; status 404 when nothing was archived); a later date is status 400."
+    },
+    {
+      "name": "note.set",
+      "permission": "notes:write",
+      "since": 1,
+      "params": { "note | append": "string" },
+      "result": "{ date, note }"
+    },
+    {
+      "name": "agentStatus.report",
+      "permission": "agent-status:write",
+      "since": 1,
+      "params": { "source": "string", "phase": "idle | running | waiting | completed | failed", "name?": "string", "title?": "string", "taskId?": "string", "host?": "string (max 64): the machine it runs on", "agent?": "claudeCode | codex", "cwd?": "string (max 260)" },
+      "result": "The saved status; id is '<plugin id>/<source>'."
+    },
+    {
+      "name": "agentStatus.clear",
+      "permission": "agent-status:write",
+      "since": 1,
+      "params": { "source?": "string; omitted clears every source of the plugin" },
+      "result": "{ cleared }"
+    },
+    {
+      "name": "island.notify",
+      "permission": "island:notify",
+      "since": 2,
+      "params": { "title": "string (1-80 chars)", "body?": "string (max 200)", "durationMs?": "number, clamped to 2000-15000, default 5000", "actions?": "[{ id: [A-Za-z0-9-]{1,32}, title: string (max 16) }] (max 2)", "icon?": "'plugin' (default) | 'media': the icon of the app playing media, else the plugin's (capability notifyStyle)", "layout?": "'card' (default) | 'inline': alone in the new-messages popup, no title row or card (capability notifyStyle)", "controls?": "'none' (default) | 'media': previous, play / pause and next beside the message, run by the island (capability notifyControls)" },
+      "result": "{ muted }: true when the user turned this plugin's messages off (nothing is shown). At most 6 per minute per plugin, else -32000 with status 429."
+    },
+    {
+      "name": "secrets.get",
+      "permission": "secrets",
+      "since": 2,
+      "params": { "key": "letters, digits, '.', '_', '-' (1-64 chars)" },
+      "result": "{ value }: null when not set"
+    },
+    {
+      "name": "secrets.set",
+      "permission": "secrets",
+      "since": 2,
+      "params": { "key": "as above", "value": "string (max 1024 chars); at most 32 secrets per plugin (status 413)" },
+      "result": "{}"
+    },
+    {
+      "name": "secrets.delete",
+      "permission": "secrets",
+      "since": 2,
+      "params": { "key": "as above" },
+      "result": "{ deleted }"
+    },
+    {
+      "name": "clipboard.history",
+      "permission": "clipboard:read",
+      "since": 2,
+      "params": { "limit?": "1-50, default 20" },
+      "result": "{ items: [{ id, text (max 4000 chars), truncated, copiedAt, favorite }] }: text items only, newest first. Status 409 while clipboard history is off."
+    },
+    {
+      "name": "messages.list",
+      "permission": "messages:read",
+      "since": 2,
+      "params": null,
+      "result": "{ items: [{ source: qq | wechat | qqMail, id, sender, preview, receivedAt, unread? }] }, newest first, from the sources the user switched on. WeChat entries have sender and preview null (only the tray flash is known); qqMail preview is the subject, never the body."
+    },
+    {
+      "name": "media.nowPlaying",
+      "permission": "media:read",
+      "since": 2,
+      "params": null,
+      "result": "{ available, status, title, artist, album, sourceApp, positionMs, durationMs, canSeek, canNext, canPrevious, shuffle (true | false | null), repeat ('none' | 'track' | 'list' | 'unknown'), volume (system volume 0-1, or null) }. No cover image: see media.cover."
+    },
+    { "name": "media.cover", "permission": "media:read", "since": 2, "params": null, "result": "{ cover }: the cover of what plays as a data: URL, or null (none, or larger than 1 MB)." },
+    { "name": "media.playPause", "permission": "media:control", "since": 2, "params": null, "result": "Same as media.nowPlaying, after the command." },
+    { "name": "media.next", "permission": "media:control", "since": 2, "params": null, "result": "Same as media.nowPlaying, after the command." },
+    { "name": "media.previous", "permission": "media:control", "since": 2, "params": null, "result": "Same as media.nowPlaying, after the command." },
+    { "name": "media.seek", "permission": "media:control", "since": 2, "params": { "positionMs": "whole number from 0" }, "result": "Same as media.nowPlaying, after the command. Fails when the player cannot seek (canSeek false)." },
+    { "name": "media.setVolume", "permission": "media:control", "since": 2, "params": { "level": "0-1" }, "result": "Same as media.nowPlaying. Sets the system volume of the default output, like the island's own slider." },
+    { "name": "media.toggleShuffle", "permission": "media:control", "since": 2, "params": null, "result": "Same as media.nowPlaying, after the command." },
+    { "name": "media.cycleRepeat", "permission": "media:control", "since": 2, "params": null, "result": "Same as media.nowPlaying: none, then list, then track." },
+    {
+      "name": "shelf.list",
+      "permission": "shelf:read",
+      "since": 2,
+      "params": null,
+      "result": "{ items: [{ id, path, name, isDir, size, addedAt, pinned, missing, unreachable }] }: paths only, never file contents."
+    },
+    {
+      "name": "shelf.add",
+      "permission": "shelf:write",
+      "since": 2,
+      "params": { "paths": "[string] (1-20 absolute paths of existing files or folders; others are skipped)" },
+      "result": "Same as shelf.list, afterwards."
+    },
+    {
+      "name": "shelf.remove",
+      "permission": "shelf:write",
+      "since": 2,
+      "params": { "ids": "[string] (1-20); only takes entries off the shelf, never deletes files" },
+      "result": "Same as shelf.list, afterwards."
+    }
+  ],
+  "toPlugin": [
+    {
+      "name": "initialize",
+      "since": 1,
+      "params": "{ apiVersion, capabilities (since 2), activationEvent (since 2: onStartup, onCommand:<id>, onView:<id>, onEvent:<name>, onSchedule:<minutes>, onStartupFinished, onUri, or onSettingsChanged when the user changed the settings of an on-demand plugin that was not running), appVersion, pluginId, dataDir, permissions (those usable now: the manifest's permissions plus the optional ones the user allowed), optionalPermissions (since 2), settings, experimentalApis (only for a development-mode plugin whose manifest lists experimentalApis: those the island has) }"
+    },
+    { "name": "command", "since": 1, "params": "{ id, args? }: a button on the plugin page or the command's keybinding (since 2) sends { id }; an entry of the todo right-click menu (contributes.menus \"todo/context\", since 2) sends { id, args: { todoId } }; of the clipboard, file shelf or message right-click menu (\"clipboard/context\", \"shelf/context\", \"message/context\") sends { id, args: { item } }, the entry as clipboard.history, shelf.list or messages.list show it" },
+    { "name": "settings.changed", "since": 1, "params": "{ settings }" },
+    { "name": "event", "since": 2, "params": "{ name, payload }; at most one per event name every 200 ms, carrying the latest payload, except messages.received, which delivers every message (up to 50 per 200 ms). Subscriptions end when the process exits, and events that need a sensitive permission stop as soon as the user revokes it." },
+    { "name": "notification.action", "since": 2, "params": "{ id }: the user clicked that button of an island.notify message" },
+    { "name": "uri", "since": 2, "params": "{ uri, path, query }: a focusd://plugin/<id>/<path>?<query> link was opened (only with activationEvents onUri, after the user allowed it on the island; query is still percent-encoded)" },
+    { "name": "view.visible", "since": 2, "params": "{ viewId, visible }: the page was opened or closed; send updates while it is visible" },
+    { "name": "view.action", "since": 2, "params": "{ viewId, actionId, itemId?, checked? }: the user clicked an action or an item, or a check box (checked)" },
+    { "name": "view.submit", "since": 2, "params": "{ viewId, values }: the user submitted the form" },
+    { "name": "view.search", "since": 2, "params": "{ viewId, query }: the user typed in the list's search box (only if the model asks for searchMode remote)" },
+    { "name": "webview.message", "since": 2, "params": "{ viewId, message }: the plugin's webview page called acquireFuyuApi().postMessage(message) (max 256 KB)" },
+    { "name": "shutdown", "since": 1, "params": "{}" }
+  ],
+  "fromPlugin": [
+    { "name": "log", "since": 1, "params": "{ message }" }
+  ],
+  "errors": [
+    { "code": -32700, "meaning": "Not valid JSON." },
+    { "code": -32600, "meaning": "Not a valid JSON-RPC 2.0 message." },
+    { "code": -32601, "meaning": "Unknown method." },
+    { "code": -32001, "meaning": "The plugin was not given the permission the method needs." },
+    { "code": -32000, "meaning": "The island answered with an error; data.status is 400 bad params, 404 not found, 413 too large, 409 the feature is switched off, 429 too many requests, 500 the host could not do it (e.g. a file or the Credential Manager failed), 504 no answer in time." }
+  ]
+}

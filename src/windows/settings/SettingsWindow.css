@@ -1,19 +1,40 @@
 .settings-stage {
+  --settings-card: #1b1d22;
+  --settings-card-line: rgba(var(--overlay-rgb, 255, 255, 255), 0.07);
   height: 100%;
   color: var(--color-page-text);
-  background: #17191d;
+  background: #131417;
+}
+
+/* The light window: the same layout, a pale base and white cards. */
+.settings-stage--light {
+  --settings-card: #ffffff;
+  --settings-card-line: rgba(0, 0, 0, 0.08);
+  background: #eceef2;
+}
+
+/* Cards white on the pale base, a step up like the sidebar card, not a grey wash. */
+.settings-stage--light :is(.settings-group__card, .settings-section:not(.settings-section--list), .plugin-card, .plugin-market__item, .theme-market__item) {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.08);
 }
 
 .settings-stage select {
   font: inherit;
 }
 
+/* The title row above the page, in line with the page and as wide. */
+.settings-stage .settings-page__header {
+  max-width: 908px;
+  /* Clear of the window buttons at the top right (WindowControls.css, 3 × 46px). */
+  padding: 4px 146px 0 24px;
+}
+
 /* Pages stop at a readable width in a wide window; the rest stays empty on the right. */
 .settings-stage .editor-panel {
   grid-template-columns: minmax(0, 860px);
-  height: 100%;
   min-height: 0;
-  padding: 16px 24px 24px;
+  padding: 4px 28px 24px 24px;
   border-radius: 0;
   background: transparent;
   gap: var(--space-xl);

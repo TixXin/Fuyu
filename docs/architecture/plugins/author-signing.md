@@ -1,6 +1,6 @@
 # 插件作者签名与“已验证”发布者（设计稿）
 
-状态：**已审**（2026-11-06，决定见第 7 节）。第 1 期已实现（2026-11-06）：SDK `packages/fly-island-plugin/src/sign.mjs`，岛屿 `src-tauri/src/plugin_host/author_signing.rs`，官方作者密钥 `0c663505c8e1d524`（公钥 `plugins/author-key.json`，私钥 `~/.tauri/fly-island/plugin-author-signing.key`）。第 2 期已实现（2026-11-06）：`fly-island-plugin keys rotate`（`packages/fly-island-plugin/src/rotate.mjs`），岛屿 `author_signing::endorsed_keys`（证明可以成链，只对写在里面的插件 id 有效），focusd-plugins 的 CI 校验 `signingKeys` 里的 `endorsedBy`。第 3 期已实现（2026-11-06）：focusd-plugins `scripts/lib/publishers.mjs`，岛屿 `market.rs` 的 `VerifiedPublisher`，与第 4 节的差异见那里。对应 [plugin-platform.md](v2-platform.md) P11 里写着“以后再做”的两项：可选的作者签名、“已验证”发布者。
+状态：**已审**（2026-11-06，决定见第 7 节）。第 1 期已实现（2026-11-06）：SDK `packages/fuyu-plugin/src/sign.mjs`，岛屿 `src-tauri/src/plugin_host/author_signing.rs`，官方作者密钥 `0c663505c8e1d524`（公钥 `plugins/author-key.json`，私钥 `~/.tauri/fly-island/plugin-author-signing.key`）。第 2 期已实现（2026-11-06）：`fly-island-plugin keys rotate`（`packages/fuyu-plugin/src/rotate.mjs`），岛屿 `author_signing::endorsed_keys`（证明可以成链，只对写在里面的插件 id 有效），focusd-plugins 的 CI 校验 `signingKeys` 里的 `endorsedBy`。第 3 期已实现（2026-11-06）：focusd-plugins `scripts/lib/publishers.mjs`，岛屿 `market.rs` 的 `VerifiedPublisher`，与第 4 节的差异见那里。对应 [plugin-platform.md](v2-platform.md) P11 里写着“以后再做”的两项：可选的作者签名、“已验证”发布者。
 
 ## 1. 要防什么
 
@@ -146,7 +146,7 @@
 
 | 期 | 内容 | 涉及 |
 |---|---|---|
-| 1 | 签名格式；SDK `keygen` / `pack --sign` / `sign`；focusd-plugins 的登记、CI 校验、索引字段；岛屿校验、首次信任后固定密钥、“签名密钥变了”提示与确认、“作者已签名”标签；官方插件签名 | `packages/fly-island-plugin`、focusd-plugins `scripts/`、`plugin_host/{market,signature,updates,store}.rs`、`src/features/plugins/` |
+| 1 | 签名格式；SDK `keygen` / `pack --sign` / `sign`；focusd-plugins 的登记、CI 校验、索引字段；岛屿校验、首次信任后固定密钥、“签名密钥变了”提示与确认、“作者已签名”标签；官方插件签名 | `packages/fuyu-plugin`、focusd-plugins `scripts/`、`plugin_host/{market,signature,updates,store}.rs`、`src/features/plugins/` |
 | 2 ✅ | 换密钥证明（`keys rotate`、CI 校验、岛屿自动接受） | 同上 |
 | 3 ✅ | “已验证”发布者 | focusd-plugins CI、市场页 |
 

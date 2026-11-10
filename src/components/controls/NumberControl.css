@@ -62,7 +62,7 @@
 }
 
 .number-control__field button:hover:not(:disabled) {
-  color: var(--color-white);
+  color: var(--color-text);
   background: var(--color-white-a10);
 }
 

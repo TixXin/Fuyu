@@ -17,26 +17,30 @@ test("the generated SDK files match their sources (run pnpm sdk:build)", () => {
 });
 
 test("the PowerShell module exports every function and stays ASCII", () => {
-  const module = read("packages/powershell/FlyIsland.Plugin/FlyIsland.Plugin.psm1");
-  const manifest = read("packages/powershell/FlyIsland.Plugin/FlyIsland.Plugin.psd1");
+  const module = read("packages/powershell/Fuyu.Plugin/Fuyu.Plugin.psm1");
+  const manifest = read("packages/powershell/Fuyu.Plugin/Fuyu.Plugin.psd1");
   const functions = [...module.matchAll(/^function ([\w-]+)/gm)].map((match) => match[1]).sort();
-  const exported = [...manifest.matchAll(/'([A-Za-z]+-Focusd\w*)'/g)].map((match) => match[1]).sort();
+  const exported = [...manifest.matchAll(/'([A-Za-z]+-Fuyu\w*)'/g)].map((match) => match[1]).sort();
   assert.deepEqual(exported, functions);
-  assert.ok([...module].every((char) => char.charCodeAt(0) < 128), "FlyIsland.Plugin.psm1 must be ASCII for PowerShell 5.1");
-  assert.ok([...read("plugins/sdk/powershell/focusd.ps1")].every((char) => char.charCodeAt(0) < 128));
+  // Each function keeps its name from before the rename as an alias (D17).
+  const aliases = [...manifest.matchAll(/'([A-Za-z]+-Focusd\w*)'/g)].map((match) => match[1].replace("-Focusd", "-Fuyu")).sort();
+  assert.deepEqual(aliases, functions);
+  assert.ok([...module].every((char) => char.charCodeAt(0) < 128), "Fuyu.Plugin.psm1 must be ASCII for PowerShell 5.1");
+  assert.ok([...read("plugins/sdk/powershell/fuyu.ps1")].every((char) => char.charCodeAt(0) < 128));
 });
 
 // Windows PowerShell 5.1's [Console]::In.ReadLineAsync blocked until a line came, so waits never
 // timed out and timer-driven plugins (the system monitor) stalled between messages (E10).
 test("the PowerShell SDK's wait for a message times out, and reads UTF-8", { skip: process.platform !== "win32" }, async () => {
-  const dir = mkdtempSync(path.join(tmpdir(), "focusd-sdk-"));
+  const dir = mkdtempSync(path.join(tmpdir(), "fuyu-sdk-"));
   try {
-    copyFileSync(path.join(root, "plugins/sdk/powershell/focusd.ps1"), path.join(dir, "focusd.ps1"));
+    copyFileSync(path.join(root, "plugins/sdk/powershell/fuyu.ps1"), path.join(dir, "fuyu.ps1"));
+    // New names, and the names from before the rename (D17) that older plugins call.
     writeFileSync(path.join(dir, "main.ps1"), [
-      '. "$PSScriptRoot\\focusd.ps1"',
-      "foreach ($i in 1..3) { if ($null -eq (Receive-FocusdNotification 200)) { Write-FocusdLog 'timeout' } }",
+      '. "$PSScriptRoot\\fuyu.ps1"',
+      "foreach ($i in 1..3) { if ($null -eq (Receive-FuyuNotification 200)) { Write-FocusdLog 'timeout' } }",
       "$message = Receive-FocusdNotification 10000",
-      "Write-FocusdLog \"echo $($message.params.text)\"",
+      "Write-FuyuLog \"echo $($message.params.text)\"",
     ].join("\r\n"));
     const child = spawn("powershell.exe", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", path.join(dir, "main.ps1")], { stdio: ["pipe", "pipe", "inherit"] });
     const logs = [];
@@ -67,11 +71,11 @@ test("the PowerShell SDK's wait for a message times out, and reads UTF-8", { ski
 });
 
 test("the npm packages publish what they reference", () => {
-  for (const name of ["fly-island-plugin", "create-fly-island-plugin"]) {
+  for (const name of ["fuyu-plugin", "create-fuyu-plugin"]) {
     const pkg = JSON.parse(read(`packages/${name}/package.json`));
     for (const target of Object.values(pkg.bin)) assert.ok(pkg.files.includes(target.split("/")[0]), `${name}: ${target}`);
     assert.deepEqual(Object.keys(pkg.dependencies ?? {}), [], `${name} has no runtime dependencies`);
   }
-  const versions = ["fly-island-plugin", "create-fly-island-plugin"].map((name) => JSON.parse(read(`packages/${name}/package.json`)).version);
+  const versions = ["fuyu-plugin", "create-fuyu-plugin"].map((name) => JSON.parse(read(`packages/${name}/package.json`)).version);
   assert.equal(versions[0], versions[1], "create-fly-island-plugin makes plugins depend on its own version of fly-island-plugin");
 });
