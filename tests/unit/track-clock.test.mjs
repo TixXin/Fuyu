@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { advanceClock, alignClock, clockPosition, hasTimeline, NO_CLOCK, startClockAt } from "../../src/features/media/trackClock.ts";
+import { advanceClock, alignClock, clockPosition, hasTimeline, keepIslandTimeline, NO_CLOCK, settleClockAt, startClockAt } from "../../src/features/media/trackClock.ts";
 
 test("players that report no position are timed by the island", () => {
   assert.equal(hasTimeline({ positionMs: 0, durationMs: 0 }), false);
@@ -49,6 +49,29 @@ test("a track the player says started at a time is timed from then, even after t
 test("a start the clock is already well past leaves it alone", () => {
   const playing = advanceClock(advanceClock(NO_CLOCK, "余香", true, 0), "晴天", true, 1000);
   assert.equal(startClockAt(playing, "晴天", true, 60_000, 60_100), playing);
+});
+
+test("a play or pause a poll saw first is moved back to when the player says it happened", () => {
+  // Playing since 0; the player paused at 10.0 s, a poll under way saw it at 10.4 s.
+  const polledPause = advanceClock(advanceClock(NO_CLOCK, "余香", true, 0), "余香", false, 10_400);
+  const paused = settleClockAt(polledPause, "余香", false, 10_000, 10_450);
+  assert.equal(clockPosition(paused, 20_000), 10_000);
+  // It played again at 30.0 s; the poll saw that at 30.3 s.
+  const polledPlay = advanceClock(paused, "余香", true, 30_300);
+  const playing = settleClockAt(polledPlay, "余香", true, 30_000, 30_350);
+  assert.equal(clockPosition(playing, 31_000), 11_000);
+  // An event long before the poll's reading is not taken for this change.
+  assert.equal(settleClockAt(polledPlay, "余香", true, 20_000, 30_350), polledPlay);
+});
+
+test("a command's answer without a position keeps the island's timing of the same track", () => {
+  const current = { title: "安和桥", artist: "宋冬野", sourceApp: "cloudmusic.exe", positionMs: 42_000, durationMs: 0, updatedAt: 5000, positionEstimate: "timed" };
+  const answer = { ...current, positionMs: 0, updatedAt: 9000, positionEstimate: undefined };
+  assert.equal(keepIslandTimeline(answer, current).positionMs, 42_000);
+  assert.equal(keepIslandTimeline(answer, current).updatedAt, 5000);
+  // Another track, or a player that reports its position, is taken as it is.
+  assert.equal(keepIslandTimeline({ ...answer, title: "董小姐" }, current).positionMs, 0);
+  assert.equal(keepIslandTimeline({ ...answer, positionMs: 1000, durationMs: 200_000 }, current).positionMs, 1000);
 });
 
 test("a start announced while paused waits for play", () => {

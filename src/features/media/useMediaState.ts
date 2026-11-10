@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getMediaState, sendMediaCommand, type MediaCommand, type MediaPlaybackStatus, type MediaSessionChange, type MediaState } from "./api";
 import { AUDIO_ACTIVE_THRESHOLD, DEFAULT_MEDIA_STATE, isSameMediaState } from "./mediaState";
-import { advanceClock, alignClock, clockPosition, hasTimeline, NO_CLOCK, startClockAt, type TrackClock } from "./trackClock";
+import { playbackPosition } from "./lyrics/lrc";
+import { alignClock, clockPosition, hasTimeline, keepIslandTimeline, NO_CLOCK, settleClockAt, startClockAt, type TrackClock } from "./trackClock";
 import { useAudioLevel } from "./useAudioLevel";
 import { useMediaSessionChanges } from "./useMediaSessionChanges";
 import { useMusicSourcePriority } from "./useMusicSourcePriority";
@@ -66,7 +67,7 @@ export function useMediaState(enabled = true) {
         ? NO_CLOCK
         : event?.kind === "track"
           ? startClockAt(trackClock.current, untimed, playing, event.at, now)
-          : advanceClock(trackClock.current, untimed, playing, event ? Math.min(event.at, now) : now);
+          : settleClockAt(trackClock.current, untimed, playing, event ? event.at : now, now);
       const timeline = untimed
         ? { positionMs: clockPosition(trackClock.current, now), updatedAt: now, positionEstimate: trackClock.current.fromStart ? "timed" as const : "unsure" as const }
         : {};
@@ -137,6 +138,8 @@ export function useMediaState(enabled = true) {
             audioPeak:
               intendedStatus === "paused" ? 0 : currentState.audioPeak,
             playbackStatus: intendedStatus,
+            // Where it is now, so the position neither freezes at the last reading nor skips it.
+            positionMs: Math.round(playbackPosition(currentState, Date.now())),
             updatedAt: Date.now(),
           }));
         }
@@ -150,9 +153,9 @@ export function useMediaState(enabled = true) {
 
         if (!isTransport) {
           setMediaState((currentState) =>
-            isSameMediaState(currentState, nextMediaState)
+            isSameMediaState(currentState, keepIslandTimeline(nextMediaState, currentState))
               ? currentState
-              : nextMediaState,
+              : keepIslandTimeline(nextMediaState, currentState),
           );
           return;
         }
@@ -160,7 +163,7 @@ export function useMediaState(enabled = true) {
         setMediaState((currentState) => {
           if (intendedStatus === "paused") {
             return {
-              ...nextMediaState,
+              ...keepIslandTimeline(nextMediaState, currentState),
               audioActive: false,
               audioPeak: 0,
               playbackStatus: intendedStatus,
@@ -168,7 +171,7 @@ export function useMediaState(enabled = true) {
           }
 
           return {
-            ...nextMediaState,
+            ...keepIslandTimeline(nextMediaState, currentState),
             audioActive:
               nextMediaState.audioActive || currentState.audioActive,
             audioPeak: Math.max(
