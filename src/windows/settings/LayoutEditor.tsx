@@ -23,9 +23,11 @@ export function LayoutEditor({
   const [found, setFound] = useState<FoundRow | null>(null);
   useFoundRow(found, category, panel);
   return (
-    <div className="settings-layout">
-      {/* The sidebar is its own card, with the window buttons on top (no Windows title bar). */}
-      <div className="settings-sidebar-card">
+    // No Windows title bar: the window's top edge, the card's top and the whole title row drag the
+    // window (data-tauri-drag-region counts only clicks on the element itself, not its children).
+    <div className="settings-layout" data-tauri-drag-region>
+      {/* The sidebar is its own card, with the window buttons on top. */}
+      <div className="settings-sidebar-card" data-tauri-drag-region>
         <WindowControls />
         <SettingsSidebar
           category={category}
@@ -37,14 +39,17 @@ export function LayoutEditor({
         />
       </div>
 
-      {/* Keyed by page so each page opens scrolled to the top. */}
-      <div className="editor-panel" key={category} ref={panel}>
-        {/* Its empty space drags the window and a double click maximizes, as a title bar would. */}
+      <div className="settings-content">
+        {/* Above the scrolling page, so it drags the window wherever the page is scrolled to; a
+            double click maximizes, as a title bar would. */}
         <div className="settings-page__header" data-tauri-drag-region>
           <h1 className="settings-page__title" data-tauri-drag-region>{t.settings.categories[category]}</h1>
           {titleAction}
         </div>
-        {children}
+        {/* Keyed by page so each page opens scrolled to the top. */}
+        <div className="editor-panel" key={category} ref={panel}>
+          {children}
+        </div>
       </div>
     </div>
   );

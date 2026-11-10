@@ -70,8 +70,8 @@
   align-content: start;
   min-height: 0;
   overflow-y: auto;
-  scrollbar-color: rgba(116, 214, 255, 0.38) transparent;
-  scrollbar-width: thin;
+  /* Scrolls by wheel and keyboard without a visible bar (user request 2026-11-10). */
+  scrollbar-width: none;
 }
 
 /* Rows sit close together and groups well apart, so the groups are what the eye sees first. */
@@ -280,4 +280,8 @@
   .settings-sidebar__item--active::before {
     animation: none;
   }
+}
+
+.settings-sidebar__list::-webkit-scrollbar {
+  display: none;
 }

@@ -10,12 +10,17 @@
   font: inherit;
 }
 
+/* The title row above the page, in line with the page and as wide. */
+.settings-stage .settings-page__header {
+  max-width: 908px;
+  padding: 4px 28px 0 24px;
+}
+
 /* Pages stop at a readable width in a wide window; the rest stays empty on the right. */
 .settings-stage .editor-panel {
   grid-template-columns: minmax(0, 860px);
-  height: 100%;
   min-height: 0;
-  padding: 10px 28px 24px 24px;
+  padding: 4px 28px 24px 24px;
   border-radius: 0;
   background: transparent;
   gap: var(--space-xl);
