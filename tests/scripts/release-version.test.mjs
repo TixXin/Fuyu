@@ -70,7 +70,7 @@ test("issues whose task has a commit in the release are told, once per release",
   assert.deepEqual([...bySubject.keys()], [18]);
   const byHash = shippedIssues([{ ...task, commits: ["88b47ae"] }], [{ hash: "88b47ae0123", subject: "rebased: another subject" }]);
   assert.deepEqual([...byHash.keys()], [18]);
-  const comment = releasedComment({ tag: "v0.3.4-beta.1", url: "https://example.com/r", tasks: [{ id: "D13", path: "docs/tasks/0-archive/D/D13.md" }], repo: "TixXin/fly-island" });
+  const comment = releasedComment({ tag: "v0.3.4-beta.1", url: "https://example.com/r", tasks: [{ id: "D13", path: "docs/tasks/0-archive/D/D13.md" }], repo: "TixXin/fuyu" });
   assert.ok(comment.includes("测试版") && comment.includes("docs/tasks/0-archive/D/D13.md") && comment.trimEnd().endsWith(RELEASED_MARKER("v0.3.4-beta.1")));
 });
 

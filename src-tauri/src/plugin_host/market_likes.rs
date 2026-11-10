@@ -1,5 +1,5 @@
 //! Likes on the market cards (issue #16): stars.json next to the index in
-//! TixXin/focusd-plugins, counted every hour from the 👍 on one discussion per
+//! TixXin/fuyu-plugins, counted every hour from the 👍 on one discussion per
 //! plugin. Not signed, because it is only shown; a link must point at a discussion
 //! of that repository, and anything odd is dropped rather than failing the page.
 use std::collections::BTreeMap;
@@ -8,9 +8,11 @@ use serde::{Deserialize, Serialize};
 
 use super::market::{client, download_unless_missing};
 
-const LIKES_URL: &str = "https://raw.githubusercontent.com/TixXin/focusd-plugins/main/stars.json";
+const LIKES_URL: &str = "https://raw.githubusercontent.com/TixXin/fuyu-plugins/main/stars.json";
 const LIKES_VERSION: u32 = 1;
-const DISCUSSION_PREFIX: &str = "https://github.com/TixXin/focusd-plugins/discussions/";
+/// The market's discussions, under its name now and before the rename (D17): stars.json may
+/// carry either, and GitHub redirects the old one.
+const DISCUSSION_PREFIXES: [&str; 2] = ["https://github.com/TixXin/fuyu-plugins/discussions/", "https://github.com/TixXin/focusd-plugins/discussions/"];
 const MAX_LIKES_BYTES: u64 = 256 * 1024;
 
 /// One plugin's likes. Mirrored by `MarketLike` in src/features/plugins/api.ts.
@@ -33,8 +35,10 @@ fn is_plugin_id(id: &str) -> bool {
 }
 
 fn is_discussion(url: &str) -> bool {
-    url.strip_prefix(DISCUSSION_PREFIX)
-        .is_some_and(|number| (1..=9).contains(&number.len()) && number.bytes().all(|byte| byte.is_ascii_digit()))
+    DISCUSSION_PREFIXES.iter().any(|prefix| {
+        url.strip_prefix(prefix)
+            .is_some_and(|number| (1..=9).contains(&number.len()) && number.bytes().all(|byte| byte.is_ascii_digit()))
+    })
 }
 
 /// The likes in stars.json; entries with a bad id or link are left out.
@@ -70,16 +74,20 @@ mod tests {
     fn keeps_likes_with_a_discussion_link_of_the_market() {
         let likes = parse_likes(
             r#"{ "version": 1, "updatedAt": "2026-11-09T00:00:00Z", "plugins": {
-                "dev.focusd.pomodoro": { "count": 3, "url": "https://github.com/TixXin/focusd-plugins/discussions/4" },
+                "dev.focusd.pomodoro": { "count": 3, "url": "https://github.com/TixXin/fuyu-plugins/discussions/4" },
+                "dev.focusd.old-name": { "count": 2, "url": "https://github.com/TixXin/focusd-plugins/discussions/7" },
+                "dev.focusd.other-repo": { "count": 2, "url": "https://github.com/TixXin/fuyu/discussions/7" },
                 "dev.focusd.elsewhere": { "count": 9, "url": "https://example.com/discussions/4" },
-                "dev.focusd.deeper": { "count": 9, "url": "https://github.com/TixXin/focusd-plugins/discussions/4/x" },
-                "Bad Id": { "count": 1, "url": "https://github.com/TixXin/focusd-plugins/discussions/5" },
-                "dev.focusd.negative": { "count": -1, "url": "https://github.com/TixXin/focusd-plugins/discussions/6" }
+                "dev.focusd.deeper": { "count": 9, "url": "https://github.com/TixXin/fuyu-plugins/discussions/4/x" },
+                "Bad Id": { "count": 1, "url": "https://github.com/TixXin/fuyu-plugins/discussions/5" },
+                "dev.focusd.negative": { "count": -1, "url": "https://github.com/TixXin/fuyu-plugins/discussions/6" }
             } }"#,
         )
         .unwrap();
-        assert_eq!(likes.len(), 1);
-        assert_eq!(likes["dev.focusd.pomodoro"], MarketLike { count: 3, url: "https://github.com/TixXin/focusd-plugins/discussions/4".into() });
+        // The market under its name before the rename (D17) still counts.
+        assert_eq!(likes.len(), 2);
+        assert_eq!(likes["dev.focusd.old-name"].count, 2);
+        assert_eq!(likes["dev.focusd.pomodoro"], MarketLike { count: 3, url: "https://github.com/TixXin/fuyu-plugins/discussions/4".into() });
     }
 
     #[test]

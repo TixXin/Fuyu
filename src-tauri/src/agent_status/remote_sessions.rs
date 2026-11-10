@@ -15,9 +15,9 @@ use std::{
 use serde::Serialize;
 
 use super::remote_fetch::{write_island_config, Connection, Forward, RemoteFile, Reply, TAIL_BYTES};
-use super::notifications::saved_notifications;
+use super::notifications::saved_notifications_in;
 use super::remote_hosts::{self, SshTarget};
-use super::remote_setup::REMOTE_NOTIFICATIONS_DIR;
+use super::remote_setup::{LEGACY_REMOTE_NOTIFICATIONS_DIR, REMOTE_NOTIFICATIONS_DIR};
 use super::session_host::SessionHost;
 use super::session_scan;
 use super::sessions::AgentSessionSummary;
@@ -105,7 +105,8 @@ pub(super) fn sessions(app_dir: &Path, window_ms: i64) -> Vec<AgentSessionSummar
     for host in &hosts {
         let registry = registries.get(host).cloned().flatten();
         let root = mirror_root(app_dir, host);
-        let saved = saved_notifications(&root.join(REMOTE_NOTIFICATIONS_DIR), now, false);
+        let (dir, legacy) = (root.join(REMOTE_NOTIFICATIONS_DIR), root.join(LEGACY_REMOTE_NOTIFICATIONS_DIR));
+        let saved = saved_notifications_in(&[&dir, &legacy], now, false);
         let mut found = session_scan::list_mirrored_sessions(&root, &saved, window_ms, registry);
         for session in &mut found {
             session.host = Some(SessionHost { name: host.clone(), exe: None, kind: "remote" });
@@ -287,8 +288,10 @@ fn mirror_path(root: &Path, remote: &str) -> Option<PathBuf> {
     let path = Path::new(remote);
     let plain = path.components().all(|component| matches!(component, Component::Normal(_)));
     let allowed = remote == ".codex/session_index.jsonl"
-        || (remote.strip_prefix(REMOTE_NOTIFICATIONS_DIR).and_then(|name| name.strip_prefix('/'))
-            .is_some_and(|name| !name.contains('/') && name.ends_with(".json")))
+        || [REMOTE_NOTIFICATIONS_DIR, LEGACY_REMOTE_NOTIFICATIONS_DIR].iter().any(|dir| {
+            remote.strip_prefix(dir).and_then(|name| name.strip_prefix('/'))
+                .is_some_and(|name| !name.contains('/') && name.ends_with(".json"))
+        })
         || ((remote.starts_with(".claude/projects/") || remote.starts_with(".codex/sessions/"))
             && remote.ends_with(".jsonl"));
     (plain && allowed).then(|| root.join(path))

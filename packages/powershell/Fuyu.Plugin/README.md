@@ -1,6 +1,6 @@
 # Fuyu.Plugin
 
-Helpers for [Fuyu](https://github.com/TixXin/fly-island) plugins written for Windows PowerShell 5.1 (also PowerShell 7).
+Helpers for [Fuyu](https://github.com/TixXin/fuyu) plugins written for Windows PowerShell 5.1 (also PowerShell 7).
 
 Plugins normally carry the single-file version, `plugins/sdk/powershell/fuyu.ps1` in the Fuyu repository (generated from this module by `pnpm sdk:build`), so users need nothing installed:
 

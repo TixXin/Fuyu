@@ -116,6 +116,9 @@ export type ErrorCode =
   | "translation.noKey"
   | "translation.status"
   | "planUsage.key"
+  | "editorExtension.unknown"
+  | "editorExtension.noCli"
+  | "editorExtension.failed"
   | "mail.address"
   | "mail.attachmentDecode"
   | "mail.attachmentDownload"
@@ -304,6 +307,9 @@ export const zhCN: ErrorsText = {
     "translation.noKey": ({ service }) => `请先配置${service}的 API 密钥。`,
     "translation.status": ({ service, status }) => `${service} 返回 HTTP ${status}，请检查密钥、模型名称或额度。`,
     "planUsage.key": "API Key 格式不对。",
+    "editorExtension.unknown": "不支持这个编辑器。",
+    "editorExtension.noCli": ({ editor }) => `找不到 ${editor} 的命令行，打开 ${editor} 后再试一次。`,
+    "editorExtension.failed": "扩展没有装上。",
     "mail.address": "请输入有效的邮箱地址。",
     "mail.attachmentDecode": "无法解码附件，请在网页中下载。",
     "mail.attachmentDownload": "无法下载附件，请检查网络并重试。",
@@ -488,6 +494,9 @@ export const en: ErrorsText = {
     "translation.noKey": ({ service }) => `Set up the API key for ${service} first.`,
     "translation.status": ({ service, status }) => `${service} answered HTTP ${status}; check the key, the model name or the quota.`,
     "planUsage.key": "That does not look like an API key.",
+    "editorExtension.unknown": "That editor is not supported.",
+    "editorExtension.noCli": ({ editor }) => `Could not find ${editor}'s command line. Open ${editor} and try again.`,
+    "editorExtension.failed": "Could not install the extension.",
     "mail.address": "Enter a valid email address.",
     "mail.attachmentDecode": "Could not decode the attachment; download it in the web mail.",
     "mail.attachmentDownload": "Could not download the attachment; check the network and try again.",

@@ -1,6 +1,6 @@
 # create-fuyu-plugin
 
-Creates a [Fuyu](https://github.com/TixXin/fly-island) plugin:
+Creates a [Fuyu](https://github.com/TixXin/fuyu) plugin:
 
 ```sh
 npm create fuyu-plugin@latest [folder]
@@ -10,4 +10,4 @@ It asks for the language (PowerShell, TypeScript or JavaScript), a template (a c
 
 Skip the questions with `-- --language typescript --template list --author you --id you.my-plugin --name "My plugin" --name-zh 我的插件 --yes`.
 
-Guide (Chinese): [docs/plugins/quickstart.md](https://github.com/TixXin/fly-island/blob/main/docs/plugins/quickstart.md).
+Guide (Chinese): [docs/plugins/quickstart.md](https://github.com/TixXin/fuyu/blob/main/docs/plugins/quickstart.md).

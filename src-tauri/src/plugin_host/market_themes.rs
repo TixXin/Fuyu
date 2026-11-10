@@ -1,4 +1,4 @@
-//! The theme market (C26): themes.json in TixXin/focusd-plugins, built from its themes/ folder.
+//! The theme market (C26): themes.json in TixXin/fuyu-plugins, built from its themes/ folder.
 //! A theme is data only (what the island looks like) and runs no code, so the file is not
 //! signed; the island checks every value again (features/theme-market/model.ts) before showing
 //! or applying one. Here only the shape is checked: a known format and plausible ids.
@@ -7,7 +7,7 @@ use serde_json::Value;
 
 use super::market::{client, download_unless_missing};
 
-const THEMES_URL: &str = "https://raw.githubusercontent.com/TixXin/focusd-plugins/main/themes.json";
+const THEMES_URL: &str = "https://raw.githubusercontent.com/TixXin/fuyu-plugins/main/themes.json";
 const THEMES_VERSION: u32 = 1;
 const MAX_THEMES_BYTES: u64 = 512 * 1024;
 const MAX_THEMES: usize = 500;

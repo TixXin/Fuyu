@@ -42,7 +42,7 @@ const EXE = `src-tauri/target/release/${EXE_NAME}`;
 const MSI_OVERLAY = "src-tauri/target/release/msi-version.conf.json";
 const BETA_CHANNEL_DIR = "src-tauri/target/release/beta-channel";
 const CHECK_DIR = "src-tauri/target/release/channel-check";
-const REPO = "TixXin/fly-island";
+const REPO = "TixXin/fuyu";
 
 const args = process.argv.slice(2);
 const baseFlag = args.indexOf("--base-url");

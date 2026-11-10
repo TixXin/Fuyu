@@ -44,3 +44,25 @@ test("background recording is off by default, so the plugin can stop when idle",
     await host.stop();
   }
 });
+
+test("an opened page gets the programs using the most CPU and memory", windowsOnly, async () => {
+  const host = startMockHost(PLUGIN, { timeoutMs: 60000 });
+  try {
+    await host.waitForRequest("host.keepAlive");
+    openPage(host);
+    // CPU shares need two scans a second apart, so the list comes with a later sample.
+    const { processes } = (await host.waitFor((h) => h.webviewMessages.find((sent) => sent.message.processes))).message;
+    for (const list of [processes.byCpu, processes.byMemory]) {
+      assert.equal(list.length, 6);
+      for (const program of list) {
+        assert.ok(program.name && !/\.exe$/i.test(program.name), `name: ${JSON.stringify(program)}`);
+        assert.ok(program.count >= 1 && program.memory >= 0 && program.cpu >= 0 && program.cpu <= 100, JSON.stringify(program));
+      }
+    }
+    const memory = processes.byMemory.map((program) => program.memory);
+    assert.deepEqual(memory, [...memory].sort((a, b) => b - a));
+    assert.ok(memory[0] > 1024 * 1024, "the largest program uses more than 1 MB");
+  } finally {
+    await host.stop();
+  }
+});

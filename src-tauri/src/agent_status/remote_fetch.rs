@@ -54,9 +54,10 @@ umask 077
 T=__TAIL__
 cd "$HOME" || exit 3
 PF=__PORT_FILE__
+OPF=__LEGACY_PORT_FILE__
 NODE=$(uname -n)
 MINE=
-trap '[ -n "$MINE" ] && [ "$(cat "$PF" 2>/dev/null)" = "$MINE" ] && rm -f "$PF"' EXIT
+trap 'for f in "$PF" "$OPF"; do [ -n "$MINE" ] && [ "$(cat "$f" 2>/dev/null)" = "$MINE" ] && rm -f "$f"; done' EXIT
 trap 'exit' HUP INT TERM PIPE
 send() {
   set -- "$1" $(stat -c '%s %Y' "$1" 2>/dev/null)
@@ -76,8 +77,8 @@ fetch() {
   find .claude/projects -mindepth 2 -maxdepth 2 -type f -name '*.jsonl' -mmin -"$W" 2>/dev/null
   find .codex/sessions -mindepth 4 -maxdepth 4 -type f -name '*.jsonl' -mmin -"$W" 2>/dev/null
   [ -f .codex/session_index.jsonl ] && echo .codex/session_index.jsonl
-  find .focusd-island/agent-notifications -maxdepth 1 -type f -name '*.json' -mmin +1440 -delete 2>/dev/null
-  find .focusd-island/agent-notifications -maxdepth 1 -type f -name '*.json' -mmin -"$W" 2>/dev/null
+  find .fuyu/agent-notifications .focusd-island/agent-notifications -maxdepth 1 -type f -name '*.json' -mmin +1440 -delete 2>/dev/null
+  find .fuyu/agent-notifications .focusd-island/agent-notifications -maxdepth 1 -type f -name '*.json' -mmin -"$W" 2>/dev/null
 } | while IFS= read -r f; do send "$f"; done
 if [ -d .claude/sessions ]; then
   echo R
@@ -102,6 +103,10 @@ while read -r W N P K; do
     if [ "$(cat "$PF" 2>/dev/null)" != "$MINE" ]; then
       mkdir -p "$(dirname "$PF")" && printf '%s\n' "$MINE" > "$PF.$$" && mv -f "$PF.$$" "$PF"
     fi
+    # Hooks installed before the rename read the old place until they are repaired.
+    if [ -d "$(dirname "$OPF")" ] && [ "$(cat "$OPF" 2>/dev/null)" != "$MINE" ]; then
+      printf '%s\n' "$MINE" > "$OPF.$$" && mv -f "$OPF.$$" "$OPF"
+    fi
   fi
   KNOWN=
   while IFS= read -r line && [ "$line" != FOCUSD_KNOWN ]; do
@@ -116,7 +121,9 @@ const END_OF_KNOWN: &str = "FOCUSD_KNOWN";
 const READY: &[u8] = b"FOCUSD_READY";
 /// Under the remote home, readable only by its owner: `<forward port there> <endpoint port here>
 /// <node name> <approval token>` while a connection with the forward is open.
-pub(super) const APPROVAL_PORT_FILE: &str = ".focusd-island/approval-port";
+pub(super) const APPROVAL_PORT_FILE: &str = ".fuyu/approval-port";
+/// Where hooks from before the rename (D17) read it; written too while that folder exists.
+const LEGACY_APPROVAL_PORT_FILE: &str = ".focusd-island/approval-port";
 
 /// A file as the remote computer last reported it.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -141,6 +148,7 @@ fn session_script() -> String {
         .replace("__TAIL__", &TAIL_BYTES.to_string())
         .replace("__HEAD_MAX__", &HEAD_MAX_BYTES.to_string())
         .replace("__HEAD_LINES__", &HEAD_LINES.to_string())
+        .replace("__LEGACY_PORT_FILE__", LEGACY_APPROVAL_PORT_FILE)
         .replace("__PORT_FILE__", APPROVAL_PORT_FILE)
 }
 

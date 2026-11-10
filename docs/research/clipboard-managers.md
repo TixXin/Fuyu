@@ -3,6 +3,8 @@
 > 日期：2026-11-09。问题：我们已经有剪贴板历史页，参考开源剪贴板管理器，看还缺什么、哪些值得做；重点弄清三件事：怎么接管 Win+V、独立弹窗怎么粘贴回原窗口、历史图片怎么在 Claude Code 这类终端 CLI 里粘贴成功。范围：GitHub（`gh search repos "clipboard manager" --sort stars`，以及 `crosspaste`、`clipboard sync`、`剪贴板` 等关键词）、各项目源码（`gh search code` 搜 `DisabledHotkeys`、`WH_KEYBOARD_LL`、`ExcludeClipboardContentFromMonitorProcessing` 等）、anthropics/claude-code 的 issue、Microsoft Learn 和 Microsoft 支持文档。相关任务：暂无。
 >
 > star 数、最后推送时间、版本号都是 2026-11-09 用 `gh api` 查到的。
+>
+> 2026-11-10 又查了一轮，看得更宽（商业工具和 2025–2026 年新出的 GitHub 项目），结果在文末[「第二轮：功能全景」](#第二轮功能全景2026-11-10)。
 
 ## 结论
 
@@ -232,3 +234,201 @@ Claude Code 和终端：
 - [yvoolab/claude-code-windows-screenshot-paste](https://github.com/yvoolab/claude-code-windows-screenshot-paste)（#68021 评论里提到，未打开核实）
 
 本次下载的源码片段放在本机 `%TEMP%\cliprefs\`（eco、tiez、qc），不进仓库。
+
+## 第二轮：功能全景（2026-11-10）
+
+> 日期：2026-11-10。问题：为剪贴板弹窗的下一版找功能，比本文前半部分（2026-11-09，侧重 Win+V、粘贴回原窗口、终端贴图）看得更宽、更新：商业和系统自带工具，以及 2025–2026 年仍活跃或新出的 GitHub 项目。范围：官网和文档（PowerToys Advanced Paste、Raycast Manual、Paste 官网和 App Store、Alfred、Pastebot、ClipboardFusion、ClipBook、PasteNow、ClipClip、Clipboard Master、Maccy、Microsoft 支持），GitHub（`gh search repos "clipboard manager" --sort stars`，只保留 2025-10 以后推送过的；`gh search repos clipboard --created ">2025-01-01" --sort stars`；读了约 20 个仓库的 README）。相关任务：暂无（C22 / C24 / C29 是已经做完的）。
+>
+> star 数、最后推送、价格都是 2026-11-10 查的；没打开原页核实的写「未核实」。
+
+### 结论
+
+#### 先说基线：弹窗现在有什么、缺什么
+
+调研时读的是 C37 之前的弹窗：只有搜索框、列表和底栏，Tab 切到片段。C37（2026-11-10）已补上**筛选胶囊**（全部 / 收藏 / 图片 / 文件 / 片段 / 常用 `#标签`）和**宽版预览栏**（全文、大图和识别出的文字、文件列表）。仍然没有的：**弹窗里每一条的操作菜单**（复制为文件等只在岛上页面）、**文本变换**、**粘贴前编辑**、链接 / 颜色识别。
+
+本轮看下来，2025–2026 年新出的工具（Deck、Beetroot、PasteMemo、ElegantClipboard、ClipBook、vPaste、Clippi）在基础功能上彼此趋同，我们已经大部分都有了。差距集中在四件事上：**空格大预览**、**Ctrl+K 动作面板和文本变换**、**按类型 / 来源 / 日期筛选**、**内容识别**（链接、颜色、代码）。
+
+#### 必做
+
+| 功能 | 理由 | 放哪里 |
+|---|---|---|
+| **空格预览**（宽版已有，C37；标准宽度还没有）：右侧（或下方）预览栏，图片显示大图和尺寸，长文本显示全文，HTML 按格式渲染，文件显示路径列表 | 这一轮看过的 Windows / macOS 工具几乎都有空格预览（Raycast、Paste、Clipbara、vPaste、Beetroot、PasteNow、EcoPaste）。我们 380 宽的弹窗只有一行摘要，图片条目基本靠猜 | 预览栏；按空格开关，或选中后停顿自动显示 |
+| **动作面板 Ctrl+K（也做成右键菜单）**：粘贴、纯文本粘贴、复制、收藏、编辑、写备注、复制为文件、复制路径、复制 OCR 文字、删除 | Raycast、PasteMemo、Beetroot（Shift+F10）都用一个统一的动作面板。我们这些操作已经写好了，只在岛上页面能用，接到弹窗里工作量小 | 右键菜单 + Ctrl+K，底栏提示「Ctrl+K 更多」 |
+| **类型筛选**：全部 / 文本 / 图片 / 文件 / 链接 / 颜色 / 收藏，←→ 或 Ctrl+P 切换 | Raycast（⌘P）、PasteMemo（←→）、vPaste、Clipbara、Beetroot 都有。岛上页面已有其中一部分，弹窗应当一致 | 顶部筛选（搜索框下一行胶囊；窄窗口只显示图标） |
+| **拼音 / 首字母搜索 + 容错模糊** | Clippi 和 Win顺 把它作为卖点；Beetroot 分阶段排序：子串 → 词首 → 元数据 → 模糊。中文用户搜「会议」时输 `hy` 很常见 | 搜索框（无 UI 变化） |
+| **常用文本变换**：去首尾空白、去换行合成一行、大小写、JSON 格式化 / 压缩、URL 编解码、去链接追踪参数、全角 / 半角、繁 / 简 | Deck、PasteMemo、ElegantClipboard、ClipBook（78 种）、Clipboard Master 都有；全部本地运算，没有隐私风险 | 动作面板的「转换后粘贴」子菜单 |
+| **暂停记录 / 忽略下一次复制** | Maccy、Deck、vPaste、Pesty、ElegantClipboard 都有，实现几乎不花功夫，偶尔复制敏感内容时最需要它 | 底栏开关 + 托盘；动作面板里也放一个 |
+
+#### 值得做
+
+| 功能 | 理由 | 放哪里 |
+|---|---|---|
+| **内容识别和标记**：链接显示域名（可选抓标题和 favicon）、颜色显示色块（HEX / RGB / HSL 互转）、代码按语言高亮、邮箱 / 电话 | Raycast、PasteMemo、vPaste、Deck、Beetroot 都会识别；让列表一眼看出是什么 | 行（行首图标换成色块或网站图标）；预览栏（代码高亮、颜色转换） |
+| **粘贴并回车** | PasteMemo 的 Shift+Enter（我们的 Shift+Enter 已经是纯文本粘贴，所以用 Ctrl+Enter）；终端和聊天软件常用 | 按键 + 动作面板 |
+| **多选后合并复制 / 粘贴**（换行、逗号、自定义分隔符） | ClipBook、Beetroot 的批量复制、Alfred 的追加合并。我们已经有 Ctrl+点击多选（用于顺序粘贴），加一个「合并粘贴」就行 | 多选状态下的底栏 |
+| **粘贴前编辑**（编辑后另存为新条目，或只这一次用） | Raycast、Paste、Clipbara（⌘E）、PasteNow、ClipClip 都能编辑 | 预览栏变为可编辑；动作面板「编辑」 |
+| **终端命令压平**：复制的多行 shell 命令（`\` 续行、提示符 `$`）粘贴到终端时合成一行 | Trimmy（749★，2025-11 新建）专做这件事；我们已经能识别终端（贴图片路径时用），用户群正好是 Claude Code / 终端用户 | 设置（默认关）+ 动作面板「粘贴为单行命令」 |
+| **HTML → Markdown 粘贴** | PowerToys Advanced Paste 内置（本地运算，不需要 AI）；PasteMD（5431★）的反方向需求也说明网页内容和 AI 对话之间转来转去很常见。我们已经存了 HTML | 动作面板「粘贴为 Markdown」 |
+| **筛选语法**：搜索框里写 `/app:chrome`、`/today`、`/img` | Deck 的斜杠规则；PasteMemo、vPaste、Paste 都能按来源和日期筛。我们已经有 `#标签` 语法，扩展起来顺手 | 搜索框 |
+| **屏幕共享时隐藏弹窗** | Deck、ClipBook 都有。Windows 上用 `SetWindowDisplayAffinity(WDA_EXCLUDEFROMCAPTURE)` 就行（Tauri 的 `set_content_protection`），开会共享屏幕时不会把历史露出去 | 设置（默认开） |
+| **QR 码识别**：图片里有二维码时提供「复制二维码内容」 | Raycast、Clippi 都有；我们已经有 OCR 流程 | 动作面板 |
+| **撤销删除**（Ctrl+Z） | Clipbara 有；误删一条收藏代价大 | 删除后底栏提示「已删除 · 撤销」 |
+| **银行卡、身份证号检测**（Luhn 校验） | Deck、ClipBook 有；我们目前只识别密钥和令牌，正好补上 | 设置（并入现有的「打码」策略） |
+
+#### 可选
+
+| 功能 | 理由 | 放哪里 |
+|---|---|---|
+| **AI 变换**（总结、翻译、改写、修语法、自定义提示词；用户自带 key 或本地 Ollama） | PowerToys、Beetroot、Raycast、openclip 都在做；我们已有快捷翻译的服务配置，可以复用。但要配置 key，按需付费，还要说清隐私 | 动作面板「AI」子菜单；提示词在设置里 |
+| **MCP / AI 工具读取剪贴板历史** | Paste（内置本地 MCP）、PasteMemo（5 个 MCP 工具）、Win顺 都已做到；我们的插件系统已有 `clipboard:read` 权限，可以做成一个插件，不放进核心 | 设置 / 插件 |
+| **文字粘贴为 .txt 文件** | PowerToys、PasteMemo 都有；和我们的「图片复制为文件」对称 | 动作面板 |
+| **按时间段删除**（最近 1 小时 / 今天） | Raycast、PasteMemo 都有；我们已有自动清理 | 顶部「⋯」 |
+| **顺序粘贴：把一段文字按分隔符拆成队列** | PasteMemo 的 Relay 拆分；填表时有用 | 动作面板 |
+| **模拟键入粘贴**（逐字敲出，给禁止粘贴的远程桌面或网页用） | Deck 有；场景窄 | 动作面板 |
+| **IDE 来源锚点**（记下文件路径和行号，点击跳回去） | Deck 独有；有意思，但要逐个编辑器适配 | 行的第二行 |
+| **自动规则**（复制时自动去追踪参数，等） | PasteMemo、Deck、Pastebot、ClipboardFusion 的 Triggers；功能强，但设置界面复杂 | 设置 |
+
+#### 不做
+
+| 功能 | 理由 |
+|---|---|
+| 跨设备云同步（Paste iCloud、ClipboardFusion、Win+V 账户同步、ClipCascade） | 上一轮已经判过：工作量大、隐私负担重，和岛屿定位关系不大 |
+| 看板 / Pinboard 多层文件夹、团队共享 | 条数上限 200，`#标签` 已经够用 |
+| 语义搜索、使用统计、主题市场、Vim 模式 | 收益低；主题跟随岛屿 |
+| 音视频转码、隐写术（Deck）、截图 / 录屏 | 不属于剪贴板弹窗 |
+| 打开弹窗前要求 Windows Hello 解锁 | Deck 有 Touch ID；我们已经有打码和排除，一个快捷弹窗每次都要验证太重 |
+
+### 功能清单
+
+图例：✓ 有；部分；✗ 没有；? 未核实。「我们」一列指剪贴板功能整体，「弹窗缺」表示岛上页面有、弹窗里没有。
+
+| 类别 | 功能 | Win+V | PowerToys AP | Raycast | Paste | Pastebot | ClipBook | Deck | Beetroot | PasteMemo | ElegantClipboard | 我们 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 捕获 | 文本 / 图片 | ✓ | 当前一条 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| 捕获 | HTML / 富文本 | HTML | ✓ | ✓ | ✓ | ? | ? | ✓ | ? | ✓ | HTML+RTF+自定义格式 | HTML |
+| 捕获 | 文件 | ✗ | 单个文件 | ✓ | ✓ | ? | ? | ✓ | ? | ✓ | 路径 | ✓ |
+| 捕获 | 链接 / 颜色识别 | ✗ | ✗ | ✓ | ✓（Pinboard 存颜色） | ? | ✓ | ✓ | ✓（标记） | ✓ | ✗ | ✗ |
+| 捕获 | 来源应用 | ✗ | ✗ | ? | ✓ | ? | ? | ✓ | ✓（含窗口标题） | ✓ | ✓ | ✓ |
+| 捕获 | 按应用排除 | ✗ | ✗ | ✓ | ✓（规则） | ✓（分类型） | ✓ | ✓ | ? | ✓ | ✓ | ✓ |
+| 捕获 | 去重 | ? | — | ? | ? | ? | ? | ? | ? | ? | ✓（合并 HTML 和纯文本） | ✓ |
+| 捕获 | 暂停 / 忽略下一次 | ✗ | — | ? | ? | ? | ✓ | ✓ | ? | ? | ✓ | ✗ |
+| 组织 | 收藏 / 置顶 | 固定 | — | ✓ | Pinboard | Pastebin | 标签 | ✓ | ✓ | ✓ | 收藏 + 置顶 | 收藏 |
+| 组织 | 标签 / 分组 | ✗ | — | ✗ | Pinboard | 智能 Pastebin | ✓ | ✓ | ✗ | ✓ | 分组 | `#标签` |
+| 组织 | 重命名 / 备注 | ✗ | — | 重命名 | ? | 备注 | 重命名 | 标题 | 备注 | ? | 备注 | 备注 |
+| 组织 | 片段 / 模板 | ✗ | 自定义动作 | 存为 snippet | ✗ | ✗ | ? | 模板库 | ✗ | ✗ | ✗ | ✓ |
+| 查找 | 搜索 | ✗ | ✗ | ✓ | ✓ | ✓ | ✓ | ✓（含语义） | ✓（模糊） | ✓ | ✓ | ✓ |
+| 查找 | 正则 | ✗ | — | ✗ | ? | ? | ? | ✓ | ✓ | 规则里有 | ? | ✗ |
+| 查找 | 按类型筛选 | ✗ | — | ✓ | ✓ | ? | ✓ | ✓ | ✓ | ✓ | ? | 弹窗缺 |
+| 查找 | 按来源 / 日期筛选 | ✗ | — | ✗ | ✓ | ? | ? | ✓ | 来源 | ✓ | ? | ✗ |
+| 查找 | 拼音搜索 | ✗ | — | ? | ? | — | — | ? | ✗ | ? | ? | ✗ |
+| 查找 | 图片内文字可搜 | ✗ | — | ✓ | ? | ? | ✓ | ✓ | ✗ | ? | ✗ | ✓ |
+| 预览 | 大图 / 全文预览 | 缩略图 | 当前一条 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓（空格） | ✓ | 悬停浮层 | 弹窗缺 |
+| 预览 | 代码高亮 | ✗ | ✗ | ? | ? | ? | ? | ✓（识别语言） | ✓ | ✓ | ✗ | ✗ |
+| 预览 | 链接标题 / 图片 | ✗ | ✗ | ✓ | ? | ? | ✓ | ✓ | ✗ | ✓ | ✗ | ✗ |
+| 预览 | 颜色色块 | ✗ | ✗ | ✓ | ? | ? | ✓ | ✓ | ✓ | ✓ | ✗ | ✗ |
+| 粘贴 | 自动粘贴回原窗口 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| 粘贴 | 数字键快速粘贴 | ✗ | ✗ | ? | ⌘1–9 | ? | ? | ? | Ctrl+1–9 | ⌘1–9 | ✓（可设） | 1–9 |
+| 粘贴 | 纯文本粘贴 | ✗ | ✓ | ✓ | ✓ | ? | ? | ? | ✓ | ? | ✓ | ✓ |
+| 粘贴 | 格式转换（Markdown / JSON / 文件） | ✗ | ✓ | PNG | ✗ | ✗ | ? | ✗ | ✗ | 文字转 .txt 文件 | 按单一格式 | 图片转文件 |
+| 粘贴 | 粘贴栈 / 队列 | ✗ | ✗ | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ |
+| 粘贴 | 合并多条 | ✗ | ✗ | ✗ | ? | ? | ✓（分隔符） | ? | ✓（分隔符） | ✓ | ✗ | ✗ |
+| 粘贴 | 文本变换 | ✗ | 少量 | ✗ | ✗ | 自定义过滤器 | 78 种 | ✓ | AI | ✓ | 少量 | ✗ |
+| 粘贴 | AI 粘贴 | ✗ | ✓ | 发到 AI Chat | ✗ | ✗ | ✗ | ✗ | ✓ | 规则里有 | ✗ | ✗ |
+| 粘贴 | 粘贴并回车 | ✗ | ✗ | ✗ | ? | ? | ? | ? | ✗ | ✓ | ✗ | ✗ |
+| 编辑 | 粘贴前编辑 | ✗ | ✗ | ✓ | ✓ | ? | ? | ? | ? | ? | ✓ | ✗ |
+| 同步备份 | 跨设备同步 | 微软账户 | ✗ | ✗ | iCloud | iCloud | ✗ | 局域网 | ✗ | ? | ✗ | ✗ |
+| 同步备份 | 导入 / 导出 | ✗ | ✗ | ? | ? | ? | ? | ✓ | 自动备份数据库 | ? | ✓ | ✓ |
+| 隐私 | 密码管理器标记 | ✓ | — | ✓ | ✓ | ? | ✓ | ✓ | ? | ✓ | ? | ✓ |
+| 隐私 | 敏感内容检测 / 打码 | ✗ | — | ✗ | ✓（规则） | ✗ | ✓（密码 / key / 卡号） | ✓（Luhn） | ✗ | ✓（含限时删除） | ✗ | ✓（密钥 / 令牌） |
+| 隐私 | 自动清理 | 重启清空 | — | 1 天–无限 | ? | ? | ? | ? | ✗ | 1–365 天 | 按分组 | ✓ |
+| 隐私 | 共享屏幕时隐藏 | ✗ | ✗ | ? | ? | ? | ✓ | ✓ | ✗ | ? | ✗ | ✗ |
+| 隐私 | 加密 / 解锁 | ✗ | ✗ | ? | ? | ? | ✗ | Touch ID | API key 存凭据管理器 | ✗ | ✗ | ✗ |
+| 界面 | 窗口形态 | 弹出面板 | 弹出面板 | 启动器 | 底部卡片条 | 菜单 | 列表 + 预览 | 面板 | 列表窗口 | 面板 | 卡片窗口 + 悬停预览 | 鼠标旁弹窗 / 岛上页面 |
+| 界面 | 动作面板 | ⋯ | ✗ | ⌘K | ? | ? | ? | ? | 右键 | ⌘K | ✗ | 弹窗缺 |
+| 界面 | 全键盘 | 部分 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓（Vim） | ✓（可改键） | ✓ | ✓ | ✓ |
+| 集成 | OCR | ✗ | ✓ | ✓ | ? | ✗ | ✓ | ✓ | ✓ | ? | ✗ | ✓ |
+| 集成 | 二维码 | ✗ | ✗ | ✓ | ✗ | ✗ | ? | 生成 | ✗ | ✗ | ✗ | ✗ |
+| 集成 | 翻译 | ✗ | AI | AI Chat | ✗ | ✗ | ✗ | ✗ | AI | AI | ✗ | 岛屿有快捷翻译，弹窗没接 |
+| 集成 | 分享 / 拖出 | ✗ | ✗ | 分享 | 共享 Pinboard | ? | ? | 局域网 | ✗ | ✓ | 拖放 | ✗ |
+| 集成 | MCP / CLI | ✗ | CLI | ✗ | MCP | CLI | ✗ | CLI | ✗ | MCP | ✗ | 插件读取 |
+
+表中的「?」大多是官网和 README 没提到，不代表没有。
+
+### 各产品要点
+
+#### 商业和系统自带
+
+- **Windows Win+V**（[Microsoft 支持](https://support.microsoft.com/en-us/windows/clipboard-in-windows-c436501e-985d-1c8d-97ea-fe46ddf338c6)）：25 条、单条 4 MB、文本 / HTML / 位图；固定的条目重启后保留；可通过微软账户同步，也可以只手动同步某一条。2025–2026 年没找到新功能（官方页面没写表情或 AI 动作，搜索结果也没有）。
+- **PowerToys Advanced Paste**（[Learn，2026-10 更新](https://learn.microsoft.com/en-us/windows/powertoys/advanced-paste)；PowerToys 140809★，2026-11-10 推送）：Win+Shift+V 打开，只处理「当前这一条」，弹窗里也能翻历史。本地动作：纯文本、**HTML→Markdown**、**CSV / XML / INI→JSON**、粘贴为 .txt / .html / .png 文件、图片转文字（Windows OCR）、音视频转 mp3 / mp4。每个动作都可以设直接快捷键（纯文本默认 Ctrl+Win+Alt+V）。AI（默认关）：自由提示词、修语法（带「讲解模式」）、保存的自定义动作；提供方可选 OpenAI、Azure、Mistral、Google、Foundry Local、Ollama、Phi Silica。「转换结果先预览再粘贴」默认开，长任务有进度和取消。还有一个 CLI（`PowerToys.AdvancedPaste.CLI.exe transform`）。**最值得借鉴的**：本地格式转换动作、结果预览、给每个动作单独设快捷键。
+- **Raycast 剪贴板历史**（[Manual](https://manual.raycast.com/clipboard-history.md)；Mac 和 Windows）：类型有文本、图片、文件、链接、邮箱、颜色，⌘P / Ctrl+P 按类型筛；链接显示社交卡片和 favicon，颜色显示色块；⌘K 动作面板（纯文本粘贴、编辑、存为 snippet、重命名、置顶、分享、OCR、读二维码、发送到 AI Chat、按时间段删除）。可以「顺序粘贴」，每条后面可选加换行。保留 1 天到 3 个月，Pro 6 个月到无限。另有自然语言的「Ask Clipboard」。**借鉴**：⌘K 动作面板 + 类型筛选的组合，Windows 上的快捷键是 Ctrl 版本，可以直接照搬。
+- **Paste**（[官网](https://pasteapp.io/)、[价格](https://pasteapp.io/pricing)、[App Store](https://apps.apple.com/us/app/paste-limitless-clipboard/id967805235)、[MCP](https://pasteapp.io/mcp)）：只有 Mac / iOS。底部横向卡片条、Pinboard（可共享给团队并设查看 / 编辑权限）、Paste Stack、按应用 / 日期 / 设备 / 类型筛选、Smart Rules 跳过密码，⌘1–9。2026 年新加了 **Intelligent Clipboard**（用 Apple Intelligence 预测下一条要贴的）和**本地 MCP 服务器**（Claude、Codex、Cursor 可以搜索历史、存条目、管理 Pinboard，用户按工具授权）。价格：官网 $2.49/月 或 $29.99/年；App Store 月付 $3.99、年付 $29.99、**终身 $99.99**、家庭 $59.99；7 天试用。
+- **Alfred 剪贴板**（[帮助](https://www.alfredapp.com/help/features/clipboard/)，Powerpack 功能）：文本、图片、文件三类可分别开关，保留 24 小时 / 7 天 / 1 个月 / 3 个月；**⌘ 按住再双击 C 就把当前复制追加到上一条**（合并）；⌘S 把条目存为 snippet（带自动展开）；默认忽略钥匙串和 1Password，「concealed」类型也默认忽略。价格未核实。
+- **Pastebot**（[官网](https://tapbots.com/pastebot/)）：可组合的**自定义过滤器**（文本变换，可设快捷键，实时预览）、带颜色和图标的 Pastebin 和按规则的智能 Pastebin、Stack 顺序粘贴（⌃⌘V）、按应用分类型屏蔽（只屏蔽图片或只屏蔽文本）、iCloud 同步、CLI。价格：直购 $39（含一年更新，续期 $19），App Store $24.99/年或 $2.99/月；14 天试用；需要 macOS 26。
+- **ClipBook**（[官网](https://clipbook.app/)）：标签、重命名、**78 种文本变换**、粘贴栈（⌃V 每次推进一条）、多选后带分隔符一起粘贴、OCR、链接预览、打码（密码、API key、卡号）、**屏幕共享时隐藏窗口**。$9.99 买断 1 台（官网说 2026-10 起涨到 $14.99，版本号各站不一致，未核实）。它的对比页提到 macOS 26 Tahoe 的 Spotlight 自带剪贴板历史只保留 30 分钟 / 8 小时 / 7 天，没有收藏（[链接](https://clipbook.app/compare/macos-tahoe-clipboard-history-alternative/)，竞品自述）。
+- **ClipboardFusion**（[功能](https://www.clipboardfusion.com/Features/)、[免费版 vs Pro](https://www.clipboardfusion.com/Compare/)）：Windows 老牌。卖点是 **C# 宏**（自己写文本转换，有社区宏库）和 **Triggers**（剪贴板变化、开机、锁屏、定时、窗口焦点时自动运行）；Pro 才有跨设备同步和在线固定。Pro 买断 $19（1 台）/ $29（个人不限台数），免费版只限个人使用。
+- **Clipboard Master**（[官网](https://www.clipboardmaster.com/)）：Windows，免费加捐赠；多剪贴板、文本模板、密码保险箱、截图。右键菜单里有大小写转换、短链接等 80 多个功能，「Flexikeys」用于补全路径和模板。后两者只来自第三方介绍（[gHacks](https://www.ghacks.net/2015/06/10/clipboard-master-4-0-review/)、[techpp 2026](https://techpp.com/2026/04/02/best-clipboard-managers-for-windows/)），未核实。
+- **ClipClip**（[官网](https://clipclip.com/)）：Windows 免费。文件夹组织、直接编辑富文本和图片、离线转换器（含翻译）、自带截图和录屏工具。价格页没有数字，未核实。
+- **PasteNow**（[官网](https://pastenow.app/)）：Mac / iOS；空格预览、右键编辑、Smart List（按条件归组）、按应用排除、把条目拖出去。价格未核实。
+- **Maccy**（[GitHub](https://github.com/p0deje/Maccy)，22265★，MIT，2026-10-26）：免费开源；⌥回车粘贴，⌥⇧回车纯文本，⌥P 置顶（分配一个固定键），**按住 ⌥ 点菜单图标暂停记录、⌥⇧ 点忽略下一次复制**；密码管理器清空剪贴板时也跟着删掉那一条；可以自定义要忽略的剪贴板类型。
+- **Flycut**（[GitHub](https://github.com/TermiT/Flycut)，2700★，2026-08-07）、**1Clipboard**（Google Drive 同步，竞品说它多年没更新，[第三方](https://relic.space/vs/1clipboard)，未核实）：没有新东西。
+
+#### GitHub：活跃和新项目（2026-11-10）
+
+| 项目 | ★ | 最近推送 | 创建 | 许可证 | 平台 / 技术 |
+|---|---|---|---|---|---|
+| [CopyQ](https://github.com/hluk/CopyQ) | 12625 | 2026-11-09 | — | GPL-3.0 | 跨平台 C++ |
+| [EcoPaste](https://github.com/EcoPasteHub/EcoPaste) | 7574 | 2026-08-13 | — | Apache-2.0 | Tauri |
+| [Ditto](https://github.com/sabrogden/Ditto) | 7444 | 2026-10-01 | — | GPL-3.0 | Windows |
+| [Slackadays/Clipboard](https://github.com/Slackadays/Clipboard) | 5945 | 2026-05-06 | — | GPL-3.0 | 终端 |
+| [PasteMD](https://github.com/RICHQAQ/PasteMD) | 5431 | 2026-10-10 | 2025-10-25 | AGPL-3.0 | Windows，Python |
+| [TieZ](https://github.com/jimuzhe/tiez-clipboard) | 3103 | 2026-10-23 | — | GPL-3.0 | Tauri |
+| [ClipCascade](https://github.com/Sathvik-Rao/ClipCascade) | 1966 | 2026-11-08 | — | GPL-3.0 | 同步 |
+| [Deck](https://github.com/yuzeguitarist/Deck) | 1485 | 2026-10-31 | 2025-12-06 | AGPL + 保留所有权利 | macOS Swift |
+| [GPaste](https://github.com/Keruspe/GPaste) | 963 | 2026-11-07 | — | ? | GNOME |
+| [Win顺 WinShun](https://github.com/LingCore/WinShun) | 950 | 2026-11-10 | 2026-10-08 | MIT | Windows 启动器 |
+| [openclip](https://github.com/ganeshmshetty/openclip) | 751 | 2026-11-10 | 2026-08-01 | AGPL-3.0 | macOS |
+| [Trimmy](https://github.com/steipete/Trimmy) | 749 | 2026-10-23 | 2025-11-15 | MIT | macOS |
+| [clipcat](https://github.com/xrelkd/clipcat) | 617 | 2026-11-09 | — | GPL-3.0 | Linux Rust |
+| [ElegantClipboard](https://github.com/Y-ASLant/ElegantClipboard) | 486 | 2026-11-10 | 2026-02-03 | MIT | Rust + GPUI，Windows 已实测 |
+| [Clippi](https://github.com/Ruszero01/clippi) | 453 | 2026-11-09 | 2026-04-23 | MIT | Rust + GPUI |
+| [PasteMemo](https://github.com/lifedever/PasteMemo-app) | 316 | 2026-11-06 | 2026-04-01 | GPL-3.0 | macOS |
+| [Clipbara](https://github.com/mobrava/Clipbara) | 258 | 2026-11-10 | 2026-02-28 | GPL-3.0 | macOS + iPhone |
+| [Beetroot](https://github.com/mnardit/beetroot-releases) | 208 | 2026-09-09 | 2026-02-09 | Apache-2.0 | **Windows**，Tauri（README 写「原生 Rust」，前端是 WebView，未细核） |
+| [vPaste](https://github.com/Loxonl/vPaste-desktop) | 183 | 2026-11-09 | 2026-07-02 | GPL-3.0 | Win / macOS，Rust + WebView2 |
+| [Pesty](https://github.com/momenbasel/pesty) | 160 | 2026-10-24 | 2026-06-26 | MIT | macOS |
+
+- **Deck**：本轮功能最全的。斜杠筛选规则（按应用 / 日期 / 类型，可包含和排除）、本地语义搜索、**按当前应用调整排序**、Smart Rules（可写 JS）、**光标助手**（三击 Shift 在输入光标旁给建议）、大量文本变换（JSON、Base64、URL、大小写、时间戳、MD5、行排序去重）、**IDE 来源锚点**（从 VS Code / JetBrains 复制时记下文件和行号）、链接去追踪参数、复制算式立即出结果、Luhn 卡号检测、**检测到密码框 / 登录页窗口时自动暂停**、**屏幕共享时隐藏**、队列模式、**模拟键入粘贴**、Vim 模式、从 Paste / Maccy 迁移。
+- **Beetroot**：Windows 上和我们最像的竞品。搜索分五段（子串、词首、元数据、模糊）+ `/正则/` 高亮；来源记录到**窗口标题**并可按应用下拉筛；内容标记（URL、邮箱、代码、JSON、颜色）和代码语言识别；Ctrl+点击多选后批量复制（自定义分隔符）；AI 变换（OpenAI / Gemini / Claude / DeepSeek / 本地，10 个文本 + 5 个图片内置提示词，后台运行完成后通知，key 放在 Windows 凭据管理器）；空格预览；Alt+T AI、Alt+P 窗口置顶、Alt+F 跟随鼠标；数据目录放在 OneDrive 时会警告；数据库自动轮转备份。
+- **PasteMemo**：**复制即文件**（文字粘贴成 .txt，截图粘贴成图片文件）、「AI 终端可用」（往终端贴图片 / 文件）、Shift+Enter **粘贴并回车**、⌘K 命令面板、←→ 切换类型；**Relay** 接力粘贴可以把一段文字按分隔符拆成队列；规则引擎的条件可以是**目标应用**、时间段，结果可以替换、新增、写到文件夹或 POST 到 webhook；**敏感条目限时删除**（10 分钟到 7 天）；按来源 / 类型 / 时间看占用空间；**5 个 MCP 工具**。
+- **ElegantClipboard**：**保真回贴**（其他原生格式，包括应用自定义格式，全部记下来，大的用 zstd 压缩成内容寻址的 blob）；同一段纯文本再带 HTML 复制时并入原条目；**复制后 300 ms 确认窗口**，用来过滤瞬时的中间内容；可选**粘贴后恢复原剪贴板**；序列粘贴用一个全局「推进键」（Ctrl+Shift+G）而不是监听 Ctrl+V；**悬停预览浮层透明、鼠标穿透、不抢焦点**，Ctrl+滚轮缩放；文件只存路径，路径失效时提示；快速粘贴有「受控 / 连贴」两种投递节奏；诊断日志不记正文。
+- **Clippi**（中文作者）：快速窗口**不获取系统焦点**；**全拼和首字母搜索**，且不接管输入法；按住 Alt 显示快捷键；OCR 和**二维码识别**；表情与符号面板；OneDrive / iCloud / WebDAV 同步文本和标签；敏感内容预览脱敏。
+- **vPaste**：横向卡片 ←→，空格预览（文本、图片、网页、文件）；颜色在 HEX / RGB / HSL 间转换；链接预览默认联网，可以关；粘贴队列用 Alt+Shift+V 开关；**可选记住上次的搜索、标签页和滚动位置**；多显示器跟随。
+- **Clipbara**：Quick Look 预览里可编辑；**删除后 ⌘Z 撤销**；按住 ⇧ 粘贴时临时反转「纯文本」开关；`clipbara://` 链接给启动器调用；FAQ 专门有一条「图片贴不进终端」。
+- **Pesty**：类似 Paste 的底部卡片条，**按来源应用给卡片头着色**，⌘1–9 加 ⇧ 是纯文本。
+- **Trimmy**：只做一件事，多行 shell 命令压成一行；终端和普通应用的灵敏度分开设，会识别 Terminal、iTerm、Ghostty、WezTerm、Alacritty 等；保留 YAML 缩进；随时可以「粘贴原文」。
+- **PasteMD**：Markdown / AI 对话网页内容一键贴成 Word / WPS 格式，Markdown 表格贴进 Excel；可以**按应用 / 窗口标题配置粘贴模式**。我们不做 Word 转换，但「按目标应用决定粘贴格式」这个思路和我们的终端特判一致。
+- **openclip**：选中文字时在附近弹出动作条（大小写、搜索、计算、自定义脚本、AI），属于「划词动作」，和我们的划词翻译同类。
+- **Win顺**：中文 Windows 启动器，内置剪贴板历史「代替 Win+V」、分组、悬停预览，以及给 AI 用的 MCP；拼音和首字母搜索是它的卖点。
+- **CopyQ 14–17**（[CHANGES](https://github.com/hluk/CopyQ/blob/master/CHANGES.md)）：14 加了单密码的标签页加密（可存进系统钥匙串，可设到期自动锁）；16 加了按 MIME 类型的大小上限（默认每种格式 100 MiB）。具体发布日期 CHANGES 里没有写。
+- **ClipCascade**：端到端加密同步文本、图片、文件，可以自建服务（Docker / JAR）或 P2P。**clipcat**、**GPaste**、cliphist、clipse 都是 Linux / 终端项目，对我们没有新的参考点。
+
+### 来源
+
+官方和商业（2026-11-10 访问）：
+
+- PowerToys Advanced Paste：<https://learn.microsoft.com/en-us/windows/powertoys/advanced-paste>
+- Windows 剪贴板：<https://support.microsoft.com/en-us/windows/clipboard-in-windows-c436501e-985d-1c8d-97ea-fe46ddf338c6>
+- Raycast：<https://manual.raycast.com/clipboard-history.md>
+- Paste：<https://pasteapp.io/>、<https://pasteapp.io/pricing>、<https://pasteapp.io/mcp>、<https://apps.apple.com/us/app/paste-limitless-clipboard/id967805235>
+- Alfred：<https://www.alfredapp.com/help/features/clipboard/>
+- Pastebot：<https://tapbots.com/pastebot/>
+- ClipBook：<https://clipbook.app/>、<https://clipbook.app/compare/macos-tahoe-clipboard-history-alternative/>
+- ClipboardFusion：<https://www.clipboardfusion.com/Features/>、<https://www.clipboardfusion.com/Compare/>
+- Clipboard Master：<https://www.clipboardmaster.com/>；第三方：<https://www.ghacks.net/2015/06/10/clipboard-master-4-0-review/>、<https://techpp.com/2026/04/02/best-clipboard-managers-for-windows/>
+- ClipClip：<https://clipclip.com/>；PasteNow：<https://pastenow.app/>；Maccy：<https://maccy.app/>
+- 1Clipboard（第三方）：<https://relic.space/vs/1clipboard>、<https://www.thewindowsclub.com/1clipboard-review-a-universal-clipboard-for-windows-which-syncs-across-multiple-devices>
+
+GitHub（`gh api repos/...` 和 README，2026-11-10）：上面表格里的所有仓库链接，另外还有 [Maccy](https://github.com/p0deje/Maccy)、[Flycut](https://github.com/TermiT/Flycut)、[PowerToys](https://github.com/microsoft/PowerToys)、[CopyQ CHANGES](https://github.com/hluk/CopyQ/blob/master/CHANGES.md)。
+
+本机：下载的 README 放在 `%TEMP%\clipreadmes\`，不进仓库。我们的代码基线来自 `src/features/clipboard/ClipboardPopup.tsx`、`ClipboardPopupRow.tsx`、`popupKeys.ts` 和 `docs/design/clipboard.md`。

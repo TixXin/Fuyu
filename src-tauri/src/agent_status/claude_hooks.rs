@@ -5,7 +5,7 @@ use std::{fs, path::Path};
 
 use super::{
     write_text_file, AGENT_RUNNING_NOTIFICATION_ARG, AGENT_SESSION_SCRIPT_FILE_NAME,
-    FOCUSD_AGENT_HOOK_SIGNATURE,
+    AGENT_HOOK_SIGNATURE,
 };
 
 /// Where the approval hook posts (`agent_approval`), and the token it shows.
@@ -27,8 +27,9 @@ pub(super) const ACTIVITY_EVENTS: [&str; 6] = ["PostToolUse", "PostToolUseFailur
 /// longer, so the island hands the request back before Claude Code gives up on it.
 pub(super) const APPROVAL_HOOK_TIMEOUT_SECONDS: i64 = 150;
 
-/// Marks the approval hook as FocuSD's: an HTTP hook has no script path to carry the signature.
-pub(super) const APPROVAL_HOOK_MARKER_HEADER: &str = "X-FocuSD-Hook";
+/// Marks the approval hook as the island's: an HTTP hook has no script path to carry the
+/// signature. Hooks from before the rename (D17) carry `X-FocuSD-Hook`, found by its value.
+pub(super) const APPROVAL_HOOK_MARKER_HEADER: &str = "X-Fuyu-Hook";
 
 pub(super) fn install_claude_code_status_hooks(
     config_path: &Path,
@@ -181,7 +182,7 @@ fn claude_code_activity_hook_entry(url: &str, token: &str) -> Value {
         "-H",
         "Content-Type: application/json",
         "-H",
-        &format!("{APPROVAL_HOOK_MARKER_HEADER}: {FOCUSD_AGENT_HOOK_SIGNATURE}activity"),
+        &format!("{APPROVAL_HOOK_MARKER_HEADER}: {AGENT_HOOK_SIGNATURE}activity"),
         "--data-binary",
         "@-",
         url,
@@ -202,7 +203,7 @@ fn claude_code_http_hook_entry(url: &str, token: &str, marker: &str) -> Value {
                 "url": url,
                 "headers": {
                     "Authorization": format!("Bearer {token}"),
-                    APPROVAL_HOOK_MARKER_HEADER: format!("{FOCUSD_AGENT_HOOK_SIGNATURE}{marker}"),
+                    APPROVAL_HOOK_MARKER_HEADER: format!("{AGENT_HOOK_SIGNATURE}{marker}"),
                 },
                 "timeout": APPROVAL_HOOK_TIMEOUT_SECONDS
             }
@@ -278,7 +279,7 @@ pub(super) fn remove_managed_claude_code_hooks(mut entry: Value) -> Option<Value
 
 pub(super) fn value_contains_focusd_hook_signature(value: &Value) -> bool {
     match value {
-        Value::String(text) => text.contains(FOCUSD_AGENT_HOOK_SIGNATURE),
+        Value::String(text) => super::is_island_hook_text(text),
         Value::Array(values) => values.iter().any(value_contains_focusd_hook_signature),
         Value::Object(values) => values.values().any(value_contains_focusd_hook_signature),
         _ => false,
@@ -404,7 +405,7 @@ mod tests {
         assert!(hooks["SessionEnd"][0]["hooks"][0].get("async").is_none());
         assert!(hooks["SessionStart"][0]["hooks"][0]["args"][4]
             .as_str()
-            .is_some_and(|path| path.ends_with("focusd-agent-session.ps1")));
+            .is_some_and(|path| path.ends_with("fuyu-agent-session.ps1")));
         assert_eq!(last_arg("PermissionRequest"), Some(json!("notification")));
         assert!(hooks["PermissionRequest"][0].get("matcher").is_none());
     }

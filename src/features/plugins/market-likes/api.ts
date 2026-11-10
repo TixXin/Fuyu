@@ -2,7 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 
 /**
  * Likes on the market cards (issue #16): the 👍 on each plugin's discussion in
- * TixXin/focusd-plugins, counted every hour into stars.json. Mirrored by
+ * TixXin/fuyu-plugins, counted every hour into stars.json. Mirrored by
  * `MarketLike` in src-tauri/src/plugin_host/market_likes.rs.
  */
 export type MarketLike = { count: number; url: string };

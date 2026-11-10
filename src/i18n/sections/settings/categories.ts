@@ -28,7 +28,7 @@ export type SettingsCategoriesText = {
   appearance: string;
   /** What the island looks like: style, colours, corners and saved themes. */
   theme: string;
-  /** Themes others made, from TixXin/focusd-plugins. */
+  /** Themes others made, from TixXin/fuyu-plugins. */
   themeMarket: string;
   shortcuts: string;
   /** QQ, WeChat and Mail on one page. */

@@ -1,6 +1,6 @@
 # fuyu-plugin
 
-SDK, command-line tool and mock host for [Fuyu](https://github.com/TixXin/fly-island) plugins. No runtime dependencies; Node.js 20 or later.
+SDK, command-line tool and mock host for [Fuyu](https://github.com/TixXin/fuyu) plugins. No runtime dependencies; Node.js 20 or later.
 
 ```sh
 npm create fuyu-plugin@latest     # start a new plugin
@@ -43,4 +43,4 @@ await host.waitFor((state) => state.notifications.length === 1);
 await host.stop();
 ```
 
-Guide (Chinese): [docs/plugins/quickstart.md](https://github.com/TixXin/fly-island/blob/main/docs/plugins/quickstart.md). API reference: [docs/plugins/api.md](https://github.com/TixXin/fly-island/blob/main/docs/plugins/api.md).
+Guide (Chinese): [docs/plugins/quickstart.md](https://github.com/TixXin/fuyu/blob/main/docs/plugins/quickstart.md). API reference: [docs/plugins/api.md](https://github.com/TixXin/fuyu/blob/main/docs/plugins/api.md).

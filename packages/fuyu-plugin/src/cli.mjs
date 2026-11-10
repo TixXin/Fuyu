@@ -42,7 +42,7 @@ Commands:
              under the mock host, run each command, open each view and check it
              answered without errors
   publish    Pack (--sign to sign it too) and print how to publish a release and
-             submit it to the plugin market (TixXin/focusd-plugins)
+             submit it to the plugin market (TixXin/fuyu-plugins)
   help       Show this text
 
 The folder defaults to the current one.`;
@@ -133,7 +133,7 @@ To publish ${id} ${version}:
      With the GitHub CLI:  gh release create ${version} ${assets}
      The workflow .github/workflows/release.yml made by create-fuyu-plugin
      does this when you push the tag (sign the zip yourself and upload the .sig).
-  2. First release only: open a pull request at https://github.com/TixXin/focusd-plugins
+  2. First release only: open a pull request at https://github.com/TixXin/fuyu-plugins
      that adds plugins/${id}.json (see its CONTRIBUTING.md). After that, new releases
      reach the market within an hour.${signWith ? "" : `
   Only signed plugins update by themselves on users' islands: see "keygen" and --sign.`}

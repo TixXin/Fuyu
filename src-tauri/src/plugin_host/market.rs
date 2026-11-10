@@ -1,4 +1,4 @@
-//! Plugin market: the index (index.json in TixXin/focusd-plugins), package
+//! Plugin market: the index (index.json in TixXin/fuyu-plugins), package
 //! download with size and SHA-256 checks, safe unzip and the folder swap that
 //! installs or updates a plugin. Packages are built by scripts/plugins/build-plugin-index.mjs.
 
@@ -20,14 +20,15 @@ use super::revocations::{parse_revoked, Revocation};
 use super::signature::{verify_file, verify_index, TRUSTED_KEYS};
 use crate::system::updater::get_updater_proxy;
 
-/// The index repository: index.json, revoked.json and their signatures at its
+/// The index repository (TixXin/focusd-plugins before the rename, D17; GitHub redirects the
+/// old name, which islands already out there ask for): index.json, revoked.json and their signatures at its
 /// root, rebuilt and signed by its CI (key e862885af5bba3dc). Builds before
-/// this change read plugins/ in TixXin/fly-island (main, or dev before that),
+/// this change read plugins/ in TixXin/fly-island (now TixXin/fuyu; main, or dev before that),
 /// which `pnpm plugins:index` keeps signed with the older key for them.
-const MARKET_REPO: &str = "TixXin/focusd-plugins";
+const MARKET_REPO: &str = "TixXin/fuyu-plugins";
 const MARKET_BRANCH: &str = "main";
 /// Shown on the settings page; the index itself is read at the branch's newest commit.
-pub(super) const INDEX_URL: &str = "https://raw.githubusercontent.com/TixXin/focusd-plugins/main/index.json";
+pub(super) const INDEX_URL: &str = "https://raw.githubusercontent.com/TixXin/fuyu-plugins/main/index.json";
 const INDEX_VERSION: u32 = 1;
 /// The island's own publisher, shown as "official".
 pub(super) const OFFICIAL_PUBLISHER: &str = "TixXin";

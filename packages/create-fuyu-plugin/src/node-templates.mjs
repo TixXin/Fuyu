@@ -6,7 +6,7 @@ const json = (value) => JSON.stringify(value);
 function header(options) {
   const from = options.language === "typescript" ? "../lib/fuyu.mjs" : "./lib/fuyu.mjs";
   return `// ${options.name.en}: a Fuyu plugin. Protocol and API:
-// https://github.com/TixXin/fly-island/blob/main/docs/plugins/README.md
+// https://github.com/TixXin/fuyu/blob/main/docs/plugins/README.md
 import { createPlugin } from ${json(from)};
 
 const plugin = createPlugin();

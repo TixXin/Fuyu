@@ -1231,6 +1231,27 @@
       "page": "clipboard",
       "zh-CN": {
         "group": "打开方式",
+        "title": "窗口宽度",
+        "description": "宽版右边显示选中这条的完整内容、大图和来源，粘贴前能看清是不是要的那条。",
+        "options": [
+          "标准",
+          "宽版"
+        ]
+      },
+      "en": {
+        "group": "Opening",
+        "title": "Window width",
+        "description": "Wide shows the picked entry in full beside the list, with a large image and where it came from.",
+        "options": [
+          "Standard",
+          "Wide"
+        ]
+      }
+    },
+    {
+      "page": "clipboard",
+      "zh-CN": {
+        "group": "打开方式",
         "title": "选中后自动粘贴",
         "description": "关掉时只复制，回到原来的窗口自己按 Ctrl+V。"
       },

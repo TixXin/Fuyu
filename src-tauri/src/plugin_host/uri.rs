@@ -1,4 +1,6 @@
-//! `focusd://plugin/<id>/<path>?<query>` links (activation event `onUri`),
+//! `fuyu://plugin/<id>/<path>?<query>` links (activation event `onUri`), and the same
+//! under `focusd://`, the scheme before the rename (D17) that existing pages and OAuth
+//! redirect addresses use,
 //! like VS Code's `vscode://<publisher>.<name>/...`: a web page or another
 //! program hands something to a plugin, e.g. the code of a sign-in.
 //!
@@ -16,7 +18,8 @@ use tauri::AppHandle;
 
 use super::{host, lifecycle, lock, sensitive};
 
-pub(super) const SCHEME: &str = "focusd";
+/// Both are registered and both open plugins; neither is preferred.
+pub(super) const SCHEMES: [&str; 2] = ["fuyu", "focusd"];
 /// The key of the remembered answer in `PluginGrant.sensitive`. Mirrored by
 /// `PLUGIN_URI_PERMISSION` in src/features/plugins/api.ts.
 pub(super) const URI_PERMISSION: &str = "uri";
@@ -35,13 +38,13 @@ pub(super) struct PluginLink {
     pub query: String,
 }
 
-/// Reads `focusd://plugin/<id>[/path][?query][#fragment]`; `None` for anything else.
+/// Reads `fuyu://` or `focusd://plugin/<id>[/path][?query][#fragment]`; `None` for anything else.
 pub(super) fn parse(link: &str) -> Option<PluginLink> {
     if link.len() > MAX_LINK_LENGTH || link.chars().any(|c| c.is_control() || c.is_whitespace()) {
         return None;
     }
     let (scheme, rest) = link.split_once("://")?;
-    if !scheme.eq_ignore_ascii_case(SCHEME) {
+    if !SCHEMES.iter().any(|known| scheme.eq_ignore_ascii_case(known)) {
         return None;
     }
     let rest = rest.split_once('#').map_or(rest, |(before, _)| before);
@@ -60,24 +63,26 @@ pub(super) fn parse(link: &str) -> Option<PluginLink> {
 
 /// The link among a program's arguments, if any.
 pub(crate) fn find_link(args: &[String]) -> Option<&str> {
-    let prefix = format!("{SCHEME}:");
-    args.iter()
-        .map(String::as_str)
-        .find(|arg| arg.len() > prefix.len() && arg.get(..prefix.len()).is_some_and(|start| start.eq_ignore_ascii_case(&prefix)))
+    args.iter().map(String::as_str).find(|arg| {
+        SCHEMES.iter().any(|scheme| {
+            let prefix = format!("{scheme}:");
+            arg.len() > prefix.len() && arg.get(..prefix.len()).is_some_and(|start| start.eq_ignore_ascii_case(&prefix))
+        })
+    })
 }
 
-/// Points `focusd://` at this executable.
+/// Points `fuyu://` and `focusd://` at this executable.
 pub(super) fn register_scheme() -> Result<(), String> {
     let exe = std::env::current_exe().map_err(|error| format!("Could not resolve the executable: {error}"))?;
     let command = format!("\"{}\" \"%1\"", exe.display());
-    crate::win32::url_protocol::register(SCHEME, "FocuSD Island", &command)
+    SCHEMES.iter().try_for_each(|scheme| crate::win32::url_protocol::register(scheme, "Fuyu", &command))
 }
 
 /// Hands `link` to its plugin, asking the user first if needed. `cold_start`:
 /// the link started the island, whose window is not listening yet.
 pub(crate) fn open(app: &AppHandle, link: &str, cold_start: bool) {
     let Some(target) = parse(link) else {
-        eprintln!("ignored a link that is not focusd://plugin/<id>/...: {link}");
+        eprintln!("ignored a link that is not fuyu://plugin/<id>/...: {link}");
         return;
     };
     let (app, link) = (app.clone(), link.to_string());
@@ -133,6 +138,8 @@ mod tests {
         assert_eq!(parse("FOCUSD://Plugin/my_plugin"), link("my_plugin", "", ""));
         assert_eq!(parse("focusd://plugin/x/a/b/"), link("x", "/a/b/", ""));
         assert_eq!(parse("focusd://plugin/x?y=1"), link("x", "", "y=1"));
+        assert_eq!(parse("fuyu://plugin/x/cb?y=1"), link("x", "/cb", "y=1"));
+        assert_eq!(parse("FUYU://plugin/x"), link("x", "", ""));
     }
 
     #[test]
@@ -146,6 +153,7 @@ mod tests {
             "focusd://plugin/x y/z",
             "focusd://plugin/a\\b",
             "focusd:plugin/x",
+            "fuyuu://plugin/x",
             &long,
         ] {
             assert_eq!(parse(text), None, "{text}");
@@ -156,6 +164,7 @@ mod tests {
     fn the_link_is_found_among_the_arguments() {
         let args = |list: &[&str]| list.iter().map(|arg| arg.to_string()).collect::<Vec<_>>();
         assert_eq!(find_link(&args(&["island.exe", "focusd://plugin/x"])), Some("focusd://plugin/x"));
+        assert_eq!(find_link(&args(&["island.exe", "fuyu://plugin/x"])), Some("fuyu://plugin/x"));
         assert_eq!(find_link(&args(&["island.exe", "--flag", "日本語の引数"])), None);
         assert_eq!(find_link(&args(&["island.exe"])), None);
     }

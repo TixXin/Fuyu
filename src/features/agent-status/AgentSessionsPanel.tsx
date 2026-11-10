@@ -1,6 +1,8 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Archive } from "lucide-react";
 import { ArchivedNotice } from "./ArchivedNotice";
+import { EditorExtensionHint } from "./EditorExtensionHint";
+import { useEditorExtensionHint } from "./useEditorExtensionHint";
 import { useArchiveMotion } from "./useArchiveMotion";
 import { useTranslation } from "../../i18n";
 import type { AgentArchiveMotion, AgentCardEffects, AgentHostDisplay, AgentSessionGroup, AgentSessionSort, AgentSessionView } from "../appearance/types";
@@ -90,6 +92,8 @@ export function AgentSessionsPanel({
   const [now, setNow] = useState(() => Date.now());
   const effortLabels = useEffortLabels();
   const [notFoundId, setNotFoundId] = useState<string | null>(null);
+  // Offered after a click lands in an editor without the island's extension.
+  const extensionHint = useEditorExtensionHint();
   // Fade out an end of the list that has more sessions past it, rather than cutting a row in half.
   const list = useScrollFade<HTMLUListElement>(sessions);
   const motion = useArchiveMotion(list.element, removal, archiveMotion);
@@ -297,6 +301,7 @@ export function AgentSessionsPanel({
         ])}
       </ul>
       {removedNotice}
+      {!removal?.removed && <EditorExtensionHint hint={extensionHint} />}
     </section>
   );
 }

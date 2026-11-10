@@ -4,6 +4,7 @@ pub(crate) mod approval_hotkeys;
 mod background_tasks;
 mod claude_hooks;
 mod codex_hooks;
+mod editor_extension;
 mod editor_terminal;
 mod external;
 mod hooks_state;
@@ -46,7 +47,7 @@ mod window_focus;
 use serde::Serialize;
 use serde_json::{json, Value};
 use std::{fs, path::Path};
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Emitter, Manager};
 
 use crate::system::windows_home_dir;
 
@@ -69,27 +70,38 @@ use snapshot::{
 
 pub(super) const AGENT_STATUS_FILE_NAME: &str = "agent-status.json";
 
-pub(super) const AGENT_RUNNING_SCRIPT_FILE_NAME: &str = "focusd-agent-running.cmd";
-pub(super) const AGENT_STATUS_SCRIPT_FILE_NAME: &str = "focusd-agent-status.ps1";
-pub(super) const AGENT_SESSION_SCRIPT_FILE_NAME: &str = "focusd-agent-session.ps1";
+pub(super) const AGENT_RUNNING_SCRIPT_FILE_NAME: &str = "fuyu-agent-running.cmd";
+pub(super) const AGENT_STATUS_SCRIPT_FILE_NAME: &str = "fuyu-agent-status.ps1";
+pub(super) const AGENT_SESSION_SCRIPT_FILE_NAME: &str = "fuyu-agent-session.ps1";
 
-pub(super) const FOCUSD_AGENT_HOOK_SIGNATURE: &str = "focusd-agent-";
+/// In every hook the island writes (script names, markers), so Install/Repair finds its own.
+pub(super) const AGENT_HOOK_SIGNATURE: &str = "fuyu-agent-";
+/// The signature before the rename (D17): those hooks are still recognised and replaced.
+const LEGACY_AGENT_HOOK_SIGNATURE: &str = "focusd-agent-";
+/// The script files islands before the rename wrote into the app data folder.
+const LEGACY_SCRIPT_FILE_NAMES: [&str; 4] =
+    ["focusd-agent-running.cmd", "focusd-agent-status.ps1", "focusd-agent-session.ps1", "focusd-agent-approval.ps1"];
+
+/// Whether `text` belongs to a hook the island wrote, under either signature.
+pub(super) fn is_island_hook_text(text: &str) -> bool {
+    text.contains(AGENT_HOOK_SIGNATURE) || text.contains(LEGACY_AGENT_HOOK_SIGNATURE)
+}
 /// Second argument of the running script for the Notification and PermissionRequest hooks (Claude
 /// Code and Codex): save the hook input instead of marking the session as running (see
 /// focusd-agent-running.cmd). Installs from before the session script also pass `session` from
 /// SessionStart, which the script still handles.
 pub(super) const AGENT_RUNNING_NOTIFICATION_ARG: &str = "notification";
 pub(super) const AGENT_RUNNING_SCRIPT: &str =
-    include_str!("hooks/focusd-agent-running.cmd");
+    include_str!("hooks/fuyu-agent-running.cmd");
 pub(super) const AGENT_STATUS_SCRIPT: &str =
-    include_str!("hooks/focusd-agent-status.ps1");
+    include_str!("hooks/fuyu-agent-status.ps1");
 /// SessionStart / SessionEnd: records the session's process and terminal (session_records.rs).
 pub(super) const AGENT_SESSION_SCRIPT: &str =
-    include_str!("hooks/focusd-agent-session.ps1");
+    include_str!("hooks/fuyu-agent-session.ps1");
 /// Codex PermissionRequest: forwards the request to the island's approval endpoint (agent_approval).
-pub(super) const AGENT_APPROVAL_SCRIPT_FILE_NAME: &str = "focusd-agent-approval.ps1";
+pub(super) const AGENT_APPROVAL_SCRIPT_FILE_NAME: &str = "fuyu-agent-approval.ps1";
 pub(super) const AGENT_APPROVAL_SCRIPT: &str =
-    include_str!("hooks/focusd-agent-approval.ps1");
+    include_str!("hooks/fuyu-agent-approval.ps1");
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -282,8 +294,62 @@ fn install_agent_status_hooks_now(app: &AppHandle) -> Result<AgentHooksInstallRe
         codex_config_path: codex_config_path.to_string_lossy().to_string(),
         claude_config_path: claude_config_path.to_string_lossy().to_string(),
         installed_at: current_unix_millis(),
-        remotes: remote_setup::install_hooks(&app_dir),
+        remotes: {
+            let remotes = remote_setup::install_hooks(&app_dir);
+            remove_legacy_hook_scripts(&app_dir);
+            remotes
+        },
     })
+}
+
+/// The scripts from before the rename, once no agent config points at them any more.
+fn remove_legacy_hook_scripts(app_dir: &Path) {
+    for name in LEGACY_SCRIPT_FILE_NAMES {
+        let _ = fs::remove_file(app_dir.join(name));
+    }
+}
+
+/// After the data moved to the new app identifier (D17): the hooks the user had installed point
+/// at the old folder's scripts and status file, so they are written again, for the agents that
+/// had them only. `Ok(false)` when none had them.
+pub(crate) fn reinstall_hooks_after_rename(app: &AppHandle) -> Result<bool, String> {
+    let app_dir = app
+        .path()
+        .app_data_dir()
+        .map_err(|error| format!("Failed to resolve app data directory: {error}"))?;
+    let state = read_agent_hooks_state(&app_dir)?;
+    let codex = state.codex != HookInstallState::NotInstalled;
+    let claude_code = state.claude_code != HookInstallState::NotInstalled;
+    if !codex && !claude_code {
+        return Ok(false);
+    }
+    install_agent_hook_scripts(&app_dir)?;
+    let running_script_path = app_dir.join(AGENT_RUNNING_SCRIPT_FILE_NAME);
+    let status_script_path = app_dir.join(AGENT_STATUS_SCRIPT_FILE_NAME);
+    let home_dir = windows_home_dir()?;
+    if codex {
+        install_codex_status_hooks(
+            &home_dir.join(".codex").join("config.toml"),
+            &running_script_path,
+            &status_script_path,
+            codex_version::codex_runs_async_hooks(&home_dir) == Some(true),
+        )?;
+    }
+    if claude_code {
+        install_claude_code_status_hooks(
+            &home_dir.join(".claude").join("settings.json"),
+            &running_script_path,
+            &status_script_path,
+            approval_hook().as_ref(),
+        )?;
+    }
+    for remote in remote_setup::install_hooks(&app_dir) {
+        if let Some(error) = remote.error {
+            eprintln!("could not reinstall the hooks on {}: {error}", remote.host);
+        }
+    }
+    remove_legacy_hook_scripts(&app_dir);
+    Ok(true)
 }
 
 /// Claude Code and Codex sessions active in the last two hours, running and waiting ones first.
@@ -423,11 +489,36 @@ pub async fn focus_agent_window(
     session_id: Option<String>,
 ) -> Result<bool, String> {
     let app_dir = app.path().app_data_dir().ok();
-    tauri::async_runtime::spawn_blocking(move || {
+    let focused = tauri::async_runtime::spawn_blocking(move || {
         focus::focus_session(app_dir.as_deref(), &provider, cwd.as_deref(), title.as_deref(), session_id.as_deref())
     })
     .await
-    .map_err(|error| format!("Failed to join the window focus task: {error}"))
+    .map_err(|error| format!("Failed to join the window focus task: {error}"))?;
+    if let Some(editor) = focused.missing_extension {
+        let name = editor_extension::editor_name(&editor).unwrap_or(&editor).to_string();
+        let payload = json!({ "app": editor, "name": name });
+        let _ = app.emit_to(crate::island::WINDOW_LABEL, EDITOR_EXTENSION_MISSING_EVENT, payload);
+    }
+    Ok(focused.found)
+}
+
+/// Sent to the island when a clicked session's editor lacks the extension that switches to its
+/// terminal: `{ app, name }` (`code`, `VS Code`).
+const EDITOR_EXTENSION_MISSING_EVENT: &str = "agent-editor-extension-missing";
+
+/// The editors built on VS Code on this computer and whether each has the island's extension.
+#[tauri::command]
+pub async fn get_editor_extension_states() -> Vec<editor_extension::EditorExtensionState> {
+    tauri::async_runtime::spawn_blocking(editor_extension::states).await.unwrap_or_default()
+}
+
+/// Installs the island's extension into the editor `app` (its executable name, as listed by
+/// `get_editor_extension_states`).
+#[tauri::command]
+pub async fn install_editor_extension(app: String) -> Result<(), crate::user_error::UserError> {
+    tauri::async_runtime::spawn_blocking(move || editor_extension::install(&app))
+        .await
+        .map_err(|error| crate::user_error::UserError::new("internal", "Something went wrong inside the island.").detail(error))?
 }
 
 /// Which of `sessions` have their window in front (focus.rs); the Agent page counts those as
@@ -631,6 +722,8 @@ macro_rules! tauri_commands {
             crate::agent_status::install_agent_status_hooks,
             crate::agent_status::get_agent_hooks_state,
             crate::agent_status::focus_agent_window,
+            crate::agent_status::get_editor_extension_states,
+            crate::agent_status::install_editor_extension,
             crate::agent_status::agent_sessions_in_front,
             crate::agent_status::get_agent_host_icon,
             crate::agent_status::list_agent_sessions,

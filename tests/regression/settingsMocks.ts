@@ -19,7 +19,7 @@ const mailbox = (email: string, extra: Partial<MailSnapshot> = {}): MailSnapshot
 });
 let mailboxes: MailSnapshot[] = [mailbox("demo@qq.com"), mailbox("louis@163.com", { status: "authRequired", enabled: false, unreadCount: null })];
 let replyMarkerOn = false;
-export const REPLY_MARKER = { path: "C:\\Users\\demo\\.claude\\rules\\focusd-island-reply-marker.md", content: "<!-- focusd-island: reply marker v3 -->\n## Reply status marker" };
+export const REPLY_MARKER = { path: "C:\\Users\\demo\\.claude\\rules\\fuyu-reply-marker.md", content: "<!-- fuyu: reply marker v4 -->\n## Reply status marker" };
 const replyMarker = () => ({ installed: replyMarkerOn, outdated: false, ...REPLY_MARKER, remotes: [] });
 export const replyMarkerCalls: boolean[] = [];
 export const openedUrls: string[] = [];
@@ -36,6 +36,12 @@ mockIPC((command, payload) => {
   }
   switch (command) {
     case "get_reply_marker_state": return replyMarker();
+    case "get_editor_extension_states":
+      return [
+        { app: "code", name: "VS Code", installed: true, canInstall: true },
+        { app: "cursor", name: "Cursor", installed: false, canInstall: true },
+      ];
+    case "install_editor_extension": return null;
     case "set_reply_marker": replyMarkerCalls.push(replyMarkerOn = Boolean(args.enabled)); return replyMarker();
     case "get_launch_at_startup": return false;
     case "set_launch_at_startup": return null;
@@ -74,14 +80,14 @@ mockIPC((command, payload) => {
     case "get_cached_plugin_market": return null;
     case "list_plugin_views": return { views: [], status: [], statusItems: [{ pluginId: "dev.example.todo-sync", pluginName: { "zh-CN": "待办同步示例", en: "Todo sync example" }, itemId: "count" }] };
     case "get_theme_market": return [{ id: "focusd.midnight", name: { "zh-CN": "午夜蓝", en: "Midnight" }, author: "TixXin", appearance: { islandBackgroundColor: "#0f1a2e", islandCornerRadius: 28 } }, { id: "someone.dusk", name: { "zh-CN": "黄昏", en: "Dusk" }, description: { "zh-CN": "一句话", en: "One line" }, author: "someone", appearance: { islandBackgroundColor: "#1b1020", collapsedScale: 1.3 } }];
-    case "get_plugin_market_likes": return { "dev.example.new": { count: 12, url: "https://github.com/TixXin/focusd-plugins/discussions/9" }, "dev.example.todo-sync": { count: 3, url: "https://github.com/TixXin/focusd-plugins/discussions/8" } };
+    case "get_plugin_market_likes": return { "dev.example.new": { count: 12, url: "https://github.com/TixXin/fuyu-plugins/discussions/9" }, "dev.example.todo-sync": { count: 3, url: "https://github.com/TixXin/fuyu-plugins/discussions/8" } };
     case "get_plugin_market": return {
-      indexUrl: "https://raw.githubusercontent.com/TixXin/focusd-plugins/main/index.json",
+      indexUrl: "https://raw.githubusercontent.com/TixXin/fuyu-plugins/main/index.json",
       nodeAvailable: false,
       trustedPublishers: [],
       officialPublisher: "TixXin",
       plugins: [
-        { id: "dev.example.todo-sync", name: { "zh-CN": "待办同步示例", en: "Todo sync example" }, description: null, version: "1.1.0", apiVersion: 1, minAppVersion: null, author: "FocuSD", homepage: "", permissions: ["todos:read"], runtime: "powershell", download: { url: "https://example.com/a.zip", sha256: "0".repeat(64), size: 1 }, publisher: null, repo: "TixXin/fly-island", categories: ["todos", "productivity"], readme: "# 待办同步\n\n每 **5 分钟**同步一次，见 [文档](https://example.com/docs)。\n\n- 读取待办\n- 写入日志", changelog: "## 1.1.0\n\n- 新增同步间隔设置", installedVersion: "1.0.0", incompatible: null, revoked: null, signedBy: "0123456789abcdef", signingKeyChanged: true },
+        { id: "dev.example.todo-sync", name: { "zh-CN": "待办同步示例", en: "Todo sync example" }, description: null, version: "1.1.0", apiVersion: 1, minAppVersion: null, author: "FocuSD", homepage: "", permissions: ["todos:read"], runtime: "powershell", download: { url: "https://example.com/a.zip", sha256: "0".repeat(64), size: 1 }, publisher: null, repo: "TixXin/fuyu", categories: ["todos", "productivity"], readme: "# 待办同步\n\n每 **5 分钟**同步一次，见 [文档](https://example.com/docs)。\n\n- 读取待办\n- 写入日志", changelog: "## 1.1.0\n\n- 新增同步间隔设置", installedVersion: "1.0.0", incompatible: null, revoked: null, signedBy: "0123456789abcdef", signingKeyChanged: true },
         { id: "dev.example.new", name: { "zh-CN": "新插件", en: "New plugin" }, description: { "zh-CN": "还没安装。", en: "Not installed yet." }, version: "0.1.0", apiVersion: 1, minAppVersion: null, author: "", homepage: "", permissions: [], runtime: "node", download: { url: "https://example.com/b.zip", sha256: "0".repeat(64), size: 1 }, publisher: "someone-with-a-long-github-name", repo: null, categories: ["developer"], installedVersion: null, incompatible: null, revoked: null, signedBy: null, signingKeyChanged: false, verified: { via: "domain", domain: "plugins.example.com" } },
       ],
     };
