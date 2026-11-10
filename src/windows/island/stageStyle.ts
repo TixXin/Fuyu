@@ -31,6 +31,8 @@ export function getIslandStageStyle(
     "--expanded-island-width": `${expandedIslandWidth}px`,
     // Unitless so IslandTopEdge.css can also fade the fillet layers out at 0.
     "--island-top-fillet-size": settings.topFilletRadius,
+    // One device pixel, for IslandTopEdge.css to round the scaled fillet radius to.
+    "--island-device-pixel": `${1 / window.devicePixelRatio}px`,
     // Unitless; IslandShell.css derives the collapsed, detached and inner panel radii from it.
     "--island-corner-radius-size": settings.islandCornerRadius,
     // The corner-shape of the island and every layer that inherits its radius (IslandShell.css).

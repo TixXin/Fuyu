@@ -8,9 +8,14 @@
 .island {
   /*
    * Radius of the concave fillets that flare the flat top into the screen edge.
-   * The unitless size comes from the appearance settings (stageStyle.ts).
+   * The unitless size comes from the appearance settings (stageStyle.ts). Rounded to whole
+   * device pixels: Chromium snaps the fillet mask tiles to them, so a fractional radius (8 at a
+   * 1.15 scale is 9.2px) left a 1px slit between the left fillet and the island.
    */
-  --island-top-fillet: calc(var(--island-top-fillet-size, 8) * 1px * var(--island-scale, 1));
+  --island-top-fillet: round(
+    calc(var(--island-top-fillet-size, 8) * 1px * var(--island-scale, 1)),
+    var(--island-device-pixel, 1px)
+  );
   /* The rim layer reaches this far into the island so it can take over its side rim. */
   --island-top-fillet-box: calc(var(--island-top-fillet) + 4px);
   /* Rim that continues the island outline along the fillet curve. */
