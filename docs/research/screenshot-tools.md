@@ -12,7 +12,7 @@
 
 ### 建议的范围
 
-2026-11-10 用户同意按下面的范围做，计划见 [screenshot-plan.md](/docs/architecture/screenshot-plan.md)，任务 [C41](/docs/tasks/C/C41.md)。
+2026-11-10 用户同意按下面的范围做，另外把录屏也加了进来（排在第三版），计划见 [screenshot-plan.md](/docs/architecture/screenshot-plan.md)，任务 [C41](/docs/tasks/C/C41.md)。
 
 - **第一版**：区域截图 + 自动识别窗口和元素、放大镜和取色、基础标注、复制 / 保存 / 贴图、岛上的截图预览（拖出、进文件中转、进剪贴板历史）、OCR 复制文字和交给翻译、发给 Agent 会话。多显示器和混合 DPI 第一版就要做对。
 - **第二版**：长截图（照 ShareX #8631 的思路处理吸顶头部）、自动打码（邮箱、手机号、IP 用规则就能做）、截图历史、像素测量。
