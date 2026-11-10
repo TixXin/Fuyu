@@ -182,12 +182,15 @@ function Send-FuyuWebviewMessage([string]$ViewId, $Message) {
 # Sets the collapsed-bar text (max 24 characters) of one of the plugin's statusItems.
 # -Cells: up to 4 @{ label = 'CPU'; value = '23%'; tone = 'warning' } columns drawn instead of
 # the text, -Ring: a 0-1 progress ring; both need the statusCells capability (older islands show the text).
-function Update-FuyuStatus([string]$ItemId, [string]$Text, [string]$Tooltip = $null, [string]$Tone = $null, [object[]]$Cells = $null, [Nullable[double]]$Ring = $null) {
+# -Batteries: up to 4 @{ level = 0.8; tone = 'warning' } upright batteries drawn instead of the
+# text and cells (capability statusBatteries).
+function Update-FuyuStatus([string]$ItemId, [string]$Text, [string]$Tooltip = $null, [string]$Tone = $null, [object[]]$Cells = $null, [Nullable[double]]$Ring = $null, [object[]]$Batteries = $null) {
     $params = @{ itemId = $ItemId; text = $Text }
     if ($Tooltip) { $params.tooltip = $Tooltip }
     if ($Tone) { $params.tone = $Tone }
     if ($null -ne $Cells -and $Cells.Count -gt 0) { $params.cells = @($Cells) }
     if ($null -ne $Ring) { $params.ring = $Ring }
+    if ($null -ne $Batteries -and $Batteries.Count -gt 0) { $params.batteries = @($Batteries) }
     [void](Invoke-FuyuMethod 'status.update' $params)
 }
 

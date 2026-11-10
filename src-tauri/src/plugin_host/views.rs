@@ -41,6 +41,8 @@ const TONES: [&str; 4] = ["neutral", "accent", "warning", "danger"];
 pub(super) const MAX_STATUS_CELLS: usize = 4;
 const MAX_CELL_LABEL_CHARS: usize = 6;
 const MAX_CELL_VALUE_CHARS: usize = 8;
+/// `status.update { batteries }`: at most this many upright batteries.
+pub(super) const MAX_STATUS_BATTERIES: usize = 4;
 
 /// A plugin and one of its views or status items ("view:<id>" / "status:<id>").
 type Slot = (String, String);
@@ -58,6 +60,16 @@ pub struct StatusText {
     /// A small progress ring (0-1) in the item's tone, before the text or cells.
     #[serde(skip_serializing_if = "Option::is_none")]
     ring: Option<f64>,
+    /// Upright batteries drawn instead of the text and the cells.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    batteries: Vec<StatusBattery>,
+}
+
+/// One upright battery of a status item: how full it is (0-1) and its tone.
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct StatusBattery {
+    level: f64,
+    tone: &'static str,
 }
 
 /// One label-over-value column of a status item.
@@ -160,7 +172,7 @@ pub(super) fn answer(app: &AppHandle, plugin_id: &str, method: &str, params: &Va
     }
 }
 
-/// `{ text, tooltip?, tone?, cells?, ring? }`; an empty text clears the item.
+/// `{ text, tooltip?, tone?, cells?, ring?, batteries? }`; an empty text clears the item.
 pub(super) fn parse_status(params: &Value) -> Result<Option<StatusText>, (u16, String)> {
     let text = params.get("text").and_then(Value::as_str).ok_or_else(|| bad("Expected \"text\" as a string."))?.trim();
     if text.chars().count() > MAX_STATUS_CHARS {
@@ -184,7 +196,20 @@ pub(super) fn parse_status(params: &Value) -> Result<Option<StatusText>, (u16, S
             _ => return Err(bad("\"ring\" must be a number from 0 to 1.")),
         },
     };
-    Ok((!text.is_empty()).then(|| StatusText { text: text.to_string(), tooltip, tone, cells, ring }))
+    let batteries = match params.get("batteries") {
+        None | Some(Value::Null) => Vec::new(),
+        Some(Value::Array(batteries)) if batteries.len() <= MAX_STATUS_BATTERIES => batteries.iter().map(parse_battery).collect::<Result<_, _>>()?,
+        Some(_) => return Err(bad(format!("\"batteries\" must be a list of at most {MAX_STATUS_BATTERIES} batteries."))),
+    };
+    Ok((!text.is_empty()).then(|| StatusText { text: text.to_string(), tooltip, tone, cells, ring, batteries }))
+}
+
+/// `{ level, tone? }`: how full the battery is, from 0 to 1.
+fn parse_battery(battery: &Value) -> Result<StatusBattery, (u16, String)> {
+    match battery.get("level").and_then(Value::as_f64) {
+        Some(level) if (0.0..=1.0).contains(&level) => Ok(StatusBattery { level, tone: parse_tone(battery.get("tone"), "batteries[].tone")? }),
+        _ => Err(bad("Each battery needs \"level\" as a number from 0 to 1.")),
+    }
 }
 
 fn parse_tone(value: Option<&Value>, field: &str) -> Result<&'static str, (u16, String)> {

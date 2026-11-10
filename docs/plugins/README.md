@@ -222,6 +222,21 @@ await plugin.status.update("bar", "CPU 23% · GPU 81°", {
 
 PowerShell：`Update-FuyuStatus 'bar' 'CPU 23%' -Cells @(@{ label = 'CPU'; value = '23%' }) -Ring 0.23`。
 
+**折叠条上的电池**（能力 `statusBatteries`）：`status.update` 带 `batteries`，最多 4 个 `[{ level, tone? }]`，`level` 是 0–1 的电量。折叠条画成几个并排立着的小电池，代替文字和 `cells`，不显示数字；具体数值写进 `tooltip`（鼠标悬停时显示）和插件自己的页面。
+
+- 不写 `tone`（或 `neutral`）的电池按位置上色：第 1 到第 4 个依次是绿、蓝、紫、粉，相邻的两个一眼能分开。所以同一个设备尽量一直排在同一个位置。
+- `tone` 为 `warning` / `danger` 的电池变成黄色 / 红色，用来表示电量低；`accent` 是浅蓝色。
+- `text` 仍然必填，没有这项能力的旧版岛屿显示文字（或 `cells`）。
+
+```js
+await plugin.status.update("battery", "80% 15%", {
+  tooltip: "PC 80% / 耳机 15%",
+  batteries: [{ level: 0.8 }, { level: 0.15, tone: "warning" }],
+});
+```
+
+PowerShell：`Update-FuyuStatus 'battery' '80% 15%' -Batteries @(@{ level = 0.8 }, @{ level = 0.15; tone = 'warning' })`。
+
 ### Agent 页的强度名称
 
 `contributes.agentEffortLabels` 改写 Agent 页会话行里推理强度的显示，按 Agent 分开写；只改显示，会话本身的强度不变：
@@ -384,6 +399,7 @@ QQ 邮箱授权码、翻译服务密钥这类凭据，任何权限都拿不到�
 | `views` | `contributes.views` 页面；`view.update` / `view.patch` 和 `view.*` 通知 |
 | `status` | `contributes.statusItems` 折叠条状态；`status.update` |
 | `statusCells` | `status.update` 的 `cells`（列）和 `ring`（小环） |
+| `statusBatteries` | `status.update` 的 `batteries`（并排立着的小电池） |
 | `notifyStyle` | `island.notify` 的 `icon`（音乐软件的图标）和 `layout`（不带卡片） |
 
 - **第 1 版插件的行为不变**：`events.*`、`storage.*`、`view.*`、`status.update` 对它们仍然返回"方法不存在"；清单里的 `keybinding`、`when`、`menus`、`views`、`statusItems` 被忽略（写成什么样都不影响加载）。新权限（`island:notify`、`secrets` 等）在第 1 版清单里也能申请，申请了就能调用对应方法。
