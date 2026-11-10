@@ -23,6 +23,13 @@ export type SettingsProjectText = {
   latestRelease: string;
   latestReleaseHint: string;
   openFailed: string;
+  diagnostics: {
+    title: string; hint: string; preview: string; copy: string; copied: string;
+    copyFailed: string; loadFailed: string; close: string;
+    version: string; system: string; architecture: string; channel: string;
+    autoCheck: string; interval: string; lastCheck: string; stage: string;
+    enabled: string; disabled: string;
+  };
   update: {
     title: string;
     hint: string;
@@ -54,6 +61,21 @@ export type SettingsProjectText = {
     autoTitle: string;
     autoCheck: string;
     autoCheckHint: string;
+    checkFrequency: string;
+    checkFrequencyHint: string;
+    frequencyHours: (hours: number) => string;
+    reminderMode: string;
+    reminderHint: string;
+    reminderBadge: string;
+    reminderNotification: string;
+    nextCheck: (time: string) => string;
+    retryCheck: (time: string) => string;
+    schedulePaused: string;
+    offline: string;
+    pendingCheck: string;
+    notificationUnavailable: string;
+    notificationTitle: string;
+    notificationBody: (version: string) => string;
     lastChecked: (time: string) => string;
     neverChecked: string;
     islandReminder: (version: string) => string;
@@ -84,6 +106,14 @@ export const zhCN: SettingsProjectText = {
   latestRelease: "查看最新版本",
   latestReleaseHint: "看看小岛又长了什么新本领",
   openFailed: "暂时没能打开浏览器，请再试一次。",
+  diagnostics: {
+    title: "诊断信息", hint: "预览并复制应用版本、系统和更新状态，便于反馈问题。",
+    preview: "预览", copy: "复制诊断信息", copied: "已复制", copyFailed: "复制失败，请重试。",
+    loadFailed: "无法读取系统信息，请重试。", close: "收起",
+    version: "应用版本", system: "操作系统", architecture: "架构", channel: "更新通道",
+    autoCheck: "自动检查", interval: "检查频率", lastCheck: "上次成功检查", stage: "更新状态",
+    enabled: "开启", disabled: "关闭",
+  },
   update: {
     title: "检查更新",
     hint: "点一下看看有没有新版本",
@@ -114,8 +144,23 @@ export const zhCN: SettingsProjectText = {
     skipped: (version) => `已跳过 v${version}，岛上不再提醒；仍可在这里手动安装`,
     autoTitle: "自动检查",
     autoCheck: "自动检查更新",
-    autoCheckHint: "启动后和之后每 6 小时检查一次；发现新版本时，岛上的设置按钮会出现小圆点",
-    lastChecked: (time) => `上次检查：${time}`,
+    autoCheckHint: "在应用运行时按所选频率检查；退出期间错过的检查会在下次启动后补查一次。",
+    checkFrequency: "检查频率",
+    checkFrequencyHint: "从上次成功检查起计算，修改后立即生效。",
+    frequencyHours: (hours) => `每 ${hours} 小时`,
+    reminderMode: "更新提醒方式",
+    reminderHint: "发现新版本后如何提醒；同一版本的系统通知只发送一次。",
+    reminderBadge: "仅岛上标记",
+    reminderNotification: "岛上标记与系统通知",
+    nextCheck: (time) => `下次检查：${time}`,
+    retryCheck: (time) => `下次重试：${time}`,
+    schedulePaused: "下载或安装期间暂停自动检查",
+    offline: "当前离线，联网后检查已到期的更新",
+    pendingCheck: "已到检查时间，等待后台检查",
+    notificationUnavailable: "系统通知不可用或被系统关闭，仍会显示岛上标记。",
+    notificationTitle: "fly-island 有新版本",
+    notificationBody: (version) => `发现 v${version}，点击打开关于页面查看更新。`,
+    lastChecked: (time) => `上次成功检查：${time}`,
     neverChecked: "还没有检查过",
     islandReminder: (version) => `发现新版本 v${version}，点击查看`,
   },
@@ -145,6 +190,14 @@ export const en: SettingsProjectText = {
   latestRelease: "View latest release",
   latestReleaseHint: "See what washed ashore in the latest update",
   openFailed: "Couldn't open your browser. Please try again.",
+  diagnostics: {
+    title: "Diagnostics", hint: "Preview and copy the app version, system and update status for a bug report.",
+    preview: "Preview", copy: "Copy diagnostics", copied: "Copied", copyFailed: "Couldn't copy. Please try again.",
+    loadFailed: "Couldn't read system information. Please try again.", close: "Hide",
+    version: "App version", system: "Operating system", architecture: "Architecture", channel: "Update channel",
+    autoCheck: "Automatic checks", interval: "Check frequency", lastCheck: "Last successful check", stage: "Update status",
+    enabled: "On", disabled: "Off",
+  },
   update: {
     title: "Check for updates",
     hint: "See whether a newer island washed ashore",
@@ -175,8 +228,23 @@ export const en: SettingsProjectText = {
     skipped: (version) => `v${version} is skipped, so the island won't remind you. You can still install it here`,
     autoTitle: "Automatic checks",
     autoCheck: "Check for updates automatically",
-    autoCheckHint: "At startup and every 6 hours after. When a new version is out, the island's settings button shows a dot",
-    lastChecked: (time) => `Last checked: ${time}`,
+    autoCheckHint: "Check at the selected frequency while the app is running. A missed check runs once after the next launch.",
+    checkFrequency: "Check frequency",
+    checkFrequencyHint: "Counted from the last successful check. Changes take effect immediately.",
+    frequencyHours: (hours) => `Every ${hours} hours`,
+    reminderMode: "Update reminders",
+    reminderHint: "Choose how new versions are announced. Each version gets at most one system notification.",
+    reminderBadge: "Island markers only",
+    reminderNotification: "Markers and system notifications",
+    nextCheck: (time) => `Next check: ${time}`,
+    retryCheck: (time) => `Next retry: ${time}`,
+    schedulePaused: "Automatic checks pause during download and installation",
+    offline: "Offline. Overdue updates will be checked when the connection returns",
+    pendingCheck: "Check due; waiting for the background check",
+    notificationUnavailable: "System notifications are unavailable or disabled. Island markers still appear.",
+    notificationTitle: "A new fly-island version is available",
+    notificationBody: (version) => `Version v${version} is available. Click to open About and see the update.`,
+    lastChecked: (time) => `Last successful check: ${time}`,
     neverChecked: "Not checked yet",
     islandReminder: (version) => `Version v${version} is available. Click to see it`,
   },

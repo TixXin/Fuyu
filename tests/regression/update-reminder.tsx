@@ -18,14 +18,14 @@ import { useWeChatReminders } from "../../src/features/messages/wechat/WeChatRem
 import { useMail } from "../../src/features/messages/mail/MailPanel";
 import type { MediaState } from "../../src/features/media/api";
 import type { PluginNotificationsController } from "../../src/features/plugins/usePluginNotifications";
-import { checkForUpdate, reloadPreferences } from "../../src/features/updater/updaterController";
+import { checkForUpdate, getUpdateState, reloadPreferences, setAutoCheck, setCheckInterval, setReminderMode, skipVersion } from "../../src/features/updater/updaterController";
 import { UPDATE_PREFERENCES_KEY } from "../../src/features/updater/storage";
 
 const automated = new URLSearchParams(location.search).has("test");
 // Only the checks wrap updates in act(); in the demo the download updates the page by itself.
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: automated });
-async function update(action: () => void | Promise<void>) {
-  if (automated) await act(action);
+async function update(action: () => void | Promise<unknown>) {
+  if (automated) await act(async () => { await action(); });
   else await action();
 }
 const NO_PLUGIN_NOTIFICATIONS: PluginNotificationsController = { notification: null, dismiss: () => {}, runAction: () => {} };
@@ -95,6 +95,22 @@ async function runChecks() {
     check(document.querySelector("#expanded .island-settings-button__dot"), "展开后设置按钮带提示圆点");
     const install = [...document.querySelectorAll<HTMLButtonElement>("#settings button")].find((button) => button.textContent?.includes("下载并安装"));
     check(install && !install.disabled, "设置的关于页给出「下载并安装」");
+
+    const settingsText = () => document.getElementById("settings")!.textContent ?? "";
+    check(settingsText().includes("检查频率") && settingsText().includes("更新提醒方式"), "自动检查下面有检查频率和提醒方式");
+    check(settingsText().includes("上次成功检查"), "脚注显示上次成功检查的时间");
+    await update(() => setAutoCheck(false));
+    check(!settingsText().includes("检查频率") && !settingsText().includes("更新提醒方式"), "关掉自动检查后两行设置收起");
+    await update(() => setAutoCheck(true));
+    await update(() => setCheckInterval(24));
+    await update(() => setReminderMode("notification"));
+    const saved = JSON.parse(localStorage.getItem(UPDATE_PREFERENCES_KEY) ?? "{}") as { checkIntervalHours?: number; reminderMode?: string };
+    check(saved.checkIntervalHours === 24 && saved.reminderMode === "notification", "检查频率和提醒方式写进偏好");
+    const version = getUpdateState().nextVersion;
+    await update(() => skipVersion(version));
+    check(!document.querySelector("#collapsed .island-update-badge"), "跳过这个版本后收起条不再提醒");
+    await update(() => skipVersion(null));
+    check(document.querySelector("#collapsed .island-update-badge"), "取消跳过后提醒回来");
     results.textContent = `${messages.join("\n")}\n\n全部 ${messages.length} 项检查通过。`;
     results.dataset.result = "passed";
   } catch (error) {

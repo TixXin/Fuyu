@@ -7,6 +7,8 @@ type Wording = string | ((args: ErrorArgs) => string);
 
 export type ErrorCode =
   | "internal"
+  | "updater.busy"
+  | "updater.targetChanged"
   | "credential.open"
   | "credential.read"
   | "credential.save"
@@ -193,6 +195,8 @@ export const zhCN: ErrorsText = {
   withDetail: (text, detail) => `${text.replace(/[。.]$/, "")}：${detail}`,
   codes: {
     internal: "岛屿内部出错。",
+    "updater.busy": "正在检查、下载或安装更新，请稍后再试。",
+    "updater.targetChanged": "可用的更新版本已变化，请确认新版本后再安装。",
     "credential.open": "无法访问 Windows 凭据管理器。",
     "credential.read": "无法从 Windows 凭据管理器读取。",
     "credential.save": "无法保存到 Windows 凭据管理器。",
@@ -375,6 +379,8 @@ export const en: ErrorsText = {
   withDetail: (text, detail) => `${text.replace(/\.$/, "")}: ${detail}`,
   codes: {
     internal: "Something went wrong inside the island.",
+    "updater.busy": "An update is being checked, downloaded or installed; try again in a moment.",
+    "updater.targetChanged": "The available update changed; look at the new version before installing.",
     "credential.open": "Could not open Windows Credential Manager.",
     "credential.read": "Could not read from Windows Credential Manager.",
     "credential.save": "Could not save to Windows Credential Manager.",

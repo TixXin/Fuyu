@@ -1,0 +1,18 @@
+.update-diagnostics {
+  margin: var(--space-md) 0 0;
+  padding: var(--space-md);
+  max-width: 100%;
+  color: var(--color-text-muted);
+  background: var(--color-white-a04);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  user-select: text;
+}
+
+.update-diagnostics__feedback {
+  color: var(--color-text-muted);
+  font-size: 12px;
+}

@@ -2,7 +2,8 @@
 // regression pages. Importing this installs the mocks; the arrays record what was called.
 import { mockIPC, mockWindows } from "@tauri-apps/api/mocks";
 import type { MailSnapshot } from "../../src/features/messages/mail/api";
-import { DEMO_CURRENT_VERSION, DEMO_UPDATE, playDemoDownload } from "./updateDemo";
+import { DEMO_CURRENT_VERSION } from "./updateDemo";
+import { updateRuntimeMock } from "./updateRuntimeMock";
 
 // update-reminder.html (updateReminderEnv.ts): the update check finds a newer version.
 const demoUpdate = Boolean((globalThis as { focusdDemoUpdate?: boolean }).focusdDemoUpdate);
@@ -63,8 +64,11 @@ mockIPC((command, payload) => {
     case "updater_configured": return true;
     case "get_updater_proxy": return null;
     case "plugin:app|version": return demoUpdate ? DEMO_CURRENT_VERSION : "0.0.0-test";
-    case "updater_check": return demoUpdate ? DEMO_UPDATE : null;
-    case "updater_install": return playDemoDownload(args.onEvent);
+    case "updater_state":
+    case "updater_check":
+    case "updater_install":
+    case "updater_notify":
+    case "updater_diagnostics": return updateRuntimeMock(command, args, demoUpdate);
     case "get_cached_plugin_market": return null;
     case "list_plugin_views": return { views: [], status: [], statusItems: [{ pluginId: "dev.example.todo-sync", pluginName: { "zh-CN": "待办同步示例", en: "Todo sync example" }, itemId: "count" }] };
     case "get_theme_market": return [{ id: "focusd.midnight", name: { "zh-CN": "午夜蓝", en: "Midnight" }, author: "TixXin", appearance: { islandBackgroundColor: "#0f1a2e", islandCornerRadius: 28 } }, { id: "someone.dusk", name: { "zh-CN": "黄昏", en: "Dusk" }, description: { "zh-CN": "一句话", en: "One line" }, author: "someone", appearance: { islandBackgroundColor: "#1b1020", collapsedScale: 1.3 } }];

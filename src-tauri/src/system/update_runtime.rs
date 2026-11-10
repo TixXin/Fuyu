@@ -5,6 +5,7 @@ use std::sync::{Mutex, MutexGuard, OnceLock};
 use serde::Serialize;
 use tauri::{AppHandle, Emitter};
 use tauri_plugin_updater::Update;
+
 use crate::user_error::UserError;
 
 pub(super) const STATE_EVENT: &str = "updater-state-changed";

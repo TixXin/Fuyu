@@ -1,39 +1,58 @@
 import { useEffect, useSyncExternalStore } from "react";
-import { CHANNEL_KEY, UPDATE_PREFERENCES_KEY } from "./storage";
+import { useTranslation } from "../../i18n";
+import { listenUpdateNotificationClick } from "./api";
+import { nextUpdateCheckAt } from "./checkSchedule";
 import {
-  checkInBackground,
-  getUpdateState,
-  reloadPreferences,
-  reminderVersion,
-  subscribeToUpdate,
+  checkInBackground, getUpdateState, notifyAvailableUpdate, reminderVersion, subscribeToUpdate,
 } from "./updaterController";
 
-// Wait a little after launch so the check never competes with the island starting up.
-const FIRST_CHECK_DELAY_MS = 20_000;
-const CHECK_INTERVAL_MS = 6 * 60 * 60 * 1000;
-
-/** The island's update checks: shortly after launch, then every six hours. */
-export function useBackgroundUpdateCheck() {
+/** One scheduler in the main window; About only reads its shared native state. */
+export function useBackgroundUpdateCheck(onOpen: () => void) {
+  const text = useTranslation().settings.project.update;
   useEffect(() => {
-    const first = window.setTimeout(() => void checkInBackground(), FIRST_CHECK_DELAY_MS);
-    const interval = window.setInterval(() => void checkInBackground(), CHECK_INTERVAL_MS);
+    let disposed = false;
+    let unlisten: (() => void) | undefined;
+    void listenUpdateNotificationClick(onOpen).then((stop) => {
+      if (disposed) stop(); else unlisten = stop;
+    }).catch((error) => console.error("Failed to listen for update notifications", error));
+    return () => { disposed = true; unlisten?.(); };
+  }, [onOpen]);
+  useEffect(() => {
+    let timer: number | undefined;
+    let stopped = false;
+    let running = false;
+    const arm = () => {
+      window.clearTimeout(timer);
+      if (stopped || running || !navigator.onLine) return;
+      const deadline = nextUpdateCheckAt(getUpdateState());
+      if (deadline === null) return;
+      // Re-evaluate at least once a minute to recover from sleep and clock changes.
+      timer = window.setTimeout(() => {
+        if (deadline > Date.now()) { arm(); return; }
+        running = true;
+        void checkInBackground().then(async (checked) => {
+          if (checked && !stopped) await notifyAvailableUpdate(text.notificationTitle, text.notificationBody);
+        }).finally(() => { running = false; arm(); });
+      }, Math.max(0, Math.min(deadline - Date.now(), 60_000)));
+    };
+    const unsubscribe = subscribeToUpdate(arm);
+    window.addEventListener("online", arm);
+    window.addEventListener("offline", arm);
+    window.addEventListener("focus", arm);
+    document.addEventListener("visibilitychange", arm);
+    arm();
     return () => {
-      window.clearTimeout(first);
-      window.clearInterval(interval);
+      stopped = true;
+      window.clearTimeout(timer);
+      unsubscribe();
+      window.removeEventListener("online", arm);
+      window.removeEventListener("offline", arm);
+      window.removeEventListener("focus", arm);
+      document.removeEventListener("visibilitychange", arm);
     };
-  }, []);
-
-  // The settings window turns auto-check off, skips a version or switches the channel.
-  useEffect(() => {
-    const sync = (event: StorageEvent) => {
-      if (event.key === UPDATE_PREFERENCES_KEY || event.key === CHANNEL_KEY) reloadPreferences();
-    };
-    window.addEventListener("storage", sync);
-    return () => window.removeEventListener("storage", sync);
-  }, []);
+  }, [text]);
 }
 
-/** The newer version to remind about on the island, or null. */
 export function useUpdateReminder() {
   return useSyncExternalStore(subscribeToUpdate, () => reminderVersion(getUpdateState()));
 }

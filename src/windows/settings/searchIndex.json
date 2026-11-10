@@ -2244,6 +2244,19 @@
     {
       "page": "about",
       "zh-CN": {
+        "group": "链接",
+        "title": "诊断信息",
+        "description": "预览并复制应用版本、系统和更新状态，便于反馈问题。"
+      },
+      "en": {
+        "group": "Links",
+        "title": "Diagnostics",
+        "description": "Preview and copy the app version, system and update status for a bug report."
+      }
+    },
+    {
+      "page": "about",
+      "zh-CN": {
         "group": "",
         "title": "重置所有设置",
         "description": "外观、行为和各功能的设置恢复默认。待办、笔记、邮箱、插件、密钥、样式预设和界面语言都保留。"

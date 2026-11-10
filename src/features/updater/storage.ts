@@ -28,28 +28,48 @@ export function saveUpdateChannel(channel: UpdateChannel) {
   writeString(CHANNEL_KEY, channel);
 }
 
+export const CHECK_INTERVAL_HOURS = [1, 6, 12, 24] as const;
+export type CheckIntervalHours = (typeof CHECK_INTERVAL_HOURS)[number];
+export type UpdateReminderMode = "badge" | "notification";
+
+export function normalizeCheckInterval(value: unknown): CheckIntervalHours {
+  return CHECK_INTERVAL_HOURS.find((hours) => hours === value) ?? 6;
+}
+
 export type UpdatePreferences = {
-  /** Check in the background at startup and every few hours. */
   autoCheck: boolean;
-  /** A version the user chose to skip; the island does not remind about it. */
+  checkIntervalHours: CheckIntervalHours;
+  reminderMode: UpdateReminderMode;
+  notificationUnavailable: boolean;
+  /** channel:version, so reopening the app does not repeat a system notification. */
+  lastNotifiedKey: string | null;
   skippedVersion: string | null;
-  /** When a check last succeeded, in ms since the epoch. */
+  /** Last successful check, retained across app restarts. */
   lastCheckedAt: number | null;
 };
 
 export const DEFAULT_UPDATE_PREFERENCES: UpdatePreferences = {
   autoCheck: true,
+  checkIntervalHours: 6,
+  reminderMode: "badge",
+  notificationUnavailable: false,
+  lastNotifiedKey: null,
   skippedVersion: null,
   lastCheckedAt: null,
 };
 
 export function normalizeUpdatePreferences(stored: unknown): UpdatePreferences {
-  if (typeof stored !== "object" || stored === null) return DEFAULT_UPDATE_PREFERENCES;
+  if (typeof stored !== "object" || stored === null) return { ...DEFAULT_UPDATE_PREFERENCES };
   const value = stored as Record<string, unknown>;
   return {
     autoCheck: value.autoCheck !== false,
+    checkIntervalHours: normalizeCheckInterval(value.checkIntervalHours),
+    reminderMode: value.reminderMode === "notification" ? "notification" : "badge",
+    notificationUnavailable: value.notificationUnavailable === true,
+    lastNotifiedKey: typeof value.lastNotifiedKey === "string" ? value.lastNotifiedKey : null,
     skippedVersion: typeof value.skippedVersion === "string" && value.skippedVersion ? value.skippedVersion : null,
-    lastCheckedAt: typeof value.lastCheckedAt === "number" && Number.isFinite(value.lastCheckedAt) ? value.lastCheckedAt : null,
+    lastCheckedAt: typeof value.lastCheckedAt === "number" && Number.isFinite(value.lastCheckedAt) && value.lastCheckedAt >= 0 && value.lastCheckedAt <= Date.now()
+      ? value.lastCheckedAt : null,
   };
 }
 

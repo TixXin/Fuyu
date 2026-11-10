@@ -1,94 +1,75 @@
 import { getVersion } from "@tauri-apps/api/app";
+import { isNativeError } from "../../i18n/nativeError.ts";
 import { isTauri } from "@tauri-apps/api/core";
-import { checkUpdate, downloadAndInstallUpdate, getUpdaterProxy, isUpdaterConfigured } from "./api";
 import {
-  loadUpdateChannel,
-  loadUpdatePreferences,
-  saveUpdateChannel,
-  saveUpdatePreferences,
-  type UpdateChannel,
+  checkUpdate, downloadAndInstallUpdate, getNativeUpdateState, getUpdaterProxy,
+  isUpdaterConfigured, listenUpdateState, notifyUpdate, type UpdateSnapshot,
+} from "./api";
+import { nextUpdateCheckAt } from "./checkSchedule";
+import {
+  CHANNEL_KEY, UPDATE_PREFERENCES_KEY, loadUpdateChannel, loadUpdatePreferences,
+  normalizeCheckInterval, saveUpdateChannel, saveUpdatePreferences,
+  type UpdateChannel, type UpdatePreferences, type UpdateReminderMode,
 } from "./storage";
 
-export type UpdateStage =
-  | "idle"
-  | "checking"
-  | "latest"
-  | "available"
-  | "downloading"
-  | "installing"
-  | "done"
-  | "error"
-  | "disabled";
-
-export type UpdateState = {
+export type UpdateStage = UpdateSnapshot["stage"] | "disabled";
+export type UpdateState = Omit<UpdateSnapshot, "stage" | "channel"> & UpdatePreferences & {
   stage: UpdateStage;
   version: string;
   channel: UpdateChannel;
-  nextVersion: string;
-  /** Release notes of `nextVersion`, as published in latest.json. */
-  notes: string;
-  downloaded: number;
-  total: number;
-  detail: string;
-  autoCheck: boolean;
-  skippedVersion: string | null;
-  lastCheckedAt: number | null;
+  nextCheckAt: number | null;
+  notificationUnavailable: boolean;
+  commandError: unknown;
 };
 
-// The check/download run lives outside the settings panel on purpose: the panel
-// is unmounted whenever another island page is opened, and the download has to
-// keep going and stay visible when the user comes back.
-const initialState: UpdateState = {
-  stage: "idle",
-  version: "",
-  channel: "stable",
-  nextVersion: "",
-  notes: "",
-  downloaded: 0,
-  total: 0,
-  detail: "",
-  autoCheck: true,
-  skippedVersion: null,
-  lastCheckedAt: null,
+let state: UpdateState = {
+  ...loadUpdatePreferences(), revision: -1, stage: "idle", version: "", channel: "stable",
+  nextVersion: "", notes: "", downloaded: 0, total: 0, detail: "",
+  lastAttemptAt: null, startedAt: 0, checkFailures: 0, nextCheckAt: null,
+  notificationUnavailable: false, commandError: null,
 };
-
-let state: UpdateState = initialState;
 const listeners = new Set<() => void>();
-
 let proxy: string | null = null;
-let hasPending = false;
 let ready: Promise<void> | null = null;
+let commandRunning = false;
+let disposed = false;
+let stopNativeListener: (() => void) | undefined;
 
 function setState(patch: Partial<UpdateState>) {
-  state = { ...state, ...patch };
+  const next = { ...state, ...patch };
+  state = { ...next, nextCheckAt: nextUpdateCheckAt(next) };
   for (const listener of listeners) listener();
 }
 
 export function subscribeToUpdate(listener: () => void) {
   listeners.add(listener);
-  return () => {
-    listeners.delete(listener);
-  };
+  return () => { listeners.delete(listener); };
 }
+export function getUpdateState() { return state; }
 
-export function getUpdateState() {
-  return state;
-}
-
-/** The version the island should remind about: found, not skipped, not yet installing. */
 export function reminderVersion(current: UpdateState) {
-  return current.stage === "available" && current.nextVersion !== current.skippedVersion
-    ? current.nextVersion
-    : null;
-}
-
-export function errorReason(error: unknown) {
-  const reason = error instanceof Error ? error.message : String(error);
-  return reason.length > 240 ? `${reason.slice(0, 240)}…` : reason;
+  return current.nextVersion && current.nextVersion !== current.skippedVersion
+    && !["downloading", "installing", "done", "disabled"].includes(current.stage)
+    ? current.nextVersion : null;
 }
 
 function busy(stage: UpdateStage) {
   return stage === "checking" || stage === "downloading" || stage === "installing";
+}
+
+/** Ignore a slow query response if a newer event already reached this window. */
+export function applyUpdateSnapshot(snapshot: UpdateSnapshot) {
+  if (disposed || snapshot.revision <= state.revision) return;
+  const preferences = loadUpdatePreferences();
+  if (snapshot.lastCheckedAt !== null && preferences.lastCheckedAt !== snapshot.lastCheckedAt) {
+    saveUpdatePreferences({ lastCheckedAt: snapshot.lastCheckedAt });
+  }
+  setState({
+    ...snapshot,
+    channel: snapshot.channel ?? loadUpdateChannel(state.version),
+    lastCheckedAt: snapshot.lastCheckedAt ?? preferences.lastCheckedAt,
+    commandError: null,
+  });
 }
 
 function initialize() {
@@ -98,121 +79,129 @@ function initialize() {
 
 async function loadBuildInfo() {
   reloadPreferences();
-  if (!isTauri()) {
-    setState({ stage: "disabled" });
-    return;
+  if (!isTauri()) { setState({ stage: "disabled" }); return; }
+  try {
+    const [version, configured] = await Promise.all([getVersion(), isUpdaterConfigured()]);
+    setState({ version, channel: loadUpdateChannel(version), stage: configured ? state.stage : "disabled" });
+    if (!configured) return;
+    proxy = await getUpdaterProxy().catch(() => null);
+    // Subscribe before querying so checks from another window cannot slip through.
+    const unlisten = await listenUpdateState(applyUpdateSnapshot);
+    if (disposed) { unlisten(); return; }
+    stopNativeListener = unlisten;
+    applyUpdateSnapshot(await getNativeUpdateState());
+  } catch (error) {
+    setState({ stage: "error", commandError: error });
   }
-
-  const [version, configured] = await Promise.all([
-    getVersion().catch(() => ""),
-    isUpdaterConfigured().catch(() => false),
-  ]);
-  proxy = await getUpdaterProxy().catch(() => null);
-
-  setState({
-    version,
-    channel: loadUpdateChannel(version),
-    stage: configured ? state.stage : "disabled",
-  });
 }
 
-/** Picks up preferences and the channel another window changed. */
 export function reloadPreferences() {
-  const { autoCheck, skippedVersion, lastCheckedAt } = loadUpdatePreferences();
-  setState({ autoCheck, skippedVersion, lastCheckedAt, ...(state.version ? { channel: loadUpdateChannel(state.version) } : {}) });
+  const preferences = loadUpdatePreferences();
+  setState({ ...preferences, channel: loadUpdateChannel(state.version) });
 }
 
-/** Checks once per run, when the updates page is first opened. A manual check, a
- * finished check or a running download is left alone. */
+/** Opening About respects the switch and the same deadline as the island. */
 export async function checkOnFirstVisit() {
   await initialize();
-  if (state.stage === "idle") await checkForUpdate();
+  if (state.stage === "idle" && state.nextCheckAt !== null && state.nextCheckAt <= Date.now()) await checkForUpdate();
 }
 
-/** The island's startup and periodic check; does nothing while auto-check is off. */
+/** Only the main window calls this; native locking also protects against manual checks. */
 export async function checkInBackground() {
   await initialize();
   reloadPreferences();
-  if (!state.autoCheck || state.stage === "available" || state.stage === "done") return;
-  await checkForUpdate();
+  if (state.nextCheckAt === null || state.nextCheckAt > Date.now()) return false;
+  return checkForUpdate();
 }
 
-export async function checkForUpdate() {
+/** Another window started the same work first; its progress shows, so this is no error to show. */
+function isBusyError(error: unknown) {
+  return isNativeError(error) && error.code === "updater.busy";
+}
+
+export async function checkForUpdate(requestedChannel?: UpdateChannel) {
   await initialize();
-  if (busy(state.stage) || state.stage === "disabled") return;
-
-  hasPending = false;
-  setState({
-    channel: loadUpdateChannel(state.version),
-    nextVersion: "",
-    notes: "",
-    downloaded: 0,
-    total: 0,
-    detail: "",
-    stage: "checking",
-  });
-
+  const channel = requestedChannel ?? loadUpdateChannel(state.version);
+  if (commandRunning || busy(state.stage) || ["disabled", "done"].includes(state.stage)) return false;
+  commandRunning = true;
+  setState({ commandError: null });
+  let success = false;
+  let failure: unknown = null;
   try {
-    const found = await checkUpdate(state.channel, proxy);
-    const { lastCheckedAt } = saveUpdatePreferences({ lastCheckedAt: Date.now() });
-    if (!found) {
-      setState({ stage: "latest", lastCheckedAt });
-      return;
-    }
-
-    hasPending = true;
-    setState({ stage: "available", nextVersion: found.version, notes: found.body?.trim() ?? "", lastCheckedAt });
-  } catch (error) {
-    console.error("Failed to check for updates", error);
-    setState({ stage: "error", detail: errorReason(error) });
+    await checkUpdate(channel, proxy);
+    success = true;
+  } catch (error) { failure = error; }
+  try { applyUpdateSnapshot(await getNativeUpdateState()); }
+  catch (error) {
+    setState({ stage: "error", startedAt: state.startedAt || Date.now(), lastAttemptAt: Date.now(), checkFailures: state.checkFailures + 1 });
+    failure ??= error;
   }
+  commandRunning = false;
+  if (failure && !busy(state.stage) && !isBusyError(failure)) setState({ commandError: failure });
+  return success;
 }
 
-/** Switches the update channel and checks it right away. Ignored mid-download. */
 export async function setUpdateChannel(channel: UpdateChannel) {
   await initialize();
-  if (busy(state.stage) || channel === state.channel) return;
-  saveUpdateChannel(channel);
-  setState({ channel });
-  if (state.stage !== "disabled") await checkForUpdate();
+  if (busy(state.stage) || commandRunning || channel === state.channel) return;
+  // Commit the preference only after native code accepted and completed this check.
+  if (await checkForUpdate(channel)) {
+    saveUpdateChannel(channel);
+    setState({ channel });
+  }
 }
 
 export function setAutoCheck(autoCheck: boolean) {
-  saveUpdatePreferences({ autoCheck });
-  setState({ autoCheck });
+  setState(saveUpdatePreferences({ autoCheck }));
 }
-
-/** Stops reminding about `version`, or reminds again with null. */
+export function setCheckInterval(hours: number) {
+  setState(saveUpdatePreferences({ checkIntervalHours: normalizeCheckInterval(hours) }));
+}
+export function setReminderMode(reminderMode: UpdateReminderMode) {
+  setState(saveUpdatePreferences({ reminderMode, notificationUnavailable: false }));
+}
 export function skipVersion(version: string | null) {
-  saveUpdatePreferences({ skippedVersion: version });
-  setState({ skippedVersion: version });
+  setState(saveUpdatePreferences({ skippedVersion: version }));
 }
 
-export async function installUpdate() {
-  if (!hasPending || busy(state.stage)) return;
-  hasPending = false;
-
-  setState({ downloaded: 0, total: 0, detail: "", stage: "downloading" });
-
-  try {
-    await downloadAndInstallUpdate((event) => {
-      if (event.event === "Started") {
-        setState({ total: event.data.contentLength ?? 0 });
-        return;
-      }
-
-      if (event.event === "Progress") {
-        setState({ downloaded: state.downloaded + event.data.chunkLength });
-        return;
-      }
-
-      setState({ stage: "installing" });
-    });
-    setState({ stage: "done" });
-  } catch (error) {
-    console.error("Failed to install the update", error);
-    setState({ stage: "error", detail: errorReason(error) });
-  }
+/** A system notification is additional to the island marker, never a replacement. */
+export async function notifyAvailableUpdate(title: string, body: (version: string) => string) {
+  reloadPreferences();
+  const version = reminderVersion(state);
+  const key = `${state.channel}:${version}`;
+  if (!state.autoCheck || state.reminderMode !== "notification" || !version || state.lastNotifiedKey === key) return;
+  const shown = await notifyUpdate(version, title, body(version)).catch(() => false);
+  if (shown) setState(saveUpdatePreferences({ lastNotifiedKey: key, notificationUnavailable: false }));
+  else setState(saveUpdatePreferences({ notificationUnavailable: true }));
 }
 
+export async function installUpdate(expectedVersion?: string, expectedChannel?: UpdateChannel) {
+  await initialize();
+  if (!state.nextVersion || busy(state.stage) || commandRunning || state.stage === "done") return;
+  commandRunning = true;
+  const nextVersion = expectedVersion ?? state.nextVersion;
+  const channel = expectedChannel ?? state.channel;
+  setState({ commandError: null });
+  let failure: unknown = null;
+  try { await downloadAndInstallUpdate(nextVersion, channel); }
+  catch (error) { failure = error; }
+  try { applyUpdateSnapshot(await getNativeUpdateState()); }
+  catch (error) { failure ??= error; }
+  commandRunning = false;
+  if (failure && !busy(state.stage) && !isBusyError(failure)) setState({ commandError: failure });
+}
+
+function syncPreferences(event: StorageEvent) {
+  if (event.key === null || event.key === UPDATE_PREFERENCES_KEY || event.key === CHANNEL_KEY) reloadPreferences();
+}
+function dispose() {
+  disposed = true;
+  stopNativeListener?.();
+  window.removeEventListener("storage", syncPreferences);
+  window.removeEventListener("pagehide", dispose);
+}
+if (typeof window !== "undefined") {
+  window.addEventListener("storage", syncPreferences);
+  window.addEventListener("pagehide", dispose);
+}
 void initialize();

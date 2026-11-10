@@ -4,7 +4,7 @@
 //! separate manifest that the release script keeps on the `beta-channel`
 //! release, so only users who opt in are offered pre-releases.
 
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use super::update_runtime::{change, Stage};
 use crate::user_error::UserError;
@@ -17,6 +17,7 @@ const STABLE_MANIFEST: &str = "releases/latest/download/latest.json";
 const BETA_MANIFEST: &str = "releases/download/beta-channel/latest.json";
 const CHECK_TIMEOUT: Duration = Duration::from_secs(20);
 const DOWNLOAD_TIMEOUT: Duration = Duration::from_secs(600);
+const PROGRESS_EVERY: Duration = Duration::from_millis(100);
 
 #[derive(Serialize)]
 pub struct UpdateInfo {
@@ -151,13 +152,22 @@ pub async fn updater_install(
     let task_app = app.clone();
     let result = tauri::async_runtime::spawn(async move {
         let mut started = false;
+        // Every change is an event to each window; a download comes in thousands of chunks, so
+        // the shared progress moves at most every PROGRESS_EVERY (the channel still gets each one).
+        let mut pending: usize = 0;
+        let mut reported = Instant::now();
         let result = update.download_and_install(
             |chunk_length, content_length| {
-                let _ = change(&task_app, |runtime| {
-                    if !started { runtime.snapshot.total = content_length.unwrap_or(0); }
-                    runtime.snapshot.downloaded = runtime.snapshot.downloaded.saturating_add(chunk_length);
-                    Ok(())
-                });
+                pending = pending.saturating_add(chunk_length);
+                if !started || reported.elapsed() >= PROGRESS_EVERY {
+                    let bytes = std::mem::take(&mut pending);
+                    reported = Instant::now();
+                    let _ = change(&task_app, |runtime| {
+                        if !started { runtime.snapshot.total = content_length.unwrap_or(0); }
+                        runtime.snapshot.downloaded = runtime.snapshot.downloaded.saturating_add(bytes);
+                        Ok(())
+                    });
+                }
                 if !started {
                     started = true;
                     let _ = on_event.send(DownloadEvent::Started { content_length });
@@ -165,7 +175,14 @@ pub async fn updater_install(
                 let _ = on_event.send(DownloadEvent::Progress { chunk_length });
             },
             || {
-                let _ = change(&task_app, |runtime| { runtime.snapshot.stage = Stage::Installing; Ok(()) });
+                let _ = change(&task_app, |runtime| {
+                    // Chunks held back since the last report: the download is whole now.
+                    if runtime.snapshot.total > 0 {
+                        runtime.snapshot.downloaded = usize::try_from(runtime.snapshot.total).unwrap_or(usize::MAX);
+                    }
+                    runtime.snapshot.stage = Stage::Installing;
+                    Ok(())
+                });
                 let _ = on_event.send(DownloadEvent::Finished);
             },
         ).await.map_err(|error| error.to_string());

@@ -1,211 +1,179 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
 import test from "node:test";
-import { runInNewContext } from "node:vm";
-import ts from "typescript";
-import { normalizeUpdateChannel, normalizeUpdatePreferences } from "../../src/features/updater/storage.ts";
+import { DEFAULT_UPDATE_PREFERENCES, normalizeUpdateChannel, normalizeUpdatePreferences } from "../../src/features/updater/storage.ts";
+import { nextUpdateCheckAt } from "../../src/features/updater/checkSchedule.ts";
+import { runtime } from "./updaterTestRuntime.mjs";
 
-const transpile = (path) => ts.transpileModule(
-  readFileSync(new URL(path, import.meta.url), "utf8"),
-  { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } },
-).outputText;
-const source = transpile("../../src/features/updater/updaterController.ts");
-const apiSource = transpile("../../src/features/updater/api.ts");
+const hour = 3_600_000;
+const schedule = (extra = {}) => ({ ...DEFAULT_UPDATE_PREFERENCES, stage: "latest", startedAt: 1000,
+  lastCheckedAt: hour, lastAttemptAt: hour, checkFailures: 0, ...extra });
 
-class Channel {
-  onmessage = () => {};
-}
-
-async function controller({
-  configured = true,
-  check = async () => null,
-  install = async () => {},
-  proxy = null,
-  version = "0.2.11",
-  storedChannel = null,
-  preferences = {},
-} = {}) {
-  const exports = {};
-  const saved = [];
-  let channel = storedChannel;
-  let prefs = normalizeUpdatePreferences(preferences);
-  const mocks = {
-    "@tauri-apps/api/app": { getVersion: async () => version },
-    "@tauri-apps/api/core": {
-      Channel,
-      isTauri: () => true,
-      invoke: async (command, args) => {
-        if (command === "updater_configured") return configured;
-        if (command === "get_updater_proxy") return proxy;
-        if (command === "updater_check") return check(args);
-        if (command === "updater_install") return install((event) => args.onEvent.onmessage(event));
-        throw new Error(`Unexpected command: ${command}`);
-      },
-    },
-    "./storage": {
-      loadUpdateChannel: (current) => normalizeUpdateChannel(channel, current),
-      saveUpdateChannel: (next) => {
-        channel = next;
-        saved.push(next);
-      },
-      loadUpdatePreferences: () => prefs,
-      saveUpdatePreferences: (patch) => (prefs = { ...prefs, ...patch }),
-    },
-  };
-  // api.ts runs against the same core mock, so the command names stay covered.
-  const api = {};
-  runInNewContext(apiSource, { exports: api, require: (name) => mocks[name] });
-  mocks["./api"] = api;
-  runInNewContext(source, {
-    exports,
-    require: (name) => {
-      assert.ok(Object.hasOwn(mocks, name), `Unexpected import: ${name}`);
-      return mocks[name];
-    },
-    console: { error() {} },
-  });
-  await new Promise(setImmediate);
-  return Object.assign(exports, { saved, prefs: () => prefs, setPrefs: (patch) => (prefs = { ...prefs, ...patch }) });
-}
-
-test("update preferences default to automatic checks and drop malformed fields", () => {
-  assert.deepEqual(normalizeUpdatePreferences(undefined), { autoCheck: true, skippedVersion: null, lastCheckedAt: null });
-  assert.deepEqual(
-    normalizeUpdatePreferences({ autoCheck: false, skippedVersion: "0.3.1", lastCheckedAt: 5 }),
-    { autoCheck: false, skippedVersion: "0.3.1", lastCheckedAt: 5 },
-  );
-  assert.deepEqual(
-    normalizeUpdatePreferences({ autoCheck: "no", skippedVersion: "", lastCheckedAt: "x" }),
-    { autoCheck: true, skippedVersion: null, lastCheckedAt: null },
-  );
+test("legacy preferences retain the switch, skipped version and successful timestamp", () => {
+  assert.deepEqual(normalizeUpdatePreferences(undefined), DEFAULT_UPDATE_PREFERENCES);
+  const old = normalizeUpdatePreferences({ autoCheck: false, skippedVersion: "0.3.1", lastCheckedAt: 5 });
+  assert.deepEqual(old, { ...DEFAULT_UPDATE_PREFERENCES, autoCheck: false, skippedVersion: "0.3.1", lastCheckedAt: 5 });
+  for (const value of [0, -1, 2, "6", NaN, Infinity]) {
+    assert.equal(normalizeUpdatePreferences({ checkIntervalHours: value }).checkIntervalHours, 6);
+  }
+  for (const value of [1, 6, 12, 24]) assert.equal(normalizeUpdatePreferences({ checkIntervalHours: value }).checkIntervalHours, value);
+  for (const value of [-1, Infinity, Date.now() + hour]) assert.equal(normalizeUpdatePreferences({ lastCheckedAt: value }).lastCheckedAt, null);
 });
 
-test("background checks follow the auto-check switch and record the check time", async () => {
-  let checks = 0;
-  const app = await controller({ preferences: { autoCheck: false }, check: async () => { checks++; return null; } });
+test("deadlines use the last successful check and one shared startup buffer", () => {
+  for (const hours of [1, 6, 12, 24]) {
+    assert.equal(nextUpdateCheckAt(schedule({ checkIntervalHours: hours }), hour), hour + hours * hour);
+  }
+  assert.equal(nextUpdateCheckAt(schedule({ lastCheckedAt: null }), hour), 21_000);
+  assert.equal(nextUpdateCheckAt(schedule({ startedAt: hour - 1000 }), hour), hour * 7);
+  assert.equal(nextUpdateCheckAt(schedule({ lastCheckedAt: null, startedAt: hour - 1000 }), hour), hour + 19_000);
+  // A clock rollback must not defer checks until the old clock catches up.
+  assert.equal(nextUpdateCheckAt(schedule({ startedAt: hour, lastCheckedAt: hour * 2 }), 500), 500);
+});
+
+test("disabled and busy schedules pause, while available and skipped versions keep checking", () => {
+  for (const stage of ["disabled", "checking", "downloading", "installing", "done"]) assert.equal(nextUpdateCheckAt(schedule({ stage }), hour), null);
+  assert.equal(nextUpdateCheckAt(schedule({ autoCheck: false }), hour), null);
+  assert.equal(nextUpdateCheckAt(schedule({ stage: "available", skippedVersion: "0.3.6" }), hour), hour * 7);
+});
+
+test("check failure retries back off without moving last-success time", () => {
+  for (const [failures, delay] of [[1, 60_000], [2, 300_000], [3, 900_000], [4, 6 * hour]]) {
+    assert.equal(nextUpdateCheckAt(schedule({ stage: "error", checkFailures: failures }), hour), hour + delay);
+  }
+  assert.equal(nextUpdateCheckAt(schedule({ checkFailures: 2 }), 500), 500);
+});
+
+test("background respects interval and switch, manual checking remains available", async () => {
+  const native = runtime({ preferences: { autoCheck: false } });
+  const app = await native.controller();
   await app.checkInBackground();
-  assert.equal(checks, 0);
-  app.setPrefs({ autoCheck: true });
-  await app.checkInBackground();
-  assert.equal(checks, 1);
-  assert.equal(typeof app.prefs().lastCheckedAt, "number");
-  assert.equal(app.getUpdateState().lastCheckedAt, app.prefs().lastCheckedAt);
-});
-
-test("the island reminds about a new version unless it is skipped", async () => {
-  const app = await controller({ check: async () => ({ version: "0.3.1", body: null }) });
-  await app.checkInBackground();
-  assert.equal(app.reminderVersion(app.getUpdateState()), "0.3.1");
-  app.skipVersion("0.3.1");
-  assert.equal(app.prefs().skippedVersion, "0.3.1");
-  assert.equal(app.reminderVersion(app.getUpdateState()), null);
-  // A skipped version can still be installed by hand.
-  assert.equal(app.getUpdateState().stage, "available");
-  app.skipVersion(null);
-  assert.equal(app.reminderVersion(app.getUpdateState()), "0.3.1");
-});
-
-test("an unsigned preview disables update checks", async () => {
-  let checks = 0;
-  const app = await controller({ configured: false, check: async () => { checks++; } });
-  assert.equal(app.getUpdateState().stage, "disabled");
-  await app.checkForUpdate();
-  assert.equal(checks, 0);
-});
-
-test("update checks use the configured proxy, the stable channel and report the installed version", async () => {
-  const app = await controller({
-    proxy: "http://127.0.0.1:7890",
-    check: async (args) => {
-      assert.equal(args.proxy, "http://127.0.0.1:7890");
-      assert.equal(args.channel, "stable");
-      return null;
-    },
-  });
+  await app.checkOnFirstVisit();
+  assert.equal(native.calls.filter((c) => c.command === "updater_check").length, 0);
   await app.checkForUpdate();
   assert.equal(app.getUpdateState().stage, "latest");
-  assert.equal(app.getUpdateState().version, "0.2.11");
+  assert.equal(typeof native.prefs().lastCheckedAt, "number");
+  app.setAutoCheck(true);
+  await app.checkInBackground();
+  assert.equal(native.calls.filter((c) => c.command === "updater_check").length, 1);
 });
 
-test("only users who pick beta check the beta channel", async () => {
-  assert.equal(normalizeUpdateChannel(null, "0.3.0"), "stable");
-  assert.equal(normalizeUpdateChannel("nightly", "0.3.0"), "stable");
-  assert.equal(normalizeUpdateChannel(null, "0.3.1-beta.1"), "beta");
-  assert.equal(normalizeUpdateChannel("stable", "0.3.1-beta.1"), "stable");
-
-  const channels = [];
-  const app = await controller({ check: async (args) => { channels.push(args.channel); return null; } });
-  await app.setUpdateChannel("beta");
-  assert.deepEqual(channels, ["beta"]);
-  assert.deepEqual(app.saved, ["beta"]);
-  assert.equal(app.getUpdateState().channel, "beta");
-  await app.setUpdateChannel("beta");
-  assert.deepEqual(channels, ["beta"]);
+test("changes propagate between windows and stale snapshots cannot roll progress back", async () => {
+  const native = runtime();
+  const main = await native.controller();
+  const settings = await native.controller();
+  settings.setCheckInterval(12);
+  assert.equal(main.getUpdateState().checkIntervalHours, 12);
+  const stale = native.snapshot();
+  native.emit({ stage: "downloading", downloaded: 60, total: 100 });
+  main.applyUpdateSnapshot(stale);
+  assert.equal(main.getUpdateState().downloaded, 60);
+  assert.equal(settings.getUpdateState().downloaded, 60);
+  settings.close();
+  assert.equal(native.listenerCount(), 1);
+  const reopened = await native.controller();
+  assert.equal(reopened.getUpdateState().stage, "downloading");
+  assert.equal(reopened.getUpdateState().downloaded, 60);
 });
 
-test("download progress survives leaving and returning to the settings panel", async () => {
-  let emit;
+test("an event arriving before the initial query response wins", async () => {
+  const native = runtime();
+  const app = await native.controller({ query: async (old) => {
+    native.emit({ stage: "available", nextVersion: "0.3.6", channel: "stable" });
+    return old;
+  } });
+  assert.equal(app.getUpdateState().nextVersion, "0.3.6");
+});
+
+test("two window checks share busy state and a skipped version does not stop later checks", async () => {
   let finish;
-  const app = await controller({
-    check: async () => ({ version: "0.2.12", body: null }),
-    install: (callback) => {
-      emit = callback;
-      return new Promise((resolve) => { finish = resolve; });
-    },
-  });
-  const leavePanel = app.subscribeToUpdate(() => {});
-  await app.checkForUpdate();
-  assert.equal(app.getUpdateState().nextVersion, "0.2.12");
-  const installing = app.installUpdate();
-  emit({ event: "Started", data: { contentLength: 100 } });
-  emit({ event: "Progress", data: { chunkLength: 25 } });
-  leavePanel();
-  emit({ event: "Progress", data: { chunkLength: 35 } });
-  let notifications = 0;
-  const returnToPanel = app.subscribeToUpdate(() => { notifications++; });
-  assert.equal(app.getUpdateState().stage, "downloading");
-  assert.equal(app.getUpdateState().downloaded, 60);
-  assert.equal(app.getUpdateState().total, 100);
-  emit({ event: "Finished" });
-  assert.equal(app.getUpdateState().stage, "installing");
-  assert.equal(notifications, 1);
-  finish();
-  await installing;
-  assert.equal(app.getUpdateState().stage, "done");
-  returnToPanel();
+  let version = "0.3.6";
+  const native = runtime({ check: () => new Promise((resolve) => { finish = () => resolve({ version, body: "notes" }); }) });
+  const main = await native.controller();
+  const settings = await native.controller();
+  const check = main.checkForUpdate();
+  await new Promise(setImmediate);
+  await settings.checkForUpdate();
+  assert.equal(native.calls.filter((c) => c.command === "updater_check").length, 1);
+  finish(); await check;
+  settings.skipVersion(version);
+  assert.equal(main.reminderVersion(main.getUpdateState()), null);
+  version = "0.3.7";
+  native.emit({ lastCheckedAt: Date.now() - 7 * hour });
+  const next = main.checkInBackground();
+  await new Promise(setImmediate);
+  finish(); await next;
+  assert.equal(main.reminderVersion(main.getUpdateState()), version);
 });
 
-test("download failures allow a new check", async () => {
-  let checks = 0;
-  const app = await controller({
-    check: async () => {
-      checks++;
-      return { version: "0.2.12", body: "notes" };
-    },
-    install: async () => { throw "signature mismatch"; },
-  });
+test("notifications are opt-in, deduplicated after reopening, and failures retain badges", async () => {
+  let notifications = 0;
+  let allowed = true;
+  const native = runtime({ check: async () => ({ version: "0.3.6" }), notify: async () => { notifications++; return allowed; } });
+  const app = await native.controller();
   await app.checkForUpdate();
-  assert.equal(app.getUpdateState().notes, "notes");
-  await app.installUpdate();
-  assert.equal(app.getUpdateState().stage, "error");
-  assert.equal(app.getUpdateState().detail, "signature mismatch");
-  await app.installUpdate();
-  assert.equal(app.getUpdateState().stage, "error");
+  await app.notifyAvailableUpdate("title", (v) => v);
+  assert.equal(notifications, 0);
+  app.setReminderMode("notification");
+  await app.notifyAvailableUpdate("title", (v) => v);
+  assert.equal(notifications, 1);
+  const reopened = await native.controller();
+  await reopened.notifyAvailableUpdate("title", (v) => v);
+  assert.equal(notifications, 1);
+  native.emit({ nextVersion: "0.3.7" }); allowed = false;
+  await app.notifyAvailableUpdate("title", (v) => v);
+  assert.equal(reopened.getUpdateState().notificationUnavailable, true);
+  assert.equal(app.reminderVersion(app.getUpdateState()), "0.3.7");
+  app.skipVersion("0.3.7");
+  await app.notifyAvailableUpdate("title", (v) => v);
+  assert.equal(notifications, 2);
+});
+
+test("explicit rendered install target is retained when the background candidate changes", async () => {
+  const native = runtime({ check: async () => ({ version: "0.3.7" }) });
+  const app = await native.controller();
   await app.checkForUpdate();
-  assert.equal(checks, 2);
+  await app.installUpdate("0.3.6", "stable");
+  assert.equal(app.getUpdateState().commandError.code, "updater.targetChanged");
   assert.equal(app.getUpdateState().stage, "available");
 });
 
-test("check failures can be retried without retaining stale errors", async () => {
-  let checks = 0;
-  const app = await controller({ check: async () => {
-    if (++checks === 1) throw "manifest unavailable";
+test("failed checks retain successful time and candidate, then clear errors on retry", async () => {
+  let fail = false;
+  const native = runtime({ check: async () => { if (fail) throw "offline"; return { version: "0.3.6", body: "notes" }; } });
+  const app = await native.controller();
+  await app.checkForUpdate();
+  const at = app.getUpdateState().lastCheckedAt;
+  fail = true; await app.checkForUpdate();
+  assert.equal(app.getUpdateState().lastCheckedAt, at);
+  assert.equal(app.getUpdateState().nextVersion, "0.3.6");
+  assert.equal(app.getUpdateState().checkFailures, 1);
+  assert.ok(app.getUpdateState().nextCheckAt > Date.now());
+  fail = false; await app.checkForUpdate();
+  assert.equal(app.getUpdateState().commandError, null);
+  assert.equal(app.getUpdateState().checkFailures, 0);
+});
+
+test("unconfigured builds cannot check and channel defaults retain beta opt-in", async () => {
+  const native = runtime();
+  const app = await native.controller({ configured: false });
+  await app.checkForUpdate();
+  assert.equal(app.getUpdateState().stage, "disabled");
+  assert.equal(native.calls.length, 0);
+  assert.equal(normalizeUpdateChannel(null, "0.3.5"), "stable");
+  assert.equal(normalizeUpdateChannel(null, "0.3.5-beta.1"), "beta");
+  assert.equal(normalizeUpdateChannel("stable", "0.3.5-beta.1"), "stable");
+});
+
+test("failed channel switch preserves stored channel", async () => {
+  const channels = [];
+  const native = runtime({ check: async ({ channel, proxy }) => {
+    assert.equal(proxy, "http://localhost:7890"); channels.push(channel);
+    if (channel === "beta") throw "offline";
     return null;
   } });
+  const app = await native.controller({ proxy: "http://localhost:7890" });
   await app.checkForUpdate();
-  assert.equal(app.getUpdateState().stage, "error");
-  assert.equal(app.getUpdateState().detail, "manifest unavailable");
-  await app.checkForUpdate();
-  assert.equal(app.getUpdateState().stage, "latest");
-  assert.equal(app.getUpdateState().detail, "");
+  await app.setUpdateChannel("beta");
+  assert.equal(app.getUpdateState().channel, "stable");
+  assert.deepEqual(channels, ["stable", "beta"]);
 });

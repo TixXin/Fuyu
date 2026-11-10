@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useSyncExternalStore } from "react";
 import { ArrowRight, Download, RefreshCcw } from "lucide-react";
-import { useLocale, useTranslation } from "../../i18n";
+import { useErrorText, useLocale, useTranslation } from "../../i18n";
 import { ProjectLink } from "./ProjectLink";
 import { PROJECT_RELEASES_URL } from "./projectLinks";
 import { releaseNoteLines } from "./releaseNotes";
@@ -19,8 +19,9 @@ import "./UpdatePanel.css";
 
 export function UpdatePanel() {
   const t = useTranslation();
+  const errorText = useErrorText();
   const { locale } = useLocale();
-  const { stage, version, channel, nextVersion, notes, downloaded, total, detail, skippedVersion } = useSyncExternalStore(
+  const { stage, version, channel, nextVersion, notes, downloaded, total, detail, skippedVersion, commandError } = useSyncExternalStore(
     subscribeToUpdate,
     getUpdateState,
   );
@@ -35,7 +36,7 @@ export function UpdatePanel() {
 
   let status = version ? t.settings.project.update.versionLabel(version) : t.settings.project.update.hint;
   let action = t.settings.project.latestRelease;
-  let onAction = checkForUpdate;
+  let onAction: () => Promise<unknown> = checkForUpdate;
 
   // A build without an updater key cannot check. The card still has to open the
   // release page: the hint tells the user to download from there.
@@ -58,13 +59,13 @@ export function UpdatePanel() {
   } else if (stage === "available") {
     status = t.settings.project.update.available(nextVersion);
     action = t.settings.project.update.download;
-    onAction = installUpdate;
+    onAction = () => installUpdate(nextVersion, channel);
   } else if (stage === "downloading") {
     status = percent === null
       ? t.settings.project.update.downloadingUnknown
       : t.settings.project.update.downloading(percent);
     action = t.settings.project.update.download;
-    onAction = installUpdate;
+    onAction = () => installUpdate(nextVersion, channel);
   } else if (stage === "installing") {
     status = t.settings.project.update.installing;
   } else if (stage === "done") {
@@ -92,6 +93,8 @@ export function UpdatePanel() {
         </span>
         <ArrowRight className="project-link__arrow" size={14} aria-hidden="true" />
       </button>
+      {commandError !== null && <p className="update-panel__detail" role="alert">{errorText(commandError)}</p>}
+      {stage === "available" && <button className="update-panel__skip-button" type="button" onClick={() => void checkForUpdate()}>{t.settings.project.update.title}</button>}
       {stage === "available" && (
         <div className="update-panel__skip">
           <span>

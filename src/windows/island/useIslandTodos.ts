@@ -31,8 +31,9 @@ export function useIslandTodos({ settings, mode, page, agentStatus, collapseIsla
     onStartTodo: collapseIsland,
     onMissingSaveDirectory: openSavePathSettings,
   });
+  const openUpdateSettings = useCallback(() => { openSettingsWindow("updates"); }, []);
   useLocalApiBridge(apiHandlers);
-  useBackgroundUpdateCheck();
+  useBackgroundUpdateCheck(openUpdateSettings);
   usePluginHostEvents({
     date: notebookProps.currentDate,
     todosVersion: [todos, notebookProps.scheduledTodos, activeTodoId],

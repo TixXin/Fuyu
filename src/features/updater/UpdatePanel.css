@@ -1,3 +1,9 @@
+.update-schedule {
+  display: grid;
+  gap: 4px;
+  overflow-wrap: anywhere;
+}
+
 .update-panel {
   display: grid;
   gap: var(--space-md);

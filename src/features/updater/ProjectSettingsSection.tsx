@@ -3,6 +3,7 @@ import { CircleHelp, Star, Tag } from "lucide-react";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { useTranslation } from "../../i18n";
 import markUrl from "../../../src-tauri/icons/mark.svg";
+import { UpdateDiagnosticsRow } from "./UpdateDiagnosticsRow";
 import { ProjectLink } from "./ProjectLink";
 import { PROJECT_ISSUES_URL, PROJECT_RELEASES_URL, PROJECT_REPO_URL } from "./projectLinks";
 import { getUpdateState, subscribeToUpdate } from "./updaterController";
@@ -49,6 +50,7 @@ export function ProjectLinksSection() {
         hint={t.settings.project.issuesHint}
         icon={<CircleHelp className="project-link__icon" size={18} strokeWidth={1.8} aria-hidden="true" />}
       />
+      <UpdateDiagnosticsRow />
       <ProjectLink
         href={PROJECT_REPO_URL}
         tone="star"
