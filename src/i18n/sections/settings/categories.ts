@@ -12,7 +12,7 @@ export type SettingsCategoriesText = {
   /** Words that also find a page in the sidebar search, besides its name. */
   keywords: Record<
     | "general" | "behavior" | "appearance" | "theme" | "themeMarket" | "shortcuts" | "todos" | "calendar" | "music" | "translation" | "clipboard"
-    | "shelf" | "messages" | "agents" | "agentRemote" | "agentAlerts" | "sounds" | "agentApprovals" | "agentConnect"
+    | "shelf" | "messages" | "agents" | "agentSessions" | "agentRemote" | "agentAlerts" | "sounds" | "agentApprovals" | "agentConnect"
     | "plugins" | "market" | "about",
     string
   >;
@@ -41,8 +41,9 @@ export type SettingsCategoriesText = {
   translation: string;
   shelf: string;
   calendar: string;
-  /** The AI Agent group's pages. */
+  /** The AI Agent group's pages: what shows on the collapsed island, then the Agent page's list. */
   agents: string;
+  agentSessions: string;
   /** Sessions on other computers, read over SSH. */
   agentRemote: string;
   agentAlerts: string;
@@ -77,7 +78,8 @@ export const zhCN: SettingsCategoriesText = {
     clipboard: "复制 粘贴 历史 图片",
     shelf: "文件 拖放 拖拽 清理",
     messages: "QQ 微信 邮箱 邮件 通知 IMAP 授权码",
-    agents: "Claude Code Codex 会话列表 标题 用量 隐藏会话",
+    agents: "Claude Code Codex 会话标题 状态灯 收起条",
+    agentSessions: "会话 卡片 用量 隐藏会话 筛选",
     agentRemote: "SSH 远程 服务器 主机 其他电脑",
     agentAlerts: "弹出 提醒 通知 回复状态标记",
     sounds: "音效 声音包 提示音",
@@ -107,7 +109,8 @@ export const zhCN: SettingsCategoriesText = {
   translation: "翻译",
   shelf: "文件中转",
   calendar: "日历",
-  agents: "会话",
+  agents: "岛上显示",
+  agentSessions: "会话列表",
   agentRemote: "SSH 远程",
   agentAlerts: "提醒",
   sounds: "声音",
@@ -141,7 +144,8 @@ export const en: SettingsCategoriesText = {
     clipboard: "copy paste history images",
     shelf: "files drag drop cleanup",
     messages: "qq wechat mail email notifications imap",
-    agents: "claude code codex sessions list title usage hide",
+    agents: "claude code codex session title status light collapsed bar",
+    agentSessions: "sessions cards usage hide filter",
     agentRemote: "ssh remote server host other computers",
     agentAlerts: "pop-up alerts notifications reply status marker",
     sounds: "sound pack",
@@ -171,7 +175,8 @@ export const en: SettingsCategoriesText = {
   translation: "Translation",
   shelf: "File shelf",
   calendar: "Calendar",
-  agents: "Sessions",
+  agents: "On the island",
+  agentSessions: "Session list",
   agentRemote: "SSH remote",
   agentAlerts: "Alerts",
   sounds: "Sounds",

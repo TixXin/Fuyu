@@ -1664,147 +1664,6 @@
     {
       "page": "agents",
       "zh-CN": {
-        "group": "会话列表",
-        "title": "列出多久内的会话",
-        "description": "最后一次活动在这段时间内的会话才会列出。"
-      },
-      "en": {
-        "group": "Session list",
-        "title": "List sessions from the last",
-        "description": "Only sessions active within this time are listed."
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "会话列表",
-        "title": "只显示进行中的会话",
-        "description": "隐藏已完成和失败的会话，只留正在运行、等待确认和可能中断的。"
-      },
-      "en": {
-        "group": "Session list",
-        "title": "Only sessions in progress",
-        "description": "Hide finished and failed sessions; keep running, waiting and possibly stalled ones."
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "会话列表",
-        "title": "隐藏已退出的会话",
-        "description": "Claude Code 或 Codex 已经退出的会话不再列出，SessionEnd hook 没触发也算：按进程是否还在判断，远程电脑上的 Claude Code 会话同样适用。"
-      },
-      "en": {
-        "group": "Session list",
-        "title": "Hide sessions that have quit",
-        "description": "Sessions whose Claude Code or Codex has quit are no longer listed, even when the SessionEnd hook did not run: told by whether the process still runs, for Claude Code sessions on remote computers too."
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "会话列表",
-        "title": "在顶部显示 Claude 用量",
-        "description": "5 小时、7 天和各模型的用量，以及最紧的那个何时重置。读的是 claude-hud 状态栏保存的用量文件（它的 externalUsagePath 或 externalUsageWritePath 设置）；没有时不显示。"
-      },
-      "en": {
-        "group": "Session list",
-        "title": "Show Claude usage at the top",
-        "description": "The 5-hour, 7-day and per-model usage, and when the fullest resets. Read from the usage file the claude-hud status line keeps (its externalUsagePath or externalUsageWritePath setting); hidden without one."
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "会话卡片",
-        "title": "显示方式",
-        "description": "卡片：每个会话一张按状态颜色描边的卡片，第二行写它在做什么和上下文大小。紧凑：每个会话一行，只有状态色条、标题、状态和时间。"
-      },
-      "en": {
-        "group": "Session cards",
-        "title": "Layout",
-        "description": "Cards: one card per session, framed in its state's colour, with what it is doing and its context size on the second line. Compact: one line per session with only the state bar, title, state and time."
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "会话卡片",
-        "title": "归档动画",
-        "description": "滑出：会话向右滑出再收起。粒子消散：会话从左到右化成状态颜色的粒子散开再收起。系统要求减少动画时直接移除。"
-      },
-      "en": {
-        "group": "Session cards",
-        "title": "Archive animation",
-        "description": "Slide: the session slides out to the right, then folds away. Dissolve: it turns into dust in its state's colour from left to right, then folds away. When Windows asks for less motion it goes at once."
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "会话卡片",
-        "title": "卡片光效",
-        "description": "只在「卡片」和「紧凑」显示方式下生效。粒子流苏：边框按状态颜色发光，进行中和等你处理的会呼吸，左侧飘着一条粒子流苏。渐变带：从右端铺开一层状态颜色的渐变，进行中和等你处理的更亮。"
-      },
-      "en": {
-        "group": "Session cards",
-        "title": "Card light effects",
-        "description": "Only in the Cards and Compact layouts. Sparkle band: cards glow in their state's colour, breathing while working or waiting on you, with a drifting band of sparks on the left. Gradient: a wash in that colour from the right end, brighter while working or waiting on you."
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "会话卡片",
-        "title": "会话来源",
-        "description": "会话在哪个程序里运行，比如 Orca、Windows Terminal、VS Code、Codex。正在运行的 Claude Code 会话会自动识别；岛屿启动前就结束的会话没有来源。"
-      },
-      "en": {
-        "group": "Session cards",
-        "title": "Session source",
-        "description": "The program a session runs in, such as Orca, Windows Terminal, VS Code or Codex. Running Claude Code sessions are recognized automatically; sessions that ended before the island started have no source."
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "会话卡片",
-        "title": "显示模型和推理强度"
-      },
-      "en": {
-        "group": "Session cards",
-        "title": "Show the model and effort"
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "会话卡片",
-        "title": "显示最近提问和正在用的工具",
-        "description": "进行中的会话在回复上方显示你最近一次的提问，运行时显示它正在调用的工具（如 Bash 命令、正在改的文件）。"
-      },
-      "en": {
-        "group": "Session cards",
-        "title": "Show the latest prompt and the tool in use",
-        "description": "Sessions in progress show your latest prompt above the reply and, while running, the tool they are calling (a Bash command, the file being edited)."
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "会话卡片",
-        "title": "显示运行时长",
-        "description": "进行中的会话显示\"已运行多久\"，每秒更新；结束的显示这一轮\"用时多久\"。从最近一次提问开始算。"
-      },
-      "en": {
-        "group": "Session cards",
-        "title": "Show how long it has run",
-        "description": "A session in progress shows how long it has been running, updated every second; a finished one shows how long its last turn took. Counted from the latest prompt."
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
         "group": "显示哪些 Agent",
         "title": "显示 Claude Code 会话"
       },
@@ -1825,7 +1684,148 @@
       }
     },
     {
-      "page": "agents",
+      "page": "agentSessions",
+      "zh-CN": {
+        "group": "会话列表",
+        "title": "列出多久内的会话",
+        "description": "最后一次活动在这段时间内的会话才会列出。"
+      },
+      "en": {
+        "group": "Session list",
+        "title": "List sessions from the last",
+        "description": "Only sessions active within this time are listed."
+      }
+    },
+    {
+      "page": "agentSessions",
+      "zh-CN": {
+        "group": "会话列表",
+        "title": "只显示进行中的会话",
+        "description": "隐藏已完成和失败的会话，只留正在运行、等待确认和可能中断的。"
+      },
+      "en": {
+        "group": "Session list",
+        "title": "Only sessions in progress",
+        "description": "Hide finished and failed sessions; keep running, waiting and possibly stalled ones."
+      }
+    },
+    {
+      "page": "agentSessions",
+      "zh-CN": {
+        "group": "会话列表",
+        "title": "隐藏已退出的会话",
+        "description": "Claude Code 或 Codex 已经退出的会话不再列出，SessionEnd hook 没触发也算：按进程是否还在判断，远程电脑上的 Claude Code 会话同样适用。"
+      },
+      "en": {
+        "group": "Session list",
+        "title": "Hide sessions that have quit",
+        "description": "Sessions whose Claude Code or Codex has quit are no longer listed, even when the SessionEnd hook did not run: told by whether the process still runs, for Claude Code sessions on remote computers too."
+      }
+    },
+    {
+      "page": "agentSessions",
+      "zh-CN": {
+        "group": "会话列表",
+        "title": "在顶部显示 Claude 用量",
+        "description": "5 小时、7 天和各模型的用量，以及最紧的那个何时重置。读的是 claude-hud 状态栏保存的用量文件（它的 externalUsagePath 或 externalUsageWritePath 设置）；没有时不显示。"
+      },
+      "en": {
+        "group": "Session list",
+        "title": "Show Claude usage at the top",
+        "description": "The 5-hour, 7-day and per-model usage, and when the fullest resets. Read from the usage file the claude-hud status line keeps (its externalUsagePath or externalUsageWritePath setting); hidden without one."
+      }
+    },
+    {
+      "page": "agentSessions",
+      "zh-CN": {
+        "group": "会话卡片",
+        "title": "显示方式",
+        "description": "卡片：每个会话一张按状态颜色描边的卡片，第二行写它在做什么和上下文大小。紧凑：每个会话一行，只有状态色条、标题、状态和时间。"
+      },
+      "en": {
+        "group": "Session cards",
+        "title": "Layout",
+        "description": "Cards: one card per session, framed in its state's colour, with what it is doing and its context size on the second line. Compact: one line per session with only the state bar, title, state and time."
+      }
+    },
+    {
+      "page": "agentSessions",
+      "zh-CN": {
+        "group": "会话卡片",
+        "title": "归档动画",
+        "description": "滑出：会话向右滑出再收起。粒子消散：会话从左到右化成状态颜色的粒子散开再收起。系统要求减少动画时直接移除。"
+      },
+      "en": {
+        "group": "Session cards",
+        "title": "Archive animation",
+        "description": "Slide: the session slides out to the right, then folds away. Dissolve: it turns into dust in its state's colour from left to right, then folds away. When Windows asks for less motion it goes at once."
+      }
+    },
+    {
+      "page": "agentSessions",
+      "zh-CN": {
+        "group": "会话卡片",
+        "title": "卡片光效",
+        "description": "只在「卡片」和「紧凑」显示方式下生效。粒子流苏：边框按状态颜色发光，进行中和等你处理的会呼吸，左侧飘着一条粒子流苏。渐变带：从右端铺开一层状态颜色的渐变，进行中和等你处理的更亮。"
+      },
+      "en": {
+        "group": "Session cards",
+        "title": "Card light effects",
+        "description": "Only in the Cards and Compact layouts. Sparkle band: cards glow in their state's colour, breathing while working or waiting on you, with a drifting band of sparks on the left. Gradient: a wash in that colour from the right end, brighter while working or waiting on you."
+      }
+    },
+    {
+      "page": "agentSessions",
+      "zh-CN": {
+        "group": "会话卡片",
+        "title": "会话来源",
+        "description": "会话在哪个程序里运行，比如 Orca、Windows Terminal、VS Code、Codex。正在运行的 Claude Code 会话会自动识别；岛屿启动前就结束的会话没有来源。"
+      },
+      "en": {
+        "group": "Session cards",
+        "title": "Session source",
+        "description": "The program a session runs in, such as Orca, Windows Terminal, VS Code or Codex. Running Claude Code sessions are recognized automatically; sessions that ended before the island started have no source."
+      }
+    },
+    {
+      "page": "agentSessions",
+      "zh-CN": {
+        "group": "会话卡片",
+        "title": "显示模型和推理强度"
+      },
+      "en": {
+        "group": "Session cards",
+        "title": "Show the model and effort"
+      }
+    },
+    {
+      "page": "agentSessions",
+      "zh-CN": {
+        "group": "会话卡片",
+        "title": "显示最近提问和正在用的工具",
+        "description": "进行中的会话在回复上方显示你最近一次的提问，运行时显示它正在调用的工具（如 Bash 命令、正在改的文件）。"
+      },
+      "en": {
+        "group": "Session cards",
+        "title": "Show the latest prompt and the tool in use",
+        "description": "Sessions in progress show your latest prompt above the reply and, while running, the tool they are calling (a Bash command, the file being edited)."
+      }
+    },
+    {
+      "page": "agentSessions",
+      "zh-CN": {
+        "group": "会话卡片",
+        "title": "显示运行时长",
+        "description": "进行中的会话显示\"已运行多久\"，每秒更新；结束的显示这一轮\"用时多久\"。从最近一次提问开始算。"
+      },
+      "en": {
+        "group": "Session cards",
+        "title": "Show how long it has run",
+        "description": "A session in progress shows how long it has been running, updated every second; a finished one shows how long its last turn took. Counted from the latest prompt."
+      }
+    },
+    {
+      "page": "agentSessions",
       "zh-CN": {
         "group": "隐藏会话",
         "title": "添加规则"

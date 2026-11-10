@@ -9,6 +9,7 @@ import { DEFAULT_SETTINGS_CATEGORY, type SettingsCategory } from "./categories";
 import { GeneralSettingsPage } from "./GeneralSettingsPage";
 import { AgentSettingsPage } from "./AgentSettingsPage";
 import { AgentAlertsSettingsPage } from "./AgentAlertsSettingsPage";
+import { AgentSessionsSettingsPage } from "./AgentSessionsSettingsPage";
 import { AgentConnectSettingsPage } from "./AgentConnectSettingsPage";
 import { AgentRemoteHostsSettings } from "../../features/agent-status/AgentRemoteHostsSettings";
 import { AgentApprovalSettings } from "../../features/agent-status/approvals/AgentApprovalSettings";
@@ -202,6 +203,7 @@ export function SettingsWindow() {
         {category === "calendar" && <CalendarSettingsPage settings={settings} onSettingsChange={setSettings} />}
         {category === "agents" && <AgentSettingsPage settings={settings} onSettingsChange={setSettings} onOpenConnect={() => setCategory("agentConnect")} />}
         {category === "agentRemote" && <AgentRemoteHostsSettings />}
+        {category === "agentSessions" && <AgentSessionsSettingsPage settings={settings} onSettingsChange={setSettings} />}
         {category === "agentAlerts" && <AgentAlertsSettingsPage settings={settings} onSettingsChange={setSettings} />}
         {category === "sounds" && <SoundSettingsSection />}
         {category === "agentApprovals" && <AgentApprovalSettings />}

@@ -312,9 +312,9 @@ if (!automated) {
     check(saved.accounts?.some((account) => account.email === "new@example.edu.cn" && account.host === "imap.example.edu.cn"),
       "The typed server is saved with the mailbox");
 
-    // AI Agent has its own group: sessions, alerts, sounds, approvals and the hooks each on a page.
+    // AI Agent has its own group: on the island, session list, alerts, sounds, approvals and the hooks each on a page.
     const agentGroup = [...document.querySelectorAll<HTMLElement>(".settings-sidebar__group")].find((group) => group.getAttribute("aria-label") === "AI Agent");
-    check([...(agentGroup?.querySelectorAll(".settings-sidebar__item") ?? [])].map((item) => item.textContent).join("|") === "会话|提醒|声音|审批|连接|SSH 远程", "AI Agent is its own sidebar group with sessions, alerts, sounds, approvals, connection and SSH remote");
+    check([...(agentGroup?.querySelectorAll(".settings-sidebar__item") ?? [])].map((item) => item.textContent).join("|") === "岛上显示|会话列表|提醒|声音|审批|连接|SSH 远程", "AI Agent is its own sidebar group with on the island, session list, alerts, sounds, approvals, connection and SSH remote");
     await openPage("agentConnect");
     await act(async () => { await new Promise(resolve => setTimeout(resolve, 50)); });
     check(agentPolls() > pollsAway, "The connection page reads the agents' state");
@@ -333,10 +333,10 @@ if (!automated) {
     check(/devbox.*nas/s.test(element(".editor-panel").textContent ?? ""), "The remote computers page lists the SSH hosts to read sessions from");
     await openPage("agents"); await act(async () => { await new Promise(resolve => setTimeout(resolve, 50)); });
     const hooksLink = [...document.querySelectorAll<HTMLButtonElement>(".editor-panel .settings-link-button")].find((button) => button.textContent === "安装/修复");
-    check(hooksLink, "Without hooks, the sessions page says so with a way to install them");
+    check(hooksLink, "Without hooks, the on-the-island page says so with a way to install them");
     await act(async () => { hooksLink!.click(); });
-    check(element(".settings-sidebar__item[data-category='agentConnect']").getAttribute("aria-current") === "page", "The hooks notice on the sessions page opens the connection page");
-    await openPage("agents");
+    check(element(".settings-sidebar__item[data-category='agentConnect']").getAttribute("aria-current") === "page", "The hooks notice on the on-the-island page opens the connection page");
+    await openPage("agentSessions");
     const filterGroup = () => [...document.querySelectorAll<HTMLElement>(".settings-group")].find((group) => group.textContent?.includes("隐藏会话"))!;
     localStorage.removeItem("fuyu-agent-session-filters");
     const filterInput = filterGroup().querySelector<HTMLInputElement>(".session-filter__form input")!;

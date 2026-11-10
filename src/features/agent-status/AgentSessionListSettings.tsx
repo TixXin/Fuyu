@@ -12,7 +12,7 @@ import {
 import type { AgentArchiveMotion, AgentCardEffects, AgentHostDisplay, AgentSessionView, IslandSettings } from "../appearance/types";
 import { useTranslation } from "../../i18n";
 
-/** Settings → AI Agent: which sessions the island's Agent page lists, and what each card shows. */
+/** Settings → AI Agent → Session list: which sessions the island's Agent page lists, and what each card shows. */
 export function AgentSessionListSettings({
   settings,
   onSettingsChange,
@@ -22,7 +22,7 @@ export function AgentSessionListSettings({
 }) {
   const text = useTranslation().settings.agent;
   const update = (patch: Partial<IslandSettings>) => onSettingsChange({ ...settings, ...patch });
-  type Toggle = "agentHideFinished" | "agentHideClosed" | "agentShowUsage" | "agentShowElapsed" | "agentShowModel" | "agentShowActivity" | "agentShowClaudeCode" | "agentShowCodex";
+  type Toggle = "agentHideFinished" | "agentHideClosed" | "agentShowUsage" | "agentShowElapsed" | "agentShowModel" | "agentShowActivity";
   const toggle = (key: Toggle, title: string, description?: string) => (
     <SettingsToggleRow title={title} description={description} checked={settings[key]} onChange={(value) => update({ [key]: value })} />
   );
@@ -98,10 +98,6 @@ export function AgentSessionListSettings({
         {toggle("agentShowModel", text.showModel)}
         {toggle("agentShowActivity", text.showActivity, text.showActivityHint)}
         {toggle("agentShowElapsed", text.showElapsed, text.showElapsedHint)}
-      </SettingsGroup>
-      <SettingsGroup title={text.agentsSection} footer={text.showAgentsHint}>
-        {toggle("agentShowClaudeCode", text.showClaudeCode)}
-        {toggle("agentShowCodex", text.showCodex)}
       </SettingsGroup>
     </>
   );

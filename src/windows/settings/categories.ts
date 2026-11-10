@@ -16,6 +16,7 @@ export const SETTINGS_CATEGORIES = [
   "shelf",
   "messages",
   "agents",
+  "agentSessions",
   "agentAlerts",
   "sounds",
   "agentApprovals",
@@ -32,12 +33,12 @@ export type SettingsGroup = "basics" | "features" | "agents" | "extensions";
 
 /**
  * Sidebar sections: app-wide settings, one page per module (QQ, WeChat and Mail share
- * Messages), the AI Agent pages (sessions, alerts, sounds, approvals, connection, SSH remote), then plugins (installed, and the market on its own page). A null label leaves About on its own at the end.
+ * Messages), the AI Agent pages (on the island, session list, alerts, sounds, approvals, connection, SSH remote), then plugins (installed, and the market on its own page). A null label leaves About on its own at the end.
  */
 export const SETTINGS_GROUPS: readonly { label: SettingsGroup | null; categories: readonly SettingsCategory[] }[] = [
   { label: "basics", categories: ["general", "behavior", "appearance", "theme", "themeMarket", "shortcuts"] },
   { label: "features", categories: ["todos", "calendar", "music", "translation", "clipboard", "shelf", "messages"] },
-  { label: "agents", categories: ["agents", "agentAlerts", "sounds", "agentApprovals", "agentConnect", "agentRemote"] },
+  { label: "agents", categories: ["agents", "agentSessions", "agentAlerts", "sounds", "agentApprovals", "agentConnect", "agentRemote"] },
   { label: "extensions", categories: ["plugins", "market"] },
   { label: null, categories: ["about"] },
 ];
