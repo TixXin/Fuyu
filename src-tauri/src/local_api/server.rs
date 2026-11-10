@@ -109,7 +109,7 @@ fn answer(app: &AppHandle, request: &mut Request, port: u16) -> Result<Value, Ap
     }
     if call.method == "health" {
         return Ok(json!({
-            "app": "FocuSD Island",
+            "app": "Fuyu",
             "version": app.package_info().version.to_string(),
             "apiVersion": API_VERSION,
             "allowWrite": config.allow_write,

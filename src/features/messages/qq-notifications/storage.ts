@@ -1,5 +1,5 @@
-export const ENABLED_KEY = "focusd-island-qq-notifications-enabled";
-export const ACCESS_REQUESTED_KEY = "focusd-island-qq-notification-access-requested";
+export const ENABLED_KEY = "fuyu-qq-notifications-enabled";
+export const ACCESS_REQUESTED_KEY = "fuyu-qq-notification-access-requested";
 
 export function isQQNotificationsEnabled() {
   return window.localStorage.getItem(ENABLED_KEY) !== "false";

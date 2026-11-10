@@ -10,8 +10,11 @@ export const MAX_THEME_NAME_LENGTH = 60;
 
 type ThemeKey = (typeof THEME_SETTING_KEYS)[number];
 
+/** Theme files written before the rename (D17) say "fly-island". */
+const APP_NAMES = ["fuyu", "fly-island"];
+
 export type ThemeFile = {
-  app: "fly-island";
+  app: "fuyu";
   kind: "theme";
   version: 1;
   name: string;
@@ -30,14 +33,14 @@ export function buildTheme(name: string, settings: IslandSettings, now: Date): T
   const appearance = Object.fromEntries(
     THEME_SETTING_KEYS.map((key) => [key, shown[key]]),
   ) as ThemeFile["appearance"];
-  return { app: "fly-island", kind: "theme", version: 1, name, exportedAt: now.toISOString(), appearance };
+  return { app: "fuyu", kind: "theme", version: 1, name, exportedAt: now.toISOString(), appearance };
 }
 
-/** "fly-island-theme-2026-11-08-1430.json", in local time; the preset's name is inside. */
+/** "fuyu-theme-2026-11-08-1430.json", in local time; the preset's name is inside. */
 export function themeFileName(now: Date) {
   const pad = (value: number) => String(value).padStart(2, "0");
   const date = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
-  return `fly-island-theme-${date}-${pad(now.getHours())}${pad(now.getMinutes())}.json`;
+  return `fuyu-theme-${date}-${pad(now.getHours())}${pad(now.getMinutes())}.json`;
 }
 
 /**
@@ -57,7 +60,7 @@ export function parseTheme(
   }
   if (typeof value !== "object" || value === null) return { problem: "notTheme" };
   const file = value as Record<string, unknown>;
-  if (file.app !== "fly-island" || file.kind !== "theme" || typeof file.appearance !== "object" || file.appearance === null) {
+  if (typeof file.app !== "string" || !APP_NAMES.includes(file.app) || file.kind !== "theme" || typeof file.appearance !== "object" || file.appearance === null) {
     return { problem: "notTheme" };
   }
   if (typeof file.version !== "number" || file.version > 1) return { problem: "newerVersion" };

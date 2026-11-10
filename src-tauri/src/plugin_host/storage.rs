@@ -1,7 +1,7 @@
 //! Per-plugin data kept by the host: `storage.*` (JSON values in
 //! `plugins-data/<id>/storage.json`, no permission needed) and `secrets.*`
 //! (strings in the Windows Credential Manager under
-//! `com.focusd.island.plugin.<id>`, needs the `secrets` permission). The names
+//! `com.tixxin.fuyu.plugin.<id>`, needs the `secrets` permission). The names
 //! of a plugin's secrets are kept in `plugin-secrets.json` next to
 //! `plugins.json`, so clearing a plugin's data can find them again.
 
@@ -18,7 +18,7 @@ use super::{host, lock};
 
 const STORAGE_FILE_NAME: &str = "storage.json";
 const SECRETS_INDEX_FILE_NAME: &str = "plugin-secrets.json";
-const SECRET_SERVICE_PREFIX: &str = "com.focusd.island.plugin.";
+const SECRET_SERVICE_PREFIX: &str = "com.tixxin.fuyu.plugin.";
 pub(super) const MAX_VALUE_BYTES: usize = 64 * 1024;
 pub(super) const MAX_TOTAL_BYTES: usize = 1024 * 1024;
 const MAX_KEY_CHARS: usize = 128;

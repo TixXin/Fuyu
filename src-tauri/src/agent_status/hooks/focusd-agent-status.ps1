@@ -74,10 +74,10 @@ function Get-DefaultStatusPath {
   }
 
   if ($env:APPDATA) {
-    return Join-Path $env:APPDATA "com.focusd.island\agent-status.json"
+    return Join-Path $env:APPDATA "com.tixxin.fuyu\agent-status.json"
   }
 
-  return Join-Path $env:LOCALAPPDATA "com.focusd.island\agent-status.json"
+  return Join-Path $env:LOCALAPPDATA "com.tixxin.fuyu\agent-status.json"
 }
 
 function Get-AgentMarkerNames {

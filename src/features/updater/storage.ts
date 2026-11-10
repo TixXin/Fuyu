@@ -2,8 +2,8 @@ import { readJson, readString, writeJson, writeString } from "../../lib/storage.
 
 export type UpdateChannel = "stable" | "beta";
 
-export const CHANNEL_KEY = "focusd-island-update-channel";
-export const UPDATE_PREFERENCES_KEY = "focusd-island-update-preferences";
+export const CHANNEL_KEY = "fuyu-update-channel";
+export const UPDATE_PREFERENCES_KEY = "fuyu-update-preferences";
 
 /** A pre-release version such as 0.3.1-beta.1. */
 export function isPrerelease(version: string) {

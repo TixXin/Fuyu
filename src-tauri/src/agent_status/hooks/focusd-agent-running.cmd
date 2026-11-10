@@ -16,9 +16,9 @@ if defined FOCUSD_AGENT_STATUS_DIR (
   set "STATUS_DIR=%FOCUSD_AGENT_STATUS_DIR%"
 ) else (
   if defined APPDATA (
-    set "STATUS_DIR=%APPDATA%\com.focusd.island"
+    set "STATUS_DIR=%APPDATA%\com.tixxin.fuyu"
   ) else (
-    set "STATUS_DIR=%LOCALAPPDATA%\com.focusd.island"
+    set "STATUS_DIR=%LOCALAPPDATA%\com.tixxin.fuyu"
   )
 )
 

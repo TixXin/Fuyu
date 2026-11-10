@@ -20,23 +20,23 @@ import "./settingsMocks";
 const query = new URLSearchParams(location.search);
 const collect = query.get("collect");
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
-const original = new Map(Object.entries(localStorage).filter(([key]) => key.startsWith("focusd-island-")));
+const original = new Map(Object.entries(localStorage).filter(([key]) => key.startsWith("fuyu-")));
 window.addEventListener("beforeunload", () => {
-  for (const key of Object.keys(localStorage).filter((key) => key.startsWith("focusd-island-"))) {
+  for (const key of Object.keys(localStorage).filter((key) => key.startsWith("fuyu-"))) {
     if (!original.has(key)) localStorage.removeItem(key);
   }
   for (const [key, value] of original) localStorage.setItem(key, value);
 });
-for (const key of Object.keys(localStorage).filter((key) => key.startsWith("focusd-island-"))) localStorage.removeItem(key);
+for (const key of Object.keys(localStorage).filter((key) => key.startsWith("fuyu-"))) localStorage.removeItem(key);
 localStorage.setItem(LOCALE_STORAGE_KEY, collect === "en" ? "en" : "zh-CN");
-localStorage.setItem("focusd-island-save-directory", "");
-localStorage.setItem("focusd-island-qq-notification-access-requested", "true");
+localStorage.setItem("fuyu-save-directory", "");
+localStorage.setItem("fuyu-qq-notification-access-requested", "true");
 if (query.get("state") === "on") {
   const allOn = Object.fromEntries(Object.entries(DEFAULT_SETTINGS).map(([key, value]) => [key, typeof value === "boolean" ? true : value]));
-  localStorage.setItem("focusd-island-settings", JSON.stringify(allOn));
-  localStorage.setItem("focusd-island-agent-push", JSON.stringify({ enabled: true }));
-  localStorage.setItem("focusd-island-agent-approval", JSON.stringify({ onIsland: true, whenInFront: true }));
-  localStorage.setItem("focusd-island-agent-sounds", JSON.stringify({ enabled: true, quietHours: { enabled: true, start: "22:00", end: "08:00" } }));
+  localStorage.setItem("fuyu-settings", JSON.stringify(allOn));
+  localStorage.setItem("fuyu-agent-push", JSON.stringify({ enabled: true }));
+  localStorage.setItem("fuyu-agent-approval", JSON.stringify({ onIsland: true, whenInFront: true }));
+  localStorage.setItem("fuyu-agent-sounds", JSON.stringify({ enabled: true, quietHours: { enabled: true, start: "22:00", end: "08:00" } }));
 }
 
 const root = createRoot(document.getElementById("root")!);

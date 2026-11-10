@@ -1,5 +1,7 @@
 # 数据存放位置
 
+应用数据目录是 `%APPDATA%\com.tixxin.fuyu`，WebView2 的数据（含 `localStorage`）在 `%LOCALAPPDATA%\com.tixxin.fuyu\EBWebView`。2026-11-10 改名（D17）前两者都是 `com.focusd.island`；新版第一次启动时把旧目录复制过来，旧目录保留，见 [contracts.md](contracts.md)「改名」。
+
 | 数据 | 位置 | 负责方 |
 |---|---|---|
 | 设置、预设、各功能开关、语言 | WebView2 的 `localStorage` | 前端各 feature 的 `storage.ts` |
@@ -20,9 +22,9 @@
 | Codex 用量（B4）：Agent 页第二行用量。读 Codex 自己写的会话记录里最新一个带额度的 `token_count` 事件（`rate_limits` 的 `primary` / `secondary`，按 `window_minutes` 分 5 小时和 7 天，窗口为 null 的跳过），每 30 秒读一次；不联网、不读 Codex 登录；Tauri 命令 `get_codex_usage`，返回和 `get_agent_usage` 相同的结构，`source` 为 `codex` | 只读 `%CODEX_HOME%` 或 `~/.codex/sessions/<年>/<月>/<日>/rollout-*.jsonl`（最近 7 天、最新 20 个文件，各读末尾 256 KiB） | `agent_status/codex_usage.rs` |
 | Codex / Claude Code hook 配置 | `~/.codex/config.toml`、`~/.claude/settings.json` 中带标记的受管区块 | `agent_status` |
 | GLM、Kimi 的 Coding Plan 用量（Agent 用量环打开 GLM / Kimi 时）：用保存的 API Key 直连 `open.bigmodel.cn`、`api.kimi.com` 查询，不走代理；答复只在内存中缓存 1 分钟，失败时保留上一次的数字并带上原因；Tauri 命令 `get_plan_usage` 返回和 `get_agent_usage` 相同的结构，`source` 为 `glm` / `kimi` | 只在内存中 | `agent_status/plan_usage.rs` |
-| QQ 邮箱授权码、翻译 API 密钥、日历订阅链接和 CalDAV 密码、GLM / Kimi 的 API Key | Windows 凭据管理器（`com.focusd.island.qq-mail`、`com.focusd.island.calendar`、`com.focusd.island.translation`、`com.focusd.island.plan-usage`（用户名 `glm` / `kimi`）；翻译密钥按服务分条目，用户名为服务 id，DeepSeek 沿用 `deepseek`） | `qq_mail`、`translation`、`agent_status/plan_usage.rs` |
+| QQ 邮箱授权码、翻译 API 密钥、日历订阅链接和 CalDAV 密码、GLM / Kimi 的 API Key | Windows 凭据管理器（`com.tixxin.fuyu.qq-mail`、`com.tixxin.fuyu.calendar`、`com.tixxin.fuyu.translation`、`com.tixxin.fuyu.plan-usage`（用户名 `glm` / `kimi`）；翻译密钥按服务分条目，用户名为服务 id，DeepSeek 沿用 `deepseek`） | `qq_mail`、`translation`、`agent_status/plan_usage.rs` |
 | 待办 Markdown 导出 | 用户选择的目录（经过校验） | `system` |
-| 开机自启 | `HKCU\...\Run` 下的值 `FocuSD Island` | `system` |
+| 开机自启 | `HKCU\...\Run` 下的值 `Fuyu`（改名前是 `FocuSD Island`） | `system` |
 | 剪贴板历史、通知、邮件正文 | 仅保存在内存中 | 各服务模块 |
 
 总览见 [overview.md](overview.md)。

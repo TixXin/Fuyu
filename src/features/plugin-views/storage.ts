@@ -2,7 +2,7 @@ import { readJson, writeJson } from "../../lib/storage.ts";
 import { normalizePluginPagePrefs, type PluginPagePrefs } from "./pagePrefs.ts";
 
 /** `{ order: string[], hidden: string[] }` of plugin page ids (`plugin:<plugin id>/<view id>`). */
-export const PLUGIN_PAGES_STORAGE_KEY = "focusd-island-plugin-pages";
+export const PLUGIN_PAGES_STORAGE_KEY = "fuyu-plugin-pages";
 
 export function loadPluginPagePrefs(): PluginPagePrefs {
   return normalizePluginPagePrefs(readJson(PLUGIN_PAGES_STORAGE_KEY));

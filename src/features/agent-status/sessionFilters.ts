@@ -1,7 +1,7 @@
 import { readJson, writeJson } from "../../lib/storage.ts";
 import type { AgentSessionSummary } from "./api";
 
-export const SESSION_FILTERS_STORAGE_KEY = "focusd-island-agent-session-filters";
+export const SESSION_FILTERS_STORAGE_KEY = "fuyu-agent-session-filters";
 /** More rules than anyone keeps by hand; later ones are dropped. */
 export const MAX_SESSION_FILTERS = 50;
 

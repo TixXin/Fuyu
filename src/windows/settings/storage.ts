@@ -1,7 +1,7 @@
 import { writeJson } from "../../lib/storage.ts";
 
 // Main island -> settings window request to reveal a section; survives the window being created.
-export const SETTINGS_FOCUS_STORAGE_KEY = "focusd-island-settings-focus";
+export const SETTINGS_FOCUS_STORAGE_KEY = "fuyu-settings-focus";
 
 export type SettingsFocusSection = "savePath" | "translation" | "music" | "calendar" | "mail" | "updates";
 
@@ -42,7 +42,7 @@ export function requestSettingsFocus(section: SettingsFocusSection) {
 // Settings window -> island: put the island back at the top center of the primary
 // screen, as its own reset button does. The time makes every request a change that
 // fires a storage event, and lets a leftover from an earlier session be ignored.
-export const ISLAND_POSITION_RESET_STORAGE_KEY = "focusd-island-position-reset";
+export const ISLAND_POSITION_RESET_STORAGE_KEY = "fuyu-position-reset";
 
 const POSITION_RESET_MAX_AGE_MS = 5_000;
 
@@ -67,7 +67,7 @@ export function isFreshPositionReset(stored: string | null, now = Date.now()) {
 // Settings window -> island: show the island expanded or collapsed while a size slider
 // moves, so the change is visible. Each request carries a fresh time, which also makes
 // every write a change that fires a storage event in the island window.
-export const PANEL_PREVIEW_STORAGE_KEY = "focusd-island-panel-preview";
+export const PANEL_PREVIEW_STORAGE_KEY = "fuyu-panel-preview";
 
 export type PanelPreviewMode = "expanded" | "collapsed";
 

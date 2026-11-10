@@ -7,7 +7,7 @@ const current = { ...DEFAULT_SETTINGS, opacity: 80, pulseColor: "#112233" };
 
 test("a theme holds the preset's name and only its look", () => {
   const theme = buildTheme("Night", { ...current, gameAutoTuck: true }, new Date("2026-11-08T06:30:00Z"));
-  assert.equal(theme.app, "fly-island");
+  assert.equal(theme.app, "fuyu");
   assert.equal(theme.kind, "theme");
   assert.equal(theme.version, 1);
   assert.equal(theme.name, "Night");
@@ -19,7 +19,7 @@ test("a theme holds the preset's name and only its look", () => {
 });
 
 test("theme files are named by local date and time", () => {
-  assert.equal(themeFileName(new Date(2026, 10, 8, 9, 5)), "fly-island-theme-2026-11-08-0905.json");
+  assert.equal(themeFileName(new Date(2026, 10, 8, 9, 5)), "fuyu-theme-2026-11-08-0905.json");
 });
 
 test("importing round-trips a theme over the current settings", () => {

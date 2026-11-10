@@ -1,7 +1,7 @@
 import { normalizeMailAccounts, type MailAccountSettings } from "./mailAccounts.ts";
 
-export const SETTINGS_KEY = "focusd-island-qq-mail-settings";
-export const REMOTE_IMAGES_KEY = "focusd-island-qq-mail-remote-images";
+export const SETTINGS_KEY = "fuyu-qq-mail-settings";
+export const REMOTE_IMAGES_KEY = "fuyu-qq-mail-remote-images";
 
 /** Saved mailboxes; the single-account format of older versions is read too. */
 export function loadMailAccounts(): MailAccountSettings[] {

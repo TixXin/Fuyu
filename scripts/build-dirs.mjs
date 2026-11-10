@@ -31,7 +31,7 @@ export function laneNumber(worktree) {
 export function lanePreview(main, lane) {
   return {
     port: LANE_PORT_BASE + lane,
-    identifier: `com.focusd.island.lane-${lane}`,
+    identifier: `com.tixxin.fuyu.lane-${lane}`,
     target: targetDir(main, `lane-${lane}`),
   };
 }

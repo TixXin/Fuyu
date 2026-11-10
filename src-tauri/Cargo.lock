@@ -1397,45 +1397,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3f9eec918d3f24069decb9af1554cad7c880e2da24a9afd88aca000531ab82c1"
 
 [[package]]
-name = "focusd-island"
-version = "0.3.5-beta.4"
-dependencies = [
- "arboard",
- "base64 0.22.1",
- "chrono",
- "chrono-tz",
- "clipboard-win",
- "ed25519-dalek",
- "flate2",
- "getrandom 0.3.4",
- "image",
- "imap",
- "imap-proto",
- "keyring",
- "lettre",
- "mailparse",
- "native-tls",
- "pollster",
- "quick-xml",
- "reqwest",
- "rrule",
- "serde",
- "serde_json",
- "sha2 0.10.9",
- "tauri",
- "tauri-build",
- "tauri-plugin-opener",
- "tauri-plugin-single-instance",
- "tauri-plugin-updater",
- "tiny_http",
- "webview2-com",
- "window-vibrancy",
- "windows",
- "windows-future",
- "zip",
-]
-
-[[package]]
 name = "foldhash"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1580,6 +1541,45 @@ dependencies = [
  "memchr",
  "pin-project-lite",
  "slab",
+]
+
+[[package]]
+name = "fuyu"
+version = "0.3.5-beta.4"
+dependencies = [
+ "arboard",
+ "base64 0.22.1",
+ "chrono",
+ "chrono-tz",
+ "clipboard-win",
+ "ed25519-dalek",
+ "flate2",
+ "getrandom 0.3.4",
+ "image",
+ "imap",
+ "imap-proto",
+ "keyring",
+ "lettre",
+ "mailparse",
+ "native-tls",
+ "pollster",
+ "quick-xml",
+ "reqwest",
+ "rrule",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin-opener",
+ "tauri-plugin-single-instance",
+ "tauri-plugin-updater",
+ "tiny_http",
+ "webview2-com",
+ "window-vibrancy",
+ "windows",
+ "windows-future",
+ "zip",
 ]
 
 [[package]]

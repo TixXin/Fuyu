@@ -60,13 +60,13 @@ test("a release bump that changes only the app version does not call for cargo t
 });
 
 test("a version file counts as version-only when nothing but the app version changed", () => {
-  const toml = (version, extra = "") => `[package]\nname = "focusd-island"\nversion = "${version}"\n${extra}\n[dependencies]\nserde = "1"\n`;
+  const toml = (version, extra = "") => `[package]\nname = "fuyu"\nversion = "${version}"\n${extra}\n[dependencies]\nserde = "1"\n`;
   assert.equal(versionOnlyChange("src-tauri/Cargo.toml", toml("0.3.5"), toml("0.3.6-beta.1")), true);
   assert.equal(versionOnlyChange("src-tauri/Cargo.toml", toml("0.3.5"), toml("0.3.6").replace(/\n/g, "\r\n")), true);
   assert.equal(versionOnlyChange("src-tauri/Cargo.toml", toml("0.3.5"), toml("0.3.6", 'edition = "2024"')), false);
   assert.equal(versionOnlyChange("src-tauri/Cargo.toml", toml("0.3.5"), toml("0.3.6").replace('serde = "1"', 'serde = "2"')), false);
 
-  const lock = (app, dep) => `[[package]]\nname = "focusd-island"\nversion = "${app}"\n\n[[package]]\nname = "serde"\nversion = "${dep}"\n`;
+  const lock = (app, dep) => `[[package]]\nname = "fuyu"\nversion = "${app}"\n\n[[package]]\nname = "serde"\nversion = "${dep}"\n`;
   assert.equal(versionOnlyChange("src-tauri/Cargo.lock", lock("0.3.5", "1.0.1"), lock("0.3.6", "1.0.1")), true);
   assert.equal(versionOnlyChange("src-tauri/Cargo.lock", lock("0.3.5", "1.0.1"), lock("0.3.6", "1.0.2")), false);
 

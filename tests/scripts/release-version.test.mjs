@@ -12,9 +12,9 @@ test("the four version files of this repository agree and can be read", () => {
 });
 
 test("setting a version changes only the version text", () => {
-  const lock = "[[package]]\r\nname = \"fnv\"\r\nversion = \"1.0.7\"\r\n\r\n[[package]]\r\nname = \"focusd-island\"\r\nversion = \"0.3.3\"\r\ndependencies = [\r\n";
+  const lock = "[[package]]\r\nname = \"fnv\"\r\nversion = \"1.0.7\"\r\n\r\n[[package]]\r\nname = \"fuyu\"\r\nversion = \"0.3.3\"\r\ndependencies = [\r\n";
   assert.equal(writeVersion("cargoLock", lock, "0.3.4-beta.1"), lock.replace('version = "0.3.3"', 'version = "0.3.4-beta.1"'));
-  const toml = '[package]\nname = "focusd-island"\nversion = "0.3.3"\n\n[dependencies]\nserde = { version = "1" }\n';
+  const toml = '[package]\nname = "fuyu"\nversion = "0.3.3"\n\n[dependencies]\nserde = { version = "1" }\n';
   assert.equal(writeVersion("cargo", toml, "0.3.4"), toml.replace('"0.3.3"', '"0.3.4"'));
   const json = '{\n  "name": "fly-island",\n  "version": "0.3.3",\n  "dependencies": { "x": "1.0.0" }\n}\n';
   assert.equal(writeVersion("package", json, "0.3.4"), json.replace("0.3.3", "0.3.4"));
@@ -51,7 +51,7 @@ test("the draft lists user-facing commits and carries the marker", () => {
   assert.ok(beta.startsWith(DRAFT_MARKER) && beta.includes("这是 0.3.4 的第二个测试版") && beta.includes("the second beta of 0.3.4"));
   assert.ok(beta.includes("- a1 feat(mail): links open") && !beta.includes("task board"));
   const final = draftNotes("0.3.4", "v0.3.3", commits);
-  assert.ok(final.includes("0.3.4 正式版，包含 v0.3.3 以来的全部改动") && final.includes("fly-island_0.3.4_x64-setup.exe") && !final.includes("numeric"));
+  assert.ok(final.includes("0.3.4 正式版，包含 v0.3.3 以来的全部改动") && final.includes("Fuyu_0.3.4_x64-setup.exe") && !final.includes("numeric"));
 });
 
 test("after a release both channels must offer what they should", () => {

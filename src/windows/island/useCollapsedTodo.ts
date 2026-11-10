@@ -8,6 +8,8 @@ import type { CollapsedSlots } from "./types";
 
 // Stands in for the agent icon (16px plus gap) when sizing the island for a session title.
 const AGENT_ICON_TEXT = "MM";
+// Between the centre pattern and the todo count behind it (.island__todo-center).
+const TODO_CENTER_GAP = 6;
 
 /**
  * What the collapsed island shows for todos: the active (or rotating) todo
@@ -15,7 +17,8 @@ const AGENT_ICON_TEXT = "MM";
  * agent's session title (`agentTitle`) or a lyric line takes the place of both when given; for
  * lyrics `lyricWidthText` is the song's longest line, so the island keeps one width per song.
  * Filled plugin slots widen the island by the width they declare; the centre slot only while
- * it shows (no summary text, message preview or translation, `isPeeking`).
+ * it shows: with no summary text, message preview or translation (`isPeeking`), or in front of
+ * the pending count.
  */
 export function useCollapsedTodo(
   todos: TodoItem[],
@@ -61,8 +64,11 @@ export function useCollapsedTodo(
         : settings.showTitle ? t.island.appName : "")
       : "";
     const iconWidth = settings.showCollapsedText && agentTitle !== null ? agentIconWidth : 0;
-    // The same condition as the centre slot on the collapsed bar.
-    const extraWidth = sideWidth + iconWidth + (text === "" && center && !isPeeking ? centerWidth : 0);
+    // The same conditions as on the collapsed bar: the centre slot, or the pattern before the count.
+    const countShown = settings.showCollapsedText && agentTitle === null && lyricWidthText === null
+      && collapsedTaskTitle === null && collapsedTodoCount !== null;
+    const patternWidth = !center ? 0 : countShown ? centerWidth + TODO_CENTER_GAP : text === "" && !isPeeking ? centerWidth : 0;
+    const extraWidth = sideWidth + iconWidth + patternWidth;
     return alignCollapsedIslandWidth(
       getCollapsedIslandWidth(text, extraWidth),
       window.innerWidth,

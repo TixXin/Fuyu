@@ -15,9 +15,9 @@ pub(crate) fn lane() -> Option<u32> {
     std::env::var(ENV).ok()?.parse().ok().filter(|lane| (1..=999).contains(lane))
 }
 
-/// The app identifier of lane `lane`'s preview, e.g. `com.focusd.island.lane-2`.
+/// The app identifier of lane `lane`'s preview, e.g. `com.tixxin.fuyu.lane-2`.
 pub(crate) fn identifier(lane: u32) -> String {
-    format!("com.focusd.island.lane-{lane}")
+    format!("com.tixxin.fuyu.lane-{lane}")
 }
 
 /// The island's default left edge on a monitor: centred, or for a preview
@@ -51,7 +51,7 @@ mod tests {
 
     #[test]
     fn each_lane_gets_its_own_identifier() {
-        assert_eq!(identifier(2), "com.focusd.island.lane-2");
+        assert_eq!(identifier(2), "com.tixxin.fuyu.lane-2");
         assert_ne!(identifier(2), identifier(12));
     }
 }

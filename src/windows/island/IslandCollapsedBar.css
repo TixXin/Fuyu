@@ -77,6 +77,13 @@
   white-space: nowrap;
 }
 
+/* The centre pattern in front of the count (CollapsedSlots.center). */
+.island__todo-center {
+  display: inline-flex;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
 .island__active-task {
   min-width: 0;
   flex: 1;

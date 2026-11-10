@@ -29,7 +29,7 @@ const UNAVAILABLE_MEDIA: MediaState = {
   repeatMode: "unknown", canRepeat: false, volume: -1, sourceApp: null, activeSessionId: null,
   sessions: [], updatedAt: 0,
 };
-const keys = ["focusd-island-qq-notifications-enabled", "focusd-island-wechat-reminders-enabled", "focusd-island-qq-mail-settings"];
+const keys = ["fuyu-qq-notifications-enabled", "fuyu-wechat-reminders-enabled", "fuyu-qq-mail-settings"];
 const originals = keys.map((key) => localStorage.getItem(key));
 keys.forEach((key) => localStorage.removeItem(key));
 window.addEventListener("beforeunload", () => {
