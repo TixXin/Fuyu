@@ -9,7 +9,7 @@
 # (host.keepAlive); without them it starts 10 s after the island and stops when idle.
 #
 # Sources, all readable without administrator rights: .NET performance counters (CPU, cores,
-# memory), the network adapters' byte counts, Get-Process (programs), the ACPI thermal zones
+# memory), the network adapters' byte counts, Win32_Process through WMI (programs), the ACPI thermal zones
 # through WMI (CPU temperature; many desktops have none), Win32_Battery, Windows' GPU engine
 # counters (any vendor; gpu-engines.ps1) and nvidia-smi (NVIDIA: temperature, power, VRAM).
 # This file stays ASCII: Windows PowerShell reads it in the ANSI code page.
@@ -183,18 +183,25 @@ function Read-Processes {
     $now = Get-Date
     $times = @{}
     $programs = @{}
-    foreach ($process in Get-Process) {
-        $name = $process.ProcessName
-        if ($process.Id -eq 0 -or $name -eq 'Idle') { continue }
-        $ms = 0.0
-        try { $ms = $process.TotalProcessorTime.TotalMilliseconds } catch { }
-        $times[$process.Id] = $ms
-        if (-not $programs.ContainsKey($name)) { $programs[$name] = @{ name = $name; count = 0; cpuMs = 0.0; memory = 0L; process = $process } }
+    # One WMI query for every process, about 0.1 s. Get-Process opens each process for its CPU
+    # time: 2 s and more for a few hundred of them, twice before the page showed anything and
+    # then every 3 s, holding up the one-second samples.
+    $rows = @(Get-CimInstance Win32_Process -Property ProcessId, Name, KernelModeTime, UserModeTime, WorkingSetSize -ErrorAction SilentlyContinue)
+    if ($rows.Count -eq 0) { return $null }
+    foreach ($process in $rows) {
+        $id = [int]$process.ProcessId
+        # 0 is the idle process.
+        if ($id -eq 0) { continue }
+        $name = [string]$process.Name -replace '\.exe$', ''
+        # Both times are in 100 ns.
+        $ms = ([double]$process.KernelModeTime + [double]$process.UserModeTime) / 10000
+        $times[$id] = $ms
+        if (-not $programs.ContainsKey($name)) { $programs[$name] = @{ name = $name; count = 0; cpuMs = 0.0; memory = 0L; id = $id } }
         $entry = $programs[$name]
         $entry.count++
-        $entry.memory += $process.WorkingSet64
-        if ($null -ne $script:LastProcs -and $script:LastProcs.Times.ContainsKey($process.Id)) {
-            $entry.cpuMs += [math]::Max(0.0, $ms - $script:LastProcs.Times[$process.Id])
+        $entry.memory += [long]$process.WorkingSetSize
+        if ($null -ne $script:LastProcs -and $script:LastProcs.Times.ContainsKey($id)) {
+            $entry.cpuMs += [math]::Max(0.0, $ms - $script:LastProcs.Times[$id])
         }
     }
     $first = $null -eq $script:LastProcs
@@ -214,7 +221,7 @@ function Read-Processes {
         if ($script:IconsSent.ContainsKey($name) -or $script:IconFailed.ContainsKey($name) -or $icons.ContainsKey($name)) { continue }
         if (-not $script:IconCache.ContainsKey($name)) {
             $path = $null
-            try { $path = $programs[$name].process.Path } catch { }
+            try { $path = (Get-Process -Id $programs[$name].id -ErrorAction Stop).Path } catch { }
             $icon = Get-ProgramIcon $path
             if ($null -eq $icon) { $script:IconFailed[$name] = $true; continue }
             if ($script:IconCache.Count -ge $MaxIcons) { $script:IconCache.Clear() }

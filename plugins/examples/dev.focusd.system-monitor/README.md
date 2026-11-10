@@ -20,7 +20,7 @@
 
 - CPU、每个核心、内存：Windows 性能计数器。
 - 网速：网卡的收发字节数。
-- 程序：`Get-Process`，两次读取之间的 CPU 时间。
+- 程序：WMI 的 `Win32_Process`（一次查询读完所有进程），两次读取之间的 CPU 时间。
 - CPU 温度：WMI 的 ACPI 温度区（`Win32_PerfFormattedData_Counters_ThermalZoneInformation`），取最热的一个。很多台式机主板不提供，会显示 -；这个温度通常是主板测的，比 CPU 核心温度低。
 - GPU：`nvidia-smi`，至多每 2 秒一次。没有 NVIDIA 显卡时显示 —。
 - 电池：`Win32_Battery`，每 10 秒一次。
