@@ -17,7 +17,7 @@ export function TodoDatePicker({
   today: string;
   disabled: boolean;
   onChange: (date: string | null) => void;
-  /** Words for today and tomorrow, where they differ from the paper notebook's. */
+  /** Words for today and tomorrow, where the page wants its own. */
   labels?: { today: string; tomorrow: string };
 }) {
   const t = useTranslation();

@@ -8,8 +8,8 @@ type Tab = "today" | "daily" | "upcoming" | "archive";
 const tabOf = (mode: TodoPageMode): Tab => (mode === "review" ? "archive" : mode);
 
 /**
- * The island style's header: named tabs for the four pages in place of the paper's coloured
- * dots and toggles, and on the right what belongs to the page (saving on Today, a saved day's
+ * The todo page's header: named tabs for the four pages, and on the right what belongs to the
+ * page (saving on Today, a saved day's
  * progress while reading it).
  */
 export function TodoIslandHeader({
@@ -54,7 +54,7 @@ export function TodoIslandHeader({
   const tabs: { id: Tab; label: string; count?: number; open: () => void }[] = [
     { id: "today", label: text.today, count: openCount, open: onShowToday },
     { id: "daily", label: text.note, open: onShowDaily },
-    // Only while something is scheduled (or the page is open), as the paper's calendar button.
+    // Only while something is scheduled (or the page is open).
     ...(scheduledCount > 0 || active === "upcoming" ? [{ id: "upcoming" as const, label: text.upcoming, count: scheduledCount, open: onShowUpcoming }] : []),
     { id: "archive", label: text.archive, open: onShowArchive },
   ];

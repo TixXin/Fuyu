@@ -78,10 +78,6 @@ export function normalizeLayoutSettings(settings: LegacyIslandSettings | null | 
       settings?.islandBackgroundColor,
       DEFAULT_SETTINGS.islandBackgroundColor,
     ),
-    todoBackgroundColor: getColorSetting(
-      settings?.todoBackgroundColor,
-      DEFAULT_SETTINGS.todoBackgroundColor,
-    ),
     showTitle:
       typeof settings?.showTitle === "boolean"
         ? settings.showTitle

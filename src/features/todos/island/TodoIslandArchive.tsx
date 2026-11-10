@@ -3,9 +3,8 @@ import { useTranslation } from "../../../i18n";
 import type { TodoArchive } from "../types";
 
 /**
- * The saved days in the island style: one list, newest first, grouped by month. Each day shows
- * how much of it got done and its first task, which tells more at a glance than the paper's
- * cards and timeline, so the island style has no layout switch.
+ * The saved days: one list, newest first, grouped by month. Each day shows how much of it got
+ * done and its first task.
  */
 export function TodoIslandArchive({ archives, onSelect }: { archives: TodoArchive[]; onSelect: (date: string) => void }) {
   const t = useTranslation();

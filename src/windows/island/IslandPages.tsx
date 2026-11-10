@@ -7,7 +7,6 @@ import type { useIslandMessagePanel } from "./useIslandMessagePanel";
 import type { useQQNotifications } from "../../features/messages/qq-notifications/QQNotifications";
 import type { useWeChatReminders } from "../../features/messages/wechat/WeChatReminders";
 import type { useMail } from "../../features/messages/mail/MailPanel";
-import { TodoNotebook } from "../../features/todos/TodoNotebook";
 import { TodoIslandPage } from "../../features/todos/island/TodoIslandPage";
 import type { useTodos } from "../../features/todos/useTodos";
 import { openSettingsWindow } from "../settings/api";
@@ -147,19 +146,11 @@ export function IslandPages({
       )}
       {page === "shelf" && <FileShelfPanel shelf={fileShelf} isDropTarget={isShelfDropping} revealOnDoubleClick={settings.shelfDoubleClick === "reveal"} />}
       {page === "todo" && (
-        settings.todoStyle === "island" ? (
-          <TodoIslandPage
-            {...notebookProps}
-            enableTodoReorder={settings.enableTodoReorder}
-            scrollStartRows={getTodoScrollStartRows(settings.maxPanelHeight)}
-          />
-        ) : (
-          <TodoNotebook
-            {...notebookProps}
-            enableTodoReorder={settings.enableTodoReorder}
-            scrollStartRows={getTodoScrollStartRows(settings.maxPanelHeight)}
-          />
-        )
+        <TodoIslandPage
+          {...notebookProps}
+          enableTodoReorder={settings.enableTodoReorder}
+          scrollStartRows={getTodoScrollStartRows(settings.maxPanelHeight)}
+        />
       )}
     </>
   );

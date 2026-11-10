@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { loadCurrentTodoDate, loadDailyNote, saveCurrentTodoDate, saveDailyNote } from "./storage";
-import type { ArchiveLayout, TodoItem, TodoPageMode } from "./types";
+import type { TodoItem, TodoPageMode } from "./types";
 import { useTodoArchives } from "./useTodoArchives";
 import { useTodoList } from "./useTodoList";
 import { useScheduledTodos } from "./useScheduledTodos";
@@ -53,7 +53,6 @@ export function useTodos({
     setDraftDate(null);
   }, [addListTodo, currentTodoDate, draftDate, draftTodo, scheduleTodo, setDraftTodo]);
   const [todoPageMode, setTodoPageMode] = useState<TodoPageMode>("today");
-  const [archiveLayout, setArchiveLayout] = useState<ArchiveLayout>("cards");
   const [selectedArchiveDate, setSelectedArchiveDate] = useState<string | null>(
     null,
   );
@@ -150,7 +149,6 @@ export function useTodos({
       currentDate: currentTodoDate,
       pageMode: todoPageMode,
       archives,
-      archiveLayout,
       selectedArchive,
       saveState,
       draftDate,
@@ -170,7 +168,6 @@ export function useTodos({
       onShowDaily: showDaily,
       onShowToday: showToday,
       onDailyNoteChange: setDailyNote,
-      onArchiveLayoutChange: setArchiveLayout,
       onSelectArchive: selectArchive,
     },
   };

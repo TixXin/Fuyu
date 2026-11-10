@@ -2,16 +2,15 @@
 // (Settings → Todos → Style → Island) on each of its pages, on a dark and on a light island, and
 // checks the tabs, adding, ticking, starting, the archive and the row height the island grows by.
 import "../../src/styles/tokens.css";
-import { act, StrictMode, type ComponentProps, type CSSProperties } from "react";
+import { act, StrictMode, type CSSProperties } from "react";
 import { createRoot } from "react-dom/client";
 import { I18nProvider } from "../../src/i18n";
 import { TodoIslandPage } from "../../src/features/todos/island/TodoIslandPage";
-import type { TodoNotebook } from "../../src/features/todos/TodoNotebook";
-import type { TodoArchive, TodoItem, TodoPageMode } from "../../src/features/todos/types";
+import type { TodoArchive, TodoItem, TodoPageMode, TodoPageProps } from "../../src/features/todos/types";
 import { TODO_ROW_HEIGHT } from "../../src/windows/island/layout";
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
-type Props = ComponentProps<typeof TodoNotebook>;
+type Props = TodoPageProps;
 const todo = (id: string, title: string, completed = false): TodoItem => ({ id, title, completed, createdAt: 0 });
 const TODOS = [
   todo("a", "评审待办页的岛屿风格"),
@@ -30,13 +29,13 @@ const spy = (name: string) => (...args: unknown[]) => { calls.push([name, ...arg
 function props(pageMode: TodoPageMode, extra: Partial<Props> = {}): Props {
   return {
     todos: TODOS, dailyNote: "上午评审，下午写测试。", draft: "", activeTodoId: "a", currentDate: "2026-11-09", pageMode,
-    archives: ARCHIVES, archiveLayout: "cards", selectedArchive: pageMode === "review" ? ARCHIVES[0] : null, saveState: "idle",
+    archives: ARCHIVES, selectedArchive: pageMode === "review" ? ARCHIVES[0] : null, saveState: "idle",
     enableTodoReorder: true, scrollStartRows: 5, draftDate: null,
     scheduledTodos: [{ id: "s", title: "牙医复诊", date: "2026-11-12", createdAt: 0 }],
     onDraftChange: spy("draft"), onDraftDateChange: spy("date"), onAddTodo: spy("add"), onShowUpcoming: spy("upcoming"),
     onDeleteScheduledTodo: spy("deleteScheduled"), onToggleTodo: spy("toggle"), onUpdateTodo: spy("update"), onStartTodo: spy("start"),
     onDeleteTodo: spy("delete"), onReorderTodo: spy("reorder"), onSaveToday: spy("save"), onShowArchive: spy("archive"),
-    onShowDaily: spy("daily"), onShowToday: spy("today"), onDailyNoteChange: spy("note"), onArchiveLayoutChange: spy("layout"),
+    onShowDaily: spy("daily"), onShowToday: spy("today"), onDailyNoteChange: spy("note"),
     onSelectArchive: spy("select"),
     ...extra,
   };
@@ -94,7 +93,7 @@ try {
   const rows = $$("today", ".todo-list [data-todo-id]");
   check(rows.length === 3, "每个待办一行，带 data-todo-id（插件菜单和拖动用）");
   check(Math.abs(rows[0].getBoundingClientRect().height + 4 - TODO_ROW_HEIGHT) < 1, "一行加间距正好是岛屿按行长高的 46px");
-  check(Math.abs(rows[1].getBoundingClientRect().height - rows[0].getBoundingClientRect().height - 19) < 1, "两行标题多 19px，和纸张风格一样");
+  check(Math.abs(rows[1].getBoundingClientRect().height - rows[0].getBoundingClientRect().height - 19) < 1, "两行标题多 19px，和岛屿增高的行高一致");
   check(rows[0].classList.contains("todo-island-row--active") && $("today", ".todo-island-row__stop")?.textContent === "进行中结束", "进行中的待办有强调条和结束按钮");
   check(getComputedStyle(rows[2].querySelector(".todo-island-row__title")!).textDecorationLine === "line-through", "已完成的划掉");
   check(getComputedStyle(rows[1].querySelector(".todo-island-row__action")!).opacity === "0", "其他操作平时隐藏");

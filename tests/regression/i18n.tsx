@@ -117,9 +117,10 @@ else {
     await act(async () => { changeLocale!("constructor" as "en"); });
     check(document.documentElement.lang === "en", "Invalid locale cannot break the mounted interface");
     await click(".dot-button--todo");
-    check(document.querySelector(".todo-title")?.textContent?.includes("保留用户任务 Привет"), "User task content stays as written");
-    await click("button[aria-label='Review saved todo lists']");
-    check(document.querySelector(".archive-card__empty")?.textContent === "No tasks", "Archive empty states follow the selected language");
+    check(document.querySelector(".todo-island-row__title")?.textContent?.includes("保留用户任务 Привет"), "User task content stays as written");
+    const archiveTab = [...document.querySelectorAll<HTMLButtonElement>(".todo-island__tab")].find((tab) => tab.textContent === "Archive");
+    await act(async () => { archiveTab?.click(); await new Promise((resolve) => setTimeout(resolve, 40)); });
+    check(document.querySelector(".todo-island__archive-preview")?.textContent === "No tasks were written down", "Archive empty states follow the selected language");
     check(document.querySelectorAll("[title]").length === 0, "No hover tooltips on the island");
     await click("button.island-message-button[aria-label^='Messages']");
     check(document.querySelector(".qq-panel__empty")?.textContent?.includes("No messages"), "QQ panel uses English copy");

@@ -31,7 +31,7 @@
   --color-white-a16: rgba(255, 255, 255, 0.16);
   --color-white-a18: rgba(255, 255, 255, 0.18);
 
-  /* Todo notebook paper */
+  /* Dark text on light surfaces (inputs, light chips) */
   --color-ink: #1f1b16;
   --color-ink-muted: rgba(31, 27, 22, 0.58);
 

@@ -327,9 +327,8 @@ test("translation opens in its window unless the island page was chosen", () => 
   assert.equal(normalizeSettings({ translationTarget: "page" }).translationTarget, "window");
 });
 
-test("the todo page style defaults to paper and keeps only known styles", () => {
-  assert.equal(DEFAULT_SETTINGS.todoStyle, "paper");
-  assert.equal(normalizeSettings({}).todoStyle, "paper");
-  assert.equal(normalizeSettings({ todoStyle: "island" }).todoStyle, "island");
-  assert.equal(normalizeSettings({ todoStyle: "glass" }).todoStyle, "paper");
+test("settings saved with the paper todo style read without it: there is one todo page", () => {
+  const older = normalizeSettings({ todoStyle: "paper", todoBackgroundColor: "#f8f4e9" });
+  assert.ok(!("todoStyle" in older) && !("todoBackgroundColor" in older));
+  assert.ok(!("todoStyle" in DEFAULT_SETTINGS) && !("todoBackgroundColor" in DEFAULT_SETTINGS));
 });

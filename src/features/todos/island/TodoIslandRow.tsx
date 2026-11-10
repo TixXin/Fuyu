@@ -7,9 +7,9 @@ import type { TodoItem } from "../types";
 const ICON = { size: 14, strokeWidth: 1.5, absoluteStrokeWidth: true, "aria-hidden": true } as const;
 
 /**
- * One todo in the island style: a round check, the title, and its actions, which show on hover or
+ * One todo: a round check, the title, and its actions, which show on hover or
  * focus. The todo being worked on keeps its stop button and an accent bar. `data-todo-id` and the
- * `.todo-list` around it are what dragging and plugin menus look for, as in the paper style.
+ * `.todo-list` around it are what dragging and plugin menus look for (plugins/menuTarget.ts).
  */
 export function TodoIslandRow({
   todo,

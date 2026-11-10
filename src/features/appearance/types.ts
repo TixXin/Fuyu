@@ -1,7 +1,6 @@
 import type { CalendarSettingValues } from "../calendar/calendarSettings";
 import type { LyricsIslandPriority, LyricsKaraokeColor, LyricsKaraokeFallback, LyricsKaraokeFill } from "../media/lyrics/lyricsSettings";
 
-export type TodoStyle = "paper" | "island";
 export type TranslationTarget = "window" | "island";
 
 export type AgentTitleMode = "changes" | "running";
@@ -99,14 +98,11 @@ export type IslandSettings = CalendarSettingValues & {
   pulseColor: string;
   pulseBrightness: number;
   islandBackgroundColor: string;
-  todoBackgroundColor: string;
   showTitle: boolean;
   showCollapsedText: boolean;
   showIdleTodoCount: boolean;
   carryOverIncompleteTodos: boolean;
   enableTodoReorder: boolean;
-  /** How the todo page looks: the paper notebook, or drawn like the island's other pages. */
-  todoStyle: TodoStyle;
   rotateTodos: boolean;
   todoRotationSeconds: number;
   autoTuck: boolean;

@@ -1,8 +1,7 @@
-import type { ComponentProps } from "react";
 import { useTranslation } from "../../../i18n";
 import { ScheduledTodoList } from "../ScheduledTodoList";
 import { TodoDataNotice } from "../TodoDataNotice";
-import type { TodoNotebook } from "../TodoNotebook";
+import type { TodoPageProps } from "../types";
 import { TodoIslandArchive } from "./TodoIslandArchive";
 import { TodoIslandHeader } from "./TodoIslandHeader";
 import { TodoIslandTasks } from "./TodoIslandTasks";
@@ -10,10 +9,10 @@ import "./TodoIslandPage.css";
 import "./TodoIslandRow.css";
 
 /**
- * The todo page in the island style (Settings → Todos → Style): the same pages and data as the
- * paper notebook, drawn like the island's other pages, on the island's own surface in its ink.
+ * The todo page: today, the daily note, upcoming and the archive, drawn like the island's other
+ * pages, on the island's own surface in its ink.
  */
-export function TodoIslandPage(props: ComponentProps<typeof TodoNotebook>) {
+export function TodoIslandPage(props: TodoPageProps) {
   const t = useTranslation();
   const { pageMode, todos, selectedArchive } = props;
   const isReview = pageMode === "review";

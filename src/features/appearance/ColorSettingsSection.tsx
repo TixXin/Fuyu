@@ -6,7 +6,7 @@ import { useTranslation } from "../../i18n";
 import { DEFAULT_SETTINGS } from "./settings";
 import type { IslandSettings } from "./types";
 
-type ColorKey = "islandBackgroundColor" | "taskTextColor" | "pulseColor" | "todoBackgroundColor";
+type ColorKey = "islandBackgroundColor" | "taskTextColor" | "pulseColor";
 
 /** Appearance → Colours: one row per colour, then how bright the status light glows. */
 export function ColorSettingsSection({
@@ -22,7 +22,6 @@ export function ColorSettingsSection({
     ["islandBackgroundColor", text.islandBackground],
     ["taskTextColor", text.taskText],
     ["pulseColor", text.pulse],
-    ["todoBackgroundColor", text.todoPaper],
   ];
 
   return (

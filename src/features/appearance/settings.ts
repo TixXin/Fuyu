@@ -29,7 +29,6 @@ export const THEME_SETTING_KEYS = [
   "pulseColor",
   "pulseBrightness",
   "islandBackgroundColor",
-  "todoBackgroundColor",
 ] as const satisfies readonly (keyof IslandSettings)[];
 
 /**

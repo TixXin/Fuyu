@@ -4,11 +4,11 @@
   -webkit-font-smoothing: none;
 }
 
-.stage--font-pixel .todo-form input,
+.stage--font-pixel .todo-island__composer input,
 .stage--font-pixel textarea,
-.stage--font-pixel .todo-title,
-.stage--font-pixel .todo-title-input,
-.stage--font-pixel .archive-card__date {
+.stage--font-pixel .todo-island-row__title,
+.stage--font-pixel .todo-island-row__input,
+.stage--font-pixel .todo-island__archive-date {
   font-family: inherit;
 }
 
@@ -29,7 +29,6 @@
   --island-pulse-glow-color: rgba(58, 228, 137, 0.72);
   --island-pulse-brightness: 100%;
   --island-background-color: #2F2F37;
-  --todo-background-color: #f8f4e9;
   --glass-intensity: 0.72;
   --glass-mask-opacity: 0.53;
   --glass-tint-color: rgba(47, 47, 55, 0.53);
@@ -91,7 +90,6 @@
   outline-offset: 3px;
 }
 
-.todo-notebook,
 .editor-panel {
   height: 100%;
   border-radius: var(--island-panel-radius, 10px);
@@ -184,10 +182,6 @@
   .music-wave-button,
   .music-control-button,
   .island__collapse-target,
-  .todo-item,
-  .todo-start,
-  .todo-delete,
-  .todo-drag-handle,
   .project-link,
   .project-link--star .project-link__icon,
   .project-link--release .project-link__icon,

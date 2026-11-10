@@ -1,6 +1,6 @@
 /*
- * A todo row in the island style. A row with its gap is 46px (TODO_ROW_HEIGHT in layout.ts) and
- * each further title line adds 19px, as in the paper style, so the island grows the same way.
+ * A todo row. A row with its gap is 46px (TODO_ROW_HEIGHT in layout.ts) and each further title
+ * line adds 19px (getTodoTitleLineCount), so the island grows with long titles.
  */
 .todo-island__list {
   min-height: 0;

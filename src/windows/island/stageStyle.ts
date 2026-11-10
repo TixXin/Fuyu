@@ -62,6 +62,5 @@ export function getIslandStageStyle(
       settings.islandBackgroundColor,
       glassMaskOpacity,
     ),
-    "--todo-background-color": settings.todoBackgroundColor,
   }) as CSSProperties;
 }
