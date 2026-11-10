@@ -67,9 +67,9 @@ export function IslandApp() {
   const navigation = useIslandNavigation();
   const { mode, isTucked, page, setPage, collapseIsland, tuckIsland, revealIsland, minimizeToEdge, openIslandPage, toggleClipboardHistory } = navigation;
   const pluginPages = usePluginPages(page);
-  const [storedSettings, saveSettings] = useIslandSettings();
-  // Dark, light or the system's colours (C31) in place of the picked ones.
-  const [settings, setSettings] = useResolvedTheme(storedSettings, saveSettings);
+  const [storedSettings, setSettings] = useIslandSettings();
+  // The colours of the dark or light set the theme uses now (C31, C33.3).
+  const settings = useResolvedTheme(storedSettings);
   // Quiet while a full-screen app (usually a game) is in front, if game mode asks for it.
   const game = useGameMode(settings, { mode, isTucked, collapseIsland, tuckIsland, revealIsland });
   const notices = useIslandNotices(settings, { mode, isTucked, quiet: game.quiet });

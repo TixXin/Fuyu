@@ -55,6 +55,12 @@ export const DEFAULT_SETTINGS: IslandSettings = {
   islandBackgroundColor: "#000000",
   collapsedDark: true,
   themeMode: "dark",
+  darkBackgroundColor: "#000000",
+  darkTextColor: "#ffffff",
+  darkPulseColor: "#3ae489",
+  lightBackgroundColor: "#f2f2f5",
+  lightTextColor: "#1c1c1f",
+  lightPulseColor: "#1f9d55",
   showTitle: false,
   showCollapsedText: true,
   showIdleTodoCount: true,
@@ -111,7 +117,6 @@ export const DEFAULT_SETTINGS: IslandSettings = {
 // field loads as this, not as the first-launch default, so an upgrade keeps the look.
 export const LEGACY_FALLBACKS = {
   // Settings from before the theme modes keep the colours their user picked.
-  themeMode: "custom" as const,
   // A light colour picked before this stays light when collapsed too.
   collapsedDark: false,
   topFilletRadius: 8,

@@ -23,12 +23,14 @@ test("theme files are named by local date and time", () => {
 });
 
 test("importing round-trips a theme over the current settings", () => {
-  const exported = buildTheme("Night", { ...current, opacity: 60, pulseColor: "#abcdef" }, new Date());
+  // Colours live in the dark and light sets (C33.3); the dark set is in use here.
+  const exported = buildTheme("Night", { ...current, themeMode: "dark", opacity: 60, darkPulseColor: "#abcdef" }, new Date());
   const parsed = parseTheme("\uFEFF" + JSON.stringify(exported), { ...current, gameAutoTuck: true });
   assert.ok(!("problem" in parsed));
   assert.equal(parsed.name, "Night");
   assert.equal(parsed.settings.opacity, 60);
-  assert.equal(parsed.settings.pulseColor, "#abcdef");
+  assert.equal(parsed.settings.darkPulseColor, "#abcdef");
+  assert.equal(exported.appearance.pulseColor, "#abcdef", "older islands read the single colour");
   // Non-appearance settings come from the current ones, not the file.
   assert.equal(parsed.settings.gameAutoTuck, true);
 });

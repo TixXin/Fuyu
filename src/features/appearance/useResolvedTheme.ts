@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { keepPickedColors, resolveThemeColors } from "./themeMode";
+import { useEffect, useMemo, useState } from "react";
+import { resolveThemeColors } from "./themeMode";
 import type { IslandSettings } from "./types";
 
 const DARK_QUERY = "(prefers-color-scheme: dark)";
@@ -17,12 +17,10 @@ export function useSystemDark() {
 }
 
 /**
- * The settings with the theme mode's colours applied (C31), and a setter that saves changes made
- * from them without overwriting the colours picked by hand.
+ * The settings with the colours of the set the mode uses (C31, C33.3). The colour fields are only
+ * a copy of that set, so settings saved from these keep both sets as they were.
  */
-export function useResolvedTheme(stored: IslandSettings, save: (settings: IslandSettings) => void) {
+export function useResolvedTheme(stored: IslandSettings) {
   const systemDark = useSystemDark();
-  const settings = useMemo(() => resolveThemeColors(stored, systemDark), [stored, systemDark]);
-  const setSettings = useCallback((next: IslandSettings) => save(keepPickedColors(next, stored)), [save, stored]);
-  return [settings, setSettings] as const;
+  return useMemo(() => resolveThemeColors(stored, systemDark), [stored, systemDark]);
 }

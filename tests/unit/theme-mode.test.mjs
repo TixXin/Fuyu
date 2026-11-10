@@ -1,45 +1,54 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { keepPickedColors, resolveThemeColors, THEME_COLORS } from "../../src/features/appearance/themeMode.ts";
+import { collapsedThemeColors, resolveThemeColors, THEME_COLORS, themeColors, withThemeColors } from "../../src/features/appearance/themeMode.ts";
 import { DEFAULT_SETTINGS, normalizeSettings } from "../../src/features/appearance/settings.ts";
+import { parseTheme } from "../../src/features/appearance/theme.ts";
 import { isLightIsland } from "../../src/utils/color.ts";
 
-const picked = { ...DEFAULT_SETTINGS, islandBackgroundColor: "#336699", taskTextColor: "#ffcc00", pulseColor: "#ff00ff" };
-
-test("dark, light and system use the built-in colours; custom keeps the picked ones (C31)", () => {
-  assert.equal(resolveThemeColors({ ...picked, themeMode: "dark" }, false).islandBackgroundColor, THEME_COLORS.dark.islandBackgroundColor);
-  assert.equal(resolveThemeColors({ ...picked, themeMode: "light" }, true).islandBackgroundColor, THEME_COLORS.light.islandBackgroundColor);
-  assert.equal(resolveThemeColors({ ...picked, themeMode: "system" }, true).taskTextColor, THEME_COLORS.dark.taskTextColor);
-  assert.equal(resolveThemeColors({ ...picked, themeMode: "system" }, false).taskTextColor, THEME_COLORS.light.taskTextColor);
-  assert.equal(resolveThemeColors({ ...picked, themeMode: "custom" }, false).islandBackgroundColor, "#336699");
+test("the island uses the dark or light set, or the system's (C31, C33.3)", () => {
+  const tuned = withThemeColors(DEFAULT_SETTINGS, "dark", { islandBackgroundColor: "#102030", taskTextColor: "#ffffff", pulseColor: "#00ff88" });
+  assert.equal(resolveThemeColors({ ...tuned, themeMode: "dark" }, false).islandBackgroundColor, "#102030");
+  assert.equal(resolveThemeColors({ ...tuned, themeMode: "light" }, true).islandBackgroundColor, THEME_COLORS.light.islandBackgroundColor);
+  assert.equal(resolveThemeColors({ ...tuned, themeMode: "system" }, true).islandBackgroundColor, "#102030");
+  assert.equal(resolveThemeColors({ ...tuned, themeMode: "system" }, false).taskTextColor, THEME_COLORS.light.taskTextColor);
+  // Adjusting one set leaves the other as it was.
+  assert.deepEqual(themeColors(tuned, "light"), THEME_COLORS.light);
   assert.ok(isLightIsland(THEME_COLORS.light.islandBackgroundColor));
   assert.ok(!isLightIsland(THEME_COLORS.dark.islandBackgroundColor));
 });
 
-test("saving while a built-in theme is on keeps the colours picked by hand", () => {
-  const stored = { ...picked, themeMode: "light" };
-  const shown = resolveThemeColors(stored, false);
-  const saved = keepPickedColors({ ...shown, opacity: 80 }, stored);
-  assert.equal(saved.opacity, 80);
-  assert.equal(saved.islandBackgroundColor, "#336699");
-  const custom = keepPickedColors({ ...shown, themeMode: "custom", islandBackgroundColor: "#ffffff" }, stored);
-  assert.equal(custom.islandBackgroundColor, "#ffffff");
-});
-
-test("new installs start dark; older settings keep their own colours", () => {
+test("settings from before the two sets keep their colours, in the set they look like", () => {
   assert.equal(DEFAULT_SETTINGS.themeMode, "dark");
-  assert.equal(normalizeSettings({ opacity: 95 }).themeMode, "custom");
-  assert.equal(normalizeSettings({ themeMode: "light" }).themeMode, "light");
-  assert.equal(normalizeSettings({ themeMode: "sepia" }).themeMode, "custom");
+  const darkPick = normalizeSettings({ opacity: 95, islandBackgroundColor: "#336699", taskTextColor: "#ffcc00", pulseColor: "#ff00ff" });
+  assert.equal(darkPick.themeMode, "dark");
+  assert.deepEqual(themeColors(darkPick, "dark"), { islandBackgroundColor: "#336699", taskTextColor: "#ffcc00", pulseColor: "#ff00ff" });
+  assert.deepEqual(themeColors(darkPick, "light"), THEME_COLORS.light);
+  assert.equal(resolveThemeColors(darkPick, true).islandBackgroundColor, "#336699", "nothing looks different after the upgrade");
+  const lightPick = normalizeSettings({ islandBackgroundColor: "#fafafa", taskTextColor: "#111111", pulseColor: "#3ae489" });
+  assert.equal(lightPick.themeMode, "light");
+  assert.equal(lightPick.lightBackgroundColor, "#fafafa");
+  // C31's built-in modes showed the shipped sets.
+  assert.equal(normalizeSettings({ themeMode: "system", islandBackgroundColor: "#336699" }).darkBackgroundColor, THEME_COLORS.dark.islandBackgroundColor);
+  assert.equal(normalizeSettings({ themeMode: "sepia" }).themeMode, "dark");
 });
 
-test("a light island can stay dark while collapsed (C33.2)", async () => {
-  const { collapsedThemeColors } = await import("../../src/features/appearance/themeMode.ts");
-  const light = resolveThemeColors({ ...DEFAULT_SETTINGS, themeMode: "light", collapsedDark: true }, false);
-  assert.equal(collapsedThemeColors(light).islandBackgroundColor, THEME_COLORS.dark.islandBackgroundColor);
+test("a theme file from before the two sets puts its colours into the set they look like", () => {
+  const file = JSON.stringify({ app: "fly-island", kind: "theme", version: 1, name: "Paper", appearance: { islandBackgroundColor: "#f7f3e8", taskTextColor: "#222222", pulseColor: "#d4502a" } });
+  const current = { ...DEFAULT_SETTINGS, themeMode: "system" };
+  const parsed = parseTheme(file, current);
+  assert.ok("settings" in parsed);
+  assert.equal(parsed.settings.themeMode, "light");
+  assert.equal(parsed.settings.lightBackgroundColor, "#f7f3e8");
+  assert.equal(parsed.settings.darkBackgroundColor, THEME_COLORS.dark.islandBackgroundColor);
+});
+
+test("a light island can stay dark while collapsed, in the dark set's colours (C33.2)", () => {
+  const tuned = withThemeColors({ ...DEFAULT_SETTINGS, collapsedDark: true }, "dark", { ...THEME_COLORS.dark, islandBackgroundColor: "#101820" });
+  const light = resolveThemeColors({ ...tuned, themeMode: "light" }, false);
+  assert.equal(collapsedThemeColors(light).islandBackgroundColor, "#101820");
   assert.equal(collapsedThemeColors({ ...light, collapsedDark: false }).islandBackgroundColor, THEME_COLORS.light.islandBackgroundColor);
-  const dark = resolveThemeColors({ ...DEFAULT_SETTINGS, themeMode: "dark" }, false);
+  const dark = resolveThemeColors({ ...tuned, themeMode: "dark" }, false);
   assert.equal(collapsedThemeColors(dark), dark);
   assert.equal(DEFAULT_SETTINGS.collapsedDark, true);
-  assert.equal(normalizeSettings({ opacity: 95 }).collapsedDark, false, "older settings keep their picked light colour when collapsed");
+  assert.equal(normalizeSettings({ opacity: 95 }).collapsedDark, false, "older settings keep a picked light colour when collapsed");
 });

@@ -7,7 +7,7 @@ import {
   MIN_ISLAND_CORNER_RADIUS, MIN_MAX_PANEL_HEIGHT, MIN_TOP_FILLET_RADIUS,
   MAX_PANEL_WIDTH, MIN_PANEL_WIDTH,
 } from "./settingsLimits.ts";
-import { THEME_MODES } from "./themeMode.ts";
+import { hasThemeSets, THEME_COLOR_KEYS, THEME_COLORS, THEME_MODES, themeSetsFromSingleColors } from "./themeMode.ts";
 import { oneOf } from "./settingsLimits.ts";
 import type { IslandSettings, LegacyIslandSettings } from "./types";
 
@@ -80,7 +80,7 @@ export function normalizeLayoutSettings(settings: LegacyIslandSettings | null | 
       settings?.islandBackgroundColor,
       DEFAULT_SETTINGS.islandBackgroundColor,
     ),
-    themeMode: oneOf(THEME_MODES, settings?.themeMode, LEGACY_FALLBACKS.themeMode),
+    ...normalizeThemeSets(settings),
     collapsedDark: typeof settings?.collapsedDark === "boolean" ? settings.collapsedDark : LEGACY_FALLBACKS.collapsedDark,
     showTitle:
       typeof settings?.showTitle === "boolean"
@@ -91,4 +91,22 @@ export function normalizeLayoutSettings(settings: LegacyIslandSettings | null | 
         ? settings.showCollapsedText
         : DEFAULT_SETTINGS.showCollapsedText,
   } satisfies Partial<IslandSettings>;
+}
+
+/**
+ * The mode and the two colour sets (C33.3). Settings from before the sets put their one set of
+ * colours into the set it looks like (themeSetsFromSingleColors), so nothing changes on upgrade.
+ */
+function normalizeThemeSets(settings: LegacyIslandSettings | null | undefined) {
+  const source = (settings ?? {}) as Record<string, unknown>;
+  const merged = hasThemeSets(source) ? source : { ...source, ...themeSetsFromSingleColors(source) };
+  const sets = Object.fromEntries(
+    (["dark", "light"] as const).flatMap((tone) =>
+      (Object.entries(THEME_COLOR_KEYS[tone]) as [keyof typeof THEME_COLORS.dark, string][]).map(([name, key]) => [
+        key,
+        getColorSetting(merged[key], THEME_COLORS[tone][name]),
+      ]),
+    ),
+  ) as Pick<IslandSettings, "darkBackgroundColor" | "darkTextColor" | "darkPulseColor" | "lightBackgroundColor" | "lightTextColor" | "lightPulseColor">;
+  return { themeMode: oneOf(THEME_MODES, merged.themeMode, DEFAULT_SETTINGS.themeMode), ...sets };
 }

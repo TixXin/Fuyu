@@ -1,4 +1,5 @@
 import { THEME_SETTING_KEYS, normalizeSettings, withThemeFrom } from "../appearance/settings.ts";
+import { hasThemeSets, themeSetsFromSingleColors } from "../appearance/themeMode.ts";
 import type { IslandSettings } from "../appearance/types";
 
 type Text = { "zh-CN": string; en: string };
@@ -51,11 +52,15 @@ export function readMarketThemes(entries: readonly unknown[]): MarketTheme[] {
 
 /** `current` with the theme applied: only theme fields change, every value checked. */
 export function withMarketTheme(current: IslandSettings, theme: MarketTheme): IslandSettings {
-  return withThemeFrom(current, normalizeSettings({ ...current, ...theme.appearance } as IslandSettings));
+  // A theme from before the two colour sets (C33.3) puts its colours into the set they look like.
+  const sets = hasThemeSets(theme.appearance) ? {} : themeSetsFromSingleColors({ ...current, themeMode: "custom", ...theme.appearance });
+  return withThemeFrom(current, normalizeSettings({ ...current, ...theme.appearance, ...sets } as IslandSettings));
 }
 
 /** Whether `current` already looks like the theme. */
 export function isThemeInUse(current: IslandSettings, theme: MarketTheme) {
   const applied = withMarketTheme(current, theme);
-  return THEME_SETTING_KEYS.every((key) => applied[key] === current[key]);
+  // The three single colours are only a copy of the set in use (C33.3), so they are not compared.
+  const copies = new Set<string>(["islandBackgroundColor", "taskTextColor", "pulseColor"]);
+  return THEME_SETTING_KEYS.every((key) => copies.has(key) || applied[key] === current[key]);
 }

@@ -417,23 +417,42 @@
       "zh-CN": {
         "group": "浅色和深色",
         "title": "配色",
-        "description": "深色是黑色的岛，浅色是浅灰的岛配深色文字；跟随系统按 Windows 的深色 / 浅色模式自动切换。在下面自己挑颜色就成了自定义，切回深色或浅色时自定义的颜色还留着。",
+        "description": "深色、浅色各有一套颜色；跟随系统按 Windows 的深色 / 浅色模式在两套之间自动切换。",
         "options": [
           "深色",
           "浅色",
-          "跟随系统",
-          "自定义"
+          "跟随系统"
         ]
       },
       "en": {
         "group": "Light and dark",
         "title": "Colors",
-        "description": "Dark is a black island, light a pale grey one with dark text; System follows Windows' dark or light mode. Picking a color below makes it custom, and your custom colors stay when you switch back.",
+        "description": "Dark and light each have their own colors; System switches between them with Windows' dark or light mode.",
         "options": [
           "Dark",
           "Light",
-          "System",
-          "Custom"
+          "System"
+        ]
+      }
+    },
+    {
+      "page": "theme",
+      "zh-CN": {
+        "group": "浅色和深色",
+        "title": "调整哪一套",
+        "description": "下面的颜色改的是这一套，预览也显示这一套。",
+        "options": [
+          "深色",
+          "浅色"
+        ]
+      },
+      "en": {
+        "group": "Light and dark",
+        "title": "Adjusting",
+        "description": "The colors below change this set, and the preview shows it.",
+        "options": [
+          "Dark",
+          "Light"
         ]
       }
     },

@@ -11,8 +11,8 @@ export type AppearanceMode = "classic" | "liquidGlass";
 export type IslandFont = "system" | "pixel";
 /** Shape of the island's corners: CSS `corner-shape: squircle`, or a circular arc. */
 export type IslandCornerShape = "squircle" | "round";
-/** Built-in colours (C31): dark, light, whichever Windows uses, or the colours picked by hand. */
-export type ThemeMode = "dark" | "light" | "system" | "custom";
+/** Which colour set the island uses (C31, C33.3): dark, light, or whichever Windows uses. */
+export type ThemeMode = "dark" | "light" | "system";
 /** Which monitor the island sits on: the primary one, or it follows the pointer or the foreground window there. */
 export type IslandMonitor = "primary" | "cursor" | "foreground";
 /** How the collapsed island opens: a click, or resting the pointer on it. */
@@ -60,6 +60,13 @@ export type IslandSettings = CalendarSettingValues & {
   islandCornerRadius: number;
   islandCornerShape: IslandCornerShape;
   themeMode: ThemeMode;
+  /** The dark and light colour sets, each adjustable (C33.3); the three colours above copy one. */
+  darkBackgroundColor: string;
+  darkTextColor: string;
+  darkPulseColor: string;
+  lightBackgroundColor: string;
+  lightTextColor: string;
+  lightPulseColor: string;
   /** A light island still shows dark while collapsed, to blend into the screen's top edge (C33.2). */
   collapsedDark: boolean;
   /** Height (px) of every expanded page (C27); longer content scrolls inside. */

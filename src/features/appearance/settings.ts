@@ -20,6 +20,12 @@ export { DEFAULT_SETTINGS } from "./settingsDefaults.ts";
 export const THEME_SETTING_KEYS = [
   "themeMode",
   "collapsedDark",
+  "darkBackgroundColor",
+  "darkTextColor",
+  "darkPulseColor",
+  "lightBackgroundColor",
+  "lightTextColor",
+  "lightPulseColor",
   "appearanceMode",
   "fontFamily",
   "glassIntensity",

@@ -2,6 +2,7 @@
 // Pure; useSettingPresets saves the file and turns an imported one into a preset.
 
 import { THEME_SETTING_KEYS, normalizeSettings, withThemeFrom } from "./settings.ts";
+import { hasThemeSets, themeColors, themeSetsFromSingleColors } from "./themeMode.ts";
 import type { IslandSettings } from "./types";
 
 /** Longer names are cut; the preset list shows one line anyway. */
@@ -23,8 +24,11 @@ export type ThemeProblem = "notJson" | "notTheme" | "newerVersion";
 
 /** The theme file of a preset: its name and its look, nothing else. */
 export function buildTheme(name: string, settings: IslandSettings, now: Date): ThemeFile {
+  // The single colours copy the set the mode uses (dark for "system"): islands from before the two
+  // sets (C33.3) read only those.
+  const shown = { ...settings, ...themeColors(settings, settings.themeMode === "light" ? "light" : "dark") };
   const appearance = Object.fromEntries(
-    THEME_SETTING_KEYS.map((key) => [key, settings[key]]),
+    THEME_SETTING_KEYS.map((key) => [key, shown[key]]),
   ) as ThemeFile["appearance"];
   return { app: "fly-island", kind: "theme", version: 1, name, exportedAt: now.toISOString(), appearance };
 }
@@ -61,7 +65,9 @@ export function parseTheme(
   const picked = Object.fromEntries(
     THEME_SETTING_KEYS.filter((key) => key in source).map((key) => [key, source[key]]),
   );
-  const settings = withThemeFrom(current, normalizeSettings({ ...current, ...picked }));
+  // A file from before the two colour sets (C33.3) puts its colours into the set they look like.
+  const sets = hasThemeSets(picked) ? {} : themeSetsFromSingleColors({ ...current, themeMode: "custom", ...picked });
+  const settings = withThemeFrom(current, normalizeSettings({ ...current, ...picked, ...sets }));
   const name = typeof file.name === "string" ? file.name.trim().slice(0, MAX_THEME_NAME_LENGTH) : "";
   return { name, settings };
 }
