@@ -189,6 +189,18 @@ if (!automated) {
     await act(async () => { await new Promise((resolve) => setTimeout(resolve, 20)); });
     check(keybindingCalls.length === 1 && keybindingCalls[0].id === "dev.example.todo-sync" && keybindingCalls[0].command === "sync-now" && keybindingCalls[0].keybinding === "",
       "Turning a plugin shortcut off saves an empty shortcut for that command");
+    const finder = element<HTMLButtonElement>("button[aria-label='按键查询']");
+    await act(async () => { finder.click(); });
+    await act(async () => { finder.dispatchEvent(new KeyboardEvent("keydown", { key: "t", ctrlKey: true, altKey: true, bubbles: true })); });
+    check(element(".shortcut-finder__result").textContent?.startsWith("Ctrl+Alt+T 已用于「翻译选中文字」（翻译）"), "The key finder names the shortcut that uses the pressed keys and its page");
+    await act(async () => { element<HTMLButtonElement>(".shortcut-finder__result .settings-link-button").click(); });
+    const translationRows = texts(".settings-group__card > .shortcut-row .shortcut-control__meta span");
+    check(element(".settings-page__title").textContent === "翻译" && translationRows === "打开快捷翻译|翻译选中文字",
+      "Its link opens the Translation page, where the same shortcuts are recorded in place");
+    await act(async () => { [...document.querySelectorAll<HTMLButtonElement>(".settings-group__header .settings-link-button")].find((link) => link.textContent === "全部快捷键 ›")?.click(); });
+    check(element(".settings-page__title").textContent === "快捷键", "A feature page's shortcut group links back to all shortcuts");
+    await openPage("behavior");
+    check(texts(".settings-group__title").includes("页面切换"), "Page switching keys are recorded on the Behavior page too");
 
     const storedSettings = () => JSON.parse(localStorage.getItem("fuyu-settings") ?? "{}") as { opacity?: number; carryOverIncompleteTodos?: boolean };
     check(!document.querySelector(".appearance-reset"), "Reset appearance is not offered outside the theme page");

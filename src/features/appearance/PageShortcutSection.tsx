@@ -1,4 +1,4 @@
-import { useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
+import { useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
 import { Keyboard } from "lucide-react";
 import { ShortcutResetButton } from "../../components/controls/ShortcutResetButton";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
@@ -26,10 +26,13 @@ export function PageShortcutSection({
   settings,
   onSettingsChange,
   takenBy,
+  action,
 }: {
   settings: IslandSettings;
   onSettingsChange: (settings: IslandSettings) => void;
   takenBy: (shortcut: string, selfId: Recording) => string | null;
+  /** The link at the end of the title: to the Shortcuts page, or from it to the Behavior page. */
+  action?: ReactNode;
 }) {
   const t = useTranslation();
   const [recording, setRecording] = useState<Recording | null>(null);
@@ -73,6 +76,7 @@ export function PageShortcutSection({
   return (
     <SettingsGroup
       title={t.settings.pageShortcuts.title}
+      action={action}
       footer={conflict ? <span className="shortcut-control__error" role="alert">{conflict}</span> : t.settings.pageShortcuts.hint}
     >
       {rows.map(([field, label, display, value, fallback]) => (

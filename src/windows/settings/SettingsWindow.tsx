@@ -178,7 +178,7 @@ export function SettingsWindow() {
             onSettingsChange={setSettings}
           />
         )}
-        {category === "behavior" && <BehaviorSettingsPage settings={settings} onSettingsChange={setSettings} />}
+        {category === "behavior" && <BehaviorSettingsPage settings={settings} onSettingsChange={setSettings} onOpenShortcuts={openShortcuts} />}
         {category === "appearance" && <AppearanceSettingsPage settings={settings} onSettingsChange={setSettings} />}
         {category === "theme" && <ThemeSettingsPage settings={settings} presets={presets} onSettingsChange={setSettings} />}
         {category === "themeMarket" && (
@@ -189,7 +189,7 @@ export function SettingsWindow() {
             onSave={(theme, look) => void presets.onImportPreset(JSON.stringify(buildTheme(theme.name[locale], look, new Date())))}
           />
         )}
-        {category === "shortcuts" && <ShortcutsSettingsPage settings={settings} onSettingsChange={setSettings} />}
+        {category === "shortcuts" && <ShortcutsSettingsPage settings={settings} onSettingsChange={setSettings} onOpenPage={changeCategory} />}
         {category === "todos" && (
           <TodosSettingsPage
             settings={settings}
@@ -201,7 +201,7 @@ export function SettingsWindow() {
           <MessagesSettingsPage settings={settings} qqNotifications={qqNotifications} wechatReminders={wechatReminders} onSettingsChange={setSettings} />
         )}
         {category === "translation" && <TranslationSettingsPage settings={settings} onSettingsChange={setSettings} onOpenShortcuts={openShortcuts} />}
-        {category === "clipboard" && <ClipboardSettingsPage onOpenShortcuts={openShortcuts} />}
+        {category === "clipboard" && <ClipboardSettingsPage settings={settings} onOpenShortcuts={openShortcuts} />}
         {category === "music" && <MusicSettingsPage settings={settings} onSettingsChange={setSettings} />}
         {category === "shelf" && <ShelfSettingsPage settings={settings} onSettingsChange={setSettings} />}
         {category === "screenshot" && <ScreenshotSettingsPage settings={settings} onSettingsChange={setSettings} />}
@@ -213,7 +213,7 @@ export function SettingsWindow() {
         {category === "sounds" && <SoundSettingsSection />}
         {category === "agentApprovals" && <AgentApprovalSettings />}
         {category === "agentConnect" && <AgentConnectSettingsPage />}
-        {category === "plugins" && <PluginsSettingsPage managedPluginId={managedPluginId} />}
+        {category === "plugins" && <PluginsSettingsPage settings={settings} managedPluginId={managedPluginId} onOpenShortcuts={openShortcuts} />}
         {category === "market" && <PluginMarketSection onManage={managePlugin} />}
         {category === "about" && <AboutSettingsPage onSettingsChange={setSettings} />}
       </LayoutEditor>

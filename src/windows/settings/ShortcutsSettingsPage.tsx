@@ -1,27 +1,25 @@
+import type { ReactNode } from "react";
 import { PageShortcutSection } from "../../features/appearance/PageShortcutSection";
-import {
-  DEFAULT_PAGE_NEXT_SHORTCUT,
-  DEFAULT_PAGE_PREVIOUS_SHORTCUT,
-  normalizePageCycleShortcut,
-  normalizePageDigitModifiers,
-} from "../../features/appearance/pageShortcuts";
 import type { IslandSettings } from "../../features/appearance/types";
-import { ClipboardShortcutRows } from "../../features/clipboard/ClipboardShortcutRows";
+import { APPROVAL_HOTKEYS, type AgentApprovalDecision } from "../../features/agent-status/approvals/api";
 import { useClipboardSettings } from "../../features/clipboard/useClipboardSettings";
 import { PluginShortcutSection } from "../../features/plugins/PluginShortcutSection";
-import { TranslationShortcutRows } from "../../features/translation/TranslationShortcutRows";
 import { useTranslationSettings } from "../../features/translation/useTranslationSettings";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton";
 import { SettingsRow } from "../../components/settings/SettingsRow";
 import { useTranslation } from "../../i18n";
-import { findShortcutOwner, type ShortcutOwner } from "./shortcutConflicts";
+import type { SettingsCategory } from "./categories";
+import { ShortcutFinder } from "./ShortcutFinder";
+import { ClipboardShortcutGroup, TranslationShortcutGroup } from "./ShortcutGroups";
+import type { ShortcutOwner } from "./shortcutConflicts";
+import { useShortcutOwners } from "./useShortcutOwners";
 import "./ShortcutsSettingsPage.css";
 
 /** Keys that cannot be changed, listed for reference: one row each, the keys as a keycap. */
-function ReferenceSection({ title, rows }: { title: string; rows: [string, string][] }) {
+function ReferenceSection({ title, rows, footer, action }: { title: string; rows: [string, string][]; footer?: string; action?: ReactNode }) {
   return (
-    <SettingsGroup title={title}>
+    <SettingsGroup title={title} footer={footer} action={action}>
       {rows.map(([label, keys]) => (
         <SettingsRow key={label} title={label} control={<kbd className="shortcut-keycap">{keys}</kbd>} />
       ))}
@@ -30,87 +28,77 @@ function ReferenceSection({ title, rows }: { title: string; rows: [string, strin
 }
 
 /**
- * Every keyboard shortcut in one place: the global ones and page switching are edited
- * here, the fixed keys are listed for reference. Feature pages link to this page.
+ * Every keyboard shortcut in one place, by the feature it belongs to. The same recorders
+ * also sit on each feature's own page; here each group links there, a feature that is off
+ * keeps its group with a switch to turn it on, and the finder at the top says what any key
+ * combination is used for.
  */
 export function ShortcutsSettingsPage({
   settings,
   onSettingsChange,
+  onOpenPage,
 }: {
   settings: IslandSettings;
   onSettingsChange: (settings: IslandSettings) => void;
+  onOpenPage: (page: SettingsCategory) => void;
 }) {
   const t = useTranslation();
+  const text = t.settings.shortcuts;
   const [clipboardSettings, updateClipboardSettings] = useClipboardSettings();
   const [translationSettings, setTranslationSettings] = useTranslationSettings();
-  const hasGlobal = settings.translationEnabled || clipboardSettings.enabled;
+  const { owners, takenBy, refreshPlugins } = useShortcutOwners({ settings, clipboard: clipboardSettings, translation: translationSettings });
+  const pageLink = (page: SettingsCategory) => <SettingsLinkButton onClick={() => onOpenPage(page)}>{text.openFeaturePage}</SettingsLinkButton>;
 
-  // A global hotkey swallows its keys everywhere, so it may not reuse another global
-  // shortcut or the island's page keys.
-  const digitModifiers = normalizePageDigitModifiers(settings.pageDigitModifiers);
-  const owners: ShortcutOwner[] = [
-    ...(settings.translationEnabled ? [
-      { id: "window", label: t.settings.shortcuts.openTranslation, shortcut: translationSettings.shortcut },
-      { id: "selection", label: t.settings.translation.selectionShortcut, shortcut: translationSettings.selectionShortcut },
-    ] : []),
-    ...(clipboardSettings.enabled && clipboardSettings.shortcutEnabled
-      ? [{ id: "clipboard", label: t.settings.clipboard.shortcut, shortcut: clipboardSettings.shortcut }]
-      : []),
-    { id: "next", label: t.settings.pageShortcuts.nextPage, shortcut: normalizePageCycleShortcut(settings.pageNextShortcut, DEFAULT_PAGE_NEXT_SHORTCUT) },
-    { id: "previous", label: t.settings.pageShortcuts.previousPage, shortcut: normalizePageCycleShortcut(settings.pagePreviousShortcut, DEFAULT_PAGE_PREVIOUS_SHORTCUT) },
-    ...Array.from({ length: 9 }, (_, index) => ({
-      id: "digit", label: t.settings.pageShortcuts.digitModifiers, shortcut: `${digitModifiers}+${index + 1}`,
-    })),
-  ];
-  const takenBy = (shortcut: string, selfId: string) => findShortcutOwner(shortcut, owners, selfId);
+  const approvalLabels: Partial<Record<AgentApprovalDecision, string>> = { allow: t.agent.approval.allow, deny: t.agent.approval.deny, terminal: t.agent.approval.terminal };
+  const approvalLabel = (action: AgentApprovalDecision) => approvalLabels[action] ?? action;
+  const approvalOwners: ShortcutOwner[] = APPROVAL_HOTKEYS.map(({ action, shortcut }) => ({
+    id: `approval:${action}`, label: `${text.approvalTitle} · ${approvalLabel(action)}`, shortcut, home: "agentApprovals",
+  }));
 
   return (
     <>
-      <SettingsGroup
-        title={t.settings.shortcuts.globalTitle}
-        footer={hasGlobal ? [t.settings.shortcuts.globalHint, settings.translationEnabled ? t.settings.translation.selectionShortcutHint : ""].filter(Boolean).join(" ") : undefined}
-      >
-        {settings.translationEnabled && (
-          <TranslationShortcutRows settings={translationSettings} onSettingsChange={setTranslationSettings} takenBy={takenBy} />
-        )}
-        {clipboardSettings.enabled && (
-          <ClipboardShortcutRows
-            clipboardSettings={clipboardSettings}
-            onClipboardSettingsChange={updateClipboardSettings}
-            takenBy={(shortcut) => takenBy(shortcut, "clipboard")}
-          />
-        )}
-        {!hasGlobal && <SettingsRow searchable={false} title={<span className="shortcut-empty">{t.settings.shortcuts.noGlobal}</span>} />}
-      </SettingsGroup>
-      <PluginShortcutSection takenBy={takenBy} />
-      <PageShortcutSection settings={settings} onSettingsChange={onSettingsChange} takenBy={takenBy} />
+      <ShortcutFinder owners={[...owners, ...approvalOwners]} onOpenPage={onOpenPage} />
+      <TranslationShortcutGroup
+        title={t.settings.categories.translation}
+        action={pageLink("translation")}
+        enabled={settings.translationEnabled}
+        translation={translationSettings}
+        onTranslationChange={setTranslationSettings}
+        takenBy={takenBy}
+        onTurnOn={() => onSettingsChange({ ...settings, translationEnabled: true })}
+      />
+      <ClipboardShortcutGroup
+        title={t.settings.categories.clipboard}
+        action={pageLink("clipboard")}
+        clipboard={clipboardSettings}
+        onClipboardChange={updateClipboardSettings}
+        takenBy={takenBy}
+        onTurnOn={() => updateClipboardSettings({ ...clipboardSettings, enabled: true })}
+      />
+      <PluginShortcutSection takenBy={takenBy} onChanged={refreshPlugins} action={pageLink("plugins")} />
+      <PageShortcutSection settings={settings} onSettingsChange={onSettingsChange} takenBy={takenBy} action={pageLink("behavior")} />
       <ReferenceSection
-        title={t.settings.shortcuts.islandTitle}
-        rows={[[t.settings.shortcuts.collapse, "Esc"], [t.settings.shortcuts.moveIsland, t.settings.shortcuts.altDrag], [t.settings.shortcuts.resizePanel, t.settings.shortcuts.altDragEdge]]}
+        title={text.islandTitle}
+        rows={[[text.collapse, "Esc"], [text.moveIsland, text.altDrag], [text.resizePanel, text.altDragEdge]]}
       />
       {settings.translationEnabled && (
         <ReferenceSection
-          title={t.settings.shortcuts.inputTitle}
-          rows={[
-            [t.settings.shortcuts.translate, "Enter"],
-            [t.settings.shortcuts.newLine, "Shift + Enter"],
-            [t.settings.shortcuts.pasteClipboard, "Tab"],
-          ]}
+          title={text.inputTitle}
+          rows={[[text.translate, "Enter"], [text.newLine, "Shift + Enter"], [text.pasteClipboard, "Tab"]]}
         />
       )}
+      <ReferenceSection
+        title={text.approvalTitle}
+        rows={APPROVAL_HOTKEYS.map(({ action, shortcut }) => [approvalLabel(action), shortcut])}
+        footer={text.approvalHint}
+        action={pageLink("agentApprovals")}
+      />
     </>
   );
 }
 
-/** Stands where a feature page used to record its shortcut; opens the Shortcuts page. */
-export function ShortcutsLinkSection({ onOpen }: { onOpen: () => void }) {
+/** A feature page's link to the Shortcuts page, at the end of its shortcut group's title. */
+export function AllShortcutsLink({ onOpen }: { onOpen: () => void }) {
   const t = useTranslation();
-  return (
-    <SettingsGroup title={t.settings.categories.shortcuts}>
-      <SettingsRow searchable={false}
-        title={t.settings.shortcuts.editHint}
-        control={<SettingsLinkButton onClick={onOpen}>{t.settings.shortcuts.openPage}</SettingsLinkButton>}
-      />
-    </SettingsGroup>
-  );
+  return <SettingsLinkButton onClick={onOpen}>{t.settings.shortcuts.allShortcuts}</SettingsLinkButton>;
 }

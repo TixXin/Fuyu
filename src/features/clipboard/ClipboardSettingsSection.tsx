@@ -11,11 +11,13 @@ import { ClipboardRecordSettings } from "./ClipboardRecordSettings";
  * The clipboard history options below the module switch (which is `enabled`, set by the
  * page): where it opens and how a pick pastes (C22), then what is recorded and kept.
  * `children` are further rows from outside this feature, such as the island page's row count.
- * Its shortcut, and Win+V, are set on the Shortcuts page.
+ * `shortcuts` (the page's shortcut group, also on the Shortcuts page) goes between the two,
+ * under the choice of what the shortcut opens.
  */
-export function ClipboardSettingsSection({ clipboardSettings, onClipboardSettingsChange, children }: {
+export function ClipboardSettingsSection({ clipboardSettings, onClipboardSettingsChange, shortcuts, children }: {
   clipboardSettings: ClipboardHistorySettings;
   onClipboardSettingsChange: (settings: ClipboardHistorySettings) => void;
+  shortcuts?: ReactNode;
   children?: ReactNode;
 }) {
   const t = useTranslation();
@@ -123,6 +125,7 @@ export function ClipboardSettingsSection({ clipboardSettings, onClipboardSetting
         )}
         {children}
       </SettingsGroup>
+      {shortcuts}
       <ClipboardRecordSettings clipboardSettings={clipboardSettings} onChange={change} />
     </>
   );

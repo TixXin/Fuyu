@@ -1,0 +1,67 @@
+import { useState, type KeyboardEvent } from "react";
+import { Keyboard } from "lucide-react";
+import { buildShortcutFromEvent } from "../../features/clipboard/shortcut";
+import { SettingsGroup } from "../../components/settings/SettingsGroup";
+import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton";
+import { SettingsRow } from "../../components/settings/SettingsRow";
+import { useTranslation } from "../../i18n";
+import type { SettingsCategory } from "./categories";
+import { findShortcutOwnerRow, type ShortcutOwner } from "./shortcutConflicts";
+
+/**
+ * The Shortcuts page's first group: press any key combination and it says which shortcut of
+ * the island uses it, with a link to the page it is set on, or that it is free. Answers
+ * "can I use this?" before recording, and "what does this do?" for keys that do something.
+ */
+export function ShortcutFinder({ owners, onOpenPage }: {
+  owners: readonly ShortcutOwner[];
+  onOpenPage: (page: SettingsCategory) => void;
+}) {
+  const t = useTranslation();
+  const text = t.settings.shortcuts;
+  const [recording, setRecording] = useState(false);
+  const [pressed, setPressed] = useState<string | null>(null);
+  const owner = pressed ? findShortcutOwnerRow(pressed, owners, "") : undefined;
+
+  const record = (event: KeyboardEvent<HTMLButtonElement>) => {
+    if (!recording) return;
+    event.preventDefault();
+    event.stopPropagation();
+    if (event.key === "Escape") { setRecording(false); return; }
+    const shortcut = buildShortcutFromEvent(event.nativeEvent);
+    if (!shortcut) return;
+    setRecording(false);
+    setPressed(shortcut);
+  };
+
+  const result = !pressed ? null : owner ? (
+    <span className="shortcut-finder__result" role="status">
+      {text.finderUsed(pressed, owner.label, owner.home ? t.settings.categories[owner.home] : text.featureTitle)}
+      {owner.home ? <SettingsLinkButton onClick={() => owner.home && onOpenPage(owner.home)}>{text.finderOpen}</SettingsLinkButton> : null}
+    </span>
+  ) : (
+    <span className="shortcut-finder__result shortcut-finder__result--free" role="status">{text.finderFree(pressed)}</span>
+  );
+
+  return (
+    <SettingsGroup footer={result}>
+      <SettingsRow
+        title={text.finderTitle}
+        description={text.finderDescription}
+        control={
+          <button
+            className={`shortcut-record-button${recording ? " shortcut-record-button--recording" : ""}`}
+            type="button"
+            aria-label={text.finderTitle}
+            onClick={() => setRecording(true)}
+            onKeyDown={record}
+            onBlur={() => setRecording(false)}
+          >
+            <Keyboard size={14} strokeWidth={2.3} />
+            <span>{recording ? text.finderPress : pressed ?? text.finderIdle}</span>
+          </button>
+        }
+      />
+    </SettingsGroup>
+  );
+}

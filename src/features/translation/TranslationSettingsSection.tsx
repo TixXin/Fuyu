@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsInput } from "../../components/settings/SettingsInput";
 import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton";
@@ -8,14 +8,19 @@ import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
 import { useErrorText, useTranslation } from "../../i18n";
 import { deleteTranslationSecret, hasTranslationSecret, saveTranslationSecret } from "./api";
 import { DEFAULT_PROVIDER_MODELS, TRANSLATION_PROVIDERS } from "./providers";
-import { useTranslationSettings } from "./useTranslationSettings";
+import type { TranslationSettings } from "./storage";
 import "./TranslationSettingsSection.css";
 
-/** Service, model, key and behavior of quick translation; its shortcuts are on the Shortcuts page. */
-export function TranslationSettingsSection() {
+/**
+ * Service, model, key and behavior of quick translation. The page holds the settings: its
+ * shortcut group edits the same copy, and two copies in one window would undo each other.
+ */
+export function TranslationSettingsSection({ settings, setSettings }: {
+  settings: TranslationSettings;
+  setSettings: Dispatch<SetStateAction<TranslationSettings>>;
+}) {
   const t = useTranslation();
   const errorText = useErrorText();
-  const [settings, setSettings] = useTranslationSettings();
   const [hasSecret, setHasSecret] = useState(false);
   const [secretDraft, setSecretDraft] = useState("");
   const [savingSecret, setSavingSecret] = useState(false);

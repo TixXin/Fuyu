@@ -1,16 +1,25 @@
+import type { IslandSettings } from "../../features/appearance/types";
 import { ClipboardAiPromptSettings } from "../../features/clipboard/ClipboardAiPromptSettings";
 import { ClipboardSettingsSection } from "../../features/clipboard/ClipboardSettingsSection";
 import { ClipboardSnippetSettings } from "../../features/clipboard/ClipboardSnippetSettings";
 import { ClipboardTransferSettings } from "../../features/clipboard/ClipboardTransferSettings";
 import { useClipboardSettings } from "../../features/clipboard/useClipboardSettings";
+import { useTranslationSettings } from "../../features/translation/useTranslationSettings";
 import { useTranslation } from "../../i18n";
 import { ModuleSwitchSection } from "./ModuleSwitchSection";
-import { ShortcutsLinkSection } from "./ShortcutsSettingsPage";
+import { ClipboardShortcutGroup } from "./ShortcutGroups";
+import { AllShortcutsLink } from "./ShortcutsSettingsPage";
+import { useShortcutOwners } from "./useShortcutOwners";
 
-/** Settings → Clipboard. Its page on the island has the panel's size like every page (C27). */
-export function ClipboardSettingsPage({ onOpenShortcuts }: { onOpenShortcuts: () => void }) {
+/**
+ * Settings → Clipboard. Its page on the island has the panel's size like every page (C27); its
+ * shortcut is recorded here, under how it opens, as well as on the Shortcuts page.
+ */
+export function ClipboardSettingsPage({ settings, onOpenShortcuts }: { settings: IslandSettings; onOpenShortcuts: () => void }) {
   const t = useTranslation();
   const [clipboardSettings, updateClipboardSettings] = useClipboardSettings();
+  const [translationSettings] = useTranslationSettings();
+  const { takenBy } = useShortcutOwners({ settings, clipboard: clipboardSettings, translation: translationSettings });
 
   return (
     <>
@@ -23,12 +32,20 @@ export function ClipboardSettingsPage({ onOpenShortcuts }: { onOpenShortcuts: ()
         <ClipboardSettingsSection
           clipboardSettings={clipboardSettings}
           onClipboardSettingsChange={updateClipboardSettings}
+          shortcuts={
+            <ClipboardShortcutGroup
+              title={t.settings.shortcuts.featureTitle}
+              action={<AllShortcutsLink onOpen={onOpenShortcuts} />}
+              clipboard={clipboardSettings}
+              onClipboardChange={updateClipboardSettings}
+              takenBy={takenBy}
+            />
+          }
         />
       )}
       {clipboardSettings.enabled && <ClipboardSnippetSettings />}
       {clipboardSettings.enabled && <ClipboardAiPromptSettings clipboardSettings={clipboardSettings} onChange={updateClipboardSettings} />}
       {clipboardSettings.enabled && <ClipboardTransferSettings />}
-      {clipboardSettings.enabled && <ShortcutsLinkSection onOpen={onOpenShortcuts} />}
     </>
   );
 }

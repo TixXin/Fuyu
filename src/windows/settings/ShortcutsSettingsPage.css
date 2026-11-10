@@ -1,5 +1,5 @@
 /*
- * The Shortcuts page's groups hold the recorder rows of several features (.shortcut-row and
+ * The shortcut groups (on the Shortcuts page and on each feature's page) hold the recorder rows of several features (.shortcut-row and
  * .shortcut-control, ClipboardSettingsSection.css). In a card they read like the other rows: the
  * name in row type, the keys only on the recorder (not repeated under the name).
  */
@@ -40,4 +40,16 @@
 
 .shortcut-empty {
   color: var(--color-text-muted);
+}
+
+/* The finder's answer under its row: what uses the keys, and a link to that page. */
+.shortcut-finder__result {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+}
+
+.shortcut-finder__result--free {
+  color: var(--color-success, var(--color-text-muted));
 }

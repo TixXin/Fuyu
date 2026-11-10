@@ -1,12 +1,17 @@
 import type { IslandSettings, TranslationTarget } from "../../features/appearance/types";
+import { useClipboardSettings } from "../../features/clipboard/useClipboardSettings";
 import { TranslationSettingsSection } from "../../features/translation/TranslationSettingsSection";
+import { useTranslationSettings } from "../../features/translation/useTranslationSettings";
 import { useTranslation } from "../../i18n";
 import { ModuleSwitchSection } from "./ModuleSwitchSection";
-import { ShortcutsLinkSection } from "./ShortcutsSettingsPage";
+import { TranslationShortcutGroup } from "./ShortcutGroups";
+import { AllShortcutsLink } from "./ShortcutsSettingsPage";
+import { useShortcutOwners } from "./useShortcutOwners";
 import { SettingsChoice } from "../../components/settings/SettingsChoice";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsRow } from "../../components/settings/SettingsRow";
 
+/** Settings → Translation. Its shortcuts are recorded here as well as on the Shortcuts page. */
 export function TranslationSettingsPage({
   settings,
   onSettingsChange,
@@ -17,6 +22,10 @@ export function TranslationSettingsPage({
   onOpenShortcuts: () => void;
 }) {
   const t = useTranslation();
+  // The one copy on this page: the service section and the shortcut group both edit it.
+  const [translationSettings, setTranslationSettings] = useTranslationSettings();
+  const [clipboardSettings] = useClipboardSettings();
+  const { takenBy } = useShortcutOwners({ settings, clipboard: clipboardSettings, translation: translationSettings });
   const targets = [
     { value: "window", label: t.settings.translation.targetWindow },
     { value: "island", label: t.settings.translation.targetIsland },
@@ -44,8 +53,15 @@ export function TranslationSettingsPage({
           />
         </SettingsGroup>
       )}
-      {settings.translationEnabled && <TranslationSettingsSection />}
-      {settings.translationEnabled && <ShortcutsLinkSection onOpen={onOpenShortcuts} />}
+      {settings.translationEnabled && <TranslationSettingsSection settings={translationSettings} setSettings={setTranslationSettings} />}
+      <TranslationShortcutGroup
+        title={t.settings.shortcuts.featureTitle}
+        action={<AllShortcutsLink onOpen={onOpenShortcuts} />}
+        enabled={settings.translationEnabled}
+        translation={translationSettings}
+        onTranslationChange={setTranslationSettings}
+        takenBy={takenBy}
+      />
     </>
   );
 }

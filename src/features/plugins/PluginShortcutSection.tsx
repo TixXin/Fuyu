@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
+import { useCallback, useEffect, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
 import { Keyboard, X } from "lucide-react";
 import { ShortcutResetButton } from "../../components/controls/ShortcutResetButton";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
@@ -13,12 +13,18 @@ import "../clipboard/ClipboardSettingsSection.css";
 const RECHECK_MS = 600;
 
 /**
- * Settings → Shortcuts: the global shortcuts of the plugins that are on. Each
- * command can get a shortcut of the user's choice, be turned off, or go back
- * to the one its manifest declares. `takenBy` refuses keys another row of the
- * page (the island's own shortcuts) uses.
+ * The global shortcuts of the plugins that are on, on the Shortcuts and Plugins pages. Each
+ * command can get a shortcut of the user's choice, be turned off, or go back to the one its
+ * manifest declares. `takenBy` refuses keys any other shortcut (the island's or another
+ * plugin's) uses; `onChanged` tells its owner list that a plugin's keys changed.
  */
-export function PluginShortcutSection({ takenBy }: { takenBy: (shortcut: string, selfId: string) => string | null }) {
+export function PluginShortcutSection({ takenBy, onChanged, action, hideWhenEmpty = false }: {
+  takenBy: (shortcut: string, selfId: string) => string | null;
+  onChanged?: () => void;
+  action?: ReactNode;
+  /** On the Plugins page a group saying there is nothing would only be in the way. */
+  hideWhenEmpty?: boolean;
+}) {
   const t = useTranslation();
   const text = t.settings.shortcuts;
   const { locale } = useLocale();
@@ -39,13 +45,12 @@ export function PluginShortcutSection({ takenBy }: { takenBy: (shortcut: string,
 
   if (!snapshot) return null;
   const rows = pluginShortcutRows(snapshot.plugins);
+  if (hideWhenEmpty && rows.length === 0) return null;
   const name = (row: PluginShortcutRow) => `${row.title[locale]} · ${row.pluginName[locale]}`;
 
   const save = (row: PluginShortcutRow, keybinding: string | null) => {
     if (keybinding) {
-      const owner = takenBy(keybinding, row.key)
-        ?? rows.find((other) => other.key !== row.key && other.shortcut && other.shortcut.toLowerCase() === keybinding.toLowerCase())?.title[locale]
-        ?? null;
+      const owner = takenBy(keybinding, row.key);
       if (owner) {
         setErrors((current) => ({ ...current, [row.key]: text.taken(keybinding, owner) }));
         return;
@@ -55,6 +60,7 @@ export function PluginShortcutSection({ takenBy }: { takenBy: (shortcut: string,
     setPluginKeybinding(row.pluginId, row.commandId, keybinding)
       .then((next) => {
         setSnapshot(next);
+        onChanged?.();
         window.setTimeout(refresh, RECHECK_MS);
       })
       .catch((error: unknown) => setErrors((current) => ({ ...current, [row.key]: String(error) })));
@@ -72,7 +78,7 @@ export function PluginShortcutSection({ takenBy }: { takenBy: (shortcut: string,
   };
 
   return (
-    <SettingsGroup title={text.pluginTitle} footer={rows.length === 0 ? undefined : text.pluginHint}>
+    <SettingsGroup title={text.pluginTitle} action={action} footer={rows.length === 0 ? undefined : text.pluginHint}>
       {rows.length === 0 && <SettingsRow searchable={false} title={<span className="shortcut-empty">{text.pluginNone}</span>} />}
       {rows.map((row) => {
         const conflicts = snapshot.plugins.find((plugin) => plugin.id === row.pluginId)?.keybindingConflicts ?? [];
