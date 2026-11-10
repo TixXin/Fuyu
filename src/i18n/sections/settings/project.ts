@@ -14,6 +14,8 @@ export type SettingsProjectText = {
   quit: string;
   quitHint: string;
   quitAction: string;
+  website: string;
+  websiteHint: string;
   releases: string;
   releasesHint: string;
   issues: string;
@@ -107,6 +109,8 @@ export const zhCN: SettingsProjectText = {
   quit: "退出岛屿",
   quitHint: "和托盘菜单里的「退出」一样；要再打开，从开始菜单或桌面快捷方式启动。",
   quitAction: "退出",
+  website: "官网",
+  websiteHint: "fuyu.tix.xin：功能介绍和下载",
   releases: "版本发布",
   releasesHint: "查看更新说明，或手动下载安装包",
   issues: "反馈问题",
@@ -199,6 +203,8 @@ export const en: SettingsProjectText = {
   quit: "Quit the island",
   quitHint: "Same as Quit in the tray menu; start it again from the Start menu or a desktop shortcut.",
   quitAction: "Quit",
+  website: "Website",
+  websiteHint: "fuyu.tix.xin: features and downloads",
   releases: "Releases",
   releasesHint: "Read the notes, or download a build by hand",
   issues: "Report a problem",

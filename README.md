@@ -8,6 +8,8 @@
   <p>Windows 上的桌面灵动岛：待办、剪贴板、消息、翻译、音乐和 AI 状态，都在屏幕顶部的一座小岛上。</p>
 
   <p>
+    <a href="https://fuyu.tix.xin">官网</a>
+    ·
     <a href="https://github.com/TixXin/fuyu/releases/latest">下载</a>
     ·
     <a href="https://github.com/TixXin/fuyu/issues">反馈问题</a>
