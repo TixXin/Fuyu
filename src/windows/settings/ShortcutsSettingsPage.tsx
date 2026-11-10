@@ -86,7 +86,7 @@ export function ShortcutsSettingsPage({
       <PageShortcutSection settings={settings} onSettingsChange={onSettingsChange} takenBy={takenBy} />
       <ReferenceSection
         title={t.settings.shortcuts.islandTitle}
-        rows={[[t.settings.shortcuts.collapse, "Esc"], [t.settings.shortcuts.moveIsland, t.settings.shortcuts.ctrlDrag]]}
+        rows={[[t.settings.shortcuts.collapse, "Esc"], [t.settings.shortcuts.moveIsland, t.settings.shortcuts.altDrag], [t.settings.shortcuts.resizePanel, t.settings.shortcuts.altDragEdge]]}
       />
       {settings.translationEnabled && (
         <ReferenceSection

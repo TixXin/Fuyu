@@ -2,12 +2,12 @@
 
 use windows::Win32::UI::Input::KeyboardAndMouse::{
     keybd_event, GetAsyncKeyState, KEYBD_EVENT_FLAGS, KEYEVENTF_KEYUP, VIRTUAL_KEY, VK_CONTROL,
-    VK_LBUTTON, VK_RBUTTON,
+    VK_LBUTTON, VK_MENU, VK_RBUTTON,
 };
 
-/// Whether either Ctrl key is physically held right now.
-pub(crate) fn is_control_key_down() -> bool {
-    is_key_down(VK_CONTROL)
+/// Whether either Alt key is physically held right now.
+pub(crate) fn is_alt_key_down() -> bool {
+    is_key_down(VK_MENU)
 }
 
 /// Whether the left mouse button is physically held right now.

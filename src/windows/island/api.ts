@@ -32,11 +32,32 @@ export function listenIslandHover(
 // Mirrors ISLAND_MOVE_ARMED_CHANGED_EVENT in src-tauri/src/island/passthrough.rs.
 export const ISLAND_MOVE_ARMED_CHANGED_EVENT = "island-move-armed-changed";
 
-/** Calls `handler` whenever holding Ctrl over the island starts (`true`) or stops arming a move. */
+/** What an Alt press over the island does (C25); ModifierTarget in src-tauri/src/island/modifier.rs. */
+export type IslandModifierTarget = "none" | "move" | "width" | "height" | "both";
+
+/** Calls `handler` whenever what an Alt press over the island would do changes. */
 export function listenIslandMoveArmed(
-  handler: (armed: boolean) => void,
+  handler: (target: IslandModifierTarget) => void,
 ): Promise<UnlistenFn> {
-  return listen<boolean>(ISLAND_MOVE_ARMED_CHANGED_EVENT, ({ payload }) => handler(payload));
+  return listen<IslandModifierTarget>(ISLAND_MOVE_ARMED_CHANGED_EVENT, ({ payload }) => handler(payload));
+}
+
+// Mirrors ISLAND_HOLD_CHANGED_EVENT in src-tauri/src/island/passthrough.rs.
+const ISLAND_HOLD_CHANGED_EVENT = "island-hold-changed";
+
+/** Calls `handler` when holding Alt (or a resize) starts (`true`) or stops keeping the panel open. */
+export function listenIslandHold(handler: (held: boolean) => void): Promise<UnlistenFn> {
+  return listen<boolean>(ISLAND_HOLD_CHANGED_EVENT, ({ payload }) => handler(payload));
+}
+
+// Mirrors ISLAND_RESIZE_EVENT and ResizeDelta in src-tauri/src/island/modifier.rs.
+const ISLAND_RESIZE_EVENT = "island-resize";
+
+/** How much wider and taller (px, before the scale) an Alt + edge drag has made the panel so far. */
+export type IslandResizeDelta = { width: number; height: number; done: boolean };
+
+export function listenIslandResize(handler: (delta: IslandResizeDelta) => void): Promise<UnlistenFn> {
+  return listen<IslandResizeDelta>(ISLAND_RESIZE_EVENT, ({ payload }) => handler(payload));
 }
 
 // 与 src-tauri/src/island/mod.rs 中 start_island_drag 推送的事件名一致。

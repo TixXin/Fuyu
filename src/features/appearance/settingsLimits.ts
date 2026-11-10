@@ -47,6 +47,11 @@ export const DEFAULT_MAX_PANEL_HEIGHT = 490;
 export const MIN_MAX_PANEL_HEIGHT = 306;
 // The tallest expanded height the native window accepts.
 export const MAX_MAX_PANEL_HEIGHT = 546;
+// Expanded panel width (C25), before the scale; wider pages (calendar, plugin pages) stay wider.
+// The widest also has to fit the island window at the scale (maxExpandedIslandWidth in layout.ts).
+export const DEFAULT_PANEL_WIDTH = 560;
+export const MIN_PANEL_WIDTH = 480;
+export const MAX_PANEL_WIDTH = 800;
 export const DEFAULT_CLIPBOARD_VISIBLE_ROWS = 6;
 export const MIN_CLIPBOARD_VISIBLE_ROWS = 2;
 // Six rows is the tallest clipboard page the native window accepts (656px).

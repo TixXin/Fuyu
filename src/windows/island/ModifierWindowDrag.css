@@ -1,8 +1,23 @@
 /*
- * Ctrl held over the island (see useModifierWindowDrag.ts): every part of it,
- * including buttons and inputs, now moves the window instead, so say so.
+ * Alt held over the island (see useModifierWindowDrag.ts): every part of it, including buttons
+ * and inputs, now moves the window, or on the open panel's edges resizes it (C25), so say so.
  */
 html.island-move-armed,
 html.island-move-armed * {
   cursor: move !important;
+}
+
+html.island-move-armed[data-island-drag="width"],
+html.island-move-armed[data-island-drag="width"] * {
+  cursor: ew-resize !important;
+}
+
+html.island-move-armed[data-island-drag="height"],
+html.island-move-armed[data-island-drag="height"] * {
+  cursor: ns-resize !important;
+}
+
+html.island-move-armed[data-island-drag="both"],
+html.island-move-armed[data-island-drag="both"] * {
+  cursor: nwse-resize !important;
 }

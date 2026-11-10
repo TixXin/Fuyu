@@ -29,6 +29,7 @@ export const APPEARANCE_SETTING_KEYS = [
   "islandCornerRadius",
   "islandCornerShape",
   "maxPanelHeight",
+  "panelWidth",
   "taskTextColor",
   "pulseColor",
   "pulseBrightness",

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { isIslandHeld } from "./islandHold";
 import { listenIslandHover } from "./api";
 import type { IslandMode } from "./types";
 
@@ -153,7 +154,8 @@ export function useHoverExpand({ enabled, delayMs, paused, collapseDelayMs, mode
     let timer: number | undefined;
     const close = () => {
       // Check again later rather than closing under a draft or a held drag.
-      if (pressingRef.current || isEditingText()) {
+      // Alt held (C25) keeps it open too, for moving or resizing it.
+      if (pressingRef.current || isEditingText() || isIslandHeld()) {
         timer = window.setTimeout(close, Math.max(collapseDelayMs, 200));
         return;
       }

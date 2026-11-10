@@ -11,6 +11,7 @@ use windows::Win32::Foundation::HWND;
 
 use super::{
     banner_hit::{banner_rect, ISLAND_BANNER_HOVER_CHANGED_EVENT},
+    modifier::{self, ModifierTarget},
     geometry::STAGE_WINDOW_WIDTH,
     state::{read_window_state, CornerShape, IslandMode},
 };
@@ -22,9 +23,14 @@ use crate::win32;
 pub(crate) const ISLAND_HOVER_CHANGED_EVENT: &str = "island-hover-changed";
 
 // Mirrored by ISLAND_MOVE_ARMED_CHANGED_EVENT in src/windows/island/api.ts. The payload
-// says whether a Ctrl + left-button press over the island would move it. Polled here
-// because the webview cannot see Ctrl while another window has keyboard focus.
+// says what an Alt + left-button press over the island would do (modifier.rs ModifierTarget:
+// "none", "move", "width", "height", "both"). Polled here because the webview cannot see Alt
+// while another window has keyboard focus.
 pub(crate) const ISLAND_MOVE_ARMED_CHANGED_EVENT: &str = "island-move-armed-changed";
+
+// Mirrored by ISLAND_HOLD_CHANGED_EVENT in src/windows/island/api.ts. The payload says whether
+// the expanded island should stay open: Alt held, or a resize under way (C25).
+pub(crate) const ISLAND_HOLD_CHANGED_EVENT: &str = "island-hold-changed";
 
 // Mirrored by ISLAND_CURSOR_MOVED_EVENT in src/features/center-pattern/api.ts. The payload
 // is the cursor in the window's CSS pixels, also outside the window, so the center
@@ -53,7 +59,8 @@ pub(crate) fn start_cursor_passthrough_loop(window: WebviewWindow) {
         let mut ignoring_cursor = false;
         let mut was_inside = false;
         let mut was_on_banner = false;
-        let mut was_move_armed = false;
+        let mut was_move_armed = ModifierTarget::None;
+        let mut was_held = false;
         // Asked once: every `window.hwnd()` is a round trip to the main event loop, which at
         // this loop's 83 Hz kept the main thread busy even with the cursor nowhere near. The
         // handle stays the same for the window's life.
@@ -82,11 +89,19 @@ pub(crate) fn start_cursor_passthrough_loop(window: WebviewWindow) {
                 let _ = window.emit(ISLAND_BANNER_HOVER_CHANGED_EVENT, is_on_banner);
             }
 
-            let is_move_armed =
-                is_inside && !read_window_state().is_tucked && win32::input::is_control_key_down();
+            let alt = win32::input::is_alt_key_down();
+            let is_move_armed = match hwnd {
+                Some(hwnd) if is_inside && alt && !modifier::is_resizing() => modifier::target(hwnd),
+                _ => ModifierTarget::None,
+            };
             if is_move_armed != was_move_armed {
                 was_move_armed = is_move_armed;
                 let _ = window.emit(ISLAND_MOVE_ARMED_CHANGED_EVENT, is_move_armed);
+            }
+            let held = modifier::is_resizing() || (alt && matches!(read_window_state().mode, IslandMode::Expanded));
+            if held != was_held {
+                was_held = held;
+                let _ = window.emit(ISLAND_HOLD_CHANGED_EVENT, held);
             }
 
             tick = tick.wrapping_add(1);

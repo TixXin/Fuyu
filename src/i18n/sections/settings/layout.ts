@@ -15,6 +15,8 @@ export type SettingsLayoutText = {
   cornerShapeSquircle: string;
   cornerShapeRound: string;
   maxPanelHeight: string;
+  panelWidth: string;
+  panelSizeHint: string;
   launchAtStartup: string;
   showTitle: string;
   displayTitle: string;
@@ -48,7 +50,9 @@ export const zhCN: SettingsLayoutText = {
   islandCornerShape: "圆角样式",
   cornerShapeSquircle: "方圆",
   cornerShapeRound: "圆角",
-  maxPanelHeight: "最大面板高度",
+  maxPanelHeight: "面板高度",
+  panelWidth: "面板宽度",
+  panelSizeHint: "也可以按住 Alt 拖动展开面板的左右边缘或底边来调。高度是待办、消息这类会变长的页面最高能到多少；日历和插件页需要时会更宽。",
   launchAtStartup: "开机自启动",
   showTitle: "显示岛屿名称",
   displayTitle: "显示内容",
@@ -81,7 +85,9 @@ export const en: SettingsLayoutText = {
   islandCornerShape: "Corner style",
   cornerShapeSquircle: "Squircle",
   cornerShapeRound: "Round",
-  maxPanelHeight: "Max panel height",
+  maxPanelHeight: "Panel height",
+  panelWidth: "Panel width",
+  panelSizeHint: "Or hold Alt and drag the open panel's side or bottom edge. The height is how tall growing pages such as todos and messages may get; the calendar and plugin pages are wider when they need it.",
   launchAtStartup: "Launch at startup",
   showTitle: "Show island name",
   displayTitle: "Display",

@@ -27,7 +27,6 @@ export function maxExpandedIslandWidth(scale: number) {
   return Math.max(EXPANDED_ISLAND_WIDTH, Math.floor((STAGE_WINDOW_WIDTH - 4) / scale));
 }
 
-/** The island's width for a plugin page asking for `pageWidth` (E15), or null for the usual width. */
 /** The calendar page: the day list beside the month view (CalendarMonth.css), as far as it fits. */
 export const CALENDAR_ISLAND_WIDTH = 680;
 
@@ -35,14 +34,20 @@ export const CALENDAR_ISLAND_WIDTH = 680;
  * The expanded island's width (before its scale) for `page`, or null for the usual width: the
  * calendar page is wider, as is a plugin page asking for more (`pluginWidth`, E15).
  */
-export function pageIslandWidth(page: string, pluginWidth: number | null | undefined, scale: number) {
-  if (page === "calendar") return Math.min(CALENDAR_ISLAND_WIDTH, maxExpandedIslandWidth(scale));
-  return pluginPageIslandWidth(pluginWidth, scale);
+export function pageIslandWidth(page: string, pluginWidth: number | null | undefined, scale: number, panelWidth = EXPANDED_ISLAND_WIDTH) {
+  if (page === "calendar") return Math.min(Math.max(CALENDAR_ISLAND_WIDTH, panelWidth), maxExpandedIslandWidth(scale));
+  return pluginPageIslandWidth(pluginWidth, scale, panelWidth);
 }
 
-export function pluginPageIslandWidth(pageWidth: number | null | undefined, scale: number) {
+/** The island's width for a plugin page asking for `pageWidth` (E15), or null for the usual width. */
+export function pluginPageIslandWidth(pageWidth: number | null | undefined, scale: number, panelWidth = EXPANDED_ISLAND_WIDTH) {
   if (typeof pageWidth !== "number") return null;
-  return Math.min(Math.max(pageWidth + EXPANDED_SIDE_PADDING, EXPANDED_ISLAND_WIDTH), maxExpandedIslandWidth(scale));
+  return Math.min(Math.max(pageWidth + EXPANDED_SIDE_PADDING, panelWidth), maxExpandedIslandWidth(scale));
+}
+
+/** The usual pages' width (C25): the panel width setting, as far as it fits at `scale`. */
+export function panelIslandWidth(panelWidth: number, scale: number) {
+  return Math.min(panelWidth, maxExpandedIslandWidth(scale));
 }
 /** What a popup leaves out: the header (34), the gap below it (14) and 10px of top padding. */
 export const POPUP_HEADER_SAVING = 58;

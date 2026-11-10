@@ -2,13 +2,15 @@ import { useEffect, useRef } from "react";
 import * as islandApi from "./api";
 import "./ModifierWindowDrag.css";
 
-/** Set on <html> while holding Ctrl over the island would move it; shows the move cursor. */
+/** Set on <html> while holding Alt over the island would move it or resize the panel. */
 const MOVE_ARMED_CLASS = "island-move-armed";
+/** The cursor's shape for each kind of Alt drag, as `data-island-drag` on <html>. */
+const DRAG_KIND_ATTRIBUTE = "islandDrag";
 
 /**
- * Ctrl + left-button drag moves the island from anywhere on its shape, collapsed or
- * expanded. The press is taken in the capture phase so buttons and inputs under the
- * cursor never see it.
+ * Alt + left-button drag moves the island from anywhere on its shape, collapsed or expanded, and
+ * from the expanded panel's side or bottom edge resizes it (C25; native side decides which). The
+ * press is taken in the capture phase so buttons and inputs under the cursor never see it.
  */
 export function useModifierWindowDrag(onDragStart: () => void) {
   const isArmedRef = useRef(false);
@@ -22,9 +24,11 @@ export function useModifierWindowDrag(onDragStart: () => void) {
     let didCancel = false;
     let unlisten: (() => void) | null = null;
 
-    void islandApi.listenIslandMoveArmed((armed) => {
+    void islandApi.listenIslandMoveArmed((target) => {
+      const armed = target !== "none";
       isArmedRef.current = armed;
       document.documentElement.classList.toggle(MOVE_ARMED_CLASS, armed);
+      document.documentElement.dataset[DRAG_KIND_ATTRIBUTE] = target;
     })
       .then((nextUnlisten) => {
         if (didCancel) {
@@ -41,17 +45,18 @@ export function useModifierWindowDrag(onDragStart: () => void) {
       didCancel = true;
       unlisten?.();
       document.documentElement.classList.remove(MOVE_ARMED_CLASS);
+      delete document.documentElement.dataset[DRAG_KIND_ATTRIBUTE];
     };
   }, []);
 
   useEffect(() => {
     let swallowNextClick = false;
 
-    // Native polling is the reliable signal; ctrlKey covers a press that lands before
-    // the first poll. Rust checks Ctrl again, so a stale value cannot move it.
+    // Native polling is the reliable signal; altKey covers a press that lands before
+    // the first poll. Rust checks Alt again, so a stale value cannot move it.
     const press = (event: PointerEvent) => {
       swallowNextClick = false;
-      if (event.button !== 0 || !(isArmedRef.current || event.ctrlKey)) {
+      if (event.button !== 0 || !(isArmedRef.current || event.altKey)) {
         return;
       }
 

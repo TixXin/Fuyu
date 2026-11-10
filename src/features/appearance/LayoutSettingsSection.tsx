@@ -3,13 +3,16 @@ import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsRow } from "../../components/settings/SettingsRow";
 import { SettingsSliderRow } from "../../components/settings/SettingsSliderRow";
 import { useTranslation } from "../../i18n";
-import { DEFAULT_SETTINGS, MAX_ISLAND_CORNER_RADIUS, MAX_MAX_PANEL_HEIGHT, MAX_TOP_FILLET_RADIUS, MIN_ISLAND_CORNER_RADIUS, MIN_MAX_PANEL_HEIGHT, MIN_TOP_FILLET_RADIUS } from "./settings";
+import { DEFAULT_SETTINGS, MAX_ISLAND_CORNER_RADIUS, MAX_MAX_PANEL_HEIGHT, MAX_PANEL_WIDTH, MAX_TOP_FILLET_RADIUS, MIN_ISLAND_CORNER_RADIUS, MIN_MAX_PANEL_HEIGHT, MIN_PANEL_WIDTH, MIN_TOP_FILLET_RADIUS } from "./settings";
 import type { IslandCornerShape, IslandSettings } from "./types";
 
 const scale = (value: number) => `${value.toFixed(2)}x`;
 const pixels = (value: number) => `${Math.round(value)} px`;
 
-/** Appearance → Size, then Corners: the island's scale and panel height, and its corner shape and radii. */
+/**
+ * Appearance → Size, then Corners: the island's scales, the panel's width and height (also set by
+ * Alt + dragging the panel's edges, C25), and its corner shape and radii.
+ */
 export function LayoutSettingsSection({
   settings,
   onSettingsChange,
@@ -57,6 +60,18 @@ export function LayoutSettingsSection({
           defaultValue={DEFAULT_SETTINGS.expandedScale}
           resetLabel={text.resetToDefault}
           onChange={(expandedScale) => change({ ...settings, expandedScale }, true)}
+        />
+        <SettingsSliderRow
+          title={text.panelWidth}
+          description={text.panelSizeHint}
+          value={settings.panelWidth}
+          min={MIN_PANEL_WIDTH}
+          max={MAX_PANEL_WIDTH}
+          step={1}
+          format={pixels}
+          defaultValue={DEFAULT_SETTINGS.panelWidth}
+          resetLabel={text.resetToDefault}
+          onChange={(panelWidth) => change({ ...settings, panelWidth }, true)}
         />
         <SettingsSliderRow
           title={text.maxPanelHeight}

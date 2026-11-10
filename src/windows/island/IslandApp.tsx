@@ -40,7 +40,8 @@ import { useMessageView } from "./useMessageView";
 import { useIslandBanner } from "./useIslandBanner";
 import { useIslandMessagePanel } from "./useIslandMessagePanel";
 import { useIslandPopup } from "./useIslandPopup";
-import { pageIslandWidth } from "./layout";
+import { pageIslandWidth, panelIslandWidth } from "./layout";
+import { useIslandResize } from "./useIslandResize";
 import { MessageBanner } from "../../features/messages/banner/MessageBanner";
 import { PluginPageButtons } from "./PluginPageButtons";
 import { useCollapsedSlots } from "./useCollapsedSlots";
@@ -158,9 +159,12 @@ export function IslandApp() {
   const { popup, expandedIslandWidth } = useIslandPopup(
     mode,
     messagePanel.arrivals !== null || alertPopup,
-    pageIslandWidth(page, pluginPages.entry?.width, settings.expandedScale),
+    pageIslandWidth(page, pluginPages.entry?.width, settings.expandedScale, settings.panelWidth),
+    panelIslandWidth(settings.panelWidth, settings.expandedScale),
   );
-  const expandedIslandHeight = getExpandedIslandHeight({
+  // Alt + dragging the panel's edges (C25); a height drag shows the panel at the height being set.
+  const resizingHeight = useIslandResize(settings, setSettings);
+  const pageIslandHeight = getExpandedIslandHeight({
     page,
     todoPageMode,
     todos,
@@ -180,6 +184,7 @@ export function IslandApp() {
     pluginWebviewHeight: pluginPages.entry?.height,
     pluginFrameless: pluginPages.entry?.frame === "none",
   });
+  const expandedIslandHeight = resizingHeight && !popup ? settings.maxPanelHeight : pageIslandHeight;
   const stageStyle = useMemo(
     () => getIslandStageStyle(settings, mode, collapsedIslandWidth, expandedIslandHeight, expandedIslandWidth),
     [collapsedIslandWidth, expandedIslandHeight, expandedIslandWidth, mode, settings],

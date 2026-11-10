@@ -5,6 +5,7 @@ import { DEFAULT_SETTINGS, LEGACY_FALLBACKS } from "./settingsDefaults.ts";
 import {
   MAX_CLIPBOARD_VISIBLE_ROWS, MAX_ISLAND_CORNER_RADIUS, MAX_MAX_PANEL_HEIGHT, MAX_TOP_FILLET_RADIUS,
   MIN_CLIPBOARD_VISIBLE_ROWS, MIN_ISLAND_CORNER_RADIUS, MIN_MAX_PANEL_HEIGHT, MIN_TOP_FILLET_RADIUS,
+  MAX_PANEL_WIDTH, MIN_PANEL_WIDTH,
 } from "./settingsLimits.ts";
 import type { IslandSettings, LegacyIslandSettings } from "./types";
 
@@ -59,6 +60,10 @@ export function normalizeLayoutSettings(settings: LegacyIslandSettings | null | 
     maxPanelHeight: typeof settings?.maxPanelHeight === "number" && Number.isFinite(settings.maxPanelHeight)
       ? clamp(Math.round(settings.maxPanelHeight), MIN_MAX_PANEL_HEIGHT, MAX_MAX_PANEL_HEIGHT)
       : DEFAULT_SETTINGS.maxPanelHeight,
+    // Older settings had no width: the panel was 560px.
+    panelWidth: typeof settings?.panelWidth === "number" && Number.isFinite(settings.panelWidth)
+      ? clamp(Math.round(settings.panelWidth), MIN_PANEL_WIDTH, MAX_PANEL_WIDTH)
+      : DEFAULT_SETTINGS.panelWidth,
     clipboardVisibleRows: typeof settings?.clipboardVisibleRows === "number" && Number.isFinite(settings.clipboardVisibleRows)
       ? clamp(Math.round(settings.clipboardVisibleRows), MIN_CLIPBOARD_VISIBLE_ROWS, MAX_CLIPBOARD_VISIBLE_ROWS)
       : LEGACY_FALLBACKS.clipboardVisibleRows,

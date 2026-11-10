@@ -9,7 +9,7 @@ import {
   pageShortcutOrder,
   resolveIslandPage,
 } from "../../src/windows/island/features.ts";
-import { getPluginPageExpandedHeight, maxExpandedIslandWidth, pageIslandWidth, pluginPageIslandWidth } from "../../src/windows/island/layout.ts";
+import { getPluginPageExpandedHeight, maxExpandedIslandWidth, pageIslandWidth, panelIslandWidth, pluginPageIslandWidth } from "../../src/windows/island/layout.ts";
 
 const all = { agents: true, todo: true, music: true, clipboard: true, shelf: true, qq: true, wechat: false, qqMail: false, translation: false };
 const board = "plugin:dev.example.board/board";
@@ -103,6 +103,11 @@ test("a webview page can ask for a wider island and drop its card (E15)", () => 
   assert.equal(pageIslandWidth("calendar", undefined, 1.4), maxExpandedIslandWidth(1.4), "as far as it fits at a large scale");
   assert.equal(pageIslandWidth("todo", undefined, 1), null);
   assert.ok(maxExpandedIslandWidth(1.4) * 1.4 <= 820);
+  // The panel width setting (C25) widens the usual pages and is the floor for wider ones.
+  assert.equal(panelIslandWidth(640, 1), 640);
+  assert.equal(panelIslandWidth(800, 1.4), maxExpandedIslandWidth(1.4));
+  assert.equal(pageIslandWidth("calendar", undefined, 1, 720), 720);
+  assert.equal(pluginPageIslandWidth(400, 1, 640), 640);
   // Without the card and its title, the page sits right under the island header.
   assert.equal(getPluginPageExpandedHeight("webview", 600, null, 250, true), 336);
   assert.equal(getPluginPageExpandedHeight("webview", 600, null, 250), 386);

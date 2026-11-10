@@ -6,6 +6,7 @@ pub(crate) mod focus;
 mod follow;
 mod geometry;
 mod glass;
+mod modifier;
 pub(crate) mod outside_click;
 pub(crate) mod passthrough;
 mod state;
@@ -156,14 +157,17 @@ pub fn start_island_drag(app: AppHandle) -> Result<(), String> {
     drag_island(window, current_state)
 }
 
-/// Ctrl + left-button drag: moves the island from anywhere on its shape, collapsed or
-/// expanded. The frontend calls it on pointer down while the passthrough loop reports
-/// Ctrl held over the island.
+/// Alt + left-button drag (C25): on an edge of the expanded panel it resizes the panel
+/// (modifier.rs), anywhere else on the shape it moves the island, collapsed or expanded. The
+/// frontend calls it on pointer down while the passthrough loop reports Alt held over the island.
 #[tauri::command]
 pub fn start_island_modifier_drag(app: AppHandle) -> Result<(), String> {
     let window = main_window(&app)?;
 
-    if !win32::input::is_control_key_down() {
+    if !win32::input::is_alt_key_down() {
+        return Ok(());
+    }
+    if modifier::start_resize(&window) {
         return Ok(());
     }
 

@@ -6,7 +6,9 @@ export type SettingsShortcutsText = {
   islandTitle: string;
   collapse: string;
   moveIsland: string;
-  ctrlDrag: string;
+  altDrag: string;
+  resizePanel: string;
+  altDragEdge: string;
   inputTitle: string;
   translate: string;
   newLine: string;
@@ -35,7 +37,9 @@ export const zhCN: SettingsShortcutsText = {
   islandTitle: "岛上操作",
   collapse: "收起展开的岛",
   moveIsland: "移动岛屿",
-  ctrlDrag: "Ctrl + 拖动",
+  altDrag: "Alt + 拖动",
+  resizePanel: "调整面板宽高（按住 Alt 时面板不收起）",
+  altDragEdge: "Alt + 拖动面板边缘",
   inputTitle: "翻译输入框",
   translate: "翻译",
   newLine: "换行",
@@ -64,7 +68,9 @@ export const en: SettingsShortcutsText = {
   islandTitle: "On the island",
   collapse: "Collapse the expanded island",
   moveIsland: "Move the island",
-  ctrlDrag: "Ctrl + drag",
+  altDrag: "Alt + drag",
+  resizePanel: "Resize the panel (it stays open while Alt is held)",
+  altDragEdge: "Alt + drag the panel's edge",
   inputTitle: "Translation input",
   translate: "Translate",
   newLine: "New line",

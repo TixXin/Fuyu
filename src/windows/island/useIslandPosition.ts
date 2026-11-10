@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import * as islandApi from "./api";
 import { clearIslandPosition, loadIslandPosition, saveIslandPosition, type IslandPosition } from "./storage";
 import { useModifierWindowDrag } from "./useModifierWindowDrag";
+import { useIslandHoldListener } from "./islandHold";
 
 /** Tracks where the user dragged the island, persisting it across launches. */
 export function useIslandPosition() {
@@ -22,6 +23,7 @@ export function useIslandPosition() {
     });
   }, []);
   useModifierWindowDrag(startIslandModifierDrag);
+  useIslandHoldListener();
 
   useEffect(() => {
     let didCancel = false;

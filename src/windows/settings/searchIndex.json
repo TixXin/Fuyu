@@ -435,11 +435,24 @@
       "page": "appearance",
       "zh-CN": {
         "group": "尺寸",
-        "title": "最大面板高度"
+        "title": "面板宽度",
+        "description": "也可以按住 Alt 拖动展开面板的左右边缘或底边来调。高度是待办、消息这类会变长的页面最高能到多少；日历和插件页需要时会更宽。"
       },
       "en": {
         "group": "Size",
-        "title": "Max panel height"
+        "title": "Panel width",
+        "description": "Or hold Alt and drag the open panel's side or bottom edge. The height is how tall growing pages such as todos and messages may get; the calendar and plugin pages are wider when they need it."
+      }
+    },
+    {
+      "page": "appearance",
+      "zh-CN": {
+        "group": "尺寸",
+        "title": "面板高度"
+      },
+      "en": {
+        "group": "Size",
+        "title": "Panel height"
       }
     },
     {
@@ -549,6 +562,17 @@
       "en": {
         "group": "On the island",
         "title": "Move the island"
+      }
+    },
+    {
+      "page": "shortcuts",
+      "zh-CN": {
+        "group": "岛上操作",
+        "title": "调整面板宽高（按住 Alt 时面板不收起）"
+      },
+      "en": {
+        "group": "On the island",
+        "title": "Resize the panel (it stays open while Alt is held)"
       }
     },
     {
