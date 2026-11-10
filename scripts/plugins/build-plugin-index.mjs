@@ -22,6 +22,9 @@ import { loadPrivateKey, signIndex } from "./plugin-signing.mjs";
 export { createZip, listFiles, readPackedFile, sha256 };
 
 /** Where the official packages (and, for islands before focusd-plugins, the index) are downloaded from: the fork's main branch (dev is kept at the same commit for older builds). */
+// The repository is TixXin/fuyu since the rename (D17); this index is only for islands from before
+// the market moved, so it keeps the address they were built with (GitHub redirects it) and its
+// signed bytes stay the same.
 export const MARKET_BASE_URL = "https://raw.githubusercontent.com/TixXin/fly-island/main/plugins";
 export const INDEX_VERSION = 1;
 const SOURCE_DIRS = ["plugins/examples"];

@@ -9,14 +9,14 @@ use serde_json::Value;
 
 use super::claude_hooks::{claude_code_installed_entries, ApprovalHook};
 use super::codex_hooks::build_codex_hook_block;
-use super::{normalize_windows_line_endings, FOCUSD_AGENT_HOOK_SIGNATURE};
+use super::{is_island_hook_text, normalize_windows_line_endings};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(super) enum HookInstallState {
-    /// No FocuSD hook in this agent's config.
+    /// No island hook in this agent's config.
     NotInstalled,
-    /// FocuSD hooks from an older version: Install/Repair would change them.
+    /// Island hooks from an older version (or from before the rename): Install/Repair would change them.
     Outdated,
     Current,
 }
@@ -43,7 +43,7 @@ pub(super) fn claude_code_hooks_state(
         return HookInstallState::NotInstalled;
     };
     let hooks = &config["hooks"];
-    if !hooks.to_string().contains(FOCUSD_AGENT_HOOK_SIGNATURE) {
+    if !is_island_hook_text(&hooks.to_string()) {
         return HookInstallState::NotInstalled;
     }
 
@@ -84,7 +84,7 @@ pub(super) fn codex_hooks_state(
     };
     if current {
         HookInstallState::Current
-    } else if config.contains(FOCUSD_AGENT_HOOK_SIGNATURE) {
+    } else if is_island_hook_text(&config) {
         HookInstallState::Outdated
     } else {
         HookInstallState::NotInstalled

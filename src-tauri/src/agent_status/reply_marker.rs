@@ -61,15 +61,18 @@ pub(super) fn split_reply(text: &str) -> (Option<ReplyMarker>, &str) {
 }
 
 /// Opens the block; the version lets a newer island replace an older wording.
-const BLOCK_START: &str = "<!-- focusd-island: reply marker v3 -->";
-pub(super) const BLOCK_START_PREFIX: &str = "<!-- focusd-island: reply marker";
-const BLOCK_END: &str = "<!-- /focusd-island: reply marker -->";
+const BLOCK_START: &str = "<!-- fuyu: reply marker v4 -->";
+pub(super) const BLOCK_START_PREFIX: &str = "<!-- fuyu: reply marker";
+const BLOCK_END: &str = "<!-- /fuyu: reply marker -->";
+/// The block's start and end before the rename (D17, v1 to v3): found, replaced and removed alike.
+pub(super) const LEGACY_BLOCK_START_PREFIX: &str = "<!-- focusd-island: reply marker";
+const LEGACY_BLOCK_END: &str = "<!-- /focusd-island: reply marker -->";
 
 /// The instruction, in the island's own words.
 const BLOCK_BODY: &str = "\
-## Reply status marker (added by FocuSD Island)
+## Reply status marker (added by Fuyu)
 
-End every reply with one extra line that holds only one of these characters, so FocuSD Island can show what this session is waiting for:
+End every reply with one extra line that holds only one of these characters, so Fuyu can show what this session is waiting for:
 
 - `↩` the next step is the user's: you asked a question, offered options or a next step (\"want me to…?\"), asked them to do something and tell you, or need their decision, approval or input
 - `⋯` nothing is needed from the user yet: you ended the turn only to wait for a background task you started (a background command, a subagent, a monitor, a scheduled wake-up) that will wake you
@@ -77,7 +80,7 @@ End every reply with one extra line that holds only one of these characters, so 
 
 When more than one fits, `↩` wins over `⋯`, and `⋯` over `✓`. When unsure, use `↩`.
 
-Write the character alone on the last line, without backticks, and nothing after it. To stop, switch off \"Reply status marker\" in FocuSD Island's Settings → AI Agent, which deletes this file.";
+Write the character alone on the last line, without backticks, and nothing after it. To stop, switch off \"Reply status marker\" in Fuyu's Settings → AI Agent, which deletes this file.";
 
 pub(super) fn block() -> String {
     format!("{BLOCK_START}\n{BLOCK_BODY}\n{BLOCK_END}")
@@ -85,9 +88,11 @@ pub(super) fn block() -> String {
 
 /// Where the island's block is in `text`: from its start line to the end of its end line.
 fn find_block(text: &str) -> Option<(usize, usize)> {
-    let start = text.find(BLOCK_START_PREFIX)?;
-    let end = text[start..].find(BLOCK_END)? + start + BLOCK_END.len();
-    Some((start, end))
+    [(BLOCK_START_PREFIX, BLOCK_END), (LEGACY_BLOCK_START_PREFIX, LEGACY_BLOCK_END)].into_iter().find_map(|(prefix, end_marker)| {
+        let start = text.find(prefix)?;
+        let end = text[start..].find(end_marker)? + start + end_marker.len();
+        Some((start, end))
+    })
 }
 
 /// Mirrored by ReplyMarkerState in src/features/agent-status/api.ts.
@@ -127,7 +132,7 @@ pub(super) fn rules_file() -> String {
 
 /// Whether `text` is the island's rules file, so switching off may delete it.
 pub(super) fn is_rules_file(text: &str) -> bool {
-    text.contains(BLOCK_START_PREFIX)
+    text.contains(BLOCK_START_PREFIX) || text.contains(LEGACY_BLOCK_START_PREFIX)
 }
 
 /// `text` without the island's block and the blank lines it added; anything else stays.
@@ -147,7 +152,28 @@ pub(super) fn without_block(text: &str) -> String {
 
 /// Under the Claude config folder. Claude Code reads every `rules/*.md` there into each session,
 /// as it reads `CLAUDE.md`, so the island never edits the user's own instructions.
-pub(super) const RULES_FILE: &str = "rules/focusd-island-reply-marker.md";
+pub(super) const RULES_FILE: &str = "rules/fuyu-reply-marker.md";
+/// The rules file before the rename (D17); replaced by the new one, and removed with it.
+pub(super) const LEGACY_RULES_FILE: &str = "rules/focusd-island-reply-marker.md";
+
+/// The island's rules text: the new file's, else the old file's when an older island wrote it.
+fn installed_rules(dir: &Path) -> Result<String, String> {
+    let rules = read_text(&dir.join(RULES_FILE))?;
+    if !rules.is_empty() {
+        return Ok(rules);
+    }
+    let legacy = read_text(&dir.join(LEGACY_RULES_FILE))?;
+    Ok(if is_rules_file(&legacy) { legacy } else { rules })
+}
+
+/// Deletes the rules file from before the rename when it is the island's.
+fn remove_legacy_rules(dir: &Path) -> Result<(), String> {
+    let path = dir.join(LEGACY_RULES_FILE);
+    if is_rules_file(&read_text(&path)?) {
+        fs::remove_file(&path).map_err(|error| format!("Failed to delete {}: {error}", path.display()))?;
+    }
+    Ok(())
+}
 
 /// The Claude config folder: `CLAUDE_CONFIG_DIR` when set, else `~/.claude`.
 fn claude_dir() -> Result<PathBuf, String> {
@@ -173,7 +199,7 @@ pub async fn get_reply_marker_state() -> Result<ReplyMarkerState, String> {
     tauri::async_runtime::spawn_blocking(|| {
         let dir = claude_dir()?;
         let path = dir.join(RULES_FILE);
-        Ok(state_of(&read_text(&path)?, &read_text(&dir.join("CLAUDE.md"))?, &path))
+        Ok(state_of(&installed_rules(&dir)?, &read_text(&dir.join("CLAUDE.md"))?, &path))
     })
     .await
     .map_err(|error| format!("Failed to join the CLAUDE.md task: {error}"))?
@@ -190,12 +216,18 @@ pub(super) fn needs_upgrade(rules: &str) -> bool {
 /// reaches users without them switching the marker off and on. SSH remotes wait for the next time
 /// the user switches it, which is when the island connects to them.
 pub(super) fn upgrade_installed() {
-    let Ok(path) = claude_dir().map(|dir| dir.join(RULES_FILE)) else { return };
-    let Ok(rules) = read_text(&path) else { return };
+    let Ok(dir) = claude_dir() else { return };
+    let path = dir.join(RULES_FILE);
+    let Ok(rules) = installed_rules(&dir) else { return };
     if needs_upgrade(&rules) {
         if let Err(error) = super::write_text_file(&path, &rules_file()) {
             eprintln!("failed to update the reply marker rules: {error}");
+            return;
         }
+    }
+    // The file from before the rename goes once the new one is there (or was never wanted).
+    if let Err(error) = remove_legacy_rules(&dir) {
+        eprintln!("failed to remove the old reply marker rules: {error}");
     }
 }
 
@@ -215,6 +247,7 @@ pub async fn set_reply_marker(app: tauri::AppHandle, enabled: bool) -> Result<Re
         if !enabled && is_rules_file(&rules) {
             fs::remove_file(&path).map_err(|error| format!("Failed to delete {}: {error}", path.display()))?;
         }
+        remove_legacy_rules(&dir)?;
         let claude_md_path = dir.join("CLAUDE.md");
         let claude_md = read_text(&claude_md_path)?;
         let cleaned = without_block(&claude_md);
@@ -249,7 +282,7 @@ mod tests {
 
     #[test]
     fn the_rules_file_holds_the_block_and_an_old_block_comes_out_of_claude_md_cleanly() {
-        let path = Path::new("C:/Users/me/.claude/rules/focusd-island-reply-marker.md");
+        let path = Path::new("C:/Users/me/.claude/rules/fuyu-reply-marker.md");
         let user = "# Global rules\r\n\r\n- reply in Chinese\r\n";
         let state = state_of(&rules_file(), user, path);
         assert!(state.installed && !state.outdated);
@@ -258,7 +291,7 @@ mod tests {
         assert!(!state_of("", user, path).installed);
 
         // An island before v2 put the block into CLAUDE.md: it counts as on, and needs moving.
-        let legacy = format!("{user}\r\n<!-- focusd-island: reply marker v1 -->\r\nold words\r\n{BLOCK_END}\r\n\r\n## After\r\n");
+        let legacy = format!("{user}\r\n<!-- focusd-island: reply marker v1 -->\r\nold words\r\n{LEGACY_BLOCK_END}\r\n\r\n## After\r\n");
         let state = state_of("", &legacy, path);
         assert!(state.installed && state.outdated);
         assert_eq!(without_block(&legacy), format!("{user}\r\n## After\r\n"));
@@ -273,5 +306,9 @@ mod tests {
         assert!(!needs_upgrade(""));
         assert!(!needs_upgrade("# my own rules\n"));
         assert!(needs_upgrade("<!-- focusd-island: reply marker v2 -->\nold words\n<!-- /focusd-island: reply marker -->\n"));
+        // The v3 file from before the rename (D17) counts as the island's and gets the new wording.
+        let v3 = "<!-- focusd-island: reply marker v3 -->\nwords\n<!-- /focusd-island: reply marker -->\n";
+        assert!(is_rules_file(v3) && needs_upgrade(v3));
+        assert_eq!(without_block(v3), "");
     }
 }

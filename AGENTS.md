@@ -42,7 +42,7 @@ FocuSD Island（仓库名 fly-island）是 Windows 优先的桌面效率工具�
 │   └── tauri.conf.json  # 窗口、更新、打包配置
 ├── tests/               # unit/ 前端单元测试、scripts/ 脚本测试（node:test，*.test.mjs）；regression/ 浏览器回归页（*.html + *.tsx）
 ├── packages/            # 插件开发者工具（pnpm workspace）：fuyu-plugin（Node SDK、CLI、模拟宿主）、create-fuyu-plugin（脚手架）、powershell/Fuyu.Plugin；vscode-extension（切到会话终端的 VS Code 扩展，不在 workspace 里，`pnpm dlx @vscode/vsce package --no-dependencies` 打包）；不进入岛屿的发布产物
-├── plugins/             # 插件市场：examples/ 示例插件源码（PowerShell，含 lib/focusd.ps1），schema/ 协议描述，sdk/ 单文件 SDK（pnpm sdk:build 从 packages/ 生成），packages/ 打包好的 zip，index.json 与 index.json.sig 给切换前的旧版岛屿的市场索引（pnpm plugins:index 生成；新版岛屿读 TixXin/focusd-plugins），signing-keys.json 可信公钥（编译进岛屿）；不进入发布产物
+├── plugins/             # 插件市场：examples/ 示例插件源码（PowerShell，含 lib/focusd.ps1），schema/ 协议描述，sdk/ 单文件 SDK（pnpm sdk:build 从 packages/ 生成），packages/ 打包好的 zip，index.json 与 index.json.sig 给切换前的旧版岛屿的市场索引（pnpm plugins:index 生成；新版岛屿读 TixXin/fuyu-plugins），signing-keys.json 可信公钥（编译进岛屿）；不进入发布产物
 ├── scripts/             # release/ 发布、签名与 latest.json 生成；plugins/ 插件索引、签名与 SDK 生成；根目录放开发流程脚本：合并队列的检查（land-check.mjs）与 dev 同步（land-sync-dev.mjs）、行数检查、浏览器回归页运行器（run-regression.mjs）、dev 前停止运行中的岛屿
 ├── .githooks/           # pre-push：合并队列的推送保护与检查；commit-msg：拒绝 Claude 署名行（只管本仓库自己的提交，合入的外部 PR 可以带；core.hooksPath 指向这里）
 ├── docs/                # 按文档性质分目录，索引和各目录放什么见 docs/README.md：features/ 功能说明，architecture/ 架构与契约（agent/、plugins/ 内部设计，history/ 做完的计划），design/ 界面约定，plugins/ 插件开发，investigations/ 自己应用的排查与验收，research/ 外部调研，reviews/ PR 评审，releases/ 发布说明，assets/ 演示视频与图片，tasks/ 任务（README.md 是规则，按编号首字母分文件夹，0-archive/ 放已结束的）
@@ -152,7 +152,7 @@ FocuSD Island（仓库名 fly-island）是 Windows 优先的桌面效率工具�
 
 - **谁怎么合入 `main`，看 GitHub 权限**。`main` 上有 GitHub 规则集 `main protection`（仓库 Settings → Rules）：必须通过 PR 合入，CI 的 `check` 必须通过，PR 必须基于最新的 `main`（落后时点 "Update branch" 或 rebase，CI 重跑），禁止强推和删除。仓库管理员（TixXin）可以绕过这些规则。
   - **仓库管理员的会话**：用下面的 lane + `pnpm mq:land`。land 先 rebase 到最新的 `origin/main`，再检查、推送；检查期间要是别人往 `main` 推了提交，这次推送不是快进，会被 git 拒绝，`main` 不会被覆盖，重新 land 即可。
-  - **协作者（Write 权限，目前是 ShengLin1001）和外部贡献者**：不用 `pnpm mq:land`，跑了也会被规则集拒绝。在自己的分支上开发。协作者把分支直接推到本仓库（`TixXin/fly-island`）再提 PR；外部贡献者从本仓库 fork 后提 PR。本仓库 2026-11-10 起已脱离 `flyl1u/fly-island` 的 fork 网络，从上游 fork 出来的仓库不能再向本仓库提 PR。不要从上游同步或合并提交；CI 通过、分支跟上最新 `main` 后再合入。协作者可以自己合，也可以等仓库管理员按下面「外部 PR」的做法合。合入用 merge 或 squash，不改写别人已经推送的分支。
+  - **协作者（Write 权限，目前是 ShengLin1001）和外部贡献者**：不用 `pnpm mq:land`，跑了也会被规则集拒绝。在自己的分支上开发。协作者把分支直接推到本仓库（`TixXin/fuyu`）再提 PR；外部贡献者从本仓库 fork 后提 PR。本仓库 2026-11-10 起已脱离 `flyl1u/fly-island` 的 fork 网络，从上游 fork 出来的仓库不能再向本仓库提 PR。不要从上游同步或合并提交；CI 通过、分支跟上最新 `main` 后再合入。协作者可以自己合，也可以等仓库管理员按下面「外部 PR」的做法合。合入用 merge 或 squash，不改写别人已经推送的分支。
   - 开发期间不要求分支一直跟着 `main`：开工前、land 或合入前各同步一次，开发时间长的分支隔天同步一次。不管哪种方式，合入那一刻都基于最新的 `main`，这一点由 land 的 rebase 和规则集保证。
 - **每个代理会话在自己的 lane（worktree + 分支）上工作，经合并队列合入 `main`**（工具是 [claude-code-merge-queue](https://github.com/funador/claude-code-merge-queue)，配置在 `claude-code-merge-queue.config.mjs`）：
   - 开 lane：用 `claude -w <任务名>` 启动，或在会话里调用 EnterWorktree。本机 `.claude/settings.json` 的 WorktreeCreate 钩子会分配 `lane/N` 分支，并在 `../fly-island-lanes/N` 建 worktree（所有 lane 都在这一个文件夹里）。钩子不可用时，手动 `git worktree add ../fly-island-lanes/<N> -b lane/<N> origin/main`，`<N>` 选一个 `../fly-island-lanes/<N>` 文件夹和 `lane/<N>` 分支都不存在的编号：往已有文件夹里建会先建出分支、再因为文件夹非空而失败，留下没有 worktree 的孤儿分支。钩子建 lane 时会自动 `pnpm install`；手动建的 lane 自己运行一次。

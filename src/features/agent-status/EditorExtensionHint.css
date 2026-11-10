@@ -1,0 +1,35 @@
+/* The extension offer reuses the archived pill (ArchivedNotice.css) but spans the page's width and
+   wraps its sentence, which is longer than "Archived". */
+.agent-extension-hint {
+  right: 6px;
+  height: auto;
+  min-height: 28px;
+  padding: 4px 4px 4px 11px;
+  border-radius: 14px;
+  white-space: normal;
+  line-height: 1.35;
+}
+
+.agent-extension-hint > span {
+  flex: 1;
+  min-width: 0;
+}
+
+.agent-extension-hint button {
+  flex: none;
+  white-space: nowrap;
+}
+
+.agent-archived .agent-extension-hint__quiet {
+  color: var(--text-2);
+  background: transparent;
+  font-weight: 500;
+}
+
+.agent-archived .agent-extension-hint__close {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  padding: 0;
+  background: transparent;
+}

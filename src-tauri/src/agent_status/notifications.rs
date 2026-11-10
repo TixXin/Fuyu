@@ -114,13 +114,18 @@ pub(super) struct SavedNotifications {
 /// deletes the files a newer one of the same session replaced and those past the age limit; a
 /// remote mirror is only read, as the remote computer ages out its own files.
 pub(super) fn saved_notifications(dir: &Path, now: i64, prune: bool) -> SavedNotifications {
+    saved_notifications_in(&[dir], now, prune)
+}
+
+/// As `saved_notifications`, over several folders together (a remote's old and new one).
+pub(super) fn saved_notifications_in(dirs: &[&Path], now: i64, prune: bool) -> SavedNotifications {
     let drop = |path: &Path| {
         if prune {
             fs::remove_file(path).ok();
         }
     };
     let mut newest: HashMap<String, (i64, PathBuf, Event)> = HashMap::new();
-    for entry in fs::read_dir(dir).into_iter().flatten().flatten() {
+    for entry in dirs.iter().flat_map(|dir| fs::read_dir(dir).into_iter().flatten().flatten()) {
         let path = entry.path();
         if path.extension().is_none_or(|extension| extension != "json") {
             continue;

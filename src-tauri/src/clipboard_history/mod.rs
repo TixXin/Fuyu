@@ -5,6 +5,7 @@ mod hotkey;
 mod listener;
 mod plugin_view;
 mod popup;
+mod preview;
 mod secrets;
 mod sequence;
 mod service;
@@ -97,6 +98,9 @@ pub struct ClipboardHistorySettings {
     /// Where the window appears: at the pointer or in the middle of the screen.
     #[serde(default)]
     popup_position: PopupPosition,
+    /// The window's width: the list alone, or the list with the picked entry beside it.
+    #[serde(default)]
+    popup_layout: PopupLayout,
     /// Picking an entry in the window pastes it into the window that was in front.
     #[serde(default = "default_true")]
     auto_paste: bool,
@@ -169,6 +173,14 @@ pub(crate) enum PopupPosition {
     Center,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) enum PopupLayout {
+    #[default]
+    Standard,
+    Wide,
+}
+
 const MAX_RETENTION_DAYS: u32 = 365;
 
 impl Default for ClipboardHistorySettings {
@@ -181,6 +193,7 @@ impl Default for ClipboardHistorySettings {
             shortcut_enabled: true,
             open_in: OpenIn::Window,
             popup_position: PopupPosition::Cursor,
+            popup_layout: PopupLayout::Standard,
             auto_paste: true,
             terminal_image_path: true,
             retention_days: 0,
@@ -431,6 +444,21 @@ pub async fn import_clipboard_history(content: String) -> Result<transfer::Impor
         .map_err(|error| format!("Failed to join the import: {error}"))?
 }
 
+/// A larger copy of an image entry for the clipboard window's side pane; null for other entries.
+#[tauri::command]
+pub async fn get_clipboard_image_preview(id: String) -> Result<Option<String>, String> {
+    let path = service()?
+        .snapshot()?
+        .items
+        .into_iter()
+        .find(|item| item.id == id)
+        .and_then(|item| item.image.map(|image| image.original_path));
+    let Some(path) = path else { return Ok(None) };
+    tauri::async_runtime::spawn_blocking(move || preview::image_data_url(std::path::Path::new(&path)).map(Some))
+        .await
+        .map_err(|error| format!("Failed to join the image preview task: {error}"))?
+}
+
 #[tauri::command]
 pub async fn hide_clipboard_popup(app: AppHandle) -> Result<(), String> {
     popup::hide(&app)
@@ -530,6 +558,7 @@ macro_rules! tauri_commands {
             crate::clipboard_history::set_clipboard_history_item_note,
             crate::clipboard_history::delete_clipboard_history_item,
             crate::clipboard_history::clear_clipboard_history,
+            crate::clipboard_history::get_clipboard_image_preview,
         ] $($rest)*)
     };
 }

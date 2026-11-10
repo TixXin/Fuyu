@@ -8,8 +8,9 @@ use std::{fs, path::Path};
 
 use serde_json::Value;
 
-/// `<publisher>.<name>` of the extension; also the authority of the links it handles.
-const EXTENSION_ID: &str = "tixxin.focusd-island";
+/// `<publisher>.<name>` of the extension, also the authority of the links it handles: the one
+/// published after the rename (D17) first, then the one before it, which users may still have.
+const EXTENSION_IDS: [&str; 2] = ["tixxin.fuyu", "tixxin.focusd-island"];
 
 /// Editors by executable name (lowercase, no ".exe"): their link scheme and the folder under the
 /// user's home that holds their extensions.
@@ -31,15 +32,18 @@ pub(super) fn editor_of_app(app: &str) -> Option<(&'static str, &'static str)> {
         .map(|&(_, scheme, folder)| (scheme, folder))
 }
 
-/// Whether the extension is installed in `extensions_dir`: a `tixxin.focusd-island-<version>`
-/// folder that is not listed in `.obsolete`, where the editor keeps uninstalled extensions until it
-/// restarts.
-pub(super) fn extension_installed(extensions_dir: &Path) -> bool {
+/// The id of the extension installed in `extensions_dir`: a `<id>-<version>` folder that is not
+/// listed in `.obsolete`, where the editor keeps uninstalled extensions until it restarts.
+pub(super) fn installed_extension(extensions_dir: &Path) -> Option<&'static str> {
+    EXTENSION_IDS.into_iter().find(|id| extension_installed(extensions_dir, id))
+}
+
+fn extension_installed(extensions_dir: &Path, id: &str) -> bool {
     let obsolete = fs::read_to_string(extensions_dir.join(".obsolete"))
         .ok()
         .and_then(|text| serde_json::from_str::<Value>(&text).ok())
         .unwrap_or(Value::Null);
-    let prefix = format!("{EXTENSION_ID}-");
+    let prefix = format!("{id}-");
     let Ok(entries) = fs::read_dir(extensions_dir) else {
         return false;
     };
@@ -55,9 +59,9 @@ pub(super) fn extension_installed(extensions_dir: &Path) -> bool {
 
 /// The link that asks the extension to show the terminal of the session: `chain` is the session's
 /// process and its ancestors, `title` its title for when no process is known.
-pub(super) fn focus_link(scheme: &str, chain: &[u32], title: Option<&str>) -> String {
+pub(super) fn focus_link(scheme: &str, extension: &str, chain: &[u32], title: Option<&str>) -> String {
     let pids = chain.iter().map(u32::to_string).collect::<Vec<_>>().join(",");
-    let mut link = format!("{scheme}://{EXTENSION_ID}/focus?pids={pids}");
+    let mut link = format!("{scheme}://{extension}/focus?pids={pids}");
     if let Some(title) = title.filter(|title| !title.is_empty()) {
         link.push_str("&title=");
         link.push_str(&percent_encode(title));
@@ -94,12 +98,12 @@ pub(super) fn show_session_terminal(
     title: Option<&str>,
 ) -> Option<EditorTerminal> {
     let (scheme, folder) = editor_of_app(app)?;
-    if !extension_installed(&home_dir.join(folder).join("extensions")) {
+    let Some(extension) = installed_extension(&home_dir.join(folder).join("extensions")) else {
         return Some(EditorTerminal::NoExtension);
-    }
+    };
     if chain.is_empty() && title.is_none_or(str::is_empty) {
         return Some(EditorTerminal::Failed);
     }
-    let opened = tauri_plugin_opener::open_url(focus_link(scheme, chain, title), None::<&str>);
+    let opened = tauri_plugin_opener::open_url(focus_link(scheme, extension, chain, title), None::<&str>);
     Some(if opened.is_ok() { EditorTerminal::Sent } else { EditorTerminal::Failed })
 }

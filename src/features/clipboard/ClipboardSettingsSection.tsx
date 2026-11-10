@@ -4,7 +4,7 @@ import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsRow } from "../../components/settings/SettingsRow";
 import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
 import { useTranslation } from "../../i18n";
-import type { ClipboardHistorySettings, ClipboardOpenIn, ClipboardPopupPosition } from "./api";
+import type { ClipboardHistorySettings, ClipboardOpenIn, ClipboardPopupLayout, ClipboardPopupPosition } from "./api";
 import { ClipboardRecordSettings } from "./ClipboardRecordSettings";
 
 /**
@@ -54,6 +54,24 @@ export function ClipboardSettingsSection({ clipboardSettings, onClipboardSetting
                   { value: "center", label: text.popupPositionOptions.center },
                 ]}
                 onChange={(popupPosition) => change({ popupPosition })}
+              />
+            }
+          />
+        )}
+        {inWindow && (
+          <SettingsRow
+            indent
+            title={text.popupLayout}
+            description={text.popupLayoutHint}
+            control={
+              <SettingsChoice<ClipboardPopupLayout>
+                value={clipboardSettings.popupLayout ?? "standard"}
+                ariaLabel={text.popupLayout}
+                options={[
+                  { value: "standard", label: text.popupLayoutOptions.standard },
+                  { value: "wide", label: text.popupLayoutOptions.wide },
+                ]}
+                onChange={(popupLayout) => change({ popupLayout })}
               />
             }
           />

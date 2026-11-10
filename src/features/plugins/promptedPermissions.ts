@@ -6,7 +6,7 @@ export type SensitivePermission = (typeof SENSITIVE_PERMISSIONS)[number];
 export type PluginSensitiveChoice = "allowed" | "denied";
 export const isSensitivePermission = (name: string): name is SensitivePermission =>
   (SENSITIVE_PERMISSIONS as readonly string[]).includes(name);
-// 与 src-tauri/src/plugin_host/uri.rs 中的 URI_PERMISSION 对应：插件第一次收到 focusd:// 链接前，岛上像敏感权限一样询问。
+// 与 src-tauri/src/plugin_host/uri.rs 中的 URI_PERMISSION 对应：插件第一次收到 fuyu://（或 focusd://） 链接前，岛上像敏感权限一样询问。
 export const PLUGIN_URI_PERMISSION = "uri";
 /** What the island asks the user about: a sensitive permission, an optional permission, or opening links (onUri). */
 export type PromptedPermission = PluginPermission | typeof PLUGIN_URI_PERMISSION;

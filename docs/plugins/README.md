@@ -398,7 +398,7 @@ QQ 邮箱授权码、翻译服务密钥这类凭据，任何权限都拿不到�
 | `settings.changed` | 1 | `{ settings }` | 用户在设置页上改了设置；`settings` 是全部设置的新值 |
 | `event` | 2 | `{ name, payload }` | 订阅的事件发生了，见下文的「事件」 |
 | `notification.action` | 2 | `{ id }` | 用户点了 `island.notify` 消息上的某个按钮 |
-| `uri` | 2 | `{ uri, path, query }` | 打开了发给这个插件的 `focusd://` 链接（清单需要 `onUri`），见「链接」 |
+| `uri` | 2 | `{ uri, path, query }` | 打开了发给这个插件的 `fuyu://` 或 `focusd://` 链接（清单需要 `onUri`），见「链接」 |
 | `view.visible` | 2 | `{ viewId, visible }` | 插件页面出现在屏幕上或被关上；不可见时岛屿不转发更新 |
 | `view.action` | 2 | `{ viewId, actionId, itemId?, checked? }` | 用户点了页面上的按钮、条目或勾选框 |
 | `view.submit` | 2 | `{ viewId, values }` | 用户提交了 `form` 页面 |
@@ -540,7 +540,7 @@ QQ 邮箱授权码、翻译服务密钥这类凭据，任何权限都拿不到�
 | `onView:<id>` | 用户打开了这个岛上页面 |
 | `onEvent:<事件名>` | 发生了这个事件（需要事件对应的权限；敏感权限会先在岛上询问）。插件会直接收到这次的 `event` 通知，不用先订阅 |
 | `onSchedule:<分钟>` | 每隔这么多分钟启动一次，5–1440 |
-| `onUri` | 打开了 `focusd://plugin/<插件 id>/...` 链接，见下文的「链接」 |
+| `onUri` | 打开了 `fuyu://plugin/<插件 id>/...`（或 `focusd://`）链接，见下文的「链接」 |
 
 - `contributes.commands` 和 `contributes.views` 会自动加上对应的 `onCommand:<id>` / `onView:<id>`，不用重复写。所以 `"activationEvents": []` 表示"只在用户用到命令或页面时启动"。
 - 启动时，触发这次启动的命令、事件或页面消息会等 `initialize` 发出之后再送达，最多等 10 秒。`initialize.activationEvent` 告诉插件这次是因为什么启动的（常驻插件为 `onStartup`）。
@@ -551,7 +551,7 @@ QQ 邮箱授权码、翻译服务密钥这类凭据，任何权限都拿不到�
 
 ### 链接（第 2 版）
 
-岛屿为当前用户注册了 `focusd://` 链接。网页或其他程序打开 `focusd://plugin/<插件 id>/<路径>?<查询>` 时，Windows 把链接交给岛屿（岛屿没在运行时会先启动它），岛屿再发给这个插件，插件可以借此接收登录回调之类的数据。
+岛屿为当前用户注册了 `fuyu://` 链接，以及改名前的 `focusd://`（两个都打开插件，已经写进网页或 OAuth 回调地址的旧链接不用改）。网页或其他程序打开 `fuyu://plugin/<插件 id>/<路径>?<查询>` 时，Windows 把链接交给岛屿（岛屿没在运行时会先启动它），岛屿再发给这个插件，插件可以借此接收登录回调之类的数据。
 
 - 只有 `activationEvents` 里写了 `onUri` 的插件能收到链接；按需启动的插件会被唤醒。插件收到 `uri { uri, path, query }`：`path` 是插件 id 后面的部分（以 `/` 开头，没有时为空），`query` 是 `?` 后面、`#` 前面的部分，仍是百分号编码。整个链接最长 2048 个字符，不能有空白。
 - 任何网页都能放这种链接，所以插件第一次收到链接前，岛上会像敏感权限一样询问用户（允许 / 本次 / 拒绝）。答案记在插件的「敏感权限」里，可以撤销。插件被关闭、没写 `onUri` 或用户拒绝时，链接被丢弃。
@@ -617,7 +617,7 @@ plugin.onCommand("sync-now", async () => {
 
 ### 放进插件市场
 
-市场列表来自 [`TixXin/focusd-plugins`](https://github.com/TixXin/focusd-plugins) 仓库根目录的 `index.json`。插件包放在**你自己仓库的 GitHub Release** 里，市场仓库只记录插件在哪里；它的 CI 每小时检查一次新版本，校验后重建索引并签名。完整步骤见那里的 [CONTRIBUTING.md](https://github.com/TixXin/focusd-plugins/blob/main/CONTRIBUTING.md)，简要来说：
+市场列表来自 [`TixXin/fuyu-plugins`](https://github.com/TixXin/fuyu-plugins) 仓库根目录的 `index.json`。插件包放在**你自己仓库的 GitHub Release** 里，市场仓库只记录插件在哪里；它的 CI 每小时检查一次新版本，校验后重建索引并签名。完整步骤见那里的 [CONTRIBUTING.md](https://github.com/TixXin/fuyu-plugins/blob/main/CONTRIBUTING.md)，简要来说：
 
 1. 用 `npx fuyu-plugin validate` 检查，`npx fuyu-plugin pack` 打包，得到 `<id>-<version>.zip`。
 2. 在自己的仓库发布 GitHub Release：标签是清单的 `version`（可以带 `v`），附件是这个 zip，文件名不能改。
@@ -679,7 +679,7 @@ plugin.onCommand("sync-now", async () => {
 
 1. 修改插件并提高 `version`，在本机运行 `pnpm plugins:index`（需要旧签名私钥，见下文；以及官方作者密钥 `~/.tauri/fly-island/plugin-author-signing.key`，公钥在 `plugins/author-key.json`）。脚本把插件打成 `plugins/packages/<id>-<version>.zip` 并写出作者签名 `<zip>.sig`，重写并签名本仓库的 `plugins/index.json` 和 `plugins/revoked.json`。文本文件打包时统一成 LF，时间戳固定，所以同一份源码每次得到同一个哈希。
 2. 提交并 land。
-3. 在 `focusd-plugins` 里把 `plugins/<id>.json` 的 `package` 改成新 zip 的地址（`https://raw.githubusercontent.com/TixXin/fly-island/main/plugins/packages/<id>-<version>.zip`），合并后 CI 更新市场索引。
+3. 在 `focusd-plugins` 里把 `plugins/<id>.json` 的 `package` 改成新 zip 的地址（`https://raw.githubusercontent.com/TixXin/fuyu/main/plugins/packages/<id>-<version>.zip`），合并后 CI 更新市场索引。
 
 本仓库的 `plugins/index.json` 只给切换到 `focusd-plugins` 之前发布的岛屿（它们读 `main`，更早的读 `dev`，`dev` 与 `main` 保持同一个提交），只含官方插件。
 

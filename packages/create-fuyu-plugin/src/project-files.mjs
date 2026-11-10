@@ -156,7 +156,7 @@ export function readme(options) {
   ];
   return `# ${options.name.en}
 
-${options.name["zh-CN"]}: a [Fuyu](https://github.com/TixXin/fly-island) plugin.
+${options.name["zh-CN"]}: a [Fuyu](https://github.com/TixXin/fuyu) plugin.
 
 ## Develop
 
@@ -168,7 +168,7 @@ ${options.name["zh-CN"]}: a [Fuyu](https://github.com/TixXin/fly-island) plugin.
 ${steps.join("\n")}
 \`\`\`
 
-The plugin API: <https://github.com/TixXin/fly-island/blob/main/docs/plugins/README.md>.
+The plugin API: <https://github.com/TixXin/fuyu/blob/main/docs/plugins/README.md>.
 
 ## Publish
 

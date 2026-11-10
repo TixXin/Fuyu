@@ -20,14 +20,16 @@ use super::claude_hooks::{
     CLAUDE_CODE_WAITING_NOTIFICATIONS,
 };
 use crate::agent_approval::{self, Agent};
-use super::FOCUSD_AGENT_HOOK_SIGNATURE;
+use super::AGENT_HOOK_SIGNATURE;
 use super::remote_fetch::{run_ssh, APPROVAL_PORT_FILE};
 use super::remote_hosts::{self, SshTarget};
-use super::reply_marker::{rules_file, without_block, BLOCK_START_PREFIX, RULES_FILE};
+use super::reply_marker::{rules_file, without_block, BLOCK_START_PREFIX, LEGACY_BLOCK_START_PREFIX, LEGACY_RULES_FILE, RULES_FILE};
 
 /// Under the remote home, and at the same place in its mirror, read as the local folder is
 /// (notifications.rs). The fetch drops files there older than a day.
-pub(super) const REMOTE_NOTIFICATIONS_DIR: &str = ".focusd-island/agent-notifications";
+pub(super) const REMOTE_NOTIFICATIONS_DIR: &str = ".fuyu/agent-notifications";
+/// Where hooks from before the rename (D17) save them; still fetched until they are repaired.
+pub(super) const LEGACY_REMOTE_NOTIFICATIONS_DIR: &str = ".focusd-island/agent-notifications";
 const SETTINGS_PATH: &str = ".claude/settings.json";
 const CLAUDE_MD_PATH: &str = ".claude/CLAUDE.md";
 const CLAUDE_DIR: &str = ".claude";
@@ -46,12 +48,12 @@ pub struct RemoteResult {
 /// The hooks a remote computer gets: its own `sh` saves the hook input, nothing calls back.
 fn remote_hook_entries() -> Vec<(&'static str, Value)> {
     // `$$` (the hook's own shell) tells apart hooks running at once. The file name carries the
-    // hook signature (`focusd-agent-`), so Install/Repair finds and replaces its own entries.
+    // hook signature (`fuyu-agent-`), so Install/Repair finds and replaces its own entries.
     // The input carries tool arguments, so the files are the user's alone.
     let hook = json!({
         "type": "command",
         "command": format!(
-            "umask 077; d=\"$HOME/{REMOTE_NOTIFICATIONS_DIR}\"; mkdir -p \"$d\" && f=\"$d/focusd-agent-$$-$(date +%s%N)\" && cat > \"$f.tmp\" && mv \"$f.tmp\" \"$f.json\""
+            "umask 077; d=\"$HOME/{REMOTE_NOTIFICATIONS_DIR}\"; mkdir -p \"$d\" && f=\"$d/fuyu-agent-$$-$(date +%s%N)\" && cat > \"$f.tmp\" && mv \"$f.tmp\" \"$f.json\""
         ),
         "timeout": 5
     });
@@ -101,8 +103,8 @@ impl RemoteApproval {
             "read N P H K 2>/dev/null < \"$HOME/{APPROVAL_PORT_FILE}\" && [ \"$H\" = \"$(uname -n)\" ] && [ -n \"$K\" ] && \
              curl -s --noproxy '*' {wait} -H \"Host: 127.0.0.1:$P\" -H \"Authorization: Bearer $K\"{}{}{} --data-binary @- \"http://127.0.0.1:$N/{path}\" || exit 1",
             header("Content-Type: application/json".into()),
-            header(format!("X-FocuSD-Remote: {}", self.host)),
-            header(format!("{APPROVAL_HOOK_MARKER_HEADER}: {FOCUSD_AGENT_HOOK_SIGNATURE}{marker}")),
+            header(format!("X-Fuyu-Remote: {}", self.host)),
+            header(format!("{APPROVAL_HOOK_MARKER_HEADER}: {AGENT_HOOK_SIGNATURE}{marker}")),
         )
     }
 
@@ -201,19 +203,21 @@ pub(super) fn install_hooks(app_dir: &Path) -> Vec<RemoteResult> {
 /// here: written, or deleted when it is the island's; an older block leaves `CLAUDE.md`.
 pub(super) fn set_reply_marker(app_dir: &Path, enabled: bool) -> Vec<RemoteResult> {
     let rules_path = format!("{CLAUDE_DIR}/{RULES_FILE}");
+    let legacy_path = format!("{CLAUDE_DIR}/{LEGACY_RULES_FILE}");
     for_each_remote(app_dir, &|_, target| {
         if enabled {
             edit(target, &rules_path, &|_| Ok(rules_file()))?;
         } else {
             run_ssh(target, &delete_rules_script(&rules_path))?;
         }
+        run_ssh(target, &delete_rules_script(&legacy_path))?;
         edit(target, CLAUDE_MD_PATH, &|text| Ok(without_block(text)))
     })
 }
 
 /// Deletes `~/<path>` only when it is the island's rules file.
 fn delete_rules_script(path: &str) -> String {
-    format!("f=\"$HOME/{path}\"\nif grep -qF '{BLOCK_START_PREFIX}' \"$f\" 2>/dev/null; then rm -f \"$f\"; fi\nexit 0\n")
+    format!("f=\"$HOME/{path}\"\nif grep -qF -e '{BLOCK_START_PREFIX}' -e '{LEGACY_BLOCK_START_PREFIX}' \"$f\" 2>/dev/null; then rm -f \"$f\"; fi\nexit 0\n")
 }
 
 #[cfg(test)]
@@ -236,7 +240,7 @@ mod tests {
             .as_str()
             .unwrap()
             .ends_with("mv \"$f.tmp\" \"$f.json\""));
-        assert!(config["hooks"]["PostCompact"][0]["hooks"][0]["command"].as_str().unwrap().contains("focusd-agent-"));
+        assert!(config["hooks"]["PostCompact"][0]["hooks"][0]["command"].as_str().unwrap().contains("fuyu-agent-"));
         assert!(with_remote_hooks("", None).is_ok());
         assert!(with_remote_hooks("[1]", None).is_err());
         assert!(with_remote_hooks("{not json", None).is_err());
@@ -291,7 +295,7 @@ mod tests {
         assert_eq!(mode, "600", "only the user may read the token");
         assert_eq!(run(&hook), "{\"ok\":\"yes\"} exit=0");
         let request = seen.join().unwrap();
-        assert!(request.contains("Host: 127.0.0.1:47839\r\n") && request.contains("X-FocuSD-Remote: test\r\n"), "{request}");
+        assert!(request.contains("Host: 127.0.0.1:47839\r\n") && request.contains("X-Fuyu-Remote: test\r\n"), "{request}");
         assert!(request.contains("Authorization: Bearer ab12\r\n"), "{request}");
 
         drop(connection);
@@ -315,10 +319,10 @@ mod tests {
         let permission = config["hooks"]["PermissionRequest"].as_array().unwrap();
         assert_eq!(permission.len(), 2);
         let curl = permission[1]["hooks"][0]["command"].as_str().unwrap();
-        assert!(curl.starts_with("read N P H K 2>/dev/null < \"$HOME/.focusd-island/approval-port\" && [ \"$H\" = \"$(uname -n)\" ] && [ -n \"$K\" ] && curl -s --noproxy '*' -f -m 145 -H \"Host: 127.0.0.1:$P\" -H \"Authorization: Bearer $K\" "));
+        assert!(curl.starts_with("read N P H K 2>/dev/null < \"$HOME/.fuyu/approval-port\" && [ \"$H\" = \"$(uname -n)\" ] && [ -n \"$K\" ] && curl -s --noproxy '*' -f -m 145 -H \"Host: 127.0.0.1:$P\" -H \"Authorization: Bearer $K\" "));
         // The token comes from the port file, which only the user can read; settings.json may be
         // readable by others on a shared server.
-        assert!(curl.contains("-H 'X-FocuSD-Remote: zcm6'"));
+        assert!(curl.contains("-H 'X-Fuyu-Remote: zcm6'"));
         assert!(curl.ends_with("--data-binary @- \"http://127.0.0.1:$N/claude/permission-request\" || exit 1"));
         assert_eq!(path_of(Some("http://127.0.0.1:47830/claude/activity".into())).as_deref(), Some("claude/activity"));
         assert_eq!(config["hooks"]["PreToolUse"][0]["matcher"], "AskUserQuestion");

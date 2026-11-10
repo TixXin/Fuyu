@@ -102,7 +102,7 @@ if (!automated) {
     const syncCard = [...document.querySelectorAll<HTMLElement>(".plugin-card")].find((card) => card.textContent?.includes("待办同步示例"));
     await act(async () => { [...(syncCard?.querySelectorAll<HTMLButtonElement>(".plugin-card__button") ?? [])].find((button) => button.textContent === "设置")?.click(); });
     const sensitiveRows = [...document.querySelectorAll<HTMLElement>(".plugin-detail__sensitive li")];
-    const linkRow = sensitiveRows.find((row) => row.textContent?.includes("focusd:// 链接"));
+    const linkRow = sensitiveRows.find((row) => row.textContent?.includes("fuyu:// 链接"));
     check(sensitiveRows.length === 2 && linkRow?.querySelector("em")?.textContent === "已允许", "A plugin that lists onUri shows the remembered answer for links next to its sensitive permissions");
     await act(async () => { linkRow?.querySelector("button")?.click(); });
     check(revokedPermissions.includes("uri"), "Revoking the link answer forgets it like a sensitive permission");
@@ -164,7 +164,7 @@ if (!automated) {
       && document.querySelector(".plugin-market__sort"), "Cards show the likes from GitHub, and a sort menu appears with them (E14)");
     const opensBefore = openedUrls.length;
     await act(async () => { likeButtons.find((button) => button.textContent === "12")?.click(); });
-    check(openedUrls.length === opensBefore + 1 && openedUrls[openedUrls.length - 1] === "https://github.com/TixXin/focusd-plugins/discussions/9", "The like button opens the plugin's discussion");
+    check(openedUrls.length === opensBefore + 1 && openedUrls[openedUrls.length - 1] === "https://github.com/TixXin/fuyu-plugins/discussions/9", "The like button opens the plugin's discussion");
     check(document.querySelector(".plugin-market__status")?.textContent?.startsWith("共 ") && !document.querySelector(".plugin-market__header > span:only-child"), "A status line with the plugin count takes the place of a second Plugin market title");
     const officialBadges = document.querySelectorAll(".plugin-market__badge--official");
     check(officialBadges.length > 0 && [...document.querySelectorAll(".plugin-market__meta")].every((meta) => !meta.textContent?.includes("· 官方")), "Official plugins carry one small mark instead of a publisher line");

@@ -7,7 +7,9 @@ use std::io::{BufRead, Read, Write};
 use super::config::remote_token;
 
 /// Names the SSH remote computer a request came from, through the island's reverse forward.
-pub(super) const REMOTE_HEADER: &str = "x-focusd-remote";
+pub(super) const REMOTE_HEADER: &str = "x-fuyu-remote";
+/// The header's name before the rename (D17), sent by remote hooks not yet repaired.
+const LEGACY_REMOTE_HEADER: &str = "x-focusd-remote";
 
 /// A hook's input: a command with its full output, or a file being written, can be large.
 pub(super) const MAX_BODY_BYTES: usize = 4 * 1024 * 1024;
@@ -165,7 +167,10 @@ pub(super) fn check_access(request: &HttpRequest, token: &str, port: u16) -> Res
     if !host_ok {
         return Err(error(403, "Unexpected Host."));
     }
-    let remote = request.header(REMOTE_HEADER).filter(|host| !host.is_empty()).map(str::to_string);
+    let remote = [REMOTE_HEADER, LEGACY_REMOTE_HEADER]
+        .into_iter()
+        .find_map(|name| request.header(name).filter(|host| !host.is_empty()))
+        .map(str::to_string);
     let expected = remote.as_deref().map_or_else(|| token.to_string(), |host| remote_token(token, host));
     let presented = request.header("authorization").and_then(|value| value.strip_prefix("Bearer ")).unwrap_or_default();
     if !same_secret(presented.trim().as_bytes(), expected.as_bytes()) {

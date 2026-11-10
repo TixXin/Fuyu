@@ -6,7 +6,7 @@ import { repositoryUrl } from "./marketFilter";
 
 const isPermission = (name: string): name is PluginPermission => (PLUGIN_PERMISSIONS as readonly string[]).includes(name);
 /** Where problems are reported for plugins whose index entry names no repository. */
-const REPORT_URL = "https://github.com/TixXin/fly-island/issues/new";
+const REPORT_URL = "https://github.com/TixXin/fuyu/issues/new";
 
 /** What a market card shows once opened: permissions, runtime, README, version history and links. */
 export function MarketPluginDetails({ plugin }: { plugin: MarketPlugin }) {

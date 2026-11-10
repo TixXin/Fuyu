@@ -68,7 +68,7 @@ node scripts/release/make-latest-json.mjs --base-url "https://ghfast.top/https:/
 
 更新包必须用私钥签名，App 用内置的公钥验证。**私钥不进仓库**，归仓库维护者所有。
 
-`tauri.conf.json` 的 `plugins.updater.pubkey` 里直接写着本仓库（TixXin/fly-island）的更新公钥。公钥本身不是秘密，写进仓库后，本地 `pnpm tauri build`、`pnpm tauri dev` 出来的程序也能检查和安装本仓库发布的更新。这个字段在插件配置里是必填项（没有默认值），删掉整个键会让应用在启动阶段报 `missing field \`pubkey\`` 并直接退出；改成空串不会影响启动，面板会显示「这里不能应用内更新」并禁用更新入口。别人 fork 本仓库做自己的发布线时，应把它换成自己的公钥或清空。
+`tauri.conf.json` 的 `plugins.updater.pubkey` 里直接写着本仓库（TixXin/fuyu）的更新公钥。公钥本身不是秘密，写进仓库后，本地 `pnpm tauri build`、`pnpm tauri dev` 出来的程序也能检查和安装本仓库发布的更新。这个字段在插件配置里是必填项（没有默认值），删掉整个键会让应用在启动阶段报 `missing field \`pubkey\`` 并直接退出；改成空串不会影响启动，面板会显示「这里不能应用内更新」并禁用更新入口。别人 fork 本仓库做自己的发布线时，应把它换成自己的公钥或清空。
 
 发布构建仍通过 `TAURI_UPDATER_PUBKEY` 传入公钥，`prepare-release-config.mjs` 会核对它和 `tauri.conf.json` 里的公钥一致，不一致就中止：用别的私钥签名的更新包，已装的 App 都会拒绝安装。
 
@@ -151,8 +151,8 @@ pnpm tauri signer generate -w $env:USERPROFILE\.tauri\fly-island.key
 6. 本机的 release 程序和桌面快捷方式已由 `pnpm release` 换成新版本，不用再跑 `pnpm build:exe`；输出里提示复制失败时才手动跑一次。两个通道的清单已由 `pnpm release` 核对过，不用再手动检查；需要时也可以手动看：
 
    ```powershell
-   gh release download --repo TixXin/fly-island --pattern latest.json --dir $env:TEMP\stable --clobber
-   gh release download beta-channel --repo TixXin/fly-island --pattern latest.json --dir $env:TEMP\beta --clobber
+   gh release download --repo TixXin/fuyu --pattern latest.json --dir $env:TEMP\stable --clobber
+   gh release download beta-channel --repo TixXin/fuyu --pattern latest.json --dir $env:TEMP\beta --clobber
    ```
 
 版本号和发布说明的提交照常在 lane 里 land 到 `main`，再在同一个 lane（停在 land 后的提交、工作区干净）里运行 `pnpm release`，不要在主工作区里发布。
@@ -166,7 +166,7 @@ CI 也可以复用同样的步骤：在仓库 Secrets 里存 `TAURI_UPDATER_PUBK
 **测试版（beta）有问题**：把 beta 通道的清单换回上一个好的版本。
 
 ```powershell
-$repo = "TixXin/fly-island"
+$repo = "TixXin/fuyu"
 # 取上一个好版本 Release 里的 latest.json，覆盖到 beta-channel 上
 gh release download v0.3.1-beta.2 --repo $repo --pattern latest.json --dir $env:TEMP\rollback --clobber
 gh release upload beta-channel "$env:TEMP\rollback\latest.json" --repo $repo --clobber
@@ -177,8 +177,8 @@ gh release upload beta-channel "$env:TEMP\rollback\latest.json" --repo $repo --c
 **正式版有问题**：把 GitHub 的 Latest 指回上一个好版本，稳定版用户检查更新就会拿到它的清单（版本不比自己新，所以不会再提示）。
 
 ```powershell
-gh release edit v0.3.0 --repo TixXin/fly-island --latest
-gh release edit v0.3.2 --repo TixXin/fly-island --prerelease --latest=false   # 有问题的那个
+gh release edit v0.3.0 --repo TixXin/fuyu --latest
+gh release edit v0.3.2 --repo TixXin/fuyu --prerelease --latest=false   # 有问题的那个
 ```
 
 把有问题的版本改成 Pre-release，是为了它不会被 GitHub 重新当成 Latest。修好后照常 `pnpm release` 一个更高的版本，它会重新成为 Latest。
@@ -193,4 +193,4 @@ gh release edit v0.3.2 --repo TixXin/fly-island --prerelease --latest=false   # 
 - **一直显示已是最新版本**：确认 release 里的 `latest.json` 的 `version` 高于客户端版本；同一版本号重发不会触发更新。
 - **提示签名校验失败**：`latest.json` 里的 `signature` 必须来自本次安装包的 `.sig` 文件，且签名私钥与构建时注入的公钥配对。
 - **发布后短时间内检查不到**：`releases/latest/download/` 走 CDN，通常几分钟内生效。
-- **只想手动下载安装包**：直接访问 [GitHub Releases](https://github.com/TixXin/fly-island/releases/latest)；设置中的「查看最新版本」用于应用内检查、下载和安装。
+- **只想手动下载安装包**：直接访问 [GitHub Releases](https://github.com/TixXin/fuyu/releases/latest)；设置中的「查看最新版本」用于应用内检查、下载和安装。
