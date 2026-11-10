@@ -7,16 +7,18 @@ mod button;
 mod chats;
 mod gate;
 mod plugin_view;
+mod reader;
 mod source;
 
 #[cfg(test)]
 mod tests;
 
+use reader::{ChatReader, Flash, Listing, PlainReason};
 use serde::Serialize;
 use source::{installed_executable, ReminderListener, ReminderSignal};
 use std::{
     cell::RefCell,
-    path::{Path, PathBuf},
+    path::Path,
     rc::Rc,
     sync::{mpsc, Arc, Mutex, OnceLock},
     thread,
@@ -42,6 +44,8 @@ pub struct ReminderSnapshot {
     error: Option<String>,
     /// The newest message read from WeChat's chat list; `None` while the list is not readable.
     message: Option<ChatMessage>,
+    /// The reminders since the island started (or the list was cleared), newest first.
+    items: Vec<ReminderItem>,
     /// Setting: switch WeChat's Qt accessibility on so its chat list can be read.
     expose_ui: bool,
     /// How that is going, for the settings; `None` while off.
@@ -65,6 +69,19 @@ pub struct ChatMessage {
     at: u64,
 }
 
+/// One row of the panel's list: a chat message, or a reminder that came without one.
+#[derive(Clone, Debug, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ReminderItem {
+    /// When it came, in ms; unique, so also the row's key.
+    at: u64,
+    message: Option<ChatMessage>,
+    /// Why there is no message; `None` too when the chat list is not read at all (setting off).
+    reason: Option<PlainReason>,
+}
+
+const MAX_ITEMS: usize = 20;
+
 impl Default for ReminderSnapshot {
     fn default() -> Self {
         Self {
@@ -75,6 +92,7 @@ impl Default for ReminderSnapshot {
             last_attention_at: None,
             error: None,
             message: None,
+            items: Vec::new(),
             expose_ui: false,
             expose_status: None,
             hide_taskbar_button: false,
@@ -138,15 +156,33 @@ impl ReminderState {
             return false;
         }
         match signal {
-            ReminderSignal::Attention if !self.snapshot.pending => {
-                self.snapshot.pending = true;
-                self.snapshot.last_attention_at = Some(now);
-            }
+            ReminderSignal::Attention => return self.remind(generation, now, None),
             ReminderSignal::Activated if self.snapshot.pending => self.snapshot.pending = false,
             _ => return false,
         }
         self.snapshot.revision += 1;
         true
+    }
+
+    /// A flash without a message: one reminder (and one row) until WeChat is looked at.
+    fn remind(&mut self, generation: u64, now: u64, reason: Option<PlainReason>) -> bool {
+        if !self.snapshot.enabled || self.generation != generation || self.snapshot.pending {
+            return false;
+        }
+        self.snapshot.pending = true;
+        self.snapshot.last_attention_at = Some(now);
+        self.remember(ReminderItem {
+            at: now,
+            message: None,
+            reason,
+        });
+        self.snapshot.revision += 1;
+        true
+    }
+
+    fn remember(&mut self, item: ReminderItem) {
+        self.snapshot.items.insert(0, item);
+        self.snapshot.items.truncate(MAX_ITEMS);
     }
 
     /// A message read from the chat list: pending as for a flash, plus the message to show.
@@ -158,6 +194,11 @@ impl ReminderState {
             self.snapshot.pending = true;
             self.snapshot.last_attention_at = Some(message.at);
         }
+        self.remember(ReminderItem {
+            at: message.at,
+            message: Some(message.clone()),
+            reason: None,
+        });
         self.snapshot.message = Some(message);
         self.snapshot.revision += 1;
         true
@@ -300,6 +341,23 @@ pub fn set_wechat_hide_taskbar_button(enabled: bool) -> Result<ReminderSnapshot,
     Ok(snapshot)
 }
 
+/// Empties the panel's list; a pending reminder stays pending.
+#[tauri::command]
+pub fn clear_wechat_reminders() -> Result<ReminderSnapshot, String> {
+    let service = service()?;
+    let snapshot = {
+        let mut state = service.state.lock().map_err(|_| "微信提醒状态不可用。")?;
+        if state.snapshot.items.is_empty() {
+            return Ok(state.snapshot.clone());
+        }
+        state.snapshot.items.clear();
+        state.snapshot.revision += 1;
+        state.snapshot.clone()
+    };
+    publish(service, snapshot.clone());
+    Ok(snapshot)
+}
+
 /// Puts WeChat's byte and taskbar button back when the island exits.
 pub(crate) fn shutdown() {
     if let Some(service) = SERVICE.get() {
@@ -355,141 +413,34 @@ fn now_ms() -> u64 {
         .as_millis() as u64
 }
 
+/// Changes the state with `change` and publishes it when that says something changed.
+fn update(service: &ReminderService, change: impl FnOnce(&mut ReminderState) -> bool) {
+    let snapshot = {
+        let Ok(mut state) = service.state.lock() else {
+            return;
+        };
+        if !change(&mut state) {
+            return;
+        }
+        state.snapshot.clone()
+    };
+    publish(service, snapshot);
+}
+
 fn signal(service: &ReminderService, generation: u64, event: ReminderSignal) {
-    let now = now_ms();
-    let snapshot = {
-        let Ok(mut state) = service.state.lock() else {
-            return;
-        };
-        if !state.apply(generation, event, now) {
-            return;
-        }
-        state.snapshot.clone()
+    update(service, |state| state.apply(generation, event, now_ms()));
+}
+
+/// WeChat's chat list as it is now, for the reader.
+fn look(executable: &Path) -> Listing {
+    let Some(window) = main_window(executable) else {
+        return Listing::Unreadable;
     };
-    publish(service, snapshot);
-}
-
-fn receive(service: &ReminderService, generation: u64, message: ChatMessage) {
-    let snapshot = {
-        let Ok(mut state) = service.state.lock() else {
-            return;
-        };
-        if !state.receive(generation, message) {
-            return;
-        }
-        state.snapshot.clone()
-    };
-    publish(service, snapshot);
-}
-
-/// WeChat updates its list a moment after the flash; a list that has not changed yet is read
-/// again a few times before the reminder goes out without a message.
-const SETTLE: Duration = Duration::from_millis(400);
-const RETRY: Duration = Duration::from_millis(700);
-const READS: u32 = 3;
-
-/// Reads WeChat's chat list after flashes and compares it with the last read.
-struct ChatReader {
-    executable: PathBuf,
-    seen: Option<Vec<chats::Session>>,
-    due: Option<Instant>,
-    reads: u32,
-    /// Read the list again once the user has left WeChat: what changed while they were in it is
-    /// not news at the next flash.
-    rebase: Option<Instant>,
-    in_wechat: bool,
-    /// The "show the contact and message" setting. Off, the list is never read, even while a
-    /// screen reader has WeChat's UI exposed: who wrote and what shows only when the user asked.
-    allowed: bool,
-}
-
-impl ChatReader {
-    fn new(executable: PathBuf, allowed: bool) -> Self {
-        let mut reader = Self {
-            executable,
-            seen: None,
-            due: None,
-            reads: 0,
-            rebase: None,
-            in_wechat: false,
-            allowed,
-        };
-        reader.seen = reader.read();
-        reader
-    }
-
-    fn read(&self) -> Option<Vec<chats::Session>> {
-        if !self.allowed {
-            return None;
-        }
-        chats::read(main_window(&self.executable)?)
-    }
-
-    /// Follows the setting; turned on, the list as it is becomes the baseline.
-    fn set_allowed(&mut self, allowed: bool) {
-        if self.allowed != allowed {
-            self.allowed = allowed;
-            self.seen = self.read();
-        }
-    }
-
-    fn flashed(&mut self) {
-        self.rebase = None;
-        if self.due.is_none() {
-            // Nothing readable last time: find out now rather than hold the reminder back.
-            let wait = if self.seen.is_some() {
-                SETTLE
-            } else {
-                Duration::ZERO
-            };
-            self.due = Some(Instant::now() + wait);
-            self.reads = 0;
-        }
-    }
-
-    fn activated(&mut self, in_wechat: bool) {
-        let left = std::mem::replace(&mut self.in_wechat, in_wechat) && !in_wechat;
-        if left && self.due.is_none() {
-            self.rebase = Some(Instant::now() + SETTLE);
-        }
-    }
-
-    /// The chats with a new message once a flash's reads are done (empty: none could be told, so
-    /// the plain reminder shows); `None` while there is nothing to report yet.
-    fn tick(&mut self) -> Option<Vec<chats::Session>> {
-        let now = Instant::now();
-        if self.rebase.is_some_and(|at| now >= at) {
-            self.rebase = None;
-            if let Some(rows) = self.read() {
-                self.seen = Some(rows);
-            }
-        }
-        if !self.due.is_some_and(|at| now >= at) {
-            return None;
-        }
-        let fresh = match (self.read(), self.seen.take()) {
-            (Some(rows), Some(before)) => {
-                let fresh: Vec<_> = chats::new_messages(&before, &rows)
-                    .into_iter()
-                    .cloned()
-                    .collect();
-                self.seen = Some(rows);
-                fresh
-            }
-            // Not readable, or the first readable list, which is only the baseline.
-            (rows, before) => {
-                self.seen = rows.or(before);
-                self.due = None;
-                return Some(Vec::new());
-            }
-        };
-        self.reads += 1;
-        if fresh.is_empty() && self.reads < READS {
-            self.due = Some(now + RETRY);
-            return None;
-        }
-        self.due = None;
-        Some(fresh)
+    match chats::read(window) {
+        Some(rows) => Listing::Rows(rows),
+        // Closed to the tray, WeChat hides its main window and lists no rows.
+        None if !win32::window::is_visible(window) => Listing::Tray,
+        None => Listing::Unreadable,
     }
 }
 
@@ -541,7 +492,7 @@ fn monitor(service: Arc<ReminderService>, receiver: mpsc::Receiver<()>) {
             Ok((listener, executable)) => {
                 connection(&service, generation, None);
                 let allowed = || service.state.lock().is_ok_and(|state| state.snapshot.expose_ui);
-                let mut reader = ChatReader::new(executable, allowed());
+                let mut reader = ChatReader::new(|| look(&executable), allowed());
                 loop {
                     if !service
                         .state
@@ -549,34 +500,35 @@ fn monitor(service: Arc<ReminderService>, receiver: mpsc::Receiver<()>) {
                         .is_ok_and(|state| state.snapshot.enabled && state.generation == generation)
                     {
                         // Reminders off: WeChat's UI goes back to hidden too.
-                        keep_gate(&service, &reader.executable);
-                        keep_button(&service, &reader.executable);
+                        keep_gate(&service, &executable);
+                        keep_button(&service, &executable);
                         break;
                     }
-                    if keep_gate(&service, &reader.executable) {
+                    if keep_gate(&service, &executable) {
                         // Readable from now on: take the list as it is as the baseline.
-                        reader.seen = reader.read();
+                        reader.rebaseline();
                     }
-                    keep_button(&service, &reader.executable);
+                    keep_button(&service, &executable);
                     reader.set_allowed(allowed());
                     listener.poll();
                     let _ = listener.stats();
+                    let now = Instant::now();
                     for event in events.take() {
                         match event {
-                            ReminderSignal::Attention => reader.flashed(),
-                            ReminderSignal::ActivatedElsewhere => reader.activated(false),
+                            ReminderSignal::Attention => reader.flashed(now),
+                            ReminderSignal::ActivatedElsewhere => reader.activated(false, now),
                             ReminderSignal::Activated => {
-                                reader.activated(true);
+                                reader.activated(true, now);
                                 signal(&service, generation, event);
                             }
                             _ => signal(&service, generation, event),
                         }
                     }
-                    match reader.tick() {
-                        Some(fresh) if fresh.is_empty() => {
-                            signal(&service, generation, ReminderSignal::Attention)
-                        }
-                        Some(fresh) => {
+                    match reader.tick(now) {
+                        Some(Flash::Plain(reason)) => update(&service, |state| {
+                            state.remind(generation, now_ms(), reason)
+                        }),
+                        Some(Flash::Messages(fresh)) => {
                             let at = now_ms();
                             for (index, chat) in fresh.into_iter().enumerate() {
                                 let message = ChatMessage {
@@ -586,7 +538,7 @@ fn monitor(service: Arc<ReminderService>, receiver: mpsc::Receiver<()>) {
                                     unread: chat.unread,
                                     at: at + index as u64,
                                 };
-                                receive(&service, generation, message);
+                                update(&service, |state| state.receive(generation, message));
                             }
                         }
                         None => {}
@@ -735,6 +687,7 @@ macro_rules! tauri_commands {
             crate::wechat_reminders::open_wechat,
             crate::wechat_reminders::set_wechat_expose_ui,
             crate::wechat_reminders::set_wechat_hide_taskbar_button,
+            crate::wechat_reminders::clear_wechat_reminders,
         ] $($rest)*)
     };
 }
