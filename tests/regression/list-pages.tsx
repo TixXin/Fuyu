@@ -61,7 +61,7 @@ const roots: ReturnType<typeof createRoot>[] = [];
 function renderAll() {
   const clip = <ClipboardHistoryPanel
     snapshot={snapshot()}
-    onCopyItem={(id, copyAs) => { calls.push(`copy:${id}${copyAs ? `:${copyAs}` : ""}`); return true; }}
+    onCopyItem={(id, copyAs) => { calls.push(`copy:${id}${copyAs && copyAs !== "original" ? `:${copyAs}` : ""}`); return true; }}
     onToggleFavorite={(id) => { calls.push(`star:${id}`); }}
     onUpdateNote={() => true}
     onDeleteItem={(id) => { calls.push(`delete:${id}`); items = items.filter((item) => item.id !== id); renderAll(); }}

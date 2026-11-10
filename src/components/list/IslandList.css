@@ -10,6 +10,8 @@
   --text-1: rgba(var(--list-ink), 0.95);
   --text-2: rgba(var(--list-ink), 0.68);
   --text-3: rgba(var(--list-ink), 0.48);
+  /* Accent text leans toward the ink, so it stays readable on a light island too. */
+  --list-accent-text: color-mix(in srgb, rgb(var(--list-accent)) 62%, rgb(var(--list-ink)));
   position: relative;
   height: 100%;
   min-width: 0;
@@ -66,7 +68,7 @@
 }
 
 .island-list-chip--tag {
-  color: rgba(var(--list-accent), 0.95);
+  color: var(--list-accent-text);
 }
 
 .island-list-count {
@@ -81,7 +83,7 @@
 .island-list-notice {
   flex: none;
   margin-right: 6px;
-  color: rgb(var(--list-accent));
+  color: var(--list-accent-text);
   font-size: 12px;
   animation: islandListNotice 2.4s ease both;
 }
@@ -118,7 +120,7 @@
 }
 
 .island-list-icon-button--on {
-  color: rgb(var(--list-accent));
+  color: var(--list-accent-text);
 }
 
 .island-list-search {
@@ -161,7 +163,7 @@
   border-radius: 4px;
 }
 
-.island-list-search button {
+.island-list-search > button {
   flex: none;
   display: grid;
   place-items: center;
@@ -307,7 +309,7 @@
 }
 
 .island-list-row__meta--accent {
-  color: rgb(var(--list-accent));
+  color: var(--list-accent-text);
   font-weight: 600;
 }
 
@@ -333,7 +335,7 @@
   display: grid;
   place-items: center;
   width: 26px;
-  color: rgb(var(--list-accent));
+  color: var(--list-accent-text);
 }
 
 .island-list-row__actions {
@@ -402,7 +404,7 @@
   height: 44px;
   display: grid;
   place-items: center;
-  color: rgb(var(--list-accent));
+  color: var(--list-accent-text);
   background: rgba(var(--list-accent), 0.12);
   border-radius: 14px;
 }
