@@ -166,7 +166,7 @@ fn overlay_window(app: &AppHandle, label: &str) -> Result<WebviewWindow, String>
     if let Some(window) = app.get_webview_window(label) {
         return Ok(window);
     }
-    WebviewWindowBuilder::new(app, label, WebviewUrl::App("index.html?window=screenshot".into()))
+    let window = WebviewWindowBuilder::new(app, label, WebviewUrl::App("index.html?window=screenshot".into()))
         .title("Fuyu")
         // A hidden WebView stops painting, so the first frame after `show` can be the last one it
         // painted (blank). Transparent, that frame shows the real screen, which the frozen
@@ -180,7 +180,12 @@ fn overlay_window(app: &AppHandle, label: &str) -> Result<WebviewWindow, String>
         .focused(false)
         .visible(false)
         .build()
-        .map_err(|error| error.to_string())
+        .map_err(|error| error.to_string())?;
+    // Without this, hiding the overlay plays Windows' shrink-and-fade over the whole monitor.
+    if let Err(error) = window.hwnd().map_err(|error| error.to_string()).and_then(|hwnd| win32::dwm::disable_transitions(hwnd).map_err(|error| error.to_string())) {
+        eprintln!("screenshot overlay keeps its show/hide animation: {error}");
+    }
+    Ok(window)
 }
 
 /// Creates the overlay windows ahead of the first screenshot, so it opens at once.
