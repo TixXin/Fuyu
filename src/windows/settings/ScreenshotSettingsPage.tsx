@@ -1,5 +1,6 @@
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsRow } from "../../components/settings/SettingsRow";
+import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
 import type { IslandSettings } from "../../features/appearance/types";
 import { useTranslation } from "../../i18n";
 import { ModuleSwitchSection } from "./ModuleSwitchSection";
@@ -24,6 +25,16 @@ export function ScreenshotSettingsPage({
         checked={settings.screenshotEnabled}
         onChange={(screenshotEnabled) => onSettingsChange({ ...settings, screenshotEnabled })}
       />
+      {settings.screenshotEnabled && (
+        <SettingsGroup title={text.whileCapturingTitle}>
+          <SettingsToggleRow
+            title={text.guides}
+            description={text.guidesHint}
+            checked={settings.screenshotGuides}
+            onChange={(screenshotGuides) => onSettingsChange({ ...settings, screenshotGuides })}
+          />
+        </SettingsGroup>
+      )}
       {settings.screenshotEnabled && (
         <SettingsGroup title={text.shortcutsTitle} footer={text.shortcutsHint}>
           <SettingsRow title={text.region} description={text.regionHint} control={keys("Ctrl+Shift+1")} />

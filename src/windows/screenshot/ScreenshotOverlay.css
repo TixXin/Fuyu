@@ -58,6 +58,27 @@ body:has(.screenshot-overlay) {
   pointer-events: none;
 }
 
+/* Guide lines through the pointer, across the whole monitor. */
+.screenshot-overlay__guide {
+  position: absolute;
+  z-index: 1;
+  background: var(--color-accent, #74d6ff);
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.screenshot-overlay__guide--h {
+  left: 0;
+  right: 0;
+  height: 1px;
+}
+
+.screenshot-overlay__guide--v {
+  top: 0;
+  bottom: 0;
+  width: 1px;
+}
+
 .screenshot-overlay__handle {
   position: absolute;
   width: 8px;

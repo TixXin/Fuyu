@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Check, X } from "lucide-react";
 import { Magnifier } from "../../features/screenshot/Magnifier";
 import { cancelScreenshot, copyScreenshot } from "../../features/screenshot/api";
@@ -16,6 +16,7 @@ import {
   type Size,
 } from "../../features/screenshot/selection";
 import { layersAt, layersKey, stepLayer } from "../../features/screenshot/targets";
+import { loadSettings } from "../../features/appearance/storage";
 import { useTranslation } from "../../i18n";
 import { getErrorMessage } from "../../utils/error";
 import { pictureContext, useScreenshotFrame } from "./useScreenshotFrame";
@@ -56,6 +57,9 @@ export function ScreenshotOverlay() {
   const [notice, setNotice] = useState<string | null>(null);
   const targets = useTargets(ready ? session?.id ?? null : null);
   const [level, setLevel] = useState({ key: "", value: 0 });
+  const sessionId = session?.id;
+  // Read again for each screenshot, so a change in the settings window shows on the next one.
+  const guides = useMemo(() => (sessionId === undefined ? false : loadSettings().screenshotGuides), [sessionId]);
 
   const pixel = pointer && bounds ? pixelAt(pointer, bounds) : null;
   const color = pixel ? colorAt(canvasRef.current, pixel) : null;
@@ -165,6 +169,12 @@ export function ScreenshotOverlay() {
         </div>
       )}
       {!area && notice && <div className="screenshot-overlay__hint">{notice}</div>}
+      {guides && ready && cssPointer && (choosing || dragging === "draw" || dragging === "resize") && (
+        <>
+          <div className="screenshot-overlay__guide screenshot-overlay__guide--h" style={{ top: cssPointer.y }} />
+          <div className="screenshot-overlay__guide screenshot-overlay__guide--v" style={{ left: cssPointer.x }} />
+        </>
+      )}
       {ready && pixel && cssPointer && color && dragging !== "move" && (
         <Magnifier picture={canvasRef.current} pixel={pixel} pointer={cssPointer} view={view} color={color} lines={lines} />
       )}

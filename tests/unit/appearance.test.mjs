@@ -351,3 +351,9 @@ test("settings saved with the paper todo style read without it: there is one tod
   assert.ok(!("todoStyle" in older) && !("todoBackgroundColor" in older));
   assert.ok(!("todoStyle" in DEFAULT_SETTINGS) && !("todoBackgroundColor" in DEFAULT_SETTINGS));
 });
+
+test("screenshot guide lines are on unless turned off, old settings included", () => {
+  assert.equal(DEFAULT_SETTINGS.screenshotGuides, true);
+  assert.equal(normalizeSettings({ opacity: 95 }).screenshotGuides, true);
+  assert.equal(normalizeSettings({ screenshotGuides: false }).screenshotGuides, false);
+});

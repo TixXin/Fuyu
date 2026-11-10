@@ -1581,6 +1581,19 @@
     {
       "page": "screenshot",
       "zh-CN": {
+        "group": "截图时",
+        "title": "显示辅助线",
+        "description": "一横一竖两条线跟着鼠标贯穿整个屏幕，方便对齐边缘；选好区域后隐藏。"
+      },
+      "en": {
+        "group": "While capturing",
+        "title": "Show guide lines",
+        "description": "A horizontal and a vertical line follow the pointer across the screen, for lining up edges; hidden once a region is chosen."
+      }
+    },
+    {
+      "page": "screenshot",
+      "zh-CN": {
         "group": "快捷键",
         "title": "截图",
         "description": "屏幕定格后，单击选中鼠标下的窗口或控件（滚轮切换到外层或内层），或拖动选择区域；按 Enter 复制到剪贴板，Esc 取消；放大镜下按 C 复制颜色。"

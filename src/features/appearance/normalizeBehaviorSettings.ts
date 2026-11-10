@@ -72,6 +72,7 @@ export function normalizeBehaviorSettings(settings: LegacyIslandSettings | null 
     translationTarget: settings?.translationTarget === "island" ? "island" : "window",
     // Unlike the other modules, off unless turned on: its shortcuts take keys from other apps.
     screenshotEnabled: settings?.screenshotEnabled === true,
+    screenshotGuides: settings?.screenshotGuides !== false,
     shelfExpandOnDrop: settings?.shelfExpandOnDrop !== false,
     shelfAutoCleanupDays: oneOf(SHELF_CLEANUP_DAYS, settings?.shelfAutoCleanupDays, DEFAULT_SETTINGS.shelfAutoCleanupDays),
     shelfRemoveMissing: settings?.shelfRemoveMissing === true,
