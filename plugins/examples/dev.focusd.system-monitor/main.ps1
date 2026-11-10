@@ -19,6 +19,8 @@
 $script:Settings = @{}
 $script:CanCells = $false
 $script:Visible = $false
+# The page has loaded and said "ready": samples go to it only then, after the recorded history.
+$script:PageReady = $false
 $script:Counters = $null
 $script:LastNet = $null
 $script:LastProcs = $null
@@ -325,7 +327,7 @@ function Invoke-Due {
     if ((Test-Sampling) -and $now -ge $script:NextPage) {
         $script:NextPage = $now.AddMilliseconds(1000)
         Open-Counters
-        if ($script:Visible) { Send-Page } else { Save-Sample }
+        if ($script:Visible -and $script:PageReady) { Send-Page } else { Save-Sample }
     }
     if ((Test-Bar) -and $now -ge $script:NextBar) {
         $script:NextBar = $now.AddMilliseconds(2000)
@@ -358,6 +360,7 @@ while ($true) {
                 'settings.changed' { Read-Settings $message.params.settings }
                 'view.visible' {
                     $script:Visible = [bool]$message.params.visible
+                    if (-not $script:Visible) { $script:PageReady = $false }
                     if (-not $script:Visible) {
                         # Background recording goes on reading the network, so its byte counts stay the baseline.
                         if (-not (Test-Setting 'backgroundHistory')) { $script:LastNet = $null }
@@ -368,7 +371,7 @@ while ($true) {
                     # The page sends { type: "ready" } once it has loaded; answer at once,
                     # first with the five minutes recorded while it was closed.
                     if ($message.params.message.type -eq 'ready') {
-                        $script:Visible = $true; $script:NextPage = [datetime]::MinValue
+                        $script:Visible = $true; $script:PageReady = $true; $script:NextPage = [datetime]::MinValue
                         # A page opened afresh may have lost its icons; send what it does not list.
                         $script:IconsSent = @{}
                         foreach ($name in @($message.params.message.icons)) { if ($name) { $script:IconsSent[[string]$name] = $true } }
