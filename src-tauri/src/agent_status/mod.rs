@@ -80,16 +80,16 @@ pub(super) const FOCUSD_AGENT_HOOK_SIGNATURE: &str = "focusd-agent-";
 /// SessionStart, which the script still handles.
 pub(super) const AGENT_RUNNING_NOTIFICATION_ARG: &str = "notification";
 pub(super) const AGENT_RUNNING_SCRIPT: &str =
-    include_str!("hooks/focusd-agent-running.cmd");
+    include_str!("hooks/fuyu-agent-running.cmd");
 pub(super) const AGENT_STATUS_SCRIPT: &str =
-    include_str!("hooks/focusd-agent-status.ps1");
+    include_str!("hooks/fuyu-agent-status.ps1");
 /// SessionStart / SessionEnd: records the session's process and terminal (session_records.rs).
 pub(super) const AGENT_SESSION_SCRIPT: &str =
-    include_str!("hooks/focusd-agent-session.ps1");
+    include_str!("hooks/fuyu-agent-session.ps1");
 /// Codex PermissionRequest: forwards the request to the island's approval endpoint (agent_approval).
 pub(super) const AGENT_APPROVAL_SCRIPT_FILE_NAME: &str = "focusd-agent-approval.ps1";
 pub(super) const AGENT_APPROVAL_SCRIPT: &str =
-    include_str!("hooks/focusd-agent-approval.ps1");
+    include_str!("hooks/fuyu-agent-approval.ps1");
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]

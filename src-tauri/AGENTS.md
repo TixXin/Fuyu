@@ -106,7 +106,7 @@ src-tauri/src/
 ## 配置与构建
 
 - 修改 `tauri.conf.json` 中的窗口配置时，同步检查 `capabilities/default.json`、前端 `main.tsx` 的窗口分发，以及 Rust 中的 label 常量。
-- `agent_status/hooks/focusd-agent-*.{cmd,ps1}` 和 `qq_notifications/repair-qq-notification-registration.ps1` 通过 `include_str!` 编入二进制，修改后需要完整的 Rust 验证。
+- `agent_status/hooks/fuyu-agent-*.{cmd,ps1}` 和 `qq_notifications/repair-qq-notification-registration.ps1` 通过 `include_str!` 编入二进制，修改后需要完整的 Rust 验证。
 - clippy lint 在 `Cargo.toml` 的 `[lints.clippy]` 中声明（`undocumented_unsafe_blocks`、`unwrap_used`、`expect_used` 为 deny），测试代码的放行写在 `clippy.toml`；不要在源文件中用 `#![warn]` / `#[allow]` 重复声明这些 lint。`cargo clippy --all-targets` 保持 0 告警；个别确实无法消除的默认 lint（例如参数即 IPC 契约的命令触发 `too_many_arguments`）在该项上用带 `reason` 的 `#[expect(...)]`。
 - 验证：`cargo test --manifest-path src-tauri/Cargo.toml` + `pnpm build:exe`。涉及窗口、托盘、注册表行为的改动，在风险需要时用 `pnpm dev:lane`（lane 里）或 `pnpm tauri dev`（主工作区）手动检查折叠态、展开态、贴边收起和托盘隐藏。
 - 成功生成 release 可执行文件后，按根目录规则同步桌面快捷方式。
