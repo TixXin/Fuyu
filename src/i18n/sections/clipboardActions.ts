@@ -17,6 +17,13 @@ export type ClipboardActionsText = {
   edit: string;
   transform: string;
   transformTitle: string;
+  ai: string;
+  aiTitle: string;
+  aiTasks: Record<"summarize" | "polish" | "grammar" | "translate", string>;
+  aiHint: string;
+  aiService: string;
+  aiLoading: string;
+  aiPasteAgain: string;
   pasteAs: (format: string) => string;
   pasteTextFile: string;
   pastePath: string;
@@ -79,6 +86,13 @@ export const zhCN: ClipboardActionsText = {
   edit: "编辑后粘贴",
   transform: "转换后粘贴…",
   transformTitle: "转换后粘贴",
+  ai: "AI 改写后粘贴…",
+  aiTitle: "AI 改写",
+  aiTasks: { summarize: "总结", polish: "润色", grammar: "修正错字和语法", translate: "中英互译" },
+  aiHint: "按 Enter 把这条发给快捷翻译设置的服务（用它的 Key 和模型），结果出来后再按 Enter 粘贴。",
+  aiService: "用快捷翻译的服务",
+  aiLoading: "正在请求…",
+  aiPasteAgain: "再按 Enter 粘贴",
   pasteAs: (format) => `粘贴为 ${format}`,
   pasteTextFile: "粘贴为 .txt 文件",
   pastePath: "粘贴图片路径",
@@ -160,6 +174,13 @@ export const en: ClipboardActionsText = {
   edit: "Edit, then paste",
   transform: "Paste transformed…",
   transformTitle: "Paste transformed",
+  ai: "Rewrite with AI, then paste…",
+  aiTitle: "Rewrite with AI",
+  aiTasks: { summarize: "Summarize", polish: "Polish", grammar: "Fix spelling and grammar", translate: "Chinese ⇄ English" },
+  aiHint: "Enter sends this entry to the service set up for quick translation (its key and model); Enter again pastes the answer.",
+  aiService: "Uses the quick translation's service",
+  aiLoading: "Asking…",
+  aiPasteAgain: "Enter again pastes",
   pasteAs: (format) => `Paste as ${format}`,
   pasteTextFile: "Paste as a .txt file",
   pastePath: "Paste the image's path",

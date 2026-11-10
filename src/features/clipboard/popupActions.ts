@@ -11,10 +11,10 @@ export type PopupAction = {
   note?: string;
   icon: ActionIcon;
   run?: () => void;
-  next?: "transforms" | "note";
+  next?: "transforms" | "note" | "ai";
 };
 
-export type ActionIcon = "paste" | "plain" | "enter" | "edit" | "wand" | "file" | "image" | "qr" | "star" | "tag" | "snippet" | "trash" | "pause" | "play" | "skip";
+export type ActionIcon = "paste" | "plain" | "enter" | "edit" | "wand" | "file" | "image" | "qr" | "star" | "tag" | "snippet" | "trash" | "pause" | "play" | "skip" | "ai";
 
 /** What the actions do; the window supplies them. */
 export type PopupActionHandlers = {
@@ -42,6 +42,7 @@ export function popupActions(item: ClipboardHistoryItem | undefined, capture: Cl
     if (isText) {
       add({ id: "edit", group: "paste", label: text.edit, keys: "Ctrl E", icon: "edit", run: handlers.edit });
       add({ id: "transform", group: "paste", label: text.transform, keys: "Ctrl T", icon: "wand", next: "transforms" });
+      if (!item.masked) add({ id: "ai", group: "paste", label: text.ai, keys: "Ctrl I", icon: "ai", next: "ai" });
       const kind = contentKind(item);
       if (kind?.kind === "color") {
         const formats = colorFormats(kind.color);

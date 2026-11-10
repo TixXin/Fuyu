@@ -25,7 +25,7 @@ type Mode = "list" | "panel" | "look" | "edit";
  * chips (Tab and Shift+Tab), the entries newest first, and a footer with the keys and whether copies
  * are recorded. ↑↓ move, Enter or a click pastes (Shift: plain text, Ctrl+Enter: then Enter), 1–9
  * paste that row, Esc closes. Ctrl+K or a right click opens the actions panel (Ctrl+T its
- * transforms, Ctrl+M the note), Ctrl+E edits before pasting, Space shows the entry in full, Del
+ * transforms, Ctrl+I its AI rewrites, Ctrl+M the note), Ctrl+E edits before pasting, Space shows the entry in full, Del
  * deletes (Ctrl+Z undoes). Ctrl+click or Ctrl+Space picks entries: Enter pastes them in turn,
  * Ctrl+Enter merged. `wide` shows the picked entry beside the list. `openCount` changes each time
  * the window is shown, which starts afresh.
@@ -156,6 +156,9 @@ export function ClipboardPopup({ items, snippets, openCount, wide, capture, link
     } else if (ctrl && key.toLowerCase() === "t" && isText) {
       handled();
       openPanel("transforms");
+    } else if (ctrl && key.toLowerCase() === "i" && isText && !item.masked) {
+      handled();
+      openPanel("ai");
     } else if (ctrl && key.toLowerCase() === "m" && item) {
       handled();
       openPanel("note");

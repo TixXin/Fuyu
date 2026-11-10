@@ -18,6 +18,7 @@ const BIG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width=
 mockIPC((command, args) => {
   calls.push(`ipc:${command}:${JSON.stringify(args ?? {})}`);
   if (command === "read_clipboard_image_qr") return "https://qr.example";
+  if (command === "rewrite_text") return `AI:${(args as { task: string }).task}`;
   if (command === "get_clipboard_image_preview") {
     calls.push(`preview:${(args as { id: string }).id}`);
     return BIG;

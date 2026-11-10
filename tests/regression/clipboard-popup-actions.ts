@@ -88,6 +88,18 @@ export async function checkSecondRound(check: Check, calls: string[]) {
   await settle();
   check(calls.some((call) => call.startsWith("ipc:read_clipboard_image_qr:")) && pasted("https://qr.example"), "图片：粘贴二维码内容");
 
+  await key("dark", { key: "Home" });
+  await key("dark", { key: "i", ctrlKey: true });
+  check($("dark", ".clipboard-panel__result pre")?.textContent?.includes("快捷翻译") && !calls.some((call) => call.startsWith("ipc:rewrite_text")), "Ctrl+I：AI 改写，按 Enter 之前什么都不发");
+  await keyOn(panelInput("dark"), { key: "Enter" });
+  await settle();
+  check(calls.some((call) => call.startsWith("ipc:rewrite_text:") && call.includes('"task":"summarize"')) && $("dark", ".clipboard-panel__result pre")?.textContent === "AI:summarize", "Enter 用快捷翻译的服务总结，结果先显示");
+  await keyOn(panelInput("dark"), { key: "Enter" });
+  await settle();
+  check(pasted("AI:summarize") && !$("dark", ".clipboard-panel"), "再按 Enter 粘贴 AI 的结果");
+
+  await key("dark", { key: "ArrowDown" });
+  await key("dark", { key: "ArrowDown" });
   await key("dark", { key: "k", ctrlKey: true });
   await setValue(panelInput("dark"), "15");
   await keyOn(panelInput("dark"), { key: "Enter" });

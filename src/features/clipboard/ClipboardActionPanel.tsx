@@ -1,19 +1,20 @@
 import { useMemo, useState, type KeyboardEvent } from "react";
 import {
-  ClipboardPaste, CornerDownLeft, FileText, ImageIcon, Pause, Pencil, Play, QrCode, Search, SkipForward, Star, Tag, TextQuote, Trash2, Type, WandSparkles,
+  ClipboardPaste, CornerDownLeft, FileText, ImageIcon, Pause, Pencil, Play, QrCode, Search, SkipForward, Sparkles, Star, Tag, TextQuote, Trash2, Type, WandSparkles,
   type LucideIcon,
 } from "lucide-react";
 import { useTranslation } from "../../i18n";
 import type { ClipboardHistoryItem } from "./api";
+import { ClipboardAiList } from "./ClipboardAiList";
 import { ClipboardTransformList } from "./ClipboardTransformList";
 import { filterActions, type ActionIcon, type PopupAction } from "./popupActions";
 
 const ICONS: Record<ActionIcon, LucideIcon> = {
   paste: ClipboardPaste, plain: Type, enter: CornerDownLeft, edit: Pencil, wand: WandSparkles, file: FileText, image: ImageIcon,
-  qr: QrCode, star: Star, tag: Tag, snippet: TextQuote, trash: Trash2, pause: Pause, play: Play, skip: SkipForward,
+  qr: QrCode, ai: Sparkles, star: Star, tag: Tag, snippet: TextQuote, trash: Trash2, pause: Pause, play: Play, skip: SkipForward,
 };
 
-export type PanelPage = "actions" | "transforms" | "note";
+export type PanelPage = "actions" | "transforms" | "note" | "ai";
 
 /**
  * The clipboard window's actions panel (C38), opened by Ctrl+K or a right click over the list:
@@ -74,7 +75,7 @@ export function ClipboardActionPanel({ item, actions, page, onPage, onClose, onP
     }
   };
 
-  const title = page === "transforms" ? text.transformTitle : page === "note" ? text.note : text.panelTitle;
+  const title = page === "ai" ? text.aiTitle : page === "transforms" ? text.transformTitle : page === "note" ? text.note : text.panelTitle;
   const preview = item ? (item.kind === "image" ? t.clipboard.imageLabel(item.image?.width ?? 0, item.image?.height ?? 0) : item.preview) : "";
 
   return (
@@ -113,7 +114,9 @@ export function ClipboardActionPanel({ item, actions, page, onPage, onClose, onP
           )}
           <kbd>Esc</kbd>
         </div>
-        {page === "transforms" && item ? (
+        {page === "ai" && item ? (
+          <ClipboardAiList item={item} onPaste={(result) => { onClose(); onPasteText(result); }} />
+        ) : page === "transforms" && item ? (
           <ClipboardTransformList item={item} query={query} onPaste={(result) => { onClose(); onPasteText(result); }} />
         ) : page === "actions" ? (
           <ul className="clipboard-panel__list" role="listbox" aria-label={text.panelTitle}>
