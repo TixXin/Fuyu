@@ -20,6 +20,7 @@
 //! - sensitive.rs: asking the user before a sensitive permission is first used
 //! - reveal.rs: a plugin opening its own page right after the user used it (`island.openView`)
 //! - uri.rs: `focusd://plugin/<id>/...` links (`onUri`)
+//! - market_link.rs: `fuyu://market/install/<id>`, the website's Install buttons
 //! - system_events.rs: lock, sleep and idle events (`system.*`)
 //! - runtime.rs: one plugin process; runtime/dispatch.rs answers its requests
 //! - market.rs / signature.rs: the market index and its signatures
@@ -42,6 +43,7 @@ mod lifecycle;
 mod manifest;
 mod market;
 mod market_likes;
+mod market_link;
 mod market_themes;
 mod menus;
 mod view_specs;
@@ -74,6 +76,7 @@ pub(crate) use uri::{find_link, open as open_link};
 pub use dev::*;
 pub use effort_labels::*;
 pub use market_likes::*;
+pub use market_link::*;
 pub use market_themes::*;
 pub use updates::*;
 pub use webviews::*;
@@ -190,6 +193,7 @@ macro_rules! tauri_commands {
     ($next:ident [$($done:tt)*] $($rest:tt)*) => {
         $next!([$($done)*
             crate::plugin_host::list_plugins,
+            crate::plugin_host::take_market_install_request,
             crate::plugin_host::set_plugins_allowed,
             crate::plugin_host::set_plugin_enabled,
             crate::plugin_host::reload_plugins,

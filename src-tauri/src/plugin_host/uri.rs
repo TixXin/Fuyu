@@ -81,8 +81,13 @@ pub(super) fn register_scheme() -> Result<(), String> {
 /// Hands `link` to its plugin, asking the user first if needed. `cold_start`:
 /// the link started the island, whose window is not listening yet.
 pub(crate) fn open(app: &AppHandle, link: &str, cold_start: bool) {
+    // The website's Install buttons: fuyu://market/install/<id> (market_link.rs).
+    if let Some(id) = super::market_link::parse(link) {
+        super::market_link::open(app, id, cold_start);
+        return;
+    }
     let Some(target) = parse(link) else {
-        eprintln!("ignored a link that is not fuyu://plugin/<id>/...: {link}");
+        eprintln!("ignored a link that is not fuyu://plugin/<id>/... or fuyu://market/install/<id>: {link}");
         return;
     };
     let (app, link) = (app.clone(), link.to_string());

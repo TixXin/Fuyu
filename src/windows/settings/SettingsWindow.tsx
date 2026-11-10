@@ -38,6 +38,7 @@ import { useSaveDirectorySetting } from "../../features/todos/useSaveDirectorySe
 import { AboutSettingsPage } from "./AboutSettingsPage";
 import { PluginsSettingsPage } from "./PluginsSettingsPage";
 import { PluginMarketSection } from "../../features/plugins/PluginMarketSection";
+import { useMarketInstallRequest } from "../../features/plugins/market-link/useMarketInstallRequest";
 import { useLocale, useTranslation } from "../../i18n";
 import { activeTone } from "../../features/appearance/themeMode";
 import { useSystemDark } from "../../features/appearance/useResolvedTheme";
@@ -147,6 +148,9 @@ export function SettingsWindow() {
     setManagedPluginId(id);
     setCategory("plugins");
   };
+  // A website Install button (fuyu://market/install/<id>) opens the market with that plugin pinned.
+  const showMarket = useCallback(() => setCategory("market"), []);
+  const marketRequest = useMarketInstallRequest(showMarket);
 
   // Light or dark as the island is (C33.6): its light tokens (.island-light) and the window's own.
   const light = activeTone(settings.themeMode, systemDark) === "light";
@@ -214,7 +218,9 @@ export function SettingsWindow() {
         {category === "agentApprovals" && <AgentApprovalSettings />}
         {category === "agentConnect" && <AgentConnectSettingsPage />}
         {category === "plugins" && <PluginsSettingsPage settings={settings} managedPluginId={managedPluginId} onOpenShortcuts={openShortcuts} />}
-        {category === "market" && <PluginMarketSection onManage={managePlugin} />}
+        {category === "market" && (
+          <PluginMarketSection onManage={managePlugin} requestedId={marketRequest.requestedId} onDismissRequest={marketRequest.dismiss} />
+        )}
         {category === "about" && <AboutSettingsPage onSettingsChange={setSettings} />}
       </LayoutEditor>
     </main>

@@ -8,6 +8,7 @@ import { useMarketFavorites } from "./marketFavorites";
 import { sortMarketPlugins, useMarketLikes, type MarketSort } from "./marketLikes";
 import { groupMarketPlugins } from "./marketGroups";
 import { MarketPluginItem } from "./MarketPluginItem";
+import { MarketInstallRequest } from "./market-link/MarketInstallRequest";
 import { usePluginMarket } from "./usePluginMarket";
 import "./PluginMarketSection.css";
 
@@ -22,7 +23,18 @@ const time = (at: number) => new Date(at).toLocaleTimeString([], { hour: "2-digi
  * a row: updates first, then the ones that can be installed, then the installed
  * ones. `onManage` opens an installed plugin on the plugins page.
  */
-export function PluginMarketSection({ onInstalled, onManage }: { onInstalled?: (snapshot: PluginsSnapshot) => void; onManage?: (id: string) => void } = {}) {
+export function PluginMarketSection({
+  onInstalled,
+  onManage,
+  requestedId,
+  onDismissRequest,
+}: {
+  onInstalled?: (snapshot: PluginsSnapshot) => void;
+  onManage?: (id: string) => void;
+  /** A plugin a website Install link asked for, pinned above the list. */
+  requestedId?: string | null;
+  onDismissRequest?: () => void;
+} = {}) {
   const t = useTranslation();
   const text = t.settings.plugins.market;
   const { locale } = useLocale();
@@ -49,27 +61,25 @@ export function PluginMarketSection({ onInstalled, onManage }: { onInstalled?: (
         ? text.status(market.plugins.length, time(loadedAt))
         : text.statusCount(market.plugins.length)
       : "";
+  const renderItem = (plugin: MarketPlugin) =>
+    market ? (
+      <MarketPluginItem
+        key={plugin.id}
+        plugin={plugin}
+        market={market}
+        installingId={installingId}
+        favorite={favorites.includes(plugin.id)}
+        like={likes[plugin.id]}
+        onToggleFavorite={toggleFavorite}
+        onInstall={(id, trust, acceptKeyChange) => void install(id, trust, acceptKeyChange)}
+        onManage={onManage}
+      />
+    ) : null;
   const renderGroup = (title: string, plugins: MarketPlugin[]) =>
     plugins.length > 0 ? (
       <div className="plugin-market__group" role="group" aria-label={title}>
         <h3 className="plugin-market__group-title">{title}</h3>
-        <div className="plugin-market__grid">
-          {market
-            ? plugins.map((plugin) => (
-                <MarketPluginItem
-                  key={plugin.id}
-                  plugin={plugin}
-                  market={market}
-                  installingId={installingId}
-                  favorite={favorites.includes(plugin.id)}
-                  like={likes[plugin.id]}
-                  onToggleFavorite={toggleFavorite}
-                  onInstall={(id, trust, acceptKeyChange) => void install(id, trust, acceptKeyChange)}
-                  onManage={onManage}
-                />
-              ))
-            : null}
-        </div>
+        <div className="plugin-market__grid">{plugins.map(renderItem)}</div>
       </div>
     ) : null;
   // Search and categories stay in place while the list loads; only an index that is known to be empty hides them.
@@ -86,6 +96,16 @@ export function PluginMarketSection({ onInstalled, onManage }: { onInstalled?: (
           <RefreshCcw className={loading ? "plugin-market__spin" : undefined} size={12} strokeWidth={2.4} />
         </button>
       </div>
+      {requestedId ? (
+        <MarketInstallRequest
+          id={requestedId}
+          market={market}
+          loading={loading}
+          loadError={loadError || null}
+          renderItem={renderItem}
+          onDismiss={() => onDismissRequest?.()}
+        />
+      ) : null}
       {loadError ? (
         <div className="plugin-market__failure" role="alert">
           <p className="plugin-card__error">{text.loadFailed}</p>

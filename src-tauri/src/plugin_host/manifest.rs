@@ -325,7 +325,7 @@ fn is_valid_api_name(name: &str) -> bool {
         && name.bytes().all(|byte| byte.is_ascii_alphanumeric() || byte == b'.')
 }
 
-fn is_valid_id(id: &str) -> bool {
+pub(super) fn is_valid_id(id: &str) -> bool {
     (3..=64).contains(&id.len())
         && id.starts_with(|first: char| first.is_ascii_lowercase() || first.is_ascii_digit())
         && id

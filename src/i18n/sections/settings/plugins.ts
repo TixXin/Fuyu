@@ -155,6 +155,16 @@ export type SettingsPluginsText = {
     /** The user's starred plugins (issue #16): the filter button, the empty list and the card's star. */
     favorites: (count: number) => string;
     noFavorites: string;
+    /** A website Install button (fuyu://market/install/<id>) pinned above the list (market-link/MarketInstallRequest.tsx). */
+    request: {
+      title: (name: string) => string;
+      titleUnknown: string;
+      hint: string;
+      loading: string;
+      missing: (id: string) => string;
+      failed: string;
+      dismiss: string;
+    };
     favorite: (name: string) => string;
     unfavorite: (name: string) => string;
     /** Likes from each plugin's discussion on GitHub (E14): the card's button and the sort menu. */
@@ -463,6 +473,15 @@ export const zhCN: SettingsPluginsText = {
     groupUpdates: (count: number) => `可更新（${count}）`,
     favorites: (count: number) => (count > 0 ? `收藏 ${count}` : "收藏"),
     noFavorites: "还没有收藏的插件。点卡片右侧的星标收藏，收藏只保存在这台电脑上。",
+    request: {
+      title: (name) => `官网请你安装「${name}」`,
+      titleUnknown: "官网请你安装一个插件",
+      hint: "确认是你自己点的，再点下面的「安装」。不点就什么都不会装。",
+      loading: "正在读取插件市场……",
+      missing: (id) => `插件市场里没有 ${id}，可能已经下架，或者链接写错了。`,
+      failed: "插件市场读不出来，检查网络后点右上角的刷新再试。",
+      dismiss: "不装了",
+    },
     favorite: (name: string) => `收藏 ${name}`,
     unfavorite: (name: string) => `取消收藏 ${name}`,
     like: (name: string, count: number) => `${name}：${count} 个赞，在 GitHub 上点赞`,
@@ -799,6 +818,15 @@ export const en: SettingsPluginsText = {
     groupUpdates: (count: number) => `Updates (${count})`,
     favorites: (count: number) => (count > 0 ? `Starred ${count}` : "Starred"),
     noFavorites: "No starred plugins yet. Use the star on a card; stars are kept on this computer only.",
+    request: {
+      title: (name) => `The website asks you to install “${name}”`,
+      titleUnknown: "The website asks you to install a plugin",
+      hint: "If you clicked it yourself, press Install below. Nothing is installed unless you do.",
+      loading: "Reading the plugin market…",
+      missing: (id) => `${id} is not in the plugin market. It may have been taken down, or the link is wrong.`,
+      failed: "The plugin market could not be read. Check the connection and press refresh above.",
+      dismiss: "Don't install",
+    },
     favorite: (name: string) => `Star ${name}`,
     unfavorite: (name: string) => `Unstar ${name}`,
     like: (name: string, count: number) => `${name}: ${count} ${count === 1 ? "like" : "likes"}, like it on GitHub`,

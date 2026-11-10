@@ -81,6 +81,7 @@
 | `todos-changed`（载荷 `{ revision, data, fields, reason }`：插件或本地接口改了 `todos.json`，主窗口只采纳 `fields` 列出的字段） | `todos/service.rs` | `main` |
 | `plugin-permission-request`（载荷 `{ requestId, pluginId, pluginName, permission, timeoutMs }`：插件第一次使用敏感权限，主窗口显示确认，用 `answer_plugin_permission` 回复） | `plugin_host/sensitive.rs` | `main` |
 | `file-shelf-changed`（无载荷：插件改了文件中转列表，主窗口重新读取） | `file_shelf/plugin_view.rs` | `main` |
+| `plugin-market-install-requested`（无载荷：官网的安装链接 `fuyu://market/install/<插件 id>` 在等着，设置窗口用 `take_market_install_request` 取走插件 id） | `plugin_host/market_link.rs` | `settings` |
 | `plugin-view-changed`（载荷 `{ kind: "view", pluginId, viewId, model }`：可见的插件页面有新模型；`{ kind: "status", pluginId, itemId, status }`：折叠条状态文字变了；`{ kind: "reset", pluginId, status }`：插件进程启动、停止或崩溃。每个页面或状态项每秒最多 10 次） | `plugin_host/views.rs` | `main` |
 
 ## 其他
@@ -98,7 +99,7 @@
 - 应用标识 `com.tixxin.fuyu`，凭据服务名 `com.tixxin.fuyu.qq-mail`、`com.tixxin.fuyu.translation`、`com.tixxin.fuyu.calendar`（2026-11-07 起，账户名为日历 id，存 ICS 订阅链接或 CalDAV 密码）、`com.tixxin.fuyu.bark`（2026-11-07 起，账户名 `device-key`，存 Bark 设备 Key，`phone_push/mod.rs`）、`com.tixxin.fuyu.plan-usage`（2026-11-08 起，账户名 `glm` / `kimi`，存 Agent 用量环的 Coding Plan API Key，`agent_status/plan_usage.rs`；Tauri 命令 `get_plan_usage`、`set_plan_key`、`has_plan_key`，`AgentUsage.source` 新增 `glm` / `kimi`）。
 - 注册表值：`HKCU\Software\Microsoft\Windows\CurrentVersion\Run` 下的 `Fuyu`（改名前是 `FocuSD Island`，新版启动时换过来）。
 - Hook 受管区块标记：`# BEGIN/END Fuyu Agent Status Hooks`，命令签名前缀 `fuyu-agent-`，审批 hook 的请求头 `X-Fuyu-Hook`（D17 第 4 步，2026-11-10 起；改名前是 `# BEGIN/END FocuSD Agent Status Hooks`、`focusd-agent-`、`X-FocuSD-Hook`，安装、判断和清理时新旧都认）。数据迁移到新目录后，新版启动时自动重装用户装过的那几种 hook（本机和打开的 SSH 远程电脑），记在 `rename-migration.json` 的 `hooks`；旧的 `focusd-agent-*` 脚本随后删除。
-- 链接协议（D17 第 4 步）：`fuyu://` 和 `focusd://` 都注册到当前程序，都能打开插件链接。
+- 链接协议（D17 第 4 步）：`fuyu://` 和 `focusd://` 都注册到当前程序，都能打开插件链接。2026-11-11 起还认 `fuyu://market/install/<插件 id>`（`focusd://` 同样，大小写不敏感，可带结尾 `/`、`?…`、`#…`；id 按清单的规则校验）：官网插件页的「安装」按钮，打开设置 → 插件市场并把这个插件置顶，由用户自己点安装，不会自动安装。Tauri 命令 `take_market_install_request`（无参数，返回等着的插件 id 并清空，没有时为 `null`），事件 `plugin-market-install-requested`（见上表）。
 - 回复状态标记（D17 第 4 步）：文件 `rules/fuyu-reply-marker.md`、标记 `<!-- fuyu: reply marker v4 -->`；岛屿写的旧文件 `rules/focusd-island-reply-marker.md`（v1–v3 标记）启动时换成新文件后删除。
 - SSH 远程目录（D17 第 4 步）：远端 `~/.fuyu/agent-notifications/` 与 `~/.fuyu/approval-port`，请求头 `X-Fuyu-Remote`；旧 hook 修复前，旧目录 `~/.focusd-island/` 照样读，端口文件在旧目录还在时也写一份，审批端点也认 `X-FocuSD-Remote`。
 - 更新端点与 `latest.json` 格式：见 `tauri.conf.json` 和 `docs/features/updater.md`。D16（2026-11-10）新增 Tauri 命令 `updater_state`（读当前更新状态快照）、`updater_notify(version, title, body)`（发系统通知，返回是否发出）、`updater_diagnostics`（返回 `{ osVersion, architecture }`）；`updater_check` 的错误改为错误码对象；`updater_install` 多了可省略的参数 `expectedVersion`、`expectedChannel`，和当前候选不符时返回 `updater.targetChanged`。D18 新增 `updater_download(expectedVersion, expectedChannel)`（后台下载并留着，状态 `stage` 多了 `ready`；`updater_install` 在 `ready` 时直接安装）和 `updater_metered`（网络是否按流量计费、漫游或超出上限）。

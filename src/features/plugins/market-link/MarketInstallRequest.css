@@ -1,0 +1,77 @@
+/* The card a website Install link pins above the market list: the accent's frame and a slow glow, so it is the first thing seen. */
+.market-request {
+  display: grid;
+  gap: var(--space-md);
+  margin-bottom: var(--space-xl);
+  padding: 12px;
+  border: 1px solid color-mix(in srgb, var(--color-accent) 55%, transparent);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+  animation: market-request-glow 2.4s ease-in-out 3;
+}
+
+.market-request--missing,
+.market-request--failed {
+  border-color: var(--color-white-a16);
+  background: var(--color-white-a04);
+  animation: none;
+}
+
+.market-request__head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-md);
+  color: var(--color-accent);
+}
+
+.market-request__copy {
+  display: grid;
+  flex: 1;
+  gap: 2px;
+  min-width: 0;
+}
+
+.market-request__copy strong {
+  color: var(--color-text);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.market-request__copy span {
+  color: var(--color-text-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.market-request__dismiss {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.market-request__dismiss:hover,
+.market-request__dismiss:focus-visible {
+  background: var(--color-white-a08);
+  color: var(--color-text);
+}
+
+@keyframes market-request-glow {
+  50% {
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-accent) 18%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .market-request,
+  .market-request--missing,
+  .market-request--failed {
+    animation: none;
+  }
+}
