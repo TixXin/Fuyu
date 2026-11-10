@@ -77,6 +77,81 @@
   color: var(--color-danger);
 }
 
+/* Upright batteries (status.update batteries): no pill behind them either. */
+.plugin-status-chip--batteries {
+  padding: 0 2px;
+}
+
+.plugin-status-chip__batteries {
+  display: inline-flex;
+  gap: 3px;
+  align-items: flex-end;
+}
+
+.plugin-status-chip__battery {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  box-sizing: border-box;
+  width: 9px;
+  height: 15px;
+  padding: 1px;
+  border: 1px solid color-mix(in srgb, currentColor 60%, transparent);
+  border-radius: 2.5px;
+}
+
+/* The cap on top. */
+.plugin-status-chip__battery::before {
+  position: absolute;
+  top: -3px;
+  left: 50%;
+  width: 4px;
+  height: 2px;
+  content: "";
+  background: color-mix(in srgb, currentColor 60%, transparent);
+  border-radius: 1px 1px 0 0;
+  transform: translateX(-50%);
+}
+
+/* An empty battery still shows a sliver. */
+.plugin-status-chip__charge {
+  width: 100%;
+  min-height: 1px;
+  background: currentColor;
+  border-radius: 1px;
+  transition: height 300ms ease;
+}
+
+/* A battery without a tone takes its place's color, so neighbors can be told apart. Each color
+   leans toward the island's ink: paler on a dark island, deeper on a light one. */
+.plugin-status-chip__battery--neutral:nth-child(4n + 1) {
+  color: color-mix(in srgb, #3fbf7f 72%, rgb(var(--island-ink-rgb, 241, 240, 246)));
+}
+
+.plugin-status-chip__battery--neutral:nth-child(4n + 2) {
+  color: color-mix(in srgb, #3d9be9 72%, rgb(var(--island-ink-rgb, 241, 240, 246)));
+}
+
+.plugin-status-chip__battery--neutral:nth-child(4n + 3) {
+  color: color-mix(in srgb, #8f7bea 72%, rgb(var(--island-ink-rgb, 241, 240, 246)));
+}
+
+.plugin-status-chip__battery--neutral:nth-child(4n) {
+  color: color-mix(in srgb, #e86aa6 72%, rgb(var(--island-ink-rgb, 241, 240, 246)));
+}
+
+.plugin-status-chip__battery--accent {
+  color: rgba(190, 232, 255, 0.95);
+}
+
+.plugin-status-chip__battery--warning {
+  color: var(--color-warning);
+}
+
+.plugin-status-chip__battery--danger {
+  color: color-mix(in srgb, #f0425c 72%, rgb(var(--island-ink-rgb, 241, 240, 246)));
+}
+
 .plugin-status-chip:disabled {
   cursor: default;
 }
@@ -98,7 +173,8 @@
 
 .plugin-status-chip--cells.plugin-status-chip--accent,
 .plugin-status-chip--cells.plugin-status-chip--warning,
-.plugin-status-chip--cells.plugin-status-chip--danger {
+.plugin-status-chip--cells.plugin-status-chip--danger,
+.plugin-status-chip.plugin-status-chip--batteries {
   background: transparent;
 }
 

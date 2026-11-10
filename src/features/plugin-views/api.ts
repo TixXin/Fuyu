@@ -48,6 +48,9 @@ export type PluginStatusTone = "neutral" | "accent" | "warning" | "danger";
 // 与 src-tauri/src/plugin_host/views.rs 中的 StatusCell 对应。
 export type PluginStatusCell = { label: string; value: string; tone: PluginStatusTone };
 
+// 与 src-tauri/src/plugin_host/views.rs 中的 StatusBattery 对应。
+export type PluginStatusBattery = { level: number; tone: PluginStatusTone };
+
 // 与 src-tauri/src/plugin_host/views.rs 中的 PluginStatusEntry 对应。
 export type PluginStatusEntry = {
   pluginId: string;
@@ -60,6 +63,8 @@ export type PluginStatusEntry = {
   cells?: PluginStatusCell[];
   /** 0-1: a small progress ring before the text or cells. */
   ring?: number;
+  /** Upright batteries drawn instead of the text and the cells. */
+  batteries?: PluginStatusBattery[];
 };
 
 /** A status item a plugin declares, set or not, for the collapsed bar settings (C12). */

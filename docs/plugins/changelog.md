@@ -4,6 +4,10 @@
 
 下面几批改动都还没有随正式版岛屿发布（2026-11-05 时最新的正式版是 0.2.14），发布时补上版本号。
 
+## 折叠条上的电池
+
+- `status.update` 多了可选的 `batteries`（最多 4 个 `{ level, tone? }`，`level` 是 0–1），折叠条画成并排立着的小电池，代替文字和 `cells`，能力 `statusBatteries`。没写 `tone` 的电池按位置上色，`warning` / `danger` 是黄色 / 红色。旧版岛屿忽略这个字段。SDK：Node `StatusOptions.batteries`、PowerShell `Update-FuyuStatus -Batteries`；模拟宿主会校验并记在 `statuses` 里。见 [README](README.md)。
+
 ## 改名为浮屿 / Fuyu（npm 包 0.5.0）
 
 - 岛屿认新名字：清单 `fuyu-plugin.json`、忽略文件 `.fuyuignore`、环境变量 `FUYU_PLUGIN_*`、页面接口 `acquireFuyuApi()`、CSS 变量 `--fuyu-*`。旧名字照样认，岛屿两组环境变量和 CSS 变量都设置。见 [README](README.md)「改名前的名字」。
