@@ -81,3 +81,11 @@ export function listenTranslationSelection(handler: EventCallback<string>) {
 export function listenTranslationIslandShortcut(handler: EventCallback<unknown>) {
   return listen(TRANSLATION_ISLAND_SHORTCUT_EVENT, handler);
 }
+
+/** What the clipboard window's AI transforms ask for (C38). */
+export type RewriteTask = "summarize" | "polish" | "grammar" | "translate";
+
+/** Rewrites text with the translation's service, key and model (C38). */
+export function rewriteText(text: string, task: RewriteTask, service: TranslationService) {
+  return invoke<string>("rewrite_text", { text, task, ...service });
+}

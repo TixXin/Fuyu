@@ -55,6 +55,6 @@
 }
 
 .plugin-permission-prompt__button--allow {
-  color: var(--mint-text, rgba(190, 240, 225, 0.95));
-  background: rgba(110, 231, 200, 0.16);
+  color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 16%, transparent);
 }

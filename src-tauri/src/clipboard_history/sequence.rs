@@ -37,7 +37,7 @@ pub(super) fn start(app: &AppHandle, ids: Vec<String>) -> Result<(), String> {
         return Ok(());
     };
     let auto_paste = service()?.snapshot()?.settings.auto_paste;
-    popup::paste(app, &first, false)?;
+    popup::paste(app, &first, popup::PasteOptions::default())?;
     if ids.is_empty() {
         return Ok(());
     }

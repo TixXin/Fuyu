@@ -1,6 +1,6 @@
 /* The calendar page's month view (CalendarMonth.tsx): straight on the island like the day list. */
 .calendar-month {
-  --calendar-accent: 255, 154, 118;
+  --calendar-accent: var(--color-accent);
   flex: none;
   width: 322px;
   min-height: 0;
@@ -50,7 +50,7 @@
 }
 
 .calendar-month__today {
-  color: rgb(var(--calendar-accent));
+  color: var(--calendar-accent);
 }
 
 .calendar-month__today:hover,
@@ -102,7 +102,7 @@
 }
 
 .calendar-month__day:focus-visible {
-  outline: 2px solid rgba(var(--calendar-accent), 0.9);
+  outline: 2px solid color-mix(in srgb, var(--calendar-accent) 90%, transparent);
   outline-offset: -2px;
 }
 
@@ -123,7 +123,7 @@
 }
 
 .calendar-month__lunar--special {
-  color: rgb(var(--calendar-accent));
+  color: var(--calendar-accent);
 }
 
 .calendar-month__day--weekend .calendar-month__date {
@@ -139,17 +139,17 @@
 }
 
 .calendar-month__day--today {
-  color: #fff;
-  background: rgba(var(--calendar-accent), 0.88);
+  color: var(--color-on-accent);
+  background: color-mix(in srgb, var(--calendar-accent) 88%, transparent);
 }
 
 .calendar-month__day--today:hover {
-  background: rgb(var(--calendar-accent));
+  background: var(--calendar-accent);
 }
 
 .calendar-month__day--today .calendar-month__date,
 .calendar-month__day--today .calendar-month__lunar {
-  color: #fff;
+  color: var(--color-on-accent);
 }
 
 .calendar-month__mark {
@@ -170,7 +170,7 @@
 }
 
 .calendar-month__day--today .calendar-month__mark {
-  color: #fff;
+  color: var(--color-on-accent);
 }
 
 .calendar-month__dot {
@@ -179,7 +179,7 @@
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background: rgba(var(--calendar-accent), 0.95);
+  background: color-mix(in srgb, var(--calendar-accent) 95%, transparent);
 }
 
 .calendar-month__day--today .calendar-month__dot {

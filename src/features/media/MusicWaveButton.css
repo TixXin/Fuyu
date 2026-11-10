@@ -42,7 +42,7 @@
   position: relative;
   overflow: hidden;
   background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.68), rgba(190, 239, 255, 0.2) 34%, rgba(182, 156, 255, 0.2) 72%, rgba(255, 255, 255, 0.54)),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.68), rgba(190, 239, 255, 0.2) 34%, color-mix(in srgb, var(--color-accent) 20%, transparent) 72%, rgba(255, 255, 255, 0.54)),
     rgba(206, 243, 255, 0.12);
   border: 1px solid rgba(255, 255, 255, 0.32);
   box-shadow:

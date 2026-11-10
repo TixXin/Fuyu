@@ -1172,6 +1172,12 @@ fn editor_titles_match_through_their_markers_and_parent_folders() {
     let repo = [window("README.md - fly-island-lanes - Visual Studio Code")];
     assert_eq!(best_window(&repo, &hints("3", &above)), Some(0));
     assert_eq!(best_window(&repo, &hints("3", &[])), None);
+    // A session on an SSH computer, in an editor window connected to it with a folder above open.
+    assert_eq!(bare_segment("app (workspace) [ssh: dev-box]"), "app");
+    assert_eq!(bare_segment("notes [draft]"), "notes [draft]");
+    let home = ["mywork".to_string(), "louis".to_string(), "home".to_string()];
+    let remote = [window("mep.pdf - louis [SSH: dev-box] - Visual Studio Code")];
+    assert_eq!(best_window(&remote, &hints("au_n2p2", &home)), Some(0));
 }
 
 #[test]
@@ -1307,7 +1313,7 @@ fn the_extension_is_packaged_as_a_vsix_with_its_manifest() {
     }
     let mut manifest = String::new();
     std::io::Read::read_to_string(&mut archive.by_name("extension.vsixmanifest").unwrap(), &mut manifest).unwrap();
-    assert!(manifest.contains(r#"Id="fuyu""#) && manifest.contains(r#"Publisher="tixxin""#));
+    assert!(manifest.contains(r#"Id="fuyu""#) && manifest.contains(r#"Publisher="TixXin""#));
     assert!(manifest.contains("<DisplayName>Fuyu</DisplayName>"));
 }
 

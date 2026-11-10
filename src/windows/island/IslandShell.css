@@ -11,7 +11,7 @@
 .island {
   --glass-pointer-x: 50%;
   --glass-pointer-y: 18%;
-  --glass-page-accent: 116, 214, 255;
+  --glass-page-accent: var(--color-accent);
   /*
    * Island corner radii, all scaled from the expanded bottom radius in the appearance
    * settings (stageStyle.ts) with the ratios of the original 30 / 22 / 14 px design.
@@ -62,17 +62,8 @@
   corner-shape: var(--island-corner-shape, round);
 }
 
-.island--music {
-  --glass-page-accent: 182, 156, 255;
-}
 
-.island--clipboard {
-  --glass-page-accent: 244, 167, 196;
-}
 
-.island--shelf {
-  --glass-page-accent: 110, 231, 200;
-}
 
 .island__glass {
   display: none;
@@ -139,7 +130,7 @@
   background: radial-gradient(
     circle,
     rgba(255, 255, 255, var(--glass-glow-alpha)),
-    rgba(var(--glass-page-accent), var(--glass-accent-alpha)) 38%,
+    color-mix(in srgb, var(--glass-page-accent) calc(var(--glass-accent-alpha) * 100%), transparent) 38%,
     transparent 70%
   );
   filter: blur(20px);
@@ -167,7 +158,7 @@
   border-radius: inherit;
   corner-shape: var(--island-corner-shape, round);
   box-shadow:
-    inset 0 0 14px rgba(var(--glass-page-accent), var(--glass-inner-accent-alpha)),
+    inset 0 0 14px color-mix(in srgb, var(--glass-page-accent) calc(var(--glass-inner-accent-alpha) * 100%), transparent),
     inset 0 0 2px rgba(255, 255, 255, 0.24);
 }
 

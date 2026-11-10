@@ -1,7 +1,7 @@
 //! Installing the island's VS Code extension (packages/vscode-extension, see editor_terminal.rs)
-//! from the island itself, so nobody has to package it by hand. The extension is not on any
-//! marketplace: the island builds the .vsix from the extension's files compiled into it and hands
-//! it to the editor's command line (`code --install-extension`).
+//! from the island itself. The extension is on the VS Code Marketplace (`TixXin.fuyu`) but not on
+//! Open VSX, which Cursor and the like use, so the island builds the .vsix from the extension's
+//! files compiled into it and hands it to the editor's command line (`code --install-extension`).
 
 use std::{
     env, fs,
@@ -69,9 +69,11 @@ impl Package {
         }
     }
 
-    /// `<publisher>.<name>`, as editor_terminal.rs looks for it.
+    /// `<publisher>.<name>` in lowercase, as editor_terminal.rs looks for it: editors compare
+    /// extension ids without case and name the extension's folder in lowercase, while the
+    /// marketplace wants the publisher exactly as it was created (`TixXin`).
     pub(super) fn id(&self) -> String {
-        format!("{}.{}", self.publisher, self.name)
+        format!("{}.{}", self.publisher, self.name).to_lowercase()
     }
 }
 

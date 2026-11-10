@@ -81,8 +81,9 @@ impl ClipboardHistoryService {
                     .text
                     .clone()
                     .ok_or_else(|| "Clipboard text item has no text.".to_string())?;
-                // With its formatting unless asked for plain text (C24.4).
+                // With its formatting unless asked for plain text (C24.4); or as a .txt file (C38).
                 match (&item.html, copy_as) {
+                    (_, CopyAs::TextFile) => write_clipboard_file(&self.write_text_file(&text)?)?,
                     (Some(html), CopyAs::Original) => write_clipboard_html(html, &text)?,
                     _ => write_clipboard_text(&text)?,
                 }
@@ -208,8 +209,22 @@ impl ClipboardHistoryService {
         Ok(snapshot)
     }
 
+    /// Writes a text entry to `<app data>/clipboard-text/<first words>.txt`, replacing the file
+    /// an earlier paste left there, for pasting into chat apps as a file (C38).
+    fn write_text_file(&self, text: &str) -> Result<std::path::PathBuf, String> {
+        let dir = self.image_dir.with_file_name("clipboard-text");
+        fs::create_dir_all(&dir).map_err(|error| format!("Failed to create the text file folder: {error}"))?;
+        let path = dir.join(format!("{}.txt", text_file_stem(text)));
+        fs::write(&path, text).map_err(|error| format!("Failed to write the text file: {error}"))?;
+        Ok(path)
+    }
+
     pub(super) fn capture_current_clipboard(&self) {
         if super::clipboard_capture_suspended() {
+            return;
+        }
+        // Paused, or this is the copy to leave out (C38).
+        if super::capture_pause::skips_capture(current_unix_millis()) {
             return;
         }
 
@@ -257,7 +272,7 @@ impl ClipboardHistoryService {
         }
     }
 
-    fn insert_capture(&self, capture: ClipboardCapture, source: Option<ClipboardSource>, masked: bool) -> Result<(), String> {
+    pub(super) fn insert_capture(&self, capture: ClipboardCapture, source: Option<ClipboardSource>, masked: bool) -> Result<(), String> {
         let now = current_unix_millis();
         let hash = capture.hash().to_string();
         let mut state = self.state.lock().map_err(|error| error.to_string())?;
@@ -450,6 +465,7 @@ impl ClipboardHistoryService {
             settings: state.settings.clone(),
             items: state.items.clone(),
             snippets: state.snippets.clone(),
+            capture: super::capture_pause::status(current_unix_millis()),
         }
     }
 
@@ -464,7 +480,7 @@ impl ClipboardHistoryService {
         // The clipboard window (C22.2), unless the settings ask for the island's page.
         let settings = self.state.lock().map(|state| state.settings.clone()).ok();
         if let Some(settings) = settings.filter(|settings| settings.open_in == super::OpenIn::Window) {
-            if let Err(error) = super::popup::toggle(&self.app, settings.popup_position, settings.popup_layout) {
+            if let Err(error) = super::popup::toggle(&self.app, &settings) {
                 eprintln!("failed to open the clipboard window: {error}");
             }
             return;
@@ -498,6 +514,28 @@ fn source_app() -> Option<ClipboardSource> {
     let path = win32::process::image_path(win32::process::window_process_id(window))?;
     let name = Path::new(&path).file_stem()?.to_string_lossy().into_owned();
     Some(ClipboardSource { path, name })
+}
+
+/// A file name from the text's first words: no characters Windows forbids, at most 40, or "clipboard".
+pub(super) fn text_file_stem(text: &str) -> String {
+    let stem: String = text
+        .split_whitespace()
+        .collect::<Vec<_>>()
+        .join(" ")
+        .chars()
+        .filter(|c| !matches!(c, '<' | '>' | ':' | '"' | '/' | '\\' | '|' | '?' | '*') && !c.is_control())
+        .take(40)
+        .collect();
+    let stem = stem.trim().trim_end_matches('.').to_string();
+    if stem.is_empty() { "clipboard".to_string() } else { stem }
+}
+
+#[cfg(test)]
+#[test]
+fn text_files_are_named_by_their_first_words() {
+    assert_eq!(text_file_stem("  hello: world?\nsecond line"), "hello world second line");
+    assert_eq!(text_file_stem("..."), "clipboard");
+    assert_eq!(text_file_stem(&"字".repeat(60)).chars().count(), 40);
 }
 
 /// Whether the program at `path` is on the "do not record" list (lower-case executable names).

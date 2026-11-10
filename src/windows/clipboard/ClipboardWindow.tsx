@@ -5,6 +5,7 @@ import { useClipboardHistory } from "../../features/clipboard/useClipboardHistor
 import { activeTone } from "../../features/appearance/themeMode";
 import { STORAGE_KEY, loadSettings } from "../../features/appearance/storage";
 import { useSystemDark } from "../../features/appearance/useResolvedTheme";
+import { useWindowAccent } from "../../features/appearance/useWindowAccent";
 import "./ClipboardWindow.css";
 
 const NO_SHORTCUT = () => {};
@@ -28,6 +29,7 @@ export function ClipboardWindow() {
     return () => window.removeEventListener("storage", sync);
   }, []);
   const light = activeTone(themeMode, systemDark) === "light";
+  useWindowAccent();
 
   const close = useCallback(() => {
     void hideClipboardPopup().catch((error: unknown) => console.error("Failed to hide the clipboard window", error));
@@ -55,10 +57,12 @@ export function ClipboardWindow() {
         onPasteSnippet={(id) => void pasteClipboardSnippet(id).catch(reportError("paste a snippet"))}
         onPasteSequence={(ids) => void pasteClipboardSequence(ids).catch(reportError("start a paste sequence"))}
         openCount={openCount}
-        onPaste={(id, plain) => void pasteClipboardItem(id, plain).catch((error: unknown) => console.error("Failed to paste a clipboard entry", error))}
+        onPaste={(id, plain, options) => void pasteClipboardItem(id, plain, options).catch((error: unknown) => console.error("Failed to paste a clipboard entry", error))}
         onClose={close}
         onToggleFavorite={(id) => void toggleClipboardHistoryFavorite(id)}
         wide={clipboardHistory.settings.popupLayout === "wide"}
+        capture={clipboardHistory.capture}
+        linkPreview={clipboardHistory.settings.linkPreview === true}
       />
     </div>
   );

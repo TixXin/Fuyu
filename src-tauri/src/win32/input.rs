@@ -2,7 +2,7 @@
 
 use windows::Win32::UI::Input::KeyboardAndMouse::{
     keybd_event, GetAsyncKeyState, KEYBD_EVENT_FLAGS, KEYEVENTF_KEYUP, VIRTUAL_KEY, VK_CONTROL,
-    VK_LBUTTON, VK_MENU, VK_RBUTTON,
+    VK_LBUTTON, VK_MENU, VK_RBUTTON, VK_RETURN,
 };
 
 /// Whether either Alt key is physically held right now.
@@ -47,6 +47,12 @@ pub(crate) fn send_paste_shortcut() {
     send_key_down(key_v);
     send_key_up(key_v);
     send_key_up(VK_CONTROL);
+}
+
+/// Synthesizes Enter, after a paste that should also be sent or run (C38).
+pub(crate) fn send_enter() {
+    send_key_down(VK_RETURN);
+    send_key_up(VK_RETURN);
 }
 
 fn send_key_event(key: VIRTUAL_KEY, flags: KEYBD_EVENT_FLAGS) {

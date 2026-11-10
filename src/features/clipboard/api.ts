@@ -33,7 +33,18 @@ export type ClipboardHistorySettings = {
   captureHtml: boolean;
   /** Reads the text in images with Windows' OCR (C24.9). */
   ocr: boolean;
+  /** Keeps the clipboard window out of screen sharing (C38); missing before. */
+  hideFromCapture?: boolean;
+  /** Reads a copied link's title and icon, visiting the address (C38). */
+  linkPreview?: boolean;
+  /** A command copied over several lines goes into a terminal as one line (C38). */
+  flattenTerminalCommands?: boolean;
+  /** The local API's GET /v1/clipboard may read the history (C38). */
+  localApiRead?: boolean;
 };
+
+/** Whether copies are recorded right now (C38). */
+export type ClipboardCaptureStatus = { paused: boolean; pausedUntil?: number | null; ignoreNext: boolean };
 
 export type ClipboardSecretHandling = "mask" | "skip" | "keep";
 
@@ -81,6 +92,8 @@ export type ClipboardHistorySnapshot = {
   items: ClipboardHistoryItem[];
   /** Saved texts for pasting again (C24.6); missing before. */
   snippets?: ClipboardSnippet[];
+  /** Paused or skipping the next copy (C38); missing before. */
+  capture?: ClipboardCaptureStatus;
 };
 
 /** A saved text; {date}, {time}, {datetime}, {weekday} and {clipboard} are filled in on paste. */
@@ -105,7 +118,7 @@ export function setClipboardHistorySettings(settings: ClipboardHistorySettings) 
 }
 
 /** How an image goes back (C22.1): as copied, as its saved file, or as its quoted path (for terminals). */
-export type ClipboardCopyAs = "original" | "file" | "path" | "plain" | "text";
+export type ClipboardCopyAs = "original" | "file" | "path" | "plain" | "text" | "textFile";
 
 // copy_clipboard_history_item_as in src-tauri/src/clipboard_history/mod.rs (CopyAs).
 export function copyClipboardItem(id: string, copyAs: ClipboardCopyAs = "original") {
@@ -118,8 +131,48 @@ export function copyClipboardItem(id: string, copyAs: ClipboardCopyAs = "origina
 const CLIPBOARD_POPUP_OPENED_EVENT = "clipboard-popup-opened";
 
 /** Copies the entry, closes the window and pastes into the window that was in front. */
-export function pasteClipboardItem(id: string, plain = false) {
-  return invoke<void>("paste_clipboard_history_item", { id, plain });
+export function pasteClipboardItem(id: string, plain = false, options: { enter?: boolean; copyAs?: ClipboardCopyAs } = {}) {
+  return invoke<void>("paste_clipboard_history_item", { id, plain, enter: options.enter ?? false, copyAs: options.copyAs ?? null });
+}
+
+/** Pastes any text (transformed, merged or edited) like an entry, without adding it (C38). */
+export function pasteClipboardText(text: string, enter = false) {
+  return invoke<void>("paste_clipboard_text", { text, enter });
+}
+
+/** Saves an edited text as a new entry (C38). */
+export function addClipboardHistoryText(text: string) {
+  return invoke<ClipboardHistorySnapshot>("add_clipboard_history_text", { text });
+}
+
+/** Stops recording for `minutes`, or until resumed (C38). */
+export function pauseClipboardCapture(minutes: number | null) {
+  return invoke<ClipboardHistorySnapshot>("pause_clipboard_capture", { minutes });
+}
+
+export function resumeClipboardCapture() {
+  return invoke<ClipboardHistorySnapshot>("resume_clipboard_capture");
+}
+
+export function ignoreNextClipboardCopy() {
+  return invoke<ClipboardHistorySnapshot>("ignore_next_clipboard_copy");
+}
+
+/** Windows' own simplified / traditional Chinese conversion (C38). */
+export function convertChineseText(text: string, to: "simplified" | "traditional") {
+  return invoke<string>("convert_chinese_text", { text, to });
+}
+
+/** The text of a QR code in an image entry, or null (C38). */
+export function readClipboardImageQr(id: string) {
+  return invoke<string | null>("read_clipboard_image_qr", { id });
+}
+
+export type ClipboardLinkPreview = { title?: string | null; icon?: string | null };
+
+/** A link's page title and icon; fails while link previews are off (C38). */
+export function getClipboardLinkPreview(url: string) {
+  return invoke<ClipboardLinkPreview>("get_clipboard_link_preview", { url });
 }
 
 /** A program's icon as a PNG data URL (get_agent_host_icon in agent_status), null without one. */

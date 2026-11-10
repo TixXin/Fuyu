@@ -6,6 +6,7 @@ import { hasTranslationSecret, hideTranslationWindow, listenTranslationWindowOpe
 import { takeTranslationHandoff, type Direction } from "../../features/translation/storage";
 import { DEFAULT_PROVIDER_MODELS } from "../../features/translation/providers";
 import { useTranslationSettings } from "../../features/translation/useTranslationSettings";
+import { useWindowAccent } from "../../features/appearance/useWindowAccent";
 import { openSettingsWindow } from "../settings/api";
 import { useAutoTranslate } from "../../features/translation/useAutoTranslate";
 import { useTranslationRequest } from "../../features/translation/useTranslationRequest";
@@ -15,6 +16,7 @@ export function TranslationWindow() {
   const t = useTranslation();
   const errorText = useErrorText();
   const [settings, setSettings] = useTranslationSettings();
+  useWindowAccent();
   const [input, setInput] = useState("");
   const [clipboardPreview, setClipboardPreview] = useState("");
   const [output, setOutput] = useState("");
@@ -147,7 +149,18 @@ export function TranslationWindow() {
   useAutoTranslate(settings.autoTranslate && hasSecret && !isLoading, input, autoTranslateKey, skipAutoSource, submit);
 
   const openSettings = () => openSettingsWindow("translation");
-  const close = () => { requestId.current += 1; clipboardRequestId.current += 1; void hideTranslationWindow(); };
+  const close = useCallback(() => { requestId.current += 1; clipboardRequestId.current += 1; void hideTranslationWindow(); }, []);
+  // Esc closes the window, as it does the clipboard window; not while the IME is choosing a word,
+  // and not when something inside (a menu) already used the key.
+  useEffect(() => {
+    const handleEscape = (event: globalThis.KeyboardEvent) => {
+      if (event.key !== "Escape" || event.isComposing || event.defaultPrevented) return;
+      event.preventDefault();
+      close();
+    };
+    window.addEventListener("keydown", handleEscape);
+    return () => window.removeEventListener("keydown", handleEscape);
+  }, [close]);
   const startWindowDrag = (event: PointerEvent<HTMLElement>) => {
     if (event.button !== 0 || (event.target as HTMLElement).closest("button")) return;
     void getCurrentWindow().startDragging().catch((failure) => console.error("Cannot drag translation window", failure));

@@ -54,6 +54,8 @@ fn routes_map_to_methods() {
     assert_eq!(remove.params, json!({ "id": "abc-123" }));
 
     assert_eq!(route("GET", "/v1/note", b"").expect("note").method, "note.get");
+    let clipboard = route("GET", "/v1/clipboard?limit=5", b"").expect("clipboard");
+    assert_eq!((clipboard.method, clipboard.params["limit"].as_u64(), clipboard.writes), ("clipboard.list", Some(5), false));
     assert_eq!(route("PUT", "/v1/note", br#"{"note":"hi"}"#).expect("note").method, "note.set");
     assert_eq!(route("GET", "/v1/health", b"").expect("health").method, "health");
 

@@ -1,31 +1,43 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
-import { CornerDownLeft, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { useTranslation } from "../../i18n";
-import type { ClipboardHistoryItem, ClipboardSnippet } from "./api";
+import type { ClipboardCaptureStatus, ClipboardCopyAs, ClipboardHistoryItem, ClipboardSnippet } from "./api";
+import { ClipboardActionPanel, type PanelPage } from "./ClipboardActionPanel";
+import { ClipboardEditor } from "./ClipboardEditor";
+import { ClipboardPauseBar, ClipboardPopupFooter, pausedNow, type MergeSeparator } from "./ClipboardPopupFooter";
 import { ClipboardPopupPreview } from "./ClipboardPopupPreview";
 import { ClipboardPopupRow } from "./ClipboardPopupRow";
+import { mergedText, popupActions } from "./popupActions";
 import { filterPopupItems, nextPopupFilter, popupFilters, popupTags, type PopupFilter } from "./popupFilters";
 import { popupIndexAfterKey, toggleQueued } from "./popupKeys";
+import { loadPinyin, parsePopupQuery } from "./popupQuery";
+import { usePopupHandlers } from "./usePopupHandlers";
 import "./ClipboardPopup.css";
+import "./ClipboardPopupPanels.css";
 
 // "5 分钟前" moves on while the window stays open.
 const CLOCK_MS = 30_000;
 
+type Mode = "list" | "panel" | "look" | "edit";
+
 /**
- * The clipboard window (C22.2), drawn like the island's clipboard page: a search box, a row of
- * chips (all, starred, images, files, snippets and the most used #tags; Tab and Shift+Tab move
- * along them), the entries newest first, and a footer with the keys. ↑↓ move the selection, Enter
- * or a click pastes it (with Shift, as plain text), 1–9 paste that row, Esc closes. Ctrl+click or
- * Ctrl+Space picks entries for a sequence that Enter starts (C24.7). `wide` adds the picked entry
- * in full on the right. `openCount` changes each time the window is shown, which clears the
- * search, the chip and the picks and goes back to the top.
+ * The clipboard window (C22.2, C37, C38): a search box (pinyin initials and "/" rules too), a row of
+ * chips (Tab and Shift+Tab), the entries newest first, and a footer with the keys and whether copies
+ * are recorded. ↑↓ move, Enter or a click pastes (Shift: plain text, Ctrl+Enter: then Enter), 1–9
+ * paste that row, Esc closes. Ctrl+K or a right click opens the actions panel (Ctrl+T its
+ * transforms, Ctrl+I its AI rewrites, Ctrl+M the note), Ctrl+E edits before pasting, Space shows the entry in full, Del
+ * deletes (Ctrl+Z undoes). Ctrl+click or Ctrl+Space picks entries: Enter pastes them in turn,
+ * Ctrl+Enter merged. `wide` shows the picked entry beside the list. `openCount` changes each time
+ * the window is shown, which starts afresh.
  */
-export function ClipboardPopup({ items, snippets, openCount, wide, onPaste, onPasteSnippet, onPasteSequence, onClose, onToggleFavorite }: {
+export function ClipboardPopup({ items, snippets, openCount, wide, capture, linkPreview = false, onPaste, onPasteSnippet, onPasteSequence, onClose, onToggleFavorite }: {
   items: readonly ClipboardHistoryItem[];
   snippets: readonly ClipboardSnippet[];
   openCount: number;
   wide: boolean;
-  onPaste: (id: string, plain: boolean) => void;
+  capture?: ClipboardCaptureStatus;
+  linkPreview?: boolean;
+  onPaste: (id: string, plain: boolean, options?: { enter?: boolean; copyAs?: ClipboardCopyAs }) => void;
   onPasteSnippet: (id: string) => void;
   onPasteSequence: (ids: string[]) => void;
   onClose: () => void;
@@ -37,81 +49,151 @@ export function ClipboardPopup({ items, snippets, openCount, wide, onPaste, onPa
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState(0);
   const [queue, setQueue] = useState<string[]>([]);
+  const [separator, setSeparator] = useState<MergeSeparator>("newline");
+  const [mode, setMode] = useState<Mode>("list");
+  const [panelPage, setPanelPage] = useState<PanelPage>("actions");
   const [now, setNow] = useState(() => Date.now());
+  const [pinyinReady, setPinyinReady] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const listRef = useRef<HTMLUListElement | null>(null);
+  const { handlers, notice, deletion, saveNote, saveAsNew, pasteText } = usePopupHandlers({ onPaste, onToggleFavorite, onEdit: () => setMode("edit") });
+  const { flush } = deletion;
 
   useEffect(() => {
+    flush();
     setFilter("all");
     setQuery("");
     setSelected(0);
     setQueue([]);
+    setMode("list");
     setNow(Date.now());
     inputRef.current?.focus();
-  }, [openCount]);
+  }, [openCount, flush]);
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), CLOCK_MS);
+    void loadPinyin().then((pinyin) => setPinyinReady(pinyin !== null));
     return () => window.clearInterval(timer);
   }, []);
 
-  const tags = useMemo(() => popupTags(items), [items]);
+  const pendingId = deletion.pending?.id;
+  const visible = useMemo(() => (pendingId ? items.filter((item) => item.id !== pendingId) : items), [items, pendingId]);
+  const tags = useMemo(() => popupTags(visible), [visible]);
   const filters = popupFilters(tags);
   const onSnippets = filter === "snippets";
+  const parsed = useMemo(() => parsePopupQuery(query), [query]);
   const needle = query.trim().toLowerCase();
-  const shownItems = useMemo(() => (onSnippets ? [] : filterPopupItems(items, filter, needle)), [items, filter, needle, onSnippets]);
+  const shownItems = useMemo(
+    () => (onSnippets ? [] : filterPopupItems(visible, filter, parsed, now)),
+    // pinyinReady: matching by pinyin starts once its table has loaded.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [visible, filter, parsed, now, onSnippets, pinyinReady],
+  );
   const shownSnippets = onSnippets && needle
     ? snippets.filter((snippet) => `${snippet.title}\n${snippet.text}`.toLowerCase().includes(needle))
     : snippets;
   const count = onSnippets ? shownSnippets.length : shownItems.length;
   const current = Math.min(selected, Math.max(0, count - 1));
+  const item = onSnippets ? undefined : shownItems[current];
+  const isText = item?.kind === "text";
+  const actions = useMemo(() => popupActions(item, capture, handlers, text.actions), [item, capture, handlers, text.actions]);
 
   useEffect(() => {
     listRef.current?.querySelector<HTMLElement>(`[data-index="${current}"]`)?.scrollIntoView({ block: "nearest" });
   }, [current, filter]);
 
+  const focusSearch = () => window.setTimeout(() => inputRef.current?.focus(), 0);
+  const backToList = () => {
+    setMode("list");
+    focusSearch();
+  };
+  const openPanel = (page: PanelPage) => {
+    setPanelPage(page);
+    setMode("panel");
+  };
   const chooseFilter = (next: PopupFilter) => {
     setFilter(next);
     setSelected(0);
     inputRef.current?.focus();
   };
-  const pick = (index: number, plain: boolean) => {
+  const pick = (index: number, plain: boolean, enter = false) => {
     if (onSnippets) {
       if (shownSnippets[index]) onPasteSnippet(shownSnippets[index].id);
     } else if (shownItems[index]) {
-      onPaste(shownItems[index].id, plain);
+      onPaste(shownItems[index].id, plain, enter ? { enter } : undefined);
     }
   };
+  const pasteMerged = () => {
+    const picked = queue.map((id) => items.find((entry) => entry.id === id)).filter((entry): entry is ClipboardHistoryItem => Boolean(entry));
+    const merged = mergedText(picked, separator);
+    if (merged) pasteText(merged);
+  };
+  const toggleRecord = () => (pausedNow(capture, now) ? handlers.resume() : handlers.pause(null));
 
   const onKeyDown = (event: KeyboardEvent) => {
-    if (event.key === "Escape") {
-      event.preventDefault();
+    const key = event.key;
+    const ctrl = event.ctrlKey && !event.altKey;
+    if (mode === "look") {
+      if (key === "Escape" || key === " ") {
+        event.preventDefault();
+        setMode("list");
+        return;
+      }
+    } else if (mode !== "list") {
+      return;
+    }
+    const handled = () => event.preventDefault();
+    if (key === "Escape") {
+      handled();
       if (queue.length > 0) setQueue([]);
       else onClose();
-      return;
-    }
-    if (event.key === "Tab") {
-      event.preventDefault();
+    } else if (key === "Tab") {
+      handled();
       chooseFilter(nextPopupFilter(filters, filter, event.shiftKey));
-      return;
+    } else if (ctrl && key.toLowerCase() === "k") {
+      handled();
+      openPanel("actions");
+    } else if (ctrl && key.toLowerCase() === "t" && isText) {
+      handled();
+      openPanel("transforms");
+    } else if (ctrl && key.toLowerCase() === "i" && isText && !item.masked) {
+      handled();
+      openPanel("ai");
+    } else if (ctrl && key.toLowerCase() === "m" && item) {
+      handled();
+      openPanel("note");
+    } else if (ctrl && key.toLowerCase() === "e" && isText) {
+      handled();
+      setMode("edit");
+    } else if (ctrl && key.toLowerCase() === "s" && item) {
+      handled();
+      onToggleFavorite(item.id);
+    } else if (ctrl && key.toLowerCase() === "z" && deletion.pending) {
+      handled();
+      deletion.undo();
+    } else if (ctrl && key === " " && item) {
+      handled();
+      setQueue(toggleQueued(queue, item.id));
+    } else if (key === "Enter") {
+      handled();
+      if (!onSnippets && queue.length > 0) {
+        if (ctrl) pasteMerged();
+        else onPasteSequence(queue);
+      } else pick(current, event.shiftKey, ctrl);
+    } else if (key === " " && query === "" && !wide && item && mode === "list") {
+      handled();
+      setMode("look");
+    } else if (key === "Delete" && query === "" && item) {
+      handled();
+      deletion.remove(item);
+    } else {
+      // Digits paste a row only while the search box is empty, so a search can still hold numbers.
+      const action = popupIndexAfterKey(key, current, count, query === "");
+      if (!action) return;
+      handled();
+      if (action.paste) pick(action.index, false);
+      else setSelected(action.index);
     }
-    if (!onSnippets && event.ctrlKey && event.key === " ") {
-      event.preventDefault();
-      if (shownItems[current]) setQueue(toggleQueued(queue, shownItems[current].id));
-      return;
-    }
-    if (event.key === "Enter") {
-      event.preventDefault();
-      if (!onSnippets && queue.length > 0) onPasteSequence(queue);
-      else pick(current, event.shiftKey);
-      return;
-    }
-    // Digits paste a row only while the search box is empty, so a search can still hold numbers.
-    const action = popupIndexAfterKey(event.key, current, count, query === "");
-    if (!action) return;
-    event.preventDefault();
-    if (action.paste) pick(action.index, false);
-    else setSelected(action.index);
   };
 
   const chipLabel = (chip: PopupFilter) =>
@@ -120,8 +202,11 @@ export function ClipboardPopup({ items, snippets, openCount, wide, onPaste, onPa
       : chip === "favorites" ? t.clipboard.favorites
       : chip === "images" ? t.clipboard.images
       : chip === "files" ? t.clipboard.files
+      : chip === "links" ? text.actions.kinds.link
+      : chip === "colors" ? text.actions.kinds.color
       : text.tabs.snippets;
   const empty = needle ? null : onSnippets ? text.noSnippets : text.empty;
+  const editing = mode === "edit" && item && isText;
 
   return (
     <section className={`clipboard-popup${wide ? " clipboard-popup--wide" : ""}`} aria-label={text.title} onKeyDown={onKeyDown}>
@@ -156,6 +241,7 @@ export function ClipboardPopup({ items, snippets, openCount, wide, onPaste, onPa
           <kbd className="clipboard-popup__tab-key" aria-hidden="true">Tab</kbd>
         </div>
       </div>
+      <ClipboardPauseBar capture={capture} now={now} onResume={handlers.resume} />
       <div className="clipboard-popup__body">
         {count === 0 ? (
           <div className="clipboard-popup__empty" role="status">
@@ -182,39 +268,68 @@ export function ClipboardPopup({ items, snippets, openCount, wide, onPaste, onPa
                   onPick={() => onPasteSnippet(snippet.id)}
                 />
               ))
-              : shownItems.map((item, index) => (
+              : shownItems.map((entry, index) => (
                 <ClipboardPopupRow
-                  key={item.id}
+                  key={entry.id}
                   index={index}
                   now={now}
                   selected={index === current}
-                  queued={queue.indexOf(item.id) + 1}
-                  entry={item}
-                  onHover={() => setSelected(index)}
+                  queued={queue.indexOf(entry.id) + 1}
+                  entry={entry}
+                  onHover={() => mode === "list" && setSelected(index)}
                   onPick={(event) => {
-                    if (event.ctrlKey) setQueue(toggleQueued(queue, item.id));
-                    else onPaste(item.id, event.shiftKey);
+                    if (event.ctrlKey) setQueue(toggleQueued(queue, entry.id));
+                    else onPaste(entry.id, event.shiftKey);
                   }}
-                  onToggleFavorite={() => onToggleFavorite(item.id)}
+                  onToggleFavorite={() => onToggleFavorite(entry.id)}
+                  onMenu={() => {
+                    setSelected(index);
+                    openPanel("actions");
+                  }}
                 />
               ))}
           </ul>
         )}
-        {wide && <ClipboardPopupPreview entry={onSnippets ? undefined : shownItems[current]} snippet={onSnippets ? shownSnippets[current] : undefined} />}
+        {wide && (editing ? (
+          <ClipboardEditor key={item.id} item={item} overlay={false} onPasteOnce={(value) => pasteText(value)} onSaveAsNew={(value) => { saveAsNew(value); backToList(); }} onCancel={backToList} />
+        ) : (
+          <ClipboardPopupPreview entry={item} snippet={onSnippets ? shownSnippets[current] : undefined} linkPreview={linkPreview} onPasteText={pasteText} />
+        ))}
+        {!wide && editing && (
+          <ClipboardEditor key={item.id} item={item} overlay onPasteOnce={(value) => pasteText(value)} onSaveAsNew={(value) => { saveAsNew(value); backToList(); }} onCancel={backToList} />
+        )}
+        {mode === "look" && item && (
+          <div className="clipboard-look" role="dialog" aria-label={text.preview.label}>
+            <span className="clipboard-look__close"><kbd>{text.actions.spaceKey}</kbd>{text.actions.closePreview}</span>
+            <ClipboardPopupPreview entry={item} linkPreview={linkPreview} onPasteText={pasteText} />
+          </div>
+        )}
+        {mode === "panel" && (
+          <ClipboardActionPanel
+            key={`${item?.id ?? ""}-${panelPage}`}
+            item={item}
+            actions={actions}
+            page={panelPage}
+            onPage={setPanelPage}
+            onClose={backToList}
+            onPasteText={pasteText}
+            onSaveNote={saveNote}
+          />
+        )}
       </div>
-      {queue.length > 0 ? (
-        <footer className="clipboard-popup__hint clipboard-popup__hint--sequence" role="status">
-          <span>{text.sequenceCount(queue.length)} · <kbd><CornerDownLeft size={10} strokeWidth={2.4} /></kbd>{text.sequenceStart}</span>
-          <span className="clipboard-popup__hint-end"><kbd>Esc</kbd>{text.cancel}</span>
-        </footer>
-      ) : (
-        <footer className="clipboard-popup__hint">
-          <span><kbd><CornerDownLeft size={10} strokeWidth={2.4} /></kbd>{text.paste}</span>
-          {!onSnippets && <span><kbd>⇧<CornerDownLeft size={10} strokeWidth={2.4} /></kbd>{text.plain}</span>}
-          {!onSnippets && <span><kbd>Ctrl</kbd>{text.pickSequence}</span>}
-          <span className="clipboard-popup__hint-end"><kbd>Esc</kbd></span>
-        </footer>
-      )}
+      <ClipboardPopupFooter
+        onSnippets={onSnippets}
+        wide={wide}
+        queued={onSnippets ? 0 : queue.length}
+        separator={separator}
+        onSeparator={setSeparator}
+        deleted={deletion.pending ? (deletion.pending.kind === "image" ? t.clipboard.imageLabel(deletion.pending.image?.width ?? 0, deletion.pending.image?.height ?? 0) : [...deletion.pending.preview].slice(0, 16).join("")) : null}
+        onUndo={deletion.undo}
+        notice={notice}
+        capture={capture}
+        now={now}
+        onToggleRecord={toggleRecord}
+      />
     </section>
   );
 }

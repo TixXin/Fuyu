@@ -1,0 +1,494 @@
+/*
+ * The clipboard window's second round (C38): recognised kinds in the rows, the pause bar and the
+ * footer's record switch, and what opens over the list (actions panel, Space preview, editor).
+ * Same ink and pink as ClipboardPopup.css.
+ */
+.clipboard-popup__body {
+  position: relative;
+}
+
+.clipboard-popup__swatch {
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px rgba(var(--pop-ink), 0.15);
+}
+
+.clipboard-popup__badge {
+  margin-left: 5px;
+  padding: 0 5px;
+  color: rgba(var(--pop-ink), 0.6);
+  font: 600 9.5px var(--font-mono, ui-monospace, Consolas, monospace);
+  background: rgba(var(--pop-ink), 0.08);
+  border-radius: 4px;
+}
+
+.clipboard-popup__pausebar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0 10px 4px;
+  padding: 5px 6px 5px 10px;
+  color: rgba(var(--pop-ink), 0.95);
+  font-size: 12px;
+  background: rgba(242, 184, 75, 0.16);
+  border-radius: 9px;
+  box-shadow: inset 0 0 0 1px rgba(242, 184, 75, 0.35);
+}
+
+.clipboard-popup__pausebar span {
+  flex: 1;
+  min-width: 0;
+}
+
+.clipboard-popup__pausebar button,
+.clipboard-popup__separator,
+.clipboard-popup__undo,
+.clipboard-popup__record {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  background: rgba(var(--pop-ink), 0.09);
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.clipboard-popup__separator {
+  margin-left: 4px;
+  padding: 0 6px;
+  font-weight: 500;
+}
+
+.clipboard-popup__record {
+  padding: 1px 6px;
+  font-weight: 500;
+  background: transparent;
+}
+
+.clipboard-popup__record:hover {
+  background: rgba(var(--pop-ink), 0.08);
+}
+
+.clipboard-popup__record i {
+  width: 6px;
+  height: 6px;
+  background: #3fb950;
+  border-radius: 50%;
+}
+
+.clipboard-popup__record--off i {
+  background: #f2b84b;
+}
+
+.clipboard-popup__record + span {
+  margin-left: -6px;
+}
+
+.clipboard-popup__hint--toast {
+  color: rgba(var(--pop-ink), 0.95);
+  background: rgba(var(--pop-ink), 0.06);
+}
+
+.clipboard-popup__toast-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.clipboard-popup__undo {
+  color: var(--pop-accent-text);
+  background: transparent;
+}
+
+/* Over the list: the actions panel rises from the bottom, Raycast-like. */
+.clipboard-panel {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+}
+
+.clipboard-panel__scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.38);
+}
+
+.island-light .clipboard-panel__scrim {
+  background: rgba(20, 20, 30, 0.16);
+}
+
+.clipboard-panel__box,
+.clipboard-look,
+.clipboard-editor--overlay {
+  background: color-mix(in srgb, var(--pop-fill) 88%, rgb(var(--pop-ink)));
+  border-radius: 12px;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(var(--pop-ink), 0.12);
+}
+
+.clipboard-panel__box {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  left: 8px;
+  max-height: calc(100% - 16px);
+  display: flex;
+  flex-direction: column;
+  padding: 6px;
+}
+
+.clipboard-panel__head {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 2px 6px 6px;
+  color: rgba(var(--pop-ink), 0.5);
+  border-bottom: 1px solid rgba(var(--pop-ink), 0.08);
+}
+
+.clipboard-panel__head input {
+  flex: 1;
+  min-width: 0;
+  padding: 3px 0;
+  color: rgba(var(--pop-ink), 0.95);
+  font: inherit;
+  font-size: 12.5px;
+  background: transparent;
+  border: 0;
+  outline: none;
+}
+
+.clipboard-panel__head input::placeholder {
+  color: rgba(var(--pop-ink), 0.45);
+}
+
+.clipboard-panel kbd,
+.clipboard-editor kbd,
+.clipboard-look kbd {
+  flex: none;
+  padding: 1px 5px;
+  color: rgba(var(--pop-ink), 0.6);
+  font: 600 10px var(--font-mono, ui-monospace, Consolas, monospace);
+  background: rgba(var(--pop-ink), 0.08);
+  border-radius: 4px;
+}
+
+.clipboard-panel__list {
+  flex: 1 1 auto;
+  min-height: 0;
+  margin: 2px 0 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+  scrollbar-width: thin;
+}
+
+.clipboard-panel__group {
+  display: block;
+  padding: 6px 8px 2px;
+  color: rgba(var(--pop-ink), 0.4);
+  font-size: 10.5px;
+  font-weight: 600;
+}
+
+.clipboard-panel__none {
+  padding: 14px 8px;
+  color: rgba(var(--pop-ink), 0.5);
+  font-size: 12px;
+}
+
+.clipboard-panel__action {
+  width: 100%;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 8px;
+  color: rgba(var(--pop-ink), 0.95);
+  font: inherit;
+  font-size: 12.5px;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-radius: 7px;
+  cursor: pointer;
+}
+
+.clipboard-panel__action svg {
+  flex: none;
+  color: rgba(var(--pop-ink), 0.6);
+}
+
+.clipboard-panel__action--selected {
+  background: rgba(var(--pop-accent), 0.18);
+  box-shadow: inset 0 0 0 1px rgba(var(--pop-accent), 0.35);
+}
+
+.clipboard-panel__action--off {
+  opacity: 0.42;
+  cursor: default;
+}
+
+.clipboard-panel__label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.clipboard-panel__note {
+  max-width: 45%;
+  overflow: hidden;
+  color: rgba(var(--pop-ink), 0.45);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.clipboard-panel__result {
+  flex: none;
+  display: grid;
+  gap: 2px;
+  margin-top: 4px;
+  padding: 7px 10px;
+  background: rgba(var(--pop-ink), 0.05);
+  border-radius: 8px;
+}
+
+.clipboard-panel__result span {
+  color: rgba(var(--pop-ink), 0.45);
+  font-size: 10.5px;
+  font-weight: 600;
+}
+
+.clipboard-panel__result pre {
+  max-height: 64px;
+  margin: 0;
+  overflow: auto;
+  font: 11.5px/1.5 var(--font-mono, ui-monospace, Consolas, monospace);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* Space: the entry in full over the list. */
+.clipboard-look {
+  position: absolute;
+  inset: 4px 8px 8px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+}
+
+.clipboard-look .clipboard-popup__pane {
+  flex: 1;
+  min-height: 0;
+}
+
+.clipboard-look__close {
+  position: absolute;
+  top: 9px;
+  right: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: rgba(var(--pop-ink), 0.55);
+  font-size: 11px;
+}
+
+/* Edit, then paste. */
+.clipboard-editor {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 8px;
+  padding: 10px 14px 12px;
+}
+
+.clipboard-editor--overlay {
+  position: absolute;
+  inset: 4px 8px 8px;
+  z-index: 2;
+}
+
+.clipboard-editor__head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  color: rgba(var(--pop-ink), 0.6);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.clipboard-editor__head span {
+  font-weight: 400;
+  color: rgba(var(--pop-ink), 0.45);
+}
+
+.clipboard-editor textarea {
+  min-height: 0;
+  padding: 10px 12px;
+  color: rgba(var(--pop-ink), 0.95);
+  font: 12.5px/1.6 var(--font-ui);
+  background: rgba(var(--pop-ink), 0.03);
+  border: 0;
+  border-radius: 10px;
+  outline: none;
+  box-shadow: inset 0 0 0 1.5px rgba(var(--pop-accent), 0.6);
+  resize: none;
+}
+
+.clipboard-editor__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.clipboard-editor__buttons button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 9px;
+  color: rgba(var(--pop-ink), 0.95);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  background: rgba(var(--pop-ink), 0.09);
+  border: 0;
+  border-radius: 7px;
+  cursor: pointer;
+}
+
+.clipboard-editor__buttons .clipboard-editor__primary {
+  color: #1a0d14;
+  background: rgb(var(--pop-accent));
+}
+
+.clipboard-editor__buttons .clipboard-editor__primary kbd {
+  color: inherit;
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.clipboard-editor__buttons button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+/* Recognised kinds in the wide pane. */
+.clipboard-kind {
+  min-height: 0;
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  overflow: auto;
+}
+
+.clipboard-kind__swatch {
+  min-height: 110px;
+  display: grid;
+  place-items: end start;
+  padding: 10px;
+  color: #fff;
+  font: 600 12px var(--font-mono, ui-monospace, Consolas, monospace);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+  border-radius: 10px;
+  box-shadow: inset 0 0 0 1px rgba(var(--pop-ink), 0.12);
+}
+
+.clipboard-kind__hint {
+  color: rgba(var(--pop-ink), 0.5);
+  font-size: 11px;
+}
+
+.clipboard-kind__formats {
+  display: grid;
+  gap: 4px;
+}
+
+.clipboard-kind__format {
+  min-height: 30px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+  color: rgba(var(--pop-ink), 0.95);
+  font: 12px var(--font-mono, ui-monospace, Consolas, monospace);
+  text-align: left;
+  overflow-wrap: anywhere;
+  background: rgba(var(--pop-ink), 0.05);
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.clipboard-kind__format:hover {
+  background: rgba(var(--pop-accent), 0.15);
+}
+
+.clipboard-kind__format b {
+  flex: none;
+  min-width: 34px;
+  color: rgba(var(--pop-ink), 0.45);
+  font: 600 10.5px var(--font-ui);
+}
+
+.clipboard-kind__link {
+  display: flex;
+  gap: 10px;
+  padding: 10px 12px;
+  background: rgba(var(--pop-ink), 0.05);
+  border-radius: 10px;
+}
+
+.clipboard-kind__link > div {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.clipboard-kind__link b {
+  font-size: 13px;
+}
+
+.clipboard-kind__link span {
+  color: rgba(var(--pop-ink), 0.55);
+  font: 11.5px var(--font-mono, ui-monospace, Consolas, monospace);
+  overflow-wrap: anywhere;
+}
+
+.clipboard-kind__favicon {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  color: rgba(var(--pop-ink), 0.6);
+  background: rgba(var(--pop-ink), 0.08);
+  border-radius: 8px;
+}
+
+.clipboard-kind__favicon img {
+  width: 20px;
+  height: 20px;
+}
+
+.clipboard-code {
+  font-family: var(--font-mono, ui-monospace, Consolas, monospace);
+  font-size: 12px;
+}
+
+.clipboard-code__k { color: #7cc4ff; }
+.clipboard-code__s { color: #f0a6c0; }
+.clipboard-code__n { color: #f2c94c; }
+.clipboard-code__p { color: rgba(var(--pop-ink), 0.5); }
+.island-light .clipboard-code__k { color: #1d6fd1; }
+.island-light .clipboard-code__s { color: #b0336a; }
+.island-light .clipboard-code__n { color: #a86b00; }

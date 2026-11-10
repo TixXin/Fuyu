@@ -37,6 +37,8 @@
 
   /* Accents and states */
   --color-accent: #74d6ff;
+  /* Text on an accent fill (a filled button, today in the month); themeMode.ts sets it for a picked accent. */
+  --color-on-accent: #06202c;
   --color-sky: #a8d8ea;
   --color-success: #2f8c61;
   --color-danger: #c75065;
@@ -93,6 +95,7 @@
   --color-white-a16: rgba(0, 0, 0, 0.12);
   --color-white-a18: rgba(0, 0, 0, 0.14);
   --color-accent: #0a7fd1;
+  --color-on-accent: #ffffff;
   --color-warning: #b7791f;
   --color-focus-ring: rgba(10, 127, 209, 0.8);
   --color-focus-ring-soft: rgba(10, 127, 209, 0.6);

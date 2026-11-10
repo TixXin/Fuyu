@@ -6,6 +6,7 @@ import { QuotaAlertPopup } from "../../features/agent-status/QuotaAlertPopup";
 import type { AgentSession } from "../../features/agent-status/session";
 import type { AgentVisualState } from "../../features/agent-status/status";
 import type { MediaState } from "../../features/media/api";
+import { useAudible } from "../../features/media/useAudible";
 import type { CurrentLyric } from "../../features/media/lyrics/useCurrentLyric";
 import { KaraokeText } from "../../features/media/lyrics/KaraokeText";
 import { CollapsedMessageContent } from "../../features/messages/CollapsedMessageContent";
@@ -150,6 +151,7 @@ export function IslandCollapsedBar({
   const t = useTranslation();
   // A newer version found by the background check, unless the user skipped it.
   const updateVersion = useUpdateReminder();
+  const audible = useAudible(mediaState.audioActive);
   const { didDragRef, prepareWindowDrag, handleWindowDragMove, cancelWindowDrag } =
     useWindowDragGesture(isTucked, onWindowDragStart);
   const pulseClassName = [
@@ -176,7 +178,8 @@ export function IslandCollapsedBar({
     pluginStatus: showCollapsedText && !preview && !translationPeek && !levelPopup && !deviceAlert && !quotaAlert ? pluginStatus : [],
     deviceUse,
     shelfCount,
-    showMusic,
+    // No sound, no waveform: it comes with the music and goes after a quiet moment.
+    showMusic: showMusic && audible,
     mediaState,
     agentSessionCount,
     slots,

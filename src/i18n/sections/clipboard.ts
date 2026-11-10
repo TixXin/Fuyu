@@ -1,3 +1,5 @@
+import * as actions from "./clipboardActions.ts";
+
 export type ClipboardText = {
   title: string;
   favoriteCount: (count: number) => string;
@@ -38,6 +40,7 @@ export type ClipboardText = {
     noMatch: (query: string) => string;
     noMatchHint: string;
     snippetsLabel: string;
+    actions: actions.ClipboardActionsText;
     preview: {
       label: string;
       text: (chars: number) => string;
@@ -102,7 +105,7 @@ export const zhCN: ClipboardText = {
   copyOcrText: "复制图片里识别出的文字",
   popup: {
     title: "剪贴板",
-    search: "搜索剪贴记录",
+    search: "搜索，拼音首字母也行；/ 筛选",
     hint: "Enter 粘贴 · Shift+Enter 纯文本 · Ctrl+点击 多选顺序粘贴 · Tab 片段",
     empty: "还没有剪贴记录",
     quickPaste: (index) => `按 ${index} 粘贴`,
@@ -118,8 +121,9 @@ export const zhCN: ClipboardText = {
     sequenceStart: "开始，之后每次 Ctrl+V 贴下一条",
     cancel: "取消",
     noMatch: (query) => `没有匹配「${query}」的记录`,
-    noMatchHint: "搜内容、备注、来源程序，或用 #标签",
+    noMatchHint: "搜内容、备注、来源程序、拼音首字母，或用 #标签、/app:程序名、/today、/img、/link",
     snippetsLabel: "常用片段 · 粘贴时填好日期和剪贴板",
+    actions: actions.zhCN,
     preview: {
       label: "选中这条的完整内容",
       text: (chars) => `文字 · ${chars} 字`,
@@ -180,7 +184,7 @@ export const en: ClipboardText = {
   copyOcrText: "Copy the text read in the image",
   popup: {
     title: "Clipboard",
-    search: "Search clipboard history",
+    search: "Search, or / to filter",
     hint: "Enter paste · Shift+Enter plain · Ctrl+click picks a sequence · Tab snippets",
     empty: "Nothing copied yet",
     quickPaste: (index) => `Press ${index} to paste`,
@@ -196,8 +200,9 @@ export const en: ClipboardText = {
     sequenceStart: "start, then each Ctrl+V pastes the next",
     cancel: "Cancel",
     noMatch: (query) => `Nothing matches “${query}”`,
-    noMatchHint: "Search text, notes, the program, or #tags",
+    noMatchHint: "Search text, notes, the program, or #tags, /app:name, /today, /img, /link",
     snippetsLabel: "Snippets · dates and the clipboard filled in on paste",
+    actions: actions.en,
     preview: {
       label: "The picked entry in full",
       text: (chars) => `Text · ${chars} characters`,

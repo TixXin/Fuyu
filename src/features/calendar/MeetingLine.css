@@ -8,7 +8,7 @@
 
 .island-meeting__icon {
   flex: none;
-  color: #ff9a76;
+  color: var(--color-accent);
 }
 
 .island-meeting__title {
@@ -24,7 +24,7 @@
 }
 
 .island-meeting--started .island-meeting__when {
-  color: #ff9a76;
+  color: var(--color-accent);
 }
 
 /* Beside the bar, not in it: the bar is one button, and a button cannot hold another. */
@@ -32,8 +32,8 @@
   flex: 0 0 auto;
   height: 22px;
   padding: 0 9px;
-  color: #fff;
-  background: rgba(255, 138, 101, 0.85);
+  color: var(--color-on-accent);
+  background: color-mix(in srgb, var(--color-accent) 85%, transparent);
   border: 0;
   border-radius: var(--radius-pill);
   font-size: 11px;
@@ -43,7 +43,7 @@
 }
 
 .island-meeting-join:hover {
-  background: rgb(255, 138, 101);
+  background: var(--color-accent);
 }
 
 .island-meeting-join:focus-visible {

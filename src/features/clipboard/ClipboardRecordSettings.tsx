@@ -58,6 +58,7 @@ export function ClipboardRecordSettings({ clipboardSettings, onChange }: {
           }}
         />
       </SettingsRow>
+      <SettingsToggleRow title={text.localApiRead} description={text.localApiReadHint} checked={clipboardSettings.localApiRead === true} onChange={(localApiRead) => onChange({ localApiRead })} />
       <SettingsNumberRow title={text.maxItems} value={clipboardSettings.maxItems} min={5} max={200} onChange={(maxItems) => onChange({ maxItems })} />
       <SettingsRow
         title={text.retention}

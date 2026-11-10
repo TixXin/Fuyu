@@ -91,6 +91,7 @@ pub(super) fn route(method: &str, url: &str, body: &[u8]) -> Result<ApiCall, Api
             Ok(call("todos.remove", Value::Object(params), true))
         }
         ("GET", ["v1", "note"]) => Ok(call("note.get", Value::Null, false)),
+        ("GET", ["v1", "clipboard"]) => Ok(call("clipboard.list", json!({ "limit": query_number(url, "limit") }), false)),
         ("PUT", ["v1", "note"]) => Ok(call("note.set", body_object(body)?, true)),
         ("PUT", ["v1", "agent-status", source]) => {
             let mut params = body_map(body)?;

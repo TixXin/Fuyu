@@ -111,9 +111,14 @@ pub(super) fn best_window(candidates: &[WindowCandidate], hints: &SessionHints) 
 /// Editors: `folder` is one of the " - "-separated segments ("file - fly-island - Visual Studio
 /// Code"). Whole segments only, so a folder named "code" does not match every editor window.
 /// Markers editors add around a name: unsaved files ("● main.rs"), multi-root workspaces
-/// ("app (Workspace)", "app (工作区)") and elevated windows ("[Administrator]", "[管理员]").
+/// ("app (Workspace)", "app (工作区)"), elevated windows ("[Administrator]", "[管理员]") and the
+/// computer a remote window is connected to ("app [SSH: dev-box]", "app [WSL: Ubuntu]").
 pub(super) fn bare_segment(segment: &str) -> &str {
     let mut text = segment.trim().trim_start_matches(['●', '•', '*']).trim();
+    let remote = text.rsplit_once(" [").filter(|(_, label)| label.ends_with(']') && label.contains(": "));
+    if let Some((name, _)) = remote {
+        text = name.trim();
+    }
     for marker in [" (workspace)", " (工作区)", " [administrator]", " [管理员]"] {
         text = text.strip_suffix(marker).unwrap_or(text).trim();
     }

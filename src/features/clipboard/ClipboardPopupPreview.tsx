@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "../../i18n";
 import { getClipboardImagePreview, type ClipboardHistoryItem, type ClipboardSnippet } from "./api";
+import { ClipboardKindPane } from "./ClipboardKindPane";
+import { contentKind } from "./contentKind";
 
 // Larger images already read this time the window has run; the native side scales them each time.
 const previews = new Map<string, Promise<string | null>>();
@@ -28,7 +30,12 @@ function useImagePreview(item: ClipboardHistoryItem | undefined) {
  * is pasted. Text wraps and scrolls, an image shows large with the text read in it, files are
  * listed; a masked key stays masked. Under it, where and when it was copied and its tags.
  */
-export function ClipboardPopupPreview({ entry, snippet }: { entry?: ClipboardHistoryItem; snippet?: ClipboardSnippet }) {
+export function ClipboardPopupPreview({ entry, snippet, linkPreview = false, onPasteText }: {
+  entry?: ClipboardHistoryItem;
+  snippet?: ClipboardSnippet;
+  linkPreview?: boolean;
+  onPasteText?: (text: string) => void;
+}) {
   const t = useTranslation();
   const text = t.clipboard.popup.preview;
   const imageUrl = useImagePreview(entry);
@@ -45,11 +52,13 @@ export function ClipboardPopupPreview({ entry, snippet }: { entry?: ClipboardHis
   const item = entry as ClipboardHistoryItem;
   const image = item.kind === "image" ? item.image : undefined;
   const fullText = item.masked ? item.preview : item.text ?? item.preview;
+  const kind = contentKind(item);
+  const kindName = kind ? t.clipboard.popup.actions.kinds[kind.kind] : null;
   const head = image
     ? text.image(image.width, image.height, Math.max(1, Math.round(image.byteSize / 1024)))
     : item.kind === "files"
       ? text.files(item.files?.length ?? 1)
-      : text.text([...fullText].length);
+      : `${kindName ? `${kindName} · ` : ""}${text.text([...fullText].length)}`;
   const copiedAt = new Intl.DateTimeFormat(t.localeTag, { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" }).format(item.copiedAt);
 
   return (
@@ -60,6 +69,8 @@ export function ClipboardPopupPreview({ entry, snippet }: { entry?: ClipboardHis
           {(imageUrl ?? image.thumbnailDataUrl) && <img src={imageUrl ?? image.thumbnailDataUrl} alt="" />}
           {item.ocrText && <p><b>{text.ocr}</b>{item.ocrText}</p>}
         </div>
+      ) : kind ? (
+        <ClipboardKindPane kind={kind} source={fullText} linkPreview={linkPreview} onPasteText={(value) => onPasteText?.(value)} />
       ) : item.kind === "files" ? (
         <ul className="clipboard-popup__pane-body clipboard-popup__pane-files">
           {(item.files ?? [item.preview]).map((path) => <li key={path}>{path}</li>)}

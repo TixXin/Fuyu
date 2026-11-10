@@ -6,8 +6,8 @@
  */
 .clipboard-popup {
   --pop-ink: var(--overlay-rgb, 241, 240, 246);
-  --pop-accent: 244, 167, 196;
-  --pop-accent-text: color-mix(in srgb, rgb(var(--pop-accent)) 62%, rgb(var(--pop-ink)));
+  --pop-accent: var(--color-accent);
+  --pop-accent-text: color-mix(in srgb, var(--pop-accent) 62%, rgb(var(--pop-ink)));
   --pop-fill: #111114;
   height: 100vh;
   display: flex;
@@ -55,7 +55,7 @@
 }
 
 .clipboard-popup__search:focus-within {
-  box-shadow: inset 0 0 0 1px rgba(var(--pop-accent), 0.5);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--pop-accent) 50%, transparent);
 }
 
 .clipboard-popup__search input {
@@ -156,8 +156,8 @@
 }
 
 .clipboard-popup__item--selected {
-  background: rgba(var(--pop-accent), 0.15);
-  box-shadow: inset 0 0 0 1px rgba(var(--pop-accent), 0.4);
+  background: color-mix(in srgb, var(--pop-accent) 15%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--pop-accent) 40%, transparent);
 }
 
 .clipboard-popup__row {
@@ -194,7 +194,7 @@
 
 .clipboard-popup__item--queued .clipboard-popup__index {
   color: #1a0d14;
-  background: rgb(var(--pop-accent));
+  background: var(--pop-accent);
 }
 
 .clipboard-popup__lead {
@@ -254,7 +254,7 @@
   margin-right: 4px;
   padding: 0 5px;
   color: rgba(var(--pop-ink), 0.95);
-  background: rgba(var(--pop-accent), 0.22);
+  background: color-mix(in srgb, var(--pop-accent) 22%, transparent);
   border-radius: 999px;
 }
 
@@ -277,7 +277,7 @@
 
 .clipboard-popup__enter kbd {
   color: inherit;
-  background: rgba(var(--pop-accent), 0.2);
+  background: color-mix(in srgb, var(--pop-accent) 20%, transparent);
 }
 
 .clipboard-popup__star {
@@ -445,8 +445,8 @@
 
 .clipboard-popup__hint--sequence {
   color: rgba(var(--pop-ink), 0.95);
-  background: rgba(var(--pop-accent), 0.14);
-  border-top-color: rgba(var(--pop-accent), 0.3);
+  background: color-mix(in srgb, var(--pop-accent) 14%, transparent);
+  border-top-color: color-mix(in srgb, var(--pop-accent) 30%, transparent);
 }
 
 .clipboard-popup__hint--sequence > span:first-child {

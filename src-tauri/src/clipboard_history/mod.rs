@@ -1,7 +1,11 @@
 //! Clipboard history: commands, item types and the background capture service.
 
+pub(crate) mod actions;
+mod capture_pause;
 mod clipboard_io;
+mod command_text;
 mod hotkey;
+mod link_preview;
 mod listener;
 mod plugin_view;
 mod popup;
@@ -26,7 +30,8 @@ use listener::{notify_clipboard_changed, start_workers};
 use store::{load_history, HISTORY_FILE_NAME, IMAGE_DIRECTORY_NAME};
 
 pub(crate) use hotkey::parse_shortcut_binding;
-pub(crate) use plugin_view::{plugin_history, plugin_item};
+pub(crate) use capture_pause::paused as clipboard_capture_paused;
+pub(crate) use plugin_view::{local_api_history, plugin_history, plugin_item};
 pub(crate) use popup::WINDOW_LABEL as POPUP_WINDOW_LABEL;
 
 const HISTORY_CHANGED_EVENT: &str = "clipboard-history-changed";
@@ -80,6 +85,9 @@ pub struct ClipboardHistorySnapshot {
     items: Vec<ClipboardHistoryItem>,
     /// Saved texts for pasting again (C24.6).
     snippets: Vec<snippets::ClipboardSnippet>,
+    /// Whether copies are being recorded right now (C38): paused, or skipping the next one.
+    #[serde(default)]
+    capture: capture_pause::CaptureStatus,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -131,6 +139,18 @@ pub struct ClipboardHistorySettings {
     /// Reads the text in recorded images with Windows' own OCR, on this computer (C24.9).
     #[serde(default = "default_true")]
     ocr: bool,
+    /// Keeps the clipboard window out of screen sharing and recordings (C38).
+    #[serde(default = "default_true")]
+    hide_from_capture: bool,
+    /// Reads a copied link's page title and icon; this visits the address (C38).
+    #[serde(default)]
+    link_preview: bool,
+    /// A command copied over several lines goes into a terminal as one line (C38).
+    #[serde(default)]
+    flatten_terminal_commands: bool,
+    /// The local API's GET /v1/clipboard may read the history, for AI tools (C38).
+    #[serde(default)]
+    local_api_read: bool,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
@@ -204,6 +224,10 @@ impl Default for ClipboardHistorySettings {
             capture_files: true,
             capture_html: true,
             ocr: true,
+            hide_from_capture: true,
+            link_preview: false,
+            flatten_terminal_commands: false,
+            local_api_read: false,
         }
     }
 }
@@ -235,6 +259,8 @@ pub(crate) enum CopyAs {
     Plain,
     /// The text OCR read in an image (C24.9).
     Text,
+    /// A text entry as a .txt file (C38).
+    TextFile,
 }
 
 #[derive(Clone)]
@@ -398,10 +424,17 @@ pub fn copy_clipboard_history_item_as(id: String, copy_as: CopyAs) -> Result<Cli
 }
 
 /// From the clipboard window: puts the entry on the clipboard and pastes it into the window that
-/// was in front (C22.2).
+/// was in front (C22.2); `enter` presses Enter after it, `copy_as` picks the form (C38).
 #[tauri::command]
-pub async fn paste_clipboard_history_item(app: AppHandle, id: String, plain: Option<bool>) -> Result<(), String> {
-    popup::paste(&app, &id, plain.unwrap_or(false))
+pub async fn paste_clipboard_history_item(
+    app: AppHandle,
+    id: String,
+    plain: Option<bool>,
+    enter: Option<bool>,
+    copy_as: Option<CopyAs>,
+) -> Result<(), String> {
+    let options = popup::PasteOptions { plain: plain.unwrap_or(false), enter: enter.unwrap_or(false), copy_as };
+    popup::paste(&app, &id, options)
 }
 
 #[tauri::command]
@@ -418,7 +451,7 @@ pub fn delete_clipboard_snippet(id: String) -> Result<ClipboardHistorySnapshot, 
 #[tauri::command]
 pub async fn paste_clipboard_snippet(app: AppHandle, id: String) -> Result<(), String> {
     let text = service()?.snippet_text(&id)?;
-    popup::paste_text(&app, &text)
+    popup::paste_text(&app, &text, false)
 }
 
 /// From the clipboard window: pastes the first of `ids` now and each next one on the user's
@@ -559,6 +592,14 @@ macro_rules! tauri_commands {
             crate::clipboard_history::delete_clipboard_history_item,
             crate::clipboard_history::clear_clipboard_history,
             crate::clipboard_history::get_clipboard_image_preview,
+            crate::clipboard_history::actions::paste_clipboard_text,
+            crate::clipboard_history::actions::add_clipboard_history_text,
+            crate::clipboard_history::actions::pause_clipboard_capture,
+            crate::clipboard_history::actions::resume_clipboard_capture,
+            crate::clipboard_history::actions::ignore_next_clipboard_copy,
+            crate::clipboard_history::actions::convert_chinese_text,
+            crate::clipboard_history::actions::read_clipboard_image_qr,
+            crate::clipboard_history::actions::get_clipboard_link_preview,
         ] $($rest)*)
     };
 }

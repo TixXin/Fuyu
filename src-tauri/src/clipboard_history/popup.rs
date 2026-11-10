@@ -11,7 +11,7 @@ use std::{
 use tauri::{AppHandle, Emitter, Manager, PhysicalPosition, PhysicalSize, Position, Size, WebviewWindow};
 use windows::Win32::Foundation::HWND;
 
-use super::{service, ClipboardHistoryItemKind, CopyAs, PopupLayout, PopupPosition};
+use super::{command_text, service, ClipboardHistoryItemKind, ClipboardHistorySettings, CopyAs, PopupLayout, PopupPosition};
 use crate::win32;
 
 pub(crate) const WINDOW_LABEL: &str = "clipboard";
@@ -78,11 +78,14 @@ fn popup_window(app: &AppHandle) -> Result<WebviewWindow, String> {
 }
 
 /// Shows the popup, remembering the window in front to paste into later; the shortcut again closes it.
-pub(super) fn toggle(app: &AppHandle, position: PopupPosition, layout: PopupLayout) -> Result<(), String> {
+pub(super) fn toggle(app: &AppHandle, settings: &ClipboardHistorySettings) -> Result<(), String> {
+    let (position, layout) = (settings.popup_position, settings.popup_layout);
     let window = popup_window(app)?;
     if window.is_visible().unwrap_or(false) {
         return hide(app);
     }
+    // Screen sharing and recordings see an empty area instead of the history (C38).
+    let _ = window.set_content_protected(settings.hide_from_capture);
     // Opening the window again ends a paste sequence still running (C24.7).
     super::sequence::stop();
     let foreground = win32::window::foreground_window();
@@ -137,47 +140,61 @@ fn take_target() -> Option<HWND> {
         .map(|value| HWND(value as *mut core::ffi::c_void))
 }
 
+/// How the window pastes an entry: without formatting, with Enter after it, or in a chosen form.
+#[derive(Debug, Clone, Copy, Default)]
+pub(super) struct PasteOptions {
+    pub(super) plain: bool,
+    pub(super) enter: bool,
+    pub(super) copy_as: Option<CopyAs>,
+}
+
 /// Puts the entry on the clipboard, closes the popup and, with auto-paste on, pastes it into the
 /// window that was in front. An image or files go as their path into a terminal when that is on;
-/// `plain` drops the formatting (C24.4).
-pub(super) fn paste(app: &AppHandle, id: &str, plain: bool) -> Result<(), String> {
+/// `plain` drops the formatting (C24.4); a command split over lines goes into a terminal as one
+/// line when that is on (C38).
+pub(super) fn paste(app: &AppHandle, id: &str, options: PasteOptions) -> Result<(), String> {
     let service = service()?;
     let snapshot = service.snapshot()?;
     let settings = &snapshot.settings;
-    let is_image = snapshot
-        .items
-        .iter()
-        .find(|item| item.id == id)
-        .is_some_and(|item| matches!(item.kind, ClipboardHistoryItemKind::Image | ClipboardHistoryItemKind::Files));
+    let item = snapshot.items.iter().find(|item| item.id == id);
+    let is_image = item.is_some_and(|item| matches!(item.kind, ClipboardHistoryItemKind::Image | ClipboardHistoryItemKind::Files));
     let target = take_target();
     let into_terminal = target.is_some_and(|window| {
         win32::process::image_path(win32::process::window_process_id(window)).is_some_and(|path| is_terminal_process(&path))
     });
-    let copy_as = if is_image && settings.auto_paste && settings.terminal_image_path && into_terminal {
-        CopyAs::Path
-    } else if plain {
-        CopyAs::Plain
+    let split_command = item
+        .filter(|_| options.copy_as.is_none() && into_terminal && settings.auto_paste && settings.flatten_terminal_commands)
+        .and_then(|item| item.text.as_deref())
+        .filter(|text| command_text::looks_like_split_command(text));
+    if let Some(text) = split_command {
+        super::suspend_clipboard_capture(Duration::from_millis(800));
+        super::clipboard_io::write_clipboard_text(&command_text::flatten_command(text))?;
     } else {
-        CopyAs::Original
-    };
-    service.copy_item_as(id, copy_as)?;
+        let copy_as = match options.copy_as {
+            Some(copy_as) => copy_as,
+            None if is_image && settings.auto_paste && settings.terminal_image_path && into_terminal => CopyAs::Path,
+            None if options.plain => CopyAs::Plain,
+            None => CopyAs::Original,
+        };
+        service.copy_item_as(id, copy_as)?;
+    }
     hide(app)?;
-    paste_into(target, settings.auto_paste);
+    paste_into(target, settings.auto_paste, options.enter);
     Ok(())
 }
 
 /// Puts `text` on the clipboard (not into the history) and pastes it like an entry (C24.6).
-pub(super) fn paste_text(app: &AppHandle, text: &str) -> Result<(), String> {
+pub(super) fn paste_text(app: &AppHandle, text: &str, enter: bool) -> Result<(), String> {
     let auto_paste = service()?.snapshot()?.settings.auto_paste;
     super::suspend_clipboard_capture(Duration::from_millis(800));
     super::clipboard_io::write_clipboard_text(text)?;
     hide(app)?;
-    paste_into(take_target(), auto_paste);
+    paste_into(take_target(), auto_paste, enter);
     Ok(())
 }
 
-/// Hands the focus back to `target` and sends Ctrl+V there, when auto-paste is on.
-fn paste_into(target: Option<HWND>, auto_paste: bool) {
+/// Hands the focus back to `target` and sends Ctrl+V there, when auto-paste is on; then Enter.
+fn paste_into(target: Option<HWND>, auto_paste: bool, enter: bool) {
     let (Some(target), true) = (target, auto_paste) else {
         return;
     };
@@ -187,6 +204,11 @@ fn paste_into(target: Option<HWND>, auto_paste: bool) {
         if win32::window::force_foreground(HWND(target as *mut core::ffi::c_void)) {
             thread::sleep(FOCUS_SETTLE);
             win32::input::send_paste_shortcut();
+            if enter {
+                // Chat boxes and terminals take the paste before the key that sends it.
+                thread::sleep(FOCUS_SETTLE);
+                win32::input::send_enter();
+            }
         }
     });
 }
