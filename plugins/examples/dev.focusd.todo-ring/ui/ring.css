@@ -9,68 +9,204 @@ body {
 }
 
 .ring {
+  /* The ring's color: the accent while there is something left, green once all is done. */
+  --ring-color: var(--focusd-accent);
+  position: relative;
   height: 100%;
   display: grid;
-  grid-template-columns: auto 1fr;
-  grid-template-rows: 1fr auto;
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
-  gap: 8px 18px;
-  padding: 4px 8px;
+  gap: 22px;
+  padding: 4px 12px;
   box-sizing: border-box;
 }
 
-svg {
-  grid-row: 1 / 3;
-  width: 150px;
-  height: 150px;
+.ring--done {
+  --ring-color: var(--focusd-success);
+}
+
+.ring__dial {
+  position: relative;
+  width: 148px;
+  height: 148px;
+}
+
+.ring__dial svg {
+  width: 100%;
+  height: 100%;
   transform: rotate(-90deg);
 }
 
 circle {
   fill: none;
-  stroke-width: 12;
+  stroke-width: 10;
 }
 
 .ring__track {
-  stroke: var(--focusd-surface);
+  stroke: color-mix(in srgb, var(--focusd-text) 9%, transparent);
+}
+
+.sweep__from {
+  stop-color: var(--ring-color);
+}
+
+.sweep__to {
+  stop-color: color-mix(in srgb, var(--ring-color) 65%, white);
 }
 
 .ring__value {
-  stroke: var(--focusd-accent);
+  stroke: url(#sweep);
   stroke-linecap: round;
   stroke-dasharray: 0 100;
-  transition: stroke-dasharray 0.6s ease;
+  filter: drop-shadow(0 0 5px color-mix(in srgb, var(--ring-color) 45%, transparent));
+  transition: stroke-dasharray 0.6s cubic-bezier(0.3, 0.7, 0.2, 1), opacity 0.2s ease;
 }
 
-.ring__text {
+/* A round cap draws a dot even at 0%. */
+.ring--none .ring__value {
+  opacity: 0;
+}
+
+.ring__center {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 2px;
+}
+
+.ring__center strong {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.ring__center span {
+  color: var(--focusd-text-muted);
+  font-size: 12px;
+}
+
+.ring--empty .ring__center strong {
+  color: var(--focusd-text-muted);
+  font-weight: 400;
+}
+
+.ring--done .ring__center span {
+  color: var(--focusd-success);
+}
+
+.ring__side {
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.ring__side p,
+.ring__next {
+  margin: 0;
+  padding: 0;
+}
+
+.ring__label,
+.ring__note {
+  color: var(--focusd-text-muted);
+  font-size: 12px;
+}
+
+.ring__counts {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  color: var(--focusd-text-muted);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.ring__counts strong {
+  color: var(--focusd-text);
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.ring__next {
   display: grid;
   gap: 4px;
+  list-style: none;
 }
 
-.ring__text strong {
-  font-size: 34px;
-  font-weight: 800;
-}
-
-.ring__text span {
-  color: var(--focusd-text-muted);
+.ring__next li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-size: 13px;
 }
 
+/* An empty checkbox ring in front of each todo still to do. */
+.ring__next li::before {
+  content: "";
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border: 1.5px solid color-mix(in srgb, var(--ring-color) 70%, transparent);
+  border-radius: 50%;
+}
+
+.ring__next span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ring__note:empty,
+.ring__next:empty {
+  display: none;
+}
+
 button {
-  justify-self: start;
-  padding: 5px 12px;
-  border: 1px solid var(--focusd-border);
-  border-radius: var(--focusd-radius);
+  position: absolute;
+  top: 0;
+  right: 4px;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--focusd-text-muted);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+button:hover,
+button:focus-visible {
   background: var(--focusd-surface);
   color: var(--focusd-text);
-  font: inherit;
-  font-size: 12px;
-  cursor: pointer;
+}
+
+button:focus-visible {
+  outline: 2px solid var(--focusd-accent);
+  outline-offset: 1px;
+}
+
+button svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ring__value {
+  .ring__value,
+  button {
     transition: none;
   }
 }
