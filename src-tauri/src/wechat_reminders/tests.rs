@@ -165,3 +165,50 @@ fn every_message_read_from_the_list_is_published_while_the_reminder_is_pending()
     state.set_enabled(false);
     assert_eq!(state.snapshot.message, None);
 }
+
+#[test]
+fn the_list_keeps_each_message_and_one_row_per_plain_reminder() {
+    let mut state = ReminderState::default();
+    state.set_enabled(true);
+    let generation = state.generation;
+    let message = |chat: &str, at| ChatMessage {
+        chat: chat.into(),
+        contact: chat.into(),
+        preview: "hi".into(),
+        unread: None,
+        at,
+    };
+    assert!(state.remind(generation, 1000, Some(PlainReason::Tray)));
+    // Still pending: a second flash is the same reminder.
+    assert!(!state.remind(generation, 2000, Some(PlainReason::Tray)));
+    assert!(state.receive(generation, message("a", 3000)));
+    assert!(state.apply(generation, ReminderSignal::Activated, 4000));
+    assert!(state.apply(generation, ReminderSignal::Attention, 5000));
+    let rows: Vec<_> = state
+        .snapshot
+        .items
+        .iter()
+        .map(|item| {
+            (
+                item.at,
+                item.message.as_ref().map(|m| m.chat.as_str()),
+                item.reason,
+            )
+        })
+        .collect();
+    assert_eq!(
+        rows,
+        [
+            (5000, None, None),
+            (3000, Some("a"), None),
+            (1000, None, Some(PlainReason::Tray))
+        ]
+    );
+    for at in 0..MAX_ITEMS as u64 + 5 {
+        state.receive(generation, message("b", 6000 + at));
+    }
+    assert_eq!(state.snapshot.items.len(), MAX_ITEMS);
+    assert_eq!(state.snapshot.items[0].at, 6000 + MAX_ITEMS as u64 + 4);
+    state.set_enabled(false);
+    assert!(state.snapshot.items.is_empty());
+}

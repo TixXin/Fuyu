@@ -1,7 +1,7 @@
 import { useTranslation } from "../../../i18n";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { isTauri } from "@tauri-apps/api/core";
-import { launchWeChat, listenWeChatReminderChanged, setWeChatExposeUi, setWeChatHideTaskbarButton, setWeChatRemindersEnabled, type ChatMessage, type ReminderSnapshot } from "./api";
+import { clearWeChatReminders, launchWeChat, listenWeChatReminderChanged, setWeChatExposeUi, setWeChatHideTaskbarButton, setWeChatRemindersEnabled, type ChatMessage, type ReminderSnapshot } from "./api";
 import {
   isWeChatExposeUiEnabled, isWeChatHideTaskbarButtonEnabled, isWeChatRemindersEnabled,
   saveWeChatExposeUiEnabled, saveWeChatHideTaskbarButtonEnabled, saveWeChatRemindersEnabled,
@@ -9,7 +9,7 @@ import {
 
 const EMPTY_SNAPSHOT: ReminderSnapshot = {
   revision: 0, enabled: false, status: "disabled", pending: false,
-  lastAttentionAt: null, error: null, message: null, exposeUi: false, exposeStatus: null,
+  lastAttentionAt: null, error: null, message: null, items: [], exposeUi: false, exposeStatus: null,
   hideTaskbarButton: false,
 };
 
@@ -37,7 +37,8 @@ export function useWeChatReminders(canPreview: boolean) {
     revisionRef.current = next.revision;
     attentionRef.current = next.lastAttentionAt;
     messageAtRef.current = next.message?.at ?? null;
-    setSnapshot(next);
+    // A snapshot from an island without the list (or a test's short mock) has no items.
+    setSnapshot({ ...next, items: next.items ?? [] });
     return true;
   }, []);
 
@@ -126,6 +127,10 @@ export function useWeChatReminders(canPreview: boolean) {
     saveWeChatHideTaskbarButtonEnabled(enabled);
   }), [acceptSnapshot, run]);
 
+  const clear = useCallback(() => run(async () => {
+    acceptSnapshot(await clearWeChatReminders());
+  }), [acceptSnapshot, run]);
+
   /** Brings WeChat up; `chat` (a preview's) also opens that chat. */
   const openWeChat = useCallback((chat?: string | null) => run(async () => {
     await launchWeChat(chat);
@@ -134,7 +139,7 @@ export function useWeChatReminders(canPreview: boolean) {
 
   const showing = canPreview && snapshot.pending && previewReceivedAt !== null;
   return {
-    snapshot, busy, actionError, setEnabled, setExposeUi, setHideTaskbarButton, openWeChat,
+    snapshot, busy, actionError, setEnabled, setExposeUi, setHideTaskbarButton, openWeChat, clear,
     previewReceivedAt: showing ? previewReceivedAt : null,
     previewMessage: showing ? previewMessage : null,
   };

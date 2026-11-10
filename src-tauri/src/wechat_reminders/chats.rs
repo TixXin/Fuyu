@@ -16,6 +16,8 @@ pub(super) struct Session {
     pub(super) preview: String,
     pub(super) unread: Option<u32>,
     pub(super) muted: bool,
+    /// Someone mentioned the user (or everyone): WeChat flashes for that even in a muted chat.
+    pub(super) mentioned: bool,
     pub(super) pinned: bool,
 }
 
@@ -33,6 +35,8 @@ const STATUS_LINES: [&str; 10] = [
 ];
 const MUTED_LINES: [&str; 3] = ["消息免打扰", "免打扰", "静音"];
 const PINNED_LINES: [&str; 2] = ["已置顶", "置顶聊天"];
+/// A status line of its own or a `[有人@我]` in front of the message, so looked for inside lines.
+const MENTION_MARKS: [&str; 2] = ["@我", "@所有人"];
 const SERVICE_ACCOUNTS: &str = "服务号";
 
 pub(super) fn parse(automation_id: &str, name: &str) -> Option<Session> {
@@ -74,13 +78,40 @@ pub(super) fn parse(automation_id: &str, name: &str) -> Option<Session> {
         preview: preview.map_or_else(String::new, |line| line.to_string()),
         unread,
         muted: lines.iter().any(|line| MUTED_LINES.contains(line)),
+        mentioned: lines[1..end]
+            .iter()
+            .any(|line| MENTION_MARKS.iter().any(|mark| line.contains(mark))),
         pinned: lines.iter().any(|line| PINNED_LINES.contains(line)),
+    })
+}
+
+/// Whether `row` shows a message `before` did not: a new last message or a higher unread count; a
+/// row scrolled into view counts only with unread messages.
+fn changed(before: &HashMap<&str, &Session>, row: &Session) -> bool {
+    match before.get(row.key.as_str()) {
+        Some(old) => {
+            old.preview != row.preview || row.unread.unwrap_or(0) > old.unread.unwrap_or(0)
+        }
+        None => row.unread.unwrap_or(0) > 0,
+    }
+}
+
+fn by_key(rows: &[Session]) -> HashMap<&str, &Session> {
+    rows.iter().map(|row| (row.key.as_str(), row)).collect()
+}
+
+/// Whether a muted chat got a message since `before` that `new_messages` leaves out.
+pub(super) fn muted_changed(before: &[Session], now: &[Session]) -> bool {
+    let before = by_key(before);
+    now.iter().any(|row| {
+        row.muted && !row.mentioned && !row.preview.is_empty() && changed(&before, row)
     })
 }
 
 /// Rows that got a message since `before`: a new last message, a higher unread count, or (when
 /// the text repeats the last one and the chat counts no unread) a move to the top of the unpinned
-/// chats. Muted chats never count; a row scrolled into view counts only with unread messages.
+/// chats. Muted chats count only when the message mentions the user; a row scrolled into view
+/// counts only with unread messages.
 pub(super) fn new_messages<'a>(before: &[Session], now: &'a [Session]) -> Vec<&'a Session> {
     let top = |rows: &'a [Session]| {
         rows.iter()
@@ -94,20 +125,10 @@ pub(super) fn new_messages<'a>(before: &[Session], now: &'a [Session]) -> Vec<&'
         .find(|row| !row.pinned)
         .map(|row| row.key.as_str());
     let moved_up = top(now).filter(|key| same_start && old_top != Some(*key));
-    let before: HashMap<&str, &Session> =
-        before.iter().map(|row| (row.key.as_str(), row)).collect();
+    let before = by_key(before);
     now.iter()
-        .filter(|row| !row.muted && !row.preview.is_empty())
-        .filter(|row| {
-            moved_up == Some(row.key.as_str())
-                || match before.get(row.key.as_str()) {
-                    Some(old) => {
-                        old.preview != row.preview
-                            || row.unread.unwrap_or(0) > old.unread.unwrap_or(0)
-                    }
-                    None => row.unread.unwrap_or(0) > 0,
-                }
-        })
+        .filter(|row| (!row.muted || row.mentioned) && !row.preview.is_empty())
+        .filter(|row| moved_up == Some(row.key.as_str()) || changed(&before, row))
         .collect()
 }
 
@@ -198,6 +219,7 @@ mod tests {
             preview: preview.into(),
             unread,
             muted: false,
+            mentioned: false,
             pinned: false,
         }
     }
@@ -276,7 +298,26 @@ mod tests {
 
         let mut muted = row("a", "又一条", Some(3));
         muted.muted = true;
-        assert!(new_messages(&before, &[muted, row("b", "好", Some(1))]).is_empty());
+        let now = [muted, row("b", "好", Some(1))];
+        assert!(new_messages(&before, &now).is_empty());
+        assert!(muted_changed(&before, &now));
+        assert!(!muted_changed(&before, &before));
+    }
+
+    #[test]
+    fn a_mention_in_a_muted_chat_counts() {
+        let before = [parse("session_item_g", "项目群\n消息免打扰\n张三: 收到\n昨天").unwrap()];
+        for name in [
+            "项目群\n[2条]\n有人@我\n李四: 看一下\n12:41\n消息免打扰",
+            "项目群\n[2条]\n[有人@我] 李四: 看一下\n12:41\n消息免打扰",
+            "项目群\n[@所有人] 李四: 开会\n12:41\n消息免打扰",
+        ] {
+            let now = [parse("session_item_g", name).unwrap()];
+            assert!(now[0].muted && now[0].mentioned, "{name}");
+            assert_eq!(new_messages(&before, &now).len(), 1, "{name}");
+            assert!(!muted_changed(&before, &now), "{name}");
+        }
+        assert!(!before[0].mentioned);
     }
 
     #[test]
