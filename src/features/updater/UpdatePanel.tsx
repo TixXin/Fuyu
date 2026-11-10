@@ -2,7 +2,7 @@ import { useEffect, useMemo, useSyncExternalStore } from "react";
 import { ArrowRight, Download, RefreshCcw } from "lucide-react";
 import { useErrorText, useLocale, useTranslation } from "../../i18n";
 import { ProjectLink } from "./ProjectLink";
-import { PROJECT_RELEASES_URL } from "./projectLinks";
+import { websitePage } from "./projectLinks";
 import { releaseNoteLines } from "./releaseNotes";
 import { UpdateChannelRow } from "./UpdateChannelRow";
 import {
@@ -43,7 +43,7 @@ export function UpdatePanel() {
   if (stage === "disabled") {
     return (
       <ProjectLink
-        href={PROJECT_RELEASES_URL}
+        href={websitePage(locale, "releases/")}
         tone="release"
         title={t.settings.project.latestRelease}
         hint={t.settings.project.update.unavailable}

@@ -1,11 +1,11 @@
 import { useSyncExternalStore } from "react";
 import { CircleHelp, Globe, Sparkles, Star, Tag } from "lucide-react";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
-import { useTranslation } from "../../i18n";
+import { useLocale, useTranslation } from "../../i18n";
 import { UpdateDiagnosticsRow } from "./UpdateDiagnosticsRow";
 import { ProjectLink } from "./ProjectLink";
 import { useOpenInBrowser } from "./useOpenInBrowser";
-import { PROJECT_ISSUES_URL, PROJECT_RELEASES_URL, PROJECT_REPO_URL, PROJECT_WEBSITE_URL } from "./projectLinks";
+import { PROJECT_REPO_URL, websitePage } from "./projectLinks";
 import { getUpdateState, subscribeToUpdate } from "./updaterController";
 import "./ProjectSettingsSection.css";
 import "./UpdatePanel.css";
@@ -59,24 +59,25 @@ export function ProjectIdentitySection() {
 /** Settings → About → Links: the website, releases, reporting a problem, and starring the project. */
 export function ProjectLinksSection() {
   const t = useTranslation();
+  const { locale } = useLocale();
 
   return (
     <SettingsGroup title={t.settings.project.linksTitle}>
       <ProjectLink
-        href={PROJECT_WEBSITE_URL}
+        href={websitePage(locale)}
         title={t.settings.project.website}
         hint={t.settings.project.websiteHint}
         icon={<Globe className="project-link__icon" size={18} strokeWidth={1.8} aria-hidden="true" />}
       />
       <ProjectLink
-        href={PROJECT_RELEASES_URL}
+        href={websitePage(locale, "releases/")}
         tone="release"
         title={t.settings.project.releases}
         hint={t.settings.project.releasesHint}
         icon={<Tag className="project-link__icon" size={18} strokeWidth={1.8} aria-hidden="true" />}
       />
       <ProjectLink
-        href={PROJECT_ISSUES_URL}
+        href={websitePage(locale, "community/")}
         title={t.settings.project.issues}
         hint={t.settings.project.issuesHint}
         icon={<CircleHelp className="project-link__icon" size={18} strokeWidth={1.8} aria-hidden="true" />}
