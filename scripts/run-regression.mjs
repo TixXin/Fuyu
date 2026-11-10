@@ -182,9 +182,10 @@ export async function runPage(session, url) {
 export async function withRegressionBrowser(root, firstPage, use) {
   const vitePort = Number(process.env.REGRESSION_PORT ?? await freePort());
   const debugPort = await freePort();
-  const base = `http://localhost:${vitePort}/tests/regression/`;
+  // 127.0.0.1 on both ends: "localhost" can resolve to ::1 for fetch while Vite listens on IPv4.
+  const base = `http://127.0.0.1:${vitePort}/tests/regression/`;
   const profile = mkdtempSync(path.join(tmpdir(), "fly-regression-"));
-  const vite = spawn(process.execPath, [path.join(root, "node_modules/vite/bin/vite.js"), "--port", String(vitePort), "--strictPort"], { cwd: root, stdio: "ignore" });
+  const vite = spawn(process.execPath, [path.join(root, "node_modules/vite/bin/vite.js"), "--port", String(vitePort), "--strictPort", "--host", "127.0.0.1"], { cwd: root, stdio: "ignore" });
   let browser;
   try {
     await waitForHttp(`${base}${firstPage.split("?")[0]}`, 30_000);
