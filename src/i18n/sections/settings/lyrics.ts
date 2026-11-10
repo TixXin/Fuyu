@@ -33,6 +33,34 @@ export type SettingsLyricsText = {
     restart: (version: string) => string;
     failed: (error: string) => string;
   };
+  karaoke: {
+    title: string;
+    hint: string;
+    preview: string;
+    previewLine: string;
+    enabled: string;
+    enabledHint: string;
+    fallback: string;
+    fallbackHint: string;
+    fallbackLine: string;
+    fallbackNone: string;
+    fill: string;
+    fillSmooth: string;
+    fillWord: string;
+    color: string;
+    colorInk: string;
+    colorAccent: string;
+    colorCustom: string;
+    customColor: string;
+    dim: string;
+    dimHint: string;
+    dimValue: (percent: number) => string;
+    dimReset: string;
+    glow: string;
+    glowHint: string;
+    follow: string;
+    followHint: string;
+  };
 };
 
 export const zhCN: SettingsLyricsText = {
@@ -70,6 +98,34 @@ export const zhCN: SettingsLyricsText = {
     restart: (version) => `已安装 v${version}，重启网易云后生效。`,
     failed: (error) => `安装失败：${error}`,
   },
+  karaoke: {
+    title: "岛上的歌词样式",
+    hint: "只影响收起的岛上那一行；音乐页的歌词照旧。",
+    preview: "预览",
+    previewLine: "而风声吹到这 已不需要释怀",
+    enabled: "逐字高亮",
+    enabledHint: "正在唱的那一句从左到右变亮。酷狗歌词和带逐字时间的本地 .lrc 按每个字的时间走。",
+    fallback: "没有逐字时间的歌",
+    fallbackHint: "LRCLIB 和网易云的歌词只有每句的时间。按整句填充：在这一句的时间里匀速变亮（最长 8 秒），和歌声大致对得上。",
+    fallbackLine: "按整句填充",
+    fallbackNone: "不填充",
+    fill: "变亮方式",
+    fillSmooth: "平滑填充",
+    fillWord: "逐字点亮",
+    color: "高亮颜色",
+    colorInk: "跟随岛屿",
+    colorAccent: "强调色",
+    colorCustom: "自定义",
+    customColor: "自定义颜色",
+    dim: "没唱到的字",
+    dimHint: "亮度越低，高亮越显眼。",
+    dimValue: (percent) => `${percent}%`,
+    dimReset: "恢复默认",
+    glow: "发光",
+    glowHint: "整句带一圈柔和的光，颜色跟高亮颜色走。",
+    follow: "长句跟着滚动",
+    followHint: "一句比岛宽时，唱到右边缘附近整句往左移，正在唱的字一直看得见。关掉则在末尾用省略号截断。",
+  },
 };
 
 export const en: SettingsLyricsText = {
@@ -106,5 +162,33 @@ export const en: SettingsLyricsText = {
     updateAvailable: (installed, latest) => `v${installed} is installed; v${latest} is out.`,
     restart: (version) => `v${version} is installed. Restart NetEase Cloud Music to use it.`,
     failed: (error) => `Install failed: ${error}`,
+  },
+  karaoke: {
+    title: "Lyrics on the island",
+    hint: "Only the line on the collapsed island; the music page's lyrics stay as they are.",
+    preview: "Preview",
+    previewLine: "And the wind blows by, nothing left to let go",
+    enabled: "Light up as sung",
+    enabledHint: "The line being sung lights up from left to right. Kugou lyrics and local .lrc files with word times follow each word.",
+    fallback: "Songs without word times",
+    fallbackHint: "LRCLIB and NetEase lyrics only time each line. Fill the line: it lights evenly over the line's time (at most 8 s), roughly with the singing.",
+    fallbackLine: "Fill the line",
+    fallbackNone: "Do not fill",
+    fill: "How it lights",
+    fillSmooth: "Smooth",
+    fillWord: "Word by word",
+    color: "Highlight colour",
+    colorInk: "Island text",
+    colorAccent: "Accent",
+    colorCustom: "Custom",
+    customColor: "Custom colour",
+    dim: "Words not sung yet",
+    dimHint: "The dimmer, the more the highlight stands out.",
+    dimValue: (percent) => `${percent}%`,
+    dimReset: "Reset",
+    glow: "Glow",
+    glowHint: "A soft glow around the line, in the highlight colour.",
+    follow: "Scroll long lines",
+    followHint: "A line wider than the island slides left as the singing nears the edge, so the word being sung stays in view. Off, it ends in an ellipsis.",
   },
 };

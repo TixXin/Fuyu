@@ -138,3 +138,34 @@ export function lyricAt(lines: LyricLine[], positionMs: number): { index: number
 export function longestLyric(lines: LyricLine[]): string {
   return lines.reduce((longest, line) => (line.text.trim().length > longest.length ? line.text.trim() : longest), "");
 }
+
+/** The longest a line without word times takes to fill, and the shortest. */
+const EVEN_FILL_MAX_MS = 8_000;
+const EVEN_FILL_MIN_MS = 600;
+// One CJK / kana / hangul character, a run of other non-space characters with the spaces after it, or spaces.
+const SPLIT = /[぀-ヿ㐀-鿿가-힯豈-﫿]\s*|[^\s぀-ヿ㐀-鿿가-힯豈-﫿]+\s*|\s+/g;
+
+/**
+ * The words a karaoke line lights up: the line's own word times when it has them; otherwise,
+ * with `even`, its characters (CJK) or words (Latin) spread evenly over most of the time until
+ * `nextAt` (the next line; at most 8 s, as a line before a break should not crawl). Undefined
+ * when there is nothing to light.
+ */
+export function karaokeWords(line: LyricLine, nextAt: number | null, even: boolean): LyricWord[] | undefined {
+  if (line.words && line.words.length > 0) return line.words;
+  const text = line.text.trim();
+  if (!even || !text) return undefined;
+  const pieces = text.match(SPLIT) ?? [text];
+  const span = nextAt === null ? EVEN_FILL_MAX_MS : nextAt - line.timeMs;
+  // Singers stop a little before the next line starts.
+  const duration = Math.min(EVEN_FILL_MAX_MS, Math.max(EVEN_FILL_MIN_MS, span * 0.85));
+  const weight = (piece: string) => Math.max(1, piece.trim().length);
+  const total = pieces.reduce((sum, piece) => sum + weight(piece), 0);
+  let at = line.timeMs;
+  return pieces.map((piece) => {
+    const length = (duration * weight(piece)) / total;
+    const word = { startMs: Math.round(at), endMs: Math.round(at + length), text: piece };
+    at += length;
+    return word;
+  });
+}

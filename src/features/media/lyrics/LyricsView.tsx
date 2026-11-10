@@ -1,29 +1,16 @@
-import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useTranslation } from "../../../i18n";
 import type { MediaState } from "../api";
-import { lineIndexAt, playbackPosition, wordFill, type LyricLine, type LyricWord } from "./lrc";
+import { lineIndexAt, playbackPosition, type LyricLine } from "./lrc";
+import { KaraokeText } from "./KaraokeText";
+import type { KaraokeLook } from "./lyricsSettings";
 import "./LyricsView.css";
 
 /** How often the line is checked while playing. */
 const TICK_MS = 200;
 
-/**
- * A line timed word by word: each word fills from dim to bright as it is sung. The timings are
- * taken once, when the line appears or the player reports a new position (the caller re-keys
- * it), and the browser runs them from there; pausing pauses them.
- */
-function SungWords({ words, positionMs, playing }: { words: LyricWord[]; positionMs: number; playing: boolean }) {
-  const [start] = useState(positionMs);
-  return words.map((word, index) => {
-    const { delayMs, durationMs } = wordFill(word, start);
-    const style = {
-      animationDelay: `${delayMs}ms`,
-      animationDuration: `${durationMs}ms`,
-      animationPlayState: playing ? "running" : "paused",
-    } as CSSProperties;
-    return <span className="lyrics-view__word" key={index} style={style}>{word.text}</span>;
-  });
-}
+// The music page's own colours; the collapsed island's come from the settings (karaokeLook).
+const PAGE_LOOK: KaraokeLook = { fill: "smooth", lit: "var(--text-1)", dim: "var(--text-3)", glow: false, follow: false };
 
 /**
  * Three lines of synced lyrics: the one being sung, bright and up to two lines long, between
@@ -73,7 +60,7 @@ export function LyricsView({ lines, mediaState, offsetMs, onPickLine }: {
     <div className={onPickLine ? "lyrics-view lyrics-view--pickable" : "lyrics-view"} aria-label={t.music.lyricsLabel}>
       {row(index - 1, "lyrics-view__line lyrics-view__line--side", text(index - 1))}
       {row(index, "lyrics-view__line lyrics-view__line--current", words
-        ? <SungWords key={`${mediaState.updatedAt}:${offsetMs}`} words={words} positionMs={position} playing={playing} />
+        ? <KaraokeText key={`${mediaState.updatedAt}:${offsetMs}`} words={words} positionMs={position} playing={playing} look={PAGE_LOOK} />
         : current, index)}
       {index >= 0 && lines[index].translation ? (
         <span className="lyrics-view__line lyrics-view__line--translation">{lines[index].translation}</span>

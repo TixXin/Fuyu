@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { MediaState } from "../api";
-import { longestLyric, lyricAt, playbackPosition, type LyricLine } from "./lrc";
+import { karaokeWords, longestLyric, lyricAt, playbackPosition, type LyricLine, type LyricWord } from "./lrc";
+import type { KaraokeLook } from "./lyricsSettings";
 
 export type CurrentLyric = {
   /** The line being sung, or null when nothing is: paused, before the first line, in a break. */
@@ -11,7 +12,20 @@ export type CurrentLyric = {
   longest: string;
   /** Not a sung line: the song's name, shown while it has no lyrics (songLine.ts). */
   song?: boolean;
+  /** The line lit word by word (C30): its words, where playback was when it was read, and the look. */
+  karaoke?: KaraokeLine;
 };
+
+export type KaraokeLine = {
+  words: LyricWord[];
+  positionMs: number;
+  /** Changes when the player reports a new position or the offset changes: the fill restarts from it. */
+  clock: string;
+  look: KaraokeLook;
+};
+
+/** Karaoke for the bar: off (null), or with whether lines without word times fill evenly, and the look. */
+export type KaraokeOptions = { even: boolean; look: KaraokeLook } | null;
 
 const NONE: CurrentLyric = { text: null, index: -1, longest: "" };
 // How long the last line stays when the island times the song itself.
@@ -21,7 +35,7 @@ const LAST_LINE_MS = 12_000;
  * The line sung now, for the collapsed island. Rather than ticking, it wakes when the next line
  * starts, so the island renders once per line. Paused, or with `active` false, there is none.
  */
-export function useCurrentLyric(lines: LyricLine[] | null, mediaState: MediaState, offsetMs: number, active: boolean): CurrentLyric {
+export function useCurrentLyric(lines: LyricLine[] | null, mediaState: MediaState, offsetMs: number, active: boolean, karaoke: KaraokeOptions = null): CurrentLyric {
   const [now, setNow] = useState(() => Date.now());
   const on = active && mediaState.playbackStatus === "playing" && lines !== null && lines.length > 0;
   const position = playbackPosition(mediaState, now) - offsetMs;
@@ -46,5 +60,12 @@ export function useCurrentLyric(lines: LyricLine[] | null, mediaState: MediaStat
   }, [on, nextAt, position]);
 
   const longest = useMemo(() => (lines ? longestLyric(lines) : ""), [lines]);
-  return at ? { text: at.text, index: at.index, longest } : NONE;
+  if (!at || !lines) return NONE;
+  const words = karaoke && at.index >= 0 && at.text ? karaokeWords(lines[at.index], at.nextAt, karaoke.even) : undefined;
+  return {
+    text: at.text,
+    index: at.index,
+    longest,
+    ...(words && { karaoke: { words, positionMs: position, clock: `${mediaState.updatedAt}:${offsetMs}`, look: karaoke!.look } }),
+  };
 }

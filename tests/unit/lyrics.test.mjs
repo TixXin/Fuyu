@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { lineIndexAt, longestLyric, lyricAt, parseLrc, playbackPosition, trackKey, wordFill } from "../../src/features/media/lyrics/lrc.ts";
+import { karaokeWords, lineIndexAt, longestLyric, lyricAt, parseLrc, playbackPosition, trackKey, wordFill } from "../../src/features/media/lyrics/lrc.ts";
 import { normalizeSettings } from "../../src/features/appearance/settings.ts";
 import { suggestsChineseSources } from "../../src/features/media/lyrics/chineseHint.ts";
 

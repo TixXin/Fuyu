@@ -1,0 +1,59 @@
+/* A karaoke line (KaraokeText.tsx): the colours come in as --karaoke-lit and --karaoke-dim. */
+.karaoke {
+  color: var(--karaoke-dim);
+}
+
+/* Following: the line is clipped by its own box and its track slides inside it. */
+.karaoke--follow {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.karaoke__track--moving {
+  display: inline-block;
+  animation: karaoke-follow linear both;
+}
+
+/* Each word: the sung half of a double-width gradient slides in behind the text over the
+   word's time (KaraokeText sets the delay and duration). */
+.karaoke__word {
+  color: transparent;
+  background: linear-gradient(90deg, var(--karaoke-lit) 50%, var(--karaoke-dim) 50%) 100% 0 / 200% 100% no-repeat;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: karaoke-fill linear both;
+}
+
+/* Fill "word": each word lights at once when it is sung. */
+.karaoke--word .karaoke__word {
+  animation-timing-function: step-start;
+}
+
+.karaoke--glow {
+  filter: drop-shadow(0 0 5px color-mix(in srgb, var(--karaoke-lit) 55%, transparent));
+}
+
+@keyframes karaoke-fill {
+  to {
+    background-position: 0 0;
+  }
+}
+
+@keyframes karaoke-follow {
+  to {
+    transform: translateX(calc(-1 * var(--karaoke-shift, 0px)));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* The word still lights when it is sung, all at once instead of filling; long lines stay put. */
+  .karaoke__word {
+    animation-timing-function: step-start;
+  }
+
+  .karaoke__track--moving {
+    animation: none;
+  }
+}

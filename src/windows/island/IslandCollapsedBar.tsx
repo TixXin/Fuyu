@@ -7,6 +7,7 @@ import type { AgentSession } from "../../features/agent-status/session";
 import type { AgentVisualState } from "../../features/agent-status/status";
 import type { MediaState } from "../../features/media/api";
 import type { CurrentLyric } from "../../features/media/lyrics/useCurrentLyric";
+import { KaraokeText } from "../../features/media/lyrics/KaraokeText";
 import { CollapsedMessageContent } from "../../features/messages/CollapsedMessageContent";
 // After CollapsedMessageContent, matching the original stylesheet order: it brings the
 // message icon, music wave and device-use styles in that order.
@@ -268,7 +269,11 @@ export function IslandCollapsedBar({
             <span className="island__agent-session island__lyric" key={`lyric:${lyric.index}`}>
               {showTitle && <span className="island__agent-session-separator">·</span>}
               <Music2 className="island__agent-session-bot" size={16} strokeWidth={1.5} absoluteStrokeWidth aria-hidden="true" />
-              <span className="island__agent-session-title">{lyric.text}</span>
+              <span className="island__agent-session-title" aria-label={lyric.karaoke ? lyric.text ?? undefined : undefined}>
+                {lyric.karaoke ? (
+                  <KaraokeText key={lyric.karaoke.clock} words={lyric.karaoke.words} positionMs={lyric.karaoke.positionMs} playing look={lyric.karaoke.look} />
+                ) : lyric.text}
+              </span>
             </span>
           )}
           {showCollapsedText && !agentSession && !lyric && collapsedTaskTitle && (

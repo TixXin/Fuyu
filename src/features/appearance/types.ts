@@ -1,5 +1,5 @@
 import type { CalendarSettingValues } from "../calendar/calendarSettings";
-import type { LyricsIslandPriority } from "../media/lyrics/lyricsSettings";
+import type { LyricsIslandPriority, LyricsKaraokeColor, LyricsKaraokeFallback, LyricsKaraokeFill } from "../media/lyrics/lyricsSettings";
 
 export type TodoStyle = "paper" | "island";
 export type TranslationTarget = "window" | "island";
@@ -180,6 +180,14 @@ export type IslandSettings = CalendarSettingValues & {
   lyricsOnIsland: boolean;
   /** Lyrics first (agents shown when their session changes or waits on the user), or agents first. */
   lyricsIslandPriority: LyricsIslandPriority;
+  lyricsKaraoke: boolean;
+  lyricsKaraokeFallback: LyricsKaraokeFallback;
+  lyricsKaraokeFill: LyricsKaraokeFill;
+  lyricsKaraokeColor: LyricsKaraokeColor;
+  lyricsKaraokeCustomColor: string;
+  lyricsKaraokeDim: number;
+  lyricsKaraokeGlow: boolean;
+  lyricsKaraokeFollow: boolean;
   mailEnabled: boolean;
   /** Show the running agent's icon and session title on the collapsed island. */
   agentTitleEnabled: boolean;

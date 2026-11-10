@@ -134,7 +134,7 @@ try {
 
   // Word-timed lines (Kugou KRC, enhanced LRC) fill word by word.
   await render(track("Believe", 1500));
-  const words = () => [...document.querySelectorAll<HTMLElement>(".lyrics-view__word")];
+  const words = () => [...document.querySelectorAll<HTMLElement>(".karaoke__word")];
   const fillX = (word: HTMLElement) => getComputedStyle(word).backgroundPosition.split(" ")[0];
   check(words().map((word) => word.textContent).join("|") === "Oh |I |believe" && lines()[1] === "Oh I believe" && lines()[2] === "in yesterday",
     "逐字时间的歌词按字分开，整句文字不变");

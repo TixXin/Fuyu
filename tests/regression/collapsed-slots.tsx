@@ -18,6 +18,10 @@ import { useQQNotifications } from "../../src/features/messages/qq-notifications
 import { useWeChatReminders } from "../../src/features/messages/wechat/WeChatReminders";
 import { useMail } from "../../src/features/messages/mail/MailPanel";
 import type { MediaState } from "../../src/features/media/api";
+import type { KaraokeLine } from "../../src/features/media/lyrics/useCurrentLyric";
+import { karaokeWords } from "../../src/features/media/lyrics/lrc";
+import { karaokeLook } from "../../src/features/media/lyrics/lyricsSettings";
+import { normalizeSettings } from "../../src/features/appearance/settings";
 
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
 const automated = new URLSearchParams(location.search).has("test");
@@ -44,7 +48,7 @@ mockIPC((command) => {
   }];
 }, { shouldMockEvents: true });
 
-type State = { slots?: CollapsedSlots; task: string | null; agents: boolean; count: number; agentTitle?: string; lyric?: string; status?: PluginStatusEntry[] };
+type State = { slots?: CollapsedSlots; task: string | null; agents: boolean; count: number; agentTitle?: string; lyric?: string; karaoke?: KaraokeLine; status?: PluginStatusEntry[] };
 const STATUS: PluginStatusEntry = { pluginId: "dev.test.monitor", itemId: "bar", priority: 0, text: "CPU 23% · 内存 61%", tooltip: null, tone: "neutral" };
 const usageRing = <MiniRing rings={[{ value: 0.62, color: "#7ccfff" }, { value: 0.28, color: "#b9a6ff" }]} ariaLabel="5 小时 62%，7 天 28%" title="5 小时 62%，7 天 28%" />;
 const sessionRing = <MiniRing segments={[{ value: 0.5, color: "#5ad19a" }, { value: 0.25, color: "#f5c46b" }, { value: 0.25, color: "#ff8a80" }]} size={22} label="4" ariaLabel="4 个会话" title="4 个会话：2 运行，1 等待，1 出错" />;
@@ -67,7 +71,7 @@ function Fixture() {
     <IslandShell deviceUse={{ camera: [], microphone: [] }} qqNotifications={qq} wechatReminders={wechat} qqMail={qqMail} pluginNotifications={NO_PLUGIN_NOTIFICATIONS} preview={preview}
       mode="collapsed" page="todo" isTucked={false} isDetached={true} showTitle={false}
       showCollapsedText={true} collapsedTaskTitle={state.task} collapsedTodoCount={null} agentSession={state.agentTitle ? { provider: "codex", label: "Codex", title: state.agentTitle } : null} activeAgentSessionCount={state.count}
-      lyricLine={state.lyric ? { text: state.lyric, index: 3, longest: state.lyric } : null}
+      lyricLine={state.lyric ? { text: state.lyric, index: 3, longest: state.lyric, ...(state.karaoke && { karaoke: state.karaoke }) } : null}
       appearanceMode="classic" nativeGlassState="disabled" agentVisualState="idle" agentStatusLabel="AI Agent 空闲或已完成"
       mediaState={UNAVAILABLE_MEDIA}
       features={{ todo: true, music: false, clipboard: true, shelf: true, qq: false, wechat: false, qqMail: false, agents: state.agents, translation: false }}
@@ -199,7 +203,23 @@ async function runChecks() {
     check(openedPage === "music", "点歌词打开音乐页");
     await set({ agentTitle: "修复登录" });
     check(!bar().querySelector(".island__lyric") && bar().querySelector(".island__agent-session-title")?.textContent === "修复登录", "外部传来 Agent 标题时不显示歌词");
-    await set({ agentTitle: undefined, lyric: undefined, task: null });
+    await set({ agentTitle: undefined });
+
+    // C30: the line lights up as it is sung, with the look from the settings.
+    const karaokeSettings = normalizeSettings({ lyricsKaraokeColor: "custom", lyricsKaraokeCustomColor: "#ff0000", lyricsKaraokeFollow: false });
+    const words = karaokeWords({ timeMs: 0, text: "故事的小黄花" }, 4_000, true)!;
+    await set({ lyric: "故事的小黄花", karaoke: { words, positionMs: 1_000, clock: "a", look: karaokeLook(karaokeSettings) } });
+    const lit = [...bar().querySelectorAll<HTMLElement>(".island__lyric .karaoke__word")];
+    check(lit.map((word) => word.textContent).join("") === "故事的小黄花" && bar().querySelector(".island__lyric .island__agent-session-title")?.getAttribute("aria-label") === "故事的小黄花",
+      "逐字高亮：每个字一段，读屏仍读整句");
+    check(parseFloat(getComputedStyle(lit[0]).animationDelay) < 0 && parseFloat(getComputedStyle(lit[5]).animationDelay) > 0, "已经唱过的字立刻亮，后面的字按时间等着");
+    check(getComputedStyle(bar().querySelector<HTMLElement>(".island__lyric .karaoke")!).getPropertyValue("--karaoke-lit").trim() === "#ff0000", "高亮颜色按设置");
+    const longLine = "一句特别特别长的歌词长到收起的岛放不下需要往左移动才能看到正在唱的字";
+    const followLook = karaokeLook(normalizeSettings({}));
+    await set({ lyric: longLine, karaoke: { words: karaokeWords({ timeMs: 0, text: longLine }, 9_000, true)!, positionMs: 0, clock: "b", look: followLook } });
+    await act(async () => { await new Promise(requestAnimationFrame); });
+    check(bar().querySelector(".island__lyric .karaoke__track--moving"), "放不下的长句会跟着往左移");
+    await set({ agentTitle: undefined, lyric: undefined, karaoke: undefined, task: null });
 
     // Plugin status (status.update): text, or label-over-value cells, with an optional ring.
     const chip = () => bar().querySelector<HTMLElement>(".plugin-status-chip")!;

@@ -884,6 +884,119 @@
       }
     },
     {
+      "page": "music",
+      "zh-CN": {
+        "group": "岛上的歌词样式",
+        "title": "逐字高亮",
+        "description": "正在唱的那一句从左到右变亮。酷狗歌词和带逐字时间的本地 .lrc 按每个字的时间走。"
+      },
+      "en": {
+        "group": "Lyrics on the island",
+        "title": "Light up as sung",
+        "description": "The line being sung lights up from left to right. Kugou lyrics and local .lrc files with word times follow each word."
+      }
+    },
+    {
+      "page": "music",
+      "zh-CN": {
+        "group": "岛上的歌词样式",
+        "title": "没有逐字时间的歌",
+        "description": "LRCLIB 和网易云的歌词只有每句的时间。按整句填充：在这一句的时间里匀速变亮（最长 8 秒），和歌声大致对得上。",
+        "options": [
+          "按整句填充",
+          "不填充"
+        ]
+      },
+      "en": {
+        "group": "Lyrics on the island",
+        "title": "Songs without word times",
+        "description": "LRCLIB and NetEase lyrics only time each line. Fill the line: it lights evenly over the line's time (at most 8 s), roughly with the singing.",
+        "options": [
+          "Fill the line",
+          "Do not fill"
+        ]
+      }
+    },
+    {
+      "page": "music",
+      "zh-CN": {
+        "group": "岛上的歌词样式",
+        "title": "变亮方式",
+        "options": [
+          "平滑填充",
+          "逐字点亮"
+        ]
+      },
+      "en": {
+        "group": "Lyrics on the island",
+        "title": "How it lights",
+        "options": [
+          "Smooth",
+          "Word by word"
+        ]
+      }
+    },
+    {
+      "page": "music",
+      "zh-CN": {
+        "group": "岛上的歌词样式",
+        "title": "高亮颜色",
+        "options": [
+          "跟随岛屿",
+          "强调色",
+          "自定义"
+        ]
+      },
+      "en": {
+        "group": "Lyrics on the island",
+        "title": "Highlight colour",
+        "options": [
+          "Island text",
+          "Accent",
+          "Custom"
+        ]
+      }
+    },
+    {
+      "page": "music",
+      "zh-CN": {
+        "group": "岛上的歌词样式",
+        "title": "没唱到的字",
+        "description": "亮度越低，高亮越显眼。"
+      },
+      "en": {
+        "group": "Lyrics on the island",
+        "title": "Words not sung yet",
+        "description": "The dimmer, the more the highlight stands out."
+      }
+    },
+    {
+      "page": "music",
+      "zh-CN": {
+        "group": "岛上的歌词样式",
+        "title": "发光",
+        "description": "整句带一圈柔和的光，颜色跟高亮颜色走。"
+      },
+      "en": {
+        "group": "Lyrics on the island",
+        "title": "Glow",
+        "description": "A soft glow around the line, in the highlight colour."
+      }
+    },
+    {
+      "page": "music",
+      "zh-CN": {
+        "group": "岛上的歌词样式",
+        "title": "长句跟着滚动",
+        "description": "一句比岛宽时，唱到右边缘附近整句往左移，正在唱的字一直看得见。关掉则在末尾用省略号截断。"
+      },
+      "en": {
+        "group": "Lyrics on the island",
+        "title": "Scroll long lines",
+        "description": "A line wider than the island slides left as the singing nears the edge, so the word being sung stays in view. Off, it ends in an ellipsis."
+      }
+    },
+    {
       "page": "translation",
       "zh-CN": {
         "group": "",
