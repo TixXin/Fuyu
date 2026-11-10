@@ -6,14 +6,17 @@ import "./PluginStatusChip.css";
 const RING_SIZE = 16;
 
 /**
- * A plugin's status on the collapsed bar (status.update): its text, or label-over-value cells
- * when it sent some, with an optional progress ring in front. Opens the plugin's page when it has one.
+ * A plugin's status on the collapsed bar (status.update): its text, or the upright batteries or
+ * label-over-value cells it sent, with an optional progress ring in front. Opens the plugin's
+ * page when it has one.
  */
 export function PluginStatusChip({ status, onOpen }: { status: PluginStatusEntry; onOpen: (() => void) | null }) {
   const title = status.tooltip ? `${status.text} · ${status.tooltip}` : status.text;
-  const cells = status.cells ?? [];
+  const batteries = status.batteries ?? [];
+  const cells = batteries.length > 0 ? [] : (status.cells ?? []);
   const classes = ["plugin-status-chip", `plugin-status-chip--${status.tone}`];
   if (cells.length > 0) classes.push("plugin-status-chip--cells");
+  if (batteries.length > 0) classes.push("plugin-status-chip--batteries");
   if (status.ring != null) classes.push("plugin-status-chip--ring");
   return (
     <button
@@ -36,7 +39,15 @@ export function PluginStatusChip({ status, onOpen }: { status: PluginStatusEntry
           ariaLabel=""
         />
       )}
-      {cells.length > 0 ? (
+      {batteries.length > 0 ? (
+        <span className="plugin-status-chip__batteries" aria-hidden="true">
+          {batteries.map((battery, index) => (
+            <span key={index} className={`plugin-status-chip__battery plugin-status-chip__battery--${battery.tone}`}>
+              <span className="plugin-status-chip__charge" style={{ height: `${Math.round(battery.level * 100)}%` }} />
+            </span>
+          ))}
+        </span>
+      ) : cells.length > 0 ? (
         cells.map((cell, index) => (
           <span key={index} className={`plugin-status-chip__cell plugin-status-chip__cell--${cell.tone}`} aria-hidden="true">
             <span className="plugin-status-chip__label">{cell.label}</span>

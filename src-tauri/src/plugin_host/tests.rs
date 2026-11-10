@@ -816,7 +816,7 @@ fn view_icons_match_the_manifest_schema() {
 mod view_tests {
     use serde_json::json;
 
-    use super::super::views::{is_action_id, parse_status, patch_items, patch_model, MAX_STATUS_CELLS, MAX_STATUS_CHARS};
+    use super::super::views::{is_action_id, parse_status, patch_items, patch_model, MAX_STATUS_BATTERIES, MAX_STATUS_CELLS, MAX_STATUS_CHARS};
 
     #[test]
     fn patches_replace_items_by_id_in_the_list_and_its_groups() {
@@ -872,6 +872,20 @@ mod view_tests {
         assert!(parse_status(&json!({ "text": "x".repeat(MAX_STATUS_CHARS + 1) })).is_err());
         assert!(parse_status(&json!({ "text": "x", "tone": "loud" })).is_err());
         assert!(parse_status(&json!({ "text": 5 })).is_err());
+    }
+
+    #[test]
+    fn status_batteries_are_checked() {
+        let params = json!({ "text": "80% 15%", "batteries": [{ "level": 0.8 }, { "level": 0.15, "tone": "warning" }] });
+        let status = serde_json::to_value(parse_status(&params).expect("ok").expect("text")).expect("json");
+        assert_eq!(status["batteries"], json!([{ "level": 0.8, "tone": "neutral" }, { "level": 0.15, "tone": "warning" }]));
+        let battery = json!({ "level": 1 });
+        assert!(parse_status(&json!({ "text": "x", "batteries": vec![battery.clone(); MAX_STATUS_BATTERIES] })).is_ok());
+        assert!(parse_status(&json!({ "text": "x", "batteries": vec![battery; MAX_STATUS_BATTERIES + 1] })).is_err());
+        assert!(parse_status(&json!({ "text": "x", "batteries": [{ "level": 1.2 }] })).is_err());
+        assert!(parse_status(&json!({ "text": "x", "batteries": [{ "tone": "danger" }] })).is_err());
+        assert!(parse_status(&json!({ "text": "x", "batteries": [{ "level": 0.5, "tone": "loud" }] })).is_err());
+        assert!(parse_status(&json!({ "text": "x", "batteries": "full" })).is_err());
     }
 
     #[test]

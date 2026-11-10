@@ -125,6 +125,14 @@ export interface StatusCell {
   tone?: Tone;
 }
 
+/** One upright battery on the collapsed bar (capability `statusBatteries`). */
+export interface StatusBattery {
+  /** How full it is, from 0 to 1. */
+  level: number;
+  /** Without one the battery takes its place's color, so neighbors can be told apart. */
+  tone?: Tone;
+}
+
 export interface StatusOptions {
   tooltip?: string;
   tone?: Tone;
@@ -132,6 +140,8 @@ export interface StatusOptions {
   cells?: StatusCell[];
   /** 0 to 1: a small progress ring in the item's tone before the text or cells (capability `statusCells`). */
   ring?: number;
+  /** At most 4 upright batteries, drawn instead of the text and cells (capability `statusBatteries`); older islands show the text. */
+  batteries?: StatusBattery[];
 }
 
 /** What `views.patch` changes in a list page. */

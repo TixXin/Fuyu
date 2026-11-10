@@ -243,6 +243,17 @@ async function runChecks() {
     check(getComputedStyle(columns[3].querySelector(".plugin-status-chip__value")!).color !== getComputedStyle(columns[0].querySelector(".plugin-status-chip__value")!).color, "danger 列的数值换色");
     const barBox = bar().getBoundingClientRect();
     check(chip().getBoundingClientRect().right <= barBox.right && bar().scrollWidth <= bar().clientWidth + 1, "四列加进度环不撑出收起条");
+    // Upright batteries (status.update batteries) replace the text and the cells.
+    const levels = [{ level: 1, tone: "neutral" }, { level: 0.3, tone: "neutral" }, { level: 0.15, tone: "warning" }, { level: 0, tone: "danger" }] as const;
+    await set({ status: [{ ...STATUS, cells: [...cells], batteries: [...levels], tooltip: "PC 100% / 耳机 30%" }] });
+    const batteries = [...chip().querySelectorAll<HTMLElement>(".plugin-status-chip__battery")];
+    const charge = (index: number) => batteries[index].querySelector<HTMLElement>(".plugin-status-chip__charge")!.getBoundingClientRect().height;
+    check(batteries.length === 4 && !chip().querySelector(".plugin-status-chip__cell, .plugin-status-chip__text"), "有电池时画并排立着的电池，不显示文字和列");
+    check(batteries.every((battery) => battery.getBoundingClientRect().height > battery.getBoundingClientRect().width), "电池是立着的");
+    check(charge(0) > charge(1) * 2 && charge(1) > charge(2) && charge(3) >= 1, "电池里的电量按比例填充，空电池也留一条");
+    check(new Set(batteries.map((battery) => getComputedStyle(battery).color)).size === 4, "相邻的电池颜色不同，电量低的是黄色和红色");
+    check(chip().getAttribute("aria-label") === `${STATUS.text} · PC 100% / 耳机 30%` && chip().title === "PC 100% / 耳机 30%", "电池的读屏名称和悬停提示来自文字和 tooltip");
+    check(chip().getBoundingClientRect().right <= bar().getBoundingClientRect().right && bar().scrollWidth <= bar().clientWidth + 1, "四个电池不撑出收起条");
     await set({ status: [], task: null });
 
     await act(async () => createRoot(rings).render(<>
