@@ -43,7 +43,7 @@ The look, size, tucking, shortcuts and every feature can be adjusted in the Sett
 
 ## Resource use
 
-Collapsed and idle with no music playing (default settings, no plugins): about 10% of one CPU core (about 0.5% of a 20-core machine in total) and about 330 MB of memory, most of it Windows' own WebView2 (the Edge engine). The Agent page reads the session list once a second, which measured at 0.1% of one core. Each PowerShell plugin adds about 60 MB. How it was measured, with the numbers: [idle-usage.md](docs/investigations/idle-usage.md).
+Collapsed and idle with no music playing (default settings, no plugins): about 10% of one CPU core (about 0.5% of a 20-core machine in total), and about 16 MB of memory for Fuyu itself. The Agent page reads the session list once a second, which measured at 0.1% of one core. Each PowerShell plugin adds about 60 MB. How it was measured, with the numbers: [idle-usage.md](docs/investigations/idle-usage.md).
 
 ## Getting started
 

@@ -43,7 +43,7 @@
 
 ## 占用
 
-收起、闲着、不放音乐时（默认设置，不装插件）：CPU 约占单核的 10%（20 核电脑上约占总量的 0.5%），内存约 330 MB，其中大部分是 Windows 自带的 WebView2（Edge 内核）。Agent 页每秒刷新一次会话列表，实测只占单核的 0.1%。每装一个 PowerShell 插件约多 60 MB。测量方法和数据见 [idle-usage.md](docs/investigations/idle-usage.md)。
+收起、闲着、不放音乐时（默认设置，不装插件）：CPU 约占单核的 10%（20 核电脑上约占总量的 0.5%），浮屿本身占用的内存约 16 MB。Agent 页每秒刷新一次会话列表，实测只占单核的 0.1%。每装一个 PowerShell 插件约多 60 MB。测量方法和数据见 [idle-usage.md](docs/investigations/idle-usage.md)。
 
 ## 上手
 
