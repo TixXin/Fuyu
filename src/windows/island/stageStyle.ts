@@ -14,6 +14,8 @@ export function getIslandStageStyle(
   expandedIslandWidth: number,
   /** The accent from the theme (C33.5), or null for the default and the light island's own. */
   accent: string | null = null,
+  /** `window.devicePixelRatio`, passed in so the style follows a change of screen scale. */
+  devicePixelRatio = window.devicePixelRatio,
 ) {
   const glassStrength = settings.glassIntensity / 100;
   const glassMaskOpacity = settings.opacity / 100;
@@ -32,7 +34,7 @@ export function getIslandStageStyle(
     // Unitless so IslandTopEdge.css can also fade the fillet layers out at 0.
     "--island-top-fillet-size": settings.topFilletRadius,
     // One device pixel, for IslandTopEdge.css to round the scaled fillet radius to.
-    "--island-device-pixel": `${1 / window.devicePixelRatio}px`,
+    "--island-device-pixel": `${1 / devicePixelRatio}px`,
     // Unitless; IslandShell.css derives the collapsed, detached and inner panel radii from it.
     "--island-corner-radius-size": settings.islandCornerRadius,
     // The corner-shape of the island and every layer that inherits its radius (IslandShell.css).

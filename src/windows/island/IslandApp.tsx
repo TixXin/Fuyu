@@ -19,6 +19,7 @@ import type { TodoItem } from "../../features/todos/types";
 import { useIslandWindow } from "./useIslandWindow";
 import { getExpandedIslandHeight } from "./expandedHeight";
 import { getIslandStageStyle } from "./stageStyle";
+import { useDevicePixelRatio } from "./useDevicePixelRatio";
 import { useCollapsedTodo } from "./useCollapsedTodo";
 import { useGameMode } from "./useGameMode";
 import { useIslandKeyboard } from "./useIslandKeyboard";
@@ -191,9 +192,10 @@ export function IslandApp() {
   // The colours the island shows now: a light island may stay dark while collapsed (C33.2).
   const look = useMemo(() => (mode === "collapsed" ? collapsedThemeColors(settings) : settings), [mode, settings]);
   const accent = useAccentColor(settings);
+  const devicePixelRatio = useDevicePixelRatio();
   const stageStyle = useMemo(
-    () => getIslandStageStyle(look, mode, collapsedIslandWidth, expandedIslandHeight, expandedIslandWidth, accent),
-    [collapsedIslandWidth, expandedIslandHeight, expandedIslandWidth, mode, look, accent],
+    () => getIslandStageStyle(look, mode, collapsedIslandWidth, expandedIslandHeight, expandedIslandWidth, accent, devicePixelRatio),
+    [collapsedIslandWidth, expandedIslandHeight, expandedIslandWidth, mode, look, accent, devicePixelRatio],
   );
 
   const { fileShelf, isShelfDropping } = useIslandShelf(settings, navigation);
