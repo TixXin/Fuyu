@@ -21,7 +21,7 @@
 </div>
 
 > [!NOTE]
-> This repository is an independently maintained version of [flyl1u/fly-island](https://github.com/flyl1u/fly-island). It branched from upstream 0.2.14 and has its own release line and update channel from 0.3.0 on. You can install it over the upstream version; your data and settings are kept.
+> This is an independent project, maintained by [TixXin](https://github.com/TixXin) and [ShengLin1001](https://github.com/ShengLin1001). It started from [flyl1u/fly-island](https://github.com/flyl1u/fly-island) 0.2.14 and now has its own release line, update channel and plugin market; it no longer follows upstream or sends changes back. Please file issues and pull requests here. You can install it over the upstream version; your data and settings are kept.
 
 ## What is this?
 
@@ -53,7 +53,7 @@ To write your own plugin, see the [plugin docs](docs/plugins/README.md).
 
 ## Origins
 
-In the words of the upstream author, [flyl1u](https://github.com/flyl1u):
+The project started from fly-island (first named FocuSD) by [flyl1u](https://github.com/flyl1u). In the words of its original author:
 
 > During everyday work and study, I often write Todo Lists in Obsidian, open music to block out noise, use translation websites, and copy or paste code, passwords, and document snippets.
 >
@@ -77,4 +77,4 @@ Built with Tauri 2, React 19 + TypeScript and Rust. Releases and in-app updates 
 
 ## License
 
-[MIT](LICENSE), based on [flyl1u/fly-island](https://github.com/flyl1u/fly-island) and keeping the upstream copyright notice. Third-party dependencies and bundled assets keep their own licenses; see the [font notices](src/assets/fonts/README.md) for bundled fonts.
+[MIT](LICENSE). The project started from [flyl1u/fly-island](https://github.com/flyl1u/fly-island) and keeps the original author's copyright notice. Third-party dependencies and bundled assets keep their own licenses; see the [font notices](src/assets/fonts/README.md) for bundled fonts.

@@ -21,7 +21,7 @@
 </div>
 
 > [!NOTE]
-> 本仓库是 [flyl1u/fly-island](https://github.com/flyl1u/fly-island) 的独立维护版本，从上游 0.2.14 分出，0.3.0 起有自己的版本线和更新渠道。可以直接覆盖安装上游版本，数据和设置都会保留。
+> 这是一个独立项目，由 [TixXin](https://github.com/TixXin) 和 [ShengLin1001](https://github.com/ShengLin1001) 维护。它最初从 [flyl1u/fly-island](https://github.com/flyl1u/fly-island) 0.2.14 分出，现在有自己的版本线、更新渠道和插件市场，不再与上游同步，也不再向上游提交改动。问题和 PR 请提到本仓库。可以直接覆盖安装上游版本，数据和设置都会保留。
 
 ## 这是什么
 
@@ -53,7 +53,7 @@ Fly Island 是一座轻量、无边框、始终置顶的悬浮岛。平时收在
 
 ## 项目起源
 
-以下是上游作者 [flyl1u](https://github.com/flyl1u) 写下的初衷：
+本项目最初基于 [flyl1u](https://github.com/flyl1u) 的 fly-island（原名 FocuSD）。以下是原作者写下的初衷：
 
 > 日常工作或学习过程中，我经常需要在某软件写下 Todo List，为了隔绝噪音，我会打开音乐软件并把音量调到合适的临界点，工作和学习又经常需要借助翻译网站，同时还会反复复制和粘贴代码，与此同时难以避免的是接收不同群聊、好友发送的消息
 >
@@ -77,4 +77,4 @@ pnpm tauri build    # 打包安装程序
 
 ## 开源协议
 
-[MIT](LICENSE)，基于 [flyl1u/fly-island](https://github.com/flyl1u/fly-island) 开发并保留上游的版权声明。第三方依赖和内置资源遵循各自的许可证，内置字体见[字体说明](src/assets/fonts/README.md)。
+[MIT](LICENSE)，最初基于 [flyl1u/fly-island](https://github.com/flyl1u/fly-island) 开发，保留原作者的版权声明。第三方依赖和内置资源遵循各自的许可证，内置字体见[字体说明](src/assets/fonts/README.md)。
