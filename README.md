@@ -21,7 +21,7 @@
 </div>
 
 > [!NOTE]
-> 这是一个独立项目，由 [TixXin](https://github.com/TixXin) 和 [ShengLin1001](https://github.com/ShengLin1001) 维护。它最初从 [flyl1u/fly-island](https://github.com/flyl1u/fly-island) 0.2.14 分出，现在有自己的版本线、更新渠道和插件市场，不再与上游同步，也不再向上游提交改动。问题和 PR 请提到本仓库。可以直接覆盖安装上游版本，数据和设置都会保留。
+> 本项目由 [TixXin](https://github.com/TixXin) 和 [ShengLin1001](https://github.com/ShengLin1001) 独立维护。原作者 [flyl1u](https://github.com/flyl1u/fly-island) 偏向于精简的灵动岛界面；为了进一步丰富灵动岛的功能，让更多用户把自己 DIY 的功能放上岛，本项目开始独立维护，并发展出了插件市场模式。欢迎大家把自己的组件上传到[插件市场](https://github.com/TixXin/focusd-plugins)，或者在本地安装自己的插件（见[插件文档](docs/plugins/README.md)）。
 
 ## 这是什么
 
@@ -51,16 +51,6 @@ Fly Island 是一座轻量、无边框、始终置顶的悬浮岛。平时收在
 
 想自己写插件，见 [插件文档](docs/plugins/README.md)。
 
-## 项目起源
-
-本项目最初基于 [flyl1u](https://github.com/flyl1u) 的 fly-island（原名 FocuSD）。以下是原作者写下的初衷：
-
-> 日常工作或学习过程中，我经常需要在某软件写下 Todo List，为了隔绝噪音，我会打开音乐软件并把音量调到合适的临界点，工作和学习又经常需要借助翻译网站，同时还会反复复制和粘贴代码，与此同时难以避免的是接收不同群聊、好友发送的消息
->
-> 在这些界面之间来回切换，不仅会降低效率，也容易让人分心，因此我开始思考：能不能把这些高频功能集成到一个足够轻量的地方？
->
-> 我想到了iPhone的灵动岛，它把消息通知、计时器、媒体控制等信息集中到一个小岛上，缩短了我们获取信息的路程。于是，FocuSD 诞生了。这个名字寓意 **Focu Study and DeepWork**，专注学习和深度工作，项目使用更轻量的 Tauri 架构开发，不过目前已改名为fly-island
-
 ## 从源码构建
 
 需要 Windows 10/11、Node.js、pnpm、Rust、Visual Studio C++ Build Tools 和 WebView2 Runtime。
@@ -77,4 +67,4 @@ pnpm tauri build    # 打包安装程序
 
 ## 开源协议
 
-[MIT](LICENSE)，最初基于 [flyl1u/fly-island](https://github.com/flyl1u/fly-island) 开发，保留原作者的版权声明。第三方依赖和内置资源遵循各自的许可证，内置字体见[字体说明](src/assets/fonts/README.md)。
+[MIT](LICENSE)。第三方依赖和内置资源遵循各自的许可证，内置字体见[字体说明](src/assets/fonts/README.md)。

@@ -21,7 +21,7 @@
 </div>
 
 > [!NOTE]
-> This is an independent project, maintained by [TixXin](https://github.com/TixXin) and [ShengLin1001](https://github.com/ShengLin1001). It started from [flyl1u/fly-island](https://github.com/flyl1u/fly-island) 0.2.14 and now has its own release line, update channel and plugin market; it no longer follows upstream or sends changes back. Please file issues and pull requests here. You can install it over the upstream version; your data and settings are kept.
+> This project is maintained independently by [TixXin](https://github.com/TixXin) and [ShengLin1001](https://github.com/ShengLin1001). The original author, [flyl1u](https://github.com/flyl1u/fly-island), prefers a lean, minimal island. To give the island more to do, and to let more people put their own DIY features on it, this project became independently maintained and grew a plugin market. You are welcome to publish your own components to the [plugin market](https://github.com/TixXin/focusd-plugins), or install your own plugins locally (see the [plugin docs](docs/plugins/README.md)).
 
 ## What is this?
 
@@ -51,16 +51,6 @@ Collapsed and idle with no music playing (default settings, no plugins): about 1
 
 To write your own plugin, see the [plugin docs](docs/plugins/README.md).
 
-## Origins
-
-The project started from fly-island (first named FocuSD) by [flyl1u](https://github.com/flyl1u). In the words of its original author:
-
-> During everyday work and study, I often write Todo Lists in Obsidian, open music to block out noise, use translation websites, and copy or paste code, passwords, and document snippets.
->
-> Switching between all those windows reduces efficiency and makes it easier to lose focus. I wanted to bring these frequent actions into one lightweight place.
->
-> Apple's Dynamic Island was an inspiration: it gathers delivery updates, timers, media controls, and other information into one small surface. FocuSD follows the same idea for focused study and deep work. The name stands for **Focu Study and DeepWork**, and the app is built with the lightweight Tauri framework.
-
 ## Build from source
 
 You need Windows 10/11, Node.js, pnpm, Rust, Visual Studio C++ Build Tools and WebView2 Runtime.
@@ -77,4 +67,4 @@ Built with Tauri 2, React 19 + TypeScript and Rust. Releases and in-app updates 
 
 ## License
 
-[MIT](LICENSE). The project started from [flyl1u/fly-island](https://github.com/flyl1u/fly-island) and keeps the original author's copyright notice. Third-party dependencies and bundled assets keep their own licenses; see the [font notices](src/assets/fonts/README.md) for bundled fonts.
+[MIT](LICENSE). Third-party dependencies and bundled assets keep their own licenses; see the [font notices](src/assets/fonts/README.md) for bundled fonts.
