@@ -1,0 +1,55 @@
+/* The window buttons' row at the top of the sidebar card; the rest of the row drags the window. */
+.window-controls {
+  height: 28px;
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  margin-bottom: 4px;
+}
+
+.window-controls__dots {
+  display: flex;
+  gap: 8px;
+}
+
+.window-controls__dot {
+  width: 12px;
+  height: 12px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  color: transparent;
+  background: var(--settings-dot, rgba(128, 128, 136, 0.45));
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease;
+}
+
+/* Colours and signs while the cursor is on the group, or a button has keyboard focus. */
+.window-controls__dots:is(:hover, :focus-within) .window-controls__dot {
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.window-controls__dots:is(:hover, :focus-within) .window-controls__dot--close {
+  background: #ff5f57;
+}
+
+.window-controls__dots:is(:hover, :focus-within) .window-controls__dot--minimize {
+  background: #febc2e;
+}
+
+.window-controls__dots:is(:hover, :focus-within) .window-controls__dot--maximize {
+  background: #28c840;
+}
+
+.window-controls__dot:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .window-controls__dot {
+    transition: none;
+  }
+}

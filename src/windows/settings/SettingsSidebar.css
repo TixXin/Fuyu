@@ -1,11 +1,9 @@
-/* Darker than the pages, with a clear edge, so the list reads as its own column. */
+/* Inside the sidebar card (LayoutEditor.css), which gives it its fill and edge. */
 .settings-sidebar {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
   min-height: 0;
-  padding: 14px var(--space-md) var(--space-md);
-  background: #111317;
-  border-right: 1px solid var(--color-white-a08);
+  padding: 0 var(--space-md) var(--space-md);
 }
 
 .settings-sidebar__search {

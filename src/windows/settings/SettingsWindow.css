@@ -1,7 +1,9 @@
 .settings-stage {
+  --settings-card: #1b1d22;
+  --settings-card-line: rgba(255, 255, 255, 0.07);
   height: 100%;
   color: var(--color-page-text);
-  background: #17191d;
+  background: #131417;
 }
 
 .settings-stage select {
@@ -13,7 +15,7 @@
   grid-template-columns: minmax(0, 860px);
   height: 100%;
   min-height: 0;
-  padding: 16px 24px 24px;
+  padding: 10px 28px 24px 24px;
   border-radius: 0;
   background: transparent;
   gap: var(--space-xl);

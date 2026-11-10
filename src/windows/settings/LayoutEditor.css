@@ -1,8 +1,26 @@
+/* The window is one base panel; the sidebar card floats on it, 8px in from its edges. */
 .settings-layout {
   height: 100%;
   display: grid;
-  grid-template-columns: 172px minmax(0, 1fr);
+  grid-template-columns: 212px minmax(0, 1fr);
   min-height: 0;
+  padding: 8px 0 8px 8px;
+}
+
+.settings-sidebar-card {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 10px 0 0;
+  background: var(--settings-card);
+  border-radius: 12px;
+  box-shadow:
+    0 0 0 1px var(--settings-card-line),
+    0 6px 18px rgba(0, 0, 0, 0.18);
+}
+
+.settings-sidebar-card > .settings-sidebar {
+  flex: 1;
 }
 
 .editor-panel {
@@ -38,6 +56,7 @@
 }
 
 .settings-page__header {
+  min-height: 42px;
   display: flex;
   align-items: center;
   justify-content: space-between;
