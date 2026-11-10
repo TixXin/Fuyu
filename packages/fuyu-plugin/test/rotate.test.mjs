@@ -23,7 +23,7 @@ test("an endorsement holds only for its plugin, its new key and the old key", ()
 });
 
 test("rotating keeps the old key, writes the new one and endorses it for every id", () => {
-  const dir = mkdtempSync(path.join(tmpdir(), "fly-island-rotate-"));
+  const dir = mkdtempSync(path.join(tmpdir(), "fuyu-rotate-"));
   try {
     const oldKey = generateKeyPairSync("ed25519").privateKey;
     const old = publicKeyOf(oldKey);

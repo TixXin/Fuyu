@@ -1,4 +1,4 @@
-// `fly-island-plugin dev`: loads a plugin folder into the running island in
+// `fuyu-plugin dev`: loads a plugin folder into the running island in
 // development mode through its local API (/v1/dev/...), restarts the plugin
 // when a file changes and prints the plugin's log until Ctrl+C.
 import { existsSync, readFileSync, watch } from "node:fs";
@@ -7,20 +7,22 @@ import path from "node:path";
 import { isIgnored, loadIgnore } from "./ignore.mjs";
 import { report, validatePlugin } from "./validate.mjs";
 
-const APP_IDENTIFIER = "com.focusd.island";
+/** The island's app identifiers, newest first: com.focusd.island is the one before the rename (D17). */
+const APP_IDENTIFIERS = ["com.tixxin.fuyu", "com.focusd.island"];
 const RELOAD_DELAY_MS = 300;
 const LOG_POLL_MS = 500;
 
-/** Where the island keeps local-api.json (port and token). */
+/** Where the island keeps local-api.json (port and token): the newest identifier's that exists. */
 export function defaultConfigPath() {
   const appData = process.env.APPDATA ?? path.join(os.homedir(), "AppData", "Roaming");
-  return path.join(appData, APP_IDENTIFIER, "local-api.json");
+  const paths = APP_IDENTIFIERS.map((identifier) => path.join(appData, identifier, "local-api.json"));
+  return paths.find((file) => existsSync(file)) ?? paths[0];
 }
 
 /** A client for the island's /v1/dev endpoints. */
 export function devClient(configPath = defaultConfigPath()) {
   if (!existsSync(configPath)) {
-    throw new Error(`${configPath} not found. Start FocuSD Island and turn on its Local API plugin (Settings > Plugins).`);
+    throw new Error(`${configPath} not found. Start Fuyu and turn on its Local API plugin (Settings > Plugins).`);
   }
   const config = JSON.parse(readFileSync(configPath, "utf8"));
   if (!config.enabled) throw new Error("The island's local API is off: turn on the Local API plugin in Settings > Plugins.");

@@ -1,12 +1,12 @@
 import assert from "node:assert/strict";
-import { mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readdirSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { isIgnored, parseIgnore } from "../src/ignore.mjs";
 import { validateSchema } from "../src/json-schema.mjs";
-import { createZip, packageFiles } from "../src/pack.mjs";
+import { createZip, packageFiles, packFolder } from "../src/pack.mjs";
 import { protocol } from "../src/schema.mjs";
 import { permissionsUsed, validatePlugin } from "../src/validate.mjs";
 
@@ -22,10 +22,10 @@ const base = {
 };
 
 function withPlugin(manifest, files, run) {
-  const dir = path.join(mkdtempSync(path.join(os.tmpdir(), "fly-island-validate-")), manifest.id ?? "plugin");
+  const dir = path.join(mkdtempSync(path.join(os.tmpdir(), "fuyu-validate-")), manifest.id ?? "plugin");
   mkdirSync(dir, { recursive: true });
   try {
-    writeFileSync(path.join(dir, "focusd-plugin.json"), JSON.stringify(manifest));
+    writeFileSync(path.join(dir, "fuyu-plugin.json"), JSON.stringify(manifest));
     for (const [name, text] of Object.entries(files)) {
       mkdirSync(path.dirname(path.join(dir, name)), { recursive: true });
       writeFileSync(path.join(dir, name), text);
@@ -58,7 +58,7 @@ test("schema errors name the field", () => {
 test("runtime.command must exist, stay inside and be packed", () => {
   withPlugin(base, {}, (dir) => assert.match(validatePlugin(dir).errors.join("\n"), /does not exist/));
   withPlugin({ ...base, runtime: { type: "process", command: "../x.mjs" } }, {}, (dir) => assert.match(validatePlugin(dir).errors.join("\n"), /inside the plugin folder/));
-  withPlugin(base, { "main.mjs": "", ".focusdignore": "*.mjs\n" }, (dir) => assert.match(validatePlugin(dir).errors.join("\n"), /left out by .focusdignore/));
+  withPlugin(base, { "main.mjs": "", ".fuyuignore": "*.mjs\n" }, (dir) => assert.match(validatePlugin(dir).errors.join("\n"), /left out by .fuyuignore/));
   withPlugin(base, { "main.mjs": "" }, (dir) => assert.deepEqual(validatePlugin(dir).errors, []));
 });
 
@@ -86,9 +86,9 @@ test("activation events and menus must point at real contributions", () => {
 
 test("permissions are compared with the methods and events the code mentions", () => {
   assert.deepEqual([...permissionsUsed(['await plugin.call("todos.add", {})', "plugin.onEvent('clipboard.changed')"])].sort(), ["clipboard:read", "todos:write"]);
-  assert.deepEqual([...permissionsUsed(["Show-FocusdNotification 'Hi'", "plugin.note.append('x')"])].sort(), ["island:notify", "notes:write"]);
+  assert.deepEqual([...permissionsUsed(["Show-FuyuNotification 'Hi'", "plugin.note.append('x')"])].sort(), ["island:notify", "notes:write"]);
   assert.deepEqual([...permissionsUsed(["const todos = 1; // the todos.listing page"])], []);
-  withPlugin({ ...base, permissions: ["secrets"] }, { "main.mjs": "plugin.todos.list()", "lib/focusd.mjs": "call('media.next')" }, (dir) => {
+  withPlugin({ ...base, permissions: ["secrets"] }, { "main.mjs": "plugin.todos.list()", "lib/fuyu.mjs": "call('media.next')" }, (dir) => {
     const warnings = validatePlugin(dir).warnings.join("\n");
     assert.match(warnings, /secrets seems unused/);
     assert.match(warnings, /seems to use todos:read/);
@@ -99,7 +99,7 @@ test("permissions are compared with the methods and events the code mentions", (
   });
 });
 
-test(".focusdignore leaves files out of the package", () => {
+test(".fuyuignore leaves files out of the package", () => {
   const rules = parseIgnore("# comment\ndist/\n*.log\n/notes.md\n!keep.log\nsrc/**/*.test.mjs\n");
   assert.equal(isIgnored(rules, "dist/main.mjs"), true);
   assert.equal(isIgnored(rules, "debug.log"), true);
@@ -109,12 +109,30 @@ test(".focusdignore leaves files out of the package", () => {
   assert.equal(isIgnored(rules, "docs/notes.md"), false);
   assert.equal(isIgnored(rules, "src/a/b/x.test.mjs"), true);
   assert.equal(isIgnored(rules, "src/x.mjs"), false);
-  assert.equal(isIgnored(rules, ".focusdignore"), true);
+  assert.equal(isIgnored(rules, ".fuyuignore"), true);
   assert.equal(isIgnored(rules, ".package/x.zip"), true);
   assert.equal(isIgnored(rules, "lib/.package/x"), false);
 
-  withPlugin(base, { "main.mjs": "a", ".focusdignore": "test/\n", "test/x.test.mjs": "b", ".package/old.zip": "c" }, (dir) => {
-    assert.deepEqual(packageFiles(dir).map(([name]) => name), ["focusd-plugin.json", "main.mjs"]);
+  withPlugin(base, { "main.mjs": "a", ".fuyuignore": "test/\n", "test/x.test.mjs": "b", ".package/old.zip": "c" }, (dir) => {
+    // The manifest goes in under its old name too, for islands from before the rename.
+    const files = packageFiles(dir);
+    assert.deepEqual(files.map(([name]) => name), ["fuyu-plugin.json", "focusd-plugin.json", "main.mjs"]);
+    assert.ok(files[0][1].equals(files[1][1]));
     assert.ok(createZip(packageFiles(dir)).equals(createZip(packageFiles(dir))));
+  });
+});
+
+test("a plugin from before the rename keeps its focusd-plugin.json and .focusdignore", () => {
+  withPlugin(base, { "main.mjs": "a", ".focusdignore": "test/\n", "test/x.test.mjs": "b" }, (dir) => {
+    renameSync(path.join(dir, "fuyu-plugin.json"), path.join(dir, "focusd-plugin.json"));
+    assert.deepEqual(packageFiles(dir).map(([name]) => name), ["focusd-plugin.json", "main.mjs"]);
+    assert.equal(packFolder(dir).manifest.id, "me.sample");
+    assert.deepEqual(validatePlugin(dir).errors, []);
+    writeFileSync(path.join(dir, ".focusdignore"), "*.mjs\n");
+    assert.match(validatePlugin(dir).errors.join("\n"), /left out by \.focusdignore/);
+  });
+  withPlugin(base, {}, (dir) => {
+    rmSync(path.join(dir, "fuyu-plugin.json"));
+    assert.match(validatePlugin(dir).errors.join("\n"), /There is no fuyu-plugin\.json/);
   });
 });

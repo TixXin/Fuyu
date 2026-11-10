@@ -5,8 +5,10 @@
 // keeps updates on the same key. Checked the same way by
 // src-tauri/src/plugin_host/author_signing.rs.
 //
-// Private key: FLY_ISLAND_PLUGIN_SIGNING_KEY (PEM text) if set, else a key file
-// (default ~/.fly-island-plugin/signing.key): on Windows encrypted with DPAPI for
+// Private key: FUYU_PLUGIN_SIGNING_KEY (PEM text; FLY_ISLAND_PLUGIN_SIGNING_KEY, its
+// name before the rename, also works) if set, else a key file (default
+// ~/.fuyu-plugin/signing.key, or ~/.fly-island-plugin/signing.key when only
+// that one exists): on Windows encrypted with DPAPI for
 // the current user, elsewhere a PEM readable only by its owner.
 import { spawnSync } from "node:child_process";
 import { createHash, createPrivateKey, createPublicKey, generateKeyPairSync, sign, verify } from "node:crypto";
@@ -15,8 +17,20 @@ import { homedir } from "node:os";
 import path from "node:path";
 
 export const SIGNATURE_DOMAIN = "focusd-plugin-package/1";
-export const DEFAULT_KEY_FILE = path.join(homedir(), ".fly-island-plugin", "signing.key");
-export const KEY_ENV = "FLY_ISLAND_PLUGIN_SIGNING_KEY";
+const KEY_FILE = path.join(homedir(), ".fuyu-plugin", "signing.key");
+/** Where keys were kept before the rename (D17). */
+const LEGACY_KEY_FILE = path.join(homedir(), ".fly-island-plugin", "signing.key");
+/** The key file: the old one while only it exists, so authors keep the key they have. */
+export const DEFAULT_KEY_FILE = existsSync(KEY_FILE) || !existsSync(LEGACY_KEY_FILE) ? KEY_FILE : LEGACY_KEY_FILE;
+export const KEY_ENV = "FUYU_PLUGIN_SIGNING_KEY";
+/** The variable's name before the rename (D17); authors' CI may still set it. */
+export const LEGACY_KEY_ENV = "FLY_ISLAND_PLUGIN_SIGNING_KEY";
+
+/** Which variable holds the key in `env`: `envName`, else (for the default) the old name; null when neither. */
+export function keyEnvName(env, envName = KEY_ENV) {
+  if (env[envName]?.trim()) return envName;
+  return envName === KEY_ENV && env[LEGACY_KEY_ENV]?.trim() ? LEGACY_KEY_ENV : null;
+}
 // DER prefix of an Ed25519 SubjectPublicKeyInfo; the raw 32-byte key follows.
 const SPKI_PREFIX = Buffer.from("302a300506032b6570032100", "hex");
 
@@ -92,8 +106,9 @@ $out = [Security.Cryptography.ProtectedData]::${mode}($data, $null, 'CurrentUser
 
 /** The private key from `env[envName]` or `file`; throws when there is none. */
 export function loadSigningKey({ file = DEFAULT_KEY_FILE, env = process.env, envName = KEY_ENV } = {}) {
-  if (env[envName]?.trim()) return createPrivateKey(env[envName]);
-  if (!existsSync(file)) throw new Error(`No signing key: run "fly-island-plugin keygen" once, or set ${envName}.`);
+  const fromEnv = keyEnvName(env, envName);
+  if (fromEnv) return createPrivateKey(env[fromEnv]);
+  if (!existsSync(file)) throw new Error(`No signing key: run "fuyu-plugin keygen" once, or set ${envName}.`);
   const stored = readFileSync(file, "utf8").trim();
   const pem = process.platform === "win32" ? dpapi("Unprotect", Buffer.from(stored, "base64")).toString("utf8") : stored;
   return createPrivateKey(pem);

@@ -79,7 +79,7 @@ export function marketText(text, limit = MAX_MARKET_TEXT) {
 
 /**
  * README.md and CHANGELOG.md from the plugin folder, shown on the market page. They
- * are signed with the index; list them in .focusdignore to keep them out of the zip.
+ * are signed with the index; list them in .fuyuignore (or .focusdignore) to keep them out of the zip.
  */
 export function marketTexts(dir) {
   const read = (name) => {

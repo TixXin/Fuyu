@@ -1,10 +1,10 @@
-// `fly-island-plugin keys rotate`: replaces the signing key and has the old key
+// `fuyu-plugin keys rotate`: replaces the signing key and has the old key
 // vouch for the new one (docs/architecture/plugins/author-signing.md §3.5), so
 // islands that remember the old key take updates signed by the new one without
 // asking. The endorsement names the plugin, so a key shared by several plugins
 // is endorsed once per plugin id.
 import { existsSync, renameSync } from "node:fs";
-import { endorseKey, generateSigningKey, KEY_ENV, loadSigningKey, publicKeyOf } from "./sign.mjs";
+import { endorseKey, generateSigningKey, keyEnvName, loadSigningKey, publicKeyOf } from "./sign.mjs";
 
 /**
  * Moves the old key file aside (`<file>.<old keyId>.old`) and creates the new key
@@ -13,8 +13,8 @@ import { endorseKey, generateSigningKey, KEY_ENV, loadSigningKey, publicKeyOf } 
  */
 export function rotateKey({ file, newFile, ids, env = process.env }) {
   if (ids.length === 0) throw new Error("Name the plugin ids the key signs.");
-  const fromEnv = Boolean(env[KEY_ENV]?.trim());
-  if (fromEnv && !newFile) throw new Error(`The old key comes from ${KEY_ENV}; say where the new one goes with --new-key <file>.`);
+  const fromEnv = keyEnvName(env);
+  if (fromEnv && !newFile) throw new Error(`The old key comes from ${fromEnv}; say where the new one goes with --new-key <file>.`);
   const oldKey = loadSigningKey({ file, env });
   const oldKeyId = publicKeyOf(oldKey).keyId;
   const target = newFile ?? file;

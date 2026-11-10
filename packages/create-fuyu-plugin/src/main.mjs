@@ -1,4 +1,4 @@
-// `npm create fly-island-plugin@latest [folder]`: asks for the language, the
+// `npm create fuyu-plugin@latest [folder]`: asks for the language, the
 // template, the id and the names, then writes a plugin folder (scaffold.mjs).
 // Options skip the questions: --language, --template, --id, --name, --name-zh,
 // --author, --yes (defaults for the rest).
@@ -41,7 +41,7 @@ async function choose(ask, question, choices, fallback) {
 export async function main(argv = process.argv.slice(2)) {
   const args = parseArgs(argv);
   if (args.help) {
-    console.log(`Usage: npm create fly-island-plugin@latest [folder] -- [--language ${LANGUAGES.join("|")}] [--template ${TEMPLATES.join("|")}] [--id <id>] [--name <English name>] [--name-zh <Chinese name>] [--author <name>] [--yes]`);
+    console.log(`Usage: npm create fuyu-plugin@latest [folder] -- [--language ${LANGUAGES.join("|")}] [--template ${TEMPLATES.join("|")}] [--id <id>] [--name <English name>] [--name-zh <Chinese name>] [--author <name>] [--yes]`);
     return 0;
   }
   const input = { language: args.language, template: args.template, id: args.id, nameEn: args.name, nameZh: args["name-zh"], author: args.author };
@@ -73,7 +73,7 @@ export async function main(argv = process.argv.slice(2)) {
   const next = [`cd ${relative}`];
   if (options.language !== "powershell") next.push("npm install");
   if (options.language === "typescript") next.push("npm run watch   (in a second terminal)");
-  next.push("npx fly-island-plugin dev");
+  next.push("npx fuyu-plugin dev");
   console.log(`\nNext (README.md has the details):\n  ${next.join("\n  ")}`);
   return 0;
 }

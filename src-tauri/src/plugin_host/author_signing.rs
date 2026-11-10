@@ -1,7 +1,7 @@
 //! Author signatures of market packages (docs/architecture/plugins/author-signing.md).
 //! The index lists, for a plugin whose author signs, the author's keys and the
 //! signature of "focusd-plugin-package/1\n<id>\n<version>\n<sha256>"; signed by
-//! `fly-island-plugin pack --sign` (packages/fuyu-plugin/src/sign.mjs).
+//! `fuyu-plugin pack --sign` (packages/fuyu-plugin/src/sign.mjs).
 //!
 //! The island remembers the key that signed the installed version
 //! (`PluginGrant::author_keys`). Updates signed by that key, or a first signed
@@ -12,7 +12,7 @@
 //!
 //! Changing keys (phase 2): a listed key may carry `endorsedBy`, the old key's
 //! signature of "focusd-plugin-key/1\n<id>\n<new keyId>\n<new publicKey>"
-//! (`fly-island-plugin keys rotate`). A key endorsed by the remembered key, or
+//! (`fuyu-plugin keys rotate`). A key endorsed by the remembered key, or
 //! through a chain of such endorsements, counts as the remembered key.
 
 use base64::{engine::general_purpose::STANDARD, Engine};

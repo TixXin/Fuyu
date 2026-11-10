@@ -443,6 +443,10 @@ fn spawn(spec: &LaunchSpec) -> Result<Child, String> {
     Command::new(&program)
         .args(&spec.args)
         .current_dir(&spec.dir)
+        .env("FUYU_PLUGIN_ID", &spec.plugin_id)
+        .env("FUYU_PLUGIN_DATA_DIR", &spec.data_dir)
+        .env("FUYU_PLUGIN_API_VERSION", spec.api_version.to_string())
+        // The names before the rename (D17), for plugins built on an older SDK.
         .env("FOCUSD_PLUGIN_ID", &spec.plugin_id)
         .env("FOCUSD_PLUGIN_DATA_DIR", &spec.data_dir)
         .env("FOCUSD_PLUGIN_API_VERSION", spec.api_version.to_string())

@@ -1,6 +1,6 @@
 // main.ps1 of a new plugin written for Windows PowerShell 5.1. The file has to
 // stay ASCII (PowerShell 5.1 reads files without a BOM as ANSI), so Chinese
-// text is written as escapes and turned back with ConvertFrom-FocusdEscape.
+// text is written as escapes and turned back with ConvertFrom-FuyuEscape.
 
 const BACKSLASH = String.fromCharCode(92);
 
@@ -14,36 +14,36 @@ export function psText(text) {
       return `${BACKSLASH}u${code.toString(16).padStart(4, "0")}`;
     })
     .join("");
-  return `(ConvertFrom-FocusdEscape '${escaped}')`;
+  return `(ConvertFrom-FuyuEscape '${escaped}')`;
 }
 
-const both = (zh, en) => `(New-FocusdText ${psText(zh)} ${psText(en)})`;
+const both = (zh, en) => `(New-FuyuText ${psText(zh)} ${psText(en)})`;
 
 function header(options) {
-  return `# ${options.name.en}: a FocuSD Island plugin for Windows PowerShell 5.1.
+  return `# ${options.name.en}: a Fuyu plugin for Windows PowerShell 5.1.
 # Protocol and API: https://github.com/TixXin/fly-island/blob/main/docs/plugins/README.md
-# Keep this file ASCII; write other languages with ConvertFrom-FocusdEscape.
-. "$PSScriptRoot${BACKSLASH}lib${BACKSLASH}focusd.ps1"
+# Keep this file ASCII; write other languages with ConvertFrom-FuyuEscape.
+. "$PSScriptRoot${BACKSLASH}lib${BACKSLASH}fuyu.ps1"
 `;
 }
 
 const bodies = {
   blank: () => `
-Invoke-FocusdLoop @{
-    initialize = { param($params) Write-FocusdLog "started ($($params.activationEvent))" }
-    'settings.changed' = { param($params) Write-FocusdLog "settings changed: $($params.settings | ConvertTo-Json -Compress)" }
+Invoke-FuyuLoop @{
+    initialize = { param($params) Write-FuyuLog "started ($($params.activationEvent))" }
+    'settings.changed' = { param($params) Write-FuyuLog "settings changed: $($params.settings | ConvertTo-Json -Compress)" }
 }
 `,
   command: () => `
-Invoke-FocusdLoop @{
-    initialize = { param($params) Write-FocusdLog "started ($($params.activationEvent))" }
+Invoke-FuyuLoop @{
+    initialize = { param($params) Write-FuyuLog "started ($($params.activationEvent))" }
     # Runs when the user clicks "Say hello" on the plugin's page in Settings.
     command = {
         param($params)
         if ($params.id -ne 'hello') { return }
-        $count = [int](Get-FocusdStorage 'count') + 1
-        Set-FocusdStorage 'count' $count
-        [void](Show-FocusdNotification "Hello #$count" 'This message came from a plugin.')
+        $count = [int](Get-FuyuStorage 'count') + 1
+        Set-FuyuStorage 'count' $count
+        [void](Show-FuyuNotification "Hello #$count" 'This message came from a plugin.')
     }
 }
 `,
@@ -53,7 +53,7 @@ $script:Items = $null
 
 function Get-Items {
     if ($null -eq $script:Items) {
-        $saved = Get-FocusdStorage 'items'
+        $saved = Get-FuyuStorage 'items'
         if ($null -eq $saved) {
             $script:Items = @(
                 @{ id = '1'; title = 'Open this page from the island'; done = $true },
@@ -69,7 +69,7 @@ function Get-Items {
 
 function Save-Items($items) {
     $script:Items = @($items)
-    Set-FocusdStorage 'items' @($script:Items)
+    Set-FuyuStorage 'items' @($script:Items)
     Show-Items
 }
 
@@ -77,15 +77,15 @@ function Show-Items {
     $rows = @(Get-Items | ForEach-Object {
         @{ id = $_.id; title = $_.title; checked = $_.done; actions = @(@{ id = 'remove'; title = ${both("删除", "Remove")} }) }
     })
-    Update-FocusdView $script:View @{
+    Update-FuyuView $script:View @{
         search = @{ placeholder = ${both("筛选", "Filter")} }
         items = $rows
         empty = ${both("没有条目", "Nothing here")}
     }
 }
 
-Invoke-FocusdLoop @{
-    initialize = { param($params) Write-FocusdLog "started ($($params.activationEvent))" }
+Invoke-FuyuLoop @{
+    initialize = { param($params) Write-FuyuLog "started ($($params.activationEvent))" }
     # The island only shows the page while it is open; send the model then.
     'view.visible' = { param($params) if ($params.visible) { Show-Items } }
     'view.action' = {
@@ -111,16 +111,16 @@ Invoke-FocusdLoop @{
 # Shows how many of today's todos are open on the collapsed island and updates
 # it when they change. The subscription keeps this on-demand plugin running.
 function Update-Open {
-    $state = Invoke-FocusdMethod 'todos.list'
+    $state = Invoke-FuyuMethod 'todos.list'
     $open = @($state.todos | Where-Object { -not $_.completed }).Count
     $text = if ($open -eq 0) { 'All done' } else { "$open open" }
-    Update-FocusdStatus 'open' $text 'Open todos today'
+    Update-FuyuStatus 'open' $text 'Open todos today'
 }
 
-Invoke-FocusdLoop @{
+Invoke-FuyuLoop @{
     initialize = {
         param($params)
-        [void](Register-FocusdEvent 'todos.changed')
+        [void](Register-FuyuEvent 'todos.changed')
         Update-Open
     }
     event = { param($params) if ($params.name -eq 'todos.changed') { Update-Open } }

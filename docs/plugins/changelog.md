@@ -4,6 +4,13 @@
 
 下面几批改动都还没有随正式版岛屿发布（2026-11-05 时最新的正式版是 0.2.14），发布时补上版本号。
 
+## 改名为浮屿 / Fuyu（npm 包 0.5.0）
+
+- 岛屿认新名字：清单 `fuyu-plugin.json`、忽略文件 `.fuyuignore`、环境变量 `FUYU_PLUGIN_*`、页面接口 `acquireFuyuApi()`、CSS 变量 `--fuyu-*`。旧名字照样认，岛屿两组环境变量和 CSS 变量都设置。见 [README](README.md)「改名前的名字」。
+- npm 包改名为 `fuyu-plugin`、`create-fuyu-plugin`（0.5.0），命令行是 `fuyu-plugin`；PowerShell 模块改名为 `Fuyu.Plugin`，函数改名为 `*-Fuyu*`，旧的 `*-Focusd*` 作为别名保留；单文件 SDK 改名为 `lib/fuyu.ps1`、`lib/fuyu.mjs`。旧包 `fly-island-plugin`、`create-fly-island-plugin` 不再更新。
+- 脚手架生成新名字的文件；插件 id 不能包含 `fuyu` 或 `focusd`。
+- `pack` 把 `fuyu-plugin.json` 也以 `focusd-plugin.json` 的名字放进 zip，改名前的岛屿也能安装。签名私钥默认放在 `~/.fuyu-plugin/signing.key`，只有旧的 `~/.fly-island-plugin/signing.key` 时继续用旧的；环境变量 `FUYU_PLUGIN_SIGNING_KEY`，旧名字 `FLY_ISLAND_PLUGIN_SIGNING_KEY` 也认。`dev` 先找新应用标识下的 `local-api.json`，再找旧的。
+
 ## 提示上的播放按钮
 
 - `island.notify` 多了可选的 `controls`（`"media"`：提示右侧放上一首、播放/暂停、下一首，由岛屿执行，插件不需要 `media:control`），能力 `notifyControls`。旧版岛屿忽略这个字段。SDK：Node `NotifyOptions.controls`、PowerShell `Show-FocusdNotification -Controls`；模拟宿主检查它是字符串。见 [README](README.md)「岛上提示」。

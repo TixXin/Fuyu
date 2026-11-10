@@ -1,7 +1,7 @@
 // Deterministic plugin zips: the same files always give the same bytes, so a
-// package can be rebuilt and compared (the market index and `fly-island-plugin pack`).
+// package can be rebuilt and compared (the market index and `fuyu-plugin pack`).
 import { createHash } from "node:crypto";
-import { readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { crc32, deflateRawSync } from "node:zlib";
 import { isIgnored, loadIgnore } from "./ignore.mjs";
@@ -82,14 +82,33 @@ export function createZip(files) {
 
 export const sha256 = (buffer) => createHash("sha256").update(buffer).digest("hex");
 
-export const MANIFEST_FILE = "focusd-plugin.json";
+export const MANIFEST_FILE = "fuyu-plugin.json";
+/** The manifest's name before the rename (D17), the only one islands before it read. */
+export const LEGACY_MANIFEST_FILE = "focusd-plugin.json";
 
-/** The files that go into a plugin's zip: [zip path, bytes], without what .focusdignore leaves out. */
+/** The manifest file a plugin folder uses: fuyu-plugin.json, else focusd-plugin.json. */
+export function manifestFileOf(dir) {
+  return existsSync(path.join(dir, MANIFEST_FILE)) || !existsSync(path.join(dir, LEGACY_MANIFEST_FILE)) ? MANIFEST_FILE : LEGACY_MANIFEST_FILE;
+}
+
+/** The parsed manifest of a plugin folder (either name). */
+export function readManifest(dir) {
+  return JSON.parse(readFileSync(path.join(dir, manifestFileOf(dir)), "utf8").replace(/^\uFEFF/, ""));
+}
+
+/**
+ * The files that go into a plugin's zip: [zip path, bytes], without what the
+ * ignore file leaves out. A fuyu-plugin.json is packed under the old name too,
+ * so islands from before the rename can install the package.
+ */
 export function packageFiles(dir) {
   const rules = loadIgnore(dir);
-  return listFiles(dir)
+  const files = listFiles(dir)
     .filter(([name]) => !isIgnored(rules, name))
     .map(([name, full]) => [name, readPackedFile(full)]);
+  const at = files.findIndex(([name]) => name === MANIFEST_FILE);
+  if (at >= 0 && !files.some(([name]) => name === LEGACY_MANIFEST_FILE)) files.splice(at + 1, 0, [LEGACY_MANIFEST_FILE, files[at][1]]);
+  return files;
 }
 
 /**
@@ -98,7 +117,7 @@ export function packageFiles(dir) {
  * installs it under that name.
  */
 export function packFolder(dir) {
-  const manifest = JSON.parse(readFileSync(path.join(dir, MANIFEST_FILE), "utf8"));
+  const manifest = readManifest(dir);
   if (path.basename(path.resolve(dir)) !== manifest.id) {
     throw new Error(`${dir}: the folder must be named after the plugin id "${manifest.id}".`);
   }

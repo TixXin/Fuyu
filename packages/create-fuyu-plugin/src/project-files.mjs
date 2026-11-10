@@ -51,8 +51,8 @@ export function manifest(options) {
   };
 }
 
-export function focusdIgnore(options) {
-  const lines = ["# Left out of the plugin's zip (fly-island-plugin pack).", ".github/", ".gitignore", "test/", "node_modules/", "package.json", "package-lock.json"];
+export function fuyuIgnore(options) {
+  const lines = ["# Left out of the plugin's zip (fuyu-plugin pack).", ".github/", ".gitignore", "test/", "node_modules/", "package.json", "package-lock.json"];
   if (options.language === "typescript") lines.push("src/", "tsconfig.json");
   return `${lines.join("\n")}\n`;
 }
@@ -72,13 +72,13 @@ export function packageJson(options) {
       type: "module",
       scripts: {
         ...(typescript ? { build: "tsc", watch: "tsc --watch" } : {}),
-        dev: "fly-island-plugin dev",
-        validate: `${build}fly-island-plugin validate`,
-        test: `${build}fly-island-plugin test`,
-        pack: `${build}fly-island-plugin pack`,
+        dev: "fuyu-plugin dev",
+        validate: `${build}fuyu-plugin validate`,
+        test: `${build}fuyu-plugin test`,
+        pack: `${build}fuyu-plugin pack`,
       },
       devDependencies: {
-        "fly-island-plugin": `^${options.sdkVersion}`,
+        "fuyu-plugin": `^${options.sdkVersion}`,
         ...(typescript ? { typescript: "^5.8.3" } : {}),
       },
     },
@@ -111,9 +111,9 @@ export function tsconfig() {
 export function workflow(options) {
   const install = options.language === "powershell" ? "" : "      - run: npm install\n";
   const build = options.language === "typescript" ? "      - run: npm run build\n" : "";
-  const cli = options.language === "powershell" ? "npx --yes fly-island-plugin@latest" : "npx fly-island-plugin";
+  const cli = options.language === "powershell" ? "npx --yes fuyu-plugin@latest" : "npx fuyu-plugin";
   return `# Checks the plugin on every push, and publishes a GitHub release with the
-# package when you push a tag equal to "version" in focusd-plugin.json (e.g. 0.1.0).
+# package when you push a tag equal to "version" in fuyu-plugin.json (e.g. 0.1.0).
 name: plugin
 on:
   push:
@@ -139,7 +139,7 @@ ${install}${build}      - run: ${cli} validate
         env:
           GH_TOKEN: \${{ github.token }}
         run: |
-          version=$(node -p "require('./focusd-plugin.json').version")
+          version=$(node -p "require('./fuyu-plugin.json').version")
           test "$version" = "\${{ github.ref_name }}" || { echo "The tag must equal version $version"; exit 1; }
           gh release create "\${{ github.ref_name }}" .package/*.zip --title "\${{ github.ref_name }}" --generate-notes
 `;
@@ -150,17 +150,17 @@ export function readme(options) {
   const steps = [
     ...(node ? ["npm install"] : []),
     ...(options.language === "typescript" ? ["npm run watch          # in a second terminal: compiles src/ to dist/"] : []),
-    "npx fly-island-plugin dev    # loads this folder into the island, restarts on changes",
-    "npx fly-island-plugin test   # runs the plugin under the mock host",
-    "npx fly-island-plugin pack   # writes .package/<id>-<version>.zip",
+    "npx fuyu-plugin dev    # loads this folder into the island, restarts on changes",
+    "npx fuyu-plugin test   # runs the plugin under the mock host",
+    "npx fuyu-plugin pack   # writes .package/<id>-<version>.zip",
   ];
   return `# ${options.name.en}
 
-${options.name["zh-CN"]}: a [FocuSD Island](https://github.com/TixXin/fly-island) plugin.
+${options.name["zh-CN"]}: a [Fuyu](https://github.com/TixXin/fly-island) plugin.
 
 ## Develop
 
-1. In FocuSD Island, open Settings > Plugins: turn on the **Local API** plugin, then
+1. In Fuyu, open Settings > Plugins: turn on the **Local API** plugin, then
    **Developer > development mode**.
 2. In this folder:
 
@@ -172,7 +172,7 @@ The plugin API: <https://github.com/TixXin/fly-island/blob/main/docs/plugins/REA
 
 ## Publish
 
-Push a tag equal to \`version\` in \`focusd-plugin.json\` (for example \`0.1.0\`); the
+Push a tag equal to \`version\` in \`fuyu-plugin.json\` (for example \`0.1.0\`); the
 workflow in \`.github/workflows/plugin.yml\` checks the plugin and attaches the
 package to a GitHub release.
 `;

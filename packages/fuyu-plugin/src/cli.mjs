@@ -1,9 +1,9 @@
-// `fly-island-plugin`: validate, pack, dev, test and publish FocuSD Island plugins.
-// Guide: docs/plugins/README.md (快速开始) in the FocuSD Island repository.
+// `fuyu-plugin`: validate, pack, dev, test and publish Fuyu plugins.
+// Guide: docs/plugins/README.md (快速开始) in the Fuyu repository.
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { runDev } from "./dev.mjs";
-import { createZip, MANIFEST_FILE, packageFiles, sha256 } from "./pack.mjs";
+import { createZip, packageFiles, readManifest, sha256 } from "./pack.mjs";
 import { rotateKey } from "./rotate.mjs";
 import { runTests } from "./run-tests.mjs";
 import { DEFAULT_KEY_FILE, generateSigningKey, loadSigningKey, parsePackageName, writePackageSignature } from "./sign.mjs";
@@ -14,10 +14,10 @@ export { report };
 /** Packages are written here (inside the plugin folder; never packed themselves). */
 export const PACKAGE_OUT_DIR = ".package";
 
-const HELP = `Usage: fly-island-plugin <command> [plugin folder] [options]
+const HELP = `Usage: fuyu-plugin <command> [plugin folder] [options]
 
 Commands:
-  validate   Check focusd-plugin.json and the folder like the island and the market do
+  validate   Check fuyu-plugin.json and the folder like the island and the market do
   pack       Write <id>-<version>.zip (the same bytes every time) to .package/
              --out <folder>   write it somewhere else
              --sign           also write <id>-<version>.zip.sig with your signing key
@@ -25,8 +25,8 @@ Commands:
              market submission ("signingKeys"). Back the key up: updates signed by a
              new key need every user's confirmation.
   sign <zip> Write <zip>.sig for a package made by pack (named <id>-<version>.zip)
-             --key <file>     the key file (default ~/.fly-island-plugin/signing.key;
-                              or set FLY_ISLAND_PLUGIN_SIGNING_KEY to the PEM text)
+             --key <file>     the key file (default ~/.fuyu-plugin/signing.key;
+                              or set FUYU_PLUGIN_SIGNING_KEY to the PEM text)
   keys rotate [folder]
              Replace your signing key while you still have the old one: the old key
              vouches for the new one, so users' islands accept it without asking.
@@ -111,7 +111,7 @@ function signZip(zipFile, options) {
 function rotate(dir, options) {
   const ids = typeof options.ids === "string"
     ? options.ids.split(",").map((id) => id.trim()).filter(Boolean)
-    : [JSON.parse(readFileSync(path.join(dir, MANIFEST_FILE), "utf8")).id];
+    : [readManifest(dir).id];
   const result = rotateKey({ file: keyFile(options), newFile: typeof options["new-key"] === "string" ? path.resolve(options["new-key"]) : undefined, ids });
   console.log(`New signing key in ${result.newFile}${result.retiredFile ? `; the old key ${result.oldKeyId} is kept as ${result.retiredFile}` : ""}.
 Back the new key up. In each plugin's market submission (focusd-plugins plugins/<id>.json),
@@ -131,7 +131,7 @@ To publish ${id} ${version}:
   1. Commit and push the plugin, then create a GitHub release tagged ${version}
      (or v${version}) in your repository and attach ${path.basename(packed.file)}${signWith ? " and its .sig" : ""}.
      With the GitHub CLI:  gh release create ${version} ${assets}
-     The workflow .github/workflows/release.yml made by create-fly-island-plugin
+     The workflow .github/workflows/release.yml made by create-fuyu-plugin
      does this when you push the tag (sign the zip yourself and upload the .sig).
   2. First release only: open a pull request at https://github.com/TixXin/focusd-plugins
      that adds plugins/${id}.json (see its CONTRIBUTING.md). After that, new releases

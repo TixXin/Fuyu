@@ -87,5 +87,5 @@ export class MockHost {
 }
 
 export function launchCommand(dir: string, runtime: unknown): [string, string[]];
-/** Starts the plugin in `dir` (its focusd-plugin.json folder) under a mock host and sends initialize. */
+/** Starts the plugin in `dir` (its fuyu-plugin.json folder) under a mock host and sends initialize. */
 export function startMockHost(dir: string, options?: MockHostOptions): MockHost;

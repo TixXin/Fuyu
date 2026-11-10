@@ -1,8 +1,8 @@
 # 发布插件 SDK
 
-npm 包 `fly-island-plugin`（SDK、命令行工具、模拟宿主）和 `create-fly-island-plugin`（脚手架）由 GitHub Actions 工作流 [`publish-sdk.yml`](../../.github/workflows/publish-sdk.yml) 发布：推送 `sdk-v<版本>` 标签就发。它用 npm 的 **Trusted Publishing**（OIDC），仓库里和电脑上都不保存 npm 令牌，也不需要绕过两步验证。
+npm 包 `fuyu-plugin`（SDK、命令行工具、模拟宿主）和 `create-fuyu-plugin`（脚手架）由 GitHub Actions 工作流 [`publish-sdk.yml`](../../.github/workflows/publish-sdk.yml) 发布：推送 `sdk-v<版本>` 标签就发。它用 npm 的 **Trusted Publishing**（OIDC），仓库里和电脑上都不保存 npm 令牌，也不需要绕过两步验证。
 
-两个包的版本号始终相同：脚手架建的插件依赖 `fly-island-plugin ^<脚手架自己的版本>`。
+两个包的版本号始终相同：脚手架建的插件依赖 `fuyu-plugin ^<脚手架自己的版本>`。
 
 ## 一次性设置（维护者在 npmjs.com 上做）
 
@@ -29,6 +29,6 @@ npm 包 `fly-island-plugin`（SDK、命令行工具、模拟宿主）和 `create
    ```
 
 3. 工作流会先核对：标签里的版本号和两个包一致、生成的 SDK 文件是最新的（`scripts/plugins/check-sdk-release.mjs`），然后跑两个包的测试，再发布。npm 上已经有的版本会跳过，所以重推同一个标签不会出错。
-4. 发布后用 `npm view fly-island-plugin version` 确认；包页面会显示 provenance（来自哪个仓库的哪次运行）。
+4. 发布后用 `npm view fuyu-plugin version` 确认；包页面会显示 provenance（来自哪个仓库的哪次运行）。
 
-PowerShell 模块 `FlyIsland.Plugin` 不在这个工作流里，仍按 [packages/powershell/Fuyu.Plugin](../../packages/powershell/Fuyu.Plugin) 手动发布到 PowerShell Gallery。
+PowerShell 模块 `Fuyu.Plugin` 不在这个工作流里，仍按 [packages/powershell/Fuyu.Plugin](../../packages/powershell/Fuyu.Plugin) 手动发布到 PowerShell Gallery。

@@ -20,23 +20,27 @@ test("the PowerShell module exports every function and stays ASCII", () => {
   const module = read("packages/powershell/Fuyu.Plugin/Fuyu.Plugin.psm1");
   const manifest = read("packages/powershell/Fuyu.Plugin/Fuyu.Plugin.psd1");
   const functions = [...module.matchAll(/^function ([\w-]+)/gm)].map((match) => match[1]).sort();
-  const exported = [...manifest.matchAll(/'([A-Za-z]+-Focusd\w*)'/g)].map((match) => match[1]).sort();
+  const exported = [...manifest.matchAll(/'([A-Za-z]+-Fuyu\w*)'/g)].map((match) => match[1]).sort();
   assert.deepEqual(exported, functions);
+  // Each function keeps its name from before the rename as an alias (D17).
+  const aliases = [...manifest.matchAll(/'([A-Za-z]+-Focusd\w*)'/g)].map((match) => match[1].replace("-Focusd", "-Fuyu")).sort();
+  assert.deepEqual(aliases, functions);
   assert.ok([...module].every((char) => char.charCodeAt(0) < 128), "Fuyu.Plugin.psm1 must be ASCII for PowerShell 5.1");
-  assert.ok([...read("plugins/sdk/powershell/focusd.ps1")].every((char) => char.charCodeAt(0) < 128));
+  assert.ok([...read("plugins/sdk/powershell/fuyu.ps1")].every((char) => char.charCodeAt(0) < 128));
 });
 
 // Windows PowerShell 5.1's [Console]::In.ReadLineAsync blocked until a line came, so waits never
 // timed out and timer-driven plugins (the system monitor) stalled between messages (E10).
 test("the PowerShell SDK's wait for a message times out, and reads UTF-8", { skip: process.platform !== "win32" }, async () => {
-  const dir = mkdtempSync(path.join(tmpdir(), "focusd-sdk-"));
+  const dir = mkdtempSync(path.join(tmpdir(), "fuyu-sdk-"));
   try {
-    copyFileSync(path.join(root, "plugins/sdk/powershell/focusd.ps1"), path.join(dir, "focusd.ps1"));
+    copyFileSync(path.join(root, "plugins/sdk/powershell/fuyu.ps1"), path.join(dir, "fuyu.ps1"));
+    // New names, and the names from before the rename (D17) that older plugins call.
     writeFileSync(path.join(dir, "main.ps1"), [
-      '. "$PSScriptRoot\\focusd.ps1"',
-      "foreach ($i in 1..3) { if ($null -eq (Receive-FocusdNotification 200)) { Write-FocusdLog 'timeout' } }",
+      '. "$PSScriptRoot\\fuyu.ps1"',
+      "foreach ($i in 1..3) { if ($null -eq (Receive-FuyuNotification 200)) { Write-FocusdLog 'timeout' } }",
       "$message = Receive-FocusdNotification 10000",
-      "Write-FocusdLog \"echo $($message.params.text)\"",
+      "Write-FuyuLog \"echo $($message.params.text)\"",
     ].join("\r\n"));
     const child = spawn("powershell.exe", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", path.join(dir, "main.ps1")], { stdio: ["pipe", "pipe", "inherit"] });
     const logs = [];

@@ -1,4 +1,4 @@
-// Creates every language x template, checks it with `fly-island-plugin validate`,
+// Creates every language x template, checks it with `fuyu-plugin validate`,
 // compiles the TypeScript ones and runs each plugin's own test against the mock
 // host (PowerShell plugins get the same test file).
 import assert from "node:assert/strict";
@@ -14,8 +14,8 @@ import { nodeTest } from "../src/node-templates.mjs";
 import { psText } from "../src/powershell-templates.mjs";
 import { LANGUAGES, TEMPLATES, idProblem, normalizeOptions, scaffold } from "../src/scaffold.mjs";
 
-const sdkPackage = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../fly-island-plugin");
-const workDir = mkdtempSync(path.join(os.tmpdir(), "fly-island-scaffold-"));
+const sdkPackage = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../fuyu-plugin");
+const workDir = mkdtempSync(path.join(os.tmpdir(), "fuyu-scaffold-"));
 after(() => rmSync(workDir, { recursive: true, force: true }));
 
 function compile(dir) {
@@ -31,6 +31,7 @@ test("ids are checked like the island and the market do", () => {
   assert.match(idProblem("Me.Plugin"), /lowercase/);
   assert.match(idProblem("me..x"), /lowercase/);
   assert.match(idProblem("me.focusd-thing"), /focusd/);
+  assert.match(idProblem("me.fuyu-thing"), /fuyu/);
   assert.throws(() => normalizeOptions({ language: "rust" }), /language must be/);
   assert.equal(normalizeOptions({ author: "Ann Lee" }).id, "ann-lee.my-plugin");
 });
@@ -38,7 +39,7 @@ test("ids are checked like the island and the market do", () => {
 test("PowerShell text stays ASCII", () => {
   assert.equal(psText("It's"), "'It''s'");
   const chinese = psText("删除");
-  assert.match(chinese, /^\(ConvertFrom-FocusdEscape '/);
+  assert.match(chinese, /^\(ConvertFrom-FuyuEscape '/);
   assert.ok([...chinese].every((char) => char.charCodeAt(0) < 128));
 });
 
@@ -52,7 +53,7 @@ async function checkTemplate(language, template) {
   const id = `tester.${language}-${template}`;
   const dir = path.join(workDir, id);
   const { written } = scaffold({ dir, id, language, template, author: "Tester", nameEn: `Demo ${template}`, nameZh: "演示" });
-  assert.ok(written.includes("focusd-plugin.json") && written.includes(".github/workflows/plugin.yml"));
+  assert.ok(written.includes("fuyu-plugin.json") && written.includes(".github/workflows/plugin.yml"));
   if (language === "powershell") {
     assert.ok([...readFileSync(path.join(dir, "main.ps1"), "utf8")].every((char) => char.charCodeAt(0) < 128), "main.ps1 is ASCII");
     // The test the Node templates get, so the PowerShell code runs too.
@@ -66,7 +67,7 @@ async function checkTemplate(language, template) {
   assert.deepEqual(result.warnings, []);
 
   mkdirSync(path.join(dir, "node_modules"));
-  symlinkSync(sdkPackage, path.join(dir, "node_modules/fly-island-plugin"), "junction");
+  symlinkSync(sdkPackage, path.join(dir, "node_modules/fuyu-plugin"), "junction");
   const run = await runTest(dir);
   assert.equal(run.code, 0, run.output);
 }

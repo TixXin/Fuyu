@@ -5,7 +5,7 @@
 //! `https://<plugin id>.plugin.focusd.invalid`, whose files come only from the
 //! folder of the view's `entry`; every other request and every navigation
 //! away is refused, and each file is sent with a fixed Content-Security-Policy.
-//! The page talks only to its own plugin process: `acquireFocusdApi()` gives it
+//! The page talks only to its own plugin process: `acquireFuyuApi()` gives it
 //! `postMessage` / `onMessage` and a small `getState` / `setState` store the
 //! island keeps while it runs. The page is created when it comes on screen and
 //! closed when it leaves (the island window reports where it is).
@@ -122,7 +122,7 @@ pub(super) fn may_navigate(origin: &str, url: &str, frame: bool) -> bool {
     own || (frame && (url == "about:blank" || url == "about:srcdoc"))
 }
 
-/// What a page posts through `acquireFocusdApi()`.
+/// What a page posts through `acquireFuyuApi()`.
 #[derive(Debug, PartialEq)]
 pub(super) enum PageMessage {
     Message(Value),
@@ -154,27 +154,32 @@ pub(super) fn parse_page_message(json: &str) -> Result<PageMessage, String> {
 /// The page's colors. A page in the island's card is on a dark surface; a page without the card
 /// (frame "none", E15) is on the island itself, so its text takes the island's ink: dark on a
 /// light island. `ink` is "r, g, b" (--island-ink-rgb); anything else counts as no ink.
+/// Every `--fuyu-*` variable is also set as `--focusd-*`, its name before the rename (D17).
 fn theme_css(ink: Option<&str>) -> String {
-    const FONT: &str = r#"--focusd-radius:8px;--focusd-font:"Segoe UI Variable Text","Segoe UI","Microsoft YaHei UI",sans-serif"#;
-    const ACCENTS: &str = "--focusd-accent:#74d6ff;--focusd-success:#2f8c61;--focusd-warning:#ffd166;--focusd-danger:#c75065";
+    const FONT: &str = r#"--fuyu-radius:8px;--fuyu-font:"Segoe UI Variable Text","Segoe UI","Microsoft YaHei UI",sans-serif"#;
+    const ACCENTS: &str = "--fuyu-accent:#74d6ff;--fuyu-success:#2f8c61;--fuyu-warning:#ffd166;--fuyu-danger:#c75065";
     let parsed = ink.and_then(|ink| {
         let parts: Vec<u8> = ink.split(',').filter_map(|part| part.trim().parse().ok()).collect();
         (parts.len() == 3 && ink.split(',').count() == 3).then(|| (parts[0], parts[1], parts[2]))
     });
-    match parsed {
+    let (scheme, variables) = match parsed {
         Some((r, g, b)) => {
             let light_island = u32::from(r) + u32::from(g) + u32::from(b) < 384;
-            let (scheme, accent) = if light_island { ("light", "--focusd-accent:#0a84c6;--focusd-success:#2f8c61;--focusd-warning:#b7791f;--focusd-danger:#c75065") } else { ("dark", ACCENTS) };
-            format!(
-                ":root{{color-scheme:{scheme};--focusd-text:rgb({r},{g},{b});--focusd-text-muted:rgba({r},{g},{b},.68);--focusd-surface:rgba({r},{g},{b},.06);--focusd-border:rgba({r},{g},{b},.12);{accent};{FONT}}}"
+            let (scheme, accent) = if light_island { ("light", "--fuyu-accent:#0a84c6;--fuyu-success:#2f8c61;--fuyu-warning:#b7791f;--fuyu-danger:#c75065") } else { ("dark", ACCENTS) };
+            (
+                scheme,
+                format!("--fuyu-text:rgb({r},{g},{b});--fuyu-text-muted:rgba({r},{g},{b},.68);--fuyu-surface:rgba({r},{g},{b},.06);--fuyu-border:rgba({r},{g},{b},.12);{accent};{FONT}"),
             )
         }
-        None => format!(":root{{color-scheme:dark;--focusd-text:#f8f6f0;--focusd-text-muted:rgba(248,246,240,.72);--focusd-surface:rgba(255,255,255,.08);--focusd-border:rgba(255,255,255,.12);{ACCENTS};{FONT}}}"),
-    }
+        None => ("dark", format!("--fuyu-text:#f8f6f0;--fuyu-text-muted:rgba(248,246,240,.72);--fuyu-surface:rgba(255,255,255,.08);--fuyu-border:rgba(255,255,255,.12);{ACCENTS};{FONT}")),
+    };
+    let legacy = variables.replace("--fuyu-", "--focusd-");
+    format!(":root{{color-scheme:{scheme};{variables};{legacy}}}")
 }
 
 /// Runs first in every document and frame of the page: the island's colors,
-/// no WebRTC (it reaches the network around CSP), and `acquireFocusdApi()`.
+/// no WebRTC (it reaches the network around CSP), and `acquireFuyuApi()`
+/// (also under its name before the rename, `acquireFocusdApi()`).
 pub(super) fn init_script(state: &Value, locale: &str, ink: Option<&str>) -> String {
     let locale = if locale == "zh-CN" { "zh-CN" } else { "en" };
     INIT_SCRIPT
@@ -210,13 +215,15 @@ const INIT_SCRIPT: &str = r#"(() => {
     setState(next) { state = next; channel.postMessage({ type: "state", state: next }); return next; },
     onMessage(listener) { listeners.add(listener); return () => listeners.delete(listener); },
   });
-  Object.defineProperty(window, "acquireFocusdApi", {
-    value() {
-      if (taken) throw new Error("acquireFocusdApi() can be called only once.");
-      taken = true;
-      return api;
-    },
-  });
+  for (const name of ["acquireFuyuApi", "acquireFocusdApi"]) {
+    Object.defineProperty(window, name, {
+      value() {
+        if (taken) throw new Error(name + "() can be called only once.");
+        taken = true;
+        return api;
+      },
+    });
+  }
 })();"#;
 
 /// Each view's last `setState`, kept while the island runs so a page that was

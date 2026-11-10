@@ -45,8 +45,8 @@ jobs:
 
       - name: Test the SDK packages
         run: |
-          pnpm --filter fly-island-plugin test
-          pnpm --filter create-fly-island-plugin test
+          pnpm --filter fuyu-plugin test
+          pnpm --filter create-fuyu-plugin test
 
       - name: Publish
         run: |

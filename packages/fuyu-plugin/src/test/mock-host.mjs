@@ -1,4 +1,4 @@
-// The mock host (`fly-island-plugin/test`): starts a plugin's process the way the
+// The mock host (`fuyu-plugin/test`): starts a plugin's process the way the
 // island does, talks JSON-RPC with it over stdio and answers every host method
 // from memory, so plugins can be tested in Node (and in CI) without the island.
 import { spawn } from "node:child_process";
@@ -7,7 +7,7 @@ import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import readline from "node:readline";
-import { MANIFEST_FILE } from "../pack.mjs";
+import { readManifest } from "../pack.mjs";
 import { protocol } from "../schema.mjs";
 import { PERMISSION_DENIED, RpcError, answer, emptyTodos } from "./methods.mjs";
 
@@ -37,11 +37,18 @@ function resolveSettings(manifest, overrides) {
   return { ...values, ...overrides };
 }
 
+/** The variables the island gives a plugin's process, under `prefix` (FUYU, or FOCUSD from before the rename). */
+const pluginEnv = (prefix, host) => ({
+  [`${prefix}_PLUGIN_ID`]: host.manifest.id,
+  [`${prefix}_PLUGIN_DATA_DIR`]: host.dataDir,
+  [`${prefix}_PLUGIN_API_VERSION`]: String(host.apiVersion),
+});
+
 export class MockHost extends EventEmitter {
   constructor(dir, options = {}) {
     super();
     this.dir = path.resolve(dir);
-    this.manifest = JSON.parse(readFileSync(path.join(this.dir, MANIFEST_FILE), "utf8"));
+    this.manifest = readManifest(this.dir);
     this.apiVersion = this.manifest.apiVersion;
     this.granted = options.permissions ?? this.manifest.permissions ?? [];
     this.denied = new Set(options.deny ?? []);
@@ -52,7 +59,7 @@ export class MockHost extends EventEmitter {
     this.activationEvent = options.activationEvent ?? "onStartup";
     this.appVersion = options.appVersion ?? "99.0.0-mock";
     this.ownDataDir = !options.dataDir;
-    this.dataDir = options.dataDir ?? mkdtempSync(path.join(os.tmpdir(), "fly-island-mock-"));
+    this.dataDir = options.dataDir ?? mkdtempSync(path.join(os.tmpdir(), "fuyu-mock-"));
     this.timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
     this.todos = options.todos ? structuredClone(options.todos) : emptyTodos();
     /** Archived days for todos.list / note.get / todos.days with a date: [{ date, todos, dailyNote }]. */
@@ -123,7 +130,7 @@ export class MockHost extends EventEmitter {
     const [program, args] = command ?? launchCommand(this.dir, this.manifest.runtime);
     this.child = spawn(program, args, {
       cwd: this.dir,
-      env: { ...process.env, FOCUSD_PLUGIN_ID: this.manifest.id, FOCUSD_PLUGIN_DATA_DIR: this.dataDir, FOCUSD_PLUGIN_API_VERSION: String(this.apiVersion) },
+      env: { ...process.env, ...pluginEnv("FUYU", this), ...pluginEnv("FOCUSD", this) },
       stdio: ["pipe", "pipe", "pipe"],
       windowsHide: true,
     });
@@ -213,7 +220,7 @@ export class MockHost extends EventEmitter {
     this.send("view.visible", { viewId, visible });
   }
 
-  /** Sends what the plugin's webview page would post with acquireFocusdApi().postMessage. */
+  /** Sends what the plugin's webview page would post with acquireFuyuApi().postMessage. */
   webviewMessage(viewId, message) {
     this.send("webview.message", { viewId, message });
   }

@@ -1,25 +1,25 @@
-// `fly-island-plugin validate`: the manifest against plugins/schema/manifest.schema.json,
+// `fuyu-plugin validate`: the manifest against plugins/schema/manifest.schema.json,
 // plus the rules a schema cannot express and the island would refuse at install
 // time, and warnings for likely mistakes (unused or missing permissions).
 import { existsSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
-import { isIgnored, loadIgnore } from "./ignore.mjs";
+import { IGNORE_FILE, ignoreFileOf, isIgnored, loadIgnore } from "./ignore.mjs";
 import { validateSchema } from "./json-schema.mjs";
-import { MANIFEST_FILE, listFiles } from "./pack.mjs";
+import { listFiles, manifestFileOf } from "./pack.mjs";
 import { eventPermissions, methodPermissions, protocol } from "./schema.mjs";
 
 /** The market refuses larger packages. */
 export const MAX_PACKAGE_BYTES = 20 * 1024 * 1024;
 const SOURCE_EXTENSIONS = new Set([".ps1", ".psm1", ".js", ".mjs", ".cjs", ".ts", ".mts", ".cts"]);
 const SKIPPED_DIRS = new Set(["node_modules", ".git"]);
-/** The SDK files list every method; they say nothing about what the plugin uses. */
-const SDK_FILES = /(^|\/)(focusd\.(mjs|ps1|d\.mts)|protocol\.d\.mts|FlyIsland\.Plugin\.psm1)$/;
+/** The SDK files list every method; they say nothing about what the plugin uses (old and new names, D17). */
+const SDK_FILES = /(^|\/)((fuyu|focusd)\.(mjs|ps1|d\.mts)|protocol\.d\.mts|(Fuyu|FlyIsland)\.Plugin\.psm1)$/;
 /** SDK helpers whose names differ from the method they call. */
 const HELPER_METHODS = [
   [/\bnotify\s*\(/, "island.notify"],
-  [/Show-FocusdNotification\b/i, "island.notify"],
+  [/Show-(Fuyu|Focusd)Notification\b/i, "island.notify"],
   [/\bnote\.append\s*\(/, "note.set"],
-  [/(Get|Set|Remove)-FocusdSecret\b/i, "secrets.get"],
+  [/(Get|Set|Remove)-(Fuyu|Focusd)Secret\b/i, "secrets.get"],
 ];
 const V2_ONLY = ["activationEvents", "contributes.views", "contributes.statusItems", "contributes.menus"];
 
@@ -118,7 +118,7 @@ function checkRuntime(dir, manifest, rules, errors) {
   }
   const full = path.join(dir, command);
   if (!existsSync(full) || !statSync(full).isFile()) errors.push(`runtime.command "${command}" does not exist (build the plugin first?).`);
-  else if (isIgnored(rules, command)) errors.push(`runtime.command "${command}" is left out by ${".focusdignore"}.`);
+  else if (isIgnored(rules, command)) errors.push(`runtime.command "${command}" is left out by ${ignoreFileOf(dir) ?? IGNORE_FILE}.`);
 }
 
 /**
@@ -129,12 +129,13 @@ function checkRuntime(dir, manifest, rules, errors) {
 export function validatePlugin(dir, { allowExperimental = false } = {}) {
   const errors = [];
   const warnings = [];
-  const manifestPath = path.join(dir, MANIFEST_FILE);
+  const manifestFile = manifestFileOf(dir);
+  const manifestPath = path.join(dir, manifestFile);
   let manifest;
   try {
     manifest = JSON.parse(withoutBom(readFileSync(manifestPath, "utf8")));
   } catch (error) {
-    errors.push(existsSync(manifestPath) ? `${MANIFEST_FILE} is not valid JSON: ${error.message}` : `There is no ${MANIFEST_FILE} in ${dir}.`);
+    errors.push(existsSync(manifestPath) ? `${manifestFile} is not valid JSON: ${error.message}` : `There is no ${manifestFile} in ${dir}.`);
     return { manifest: null, errors, warnings };
   }
   for (const { path: where, message } of validateSchema(protocol().manifestSchema, manifest)) {
@@ -159,7 +160,7 @@ export function validatePlugin(dir, { allowExperimental = false } = {}) {
   const size = packed.reduce((total, [, full]) => total + statSync(full).size, 0);
   if (size > MAX_PACKAGE_BYTES) errors.push(`The package would be ${(size / 1024 / 1024).toFixed(1)} MB; the market takes at most 20 MB.`);
   if (packed.some(([name]) => name.split("/").includes("node_modules"))) {
-    warnings.push("node_modules would be packed; add it to .focusdignore unless the plugin needs it at run time.");
+    warnings.push("node_modules would be packed; add it to the ignore file (.fuyuignore) unless the plugin needs it at run time.");
   }
 
   const declared = new Set(manifest.permissions ?? []);

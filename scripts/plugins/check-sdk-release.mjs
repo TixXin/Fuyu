@@ -1,8 +1,8 @@
 // Before .github/workflows/publish-sdk.yml publishes the SDK packages: the tag
 // (sdk-v<version>) names the version both packages carry, and the generated
 // SDK files (pnpm sdk:build) are up to date. The two packages always share a
-// version: projects made by create-fly-island-plugin depend on
-// fly-island-plugin ^<its own version>.
+// version: projects made by create-fuyu-plugin depend on
+// fuyu-plugin ^<its own version>.
 //
 // Usage: node scripts/plugins/check-sdk-release.mjs sdk-v0.2.1
 import { spawnSync } from "node:child_process";

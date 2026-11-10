@@ -3,7 +3,7 @@ import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFi
 import path from "node:path";
 import { nodeMain, nodeTest } from "./node-templates.mjs";
 import { powershellMain } from "./powershell-templates.mjs";
-import { focusdIgnore, gitIgnore, license, manifest, packageJson, readme, tsconfig, workflow } from "./project-files.mjs";
+import { fuyuIgnore, gitIgnore, license, manifest, packageJson, readme, tsconfig, workflow } from "./project-files.mjs";
 
 export const LANGUAGES = ["powershell", "typescript", "javascript"];
 export const TEMPLATES = ["command", "list", "status", "blank"];
@@ -18,7 +18,8 @@ export function sdkVersion() {
 /** Why `id` cannot be a plugin id, or null when it can. */
 export function idProblem(id) {
   if (!ID_PATTERN.test(id) || id.includes("..")) return "3-64 lowercase letters, digits, '.' and '-', starting with a letter or digit";
-  if (id.includes("focusd")) return "ids containing \"focusd\" are kept for the island's own plugins";
+  const kept = ["fuyu", "focusd"].find((name) => id.includes(name));
+  if (kept) return `ids containing "${kept}" are kept for the island's own plugins`;
   return null;
 }
 
@@ -48,8 +49,8 @@ export function normalizeOptions(input) {
 /** Repository-relative file name -> contents for a new plugin. */
 export function pluginFiles(options) {
   const files = new Map([
-    ["focusd-plugin.json", `${JSON.stringify(manifest(options), null, 2)}\n`],
-    [".focusdignore", focusdIgnore(options)],
+    ["fuyu-plugin.json", `${JSON.stringify(manifest(options), null, 2)}\n`],
+    [".fuyuignore", fuyuIgnore(options)],
     [".gitignore", gitIgnore(options)],
     ["README.md", readme(options)],
     ["LICENSE", license(options)],
@@ -68,7 +69,7 @@ export function pluginFiles(options) {
 
 /** The SDK files a plugin carries in lib/, so it needs nothing installed to run. */
 function sdkFiles(language) {
-  return language === "powershell" ? ["focusd.ps1"] : ["focusd.mjs", "focusd.d.mts", "protocol.d.mts"];
+  return language === "powershell" ? ["fuyu.ps1"] : ["fuyu.mjs", "fuyu.d.mts", "protocol.d.mts"];
 }
 
 /** Writes the plugin folder; refuses a folder that exists and is not empty. Returns the written paths. */

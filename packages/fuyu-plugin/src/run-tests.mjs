@@ -1,4 +1,4 @@
-// `fly-island-plugin test`: the plugin's own tests (test/*.test.mjs, run with
+// `fuyu-plugin test`: the plugin's own tests (test/*.test.mjs, run with
 // node --test), or a smoke test under the mock host when it has none.
 import { spawnSync } from "node:child_process";
 import { existsSync, readdirSync } from "node:fs";

@@ -1,10 +1,10 @@
-// FocuSD Island plugin SDK for Node.js: no dependencies, one file. Plugins that use
+// Fuyu plugin SDK for Node.js: no dependencies, one file. Plugins that use
 // it need Node.js installed (`node` on PATH). Protocol: docs/plugins/README.md.
-// Types: the .d.mts file of the same name (also in the npm package `fly-island-plugin`).
+// Types: the .d.mts file of the same name (also in the npm package `fuyu-plugin`).
 import readline from "node:readline";
 
 /**
- * Connects to FocuSD Island over stdin/stdout (JSON-RPC 2.0, one message per line).
+ * Connects to Fuyu over stdin/stdout (JSON-RPC 2.0, one message per line).
  * The process exits when the island closes stdin or sends `shutdown`.
  * Write logs with `plugin.log()` or to stderr; never print other text to stdout.
  * Options (for tests): input and output streams instead of stdin / stdout, and exit.
@@ -161,7 +161,7 @@ export function createPlugin(options = {}) {
       onSearch: (viewId, handler) => forView("view.search", viewId, (params) => handler(String(params.query ?? ""))),
       /** Sends a message to a webview page (template "webview"); resolves to { shown }: false when the page is closed. */
       postMessage: (viewId, message) => call("webview.postMessage", { viewId, message }),
-      /** Messages a webview page sends with acquireFocusdApi().postMessage. */
+      /** Messages a webview page sends with acquireFuyuApi().postMessage. */
       onMessage: (viewId, handler) => forView("webview.message", viewId, (params) => handler(params.message)),
     },
     status: {

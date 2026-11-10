@@ -74,9 +74,9 @@ plugin.onShutdown(() => plugin.log("bye"));
 `;
 
 function makePlugin(manifest) {
-  const dir = path.join(mkdtempSync(path.join(os.tmpdir(), "fly-island-mock-test-")), manifest.id);
+  const dir = path.join(mkdtempSync(path.join(os.tmpdir(), "fuyu-mock-test-")), manifest.id);
   mkdirSync(dir, { recursive: true });
-  writeFileSync(path.join(dir, "focusd-plugin.json"), JSON.stringify(manifest));
+  writeFileSync(path.join(dir, "fuyu-plugin.json"), JSON.stringify(manifest));
   writeFileSync(path.join(dir, "main.mjs"), MAIN);
   copyFileSync(CLIENT, path.join(dir, "client.mjs"));
   return dir;

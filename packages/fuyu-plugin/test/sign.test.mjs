@@ -39,7 +39,7 @@ test("the key comes from the environment, and pack names give the id and version
 });
 
 test("writePackageSignature writes <zip>.sig next to the zip", () => {
-  const dir = mkdtempSync(path.join(tmpdir(), "fly-island-sign-"));
+  const dir = mkdtempSync(path.join(tmpdir(), "fuyu-sign-"));
   try {
     const file = path.join(dir, "com.example.clock-1.0.0.zip");
     writePackageSignature(file, "com.example.clock", "1.0.0", zip, privateKey);

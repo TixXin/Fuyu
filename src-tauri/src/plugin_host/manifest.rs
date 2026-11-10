@@ -1,4 +1,5 @@
-//! `focusd-plugin.json`: parsing, validation and how a plugin's process is launched.
+//! `fuyu-plugin.json` (or the older `focusd-plugin.json`): parsing, validation and
+//! how a plugin's process is launched.
 
 use serde::{Deserialize, Serialize};
 use std::{
@@ -15,7 +16,22 @@ use super::settings::{validate_specs, SettingSpec};
 use super::sound_contrib::{self, SoundContribution};
 use crate::clipboard_history::parse_shortcut_binding;
 
-pub(super) const MANIFEST_FILE_NAME: &str = "focusd-plugin.json";
+pub(super) const MANIFEST_FILE_NAME: &str = "fuyu-plugin.json";
+/// The manifest's name before the rename (D17). Published plugins carry it and
+/// third-party plugins may never change, so it is read until the next major API.
+const LEGACY_MANIFEST_FILE_NAME: &str = "focusd-plugin.json";
+
+/// Reads the manifest in `dir`: `fuyu-plugin.json`, else `focusd-plugin.json`.
+pub(super) fn read_manifest_text(dir: &Path) -> std::io::Result<String> {
+    match std::fs::read_to_string(dir.join(MANIFEST_FILE_NAME)) {
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
+            std::fs::read_to_string(dir.join(LEGACY_MANIFEST_FILE_NAME)).map_err(|legacy| {
+                if legacy.kind() == std::io::ErrorKind::NotFound { error } else { legacy }
+            })
+        }
+        result => result,
+    }
+}
 /// The newest host API version this build speaks. Plugins declare the one they
 /// were written for; any version from MIN_API_VERSION up to this one runs, and
 /// the plugin is told the version it declared (see docs/plugins/README.md).

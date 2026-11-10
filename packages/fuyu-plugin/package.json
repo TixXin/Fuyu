@@ -1,8 +1,8 @@
 {
-  "name": "fly-island-plugin",
-  "version": "0.4.0",
-  "description": "SDK, CLI (validate, pack, dev, test) and mock host for FocuSD Island plugins",
-  "keywords": ["focusd", "fly-island", "plugin", "sdk"],
+  "name": "fuyu-plugin",
+  "version": "0.5.0",
+  "description": "SDK, CLI (validate, pack, dev, test) and mock host for Fuyu plugins",
+  "keywords": ["fuyu", "plugin", "sdk"],
   "license": "MIT",
   "type": "module",
   "repository": {
@@ -12,7 +12,7 @@
   },
   "homepage": "https://github.com/TixXin/fly-island/tree/main/docs/plugins",
   "bin": {
-    "fly-island-plugin": "bin/fly-island-plugin.mjs"
+    "fuyu-plugin": "bin/fuyu-plugin.mjs"
   },
   "exports": {
     ".": {

@@ -4,8 +4,8 @@
 const json = (value) => JSON.stringify(value);
 
 function header(options) {
-  const from = options.language === "typescript" ? "../lib/focusd.mjs" : "./lib/focusd.mjs";
-  return `// ${options.name.en}: a FocuSD Island plugin. Protocol and API:
+  const from = options.language === "typescript" ? "../lib/fuyu.mjs" : "./lib/fuyu.mjs";
+  return `// ${options.name.en}: a Fuyu plugin. Protocol and API:
 // https://github.com/TixXin/fly-island/blob/main/docs/plugins/README.md
 import { createPlugin } from ${json(from)};
 
@@ -122,11 +122,11 @@ export function nodeTest(options) {
   host.publish("todos.changed", { date: host.todos.date });
   await host.waitFor((state) => state.statuses.get("open")?.text === "1 open");`,
   };
-  return `// Runs the plugin under the mock host from fly-island-plugin (no island needed):
-//   npm test   (or npx fly-island-plugin test)
+  return `// Runs the plugin under the mock host from fuyu-plugin (no island needed):
+//   npm test   (or npx fuyu-plugin test)
 import assert from "node:assert/strict";
 import test from "node:test";
-import { startMockHost } from "fly-island-plugin/test";
+import { startMockHost } from "fuyu-plugin/test";
 
 test(${json(`${options.template} plugin works`)}, async () => {
   const host = startMockHost(".");
