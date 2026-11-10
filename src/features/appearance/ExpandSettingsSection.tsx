@@ -139,6 +139,9 @@ export function ExpandSettingsSection({
                 />
               }
             />
+            <SettingsToggleRow indent title={expand.holdTodo} description={expand.holdTodoHint} checked={settings.autoTuckHoldTodo} onChange={(autoTuckHoldTodo) => update({ autoTuckHoldTodo })} />
+            <SettingsToggleRow indent title={expand.holdAgent} description={expand.holdAgentHint} checked={settings.autoTuckHoldAgent} onChange={(autoTuckHoldAgent) => update({ autoTuckHoldAgent })} />
+            <SettingsToggleRow indent title={expand.holdMusic} description={expand.holdMusicHint} checked={settings.autoTuckHoldMusic} onChange={(autoTuckHoldMusic) => update({ autoTuckHoldMusic })} />
             <SettingsToggleRow
               indent
               title={layout.autoTuckRetract}

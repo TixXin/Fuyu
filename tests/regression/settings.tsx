@@ -258,6 +258,12 @@ if (!automated) {
     localStorage.removeItem("focusd-island-collapsed-items");
 
     await openPage("behavior");
+    // Issue #29: what keeps the island out of the idle tuck, under the auto-tuck switch.
+    const holdRow = (title: string) => [...document.querySelectorAll<HTMLElement>(".settings-row")].find((row) => row.querySelector(".settings-row__title")?.textContent === title)?.querySelector<HTMLInputElement>("input");
+    check(!holdRow("有正在进行的待办时不收起"), "Idle tuck holds are hidden while idle tuck is off");
+    await act(async () => { holdRow("闲置时贴边隐藏")!.click(); });
+    check(holdRow("有正在进行的待办时不收起")?.checked === true && holdRow("Agent 在等你时不收起")?.checked === true && holdRow("音乐播放中不收起")?.checked === false,
+      "Idle tuck holds: todo and agent on, music off by default");
     const tuckedHover = [...document.querySelectorAll<HTMLElement>(".settings-row")].find((row) => row.querySelector(".settings-row__title")?.textContent === "鼠标移到隐藏的岛上");
     const tuckedHoverButton = (label: string) => [...(tuckedHover?.querySelectorAll<HTMLButtonElement>("button") ?? [])].find((button) => button.textContent === label);
     check(tuckedHoverButton("只露出岛屿")?.getAttribute("aria-pressed") === "true", "Hovering a tucked island only slides it out by default");

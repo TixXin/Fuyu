@@ -110,6 +110,12 @@ export type IslandSettings = CalendarSettingValues & {
   todoRotationSeconds: number;
   autoTuck: boolean;
   autoTuckSeconds: number;
+  /** The idle timer does not tuck the island while a todo is in progress (issue #29). */
+  autoTuckHoldTodo: boolean;
+  /** ... while an agent session waits on the user's approval or answer. */
+  autoTuckHoldAgent: boolean;
+  /** ... while music plays. */
+  autoTuckHoldMusic: boolean;
   /** An island tucked after idling slides back once the cursor that brought it out leaves. */
   autoTuckRetract: boolean;
   /** How long (ms) it waits after the cursor leaves before sliding back. */

@@ -13,6 +13,13 @@ export type SettingsExpandText = {
   tuckTitle: string;
   /** Title of the group for how a tucked island comes back. */
   revealTitle: string;
+  /** Times the idle timer does not tuck the island (issue #29). */
+  holdTodo: string;
+  holdTodoHint: string;
+  holdAgent: string;
+  holdAgentHint: string;
+  holdMusic: string;
+  holdMusicHint: string;
   revealOnMessage: string;
   /** What hovering an island tucked to the edge does. */
   tuckedHover: string;
@@ -32,6 +39,12 @@ export const zhCN: SettingsExpandText = {
   hoverSwitchDelay: "悬停多久后切换",
   tuckTitle: "贴边隐藏",
   revealTitle: "露出",
+  holdTodo: "有正在进行的待办时不收起",
+  holdTodoHint: "点了「开始」、岛上正显示这件事时，一直留在屏幕上。",
+  holdAgent: "Agent 在等你时不收起",
+  holdAgentHint: "有会话在等你审批或回答时，一直留在屏幕上。",
+  holdMusic: "音乐播放中不收起",
+  holdMusicHint: "播放音乐时一直留在屏幕上。暂停或停止后，重新从头计时。",
   revealOnMessage: "有新消息时露出",
   tuckedHover: "鼠标移到隐藏的岛上",
   tuckedHoverReveal: "只露出岛屿",
@@ -50,6 +63,12 @@ export const en: SettingsExpandText = {
   hoverSwitchDelay: "Hover time before switching",
   tuckTitle: "Tuck to edge",
   revealTitle: "Sliding out",
+  holdTodo: "Stay out while a todo is in progress",
+  holdTodoHint: "While a todo you started shows on the island, it stays on screen.",
+  holdAgent: "Stay out while an agent waits for you",
+  holdAgentHint: "While a session waits for your approval or answer, the island stays on screen.",
+  holdMusic: "Stay out while music plays",
+  holdMusicHint: "While music plays, the island stays on screen. Paused or stopped, the idle time starts again.",
   revealOnMessage: "Slide out for new messages",
   tuckedHover: "Pointer on a tucked island",
   tuckedHoverReveal: "Slides it out",

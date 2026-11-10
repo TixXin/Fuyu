@@ -31,6 +31,7 @@ import { useAgentIndicator } from "./useAgentIndicator";
 import { useIslandNavigation } from "./useIslandNavigation";
 import { useIslandTodos } from "./useIslandTodos";
 import { useIslandTucking } from "./useIslandTucking";
+import { holdsTuck } from "./tuckHold";
 import { useIslandShelf } from "./useIslandShelf";
 import { useIslandHover } from "./useIslandHover";
 import { useIslandTranslation } from "./useIslandTranslation";
@@ -122,6 +123,11 @@ export function IslandApp() {
     hasMessagePreview: showsMessage,
     hasPermissionPrompt: permissionPrompts.current !== null,
     hasTranslationPeek: Boolean(translationPeek),
+    holdTuck: holdsTuck(settings, {
+      todoInProgress: activeTodoId !== null && todos.some((todo) => todo.id === activeTodoId && !todo.completed),
+      agentWaiting: agentSessions.some((session) => session.phase === "waiting"),
+      musicPlaying: media.mediaState.playbackStatus === "playing",
+    }),
   });
 
 

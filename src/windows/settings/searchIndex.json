@@ -192,6 +192,45 @@
       "page": "behavior",
       "zh-CN": {
         "group": "贴边隐藏",
+        "title": "有正在进行的待办时不收起",
+        "description": "点了「开始」、岛上正显示这件事时，一直留在屏幕上。"
+      },
+      "en": {
+        "group": "Tuck to edge",
+        "title": "Stay out while a todo is in progress",
+        "description": "While a todo you started shows on the island, it stays on screen."
+      }
+    },
+    {
+      "page": "behavior",
+      "zh-CN": {
+        "group": "贴边隐藏",
+        "title": "Agent 在等你时不收起",
+        "description": "有会话在等你审批或回答时，一直留在屏幕上。"
+      },
+      "en": {
+        "group": "Tuck to edge",
+        "title": "Stay out while an agent waits for you",
+        "description": "While a session waits for your approval or answer, the island stays on screen."
+      }
+    },
+    {
+      "page": "behavior",
+      "zh-CN": {
+        "group": "贴边隐藏",
+        "title": "音乐播放中不收起",
+        "description": "播放音乐时一直留在屏幕上。暂停或停止后，重新从头计时。"
+      },
+      "en": {
+        "group": "Tuck to edge",
+        "title": "Stay out while music plays",
+        "description": "While music plays, the island stays on screen. Paused or stopped, the idle time starts again."
+      }
+    },
+    {
+      "page": "behavior",
+      "zh-CN": {
+        "group": "贴边隐藏",
         "title": "鼠标移开后再次隐藏"
       },
       "en": {
