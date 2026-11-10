@@ -61,24 +61,24 @@ export function normalizeLayoutSettings(settings: LegacyIslandSettings | null | 
     islandCornerShape: settings?.islandCornerShape === "round" ? "round" : "squircle",
     maxPanelHeight: typeof settings?.maxPanelHeight === "number" && Number.isFinite(settings.maxPanelHeight)
       ? clamp(Math.round(settings.maxPanelHeight), MIN_MAX_PANEL_HEIGHT, MAX_MAX_PANEL_HEIGHT)
-      : DEFAULT_SETTINGS.maxPanelHeight,
+      : LEGACY_FALLBACKS.maxPanelHeight,
     // Older settings had no width: the panel was 560px.
     panelWidth: typeof settings?.panelWidth === "number" && Number.isFinite(settings.panelWidth)
       ? clamp(Math.round(settings.panelWidth), MIN_PANEL_WIDTH, MAX_PANEL_WIDTH)
-      : DEFAULT_SETTINGS.panelWidth,
+      : LEGACY_FALLBACKS.panelWidth,
     taskTextColor,
     pulseColor: getColorSetting(
       settings?.pulseColor,
       DEFAULT_SETTINGS.pulseColor,
     ),
     pulseBrightness: clamp(
-      Number(settings?.pulseBrightness ?? DEFAULT_SETTINGS.pulseBrightness),
+      Number(settings?.pulseBrightness ?? LEGACY_FALLBACKS.pulseBrightness),
       50,
       160,
     ),
     islandBackgroundColor: getColorSetting(
       settings?.islandBackgroundColor,
-      DEFAULT_SETTINGS.islandBackgroundColor,
+      LEGACY_FALLBACKS.islandBackgroundColor,
     ),
     ...normalizeThemeSets(settings),
     collapsedDark: typeof settings?.collapsedDark === "boolean" ? settings.collapsedDark : LEGACY_FALLBACKS.collapsedDark,

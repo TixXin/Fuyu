@@ -1,5 +1,5 @@
 // Reading saved settings, part 2 (normalizeSettings in settings.ts): the Agent page and its alerts.
-import { DEFAULT_SETTINGS } from "./settingsDefaults.ts";
+import { DEFAULT_SETTINGS, LEGACY_FALLBACKS } from "./settingsDefaults.ts";
 import {
   AGENT_ALERT_SECONDS, AGENT_HOST_DISPLAYS, AGENT_QUOTA_ALERT_PERCENTS, AGENT_REMIND_SECONDS, AGENT_ARCHIVE_MOTIONS, AGENT_CARD_EFFECTS, AGENT_SESSION_GROUPS, AGENT_SESSION_HOURS, AGENT_SESSION_SORTS, AGENT_SESSION_VIEWS,
   oneOf,
@@ -30,8 +30,8 @@ export function normalizeAgentSettings(settings: LegacyIslandSettings | null | u
     agentAlertFailed: settings?.agentAlertFailed !== false,
     agentAlertWaiting: settings?.agentAlertWaiting !== false,
     agentAlertStarted: settings?.agentAlertStarted === "newSession" || settings?.agentAlertStarted === "off" ? settings.agentAlertStarted : "everyTurn",
-    agentAlertSeconds: oneOf(AGENT_ALERT_SECONDS, settings?.agentAlertSeconds, DEFAULT_SETTINGS.agentAlertSeconds),
-    agentRemindSeconds: oneOf(AGENT_REMIND_SECONDS, settings?.agentRemindSeconds, DEFAULT_SETTINGS.agentRemindSeconds),
+    agentAlertSeconds: oneOf(AGENT_ALERT_SECONDS, settings?.agentAlertSeconds, LEGACY_FALLBACKS.agentAlertSeconds),
+    agentRemindSeconds: oneOf(AGENT_REMIND_SECONDS, settings?.agentRemindSeconds, LEGACY_FALLBACKS.agentRemindSeconds),
     agentQuotaAlertPercent: oneOf(AGENT_QUOTA_ALERT_PERCENTS, settings?.agentQuotaAlertPercent, DEFAULT_SETTINGS.agentQuotaAlertPercent),
   } satisfies Partial<IslandSettings>;
 }

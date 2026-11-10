@@ -49,7 +49,7 @@ test("a light island can stay dark while collapsed, in the dark set's colours (C
   assert.equal(collapsedThemeColors({ ...light, collapsedDark: false }).islandBackgroundColor, THEME_COLORS.light.islandBackgroundColor);
   const dark = resolveThemeColors({ ...tuned, themeMode: "dark" }, false);
   assert.equal(collapsedThemeColors(dark), dark);
-  assert.equal(DEFAULT_SETTINGS.collapsedDark, true);
+  assert.equal(DEFAULT_SETTINGS.collapsedDark, false);
   assert.equal(normalizeSettings({ opacity: 95 }).collapsedDark, false, "older settings keep a picked light colour when collapsed");
 });
 

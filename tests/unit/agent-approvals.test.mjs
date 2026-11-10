@@ -41,9 +41,38 @@ test("always allow uses the first addRules suggestion", () => {
   assert.equal(alwaysAllowRule([{ type: "setMode", mode: "plan" }]), null);
 });
 
-test("approval settings: both switches off by default, old saved settings keep working", async () => {
-  const { normalizeAgentApprovalSettings } = await import("../../src/features/agent-status/approvals/storage.ts");
-  assert.deepEqual(normalizeAgentApprovalSettings(null), { onIsland: false, whenInFront: false });
+/** Runs `body` with window.localStorage holding `entries`. */
+async function withStorage(entries, body) {
+  const values = new Map(entries);
+  const previous = globalThis.window;
+  globalThis.window = { localStorage: { getItem: (key) => values.get(key) ?? null, setItem: (key, value) => values.set(key, String(value)) } };
+  try {
+    await body();
+  } finally {
+    globalThis.window = previous;
+  }
+}
+
+test("approval settings: on for a new install, off for an island that ran before them, saved settings as saved", async () => {
+  const { loadAgentApprovalSettings, normalizeAgentApprovalSettings } = await import("../../src/features/agent-status/approvals/storage.ts");
+  assert.deepEqual(normalizeAgentApprovalSettings(null), { onIsland: true, whenInFront: true });
   assert.deepEqual(normalizeAgentApprovalSettings({ onIsland: true }), { onIsland: true, whenInFront: false });
-  assert.deepEqual(normalizeAgentApprovalSettings({ onIsland: true, whenInFront: true }), { onIsland: true, whenInFront: true });
+  assert.deepEqual(normalizeAgentApprovalSettings({}), { onIsland: false, whenInFront: false });
+  await withStorage([], () => assert.deepEqual(loadAgentApprovalSettings(), { onIsland: true, whenInFront: true }));
+  await withStorage([["fuyu-settings", "{}"]], () => assert.deepEqual(loadAgentApprovalSettings(), { onIsland: false, whenInFront: false }));
+  await withStorage([["fuyu-settings", "{}"], ["fuyu-agent-approval", '{"onIsland":true,"whenInFront":false}']], () =>
+    assert.deepEqual(loadAgentApprovalSettings(), { onIsland: true, whenInFront: false }));
+});
+
+test("agent sounds: every event for a new install; islands that ran before keep the quieter set", async () => {
+  const { DEFAULT_AGENT_SOUND_SETTINGS, loadAgentSoundSettings, normalizeAgentSoundSettings } = await import("../../src/features/agent-status/sounds/storage.ts");
+  assert.ok(Object.values(DEFAULT_AGENT_SOUND_SETTINGS.events).every(Boolean));
+  assert.equal(DEFAULT_AGENT_SOUND_SETTINGS.quietWhenInFront, false);
+  const earlier = (settings) => {
+    assert.deepEqual([settings.events.start, settings.events.ack, settings.events.idle, settings.events.complete], [false, false, false, true]);
+    assert.equal(settings.quietWhenInFront, true);
+  };
+  earlier(normalizeAgentSoundSettings({ volume: 50 }));
+  await withStorage([], () => assert.deepEqual(loadAgentSoundSettings(), DEFAULT_AGENT_SOUND_SETTINGS));
+  await withStorage([["fuyu-settings", "{}"]], () => earlier(loadAgentSoundSettings()));
 });

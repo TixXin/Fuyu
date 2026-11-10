@@ -40,6 +40,10 @@ import { activeTone } from "../../features/appearance/themeMode";
 import { useSystemDark } from "../../features/appearance/useResolvedTheme";
 import "./SettingsWindow.css";
 
+// Same as .settings-stage and .settings-stage--light in SettingsWindow.css.
+const SETTINGS_DARK_FILL = "#131417";
+const SETTINGS_LIGHT_FILL = "#eceef2";
+
 export function SettingsWindow() {
   const t = useTranslation();
   const { locale, setLocale } = useLocale();
@@ -141,6 +145,14 @@ export function SettingsWindow() {
 
   // Light or dark as the island is (C33.6): its light tokens (.island-light) and the window's own.
   const light = activeTone(settings.themeMode, systemDark) === "light";
+  // The window's own fill (shown while the page loads, and at an edge just uncovered by
+  // resizing) and the system's shadow and border follow the same tone as the page.
+  useEffect(() => {
+    const window = getCurrentWindow();
+    const failed = (error: unknown) => console.error("Failed to set the settings window's tone", error);
+    void window.setBackgroundColor(light ? SETTINGS_LIGHT_FILL : SETTINGS_DARK_FILL).catch(failed);
+    void window.setTheme(light ? "light" : "dark").catch(failed);
+  }, [light]);
 
   return (
     <main className={`settings-stage stage--font-${settings.fontFamily}${light ? " island-light settings-stage--light" : ""}`}>

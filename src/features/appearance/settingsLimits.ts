@@ -24,7 +24,7 @@ export const MIN_TOP_FILLET_RADIUS = 0;
 // The island window leaves room beside the island for fillets up to this size.
 export const MAX_TOP_FILLET_RADIUS = 12;
 // Bottom corner radius of the expanded island; every other island radius scales from it.
-export const DEFAULT_ISLAND_CORNER_RADIUS = 16;
+export const DEFAULT_ISLAND_CORNER_RADIUS = 32;
 export const MIN_ISLAND_CORNER_RADIUS = 16;
 export const MAX_ISLAND_CORNER_RADIUS = 40;
 export const DEFAULT_HOVER_EXPAND_DELAY_MS = 0;
@@ -40,9 +40,10 @@ export const MAX_HOVER_SWITCH_DELAY_MS = 1_000;
 export const DEFAULT_AUTO_TUCK_RETRACT_DELAY_MS = 500;
 export const MIN_AUTO_TUCK_RETRACT_DELAY_MS = 0;
 export const MAX_AUTO_TUCK_RETRACT_DELAY_MS = 3_000;
-// Tallest panel before the todo list and other long pages scroll. The default is the
-// height the todo page reached before this was a setting (six rows).
-export const DEFAULT_MAX_PANEL_HEIGHT = 490;
+// Tallest panel before the todo list and other long pages scroll. Before this was a setting
+// the todo page reached 490 (six rows), which is what saved settings without it keep
+// (LEGACY_FALLBACKS); new installs start at the compact minimum.
+export const DEFAULT_MAX_PANEL_HEIGHT = 360;
 // Every page is this tall (C27): low enough for a compact panel, tall enough that the translation
 // and music pages still fit.
 export const MIN_MAX_PANEL_HEIGHT = 360;
@@ -50,7 +51,7 @@ export const MIN_MAX_PANEL_HEIGHT = 360;
 export const MAX_MAX_PANEL_HEIGHT = 640;
 // Expanded panel width (C25), before the scale; wider pages (calendar, plugin pages) stay wider.
 // The widest also has to fit the island window at the scale (maxExpandedIslandWidth in layout.ts).
-export const DEFAULT_PANEL_WIDTH = 560;
+export const DEFAULT_PANEL_WIDTH = 800;
 export const MIN_PANEL_WIDTH = 480;
 export const MAX_PANEL_WIDTH = 800;
 // File shelf cap; matches MAX_ITEMS and MIN / MAX_MAX_ITEMS in src-tauri/src/file_shelf/store.rs.
