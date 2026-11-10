@@ -91,6 +91,7 @@
   "bundle": {
     "active": true,
     "targets": "all",
+    "homepage": "https://fuyu.tix.xin",
     "windows": {
       "nsis": {
         "installerIcon": "icons/icon.ico",
