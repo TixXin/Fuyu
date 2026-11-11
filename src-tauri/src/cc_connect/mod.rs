@@ -7,7 +7,9 @@
 //!
 //! For a start from nothing the plugin page also downloads the program (install.rs), checks a
 //! bot token (bots.rs), adds a project to cc-connect's config (config_file.rs; Feishu's through
-//! cc-connect's own QR setup, feishu.rs), and keeps cc-connect running (runner.rs).
+//! cc-connect's own QR setup, feishu.rs), and keeps cc-connect running (runner.rs). The cc-connect
+//! of an SSH computer is read and sent through over ssh (remote.rs), so its sessions are pushed by
+//! its own bots, which can take them over.
 
 mod bots;
 mod chats;
@@ -15,6 +17,7 @@ mod config_file;
 mod feishu;
 mod install;
 mod locate;
+pub(crate) mod remote;
 mod runner;
 
 use crate::user_error::UserError;
@@ -113,7 +116,7 @@ pub async fn get_cc_connect_status(path: Option<String>) -> Result<CcConnectStat
             running: crate::win32::process::running_executable(&[locate::EXE_NAME]).is_some(),
             runner: run.key(),
             runner_error: run.error(),
-            projects: chats::read_projects(&data_dir),
+            projects: chats::read_projects(&data_dir, config.as_deref()),
             config_projects: config.as_deref().map(config_file::project_names).unwrap_or_default(),
             config: config.is_some(),
             data_dir: data_dir.display().to_string(),
@@ -127,14 +130,7 @@ pub async fn get_cc_connect_status(path: Option<String>) -> Result<CcConnectStat
 /// Sends `text` to one chat (`session_key`, as listed by `get_cc_connect_status`) of `project`.
 #[tauri::command]
 pub async fn send_cc_connect_message(path: Option<String>, project: String, session_key: String, text: String) -> Result<(), UserError> {
-    let plain = |value: &str| !value.is_empty() && value.len() <= 256 && !value.chars().any(char::is_control);
-    if !plain(&project) || !plain(&session_key) || !session_key.contains(':') {
-        return Err(UserError::new("ccConnect.chat", "The cc-connect project or chat is not valid."));
-    }
-    if text.trim().is_empty() {
-        return Err(UserError::new("ccConnect.emptyPush", "The push has no text."));
-    }
-    let text: String = text.chars().take(MAX_TEXT_CHARS).collect();
+    let text = check_message(&project, &session_key, &text)?;
     tauri::async_runtime::spawn_blocking(move || {
         let (exe, _) = locate::find(path.as_deref(), app_dir())?.ok_or_else(|| UserError::new("ccConnect.notFound", "cc-connect was not found; fill in its path in the plugin's settings."))?;
         send(&exe, &project, &session_key, &text)
@@ -162,6 +158,7 @@ pub async fn check_cc_connect_bot(platform: String, token: String) -> Result<bot
 pub async fn add_cc_connect_project(
     path: Option<String>,
     project: String,
+    agent: String,
     work_dir: String,
     platform: String,
     token: String,
@@ -177,6 +174,7 @@ pub async fn add_cc_connect_project(
         let proxy = crate::system::updater::get_updater_proxy();
         let new = config_file::NewProject {
             name: project.trim(),
+            agent: &agent,
             work_dir: work_dir.trim(),
             platform: &platform,
             token: token.trim(),
@@ -210,6 +208,18 @@ pub async fn cancel_cc_connect_feishu_setup() -> Result<(), UserError> {
     tauri::async_runtime::spawn_blocking(feishu::cancel)
         .await
         .map_err(join_error)
+}
+
+/// The text to send, cut to fit, if the project and chat are plain enough to hand to cc-connect.
+fn check_message(project: &str, session_key: &str, text: &str) -> Result<String, UserError> {
+    let plain = |value: &str| !value.is_empty() && value.len() <= 256 && !value.chars().any(char::is_control);
+    if !plain(project) || !plain(session_key) || !session_key.contains(':') {
+        return Err(UserError::new("ccConnect.chat", "The cc-connect project or chat is not valid."));
+    }
+    if text.trim().is_empty() {
+        return Err(UserError::new("ccConnect.emptyPush", "The push has no text."));
+    }
+    Ok(text.chars().take(MAX_TEXT_CHARS).collect())
 }
 
 fn join_error(error: impl std::fmt::Display) -> UserError {
@@ -265,6 +275,8 @@ macro_rules! tauri_commands {
             crate::cc_connect::add_cc_connect_project,
             crate::cc_connect::get_cc_connect_feishu_setup,
             crate::cc_connect::cancel_cc_connect_feishu_setup,
+            crate::cc_connect::remote::get_cc_connect_remote_status,
+            crate::cc_connect::remote::send_cc_connect_remote_message,
         ] $($rest)*)
     };
 }

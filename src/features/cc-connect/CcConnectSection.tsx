@@ -1,7 +1,7 @@
 import { RefreshCw } from "lucide-react";
 import { useState } from "react";
 import { useErrorText, useTranslation } from "../../i18n";
-import { chatLabel, installCcConnect, type CcConnectStatus } from "./api";
+import { CC_CONNECT_AGENT_LABELS, chatLabel, installCcConnect, type CcConnectStatus } from "./api";
 import { CcConnectSetup } from "./CcConnectSetup";
 import { useCcConnect } from "./useCcConnect";
 
@@ -52,7 +52,7 @@ export function CcConnectSection() {
                 <InfoRow label={t.runnerLabel} value={[t.runner[status.runner], status.runnerError && errorText(status.runnerError)].filter(Boolean).join(" · ")} />
               ) : null}
               {projectNames(status).map((name) => (
-                <InfoRow key={name} label={name} value={chatsOf(status, name, t.platforms) || t.noChats} />
+                <InfoRow key={name} label={projectLabel(status, name)} value={chatsOf(status, name, t.platforms) || t.noChats} />
               ))}
             </div>
             {status.exe ? null : (
@@ -81,6 +81,12 @@ export function CcConnectSection() {
 /** Every project: those in the config, then any only the session files know. */
 function projectNames(status: CcConnectStatus) {
   return [...new Set([...status.configProjects, ...status.projects.map((project) => project.name)])];
+}
+
+/** "pc · Claude Code": the name, and its agent when known. */
+function projectLabel(status: CcConnectStatus, name: string) {
+  const agent = status.projects.find((entry) => entry.name === name)?.agent;
+  return agent ? `${name} · ${CC_CONNECT_AGENT_LABELS[agent] ?? agent}` : name;
 }
 
 function chatsOf(status: CcConnectStatus, name: string, platforms: Record<string, string>) {

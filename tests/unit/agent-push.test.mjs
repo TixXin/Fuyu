@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { DEFAULT_AGENT_PUSH_SETTINGS, normalizeAgentPushSettings } from "../../src/features/agent-status/push/storage.ts";
+import { DEFAULT_AGENT_PUSH_SETTINGS, normalizeAgentPushSettings, pushRoute } from "../../src/features/agent-status/push/storage.ts";
 import { queuePushes, takeDuePushes } from "../../src/features/agent-status/push/pushQueue.ts";
 import { ccConnectText, pushBody, takeoverCommands } from "../../src/features/agent-status/push/pushText.ts";
 
@@ -18,17 +18,40 @@ test("saved push settings are read safely", () => {
     events: { waiting: true, completed: false, failed: true },
     awayMinutes: 5,
     channel: "bark",
-    ccConnect: { project: "", chats: [] },
+    mutedHosts: [],
+    ccConnect: {},
   });
   assert.equal(normalizeAgentPushSettings({ awayMinutes: 0 }).awayMinutes, 0);
   assert.equal(normalizeAgentPushSettings({ server: 42 }).server, "");
 });
 
-test("a cc-connect target keeps only chat keys, once each", () => {
+test("the old single cc-connect project becomes this computer's, keeping only chat keys, once each", () => {
   const read = normalizeAgentPushSettings({ channel: "ccConnect", ccConnect: { project: " pc ", chats: ["telegram:1:1", "telegram:1:1", "nope", 7] } });
   assert.equal(read.channel, "ccConnect");
-  assert.deepEqual(read.ccConnect, { project: "pc", chats: ["telegram:1:1"] });
+  assert.deepEqual(read.ccConnect, { "": { chats: [{ project: "pc", key: "telegram:1:1", agent: "claudecode" }], path: "", viaLocal: false } });
   assert.equal(normalizeAgentPushSettings({ channel: "sms" }).channel, "bark");
+});
+
+test("each computer keeps its chats of any number of projects", () => {
+  const read = normalizeAgentPushSettings({
+    mutedHosts: ["zcm6", "zcm6", 3],
+    ccConnect: {
+      "": { chats: [{ project: "pc", key: "telegram:1:1", agent: "claudecode" }, { project: "cx", key: "telegram:1:1", agent: "codex" }] },
+      zcm6: { chats: [{ project: "zcm6", key: "discord:2:3" }, { project: "", key: "x:1" }], path: " /opt/cc-connect ", viaLocal: true },
+    },
+  });
+  assert.deepEqual(read.mutedHosts, ["zcm6"]);
+  assert.equal(read.ccConnect[""].chats.length, 2);
+  assert.deepEqual(read.ccConnect.zcm6, { chats: [{ project: "zcm6", key: "discord:2:3", agent: null }], path: "/opt/cc-connect", viaLocal: true });
+});
+
+test("a computer's sessions go through its own cc-connect, or this computer's without takeover", () => {
+  const settings = normalizeAgentPushSettings({
+    ccConnect: { "": { chats: [{ project: "pc", key: "telegram:1:1" }] }, zcm6: { chats: [{ project: "zcm6", key: "telegram:1:1" }], path: "/x" }, nas: { viaLocal: true } },
+  });
+  assert.deepEqual(pushRoute(settings, "zcm6"), { via: "zcm6", path: "/x", chats: settings.ccConnect.zcm6.chats, takeover: true });
+  assert.deepEqual(pushRoute(settings, "nas"), { via: "", path: "", chats: settings.ccConnect[""].chats, takeover: false });
+  assert.deepEqual(pushRoute(settings, "other").chats, []);
 });
 
 const session = (sessionId, phase, extra = {}) => ({
@@ -60,12 +83,14 @@ test("only the newest three pushes go at once", () => {
   assert.deepEqual(takeDuePushes(queue, sessions, true, () => false).map((alert) => alert.session.sessionId), ["b", "c", "d"]);
 });
 
-test("takeover commands only for a terminal Claude Code session here", () => {
-  const local = session("0123456789abcdef", "waiting");
-  assert.deepEqual(takeoverCommands(local, { entrypoint: "cli", wait: null }), ["/cd /work", "/switch 01234567"]);
-  assert.deepEqual(takeoverCommands(local, { entrypoint: "sdk-ts", wait: null }), []);
-  assert.deepEqual(takeoverCommands({ ...local, remoteHost: "zcm6" }, { entrypoint: "cli", wait: null }), []);
-  assert.deepEqual(takeoverCommands({ ...local, provider: "codex" }, { entrypoint: null, wait: null }), []);
+test("takeover commands only from a project of the session's own agent", () => {
+  const claude = session("0123456789abcdef", "waiting");
+  assert.deepEqual(takeoverCommands(claude, "claudecode"), ["/cd /work", "/switch 01234567"]);
+  assert.deepEqual(takeoverCommands({ ...claude, remoteHost: "zcm6" }, "claudecode"), ["/cd /work", "/switch 01234567"]);
+  assert.deepEqual(takeoverCommands(claude, "codex"), []);
+  assert.deepEqual(takeoverCommands(claude, null), []);
+  assert.deepEqual(takeoverCommands({ ...claude, provider: "codex" }, "codex"), ["/cd /work", "/switch 01234567"]);
+  assert.deepEqual(takeoverCommands({ ...claude, cwd: null }, "claudecode"), []);
 });
 
 test("the push body is what the session waits on, else its tool or last message", () => {

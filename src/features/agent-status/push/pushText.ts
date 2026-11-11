@@ -6,15 +6,17 @@ import type { AgentPushDetail } from "./api";
 export const MAX_BODY_CHARS = 600;
 export const DISCORD_MAX_BODY_CHARS = 3500;
 
+/** The cc-connect agent type (`[projects.agent] type`) that can resume each provider's sessions. */
+const TAKEOVER_AGENTS: Record<AgentSessionSummary["provider"], string> = { claudeCode: "claudecode", codex: "codex" };
+
 /**
  * The commands that take a session over in cc-connect: `/cd` to its folder, then `/switch` to it.
- * Only for a Claude Code session on this computer, started in a terminal: an SDK host (Happy)
- * holds its session, and resuming it elsewhere would fork it; another computer's session is
- * resumed by that computer's cc-connect.
+ * Only through a project whose agent is the session's own (`agent`; a Claude Code project cannot
+ * resume a Codex session), and only by the cc-connect of the computer the session runs on, which
+ * the caller sees to. However the session was started (a terminal, Happy) does not matter.
  */
-export function takeoverCommands(session: AgentSessionSummary, detail: AgentPushDetail): string[] {
-  if (session.provider !== "claudeCode" || session.remoteHost || !session.cwd) return [];
-  if (detail.entrypoint?.startsWith("sdk-")) return [];
+export function takeoverCommands(session: AgentSessionSummary, agent: string | null): string[] {
+  if (!session.cwd || agent !== TAKEOVER_AGENTS[session.provider]) return [];
   return [`/cd ${session.cwd}`, `/switch ${session.sessionId.slice(0, 8)}`];
 }
 

@@ -11,6 +11,8 @@ use serde_json::Value;
 #[serde(rename_all = "camelCase")]
 pub struct Project {
     pub name: String,
+    /// Its agent type in the config (`[projects.agent] type`, such as "claudecode"); None when not there.
+    pub agent: Option<String>,
     pub chats: Vec<Chat>,
 }
 
@@ -54,27 +56,50 @@ pub(super) fn chats_of(text: &str) -> Vec<Chat> {
         .collect()
 }
 
-/// Every project with a session file under `data_dir`, by name, with its chats; a project whose
-/// work folder changed has a file for each, and their chats are put together.
-pub(super) fn read_projects(data_dir: &Path) -> Vec<Project> {
+/// Every project with a session file among `files` (file name, text), by name, with its chats and
+/// its agent type from the config text; a project whose work folder changed has a file for each,
+/// and their chats are put together.
+pub(super) fn projects_from(files: impl IntoIterator<Item = (String, String)>, config: Option<&str>) -> Vec<Project> {
     let mut projects: BTreeMap<String, BTreeMap<String, Chat>> = BTreeMap::new();
-    for entry in fs::read_dir(data_dir.join("sessions")).into_iter().flatten().flatten() {
-        let file_name = entry.file_name();
-        let Some(name) = file_name.to_str().and_then(project_name) else { continue };
+    for (file_name, text) in files {
+        let Some(name) = project_name(&file_name) else { continue };
         let chats = projects.entry(name.to_string()).or_default();
-        for chat in chats_of(&fs::read_to_string(entry.path()).unwrap_or_default()) {
+        for chat in chats_of(&text) {
             chats.entry(chat.key.clone()).or_insert(chat);
         }
     }
+    let mut agents = config.map(super::config_file::project_agents).unwrap_or_default();
     projects
         .into_iter()
-        .map(|(name, chats)| Project { name, chats: chats.into_values().collect() })
+        .map(|(name, chats)| Project { agent: agents.remove(&name), name, chats: chats.into_values().collect() })
         .collect()
+}
+
+/// The projects with a session file under `data_dir` (see `projects_from`).
+pub(super) fn read_projects(data_dir: &Path, config: Option<&str>) -> Vec<Project> {
+    let files = fs::read_dir(data_dir.join("sessions")).into_iter().flatten().flatten().filter_map(|entry| {
+        let name = entry.file_name().to_str()?.to_string();
+        project_name(&name)?;
+        Some((name, fs::read_to_string(entry.path()).unwrap_or_default()))
+    });
+    projects_from(files, config)
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{chats_of, project_name, Chat};
+    use super::{chats_of, project_name, projects_from, Chat};
+
+    #[test]
+    fn projects_put_their_files_together_and_carry_their_agent() {
+        let files = [
+            ("pc_60329304.json".to_string(), r#"{"user_sessions": {"telegram:1:1": []}}"#.to_string()),
+            ("pc_0a1b2c3d.json".to_string(), r#"{"user_sessions": {"telegram:1:1": [], "discord:2:3": []}}"#.to_string()),
+            ("other.txt".to_string(), String::new()),
+        ];
+        let projects = projects_from(files, Some("[[projects]]\nname = \"pc\"\n[projects.agent]\ntype = \"codex\"\n"));
+        assert_eq!(projects.len(), 1);
+        assert_eq!((projects[0].name.as_str(), projects[0].agent.as_deref(), projects[0].chats.len()), ("pc", Some("codex"), 2));
+    }
 
     #[test]
     fn a_session_file_names_its_project() {

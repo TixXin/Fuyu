@@ -62,6 +62,10 @@ export type ErrorCode =
   | "ccConnect.chat"
   | "ccConnect.emptyPush"
   | "ccConnect.run"
+  | "ccConnect.agent"
+  | "ccConnect.host"
+  | "ccConnect.remoteNotFound"
+  | "ccConnect.remoteFailed"
   | "ccConnect.stdin"
   | "ccConnect.timeout"
   | "ccConnect.failed"
@@ -253,6 +257,10 @@ export const zhCN: ErrorsText = {
     "ccConnect.chat": "cc-connect 项目或聊天无效。",
     "ccConnect.emptyPush": "推送内容是空的。",
     "ccConnect.run": "无法运行 cc-connect。",
+    "ccConnect.agent": ({ agent }) => `不支持的 Agent：${agent}`,
+    "ccConnect.host": ({ host }) => `「${host}」不是 SSH 主机名。`,
+    "ccConnect.remoteNotFound": ({ host }) => `${host} 上找不到 cc-connect 程序，请在推送设置里填写它的路径。`,
+    "ccConnect.remoteFailed": ({ host }) => `没能经 SSH 用上 ${host} 的 cc-connect。`,
     "ccConnect.stdin": "无法把内容交给 cc-connect。",
     "ccConnect.timeout": "cc-connect 10 秒没有回应。",
     "ccConnect.failed": "cc-connect 出错。",
@@ -440,6 +448,10 @@ export const en: ErrorsText = {
     "ccConnect.chat": "The cc-connect project or chat is not valid.",
     "ccConnect.emptyPush": "The push has no text.",
     "ccConnect.run": "Could not run cc-connect.",
+    "ccConnect.agent": ({ agent }) => `Unsupported agent: ${agent}`,
+    "ccConnect.host": ({ host }) => `"${host}" is not an SSH host name.`,
+    "ccConnect.remoteNotFound": ({ host }) => `cc-connect was not found on ${host}; fill in its path in the push settings.`,
+    "ccConnect.remoteFailed": ({ host }) => `cc-connect on ${host} could not be used over SSH.`,
     "ccConnect.stdin": "Could not hand the text to cc-connect.",
     "ccConnect.timeout": "cc-connect did not answer within 10 seconds.",
     "ccConnect.failed": "cc-connect failed.",

@@ -2,21 +2,27 @@
 //! `[[projects]]` block appended as text, so what the user wrote, comments too, stays as it was
 //! (a TOML library would rewrite the file). The old file is copied to
 //! `config.toml.bak-focusd-<time>` first; a file is made when there is none. The agent is Claude
-//! Code in `default` mode, so every tool call still asks on the phone.
+//! Code in `default` mode, so every tool call still asks on the phone, or Codex in `suggest` mode
+//! (read-only: `codex exec` cannot ask), until `/mode` on the phone says otherwise.
 
 use crate::user_error::UserError;
 use std::{
+    collections::BTreeMap,
     fs,
     path::{Path, PathBuf},
 };
 
 pub(super) const FILE_NAME: &str = "config.toml";
 pub(super) const PLATFORMS: [&str; 3] = ["telegram", "discord", "feishu"];
+/// The agents a project can be set up for, each with the mode it starts in.
+const AGENTS: [(&str, &str); 2] = [("claudecode", "default"), ("codex", "suggest")];
 
 /// What the setup asks for. Feishu has no token or `allow_from` here: its QR setup in cc-connect
 /// fills the app's credentials and the owner (feishu.rs).
 pub(super) struct NewProject<'a> {
     pub(super) name: &'a str,
+    /// "claudecode" or "codex".
+    pub(super) agent: &'a str,
     pub(super) work_dir: &'a str,
     pub(super) platform: &'a str,
     pub(super) token: &'a str,
@@ -44,6 +50,9 @@ pub(super) fn check(project: &NewProject, taken: &[String]) -> Result<(), UserEr
     let dir = Path::new(project.work_dir);
     if !dir.is_absolute() || !dir.is_dir() {
         return Err(UserError::new("ccConnect.workDir", format!("The work folder does not exist: {}", project.work_dir)).arg("path", project.work_dir));
+    }
+    if !AGENTS.iter().any(|(agent, _)| *agent == project.agent) {
+        return Err(UserError::new("ccConnect.agent", format!("Unsupported agent: {}", project.agent)).arg("agent", project.agent));
     }
     if !PLATFORMS.contains(&project.platform) {
         return Err(UserError::new("ccConnect.platform", format!("Unsupported platform: {}", project.platform)).arg("platform", project.platform));
@@ -83,11 +92,14 @@ pub(super) fn toml_string(value: &str) -> String {
 
 /// The `[[projects]]` block for `project`, dated `today`.
 pub(super) fn project_block(project: &NewProject, today: &str) -> String {
+    let mode = AGENTS.iter().find(|(agent, _)| *agent == project.agent).map_or("default", |(_, mode)| mode);
     let mut block = format!(
-        "\n# Added by Fuyu on {today}.\n[[projects]]\nname = {}\n\n[projects.agent]\ntype = \"claudecode\"\n\n\
-         [projects.agent.options]\nwork_dir = {}\nmode = \"default\"\n\n[[projects.platforms]]\ntype = {}\n\n[projects.platforms.options]\n",
+        "\n# Added by Fuyu on {today}.\n[[projects]]\nname = {}\n\n[projects.agent]\ntype = {}\n\n\
+         [projects.agent.options]\nwork_dir = {}\nmode = {}\n\n[[projects.platforms]]\ntype = {}\n\n[projects.platforms.options]\n",
         toml_string(project.name),
+        toml_string(project.agent),
         toml_string(project.work_dir),
+        toml_string(mode),
         toml_string(project.platform),
     );
     if project.platform != "feishu" {
@@ -119,6 +131,35 @@ pub(super) fn project_names(text: &str) -> Vec<String> {
         }
     }
     names
+}
+
+/// Each project's agent type (`type` under its `[projects.agent]`), by project name; read line by
+/// line like `project_names`.
+pub(super) fn project_agents(text: &str) -> BTreeMap<String, String> {
+    let mut agents = BTreeMap::new();
+    let mut section = "";
+    let mut project: Option<String> = None;
+    for line in text.lines().map(str::trim) {
+        if line.starts_with('[') {
+            section = line;
+            if line == "[[projects]]" {
+                project = None;
+            }
+            continue;
+        }
+        let Some((key, value)) = line.split_once('=') else { continue };
+        let value = value.split('#').next().unwrap_or("").trim().trim_matches(|ch| ch == '"' || ch == '\'').to_string();
+        match (section, key.trim()) {
+            ("[[projects]]", "name") if project.is_none() => project = Some(value),
+            ("[projects.agent]", "type") => {
+                if let Some(name) = &project {
+                    agents.insert(name.clone(), value);
+                }
+            }
+            _ => {}
+        }
+    }
+    agents
 }
 
 /// Appends `project` to the config at `path`; returns the text it had (None: there was no file),
@@ -164,11 +205,11 @@ fn write(path: &Path, text: &str) -> Result<(), UserError> {
 
 #[cfg(test)]
 mod tests {
-    use super::{add_project, check, project_block, project_names, restore, toml_string, NewProject};
+    use super::{add_project, check, project_agents, project_block, project_names, restore, toml_string, NewProject};
     use std::fs;
 
     fn telegram<'a>(name: &'a str, work_dir: &'a str, allow_from: &'a str) -> NewProject<'a> {
-        NewProject { name, work_dir, platform: "telegram", token: "123:abc", allow_from, proxy: Some("http://127.0.0.1:7897") }
+        NewProject { name, agent: "claudecode", work_dir, platform: "telegram", token: "123:abc", allow_from, proxy: Some("http://127.0.0.1:7897") }
     }
 
     #[test]
@@ -191,6 +232,8 @@ mod tests {
         }
         let feishu = NewProject { platform: "feishu", token: "", allow_from: "", ..telegram("phone", home, "") };
         assert!(check(&feishu, &[]).is_ok());
+        assert!(check(&NewProject { agent: "codex", ..telegram("phone", home, "1") }, &[]).is_ok());
+        assert_eq!(check(&NewProject { agent: "gemini", ..telegram("phone", home, "1") }, &[]).unwrap_err().code(), "ccConnect.agent");
     }
 
     #[test]
@@ -203,6 +246,18 @@ mod tests {
         assert!(block.contains("token = \"123:abc\"\nallow_from = \"123\"\nproxy = \"http://127.0.0.1:7897\""));
         let feishu = NewProject { platform: "feishu", token: "", allow_from: "", proxy: None, ..telegram("phone", r"C:\work", "") };
         assert!(project_block(&feishu, "2026-11-09").ends_with("[projects.platforms.options]\n"));
+        let codex = project_block(&NewProject { agent: "codex", ..telegram("phone", r"C:\work", "123") }, "2026-11-09");
+        assert!(codex.contains("[projects.agent]\ntype = \"codex\"") && codex.contains("mode = \"suggest\""));
+    }
+
+    #[test]
+    fn each_project_has_the_agent_type_under_it() {
+        let text = "[[projects]]\nname = \"pc\"\n[projects.agent]\ntype = \"claudecode\" # main\n[projects.agent.options]\ntype = \"no\"\n\
+                    [[projects.platforms]]\ntype = \"telegram\"\n[[projects]]\nname = 'cx'\n[projects.agent]\ntype='codex'\n[[projects]]\nname = \"bare\"\n";
+        let agents = project_agents(text);
+        assert_eq!(agents.get("pc").map(String::as_str), Some("claudecode"));
+        assert_eq!(agents.get("cx").map(String::as_str), Some("codex"));
+        assert_eq!(agents.get("bare"), None);
     }
 
     #[test]
