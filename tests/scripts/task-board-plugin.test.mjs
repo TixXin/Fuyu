@@ -29,7 +29,7 @@ function fixture() {
   const plugin = path.join(base, "plugin");
   cpSync(path.join(ROOT, "scripts/tasks/island-plugin"), plugin, { recursive: true });
   mkdirSync(path.join(plugin, "lib"));
-  copyFileSync(path.join(ROOT, "plugins/examples/dev.focusd.github-issues/lib/focusd.ps1"), path.join(plugin, "lib/focusd.ps1"));
+  copyFileSync(path.join(ROOT, "plugins/sdk/powershell/fuyu.ps1"), path.join(plugin, "lib/fuyu.ps1"));
   const repo = path.join(base, "repo");
   cpSync(path.join(ROOT, "scripts"), path.join(repo, "scripts"), { recursive: true });
   cpSync(path.join(ROOT, "docs/tasks/README.md"), path.join(repo, "docs/tasks/README.md"));

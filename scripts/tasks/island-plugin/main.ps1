@@ -2,9 +2,9 @@
 # repo on an island page, from `node scripts/tasks/tasks.mjs --json`, so the
 # board, stale claims and handoffs are worked out in one place (tasks.mjs).
 # The collapsed bar shows how many tasks wait for the user. Installed by
-# `pnpm tasks:plugin`, which copies lib/focusd.ps1 next to this file and records
+# `pnpm tasks:plugin`, which copies lib/fuyu.ps1 (plugins/sdk/powershell) next to this file and records
 # the repo folder in repo.txt.
-. "$PSScriptRoot\lib\focusd.ps1"
+. "$PSScriptRoot\lib\fuyu.ps1"
 
 # Windows PowerShell 5.1 reads a script without a BOM as ANSI, so this file stays
 # ASCII and writes Chinese text as \u escapes.
@@ -81,7 +81,7 @@ function Send-Model([bool]$Loading = $false) {
     $status = if ($waiting.Count -gt 0) { "$(Text '\u4efb\u52a1\u5f85\u5b9a') $($waiting.Count)" } else { '' }
     if ($status -ne $script:ShownStatus) {
         $script:ShownStatus = $status
-        [void](Invoke-FocusdMethod 'status.update' @{ itemId = 'waiting'; text = $status; tone = 'warning'; tooltip = (Text '\u6709\u4efb\u52a1\u9700\u8981\u4f60') })
+        [void](Invoke-FuyuMethod 'status.update' @{ itemId = 'waiting'; text = $status; tone = 'warning'; tooltip = (Text '\u6709\u4efb\u52a1\u9700\u8981\u4f60') })
     }
     if (-not $script:CanShow -or -not $script:Visible) { return }
 
@@ -107,7 +107,7 @@ function Send-Model([bool]$Loading = $false) {
         loading = $Loading
     }
     if ($script:LoadError) { $model.error = $script:LoadError }
-    [void](Invoke-FocusdMethod 'view.update' @{ viewId = 'tasks'; model = $model })
+    [void](Invoke-FuyuMethod 'view.update' @{ viewId = 'tasks'; model = $model })
 }
 
 function Update-Tasks {
@@ -128,7 +128,7 @@ function Update-Tasks {
     } catch {
         $reason = $_.Exception.Message
         $script:LoadError = @{ 'zh-CN' = "$(Text '\u8bfb\u53d6\u5931\u8d25\uff1a')$reason"; en = "Could not read the tasks: $reason" }
-        Write-FocusdLog "read failed: $reason"
+        Write-FuyuLog "read failed: $reason"
     }
     Send-Model
 }
@@ -136,7 +136,7 @@ function Update-Tasks {
 function Test-Stale { ([DateTime]::UtcNow - $script:FetchedAt).TotalMinutes -ge $script:Minutes }
 
 while ($true) {
-    $message = Receive-FocusdNotification 5000
+    $message = Receive-FuyuNotification 5000
     try {
         # The collapsed bar's count stays current while the page is closed too.
         if ($null -eq $message) {
@@ -176,6 +176,6 @@ while ($true) {
         }
     } catch {
         # Keep running: one failed call should not make the island restart the plugin.
-        Write-FocusdLog "error: $($_.Exception.Message)"
+        Write-FuyuLog "error: $($_.Exception.Message)"
     }
 }
