@@ -1,21 +1,29 @@
 import { RefreshCw } from "lucide-react";
 import { useState } from "react";
+import { SelectControl } from "../../components/controls/SelectControl";
 import { useErrorText, useTranslation } from "../../i18n";
-import { CC_CONNECT_AGENT_LABELS, chatLabel, installCcConnect, type CcConnectStatus } from "./api";
+import { installCcConnect, type CcConnectStatus } from "./api";
+import { chatsOf, InfoRow, projectLabel } from "./CcConnectInfo";
+import { CcConnectRemote } from "./CcConnectRemote";
 import { CcConnectSetup } from "./CcConnectSetup";
 import { useCcConnect } from "./useCcConnect";
+import { useRemoteCcConnect } from "./useRemoteCcConnect";
 
 /**
- * The cc-connect phone link's plugin page sections: the program found and how (or a download),
- * whether it runs and the island's own run of it, and the chats each project has talked to (the
- * phone push sends to those); then setting a new bot up (CcConnectSetup). Read while the plugin
- * is on, again every few seconds, so a chat shows soon after its first message to the bot.
+ * The cc-connect phone link's plugin page sections, for the computer picked: this one or an SSH
+ * computer the island reads (AI Agent → Remote computers; CcConnectRemote). For this one: the
+ * program found and how (or a download), whether it runs and the island's own run of it, and the
+ * chats each project has talked to (the phone push sends to those); then setting a new bot up
+ * (CcConnectSetup). Read while the plugin is on, again every few seconds, so a chat shows soon
+ * after its first message to the bot; an SSH computer is read when picked and on refresh.
  */
 export function CcConnectSection() {
   const t = useTranslation().settings.plugins.ccConnect;
   const cc = useCcConnect();
   const errorText = useErrorText();
   const { enabled, status, error, refresh } = cc;
+  const [host, setHost] = useState("");
+  const remote = useRemoteCcConnect(enabled && host !== "");
   const [downloading, setDownloading] = useState(false);
   const [downloadError, setDownloadError] = useState<string | null>(null);
   if (!enabled) return null;
@@ -32,48 +40,69 @@ export function CcConnectSection() {
       setDownloading(false);
     }
   };
+  const hosts = [{ value: "", label: t.thisComputer }, ...remote.hosts.map((name) => ({ value: name, label: name }))];
 
   return (
     <>
       <section className="settings-section plugins-panel">
         <div className="settings-section__header">
           <span>{t.title}</span>
-          <button className="plugin-card__button" type="button" onClick={() => void refresh()} aria-label={t.refresh} title={t.refresh}>
+          <button className="plugin-card__button" type="button" onClick={() => void (host ? remote.read(host) : refresh())} aria-label={t.refresh} title={t.refresh}>
             <RefreshCw size={12} strokeWidth={2.4} />
           </button>
         </div>
         <p className="settings-section__hint">{t.hint}</p>
-        {status ? (
-          <>
-            <div className="plugin-info">
-              {status.exe ? <InfoRow label={t.program} value={`${status.exe} · ${t.source[status.exeSource ?? "path"]}`} /> : null}
-              {status.exe && status.running ? <InfoRow label={t.state} value={t.running} /> : null}
-              {status.runner !== "off" ? (
-                <InfoRow label={t.runnerLabel} value={[t.runner[status.runner], status.runnerError && errorText(status.runnerError)].filter(Boolean).join(" · ")} />
-              ) : null}
-              {projectNames(status).map((name) => (
-                <InfoRow key={name} label={projectLabel(status, name)} value={chatsOf(status, name, t.platforms) || t.noChats} />
-              ))}
-            </div>
-            {status.exe ? null : (
-              <>
-                <p className="plugin-card__error">{status.exeError ? errorText(status.exeError) : t.notFound}</p>
-                <p className="settings-section__hint">{t.downloadHint}</p>
-                <div>
-                  <button className="plugin-card__button" type="button" disabled={downloading} onClick={() => void download()}>
-                    {downloading ? t.downloading : t.download}
-                  </button>
-                </div>
-              </>
-            )}
-            {status.exe && !status.running && status.runner === "off" ? <p className="plugin-card__error">{t.notRunning}</p> : null}
-            {status.projects.length === 0 ? <p className="settings-section__hint">{t.noProjects}</p> : null}
-          </>
+        {remote.hosts.length > 0 ? (
+          <div className="plugin-setting">
+            <label className="plugin-setting__row">
+              <span>{t.computer}</span>
+              <SelectControl value={host} options={hosts} ariaLabel={t.computer} onChange={setHost} />
+            </label>
+          </div>
         ) : null}
-        {downloadError ? <p className="plugin-card__error">{downloadError}</p> : null}
-        {error ? <p className="plugin-card__error">{error}</p> : null}
+        {host ? (
+          <CcConnectRemote host={host} remote={remote} />
+        ) : (
+          <>
+            {status ? <LocalStatus status={status} downloading={downloading} onDownload={() => void download()} /> : null}
+            {downloadError ? <p className="plugin-card__error">{downloadError}</p> : null}
+            {error ? <p className="plugin-card__error">{error}</p> : null}
+          </>
+        )}
       </section>
-      <CcConnectSetup cc={cc} />
+      {host ? null : <CcConnectSetup cc={cc} />}
+    </>
+  );
+}
+
+function LocalStatus({ status, downloading, onDownload }: { status: CcConnectStatus; downloading: boolean; onDownload: () => void }) {
+  const t = useTranslation().settings.plugins.ccConnect;
+  const errorText = useErrorText();
+  return (
+    <>
+      <div className="plugin-info">
+        {status.exe ? <InfoRow label={t.program} value={`${status.exe} · ${t.source[status.exeSource ?? "path"]}`} /> : null}
+        {status.exe && status.running ? <InfoRow label={t.state} value={t.running} /> : null}
+        {status.runner !== "off" ? (
+          <InfoRow label={t.runnerLabel} value={[t.runner[status.runner], status.runnerError && errorText(status.runnerError)].filter(Boolean).join(" · ")} />
+        ) : null}
+        {projectNames(status).map((name) => (
+          <InfoRow key={name} label={projectLabel(status.projects, name)} value={chatsOf(status.projects, name, t.platforms) || t.noChats} />
+        ))}
+      </div>
+      {status.exe ? null : (
+        <>
+          <p className="plugin-card__error">{status.exeError ? errorText(status.exeError) : t.notFound}</p>
+          <p className="settings-section__hint">{t.downloadHint}</p>
+          <div>
+            <button className="plugin-card__button" type="button" disabled={downloading} onClick={onDownload}>
+              {downloading ? t.downloading : t.download}
+            </button>
+          </div>
+        </>
+      )}
+      {status.exe && !status.running && status.runner === "off" ? <p className="plugin-card__error">{t.notRunning}</p> : null}
+      {status.projects.length === 0 ? <p className="settings-section__hint">{t.noProjects}</p> : null}
     </>
   );
 }
@@ -81,24 +110,4 @@ export function CcConnectSection() {
 /** Every project: those in the config, then any only the session files know. */
 function projectNames(status: CcConnectStatus) {
   return [...new Set([...status.configProjects, ...status.projects.map((project) => project.name)])];
-}
-
-/** "pc · Claude Code": the name, and its agent when known. */
-function projectLabel(status: CcConnectStatus, name: string) {
-  const agent = status.projects.find((entry) => entry.name === name)?.agent;
-  return agent ? `${name} · ${CC_CONNECT_AGENT_LABELS[agent] ?? agent}` : name;
-}
-
-function chatsOf(status: CcConnectStatus, name: string, platforms: Record<string, string>) {
-  const project = status.projects.find((entry) => entry.name === name);
-  return (project?.chats ?? []).map((chat) => chatLabel(chat, platforms)).join(", ");
-}
-
-function InfoRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="plugin-info__row">
-      <span>{label}</span>
-      <code title={value}>{value}</code>
-    </div>
-  );
 }

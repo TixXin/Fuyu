@@ -212,6 +212,15 @@ export type SettingsPluginsText = {
     download: string;
     downloading: string;
     downloadHint: string;
+    /** Picking this computer or an SSH computer (AI Agent → Remote computers) to look at. */
+    computer: string;
+    thisComputer: string;
+    reading: string;
+    /** An SSH computer's cc-connect: where the program is (kept on this page) and what it is not. */
+    remotePath: string;
+    remotePathHint: string;
+    remoteNotRunning: string;
+    remoteSetup: string;
     /** The island's own cc-connect (the "run" setting) and how it is doing. */
     runnerLabel: string;
     runner: Record<"off" | "starting" | "running" | "external" | "noConfig" | "failed", string>;
@@ -529,6 +538,13 @@ export const zhCN: SettingsPluginsText = {
     download: "下载 cc-connect",
     downloading: "正在下载…",
     downloadHint: "从 GitHub 下载最新正式版，按发布的校验值核对后放在岛的数据文件夹里。",
+    computer: "电脑",
+    thisComputer: "本机",
+    reading: "正在经 SSH 读取…",
+    remotePath: "程序路径",
+    remotePathHint: "留空自动找：正在运行的那个，或登录 shell 的 PATH 里的。改了点刷新",
+    remoteNotRunning: "没在运行：推送要那台电脑上的 cc-connect 在运行，请在那台电脑上启动它。",
+    remoteSetup: "远程电脑的机器人在那台电脑上用 cc-connect 自己配置，岛只读取和经它发送。",
     runnerLabel: "由岛启动",
     runner: {
       off: "未开启",
@@ -876,6 +892,13 @@ export const en: SettingsPluginsText = {
     download: "Download cc-connect",
     downloading: "Downloading…",
     downloadHint: "Gets the latest release from GitHub, checks it against the published checksum, and keeps it in the island's data folder.",
+    computer: "Computer",
+    thisComputer: "This computer",
+    reading: "Reading over SSH…",
+    remotePath: "Program path",
+    remotePathHint: "Leave empty to find it: the one running, or the one on a login shell's PATH. Refresh after a change",
+    remoteNotRunning: "Not running: pushes need cc-connect running on that computer; start it there.",
+    remoteSetup: "A remote computer's bots are set up with cc-connect on that computer; the island only reads them and sends through it.",
     runnerLabel: "Run by the island",
     runner: {
       off: "Off",

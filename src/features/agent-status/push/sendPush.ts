@@ -1,4 +1,4 @@
-import { sendCcConnectMessage, sendCcConnectRemoteMessage } from "../../cc-connect/api";
+import { remotePath, sendCcConnectMessage, sendCcConnectRemoteMessage } from "../../cc-connect";
 import type { AgentAlert, AgentAlertKind } from "../alerts";
 import { sessionProject } from "../sessionList";
 import { AGENT_PROVIDER_LABELS } from "../status";
@@ -51,7 +51,7 @@ export async function sendPush({ kind, session }: AgentAlert, push: AgentPushSet
       const text = ccConnectText(heading, body, commands, labels.takeover, key.split(":")[0]);
       return route.via === LOCAL_HOST
         ? sendCcConnectMessage(ccConnectPath, project, key, text)
-        : sendCcConnectRemoteMessage(route.via, route.path, project, key, text);
+        : sendCcConnectRemoteMessage(route.via, remotePath(route.via), project, key, text);
     }),
   );
   const failed = results.find((result) => result.status === "rejected");

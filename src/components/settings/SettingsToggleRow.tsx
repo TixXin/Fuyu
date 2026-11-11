@@ -14,7 +14,7 @@ export function SettingsToggleRow({
   title: ReactNode;
   description?: ReactNode;
   checked: boolean;
-  indent?: boolean;
+  indent?: boolean | 2 | 3;
   /** False for a row that is data, not a setting (see SettingsRow). */
   searchable?: boolean;
   onChange: (checked: boolean) => void;

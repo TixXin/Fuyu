@@ -1,12 +1,11 @@
-import { Fragment } from "react";
-import { SettingsInput } from "../../../components/settings/SettingsInput";
+import { Fragment, useState } from "react";
 import { SettingsLinkButton } from "../../../components/settings/SettingsLinkButton";
 import { SettingsRow } from "../../../components/settings/SettingsRow";
+import { SettingsSelect } from "../../../components/settings/SettingsSelect";
 import { SettingsToggleRow } from "../../../components/settings/SettingsToggleRow";
 import { useTranslation } from "../../../i18n";
-import { CC_CONNECT_AGENT_LABELS, chatLabel, type CcConnectProject, type useCcConnect } from "../../cc-connect";
+import { CC_CONNECT_AGENT_LABELS, chatLabel, type CcConnectProject, type useCcConnect, type useRemoteCcConnect } from "../../cc-connect";
 import { LOCAL_HOST, pushHost, type AgentPushSettings, type CcConnectPushHost } from "./storage";
-import type { useRemoteCcConnect } from "./useRemoteCcConnect";
 
 type Props = {
   settings: AgentPushSettings;
@@ -20,7 +19,8 @@ type Props = {
 /**
  * Settings → AI Agent → Alerts → Phone push, by computer: this one, then each SSH computer whose
  * sessions the island reads. Each has a switch for pushing its sessions; with the cc-connect
- * channel, the chats of its own cc-connect's projects (any number, of any agent) to push to.
+ * channel, under it a project picked from its own cc-connect's, and under that the project's bots
+ * (chats) to push to. Chats of several projects can be on at once; the list shows one project.
  */
 export function CcConnectPushTargets({ settings, onChange, cc, remote, targets }: Props) {
   const text = useTranslation().settings.agent.push.ccConnect;
@@ -52,26 +52,20 @@ function RemoteTargets({ host, entry, onChange, remote }: { host: string; entry:
   const text = useTranslation().settings.agent.push.ccConnect;
   const state = remote.entries[host];
   const status = state?.status ?? null;
-  const program = status?.exe ? (status.running ? status.exe : `${status.exe} · ${text.notRunning}`) : `${text.notFound}: ${text.notFoundHint}`;
+  const found = status?.exe ? (status.running ? status.exe : `${status.exe} · ${text.notRunning}`) : `${text.notFound}: ${text.notFoundHint}`;
   return (
     <>
-      <SettingsRow
-        indent
-        searchable={false}
-        title={text.program}
-        description={state?.reading ? text.reading : (state?.error ?? (status ? program : text.programHint))}
-        control={<SettingsLinkButton disabled={state?.reading} onClick={() => void remote.read(host)}>{text.refresh}</SettingsLinkButton>}
-      >
-        <SettingsInput
-          monospace
-          value={entry.path}
-          placeholder={text.programHint}
-          aria-label={text.program}
-          onChange={(event) => onChange({ ...entry, path: event.target.value })}
+      {state?.reading || state?.error || !status?.exe || !status.running ? (
+        <SettingsRow
+          indent={2}
+          searchable={false}
+          title={text.program}
+          description={state?.reading ? text.reading : (state?.error ?? (status ? found : undefined))}
+          control={<SettingsLinkButton disabled={state?.reading} onClick={() => void remote.read(host)}>{text.refresh}</SettingsLinkButton>}
         />
-      </SettingsRow>
+      ) : null}
       {(status && !status.exe) || entry.viaLocal ? (
-        <SettingsToggleRow indent title={text.viaLocal} description={text.viaLocalHint} checked={entry.viaLocal} onChange={(viaLocal) => onChange({ ...entry, viaLocal })} />
+        <SettingsToggleRow indent={2} searchable={false} title={text.viaLocal} description={text.viaLocalHint} checked={entry.viaLocal} onChange={(viaLocal) => onChange({ ...entry, viaLocal })} />
       ) : null}
       {status?.exe && !entry.viaLocal ? (
         <ProjectChats projects={status.projects} error={null} entry={entry} onChange={onChange} onRefresh={() => void remote.read(host)} />
@@ -95,11 +89,19 @@ function ProjectChats({
 }) {
   const t = useTranslation().settings;
   const text = t.agent.push.ccConnect;
+  const [shown, setShown] = useState<string | null>(null);
   if (projects.length === 0) {
-    return <SettingsRow indent searchable={false} title={text.noProjects} description={error ?? undefined} control={<SettingsLinkButton onClick={onRefresh}>{text.refresh}</SettingsLinkButton>} />;
+    return <SettingsRow indent={2} searchable={false} title={text.noProjects} description={error ?? undefined} control={<SettingsLinkButton onClick={onRefresh}>{text.refresh}</SettingsLinkButton>} />;
   }
-  const picked = (project: string, key: string) => entry.chats.some((chat) => chat.project === project && chat.key === key);
-  const toggle = (project: CcConnectProject, key: string, on: boolean) =>
+  const pickedIn = (name: string) => entry.chats.filter((chat) => chat.project === name).length;
+  // Until one is picked: the first project already pushing, else the first.
+  const project = projects.find((each) => each.name === shown) ?? projects.find((each) => pickedIn(each.name) > 0) ?? projects[0];
+  const label = (each: CcConnectProject) => {
+    const name = text.project(each.name, each.agent ? (CC_CONNECT_AGENT_LABELS[each.agent] ?? each.agent) : "?");
+    const picked = pickedIn(each.name);
+    return picked > 0 ? `${name} · ${text.picked(picked)}` : name;
+  };
+  const toggle = (key: string, on: boolean) =>
     onChange({
       ...entry,
       chats: on
@@ -108,26 +110,27 @@ function ProjectChats({
     });
   return (
     <>
-      {projects.map((project) => (
-        <Fragment key={project.name}>
-          <SettingsRow
-            indent
-            searchable={false}
-            title={text.project(project.name, project.agent ? (CC_CONNECT_AGENT_LABELS[project.agent] ?? project.agent) : "?")}
-            description={error ?? text.projectHint}
-          />
-          {project.chats.map((chat) => (
-            <SettingsToggleRow
-              key={chat.key}
-              indent
-              title={chatLabel(chat, t.plugins.ccConnect.platforms)}
-              description={chat.key}
-              checked={picked(project.name, chat.key)}
-              onChange={(on) => toggle(project, chat.key, on)}
-            />
-          ))}
-        </Fragment>
+      <SettingsRow
+        indent={2}
+        searchable={false}
+        title={text.projectTitle}
+        description={error ?? text.projectHint}
+        control={<SettingsSelect value={project.name} options={projects.map((each) => ({ value: each.name, label: label(each) }))} ariaLabel={text.projectTitle} onChange={setShown} />}
+      />
+      {project.chats.map((chat) => (
+        <SettingsToggleRow
+          key={chat.key}
+          indent={3}
+          searchable={false}
+          title={chatLabel(chat, t.plugins.ccConnect.platforms)}
+          description={chat.key}
+          checked={entry.chats.some((each) => each.project === project.name && each.key === chat.key)}
+          onChange={(on) => toggle(chat.key, on)}
+        />
       ))}
+      {project.chats.length === 0 ? (
+        <SettingsRow indent={3} searchable={false} title={text.noChats} control={<SettingsLinkButton onClick={onRefresh}>{text.refresh}</SettingsLinkButton>} />
+      ) : null}
     </>
   );
 }

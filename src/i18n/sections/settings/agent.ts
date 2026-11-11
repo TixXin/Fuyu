@@ -106,17 +106,21 @@ export type SettingsAgentText = {
       thisComputer: string;
       /** A computer's switch: push its sessions (Bark and cc-connect alike). */
       hostHint: string;
-      /** A project's heading: its name and agent. */
+      /** The row with the project picker. */
+      projectTitle: string;
+      /** A project in the picker: its name and agent. */
       project: (name: string, agent: string) => string;
+      /** After a project in the picker: how many of its chats are pushed to. */
+      picked: (count: number) => string;
       projectHint: string;
       noProjects: string;
+      noChats: string;
       off: string;
       offHint: string;
       refresh: string;
       reading: string;
       notRunning: string;
       program: string;
-      programHint: string;
       notFound: string;
       notFoundHint: string;
       viaLocal: string;
@@ -289,18 +293,20 @@ export const zhCN: SettingsAgentText = {
     ccConnect: {
       thisComputer: "本机",
       hostHint: "推送这台电脑上的会话",
+      projectTitle: "项目",
       project: (name, agent) => `${name} · ${agent}`,
-      projectHint: "项目的机器人和它聊过的人；接管命令只附给 Agent 和会话相同的项目",
+      picked: (count) => `已选 ${count} 个`,
+      projectHint: "可以在几个项目里各选机器人；接管命令只附给 Agent 和会话相同的项目",
       noProjects: "还没有聊过的项目：在手机上给机器人发一句话，再点刷新。",
+      noChats: "这个项目还没有聊天：在手机上给它的机器人发一句话，再点刷新。",
       off: "cc-connect 手机连接没打开",
       offHint: "先在 设置 → 插件 里打开内置插件「cc-connect 手机连接」。",
       refresh: "刷新",
       reading: "正在经 SSH 读取…",
       notRunning: "cc-connect 没在运行，推送会发不出去",
       program: "cc-connect 程序",
-      programHint: "留空自动找：正在运行的那个，或登录 shell 的 PATH 里的。改了点刷新",
       notFound: "没找到 cc-connect",
-      notFoundHint: "填它在那台电脑上的路径，或改用本机的机器人推",
+      notFoundHint: "在 设置 → 插件 → cc-connect 手机连接 里选这台电脑、填它的路径，或改用本机的机器人推",
       viaLocal: "改用本机的机器人推",
       viaLocalHint: "能收到推送，但不附接管命令：本机的 cc-connect 续不上另一台电脑上的会话",
       testBody: "🔔 浮屿：cc-connect 推送已接通",
@@ -467,18 +473,20 @@ export const en: SettingsAgentText = {
     ccConnect: {
       thisComputer: "This computer",
       hostHint: "Push the sessions on this computer",
+      projectTitle: "Project",
       project: (name, agent) => `${name} · ${agent}`,
-      projectHint: "The project's bots and who has talked to them; takeover commands go only with a project of the session's agent",
+      picked: (count) => `${count} picked`,
+      projectHint: "Bots of several projects can be picked; takeover commands go only with a project of the session's agent",
       noProjects: "No project has chats yet: send a bot a message from your phone, then refresh.",
+      noChats: "This project has no chats yet: send its bot a message from your phone, then refresh.",
       off: "The cc-connect phone link is off",
       offHint: "Turn on the built-in plugin \"cc-connect phone link\" under Settings → Plugins first.",
       refresh: "Refresh",
       reading: "Reading over SSH…",
       notRunning: "cc-connect is not running, so pushes will not go out",
       program: "cc-connect program",
-      programHint: "Leave empty to find it: the one running, or the one on a login shell's PATH. Refresh after a change",
       notFound: "cc-connect was not found",
-      notFoundHint: "Enter its path on that computer, or push with this computer's bots instead",
+      notFoundHint: "Pick this computer under Settings → Plugins → cc-connect phone link and enter its path there, or push with this computer's bots instead",
       viaLocal: "Push with this computer's bots",
       viaLocalHint: "The push arrives, without takeover commands: this computer's cc-connect cannot resume a session that lives on another",
       testBody: "🔔 Fuyu: cc-connect push is set up",

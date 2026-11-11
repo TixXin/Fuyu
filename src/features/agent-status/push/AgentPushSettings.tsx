@@ -6,13 +6,12 @@ import { SettingsRow } from "../../../components/settings/SettingsRow";
 import { SettingsSelect } from "../../../components/settings/SettingsSelect";
 import { SettingsToggleRow } from "../../../components/settings/SettingsToggleRow";
 import { useErrorText, useTranslation } from "../../../i18n";
-import { sendCcConnectMessage, sendCcConnectRemoteMessage, useCcConnect } from "../../cc-connect";
+import { remotePath, sendCcConnectMessage, sendCcConnectRemoteMessage, useCcConnect, useRemoteCcConnect } from "../../cc-connect";
 import { deleteBarkKey, hasBarkKey, saveBarkKey, sendBarkPush } from "./api";
 import { CcConnectPushTargets } from "./CcConnectPushTargets";
 import { PUSH_GROUP } from "./sendPush";
 import { AGENT_PUSH_AWAY_MINUTES, AGENT_PUSH_CHANNELS, AGENT_PUSH_EVENTS, LOCAL_HOST, type AgentPushChannel } from "./storage";
 import { useAgentPushSettings } from "./useAgentPushSettings";
-import { useRemoteCcConnect } from "./useRemoteCcConnect";
 
 /** Settings → AI Agent → Alerts: pushing agent events to the phone with Bark or a cc-connect bot (roadmap B6.5.5). */
 export function AgentPushSettings() {
@@ -25,7 +24,7 @@ export function AgentPushSettings() {
   const [busy, setBusy] = useState(false);
   const cc = useCcConnect();
   const bark = settings.channel === "bark";
-  const remote = useRemoteCcConnect(settings.enabled && !bark && cc.enabled, settings);
+  const remote = useRemoteCcConnect(settings.enabled && !bark && cc.enabled);
 
   useEffect(() => {
     void hasBarkKey().then(setKeySaved).catch(() => setKeySaved(false));
@@ -57,17 +56,17 @@ export function AgentPushSettings() {
   // Every chat that gets pushes, each through its own computer's cc-connect.
   const testChats = Object.entries(settings.ccConnect)
     .filter(([host, entry]) => !settings.mutedHosts.includes(host) && !entry.viaLocal)
-    .flatMap(([host, entry]) => entry.chats.map((chat) => ({ ...chat, host, path: entry.path })));
+    .flatMap(([host, entry]) => entry.chats.map((chat) => ({ ...chat, host })));
   const test = () =>
     run(
       () =>
         bark
           ? sendBarkPush(settings.server, text.testTitle, text.testBody, PUSH_GROUP)
           : Promise.all(
-              testChats.map(({ host, path, project, key }) =>
+              testChats.map(({ host, project, key }) =>
                 host === LOCAL_HOST
                   ? sendCcConnectMessage(cc.path, project, key, text.ccConnect.testBody)
-                  : sendCcConnectRemoteMessage(host, path, project, key, `${text.ccConnect.testBody} · ${host}`),
+                  : sendCcConnectRemoteMessage(host, remotePath(host), project, key, `${text.ccConnect.testBody} · ${host}`),
               ),
             ),
       text.testSent,

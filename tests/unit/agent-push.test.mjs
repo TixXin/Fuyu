@@ -28,7 +28,7 @@ test("saved push settings are read safely", () => {
 test("the old single cc-connect project becomes this computer's, keeping only chat keys, once each", () => {
   const read = normalizeAgentPushSettings({ channel: "ccConnect", ccConnect: { project: " pc ", chats: ["telegram:1:1", "telegram:1:1", "nope", 7] } });
   assert.equal(read.channel, "ccConnect");
-  assert.deepEqual(read.ccConnect, { "": { chats: [{ project: "pc", key: "telegram:1:1", agent: "claudecode" }], path: "", viaLocal: false } });
+  assert.deepEqual(read.ccConnect, { "": { chats: [{ project: "pc", key: "telegram:1:1", agent: "claudecode" }], viaLocal: false } });
   assert.equal(normalizeAgentPushSettings({ channel: "sms" }).channel, "bark");
 });
 
@@ -37,20 +37,20 @@ test("each computer keeps its chats of any number of projects", () => {
     mutedHosts: ["zcm6", "zcm6", 3],
     ccConnect: {
       "": { chats: [{ project: "pc", key: "telegram:1:1", agent: "claudecode" }, { project: "cx", key: "telegram:1:1", agent: "codex" }] },
-      zcm6: { chats: [{ project: "zcm6", key: "discord:2:3" }, { project: "", key: "x:1" }], path: " /opt/cc-connect ", viaLocal: true },
+      zcm6: { chats: [{ project: "zcm6", key: "discord:2:3" }, { project: "", key: "x:1" }], viaLocal: true },
     },
   });
   assert.deepEqual(read.mutedHosts, ["zcm6"]);
   assert.equal(read.ccConnect[""].chats.length, 2);
-  assert.deepEqual(read.ccConnect.zcm6, { chats: [{ project: "zcm6", key: "discord:2:3", agent: null }], path: "/opt/cc-connect", viaLocal: true });
+  assert.deepEqual(read.ccConnect.zcm6, { chats: [{ project: "zcm6", key: "discord:2:3", agent: null }], viaLocal: true });
 });
 
 test("a computer's sessions go through its own cc-connect, or this computer's without takeover", () => {
   const settings = normalizeAgentPushSettings({
-    ccConnect: { "": { chats: [{ project: "pc", key: "telegram:1:1" }] }, zcm6: { chats: [{ project: "zcm6", key: "telegram:1:1" }], path: "/x" }, nas: { viaLocal: true } },
+    ccConnect: { "": { chats: [{ project: "pc", key: "telegram:1:1" }] }, zcm6: { chats: [{ project: "zcm6", key: "telegram:1:1" }] }, nas: { viaLocal: true } },
   });
-  assert.deepEqual(pushRoute(settings, "zcm6"), { via: "zcm6", path: "/x", chats: settings.ccConnect.zcm6.chats, takeover: true });
-  assert.deepEqual(pushRoute(settings, "nas"), { via: "", path: "", chats: settings.ccConnect[""].chats, takeover: false });
+  assert.deepEqual(pushRoute(settings, "zcm6"), { via: "zcm6", chats: settings.ccConnect.zcm6.chats, takeover: true });
+  assert.deepEqual(pushRoute(settings, "nas"), { via: "", chats: settings.ccConnect[""].chats, takeover: false });
   assert.deepEqual(pushRoute(settings, "other").chats, []);
 });
 

@@ -24,11 +24,11 @@ export const LOCAL_HOST = "";
 export type CcConnectPushChat = { project: string; key: string; agent: string | null };
 
 /**
- * One computer's cc-connect: the chats its sessions are pushed to, the program there (empty: find
- * it; this computer's is the plugin's setting), and, for an SSH computer without cc-connect,
- * whether this computer's chats push for it instead (without takeover commands).
+ * One computer's cc-connect: the chats its sessions are pushed to (of any of its projects) and, for
+ * an SSH computer without cc-connect, whether this computer's chats push for it instead (without
+ * takeover commands). Where the program is, is the plugin page's setting.
  */
-export type CcConnectPushHost = { chats: CcConnectPushChat[]; path: string; viaLocal: boolean };
+export type CcConnectPushHost = { chats: CcConnectPushChat[]; viaLocal: boolean };
 
 const MAX_CHATS = 20;
 const MAX_HOSTS = 20;
@@ -46,7 +46,7 @@ export type AgentPushSettings = {
   ccConnect: Record<string, CcConnectPushHost>;
 };
 
-export const EMPTY_PUSH_HOST: CcConnectPushHost = { chats: [], path: "", viaLocal: false };
+export const EMPTY_PUSH_HOST: CcConnectPushHost = { chats: [], viaLocal: false };
 
 export const DEFAULT_AGENT_PUSH_SETTINGS: AgentPushSettings = {
   enabled: false,
@@ -112,7 +112,7 @@ function normalizeHosts(value: unknown): Record<string, CcConnectPushHost> {
 
 function normalizeHost(value: unknown): CcConnectPushHost {
   const raw = value && typeof value === "object" ? (value as Record<string, unknown>) : {};
-  return { chats: normalizeChats(raw.chats), path: text(raw.path, 1024), viaLocal: raw.viaLocal === true };
+  return { chats: normalizeChats(raw.chats), viaLocal: raw.viaLocal === true };
 }
 
 function normalizeChats(value: unknown): CcConnectPushChat[] {
@@ -133,7 +133,7 @@ function normalizeChats(value: unknown): CcConnectPushChat[] {
 }
 
 /** Where a computer's sessions are pushed: through the cc-connect of `via` (LOCAL_HOST or `host`) to `chats`. */
-export type PushRoute = { via: string; path: string; chats: CcConnectPushChat[]; takeover: boolean };
+export type PushRoute = { via: string; chats: CcConnectPushChat[]; takeover: boolean };
 
 /**
  * Each computer's sessions go out through its own cc-connect, whose bots can take them over. An
@@ -142,6 +142,6 @@ export type PushRoute = { via: string; path: string; chats: CcConnectPushChat[];
  */
 export function pushRoute(settings: AgentPushSettings, host: string): PushRoute {
   const own = pushHost(settings, host);
-  if (host !== LOCAL_HOST && own.viaLocal) return { via: LOCAL_HOST, path: "", chats: pushHost(settings, LOCAL_HOST).chats, takeover: false };
-  return { via: host, path: own.path, chats: own.chats, takeover: true };
+  if (host !== LOCAL_HOST && own.viaLocal) return { via: LOCAL_HOST, chats: pushHost(settings, LOCAL_HOST).chats, takeover: false };
+  return { via: host, chats: own.chats, takeover: true };
 }

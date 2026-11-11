@@ -3,7 +3,6 @@ export {
   CC_CONNECT_AGENT_LABELS,
   CC_CONNECT_PLUGIN_ID,
   chatLabel,
-  getCcConnectRemoteStatus,
   sendCcConnectMessage,
   sendCcConnectRemoteMessage,
   type CcConnectChat,
@@ -11,4 +10,6 @@ export {
   type CcConnectRemoteStatus,
 } from "./api";
 export { CcConnectSection } from "./CcConnectSection";
+export { remotePath } from "./remotePaths";
 export { useCcConnect } from "./useCcConnect";
+export { useRemoteCcConnect } from "./useRemoteCcConnect";
