@@ -109,8 +109,6 @@ pub(crate) struct IslandWindowState {
     pub(super) is_dragging: bool,
     pub(super) top_attached: bool,
     pub(super) glass_enabled: bool,
-    pub(super) glass_intensity: f64,
-    pub(super) glass_tint: (u8, u8, u8),
     /// Expanded bottom corner radius from the appearance settings. The other corner
     /// radii keep their default ratios to it, matching IslandShell.css.
     pub(super) corner_radius: f64,
@@ -170,8 +168,6 @@ impl Default for IslandWindowState {
             is_dragging: false,
             top_attached: true,
             glass_enabled: false,
-            glass_intensity: 72.0,
-            glass_tint: (47, 47, 55),
             corner_radius: EXPANDED_RADIUS,
             // The front end's default; it reports the setting with the first interaction sync.
             corner_shape: CornerShape::Squircle,

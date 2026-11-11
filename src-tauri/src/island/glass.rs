@@ -8,19 +8,6 @@ use crate::win32;
 
 pub(super) static NATIVE_GLASS_INITIALIZED: OnceLock<()> = OnceLock::new();
 
-pub(super) fn parse_hex_color(value: &str) -> Option<(u8, u8, u8)> {
-    let hex = value.strip_prefix('#')?;
-    if hex.len() != 6 || !hex.bytes().all(|byte| byte.is_ascii_hexdigit()) {
-        return None;
-    }
-
-    Some((
-        u8::from_str_radix(&hex[0..2], 16).ok()?,
-        u8::from_str_radix(&hex[2..4], 16).ok()?,
-        u8::from_str_radix(&hex[4..6], 16).ok()?,
-    ))
-}
-
 pub(super) fn clear_window_glass_region(window: &WebviewWindow) -> Result<(), String> {
     let hwnd = window.hwnd().map_err(|error| error.to_string())?;
     if !win32::window::clear_window_region(hwnd) {

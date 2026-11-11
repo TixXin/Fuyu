@@ -28,7 +28,7 @@ use geometry::{
     EXPANDED_ISLAND_HEIGHT_RANGE, max_expanded_width, MAX_CORNER_RADIUS, MIN_COLLAPSED_ISLAND_WIDTH, MIN_CORNER_RADIUS,
     MIN_EXPANDED_ISLAND_HEIGHT, POSITION_ANIMATION_GENERATION,
 };
-use glass::{apply_glass_material, parse_hex_color};
+use glass::apply_glass_material;
 use crate::win32;
 use state::{mutate_window_state, read_window_state, window_state, CornerShape, IslandMode, MonitorFollow};
 
@@ -81,12 +81,15 @@ pub fn set_island_interaction(
     is_tucked: Option<bool>,
     animate_position: Option<bool>,
     glass_enabled: Option<bool>,
+    // Still sent by the front end; CSS draws the glass material now (glass.rs), so the
+    // native side has no use for them. Kept so the IPC parameter names stay the same.
     glass_intensity: Option<f64>,
     glass_tint: Option<String>,
     corner_radius: Option<f64>,
     corner_shape: Option<String>,
     monitor_follow: Option<String>,
 ) -> Result<String, String> {
+    let _ = (glass_intensity, glass_tint);
     let window = main_window(&app)?;
     let mode = IslandMode::from_value(&mode)?;
     let previous_state = read_window_state();
@@ -126,12 +129,6 @@ pub fn set_island_interaction(
             state.custom_position = restored_custom_position;
         }
         state.glass_enabled = glass_enabled.unwrap_or(false);
-        if let Some(glass_intensity) = glass_intensity {
-            state.glass_intensity = glass_intensity.clamp(25.0, 100.0);
-        }
-        if let Some(glass_tint) = glass_tint.as_deref().and_then(parse_hex_color) {
-            state.glass_tint = glass_tint;
-        }
         if let Some(corner_radius) = corner_radius {
             state.corner_radius = corner_radius.clamp(MIN_CORNER_RADIUS, MAX_CORNER_RADIUS);
         }

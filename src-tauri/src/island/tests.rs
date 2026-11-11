@@ -1,7 +1,6 @@
 use tauri::PhysicalPosition;
 
 use super::geometry::*;
-use super::glass::parse_hex_color;
 use super::passthrough::point_in_notch;
 use super::state::*;
 
@@ -216,13 +215,6 @@ fn tuck_and_reveal_move_monotonically_between_physical_positions() {
             last = current;
         }
     }
-}
-
-#[test]
-fn hex_tint_parser_rejects_invalid_values() {
-    assert_eq!(parse_hex_color("#101013"), Some((16, 16, 19)));
-    assert_eq!(parse_hex_color("101013"), None);
-    assert_eq!(parse_hex_color("#xyzxyz"), None);
 }
 
 #[test]

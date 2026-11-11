@@ -265,16 +265,6 @@ fn publish(service: &ReminderService, snapshot: ReminderSnapshot) {
         .emit_to(crate::island::WINDOW_LABEL, EVENT_NAME, payload);
 }
 
-#[tauri::command]
-pub fn get_wechat_reminder_state() -> Result<ReminderSnapshot, String> {
-    Ok(service()?
-        .state
-        .lock()
-        .map_err(|_| "微信提醒状态不可用。")?
-        .snapshot
-        .clone())
-}
-
 pub(crate) fn diagnostic_state() -> Result<serde_json::Value, String> {
     let state = service()?
         .state
@@ -684,7 +674,6 @@ fn activate_existing_wechat(executable: &std::path::Path) -> Result<bool, String
 macro_rules! tauri_commands {
     ($next:ident [$($done:tt)*] $($rest:tt)*) => {
         $next!([$($done)*
-            crate::wechat_reminders::get_wechat_reminder_state,
             crate::wechat_reminders::set_wechat_reminders_enabled,
             crate::wechat_reminders::open_wechat,
             crate::wechat_reminders::set_wechat_expose_ui,

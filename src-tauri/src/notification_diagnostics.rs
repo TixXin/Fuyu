@@ -70,14 +70,14 @@ pub fn start(app: &AppHandle) -> Result<(), String> {
                 "startedAtUnixMs": started_at,
                 "elapsedMs": start.elapsed().as_millis(),
                 "completed": completed,
-                "windowVisible": app.get_webview_window("main").is_some_and(|window| window.is_visible().unwrap_or(false)),
+                "windowVisible": app.get_webview_window(crate::island::WINDOW_LABEL).is_some_and(|window| window.is_visible().unwrap_or(false)),
                 "qqArrivalObserved": qq_arrival,
                 "wechatAttentionObserved": wechat_attention,
                 "current": current,
                 "history": history,
             });
             if let Ok(bytes) = serde_json::to_vec_pretty(&report) {
-                if let Err(error) = fs::write(&path, bytes) {
+                if let Err(error) = crate::fs_write::replace_file(&path, &bytes) {
                     eprintln!("failed to write notification verification report: {error}");
                     return;
                 }
