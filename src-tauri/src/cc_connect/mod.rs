@@ -66,11 +66,18 @@ pub struct CcConnectStatus {
     runner_error: Option<UserError>,
     /// Its data folder, `~/.cc-connect`.
     data_dir: String,
+    /// The work folder a new bot is offered: an empty one in the island's data folder.
+    default_work_dir: Option<String>,
     /// Whether `config.toml` is there.
     config: bool,
     /// The projects in it, chats or not.
     config_projects: Vec<String>,
     projects: Vec<chats::Project>,
+}
+
+/// Starts empty, so Claude Code there reads nothing of the user's without asking.
+fn default_work_dir() -> Option<PathBuf> {
+    app_dir().map(|dir| dir.join("cc-connect").join("work"))
 }
 
 fn data_dir() -> Result<PathBuf, String> {
@@ -110,6 +117,7 @@ pub async fn get_cc_connect_status(path: Option<String>) -> Result<CcConnectStat
             config_projects: config.as_deref().map(config_file::project_names).unwrap_or_default(),
             config: config.is_some(),
             data_dir: data_dir.display().to_string(),
+            default_work_dir: default_work_dir().map(|dir| dir.display().to_string()),
         }
     })
     .await
@@ -162,6 +170,10 @@ pub async fn add_cc_connect_project(
     let config = config_file::config_path(&data_dir()?);
     let app_dir = app_dir().ok_or_else(|| UserError::new("ccConnect.notReady", "cc-connect is not ready yet."))?.to_path_buf();
     tauri::async_runtime::spawn_blocking(move || {
+        // The offered folder is made on first use; any other folder must already exist.
+        if let Some(default) = default_work_dir().filter(|dir| Path::new(work_dir.trim()) == dir) {
+            std::fs::create_dir_all(&default).map_err(|error| UserError::new("ccConnect.workDir", format!("The work folder does not exist: {}", default.display())).arg("path", default.display().to_string()).detail(error))?;
+        }
         let proxy = crate::system::updater::get_updater_proxy();
         let new = config_file::NewProject {
             name: project.trim(),
