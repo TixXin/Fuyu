@@ -1,4 +1,3 @@
-import { openUrl } from "@tauri-apps/plugin-opener";
 import { useState, type ReactNode } from "react";
 import { SelectControl } from "../../components/controls/SelectControl";
 import { useErrorText, useTranslation } from "../../i18n";
@@ -10,6 +9,7 @@ import {
   CC_CONNECT_SETUP_PLATFORMS,
   checkCcConnectBot,
   freeProjectName,
+  openCcConnectLink,
   type CcConnectBotCheck,
   type CcConnectSetupAgent,
   type CcConnectSetupPlatform,
@@ -163,7 +163,7 @@ export function CcConnectSetup({ cc }: { cc: ReturnType<typeof useCcConnect> }) 
             <div className="cc-connect-setup__actions">
               <p className="settings-section__hint">{t.bot(bot.name)}</p>
               {bot.inviteUrl ? (
-                <button className="plugin-card__button plugin-card__button--quiet" type="button" onClick={() => void openUrl(bot.inviteUrl ?? "")}>
+                <button className="plugin-card__button plugin-card__button--quiet" type="button" onClick={() => void openCcConnectLink(bot.inviteUrl ?? "")}>
                   {t.invite}
                 </button>
               ) : null}

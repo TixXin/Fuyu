@@ -1,7 +1,6 @@
-import { openUrl } from "@tauri-apps/plugin-opener";
 import { useEffect, useState } from "react";
 import { useErrorText, useTranslation } from "../../i18n";
-import { cancelCcConnectFeishuSetup, getCcConnectFeishuSetup, type CcConnectFeishuSetup } from "./api";
+import { cancelCcConnectFeishuSetup, getCcConnectFeishuSetup, openCcConnectLink, type CcConnectFeishuSetup } from "./api";
 
 /** How often the QR setup is asked how it goes. */
 const POLL_MS = 1_000;
@@ -37,7 +36,7 @@ export function FeishuSetup({ onEnd }: { onEnd: () => void }) {
         {state?.qr ? <img src={state.qr} alt={t.feishuQr} width={180} height={180} /> : <p className="settings-section__hint">{t.feishuWaiting}</p>}
         <div className="cc-connect-setup__actions">
           {state?.url ? (
-            <button className="plugin-card__button plugin-card__button--quiet" type="button" onClick={() => void openUrl(state.url ?? "")}>
+            <button className="plugin-card__button plugin-card__button--quiet" type="button" onClick={() => void openCcConnectLink(state.url ?? "")}>
               {t.feishuOpen}
             </button>
           ) : null}

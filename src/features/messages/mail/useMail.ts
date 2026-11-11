@@ -1,8 +1,7 @@
 import { useErrorText, useTranslation } from "../../../i18n";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { openUrl } from "@tauri-apps/plugin-opener";
 import { nextQQPreview, type QQPreviewTiming } from "../qqNotificationTiming";
-import { getMailReply, type MailEvent, type MailMessage, type MailSnapshot } from "./api";
+import { getMailReply, openMailLink, type MailEvent, type MailMessage, type MailSnapshot } from "./api";
 import type { ComposeDraft } from "./compose";
 import { mailWebUrl } from "./mailDomain";
 import { useMailAccounts } from "./useMailAccounts";
@@ -88,7 +87,7 @@ export function useMail(canPreview: boolean) {
   }, [email, openInReader]);
   const openMail = useCallback(async () => {
     try {
-      await openUrl(mailWebUrl(readerAccount ?? email));
+      await openMailLink(mailWebUrl(readerAccount ?? email));
       clearPreview();
       return true;
     } catch {

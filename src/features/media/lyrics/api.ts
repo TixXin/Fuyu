@@ -1,4 +1,10 @@
 import { invoke } from "@tauri-apps/api/core";
+import { openUrl } from "@tauri-apps/plugin-opener";
+
+/** Opens an InfLink-rs or BetterNCM page in the system browser. */
+export function openLyricsLink(url: string) {
+  return openUrl(url);
+}
 
 /** Mirrors Lyrics in src-tauri/src/lyrics/mod.rs. */
 export type Lyrics = {

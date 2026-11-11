@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
 import { isTauri } from "@tauri-apps/api/core";
-import { openUrl } from "@tauri-apps/plugin-opener";
 import { SettingsLinkButton } from "../../../components/settings/SettingsLinkButton";
 import { SettingsRow } from "../../../components/settings/SettingsRow";
 import { useErrorText, useTranslation } from "../../../i18n";
-import { getInflinkState, installInflink, type InflinkState } from "./api";
+import { getInflinkState, installInflink, openLyricsLink, type InflinkState } from "./api";
 
 const INFLINK_URL = "https://github.com/apoint123/InfLink-rs";
 const BETTERNCM_URL = "https://github.com/std-microblock/BetterNCM-Installer/releases/latest";
@@ -28,7 +27,7 @@ export function InflinkRow() {
     return () => { current = false; };
   }, [errorText]);
 
-  const open = (url: string) => void openUrl(url).catch(() => {});
+  const open = (url: string) => void openLyricsLink(url).catch(() => {});
   const install = async () => {
     setBusy(true);
     setError(null);

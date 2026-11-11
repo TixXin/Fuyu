@@ -1,5 +1,11 @@
 import { invoke } from "@tauri-apps/api/core";
+import { openUrl } from "@tauri-apps/plugin-opener";
 import type { NativeError } from "../../i18n/nativeError";
+
+/** Opens a bot's invite or setup page in the system browser. */
+export function openCcConnectLink(url: string) {
+  return openUrl(url);
+}
 
 // Mirrors the commands in src-tauri/src/cc_connect/mod.rs.
 

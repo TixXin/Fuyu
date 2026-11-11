@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { isTauri } from "@tauri-apps/api/core";
-import { openUrl } from "@tauri-apps/plugin-opener";
 import type { Translations } from "../../../i18n";
 import { errorText } from "../../../i18n/nativeError";
-import { readMailContent, type MailContent, type MailMessage } from "./api";
+import { openMailLink, readMailContent, type MailContent, type MailMessage } from "./api";
 
 /** The in-island reader: which mail of which mailbox is open, its body, and loading state. */
 export function useMailReader(t: Translations, onOpen: () => void, onError: (message: string) => void) {
@@ -54,7 +53,7 @@ export function useMailReader(t: Translations, onOpen: () => void, onError: (mes
 
   const openLink = useCallback(async (href: string) => {
     if (!/^https?:\/\//i.test(href)) return;
-    try { await openUrl(href); }
+    try { await openMailLink(href); }
     catch { onError(t.mail.openLinkFailed); }
   }, [onError, t]);
 

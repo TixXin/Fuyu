@@ -2,8 +2,7 @@ import { useTranslation } from "../../../i18n";
 import { errorText } from "../../../i18n/nativeError";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { isTauri } from "@tauri-apps/api/core";
-import { openUrl } from "@tauri-apps/plugin-opener";
-import { getMailState, invokeMailCommand, listenMailChanged, type MailEvent, type MailSnapshot, type MailCommand } from "./api";
+import { getMailState, invokeMailCommand, listenMailChanged, openMailLink, type MailEvent, type MailSnapshot, type MailCommand } from "./api";
 import { loadMailAccounts, saveMailAccounts } from "./storage";
 import { orderMailboxes, rememberMailbox, totalUnread, upsertMailbox } from "./mailAccounts";
 
@@ -112,7 +111,7 @@ export function useMailAccounts({ restore, onSnapshot, onEvent }: {
   /** Marks a message read on the server; reading in the island leaves it unread. */
   const markRead = useCallback((email: string, messageId: string) => run("mark_qq_mail_read", { email, messageId }), [run]);
   const openHelp = useCallback(async () => {
-    try { await openUrl("https://service.mail.qq.com/"); }
+    try { await openMailLink("https://service.mail.qq.com/"); }
     catch { setActionError(t.mail.helpFailed); }
   }, [t]);
 

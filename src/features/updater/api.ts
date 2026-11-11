@@ -1,6 +1,18 @@
+import { getVersion } from "@tauri-apps/api/app";
 import { Channel, invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
+import { openUrl } from "@tauri-apps/plugin-opener";
 import type { UpdateChannel } from "./storage";
+
+/** The running app's version (tauri.conf.json). */
+export function getAppVersion() {
+  return getVersion();
+}
+
+/** Opens a project or release page in the system browser. */
+export function openProjectLink(url: string) {
+  return openUrl(url);
+}
 
 export function isUpdaterConfigured() {
   return invoke<boolean>("updater_configured");

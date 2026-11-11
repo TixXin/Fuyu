@@ -1,6 +1,6 @@
 import { useState, type MouseEvent as ReactMouseEvent } from "react";
 import { isTauri } from "@tauri-apps/api/core";
-import { openUrl } from "@tauri-apps/plugin-opener";
+import { openProjectLink } from "./api";
 
 /**
  * Click handler for a link to a project page: in the app the system browser opens
@@ -16,7 +16,7 @@ export function useOpenInBrowser() {
     event.preventDefault();
     setFailed(false);
     try {
-      await openUrl(event.currentTarget.href);
+      await openProjectLink(event.currentTarget.href);
     } catch (error) {
       console.error("Failed to open project link", error);
       setFailed(true);

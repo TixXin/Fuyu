@@ -1,6 +1,12 @@
 import { invoke } from "@tauri-apps/api/core";
 import type { NativeError } from "../../../i18n/nativeError";
 import { listen, type EventCallback } from "@tauri-apps/api/event";
+import { openUrl } from "@tauri-apps/plugin-opener";
+
+/** Opens webmail, a help page or a link in a mail in the system browser. */
+export function openMailLink(url: string) {
+  return openUrl(url);
+}
 
 // 与 src-tauri/src/mail/mod.rs 中返回给前端的结构对应。
 export type MailMessage = {

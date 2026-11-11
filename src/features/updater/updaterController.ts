@@ -1,8 +1,7 @@
-import { getVersion } from "@tauri-apps/api/app";
 import { isNativeError } from "../../i18n/nativeError.ts";
 import { isTauri } from "@tauri-apps/api/core";
 import {
-  checkUpdate, downloadAndInstallUpdate, downloadUpdate, getNativeUpdateState, isNetworkMetered, getUpdaterProxy,
+  checkUpdate, downloadAndInstallUpdate, downloadUpdate, getAppVersion, getNativeUpdateState, isNetworkMetered, getUpdaterProxy,
   isUpdaterConfigured, listenUpdateState, notifyUpdate, type UpdateSnapshot,
 } from "./api";
 import { nextUpdateCheckAt } from "./checkSchedule";
@@ -81,7 +80,7 @@ async function loadBuildInfo() {
   reloadPreferences();
   if (!isTauri()) { setState({ stage: "disabled" }); return; }
   try {
-    const [version, configured] = await Promise.all([getVersion(), isUpdaterConfigured()]);
+    const [version, configured] = await Promise.all([getAppVersion(), isUpdaterConfigured()]);
     setState({ version, channel: loadUpdateChannel(version), stage: configured ? state.stage : "disabled" });
     if (!configured) return;
     proxy = await getUpdaterProxy().catch(() => null);
