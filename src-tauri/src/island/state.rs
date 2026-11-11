@@ -102,6 +102,10 @@ pub(crate) struct IslandWindowState {
     pub(super) expanded_width: f64,
     pub(super) expanded_height: f64,
     pub(super) custom_position: Option<IslandPosition>,
+    /// Came out of a tuck and shows at the top edge, at the dragged position's x, so it slides
+    /// out under the pointer that reached the tucked strip (issue #37). It goes back down to the
+    /// dragged height once a panel closes, and ends with the next tuck or drag (out_at_top_after).
+    pub(super) out_at_top: bool,
     pub(super) is_dragging: bool,
     pub(super) top_attached: bool,
     pub(super) glass_enabled: bool,
@@ -162,6 +166,7 @@ impl Default for IslandWindowState {
             expanded_width: EXPANDED_ISLAND_WIDTH,
             expanded_height: DEFAULT_EXPANDED_ISLAND_HEIGHT,
             custom_position: None,
+            out_at_top: false,
             is_dragging: false,
             top_attached: true,
             glass_enabled: false,

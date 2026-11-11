@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { listenIslandRevealRequested } from "./api";
 
 export function useTodoRotation(
   todoIds: string[],
@@ -73,6 +74,22 @@ export function useIdleTuck(
       window.removeEventListener("blur", blur);
     };
   }, [enabled, isTucked, onTuck, seconds, view]);
+}
+
+/** Slides a tucked island out when the tray's Show asks for it. */
+export function useRevealOnRequest(onReveal: () => void) {
+  useEffect(() => {
+    let didCancel = false;
+    let unlisten: (() => void) | null = null;
+    void listenIslandRevealRequested(() => onReveal()).then((next) => {
+      if (didCancel) next();
+      else unlisten = next;
+    });
+    return () => {
+      didCancel = true;
+      unlisten?.();
+    };
+  }, [onReveal]);
 }
 
 /** Slides a tucked island back into view when a message preview starts showing on it. */

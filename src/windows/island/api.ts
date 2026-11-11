@@ -29,6 +29,14 @@ export function listenIslandHover(
   return listen<boolean>(ISLAND_HOVER_CHANGED_EVENT, ({ payload }) => handler(payload));
 }
 
+// Mirrors ISLAND_REVEAL_REQUESTED_EVENT in src-tauri/src/island/mod.rs.
+export const ISLAND_REVEAL_REQUESTED_EVENT = "island-reveal-requested";
+
+/** Calls `handler` when the tray's Show asks a tucked island to come out (issue #37). */
+export function listenIslandRevealRequested(handler: () => void): Promise<UnlistenFn> {
+  return listen(ISLAND_REVEAL_REQUESTED_EVENT, () => handler());
+}
+
 // Mirrors ISLAND_MOVE_ARMED_CHANGED_EVENT in src-tauri/src/island/passthrough.rs.
 export const ISLAND_MOVE_ARMED_CHANGED_EVENT = "island-move-armed-changed";
 

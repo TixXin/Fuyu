@@ -24,7 +24,7 @@ use std::{
 use tauri::{AppHandle, Emitter, Manager, WebviewWindow};
 
 use geometry::{
-    monitor_for_island_position, COLLAPSED_ISLAND_WIDTH, DEFAULT_EXPANDED_ISLAND_HEIGHT,
+    monitor_for_island_position, out_at_top_after, COLLAPSED_ISLAND_WIDTH, DEFAULT_EXPANDED_ISLAND_HEIGHT,
     EXPANDED_ISLAND_HEIGHT_RANGE, max_expanded_width, MAX_CORNER_RADIUS, MIN_COLLAPSED_ISLAND_WIDTH, MIN_CORNER_RADIUS,
     MIN_EXPANDED_ISLAND_HEIGHT, POSITION_ANIMATION_GENERATION,
 };
@@ -38,6 +38,8 @@ pub(crate) use passthrough::start_cursor_passthrough_loop;
 pub(crate) use state::{record_dragged_position, IslandPosition, IslandWindowState};
 
 pub(crate) const WINDOW_LABEL: &str = "main";
+// Mirrored by ISLAND_REVEAL_REQUESTED_EVENT in src/windows/island/api.ts.
+const ISLAND_REVEAL_REQUESTED_EVENT: &str = "island-reveal-requested";
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -95,8 +97,10 @@ pub fn set_island_interaction(
         })
     });
     let state = mutate_window_state(|state| {
+        let (was_tucked, was_expanded) = (state.is_tucked, matches!(state.mode, IslandMode::Expanded));
         state.mode = mode;
         state.is_tucked = is_tucked.unwrap_or(false);
+        state.out_at_top = out_at_top_after(state.out_at_top, was_tucked, was_expanded, state.is_tucked, mode);
         state.collapsed_scale = collapsed_scale.clamp(0.75, 1.4);
         state.expanded_scale = expanded_scale.clamp(0.75, 1.4);
         if let Some(margin_y) = margin_y {
@@ -140,7 +144,8 @@ pub fn set_island_interaction(
     apply_stage_geometry(
         &window,
         state,
-        animate_position.unwrap_or(true) && previous_state.is_tucked != state.is_tucked,
+        animate_position.unwrap_or(true)
+            && (previous_state.is_tucked != state.is_tucked || previous_state.out_at_top != state.out_at_top),
     )?;
     apply_glass_material(&window, state)
 }
@@ -186,6 +191,8 @@ fn drag_island(window: WebviewWindow, current_state: IslandWindowState) -> Resul
             x: position.x,
             y: position.y,
         });
+        // Dragged from where it shows now, so that is the new position.
+        state.out_at_top = false;
         state.is_dragging = true;
         *state
     });
@@ -271,6 +278,10 @@ pub(crate) fn show_island(app: &AppHandle) -> Result<(), String> {
     apply_stage_geometry(&window, read_window_state(), false)?;
     window.show().map_err(|error| error.to_string())?;
     window.set_focus().map_err(|error| error.to_string())?;
+    // A tucked island shows only its strip; asking to see it brings it out (issue #37).
+    if read_window_state().is_tucked {
+        let _ = window.emit(ISLAND_REVEAL_REQUESTED_EVENT, ());
+    }
     Ok(())
 }
 

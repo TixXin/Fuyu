@@ -53,7 +53,8 @@ function mount(name, initialArgs) {
       }
     },
   };
-  runInNewContext(source, { exports, require: () => react, window: browserWindow, document });
+  const api = { listenIslandRevealRequested: () => Promise.resolve(() => {}) };
+  runInNewContext(source, { exports, require: (path) => (path === "./api" ? api : react), window: browserWindow, document });
   function render(nextArgs = args) {
     args = nextArgs;
     do {

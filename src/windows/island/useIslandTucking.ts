@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import type { IslandSettings } from "../../features/appearance/types";
-import { useIdleTuck, useRevealOnMessage } from "./useIslandAutomation";
+import { useIdleTuck, useRevealOnMessage, useRevealOnRequest } from "./useIslandAutomation";
 import type { useIslandNavigation } from "./useIslandNavigation";
 import { useTuckPeek } from "./useTuckPeek";
 
@@ -26,6 +26,7 @@ export function useIslandTucking({ settings, navigation, hasMessagePreview, hasP
   );
   useIdleTuck(settings.autoTuck && !hasMessagePreview && !hasTranslationPeek && !holdTuck, settings.autoTuckSeconds, isTucked, `${mode}:${page}`, tuckWhenIdle);
   useRevealOnMessage(hasMessagePreview, isTucked, revealIsland);
+  useRevealOnRequest(revealIsland);
   // A plugin waits for this answer, so it is shown even when tucked away.
   useRevealOnMessage(hasPermissionPrompt, isTucked, revealIsland);
   useRevealOnMessage(hasTranslationPeek, isTucked && settings.revealOnMessage, revealIsland);

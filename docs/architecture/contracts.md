@@ -55,6 +55,7 @@
 | `island-position-changed` | `island/mod.rs` | 广播（通过主窗口对象调用 `emit`） |
 | `island-position-cleared`（无载荷：岛屿跟随鼠标或前台窗口换了显示器，拖动保存的位置作废，主窗口清掉 `fuyu-position`） | `island/follow.rs` | 主窗口 |
 | `island-top-attachment-changed`（载荷为 `bool`：岛屿是否贴住所在显示器顶边） | `island/top_edge.rs` | 广播（通过主窗口对象调用 `emit`） |
+| `island-reveal-requested`（无载荷：托盘「显示」时岛屿正贴边隐藏，主窗口把它滑出来；issue #37，2026-11-11） | `island/mod.rs` | 广播（通过主窗口对象调用 `emit`） |
 | `island-hover-changed`（载荷为 `bool`：光标是否在岛屿形状内，供悬停展开使用） | `island/passthrough.rs` | 广播（通过主窗口对象调用 `emit`） |
 | `island-banner-hover-changed`（载荷为 `bool`：光标是否在新消息横幅上；只在横幅用 `set_island_banner_rect` 交出矩形期间有意义，供横幅悬停暂停计时） | `island/passthrough.rs`（常量在 `island/banner_hit.rs`） | 广播（通过主窗口对象调用 `emit`） |
 | `island-cursor-moved`（载荷 `{ x, y }`：光标在主窗口 CSS 像素中的位置，窗口外也有；只在 `set_island_cursor_tracking(true)` 后、光标移动时发，约 28 次/秒，供中心图案的眼睛跟随） | `island/passthrough.rs` | 广播（通过主窗口对象调用 `emit`） |

@@ -10,7 +10,7 @@ use std::{
 };
 use tauri::{LogicalSize, Monitor, PhysicalPosition, Position, Size, WebviewWindow};
 
-use super::state::{IslandPosition, IslandWindowState, MonitorFollow};
+use super::state::{IslandMode, IslandPosition, IslandWindowState, MonitorFollow};
 
 pub(super) const STAGE_WINDOW_WIDTH: f64 = 820.0;
 pub(super) const STAGE_WINDOW_HEIGHT: f64 = 460.0;
@@ -109,6 +109,7 @@ pub(crate) fn apply_stage_geometry(
     if !has_custom_monitor {
         positioned_state.custom_position = None;
     }
+    positioned_state.custom_position = shown_custom_position(positioned_state, normal_y);
     let (x, y) = resolve_stage_position(positioned_state, centered_x, normal_y, tucked_y);
     super::top_edge::sync_from_stage(window, positioned_state, monitor_position.y + top_inset);
 
@@ -237,6 +238,37 @@ pub(super) fn contains((left, top, width, height): (i32, i32, i32, i32), (x, y):
 // so the island has to be anchored below it or the taskbar covers the island.
 pub(super) fn work_area_top_inset(monitor_top: i32, work_area_top: i32) -> i32 {
     (work_area_top - monitor_top).max(0)
+}
+
+/// Whether the island keeps to the top edge (`out_at_top`) after an interaction update that
+/// moves it from `was_tucked` / `was_expanded` to `is_tucked` / `mode`. Leaving a tuck starts it;
+/// tucking again, or a panel closing back to the collapsed island, ends it.
+pub(super) fn out_at_top_after(
+    out_at_top: bool,
+    was_tucked: bool,
+    was_expanded: bool,
+    is_tucked: bool,
+    mode: IslandMode,
+) -> bool {
+    if is_tucked {
+        false
+    } else if was_tucked {
+        true
+    } else {
+        out_at_top && !(was_expanded && matches!(mode, IslandMode::Collapsed))
+    }
+}
+
+/// The dragged position the island shows at: while out at the top edge, its x at the top
+/// (`normal_y`), so the pointer that reached the tucked strip lands on it, not in the gap above.
+pub(super) fn shown_custom_position(state: IslandWindowState, normal_y: i32) -> Option<IslandPosition> {
+    state.custom_position.map(|position| {
+        if state.out_at_top && !state.is_tucked {
+            IslandPosition { x: position.x, y: position.y.min(normal_y) }
+        } else {
+            position
+        }
+    })
 }
 
 pub(super) fn resolve_stage_position(

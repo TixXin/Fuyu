@@ -38,6 +38,32 @@ fn custom_position_survives_tuck_and_reveal() {
 }
 
 #[test]
+fn a_dragged_island_slides_out_of_its_tuck_at_the_top_edge() {
+    // Issue #37: dragged below the top, it came out at the dragged height, so the pointer on the
+    // tucked strip sat in the gap above it and it bounced in and out.
+    let mut custom = state(IslandMode::Collapsed, 1.0, DEFAULT_EXPANDED_ISLAND_HEIGHT);
+    custom.custom_position = Some(IslandPosition { x: 420, y: 180 });
+    custom.out_at_top = true;
+    assert_eq!(shown_custom_position(custom, 12), Some(IslandPosition { x: 420, y: 12 }));
+    custom.is_tucked = true;
+    assert_eq!(shown_custom_position(custom, 12), Some(IslandPosition { x: 420, y: 180 }));
+    custom.is_tucked = false;
+    custom.out_at_top = false;
+    assert_eq!(shown_custom_position(custom, 12), Some(IslandPosition { x: 420, y: 180 }));
+
+    let (collapsed, expanded) = (IslandMode::Collapsed, IslandMode::Expanded);
+    // Leaving a tuck starts it, for the collapsed island and a panel opened from it.
+    assert!(out_at_top_after(false, true, false, false, collapsed));
+    assert!(out_at_top_after(true, false, false, false, expanded));
+    assert!(out_at_top_after(true, false, true, false, expanded));
+    // A panel closing back to the collapsed island, or tucking again, ends it.
+    assert!(!out_at_top_after(true, false, true, false, collapsed));
+    assert!(!out_at_top_after(true, false, false, true, collapsed));
+    // Without a tuck it never starts.
+    assert!(!out_at_top_after(false, false, true, false, collapsed));
+}
+
+#[test]
 fn notch_has_flat_top_and_rounded_bottom_at_all_scales() {
     for scale in [0.75, DEFAULT_COLLAPSED_SCALE, 1.0, 1.4, 2.1] {
         for mode in [IslandMode::Collapsed, IslandMode::Expanded] {
