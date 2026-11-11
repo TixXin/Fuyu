@@ -70,8 +70,6 @@ pub struct CcConnectStatus {
     config: bool,
     /// The projects in it, chats or not.
     config_projects: Vec<String>,
-    /// The user's folder: the setup's default work folder.
-    home: String,
     projects: Vec<chats::Project>,
 }
 
@@ -111,7 +109,6 @@ pub async fn get_cc_connect_status(path: Option<String>) -> Result<CcConnectStat
             projects: chats::read_projects(&data_dir),
             config_projects: config.as_deref().map(config_file::project_names).unwrap_or_default(),
             config: config.is_some(),
-            home: data_dir.parent().map(|home| home.display().to_string()).unwrap_or_default(),
             data_dir: data_dir.display().to_string(),
         }
     })

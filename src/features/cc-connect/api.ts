@@ -28,8 +28,6 @@ export type CcConnectStatus = {
   config: boolean;
   /** The projects in it, chats or not. */
   configProjects: string[];
-  /** The user's folder, the setup's default work folder. */
-  home: string;
   projects: CcConnectProject[];
 };
 

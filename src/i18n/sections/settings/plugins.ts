@@ -543,7 +543,7 @@ export const zhCN: SettingsPluginsText = {
       project: "项目名",
       projectHint: "只用字母、数字、- 和 _。",
       workDir: "工作文件夹",
-      workDirHint: "在手机上开的会话从这个文件夹开始，之后可以用 /cd 换。",
+      workDirHint: "填一个专门给它用的文件夹：Claude Code 读这个文件夹里的文件不会问你，所以不要填整个用户文件夹。在手机上开的会话从这里开始，之后可以用 /cd 换。",
       steps: {
         telegram: [
           "在 Telegram 里找 @BotFather，发 /newbot，按提示给机器人起名，复制它最后给的 token。",
@@ -888,7 +888,7 @@ export const en: SettingsPluginsText = {
       project: "Project name",
       projectHint: "Letters, digits, - and _ only.",
       workDir: "Work folder",
-      workDirHint: "Sessions started from the phone begin in this folder; /cd changes it later.",
+      workDirHint: "Name a folder kept for this bot: Claude Code reads what is in it without asking, so do not give it your whole user folder. Sessions started from the phone begin here; /cd changes it later.",
       steps: {
         telegram: [
           "In Telegram, open @BotFather, send /newbot, name the bot as it asks, and copy the token it gives you last.",

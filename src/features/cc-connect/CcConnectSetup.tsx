@@ -40,7 +40,8 @@ export function CcConnectSetup({ cc }: { cc: ReturnType<typeof useCcConnect> }) 
   const status = cc.status;
   if (!status) return null;
   const name = project ?? freeProjectName([...status.configProjects, ...status.projects.map((entry) => entry.name)]);
-  const folder = workDir ?? status.home;
+  // Empty until the user names one: Claude Code reads what is in it without asking, so the user's own folder is not offered.
+  const folder = workDir ?? "";
   const ids = allowFrom.split(",").map((id) => id.trim()).filter(Boolean);
 
   const pick = (next: string) => {
