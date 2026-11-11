@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { useErrorText } from "../../i18n";
 import {
   getCachedPluginMarket,
   getPluginMarket,
@@ -22,6 +23,7 @@ let lastLoadedAt: number | null = null;
  * installing from it. `onInstalled`, when given, receives the new list of installed plugins.
  */
 export function usePluginMarket(onInstalled?: (snapshot: PluginsSnapshot) => void) {
+  const errorText = useErrorText();
   const [market, setMarket] = useState<MarketSnapshot | null>(lastMarket);
   useEffect(() => {
     lastMarket = market;
@@ -43,11 +45,11 @@ export function usePluginMarket(onInstalled?: (snapshot: PluginsSnapshot) => voi
       lastLoadedAt = Date.now();
       setLoadedAt(lastLoadedAt);
     } catch (nextError) {
-      setLoadError(String(nextError));
+      setLoadError(errorText(nextError));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [errorText]);
 
   useEffect(() => {
     // Show the island's last verified copy while the fresh one downloads; never over a newer answer.
@@ -80,12 +82,12 @@ export function usePluginMarket(onInstalled?: (snapshot: PluginsSnapshot) => voi
           },
         );
       } catch (nextError) {
-        setInstallError({ id, detail: String(nextError) });
+        setInstallError({ id, detail: errorText(nextError) });
       } finally {
         setInstallingId(null);
       }
     },
-    [market, onInstalled],
+    [errorText, market, onInstalled],
   );
 
   return { market, loadedAt, loading, loadError, installError, installingId, refresh, install };

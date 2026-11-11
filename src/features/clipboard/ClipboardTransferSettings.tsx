@@ -3,7 +3,7 @@ import { Download, Upload } from "lucide-react";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton";
 import { SettingsRow } from "../../components/settings/SettingsRow";
-import { useTranslation } from "../../i18n";
+import { useErrorText, useTranslation } from "../../i18n";
 import { exportClipboardHistory, importClipboardHistory, revealExportedFile } from "./api";
 
 type Status = { kind: "exported"; path: string } | { kind: "imported"; items: number; snippets: number } | { kind: "error"; message: string } | null;
@@ -11,6 +11,7 @@ type Status = { kind: "exported"; path: string } | { kind: "imported"; items: nu
 /** Settings → Clipboard → Import and export (C24.8): the history, its images and the snippets in one file. */
 export function ClipboardTransferSettings() {
   const t = useTranslation();
+  const errorText = useErrorText();
   const text = t.settings.clipboard.transfer;
   const [status, setStatus] = useState<Status>(null);
   const [busy, setBusy] = useState(false);
@@ -20,7 +21,7 @@ export function ClipboardTransferSettings() {
     setBusy(true);
     void exportClipboardHistory()
       .then((path) => setStatus({ kind: "exported", path }))
-      .catch((error: unknown) => setStatus({ kind: "error", message: String(error) }))
+      .catch((error: unknown) => setStatus({ kind: "error", message: errorText(error) }))
       .finally(() => setBusy(false));
   };
 
@@ -33,7 +34,7 @@ export function ClipboardTransferSettings() {
       const report = await importClipboardHistory(await file.text());
       setStatus({ kind: "imported", ...report });
     } catch (error) {
-      setStatus({ kind: "error", message: String(error) });
+      setStatus({ kind: "error", message: errorText(error) });
     } finally {
       setBusy(false);
     }

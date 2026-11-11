@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { getErrorMessage } from "../../utils/error";
+import { useErrorText } from "../../i18n";
 import { clearAgentProviderStatus, getAgentHooksState, getAgentStatus, installAgentStatusHooks, type AgentHooksInstallResult, type AgentHooksState, type AgentStatusSnapshot } from "./api";
 import { AGENT_PROVIDERS, DEFAULT_AGENT_STATUS, type AgentHooksInstallState } from "./status";
 
@@ -7,6 +7,7 @@ const AGENT_STATUS_POLL_MS = 1_000;
 
 /** Agent status as the settings window shows it, plus clearing a provider and installing the hooks. */
 export function useAgentStatusSettings() {
+  const errorText = useErrorText();
   const [agentStatus, setAgentStatus] =
     useState<AgentStatusSnapshot>(DEFAULT_AGENT_STATUS);
   const [clearingAgentProvider, setClearingAgentProvider] =
@@ -55,7 +56,7 @@ export function useAgentStatusSettings() {
       void refreshAgentStatus();
     }, AGENT_STATUS_POLL_MS);
     return () => window.clearInterval(interval);
-  }, [refreshAgentHooksState, refreshAgentStatus]);
+  }, [refreshAgentStatus]);
 
   const clearAgentStatus = useCallback(async (provider: string) => {
     setClearingAgentProvider(provider);
@@ -81,10 +82,10 @@ export function useAgentStatusSettings() {
       void refreshAgentHooksState();
     } catch (error) {
       console.error("Failed to install agent status hooks", error);
-      setAgentHooksInstallError(getErrorMessage(error));
+      setAgentHooksInstallError(errorText(error));
       setAgentHooksInstallState("error");
     }
-  }, [refreshAgentHooksState, refreshAgentStatus]);
+  }, [errorText, refreshAgentHooksState, refreshAgentStatus]);
 
   return {
     agentStatus,

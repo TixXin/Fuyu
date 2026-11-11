@@ -138,7 +138,6 @@ export function useTodos({
   return {
     todos,
     activeTodoId,
-    todoPageMode,
     /** Local API handlers for todos and the daily note; see useTodoApiHandlers. */
     apiHandlers,
     notebookProps: {

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { useErrorText } from "../../i18n";
 import {
   getPluginDevState,
   getPluginRpcTrace,
@@ -16,6 +17,7 @@ const TRACE_REFRESH_MS = 1000;
 
 /** Development mode for the settings page: its switch, loaded folders and one plugin's JSON-RPC trace. */
 export function usePluginDev(open: boolean) {
+  const errorText = useErrorText();
   const [state, setState] = useState<PluginDevState | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const [trace, setTrace] = useState<PluginTraceEntry[]>([]);
@@ -30,12 +32,12 @@ export function usePluginDev(open: boolean) {
       setError("");
       return true;
     } catch (nextError) {
-      setError(String(nextError));
+      setError(errorText(nextError));
       return false;
     } finally {
       setBusy(false);
     }
-  }, []);
+  }, [errorText]);
 
   useEffect(() => {
     if (!open) return;
@@ -44,14 +46,14 @@ export function usePluginDev(open: boolean) {
     const refresh = () =>
       void getPluginDevState()
         .then((next) => !didCancel && setState(next))
-        .catch((nextError) => !didCancel && setError(String(nextError)));
+        .catch((nextError: unknown) => !didCancel && setError(errorText(nextError)));
     refresh();
     const timer = window.setInterval(refresh, TRACE_REFRESH_MS * 2);
     return () => {
       didCancel = true;
       window.clearInterval(timer);
     };
-  }, [open]);
+  }, [errorText, open]);
 
   const shown = selected && state?.plugins.some((plugin) => plugin.id === selected) ? selected : null;
 

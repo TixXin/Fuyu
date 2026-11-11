@@ -76,5 +76,15 @@ export function useNativeLayout(settings: IslandSettings) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [settings.marginY, scheduleNativeLayout]);
 
+  useEffect(() => {
+    const syncState = layoutSync.current;
+    return () => {
+      if (syncState.frame !== null) {
+        window.cancelAnimationFrame(syncState.frame);
+        syncState.frame = null;
+      }
+    };
+  }, []);
+
   return syncNativeLayout;
 }

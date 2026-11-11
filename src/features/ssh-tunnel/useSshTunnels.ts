@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { getErrorMessage } from "../../utils/error";
+import { useErrorText } from "../../i18n";
 import { checkSshTunnelPort, getSshTunnels, setSshTunnel, type SshTunnelHost } from "./api";
 
 /** How often the hosts' tunnel states are read again while the plugin page is open. */
@@ -17,6 +17,7 @@ export type TakenPort = { host: string; port: number; unchecked: string | null }
  * when it is, waits for `answer`.
  */
 export function useSshTunnels() {
+  const errorText = useErrorText();
   const [hosts, setHosts] = useState<SshTunnelHost[] | null>(null);
   const [error, setError] = useState("");
   const [checking, setChecking] = useState<string | null>(null);
@@ -27,9 +28,9 @@ export function useSshTunnels() {
       .then((next) => setHosts(Array.isArray(next) ? next : []))
       .catch((reason: unknown) => {
         setHosts((current) => current ?? []);
-        setError(getErrorMessage(reason));
+        setError(errorText(reason));
       });
-  }, []);
+  }, [errorText]);
 
   useEffect(() => {
     refresh();
@@ -43,14 +44,14 @@ export function useSshTunnels() {
         setError("");
         setHosts(next);
       })
-      .catch((reason: unknown) => setError(getErrorMessage(reason)));
+      .catch((reason: unknown) => setError(errorText(reason)));
 
   const switchOn = (host: string, port: number) => {
     setChecking(host);
     checkSshTunnelPort(host, port)
       .then((inUse) => (inUse ? setTaken({ host, port, unchecked: null }) : save(host, true, port)))
       // No ss or netstat there, or no answer: the user decides, as for a taken port.
-      .catch((reason: unknown) => setTaken({ host, port, unchecked: getErrorMessage(reason) }))
+      .catch((reason: unknown) => setTaken({ host, port, unchecked: errorText(reason) }))
       .finally(() => setChecking((current) => (current === host ? null : current)));
   };
 

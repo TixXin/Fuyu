@@ -22,8 +22,6 @@ export type MessagePreview = {
   chat?: string | null;
 };
 
-export const MESSAGE_SOURCE_LABELS: Record<MessageSource, string> = zhCN.messages.sourceLabels;
-
 export function messagePreviewText(preview: MessagePreview, copy: Translations["messages"] = zhCN.messages): string {
   if (preview.source === "wechat" && preview.chat) return copy.qqPreview(preview.title, preview.body);
   if (preview.source === "wechat") return copy.wechatPreview;

@@ -3,7 +3,7 @@ import { Keyboard, X } from "lucide-react";
 import { ShortcutResetButton } from "../../components/controls/ShortcutResetButton";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsRow } from "../../components/settings/SettingsRow";
-import { useLocale, useTranslation } from "../../i18n";
+import { useErrorText, useLocale, useTranslation } from "../../i18n";
 import { buildShortcutFromEvent } from "../clipboard/shortcut";
 import { listPlugins, setPluginKeybinding, type PluginsSnapshot } from "./api";
 import { pluginShortcutRows, type PluginShortcutRow } from "./pluginShortcuts";
@@ -26,6 +26,7 @@ export function PluginShortcutSection({ takenBy, onChanged, action, hideWhenEmpt
   hideWhenEmpty?: boolean;
 }) {
   const t = useTranslation();
+  const errorText = useErrorText();
   const text = t.settings.shortcuts;
   const { locale } = useLocale();
   const [snapshot, setSnapshot] = useState<PluginsSnapshot | null>(null);
@@ -63,7 +64,7 @@ export function PluginShortcutSection({ takenBy, onChanged, action, hideWhenEmpt
         onChanged?.();
         window.setTimeout(refresh, RECHECK_MS);
       })
-      .catch((error: unknown) => setErrors((current) => ({ ...current, [row.key]: String(error) })));
+      .catch((error: unknown) => setErrors((current) => ({ ...current, [row.key]: errorText(error) })));
   };
 
   const record = (row: PluginShortcutRow, event: ReactKeyboardEvent<HTMLButtonElement>) => {

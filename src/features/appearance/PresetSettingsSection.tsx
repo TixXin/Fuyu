@@ -3,7 +3,7 @@ import { Download, FolderOpen, Trash2, Upload } from "lucide-react";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton";
 import { SettingsRow } from "../../components/settings/SettingsRow";
-import { useTranslation } from "../../i18n";
+import { useErrorText, useTranslation } from "../../i18n";
 import { revealThemeFile } from "./api";
 import type { ThemeProblem } from "./theme.ts";
 import type { IslandPreset } from "./types";
@@ -37,6 +37,7 @@ export function PresetSettingsSection({
   onImportPreset: (text: string) => { name: string } | { problem: ThemeProblem };
 }) {
   const t = useTranslation();
+  const errorText = useErrorText();
   const text = t.settings.presets;
   const [editingPresetId, setEditingPresetId] = useState<string | null>(null);
   const [presetNameDraft, setPresetNameDraft] = useState("");
@@ -46,7 +47,7 @@ export function PresetSettingsSection({
   const exportPreset = (presetId: string) => {
     void onExportPreset(presetId)
       .then((path) => setStatus({ kind: "exported", path }))
-      .catch((error: unknown) => setStatus({ kind: "error", message: String(error) }));
+      .catch((error: unknown) => setStatus({ kind: "error", message: errorText(error) }));
   };
 
   const importTheme = async (event: ChangeEvent<HTMLInputElement>) => {

@@ -3,7 +3,7 @@ import { isTauri } from "@tauri-apps/api/core";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { SettingsLinkButton } from "../../../components/settings/SettingsLinkButton";
 import { SettingsRow } from "../../../components/settings/SettingsRow";
-import { useTranslation } from "../../../i18n";
+import { useErrorText, useTranslation } from "../../../i18n";
 import { getInflinkState, installInflink, type InflinkState } from "./api";
 
 const INFLINK_URL = "https://github.com/apoint123/InfLink-rs";
@@ -15,6 +15,7 @@ const BETTERNCM_URL = "https://github.com/std-microblock/BetterNCM-Installer/rel
  */
 export function InflinkRow() {
   const text = useTranslation().settings.lyrics.inflink;
+  const errorText = useErrorText();
   const [state, setState] = useState<InflinkState | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -23,9 +24,9 @@ export function InflinkRow() {
   useEffect(() => {
     if (!isTauri()) return;
     let current = true;
-    void getInflinkState(true).then((next) => { if (current) setState(next); }).catch((reason) => { if (current) setError(String(reason)); });
+    void getInflinkState(true).then((next) => { if (current) setState(next); }).catch((reason: unknown) => { if (current) setError(errorText(reason)); });
     return () => { current = false; };
-  }, []);
+  }, [errorText]);
 
   const open = (url: string) => void openUrl(url).catch(() => {});
   const install = async () => {
@@ -35,7 +36,7 @@ export function InflinkRow() {
       setState(await installInflink());
       setJustInstalled(true);
     } catch (reason) {
-      setError(String(reason));
+      setError(errorText(reason));
     } finally {
       setBusy(false);
     }

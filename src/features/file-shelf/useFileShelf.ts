@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { getErrorMessage } from "../../utils/error.ts";
+import { useErrorText } from "../../i18n";
 import {
   addFileShelfPaths,
   clearFileShelf,
@@ -34,6 +34,7 @@ export function useFileShelf(
   enabled: boolean,
   { maxItems, maxAgeDays, removeMissing, removeAfterDragOut }: FileShelfPreferences,
 ) {
+  const errorText = useErrorText();
   const [items, setItems] = useState<FileShelfItem[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [recentDrop, setRecentDrop] = useState<FileShelfDrop | null>(null);
@@ -53,10 +54,10 @@ export function useFileShelf(
       // Commands without a snapshot resolve to undefined; only a failure gives null.
       return snapshot;
     } catch (caught) {
-      setError(getErrorMessage(caught));
+      setError(errorText(caught));
       return null;
     }
-  }, []);
+  }, [errorText]);
 
   const refresh = useCallback(() => run(getFileShelf), [run]);
 

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
-import { useTranslation } from "../../i18n";
+import { useErrorText, useTranslation } from "../../i18n";
 import { RemoteResultLines } from "./RemoteResultLines";
 import "./AgentReplyMarkerSettings.css";
 import { getReplyMarkerState, setReplyMarker, type ReplyMarkerState } from "./api";
@@ -13,6 +13,7 @@ import { getReplyMarkerState, setReplyMarker, type ReplyMarkerState } from "./ap
  */
 export function AgentReplyMarkerSettings() {
   const text = useTranslation().settings.agent.replyMarker;
+  const errorText = useErrorText();
   const [state, setState] = useState<ReplyMarkerState | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -24,12 +25,12 @@ export function AgentReplyMarkerSettings() {
         if (!cancelled) setState(next);
       })
       .catch((reason: unknown) => {
-        if (!cancelled) setError(String(reason));
+        if (!cancelled) setError(errorText(reason));
       });
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [errorText]);
 
   const toggle = (enabled: boolean) => {
     if (busy) return;
@@ -37,7 +38,7 @@ export function AgentReplyMarkerSettings() {
     setError(null);
     setReplyMarker(enabled)
       .then(setState)
-      .catch((reason: unknown) => setError(String(reason)))
+      .catch((reason: unknown) => setError(errorText(reason)))
       .finally(() => setBusy(false));
   };
 

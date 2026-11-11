@@ -19,8 +19,7 @@ import {
 } from "../../features/screenshot/selection";
 import { layersAt, layersKey, stepLayer } from "../../features/screenshot/targets";
 import { loadSettings } from "../../features/appearance/storage";
-import { useTranslation } from "../../i18n";
-import { getErrorMessage } from "../../utils/error";
+import { useErrorText, useTranslation } from "../../i18n";
 import { AnnotationLayer } from "./AnnotationLayer";
 import { AnnotationTextInput } from "./AnnotationTextInput";
 import { ScreenshotToolbar } from "./ScreenshotToolbar";
@@ -56,6 +55,7 @@ function colorAt(canvas: HTMLCanvasElement | null, pixel: Point): string {
  */
 export function ScreenshotOverlay() {
   const t = useTranslation().screenshot;
+  const errorText = useErrorText();
   const { session, ready, canvasRef } = useScreenshotFrame();
   const view = useViewSize();
   const bounds = session && ready ? { width: session.width, height: session.height } : null;
@@ -92,8 +92,8 @@ export function ScreenshotOverlay() {
     if (!chosen) return;
     const picture = canvasRef.current;
     const composed = items.length > 0 && picture ? composeSelection(picture, chosen, items) : null;
-    (composed ? copyScreenshotPixels(composed) : copyScreenshot(chosen)).catch((error: unknown) => setNotice(getErrorMessage(error)));
-  }, [chosen, items, canvasRef]);
+    (composed ? copyScreenshotPixels(composed) : copyScreenshot(chosen)).catch((error: unknown) => setNotice(errorText(error)));
+  }, [chosen, items, canvasRef, errorText]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {

@@ -27,7 +27,11 @@ export function readDismissedEditors(): string[] {
 
 function dismissEditor(app: string) {
   const next = [...readDismissedEditors().filter((other) => other !== app), app].slice(-MAX_DISMISSED);
-  localStorage.setItem(DISMISSED_KEY, JSON.stringify(next));
+  try {
+    localStorage.setItem(DISMISSED_KEY, JSON.stringify(next));
+  } catch {
+    // Ignore storage errors so dismissing still closes the hint.
+  }
 }
 
 /**
@@ -39,13 +43,15 @@ export function useEditorExtensionHint() {
   const offered = useRef(new Set<string>());
 
   useEffect(() => {
+    let disposed = false;
     const unlisten = listenEditorExtensionMissing((payload) => {
-      if (offered.current.has(payload.app) || readDismissedEditors().includes(payload.app)) return;
+      if (disposed || offered.current.has(payload.app) || readDismissedEditors().includes(payload.app)) return;
       offered.current.add(payload.app);
       setHint({ editor: payload, status: "offer" });
-    });
+    }).catch(() => undefined);
     return () => {
-      void unlisten.then((stop) => stop());
+      disposed = true;
+      void unlisten.then((stop) => stop?.());
     };
   }, []);
 

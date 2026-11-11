@@ -3,7 +3,7 @@ import { FolderOpen } from "lucide-react";
 import { SettingsGroup } from "../../../components/settings/SettingsGroup";
 import { SettingsLinkButton } from "../../../components/settings/SettingsLinkButton";
 import { SettingsRow } from "../../../components/settings/SettingsRow";
-import { useLocale, useTranslation } from "../../../i18n";
+import { useErrorText, useLocale, useTranslation } from "../../../i18n";
 import { importSoundPack, openSoundPackFolder, removeSoundPack, soundPackName, type SoundPack, type SoundPackImport } from "./api";
 import { AGENT_SOUND_EVENTS } from "./events";
 import { planSoundPack } from "./packManifest";
@@ -24,6 +24,7 @@ export function SoundPacksGroup({
   onChanged: (imported?: SoundPack) => void;
 }) {
   const t = useTranslation();
+  const errorText = useErrorText();
   const { locale } = useLocale();
   const text = t.settings.sounds;
   const input = useRef<HTMLInputElement>(null);
@@ -57,7 +58,7 @@ export function SoundPacksGroup({
       setStatus({ kind: "done", text: text.imported(pack.name) });
       onChanged(pack);
     } catch (error) {
-      setStatus({ kind: "error", text: String(error) });
+      setStatus({ kind: "error", text: errorText(error) });
     }
   };
 
@@ -65,11 +66,11 @@ export function SoundPacksGroup({
     if (!window.confirm(text.confirmRemove(pack.name))) return;
     void removeSoundPack(pack.id)
       .then(() => onChanged())
-      .catch((error: unknown) => setStatus({ kind: "error", text: String(error) }));
+      .catch((error: unknown) => setStatus({ kind: "error", text: errorText(error) }));
   };
 
   const openFolder = (pack: SoundPack) => {
-    void openSoundPackFolder(pack.id).catch((error: unknown) => setStatus({ kind: "error", text: String(error) }));
+    void openSoundPackFolder(pack.id).catch((error: unknown) => setStatus({ kind: "error", text: errorText(error) }));
   };
 
   const footer = (

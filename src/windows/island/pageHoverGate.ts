@@ -1,7 +1,7 @@
 /**
  * When hovering a page button switches pages.
  *
- * Pages differ in width (the system monitor 800, the calendar 680, others 560) and the island
+ * Pages differ in width (the system monitor 780, the calendar 680, others 560) and the island
  * stays centred, so a page switch slides the header's buttons sideways. A button that slides
  * under a resting pointer gets a pointer enter (and Chromium may send a move at the same spot);
  * that must not switch again, or pages switch back and forth. So only a pointer that really

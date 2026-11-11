@@ -165,7 +165,7 @@ export function startIslandDrag() {
   return invoke("start_island_drag");
 }
 
-/** Ctrl + left-button drag; works collapsed or expanded and is a no-op unless Ctrl is held. */
+/** Alt + left-button drag; works collapsed or expanded and is a no-op unless Alt is held. */
 export function startIslandModifierDrag() {
   return invoke("start_island_modifier_drag");
 }

@@ -3,7 +3,7 @@ import { Pencil, Plus, Trash2 } from "lucide-react";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsInput } from "../../components/settings/SettingsInput";
 import { SettingsRow } from "../../components/settings/SettingsRow";
-import { useTranslation } from "../../i18n";
+import { useErrorText, useTranslation } from "../../i18n";
 import { deleteClipboardSnippet, getClipboardHistory, listenClipboardHistoryChanged, saveClipboardSnippet, type ClipboardSnippet } from "./api";
 import "./ClipboardSnippetSettings.css";
 
@@ -12,6 +12,7 @@ type Draft = { id: string | null; title: string; text: string };
 /** Settings → Clipboard → Snippets (C24.6): the list, and a form to add or change one. */
 export function ClipboardSnippetSettings() {
   const t = useTranslation();
+  const errorText = useErrorText();
   const text = t.settings.clipboard.snippets;
   const [snippets, setSnippets] = useState<ClipboardSnippet[]>([]);
   const [draft, setDraft] = useState<Draft | null>(null);
@@ -42,7 +43,7 @@ export function ClipboardSnippetSettings() {
         setDraft(null);
         setError("");
       })
-      .catch((failure: unknown) => setError(String(failure)));
+      .catch((failure: unknown) => setError(errorText(failure)));
   };
 
   return (

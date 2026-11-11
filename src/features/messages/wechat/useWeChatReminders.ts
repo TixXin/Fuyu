@@ -1,4 +1,4 @@
-import { useTranslation } from "../../../i18n";
+import { useErrorText, useTranslation } from "../../../i18n";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { isTauri } from "@tauri-apps/api/core";
 import { clearWeChatReminders, launchWeChat, listenWeChatReminderChanged, setWeChatExposeUi, setWeChatHideTaskbarButton, setWeChatRemindersEnabled, type ChatMessage, type ReminderSnapshot } from "./api";
@@ -15,6 +15,9 @@ const EMPTY_SNAPSHOT: ReminderSnapshot = {
 
 export function useWeChatReminders(canPreview: boolean) {
   const t = useTranslation();
+  const errorText = useErrorText();
+  const errorTextRef = useRef(errorText);
+  useLayoutEffect(() => { errorTextRef.current = errorText; }, [errorText]);
   const [snapshot, setSnapshot] = useState(EMPTY_SNAPSHOT);
   const [busy, setBusy] = useState(isTauri);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -74,7 +77,7 @@ export function useWeChatReminders(canPreview: boolean) {
       await setWeChatExposeUi(isWeChatExposeUiEnabled());
       await setWeChatHideTaskbarButton(isWeChatHideTaskbarButtonEnabled());
     })().catch((error: unknown) => {
-      if (!cancelled) setActionError(String(error));
+      if (!cancelled) setActionError(errorTextRef.current(error));
     }).finally(() => {
       if (!cancelled) setBusy(false);
     });
@@ -101,13 +104,13 @@ export function useWeChatReminders(canPreview: boolean) {
       await action();
       return true;
     } catch (error) {
-      setActionError(String(error));
+      setActionError(errorText(error));
       return false;
     } finally {
       actionPending.current = false;
       setBusy(false);
     }
-  }, [t]);
+  }, [errorText, t]);
 
   const setEnabled = useCallback((enabled: boolean) => run(async () => {
     acceptSnapshot(await setWeChatRemindersEnabled(enabled));

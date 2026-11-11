@@ -3,7 +3,7 @@ import { Download, FolderOpen, RotateCw, Upload } from "lucide-react";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton";
 import { SettingsRow } from "../../components/settings/SettingsRow";
-import { useTranslation } from "../../i18n";
+import { useErrorText, useTranslation } from "../../i18n";
 import { restartIsland, revealBackup, saveSettingsBackup } from "./api";
 import { backupFileName, parseBackup } from "./backup.ts";
 import { collectBackup, restoreBackup } from "./storage.ts";
@@ -18,6 +18,7 @@ type Status =
 /** Settings → General: save the settings to a file, or restore them from one. */
 export function SettingsBackupSection() {
   const t = useTranslation();
+  const errorText = useErrorText();
   const text = t.settings.backup;
   const fileInput = useRef<HTMLInputElement>(null);
   const [status, setStatus] = useState<Status>({ kind: "idle" });
@@ -26,7 +27,7 @@ export function SettingsBackupSection() {
     const now = new Date();
     void saveSettingsBackup(backupFileName(now), JSON.stringify(collectBackup(now), null, 2))
       .then((path) => setStatus({ kind: "saved", path }))
-      .catch((error: unknown) => setStatus({ kind: "error", message: String(error) }));
+      .catch((error: unknown) => setStatus({ kind: "error", message: errorText(error) }));
   };
 
   const restore = async (event: ChangeEvent<HTMLInputElement>) => {

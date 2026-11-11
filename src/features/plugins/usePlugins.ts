@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { useErrorText } from "../../i18n";
 import {
   checkPluginUpdates,
   clearPluginData,
@@ -25,6 +26,7 @@ const REFRESH_MS = 2000;
 
 /** Installed plugins and their actions, for the settings page. */
 export function usePlugins() {
+  const errorText = useErrorText();
   const [snapshot, setSnapshot] = useState<PluginsSnapshot | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -38,25 +40,25 @@ export function usePlugins() {
       }
       setError("");
     } catch (nextError) {
-      setError(String(nextError));
+      setError(errorText(nextError));
     } finally {
       setBusy(false);
     }
-  }, []);
+  }, [errorText]);
 
   useEffect(() => {
     let didCancel = false;
     const refresh = () =>
       void listPlugins()
         .then((next) => !didCancel && setSnapshot(next))
-        .catch((nextError) => !didCancel && setError(String(nextError)));
+        .catch((nextError: unknown) => !didCancel && setError(errorText(nextError)));
     refresh();
     const timer = window.setInterval(refresh, REFRESH_MS);
     return () => {
       didCancel = true;
       window.clearInterval(timer);
     };
-  }, []);
+  }, [errorText]);
 
   return {
     snapshot,

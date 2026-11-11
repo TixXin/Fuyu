@@ -53,8 +53,3 @@ export function clockTime(ms: number) {
   const date = new Date(ms);
   return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
 }
-
-/** Whether `ms` falls on the same local day as `day`. */
-export function sameDay(ms: number, day: number) {
-  return new Date(ms).toDateString() === new Date(day).toDateString();
-}

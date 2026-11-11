@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { getErrorMessage } from "../../utils/error";
+import { useErrorText } from "../../i18n";
 import {
   addAgentRemoteHost,
   getAgentCustomHosts,
@@ -36,6 +36,7 @@ export function customAddress(custom: CustomRemoteHost) {
  * in the island, then chosen ones found in neither (so they can still be switched off).
  */
 export function useRemoteHosts() {
+  const errorText = useErrorText();
   const [available, setAvailable] = useState<string[] | null>(null);
   const [custom, setCustom] = useState<CustomRemoteHost[]>([]);
   const [statuses, setStatuses] = useState<RemoteHostStatus[]>([]);
@@ -52,7 +53,7 @@ export function useRemoteHosts() {
       .then((next) => setAvailable(Array.isArray(next) ? next : []))
       .catch((reason: unknown) => {
         setAvailable([]);
-        setError(getErrorMessage(reason));
+        setError(errorText(reason));
       });
     getAgentCustomHosts()
       .then((next) => setCustom(Array.isArray(next) ? next : []))
@@ -60,7 +61,7 @@ export function useRemoteHosts() {
     refreshStatuses();
     const timer = window.setInterval(refreshStatuses, STATUS_POLL_MS);
     return () => window.clearInterval(timer);
-  }, [refreshStatuses]);
+  }, [errorText, refreshStatuses]);
 
   const chosen = statuses.map((status) => status.host);
   const names = [...(available ?? []), ...custom.map((host) => host.name), ...chosen];
@@ -79,7 +80,7 @@ export function useRemoteHosts() {
         return true;
       })
       .catch((reason: unknown) => {
-        setError(getErrorMessage(reason));
+        setError(errorText(reason));
         return false;
       });
 

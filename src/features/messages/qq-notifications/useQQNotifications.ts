@@ -1,4 +1,4 @@
-import { useTranslation } from "../../../i18n";
+import { useErrorText, useTranslation } from "../../../i18n";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { isTauri } from "@tauri-apps/api/core";
 import { nextQQPreview, type QQPreviewTiming } from "../qqNotificationTiming";
@@ -15,6 +15,9 @@ const EMPTY_SNAPSHOT: QQNotificationSnapshot = {
 
 export function useQQNotifications(canPreview: boolean) {
   const t = useTranslation();
+  const errorText = useErrorText();
+  const errorTextRef = useRef(errorText);
+  useLayoutEffect(() => { errorTextRef.current = errorText; }, [errorText]);
   const [snapshot, setSnapshot] = useState(EMPTY_SNAPSHOT);
   const [actionError, setActionError] = useState<string | null>(null);
   const [busy, setBusy] = useState(isTauri);
@@ -69,7 +72,7 @@ export function useQQNotifications(canPreview: boolean) {
         await requestQQNotificationAccess();
       }
     })().catch((error: unknown) => {
-      if (!cancelled) setActionError(String(error));
+      if (!cancelled) setActionError(errorTextRef.current(error));
     }).finally(() => {
       if (!cancelled) setBusy(false);
     });
@@ -95,13 +98,13 @@ export function useQQNotifications(canPreview: boolean) {
       await action();
       return true;
     } catch (error) {
-      setActionError(String(error));
+      setActionError(errorText(error));
       return false;
     } finally {
       actionPending.current = false;
       setBusy(false);
     }
-  }, [t]);
+  }, [errorText, t]);
 
   const setEnabled = useCallback((enabled: boolean) => run(async () => {
     acceptSnapshot(await setQQNotificationsEnabled(enabled));
