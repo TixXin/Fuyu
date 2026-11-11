@@ -94,6 +94,7 @@
     "homepage": "https://fuyu.tix.xin",
     "windows": {
       "nsis": {
+        "template": "windows/installer.nsi",
         "installerIcon": "icons/icon.ico",
         "uninstallerIcon": "icons/icon.ico"
       }

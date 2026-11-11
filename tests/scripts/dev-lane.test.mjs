@@ -70,5 +70,5 @@ test("the shortcut script quotes the exe path for PowerShell", async () => {
   const { shortcutScript } = await import("../../scripts/build-exe.mjs");
   const script = shortcutScript(String.raw`C:\it's\fuyu.exe`);
   assert.ok(script.startsWith(String.raw`$exe = 'C:\it''s\fuyu.exe'`));
-  assert.match(script, /Fuyu.lnk/);
+  assert.match(script, /\[char\]0x6D6E\)\$\(\[char\]0x5C7F\)\.lnk/);
 });

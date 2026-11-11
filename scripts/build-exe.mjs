@@ -101,7 +101,7 @@ function takeLock(lock) {
   }
 }
 
-/** The PowerShell that points the desktop's island shortcuts at `exe`, or creates Fuyu.lnk. */
+/** The PowerShell that points the desktop's island shortcuts at `exe`, or creates 浮屿.lnk as the installer does. */
 export function shortcutScript(exe) {
   const quoted = `'${exe.replace(/'/g, "''")}'`;
   return [
@@ -109,7 +109,8 @@ export function shortcutScript(exe) {
     "$desk = [Environment]::GetFolderPath('Desktop')",
     "$shell = New-Object -ComObject WScript.Shell",
     "$links = @(Get-ChildItem $desk -Filter *.lnk | Where-Object { $_.Name -match 'focusd|fly-island|fuyu' -or $shell.CreateShortcut($_.FullName).TargetPath -match '(focusd-island|fuyu)\\.exe$' })",
-    "if ($links.Count -eq 0) { $links = @([pscustomobject]@{ FullName = Join-Path $desk 'Fuyu.lnk' }) }",
+    // 浮屿 as char codes: the command line's code page could garble it.
+    "if ($links.Count -eq 0) { $links = @([pscustomobject]@{ FullName = Join-Path $desk \"$([char]0x6D6E)$([char]0x5C7F).lnk\" }) }",
     "foreach ($link in $links) {",
     "  $s = $shell.CreateShortcut($link.FullName); $s.TargetPath = $exe; $s.WorkingDirectory = Split-Path $exe; $s.IconLocation = \"$exe,0\"; $s.Save()",
     "  $check = $shell.CreateShortcut($link.FullName)",
