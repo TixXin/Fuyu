@@ -61,7 +61,8 @@ function rowsOnPage(): SettingsRowText[] {
   return rows.flatMap((row) => {
     const title = text(row.querySelector(".settings-row__title"));
     if (!title) return [];
-    const description = text(row.querySelector(".settings-row__description"));
+    const descEl = row.querySelector(".settings-row__description");
+    const description = descEl && !descEl.querySelector("[data-search='off']") ? text(descEl) : "";
     const options = [...row.querySelectorAll(".settings-row__control option, .settings-row__control .settings-choice__option")].map(text).filter(Boolean);
     const group = text(row.closest(".settings-group")?.querySelector(".settings-group__title"));
     return [{ group, title, ...(description ? { description } : {}), ...(options.length ? { options } : {}) }];

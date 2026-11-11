@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { RefreshCcw, Settings, Video } from "lucide-react";
-import { useLocale, useTranslation } from "../../i18n";
+import { useErrorText, useLocale, useTranslation } from "../../i18n";
 import { openMeetingLink, type CalendarEvent, type CalendarSnapshot } from "./api";
 import { CalendarEmpty } from "./CalendarEmpty";
 import { CalendarMonth } from "./CalendarMonth";
@@ -32,6 +32,7 @@ export function CalendarPanel({
 }) {
   const t = useTranslation();
   const text = t.calendar;
+  const errorText = useErrorText();
   const lunar = useLocale().locale === "zh-CN";
   const today = startOfDay(now);
   // Null: today (so the page follows midnight); a month of null follows the picked day.
@@ -92,7 +93,10 @@ export function CalendarPanel({
     <section className="calendar-panel" aria-label={text.title}>
       <div className="calendar-panel__list">
         <div className="calendar-panel__head">
-          <span className="calendar-panel__status">
+          <span
+            className="calendar-panel__status"
+            title={snapshot.problems.length > 0 ? snapshot.problems.map((problem) => errorText(problem.message)).join("\n") : undefined}
+          >
             {snapshot.problems.length > 0 ? text.problems(snapshot.problems.length) : snapshot.fetchedAt ? text.updatedAt(clockTime(snapshot.fetchedAt)) : ""}
           </span>
           <button className="calendar-panel__icon" type="button" aria-label={text.refresh} onClick={onRefresh}>

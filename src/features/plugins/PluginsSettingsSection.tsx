@@ -95,7 +95,7 @@ export function PluginsSettingsSection({ initialOpenId = null }: { initialOpenId
           title={t.settings.plugins.folder}
           description={
             // Right-to-left so a long path loses its start, not the plugins folder at its end.
-            <code className="plugins-folder__path" dir="rtl">
+            <code className="plugins-folder__path" dir="rtl" data-search="off">
               <bdi>{snapshot?.pluginsDir ?? ""}</bdi>
             </code>
           }

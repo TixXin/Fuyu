@@ -23,7 +23,14 @@ test("a backup holds the set settings keys and nothing else", () => {
 });
 
 test("a backup carries the AI Agent approval and phone push choices and lyrics offsets", () => {
-  for (const key of ["fuyu-agent-approval", "fuyu-agent-push", "fuyu-lyrics-offsets"]) {
+  for (const key of [
+    "fuyu-agent-approval",
+    "fuyu-agent-push",
+    "fuyu-lyrics-offsets",
+    "fuyu-collapsed-items",
+    "fuyu-plugin-market-favorites",
+    "fuyu-screenshot-annotation",
+  ]) {
     assert.ok(BACKUP_KEYS.includes(key), key);
   }
   // What sessions were looked at or removed is per-computer state, not a preference.

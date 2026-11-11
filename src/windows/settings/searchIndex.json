@@ -2493,13 +2493,11 @@
       "page": "plugins",
       "zh-CN": {
         "group": "",
-        "title": "插件目录",
-        "description": "C:\\Users\\demo\\AppData\\Roaming\\com.tixxin.fuyu\\plugins"
+        "title": "插件目录"
       },
       "en": {
         "group": "",
-        "title": "Plugins folder",
-        "description": "C:\\Users\\demo\\AppData\\Roaming\\com.tixxin.fuyu\\plugins"
+        "title": "Plugins folder"
       }
     },
     {
