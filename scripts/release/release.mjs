@@ -241,7 +241,7 @@ function verifyChannels() {
     if (problems.length === 0) break;
   }
   if (problems.length > 0) {
-    fail(`${tag} is published, but the update channels are off:\n${problems.join("\n")}\nSee "撤回有问题的版本" in docs/updater.md.`);
+    fail(`${tag} is published, but the update channels are off:\n${problems.join("\n")}\nSee "撤回有问题的版本" in docs/features/updater.md.`);
   }
   console.log(`✓ Channels read back: stable offers ${prerelease ? "the last final release" : tag}, beta offers ${tag}.`);
 }

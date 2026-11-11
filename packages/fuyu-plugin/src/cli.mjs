@@ -126,7 +126,7 @@ function rotate(dir, options) {
     : [readManifest(dir).id];
   const result = rotateKey({ file: keyFile(options), newFile: typeof options["new-key"] === "string" ? path.resolve(options["new-key"]) : undefined, ids });
   console.log(`New signing key in ${result.newFile}${result.retiredFile ? `; the old key ${result.oldKeyId} is kept as ${result.retiredFile}` : ""}.
-Back the new key up. In each plugin's market submission (focusd-plugins plugins/<id>.json),
+Back the new key up. In each plugin's market submission (TixXin/fuyu-plugins plugins/<id>.json),
 add its entry to "signingKeys" next to the old key and open a pull request:`);
   for (const { id, key } of result.endorsed) console.log(`\n${id}:\n${JSON.stringify(key, null, 2)}`);
   console.log(`\nSign new releases with the new key (pack --sign). Keep the old key listed until users have updated.`);
@@ -160,7 +160,7 @@ To publish ${id} ${version}:
   1. Commit and push the plugin, then create a GitHub release tagged ${version}
      (or v${version}) in your repository and attach ${path.basename(packed.file)}${signWith ? " and its .sig" : ""}.
      With the GitHub CLI:  gh release create ${version} ${assets}
-     The workflow .github/workflows/release.yml made by create-fuyu-plugin
+     The workflow .github/workflows/plugin.yml made by create-fuyu-plugin
      does this when you push the tag (sign the zip yourself and upload the .sig).
   2. First release only: open a pull request at https://github.com/TixXin/fuyu-plugins
      that adds plugins/${id}.json (see its CONTRIBUTING.md). After that, new releases

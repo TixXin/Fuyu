@@ -19,6 +19,13 @@ plugin.onCommand("go", async (args) => {
 void plugin.status.update("open", "x", { tone: "loud" });
 plugin.views.onAction("main", ({ actionId, itemId, checked }) => plugin.log(`${actionId} ${itemId ?? ""} ${checked ?? ""}`));
 
-const host: MockHost = startMockHost(".", { deny: ["clipboard:read"], settings: { repo: "a/b" } });
+const host: MockHost = startMockHost(".", {
+  deny: ["clipboard:read"],
+  settings: { repo: "a/b" },
+  archives: [{ date: "2026-11-10", todos: [{ title: "done", completed: true }], dailyNote: "note" }],
+  cover: null,
+});
+host.openUri("/callback", "code=1");
+void host.openedViews.length;
 void host.waitForView<ListModel>("main", (next) => (next.items ?? []).length > 0).then((next) => next.items?.[0]?.title);
 void host.stop();

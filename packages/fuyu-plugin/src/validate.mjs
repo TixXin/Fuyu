@@ -10,6 +10,18 @@ import { eventPermissions, methodPermissions, protocol } from "./schema.mjs";
 
 /** The market refuses larger packages. */
 export const MAX_PACKAGE_BYTES = 20 * 1024 * 1024;
+const MAX_SOUND_BYTES = 4 * 1024 * 1024;
+const SOUND_EVENTS = new Set([
+  "complete",
+  "approval",
+  "question",
+  "error",
+  "subagent",
+  "todoDone",
+  "pomodoroFocusEnd",
+  "pomodoroBreakEnd",
+  "reminder",
+]);
 const SOURCE_EXTENSIONS = new Set([".ps1", ".psm1", ".js", ".mjs", ".cjs", ".ts", ".mts", ".cts"]);
 const SKIPPED_DIRS = new Set(["node_modules", ".git"]);
 /** The SDK files list every method; they say nothing about what the plugin uses (old and new names, D17). */
@@ -92,11 +104,13 @@ function checkContributions(manifest, errors, warnings) {
   }
 }
 
-/** Webview views need an entry page that exists; other templates take neither entry nor height. */
+/** Webview views need an entry page that exists; other templates take neither entry, height, width nor frame. */
 function checkWebviews(dir, manifest, errors) {
   for (const view of manifest.contributes?.views ?? []) {
     if (view?.template !== "webview") {
-      if (view?.entry !== undefined || view?.height !== undefined) errors.push(`View "${view.id}": entry and height are only for the webview template.`);
+      if (view?.entry !== undefined || view?.height !== undefined || view?.width !== undefined || view?.frame !== undefined) {
+        errors.push(`View "${view.id}": "entry", "height", "width" and "frame" are only for the webview template.`);
+      }
       continue;
     }
     if (typeof view.entry !== "string") {
@@ -105,6 +119,26 @@ function checkWebviews(dir, manifest, errors) {
     }
     const full = path.join(dir, view.entry);
     if (!existsSync(full) || !statSync(full).isFile()) errors.push(`View "${view.id}": the page "${view.entry}" does not exist.`);
+  }
+}
+
+function checkSounds(dir, manifest, rules, errors) {
+  const sounds = manifest.contributes?.sounds;
+  if (!sounds || typeof sounds !== "object") return;
+  if (typeof sounds.license !== "string" || sounds.license.trim() === "") {
+    errors.push('contributes.sounds needs a "license" (such as "CC0-1.0"), at most 120 characters.');
+  }
+  const entries = Object.entries(sounds.files ?? {}).filter(([event]) => SOUND_EVENTS.has(event));
+  if (entries.length === 0) {
+    errors.push("contributes.sounds.files lists no sound for a known event.");
+    return;
+  }
+  for (const [event, file] of entries) {
+    const rel = String(file).replaceAll("\\", "/");
+    const full = path.join(dir, rel);
+    if (!existsSync(full) || !statSync(full).isFile()) errors.push(`contributes.sounds.files.${event} "${rel}" does not exist.`);
+    else if (isIgnored(rules, rel)) errors.push(`contributes.sounds.files.${event} "${rel}" is left out by ${ignoreFileOf(dir) ?? IGNORE_FILE}.`);
+    else if (statSync(full).size > MAX_SOUND_BYTES) errors.push(`contributes.sounds.files.${event} "${rel}" is larger than 4 MB.`);
   }
 }
 
@@ -154,6 +188,7 @@ export function validatePlugin(dir, { allowExperimental = false } = {}) {
   const rules = loadIgnore(dir);
   checkRuntime(dir, manifest, rules, errors);
   checkWebviews(dir, manifest, errors);
+  checkSounds(dir, manifest, rules, errors);
   checkContributions(manifest, errors, warnings);
 
   const packed = listFiles(dir).filter(([name]) => !isIgnored(rules, name));

@@ -1,4 +1,4 @@
-import type { InitializeParams, Permission, TodosState, ViewModel } from "../client.mjs";
+import type { InitializeParams, Permission, Todo, TodosState, ViewModel } from "../client.mjs";
 
 export const METHOD_NOT_FOUND: -32601;
 export const PERMISSION_DENIED: -32001;
@@ -19,10 +19,12 @@ export interface MockHostOptions {
   /** For waitFor and friends; default 10 000 ms. */
   timeoutMs?: number;
   todos?: TodosState;
+  archives?: { date: string; todos?: Partial<Todo>[]; dailyNote?: string }[];
   note?: string;
   clipboard?: { id: string; text: string; truncated: boolean; copiedAt: number; favorite: boolean }[];
   messages?: { source: string; id: string; sender: string | null; preview: string | null; receivedAt: number; unread?: number }[];
   media?: Record<string, unknown>;
+  cover?: string | null;
   shelf?: Record<string, unknown>[];
   storage?: Record<string, unknown>;
   secrets?: Record<string, string>;
@@ -46,11 +48,14 @@ export class MockHost {
   readonly dataDir: string;
   settings: Record<string, unknown>;
   todos: TodosState;
+  archives: { date: string; todos: Todo[]; dailyNote: string }[];
   note: string;
   readonly requests: RecordedRequest[];
   readonly logs: string[];
   readonly views: Map<string, ViewModel>;
   readonly statuses: Map<string, { text: string; tooltip?: string; tone?: string; cells?: { label: string; value: string; tone?: string }[]; ring?: number; batteries?: { level: number; tone?: string }[] }>;
+  /** Views the plugin opened with island.openView. */
+  readonly openedViews: string[];
   /** Webview pages on screen (viewVisible opens and closes them). */
   readonly openWebviews: Set<string>;
   /** Messages the plugin sent to open webview pages. */
@@ -69,6 +74,8 @@ export class MockHost {
   initializeParams(): InitializeParams;
   send(method: string, params?: unknown): void;
   command(id: string, args?: Record<string, unknown>): void;
+  /** Sends a fuyu://plugin/<id><path>?<query> URI notification. */
+  openUri(path?: string, query?: string): void;
   /** Sends an island event if the plugin subscribed to it; returns whether it did. */
   publish(name: string, payload?: unknown): boolean;
   changeSettings(values: Record<string, unknown>): void;

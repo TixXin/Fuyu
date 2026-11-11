@@ -1,7 +1,8 @@
 // A small JSON Schema checker for the keywords plugins/schema/manifest.schema.json
-// uses (type, required, properties, additionalProperties, enum, const, pattern,
-// min/maxLength, minimum/maximum, min/maxItems, items, oneOf, anyOf, $ref to
-// #/$defs). Kept here so the CLI needs no dependencies.
+// uses (type, required, properties, propertyNames, additionalProperties,
+// min/maxProperties, enum, const, pattern, min/maxLength, minimum/maximum,
+// min/maxItems, items, oneOf, anyOf, $ref to #/$defs). Kept here so the CLI
+// needs no dependencies.
 
 const typeOf = (value) => {
   if (value === null) return "null";
@@ -55,14 +56,19 @@ function check(root, schemaIn, value, path, errors) {
     if (schema.items) value.forEach((item, index) => check(root, schema.items, item, `${path}[${index}]`, errors));
   }
   if (typeOf(value) === "object") {
+    const keys = Object.keys(value);
+    if (schema.minProperties !== undefined && keys.length < schema.minProperties) fail(`must have at least ${schema.minProperties} properties`);
+    if (schema.maxProperties !== undefined && keys.length > schema.maxProperties) fail(`must have at most ${schema.maxProperties} properties`);
     for (const key of schema.required ?? []) {
       if (!(key in value)) fail(`is missing "${key}"`);
     }
     const properties = schema.properties ?? {};
     for (const [key, item] of Object.entries(value)) {
       const childPath = `${path}.${key}`.replace(/^\./, "");
+      if (schema.propertyNames) check(root, schema.propertyNames, key, childPath, errors);
       if (key in properties) check(root, properties[key], item, childPath, errors);
       else if (schema.additionalProperties === false) errors.push({ path: pointer(childPath), message: "is not allowed here" });
+      else if (schema.additionalProperties && typeof schema.additionalProperties === "object") check(root, schema.additionalProperties, item, childPath, errors);
     }
   }
   for (const keyword of ["oneOf", "anyOf"]) {

@@ -46,12 +46,24 @@ test("the example plugins validate without errors or warnings", () => {
 });
 
 test("schema errors name the field", () => {
-  const errors = validateSchema(protocol().manifestSchema, { ...base, id: "Bad", apiVersion: 3, contributes: { views: [{ id: "v", title: "x", template: "chart" }] } });
+  const errors = validateSchema(protocol().manifestSchema, {
+    ...base,
+    id: "Bad",
+    apiVersion: 3,
+    contributes: {
+      views: [{ id: "v", title: "x", template: "chart" }],
+      sounds: { license: "CC0-1.0", files: { complete: "../escape.wav" } },
+      agentEffortLabels: { claudeCode: { "": "空", ok: "12345678901234567" } },
+    },
+  });
   const text = errors.map((error) => `${error.path} ${error.message}`).join("\n");
   assert.match(text, /^id must match/m);
   assert.match(text, /^apiVersion must be at most 2/m);
   assert.match(text, /contributes\.views\[0\]\.title must be object/);
   assert.match(text, /contributes\.views\[0\]\.template must be one of/);
+  assert.match(text, /contributes\.sounds\.files\.complete must match/);
+  assert.match(text, /contributes\.agentEffortLabels\.claudeCode\..*must have at least 1 characters/);
+  assert.match(text, /contributes\.agentEffortLabels\.claudeCode\.ok must have at most 16 characters/);
   assert.deepEqual(validateSchema(protocol().manifestSchema, base), []);
 });
 

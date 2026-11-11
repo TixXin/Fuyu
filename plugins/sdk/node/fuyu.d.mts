@@ -23,6 +23,8 @@ export interface InitializeParams {
   /** Since API version 2: the manifest's optionalPermissions (ask with permissions.request). */
   optionalPermissions?: Permission[];
   settings: Record<string, unknown>;
+  /** Experimental APIs enabled for a development-mode plugin. */
+  experimentalApis?: string[];
 }
 
 export interface HostError extends Error {
