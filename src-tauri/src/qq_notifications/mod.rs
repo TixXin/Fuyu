@@ -242,7 +242,7 @@ fn publish(
     plugin_view::publish_received(&snapshot, newest_id.as_deref());
     let window_visible = service
         .app
-        .get_webview_window("main")
+        .get_webview_window(crate::island::WINDOW_LABEL)
         .is_some_and(|window| window.is_visible().unwrap_or(false));
     let event = NotificationEvent {
         snapshot,
@@ -254,7 +254,7 @@ fn publish(
         EVENT_NAME,
         event.clone(),
     );
-    let _ = service.app.emit_to("main", EVENT_NAME, event);
+    let _ = service.app.emit_to(crate::island::WINDOW_LABEL, EVENT_NAME, event);
 }
 
 #[tauri::command]

@@ -461,7 +461,9 @@ pub async fn add_agent_remote_host(app: AppHandle, host: remote_hosts::CustomHos
 /// Removes a computer added in the island.
 #[tauri::command]
 pub async fn remove_agent_remote_host(app: AppHandle, name: String) -> Result<Vec<remote_hosts::CustomHost>, String> {
-    remote_hosts::remove_custom(&remote_app_dir(&app)?, &name)
+    let remaining = remote_hosts::remove_custom(&remote_app_dir(&app)?, &name)?;
+    remote_sessions::refresh_soon();
+    Ok(remaining)
 }
 
 /// Reads every chosen computer again at the next listing instead of waiting out its interval.

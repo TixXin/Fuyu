@@ -75,7 +75,8 @@ fn read_file(app_dir: &Path) -> RemoteHostsFile {
 fn save(app_dir: &Path, file: &RemoteHostsFile) -> Result<(), String> {
     let text = serde_json::to_string_pretty(file).map_err(|error| error.to_string())?;
     fs::create_dir_all(app_dir).map_err(|error| format!("Failed to create the app data folder: {error}"))?;
-    fs::write(app_dir.join(FILE_NAME), text).map_err(|error| format!("Failed to save the remote computers: {error}"))
+    crate::fs_write::replace_file(&app_dir.join(FILE_NAME), text.as_bytes())
+        .map_err(|error| format!("Failed to save the remote computers: {error}"))
 }
 
 /// The chosen hosts; none when the file is missing or unreadable.

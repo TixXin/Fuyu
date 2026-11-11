@@ -194,7 +194,7 @@ impl MailService {
         super::plugin_view::publish_received(&snapshot, newest_id.as_deref());
         let window_visible = self
             .app
-            .get_webview_window("main")
+            .get_webview_window(crate::island::WINDOW_LABEL)
             .is_some_and(|window| window.is_visible().unwrap_or(false));
         let _ = self.app.emit(
             EVENT,

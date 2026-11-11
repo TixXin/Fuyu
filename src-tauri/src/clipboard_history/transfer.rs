@@ -4,7 +4,7 @@
 
 use base64::{engine::general_purpose, Engine as _};
 use serde::{Deserialize, Serialize};
-use std::{fs, path::PathBuf};
+use std::{collections::HashSet, fs, path::PathBuf};
 
 use super::{
     current_unix_millis, snippets::ClipboardSnippet, ClipboardHistoryItem, ClipboardHistoryItemKind,
@@ -90,10 +90,17 @@ impl ClipboardHistoryService {
         if file.app != APP || file.version > VERSION {
             return Err("这不是岛屿导出的剪贴板文件，或者来自更新的版本。".into());
         }
-        let known: Vec<String> = self.state.lock().map_err(|error| error.to_string())?.items.iter().map(|item| item.hash.clone()).collect();
+        let mut seen: HashSet<String> = self
+            .state
+            .lock()
+            .map_err(|error| error.to_string())?
+            .items
+            .iter()
+            .map(|item| item.hash.clone())
+            .collect();
         let mut added = Vec::new();
         for ExportedEntry { mut item, image_png } in file.items {
-            if known.contains(&item.hash) || added.iter().any(|kept: &ClipboardHistoryItem| kept.hash == item.hash) {
+            if seen.contains(&item.hash) {
                 continue;
             }
             if item.kind == ClipboardHistoryItemKind::Image {
@@ -108,6 +115,7 @@ impl ClipboardHistoryService {
                 let (width, height) = (rgba.width() as usize, rgba.height() as usize);
                 item.image = Some(self.persist_image(&item.hash, width, height, rgba.into_raw())?);
             }
+            seen.insert(item.hash.clone());
             added.push(item);
         }
 

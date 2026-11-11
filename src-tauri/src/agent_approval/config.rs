@@ -54,7 +54,8 @@ pub(super) fn save_config(path: &Path, config: &ApprovalConfig) -> Result<(), St
         fs::create_dir_all(dir).map_err(|error| format!("Could not create {}: {error}", dir.display()))?;
     }
     let text = serde_json::to_string_pretty(config).map_err(|error| error.to_string())?;
-    fs::write(path, text).map_err(|error| format!("Could not write {}: {error}", path.display()))
+    crate::fs_write::replace_file(path, text.as_bytes())
+        .map_err(|error| format!("Could not write {}: {error}", path.display()))
 }
 
 fn generate_token() -> Result<String, String> {

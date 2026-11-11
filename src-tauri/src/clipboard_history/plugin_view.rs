@@ -42,6 +42,22 @@ pub(crate) fn local_api_history(params: &Value) -> Result<Value, (u16, String)> 
     Ok(json!({ "items": text_items(&snapshot.items, limit, true) }))
 }
 
+fn format_text_item(item: &ClipboardHistoryItem, hide_masked: bool) -> Value {
+    let text = if hide_masked && item.masked {
+        item.preview.as_str()
+    } else {
+        item.text.as_deref().unwrap_or_default()
+    };
+    let truncated = text.chars().count() > MAX_TEXT_CHARS;
+    json!({
+        "id": item.id,
+        "text": if truncated { text.chars().take(MAX_TEXT_CHARS).collect::<String>() } else { text.to_string() },
+        "truncated": truncated,
+        "copiedAt": item.copied_at,
+        "favorite": item.favorite,
+    })
+}
+
 /// The newest `limit` text items as plugins see them; with `hide_masked`, a masked key gives its
 /// masked preview.
 pub(super) fn text_items(items: &[ClipboardHistoryItem], limit: usize, hide_masked: bool) -> Vec<Value> {
@@ -53,17 +69,7 @@ pub(super) fn text_items(items: &[ClipboardHistoryItem], limit: usize, hide_mask
     texts
         .into_iter()
         .take(limit)
-        .map(|item| {
-            let text = if hide_masked && item.masked { item.preview.as_str() } else { item.text.as_deref().unwrap_or_default() };
-            let truncated = text.chars().count() > MAX_TEXT_CHARS;
-            json!({
-                "id": item.id,
-                "text": if truncated { text.chars().take(MAX_TEXT_CHARS).collect::<String>() } else { text.to_string() },
-                "truncated": truncated,
-                "copiedAt": item.copied_at,
-                "favorite": item.favorite,
-            })
-        })
+        .map(|item| format_text_item(item, hide_masked))
         .collect()
 }
 
@@ -75,7 +81,11 @@ pub(crate) fn plugin_item(id: &str) -> Option<Value> {
     if !snapshot.settings.enabled {
         return None;
     }
-    text_items(&snapshot.items, usize::MAX, false).into_iter().find(|item| item["id"] == id)
+    snapshot
+        .items
+        .iter()
+        .find(|item| item.id == id && item.kind == ClipboardHistoryItemKind::Text && item.text.is_some())
+        .map(|item| format_text_item(item, false))
 }
 
 /// Tells subscribed plugins the history changed, if it is on.

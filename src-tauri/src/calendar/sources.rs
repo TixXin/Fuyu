@@ -49,7 +49,7 @@ pub(super) fn write(app_dir: &Path, sources: &[CalendarSource]) -> Result<(), Us
     let save = |error: std::io::Error| UserError::new("calendar.save", "Could not save the calendar settings.").detail(error);
     fs::create_dir_all(app_dir).map_err(save)?;
     let text = serde_json::to_string_pretty(sources).map_err(|error| UserError::new("internal", "Something went wrong inside the island.").detail(error))?;
-    fs::write(app_dir.join(FILE_NAME), text).map_err(save)
+    crate::fs_write::replace_file(&app_dir.join(FILE_NAME), text.as_bytes()).map_err(save)
 }
 
 fn entry(id: &str) -> Result<Entry, UserError> {

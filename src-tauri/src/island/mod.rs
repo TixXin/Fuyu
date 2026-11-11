@@ -40,6 +40,8 @@ pub(crate) use state::{record_dragged_position, IslandPosition, IslandWindowStat
 pub(crate) const WINDOW_LABEL: &str = "main";
 // Mirrored by ISLAND_REVEAL_REQUESTED_EVENT in src/windows/island/api.ts.
 const ISLAND_REVEAL_REQUESTED_EVENT: &str = "island-reveal-requested";
+// Mirrored by ISLAND_POSITION_CHANGED_EVENT in src/windows/island/api.ts.
+const ISLAND_POSITION_CHANGED_EVENT: &str = "island-position-changed";
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -237,7 +239,7 @@ fn drag_island(window: WebviewWindow, current_state: IslandWindowState) -> Resul
 
         if did_finish_drag {
             if let Some(position) = final_position {
-                let _ = window.emit("island-position-changed", position);
+                let _ = window.emit(ISLAND_POSITION_CHANGED_EVENT, position);
             }
         }
     });

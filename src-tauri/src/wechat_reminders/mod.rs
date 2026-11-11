@@ -31,6 +31,8 @@ pub(crate) use plugin_view::plugin_messages;
 
 use crate::win32;
 
+const EVENT_NAME: &str = "wechat-reminder-changed";
+
 static SERVICE: OnceLock<Arc<ReminderService>> = OnceLock::new();
 
 #[derive(Clone, Debug, PartialEq, Serialize)]
@@ -250,17 +252,17 @@ fn publish(service: &ReminderService, snapshot: ReminderSnapshot) {
     plugin_view::publish_received(&snapshot);
     let visible = service
         .app
-        .get_webview_window("main")
+        .get_webview_window(crate::island::WINDOW_LABEL)
         .is_some_and(|window| window.is_visible().unwrap_or(false));
     let payload = serde_json::json!({"snapshot": snapshot, "windowVisible": visible});
     let _ = service.app.emit_to(
         crate::settings_window::WINDOW_LABEL,
-        "wechat-reminder-changed",
+        EVENT_NAME,
         payload.clone(),
     );
     let _ = service
         .app
-        .emit_to("main", "wechat-reminder-changed", payload);
+        .emit_to(crate::island::WINDOW_LABEL, EVENT_NAME, payload);
 }
 
 #[tauri::command]

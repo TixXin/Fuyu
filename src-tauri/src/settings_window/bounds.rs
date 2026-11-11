@@ -59,7 +59,7 @@ pub(super) fn save(window: &WebviewWindow) {
         return;
     };
     if fs::create_dir_all(&directory).is_ok() {
-        let _ = fs::write(directory.join(BOUNDS_FILE_NAME), json);
+        let _ = crate::fs_write::replace_file(&directory.join(BOUNDS_FILE_NAME), json.as_bytes());
     }
 }
 

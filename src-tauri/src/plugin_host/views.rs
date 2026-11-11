@@ -370,12 +370,13 @@ fn schedule(app: &AppHandle, key: Slot) {
         return;
     }
     let app = app.clone();
+    let slot = key.clone();
     let spawned = thread::Builder::new().name("plugin-view".into()).spawn(move || {
         thread::sleep(GAP);
-        send(&app, &key);
+        send(&app, &slot);
     });
     if spawned.is_err() {
-        lock(store()).pending.clear();
+        lock(store()).pending.remove(&key);
     }
 }
 

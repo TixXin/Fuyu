@@ -1,26 +1,26 @@
 //! Authorization code storage in the Windows Credential Manager, and address validation.
 
-use crate::user_error::UserError;
+use crate::user_error::{credential as cred_err, UserError};
 use keyring::{Entry, Error as KeyringError};
 
 const CREDENTIAL_SERVICE: &str = "com.tixxin.fuyu.qq-mail";
 
 pub(super) fn credential(email: &str) -> Result<Entry, UserError> {
-    Entry::new(CREDENTIAL_SERVICE, email).map_err(|_| UserError::new("credential.open", "Could not open Windows Credential Manager."))
+    Entry::new(CREDENTIAL_SERVICE, email).map_err(cred_err::open)
 }
 
 pub(super) fn read_secret(email: &str) -> Result<Option<String>, UserError> {
     match credential(email)?.get_password() {
         Ok(secret) => Ok(Some(secret)),
         Err(KeyringError::NoEntry) => Ok(None),
-        Err(_) => Err(UserError::new("credential.read", "Could not read from Windows Credential Manager.")),
+        Err(error) => Err(cred_err::read(error)),
     }
 }
 
 pub(super) fn delete_secret(email: &str) -> Result<(), UserError> {
     match credential(email)?.delete_credential() {
         Ok(()) | Err(KeyringError::NoEntry) => Ok(()),
-        Err(_) => Err(UserError::new("credential.delete", "Could not delete from Windows Credential Manager.")),
+        Err(error) => Err(cred_err::delete(error)),
     }
 }
 

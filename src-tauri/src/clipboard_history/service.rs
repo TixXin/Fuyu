@@ -19,7 +19,7 @@ use super::store::{
 use super::{
     current_unix_millis, ClipboardHistoryImage, ClipboardHistoryItem, ClipboardSource, SecretHandling,
     ClipboardHistoryItemKind, ClipboardHistoryService, CopyAs, ClipboardHistorySettings,
-    ClipboardHistorySnapshot, ClipboardHistoryState, HISTORY_CHANGED_EVENT, MAIN_WINDOW_LABEL,
+    ClipboardHistorySnapshot, ClipboardHistoryState, HISTORY_CHANGED_EVENT,
     SHORT_DUPLICATE_WINDOW_MS,
 };
 use crate::win32;
@@ -561,7 +561,7 @@ impl ClipboardHistoryService {
             }
             return;
         }
-        if let Some(window) = self.app.get_webview_window(MAIN_WINDOW_LABEL) {
+        if let Some(window) = self.app.get_webview_window(crate::island::WINDOW_LABEL) {
             let _ = window.show();
             crate::island::focus::focus_island_for_shortcut(&window);
         }

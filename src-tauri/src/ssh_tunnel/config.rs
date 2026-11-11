@@ -70,6 +70,7 @@ pub(super) fn set(app_dir: &Path, host: &str, enabled: bool, remote_port: Option
     }
     let text = serde_json::to_string_pretty(&TunnelsFile { hosts: hosts.clone() }).map_err(|error| error.to_string())?;
     fs::create_dir_all(app_dir).map_err(|error| format!("Failed to create the app data folder: {error}"))?;
-    fs::write(app_dir.join(FILE_NAME), text).map_err(|error| format!("Failed to save the tunnels: {error}"))?;
+    crate::fs_write::replace_file(&app_dir.join(FILE_NAME), text.as_bytes())
+        .map_err(|error| format!("Failed to save the tunnels: {error}"))?;
     Ok(hosts)
 }

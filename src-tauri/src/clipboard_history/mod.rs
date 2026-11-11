@@ -37,8 +37,6 @@ pub(crate) use popup::WINDOW_LABEL as POPUP_WINDOW_LABEL;
 
 const HISTORY_CHANGED_EVENT: &str = "clipboard-history-changed";
 
-const MAIN_WINDOW_LABEL: &str = "main";
-
 const DEFAULT_MAX_ITEMS: usize = 30;
 
 const DEFAULT_SHORTCUT: &str = "Ctrl+Shift+W";

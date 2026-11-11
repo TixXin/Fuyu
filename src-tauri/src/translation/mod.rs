@@ -27,14 +27,14 @@ use crate::win32::{
     message_window::{self, WindowMessages},
 };
 
-const WINDOW_LABEL: &str = "translation";
-const MAIN_WINDOW_LABEL: &str = "main";
+pub(crate) const WINDOW_LABEL: &str = "translation";
 const DEFAULT_SHORTCUT: &str = "Ctrl+Shift+F";
 const DEFAULT_SELECTION_SHORTCUT: &str = "Ctrl+Alt+T";
 const HOTKEY_ID: i32 = 0x4654;
 const SELECTION_HOTKEY_ID: i32 = 0x4655;
 const CHANGE_HOTKEY_MESSAGE: u32 = WM_APP + 0x52;
 const CHANGE_SELECTION_HOTKEY_MESSAGE: u32 = WM_APP + 0x53;
+const TRANSLATION_WINDOW_OPENED_EVENT: &str = "translation-window-opened";
 const TRANSLATION_SELECTION_EVENT: &str = "translation-selection";
 const TRANSLATION_ISLAND_SHORTCUT_EVENT: &str = "translation-island-shortcut";
 const MAX_CHARACTERS: usize = 5_000;
@@ -125,7 +125,7 @@ pub fn toggle_translation_window(app: AppHandle) -> Result<(), String> {
     }
     window.show().map_err(|error| error.to_string())?;
     window.set_focus().map_err(|error| error.to_string())?;
-    let _ = app.emit("translation-window-opened", ());
+    let _ = app.emit(TRANSLATION_WINDOW_OPENED_EVENT, ());
     Ok(())
 }
 
@@ -138,7 +138,7 @@ pub fn present_translation_window(app: AppHandle) -> Result<(), String> {
         .ok_or_else(|| "Translation window was not found.".to_string())?;
     if window.is_visible().map_err(|error| error.to_string())? {
         window.set_focus().map_err(|error| error.to_string())?;
-        let _ = app.emit("translation-window-opened", ());
+        let _ = app.emit(TRANSLATION_WINDOW_OPENED_EVENT, ());
         return Ok(());
     }
     toggle_translation_window(app)
@@ -299,25 +299,31 @@ async fn complete(
 }
 
 #[tauri::command]
-pub fn set_translation_shortcut(shortcut: String) -> Result<String, UserError> {
+pub async fn set_translation_shortcut(shortcut: String) -> Result<String, UserError> {
     let binding = parse_shortcut_binding(&shortcut)
         .ok_or_else(|| UserError::new("shortcut.invalid", "That shortcut is not valid; use at least one modifier key."))?;
     if !ENABLED.load(Ordering::SeqCst) {
         // Remembered by the frontend and registered when translation is switched on.
         return Ok(binding.label);
     }
-    change_hotkey(Some(binding))
+    tauri::async_runtime::spawn_blocking(move || change_hotkey(Some(binding)))
+        .await
+        .map_err(|error| UserError::new("internal", "Something went wrong inside the island.").detail(error))?
 }
 
 /// Switching off unregisters the shortcut; switching on registers nothing by itself,
 /// the frontend then calls set_translation_shortcut with the saved shortcut.
 #[tauri::command]
-pub fn set_translation_enabled(enabled: bool) -> Result<(), UserError> {
+pub async fn set_translation_enabled(enabled: bool) -> Result<(), UserError> {
     ENABLED.store(enabled, Ordering::SeqCst);
     if !enabled {
-        let window = change_hotkey(None);
-        let selection = change_selection_hotkey(None);
-        window.and(selection).map(|_| ())?;
+        tauri::async_runtime::spawn_blocking(|| {
+            let window = change_hotkey(None);
+            let selection = change_selection_hotkey(None);
+            window.and(selection).map(|_| ())
+        })
+        .await
+        .map_err(|error| UserError::new("internal", "Something went wrong inside the island.").detail(error))??;
     }
     Ok(())
 }
@@ -329,13 +335,15 @@ pub fn set_translation_target(island: bool) {
 }
 
 #[tauri::command]
-pub fn set_translation_selection_shortcut(shortcut: String) -> Result<String, UserError> {
+pub async fn set_translation_selection_shortcut(shortcut: String) -> Result<String, UserError> {
     let binding = parse_shortcut_binding(&shortcut)
         .ok_or_else(|| UserError::new("shortcut.invalid", "That shortcut is not valid; use at least one modifier key."))?;
     if !ENABLED.load(Ordering::SeqCst) {
         return Ok(binding.label);
     }
-    change_selection_hotkey(Some(binding))
+    tauri::async_runtime::spawn_blocking(move || change_selection_hotkey(Some(binding)))
+        .await
+        .map_err(|error| UserError::new("internal", "Something went wrong inside the island.").detail(error))?
 }
 
 /// Hands `binding` to the hotkey thread, which owns the registration, and waits for it.
@@ -461,7 +469,7 @@ pub(crate) fn open_translator(app: &AppHandle) {
         return;
     }
     if OPENS_IN_ISLAND.load(Ordering::SeqCst) {
-        if let Some(window) = app.get_webview_window(MAIN_WINDOW_LABEL) {
+        if let Some(window) = app.get_webview_window(crate::island::WINDOW_LABEL) {
             let _ = window.show();
             crate::island::focus::focus_island_for_shortcut(&window);
         }

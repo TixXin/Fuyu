@@ -1,30 +1,10 @@
 //! Updater support: proxy discovery and whether this build can check for updates.
 
-use std::{os::windows::process::CommandExt, process::Command};
 use tauri::AppHandle;
+use windows::Win32::System::Registry::HKEY_CURRENT_USER;
 
-use super::CREATE_NO_WINDOW;
-
-pub(super) const INTERNET_SETTINGS_KEY: &str =
-    r"HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings";
-
-pub(super) fn registry_value(key: &str, value: &str) -> Option<String> {
-    let output = Command::new("reg")
-        .creation_flags(CREATE_NO_WINDOW)
-        .args(["query", key, "/v", value])
-        .output()
-        .ok()?;
-
-    if !output.status.success() {
-        return None;
-    }
-
-    String::from_utf8_lossy(&output.stdout)
-        .lines()
-        .find(|line| line.contains(value))
-        .and_then(|line| line.split_whitespace().last())
-        .map(str::to_string)
-}
+const INTERNET_SETTINGS_SUBKEY: &str =
+    r"Software\Microsoft\Windows\CurrentVersion\Internet Settings";
 
 pub(super) fn normalize_proxy(raw: &str) -> String {
     let entries: Vec<&str> = raw
@@ -56,11 +36,14 @@ pub fn get_updater_proxy() -> Option<String> {
         }
     }
 
-    if registry_value(INTERNET_SETTINGS_KEY, "ProxyEnable")?.trim() != "0x1" {
+    if crate::win32::registry::read_u32(HKEY_CURRENT_USER, INTERNET_SETTINGS_SUBKEY, "ProxyEnable")?
+        == 0
+    {
         return None;
     }
 
-    let server = registry_value(INTERNET_SETTINGS_KEY, "ProxyServer")?;
+    let server =
+        crate::win32::registry::read_string(HKEY_CURRENT_USER, INTERNET_SETTINGS_SUBKEY, "ProxyServer")?;
     if server.trim().is_empty() {
         return None;
     }

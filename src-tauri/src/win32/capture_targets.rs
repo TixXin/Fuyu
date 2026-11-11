@@ -4,26 +4,15 @@
 
 use windows::Win32::{
     Foundation::{HWND, RECT},
-    UI::{
-        Accessibility::{TreeScope_Descendants, UIA_BoundingRectanglePropertyId, UIA_IsOffscreenPropertyId},
-        WindowsAndMessaging::GetWindowThreadProcessId,
-    },
+    UI::Accessibility::{TreeScope_Descendants, UIA_BoundingRectanglePropertyId, UIA_IsOffscreenPropertyId},
 };
 
-use super::{com::ComApartment, dwm, uia_list, window};
+use super::{com::ComApartment, dwm, process, uia_list, window};
 
 /// A window on screen and where it is drawn.
 pub(crate) struct ShownWindow {
     pub(crate) handle: HWND,
     pub(crate) rect: RECT,
-}
-
-fn process_id(window: HWND) -> u32 {
-    let mut process = 0u32;
-    // SAFETY: GetWindowThreadProcessId writes only into the valid local `process`; an invalid
-    // window leaves it 0.
-    unsafe { GetWindowThreadProcessId(window, Some(&mut process)) };
-    process
 }
 
 fn has_area(rect: &RECT) -> bool {
@@ -36,7 +25,7 @@ pub(crate) fn shown_windows() -> Vec<ShownWindow> {
     let own = std::process::id();
     let mut shown = Vec::new();
     let _ = window::for_each_top_level_window(|handle| {
-        if !window::is_visible(handle) || window::is_minimized(handle) || dwm::is_cloaked(handle) || process_id(handle) == own {
+        if !window::is_visible(handle) || window::is_minimized(handle) || dwm::is_cloaked(handle) || process::window_process_id(handle) == own {
             return;
         }
         if let Some(rect) = dwm::frame_bounds(handle).or_else(|| window::window_rect(handle)).filter(has_area) {

@@ -110,11 +110,12 @@ impl FileShelfService {
         let next = prune(change(items.clone()), options, current_unix_millis(), presence);
         if next != *items {
             save_items(&self.path, &next)?;
-            *items = next;
+            *items = next.clone();
             // Plugins with shelf:read call shelf.list for the entries.
             crate::plugin_host::publish_event("shelf.changed", serde_json::json!({ "count": items.len() }));
         }
-        Ok(snapshot_of(&items, presence))
+        drop(items);
+        Ok(snapshot_of(&next, presence))
     }
 
     fn path_of(&self, id: &str) -> Result<String, String> {
@@ -128,11 +129,14 @@ impl FileShelfService {
     /// Paths of `ids` that still exist, in shelf order. Only paths already on the
     /// shelf are ever handed to the shell.
     fn existing_paths(&self, ids: &[String]) -> Result<Vec<String>, String> {
-        let paths: Vec<String> = self
+        let candidates: Vec<String> = self
             .items()
             .iter()
             .filter(|item| ids.contains(&item.id))
             .map(|item| item.path.clone())
+            .collect();
+        let paths: Vec<String> = candidates
+            .into_iter()
             .filter(|path| Path::new(path).exists())
             .collect();
         if paths.is_empty() {

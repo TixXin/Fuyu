@@ -2,12 +2,15 @@
 //! saving an edit as a new entry, pausing the history, converting Chinese scripts, reading a QR
 //! code in an image and a link's title.
 
+use std::sync::atomic::{AtomicU64, Ordering};
 use tauri::AppHandle;
 
 use super::clipboard_io::ClipboardCapture;
 use super::secrets::looks_like_secret;
 use super::store::{hash_bytes, preview_text};
 use super::{capture_pause, current_unix_millis, link_preview, popup, service, ClipboardHistorySnapshot, SecretHandling};
+
+static PAUSE_TIMER_GEN: AtomicU64 = AtomicU64::new(0);
 
 /// Puts `text` on the clipboard (not into the history) and pastes it into the window that was in
 /// front; `enter` presses Enter after it.
@@ -41,12 +44,13 @@ pub fn add_clipboard_history_text(text: String) -> Result<ClipboardHistorySnapsh
 #[tauri::command]
 pub fn pause_clipboard_capture(minutes: Option<u32>) -> Result<ClipboardHistorySnapshot, String> {
     let minutes = minutes.map(|minutes| minutes.clamp(1, 24 * 60));
+    let generation = PAUSE_TIMER_GEN.fetch_add(1, Ordering::SeqCst) + 1;
     capture_pause::pause(minutes, current_unix_millis());
     // A timed pause tells the windows when it ends, so the pause bar goes at once (C42).
     if let Some(minutes) = minutes {
         std::thread::spawn(move || {
             std::thread::sleep(std::time::Duration::from_secs(u64::from(minutes) * 60 + 1));
-            if !capture_pause::paused() {
+            if PAUSE_TIMER_GEN.load(Ordering::SeqCst) == generation && !capture_pause::paused() {
                 let _ = changed();
             }
         });
@@ -56,6 +60,7 @@ pub fn pause_clipboard_capture(minutes: Option<u32>) -> Result<ClipboardHistoryS
 
 #[tauri::command]
 pub fn resume_clipboard_capture() -> Result<ClipboardHistorySnapshot, String> {
+    PAUSE_TIMER_GEN.fetch_add(1, Ordering::SeqCst);
     capture_pause::resume();
     changed()
 }
@@ -69,6 +74,7 @@ pub fn ignore_next_clipboard_copy() -> Result<ClipboardHistorySnapshot, String> 
 
 /// Pauses until resumed, or resumes: the tray menu's item.
 pub(crate) fn toggle_capture_pause() {
+    PAUSE_TIMER_GEN.fetch_add(1, Ordering::SeqCst);
     if capture_pause::paused() {
         capture_pause::resume();
     } else {
