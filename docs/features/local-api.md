@@ -18,7 +18,7 @@
 
 > 从旧版本升级：以前在"设置 → 待办"里打开过本地接口的用户，第一次启动新版本时，原来的开关和"允许修改"设置会自动迁移到这个插件上。地址、端口、令牌都不变，已有的脚本不用修改。
 
-脚本也可以直接读取配置文件来获取端口和令牌，路径为 `%APPDATA%\com.focusd.island\local-api.json`：
+脚本也可以直接读取配置文件来获取端口和令牌，路径为 `%APPDATA%\com.tixxin.fuyu\local-api.json`：
 
 ```json
 { "enabled": true, "allowWrite": true, "port": 39271, "token": "64 位十六进制" }
@@ -58,7 +58,7 @@
 
 ## 开发模式
 
-供插件开发工具 `fly-island-plugin dev` 使用（见 [插件快速开始](../plugins/quickstart.md)）。只有在 设置 → 插件扩展 → 开发者 中打开了开发模式时可用，否则返回 403。加载、重新加载和移除会运行或停止任意文件夹里的代码，所以还需要打开"允许修改"（否则返回 403）；读取日志不需要。
+供插件开发工具 `fuyu-plugin dev` 使用（见 [插件快速开始](../plugins/quickstart.md)）。只有在 设置 → 插件扩展 → 开发者 中打开了开发模式时可用，否则返回 403。加载、重新加载和移除会运行或停止任意文件夹里的代码，所以还需要打开"允许修改"（否则返回 403）；读取日志不需要。
 
 | 方法 | 路径 | 请求体 | 说明 |
 |---|---|---|---|
@@ -99,7 +99,7 @@ claude mcp add fuyu -- npx -y fuyu-plugin mcp
 PowerShell：
 
 ```powershell
-$config = Get-Content "$env:APPDATA\com.focusd.island\local-api.json" | ConvertFrom-Json
+$config = Get-Content "$env:APPDATA\com.tixxin.fuyu\local-api.json" | ConvertFrom-Json
 $api = "http://127.0.0.1:$($config.port)/v1"
 $headers = @{ Authorization = "Bearer $($config.token)" }
 

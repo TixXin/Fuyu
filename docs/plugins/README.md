@@ -11,7 +11,7 @@
 下面是不用任何工具、手动安装一个示例插件的步骤。
 
 1. 复制示例 [`plugins/examples/dev.focusd.todo-digest`](../../plugins/examples/dev.focusd.todo-digest/) 到
-   `%APPDATA%\com.focusd.island\plugins\dev.focusd.todo-digest\`。
+   `%APPDATA%\com.tixxin.fuyu\plugins\dev.focusd.todo-digest\`。
    插件目录也可以在 设置 → 插件扩展 → 插件目录 → **打开** 中找到。
 2. 示例使用 Windows 自带的 PowerShell 运行，不需要另外安装任何东西。
 3. 在 设置 → 插件扩展 中打开 **允许运行第三方插件**，点 **重新加载**，再打开插件卡片上的 **启用**。
@@ -32,7 +32,7 @@
 
 - [本地接口](../features/local-api.md)（`focusd.local-api`）；
 - 中心图案（`focusd.center-pattern`，默认关闭）：折叠岛没有摘要文字时，在中间显示眼睛、小鸟、光点、小猫、悬岛标志或一只 Codex Pets 宠物，摘要只有剩余待办数时排在待办数前面，悬岛标志和宠物随 Agent 会话的状态变化，岛上显示 Agent 标题时站在标题前代替 Agent 图标（状态灯已经是悬岛时，悬岛标志不再站过去）；设置「大小」调图案高度，默认 24px，和环一样高。
-- Agent 用量环（`focusd.claude-usage`，默认关闭；原名 Claude 用量环）：收起条上每个打开的 Agent 一个同心双环，外环 5 小时、内环 7 天（没有周限额时画本月），悬停显示详情卡片。设置里 Claude Code（默认开）、Codex、GLM、Kimi 各一个开关。Codex 读本机 Codex 会话记录（`get_codex_usage`，和 Agent 页相同，不联网）。GLM 和 Kimi 用插件页保存的 API Key 直连官方接口（`get_plan_usage`：`open.bigmodel.cn/api/monitor/usage/quota/limit`、`api.kimi.com/coding/v1/usages`；不走代理、不跟随重定向，答复缓存 1 分钟，点击环 10 秒内只放行一次）；Key 由 `set_plan_key` 存进 Windows 凭据管理器 `com.focusd.island.plan-usage`，`has_plan_key` 只回答有没有，Key 不回到前端、日志和插件设置。Qwen（阿里云百炼）没有公开的额度查询接口，暂不支持。Claude Code 的数据与 Agent 页顶部的用量相同（`get_agent_usage`）：Claude Code 经本机 magpie 网关时读它的 `/v1/magpie/quotas`（只请求本机），否则读 claude-hud 写出的用量快照；都不联网、不读登录凭据。设置「直接向 Anthropic 查询」（默认关）打开后，原生端（`src-tauri/src/claude_usage/`）只读 Claude Code 的 `~/.claude/.credentials.json` 里的 access token（不刷新、不改写，不进日志、前端和事件），经 http(s) 代理请求 `api.anthropic.com/api/oauth/usage`：代理依次取插件设置、`HTTPS_PROXY`、Windows 系统代理，都没有就不请求，**从不直连**；不跟随重定向；间隔 5–120 分钟（设置「刷新间隔」），失败时加倍退避，429 遵守 `Retry-After`。`get_agent_usage` 在两份数据中取较新的，并带上最近一次失败的原因。这个接口没有公开文档，可能随时失效。
+- Agent 用量环（`focusd.claude-usage`，默认关闭；原名 Claude 用量环）：收起条上每个打开的 Agent 一个同心双环，外环 5 小时、内环 7 天（没有周限额时画本月），悬停显示详情卡片。设置里 Claude Code（默认开）、Codex、GLM、Kimi 各一个开关。Codex 读本机 Codex 会话记录（`get_codex_usage`，和 Agent 页相同，不联网）。GLM 和 Kimi 用插件页保存的 API Key 直连官方接口（`get_plan_usage`：`open.bigmodel.cn/api/monitor/usage/quota/limit`、`api.kimi.com/coding/v1/usages`；不走代理、不跟随重定向，答复缓存 1 分钟，点击环 10 秒内只放行一次）；Key 由 `set_plan_key` 存进 Windows 凭据管理器 `com.tixxin.fuyu.plan-usage`，`has_plan_key` 只回答有没有，Key 不回到前端、日志和插件设置。Qwen（阿里云百炼）没有公开的额度查询接口，暂不支持。Claude Code 的数据与 Agent 页顶部的用量相同（`get_agent_usage`）：Claude Code 经本机 magpie 网关时读它的 `/v1/magpie/quotas`（只请求本机），否则读 claude-hud 写出的用量快照；都不联网、不读登录凭据。设置「直接向 Anthropic 查询」（默认关）打开后，原生端（`src-tauri/src/claude_usage/`）只读 Claude Code 的 `~/.claude/.credentials.json` 里的 access token（不刷新、不改写，不进日志、前端和事件），经 http(s) 代理请求 `api.anthropic.com/api/oauth/usage`：代理依次取插件设置、`HTTPS_PROXY`、Windows 系统代理，都没有就不请求，**从不直连**；不跟随重定向；间隔 5–120 分钟（设置「刷新间隔」），失败时加倍退避，429 遵守 `Retry-After`。`get_agent_usage` 在两份数据中取较新的，并带上最近一次失败的原因。这个接口没有公开文档，可能随时失效。
 - Agent 会话环（`focusd.session-ring`，默认关闭）：AI Agent 开启时，在收起条上代替蓝色会话数，样式可选分段环（默认）、像素格、状态条和信号格，按状态着色（等你确认、等你回复、运行、可能已停、完成），分段环和状态条的会话数可以用「显示会话数」开关关掉，悬停列出等你处理的会话，点击打开 Agent 页。数据就是 Agent 页的会话列表（Claude Code 和 Codex），只在岛屿窗口工作，没有原生部分。
 
 - SSH 代理隧道（`focusd.ssh-proxy-tunnel`，默认关闭）：把这台电脑的代理借给 SSH 服务器。插件页列出 `~/.ssh/config` 的 Host 和 AI Agent 页添加的电脑，每台可以单独打开并填服务器上的端口（1024–65535）；打开的主机各有一条常驻的 `ssh -N -R 127.0.0.1:<服务器端口>:127.0.0.1:<本地端口>`（隐藏窗口、只用密钥登录、`ExitOnForwardFailure`，和读会话的那条连接分开），断开后 5 秒起加倍退避重连（最长 2 分钟），关闭插件、关掉主机或退出岛屿时结束（ssh 在作业对象里，岛屿崩溃也不留下）。本地端口在设置里选，默认「自动检测」：依次看 Clash Verge 的运行配置（`%APPDATA%\io.github.clash-verge-rev.clash-verge-rev\clash-verge.yaml` 的 `mixed-port`，没有时 `verge.yaml` 的 `verge_mixed_port`）、正在运行的 v2rayN 旁边的 `guiConfigs\guiNConfig.json`（`Inbound[0].LocalPort`，7.x 起是混合端口）、Windows 系统代理（开着且指向本机时），再试 7897、10808，取第一个真有程序在监听的；都没在监听时保持上次的端口。之后每 15 秒再看一次，端口变了隧道跟着重建。也可以固定选 Clash Verge（先读它的设置，读不到用 7897）、v2rayN（先读它的设置，读不到用 10808；7.0 之前的版本 HTTP 是 10809，请选自定义）或自定义。插件页「运行信息」实时显示隧道转发到的本地地址、端口从哪里来、现在有没有程序在监听。打开主机或改端口时先用一条短 ssh 在服务器上跑 `ss -ltn`（没有时 `netstat -ltn`）看端口是否已被占用，占用时问「仍要搭建隧道吗？」：是就照样搭（等端口空出来），否就不打开；查不了（服务器上没有 `ss` 也没有 `netstat`，或连不上）时同样询问，并写出原因；岛屿启动或重连时不弹窗，转发被拒时显示「端口被占用，等待中」并继续重试。打开的主机下面有一行可复制的 `export http_proxy=… https_proxy=… HTTPS_PROXY=…`，在服务器上运行它。
@@ -40,7 +40,7 @@
 
 内置插件的清单写在 `src-tauri/src/plugin_host/builtin.rs` 中，`runtime.type` 为 `builtin`。插件目录里的第三方插件不能使用这个类型，也不能使用内置插件的 id。
 
-只在岛屿窗口里工作的内置插件（例如收起条上的小环）只需在 `BUILTINS` 表里加一行"id + 清单"：后端启动和停止时什么都不做；前端用 `useBuiltinPlugin(id)`（`src/features/plugins/useBuiltinPlugin.ts`）读到 `{ enabled, settings }`，插件启停或改设置时自动更新（宿主发出 `plugin-view-changed` 的 `reset` 事件），再在 `src/windows/island/useCollapsedSlots.tsx` 里填收起条槽位。
+只在岛屿窗口里工作的内置插件（例如收起条上的小环）只需在 `BUILTINS` 表里加一行`("id", 清单, 默认启用)`：后端启动和停止时什么都不做；前端用 `useBuiltinPlugin(id)`（`src/features/plugins/useBuiltinPlugin.ts`）读到 `{ enabled, settings }`，插件启停或改设置时自动更新（宿主发出 `plugin-view-changed` 的 `reset` 事件），再在 `src/windows/island/useCollapsedSlots.tsx` 里填收起条槽位。
 
 ## 目录结构
 
@@ -347,7 +347,7 @@ QQ 邮箱授权码、翻译服务密钥这类凭据，任何权限都拿不到�
 
 用户启用插件时，会授予清单里列出的全部权限。新版本如果要求更多权限，插件会暂停，直到用户重新授权。
 
-注意：权限只限制插件能调用哪些岛屿接口。插件程序本身以用户身份运行，可以读写文件和联网，也能直接读取 Windows 凭据管理器里当前用户的条目（包括岛屿保存的邮箱授权码 `com.focusd.island.qq-mail` 和翻译密钥）。岛屿的接口不会把这些凭据交给插件，但无法阻止插件进程自己去读；所以市场要求人工审核源码，安装其他发布者的插件前要先信任发布者，设置页也写明了这一点。用 AppContainer 或受限令牌隔离插件进程会让 Node.js 和 PowerShell 插件无法正常运行，目前不做。
+注意：权限只限制插件能调用哪些岛屿接口。插件程序本身以用户身份运行，可以读写文件和联网，也能直接读取 Windows 凭据管理器里当前用户的条目（包括岛屿保存的邮箱授权码 `com.tixxin.fuyu.qq-mail` 和翻译密钥）。岛屿的接口不会把这些凭据交给插件，但无法阻止插件进程自己去读；所以市场要求人工审核源码，安装其他发布者的插件前要先信任发布者，设置页也写明了这一点。用 AppContainer 或受限令牌隔离插件进程会让 Node.js 和 PowerShell 插件无法正常运行，目前不做。
 
 同样的原因，插件网页的 WebRTC 屏蔽只是减少意外：页面里的数据都来自它自己的插件进程，而插件进程本来就能联网，页面即使绕过屏蔽也拿不到更多东西。
 
@@ -509,7 +509,7 @@ QQ 邮箱授权码、翻译服务密钥这类凭据，任何权限都拿不到�
 ### 存储与秘密（第 2 版）
 
 - `storage.*` 由岛屿保存在 `plugins-data/<id>/storage.json`，不需要权限，适合保存设置以外的小量数据（对应 VS Code 的 `globalState`）。写入是原子的，岛屿崩溃也不会留下半个文件。
-- `secrets.*` 保存在 Windows 凭据管理器中（服务名 `com.focusd.island.plugin.<id>`），需要 `secrets` 权限，适合令牌和密码。`key` 为 1–64 个字母、数字、`.`、`_`、`-`；`value` 是最长 1024 个字符的字符串；每个插件最多 32 个，超过返回状态 413。
+- `secrets.*` 保存在 Windows 凭据管理器中（服务名 `com.tixxin.fuyu.plugin.<id>`），需要 `secrets` 权限，适合令牌和密码。`key` 为 1–64 个字母、数字、`.`、`_`、`-`；`value` 是最长 1024 个字符的字符串；每个插件最多 32 个，超过返回状态 413。
 - 卸载插件时，存储和秘密都会保留，重新安装后还能读到。插件设置页的 **清除数据** 会删除 `plugins-data/<id>/` 整个目录和这个插件的全部秘密，运行中的插件会被重启。
 
 ### 错误码
@@ -527,7 +527,7 @@ QQ 邮箱授权码、翻译服务密钥这类凭据，任何权限都拿不到�
 | 变量 | 说明 |
 |---|---|
 | `FUYU_PLUGIN_ID` | 插件 id |
-| `FUYU_PLUGIN_DATA_DIR` | 插件私有的数据目录 `%APPDATA%\com.focusd.island\plugins-data\<id>\`，已经创建好。插件的数据请存在这里，不要写进插件目录，否则更新插件时会被覆盖。 |
+| `FUYU_PLUGIN_DATA_DIR` | 插件私有的数据目录 `%APPDATA%\com.tixxin.fuyu\plugins-data\<id>\`，已经创建好。插件的数据请存在这里，不要写进插件目录，否则更新插件时会被覆盖。 |
 | `FUYU_PLUGIN_API_VERSION` | 清单里的 `apiVersion`（`1` 或 `2`） |
 
 工作目录是插件文件夹，进程不会显示控制台窗口。
@@ -573,7 +573,7 @@ QQ 邮箱授权码、翻译服务密钥这类凭据，任何权限都拿不到�
 - 任何网页都能放这种链接，所以插件第一次收到链接前，岛上会像敏感权限一样询问用户（允许 / 本次 / 拒绝）。答案记在插件的「敏感权限」里，可以撤销。插件被关闭、没写 `onUri` 或用户拒绝时，链接被丢弃。
 - 把链接里的数据当成不可信的输入：检查格式，不要直接执行；做登录回调时用 `state` 参数核对是自己发起的请求。
 - Node SDK：`plugin.onUri(({ path, query }) => ...)`；模拟宿主：`host.openUri("/auth", "code=1")`。PowerShell：在 `Invoke-FuyuLoop` 的处理函数表里加 `uri`。
-- 注册写在 `HKCU\Software\Classes\focusd`，指向最近一次启动的岛屿程序；卸载岛屿不会删除它。
+- 注册写在 `HKCU\Software\Classes\fuyu` 与 `HKCU\Software\Classes\focusd`，指向最近一次启动的岛屿程序；卸载岛屿不会删除它。
 
 ## SDK
 
@@ -637,10 +637,10 @@ plugin.onCommand("sync-now", async () => {
 
 1. 用 `npx fuyu-plugin validate` 检查，`npx fuyu-plugin pack` 打包，得到 `<id>-<version>.zip`。
 2. 在自己的仓库发布 GitHub Release：标签是清单的 `version`（可以带 `v`），附件是这个 zip，文件名不能改。
-3. 向 `focusd-plugins` 开 pull request，只新增 `plugins/<插件 id>.json`（见下文）。PR 会自动检查所有权、下载并校验插件包；维护者阅读源码后合并，一小时内插件出现在 **设置 → 插件市场**。
+3. 向 `fuyu-plugins` 开 pull request，只新增 `plugins/<插件 id>.json`（见下文）。PR 会自动检查所有权、下载并校验插件包；维护者阅读源码后合并，一小时内插件出现在 **设置 → 插件市场**。
 4. 以后发新版本只要在自己的仓库发新的 Release。申请新权限、第一次加入自定义网页界面或换了运行时的版本不会自动上架，要等维护者审核。
 
-**点赞**：插件上架后，`focusd-plugins` 的 CI 会在它的 Discussions 里自动给插件开一条点赞帖，每小时统计帖子的 👍，写进 `stars.json`。市场卡片显示这个数字，可以按点赞数排序，点卡片上的 👍 打开这条帖子。作者不需要做任何事，想让用户来点赞时，把帖子地址放进 README 即可。
+**点赞**：插件上架后，`fuyu-plugins` 的 CI 会在它的 Discussions 里自动给插件开一条点赞帖，每小时统计帖子的 👍，写进 `stars.json`。市场卡片显示这个数字，可以按点赞数排序，点卡片上的 👍 打开这条帖子。作者不需要做任何事，想让用户来点赞时，把帖子地址放进 README 即可。
 
 **安装链接**：`fuyu://market/install/<插件 id>`（改名前的 `focusd://market/install/<插件 id>` 也认）打开岛屿的 **设置 → 插件市场**，并把这个插件置顶，官网插件页的「安装」按钮用的就是它，作者也可以放进自己的 README。链接本身不会安装任何东西：用户在置顶的卡片上自己点「安装」，照常经过信任发布者和权限的确认；插件不在市场里时会提示链接无效。需要 v0.3.5 之后发布的岛屿，旧版会忽略这种链接。
 
@@ -648,7 +648,7 @@ plugin.onCommand("sync-now", async () => {
 
 ### 发布者与分类
 
-`plugins/<插件 id>.json`（在 `focusd-plugins` 里）：
+`plugins/<插件 id>.json`（在 `fuyu-plugins` 里）：
 
 ```json
 {
@@ -676,7 +676,7 @@ plugin.onCommand("sync-now", async () => {
 
 可选。签了名，用户的岛屿才会**自动更新**你的插件；岛屿还会记下第一次看到的密钥，之后换了密钥的版本要用户确认才装。这样即使你的 GitHub 账号或仓库被盗，攻击者发的新版本也不会悄悄装到用户电脑上。设计见 [plugin-author-signing.md](../architecture/plugins/author-signing.md)。
 
-1. 只需一次：`npx fuyu-plugin keygen` 生成签名密钥。私钥存在 `~/.fuyu-plugin/signing.key`（Windows 上用 DPAPI 加密，只有当前 Windows 账户能解开），也可以用环境变量 `FUYU_PLUGIN_SIGNING_KEY`（PEM 文本）提供。它打印的 `{ keyId, publicKey }` 写进 `focusd-plugins` 里你的提交 `plugins/<插件 id>.json` 的 `"signingKeys": [ ... ]`。
+1. 只需一次：`npx fuyu-plugin keygen` 生成签名密钥。私钥存在 `~/.fuyu-plugin/signing.key`（Windows 上用 DPAPI 加密，只有当前 Windows 账户能解开），也可以用环境变量 `FUYU_PLUGIN_SIGNING_KEY`（PEM 文本）提供。它打印的 `{ keyId, publicKey }` 写进 `fuyu-plugins` 里你的提交 `plugins/<插件 id>.json` 的 `"signingKeys": [ ... ]`。
 2. 每次发版：`npx fuyu-plugin pack --sign`，把 `<id>-<version>.zip` 和 `<id>-<version>.zip.sig` 一起附到 Release。已经打好的包可以用 `npx fuyu-plugin sign <zip>` 补签。
 3. 登记了 `signingKeys` 之后，没有签名或签名不对的版本不会上架，维护者也不能放行。
 
@@ -697,9 +697,9 @@ plugin.onCommand("sync-now", async () => {
 
 1. 修改插件并提高 `version`，在本机运行 `pnpm plugins:index`（需要旧签名私钥，见下文；以及官方作者密钥 `~/.tauri/fly-island/plugin-author-signing.key`，公钥在 `plugins/author-key.json`）。脚本把插件打成 `plugins/packages/<id>-<version>.zip` 并写出作者签名 `<zip>.sig`，重写并签名本仓库的 `plugins/index.json` 和 `plugins/revoked.json`。文本文件打包时统一成 LF，时间戳固定，所以同一份源码每次得到同一个哈希。
 2. 提交并 land。
-3. 在 `focusd-plugins` 里把 `plugins/<id>.json` 的 `package` 改成新 zip 的地址（`https://raw.githubusercontent.com/TixXin/fuyu/main/plugins/packages/<id>-<version>.zip`），合并后 CI 更新市场索引。
+3. 在 `fuyu-plugins` 里把 `plugins/<id>.json` 的 `package` 改成新 zip 的地址（`https://raw.githubusercontent.com/TixXin/fuyu/main/plugins/packages/<id>-<version>.zip`），合并后 CI 更新市场索引。
 
-本仓库的 `plugins/index.json` 只给切换到 `focusd-plugins` 之前发布的岛屿（它们读 `main`，更早的读 `dev`，`dev` 与 `main` 保持同一个提交），只含官方插件。
+本仓库的 `plugins/index.json` 只给切换到 `fuyu-plugins` 之前发布的岛屿（它们读 `main`，更早的读 `dev`，`dev` 与 `main` 保持同一个提交），只含官方插件。
 
 ### 更新
 
@@ -707,7 +707,7 @@ plugin.onCommand("sync-now", async () => {
 
 ### 下架
 
-`focusd-plugins` 根目录的 `revoked.json` 列出被撤销的版本（本仓库的 `plugins/revoked.json` 是给旧版岛屿的副本，要同步修改）：
+`fuyu-plugins` 根目录的 `revoked.json` 列出被撤销的版本（本仓库的 `plugins/revoked.json` 是给旧版岛屿的副本，要同步修改）：
 
 ```json
 {
@@ -726,17 +726,17 @@ plugin.onCommand("sync-now", async () => {
 - `versions`：`"*"` 表示所有版本，或者列出具体版本。
 - `action`：`disable` 停止并禁用插件；`uninstall` 停止并删除插件目录（`plugins-data/<id>/` 保留）。
 - 岛屿每次刷新市场时读取它，名单保存在 `plugins.json` 的 `revoked` 里，离线时也有效。下载到的名单只会往保存的名单里**加**条目，不会删：旧的缓存副本或者暂时读不到 `revoked.json`，都不会让已下架的版本重新可用。误下架的插件请发一个新版本。市场也不会把已安装的插件换成更旧的版本。被撤销的版本不能启用，也不能从市场安装；插件卡片显示原因。手动放进插件目录的同 id 同版本也会被拦截，开发模式加载的插件除外。
-- 它和 `index.json` 一样要签名（`focusd-plugins` 的 CI 合并后重新签名）。没有这个文件时视为没有撤销任何版本；有文件但签名不对时，整个市场刷新失败。
+- 它和 `index.json` 一样要签名（`fuyu-plugins` 的 CI 合并后重新签名）。没有这个文件时视为没有撤销任何版本；有文件但签名不对时，整个市场刷新失败。
 
 ### 签名
 
 岛屿只接受签名有效的索引。索引里有每个插件包的 SHA-256，所以给索引签名，也就间接保护了插件包：即使有人能修改仓库或 CDN 上的文件，没有私钥也无法让岛屿安装被改过的插件。
 
 - **算法**：Ed25519。签名对象是 LF 换行的 `index.json`（`revoked.json` 同理）。签名文件的格式为 `{ "keyId", "signature" }`，或者这种对象的数组（多把密钥各签一份，例如换密钥的过渡期）；数组中任一由可信公钥做出的有效签名即可通过。
-- **公钥**：放在 `plugins/signing-keys.json` 中，编译时嵌入岛屿；`focusd-plugins` 的 `keys/trusted.json` 与它一致。如果要换密钥，需要先把新公钥加进这个文件并发布一个新版本的岛屿。
-- **私钥**：有两把。`focusd-plugins` 的市场索引由 CI 签名（密钥 `e862885af5bba3dc`，存在该仓库 `release` 环境的 secret 里，只有 `main` 分支能用）。本仓库给旧版岛屿的 `plugins/index.json` 用较早的密钥签名：由 `pnpm plugins:keygen` 生成，保存在 `~/.tauri/fly-island/plugin-index-signing.key`，用 Windows DPAPI 加密，只有生成它的 Windows 账户能解开；也可以用环境变量 `FUYU_PLUGIN_SIGNING_KEY`（PEM 文本）提供。
+- **公钥**：放在 `plugins/signing-keys.json` 中，编译时嵌入岛屿；`fuyu-plugins` 的 `keys/trusted.json` 与它一致。如果要换密钥，需要先把新公钥加进这个文件并发布一个新版本的岛屿。
+- **私钥**：有两把。`fuyu-plugins` 的市场索引由 CI 签名（密钥 `e862885af5bba3dc`，存在该仓库 `release` 环境的 secret 里，只有 `main` 分支能用）。本仓库给旧版岛屿的 `plugins/index.json` 用较早的密钥签名：由 `pnpm plugins:keygen` 生成，保存在 `~/.tauri/fly-island/plugin-index-signing.key`，用 Windows DPAPI 加密，只有生成它的 Windows 账户能解开；也可以用环境变量 `FUYU_PLUGIN_SIGNING_KEY`（PEM 文本）提供。
 - **备份私钥**：私钥丢失后，已经安装的岛屿不会接受用新密钥签名的索引，只能随新版岛屿换密钥。DPAPI 加密的文件换了电脑或账户就解不开，所以备份时要另外导出一份明文 PEM，放在安全的地方。
-- **下载方式**：岛屿先通过 GitHub API 查出 `focusd-plugins` 的 `main` 分支最新的提交号，再按提交号下载 `index.json`、`revoked.json` 和它们的签名。这样两个文件一定来自同一次提交，也不会读到 CDN 的旧缓存。GitHub API 不可用时，退回按分支名下载；这时如果刚好赶上 CDN 缓存，可能短暂出现"签名不匹配"，稍等几分钟再刷新即可。
+- **下载方式**：岛屿先通过 GitHub API 查出 `fuyu-plugins` 的 `main` 分支最新的提交号，再按提交号下载 `index.json`、`revoked.json` 和它们的签名。这样两个文件一定来自同一次提交，也不会读到 CDN 的旧缓存。GitHub API 不可用时，退回按分支名下载；这时如果刚好赶上 CDN 缓存，可能短暂出现"签名不匹配"，稍等几分钟再刷新即可。
 
 规则：
 

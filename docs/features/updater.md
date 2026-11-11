@@ -35,8 +35,8 @@
 
 - `src-tauri/tauri.conf.json`：`plugins.updater`（端点、安装模式）
 - `src-tauri/capabilities/default.json`：`updater:default` 权限
-- `src/updaterController.ts`：检查 / 下载 / 安装状态机，跨页面存活
-- `src/UpdatePanel.tsx`：设置页里的检查更新面板，只负责渲染
+- `src/features/updater/updaterController.ts`：检查 / 下载 / 安装状态机，跨页面存活
+- `src/features/updater/UpdatePanel.tsx`：设置页里的检查更新面板，只负责渲染
 - `scripts/release/prepare-release-config.mjs`：构建发布包时写入公钥与签名开关
 - `scripts/release/make-latest-json.mjs`：根据构建产物生成 `latest.json`
 - `scripts/release/release.mjs`：一键构建 + 签名 + 生成清单 + 上传 Release

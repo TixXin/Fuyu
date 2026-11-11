@@ -59,7 +59,7 @@
 
 ```powershell
 git clone https://github.com/TixXin/fuyu.git
-cd fly-island
+cd fuyu
 pnpm install
 pnpm tauri dev      # 开发模式
 pnpm tauri build    # 打包安装程序

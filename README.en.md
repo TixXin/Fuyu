@@ -59,7 +59,7 @@ You need Windows 10/11, Node.js, pnpm, Rust, Visual Studio C++ Build Tools and W
 
 ```powershell
 git clone https://github.com/TixXin/fuyu.git
-cd fly-island
+cd fuyu
 pnpm install
 pnpm tauri dev      # development
 pnpm tauri build    # installers
