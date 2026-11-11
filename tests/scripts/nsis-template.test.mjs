@@ -5,7 +5,8 @@ import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import test from "node:test";
 
-const template = readFileSync(new URL("../../src-tauri/windows/installer.nsi", import.meta.url), "utf8");
+// Git may check it out with CRLF line endings.
+const template = readFileSync(new URL("../../src-tauri/windows/installer.nsi", import.meta.url), "utf8").replace(/\r\n/g, "\n");
 const config = JSON.parse(readFileSync(new URL("../../src-tauri/tauri.conf.json", import.meta.url), "utf8"));
 
 test("the NSIS template was copied from the installed Tauri CLI", () => {
