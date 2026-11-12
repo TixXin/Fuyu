@@ -19,6 +19,7 @@ import type { SettingsLyricsText } from "./lyrics";
 import type { SettingsMusicBarText } from "./musicBar";
 import type { SettingsCalendarText } from "./calendar";
 import type { SettingsBackupText } from "./backup";
+import type { SettingsDataHomeText } from "./dataHome";
 import type { SettingsShortcutsText } from "./shortcuts";
 import type { SettingsPageShortcutsText } from "./pageShortcuts";
 import type { SettingsProjectText } from "./project";
@@ -54,6 +55,7 @@ import * as lyrics from "./lyrics.ts";
 import * as musicBar from "./musicBar.ts";
 import * as calendar from "./calendar.ts";
 import * as backup from "./backup.ts";
+import * as dataHome from "./dataHome.ts";
 import * as shortcuts from "./shortcuts.ts";
 import * as pageShortcuts from "./pageShortcuts.ts";
 import * as project from "./project.ts";
@@ -99,6 +101,7 @@ export type SettingsText = {
   musicBar: SettingsMusicBarText;
   calendar: SettingsCalendarText;
   backup: SettingsBackupText;
+  dataHome: SettingsDataHomeText;
 
   shortcuts: SettingsShortcutsText;
 
@@ -157,6 +160,7 @@ export const zhCN: SettingsText = {
   musicBar: musicBar.zhCN,
   calendar: calendar.zhCN,
   backup: backup.zhCN,
+  dataHome: dataHome.zhCN,
 
   shortcuts: shortcuts.zhCN,
 
@@ -215,6 +219,7 @@ export const en: SettingsText = {
   musicBar: musicBar.en,
   calendar: calendar.en,
   backup: backup.en,
+  dataHome: dataHome.en,
 
   shortcuts: shortcuts.en,
 

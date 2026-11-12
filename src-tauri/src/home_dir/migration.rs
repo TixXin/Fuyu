@@ -28,7 +28,7 @@ pub(crate) fn has_island_data(dir: &Path) -> bool {
     DATA_MARKERS.iter().any(|name| dir.join(name).exists())
 }
 
-fn write_state(dir: &Path, state: &State) -> io::Result<()> {
+pub(crate) fn write_state(dir: &Path, state: &State) -> io::Result<()> {
     let text = serde_json::to_string_pretty(state).map_err(io::Error::other)?;
     fs::write(dir.join(STATE_FILE), text)
 }

@@ -88,6 +88,10 @@ export type ErrorCode =
   | "calendar.https"
   | "calendar.notCalendar"
   | "calendar.noCalendars"
+  | "home.envSet"
+  | "home.notAbsolute"
+  | "home.inUse"
+  | "home.copy"
   | "calendar.linkExpired"
   | "calendar.notIcs"
   | "calendar.corrupt"
@@ -283,6 +287,10 @@ export const zhCN: ErrorsText = {
     "calendar.https": "日历地址要以 https:// 开头。",
     "calendar.notCalendar": "这个地址不是日历，也找不到账号下的日历。",
     "calendar.noCalendars": "找不到账号下的日历。",
+    "home.envSet": ({ home }) => `家目录由环境变量 FUYU_HOME 指定（${home}），在这里改不了；要改请先去掉这个环境变量。`,
+    "home.notAbsolute": "请填一个完整的文件夹路径，例如 D:\\Fuyu。",
+    "home.inUse": ({ computer }) => `这个文件夹正在被电脑「${computer}」上的浮屿使用，先在那台电脑上退出浮屿。`,
+    "home.copy": ({ path }) => `没能把数据复制到 ${path}。`,
     "calendar.linkExpired": "订阅链接已失效，或没有权限。",
     "calendar.notIcs": "这个链接不是日历（iCalendar）。",
     "calendar.corrupt": "日历内容损坏。",
@@ -475,6 +483,10 @@ export const en: ErrorsText = {
     "calendar.https": "The calendar address must start with https://.",
     "calendar.notCalendar": "This address is not a calendar, and no calendars were found for the account.",
     "calendar.noCalendars": "No calendars were found for the account.",
+    "home.envSet": ({ home }) => `The home folder is set by the FUYU_HOME environment variable (${home}) and cannot be changed here; remove the variable first.`,
+    "home.notAbsolute": "Enter a full folder path, such as D:\\Fuyu.",
+    "home.inUse": ({ computer }) => `Fuyu on "${computer}" is using this folder. Quit Fuyu there first.`,
+    "home.copy": ({ path }) => `Could not copy the data to ${path}.`,
     "calendar.linkExpired": "The subscription link has expired, or does not allow access.",
     "calendar.notIcs": "This link is not a calendar (iCalendar).",
     "calendar.corrupt": "The calendar is damaged.",

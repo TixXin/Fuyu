@@ -192,6 +192,7 @@ pub fn run() {
             screenshot;
             settings_window;
             settings_file;
+            home_dir;
             onboarding_window;
             ssh_tunnel;
             phone_push;
@@ -204,6 +205,7 @@ pub fn run() {
             app.run(|_, event| {
                 if let tauri::RunEvent::Exit = event {
                     agent_approval::shutdown();
+                    home_dir::before_exit();
                     wechat_reminders::shutdown();
                 }
             })

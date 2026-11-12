@@ -7,6 +7,7 @@ pub(crate) mod clipboard;
 pub(crate) mod com;
 pub(crate) mod credentials;
 pub(crate) mod desktop;
+pub(crate) mod message_box;
 pub(crate) mod devnode;
 pub(crate) mod dwm;
 pub(crate) mod hotkey;

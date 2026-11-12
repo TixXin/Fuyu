@@ -80,6 +80,17 @@
     {
       "page": "general",
       "zh-CN": {
+        "group": "数据文件夹",
+        "title": "家目录"
+      },
+      "en": {
+        "group": "Data folder",
+        "title": "Home folder"
+      }
+    },
+    {
+      "page": "general",
+      "zh-CN": {
         "group": "备份与恢复",
         "title": "导出设置"
       },

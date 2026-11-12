@@ -40,6 +40,7 @@ mockIPC((command, payload) => {
     case "install_editor_extension": return null;
     case "set_reply_marker": replyMarkerCalls.push(replyMarkerOn = Boolean(args.enabled)); return replyMarker();
     case "get_launch_at_startup": return false;
+    case "get_data_home": return { home: "C:\\Users\\demo\\.fuyu", defaultHome: "C:\\Users\\demo\\.fuyu", source: "default" };
     case "set_launch_at_startup": return null;
     case "get_default_todo_save_directory": return "";
     case "get_clipboard_history":
