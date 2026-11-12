@@ -1,6 +1,6 @@
 # lane 与合并队列
 
-代理会话怎样开 lane、在 lane 里工作、合入 `main`，以及背后的设计和排障。必须遵守的几条在 [AGENTS.md](../../AGENTS.md)「Git 与协作」；本机的 `lanes` skill 按这份文档的顺序带着做。
+代理会话怎样开 lane、在 lane 里工作、合入 `main`，以及背后的设计和排障。必须遵守的几条在 [AGENTS.md](../../AGENTS.md)「Git 与协作」；仓库里的 `lanes` skill（`.claude/skills/lanes/`）按这份文档的顺序带着做。
 
 全部在仓库里：合并队列（rebase、推分支开 PR 并开启自动合并、等合入后快进主工作区、pre-push 检查）在 `scripts/mq/`，lane 的分配、归属和 Claude Code 钩子在 `scripts/lanes/`。2026-11-12 之前用的是 [claude-code-merge-queue](https://github.com/funador/claude-code-merge-queue) 加一份补丁，F29 收回了仓库；数据目录 `.git/claude-code-merge-queue/` 和环境变量 `CLAUDE_CODE_MERGE_QUEUE_EMERGENCY_PUSH` 沿用原名（`CLAUDE_CODE_MERGE_QUEUE_LANDING` 在 F30 第 4 步删掉了）。2026-11-13 起 land 不再直接推 `main`，改成开 PR、由 GitHub 在 CI 通过后合入（F30，计划见 [land-via-pr-plan.md](land-via-pr-plan.md)），本机的排队锁随之删除。
 
@@ -8,11 +8,15 @@
 
 | 钩子 | 在哪里配 | 脚本 |
 |---|---|---|
-| WorktreeCreate | 主工作区 `.claude/settings.json` | `node scripts/lanes/worktree-hooks.mjs create`：同 `lane:open` |
-| WorktreeRemove | 主工作区 `.claude/settings.json` | `node scripts/lanes/worktree-hooks.mjs remove`：同 `lane:done`；干净的释放回池子、目录留着，有工作的退出码 1，Claude Code 就不删 |
-| SessionStart | 用户级 `~/.claude/settings.json` | `scripts/lanes/session-hint.mjs`：在主工作区启动时提醒先开 lane，并列出被遗弃的 lane |
-| SessionEnd | 用户级 `~/.claude/settings.json`（`timeout` 30） | `scripts/lanes/session-end.mjs` |
+| WorktreeCreate | 仓库里的 `.claude/settings.json` | `worktree-hooks.mjs create`：同 `lane:open` |
+| WorktreeRemove | 仓库里的 `.claude/settings.json` | `worktree-hooks.mjs remove`：同 `lane:done`；干净的释放回池子、目录留着，有工作的退出码 1，Claude Code 就不删 |
+| SessionStart | 用户级 `~/.claude/settings.json`，`pnpm lane:install-hooks` 写入 | `scripts/lanes/session-hint.mjs`：在主工作区启动时提醒先开 lane，并列出被遗弃的 lane |
+| SessionEnd | 用户级 `~/.claude/settings.json`（`timeout` 30），`pnpm lane:install-hooks` 写入 | `scripts/lanes/session-end.mjs` |
 | pre-push | `.githooks/pre-push`（`core.hooksPath`） | `node scripts/mq/mq.mjs check-push` |
+
+`.claude/` 里只有 `settings.json`（上面两个 Worktree 钩子）和 `skills/`（`lanes`、`fuyu-release`）进仓库，其余（`settings.local.json`、`worktrees/`）各机器自己的。仓库里的钩子命令写成 `sh -c 'PATH="$PATH:/opt/homebrew/bin:/usr/local/bin" exec node "$CLAUDE_PROJECT_DIR/scripts/lanes/worktree-hooks.mjs" …'`：不写死路径，换文件夹、换机器都能用；mac 上的钩子不读 shell 配置，要补上 Homebrew 的 PATH 才找得到 `node`；Windows 上 Claude Code 用 Git Bash 跑钩子，同一条命令也能用（2026-11-13 实测）。会话从 lane 启动时 `$CLAUDE_PROJECT_DIR` 是 lane，脚本用 `git rev-parse --git-common-dir` 找回主工作区。
+
+SessionStart / SessionEnd 必须放用户级：magpie 这类会话不从仓库启动，读不到仓库的 `.claude/settings.json`，也没有指向仓库的 `$CLAUDE_PROJECT_DIR`，只能写主工作区的绝对路径。新机器或主工作区挪了位置后，在主工作区跑 `pnpm lane:install-hooks`：它往 SessionStart / SessionEnd 追加这两个钩子，不动别的工具的钩子；已经有的（哪怕指向旧路径）就地改成当前路径、去掉重复；改之前把原文件备份成 `settings.json.bak-lane-hooks-<时间>`；mac 上自动加上面的 PATH 包装；可以重复运行。`--check` 只列出要改什么，不写，要改时退出码 1。另外每台机器在主工作区 `git config core.hooksPath .githooks` 一次。
 
 ## 开 lane、进入 lane
 
@@ -20,7 +24,7 @@
 - 钩子用不了时（例如会话不是从仓库目录启动的，magpie 会话就是这样）：在主工作区运行 `pnpm lane:open --as <会话名>`，最后一行是 lane 的路径，**紧接着 EnterWorktree(path=<lane 路径>) 进入它**。会话名用 ListAgents 里自己的名字。
 - 接手别人的 lane（交接）：`pnpm lane:take <N> --as <会话名>`，再 EnterWorktree(path) 进入。对方还在用时会拒绝，确认对方不用了再加 `--force`。
 - 退出会话前：`pnpm lane:done`（在 lane 里不用写编号）。lane 干净、提交都在 `main` 上时释放它，否则列出未提交的文件和未合入的提交、不释放，还会提醒写着这个 lane 的任务。确认不要那些改动了才加 `--force`。释放后再 ExitWorktree(action="keep")；lane 本身留着，下一个会话立刻就能复用。
-- 会话退出时（两次 Ctrl+C、`/exit`、Ctrl+D），`SessionEnd` 钩子（`scripts/lanes/session-end.mjs`）自动做同样的检查：释放会话所在的 lane 和登记在这个会话 ID 名下的 lane，有工作的保留；`/clear`、`/resume` 不释放。钩子配在用户级 `~/.claude/settings.json`，所以 magpie 这类从别处启动的会话也会跑；脚本按自己所在位置找仓库，`timeout` 设为 30 秒（SessionEnd 默认只有 1.5 秒）。直接关掉终端或进程被杀时钩子不一定跑，所以收工前仍要 `lane:done`。
+- 会话退出时（两次 Ctrl+C、`/exit`、Ctrl+D），`SessionEnd` 钩子（`scripts/lanes/session-end.mjs`）自动做同样的检查：释放会话所在的 lane 和登记在这个会话 ID 名下的 lane，有工作的保留；`/clear`、`/resume` 不释放。钩子配在用户级 `~/.claude/settings.json`（`pnpm lane:install-hooks` 写入），所以 magpie 这类从别处启动的会话也会跑；脚本按自己所在位置找仓库，`timeout` 设为 30 秒（SessionEnd 默认只有 1.5 秒）。直接关掉终端或进程被杀时钩子不一定跑，所以收工前仍要 `lane:done`。
 - 只想放掉登记、不做检查：`pnpm lane:release <N>`。
 - **不要手动 `git worktree add`**：那样不留归属记录，别的会话会把它当成空闲的 lane；`pnpm verify` 和 land 也会拒绝没有归属记录的 lane。
 

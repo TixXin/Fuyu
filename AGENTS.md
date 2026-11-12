@@ -78,7 +78,7 @@
 | 改版本号、起草发布说明 | `pnpm release:version <版本号>`（四处版本号一起改，不要手动改） |
 | 发布 | `pnpm release`（流程见 `docs/features/updater.md`） |
 | 合入 main（在 lane 里） | `pnpm mq:land`（开 PR 并开启自动合并），再后台 `pnpm mq:wait` 等合入；主工作区快进 `pnpm mq:sync`；列出被遗弃的 lane `pnpm mq:reconcile`（都在 `scripts/mq/`） |
-| lane 分配与归属 | `pnpm lane:open --as <会话名>`（钩子不可用时开 lane）、`pnpm lane:take <N> --as <会话名>`（接手）、`pnpm lane:done`（退出会话前检查并释放）、`pnpm lane:release <N>`、`pnpm lane:list`（谁在用哪个 lane、为什么） |
+| lane 分配与归属 | `pnpm lane:open --as <会话名>`（钩子不可用时开 lane）、`pnpm lane:take <N> --as <会话名>`（接手）、`pnpm lane:done`（退出会话前检查并释放）、`pnpm lane:release <N>`、`pnpm lane:list`（谁在用哪个 lane、为什么）；新机器或主工作区挪了位置后 `pnpm lane:install-hooks [--check]`（往用户级 settings 写 SessionStart / SessionEnd 的 lane 钩子） |
 
 如果运行环境禁止派生子进程（例如受限沙箱），`node --test` 需要加 `--test-isolation=none`。此时 `tests/scripts/release-manifest.test.mjs` 仍会因 `spawnSync` 被拦截而失败，这是环境限制，报告时应如实说明。如果 `vite build` 报错无法删除系统临时目录中的 esbuild 文件（Access is denied），可以把 `TEMP` / `TMP` 指向 `node_modules/.cache/` 下的目录后重试。
 
@@ -159,7 +159,7 @@
   - **仓库管理员和协作者的会话**：用下面的 lane + `pnpm mq:land`。land 先 rebase 到最新的 `origin/main`，推到自己的 `land/…` 分支，开 PR 并开启自动合并；CI 的 `check` 通过后由 GitHub 合入，所以要有本仓库的 Write 权限（2026-11-13 起，F30）。
   - **不用 lane 的协作者（Write 权限，目前是 ShengLin1001）和外部贡献者**：在自己的分支上开发。协作者把分支直接推到本仓库（`TixXin/fuyu`）再提 PR；外部贡献者从本仓库 fork 后提 PR。本仓库 2026-11-10 起已脱离 `flyl1u/fly-island` 的 fork 网络，从上游 fork 出来的仓库不能再向本仓库提 PR。不要从上游同步或合并提交；CI 通过、分支跟上最新 `main` 后再合入。协作者可以自己合，也可以等仓库管理员按下面「外部 PR」的做法合。合入用 merge 或 squash，不改写别人已经推送的分支。
   - 开发期间不要求分支一直跟着 `main`：开工前、land 或合入前各同步一次，开发时间长的分支隔天同步一次。不管哪种方式，合入那一刻都基于最新的 `main`，这一点由 land 的 rebase 和规则集保证。
-- **每个代理会话在自己的 lane（worktree + 分支）上工作，经合并队列合入 `main`**。怎么开、接手、验证、land、预览、处理外部 PR 和排障，见 [docs/architecture/lanes.md](docs/architecture/lanes.md)（本机的 `lanes` skill 按它带着做）。必须遵守的是这几条：
+- **每个代理会话在自己的 lane（worktree + 分支）上工作，经合并队列合入 `main`**。怎么开、接手、验证、land、预览、处理外部 PR 和排障，见 [docs/architecture/lanes.md](docs/architecture/lanes.md)（仓库里的 `lanes` skill 按它带着做）。必须遵守的是这几条：
   - **开工先开 lane 并进入它**：会话从仓库目录启动时用 EnterWorktree（`claude -w`）；不是时（magpie 会话）在主工作区 `pnpm lane:open --as <会话名>`，再 EnterWorktree(path=<最后一行的路径>)。接手别人的 lane 用 `pnpm lane:take <N> --as <会话名>` 后同样进入。会话当前目录要在 lane 里，不要留在主工作区用绝对路径改 lane。
   - **不要手动 `git worktree add`**，没有归属记录的 lane `pnpm verify` 和 land 会拒绝。不要删别人的 lane；`../fly-island-lanes/` 里只放 lane。
   - **主工作区留给用户**（例如 `pnpm tauri dev`），保持干净、停在 `main` 上，代理不在里面改文件或提交。`main` 只经 land 或在 GitHub 上合入 PR 移动，不手动推送。

@@ -14,6 +14,7 @@
     "lane:release": "node scripts/lanes/lanes.mjs release",
     "lane:done": "node scripts/lanes/lanes.mjs done",
     "lane:list": "node scripts/lanes/lanes.mjs list",
+    "lane:install-hooks": "node scripts/lanes/install-hooks.mjs",
     "build:exe": "node scripts/build-exe.mjs",
     "prune:target": "node scripts/prune-build-cache.mjs",
     "build": "tsc && vite build",
