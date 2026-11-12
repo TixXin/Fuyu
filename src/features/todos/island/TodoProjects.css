@@ -88,3 +88,27 @@
 .todo-island--archive:has(> .todo-project-filter) {
   grid-template-rows: auto auto minmax(0, 1fr);
 }
+
+.todo-project-filter__add {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 6px;
+}
+
+.todo-project-filter__name {
+  width: 9em;
+  max-width: none;
+  color: var(--text-1);
+  outline: none;
+  box-shadow: inset 0 0 0 1px rgba(var(--todo-accent-rgb), 0.5);
+}
+
+.todo-project-filter__name::placeholder {
+  color: var(--text-placeholder);
+}
+
+.todo-island__project-pick {
+  max-width: 7em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

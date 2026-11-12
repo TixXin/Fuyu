@@ -35,5 +35,5 @@ export function useTodoArchives() {
     saveTodoArchives(archives);
   }, [archives]);
 
-  return { archives, upsertArchive };
+  return { archives, setArchives, upsertArchive };
 }

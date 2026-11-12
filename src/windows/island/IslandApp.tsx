@@ -98,7 +98,7 @@ export function IslandApp() {
     onOpenAgents: openAgentsPage,
     markLight: settings.agentLightStyle === "mark",
   });
-  const { todos, activeTodoId, notebookProps, addTodoOn } = useIslandTodos({ settings, mode, page, agentStatus, collapseIsland });
+  const { todos, activeTodoId, notebookProps, addTodoOn } = useIslandTodos({ settings, setSettings, mode, page, agentStatus, collapseIsland });
 
   const screenshotText = useScreenshotText();
   const screenshotCard = useScreenshotCard();

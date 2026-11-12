@@ -1,5 +1,6 @@
 import type { CalendarSettingValues } from "../calendar/calendarSettings";
 import type { LyricsIslandPriority, LyricsKaraokeColor, LyricsKaraokeFallback, LyricsKaraokeFill } from "../media/lyrics/lyricsSettings";
+import type { TodoProject } from "../todos/types";
 
 export type TranslationTarget = "window" | "island";
 
@@ -85,6 +86,7 @@ export type IslandSettings = CalendarSettingValues & {
   showIdleTodoCount: boolean;
   carryOverIncompleteTodos: boolean;
   enableTodoReorder: boolean;
+  todoProjects: TodoProject[];
   rotateTodos: boolean;
   todoRotationSeconds: number;
   autoTuck: boolean;

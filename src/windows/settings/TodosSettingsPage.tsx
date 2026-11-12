@@ -1,3 +1,4 @@
+import { TodoProjectsSection } from "../../features/appearance/TodoProjectsSection";
 import { TodoSettingsSection } from "../../features/appearance/TodoSettingsSection";
 import type { IslandSettings } from "../../features/appearance/types";
 import { SavePathSettingsSection } from "../../features/todos/SavePathSettingsSection";
@@ -24,6 +25,7 @@ export function TodosSettingsPage({
         onChange={(todoEnabled) => onSettingsChange({ ...settings, todoEnabled })}
       />
       <TodoSettingsSection settings={settings} onSettingsChange={onSettingsChange} />
+      <TodoProjectsSection settings={settings} onSettingsChange={onSettingsChange} />
       <SavePathSettingsSection
         saveDirectoryDraft={saveDirectory.saveDirectoryDraft}
         savePathState={saveDirectory.savePathState}

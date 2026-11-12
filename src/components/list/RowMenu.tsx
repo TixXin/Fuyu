@@ -16,7 +16,13 @@ export type RowMenuItem = {
 const MENU_WIDTH = 200;
 const EDGE = 8;
 
-export function RowMenu({ label, items, onOpenChange }: { label: string; items: RowMenuItem[]; onOpenChange?: (open: boolean) => void }) {
+export function RowMenu({ label, items, onOpenChange, buttonClassName, children }: {
+  label: string;
+  items: RowMenuItem[];
+  onOpenChange?: (open: boolean) => void;
+  buttonClassName?: string;
+  children?: ReactNode;
+}) {
   const [open, setOpen] = useState(false);
   const [place, setPlace] = useState<{ left: number; top: number; ink: string; fill: string } | null>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -72,7 +78,7 @@ export function RowMenu({ label, items, onOpenChange }: { label: string; items: 
     <>
       <button
         ref={buttonRef}
-        className={`island-list-icon-button${open ? " island-list-icon-button--open" : ""}`}
+        className={children ? buttonClassName : `island-list-icon-button${open ? " island-list-icon-button--open" : ""}`}
         type="button"
         aria-label={label}
         title={label}
@@ -83,7 +89,7 @@ export function RowMenu({ label, items, onOpenChange }: { label: string; items: 
           setMenuOpen(!open);
         }}
       >
-        <MoreHorizontal size={15} strokeWidth={2.2} aria-hidden="true" />
+        {children ?? <MoreHorizontal size={15} strokeWidth={2.2} aria-hidden="true" />}
       </button>
       {open && createPortal(
         <div

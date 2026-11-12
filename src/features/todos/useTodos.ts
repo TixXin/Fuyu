@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { createTodoId, loadCurrentTodoDate, loadDailyNote, saveCurrentTodoDate, saveDailyNote } from "./storage";
-import { splitProjectPrefix } from "./project";
-import type { TodoItem, TodoPageMode } from "./types";
+import { MAX_TODO_PROJECTS, readProject, splitProjectPrefix } from "./project";
+import type { TodoItem, TodoPageMode, TodoProject } from "./types";
 import { useTodoArchives } from "./useTodoArchives";
 import { useTodoList } from "./useTodoList";
 import { useScheduledTodos } from "./useScheduledTodos";
@@ -9,15 +9,20 @@ import { useTodoApiHandlers } from "./useTodoApiHandlers";
 import { useTodoRollover } from "./useTodoRollover";
 import { useTodoSaving } from "./useTodoSaving";
 import { useTodoFileField } from "./useTodoFileField";
+import { useTodoProjectSync } from "./useTodoProjectSync";
 
 type TodosOptions = {
   carryOverIncompleteTodos: boolean;
+  projects: readonly TodoProject[];
+  onProjectsChange: (projects: TodoProject[]) => void;
   onStartTodo: () => void;
   onMissingSaveDirectory: () => void;
 };
 
 export function useTodos({
   carryOverIncompleteTodos,
+  projects,
+  onProjectsChange,
   onStartTodo,
   onMissingSaveDirectory,
 }: TodosOptions) {
@@ -27,9 +32,18 @@ export function useTodos({
   useTodoFileField("dailyNote", setDailyNote);
   const [currentTodoDate, setCurrentTodoDate] =
     useState<string>(loadCurrentTodoDate);
-  const { archives, upsertArchive } = useTodoArchives();
-  const { scheduledTodos, scheduleTodo, deleteScheduledTodo } =
+  const { archives, setArchives, upsertArchive } = useTodoArchives();
+  const { scheduledTodos, setScheduledTodos, scheduleTodo, deleteScheduledTodo } =
     useScheduledTodos(currentTodoDate, setTodos);
+  useTodoProjectSync({
+    projects, onProjectsChange, currentDate: currentTodoDate, todos, setTodos, scheduledTodos, setScheduledTodos, archives, setArchives,
+  });
+  const projectNames = useMemo(() => projects.map((project) => project.name), [projects]);
+  const createProject = useCallback((value: string) => {
+    const name = readProject(value);
+    if (!name || projects.length >= MAX_TODO_PROJECTS || projects.some((project) => project.name === name)) return;
+    onProjectsChange([...projects, { id: createTodoId(), name }]);
+  }, [onProjectsChange, projects]);
   const apiHandlers = useTodoApiHandlers({
     date: currentTodoDate, todos, scheduledTodos, activeTodoId, dailyNote, archives,
     setTodos, setDailyNote, scheduleTodo,
@@ -162,6 +176,8 @@ export function useTodos({
       onDraftChange: setDraftTodo,
       onDraftDateChange: setDraftDate,
       onAddTodo: addTodo,
+      projects: projectNames,
+      onCreateProject: createProject,
       onShowUpcoming: showUpcoming,
       onDeleteScheduledTodo: deleteScheduledTodo,
       onToggleTodo: list.toggleTodo,

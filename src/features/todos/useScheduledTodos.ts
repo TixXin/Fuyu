@@ -44,5 +44,5 @@ export function useScheduledTodos(
     setScheduledTodos((current) => current.filter((todo) => todo.id !== id));
   }, []);
 
-  return { scheduledTodos, scheduleTodo, deleteScheduledTodo };
+  return { scheduledTodos, setScheduledTodos, scheduleTodo, deleteScheduledTodo };
 }
