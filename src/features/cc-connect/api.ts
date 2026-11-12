@@ -24,12 +24,12 @@ export type CcConnectStatus = {
   runner: CcConnectRunState;
   runnerError: NativeError | string | null;
   dataDir: string;
+  /** The work folder a new bot is offered; made when the bot is added. */
+  defaultWorkDir: string | null;
   /** Whether cc-connect's config.toml is there. */
   config: boolean;
   /** The projects in it, chats or not. */
   configProjects: string[];
-  /** The user's folder, the setup's default work folder. */
-  home: string;
   projects: CcConnectProject[];
 };
 
