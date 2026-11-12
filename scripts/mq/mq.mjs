@@ -4,6 +4,7 @@ import { checkPush } from "./checkPush.mjs";
 import { land } from "./land.mjs";
 import { mainCheckoutOf } from "./settings.mjs";
 import { sync } from "./sync.mjs";
+import { waitCommand } from "./wait.mjs";
 
 async function reconcile() {
   const { strandedLines } = await import("../lanes/session-hint.mjs");
@@ -12,7 +13,13 @@ async function reconcile() {
   return 0;
 }
 
-const COMMANDS = { land, sync: () => sync(), reconcile, "check-push": () => checkPush() };
+const COMMANDS = {
+  land: (args) => land({ wait: args.includes("--wait") }),
+  wait: (args) => waitCommand(args),
+  sync: () => sync(),
+  reconcile,
+  "check-push": () => checkPush(),
+};
 
 export async function main(argv) {
   const run = COMMANDS[argv[0]];
@@ -20,7 +27,7 @@ export async function main(argv) {
     console.error(`用法：node scripts/mq/mq.mjs <${Object.keys(COMMANDS).join("|")}>`);
     return 1;
   }
-  return run();
+  return run(argv.slice(1));
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
