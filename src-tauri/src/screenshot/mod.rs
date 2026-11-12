@@ -38,6 +38,7 @@ pub async fn screenshot_configure(app: AppHandle, enabled: bool) {
     hotkeys::set_enabled(enabled);
     if enabled {
         session::prepare(&app);
+        pin::prepare(&app);
     }
 }
 
@@ -100,8 +101,9 @@ impl Action {
 /// selection), `x-patch-width` × `x-patch-height`: only that much crosses from the page, since a
 /// whole 4K selection through the WebView made copying stall. Gives the saved file's path.
 ///
-/// Copying and pinning close the overlays first, so the screen is back at once while the picture
-/// is encoded; a failed save keeps the screenshot open, to try again.
+/// Copying closes the overlays first, so the screen is back at once while the picture is encoded.
+/// Pinning keeps them until the pin has drawn, then swaps the two (pin.rs). A failed save keeps
+/// the screenshot open, to try again.
 #[tauri::command]
 pub async fn screenshot_finish(app: AppHandle, window: WebviewWindow, request: tauri::ipc::Request<'_>) -> Result<Option<String>, String> {
     let tauri::ipc::InvokeBody::Raw(body) = request.body() else {
@@ -140,8 +142,12 @@ pub async fn screenshot_finish(app: AppHandle, window: WebviewWindow, request: t
         }
         Action::Pin => {
             let origin = session::origin(window.label()).ok_or_else(|| "No screenshot is open.".to_string())?;
-            session::end(&app);
-            pin::open(&app, picture, (origin.0.saturating_add_unsigned(left), origin.1.saturating_add_unsigned(top)))?;
+            let at = (origin.0.saturating_add_unsigned(left), origin.1.saturating_add_unsigned(top));
+            let scale = window.scale_factor().unwrap_or(1.0);
+            if let Err(error) = pin::open(&app, picture, at, scale, session::id()) {
+                session::end(&app);
+                return Err(error);
+            }
             Ok(None)
         }
         Action::Text | Action::Translate => {
@@ -198,18 +204,24 @@ pub fn screenshot_cancel(app: AppHandle) {
     session::end(&app);
 }
 
-/// The calling pin's picture: RGBA rows, its size in the page's URL.
+/// The calling pin page's picture size, once it has been given one.
 #[tauri::command]
-pub async fn screenshot_pin_image(window: WebviewWindow) -> Result<tauri::ipc::Response, String> {
-    pin::picture(window.label())
-        .map(|picture| tauri::ipc::Response::new(picture.rgba.clone()))
-        .ok_or_else(|| "This pin is closed.".to_string())
+pub fn screenshot_pin_info(window: WebviewWindow) -> Option<pin::PinInfo> {
+    pin::info(window.label())
 }
 
-/// The calling pin has drawn its picture and can be shown.
+/// The calling pin's picture as a PNG: a tenth of the raw pixels to send, and the page decodes it
+/// off its main thread.
 #[tauri::command]
-pub fn screenshot_pin_ready(window: WebviewWindow) {
-    pin::ready(&window);
+pub async fn screenshot_pin_image(window: WebviewWindow) -> Result<tauri::ipc::Response, String> {
+    let picture = pin::picture(window.label()).ok_or_else(|| "This pin is closed.".to_string())?;
+    output::encode_png(&picture).map(tauri::ipc::Response::new)
+}
+
+/// The calling pin has drawn its picture: it shows, and the screenshot it came from goes.
+#[tauri::command]
+pub fn screenshot_pin_ready(app: AppHandle, window: WebviewWindow) {
+    pin::ready(&app, &window);
 }
 
 /// Zooms the calling pin to `scale` of its picture, keeping (`anchor_x`, `anchor_y`), fractions
@@ -263,6 +275,7 @@ macro_rules! tauri_commands {
             crate::screenshot::screenshot_overlay_ready,
             crate::screenshot::screenshot_finish,
             crate::screenshot::screenshot_cancel,
+            crate::screenshot::screenshot_pin_info,
             crate::screenshot::screenshot_pin_image,
             crate::screenshot::screenshot_pin_ready,
             crate::screenshot::screenshot_pin_zoom,

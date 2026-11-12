@@ -87,9 +87,6 @@ async function runChecks() {
     await key({ key: "s", ctrlKey: true });
     const saved = last("screenshot_finish");
     check(saved?.headers["x-action"] === "save" && decodeURIComponent(saved.headers["x-folder-name"]) === "浮屿截图", "Ctrl+S saves it, to the Pictures subfolder named in the current language");
-    await key({ key: "t" });
-    const pinned = last("screenshot_finish");
-    check(pinned?.headers["x-action"] === "pin" && pinned.headers["x-left"] === "40" && pinned.headers["x-top"] === "40", "T pins it where the selection is");
     check(button("贴到屏幕上（T）") && button("保存（Ctrl+S）"), "The toolbar has pin and save buttons");
     await click("识别文字");
     check(last("screenshot_finish")?.headers["x-action"] === "text", "Read text sends the region to OCR");
@@ -149,6 +146,11 @@ async function runChecks() {
       return Array.from(composed!.slice(index, index + 4));
     };
     check(isRed(at(60, 90)) && at(80, 90).join() === "128,128,128,255", `…the rectangle drawn on the frozen picture (${at(60, 90).join()} / ${at(80, 90).join()})`);
+
+    await key({ key: "t" });
+    const pinned = last("screenshot_finish");
+    check(pinned?.headers["x-action"] === "pin" && pinned.headers["x-left"] === "40" && pinned.headers["x-top"] === "40", "T pins it where the selection is");
+    check(!document.querySelector(".screenshot-overlay__toolbar") && !document.querySelector(".screenshot-overlay__handle"), "…and while the pin takes over, only the picture stays: no toolbar, no handles");
 
     const before = calls.filter((call) => call.command === "screenshot_finish").length;
     await act(async () => { await emit("screenshot-ended"); });

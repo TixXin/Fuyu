@@ -12,6 +12,8 @@ export const SCREENSHOT_ENDED_EVENT = "screenshot-ended";
 export const SCREENSHOT_TARGETS_EVENT = "screenshot-targets";
 /** Between the overlays only: one started a selection, so the others drop theirs. */
 export const SCREENSHOT_SELECTING_EVENT = "screenshot-selecting";
+/** Mirrored by ASSIGNED_EVENT in src-tauri/src/screenshot/pin.rs: the ready pin window got a picture. */
+export const PIN_ASSIGNED_EVENT = "screenshot-pin-assigned";
 /** Mirrored by TEXT_EVENT in src-tauri/src/screenshot/mod.rs: the text read and copied, or "". */
 export const SCREENSHOT_TEXT_EVENT = "screenshot-text";
 
@@ -129,7 +131,19 @@ export function listenSelecting(handler: EventCallback<string>) {
   return listen<string>(SCREENSHOT_SELECTING_EVENT, handler);
 }
 
-/** The calling pin's picture: RGBA rows, its size in the page's URL. */
+// 与 src-tauri/src/screenshot/pin.rs 中的 PinInfo 对应。
+export type PinInfo = { width: number; height: number };
+
+/** The calling pin page's picture size, or null before it is given one. */
+export function getPinInfo() {
+  return invoke<PinInfo | null>("screenshot_pin_info");
+}
+
+export function listenPinAssigned(handler: EventCallback<PinInfo>) {
+  return listen<PinInfo>(PIN_ASSIGNED_EVENT, handler);
+}
+
+/** The calling pin's picture, as PNG bytes. */
 export function getPinImage() {
   return invoke<ArrayBuffer>("screenshot_pin_image");
 }

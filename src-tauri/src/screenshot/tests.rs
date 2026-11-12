@@ -91,6 +91,7 @@ fn folder_names_and_actions_come_through_headers() {
 
 #[test]
 fn a_zoomed_pin_keeps_the_point_under_the_pointer() {
+    // Positions and sizes are the picture's, inside the window's shadow margin.
     use super::pin::zoomed;
     // A 200 × 100 picture at (1000, 500), shown at its own size, zoomed to 2× about its middle.
     assert_eq!(zoomed((1000, 500), (200, 100), (200, 100), 2.0, (0.5, 0.5)), (900, 450, 400, 200));

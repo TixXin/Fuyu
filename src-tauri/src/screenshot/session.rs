@@ -288,6 +288,18 @@ pub(crate) fn crop(rgba: &[u8], width: u32, height: u32, rect: PixelRect) -> Opt
     Some((cut_width, cut_height, out))
 }
 
+/// The open screenshot's id.
+pub(crate) fn id() -> Option<u64> {
+    session().as_ref().map(|session| session.id)
+}
+
+/// Closes screenshot `id` if it is still the open one (a pin hands off from it, C41.4).
+pub(crate) fn end_if(app: &AppHandle, id: u64) {
+    if self::id() == Some(id) {
+        end(app);
+    }
+}
+
 /// Closes the screenshot: hides every overlay and lets go of the pictures.
 pub(crate) fn end(app: &AppHandle) {
     session().take();

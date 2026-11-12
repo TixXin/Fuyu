@@ -64,6 +64,7 @@ export function ScreenshotOverlay() {
   const scale = bounds ? pixelScale(bounds, view) : 1;
   const { selection, setSelection, pointer, dragging, hovered, onPointerDown, onPointerMove, onPointerUp, onPointerLeave } = useSelection(session, bounds, scale);
   const [notice, setNotice] = useState<string | null>(null);
+  const [leaving, setLeaving] = useState(false);
   const targets = useTargets(ready ? session?.id ?? null : null);
   const [level, setLevel] = useState({ key: "", value: 0 });
   const sessionId = session?.id;
@@ -98,7 +99,12 @@ export function ScreenshotOverlay() {
     const image = area ? composeArea(picture, area, chosen, items) : null;
     const patch = area && image ? { at: area, image } : null;
     const save = action === "save" ? { folderName: t.saveFolderName } : undefined;
-    finishScreenshot(chosen, patch, action, save).catch((error: unknown) => setNotice(errorText(error)));
+    // A pin takes over from this overlay once it has drawn; meanwhile only the picture shows.
+    if (action === "pin") setLeaving(true);
+    finishScreenshot(chosen, patch, action, save).catch((error: unknown) => {
+      setLeaving(false);
+      setNotice(errorText(error));
+    });
   }, [chosen, items, canvasRef, errorText, t]);
   const copy = useCallback(() => finish("copy"), [finish]);
 
@@ -142,7 +148,10 @@ export function ScreenshotOverlay() {
     return () => window.removeEventListener("keydown", onKey);
   }, [annotations, chosen, color, copy, finish, t]);
 
-  useEffect(() => setNotice(null), [sessionId]);
+  useEffect(() => {
+    setNotice(null);
+    setLeaving(false);
+  }, [sessionId]);
 
   const at = (event: PointerEvent) => toPixels({ x: event.clientX, y: event.clientY }, scale);
   const grabbedAt = (point: Point) => (chosen ? hitTest(chosen, point, GRAB * scale) : null);
@@ -209,7 +218,7 @@ export function ScreenshotOverlay() {
       {bounds && <AnnotationLayer picture={canvasRef} bounds={bounds} items={annotations.items} draft={annotations.draft} selection={chosen} />}
       {area ? (
         <div className="screenshot-overlay__selection" style={{ left: area.x, top: area.y, width: area.width, height: area.height }}>
-          {!dragging && !annotations.drafting && HANDLES.map((handle) => {
+          {!dragging && !annotations.drafting && !leaving && HANDLES.map((handle) => {
             const spot = handlePosition({ x: 0, y: 0, width: area.width, height: area.height }, handle);
             return <span key={handle} className="screenshot-overlay__handle" style={{ left: spot.x, top: spot.y }} />;
           })}
@@ -229,7 +238,7 @@ export function ScreenshotOverlay() {
         ready && <div key={sessionId} className="screenshot-overlay__dim" />
       )}
       {!area && ready && session?.underPointer && <div className="screenshot-overlay__hint">{quickMode ? t.quickHints[quickMode] : t.selectHint}</div>}
-      {area && chosen && !dragging && !annotations.drafting && !quick && (
+      {area && chosen && !dragging && !annotations.drafting && !quick && !leaving && (
         <ScreenshotToolbar area={area} view={view} annotations={annotations} notice={notice} onCancel={() => void cancelScreenshot()} onFinish={finish} />
       )}
       {annotations.editing && (
@@ -260,7 +269,7 @@ export function ScreenshotOverlay() {
         </>
       )}
       {/* While annotating the magnifier would only be in the way. */}
-      {ready && pixel && cssPointer && color && dragging !== "move" && !annotations.tool && (
+      {ready && pixel && cssPointer && color && dragging !== "move" && !annotations.tool && !leaving && (
         <Magnifier picture={canvasRef.current} pixel={pixel} pointer={cssPointer} view={view} color={color} lines={lines} />
       )}
     </div>

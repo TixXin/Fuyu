@@ -1,6 +1,11 @@
 //! Pins (C41.4): a screenshot kept on top of everything in its own small window, where it was
 //! taken, at the same size. Several can be open at once; each can be dragged, zoomed, faded, made
 //! click-through, copied, saved and closed. Their pictures stay in memory until they close.
+//!
+//! Pinning has to feel instant, so one pin window is kept ready, hidden, like the screenshot
+//! overlays: a new WebView takes a few hundred milliseconds. The frozen screenshot stays up until
+//! the pin has drawn its picture, then the two swap at once and the selection seems to lift off
+//! the screen. The window is a little larger than the picture, for the pin's shadow.
 
 use std::{
     collections::BTreeMap,
@@ -8,95 +13,200 @@ use std::{
         atomic::{AtomicBool, AtomicU64, Ordering},
         Arc, Mutex, MutexGuard, PoisonError,
     },
+    thread,
+    time::Duration,
 };
 
-use tauri::{AppHandle, Manager, PhysicalPosition, PhysicalSize, WebviewUrl, WebviewWindow, WebviewWindowBuilder};
+use serde::Serialize;
+use tauri::{AppHandle, Emitter, Manager, PhysicalPosition, PhysicalSize, WebviewUrl, WebviewWindow, WebviewWindowBuilder};
 
-use super::output::Picture;
+use super::{output::Picture, session};
+use crate::win32;
 
 /// Pin windows are `pin-<number>`.
 pub(crate) const WINDOW_PREFIX: &str = "pin-";
+/// Mirrored by `PIN_ASSIGNED_EVENT` in src/features/screenshot/api.ts: the ready pin window got a
+/// picture to show.
+const ASSIGNED_EVENT: &str = "screenshot-pin-assigned";
+/// Room around the picture for the pin's shadow, in CSS pixels (`MARGIN` in PinWindow.css).
+pub(crate) const MARGIN: f64 = 10.0;
 /// Zooming stops at these scales of the picture's own size.
 const MIN_SCALE: f64 = 0.1;
 const MAX_SCALE: f64 = 8.0;
 /// The smallest a zoomed pin gets, in physical pixels, so it can still be grabbed.
 const MIN_SIDE: f64 = 16.0;
+/// A pin that has not drawn by then still takes the screenshot away, so it never stays frozen.
+const HANDOFF_TIMEOUT: Duration = Duration::from_millis(1500);
+/// How long the screenshot stays under a pin that has just shown.
+const SWAP_DELAY: Duration = Duration::from_millis(50);
 
-static PINS: Mutex<BTreeMap<String, Arc<Picture>>> = Mutex::new(BTreeMap::new());
+struct Pin {
+    picture: Arc<Picture>,
+    /// `MARGIN` in this window's physical pixels.
+    margin: u32,
+    /// The screenshot to close once the pin shows.
+    session: Option<u64>,
+}
+
+/// What a pin page needs before it can show (mirrored by `PinInfo` in api.ts).
+#[derive(Clone, Copy, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct PinInfo {
+    width: u32,
+    height: u32,
+}
+
+static PINS: Mutex<BTreeMap<String, Pin>> = Mutex::new(BTreeMap::new());
+/// The hidden pin window kept ready for the next pin.
+static SPARE: Mutex<Option<String>> = Mutex::new(None);
 static NEXT_ID: AtomicU64 = AtomicU64::new(1);
 /// All pins are hidden (T); a new pin shows them again.
 static HIDDEN: AtomicBool = AtomicBool::new(false);
 
-fn pins() -> MutexGuard<'static, BTreeMap<String, Arc<Picture>>> {
+fn pins() -> MutexGuard<'static, BTreeMap<String, Pin>> {
     PINS.lock().unwrap_or_else(PoisonError::into_inner)
 }
 
-/// Pins `picture` with its top-left at `at` on the virtual screen (physical pixels). It shows once
-/// its page has drawn the picture (`ready`).
-pub(super) fn open(app: &AppHandle, picture: Picture, at: (i32, i32)) -> Result<(), String> {
-    if HIDDEN.swap(false, Ordering::SeqCst) {
-        set_all_visible(app, true);
-    }
+fn spare() -> MutexGuard<'static, Option<String>> {
+    SPARE.lock().unwrap_or_else(PoisonError::into_inner)
+}
+
+fn build(app: &AppHandle) -> Result<WebviewWindow, String> {
     let label = format!("{WINDOW_PREFIX}{}", NEXT_ID.fetch_add(1, Ordering::SeqCst));
-    let (width, height) = (picture.width, picture.height);
-    pins().insert(label.clone(), Arc::new(picture));
-    let url = format!("index.html?window=pin&width={width}&height={height}");
-    let built = WebviewWindowBuilder::new(app, &label, WebviewUrl::App(url.into()))
+    let window = WebviewWindowBuilder::new(app, &label, WebviewUrl::App("index.html?window=pin".into()))
         .title("Fuyu")
-        // Transparent so the page can fade the picture (Ctrl + wheel).
+        // Transparent for the shadow around the picture, and for fading it (Ctrl + wheel).
         .transparent(true)
         .decorations(false)
         .resizable(false)
         .always_on_top(true)
         .skip_taskbar(true)
         .shadow(false)
+        .focused(false)
         .visible(false)
-        .build();
-    let window = match built {
-        Ok(window) => window,
-        Err(error) => {
-            pins().remove(&label);
-            return Err(error.to_string());
+        .build()
+        .map_err(|error| error.to_string())?;
+    // The page animates the pin in and out; Windows' own show and hide animations would fight it.
+    if let Ok(hwnd) = window.hwnd() {
+        let _ = win32::dwm::disable_transitions(hwnd);
+    }
+    Ok(window)
+}
+
+/// Creates the hidden pin window the next pin will use, unless there is one. Not on the main
+/// thread: building a window waits for it.
+pub(super) fn prepare(app: &AppHandle) {
+    let app = app.clone();
+    thread::spawn(move || {
+        if spare().is_some() {
+            return;
         }
-    };
+        match build(&app) {
+            Ok(window) => *spare() = Some(window.label().to_string()),
+            Err(error) => eprintln!("failed to prepare a pin window: {error}"),
+        }
+    });
+}
+
+/// The ready pin window, or a new one when there is none.
+fn take_window(app: &AppHandle) -> Result<WebviewWindow, String> {
+    let ready = spare().take().and_then(|label| app.get_webview_window(&label));
+    match ready {
+        Some(window) => Ok(window),
+        None => build(app),
+    }
+}
+
+/// Pins `picture` with its top-left at `at` on the virtual screen (physical pixels, `scale` the
+/// monitor's). The screenshot `session` stays open until the pin shows (`ready`).
+pub(super) fn open(app: &AppHandle, picture: Picture, at: (i32, i32), scale: f64, session: Option<u64>) -> Result<(), String> {
+    if HIDDEN.swap(false, Ordering::SeqCst) {
+        set_all_visible(app, true);
+    }
+    let window = take_window(app)?;
+    let label = window.label().to_string();
+    let margin = (MARGIN * scale).round().max(0.0) as u32;
+    let info = PinInfo { width: picture.width, height: picture.height };
+    let (width, height) = (picture.width + margin * 2, picture.height + margin * 2);
+    pins().insert(label.clone(), Pin { picture: Arc::new(picture), margin, session });
     // Position first: moving onto a monitor of another scale makes Windows resize the window.
-    window.set_position(PhysicalPosition::new(at.0, at.1)).map_err(|error| error.to_string())?;
-    window.set_size(PhysicalSize::new(width, height)).map_err(|error| error.to_string())?;
+    let placed = window
+        .set_position(PhysicalPosition::new(at.0 - margin as i32, at.1 - margin as i32))
+        .and_then(|()| window.set_size(PhysicalSize::new(width, height)));
+    if let Err(error) = placed {
+        pins().remove(&label);
+        let _ = window.destroy();
+        return Err(error.to_string());
+    }
+    // A page still loading misses this and asks with `info` once it has loaded.
+    let _ = app.emit_to(label.as_str(), ASSIGNED_EVENT, info);
+    if let Some(id) = session {
+        let app = app.clone();
+        thread::spawn(move || {
+            thread::sleep(HANDOFF_TIMEOUT);
+            session::end_if(&app, id);
+        });
+    }
+    prepare(app);
     Ok(())
 }
 
-/// The picture of the pin `label`: RGBA rows, its size in the page's URL.
-pub(super) fn picture(label: &str) -> Option<Arc<Picture>> {
-    pins().get(label).cloned()
+/// The calling pin page's picture size, once it has one.
+pub(super) fn info(label: &str) -> Option<PinInfo> {
+    pins().get(label).map(|pin| PinInfo { width: pin.picture.width, height: pin.picture.height })
 }
 
-/// The pin has drawn its picture: show it, with the keyboard.
-pub(super) fn ready(window: &WebviewWindow) {
-    if HIDDEN.load(Ordering::SeqCst) {
-        return;
+/// The picture of the pin `label`.
+pub(super) fn picture(label: &str) -> Option<Arc<Picture>> {
+    pins().get(label).map(|pin| Arc::clone(&pin.picture))
+}
+
+/// The pin has drawn its picture: show it, with the keyboard, and close the screenshot it came
+/// from in the same moment, so the selection seems to lift off the frozen screen.
+pub(super) fn ready(app: &AppHandle, window: &WebviewWindow) {
+    let session = pins().get_mut(window.label()).and_then(|pin| pin.session.take());
+    if !HIDDEN.load(Ordering::SeqCst) {
+        let _ = window.show();
+        let _ = window.set_focus();
     }
-    let _ = window.show();
-    let _ = window.set_focus();
+    if let Some(id) = session {
+        // A frame later: the window's first frame after showing can be its last painted one.
+        // The pin covers the same pixels of the screenshot, so the overlap does not show.
+        let app = app.clone();
+        thread::spawn(move || {
+            thread::sleep(SWAP_DELAY);
+            session::end_if(&app, id);
+        });
+    }
 }
 
 /// The pin window went away (closed from its menu, Esc or Alt+F4): let go of its picture.
 pub(crate) fn forget(label: &str) {
     pins().remove(label);
+    let mut spare = spare();
+    if spare.as_deref() == Some(label) {
+        *spare = None;
+    }
 }
 
 /// Zooms the pin to `scale` of its picture's size, keeping the point at `anchor` (fractions of
-/// the window, 0 to 1) where it is on the screen.
+/// the picture, 0 to 1) where it is on the screen.
 pub(super) fn zoom(window: &WebviewWindow, scale: f64, anchor: (f64, f64)) -> Result<(), String> {
-    let picture = picture(window.label()).ok_or_else(|| "This pin is closed.".to_string())?;
+    let (picture, margin) = pins()
+        .get(window.label())
+        .map(|pin| ((pin.picture.width, pin.picture.height), pin.margin))
+        .ok_or_else(|| "This pin is closed.".to_string())?;
     let position = window.outer_position().map_err(|error| error.to_string())?;
     let size = window.outer_size().map_err(|error| error.to_string())?;
-    let (x, y, width, height) = zoomed((position.x, position.y), (size.width, size.height), (picture.width, picture.height), scale, anchor);
-    window.set_position(PhysicalPosition::new(x, y)).map_err(|error| error.to_string())?;
-    window.set_size(PhysicalSize::new(width, height)).map_err(|error| error.to_string())
+    let inner = (position.x + margin as i32, position.y + margin as i32);
+    let shown = (size.width.saturating_sub(margin * 2), size.height.saturating_sub(margin * 2));
+    let (x, y, width, height) = zoomed(inner, shown, picture, scale, anchor);
+    window.set_position(PhysicalPosition::new(x - margin as i32, y - margin as i32)).map_err(|error| error.to_string())?;
+    window.set_size(PhysicalSize::new(width + margin * 2, height + margin * 2)).map_err(|error| error.to_string())
 }
 
-/// Where a pin at `position` and `size` goes when its `picture` is shown at `scale`, `anchor`
-/// staying put: (x, y, width, height).
+/// Where a picture shown at `position` and `size` goes when shown at `scale` of its own size
+/// `picture`, `anchor` staying put: (x, y, width, height).
 pub(super) fn zoomed(position: (i32, i32), size: (u32, u32), picture: (u32, u32), scale: f64, anchor: (f64, f64)) -> (i32, i32, u32, u32) {
     let scale = if scale.is_finite() { scale.clamp(MIN_SCALE, MAX_SCALE) } else { 1.0 };
     let (fx, fy) = (anchor.0.clamp(0.0, 1.0), anchor.1.clamp(0.0, 1.0));
@@ -113,8 +223,14 @@ pub(super) fn click_through(window: &WebviewWindow, through: bool) -> Result<(),
     window.set_ignore_cursor_events(through).map_err(|error| error.to_string())
 }
 
+/// The pins on screen: not the hidden spare, nor one still waiting for its picture.
 fn pin_windows(app: &AppHandle) -> Vec<WebviewWindow> {
-    app.webview_windows().into_iter().filter(|(label, _)| label.starts_with(WINDOW_PREFIX)).map(|(_, window)| window).collect()
+    let pins = pins();
+    app.webview_windows()
+        .into_iter()
+        .filter(|(label, _)| label.starts_with(WINDOW_PREFIX) && pins.get(label).is_some_and(|pin| pin.session.is_none()))
+        .map(|(_, window)| window)
+        .collect()
 }
 
 fn set_all_visible(app: &AppHandle, visible: bool) {
