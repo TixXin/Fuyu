@@ -58,12 +58,12 @@
 ## 开发、验证、合入
 
 1. 在 lane 里开发、提交。想在本机先验一遍时用 `pnpm verify`：`pnpm check`，改到 `src-tauri/` 或 `plugins/` 时加 `cargo test`，只改 Markdown 时只跑文档检查；通过的代码树会被记住，同一棵树不再重跑。land 不再在本机跑这些，由 PR 上 CI 的 `check` 把关。
-2. 一个功能单元完成并提交后，在 lane 里 `pnpm mq:land`，不用问用户。它 rebase 到 `origin/main`，推到远程分支 `land/<GitHub 用户名>/<机器名>-<分支名>`（pre-push 钩子跑 `scripts/land-check.mjs --light`：lane 的归属记录、Claude 署名行、已完成任务的提交记录、只改文档或版本号时的轻量检查，不跑 `pnpm check` 和 `cargo test`），没有 PR 就开一个（标题和正文取提交说明），再开启自动合并（`--merge`，提交号不变）。然后在后台跑 `pnpm mq:wait`：CI 的 `check` 通过、GitHub 合入后，它把主工作区快进到新的 `main`，再把 `dev` 推到合并提交（旧版本岛屿从 `dev` 读插件市场）。PR 落后于 `main` 时由工作流 `update-behind-prs.yml` 更新（见下）；那个工作流出问题时可以 `pnpm mq:wait --update` 自己更新。`pnpm mq:land --wait` 把两步合在一起，在前台等。
+2. 一个功能单元完成并提交后，在 lane 里 `pnpm mq:land`，不用问用户。它 rebase 到 `origin/main`，推到远程分支 `land/<GitHub 用户名>/<机器名>-<分支名>`（pre-push 钩子跑 `scripts/land-check.mjs --light`：lane 的归属记录、Claude 署名行、已完成任务的提交记录、只改文档或版本号时的轻量检查，不跑 `pnpm check` 和 `cargo test`），没有 PR 就开一个（标题和正文取提交说明），再开启自动合并（`--merge`，提交号不变）。然后在后台跑 `pnpm mq:wait`：CI 的 `check` 通过、GitHub 合入后，它把主工作区快进到新的 `main`。`dev`（旧版本岛屿从这里读插件市场）由工作流 `sync-dev.yml` 在 `main` 每次有推送时快进到同一提交，经网页合入的 PR 也一样。PR 落后于 `main` 时由工作流 `update-behind-prs.yml` 更新（见下）；那个工作流出问题时可以 `pnpm mq:wait --update` 自己更新。`pnpm mq:land --wait` 把两步合在一起，在前台等。
 3. PR 合入才算完成，`mq:wait` 报告失败就不算：
    - rebase 冲突（land 时，或 `mq:wait` 报 PR 冲突）：land 会自动中止 rebase。`git fetch origin main && git rebase origin/main` 解决冲突后重新 land。
    - 本机检查或 CI 失败：在同一个 lane 修好、提交，再 land，PR 自动更新。计时类测试在机器负载高时偶尔失败，单独重跑通过就重新 land。
    - `mq:wait` 已经报告合入，只是快进主工作区失败：不要重复 land，在主工作区运行 `pnpm mq:sync`。
-   - `dev` 同步看 `.git/land-sync-dev.log`，`exit=0` 才算成功；没成功时，确认是快进后 `git push --no-verify origin <提交号>:refs/heads/dev`。
+   - `dev` 没跟上 `main` 时看 Actions 里的 Sync dev。它只快进；`dev` 被别人推过、不能快进时会失败，确认后 `git push --no-verify origin <提交号>:refs/heads/dev`。
 4. 需要 release 可执行文件时，land 之后另外跑 `pnpm build:exe`（见「Rust 构建」）。
 
 `main` 只通过在 GitHub 上合入 PR 移动（land 也是开 PR）。`.githooks/pre-push`（`core.hooksPath` 指向 `.githooks`）对任何人都拒绝直接推送 `main`，紧急情况才设 `CLAUDE_CODE_MERGE_QUEUE_EMERGENCY_PUSH=1`。主工作区留给用户（例如 `pnpm tauri dev`），保持干净、停在 `main` 上。

@@ -5,7 +5,6 @@ import path from "node:path";
 export const INTEGRATION_BRANCH = "main";
 export const LANE_BRANCH_PREFIX = "lane/";
 export const CHECK_COMMAND = "node scripts/land-check.mjs --light";
-export const ON_LAND = ["scripts/land-sync-dev.mjs"];
 export const LOCKFILES = ["pnpm-lock.yaml"];
 export const EMERGENCY_ENV = "CLAUDE_CODE_MERGE_QUEUE_EMERGENCY_PUSH";
 export const DATA_DIR = "claude-code-merge-queue";
