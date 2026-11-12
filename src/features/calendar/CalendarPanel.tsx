@@ -1,9 +1,12 @@
-import { useEffect, useState } from "react";
-import { RefreshCcw, Settings, Video } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ListTodo, RefreshCcw, Settings, Video } from "lucide-react";
 import { useErrorText, useLocale, useTranslation } from "../../i18n";
 import { openMeetingLink, type CalendarEvent, type CalendarSnapshot } from "./api";
 import { CalendarEmpty } from "./CalendarEmpty";
 import { CalendarMonth } from "./CalendarMonth";
+import { CalendarTodoInput } from "./CalendarTodoInput";
+import { SCHEDULED_TODO_UID, scheduledTodoEvents } from "./todoEvents";
+import { getLocalDateString } from "../../utils/date";
 import { chineseDay } from "./lunar.ts";
 import { eventsOn, isRead, monthStart, namesTheDay, nextDay, nextSpecialDay, startOfDay } from "./monthView.ts";
 import { clockTime } from "./upcoming";
@@ -17,18 +20,22 @@ function join(link: string) {
  * The island's calendar page: the day list on the left (today and tomorrow, or the day picked in
  * the month), each event with its time, title and place and a "Join" button for a meeting until
  * it ends; the month on the right, with lunar dates and holiday marks. Opening the page reads the
- * calendars again. With no calendar added, it shows how to add one (CalendarEmpty.tsx).
+ * calendars again. With no calendar added, it shows how to add one (CalendarEmpty.tsx). With
+ * `todos`, today and later days take a todo (issue #43), and planned todos show among the events.
  */
 export function CalendarPanel({
   snapshot,
   now,
   onRefresh,
   onOpenSettings,
+  todos,
 }: {
   snapshot: CalendarSnapshot;
   now: number;
   onRefresh: () => void;
   onOpenSettings: () => void;
+  /** Todos planned for later days, and adding one for a day (YYYY-MM-DD); off with todos. */
+  todos?: { scheduled: readonly { id: string; title: string; date: string }[]; onAdd: (title: string, date: string) => void };
 }) {
   const t = useTranslation();
   const text = t.calendar;
@@ -40,6 +47,12 @@ export function CalendarPanel({
   const [month, setMonth] = useState<number | null>(null);
   const selected = picked ?? today;
   const shownMonth = month ?? monthStart(selected);
+  const todoList = t.island.todoList;
+  const scheduled = todos?.scheduled;
+  const events = useMemo(
+    () => (scheduled?.length ? [...snapshot.events, ...scheduledTodoEvents(scheduled, todoList)].sort((a, b) => a.startMs - b.startMs) : snapshot.events),
+    [scheduled, snapshot.events, todoList],
+  );
   useEffect(() => {
     onRefresh();
   }, [onRefresh]);
@@ -71,10 +84,11 @@ export function CalendarPanel({
   const row = (event: CalendarEvent) => {
     const past = event.endMs <= now;
     const running = event.startMs <= now && now < event.endMs;
-    const time = event.allDay ? text.allDay : `${clockTime(event.startMs)}–${clockTime(event.endMs)}`;
+    const todo = event.uid.startsWith(SCHEDULED_TODO_UID);
+    const time = event.allDay ? (todo ? text.todo : text.allDay) : `${clockTime(event.startMs)}–${clockTime(event.endMs)}`;
     return (
-      <li key={`${event.uid}:${event.startMs}`} className={`calendar-event${past ? " calendar-event--past" : ""}${running && !event.allDay ? " calendar-event--now" : ""}`}>
-        <span className="calendar-event__time">{time}</span>
+      <li key={`${event.uid}:${event.startMs}`} className={`calendar-event${past ? " calendar-event--past" : ""}${running && !event.allDay ? " calendar-event--now" : ""}${todo ? " calendar-event--todo" : ""}`}>
+        <span className="calendar-event__time">{todo && <ListTodo size={12} strokeWidth={2.2} aria-label={text.todo} />}{time}</span>
         <span className="calendar-event__main">
           <span className="calendar-event__title">{event.title || text.untitled}</span>
           <span className="calendar-event__place">{[event.location, event.calendar].filter(Boolean).join(" · ")}</span>
@@ -108,14 +122,15 @@ export function CalendarPanel({
         </div>
         <div className="calendar-panel__days">
           {days.map(({ day, label }) => {
-            const events = eventsOn(snapshot.events, day).filter((event) => !namesTheDay(event));
+            const dayEvents = eventsOn(events, day).filter((event) => !namesTheDay(event));
             const read = snapshot.fromMs === 0 || isRead(snapshot, day);
             const sub = subtitle(day);
             return (
               <div key={day} className="calendar-day">
                 <h3 className="calendar-day__label">{label}</h3>
                 {sub && <p className="calendar-day__lunar">{sub}</p>}
-                {events.length > 0 ? <ul className="calendar-day__events">{events.map(row)}</ul> : <p className="calendar-day__empty">{read ? text.nothing : text.notRead}</p>}
+                {dayEvents.length > 0 ? <ul className="calendar-day__events">{dayEvents.map(row)}</ul> : <p className="calendar-day__empty">{read ? text.nothing : text.notRead}</p>}
+                {todos && day >= today && <CalendarTodoInput label={label} onAdd={(title) => todos.onAdd(title, getLocalDateString(new Date(day)))} />}
               </div>
             );
           })}
@@ -125,7 +140,7 @@ export function CalendarPanel({
         month={shownMonth}
         today={today}
         selected={selected}
-        events={snapshot.events}
+        events={events}
         onSelect={select}
         onMonth={(delta) => setMonth(monthStart(shownMonth, delta))}
       />

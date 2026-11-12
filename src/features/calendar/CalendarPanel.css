@@ -115,6 +115,9 @@
 
 .calendar-event__time {
   flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   width: 78px;
   color: rgba(var(--calendar-ink), 0.68);
   font-size: 12px;
@@ -241,4 +244,42 @@
 .calendar-empty__error {
   color: #ff8a8a;
   font-size: 12px;
+}
+
+/* A todo planned for the day (issue #43): the accent marks it apart from calendar events. */
+.calendar-event--todo .calendar-event__time {
+  color: var(--color-accent, rgba(var(--calendar-ink), 0.68));
+}
+
+/* "Add a todo" under a day: a quiet line until focused. */
+.calendar-todo-input {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+  padding: 0 8px;
+  height: 28px;
+  border-radius: 8px;
+  color: rgba(var(--calendar-ink), 0.42);
+}
+
+.calendar-todo-input:focus-within {
+  background: rgba(var(--calendar-ink), 0.06);
+  color: rgba(var(--calendar-ink), 0.68);
+}
+
+.calendar-todo-input input {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: rgba(var(--calendar-ink), 0.92);
+  font: inherit;
+  font-size: 12px;
+}
+
+.calendar-todo-input input::placeholder {
+  color: rgba(var(--calendar-ink), 0.42);
 }

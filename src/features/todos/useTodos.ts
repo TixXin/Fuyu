@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { loadCurrentTodoDate, loadDailyNote, saveCurrentTodoDate, saveDailyNote } from "./storage";
+import { createTodoId, loadCurrentTodoDate, loadDailyNote, saveCurrentTodoDate, saveDailyNote } from "./storage";
 import type { TodoItem, TodoPageMode } from "./types";
 import { useTodoArchives } from "./useTodoArchives";
 import { useTodoList } from "./useTodoList";
@@ -52,6 +52,16 @@ export function useTodos({
     }
     setDraftDate(null);
   }, [addListTodo, currentTodoDate, draftDate, draftTodo, scheduleTodo, setDraftTodo]);
+  /** A todo for `date` (YYYY-MM-DD) from elsewhere (the calendar page): today's list, or planned for a later day. */
+  const addTodoOn = useCallback((title: string, date: string) => {
+    const text = title.trim();
+    if (!text) return;
+    if (date > currentTodoDate) {
+      scheduleTodo(text, date);
+      return;
+    }
+    setTodos((current) => [{ id: createTodoId(), title: text, completed: false, createdAt: Date.now() }, ...current]);
+  }, [currentTodoDate, scheduleTodo, setTodos]);
   const [todoPageMode, setTodoPageMode] = useState<TodoPageMode>("today");
   const [selectedArchiveDate, setSelectedArchiveDate] = useState<string | null>(
     null,
@@ -140,6 +150,7 @@ export function useTodos({
     activeTodoId,
     /** Local API handlers for todos and the daily note; see useTodoApiHandlers. */
     apiHandlers,
+    addTodoOn,
     notebookProps: {
       todos,
       dailyNote,

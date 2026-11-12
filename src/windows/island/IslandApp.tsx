@@ -105,7 +105,7 @@ export function IslandApp() {
     onOpenAgents: openAgentsPage,
     markLight: settings.agentLightStyle === "mark",
   });
-  const { todos, activeTodoId, notebookProps } = useIslandTodos({ settings, mode, page, agentStatus, collapseIsland });
+  const { todos, activeTodoId, notebookProps, addTodoOn } = useIslandTodos({ settings, mode, page, agentStatus, collapseIsland });
 
   const translationPeek = useQuickTranslation(settings.translationEnabled);
   const { lyrics, lyricLine: currentLyric } = useIslandLyrics(settings, media.mediaState, {
@@ -338,6 +338,7 @@ export function IslandApp() {
           fileShelf={fileShelf}
           isShelfDropping={isShelfDropping}
           notebookProps={notebookProps}
+          addTodoOn={settings.todoEnabled ? addTodoOn : undefined}
           calendar={calendar}
         />
       </IslandShell>

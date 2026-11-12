@@ -107,6 +107,33 @@ try {
   await act(async () => { document.querySelector<HTMLButtonElement>(".calendar-month__today")!.click(); await wait(); });
   check(monthTitle() === shownMonth && document.querySelectorAll(".calendar-day").length === 2, "回到今天：月份和今天、明天两组都回来");
 
+  // Issue #43: planned todos on the calendar, and adding a todo for a day.
+  const dateOf = (offset: number) => { const day = new Date(at(offset, 0)); return `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, "0")}-${String(day.getDate()).padStart(2, "0")}`; };
+  const addedTodos: string[] = [];
+  const scheduled = [{ id: "s1", title: "交组会 PPT", date: dateOf(1) }, { id: "s2", title: "14:00 组会", date: dateOf(1) }];
+  await act(async () => {
+    panel.render(<StrictMode><I18nProvider><CalendarPanel snapshot={SNAPSHOT} now={now} onRefresh={() => {}} onOpenSettings={() => {}}
+      todos={{ scheduled, onAdd: (title, date) => addedTodos.push(`${date} ${title}`) }} /></I18nProvider></StrictMode>);
+    await wait();
+  });
+  const tomorrowGroup = document.querySelectorAll<HTMLElement>(".calendar-day")[1];
+  const todoRows = [...tomorrowGroup.querySelectorAll<HTMLElement>(".calendar-event--todo")];
+  check(titles(tomorrowGroup).join("|") === "交组会 PPT|组会|1:1" && todoRows.length === 2
+    && todoRows[0].querySelector(".calendar-event__time")?.textContent === "待办" && todoRows[1].querySelector(".calendar-event__time")?.textContent === "14:00–14:30",
+    "计划到明天的待办列在明天，带待办标记；以时间开头的排在那个时间");
+  check(todayCell().nextElementSibling?.querySelector(".calendar-month__dot") || tomorrowCell.querySelector(".calendar-month__dot"), "月历上有计划待办的日子有圆点");
+  const todoInputs = () => [...document.querySelectorAll<HTMLInputElement>(".calendar-todo-input input")];
+  check(todoInputs().length === 2 && todoInputs()[1].getAttribute("aria-label")?.startsWith("给 明天 · "), "今天和明天下面各有一行添加待办，读屏写出是哪天");
+  await act(async () => { setInput(todoInputs()[1], "交周报"); await wait(); });
+  await act(async () => { todoInputs()[1].form!.requestSubmit(); await wait(); });
+  await act(async () => { setInput(todoInputs()[0], "  "); await wait(); });
+  await act(async () => { todoInputs()[0].form!.requestSubmit(); await wait(); });
+  check(addedTodos.join("|") === `${dateOf(1)} 交周报` && todoInputs()[1].value === "", "回车把待办加到那一天，输入框清空；空白不加");
+  const yesterdayCell = cells()[cells().indexOf(todayCell()) - 1];
+  await act(async () => { yesterdayCell.click(); await wait(); });
+  check(document.querySelectorAll(".calendar-day").length === 1 && todoInputs().length === 0, "过去的日子没有添加待办");
+  await act(async () => { document.querySelector<HTMLButtonElement>(".calendar-month__today")!.click(); await wait(); });
+
   let added = 0;
   const empty = { ...SNAPSHOT, events: [], problems: [], sourceCount: 0 };
   await act(async () => {
