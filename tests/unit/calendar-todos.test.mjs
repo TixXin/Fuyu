@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { todoEvents } from "../../src/features/calendar/todoEvents.ts";
+import { scheduledTodoEvents, todoEvents } from "../../src/features/calendar/todoEvents.ts";
 
 const now = new Date(2026, 10, 7, 9, 0).getTime();
 const at = (h, m) => new Date(2026, 10, 7, h, m).getTime();
@@ -21,4 +21,18 @@ test("todos that start with a time become today's events", () => {
     ],
   );
   assert.deepEqual(todoEvents([todo("15:00")], now, "x"), []);
+});
+
+test("todos planned for later days show on their day: at their time, or all day", () => {
+  const events = scheduledTodoEvents(
+    [{ id: "a", title: "交组会 PPT", date: "2026-11-20" }, { id: "b", title: "9:30-10:00 站会", date: "2026-11-21" }, { id: "c", title: "坏日期", date: "x" }],
+    "任务清单",
+  );
+  assert.deepEqual(
+    events.map((event) => [event.uid, event.title, event.allDay, event.startMs, event.endMs]),
+    [
+      ["scheduled:a", "交组会 PPT", true, new Date(2026, 10, 20).getTime(), new Date(2026, 10, 21).getTime()],
+      ["scheduled:b", "站会", false, new Date(2026, 10, 21, 9, 30).getTime(), new Date(2026, 10, 21, 10, 0).getTime()],
+    ],
+  );
 });

@@ -61,6 +61,8 @@ type IslandPagesProps = {
   fileShelf: ReturnType<typeof useFileShelf>;
   isShelfDropping: boolean;
   notebookProps: ReturnType<typeof useTodos>["notebookProps"];
+  /** Adds a todo for a day from the calendar page; undefined while todos are off. */
+  addTodoOn?: ReturnType<typeof useTodos>["addTodoOn"];
   calendar: CalendarState;
 };
 
@@ -89,6 +91,7 @@ export function IslandPages({
   fileShelf,
   isShelfDropping,
   notebookProps,
+  addTodoOn,
   calendar,
 }: IslandPagesProps): ReactNode {
   const { mediaState, isMediaTrackChanging, mediaCommandError, runMediaCommand } = media;
@@ -142,7 +145,8 @@ export function IslandPages({
       {pluginPages.entry && <PluginViewPage entry={pluginPages.entry} isOpen={mode === "expanded"} />}
       {page === "translation" && <TranslationPanel isOpen={mode === "expanded"} onOpenSettings={() => openSettingsWindow("translation")} />}
       {page === "calendar" && (
-        <CalendarPanel snapshot={calendar.snapshot} now={calendar.now} onRefresh={calendar.refresh} onOpenSettings={() => openSettingsWindow("calendar")} />
+        <CalendarPanel snapshot={calendar.snapshot} now={calendar.now} onRefresh={calendar.refresh} onOpenSettings={() => openSettingsWindow("calendar")}
+          todos={addTodoOn && { scheduled: notebookProps.scheduledTodos, onAdd: addTodoOn }} />
       )}
       {page === "shelf" && <FileShelfPanel shelf={fileShelf} isDropTarget={isShelfDropping} revealOnDoubleClick={settings.shelfDoubleClick === "reveal"} />}
       {page === "todo" && (

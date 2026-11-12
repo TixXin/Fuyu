@@ -26,7 +26,7 @@ export function useIslandTodos({ settings, mode, page, agentStatus, collapseIsla
     openSettingsWindow("savePath");
   }, []);
 
-  const { todos, activeTodoId, apiHandlers, notebookProps } = useTodos({
+  const { todos, activeTodoId, apiHandlers, notebookProps, addTodoOn } = useTodos({
     carryOverIncompleteTodos: settings.carryOverIncompleteTodos,
     onStartTodo: collapseIsland,
     onMissingSaveDirectory: openSavePathSettings,
@@ -42,5 +42,5 @@ export function useIslandTodos({ settings, mode, page, agentStatus, collapseIsla
     mode,
   });
   usePluginKeybindings({ mode, page, hasActiveTodo: activeTodoId !== null });
-  return { todos, activeTodoId, notebookProps };
+  return { todos, activeTodoId, notebookProps, addTodoOn };
 }

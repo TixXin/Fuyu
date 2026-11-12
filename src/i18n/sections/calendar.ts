@@ -5,6 +5,10 @@ export type CalendarText = {
   allDay: string;
   untitled: string;
   nothing: string;
+  /** The add-a-todo row under a day (issue #43), its label naming the day, and a planned todo's time column. */
+  addTodo: string;
+  addTodoOn: (day: string) => string;
+  todo: string;
   join: string;
   joinLabel: (title: string) => string;
   refresh: string;
@@ -51,6 +55,9 @@ export const zhCN: CalendarText = {
   allDay: "全天",
   untitled: "（无标题）",
   nothing: "没有日程",
+  addTodo: "添加待办",
+  addTodoOn: (day) => `给 ${day} 添加待办`,
+  todo: "待办",
   join: "加入",
   joinLabel: (title) => `加入「${title}」的会议`,
   refresh: "重新读取日历",
@@ -87,6 +94,9 @@ export const en: CalendarText = {
   allDay: "All day",
   untitled: "(No title)",
   nothing: "Nothing scheduled",
+  addTodo: "Add a todo",
+  addTodoOn: (day) => `Add a todo for ${day}`,
+  todo: "Todo",
   join: "Join",
   joinLabel: (title) => `Join the meeting "${title}"`,
   refresh: "Read the calendars again",
