@@ -185,7 +185,7 @@ export function IslandApp() {
     panelIslandWidth(settings.panelWidth, settings.expandedScale),
   );
   // Alt + dragging the panel's edges (C25); a height drag shows the panel at the height being set.
-  const resizingHeight = useIslandResize(settings, setSettings);
+  const { resizingHeight, resizing } = useIslandResize(settings, setSettings, popup);
   const pageIslandHeight = getExpandedIslandHeight({
     page,
     maxPanelHeight: settings.maxPanelHeight,
@@ -274,6 +274,7 @@ export function IslandApp() {
         mode={mode}
         page={page}
         popup={popup}
+        resizeLabel={resizing === "collapsed" ? `${collapsedIslandWidth} px` : resizing ? `${expandedIslandWidth} × ${settings.maxPanelHeight}` : null}
         appearanceMode={settings.appearanceMode}
         nativeGlassState={nativeGlassState}
         isTucked={isTucked}

@@ -6,7 +6,7 @@ pub(crate) mod focus;
 mod follow;
 mod geometry;
 mod glass;
-mod modifier;
+pub(crate) mod modifier;
 pub(crate) mod outside_click;
 pub(crate) mod passthrough;
 mod state;
@@ -314,6 +314,7 @@ macro_rules! tauri_commands {
             crate::island::focus::release_island_hover_focus,
             crate::island::focus::island_is_foreground,
             crate::island::passthrough::set_island_cursor_tracking,
+            crate::island::modifier::set_island_panel_resizable,
             crate::island::banner_hit::set_island_banner_rect,
             crate::island::outside_click::set_island_outside_click_watch,
         ] $($rest)*)

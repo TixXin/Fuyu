@@ -34,6 +34,46 @@ html.island-move-armed .island-resize-hints {
   opacity: 1;
 }
 
+/*
+ * A soft glow keeps the lines visible on an island close to the accent's own colour. On the
+ * lines' wrapper, not each line: a line's mask would cut its own glow off at the edge.
+ */
+.island-resize-lines {
+  position: absolute;
+  inset: 0;
+  filter: drop-shadow(0 0 2px var(--color-accent));
+}
+
+/* While a drag resizes the island, it follows the cursor without the open and close easing. */
+html.island-resizing .island {
+  transition: background-color 360ms ease;
+}
+
+html.island-resizing .island--expanded .island__expanded {
+  transition: opacity 250ms ease 120ms;
+}
+
+/* The size being set: inside the panel at the bottom, under the collapsed island. */
+.island-resize-size {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
+  padding: 0 8px;
+  border-radius: var(--radius-pill);
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  line-height: 18px;
+  white-space: nowrap;
+}
+
+.island--collapsed .island-resize-size {
+  top: calc(100% + 6px);
+  bottom: auto;
+}
+
 .island-resize-hint {
   --resize-hint-corner: calc(var(--resize-hint-bottom) + 10px);
   position: absolute;
@@ -45,7 +85,7 @@ html.island-move-armed .island-resize-hints {
     max(0px, calc(var(--resize-hint-bottom) - var(--resize-hint-inset)))
     max(0px, calc(var(--resize-hint-bottom) - var(--resize-hint-inset)));
   corner-shape: var(--island-corner-shape, round);
-  opacity: 0.4;
+  opacity: 0.45;
   mask-image: linear-gradient(#000 0 0);
   mask-repeat: no-repeat;
   transition: opacity 120ms ease;
@@ -59,6 +99,11 @@ html.island-move-armed .island-resize-hints {
 .island-resize-hint--right {
   mask-position: right center;
   mask-size: 10px var(--resize-hint-side);
+}
+
+/* On a short panel the side lines shrink, so they never run into the corner lines. */
+.island--expanded .island-resize-hint:is(.island-resize-hint--left, .island-resize-hint--right) {
+  mask-size: 10px min(var(--resize-hint-side), max(0px, calc(100% - 2 * var(--resize-hint-corner) - 12px)));
 }
 
 .island-resize-hint--bottom {

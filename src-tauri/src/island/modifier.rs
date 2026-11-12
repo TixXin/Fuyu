@@ -25,6 +25,9 @@ const ISLAND_RESIZE_EVENT: &str = "island-resize";
 const EDGE: f64 = 12.0;
 
 static RESIZING: AtomicBool = AtomicBool::new(false);
+/// Whether the expanded panel's edges resize it; off while it shows a popup's card, whose size
+/// the panel settings do not set (set_island_panel_resizable).
+static PANEL_RESIZABLE: AtomicBool = AtomicBool::new(true);
 /// The edge being dragged while RESIZING, as `ModifierTarget::to_u8`.
 static RESIZE_TARGET: AtomicU8 = AtomicU8::new(0);
 
@@ -106,10 +109,17 @@ fn edges_under_cursor(hwnd: HWND) -> Option<(i8, bool, f64)> {
     let x = ((cursor.x - window_rect.left) as f64 - left) / per_px;
     let y = (cursor.y - window_rect.top) as f64 / per_px;
     let (side, bottom) = match state.mode {
+        IslandMode::Expanded if !PANEL_RESIZABLE.load(Ordering::SeqCst) => (0, false),
         IslandMode::Expanded => edges_at(x, y, width, height, state.bottom_corner_radius()),
         IslandMode::Collapsed => (edges_at(x, y, width, height, 0.0).0, false),
     };
     Some((side, bottom, per_px))
+}
+
+/// Lets the expanded panel's edges resize it, or (`false`, while a popup shows) only move it.
+#[tauri::command]
+pub fn set_island_panel_resizable(resizable: bool) {
+    PANEL_RESIZABLE.store(resizable, Ordering::SeqCst);
 }
 
 /// What an Alt press would do, with the cursor already known to be over the island.

@@ -70,6 +70,11 @@ const ISLAND_RESIZE_EVENT = "island-resize";
  */
 export type IslandResizeDelta = { width: number; height: number; collapsed: boolean; done: boolean };
 
+/** Lets Alt + dragging the open panel's edges resize it (`false` while a popup shows its card). */
+export function setIslandPanelResizable(resizable: boolean): Promise<void> {
+  return invoke("set_island_panel_resizable", { resizable });
+}
+
 export function listenIslandResize(handler: (delta: IslandResizeDelta) => void): Promise<UnlistenFn> {
   return listen<IslandResizeDelta>(ISLAND_RESIZE_EVENT, ({ payload }) => handler(payload));
 }

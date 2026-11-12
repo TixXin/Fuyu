@@ -40,6 +40,8 @@ type IslandShellProps = {
   page: IslandPage;
   /** Only a popup's card, without the header, on a narrower island (useIslandPopup). */
   popup?: boolean;
+  /** The size an Alt + edge drag is setting, shown meanwhile; null when none is under way. */
+  resizeLabel?: string | null;
   appearanceMode: AppearanceMode;
   nativeGlassState: NativeGlassState;
   isTucked: boolean;
@@ -112,6 +114,7 @@ export function IslandShell({
   mode,
   page,
   popup = false,
+  resizeLabel = null,
   appearanceMode,
   nativeGlassState,
   isTucked,
@@ -287,8 +290,8 @@ export function IslandShell({
           <div ref={contentRef} className="island__content">{children}</div>
         </div>
         {overlay}
-        <IslandResizeHints isExpanded={isExpanded} />
       </div>
+      <IslandResizeHints isExpanded={isExpanded} popup={popup} sizeLabel={resizeLabel} />
     </section>
   );
 }
