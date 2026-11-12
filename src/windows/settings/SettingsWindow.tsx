@@ -76,6 +76,7 @@ export function SettingsWindow() {
     if (section === "calendar") setCategory("calendar");
     if (section === "mail") setCategory("messages");
     if (section === "updates") setCategory("about");
+    if (section === "agentConnect") setCategory("agentConnect");
   }, [focusSavePath]);
 
   // The window opens hidden and is shown once the page has rendered, so it never shows

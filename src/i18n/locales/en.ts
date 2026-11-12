@@ -20,6 +20,7 @@ import * as fileShelf from "../sections/fileShelf.ts";
 import * as screenshot from "../sections/screenshot.ts";
 import * as pluginViews from "../sections/pluginViews.ts";
 import * as settings from "../sections/settings/index.ts";
+import * as onboarding from "../sections/onboarding.ts";
 import * as errors from "../sections/errors.ts";
 
 const en: Translations = {
@@ -56,6 +57,7 @@ const en: Translations = {
 
   pluginViews: pluginViews.en,
   settings: settings.en,
+  onboarding: onboarding.en,
   errors: errors.en,
 };
 

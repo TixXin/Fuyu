@@ -90,8 +90,8 @@ pub fn open(app: &AppHandle) -> Result<(), String> {
 }
 
 /// The screen the island is on, so settings open where the user is looking;
-/// the primary screen when the island has none.
-fn island_screen(app: &AppHandle) -> Option<Monitor> {
+/// the primary screen when the island has none. The first-run guide opens there too.
+pub(crate) fn island_screen(app: &AppHandle) -> Option<Monitor> {
     app.get_webview_window(crate::island::WINDOW_LABEL)
         .and_then(|island| island.current_monitor().ok().flatten())
         .or_else(|| app.primary_monitor().ok().flatten())

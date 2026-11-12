@@ -2517,6 +2517,19 @@
       "page": "about",
       "zh-CN": {
         "group": "",
+        "title": "新手引导",
+        "description": "第一次启动时打开的那个窗口：语言、外观、功能开关和几个常用选项。"
+      },
+      "en": {
+        "group": "",
+        "title": "Welcome guide",
+        "description": "The window shown on first start: language, appearance, modules and a few common choices."
+      }
+    },
+    {
+      "page": "about",
+      "zh-CN": {
+        "group": "",
         "title": "重置所有设置",
         "description": "外观、行为和各功能的设置恢复默认。待办、笔记、邮箱、插件、密钥、样式预设和界面语言都保留。"
       },

@@ -35,6 +35,7 @@ export const PAGES = [
   "mail-reader.html?run=1",
   "music-lyrics.html",
   "notification-startup.html",
+  "onboarding.html?test=1",
   "plugin-menus.html",
   "plugin-views.html?test=1",
   "settings.html?test=1",
