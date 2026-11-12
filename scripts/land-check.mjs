@@ -149,7 +149,7 @@ function checkIn() {
   }
 }
 
-function main() {
+function main(args = []) {
   lowerPriority("land-check");
   const unrecorded = checkIn();
   if (unrecorded) {
@@ -185,6 +185,10 @@ function main() {
     for (const command of DOCS_CHECKS) if (run(command) !== 0) return 1;
     return 0;
   }
+  if (args.includes("--light")) {
+    console.log("[land-check] pnpm check and cargo test are left to CI's check on the pull request; run pnpm verify to run them here");
+    return 0;
+  }
   if (passed.check) {
     console.log(`[land-check] tree ${tree.slice(0, 10)} already passed pnpm check; not running it again`);
   } else {
@@ -207,5 +211,5 @@ function main() {
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  process.exit(main());
+  process.exit(main(process.argv.slice(2)));
 }

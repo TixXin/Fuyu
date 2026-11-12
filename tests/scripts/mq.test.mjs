@@ -23,11 +23,12 @@ function withoutGitEnv(work) {
     });
 }
 
-test("pushes to main need the landing flag, and an emergency lets anything through", () => {
+test("nobody pushes main directly, other branches go through, and an emergency lets anything through", () => {
   const updates = parseRefUpdates("refs/heads/lane/3 aaa refs/heads/main bbb\n\n");
   assert.deepEqual(updates, [{ localRef: "refs/heads/lane/3", localSha: "aaa", remoteRef: "refs/heads/main", remoteSha: "bbb" }]);
   assert.match(pushBlock(updates, {}), /pnpm mq:land/);
-  assert.equal(pushBlock(updates, { CLAUDE_CODE_MERGE_QUEUE_LANDING: "1" }), null);
+  assert.match(pushBlock(updates, { CLAUDE_CODE_MERGE_QUEUE_LANDING: "1" }), /pnpm mq:land/, "the old landing flag no longer opens main");
+  assert.equal(pushBlock(parseRefUpdates("refs/heads/lane/3 a refs/heads/land/t/pc-lane-3 b"), {}), null);
   assert.equal(pushBlock(updates, { CLAUDE_CODE_MERGE_QUEUE_EMERGENCY_PUSH: "1" }), null);
   assert.equal(pushBlock(parseRefUpdates("refs/heads/pr-9 a refs/heads/pr-9 b"), {}), null);
 });

@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { CHECK_COMMAND, EMERGENCY_ENV, INTEGRATION_BRANCH, LANDING_ENV, git } from "./settings.mjs";
+import { CHECK_COMMAND, EMERGENCY_ENV, INTEGRATION_BRANCH, git } from "./settings.mjs";
 
 export function parseRefUpdates(stdin) {
   return stdin
@@ -15,10 +15,10 @@ export function parseRefUpdates(stdin) {
 export function pushBlock(updates, env) {
   if (env[EMERGENCY_ENV] === "1") return null;
   const main = `refs/heads/${INTEGRATION_BRANCH}`;
-  if (updates.some((update) => update.remoteRef === main) && env[LANDING_ENV] !== "1") {
+  if (updates.some((update) => update.remoteRef === main)) {
     return [
       "",
-      `✋ 不能直接推送 ${INTEGRATION_BRANCH}，要经合并队列：在 lane 里 pnpm mq:land。`,
+      `✋ 不能直接推送 ${INTEGRATION_BRANCH}，要开 PR：在 lane 里 pnpm mq:land（推自己的分支、开 PR、CI 通过后自动合入）。`,
       `   紧急情况：${EMERGENCY_ENV}=1 git push …`,
       "",
     ].join("\n");
