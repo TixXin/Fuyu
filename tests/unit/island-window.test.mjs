@@ -6,7 +6,6 @@ import {
   alignCollapsedIslandWidth,
   getCollapsedIslandWidth,
   getTodoScrollStartRows,
-  getTodoVisualRows,
 } from "../../src/windows/island/layout.ts";
 import { ISLAND_POSITION_STORAGE_KEY, loadIslandPosition } from "../../src/windows/island/storage.ts";
 
@@ -58,13 +57,6 @@ test("the collapsed width is nudged so the centred island starts on a whole devi
   }
   // A ratio no nearby width can satisfy keeps the computed width.
   assert.equal(alignCollapsedIslandWidth(301, 820, 1.13), 301);
-});
-
-test("todo visual rows add up the estimated lines of every title", () => {
-  const todo = (title) => ({ id: title, title, completed: false, createdAt: 0 });
-  assert.equal(getTodoVisualRows([]), 0);
-  assert.equal(getTodoVisualRows([todo("a"), todo("b")]), 2);
-  assert.equal(getTodoVisualRows([todo("文".repeat(21))]), 2);
 });
 
 test("a stored island position is rounded and invalid data is ignored", () => {

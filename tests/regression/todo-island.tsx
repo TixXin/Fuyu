@@ -97,6 +97,9 @@ try {
   check(rows[0].classList.contains("todo-island-row--active") && $("today", ".todo-island-row__stop")?.textContent === "进行中结束", "进行中的待办有强调条和结束按钮");
   check(getComputedStyle(rows[2].querySelector(".todo-island-row__title")!).textDecorationLine === "line-through", "已完成的划掉");
   check(getComputedStyle(rows[1].querySelector(".todo-island-row__action")!).opacity === "0", "其他操作平时隐藏");
+  // Row height follows the lines the title actually wraps to (issue #41), not a character estimate.
+  const heights = rows.map((row) => [Math.round(row.querySelector<HTMLElement>(".todo-island-row__title")!.offsetHeight / 19), row.offsetHeight]);
+  check(heights.every(([lines, height]) => height === 23 + 19 * lines) && heights.some(([lines]) => lines > 1), `行高跟着标题实际换行：一行 42px，每多一行加 19px（${heights.map(([l, h]) => l + "行 " + h + "px").join("，")}）`);
   await click(rows[1].querySelector<HTMLElement>(".todo-island-row__check"));
   await click(rows[1].querySelector<HTMLElement>(".todo-island-row__action"));
   check(calls.includes("toggle:b") && calls.includes("start:b"), "勾选和开始");

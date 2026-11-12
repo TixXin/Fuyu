@@ -1,7 +1,6 @@
-import type { TodoItem } from "../../features/todos/types";
 import type { AgentSessionView } from "../../features/appearance/types";
 import { clamp } from "../../utils/number.ts";
-import { getCollapsedTextUnits, getTodoTitleLineCount } from "../../utils/text.ts";
+import { getCollapsedTextUnits } from "../../utils/text.ts";
 
 export const MIN_COLLAPSED_ISLAND_WIDTH = 280;
 export const MAX_COLLAPSED_ISLAND_WIDTH = 340;
@@ -96,13 +95,6 @@ export function getTodoScrollStartRows(maxPanelHeight: number) {
   return (
     TODO_GROW_START_ROWS +
     Math.max(0, Math.floor((maxPanelHeight - BASE_EXPANDED_ISLAND_HEIGHT) / TODO_ROW_HEIGHT))
-  );
-}
-
-export function getTodoVisualRows(todoList: TodoItem[]) {
-  return todoList.reduce(
-    (total, todo) => total + getTodoTitleLineCount(todo.title),
-    0,
   );
 }
 

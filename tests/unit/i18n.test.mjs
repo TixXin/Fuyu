@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { detectLocale, isLocaleCode, loadLocale, saveLocale, LOCALE_STORAGE_KEY, TRANSLATIONS } from "../../src/i18n/index.ts";
 import { messagePreviewText } from "../../src/features/messages/messagePreview.ts";
-import { getCollapsedTextUnits, getTodoTitleLineCount, getTodoTitleVisualLength } from "../../src/utils/text.ts";
+import { getCollapsedTextUnits } from "../../src/utils/text.ts";
 
 test("locale detection respects language preference order and regional tags", () => {
   assert.equal(detectLocale(["en-US", "zh-CN"]), "en");
@@ -69,14 +69,7 @@ test("message fallbacks follow the interface language and preserve user content"
   assert.equal(messagePreviewText({ ...empty, source: "qqMail", body: " 项目周报 " }, TRANSLATIONS.en.messages), "项目周报");
 });
 
-test("narrow scripts do not inflate island sizing and wide scripts still wrap", () => {
-  assert.equal(getTodoTitleVisualLength("Привет"), 6);
-  assert.equal(getTodoTitleVisualLength("Ελλάδα"), 6);
-  assert.equal(getTodoTitleVisualLength("待办"), 3.2);
-  assert.equal(getTodoTitleLineCount("я".repeat(32)), 1);
-  assert.equal(getTodoTitleLineCount("文".repeat(21)), 2);
-  assert.equal(getTodoTitleLineCount("x".repeat(1000)), 5);
-  assert.equal(getTodoTitleLineCount(""), 1);
+test("narrow scripts do not inflate the collapsed island width", () => {
   assert.equal(getCollapsedTextUnits("Привет"), getCollapsedTextUnits("abcdef"));
   assert.equal(getCollapsedTextUnits("文😀"), 2);
 });

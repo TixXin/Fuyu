@@ -1,8 +1,8 @@
 /*
  * A todo row, drawn like the island's other list rows (IslandList.css): no fill until the cursor
  * rests on it, its actions only then. A row with its gap is 46px (TODO_ROW_HEIGHT in layout.ts)
- * and each further title line adds 19px (getTodoTitleLineCount), so the island grows with long
- * titles.
+ * and each line the title actually wraps to adds 19px: nothing else in the row is taller than one
+ * title line, so rows of the same line count are the same height at any panel width or font.
  */
 .todo-island__list {
   min-height: 0;
@@ -16,11 +16,11 @@
 
 .todo-island-row {
   position: relative;
-  min-height: max(42px, calc(var(--todo-title-lines, 1) * 19px + 23px));
+  min-height: 42px;
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  padding: 11px 6px 0 10px;
+  padding: 11px 6px 12px 10px;
   border-radius: 10px;
   transition: background 140ms ease, box-shadow 140ms ease, opacity 140ms ease;
 }
@@ -66,7 +66,7 @@
   flex: none;
   width: 14px;
   height: 20px;
-  margin: 0 -6px 0 -8px;
+  margin: 0 -6px -1px -8px;
   display: grid;
   place-items: center;
   padding: 0;
@@ -175,7 +175,7 @@
   display: inline-flex;
   align-items: center;
   gap: 2px;
-  margin-top: -4px;
+  margin: -4px 0;
 }
 
 .todo-island-row__action {

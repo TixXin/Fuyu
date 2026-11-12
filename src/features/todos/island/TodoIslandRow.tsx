@@ -1,7 +1,6 @@
-import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react";
+import type { PointerEvent as ReactPointerEvent } from "react";
 import { Check, GripVertical, Play, Square, Trash2 } from "lucide-react";
 import { useTranslation } from "../../../i18n";
-import { getTodoTitleLineCount } from "../../../utils/text";
 import type { TodoItem } from "../types";
 
 const ICON = { size: 14, strokeWidth: 1.5, absoluteStrokeWidth: true, "aria-hidden": true } as const;
@@ -63,7 +62,7 @@ export function TodoIslandRow({
   ].filter(Boolean).join(" ");
 
   return (
-    <div className={className} role="listitem" data-todo-id={todo.id} style={{ "--todo-title-lines": getTodoTitleLineCount(todo.title) } as CSSProperties}>
+    <div className={className} role="listitem" data-todo-id={todo.id}>
       {canReorder && (
         <button
           className="todo-island-row__grip"

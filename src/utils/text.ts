@@ -1,7 +1,3 @@
-const TODO_TITLE_CHARACTERS_PER_LINE = 32;
-const TODO_MAX_ESTIMATED_TITLE_LINES = 5;
-const WIDE_CHARACTER_WIDTH = 1.6;
-
 /**
  * Codepoint ranges that render roughly full-width in the island font.
  * Scripts outside these ranges (Cyrillic, Greek, accented Latin, …) are
@@ -27,25 +23,6 @@ function isWideCharacter(codePoint: number) {
   return WIDE_CHARACTER_RANGES.some(
     ([start, end]) => codePoint >= start && codePoint <= end,
   );
-}
-
-export function getTodoTitleVisualLength(title: string) {
-  let total = 0;
-
-  for (const character of title) {
-    const codePoint = character.codePointAt(0) ?? 0;
-    total += isWideCharacter(codePoint) ? WIDE_CHARACTER_WIDTH : 1;
-  }
-
-  return total;
-}
-
-export function getTodoTitleLineCount(title: string) {
-  const lines = Math.ceil(
-    getTodoTitleVisualLength(title) / TODO_TITLE_CHARACTERS_PER_LINE,
-  );
-
-  return Math.min(Math.max(lines, 1), TODO_MAX_ESTIMATED_TITLE_LINES);
 }
 
 const COLLAPSED_WIDE_UNITS = 1;
