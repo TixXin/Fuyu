@@ -176,7 +176,7 @@ function Get-ProgramIcon([string]$Path) {
     } catch { return $null }
 }
 
-# The six programs using the most CPU and the most memory, each program's processes added up,
+# The ten programs using the most CPU and the most memory (the page shows as many as fit), each program's processes added up,
 # with the icons of those the page has not got yet. CPU is the share of the whole machine since
 # the last scan; $null on the first scan.
 function Read-Processes {
@@ -212,8 +212,8 @@ function Read-Processes {
     $list = @($programs.Values | ForEach-Object {
         @{ name = $_.name; count = $_.count; cpu = [math]::Round($_.cpuMs / $span * 100, 1); memory = $_.memory }
     })
-    $byCpu = @($list | Sort-Object { $_.cpu } -Descending | Select-Object -First 6)
-    $byMemory = @($list | Sort-Object { $_.memory } -Descending | Select-Object -First 6)
+    $byCpu = @($list | Sort-Object { $_.cpu } -Descending | Select-Object -First 10)
+    $byMemory = @($list | Sort-Object { $_.memory } -Descending | Select-Object -First 10)
     # Paths are read only for the programs shown: reading one costs a handle on the process.
     $icons = @{}
     foreach ($program in @($byCpu) + @($byMemory)) {
@@ -316,6 +316,8 @@ function Send-Page {
         cpuTemperature = Read-CpuTemperature
         gpu = Read-PageGpu
         battery = Read-Battery
+        # The page lays itself out in one or two columns by this setting.
+        layout = [string]$script:Settings['layout']
     }
     $network = Read-Network
     $sample.download = $network.down

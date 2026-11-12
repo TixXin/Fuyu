@@ -6,8 +6,9 @@
     <link rel="stylesheet" href="monitor.css" />
   </head>
   <body>
-    <!-- Two columns, no cards: the island draws the page straight on itself (frame "none").
-         Each of CPU and GPU has its detail under it: the cores, the GPU's engines. -->
+    <!-- No cards: the island draws the page straight on itself (frame "none"). Two columns, or one
+         on a narrow panel (programs under the figures). Under each of CPU and GPU: its chart, then
+         the cores or the GPU's engines; the charts and the program list take the panel's height. -->
     <main class="monitor" id="monitor" hidden>
       <div class="stats">
         <div class="pair">
@@ -18,8 +19,8 @@
                 <strong class="gauge__value" id="cpu">-</strong>
                 <span class="gauge__extra" id="cpu-extra">CPU</span>
               </div>
-              <svg class="spark spark--cpu" id="cpu-spark" viewBox="0 0 120 24" preserveAspectRatio="none" aria-hidden="true"></svg>
             </div>
+            <svg class="spark spark--cpu" id="cpu-spark" viewBox="0 0 120 40" preserveAspectRatio="none" aria-hidden="true"></svg>
             <div class="cores" id="cores" aria-hidden="true"></div>
           </section>
           <section class="unit unit--gpu" id="gpu-unit">
@@ -29,8 +30,8 @@
                 <strong class="gauge__value" id="gpu">-</strong>
                 <span class="gauge__extra" id="gpu-extra">GPU</span>
               </div>
-              <svg class="spark spark--gpu" id="gpu-spark" viewBox="0 0 120 24" preserveAspectRatio="none" aria-hidden="true"></svg>
             </div>
+            <svg class="spark spark--gpu" id="gpu-spark" viewBox="0 0 120 40" preserveAspectRatio="none" aria-hidden="true"></svg>
             <div class="engines" id="engines"></div>
           </section>
         </div>

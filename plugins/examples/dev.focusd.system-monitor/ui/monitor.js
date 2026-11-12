@@ -8,7 +8,10 @@
 const focusd = acquireFocusdApi();
 const chinese = focusd.locale === "zh-CN";
 const HISTORY = 300;
-const PROGRAM_ROWS = 6;
+// main.ps1 sends the top ten programs; the page shows as many as its height fits.
+const MAX_PROGRAM_ROWS = 10;
+// A row is 28px with a 2px gap (monitor.css).
+const PROGRAM_ROW = 30;
 const text = chinese
   ? {
       memory: "内存", processes: "程序", byMemory: "内存", reading: "正在读取…", vram: "显存", power: "显卡功耗", down: "下载", up: "上传",
@@ -38,6 +41,7 @@ let processes = saved.processes || null;
 const icons = {};
 let last = null;
 let shownPrograms = "";
+let programRows = 6;
 
 const save = () => focusd.setState({ history, sortBy, processes, last });
 
@@ -177,16 +181,16 @@ function programIcon(name) {
 function showProcesses() {
   const rows = processes ? (sortBy === "cpu" ? processes.byCpu : processes.byMemory) : null;
   // The same rows as last time: nothing to draw (the list updates every 3 s, the page every second).
-  const key = JSON.stringify([sortBy, rows, Object.keys(icons).length]);
+  const key = JSON.stringify([sortBy, rows, Object.keys(icons).length, programRows]);
   if (key === shownPrograms) return;
   shownPrograms = key;
   for (const button of $("sort").querySelectorAll("button")) button.setAttribute("aria-pressed", String(button.dataset.sort === sortBy));
   if (!rows) {
-    $("processes").replaceChildren(...Array.from({ length: PROGRAM_ROWS }, () => element("li", "processes__placeholder")));
+    $("processes").replaceChildren(...Array.from({ length: programRows }, () => element("li", "processes__placeholder")));
     return;
   }
   $("processes").replaceChildren(
-    ...rows.slice(0, PROGRAM_ROWS).map((program) => {
+    ...rows.slice(0, programRows).map((program) => {
       const item = document.createElement("li");
       const name = element("span", "processes__name", program.name);
       if (program.count > 1) {
@@ -229,6 +233,9 @@ function showExtra(sample) {
 function show(sample) {
   $("monitor").hidden = false;
   $("waiting").hidden = true;
+  // The "layout" setting: "single" or "double" columns, or "auto" (one column on a narrow page, in monitor.css).
+  $("monitor").classList.toggle("monitor--single", sample.layout === "single");
+  $("monitor").classList.toggle("monitor--double", sample.layout === "double");
   const degree = (value) => `${Math.round(value)}°C`;
   const whole = (value) => String(Math.round(value));
 
@@ -289,6 +296,14 @@ $("sort").addEventListener("click", (event) => {
   showProcesses();
   save();
 });
+
+// The list's height changes with the panel and with the layout: count the rows again.
+new ResizeObserver(([entry]) => {
+  const rows = Math.min(MAX_PROGRAM_ROWS, Math.max(1, Math.floor((entry.contentRect.height + 2) / PROGRAM_ROW)));
+  if (rows === programRows) return;
+  programRows = rows;
+  showProcesses();
+}).observe($("processes"));
 
 $("task-manager").addEventListener("click", () => focusd.postMessage({ type: "taskManager" }));
 
