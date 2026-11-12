@@ -1,7 +1,11 @@
 // Builds, signs and publishes a release that in-app updates can pick up.
 //
 // Usage:
-//   pnpm release [--base-url <url>] [--no-upload] [--no-issue-comments]
+//   pnpm release [--base-url <url>] [--no-upload] [--no-issue-comments] [--no-smoke-test]
+//
+// Builds in the main checkout's src-tauri/target/publish (build-dirs.mjs). Before the uploaded
+// draft goes public, release-smoke.yml installs and starts it on a clean Windows runner
+// (smoke-test.mjs); --no-smoke-test skips that.
 //
 // Set the version and start the notes first with `pnpm release:version <version>`.
 //
@@ -23,8 +27,8 @@
 // release also refreshes the beta channel's manifest; see channel.mjs.
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { basename, dirname, join } from "node:path";
 import { channelProblems, readTasks, RELEASED_MARKER, releasedComment, shippedIssues } from "./after-release.mjs";
 import { commandLine } from "./command-line.mjs";
 import { BETA_CHANNEL_TAG, isPrerelease, shouldUpdateBetaManifest } from "./channel.mjs";
@@ -32,16 +36,23 @@ import { baseTag, DRAFT_MARKER } from "./notes-draft.mjs";
 import { readVersion, VERSION_FILES } from "./versions.mjs";
 import { msiNames, msiVersion } from "./msi-version.mjs";
 import { loadSigningEnvironment } from "./release-signing.mjs";
-import { EXE_NAME, installExe } from "../build-exe.mjs";
+import { smokeTest } from "./smoke-test.mjs";
+import { EXE_NAME, installExe, takeLock } from "../build-exe.mjs";
+import { mainCheckout, PUBLISH_DIR, targetDir } from "../build-dirs.mjs";
 
 const CONFIG = "src-tauri/tauri.conf.json";
 const OVERLAY = "src-tauri/tauri.release.conf.json";
-const BUNDLE_DIR = "src-tauri/target/release/bundle/nsis";
-const MSI_DIR = "src-tauri/target/release/bundle/msi";
-const EXE = `src-tauri/target/release/${EXE_NAME}`;
-const MSI_OVERLAY = "src-tauri/target/release/msi-version.conf.json";
-const BETA_CHANNEL_DIR = "src-tauri/target/release/beta-channel";
-const CHECK_DIR = "src-tauri/target/release/channel-check";
+// Built in the main checkout's target/publish from any lane (build-dirs.mjs), so a release
+// compiles incrementally; the lock keeps two lanes from releasing into it at once.
+const PUBLISH_TARGET = targetDir(mainCheckout(), PUBLISH_DIR);
+const RELEASE_DIR = join(PUBLISH_TARGET, "release");
+const BUNDLE_DIR = join(RELEASE_DIR, "bundle", "nsis");
+const MSI_DIR = join(RELEASE_DIR, "bundle", "msi");
+const EXE = join(RELEASE_DIR, EXE_NAME);
+const MSI_OVERLAY = join(RELEASE_DIR, "msi-version.conf.json");
+const BETA_CHANNEL_DIR = join(RELEASE_DIR, "beta-channel");
+const CHECK_DIR = join(RELEASE_DIR, "channel-check");
+const PUBLISH_LOCK = join(PUBLISH_TARGET, ".release.lock");
 const REPO = "TixXin/fuyu";
 
 const args = process.argv.slice(2);
@@ -49,6 +60,7 @@ const baseFlag = args.indexOf("--base-url");
 const baseUrl = baseFlag >= 0 ? args[baseFlag + 1] : "";
 const upload = !args.includes("--no-upload");
 const issueComments = !args.includes("--no-issue-comments");
+const smoke = !args.includes("--no-smoke-test");
 
 if (baseFlag >= 0 && (!baseUrl || !URL.canParse(baseUrl) || new URL(baseUrl).protocol !== "https:")) {
   fail("--base-url requires a valid HTTPS URL.");
@@ -73,6 +85,7 @@ function run(command, commandArgs, options = {}) {
     encoding: "utf8",
     shell: windows,
     windowsHide: true,
+    env: options.env ? { ...process.env, ...options.env } : process.env,
   });
   if (result.error) fail(`${command} failed: ${result.error.message}`);
   if (!options.allowFailure && result.status !== 0) {
@@ -119,6 +132,8 @@ if (upload) {
   if (existing.status === 0) fail(`Release ${tag} already exists. Bump the version instead of replacing published update packages.`);
 }
 
+takeLock(PUBLISH_LOCK);
+process.on("exit", () => rmSync(PUBLISH_LOCK, { force: true }));
 run("node", ["scripts/release/prepare-release-config.mjs"]);
 const configs = ["--config", OVERLAY];
 let wixVersion;
@@ -134,9 +149,9 @@ if (wixVersion) {
   configs.push("--config", MSI_OVERLAY);
   console.log(`MSI version for ${version}: ${wixVersion}`);
 }
-run("pnpm", ["tauri", "build", "--ci", ...configs, "--bundles", "nsis,msi"]);
+run("pnpm", ["tauri", "build", "--ci", ...configs, "--bundles", "nsis,msi"], { env: { CARGO_TARGET_DIR: PUBLISH_TARGET } });
 
-const latestArgs = ["scripts/release/make-latest-json.mjs", "--notes-file", notesFile];
+const latestArgs = ["scripts/release/make-latest-json.mjs", "--notes-file", notesFile, "--release-dir", RELEASE_DIR];
 if (baseUrl) latestArgs.push("--base-url", baseUrl);
 run("node", latestArgs);
 
@@ -147,7 +162,7 @@ if (!msi) fail(`Missing MSI installer in ${MSI_DIR}.`);
 const installers = [`${BUNDLE_DIR}/${installer}`, `${MSI_DIR}/${msi}`];
 const checksumPath = `${BUNDLE_DIR}/SHA256SUMS.txt`;
 writeFileSync(checksumPath, installers.map((path) =>
-  `${createHash("sha256").update(readFileSync(path)).digest("hex")}  ${path.split("/").pop()}`,
+  `${createHash("sha256").update(readFileSync(path)).digest("hex")}  ${basename(path)}`,
 ).join("\n") + "\n");
 
 if (!upload) {
@@ -167,12 +182,17 @@ run("gh", [
 const releaseId = run("gh", ["release", "view", tag, "--repo", REPO, "--json", "databaseId", "--jq", ".databaseId"], { capture: true }).stdout.trim();
 const remote = JSON.parse(run("gh", ["api", `repos/${REPO}/releases/${releaseId}`], { capture: true }).stdout);
 for (const path of assets) {
-  const name = path.split("/").pop();
+  const name = basename(path);
   const asset = remote.assets.find((entry) => entry.name === name);
   const digest = `sha256:${createHash("sha256").update(readFileSync(path)).digest("hex")}`;
   if (!asset || asset.state !== "uploaded" || asset.digest !== digest) {
     fail(`Uploaded asset verification failed for ${name}. The release remains a draft.`);
   }
+}
+if (smoke) {
+  const problem = smokeTest(run, tag, REPO);
+  if (problem) fail(`${problem}\nThe release remains a draft; fix it and release a new version, or delete the draft.`);
+  console.log("✓ The installer installs and starts on a clean Windows runner.");
 }
 run("gh", [
   "release", "edit", tag, "--repo", REPO, "--draft=false",

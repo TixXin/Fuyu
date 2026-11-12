@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { attributedCommits, checksFor, docsOnly, needsRust, recordPass, versionOnlyChange } from "../../scripts/land-check.mjs";
+import { attributedCommits, checksFor, docsOnly, needsRust, recordPass, releaseBumpOnly, versionMismatch, versionOnlyChange } from "../../scripts/land-check.mjs";
 
 test("a landing of Markdown docs alone runs the doc checks, except generated docs", () => {
   assert.equal(docsOnly(["docs/tasks/F1.md", "AGENTS.md"]), true);
@@ -56,7 +56,16 @@ test("a release bump that changes only the app version does not call for cargo t
   const versionOnly = (file) => file !== "src-tauri/src/lib.rs";
   assert.equal(needsRust(bump, versionOnly), false);
   assert.equal(needsRust([...bump, "src-tauri/src/lib.rs"], versionOnly), true);
-  assert.deepEqual(checksFor(bump, versionOnly), { frontend: "full", rust: false });
+  assert.deepEqual(checksFor(bump, versionOnly), { frontend: "release", rust: false });
+  assert.deepEqual(checksFor([...bump, "src/main.tsx"], versionOnly), { frontend: "full", rust: false });
+  assert.deepEqual(checksFor(bump, () => false), { frontend: "full", rust: true });
+  assert.equal(releaseBumpOnly(["docs/releases/v0.3.6.md"], versionOnly), false);
+});
+
+test("the four version fields must agree", () => {
+  const files = { "package.json": '{ "version": "1.2.3" }', "src-tauri/tauri.conf.json": '{ "version": "1.2.3" }', "src-tauri/Cargo.toml": '[package]\nname = "fuyu"\nversion = "1.2.3"\n', "src-tauri/Cargo.lock": '[[package]]\nname = "fuyu"\nversion = "1.2.3"\n' };
+  assert.equal(versionMismatch((file) => files[file]), null);
+  assert.match(versionMismatch((file) => (file === "package.json" ? '{ "version": "1.2.4" }' : files[file])), /disagree/);
 });
 
 test("a version file counts as version-only when nothing but the app version changed", () => {

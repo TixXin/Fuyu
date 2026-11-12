@@ -69,10 +69,30 @@ export function docsOnly(files) {
   return files.length > 0 && files.every((file) => file.endsWith(".md") && !CHECKED_DOCS.includes(file));
 }
 
+/**
+ * A release bump (`pnpm release:version`): app version changes in the version files plus
+ * Markdown. The code is the same tree that already passed on main, so `pnpm check` is not rerun.
+ */
+export function releaseBumpOnly(files, versionOnly = () => false) {
+  const isDoc = (file) => file.endsWith(".md") && !CHECKED_DOCS.includes(file);
+  const isVersion = (file) => Object.values(VERSION_FILES).includes(file) && versionOnly(file);
+  return files.some(isVersion) && files.every((file) => isDoc(file) || isVersion(file));
+}
+
 /** The checks a landing of `files` needs; `files` null (unknown) needs all of them. */
 export function checksFor(files, versionOnly = () => false) {
   if (files && docsOnly(files)) return { frontend: "docs", rust: false };
+  if (files && releaseBumpOnly(files, versionOnly)) return { frontend: "release", rust: false };
   return { frontend: "full", rust: !files || needsRust(files, versionOnly) };
+}
+
+/** The four version fields, or a message saying which disagree. */
+export function versionMismatch(read = (file) => readFileSync(file, "utf8")) {
+  const found = Object.entries(VERSION_FILES).map(([kind, file]) => [file, readVersion(kind, read(file))]);
+  const first = found[0][1];
+  return first && found.every(([, version]) => version === first)
+    ? null
+    : `version fields disagree: ${found.map(([file, version]) => `${file}=${version}`).join(", ")}`;
 }
 
 /** `passes` with `tree` marked as having passed `kinds`, oldest trees dropped past MAX_PASSES. */
@@ -196,6 +216,16 @@ function main() {
 
   if (frontend === "docs") {
     console.log("[land-check] only Markdown docs changed; running the doc checks");
+    for (const command of DOCS_CHECKS) if (run(command) !== 0) return 1;
+    return 0;
+  }
+  if (frontend === "release") {
+    console.log("[land-check] a release bump (only the app version and Markdown); running the doc and version checks");
+    const mismatch = versionMismatch();
+    if (mismatch) {
+      console.error(`[land-check] ${mismatch}; set them together with pnpm release:version`);
+      return 1;
+    }
     for (const command of DOCS_CHECKS) if (run(command) !== 0) return 1;
     return 0;
   }

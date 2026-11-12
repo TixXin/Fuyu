@@ -135,11 +135,13 @@ pnpm tauri signer generate -w $env:USERPROFILE\.tauri\fly-island.key
 
    - 校验四处版本号一致、`docs/releases/vX.Y.Z.md` 存在且不是草稿、工作区没有未提交改动、`gh` 已登录；
    - 生成 `src-tauri/tauri.release.conf.json`（公钥 + `createUpdaterArtifacts`，该文件已被 git 忽略）；
-   - `tauri build --config` 出带签名的 NSIS、MSI 安装包与各自 `.sig`；
+   - `tauri build --config` 出带签名的 NSIS、MSI 安装包与各自 `.sig`。不管在哪个 lane 发布，都编译到主工作区的 `src-tauri/target/publish`（D24，`scripts/build-dirs.mjs`），每次都是增量编译，lane 里不再各留一份几 GB 的产物；两个 lane 同时发布时后来的等前一个（`target/publish/.release.lock`）。`pnpm prune:target` 也清理这个目录；
    - 生成 `latest.json`；
    - 生成两种安装包的 `SHA256SUMS.txt`；
    - 创建指向当前提交的 Release 草稿，上传安装包、`.sig`、`latest.json` 与校验文件；
-   - 比较 GitHub 上每个文件的 SHA-256 与本地产物，一致后才公开并设为最新版本；已存在的版本会被拒绝，避免覆盖用户正在下载的更新包；
+   - 比较 GitHub 上每个文件的 SHA-256 与本地产物；
+   - 冒烟测试（D26）：触发 `.github/workflows/release-smoke.yml`，在干净的 Windows runner 上下载草稿里的 NSIS 安装包，静默安装，像新用户一样启动，确认进程活着、有可见窗口，再卸载（`scripts/release/smoke-test.ps1`），`pnpm release` 等它跑完。本机做不了：release 构建和你自己的岛屿用同一个应用标识、数据目录和单实例锁。没通过时 Release 留在草稿，不会公开。约 2–4 分钟，加 `--no-smoke-test` 跳过；
+   - 以上都通过才公开并设为最新版本；已存在的版本会被拒绝，避免覆盖用户正在下载的更新包；
    - 把刚发布的 `fuyu.exe` 复制到主工作区的 `src-tauri/target/release`，并把桌面快捷方式指过去（和 `pnpm build:exe` 一样：正在运行的旧 exe 先改名挪开，等它的构建锁）。本机跑的就是用户拿到的那一份，不用再花几分钟重编；复制失败只打印提示，不影响发布；
    - 刷新 beta 通道的清单；
    - 用 `gh` 读回两个通道的 `latest.json`（直接用 curl 访问下载地址，GitHub 有时返回 504），确认正式版两个通道都是新版本，测试版只有 beta 通道是新版本、稳定通道不是。GitHub 切换 Latest 可能要几秒，读不对时隔 5 秒重试，最多 4 次，还不对就报错并指向下面的「撤回有问题的版本」；
@@ -155,7 +157,7 @@ pnpm tauri signer generate -w $env:USERPROFILE\.tauri\fly-island.key
    gh release download beta-channel --repo TixXin/fuyu --pattern latest.json --dir $env:TEMP\beta --clobber
    ```
 
-版本号和发布说明的提交照常在 lane 里 land 到 `main`，再在同一个 lane（停在 land 后的提交、工作区干净）里运行 `pnpm release`，不要在主工作区里发布。
+版本号和发布说明的提交照常在 lane 里 land 到 `main`（D25：只改了四处版本号和 Markdown 时，land 只核对版本号一致并跑任务检查，不跑 `pnpm check`；lane 要有归属记录，用 EnterWorktree 或 `pnpm lane:open` 开），再在同一个 lane（停在 land 后的提交、工作区干净）里运行 `pnpm release`，不要在主工作区里发布。
 
 CI 也可以复用同样的步骤：在仓库 Secrets 里存 `TAURI_UPDATER_PUBKEY`、`TAURI_SIGNING_PRIVATE_KEY`、`TAURI_SIGNING_PRIVATE_KEY_PASSWORD`，按上面的顺序跑 `prepare-release-config` → `tauri build --config` → `make-latest-json` → `gh release`。
 

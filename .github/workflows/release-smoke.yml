@@ -1,0 +1,40 @@
+name: Release smoke test
+
+# Started by `pnpm release` (scripts/release/smoke-test.mjs) while a release is still a draft:
+# installs its NSIS installer on a clean Windows runner and starts it as a first-time user.
+# The release is published only when this passes (task D26).
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag (a draft), e.g. v0.3.7-beta.3
+        required: true
+
+jobs:
+  smoke:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    permissions:
+      # Draft releases are only visible with write access to the repository's contents.
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: scripts/release/smoke-test.ps1
+          sparse-checkout-cone-mode: false
+
+      - name: Download the draft's installer
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          New-Item -ItemType Directory -Force smoke | Out-Null
+          gh release download $env:TAG --repo $env:GITHUB_REPOSITORY --pattern "*_x64-setup.exe" --dir smoke
+
+      - name: Install, start and uninstall
+        shell: pwsh
+        run: |
+          $installer = Get-ChildItem smoke -Filter "*_x64-setup.exe" | Select-Object -First 1
+          if (-not $installer) { Write-Host "::error::No installer in the draft"; exit 1 }
+          ./scripts/release/smoke-test.ps1 -Installer $installer.FullName

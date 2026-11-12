@@ -78,7 +78,7 @@ export function lockHeld(holder, now = Date.now(), alive = processAlive) {
  * Waits until no other build (another lane's session) holds `lock`, then takes it; two builds
  * writing target/release at once would race over the exe being moved aside.
  */
-function takeLock(lock) {
+export function takeLock(lock) {
   mkdirSync(path.dirname(lock), { recursive: true });
   for (let waited = false; ; waited = true) {
     try {

@@ -2,16 +2,19 @@
 // https://github.com/TixXin/fuyu/releases/latest/download/latest.json
 //
 // Usage: node scripts/release/make-latest-json.mjs [--notes-file docs/releases/vX.Y.Z.md]
+//        [--release-dir <cargo release folder>]   (default src-tauri/target/release)
 import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { msiNames } from "./msi-version.mjs";
 
 const REPO = "TixXin/fuyu";
 const CONFIG = "src-tauri/tauri.conf.json";
-const BUNDLE_DIR = "src-tauri/target/release/bundle/nsis";
-const MSI_DIR = "src-tauri/target/release/bundle/msi";
 
 const args = process.argv.slice(2);
+const releaseFlag = args.indexOf("--release-dir");
+const RELEASE_DIR = releaseFlag >= 0 ? args[releaseFlag + 1] : "src-tauri/target/release";
+const BUNDLE_DIR = join(RELEASE_DIR, "bundle", "nsis");
+const MSI_DIR = join(RELEASE_DIR, "bundle", "msi");
 const notesFlag = args.indexOf("--notes-file");
 const baseFlag = args.indexOf("--base-url");
 const baseUrl = baseFlag >= 0 ? args[baseFlag + 1]?.replace(/\/$/, "") : `https://github.com/${REPO}/releases/download/v${readVersion()}`;

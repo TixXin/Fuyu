@@ -33,6 +33,12 @@ export function laneNumber(worktree) {
   return parts.at(-2) === "fly-island-lanes" && Number.isInteger(number) && number > 0 && number < 1000 ? number : null;
 }
 
+/**
+ * Where `pnpm release` builds, from whichever lane: one folder, so every release compiles
+ * incrementally instead of cold in a fresh lane, and no lane keeps gigabytes of its own.
+ */
+export const PUBLISH_DIR = "publish";
+
 /** The build-dir every lane preview shares. */
 export const LANE_BUILD_DIR = "lane-build";
 

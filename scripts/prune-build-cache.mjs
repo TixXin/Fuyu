@@ -16,7 +16,7 @@
 import { existsSync, lstatSync, readdirSync, rmSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { LANE_BUILD_DIR, mainCheckout, targetDir } from "./build-dirs.mjs";
+import { LANE_BUILD_DIR, mainCheckout, PUBLISH_DIR, targetDir } from "./build-dirs.mjs";
 
 export const MAX_AGE_DAYS = 3;
 /** Kept per crate whatever their age: the lib, its tests and a clippy run each have their own hash. */
@@ -29,7 +29,7 @@ const OWN_UNIT = /^(fuyu|fuyu_lib|focusd_island|focusd_island_lib)-([0-9a-z]+)(?
 const INCREMENTAL_UNIT = /^(.+)-([0-9a-z]+)$/;
 const TEMP_ARCHIVE = /^\.tmp.*\.temp-archive$/;
 const LANE_DIR = /^lane-(\d+)$/;
-const KNOWN_DIRS = new Set(["debug", "release", "agents", LANE_BUILD_DIR]);
+const KNOWN_DIRS = new Set(["debug", "release", "agents", LANE_BUILD_DIR, PUBLISH_DIR]);
 
 /**
  * Which units are stale: `units` are `{ unit, crate, mtimeMs }`; in each crate the `keep` newest
