@@ -114,7 +114,7 @@ pnpm tauri signer generate -w $env:USERPROFILE\.tauri\fly-island.key
    ```
 
    它一次改好四处版本号（`package.json`、`src-tauri/tauri.conf.json`、`src-tauri/Cargo.toml`，以及 `src-tauri/Cargo.lock` 里岛屿自己那一项），先确认新版本号比已发布的都新。`docs/releases/vX.Y.Z.md` 还不存在时，它会写一份草稿：测试版或正式版固定的开头和下载说明，再加上一条注释，列出上一个版本以来面向用户的 feat / fix / perf 提交。测试版从上一个任意版本算起，正式版从上一个正式版算起，所以正式版的说明会包含它之前的几个测试版。不要再手动改版本号。这样的提交 land 时只跑 `pnpm check`：Rust 那几个文件除了岛屿版本号没有别的变化时，`land-check.mjs` 不跑 `cargo test`。
-2. 把草稿改写成面向用户的中英文说明，删掉开头的 `<!-- release-notes-draft -->` 标记和提交列表。标记还在时 `pnpm release` 会拒绝发布。发布说明会成为 `latest.json` 里的 `notes`，同时作为 Release 正文。
+2. 把草稿改写成面向用户的中英文说明（写法见 [docs/releases/README.md](/docs/releases/README.md)），删掉开头的 `<!-- release-notes-draft -->` 标记和提交列表。标记还在时 `pnpm release` 会拒绝发布。发布说明会成为 `latest.json` 里的 `notes`，同时作为 Release 正文。
 3. Windows 发布机器配置一次上述本机凭据即可；其他机器或 CI 设置发布环境变量：
 
    ```powershell
