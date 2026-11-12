@@ -86,6 +86,7 @@ body {
   min-width: 0;
   display: grid;
   gap: 8px;
+  container-type: inline-size;
 }
 
 .gauge {
@@ -94,6 +95,20 @@ body {
   grid-template-columns: 28px minmax(0, 1fr) 56px;
   align-items: center;
   gap: 8px;
+}
+
+/* A narrow CPU or GPU column (a large expanded scale caps the island's width): the chart moves
+   under the figures, over the cores or engines, so the GPU's name keeps its room. */
+@container (max-width: 230px) {
+  .gauge {
+    grid-template-columns: 28px minmax(0, 1fr);
+    row-gap: 4px;
+  }
+
+  .gauge .spark {
+    grid-column: 1 / -1;
+    height: 14px;
+  }
 }
 
 .gauge__text {
@@ -507,30 +522,17 @@ body {
 }
 
 /* Narrower than asked (a large expanded scale caps the island, or an island before 0.3.4 shows
-   the page in its 520px card): a narrower program column and no small charts beside the figures. */
+   the page in its 520px card): a narrower program column. The charts stay; the CPU and GPU
+   ones move under their figures (the @container rule above). */
 @media (max-width: 640px) {
   .monitor {
     grid-template-columns: minmax(0, 1fr) 190px;
     gap: 16px;
   }
 
-  .gauge {
-    grid-template-columns: 28px minmax(0, 1fr);
-  }
-
-  .gauge .spark,
-  .net__item .spark,
-  .line__percent {
-    display: none;
-  }
-
   .pair,
   .line--net {
     gap: 12px;
-  }
-
-  .net__item {
-    grid-template-columns: 12px minmax(0, 1fr);
   }
 
   .processes__count {
