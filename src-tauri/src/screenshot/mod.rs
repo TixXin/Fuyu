@@ -16,7 +16,7 @@ pub(crate) use output::is_screenshot_file;
 pub(crate) use pin::{forget as forget_pin, WINDOW_PREFIX as PIN_PREFIX};
 pub(crate) use session::WINDOW_PREFIX;
 use output::Picture;
-use session::OverlaySession;
+use session::{OverlaySession, PixelRect};
 use targets::LocalTarget;
 
 pub(crate) fn init(app: &AppHandle) {
@@ -83,29 +83,43 @@ impl Action {
     }
 }
 
-/// Takes the picture the calling overlay composed (the selection with its annotations) to the
-/// clipboard, a file or a pin, and closes the screenshot. The body is raw RGBA, rows top to
-/// bottom, so megabytes of pixels do not go through JSON; the headers say the rest: `x-action`,
-/// `x-width` and `x-height`, where the selection is in the monitor's picture (`x-left`, `x-top`,
-/// for a pin), and for saving `x-folder` and `x-folder-name`, percent-encoded. Gives the saved
-/// file's path when saving. A failed copy or save keeps the screenshot open, to try again.
+/// Takes the chosen picture to the clipboard, a file or a pin, and closes the screenshot. The
+/// headers say what and where: `x-action`, the selection in the monitor's picture (`x-left`,
+/// `x-top`, `x-width`, `x-height`), and for saving `x-folder` and `x-folder-name`, percent-encoded.
+/// The selection is cut from the frozen picture here. With annotations the body is the part they
+/// cover, raw RGBA rows (not JSON), laid over it at `x-patch-left`, `x-patch-top` (in the
+/// selection), `x-patch-width` × `x-patch-height`: only that much crosses from the page, since a
+/// whole 4K selection through the WebView made copying stall. Gives the saved file's path.
+///
+/// Copying and pinning close the overlays first, so the screen is back at once while the picture
+/// is encoded; a failed save keeps the screenshot open, to try again.
 #[tauri::command]
 pub async fn screenshot_finish(app: AppHandle, window: WebviewWindow, request: tauri::ipc::Request<'_>) -> Result<Option<String>, String> {
-    let tauri::ipc::InvokeBody::Raw(rgba) = request.body() else {
+    let tauri::ipc::InvokeBody::Raw(body) = request.body() else {
         return Err("The screenshot pixels must come as raw bytes.".to_string());
     };
     let header = |name: &str| request.headers().get(name).and_then(|value| value.to_str().ok());
     let number = |name: &str| header(name).and_then(|value| value.parse::<u32>().ok());
     let action = header("x-action").and_then(Action::parse).ok_or_else(|| "Unknown screenshot action.".to_string())?;
     let (width, height) = number("x-width").zip(number("x-height")).ok_or_else(|| "The screenshot size is missing.".to_string())?;
-    if !pixels_fit(rgba.len(), width, height) {
-        return Err("The screenshot pixels do not match their size.".to_string());
+    let (left, top) = (number("x-left").unwrap_or(0), number("x-top").unwrap_or(0));
+    let (width, height, rgba) = session::selection(window.label(), PixelRect { x: left, y: top, width, height }).ok_or_else(|| "Nothing is selected.".to_string())?;
+    let mut picture = Picture { width, height, rgba };
+    if !body.is_empty() {
+        let patch = PixelRect {
+            x: number("x-patch-left").unwrap_or(0),
+            y: number("x-patch-top").unwrap_or(0),
+            width: number("x-patch-width").unwrap_or(0),
+            height: number("x-patch-height").unwrap_or(0),
+        };
+        if !output::lay_over(&mut picture, patch, body) {
+            return Err("The annotated pixels do not fit the selection.".to_string());
+        }
     }
-    let picture = Picture { width, height, rgba: rgba.clone() };
     match action {
         Action::Copy => {
-            output::copy(&app, &picture)?;
             session::end(&app);
+            output::copy(&app, &picture).inspect_err(|error| eprintln!("{error}"))?;
             Ok(None)
         }
         Action::Save => {
@@ -117,7 +131,6 @@ pub async fn screenshot_finish(app: AppHandle, window: WebviewWindow, request: t
         }
         Action::Pin => {
             let origin = session::origin(window.label()).ok_or_else(|| "No screenshot is open.".to_string())?;
-            let (left, top) = (number("x-left").unwrap_or(0), number("x-top").unwrap_or(0));
             session::end(&app);
             pin::open(&app, picture, (origin.0.saturating_add_unsigned(left), origin.1.saturating_add_unsigned(top)))?;
             Ok(None)

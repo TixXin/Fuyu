@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
 import { Magnifier } from "../../features/screenshot/Magnifier";
-import { textSize } from "../../features/screenshot/annotations";
+import { annotationArea, textSize } from "../../features/screenshot/annotations";
 import { cancelScreenshot, finishScreenshot, type ScreenshotAction } from "../../features/screenshot/api";
-import { composeSelection } from "../../features/screenshot/drawAnnotations";
+import { composeArea } from "../../features/screenshot/drawAnnotations";
 import {
   HANDLES,
   handleCursor,
@@ -92,10 +92,13 @@ export function ScreenshotOverlay() {
   const { items } = annotations;
   const finish = useCallback((action: ScreenshotAction) => {
     const picture = canvasRef.current;
-    const composed = chosen && picture ? composeSelection(picture, chosen, items) : null;
-    if (!chosen || !composed) return;
+    if (!chosen || !picture) return;
+    // Only the part the annotations cover is read and sent; the native side has the rest.
+    const area = annotationArea(items, chosen);
+    const image = area ? composeArea(picture, area, chosen, items) : null;
+    const patch = area && image ? { at: area, image } : null;
     const save = action === "save" ? { folderName: t.saveFolderName } : undefined;
-    finishScreenshot(composed, chosen, action, save).catch((error: unknown) => setNotice(errorText(error)));
+    finishScreenshot(chosen, patch, action, save).catch((error: unknown) => setNotice(errorText(error)));
   }, [chosen, items, canvasRef, errorText, t]);
   const copy = useCallback(() => finish("copy"), [finish]);
 

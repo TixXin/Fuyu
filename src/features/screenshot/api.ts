@@ -65,24 +65,34 @@ function rawBytes(image: ImageData) {
   return new Uint8Array(image.data.buffer, image.data.byteOffset, image.data.byteLength);
 }
 
+/** Annotated pixels to lay over the frozen picture: `image` at `at`, in the monitor's picture. */
+export type ScreenshotPatch = { at: PixelRect; image: ImageData };
+
 /**
- * Takes the picture this overlay composed (the selection with its annotations) to the clipboard, a
- * file or a pin, and closes the screenshot; a failed copy or save leaves it open. The pixels go
- * as raw RGBA, not JSON; `at` is where the selection is in the monitor's picture (for a pin).
- * Gives the saved file's path when saving.
+ * Takes `selection` (in the monitor's picture) to the clipboard, a file or a pin, and closes the
+ * screenshot; a failed save leaves it open. The native side cuts the selection from its frozen
+ * picture; with annotations, `patch` is the part they cover, sent as raw RGBA (not JSON) and laid
+ * over it. Gives the saved file's path when saving.
  */
-export function finishScreenshot(image: ImageData, at: PixelRect, action: ScreenshotAction, save?: SaveTarget) {
+export function finishScreenshot(selection: PixelRect, patch: ScreenshotPatch | null, action: ScreenshotAction, save?: SaveTarget) {
+  const whole = (value: number) => String(Math.max(0, Math.round(value)));
   const headers: Record<string, string> = {
     "x-action": action,
-    "x-width": String(image.width),
-    "x-height": String(image.height),
-    "x-left": String(Math.max(0, Math.round(at.x))),
-    "x-top": String(Math.max(0, Math.round(at.y))),
+    "x-left": whole(selection.x),
+    "x-top": whole(selection.y),
+    "x-width": whole(selection.width),
+    "x-height": whole(selection.height),
   };
+  if (patch) {
+    headers["x-patch-left"] = whole(patch.at.x - selection.x);
+    headers["x-patch-top"] = whole(patch.at.y - selection.y);
+    headers["x-patch-width"] = String(patch.image.width);
+    headers["x-patch-height"] = String(patch.image.height);
+  }
   // Header values must be ASCII; folder names need not be.
   if (save?.folder) headers["x-folder"] = encodeURIComponent(save.folder);
   if (save) headers["x-folder-name"] = encodeURIComponent(save.folderName);
-  return invoke<string | null>("screenshot_finish", rawBytes(image), { headers });
+  return invoke<string | null>("screenshot_finish", patch ? rawBytes(patch.image) : new Uint8Array(0), { headers });
 }
 
 export function cancelScreenshot() {

@@ -1,12 +1,11 @@
 // Drawing annotations (annotations.ts) with the 2D canvas API, on the overlay's layer and when the
 // selection is composed for copying. Coordinates are the monitor picture's pixels.
 
-import { arrowGeometry, mosaicBlock, normalizedRect, type Annotation } from "./annotations";
+import { arrowGeometry, mosaicBlock, normalizedRect, TEXT_LINE_HEIGHT, type Annotation } from "./annotations";
 import type { PixelRect } from "./selection";
 
+export { TEXT_LINE_HEIGHT };
 export const ANNOTATION_FONT = '"Microsoft YaHei UI", "Segoe UI", sans-serif';
-/** Line height of text annotations, times their size. */
-export const TEXT_LINE_HEIGHT = 1.3;
 const HIGHLIGHTER_ALPHA = 0.38;
 
 function strokePath(context: CanvasRenderingContext2D, points: readonly { x: number; y: number }[]) {
@@ -122,15 +121,20 @@ export function drawAnnotations(
   context.restore();
 }
 
-/** The selection of `picture` with `items` drawn on it, as RGBA pixels; null when it cannot be drawn. */
-export function composeSelection(picture: HTMLCanvasElement, selection: PixelRect, items: readonly Annotation[]): ImageData | null {
+/**
+ * `area` of `picture` with `items` drawn on it (clipped to `selection`), as RGBA pixels; null when
+ * it cannot be drawn. Copying sends only the area the annotations cover (annotationArea): reading
+ * and sending a whole 4K selection is what made copying slow.
+ */
+export function composeArea(picture: HTMLCanvasElement, area: PixelRect, selection: PixelRect, items: readonly Annotation[]): ImageData | null {
+  if (area.width < 1 || area.height < 1) return null;
   const canvas = document.createElement("canvas");
-  canvas.width = selection.width;
-  canvas.height = selection.height;
+  canvas.width = area.width;
+  canvas.height = area.height;
   const context = canvas.getContext("2d", { willReadFrequently: true });
-  if (!context || selection.width < 1 || selection.height < 1) return null;
-  context.translate(-selection.x, -selection.y);
-  context.drawImage(picture, 0, 0);
+  if (!context) return null;
+  context.translate(-area.x, -area.y);
+  context.drawImage(picture, area.x, area.y, area.width, area.height, area.x, area.y, area.width, area.height);
   drawAnnotations(context, items, picture, selection);
-  return context.getImageData(0, 0, selection.width, selection.height);
+  return context.getImageData(0, 0, area.width, area.height);
 }

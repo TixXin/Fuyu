@@ -82,7 +82,8 @@ async function runChecks() {
     check(button("撤销（Ctrl+Z）")?.disabled && button("重做（Ctrl+Y）")?.disabled, "Undo and redo start disabled");
     await key({ key: "Enter" });
     const plain = last("screenshot_finish");
-    check(plain?.headers["x-action"] === "copy" && (plain.payload as Uint8Array).byteLength === 200 * 160 * 4 && plain.headers["x-width"] === "200", "Enter copies the region's pixels");
+    check(plain?.headers["x-action"] === "copy" && plain.headers["x-left"] === "40" && plain.headers["x-width"] === "200" && plain.headers["x-height"] === "160", "Enter copies the region");
+    check((plain?.payload as Uint8Array).byteLength === 0, "…without sending its pixels: the native side cuts them from the frozen picture");
     await key({ key: "s", ctrlKey: true });
     const saved = last("screenshot_finish");
     check(saved?.headers["x-action"] === "save" && decodeURIComponent(saved.headers["x-folder-name"]) === "浮屿截图", "Ctrl+S saves it, to the Pictures subfolder named in the current language");
@@ -134,10 +135,18 @@ async function runChecks() {
     check(!document.querySelector('.screenshot-overlay__toolbar button[aria-pressed="true"]') && document.querySelector(".screenshot-overlay__selection"), "A right click turns the tool off and keeps the selection");
 
     await key({ key: "Enter" });
-    const composed = last("screenshot_finish")?.payload as Uint8Array | undefined;
-    check(composed instanceof Uint8Array && composed.byteLength === 200 * 160 * 4, "With annotations Enter sends the composed region as raw pixels");
-    const at = (x: number, y: number) => Array.from(composed!.slice((y * 200 + x) * 4, (y * 200 + x) * 4 + 4));
-    check(isRed(at(20, 50)) && at(5, 5).join() === "128,128,128,255", `…the rectangle drawn on the frozen picture (${at(20, 50).join()} / ${at(5, 5).join()})`);
+    const annotated = last("screenshot_finish");
+    const composed = annotated?.payload as Uint8Array | undefined;
+    const patch = ["x-patch-left", "x-patch-top", "x-patch-width", "x-patch-height"].map((name) => Number(annotated?.headers[name]));
+    const [patchLeft, patchTop, patchWidth, patchHeight] = patch;
+    check(composed instanceof Uint8Array && composed.byteLength === patchWidth * patchHeight * 4 && patchWidth * patchHeight < 200 * 160, `With annotations Enter sends only the part they cover, as raw pixels (${patch.join(", ")})`);
+    check(annotated?.headers["x-width"] === "200" && patchLeft + patchWidth <= 200 && patchTop + patchHeight <= 160, "…inside the selection, which the native side cuts itself");
+    // Picture (x, y) in the patch: the selection is at (40, 40).
+    const at = (x: number, y: number) => {
+      const index = ((y - 40 - patchTop) * patchWidth + (x - 40 - patchLeft)) * 4;
+      return Array.from(composed!.slice(index, index + 4));
+    };
+    check(isRed(at(60, 90)) && at(80, 90).join() === "128,128,128,255", `…the rectangle drawn on the frozen picture (${at(60, 90).join()} / ${at(80, 90).join()})`);
 
     const before = calls.filter((call) => call.command === "screenshot_finish").length;
     await act(async () => { await emit("screenshot-ended"); });
