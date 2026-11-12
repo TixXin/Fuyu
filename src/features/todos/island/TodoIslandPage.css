@@ -31,6 +31,11 @@
   font-family: var(--font-ui);
 }
 
+/* At 75% the purple of later days is 2.9:1 on its own light chip. */
+.island-light .todo-island {
+  --todo-later: color-mix(in srgb, #a68bff 55%, rgb(var(--todo-ink)));
+}
+
 .todo-island *,
 .todo-island *::before {
   box-sizing: border-box;

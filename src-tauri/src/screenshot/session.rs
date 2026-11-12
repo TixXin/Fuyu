@@ -14,7 +14,7 @@ use std::{
     thread,
 };
 
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager, Monitor, PhysicalPosition, PhysicalSize, WebviewUrl, WebviewWindow, WebviewWindowBuilder};
 
 use super::targets::{self, LocalTarget, Target};
@@ -27,11 +27,13 @@ const SESSION_EVENT: &str = "screenshot-session";
 /// Mirrored by `SCREENSHOT_ENDED_EVENT` in src/features/screenshot/api.ts.
 const ENDED_EVENT: &str = "screenshot-ended";
 
-/// How the screenshot starts: choose a region, or with the whole monitor under the pointer chosen.
+/// How the screenshot starts: choose a region, choose one and copy it at once (no toolbar), or
+/// with the whole monitor under the pointer chosen.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) enum Mode {
     Region,
+    Copy,
     Fullscreen,
 }
 
@@ -48,8 +50,8 @@ pub(crate) struct OverlaySession {
     under_pointer: bool,
 }
 
-/// A rectangle of a monitor's picture, in its physical pixels (mirrored by `PixelRect` in api.ts).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
+/// A rectangle of a monitor's picture, in its physical pixels.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) struct PixelRect {
     pub(crate) x: u32,
     pub(crate) y: u32,
@@ -252,6 +254,11 @@ pub(crate) fn overlay_ready(window: &WebviewWindow, id: u64) {
     if focus {
         let _ = window.set_focus();
     }
+}
+
+/// The top-left of the overlay `label`'s monitor on the virtual screen, in physical pixels.
+pub(crate) fn origin(label: &str) -> Option<(i32, i32)> {
+    session().as_ref()?.frames.iter().find(|frame| frame.label == label).map(|frame| frame.origin)
 }
 
 /// The pixels of `rect` in the overlay `label`'s picture, clipped to it: (width, height, RGBA).

@@ -6,7 +6,7 @@ import path from "node:path";
 import test from "node:test";
 import { LANE_PORT_BASE, laneNumber, lanePreview, targetDir } from "../../scripts/build-dirs.mjs";
 import { isInUse, moveAsideIfRunning, removeOldExes } from "../../scripts/build-exe.mjs";
-import { previewConfig } from "../../scripts/dev-lane.mjs";
+import { previewConfig, previewDataDirs } from "../../scripts/dev-lane.mjs";
 
 test("a lane's number comes from its folder under fly-island-lanes", () => {
   assert.equal(laneNumber("E:\\Projects\\fly-island-lanes\\2"), 2);
@@ -32,6 +32,16 @@ test("each lane previews on its own port, identifier and build folder, apart fro
   assert.equal(config.build.devUrl, `http://localhost:${two.port}`);
   assert.doesNotMatch(config.build.beforeDevCommand, /stop-running-island/, "the user's island keeps running");
   assert.match(config.build.beforeDevCommand, new RegExp(`--port ${two.port} --strictPort`));
+});
+
+test("--fresh only deletes the preview's own folders, never the user's island's", () => {
+  const env = { APPDATA: "C:\\Users\\u\\AppData\\Roaming", LOCALAPPDATA: "C:\\Users\\u\\AppData\\Local" };
+  assert.deepEqual(previewDataDirs("com.tixxin.fuyu.lane-21", env), [
+    path.join(env.APPDATA, "com.tixxin.fuyu.lane-21"),
+    path.join(env.LOCALAPPDATA, "com.tixxin.fuyu.lane-21"),
+  ]);
+  assert.throws(() => previewDataDirs("com.tixxin.fuyu", env), /Not a lane preview/);
+  assert.throws(() => previewDataDirs("", env));
 });
 
 test("a running exe is moved aside and a new one can take its place", { skip: process.platform !== "win32" }, async () => {

@@ -213,6 +213,11 @@
   font-weight: 600;
 }
 
+/* At 80% the green is 2.6:1 on a light island. */
+.island-light .agent-card--lively .agent-card__state {
+  color: color-mix(in srgb, var(--card-color) 55%, rgb(var(--agent-ink)));
+}
+
 .agent-card__doing,
 .agent-card__tool {
   min-width: 0;

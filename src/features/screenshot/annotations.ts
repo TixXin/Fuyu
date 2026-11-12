@@ -31,6 +31,8 @@ export type Annotation = ShapeAnnotation | StrokeAnnotation | TextAnnotation | N
 export const lineWidth = (level: StrokeLevel, scale: number) => LINE[level] * scale;
 export const textSize = (level: StrokeLevel, scale: number) => TEXT[level] * scale;
 export const badgeRadius = (level: StrokeLevel, scale: number) => BADGE[level] * scale;
+/** Line height of text annotations, times their size. */
+export const TEXT_LINE_HEIGHT = 1.3;
 /** A highlighter stroke is this much wider than a pen's. */
 export const HIGHLIGHTER_FACTOR = 4;
 /** The side of a mosaic block for a line `width`: coarse enough that text cannot be read. */
@@ -143,4 +145,51 @@ export function undoAnnotation(history: AnnotationHistory): AnnotationHistory {
 export function redoAnnotation(history: AnnotationHistory): AnnotationHistory {
   const next = history.undone[history.undone.length - 1];
   return next ? { items: [...history.items, next], undone: history.undone.slice(0, -1) } : history;
+}
+
+function grow(rect: PixelRect, by: number): PixelRect {
+  return { x: rect.x - by, y: rect.y - by, width: rect.width + by * 2, height: rect.height + by * 2 };
+}
+
+function pointsBox(points: readonly Point[]): PixelRect {
+  const xs = points.map((point) => point.x);
+  const ys = points.map((point) => point.y);
+  return normalizedRect({ x: Math.min(...xs), y: Math.min(...ys) }, { x: Math.max(...xs), y: Math.max(...ys) });
+}
+
+/** Where `item` can paint, a little generously (text is not measured: a character is at most 1.1 em). */
+export function annotationBounds(item: Annotation): PixelRect {
+  switch (item.kind) {
+    case "rect":
+    case "ellipse":
+      return grow(normalizedRect(item.from, item.to), item.width);
+    case "mosaic":
+      return grow(normalizedRect(item.from, item.to), 1);
+    case "arrow":
+      return grow(normalizedRect(item.from, item.to), Math.max(10, item.width * 4) + item.width);
+    case "pen":
+    case "highlighter":
+      return grow(pointsBox(item.points), item.width);
+    case "text": {
+      const lines = item.text.split("\n");
+      const longest = Math.max(...lines.map((line) => [...line].length));
+      return grow({ x: item.at.x, y: item.at.y, width: longest * item.size * 1.1, height: lines.length * item.size * TEXT_LINE_HEIGHT }, item.size * 0.5);
+    }
+    case "number":
+      return grow({ x: item.at.x, y: item.at.y, width: 0, height: 0 }, item.size + 2);
+  }
+}
+
+/**
+ * The part of `selection` the annotations cover, in whole pixels; null without any. Only this part
+ * differs from the frozen picture, so only it is composed and sent when copying.
+ */
+export function annotationArea(items: readonly Annotation[], selection: PixelRect): PixelRect | null {
+  if (items.length === 0) return null;
+  const boxes = items.map(annotationBounds);
+  const left = Math.max(selection.x, Math.floor(Math.min(...boxes.map((box) => box.x))));
+  const top = Math.max(selection.y, Math.floor(Math.min(...boxes.map((box) => box.y))));
+  const right = Math.min(selection.x + selection.width, Math.ceil(Math.max(...boxes.map((box) => box.x + box.width))));
+  const bottom = Math.min(selection.y + selection.height, Math.ceil(Math.max(...boxes.map((box) => box.y + box.height))));
+  return right > left && bottom > top ? { x: left, y: top, width: right - left, height: bottom - top } : null;
 }

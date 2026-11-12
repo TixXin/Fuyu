@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
-import { Check, Circle, Grid3x3, Hash, Highlighter, MoveUpRight, Pencil, Redo2, Square, Type, Undo2, X, type LucideIcon } from "lucide-react";
+import { Check, Circle, Download, Grid3x3, Hash, Highlighter, MoveUpRight, Pencil, Pin, Redo2, Square, Type, Undo2, X, type LucideIcon } from "lucide-react";
+import type { ScreenshotAction } from "../../features/screenshot/api";
 import { ANNOTATION_COLORS, ANNOTATION_TOOLS, STROKE_LEVELS, type AnnotationTool } from "../../features/screenshot/annotations";
 import type { PixelRect, Size } from "../../features/screenshot/selection";
 import { useTranslation } from "../../i18n";
@@ -40,7 +41,7 @@ function ToolButton({ label, active, disabled, onClick, children }: { label: str
 }
 
 /**
- * The toolbar beside a chosen selection: the annotation tools, undo and redo, cancel and copy;
+ * The toolbar beside a chosen selection: the annotation tools, undo and redo, pin, save, cancel and copy;
  * with a tool on, a second row of colours and thicknesses. Below the selection, above it when
  * there is no room, inside it when neither fits.
  */
@@ -50,7 +51,7 @@ export function ScreenshotToolbar({
   annotations,
   notice,
   onCancel,
-  onCopy,
+  onFinish,
 }: {
   /** The selection in CSS pixels. */
   area: PixelRect;
@@ -58,7 +59,7 @@ export function ScreenshotToolbar({
   annotations: Annotations;
   notice: string | null;
   onCancel: () => void;
-  onCopy: () => void;
+  onFinish: (action: ScreenshotAction) => void;
 }) {
   const t = useTranslation().screenshot;
   const box = useRef<HTMLDivElement>(null);
@@ -109,10 +110,16 @@ export function ScreenshotToolbar({
           <Redo2 size={18} />
         </ToolButton>
         <span className="screenshot-overlay__separator" />
+        <ToolButton label={t.pin} onClick={() => onFinish("pin")}>
+          <Pin size={18} />
+        </ToolButton>
+        <ToolButton label={t.save} onClick={() => onFinish("save")}>
+          <Download size={18} />
+        </ToolButton>
         <ToolButton label={t.cancel} onClick={onCancel}>
           <X size={18} />
         </ToolButton>
-        <button type="button" className="screenshot-overlay__button screenshot-overlay__button--primary" aria-label={t.copy} title={t.copy} onClick={onCopy}>
+        <button type="button" className="screenshot-overlay__button screenshot-overlay__button--primary" aria-label={t.copy} title={t.copy} onClick={() => onFinish("copy")}>
           <Check size={18} />
         </button>
       </div>

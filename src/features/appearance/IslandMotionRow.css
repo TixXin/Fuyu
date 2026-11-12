@@ -30,6 +30,20 @@
     border-radius var(--island-motion-radius) var(--island-motion-radius-ease);
 }
 
+/* As the light island looks (themeMode.ts), outlined so it stands off the white card. */
+.island-light .island-motion-preview__island {
+  background: #f2f2f5;
+  box-shadow: 0 0 0 1px rgba(24, 24, 30, 0.1), 0 6px 18px rgba(0, 0, 0, 0.1);
+}
+
+.island-light .island-motion-preview__line {
+  background: rgba(24, 24, 30, 0.42);
+}
+
+.island-light .island-motion-preview__line--short {
+  background: rgba(24, 24, 30, 0.22);
+}
+
 .island-motion-preview__island--open {
   width: 232px;
   height: 72px;

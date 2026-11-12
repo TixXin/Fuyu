@@ -26,7 +26,7 @@ use crate::win32::{
 
 /// The digit after Ctrl+Shift and what it does (plan: docs/architecture/screenshot-plan.md,
 /// "快捷键"). Shortcuts for features not built yet are not registered, so they take no keys.
-const SHORTCUTS: [(u32, Mode); 2] = [(1, Mode::Region), (7, Mode::Fullscreen)];
+const SHORTCUTS: [(u32, Mode); 3] = [(1, Mode::Region), (2, Mode::Copy), (7, Mode::Fullscreen)];
 /// RegisterHotKey ids: this base plus the digit.
 const HOTKEY_BASE: i32 = 0x5300;
 const REFRESH_MESSAGE: u32 = WM_APP + 0x61;
@@ -124,9 +124,10 @@ mod tests {
     use super::*;
 
     #[test]
-    fn digit_1_selects_a_region_and_7_takes_the_whole_monitor() {
+    fn digit_1_selects_a_region_2_copies_one_and_7_takes_the_whole_monitor() {
         assert_eq!(mode_for(1), Some(Mode::Region));
+        assert_eq!(mode_for(2), Some(Mode::Copy));
         assert_eq!(mode_for(7), Some(Mode::Fullscreen));
-        assert_eq!(mode_for(2), None);
+        assert_eq!(mode_for(3), None);
     }
 }

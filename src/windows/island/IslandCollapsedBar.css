@@ -264,6 +264,17 @@
   background: rgba(61, 139, 255, 0.5);
 }
 
+/* White on the pale blue wash is unreadable on a light island (1.55:1); dark blue on it is not. */
+.island-light .island-agent-count {
+  color: #0b4fb3;
+  background: rgba(61, 139, 255, 0.18);
+  box-shadow: none;
+}
+
+.island-light .island-agent-count:hover {
+  background: rgba(61, 139, 255, 0.28);
+}
+
 .island-agent-count:focus-visible {
   outline: 2px solid var(--color-focus-ring-soft);
   outline-offset: 2px;

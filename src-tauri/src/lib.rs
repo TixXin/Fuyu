@@ -86,6 +86,12 @@ pub fn run() {
                 }
                 return;
             }
+            if window.label().starts_with(screenshot::PIN_PREFIX) {
+                if let WindowEvent::Destroyed = event {
+                    screenshot::forget_pin(window.label());
+                }
+                return;
+            }
             if window.label() != island::WINDOW_LABEL {
                 return;
             }

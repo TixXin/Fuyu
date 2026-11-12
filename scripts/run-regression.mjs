@@ -11,11 +11,12 @@
 // Both ports are free ones picked per run: lanes run this at the same time, and with fixed
 // ports one run would test another lane's Vite and read another lane's browser.
 import { spawn } from "node:child_process";
-import { existsSync, mkdtempSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { auditLight, MIN_CONTRAST } from "./regression-contrast.mjs";
 
 /** Each page with the query that starts its automated checks. */
 export const PAGES = [
@@ -222,13 +223,22 @@ async function main() {
   const pages = PAGES.filter((page) => filters.length === 0 || filters.some((word) => page.includes(word)));
   if (pages.length === 0) throw new Error(`No regression page matches ${filters.join(", ")}.`);
   let failed = 0;
+  const contrastAllowlist = JSON.parse(readFileSync(path.join(root, "tests/regression/contrast-allowlist.json"), "utf8")).pages;
   await withRegressionBrowser(root, pages[0], async ({ session, base }) => {
     for (const page of pages) {
       const started = Date.now();
       const { outcome, state, errors } = await runPage(session, base + page);
       const seconds = ((Date.now() - started) / 1000).toFixed(1);
       console.log(`${outcome === "passed" ? "✓" : "✗"} ${page}  ${outcome}, ${passedChecks(state.text ?? "")} checks, ${seconds}s`);
-      if (outcome !== "passed") {
+      if (outcome === "passed") {
+        // The light-island pass (regression-contrast.mjs), on what the page left on screen.
+        const findings = await auditLight(session, page, contrastAllowlist);
+        if (findings.length > 0) {
+          failed += 1;
+          console.log(`✗ ${page}  light island: ${findings.length} text(s) under ${MIN_CONTRAST}:1`);
+          for (const { key, ratio, text, color, background } of findings.slice(0, 8)) console.log(`    ${ratio} ${key} "${text}" ${color} on ${background}`);
+        }
+      } else {
         failed += 1;
         const lines = (state.text ?? "").split("\n").filter((line) => line.trim());
         for (const line of lines.filter((line) => !line.startsWith("PASS ")).slice(-5)) console.log(`    ${line}`);
