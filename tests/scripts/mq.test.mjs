@@ -7,6 +7,7 @@ import test from "node:test";
 import { parseRefUpdates, pushBlock } from "../../scripts/mq/checkPush.mjs";
 import { land, landRefusal } from "../../scripts/mq/land.mjs";
 import { failedChecks, landBranchName, prText } from "../../scripts/mq/github.mjs";
+import { queueOrder, updateBehind } from "../../scripts/mq/updateBehind.mjs";
 import { waitFor } from "../../scripts/mq/wait.mjs";
 import { lockfileChanged, removedDependencies } from "../../scripts/mq/sync.mjs";
 import { createWorktree, removeWorktree } from "../../scripts/lanes/worktree-hooks.mjs";
@@ -144,17 +145,41 @@ test("land rebases onto main, pushes its own branch, opens one PR with auto-merg
 }));
 
 test("wait updates a PR that fell behind and reports the merge, a failed check or a conflict", async () => {
-  const run = async (states) => {
+  const run = async (states, updateBehind = true) => {
     const gh = { ...fakeGitHub(), view: () => states.shift() };
     const merged = [];
-    const code = await waitFor(7, { github: gh, sleep: async () => {}, onMerged: (sha) => { merged.push(sha); } });
+    const code = await waitFor(7, { github: gh, sleep: async () => {}, onMerged: (sha) => { merged.push(sha); }, updateBehind });
     return { code, merged, updated: gh.calls.updated };
   };
   const open = (mergeStateStatus, statusCheckRollup = []) => ({ state: "OPEN", mergeStateStatus, statusCheckRollup, url: "u" });
   assert.deepEqual(await run([open("BEHIND"), open("BLOCKED", [{ name: "check", status: "IN_PROGRESS" }]), { state: "MERGED", mergeCommit: { oid: "abc123" } }]), { code: 0, merged: ["abc123"], updated: [7] });
   assert.deepEqual(await run([open("BLOCKED", [{ name: "check", conclusion: "FAILURE", detailsUrl: "x" }])]), { code: 1, merged: [], updated: [] });
+  assert.deepEqual(await run([open("BEHIND"), { state: "MERGED", mergeCommit: { oid: "d" } }], false), { code: 0, merged: ["d"], updated: [] }, "the workflow updates behind PRs, so wait leaves them alone by default");
   assert.deepEqual(await run([open("DIRTY")]), { code: 1, merged: [], updated: [] });
   assert.deepEqual(await run([{ state: "CLOSED", url: "u" }]), { code: 1, merged: [], updated: [] });
+});
+
+test("only the first PR in line is brought up to date; drafts, conflicts and failed checks step aside", () => {
+  const pr = (number, enabledAt, extra = {}) => ({ number, headRefOid: `sha${number}`, isDraft: false, mergeable: "MERGEABLE", statusCheckRollup: [], autoMergeRequest: enabledAt && { enabledAt }, ...extra });
+  const prs = [
+    pr(5, "2026-11-13T03:00:00Z"),
+    pr(3, "2026-11-13T01:00:00Z", { statusCheckRollup: [{ name: "check", conclusion: "FAILURE" }] }),
+    pr(4, "2026-11-13T02:00:00Z"),
+    pr(2, "2026-11-13T00:30:00Z", { mergeable: "CONFLICTING" }),
+    pr(1, "2026-11-13T00:00:00Z", { isDraft: true }),
+    pr(6, null),
+  ];
+  assert.deepEqual(queueOrder(prs).map(({ number }) => number), [4, 5]);
+  const run = (behind) => {
+    const updated = [];
+    const lines = [];
+    const code = updateBehind({ github: { openPrs: () => prs, mainSha: () => "main", behindBy: (base, head) => (head === "sha4" ? behind : 9), updateBranch: (number) => updated.push(number) }, log: (line) => lines.push(line) });
+    return { code, updated, said: lines.join("\n") };
+  };
+  assert.deepEqual(run(2).updated, [4], "the earliest behind PR is updated, the next one waits");
+  const current = run(0);
+  assert.deepEqual(current.updated, [], "nothing is updated while the first in line is current");
+  assert.match(current.said, /#4 已经基于最新的 main/);
 });
 
 test("the worktree hooks hand out lanes and keep a lane with work from being removed", () => {

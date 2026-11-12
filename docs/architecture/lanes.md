@@ -58,7 +58,7 @@
 ## 开发、验证、合入
 
 1. 在 lane 里开发、提交。想在本机先验一遍时用 `pnpm verify`：`pnpm check`，改到 `src-tauri/` 或 `plugins/` 时加 `cargo test`，只改 Markdown 时只跑文档检查；通过的代码树会被记住，同一棵树不再重跑。land 不再在本机跑这些，由 PR 上 CI 的 `check` 把关。
-2. 一个功能单元完成并提交后，在 lane 里 `pnpm mq:land`，不用问用户。它 rebase 到 `origin/main`，推到远程分支 `land/<GitHub 用户名>/<机器名>-<分支名>`（pre-push 钩子跑 `scripts/land-check.mjs --light`：lane 的归属记录、Claude 署名行、已完成任务的提交记录、只改文档或版本号时的轻量检查，不跑 `pnpm check` 和 `cargo test`），没有 PR 就开一个（标题和正文取提交说明），再开启自动合并（`--merge`，提交号不变）。然后在后台跑 `pnpm mq:wait`：CI 的 `check` 通过、GitHub 合入后，它把主工作区快进到新的 `main`，再把 `dev` 推到合并提交（旧版本岛屿从 `dev` 读插件市场）；PR 落后于 `main` 时它会更新分支。`pnpm mq:land --wait` 把两步合在一起，在前台等。
+2. 一个功能单元完成并提交后，在 lane 里 `pnpm mq:land`，不用问用户。它 rebase 到 `origin/main`，推到远程分支 `land/<GitHub 用户名>/<机器名>-<分支名>`（pre-push 钩子跑 `scripts/land-check.mjs --light`：lane 的归属记录、Claude 署名行、已完成任务的提交记录、只改文档或版本号时的轻量检查，不跑 `pnpm check` 和 `cargo test`），没有 PR 就开一个（标题和正文取提交说明），再开启自动合并（`--merge`，提交号不变）。然后在后台跑 `pnpm mq:wait`：CI 的 `check` 通过、GitHub 合入后，它把主工作区快进到新的 `main`，再把 `dev` 推到合并提交（旧版本岛屿从 `dev` 读插件市场）。PR 落后于 `main` 时由工作流 `update-behind-prs.yml` 更新（见下）；那个工作流出问题时可以 `pnpm mq:wait --update` 自己更新。`pnpm mq:land --wait` 把两步合在一起，在前台等。
 3. PR 合入才算完成，`mq:wait` 报告失败就不算：
    - rebase 冲突（land 时，或 `mq:wait` 报 PR 冲突）：land 会自动中止 rebase。`git fetch origin main && git rebase origin/main` 解决冲突后重新 land。
    - 本机检查或 CI 失败：在同一个 lane 修好、提交，再 land，PR 自动更新。计时类测试在机器负载高时偶尔失败，单独重跑通过就重新 land。
@@ -118,4 +118,4 @@ land 从 git 的 pre-push 钩子里跑检查，环境里带着 `GIT_DIR` 等变�
 - land 不删除任何 lane：按进程判断曾经误删过经 magpie 跑命令的会话还在用的 lane。空闲的 lane 留着复用。
 - 被遗弃的 lane（有没合入的工作，登记的会话已经不在，也没有任务写着它）：land 结束时和会话开始时输出里带 `⚠`，`pnpm mq:reconcile` 也会列出。问用户怎么处理，不要删。
 - 真要删 lane 时：Windows 上 `git worktree remove` 常常删不掉 `node_modules`，会留下只剩 `node_modules` 的文件夹，分配时会把它当成已占用的编号。删完确认文件夹已经不在，残留的用 `cmd /c rmdir /s /q <路径>` 删除，它不会顺着 pnpm 的目录联接删到 store。
-- land 不再在本机排队：同时开着的几个 PR 由 GitHub 按规则集一个个合入，落后的由 `mq:wait` 更新分支。`tests/scripts/mq.test.mjs` 在临时仓库里真的 land 一次（rebase、推分支、只开一个 PR、冲突时中止），用假的 `gh` 代替 GitHub；`mq:wait` 的合入、检查失败、冲突和落后也各有一条。
+- land 不再在本机排队，排队在 GitHub 上：规则集要求 PR 基于最新的 `main`，工作流 `.github/workflows/update-behind-prs.yml`（`scripts/mq/updateBehind.mjs`）在 `main` 有新提交、有 PR 开启自动合并、任何一次 CI 跑完时，按开启自动合并的先后找出排在最前、能合入的 PR（跳过草稿、冲突和检查失败的），只在它落后时更新它的分支，后面的等着。更新用仓库 secret `PR_UPDATER_TOKEN`（只授权本仓库的 fine-grained token），因为用 Actions 自带的 token 推的提交不会触发 CI；它过期或被撤销时这个工作流会失败，PR 停在落后状态。`tests/scripts/mq.test.mjs` 在临时仓库里真的 land 一次（rebase、推分支、只开一个 PR、冲突时中止），用假的 `gh` 代替 GitHub；`mq:wait` 的合入、检查失败、冲突和落后也各有一条。

@@ -42,7 +42,7 @@ async function afterMerge(commit) {
 }
 
 export async function waitFor(number, options = {}) {
-  const { github = realGitHub, interval = POLL_MS, timeout = TIMEOUT_MS, sleep = pause, onMerged = afterMerge, updateBehind = true } = options;
+  const { github = realGitHub, interval = POLL_MS, timeout = TIMEOUT_MS, sleep = pause, onMerged = afterMerge, updateBehind = false } = options;
   const deadline = Date.now() + timeout;
   console.log(`[wait] 等 PR #${number} 合入 ${INTEGRATION_BRANCH}…`);
   while (Date.now() < deadline) {
@@ -92,5 +92,5 @@ export async function waitCommand(args = [], { github = realGitHub, host = hostn
     }
     number = pr.number;
   }
-  return waitFor(number, { github });
+  return waitFor(number, { github, updateBehind: args.includes("--update") });
 }

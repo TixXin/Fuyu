@@ -1,0 +1,35 @@
+name: Update behind PRs
+
+on:
+  push:
+    branches: [main]
+  pull_request_target:
+    types: [auto_merge_enabled]
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+  workflow_dispatch:
+
+concurrency:
+  group: update-behind-prs
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 26
+
+      - name: Update the first auto-merge PR in line when it is behind main
+        env:
+          GH_TOKEN: ${{ secrets.PR_UPDATER_TOKEN }}
+        run: node scripts/mq/updateBehind.mjs
