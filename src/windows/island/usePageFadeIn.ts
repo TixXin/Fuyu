@@ -27,11 +27,11 @@ export function usePageFadeIn<T extends HTMLElement>(page: IslandPage, mode: Isl
       return;
     }
 
+    // Opacity only, as the island's layers: a transform slide moves the page by fractions of a
+    // device pixel each frame, so its text blurs and steps a pixel, and lands once more when the
+    // slide ends (docs/investigations/island-jitter.md, fifth round).
     const animation = content.animate(
-      [
-        { opacity: 0, transform: "translateY(6px)" },
-        { opacity: 1, transform: "none" },
-      ],
+      [{ opacity: 0 }, { opacity: 1 }],
       { duration: FADE_IN_DURATION_MS, easing: "cubic-bezier(0.16, 1, 0.3, 1)" },
     );
     return () => animation.cancel();
