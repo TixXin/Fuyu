@@ -1,17 +1,21 @@
 diff --git a/dist/hooks/worktree-create.js b/dist/hooks/worktree-create.js
-index 558e886b00a53edf989b804182f90ef4431d0912..92ae5d331e818491b980041ca28ff3c4bfc23215 100644
+index 558e886b00a53edf989b804182f90ef4431d0912..5137cdebaafda46a775a9470c5d34a6926ca862e 100644
 --- a/dist/hooks/worktree-create.js
 +++ b/dist/hooks/worktree-create.js
-@@ -30,6 +30,8 @@ import { fileURLToPath } from "node:url";
+@@ -26,10 +26,11 @@
+ import { execFileSync } from "node:child_process";
+ import { existsSync, mkdirSync, readFileSync, symlinkSync } from "node:fs";
+ import { dirname, join, basename, sep } from "node:path";
+-import { fileURLToPath } from "node:url";
++import { fileURLToPath, pathToFileURL } from "node:url";
  import { loadConfig, hasConfig, DEFAULTS } from "../lib/config.js";
  import { resolveMainCheckout } from "../lib/main-checkout.js";
  import { detectPackageManager } from "../lib/check-command.js";
 +import { findClaudeAncestorPid, recordLaneOwner } from "../lib/lane-owner.js";
-+import { reuseIdleLane } from "../lib/lane-pool.js";
  // A lane-claim loop with no upper bound is exactly one path-resolution bug
  // away from spinning the CPU forever instead of failing loud — which is
  // precisely what happened here: an earlier, separate implementation of what
-@@ -152,7 +154,7 @@ export function createLane(mainTop, cfg) {
+@@ -152,7 +153,7 @@ export function createLane(mainTop, cfg) {
              // way a `git worktree add` failure does.
              const pm = detectPackageManager(wt);
              try {
@@ -20,26 +24,21 @@ index 558e886b00a53edf989b804182f90ef4431d0912..92ae5d331e818491b980041ca28ff3c4
              }
              catch (e) {
                  const err = e;
-@@ -233,7 +235,21 @@ export async function runWorktreeCreateHook() {
+@@ -233,7 +234,17 @@ export async function runWorktreeCreateHook() {
                  `dependency — node_modules is missing or broken. Run \`${pm} install\` in the main checkout and try again.`);
          }
          const cfg = hasConfig(mainTop) ? await loadConfig(mainTop) : { ...DEFAULTS };
--        const { wt } = createLane(mainTop, cfg);
-+        // fly-island patch: take back an idle lane before creating another (lib/lane-pool.js).
-+        const claudePid = findClaudeAncestorPid();
-+        const reused = reuseIdleLane(mainTop, cfg, fromCwd, claudePid);
-+        if (reused && cfg.installOnCreate) {
-+            // The lockfile may have moved on since the lane last installed; unchanged it takes seconds.
-+            const pm = detectPackageManager(reused.wt);
-+            try {
-+                execFileSync(pm, ["install"], { cwd: reused.wt, shell: process.platform === "win32", stdio: ["ignore", "pipe", "pipe"] });
-+            }
-+            catch (e) {
-+                process.stderr.write(`claude-code-merge-queue: "${pm} install" failed in reused lane ${reused.wt}; run it by hand.\n`);
-+            }
++        // fly-island patch: the repo hands out lanes itself (scripts/lanes/lanePool.mjs: reuse an
++        // idle lane before creating one, and record who uses it), the same as `pnpm lane:open`.
++        const repoPool = join(mainTop, "scripts", "lanes", "lanePool.mjs");
++        if (existsSync(repoPool)) {
++            const { openLane } = await import(pathToFileURL(repoPool).href);
++            const { wt } = openLane({ main: mainTop, fromCwd, pid: findClaudeAncestorPid(), install: cfg.installOnCreate });
++            process.stdout.write(wt + "\n");
++            process.exit(0);
 +        }
-+        const { wt } = reused ?? createLane(mainTop, cfg);
-+        recordLaneOwner(wt, claudePid); // fly-island patch: lets prune tell a live lane on Windows
+         const { wt } = createLane(mainTop, cfg);
++        recordLaneOwner(wt, findClaudeAncestorPid()); // fly-island patch: lets prune tell a live lane on Windows
          process.stdout.write(wt + "\n");
          process.exit(0);
      }
@@ -79,10 +78,10 @@ index 76a40f553c9746841bca0e0d8d316af81a3f4443..a75547c0ccbf200f552fbd45bfa51a84
                  CCMQ_LANDED_SHA: info.landedCommit ?? "",
 diff --git a/dist/lib/lane-owner.js b/dist/lib/lane-owner.js
 new file mode 100644
-index 0000000000000000000000000000000000000000..0073d781e559f8732a83018c07f3e7ec3433555e
+index 0000000000000000000000000000000000000000..8db3e15f158aebe9fef1c5e05293cacd439e66c8
 --- /dev/null
 +++ b/dist/lib/lane-owner.js
-@@ -0,0 +1,87 @@
+@@ -0,0 +1,81 @@
 +// fly-island patch: Windows has no lsof, so the stock "is a session still in
 +// this lane?" check always said yes and no lane was ever pruned. Instead the
 +// WorktreeCreate hook records the claude.exe that asked for the lane, and a
@@ -97,9 +96,6 @@ index 0000000000000000000000000000000000000000..0073d781e559f8732a83018c07f3e7ec
 +}
 +function key(path) {
 +    return resolve(path).toLowerCase();
-+}
-+export function readLaneOwners() {
-+    return readOwners();
 +}
 +function readOwners() {
 +    try {
@@ -150,9 +146,6 @@ index 0000000000000000000000000000000000000000..0073d781e559f8732a83018c07f3e7ec
 +        writeOwners(owners);
 +    }
 +}
-+export function pidAlive(pid) {
-+    return alive(pid);
-+}
 +function alive(pid) {
 +    try {
 +        process.kill(pid, 0);
@@ -169,153 +162,6 @@ index 0000000000000000000000000000000000000000..0073d781e559f8732a83018c07f3e7ec
 +}
 +export function hasLaneOwner(wt) {
 +    return Boolean(readOwners()[key(wt)]);
-+}
-diff --git a/dist/lib/lane-pool.js b/dist/lib/lane-pool.js
-new file mode 100644
-index 0000000000000000000000000000000000000000..913790afd6f50168ea22044d89d7dca65f43f144
---- /dev/null
-+++ b/dist/lib/lane-pool.js
-@@ -0,0 +1,141 @@
-+// fly-island patch: a pool of lanes instead of a new one per session. The stock
-+// hook only takes a lane number whose folder does not exist, so every /clear,
-+// restart or new session added a lane and they piled up (27 on one machine).
-+// Before creating one, the WorktreeCreate hook now takes back an idle lane:
-+//   1. the lane the session is already in (a /clear asks for a worktree again);
-+//   2. a lane the same claude.exe asked for earlier;
-+//   (3. the lowest-numbered lane nobody uses: off until lanes record who uses them.)
-+// A lane is reused only when it has no uncommitted or untracked files and
-+// nothing that is not already in the main checkout's HEAD, so no work is lost.
-+// "Nobody uses it": its recorded owner is not another live claude.exe, and its
-+// folder can be renamed, which Windows refuses while any process has its
-+// current directory in there (a session, a dev server, a shell).
-+// A reused lane is reset to the main checkout's HEAD and keeps its
-+// node_modules and untracked build caches.
-+import { execFileSync } from "node:child_process";
-+import { existsSync, mkdirSync, renameSync, rmSync, statSync } from "node:fs";
-+import { basename, dirname, join, resolve, sep } from "node:path";
-+import { readLaneOwners } from "./lane-owner.js";
-+
-+const MAX_LANE = 200;
-+const LOCK_STALE_MS = 60 * 1000;
-+
-+function git(args, cwd) {
-+    return execFileSync("git", args, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim();
-+}
-+function tryGit(args, cwd) {
-+    try {
-+        return { ok: true, out: git(args, cwd) };
-+    }
-+    catch {
-+        return { ok: false, out: "" };
-+    }
-+}
-+function key(path) {
-+    return resolve(path).toLowerCase();
-+}
-+export function lanePath(mainTop, cfg, lane) {
-+    return join(dirname(mainTop), `${basename(mainTop)}${cfg.worktreeSuffix}${lane}`);
-+}
-+/** The lane number of `dir` (or a folder inside it), or null. */
-+export function laneOf(mainTop, cfg, dir) {
-+    const target = key(dir);
-+    for (let lane = 1; lane <= MAX_LANE; lane += 1) {
-+        const wt = key(lanePath(mainTop, cfg, lane));
-+        if (target === wt || target.startsWith(wt + sep))
-+            return lane;
-+    }
-+    return null;
-+}
-+/** Why `wt` cannot be reused, or null when it has nothing to lose. */
-+export function workIn(wt, mainHead) {
-+    if (!existsSync(join(wt, ".git")))
-+        return "not a worktree";
-+    const status = tryGit(["status", "--porcelain", "--untracked-files=all"], wt);
-+    if (!status.ok)
-+        return "git status failed";
-+    if (status.out)
-+        return "uncommitted files";
-+    if (!tryGit(["merge-base", "--is-ancestor", "HEAD", mainHead], wt).ok)
-+        return "commits not on main";
-+    return null;
-+}
-+/** Whether a process has its current directory in `wt`: Windows then refuses to rename it. */
-+export function folderBusy(wt) {
-+    if (process.platform !== "win32")
-+        return false;
-+    const probe = `${wt}.probe-${process.pid}`;
-+    try {
-+        renameSync(wt, probe);
-+    }
-+    catch {
-+        return true;
-+    }
-+    renameSync(probe, wt);
-+    return false;
-+}
-+function withPoolLock(mainTop, work) {
-+    const common = resolve(mainTop, git(["rev-parse", "--git-common-dir"], mainTop));
-+    const lock = join(common, "claude-code-merge-queue", "lane-pool.lock");
-+    mkdirSync(dirname(lock), { recursive: true });
-+    for (let tries = 0;; tries += 1) {
-+        try {
-+            mkdirSync(lock);
-+            break;
-+        }
-+        catch {
-+            let age = 0;
-+            try {
-+                age = Date.now() - statSync(lock).mtimeMs;
-+            }
-+            catch {
-+                continue;
-+            }
-+            if (age > LOCK_STALE_MS || tries > 100) {
-+                rmSync(lock, { recursive: true, force: true });
-+                continue;
-+            }
-+            Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 100);
-+        }
-+    }
-+    try {
-+        return work();
-+    }
-+    finally {
-+        rmSync(lock, { recursive: true, force: true });
-+    }
-+}
-+/**
-+ * Picks an idle lane for a session started from `fromCwd` by claude.exe `claudePid` (or null),
-+ * resets it to the main checkout's HEAD and returns `{ wt, branch, lane }`; null when none is idle.
-+ */
-+export function reuseIdleLane(mainTop, cfg, fromCwd, claudePid) {
-+    return withPoolLock(mainTop, () => {
-+        const mainHead = git(["rev-parse", "HEAD"], mainTop);
-+        const owners = readLaneOwners();
-+        const existing = [];
-+        for (let lane = 1; lane <= MAX_LANE; lane += 1) {
-+            if (existsSync(lanePath(mainTop, cfg, lane)))
-+                existing.push(lane);
-+        }
-+        const current = fromCwd ? laneOf(mainTop, cfg, fromCwd) : null;
-+        const ownedBy = (lane) => owners[key(lanePath(mainTop, cfg, lane))]?.pid ?? null;
-+        // Only the session's own lane for now. Most sessions work in a lane from the main
-+        // checkout by absolute paths, or take one over from another session, and nothing
-+        // records that yet, so a lane that looks idle may well be someone's (F23 follow-up).
-+        const order = [
-+            ...existing.filter((lane) => lane === current),
-+            ...existing.filter((lane) => lane !== current && claudePid && ownedBy(lane) === claudePid),
-+        ];
-+        for (const lane of order) {
-+            const wt = lanePath(mainTop, cfg, lane);
-+            if (workIn(wt, mainHead))
-+                continue;
-+            const branch = `${cfg.branchPrefix}${lane}`;
-+            if (!tryGit(["checkout", "-q", "-B", branch, mainHead], wt).ok)
-+                continue;
-+            return { wt, branch, lane, reused: true };
-+        }
-+        return null;
-+    });
 +}
 diff --git a/dist/lib/lane-port.js b/dist/lib/lane-port.js
 index b85b163ac4f821d428a9cb7de9e3f9f8f0cbcc1d..b7a629db55729b8818fdf9f7a06612d9977b39fa 100644
