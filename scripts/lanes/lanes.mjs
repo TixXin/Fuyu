@@ -1,11 +1,3 @@
-// `pnpm lane:*`: lanes for sessions that do not go through the WorktreeCreate hook
-// (EnterWorktree), and a view of who uses which lane. Rules: lanePool.mjs, laneState.mjs.
-//
-//   pnpm lane:open [--as <session>] [--no-install]   a lane for this session: its own idle
-//                                                   one, else an idle one, else a new one
-//   pnpm lane:take <N> [--as <session>] [--force]   take over lane N from another session
-//   pnpm lane:release [N]                           this session no longer uses lane N
-//   pnpm lane:list [--json]                         every lane, whose it is and why
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { mainCheckout } from "../build-dirs.mjs";
@@ -23,7 +15,6 @@ function minutesAgo(ms, now = Date.now()) {
   return minutes < 120 ? `${minutes} 分钟前` : `${Math.round(minutes / 60)} 小时前`;
 }
 
-/** One line per lane for `lane:list`. */
 export function listLine(entry, now = Date.now()) {
   const { owner } = entry;
   const alive = { true: "", false: "（已退出）", null: "（进程未知）" }[String(owner?.alive ?? null)];

@@ -1,7 +1,3 @@
-// pnpm dev, then open /tests/regression/onboarding.html (a full-screen overlay; the island is faked
-// at the top centre). Without ?test=1 the page is for visual QA: ?act=<1-5> opens that act,
-// ?locale=en switches the language, ?light=1 shows the light theme, ?open=1 shows the island open.
-// ?test=1 runs the checks below.
 import { act, StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { emit } from "@tauri-apps/api/event";
@@ -79,7 +75,6 @@ const welcome = () => JSON.parse(localStorage.getItem("fuyu-onboarding-welcome")
 
 if (!automated) {
   mount();
-  // Once the page listens; act() outside the checks would swallow the render.
   setTimeout(() => void emit("onboarding-island", query.has("open") ? open : closed), 300);
   const target = Number(query.get("act") ?? 1);
   const advance = (left: number) => {

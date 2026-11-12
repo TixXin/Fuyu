@@ -1,11 +1,7 @@
-// What makes a task file valid (`pnpm check:tasks`), and the group table read from
-// docs/tasks/README.md, so the groups are defined in one place that people and
-// agents read anyway.
 import {
   BODY_SECTIONS, CLOSED_STATUSES, FIELDS, STATUSES, groupOf, isTaskId, sectionItems, sectionText, splitBody,
 } from "./taskFile.mjs";
 
-/** The groups in board order, from the `| A | 名称 |` rows under "## 分组" in the README. */
 export function parseGroups(readme) {
   const text = readme.replace(/\r\n/g, "\n");
   const start = text.indexOf("\n## 分组");
@@ -19,14 +15,8 @@ export function parseGroups(readme) {
 
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 const NEEDS = ["user"];
-/** A link into the repo must start at its root (/docs/...): a task moves to 0-archive/ when it closes. */
 const RELATIVE_LINK = /\]\((?!https?:|\/|#|mailto:)[^)]*\)/;
 
-/**
- * Problems with one task; empty when it is fine.
- * `context`: { fileId, archived, folder (the group folder it is in; undefined to skip), tasks: Map id → task,
- * groups: Set of codes, children: Map id → child tasks }.
- */
 export function taskProblems(task, { fileId, archived, folder, tasks, groups, children }) {
   const { fields, body } = task;
   const problems = [];
@@ -76,7 +66,6 @@ function bodyProblems(body, title) {
   return problems;
 }
 
-/** Problems across `entries` ({ id, archived, task?, error? }) given the README's groups. */
 export function checkEntries(entries, groups) {
   const tasks = new Map();
   const problems = [];
@@ -100,7 +89,6 @@ export function checkEntries(entries, groups) {
   return problems;
 }
 
-/** A commit entry under ## 提交: a commit subject in backticks or a short hash, plus optional words after it. */
 export function commitRef(entry) {
   const quoted = /^`([^`]+)`/.exec(entry);
   if (quoted) return /^[0-9a-f]{7,40}$/.test(quoted[1]) ? { hash: quoted[1] } : { subject: quoted[1] };

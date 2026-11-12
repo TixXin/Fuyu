@@ -51,7 +51,6 @@ test("the idle sound comes once per turn for a finished session left unread", ()
   assert.deepEqual(takeIdleSessions(state, sessions, unseen, 999, 1000), []);
   assert.deepEqual(takeIdleSessions(state, sessions, unseen, 1000, 1000).map((item) => item.sessionId), ["a"]);
   assert.deepEqual(takeIdleSessions(state, sessions, unseen, 5000, 1000), [], "once per turn");
-  // Read: it starts over; a new unread turn waits its own time.
   assert.deepEqual(takeIdleSessions(state, sessions, new Set(), 6000, 1000), []);
   const next = [session("a", "completed", 2)];
   assert.deepEqual(takeIdleSessions(state, next, unseen, 7000, 1000), []);

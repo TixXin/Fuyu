@@ -30,11 +30,9 @@ test("plugin pages come after the built-in pages, in the order given", () => {
   assert.equal(cycleShortcutPage(features, "qq", 1), timer);
   assert.equal(cycleShortcutPage(features, board, 1), "agents");
   assert.equal(cycleShortcutPage(features, "agents", -1), board);
-  // Past the ninth page there is no number key, so no label either.
   const many = { ...features, pluginPages: [timer, board, "plugin:c/1", "plugin:d/1"] };
   assert.equal(pageShortcutLabel(many, "plugin:c/1", "Alt"), "Alt+9");
   assert.equal(pageShortcutLabel(many, "plugin:d/1", "Alt"), null);
-  // Built-in pages switched off leave no gap.
   assert.equal(pageForAltDigit({ ...features, agents: false, music: false }, 5), timer);
 });
 
@@ -75,7 +73,6 @@ test("plugin page preferences order and hide pages, and bad stored data means de
   assert.equal(movePluginPage(views, prefs, "plugin:a.one/x", -1), prefs, "the first page cannot move up");
   prefs = setPluginPageHidden(prefs, "plugin:a.one/x", true);
   assert.deepEqual(ids(visiblePluginViews(views, prefs)), ["c.three/z", "b.two/y"]);
-  // A page whose plugin is off keeps its place for when it comes back.
   const withGone = { ...prefs, order: ["plugin:gone/q", ...prefs.order] };
   assert.ok(movePluginPage(views, withGone, "plugin:b.two/y", -1).order.includes("plugin:gone/q"));
   assert.deepEqual(ids(visiblePluginViews(views, setPluginPageHidden(prefs, "plugin:a.one/x", false))), ["a.one/x", "c.three/z", "b.two/y"]);

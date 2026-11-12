@@ -1,7 +1,3 @@
-// pnpm dev, then open /tests/regression/screenshot-overlay.html.
-// The screenshot overlay (C41.1–C41.4) with the Tauri boundary mocked: a grey frozen picture the
-// size of the page, choosing a region, the annotation tools, undo / redo, and what copying, saving
-// and pinning send, and Ctrl+Shift+2 copying as soon as a region is chosen.
 import { act, StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { emit } from "@tauri-apps/api/event";
@@ -18,14 +14,12 @@ const calls: { command: string; payload: unknown; headers: Record<string, string
 mockIPC((command) => {
   switch (command) {
     case "screenshot_session": return { id: 1, mode: "region", width: WIDTH, height: HEIGHT, underPointer: true };
-    // Opaque grey, as the native capture is (win32/screen_capture.rs makes every alpha 255).
     case "screenshot_frame": return new Uint8Array(WIDTH * HEIGHT * 4).map((_, index) => (index % 4 === 3 ? 255 : 128)).buffer;
     case "screenshot_targets": return [];
     default: return null;
   }
 }, { shouldMockEvents: true });
 mockWindows("screenshot-0");
-// mockIPC does not pass the invoke options on; the headers carry the action and the size.
 type Internals = { invoke: (command: string, payload: unknown, options?: { headers?: Record<string, string> }) => Promise<unknown> };
 const internals = (window as unknown as { __TAURI_INTERNALS__: Internals }).__TAURI_INTERNALS__;
 const mockedInvoke = internals.invoke;
@@ -140,7 +134,6 @@ async function runChecks() {
     const [patchLeft, patchTop, patchWidth, patchHeight] = patch;
     check(composed instanceof Uint8Array && composed.byteLength === patchWidth * patchHeight * 4 && patchWidth * patchHeight < 200 * 160, `With annotations Enter sends only the part they cover, as raw pixels (${patch.join(", ")})`);
     check(annotated?.headers["x-width"] === "200" && patchLeft + patchWidth <= 200 && patchTop + patchHeight <= 160, "…inside the selection, which the native side cuts itself");
-    // Picture (x, y) in the patch: the selection is at (40, 40).
     const at = (x: number, y: number) => {
       const index = ((y - 40 - patchTop) * patchWidth + (x - 40 - patchLeft)) * 4;
       return Array.from(composed!.slice(index, index + 4));

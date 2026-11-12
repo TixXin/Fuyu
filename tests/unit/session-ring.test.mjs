@@ -42,15 +42,11 @@ test("phases map to ring states the way the Agent page lights its rows", () => {
   assert.equal(sessionRingState(session("a", "waiting"), unseen), "needs");
   assert.equal(sessionRingState(session("a", "running"), NONE), "working");
   assert.equal(sessionRingState(session("a", "stale"), NONE), "stale");
-  // A reply ending in a question is yellow until looked at, however old.
   assert.equal(sessionRingState(session("a", "completed", { replyAsks: true, ...old }), unseen), "yourturn");
-  // Looked at (roadmap B15): waiting, asking and failed stop asking and are grey, like a "looked" row.
   assert.equal(sessionRingState(session("a", "waiting"), NONE), "done");
   assert.equal(sessionRingState(session("a", "completed", { replyAsks: true }), NONE), "done");
   assert.equal(sessionRingState(session("a", "failed"), NONE), "done");
-  // A failed turn is red until looked at.
   assert.equal(sessionRingState(session("a", "failed", old), unseen), "needs");
-  // The ring has no clock of its own: a session stays while the page lists it.
   assert.equal(sessionRingState(session("a", "completed", old), unseen), "done");
   assert.equal(sessionRingState(session("a", "completed", old), NONE), "done");
 });
@@ -58,15 +54,11 @@ test("phases map to ring states the way the Agent page lights its rows", () => {
 test("the reply status marker decides a finished turn instead of whether it was seen", () => {
   const unseen = new Set(["claudeCode:a"]);
   const old = { updatedAt: NOW - 60 * MINUTE };
-  // Waiting for a reply stays yellow until looked at, however old.
   assert.equal(sessionRingState(session("a", "completed", { replyMarker: "yourTurn", ...old }), unseen), "yourturn");
   assert.equal(sessionRingState(session("a", "completed", { replyMarker: "done" }), unseen), "done");
-  // Waiting on its own background task still counts as working.
   assert.equal(sessionRingState(session("a", "completed", { replyMarker: "background" }), NONE), "working");
-  // A marker only means something on a finished turn.
   assert.equal(sessionRingState(session("a", "running", { replyMarker: "done" }), NONE), "working");
   assert.equal(sessionRingState(session("a", "failed", { replyMarker: "done" }), unseen), "needs");
-  // The marker wins over the question guess.
   assert.equal(sessionRingState(session("a", "completed", { replyMarker: "done", replyAsks: true }), unseen), "done");
 });
 
@@ -117,7 +109,6 @@ test("the pixel grid lights one cell per session in ring order, with a plus past
   const many = { needs: 2, yourturn: 3, working: 6, stale: 0, done: 4, total: 15 };
   const cells = sessionGridCells(many);
   assert.equal(cells.length, SESSION_GRID_MAX);
-  // The least urgent are the ones left off; the last cell says there are more.
   assert.deepEqual(cells, ["needs", "needs", "yourturn", "yourturn", "yourturn", "working", "working", "working", "more"]);
   assert.deepEqual(sessionGridCells(sessionRingCounts([], NONE)), []);
 });
@@ -127,7 +118,6 @@ test("signal bars: a column per colour with sessions, least urgent left, a bar p
   assert.deepEqual(sessionSignal(counts), {
     columns: [
       { key: "done", bars: ["done", "done", "done"] },
-      // Silent running sessions are dimmed bars on top of the green column.
       { key: "working", bars: ["working", "working", "stale"] },
       { key: "needs", bars: ["needs"] },
     ],

@@ -1,9 +1,3 @@
-// Writes the files generated from the plugin SDK sources and plugins/schema/:
-// the single-file SDKs in plugins/sdk/ (for people who copy one file), the copies
-// the npm packages publish, protocol.d.mts (names from rpc.json) and the API
-// reference docs/plugins/api.md, and the AI assistant skill the scaffold writes
-// into new plugins (a copy of packages/fuyu-plugin/ai/).
-// Usage: pnpm sdk:build. tests/scripts/plugin-sdk.test.mjs checks they are current.
 import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -15,7 +9,6 @@ const SCAFFOLD_SDK = "packages/create-fuyu-plugin/sdk";
 const AI_SOURCE = "packages/fuyu-plugin/ai";
 const SCAFFOLD_AI = "packages/create-fuyu-plugin/ai";
 
-/** Every file under `dir` (relative to `root`), as paths relative to `dir`, sorted. */
 function filesUnder(root, dir, prefix = "") {
   return readdirSync(path.join(root, dir, prefix), { withFileTypes: true })
     .sort((a, b) => a.name.localeCompare(b.name))
@@ -25,7 +18,6 @@ function filesUnder(root, dir, prefix = "") {
 const lf = (text) => text.replaceAll("\r\n", "\n");
 const union = (names) => (names.length === 0 ? "never" : names.map((name) => JSON.stringify(name)).join(" | "));
 
-/** protocol.d.mts: the names in plugins/schema/rpc.json as TypeScript types. */
 export function protocolTypes(rpc) {
   const names = (list) => list.map((item) => item.name);
   const permissions = Object.fromEntries(rpc.methods.map((method) => [method.name, method.permission]));
@@ -54,7 +46,6 @@ export function protocolTypes(rpc) {
   return lines.join("\n");
 }
 
-/** The PowerShell module as one dot-sourceable file. */
 export function powershellSingleFile(module) {
   const body = lf(module)
     .replace(/^(#[^\n]*\n)+\n/, "")
@@ -74,7 +65,6 @@ export function powershellSingleFile(module) {
   return `${header}${body}`;
 }
 
-/** Every generated file: repository-relative path -> contents (LF line ends). */
 export function generatedFiles(root) {
   const read = (relative) => lf(readFileSync(path.join(root, relative), "utf8"));
   const rpcText = read("plugins/schema/rpc.json");

@@ -48,7 +48,6 @@ test("the collapsed width setting moves the whole range, and alignment stays ins
 });
 
 test("the todo list scrolls after as many rows as fit under the max panel height", () => {
-  // 490px is the default and keeps the six rows the todo page always had.
   assert.equal(getTodoScrollStartRows(490), 6);
   assert.equal(getTodoScrollStartRows(351), 2);
   assert.equal(getTodoScrollStartRows(352), 3);
@@ -56,7 +55,6 @@ test("the todo list scrolls after as many rows as fit under the max panel height
 
 test("the collapsed width is nudged so the centred island starts on a whole device pixel", () => {
   const leftEdge = (width, ratio) => ((820 - width) / 2) * ratio;
-  // 301 is the width "剩余1个待办" produced: its centred left edge was 259.5px.
   assert.equal(alignCollapsedIslandWidth(301, 820, 1), 300);
   assert.equal(alignCollapsedIslandWidth(300, 820, 1), 300);
   for (const ratio of [1, 1.25, 1.5, 1.75, 2]) {
@@ -67,7 +65,6 @@ test("the collapsed width is nudged so the centred island starts on a whole devi
       assert.equal(Number.isInteger(leftEdge(aligned, ratio)), true, `${width} at ${ratio} -> ${aligned}`);
     }
   }
-  // A ratio no nearby width can satisfy keeps the computed width.
   assert.equal(alignCollapsedIslandWidth(301, 820, 1.13), 301);
 });
 
@@ -88,7 +85,6 @@ test("pages and message sources that are switched off fall back to ones still on
   assert.equal(resolveIslandPage("todo", { ...all, todo: false }), "music");
   assert.equal(resolveIslandPage("todo", { ...all, todo: false, music: false, clipboard: false }), "shelf");
   assert.equal(resolveIslandPage("todo", { ...all, todo: false, music: false, clipboard: false, shelf: false }), "qq");
-  // The messages page stays while any one of its sources is on.
   assert.equal(isPageEnabled("qq", { ...all, qq: false, wechat: false }), true);
   const none = { todo: false, music: false, clipboard: false, shelf: false, qq: false, wechat: false, qqMail: false };
   assert.equal(isPageEnabled("qq", none), false);

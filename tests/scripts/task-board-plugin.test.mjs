@@ -1,5 +1,3 @@
-// The dev task board (scripts/tasks/island-plugin) under the mock host, reading a small
-// task folder of its own: the groups, their icons, and what each row says.
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { copyFileSync, cpSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
@@ -9,8 +7,6 @@ import test from "node:test";
 import { startMockHost } from "../../packages/fuyu-plugin/src/test/index.mjs";
 
 const ROOT = path.resolve(import.meta.dirname, "../..");
-// Under the pre-push hook git sets GIT_DIR and friends, which would point the fixture's
-// git calls (and the plugin's tasks.mjs) at this repository and its lanes.
 for (const name of Object.keys(process.env)) if (name.startsWith("GIT_")) delete process.env[name];
 const windowsOnly = { skip: process.platform !== "win32" && "the plugin runs on Windows PowerShell" };
 const today = new Date();
@@ -23,7 +19,6 @@ function task(dir, id, fields, body = "") {
   writeFileSync(path.join(dir, `${id}.md`), `${lines}\n`);
 }
 
-/** A copy of the plugin, and a repo with the task scripts and a few tasks of its own. */
 function fixture() {
   const base = mkdtempSync(path.join(os.tmpdir(), "task-board-"));
   const plugin = path.join(base, "plugin");
@@ -38,7 +33,6 @@ function fixture() {
   task(path.join(tasks, "C"), "C2", { title: "等第一步", status: "待做", depends: "C1" });
   task(path.join(tasks, "D"), "D1", { title: "换电脑实测", status: "待做", needs: "user" });
   task(path.join(tasks, "0-archive/D"), "D2", { title: "今天修好的", status: "已完成", done: day }, "## 提交\n\n- `fix: x`\n");
-  // tasks.mjs finds the repository through git.
   execFileSync("git", ["init", "-q"], { cwd: repo });
   return { base, plugin, repo };
 }
@@ -49,7 +43,6 @@ test("the board groups the tasks, marks each group with an icon and keeps the ti
   try {
     host.viewVisible("tasks");
     const model = await host.waitForView("tasks", (m) => Array.isArray(m.groups) && m.groups.length > 0 && !m.loading);
-    // The fixture has no lane 4, so C1's claim counts as stale.
     assert.deepEqual(model.groups.map((group) => group.title), ["需要你 1", "认领已失效 1", "待做 1", "今天完成 1"], JSON.stringify(model));
     const [needs, stale, todo, finished] = model.groups.map((group) => group.items[0]);
     assert.equal(needs.icon, "bell");

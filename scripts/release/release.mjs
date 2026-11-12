@@ -1,30 +1,3 @@
-// Builds, signs and publishes a release that in-app updates can pick up.
-//
-// Usage:
-//   pnpm release [--base-url <url>] [--no-upload] [--no-issue-comments] [--no-smoke-test]
-//
-// Builds in the main checkout's src-tauri/target/publish (build-dirs.mjs). Before the uploaded
-// draft goes public, release-smoke.yml installs and starts it on a clean Windows runner
-// (smoke-test.mjs); --no-smoke-test skips that.
-//
-// Set the version and start the notes first with `pnpm release:version <version>`.
-//
-// Explicit CI environment (otherwise the Windows local signing config is used):
-//   TAURI_SIGNING_PRIVATE_KEY           private key content (or its path)
-//   TAURI_SIGNING_PRIVATE_KEY_PASSWORD  empty string when the key has no password
-//   TAURI_UPDATER_PUBKEY                public key content, must match the private key
-//
-// The script refuses to run when the four version fields disagree (versions.mjs),
-// when the release notes file is missing or still a draft, or when the working
-// tree has uncommitted changes. Published versions are never overwritten.
-// Once public, it reads both channels back and tells the GitHub issues whose
-// tasks shipped (after-release.mjs; --no-issue-comments skips that). The
-// published exe also replaces this machine's release build (installExe in
-// build-exe.mjs), so no `pnpm build:exe` is needed afterwards.
-//
-// A pre-release version (0.3.1-beta.1) is published as a GitHub pre-release,
-// so the stable channel (GitHub's "latest" release) never offers it. Every
-// release also refreshes the beta channel's manifest; see channel.mjs.
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
@@ -42,8 +15,6 @@ import { mainCheckout, PUBLISH_DIR, targetDir } from "../build-dirs.mjs";
 
 const CONFIG = "src-tauri/tauri.conf.json";
 const OVERLAY = "src-tauri/tauri.release.conf.json";
-// Built in the main checkout's target/publish from any lane (build-dirs.mjs), so a release
-// compiles incrementally; the lock keeps two lanes from releasing into it at once.
 const PUBLISH_TARGET = targetDir(mainCheckout(), PUBLISH_DIR);
 const RELEASE_DIR = join(PUBLISH_TARGET, "release");
 const BUNDLE_DIR = join(RELEASE_DIR, "bundle", "nsis");
@@ -77,8 +48,6 @@ function fail(message) {
 }
 
 function run(command, commandArgs, options = {}) {
-  // On Windows the shell finds pnpm.cmd; it gets one quoted command line, since
-  // passing an argument list together with `shell` is deprecated (DEP0190).
   const windows = process.platform === "win32";
   const result = spawnSync(windows ? commandLine(command, commandArgs) : command, windows ? [] : commandArgs, {
     stdio: options.capture ? "pipe" : "inherit",
@@ -143,7 +112,6 @@ try {
   fail(error.message);
 }
 if (wixVersion) {
-  // A pre-release (0.3.1-beta.1) needs a numeric MSI version; see msi-version.mjs.
   mkdirSync(dirname(MSI_OVERLAY), { recursive: true });
   writeFileSync(MSI_OVERLAY, `${JSON.stringify({ bundle: { windows: { wix: { version: wixVersion } } } })}\n`);
   configs.push("--config", MSI_OVERLAY);
@@ -178,7 +146,6 @@ run("gh", [
   ...(prerelease ? ["--prerelease"] : []),
   "--title", tag, "--notes-file", notesFile, ...assets,
 ]);
-// An unpublished draft's tag may not exist yet, so fetch its assets by release ID.
 const releaseId = run("gh", ["release", "view", tag, "--repo", REPO, "--json", "databaseId", "--jq", ".databaseId"], { capture: true }).stdout.trim();
 const remote = JSON.parse(run("gh", ["api", `repos/${REPO}/releases/${releaseId}`], { capture: true }).stdout);
 for (const path of assets) {
@@ -206,10 +173,6 @@ updateBetaChannel(revision);
 verifyChannels();
 if (issueComments) tellShippedIssues(revision);
 
-/**
- * Puts the exe just published where the desktop shortcut runs it (what `pnpm build:exe` would
- * otherwise rebuild for minutes). A failure here does not touch the release.
- */
 function installLocally() {
   try {
     const exe = installExe(EXE);
@@ -226,7 +189,6 @@ function updateBetaChannel(target) {
   if (exists.status !== 0) {
     const notes = join(dir, "notes.md");
     writeFileSync(notes, "Update manifest of the beta channel, refreshed by every release. Do not delete.\n");
-    // A pre-release, so it can never become GitHub's "latest" release.
     run("gh", [
       "release", "create", BETA_CHANNEL_TAG, "--repo", REPO, "--target", target,
       "--prerelease", "--latest=false", "--title", BETA_CHANNEL_TAG, "--notes-file", notes,
@@ -246,7 +208,6 @@ function updateBetaChannel(target) {
   console.log(`✓ Beta channel now offers ${tag}.`);
 }
 
-/** Reads both channels' latest.json back through gh; GitHub may take a few seconds to switch "latest". */
 function verifyChannels() {
   const read = (name, tagArgs) => {
     const dir = join(CHECK_DIR, name);
@@ -266,7 +227,6 @@ function verifyChannels() {
   console.log(`✓ Channels read back: stable offers ${prerelease ? "the last final release" : tag}, beta offers ${tag}.`);
 }
 
-/** Comments once on each GitHub issue whose task has a commit in this release. */
 function tellShippedIssues(target) {
   run("git", ["fetch", "--quiet", "--tags", "origin"], { allowFailure: true });
   const tags = run("git", ["tag", "--list", "v*"], { capture: true }).stdout.split("\n").map((line) => line.trim()).filter(Boolean);

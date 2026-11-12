@@ -1,5 +1,3 @@
-// pnpm dev, then open /tests/i18n.html?test=1. Omit ?test=1 for interactive QA.
-// The island and the settings window share one page and one I18nProvider here.
 import { act, StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { mockIPC, mockWindows } from "@tauri-apps/api/mocks";
@@ -35,7 +33,6 @@ if (!translation) {
 }
 let revision = 0;
 let reads = 0;
-// The translation window pastes this on open; emptied before its empty-source check.
 let clipboardText = "用户复制的文本";
 const commands: string[] = [];
 mockIPC((command, payload) => {
@@ -45,11 +42,9 @@ mockIPC((command, payload) => {
     case "get_launch_at_startup": return false;
     case "get_default_todo_save_directory": return "";
     case "get_clipboard_history": return { settings: { enabled: true, captureImages: true, maxItems: 100, shortcut: "Ctrl+X", shortcutEnabled: true }, items: [] };
-    // The island polls these every second; null would end the run when the checks take longer.
     case "list_agent_sessions": return [];
     case "list_plugin_views": return { views: [], status: [] };
     case "get_agent_status": return { codex: { phase: "idle", updatedAt: 0 }, claudeCode: { phase: "idle", updatedAt: 0 }, updatedAt: 0, statusPath: "" };
-    // Same values as MediaState::empty() in src-tauri/src/media_control/session.rs.
     case "get_media_state": return { available: false, audioActive: false, audioPeak: 0, playbackStatus: "unavailable", title: null, artist: null, album: null, thumbnail: null, positionMs: 0, durationMs: 0, canSeek: false, canNext: false, canPrevious: false, shuffleActive: null, canShuffle: false, repeatMode: "unknown", canRepeat: false, volume: -1, sourceApp: null, activeSessionId: null, sessions: [], updatedAt: 0 };
     case "get_audio_level": return { active: false, peak: 0, updatedAt: 0 };
     case "get_foreground_fullscreen": return { active: false, onIslandMonitor: false };
@@ -85,7 +80,6 @@ const click = async (selector: string) => {
   if (!element) throw new Error(`Missing ${selector}`);
   await act(async () => { element.click(); });
 };
-// The language row's dropdown is named by its row title in whichever language is showing.
 const LANGUAGE_TRIGGER = [TRANSLATIONS["zh-CN"], TRANSLATIONS.en]
   .map((text) => `.settings-select .select-control__trigger[aria-label='${text.settings.language.label}']`)
   .join(", ");

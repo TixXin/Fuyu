@@ -1,7 +1,3 @@
-// pnpm dev, then open /tests/regression/agent-approvals.html. Drives the permission request card
-// (roadmap B6 phase 2) with the agent hook endpoint mocked: its events, the pending list and the
-// decisions sent back. Checks when the Agent page opens and closes for a request, what the card
-// shows, and which requests go straight back to the terminal.
 import { act, StrictMode, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { emit } from "@tauri-apps/api/event";
@@ -15,7 +11,6 @@ import { AgentSessionsPanel } from "../../src/features/agent-status/AgentSession
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
 
 const COMMAND = "pnpm test:regression agent && git status --short && cmd //c echo 一条很长的命令，用来看两行之后是否折叠，点开后能看到全部内容";
-// Requests are named in the checks ("p1"); the endpoint numbers them.
 const names: string[] = [];
 const idOf = (name: string) => (names.includes(name) ? names.indexOf(name) : names.push(name) - 1) + 1;
 const nameOf = (id: unknown) => names[Number(id) - 1] ?? String(id);
@@ -196,7 +191,6 @@ try {
   await wait(50);
   check(last(decisions) === "w1:terminal" && current() === null, "转入勿扰时，还在等的请求交回终端");
 
-  // Questions (AskUserQuestion, phase 3).
   await act(async () => setEnabled(true));
   await act(async () => setIsland({ mode: "collapsed", page: "todo" }));
   const DRINK = "你更喜欢哪种饮品？";

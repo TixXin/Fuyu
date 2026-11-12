@@ -10,7 +10,6 @@ const event = (title, startMs, endMs, fields = {}) => ({ uid: title, title, star
 test("lunar dates come from the table, including leap months and new moons just before midnight", () => {
   assert.deepEqual(lunarDate(day(2026, 11, 9)), { month: "十月", day: 1 });
   assert.deepEqual(lunarDate(day(2025, 7, 25)), { month: "闰六月", day: 1 });
-  // The WebView's Intl calendar puts this Spring Festival on the 7th.
   assert.deepEqual(lunarDate(day(2027, 2, 6)), { month: "正月", day: 1 });
   assert.deepEqual(lunarDate(day(1900, 1, 31)), { month: "正月", day: 1 });
   assert.equal(lunarDate(day(1900, 1, 30)), null);

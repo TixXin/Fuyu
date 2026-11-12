@@ -45,7 +45,6 @@ test("every code the native side sends has its wording", () => {
     }
   };
   walk("src-tauri/src");
-  // "plain" is a message not given a code yet; the user_error.rs tests use codes of their own.
   const missing = [...sent].filter((code) => code !== "plain" && !(code in errors.en.codes));
   assert.deepEqual(missing, []);
 });

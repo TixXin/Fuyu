@@ -1,9 +1,7 @@
-// pnpm dev, then open /tests/regression/session-ring.html (demo) or ?test=1 (checks).
 import { act, StrictMode, type CSSProperties } from "react";
 import { createRoot } from "react-dom/client";
 import { mockIPC } from "@tauri-apps/api/mocks";
 import "../../src/styles/tokens.css";
-// Loads the island stylesheets in the same order as the app.
 import "../../src/windows/island/IslandApp";
 import { IslandShell } from "../../src/windows/island/IslandShell";
 import { useLatestMessagePreview } from "../../src/windows/island/useLatestMessagePreview";
@@ -21,7 +19,6 @@ import type { MediaState } from "../../src/features/media/api";
 
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
 const automated = new URLSearchParams(location.search).has("test");
-// Same values as MediaState::empty() in src-tauri/src/media_control/session.rs.
 const UNAVAILABLE_MEDIA: MediaState = {
   available: false, audioActive: false, audioPeak: 0, playbackStatus: "unavailable",
   title: null, artist: null, album: null, thumbnail: null, positionMs: 0, durationMs: 0,
@@ -41,8 +38,6 @@ const session = (sessionId: string, phase: AgentSessionSummary["phase"], title: 
   provider: "claudeCode", sessionId, cwd: "F:\\code\\fly-island", title, model: null, effort: null, phase,
   lastMessage: null, updatedAt: NOW - minutesAgo * 60_000, host: null, turnStartedAt: null,
 });
-// Needs you 1, your turn 1 (finished, its reply asks something), running 2, done 2 (one seen 2
-// minutes ago, one an hour ago: the ring has no clock of its own and shows what the page lists).
 const BUSY = [
   session("a1", "waiting", "修复登录"),
   { ...session("b2", "completed", "写测试"), replyAsks: true },
@@ -51,13 +46,9 @@ const BUSY = [
   session("e5", "completed", "已看过", 2),
   session("f6", "completed", "很久以前", 60),
 ];
-// Sessions waiting on you count as asking only until looked at (roadmap B15).
 const UNSEEN: ReadonlySet<string> = new Set(["claudeCode:a1", "claudeCode:b2"]);
-// The Agent page lists nothing (say, every session has quit and quit ones are hidden).
 const QUIET: AgentSessionSummary[] = [];
-// Twelve: past nine the grid's last cell is a plus.
 const CROWD = [...BUSY, ...["g7", "h8", "i9", "j10", "k11", "l12"].map((id, index) => session(id, index % 3 ? "running" : "stale", id))];
-// What the mocked host answers; each scenario sets these, then mounts a fresh island.
 let pluginOn = true;
 let pluginSettings: Record<string, unknown> = { style: "grid" };
 let sessions: AgentSessionSummary[] = BUSY;
@@ -74,10 +65,8 @@ mockIPC((command) => {
 
 let openedPage: string | null = null;
 const OPEN_AGENTS = () => { openedPage = "agents"; };
-// One array for every render: a new one each time would read as new agent activity.
 const NO_AGENTS: AgentActivity[] = [];
 
-// The appearance's corners as stageStyle.ts sets them on the stage; none: the stylesheet's defaults.
 let corners: CSSProperties = {};
 
 function Island({ agents, count, list, report }: { agents: boolean; count: number; list: AgentSessionSummary[]; report: (slots: CollapsedSlots) => void }) {
@@ -111,7 +100,6 @@ function check(condition: unknown, label: string) {
   messages.push(`PASS ${label}`);
 }
 
-/** Mounts one island, captioned, with the mocks as set now; returns its collapsed bar and its slots. */
 async function mount(caption: string, agents: boolean, count = 2) {
   let slots: CollapsedSlots = {};
   const box = document.createElement("div");
@@ -123,8 +111,6 @@ async function mount(caption: string, agents: boolean, count = 2) {
   await act(async () => {
     createRoot(box).render(<StrictMode><Island agents={agents} count={count} list={sessions} report={(next) => { slots = next; }} /></StrictMode>);
   });
-  // Let the plugin list and the session read come back.
-  // Timers, not animation frames: a background tab gets no frames (the demo is viewed in one).
   for (let frame = 0; frame < 10; frame += 1) await act(async () => { await new Promise((resolve) => setTimeout(resolve, 16)); });
   return [box.querySelector<HTMLElement>(".island__collapsed")!, slots] as const;
 }
@@ -230,7 +216,6 @@ async function runChecks() {
 if (automated) await runChecks();
 else {
   Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: false });
-  // Every style with 1, 3, 6 and 12 sessions, for looking at side by side.
   const sets: [string, AgentSessionSummary[]][] = [["1", BUSY.slice(2, 3)], ["3", BUSY.slice(0, 3)], ["6", BUSY], ["12", CROWD]];
   for (const [style, name] of [["grid", "像素格"], ["ring", "分段环"], ["bar", "状态条"], ["signal", "信号格"]]) {
     pluginSettings = { style };
@@ -239,7 +224,6 @@ else {
       await mount(`${name}：${count} 个会话`, true);
     }
   }
-  // Signal bars under the appearance's corners: the smallest radius, the largest, and round.
   sessions = BUSY;
   for (const [radius, shape] of [[16, "squircle"], [40, "squircle"], [16, "round"]] as const) {
     corners = { "--island-corner-radius-size": radius, "--island-corner-shape": shape } as CSSProperties;

@@ -62,8 +62,6 @@ test("lanes are handed back, reused when idle, created when none is, and taken o
   const root = realpathSync(mkdtempSync(path.join(tmpdir(), "lanes-")));
   const main = path.join(root, "app");
   const git = (args, cwd = main) => execFileSync("git", ["-c", "user.email=t@t", "-c", "user.name=t", ...args], { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim();
-  // land runs the checks from git's pre-push hook, whose GIT_DIR would point every git call
-  // here at the real repo: once that re-initialised it as bare and committed to it.
   const hookEnv = Object.keys(process.env).filter((name) => name.startsWith("GIT_")).map((name) => [name, process.env[name]]);
   for (const [name] of hookEnv) delete process.env[name];
   try {
@@ -80,7 +78,7 @@ test("lanes are handed back, reused when idle, created when none is, and taken o
     assert.equal(b.lane, 2, "lane 1's session runs, so a second session gets a new lane");
     writeFileSync(path.join(b.wt, "wip.txt"), "x");
 
-    git(["commit", "-q", "--allow-empty", "-m", "two"]); // a land
+    git(["commit", "-q", "--allow-empty", "-m", "two"]);
     const again = openLane({ main, pid: alive, name: "a", install: false });
     assert.deepEqual([again.lane, again.reused], [1, true], "/clear or a new conversation: the same session gets its lane back");
     assert.equal(git(["rev-parse", "HEAD"], again.wt), git(["rev-parse", "HEAD"]), "reset to main");
@@ -95,8 +93,6 @@ test("lanes are handed back, reused when idle, created when none is, and taken o
     assert.throws(() => takeLane(main, 1, { pid: alive, name: "d" }), /有人在用：.*分钟前有改动/);
     takeLane(main, 1, { pid: alive, name: "d", force: true });
     assert.equal(ownerOf(main, 1).name, "d");
-    // A session whose claude.exe is not found (magpie): the merge queue prunes lanes whose recorded
-    // pid is gone, so the check-in must stay out of its file (that deleted lane 21 once).
     takeLane(main, 3, { pid: null, name: "magpie", force: true });
     const queue = JSON.parse(readFileSync(path.join(main, ".git", "claude-code-merge-queue", "lane-owners.json"), "utf8"));
     assert.equal(queue[path.resolve(lanePath(main, 3)).toLowerCase()], undefined);

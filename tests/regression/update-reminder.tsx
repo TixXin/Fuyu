@@ -1,12 +1,8 @@
-// pnpm dev, then open /tests/regression/update-reminder.html (demo) or ?test=1 (checks).
-// The update check finds a made-up v0.3.4 (updateDemo.ts). The island shows its two reminders and
-// the settings window below its About page; all three share one updater, as in the app.
 import "./updateReminderEnv";
 import "./settingsMocks";
 import { act, StrictMode, type CSSProperties } from "react";
 import { createRoot } from "react-dom/client";
 import "../../src/styles/tokens.css";
-// Loads the island stylesheets in the same order as the app.
 import "../../src/windows/island/IslandApp";
 import { IslandShell } from "../../src/windows/island/IslandShell";
 import type { IslandMode } from "../../src/windows/island/types";
@@ -22,14 +18,12 @@ import { checkForUpdate, getUpdateState, reloadPreferences, setAutoCheck, setChe
 import { UPDATE_PREFERENCES_KEY } from "../../src/features/updater/storage";
 
 const automated = new URLSearchParams(location.search).has("test");
-// Only the checks wrap updates in act(); in the demo the download updates the page by itself.
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: automated });
 async function update(action: () => void | Promise<unknown>) {
   if (automated) await act(async () => { await action(); });
   else await action();
 }
 const NO_PLUGIN_NOTIFICATIONS: PluginNotificationsController = { notification: null, dismiss: () => {}, runAction: () => {}, post: () => {} };
-// Same values as MediaState::empty() in src-tauri/src/media_control/session.rs.
 const UNAVAILABLE_MEDIA: MediaState = {
   available: false, audioActive: false, audioPeak: 0, playbackStatus: "unavailable",
   title: null, artist: null, album: null, thumbnail: null, positionMs: 0, durationMs: 0,
@@ -38,7 +32,6 @@ const UNAVAILABLE_MEDIA: MediaState = {
   sessions: [], updatedAt: 0,
 };
 
-// A version skipped earlier would hide the reminder: start without one, and put it back on leaving.
 const savedPreferences = localStorage.getItem(UPDATE_PREFERENCES_KEY);
 localStorage.removeItem(UPDATE_PREFERENCES_KEY);
 reloadPreferences();
@@ -70,14 +63,12 @@ function Island({ mode }: { mode: IslandMode }) {
 const results = document.getElementById("results")!;
 
 async function mount() {
-  // The island's reminders open About through this request; here it is made up front.
   requestSettingsFocus("updates");
   await update(() => {
     createRoot(document.getElementById("collapsed")!).render(<StrictMode><Island mode="collapsed" /></StrictMode>);
     createRoot(document.getElementById("expanded")!).render(<StrictMode><Island mode="expanded" /></StrictMode>);
     createRoot(document.getElementById("settings")!).render(<StrictMode><I18nProvider><SettingsWindow /></I18nProvider></StrictMode>);
   });
-  // The island checks 20 s after launch; About checks when it opens. Wait for that check.
   await update(checkForUpdate);
 }
 

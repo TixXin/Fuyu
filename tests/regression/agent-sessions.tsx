@@ -1,6 +1,3 @@
-// pnpm dev, then open /tests/agent-sessions.html?test=1 (without ?test=1 the page is for visual QA;
-// add &empty=1 to see the empty state, &rows=N to size it for N rows like the island does,
-// &view=cards or &view=compact for the other layouts, &effects=sparkle or gradient on them).
 import { act, StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { mockIPC } from "@tauri-apps/api/mocks";
@@ -11,7 +8,6 @@ import type { AgentCardEffects, AgentHostDisplay, AgentSessionView } from "../..
 import type { AgentSessionSummary } from "../../src/features/agent-status/api";
 import { getAgentPageExpandedHeight } from "../../src/windows/island/layout";
 
-// Island padding, header and gap above the page content; see AGENT_PAGE_CHROME_HEIGHT in layout.ts.
 const ISLAND_CHROME_HEIGHT = 86;
 const fixture = document.getElementById("fixture")!;
 const sizeFor = (rows: number) => { fixture.style.height = `${getAgentPageExpandedHeight(rows) - ISLAND_CHROME_HEIGHT}px`; };
@@ -24,10 +20,8 @@ mockIPC((command, payload) => {
   if (command === "focus_agent_window") {
     const args = (payload ?? {}) as Record<string, unknown>;
     focusCalls.push(args);
-    // Only the fly-island session has a window to switch to.
     return args.cwd === "E:\\Projects\\fly-island";
   }
-  // A plugin renames Claude Code's efforts; Codex's are left alone.
   if (command === "list_agent_effort_labels") return { claudeCode: { medium: "xhigh", high: "max" } };
   if (command === "get_agent_host_icon") {
     return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
@@ -47,7 +41,6 @@ const SESSIONS: AgentSessionSummary[] = [
     provider: "claudeCode", sessionId: "a", cwd: "E:\\Projects\\fly-island", title: "设置界面完善思路",
     model: "Opus 5.5", effort: "medium", phase: "running", updatedAt: now - 20_000, turnStartedAt: now - 200_000,
     permissionMode: "bypass", subagents: 2,
-    // As long as the native side sends (120 characters), so it needs more than two lines.
     host: { name: "Orca", exe: "C:\\Apps\\orca\\Orca.exe", kind: "terminal" },
     lastMessage: "24 个测试全部通过。接下来用真实数据看看列表的实际效果和耗时，再决定要不要给第一句提问加缓存，顺便检查一下项目名是不是会话开始时的目录，以及跳转窗口时能不能按项目文件夹找到对应的编辑器窗口和终端窗口…",
   },
@@ -112,10 +105,8 @@ async function runChecks() {
       await new Promise((resolve) => setTimeout(resolve, 20));
     });
     check(third.classList.contains("agent-session--unseen") && titleTone(third) === titleTone(first) && titleTone(third) !== dimTitle && !first.classList.contains("agent-session--unseen"), "跑完还没看的会话标题保持亮色，看过的才变灰");
-    // The fly-island session has a window, so clicking it leaves no "not found" note behind.
     first.click();
     check(seenKeys.join() === "a", "点开会话就算看过");
-    // Looked at (roadmap B15): the waiting row keeps its words but loses its orange alarm.
     const lookedSessions = rows();
     check(lookedSessions[1].classList.contains("agent-session--looked") && meta(lookedSessions[1])?.startsWith("等待确认")
       && getComputedStyle(lookedSessions[1].querySelector(".agent-session__dot")!).boxShadow === "none"
@@ -196,7 +187,6 @@ async function runChecks() {
     await render("icon", { showElapsed: false });
     const iconRight = (row: HTMLElement) => row.querySelector(".agent-provider-icon")!.getBoundingClientRect().right;
     check(meta(first) === "2 个子 Agent · 刚刚" && meta(third) === "1 小时" && Math.abs(iconRight(first) - iconRight(third)) < 0.5 && Math.abs(iconRight(first) - iconRight(second)) < 0.5, "时间长短不同、有无来源时，右侧图标仍在同一列");
-    // The fixture is the island's content box; the island's edge is its 20px side padding further out.
     const dotGap = first.querySelector(".agent-session__dot")!.getBoundingClientRect().left - (fixture.getBoundingClientRect().left - 20);
     const iconGap = fixture.getBoundingClientRect().right + 20 - iconRight(first);
     check(Math.abs(dotGap - 20) < 1 && Math.abs(iconGap - 20) < 1, "圆点和右侧图标都距岛屿边缘 20px，和顶部栏对齐");
@@ -261,7 +251,6 @@ async function runChecks() {
     const usageList = document.querySelector<HTMLElement>(".agent-sessions__list")!;
     check(usageList.scrollHeight <= usageList.clientHeight + 1, "加上用量行后，设为 3 条时仍放下 3 个会话");
     check(usage!.getBoundingClientRect().width > usageList.getBoundingClientRect().width - 20, "悬停卡片的外壳不改变用量行的宽度");
-    // The pointer in the middle of the line, right where a centred card would sit under it.
     const line = usage!.getBoundingClientRect();
     const clear = (pointer: number) => {
       const box = document.querySelector<HTMLElement>(".island-hover-card")!.getBoundingClientRect();
@@ -279,7 +268,6 @@ async function runChecks() {
     check(clear(pointer), "鼠标沿着用量行移动时，卡片继续避开指针");
     await act(async () => { usage!.parentElement!.dispatchEvent(new PointerEvent("pointerout", { bubbles: true, relatedTarget: document.body })); });
 
-    // Codex reporting limits too: a second line, and the page sized for both.
     const readAt = Date.now();
     const usages = {
       claude: { updatedAt: readAt, plan: null, fiveHour: { name: "", used: 27, resetsAt: null }, sevenDay: null, models: [] },
@@ -312,7 +300,6 @@ async function runChecks() {
     await act(async () => { third.click(); await new Promise((resolve) => setTimeout(resolve, 20)); });
     check(third.querySelector(".agent-session__not-found")?.textContent === "没找到对应的窗口，会话可能已经关掉了", "已结束的会话找不到窗口时说明可能已关掉");
 
-    // A finished reply that asks something: yellow and named, without the reply status marker.
     await act(async () => {
       root.render(<StrictMode><I18nProvider><AgentSessionsPanel sort="recent" sessions={[{ ...SESSIONS[2], sessionId: "d", replyAsks: true }]} hostDisplay="both" /></I18nProvider></StrictMode>);
       await new Promise((resolve) => setTimeout(resolve, 20));
@@ -337,7 +324,6 @@ async function runChecks() {
       todos?.textContent === "2/5 步" && todos.title === "正在：正在写解析" && meta(planned)?.includes("2 个后台任务") && planned.getBoundingClientRect().height < 90,
       `状态行显示任务清单进度和后台任务数，鼠标停上去看正在做的一步，行高不变：${meta(planned)}`,
     );
-    // Last: it swaps the list for one remote row, which the checks above would not find.
     const remote: AgentSessionSummary = {
       ...sessions[0], sessionId: "local-api/r-1", provider: "codex", cwd: "/srv/app", title: "服务器上的会话",
       host: { name: "dev-box", exe: null, kind: "remote" }, remoteHost: "dev-box",
@@ -353,7 +339,6 @@ async function runChecks() {
     check(focusCalls.length === remoteFocuses + 1 && remoteCall?.sessionId === "" && remoteCall?.cwd === "/srv/app" && remoteCall?.title === "服务器上的会话",
       "点远程会话按标题和文件夹找连着服务器的本地窗口，不带会话 ID");
     check(rows()[0].querySelector(".agent-session__not-found")?.textContent === "没找到连着 dev-box 的终端或编辑器窗口", "找不到时说明没有连着那台机器的窗口");
-    // The card and compact layouts (Settings), each sized by its own row height.
     const renderView = async (view: AgentSessionView) => {
       fixture.style.height = `${getAgentPageExpandedHeight(3, 0, view) - ISLAND_CHROME_HEIGHT}px`;
       await act(async () => {

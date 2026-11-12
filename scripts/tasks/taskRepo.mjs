@@ -1,6 +1,3 @@
-// Task files on disk: open ones in docs/tasks/<group>/, closed ones in
-// docs/tasks/0-archive/<group>/ (the group is the id's first letter), the group table in
-// docs/tasks/README.md; and whether a claim still holds.
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, statSync, writeFileSync } from "node:fs";
 import path from "node:path";
@@ -12,7 +9,6 @@ export const TASKS_DIR = "docs/tasks";
 export const ARCHIVE_DIR = "docs/tasks/0-archive";
 const README = "docs/tasks/README.md";
 
-/** Where task `id` belongs, relative to the repo: docs/tasks/F/F15.md, or under 0-archive/ once closed. */
 export function taskPath(id, closed) {
   return `${closed ? ARCHIVE_DIR : TASKS_DIR}/${groupOf(id)}/${id}.md`;
 }
@@ -45,7 +41,6 @@ function readFiles(root, dir, archived, folder) {
     });
 }
 
-/** Task files in `dir` and its group folders; files directly in `dir` come back with folder "" (check flags them). */
 function readDir(root, dir, archived) {
   if (!existsSync(path.join(root, dir))) return [];
   const folders = readdirSync(path.join(root, dir))
@@ -53,12 +48,10 @@ function readDir(root, dir, archived) {
   return [readFiles(root, dir, archived, ""), ...folders.map((folder) => readFiles(root, `${dir}/${folder}`, archived, folder))].flat();
 }
 
-/** Every task file as `{ file, id, archived, folder, task?, error? }` (file relative to the repo); open ones first. */
 export function readEntries(root) {
   return [...readDir(root, TASKS_DIR, false), ...readDir(root, ARCHIVE_DIR, true)];
 }
 
-/** Every task that parses. */
 export function readAll(root) {
   return readEntries(root).filter((entry) => entry.task).map((entry) => entry.task);
 }
@@ -68,12 +61,10 @@ export function readGroups(root) {
   return existsSync(file) ? parseGroups(readFileSync(file, "utf8")) : [];
 }
 
-/** Every problem with the task files. */
 export function checkTasks(root) {
   return checkEntries(readEntries(root), readGroups(root));
 }
 
-/** Where task `id` is now (absolute), or null. */
 export function findTask(root, id) {
   for (const closed of [false, true]) {
     const file = path.join(root, taskPath(id, closed));
@@ -88,7 +79,6 @@ export function load(root, id) {
   return parseTask(readFileSync(file, "utf8"));
 }
 
-/** Writes `task` to the folder its status belongs in, moving it (with git when tracked) if it was in the other. */
 export function save(root, task) {
   const target = path.join(root, taskPath(task.fields.id, CLOSED_STATUSES.includes(task.fields.status)));
   const current = findTask(root, task.fields.id);
@@ -128,7 +118,6 @@ function alive(pid) {
   }
 }
 
-/** Why a claim no longer holds, or null: its lane is gone, the session that made the lane exited, or a day without moves. */
 export function staleReason({ fields }, { laneExists, laneOwnerName, ownerPidAlive, lastLaneCommitMs, now = Date.now() }) {
   if (fields.status !== "进行中" || !fields.lane) return null;
   if (!laneExists) return `lane ${fields.lane} 已不存在`;
@@ -152,7 +141,6 @@ function laneFacts(main, lane) {
   };
 }
 
-/** `staleReason` for `task` against the lanes next to the main checkout `main`. */
 export function staleOf(main, task) {
   return task.fields.lane ? staleReason(task, laneFacts(main, task.fields.lane)) : null;
 }

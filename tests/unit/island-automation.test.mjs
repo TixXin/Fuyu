@@ -9,7 +9,6 @@ const source = ts.transpileModule(
   { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } },
 ).outputText;
 
-// A deterministic hook clock lets these checks cover long idle periods and cleanup without sleeping.
 function mount(name, initialArgs) {
   let args = initialArgs;
   let now = 0;
@@ -22,7 +21,6 @@ function mount(name, initialArgs) {
   let pending = [];
   const browserWindow = new EventTarget();
   const removeEventListener = browserWindow.removeEventListener.bind(browserWindow);
-  // Node's EventTarget needs an options object to remove capture listeners reliably.
   browserWindow.removeEventListener = (type, listener, capture) =>
     removeEventListener(type, listener, { capture: capture === true });
   browserWindow.setTimeout = (callback, delay) => {

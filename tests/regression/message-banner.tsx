@@ -1,10 +1,8 @@
-// pnpm dev, then open /tests/regression/message-banner.html (demo) or ?test=1 (checks).
 import { act, StrictMode, useState, type CSSProperties } from "react";
 import { createRoot } from "react-dom/client";
 import { mockIPC } from "@tauri-apps/api/mocks";
 import { emit } from "@tauri-apps/api/event";
 import "../../src/styles/tokens.css";
-// Loads the island stylesheets in the same order as the app.
 import "../../src/windows/island/IslandApp";
 import { IslandShell } from "../../src/windows/island/IslandShell";
 import { useLatestMessagePreview } from "../../src/windows/island/useLatestMessagePreview";
@@ -20,12 +18,10 @@ import type { MediaState } from "../../src/features/media/api";
 
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
 const automated = new URLSearchParams(location.search).has("test");
-// act() only when checking; the demo lets React render on its own.
 async function update(action: () => void | Promise<void>) {
   if (automated) await act(action);
   else await action();
 }
-// Same values as MediaState::empty() in src-tauri/src/media_control/session.rs.
 const UNAVAILABLE_MEDIA: MediaState = {
   available: false, audioActive: false, audioPeak: 0, playbackStatus: "unavailable",
   title: null, artist: null, album: null, thumbnail: null, positionMs: 0, durationMs: 0,

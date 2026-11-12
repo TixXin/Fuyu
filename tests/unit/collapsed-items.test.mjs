@@ -22,7 +22,6 @@ test("a new item goes right after the item that comes before it by default", () 
   const saved = [{ id: "status-light", zone: "left" }, { id: "music", zone: "left" }, { id: "session-count", zone: "right" }, { id: "mail", zone: "right" }];
   const placements = arrangeCollapsedItems(["status-light", "music", "session-count", "mail", "usage:glm", "update"], saved);
   assert.deepEqual(ids(placements), ["l:status-light", "l:music", "r:session-count", "r:mail", "r:update", "r:usage:glm"]);
-  // Nothing before it by default in its zone: first in the zone.
   assert.deepEqual(ids(arrangeCollapsedItems(["session-count", "mail"], [{ id: "session-count", zone: "right" }])), ["r:mail", "r:session-count"]);
 });
 

@@ -1,5 +1,3 @@
-// pnpm dev, then open /tests/regression/settings-sidebar.html. The settings window's page list on
-// its own: search, the folding AI Agent item and About at the bottom. ?page=<category> starts there.
 import { act, StrictMode, useState } from "react";
 import { createRoot } from "react-dom/client";
 import "../../src/styles/tokens.css";

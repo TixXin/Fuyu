@@ -23,7 +23,6 @@ function done(id, fields = {}, commit = "`feat(x): y`") {
   return task(id, { status: "已完成", owner: "s", done: "2026-11-09", ...fields }, `## 提交\n\n- ${commit}`);
 }
 
-/** Problems for tasks given as [task, archived?]; files are named after the ids. */
 function problems(...entries) {
   return checkEntries(entries.map(([t, archived = false]) => ({ id: t.fields.id, archived, task: t })), GROUPS);
 }

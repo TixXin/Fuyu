@@ -1,6 +1,3 @@
-// pnpm dev, then open /tests/settings.html. Without ?test=1 the page is for visual QA:
-// ?page=<category> opens that page, ?locale=en switches the language.
-// ?test=1 runs the checks below; resize the viewport to 580px wide to cover the narrowest window.
 import { act, StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "../../src/styles/tokens.css";
@@ -25,7 +22,6 @@ const restore = () => {
 window.addEventListener("beforeunload", restore);
 
 localStorage.setItem(LOCALE_STORAGE_KEY, query.get("locale") === "en" ? "en" : "zh-CN");
-// The checks below expect a customized look plus a General page choice that a reset must keep.
 if (automated) localStorage.setItem("fuyu-settings", JSON.stringify({ opacity: 60, carryOverIncompleteTodos: false }));
 else localStorage.removeItem("fuyu-settings");
 localStorage.setItem("fuyu-save-directory", "");
@@ -48,12 +44,10 @@ const click = async (selector: string) => {
   const target = element<HTMLButtonElement>(selector);
   await act(async () => { target.click(); });
 };
-/** Types into a controlled input the way a user would, so React sees the change. */
 const type = async (input: HTMLInputElement, value: string) => {
   const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!;
   await act(async () => { setter.call(input, value); input.dispatchEvent(new Event("input", { bubbles: true })); });
 };
-/** The texts of the elements a selector finds, joined by "|". */
 const texts = (selector: string) => [...document.querySelectorAll(selector)].map((found) => found.textContent ?? "").join("|");
 const backButton = () => [...document.querySelectorAll<HTMLButtonElement>("button")].find((button) => button.textContent === "返回插件列表");
 const onPluginPage = () => Boolean(backButton());
@@ -64,7 +58,6 @@ const categories = () =>
 
 if (!automated) {
   mount();
-  // Old names of merged pages (qq, wechat, mail) open the page they became.
   const page = settingsCategoryFor(query.get("page") ?? "");
   const openRequestedPage = () => {
     const item = document.querySelector<HTMLButtonElement>(`.settings-sidebar__item[data-category='${page}']`);
@@ -108,7 +101,6 @@ if (!automated) {
     check(revokedPermissions.includes("uri"), "Revoking the link answer forgets it like a sensitive permission");
     await backToList();
 
-    // The market has its own page.
     await openPage("market");
     await act(async () => { await new Promise((resolve) => setTimeout(resolve, 50)); });
     const groupTitles = () => texts(".plugin-market__group-title");
@@ -141,7 +133,6 @@ if (!automated) {
     check(document.querySelectorAll("[title]").length === 0, "No hover tooltips anywhere in Settings");
     const verifiedItem = verifiedBadges[0]?.closest<HTMLElement>(".plugin-market__item");
     check(verifiedItem && verifiedItem.scrollWidth <= verifiedItem.clientWidth, "The verified mark does not make the market overflow");
-    // The update above was installed, so the plugin is current now and listed with the other installed ones.
     check(groupTitles() === "可安装（1）|已安装（1）" && !document.querySelector(".plugin-market__toggle")
       && document.querySelectorAll(".plugin-market__grid").length === 2, "Installed plugins are listed at once, last, cards in a grid (issue #16)");
     const categoryButton = (label: string) => [...document.querySelectorAll<HTMLButtonElement>(".plugin-market__category")].find((item) => item.textContent?.startsWith(label));
@@ -227,7 +218,6 @@ if (!automated) {
     await act(async () => { glassButton!.click(); });
     check(document.querySelectorAll(".island-preview__island--glass").length === 2, "Choosing liquid glass shows on both preview islands");
     await openPage("appearance");
-    // Items on the collapsed bar (C12): the default layout, then moving, hiding and resetting.
     const zoneRows = (name: string) => [...(document.querySelector(`.collapsed-items__zone[aria-label="${name}"]`)?.querySelectorAll(".plugin-pages__name") ?? [])].map((row) => row.textContent);
     const itemButton = (label: string) => document.querySelector<HTMLButtonElement>(`.collapsed-items button[aria-label="${label}"]`);
     const savedItems = () => JSON.parse(localStorage.getItem("fuyu-collapsed-items") ?? "null") as { items: { id: string; zone: string; hidden?: boolean }[] } | null;
@@ -241,7 +231,6 @@ if (!automated) {
     await act(async () => { [...document.querySelectorAll<HTMLButtonElement>(".collapsed-items__reset")][0].click(); });
     check(savedItems() === null && zoneRows("左侧").join("|") === "Agent 状态灯", "Reset to default clears the saved order");
 
-    // Settings → Theme market (C26): a card per theme, Apply changes the look only, Save adds a saved theme.
     await openPage("themeMarket");
     await act(async () => { await new Promise((resolve) => setTimeout(resolve, 30)); });
     const card = (id: string) => document.querySelector<HTMLElement>(`.theme-market__item[data-theme-id="${id}"]`)!;
@@ -258,7 +247,6 @@ if (!automated) {
     check(cardButton("focusd.midnight", "已保存")?.disabled && (localStorage.getItem("fuyu-setting-presets") ?? "").includes("午夜蓝"),
       "Save adds the theme to the saved themes");
 
-    // Settings → Music: the music wave switch is the collapsed bar's "music" item.
     await openPage("music");
     const waveRow = [...document.querySelectorAll<HTMLElement>(".settings-row")].find((row) => row.querySelector(".settings-row__title")?.textContent === "在收起的岛上显示音乐波形");
     const waveSwitch = () => waveRow?.querySelector<HTMLInputElement>("input");
@@ -270,7 +258,6 @@ if (!automated) {
     localStorage.removeItem("fuyu-collapsed-items");
 
     await openPage("behavior");
-    // Issue #29: what keeps the island out of the idle tuck, under the auto-tuck switch.
     const holdRow = (title: string) => [...document.querySelectorAll<HTMLElement>(".settings-row")].find((row) => row.querySelector(".settings-row__title")?.textContent === title)?.querySelector<HTMLInputElement>("input");
     check(!holdRow("有正在进行的待办时不收起"), "Idle tuck holds are hidden while idle tuck is off");
     await act(async () => { holdRow("闲置时贴边隐藏")!.click(); });
@@ -324,7 +311,6 @@ if (!automated) {
     check(saved.accounts?.some((account) => account.email === "new@example.edu.cn" && account.host === "imap.example.edu.cn"),
       "The typed server is saved with the mailbox");
 
-    // AI Agent has its own group: on the island, session list, alerts, sounds, approvals and the hooks each on a page.
     const agentGroup = [...document.querySelectorAll<HTMLElement>(".settings-sidebar__group")].find((group) => group.getAttribute("aria-label") === "AI Agent");
     check([...(agentGroup?.querySelectorAll(".settings-sidebar__item") ?? [])].map((item) => item.textContent).join("|") === "岛上显示|会话列表|提醒|声音|审批|连接|SSH 远程", "AI Agent is its own sidebar group with on the island, session list, alerts, sounds, approvals, connection and SSH remote");
     await openPage("agentConnect");
@@ -365,7 +351,6 @@ if (!automated) {
       [...document.querySelectorAll<HTMLButtonElement>(".settings-link-button")].find((button) => button.textContent === label);
     await act(async () => { aboutLink("重置")!.click(); });
     check(aboutLink("确认重置") && aboutLink("取消"), "Reset all settings asks first");
-    // The appearance reset above kept the todo setting, so it is the one that shows a full reset.
     check(storedSettings().carryOverIncompleteTodos === false, "Asking changes nothing yet");
     await act(async () => { aboutLink("确认重置")!.click(); });
     await act(async () => { await new Promise(resolve => setTimeout(resolve, 20)); });

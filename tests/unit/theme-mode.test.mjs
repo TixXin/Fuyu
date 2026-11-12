@@ -11,7 +11,6 @@ test("the island uses the dark or light set, or the system's (C31, C33.3)", () =
   assert.equal(resolveThemeColors({ ...tuned, themeMode: "light" }, true).islandBackgroundColor, THEME_COLORS.light.islandBackgroundColor);
   assert.equal(resolveThemeColors({ ...tuned, themeMode: "system" }, true).islandBackgroundColor, "#102030");
   assert.equal(resolveThemeColors({ ...tuned, themeMode: "system" }, false).taskTextColor, THEME_COLORS.light.taskTextColor);
-  // Adjusting one set leaves the other as it was.
   assert.deepEqual(themeColors(tuned, "light"), THEME_COLORS.light);
   assert.ok(isLightIsland(THEME_COLORS.light.islandBackgroundColor));
   assert.ok(!isLightIsland(THEME_COLORS.dark.islandBackgroundColor));
@@ -27,7 +26,6 @@ test("settings from before the two sets keep their colours, in the set they look
   const lightPick = normalizeSettings({ islandBackgroundColor: "#fafafa", taskTextColor: "#111111", pulseColor: "#3ae489" });
   assert.equal(lightPick.themeMode, "light");
   assert.equal(lightPick.lightBackgroundColor, "#fafafa");
-  // C31's built-in modes showed the shipped sets.
   assert.equal(normalizeSettings({ themeMode: "system", islandBackgroundColor: "#336699" }).darkBackgroundColor, THEME_COLORS.dark.islandBackgroundColor);
   assert.equal(normalizeSettings({ themeMode: "sepia" }).themeMode, "dark");
 });
@@ -59,7 +57,6 @@ test("the accent ships as it was, and can follow Windows or be picked (C33.5)", 
   assert.equal(normalizeSettings({}).accentMode, "default");
   assert.equal(normalizeSettings({ accentMode: "windows" }).accentMode, "windows");
   assert.equal(normalizeSettings({ accentMode: "neon", accentColor: "red" }).accentColor, DEFAULT_SETTINGS.accentColor);
-  // No accent: the stage leaves --color-accent to the default and the light island's own.
   assert.deepEqual(accentVariables(null), {});
   const style = accentVariables("#0078d4");
   assert.equal(style["--color-accent"], "#0078d4");

@@ -1,6 +1,3 @@
-// pnpm dev, then open /tests/regression/plugin-views.html (add ?test=1 for the checks).
-// Every plugin page template at the island's width and a narrow one, with long
-// texts, empty states and hostile Markdown. IPC is mocked: actions are only logged.
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { mockIPC } from "@tauri-apps/api/mocks";
@@ -10,7 +7,6 @@ import { DetailTemplate } from "../../src/features/plugin-views/templates/Detail
 import { FormTemplate } from "../../src/features/plugin-views/templates/FormTemplate";
 import { ListTemplate } from "../../src/features/plugin-views/templates/ListTemplate";
 import { StatusTemplate } from "../../src/features/plugin-views/templates/StatusTemplate";
-// After the templates, as PluginViewPage.tsx loads it: the page frame comes last in the app too.
 import "../../src/features/plugin-views/PluginViewPage.css";
 
 const sent: string[] = [];
@@ -128,7 +124,6 @@ function check() {
   }
   const title = document.querySelector<HTMLElement>('[data-case="list-300"] .plugin-list__item:nth-of-type(2) .plugin-list__title');
   expect("long titles are cut with an ellipsis", title !== null && title.scrollWidth > title.clientWidth && getComputedStyle(title).textOverflow === "ellipsis");
-  // E16: list pages sit on the island like the Agent page; the other templates keep their card.
   const listPage = document.querySelector<HTMLElement>('[data-case="list-520"] .plugin-view')!;
   const row = document.querySelector<HTMLElement>('[data-case="list-520"] .plugin-list__item')!;
   expect("a list page has no card of its own", getComputedStyle(listPage).backgroundImage === "none" && getComputedStyle(listPage).boxShadow === "none");

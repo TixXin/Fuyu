@@ -1,8 +1,5 @@
-// What `pnpm tasks`, `pnpm tasks next` and `pnpm tasks show` print. Pure functions over
-// the parsed tasks; `stale(task)` says why a claim no longer holds (taskRepo.mjs).
 import { CLOSED_STATUSES, OPEN_STATUSES, compareIds, groupOf, sectionText } from "./taskFile.mjs";
 
-/** Tasks by id, with each task's children. */
 export function index(tasks) {
   const byId = new Map(tasks.map((task) => [task.fields.id, task]));
   const children = new Map();
@@ -13,19 +10,16 @@ export function index(tasks) {
   return { byId, children };
 }
 
-/** The dependencies of `task` that are still open. */
 export function blockers(task, byId) {
   return task.fields.depends.filter((id) => byId.has(id) && !CLOSED_STATUSES.includes(byId.get(id).fields.status));
 }
 
-/** `{ done, total }` over a parent's children, or null for a task without any. */
 export function progress(task, children) {
   const list = children.get(task.fields.id) ?? [];
   if (list.length === 0) return null;
   return { done: list.filter((child) => CLOSED_STATUSES.includes(child.fields.status)).length, total: list.length };
 }
 
-/** Whether the task is the user's own: only they can do it, or it waits for their answer. */
 export function forUser(task) {
   return task.fields.needs === "user" || task.fields.status === "待用户确认";
 }
@@ -42,7 +36,6 @@ function orderBy(groups) {
   return (a, b) => rank(a) - rank(b) || compareIds(a.fields.id, b.fields.id);
 }
 
-/** One row per task for `pnpm tasks --json` (read by the island's task board plugin). */
 export function jsonRows(tasks, { stale, all = false }) {
   const { byId, children } = index(tasks);
   return tasks
@@ -83,7 +76,6 @@ function rows(task, context, depth) {
   return lines;
 }
 
-/** The board: what needs the user first, then each group in the README's order; children under their parent. */
 export function boardLines(tasks, { groups, stale, all = false }) {
   const { byId, children } = index(tasks);
   const listed = tasks.filter((task) => all || OPEN_STATUSES.includes(task.fields.status)).sort(orderBy(groups));
@@ -112,7 +104,6 @@ export function boardLines(tasks, { groups, stale, all = false }) {
   return lines;
 }
 
-/** What an agent can claim now: 待做, not the user's own, nothing it waits on, not a parent of open work. In board order. */
 export function claimable(tasks, groups) {
   const { byId, children } = index(tasks);
   return tasks
@@ -138,12 +129,10 @@ export function nextLines(tasks, { groups, stale }) {
   return lines;
 }
 
-/** Repo paths linked from the body, e.g. /docs/architecture/x.md. */
 export function linkedPaths(body) {
   return [...body.matchAll(/\]\((\/[^)#\s]+)/g)].map((match) => match[1].slice(1));
 }
 
-/** The relations `pnpm tasks show` adds below the file: parent, children, dependencies, dependents. */
 export function relationLines(task, tasks, { exists }) {
   const { byId, children } = index(tasks);
   const line = (other) => `  ${other.fields.id.padEnd(9)} ${other.fields.status.padEnd(5)} ${other.fields.title}`;

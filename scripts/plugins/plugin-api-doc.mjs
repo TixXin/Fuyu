@@ -1,9 +1,3 @@
-// docs/plugins/api.md: the plugin protocol reference, written from
-// plugins/schema/rpc.json by `pnpm sdk:build` (see build-plugin-sdk.mjs).
-// One section per area and one block per method, so the page reads as a
-// reference (and the website's contents list can jump to a method) instead
-// of one table too wide to read. The descriptions are rpc.json's own, in English.
-
 const code = (value) => `\`${value}\``;
 const text = (value) => String(value ?? "").replaceAll("\n", " ").trim();
 const cell = (value) => text(value).replaceAll("|", "\\|");
@@ -12,7 +6,6 @@ function table(head, rows) {
   return [`| ${head.join(" | ")} |`, `|${head.map(() => "---").join("|")}|`, ...rows.map((row) => `| ${row.join(" | ")} |`)].join("\n");
 }
 
-/** Where each method goes, in reading order; anything not listed lands in the last group. */
 const GROUPS = [
   { title: "宿主、设置与运行信息", match: (name) => /^(host|settings|ui)\./.test(name) },
   { title: "权限", match: (name) => name.startsWith("permissions.") },

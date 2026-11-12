@@ -14,7 +14,6 @@ test("the clock counts only playing time and restarts for another track", () => 
   assert.equal(clockPosition(clock, 60_000), 4000);
   clock = advanceClock(clock, "余香", true, 70_000);
   assert.equal(clockPosition(clock, 71_000), 5000);
-  // Readings that change nothing keep the same clock.
   assert.equal(advanceClock(clock, "余香", true, 72_000), clock);
   clock = advanceClock(clock, "晴天", false, 80_000);
   assert.equal(clockPosition(clock, 90_000), 0);
@@ -36,12 +35,10 @@ test("aligning sets the position and makes the clock trusted", () => {
 });
 
 test("a track the player says started at a time is timed from then, even after the poll saw it", () => {
-  // The poll found the new track at 10.0 s; the player says its sound began at 9.2 s.
   const polled = advanceClock(advanceClock(NO_CLOCK, "余香", true, 0), "晴天", true, 10_000);
   const clock = startClockAt(polled, "晴天", true, 9200, 10_300);
   assert.equal(clockPosition(clock, 11_200), 2000);
   assert.equal(clock.fromStart, true);
-  // A track the island had not seen yet starts there too, and counts as timed from its start.
   assert.equal(clockPosition(startClockAt(NO_CLOCK, "晴天", true, 9200, 9500), 10_200), 1000);
   assert.equal(startClockAt(NO_CLOCK, "晴天", true, 9200, 9500).fromStart, true);
 });
@@ -52,15 +49,12 @@ test("a start the clock is already well past leaves it alone", () => {
 });
 
 test("a play or pause a poll saw first is moved back to when the player says it happened", () => {
-  // Playing since 0; the player paused at 10.0 s, a poll under way saw it at 10.4 s.
   const polledPause = advanceClock(advanceClock(NO_CLOCK, "余香", true, 0), "余香", false, 10_400);
   const paused = settleClockAt(polledPause, "余香", false, 10_000, 10_450);
   assert.equal(clockPosition(paused, 20_000), 10_000);
-  // It played again at 30.0 s; the poll saw that at 30.3 s.
   const polledPlay = advanceClock(paused, "余香", true, 30_300);
   const playing = settleClockAt(polledPlay, "余香", true, 30_000, 30_350);
   assert.equal(clockPosition(playing, 31_000), 11_000);
-  // An event long before the poll's reading is not taken for this change.
   assert.equal(settleClockAt(polledPlay, "余香", true, 20_000, 30_350), polledPlay);
 });
 
@@ -69,7 +63,6 @@ test("a command's answer without a position keeps the island's timing of the sam
   const answer = { ...current, positionMs: 0, updatedAt: 9000, positionEstimate: undefined };
   assert.equal(keepIslandTimeline(answer, current).positionMs, 42_000);
   assert.equal(keepIslandTimeline(answer, current).updatedAt, 5000);
-  // Another track, or a player that reports its position, is taken as it is.
   assert.equal(keepIslandTimeline({ ...answer, title: "董小姐" }, current).positionMs, 0);
   assert.equal(keepIslandTimeline({ ...answer, positionMs: 1000, durationMs: 200_000 }, current).positionMs, 1000);
 });

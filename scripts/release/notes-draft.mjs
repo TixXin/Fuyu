@@ -1,22 +1,12 @@
-// The first draft of docs/releases/v<version>.md that `pnpm release:version`
-// writes: the opening and closing paragraphs every release has, and the
-// feat/fix/perf commits since the release it follows, to be rewritten for users.
-// The draft carries DRAFT_MARKER; release.mjs refuses to publish while it is there.
 import { compareVersions, isPrerelease } from "./channel.mjs";
 import { isVersion } from "./versions.mjs";
 
 export const DRAFT_MARKER = "<!-- release-notes-draft -->";
 
-/** Scopes whose commits never reach users: development tools and the release itself. */
 const INTERNAL_SCOPES = new Set(["tooling", "release", "tasks", "docs", "ci"]);
 const ZH_ORDINALS = ["一", "二", "三", "四", "五", "六", "七", "八", "九", "十"];
 const EN_ORDINALS = ["first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", "tenth"];
 
-/**
- * The tag the notes count from: for a beta the newest earlier release of any
- * kind; for a final release the newest earlier final one, so its notes cover
- * its betas too. Null when there is none.
- */
 export function baseTag(version, tags) {
   const earlier = tags
     .filter((tag) => isVersion(tag.replace(/^v/, "")))
@@ -26,7 +16,6 @@ export function baseTag(version, tags) {
   return earlier.at(-1) ?? null;
 }
 
-/** Commits worth a line in the notes: feat, fix and perf outside the internal scopes. */
 export function userFacingCommits(commits) {
   return commits.filter(({ subject }) => {
     const match = /^(feat|fix|perf)(?:\(([^)]+)\))?!?:/.exec(subject);
@@ -39,7 +28,6 @@ function betaNumber(version) {
   return Number.isInteger(number) && number > 0 ? number : null;
 }
 
-/** The draft notes for `version`; `commits` are { hash, subject } since `base`. */
 export function draftNotes(version, base, commits) {
   const core = version.replace(/-.*/, "");
   const beta = isPrerelease(version);

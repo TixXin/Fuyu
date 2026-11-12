@@ -6,7 +6,6 @@ import { en, zhCN } from "../../src/i18n/sections/claudeUsage.ts";
 const NOW = Date.parse("2026-11-06T08:00:00Z");
 const MINUTE = 60_000;
 
-// Shaped like AgentUsage from get_agent_usage (claude-hud's snapshot).
 function usage(overrides = {}) {
   return {
     updatedAt: NOW - MINUTE,
@@ -80,14 +79,11 @@ test("card handles missing reset times, past resets and missing snapshots", () =
 test("asking Anthropic directly: its numbers name the source, its failures add a line", () => {
   assert.deepEqual(texts(usageCardLines(usage({ source: "api" }), NOW, zhCN)).slice(2), ["1 分钟前更新 · 来自 Anthropic"]);
   assert.deepEqual(texts(usageCardLines(usage({ source: "magpie" }), NOW, en)).slice(2), ["updated 1 min ago · from magpie"]);
-  // A failure keeps the fresh numbers coloured and says why.
   const failed = usageCardLines(usage({ source: "hud", error: { kind: "loginRequired", message: "" } }), NOW, zhCN);
   assert.deepEqual(texts(failed).slice(2), ["需要在 Claude Code 里重新登录", "1 分钟前更新 · 来自 claude-hud"]);
   assert.equal(failed[0].color, USAGE_COLORS.normal);
-  // No numbers at all: the reason, without an age.
   const empty = usage({ fiveHour: null, sevenDay: null, updatedAt: null, error: { kind: "noProxy", message: "" } });
   assert.deepEqual(texts(usageCardLines(empty, NOW, en)), [en.noData, en.errors.noProxy]);
-  // Every error kind has text in both languages.
   for (const kind of ["noCredentials", "tokenExpired", "loginRequired", "forbidden", "rateLimited", "noProxy", "network", "http", "invalidResponse"]) {
     assert.ok(zhCN.errors[kind] && en.errors[kind], kind);
   }
@@ -120,7 +116,6 @@ test("with a provider the card starts with its name and plan in its colour", () 
     "GLM · GLM Coding Pro", "5h 42% · resets in 2h 13m", "7d 17% · resets in 3d 4h", "MCP month 5%", "updated 1 min ago · from Zhipu's open platform",
   ]);
   assert.deepEqual(texts(usageCardLines(null, NOW, zhCN, false, provider("codex"))), ["Codex", zhCN.noUsage.codex]);
-  // GLM or Kimi without a key: the provider's hint and the key's reason, not Claude's login.
   const noKey = usage({ source: "glm", fiveHour: null, sevenDay: null, updatedAt: null, plan: null, error: { kind: "noCredentials", message: "" } });
   assert.deepEqual(texts(usageCardLines(noKey, NOW, zhCN, false, provider("glm"))), ["GLM", zhCN.noUsage.glm, "还没有保存 API Key，请在插件页填写"]);
   for (const kind of Object.keys(zhCN.errors)) assert.ok(zhCN.planErrors[kind] && en.planErrors[kind], kind);

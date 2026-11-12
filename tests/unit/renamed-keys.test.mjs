@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { copyRenamedKeys, renamedKey } from "../../src/lib/renamedKeys.ts";
 
-/** A Storage with the parts copyRenamedKeys uses. */
 function memoryStorage(entries, { full = false } = {}) {
   const map = new Map(Object.entries(entries));
   return {
@@ -41,7 +40,6 @@ test("old keys are copied, new keys win, and the old ones stay", () => {
     "other-app": "x",
     "fuyu-settings": '{"theme":"old"}',
   });
-  // A second start copies nothing, even after the old version wrote again.
   storage.setItem("focusd-island-settings", '{"theme":"newer in the old version"}');
   assert.equal(copyRenamedKeys(storage), 0);
   assert.equal(storage.getItem("fuyu-settings"), '{"theme":"old"}');

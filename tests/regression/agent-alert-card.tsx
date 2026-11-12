@@ -1,8 +1,3 @@
-// pnpm dev, then open /tests/regression/agent-alert-card.html. Drives useIslandAgentAlerts, where
-// the pop-up alert and the permission card meet, with the agent hook endpoint mocked. The bug it
-// guards: an alert opened the Agent page for a waiting session, the card came onto it, the user
-// pressed the card, and once the card went (answered on the island or in the terminal) the island
-// stayed open for good.
 import { act, StrictMode, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { emit } from "@tauri-apps/api/event";
@@ -17,7 +12,6 @@ import type { IslandPage } from "../../src/windows/island/types";
 
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
 localStorage.setItem(AGENT_APPROVAL_STORAGE_KEY, JSON.stringify({ onIsland: true, whenInFront: false }));
-// The island holds the focus while the cursor rests on it; headless pages report focus on their own.
 Object.defineProperty(document, "hasFocus", { value: () => false });
 const decisions: string[] = [];
 let watchingOutside = false;
@@ -33,7 +27,6 @@ mockIPC(
   { shouldMockEvents: true },
 );
 
-// Long enough that the alert's own timer does not close the page during the checks.
 const SETTINGS: IslandSettings = { ...DEFAULT_SETTINGS, agentAlertSeconds: 30, agentRemindSeconds: 0 };
 const session = (phase: AgentSessionSummary["phase"]): AgentSessionSummary => ({
   provider: "claudeCode", sessionId: "s1", cwd: null, title: "s1", model: null, effort: null,
@@ -77,7 +70,6 @@ function check(condition: unknown, label: string) {
 }
 const results = document.getElementById("results")!;
 
-/** An alert opens the page for a waiting session, then the card comes and the user presses it. */
 async function waitThenCard(id: number) {
   await act(async () => setSessions([session("running")]));
   await wait(50);
@@ -92,7 +84,6 @@ try {
   await act(async () => { createRoot(document.getElementById("fixture")!).render(<StrictMode><Harness /></StrictMode>); });
   await wait(50);
 
-  // An alert on its own: a click outside the island closes it.
   await act(async () => setSessions([session("completed")]));
   await wait(80);
   check(island.mode === "expanded" && watchingOutside, "会话完成弹出提醒时，开始留意岛屿外的点击");

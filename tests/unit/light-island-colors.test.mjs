@@ -3,25 +3,21 @@ import { readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
-// A white written as a literal stays white on a light island (C33.1) and turns unreadable. Island
-// styles write neutral whites as rgba(var(--overlay-rgb, 255, 255, 255), a) instead: the same white
-// on a dark island, dark ink on a light one (.island-light in tokens.css).
 const ROOTS = ["src/windows/island", "src/features"];
-// Not on the island, or white on purpose.
 const ALLOWED = [
-  /features\/appearance\//, // settings window
+  /features\/appearance\//,
   /features\/(plugins|plugin-dev|theme-market|ssh-tunnel|cc-connect|updater)\//,
-  /features\/calendar\/CalendarSourcesSection\.css$/, // settings window
+  /features\/calendar\/CalendarSourcesSection\.css$/,
   /Settings[^/]*\.css$/,
-  /features\/(clipboard|file-shelf)\//, // C29 redesign, on --island-ink-rgb
-  /features\/center-pattern\//, // drawn on its own fill
-  /features\/screenshot\//, // the screenshot overlay's dark boxes over the frozen screen, not the island
-  /features\/media\/MusicWaveButton\.css$/, // a glass bubble on the collapsed island
-  /features\/todos\/TodoDatePicker\.css$/, // a light chip
-  /features\/agent-status\/approvals\//, // white on the filled green buttons
-  /features\/calendar\/(CalendarMonth|CalendarPanel|MeetingLine)\.css$/, // white on the accent, ink via --calendar-ink
-  /windows\/island\/(IslandShell|IslandTopEdge|IslandApp)\.css$/, // the dark liquid glass; IslandGlassLight.css is its light version
-  /windows\/island\/IslandGlassLight\.css$/, // white highlights on a light island, on purpose (C33.4)
+  /features\/(clipboard|file-shelf)\//,
+  /features\/center-pattern\//,
+  /features\/screenshot\//,
+  /features\/media\/MusicWaveButton\.css$/,
+  /features\/todos\/TodoDatePicker\.css$/,
+  /features\/agent-status\/approvals\//,
+  /features\/calendar\/(CalendarMonth|CalendarPanel|MeetingLine)\.css$/,
+  /windows\/island\/(IslandShell|IslandTopEdge|IslandApp)\.css$/,
+  /windows\/island\/IslandGlassLight\.css$/,
 ];
 const WHITE = /rgba\(\s*255\s*,\s*255\s*,\s*255\s*,|color:\s*#fff(fff)?\s*;/g;
 

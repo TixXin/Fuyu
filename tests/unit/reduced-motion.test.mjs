@@ -6,7 +6,6 @@ import { fileURLToPath } from "node:url";
 
 const SRC = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../src");
 
-// Animations that only fade a colour, with no movement, may keep running.
 const COLOUR_ONLY = new Set([".shelf-item--recent"]);
 
 function cssFiles(dir) {
@@ -17,7 +16,6 @@ function cssFiles(dir) {
   });
 }
 
-/** Top-level blocks as { prelude, body }, nested blocks kept inside the body. */
 function blocks(css) {
   const out = [];
   let depth = 0;
@@ -49,11 +47,9 @@ test("every animation stops or calms down when Windows asks for less motion", ()
       .join("\n");
     return { file, all, own };
   });
-  // The calming rule may live in another sheet (the island's own sheet covers the collapsed bar).
   const reduced = sheets.map((sheet) => sheet.own).join("\n");
   const missing = [];
   for (const { file, all, own } of sheets) {
-    // A wildcard such as `.center-pattern *` calms everything the sheet draws.
     if (/\s\*\s*[,{]/.test(own)) continue;
     for (const block of all) {
       if (block.prelude.startsWith("@") || !moving(block.body)) continue;

@@ -181,7 +181,6 @@ test("first launch uses the maintainer's layout, while saved settings missing a 
   assert.equal(DEFAULT_SETTINGS.islandCornerRadius, 32);
   assert.equal(DEFAULT_SETTINGS.collapsedScale, 1);
   assert.equal(DEFAULT_SETTINGS.expandedScale, 1);
-  // Saved settings keep their own scale and radius; only a missing radius falls back.
   assert.equal(normalizeSettings({ collapsedScale: 0.96, expandedScale: 1.05, islandCornerRadius: 16 }).expandedScale, 1.05);
   assert.equal(normalizeSettings({ collapsedScale: 0.96, expandedScale: 1.05, islandCornerRadius: 16 }).islandCornerRadius, 16);
   assert.equal(DEFAULT_SETTINGS.expandTrigger, "hover");
@@ -211,7 +210,6 @@ test("first launch takes the maintainer's settings of 0.3.5-beta.5; saved settin
     assert.equal(DEFAULT_SETTINGS[key], first, `first launch ${key}`);
     assert.equal(older[key], earlier, `saved without ${key}`);
   }
-  // The scales stay 1: any other resamples the island's text and 1px lines.
   assert.equal(DEFAULT_SETTINGS.collapsedScale, 1);
   assert.equal(DEFAULT_SETTINGS.lyricsOffsetMs, 0);
   assert.deepEqual(normalizeSettings(DEFAULT_SETTINGS), DEFAULT_SETTINGS);
@@ -285,7 +283,6 @@ test("taking the appearance from other settings keeps todo and tuck behavior", (
 
   assert.equal(next.opacity, DEFAULT_SETTINGS.opacity);
   assert.equal(next.pulseColor, DEFAULT_SETTINGS.pulseColor);
-  // Reset theme leaves what the bar shows to Reset appearance (C26).
   assert.equal(next.showTitle, true);
   const layout = withLayoutFrom(current, DEFAULT_SETTINGS);
   assert.equal(layout.showTitle, DEFAULT_SETTINGS.showTitle);
@@ -296,7 +293,6 @@ test("taking the appearance from other settings keeps todo and tuck behavior", (
   assert.equal(next.todoRotationSeconds, 12);
   assert.equal(next.autoTuck, true);
   assert.equal(next.autoTuckSeconds, 90);
-  // Shown on the general and todos pages, so presets and Reset appearance leave them.
   assert.equal(next.marginY, 48);
   assert.equal(next.showIdleTodoCount, false);
   assert.deepEqual(withThemeFrom(DEFAULT_SETTINGS, DEFAULT_SETTINGS), DEFAULT_SETTINGS);

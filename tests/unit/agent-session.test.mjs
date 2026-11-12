@@ -8,7 +8,6 @@ import {
 
 const NOW = 1_800_000_000_000;
 
-/** One entry of the Agent page's list (list_agent_sessions). */
 function session(overrides = {}) {
   return {
     provider: "claudeCode",
@@ -71,9 +70,7 @@ test("with several sessions the most recently updated wins", () => {
 test("sources reported by plugins or the local API are named by their own name", () => {
   const others = [{ id: "local-api/aider", name: "Aider", phase: "running", title: "Refactor parser", updatedAt: NOW - 10 }];
   assert.deepEqual(pickAgentSession([], others, NOW), { provider: null, label: "Aider", title: "Refactor parser" });
-  // An untitled or idle report is not shown.
   assert.equal(pickAgentSession([], [{ ...others[0], title: undefined }], NOW), null);
   assert.equal(pickAgentSession([], [{ ...others[0], phase: "idle" }], NOW), null);
-  // A newer list session wins over an older report.
   assert.equal(pickAgentSession([session({ updatedAt: NOW })], others, NOW)?.provider, "claudeCode");
 });

@@ -1,5 +1,3 @@
-// pnpm dev, then open /tests/regression/calendar.html. Renders the calendar page with two days of
-// events, the collapsed island's meeting line, and Settings → Calendar with the native side mocked.
 import "../../src/styles/tokens.css";
 import { act, StrictMode } from "react";
 import { createRoot } from "react-dom/client";
@@ -107,7 +105,6 @@ try {
   await act(async () => { document.querySelector<HTMLButtonElement>(".calendar-month__today")!.click(); await wait(); });
   check(monthTitle() === shownMonth && document.querySelectorAll(".calendar-day").length === 2, "回到今天：月份和今天、明天两组都回来");
 
-  // Issue #43: planned todos on the calendar, and adding a todo for a day.
   const dateOf = (offset: number) => { const day = new Date(at(offset, 0)); return `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, "0")}-${String(day.getDate()).padStart(2, "0")}`; };
   const addedTodos: string[] = [];
   const scheduled = [{ id: "s1", title: "交组会 PPT", date: dateOf(1) }, { id: "s2", title: "14:00 组会", date: dateOf(1) }];

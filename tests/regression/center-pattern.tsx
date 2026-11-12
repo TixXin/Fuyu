@@ -1,6 +1,3 @@
-// pnpm dev, then open /tests/regression/center-pattern.html (?test=1 runs the checks).
-// Real pets for visual QA: copy ~/.codex/pets/<id>/ into node_modules/.cache/codex-pets/
-// and add ?pets=chispa,doraemon (or &petsBase=<url> for another folder Vite serves).
 import { act, StrictMode, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import { emit } from "@tauri-apps/api/event";
@@ -23,7 +20,6 @@ const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
 const trackingCalls: boolean[] = [];
-// The built-in plugin as list_plugins reports it; the slot use cases swap its settings.
 let centerPlugin = { enabled: true, settings: { pattern: "eyes", pet: "" } as Record<string, unknown> };
 mockIPC((command, payload) => {
   if (command === "set_island_cursor_tracking") trackingCalls.push(Boolean((payload as { enabled?: boolean }).enabled));
@@ -38,7 +34,6 @@ mockIPC((command, payload) => {
 }, { shouldMockEvents: true });
 mockWindows("main");
 
-/** A petdex-sized sheet (8×9 cells of 192×208) with each cell numbered, drawn on a canvas. */
 function syntheticSheet(rows = 9): string {
   const canvas = document.createElement("canvas");
   canvas.width = 8 * 192;
@@ -65,12 +60,10 @@ const results = document.getElementById("results")!;
 const messages: string[] = [];
 const root = createRoot(fixture);
 
-// Stable, so the slots are not rebuilt on every render.
 const NO_SESSIONS: AgentSessionSummary[] = [];
 const NO_UNSEEN: ReadonlySet<string> = new Set();
 const NO_OP = () => {};
 
-/** The collapsed bar's center slot as useCollapsedSlots fills it from the plugin's settings. */
 function Slot({ agents = [], paused = false, markLight = false }: { agents?: AgentActivity[]; paused?: boolean; markLight?: boolean }) {
   const slots = useCollapsedSlots({ paused, agents, sessions: NO_SESSIONS, unseen: NO_UNSEEN, agentsOn: false, onOpenAgents: NO_OP, markLight });
   return <div className="cp-island cp-slot">
@@ -172,7 +165,6 @@ async function runChecks() {
   await slotWith({ pattern: "cat", pet: "" }, [], false);
   expect(fixture.querySelector(".cp-slot")!.childElementCount === 0, "插件关闭时不填槽位");
 
-  // The mark follows the same mood as the pet, but stays in the center.
   const markIn = (agents: AgentActivity[]) => slotWith({ pattern: "mark", pet: "" }, agents)
     .then(() => fixture.querySelector<SVGSVGElement>(".cp-slot .center-mark")!);
   const lightFill = (mark: SVGSVGElement) => getComputedStyle(mark.querySelector(".center-mark-light circle")!).fill;
@@ -181,7 +173,6 @@ async function runChecks() {
     "悬岛空闲：绿点、短横");
   expect(getComputedStyle(mark.querySelector(".center-mark-pill")!).animationName === (reducedMotion ? "none" : "center-mark-open"),
     reducedMotion ? "减弱动态时悬岛不弹开" : "悬岛空闲时胶囊定时弹开");
-  // The pill (16 of the box's 17 units) is 24 px tall, as the rings on the bar, in the center and before the title.
   const pill = (selector: string) => fixture.querySelector(`${selector} .center-mark-pill`)?.getBoundingClientRect();
   const centerPill = pill(".cp-slot .island__center-slot");
   const iconPill = pill(".cp-agent-icon");
@@ -200,8 +191,6 @@ async function runChecks() {
   const smaller = pill(".cp-slot .island__center-slot");
   expect(smaller !== undefined && Math.abs(smaller.height - 18) < 0.6, `大小设成 18 时悬岛胶囊 18px 高（${smaller?.height.toFixed(1)}px）`);
 
-  // As the status light (Settings > AI Agent, the default) the mark follows the agents with the
-  // center plugin off, and no second mark stands before the title.
   centerPlugin = { enabled: false, settings: { pattern: "cat", pet: "" } };
   await render(<Slot key="light" markLight agents={[{ phase: "waiting", updatedAt: Date.now() }]} />);
   const lightPill = fixture.querySelector(".cp-light .center-mark-pill")?.getBoundingClientRect();
@@ -220,7 +209,6 @@ async function runChecks() {
   const bird = fixture.querySelector(".center-bird-body")!;
   expect(getComputedStyle(bird).animationName === (reducedMotion ? "none" : "center-bird-peck"), reducedMotion ? "减弱动态时小鸟不动" : "小鸟在播放啄食动画");
 
-  // Pet sprite: the row and the frame steps.
   const sprite = fixture.querySelector<HTMLElement>(".pet-sprite")!;
   await waitFor(() => sprite.dataset.ready !== undefined, "宠物图集加载后才显示");
   await waitFor(() => getComputedStyle(sprite).opacity === "1", "宠物加载后完全不透明");
@@ -237,14 +225,12 @@ async function runChecks() {
   const frame = sprites[0].getBoundingClientRect();
   expect(Math.round(frame.height) === 22 && Math.abs(frame.width - (22 * 192) / 208) < 0.5, "一帧按 192:208 缩放到 22px 高");
 
-  // A sheet that is not a petdex grid stays hidden.
   await render(<PetSprite src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==" mood="idle" />);
   const invalidSheet = fixture.querySelector<HTMLImageElement>(".pet-sprite img")!;
   await waitFor(() => invalidSheet.complete, "无效图片加载完成");
   await act(async () => { await new Promise((resolve) => setTimeout(resolve, 0)); });
   expect(fixture.querySelector<HTMLElement>(".pet-sprite")!.dataset.ready === undefined, "不是 8×9 / 8×11 网格的图片不显示");
 
-  // Eyes: in-window mouse moves and the native cursor event.
   trackingCalls.length = 0;
   await render(<CenterPattern pattern="eyes" />);
   const pupil = fixture.querySelector<SVGGElement>(".center-eyes-pupil")!;
@@ -260,7 +246,6 @@ async function runChecks() {
     await render(<CenterPattern pattern="eyes" paused />);
     expect(trackingCalls[trackingCalls.length - 1] === false, "暂停后关闭原生光标事件");
 
-    // Two eyes share the native switch: it stays on until the last one goes.
     trackingCalls.length = 0;
     await render(<><CenterPattern pattern="eyes" /><CenterPattern pattern="eyes" /></>);
     expect(trackingCalls[trackingCalls.length - 1] === true, "两双眼睛时原生光标事件开启");
@@ -270,7 +255,6 @@ async function runChecks() {
     await render(<CenterPattern pattern="cat" />);
     expect(trackingCalls[trackingCalls.length - 1] === false, "最后一双去掉后才关闭");
 
-    // Another window (a settings preview) only follows its own mousemove.
     mockWindows("settings");
     trackingCalls.length = 0;
     await render(<CenterPattern pattern="eyes" />);

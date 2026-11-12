@@ -59,14 +59,11 @@ test("enhanced LRC word times become the line's words", () => {
     { startMs: 17_800, endMs: 18_210, text: "I " },
     { startMs: 18_210, endMs: 19_750, text: "believe" },
   ]);
-  // Text before the first word time starts with the line; plain lines have no words.
   assert.deepEqual(parse("[00:01.00]啊 <00:01.50>哦<00:02.00>")[0].words?.map((word) => [word.startMs, word.text]), [[1000, "啊 "], [1500, "哦"]]);
   assert.equal(parse("[00:01.00]plain")[0].words, undefined);
   assert.equal(parse("[00:01.00]<00:01.00><00:02.00>")[0].words, undefined);
-  // The offset tag moves the words too; a repeated line keeps its words' spacing.
   const repeated = parse("[offset:+100]\n[00:01.00][00:10.00]<00:01.00>a<00:01.50>b<00:02.00>");
   assert.deepEqual(repeated.map((l) => l.words?.map((word) => word.startMs)), [[900, 1400], [9900, 10_400]]);
-  // Angle brackets that are not times stay text.
   assert.equal(parse("[00:01.00]a <b> c")[0].text, "a <b> c");
   assert.deepEqual(wordFill({ startMs: 1000, endMs: 1400, text: "x" }, 1100), { delayMs: -100, durationMs: 400 });
   assert.deepEqual(wordFill({ startMs: 2000, endMs: 2000, text: "x" }, 1000), { delayMs: 1000, durationMs: 1 });
@@ -76,7 +73,6 @@ test("a Chinese song with no lyrics from LRCLIB suggests Kugou and NetEase", () 
   const song = { title: "不找了", artist: "隔壁老樊" };
   const lrclibOnly = { lyricsOnline: true, lyricsChinese: false };
   assert.equal(suggestsChineseSources(song, lrclibOnly, true), true);
-  // Found or still looking, already asking them, offline on purpose, or not a Chinese name: no hint.
   assert.equal(suggestsChineseSources(song, lrclibOnly, false), false);
   assert.equal(suggestsChineseSources(song, { lyricsOnline: true, lyricsChinese: true }, true), false);
   assert.equal(suggestsChineseSources(song, { lyricsOnline: false }, true), false);

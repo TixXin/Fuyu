@@ -38,7 +38,6 @@ test("only this repo's own commits are held to it; a contributor's may carry the
     { subject: "feat: theirs", author: "louis@example.com", body: `feat: theirs${line}` },
   ];
   assert.deepEqual(attributedCommits(commits, "me@example.com"), ["feat: mine"]);
-  // Without a configured email every commit is checked.
   assert.deepEqual(attributedCommits(commits, ""), ["feat: mine", "feat: theirs"]);
 });
 

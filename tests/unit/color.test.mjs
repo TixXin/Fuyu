@@ -12,7 +12,6 @@ test("relative luminance runs from black to white", () => {
 test("text on the island is light on dark backgrounds and dark on light ones", () => {
   const light = "241, 240, 246";
   const dark = "24, 24, 30";
-  // The default and the old default stay light.
   assert.equal(inkOn("#030303"), light);
   assert.equal(inkOn("#2F2F37"), light);
   assert.equal(inkOn("#ffffff"), dark);

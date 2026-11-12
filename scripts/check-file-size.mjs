@@ -1,5 +1,3 @@
-// Enforces the per-file line limits from AGENTS.md. Files that already exceeded a limit
-// are listed in file-size-allowlist.json with their current size and may only shrink.
 import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join, relative, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -17,7 +15,6 @@ const LINE_LIMITS = {
   ".cmd": 400,
 };
 
-// Translation dictionaries grow with copy, and extracted Rust test files hold tests only.
 const EXEMPT_PATTERNS = [
   /^src\/i18n\/locales\/[^/]+\.ts$/,
   /^src\/i18n\/sections\/.+\.ts$/,
@@ -32,7 +29,6 @@ export function countLines(source) {
   return lines[lines.length - 1] === "" ? lines.length - 1 : lines.length;
 }
 
-/** Returns the line limit for a repository-relative path, or null when the file is not checked. */
 export function lineLimitFor(path) {
   if (EXEMPT_PATTERNS.some((pattern) => pattern.test(path))) return null;
   const dot = path.lastIndexOf(".");
@@ -40,10 +36,6 @@ export function lineLimitFor(path) {
   return LINE_LIMITS[path.slice(dot)] ?? null;
 }
 
-/**
- * Counts lines of top-level `#[cfg(test)] mod x { ... }` blocks, from the attribute to the
- * closing brace in column 0. External `mod tests;` declarations are not counted.
- */
 export function inlineTestLines(source) {
   const lines = source.split(/\r?\n/);
   let total = 0;
@@ -74,10 +66,6 @@ function ratchet(result, { path, label, value, limit, allowed }) {
   }
 }
 
-/**
- * Checks `{ path, source }` entries against the limits and the allowlist.
- * Paths are repository-relative and use forward slashes.
- */
 export function checkFiles(files, allowlist = {}) {
   const lineAllowlist = allowlist.lines ?? {};
   const inlineTestAllowlist = allowlist.inlineTests ?? {};

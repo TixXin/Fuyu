@@ -20,7 +20,6 @@ test("restricted markdown never lets markup or other links through", () => {
   assert.equal(/<(script|img|iframe)/i.test(html), false);
   assert.equal(html.includes("javascript:"), false, "the label is kept, the link dropped");
   assert.ok(html.includes("click") && html.includes("web"));
-  // Only the https link is a link, and its quote stays escaped inside the attribute.
   const links = [...html.matchAll(/<a href="([^"]*)">/g)].map((match) => match[1]);
   assert.deepEqual(links, ["https://x.com/&quot;onmouseover=&quot;alert(1"]);
   assert.ok(html.includes("&lt;script&gt;"));

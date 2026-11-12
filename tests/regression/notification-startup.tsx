@@ -1,4 +1,3 @@
-// Open /tests/notification-startup.html with pnpm dev to run the browser regression checks.
 import { act, StrictMode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { mockIPC } from "@tauri-apps/api/mocks";

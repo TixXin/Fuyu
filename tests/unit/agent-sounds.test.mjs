@@ -25,7 +25,6 @@ test("waking a turn that waited on its background task plays no ack (issue #15)"
   assert.equal(rememberedPhase(waiting), "running");
   assert.equal(rememberedPhase({ ...tool(), phase: "completed", replyMarker: null, backgroundTasks: 2 }), "running");
   assert.equal(soundFor(rememberedPhase(waiting), "running", tool()), null);
-  // A turn that is really over still acks the next prompt.
   for (const replyMarker of ["done", "yourTurn", null]) {
     const ended = { ...tool(), phase: "completed", replyMarker };
     assert.equal(soundFor(rememberedPhase(ended), "running", tool()), "ack", String(replyMarker));
@@ -88,7 +87,6 @@ test("context, usage and reset categories land on their own events; unknown ones
   const manifest = { path: "rec/manifest.json", text: JSON.stringify(names.map((name, at) => ({ file: `${name}.wav`, cesp_category: categories[at] }))) };
   const expected = { compact: "rec/06-resource-limit.wav", quotaLow: "rec/08-usage-warning.wav", quotaReset: "rec/09-usage-reset.wav" };
   assert.deepEqual(planSoundPack("rec", files, [manifest]).sounds, expected);
-  // The same folder without its manifest: the file names alone give the same events.
   assert.deepEqual(planSoundPack("rec", files, []).sounds, expected);
 });
 
@@ -104,7 +102,6 @@ test("a finished turn sounds by its reply status marker", () => {
   assert.equal(soundFor("running", "completed", ended("background")), null);
   assert.equal(soundFor("running", "completed", ended("done")), "complete");
   assert.equal(soundFor("running", "completed", ended(undefined)), "complete");
-  // Without a marker, a reply that asks something sounds as a question.
   assert.equal(soundFor("running", "completed", { currentTool: null, replyAsks: true }), "question");
   assert.equal(soundFor("running", "completed", { currentTool: null, replyMarker: "done", replyAsks: true }), "complete");
 });

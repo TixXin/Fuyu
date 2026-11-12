@@ -1,18 +1,9 @@
-// What pnpm release does once a release is public:
-// - reads both update channels' latest.json back through gh (curl to the
-//   download URL sometimes gets a 504 from GitHub's CDN) and fails loudly when
-//   one does not offer what it should;
-// - tells each GitHub issue whose task shipped in this release that it is out.
-//   Tasks link issues with `issue: <n>` and list their commits under "## 提交"
-//   (docs/tasks/README.md); a task shipped when one of those commits is in the
-//   release's range. Each issue is told once per release (a marker in the comment).
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { isPrerelease } from "./channel.mjs";
 
 export const RELEASED_MARKER = (tag) => `<!-- released: ${tag} -->`;
 
-/** Problems with the channels after releasing `version`; empty when both are right. */
 export function channelProblems(version, { stable, beta }) {
   const problems = [];
   if (isPrerelease(version)) {
@@ -24,7 +15,6 @@ export function channelProblems(version, { stable, beta }) {
   return problems;
 }
 
-/** A task file's id, issue number and listed commits (subjects in backticks, or hashes). */
 export function parseTask(text) {
   const front = /^---\r?\n([\s\S]*?)\r?\n---/.exec(text)?.[1] ?? "";
   const field = (name) => new RegExp(`^${name}:\\s*(.+)$`, "m").exec(front)?.[1].trim() ?? null;
@@ -38,10 +28,6 @@ export function parseTask(text) {
   return { id: field("id"), issue: Number.isInteger(issue) && issue > 0 ? issue : null, commits };
 }
 
-/**
- * The issues whose tasks have a commit among `commits` ({ hash: full hash, subject }),
- * each with those tasks. A task lists a commit by its subject or by a hash prefix.
- */
 export function shippedIssues(tasks, commits) {
   const subjects = new Set(commits.map(({ subject }) => subject));
   const isHash = (entry) => /^[0-9a-f]{7,40}$/.test(entry);
@@ -54,7 +40,6 @@ export function shippedIssues(tasks, commits) {
   return shipped;
 }
 
-/** Every task file under docs/tasks, closed ones included. */
 export function readTasks(root = "docs/tasks") {
   const files = [];
   const walk = (dir) => {
@@ -68,7 +53,6 @@ export function readTasks(root = "docs/tasks") {
   return files.map((path) => ({ path: path.replaceAll("\\", "/"), ...parseTask(readFileSync(path, "utf8")) }));
 }
 
-/** The comment telling an issue its change is out. */
 export function releasedComment({ tag, url, tasks, repo }) {
   const beta = isPrerelease(tag.replace(/^v/, ""));
   const links = tasks.map(({ id, path }) => `[${id}](https://github.com/${repo}/blob/main/${path})`).join("、");

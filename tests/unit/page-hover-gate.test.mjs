@@ -11,7 +11,6 @@ test("a pointer that moves onto a page button counts", () => {
 test("a button sliding under a resting pointer does not switch pages back and forth", () => {
   const gate = createPageHoverGate();
   assert.equal(pageHoverMoved(gate, 100, 12), true);
-  // The island resizes and another button arrives under the pointer: same spot, not a move.
   assert.equal(pageHoverMoved(gate, 100, 12), false);
   assert.equal(pageHoverMoved(gate, 103, 12), true);
 });

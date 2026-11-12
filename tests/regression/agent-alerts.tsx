@@ -1,6 +1,3 @@
-// pnpm dev, then open /tests/regression/agent-alerts.html. Drives useAgentAlerts with a stand-in
-// for the island's mode and page, the in-front check mocked: when a session finishing, failing or
-// waiting opens the Agent page, when it closes again, and when it stays quiet.
 import { act, StrictMode, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { mockIPC } from "@tauri-apps/api/mocks";
@@ -14,7 +11,6 @@ const DURATION_MS = 300;
 const SUMMARY = "修好了，已合入 main。完成提醒现在显示最后的回复，Markdown 符号已经去掉，卡片最多三行，高度按内容。";
 let inFront: string[] = [];
 mockIPC((command) => (command === "agent_sessions_in_front" ? inFront : null));
-// The island holds the focus while the cursor rests on it; headless pages report focus on their own.
 let hovering = false;
 Object.defineProperty(document, "hasFocus", { value: () => hovering });
 
@@ -39,9 +35,7 @@ function Harness() {
   const [sessions, changeSessions] = useState<AgentSessionSummary[]>([session("a", "running"), session("b", "running")]);
   const [state, changeIsland] = useState<Island>(island);
   const [canAlert, changeCanAlert] = useState(true);
-  // Off for the checks below, whose sessions run again between them; checked on its own at the end.
   const [started, changeStarted] = useState<AgentAlertStarted>("off");
-  // Off until the reminder checks, so the waits above stay single alerts.
   const [remindAfterMs, changeRemindAfter] = useState(0);
   setRemindAfter = changeRemindAfter;
   setStarted = changeStarted;
@@ -64,7 +58,6 @@ function Harness() {
   return null;
 }
 
-// Set while rendering; read through a function so TypeScript does not narrow it to its initial null.
 const latestAlert = (): AlertedSession | null => alerted;
 const wait = (ms: number) => act(async () => { await new Promise((resolve) => setTimeout(resolve, ms)); });
 const messages: string[] = [];
@@ -155,10 +148,7 @@ try {
   check(island.mode === "expanded" && latestAlert()?.key === "claudeCode:n" && latestAlert()?.kind === "started", "新会话开始时弹出");
   await wait(DURATION_MS + 100);
 
-  // Reminders: a session still waiting a while later pops up once more, once per wait.
   const REMIND_MS = 800;
-  // Reminders fire from a timer, mid-wait: short act() steps let React render in between, as the
-  // app does at once (one long act() would hold the render until it ends).
   const settle = async (ms: number) => { for (let waited = 0; waited < ms; waited += 25) await wait(25); };
   const waitFor = (sessions: AgentSessionSummary[]) => act(async () => setSessions(sessions));
   const done = [session("a", "completed"), session("b", "completed")];
@@ -194,7 +184,6 @@ try {
   await act(async () => setRemindAfter(0));
   await settle(DURATION_MS + 100);
 
-  // The panel: an alert shows its session alone and leaves the usage line out.
   const panel = createRoot(document.getElementById("panel")!);
   const listed = [session("a", "completed"), session("b", "running"), { ...session("c", "completed"), lastMessage: SUMMARY }];
   let measured = 0;

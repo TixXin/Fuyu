@@ -1,8 +1,3 @@
-// Builds the updater manifest that the app downloads from
-// https://github.com/TixXin/fuyu/releases/latest/download/latest.json
-//
-// Usage: node scripts/release/make-latest-json.mjs [--notes-file docs/releases/vX.Y.Z.md]
-//        [--release-dir <cargo release folder>]   (default src-tauri/target/release)
 import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { msiNames } from "./msi-version.mjs";

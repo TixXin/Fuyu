@@ -1,18 +1,3 @@
-// `pnpm prune:target [--dry-run] [--days N]`: deletes what cargo leaves behind in the
-// main checkout's src-tauri/target and never cleans up itself. land-check runs it
-// after every cargo test, so the folder stops growing without anyone remembering to.
-//
-// Every lane path, toolchain or flag change gives this app's own crates a new hash,
-// and with it a new incremental cache (1-2 GB) and a new set of artifacts, while the
-// old ones stay forever: the folder reached ~360 GB. What goes:
-//   - incremental caches, and this app's own artifacts in deps/, build/ and
-//     .fingerprint/ (current and pre-rename crate names), unused for MAX_AGE_DAYS,
-//     except the KEEP newest of each crate;
-//   - temp archives a crashed link left in deps/;
-//   - the preview exe folders (lane-<N>) of lanes that no longer exist.
-// Dependencies' artifacts stay: deleting them only means compiling them again.
-// Folders it does not know are listed, not touched. A deleted cache only costs a
-// rebuild of what used it, so a build running meanwhile is not broken by it.
 import { existsSync, lstatSync, readdirSync, rmSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -20,22 +5,15 @@ import { LANE_BUILD_DIR, mainCheckout, PUBLISH_DIR, targetDir } from "./build-di
 import { lanePath } from "./lanes/laneRegistry.mjs";
 
 export const MAX_AGE_DAYS = 3;
-/** Kept per crate whatever their age: the lib, its tests and a clippy run each have their own hash. */
 export const KEEP = 3;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-/** This app's crates, under their current and pre-rename names, followed by cargo's hash. */
 const OWN_UNIT = /^(fuyu|fuyu_lib|focusd_island|focusd_island_lib)-([0-9a-z]+)(?:\.|$)/;
-/** An incremental cache folder: `<crate>-<hash>`. */
 const INCREMENTAL_UNIT = /^(.+)-([0-9a-z]+)$/;
 const TEMP_ARCHIVE = /^\.tmp.*\.temp-archive$/;
 const LANE_DIR = /^lane-(\d+)$/;
 const KNOWN_DIRS = new Set(["debug", "release", "agents", LANE_BUILD_DIR, PUBLISH_DIR]);
 
-/**
- * Which units are stale: `units` are `{ unit, crate, mtimeMs }`; in each crate the `keep` newest
- * stay, and of the rest those last used before `cutoff`. Returns the stale unit names.
- */
 export function staleUnits(units, cutoff, keep = KEEP) {
   const byCrate = new Map();
   for (const unit of units) byCrate.set(unit.crate, [...(byCrate.get(unit.crate) ?? []), unit]);
@@ -47,11 +25,6 @@ export function staleUnits(units, cutoff, keep = KEEP) {
   return stale.sort();
 }
 
-/**
- * Groups entry `names` (files or folders) into units with `pattern` (crate in group 1, hash in 2).
- * `mtimeOf(name)` gives each entry's time; a unit's time is its newest entry's.
- * Returns `{ units, entriesOf }`, entriesOf mapping a unit to its entry names.
- */
 export function groupUnits(names, pattern, mtimeOf) {
   const units = new Map();
   const entriesOf = new Map();
@@ -67,7 +40,6 @@ export function groupUnits(names, pattern, mtimeOf) {
   return { units: [...units.values()], entriesOf };
 }
 
-/** Bytes under `file`, not following junctions or links. */
 function sizeOf(file) {
   let stat;
   try {
@@ -95,7 +67,6 @@ function list(dir) {
   }
 }
 
-/** Folders under `target` laid out as a cargo profile (debug/, release/, agents/debug/, ...). */
 export function profileDirs(target) {
   const candidates = list(target).flatMap((name) => {
     const dir = path.join(target, name);
@@ -104,7 +75,6 @@ export function profileDirs(target) {
   return candidates.filter((dir) => ["deps", "incremental"].some((sub) => existsSync(path.join(dir, sub))));
 }
 
-/** What to delete in one profile folder: `{ path, kind }` items. */
 function profileItems(profile, cutoff) {
   const items = [];
   const incremental = path.join(profile, "incremental");
@@ -124,10 +94,6 @@ function profileItems(profile, cutoff) {
   return items;
 }
 
-/**
- * Plans the cleanup of `target`: `{ items, unknown }`. `laneExists(n)` says whether lane n's
- * worktree folder is still there; `unknown` lists top-level folders this does not manage.
- */
 export function plan(target, { now = Date.now(), maxAgeDays = MAX_AGE_DAYS, laneExists = () => true } = {}) {
   const cutoff = now - maxAgeDays * DAY_MS;
   const items = profileDirs(target).flatMap((profile) => profileItems(profile, cutoff));
@@ -142,7 +108,6 @@ export function plan(target, { now = Date.now(), maxAgeDays = MAX_AGE_DAYS, lane
       unknown.push({ name, days: Math.floor((now - mtime(dir)) / DAY_MS) });
     }
   }
-  // A whole lane folder goes, so nothing planned inside it needs deleting on its own.
   const lanes = items.filter((item) => item.kind === "lane").map((item) => item.path + path.sep);
   return { items: items.filter((item) => item.kind === "lane" || !lanes.some((lane) => item.path.startsWith(lane))), unknown };
 }
@@ -154,7 +119,6 @@ const KIND_NAMES = {
   lane: "previews of removed lanes",
 };
 
-/** Deletes what `plan` found (or only measures it with `dryRun`); returns `{ bytes, counts, failed }`. */
 export function prune(target, options = {}) {
   const { items, unknown } = plan(target, options);
   const counts = {};
@@ -176,7 +140,6 @@ export function prune(target, options = {}) {
   return { bytes, counts, failed, unknown };
 }
 
-/** One line for the log. */
 export function summary({ bytes, counts, failed, unknown }, dryRun = false) {
   const parts = Object.entries(counts).map(([kind, count]) => `${count} ${KIND_NAMES[kind]}`);
   const gb = (bytes / 1024 ** 3).toFixed(1);
@@ -186,7 +149,6 @@ export function summary({ bytes, counts, failed, unknown }, dryRun = false) {
   return line;
 }
 
-/** Cleans the main checkout's target folder; never throws. */
 export function pruneMainTarget(options = {}) {
   try {
     const main = mainCheckout();

@@ -18,7 +18,6 @@ test("a removed session with no known turn stays hidden until its file changes",
   assert.equal(isHidden(session("b", 1000), hidden), false);
   assert.equal(isHidden(session("a", 1500), hidden), false);
   assert.deepEqual(forgetReturned(hidden, [session("a", 1500)]), {});
-  // Nothing came back: the same object, so nothing is saved again.
   assert.equal(forgetReturned(hidden, [session("a", 1000), session("b", 9000)]), hidden);
 });
 
@@ -26,12 +25,9 @@ test("a removed session with a known turn comes back only when a new turn starts
   const asking = { provider: "claudeCode", sessionId: "q", updatedAt: 5000, turnStartedAt: 4000 };
   const hidden = hideSession({}, asking);
   assert.equal(hidden["claudeCode:q"], 4000);
-  // An idle summary written later in the same turn keeps it hidden.
   assert.equal(isHidden({ ...asking, updatedAt: 9000 }, hidden), true);
   assert.equal(forgetReturned(hidden, [{ ...asking, updatedAt: 9000 }]), hidden);
-  // A new prompt is a new turn.
   assert.equal(isHidden({ ...asking, updatedAt: 9500, turnStartedAt: 9400 }, hidden), false);
-  // An entry saved before (the last write) still hides the same turn.
   assert.equal(isHidden({ ...asking, updatedAt: 9000 }, { "claudeCode:q": 5000 }), true);
 });
 

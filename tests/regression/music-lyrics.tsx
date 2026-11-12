@@ -1,6 +1,3 @@
-// pnpm dev, then open /tests/regression/music-lyrics.html. Renders the music page with get_lyrics
-// mocked: synced lyrics show above a slimmer waveform and follow the position and the offset, and
-// the waveform keeps its full size when there are none or no source is set.
 import "../../src/styles/tokens.css";
 import { act, StrictMode } from "react";
 import { createRoot } from "react-dom/client";
@@ -115,7 +112,6 @@ try {
   await render(track("七里香", 6000), { ...ONLINE, lyricsChinese: true } as typeof ONLINE);
   check(!view() && !hint(), "已经开着酷狗和网易云还找不到时不提示");
 
-  // A translation shows under its line; this song's own offset sits by the settings button.
   localStorage.removeItem("fuyu-lyrics-offsets");
   await render(track("Yesterday", 2000), { ...ONLINE, lyricsChinese: true } as typeof ONLINE);
   const yesterday = queries[queries.length - 1];
@@ -132,7 +128,6 @@ try {
   check(offsetButtons[1].textContent === "0s" && lines()[1] === "Oh I believe", "点中间的数字恢复为 0");
   localStorage.removeItem("fuyu-lyrics-offsets");
 
-  // Word-timed lines (Kugou KRC, enhanced LRC) fill word by word.
   await render(track("Believe", 1500));
   const words = () => [...document.querySelectorAll<HTMLElement>(".karaoke__word")];
   const fillX = (word: HTMLElement) => getComputedStyle(word).backgroundPosition.split(" ")[0];
@@ -148,8 +143,6 @@ try {
   await render(track("Believe", 4500));
   check(words().length === 0 && lines()[1] === "in yesterday", "没有逐字时间的句子照常整句显示");
 
-  // A player that reports no position (NetEase without InfLink): the island times the song,
-  // says so under the lyrics, and each line aligns the timing to itself.
   const untimed = (estimate: "timed" | "unsure", sourceApp: string): MediaState => ({ ...track("晴天", 6000), durationMs: 0, positionEstimate: estimate, sourceApp });
   await render(untimed("unsure", "cloudmusic.exe"));
   const estimate = () => document.querySelector<HTMLElement>(".music-player__estimate");

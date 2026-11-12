@@ -1,6 +1,3 @@
-// The todo ring example plugin (plugins/examples/dev.focusd.todo-ring) under the mock host: the
-// bar item follows the todos whether or not the page is open, and the page gets the counts and
-// the next todos to do.
 import assert from "node:assert/strict";
 import path from "node:path";
 import test from "node:test";
@@ -17,7 +14,6 @@ test("the bar shows done/total with a ring and the page lists what is next", win
     const bar = await host.waitFor((h) => h.statuses.get("progress"));
     assert.deepEqual({ text: bar.text, ring: bar.ring, tone: bar.tone }, { text: "1/5", ring: 0.2, tone: "accent" });
 
-    // A closed page gets nothing; the bar still follows.
     host.todos.todos[1].completed = true;
     host.publish("todos.changed", { date: todos.date });
     await host.waitFor((h) => h.statuses.get("progress")?.text === "2/5");
@@ -28,7 +24,6 @@ test("the bar shows done/total with a ring and the page lists what is next", win
     const counts = (await host.waitFor((h) => h.webviewMessages[0])).message;
     assert.deepEqual(counts, { type: "counts", done: 2, total: 5, next: ["待办 c", "待办 d", "待办 e"] });
 
-    // One left: still a list. None left: an empty list and a full ring.
     for (const index of [2, 3]) host.todos.todos[index].completed = true;
     host.publish("todos.changed", { date: todos.date });
     assert.deepEqual((await host.waitFor((h) => h.webviewMessages[1])).message.next, ["待办 e"]);
@@ -37,7 +32,6 @@ test("the bar shows done/total with a ring and the page lists what is next", win
     assert.deepEqual((await host.waitFor((h) => h.webviewMessages[2])).message, { type: "counts", done: 5, total: 5, next: [] });
     assert.equal(host.statuses.get("progress").ring, 1);
 
-    // A day without todos takes the item off the bar.
     host.todos.todos = [];
     host.publish("todos.changed", { date: todos.date });
     await host.waitFor((h) => !h.statuses.has("progress"));

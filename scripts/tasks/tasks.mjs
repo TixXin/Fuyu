@@ -1,17 +1,3 @@
-// `pnpm tasks`: the task board kept in docs/tasks/<group>/ (open) and
-// docs/tasks/0-archive/<group>/ (done or dropped), and claiming, finishing and handing over tasks. Rules and the
-// group table: docs/tasks/README.md.
-//
-//   pnpm tasks [--all] [--json]   the board (--all: closed ones too)
-//   pnpm tasks next               what an agent can claim now, by priority
-//   pnpm tasks show <id>          one task with its parent, children, dependencies and linked files
-//   pnpm task:claim <id...> [--as <name>] [--scope a/,b.ts] [--takeover] [--force] [--no-land]
-//   pnpm tasks add <id> --title .. [--parent ..] [--depends a,b] [--needs user] [--issue 13] [--body ..] [--claim ...]
-//   pnpm tasks done <id> [--commit "<subject>"]...   mark done, move to 0-archive/ (commit it with the work)
-//   pnpm tasks drop <id> --reason ..                 mark 不做, move to 0-archive/
-//   pnpm tasks note <id> <text> [--as <name>]        a handoff line for whoever takes over
-//   pnpm tasks release <id> [--reason ..] [--no-land] give a claim back
-//   pnpm tasks stale | conflicts | check | landing
 import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import path from "node:path";
@@ -32,7 +18,6 @@ export { checkTasks } from "./taskRepo.mjs";
 export { staleReason } from "./taskRepo.mjs";
 
 const FLAGS = ["--all", "--json", "--takeover", "--no-land", "--claim", "--force"];
-/** Set on the run that syncedLane starts after the rebase brought newer task scripts. */
 const RERUN = "FOCUSD_TASKS_RERUN";
 
 function parseArgs(argv) {
@@ -51,17 +36,14 @@ function run(command, args) {
   return spawnSync(command, args, { stdio: "inherit", shell: process.platform === "win32" }).status ?? 1;
 }
 
-/** Claiming a task in a lane also records the lane as this session's (`pnpm lane:take`, scripts/lanes). */
 function checkInLane(main, lane, name) {
   if (!lane) return;
   try {
     recordOwner(main, lane, { pid: claudePid(), name: name || null });
   } catch {
-    // The task's lane field still marks the lane as in use.
   }
 }
 
-/** The lane this runs in, synced with origin/main and with no uncommitted tracked changes. */
 function syncedLane(root, what) {
   const lane = laneNumber(root);
   if (lane === null) throw new Error(`${what}要在 lane 里做（pnpm lane:open 开的 lane），主工作区留给用户`);
@@ -71,8 +53,6 @@ function syncedLane(root, what) {
   if (run("git", ["fetch", "-q", "origin"]) !== 0 || run("git", ["rebase", "-q", "origin/main"]) !== 0) {
     throw new Error(`同步 origin/main 失败；先解决 rebase 再${what}`);
   }
-  // This process still runs the scripts from before the rebase, which may write task files where
-  // main no longer keeps them; run the same command again with the scripts main has now.
   if (scripts() !== before && !process.env[RERUN]) {
     console.log("任务脚本在 main 上更新了，用新版本重新运行这条命令");
     const result = spawnSync(process.execPath, process.argv.slice(1), { stdio: "inherit", env: { ...process.env, [RERUN]: "1" } });
@@ -154,7 +134,6 @@ function add(root, main, options) {
   return 0;
 }
 
-/** Subjects of this lane's own commits not yet on origin/main, leaving out task-board commits. */
 function laneSubjects() {
   return (tryGit(["log", "--format=%s", "origin/main..HEAD"]) ?? "").split("\n").filter((subject) => subject && !subject.startsWith("docs(tasks)"));
 }
@@ -165,7 +144,6 @@ function close(root, options, status) {
   if (CLOSED_STATUSES.includes(task.fields.status)) throw new Error(`${id} 已经是「${task.fields.status}」`);
   const open = readAll(root).filter((child) => child.fields.parent === id && OPEN_STATUSES.includes(child.fields.status));
   if (open.length) throw new Error(`${id} 还有没结束的子任务：${open.map((child) => child.fields.id).join("、")}`);
-  // A closed task keeps only who did it: its lane is reused and its scope no longer guards anything.
   const { lane: _lane, claimed: _claimed, ...fields } = task.fields;
   fields.scope = [];
   let body = task.body;

@@ -41,7 +41,6 @@ test("always allow uses the first addRules suggestion", () => {
   assert.equal(alwaysAllowRule([{ type: "setMode", mode: "plan" }]), null);
 });
 
-/** Runs `body` with window.localStorage holding `entries`. */
 async function withStorage(entries, body) {
   const values = new Map(entries);
   const previous = globalThis.window;

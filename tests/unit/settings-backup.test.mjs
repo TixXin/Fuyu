@@ -16,7 +16,6 @@ test("a backup holds the set settings keys and nothing else", () => {
     exportedAt: "2026-11-06T06:30:00.000Z",
     keys: { "fuyu-settings": '{"opacity":95}', "fuyu-locale": "en" },
   });
-  // Todos, window positions, migration markers and one-off requests are never in a backup.
   for (const key of ["fuyu-todos", "fuyu-position", "fuyu-todos-migrated-v1", "fuyu-settings-focus"]) {
     assert.ok(!BACKUP_KEYS.includes(key), key);
   }
@@ -33,7 +32,6 @@ test("a backup carries the AI Agent approval and phone push choices and lyrics o
   ]) {
     assert.ok(BACKUP_KEYS.includes(key), key);
   }
-  // What sessions were looked at or removed is per-computer state, not a preference.
   for (const key of ["fuyu-agent-seen-turns", "fuyu-agent-hidden-sessions"]) {
     assert.ok(!BACKUP_KEYS.includes(key), key);
   }
@@ -63,7 +61,6 @@ test("a backup from before the rename restores under the new key names", () => {
     keys: { "focusd-island-settings": '{"opacity":80}', "focusd-island-locale": "en", "focusd-island-todos": "[x]" },
   });
   assert.deepEqual(parseBackup(old), { keys: { "fuyu-settings": '{"opacity":80}', "fuyu-locale": "en" } });
-  // A file with both names (edited by hand) keeps the new one.
   const both = JSON.stringify({ app: "fuyu", version: 1, keys: { "fuyu-locale": "zh-CN", "focusd-island-locale": "en" } });
   assert.deepEqual(parseBackup(both), { keys: { "fuyu-locale": "zh-CN" } });
 });

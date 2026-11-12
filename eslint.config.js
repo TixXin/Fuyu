@@ -1,7 +1,6 @@
 import tseslint from "typescript-eslint";
 import reactHooks from "eslint-plugin-react-hooks";
 
-// IPC 只能在各目录的 api.ts 中出现（规则见 src/AGENTS.md「边界收口」）。
 const ipcImportRestriction = {
   paths: [
     {
@@ -16,8 +15,6 @@ const ipcImportRestriction = {
     },
   ],
 };
-
-// 重构前直接调用 invoke / listen 的文件曾在这里降为 warn。存量问题已全部处理（7.2），所有规则均为 error。
 
 export default tseslint.config(
   { ignores: ["dist/**", "node_modules/**", "src-tauri/**"] },
@@ -46,7 +43,6 @@ export default tseslint.config(
     },
   },
   {
-    // utils/ 只放纯函数：不依赖 React、Tauri。
     files: ["src/utils/**/*.ts"],
     rules: {
       "no-restricted-imports": [

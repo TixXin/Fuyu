@@ -1,11 +1,3 @@
-// Handing out lanes, so there are about as many as sessions at once instead of
-// one more per session, /clear or restart. The WorktreeCreate hook (through the
-// patched merge queue) and `pnpm lane:open` both come here:
-//   1. the requester's own idle lane (the one it is in, or recorded as its);
-//   2. otherwise the lowest-numbered lane nobody uses (laneState.mjs);
-//   3. otherwise a new lane at the lowest free number.
-// A lane handed out is reset to the main checkout's HEAD; it keeps its
-// node_modules and build caches. Lanes with work in them are never reset.
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, rmSync, statSync } from "node:fs";
 import path from "node:path";
@@ -26,7 +18,6 @@ function tryGit(args, cwd) {
   }
 }
 
-/** Runs `work` while no other session hands out lanes. */
 export function withPoolLock(main, work) {
   const lock = path.join(commonDir(main), "claude-code-merge-queue", "lane-pool.lock");
   mkdirSync(path.dirname(lock), { recursive: true });
@@ -58,7 +49,6 @@ function existingLanes(main) {
   return lanes;
 }
 
-/** Every lane folder with its facts and, for `requester`, whose it is. */
 export function listLanes(main, requester = {}, { now = Date.now(), probe = true } = {}) {
   const context = { mainHead: git(["rev-parse", "HEAD"], main), owners: readOwners(main), tasks: tasksByLane(main) };
   return existingLanes(main).map((lane) => {
@@ -75,7 +65,6 @@ function createLane(main, mainHead) {
     if (existsSync(wt)) continue;
     const branch = `${BRANCH_PREFIX}${lane}`;
     const hasBranch = tryGit(["show-ref", "--verify", "--quiet", `refs/heads/${branch}`], main) !== null;
-    // An old lane/N branch is reused only when it has nothing main lacks; otherwise the number is skipped.
     if (hasBranch && tryGit(["merge-base", "--is-ancestor", branch, mainHead], main) === null) continue;
     const args = hasBranch ? ["worktree", "add", "-q", "-f", wt, branch] : ["worktree", "add", "-q", wt, "-b", branch, mainHead];
     if (tryGit(args, main) === null) continue;
@@ -85,10 +74,6 @@ function createLane(main, mainHead) {
   throw new Error(`no free lane number up to ${MAX_LANE}`);
 }
 
-/**
- * Picks a lane for the session `{ pid, name }` started from `fromCwd`, records it as theirs and
- * returns `{ lane, wt, branch, reused }`. `install` runs the package manager in it afterwards.
- */
 export function openLane({ main, fromCwd = null, pid = null, name = null, install = true, now = Date.now() }) {
   const picked = withPoolLock(main, () => {
     const mainHead = git(["rev-parse", "HEAD"], main);
@@ -117,7 +102,6 @@ export function openLane({ main, fromCwd = null, pid = null, name = null, instal
   return picked;
 }
 
-/** Records lane `lane` as `{ pid, name }`'s, for a session taking it over; refuses while someone else uses it unless `force`. */
 export function takeLane(main, lane, { pid = null, name = null, force = false, now = Date.now() }) {
   return withPoolLock(main, () => {
     const entry = listLanes(main, { pid, name }, { now }).find((item) => item.lane === lane);

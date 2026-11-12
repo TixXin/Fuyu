@@ -1,9 +1,7 @@
-// pnpm dev, then open /tests/regression/claude-usage.html (demo, card open) or ?test=1 (checks).
 import { act, StrictMode, type CSSProperties } from "react";
 import { createRoot } from "react-dom/client";
 import { mockIPC } from "@tauri-apps/api/mocks";
 import "../../src/styles/tokens.css";
-// Loads the island stylesheets in the same order as the app.
 import "../../src/windows/island/IslandApp";
 import { IslandShell } from "../../src/windows/island/IslandShell";
 import { useLatestMessagePreview } from "../../src/windows/island/useLatestMessagePreview";
@@ -25,7 +23,6 @@ import type { MediaState } from "../../src/features/media/api";
 
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
 const automated = new URLSearchParams(location.search).has("test");
-// Same values as MediaState::empty() in src-tauri/src/media_control/session.rs.
 const UNAVAILABLE_MEDIA: MediaState = {
   available: false, audioActive: false, audioPeak: 0, playbackStatus: "unavailable",
   title: null, artist: null, album: null, thumbnail: null, positionMs: 0, durationMs: 0,
@@ -42,7 +39,6 @@ window.addEventListener("beforeunload", () => {
 
 const MINUTE = 60_000;
 const at = (minutes: number) => Date.now() + minutes * MINUTE;
-// Shaped like AgentUsage in src-tauri/src/agent_status/usage.rs.
 const snapshot = (overrides: Partial<AgentUsage> = {}): AgentUsage => ({
   updatedAt: Date.now() - 2 * MINUTE,
   fiveHour: { name: "", used: 42, resetsAt: at(132.5) },
@@ -52,7 +48,6 @@ const snapshot = (overrides: Partial<AgentUsage> = {}): AgentUsage => ({
   ...overrides,
 });
 let current: AgentUsage | null = snapshot();
-// The other agents' rings, side by side with Claude's in the second fixture.
 const others: Record<string, AgentUsage> = {
   codex: snapshot({ source: "codex", plan: "Plus", fiveHour: { name: "", used: 18, resetsAt: at(200) }, sevenDay: { name: "", used: 40, resetsAt: at(5000) } }),
   glm: snapshot({ source: "glm", plan: "GLM Coding Pro", fiveHour: { name: "", used: 35, resetsAt: at(90.5) }, sevenDay: { name: "", used: 52, resetsAt: at(2 * 1440 + 18 * 60 - 0.5) }, models: [{ name: "mcpMonth", used: 8, resetsAt: null }] }),
@@ -61,7 +56,6 @@ const others: Record<string, AgentUsage> = {
 let reads = 0;
 let refreshes = 0;
 const planReads: string[] = [];
-// The plugin page's key fields: what reached set_plan_key, and which keys are saved.
 const keyWrites: string[] = [];
 const savedKeys = new Set<string>();
 mockIPC((command, payload) => {
@@ -93,7 +87,6 @@ mockIPC((command, payload) => {
   }
 }, { shouldMockEvents: true });
 
-/** The bar with Claude's ring alone (`all` false, what the checks drive) or every agent's. */
 function Fixture({ all = false }: { all?: boolean }) {
   const qq = useQQNotifications(true);
   const wechat = useWeChatReminders(true);
@@ -128,7 +121,6 @@ const card = () => document.querySelector<HTMLElement>(".island-hover-card");
 const cardLines = () => [...card()!.querySelectorAll(".island-hover-card__line")].map((line) => line.textContent);
 const arcColors = () => [...button().querySelectorAll(".mini-ring__arc")].map((arc) => (arc as SVGElement).style.stroke);
 const wait = (ms: number) => act(async () => { await new Promise((resolve) => setTimeout(resolve, ms)); });
-// A click re-reads the snapshot, so a new one shows without waiting for the 30-second timer.
 const push = async (next: AgentUsage | null) => {
   current = next;
   await act(async () => button().click());
@@ -148,10 +140,9 @@ async function runChecks() {
     check(!button().title && !button().querySelector("[title]"), "不用原生 title 提示");
     check(button().querySelectorAll(".mini-ring__track").length === 2, "同心双环：两条底轨");
     check(arcColors().join() === [USAGE_COLORS.normal, USAGE_COLORS.warn].join(), "外环 42% 常态色，内环 76% 用 ≥70% 的颜色");
-    // Issue #42: each colour has a dark-island and a light-island value, and the track follows the ink.
     const arc = button().querySelector(".mini-ring__arc")!;
     const track = button().querySelector(".mini-ring__track")!;
-    (arc as SVGElement).style.transition = "none"; // the colour change is animated
+    (arc as SVGElement).style.transition = "none";
     const dark = [getComputedStyle(arc).stroke, getComputedStyle(track).stroke];
     document.body.classList.add("island-light");
     document.body.style.setProperty("--island-ink-rgb", "24, 24, 30");
@@ -176,7 +167,6 @@ async function runChecks() {
     await leave();
     check(!card(), "移开后卡片消失");
 
-    // With the pointer on the ring, the card steps out from under the cursor.
     const ring = button().getBoundingClientRect();
     const pointerX = ring.left + ring.width / 2;
     await act(async () => { anchor().dispatchEvent(new PointerEvent("pointerover", { bubbles: true, clientX: pointerX, clientY: ring.top + ring.height / 2 })); });
@@ -210,7 +200,6 @@ async function runChecks() {
     await act(async () => button().blur());
     check(!card(), "失去焦点后卡片消失");
 
-    // Every agent switched on: one ring each, in order and colour, side by side inside the island.
     const all = [...document.querySelectorAll<HTMLButtonElement>(".stage--all .claude-usage-gauge")];
     check(all.map((gauge) => gauge.dataset.provider).join() === "claudeCode,codex,glm,kimi", "四个环按 Claude Code、Codex、GLM、Kimi 排列");
     const colorsOf = (gauge: HTMLElement) => [...gauge.querySelectorAll(".mini-ring__arc")].map((arc) => (arc as SVGElement).style.stroke);
@@ -229,7 +218,6 @@ async function runChecks() {
     check(cardLines().join(" / ") === "GLM · GLM Coding Pro / 5 小时 35% · 1 小时 31 分后重置 / 7 天 52% · 2 天 18 小时后重置 / MCP 本月 8% / 2 分钟前更新 · 来自智谱开放平台", `GLM 卡片：${cardLines().join(" / ")}`);
     await act(async () => { glmAnchor.dispatchEvent(new PointerEvent("pointerout", { bubbles: true, relatedTarget: document.body })); });
 
-    // The plugin page: a password field per plan switched on; the key goes to set_plan_key and never back.
     const fields = [...document.querySelectorAll<HTMLElement>("#plan-keys [data-plan-key]")];
     check(fields.map((field) => field.dataset.planKey).join() === "glm", "只为打开的 GLM 显示 API Key 输入框");
     const input = fields[0].querySelector("input")!;

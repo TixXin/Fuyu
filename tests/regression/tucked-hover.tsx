@@ -1,6 +1,3 @@
-// pnpm dev, then open /tests/regression/tucked-hover.html?test=1.
-// Drives the island's real navigation hooks with the native hover event mocked:
-// what resting the cursor on a tucked island does, per the "收起时鼠标移上去" setting.
 import { act, StrictMode, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { mockIPC } from "@tauri-apps/api/mocks";
@@ -14,7 +11,7 @@ Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
 mockIPC(() => null, { shouldMockEvents: true });
 
 const RETRACT_MS = 120;
-const HOVER_DELAY_MS = 0; // The user's setting; opening still waits for the 320 ms slide-out.
+const HOVER_DELAY_MS = 0;
 
 type Island = ReturnType<typeof useIslandNavigation>;
 let island: Island;
@@ -56,7 +53,6 @@ const wait = (ms: number) => act(async () => { await new Promise((resolve) => se
 const hover = async (inside: boolean) => {
   await act(async () => { await emit(ISLAND_HOVER_CHANGED_EVENT, inside); });
 };
-/** The cursor arrives on the tucked island: the page's mouseenter, then the native hover event. */
 const arrive = async () => {
   await act(async () => enter());
   await hover(true);
@@ -67,7 +63,6 @@ async function runChecks() {
   try {
     await wait(50);
 
-    // "只露出岛屿": a minimized island only slides out, and back once the cursor leaves.
     await act(async () => island.minimizeToEdge());
     await arrive();
     await wait(400);
@@ -76,7 +71,6 @@ async function runChecks() {
     await wait(450);
     check(state() === "collapsed/tucked", "只露出岛屿：鼠标移开后岛屿收回边缘");
 
-    // "展开面板": slides out at once, opens once the cursor stays.
     await act(async () => setOpensPanel(true));
     await arrive();
     check(state() === "collapsed/out", "展开面板：先立即露出岛屿");
@@ -88,15 +82,12 @@ async function runChecks() {
     await wait(450);
     check(state() === "collapsed/tucked", "展开面板：鼠标移开后面板关闭，岛屿收回边缘");
 
-    // Passing over the edge on the way to a browser tab does not open the panel.
     await arrive();
     await wait(40);
     await hover(false);
     await wait(500);
     check(state() === "collapsed/tucked", "鼠标只是划过边缘时不展开面板，岛屿收回");
 
-    // Out and straight back in, before the island slid away: no tucked mouse-enter
-    // comes, and the panel still opens.
     await arrive();
     await wait(40);
     await hover(false);
@@ -109,7 +100,6 @@ async function runChecks() {
     await wait(450);
     check(state() === "collapsed/tucked", "之后移开，面板关闭、岛屿收回");
 
-    // A draft in the panel keeps it open after the cursor leaves.
     await arrive();
     await wait(400);
     await act(async () => document.querySelector<HTMLInputElement>("#draft")!.focus());
@@ -120,7 +110,6 @@ async function runChecks() {
     await wait(600);
     check(state() === "collapsed/tucked", "输入框失去焦点后再收回");
 
-    // Idle-tucked without "鼠标移开后重新收起": the panel opens and the island stays out.
     await act(async () => island.idleTuck(null));
     await arrive();
     await wait(400);

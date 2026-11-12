@@ -7,7 +7,6 @@ const state = (codex, claudeCode, scriptsOutdated = false) => ({ codex, claudeCo
 test("no notice before the state is read or when the hooks are current", () => {
   assert.equal(getAgentHooksNotice(null), null);
   assert.equal(getAgentHooksNotice(state("current", "current")), null);
-  // Only one agent installed is fine: Install/Repair would not change anything for it.
   assert.equal(getAgentHooksNotice(state("notInstalled", "current")), null);
 });
 

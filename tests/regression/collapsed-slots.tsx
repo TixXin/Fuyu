@@ -1,9 +1,7 @@
-// pnpm dev, then open /tests/regression/collapsed-slots.html (demo) or ?test=1 (checks).
 import { act, StrictMode, useState, type CSSProperties } from "react";
 import { createRoot } from "react-dom/client";
 import { mockIPC } from "@tauri-apps/api/mocks";
 import "../../src/styles/tokens.css";
-// Loads the island stylesheets in the same order as the app.
 import "../../src/windows/island/IslandApp";
 import { IslandShell } from "../../src/windows/island/IslandShell";
 import { useLatestMessagePreview } from "../../src/windows/island/useLatestMessagePreview";
@@ -25,7 +23,6 @@ import { normalizeSettings } from "../../src/features/appearance/settings";
 
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
 const automated = new URLSearchParams(location.search).has("test");
-// Same values as MediaState::empty() in src-tauri/src/media_control/session.rs.
 const UNAVAILABLE_MEDIA: MediaState = {
   available: false, audioActive: false, audioPeak: 0, playbackStatus: "unavailable",
   title: null, artist: null, album: null, thumbnail: null, positionMs: 0, durationMs: 0,
@@ -92,7 +89,6 @@ function check(condition: unknown, label: string) {
 const bar = () => document.querySelector<HTMLElement>(".island__collapsed")!;
 const set = (next: Partial<State>) => act(async () => {
   change(next);
-  // The bar reads plugin statuses over IPC, as on the island; tell it they changed.
   if (next.status !== undefined) {
     pluginStatus = next.status;
     await emit("plugin-view-changed", { kind: "status", pluginId: STATUS.pluginId, itemId: STATUS.itemId, status: null });
@@ -133,7 +129,6 @@ async function runChecks() {
 
     await set({ agents: false, count: 0, slots: { center: <span className="test-center">中</span> } });
     check(!bar().querySelector(".island__center-slot"), "有待办摘要时不显示中心槽位");
-    // Only the pending count: the pattern stays, in front of the count, not in the centre slot.
     await set({ task: null, todoCount: 5 });
     await settle();
     const count = bar().querySelector<HTMLElement>(".island__todo-count")!;
@@ -143,7 +138,6 @@ async function runChecks() {
     await set({ slots: {} });
     check(!bar().querySelector(".island__todo-center"), "中心图案关着时待办数前面没有空位");
     await set({ todoCount: null, slots: { center: <span className="test-center">中</span> } });
-    // With rings and the session count on the right, the pattern centres in the space left between them.
     await set({ task: null, agents: true, count: 2, slots: { center: <span className="test-center">中</span>, gauges: [{ id: "usage:claudeCode", node: <span className="test-gauge" style={{ display: "block", width: 42, height: 20 }} /> }] } });
     const box = (selector: string) => bar().querySelector(selector)!.getBoundingClientRect();
     const [pattern, slot, light, gauges] = [box(".test-center"), box(".island__center-slot"), box(".island__pulse"), box(".island__gauge-slot")];
@@ -162,7 +156,6 @@ async function runChecks() {
     await set({ agents: true, count: 2 });
     check(gauge().nextElementSibling?.classList.contains("island-agent-count") && bar().lastElementChild === gauge().nextElementSibling,
       "仪表槽位在会话数之前");
-    // The user's order (Appearance > Collapsed bar), followed through the storage event as from the settings window.
     const arrange = (items: unknown[] | null) => act(async () => {
       if (items) localStorage.setItem("fuyu-collapsed-items", JSON.stringify({ version: 1, items }));
       else localStorage.removeItem("fuyu-collapsed-items");
@@ -205,7 +198,6 @@ async function runChecks() {
     check(bar().querySelector(".island__agent-session .agent-provider-icon"), "图标槽位为空时照旧显示 Agent 图标");
     await set({ agentTitle: undefined });
 
-    // The line being sung takes the summary's place (C4e); a named agent comes first.
     await set({ task: "剩余3个待办", lyric: "故事的小黄花" });
     check(bar().querySelector(".island__lyric")?.textContent === "故事的小黄花" && !bar().querySelector(".island__active-task"), "有歌词时显示当前这句，代替待办");
     openedPage = null;
@@ -215,7 +207,6 @@ async function runChecks() {
     check(!bar().querySelector(".island__lyric") && bar().querySelector(".island__agent-session-title")?.textContent === "修复登录", "外部传来 Agent 标题时不显示歌词");
     await set({ agentTitle: undefined });
 
-    // C30: the line lights up as it is sung, with the look from the settings.
     const karaokeSettings = normalizeSettings({ lyricsKaraokeColor: "custom", lyricsKaraokeCustomColor: "#ff0000", lyricsKaraokeFollow: false });
     const words = karaokeWords({ timeMs: 0, text: "故事的小黄花" }, 4_000, true)!;
     await set({ lyric: "故事的小黄花", karaoke: { words, positionMs: 1_000, clock: "a", look: karaokeLook(karaokeSettings) } });
@@ -231,7 +222,6 @@ async function runChecks() {
     check(bar().querySelector(".island__lyric .karaoke__track--moving"), "放不下的长句会跟着往左移");
     await set({ agentTitle: undefined, lyric: undefined, karaoke: undefined, task: null });
 
-    // Plugin status (status.update): text, or label-over-value cells, with an optional ring.
     const chip = () => bar().querySelector<HTMLElement>(".plugin-status-chip")!;
     await set({ task: "剩余3个待办", slots: {}, status: [STATUS] });
     check(chip().textContent === STATUS.text && !chip().querySelector(".mini-ring, .plugin-status-chip__cell"), "插件状态只有文字时照旧显示文字");
@@ -243,7 +233,6 @@ async function runChecks() {
     check(getComputedStyle(columns[3].querySelector(".plugin-status-chip__value")!).color !== getComputedStyle(columns[0].querySelector(".plugin-status-chip__value")!).color, "danger 列的数值换色");
     const barBox = bar().getBoundingClientRect();
     check(chip().getBoundingClientRect().right <= barBox.right && bar().scrollWidth <= bar().clientWidth + 1, "四列加进度环不撑出收起条");
-    // Upright batteries (status.update batteries) replace the text and the cells.
     const levels = [{ level: 1, tone: "neutral" }, { level: 0.3, tone: "neutral" }, { level: 0.15, tone: "warning" }, { level: 0, tone: "danger" }] as const;
     await set({ status: [{ ...STATUS, cells: [...cells], batteries: [...levels], tooltip: "PC 100% / 耳机 30%" }] });
     const batteries = [...chip().querySelectorAll<HTMLElement>(".plugin-status-chip__battery")];

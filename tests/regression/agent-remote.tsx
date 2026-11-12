@@ -1,6 +1,3 @@
-// pnpm dev, then open /tests/regression/agent-remote.html. Settings → AI Agent → Remote computers
-// on its own, against an in-memory native side: Hosts from ~/.ssh/config, adding and removing a
-// computer by address, refreshing, and the empty page. ?empty shows the page with no hosts.
 import { act, StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { mockIPC } from "@tauri-apps/api/mocks";

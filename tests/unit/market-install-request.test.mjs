@@ -6,7 +6,6 @@ const market = { plugins: [{ id: "dev.focusd.pomodoro" }, { id: "com.example.clo
 
 test("a requested plugin in the market is found", () => {
   assert.deepEqual(marketRequestState("com.example.clock", market, false, null), { kind: "found", plugin: { id: "com.example.clock" } });
-  // A refresh in progress still shows the plugin it already knows.
   assert.equal(marketRequestState("com.example.clock", market, true, null).kind, "found");
 });
 

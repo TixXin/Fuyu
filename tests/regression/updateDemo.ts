@@ -1,5 +1,3 @@
-// The made-up release that update-reminder.html announces, shared by the island
-// part of that page and the settings window it shows (settings.html?update=1).
 import type { DownloadEvent, UpdateInfo } from "../../src/features/updater/api";
 
 export const DEMO_CURRENT_VERSION = "0.3.3";
@@ -27,7 +25,6 @@ export const DEMO_UPDATE: UpdateInfo = {
   ].join("\n"),
 };
 
-/** Plays a 12 MB download over about three seconds, as updater_install reports one. */
 export function playDemoDownload(channel: unknown): Promise<null> {
   const send = (event: DownloadEvent) => (channel as { onmessage?: (event: DownloadEvent) => void }).onmessage?.(event);
   const total = 12 * 1024 * 1024;

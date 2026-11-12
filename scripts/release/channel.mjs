@@ -1,12 +1,5 @@
-// Update channels on the release side. Stable releases become GitHub's
-// "latest" release, which the stable endpoint reads; GitHub never makes a
-// pre-release "latest", so stable users never see a beta. The beta channel
-// reads the latest.json kept on the BETA_CHANNEL_TAG release, which every
-// release (stable or beta) updates unless it already announces a newer version.
-
 export const BETA_CHANNEL_TAG = "beta-channel";
 
-/** 0.3.1-beta.1 and the like. */
 export function isPrerelease(version) {
   return /^\d+\.\d+\.\d+-/.test(version);
 }
@@ -17,7 +10,6 @@ function parse(version) {
   return { core: match.slice(1, 4).map(Number), pre: match[4]?.split(".") ?? [] };
 }
 
-/** Semver precedence: negative when a < b, 0 when equal, positive when a > b. */
 export function compareVersions(a, b) {
   const left = parse(a);
   const right = parse(b);
@@ -40,7 +32,6 @@ export function compareVersions(a, b) {
   return 0;
 }
 
-/** Whether a release of `version` should replace the beta manifest announcing `current`. */
 export function shouldUpdateBetaManifest(version, current) {
   return !current || compareVersions(version, current) >= 0;
 }

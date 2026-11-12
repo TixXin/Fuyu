@@ -1,11 +1,3 @@
-// Writes src/windows/settings/searchIndex.json: every row of every settings page, in Chinese and
-// English, for the settings search (src/windows/settings/settingsSearch.ts). The rows come from
-// the pages themselves: tests/regression/settings-search.html opens each one in headless Chrome
-// or Edge, once as a new install has them and once with every switch on (rows that only show
-// under a switch). Run it after adding, removing or renaming a setting; the settings-search
-// regression page fails while a row is missing.
-//
-//   pnpm settings:index
 import { writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -15,7 +7,6 @@ const LOCALES = ["zh-CN", "en"];
 const STATES = ["on", "default"];
 const PAGE = "settings-search.html";
 
-/** One locale's rows: those with every switch on, then those only the defaults show. */
 export function mergeStates(byState) {
   const key = (row) => `${row.page}\u0000${row.group}\u0000${row.title}`;
   const rows = [];
@@ -30,7 +21,6 @@ export function mergeStates(byState) {
   return rows;
 }
 
-/** The index entries: the locales' rows side by side; they must be the same rows in the same order. */
 export function pairLocales(byLocale) {
   const [first, ...others] = LOCALES;
   const count = byLocale[first].length;

@@ -1,6 +1,3 @@
-// The system monitor example plugin (plugins/examples/dev.focusd.system-monitor) under the mock
-// host: with background recording on it reads while the page is closed and hands the page those
-// five minutes when it opens; it is off by default.
 import assert from "node:assert/strict";
 import path from "node:path";
 import test from "node:test";
@@ -10,7 +7,6 @@ const PLUGIN = path.resolve("plugins/examples/dev.focusd.system-monitor");
 const windowsOnly = { skip: process.platform !== "win32" };
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-/** Opens the page as the island does: visible, then the page's "ready". */
 function openPage(host) {
   host.viewVisible("monitor", true);
   host.webviewMessage("monitor", { type: "ready" });
@@ -20,7 +16,6 @@ test("background recording keeps the plugin running and gives the opening page w
   const host = startMockHost(PLUGIN, { settings: { backgroundHistory: true }, timeoutMs: 60000 });
   try {
     await host.waitFor((h) => h.keepAlive);
-    // Performance counters take a few seconds to open (10 s and more on a busy machine), then one reading a second.
     await delay(12000);
     assert.equal(host.webviewMessages.length, 0, "nothing goes to a closed page");
     openPage(host);
@@ -50,9 +45,7 @@ test("an opened page gets the programs using the most CPU and memory", windowsOn
   try {
     await host.waitForRequest("host.keepAlive");
     openPage(host);
-    // CPU shares need two scans a second apart, so the list comes with a later sample.
     const { processes, layout } = (await host.waitFor((h) => h.webviewMessages.find((sent) => sent.message.processes))).message;
-    // The page lays itself out by the "layout" setting; automatic by default.
     assert.equal(layout, "auto");
     for (const list of [processes.byCpu, processes.byMemory]) {
       assert.equal(list.length, 10);

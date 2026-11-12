@@ -18,7 +18,6 @@ try {
   [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($pointer)
 }`;
   const childEnv = { ...process.env, FOCUSD_RELEASE_PASSWORD_FILE: passwordFile };
-  // PowerShell 7 module paths are incompatible with the Windows PowerShell 5 host.
   delete childEnv.PSModulePath;
   const result = spawnSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-Command", command], {
     encoding: "utf8",
@@ -34,7 +33,6 @@ try {
 }
 
 export function loadSigningEnvironment(env = process.env, options = {}) {
-  // CI or an explicitly selected key must never be mixed with the local key pair.
   if (env.TAURI_UPDATER_PUBKEY?.trim() || env.TAURI_SIGNING_PRIVATE_KEY?.trim()) return { ...env };
 
   const configPath = options.configPath ?? env.FOCUSD_SIGNING_CONFIG

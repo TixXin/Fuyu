@@ -7,12 +7,12 @@ const window = (z, x, y, width, height) => ({ window: z, element: false, x, y, w
 const control = (z, x, y, width, height) => ({ window: z, element: true, x, y, width, height });
 
 const TARGETS = [
-  window(0, 100, 100, 800, 600), // the editor, on top
-  control(0, 100, 100, 800, 40), // its toolbar
-  control(0, 110, 105, 30, 30), // a button in the toolbar
-  control(0, 100, 100, 800, 600), // its root pane, as big as the window
-  window(1, 0, 0, 1920, 1040), // the browser behind it
-  control(1, 0, 0, 1920, 80), // the browser's toolbar, covered by the editor at (120, 110)
+  window(0, 100, 100, 800, 600),
+  control(0, 100, 100, 800, 40),
+  control(0, 110, 105, 30, 30),
+  control(0, 100, 100, 800, 600),
+  window(1, 0, 0, 1920, 1040),
+  control(1, 0, 0, 1920, 80),
 ];
 
 test("the layers under the pointer go from the innermost control out to the monitor, in the top window only", () => {
@@ -29,7 +29,6 @@ test("outside the top window, the window below and its controls are found", () =
   const layers = layersAt(TARGETS, { x: 50, y: 40 }, BOUNDS);
   assert.deepEqual(layers.map((layer) => layer.width), [1920, 1920, 1920]);
   assert.deepEqual(layers[0], { x: 0, y: 0, width: 1920, height: 80 });
-  // Nothing at all: only the monitor.
   assert.deepEqual(layersAt([], { x: 5, y: 5 }, BOUNDS), [{ x: 0, y: 0, width: 1920, height: 1080 }]);
 });
 

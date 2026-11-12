@@ -10,7 +10,6 @@ const session = (sessionId, phase, updatedAt = 0, extra = {}) => ({
 
 test("lyrics give way for a moment when a session starts, finishes or fails", () => {
   const before = phasesOf([session("a", "running"), session("b", "completed")]);
-  // The first look only notes where sessions stand.
   assert.equal(interjectingSession(null, [session("a", "completed")]), null);
   assert.equal(interjectingSession(before, [session("a", "completed", 5)])?.sessionId, "a");
   assert.equal(interjectingSession(before, [session("a", "failed", 5)])?.sessionId, "a");
@@ -19,11 +18,9 @@ test("lyrics give way for a moment when a session starts, finishes or fails", ()
 
 test("nothing interrupts the lyrics while sessions just carry on", () => {
   const before = phasesOf([session("a", "running"), session("b", "completed")]);
-  // Still running, a later turn the user just started, an old session coming into view finished.
   assert.equal(interjectingSession(before, [session("a", "running", 5), session("b", "completed")]), null);
   assert.equal(interjectingSession(before, [session("a", "running"), session("b", "running", 5)]), null);
   assert.equal(interjectingSession(before, [session("a", "running"), session("b", "completed"), session("c", "completed", 9)]), null);
-  // A session with no title has nothing to show.
   assert.equal(interjectingSession(before, [session("a", "completed", 5, { title: null })]), null);
 });
 
@@ -39,7 +36,6 @@ test("a session stopped on an approval or question keeps the bar, the latest whe
 
 test("a finished turn whose reply asks something shows for a moment, not until answered", () => {
   const asked = session("a", "completed", 5, { replyMarker: "yourTurn" });
-  // Left asking for hours, it would cover the lyrics all that time.
   assert.equal(waitingSession([asked]), null);
   assert.equal(interjectingSession(phasesOf([session("a", "running")]), [asked])?.sessionId, "a");
 });

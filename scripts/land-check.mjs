@@ -1,13 +1,3 @@
-// The merge queue's checkCommand: the pre-push hook runs it on every land, and
-// `pnpm verify` runs it in a lane before landing. `pnpm check` always; `cargo
-// test` too when the landing touches files the Rust build or its tests read.
-// Two shortcuts keep the queue (locked while this runs) moving:
-//   - a landing that only changes Markdown docs runs the quick doc checks;
-//   - Rust files changed only in the app version (a release bump) do not
-//     call for cargo test;
-//   - a tree that already passed (in the lane, or a land that failed to push)
-//     is not checked again: passes are recorded by tree hash in the git dir.
-// The release build stays a manual step (AGENTS.md).
 import { execFileSync, spawnSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
@@ -18,26 +8,16 @@ import { backgroundBuildEnv, lowerPriority } from "./build-load.mjs";
 import { pruneMainTarget } from "./prune-build-cache.mjs";
 import { readVersion, VERSION_FILES, writeVersion } from "./release/versions.mjs";
 
-/** src-tauri itself (including the scripts it embeds with include_str!) and plugins/ (keys, index and schema its tests read). */
 const RUST_INPUTS = ["src-tauri/", "plugins/"];
 
-/** Markdown that a test checks against its generator, so changing it needs the full check. */
 const CHECKED_DOCS = ["docs/plugins/api.md"];
 
-/** What a docs-only landing runs instead of `pnpm check`. */
 const DOCS_CHECKS = ["pnpm run check:tasks"];
 
-/** How many passed trees are remembered. */
 const MAX_PASSES = 40;
 
-/** Attribution lines this repo's commits must not carry (AGENTS.md; .githooks/commit-msg). */
 const ATTRIBUTION = /^(Co-Authored-By: Claude|🤖 Generated with \[Claude Code\])/im;
 
-/**
- * Subjects of the commits whose messages carry an attribution line. Only commits authored by
- * `ownEmail` (this clone's user.email) count: a contributor's merged pull request keeps its own
- * messages. With no email known, every commit counts.
- */
 export function attributedCommits(commits, ownEmail = "") {
   const own = ownEmail.trim().toLowerCase();
   return commits
@@ -46,15 +26,10 @@ export function attributedCommits(commits, ownEmail = "") {
     .map(({ subject }) => subject);
 }
 
-/**
- * Whether the Rust side needs testing. `versionOnly(file)` says a file changed in nothing but the
- * app version (`pnpm release:version`): the tests read no version, so those files do not count.
- */
 export function needsRust(files, versionOnly = () => false) {
   return files.some((file) => RUST_INPUTS.some((prefix) => file.startsWith(prefix)) && !versionOnly(file));
 }
 
-/** True when `after` is `before` with only the app version changed; `file` is a repo path. */
 export function versionOnlyChange(file, before, after) {
   const kind = Object.keys(VERSION_FILES).find((key) => VERSION_FILES[key] === file);
   if (!kind || before === null || after === null) return false;
@@ -64,29 +39,22 @@ export function versionOnlyChange(file, before, after) {
   return normalize(writeVersion(kind, before, version)) === normalize(after);
 }
 
-/** Every file is Markdown that no test generates or reads. */
 export function docsOnly(files) {
   return files.length > 0 && files.every((file) => file.endsWith(".md") && !CHECKED_DOCS.includes(file));
 }
 
-/**
- * A release bump (`pnpm release:version`): app version changes in the version files plus
- * Markdown. The code is the same tree that already passed on main, so `pnpm check` is not rerun.
- */
 export function releaseBumpOnly(files, versionOnly = () => false) {
   const isDoc = (file) => file.endsWith(".md") && !CHECKED_DOCS.includes(file);
   const isVersion = (file) => Object.values(VERSION_FILES).includes(file) && versionOnly(file);
   return files.some(isVersion) && files.every((file) => isDoc(file) || isVersion(file));
 }
 
-/** The checks a landing of `files` needs; `files` null (unknown) needs all of them. */
 export function checksFor(files, versionOnly = () => false) {
   if (files && docsOnly(files)) return { frontend: "docs", rust: false };
   if (files && releaseBumpOnly(files, versionOnly)) return { frontend: "release", rust: false };
   return { frontend: "full", rust: !files || needsRust(files, versionOnly) };
 }
 
-/** The four version fields, or a message saying which disagree. */
 export function versionMismatch(read = (file) => readFileSync(file, "utf8")) {
   const found = Object.entries(VERSION_FILES).map(([kind, file]) => [file, readVersion(kind, read(file))]);
   const first = found[0][1];
@@ -95,7 +63,6 @@ export function versionMismatch(read = (file) => readFileSync(file, "utf8")) {
     : `version fields disagree: ${found.map(([file, version]) => `${file}=${version}`).join(", ")}`;
 }
 
-/** `passes` with `tree` marked as having passed `kinds`, oldest trees dropped past MAX_PASSES. */
 export function recordPass(passes, tree, kinds, now = Date.now()) {
   const next = { ...passes, [tree]: { ...passes[tree], ...Object.fromEntries(kinds.map((kind) => [kind, now])) } };
   const newest = (key) => Math.max(...Object.values(next[key]));
@@ -107,7 +74,6 @@ function git(args) {
   return execFileSync("git", args, { encoding: "utf8" }).trim();
 }
 
-/** null when unknown, so everything runs. land fetched and rebased onto origin/main just before pushing. */
 function changedFiles() {
   try {
     return git(["diff", "--name-only", "origin/main...HEAD"]).split("\n").filter(Boolean);
@@ -116,7 +82,6 @@ function changedFiles() {
   }
 }
 
-/** Whether `file` differs from origin/main only in the app version (the working copy is what gets checked). */
 function versionBumpOnly(file) {
   let before = null;
   let after = null;
@@ -129,7 +94,6 @@ function versionBumpOnly(file) {
   return versionOnlyChange(file, before, after);
 }
 
-/** HEAD's tree when no tracked file has uncommitted changes (only then is it what gets checked). */
 function cleanTree() {
   try {
     return git(["status", "--porcelain", "--untracked-files=no"]) ? null : git(["rev-parse", "HEAD^{tree}"]);
@@ -155,7 +119,6 @@ function run(command, env = {}) {
   return spawnSync(command, { shell: true, stdio: "inherit", env: { ...process.env, ...env } }).status ?? 1;
 }
 
-/** The commits being landed, or [] when unknown. */
 function landingCommits() {
   try {
     return git(["log", "origin/main..HEAD", "--format=%ae%x1f%s%x1f%B%x1e"])
@@ -169,7 +132,6 @@ function landingCommits() {
   }
 }
 
-/** This clone's commit email, so only its own commits are held to the attribution rule. */
 function ownEmail() {
   try {
     return git(["config", "user.email"]).trim();
@@ -178,17 +140,12 @@ function ownEmail() {
   }
 }
 
-/**
- * A land shows the lane's session is still there (scripts/lanes: its process may be unknown).
- * Returns the lane number when the lane has no owner: made by hand, so another session may be
- * handed it as idle (AGENTS.md: lanes come from EnterWorktree or `pnpm lane:open`).
- */
 function checkIn() {
   try {
     const lane = laneNumber(process.cwd());
     return lane && !touchOwner(mainCheckout(), lane) ? lane : null;
   } catch {
-    return null; // never block a land on a bookkeeping error
+    return null;
   }
 }
 
@@ -204,7 +161,6 @@ function main() {
     console.error(`[land-check] remove the Claude attribution lines from: ${attributed.join("; ")}`);
     return 1;
   }
-  // Tasks marked done must name real commits; the lane's open claims get a reminder.
   if (run("node scripts/tasks/tasks.mjs landing") !== 0) return 1;
   const files = changedFiles();
   const { frontend, rust } = checksFor(files, versionBumpOnly);
@@ -243,12 +199,9 @@ function main() {
     console.log(`[land-check] tree ${tree.slice(0, 10)} already passed cargo test; not running it again`);
     return 0;
   }
-  // Lanes share one build cache, apart from the user's `pnpm tauri dev` (build-dirs.mjs):
-  // sharing target/debug made each wait on and rebuild after the other.
   const target = process.env.CARGO_TARGET_DIR ?? targetDir(mainCheckout(), "agents");
   if (run("cargo test --manifest-path src-tauri/Cargo.toml", { CARGO_TARGET_DIR: target, ...backgroundBuildEnv() }) !== 0) return 1;
   record("cargo");
-  // Each lane's path gives the app's crates new hashes, and cargo keeps every old cache.
   pruneMainTarget();
   return 0;
 }

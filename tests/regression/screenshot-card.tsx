@@ -1,7 +1,3 @@
-// pnpm dev, then open /tests/regression/screenshot-card.html.
-// The island's screenshot card (C41.5) with the Tauri boundary mocked: it appears for a copied
-// screenshot, puts it on the file shelf, sends it to the one agent session (focus, then paste),
-// is disabled without a session, and closes.
 import { act, StrictMode, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { emit } from "@tauri-apps/api/event";

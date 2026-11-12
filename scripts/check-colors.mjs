@@ -1,13 +1,3 @@
-// Keeps colours that only suit a dark island out of the CSS. A colour written as a literal
-// (#fff, rgba(255, 255, 255, 0.6), white) in a text, fill or border property shows the same on
-// a light island, where it is often unreadable. Write it as a token with the old value as the
-// fallback instead: var(--error-text, #ff9aa9), or rgba(var(--overlay-rgb, 255, 255, 255), 0.6)
-// for a neutral; .island-light (src/styles/tokens.css) supplies the light values.
-//
-// Allowed as they are: token definitions (--name: value), fallbacks inside var(), rules for a
-// light island (a selector with island-light or --light), tokens.css, and windows that are dark
-// whatever the theme (the screenshot overlay). Files that already had literals are listed in
-// color-literal-allowlist.json with their count, which may only go down.
 import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -17,7 +7,6 @@ const EXEMPT = [/^src\/styles\/tokens\.css$/, /^src\/windows\/screenshot\//, /^s
 const PROPERTY = /^(color|background(-color)?|border(-(top|right|bottom|left))?(-color)?|outline(-color)?|fill|stroke|caret-color|text-decoration-color|column-rule-color)$/;
 const LITERAL = /#[0-9a-f]{3,8}\b|\brgba?\(\s*[0-9.]+\s*[, ]\s*[0-9.]+|\bhsla?\(\s*[0-9.]+|\b(white|black)\b/gi;
 
-/** `value` with every var(...) call removed, so fallbacks inside them do not count. */
 function withoutVars(value) {
   let out = "";
   let depth = 0;
@@ -37,7 +26,6 @@ function withoutVars(value) {
   return out;
 }
 
-/** The literal colours in a stylesheet that would look the same on a light island: [{ line, text }]. */
 export function colorLiterals(source) {
   const found = [];
   const code = source.replace(/\/\*[\s\S]*?\*\//g, (comment) => comment.replace(/[^\n]/g, " "));
@@ -88,7 +76,6 @@ function cssFiles(dir, root) {
   return files;
 }
 
-/** Problems with `counts` (path → literals) against `allowlist` (path → allowed count). */
 export function compare(counts, allowlist) {
   const problems = [];
   for (const [file, count] of Object.entries(counts)) {
@@ -117,7 +104,6 @@ function main() {
     }
   }
   if (process.argv.includes("--update")) {
-    // Only ever lowers entries (or drops them); a file that grew still fails below.
     const next = {};
     for (const [file, count] of Object.entries(counts)) {
       const allowed = allowlistFile.files[file] ?? 0;

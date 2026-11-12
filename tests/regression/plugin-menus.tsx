@@ -1,6 +1,3 @@
-// pnpm dev, then open /tests/regression/plugin-menus.html.
-// The plugin right-click menus (contributes.menus) on rows like the island's,
-// with the Tauri boundary mocked: which menu a row opens and what is sent.
 import { act, StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { mockIPC, mockWindows } from "@tauri-apps/api/mocks";
@@ -50,7 +47,6 @@ const check = (condition: unknown, message: string) => {
 };
 const wait = (ms: number) => act(async () => { await new Promise((resolve) => setTimeout(resolve, ms)); });
 const menu = () => document.querySelector<HTMLElement>(".plugin-todo-menu");
-/** Right-clicks `selector`; returns whether the page let the browser's own menu through. */
 const rightClick = async (selector: string) => {
   let allowed = true;
   await act(async () => {

@@ -14,7 +14,6 @@ test("a turn that ends, fails or asks the user alerts once", () => {
   assert.equal(alertKind("stale", "completed"), "completed");
   assert.equal(alertKind("running", "failed"), "failed");
   assert.equal(alertKind("running", "waiting"), "waiting");
-  // No change, or a change that needs nothing from the user.
   assert.equal(alertKind("completed", "completed"), null);
   assert.equal(alertKind("waiting", "waiting"), null);
   assert.equal(alertKind("failed", "failed"), null);
@@ -30,7 +29,6 @@ test("a session seen for the first time alerts when it is waiting or working", (
 
 test("alerts come from the change since the last look, of the kinds switched on", () => {
   const before = [session("a", "running"), session("b", "running"), session("c", "completed")];
-  // The first look only takes note.
   assert.deepEqual(detectAlerts(null, before, ALL), []);
   const after = [session("a", "completed"), session("b", "waiting"), session("c", "completed"), session("d", "waiting")];
   const alerts = detectAlerts(phasesOf(before), after, ALL);
@@ -49,7 +47,6 @@ test("a turn starts when a finished session runs again, not when a stalled or an
 });
 
 test("starts alert every turn, for new sessions only, or never", () => {
-  // a was there when the island started; b shows up later and works, then finishes.
   const first = phasesOf([session("a", "completed")]);
   const withB = [session("a", "completed"), session("b", "running")];
   const started = (previous, sessions, mode) =>
@@ -61,11 +58,9 @@ test("starts alert every turn, for new sessions only, or never", () => {
   const bDone = phasesOf([session("a", "completed"), session("b", "completed")], bWorked);
   const nextTurns = [session("a", "running"), session("b", "running")];
   assert.deepEqual(started(bDone, nextTurns, "everyTurn"), ["a", "b"]);
-  // a was listed at the first look and b has worked since: neither is a new session.
   assert.deepEqual(started(bDone, nextTurns, "newSession"), []);
   const fresh = [session("a", "completed"), session("b", "completed"), session("c", "completed")];
   const cAppears = phasesOf(fresh, bDone);
-  // c showed up finished (an empty session after /clear, say); its first turn is still new.
   assert.deepEqual(started(cAppears, [session("a", "completed"), session("b", "completed"), session("c", "running")], "newSession"), ["c"]);
 });
 
@@ -73,7 +68,6 @@ test("the reply status marker decides how a finished turn alerts", () => {
   assert.equal(alertKind("running", "completed", "yourTurn"), "waiting");
   assert.equal(alertKind("running", "completed", "background"), null);
   assert.equal(alertKind("running", "completed", "done"), "completed");
-  // The marker only speaks for a turn that just finished.
   assert.equal(alertKind("completed", "completed", "yourTurn"), null);
   assert.equal(alertKind("running", "failed", "yourTurn"), "failed");
 
@@ -85,13 +79,10 @@ test("the reply status marker decides how a finished turn alerts", () => {
   ];
   const alerts = detectAlerts(phasesOf(before), after, ALL);
   assert.deepEqual(alerts.map(({ kind, session }) => `${kind}:${session.sessionId}`), ["waiting:a", "completed:c"]);
-  // "Your turn" follows the waiting switch, not the completed one.
   const noWaiting = detectAlerts(phasesOf(before), after, { ...ALL, waiting: false });
   assert.deepEqual(noWaiting.map(({ session }) => session.sessionId), ["c"]);
 });
 
-// Issue #15: a turn that ends on ⋯ is woken by Claude Code when its background task ends; that
-// carries on the same turn and must not alert as a start. Its real end alerts as usual.
 test("waking a turn that waited on its background task does not alert as a start", () => {
   const looks = [
     [session("a", "running")],
@@ -109,7 +100,6 @@ test("waking a turn that waited on its background task does not alert as a start
   }
   assert.deepEqual(alerts, ["completed"]);
 
-  // A turn that ended done or asking, then gets a new prompt, still starts a new turn.
   for (const ending of ["done", "yourTurn"]) {
     const ended = phasesOf([{ ...session("b", "completed"), replyMarker: ending }]);
     assert.deepEqual(detectAlerts(ended, [session("b", "running")], ALL).map(({ kind }) => kind), ["started"], ending);
@@ -121,7 +111,6 @@ test("without a marker, a finished reply that asks something alerts as waiting",
   const after = [
     { ...session("a", "completed"), replyAsks: true },
     { ...session("b", "completed"), replyAsks: false },
-    // The marker wins over the guess.
     { ...session("c", "completed"), replyAsks: true, replyMarker: "done" },
   ];
   const alerts = detectAlerts(phasesOf(before), after, ALL);
@@ -142,12 +131,10 @@ test("reminders: once per wait, after the delay, for sessions still waiting on t
   assert.deepEqual(ids(takeDueReminders(state, [session("w", "waiting")], 60_999, 60_000)), []);
   assert.deepEqual(ids(takeDueReminders(state, [session("w", "waiting")], 61_000, 60_000)), ["w"]);
   assert.deepEqual(ids(takeDueReminders(state, [session("w", "waiting")], 500_000, 60_000)), [], "once per wait");
-  // Answered, then waiting again: a new wait with its own reminder.
   takeDueReminders(state, [session("w", "running")], 500_000, 60_000);
   assert.equal(state.since.size, 0);
   assert.deepEqual(ids(takeDueReminders(state, [session("w", "waiting")], 600_000, 60_000)), []);
   assert.deepEqual(ids(takeDueReminders(state, [session("w", "waiting")], 660_000, 60_000)), ["w"]);
-  // A session the user already looked at is not reminded about (roadmap B15).
   const fresh = { since: new Map(), reminded: new Set() };
   const looked = (one) => one.sessionId === "w";
   takeDueReminders(fresh, [session("w", "waiting"), session("v", "waiting")], 0, 60_000, looked);

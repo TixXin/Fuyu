@@ -1,6 +1,3 @@
-// The clipboard window's second round (C38), checked on the frames clipboard-popup.tsx renders:
-// recognised kinds, pinyin and "/" search, the actions panel, transforms, Space, editing, delete
-// with undo, merged paste, pausing, and the wide window's colour and link panes.
 import { act } from "react";
 import { loadPinyin } from "../../src/features/clipboard/popupQuery";
 

@@ -1,10 +1,8 @@
-// pnpm dev, then open /tests/regression/message-panel.html (demo) or ?test=1 (checks).
 import { act, StrictMode, useCallback, useState, type CSSProperties } from "react";
 import { createRoot } from "react-dom/client";
 import { mockIPC } from "@tauri-apps/api/mocks";
 import { emit } from "@tauri-apps/api/event";
 import "../../src/styles/tokens.css";
-// Loads the island stylesheets in the same order as the app.
 import "../../src/windows/island/IslandApp";
 import { IslandShell } from "../../src/windows/island/IslandShell";
 import { useLatestMessagePreview } from "../../src/windows/island/useLatestMessagePreview";
@@ -23,14 +21,12 @@ import type { MediaState } from "../../src/features/media/api";
 
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
 const automated = new URLSearchParams(location.search).has("test");
-// The panel waits while the island has the focus (the cursor rests on it); here it says when.
 let hovering = false;
 Object.defineProperty(document, "hasFocus", { value: () => hovering });
 async function update(action: () => void | Promise<void>) {
   if (automated) await act(action);
   else await action();
 }
-// Same values as MediaState::empty() in src-tauri/src/media_control/session.rs.
 const UNAVAILABLE_MEDIA: MediaState = {
   available: false, audioActive: false, audioPeak: 0, playbackStatus: "unavailable",
   title: null, artist: null, album: null, thumbnail: null, positionMs: 0, durationMs: 0,
@@ -64,7 +60,6 @@ mockIPC((command, payload) => {
 }, { shouldMockEvents: true });
 
 const DURATION_MS = automated ? 700 : 8000;
-// Presses on a now-playing message's player buttons (controls "media").
 const mediaPresses: string[] = [];
 const PLAYER = {
   playing: true,
@@ -145,7 +140,6 @@ async function notify(source: "qq" | "wechat" | "qqMail" | "plugin", title = "�
       pluginId: "dev.test.build", pluginName: "构建", title, body: "main 分支构建通过", durationMs: 5000, actions: [{ id: "open", title: "查看" }, { id: "rerun", title: "重跑" }],
     });
   });
-  // Arrivals are taken in an effect after the render.
   await wait(30);
 }
 
@@ -191,7 +185,6 @@ async function runChecks() {
     check(actions.map((button) => button.textContent).join(",") === "查看,重跑", "插件通知那一行带它的按钮");
     const islandBottom = () => document.querySelector(".island")!.getBoundingClientRect().bottom;
     const listBottom = () => document.querySelector(".message-arrivals")!.getBoundingClientRect().bottom;
-    // The rows report their height a frame later (ResizeObserver), and the island follows.
     await waitFor(() => listBottom() <= islandBottom() - 8, "岛跟上行的高度", 1500).catch(() => undefined);
     const island = document.querySelector(".island")!.getBoundingClientRect();
     const list = document.querySelector(".message-arrivals")!.getBoundingClientRect();
@@ -235,7 +228,6 @@ async function runChecks() {
     await notify("qq", "小张");
     check(rows().length === 0, "你自己在用展开的岛时，新消息不弹面板");
 
-    // Clearing every reminder at once (issue #45).
     await act(async () => setUserMode("collapsed"));
     await notify("qq", "老李");
     await notify("wechat");
@@ -255,7 +247,6 @@ async function runChecks() {
     check(after.includes("clear_qq_notifications") && after.includes("clear_wechat_reminders"), "清空 QQ 和微信的提醒列表");
     check(!after.some((command) => /launch|open_|read_qq_mail|mark_qq_mail/.test(command)), `不打开任何应用，也不把邮件标为已读（${after.join(",")}）`);
 
-    // island.notify with icon "media" and layout "inline" (C11c): the island is the message.
     await act(async () => setUserMode("collapsed"));
     await wait(30);
     const playerIcon = "data:image/png;base64,iVBORw0KGgo=";
@@ -274,7 +265,6 @@ async function runChecks() {
     const listWidth = document.querySelector(".message-arrivals__list")!.getBoundingClientRect().width;
     check(Math.abs(rowWidth - listWidth) < 1 && listWidth > 300, `卡片撑满岛的宽度（${Math.round(rowWidth)}px）`);
 
-    // island.notify with controls "media": the player's buttons where the time would be.
     await act(async () => setUserMode("collapsed"));
     await wait(30);
     const nowPlaying = (title: string) => update(() => emit("plugin-notification", {

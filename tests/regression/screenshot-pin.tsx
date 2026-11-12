@@ -1,7 +1,3 @@
-// pnpm dev, then open /tests/regression/screenshot-pin.html.
-// A pin window (C41.4) with the Tauri boundary mocked: it waits hidden for a picture, shows only
-// once the PNG is decoded, lifts in, zooms about the pointer, fades with Ctrl + wheel and fades
-// out before it closes.
 import { act, StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { emit } from "@tauri-apps/api/event";

@@ -45,7 +45,6 @@ test("a target folder loses old caches, old builds of the app and removed lanes,
   const target = mkdtempSync(path.join(tmpdir(), "prune-target-"));
   const at = (...parts) => path.join(target, ...parts);
   try {
-    // The user's dev build: five incremental caches, the two oldest unused for days.
     for (const [hash, days] of [["aaa", 20], ["bbb", 10], ["ccc", 2], ["ddd", 1], ["eee", 0]]) {
       touch(at("debug", "incremental", `fuyu_lib-${hash}`, "s-1", "dep-graph.bin"), days);
       age(at("debug", "incremental", `fuyu_lib-${hash}`), days);
@@ -57,7 +56,6 @@ test("a target folder loses old caches, old builds of the app and removed lanes,
     touch(at("debug", "deps", "focusd_island_lib-0009.rlib"), 40);
     touch(at("debug", "deps", "serde-0010.rlib"), 90, "a dependency");
     touch(at("debug", "deps", ".tmpAbC.temp-archive"), 5);
-    // Agents' cache, one level deeper; a lane preview whose lane is gone, one that is still there.
     touch(at("agents", "debug", "deps", "fuyu_lib-0005.rlib"), 1);
     touch(at("lane-7", "debug", "fuyu.exe"), 8);
     touch(at("lane-2", "debug", "fuyu.exe"), 8);

@@ -1,10 +1,3 @@
-// The settings search over single settings (issue #11). Two uses:
-// - ?collect=<locale>&state=<default|on>: opens every page and puts its rows (title, group,
-//   description, choices) on <html data-index>; `pnpm settings:index` reads them into
-//   src/windows/settings/searchIndex.json. `on` switches every switch on first, so rows that only
-//   show under one are found too.
-// - otherwise (pnpm test:regression): checks that every row the pages show is in that index, then
-//   searches for a row title, a description word, a joined-up phrase and an English word.
 import { act, StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "../../src/styles/tokens.css";
@@ -51,11 +44,9 @@ const text = (element: Element | null | undefined) => (element?.textContent ?? "
 const categories = () => [...document.querySelectorAll<HTMLElement>(".settings-sidebar__item")].map((item) => item.dataset.category!);
 const openPage = async (category: string) => {
   await act(async () => { document.querySelector<HTMLButtonElement>(`.settings-sidebar__item[data-category='${category}']`)!.click(); });
-  // Pages that read their data first (plugins, hosts) fill in a moment later.
   await wait(60);
 };
 
-/** The rows the open page shows, as the index keeps them. */
 function rowsOnPage(): SettingsRowText[] {
   const rows = [...document.querySelectorAll<HTMLElement>(".editor-panel .settings-row")].filter((row) => !row.closest("[data-search='off']"));
   return rows.flatMap((row) => {

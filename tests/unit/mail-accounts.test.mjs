@@ -48,7 +48,6 @@ test("mailboxes follow the saved order and the saved list tracks connections", (
   assert.deepEqual(next.at(-1), { email: "c@126.com", host: "imap.126.com", enabled: true });
   next = rememberMailbox(next, box("b@163.com", { enabled: false }));
   assert.deepEqual(next[0], { email: "b@163.com", host: "", enabled: false });
-  // A server typed in this window wins; another window's snapshot without one keeps it.
   next = rememberMailbox(next, box("b@163.com", { enabled: false }), " imap.example.com ");
   assert.equal(next[0].host, "imap.example.com");
   next = rememberMailbox(next, box("b@163.com", { enabled: true }));

@@ -1,5 +1,3 @@
-// pnpm dev, then open /tests/regression/clipboard-popup.html (demo) or ?test=1 (checks). The
-// clipboard window (C22.2) with made-up entries: standard and wide, dark and light.
 import { act, StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { mockIPC } from "@tauri-apps/api/mocks";
@@ -19,7 +17,6 @@ mockIPC((command, args) => {
   calls.push(`ipc:${command}:${JSON.stringify(args ?? {})}`);
   if (command === "read_clipboard_image_qr") return "https://qr.example";
   if (command === "rewrite_text") {
-    // The answer arrives in two pieces through the channel, then the command resolves.
     const { task, onChunk } = args as { task: string; onChunk: { id: number } };
     const internals = (window as unknown as { __TAURI_INTERNALS__: { runCallback: (id: number, data: unknown) => void } }).__TAURI_INTERNALS__;
     internals.runCallback(onChunk.id, { index: 0, message: "AI:" });

@@ -1,18 +1,3 @@
-// `pnpm build:exe`: the release exe (pnpm tauri build --no-bundle) into the main
-// checkout's src-tauri/target/release, which the desktop shortcut runs, from the
-// main checkout or any lane, without asking the user to close the island.
-//
-// Windows refuses to overwrite a running exe but lets it be renamed, so a
-// running fuyu.exe is moved aside to fuyu.exe.old-<time>; the
-// island keeps running from it, and the next start runs the new build. Moved
-// files are deleted by later builds once nothing runs them. If the build fails,
-// the old exe goes back in place.
-//
-// One build at a time across lanes (a lock file in target/release), and a
-// successful build points the desktop shortcut at the new exe.
-//
-// `pnpm release` puts the exe it just published in place the same way
-// (installExe), so a release needs no second build.
 import { spawnSync } from "node:child_process";
 import { closeSync, copyFileSync, existsSync, mkdirSync, openSync, readFileSync, readdirSync, renameSync, rmSync, unlinkSync, writeFileSync } from "node:fs";
 import path from "node:path";
@@ -23,7 +8,6 @@ import { backgroundBuildEnv, lowerPriority } from "./build-load.mjs";
 export const EXE_NAME = "fuyu.exe";
 const OLD_PREFIX = `${EXE_NAME}.old-`;
 
-/** True when the file exists and something (a running island) keeps it from being written. */
 export function isInUse(file) {
   if (!existsSync(file)) return false;
   try {
@@ -34,7 +18,6 @@ export function isInUse(file) {
   }
 }
 
-/** Deletes exes moved aside by earlier builds that nothing runs any more; returns how many are left. */
 export function removeOldExes(dir) {
   let left = 0;
   for (const name of existsSync(dir) ? readdirSync(dir) : []) {
@@ -48,7 +31,6 @@ export function removeOldExes(dir) {
   return left;
 }
 
-/** Moves a running exe aside; returns where it went, or null when it was not in use. */
 export function moveAsideIfRunning(exe, now = new Date()) {
   if (!isInUse(exe)) return null;
   const aside = `${exe}.old-${now.toISOString().replace(/[-:.TZ]/g, "")}`;
@@ -56,7 +38,6 @@ export function moveAsideIfRunning(exe, now = new Date()) {
   return aside;
 }
 
-/** A lock held this long is from a build that died without cleaning up. */
 const LOCK_MAX_AGE_MS = 60 * 60 * 1000;
 const LOCK_WAIT_MS = 5000;
 
@@ -69,15 +50,10 @@ function processAlive(pid) {
   }
 }
 
-/** Whether a lock holder `{ pid, since }` still counts: its process runs and it is under an hour old. */
 export function lockHeld(holder, now = Date.now(), alive = processAlive) {
   return Boolean(holder) && alive(holder.pid) && now - holder.since < LOCK_MAX_AGE_MS;
 }
 
-/**
- * Waits until no other build (another lane's session) holds `lock`, then takes it; two builds
- * writing target/release at once would race over the exe being moved aside.
- */
 export function takeLock(lock) {
   mkdirSync(path.dirname(lock), { recursive: true });
   for (let waited = false; ; waited = true) {
@@ -91,7 +67,6 @@ export function takeLock(lock) {
     try {
       holder = JSON.parse(readFileSync(lock, "utf8"));
     } catch {
-      // Being written right now; look again shortly.
     }
     if (holder && !lockHeld(holder)) {
       unlinkSync(lock);
@@ -102,7 +77,6 @@ export function takeLock(lock) {
   }
 }
 
-/** The PowerShell that points the desktop's island shortcuts at `exe`, or creates 浮屿.lnk as the installer does. */
 export function shortcutScript(exe) {
   const quoted = `'${exe.replace(/'/g, "''")}'`;
   return [
@@ -110,7 +84,6 @@ export function shortcutScript(exe) {
     "$desk = [Environment]::GetFolderPath('Desktop')",
     "$shell = New-Object -ComObject WScript.Shell",
     "$links = @(Get-ChildItem $desk -Filter *.lnk | Where-Object { $_.Name -match 'focusd|fly-island|fuyu' -or $shell.CreateShortcut($_.FullName).TargetPath -match '(focusd-island|fuyu)\\.exe$' })",
-    // 浮屿 as char codes: the command line's code page could garble it.
     "if ($links.Count -eq 0) { $links = @([pscustomobject]@{ FullName = Join-Path $desk \"$([char]0x6D6E)$([char]0x5C7F).lnk\" }) }",
     "foreach ($link in $links) {",
     "  $s = $shell.CreateShortcut($link.FullName); $s.TargetPath = $exe; $s.WorkingDirectory = Split-Path $exe; $s.IconLocation = \"$exe,0\"; $s.Save()",
@@ -121,7 +94,6 @@ export function shortcutScript(exe) {
   ].join("\n");
 }
 
-/** Points the desktop shortcut at the new build (AGENTS.md, "本机更新与桌面快捷方式"); Windows only. */
 function syncShortcut(exe) {
   if (process.platform !== "win32" || process.env.FUYU_SKIP_SHORTCUT === "1" || process.env.FOCUSD_SKIP_SHORTCUT === "1") return;
   const result = spawnSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-Command", shortcutScript(exe)], { encoding: "utf8" });
@@ -129,7 +101,6 @@ function syncShortcut(exe) {
   else console.error(`[build:exe] could not update the desktop shortcut: ${result.stderr.trim()}`);
 }
 
-/** Runs `work(releaseDir)` holding the lock on the main checkout's target/release. */
 function withReleaseDir(work) {
   const releaseDir = targetDir(mainCheckout(), "release");
   const lock = path.join(releaseDir, ".build-exe.lock");
@@ -141,16 +112,10 @@ function withReleaseDir(work) {
   }
 }
 
-/**
- * Copies an exe built elsewhere (a lane's release build) into target/release and points the
- * desktop shortcut at it. Returns where it went; throws when the copy fails, with the previous
- * exe back in place.
- */
 export function installExe(source) {
   return withReleaseDir((releaseDir) => {
     const exe = path.join(releaseDir, EXE_NAME);
     if (path.resolve(source).toLowerCase() === exe.toLowerCase()) {
-      // Built in the main checkout itself: already in place.
       syncShortcut(exe);
       return exe;
     }

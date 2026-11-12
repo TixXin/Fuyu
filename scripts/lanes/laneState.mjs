@@ -1,13 +1,3 @@
-// Whether a lane is someone's. A session often works in a lane from the main
-// checkout by absolute paths, or takes one over from another session, so no
-// single sign tells; any of these means the lane is in use:
-//   - its recorded session (lane:open / lane:take / the hook) still runs, or, when its
-//     process could not be found, checked in (those commands, a land) within a day;
-//   - an open task names it (进行中 and not stale, or 待用户确认);
-//   - something changed in it within ACTIVE_MS (index, HEAD, the owner's last check-in);
-//   - a process has its current directory in it (Windows then refuses a rename).
-// A lane with uncommitted or untracked files, or commits not on main, is never
-// handed to anyone else and never reset.
 import { execFileSync } from "node:child_process";
 import { existsSync, renameSync, statSync } from "node:fs";
 import path from "node:path";
@@ -15,12 +5,10 @@ import { lanePath, ownerOf, pidAlive } from "./laneRegistry.mjs";
 import { readAll, staleOf } from "../tasks/taskRepo.mjs";
 
 export const ACTIVE_MS = 2 * 60 * 60 * 1000;
-/** How long a check-in counts when the session's process could not be found (as a task claim). */
 export const UNKNOWN_OWNER_MS = 24 * 60 * 60 * 1000;
 
 function tryGit(args, cwd) {
   try {
-    // --no-optional-locks: looking must not refresh the lane's index and count as activity.
     return execFileSync("git", ["--no-optional-locks", ...args], { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim();
   } catch {
     return null;
@@ -35,7 +23,6 @@ function mtime(file) {
   }
 }
 
-/** Open tasks by lane number: `{ id, owner, status }`, leaving out stale claims. */
 export function tasksByLane(main) {
   const byLane = new Map();
   let tasks = [];
@@ -53,7 +40,6 @@ export function tasksByLane(main) {
   return byLane;
 }
 
-/** What is known about lane `lane` without changing anything. */
 export function laneFacts(main, lane, { mainHead, owners, tasks }) {
   const wt = lanePath(main, lane);
   const facts = { lane, wt, exists: existsSync(wt), worktree: existsSync(path.join(wt, ".git")) };
@@ -75,15 +61,12 @@ export function laneFacts(main, lane, { mainHead, owners, tasks }) {
     ...facts,
     branch,
     work,
-    // alive null: the session's claude.exe was not found when it checked in (its commands run
-    // outside it, as under magpie), so only its check-in time tells.
     owner: owner ? { pid: owner.pid ?? null, name: owner.name ?? null, alive: owner.pid ? pidAlive(owner.pid) : null, seenMs: seen } : null,
     task: tasks.get(lane) ?? null,
     lastActivityMs,
   };
 }
 
-/** Whether a process has its current directory in `wt`: Windows then refuses to rename it. */
 export function folderBusy(wt) {
   if (process.platform !== "win32") return false;
   const probe = `${wt}.probe-${process.pid}`;
@@ -96,11 +79,6 @@ export function folderBusy(wt) {
   return false;
 }
 
-/**
- * Whose lane `facts` is, for a requester `{ pid, name, fromLane }`:
- * `{ mine, users }`, users being the reasons it is someone else's.
- * `busy()` is asked last, and only when nothing else already says the lane is in use.
- */
 export function judge(facts, requester = {}, { now = Date.now(), busy = () => false } = {}) {
   const { owner, task } = facts;
   const mine = facts.lane === requester.fromLane
@@ -119,7 +97,6 @@ export function judge(facts, requester = {}, { now = Date.now(), busy = () => fa
   return { mine, users };
 }
 
-/** Whether the requester may (re)use the lane: no work in it, and it is theirs or nobody's. */
 export function usable(facts, verdict) {
   return facts.worktree && !facts.work && (verdict.mine || verdict.users.length === 0);
 }

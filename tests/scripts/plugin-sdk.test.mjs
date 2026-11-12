@@ -22,20 +22,16 @@ test("the PowerShell module exports every function and stays ASCII", () => {
   const functions = [...module.matchAll(/^function ([\w-]+)/gm)].map((match) => match[1]).sort();
   const exported = [...manifest.matchAll(/'([A-Za-z]+-Fuyu\w*)'/g)].map((match) => match[1]).sort();
   assert.deepEqual(exported, functions);
-  // Each function keeps its name from before the rename as an alias (D17).
   const aliases = [...manifest.matchAll(/'([A-Za-z]+-Focusd\w*)'/g)].map((match) => match[1].replace("-Focusd", "-Fuyu")).sort();
   assert.deepEqual(aliases, functions);
   assert.ok([...module].every((char) => char.charCodeAt(0) < 128), "Fuyu.Plugin.psm1 must be ASCII for PowerShell 5.1");
   assert.ok([...read("plugins/sdk/powershell/fuyu.ps1")].every((char) => char.charCodeAt(0) < 128));
 });
 
-// Windows PowerShell 5.1's [Console]::In.ReadLineAsync blocked until a line came, so waits never
-// timed out and timer-driven plugins (the system monitor) stalled between messages (E10).
 test("the PowerShell SDK's wait for a message times out, and reads UTF-8", { skip: process.platform !== "win32" }, async () => {
   const dir = mkdtempSync(path.join(tmpdir(), "fuyu-sdk-"));
   try {
     copyFileSync(path.join(root, "plugins/sdk/powershell/fuyu.ps1"), path.join(dir, "fuyu.ps1"));
-    // New names, and the names from before the rename (D17) that older plugins call.
     writeFileSync(path.join(dir, "main.ps1"), [
       '. "$PSScriptRoot\\fuyu.ps1"',
       "foreach ($i in 1..3) { if ($null -eq (Receive-FuyuNotification 200)) { Write-FocusdLog 'timeout' } }",
@@ -55,7 +51,6 @@ test("the PowerShell SDK's wait for a message times out, and reads UTF-8", { ski
         const message = JSON.parse(buffered.slice(0, end));
         buffered = buffered.slice(end + 1);
         logs.push(message.params.message);
-        // Answer only once all three waits have timed out on their own.
         if (message.params.message === "timeout" && ++timeouts === 3) {
           child.stdin.write(`${JSON.stringify({ jsonrpc: "2.0", method: "echo", params: { text: "番茄钟 ☕" } })}\n`);
         }

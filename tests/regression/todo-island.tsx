@@ -1,6 +1,3 @@
-// pnpm dev, then open /tests/regression/todo-island.html. Renders the todo page in the island style
-// (Settings → Todos → Style → Island) on each of its pages, on a dark and on a light island, and
-// checks the tabs, adding, ticking, starting, the archive and the row height the island grows by.
 import "../../src/styles/tokens.css";
 import { act, StrictMode, type CSSProperties } from "react";
 import { createRoot } from "react-dom/client";
@@ -23,7 +20,6 @@ const ARCHIVES: TodoArchive[] = [
   { date: "2026-10-30", todos: [], dailyNote: "休息", savedAt: 0, savedToDisk: true },
 ];
 const calls: string[] = [];
-// Click handlers pass the event along; only the ids and values are noted.
 const spy = (name: string) => (...args: unknown[]) => { calls.push([name, ...args.filter((arg) => typeof arg !== "object")].join(":")); };
 
 function props(pageMode: TodoPageMode, extra: Partial<Props> = {}): Props {
@@ -69,7 +65,6 @@ for (const frame of FRAMES) {
   const island = document.createElement("div");
   island.className = `frame${frame.light ? " frame--light" : ""}${frame.tall ? " frame--tall" : ""}`;
   island.id = `frame-${frame.id}`;
-  // What stageStyle.ts sets from the island background colour.
   island.style.setProperty("--island-ink-rgb", frame.light ? "28, 27, 31" : "241, 240, 246");
   const host = document.createElement("div");
   island.append(host);
@@ -101,7 +96,6 @@ try {
   check(rows[0].classList.contains("todo-island-row--active") && $("today", ".todo-island-row__stop")?.textContent === "进行中结束", "进行中的待办有强调条和结束按钮");
   check(getComputedStyle(rows[2].querySelector(".todo-island-row__title")!).textDecorationLine === "line-through", "已完成的划掉");
   check(getComputedStyle(rows[1].querySelector(".todo-island-row__action")!).opacity === "0", "其他操作平时隐藏");
-  // Row height follows the lines the title actually wraps to (issue #41), not a character estimate.
   const heights = rows.map((row) => [Math.round(row.querySelector<HTMLElement>(".todo-island-row__title")!.offsetHeight / 19), row.offsetHeight]);
   check(heights.every(([lines, height]) => height === 23 + 19 * lines) && heights.some(([lines]) => lines > 1), `行高跟着标题实际换行：一行 42px，每多一行加 19px（${heights.map(([l, h]) => l + "行 " + h + "px").join("，")}）`);
   await click(rows[1].querySelector<HTMLElement>(".todo-island-row__check"));
@@ -129,7 +123,6 @@ try {
   check($$("today", ".todo-list [data-todo-id]").length === 2 && fold.getAttribute("aria-expanded") === "false", "「已完成」可以折叠");
   await click(fold);
 
-  // Projects (issue #44).
   check(!$("today", ".todo-project-filter") && !$("today", ".todo-project-heading"), "没有项目时界面不变：没有筛选和组标题");
   const chips = $$("projects", ".todo-project-filter__chip");
   check(chips.map((chip) => chip.textContent).join("|") === "全部|论文|组会" && chips[0].getAttribute("aria-pressed") === "true", "有项目时上面多一行筛选：全部和各个项目");

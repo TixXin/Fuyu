@@ -1,5 +1,3 @@
-// The GitHub Issues example plugin (plugins/examples/dev.focusd.github-issues) under the
-// mock host, against a local stand-in for the GitHub API (FOCUSD_GITHUB_API).
 import assert from "node:assert/strict";
 import { createServer } from "node:http";
 import path from "node:path";
@@ -12,7 +10,6 @@ function issue(number, extra = {}) {
   return { number, title: `Issue ${number}`, user: { login: "someone" }, updated_at: "2026-11-09T01:00:00Z", comments: 2, html_url: `https://github.com/a/one/issues/${number}`, ...extra };
 }
 
-/** A local GitHub: a/one has an issue and a pull request, anything else is 404; one device flow, slowed down once. */
 async function fakeGitHub() {
   const seen = [];
   const server = createServer((request, response) => {
@@ -35,7 +32,6 @@ async function fakeGitHub() {
       if (request.url.startsWith("/repos/a/one/issues")) send(200, [issue(1), issue(2, { pull_request: {} })]);
       else if (request.url.startsWith("/repos/")) send(404, { message: "Not Found" });
       else if (request.url === "/login/device/code") send(200, { device_code: "dc", user_code: "ABCD-1234", verification_uri: "https://github.com/login/device", expires_in: 900, interval: 5 });
-      // The first poll is told to slow down to 6 s, as GitHub does to a poll that comes too soon.
       else if (request.url === "/login/oauth/access_token") send(200, seen.filter((call) => call.url === request.url).length === 1 ? { error: "slow_down", interval: 6 } : { access_token: "ghu_test", token_type: "bearer" });
       else if (request.url === "/user" && signedIn) send(200, { login: "tester" });
       else send(401, { message: "Bad credentials" });

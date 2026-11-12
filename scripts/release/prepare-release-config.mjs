@@ -1,22 +1,3 @@
-// Writes the release-only Tauri config overlay that turns on updater signing.
-//
-// The base src-tauri/tauri.conf.json carries the fork's public key (so every
-// build can update) and leaves updater artifacts off, so a normal
-// `pnpm tauri build` works on any machine without the private key. The field
-// cannot be omitted: tauri-plugin-updater declares `pubkey` as mandatory, and a
-// build without it aborts at startup with "missing field `pubkey`". Release
-// builds pass this overlay with `tauri build --config <file>` to turn on
-// signing. The release key must match the shipped key, or installed builds
-// would reject the update.
-//
-// Usage:
-//   TAURI_UPDATER_PUBKEY="$(cat ~/.tauri/fly-island.key.pub)" \
-//   TAURI_SIGNING_PRIVATE_KEY="$(cat ~/.tauri/fly-island.key)" \
-//   node scripts/release/prepare-release-config.mjs
-//
-// Optional:
-//   TAURI_UPDATER_ENDPOINTS  comma or newline separated list, overrides the
-//                            endpoints from tauri.conf.json (self-hosting, forks)
 import { readFileSync, writeFileSync } from "node:fs";
 
 const TARGET = "src-tauri/tauri.release.conf.json";
@@ -58,8 +39,6 @@ const endpoints = (process.env.TAURI_UPDATER_ENDPOINTS ?? "")
   .filter(Boolean);
 
 if (endpoints.length > 0) {
-  // tauri-plugin-updater refuses to start on a non-https endpoint, so catch it
-  // here instead of shipping a build that panics on launch.
   const insecure = endpoints.filter((entry) => !entry.startsWith("https://"));
   if (insecure.length > 0) {
     console.error(`Updater endpoints must use https:\n  ${insecure.join("\n  ")}`);

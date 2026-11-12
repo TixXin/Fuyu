@@ -17,21 +17,17 @@ test("the spring is the website's top island both ways; smooth and fast close qu
   const open = islandMotionTiming("spring", "open");
   const close = islandMotionTiming("spring", "close");
   for (const key of ["width", "widthEase", "height", "radius", "ease"]) assert.equal(close[key], open[key], key);
-  // The website's menu fades out in 250ms; its bar comes back as the panel has gone.
   assert.equal(close.layer, 250);
   assert.ok(close.collapsedDelay >= 200);
   for (const motion of ["smooth", "fast"]) {
     const opening = islandMotionTiming(motion, "open");
     const closing = islandMotionTiming(motion, "close");
     assert.ok(closing.width < opening.width && closing.height < opening.height, motion);
-    // An overshooting curve has a control point above 1.
     assert.ok(!/,\s*1\.\d+,/.test(closing.widthEase), motion);
   }
 });
 
-/** The values a linear() curve passes through. */
 const points = (ease) => ease.slice("linear(".length, -1).split(",").map(Number);
-/** How many times a curve turns back: a swing past its end and back is two. */
 const turns = (values) => values.slice(1, -1).filter((value, i) => (value - values[i]) * (values[i + 2] - value) < 0).length;
 
 test("bouncy springs out, swings back a little and settles; its height bounces back without passing its end", () => {
@@ -39,7 +35,6 @@ test("bouncy springs out, swings back a little and settles; its height bounces b
     const timing = islandMotionTiming("bouncy", direction);
     const width = points(timing.widthEase);
     const peak = Math.max(...width);
-    // Past the end and back in: enough to see, not the jelly that wobbled too much (2026-11-12).
     assert.ok(peak > 1.05 && peak < 1.2, `${direction} width out ${peak}`);
     const back = 1 - Math.min(...width.slice(width.indexOf(peak)));
     assert.ok(back > 0.005 && back < 0.03, `${direction} width back ${back}`);
@@ -50,7 +45,6 @@ test("bouncy springs out, swings back a little and settles; its height bounces b
     assert.equal(width.at(-1), 1);
     assert.equal(height.at(-1), 1);
   }
-  // The bar fades in after the closing width's narrowest dip, which would cut its ends.
   const close = islandMotionTiming("bouncy", "close");
   const width = points(close.widthEase);
   const deepest = width.indexOf(Math.max(...width)) / (width.length - 1) * close.width;

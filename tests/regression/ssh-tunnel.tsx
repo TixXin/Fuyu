@@ -1,8 +1,3 @@
-// pnpm dev, then open /tests/regression/ssh-tunnel.html. The SSH proxy tunnel's plugin page
-// (Settings → Plugins → SSH proxy tunnel) against an in-memory native side: the running info shows
-// the local proxy found and whether it listens, the custom local port shows only with "Custom
-// port" picked, hosts list their tunnel states and export line, a bad server port is refused, and
-// a port the server already uses, or one it could not check, asks first (yes / no).
 import { act, StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { mockIPC } from "@tauri-apps/api/mocks";

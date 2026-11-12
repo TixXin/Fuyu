@@ -1,10 +1,3 @@
-// Before .github/workflows/publish-sdk.yml publishes the SDK packages: the tag
-// (sdk-v<version>) names the version both packages carry, and the generated
-// SDK files (pnpm sdk:build) are up to date. The two packages always share a
-// version: projects made by create-fuyu-plugin depend on
-// fuyu-plugin ^<its own version>.
-//
-// Usage: node scripts/plugins/check-sdk-release.mjs sdk-v0.2.1
 import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import path from "node:path";
@@ -13,13 +6,11 @@ import { fileURLToPath } from "node:url";
 export const SDK_PACKAGES = ["packages/fuyu-plugin", "packages/create-fuyu-plugin"];
 const VERSION = /^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$/;
 
-/** The version a tag names, or null when it is not sdk-v<version>. */
 export function versionOfSdkTag(tag) {
   const match = /^sdk-v(.+)$/.exec(tag ?? "");
   return match && VERSION.test(match[1]) ? match[1] : null;
 }
 
-/** Problems with releasing `tag` when the packages are at `versions` ({ name: version }); empty when fine. */
 export function releaseProblems(tag, versions) {
   const wanted = versionOfSdkTag(tag);
   if (!wanted) return [`"${tag}" is not a tag like sdk-v0.2.1.`];

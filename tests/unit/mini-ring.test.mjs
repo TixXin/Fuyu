@@ -9,7 +9,6 @@ test("concentric rings step inward by a stroke and a gap, and stop when they no 
   assert.equal(ringRadius(20, 2, 0, 1), 9);
   assert.equal(ringRadius(20, 2, 1, 1), 6);
   assert.equal(ringRadius(20, 2, 4, 1), 0);
-  // 0.75px left with a 2.5px stroke would draw a filled dot, not a ring.
   assert.equal(ringRadius(20, 2.5, 2, 1.5), 0);
 });
 

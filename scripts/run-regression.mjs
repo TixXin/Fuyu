@@ -1,15 +1,3 @@
-// Runs the browser regression pages (tests/regression/*.html) in headless Chrome or
-// Edge and reports each page's own pass/fail result. Starts its own Vite server.
-//
-//   pnpm test:regression                 every page
-//   pnpm test:regression mail-reader     pages whose name contains the word
-//
-// Pages are driven over the DevTools protocol in a normal tab, not with --dump-dom:
-// that mode stops running page scripts after load, so pages that wait on timers
-// (the collapsed message animation waits for a five-second auto-restore) never finish.
-// CHROME_PATH picks the browser; REGRESSION_PORT the Vite port (default: a free one).
-// Both ports are free ones picked per run: lanes run this at the same time, and with fixed
-// ports one run would test another lane's Vite and read another lane's browser.
 import { spawn } from "node:child_process";
 import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { createServer } from "node:net";
@@ -18,7 +6,6 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { auditLight, MIN_CONTRAST } from "./regression-contrast.mjs";
 
-/** Each page with the query that starts its automated checks. */
 export const PAGES = [
   "agent-alert-card.html",
   "agent-alerts.html",
@@ -62,10 +49,6 @@ const BROWSERS = [
   "C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe",
 ];
 
-/**
- * A page's outcome from what it wrote: `data-test-result` on <html>, `data-result` on
- * #results, or a summary line in #results. Null while it is still running.
- */
 export function pageOutcome({ testResult = "", dataResult = "", text = "" }) {
   const marker = testResult || dataResult;
   if (marker === "passed" || marker === "failed") return marker;
@@ -74,7 +57,6 @@ export function pageOutcome({ testResult = "", dataResult = "", text = "" }) {
   return null;
 }
 
-/** Number of passed checks, counted from the page's "PASS ..." lines. */
 export function passedChecks(text) {
   return (text.match(/^PASS /gm) ?? []).length;
 }
@@ -92,13 +74,12 @@ async function waitForHttp(url, timeoutMs) {
   while (Date.now() < deadline) {
     try {
       if ((await fetch(url)).ok) return;
-    } catch { /* not listening yet */ }
+    } catch {}
     await sleep(200);
   }
   throw new Error(`${url} did not answer within ${timeoutMs / 1000}s`);
 }
 
-/** A TCP port nothing listens on right now. */
 export function freePort() {
   return new Promise((resolve, reject) => {
     const server = createServer();
@@ -111,7 +92,6 @@ export function freePort() {
   });
 }
 
-/** A DevTools protocol session on the browser's first tab. */
 async function connect(port) {
   const deadline = Date.now() + 15_000;
   let page;
@@ -146,10 +126,6 @@ async function connect(port) {
   });
   await send("Runtime.enable");
   await send("Page.enable");
-  // Windows Server (the CI runner) has animations off, which Chrome reports as
-  // prefers-reduced-motion: reduce and the island then swaps messages without a
-  // transition. Pages that test reduced motion stub matchMedia themselves, so the
-  // run uses an ordinary desktop's setting unless REGRESSION_REDUCED_MOTION says otherwise.
   await send("Emulation.setEmulatedMedia", {
     features: [{ name: "prefers-reduced-motion", value: process.env.REGRESSION_REDUCED_MOTION ?? "no-preference" }],
   });
@@ -180,25 +156,16 @@ export async function runPage(session, url) {
   return { outcome: "timed out", state, errors: [...session.errors] };
 }
 
-/**
- * Starts this checkout's Vite on a free port and a headless browser, and runs `use` with a
- * DevTools session and the regression pages' base URL; stops both afterwards. `firstPage` is
- * fetched first, to know Vite answers.
- */
 export async function withRegressionBrowser(root, firstPage, use) {
   const vitePort = Number(process.env.REGRESSION_PORT ?? await freePort());
   const debugPort = await freePort();
-  // 127.0.0.1 on both ends: "localhost" can resolve to ::1 for fetch while Vite listens on IPv4.
   const base = `http://127.0.0.1:${vitePort}/tests/regression/`;
   const profile = mkdtempSync(path.join(tmpdir(), "fly-regression-"));
   const vite = spawn(process.execPath, [path.join(root, "node_modules/vite/bin/vite.js"), "--port", String(vitePort), "--strictPort", "--host", "127.0.0.1"], { cwd: root, stdio: "ignore" });
   let browser;
   try {
     await waitForHttp(`${base}${firstPage.split("?")[0]}`, 30_000);
-    // Something else answering on the port (Vite could not take it) is not this checkout's code.
     if (vite.exitCode !== null) throw new Error(`Vite exited (port ${vitePort} taken?); not testing whatever answers there.`);
-    // Pages that do not pick a language follow the browser's, and their checks are written
-    // against the Chinese interface; an English CI runner would otherwise fail them.
     const language = process.env.REGRESSION_LANG ?? "zh-CN";
     browser = spawn(findBrowser(), ["--headless=new", "--disable-gpu", "--no-first-run", "--no-default-browser-check", `--remote-debugging-port=${debugPort}`, `--user-data-dir=${profile}`, `--lang=${language}`, `--accept-lang=${language}`, "--window-size=1280,900", "about:blank"], { stdio: "ignore" });
     const session = await connect(debugPort);
@@ -209,8 +176,6 @@ export async function withRegressionBrowser(root, firstPage, use) {
     browser?.kill();
     vite.kill();
     await sleep(300);
-    // The browser can still hold files in its profile for a moment; a leftover temp
-    // folder must not turn a finished run into a failure.
     try {
       rmSync(profile, { recursive: true, force: true, maxRetries: 10, retryDelay: 300 });
     } catch (error) {
@@ -233,7 +198,6 @@ async function main() {
       const seconds = ((Date.now() - started) / 1000).toFixed(1);
       console.log(`${outcome === "passed" ? "✓" : "✗"} ${page}  ${outcome}, ${passedChecks(state.text ?? "")} checks, ${seconds}s`);
       if (outcome === "passed") {
-        // The light-island pass (regression-contrast.mjs), on what the page left on screen.
         const findings = await auditLight(session, page, contrastAllowlist);
         if (findings.length > 0) {
           failed += 1;

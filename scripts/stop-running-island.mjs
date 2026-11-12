@@ -1,10 +1,5 @@
-// Runs before `pnpm tauri dev` starts the dev server. Another island instance blocks
-// the dev build in two ways: the single-instance plugin makes the new process exit
-// silently, and a running debug build locks the exe that cargo has to relink.
 import { execFileSync } from "node:child_process";
 
-// Repository builds are fuyu.exe (focusd-island.exe before the rename, D17); the
-// installed app was once named after productName (fly-island.exe).
 const IMAGE_NAMES = ["fuyu.exe", "focusd-island.exe", "fly-island.exe"];
 const EXIT_TIMEOUT_MS = 5_000;
 const POLL_INTERVAL_MS = 100;
@@ -31,11 +26,9 @@ if (running.length > 0) {
     try {
       execFileSync("taskkill", ["/F", "/IM", name], { stdio: "ignore", windowsHide: true });
     } catch {
-      // The process may already be gone; the wait below reports anything left over.
     }
   }
 
-  // The plugin mutex and the exe lock are released only after the process fully exits.
   const deadline = Date.now() + EXIT_TIMEOUT_MS;
   while (runningImages().length > 0 && Date.now() < deadline) {
     await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));

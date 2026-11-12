@@ -48,7 +48,6 @@ test("labels for the session rows", () => {
   assert.equal(sessionProject("E:\\Projects\\fly-island\\"), "fly-island");
   assert.equal(sessionProject("/home/me/repo"), "repo");
   assert.equal(sessionProject(null), null);
-  // A worktree shows the project it belongs to, not its own folder.
   assert.equal(sessionProject("E:\\Projects\\fly-island-lanes\\3"), "fly-island");
   assert.equal(sessionProject("E:\\Projects\\fly-island-lane-2"), "fly-island");
   assert.equal(sessionProject("/home/me/repo/.claude/worktrees/fix-tabs"), "repo");
@@ -73,15 +72,11 @@ test("the Agent page follows the AI Agent switch", () => {
 test("Agent page rows and the Agent settings", async () => {
   const { getAgentPageExpandedHeight } = await import("../../src/windows/island/layout.ts");
   const { normalizeSettings, DEFAULT_SETTINGS } = await import("../../src/features/appearance/settings.ts");
-  // Flat rows: three full rows take far less room than the old cards (429px).
   assert.equal(getAgentPageExpandedHeight(3), 316);
-  // Each extra session adds one full row and its gap.
   assert.equal(getAgentPageExpandedHeight(4) - getAgentPageExpandedHeight(3), 80);
-  // Cards (62px, 6px apart) and compact rows (34px, 4px apart) size the page by their own rows.
   assert.equal(getAgentPageExpandedHeight(4, 0, "cards") - getAgentPageExpandedHeight(3, 0, "cards"), 68);
   assert.equal(getAgentPageExpandedHeight(4, 0, "compact") - getAgentPageExpandedHeight(3, 0, "compact"), 38);
   assert.equal(getAgentPageExpandedHeight(1, 0, "cards"), getAgentPageExpandedHeight(0, 0, "cards") + 62 + 6 - 6 + 6);
-  // Flat rows stay the default view; an unknown saved one falls back to it.
   assert.equal(DEFAULT_SETTINGS.agentSessionView, "list");
   assert.equal(normalizeSettings({ agentSessionView: "cards" }).agentSessionView, "cards");
   assert.equal(normalizeSettings({ agentSessionView: "tiles" }).agentSessionView, "list");
@@ -89,23 +84,18 @@ test("Agent page rows and the Agent settings", async () => {
   assert.equal(normalizeSettings({ agentSessionSort: "firstSeen" }).agentSessionSort, "firstSeen");
   assert.equal(normalizeSettings({ agentSessionGroup: "project" }).agentSessionGroup, "project");
   assert.equal(normalizeSettings({ agentSessionGroup: "tree" }).agentSessionGroup, "computer");
-  // Archiving slides out unless the dust is chosen.
   assert.equal(DEFAULT_SETTINGS.agentArchiveMotion, "slide");
   assert.equal(normalizeSettings({ agentArchiveMotion: "dissolve" }).agentArchiveMotion, "dissolve");
   assert.equal(normalizeSettings({ agentArchiveMotion: "explode" }).agentArchiveMotion, "slide");
-  // Card light effects are off unless chosen.
   assert.equal(DEFAULT_SETTINGS.agentCardEffects, "off");
   assert.equal(normalizeSettings({ agentCardEffects: "sparkle" }).agentCardEffects, "sparkle");
   assert.equal(normalizeSettings({ agentCardEffects: "rainbow" }).agentCardEffects, "off");
 
-  // The row count setting is gone (C27): the page is the panel's height and scrolls.
   assert.equal("agentVisibleRows" in normalizeSettings({ agentVisibleRows: 4 }), false);
 
-  // Running time is off unless turned on.
   assert.equal(DEFAULT_SETTINGS.agentShowElapsed, false);
   assert.equal(normalizeSettings({}).agentShowElapsed, false);
   assert.equal(normalizeSettings({ agentShowElapsed: true }).agentShowElapsed, true);
-  // Sessions that have quit are hidden unless turned off; the window stays 2 hours.
   assert.equal(DEFAULT_SETTINGS.agentHideClosed, true);
   assert.equal(normalizeSettings({}).agentHideClosed, true);
   assert.equal(normalizeSettings({ agentHideClosed: false }).agentHideClosed, false);
@@ -147,7 +137,6 @@ test("sessions arrange by light or time, under computer, project or no headings"
   ]);
   assert.deepEqual(ids(arrangeSessions([s("x", 1, "running", { remoteHost: "zcm6" })], "status", "computer")), [["zcm6", null, ["x"]]]);
   assert.deepEqual(arrangeSessions([], "status", "computer"), []);
-  // First seen keeps the order a session had when the island first listed it, however it writes after.
   const first = [s("a", 100), s("b", 200)];
   assert.deepEqual(ids(arrangeSessions(first, "firstSeen", "none"))[0][2], ["b", "a"]);
   assert.deepEqual(ids(arrangeSessions([s("a", 900), s("b", 200), s("c", 300)], "firstSeen", "none"))[0][2], ["c", "b", "a"]);

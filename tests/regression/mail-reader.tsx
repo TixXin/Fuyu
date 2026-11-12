@@ -1,4 +1,3 @@
-// Open /tests/mail-reader.html?run=1 with pnpm dev. No real accounts or native actions are used.
 import { act, StrictMode, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { mockIPC } from "@tauri-apps/api/mocks";
@@ -71,7 +70,6 @@ const button = (label: string) => {
   return result[0];
 };
 const click = async (label: string) => { await act(async () => { button(label).click(); }); };
-/** Types into a controlled field the way a user would, so React sees the change. */
 const type = async (field: HTMLInputElement | HTMLTextAreaElement, value: string) => {
   const setter = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(field), "value")!.set!;
   await act(async () => { setter.call(field, value); field.dispatchEvent(new Event("input", { bubbles: true })); });

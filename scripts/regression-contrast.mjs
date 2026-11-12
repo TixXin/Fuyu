@@ -1,18 +1,7 @@
-// The light-island pass of `pnpm test:regression`. After a page's own checks pass, the runner
-// turns the page light the way a light island is (.island-light on <html>, the light island's
-// fill and ink) and measures every piece of text against what is behind it. Text under 3:1 is
-// reported; a page's known exceptions are in tests/regression/contrast-allowlist.json.
-//
-// The pages' own fixture styles (the frames and logs in each .html, not the app's CSS that Vite
-// injects) are painted light and their text is skipped: they are scaffolding, not the island.
-
-/** Lowest contrast text may have on a light island (WCAG's floor for large text and UI). */
 export const MIN_CONTRAST = 3;
 
-/** Pages whose windows are dark whatever the theme. */
 export const SKIPPED_PAGES = ["screenshot-overlay.html"];
 
-/** Runs in the page; resolves to [{ key, ratio, text, color, background }]. */
 export const LIGHT_AUDIT = `(async () => {
   const LIGHT = "#f2f2f5";
   const fixtureRules = [];
@@ -36,18 +25,15 @@ export const LIGHT_AUDIT = `(async () => {
     "html.island-light, html.island-light * { --island-fill: rgba(242, 242, 245, 1) !important; --island-background-color: #f2f2f5 !important; --island-ink-rgb: 24, 24, 30 !important; --task-text-color: #1c1c1f !important; --glass-tint-color: rgba(242, 242, 245, 1) !important; --glass-collapsed-tint-color: rgba(242, 242, 245, 1) !important; }",
     "html.island-light, html.island-light body { background: " + LIGHT + " !important; }",
     ...bgSelectors.map((s) => ":is(" + s + ") { background: " + LIGHT + " !important; }"),
-    // Text that only inherits a page style gets the light island's ink, as on the real stage.
     ...inkSelectors.map((s) => ":is(" + s + ") { color: #18181e !important; }"),
   ].join("\\n");
   document.head.appendChild(style);
   document.documentElement.classList.add("island-light");
-  // Windows with their own light look, as SettingsWindow.tsx and OnboardingWindow.tsx set it.
   for (const [root, modifier] of [["settings-stage", "settings-stage--light"], ["onboarding", "onboarding--light"]]) {
     document.querySelectorAll("." + root).forEach((el) => el.classList.add(modifier));
   }
   await new Promise((resolve) => setTimeout(resolve, 300));
 
-  // rgb(), rgba() and color(srgb ...) as color-mix() resolves; null for anything else.
   const parse = (c) => {
     const srgb = c.match(/^color\\(srgb ([^)]+)\\)/);
     if (srgb) {
@@ -64,10 +50,7 @@ export const LIGHT_AUDIT = `(async () => {
     return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
   };
   const over = (top, bottom) => ({ r: top.r * top.a + bottom.r * (1 - top.a), g: top.g * top.a + bottom.g * (1 - top.a), b: top.b * top.a + bottom.b * (1 - top.a), a: 1 });
-  // Only the element itself: app text inside a page's frame is what the pass is for.
   const matches = (el, selectors) => selectors.some((s) => { try { return el.matches(s); } catch { return false; } });
-  // The composited background behind el, or null when an image makes it unknowable. Gradients
-  // are left out: on the island they are faint sheens over the fill.
   const backdrop = (el) => {
     const layers = [];
     for (let n = el; n && n.nodeType === 1; n = n.parentElement) {
@@ -119,16 +102,13 @@ export const LIGHT_AUDIT = `(async () => {
   return JSON.stringify([...found.values()].sort((a, b) => a.ratio - b.ratio));
 })()`;
 
-/** The page's name as the allowlist knows it: the file without its query. */
 export const pageName = (page) => page.split("?")[0];
 
-/** `findings` with the page's allowlisted keys dropped. */
 export function unexpected(findings, allowlist, page) {
   const allowed = new Set(allowlist[pageName(page)] ?? []);
   return findings.filter(({ key }) => !allowed.has(key));
 }
 
-/** Runs the light pass on the page `session` shows; returns the findings not allowlisted. */
 export async function auditLight(session, page, allowlist) {
   if (SKIPPED_PAGES.includes(pageName(page))) return [];
   const { result } = await session.send("Runtime.evaluate", { expression: LIGHT_AUDIT, awaitPromise: true, returnByValue: true });

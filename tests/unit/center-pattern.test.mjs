@@ -9,13 +9,13 @@ test("pet moods map to petdex rows and their frame counts", () => {
   assert.equal(petRow("waiting").row, 6);
   assert.equal(petRow("failed").row, 5);
   assert.equal(petRow("failed").frames, 8);
-  assert.equal(petRow("done").row, 3); // waving
+  assert.equal(petRow("done").row, 3);
   assert.equal(petRow("nonsense").row, 0, "unknown moods fall back to idle");
 });
 
 test("sheet rows come from the pixel size, at any clean scale", () => {
   assert.equal(petSheetRows(1536, 1872), 9);
-  assert.equal(petSheetRows(1536, 2288), 11); // v2
+  assert.equal(petSheetRows(1536, 2288), 11);
   assert.equal(petSheetRows(768, 936), 9);
   assert.equal(petSheetRows(1536, 1536), null);
   assert.equal(petSheetRows(0, 0), null);

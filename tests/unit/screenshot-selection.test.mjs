@@ -18,13 +18,11 @@ import {
 const BOUNDS = { width: 2560, height: 1440 };
 
 test("the overlay's scale comes from the picture against the view, so 150% and 100% monitors both map to physical pixels", () => {
-  // A 2560-wide monitor at 150%: the overlay is 1706.67 CSS pixels wide.
   const scale = pixelScale(BOUNDS, { width: 2560 / 1.5, height: 1440 / 1.5 });
   assert.equal(scale, 1.5);
   assert.deepEqual(toPixels({ x: 100, y: 200 }, scale), { x: 150, y: 300 });
   assert.deepEqual(toCss({ x: 150, y: 300, width: 30, height: 60 }, scale), { x: 100, y: 200, width: 20, height: 40 });
   assert.equal(pixelScale({ width: 1920, height: 1080 }, { width: 1920, height: 1080 }), 1);
-  // A view not laid out yet does not divide by zero.
   assert.equal(pixelScale(BOUNDS, { width: 0, height: 0 }), 1);
 });
 

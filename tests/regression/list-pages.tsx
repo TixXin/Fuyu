@@ -1,5 +1,3 @@
-// pnpm dev, then open /tests/regression/list-pages.html (demo) or ?test=1 (checks). The island's
-// clipboard and file shelf pages (C29) with made-up entries, on a dark and a light island.
 import { act, StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { mockIPC } from "@tauri-apps/api/mocks";
@@ -128,7 +126,6 @@ async function runChecks() {
     await click(menuItem("再点一次删除"));
     check(calls.includes("delete:t1") && !row(clip, "t1"), "确认后删除");
 
-    // C43: what the clipboard window recognises, searches and transforms, on the island too.
     const color = row(clip, "c1")!;
     check($(".clipboard-swatch", color) && $(".island-list-row__meta", color)?.textContent?.startsWith("颜色"), "颜色：行首是色块，第二行标「颜色」");
     check($(".island-list-row__main", row(clip, "l1")!)?.textContent === "github.com › TixXin/fuyu › pull/26", "链接写成「域名 › 路径」");

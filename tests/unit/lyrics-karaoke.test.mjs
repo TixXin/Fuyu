@@ -13,11 +13,9 @@ test("a line without word times fills evenly, character by character in Chinese,
   const zh = karaokeWords({ timeMs: 10_000, text: "而风声 吹到" }, 14_000, true);
   assert.deepEqual(zh.map((word) => word.text), ["而", "风", "声 ", "吹", "到"]);
   assert.equal(zh[0].startMs, 10_000);
-  // Most of the time to the next line: 85% of 4 s.
   assert.equal(zh[zh.length - 1].endMs, 13_400);
   const en = karaokeWords({ timeMs: 0, text: "Oh I believe" }, 2_000, true);
   assert.deepEqual(en.map((word) => word.text), ["Oh ", "I ", "believe"]);
-  // Longer words take longer.
   assert.ok(en[2].endMs - en[2].startMs > en[1].endMs - en[1].startMs);
 });
 

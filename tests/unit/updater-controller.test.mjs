@@ -26,7 +26,6 @@ test("deadlines use the last successful check and one shared startup buffer", ()
   assert.equal(nextUpdateCheckAt(schedule({ lastCheckedAt: null }), hour), 21_000);
   assert.equal(nextUpdateCheckAt(schedule({ startedAt: hour - 1000 }), hour), hour * 7);
   assert.equal(nextUpdateCheckAt(schedule({ lastCheckedAt: null, startedAt: hour - 1000 }), hour), hour + 19_000);
-  // A clock rollback must not defer checks until the old clock catches up.
   assert.equal(nextUpdateCheckAt(schedule({ startedAt: hour, lastCheckedAt: hour * 2 }), 500), 500);
 });
 
@@ -181,7 +180,6 @@ test("failed channel switch preserves stored channel", async () => {
 test("new installs check every hour and download updates in the background by default", () => {
   assert.equal(DEFAULT_UPDATE_PREFERENCES.checkIntervalHours, 1);
   assert.equal(DEFAULT_UPDATE_PREFERENCES.autoUpdate, "download");
-  // A saved interval stays as it was; an unknown auto-update value falls back to downloading.
   assert.equal(normalizeUpdatePreferences({ checkIntervalHours: 6 }).checkIntervalHours, 6);
   assert.equal(normalizeUpdatePreferences({ autoUpdate: "install" }).autoUpdate, "install");
   assert.equal(normalizeUpdatePreferences({ autoUpdate: "always" }).autoUpdate, "download");

@@ -1,14 +1,3 @@
-// Sets the app version for the next release and starts its notes.
-//
-// Usage:
-//   pnpm release:version <version>      e.g. 0.3.4 or 0.3.4-beta.1
-//
-// Writes the version into package.json, src-tauri/tauri.conf.json,
-// src-tauri/Cargo.toml and the app's entry in src-tauri/Cargo.lock (versions.mjs),
-// after checking it is newer than every released tag. When
-// docs/releases/v<version>.md does not exist yet, writes a draft with the
-// paragraphs every release has and the user-facing commits since the release it
-// follows (notes-draft.mjs). Commit both, land them, then run `pnpm release`.
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { baseTag, draftNotes } from "./notes-draft.mjs";

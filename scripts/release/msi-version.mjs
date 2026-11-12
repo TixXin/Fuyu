@@ -1,10 +1,3 @@
-// The MSI ProductVersion for an app version. MSI only takes numbers
-// (major.minor.patch[.build], major and minor up to 255, the rest up to 65535),
-// so "0.3.1-beta.1" cannot be used as is. A pre-release becomes
-// major.minor.patch.<its last number>, e.g. 0.3.1-beta.2 -> 0.3.1.2. The final
-// 0.3.1 still installs over it: Tauri builds MSIs with AllowDowngrades
-// (bundle.windows.allowDowngrades defaults to true).
-// Returns null for a plain x.y.z, which Tauri can use directly.
 export function msiVersion(version) {
   const match = /^(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+))?$/.exec(version);
   if (!match) throw new Error(`"${version}" is not a version like 1.2.3 or 1.2.3-beta.1.`);
@@ -19,7 +12,6 @@ export function msiVersion(version) {
   return `${major}.${minor}.${patch}.${build}`;
 }
 
-/** File name endings the MSI of `version` may have (named after the app version or the MSI version). */
 export function msiNames(version) {
   const wix = msiVersion(version);
   return [`_${version}_x64_en-US.msi`, ...(wix ? [`_${wix}_x64_en-US.msi`] : [])];

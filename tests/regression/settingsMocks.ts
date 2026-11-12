@@ -1,11 +1,8 @@
-// The Tauri commands the settings window calls, answered as the island would, for the settings
-// regression pages. Importing this installs the mocks; the arrays record what was called.
 import { mockIPC, mockWindows } from "@tauri-apps/api/mocks";
 import type { MailSnapshot } from "../../src/features/messages/mail/api";
 import { DEMO_CURRENT_VERSION } from "./updateDemo";
 import { updateRuntimeMock } from "./updateRuntimeMock";
 
-// update-reminder.html (updateReminderEnv.ts): the update check finds a newer version.
 const demoUpdate = Boolean((globalThis as { focusdDemoUpdate?: boolean }).focusdDemoUpdate);
 let revision = 0;
 export const commands: string[] = [];
@@ -29,7 +26,6 @@ mockIPC((command, payload) => {
   if (command === "revoke_plugin_sensitive_permission") revokedPermissions.push(String(args.permission));
   if (command === "install_market_plugin") marketInstalls.push(args);
   if (command === "plugin:opener|open_url") openedUrls.push(String(args.url));
-  // Answers with the plugin list, like the island does after saving the shortcut.
   if (command === "set_plugin_keybinding") {
     keybindingCalls.push(args);
     command = "list_plugins";
@@ -106,7 +102,6 @@ mockIPC((command, payload) => {
       ],
       };
     }
-    // Development mode (P10): on, with one plugin loaded from a folder and some JSON-RPC lines.
     case "get_plugin_dev_state":
     case "set_plugin_dev_mode":
     case "load_dev_plugin":

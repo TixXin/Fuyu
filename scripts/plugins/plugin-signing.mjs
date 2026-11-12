@@ -1,14 +1,3 @@
-// Ed25519 signing of plugins/index.json. The app trusts the keys in
-// plugins/signing-keys.json (compiled in) and refuses an index whose
-// index.json.sig does not verify. The index lists each package's SHA-256, so
-// signing the index covers the packages too.
-//
-//   pnpm plugins:keygen   create the key pair (once); the private key is kept
-//                         outside the repo, encrypted for this Windows user
-//   pnpm plugins:index    packs, writes and signs the index
-//
-// Private key: FOCUSD_PLUGIN_SIGNING_KEY (PEM text) if set, else
-// ~/.tauri/fly-island/plugin-index-signing.key (DPAPI-protected PEM).
 import { spawnSync } from "node:child_process";
 import { createHash, createPrivateKey, createPublicKey, generateKeyPairSync, sign, verify } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -18,10 +7,8 @@ import { fileURLToPath } from "node:url";
 
 export const KEY_FILE = path.join(homedir(), ".tauri", "fly-island", "plugin-index-signing.key");
 export const TRUSTED_KEYS_PATH = "plugins/signing-keys.json";
-// DER prefix of an Ed25519 SubjectPublicKeyInfo; the raw 32-byte key follows.
 const SPKI_PREFIX = Buffer.from("302a300506032b6570032100", "hex");
 
-/** The bytes that are signed: CRLF line ends become LF, so a CRLF checkout verifies too. */
 export const signedBytes = (text) => Buffer.from(text.replaceAll("\r\n", "\n"), "utf8");
 
 export function rawPublicKey(publicKey) {
@@ -35,11 +22,6 @@ export function signIndex(text, privateKey) {
   return { keyId: keyIdOf(raw), signature: sign(null, signedBytes(text), privateKey).toString("base64") };
 }
 
-/**
- * True when `signature` ({ keyId, signature }, or a list of them like
- * src-tauri/src/plugin_host/signature.rs accepts) holds a valid signature of
- * `text` by one of `trustedKeys`.
- */
 export function verifyIndex(text, signature, trustedKeys) {
   if (Array.isArray(signature)) return signature.some((one) => verifyIndex(text, one, trustedKeys));
   const trusted = trustedKeys.find((key) => key.keyId === signature?.keyId);
@@ -52,7 +34,6 @@ export function verifyIndex(text, signature, trustedKeys) {
   return verify(null, signedBytes(text), publicKey, Buffer.from(signature.signature, "base64"));
 }
 
-/** Runs DPAPI (CurrentUser) through Windows PowerShell; `mode` is Protect or Unprotect. */
 function dpapi(mode, input) {
   const command = `
 $ErrorActionPreference = 'Stop'
@@ -61,7 +42,6 @@ $data = [Convert]::FromBase64String($env:FOCUSD_DPAPI_INPUT)
 $out = [Security.Cryptography.ProtectedData]::${mode}($data, $null, 'CurrentUser')
 [Console]::Out.Write([Convert]::ToBase64String($out))`;
   const env = { ...process.env, FOCUSD_DPAPI_INPUT: input.toString("base64") };
-  // PowerShell 7 module paths are incompatible with the Windows PowerShell 5 host.
   delete env.PSModulePath;
   const result = spawnSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-Command", command], {
     encoding: "utf8",

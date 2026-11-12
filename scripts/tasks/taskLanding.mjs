@@ -1,6 +1,3 @@
-// `pnpm tasks landing`, run by scripts/land-check.mjs on every land: a task marked 已完成
-// in the landing must name commits that exist, and the lane's own claims that are still
-// open get a reminder.
 import path from "node:path";
 import { claimState, groupOf, parseTask, sectionItems } from "./taskFile.mjs";
 import { commitRef } from "./taskRules.mjs";
@@ -10,9 +7,7 @@ function lines(text) {
   return (text ?? "").split("\n").map((line) => line.trim()).filter(Boolean);
 }
 
-/** The status task `id` had on origin/main, or null when it did not exist there. */
 function statusOnMain(root, id) {
-  // Earlier layouts (all 2026-11-09): docs/tasks/<id>.md and archive/<id>.md, then archive/<group>/<id>.md.
   const old = [`${TASKS_DIR}/${id}.md`, `${TASKS_DIR}/archive/${id}.md`, `${TASKS_DIR}/archive/${groupOf(id)}/${id}.md`];
   const paths = [taskPath(id, false), taskPath(id, true), ...old];
   for (const file of paths) {
@@ -28,10 +23,6 @@ function statusOnMain(root, id) {
   return null;
 }
 
-/**
- * Problems with the tasks this landing marks 已完成. `facts` can be passed in by tests:
- * { changed: ids, landing: subjects, history: subjects, commitExists(hash) }.
- */
 export function doneProblems(tasks, facts) {
   const problems = [];
   const subjects = new Set([...facts.landing, ...facts.history]);
@@ -64,7 +55,6 @@ export function landingProblems(root) {
   });
 }
 
-/** Reminders for this lane's claims that are still open while it lands other work. */
 export function laneReminders(root, lane) {
   if (lane === null) return [];
   const changed = lines(tryGit(["diff", "--name-only", "origin/main...HEAD"], root));

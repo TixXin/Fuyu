@@ -1,13 +1,5 @@
-# The dev task board (roadmap F10): the tasks in docs/tasks of the fly-island
-# repo on an island page, from `node scripts/tasks/tasks.mjs --json`, so the
-# board, stale claims and handoffs are worked out in one place (tasks.mjs).
-# The collapsed bar shows how many tasks wait for the user. Installed by
-# `pnpm tasks:plugin`, which copies lib/fuyu.ps1 (plugins/sdk/powershell) next to this file and records
-# the repo folder in repo.txt.
 . "$PSScriptRoot\lib\fuyu.ps1"
 
-# Windows PowerShell 5.1 reads a script without a BOM as ANSI, so this file stays
-# ASCII and writes Chinese text as \u escapes.
 function Text([string]$Escaped) { [regex]::Unescape($Escaped) }
 function Both([string]$Zh, [string]$En) { @{ 'zh-CN' = (Text $Zh); en = $En } }
 
@@ -32,7 +24,6 @@ function Read-Settings($settings) {
 
 function Get-Field($task, [string]$Name) { [string]$task.$Name }
 
-# "12 minutes ago" for a claim made today, else the date: the board says how fresh a claim is.
 function Format-Ago([string]$Claimed) {
     try { $at = [DateTime]::ParseExact($Claimed, 'yyyy-MM-dd HH:mm', [Globalization.CultureInfo]::InvariantCulture) } catch { return $Claimed }
     $minutes = [int][Math]::Floor(([DateTime]::Now - $at).TotalMinutes)
@@ -42,9 +33,6 @@ function Format-Ago([string]$Claimed) {
     $at.ToString('M-d')
 }
 
-# One row: the title alone on top; under it the id, who and where, how long ago, and what it
-# waits on; on the right one short mark (children done, its issue, or a handoff). The icon
-# says which group it is in, so a row read on its own still says what it is.
 function New-Item-Row($task, [string]$Icon) {
     $parts = @(Get-Field $task 'id')
     if (Get-Field $task 'owner') { $parts += Get-Field $task 'owner' }
@@ -67,7 +55,6 @@ function New-Item-Row($task, [string]$Icon) {
 }
 
 function Send-Model([bool]$Loading = $false) {
-    # needsUser: waiting for the user's answer, or work only the user can do (needs: user).
     $done = Text '\u5df2\u5b8c\u6210'
     $dropped = Text '\u4e0d\u505a'
     $open = @($script:Tasks | Where-Object { $_.status -ne $done -and $_.status -ne $dropped })
@@ -95,7 +82,6 @@ function Send-Model([bool]$Loading = $false) {
     )) {
         if ($group.list.Count -gt 0) {
             $icon = $group.icon
-            # A task still waiting on another shows a clock instead of the to-do mark.
             $items = @($group.list | ForEach-Object { New-Item-Row $_ $(if ($icon -eq 'list-todo' -and @($_.blockedBy).Count -gt 0) { 'clock' } else { $icon }) })
             $groups += @{ title = "$($group.title) $($group.list.Count)"; items = $items }
         }
@@ -138,7 +124,6 @@ function Test-Stale { ([DateTime]::UtcNow - $script:FetchedAt).TotalMinutes -ge 
 while ($true) {
     $message = Receive-FuyuNotification 5000
     try {
-        # The collapsed bar's count stays current while the page is closed too.
         if ($null -eq $message) {
             if (Test-Stale) { Update-Tasks }
             continue
@@ -160,7 +145,6 @@ while ($true) {
             'view.action' {
                 $id = ([string]$message.params.itemId) -replace '^task-', ''
                 if ($id -match '^[A-Z][A-Za-z0-9.]*$') {
-                    # Open tasks sit in the folder of their group, the id's first letter; closed ones in 0-archive.
                     foreach ($folder in @("docs\tasks\$($id.Substring(0, 1))", "docs\tasks\0-archive\$($id.Substring(0, 1))")) {
                         $file = Join-Path $script:Repo "$folder\$id.md"
                         if (Test-Path $file) { Invoke-Item $file; break }
@@ -175,7 +159,6 @@ while ($true) {
             }
         }
     } catch {
-        # Keep running: one failed call should not make the island restart the plugin.
         Write-FuyuLog "error: $($_.Exception.Message)"
     }
 }

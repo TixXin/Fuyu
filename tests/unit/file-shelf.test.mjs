@@ -34,7 +34,6 @@ test("a drop reports the entries it added and whether they were all on the shelf
   assert.deepEqual(getDropResult(["C:/B.TXT"], before, after), { ids: ["2"], allExisting: false });
   assert.deepEqual(getDropResult([String.raw`c:\A.txt`], before, after), { ids: ["1"], allExisting: true });
   assert.deepEqual(getDropResult([String.raw`C:\a.txt`, String.raw`C:\b.txt`], before, after), { ids: ["2", "1"], allExisting: false });
-  // Paths the shelf refused (missing or relative) add nothing.
   assert.deepEqual(getDropResult(["relative.txt"], before, after), { ids: [], allExisting: false });
 });
 
@@ -51,7 +50,6 @@ test("clicks select entries like Explorer: plain, Ctrl-toggle and Shift-range", 
   assert.deepEqual(selection.ids, ["a", "b", "d"]);
   assert.deepEqual(targetIds(selection, "b"), ["a", "b", "d"]);
   assert.deepEqual(targetIds(selection, "c"), ["c"]);
-  // The last Ctrl-click (c) stays the anchor while it is visible.
   assert.deepEqual(keepVisible(selection, ["b", "c"]), { ids: ["b"], anchor: "c" });
   assert.deepEqual(keepVisible(selection, ["b"]), { ids: ["b"], anchor: null });
   assert.equal(keepVisible(selection, visible), selection);

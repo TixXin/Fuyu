@@ -28,7 +28,6 @@ const keys = (values) => ({
 
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 
-/** What src-tauri/src/todos/model.rs validate() accepts. */
 function assertRustAccepts(data) {
   const item = (todo) => {
     assert.equal(typeof todo.id, "string");
@@ -56,12 +55,10 @@ function assertRustAccepts(data) {
   });
   assert.equal(typeof data.dailyNote, "string");
   assert.ok(data.activeTodoId === null || (typeof data.activeTodoId === "string" && data.activeTodoId.length > 0));
-  // Round-trips through JSON as Rust receives it.
   assert.deepEqual(JSON.parse(JSON.stringify(data)), JSON.parse(JSON.stringify(data)));
 }
 
 test("data written by every released version (0.1.1 to 0.2.14) migrates unchanged", () => {
-  // Those versions wrote the same shapes; archives from before "save to disk" have no filePath.
   const todos = [
     { id: "8f1c-uuid", title: "写周报", completed: false, createdAt: 1751700000000 },
     { id: "1751700000001-abc", title: "done", completed: true, createdAt: 1751700000001 },
@@ -190,8 +187,8 @@ test("changes from plugins replace only the fields they changed, and win over un
   const seen = [];
   const unsubscribe = subscribeTodoFile((data, changed) => seen.push([[...changed], data.todos.length, data.dailyNote]));
 
-  queueTodoChange({ dailyNote: "typing" }); // in flight
-  queueTodoChange({ todos: [{ id: "mine", title: "mine", completed: false, createdAt: 1 }] }); // waiting
+  queueTodoChange({ dailyNote: "typing" });
+  queueTodoChange({ todos: [{ id: "mine", title: "mine", completed: false, createdAt: 1 }] });
   const plugin = { ...base, todos: [{ id: "p", title: "from plugin", completed: false, createdAt: 2 }] };
   adoptTodoFileData(plugin, 5, ["todos"]);
   assert.deepEqual(seen, [[["todos"], 1, "typing"]], "the note being typed is kept");
@@ -201,7 +198,6 @@ test("changes from plugins replace only the fields they changed, and win over un
   await new Promise((resolve) => setTimeout(resolve, 0));
   assert.equal(writes.length, 1, "the unsaved todo edit was replaced by the plugin's, so nothing more to write");
 
-  // A save that lost a field to a plugin takes that field back from Rust.
   queueTodoChange({ activeTodoId: "p" });
   release({ revision: 8, conflicts: ["activeTodoId"], data: { ...plugin, dailyNote: "typing", activeTodoId: null } });
   await new Promise((resolve) => setTimeout(resolve, 0));
