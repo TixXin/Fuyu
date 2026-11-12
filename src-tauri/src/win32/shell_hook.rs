@@ -10,7 +10,7 @@ use windows::{
 
 pub(crate) fn hook_message() -> Result<u32> {
     match unsafe { RegisterWindowMessageW(w!("SHELLHOOK")) } {
-        0 => Err(Error::from_win32()),
+        0 => Err(Error::from_thread()),
         message => Ok(message),
     }
 }

@@ -304,3 +304,46 @@ pub(super) fn point_in_notch(
 
     shape.contains(dx, dy, radius)
 }
+
+#[cfg_attr(not(windows), allow(dead_code))]
+pub(super) fn stage_point(window_left: f64, window_top: f64, window_width: f64, cursor_x: f64, cursor_y: f64) -> (f64, f64) {
+    let physical_scale = window_width / STAGE_WINDOW_WIDTH;
+    let round = |value: f64| (value * 10.0).round() / 10.0;
+    (round((cursor_x - window_left) / physical_scale), round((cursor_y - window_top) / physical_scale))
+}
+
+#[cfg_attr(not(windows), allow(dead_code))]
+pub(super) fn cursor_on_island(
+    window_left: f64,
+    window_top: f64,
+    window_width: f64,
+    cursor_x: f64,
+    cursor_y: f64,
+    state: IslandWindowState,
+) -> bool {
+    let physical_scale = window_width / STAGE_WINDOW_WIDTH;
+    let local_x = cursor_x - window_left;
+    let local_y = cursor_y - window_top;
+
+    let (base_width, base_height) = state
+        .mode
+        .base_size(state.collapsed_width, state.expanded_width, state.expanded_height);
+    let island_width = base_width * state.active_scale() * physical_scale;
+    let island_height = base_height * state.active_scale() * physical_scale;
+    let island_left = (window_width - island_width) / 2.0;
+    let island_top = 0.0;
+    let radius = state.bottom_corner_radius() * state.active_scale() * physical_scale;
+    let top_radius = state.top_corner_radius() * state.active_scale() * physical_scale;
+
+    point_in_notch(
+        local_x,
+        local_y,
+        island_left,
+        island_top,
+        island_width,
+        island_height,
+        radius,
+        top_radius,
+        state.corner_shape,
+    )
+}
