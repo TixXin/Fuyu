@@ -5,6 +5,7 @@ import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton
 import { SettingsRow } from "../../components/settings/SettingsRow";
 import { SettingsSelect } from "../../components/settings/SettingsSelect";
 import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
+import { useFlash } from "../../components/settings/useFlash";
 import { useErrorText, useTranslation } from "../../i18n";
 import { deleteTranslationSecret, hasTranslationSecret, saveTranslationSecret } from "./api";
 import { DEFAULT_PROVIDER_MODELS, TRANSLATION_PROVIDERS } from "./providers";
@@ -21,6 +22,7 @@ export function TranslationSettingsSection({ settings, setSettings }: {
   const [secretDraft, setSecretDraft] = useState("");
   const [savingSecret, setSavingSecret] = useState(false);
   const [serviceError, setServiceError] = useState("");
+  const [secretNotice, flashSecret] = useFlash<string>();
   const provider = settings.provider;
   const defaultModel = DEFAULT_PROVIDER_MODELS[provider];
 
@@ -40,6 +42,7 @@ export function TranslationSettingsSection({ settings, setSettings }: {
       setSecretDraft("");
       setHasSecret(true);
       setServiceError("");
+      flashSecret(t.translator.secretSaved);
     } catch (failure) { setServiceError(errorText(failure)); }
     finally { setSavingSecret(false); }
   };
@@ -49,6 +52,7 @@ export function TranslationSettingsSection({ settings, setSettings }: {
       await deleteTranslationSecret(provider);
       setHasSecret(false);
       setSecretDraft("");
+      flashSecret(t.translator.secretDeleted);
     } catch (failure) { setServiceError(errorText(failure)); }
   };
 
@@ -82,7 +86,7 @@ export function TranslationSettingsSection({ settings, setSettings }: {
         </SettingsRow>
         <SettingsRow
           title={t.translator.secret}
-          description={hasSecret ? t.common.saved : undefined}
+          description={secretNotice ? <span role="status">{secretNotice}</span> : hasSecret ? t.common.saved : undefined}
           control={
             <>
               <SettingsLinkButton disabled={!secretDraft.trim() || savingSecret} onClick={() => void saveSecret()}>{t.translator.saveSecret}</SettingsLinkButton>

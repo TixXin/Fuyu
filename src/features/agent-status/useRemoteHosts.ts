@@ -83,6 +83,6 @@ export function useRemoteHosts() {
       void run(setAgentRemoteHosts(on ? [...chosen, name] : chosen.filter((known) => known !== name)), () => undefined),
     add: (host: CustomRemoteHost) => run(addAgentRemoteHost(host), setCustom),
     remove: (name: string) => void run(removeAgentRemoteHost(name), setCustom),
-    refresh: () => void run(refreshAgentRemoteHosts(), () => undefined),
+    refresh: () => run(refreshAgentRemoteHosts(), () => undefined),
   };
 }

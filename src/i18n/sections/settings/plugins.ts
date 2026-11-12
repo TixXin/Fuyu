@@ -4,6 +4,16 @@ export type SettingsPluginsText = {
   folder: string;
   openFolder: string;
   reload: string;
+  feedback: {
+    checking: string;
+    upToDate: string;
+    found: (count: number) => string;
+    reloaded: (count: number) => string;
+    folderOpened: string;
+    dataCleared: string;
+    saved: string;
+    commandSent: string;
+  };
   empty: string;
   groupBuiltin: (count: number) => string;
   groupThirdParty: (count: number) => string;
@@ -62,6 +72,7 @@ export type SettingsPluginsText = {
     pathPlaceholder: string;
     load: string;
     reload: string;
+    reloaded: string;
     unload: string;
     noPlugins: string;
     trace: (id: string) => string;
@@ -270,6 +281,16 @@ export const zhCN: SettingsPluginsText = {
   folder: "插件目录",
   openFolder: "打开",
   reload: "重新加载",
+  feedback: {
+    checking: "正在检查…",
+    upToDate: "已是最新（刚刚检查）",
+    found: (count) => `找到 ${count} 个更新`,
+    reloaded: (count) => `已重新加载，共 ${count} 个插件`,
+    folderOpened: "已在资源管理器中打开",
+    dataCleared: "数据已清除",
+    saved: "已保存",
+    commandSent: "已发给插件",
+  },
   empty: "还没有安装插件。把插件文件夹放进插件目录，再点“重新加载”。",
   groupBuiltin: (count: number) => `内置（${count}）`,
   groupThirdParty: (count: number) => `第三方（${count}）`,
@@ -361,6 +382,7 @@ export const zhCN: SettingsPluginsText = {
     pathPlaceholder: "插件文件夹的完整路径，里面要有 fuyu-plugin.json",
     load: "加载",
     reload: "重新加载",
+    reloaded: "已重新加载",
     unload: "移除",
     noPlugins: "还没有加载开发中的插件。",
     trace: (id: string) => `${id} 的 JSON-RPC 收发记录（最近 200 行）`,
@@ -624,6 +646,16 @@ export const en: SettingsPluginsText = {
   folder: "Plugins folder",
   openFolder: "Open",
   reload: "Reload",
+  feedback: {
+    checking: "Checking…",
+    upToDate: "Up to date (just checked)",
+    found: (count) => `${count} update${count === 1 ? "" : "s"} found`,
+    reloaded: (count) => `Reloaded, ${count} plugin${count === 1 ? "" : "s"}`,
+    folderOpened: "Opened in File Explorer",
+    dataCleared: "Data cleared",
+    saved: "Saved",
+    commandSent: "Sent to the plugin",
+  },
   empty: "No plugins installed. Put a plugin folder in the plugins folder, then click Reload.",
   groupBuiltin: (count: number) => `Built in (${count})`,
   groupThirdParty: (count: number) => `Third-party (${count})`,
@@ -715,6 +747,7 @@ export const en: SettingsPluginsText = {
     pathPlaceholder: "Full path of a folder with fuyu-plugin.json",
     load: "Load",
     reload: "Reload",
+    reloaded: "Reloaded",
     unload: "Remove",
     noPlugins: "No plugins in development loaded yet.",
     trace: (id: string) => `JSON-RPC messages of ${id} (last 200 lines)`,

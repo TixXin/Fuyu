@@ -4,6 +4,7 @@ import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton";
 import { SettingsRow } from "../../components/settings/SettingsRow";
 import { SettingsSwitch } from "../../components/settings/SettingsSwitch";
+import { useFlash } from "../../components/settings/useFlash";
 import { useTranslation } from "../../i18n";
 import { RemoteHostForm } from "./RemoteHostForm";
 import { customAddress, useRemoteHosts, type RemoteHostEntry } from "./useRemoteHosts";
@@ -13,6 +14,16 @@ export function AgentRemoteHostsSettings() {
   const text = useTranslation().settings.agent;
   const remote = useRemoteHosts();
   const [adding, setAdding] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [refreshed, flashRefreshed] = useFlash<true>();
+  const refresh = async () => {
+    setRefreshing(true);
+    flashRefreshed(null);
+    const ok = await remote.refresh();
+    setRefreshing(false);
+    if (ok) flashRefreshed(true);
+  };
+  const refreshLabel = refreshing ? text.remoteRefreshing : refreshed ? text.remoteRefreshed : text.remoteRefresh;
 
   return (
     <>
@@ -27,7 +38,7 @@ export function AgentRemoteHostsSettings() {
       </SettingsGroup>
       <SettingsGroup
         title={text.remoteHostsSection}
-        action={remote.entries.some((entry) => entry.status) ? <SettingsLinkButton onClick={remote.refresh}>{text.remoteRefresh}</SettingsLinkButton> : undefined}
+        action={remote.entries.some((entry) => entry.status) ? <SettingsLinkButton disabled={refreshing} onClick={() => void refresh()}><span role="status">{refreshLabel}</span></SettingsLinkButton> : undefined}
         footer={remote.error ? <span className="agent-remote__error">{remote.error}</span> : text.remoteHostsFooter}
       >
         {remote.loaded && remote.entries.length === 0 ? <SettingsRow searchable={false} title={text.remoteEmpty} description={text.remoteEmptyHint} /> : null}

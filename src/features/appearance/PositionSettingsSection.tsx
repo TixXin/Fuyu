@@ -3,6 +3,7 @@ import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton
 import { SettingsRow } from "../../components/settings/SettingsRow";
 import { SettingsSelect } from "../../components/settings/SettingsSelect";
 import { SettingsSliderRow } from "../../components/settings/SettingsSliderRow";
+import { useFlash } from "../../components/settings/useFlash";
 import { useTranslation } from "../../i18n";
 import { DEFAULT_SETTINGS } from "./settings";
 import type { IslandMonitor, IslandSettings } from "./types";
@@ -17,6 +18,7 @@ export function PositionSettingsSection({
   onResetPosition: () => void;
 }) {
   const t = useTranslation();
+  const [done, flash] = useFlash<true>();
   const monitorOptions = (["primary", "cursor", "foreground"] as const).map((value) => ({ value, label: t.settings.position.monitorOptions[value] }));
 
   return (
@@ -45,7 +47,11 @@ export function PositionSettingsSection({
       />
       <SettingsRow
         title={t.settings.position.resetRow}
-        control={<SettingsLinkButton onClick={onResetPosition}>{t.settings.position.reset}</SettingsLinkButton>}
+        control={
+          <SettingsLinkButton onClick={() => { onResetPosition(); flash(true); }}>
+            <span role="status">{done ? t.settings.position.resetDone : t.settings.position.reset}</span>
+          </SettingsLinkButton>
+        }
       />
     </SettingsGroup>
   );

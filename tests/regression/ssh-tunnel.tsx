@@ -80,7 +80,7 @@ const render = async (localProxy: string) => {
   await act(async () => {
     root.render(
       <StrictMode><I18nProvider>
-        <PluginDetailPage plugin={plugin(localProxy)} busy={false} onBack={noop} onSettingChange={noop} onRunCommand={noop}
+        <PluginDetailPage plugin={plugin(localProxy)} busy={false} notice={null} onBack={noop} onSettingChange={noop} onRunCommand={noop}
           onNotificationsMutedChange={noop} onPreReleaseChange={noop} onMemoryLimitChange={noop} onClearData={noop} onRevokeSensitive={noop} />
       </I18nProvider></StrictMode>,
     );

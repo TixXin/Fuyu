@@ -38,6 +38,8 @@ export type SettingsAgentText = {
   remoteHostsSection: string;
   remoteHostsFooter: string;
   remoteRefresh: string;
+  remoteRefreshing: string;
+  remoteRefreshed: string;
   remoteEmpty: string;
   remoteEmptyHint: string;
   remoteFromConfig: string;
@@ -218,6 +220,8 @@ export const zhCN: SettingsAgentText = {
   remoteHostsSection: "主机",
   remoteHostsFooter: "~/.ssh/config 里的 Host 和在这里添加的主机都列在上面，最多同时打开 8 台。",
   remoteRefresh: "立即刷新",
+  remoteRefreshing: "正在刷新…",
+  remoteRefreshed: "已刷新",
   remoteEmpty: "还没有主机",
   remoteEmptyHint: "在下面添加一台，或者在 ~/.ssh/config 里写好 Host 再回到这一页。",
   remoteFromConfig: "来自 ~/.ssh/config",
@@ -398,6 +402,8 @@ export const en: SettingsAgentText = {
   remoteHostsSection: "Hosts",
   remoteHostsFooter: "The Hosts in ~/.ssh/config and the ones added here are listed above; at most 8 can be on.",
   remoteRefresh: "Refresh now",
+  remoteRefreshing: "Refreshing…",
+  remoteRefreshed: "Refreshed",
   remoteEmpty: "No hosts yet",
   remoteEmptyHint: "Add one below, or write a Host in ~/.ssh/config and come back to this page.",
   remoteFromConfig: "From ~/.ssh/config",

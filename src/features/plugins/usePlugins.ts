@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import { useErrorText } from "../../i18n";
+import { useFlash } from "../../components/settings/useFlash";
+import { useErrorText, useTranslation } from "../../i18n";
 import {
   checkPluginUpdates,
   clearPluginData,
@@ -23,26 +24,37 @@ import type { PromptedPermission } from "./promptedPermissions";
 
 const REFRESH_MS = 2000;
 
+export type PluginAction = "check" | "reload" | "folder" | "clearData" | "memory" | "command";
+export type PluginNotice = { action: PluginAction; text: string };
+type PluginDone = { action: PluginAction; text: (next: PluginsSnapshot | void) => string };
+
 export function usePlugins() {
   const errorText = useErrorText();
   const [snapshot, setSnapshot] = useState<PluginsSnapshot | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [pending, setPending] = useState<PluginAction | null>(null);
+  const [notice, showNotice] = useFlash<PluginNotice>();
+  const feedback = useTranslation().settings.plugins.feedback;
 
-  const run = useCallback(async (action: () => Promise<PluginsSnapshot | void>) => {
+  const run = useCallback(async (action: () => Promise<PluginsSnapshot | void>, done?: PluginDone) => {
     setBusy(true);
+    setPending(done?.action ?? null);
+    showNotice(null);
     try {
       const next = await action();
       if (next) {
         setSnapshot(next);
       }
       setError("");
+      if (done) showNotice({ action: done.action, text: done.text(next) });
     } catch (nextError) {
       setError(errorText(nextError));
     } finally {
       setBusy(false);
+      setPending(null);
     }
-  }, [errorText]);
+  }, [errorText, showNotice]);
 
   useEffect(() => {
     let didCancel = false;
@@ -62,23 +74,49 @@ export function usePlugins() {
     snapshot,
     error,
     busy,
+    pending,
+    notice,
     setAllowed: useCallback((allowed: boolean) => void run(() => setPluginsAllowed(allowed)), [run]),
     setEnabled: useCallback((id: string, enabled: boolean) => void run(() => setPluginEnabled(id, enabled)), [run]),
-    reload: useCallback(() => void run(reloadPlugins), [run]),
-    openFolder: useCallback(() => void run(openPluginsFolder), [run]),
-    runCommand: useCallback((id: string, command: string) => void run(() => runPluginCommand(id, command)), [run]),
+    reload: useCallback(
+      () => void run(reloadPlugins, { action: "reload", text: (next) => feedback.reloaded(next ? next.plugins.length : 0) }),
+      [run, feedback],
+    ),
+    openFolder: useCallback(
+      () => void run(openPluginsFolder, { action: "folder", text: () => feedback.folderOpened }),
+      [run, feedback],
+    ),
+    runCommand: useCallback(
+      (id: string, command: string) =>
+        void run(() => runPluginCommand(id, command), { action: "command", text: () => feedback.commandSent }),
+      [run, feedback],
+    ),
     uninstall: useCallback((id: string) => void run(() => uninstallPlugin(id)), [run]),
-    clearData: useCallback((id: string) => void run(() => clearPluginData(id)), [run]),
+    clearData: useCallback(
+      (id: string) => void run(() => clearPluginData(id), { action: "clearData", text: () => feedback.dataCleared }),
+      [run, feedback],
+    ),
     setAutoUpdate: useCallback((enabled: boolean) => void run(() => setPluginAutoUpdate(enabled)), [run]),
     untrustPublisher: useCallback((publisher: string) => void run(() => setPluginPublisherTrusted(publisher, false)), [run]),
-    checkUpdates: useCallback(() => void run(checkPluginUpdates), [run]),
+    checkUpdates: useCallback(
+      () =>
+        void run(checkPluginUpdates, {
+          action: "check",
+          text: (next) => {
+            const found = next ? next.plugins.filter((plugin) => plugin.updateAvailable).length : 0;
+            return found > 0 ? feedback.found(found) : feedback.upToDate;
+          },
+        }),
+      [run, feedback],
+    ),
     revokeSensitive: useCallback(
       (id: string, permission: PromptedPermission) => void run(() => revokePluginSensitivePermission(id, permission)),
       [run],
     ),
     setMemoryLimit: useCallback(
-      (id: string, megabytes: number) => void run(() => setPluginMemoryLimit(id, megabytes)),
-      [run],
+      (id: string, megabytes: number) =>
+        void run(() => setPluginMemoryLimit(id, megabytes), { action: "memory", text: () => feedback.saved }),
+      [run, feedback],
     ),
     setPreRelease: useCallback(
       (id: string, enabled: boolean) => void run(() => setPluginPreRelease(id, enabled)),

@@ -2,16 +2,22 @@ import { RefreshCcw, X } from "lucide-react";
 import { ToggleControl } from "../../components/controls/ToggleControl";
 import { useTranslation } from "../../i18n";
 import type { PluginsSnapshot } from "./api";
+import { PluginNotice } from "./PluginNotice";
+import type { PluginAction, PluginNotice as Notice } from "./usePlugins";
 
 export function PluginUpdatesSection({
   snapshot,
   busy,
+  pending,
+  notice,
   onAutoUpdateChange,
   onCheck,
   onUntrust,
 }: {
   snapshot: PluginsSnapshot;
   busy: boolean;
+  pending: PluginAction | null;
+  notice: Notice | null;
   onAutoUpdateChange: (enabled: boolean) => void;
   onCheck: () => void;
   onUntrust: (publisher: string) => void;
@@ -25,9 +31,10 @@ export function PluginUpdatesSection({
         <span>{text.title}</span>
         <button className="plugin-card__button" type="button" disabled={busy || !snapshot.allowThirdParty} onClick={onCheck}>
           <RefreshCcw size={12} strokeWidth={2.4} />
-          <span>{text.check}</span>
+          <span>{pending === "check" ? t.settings.plugins.feedback.checking : text.check}</span>
         </button>
       </div>
+      <PluginNotice notice={notice} action="check" />
       <ToggleControl label={text.autoUpdate} checked={snapshot.autoUpdate} onChange={(next) => !busy && onAutoUpdateChange(next)} />
       <p className="settings-section__hint">{text.autoUpdateHint}</p>
       <div className="plugin-updates__trusted">

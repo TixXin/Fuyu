@@ -25,6 +25,8 @@ export type TranslatorText = {
   enterSecret: string;
   saveSecret: string;
   deleteSecret: string;
+  secretSaved: string;
+  secretDeleted: string;
   shortcut: string;
   pressShortcut: string;
   shortcutHint: string;
@@ -94,6 +96,8 @@ export const zhCN: TranslatorText = {
   enterSecret: "输入 API 密钥",
   saveSecret: "保存密钥",
   deleteSecret: "删除已保存密钥",
+  secretSaved: "新密钥已保存",
+  secretDeleted: "密钥已删除",
   shortcut: "全局快捷键",
   pressShortcut: "请按下组合键…",
   shortcutHint: "点击输入框，再按新的组合键",
@@ -163,6 +167,8 @@ export const en: TranslatorText = {
   enterSecret: "Enter your API key",
   saveSecret: "Save key",
   deleteSecret: "Delete saved key",
+  secretSaved: "New key saved",
+  secretDeleted: "Key deleted",
   shortcut: "Global shortcut",
   pressShortcut: "Press a key combination…",
   shortcutHint: "Click the field, then press a new key combination",

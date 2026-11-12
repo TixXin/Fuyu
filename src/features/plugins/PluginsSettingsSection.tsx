@@ -7,6 +7,7 @@ import { useTranslation } from "../../i18n";
 import type { PluginInfo } from "./api";
 import { PluginCard } from "./PluginCard";
 import { PluginDetailPage } from "./PluginDetailPage";
+import { PluginNotice } from "./PluginNotice";
 import { PluginUpdatesSection } from "./PluginUpdatesSection";
 import { usePlugins } from "./usePlugins";
 import "./PluginsSettingsSection.css";
@@ -17,6 +18,8 @@ export function PluginsSettingsSection({ initialOpenId = null }: { initialOpenId
     snapshot,
     error,
     busy,
+    pending,
+    notice,
     setAllowed,
     setEnabled,
     setSetting,
@@ -43,6 +46,7 @@ export function PluginsSettingsSection({ initialOpenId = null }: { initialOpenId
         <PluginDetailPage
           plugin={openPlugin}
           busy={busy}
+          notice={notice}
           onBack={() => setOpenId(null)}
           onSettingChange={(key, value) => setSetting(openPlugin.id, key, value)}
           onRunCommand={(command) => runCommand(openPlugin.id, command)}
@@ -115,6 +119,7 @@ export function PluginsSettingsSection({ initialOpenId = null }: { initialOpenId
           }
         />
       </SettingsGroup>
+      <PluginNotice notice={notice} action={["reload", "folder"]} />
       {error ? <p className="plugin-card__error">{error}</p> : null}
       {snapshot && plugins.length === 0 ? <p className="settings-section__hint">{t.settings.plugins.empty}</p> : null}
       {renderGroup(t.settings.plugins.groupThirdParty(thirdParty.length), thirdParty)}
@@ -123,6 +128,8 @@ export function PluginsSettingsSection({ initialOpenId = null }: { initialOpenId
         <PluginUpdatesSection
           snapshot={snapshot}
           busy={busy}
+          pending={pending}
+          notice={notice}
           onAutoUpdateChange={setAutoUpdate}
           onCheck={checkUpdates}
           onUntrust={untrustPublisher}

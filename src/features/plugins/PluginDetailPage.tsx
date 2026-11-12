@@ -11,6 +11,8 @@ import { PLUGIN_MEMORY_LIMITS_MB, type PluginInfo } from "./api";
 import type { PromptedPermission } from "./promptedPermissions";
 import { PluginCallLog } from "./PluginCallLog";
 import { PluginInfoList } from "./PluginInfoList";
+import { PluginNotice } from "./PluginNotice";
+import type { PluginNotice as Notice } from "./usePlugins";
 import { PluginSensitiveSection } from "./PluginSensitiveSection";
 import { PluginSettingField } from "./PluginSettingField";
 import "./PluginDetailPage.css";
@@ -18,6 +20,7 @@ import "./PluginDetailPage.css";
 export function PluginDetailPage({
   plugin,
   busy,
+  notice,
   onBack,
   onSettingChange,
   onRunCommand,
@@ -29,6 +32,7 @@ export function PluginDetailPage({
 }: {
   plugin: PluginInfo;
   busy: boolean;
+  notice: Notice | null;
   onBack: () => void;
   onSettingChange: (key: string, value: unknown) => void;
   onRunCommand: (command: string) => void;
@@ -176,6 +180,7 @@ export function PluginDetailPage({
             onChange={(value) => onMemoryLimitChange(Number(value))}
           />
           <p className="settings-section__hint">{t.settings.plugins.detail.memoryLimitHint}</p>
+          <PluginNotice notice={notice} action="memory" />
         </section>
       ) : null}
 
@@ -202,6 +207,7 @@ export function PluginDetailPage({
                   </button>
                 ))}
               </div>
+              <PluginNotice notice={notice} action="command" />
             </>
           ) : null}
           {plugin.hasProcess && !plugin.builtin ? (
@@ -226,6 +232,7 @@ export function PluginDetailPage({
                   <span>{confirmingClear ? t.settings.plugins.detail.confirmClearData : t.settings.plugins.detail.clearData}</span>
                 </button>
               </div>
+              <PluginNotice notice={notice} action="clearData" />
             </>
           ) : null}
           {plugin.hasProcess ? (

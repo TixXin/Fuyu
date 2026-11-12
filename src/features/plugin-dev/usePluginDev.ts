@@ -78,7 +78,7 @@ export function usePluginDev(open: boolean) {
     select: setSelected,
     setEnabled: useCallback((enabled: boolean) => void run(() => setPluginDevMode(enabled)), [run]),
     load: useCallback((path: string) => run(() => loadDevPlugin(path)), [run]),
-    reload: useCallback((id: string) => void run(() => reloadDevPlugin(id)), [run]),
+    reload: useCallback((id: string) => run(() => reloadDevPlugin(id)), [run]),
     unload: useCallback((id: string) => void run(() => unloadDevPlugin(id)), [run]),
     sendEvent: useCallback((id: string, name: string, payload: unknown) => run(() => sendPluginDevEvent(id, name, payload)), [run]),
   };

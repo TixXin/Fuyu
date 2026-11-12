@@ -2,6 +2,7 @@ import { useState } from "react";
 import { FolderInput, RotateCcw, Send, X } from "lucide-react";
 import { SelectControl } from "../../components/controls/SelectControl";
 import { ToggleControl } from "../../components/controls/ToggleControl";
+import { useFlash } from "../../components/settings/useFlash";
 import { useTranslation } from "../../i18n";
 import { PLUGIN_EVENT_NAMES, type PluginTraceEntry } from "./api";
 import { usePluginDev } from "./usePluginDev";
@@ -34,6 +35,13 @@ export function PluginDevSection() {
   const [payloadError, setPayloadError] = useState("");
   const dev = usePluginDev(open);
   const enabled = dev.state?.enabled ?? false;
+
+  const [reloaded, flashReloaded] = useFlash<string>();
+
+  const reload = async (id: string) => {
+    flashReloaded(null);
+    if (await dev.reload(id)) flashReloaded(id);
+  };
 
   const load = async () => {
     if (path.trim() && (await dev.load(path.trim()))) setPath("");
@@ -86,9 +94,9 @@ export function PluginDevSection() {
                         <strong>{plugin.id}</strong>
                         <span>{plugin.path}</span>
                       </button>
-                      <button className="plugin-card__button" type="button" disabled={dev.busy} onClick={() => dev.reload(plugin.id)}>
+                      <button className="plugin-card__button" type="button" disabled={dev.busy} onClick={() => void reload(plugin.id)}>
                         <RotateCcw size={12} strokeWidth={2.4} />
-                        <span>{text.reload}</span>
+                        <span role="status">{reloaded === plugin.id ? text.reloaded : text.reload}</span>
                       </button>
                       <button className="plugin-card__button" type="button" disabled={dev.busy} onClick={() => dev.unload(plugin.id)}>
                         <X size={12} strokeWidth={2.4} />
