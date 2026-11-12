@@ -37,20 +37,20 @@
 
 | 编号 | 问题 | 选项 | 推荐 | 状态 |
 |---|---|---|---|---|
-| M1 | Apple 开发者账号 | 现在就买 / 先用自签名证书自用，第 3 步前再买 | 第 3 步开始前买；在那之前用钥匙串里的自签名证书签名，避免每次重编后辅助功能等授权失效 | 待定 |
-| M2 | 最低 macOS 版本 | 13 / 14 / 15 | 14：截图的 `SCScreenshotManager`、麦克风按进程检测都要 14；主流竞品的下限也是 14 | 待定 |
-| M3 | 芯片架构 | universal / 只发 Apple Silicon | universal：额外成本主要是包体积和 CI 时间；但手上只有 Apple Silicon 能测，Intel 出问题只能尽力修。macOS 27 起已不支持 Intel | 待定 |
-| M4 | 岛的位置 | 刘海处 / 顶部正中 | 先做顶部正中（无刘海屏和外接屏本来就要这种形态），刘海形态作为第 2 步的可选项 | 待定 |
-| M5 | 顶部正中时与菜单栏的关系 | 压在菜单栏上 / 贴在菜单栏下面 | 贴在菜单栏下面，不挡应用菜单和状态图标 | 待定 |
-| M6 | 有全屏应用时 | 照常显示 / 隐藏，有提醒时短暂出现 | 隐藏，有提醒时短暂出现（竞品用户呼声最高的需求之一） | 待定 |
-| M7 | 私有 API（媒体与歌词、亮度） | 接受，做成可关、可降级的模块 / 不做 | 接受，放进单独模块，失效时整块隐藏 | 待定 |
-| M8 | QQ / 微信提醒 | 只做 Dock 角标未读数 / 先做技术验证再决定 / 不做 | 先做技术验证，对外只承诺未读数 | 待定 |
-| M9 | Tauri 升级与 `tauri-nspanel` | 升到 ≥ 2.12.1 并依赖 `tauri-nspanel` / 自己用 objc2 改 NSWindow | 升级 Tauri（单独提交）；用 `tauri-nspanel`，同时把用到的部分封装在平台层，日后能换成自己的实现 | 待定 |
-| M10 | 平台层目录 | 保留 `win32/`，新建同级 `macos/` / 统一改名为 `platform/{windows,macos}` | 保留 `win32/`、新建 `macos/`：搬迁量小，`unsafe` 只在这两处的规则直接沿用 | 建议 |
-| M11 | Mac 包怎么出 | CI 的 macOS runner 出 Mac 包、Windows 包继续本机出 / 整个发布搬到 Actions | Mac 包在 CI 出，两边上传到同一个 Release 草稿，再由本机汇总 `latest.json` | 待定 |
-| M12 | 两个平台是否同时发版 | 必须同时 / Mac 可以落后 | 必须同时：`latest.json` 只有一份，Mac 落后时 Mac 用户检查更新会报错 | 待定 |
-| M13 | 收费 | 免费 / 赞助 / 付费分发渠道 | 免费（项目是 GPL-3.0），以后再议 | 待定 |
-| M14 | 剪贴板历史触发系统隐私提示时 | 首次启动引导用户在设置里永久允许 / 只在出现提示时说明 | 首次用到时引导一次 | 待定 |
+| M1 | Apple 开发者账号 | 现在就买 / 先用自签名证书自用，第 3 步前再买 | 第 3 步开始前买；在那之前用钥匙串里的自签名证书签名，避免每次重编后辅助功能等授权失效 | 已定（2026-11-13，用户）：正式发布时再买，之前只在本机用自签名证书测试 |
+| M2 | 最低 macOS 版本 | 13 / 14 / 15 | 14：截图的 `SCScreenshotManager`、麦克风按进程检测都要 14；主流竞品的下限也是 14 | 已定（2026-11-13，用户）：**15**，不写 15 以下的兼容分支 |
+| M3 | 芯片架构 | universal / 只发 Apple Silicon | universal：额外成本主要是包体积和 CI 时间；但手上只有 Apple Silicon 能测，Intel 出问题只能尽力修。macOS 27 起已不支持 Intel | 已定（2026-11-13，用户）：**只发 Apple Silicon**（`aarch64-apple-darwin`） |
+| M4 | 岛的位置 | 刘海处 / 顶部正中 | 先做顶部正中（无刘海屏和外接屏本来就要这种形态），刘海形态作为第 2 步的可选项 | 已定（2026-11-13，用户）：按推荐 |
+| M5 | 顶部正中时与菜单栏的关系 | 压在菜单栏上 / 贴在菜单栏下面 | 贴在菜单栏下面，不挡应用菜单和状态图标 | 已定（2026-11-13，用户）：**默认压在菜单栏上**，设置里可改成贴在菜单栏下面 |
+| M6 | 有全屏应用时 | 照常显示 / 隐藏，有提醒时短暂出现 | 隐藏，有提醒时短暂出现（竞品用户呼声最高的需求之一） | 已定（2026-11-13，用户）：**两种都做，设置里选**；默认按推荐 |
+| M7 | 私有 API（媒体与歌词、亮度） | 接受，做成可关、可降级的模块 / 不做 | 接受，放进单独模块，失效时整块隐藏 | 已定（2026-11-13，用户）：按推荐 |
+| M8 | QQ / 微信提醒 | 只做 Dock 角标未读数 / 先做技术验证再决定 / 不做 | 先做技术验证，对外只承诺未读数 | 已定（2026-11-13，用户）：按推荐 |
+| M9 | Tauri 升级与 `tauri-nspanel` | 升到 ≥ 2.12.1 并依赖 `tauri-nspanel` / 自己用 objc2 改 NSWindow | 升级 Tauri（单独提交）；用 `tauri-nspanel`，同时把用到的部分封装在平台层，日后能换成自己的实现 | 已定（2026-11-13，用户）：按推荐 |
+| M10 | 平台层目录 | 保留 `win32/`，新建同级 `macos/` / 统一改名为 `platform/{windows,macos}` | 保留 `win32/`、新建 `macos/`：搬迁量小，`unsafe` 只在这两处的规则直接沿用 | 已定（2026-11-13，用户）：按推荐 |
+| M11 | Mac 包怎么出 | CI 的 macOS runner 出 Mac 包、Windows 包继续本机出 / 整个发布搬到 Actions | Mac 包在 CI 出，两边上传到同一个 Release 草稿，再由本机汇总 `latest.json` | 已定（2026-11-13，用户）：按推荐 |
+| M12 | 两个平台是否同时发版 | 必须同时 / Mac 可以落后 | 必须同时：`latest.json` 只有一份，Mac 落后时 Mac 用户检查更新会报错 | 已定（2026-11-13，用户）：按推荐 |
+| M13 | 收费 | 免费 / 赞助 / 付费分发渠道 | 免费（项目是 GPL-3.0），以后再议 | 已定（2026-11-13，用户）：按推荐 |
+| M14 | 剪贴板历史触发系统隐私提示时 | 首次启动引导用户在设置里永久允许 / 只在出现提示时说明 | 首次用到时引导一次 | 已定（2026-11-13，用户）：按推荐 |
 
 ## 第 0 步：在 Mac 上能编译、能跑测试
 
@@ -65,7 +65,7 @@
 
 ## 第 1 步：Mac 上能日常使用
 
-- [ ] **G1.3 悬浮岛窗口。** Tauri 升到 ≥ 2.12.1（单独提交，M9）；主窗口用 `tauri-nspanel` 转成非激活 NSPanel，`collectionBehavior` 设所有桌面、全屏辅助、不进 Cmd+Tab；`ActivationPolicy::Accessory`；鼠标穿透沿用「轮询 + 整窗开关」；定位改用逻辑坐标，避开多显示器缩放比不同时的坐标 bug（tauri#7890、tao#816）；顶部正中形态（M4、M5），全屏时的行为（M6）。新手引导遮罩和截图选区窗口在 Mac 上可用。验收：Retina 内屏 + 1x 外接屏下定位正确；全屏应用上方能显示（或按 M6 隐藏）；点岛不抢前台焦点；打成 dmg 后透明窗口不变白（tauri#13415）。
+- [ ] **G1.3 悬浮岛窗口。** Tauri 升到 ≥ 2.12.1（单独提交，M9）；主窗口用 `tauri-nspanel` 转成非激活 NSPanel，`collectionBehavior` 设所有桌面、全屏辅助、不进 Cmd+Tab；`ActivationPolicy::Accessory`；鼠标穿透沿用「轮询 + 整窗开关」；定位改用逻辑坐标，避开多显示器缩放比不同时的坐标 bug（tauri#7890、tao#816）；顶部正中形态（M4；默认压在菜单栏上，设置里可改成贴在菜单栏下面，M5），全屏应用时照常显示还是隐藏做成设置（M6），界面约定见 [design/macos.md](../design/macos.md)。新手引导遮罩和截图选区窗口在 Mac 上可用。验收：Retina 内屏 + 1x 外接屏下定位正确；两种菜单栏设置下位置都正确；全屏应用时两种设置的行为都正确；点岛不抢前台焦点；打成 dmg 后透明窗口不变白（tauri#13415）。
 - [ ] **G1.4 系统集成。** 菜单栏图标（模板图）；开机自启用 SMAppService；凭据换 Keychain（`keyring` 的 apple-native）；全局快捷键（不劫持系统组合键，剪贴板默认 ⌘⇧V）；`fuyu://` 用 Info.plist 声明；单实例；数据目录与家目录在 Mac 上的位置写进 contracts.md 和 data-storage.md。
 - [ ] **G1.5 Mac 上的开发流程。** `pnpm dev:lane`、`build:exe`（Mac 上改成把 `.app` 放进 `~/Applications`）、停止运行中岛屿的脚本、`run-regression.mjs` 找浏览器、`prune:target` 等在 Mac 上可用；AGENTS.md 和 lanes.md 补 Mac 上的命令和验证要求。
 - [ ] **G1.6 日常功能。** 剪贴板历史（`changeCount` 轮询，隐私提示按 M14）、文件中转（含拖出到 Finder）、截图（ScreenCaptureKit）和 OCR（Vision）、划词翻译（AX 读选中文字）、音量、摄像头 / 麦克风占用、设备插拔与电源、锁屏与空闲、强调色、网络计费、全屏判断。每项需要的权限在首次使用时引导，设置里能看到授权状态。
@@ -81,7 +81,7 @@
 ## 第 3 步：签名与发布
 
 - [ ] **G1.12 用户准备账号和证书（只有用户本人能做，M1）。** 个人开发者账号、Developer ID Application 证书（导出 `.p12`）、App Store Connect API key（`.p8`）；放进仓库 Secrets。步骤见 [macos-distribution.md](../research/macos-distribution.md)「用户本人必须做的事」。
-- [ ] **G1.13 Mac 版发布流程。** `tauri.conf.json` 加 `bundle.macOS`（最低版本、entitlements、Info.plist 用途说明的中英文）；新增 macOS 发布工作流（M11），出 dmg 和 `.app.tar.gz` + `.sig`，签名、公证、staple；`make-latest-json.mjs` 写 `darwin-aarch64`（universal 时也写 `darwin-x86_64`，M3、M12）；冒烟测试加 macOS（`spctl`、`stapler validate`、能启动）；发布后核对两个通道都有 darwin 条目；自建 Homebrew tap。改动清单见 [macos-distribution.md](../research/macos-distribution.md)「对现有发布流程的改动清单」。
+- [ ] **G1.13 Mac 版发布流程。** `tauri.conf.json` 加 `bundle.macOS`（最低版本 15.0（M2）、entitlements、Info.plist 用途说明的中英文）；新增 macOS 发布工作流（M11），出 dmg 和 `.app.tar.gz` + `.sig`，签名、公证、staple；`make-latest-json.mjs` 写 `darwin-aarch64`（只发 Apple Silicon，M3；和 Windows 同时发版，M12）；冒烟测试加 macOS（`spctl`、`stapler validate`、能启动）；发布后核对两个通道都有 darwin 条目；自建 Homebrew tap。改动清单见 [macos-distribution.md](../research/macos-distribution.md)「对现有发布流程的改动清单」。
 - [ ] **G1.14 对外文档。** README 中英文的系统要求和 Mac 安装方法、`docs/features/updater.md` 的 macOS 部分、插件文档里的平台说明、官网下载页。
 
 ## 第 0 步的迁移表
@@ -92,7 +92,8 @@
 
 | 日期 | 子任务 | 提交 | 改了什么 | 验证 |
 |---|---|---|---|---|
-| 2026-11-13 | — | （本次提交） | 4 份调研、本计划、[platforms.md](platforms.md)、任务 G1 | 仅文档 |
+| 2026-11-13 | — | — | 4 份调研、本计划、[platforms.md](platforms.md)、任务 G1 | 仅文档 |
+| 2026-11-13 | G1.1 | （本次提交） | 用户拍板 M1–M14，写进决定表；界面形态（M4–M6）写进 [design/macos.md](../design/macos.md) | 仅文档 |
 
 ## 待人工验收
 
