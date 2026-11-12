@@ -169,7 +169,7 @@ pub async fn add_cc_connect_project(
     tauri::async_runtime::spawn_blocking(move || {
         // The offered folder is made on first use; any other folder must already exist.
         if let Some(default) = default_work_dir().filter(|dir| Path::new(work_dir.trim()) == dir) {
-            std::fs::create_dir_all(&default).map_err(|error| UserError::new("ccConnect.workDir", format!("The work folder does not exist: {}", default.display())).arg("path", default.display().to_string()).detail(error))?;
+            std::fs::create_dir_all(&default).map_err(|error| UserError::new("ccConnect.workDirCreate", format!("The work folder could not be made: {}", default.display())).arg("path", default.display().to_string()).detail(error))?;
         }
         let proxy = crate::system::updater::get_updater_proxy();
         let new = config_file::NewProject {

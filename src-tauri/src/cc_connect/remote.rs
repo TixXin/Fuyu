@@ -1,8 +1,9 @@
 //! cc-connect on an SSH computer (one of AI Agent → Remote computers), so that computer's sessions
 //! are pushed by its own bots, which can take them over there. Each call is one ssh running a short
-//! `sh` script: the status finds the program and hands back its config and session files (base64,
-//! one per line) to be read like this computer's; a send pipes the text into `cc-connect send`.
-//! Nothing is installed there and no token leaves it.
+//! `sh` script: the status finds the program and hands back its session files and, of its config,
+//! only the section headers and `name` / `type` lines (base64, one per line) to be read like this
+//! computer's; a send pipes the text into `cc-connect send`. Nothing is installed there and no
+//! token leaves it.
 
 use base64::{engine::general_purpose::STANDARD, Engine};
 use serde::Serialize;
@@ -78,8 +79,10 @@ const NOT_FOUND: &str = "NOTFOUND";
 /// a login shell finds (the PATH the user's profile adds); empty when none can be run.
 fn find_script(path: Option<&str>) -> String {
     let mut script = format!("exe={}\n", sh_quote(path.unwrap_or_default().trim()));
+    // A quoted `~` is not expanded, so a path typed as `~/…` is made the home folder's here.
     script.push_str(
-        r#"if [ -z "$exe" ]; then
+        r#"case $exe in "~/"*) exe="$HOME/${exe#??}" ;; esac
+if [ -z "$exe" ]; then
   pid=$(pgrep -u "$(id -u)" -x cc-connect 2>/dev/null | head -n 1)
   [ -n "$pid" ] && exe=$(readlink "/proc/$pid/exe" 2>/dev/null)
 fi
@@ -97,7 +100,7 @@ fn status_script(path: Option<&str>) -> String {
         r#"printf 'X %s\n' "$exe"
 pgrep -u "$(id -u)" -x cc-connect >/dev/null 2>&1 && echo R
 d="$HOME/.cc-connect"
-[ -f "$d/config.toml" ] && printf 'C %s\n' "$(base64 < "$d/config.toml" | tr -d '\n')"
+[ -f "$d/config.toml" ] && printf 'C %s\n' "$(grep -E '^[[:space:]]*(\[|name[[:space:]]*=|type[[:space:]]*=)' "$d/config.toml" | base64 | tr -d '\n')"
 for f in "$d"/sessions/*.json; do
   [ -f "$f" ] && [ "$(wc -c < "$f")" -le "$max" ] && printf 'S %s %s\n' "${f##*/}" "$(base64 < "$f" | tr -d '\n')"
 done
@@ -156,6 +159,14 @@ mod tests {
         assert!(!script.contains("rm -rf"));
         assert!(script.contains(&format!("printf '%s' '{}' | base64 -d", STANDARD.encode("$(rm -rf ~) `x` 'y'"))));
         assert!(script.contains("send -p 'pc' -s 'telegram:1:1' --stdin"));
+    }
+
+    #[test]
+    fn a_home_path_is_expanded_there_and_only_names_and_types_of_the_config_come_back() {
+        let find = super::find_script(Some("~/bin/cc-connect"));
+        assert!(find.starts_with("exe='~/bin/cc-connect'\ncase $exe in \"~/\"*) exe=\"$HOME/${exe#??}\" ;; esac\n"));
+        let status = super::status_script(None);
+        assert!(status.contains("grep -E '^[[:space:]]*(\\[|name[[:space:]]*=|type[[:space:]]*=)' \"$d/config.toml\" | base64"));
     }
 
     #[test]

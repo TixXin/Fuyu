@@ -84,9 +84,12 @@ export function saveAgentPushSettings(settings: AgentPushSettings) {
   writeJson(AGENT_PUSH_STORAGE_KEY, settings);
 }
 
-/** The cc-connect settings of a computer (LOCAL_HOST for this one). */
+/**
+ * The cc-connect settings of a computer (LOCAL_HOST for this one). An SSH computer not set up yet
+ * borrows this computer's chats, as every computer's sessions did before each had its own.
+ */
 export function pushHost(settings: AgentPushSettings, host: string): CcConnectPushHost {
-  return settings.ccConnect[host] ?? EMPTY_PUSH_HOST;
+  return settings.ccConnect[host] ?? (host === LOCAL_HOST ? EMPTY_PUSH_HOST : { chats: [], viaLocal: true });
 }
 
 function isHost(value: unknown): value is string {

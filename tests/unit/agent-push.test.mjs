@@ -51,7 +51,8 @@ test("a computer's sessions go through its own cc-connect, or this computer's wi
   });
   assert.deepEqual(pushRoute(settings, "zcm6"), { via: "zcm6", chats: settings.ccConnect.zcm6.chats, takeover: true });
   assert.deepEqual(pushRoute(settings, "nas"), { via: "", chats: settings.ccConnect[""].chats, takeover: false });
-  assert.deepEqual(pushRoute(settings, "other").chats, []);
+  // Not set up yet: as before computers had their own, this computer's chats, without takeover.
+  assert.deepEqual(pushRoute(settings, "other"), { via: "", chats: settings.ccConnect[""].chats, takeover: false });
 });
 
 const session = (sessionId, phase, extra = {}) => ({

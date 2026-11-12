@@ -41,6 +41,7 @@ export type ErrorCode =
   | "ccConnect.projectName"
   | "ccConnect.projectTaken"
   | "ccConnect.workDir"
+  | "ccConnect.workDirCreate"
   | "ccConnect.platform"
   | "ccConnect.allowFrom"
   | "ccConnect.feishuRunning"
@@ -236,6 +237,7 @@ export const zhCN: ErrorsText = {
     "ccConnect.projectName": "项目名只能用字母、数字、- 和 _，最多 64 个字符。",
     "ccConnect.projectTaken": ({ name }) => `cc-connect 已经有叫 ${name} 的项目了，换个名字。`,
     "ccConnect.workDir": ({ path }) => `工作文件夹不存在：${path}`,
+    "ccConnect.workDirCreate": ({ path }) => `没能建出工作文件夹：${path}`,
     "ccConnect.platform": ({ platform }) => `不支持的平台：${platform}`,
     "ccConnect.allowFrom": "请填写你自己的用户 ID（多个用英文逗号隔开），不然谁找到机器人都能用这台电脑。",
     "ccConnect.feishuRunning": "飞书扫码已经在进行了。",
@@ -427,6 +429,7 @@ export const en: ErrorsText = {
     "ccConnect.projectName": "A project name takes letters, digits, - and _, up to 64 characters.",
     "ccConnect.projectTaken": ({ name }) => `cc-connect already has a project called ${name}; pick another name.`,
     "ccConnect.workDir": ({ path }) => `The work folder does not exist: ${path}`,
+    "ccConnect.workDirCreate": ({ path }) => `The work folder could not be made: ${path}`,
     "ccConnect.platform": ({ platform }) => `Unsupported platform: ${platform}`,
     "ccConnect.allowFrom": "Fill in your own user ID (several separated by commas), or anyone who finds the bot can use this computer.",
     "ccConnect.feishuRunning": "A Feishu QR setup is already running.",
