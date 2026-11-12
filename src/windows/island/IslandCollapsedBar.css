@@ -273,3 +273,23 @@
   color: var(--color-white);
   background: color-mix(in srgb, var(--color-accent) 22%, transparent);
 }
+
+/* The greeting after the first-run guide flies in: a light sweeps across the words once. */
+.island__welcome {
+  background: linear-gradient(100deg, var(--task-text-color) 40%, var(--color-accent) 50%, var(--task-text-color) 60%) 0 0 / 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: taskFlowIn 260ms ease-out backwards, islandWelcomeSweep 1.6s ease-in-out 300ms;
+}
+
+@keyframes islandWelcomeSweep {
+  from { background-position: 100% 0; }
+  to { background-position: 0 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .island__welcome {
+    animation: none;
+  }
+}

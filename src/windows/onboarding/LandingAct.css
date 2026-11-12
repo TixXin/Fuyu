@@ -1,0 +1,37 @@
+/* A drop of light falls to the top edge, then stretches into the island. */
+.landing-act__drop {
+  transform-origin: top center;
+  animation: landingDrop 1.3s cubic-bezier(0.3, 0.8, 0.3, 1) backwards;
+}
+
+.landing-act__hint {
+  position: absolute;
+  left: 50%;
+  top: 64px;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 12px;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.45);
+  transform: translateX(-50%);
+  white-space: nowrap;
+  animation: landingHint 600ms ease-out 1.3s backwards;
+}
+
+@keyframes landingDrop {
+  0% { opacity: 0; transform: translateY(-80px) scale(0.04, 0.25); }
+  35% { opacity: 1; transform: translateY(0) scale(0.04, 0.25); }
+  55% { transform: translateY(0) scale(0.06, 0.35); }
+  80% { transform: scale(1.06, 1); }
+  100% { transform: scale(1); }
+}
+
+@keyframes landingHint {
+  from { opacity: 0; transform: translate(-50%, -6px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-act__drop,
+  .landing-act__hint {
+    animation: none;
+  }
+}

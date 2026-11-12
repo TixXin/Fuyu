@@ -72,7 +72,7 @@ export function IslandApp() {
   const t = useTranslation();
   useTrayLanguage();
   // Before useIslandSettings saves the settings, which marks the install as having run.
-  useFirstRunGuide();
+  const welcome = useFirstRunGuide();
   const navigation = useIslandNavigation();
   const { mode, isTucked, page, setPage, collapseIsland, tuckIsland, revealIsland, minimizeToEdge, openIslandPage, toggleClipboardHistory } = navigation;
   const pluginPages = usePluginPages(page);
@@ -126,7 +126,7 @@ export function IslandApp() {
       mode !== "collapsed" || isTucked || !settings.showCollapsedText || banner.hasLinePreview,
       agentSession?.title ?? null,
       collapsedSlots,
-      banner.hasLinePreview || translationPeek !== null,
+      banner.hasLinePreview || translationPeek !== null || welcome,
       lyricLine?.longest ?? null,
     );
   useIslandTucking({
@@ -292,6 +292,7 @@ export function IslandApp() {
         shelfCount={settings.shelfEnabled && settings.shelfShowCount ? fileShelf.items.length : null}
         deviceUse={notices.deviceUse}
         levelPopup={notices.levelPopup}
+        welcomeLine={welcome ? t.onboarding.islandWelcome : null}
         deviceAlert={notices.deviceAlert}
         quotaAlert={quotaAlert}
         meeting={calendar.upcoming && settings.calendarEnabled ? { upcoming: calendar.upcoming, showTitle: settings.calendarShowTitle } : null}

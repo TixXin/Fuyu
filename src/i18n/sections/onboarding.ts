@@ -1,106 +1,151 @@
-/** The first-run guide's own window (windows/onboarding). */
+/** The first-run guide's own window (windows/onboarding), five acts on a small desktop. */
 export type OnboardingText = {
   windowTitle: string;
-  /** "Step 2 of 4", for the progress dots. */
+  /** "Step 2 of 5", for the progress dots. */
   stepOf: (step: number, total: number) => string;
   skip: string;
   back: string;
   next: string;
-  finish: string;
   close: string;
-  welcome: {
+  /** What the collapsed island says on the small desktop before anything else. */
+  islandName: string;
+  landing: {
+    hellos: string[];
     title: string;
     lead: string;
+    tapIsland: string;
     language: string;
+  };
+  shape: {
+    title: string;
+    lead: string;
     theme: string;
+    accent: string;
+    corners: string;
   };
-  modules: {
+  outfit: {
     title: string;
     lead: string;
-    todo: [string, string];
-    music: [string, string];
-    agents: [string, string];
-    mail: [string, string];
-    shelf: [string, string];
-    translation: [string, string];
-    clipboard: [string, string];
-    screenshot: [string, string];
+    personaQuestion: string;
+    personas: Record<"code" | "office" | "study" | "fun", [string, string]>;
+    stickers: string;
+    stickersHint: string;
+    modules: Record<"todo" | "music" | "agents" | "translation" | "shelf" | "mail" | "screenshot" | "clipboard", string>;
   };
-  habits: {
+  play: {
     title: string;
     lead: string;
-    expand: string;
-    expandHint: string;
-    click: string;
+    stars: (done: number, total: number) => string;
+    allDone: string;
     hover: string;
-    autoTuck: string;
-    autoTuckHint: string;
+    click: string;
+    expandBy: string;
+    expandHover: string;
+    expandClick: string;
+    drop: string;
+    dropFile: string;
+    dropKeyboard: string;
+    dropHere: string;
+    shortcut: (keys: string) => string;
+    shortcutHint: string;
     winV: string;
-    winVHint: string;
+    nowPlaying: string;
+    song: string;
+    agentWorking: string;
+  };
+  release: {
+    title: string;
+    lead: string;
     launchAtStartup: string;
     launchAtStartupHint: string;
-  };
-  done: {
-    title: string;
-    lead: string;
-    tips: string[];
+    later: string;
     connectAgents: string;
     addMail: string;
     openSettings: string;
+    finish: string;
   };
+  /** The real island's line for a moment after the guide flies into it. */
+  islandWelcome: string;
 };
 
 export const zhCN: OnboardingText = {
   windowTitle: "欢迎使用浮屿",
   stepOf: (step, total) => `第 ${step} 步，共 ${total} 步`,
-  skip: "跳过引导",
+  skip: "跳过",
   back: "上一步",
   next: "下一步",
-  finish: "开始使用",
   close: "关闭",
-  welcome: {
-    title: "欢迎使用浮屿",
-    lead: "浮屿是停在屏幕顶部的一座小岛：待办、音乐、消息、剪贴板和 AI Agent 状态都收在里面。花一分钟挑一挑，之后随时能在设置里改。",
+  islandName: "浮屿",
+  landing: {
+    hellos: ["你好", "Hello", "こんにちは", "Bonjour", "안녕하세요"],
+    title: "一座岛刚刚落在你的屏幕上",
+    lead: "它平时安静地停在顶部，有事才变大。花一分钟认识它。",
+    tapIsland: "点一下岛开始",
     language: "界面语言",
-    theme: "外观",
   },
-  modules: {
-    title: "想用哪些功能",
-    lead: "关掉的功能不会出现在岛上，也不在后台运行。之后在设置的各功能页里随时打开。",
-    todo: ["待办", "今天要做的事、每日笔记和归档"],
-    music: ["音乐控制", "控制正在播放的音乐，显示歌词"],
-    agents: ["AI Agent 状态", "Claude Code、Codex 在忙、等你还是做完了"],
-    mail: ["邮箱", "新邮件提醒，在设置里添加邮箱后生效"],
-    shelf: ["文件中转", "把文件先拖到岛上放着，再拖到别处"],
-    translation: ["快捷翻译", "选中文字按快捷键翻译"],
-    clipboard: ["剪贴板历史", "复制过的文字和图片，随时再贴"],
-    screenshot: ["截图", "Ctrl+Shift+数字键截图并复制"],
+  shape: {
+    title: "把它捏成你喜欢的样子",
+    lead: "改动会马上出现在上面的岛上，真正的岛也一样。",
+    theme: "深色还是浅色",
+    accent: "强调色",
+    corners: "圆角",
   },
-  habits: {
-    title: "怎么用顺手",
-    lead: "岛平时收成一条细条，展开后是各个功能的页面。",
-    expand: "展开岛",
-    expandHint: "点击收起的岛，或者把鼠标停在上面",
-    click: "点击",
-    hover: "悬停",
-    autoTuck: "闲置时收到屏幕边缘",
-    autoTuckHint: "一段时间不用就贴边藏起来，鼠标移到顶边再出来",
-    winV: "用 Win+V 打开剪贴板历史",
-    winVHint: "代替 Windows 自带的剪贴板面板",
-    launchAtStartup: "开机时启动",
-    launchAtStartupHint: "登录 Windows 后自动出现",
+  outfit: {
+    title: "给岛装上功能",
+    lead: "先回答一个问题，岛会替你装好一组；再点贴纸增减，或者直接拖到岛上。",
+    personaQuestion: "你平时主要用电脑做什么？可以多选。",
+    personas: {
+      code: ["写代码", "AI Agent、剪贴板、截图"],
+      office: ["办公", "待办、邮箱、翻译"],
+      study: ["学习", "待办、翻译、音乐"],
+      fun: ["娱乐", "音乐、文件中转"],
+    },
+    stickers: "功能贴纸",
+    stickersHint: "亮着的已经装上。点一下装上或卸下，也可以拖到岛上。",
+    modules: {
+      todo: "待办",
+      music: "音乐",
+      agents: "AI Agent",
+      translation: "翻译",
+      shelf: "文件中转",
+      mail: "邮箱",
+      screenshot: "截图",
+      clipboard: "剪贴板",
+    },
   },
-  done: {
+  play: {
+    title: "试着用一下",
+    lead: "上面的桌面是活的：音乐在放，一个 Agent 在干活。完成下面的小任务。",
+    stars: (done, total) => `${done} / ${total}`,
+    allDone: "全部完成，你已经会用了。",
+    hover: "把鼠标停在岛上，看它展开",
+    click: "点一下岛，看它展开",
+    expandBy: "展开方式",
+    expandHover: "悬停",
+    expandClick: "点击",
+    drop: "把桌面上的文件拖给岛",
+    dropFile: "旅行计划.pdf",
+    dropKeyboard: "放进去",
+    dropHere: "松开，放进中转",
+    shortcut: (keys) => `按一下 ${keys}，剪贴板会弹出来`,
+    shortcutHint: "这一步是真的：在任何程序里都能这样打开。",
+    winV: "也用 Win+V 打开",
+    nowPlaying: "正在播放",
+    song: "海边的风",
+    agentWorking: "Claude Code · 正在修改 3 个文件",
+  },
+  release: {
     title: "准备好了",
-    lead: "下面这些需要多一步设置，现在或以后都可以：",
-    tips: [
-      "设置在托盘图标的菜单里，也可以从展开的岛上打开",
-      "按住岛可以拖到别的位置，右键托盘图标能隐藏它",
-    ],
+    lead: "点下面的按钮，这个窗口会飞回屏幕顶部真正的岛里。",
+    launchAtStartup: "开机时启动",
+    launchAtStartupHint: "登录 Windows 后岛自动出现",
+    later: "下面这些要多一步设置，现在或以后都行：",
     connectAgents: "连接 AI 编程工具",
     addMail: "添加邮箱",
     openSettings: "打开设置",
+    finish: "开始使用",
   },
+  islandWelcome: "浮屿已就绪 · 鼠标停在这里试试",
 };
 
 export const en: OnboardingText = {
@@ -109,49 +154,76 @@ export const en: OnboardingText = {
   skip: "Skip",
   back: "Back",
   next: "Next",
-  finish: "Get started",
   close: "Close",
-  welcome: {
-    title: "Welcome to Fuyu",
-    lead: "Fuyu is a small island at the top of your screen that holds your todos, music, messages, clipboard and AI agent status. Take a minute to pick what you want; you can change all of it in Settings later.",
+  islandName: "Fuyu",
+  landing: {
+    hellos: ["Hello", "你好", "こんにちは", "Bonjour", "안녕하세요"],
+    title: "An island just landed on your screen",
+    lead: "It rests quietly at the top and grows when something needs you. Take a minute to meet it.",
+    tapIsland: "Click the island to begin",
     language: "Language",
-    theme: "Appearance",
   },
-  modules: {
-    title: "Pick your modules",
-    lead: "Modules you turn off leave the island and stop running in the background. Turn them on any time on their settings pages.",
-    todo: ["Todos", "What to do today, daily notes and an archive"],
-    music: ["Music controls", "Control what is playing and show lyrics"],
-    agents: ["AI agent status", "Whether Claude Code, Codex and others are working, waiting on you or done"],
-    mail: ["Mail", "New mail alerts and previews, once you add an account in Settings"],
-    shelf: ["File shelf", "Drop files on the island and drag them out somewhere else"],
-    translation: ["Quick translation", "Translate selected text with a shortcut"],
-    clipboard: ["Clipboard history", "Text and images you copied, ready to paste again"],
-    screenshot: ["Screenshots", "Ctrl+Shift+digit to capture and copy"],
+  shape: {
+    title: "Shape it your way",
+    lead: "Changes show on the island above at once, and on the real one too.",
+    theme: "Dark or light",
+    accent: "Accent",
+    corners: "Corners",
   },
-  habits: {
-    title: "Make it yours",
-    lead: "The island rests as a slim bar and opens into a page for each module.",
-    expand: "Open the island",
-    expandHint: "Click the bar, or rest the pointer on it",
-    click: "Click",
-    hover: "Hover",
-    autoTuck: "Tuck to the edge when idle",
-    autoTuckHint: "Hides at the screen edge after a while; move the pointer to the top to bring it back",
-    winV: "Open clipboard history with Win+V",
-    winVHint: "Instead of the Windows clipboard panel",
-    launchAtStartup: "Start with Windows",
-    launchAtStartupHint: "Appears after you sign in",
+  outfit: {
+    title: "Give it some features",
+    lead: "Answer one question and the island picks a set; then click stickers to add or remove, or drag them onto it.",
+    personaQuestion: "What do you mostly use your computer for? Pick any.",
+    personas: {
+      code: ["Coding", "AI agents, clipboard, screenshots"],
+      office: ["Work", "Todos, mail, translation"],
+      study: ["Study", "Todos, translation, music"],
+      fun: ["Leisure", "Music, file shelf"],
+    },
+    stickers: "Feature stickers",
+    stickersHint: "Lit ones are on. Click to add or remove, or drag one onto the island.",
+    modules: {
+      todo: "Todos",
+      music: "Music",
+      agents: "AI agents",
+      translation: "Translate",
+      shelf: "File shelf",
+      mail: "Mail",
+      screenshot: "Screenshots",
+      clipboard: "Clipboard",
+    },
   },
-  done: {
+  play: {
+    title: "Give it a try",
+    lead: "The desktop above is alive: music is playing and an agent is at work. Do the little tasks below.",
+    stars: (done, total) => `${done} / ${total}`,
+    allDone: "All done. You know how it works.",
+    hover: "Rest the pointer on the island to open it",
+    click: "Click the island to open it",
+    expandBy: "Opens on",
+    expandHover: "Hover",
+    expandClick: "Click",
+    drop: "Drag the file on the desktop onto the island",
+    dropFile: "Trip plan.pdf",
+    dropKeyboard: "Put it in",
+    dropHere: "Drop to keep it on the shelf",
+    shortcut: (keys) => `Press ${keys} and the clipboard pops up`,
+    shortcutHint: "This one is real: it works in any app.",
+    winV: "Win+V opens it too",
+    nowPlaying: "Now playing",
+    song: "Sea Breeze",
+    agentWorking: "Claude Code · editing 3 files",
+  },
+  release: {
     title: "You're all set",
-    lead: "These take one more step, now or later:",
-    tips: [
-      "Settings are in the tray icon's menu, and on the open island",
-      "Drag the island to move it; right-click the tray icon to hide it",
-    ],
+    lead: "Press the button and this window flies back into the real island at the top of your screen.",
+    launchAtStartup: "Start with Windows",
+    launchAtStartupHint: "The island appears after you sign in",
+    later: "These take one more step, now or later:",
     connectAgents: "Connect AI coding tools",
     addMail: "Add a mail account",
     openSettings: "Open Settings",
+    finish: "Get started",
   },
+  islandWelcome: "Fuyu is ready · rest the pointer here",
 };

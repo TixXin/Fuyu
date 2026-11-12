@@ -1,0 +1,160 @@
+/* A file lying on the small desktop, waiting to be dragged onto the island. */
+.play-act__file {
+  position: absolute;
+  left: 40px;
+  bottom: 22px;
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  width: 92px;
+  padding: 8px 4px;
+  color: #ffffff;
+  font-size: 11px;
+  text-align: center;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+  border-radius: var(--radius-md);
+  cursor: grab;
+  animation: playFileNudge 2.4s ease-in-out 1s infinite;
+}
+
+.play-act__file:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.play-act__tasks {
+  display: grid;
+  gap: var(--space-md);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.play-act__task {
+  min-height: 46px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-xl);
+  padding: 8px 14px;
+  font-size: 13px;
+  background: var(--color-white-a04);
+  border: 1px solid var(--color-white-a06);
+  border-radius: var(--radius-lg);
+}
+
+.onboarding--light .play-act__task {
+  background: #ffffff;
+}
+
+.play-act__task-text {
+  min-width: 0;
+  flex: 1;
+  display: grid;
+  gap: 2px;
+}
+
+.play-act__task-text small {
+  color: var(--color-text-muted);
+  font-size: 11px;
+}
+
+.play-act__star {
+  flex: none;
+  color: var(--color-white-a18);
+}
+
+.play-act__task--done .play-act__star {
+  color: #ffc53d;
+  fill: #ffc53d;
+  animation: playStar 480ms cubic-bezier(0.2, 0.9, 0.3, 1.5);
+}
+
+.play-act__task--done .play-act__task-text {
+  color: var(--color-text-muted);
+}
+
+.play-act__winv {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-md);
+  color: var(--color-text-muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+/* The small island's open panel. */
+.play-panel {
+  display: grid;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.play-panel__row,
+.play-panel__shelf {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.play-panel__shelf {
+  min-height: 44px;
+  padding: 0 12px;
+  font-size: 12px;
+  border: 1px dashed currentColor;
+  border-radius: 10px;
+}
+
+.play-panel__bars {
+  height: 14px;
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.play-panel__bars i {
+  width: 3px;
+  height: 100%;
+  background: var(--mini-pulse);
+  border-radius: 2px;
+  transform-origin: bottom;
+  animation: playBars 900ms ease-in-out infinite alternate;
+}
+
+.play-panel__bars i:nth-child(2) { animation-delay: -300ms; }
+.play-panel__bars i:nth-child(3) { animation-delay: -600ms; }
+.play-panel__bars i:nth-child(4) { animation-delay: -150ms; }
+
+.play-panel__agent {
+  width: 10px;
+  height: 10px;
+  border: 2px solid var(--mini-pulse);
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: playSpin 900ms linear infinite;
+}
+
+@keyframes playFileNudge {
+  0%, 70%, 100% { transform: translateY(0); }
+  80% { transform: translateY(-6px) rotate(-3deg); }
+  90% { transform: translateY(0) rotate(2deg); }
+}
+
+@keyframes playStar {
+  from { transform: scale(0.3) rotate(-60deg); }
+}
+
+@keyframes playBars {
+  from { transform: scaleY(0.25); }
+}
+
+@keyframes playSpin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .play-act__file,
+  .play-act__task--done .play-act__star,
+  .play-panel__bars i,
+  .play-panel__agent {
+    animation: none;
+  }
+}

@@ -1,15 +1,31 @@
-/* The first-run guide: the settings window's colours, one column, a step at a time. */
+/*
+ * The guide's window is transparent; the card inside draws the window, so at the end it can shrink
+ * into an island shape while the window flies to the real island (onboarding_window/fly.rs).
+ */
 .onboarding {
   height: 100%;
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  padding: 14px;
   color: var(--color-page-text);
-  background: #131417;
   user-select: none;
 }
 
-.onboarding--light {
-  background: #eceef2;
+.onboarding__card {
+  --onboarding-fill: #131417;
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  overflow: hidden;
+  background: var(--onboarding-fill);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  box-shadow: 0 10px 34px rgba(0, 0, 0, 0.45);
+  transform-origin: top center;
+}
+
+.onboarding--light .onboarding__card {
+  --onboarding-fill: #eceef2;
+  border-color: rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 34px rgba(0, 0, 0, 0.22);
 }
 
 .onboarding--light .settings-group__card {
@@ -68,26 +84,26 @@
 .onboarding__body {
   min-height: 0;
   overflow-y: auto;
-  padding: 12px 40px 16px;
+  padding: 4px 36px 12px;
+  animation: onboardingAct 320ms ease-out;
+}
+
+.onboarding__heading {
+  margin: 18px 0 14px;
 }
 
 .onboarding__title {
-  margin: 0 0 var(--space-md);
-  font-size: 22px;
+  margin: 0 0 6px;
+  font-size: 21px;
   font-weight: 600;
   line-height: 1.3;
 }
 
 .onboarding__lead {
-  max-width: 560px;
-  margin: 0 0 var(--space-2xl);
+  margin: 0;
   color: var(--color-text-muted);
   font-size: 13px;
   line-height: 1.6;
-}
-
-.onboarding__content {
-  margin-top: var(--space-xl);
 }
 
 .onboarding__footer {
@@ -95,7 +111,7 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-xl);
-  padding: 14px 40px 22px;
+  padding: 12px 36px 18px;
 }
 
 .onboarding__nav {
@@ -110,6 +126,7 @@
   color: var(--color-text);
   font: inherit;
   font-size: 13px;
+  white-space: nowrap;
   background: var(--color-white-a06);
   border: 1px solid var(--color-white-a06);
   border-radius: var(--radius-md);
@@ -145,51 +162,25 @@
   filter: brightness(1.08);
 }
 
-:is(.onboarding__button, .onboarding__close, .onboarding-done__link):focus-visible {
+:is(.onboarding__button, .onboarding__close, .onboarding-release__link):focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
 }
 
-/* The welcome step's island preview: a short strip above the two choices. */
-.onboarding .island-preview {
-  margin-bottom: var(--space-xl);
-}
-
-.onboarding-modules {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  align-items: start;
-  gap: var(--space-xl);
-}
-
-/* Side by side, not one after the other: no gap above the second column. */
-.onboarding-modules .settings-group + .settings-group {
-  margin-top: 0;
-}
-
-/* The last step: two tips, then buttons for the setups that need more than a switch. */
-.onboarding-done__tips {
-  display: grid;
-  gap: var(--space-md);
-  margin: 0 0 var(--space-2xl);
-  padding-left: 18px;
-  font-size: 13px;
-  line-height: 1.6;
-}
-
-.onboarding-done__lead {
-  margin: 0 0 var(--space-xl);
+/* The last act: buttons for the setups that need more than a switch. */
+.onboarding-release__later {
+  margin: var(--space-2xl) 0 var(--space-md);
   color: var(--color-text-muted);
-  font-size: 13px;
+  font-size: 12px;
 }
 
-.onboarding-done__links {
+.onboarding-release__links {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-md);
 }
 
-.onboarding-done__link {
+.onboarding-release__link {
   display: inline-flex;
   align-items: center;
   gap: var(--space-sm);
@@ -204,6 +195,38 @@
   cursor: pointer;
 }
 
-.onboarding-done__link:hover {
+.onboarding-release__link:hover {
   border-color: var(--color-accent);
+}
+
+/* Flying home: the content fades and the card shrinks into a dark pill at the window's top centre. */
+.onboarding--flying .onboarding__card {
+  pointer-events: none;
+  animation: onboardingShrink 620ms cubic-bezier(0.6, 0, 0.3, 1) forwards;
+}
+
+.onboarding--flying .onboarding__card > * {
+  animation: onboardingFade 180ms ease-out forwards;
+}
+
+@keyframes onboardingAct {
+  from { opacity: 0; transform: translateX(14px); }
+}
+
+@keyframes onboardingShrink {
+  0% { border-radius: 14px; }
+  45% { background: #000000; }
+  100% { background: #000000; border-radius: 0 0 60px 60px; transform: translateY(-14px) scale(0.26, 0.07); opacity: 0.2; }
+}
+
+@keyframes onboardingFade {
+  to { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .onboarding__body,
+  .onboarding--flying .onboarding__card,
+  .onboarding--flying .onboarding__card > * {
+    animation: none;
+  }
 }

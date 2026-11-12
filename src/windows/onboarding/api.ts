@@ -7,6 +7,14 @@ export function openOnboardingWindow() {
   });
 }
 
+/**
+ * Moves this window over the real island for `durationMs` while the page shrinks into an island
+ * shape, then closes it (onboarding_window/fly.rs). Resolves as soon as the flight has started.
+ */
+export function flyOnboardingToIsland(durationMs: number) {
+  return invoke("fly_onboarding_to_island", { durationMs });
+}
+
 /** Shows this window, which a fresh open creates hidden until the page has painted. */
 export function showOnboardingWindow() {
   return invoke("show_onboarding_window");

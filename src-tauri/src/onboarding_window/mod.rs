@@ -1,6 +1,8 @@
 //! The first-run guide's window (`?window=onboarding`): language, theme, modules and a few
 //! choices, built on demand like the settings window and closed when the guide is done.
 
+mod fly;
+
 use std::{thread, time::Duration};
 use tauri::{AppHandle, Manager, Monitor, PhysicalPosition, WebviewWindow, WebviewWindowBuilder};
 
@@ -68,6 +70,12 @@ pub async fn open_onboarding_window(app: AppHandle) -> Result<(), String> {
     open(&app)
 }
 
+/// The guide's finish: flies the window over the island and closes it (fly.rs).
+#[tauri::command]
+pub async fn fly_onboarding_to_island(app: AppHandle, duration_ms: u32) -> Result<(), String> {
+    fly::fly_to_island(&app, duration_ms)
+}
+
 /// Called by the guide once it has painted, to show its hidden new window.
 #[tauri::command]
 pub async fn show_onboarding_window(app: AppHandle) -> Result<(), String> {
@@ -84,6 +92,7 @@ macro_rules! tauri_commands {
         $next!([$($done)*
             crate::onboarding_window::open_onboarding_window,
             crate::onboarding_window::show_onboarding_window,
+            crate::onboarding_window::fly_onboarding_to_island,
         ] $($rest)*)
     };
 }
