@@ -155,7 +155,7 @@
 
 ## Git 与协作
 
-- **谁怎么合入 `main`，看 GitHub 权限**。`main` 上有 GitHub 规则集 `main protection`（仓库 Settings → Rules）：必须通过 PR 合入，CI 的 `check` 必须通过，PR 必须基于最新的 `main`（落后时点 "Update branch" 或 rebase，CI 重跑），禁止强推和删除。仓库管理员（TixXin）可以绕过这些规则。
+- **谁怎么合入 `main`，看 GitHub 权限**。`main` 上有 GitHub 规则集 `main protection`（仓库 Settings → Rules）：必须通过 PR 合入，CI 的 `check` 必须通过，PR 必须基于最新的 `main`（落后时点 "Update branch" 或 rebase，CI 重跑），禁止强推和删除。仓库管理员（TixXin）只能在 PR 上绕过（`bypass_mode: pull_request`，2026-11-13 起，F30 第 8 步）：紧急时可以 `gh pr merge --admin` 不等 CI，但谁都不能直接推、强推或删除 `main`。
   - **仓库管理员和协作者的会话**：用下面的 lane + `pnpm mq:land`。land 先 rebase 到最新的 `origin/main`，推到自己的 `land/…` 分支，开 PR 并开启自动合并；CI 的 `check` 通过后由 GitHub 合入，所以要有本仓库的 Write 权限（2026-11-13 起，F30）。
   - **不用 lane 的协作者（Write 权限，目前是 ShengLin1001）和外部贡献者**：在自己的分支上开发。协作者把分支直接推到本仓库（`TixXin/fuyu`）再提 PR；外部贡献者从本仓库 fork 后提 PR。本仓库 2026-11-10 起已脱离 `flyl1u/fly-island` 的 fork 网络，从上游 fork 出来的仓库不能再向本仓库提 PR。不要从上游同步或合并提交；CI 通过、分支跟上最新 `main` 后再合入。协作者可以自己合，也可以等仓库管理员按下面「外部 PR」的做法合。合入用 merge 或 squash，不改写别人已经推送的分支。
   - 开发期间不要求分支一直跟着 `main`：开工前、land 或合入前各同步一次，开发时间长的分支隔天同步一次。不管哪种方式，合入那一刻都基于最新的 `main`，这一点由 land 的 rebase 和规则集保证。
@@ -171,7 +171,7 @@
 - 每完成一个**可验证的功能单元**（一个用户可感知的功能、一个完整的修复，或计划中的一个步骤），按改动范围执行必要验证，再主动创建 Git 提交，无需再次确认。不要每改一处就提交一次；同一功能单元内的多处改动合在一个提交里。只提交当前任务相关的文件，在最终说明中给出提交号和验证结果。
 - 修补自己尚未推送的提交（漏掉的文案、测试、拼写、小 bug）时，不新开 `fix:` 提交：最近一个提交用 `git commit --amend`，更早的用 `git commit --fixup=<提交号>`，推送前再用 `GIT_SEQUENCE_EDITOR=: git rebase -i --autosquash <基点>` 合并（非交互，代理可执行）。
 - 改写历史只限于自己创建、尚未推送、也尚未合入 `main` 的提交（即自己 lane 分支上还没 land 的提交）。已经合入 `main` 的提交不再改写，有问题就新开修复提交。
-  - 唯一的例外是用户明确要求去掉已推送提交里的 Claude 署名行：先通知其他会话；用 `git filter-branch --msg-filter` 按字节过滤（例如 Python 读 `sys.stdin.buffer`，否则 Windows 会把所有提交说明的换行改成 CRLF）；改写后核对每个提交的 tree 不变，用 `git update-ref` 切换；`main` 用 `--force-with-lease=main:<原提交>` 强推一次（要设 `CLAUDE_CODE_MERGE_QUEUE_EMERGENCY_PUSH=1`）。
+  - 唯一的例外是用户明确要求去掉已推送提交里的 Claude 署名行：先通知其他会话；用 `git filter-branch --msg-filter` 按字节过滤（例如 Python 读 `sys.stdin.buffer`，否则 Windows 会把所有提交说明的换行改成 CRLF）；改写后核对每个提交的 tree 不变，用 `git update-ref` 切换；`main` 用 `--force-with-lease=main:<原提交>` 强推一次（要设 `CLAUDE_CODE_MERGE_QUEUE_EMERGENCY_PUSH=1`）。规则集不允许强推，所以要先经用户同意，把 `main protection` 里管理员的绕过方式临时改回 `always`，推完立刻改回 `pull_request`。
 - 一个功能阶段（例如插件 API 的一期）通常对应 1–5 个提交，而不是十几个。修复提交只用于已推送内容的问题。
 - 提交前尽量让改动范围保持聚焦，并在最终说明中列出已验证的命令。
 
