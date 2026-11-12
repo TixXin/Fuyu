@@ -83,7 +83,7 @@ src-tauri/src/
 
 ## 错误处理
 
-- 生产代码禁止使用 `unwrap()` 和 `expect()`。只有在能证明不会失败时才允许使用（例如字面量常量的解析），并且必须附注释说明理由。测试代码不受此限。
+- 生产代码禁止使用 `unwrap()` 和 `expect()`。只有在能证明不会失败时才允许使用（例如字面量常量的解析），用 `#[allow(clippy::unwrap_used)]` 放行，理由写在提交说明里，不写注释。测试代码不受此限。
 - `Mutex` 加锁使用 `lock().map_err(...)` 或 `unwrap_or_else(PoisonError::into_inner)`，不要因为锁中毒导致整个应用崩溃。
 - `let _ = ...` 忽略错误只用于尽力而为的操作，例如推送事件、清理临时文件。
 - 错误转换就近写 `map_err(|error| error.to_string())` 或带上下文的 `format!`，不吞掉原始错误信息。
@@ -92,7 +92,7 @@ src-tauri/src/
 
 - **`unsafe` 只能写在 `win32/` 中**，对外暴露安全函数，参数尽量用 Rust 类型（`&str`、`u32`），不让调用方传裸指针。生产代码中 `win32/` 以外没有 `unsafe`；窗口过程实现 `win32::message_window::WindowMessages`，枚举窗口用 `win32::window::for_each_top_level_window` 的闭包。
 - `wechat_reminders/source.rs` 及它用到的 `win32/` 文件也被 `examples/wechat_reminder_probe.rs` 通过 `#[path]` 编译，这些文件只能依赖 `windows` crate，不能引用 crate 内其他模块。
-- 每个 `unsafe` 块上方必须写 `// SAFETY:` 注释，说明满足了哪些前置条件。
+- `unsafe` 块不写 `// SAFETY:` 注释（代码不写注释，见根目录 AGENTS.md），前置条件靠 `win32/` 对外的安全函数签名保证，有特殊前提时写进提交说明。
 - 句柄、COM 对象等资源用 RAII 类型包装，在 `Drop` 中释放，不手动配对 close。
 - COM 初始化与反初始化在同一线程中配对完成。
 - 开机自启只使用当前用户注册表路径 `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`，遵循最小权限。

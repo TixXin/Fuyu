@@ -77,7 +77,7 @@ main.tsx → windows/ → features/ → components/、lib/、utils/、i18n/、st
 ## 边界收口
 
 - **IPC**：`invoke`、`listen` 只出现在各目录的 `api.ts` 中。组件和 hook 调用 `api.ts` 导出的类型化函数，不直接写命令名字符串。
-  - `api.ts` 中与 Rust 结构对应的类型，用注释标明对应的 Rust 文件和结构名。
+  - `api.ts` 中与 Rust 结构对应的类型，尽量和 Rust 结构同名，不写注释标明对应关系。
   - 事件名定义为常量，与 Rust 侧常量保持一致。
   - `listen` 返回的取消函数必须在组件卸载时调用，并处理"Promise 尚未 resolve 就已卸载"的情况。
 - **持久化**：`localStorage` 只在各目录的 `storage.ts` 中读写，统一通过 `lib/` 中的安全读写函数完成。`src/i18n/index.ts` 中的语言偏好属于存量例外，已有测试覆盖。
