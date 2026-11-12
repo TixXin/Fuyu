@@ -24,7 +24,7 @@ SessionStart / SessionEnd 必须放用户级：magpie 这类会话不从仓库�
 - 钩子用不了时（例如会话不是从仓库目录启动的，magpie 会话就是这样）：在主工作区运行 `pnpm lane:open --as <会话名>`，最后一行是 lane 的路径，**紧接着 EnterWorktree(path=<lane 路径>) 进入它**。会话名用 ListAgents 里自己的名字。
 - 接手别人的 lane（交接）：`pnpm lane:take <N> --as <会话名>`，再 EnterWorktree(path) 进入。对方还在用时会拒绝，确认对方不用了再加 `--force`。
 - 退出会话前：`pnpm lane:done`（在 lane 里不用写编号）。lane 干净、提交都在 `main` 上时释放它，否则列出未提交的文件和未合入的提交、不释放，还会提醒写着这个 lane 的任务。确认不要那些改动了才加 `--force`。释放后再 ExitWorktree(action="keep")；lane 本身留着，下一个会话立刻就能复用。
-- 会话退出时（两次 Ctrl+C、`/exit`、Ctrl+D），`SessionEnd` 钩子（`scripts/lanes/session-end.mjs`）自动做同样的检查：释放会话所在的 lane 和登记在这个会话 ID 名下的 lane，有工作的保留；`/clear`、`/resume` 不释放。钩子配在用户级 `~/.claude/settings.json`（`pnpm lane:install-hooks` 写入），所以 magpie 这类从别处启动的会话也会跑；脚本按自己所在位置找仓库，`timeout` 设为 30 秒（SessionEnd 默认只有 1.5 秒）。直接关掉终端或进程被杀时钩子不一定跑，所以收工前仍要 `lane:done`。
+- 会话退出时（两次 Ctrl+C、`/exit`、Ctrl+D），`SessionEnd` 钩子（`scripts/lanes/session-end.mjs`）自动做同样的检查：释放会话所在的 lane 和登记在这个会话 ID 名下的 lane，有工作的保留；会话所在的 lane 登记在别的会话名下时不碰（例如在 lane 里起的 `claude -p` 子会话退出时，2026-11-13 曾把父会话干净的 lane 释放掉，land 因此报“没有归属记录”）；`/clear`、`/resume` 不释放。钩子配在用户级 `~/.claude/settings.json`（`pnpm lane:install-hooks` 写入），所以 magpie 这类从别处启动的会话也会跑；脚本按自己所在位置找仓库，`timeout` 设为 30 秒（SessionEnd 默认只有 1.5 秒）。直接关掉终端或进程被杀时钩子不一定跑，所以收工前仍要 `lane:done`。
 - 只想放掉登记、不做检查：`pnpm lane:release <N>`。
 - **不要手动 `git worktree add`**：那样不留归属记录，别的会话会把它当成空闲的 lane；`pnpm verify` 和 land 也会拒绝没有归属记录的 lane。
 
