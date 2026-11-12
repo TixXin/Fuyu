@@ -180,6 +180,12 @@ pub(super) fn copy(app: &AppHandle, picture: &Picture) -> Result<(), String> {
     Ok(())
 }
 
+/// Puts the text read in a screenshot on the clipboard.
+pub(super) fn copy_text(text: &str) -> Result<(), String> {
+    let _open = clipboard_win::Clipboard::new_attempts(OPEN_ATTEMPTS).map_err(|error| format!("Failed to open the clipboard: {error}"))?;
+    raw::set_string(text).map_err(|error| format!("Failed to copy the text: {error}"))
+}
+
 /// Saves the screenshot as a PNG in `folder`, or in Pictures\`default_name` without one.
 pub(super) fn save(picture: &Picture, folder: Option<&str>, default_name: &str) -> Result<PathBuf, String> {
     let folder = match folder.map(str::trim).filter(|folder| !folder.is_empty()) {

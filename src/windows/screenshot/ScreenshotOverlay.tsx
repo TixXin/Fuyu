@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
 import { Magnifier } from "../../features/screenshot/Magnifier";
 import { annotationArea, textSize } from "../../features/screenshot/annotations";
-import { cancelScreenshot, finishScreenshot, type ScreenshotAction } from "../../features/screenshot/api";
+import { cancelScreenshot, finishScreenshot, quickAction, type ScreenshotAction } from "../../features/screenshot/api";
 import { composeArea } from "../../features/screenshot/drawAnnotations";
 import {
   HANDLES,
@@ -52,8 +52,8 @@ function colorAt(canvas: HTMLCanvasElement | null, pixel: Point): string {
  * annotation tool on, a drag inside the selection draws (its handles still resize it); Ctrl+Z / Ctrl+Y
  * undo and redo. Enter, Ctrl+C or a double click copies, with the annotations; Ctrl+S saves, T pins
  * it to the screen; Esc or a right click with nothing selected leaves, C copies the colour under
- * the pointer. Opened with Ctrl+Shift+2 (mode "copy"), the selection is copied as soon as it is
- * chosen, without the toolbar.
+ * the pointer. Opened with Ctrl+Shift+2, 3 or 4, the selection is copied, its text read (OCR) or
+ * that text translated as soon as it is chosen, without the toolbar.
  */
 export function ScreenshotOverlay() {
   const t = useTranslation().screenshot;
@@ -102,14 +102,15 @@ export function ScreenshotOverlay() {
   }, [chosen, items, canvasRef, errorText, t]);
   const copy = useCallback(() => finish("copy"), [finish]);
 
-  // Ctrl+Shift+2: copied as soon as a region or target is chosen, once per screenshot.
-  const quick = session?.mode === "copy";
-  const copiedFor = useRef<number | null>(null);
+  // Ctrl+Shift+2, 3, 4: done as soon as a region or target is chosen, once per screenshot.
+  const quickMode = quickAction(session?.mode);
+  const quick = quickMode !== null;
+  const doneFor = useRef<number | null>(null);
   useEffect(() => {
-    if (!quick || !chosen || dragging || sessionId === undefined || copiedFor.current === sessionId) return;
-    copiedFor.current = sessionId;
-    copy();
-  }, [quick, chosen, dragging, sessionId, copy]);
+    if (!quickMode || !chosen || dragging || sessionId === undefined || doneFor.current === sessionId) return;
+    doneFor.current = sessionId;
+    finish(quickMode);
+  }, [quickMode, chosen, dragging, sessionId, finish]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -227,7 +228,7 @@ export function ScreenshotOverlay() {
         // hidden window's last painted frame then has nothing on it (see session.rs, transparent).
         ready && <div key={sessionId} className="screenshot-overlay__dim" />
       )}
-      {!area && ready && session?.underPointer && <div className="screenshot-overlay__hint">{quick ? t.copySelectHint : t.selectHint}</div>}
+      {!area && ready && session?.underPointer && <div className="screenshot-overlay__hint">{quickMode ? t.quickHints[quickMode] : t.selectHint}</div>}
       {area && chosen && !dragging && !annotations.drafting && !quick && (
         <ScreenshotToolbar area={area} view={view} annotations={annotations} notice={notice} onCancel={() => void cancelScreenshot()} onFinish={finish} />
       )}

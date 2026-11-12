@@ -10,6 +10,7 @@ import { IslandPages } from "./IslandPages";
 import { useTranslation } from "../../i18n";
 import { openSettingsWindow } from "../settings/api";
 import { useQuickTranslation } from "../../features/translation/useQuickTranslation";
+import { useScreenshotText } from "../../features/screenshot/useScreenshotText";
 import { useIslandSettings } from "../../features/appearance/useIslandSettings";
 import { useClipboardHistory } from "../../features/clipboard/useClipboardHistory";
 // Imported after the page panels so its CSS keeps its place in the cascade.
@@ -112,7 +113,9 @@ export function IslandApp() {
   });
   const { todos, activeTodoId, notebookProps, addTodoOn } = useIslandTodos({ settings, mode, page, agentStatus, collapseIsland });
 
-  const translationPeek = useQuickTranslation(settings.translationEnabled);
+  // A screenshot's text (C41.5) shows like a selection translation, and opens in the translator.
+  const screenshotText = useScreenshotText();
+  const translationPeek = useQuickTranslation(settings.translationEnabled) ?? screenshotText;
   const { lyrics, lyricLine: currentLyric } = useIslandLyrics(settings, media.mediaState, {
     page,
     barShown: mode === "collapsed" && !isTucked && settings.showCollapsedText,

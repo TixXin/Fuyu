@@ -57,6 +57,12 @@ type PendingBinding = (Option<ShortcutBinding>, mpsc::Sender<Result<String, User
 static PENDING_BINDING: Mutex<Option<PendingBinding>> = Mutex::new(None);
 static PENDING_SELECTION_BINDING: Mutex<Option<PendingBinding>> = Mutex::new(None);
 
+/// Translates `text` as if it had been selected and the selection shortcut pressed: the island
+/// shows the result and hands it to the translation window (screenshot OCR, C41.5).
+pub(crate) fn translate_text_from_elsewhere(app: &AppHandle, text: String) {
+    let _ = app.emit(TRANSLATION_SELECTION_EVENT, text);
+}
+
 pub fn init(app: &AppHandle) {
     if APP.set(app.clone()).is_ok() {
         thread::spawn(|| {

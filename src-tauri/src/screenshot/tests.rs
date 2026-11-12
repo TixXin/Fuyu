@@ -84,6 +84,8 @@ fn folder_names_and_actions_come_through_headers() {
     assert_eq!(Action::parse("pin"), Some(Action::Pin));
     assert_eq!(Action::parse("copy"), Some(Action::Copy));
     assert_eq!(Action::parse("save"), Some(Action::Save));
+    assert_eq!(Action::parse("text"), Some(Action::Text));
+    assert_eq!(Action::parse("translate"), Some(Action::Translate));
     assert_eq!(Action::parse("upload"), None);
 }
 

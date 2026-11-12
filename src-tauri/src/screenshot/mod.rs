@@ -10,11 +10,14 @@ mod targets;
 #[cfg(test)]
 mod tests;
 
-use tauri::{AppHandle, WebviewWindow};
+use tauri::{AppHandle, Emitter, WebviewWindow};
 
 pub(crate) use output::is_screenshot_file;
 pub(crate) use pin::{forget as forget_pin, WINDOW_PREFIX as PIN_PREFIX};
 pub(crate) use session::WINDOW_PREFIX;
+/// The text read in a screenshot (Ctrl+Shift+3), already on the clipboard; empty when none was
+/// found. Mirrored by SCREENSHOT_TEXT_EVENT in src/features/screenshot/api.ts.
+const TEXT_EVENT: &str = "screenshot-text";
 use output::Picture;
 use session::{OverlaySession, PixelRect};
 use targets::LocalTarget;
@@ -70,6 +73,10 @@ pub(crate) enum Action {
     Copy,
     Save,
     Pin,
+    /// Read the text (OCR) and copy it.
+    Text,
+    /// Read the text and translate it on the island.
+    Translate,
 }
 
 impl Action {
@@ -78,6 +85,8 @@ impl Action {
             "copy" => Some(Self::Copy),
             "save" => Some(Self::Save),
             "pin" => Some(Self::Pin),
+            "text" => Some(Self::Text),
+            "translate" => Some(Self::Translate),
             _ => None,
         }
     }
@@ -135,7 +144,30 @@ pub async fn screenshot_finish(app: AppHandle, window: WebviewWindow, request: t
             pin::open(&app, picture, (origin.0.saturating_add_unsigned(left), origin.1.saturating_add_unsigned(top)))?;
             Ok(None)
         }
+        Action::Text | Action::Translate => {
+            session::end(&app);
+            let text = read_text(picture).await;
+            if action == Action::Translate {
+                crate::translation::translate_text_from_elsewhere(&app, text);
+            } else {
+                if !text.is_empty() {
+                    output::copy_text(&text)?;
+                }
+                let _ = app.emit(TEXT_EVENT, text);
+            }
+            Ok(None)
+        }
     }
+}
+
+/// The text Windows' OCR reads in `picture`, empty when it finds none. On a blocking thread: it
+/// waits for WinRT.
+async fn read_text(picture: Picture) -> String {
+    tauri::async_runtime::spawn_blocking(move || crate::win32::ocr::recognize(picture.width, picture.height, &picture.rgba))
+        .await
+        .ok()
+        .flatten()
+        .unwrap_or_default()
 }
 
 /// Whether `len` bytes are exactly `width` × `height` RGBA pixels, none of them zero.

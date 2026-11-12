@@ -13,8 +13,12 @@ export type ScreenshotText = {
   colorCopied: (hex: string) => string;
   /** Shown before anything is selected. */
   selectHint: string;
-  /** The same, for Ctrl+Shift+2: copied as soon as it is chosen. */
-  copySelectHint: string;
+  /** The same for the shortcuts that act as soon as a region is chosen (quickAction in api.ts). */
+  quickHints: Record<"copy" | "text" | "translate", string>;
+  readText: string;
+  /** On the island: the text read in a screenshot, now on the clipboard. */
+  textCopied: (line: string) => string;
+  noText: string;
   /** The annotation tools (AnnotationTool in src/features/screenshot/annotations.ts). */
   tools: Record<"rect" | "ellipse" | "arrow" | "pen" | "highlighter" | "text" | "mosaic" | "number", string>;
   undo: string;
@@ -47,7 +51,14 @@ export const zhCN: ScreenshotText = {
   copyColorHint: "按 C 复制颜色",
   colorCopied: (hex) => `已复制 ${hex}`,
   selectHint: "单击选中窗口或控件，拖动选择区域 · 滚轮切换层级 · 右键或 Esc 退出",
-  copySelectHint: "单击选中窗口或控件，或拖动选择区域，选好就复制 · 右键或 Esc 退出",
+  quickHints: {
+    copy: "单击选中窗口或控件，或拖动选择区域，选好就复制 · 右键或 Esc 退出",
+    text: "单击选中窗口或控件，或拖动选择区域，选好就识别文字并复制 · 右键或 Esc 退出",
+    translate: "单击选中窗口或控件，或拖动选择区域，选好就识别文字并翻译 · 右键或 Esc 退出",
+  },
+  readText: "识别文字",
+  textCopied: (line) => `已复制识别的文字：${line}`,
+  noText: "截图里没有识别到文字",
   tools: {
     rect: "矩形",
     ellipse: "椭圆",
@@ -86,7 +97,14 @@ export const en: ScreenshotText = {
   copyColorHint: "Press C to copy the colour",
   colorCopied: (hex) => `Copied ${hex}`,
   selectHint: "Click a window or control, or drag a region · Scroll to step out or in · Right-click or Esc to exit",
-  copySelectHint: "Click a window or control, or drag a region, and it is copied · Right-click or Esc to exit",
+  quickHints: {
+    copy: "Click a window or control, or drag a region, and it is copied · Right-click or Esc to exit",
+    text: "Click a window or control, or drag a region, and its text is read and copied · Right-click or Esc to exit",
+    translate: "Click a window or control, or drag a region, and its text is read and translated · Right-click or Esc to exit",
+  },
+  readText: "Read text",
+  textCopied: (line) => `Copied the text: ${line}`,
+  noText: "No text found in the screenshot",
   tools: {
     rect: "Rectangle",
     ellipse: "Ellipse",

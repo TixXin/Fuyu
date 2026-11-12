@@ -1717,6 +1717,32 @@
       "page": "screenshot",
       "zh-CN": {
         "group": "快捷键",
+        "title": "截图并识别文字",
+        "description": "选好区域就用 Windows 自带的文字识别读出文字并复制，浮屿上显示识别结果，点它在翻译里打开。工具栏里的「识别文字」也一样。"
+      },
+      "en": {
+        "group": "Shortcuts",
+        "title": "Screenshot and read text",
+        "description": "Once a region is chosen, Windows' own text recognition reads it and the text is copied; the island shows it, and a click opens it in the translator. The toolbar's Read text does the same."
+      }
+    },
+    {
+      "page": "screenshot",
+      "zh-CN": {
+        "group": "快捷键",
+        "title": "截图并翻译",
+        "description": "选好区域就识别文字，交给快捷翻译，浮屿上显示译文。需要打开翻译功能。"
+      },
+      "en": {
+        "group": "Shortcuts",
+        "title": "Screenshot and translate",
+        "description": "Once a region is chosen its text is read and handed to quick translation; the island shows the translation. Needs translation turned on."
+      }
+    },
+    {
+      "page": "screenshot",
+      "zh-CN": {
+        "group": "快捷键",
         "title": "截取整个屏幕",
         "description": "选中鼠标所在的显示器，按 Enter 复制。"
       },

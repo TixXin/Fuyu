@@ -27,13 +27,16 @@ const SESSION_EVENT: &str = "screenshot-session";
 /// Mirrored by `SCREENSHOT_ENDED_EVENT` in src/features/screenshot/api.ts.
 const ENDED_EVENT: &str = "screenshot-ended";
 
-/// How the screenshot starts: choose a region, choose one and copy it at once (no toolbar), or
-/// with the whole monitor under the pointer chosen.
+/// How the screenshot starts: choose a region; choose one and at once copy it, read its text
+/// (OCR) or translate that text, without the toolbar; or with the whole monitor under the pointer
+/// chosen.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) enum Mode {
     Region,
     Copy,
+    Text,
+    Translate,
     Fullscreen,
 }
 

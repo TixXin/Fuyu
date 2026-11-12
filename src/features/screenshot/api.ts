@@ -12,9 +12,11 @@ export const SCREENSHOT_ENDED_EVENT = "screenshot-ended";
 export const SCREENSHOT_TARGETS_EVENT = "screenshot-targets";
 /** Between the overlays only: one started a selection, so the others drop theirs. */
 export const SCREENSHOT_SELECTING_EVENT = "screenshot-selecting";
+/** Mirrored by TEXT_EVENT in src-tauri/src/screenshot/mod.rs: the text read and copied, or "". */
+export const SCREENSHOT_TEXT_EVENT = "screenshot-text";
 
 // 与 src-tauri/src/screenshot/session.rs 中的 Mode 对应。
-export type ScreenshotMode = "region" | "copy" | "fullscreen";
+export type ScreenshotMode = "region" | "copy" | "text" | "translate" | "fullscreen";
 
 // 与 src-tauri/src/screenshot/session.rs 中的 OverlaySession 对应。
 export type ScreenshotSession = {
@@ -56,7 +58,14 @@ export function screenshotOverlayReady(session: number) {
 }
 
 /** What to do with the chosen picture (mirrored by Action in src-tauri/src/screenshot/mod.rs). */
-export type ScreenshotAction = "copy" | "save" | "pin";
+export type ScreenshotAction = "copy" | "save" | "pin" | "text" | "translate";
+
+/** What the shortcuts that act as soon as a region is chosen do; the others open the toolbar. */
+export type QuickAction = Extract<ScreenshotAction, "copy" | "text" | "translate">;
+
+export function quickAction(mode: ScreenshotMode | undefined): QuickAction | null {
+  return mode === "copy" || mode === "text" || mode === "translate" ? mode : null;
+}
 
 /** Where a save goes: the folder from the settings (none yet: Pictures) and the default subfolder's name. */
 export type SaveTarget = { folder?: string; folderName: string };
@@ -158,4 +167,9 @@ export function togglePins() {
 
 export function closeAllPins() {
   return invoke<void>("screenshot_pins_close_all");
+}
+
+/** The text a screenshot's OCR read and copied (Ctrl+Shift+3, or the toolbar); "" when none. */
+export function listenScreenshotText(handler: EventCallback<string>) {
+  return listen<string>(SCREENSHOT_TEXT_EVENT, handler);
 }

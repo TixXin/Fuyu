@@ -91,6 +91,8 @@ async function runChecks() {
     const pinned = last("screenshot_finish");
     check(pinned?.headers["x-action"] === "pin" && pinned.headers["x-left"] === "40" && pinned.headers["x-top"] === "40", "T pins it where the selection is");
     check(button("贴到屏幕上（T）") && button("保存（Ctrl+S）"), "The toolbar has pin and save buttons");
+    await click("识别文字");
+    check(last("screenshot_finish")?.headers["x-action"] === "text", "Read text sends the region to OCR");
 
     await click("矩形");
     check(button("矩形")?.getAttribute("aria-pressed") === "true" && document.querySelectorAll(".screenshot-overlay__swatch").length === 8, "Choosing the rectangle shows the colours and thicknesses");
