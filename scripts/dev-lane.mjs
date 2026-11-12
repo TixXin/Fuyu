@@ -8,7 +8,9 @@
 //   - runs as com.tixxin.fuyu.lane-<N> (FOCUSD_DEV_LANE, src-tauri/src/dev_lane.rs),
 //     with its own data, and without touching focusd:// links, launch at
 //     startup or the agents' status hooks.
-// It starts with empty data; the user's island keeps running.
+// It starts with empty data; the user's island keeps running. It sits on the left quarter of
+// the screen so it does not cover the user's island; `--center` (`pnpm dev:lane:center`) puts it
+// at the top centre like a real install, e.g. to check the first-run guide where users see it.
 import { spawn } from "node:child_process";
 import { writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -36,16 +38,17 @@ function main() {
     return Promise.resolve(1);
   }
   const preview = lanePreview(mainCheckout(root), lane);
+  const centred = process.argv.includes("--center");
   const configFile = path.join(tmpdir(), `fly-island-lane-${lane}.tauri.json`);
   writeFileSync(configFile, JSON.stringify(previewConfig(preview.port)));
-  console.log(`[dev:lane] lane ${lane}: ${preview.identifier}, Vite on ${preview.port}, exe in ${preview.target}, compiling in ${preview.buildDir}`);
+  console.log(`[dev:lane] lane ${lane}: ${preview.identifier}, Vite on ${preview.port}, exe in ${preview.target}, compiling in ${preview.buildDir}${centred ? ", at the top centre" : ""}`);
   console.log("[dev:lane] The first preview on this machine builds the dependencies (a few minutes); later lanes reuse them. Close the preview from its tray icon or with Ctrl+C.");
   const child = spawn(`pnpm tauri dev --config "${configFile}"`, {
     shell: true,
     stdio: "inherit",
     // Fewer rustc jobs, but normal priority: the user is watching this preview.
     // Another preview compiling at the same time waits on the build-dir's lock.
-    env: { ...process.env, CARGO_TARGET_DIR: preview.target, CARGO_BUILD_BUILD_DIR: preview.buildDir, FOCUSD_DEV_LANE: String(lane), ...backgroundBuildEnv() },
+    env: { ...process.env, CARGO_TARGET_DIR: preview.target, CARGO_BUILD_BUILD_DIR: preview.buildDir, FOCUSD_DEV_LANE: String(lane), FOCUSD_DEV_LANE_CENTER: centred ? "1" : "0", ...backgroundBuildEnv() },
   });
   return new Promise((resolve) => child.on("exit", (code) => resolve(code ?? 1)));
 }

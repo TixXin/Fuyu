@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "vite",
     "dev:lane": "node scripts/dev-lane.mjs",
+    "dev:lane:center": "node scripts/dev-lane.mjs --center",
     "build:exe": "node scripts/build-exe.mjs",
     "prune:target": "node scripts/prune-build-cache.mjs",
     "build": "tsc && vite build",
