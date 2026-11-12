@@ -24,6 +24,9 @@ export type TodoIslandText = {
   allProjects: string;
   noProject: string;
   projectHint: string;
+  newProject: string;
+  newProjectPlaceholder: string;
+  addToProject: (project: string) => string;
   projectCount: (project: string, open: number) => string;
 };
 
@@ -57,8 +60,11 @@ export const zhCN: TodoIslandText = {
   doneSection: (count) => `已完成 ${count}`,
   projectFilter: "按项目筛选",
   allProjects: "全部",
-  noProject: "未分组",
-  projectHint: "开头写 #项目名 加空格，就归到这个项目，例如「#论文 写引言」",
+  noProject: "临时",
+  projectHint: "开头写 #项目名 加空格，就归到这个项目，例如「#论文 写引言」；没有的项目会新建",
+  newProject: "新建项目",
+  newProjectPlaceholder: "项目名，回车保存",
+  addToProject: (project) => `新待办加到「${project}」`,
   projectCount: (project, open) => `${project}，${open} 件未完成`,
 };
 
@@ -92,7 +98,10 @@ export const en: TodoIslandText = {
   doneSection: (count) => `Done ${count}`,
   projectFilter: "Filter by project",
   allProjects: "All",
-  noProject: "No project",
-  projectHint: "Start with #name and a space to put it in a project, such as \"#thesis Write the intro\"",
+  noProject: "Inbox",
+  projectHint: "Start with #name and a space to put it in a project, such as \"#thesis Write the intro\"; a new name makes a new project",
+  newProject: "New project",
+  newProjectPlaceholder: "Project name, Enter to save",
+  addToProject: (project) => `New tasks go to ${project}`,
   projectCount: (project, open) => `${project}, ${open} open`,
 };

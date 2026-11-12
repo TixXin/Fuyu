@@ -1,6 +1,7 @@
 import { clamp } from "../../utils/number.ts";
 import { normalizeLyricsSettings } from "../media/lyrics/lyricsSettings.ts";
 import { normalizeCalendarSettings } from "../calendar/calendarSettings.ts";
+import { normalizeTodoProjects } from "../todos/project.ts";
 import { DEFAULT_PAGE_NEXT_SHORTCUT, DEFAULT_PAGE_PREVIOUS_SHORTCUT, normalizePageCycleShortcut, normalizePageDigitModifiers } from "./pageShortcuts.ts";
 import { DEFAULT_SETTINGS, LEGACY_FALLBACKS } from "./settingsDefaults.ts";
 import {
@@ -24,6 +25,7 @@ export function normalizeBehaviorSettings(settings: LegacyIslandSettings | null 
       typeof settings?.enableTodoReorder === "boolean"
         ? settings.enableTodoReorder
         : DEFAULT_SETTINGS.enableTodoReorder,
+    todoProjects: normalizeTodoProjects(settings?.todoProjects),
     rotateTodos: settings?.rotateTodos === true,
     todoRotationSeconds: typeof settings?.todoRotationSeconds === "number" && Number.isFinite(settings.todoRotationSeconds)
       ? clamp(Math.round(settings.todoRotationSeconds), 1, 3_600)

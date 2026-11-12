@@ -6,6 +6,7 @@ export function getTodoSignature(date: string, todos: TodoItem[], dailyNote: str
     todos: todos.map((todo) => ({
       title: todo.title,
       completed: todo.completed,
+      project: todo.project,
     })),
     dailyNote,
   });

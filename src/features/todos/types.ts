@@ -1,3 +1,5 @@
+export type TodoProject = { id: string; name: string };
+
 export type TodoPageMode = "today" | "daily" | "archive" | "review" | "upcoming";
 
 export type TodoItem = {
@@ -45,6 +47,8 @@ export type TodoPageProps = {
   onDraftChange: (value: string) => void;
   onDraftDateChange: (date: string | null) => void;
   onAddTodo: (project?: string) => void;
+  projects: readonly string[];
+  onCreateProject: (name: string) => void;
   onShowUpcoming: () => void;
   onDeleteScheduledTodo: (id: string) => void;
   onToggleTodo: (id: string) => void;

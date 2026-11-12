@@ -6,7 +6,8 @@ import type { TodoItem } from "../types";
 import { useTodoNotebookEditing } from "../useTodoNotebookEditing";
 import { groupByProject, projectsOf } from "../project";
 import { TodoIslandRow } from "./TodoIslandRow";
-import { TodoProjectFilter, TodoProjectHeading } from "./TodoProjectFilter";
+import { RowMenu } from "../../../components/list/RowMenu";
+import { INBOX, TodoProjectFilter, TodoProjectHeading } from "./TodoProjectFilter";
 
 export function TodoIslandTasks({
   todos,
@@ -20,6 +21,8 @@ export function TodoIslandTasks({
   onDraftChange,
   onDraftDateChange,
   onAddTodo,
+  projects: savedProjects,
+  onCreateProject,
   onToggleTodo,
   onUpdateTodo,
   onStartTodo,
@@ -37,6 +40,8 @@ export function TodoIslandTasks({
   onDraftChange: (value: string) => void;
   onDraftDateChange: (date: string | null) => void;
   onAddTodo: (project?: string) => void;
+  projects: readonly string[];
+  onCreateProject: (name: string) => void;
   onToggleTodo: (id: string) => void;
   onUpdateTodo: (id: string, title: string) => void;
   onStartTodo: (id: string) => void;
@@ -49,10 +54,17 @@ export function TodoIslandTasks({
   const editing = useTodoNotebookEditing(editable, canReorder, onUpdateTodo, onReorderTodo);
   const later = draftDate !== null && draftDate > currentDate;
   const [doneFolded, setDoneFolded] = useState(false);
-  const projects = projectsOf(todos);
+  const projects = editable ? [...new Set([...savedProjects, ...projectsOf(todos)])] : projectsOf(todos);
   const [pickedProject, setPickedProject] = useState<string | null>(null);
-  const filter = pickedProject !== null && projects.includes(pickedProject) ? pickedProject : null;
-  const shown = filter === null ? todos : todos.filter((todo) => todo.project === filter);
+  const filter = (editable && pickedProject === INBOX) || (pickedProject && projects.includes(pickedProject)) ? pickedProject : null;
+  const shown = filter === null ? todos : todos.filter((todo) => (todo.project ?? INBOX) === filter);
+  const [pickedTarget, setPickedTarget] = useState<string | null>(null);
+  const wanted = pickedTarget ?? filter ?? INBOX;
+  const target = wanted === INBOX || projects.includes(wanted) ? wanted : INBOX;
+  const pickFilter = (project: string | null) => {
+    setPickedProject(project);
+    setPickedTarget(null);
+  };
   const grouped = projects.length > 0 && filter === null;
   const open = editable ? shown.filter((todo) => !todo.completed) : shown;
   const done = editable ? shown.filter((todo) => todo.completed) : [];
@@ -89,22 +101,31 @@ export function TodoIslandTasks({
           className="island-list-search todo-island__composer"
           onSubmit={(event) => {
             event.preventDefault();
-            if (filter === null) onAddTodo();
-            else onAddTodo(filter);
+            if (target === INBOX) onAddTodo();
+            else onAddTodo(target);
           }}
         >
           <Plus size={15} strokeWidth={2.1} aria-hidden="true" />
           <input
             value={draft}
-            placeholder={later ? text.addPlaceholderFor(draftDate) : filter ?? text.addPlaceholder}
+            placeholder={later ? text.addPlaceholderFor(draftDate) : text.addPlaceholder}
             aria-label={t.notebook.addTaskHint}
             title={text.projectHint}
             onChange={(event) => onDraftChange(event.currentTarget.value)}
           />
+          <RowMenu
+            label={text.addToProject(target || text.noProject)}
+            buttonClassName="todo-date-picker__button todo-island__project-pick"
+            items={[INBOX, ...projects].map((project) => ({ key: `p:${project}`, label: project || text.noProject, onSelect: () => setPickedTarget(project) }))}
+          >
+            {target || text.noProject}
+          </RowMenu>
           <TodoDatePicker value={draftDate} today={currentDate} disabled={false} onChange={onDraftDateChange} labels={{ today: text.today, tomorrow: text.tomorrow }} />
         </form>
       )}
-      {projects.length > 0 && <TodoProjectFilter projects={projects} value={filter} onChange={setPickedProject} />}
+      {(editable || projects.length > 0) && (
+        <TodoProjectFilter projects={projects} value={filter} onChange={pickFilter} onCreate={editable ? onCreateProject : undefined} />
+      )}
       <div className={todos.length > scrollStartRows ? "todo-list todo-island__list todo-island__list--scroll" : "todo-list todo-island__list"} role="list">
         {todos.length === 0 ? (
           <div className="island-list-empty todo-island__empty">
@@ -115,7 +136,7 @@ export function TodoIslandTasks({
         ) : (
           <>
             {grouped
-              ? groupByProject(open).map((group) => [
+              ? groupByProject(open, projects).map((group) => [
                 <TodoProjectHeading key={`project:${group.project ?? ""}`} project={group.project} open={editable ? group.todos.length : 0} />,
                 ...group.todos.map((todo) => row(todo, true)),
               ])

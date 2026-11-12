@@ -28,7 +28,7 @@ function props(pageMode: TodoPageMode, extra: Partial<Props> = {}): Props {
     archives: ARCHIVES, selectedArchive: pageMode === "review" ? ARCHIVES[0] : null, saveState: "idle",
     enableTodoReorder: true, scrollStartRows: 5, draftDate: null,
     scheduledTodos: [{ id: "s", title: "牙医复诊", date: "2026-11-12", createdAt: 0 }],
-    onDraftChange: spy("draft"), onDraftDateChange: spy("date"), onAddTodo: spy("add"), onShowUpcoming: spy("upcoming"),
+    onDraftChange: spy("draft"), onDraftDateChange: spy("date"), onAddTodo: spy("add"), projects: [], onCreateProject: spy("createProject"), onShowUpcoming: spy("upcoming"),
     onDeleteScheduledTodo: spy("deleteScheduled"), onToggleTodo: spy("toggle"), onUpdateTodo: spy("update"), onStartTodo: spy("start"),
     onDeleteTodo: spy("delete"), onReorderTodo: spy("reorder"), onSaveToday: spy("save"), onShowArchive: spy("archive"),
     onShowDaily: spy("daily"), onShowToday: spy("today"), onDailyNoteChange: spy("note"),
@@ -44,7 +44,7 @@ const FRAMES: { id: string; caption: string; props: Props; light?: boolean; tall
   { id: "upcoming", caption: "已安排", props: props("upcoming") },
   { id: "archive", caption: "归档", props: props("archive") },
   { id: "review", caption: "回看某一天", props: props("review") },
-  { id: "projects", caption: "按项目分组（issue #44）", tall: true, props: props("today", { activeTodoId: null, todos: [
+  { id: "projects", caption: "按项目分组（issue #44）", tall: true, props: props("today", { activeTodoId: null, projects: ["组会", "论文", "空项目"], todos: [
     { ...todo("p1", "写引言"), project: "论文" }, todo("p2", "买菜"), { ...todo("p3", "做 PPT"), project: "组会" },
     { ...todo("p4", "跑对比"), project: "论文" }, { ...todo("p5", "交初稿", true), project: "论文" },
   ] }) },
@@ -123,18 +123,27 @@ try {
   check($$("today", ".todo-list [data-todo-id]").length === 2 && fold.getAttribute("aria-expanded") === "false", "「已完成」可以折叠");
   await click(fold);
 
-  check(!$("today", ".todo-project-filter") && !$("today", ".todo-project-heading"), "没有项目时界面不变：没有筛选和组标题");
+  const chipText = (frame: string) => $$(frame, ".todo-project-filter__chip").map((chip) => chip.textContent || "+").join("|");
+  check(chipText("today") === "全部|临时|+" && !$("today", ".todo-project-heading"), "没有项目时筛选只有全部、临时和 +，不分组");
+  check($("today", ".todo-island__project-pick")?.textContent === "临时", "输入框旁一直有项目按钮，默认临时");
   const chips = $$("projects", ".todo-project-filter__chip");
-  check(chips.map((chip) => chip.textContent).join("|") === "全部|论文|组会" && chips[0].getAttribute("aria-pressed") === "true", "有项目时上面多一行筛选：全部和各个项目");
+  check(chipText("projects") === "全部|临时|组会|论文|空项目|+" && chips[0].getAttribute("aria-pressed") === "true", "筛选按保存的顺序列出项目，没有待办的项目也在");
   const headings = () => $$("projects", ".todo-project-heading").map((heading) => heading.textContent);
-  check(headings().join("|") === "论文2|组会1|未分组1", "未完成的按项目分组，组标题写未完成数，没项目的放最后");
+  check(headings().join("|") === "组会1|论文2|临时1", "未完成的按保存的顺序分组，组标题写未完成数，临时放最后");
   const titlesIn = (frame: string) => $$(frame, ".todo-list [data-todo-id] .todo-island-row__title").map((title) => title.textContent);
-  check(titlesIn("projects").join("|") === "写引言|跑对比|做 PPT|买菜|论文交初稿", "组内保持原来的顺序；已完成的不分组，标题前写项目");
+  check(titlesIn("projects").join("|") === "做 PPT|写引言|跑对比|买菜|论文交初稿", "组内保持原来的顺序；已完成的不分组，标题前写项目");
   await click(chips[1]);
+  check(titlesIn("projects").join("|") === "买菜" && headings().length === 0, "选临时只看没有项目的待办");
+  await click(chips[3]);
   check(titlesIn("projects").join("|") === "写引言|跑对比|交初稿" && headings().length === 0, "选一个项目只看它的待办，不再分组");
-  check(($("projects", ".todo-island__composer input") as HTMLInputElement).placeholder === "论文", "筛选时输入框提示加到哪个项目");
+  check($("projects", ".todo-island__project-pick")?.textContent === "论文", "筛选时项目按钮跟着变成这个项目");
   await act(async () => { ($("projects", ".todo-island__composer") as HTMLFormElement).requestSubmit(); });
   check(calls.includes("add:论文"), "筛选时新加的待办归到这个项目");
+  await click($("projects", ".todo-project-filter__add")!);
+  const name = $("projects", ".todo-project-filter__name") as HTMLInputElement;
+  name.value = "读书";
+  await act(async () => { name.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true })); });
+  check(calls.includes("createProject:读书"), "+ 输入名字回车新建项目");
   await click($$("projects", ".todo-project-filter__chip")[0]);
 
   const text = (frame: string) => getComputedStyle($(frame, ".todo-island-row__title")!).color;

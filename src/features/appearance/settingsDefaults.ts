@@ -65,6 +65,7 @@ export const DEFAULT_SETTINGS: IslandSettings = {
   showIdleTodoCount: true,
   carryOverIncompleteTodos: false,
   enableTodoReorder: false,
+  todoProjects: [],
   rotateTodos: false,
   todoRotationSeconds: 5,
   autoTuck: false,
