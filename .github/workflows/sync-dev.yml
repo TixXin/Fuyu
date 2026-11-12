@@ -1,0 +1,21 @@
+name: Sync dev
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: sync-dev
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Move dev to the new main
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api -X PATCH "repos/$GITHUB_REPOSITORY/git/refs/heads/dev" -f sha="$GITHUB_SHA" -q .object.sha

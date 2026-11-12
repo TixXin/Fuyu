@@ -1,28 +1,13 @@
-import { spawn } from "node:child_process";
 import { hostname } from "node:os";
 import path from "node:path";
 import { failedChecks, github as realGitHub, landBranchName } from "./github.mjs";
-import { INTEGRATION_BRANCH, ON_LAND, git, tryGit } from "./settings.mjs";
+import { INTEGRATION_BRANCH, git, tryGit } from "./settings.mjs";
 import { sync } from "./sync.mjs";
 
 const POLL_MS = 20_000;
 const TIMEOUT_MS = 90 * 60_000;
 
 const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
-function fireOnLand(commit, branch) {
-  try {
-    const child = spawn(process.execPath, ON_LAND, {
-      detached: true,
-      stdio: "ignore",
-      windowsHide: true,
-      env: { ...process.env, CCMQ_LANDED_SHA: commit, CCMQ_INTEGRATION_BRANCH: INTEGRATION_BRANCH, CCMQ_LANE_BRANCH: branch },
-    });
-    child.unref();
-  } catch {
-    return;
-  }
-}
 
 async function reportStranded() {
   try {
@@ -33,11 +18,9 @@ async function reportStranded() {
   }
 }
 
-async function afterMerge(commit) {
-  const branch = tryGit(["rev-parse", "--abbrev-ref", "HEAD"]).out.trim();
+async function afterMerge() {
   tryGit(["fetch", "origin", INTEGRATION_BRANCH, "--quiet"]);
   sync();
-  if (commit) fireOnLand(commit, branch);
   await reportStranded();
 }
 
