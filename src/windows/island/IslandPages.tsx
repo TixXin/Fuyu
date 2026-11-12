@@ -105,7 +105,7 @@ export function IslandPages({
       {page === "qq" && (
         <div className="message-panel">
           {messagePanel?.arrivals ? (
-            <MessageArrivalsPanel arrivals={messagePanel.arrivals} onOpen={messagePanel.open} onAction={messagePanel.runAction} onMeasure={messagePanel.measure} onShowAll={messagePanel.showAll} media={{
+            <MessageArrivalsPanel arrivals={messagePanel.arrivals} onOpen={messagePanel.open} onAction={messagePanel.runAction} onMeasure={messagePanel.measure} onShowAll={messagePanel.showAll} onClearAll={messagePanel.clearAll} media={{
               playing: mediaState.playbackStatus === "playing",
               onPrevious: () => void runMediaCommand("media_previous"),
               onPlayPause: () => void runMediaCommand("media_play_pause"),

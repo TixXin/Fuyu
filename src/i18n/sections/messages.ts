@@ -34,6 +34,9 @@ export type MessagesText = {
     title: string;
     /** Opens the whole Messages page from the popup. */
     showAll: string;
+    /** Clears the island's reminders (issue #45); the hint says it marks nothing read in QQ or WeChat. */
+    clearAll: string;
+    clearAllHint: string;
   };
 };
 
@@ -70,6 +73,8 @@ export const zhCN: MessagesText = {
   arrivals: {
     title: "新消息",
     showAll: "全部消息",
+    clearAll: "清除提醒",
+    clearAllHint: "清除岛上的所有提醒，不打开应用；微信、QQ 和邮箱里的消息不会标为已读",
   },
 };
 
@@ -106,5 +111,7 @@ export const en: MessagesText = {
   arrivals: {
     title: "New messages",
     showAll: "All messages",
+    clearAll: "Clear reminders",
+    clearAllHint: "Clears every reminder on the island without opening an app; nothing is marked read in WeChat, QQ or mail",
   },
 };

@@ -141,8 +141,11 @@ export function useQQNotifications(canPreview: boolean) {
     setPreviewWindow(null);
   }), [run]);
 
+  /** Takes the newest message off the collapsed island and the banner; the list keeps it. */
+  const dismissPreview = useCallback(() => setPreviewWindow(null), []);
+
   return {
-    snapshot, busy, actionError, setEnabled, requestAccess, openSettings, refresh, clear, openQQ,
+    snapshot, busy, actionError, setEnabled, requestAccess, openSettings, refresh, clear, openQQ, dismissPreview,
     previewReceivedAt: canPreview ? previewWindow?.receivedAt ?? null : null,
     preview: canPreview && previewWindow
       ? snapshot.items.find((item) => item.id === previewWindow.id) ?? null

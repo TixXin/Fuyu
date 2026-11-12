@@ -58,6 +58,8 @@ mockIPC((command, payload) => {
   if (command === "set_qq_notifications_enabled") return { revision: ++revision, enabled: args.enabled, status: "listening", items: [], error: null };
   if (command === "set_wechat_reminders_enabled") return { revision: ++revision, enabled: args.enabled, status: "listening", pending: false, lastAttentionAt: null, error: null };
   if (command === "get_qq_mail_state") return [mail];
+  if (command === "clear_qq_notifications") return { revision: ++revision, enabled: true, status: "listening", items: [], error: null };
+  if (command === "clear_wechat_reminders") return { revision: ++revision, enabled: true, status: "listening", pending: true, lastAttentionAt: revision, error: null, items: [] };
   if (command === "read_qq_mail") return { id: args.messageId, content: "本周项目进度已更新", contentType: "text/plain", attachments: [] };
 }, { shouldMockEvents: true });
 
@@ -73,6 +75,7 @@ const PLAYER = {
 let state = { mode: "collapsed" as IslandMode, page: "todo" as IslandPage };
 let openedSource: MessageSource | null = null;
 let setUserMode: (mode: IslandMode) => void;
+let latestPreview: unknown = null;
 
 function Fixture() {
   const [mode, setMode] = useState<IslandMode>("collapsed");
@@ -86,6 +89,7 @@ function Fixture() {
   const qqMail = useMail(canPreview);
   const plugins = usePluginNotifications(canPreview);
   const preview = useLatestMessagePreview(qq, wechat, qqMail, plugins);
+  latestPreview = preview;
   const openIslandPage = useCallback((next: IslandPage) => { setPage(next); setMode("expanded"); }, []);
   const collapseIsland = useCallback(() => setMode("collapsed"), []);
   const panel = useIslandMessagePanel({
@@ -114,7 +118,7 @@ function Fixture() {
       {page === "qq" && (
         <div className="message-panel">
           {panel.arrivals
-            ? <MessageArrivalsPanel arrivals={panel.arrivals} onOpen={panel.open} onAction={panel.runAction} onMeasure={panel.measure} onShowAll={panel.showAll} media={PLAYER} />
+            ? <MessageArrivalsPanel arrivals={panel.arrivals} onOpen={panel.open} onAction={panel.runAction} onMeasure={panel.measure} onShowAll={panel.showAll} onClearAll={panel.clearAll} media={PLAYER} />
             : <span className="message-panel-full">完整消息页</span>}
         </div>
       )}
@@ -230,6 +234,26 @@ async function runChecks() {
     check(state.mode === "expanded", "按过之后不再自动收起");
     await notify("qq", "小张");
     check(rows().length === 0, "你自己在用展开的岛时，新消息不弹面板");
+
+    // Clearing every reminder at once (issue #45).
+    await act(async () => setUserMode("collapsed"));
+    await notify("qq", "老李");
+    await notify("wechat");
+    await notify("qqMail", "财务");
+    await notify("plugin", "构建完成");
+    await waitFor(() => rows().length === 4, "四个来源都在面板里");
+    const clear = document.querySelector<HTMLButtonElement>(".message-arrivals__clear")!;
+    check(clear.getAttribute("aria-label") === "清除提醒" && clear.title.includes("不会标为已读"), "标题行有「清除提醒」，说明不会标为已读");
+    const before = commands.length;
+    await act(async () => {
+      clear.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+      clear.click();
+    });
+    await waitFor(() => state.mode === "collapsed", "清除后收起");
+    const after = commands.slice(before).map((entry) => entry.command);
+    check(rows().length === 0 && latestPreview === null, "清除后面板没有了，收起条也不再显示预览");
+    check(after.includes("clear_qq_notifications") && after.includes("clear_wechat_reminders"), "清空 QQ 和微信的提醒列表");
+    check(!after.some((command) => /launch|open_|read_qq_mail|mark_qq_mail/.test(command)), `不打开任何应用，也不把邮件标为已读（${after.join(",")}）`);
 
     // island.notify with icon "media" and layout "inline" (C11c): the island is the message.
     await act(async () => setUserMode("collapsed"));

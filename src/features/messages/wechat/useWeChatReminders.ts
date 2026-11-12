@@ -140,9 +140,12 @@ export function useWeChatReminders(canPreview: boolean) {
     setPreviewReceivedAt(null);
   }), [run]);
 
+  /** Takes the reminder off the collapsed island and the banner; WeChat's own state is unchanged. */
+  const dismissPreview = useCallback(() => setPreviewReceivedAt(null), []);
+
   const showing = canPreview && snapshot.pending && previewReceivedAt !== null;
   return {
-    snapshot, busy, actionError, setEnabled, setExposeUi, setHideTaskbarButton, openWeChat, clear,
+    snapshot, busy, actionError, setEnabled, setExposeUi, setHideTaskbarButton, openWeChat, clear, dismissPreview,
     previewReceivedAt: showing ? previewReceivedAt : null,
     previewMessage: showing ? previewMessage : null,
   };

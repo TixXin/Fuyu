@@ -99,8 +99,8 @@ export function useIslandMessagePanel({ enabled, durationMs, notices, mode, page
   useEffect(() => {
     if (!showing) return;
     const takeOver = (event: PointerEvent) => {
-      // The player's buttons leave the popup to close on its own time.
-      if (event.target instanceof Element && event.target.closest(".message-arrivals__media")) return;
+      // The player's buttons leave the popup to close on its own time; clearing closes it.
+      if (event.target instanceof Element && event.target.closest(".message-arrivals__media, .message-arrivals__clear")) return;
       autoOpenedRef.current = false;
       window.clearTimeout(closeTimerRef.current);
       // The title row too: without the island's header (C11b) it is the way to the whole page.
@@ -159,7 +159,23 @@ export function useIslandMessagePanel({ enabled, durationMs, notices, mode, page
     else setArrivals(rest);
   }, [arrivals, close, pluginNotifications]);
 
+  /**
+   * Clears every reminder on the island at once (issue #45): the popup, the collapsed preview and
+   * banner, and the QQ and WeChat lists; a plugin's message is dismissed. Opens no app and leaves
+   * QQ's and WeChat's own unread state, and the mail's, as it is.
+   */
+  const clearAll = useCallback(() => {
+    void qqNotifications.clear();
+    void wechatReminders.clear();
+    qqNotifications.dismissPreview();
+    wechatReminders.dismissPreview();
+    qqMail.dismissPreview();
+    pluginNotifications.dismiss();
+    close();
+  }, [close, pluginNotifications, qqMail, qqNotifications, wechatReminders]);
+
   return {
+    clearAll,
     /** The rows while the page shows only the new messages, else null. */
     arrivals: showing && page === "qq" ? arrivals : null,
     /** The rows' measured height, for the island's height. */
