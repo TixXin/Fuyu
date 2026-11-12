@@ -197,7 +197,25 @@ await plugin.status.update("battery", "80% 15%", {
 });
 ```
 
-`text` 始终必填：读屏软件念它，不认识 `cells`、`ring`、`batteries` 的旧版岛屿也显示它。所以不用先判断能力，照常发就行。
+### 饼图
+
+`pie`（能力 `statusPie`）：最多 4 块 `[{ value, tone? }]`，`value` 是不小于 0 的数，每块的大小是它占全部 `value` 之和的比例。收起条画成一个和进度环一样大的小饼，从 12 点方向顺时针排，代替文字和 `cells`，不显示数字，具体数值写进 `tooltip` 和插件自己的页面。适合「几种状态各占多少」，比如作业队列里运行、排队、收尾的个数。
+
+- 没写 `tone` 的块按位置上色：第 1 到第 4 块依次是绿、橙、蓝、品红，对应「运行、等待、收尾、其他」，按这个顺序排最好认。`value` 为 0 的块不画，但仍占着它的位置，后面几块的颜色不变。
+- `tone` 为 `warning` / `danger` 的块是黄色 / 红色，`accent` 是浅蓝色。
+- 所有 `value` 都是 0 时画一个空的灰圈。
+- 同时给了 `batteries` 时只画电池。`ring` 照常画在饼前面。
+
+```js
+await plugin.status.update("queue", "R12 PD3 CG1", {
+  tooltip: "R 12 · PD 3 · CG 1 · 其他 0",
+  pie: [{ value: 12 }, { value: 3 }, { value: 1 }, { value: 0 }],
+});
+```
+
+PowerShell：`Update-FuyuStatus 'queue' 'R12 PD3 CG1' -Tooltip 'R 12 · PD 3 · CG 1' -Pie @(@{ value = 12 }, @{ value = 3 }, @{ value = 1 })`。
+
+`text` 始终必填：读屏软件念它，不认识 `cells`、`ring`、`batteries`、`pie` 的旧版岛屿也显示它。所以不用先判断能力，照常发就行。
 
 ## 岛上提示
 

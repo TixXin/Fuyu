@@ -38,6 +38,8 @@ export type PluginStatusCell = { label: string; value: string; tone: PluginStatu
 
 export type PluginStatusBattery = { level: number; tone: PluginStatusTone };
 
+export type PluginStatusSlice = { value: number; tone: PluginStatusTone };
+
 export type PluginStatusEntry = {
   pluginId: string;
   itemId: string;
@@ -48,6 +50,7 @@ export type PluginStatusEntry = {
   cells?: PluginStatusCell[];
   ring?: number;
   batteries?: PluginStatusBattery[];
+  pie?: PluginStatusSlice[];
 };
 
 export type PluginStatusItemEntry = { pluginId: string; pluginName: ViewLocalizedText; itemId: string };

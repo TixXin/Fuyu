@@ -23,6 +23,7 @@
 | `notifyStyle` | island.notify takes 'icon' ('media': the icon of the app playing media) and 'layout' ('inline': alone in the new-messages popup, the island is the message, with no title row or card). Islands without it ignore both. |
 | `notifyControls` | island.notify takes 'controls' ('media': the island draws previous, play / pause and next beside the message and runs them itself; the plugin needs no media:control). Islands without it ignore it. |
 | `statusBatteries` | status.update draws 'batteries' (upright batteries, each 0-1 full). Islands without it ignore them and show the text or cells. |
+| `statusPie` | status.update draws a 'pie' (up to 4 slices sized by their values). Islands without it ignore it and show the text or cells. |
 
 ## 权限一览
 
@@ -144,6 +145,7 @@
   - `cells?`：[{ label: string max 6, value: string max 8, tone?: as above }], at most 4; drawn instead of the text (capability statusCells)
   - `ring?`：number 0-1: a small progress ring in the item's tone before the text or cells (capability statusCells)
   - `batteries?`：[{ level: number 0-1, tone?: as above }], at most 4 upright batteries drawn instead of the text and cells; one without a tone takes its place's color (capability statusBatteries)
+  - `pie?`：[{ value: number >= 0, tone?: as above }], at most 4 slices of a small pie, each sized by its share of the total, drawn instead of the text and cells (batteries win when both are set); one without a tone takes its place's color, all zero draws an empty circle (capability statusPie)
 - 结果：{}
 
 ### `island.openView`

@@ -53,7 +53,7 @@ export class MockHost {
   readonly requests: RecordedRequest[];
   readonly logs: string[];
   readonly views: Map<string, ViewModel>;
-  readonly statuses: Map<string, { text: string; tooltip?: string; tone?: string; cells?: { label: string; value: string; tone?: string }[]; ring?: number; batteries?: { level: number; tone?: string }[] }>;
+  readonly statuses: Map<string, { text: string; tooltip?: string; tone?: string; cells?: { label: string; value: string; tone?: string }[]; ring?: number; batteries?: { level: number; tone?: string }[]; pie?: { value: number; tone?: string }[] }>;
   /** Views the plugin opened with island.openView. */
   readonly openedViews: string[];
   /** Webview pages on screen (viewVisible opens and closes them). */

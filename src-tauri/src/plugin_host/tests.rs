@@ -806,7 +806,7 @@ fn view_icons_match_the_manifest_schema() {
 mod view_tests {
     use serde_json::json;
 
-    use super::super::views::{is_action_id, parse_status, patch_items, patch_model, MAX_STATUS_BATTERIES, MAX_STATUS_CELLS, MAX_STATUS_CHARS};
+    use super::super::views::{is_action_id, parse_status, patch_items, patch_model, MAX_STATUS_BATTERIES, MAX_STATUS_CELLS, MAX_STATUS_CHARS, MAX_STATUS_SLICES};
 
     #[test]
     fn patches_replace_items_by_id_in_the_list_and_its_groups() {
@@ -876,6 +876,21 @@ mod view_tests {
         assert!(parse_status(&json!({ "text": "x", "batteries": [{ "tone": "danger" }] })).is_err());
         assert!(parse_status(&json!({ "text": "x", "batteries": [{ "level": 0.5, "tone": "loud" }] })).is_err());
         assert!(parse_status(&json!({ "text": "x", "batteries": "full" })).is_err());
+    }
+
+    #[test]
+    fn status_pies_are_checked() {
+        let params = json!({ "text": "R12 PD3", "pie": [{ "value": 12 }, { "value": 0 }, { "value": 2.5, "tone": "danger" }] });
+        let status = serde_json::to_value(parse_status(&params).expect("ok").expect("text")).expect("json");
+        assert_eq!(status["pie"], json!([{ "value": 12.0, "tone": "neutral" }, { "value": 0.0, "tone": "neutral" }, { "value": 2.5, "tone": "danger" }]));
+        assert!(serde_json::to_value(parse_status(&json!({ "text": "x" })).expect("ok").expect("text")).expect("json").get("pie").is_none());
+        let slice = json!({ "value": 1 });
+        assert!(parse_status(&json!({ "text": "x", "pie": vec![slice.clone(); MAX_STATUS_SLICES] })).is_ok());
+        assert!(parse_status(&json!({ "text": "x", "pie": vec![slice; MAX_STATUS_SLICES + 1] })).is_err());
+        assert!(parse_status(&json!({ "text": "x", "pie": [{ "value": -1 }] })).is_err());
+        assert!(parse_status(&json!({ "text": "x", "pie": [{ "tone": "danger" }] })).is_err());
+        assert!(parse_status(&json!({ "text": "x", "pie": [{ "value": 1, "tone": "loud" }] })).is_err());
+        assert!(parse_status(&json!({ "text": "x", "pie": { "value": 1 } })).is_err());
     }
 
     #[test]
