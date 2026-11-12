@@ -13,10 +13,11 @@
 //   pnpm tasks release <id> [--reason ..] [--no-land] give a claim back
 //   pnpm tasks stale | conflicts | check | landing
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { existsSync } from "node:fs";
 import path from "node:path";
-import { fileURLToPath, pathToFileURL } from "node:url";
+import { fileURLToPath } from "node:url";
 import { laneNumber, mainCheckout } from "../build-dirs.mjs";
+import { claudePid, recordOwner } from "../lanes/laneRegistry.mjs";
 import { boardLines, blockers, index, jsonRows, nextLines, relationLines } from "./taskBoard.mjs";
 import {
   CLOSED_STATUSES, OPEN_STATUSES, addLine, claimState, claimed, filesInScope, formatTask, isTaskId,
@@ -24,7 +25,7 @@ import {
 } from "./taskFile.mjs";
 import { landingProblems, laneReminders } from "./taskLanding.mjs";
 import {
-  checkTasks, findTask, git, laneOwners, load, nowText, readAll, readGroups, save, staleOf, taskPath, todayText, tryGit,
+  checkTasks, findTask, git, load, nowText, readAll, readGroups, save, staleOf, taskPath, todayText, tryGit,
 } from "./taskRepo.mjs";
 
 export { checkTasks } from "./taskRepo.mjs";
@@ -50,20 +51,13 @@ function run(command, args) {
   return spawnSync(command, args, { stdio: "inherit", shell: process.platform === "win32" }).status ?? 1;
 }
 
-/** Records the claude.exe running this command as the lane's owner when the lane has none (lanes made by hand). */
-async function recordOwner(main, worktree) {
-  const file = path.join(main, ".git", "claude-code-merge-queue", "lane-owners.json");
-  const owners = laneOwners(main);
-  const key = path.resolve(worktree).toLowerCase();
-  if (owners[key]) return;
+/** Claiming a task in a lane also records the lane as this session's (`pnpm lane:take`, scripts/lanes). */
+function checkInLane(main, lane, name) {
+  if (!lane) return;
   try {
-    const lib = pathToFileURL(path.join(worktree, "node_modules/claude-code-merge-queue/dist/lib/lane-owner.js")).href;
-    const pid = (await import(lib)).findClaudeAncestorPid();
-    if (!pid) return;
-    mkdirSync(path.dirname(file), { recursive: true });
-    writeFileSync(file, `${JSON.stringify({ ...owners, [key]: { pid, since: new Date().toISOString() } }, null, 2)}\n`);
+    recordOwner(main, lane, { pid: claudePid(), name: name || null });
   } catch {
-    // Without an owner the lane only goes stale after a quiet day.
+    // The task's lane field still marks the lane as in use.
   }
 }
 
@@ -135,7 +129,7 @@ async function claim(root, main, options, added = []) {
     save(root, claimed(task, { owner, lane, at: nowText(), scope }));
     taking.push(id);
   }
-  await recordOwner(main, root);
+  checkInLane(main, lane, owner);
   if (taking.length === 0) return 0;
   const verb = added.length ? "adds and takes" : "takes";
   return commitAndLand(taking.map((id) => taskPath(id, false)), `docs(tasks): ${owner} ${verb} ${taking.join(", ")}`, options);

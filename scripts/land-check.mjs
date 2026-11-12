@@ -12,7 +12,8 @@ import { execFileSync, spawnSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { mainCheckout, targetDir } from "./build-dirs.mjs";
+import { laneNumber, mainCheckout, targetDir } from "./build-dirs.mjs";
+import { touchOwner } from "./lanes/laneRegistry.mjs";
 import { backgroundBuildEnv, lowerPriority } from "./build-load.mjs";
 import { pruneMainTarget } from "./prune-build-cache.mjs";
 import { readVersion, VERSION_FILES, writeVersion } from "./release/versions.mjs";
@@ -157,8 +158,27 @@ function ownEmail() {
   }
 }
 
+/**
+ * A land shows the lane's session is still there (scripts/lanes: its process may be unknown).
+ * Returns the lane number when the lane has no owner: made by hand, so another session may be
+ * handed it as idle (AGENTS.md: lanes come from EnterWorktree or `pnpm lane:open`).
+ */
+function checkIn() {
+  try {
+    const lane = laneNumber(process.cwd());
+    return lane && !touchOwner(mainCheckout(), lane) ? lane : null;
+  } catch {
+    return null; // never block a land on a bookkeeping error
+  }
+}
+
 function main() {
   lowerPriority("land-check");
+  const unrecorded = checkIn();
+  if (unrecorded) {
+    console.error(`[land-check] lane ${unrecorded} 没有归属记录（手动建的 lane）。先运行 pnpm lane:take ${unrecorded} --as <会话名>，以后用 EnterWorktree 或 pnpm lane:open 开 lane`);
+    return 1;
+  }
   const attributed = attributedCommits(landingCommits(), ownEmail());
   if (attributed.length) {
     console.error(`[land-check] remove the Claude attribution lines from: ${attributed.join("; ")}`);

@@ -1,7 +1,8 @@
 // Whether a lane is someone's. A session often works in a lane from the main
 // checkout by absolute paths, or takes one over from another session, so no
 // single sign tells; any of these means the lane is in use:
-//   - its recorded session (lane:open / lane:take / the hook) still runs;
+//   - its recorded session (lane:open / lane:take / the hook) still runs, or, when its
+//     process could not be found, checked in (those commands, a land) within a day;
 //   - an open task names it (进行中 and not stale, or 待用户确认);
 //   - something changed in it within ACTIVE_MS (index, HEAD, the owner's last check-in);
 //   - a process has its current directory in it (Windows then refuses a rename).
@@ -14,6 +15,8 @@ import { lanePath, ownerOf, pidAlive } from "./laneRegistry.mjs";
 import { readAll, staleOf } from "../tasks/taskRepo.mjs";
 
 export const ACTIVE_MS = 2 * 60 * 60 * 1000;
+/** How long a check-in counts when the session's process could not be found (as a task claim). */
+export const UNKNOWN_OWNER_MS = 24 * 60 * 60 * 1000;
 
 function tryGit(args, cwd) {
   try {
@@ -72,7 +75,9 @@ export function laneFacts(main, lane, { mainHead, owners, tasks }) {
     ...facts,
     branch,
     work,
-    owner: owner ? { pid: owner.pid, name: owner.name ?? null, alive: pidAlive(owner.pid) } : null,
+    // alive null: the session's claude.exe was not found when it checked in (its commands run
+    // outside it, as under magpie), so only its check-in time tells.
+    owner: owner ? { pid: owner.pid ?? null, name: owner.name ?? null, alive: owner.pid ? pidAlive(owner.pid) : null, seenMs: seen } : null,
     task: tasks.get(lane) ?? null,
     lastActivityMs,
   };
@@ -104,6 +109,9 @@ export function judge(facts, requester = {}, { now = Date.now(), busy = () => fa
   if (mine) return { mine, users: [] };
   const users = [];
   if (owner?.alive) users.push(`会话 ${owner.name ?? `pid ${owner.pid}`} 在用`);
+  else if (owner && owner.alive === null && now - (owner.seenMs ?? 0) < UNKNOWN_OWNER_MS) {
+    users.push(`会话 ${owner.name ?? "（无名）"} ${Math.max(0, Math.round((now - owner.seenMs) / 3600000))} 小时前登记（进程未知）`);
+  }
   if (task) users.push(`任务 ${task.id}（${task.owner ?? "无人"}，${task.status}）`);
   const quiet = now - (facts.lastActivityMs ?? 0);
   if (quiet < ACTIVE_MS) users.push(`${Math.max(0, Math.round(quiet / 60000))} 分钟前有改动`);

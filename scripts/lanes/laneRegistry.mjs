@@ -1,7 +1,4 @@
-// Where lanes live and who uses them. The record is the merge queue's own
-// .git/claude-code-merge-queue/lane-owners.json ({ "<lane path, lower case>": { pid,
-// since } }), so its land-time pruning keeps reading it; this adds the session's
-// name and when it last said it was there (`seen`).
+// Where lanes live and who uses them, keyed by the lane's path in lower case.
 import { execFileSync } from "node:child_process";
 import { mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import path from "node:path";
@@ -37,24 +34,37 @@ export function commonDir(main) {
   return path.resolve(main, out);
 }
 
-function ownersFile(main) {
+// Two files. The merge queue's lane-owners.json ({ pid, since }) decides its land-time
+// pruning: a lane whose pid no longer runs is deleted, a lane with no entry is kept. So a
+// session whose claude.exe could not be found must never land there with an empty pid (that
+// once deleted a lane in use); it is left out of it and kept in lane-sessions.json, which
+// holds every check-in with the session's name and last check-in (`seen`).
+function queueFile(main) {
   return path.join(commonDir(main), "claude-code-merge-queue", "lane-owners.json");
 }
 
-export function readOwners(main) {
+function sessionsFile(main) {
+  return path.join(commonDir(main), "claude-code-merge-queue", "lane-sessions.json");
+}
+
+function readJson(file) {
   try {
-    return JSON.parse(readFileSync(ownersFile(main), "utf8"));
+    return JSON.parse(readFileSync(file, "utf8"));
   } catch {
     return {};
   }
 }
 
-function writeOwners(main, owners) {
-  const file = ownersFile(main);
+function writeJson(file, value) {
   mkdirSync(path.dirname(file), { recursive: true });
   const temp = `${file}.${process.pid}.tmp`;
-  writeFileSync(temp, `${JSON.stringify(owners, null, 2)}\n`);
+  writeFileSync(temp, `${JSON.stringify(value, null, 2)}\n`);
   renameSync(temp, file);
+}
+
+/** Every lane's owner: the merge queue's records (lanes made by its hook), overridden by check-ins. */
+export function readOwners(main) {
+  return { ...readJson(queueFile(main)), ...readJson(sessionsFile(main)) };
 }
 
 /** The owner record of lane `lane`, or null. */
@@ -64,17 +74,36 @@ export function ownerOf(main, lane, owners = readOwners(main)) {
 
 /** Records `{ pid, name }` as using lane `lane`. */
 export function recordOwner(main, lane, { pid, name }, now = new Date()) {
-  const owners = readOwners(main);
   const key = ownerKey(lanePath(main, lane));
-  const since = owners[key]?.pid === pid && owners[key]?.name === name ? owners[key].since : now.toISOString();
-  owners[key] = { pid: pid ?? null, ...(name ? { name } : {}), since, seen: now.toISOString() };
-  writeOwners(main, owners);
+  const sessions = readJson(sessionsFile(main));
+  const known = sessions[key];
+  const since = known && known.pid === (pid ?? null) && known.name === name ? known.since : now.toISOString();
+  sessions[key] = { pid: pid ?? null, ...(name ? { name } : {}), since, seen: now.toISOString() };
+  writeJson(sessionsFile(main), sessions);
+  const queue = readJson(queueFile(main));
+  if (pid) queue[key] = { pid, since };
+  else delete queue[key];
+  writeJson(queueFile(main), queue);
+}
+
+/** Marks lane `lane`'s recorded session as still there (a land from it); false when the lane has no record. */
+export function touchOwner(main, lane, now = new Date()) {
+  const key = ownerKey(lanePath(main, lane));
+  const sessions = readJson(sessionsFile(main));
+  const owner = sessions[key] ?? readJson(queueFile(main))[key];
+  if (!owner) return false;
+  sessions[key] = { ...owner, seen: now.toISOString() };
+  writeJson(sessionsFile(main), sessions);
+  return true;
 }
 
 export function forgetOwner(main, lane) {
-  const owners = readOwners(main);
-  delete owners[ownerKey(lanePath(main, lane))];
-  writeOwners(main, owners);
+  const key = ownerKey(lanePath(main, lane));
+  for (const file of [sessionsFile(main), queueFile(main)]) {
+    const records = readJson(file);
+    delete records[key];
+    writeJson(file, records);
+  }
 }
 
 export function pidAlive(pid) {

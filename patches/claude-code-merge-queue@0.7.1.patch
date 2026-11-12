@@ -1,5 +1,5 @@
 diff --git a/dist/hooks/worktree-create.js b/dist/hooks/worktree-create.js
-index 558e886b00a53edf989b804182f90ef4431d0912..5137cdebaafda46a775a9470c5d34a6926ca862e 100644
+index 558e886b00a53edf989b804182f90ef4431d0912..eaab55ab61877f1dbc57755fcc5bccc98d9ff070 100644
 --- a/dist/hooks/worktree-create.js
 +++ b/dist/hooks/worktree-create.js
 @@ -26,10 +26,11 @@
@@ -178,7 +178,7 @@ index b85b163ac4f821d428a9cb7de9e3f9f8f0cbcc1d..b7a629db55729b8818fdf9f7a06612d9
      if (idx === -1)
          return null;
 diff --git a/dist/lib/prune-lanes.js b/dist/lib/prune-lanes.js
-index 0ba4d716ec85fa3a8571c3d2b85f6f8250807523..e74b32cf2c4bb3d1bebe2d01f339345844a87a67 100644
+index 0ba4d716ec85fa3a8571c3d2b85f6f8250807523..22dee10cc49f484afd5fd04486e88534be479a41 100644
 --- a/dist/lib/prune-lanes.js
 +++ b/dist/lib/prune-lanes.js
 @@ -41,8 +41,17 @@
@@ -201,16 +201,19 @@ index 0ba4d716ec85fa3a8571c3d2b85f6f8250807523..e74b32cf2c4bb3d1bebe2d01f3393458
  /**
   * Is a Claude Code session's current working directory inside `dir` right
   * now? `lsof`'s own exit code is NOT reliable for this — it returns
-@@ -74,6 +83,8 @@ export function isClaudeProcessRow(lsofRow) {
+@@ -74,6 +83,11 @@ export function isClaudeProcessRow(lsofRow) {
      return (lsofRow.trim().split(/\s+/)[0] ?? "").toLowerCase().startsWith("claude");
  }
  function hasLiveProcessInside(dir) {
 +    if (process.platform === "win32")
-+        return laneOwnerAlive(dir); // fly-island patch: no lsof on Windows
++        // fly-island patch: never prune. Idle lanes are handed to the next session again
++        // (scripts/lanes), and an owner record cannot tell a session that runs its commands
++        // outside claude.exe: pruning by it deleted a lane in use.
++        return true;
      const result = spawnSync("lsof", ["-a", "-d", "cwd", "+D", dir], { encoding: "utf8" });
      if (result.error)
          return true; // lsof missing/unspawnable — can't verify, assume in use
-@@ -124,6 +135,10 @@ function existsRealpath(path) {
+@@ -124,6 +138,10 @@ function existsRealpath(path) {
  function tryRemoveWorktree(mainTop, wt) {
      try {
          execFileSync("git", ["worktree", "remove", wt], { cwd: mainTop, stdio: "ignore" });
@@ -221,7 +224,7 @@ index 0ba4d716ec85fa3a8571c3d2b85f6f8250807523..e74b32cf2c4bb3d1bebe2d01f3393458
          return true;
      }
      catch {
-@@ -142,7 +157,7 @@ function listWorktrees(mainTop) {
+@@ -142,7 +160,7 @@ function listWorktrees(mainTop) {
      for (const line of out.split("\n")) {
          if (line.startsWith("worktree ")) {
              flush();
@@ -230,7 +233,7 @@ index 0ba4d716ec85fa3a8571c3d2b85f6f8250807523..e74b32cf2c4bb3d1bebe2d01f3393458
          }
          else if (line.startsWith("branch ")) {
              current.branch = line.slice("branch ".length).replace("refs/heads/", "");
-@@ -186,7 +201,7 @@ export function findOrphanedLanes(mainTop, cfg, currentWorktree) {
+@@ -186,7 +204,7 @@ export function findOrphanedLanes(mainTop, cfg, currentWorktree) {
      for (const { path: wt, branch } of worktrees) {
          if (wt === mainTopReal || wt === currentWorktreeReal)
              continue; // never report the lane running this check
@@ -239,7 +242,7 @@ index 0ba4d716ec85fa3a8571c3d2b85f6f8250807523..e74b32cf2c4bb3d1bebe2d01f3393458
              continue; // not one of ours
          if (!branch || !branch.startsWith(cfg.branchPrefix))
              continue;
-@@ -272,7 +287,7 @@ export function pruneLandedLanes(mainTop, cfg, currentWorktree) {
+@@ -272,7 +290,7 @@ export function pruneLandedLanes(mainTop, cfg, currentWorktree) {
      for (const { path: wt, branch } of worktrees) {
          if (wt === mainTopReal || wt === currentWorktreeReal)
              continue;

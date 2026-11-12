@@ -6,7 +6,7 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { laneOf, lanePath, ownerOf } from "../../scripts/lanes/laneRegistry.mjs";
-import { ACTIVE_MS, judge, usable } from "../../scripts/lanes/laneState.mjs";
+import { ACTIVE_MS, UNKNOWN_OWNER_MS, judge, usable } from "../../scripts/lanes/laneState.mjs";
 import { listLanes, openLane, releaseLane, takeLane } from "../../scripts/lanes/lanePool.mjs";
 import { listLine } from "../../scripts/lanes/lanes.mjs";
 
@@ -21,6 +21,9 @@ test("a lane is someone else's while its session runs, a task names it, it chang
   const tasked = { ...quiet, task: { id: "C41.4", owner: "fly-island-e9", status: "待用户确认" } };
   assert.deepEqual(judge(tasked, {}, { now: NOW }).users, ["任务 C41.4（fly-island-e9，待用户确认）"]);
   assert.deepEqual(judge({ ...quiet, lastActivityMs: NOW - 9 * 60000 }, {}, { now: NOW }).users, ["9 分钟前有改动"]);
+  const unknown = { ...quiet, owner: { pid: null, name: "fly-island-4b", alive: null, seenMs: NOW - 5 * 3600000 } };
+  assert.deepEqual(judge(unknown, {}, { now: NOW }).users, ["会话 fly-island-4b 5 小时前登记（进程未知）"], "a session whose process was not found (magpie)");
+  assert.deepEqual(judge({ ...unknown, owner: { ...unknown.owner, seenMs: NOW - UNKNOWN_OWNER_MS - 1 } }, {}, { now: NOW }).users, []);
   let probed = 0;
   const busy = () => (probed += 1) > 0;
   assert.deepEqual(judge(quiet, {}, { now: NOW, busy }).users, ["有进程的当前目录在里面"]);
@@ -52,6 +55,7 @@ test("the list says whose a lane is and why", () => {
   const line = listLine({ ...quiet, branch: "lane/3", owner: { pid: 7, name: "a", alive: false }, users: [], lastActivityMs: NOW - 3 * 3600000 }, NOW);
   assert.match(line, /^ {2}3 {2}lane\/3 .*a（已退出）.*3 小时前.*空闲，可复用$/);
   assert.match(listLine({ ...quiet, work: "1 个提交不在 main 上", users: [] }, NOW), /有工作：1 个提交不在 main 上$/);
+  assert.match(listLine({ ...quiet, mine: true, users: [], owner: { pid: null, name: "b", alive: null } }, NOW), /b（进程未知）.* 你的 lane$/);
 });
 
 test("lanes are handed back, reused when idle, created when none is, and taken over on purpose", () => {
@@ -91,6 +95,13 @@ test("lanes are handed back, reused when idle, created when none is, and taken o
     assert.throws(() => takeLane(main, 1, { pid: alive, name: "d" }), /有人在用：.*分钟前有改动/);
     takeLane(main, 1, { pid: alive, name: "d", force: true });
     assert.equal(ownerOf(main, 1).name, "d");
+    // A session whose claude.exe is not found (magpie): the merge queue prunes lanes whose recorded
+    // pid is gone, so the check-in must stay out of its file (that deleted lane 21 once).
+    takeLane(main, 3, { pid: null, name: "magpie", force: true });
+    const queue = JSON.parse(readFileSync(path.join(main, ".git", "claude-code-merge-queue", "lane-owners.json"), "utf8"));
+    assert.equal(queue[path.resolve(lanePath(main, 3)).toLowerCase()], undefined);
+    assert.equal(queue[path.resolve(lanePath(main, 1)).toLowerCase()]?.pid, alive, "a known pid still goes there");
+    assert.deepEqual([ownerOf(main, 3).name, ownerOf(main, 3).pid], ["magpie", null]);
     const listed = listLanes(main, { name: "d" });
     assert.deepEqual(listed.map((lane) => [lane.lane, lane.mine, Boolean(lane.work)]), [[1, true, false], [2, false, true], [3, false, false]]);
   } finally {

@@ -25,10 +25,13 @@ function minutesAgo(ms, now = Date.now()) {
 
 /** One line per lane for `lane:list`. */
 export function listLine(entry, now = Date.now()) {
-  const who = entry.owner ? `${entry.owner.name ?? `pid ${entry.owner.pid}`}${entry.owner.alive ? "" : "（已退出）"}` : "无记录";
+  const { owner } = entry;
+  const alive = { true: "", false: "（已退出）", null: "（进程未知）" }[String(owner?.alive ?? null)];
+  const who = owner ? `${owner.name ?? `pid ${owner.pid}`}${alive}` : "无记录";
   let state;
   if (!entry.worktree) state = "不是 worktree";
-  else if (entry.work) state = `有工作：${entry.work}`;
+  else if (entry.work) state = `${entry.mine ? "你的 lane，" : ""}有工作：${entry.work}`;
+  else if (entry.mine) state = "你的 lane";
   else if (entry.users.length) state = `在用：${entry.users.join("；")}`;
   else state = "空闲，可复用";
   return `${String(entry.lane).padStart(3)}  ${(entry.branch ?? "").padEnd(14)} ${who.padEnd(20)} 最近改动 ${minutesAgo(entry.lastActivityMs, now).padEnd(9)} ${state}`;
