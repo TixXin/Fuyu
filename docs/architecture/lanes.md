@@ -72,12 +72,13 @@ land 从 git 的 pre-push 钩子里跑检查，环境里带着 `GIT_DIR` 等变�
 
 ## 外部 PR
 
-别人提的 PR（协作者的 PR 由仓库管理员来合时也一样）不走 land：land 推送前会 rebase，PR 的提交号随之改变，GitHub 认不出 PR 已合并（#10 就是这样，只能手动关闭）。
+别人提的 PR（协作者的 PR 由我们来合时也一样）不走 land：land 会 rebase 再推自己的 `land/…` 分支、另开 PR，别人的 PR 就合不上了。直接在那个 PR 上开启自动合并。
 
-1. 在 lane 里 `git fetch origin pull/<编号>/head:pr-<编号>`，`git merge --no-ff pr-<编号>` 合到最新的 `origin/main` 上，按 AGENTS.md「验证」一节的范围跑 `pnpm check`、`cargo test`、clippy 和 `pnpm test:regression`。这一步只用来检查，合并提交不推送。
-2. 检查通过后 `gh pr merge <编号> --merge` 由 GitHub 合并（保留提交号，PR 自动关闭），再在主工作区 `pnpm mq:sync`。`gh pr merge` 不经过本地 pre-push 钩子，所以第 1 步不能省；GitHub 上的 CI 会再跑一遍。
-3. 要补的修改另开 lane，照常 land。PR 落后 `main` 太多、GitHub 报冲突时，请作者 rebase，或问用户怎么处理，不要改写别人的分支。
-4. 外部提交可以带 Claude 署名行，`land-check.mjs` 只查作者是本机 `user.email` 的提交。
+1. 读说明和改动。CI 会在 PR 上跑全套检查（`check`），一般不用在本机再跑；要看界面效果或改动风险大时，在 lane 里 `git fetch origin pull/<编号>/head:pr-<编号>`，`git merge --no-ff pr-<编号>` 合到最新的 `origin/main` 上验证，这个合并不推送。
+2. 要合的：`gh pr merge <编号> --auto --merge`。CI 通过后 GitHub 合入，PR 自动关闭、提交号不变；落后于 `main` 时由 `update-behind-prs.yml` 排队更新（见上一节）。等结果用 `pnpm mq:wait <编号>`，合入后它会快进主工作区。
+3. fork 来的 PR 有两处不同：第一次贡献的人的 CI 要维护者在 PR 页面点批准才会跑；作者没勾 "Allow edits from maintainers" 时，工作流没法更新它的分支，落后了要请作者自己更新。
+4. 要补的修改另开 lane，照常 land。GitHub 报冲突时请作者 rebase，或问用户怎么处理，不要改写别人的分支。
+5. 外部提交可以带 Claude 署名行，`land-check.mjs` 只查作者是本机 `user.email` 的提交。
 
 回复和任务的顺序见 [docs/tasks/README.md](../tasks/README.md)「GitHub PR」。
 

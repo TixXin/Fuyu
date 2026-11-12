@@ -75,7 +75,7 @@
 认领以 `origin/main` 为准，不等其他会话回消息。
 
 1. **挑**：`pnpm tasks next`，再 `pnpm tasks show <编号>` 读全文。
-2. **认领**：在 lane 里 `pnpm task:claim <编号> --as <会话名> --scope <要改的目录/,文件>`。会话名用 ListAgents 里自己的名字。它会同步 `origin/main`、提交、`mq:land`；已经是你的不会重复提交；两个会话抢同一项时，后 land 的 rebase 冲突，按提示换一项。
+2. **认领**：在 lane 里 `pnpm task:claim <编号> --as <会话名> --scope <要改的目录/,文件>`。会话名用 ListAgents 里自己的名字。它会同步 `origin/main`、提交，再 `mq:land --wait`：开一个只改任务文件的 PR，等它合入（只改文档，一两分钟）才算认领成功；已经是你的不会重复提交；两个会话抢同一项时，后合入的那个会冲突（land 时 rebase 冲突，或 PR 冲突），按提示换一项。
 3. **新任务马上要做**：`pnpm tasks add <编号> --title .. --claim --as <会话名> --scope ..`，新建和认领在一个提交里。只是记下来以后做：`pnpm tasks add <编号> --title ..`，和别的改动一起提交。
 4. **做的过程中**：开发中途和 land 前跑 `pnpm tasks conflicts`，看和 main、和别人声明的范围有没有冲突。
 5. **停下来**：`pnpm tasks note <编号> "<进度和下一步>"`，随下一次提交带上。不打算做完了：`pnpm tasks release <编号> --reason ".."`，放回待做并留交接。
@@ -99,12 +99,12 @@ land 时会自动检查（`scripts/land-check.mjs` 调 `pnpm tasks landing`）�
 
 ## GitHub PR
 
-别人提的 PR（含协作者的）由仓库管理员的会话来合时，和 issue 一样先回复、后动手、合完再回复（用户 2026-11-09 定）。怎么合（不走 land）见 [AGENTS.md](/AGENTS.md)「外部 PR 例外」。
+别人提的 PR（含协作者的）由仓库管理员的会话来合时，和 issue 一样先回复、后动手、合完再回复（用户 2026-11-09 定）。怎么合（不走 land）见 [lanes.md](/docs/architecture/lanes.md)「外部 PR」。
 
-1. **核实**：读说明和改动；在 lane 里把它合到最新的 `origin/main` 上，按改动范围跑检查。这个合并只用来检查，不推送。
-2. **先回复，再合**：说明已收到、看法（合 / 要作者改 / 不合）、本地检查的结果和接下来怎么做。要作者改的，写清楚改哪里，等作者推上来再从第 1 步走。不合的回复原因后 `gh pr close <N>`，到此为止。
+1. **核实**：读说明和改动，看 PR 上 CI 的 `check`；要看界面效果或改动风险大时，再在 lane 里把它合到最新的 `origin/main` 上验证，这个合并不推送。
+2. **先回复，再合**：说明已收到、看法（合 / 要作者改 / 不合）、检查的结果和接下来怎么做。要作者改的，写清楚改哪里，等作者推上来再从第 1 步走。不合的回复原因后 `gh pr close <N>`，到此为止。
 3. **跟进建任务**：合入后还要我们自己补的（作者没做的部分、顺带发现的问题），`pnpm tasks add <编号> --title .. --issue <PR 号>`（PR 和 issue 共用编号，`issue` 字段写 PR 号即可），第 2 步的回复里引用任务文档；任务建好之前写的回复，建好后补一条带链接的。PR 本身就是做好的改动，不为它另建任务。
-4. **合入**：分支落后 `main` 时 `gh pr update-branch <N>`，CI 的 `check` 通过后 `gh pr merge <N> --merge`，再在主工作区 `pnpm mq:sync`。合入时 PR 自动关闭。
+4. **合入**：`gh pr merge <N> --auto --merge` 开启自动合并，CI 的 `check` 通过后 GitHub 合入，落后于 `main` 时由工作流排队更新；`pnpm mq:wait <N>` 等到合入并快进主工作区。合入时 PR 自动关闭。
 5. **合完回复**：写合并提交号、怎么拿到（下个版本 / 插件市场 / npm）和验证结果；有跟进任务的，任务做完后再回复一条，引用任务文档（这时在 `0-archive/`）并列出跟进的提交（短提交号加标题）。
 
 回复的语言、署名和最后一行同上一节。
