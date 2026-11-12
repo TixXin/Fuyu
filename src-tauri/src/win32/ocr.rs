@@ -28,7 +28,7 @@ pub(crate) fn recognize(width: u32, height: u32, rgba: &[u8]) -> Option<String> 
     )
     .ok()?;
     let engine = OcrEngine::TryCreateFromUserProfileLanguages().ok()?;
-    let result = engine.RecognizeAsync(&bitmap).ok()?.get().ok()?;
+    let result = engine.RecognizeAsync(&bitmap).ok()?.join().ok()?;
     let lines: Vec<String> = result
         .Lines()
         .ok()?

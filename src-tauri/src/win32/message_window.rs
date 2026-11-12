@@ -48,7 +48,7 @@ pub(crate) fn register_class<H: WindowMessages>(instance: HINSTANCE, name: &str)
         ..Default::default()
     };
     if unsafe { RegisterClassW(&class) } == 0 {
-        return Err(Error::from_win32());
+        return Err(Error::from_thread());
     }
     Ok(())
 }
