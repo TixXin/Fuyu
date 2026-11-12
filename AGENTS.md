@@ -171,7 +171,7 @@
 - 每完成一个**可验证的功能单元**（一个用户可感知的功能、一个完整的修复，或计划中的一个步骤），按改动范围执行必要验证，再主动创建 Git 提交，无需再次确认。不要每改一处就提交一次；同一功能单元内的多处改动合在一个提交里。只提交当前任务相关的文件，在最终说明中给出提交号和验证结果。
 - 修补自己尚未推送的提交（漏掉的文案、测试、拼写、小 bug）时，不新开 `fix:` 提交：最近一个提交用 `git commit --amend`，更早的用 `git commit --fixup=<提交号>`，推送前再用 `GIT_SEQUENCE_EDITOR=: git rebase -i --autosquash <基点>` 合并（非交互，代理可执行）。
 - 改写历史只限于自己创建、尚未推送、也尚未合入 `main` 的提交（即自己 lane 分支上还没 land 的提交）。已经合入 `main` 的提交不再改写，有问题就新开修复提交。
-  - 唯一的例外是用户明确要求去掉已推送提交里的 Claude 署名行：先通知其他会话；用 `git filter-branch --msg-filter` 按字节过滤（例如 Python 读 `sys.stdin.buffer`，否则 Windows 会把所有提交说明的换行改成 CRLF）；改写后核对每个提交的 tree 不变，用 `git update-ref` 切换；`main` 和 `dev` 各用 `--force-with-lease=<分支>:<原提交>` 强推一次（要设 `CLAUDE_CODE_MERGE_QUEUE_EMERGENCY_PUSH=1`）。
+  - 唯一的例外是用户明确要求去掉已推送提交里的 Claude 署名行：先通知其他会话；用 `git filter-branch --msg-filter` 按字节过滤（例如 Python 读 `sys.stdin.buffer`，否则 Windows 会把所有提交说明的换行改成 CRLF）；改写后核对每个提交的 tree 不变，用 `git update-ref` 切换；`main` 用 `--force-with-lease=main:<原提交>` 强推一次（要设 `CLAUDE_CODE_MERGE_QUEUE_EMERGENCY_PUSH=1`）。
 - 一个功能阶段（例如插件 API 的一期）通常对应 1–5 个提交，而不是十几个。修复提交只用于已推送内容的问题。
 - 提交前尽量让改动范围保持聚焦，并在最终说明中列出已验证的命令。
 
