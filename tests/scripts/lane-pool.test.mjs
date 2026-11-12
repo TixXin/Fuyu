@@ -20,6 +20,10 @@ test("a new session takes back an idle lane, and never one with work or someone 
   const lane = (n) => path.join(root, "app-lanes", String(n));
   const git = (args, cwd = main) => execFileSync("git", ["-c", "user.email=t@t", "-c", "user.name=t", ...args], { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim();
   const before = process.cwd();
+  // land runs the checks from git's pre-push hook, whose GIT_DIR and friends would point
+  // every git call here (the pool's too) at the real repo instead of the temp one.
+  const hookEnv = Object.keys(process.env).filter((name) => name.startsWith("GIT_")).map((name) => [name, process.env[name]]);
+  for (const [name] of hookEnv) delete process.env[name];
   try {
     mkdirSync(main);
     git(["init", "-q", "-b", "main"]);
@@ -50,6 +54,7 @@ test("a new session takes back an idle lane, and never one with work or someone 
     assert.notEqual(git(["rev-parse", "HEAD"], lane(3)), git(["rev-parse", "HEAD"]), "the unlanded commit is still there");
   } finally {
     process.chdir(before);
+    for (const [name, value] of hookEnv) process.env[name] = value;
     rmSync(root, { recursive: true, force: true });
   }
 });
