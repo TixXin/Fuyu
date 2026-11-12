@@ -1,5 +1,3 @@
-#![cfg_attr(not(windows), allow(dead_code))]
-
 use serde::{Deserialize, Serialize};
 use std::sync::{Mutex, OnceLock, PoisonError};
 use tauri::PhysicalPosition;

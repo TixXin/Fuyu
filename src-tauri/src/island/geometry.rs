@@ -84,6 +84,9 @@ pub(crate) fn apply_stage_geometry(
         -((COLLAPSED_ISLAND_HEIGHT * state.collapsed_scale - TUCKED_VISIBLE_EDGE_HEIGHT).max(0.0)
             * scale)
             .round() as i32;
+    #[cfg(target_os = "macos")]
+    let top_inset = 0;
+    #[cfg(not(target_os = "macos"))]
     let top_inset = work_area_top_inset(monitor_position.y, monitor.work_area().position.y);
     let centered_x = crate::dev_lane::stage_x(monitor_position.x, monitor_size.width as i32, physical_width);
     let normal_y = monitor_position.y + top_inset + physical_top_offset;
@@ -261,7 +264,6 @@ pub(super) fn resolve_stage_position(
     clippy::too_many_arguments,
     reason = "a point and the notch's rectangle, two radii and their shape, all plain values"
 )]
-#[cfg_attr(not(windows), allow(dead_code))]
 pub(super) fn point_in_notch(
     x: f64,
     y: f64,
@@ -305,14 +307,12 @@ pub(super) fn point_in_notch(
     shape.contains(dx, dy, radius)
 }
 
-#[cfg_attr(not(windows), allow(dead_code))]
 pub(super) fn stage_point(window_left: f64, window_top: f64, window_width: f64, cursor_x: f64, cursor_y: f64) -> (f64, f64) {
     let physical_scale = window_width / STAGE_WINDOW_WIDTH;
     let round = |value: f64| (value * 10.0).round() / 10.0;
     (round((cursor_x - window_left) / physical_scale), round((cursor_y - window_top) / physical_scale))
 }
 
-#[cfg_attr(not(windows), allow(dead_code))]
 pub(super) fn cursor_on_island(
     window_left: f64,
     window_top: f64,

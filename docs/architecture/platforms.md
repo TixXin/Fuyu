@@ -25,7 +25,7 @@ macOS 的计划和决定见 [macos-port-plan.md](macos-port-plan.md)，各功能
 
 | 功能 | 模块 | Windows | macOS | macOS 的做法与权限 | 子任务 | 最后验证（macOS） |
 |---|---|---|---|---|---|---|
-| 悬浮岛窗口（折叠、展开、贴边收起） | `island` | 已支持 | 未开始 | NSPanel（`tauri-nspanel`）+ Accessory；无需权限 | G1.3 | — |
+| 悬浮岛窗口（折叠、展开、贴边收起） | `island` | 已支持 | 开发中 | NSPanel（`tauri-nspanel`）+ Accessory；无需权限 | G1.3 | — |
 | 新手引导 | `onboarding_window` | 已支持 | 未开始 | 全屏透明遮罩；「最小化全部窗口」改为隐藏其他应用 | G1.3 | — |
 | 设置窗口 | `settings_window` | 已支持 | 未开始 | 普通窗口 | G1.4 | — |
 | 家目录与数据位置 | `home_dir` | 已支持 | 未开始 | 默认 `~/.fuyu`；应用数据目录在 `~/Library/Application Support/` 下，写进 contracts.md | G1.4 | — |
