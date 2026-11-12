@@ -2,7 +2,7 @@
 # packages/create-fuyu-plugin) to npm when a tag like sdk-v0.2.1 is
 # pushed. It uses npm Trusted Publishing (OIDC): no npm token is stored
 # anywhere; npmjs.com trusts this workflow file in this repository. Setup and
-# the release steps: docs/plugins/sdk-release.md.
+# the release steps: docs/architecture/plugins/sdk-release.md.
 name: Publish SDK
 
 on:

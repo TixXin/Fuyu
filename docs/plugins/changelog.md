@@ -1,154 +1,61 @@
-# 插件 API 更新日志
+# 更新日志
 
-每次岛屿发布时在这里记录插件能用的新东西。插件应按 `initialize.capabilities` 判断宿主有没有某项能力，不要按岛屿版本号判断；`apiVersion` 只在不兼容的改动时才升。完整列表见 [API 参考](api.md)。
+每个浮屿版本给插件带来了什么，最新的在最前。插件要用某一版才有的东西时，按 `initialize.capabilities` 判断宿主有没有这项能力，或者在清单里写 `minAppVersion`；只给已有方法加的可选字段，旧版岛屿会忽略，不用判断。
 
-下面几批改动都还没有随正式版岛屿发布（2026-11-05 时最新的正式版是 0.2.14），发布时补上版本号。
+npm 包 `fuyu-plugin` 和 `create-fuyu-plugin` 的版本单独标在括号里。
 
-## 让 AI 帮你写插件（npm 包 0.6.0）
+## 0.3.6
 
-- 新命令 `fuyu-plugin skill`：把给 AI 编程助手看的 `fuyu-plugin` skill（`.claude/skills/fuyu-plugin/`，Claude Code 自动加载）和 `AGENTS.md`（Codex 等）装进插件文件夹，并写进 `.fuyuignore`，不进 zip。你改过的文件保留，`--force` 覆盖。见 [快速开始](quickstart.md#6-让-ai-帮你写)。
-- `create-fuyu-plugin` 建的新插件自带这两样，`.fuyuignore` 里也排除了它们。
-- skill 的源文件在 `packages/fuyu-plugin/ai/`，脚手架带的是 `pnpm sdk:build` 生成的副本，测试保证两边一致。
+- **安装链接**：`fuyu://market/install/<插件 id>` 打开插件市场并把这个插件置顶，官网插件页的「在浮屿中安装」按钮用的就是它，作者也可以放进 README。链接不会直接安装，用户照常确认。见 [发布 · 安装链接](publish.md#安装链接)。
 
-## 折叠条上的电池
+## 0.3.5
 
-- `status.update` 多了可选的 `batteries`（最多 4 个 `{ level, tone? }`，`level` 是 0–1），折叠条画成并排立着的小电池，代替文字和 `cells`，能力 `statusBatteries`。没写 `tone` 的电池按位置上色，`warning` / `danger` 是黄色 / 红色。旧版岛屿忽略这个字段。SDK：Node `StatusOptions.batteries`、PowerShell `Update-FuyuStatus -Batteries`；模拟宿主会校验并记在 `statuses` 里。见 [README](README.md)。
+- **改名为浮屿 / Fuyu**（npm 包 0.5.0）：清单 `fuyu-plugin.json`、忽略文件 `.fuyuignore`、环境变量 `FUYU_PLUGIN_*`、网页接口 `acquireFuyuApi()`、CSS 变量 `--fuyu-*`、链接 `fuyu://`。旧名字照样认。npm 包改名为 `fuyu-plugin`、`create-fuyu-plugin`，PowerShell 模块改名为 `Fuyu.Plugin`，函数改名为 `*-Fuyu*`（旧的 `*-Focusd*` 是别名）。插件市场换到 [`TixXin/fuyu-plugins`](https://github.com/TixXin/fuyu-plugins)。见 [改名前的名字](runtime.md#改名前的名字)。
+- **收起条上的电池**：`status.update` 多了 `batteries`（最多 4 个 `{ level, tone? }`），能力 `statusBatteries`。见 [岛上界面 · 电池](ui.md#电池)。
+- **页面大小统一**：岛上所有页面，包括插件的自定义网页，都用用户在「外观」里设的面板大小。`webview` 页面的 `height` / `width` 不再改变岛的大小。
+- **让 AI 帮你写插件**（npm 包 0.6.0）：`fuyu-plugin skill` 把给 AI 编程助手看的说明装进插件文件夹，脚手架建的新插件自带。见 [快速开始 · 让 AI 帮你写](quickstart.md#让-ai-帮你写)。
 
-## 改名为浮屿 / Fuyu（npm 包 0.5.0）
+## 0.3.4
 
-- 岛屿认新名字：清单 `fuyu-plugin.json`、忽略文件 `.fuyuignore`、环境变量 `FUYU_PLUGIN_*`、页面接口 `acquireFuyuApi()`、CSS 变量 `--fuyu-*`。旧名字照样认，岛屿两组环境变量和 CSS 变量都设置。见 [README](README.md)「改名前的名字」。
-- npm 包改名为 `fuyu-plugin`、`create-fuyu-plugin`（0.5.0），命令行是 `fuyu-plugin`；PowerShell 模块改名为 `Fuyu.Plugin`，函数改名为 `*-Fuyu*`，旧的 `*-Focusd*` 作为别名保留；单文件 SDK 改名为 `lib/fuyu.ps1`、`lib/fuyu.mjs`。旧包 `fly-island-plugin`、`create-fly-island-plugin` 不再更新。
-- 脚手架生成新名字的文件；插件 id 不能包含 `fuyu` 或 `focusd`。
-- `pack` 把 `fuyu-plugin.json` 也以 `focusd-plugin.json` 的名字放进 zip，改名前的岛屿也能安装。签名私钥默认放在 `~/.fuyu-plugin/signing.key`，只有旧的 `~/.fly-island-plugin/signing.key` 时继续用旧的；环境变量 `FUYU_PLUGIN_SIGNING_KEY`，旧名字 `FLY_ISLAND_PLUGIN_SIGNING_KEY` 也认。`dev` 先找新应用标识下的 `local-api.json`，再找旧的。
+- **提示的样式**：`island.notify` 多了 `icon: "media"`（正在播放的音乐软件的图标）和 `layout: "inline"`（新消息面板里只有这一条时不带标题和卡片），能力 `notifyStyle`。
+- **提示上的播放按钮**：`island.notify` 多了 `controls: "media"`，由岛屿在提示旁放上一首、播放 / 暂停、下一首，插件不需要 `media:control`，能力 `notifyControls`。见 [岛上提示](ui.md#岛上提示)。
+- **自定义网页不带卡片**：`webview` 页面可以写 `frame: "none"`，直接画在岛上；这样的页面的颜色变量跟着岛屿的深浅底色。
 
-## 提示上的播放按钮
+## 0.3.3
 
-- `island.notify` 多了可选的 `controls`（`"media"`：提示右侧放上一首、播放/暂停、下一首，由岛屿执行，插件不需要 `media:control`），能力 `notifyControls`。旧版岛屿忽略这个字段。SDK：Node `NotifyOptions.controls`、PowerShell `Show-FocusdNotification -Controls`；模拟宿主检查它是字符串。见 [README](README.md)「岛上提示」。
+- **收起条上的多个状态项**：每个有文字的状态项都是收起条上的一个项目，用户在 **外观 → 收起条上的项目** 里排顺序、放左右、隐藏。以前只显示优先级最高的一个。
+- npm 包 0.4.0：修好了 PowerShell SDK 在 Windows PowerShell 5.1 上 `Receive-*Notification` 超时不生效的问题（靠超时做定时任务的插件会停住），用旧脚手架建的 PowerShell 插件请换上新的 `lib/` 文件；`validate` 不再把 `optionalPermissions` 里的权限报成「没申请」；清单校验认识 `sounds` 和 `agentEffortLabels`。
 
-## 提示的样式
+## 0.3.2
 
-- `island.notify` 多了可选的 `icon`（`"media"`：正在播放的音乐软件的图标）和 `layout`（`"inline"`：新消息面板里只有这一条时不带标题和卡片），能力 `notifyStyle`。旧版岛屿忽略这两个字段。SDK：Node `NotifyOptions` 的类型、PowerShell `Show-FocusdNotification -Icon -Layout`；模拟宿主检查它们是字符串。见 [README](README.md)「岛上提示」。
+- **收起条上的列和小环**：`status.update` 多了 `cells`（最多 4 列 `{ label, value, tone? }`）和 `ring`（0–1 的小进度环），能力 `statusCells`。见 [岛上界面 · 几列数字和进度环](ui.md#几列数字和进度环)。
+- **更多右键菜单**：`contributes.menus` 新增 `clipboard/context`、`shelf/context`、`message/context`，插件收到 `command { id, args: { item } }`。用户亲手选的这一条不需要读取权限。
+- **修改自己的设置**：`settings.set { values }`，比如登录后把账号写进设置。
+- **媒体控制**：`media.nowPlaying` 多了 `canSeek`、`canNext`、`canPrevious`、`shuffle`、`repeat`、`volume`；新方法 `media.cover`、`media.seek`、`media.setVolume`、`media.toggleShuffle`、`media.cycleRepeat`。
+- **文件中转和系统事件**：事件 `shelf.changed`；不需要权限的 `system.locked` / `unlocked`、`system.suspended` / `resumed`、`system.idle` / `active`，可以写进 `activationEvents`，比如 `onEvent:system.resumed`。
+- **Agent 页的强度名称**：`contributes.agentEffortLabels`，只有清单的插件就能用。见 [清单](manifest.md#agent-页的强度名称)。
+- **按需启动的两处修正**：岛屿启动后才启用的 `onStartupFinished` 插件立即启动，不再等下次重启；用户改了待命插件的设置时启动它（`activationEvent` 为 `onSettingsChanged`）。
+- npm 包 0.3.0 带上这些接口的 SDK 和模拟宿主支持。
 
-## npm 包 0.4.0（2026-11-09）
+## 0.3.1
 
-`fly-island-plugin` 和 `create-fly-island-plugin` 0.4.0：
+- **读以前的待办和笔记**：`todos.list` 和 `note.get` 接受 `{ date }`，过去的日子读归档；新方法 `todos.days { from, to }`，适合周报和完成率统计。
+- **打开自己的页面**：`island.openView { viewId }`，用户刚用过插件的 15 秒内展开岛屿并打开插件的页面，能力 `openView`。
+- **可选权限**：清单 `optionalPermissions` 和 `permissions.request`，用到时再询问，能力 `permissions`。见 [可选权限](permissions.md#可选权限)。
+- **调用记录**：插件设置页列出最近 200 次请求的方法名和结果。
+- **链接**：激活事件 `onUri` 和通知 `uri`，网页打开 `fuyu://plugin/<id>/…` 时发给插件，适合登录回调。见 [链接](runtime.md#链接)。
+- **页面与快捷键**：`view.patch` 可以删除（`remove`）和插入（`add`）条目；用户可以在 **设置 → 快捷键 → 插件快捷键** 里改插件命令的快捷键。
+- **作者签名**（npm 包 0.2.0）：`keygen`、`pack --sign`、`sign`、`keys rotate`。签了名的插件才会自动更新。见 [作者签名](publish.md#作者签名)。
 
-- **修复（PowerShell）**：脚手架和 `plugins/sdk/powershell/focusd.ps1` 带的 PowerShell 辅助库里，`Receive-FocusdNotification` 的超时在 Windows PowerShell 5.1 上不生效：`[Console]::In.ReadLineAsync()` 在那里是同步的，会一直等到岛屿发来下一行。靠超时做定时任务的插件（每秒刷新、倒计时）因此停住。现在改用 `StreamReader` 读标准输入。用旧版脚手架建的 PowerShell 插件，把 `lib/focusd.ps1` 换成新版即可（只差 `Read-FocusdLine` 和顶部的读取器）。PowerShell 模块 `FlyIsland.Plugin` 的源码同样改了，PowerShell Gallery 上的版本另行发布。
-- 下面「折叠条上的列和小环」：Node SDK `plugin.status.update(id, text, { cells, ring })`、能力 `statusCells`，模拟宿主校验并记录 `cells` / `ring`。
-- `fly-island-plugin validate` 不再把清单 `optionalPermissions` 里的权限报成「代码用了但清单没申请」。
-- 清单校验认识 `contributes.sounds`（音效包）和 `contributes.agentEffortLabels`（Agent 页努力程度的显示名）。
-- `plugin.agentStatus.report` 的类型多了 `host`、`agent`、`cwd`（其他电脑上报的会话）。
-- 脚手架建的插件依赖 `fly-island-plugin` ^0.4.0。
+## 0.3.0：插件 API 第 2 版
 
-## 按需启动的两处修正
+第 2 版插件在清单里写 `"apiVersion": 2`。第 1 版的插件行为不变。
 
-- `onStartupFinished` 的插件如果是岛屿启动后才启用、安装或授权的，现在会立即启动；以前要等岛屿下次重启。
-- 用户改了待命插件的设置时，岛屿启动它，`initialize.activationEvent` 为 `onSettingsChanged`。以前插件要等下一个激活事件才看到新设置。
-
-## 折叠条上的列和小环
-
-- `status.update` 多了可选的 `cells`（最多 4 列 `{ label, value, tone? }`，代替文字显示）和 `ring`（0–1 的小进度环），能力 `statusCells`。`text` 仍然必填，旧版岛屿只显示文字。SDK：Node `plugin.status.update(id, text, { cells, ring })`，PowerShell `Update-FocusdStatus -Cells -Ring`；模拟宿主会校验并记在 `statuses` 里。见 [README](README.md)「折叠条上的列和小环」。
-
-## npm 包 0.3.0（2026-11-06）
-
-`fly-island-plugin` 和 `create-fly-island-plugin` 0.3.0 带上下面这些新接口（从「更多右键菜单」到「打开自己的页面」）：
-
-- Node SDK：`plugin.openView`、`plugin.setSettings`、`plugin.todos.list(date)` / `plugin.todos.days(from, to)` / `plugin.note.get(date)`、`plugin.media.cover / seek / setVolume / toggleShuffle / cycleRepeat`；事件类型加上 `shelf.changed` 和 `system.*`；清单校验认识新的右键菜单 `clipboard/context`、`shelf/context`、`message/context`。
-- 模拟宿主：`openedViews`、`settings.set`，`startMockHost(dir, { archives, cover })`，媒体控制方法。
-- 脚手架建的插件依赖 `fly-island-plugin` ^0.3.0。
-
-这些接口要配合包含它们的岛屿版本使用；在旧版岛屿上调用会得到「未知方法」，可以先用 `initialize.capabilities`（`openView`）或 `plugin.hasCapability` 判断。
-
-## Agent 页的强度名称
-
-清单的 `contributes.agentEffortLabels` 改写 Agent 页显示的推理强度（只改显示），`runtime: none` 的插件就能用，见 [README](README.md)「Agent 页的强度名称」。旧版岛屿会忽略这个字段。
-
-## 更多右键菜单
-
-- `contributes.menus` 新增 `clipboard/context`（剪贴板历史的文字条目）、`shelf/context`（文件中转条目）、`message/context`（QQ 通知和邮件）。用户在这些条目上右键选了插件的命令，插件收到 `command { id, args: { item } }`，`item` 和 `clipboard.history` / `shelf.list` / `messages.list` 里的一项相同。用户亲手选的这一条不需要对应的读取权限。
-
-## 修改自己的设置
-
-- 方法 `settings.set { values }`：插件改自己在 `contributes.settings` 里声明的设置（比如登录后的账号），设置页随之显示。全部生效或全部不改；未声明的键或类型不对为 400。插件自己的修改不会再收到 `settings.changed`。SDK：Node `plugin.setSettings(values)`，PowerShell `Set-FocusdSetting`；模拟宿主支持。
-
-## 媒体控制
-
-- `media.nowPlaying`（以及每个媒体控制方法的结果）多了 `canSeek`、`canNext`、`canPrevious`、`shuffle`、`repeat`、`volume`。
-- 新方法：`media.cover`（`media:read`，封面的 data: URL，超过 1 MB 为 null）；`media.seek { positionMs }`、`media.setVolume { level }`（系统音量 0–1）、`media.toggleShuffle`、`media.cycleRepeat`（都要 `media:control`）。SDK：Node `plugin.media.cover / seek / setVolume / toggleShuffle / cycleRepeat`；模拟宿主支持，封面用 `startMockHost(dir, { cover })` 提供。
-
-## 文件中转和系统事件
-
-- 事件 `shelf.changed { count }`（`shelf:read`）：文件中转变了。
-- 系统事件（不需要权限）：`system.locked` / `system.unlocked`、`system.suspended` / `system.resumed`、`system.idle { idleSeconds }`（5 分钟没有输入）/ `system.active`。可以写进 `activationEvents`，比如 `onEvent:system.resumed` 让按需启动的插件在电脑唤醒时启动。
-
-## 读取以前的待办和笔记
-
-- `todos.list` 和 `note.get` 接受 `{ date }`：过去的日子读归档（结果带 `archived: true`，没有归档为 404），以后的日子给出排到那天的待办。新方法 `todos.days { from, to }`（`todos:read`）按天给出待办数、完成数和有没有笔记。SDK：Node `plugin.todos.list(date)`、`plugin.note.get(date)`、`plugin.todos.days(from, to)`；模拟宿主用 `startMockHost(dir, { archives })` 提供归档。
-
-## 打开自己的页面
-
-- 方法 `island.openView { viewId }`，能力 `openView`：用户刚用过插件（命令、提示按钮、链接、页面操作）后 15 秒内，插件可以展开岛屿并打开自己的页面，比如登录回调回来后显示结果。SDK：Node `plugin.openView(viewId)`，PowerShell `Open-FocusdView`；模拟宿主记在 `openedViews`。
-
-## npm 包 0.2.0（2026-11-06）
-
-- `fly-island-plugin` 0.2.0：新增 `keygen`、`pack --sign`、`sign`、`keys rotate`（作者签名与换密钥，见 [作者签名](README.md#作者签名)），`publish` 改为指向插件市场 `TixXin/focusd-plugins`；SDK 带上 `onUri`、`view.patch` 增删条目、运行时申请的可选权限等这一批的 API 和类型。
-- `create-fly-island-plugin` 0.2.0：生成的项目依赖 `fly-island-plugin` ^0.2.0，复制的单文件 SDK 是最新版本。
-
-## 可选权限
-
-- 清单 `optionalPermissions`：用到时再申请的权限。方法 `permissions.request { permissions }` 在岛上询问用户，返回 `{ granted, denied }`；能力 `permissions`；`initialize.optionalPermissions`。索引条目增加可选字段 `optionalPermissions`。SDK：Node `plugin.permissions.request` / `has`，PowerShell `Request-FocusdPermission`，模拟宿主支持。见 [可选权限](README.md#可选权限第-2-版)。
-- 插件设置页新增「调用记录」：最近 200 次请求的方法名和结果，不含数据。插件不需要改动。见 [调用记录](README.md#调用记录)。
-
-## 页面与快捷键
-
-- `view.patch` 除了 `items`（按 id 替换），还接受 `remove: [id]`（删除）和 `add: [{ item, before?, group? }]`（插在 `before` 那一项前面，否则加到第 `group` 组末尾，否则加到列表末尾）。三项至少给一项；`add` 的 id 已经在页面里时返回状态 400。SDK：Node `views.patch(viewId, { items, remove, add })`（仍然可以直接传条目数组），PowerShell `Update-FocusdViewItems -Remove ... -Add ...`；模拟宿主同样支持。
-- 用户可以在 设置 → 快捷键 → 插件快捷键 里改插件命令的快捷键、关闭它，或者给没有快捷键的命令设一个；清单里的 `keybinding` 只是默认值。插件不需要做任何改动。
-
-## 链接
-- 激活事件 `onUri` 和通知 `uri { uri, path, query }`：打开 `focusd://plugin/<id>/...` 链接时发给插件。第一次之前岛上询问用户，答案和敏感权限放在一起，可以撤销。SDK：Node `plugin.onUri`；模拟宿主 `openUri()`。见 [链接](README.md#链接第-2-版)。
-
-## 自定义界面（P8）
-
-- `contributes.views[].template: "webview"`，配 `entry`（插件文件夹里的 .html）和 `height`：插件自己的网页显示在岛上。页面在单独的 WebView2 里，不能联网，也没有岛屿的接口，只能通过 `acquireFocusdApi()` 和插件进程收发消息。
-- 方法 `webview.postMessage`，通知 `webview.message`，能力 `webview`。SDK：Node `plugin.views.postMessage` / `views.onMessage`，PowerShell `Send-FocusdWebviewMessage`；模拟宿主 `webviewMessage()`、`openWebviews`、`webviewMessages`。
-- 新示例 `dev.focusd.todo-ring`（待办进度环）。市场给这类插件加"自定义界面"标签（索引字段 `webview`）。
-
-## 市场（P11）
-
-- 插件 API 没有变化；改的是上架和分发。
-- `plugins/market/<id>.json` 写发布者、仓库、分类和预发布标记，`pnpm plugins:index` 把它们写进索引。市场页可以搜索、按分类筛选、展开详情。
-- 非官方发布者的插件第一次安装时要信任发布者；信任列表可在设置里管理。
-- `plugins/revoked.json` 下架有问题的版本：岛屿刷新市场时停止并禁用（或删除）它们。
-- 允许第三方插件时岛屿每 6 小时在后台检查更新；可选自动更新（只限可信发布者、不加权限的版本）。
-- 索引签名文件可以包含多个签名。见 [提交插件](README.md#提交插件)。
-
-## 开发者工具（P10）
-
-- 清单 `experimentalApis`：申请还在设计中的 API，只在开发模式下可用；`initialize.experimentalApis` 列出岛屿提供的那些（目前没有）。不是开发模式加载的插件写了这个字段时无法使用。
-- 开发模式：设置 → 插件扩展 → 开发者，从任意文件夹加载插件，查看 JSON-RPC 收发记录，手动发送事件。本地 API 增加 `POST /v1/dev/plugins`、`POST /v1/dev/plugins/{id}/reload`、`DELETE /v1/dev/plugins/{id}`、`GET /v1/dev/plugins/{id}/log?after=<序号>`，只在开发模式打开时可用。
-- 工具：npm 包 `fly-island-plugin`（SDK、命令行 `validate` / `pack` / `dev` / `test` / `publish`、模拟宿主 `fly-island-plugin/test`）、脚手架 `create-fly-island-plugin`、PowerShell 模块 `FlyIsland.Plugin`。见 [快速开始](quickstart.md)。
-
-## 按需启动（P9）
-
-- 清单 `activationEvents`：`onStartup`、`onStartupFinished`、`onCommand:<id>`、`onView:<id>`、`onEvent:<名称>`、`onSchedule:<分钟>`。命令和页面自动带上对应的事件；不写这个字段的插件仍随岛屿常驻。
-- `initialize.activationEvent`；方法 `host.keepAlive`。
-- 按需启动的插件空闲 60 秒后停止；插件进程树随插件结束；内存超过 512 MB 时插件被停止。
-
-## 岛上界面（P7）
-
-- 清单 `contributes.views`（`list`、`detail`、`form`、`status` 模板）和 `contributes.statusItems`。
-- 方法 `view.update`、`view.patch`、`status.update`；通知 `view.visible`、`view.action`、`view.submit`、`view.search`。
-- 能力 `views`、`status`。
-
-## 数据（P6）
-
-- 敏感权限 `clipboard:read`、`messages:read`、`media:read`、`shelf:read`、`shelf:write`（第一次使用时在岛上确认），普通权限 `media:control`。
-- 方法 `clipboard.history`、`messages.list`、`media.nowPlaying` / `playPause` / `next` / `previous`、`shelf.list` / `add` / `remove`；事件 `clipboard.changed`、`messages.received`、`media.changed`。
-- 待办由岛屿直接读写（不再经过窗口），插件和本地 API 的待办请求不再受主窗口卡顿影响。
-
-## API 第 2 版（P5）
-
-- 清单 `apiVersion: 2`、`contributes.commands[].keybinding` / `when`、`contributes.menus["todo/context"]`。
-- `initialize.capabilities`；方法 `events.subscribe` / `unsubscribe`、`island.notify`、`storage.*`、`secrets.*`；通知 `event`、`notification.action`，`command` 的 `args`。
-- 权限 `agent-status:read`、`island:notify`、`secrets`。
-- 第 1 版的插件行为不变。
+- **岛上界面**：`contributes.views`（`list`、`detail`、`form`、`status` 模板）和 `contributes.statusItems`；`view.update`、`view.patch`、`status.update` 和 `view.*` 通知。
+- **自定义网页**：`webview` 模板显示插件自己的网页，在单独的 WebView2 里运行，不能联网；`webview.postMessage` 和 `webview.message`。新示例 `dev.focusd.todo-ring`。
+- **事件与提示**：`events.subscribe` / `unsubscribe` 和 `event` 通知；`island.notify` 和 `notification.action`。
+- **快捷键与菜单**：命令的 `keybinding` / `when`，待办右键菜单 `todo/context`。
+- **数据**：`storage.*`、`secrets.*`；敏感权限 `clipboard:read`、`messages:read`、`media:read`、`shelf:read`、`shelf:write`（第一次使用时在岛上确认），以及 `media:control`、`agent-status:read`、`island:notify`、`secrets`。
+- **按需启动**：`activationEvents`、`initialize.activationEvent`、`host.keepAlive`；空闲 60 秒停止；插件进程树随插件结束；内存上限。
+- **开发者工具**：npm 包 `fly-island-plugin`（SDK、命令行、模拟宿主）和脚手架 `create-fly-island-plugin`（0.5.0 起改名为 `fuyu-plugin`、`create-fuyu-plugin`）；岛屿的开发模式；`experimentalApis`。
+- **插件市场**：作者把插件包发在自己仓库的 Release，向市场仓库提 PR 上架；发布者信任、下架名单、后台检查更新和可选的自动更新。

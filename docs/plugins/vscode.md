@@ -1,6 +1,6 @@
 # 和 VS Code 插件系统的对比
 
-本文对比的是 **现在已经落地的** 浮屿插件（插件 API 第 2 版，见 [编写插件](README.md)），不是 [插件平台第 2 版](../architecture/plugins/v2-platform.md) 里尚未实现的部分。VS Code 一侧依据其扩展 API：扩展跑在独立的 Extension Host 进程里，通过 `package.json` 的 `contributes` 声明能力，用 `vscode` 模块调用编辑器。
+浮屿的插件系统参考了 VS Code 的扩展：清单里的 `contributes`、激活事件、按需启动、事件订阅、`globalState` / `secrets` 式的存储，都能在 VS Code 里找到对应的东西。本文说明两边哪里一样、哪里不一样，以及为什么。浮屿一侧是现在的插件 API 第 2 版；VS Code 一侧依据它的扩展 API：扩展跑在独立的 Extension Host 进程里，通过 `package.json` 的 `contributes` 声明能力，用 `vscode` 模块调用编辑器。
 
 两边相同的是：插件不跑在画界面的那个进程里，所以一个插件卡死或崩溃，不至于直接拖垮主界面；能力都在清单的 `contributes` 里声明。其余差别很大。VS Code 是一个可编程的编辑器平台；岛屿是一条较窄的协议，界面大多由岛屿按模板绘制。
 
@@ -37,7 +37,7 @@ VS Code 的 `contributes` 是一张很长的清单：命令、菜单、视图容
 
 岛屿的插件能做的事：
 
-- 按权限调用宿主方法、订阅事件（待办、笔记、Agent 状态、剪贴板、消息、媒体、文件架等，完整列表见 [权限](README.md#权限)）。
+- 按权限调用宿主方法、订阅事件（待办、笔记、Agent 状态、剪贴板、消息、媒体、文件架等，完整列表见 [权限与安全](permissions.md)）。
 - 在清单里声明命令、快捷键、待办右键菜单和设置项，由岛屿画出来。
 - 声明岛上页面和收起条状态项：模板页面只发数据，由岛屿绘制，和其他页面风格一致；`webview` 页面是插件自己的 HTML，跑在单独的 WebView2 里，只能和自己的插件进程通信。
 - 在岛上弹提示，用 `storage` / `secrets` 保存自己的数据。
@@ -57,10 +57,26 @@ VS Code 的 `contributes` 是一张很长的清单：命令、菜单、视图容
 
 VS Code 有官方市场：注册发布者、打包成 VSIX、上传、签名校验、更新通道。扩展也可以脱离市场，把 VSIX 装到一台机器上。
 
-岛屿的市场是一个 GitHub 仓库：作者把插件包发到自己仓库的 Release，向 `fuyu-plugins` 提交一份描述；CI 校验后重建索引并用 Ed25519 签名，zip 用 SHA-256 核对，作者可以另外签名。没有索引私钥就改不了市场列表。自己试用不必走市场，把文件夹放进 `%APPDATA%\com.tixxin.fuyu\plugins\<id>\` 即可。步骤见 [提交插件](README.md#提交插件)。
+岛屿的市场是一个 GitHub 仓库：作者把插件包发到自己仓库的 Release，向 `fuyu-plugins` 提交一份描述；CI 校验后重建索引并用 Ed25519 签名，zip 用 SHA-256 核对，作者可以另外签名。没有索引私钥就改不了市场列表。自己试用不必走市场，把文件夹放进 `%APPDATA%\com.tixxin.fuyu\plugins\<id>\` 即可。步骤见 [发布](publish.md)。
 
 ## 取舍
 
-岛屿换来的是：任意语言都能写、坏一个不影响岛、界面风格不会被插件拆掉、第三方默认关闭、敏感数据逐项询问。换出去的是 VS Code 那种“扩展可以长出一整块产品”的能力。真要更深的定制或进程沙箱，是另一项工作，不在现在的插件宿主里。
+岛屿换来的是：任意语言都能写、坏一个不影响岛、界面风格不会被插件拆掉、第三方默认关闭、敏感数据逐项询问。换出去的是 VS Code 那种“扩展可以长出一整块产品”的能力。更深的定制（改岛的布局、替换内置页面）和进程沙箱都不在现在的计划里。
 
-插件平台的分阶段计划见 [插件平台第 2 版](../architecture/plugins/v2-platform.md)。
+## 从 VS Code 扩展过来
+
+熟悉 VS Code 扩展的话，可以按这张表找对应的东西：
+
+| VS Code | 浮屿 |
+|---|---|
+| `package.json` 的 `contributes` | `fuyu-plugin.json` 的 `contributes`，见 [清单](manifest.md) |
+| `activationEvents` | `activationEvents`，见 [按需启动](runtime.md#按需启动) |
+| `vscode.commands.registerCommand` + `keybindings` | `contributes.commands` 的 `keybinding` / `when`，插件收到 `command` 通知 |
+| `menus` | `contributes.menus`（待办、剪贴板、文件中转、消息的右键菜单） |
+| `contributes.configuration` | `contributes.settings`，由岛屿画在插件设置页上 |
+| `TreeView` / `WebviewView` | 岛上页面：`list` 等模板 / `webview` 模板，见 [岛上界面](ui.md) |
+| `StatusBarItem` | 收起条状态项 `status.update` |
+| `window.showInformationMessage` | `island.notify` |
+| `ExtensionContext.globalState` / `secrets` | `storage.*` / `secrets.*` |
+| `vscode.window.registerUriHandler` | `onUri` 和 `fuyu://plugin/<id>/…` 链接 |
+| Extension Development Host | `npx fuyu-plugin dev` 和岛屿的开发模式；不开岛屿时用模拟宿主 |

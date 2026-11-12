@@ -1,5 +1,7 @@
 # 插件平台第 2 版：向 VS Code 式扩展靠拢的实施计划
 
+> **2026-11-12：P5–P11 都已完成并随岛屿发布**（插件 API 第 2 版从 0.3.0 起，市场从 0.3.5 起读 [`TixXin/fuyu-plugins`](https://github.com/TixXin/fuyu-plugins)）。本文留作计划和决策记录；插件现在能做什么以 [插件开发文档](../../plugins/README.md) 为准。下面的状态行是当时写的。
+
 > 状态：**P5、P6、P7、P9、P10 已完成**（2026-11-05，见各节末尾的「完成记录」；P6 的单独发版和真实数据升级验证还要人工完成）；P10 的 npm 包已发布 0.1.0（2026-11-05），PowerShell Gallery 还没发；P8 第一轮技术验证不通过，换成不经过 Tauri 的独立 WebView2 后第二轮验证通过并已实现（见 [p8-webview-validation.md](../../investigations/p8-webview-validation.md)），2026-11-06 人工验收通过；P11 完成了岛屿端（多签名、黑名单、发布者信任、后台检查与自动更新、市场搜索与分类），独立索引仓库 [TixXin/focusd-plugins](https://github.com/TixXin/focusd-plugins) 和 CI 签名已建好，岛屿还没改读新仓库。
 > 现状见 [插件开发文档](../../plugins/README.md) 和 [与 VS Code 的对比](../../plugins/vscode.md)；第 1 版的设计与路线图（P1–P4）见 [plugins.md](v1-design.md)。本文接着它的 P5。
 > 编码规则仍以 [AGENTS.md](../../../AGENTS.md)、[src/AGENTS.md](../../../src/AGENTS.md)、[src-tauri/AGENTS.md](../../../src-tauri/AGENTS.md) 为准；每个阶段都要登记新增的对外契约（[contracts.md](../contracts.md)）。
