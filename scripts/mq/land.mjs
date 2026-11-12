@@ -1,4 +1,5 @@
 import { spawnSync } from "node:child_process";
+import { existsSync, readFileSync } from "node:fs";
 import { hostname } from "node:os";
 import { github as realGitHub, landBranchName, prText } from "./github.mjs";
 import { INTEGRATION_BRANCH, git, tryGit } from "./settings.mjs";
@@ -50,12 +51,28 @@ function pushBranch(remoteBranch) {
   return push.status === 0;
 }
 
+function readBody(file) {
+  if (!file) return { body: null };
+  if (!existsSync(file)) return { error: `--body 指定的文件不存在：${file}` };
+  const body = readFileSync(file, "utf8");
+  return body.trim() ? { body } : { error: `--body 指定的文件是空的：${file}` };
+}
+
+function changedFiles() {
+  return tryGit(["diff", "--name-only", `origin/${INTEGRATION_BRANCH}...HEAD`]).out.split("\n").filter(Boolean);
+}
+
 export async function land(options = {}) {
-  const { github = realGitHub, host = hostname(), wait = false, waitOptions = {} } = options;
+  const { github = realGitHub, host = hostname(), wait = false, waitOptions = {}, bodyFile = null, title = null } = options;
   const branch = tryGit(["rev-parse", "--abbrev-ref", "HEAD"]).out.trim();
   const refusal = landRefusal(branch, tryGit(["status", "--porcelain"]).out.split("\n"));
   if (refusal) {
     console.error(`[land] ${refusal}`);
+    return 1;
+  }
+  const { body, error } = readBody(bodyFile);
+  if (error) {
+    console.error(`[land] ${error}`);
     return 1;
   }
   if (!rebaseOntoMain()) return 1;
@@ -69,12 +86,15 @@ export async function land(options = {}) {
     console.error(`\n[land] 推送 ${remoteBranch} 失败，见上面的输出。修好后重新 pnpm mq:land。`);
     return 1;
   }
+  const text = prText(commits, branch, { title, body, files: changedFiles() });
   let pr = github.findPr(remoteBranch);
   if (pr) {
-    console.log(`[land] PR #${pr.number} 已更新：${pr.url}`);
+    if (body || title) github.editPr({ number: pr.number, ...text });
+    console.log(`[land] PR #${pr.number} 已更新${body || title ? "（标题和正文也换成了这次给的）" : ""}：${pr.url}`);
   } else {
-    pr = github.createPr({ head: remoteBranch, base: INTEGRATION_BRANCH, ...prText(commits, branch) });
+    pr = github.createPr({ head: remoteBranch, base: INTEGRATION_BRANCH, ...text });
     console.log(`[land] 开了 PR #${pr.number}：${pr.url}`);
+    if (!body) console.log("  没给 --body，正文是从提交自动生成的骨架；补中文说明：写好文件后 pnpm mq:land --body <文件>");
   }
   try {
     github.autoMerge(pr.number);

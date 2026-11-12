@@ -50,10 +50,15 @@ test("dependencies are reinstalled only for a lockfile change, and never over a 
 test("the land branch is unique per account, machine and lane, and the PR text comes from the commits", () => {
   assert.equal(landBranchName("TixXin", "TixxindeMacBook-Air.local", "lane/3"), "land/TixXin/tixxindemacbook-air-lane-3");
   assert.equal(landBranchName("ShengLin1001", "DESKTOP-AB12", "feat/x y"), "land/ShengLin1001/desktop-ab12-feat-x-y");
-  assert.deepEqual(prText([{ subject: "fix(a): one", body: "why\n" }], "lane/1"), { title: "fix(a): one", body: "why\n\n由 `pnpm mq:land` 从 `lane/1` 开出，CI 通过后自动合入。" });
+  assert.deepEqual(prText([{ subject: "fix(a): one", body: "why\n" }], "lane/1", { body: "## 改了什么\n\n- 一\n" }), {
+    title: "fix(a): one",
+    body: "## 改了什么\n\n- 一\n\n---\n由 `pnpm mq:land` 从 `lane/1` 开出，CI 通过后自动合入。",
+  });
   const many = prText([{ subject: "first", body: "" }, { subject: "second", body: "b" }], "lane/1");
   assert.equal(many.title, "first");
-  assert.match(many.body, /^- first\n- second\n/);
+  assert.match(many.body, /^## 改了什么\n\n> land 时没有给中文说明/);
+  assert.match(many.body, /- `first`\n- `second`/);
+  assert.equal(prText([{ subject: "first", body: "" }], "lane/1", { title: "feat: overall" }).title, "feat: overall");
   assert.deepEqual(failedChecks([
     { name: "scope", conclusion: "SUCCESS" },
     { name: "rust", status: "IN_PROGRESS", conclusion: null },
@@ -63,7 +68,7 @@ test("the land branch is unique per account, machine and lane, and the PR text c
 });
 
 function fakeGitHub() {
-  const calls = { created: [], autoMerged: [], updated: [] };
+  const calls = { created: [], autoMerged: [], updated: [], edited: [] };
   const prs = new Map();
   return {
     calls,
@@ -75,6 +80,7 @@ function fakeGitHub() {
       prs.set(pr.head, created);
       return created;
     },
+    editPr: (pr) => calls.edited.push(pr),
     autoMerge: (number) => calls.autoMerged.push(number),
     updateBranch: (number) => calls.updated.push(number),
   };
@@ -116,7 +122,9 @@ test("land rebases onto main, pushes its own branch, opens one PR with auto-merg
     assert.equal(remoteLog(branch), "lane work\nsomeone else landed\none", "rebased onto main and pushed to its own branch");
     assert.equal(remoteLog("main"), "someone else landed\none", "main itself is left to the PR");
     assert.deepEqual(gh.calls.created.map(({ head, base, title }) => [head, base, title]), [[branch, "main", "lane work"]]);
-    assert.match(gh.calls.created[0].body, /^because/);
+    assert.match(gh.calls.created[0].body, /- `lane work`/);
+    assert.match(gh.calls.created[0].body, /`b\.txt`/, "the skeleton lists what changed");
+    assert.match(gh.calls.created[0].body, /<details><summary>提交说明（英文）<\/summary>\n\n### lane work\n\nbecause/);
     assert.deepEqual(gh.calls.autoMerged, [7]);
 
     commit(other, "d.txt", "d\n", "more on main");
@@ -126,6 +134,14 @@ test("land rebases onto main, pushes its own branch, opens one PR with auto-merg
     assert.equal(remoteLog(branch), "follow-up\nlane work\nmore on main\nsomeone else landed\none", "the rebased branch replaced the old one");
     assert.equal(gh.calls.created.length, 1, "the open PR is reused");
     assert.deepEqual(gh.calls.autoMerged, [7, 7]);
+    assert.deepEqual(gh.calls.edited, [], "a re-land without --body keeps the PR text");
+    const bodyFile = path.join(root, "body.md");
+    writeFileSync(bodyFile, "## 改了什么\n\n- 中文说明\n");
+    assert.equal(await land({ github: gh, host: "Test-PC", bodyFile }), 0);
+    assert.equal(gh.calls.edited.length, 1);
+    assert.match(gh.calls.edited[0].body, /^## 改了什么\n\n- 中文说明\n\n---\n由 `pnpm mq:land`/);
+    assert.equal(await land({ github: gh, host: "Test-PC", bodyFile: path.join(root, "missing.md") }), 1);
+    assert.deepEqual(gh.calls.autoMerged, [7, 7, 7], "a missing body file stops before pushing");
 
     git(["pull", "-q", "--rebase", "origin", "main"], other);
     commit(other, "b.txt", "theirs\n", "conflicting");
@@ -134,7 +150,7 @@ test("land rebases onto main, pushes its own branch, opens one PR with auto-merg
     assert.equal(await land({ github: gh, host: "Test-PC" }), 1);
     assert.equal(git(["status", "--porcelain"], lane), "", "the rebase was aborted and the tree left clean");
     assert.equal(git(["log", "-1", "--format=%s"], lane), "mine");
-    assert.equal(gh.calls.autoMerged.length, 2, "nothing was pushed or merged after the conflict");
+    assert.equal(gh.calls.autoMerged.length, 3, "nothing was pushed or merged after the conflict");
   } finally {
     try {
       rmSync(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });

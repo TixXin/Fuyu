@@ -1,7 +1,9 @@
 import { execFileSync } from "node:child_process";
+import { skeletonBody, writtenBody } from "./prBody.mjs";
 
-function gh(args) {
-  return execFileSync("gh", args, { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], windowsHide: true }).trim();
+function gh(args, input = null) {
+  const stdin = input === null ? "ignore" : "pipe";
+  return execFileSync("gh", args, { encoding: "utf8", input: input ?? undefined, stdio: [stdin, "pipe", "pipe"], windowsHide: true }).trim();
 }
 
 function firstPr(out) {
@@ -12,9 +14,10 @@ export const github = {
   login: () => gh(["api", "user", "-q", ".login"]),
   findPr: (head, state = "open") => firstPr(gh(["pr", "list", "--head", head, "--state", state, "--json", "number,url", "-q", ".[0]"])),
   createPr: ({ head, base, title, body }) => {
-    const url = gh(["pr", "create", "--head", head, "--base", base, "--title", title, "--body", body]).split("\n").pop();
+    const url = gh(["pr", "create", "--head", head, "--base", base, "--title", title, "--body-file", "-"], body).split("\n").pop();
     return { number: Number(url.match(/\/pull\/(\d+)/)?.[1]), url };
   },
+  editPr: ({ number, title, body }) => gh(["pr", "edit", String(number), "--title", title, "--body-file", "-"], body),
   autoMerge: (number) => gh(["pr", "merge", String(number), "--auto", "--merge"]),
   view: (number) => JSON.parse(gh(["pr", "view", String(number), "--json", "state,mergeStateStatus,mergeCommit,url,statusCheckRollup"])),
   updateBranch: (number) => gh(["pr", "update-branch", String(number)]),
@@ -32,13 +35,11 @@ export function landBranchName(login, host, branch) {
   return `land/${login}/${machine}-${slug(branch)}`;
 }
 
-export function prText(commits, branch) {
-  const footer = `由 \`pnpm mq:land\` 从 \`${branch}\` 开出，CI 通过后自动合入。`;
-  if (commits.length === 1) {
-    const [{ subject, body }] = commits;
-    return { title: subject, body: [body.trim(), footer].filter(Boolean).join("\n\n") };
-  }
-  return { title: commits[0].subject, body: [...commits.map(({ subject }) => `- ${subject}`), "", footer].join("\n") };
+export function prText(commits, branch, { title = null, body = null, files = [] } = {}) {
+  return {
+    title: title?.trim() || commits[0].subject,
+    body: body?.trim() ? writtenBody(body, branch) : skeletonBody({ commits, files, branch }),
+  };
 }
 
 const FAILED = new Set(["FAILURE", "TIMED_OUT", "CANCELLED", "ACTION_REQUIRED", "STARTUP_FAILURE", "ERROR"]);

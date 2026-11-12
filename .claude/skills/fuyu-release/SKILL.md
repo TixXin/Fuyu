@@ -25,7 +25,7 @@ description: >
 2. **定版本号**：看 `gh release list --repo TixXin/Fuyu --limit 5` 和 `package.json`，按 `docs/releases/README.md`。
 3. `pnpm release:version <版本号>`：改四处版本号，写草稿 `docs/releases/v<版本号>.md`。
 4. **写说明**：读提交正文（不只标题），按 `docs/releases/README.md` 改写成中英文，删掉草稿标记。
-5. 提交 `chore(release): <版本号>`，`pnpm mq:land --wait`（开 PR、开自动合并，等 CI 通过、GitHub 合入）。只改版本号和 Markdown 时 CI 走快速路径，很快。没合入就不要往下走。
+5. 提交 `chore(release): <版本号>`，写一份中文 PR 正文（`## 改了什么` 写版本号和这版的要点，`## 关联` 写发布说明文件），`pnpm mq:land --body <文件> --wait`（开 PR、开自动合并，等 CI 通过、GitHub 合入）。只改版本号和 Markdown 时 CI 走快速路径，很快。没合入就不要往下走。
 6. 在**同一个 lane**、合入的那个提交上（`--merge` 合入，提交号不变），后台运行 `pnpm release`，日志写到 scratchpad。它会：在主工作区的 `target/publish` 增量构建（约 3 分钟），上传草稿并核对 SHA-256，触发 `release-smoke.yml` 在干净 runner 上装一遍、启动一遍（约 1 分钟），通过才公开；然后换本机 exe 和快捷方式、刷新 beta 通道、读回两个通道、在 issue 下留言。
 7. **看日志，不只看退出码**（管道到 `tail` 时退出码总是 0）。要看到 `✓ Published` 和 `✓ Channels read back`。
 

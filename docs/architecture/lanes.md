@@ -62,7 +62,7 @@ SessionStart / SessionEnd 必须放用户级：magpie 这类会话不从仓库�
 ## 开发、验证、合入
 
 1. 在 lane 里开发、提交。想在本机先验一遍时用 `pnpm verify`：`pnpm check`，改到 `src-tauri/` 或 `plugins/` 时加 `cargo test`，只改 Markdown 时只跑文档检查；通过的代码树会被记住，同一棵树不再重跑。land 不再在本机跑这些，由 PR 上 CI 的 `check` 把关。
-2. 一个功能单元完成并提交后，在 lane 里 `pnpm mq:land`，不用问用户。它 rebase 到 `origin/main`，推到远程分支 `land/<GitHub 用户名>/<机器名>-<分支名>`（pre-push 钩子跑 `scripts/land-check.mjs --light`：lane 的归属记录、Claude 署名行、已完成任务的提交记录、只改文档或版本号时的轻量检查，不跑 `pnpm check` 和 `cargo test`），没有 PR 就开一个（标题和正文取提交说明），再开启自动合并（`--merge`，提交号不变）。然后在后台跑 `pnpm mq:wait`：CI 的 `check` 通过、GitHub 合入后，它把主工作区快进到新的 `main`。PR 落后于 `main` 时由工作流 `update-behind-prs.yml` 更新（见下）；那个工作流出问题时可以 `pnpm mq:wait --update` 自己更新。`pnpm mq:land --wait` 把两步合在一起，在前台等。
+2. 一个功能单元完成并提交后，在 lane 里 `pnpm mq:land --body <文件>`，不用问用户。`<文件>` 是会话写在 scratchpad 里的中文 PR 正文（见下面「PR 的标题和正文」）。它 rebase 到 `origin/main`，推到远程分支 `land/<GitHub 用户名>/<机器名>-<分支名>`（pre-push 钩子跑 `scripts/land-check.mjs --light`：lane 的归属记录、Claude 署名行、已完成任务的提交记录、只改文档或版本号时的轻量检查，不跑 `pnpm check` 和 `cargo test`），没有 PR 就开一个（标题取第一个提交的英文标题，`--title` 可以换成一个总标题；正文用 `--body` 给的文件），再开启自动合并（`--merge`，提交号不变）。然后在后台跑 `pnpm mq:wait`：CI 的 `check` 通过、GitHub 合入后，它把主工作区快进到新的 `main`。PR 落后于 `main` 时由工作流 `update-behind-prs.yml` 更新（见下）；那个工作流出问题时可以 `pnpm mq:wait --update` 自己更新。`pnpm mq:land --wait` 把两步合在一起，在前台等。
 3. PR 合入才算完成，`mq:wait` 报告失败就不算：
    - rebase 冲突（land 时，或 `mq:wait` 报 PR 冲突）：land 会自动中止 rebase。`git fetch origin main && git rebase origin/main` 解决冲突后重新 land。
    - 本机检查或 CI 失败：在同一个 lane 修好、提交，再 land，PR 自动更新。计时类测试在机器负载高时偶尔失败，单独重跑通过就重新 land。
@@ -72,6 +72,32 @@ SessionStart / SessionEnd 必须放用户级：magpie 这类会话不从仓库�
 `main` 只通过在 GitHub 上合入 PR 移动（land 也是开 PR）。`.githooks/pre-push`（`core.hooksPath` 指向 `.githooks`）对任何人都拒绝直接推送 `main`；GitHub 的规则集也拒绝（管理员只能在 PR 上绕过，F30 第 8 步），所以紧急时用 `gh pr merge --admin` 合 PR。`CLAUDE_CODE_MERGE_QUEUE_EMERGENCY_PUSH=1` 只放行本机钩子，规则集临时改回 `always` 时才用得上。主工作区留给用户（例如 `pnpm tauri dev`），保持干净、停在 `main` 上。
 
 land 从 git 的 pre-push 钩子里跑检查，环境里带着 `GIT_DIR` 等变量。凡是在临时仓库里跑 git 的测试，开头都要去掉 `GIT_*` 变量，并确认 git 指向临时仓库：2026-11-12 一个测试因此把真实仓库改成了 `core.bare=true`，还往 `main` 上留下了作者 `t <t@t>` 的提交 `852a7aab`。
+
+## PR 的标题和正文
+
+标题用英文，取第一个提交的标题，和提交历史、合并提交对得上；一个 lane 有几个提交、第一个代表不了全部时，用 `--title "<英文总标题>"` 换掉。正文用中文，由会话写进 scratchpad 里的一个文件，用 `--body <文件>` 交给 land；land 在末尾加一条分隔线和「由 `pnpm mq:land` 从 `lane/N` 开出」。PR 已经开着时（重新 land），给了 `--body` 或 `--title` 就把 PR 的正文和标题换成新的，没给就不动。
+
+正文按下面的格式写，和 PR 模板一致。每段不手动折行：GitHub 把 PR 正文里的每个换行都显示成换行，按 72 列折的提交说明贴进去会一行长一行短。
+
+```markdown
+## 改了什么
+- 用户或开发者能感知到的变化，一条一行
+
+## 为什么
+一两句：起因、bug 的现象、任务编号
+
+## 验证
+- `pnpm check` 通过（666 条）
+- 实测：怎么做的、看到了什么
+
+## 注意
+契约变更、要手动做的事、没验证到的（没有就删掉这一节）
+
+## 关联
+任务 D31 · issue #12（多个提交时列出提交标题）
+```
+
+没给 `--body` 时，land 自动生成一份中文骨架：一句「land 时没有给中文说明」的提示、提交标题列表、按目录归类的改动范围、从任务文件推出的关联任务，英文提交说明去掉折行后收进折叠块。`task:claim`、放回任务这类只改任务文件的 PR 用固定的一段中文，不用另写。实现在 `scripts/mq/prBody.mjs`。
 
 ## 外部 PR
 
