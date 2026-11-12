@@ -13,7 +13,7 @@
 
 1. 修改插件并提高 `version`，在本机运行 `pnpm plugins:index`（需要旧索引的签名私钥，见下文；以及官方作者密钥 `~/.tauri/fly-island/plugin-author-signing.key`，公钥在 `plugins/author-key.json`）。脚本把插件打成 `plugins/packages/<id>-<version>.zip` 并写出作者签名 `<zip>.sig`，重写并签名 `plugins/index.json` 和 `plugins/revoked.json`。文本文件打包时统一成 LF，时间戳固定，所以同一份源码每次得到同一个哈希。
 2. 提交并 land。
-3. 在 `fuyu-plugins` 里把 `plugins/<id>.json` 的 `package` 改成新 zip 的地址（`https://raw.githubusercontent.com/TixXin/fuyu/main/plugins/packages/<id>-<version>.zip`），合并后 CI 更新市场索引。
+3. 不用再去 `fuyu-plugins` 改地址：它的 CI 每小时（以及 `main` 有变化时）读 `plugins/<id>.json` 的 `path` 里的清单，版本比 `package` 地址里的新，就改用同一文件夹里那个版本的 zip（`fuyu-plugins` 的 `scripts/lib/official.mjs`，2026-11-12 起，E20）。所以 land 之后一小时内市场就会更新；作者签名照样要通过，要的权限比上一版多时会开 `review-needed` issue，等维护者在 `plugins/<id>.json` 里写 `"approved": "<版本>"`。以前要手动改地址，漏改过两次（系统监控停在 1.2.0、待办进度环停在 1.0.1，见 PR #49）。
 
 `pnpm test` 会检查 `plugins/index.json` 和 zip 是否与示例插件的源码一致。已发布的版本不能修改，同一个版本号的包变了 `pnpm plugins:index` 会报错。
 
