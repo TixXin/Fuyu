@@ -66,8 +66,8 @@ function commitAndLand(paths, message, options) {
   git(["add", "-A", "--", ...paths]);
   git(["commit", "-q", "-m", message]);
   if (options["no-land"]) return 0;
-  const status = run("pnpm", ["mq:land"]);
-  if (status !== 0) console.error("没有 land 成功。rebase 冲突说明别人刚改了同一个任务：git rebase --abort 后 pnpm tasks 看看。");
+  const status = run("pnpm", ["mq:land", "--wait"]);
+  if (status !== 0) console.error("认领的 PR 没有合入。冲突说明别人刚改了同一个任务：git rebase --abort（land 时冲突的话）后 pnpm tasks 看看，换一项；检查失败就按上面的提示修。");
   return status;
 }
 
