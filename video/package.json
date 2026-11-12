@@ -1,0 +1,17 @@
+{
+  "name": "fuyu-video",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node ../node_modules/vite/bin/vite.js --config vite.config.ts",
+    "check": "node ../node_modules/typescript/bin/tsc -p tsconfig.json",
+    "browser": "browsers install chrome-headless-shell@stable --path .browser",
+    "render": "node render/render.mjs",
+    "still": "node render/render.mjs --still"
+  },
+  "devDependencies": {
+    "@puppeteer/browsers": "^2.10.0",
+    "puppeteer-core": "^24.0.0"
+  }
+}
