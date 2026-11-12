@@ -8,10 +8,6 @@ import { getInflinkState, installInflink, openLyricsLink, type InflinkState } fr
 const INFLINK_URL = "https://github.com/apoint123/InfLink-rs";
 const BETTERNCM_URL = "https://github.com/std-microblock/BetterNCM-Installer/releases/latest";
 
-/**
- * NetEase's InfLink-rs plugin, which gives the music page a progress bar and exact lyrics. The
- * island installs it into BetterNCM's plugins folder; BetterNCM itself the user installs.
- */
 export function InflinkRow() {
   const text = useTranslation().settings.lyrics.inflink;
   const errorText = useErrorText();

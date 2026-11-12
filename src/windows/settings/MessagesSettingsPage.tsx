@@ -17,11 +17,6 @@ import type { WeChatRemindersController } from "../../features/messages/wechat/W
 import { useTranslation } from "../../i18n";
 import "./MessagesSettingsPage.css";
 
-/**
- * Messages: how new messages show, then QQ, WeChat and Mail on one page (they were three). QQ and
- * WeChat have a receive switch each; Mail its module switch, the mailboxes, and the form that adds
- * or re-authorizes one.
- */
 export function MessagesSettingsPage({
   settings,
   qqNotifications,
@@ -96,7 +91,6 @@ export function MessagesSettingsPage({
   );
 }
 
-/** A group's footer: what went wrong, else the hint. */
 function Problem({ error, hint }: { error: string | null | undefined; hint: string }) {
   return error ? <span className="messages-settings__error" role="alert">{error}</span> : <>{hint}</>;
 }
@@ -129,7 +123,6 @@ function QQGroup({ controller, title, hint }: { controller: QQNotificationsContr
 
 function MailGroups({ settings, onSettingsChange }: { settings: IslandSettings; onSettingsChange: (settings: IslandSettings) => void }) {
   const t = useTranslation();
-  // The island reconnects the saved mailboxes at startup; this page only follows them.
   const { mailboxes, busy, actionError, connect, setEnabled, disconnect, openHelp } = useMailAccounts({ restore: false });
   const [reauthorizing, setReauthorizing] = useState<string | null>(null);
   const hosts = Object.fromEntries(loadMailAccounts().map((account) => [account.email, account.host]));

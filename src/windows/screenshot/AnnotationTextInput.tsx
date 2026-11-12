@@ -2,11 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { ANNOTATION_FONT, TEXT_LINE_HEIGHT } from "../../features/screenshot/drawAnnotations";
 import type { Point } from "../../features/screenshot/selection";
 
-/**
- * The box a text annotation is typed in, where it was clicked, in the colour and size it will be
- * drawn. Enter (or clicking away) keeps the text, Shift+Enter starts a new line, Esc drops it;
- * keys typed here never reach the overlay's own shortcuts.
- */
 export function AnnotationTextInput({
   at,
   color,
@@ -15,10 +10,8 @@ export function AnnotationTextInput({
   onCommit,
   onCancel,
 }: {
-  /** CSS pixels. */
   at: Point;
   color: string;
-  /** Font size in CSS pixels. */
   size: number;
   placeholder: string;
   onCommit: (text: string) => void;
@@ -29,7 +22,6 @@ export function AnnotationTextInput({
   const done = useRef(false);
 
   useEffect(() => {
-    // After the press that opened it is over, or the press takes the focus back.
     const timer = setTimeout(() => box.current?.focus(), 0);
     return () => clearTimeout(timer);
   }, []);

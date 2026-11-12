@@ -1,11 +1,6 @@
 import { useEffect, useState } from "react";
 import { getPetSpritesheet } from "./api";
 
-/**
- * The pet's spritesheet URL: undefined while it loads, null when the pet is gone or its
- * sheet cannot be read (the caller shows something else then). Sheets, and failures, are
- * cached in api.ts; a new `retryToken` (the plugin's settings changed) asks again after a failure.
- */
 export function usePetSheet(id: string | null, retryToken?: unknown): string | null | undefined {
   const [sheet, setSheet] = useState<{ id: string; src: string | null } | null>(null);
 

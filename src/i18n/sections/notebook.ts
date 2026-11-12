@@ -2,7 +2,6 @@ export type NotebookText = {
   sectionLabel: string;
   addTaskHint: string;
   dailyNoteLabel: string;
-  /** Start-up notice about moving the todos to todos.json. */
   dataNotice: { migrationFailed: string; reimported: string };
   dismissNotice: string;
   pickDate: string;

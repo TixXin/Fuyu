@@ -1,10 +1,8 @@
 import type { LocalApiResponse } from "./api";
 
 export type LocalApiHandler = (params: unknown) => LocalApiResponse | Promise<LocalApiResponse>;
-/** Handlers keyed by method name, e.g. `todos.add`. Supplied by the features that own the data. */
 export type LocalApiHandlers = Record<string, LocalApiHandler>;
 
-/** Runs one request; never throws, so the native side always gets an answer. */
 export async function dispatchLocalApiRequest(
   handlers: LocalApiHandlers,
   method: string,

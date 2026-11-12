@@ -1,18 +1,5 @@
 import type { AppliedTodosChange, TodosChange, TodosData } from "./api";
 
-/**
- * Where this window keeps the todos: in todos.json through Rust ("file"), or in
- * localStorage as older versions did ("local": outside Tauri, or when the
- * migration failed). storage.ts reads and writes through this.
- *
- * In file mode the data is kept here, and saves are queued: one write at a
- * time, later changes merged into the next write, and a failed write retried,
- * so a burst of typing does not become a burst of disk writes. Plugins and the
- * local API change todos.json too; their changes arrive through
- * `adoptTodoFileData`, win over unsaved edits of the same field, and reach the
- * hooks that subscribed with `subscribeTodoFile`.
- */
-
 type Writer = (change: TodosChange) => Promise<AppliedTodosChange>;
 type Listener = (data: Readonly<TodosData>, changed: ReadonlySet<keyof TodosData>) => void;
 export type TodoStoreNotice = "migrationFailed" | "reimported";
@@ -28,14 +15,12 @@ let writing = false;
 let notice: TodoStoreNotice | null = null;
 const listeners = new Set<Listener>();
 
-/** Switches to todos.json with the data it holds now. */
 export function switchToTodoFile(initial: TodosData, initialRevision: number, write: Writer) {
   data = { ...initial };
   revision = initialRevision;
   writer = write;
 }
 
-/** The data from todos.json, or null while the todos are in localStorage. */
 export function todoFileData(): Readonly<TodosData> | null {
   return data;
 }
@@ -44,14 +29,12 @@ export function setTodoStoreNotice(next: TodoStoreNotice) {
   notice = next;
 }
 
-/** The start-up notice for the user, once. */
 export function takeTodoStoreNotice() {
   const current = notice;
   notice = null;
   return current;
 }
 
-/** Calls `listener` when a plugin or script changed todos.json; returns the unsubscribe function. */
 export function subscribeTodoFile(listener: Listener) {
   listeners.add(listener);
   return () => {
@@ -59,10 +42,6 @@ export function subscribeTodoFile(listener: Listener) {
   };
 }
 
-/**
- * Takes `fields` of data a plugin or script saved; they replace this window's
- * unsaved edits of the same fields. Other fields keep this window's values.
- */
 export function adoptTodoFileData(next: TodosData, nextRevision: number, fields: readonly (keyof TodosData)[]) {
   if (!data) return;
   revision = Math.max(revision, nextRevision);
@@ -80,7 +59,6 @@ export function adoptTodoFileData(next: TodosData, nextRevision: number, fields:
   for (const listener of listeners) listener(adopted, changed);
 }
 
-/** Saves the fields of `change` that differ from what todos.json holds. */
 export function queueTodoChange(change: TodosChange) {
   if (!data) return;
   let changed = false;
@@ -107,7 +85,6 @@ async function flush() {
     applied = await writer({ ...change, baseRevision: revision });
   } catch (error) {
     console.error("Failed to save the todos; trying again", error);
-    // Newer values queued meanwhile win over the ones that failed.
     pending = { ...change, ...pending };
     hasPending = true;
     writing = false;

@@ -6,11 +6,6 @@ import { RemoteResultLines } from "./RemoteResultLines";
 import "./AgentReplyMarkerSettings.css";
 import { getReplyMarkerState, setReplyMarker, type ReplyMarkerState } from "./api";
 
-/**
- * Settings → AI Agent: the optional reply status marker. Its state is whether the island's rules
- * file is there, read from disk rather than kept as a setting, so deleting it by hand shows here too.
- * The exact text it writes can be read before switching it on.
- */
 export function AgentReplyMarkerSettings() {
   const text = useTranslation().settings.agent.replyMarker;
   const errorText = useErrorText();

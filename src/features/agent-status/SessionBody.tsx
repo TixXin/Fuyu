@@ -1,11 +1,6 @@
 import { useTranslation } from "../../i18n";
 import type { AgentSessionSummary } from "./api";
 
-/**
- * What a working session row says under its title, in at most two lines (the row height the
- * island is sized by): the latest prompt, then the tool being called or else the latest reply.
- * Null when there is nothing to show, so the row folds to one line.
- */
 export function SessionBody({ session, showActivity }: { session: AgentSessionSummary; showActivity: boolean }) {
   const t = useTranslation();
   const prompt = showActivity ? session.lastPrompt : null;

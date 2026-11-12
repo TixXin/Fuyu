@@ -1,4 +1,3 @@
-/* Everything but the island is dimmed by the hole's shadow; the hole itself lets the island show. */
 .onboarding-spotlight {
   position: fixed;
   border-radius: 0 0 var(--spot-radius) var(--spot-radius);
@@ -8,7 +7,6 @@
   animation: spotlightIn 500ms ease-out backwards;
 }
 
-/* A ring that grows out of the island and fades, asking for a touch. */
 .onboarding-spotlight::after {
   content: "";
   position: absolute;

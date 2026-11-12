@@ -1,4 +1,3 @@
-/* The list template of plugin pages. Scrolls like the clipboard page. */
 .plugin-list {
   min-height: 0;
   min-width: 0;
@@ -215,18 +214,11 @@ button.plugin-list__main:hover .plugin-list__title {
   text-overflow: ellipsis;
 }
 
-/*
- * List pages sit straight on the island like the Agent page (AgentSessionsPanel.css): no card,
- * rows without boxes, told apart by size and brightness, only the hovered row lights up. The
- * text takes the island's ink (stageStyle.ts sets --island-ink-rgb), so a light island gets
- * dark text. The page frame itself is PluginViewPage's; this only undoes it for list pages.
- */
 .plugin-view.plugin-view--list {
   --list-ink: var(--island-ink-rgb, 241, 240, 246);
   --text-1: rgba(var(--list-ink), 0.96);
   --text-2: rgba(var(--list-ink), 0.68);
   --text-3: rgba(var(--list-ink), 0.54);
-  /* Reaches 6px into the island's side padding, room for the hovered row's highlight. */
   margin-inline: -6px;
   padding: 2px 0 0;
   background: none;
@@ -297,7 +289,6 @@ button.plugin-list__main:hover .plugin-list__title {
   color: var(--text-3);
 }
 
-/* The link mark shows on the hovered row only, as the Agent page's row buttons do. */
 .plugin-view--list .plugin-list__link {
   opacity: 0;
   transition: opacity 140ms ease;

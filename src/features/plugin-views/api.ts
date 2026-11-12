@@ -2,16 +2,12 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { openUrl } from "@tauri-apps/plugin-opener";
 
-// 与 src-tauri/src/plugin_host/manifest.rs 中的 LocalizedText 对应。
 export type ViewLocalizedText = { "zh-CN": string; en: string };
 
-// 与 src-tauri/src/plugin_host/view_specs.rs 中的 ViewTemplate 对应。
 export type PluginViewTemplate = "list" | "detail" | "form" | "status" | "webview";
 
-// 与 src-tauri/src/plugin_host/runtime.rs 中的 RuntimeStatus 对应。
 export type PluginViewRunState = "stopped" | "starting" | "running" | "restarting" | "crashed" | "idle";
 
-// 与 src-tauri/src/plugin_host/views.rs 中的 PluginViewEntry 对应。
 export type PluginViewEntry = {
   pluginId: string;
   pluginName: ViewLocalizedText;
@@ -19,39 +15,29 @@ export type PluginViewEntry = {
   title: ViewLocalizedText;
   icon: string;
   template: PluginViewTemplate;
-  /** Webview pages only: their height on the island in pixels. */
   height?: number;
-  /** Webview pages only: the width they ask for (E15); the island widens for it. */
   width?: number;
-  /** Webview pages only: "none" draws the page without the island's card and title (E15). */
   frame?: "card" | "none";
   status: PluginViewRunState;
   error: string | null;
 };
 
-// 与 src-tauri/src/plugin_host/webviews.rs 中的 WebviewBounds 对应（窗口内的 CSS 像素）。
 export type PluginWebviewBounds = { x: number; y: number; width: number; height: number };
 
-/** Shows a webview page over `bounds` of the island window (creating it the first time, in `locale`) or moves it there. */
-/** `ink` ("r, g, b"): the island's text color, for a page drawn without the card (E15). */
 export function showPluginWebview(id: string, viewId: string, bounds: PluginWebviewBounds, locale: string, ink: string | null = null) {
   return invoke<void>("show_plugin_webview", { id, viewId, bounds, locale, ink });
 }
 
-/** Closes a webview page; the state it saved is kept for the next time. */
 export function hidePluginWebview(id: string, viewId: string) {
   return invoke<void>("hide_plugin_webview", { id, viewId });
 }
 
 export type PluginStatusTone = "neutral" | "accent" | "warning" | "danger";
 
-// 与 src-tauri/src/plugin_host/views.rs 中的 StatusCell 对应。
 export type PluginStatusCell = { label: string; value: string; tone: PluginStatusTone };
 
-// 与 src-tauri/src/plugin_host/views.rs 中的 StatusBattery 对应。
 export type PluginStatusBattery = { level: number; tone: PluginStatusTone };
 
-// 与 src-tauri/src/plugin_host/views.rs 中的 PluginStatusEntry 对应。
 export type PluginStatusEntry = {
   pluginId: string;
   itemId: string;
@@ -59,32 +45,24 @@ export type PluginStatusEntry = {
   text: string;
   tooltip: string | null;
   tone: PluginStatusTone;
-  /** Drawn instead of the text when present. */
   cells?: PluginStatusCell[];
-  /** 0-1: a small progress ring before the text or cells. */
   ring?: number;
-  /** Upright batteries drawn instead of the text and the cells. */
   batteries?: PluginStatusBattery[];
 };
 
-/** A status item a plugin declares, set or not, for the collapsed bar settings (C12). */
 export type PluginStatusItemEntry = { pluginId: string; pluginName: ViewLocalizedText; itemId: string };
 
-// 与 src-tauri/src/plugin_host/views.rs 中的 PluginViewsSnapshot 对应。
 export type PluginViewsSnapshot = { views: PluginViewEntry[]; status: PluginStatusEntry[]; statusItems: PluginStatusItemEntry[] };
 
-// 与 src-tauri/src/plugin_host/views.rs 中的 VIEW_EVENT 对应。
 const PLUGIN_VIEW_CHANGED_EVENT = "plugin-view-changed";
 export type PluginViewChanged =
   | { kind: "view"; pluginId: string; viewId: string; model: unknown }
   | { kind: "status"; pluginId: string; itemId: string; status: unknown }
   | { kind: "reset"; pluginId: string; status: PluginViewRunState };
 
-// 与 src-tauri/src/plugin_host/reveal.rs 中的 OPEN_VIEW_EVENT 对应。
 const PLUGIN_OPEN_VIEW_EVENT = "plugin-open-view";
 export type PluginOpenView = { pluginId: string; viewId: string };
 
-/** Calls `onOpen` when a plugin asks to open one of its pages (island.openView); resolves to the unlisten function. */
 export function listenPluginOpenView(onOpen: (request: PluginOpenView) => void) {
   return listen<PluginOpenView>(PLUGIN_OPEN_VIEW_EVENT, (event) => onOpen(event.payload));
 }
@@ -93,12 +71,10 @@ export function listPluginViews() {
   return invoke<PluginViewsSnapshot>("list_plugin_views");
 }
 
-/** Calls `onChange` for plugin view, status and restart changes; resolves to the unlisten function. */
 export function listenPluginViewChanged(onChange: (change: PluginViewChanged) => void) {
   return listen<PluginViewChanged>(PLUGIN_VIEW_CHANGED_EVENT, (event) => onChange(event.payload));
 }
 
-/** Tells the plugin its page is on screen or not; resolves to the page's model when shown (null before the plugin sent one). */
 export function setPluginViewVisible(id: string, viewId: string, visible: boolean) {
   return invoke<unknown>("set_plugin_view_visible", { id, viewId, visible });
 }
@@ -119,7 +95,6 @@ export function restartPlugin(id: string) {
   return invoke<void>("restart_plugin", { id });
 }
 
-/** Opens a link from a plugin page in the browser; only https links are allowed. */
 export function openPluginViewLink(url: string) {
   return url.startsWith("https://") ? openUrl(url) : Promise.resolve();
 }

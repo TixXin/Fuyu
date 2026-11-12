@@ -11,7 +11,6 @@
   flex: none;
 }
 
-/* The session ring's "running" green, readable on the dark island. */
 .device-alert--on .device-alert__icon,
 .device-alert--charge .device-alert__icon {
   color: var(--mint-text, #34c759);

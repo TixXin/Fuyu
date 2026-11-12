@@ -4,7 +4,6 @@ import type { IslandSettings } from "./types";
 
 const DARK_QUERY = "(prefers-color-scheme: dark)";
 
-/** Whether Windows is set to dark mode for apps, following changes. */
 export function useSystemDark() {
   const [dark, setDark] = useState(() => window.matchMedia(DARK_QUERY).matches);
   useEffect(() => {
@@ -16,10 +15,6 @@ export function useSystemDark() {
   return dark;
 }
 
-/**
- * The settings with the colours of the set the mode uses (C31, C33.3). The colour fields are only
- * a copy of that set, so settings saved from these keep both sets as they were.
- */
 export function useResolvedTheme(stored: IslandSettings) {
   const systemDark = useSystemDark();
   return useMemo(() => resolveThemeColors(stored, systemDark), [stored, systemDark]);

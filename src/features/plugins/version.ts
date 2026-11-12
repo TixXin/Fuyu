@@ -1,9 +1,3 @@
-/**
- * Semantic-version order, pre-releases included, like `compare_versions` in
- * src-tauri/src/plugin_host/manifest.rs: `1.3.0-beta.1` < `1.3.0-beta.2` < `1.3.0`;
- * missing parts count as 0 and build metadata after `+` is ignored. Negative when
- * `left` is older, positive when newer, 0 when the same.
- */
 export function compareVersions(left: string, right: string): number {
   const split = (version: string) => {
     const [core = "", ...pre] = (version.split("+")[0] ?? "").trim().split("-");
@@ -32,7 +26,6 @@ export function compareVersions(left: string, right: string): number {
   return Math.sign(left_.length - right_.length);
 }
 
-/** True when `candidate` is newer than `current`, e.g. a release over its own beta. */
 export function isNewerVersion(candidate: string, current: string): boolean {
   return compareVersions(candidate, current) > 0;
 }

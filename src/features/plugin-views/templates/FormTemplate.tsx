@@ -5,7 +5,6 @@ import { submitPluginView } from "../api";
 import { formValues, normalizeFormModel, type FormField, type FormValue } from "../templateModels";
 import "./FormTemplate.css";
 
-/** The form template: the plugin setting field types plus multiline; submitting sends view.submit. */
 export function FormTemplate({ pluginId, viewId, model }: { pluginId: string; viewId: string; model: unknown }) {
   const t = useTranslation();
   const { locale } = useLocale();

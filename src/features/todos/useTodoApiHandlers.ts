@@ -5,11 +5,6 @@ import type { ScheduledTodo, TodoItem } from "./types";
 
 export type TodoApiHandlers = Record<string, (params: unknown) => TodoApiResult>;
 
-/**
- * Handlers for the local API's todo and note calls, keyed by method name. They work
- * on the latest state through a ref, and update the ref straight away so calls that
- * arrive before the next render still see each other's changes.
- */
 export function useTodoApiHandlers({
   date,
   todos,

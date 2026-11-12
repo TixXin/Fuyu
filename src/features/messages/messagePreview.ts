@@ -2,7 +2,6 @@ import zhCN from "../../i18n/locales/zh-CN.ts";
 import type { Translations } from "../../i18n/types";
 
 export type MessageSource = "qq" | "wechat" | "qqMail";
-/** Where a collapsed preview comes from: a message source, or a plugin's island.notify. */
 export type PreviewSource = MessageSource | "plugin";
 
 export type MessagePreview = {
@@ -10,15 +9,10 @@ export type MessagePreview = {
   title: string;
   body: string;
   receivedAt: number;
-  /** The mailbox a mail preview came from, which picks the mail icon. */
   account?: string | null;
-  /** A plugin message's own icon (island.notify `icon: "media"`), as a data URL. */
   iconUrl?: string | null;
-  /** A plugin message that, alone in the new-messages popup, shows without a title row or card. */
   inline?: boolean;
-  /** A plugin message with the island's previous / play-pause / next beside it (island.notify `controls: "media"`). */
   mediaControls?: boolean;
-  /** The WeChat chat a preview read from WeChat's chat list came from, which clicking it opens. */
   chat?: string | null;
 };
 

@@ -33,7 +33,6 @@ export type SettingsAgentText = {
   sessionHoursOption: (hours: number) => string;
   sessionHoursHint: string;
   sessionCardSection: string;
-  /** Settings → AI Agent → Remote computers (AgentRemoteHostsSettings): read over SSH. */
   remoteIntro: string;
   remoteRequirements: string;
   remoteHostsSection: string;
@@ -45,7 +44,6 @@ export type SettingsAgentText = {
   remoteFetching: string;
   remoteFetchedAt: (time: string, sessions: number) => string;
   remoteFailed: (reason: string) => string;
-  /** Sessions come, but approvals from there cannot reach the island's cards. */
   remoteApprovalFailed: (reason: string) => string;
   remoteRemove: (name: string) => string;
   remoteAdd: string;
@@ -59,7 +57,6 @@ export type SettingsAgentText = {
   remotePort: string;
   remoteSave: string;
   remoteCancel: string;
-  /** The group with a switch per agent kind. */
   agentsSection: string;
   showClaudeCode: string;
   showCodex: string;
@@ -85,32 +82,24 @@ export type SettingsAgentText = {
     waiting: string;
     seconds: string;
     secondsValue: (seconds: number) => string;
-    /** Reminding again about a session still waiting on the user (roadmap B6.4.1). */
     remind: string;
     remindDescription: string;
     remindValue: (seconds: number) => string;
-    /** Claude's or Codex's usage reaching a level (roadmap B6.5.2). */
     quota: string;
     quotaDescription: string;
     quotaValue: (percent: number) => string;
   };
-  /** Pushing agent events to the phone with Bark (roadmap B6.5.5). */
   push: {
     title: string;
     enabled: string;
     enabledHint: string;
     channel: string;
     channels: Record<"bark" | "ccConnect", string>;
-    /** Picking, by computer, the cc-connect chats a push goes to (src/features/agent-status/push/CcConnectPushTargets.tsx). */
     ccConnect: {
       thisComputer: string;
-      /** A computer's switch: push its sessions (Bark and cc-connect alike). */
       hostHint: string;
-      /** The row with the project picker. */
       projectTitle: string;
-      /** A project in the picker: its name and agent. */
       project: (name: string, agent: string) => string;
-      /** After a project in the picker: how many of its chats are pushed to. */
       picked: (count: number) => string;
       projectHint: string;
       noProjects: string;
@@ -149,7 +138,6 @@ export type SettingsAgentText = {
     hint: string;
     ccConnectHint: string;
   };
-  /** Approving agents' permission requests on the island (roadmap B6 phase 2). */
   approval: {
     title: string;
     onIsland: string;
@@ -157,7 +145,6 @@ export type SettingsAgentText = {
     whenInFrontHint: string;
     hint: string;
   };
-  /** Rules hiding agent sessions by folder or prompt text (roadmap B6.4.3). */
   filters: {
     title: string;
     hint: string;
@@ -169,7 +156,6 @@ export type SettingsAgentText = {
     promptPlaceholder: string;
     remove: (value: string) => string;
   };
-  /** The optional reply status marker in the user's CLAUDE.md (roadmap B9). */
   replyMarker: {
     title: string;
     toggle: string;
@@ -177,7 +163,6 @@ export type SettingsAgentText = {
     outdated: string;
     preview: string;
   };
-  /** Installing the island's extension into VS Code and editors built on it (task A9). */
   editorExtension: {
     title: string;
     hint: string;

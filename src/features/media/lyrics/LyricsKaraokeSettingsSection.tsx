@@ -13,11 +13,9 @@ import { karaokeWords } from "./lrc";
 import { karaokeLook, LYRICS_KARAOKE_DIM, type LyricsKaraokeColor, type LyricsKaraokeFallback, type LyricsKaraokeFill } from "./lyricsSettings";
 import "./LyricsKaraokeSettingsSection.css";
 
-/** The preview's line takes this long to fill, then starts again after a short pause. */
 const PREVIEW_FILL_MS = 3_600;
 const PREVIEW_LOOP_MS = 4_800;
 
-/** A strip like the collapsed island, playing a sample line with the chosen look, over and over. */
 function KaraokePreview({ settings, line }: { settings: IslandSettings; line: string }) {
   const [round, setRound] = useState(0);
   useEffect(() => {
@@ -37,7 +35,6 @@ function KaraokePreview({ settings, line }: { settings: IslandSettings; line: st
   );
 }
 
-/** Settings → Music: how the line on the collapsed island lights up as it is sung (C30). */
 export function LyricsKaraokeSettingsSection({ settings, onSettingsChange }: { settings: IslandSettings; onSettingsChange: (settings: IslandSettings) => void }) {
   const text = useTranslation().settings.lyrics.karaoke;
   const set = (patch: Partial<IslandSettings>) => onSettingsChange({ ...settings, ...patch });

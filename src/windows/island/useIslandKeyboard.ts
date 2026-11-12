@@ -5,10 +5,6 @@ import { pageCycleDirection, pageDigitFromEvent } from "../../features/appearanc
 import { cycleShortcutPage, pageForAltDigit, type IslandFeatures } from "./features";
 import type { IslandMode, IslandPage } from "./types";
 
-/**
- * In-window keys: the clipboard history shortcut toggles its page, Escape collapses the island, T
- * hides or shows the screenshot pins (C41.4; nothing without pins, and not while typing).
- */
 export function useIslandKeyboard(
   clipboardShortcutEnabled: boolean,
   clipboardShortcut: string,
@@ -33,8 +29,6 @@ export function useIslandKeyboard(
         return;
       }
 
-      // Only while this window is focused and expanded. A collapsed or tucked island
-      // stays put, and holding the key does not repeat the switch.
       const digit = pageDigitFromEvent(event, pageDigitModifiers);
       if (digit !== null && mode === "expanded") {
         const target = pageForAltDigit(features, digit);

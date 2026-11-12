@@ -3,10 +3,8 @@ import { RotateCcw } from "lucide-react";
 import { useTranslation } from "../../i18n";
 import "./ResetAppearanceButton.css";
 
-// An unanswered confirmation falls back so a stray click later cannot reset.
 const CONFIRM_TIMEOUT_MS = 4_000;
 
-/** Resets the theme (or, with `layout`, the sizes and display) after an inline confirmation step. */
 export function ResetAppearanceButton({ onReset, layout = false }: { onReset: () => void; layout?: boolean }) {
   const t = useTranslation();
   const text = t.settings.resetAppearance;

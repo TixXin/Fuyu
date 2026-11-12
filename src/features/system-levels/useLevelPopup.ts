@@ -1,14 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { listenLevelChanges, setLevelPopupEnabled, type LevelChange } from "./api";
 
-/** How long the popup stays after the last change. */
 export const LEVEL_POPUP_MS = 1500;
 
-/**
- * The volume or brightness the collapsed island shows right after it changed, or null. `watch`
- * runs the native watcher (the setting is on); `show` says whether the island may show it now
- * (collapsed, not tucked away, not quiet for a game). Changes while it may not are dropped.
- */
 export function useLevelPopup(watch: boolean, show: boolean): LevelChange | null {
   const [change, setChange] = useState<LevelChange | null>(null);
   const showRef = useRef(show);

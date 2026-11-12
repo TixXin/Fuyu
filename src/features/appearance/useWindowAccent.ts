@@ -8,11 +8,6 @@ type AccentSettings = Pick<IslandSettings, "accentMode" | "accentColor">;
 
 const accentOf = ({ accentMode, accentColor }: IslandSettings): AccentSettings => ({ accentMode, accentColor });
 
-/**
- * Gives a window other than the island (settings, clipboard, translation) the theme's accent, on
- * its document root. `settings` when the window holds them (the settings window); otherwise they
- * are read from the shared storage, and again whenever the island or settings save them.
- */
 export function useWindowAccent(settings?: AccentSettings) {
   const [stored, setStored] = useState(() => accentOf(loadSettings()));
   const reads = settings === undefined;

@@ -1,17 +1,12 @@
-// The built-in plugin `focusd.center-pattern` (manifest in src-tauri/src/plugin_host/builtin.rs):
-// reading its settings, the pet a session's agents act out, and the pet list for its page.
 import type { PetInfo } from "./api";
 import { CENTER_PATTERNS, type CenterPatternId, type PetMood } from "./patterns.ts";
 
 export const CENTER_PATTERN_PLUGIN_ID = "focusd.center-pattern";
-/** The plugin's string setting holding a pet's id; its page shows it as a list of pets. */
 export const CENTER_PATTERN_PET_KEY = "pet";
-/** How long a pet keeps waving after an agent finished (matches the island's held title). */
 export const PET_DONE_HOLD_MS = 3000;
 
 export type CenterPatternChoice = { pattern: CenterPatternId; petId: null } | { pattern: "pet"; petId: string };
 
-/** What the plugin's settings ask for; anything unknown falls back to the eyes. */
 export function centerPatternChoice(settings: Record<string, unknown>): CenterPatternChoice {
   const pattern = settings.pattern;
   const petId = typeof settings[CENTER_PATTERN_PET_KEY] === "string" ? (settings[CENTER_PATTERN_PET_KEY] as string).trim() : "";
@@ -19,20 +14,13 @@ export function centerPatternChoice(settings: Record<string, unknown>): CenterPa
   return { pattern: CENTER_PATTERNS.find((known) => known === pattern) ?? "eyes", petId: null };
 }
 
-/** The plugin's size setting: px tall, as the bar's 24 px rings by default; 16 to 30 fit the 38 px bar. */
 export function centerPatternSize(settings: Record<string, unknown>): number {
   const size = settings.size;
   return typeof size === "number" && Number.isFinite(size) ? Math.round(Math.min(30, Math.max(16, size))) : 24;
 }
 
-/** A session or a reported agent, as far as the pet cares. */
 export type AgentActivity = { phase: string; updatedAt: number };
 
-/**
- * What the pet acts out for the agents: waiting for the user beats running, running beats
- * failed or possibly stopped (stale), and an agent that finished under `PET_DONE_HOLD_MS` ago
- * gets a wave; otherwise idle.
- */
 export function petMoodFor(agents: readonly AgentActivity[], now: number): PetMood {
   const phases = new Set(agents.map((agent) => agent.phase));
   if (phases.has("waiting")) return "waiting";
@@ -41,7 +29,6 @@ export function petMoodFor(agents: readonly AgentActivity[], now: number): PetMo
   return agents.some((agent) => agent.phase === "completed" && isFresh(agent, now)) ? "done" : "idle";
 }
 
-/** When the next wave ends (the mood may change then), or null when none is under way. */
 export function petMoodChangesAt(agents: readonly AgentActivity[], now: number): number | null {
   const ends = agents
     .filter((agent) => agent.phase === "completed" && isFresh(agent, now))
@@ -53,14 +40,8 @@ function isFresh(agent: AgentActivity, now: number) {
   return now - agent.updatedAt < PET_DONE_HOLD_MS && now >= agent.updatedAt;
 }
 
-/** The pets on disk as the plugin page knows them: still reading, unreadable, or the list. */
 export type PetList = readonly PetInfo[] | "loading" | "failed";
 
-/**
- * The pet list for the plugin page: an empty "none chosen" entry first (it says why when there
- * is nothing to pick), every pet found, and the saved one marked missing when it is gone.
- * While the list loads, only the saved value, labelled as loading.
- */
 export function petChoices(
   pets: PetList,
   current: string,

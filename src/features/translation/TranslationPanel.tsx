@@ -9,10 +9,6 @@ import { useTranslationRequest } from "./useTranslationRequest";
 import { useTranslationSettings } from "./useTranslationSettings";
 import "./TranslationPanel.css";
 
-/**
- * Translation as a page of the expanded island. It shares settings, key, clipboard fill and
- * auto-translate with the translation window, and keeps its text while the island collapses.
- */
 export function TranslationPanel({ isOpen, onOpenSettings }: { isOpen: boolean; onOpenSettings: () => void }) {
   const t = useTranslation();
   const errorText = useErrorText();
@@ -36,7 +32,6 @@ export function TranslationPanel({ isOpen, onOpenSettings }: { isOpen: boolean; 
   const providerName = text.providers[settings.provider];
   const model = settings.models[settings.provider] || DEFAULT_PROVIDER_MODELS[settings.provider];
 
-  // Checked each time the page opens, so a key saved in the settings window meanwhile is seen.
   useEffect(() => {
     if (!isOpen) return;
     let didCancel = false;
@@ -56,7 +51,6 @@ export function TranslationPanel({ isOpen, onOpenSettings }: { isOpen: boolean; 
     skipAutoSource.current = result ? source.trim() : null;
   }, []);
 
-  // Opening shows a quick result the island asked for, or fills an empty source from the clipboard.
   useEffect(() => {
     if (!isOpen) return;
     let didCancel = false;

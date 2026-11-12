@@ -15,7 +15,6 @@ type Status =
   | { kind: "restored"; count: number }
   | { kind: "error"; message: string };
 
-/** Settings → General: save the settings to a file, or restore them from one. */
 export function SettingsBackupSection() {
   const t = useTranslation();
   const errorText = useErrorText();

@@ -9,18 +9,15 @@ import { AGENT_SOUND_EVENTS } from "./events";
 import { planSoundPack } from "./packManifest";
 import "./SoundPacksGroup.css";
 
-/** JSON files larger than this are not manifests; they are not read. */
 const MAX_MANIFEST_BYTES = 256 * 1024;
 
 type Status = { kind: "idle" } | { kind: "busy" } | { kind: "done"; text: string } | { kind: "error"; text: string };
 
-/** Settings → Sounds → Sound packs: the imported packs, removing one, importing a folder. */
 export function SoundPacksGroup({
   packs,
   onChanged,
 }: {
   packs: SoundPack[];
-  /** After an import (with the new pack) or a removal. */
   onChanged: (imported?: SoundPack) => void;
 }) {
   const t = useTranslation();

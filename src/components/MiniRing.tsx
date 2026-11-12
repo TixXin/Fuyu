@@ -2,36 +2,24 @@ import type { CSSProperties } from "react";
 import { ringArc, ringRadius, segmentStarts } from "../utils/ring.ts";
 import "./MiniRing.css";
 
-/** One concentric ring: `value` 0–1 of the way round, on its own track. */
 export type MiniRingTrack = { value: number; color: string; trackColor?: string };
-/** One part of a single segmented ring: `value` 0–1 of the circle. */
 export type MiniRingSegment = { value: number; color: string };
 
 type MiniRingProps = {
-  /** Concentric rings, outermost first. Ignored when `segments` is given. */
   rings?: readonly MiniRingTrack[];
-  /** One ring split into parts in this order, clockwise from 12 o'clock. */
   segments?: readonly MiniRingSegment[];
-  /** Outer size in px (default 20). */
   size?: number;
-  /** Stroke width in px (default 2.5). */
   strokeWidth?: number;
-  /** Space between concentric rings, and between segments, in px (default 1.5). */
   gap?: number;
-  /** Track under every ring that sets none (default: the island's ink at 12%, so light on a dark island and dark on a light one). */
   trackColor?: string;
-  /** Short text in the middle, e.g. a count. */
   label?: string;
-  /** What the ring says, for screen readers; the caller translates it. */
   ariaLabel: string;
-  /** Hover tooltip; the caller translates it. */
   title?: string;
   className?: string;
 };
 
 const DEFAULT_TRACK = "rgba(var(--island-ink-rgb, 241, 240, 246), 0.12)";
 
-/** A small SVG progress ring: concentric rings, or one ring in coloured segments. */
 export function MiniRing({
   rings = [],
   segments,
@@ -52,7 +40,6 @@ export function MiniRing({
       cx={center}
       cy={center}
       r={radius}
-      // A style, not the stroke attribute: colours may be CSS variables (the usage rings' are).
       style={{ stroke: color }}
       strokeWidth={strokeWidth}
       strokeDasharray={arc === "track" ? undefined : arc?.dashArray}
@@ -63,7 +50,6 @@ export function MiniRing({
   if (segments) {
     const radius = ringRadius(size, strokeWidth, 0, gap);
     const shown = segmentStarts(segments.map((segment) => segment.value));
-    // Gaps only separate neighbours; a lone segment closes the ring.
     const segmentGap = shown.filter((segment) => segment.share > 0).length > 1 ? gap : 0;
     parts.push(circle("track", radius, trackColor, "track"));
     shown.forEach(({ start, share }, index) => {
@@ -89,7 +75,6 @@ export function MiniRing({
       style={{ "--mini-ring-size": `${size}px` } as CSSProperties}
     >
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden="true">
-        {/* Turned a quarter back so every arc starts at 12 o'clock and runs clockwise. */}
         <g transform={`rotate(-90 ${center} ${center})`}>{parts}</g>
       </svg>
       {label && <span className="mini-ring__label" aria-hidden="true">{label}</span>}

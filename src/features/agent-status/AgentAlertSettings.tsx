@@ -6,7 +6,6 @@ import { useTranslation } from "../../i18n";
 import { AGENT_ALERT_SECONDS, AGENT_QUOTA_ALERT_PERCENTS, AGENT_REMIND_SECONDS } from "../appearance/settings";
 import type { AgentAlertStarted, IslandSettings } from "../appearance/types";
 
-/** Settings → AI Agent: which session events open the Agent page, and for how long. */
 export function AgentAlertSettings({
   settings,
   onSettingsChange,

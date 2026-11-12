@@ -3,7 +3,6 @@ import { ExternalLink } from "lucide-react";
 import { useTranslation } from "../../i18n";
 import { useOpenInBrowser } from "./useOpenInBrowser";
 
-/** A settings card that opens a project page. In the app, the system browser opens it. */
 export function ProjectLink({
   href,
   title,

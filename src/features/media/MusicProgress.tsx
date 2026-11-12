@@ -11,11 +11,6 @@ const clock = (ms: number) => {
   return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 };
 
-/**
- * Where the track is, for players that report their position and length: the time played, a
- * thin bar and the length. Players that report neither (NetEase without its InfLink plugin)
- * get no bar: the island only estimates their position (MusicPlayerPanel says so instead).
- */
 export function MusicProgress({ mediaState }: { mediaState: MediaState }) {
   const t = useTranslation();
   const [now, setNow] = useState(() => Date.now());

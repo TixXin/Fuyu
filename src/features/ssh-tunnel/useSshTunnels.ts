@@ -2,20 +2,10 @@ import { useCallback, useEffect, useState } from "react";
 import { useErrorText } from "../../i18n";
 import { checkSshTunnelPort, getSshTunnels, setSshTunnel, type SshTunnelHost } from "./api";
 
-/** How often the hosts' tunnel states are read again while the plugin page is open. */
 const STATUS_POLL_MS = 3_000;
 
-/**
- * A port found taken on a host, or one the check could not look at (`unchecked` says why), waiting
- * for the user's yes or no.
- */
 export type TakenPort = { host: string; port: number; unchecked: string | null };
 
-/**
- * The SSH proxy tunnel's hosts: read, polled, switched and given ports. Switching a host on (or
- * moving a switched-on host to another port) asks the server first whether the port is taken, and
- * when it is, waits for `answer`.
- */
 export function useSshTunnels() {
   const errorText = useErrorText();
   const [hosts, setHosts] = useState<SshTunnelHost[] | null>(null);
@@ -50,7 +40,6 @@ export function useSshTunnels() {
     setChecking(host);
     checkSshTunnelPort(host, port)
       .then((inUse) => (inUse ? setTaken({ host, port, unchecked: null }) : save(host, true, port)))
-      // No ss or netstat there, or no answer: the user decides, as for a taken port.
       .catch((reason: unknown) => setTaken({ host, port, unchecked: errorText(reason) }))
       .finally(() => setChecking((current) => (current === host ? null : current)));
   };
@@ -60,7 +49,6 @@ export function useSshTunnels() {
     error,
     checking,
     taken,
-    /** `port` is what the row's field holds now, saved or not. */
     toggle: (entry: SshTunnelHost, on: boolean, port: number | null) =>
       on && port !== null ? switchOn(entry.host, port) : on ? undefined : save(entry.host, false, port),
     setPort: (entry: SshTunnelHost, port: number | null) => {
@@ -68,7 +56,6 @@ export function useSshTunnels() {
       if (entry.enabled && port !== null) switchOn(entry.host, port);
       else save(entry.host, false, port);
     },
-    /** Yes sets the tunnel up anyway (it waits for the port to free); no leaves the host off. */
     answer: (yes: boolean) => {
       if (!taken) return;
       setTaken(null);

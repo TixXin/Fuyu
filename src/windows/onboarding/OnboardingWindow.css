@@ -1,8 +1,3 @@
-/*
- * The guide is a transparent overlay over the island's screen: the spotlight (Spotlight.css)
- * dims everything but the real island, and the card beside it carries the act. Only the card
- * takes the pointer (onboarding_window/overlay.rs).
- */
 .onboarding {
   position: fixed;
   inset: 0;
@@ -182,7 +177,6 @@
   outline-offset: 2px;
 }
 
-/* The last act: buttons for the setups that need more than a switch. */
 .onboarding-release__later {
   margin: var(--space-2xl) 0 var(--space-md);
   color: var(--color-text-muted);

@@ -67,7 +67,6 @@ export function useQQNotifications(canPreview: boolean) {
       );
       if (!cancelled) acceptSnapshot(next);
       if (!cancelled && next.enabled && !hasRequestedQQNotificationAccess()) {
-        // Remember the attempt before invoking so a dismissed prompt never repeats on startup.
         markQQNotificationAccessRequested();
         await requestQQNotificationAccess();
       }
@@ -141,7 +140,6 @@ export function useQQNotifications(canPreview: boolean) {
     setPreviewWindow(null);
   }), [run]);
 
-  /** Takes the newest message off the collapsed island and the banner; the list keeps it. */
   const dismissPreview = useCallback(() => setPreviewWindow(null), []);
 
   return {

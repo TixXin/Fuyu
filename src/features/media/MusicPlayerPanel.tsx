@@ -11,7 +11,6 @@ import { usePlayingLyrics, type PlayingLyrics } from "./lyrics/usePlayingLyrics"
 import "./MusicPlayerPanel.css";
 
 const NO_LYRICS = { lyricsFolder: "", lyricsOnline: false, lyricsOffsetMs: 0 };
-/** The NetEase Cloud Music plugin that reports the position and song id to Windows. */
 const isNetEase = (sourceApp: string | null) => /cloudmusic/i.test(sourceApp ?? "");
 
 export function MusicPlayerPanel({
@@ -29,16 +28,12 @@ export function MusicPlayerPanel({
   mediaState: MediaState;
   isTrackChanging: boolean;
   commandError: string | null;
-  /** Opens Settings > Music, where the source order is set. */
   onOpenSettings: () => void;
   onPlayPause: () => void;
   onNext: () => void;
   onPrevious: () => void;
-  /** Where lyrics come from and how far they are moved; without it there are none. */
   lyricsSettings?: LyricsSettings & { lyricsOffsetMs: number };
-  /** Lyrics the island already looked up (it shows them collapsed too); without them the page looks them up itself. */
   lyrics?: PlayingLyrics;
-  /** Sets the island's own timing of the track (players that report no position). */
   onAlignLyrics?: (positionMs: number) => void;
 }) {
   const t = useTranslation();
@@ -56,8 +51,6 @@ export function MusicPlayerPanel({
 
   const meta = [hasTrack ? (mediaState.artist ?? t.music.unknownArtist) : null, source].filter(Boolean).join(" · ");
 
-  // Straight on the island like the Agent page (no card of its own): what is playing on one
-  // line at the top, the lyrics across the full width, then the time and the controls.
   return (
     <section className={mediaState.available ? "music-player" : "music-player music-player--empty"} aria-label={t.music.playerLabel}>
       <header className="music-player__head">

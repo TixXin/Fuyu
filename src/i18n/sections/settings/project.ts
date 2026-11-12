@@ -5,7 +5,6 @@ export type SettingsProjectText = {
   description: string;
   versionTitle: string;
   linksTitle: string;
-  /** The last card of About: the first-run guide again, resetting every setting, and quitting the island. */
   guide: string;
   guideHint: string;
   guideAction: string;
@@ -19,7 +18,6 @@ export type SettingsProjectText = {
   quitAction: string;
   website: string;
   websiteHint: string;
-  /** The logo call: the empty logo spot and the credit line under the description lead to it. */
   logoCall: string;
   logoCredit: string;
   logoOpen: string;
@@ -83,9 +81,7 @@ export type SettingsProjectText = {
     autoUpdateOff: string;
     autoUpdateDownload: string;
     autoUpdateInstall: string;
-    /** Downloaded, waiting for the user's click. */
     ready: (version: string) => string;
-    /** Downloaded, installs by itself when the computer is idle. */
     readyIdle: (version: string) => string;
     installNow: string;
     nextCheck: (time: string) => string;

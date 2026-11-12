@@ -56,7 +56,6 @@ function busy(stage: UpdateStage) {
   return stage === "checking" || stage === "downloading" || stage === "installing";
 }
 
-/** Ignore a slow query response if a newer event already reached this window. */
 export function applyUpdateSnapshot(snapshot: UpdateSnapshot) {
   if (disposed || snapshot.revision <= state.revision) return;
   const preferences = loadUpdatePreferences();
@@ -84,7 +83,6 @@ async function loadBuildInfo() {
     setState({ version, channel: loadUpdateChannel(version), stage: configured ? state.stage : "disabled" });
     if (!configured) return;
     proxy = await getUpdaterProxy().catch(() => null);
-    // Subscribe before querying so checks from another window cannot slip through.
     const unlisten = await listenUpdateState(applyUpdateSnapshot);
     if (disposed) { unlisten(); return; }
     stopNativeListener = unlisten;
@@ -99,13 +97,11 @@ export function reloadPreferences() {
   setState({ ...preferences, channel: loadUpdateChannel(state.version) });
 }
 
-/** Opening About respects the switch and the same deadline as the island. */
 export async function checkOnFirstVisit() {
   await initialize();
   if (state.stage === "idle" && state.nextCheckAt !== null && state.nextCheckAt <= Date.now()) await checkForUpdate();
 }
 
-/** Only the main window calls this; native locking also protects against manual checks. */
 export async function checkInBackground() {
   await initialize();
   reloadPreferences();
@@ -113,7 +109,6 @@ export async function checkInBackground() {
   return checkForUpdate();
 }
 
-/** Another window started the same work first; its progress shows, so this is no error to show. */
 function isBusyError(error: unknown) {
   return isNativeError(error) && error.code === "updater.busy";
 }
@@ -143,7 +138,6 @@ export async function checkForUpdate(requestedChannel?: UpdateChannel) {
 export async function setUpdateChannel(channel: UpdateChannel) {
   await initialize();
   if (busy(state.stage) || commandRunning || channel === state.channel) return;
-  // Commit the preference only after native code accepted and completed this check.
   if (await checkForUpdate(channel)) {
     saveUpdateChannel(channel);
     setState({ channel });
@@ -166,13 +160,8 @@ export function setAutoUpdate(autoUpdate: AutoUpdateMode) {
   setState(saveUpdatePreferences({ autoUpdate }));
 }
 
-// Versions this run already tried to download, so a failed one is not fetched over and over.
 const downloadTried = new Set<string>();
 
-/**
- * Downloads a found update in the background when automatic updates allow it (main window only):
- * not a skipped version, once per version a run, never on a metered connection.
- */
 export async function downloadInBackground() {
   await initialize();
   reloadPreferences();
@@ -185,13 +174,11 @@ export async function downloadInBackground() {
   try {
     await downloadUpdate(version, state.channel);
   } catch {
-    // The update stays available to install by hand.
   }
-  try { applyUpdateSnapshot(await getNativeUpdateState()); } catch { /* the next event catches up */ }
+  try { applyUpdateSnapshot(await getNativeUpdateState()); } catch {}
   return getUpdateState().stage === "ready";
 }
 
-/** A system notification is additional to the island marker, never a replacement. */
 export async function notifyAvailableUpdate(title: string, body: (version: string) => string) {
   reloadPreferences();
   const version = reminderVersion(state);

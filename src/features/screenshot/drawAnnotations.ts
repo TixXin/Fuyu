@@ -1,6 +1,3 @@
-// Drawing annotations (annotations.ts) with the 2D canvas API, on the overlay's layer and when the
-// selection is composed for copying. Coordinates are the monitor picture's pixels.
-
 import { arrowGeometry, mosaicBlock, normalizedRect, TEXT_LINE_HEIGHT, type Annotation } from "./annotations";
 import type { PixelRect } from "./selection";
 
@@ -14,7 +11,6 @@ function strokePath(context: CanvasRenderingContext2D, points: readonly { x: num
   context.stroke();
 }
 
-/** Blocks of `picture` averaged over `rect` (scaled down with smoothing, back up without). */
 function drawMosaic(context: CanvasRenderingContext2D, picture: CanvasImageSource, rect: PixelRect, block: number) {
   const x = Math.round(rect.x);
   const y = Math.round(rect.y);
@@ -74,7 +70,6 @@ function drawOne(context: CanvasRenderingContext2D, item: Annotation, picture: C
     case "highlighter":
       context.strokeStyle = item.color;
       context.lineWidth = item.width;
-      // One path, so overlapping parts of a highlighter stroke do not get darker.
       if (item.kind === "highlighter") context.globalAlpha = HIGHLIGHTER_ALPHA;
       strokePath(context, item.points);
       break;
@@ -92,7 +87,6 @@ function drawOne(context: CanvasRenderingContext2D, item: Annotation, picture: C
       context.beginPath();
       context.arc(item.at.x, item.at.y, item.size, 0, Math.PI * 2);
       context.fill();
-      // Dark digits on the light swatches, white on the rest.
       context.fillStyle = item.color === "#FFFFFF" || item.color === "#FFCC00" ? "#000000" : "#FFFFFF";
       context.font = `700 ${item.size * 1.1}px ${ANNOTATION_FONT}`;
       context.textAlign = "center";
@@ -104,7 +98,6 @@ function drawOne(context: CanvasRenderingContext2D, item: Annotation, picture: C
   context.restore();
 }
 
-/** Draws `items` in order, clipped to `clip`; mosaics are made from `picture`. */
 export function drawAnnotations(
   context: CanvasRenderingContext2D,
   items: readonly Annotation[],
@@ -121,11 +114,6 @@ export function drawAnnotations(
   context.restore();
 }
 
-/**
- * `area` of `picture` with `items` drawn on it (clipped to `selection`), as RGBA pixels; null when
- * it cannot be drawn. Copying sends only the area the annotations cover (annotationArea): reading
- * and sending a whole 4K selection is what made copying slow.
- */
 export function composeArea(picture: HTMLCanvasElement, area: PixelRect, selection: PixelRect, items: readonly Annotation[]): ImageData | null {
   if (area.width < 1 || area.height < 1) return null;
   const canvas = document.createElement("canvas");

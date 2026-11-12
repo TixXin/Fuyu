@@ -1,7 +1,6 @@
 import { readJson, writeJson } from "../../lib/storage.ts";
 import { ANNOTATION_COLORS, STROKE_LEVELS, type AnnotationStyle, type StrokeLevel } from "./annotations.ts";
 
-/** The colour and thickness last used for annotations, so the next screenshot starts with them. */
 export const ANNOTATION_STYLE_KEY = "fuyu-screenshot-annotation";
 
 export const DEFAULT_ANNOTATION_STYLE: AnnotationStyle = { color: ANNOTATION_COLORS[0], level: 1 };

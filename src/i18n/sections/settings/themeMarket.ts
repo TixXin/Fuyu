@@ -1,4 +1,3 @@
-/** Settings → Theme market (C26). */
 export type SettingsThemeMarketText = {
   status: (count: number) => string;
   refreshing: string;

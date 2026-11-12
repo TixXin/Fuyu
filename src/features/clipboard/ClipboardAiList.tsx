@@ -7,10 +7,8 @@ import type { ClipboardAiPrompt, ClipboardHistoryItem } from "./api";
 
 const TASKS = ["summarize", "polish", "grammar", "translate"] as const satisfies readonly RewriteTask[];
 
-/** One line of the AI page: a built-in task, or a prompt of the user's own (C43). */
 type Choice = { key: string; task: RewriteTask; prompt?: string; label: string; own: boolean };
 
-/** The service, base URL and model the quick translation uses, from its saved settings. */
 function translationService() {
   const settings = loadSettings();
   return {
@@ -25,12 +23,6 @@ type Result =
   | { key: string; state: "done"; text: string }
   | { key: string; state: "failed"; error: string };
 
-/**
- * The actions panel's AI page (C38, C43): summarize, polish, fix grammar, translate, or a prompt
- * of the user's own (Settings → Clipboard), with the service set up for quick translation. The
- * first Enter (or click) asks, and the answer shows as it is written; the second pastes it.
- * Nothing is sent before that first Enter.
- */
 export function ClipboardAiList({ item, prompts = [], copy = false, onPaste }: { item: ClipboardHistoryItem; prompts?: readonly ClipboardAiPrompt[]; copy?: boolean; onPaste: (text: string) => void }) {
   const t = useTranslation();
   const actions = t.clipboard.popup.actions;
@@ -75,7 +67,6 @@ export function ClipboardAiList({ item, prompts = [], copy = false, onPaste }: {
         run(selected);
       }
     };
-    // Capture on the panel: its own handler stops keys on their way up.
     const panel = listRef.current?.closest(".clipboard-panel");
     panel?.addEventListener("keydown", onKey as EventListener, true);
     return () => panel?.removeEventListener("keydown", onKey as EventListener, true);

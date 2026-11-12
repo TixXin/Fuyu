@@ -5,17 +5,11 @@ import { parseLrc, trackKey, withTranslations, type LyricLine } from "./lrc";
 
 export type LyricsSettings = { lyricsFolder: string; lyricsOnline: boolean; lyricsChinese?: boolean };
 
-/**
- * Synced lyrics for the playing track, looked up once per track (the native side caches online
- * answers on disk). `lines` is null while looking, when nothing is found, or with neither a
- * folder nor online lyrics set; `notFound` only when a finished lookup found nothing.
- */
 export function useLyrics(mediaState: MediaState, settings: LyricsSettings): { lines: LyricLine[] | null; notFound: boolean } {
   const key = trackKey(mediaState);
   const folder = settings.lyricsFolder.trim();
   const active = Boolean(key) && (folder !== "" || settings.lyricsOnline);
   const [found, setFound] = useState<{ key: string; lines: LyricLine[] } | null>(null);
-  // Read when the track changes, not on every poll that moves the position.
   const { title, artist, album, durationMs, trackId } = mediaState;
   const chinese = settings.lyricsOnline && settings.lyricsChinese === true;
 
@@ -35,7 +29,6 @@ export function useLyrics(mediaState: MediaState, settings: LyricsSettings): { l
     return () => {
       cancelled = true;
     };
-    // `key` already covers title, artist and duration; album only refines the lookup.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active, key, folder, settings.lyricsOnline, chinese]);
 

@@ -3,12 +3,10 @@ import type { NativeError } from "../../../i18n/nativeError";
 import { listen, type EventCallback } from "@tauri-apps/api/event";
 import { openUrl } from "@tauri-apps/plugin-opener";
 
-/** Opens webmail, a help page or a link in a mail in the system browser. */
 export function openMailLink(url: string) {
   return openUrl(url);
 }
 
-// 与 src-tauri/src/mail/mod.rs 中返回给前端的结构对应。
 export type MailMessage = {
   id: string;
   uid: number;
@@ -18,26 +16,21 @@ export type MailMessage = {
   unread: boolean;
 };
 
-/** Mirrors AttachmentInfo in src-tauri/src/mail/attachments.rs. */
 export type MailAttachment = { part: string; name: string; size: number; mime: string };
 
 export type MailContent = { id: string; content: string; contentType: "text/plain" | "text/html"; attachments: MailAttachment[] };
 
-/** Mirrors OutgoingMail in src-tauri/src/mail/send.rs. */
 export type OutgoingMail = { to: string[]; cc: string[]; subject: string; body: string };
-/** Mirrors ReplyDraft in src-tauri/src/mail/send.rs. */
 export type MailReplyDraft = { to: string; subject: string };
 
 export function getMailReply(email: string, messageId: string) {
   return invoke<MailReplyDraft>("get_qq_mail_reply", { email, messageId });
 }
 
-/** Sends over SMTP from a connected mailbox; `replyTo` is a listed message being answered. */
 export function sendMail(email: string, mail: OutgoingMail, replyTo?: string) {
   return invoke<void>("send_qq_mail", { email, mail, replyTo: replyTo ?? null });
 }
 
-/** Saves one attachment into Downloads and shows it in Explorer; resolves to the path written. */
 export function saveMailAttachment(email: string, messageId: string, part: string) {
   return invoke<string>("save_qq_mail_attachment", { email, messageId, part });
 }
@@ -52,19 +45,15 @@ export type MailSnapshot = {
   unreadCount: number | null;
   items: MailMessage[];
   lastSyncedAt: number | null;
-  /** Words with useErrorText (task D15). */
   error: NativeError | string | null;
 };
 
-// 每个邮箱各自推送；断开或首次连接失败的邮箱推送 configured: false、status: "disconnected"。
 export type MailEvent = { snapshot: MailSnapshot; newestId: string | null; windowVisible: boolean };
 
-// 与 mail/mod.rs 中的 EVENT 一致。
 export const MAIL_CHANGED_EVENT = "qq-mail-changed";
 
 export type MailCommand = "connect_qq_mail" | "set_qq_mail_enabled" | "refresh_qq_mail" | "disconnect_qq_mail" | "mark_qq_mail_read";
 
-/** One snapshot per mailbox the backend knows, in no particular order. */
 export function getMailState() {
   return invoke<MailSnapshot[]>("get_qq_mail_state");
 }

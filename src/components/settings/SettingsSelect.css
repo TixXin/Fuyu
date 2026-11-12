@@ -27,7 +27,6 @@
   box-shadow: none;
 }
 
-/* The menu opens under the value, aligned to the row's right edge. */
 .settings-select .select-control__menu {
   left: auto;
   min-width: 180px;

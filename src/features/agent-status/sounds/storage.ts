@@ -4,22 +4,17 @@ import { AGENT_SOUND_EVENTS, type AgentSoundEvent } from "./events.ts";
 
 export const AGENT_SOUNDS_STORAGE_KEY = "fuyu-agent-sounds";
 
-/** The sounds that ship with the island; any other value is an imported pack's id. */
 export const BUILTIN_PACK = "builtin";
 
 export type AgentSoundSettings = {
   enabled: boolean;
-  /** 0-100. */
   volume: number;
-  /** BUILTIN_PACK or an imported pack's id. */
   pack: string;
   events: Record<AgentSoundEvent, boolean>;
-  /** Stay quiet while the session's terminal or window is in front. */
   quietWhenInFront: boolean;
   quietHours: { enabled: boolean; start: string; end: string };
 };
 
-/** A new install plays every event, the terminal in front or not. */
 export const DEFAULT_AGENT_SOUND_SETTINGS: AgentSoundSettings = {
   enabled: true,
   volume: 70,
@@ -29,11 +24,6 @@ export const DEFAULT_AGENT_SOUND_SETTINGS: AgentSoundSettings = {
   quietHours: { enabled: false, start: "22:00", end: "08:00" },
 };
 
-/**
- * What islands that ran before 0.3.5-beta.5 had, for their saved settings' missing fields and for
- * islands from before sounds: starting a session, sending a prompt and an unread finished session
- * stayed quiet, and so did a session whose terminal was in front.
- */
 const EARLIER_AGENT_SOUND_SETTINGS: AgentSoundSettings = {
   ...DEFAULT_AGENT_SOUND_SETTINGS,
   events: { ...DEFAULT_AGENT_SOUND_SETTINGS.events, start: false, ack: false, idle: false },
@@ -42,7 +32,6 @@ const EARLIER_AGENT_SOUND_SETTINGS: AgentSoundSettings = {
 
 const CLOCK = /^\d{1,2}:\d{2}$/;
 
-/** Saved settings with missing or malformed fields as earlier islands had them; nothing saved is a new install's default. */
 export function normalizeAgentSoundSettings(value: unknown): AgentSoundSettings {
   if (!value || typeof value !== "object") return DEFAULT_AGENT_SOUND_SETTINGS;
   const fallback = EARLIER_AGENT_SOUND_SETTINGS;

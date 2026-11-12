@@ -1,4 +1,3 @@
-// Reading saved settings, part 2 (normalizeSettings in settings.ts): the Agent page and its alerts.
 import { DEFAULT_SETTINGS, LEGACY_FALLBACKS } from "./settingsDefaults.ts";
 import {
   AGENT_ALERT_SECONDS, AGENT_HOST_DISPLAYS, AGENT_QUOTA_ALERT_PERCENTS, AGENT_REMIND_SECONDS, AGENT_ARCHIVE_MOTIONS, AGENT_CARD_EFFECTS, AGENT_SESSION_GROUPS, AGENT_SESSION_HOURS, AGENT_SESSION_SORTS, AGENT_SESSION_VIEWS,
@@ -6,7 +5,6 @@ import {
 } from "./settingsLimits.ts";
 import type { AgentHostDisplay, IslandSettings, LegacyIslandSettings } from "./types";
 
-/** The Agent page's rows and columns, and which session events alert, for how long. */
 export function normalizeAgentSettings(settings: LegacyIslandSettings | null | undefined) {
   return {
     agentHostDisplay: AGENT_HOST_DISPLAYS.includes(settings?.agentHostDisplay as AgentHostDisplay)

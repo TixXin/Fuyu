@@ -1,13 +1,3 @@
-/**
- * The `when` clause of a plugin command's keybinding (fuyu-plugin.json), e.g.
- * `island.expanded && island.page == todo` or `!todos.hasActive`.
- *
- * Grammar: `||` binds looser than `&&`, `!` negates, parentheses group. A bare name is
- * true when its context value is `true`; `name == value` / `name != value` compare the
- * value as text (quotes are optional). Unknown names are false; a clause that does not
- * parse is never true. An empty clause is always true.
- */
-
 export type WhenContext = Readonly<Record<string, string | boolean>>;
 
 type Token = { kind: "op"; value: string } | { kind: "word"; value: string };
@@ -54,7 +44,6 @@ export function evaluateWhen(clause: string | null | undefined, context: WhenCon
     return token?.kind === "op" && token.value === value;
   };
 
-  // Each returns null when the clause does not parse.
   const either = (): boolean | null => {
     let left = both();
     while (left !== null && isOperator("||")) {

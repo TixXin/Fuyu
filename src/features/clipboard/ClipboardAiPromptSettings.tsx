@@ -11,10 +11,6 @@ type Draft = { id: string | null; title: string; prompt: string };
 
 const newId = () => `p${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
 
-/**
- * Settings → Clipboard → AI prompts (C43): the user's own prompts for "Rewrite with AI" in the
- * clipboard window, next to its four built-in tasks. Saved with the clipboard settings.
- */
 export function ClipboardAiPromptSettings({ clipboardSettings, onChange }: {
   clipboardSettings: ClipboardHistorySettings;
   onChange: (settings: ClipboardHistorySettings) => void;

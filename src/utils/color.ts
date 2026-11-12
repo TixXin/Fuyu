@@ -6,7 +6,6 @@ export function getColorSetting(value: unknown, fallback: string) {
     : fallback;
 }
 
-/** Relative luminance (WCAG) of a `#rrggbb` colour, 0 for black to 1 for white; 0 when malformed. */
 export function relativeLuminance(hex: string) {
   if (!HEX_COLOR_PATTERN.test(hex)) return 0;
   const [r, g, b] = [1, 3, 5].map((start) => {
@@ -16,11 +15,6 @@ export function relativeLuminance(hex: string) {
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }
 
-/**
- * RGB channels ("r, g, b") for text drawn straight on `background`: near-white on dark colours,
- * near-black on light ones. 0.18 is where white and black text have about the same contrast.
- */
-/** Whether text on `background` should be dark: a light island (C31 restyles the island for it). */
 export function isLightIsland(background: string) {
   return relativeLuminance(background) > 0.18;
 }

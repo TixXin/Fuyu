@@ -1,4 +1,3 @@
-/* Time played, a thin bar and the length, under the lyrics or the waveform. */
 .music-progress {
   display: grid;
   grid-template-columns: auto 1fr auto;

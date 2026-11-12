@@ -1,15 +1,12 @@
 export type SettingsCategoriesText = {
   label: string;
-  /** The search box at the top of the sidebar. */
   search: {
     placeholder: string;
     clear: string;
     empty: string;
   };
-  /** Each group's pages fold under its row; what the row says to a screen reader. */
   expand: (group: string) => string;
   collapse: (group: string) => string;
-  /** Words that also find a page in the sidebar search, besides its name. */
   keywords: Record<
     | "general" | "behavior" | "appearance" | "theme" | "themeMarket" | "shortcuts" | "todos" | "calendar" | "music" | "translation" | "clipboard"
     | "shelf" | "screenshot" | "messages" | "agents" | "agentSessions" | "agentRemote" | "agentAlerts" | "sounds" | "agentApprovals" | "agentConnect"
@@ -23,17 +20,12 @@ export type SettingsCategoriesText = {
     extensions: string;
   };
   general: string;
-  /** How the island reacts: opening, tucking, games and passing popups. */
   behavior: string;
   appearance: string;
-  /** What the island looks like: style, colours, corners and saved themes. */
   theme: string;
-  /** Themes others made, from TixXin/fuyu-plugins. */
   themeMarket: string;
   shortcuts: string;
-  /** QQ, WeChat and Mail on one page. */
   messages: string;
-  /** Mail's group on the Messages page. */
   mail: string;
   todos: string;
   music: string;
@@ -42,10 +34,8 @@ export type SettingsCategoriesText = {
   shelf: string;
   screenshot: string;
   calendar: string;
-  /** The AI Agent group's pages: what shows on the collapsed island, then the Agent page's list. */
   agents: string;
   agentSessions: string;
-  /** Sessions on other computers, read over SSH. */
   agentRemote: string;
   agentAlerts: string;
   sounds: string;

@@ -21,11 +21,6 @@ import "./CollapsedItemsSection.css";
 
 const CLAUDE_USAGE_PLUGIN_ID = "focusd.claude-usage";
 
-/**
- * Appearance → the icons on the collapsed bar: left and right of the summary, in
- * order, each movable to the other side or hidden (C12, issue #17). Lists every
- * item the bar can show here, also the ones with nothing to show right now.
- */
 export function CollapsedItemsSection() {
   const t = useTranslation();
   const { locale } = useLocale();

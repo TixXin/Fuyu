@@ -3,7 +3,6 @@ import { useTranslation } from "../../i18n";
 import type { DeviceAlert } from "./api";
 import "./DeviceAlertPopup.css";
 
-/** The collapsed island's device line: an icon, what happened, and the battery level if known. */
 export function DeviceAlertPopup({ alert }: { alert: DeviceAlert }) {
   const text = useTranslation().island.deviceAlert;
   let Icon: LucideIcon;

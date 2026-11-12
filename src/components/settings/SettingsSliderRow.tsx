@@ -3,10 +3,6 @@ import { RotateCcw } from "lucide-react";
 import { SettingsRow } from "./SettingsRow";
 import "./SettingsSliderRow.css";
 
-/**
- * A row for a number on a range: title with the value in a pill (and a way back to
- * the default once it differs), then a slider across the whole row.
- */
 export function SettingsSliderRow({
   title,
   description,
@@ -28,7 +24,6 @@ export function SettingsSliderRow({
   step: number;
   format: (value: number) => string;
   defaultValue?: number;
-  /** Accessible name of the reset button; needed when `defaultValue` is given. */
   resetLabel?: string;
   indent?: boolean;
   onChange: (value: number) => void;

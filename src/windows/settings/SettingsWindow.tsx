@@ -44,7 +44,6 @@ import { activeTone } from "../../features/appearance/themeMode";
 import { useSystemDark } from "../../features/appearance/useResolvedTheme";
 import "./SettingsWindow.css";
 
-// Same as .settings-stage and .settings-stage--light in SettingsWindow.css.
 const SETTINGS_DARK_FILL = "#131417";
 const SETTINGS_LIGHT_FILL = "#eceef2";
 
@@ -54,7 +53,6 @@ export function SettingsWindow() {
   const qqNotifications = useQQNotifications(false);
   const wechatReminders = useWeChatReminders(false);
   const [settings, setSettings] = useState<IslandSettings>(loadSettings);
-  // The accent being picked shows here at once, before the island saves it.
   useWindowAccent(settings);
   const systemDark = useSystemDark();
   const presets = useSettingPresets(settings, setSettings);
@@ -62,12 +60,10 @@ export function SettingsWindow() {
   const [category, setCategory] = useState<SettingsCategory>(DEFAULT_SETTINGS_CATEGORY);
   const highlightSaveDirectory = saveDirectory.highlight;
 
-  // The island asks for the save path when an export has nowhere to go; it lives on the todos page.
   const focusSavePath = useCallback(() => {
     setCategory("todos");
     highlightSaveDirectory();
   }, [highlightSaveDirectory]);
-  // The translation window's settings button opens its page here.
   const focusRequestedSection = useCallback(() => {
     const section = takeFocusRequest();
     if (section === "savePath") focusSavePath();
@@ -79,9 +75,6 @@ export function SettingsWindow() {
     if (section === "agentConnect") setCategory("agentConnect");
   }, [focusSavePath]);
 
-  // The window opens hidden and is shown once the page has rendered, so it never shows
-  // empty. A hidden webview may not run animation frames at all, so then the rendered
-  // DOM is enough; otherwise wait two frames (the first runs before its paint).
   useEffect(() => {
     const show = () => {
       void showSettingsWindow().catch((error) => {
@@ -139,7 +132,6 @@ export function SettingsWindow() {
   }, []);
 
   const openShortcuts = () => setCategory("shortcuts");
-  // The market's Manage opens that plugin on the Plugins page; any other way there shows the list.
   const [managedPluginId, setManagedPluginId] = useState<string | null>(null);
   const changeCategory = (next: typeof category) => {
     setManagedPluginId(null);
@@ -149,14 +141,10 @@ export function SettingsWindow() {
     setManagedPluginId(id);
     setCategory("plugins");
   };
-  // A website Install button (fuyu://market/install/<id>) opens the market with that plugin pinned.
   const showMarket = useCallback(() => setCategory("market"), []);
   const marketRequest = useMarketInstallRequest(showMarket);
 
-  // Light or dark as the island is (C33.6): its light tokens (.island-light) and the window's own.
   const light = activeTone(settings.themeMode, systemDark) === "light";
-  // The window's own fill (shown while the page loads, and at an edge just uncovered by
-  // resizing) and the system's shadow and border follow the same tone as the page.
   useEffect(() => {
     const window = getCurrentWindow();
     const failed = (error: unknown) => console.error("Failed to set the settings window's tone", error);
@@ -190,7 +178,6 @@ export function SettingsWindow() {
           <ThemeMarketPage
             settings={settings}
             onSettingsChange={setSettings}
-            // Saved the way an imported theme file is, so it lands among the Theme page's saved themes.
             onSave={(theme, look) => void presets.onImportPreset(JSON.stringify(buildTheme(theme.name[locale], look, new Date())))}
           />
         )}

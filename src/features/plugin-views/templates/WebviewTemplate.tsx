@@ -3,27 +3,18 @@ import { useLocale } from "../../../i18n";
 import { hidePluginWebview, showPluginWebview, type PluginWebviewBounds } from "../api";
 import "./WebviewTemplate.css";
 
-/** How long after the page opens or resizes its position is checked every frame (the island animates meanwhile). */
 const FOLLOW_MS = 900;
 
 const sameBounds = (a: PluginWebviewBounds | null, b: PluginWebviewBounds) =>
   a !== null && a.x === b.x && a.y === b.y && a.width === b.width && a.height === b.height;
 
-/**
- * The webview template (P8): a box on the island that the plugin's own page
- * covers. The page itself is a separate native WebView2 (not part of this
- * window) that the island places over the box, so here we only report where
- * the box is, and close the page when the box goes away.
- */
 export function WebviewTemplate({ pluginId, viewId, active, frameless = false }: {
   pluginId: string;
   viewId: string;
   active: boolean;
-  /** Drawn without the card, on the island itself: the page takes the island's ink. */
   frameless?: boolean;
 }) {
   const box = useRef<HTMLDivElement>(null);
-  // Given to the page when it is created; another language applies the next time it opens.
   const { locale } = useLocale();
   const localeRef = useRef(locale);
   useEffect(() => {

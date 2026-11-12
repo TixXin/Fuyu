@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef } from "react";
 import type { IslandSettings } from "../../features/appearance/types";
 import * as islandApi from "./api";
 
-/** Pushes scale and margin changes to the native window, at most one call in flight per frame. */
 export function useNativeLayout(settings: IslandSettings) {
   const layoutSync = useRef<{
     frame: number | null;
@@ -71,8 +70,6 @@ export function useNativeLayout(settings: IslandSettings) {
 
   useEffect(() => {
     scheduleNativeLayout(settings);
-    // Only the margin needs this path: scale changes already reach the native side
-    // through set_island_interaction in useIslandWindow.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [settings.marginY, scheduleNativeLayout]);
 

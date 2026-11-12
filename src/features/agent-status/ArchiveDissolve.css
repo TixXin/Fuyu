@@ -1,6 +1,3 @@
-/* The "dissolve" archive animation (useArchiveMotion.ts, Settings → AI Agent → Sessions): the row
-   turns into a front of drifting dust in its light's colour from left to right (DISSOLVE_MS), then
-   folds away. After PR #5's card dissolve; works on flat rows, cards and compact rows alike. */
 .agent-dissolving > :not(.agent-dissolve__dust) {
   -webkit-mask-image: linear-gradient(90deg, transparent 40%, #000 60%);
   mask-image: linear-gradient(90deg, transparent 40%, #000 60%);
@@ -48,7 +45,6 @@
   }
 }
 
-/* useArchiveMotion removes the row at once then; nothing here should move either. */
 @media (prefers-reduced-motion: reduce) {
   .agent-dissolving > :not(.agent-dissolve__dust),
   .agent-dissolve__dust {

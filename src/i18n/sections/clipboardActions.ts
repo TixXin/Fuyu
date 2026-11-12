@@ -1,6 +1,5 @@
 import type { TransformBlock, TransformId } from "../../features/clipboard/textTransforms";
 
-/** The clipboard window's actions panel, transforms, editor and record status (C38). */
 export type ClipboardActionsText = {
   more: string;
   preview: string;
@@ -70,7 +69,6 @@ export type ClipboardActionsText = {
   linkOffline: string;
   colorPick: string;
   failed: string;
-  /** The transform and AI pages on the island's clipboard page (C43), which copy instead. */
   copy: Pick<ClipboardActionsText, "transform" | "transformTitle" | "ai" | "aiHint" | "aiPasteAgain" | "result" | "resultNative">;
 };
 

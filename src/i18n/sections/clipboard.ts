@@ -18,7 +18,6 @@ export type ClipboardText = {
   emptySearch: string;
   copyBack: string;
   filterByTag: (tag: string) => string;
-  /** An image's text read by OCR (C24.9). */
   copyOcrText: string;
   popup: {
     title: string;
@@ -54,9 +53,7 @@ export type ClipboardText = {
       none: string;
     };
   };
-  /** An image as its file: chat apps and Explorer paste the file. */
   copyAsFile: string;
-  /** An image as its path in quotes: terminal CLIs such as Claude Code attach it as an image. */
   copyPath: string;
   copy: string;
   copied: string;
@@ -75,9 +72,7 @@ export type ClipboardText = {
   noteFallback: string;
   images: string;
   files: string;
-  /** An image entry's first line. */
   imageLabel: (width: number, height: number) => string;
-  /** More files than the one named. */
   moreFiles: (count: number) => string;
   emptyHint: string;
   noteAction: string;

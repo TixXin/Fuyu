@@ -11,7 +11,6 @@ import "./ShortcutsSettingsPage.css";
 
 type TakenBy = (shortcut: string, selfId: string) => string | null;
 
-/** Stands in for the recorders of a feature that is off, on the Shortcuts page. */
 function FeatureOffRow({ feature, onTurnOn }: { feature: string; onTurnOn: () => void }) {
   const t = useTranslation();
   return (
@@ -23,11 +22,6 @@ function FeatureOffRow({ feature, onTurnOn }: { feature: string; onTurnOn: () =>
   );
 }
 
-/**
- * The two global translation shortcuts as one group, the same on the Translation page and the
- * Shortcuts page: both edit the one saved copy, so a change on either shows on the other.
- * `onTurnOn` (Shortcuts page only) keeps the group when translation is off.
- */
 export function TranslationShortcutGroup({ title, action, enabled, translation, onTranslationChange, takenBy, onTurnOn }: {
   title: string;
   action: ReactNode;
@@ -43,7 +37,6 @@ export function TranslationShortcutGroup({ title, action, enabled, translation, 
     <SettingsGroup
       title={title}
       action={action}
-      // On the Shortcuts page the clipboard group below already says what a global shortcut is.
       footer={!enabled ? undefined : onTurnOn ? t.settings.translation.selectionShortcutHint : `${t.settings.shortcuts.globalHint} ${t.settings.translation.selectionShortcutHint}`}
     >
       {enabled
@@ -53,7 +46,6 @@ export function TranslationShortcutGroup({ title, action, enabled, translation, 
   );
 }
 
-/** The clipboard history shortcut (its switch, the keys, Win+V) as one group; see TranslationShortcutGroup. */
 export function ClipboardShortcutGroup({ title, action, clipboard, onClipboardChange, takenBy, onTurnOn }: {
   title: string;
   action: ReactNode;

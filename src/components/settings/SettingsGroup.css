@@ -4,7 +4,6 @@
   min-width: 0;
 }
 
-/* Groups after the first leave a clear gap, so each reads as its own block. */
 .settings-group + .settings-group {
   margin-top: var(--space-lg);
 }
@@ -33,7 +32,6 @@
   border-radius: var(--radius-xl);
 }
 
-/* Hairlines between rows, inset from the card's sides. */
 .settings-group__card > * {
   position: relative;
 }

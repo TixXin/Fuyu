@@ -6,14 +6,12 @@
   background: #131417;
 }
 
-/* The light window: the same layout, a pale base and white cards. */
 .settings-stage--light {
   --settings-card: #ffffff;
   --settings-card-line: rgba(0, 0, 0, 0.08);
   background: #eceef2;
 }
 
-/* Cards white on the pale base, a step up like the sidebar card, not a grey wash. */
 .settings-stage--light :is(.settings-group__card, .settings-section:not(.settings-section--list), .plugin-card, .plugin-market__item, .theme-market__item) {
   background: #ffffff;
   border-color: rgba(0, 0, 0, 0.08);
@@ -23,14 +21,11 @@
   font: inherit;
 }
 
-/* The title row above the page, in line with the page and as wide. */
 .settings-stage .settings-page__header {
   max-width: 908px;
-  /* Clear of the window buttons at the top right (WindowControls.css, 3 × 46px). */
   padding: 4px 146px 0 24px;
 }
 
-/* Pages stop at a readable width in a wide window; the rest stays empty on the right. */
 .settings-stage .editor-panel {
   grid-template-columns: minmax(0, 860px);
   min-height: 0;
@@ -40,11 +35,6 @@
   gap: var(--space-xl);
 }
 
-/*
- * Type scale for the plugin pages, which still use the island's controls: labels read
- * as regular body text and values carry a little weight, so cards and the page title
- * lead. Scoped to .settings-stage because the same controls also render on the island.
- */
 .settings-stage :is(
     .toggle-control,
     .number-control,
@@ -64,7 +54,6 @@
   font-weight: 500;
 }
 
-/* The island's switch, still on the plugin pages, looks like SettingsSwitch here. */
 .settings-stage .toggle-control__switch {
   background: var(--color-white-a16);
   border-color: transparent;
@@ -75,7 +64,6 @@
   border-color: transparent;
 }
 
-/* Buttons keep some weight, but stay below the page title. */
 .settings-stage :is(.shortcut-record-button, .number-control__field input) {
   font-weight: 600;
 }

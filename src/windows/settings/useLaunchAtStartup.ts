@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { readLaunchAtStartup, saveLaunchAtStartup } from "./api";
 
-/** The launch-at-startup registry value, updated optimistically and rolled back on failure. */
 export function useLaunchAtStartup() {
   const [launchAtStartup, setLaunchAtStartup] = useState(false);
 

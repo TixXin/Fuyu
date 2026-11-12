@@ -5,11 +5,6 @@ function report(error: unknown) {
   console.error("Failed to watch for clicks outside the island", error);
 }
 
-/**
- * Calls `onOutsideClick` when the user presses a mouse button outside the island window, while
- * `watching`. The native side looks only while asked, so keep `watching` to the few seconds it is
- * needed (an alert showing).
- */
 export function useOutsideClick(watching: boolean, onOutsideClick: () => void) {
   const handlerRef = useRef(onOutsideClick);
   useLayoutEffect(() => {

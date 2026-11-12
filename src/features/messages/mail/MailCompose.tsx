@@ -5,7 +5,6 @@ import { useErrorText, useTranslation } from "../../../i18n";
 import { sendMail } from "./api";
 import { splitRecipients, type ComposeDraft } from "./compose";
 
-/** Writes plain-text mail from `account`; a draft with `replyTo` answers that message. */
 export function MailCompose({ account, draft, onClose }: { account: string; draft: ComposeDraft; onClose: () => void }) {
   const t = useTranslation();
   const errorText = useErrorText();

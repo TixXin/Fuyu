@@ -1,11 +1,6 @@
 import { daysBetween, listDay, noteOfDay } from "./todoHistory.ts";
 import type { ScheduledTodo, TodoArchive, TodoItem } from "./types";
 
-/**
- * Todo and daily-note calls from the local API (see docs/features/local-api.md). Pure: each
- * call gets the current state and says what to change; useTodoApiHandlers applies it.
- */
-
 export type TodoApiResult =
   | { ok: true; data: unknown }
   | { ok: false; status: 400 | 404; error: string };
@@ -22,7 +17,6 @@ export type TodoApiState = {
 export type TodoApiChange = {
   todos?: TodoItem[];
   dailyNote?: string;
-  /** A todo for a later day, added through the scheduled list. */
   schedule?: { title: string; date: string };
 };
 

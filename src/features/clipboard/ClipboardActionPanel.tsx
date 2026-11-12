@@ -16,11 +16,6 @@ const ICONS: Record<ActionIcon, LucideIcon> = {
 
 export type PanelPage = "actions" | "transforms" | "note" | "ai";
 
-/**
- * The clipboard window's actions panel (C38), opened by Ctrl+K or a right click over the list:
- * everything the island's page can do with an entry, transforms, and pausing the history. Typing
- * narrows the actions; ↑↓ and Enter pick one; Esc goes back a page, then closes.
- */
 export function ClipboardActionPanel({ item, actions, page, aiPrompts, copy = false, onPage, onClose, onPasteText, onSaveNote }: {
   item?: ClipboardHistoryItem;
   actions: readonly PopupAction[];
@@ -30,7 +25,6 @@ export function ClipboardActionPanel({ item, actions, page, aiPrompts, copy = fa
   onPasteText: (text: string) => void;
   onSaveNote: (id: string, note: string) => void;
   aiPrompts?: readonly ClipboardAiPrompt[];
-  /** On the island's page (C43): the transform and AI pages copy the result instead of pasting it. */
   copy?: boolean;
 }) {
   const t = useTranslation();

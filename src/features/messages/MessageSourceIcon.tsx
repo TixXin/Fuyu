@@ -23,12 +23,6 @@ const MAIL_PROVIDER_ICONS: Record<MailProvider, string> = {
   outlook: outlookIcon,
 };
 
-/**
- * A message source's icon. Mail shows the logo of the mailbox's service: pass
- * `account` (the mailbox address), or `mailProvider` when several mailboxes
- * share one; an unknown service, or none, gets the plain mail icon. A plugin
- * message may bring its own `iconUrl` (the app playing media).
- */
 export function MessageSourceIcon({ source, size = 16, account, mailProvider, iconUrl }: {
   source: PreviewSource;
   size?: number;

@@ -9,7 +9,6 @@ import { movePluginPage, orderPluginViews, setPluginPageHidden } from "./pagePre
 import { usePluginPagePrefs } from "./usePluginPagePrefs";
 import "./PluginIslandPagesSection.css";
 
-/** Settings → plugins: which plugin pages the island shows, and their order (also their Alt+number). */
 export function PluginIslandPagesSection() {
   const t = useTranslation();
   const { locale } = useLocale();
@@ -17,7 +16,6 @@ export function PluginIslandPagesSection() {
   const [views, setViews] = useState<PluginViewEntry[]>([]);
   const [prefs, setPrefs] = usePluginPagePrefs();
 
-  // Plugin events go to the island window only, so look again when this window gets focus.
   const refresh = useCallback(() => {
     listPluginViews()
       .then((snapshot) => setViews(snapshot.views))

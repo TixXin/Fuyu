@@ -2,7 +2,6 @@ export const ENABLED_KEY = "fuyu-wechat-reminders-enabled";
 
 export const EXPOSE_UI_KEY = "fuyu-wechat-expose-ui";
 
-/** Off unless the user turned it on: it changes a byte in the running WeChat. */
 export function isWeChatExposeUiEnabled() {
   return window.localStorage.getItem(EXPOSE_UI_KEY) === "true";
 }
@@ -13,7 +12,6 @@ export function saveWeChatExposeUiEnabled(enabled: boolean) {
 
 export const HIDE_TASKBAR_BUTTON_KEY = "fuyu-wechat-hide-taskbar-button";
 
-/** On unless the user turned it off: closed to the tray, WeChat's chat list cannot be read. */
 export function isWeChatHideTaskbarButtonEnabled() {
   return window.localStorage.getItem(HIDE_TASKBAR_BUTTON_KEY) !== "false";
 }

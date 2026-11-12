@@ -5,11 +5,6 @@ import { listenScreenshotText } from "./api";
 
 const PEEK_MS = 8_000;
 
-/**
- * The text a screenshot's OCR read (Ctrl+Shift+3, or the toolbar's Read text), as a one-line peek
- * for the collapsed island; it is already on the clipboard. Handed to the translation window too,
- * so clicking the peek opens it there, as a selection translation's peek does.
- */
 export function useScreenshotText() {
   const t = useTranslation().screenshot;
   const [peek, setPeek] = useState<string | null>(null);

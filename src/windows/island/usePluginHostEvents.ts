@@ -8,20 +8,14 @@ import type { IslandMode } from "./types";
 
 type PluginHostEventSources = {
   date: string;
-  /** Any value whose identity changes when the day's todos, the later list or the active todo change. */
   todosVersion: readonly unknown[];
   note: string;
   agentStatus: AgentStatusSnapshot;
   mode: IslandMode;
 };
 
-/**
- * Reports changes plugins can subscribe to (events.subscribe) to the plugin host.
- * Nothing is sent for the first render: plugins read the current state themselves.
- */
 export function usePluginHostEvents({ date, todosVersion, note, agentStatus, mode }: PluginHostEventSources) {
   const { locale } = useLocale();
-  // With todos.json, Rust reports todo and note changes itself (with a reason).
   const fromRust = todoFileData() !== null;
   useChangeEvent("todos.changed", [date, ...todosVersion], () => ({ date }), fromRust);
   useChangeEvent("note.changed", [date, note], () => ({ date }), fromRust);

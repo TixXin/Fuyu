@@ -1,15 +1,9 @@
 import type { AgentSessionSummary, ExternalAgentStatus } from "./api";
 
-/**
- * A report from another computer: it names the machine (`host`) and the agent (`agent`), sent by
- * a plugin or over the local API, often through an SSH tunnel (docs/features/agent-status-hooks.md,
- * "Sessions on Other Computers"). The Agent page lists these with the local sessions.
- */
 export function isRemoteSessionReport(report: ExternalAgentStatus) {
   return Boolean(report.host) && (report.agent === "claudeCode" || report.agent === "codex");
 }
 
-/** Remote reports as Agent page rows; idle ones are left out. */
 export function remoteSessions(others: ExternalAgentStatus[] | undefined): AgentSessionSummary[] {
   return (others ?? []).flatMap((report) => {
     if (!isRemoteSessionReport(report) || report.phase === "idle" || !report.agent || !report.host) return [];
@@ -30,7 +24,6 @@ export function remoteSessions(others: ExternalAgentStatus[] | undefined): Agent
   });
 }
 
-/** Local and remote sessions in the list's order: working ones first, then the newest. */
 export function withRemoteSessions(local: AgentSessionSummary[], remote: AgentSessionSummary[]) {
   if (remote.length === 0) return local;
   const active = (session: AgentSessionSummary) => session.phase === "running" || session.phase === "waiting";

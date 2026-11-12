@@ -8,17 +8,12 @@ import {
 export type Direction = "auto" | "zh-en" | "en-zh";
 export type TranslationSettings = {
   shortcut: string;
-  /** Copies the current selection, translates it, then restores the clipboard. */
   selectionShortcut: string;
   direction: Direction;
   provider: TranslationProvider;
-  /** Base URL of the OpenAI-compatible service used by the "custom" provider. */
   customBaseUrl: string;
-  /** Model per provider; an empty or missing entry uses the provider's default. */
   models: Partial<Record<TranslationProvider, string>>;
-  /** Fill an empty source from the clipboard when the translation window opens. */
   pasteClipboardOnOpen: boolean;
-  /** Translate after the source has stopped changing, while the window is open. */
   autoTranslate: boolean;
 };
 export const STORAGE_KEY = "fuyu-translation-settings";
@@ -61,7 +56,6 @@ export function normalizeTranslationSettings(stored: unknown): TranslationSettin
   const value = stored as Record<string, unknown>;
   const shortcut = typeof value.shortcut === "string" ? value.shortcut : DEFAULT_SETTINGS.shortcut;
   return {
-    // Earlier defaults move to the current one; a shortcut the user picked is kept.
     shortcut: LEGACY_DEFAULT_SHORTCUTS.has(shortcut) ? DEFAULT_SETTINGS.shortcut : shortcut,
     direction: value.direction === "zh-en" || value.direction === "en-zh" ? value.direction : "auto",
     provider: isTranslationProvider(value.provider) ? value.provider : LEGACY_TRANSLATION_PROVIDER,
@@ -95,7 +89,6 @@ function writeHandoff(handoff: TranslationHandoff) {
   localStorage.setItem(HANDOFF_KEY, JSON.stringify(handoff));
 }
 
-/** Remember a quick translation so the window can open onto it. */
 export function saveTranslationHandoff(source: string, output: string) {
   writeHandoff({
     source,
@@ -105,14 +98,12 @@ export function saveTranslationHandoff(source: string, output: string) {
   });
 }
 
-/** The next time the translation window opens, it should show the saved handoff. */
 export function requestTranslationHandoffOpen() {
   const current = readHandoff();
   if (!current) return;
   writeHandoff({ ...current, openRequestedAt: Date.now() });
 }
 
-/** The handoff a fresh open request is waiting for, consumed so a later open stays blank. */
 export function takeTranslationHandoff(now = Date.now()): { source: string; output: string } | null {
   const current = readHandoff();
   if (!current?.openRequestedAt) return null;

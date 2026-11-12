@@ -1,7 +1,3 @@
-/* Light effects on the card and compact layouts (AgentSessionCard.tsx), chosen in Settings → AI
-   Agent → Sessions and off by default: the sparkle band with a glowing frame that breathes while
-   the session is lively, or a gradient wash from the right end. After PR #5. Transforms and
-   opacity only for what moves, so it stays on the compositor. */
 .agent-card--sparkle,
 .agent-card--gradient {
   position: relative;
@@ -9,7 +5,6 @@
   overflow: hidden;
 }
 
-/* Sparkle: every card glows in its colour, and a lively one's frame breathes. */
 .agent-card--sparkle {
   --glow: color-mix(in srgb, var(--card-color) 70%, transparent);
   border-color: color-mix(in srgb, var(--card-color) 55%, transparent);
@@ -33,8 +28,6 @@
   }
 }
 
-/* The band: sparks of three sizes in the card's colour stream out of a soft glow at the left edge
-   in two layers at different speeds and twinkle, fading out towards the card's middle. */
 .agent-card__band {
   position: absolute;
   inset: 0;
@@ -47,14 +40,12 @@
   mask-image: linear-gradient(90deg, #000, rgba(0, 0, 0, 0.8) 14%, rgba(0, 0, 0, 0.38) 34%, rgba(0, 0, 0, 0.1) 52%, transparent 66%);
 }
 
-/* Finished or looked-at cards keep a quieter band. */
 .agent-card:not(.agent-card--lively) .agent-card__band {
   opacity: 0.6;
 }
 
 .agent-card__band::before,
 .agent-card__band::after {
-  /* The core leans to the ink: near white on a dark island, darker on a light one. */
   --hot: color-mix(in srgb, var(--card-color) 40%, rgb(var(--agent-ink)));
   --halo: color-mix(in srgb, var(--card-color) 75%, transparent);
   --mist: color-mix(in srgb, var(--card-color) 22%, transparent);
@@ -90,7 +81,6 @@
     agent-band-twinkle 2.6s ease-in-out -1.3s infinite;
 }
 
-/* Neighbouring cards do not move in step. */
 .agent-sessions__list > li:nth-child(3n + 2) .agent-card__band::before { animation-delay: -5s, -0.8s; }
 .agent-sessions__list > li:nth-child(3n) .agent-card__band::before { animation-delay: -11s, -1.9s; }
 .agent-sessions__list > li:nth-child(3n + 2) .agent-card__band::after { animation-delay: -3s, -2.1s; }
@@ -110,7 +100,6 @@
   50% { opacity: 0.4; }
 }
 
-/* Gradient: a wash in the card's colour from the right end, brighter while lively. */
 .agent-card--gradient::before {
   --wash: color-mix(in srgb, var(--card-color) 8%, transparent);
   content: "";
@@ -126,7 +115,6 @@
   --wash: color-mix(in srgb, var(--card-color) 26%, transparent);
 }
 
-/* Windows asked for less motion: the glow, band and wash stay, still. */
 @media (prefers-reduced-motion: reduce) {
   .agent-card--sparkle.agent-card--lively,
   .agent-card__band::before,

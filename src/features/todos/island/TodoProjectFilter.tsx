@@ -1,7 +1,6 @@
 import { useTranslation } from "../../../i18n";
 import "./TodoProjects.css";
 
-/** The projects above today's list (issue #44): all, or one; shown only once a todo has a project. */
 export function TodoProjectFilter({ projects, value, onChange }: { projects: readonly string[]; value: string | null; onChange: (project: string | null) => void }) {
   const text = useTranslation().todoIsland;
   const chip = (project: string | null, label: string) => (
@@ -17,7 +16,6 @@ export function TodoProjectFilter({ projects, value, onChange }: { projects: rea
   );
 }
 
-/** A project's heading in today's list: its name and how many of its todos are open. */
 export function TodoProjectHeading({ project, open }: { project: string | null; open: number }) {
   const text = useTranslation().todoIsland;
   const name = project ?? text.noProject;

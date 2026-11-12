@@ -43,7 +43,6 @@ export function CollapsedMessageContent({
   const key = current ? JSON.stringify([current.source, current.receivedAt, current.title, current.body]) : "idle";
   const [transition, setTransition] = useState<ContentTransition>({ key, current, previous: undefined, version: 0, animated: false, previousAnimated: false });
 
-  // Retain just the departing row; identical snapshots must not restart the entrance.
   if (key !== transition.key || (!enabled && (transition.previous !== undefined || transition.animated))) {
     setTransition({
       key, current, previous: enabled ? transition.current : undefined, version: transition.version + 1,
@@ -65,7 +64,6 @@ export function CollapsedMessageContent({
         ? { ...state, previous: undefined, animated: false } : state);
       return;
     }
-    // Hidden webviews may skip animationend; never retain an old message indefinitely.
     const timer = window.setTimeout(finish, 720);
     return () => window.clearTimeout(timer);
   }, [moving, version]);

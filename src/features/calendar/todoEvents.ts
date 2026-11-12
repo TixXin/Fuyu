@@ -1,16 +1,9 @@
 import type { CalendarEvent } from "./api";
 
-/** A todo with no end time is taken as a half-hour meeting. */
 const DEFAULT_LENGTH_MS = 30 * 60_000;
 
-/** "15:00 周会", "9:30-10:00 站会", "14：00～15：30 评审": a time (and maybe an end) before the title. */
 const LEADING_TIME = /^\s*(\d{1,2})[:：](\d{2})(?:\s*[-~～–—]\s*(\d{1,2})[:：](\d{2}))?\s+(.+)$/u;
 
-/**
- * Today's unfinished todos whose title starts with a time, as calendar events, so the collapsed
- * island counts down to them like meetings with no calendar added. The time is local, today; a
- * join link in the title is kept. Nothing about the todos themselves changes.
- */
 export function todoEvents(todos: readonly { id: string; title: string; completed: boolean }[], now: number, calendarName: string): CalendarEvent[] {
   return todos.flatMap((todo) => {
     if (todo.completed) return [];
@@ -19,14 +12,8 @@ export function todoEvents(todos: readonly { id: string; title: string; complete
   });
 }
 
-/** `uid` of the events below: the calendar page marks them as todos. */
 export const SCHEDULED_TODO_UID = "scheduled:";
 
-/**
- * Todos planned for later days (useScheduledTodos), shown on the calendar page (issue #43): a
- * title starting with a time as that time on its day, others as an all-day line. They are not
- * reminders: on their day they join today's list, and todoEvents takes them from there.
- */
 export function scheduledTodoEvents(todos: readonly { id: string; title: string; date: string }[], calendarName: string): CalendarEvent[] {
   return todos.flatMap((todo) => {
     const [year, month, day] = todo.date.split("-").map(Number);
@@ -40,7 +27,6 @@ export function scheduledTodoEvents(todos: readonly { id: string; title: string;
   });
 }
 
-/** The event a title starting with a time stands for, on the day `day` is in; null for other titles. */
 function timedEvent(uid: string, text: string, day: number, calendarName: string): CalendarEvent | null {
   const match = LEADING_TIME.exec(text);
   if (!match) return null;

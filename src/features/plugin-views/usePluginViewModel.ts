@@ -1,11 +1,6 @@
 import { useEffect, useState } from "react";
 import { listenPluginViewChanged, setPluginViewVisible } from "./api";
 
-/**
- * The latest model of one plugin view while it is on screen. Showing the page
- * tells the plugin (view.visible) and fetches the model; while hidden the host
- * holds updates back, so a closed page costs nothing.
- */
 export function usePluginViewModel(pluginId: string, viewId: string, shown: boolean) {
   const [model, setModel] = useState<unknown>(null);
   const [loaded, setLoaded] = useState(false);

@@ -1,4 +1,3 @@
-/** The collapsed bar's session ring (features/session-ring). */
 export type SessionRingText = {
   needs: string;
   yourturn: string;
@@ -6,9 +5,7 @@ export type SessionRingText = {
   stale: string;
   done: string;
   empty: string;
-  /** A session waiting on you in the ring's hover card: its state, then "title · project". */
   sessionLine: (state: string, name: string) => string;
-  /** The ring button's label: its summary, then what a click does. */
   openAgents: (summary: string) => string;
 };
 

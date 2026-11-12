@@ -18,10 +18,8 @@ const TOOL_ICONS: Record<AnnotationTool, LucideIcon> = {
   number: Hash,
 };
 
-/** Room the toolbar takes beside the selection, with and without the colour row. */
 const ONE_ROW = 48;
 const TWO_ROWS = 88;
-/** Least gap between the toolbar and the monitor's edges. */
 const EDGE = 4;
 
 function ToolButton({ label, active, disabled, onClick, children }: { label: string; active?: boolean; disabled?: boolean; onClick: () => void; children: ReactNode }) {
@@ -40,12 +38,6 @@ function ToolButton({ label, active, disabled, onClick, children }: { label: str
   );
 }
 
-/**
- * The toolbar beside a chosen selection: the annotation tools, undo and redo, read text, pin, save,
- * cancel and copy;
- * with a tool on, a second row of colours and thicknesses. Below the selection, above it when
- * there is no room, inside it when neither fits.
- */
 export function ScreenshotToolbar({
   area,
   view,
@@ -54,7 +46,6 @@ export function ScreenshotToolbar({
   onCancel,
   onFinish,
 }: {
-  /** The selection in CSS pixels. */
   area: PixelRect;
   view: Size;
   annotations: Annotations;
@@ -65,7 +56,6 @@ export function ScreenshotToolbar({
   const t = useTranslation().screenshot;
   const box = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(0);
-  // Its width changes with the colour row; follow it.
   useLayoutEffect(() => {
     const element = box.current;
     if (!element) return;
@@ -74,8 +64,6 @@ export function ScreenshotToolbar({
     observer.observe(element);
     return () => observer.disconnect();
   }, []);
-  // Lined up with the selection's right edge, but never off the monitor: the toolbar is often
-  // wider than a small selection near the left edge.
   const left = Math.min(Math.max(EDGE, area.x + area.width - width), Math.max(EDGE, view.width - width - EDGE));
   const space = annotations.tool ? TWO_ROWS : ONE_ROW;
   const place = area.y + area.height + space <= view.height ? { top: area.y + area.height + 8 }

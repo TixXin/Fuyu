@@ -11,12 +11,6 @@ import { isSensitivePermission } from "./promptedPermissions";
 
 const isCategory = (name: string): name is MarketCategory => (MARKET_CATEGORIES as readonly string[]).includes(name);
 
-/**
- * One plugin on the market page: a generated icon, its name with an Official or
- * Verified mark, one line of facts (publisher, permissions, runtime, tags), a
- * two-line description, and Install / Installed + Manage / Update on the right.
- * Clicking the card opens its details.
- */
 export function MarketPluginItem({
   plugin,
   market,
@@ -30,12 +24,9 @@ export function MarketPluginItem({
   plugin: MarketPlugin;
   market: MarketSnapshot;
   installingId: string | null;
-  /** Starred by the user; kept on this computer only. */
   favorite: boolean;
-  /** Its 👍 count and the discussion to give one on; missing when the likes could not be read. */
   like?: MarketLike;
   onToggleFavorite: (id: string) => void;
-  /** `trust`: the user agreed to trust the publisher first. `acceptKeyChange`: the user confirmed a new author key. */
   onInstall: (id: string, trust: boolean, acceptKeyChange: boolean) => void;
   onManage?: (id: string) => void;
 }) {

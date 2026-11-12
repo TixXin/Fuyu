@@ -26,8 +26,6 @@ export function MusicWaveButton({
   const prefersReducedMotion =
     typeof window !== "undefined" &&
     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  // Only playing music moves the bars. A paused player used to keep them breathing, which
-  // repainted the collapsed island several times a second for nothing.
   const shouldAnimate = isPlaying && !prefersReducedMotion;
 
   useEffect(() => {
@@ -36,7 +34,6 @@ export function MusicWaveButton({
       return;
     }
 
-    // 10 frames a second; the bars' 100ms CSS transition fills in between.
     const interval = window.setInterval(() => setPhase(performance.now() / 260), 100);
     return () => window.clearInterval(interval);
   }, [shouldAnimate]);

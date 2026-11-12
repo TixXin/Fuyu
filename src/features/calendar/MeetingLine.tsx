@@ -3,10 +3,6 @@ import { useTranslation } from "../../i18n";
 import type { UpcomingMeeting } from "./upcoming";
 import "./MeetingLine.css";
 
-/**
- * The collapsed island's line for a meeting about to start: "周会 · 10 分钟后", or "进行中"
- * once it started. Phrasing content only: it sits inside the bar's open button.
- */
 export function MeetingLine({ meeting, showTitle }: { meeting: UpcomingMeeting; showTitle: boolean }) {
   const text = useTranslation().calendar;
   const when = meeting.minutes > 0 ? text.inMinutes(meeting.minutes) : text.started;

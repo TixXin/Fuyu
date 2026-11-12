@@ -19,16 +19,9 @@ type IslandFeatureOptions = {
   setPage: (page: IslandPage) => void;
   setMessageSource: (source: MessageView) => void;
   openIslandPage: (page: IslandPage) => void;
-  /** Plugin pages to show, in order. */
   pluginPages?: readonly PluginPageId[];
 };
 
-/**
- * The modules switched on, and the island kept consistent with them: an open page or
- * message source that gets switched off moves to one still on, opening a page that is
- * off opens the first one on instead (or nothing when all are off), and switching mail
- * off pauses its sync until it is switched back on.
- */
 export function useIslandFeatures({
   settings,
   clipboardEnabled,
@@ -66,8 +59,6 @@ export function useIslandFeatures({
     if (next !== messageSource) setMessageSource(next);
   }, [features, messageSource, setMessageSource]);
 
-  // Switching mail off pauses every mailbox; switching it back on resumes them.
-  // While mail is on, the panel's own receive switch is left to the user.
   const mailConfigured = qqMail.anyConfigured;
   const mailReceiving = qqMail.anyReceiving;
   const setMailReceiving = qqMail.setAllEnabled;
@@ -87,7 +78,6 @@ export function useIslandFeatures({
     const next = resolveIslandPage(target, features);
     if (next) openIslandPage(next);
   }, [features, openIslandPage]);
-  // A plugin opening its own page right after the user used it (island.openView).
   usePluginOpenView(pluginPages ?? NO_PLUGIN_PAGES, openEnabledPage);
 
   return { features, openEnabledPage };

@@ -25,7 +25,6 @@ import "./OnboardingWindow.css";
 
 const ACTS = ["hello", "shape", "outfit", "play", "release"] as const;
 
-// StrictMode runs effects twice; the island says hello once per guide.
 let greeted = false;
 
 function closeGuide() {
@@ -33,7 +32,6 @@ function closeGuide() {
   void getCurrentWindow().close().catch((error: unknown) => console.error("Failed to close the onboarding window", error));
 }
 
-/** Shown once painted, like the settings window, so it never appears empty. */
 function useShowWhenPainted() {
   useEffect(() => {
     const show = () => void showOnboardingWindow().catch((error) => console.error("Failed to show the onboarding window", error));
@@ -62,12 +60,6 @@ function useViewport() {
   return size;
 }
 
-/**
- * The first-run guide (?window=onboarding): a transparent overlay over the island's screen that
- * dims everything but the real island and walks through it in five acts on a card beside it.
- * Every choice is saved as it is made and shows on the island at once; while the guide runs the
- * island plays a demo song and agent session. The overlay takes the pointer only on the card.
- */
 export function OnboardingWindow() {
   const t = useTranslation();
   const text = t.onboarding;

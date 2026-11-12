@@ -18,10 +18,6 @@ import type { IslandSettings } from "./types";
 
 type Recording = "digit" | "next" | "previous";
 
-/**
- * Shortcuts for moving between expanded island pages. Keys that another shortcut
- * already uses (`takenBy`, given the row's id) are refused with a message.
- */
 export function PageShortcutSection({
   settings,
   onSettingsChange,
@@ -31,7 +27,6 @@ export function PageShortcutSection({
   settings: IslandSettings;
   onSettingsChange: (settings: IslandSettings) => void;
   takenBy: (shortcut: string, selfId: Recording) => string | null;
-  /** The link at the end of the title: to the Shortcuts page, or from it to the Behavior page. */
   action?: ReactNode;
 }) {
   const t = useTranslation();

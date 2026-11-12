@@ -3,10 +3,6 @@ import { getScreenshotTargets, listenScreenshotTargets } from "../../features/sc
 import type { Target } from "../../features/screenshot/targets";
 import { getErrorMessage } from "../../utils/error";
 
-/**
- * What screenshot `id` can snap to on this overlay: the windows at once, the controls inside them
- * as the native side reads them (each batch is announced, then fetched whole).
- */
 export function useTargets(id: number | null): readonly Target[] {
   const [targets, setTargets] = useState<{ id: number | null; list: Target[] }>({ id: null, list: [] });
 

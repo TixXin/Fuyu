@@ -1,4 +1,3 @@
-/* Mailbox list and connect form in the Mail group of the settings window's Messages page. */
 .mail-settings__list {
 display: flex;
   flex-direction: column;
@@ -188,7 +187,6 @@ color: var(--error-text, #ffb7c2);
   .mail-settings__spinning { animation: none; }
 }
 
-/* The card already draws a line above the first mailbox. */
 .mail-settings__account:first-child {
   border-top: 0;
 }

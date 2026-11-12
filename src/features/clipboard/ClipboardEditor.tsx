@@ -2,11 +2,6 @@ import { useState } from "react";
 import { useTranslation } from "../../i18n";
 import type { ClipboardHistoryItem } from "./api";
 
-/**
- * Edit, then paste (C38): the entry's text in a box; Ctrl+Enter pastes the edit once, Ctrl+S
- * saves it as a new entry, Esc goes back. The entry itself does not change. Fills the wide
- * window's right side, or covers the list in the standard one.
- */
 export function ClipboardEditor({ item, overlay, onPasteOnce, onSaveAsNew, onCancel }: {
   item: ClipboardHistoryItem;
   overlay: boolean;

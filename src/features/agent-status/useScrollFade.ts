@@ -1,14 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 
-/** Within this many pixels of an end, the list counts as being at that end. */
 const EDGE_PX = 2;
 
-/**
- * Which ends of a scrolling element have more content past them, so the page can fade those
- * ends out. Updates on scroll, when the element is resized (the island changing height) and
- * when `contentKey` changes (rows added, removed or growing). `ref` is a callback ref, so an
- * element that appears later (after an empty state) is picked up too.
- */
 export function useScrollFade<T extends HTMLElement>(contentKey: unknown) {
   const [element, setElement] = useState<T | null>(null);
   const [fade, setFade] = useState({ top: false, bottom: false });

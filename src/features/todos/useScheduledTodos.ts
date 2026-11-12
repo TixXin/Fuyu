@@ -5,11 +5,6 @@ import { createTodoId, loadScheduledTodos, saveScheduledTodos } from "./storage"
 import type { ScheduledTodo, TodoItem } from "./types";
 import { useTodoFileField } from "./useTodoFileField";
 
-/**
- * Todos planned for later days. Once the list on screen is today's list, every
- * scheduled todo whose day has come moves to the top of it. A list left over from
- * an earlier day waits for the rollover, so due todos are not archived with it.
- */
 export function useScheduledTodos(
   currentTodoDate: string,
   setTodos: Dispatch<SetStateAction<TodoItem[]>>,
@@ -33,7 +28,6 @@ export function useScheduledTodos(
     }
 
     setScheduledTodos(later);
-    // Ids are kept, so a repeated run cannot add the same todo twice.
     setTodos((currentTodos) => [
       ...toTodoItems(due).filter((todo) => !currentTodos.some((item) => item.id === todo.id)),
       ...currentTodos,

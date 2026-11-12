@@ -11,15 +11,8 @@ import { useState } from "react";
 import { useLatestMessagePreview } from "./useLatestMessagePreview";
 import type { IslandMode } from "./types";
 
-/**
- * What can pop up on the collapsed island: message previews (QQ, WeChat, mail, plugins), the
- * camera / microphone hint, the device alert, the volume or brightness popup and plugins'
- * permission questions.
- */
 export function useIslandNotices(settings: IslandSettings, { mode, isTucked, quiet }: { mode: IslandMode; isTucked: boolean; quiet: boolean }) {
-  // The panel opened for new messages keeps taking them while it shows (useIslandMessagePanel).
   const [messagePanelOpen, setMessagePanelOpen] = useState(false);
-  // A tucked island still takes message previews when it will slide out to show them.
   const canPreviewMessages = !quiet && ((mode === "collapsed" && (!isTucked || settings.revealOnMessage)) || messagePanelOpen);
   const qqNotifications = useQQNotifications(canPreviewMessages);
   const wechatReminders = useWeChatReminders(canPreviewMessages);

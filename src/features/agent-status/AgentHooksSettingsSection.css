@@ -1,4 +1,3 @@
-/* An agent's state on the right of its row; one stuck on an error or a stall stands out. */
 .agent-hooks-value {
   color: var(--color-text-muted);
   font-size: 13px;
@@ -8,7 +7,6 @@
   color: var(--color-warning);
 }
 
-/* Under the card: what the last install said, or that the hooks need installing again. */
 .agent-hooks-message {
   display: inline-flex;
   align-items: flex-start;

@@ -7,10 +7,6 @@ import { useAudioLevel } from "./useAudioLevel";
 import { useMediaSessionChanges } from "./useMediaSessionChanges";
 import { useMusicSourcePriority } from "./useMusicSourcePriority";
 
-/**
- * Media session state, playback commands and the source the island currently controls.
- * With `enabled` false (music switched off) nothing is polled and the state stays empty.
- */
 export function useMediaState(enabled = true) {
   const [mediaState, setMediaState] =
     useState<MediaState>(DEFAULT_MEDIA_STATE);
@@ -22,7 +18,6 @@ export function useMediaState(enabled = true) {
   const isRefreshingMediaState = useRef(false);
   const isRunningMediaCommand = useRef(false);
   const trackClock = useRef<TrackClock>(NO_CLOCK);
-  // Changes the player announced while a reading was under way; each gets its own reading.
   const pendingChanges = useRef<MediaSessionChange[]>([]);
   const mediaPlaybackIntent = useRef<{
     status: MediaPlaybackStatus;
@@ -31,7 +26,6 @@ export function useMediaState(enabled = true) {
   const { musicSourcePriority, reorderMusicSource, removeMusicSource } =
     useMusicSourcePriority(mediaState.sessions);
 
-  /** Reads the player's state; `change`, an event it raised, times the clock to the event. */
   const refreshMediaState = useCallback(async function refresh(change?: MediaSessionChange): Promise<void> {
     if (isRefreshingMediaState.current) {
       if (change) pendingChanges.current.push(change);
@@ -56,11 +50,9 @@ export function useMediaState(enabled = true) {
         mediaPlaybackIntent.current = null;
       }
 
-      // A player that reports no position (NetEase Cloud Music) is timed by the island.
       const untimed = nextMediaState.title && !hasTimeline(nextMediaState)
         ? `${nextMediaState.sourceApp ?? ""}\u001f${nextMediaState.title}\u001f${nextMediaState.artist ?? ""}`
         : null;
-      // An event from the player read here counts from when it happened, not from this reading.
       const event = change && (change.sessionId === null || change.sessionId === nextMediaState.activeSessionId) ? change : null;
       const playing = playbackStatus === "playing";
       trackClock.current = !untimed
@@ -138,7 +130,6 @@ export function useMediaState(enabled = true) {
             audioPeak:
               intendedStatus === "paused" ? 0 : currentState.audioPeak,
             playbackStatus: intendedStatus,
-            // Where it is now, so the position neither freezes at the last reading nor skips it.
             positionMs: Math.round(playbackPosition(currentState, Date.now())),
             updatedAt: Date.now(),
           }));
@@ -194,9 +185,6 @@ export function useMediaState(enabled = true) {
     [mediaState.playbackStatus, refreshMediaState],
   );
 
-  // The fast meter only runs while something plays: each read starts a COM thread natively. The
-  // 1.5s state poll below also reads the peak, so sound from a player without a media session
-  // still switches it on.
   useAudioLevel(
     setMediaState,
     mediaPlaybackIntent,
@@ -251,7 +239,6 @@ export function useMediaState(enabled = true) {
     void refreshMediaState();
   }, [effectiveMediaTarget, enabled, refreshMediaState]);
 
-  /** Sets the island's own timing of the track to `positionMs`, as when the user picks the line being sung. */
   const alignPosition = useCallback((positionMs: number) => {
     if (trackClock.current.key === null) return;
     const now = Date.now();

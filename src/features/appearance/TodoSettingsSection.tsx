@@ -4,7 +4,6 @@ import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
 import { useTranslation } from "../../i18n";
 import type { IslandSettings } from "./types";
 
-/** Todos → Todos: what the collapsed island shows, carrying unfinished ones over, order and rotation. */
 export function TodoSettingsSection({ settings, onSettingsChange }: {
   settings: IslandSettings;
   onSettingsChange: (settings: IslandSettings) => void;

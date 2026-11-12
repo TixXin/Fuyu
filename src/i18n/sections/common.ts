@@ -6,7 +6,6 @@ export type CommonText = {
   saved: string;
   connecting: string;
   noMessages: string;
-  /** How long ago something happened, for list rows. */
   ago: { justNow: string; minutes: (count: number) => string; hours: (count: number) => string; yesterday: (time: string) => string; date: (month: number, day: number) => string };
   more: string;
 };

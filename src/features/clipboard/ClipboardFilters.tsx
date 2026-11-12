@@ -2,14 +2,12 @@ import { Search, X } from "lucide-react";
 import { useTranslation } from "../../i18n";
 import { normalizeClipboardShortcut } from "./shortcut";
 
-/** The search box, always shown, with the shortcut that opens the clipboard at its end. */
 export function ClipboardFilters({
   query,
   shortcut,
   onQueryChange,
 }: {
   query: string;
-  /** Shown while the shortcut is on; null hides it. */
   shortcut: string | null;
   onQueryChange: (query: string) => void;
 }) {

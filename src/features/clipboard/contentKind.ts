@@ -1,6 +1,5 @@
 import type { ClipboardHistoryItem } from "./api";
 
-/** What a text entry turns out to be, for its icon, its badge and the wide window's pane (C38). */
 export type ContentKind =
   | { kind: "link"; url: URL }
   | { kind: "color"; color: Rgba }
@@ -10,7 +9,6 @@ export type Rgba = { r: number; g: number; b: number; a: number };
 
 const MAX_SNIFF_LENGTH = 20_000;
 
-/** The kind of a text entry, or null for plain text, images, files and masked keys. */
 export function contentKind(item: ClipboardHistoryItem): ContentKind | null {
   if (kinds.has(item)) return kinds.get(item) ?? null;
   const kind = sniff(item);
@@ -18,7 +16,6 @@ export function contentKind(item: ClipboardHistoryItem): ContentKind | null {
   return kind;
 }
 
-// Entries are replaced, not changed, when the history changes, so each object is sniffed once.
 const kinds = new WeakMap<ClipboardHistoryItem, ContentKind | null>();
 
 function sniff(item: ClipboardHistoryItem): ContentKind | null {
@@ -39,7 +36,6 @@ function sniff(item: ClipboardHistoryItem): ContentKind | null {
   return null;
 }
 
-/** A single http(s) address with nothing around it. */
 export function parseLink(text: string): URL | null {
   if (!/^https?:\/\/\S+$/i.test(text)) return null;
   try {
@@ -50,7 +46,6 @@ export function parseLink(text: string): URL | null {
   }
 }
 
-/** "github.com › TixXin/fuyu › pull/26": the host without www, then the path in at most two parts. */
 export function linkLabel(url: URL): string {
   const host = url.hostname.replace(/^www\./, "");
   const parts = url.pathname.split("/").filter(Boolean);
@@ -60,10 +55,8 @@ export function linkLabel(url: URL): string {
   return [host, head, rest].filter(Boolean).join(" › ");
 }
 
-// Parameters that only say where a click came from.
 const TRACKING = /^(utm_\w+|fbclid|gclid|dclid|msclkid|mc_cid|mc_eid|igshid|yclid|_hsenc|_hsmi|spm|scm|from|share_source|share_medium|share_plat|share_tag|vd_source|si|ref_src|ref_url)$/i;
 
-/** The address without its tracking parameters; the same string when it has none. */
 export function stripTracking(text: string): string {
   const url = parseLink(text.trim());
   if (!url) return text;
@@ -75,7 +68,6 @@ export function stripTracking(text: string): string {
 
 const clamp = (value: number, max: number) => Math.min(max, Math.max(0, value));
 
-/** #rgb, #rrggbb, #rrggbbaa, rgb()/rgba() or hsl()/hsla(); null for anything else. */
 export function parseColor(text: string): Rgba | null {
   const value = text.trim().toLowerCase();
   const hex = /^#([0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/.exec(value);
@@ -104,7 +96,6 @@ function hslToRgb(hue: number, saturation: number, lightness: number) {
   return { r: Math.round((r + m) * 255), g: Math.round((g + m) * 255), b: Math.round((b + m) * 255) };
 }
 
-/** The colour written three ways: HEX, RGB and HSL. */
 export function colorFormats({ r, g, b, a }: Rgba): { hex: string; rgb: string; hsl: string } {
   const hex = `#${[r, g, b].map((channel) => channel.toString(16).padStart(2, "0")).join("").toUpperCase()}${a < 1 ? Math.round(a * 255).toString(16).padStart(2, "0").toUpperCase() : ""}`;
   const max = Math.max(r, g, b) / 255;

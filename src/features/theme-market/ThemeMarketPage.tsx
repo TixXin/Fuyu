@@ -9,17 +9,10 @@ import "../plugins/PluginMarketSection.css";
 import "../plugins/PluginCard.css";
 import "./ThemeMarketPage.css";
 
-/** The island's own publisher, shown as Official (OFFICIAL_PUBLISHER in plugin_host/market.rs). */
 const OFFICIAL = "TixXin";
 
-/** The themes this window last read, shown at once when the page opens again. */
 let lastThemes: MarketTheme[] | null = null;
 
-/**
- * Settings → Theme market (C26): themes from TixXin/fuyu-plugins, each a card with the collapsed
- * island drawn in it over the user's own sizes. Apply changes the look at once; Save adds it to
- * the Theme page's saved themes (`onSave` takes a theme file's text, as an import does).
- */
 export function ThemeMarketPage({ settings, onSettingsChange, onSave }: {
   settings: IslandSettings;
   onSettingsChange: (settings: IslandSettings) => void;

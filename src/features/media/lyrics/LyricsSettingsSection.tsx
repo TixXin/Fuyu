@@ -10,7 +10,6 @@ import type { LyricsIslandPriority } from "./lyricsSettings";
 import type { IslandSettings } from "../../appearance/types";
 import "./LyricsSettingsSection.css";
 
-/** Settings → Music: where lyrics come from and how far they are moved. */
 export function LyricsSettingsSection({
   settings,
   onSettingsChange,
@@ -19,7 +18,6 @@ export function LyricsSettingsSection({
   onSettingsChange: (settings: IslandSettings) => void;
 }) {
   const text = useTranslation().settings.lyrics;
-  // Saved when the field is left, so each keystroke does not start a lookup.
   const [folder, setFolder] = useState(settings.lyricsFolder);
   useEffect(() => setFolder(settings.lyricsFolder), [settings.lyricsFolder]);
   const saveFolder = () => {

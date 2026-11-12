@@ -1,4 +1,3 @@
-/* Settings → Clipboard → Snippets (C24.6). */
 .clipboard-snippet__actions {
   display: flex;
   gap: var(--space-xs);

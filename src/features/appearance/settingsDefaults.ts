@@ -1,4 +1,3 @@
-// First-launch settings, and what older versions showed for fields they did not have yet.
 import { DEFAULT_LYRICS_SETTINGS } from "../media/lyrics/lyricsSettings.ts";
 import { DEFAULT_CALENDAR_SETTINGS } from "../calendar/calendarSettings.ts";
 import { DEFAULT_PAGE_DIGIT_MODIFIERS, DEFAULT_PAGE_NEXT_SHORTCUT, DEFAULT_PAGE_PREVIOUS_SHORTCUT } from "./pageShortcuts.ts";
@@ -8,16 +7,13 @@ import {
 } from "./settingsLimits.ts";
 import type { IslandSettings } from "./types";
 
-// First-launch settings. A saved setting that lacks a newer field keeps the
-// fallback in normalizeSettings, which for behavior switches is what older
-// versions did, so upgrading never flips them.
 export const DEFAULT_SETTINGS: IslandSettings = {
   topEdgeLayoutVersion: 1,
   appearanceMode: "classic",
   fontFamily: "system",
   glassIntensity: 72,
   opacity: 100,
-  collapsedScale: 1, // Any other scale resamples the island's text and 1px lines.
+  collapsedScale: 1,
   expandedScale: 1,
   marginY: 0,
   islandMonitor: "primary",
@@ -39,7 +35,6 @@ export const DEFAULT_SETTINGS: IslandSettings = {
   agentShowCodex: true,
   agentHideFinished: false,
   agentHideClosed: true,
-  // Off unless asked for: the age alone keeps finished rows short.
   agentShowElapsed: false,
   agentShowModel: true,
   agentShowActivity: true,
@@ -119,17 +114,12 @@ export const DEFAULT_SETTINGS: IslandSettings = {
   gameDoNotDisturb: true,
   gameAutoTuck: false,
 };
-// What versions before these fields existed showed. A saved setting without the
-// field loads as this, not as the first-launch default, so an upgrade keeps the look.
 export const LEGACY_FALLBACKS = {
-  // Settings from before the theme modes keep the colours their user picked.
-  // A light colour picked before this stays light when collapsed too.
   collapsedDark: false,
   topFilletRadius: 8,
   islandCornerRadius: 30,
   hoverExpandDelayMs: 300,
   hoverCollapseDelayMs: 400,
-  // First-launch values before 0.3.5-beta.5, for saved settings that lack the field.
   maxPanelHeight: 490,
   panelWidth: 560,
   pulseBrightness: 100,

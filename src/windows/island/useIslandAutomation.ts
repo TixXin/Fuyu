@@ -76,7 +76,6 @@ export function useIdleTuck(
   }, [enabled, isTucked, onTuck, seconds, view]);
 }
 
-/** Slides a tucked island out when the tray's Show asks for it. */
 export function useRevealOnRequest(onReveal: () => void) {
   useEffect(() => {
     let didCancel = false;
@@ -92,7 +91,6 @@ export function useRevealOnRequest(onReveal: () => void) {
   }, [onReveal]);
 }
 
-/** Slides a tucked island back into view when a message preview starts showing on it. */
 export function useRevealOnMessage(hasPreview: boolean, isTucked: boolean, onReveal: () => void) {
   useEffect(() => {
     if (hasPreview && isTucked) onReveal();

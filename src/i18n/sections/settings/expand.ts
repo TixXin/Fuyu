@@ -5,15 +5,11 @@ export type SettingsExpandText = {
   hover: string;
   hoverDelay: string;
   hoverCollapseDelay: string;
-  /** Resting the pointer on a page dot of the expanded island opens that page. */
   hoverSwitchPage: string;
   hoverSwitchPageHint: string;
   hoverSwitchDelay: string;
-  /** Title of the group for tucking to the screen edge. */
   tuckTitle: string;
-  /** Title of the group for how a tucked island comes back. */
   revealTitle: string;
-  /** Times the idle timer does not tuck the island (issue #29). */
   holdTodo: string;
   holdTodoHint: string;
   holdAgent: string;
@@ -21,11 +17,9 @@ export type SettingsExpandText = {
   holdMusic: string;
   holdMusicHint: string;
   revealOnMessage: string;
-  /** What hovering an island tucked to the edge does. */
   tuckedHover: string;
   tuckedHoverReveal: string;
   tuckedHoverExpand: string;
-  /** How the island opens and closes (C49), the presets and the preview's play button. */
   motion: string;
   motionHint: string;
   motionSpring: string;

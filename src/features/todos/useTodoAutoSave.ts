@@ -12,7 +12,6 @@ type TodoAutoSaveOptions = {
   setSaveState: (state: SaveState) => void;
 };
 
-/** Writes the day's markdown 700ms after the last edit, skipping the initial load and unchanged content. */
 export function useTodoAutoSave({
   currentTodoDate,
   todos,

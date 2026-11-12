@@ -1,4 +1,3 @@
-/** Settings → Music → On the island: the collapsed bar's music wave. */
 export type SettingsMusicBarText = {
   title: string;
   wave: string;

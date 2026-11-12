@@ -3,7 +3,6 @@ import type { MessageView } from "../../features/messages/Messages";
 import type { MessageSource } from "../../features/messages/messagePreview";
 import type { IslandPage } from "./types";
 
-/** Which message source the Messages page shows, and opening that page on a source. */
 export function useMessageView(closeMailReader: () => void, openIslandPage: (page: IslandPage) => void) {
   const [messageSource, setMessageSource] = useState<MessageView>("qq");
 

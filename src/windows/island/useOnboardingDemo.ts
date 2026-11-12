@@ -13,16 +13,10 @@ export type OnboardingDemo = {
 
 const OFF: OnboardingDemo = { active: false, mediaState: null, sessions: [] };
 
-/**
- * While the first-run guide runs (it renews `fuyu-onboarding-demo`), a demo song and a demo agent
- * session, so the guide's practice shows the music and agent parts of the island on a fresh
- * install. Ends when the guide closes, or a few seconds after it stops renewing.
- */
 export function useOnboardingDemo(): OnboardingDemo {
   const text = useTranslation().onboarding.demo;
   const [until, setUntil] = useState(() => islandDemoUntil());
   const [now, setNow] = useState(() => Date.now());
-  // Fixed for the whole demo, so the session's start and the song's position do not jump.
   const [startedAt, setStartedAt] = useState(() => Date.now());
   const untilRef = useRef(until);
   const active = until > now;
@@ -32,7 +26,6 @@ export function useOnboardingDemo(): OnboardingDemo {
       if (event.key !== ONBOARDING_DEMO_STORAGE_KEY) return;
       const next = islandDemoUntil(event.newValue);
       const at = Date.now();
-      // A demo that was over starts again with a new start time.
       if (untilRef.current <= at && next > at) setStartedAt(at);
       untilRef.current = next;
       setUntil(next);
@@ -83,7 +76,6 @@ export function useOnboardingDemo(): OnboardingDemo {
   }, [active, startedAt, text]);
 }
 
-/** The island's media with the demo song in place, while the demo runs and nothing real plays. */
 export function withDemoMedia<T extends { mediaState: MediaState }>(media: T, demo: OnboardingDemo): T {
   if (!demo.mediaState || media.mediaState.playbackStatus === "playing") return media;
   return { ...media, mediaState: demo.mediaState };

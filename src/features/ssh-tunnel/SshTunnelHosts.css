@@ -1,4 +1,3 @@
-/* The SSH proxy tunnel's hosts on its plugin page; fields and buttons come from the plugin page. */
 .ssh-tunnel__host {
   display: grid;
   gap: 6px;

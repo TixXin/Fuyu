@@ -9,11 +9,6 @@ type KeybindingContext = {
   hasActiveTodo: boolean;
 };
 
-/**
- * Runs a plugin command when its global shortcut is pressed and its `when` clause
- * holds for the island right now. The host registers the shortcuts; the island
- * decides, because only it knows which page is open.
- */
 export function usePluginKeybindings({ mode, page, hasActiveTodo }: KeybindingContext) {
   const context = useRef<WhenContext>({});
   context.current = {

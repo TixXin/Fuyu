@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { getCalendarEvents, type CalendarEvent, type CalendarSnapshot } from "./api";
 import { nextChangeAt, upcomingMeeting, type UpcomingMeeting } from "./upcoming";
 
-/** How often the island asks; the native side reads the calendars again only every 15 minutes. */
 const POLL_MS = 60_000;
 
 const NO_EVENTS: readonly CalendarEvent[] = [];
@@ -16,18 +15,11 @@ function isSnapshot(value: unknown): value is CalendarSnapshot {
 
 export type CalendarState = {
   snapshot: CalendarSnapshot;
-  /** The meeting the collapsed island counts down to, or null. */
   upcoming: UpcomingMeeting | null;
-  /** The time `upcoming` was worked out for; the page marks past events by it. */
   now: number;
-  /** Reads the calendars now (the page opened, or the user asked). */
   refresh: () => void;
 };
 
-/**
- * The events of last month to next month while the calendar module is on, and the next meeting.
- * `extra` are events from elsewhere (todos that start with a time, todoEvents.ts), merged in.
- */
 export function useCalendar(enabled: boolean, remindMinutes: number, extra: readonly CalendarEvent[] = NO_EVENTS): CalendarState {
   const [read, setSnapshot] = useState<CalendarSnapshot>(EMPTY_CALENDAR);
   const snapshot = useMemo(
@@ -56,7 +48,6 @@ export function useCalendar(enabled: boolean, remindMinutes: number, extra: read
     return () => window.clearInterval(timer);
   }, [enabled, load]);
 
-  // Wake when the countdown's minute, a start or an end comes, rather than every second.
   useEffect(() => {
     const at = nextChangeAt(snapshot.events, now, remindMinutes);
     if (at === null) return;

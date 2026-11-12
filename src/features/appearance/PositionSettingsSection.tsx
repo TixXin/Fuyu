@@ -7,7 +7,6 @@ import { useTranslation } from "../../i18n";
 import { DEFAULT_SETTINGS } from "./settings";
 import type { IslandMonitor, IslandSettings } from "./types";
 
-/** Where the island sits: its top margin, how to drag it, and a way back to the default. */
 export function PositionSettingsSection({
   settings,
   onSettingsChange,

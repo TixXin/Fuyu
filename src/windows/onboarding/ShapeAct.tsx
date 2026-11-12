@@ -10,7 +10,6 @@ import type { IslandCornerShape, IslandSettings, ThemeMode } from "../../feature
 import { useTranslation } from "../../i18n";
 import { ActHeading } from "./ActHeading";
 
-/** Act 2: dark or light, the accent, the corners and how it opens, each seen at once on the real island. */
 export function ShapeAct({ settings, onSettingsChange }: { settings: IslandSettings; onSettingsChange: (settings: IslandSettings) => void }) {
   const t = useTranslation();
   const text = t.onboarding.shape;

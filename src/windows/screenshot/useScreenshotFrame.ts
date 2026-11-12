@@ -9,17 +9,10 @@ import {
 } from "../../features/screenshot/api";
 import { getErrorMessage } from "../../utils/error";
 
-/** The picture's 2D context; read often (magnifier, colour), so kept in CPU memory. */
 export function pictureContext(canvas: HTMLCanvasElement | null) {
   return canvas?.getContext("2d", { willReadFrequently: true }) ?? null;
 }
 
-/**
- * The open screenshot as this overlay shows it: follows the session announcements (and asks once
- * on load, for a window that was still loading when it was announced), draws the monitor's
- * picture into `canvasRef`, then tells the native side to show the window. `ready` turns true once
- * the picture is drawn; the session ending clears it and frees the picture.
- */
 export function useScreenshotFrame() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [session, setSession] = useState<ScreenshotSession | null>(null);

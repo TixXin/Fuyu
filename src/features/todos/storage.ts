@@ -13,30 +13,17 @@ import { queueTodoChange, todoFileData } from "./todoStore.ts";
 
 export { createTodoId, normalizeTodo };
 
-// The todo data below lives in todos.json once the island has migrated it
-// (todoStore.ts); these keys are then only read for the migration and are
-// never written or deleted, so an older version still finds them. Saves to
-// todos.json go through the same parse functions as the migration, so todos.json
-// only ever holds what the island would have read back from localStorage.
-
-// Todos planned for later days (ScheduledTodo[]); added for upstream issue #30.
 export const SCHEDULED_TODOS_STORAGE_KEY = "fuyu-scheduled-todos";
 export const TODOS_STORAGE_KEY = "fuyu-todos";
 export const ACTIVE_TODO_STORAGE_KEY = "fuyu-active-todo";
 export const TODO_DATE_STORAGE_KEY = "fuyu-current-date";
 export const TODO_ARCHIVE_STORAGE_KEY = "fuyu-archives";
 export const DAILY_NOTE_STORAGE_KEY = "fuyu-daily-note";
-/** Set once the todo keys were moved to todos.json: `{ at }`. */
 export const TODOS_MIGRATED_STORAGE_KEY = "fuyu-todos-migrated-v1";
-// Settings for exporting archives; they stay in localStorage.
 export const TODO_SAVE_DIRECTORY_STORAGE_KEY = "fuyu-save-directory";
 export const TODO_LAST_SAVED_SIGNATURE_STORAGE_KEY =
   "fuyu-last-saved-signature";
 
-/**
- * The stored text of every migrated key, for migrate_todos. The command names
- * them by their keys from before the rename (D17), which it was written for.
- */
 export function readLocalTodoKeys(): LocalTodoKeys {
   return {
     "focusd-island-todos": readString(TODOS_STORAGE_KEY),
@@ -86,7 +73,6 @@ export function loadDailyNote() {
   return todoFileData()?.dailyNote ?? readString(DAILY_NOTE_STORAGE_KEY) ?? "";
 }
 
-/** Returns false when the value could not be stored. */
 export function saveSaveDirectory(directory: string) {
   return writeString(TODO_SAVE_DIRECTORY_STORAGE_KEY, directory);
 }

@@ -1,7 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 
-// 与 src-tauri/src/media_control/service.rs 中的 MediaState、MediaSessionInfo、AudioLevel 对应。
 export type MediaPlaybackStatus = "unavailable" | "playing" | "paused";
 
 export type MediaRepeatMode = "none" | "track" | "list" | "unknown";
@@ -21,15 +20,9 @@ export type MediaState = {
   artist: string | null;
   album: string | null;
   thumbnail: string | null;
-  /** A song id a player plugin gives (`NCM-<id>`, `QQ-<id>`); missing from older builds. */
   trackId?: string | null;
   positionMs: number;
   durationMs: number;
-  /**
-   * Set when the player reports no position and the island times the track (trackClock.ts):
-   * "timed" when it saw the track start or the user aligned it, "unsure" when the track may
-   * have been playing before. Absent for players that report their position.
-   */
   positionEstimate?: "timed" | "unsure";
   canSeek: boolean;
   canNext: boolean;
@@ -65,14 +58,10 @@ export function getAudioLevel() {
   return invoke<AudioLevel>("get_audio_level");
 }
 
-// Mirrors MEDIA_SESSION_CHANGED_EVENT in src-tauri/src/media_control/events.rs.
 export const MEDIA_SESSION_CHANGED_EVENT = "media-session-changed";
 
-/** A player changed track or played / paused (SessionChange in src-tauri/src/media_control/events.rs). */
 export type MediaSessionChange = {
-  /** "track": another song started, `at` when its sound began; "playback": it played or paused. */
   kind: "track" | "playback";
-  /** Unix milliseconds. */
   at: number;
   sessionId: string | null;
 };

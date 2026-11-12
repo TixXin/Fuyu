@@ -1,4 +1,3 @@
-/** Mirrors AgentSoundEvent in features/agent-status/sounds/events.ts (i18n does not import features). */
 type SoundEvent = "start" | "complete" | "error" | "approval" | "question" | "ack" | "compact" | "idle" | "quotaLow" | "quotaReset";
 
 export type SettingsSoundsText = {
@@ -29,7 +28,6 @@ export type SettingsSoundsText = {
   imported: (name: string) => string;
   removePack: string;
   openFolder: string;
-  /** On a pack an installed plugin brings; it is removed on the plugin page. */
   fromPlugin: string;
   confirmRemove: (name: string) => string;
   noSounds: string;

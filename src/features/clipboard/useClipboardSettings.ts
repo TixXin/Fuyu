@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from "react";
 import { getClipboardHistory, listenClipboardHistoryChanged, setClipboardHistorySettings, type ClipboardHistorySettings } from "./api";
 import { DEFAULT_CLIPBOARD_HISTORY, normalizeClipboardSettings } from "./settings";
 
-/** Clipboard history settings for the settings window, kept in sync with the native store. */
 export function useClipboardSettings() {
   const [clipboardSettings, setClipboardSettings] =
     useState<ClipboardHistorySettings>(DEFAULT_CLIPBOARD_HISTORY.settings);

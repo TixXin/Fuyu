@@ -10,18 +10,9 @@ import {
   type PluginsSnapshot,
 } from "./api";
 
-/**
- * The last index this window loaded, so reopening the page shows it at once
- * while a fresh copy loads in the background.
- */
 let lastMarket: MarketSnapshot | null = null;
-/** When this window last read the index online (ms); null while only the island's cached copy is shown. */
 let lastLoadedAt: number | null = null;
 
-/**
- * The plugin market index, fetched when the page opens and on Refresh, and
- * installing from it. `onInstalled`, when given, receives the new list of installed plugins.
- */
 export function usePluginMarket(onInstalled?: (snapshot: PluginsSnapshot) => void) {
   const errorText = useErrorText();
   const [market, setMarket] = useState<MarketSnapshot | null>(lastMarket);
@@ -30,13 +21,11 @@ export function usePluginMarket(onInstalled?: (snapshot: PluginsSnapshot) => voi
   }, [market]);
   const [loadedAt, setLoadedAt] = useState<number | null>(lastLoadedAt);
   const [loading, setLoading] = useState(false);
-  // Kept apart so a failed install does not read as the list failing to load.
   const [loadError, setLoadError] = useState("");
   const [installError, setInstallError] = useState<{ id: string; detail: string } | null>(null);
   const [installingId, setInstallingId] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
-    // Clear the old failure first, so a retry shows only "Loading" until it answers.
     setLoadError("");
     setInstallError(null);
     setLoading(true);
@@ -52,7 +41,6 @@ export function usePluginMarket(onInstalled?: (snapshot: PluginsSnapshot) => voi
   }, [errorText]);
 
   useEffect(() => {
-    // Show the island's last verified copy while the fresh one downloads; never over a newer answer.
     if (lastMarket === null) {
       getCachedPluginMarket()
         .then((cached) => cached && setMarket((current) => current ?? cached))
@@ -61,7 +49,6 @@ export function usePluginMarket(onInstalled?: (snapshot: PluginsSnapshot) => voi
     void refresh();
   }, [refresh]);
 
-  /** `trust`: trust the plugin's publisher first (the user agreed on the button). `acceptKeyChange`: the user confirmed a new author key. */
   const install = useCallback(
     async (id: string, trust = false, acceptKeyChange = false) => {
       setInstallingId(id);

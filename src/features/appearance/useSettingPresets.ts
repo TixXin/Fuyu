@@ -7,10 +7,6 @@ import { saveThemeFile } from "./api";
 import { buildTheme, parseTheme, themeFileName, type ThemeProblem } from "./theme.ts";
 import type { IslandPreset, IslandSettings } from "./types";
 
-/**
- * Saved style presets: saving the current settings, applying, renaming and deleting them, and
- * moving one in or out as a theme file.
- */
 export function useSettingPresets(
   settings: IslandSettings,
   onSettingsChange: (settings: IslandSettings) => void,
@@ -80,7 +76,6 @@ export function useSettingPresets(
     );
   }, []);
 
-  /** Saves a preset as a theme file in Downloads; resolves to the file's path. */
   const exportSettingsPreset = useCallback(
     (presetId: string) => {
       const preset = presets.find((item) => item.id === presetId);
@@ -91,7 +86,6 @@ export function useSettingPresets(
     [presets],
   );
 
-  /** Adds a theme file's text as a new preset (not applied); returns its name or the problem. */
   const importSettingsPreset = useCallback(
     (text: string): { name: string } | { problem: ThemeProblem } => {
       const parsed = parseTheme(text, settings);

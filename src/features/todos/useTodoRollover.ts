@@ -12,14 +12,9 @@ type TodoRolloverOptions = {
   saveDirectory: string;
   saveTodosToDisk: (date: string, todoList: TodoItem[], nextDailyNote: string) => Promise<unknown>;
   upsertArchive: (date: string, todoList: TodoItem[], nextDailyNote: string, savedToDisk: boolean) => void;
-  /** Resets the day's state to the new date with the carried-over todos. */
   onStartDay: (nextDate: string, carriedTodos: TodoItem[]) => void;
 };
 
-/**
- * Starts a new day when the local date changes (checked on load and every
- * 30s): archives unsaved work, then carries incomplete todos over if enabled.
- */
 export function useTodoRollover({
   currentTodoDate,
   todos,

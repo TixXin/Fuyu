@@ -9,14 +9,6 @@ import { CcConnectSetup } from "./CcConnectSetup";
 import { useCcConnect } from "./useCcConnect";
 import { useRemoteCcConnect } from "./useRemoteCcConnect";
 
-/**
- * The cc-connect phone link's plugin page sections, for the computer picked: this one or an SSH
- * computer the island reads (AI Agent → Remote computers; CcConnectRemote). For this one: the
- * program found and how (or a download), whether it runs and the island's own run of it, and the
- * chats each project has talked to (the phone push sends to those); then setting a new bot up
- * (CcConnectSetup). Read while the plugin is on, again every few seconds, so a chat shows soon
- * after its first message to the bot; an SSH computer is read when picked and on refresh.
- */
 export function CcConnectSection() {
   const t = useTranslation().settings.plugins.ccConnect;
   const cc = useCcConnect();
@@ -107,7 +99,6 @@ function LocalStatus({ status, downloading, onDownload }: { status: CcConnectSta
   );
 }
 
-/** Every project: those in the config, then any only the session files know. */
 function projectNames(status: CcConnectStatus) {
   return [...new Set([...status.configProjects, ...status.projects.map((project) => project.name)])];
 }

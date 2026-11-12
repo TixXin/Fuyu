@@ -32,7 +32,6 @@
 
 .island__header {
   display: grid;
-  /* The dots stay 96px wide unless plugin page buttons need more. */
   grid-template-columns: auto minmax(96px, auto) minmax(0, 1fr) auto;
   align-items: center;
   gap: var(--space-md);
@@ -89,7 +88,6 @@
   outline-offset: -5px;
 }
 
-/* Built-in page buttons: grey icons; the open page's takes the theme's accent on a tint of it. */
 .dot-button {
   --page-color: var(--color-accent);
   flex: 0 0 auto;
@@ -136,8 +134,6 @@
   gap: var(--space-md);
 }
 
-/* The Agent icon, coloured by the agent state, opens the Agent page; a fill marks it while that
-   page is open. As big as the page buttons beside it (.dot-button). */
 .island__agent-button {
   display: inline-grid;
   place-items: center;
@@ -162,7 +158,6 @@
   outline-offset: 1px;
 }
 
-/* Translation opened as an island page: the header button shows it is the open page. */
 .icon-button.island-translate-button--active {
   color: rgb(var(--overlay-rgb, 255, 255, 255));
   background: var(--color-white-a16);
@@ -172,7 +167,6 @@
   position: relative;
 }
 
-/* A newer version is out; clicking opens the Updates page. */
 .island-settings-button__dot {
   position: absolute;
   top: 4px;

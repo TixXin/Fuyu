@@ -3,10 +3,6 @@ import type { PluginCallRecord } from "./api";
 
 const time = (at: number) => new Date(at).toLocaleTimeString([], { hour12: false });
 
-/**
- * "What has this plugin been doing": its last host API calls, newest first,
- * with how each ended. Only method names, never what was read or written.
- */
 export function PluginCallLog({ calls }: { calls: PluginCallRecord[] }) {
   const t = useTranslation();
   const labels = t.settings.plugins.calls;

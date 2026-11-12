@@ -1,6 +1,5 @@
 import { normalizeSearchText, searchWords } from "./settingsSearch.ts";
 
-/** Pages of the settings window, in sidebar order. */
 export const SETTINGS_CATEGORIES = [
   "general",
   "behavior",
@@ -32,10 +31,6 @@ export type SettingsCategory = (typeof SETTINGS_CATEGORIES)[number];
 
 export type SettingsGroup = "basics" | "features" | "agents" | "extensions";
 
-/**
- * Sidebar sections: app-wide settings, one page per module (QQ, WeChat and Mail share
- * Messages), the AI Agent pages (on the island, session list, alerts, sounds, approvals, connection, SSH remote), then plugins (installed, and the market on its own page). A null label leaves About on its own at the end.
- */
 export const SETTINGS_GROUPS: readonly { label: SettingsGroup | null; categories: readonly SettingsCategory[] }[] = [
   { label: "basics", categories: ["general", "behavior", "appearance", "theme", "themeMarket", "shortcuts"] },
   { label: "features", categories: ["todos", "calendar", "music", "translation", "clipboard", "shelf", "screenshot", "messages"] },
@@ -46,7 +41,6 @@ export const SETTINGS_GROUPS: readonly { label: SettingsGroup | null; categories
 
 export const DEFAULT_SETTINGS_CATEGORY: SettingsCategory = "general";
 
-/** Pages that were merged into another, by their old name: what the island or a link still asks for. */
 const MERGED_CATEGORIES: Readonly<Record<string, SettingsCategory>> = {
   qq: "messages",
   wechat: "messages",
@@ -54,11 +48,6 @@ const MERGED_CATEGORIES: Readonly<Record<string, SettingsCategory>> = {
   updates: "about",
 };
 
-/**
- * Pages the sidebar search finds, in sidebar order: every word of the query appears in the
- * page's text (its name, its group's name and its keywords, from `describe`), ignoring case,
- * spaces and punctuation (settingsSearch.ts `normalizeSearchText`).
- */
 export function searchCategories(query: string, describe: (category: SettingsCategory) => string): SettingsCategory[] {
   const words = searchWords(query);
   if (words.length === 0) return [...SETTINGS_CATEGORIES];
@@ -68,7 +57,6 @@ export function searchCategories(query: string, describe: (category: SettingsCat
   });
 }
 
-/** The page a category name opens, old names included; null when there is no such page. */
 export function settingsCategoryFor(name: string): SettingsCategory | null {
   if ((SETTINGS_CATEGORIES as readonly string[]).includes(name)) return name as SettingsCategory;
   return MERGED_CATEGORIES[name] ?? null;

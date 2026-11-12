@@ -4,12 +4,6 @@ import { getLocalDateString } from "../../utils/date.ts";
 import { readProject } from "./project.ts";
 import { normalizeScheduledTodo, sortScheduledTodos } from "./schedule.ts";
 
-/**
- * Reads the stored text of each todo key into the current format. Pure: no
- * localStorage access, so storage.ts and the todos.json migration share it.
- * Corrupt or missing data falls back to empty values, as it always has.
- */
-
 export function createTodoId() {
   if ("crypto" in window && typeof window.crypto.randomUUID === "function") {
     return window.crypto.randomUUID();
@@ -28,7 +22,6 @@ export function normalizeTodo(todo: Partial<TodoItem>): TodoItem {
   };
 }
 
-/** `{ project }` for a usable project name, else nothing, so todos without one keep their old shape. */
 export function withProject(value: unknown): { project?: string } {
   const project = readProject(value);
   return project ? { project } : {};
@@ -116,11 +109,6 @@ export function parseTodoArchives(stored: string | null): TodoArchive[] {
   }
 }
 
-/**
- * What the island showed from these keys, in the shape of todos.json: the data
- * the migration writes. The empty active todo id older versions could leave
- * behind means "none".
- */
 export function normalizeLocalTodoKeys(keys: LocalTodoKeys): TodosData {
   return {
     date: parseCurrentTodoDate(keys["focusd-island-current-date"]),

@@ -2,10 +2,6 @@ import { useEffect, useId, useState, type ReactNode } from "react";
 import { SettingsInput } from "./SettingsInput";
 import { SettingsRow } from "./SettingsRow";
 
-/**
- * A row for a whole number typed in: a short field at the right end of the title line. The value
- * is kept within `min`..`max` once the field loses focus; an empty or partial entry is not saved.
- */
 export function SettingsNumberRow({
   title,
   description,
@@ -21,7 +17,6 @@ export function SettingsNumberRow({
   value: number;
   min: number;
   max: number;
-  /** Shown after the field, such as "秒". */
   unit?: string;
   indent?: boolean;
   onChange: (value: number) => void;

@@ -3,15 +3,10 @@ import type { AgentSessionSummary } from "../api";
 import { rememberedPhase } from "../sessionLight.ts";
 import { sessionKey } from "../unseen.ts";
 
-/** More than this many due at once (the island just woke up, say) is noise; the newest go. */
 export const MAX_PUSHES = 3;
 
 type Pending = AgentAlert & { phase: AgentSessionSummary["phase"] };
 
-/**
- * Alerts not pushed yet, one per session (a newer alert replaces an older one), each with the
- * phase its session was in when it came, in the order they came.
- */
 export type PushQueue = Map<string, Pending>;
 
 export function queuePushes(queue: PushQueue, alerts: AgentAlert[]) {
@@ -22,12 +17,6 @@ export function queuePushes(queue: PushQueue, alerts: AgentAlert[]) {
   }
 }
 
-/**
- * The alerts to push now. One whose session has moved on (answered, running again, gone from the
- * list) or that the user has looked at (roadmap B15) is dropped: it was dealt with at the computer.
- * The rest wait until the user is `away` (screen locked, or idle long enough), so a wait that
- * began while the user sat there is still pushed once they leave; then they go, each once.
- */
 export function takeDuePushes(
   queue: PushQueue,
   sessions: AgentSessionSummary[],

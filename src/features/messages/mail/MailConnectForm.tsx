@@ -4,10 +4,6 @@ import { useTranslation } from "../../../i18n";
 import { hasQQMailHelp } from "./mailDomain";
 import "./MailSettings.css";
 
-/**
- * Adds a mailbox, or, given `reauthorizing`, re-enters the code of a known one; its
- * address is then fixed and its saved IMAP server kept.
- */
 export function MailConnectForm({ reauthorizing, busy, onConnect, onHelp, onCancel }: {
   reauthorizing: string | null;
   busy: boolean;

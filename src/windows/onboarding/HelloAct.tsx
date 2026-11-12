@@ -4,7 +4,6 @@ import { SettingsRow } from "../../components/settings/SettingsRow";
 import { LOCALE_CODES, TRANSLATIONS, useLocale, useTranslation } from "../../i18n";
 import { ActHeading } from "./ActHeading";
 
-/** Act 1: the real island is lit up and says hello in its message panel; the language is chosen here. */
 export function HelloAct() {
   const t = useTranslation();
   const text = t.onboarding.hello;

@@ -1,5 +1,3 @@
-/* The small island under the open-and-close setting (C49): it moves with the same
-   --island-motion-* variables, and the same properties, as .island in IslandShell.css. */
 .island-motion-preview {
   position: relative;
   height: 92px;
@@ -30,7 +28,6 @@
     border-radius var(--island-motion-radius) var(--island-motion-radius-ease);
 }
 
-/* As the light island looks (themeMode.ts), outlined so it stands off the white card. */
 .island-light .island-motion-preview__island {
   background: #f2f2f5;
   box-shadow: 0 0 0 1px rgba(24, 24, 30, 0.1), 0 6px 18px rgba(0, 0, 0, 0.1);

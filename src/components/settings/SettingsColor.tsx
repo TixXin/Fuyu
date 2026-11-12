@@ -1,6 +1,5 @@
 import "./SettingsColor.css";
 
-/** A colour as a settings row shows it: its hex value, then a swatch that opens the picker. */
 export function SettingsColor({
   value,
   ariaLabel,

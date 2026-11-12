@@ -57,7 +57,6 @@ label.settings-row__title {
   gap: var(--space-md);
 }
 
-/* The row a settings search opened: a short wash of the accent colour, then gone. */
 .settings-row--found {
   border-radius: var(--radius-md, 10px);
   animation: settings-row-found 1.8s ease-out;
@@ -73,7 +72,6 @@ label.settings-row__title {
   }
 }
 
-/* Without motion the wash still shows, it just ends without fading. */
 @media (prefers-reduced-motion: reduce) {
   .settings-row--found {
     animation-timing-function: steps(1, end);

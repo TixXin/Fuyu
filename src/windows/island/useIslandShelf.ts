@@ -3,7 +3,6 @@ import type { IslandSettings } from "../../features/appearance/types";
 import { useFileShelfDrop } from "./useFileShelfDrop";
 import type { useIslandNavigation } from "./useIslandNavigation";
 
-/** The file shelf, and files dropped on the island going onto it. */
 export function useIslandShelf(settings: IslandSettings, navigation: ReturnType<typeof useIslandNavigation>) {
   const { mode, page, isTucked, isPeeking, openIslandPage, setPage, collapseIsland, tuckIsland, minimizeToEdge } = navigation;
   const fileShelf = useFileShelf(settings.shelfEnabled, {

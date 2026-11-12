@@ -20,7 +20,6 @@ type IslandWindowOptions = {
   onCollapse: () => void;
 };
 
-/** Keeps the native island window (size, position, glass, focus) in sync with the island's state. */
 export function useIslandWindow({
   mode,
   isTucked,
@@ -135,8 +134,6 @@ export function useIslandWindow({
     ).finally(() => {
       void showReadyIsland();
     });
-    // Lists exactly the settings fields syncNativeInteraction sends, so unrelated
-    // settings changes do not cost a native round trip (expansion performance).
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     expandedIslandHeight,

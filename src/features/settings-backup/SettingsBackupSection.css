@@ -2,7 +2,6 @@
   display: none;
 }
 
-/* What the last export or restore did, under the group's footnote. */
 .settings-backup__status {
   display: flex;
   flex-wrap: wrap;

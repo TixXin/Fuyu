@@ -4,10 +4,6 @@ import "./SelectControl.css";
 
 export type SelectOption<T extends string> = { value: T; label: string };
 
-/**
- * Dark dropdown in place of a native <select>, whose option list WebView2 draws in the
- * light system style. Keyboard: arrows/Home/End move, Enter or Space picks, Esc closes.
- */
 export function SelectControl<T extends string>({
   value,
   options,
@@ -29,7 +25,6 @@ export function SelectControl<T extends string>({
 
   useEffect(() => {
     if (isOpen) document.getElementById(optionId(activeIndex))?.scrollIntoView({ block: "nearest" });
-    // optionId only depends on listId, which never changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeIndex, isOpen]);
 
@@ -96,7 +91,6 @@ export function SelectControl<T extends string>({
               aria-selected={option.value === value}
               data-value={option.value}
               onPointerEnter={() => setActiveIndex(index)}
-              // Keeps focus on the trigger, so its blur does not close the menu first.
               onPointerDown={(event) => event.preventDefault()}
               onClick={() => choose(index)}
             >

@@ -1,7 +1,6 @@
 import { useEffect, useRef } from "react";
 import { listenTranslationIslandShortcut } from "./api";
 
-/** Calls `onShortcut` when the translation shortcut is pressed while translation opens on the island. */
 export function useTranslationIslandShortcut(enabled: boolean, onShortcut: () => void) {
   const latest = useRef(onShortcut);
   latest.current = onShortcut;

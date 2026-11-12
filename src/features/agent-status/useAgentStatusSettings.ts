@@ -5,7 +5,6 @@ import { AGENT_PROVIDERS, DEFAULT_AGENT_STATUS, type AgentHooksInstallState } fr
 
 const AGENT_STATUS_POLL_MS = 1_000;
 
-/** Agent status as the settings window shows it, plus clearing a provider and installing the hooks. */
 export function useAgentStatusSettings() {
   const errorText = useErrorText();
   const [agentStatus, setAgentStatus] =
@@ -19,7 +18,6 @@ export function useAgentStatusSettings() {
   const [agentHooksInstallError, setAgentHooksInstallError] = useState("");
   const [agentHooksState, setAgentHooksState] = useState<AgentHooksState | null>(null);
 
-  // The configs only change on Install/Repair (or by hand), so they are read on open and after installing.
   const refreshAgentHooksState = useCallback(async () => {
     try {
       setAgentHooksState(await getAgentHooksState());

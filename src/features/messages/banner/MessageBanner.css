@@ -1,7 +1,3 @@
-/*
- * Below the collapsed island (38px tall, scaled from the top centre), on the island's own colour.
- * The native side adds this card's rectangle to the window's click area while it shows.
- */
 .message-banner {
   position: absolute;
   top: calc(38px * var(--island-scale, 1) + 8px);

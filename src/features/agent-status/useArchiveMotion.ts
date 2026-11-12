@@ -8,17 +8,13 @@ import "./ArchiveDissolve.css";
 const LEAVE_MS = 260;
 const RETURN_MS = 240;
 const EASING = "cubic-bezier(0.2, 0.7, 0.3, 1)";
-/** How far a row slides right as it fades, before its height folds away. */
 const SLIDE_PX = 18;
 
-/** How long a row takes to turn into dust (agent-dissolve-sweep in ArchiveDissolve.css). */
 export const DISSOLVE_MS = 480;
-/** Then its height folds away. */
 const FOLD_MS = 160;
 
 const reducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-/** The row's light colour: a card's frame colour, else the flat row's dot. */
 function dustColor(element: HTMLElement) {
   const card = element.querySelector<HTMLElement>(".agent-card");
   if (card) return getComputedStyle(card).getPropertyValue("--card-color").trim();
@@ -26,7 +22,6 @@ function dustColor(element: HTMLElement) {
   return dot ? getComputedStyle(dot).backgroundColor : "";
 }
 
-/** Sweeps the row away from left to right behind a front of dust in its light's colour. */
 function dissolve(element: HTMLElement, then: () => void) {
   const color = dustColor(element);
   if (color) element.style.setProperty("--dust-color", color);
@@ -44,18 +39,10 @@ function undissolve(element: HTMLElement) {
   element.style.removeProperty("--dust-color");
 }
 
-/**
- * Archiving a row with motion: it slides right and fades (or, with `style` "dissolve", turns into
- * dust from left to right), then its height folds and the rows below move up; only then does the
- * session leave the list (the island's height follows the row count, so it shrinks after the row
- * has gone). Undo unfolds the row back the same way.
- */
 export function useArchiveMotion(list: HTMLElement | null, removal: SessionRemoval | undefined, style: AgentArchiveMotion = "slide") {
   const [returning, setReturning] = useState<string | null>(null);
   const row = (key: string) => list?.querySelector<HTMLElement>(`[data-session-key="${CSS.escape(key)}"]`) ?? null;
 
-  // Undo puts the session back in the same render that sets `returning`, so the row is in the
-  // list when this runs and unfolds before the first paint.
   useLayoutEffect(() => {
     if (!returning) return;
     const element = list?.querySelector<HTMLElement>(`[data-session-key="${CSS.escape(returning)}"]`);
@@ -77,14 +64,11 @@ export function useArchiveMotion(list: HTMLElement | null, removal: SessionRemov
     setReturning(null);
   }, [returning, list]);
 
-  /** Removes the session once `animation` is done, then puts the row back as it was. */
   const removeAfter = (session: AgentSessionSummary, element: HTMLElement, animation: Animation, cleanup?: () => void) => {
     void animation.finished
       .catch(() => undefined)
       .finally(() => {
         removal?.remove(session);
-        // Normally the row is gone by the next frame; if it stays (the removal did not take),
-        // it comes back rather than staying folded away.
         requestAnimationFrame(() => {
           animation.cancel();
           cleanup?.();

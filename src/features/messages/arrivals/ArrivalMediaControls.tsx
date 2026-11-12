@@ -2,7 +2,6 @@ import { Pause, Play, SkipBack, SkipForward } from "lucide-react";
 import { useTranslation } from "../../../i18n";
 import "./ArrivalMediaControls.css";
 
-/** The player the island controls, for a plugin message that asked for its buttons (`controls: "media"`). */
 export type ArrivalMedia = {
   playing: boolean;
   onPrevious: () => void;
@@ -10,10 +9,6 @@ export type ArrivalMedia = {
   onNext: () => void;
 };
 
-/**
- * Previous, play / pause and next beside a now-playing message. The island runs them itself, so
- * the plugin needs no media:control; pressing one leaves the popup to close on its own time.
- */
 export function ArrivalMediaControls({ media }: { media: ArrivalMedia }) {
   const t = useTranslation().music;
   return (

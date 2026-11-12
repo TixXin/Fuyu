@@ -13,7 +13,6 @@ export type SettingsScreenshotText = {
   translateHint: string;
   fullscreen: string;
   fullscreenHint: string;
-  /** Under the shortcuts: number row or numpad, and NumLock. */
   shortcutsHint: string;
 };
 

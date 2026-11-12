@@ -10,7 +10,6 @@ import type { SessionFilter } from "./sessionFilters";
 import { useSessionFilters } from "./useSessionFilters";
 import "./AgentSessionFilterSettings.css";
 
-/** Settings → AI Agent: rules that hide agent sessions by folder or prompt text (roadmap B6.4.3). */
 export function AgentSessionFilterSettings() {
   const text = useTranslation().settings.agent.filters;
   const [filters, setFilters] = useSessionFilters();

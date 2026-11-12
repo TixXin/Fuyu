@@ -1,4 +1,3 @@
-/* The card a website Install link pins above the market list: the accent's frame and a slow glow, so it is the first thing seen. */
 .market-request {
   display: grid;
   gap: var(--space-md);

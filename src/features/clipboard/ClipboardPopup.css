@@ -1,9 +1,3 @@
-/*
- * The clipboard window (C22.2), drawn like the island's clipboard page (IslandList.css): one
- * rounded panel filling its window, rows without a fill until picked, the clipboard's pink only
- * for what is picked. Ink follows light and dark: --overlay-rgb is set on a light window
- * (.island-light in tokens.css).
- */
 .clipboard-popup {
   --pop-ink: var(--overlay-rgb, 241, 240, 246);
   --pop-accent: var(--color-accent);
@@ -319,7 +313,6 @@
   font-weight: 600;
 }
 
-/* The wide window's right side: the picked entry in full. */
 .clipboard-popup__pane {
   flex: 1;
   min-width: 0;

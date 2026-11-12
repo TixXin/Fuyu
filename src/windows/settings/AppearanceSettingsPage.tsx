@@ -5,7 +5,6 @@ import { SizeSettingsSection } from "../../features/appearance/LayoutSettingsSec
 import type { IslandSettings } from "../../features/appearance/types";
 import { requestPanelPreview } from "./storage";
 
-/** Settings → Appearance: how big the island is and what the collapsed bar shows. The look is on Theme. */
 export function AppearanceSettingsPage({
   settings,
   onSettingsChange,

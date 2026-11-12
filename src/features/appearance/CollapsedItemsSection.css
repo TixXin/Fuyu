@@ -1,8 +1,6 @@
-/* Appearance → items on the collapsed bar: the rows reuse the plugin page list (plugin-pages). */
 .collapsed-items {
   display: grid;
   gap: 12px;
-  /* Lines up with the rows of the other settings cards. */
   padding: 12px 16px 14px;
 }
 

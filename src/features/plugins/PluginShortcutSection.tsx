@@ -9,20 +9,12 @@ import { listPlugins, setPluginKeybinding, type PluginsSnapshot } from "./api";
 import { pluginShortcutRows, type PluginShortcutRow } from "./pluginShortcuts";
 import "../clipboard/ClipboardSettingsSection.css";
 
-/** Registration happens after saving; read the conflicts again once it has. */
 const RECHECK_MS = 600;
 
-/**
- * The global shortcuts of the plugins that are on, on the Shortcuts and Plugins pages. Each
- * command can get a shortcut of the user's choice, be turned off, or go back to the one its
- * manifest declares. `takenBy` refuses keys any other shortcut (the island's or another
- * plugin's) uses; `onChanged` tells its owner list that a plugin's keys changed.
- */
 export function PluginShortcutSection({ takenBy, onChanged, action, hideWhenEmpty = false }: {
   takenBy: (shortcut: string, selfId: string) => string | null;
   onChanged?: () => void;
   action?: ReactNode;
-  /** On the Plugins page a group saying there is nothing would only be in the way. */
   hideWhenEmpty?: boolean;
 }) {
   const t = useTranslation();

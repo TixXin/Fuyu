@@ -22,14 +22,8 @@ import {
 import { IslandMotionRow } from "./IslandMotionRow";
 import type { ExpandTrigger, IslandSettings, TuckedHoverAction } from "./types";
 
-/** Idle times offered before tucking, in seconds. A saved value outside the list is offered too. */
 const IDLE_SECONDS = [5, 10, 15, 30, 60, 120, 300, 600];
 
-/**
- * Settings → General: how the island opens, when it tucks to the screen edge, and
- * how a tucked island comes back. Rows that only matter while a switch is on sit
- * indented under it and are hidden while it is off.
- */
 export function ExpandSettingsSection({
   settings,
   onSettingsChange,

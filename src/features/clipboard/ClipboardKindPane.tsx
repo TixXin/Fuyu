@@ -4,7 +4,6 @@ import { useTranslation } from "../../i18n";
 import { getClipboardLinkPreview, type ClipboardLinkPreview } from "./api";
 import { colorFormats, linkLabel, stripTracking, type ContentKind } from "./contentKind";
 
-// Titles already read while the window runs; null when the page gave none or could not be read.
 const linkPreviews = new Map<string, Promise<ClipboardLinkPreview | null>>();
 
 function useLinkPreview(url: string | null, enabled: boolean) {
@@ -24,7 +23,6 @@ function useLinkPreview(url: string | null, enabled: boolean) {
   return preview;
 }
 
-/** JSON with its keys, strings, numbers and punctuation in their own colours. */
 function highlightJson(value: unknown): ReactNode[] {
   const source = JSON.stringify(value, null, 2) ?? "";
   const parts: ReactNode[] = [];
@@ -43,11 +41,6 @@ function highlightJson(value: unknown): ReactNode[] {
   return parts;
 }
 
-/**
- * The wide window's right side for a recognised text (C38): a colour as a swatch and its three
- * forms (a click pastes one), a link with its title when link previews are on and without its
- * tracking parameters, JSON formatted and coloured.
- */
 export function ClipboardKindPane({ kind, source, linkPreview, onPasteText }: {
   kind: ContentKind;
   source: string;

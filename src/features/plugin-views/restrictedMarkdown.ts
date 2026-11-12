@@ -1,11 +1,3 @@
-/**
- * The small Markdown the detail template accepts: headings, bold, italic,
- * inline code, lists, paragraphs and https links. Everything else stays
- * text: the input is HTML-escaped first, so the result only ever holds the
- * tags made here. DetailTemplate still runs it through DOMPurify with the
- * same short list (RESTRICTED_MARKDOWN_TAGS).
- */
-
 export const RESTRICTED_MARKDOWN_TAGS = ["h3", "h4", "h5", "p", "strong", "em", "code", "ul", "ol", "li", "a", "br"];
 export const MAX_MARKDOWN_CHARS = 20000;
 
@@ -13,7 +5,6 @@ function escapeHtml(text: string) {
   return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
 
-/** Inline marks on escaped text. Code spans are taken out first so nothing inside them is formatted. */
 function inline(escaped: string) {
   const codes: string[] = [];
   let text = escaped.replace(/`([^`]+)`/g, (_, code: string) => {
@@ -21,7 +12,6 @@ function inline(escaped: string) {
     return `\u0000${codes.length - 1}\u0000`;
   });
   text = text.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (_, label: string, href: string) => {
-    // href is escaped text; only plain https links become links.
     return /^https:\/\/[^\s"'<>]+$/.test(href) ? `<a href="${href}">${label}</a>` : label;
   });
   text = text.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");

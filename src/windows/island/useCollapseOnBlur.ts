@@ -2,17 +2,8 @@ import { useEffect, useLayoutEffect, useRef } from "react";
 import { islandIsForeground, listenIslandFocus } from "./api";
 import { isIslandHeld } from "./islandHold";
 
-/** How often the island checks it is still in front while a plugin page holds the focus. */
 const WATCH_MS = 250;
 
-/**
- * Collapses the expanded island when the user moves to another window. The island losing the
- * keyboard focus is not enough: a plugin page (a separate WebView2 inside the island window)
- * taking it looks the same to Tauri, and clicking one used to close the island (issue #12). So
- * the island checks it is really out of front, and while a plugin page holds the focus it keeps
- * checking, until the focus comes back or another window comes to the front. While Alt is held
- * (C25) it keeps checking instead of closing.
- */
 export function useCollapseOnBlur(expanded: boolean, onCollapse: () => void) {
   const onCollapseRef = useRef(onCollapse);
   useLayoutEffect(() => {
@@ -24,7 +15,6 @@ export function useCollapseOnBlur(expanded: boolean, onCollapse: () => void) {
     let cancelled = false;
     let timer: number | undefined;
     let unlisten: (() => void) | undefined;
-    // Bumped by every focus change, so a check still on its way for an older one does nothing.
     let generation = 0;
     const check = (asked: number) => {
       void islandIsForeground()

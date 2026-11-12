@@ -4,7 +4,6 @@ import { useTranslation } from "../../i18n";
 import { takeTodoStoreNotice } from "./todoStore";
 import "./TodoDataNotice.css";
 
-/** Tells the user, once per start, that the todo data migration failed or re-imported older data. */
 export function TodoDataNotice() {
   const t = useTranslation();
   const [notice, setNotice] = useState(takeTodoStoreNotice);

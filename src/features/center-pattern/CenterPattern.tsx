@@ -5,15 +5,11 @@ import "./CenterPattern.css";
 
 type CenterPatternProps = {
   pattern: CenterPatternId;
-  /** Freeze every loop: the island is expanded or tucked away. Reduced motion freezes on its own. */
   paused?: boolean;
-  /** CSS pixels; the width follows each pattern's own proportions (at most about 44 px at 22). */
   height?: number;
-  /** What the agents are doing, as the pet would act it out; only the mark shows it. */
   mood?: PetMood;
 };
 
-/** One of the built-in animated drawings shown in the collapsed island when there is no summary text. */
 export function CenterPattern({ pattern, paused = false, height = 22, mood = "idle" }: CenterPatternProps) {
   return (
     <span
@@ -32,11 +28,6 @@ export function CenterPattern({ pattern, paused = false, height = 22, mood = "id
   );
 }
 
-/**
- * The app's mark (src-tauri/icons/mark.svg): a pill with a light and a dash. Idle, the light
- * breathes and the pill now and then springs open like the island; otherwise the light takes
- * the session light's colour and the dash shows the agents: dots while running, a tick when done.
- */
 function Mark({ mood }: { mood: PetMood }) {
   return (
     <svg className="center-mark" viewBox="0 2.5 36 17" data-mood={mood}>
@@ -61,7 +52,6 @@ function Mark({ mood }: { mood: PetMood }) {
   );
 }
 
-/** Sits, tilts its head, pecks twice and flaps, on one eight-second loop. */
 function Bird() {
   return (
     <svg className="center-bird" viewBox="0 0 34 22">
@@ -82,7 +72,6 @@ function Bird() {
   );
 }
 
-/** A soft light that breathes in and out. */
 function Orb() {
   const glow = `center-orb-glow-${useId().replace(/:/g, "")}`;
   return (
@@ -100,7 +89,6 @@ function Orb() {
   );
 }
 
-/** A cat face that slow-blinks and flicks an ear. */
 function Cat() {
   return (
     <svg className="center-cat" viewBox="0 0 30 22">

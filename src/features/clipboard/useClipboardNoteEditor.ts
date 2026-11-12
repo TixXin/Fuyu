@@ -44,7 +44,6 @@ export function useClipboardNoteEditor(
     }, 1100);
   }, []);
 
-  // The copied mark goes on the button used: the id for a plain copy, "id:file" / "id:path" else.
   const handleCopyItem = useCallback(
     (id: string, copyAs: ClipboardCopyAs = "original") => {
       void Promise.resolve(onCopyItem(id, copyAs)).then((didCopy) => {
@@ -68,7 +67,6 @@ export function useClipboardNoteEditor(
     (item: ClipboardHistoryItem) => {
       dismissConfirmations();
       setEditingNoteId(item.id);
-      // Tags are edited as "#tag" words in front of the note (C24.5).
       setNoteDraft([...(item.tags ?? []).map((tag) => `#${tag}`), item.note ?? ""].filter(Boolean).join(" "));
     },
     [dismissConfirmations],

@@ -11,7 +11,6 @@ import "./IslandHeader.css";
 
 type BuiltinPageButton = "todo" | "music" | "calendar" | "clipboard" | "shelf";
 
-/** The built-in pages' buttons, left to right, with the icons Settings uses for them (SettingsSidebar.tsx). */
 const PAGE_BUTTONS: { page: BuiltinPageButton; Icon: LucideIcon }[] = [
   { page: "todo", Icon: ListTodo },
   { page: "music", Icon: Music },
@@ -31,26 +30,19 @@ type IslandHeaderProps = {
   wechatPending: boolean;
   onPageChange: (page: IslandPage) => void;
   onCollapse: () => void;
-  /** With "updates", opens About (its version and updates), for the new-version reminder. */
   onOpenSettings: (section?: "updates") => void;
   onOpenMessages: (source: MessageSource) => void;
   onOpenTranslator: (() => void) | null;
   onResetPosition: () => void;
-  /** False when minimizing tucks the island to the top edge instead. */
   minimizesToTray: boolean;
   onMinimize: () => void;
-  /** Modifiers shown with each page number, such as "Alt" or "Ctrl+Shift". */
   pageDigitModifiers: string;
-  /** Resting the pointer on a page button opens its page. */
   hoverSwitchPage: boolean;
   hoverSwitchDelayMs: number;
-  /** Buttons for plugin pages, after the built-in page buttons. */
   pluginPageButtons?: ReactNode;
-  /** Buttons of the open page, first among the window actions. */
   pageActions?: ReactNode;
 };
 
-/** Header of the expanded island: agent status, page buttons (icons), collapse target and window actions. */
 export function IslandHeader({
   page,
   features,
@@ -99,7 +91,6 @@ export function IslandHeader({
     <header className="island__header">
       <div className="island__title">
         {features.agents ? (
-          // The status light doubles as the way into the Agent page.
           <button
             className={`island__agent-button${page === "agents" ? " island__agent-button--active" : ""}`}
             type="button"

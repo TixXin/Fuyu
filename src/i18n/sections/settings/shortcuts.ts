@@ -1,11 +1,8 @@
 export type SettingsShortcutsText = {
   globalHint: string;
   openTranslation: string;
-  /** Title of a feature page's own group of shortcuts. */
   featureTitle: string;
-  /** Its link to the Shortcuts page. */
   allShortcuts: string;
-  /** On the Shortcuts page, a group's link to the page its feature is set on. */
   openFeaturePage: string;
   featureOff: (feature: string) => string;
   turnOn: string;

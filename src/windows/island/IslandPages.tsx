@@ -44,11 +44,9 @@ type IslandPagesProps = {
   qqNotifications: ReturnType<typeof useQQNotifications>;
   wechatReminders: ReturnType<typeof useWeChatReminders>;
   messageSource: MessageView["messageSource"];
-  /** The page opened for new messages (useIslandMessagePanel); its rows take the page's place. */
   messagePanel?: ReturnType<typeof useIslandMessagePanel>;
   openMessages: MessageView["openMessages"];
   media: ReturnType<typeof useMediaState>;
-  /** The playing track's lyrics, looked up once for this page and the collapsed bar. */
   lyrics?: PlayingLyrics;
   clipboard: ReturnType<typeof useClipboardHistory>;
   agentSessions: AgentSessionSummary[];
@@ -61,12 +59,10 @@ type IslandPagesProps = {
   fileShelf: ReturnType<typeof useFileShelf>;
   isShelfDropping: boolean;
   notebookProps: ReturnType<typeof useTodos>["notebookProps"];
-  /** Adds a todo for a day from the calendar page; undefined while todos are off. */
   addTodoOn?: ReturnType<typeof useTodos>["addTodoOn"];
   calendar: CalendarState;
 };
 
-/** The expanded island's page panels; the one for `page` shows. */
 export function IslandPages({
   page,
   mode,

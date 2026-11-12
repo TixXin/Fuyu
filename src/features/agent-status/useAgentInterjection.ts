@@ -5,11 +5,6 @@ import { AGENT_INTERJECTION_MS, interjectingSession, waitingSession } from "./in
 import { sessionName, type AgentSession } from "./session.ts";
 import { sessionKey } from "./unseen.ts";
 
-/**
- * The agent to show in place of the lyrics on the collapsed island: one waiting on the user, for as
- * long as it waits, else one whose session just changed, for `AGENT_INTERJECTION_MS`. A newer
- * change takes over and starts the time again. Null when there is none or `enabled` is off.
- */
 export function useAgentInterjection(sessions: AgentSessionSummary[], enabled: boolean): AgentSession | null {
   const previous = useRef<SessionPhases | null>(null);
   const [flash, setFlash] = useState<{ key: string; until: number } | null>(null);

@@ -1,21 +1,14 @@
-// Annotations on a screenshot (C41.3): what each tool draws, in the monitor picture's pixels, and
-// the undo / redo history. Drawing them is in drawAnnotations.ts; nothing here touches the DOM.
-
 import type { PixelRect, Point } from "./selection";
 
 export type AnnotationTool = "rect" | "ellipse" | "arrow" | "pen" | "highlighter" | "text" | "mosaic" | "number";
 
 export const ANNOTATION_TOOLS: readonly AnnotationTool[] = ["rect", "ellipse", "arrow", "pen", "highlighter", "text", "mosaic", "number"];
 
-/** Red first: the colour most annotations are made in. */
 export const ANNOTATION_COLORS = ["#FF3B30", "#FF9500", "#FFCC00", "#34C759", "#0A84FF", "#AF52DE", "#FFFFFF", "#000000"] as const;
 
-/** Thin, medium, thick. */
 export type StrokeLevel = 0 | 1 | 2;
 export const STROKE_LEVELS: readonly StrokeLevel[] = [0, 1, 2];
 
-// CSS pixels per level; times the overlay's scale they are picture pixels, so a line looks the
-// same on a 100% and a 200% monitor.
 const LINE = [2, 4, 8];
 const TEXT = [16, 22, 32];
 const BADGE = [11, 14, 18];
@@ -31,22 +24,14 @@ export type Annotation = ShapeAnnotation | StrokeAnnotation | TextAnnotation | N
 export const lineWidth = (level: StrokeLevel, scale: number) => LINE[level] * scale;
 export const textSize = (level: StrokeLevel, scale: number) => TEXT[level] * scale;
 export const badgeRadius = (level: StrokeLevel, scale: number) => BADGE[level] * scale;
-/** Line height of text annotations, times their size. */
 export const TEXT_LINE_HEIGHT = 1.3;
-/** A highlighter stroke is this much wider than a pen's. */
 export const HIGHLIGHTER_FACTOR = 4;
-/** The side of a mosaic block for a line `width`: coarse enough that text cannot be read. */
 export const mosaicBlock = (width: number) => Math.max(6, Math.round(width * 3));
 
-/** The next number badge after the ones already placed. */
 export function nextNumber(items: readonly Annotation[]): number {
   return items.reduce((top, item) => (item.kind === "number" ? Math.max(top, item.value) : top), 0) + 1;
 }
 
-/**
- * What a press of `tool` at `at` starts. Text is typed in a box first (TextAnnotation is made when
- * it is committed), so it starts nothing here; a number badge is complete at once.
- */
 export function startAnnotation(tool: AnnotationTool, at: Point, style: AnnotationStyle, scale: number, items: readonly Annotation[]): Annotation | null {
   const width = lineWidth(style.level, scale);
   switch (tool) {
@@ -66,13 +51,11 @@ export function startAnnotation(tool: AnnotationTool, at: Point, style: Annotati
   }
 }
 
-/** `annotation` with the pointer dragged on to `to`. */
 export function extendAnnotation(annotation: Annotation, to: Point): Annotation {
   switch (annotation.kind) {
     case "pen":
     case "highlighter": {
       const last = annotation.points[annotation.points.length - 1];
-      // Points closer than a pixel add nothing but work.
       if (last && Math.hypot(to.x - last.x, to.y - last.y) < 1) return annotation;
       return { ...annotation, points: [...annotation.points, to] };
     }
@@ -84,7 +67,6 @@ export function extendAnnotation(annotation: Annotation, to: Point): Annotation 
   }
 }
 
-/** Whether a finished drag drew something; a click with a shape tool draws nothing. */
 export function isMeaningful(annotation: Annotation): boolean {
   switch (annotation.kind) {
     case "rect":
@@ -109,10 +91,6 @@ export function normalizedRect(a: Point, b: Point): PixelRect {
   return { x: Math.min(a.x, b.x), y: Math.min(a.y, b.y), width: Math.abs(b.x - a.x), height: Math.abs(b.y - a.y) };
 }
 
-/**
- * An arrow from `from` to `to` drawn `width` thick: its head's three corners and where the shaft
- * meets the head. The head grows with the line, and never past half the arrow's length.
- */
 export function arrowGeometry(from: Point, to: Point, width: number) {
   const length = Math.hypot(to.x - from.x, to.y - from.y) || 1;
   const head = Math.min(Math.max(10, width * 4), length / 2);
@@ -132,7 +110,6 @@ export type AnnotationHistory = { items: readonly Annotation[]; undone: readonly
 
 export const EMPTY_HISTORY: AnnotationHistory = { items: [], undone: [] };
 
-/** Adding something new drops what was undone, as in any editor. */
 export function addAnnotation(history: AnnotationHistory, annotation: Annotation): AnnotationHistory {
   return { items: [...history.items, annotation], undone: [] };
 }
@@ -157,7 +134,6 @@ function pointsBox(points: readonly Point[]): PixelRect {
   return normalizedRect({ x: Math.min(...xs), y: Math.min(...ys) }, { x: Math.max(...xs), y: Math.max(...ys) });
 }
 
-/** Where `item` can paint, a little generously (text is not measured: a character is at most 1.1 em). */
 export function annotationBounds(item: Annotation): PixelRect {
   switch (item.kind) {
     case "rect":
@@ -180,10 +156,6 @@ export function annotationBounds(item: Annotation): PixelRect {
   }
 }
 
-/**
- * The part of `selection` the annotations cover, in whole pixels; null without any. Only this part
- * differs from the frozen picture, so only it is composed and sent when copying.
- */
 export function annotationArea(items: readonly Annotation[], selection: PixelRect): PixelRect | null {
   if (items.length === 0) return null;
   const boxes = items.map(annotationBounds);

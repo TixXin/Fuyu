@@ -16,7 +16,6 @@ const MODULE_ICONS: Record<OnboardingModule, LucideIcon> = {
   clipboard: ClipboardList,
 };
 
-/** Act 3: one question picks a set of modules, and stickers add or remove one each; the real island follows. */
 export function OutfitAct({ modules, onModulesChange }: {
   modules: ReadonlySet<OnboardingModule>;
   onModulesChange: (modules: ReadonlySet<OnboardingModule>) => void;

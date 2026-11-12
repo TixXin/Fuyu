@@ -12,13 +12,10 @@ import { useTodoFileField } from "./useTodoFileField";
 
 type TodosOptions = {
   carryOverIncompleteTodos: boolean;
-  /** Called after a todo becomes the active one shown on the collapsed island. */
   onStartTodo: () => void;
-  /** Called when a manual save has no directory to write to. */
   onMissingSaveDirectory: () => void;
 };
 
-/** The todo notebook: today's list and daily note, archives, markdown saving and the daily rollover. */
 export function useTodos({
   carryOverIncompleteTodos,
   onStartTodo,
@@ -37,7 +34,6 @@ export function useTodos({
     date: currentTodoDate, todos, scheduledTodos, activeTodoId, dailyNote, archives,
     setTodos, setDailyNote, scheduleTodo,
   });
-  // Day the next added todo is for; null is the list's own day.
   const [draftDate, setDraftDate] = useState<string | null>(null);
   const draftTodo = list.draftTodo;
   const addListTodo = list.addTodo;
@@ -54,7 +50,6 @@ export function useTodos({
     }
     setDraftDate(null);
   }, [addListTodo, currentTodoDate, draftDate, draftTodo, scheduleTodo, setDraftTodo]);
-  /** A todo for `date` (YYYY-MM-DD) from elsewhere (the calendar page): today's list, or planned for a later day. */
   const addTodoOn = useCallback((title: string, date: string) => {
     const { title: text, project } = splitProjectPrefix(title);
     if (!text) return;
@@ -150,7 +145,6 @@ export function useTodos({
   return {
     todos,
     activeTodoId,
-    /** Local API handlers for todos and the daily note; see useTodoApiHandlers. */
     apiHandlers,
     addTodoOn,
     notebookProps: {

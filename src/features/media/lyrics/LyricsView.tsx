@@ -6,23 +6,14 @@ import { KaraokeText } from "./KaraokeText";
 import type { KaraokeLook } from "./lyricsSettings";
 import "./LyricsView.css";
 
-/** How often the line is checked while playing. */
 const TICK_MS = 200;
 
-// The music page's own colours; the collapsed island's come from the settings (karaokeLook).
 const PAGE_LOOK: KaraokeLook = { fill: "smooth", lit: "var(--text-1)", dim: "var(--text-3)", glow: false, follow: false };
 
-/**
- * Three lines of synced lyrics: the one being sung, bright and up to two lines long, between
- * the one before and the one after. A line with a translation shows it under itself in place
- * of the next line. `offsetMs` moves the lyrics later (positive) or earlier. With `onPickLine`
- * (the island only estimates the position) each line is a button that aligns the timing to it.
- */
 export function LyricsView({ lines, mediaState, offsetMs, onPickLine }: {
   lines: LyricLine[];
   mediaState: MediaState;
   offsetMs: number;
-  /** Called with the position at which the picked line starts. */
   onPickLine?: (positionMs: number) => void;
 }) {
   const t = useTranslation();
@@ -40,10 +31,7 @@ export function LyricsView({ lines, mediaState, offsetMs, onPickLine }: {
   const index = lineIndexAt(lines, position);
   const words = index >= 0 ? lines[index].words : undefined;
   const text = (at: number) => (at >= 0 && at < lines.length ? lines[at].text : "");
-  // Before the first line (the intro) and in breaks, a note holds the middle row, so the first
-  // line waits below it rather than standing alone.
   const current = (index >= 0 && text(index)) || "♪";
-  // A row that aligns the timing to its line when the island only estimates the position.
   const row = (at: number, className: string, content: ReactNode, key?: number) => {
     const line = at >= 0 && at < lines.length ? lines[at] : null;
     if (!onPickLine || !line?.text) {

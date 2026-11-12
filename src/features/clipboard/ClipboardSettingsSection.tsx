@@ -7,13 +7,6 @@ import { useTranslation } from "../../i18n";
 import type { ClipboardHistorySettings, ClipboardOpenIn, ClipboardPopupLayout, ClipboardPopupPosition } from "./api";
 import { ClipboardRecordSettings } from "./ClipboardRecordSettings";
 
-/**
- * The clipboard history options below the module switch (which is `enabled`, set by the
- * page): where it opens and how a pick pastes (C22), then what is recorded and kept.
- * `children` are further rows from outside this feature, such as the island page's row count.
- * `shortcuts` (the page's shortcut group, also on the Shortcuts page) goes between the two,
- * under the choice of what the shortcut opens.
- */
 export function ClipboardSettingsSection({ clipboardSettings, onClipboardSettingsChange, shortcuts, children }: {
   clipboardSettings: ClipboardHistorySettings;
   onClipboardSettingsChange: (settings: ClipboardHistorySettings) => void;

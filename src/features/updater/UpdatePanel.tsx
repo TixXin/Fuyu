@@ -13,7 +13,6 @@ import {
   skipVersion,
   subscribeToUpdate,
 } from "./updaterController";
-// The project-link card styles live with the About section; the Updates page needs them too.
 import "./ProjectSettingsSection.css";
 import "./UpdatePanel.css";
 
@@ -38,8 +37,6 @@ export function UpdatePanel() {
   let action = t.settings.project.latestRelease;
   let onAction: () => Promise<unknown> = checkForUpdate;
 
-  // A build without an updater key cannot check. The card still has to open the
-  // release page: the hint tells the user to download from there.
   if (stage === "disabled") {
     return (
       <ProjectLink

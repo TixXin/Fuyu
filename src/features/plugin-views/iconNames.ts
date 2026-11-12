@@ -1,5 +1,3 @@
-// lucide icon names plugin views and items may use. Same list as VIEW_ICONS in
-// src-tauri/src/plugin_host/view_specs.rs and the manifest schema (checked by tests).
 export const VIEW_ICON_NAMES = [
   "list", "list-checks", "list-todo", "kanban", "square-check", "timer", "clock", "calendar", "bell", "book-open",
   "bookmark", "star", "heart", "folder", "file-text", "git-pull-request", "bug", "code", "terminal", "cloud", "sun",

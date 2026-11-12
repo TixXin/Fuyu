@@ -15,10 +15,6 @@ type Status =
   | { kind: "imported"; name: string }
   | { kind: "error"; message: string };
 
-/**
- * Appearance → Presets, last on the page: one row per saved look (click the name to rename it,
- * export it as a theme file), "import" and "save current" on the title line.
- */
 export function PresetSettingsSection({
   presets,
   onSavePreset,

@@ -13,7 +13,6 @@ const KIND_ICONS: Record<FileKind, LucideIcon> = {
   file: File,
 };
 
-/** The entry's file-type icon, replaced by a preview once one loads for an image. */
 export function FileShelfItemIcon({
   id,
   name,
@@ -23,7 +22,6 @@ export function FileShelfItemIcon({
   id: string;
   name: string;
   isDir: boolean;
-  /** False for missing or unreachable entries, which are not previewed. */
   available: boolean;
 }) {
   const kind = getFileKind(name, isDir);
@@ -41,7 +39,6 @@ export function FileShelfItemIcon({
         if (!didCancel) setThumbnail(url);
       })
       .catch(() => {
-        // A preview is optional; the icon stays.
       });
     return () => {
       didCancel = true;

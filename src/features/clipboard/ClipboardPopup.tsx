@@ -15,21 +15,10 @@ import { usePopupHandlers } from "./usePopupHandlers";
 import "./ClipboardPopup.css";
 import "./ClipboardPopupPanels.css";
 
-// "5 分钟前" moves on while the window stays open.
 const CLOCK_MS = 30_000;
 
 type Mode = "list" | "panel" | "look" | "edit";
 
-/**
- * The clipboard window (C22.2, C37, C38): a search box (pinyin initials and "/" rules too), a row of
- * chips (Tab and Shift+Tab), the entries newest first, and a footer with the keys and whether copies
- * are recorded. ↑↓ move, Enter or a click pastes (Shift: plain text, Ctrl+Enter: then Enter), 1–9
- * paste that row, Esc closes. Ctrl+K or a right click opens the actions panel (Ctrl+T its
- * transforms, Ctrl+I its AI rewrites, Ctrl+M the note), Ctrl+E edits before pasting, Space shows the entry in full, Del
- * deletes (Ctrl+Z undoes). Ctrl+click or Ctrl+Space picks entries: Enter pastes them in turn,
- * Ctrl+Enter merged. `wide` shows the picked entry beside the list. `openCount` changes each time
- * the window is shown, which starts afresh.
- */
 export function ClipboardPopup({ items, snippets, openCount, wide, capture, linkPreview = false, aiPrompts, onPaste, onPasteSnippet, onPasteSequence, onClose, onToggleFavorite }: {
   items: readonly ClipboardHistoryItem[];
   snippets: readonly ClipboardSnippet[];
@@ -86,7 +75,6 @@ export function ClipboardPopup({ items, snippets, openCount, wide, capture, link
   const needle = query.trim().toLowerCase();
   const shownItems = useMemo(
     () => (onSnippets ? [] : filterPopupItems(visible, filter, parsed, now)),
-    // pinyinReady: matching by pinyin starts once its table has loaded.
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [visible, filter, parsed, now, onSnippets, pinyinReady],
   );
@@ -188,7 +176,6 @@ export function ClipboardPopup({ items, snippets, openCount, wide, capture, link
       handled();
       deletion.remove(item);
     } else {
-      // Digits paste a row only while the search box is empty, so a search can still hold numbers.
       const action = popupIndexAfterKey(key, current, count, query === "");
       if (!action) return;
       handled();

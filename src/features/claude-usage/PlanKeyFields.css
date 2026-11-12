@@ -1,4 +1,3 @@
-/* Under the key field: whether a key is saved on the left, save and remove on the right. */
 .plan-key__actions {
   display: flex;
   align-items: center;

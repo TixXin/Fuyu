@@ -1,6 +1,5 @@
 export type SettingsFileShelfText = {
   title: string;
-  /** The group for when files leave the shelf. */
   cleanupTitle: string;
   expandOnDrop: string;
   expandOnDropHint: string;

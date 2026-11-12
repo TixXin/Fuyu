@@ -24,7 +24,6 @@ import { useGlassPointer } from "./useGlassPointer";
 import { useIslandPreparing } from "./useIslandPreparing";
 import { usePageFadeIn } from "./usePageFadeIn";
 import "./IslandShell.css";
-// After the shell: the light island's glass overrides it (C33.4).
 import "./IslandGlassLight.css";
 import { IslandResizeHints } from "./IslandResizeHints";
 
@@ -33,14 +32,11 @@ type IslandShellProps = {
   qqNotifications: QQNotificationsController;
   wechatReminders: WeChatRemindersController;
   pluginNotifications: PluginNotificationsController;
-  /** The message preview the collapsed bar shows, or null. */
   preview: MessagePreview | null;
   onOpenMessages: (source: MessageSource) => void;
   mode: IslandMode;
   page: IslandPage;
-  /** Only a popup's card, without the header, on a narrower island (useIslandPopup). */
   popup?: boolean;
-  /** The size an Alt + edge drag is setting, shown meanwhile; null when none is under way. */
   resizeLabel?: string | null;
   appearanceMode: AppearanceMode;
   nativeGlassState: NativeGlassState;
@@ -50,25 +46,18 @@ type IslandShellProps = {
   showCollapsedText: boolean;
   collapsedTaskTitle: string | null;
   collapsedTodoCount: number | null;
-  /** Running agent session shown in place of the todo, or null. */
   agentSession: AgentSession | null;
-  /** The line being sung, shown in the summary's place while no agent is named. */
   lyricLine?: CurrentLyric | null;
-  /** Agent sessions still working, shown in place of the tuck dot while the AI Agent switch is on. */
   activeAgentSessionCount: number;
   mediaState: MediaState;
   agentVisualState: AgentVisualState;
   agentStatusLabel: string;
-  /** Modules switched on; the header and collapsed bar hide the rest. */
   features: IslandFeatures;
-  /** Files on the shelf for the collapsed bar, or null when it does not show them. */
   shelfCount: number | null;
   deviceUse: DeviceUse;
   levelPopup?: LevelChange | null;
   deviceAlert?: DeviceAlert | null;
-  /** Claude's or Codex's usage reaching the alert level, or resetting. */
   quotaAlert?: QuotaAlert | null;
-  /** A meeting about to start (calendar), and whether to name it. */
   meeting?: CollapsedMeeting | null;
   onOpenPage: (page: IslandPage) => void;
   onWindowDragStart: () => void;
@@ -76,9 +65,7 @@ type IslandShellProps = {
   onResetPosition: () => void;
   minimizesToTray: boolean;
   onMinimize: () => void;
-  /** Null while translation is switched off, which hides its button. */
   onOpenTranslator: (() => void) | null;
-  /** One line from the selection shortcut, shown on the collapsed island, or null. */
   translationPeek: string | null;
   onOpenTranslationPeek: () => void;
   onOpenSettings: (section?: "updates") => void;
@@ -88,16 +75,11 @@ type IslandShellProps = {
   pageDigitModifiers: string;
   hoverSwitchPage: boolean;
   hoverSwitchDelayMs: number;
-  /** Shown over the top row in both modes, e.g. a plugin permission question. */
   overlay?: ReactNode;
-  /** Buttons for plugin pages in the expanded header. */
   pluginPageButtons?: ReactNode;
-  /** Buttons of the open page, first among the window actions. */
   pageActions?: ReactNode;
-  /** Plugin pages on the island, for the plugin statuses on the collapsed bar. */
   pluginViews?: readonly PluginViewEntry[];
   onOpenPluginPage?: (page: `plugin:${string}`) => void;
-  /** Built-in plugins' slots on the collapsed bar. */
   collapsedSlots?: CollapsedSlots;
   children: ReactNode;
 };
@@ -169,7 +151,6 @@ export function IslandShell({
   const className = [
     "island",
     `island--${mode}`,
-    // Plugin page ids contain ":" and "/", so they share one class.
     isPluginPage(page) ? "island--plugin" : `island--${page}`,
     `island--appearance-${appearanceMode}`,
     isPreparing && !isExpanded ? "island--preparing" : "",

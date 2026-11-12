@@ -4,7 +4,6 @@ import { loadPinyin, matchesPopupQuery, parsePopupQuery } from "./popupQuery";
 
 export type ClipboardView = "all" | "favorites" | "images" | "files";
 
-/** The tags used most, for the filter row: at most `limit`, the most used first. */
 export function topTags(items: ClipboardHistoryItem[], limit = 3): string[] {
   const counts = new Map<string, number>();
   for (const item of items) for (const tag of item.tags ?? []) counts.set(tag, (counts.get(tag) ?? 0) + 1);
@@ -29,7 +28,6 @@ export function useClipboardHistoryList(items: ClipboardHistoryItem[]) {
     [items],
   );
   const viewedItems = useMemo(() => (clipboardView === "favorites" ? favoriteItems : items.filter((item) => inView(item, clipboardView))), [clipboardView, favoriteItems, items]);
-  // The same search as the clipboard window (C43): pinyin and its initials, and "/" rules.
   const [pinyinReady, setPinyinReady] = useState(false);
   useEffect(() => {
     if (!normalizedQuery || pinyinReady) return;
@@ -45,7 +43,6 @@ export function useClipboardHistoryList(items: ClipboardHistoryItem[]) {
     const parsed = parsePopupQuery(normalizedQuery);
     const now = Date.now();
     return viewedItems.filter((item) => matchesPopupQuery(item, parsed, now));
-    // pinyinReady: matching by pinyin starts once its table has loaded.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [normalizedQuery, viewedItems, pinyinReady]);
 

@@ -3,7 +3,6 @@ import { RowMenu } from "../../components/list/RowMenu";
 import { useTranslation } from "../../i18n";
 import type { ClipboardView } from "./useClipboardHistoryList";
 
-/** The filters (all, starred, images, files and the most used #tags), the count and "⋯". */
 export function ClipboardPanelHeader({
   view,
   query,

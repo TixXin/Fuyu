@@ -8,7 +8,6 @@ import { CALENDAR_REMIND_MINUTES, type CalendarRemindMinutes } from "../../featu
 import { useTranslation } from "../../i18n";
 import { ModuleSwitchSection } from "./ModuleSwitchSection";
 
-/** Settings → Calendar: the module switch, the countdown on the collapsed island, and the calendars. */
 export function CalendarSettingsPage({
   settings,
   onSettingsChange,

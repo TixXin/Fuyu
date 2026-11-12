@@ -4,7 +4,6 @@ import { ToggleControl } from "../../components/controls/ToggleControl";
 import { useLocale } from "../../i18n";
 import type { PluginSettingSpec } from "./api";
 
-/** One declared plugin setting, drawn with the island's own controls. */
 export function PluginSettingField({
   spec,
   value,
@@ -16,7 +15,6 @@ export function PluginSettingField({
   value: unknown;
   disabled: boolean;
   onChange: (value: unknown) => void;
-  /** Values a string setting is picked from, known only at run time (a built-in plugin's list). */
   choices?: { value: string; label: string }[];
 }) {
   const { locale } = useLocale();
@@ -62,7 +60,6 @@ export function PluginSettingField({
         return (
           <label className="plugin-setting__row">
             <span>{title}</span>
-            {/* Saved on blur or Enter, not on every key; a new saved value resets it. */}
             <input
               key={text}
               className="plugin-setting__input"

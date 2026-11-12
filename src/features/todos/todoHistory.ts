@@ -1,11 +1,5 @@
 import type { ScheduledTodo, TodoArchive, TodoItem } from "./types";
 
-/**
- * Reading other days: `todos.list { date }`, `note.get { date }` and `todos.days
- * { from, to }`. A past day is read from its archive, a later day from the scheduled
- * list. Same rules and messages as src-tauri/src/todos/history.rs.
- */
-
 export type HistoryState = {
   date: string;
   todos: TodoItem[];
@@ -21,14 +15,12 @@ const ok = (data: unknown): HistoryAnswer => ({ ok: true, data });
 const fail = (status: 400 | 404, error: string): HistoryAnswer => ({ ok: false, status, error });
 const noArchive = (date: string) => fail(404, `Nothing was archived for ${date}.`);
 
-/** The date asked for: null for today (missing, or the list's own day), or the error. */
 function askedDate(value: unknown, state: HistoryState): string | null | HistoryAnswer {
   if (value === undefined || value === null) return null;
   if (typeof value !== "string" || !DATE_PATTERN.test(value)) return fail(400, `"date" must look like YYYY-MM-DD.`);
   return value === state.date ? null : value;
 }
 
-/** `todos.list` for another day; null means today (answered as before). */
 export function listDay(value: unknown, state: HistoryState): HistoryAnswer | null {
   const date = askedDate(value, state);
   if (date === null || typeof date !== "string") return date;
@@ -39,7 +31,6 @@ export function listDay(value: unknown, state: HistoryState): HistoryAnswer | nu
   return archive ? ok({ date, todos: archive.todos, scheduled: [], activeTodoId: null, archived: true }) : noArchive(date);
 }
 
-/** `note.get` for another day; null means today. */
 export function noteOfDay(value: unknown, state: HistoryState): HistoryAnswer | null {
   const date = askedDate(value, state);
   if (date === null || typeof date !== "string") return date;
@@ -48,7 +39,6 @@ export function noteOfDay(value: unknown, state: HistoryState): HistoryAnswer | 
   return archive ? ok({ date, note: archive.dailyNote, archived: true }) : noArchive(date);
 }
 
-/** `todos.days { from, to }`: a summary of today and each archived day in the range, oldest first. */
 export function daysBetween(from: unknown, to: unknown, state: HistoryState): HistoryAnswer {
   if (typeof from !== "string" || !DATE_PATTERN.test(from) || typeof to !== "string" || !DATE_PATTERN.test(to)) {
     return fail(400, "Send { from, to } as YYYY-MM-DD dates.");

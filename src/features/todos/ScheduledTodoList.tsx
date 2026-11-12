@@ -3,7 +3,6 @@ import { useTranslation } from "../../i18n";
 import type { ScheduledTodo } from "./types";
 import "./ScheduledTodoList.css";
 
-/** Todos planned for later days, grouped by day, each removable. */
 export function ScheduledTodoList({
   todos,
   onDelete,

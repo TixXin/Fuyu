@@ -6,29 +6,21 @@ import type { ClipboardHistoryItem, ClipboardSnippet } from "./api";
 import { ClipboardEntryIcon } from "./ClipboardEntryIcon";
 import { contentKind, linkLabel } from "./contentKind";
 
-/**
- * One row of the clipboard window, drawn like the island's list rows: the quick-paste digit (or the
- * row's place in a sequence being picked, C24.7), an icon or thumbnail, the content on one line and
- * where and when it came from under it. The picked row says what Enter does.
- */
 export function ClipboardPopupRow({ index, now, selected, queued, entry, snippet, onPick, onHover, onToggleFavorite, onMenu }: {
   index: number;
   now: number;
   selected: boolean;
-  /** 1-based place in the sequence, or 0. */
   queued: number;
   entry?: ClipboardHistoryItem;
   snippet?: ClipboardSnippet;
   onPick: (event: MouseEvent) => void;
   onHover: () => void;
   onToggleFavorite?: () => void;
-  /** A right click: the actions panel for this row (C38). */
   onMenu?: () => void;
 }) {
   const t = useTranslation();
   const text = t.clipboard;
   const image = entry?.kind === "image" ? entry.image : undefined;
-  // Links, colours and JSON are recognised (C38): their own lead, a badge, a link as host › path.
   const kind = entry ? contentKind(entry) : null;
   const main = entry ? (image ? text.imageLabel(image.width, image.height) : kind?.kind === "link" ? linkLabel(kind.url) : entry.preview) : snippet?.title ?? "";
   const extraFiles = entry?.kind === "files" && entry.files && entry.files.length > 1 ? entry.files.length - 1 : 0;

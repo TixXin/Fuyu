@@ -5,16 +5,13 @@ import { openPluginHomepage, PLUGIN_PERMISSIONS, type MarketPlugin, type PluginP
 import { repositoryUrl } from "./marketFilter";
 
 const isPermission = (name: string): name is PluginPermission => (PLUGIN_PERMISSIONS as readonly string[]).includes(name);
-/** Where problems are reported for plugins whose index entry names no repository. */
 const REPORT_URL = "https://github.com/TixXin/fuyu/issues/new";
 
-/** What a market card shows once opened: permissions, runtime, README, version history and links. */
 export function MarketPluginDetails({ plugin }: { plugin: MarketPlugin }) {
   const t = useTranslation();
   const text = t.settings.plugins.market;
   const { locale } = useLocale();
   const repo = repositoryUrl(plugin.repo);
-  // A plugin's own repository takes its problem reports; the island's repository takes the rest.
   const report = `${repo ? `${repo}/issues/new` : REPORT_URL}?title=${encodeURIComponent(`[plugin] ${plugin.id} ${plugin.version}`)}`;
   const openLink = (href: string) => void openPluginHomepage(href);
   const names = (list: string[]) =>
@@ -30,7 +27,6 @@ export function MarketPluginDetails({ plugin }: { plugin: MarketPlugin }) {
           {t.settings.plugins.optionalPermission}: {names(plugin.optionalPermissions)}
         </p>
       ) : null}
-      {/* "none" runs nothing (a sound pack, say): there is nothing to say about installing it. */}
       {plugin.runtime && plugin.runtime !== "none" ? <p>{plugin.runtime === "node" ? t.settings.plugins.runtimeNode : t.settings.plugins.runtimeBuiltIn}</p> : null}
       {plugin.readme ? (
         <section className="plugin-market__doc" aria-label={text.readme}>

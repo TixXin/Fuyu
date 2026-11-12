@@ -2,14 +2,8 @@ import { useEffect, useState } from "react";
 import { listenIslandHover } from "./api";
 import { isEditingText } from "./useHoverExpand";
 
-// Grace period before a peeking island slides back, so brushing past the edge or a
-// cursor that slips off for a moment does not make it bounce.
 const PEEK_RETRACT_DELAY_MS = 300;
 
-/**
- * Slides a peeking island (minimized to the top edge) back once the cursor leaves it;
- * a panel opened from the peek closes with it, but not under a draft or a held button.
- */
 export function useTuckPeek(isPeeking: boolean, onRetract: () => void, delayMs: number = PEEK_RETRACT_DELAY_MS) {
   const [isHovering, setIsHovering] = useState(false);
 

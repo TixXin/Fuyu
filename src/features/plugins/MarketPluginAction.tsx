@@ -4,11 +4,6 @@ import { useTranslation } from "../../i18n";
 import type { MarketPlugin } from "./api";
 import { hasUpdate } from "./marketGroups";
 
-/**
- * The right-hand side of a market card: Install; a grey "Installed" mark and
- * Manage; or an accent "Update to vX". An update signed by another author key
- * takes two clicks ("Update anyway", then "Confirm").
- */
 export function MarketPluginAction({
   plugin,
   trusted,
@@ -20,7 +15,6 @@ export function MarketPluginAction({
   trusted: boolean;
   installingId: string | null;
   onInstall: (id: string, trust: boolean, acceptKeyChange: boolean) => void;
-  /** Opens the installed plugin on the plugins page; without it there is no Manage button. */
   onManage?: (id: string) => void;
 }) {
   const text = useTranslation().settings.plugins.market;

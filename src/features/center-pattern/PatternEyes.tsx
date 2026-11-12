@@ -4,14 +4,12 @@ import { gazeOffset } from "./patterns";
 import { useReducedMotion } from "./useReducedMotion";
 
 const MAX_PUPIL_OFFSET = 2.6;
-// No cursor news for this long: the eyes start glancing around on their own.
 const WANDER_AFTER_MS = 4000;
 const WANDER_EVERY_MS = 2600;
 const WANDER_GLANCES = [
   { x: 0, y: 0 }, { x: -2.2, y: 0.4 }, { x: 2.2, y: -0.6 }, { x: 0, y: 1.6 }, { x: 1.4, y: 1.2 }, { x: -1.6, y: -1 },
 ];
 
-/** A pair of eyes whose pupils follow the cursor, also outside the window, and blink now and then. */
 export function PatternEyes({ paused }: { paused: boolean }) {
   const svgRef = useRef<SVGSVGElement>(null);
   const reducedMotion = useReducedMotion();
@@ -48,8 +46,6 @@ export function PatternEyes({ paused }: { paused: boolean }) {
       pupils.forEach((pupil) => { pupil.style.transform = `translate(${x}px, ${y}px)`; });
     }, WANDER_EVERY_MS);
 
-    // The island's webview gets no mousemove once the cursor leaves the island shape, so ask
-    // the native side; other windows (a settings preview) make do with their own mousemove.
     let unlisten: (() => void) | null = null;
     let disposed = false;
     const native = canTrackIslandCursor();

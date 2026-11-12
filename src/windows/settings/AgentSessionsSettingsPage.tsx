@@ -2,7 +2,6 @@ import { AgentSessionFilterSettings } from "../../features/agent-status/AgentSes
 import { AgentSessionListSettings } from "../../features/agent-status/AgentSessionListSettings";
 import type { IslandSettings } from "../../features/appearance/types";
 
-/** Settings → AI Agent → Session list: which sessions the island's Agent page lists, what each card shows, and the rules that hide some. */
 export function AgentSessionsSettingsPage({
   settings,
   onSettingsChange,

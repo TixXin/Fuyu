@@ -8,7 +8,6 @@ import type { IslandSettings, MinimizeAction } from "./types";
 
 const LOCALE_OPTIONS = LOCALE_CODES.map((code) => ({ value: code, label: TRANSLATIONS[code].localeLabel }));
 
-/** Settings → General → System: start with Windows, the interface language and the minimize button. */
 export function BehaviorSettingsSection({
   launchAtStartup,
   locale,

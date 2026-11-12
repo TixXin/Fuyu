@@ -5,10 +5,6 @@ import { AGENT_SESSION_GROUPS, AGENT_SESSION_SORTS } from "../appearance/setting
 import type { AgentSessionGroup, AgentSessionSort } from "../appearance/types";
 import "./AgentArrangeButton.css";
 
-/**
- * The island header's arrange button on the Agent page: a small menu with the list's order and
- * its headings (sessionList.ts arrangeSessions), saved with the settings.
- */
 export function AgentArrangeButton({
   sort,
   group,

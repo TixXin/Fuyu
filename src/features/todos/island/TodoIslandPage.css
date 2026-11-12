@@ -1,8 +1,3 @@
-/*
- * The todo page in the island style. No panel of its own: it sits on the island like the Agent
- * page, and its text follows the island background (stageStyle.ts sets --island-ink-rgb), light
- * on dark and dark on light. Surfaces are the ink at low alpha for the same reason.
- */
 .todo-island {
   --todo-ink: var(--island-ink-rgb, 241, 240, 246);
   --text-1: rgba(var(--todo-ink), 0.96);
@@ -12,11 +7,9 @@
   --todo-surface: rgba(var(--todo-ink), 0.06);
   --todo-surface-hover: rgba(var(--todo-ink), 0.09);
   --todo-line: rgba(var(--todo-ink), 0.1);
-  /* Accents leaned toward the ink, so they stay readable on a light island too. */
   --todo-accent: color-mix(in srgb, var(--color-accent) 72%, rgb(var(--todo-ink)));
   --todo-later: color-mix(in srgb, #a68bff 75%, rgb(var(--todo-ink)));
   --todo-radius: var(--island-panel-radius, 10px);
-  /* The todo page's blue, for the chips, the list rows and the shared toolbar (IslandList.css). */
   --todo-accent-rgb: 116, 214, 255;
   --list-ink: var(--todo-ink);
   --list-accent: var(--todo-accent-rgb);
@@ -31,7 +24,6 @@
   font-family: var(--font-ui);
 }
 
-/* At 75% the purple of later days is 2.9:1 on its own light chip. */
 .island-light .todo-island {
   --todo-later: color-mix(in srgb, #a68bff 55%, rgb(var(--todo-ink)));
 }
@@ -41,7 +33,6 @@
   box-sizing: border-box;
 }
 
-/* Pages with nothing between the header and their content. */
 .todo-island--daily,
 .todo-island--upcoming,
 .todo-island--archive {
@@ -57,7 +48,6 @@
   outline-offset: 2px;
 }
 
-/* Header: the pages as chips on the left (IslandList.css), today's progress and "⋯" on the right. */
 .todo-island__header {
   min-height: 28px;
   display: flex;
@@ -142,7 +132,6 @@
   padding-left: 6px;
 }
 
-/* Adding a todo: the same field as the clipboard and shelf search (IslandList.css). */
 .todo-island__composer {
   height: 34px;
   padding: 0 5px 0 10px;
@@ -175,12 +164,10 @@
   background: rgba(166, 139, 255, 0.2);
 }
 
-/* Empty list, empty archive: IslandList.css's empty state, a little shorter. */
 .todo-island__empty {
   min-height: 140px;
 }
 
-/* The daily note. */
 .todo-island__note {
   width: 100%;
   min-height: 0;
@@ -208,7 +195,6 @@
   border-color: rgba(116, 214, 255, 0.55);
 }
 
-/* Month and day headings in the archive and the upcoming list. */
 .todo-island__section-label,
 .todo-island .scheduled-list__date {
   padding: 6px 10px 2px;
@@ -217,7 +203,6 @@
   font-weight: 600;
 }
 
-/* Upcoming: the shared list, drawn like the rows. */
 .todo-island .scheduled-list {
   gap: 6px;
 }
@@ -265,7 +250,6 @@
   border: 0;
 }
 
-/* Archive: one row per saved day. */
 .todo-island__archive {
   min-height: 0;
   overflow-y: auto;
@@ -301,7 +285,6 @@
   box-shadow: inset 0 0 0 1px rgba(var(--todo-ink), 0.09);
 }
 
-/* The day as a small square: the date over the weekday. */
 .todo-island__archive-date {
   flex: none;
   width: 34px;

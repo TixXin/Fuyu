@@ -7,7 +7,6 @@ import { normalizeDetailModel } from "../templateModels";
 import { TemplateActions } from "./TemplateActions";
 import "./DetailTemplate.css";
 
-/** The detail template: a title, restricted Markdown, facts and actions. Links open in the browser. */
 export function DetailTemplate({ pluginId, viewId, model }: { pluginId: string; viewId: string; model: unknown }) {
   const t = useTranslation();
   const { locale } = useLocale();
@@ -25,11 +24,8 @@ export function DetailTemplate({ pluginId, viewId, model }: { pluginId: string; 
         : "",
     [detail.markdown],
   );
-  // Kept as one object: React 19 rewrites innerHTML for every new one, which would swap a
-  // link for a copy mid-click on a re-render and lose the click (see MailPanel).
   const markdownHtml = useMemo(() => ({ __html: html }), [html]);
 
-  // Links never navigate the island window; https ones open in the browser.
   const openLink = (event: MouseEvent<HTMLDivElement>) => {
     const link = event.target instanceof Element ? event.target.closest("a") : null;
     if (!link) return;
@@ -45,7 +41,6 @@ export function DetailTemplate({ pluginId, viewId, model }: { pluginId: string; 
         {detail.error ? <p className="plugin-detail__error" role="alert">{detail.error}</p> : null}
         {detail.loading && !html ? <p className="plugin-detail__muted">{t.pluginViews.loading}</p> : null}
         {html ? (
-          // Built from escaped text with a fixed tag list, then sanitized again.
           <div className="plugin-detail__markdown" onClick={openLink} dangerouslySetInnerHTML={markdownHtml} />
         ) : null}
         {!html && !detail.loading && detail.meta.length === 0 ? <p className="plugin-detail__muted">{t.pluginViews.empty}</p> : null}

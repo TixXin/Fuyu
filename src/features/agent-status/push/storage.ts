@@ -2,32 +2,18 @@ import { readJson, writeJson } from "../../../lib/storage.ts";
 
 export const AGENT_PUSH_STORAGE_KEY = "fuyu-agent-push";
 
-/** What a session did that can go to the phone. */
 export const AGENT_PUSH_EVENTS = ["waiting", "completed", "failed"] as const;
 export type AgentPushEvent = (typeof AGENT_PUSH_EVENTS)[number];
 
-/** Push only after this many minutes without keyboard or mouse input (or at once when locked); 0 pushes always. */
 export const AGENT_PUSH_AWAY_MINUTES = [0, 2, 5, 10] as const;
 
-/** Where a push goes: Bark, or a chat of a cc-connect bot (the built-in plugin focusd.cc-connect). */
 export const AGENT_PUSH_CHANNELS = ["bark", "ccConnect"] as const;
 export type AgentPushChannel = (typeof AGENT_PUSH_CHANNELS)[number];
 
-/** The key of this computer among the hosts; an SSH computer's is its name, as in `remoteHost`. */
 export const LOCAL_HOST = "";
 
-/**
- * A chat of a cc-connect project that gets the push. `agent` is the project's agent type
- * ("claudecode", "codex") as it was when the chat was picked: the takeover commands only work for
- * sessions of that agent.
- */
 export type CcConnectPushChat = { project: string; key: string; agent: string | null };
 
-/**
- * One computer's cc-connect: the chats its sessions are pushed to (of any of its projects) and, for
- * an SSH computer without cc-connect, whether this computer's chats push for it instead (without
- * takeover commands). Where the program is, is the plugin page's setting.
- */
 export type CcConnectPushHost = { chats: CcConnectPushChat[]; viaLocal: boolean };
 
 const MAX_CHATS = 20;
@@ -35,14 +21,11 @@ const MAX_HOSTS = 20;
 
 export type AgentPushSettings = {
   enabled: boolean;
-  /** A bark-server's address; empty is Bark's own (https://api.day.app). */
   server: string;
   events: Record<AgentPushEvent, boolean>;
   awayMinutes: number;
   channel: AgentPushChannel;
-  /** The computers whose sessions are not pushed (LOCAL_HOST for this one); any other is. */
   mutedHosts: string[];
-  /** By computer (LOCAL_HOST for this one). */
   ccConnect: Record<string, CcConnectPushHost>;
 };
 
@@ -52,7 +35,6 @@ export const DEFAULT_AGENT_PUSH_SETTINGS: AgentPushSettings = {
   enabled: false,
   server: "",
   events: { waiting: true, completed: true, failed: true },
-  // Pushing to the phone while sitting at the computer is noise.
   awayMinutes: 5,
   channel: "bark",
   mutedHosts: [],
@@ -84,10 +66,6 @@ export function saveAgentPushSettings(settings: AgentPushSettings) {
   writeJson(AGENT_PUSH_STORAGE_KEY, settings);
 }
 
-/**
- * The cc-connect settings of a computer (LOCAL_HOST for this one). An SSH computer not set up yet
- * borrows this computer's chats, as every computer's sessions did before each had its own.
- */
 export function pushHost(settings: AgentPushSettings, host: string): CcConnectPushHost {
   return settings.ccConnect[host] ?? (host === LOCAL_HOST ? EMPTY_PUSH_HOST : { chats: [], viaLocal: true });
 }
@@ -103,7 +81,6 @@ function text(value: unknown, max: number) {
 function normalizeHosts(value: unknown): Record<string, CcConnectPushHost> {
   if (!value || typeof value !== "object") return {};
   const raw = value as Record<string, unknown>;
-  // Before computers had their own: one project of this computer, `{ project, chats: [key] }`.
   if (typeof raw.project === "string" && Array.isArray(raw.chats)) {
     const project = text(raw.project, 200);
     const chats = raw.chats.map((key) => ({ project, key, agent: "claudecode" }));
@@ -126,7 +103,6 @@ function normalizeChats(value: unknown): CcConnectPushChat[] {
     if (!entry || typeof entry !== "object") continue;
     const raw = entry as Record<string, unknown>;
     const project = text(raw.project, 200);
-    // A chat key is `<platform>:<chat>:<user>`; anything else would only fail to send.
     const key = typeof raw.key === "string" && raw.key.includes(":") && raw.key.length <= 256 ? raw.key : "";
     if (!project || !key || seen.has(`${project}\n${key}`)) continue;
     seen.add(`${project}\n${key}`);
@@ -135,14 +111,8 @@ function normalizeChats(value: unknown): CcConnectPushChat[] {
   return chats.slice(0, MAX_CHATS);
 }
 
-/** Where a computer's sessions are pushed: through the cc-connect of `via` (LOCAL_HOST or `host`) to `chats`. */
 export type PushRoute = { via: string; chats: CcConnectPushChat[]; takeover: boolean };
 
-/**
- * Each computer's sessions go out through its own cc-connect, whose bots can take them over. An
- * SSH computer set to `viaLocal` borrows this computer's chats instead, without takeover: this
- * computer's cc-connect cannot resume a session that lives on another.
- */
 export function pushRoute(settings: AgentPushSettings, host: string): PushRoute {
   const own = pushHost(settings, host);
   if (host !== LOCAL_HOST && own.viaLocal) return { via: LOCAL_HOST, chats: pushHost(settings, LOCAL_HOST).chats, takeover: false };

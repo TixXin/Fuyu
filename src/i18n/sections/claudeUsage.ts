@@ -5,9 +5,7 @@ export type ResetParts = { days: number; hours: number; minutes: number };
 export type ClaudeUsageText = {
   fiveHour: string;
   sevenDay: string;
-  /** "5 小时 42% · 2 小时 13 分后重置"; `reset` is null when the snapshot gave no reset time. */
   window: (label: string, percent: number, reset: string | null) => string;
-  /** The same with what is left: "5 小时 剩余 58% · 2 小时 13 分后重置". */
   windowLeft: (label: string, percent: number, reset: string | null) => string;
   resetsIn: (parts: ResetParts) => string;
   resettingSoon: string;
@@ -18,21 +16,13 @@ export type ClaudeUsageText = {
   fromCodex: string;
   fromGlm: string;
   fromKimi: string;
-  /** "3 分钟前更新 · 来自 claude-hud". */
   updated: (ago: string, source: string) => string;
-  /** The ring button's label: what the card says (it starts with the agent's name), and that a click re-reads it. */
   ringLabel: (details: string) => string;
-  /** Claude's card without numbers. */
   noData: string;
-  /** The other agents' cards before there are numbers. */
   noUsage: Record<"codex" | "glm" | "kimi", string>;
-  /** Named windows that are not models (plan_usage.rs): Kimi's month, GLM's monthly MCP calls. */
   windowNames: Record<string, string>;
-  /** Why asking GLM or Kimi with the saved API key failed. */
   planErrors: Record<AgentUsageErrorKind, string>;
-  /** Why asking Anthropic directly failed; one per AgentUsageErrorKind in features/agent-status/api.ts. */
   errors: Record<AgentUsageErrorKind, string>;
-  /** The API key fields on the plugin page (PlanKeyFields). */
   keys: {
     title: string;
     hint: string;

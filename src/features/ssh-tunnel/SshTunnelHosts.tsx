@@ -7,11 +7,6 @@ import { exportLine, parseRemotePort } from "./tunnelPort";
 import { useSshTunnels, type TakenPort } from "./useSshTunnels";
 import "./SshTunnelHosts.css";
 
-/**
- * The SSH proxy tunnel's plugin page section: every host of the SSH list with its switch, its
- * port on the server, how its tunnel is doing and the line to run there. Asks before setting up
- * a tunnel on a port the server already uses.
- */
 export function SshTunnelHosts() {
   const t = useTranslation().settings.plugins.sshTunnel;
   const tunnels = useSshTunnels();
@@ -60,7 +55,6 @@ function HostRow({
   const field = useRef<HTMLInputElement>(null);
   const [invalid, setInvalid] = useState(false);
   const [copied, setCopied] = useState(false);
-  // The field as typed now: a switch flipped right after typing uses it before it is saved.
   const typed = (then: (port: number | null) => void) => {
     const port = parseRemotePort(field.current?.value ?? "");
     setInvalid(port === "invalid");

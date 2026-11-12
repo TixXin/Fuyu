@@ -1,19 +1,12 @@
-// The selection on a screenshot overlay, in the monitor picture's physical pixels. The overlay
-// window covers one monitor at its own scale, so a pointer position (CSS pixels) times
-// `pixelScale` is a pixel of the picture; nothing here depends on devicePixelRatio.
-
 export type Point = { x: number; y: number };
 export type Size = { width: number; height: number };
-// A rectangle of a monitor picture, in its physical pixels.
 export type PixelRect = { x: number; y: number; width: number; height: number };
 export type Handle = "n" | "s" | "e" | "w" | "ne" | "nw" | "se" | "sw";
 
 export const HANDLES: readonly Handle[] = ["nw", "n", "ne", "e", "se", "s", "sw", "w"];
 
-/** A drag shorter than this (pixels on either axis) is a click, not a selection. */
 export const MIN_SELECTION = 4;
 
-/** Picture pixels per CSS pixel of the overlay. */
 export function pixelScale(picture: Size, view: Size): number {
   return view.width > 0 ? picture.width / view.width : 1;
 }
@@ -30,12 +23,10 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
 }
 
-/** The pixel under `point`, inside the picture. */
 export function pixelAt(point: Point, bounds: Size): Point {
   return { x: clamp(Math.floor(point.x), 0, bounds.width - 1), y: clamp(Math.floor(point.y), 0, bounds.height - 1) };
 }
 
-/** The rectangle between two points (either order), on whole pixels, inside the picture. */
 export function rectFromPoints(a: Point, b: Point, bounds: Size): PixelRect {
   const left = clamp(Math.round(Math.min(a.x, b.x)), 0, bounds.width);
   const top = clamp(Math.round(Math.min(a.y, b.y)), 0, bounds.height);
@@ -48,7 +39,6 @@ export function isSelection(rect: PixelRect): boolean {
   return rect.width >= MIN_SELECTION && rect.height >= MIN_SELECTION;
 }
 
-/** `rect` with the edges `handle` names dragged to `point`; dragging past the other edge flips it. */
 export function resizeRect(rect: PixelRect, handle: Handle, point: Point, bounds: Size): PixelRect {
   let left = rect.x;
   let top = rect.y;
@@ -61,7 +51,6 @@ export function resizeRect(rect: PixelRect, handle: Handle, point: Point, bounds
   return rectFromPoints({ x: left, y: top }, { x: right, y: bottom }, bounds);
 }
 
-/** `rect` moved by (dx, dy), kept whole inside the picture. */
 export function moveRect(rect: PixelRect, dx: number, dy: number, bounds: Size): PixelRect {
   return {
     ...rect,
@@ -70,7 +59,6 @@ export function moveRect(rect: PixelRect, dx: number, dy: number, bounds: Size):
   };
 }
 
-/** What a press at `point` grabs: a handle (within `tolerance` pixels), the inside, or nothing. */
 export function hitTest(rect: PixelRect, point: Point, tolerance: number): Handle | "inside" | null {
   const right = rect.x + rect.width;
   const bottom = rect.y + rect.height;
@@ -85,14 +73,12 @@ export function hitTest(rect: PixelRect, point: Point, tolerance: number): Handl
   return point.x > rect.x && point.x < right && point.y > rect.y && point.y < bottom ? "inside" : null;
 }
 
-/** Where a handle sits on `rect` (CSS or pixels alike). */
 export function handlePosition(rect: PixelRect, handle: Handle): Point {
   const x = handle.includes("w") ? rect.x : handle.includes("e") ? rect.x + rect.width : rect.x + rect.width / 2;
   const y = handle.includes("n") ? rect.y : handle.includes("s") ? rect.y + rect.height : rect.y + rect.height / 2;
   return { x, y };
 }
 
-/** The CSS cursor for a handle. */
 export function handleCursor(handle: Handle): string {
   return handle === "n" || handle === "s" ? "ns-resize"
     : handle === "e" || handle === "w" ? "ew-resize"
@@ -104,10 +90,6 @@ export function hexColor(red: number, green: number, blue: number): string {
   return `#${[red, green, blue].map((value) => value.toString(16).padStart(2, "0")).join("")}`.toUpperCase();
 }
 
-/**
- * Where the magnifier goes for a pointer at `pointer` (CSS pixels): below and right of it, flipped
- * to the other side where it would leave the view.
- */
 export function magnifierPosition(pointer: Point, size: Size, view: Size, gap: number): Point {
   let x = pointer.x + gap;
   let y = pointer.y + gap;

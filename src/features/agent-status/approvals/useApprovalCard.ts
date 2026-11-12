@@ -2,14 +2,8 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { listenAgentApprovalHotkey, setAgentApprovalHotkeys, type AgentApprovalDecision, type APPROVAL_HOTKEYS } from "./api";
 import type { AgentApprovals } from "./useAgentApprovals";
 
-/** A card that appears under a click or key press about to land is not answered by it. */
 export const APPROVAL_ARM_MS = 500;
 
-/**
- * What every card on the Agent page for a waiting request shares: it can be answered only once
- * `armed`, its `hotkeys` are registered only while it is armed and showing, and it reports its
- * height (through `cardRef`) for the island to fit it. A hotkey press calls `actRef.current`.
- */
 export function useApprovalCard(approvals: AgentApprovals, hotkeys: typeof APPROVAL_HOTKEYS) {
   const [armed, setArmed] = useState(false);
   const cardRef = useRef<HTMLElement>(null);

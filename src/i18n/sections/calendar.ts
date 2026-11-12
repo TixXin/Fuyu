@@ -5,7 +5,6 @@ export type CalendarText = {
   allDay: string;
   untitled: string;
   nothing: string;
-  /** The add-a-todo row under a day (issue #43), its label naming the day, and a planned todo's time column. */
   addTodo: string;
   addTodoOn: (day: string) => string;
   todo: string;
@@ -15,33 +14,26 @@ export type CalendarText = {
   openSettings: string;
   updatedAt: (time: string) => string;
   problems: (count: number) => string;
-  /** The collapsed island's countdown. */
   meeting: string;
   inMinutes: (minutes: number) => string;
   started: string;
-  /** The page before any calendar is added. */
   emptyTitle: string;
   emptyHint: string;
   addHolidays: string;
   addWork: string;
   adding: string;
-  /** The month view: weekday heads from Monday, the month's title, the day's title. */
   weekdays: string[];
   monthTitle: (year: number, month: number) => string;
   dayTitle: (date: Date) => string;
   previousMonth: string;
   nextMonth: string;
   backToToday: string;
-  /** A holiday calendar's marks: a day off, a make-up workday (the short form in the cell). */
   off: string;
   work: string;
   offLabel: string;
   workLabel: string;
-  /** "13 天后小雪", beside today's title (only where lunar dates are shown). */
   daysUntil: (name: string, days: number) => string;
-  /** A day's cell, for screen readers. */
   dayLabel: (title: string, events: number) => string;
-  /** A day outside the months that were read. */
   notRead: string;
 };
 

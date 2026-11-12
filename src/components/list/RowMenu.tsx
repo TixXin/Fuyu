@@ -9,7 +9,6 @@ export type RowMenuItem = {
   icon?: ReactNode;
   danger?: boolean;
   disabled?: boolean;
-  /** Leave the menu open after the click (a first click that only arms a confirmation). */
   keepOpen?: boolean;
   onSelect: () => void;
 };
@@ -17,11 +16,6 @@ export type RowMenuItem = {
 const MENU_WIDTH = 200;
 const EDGE = 8;
 
-/**
- * A "⋯" button with a small menu under it, for the actions a list row or a page's toolbar
- * keeps out of sight. The menu is put on the page body, so a scrolling list does not clip it,
- * and closes on a click elsewhere, Escape or a scroll.
- */
 export function RowMenu({ label, items, onOpenChange }: { label: string; items: RowMenuItem[]; onOpenChange?: (open: boolean) => void }) {
   const [open, setOpen] = useState(false);
   const [place, setPlace] = useState<{ left: number; top: number; ink: string; fill: string } | null>(null);
@@ -39,8 +33,6 @@ export function RowMenu({ label, items, onOpenChange }: { label: string; items: 
     const height = menuRef.current?.offsetHeight ?? 0;
     const up = button.bottom + 4 + height > window.innerHeight - EDGE && button.top - 4 - height > EDGE;
     const left = Math.max(EDGE, Math.min(button.right - MENU_WIDTH, window.innerWidth - MENU_WIDTH - EDGE));
-    // On the page body (a zoomed island layer would shift a fixed menu), so it takes the island's
-    // ink and background from the button it opens from.
     const style = getComputedStyle(buttonRef.current);
     setPlace({
       left,
@@ -73,7 +65,6 @@ export function RowMenu({ label, items, onOpenChange }: { label: string; items: 
       window.removeEventListener("blur", close);
       document.removeEventListener("keydown", onKey, true);
     };
-    // setMenuOpen only calls setState and the caller's callback.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 

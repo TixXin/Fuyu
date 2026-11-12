@@ -2,14 +2,8 @@ import { MiniRing } from "../../components/MiniRing";
 import type { PluginStatusEntry } from "./api";
 import "./PluginStatusChip.css";
 
-/** Outer size of the status ring in px; it fits the collapsed bar's 22px chip. */
 const RING_SIZE = 16;
 
-/**
- * A plugin's status on the collapsed bar (status.update): its text, or the upright batteries or
- * label-over-value cells it sent, with an optional progress ring in front. Opens the plugin's
- * page when it has one.
- */
 export function PluginStatusChip({ status, onOpen }: { status: PluginStatusEntry; onOpen: (() => void) | null }) {
   const title = status.tooltip ? `${status.text} · ${status.tooltip}` : status.text;
   const batteries = status.batteries ?? [];

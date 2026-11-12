@@ -1,10 +1,6 @@
 import type { ReactNode } from "react";
 import "./SettingsGroup.css";
 
-/**
- * A group of settings: a bold title above a card of rows divided by hairlines, and
- * an optional grey footnote under the card for what concerns the whole group.
- */
 export function SettingsGroup({
   title,
   action,
@@ -12,7 +8,6 @@ export function SettingsGroup({
   children,
 }: {
   title?: string;
-  /** A small control at the right end of the title line, such as a text link. */
   action?: ReactNode;
   footer?: ReactNode;
   children: ReactNode;

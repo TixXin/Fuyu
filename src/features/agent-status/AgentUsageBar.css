@@ -1,5 +1,3 @@
-/* One line above the session list, aligned with the rows' text. Its height is part of the Agent
-   page's chrome in getAgentPageExpandedHeight (windows/island/layout.ts): keep the two in step. */
 .agent-usage {
   flex: none;
   height: 22px;
@@ -56,7 +54,6 @@
   font-weight: 400;
 }
 
-/* The hover card's wrapper takes the line's place in the page's column. */
 .island-hover-card__anchor.agent-usage__hover {
   display: flex;
   min-width: 0;

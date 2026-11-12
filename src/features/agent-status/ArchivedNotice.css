@@ -1,4 +1,3 @@
-/* Floats over the Agent page's bottom left; .agent-sessions runs 20px under the island's edge. */
 .agent-archived {
   position: absolute;
   left: 6px;
@@ -72,7 +71,6 @@
   }
 }
 
-/* Still ends with animationend, which removes the pill, but without moving. */
 @media (prefers-reduced-motion: reduce) {
   .agent-archived,
   .agent-archived--leaving {

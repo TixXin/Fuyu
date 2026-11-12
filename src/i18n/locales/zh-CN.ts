@@ -40,9 +40,6 @@ const zhCN: Translations = {
   claudeUsage: claudeUsage.zhCN,
   sessionRing: sessionRing.zhCN,
 
-  // These panels shipped in English in the original Chinese-first build.
-  // zh-CN keeps that exact wording so existing users see no change; the en
-  // locale is identical here. Translate later if a fully-Chinese UI is wanted.
   notebook: notebook.zhCN,
 
   archive: archive.zhCN,

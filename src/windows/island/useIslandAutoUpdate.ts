@@ -7,17 +7,9 @@ import {
 import { getForegroundFullscreen } from "./api";
 import type { IslandMode } from "./types";
 
-/** Without input this long (or with the screen locked), the computer counts as idle. */
 const IDLE_SECONDS = 10 * 60;
 const IDLE_CHECK_MS = 30_000;
 
-/**
- * Automatic updates (task D18), in the main window only: a found update downloads in the
- * background, and with "install when idle" it installs once nobody would notice the island
- * restart: the screen locked or no input for 10 minutes, the island not open, no agent running
- * or waiting on the user (its approval port and alerts go away while the island restarts), and
- * no full-screen app in front.
- */
 export function useIslandAutoUpdate({ mode, sessions }: { mode: IslandMode; sessions: AgentSessionSummary[] }) {
   const latest = useRef({ mode, sessions });
   latest.current = { mode, sessions };

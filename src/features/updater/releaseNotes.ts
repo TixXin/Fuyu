@@ -1,6 +1,5 @@
 export type ReleaseNoteLine = { kind: "heading" | "item" | "text"; text: string };
 
-/** Release notes are bilingual: the Chinese half, a `---` rule, then English. */
 const LANGUAGE_RULE = /^\s*-{3,}\s*$/m;
 
 function plain(text: string) {
@@ -11,11 +10,6 @@ function plain(text: string) {
     .trim();
 }
 
-/**
- * Turns the markdown notes of a release into plain lines for the About page,
- * keeping only the half written in the interface language. The installer list
- * at the end is dropped: the update panel installs the right one by itself.
- */
 export function releaseNoteLines(notes: string, locale: "zh-CN" | "en"): ReleaseNoteLine[] {
   const halves = notes.split(LANGUAGE_RULE);
   const half = halves.length > 1 && locale === "en" ? halves[1] : halves[0];

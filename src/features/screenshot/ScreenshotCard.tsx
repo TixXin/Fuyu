@@ -8,18 +8,11 @@ import { dragScreenshot, pasteScreenshotToFront } from "./api";
 import type { ScreenshotCardState } from "./useScreenshotCard";
 import "./ScreenshotCard.css";
 
-/** A session's name in the menu: its title, else its folder, else the agent. */
 function sessionName(session: AgentSessionSummary) {
   const folder = session.cwd?.split(/[\\/]/).filter(Boolean).pop();
   return session.title?.trim() || folder || session.provider;
 }
 
-/**
- * The last screenshot copied or saved, in one row over the top of the island (C41.5): drag the
- * thumbnail out as a file, put it on the file shelf, or send it to an agent (its terminal comes
- * forward and the picture is pasted as a file path, which Claude Code and Codex read as an
- * image). Local sessions only: a remote one cannot open a file on this computer.
- */
 export function ScreenshotCard({ card, sessions }: { card: ScreenshotCardState; sessions: readonly AgentSessionSummary[] }) {
   const t = useTranslation().screenshot;
   const errorText = useErrorText();

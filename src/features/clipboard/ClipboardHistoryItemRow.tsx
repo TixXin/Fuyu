@@ -6,10 +6,6 @@ import type { ClipboardCopyAs, ClipboardHistoryItem } from "./api";
 import { ClipboardEntryIcon } from "./ClipboardEntryIcon";
 import { contentKind, linkLabel } from "./contentKind";
 
-/**
- * One entry on the island's clipboard page (IslandList.css): click it to copy it back; star and
- * copy show on hover, the rest (note, image copies, delete) is under "⋯".
- */
 export function ClipboardHistoryItemRow({
   item,
   now,
@@ -38,7 +34,6 @@ export function ClipboardHistoryItemRow({
   noteDraft: string;
   isSavingNote: boolean;
   isConfirmingDelete: boolean;
-  /** Which copy just copied this item, or null. */
   copied: ClipboardCopyAs | null;
   menuOpen: boolean;
   onMenuOpenChange: (open: boolean) => void;
@@ -49,16 +44,13 @@ export function ClipboardHistoryItemRow({
   onSaveNote: (id: string) => void;
   onCancelEditNote: () => void;
   onDelete: (id: string) => void;
-  /** A tag was clicked: filter by it (C24.5). */
   onTag?: (tag: string) => void;
-  /** Opens the transforms or the AI rewrites for this entry (C43). */
   onTools?: (page: "transforms" | "ai") => void;
 }) {
   const t = useTranslation();
   const text = t.clipboard;
   const copyText = text.popup.actions.copy;
   const image = item.kind === "image" ? item.image : undefined;
-  // Links, colours and JSON are recognised as in the clipboard window (C38, C43).
   const kind = contentKind(item);
   const main = item.kind === "image" && image ? text.imageLabel(image.width, image.height) : kind?.kind === "link" ? linkLabel(kind.url) : item.preview;
   const extraFiles = item.kind === "files" && item.files && item.files.length > 1 ? item.files.length - 1 : 0;
@@ -70,8 +62,6 @@ export function ClipboardHistoryItemRow({
     item.note,
   ].filter((part): part is string => Boolean(part));
 
-  // Images also go as the saved file or as its path, which terminal CLIs such as Claude Code take
-  // as an image (C22.1).
   const menu: RowMenuItem[] = [
     { key: "note", label: text.noteAction, icon: <Pencil size={14} strokeWidth={2} />, onSelect: () => onStartEditNote(item) },
     ...(item.kind === "text" && onTools

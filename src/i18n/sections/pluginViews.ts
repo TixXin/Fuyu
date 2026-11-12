@@ -10,7 +10,6 @@ export type PluginViewsText = {
   actions: string;
   submit: string;
   submitted: string;
-  /** Settings → plugins: which plugin pages the island shows, in what order. */
   pagesSettings: { title: string; hint: string; empty: string; show: string; moveUp: string; moveDown: string };
 };
 

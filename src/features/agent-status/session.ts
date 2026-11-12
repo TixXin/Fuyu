@@ -2,20 +2,16 @@ import type { AgentProvider, AgentSessionSummary, AgentTaskStatus, ExternalAgent
 import { sessionProject } from "./sessionList.ts";
 import { AGENT_PROVIDER_LABELS } from "./status.ts";
 
-/** How long a finished session's title stays on the island before the todo comes back. */
 export const COMPLETED_TITLE_HOLD_MS = 3000;
 
 export type AgentSession = {
-  /** Null for a source reported by a plugin or the local API. */
   provider: AgentProvider | null;
-  /** Who is working, e.g. "Claude Code" or a reported source's name. */
   label: string;
   title: string;
 };
 
 type Candidate = { session: AgentSession; phase: AgentTaskStatus["phase"]; updatedAt: number };
 
-/** How the island names a session of the Agent page's list; the title is empty when it has none. */
 export function sessionName(summary: AgentSessionSummary): AgentSession {
   return {
     provider: summary.provider,
@@ -24,11 +20,6 @@ export function sessionName(summary: AgentSessionSummary): AgentSession {
   };
 }
 
-/**
- * Claude Code and Codex come from the session files (the Agent page's list), so the island
- * names them with or without FocuSD's hooks; plugin and local API sources report their own
- * title in the status snapshot.
- */
 function candidates(sessions: AgentSessionSummary[], others: ExternalAgentStatus[] | undefined): Candidate[] {
   const fromSessions = sessions.map((summary) => ({
     session: sessionName(summary),
@@ -53,11 +44,6 @@ function isVisible({ phase, updatedAt }: Candidate, now: number) {
   );
 }
 
-/**
- * The session the collapsed island should name: a running, waiting, failed or stale one, or one
- * that completed less than `COMPLETED_TITLE_HOLD_MS` ago. With several, the most recently
- * updated wins.
- */
 export function pickAgentSession(
   sessions: AgentSessionSummary[],
   others: ExternalAgentStatus[] | undefined,
@@ -72,7 +58,6 @@ export function pickAgentSession(
   return picked?.session ?? null;
 }
 
-/** When the next completed title stops being shown, or null when nothing expires. */
 export function agentSessionExpiresAt(
   sessions: AgentSessionSummary[],
   others: ExternalAgentStatus[] | undefined,

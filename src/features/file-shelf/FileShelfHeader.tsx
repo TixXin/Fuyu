@@ -3,12 +3,10 @@ import { Copy, Search, Trash2, X } from "lucide-react";
 import { RowMenu } from "../../components/list/RowMenu";
 import { useTranslation } from "../../i18n";
 
-// A first click on Clear arms it; it disarms again if not confirmed in time.
 const CLEAR_CONFIRM_MS = 3_000;
 
 export type ShelfView = "all" | "pinned";
 
-/** Filters, count and "⋯" (clear), the search box, and the bar acting on a multi-entry selection. */
 export function FileShelfHeader({
   view,
   count,
@@ -24,7 +22,6 @@ export function FileShelfHeader({
 }: {
   view: ShelfView;
   count: number;
-  /** Changes each time a drop added only files already on the shelf; null hides the notice. */
   noticeKey: number | null;
   query: string;
   selectedCount: number;

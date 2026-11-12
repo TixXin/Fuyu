@@ -4,7 +4,6 @@ import { splitProjectPrefix } from "./project";
 import type { TodoItem } from "./types";
 import { useTodoFileField } from "./useTodoFileField";
 
-/** Today's todo items, the input draft and the todo shown on the collapsed island. */
 export function useTodoList(onStartTodo: () => void) {
   const [todos, setTodos] = useState<TodoItem[]>(loadTodos);
   const [draftTodo, setDraftTodo] = useState("");
@@ -14,7 +13,6 @@ export function useTodoList(onStartTodo: () => void) {
   useTodoFileField("todos", setTodos);
   useTodoFileField("activeTodoId", setActiveTodoId);
 
-  /** Adds the draft; "#name title" puts it in that project, else `defaultProject` (issue #44). */
   const addTodo = useCallback((defaultProject?: string) => {
     const { title, project = typeof defaultProject === "string" ? defaultProject : undefined } = splitProjectPrefix(draftTodo);
 

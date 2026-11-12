@@ -13,7 +13,6 @@ import { PUSH_GROUP } from "./sendPush";
 import { AGENT_PUSH_AWAY_MINUTES, AGENT_PUSH_CHANNELS, AGENT_PUSH_EVENTS, LOCAL_HOST, type AgentPushChannel } from "./storage";
 import { useAgentPushSettings } from "./useAgentPushSettings";
 
-/** Settings → AI Agent → Alerts: pushing agent events to the phone with Bark or a cc-connect bot (roadmap B6.5.5). */
 export function AgentPushSettings() {
   const text = useTranslation().settings.agent.push;
   const errorText = useErrorText();
@@ -53,7 +52,6 @@ export function AgentPushSettings() {
       await deleteBarkKey();
       setKeySaved(false);
     }, text.keyCleared);
-  // Every chat that gets pushes, each through its own computer's cc-connect.
   const testChats = Object.entries(settings.ccConnect)
     .filter(([host, entry]) => !settings.mutedHosts.includes(host) && !entry.viaLocal)
     .flatMap(([host, entry]) => entry.chats.map((chat) => ({ ...chat, host })));
@@ -94,7 +92,6 @@ export function AgentPushSettings() {
             }
           />
           {!bark && !cc.enabled ? <SettingsRow indent title={text.ccConnect.off} description={text.ccConnect.offHint} /> : null}
-          {/* Bark with no SSH computer has only this one, which the switch above already covers. */}
           {!bark || remote.hosts.length > 0 ? (
             <CcConnectPushTargets settings={settings} onChange={setSettings} cc={cc} remote={remote} targets={!bark && cc.enabled} />
           ) : null}

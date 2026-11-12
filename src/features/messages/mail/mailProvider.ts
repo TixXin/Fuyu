@@ -1,6 +1,3 @@
-// Which mail service an address belongs to, so the island can show that
-// service's logo; addresses of other services get the plain mail icon.
-
 export type MailProvider = "qq" | "netease" | "gmail" | "outlook";
 
 const PROVIDER_DOMAINS: Record<string, MailProvider> = {
@@ -18,7 +15,6 @@ const PROVIDER_DOMAINS: Record<string, MailProvider> = {
   "msn.com": "outlook",
 };
 
-/** Microsoft serves outlook.com, hotmail.com and live.com under many country endings. */
 const OUTLOOK_DOMAIN = /^(outlook|hotmail|live)\.[a-z.]+$/;
 
 export function mailProviderOf(email: string | null | undefined): MailProvider | null {
@@ -27,7 +23,6 @@ export function mailProviderOf(email: string | null | undefined): MailProvider |
   return PROVIDER_DOMAINS[domain] ?? (OUTLOOK_DOMAIN.test(domain) ? "outlook" : null);
 }
 
-/** The one service all these addresses share; null when they differ or none is known. */
 export function sharedMailProvider(emails: readonly (string | null | undefined)[]): MailProvider | null {
   const providers = new Set(emails.filter(Boolean).map(mailProviderOf));
   if (providers.size !== 1) return null;

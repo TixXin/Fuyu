@@ -5,7 +5,6 @@ export const DEFAULT_PAGE_NEXT_SHORTCUT = "Ctrl+Tab";
 export const DEFAULT_PAGE_PREVIOUS_SHORTCUT = "Ctrl+Shift+Tab";
 
 const MODIFIER_ORDER = ["Ctrl", "Alt", "Shift", "Win"] as const;
-// Windows handles these before the window sees them, so they can never be page shortcuts.
 const RESERVED_SHORTCUTS = new Set(["Alt+Tab", "Alt+Shift+Tab", "Win+Tab", "Shift+Win+Tab"]);
 
 export function normalizePageDigitModifiers(value: string | undefined) {
@@ -24,7 +23,6 @@ export function normalizePageDigitModifiers(value: string | undefined) {
   return MODIFIER_ORDER.filter((modifier) => modifiers.has(modifier)).join("+");
 }
 
-/** A full shortcut, or the fallback when it is empty or reserved by Windows. */
 export function normalizePageCycleShortcut(value: string | undefined, fallback: string) {
   const modifiers = new Set<string>();
   let keyLabel = "";
@@ -47,14 +45,12 @@ export function normalizePageCycleShortcut(value: string | undefined, fallback: 
   return RESERVED_SHORTCUTS.has(shortcut) ? fallback : shortcut;
 }
 
-/** The shortcut a recording produced, or null when it is empty or reserved by Windows. */
 export function recordedPageCycleShortcut(value: string | undefined): string | null {
   return normalizePageCycleShortcut(value, "") || null;
 }
 
 type DigitEvent = ShortcutKeyboardEvent & { repeat: boolean; code: string };
 
-/** Main-row digit held with exactly the configured modifiers. Numpad digits stay free. */
 export function pageDigitFromEvent(event: DigitEvent, modifiers: string | undefined): number | null {
   if (event.repeat || event.metaKey) return null;
   const match = /^Digit([1-9])$/.exec(event.code);
@@ -68,7 +64,6 @@ export function pageDigitFromEvent(event: DigitEvent, modifiers: string | undefi
   return pressed === expected ? Number(match[1]) : null;
 }
 
-/** 1 for the next-page shortcut, -1 for the previous, null otherwise. */
 export function pageCycleDirection(
   event: DigitEvent,
   nextShortcut: string | undefined,
@@ -82,7 +77,6 @@ export function pageCycleDirection(
   return null;
 }
 
-/** Modifiers from a recorded digit key, or null when the key is not a number with a modifier. */
 export function digitModifiersFromEvent(event: ShortcutKeyboardEvent & { code: string }): string | null {
   if (event.metaKey) return null;
   if (!/^Digit[1-9]$/.test(event.code) && !/^Numpad[1-9]$/.test(event.code)) return null;

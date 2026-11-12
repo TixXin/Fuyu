@@ -4,7 +4,6 @@ import { normalizeStatusModel } from "../templateModels";
 import { TemplateActions } from "./TemplateActions";
 import "./StatusTemplate.css";
 
-/** The status template: one or two lines of large text, a caption, a progress bar and actions. */
 export function StatusTemplate({ pluginId, viewId, model }: { pluginId: string; viewId: string; model: unknown }) {
   const t = useTranslation();
   const { locale } = useLocale();

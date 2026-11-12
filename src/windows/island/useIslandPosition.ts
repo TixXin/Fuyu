@@ -4,7 +4,6 @@ import { clearIslandPosition, loadIslandPosition, saveIslandPosition, type Islan
 import { useModifierWindowDrag } from "./useModifierWindowDrag";
 import { useIslandHoldListener } from "./islandHold";
 
-/** Tracks where the user dragged the island, persisting it across launches. */
 export function useIslandPosition() {
   const [isPositionDetached, setIsPositionDetached] = useState(() => loadIslandPosition() !== null);
   const islandPositionRef = useRef<IslandPosition | null>(loadIslandPosition());
@@ -51,8 +50,6 @@ export function useIslandPosition() {
     };
   }, []);
 
-  // The island followed the pointer or the active window to another monitor (Settings → Position):
-  // the dragged position is gone, or the next interaction sync would send the island back to it.
   useEffect(() => {
     let didCancel = false;
     let unlisten: (() => void) | null = null;

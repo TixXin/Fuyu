@@ -8,21 +8,13 @@ import { playAgentSound } from "./player";
 import type { AgentSoundSettings } from "./storage";
 import { useAgentSoundSettings } from "./useAgentSoundSettings";
 
-/** The most important sound wins when several sessions change at once. */
 const PRIORITY: AgentSoundEvent[] = ["error", "approval", "question", "complete", "compact", "idle", "start", "ack"];
 
-/** How often finished, unread sessions are checked for the idle sound. */
 const IDLE_CHECK_MS = 30_000;
 
 type Seen = { phase: AgentSessionSummary["phase"]; compacting: boolean };
 type Change = { event: AgentSoundEvent; session: AgentSessionSummary };
 
-/**
- * Plays a sound when an agent session starts, finishes, fails, waits for approval or asks a
- * question, gets a new prompt or starts compacting its context, and when a finished session has
- * sat unread (`unseen`) for a while; on its own and apart from the pop-up alerts. One sound per
- * poll at most. `canPlay` is false while game mode keeps the island quiet.
- */
 export function useAgentSounds(sessions: AgentSessionSummary[], canPlay: boolean, unseen: ReadonlySet<string> = new Set()) {
   const [settings] = useAgentSoundSettings();
   const seenRef = useRef<Map<string, Seen> | null>(null);
@@ -34,10 +26,7 @@ export function useAgentSounds(sessions: AgentSessionSummary[], canPlay: boolean
 
   useEffect(() => {
     const previous = seenRef.current;
-    // A turn waiting on its own background task is remembered as running (rememberedPhase), so
-    // its wake-up plays no "ack".
     seenRef.current = new Map(sessions.map((session) => [sessionKey(session), { phase: rememberedPhase(session), compacting: session.compacting === true }]));
-    // The first look only takes note of where every session stands.
     if (!previous) return;
     const changes = sessions.flatMap((session): Change[] => {
       const before = previous.get(sessionKey(session));
@@ -59,13 +48,11 @@ export function useAgentSounds(sessions: AgentSessionSummary[], canPlay: boolean
   }, []);
 }
 
-/** Plays the most important of `changes` that the settings allow, leaving out sessions in front. */
 function playOne(candidates: Change[], { settings, canPlay }: { settings: AgentSoundSettings; canPlay: boolean }) {
   if (!canPlay || !settings.enabled) return;
   const changes = candidates.filter((change) => settings.events[change.event]);
   if (changes.length === 0) return;
   const pick = (from: Change[]) => PRIORITY.map((event) => from.find((change) => change.event === event)).find(Boolean);
-  // Sounds about the user's own typing (start, a new prompt) are wanted while the terminal is in front.
   const needsCheck = changes.filter((change) => change.event !== "start" && change.event !== "ack");
   if (!settings.quietWhenInFront || needsCheck.length === 0) {
     const chosen = pick(changes);

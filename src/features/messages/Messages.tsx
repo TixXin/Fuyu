@@ -13,10 +13,8 @@ type MessagesProps = {
   qqNotifications: QQNotificationsController;
   wechatReminders: WeChatRemindersController;
   source: MessageView;
-  /** Sources switched on; the tabs of the others are hidden. */
   enabledSources: Record<MessageSource, boolean>;
   onSourceChange: (source: MessageView) => void;
-  /** Opens the settings window on the mail page, where mailboxes are added. */
   onOpenMailSettings?: () => void;
 };
 

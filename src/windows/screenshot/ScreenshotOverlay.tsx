@@ -44,17 +44,6 @@ function colorAt(canvas: HTMLCanvasElement | null, pixel: Point): string {
   return data ? hexColor(data[0], data[1], data[2]) : "#000000";
 }
 
-/**
- * A screenshot overlay (`?window=screenshot`, one per monitor): the frozen picture of its monitor,
- * dimmed outside the selection, the selection's handles and size, a toolbar once it is chosen, and
- * the magnifier by the pointer. Before anything is selected, the window or control under the pointer
- * is outlined (the wheel steps out to its parents and back) and a click selects it. With an
- * annotation tool on, a drag inside the selection draws (its handles still resize it); Ctrl+Z / Ctrl+Y
- * undo and redo. Enter, Ctrl+C or a double click copies, with the annotations; Ctrl+S saves, T pins
- * it to the screen; Esc or a right click with nothing selected leaves, C copies the colour under
- * the pointer. Opened with Ctrl+Shift+2, 3 or 4, the selection is copied, its text read (OCR) or
- * that text translated as soon as it is chosen, without the toolbar.
- */
 export function ScreenshotOverlay() {
   const t = useTranslation().screenshot;
   const errorText = useErrorText();
@@ -68,13 +57,11 @@ export function ScreenshotOverlay() {
   const targets = useTargets(ready ? session?.id ?? null : null);
   const [level, setLevel] = useState({ key: "", value: 0 });
   const sessionId = session?.id;
-  // Read again for each screenshot, so a change in the settings window shows on the next one.
   const guides = useMemo(() => (sessionId === undefined ? false : loadSettings().screenshotGuides), [sessionId]);
   const annotations = useAnnotations(sessionId, scale);
 
   const pixel = pointer && bounds ? pixelAt(pointer, bounds) : null;
   const color = pixel ? colorAt(canvasRef.current, pixel) : null;
-  // Until a region is chosen, the window or control under the pointer is what a click takes.
   const chosen = selection && isSelection(selection) ? selection : null;
   const choosing = chosen === null;
   const layers = choosing && pixel && bounds ? layersAt(targets, pixel, bounds) : [];
@@ -84,7 +71,6 @@ export function ScreenshotOverlay() {
     hovered.current = target;
   });
 
-  // Annotations belong to the selection they were drawn on; a new one starts clean.
   const { reset: resetAnnotations } = annotations;
   useEffect(() => {
     if (choosing) resetAnnotations();
@@ -94,12 +80,10 @@ export function ScreenshotOverlay() {
   const finish = useCallback((action: ScreenshotAction) => {
     const picture = canvasRef.current;
     if (!chosen || !picture) return;
-    // Only the part the annotations cover is read and sent; the native side has the rest.
     const area = annotationArea(items, chosen);
     const image = area ? composeArea(picture, area, chosen, items) : null;
     const patch = area && image ? { at: area, image } : null;
     const save = action === "save" ? { folderName: t.saveFolderName } : undefined;
-    // A pin takes over from this overlay once it has drawn; meanwhile only the picture shows.
     if (action === "pin") setLeaving(true);
     finishScreenshot(chosen, patch, action, save).catch((error: unknown) => {
       setLeaving(false);
@@ -108,7 +92,6 @@ export function ScreenshotOverlay() {
   }, [chosen, items, canvasRef, errorText, t]);
   const copy = useCallback(() => finish("copy"), [finish]);
 
-  // Ctrl+Shift+2, 3, 4: done as soon as a region or target is chosen, once per screenshot.
   const quickMode = quickAction(session?.mode);
   const quick = quickMode !== null;
   const doneFor = useRef<number | null>(null);
@@ -120,7 +103,6 @@ export function ScreenshotOverlay() {
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      // Typing a text annotation: its box has the keys.
       if (event.target instanceof HTMLTextAreaElement || annotations.editing) return;
       const ctrl = event.ctrlKey || event.metaKey;
       const letter = event.key.toLowerCase();
@@ -166,7 +148,6 @@ export function ScreenshotOverlay() {
         annotations.begin(point);
         return;
       }
-      // Outside the selection a tool draws nothing; its handles still resize it.
       if (grab === null) return;
     }
     onPointerDown(event);
@@ -235,8 +216,6 @@ export function ScreenshotOverlay() {
           </span>
         </div>
       ) : (
-        // Only once the picture is up, and new for each screenshot so it eases in each time; the
-        // hidden window's last painted frame then has nothing on it (see session.rs, transparent).
         ready && <div key={sessionId} className="screenshot-overlay__dim" />
       )}
       {!area && ready && session?.underPointer && <div className="screenshot-overlay__hint">{quickMode ? t.quickHints[quickMode] : t.selectHint}</div>}
@@ -262,7 +241,6 @@ export function ScreenshotOverlay() {
         </>
       )}
       {guides && area && !leaving && (
-        // The selection's four edges carried across the monitor, on its 1px border.
         <>
           <div className="screenshot-overlay__guide screenshot-overlay__guide--h" style={{ top: area.y }} />
           <div className="screenshot-overlay__guide screenshot-overlay__guide--h" style={{ top: area.y + area.height - 1 }} />
@@ -270,7 +248,6 @@ export function ScreenshotOverlay() {
           <div className="screenshot-overlay__guide screenshot-overlay__guide--v" style={{ left: area.x + area.width - 1 }} />
         </>
       )}
-      {/* While annotating the magnifier would only be in the way. */}
       {ready && pixel && cssPointer && color && dragging !== "move" && !annotations.tool && !leaving && (
         <Magnifier picture={canvasRef.current} pixel={pixel} pointer={cssPointer} view={view} color={color} lines={lines} />
       )}

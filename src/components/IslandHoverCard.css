@@ -4,7 +4,6 @@
   align-items: center;
 }
 
-/* Same surface as the island; never under the cursor's reach, so clicks fall through it. */
 .island-hover-card {
   position: fixed;
   z-index: 50;

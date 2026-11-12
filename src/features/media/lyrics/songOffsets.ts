@@ -1,20 +1,16 @@
 import { readJson, writeJson } from "../../../lib/storage.ts";
 
 export const SONG_OFFSETS_STORAGE_KEY = "fuyu-lyrics-offsets";
-/** Older entries are dropped past this many songs. */
 export const MAX_SONG_OFFSETS = 500;
-/** One press of the music page's earlier / later buttons. */
 export const SONG_OFFSET_STEP_MS = 500;
 const LIMIT_MS = 10_000;
 
-/** Per-song lyrics offsets in ms, on top of the one in Settings: track key (lrc.ts trackKey) → ms. */
 export type SongOffsets = Record<string, number>;
 
 export function clampSongOffset(ms: number) {
   return Math.max(-LIMIT_MS, Math.min(LIMIT_MS, Math.round(ms / 100) * 100));
 }
 
-/** `offsets` with `key` set to `ms`; 0 removes it, and the oldest go past the limit. */
 export function setSongOffset(offsets: SongOffsets, key: string, ms: number): SongOffsets {
   const entries = Object.entries(offsets).filter(([other]) => other !== key);
   const value = clampSongOffset(ms);

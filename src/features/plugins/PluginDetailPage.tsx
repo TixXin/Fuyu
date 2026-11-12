@@ -15,7 +15,6 @@ import { PluginSensitiveSection } from "./PluginSensitiveSection";
 import { PluginSettingField } from "./PluginSettingField";
 import "./PluginDetailPage.css";
 
-/** A plugin's own page: what it shares while running, its settings, its actions and its log. */
 export function PluginDetailPage({
   plugin,
   busy,
@@ -42,15 +41,11 @@ export function PluginDetailPage({
   const t = useTranslation();
   const { locale } = useLocale();
   const running = plugin.status === "running";
-  // The center pattern's pet is picked from the pets on disk, not typed in.
   const pets = usePetChoices(plugin.id === CENTER_PATTERN_PLUGIN_ID);
-  // The SSH proxy tunnel shows the local proxy it forwards to, read live rather than set at start.
   const tunnelShowsProxy = plugin.builtin && plugin.id === SSH_TUNNEL_PLUGIN_ID && plugin.enabled;
   const tunnelProxy = useSshTunnelProxy(tunnelShowsProxy);
   const proxyText = t.settings.plugins.sshTunnel.proxy;
-  // Clearing takes a second click, like uninstalling.
   const [confirmingClear, setConfirmingClear] = useState(false);
-  // The SSH proxy tunnel's own port field matters only with "Custom port" picked.
   const shown = plugin.settingsSchema.filter(
     (spec) => !(plugin.id === SSH_TUNNEL_PLUGIN_ID && spec.key === "customPort" && plugin.settings.localProxy !== "custom"),
   );
@@ -84,7 +79,6 @@ export function PluginDetailPage({
           {tunnelShowsProxy ? (
             tunnelProxy ? (
               <>
-                {/* PluginInfoList picks the label's language; this one already is in it. */}
                 <PluginInfoList
                   items={[
                     {
@@ -135,7 +129,6 @@ export function PluginDetailPage({
         )}
       </section>
 
-      {/* The usage rings' GLM and Kimi keys, which plugin settings (plain JSON on disk) must not hold. */}
       {plugin.id === "focusd.claude-usage" ? <PlanKeyFields settings={plugin.settings} disabled={busy} /> : null}
       {plugin.builtin && plugin.id === SSH_TUNNEL_PLUGIN_ID ? <SshTunnelHosts /> : null}
       {plugin.builtin && plugin.id === CC_CONNECT_PLUGIN_ID ? <CcConnectSection /> : null}

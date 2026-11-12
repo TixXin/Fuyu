@@ -1,4 +1,3 @@
-/* A preset's name reads like a row title; clicking it turns it into an input for renaming. */
 .preset-name-button,
 .preset-name-input {
   min-width: 0;
@@ -58,12 +57,10 @@
   outline: none;
 }
 
-/* The theme file picker is opened by the "Import…" link; the input itself stays out of sight. */
 .preset-file-input {
   display: none;
 }
 
-/* What the last export or import did, under the group's footnote. */
 .preset-status {
   display: flex;
   flex-wrap: wrap;

@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import "./SettingsLinkButton.css";
 
-/** A secondary action written as accent-coloured text, in place of a filled button. */
 export function SettingsLinkButton({
   children,
   tone = "accent",

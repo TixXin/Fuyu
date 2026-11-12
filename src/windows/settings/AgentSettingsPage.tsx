@@ -8,11 +8,6 @@ import type { AgentLightStyle, AgentTitleMode, IslandSettings } from "../../feat
 import { useTranslation } from "../../i18n";
 import { ModuleSwitchSection } from "./ModuleSwitchSection";
 
-/**
- * Settings → AI Agent → On the island: the module switch, the title and status light on the
- * collapsed island, and which agents count at all. The Agent page's list, alerts, sounds,
- * approvals and the hooks have their own pages in the group.
- */
 export function AgentSettingsPage({
   settings,
   onSettingsChange,
@@ -20,7 +15,6 @@ export function AgentSettingsPage({
 }: {
   settings: IslandSettings;
   onSettingsChange: (settings: IslandSettings) => void;
-  /** Opens the Connection page, where the hooks are installed. */
   onOpenConnect: () => void;
 }) {
   const t = useTranslation();
@@ -32,7 +26,6 @@ export function AgentSettingsPage({
         checked={settings.agentStatusEnabled}
         onChange={(agentStatusEnabled) => onSettingsChange({ ...settings, agentStatusEnabled })}
       />
-      {/* The hooks live on the Connection page; most of what follows needs them. */}
       <AgentHooksNotice onOpenConnect={onOpenConnect} />
       <SettingsGroup title={t.settings.agent.sessionTitleSection}>
         <SettingsToggleRow

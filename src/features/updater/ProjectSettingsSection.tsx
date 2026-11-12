@@ -10,12 +10,6 @@ import { getUpdateState, subscribeToUpdate } from "./updaterController";
 import "./ProjectSettingsSection.css";
 import "./UpdatePanel.css";
 
-/**
- * Settings → About, first: the island's name, version and what it does. Fuyu has no
- * logo yet: its spot is an empty slot that, like the credit line under the
- * description, leads to the logo call on the website. The chosen design and its
- * designer's name go here.
- */
 export function ProjectIdentitySection() {
   const t = useTranslation();
   const { version } = useSyncExternalStore(subscribeToUpdate, getUpdateState);
@@ -56,7 +50,6 @@ export function ProjectIdentitySection() {
   );
 }
 
-/** Settings → About → Links: the website, releases, reporting a problem, and starring the project. */
 export function ProjectLinksSection() {
   const t = useTranslation();
   const { locale } = useLocale();

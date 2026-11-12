@@ -14,13 +14,11 @@ const EMPTY_SNAPSHOT: MailSnapshot = {
 
 type PreviewWindow = { email: string; id: string; receivedAt: number; expiresAt: number };
 
-/** The island's mail: which mailbox tab is shown, new-mail previews and the reader. */
 export function useMail(canPreview: boolean) {
   const t = useTranslation();
   const errorText = useErrorText();
   const [selectedEmail, setSelectedEmail] = useState<string | null>(null);
   const [previewWindow, setPreviewWindow] = useState<PreviewWindow | null>(null);
-  /** The compose view: which mailbox it sends from and what it starts with. */
   const [compose, setCompose] = useState<{ account: string; draft: ComposeDraft } | null>(null);
   const previewRef = useRef<PreviewWindow | null>(null);
   const canPreviewRef = useRef(canPreview);
@@ -78,7 +76,6 @@ export function useMail(canPreview: boolean) {
     email ? setMailboxEnabled(email, enabled) : Promise.resolve(false), [email, setMailboxEnabled]);
   const refresh = useCallback(() => (email ? refreshMailbox(email) : Promise.resolve(false)), [email, refreshMailbox]);
   const selectMailbox = useCallback((next: string) => { setSelectedEmail(next); setActionError(null); }, [setActionError]);
-  /** Opens a mail in the island; the mailbox defaults to the one shown. */
   const readMail = useCallback((message: MailMessage, account?: string | null) => {
     const target = account ?? email;
     if (!target) return Promise.resolve(false);
@@ -97,7 +94,6 @@ export function useMail(canPreview: boolean) {
   }, [clearPreview, email, readerAccount, setActionError, t]);
 
   const startCompose = useCallback(() => { if (email) setCompose({ account: email, draft: { to: "", subject: "" } }); }, [email]);
-  /** Opens the compose view answering the open mail, with recipient and subject from the server. */
   const startReply = useCallback(async () => {
     const account = readerAccount;
     const message = reader.selectedMail;
@@ -118,10 +114,8 @@ export function useMail(canPreview: boolean) {
   return {
     ...accounts, ...reader, snapshot, setEnabled, refresh, selectMailbox, readMail, openMail,
     compose, startCompose, startReply, closeCompose,
-    /** Reading or writing a mail: the island gives the panel more height. */
     wantsTallPanel: Boolean(reader.selectedMail) || compose !== null,
     preview, previewAccount: preview ? previewWindow?.email ?? null : null,
-    /** Takes the new mail off the collapsed island and the banner; it stays unread. */
     dismissPreview: clearPreview,
     previewReceivedAt: preview ? previewWindow?.receivedAt ?? null : null,
   };

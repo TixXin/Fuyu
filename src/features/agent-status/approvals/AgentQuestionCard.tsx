@@ -13,14 +13,8 @@ import { answerOf, answersFor, answersOnPick, EMPTY_PICK, parseQuestions, toggle
 import "./AgentApprovalCard.css";
 import "./AgentQuestionCard.css";
 
-/** Only "back to the terminal" is system-wide here; number keys work while the island has the focus. */
 const QUESTION_HOTKEYS = APPROVAL_HOTKEYS.filter((hotkey) => hotkey.action === "terminal");
 
-/**
- * A question Claude Code asks with AskUserQuestion, answered on the island: a lone single-select
- * question answers on the first pick (a click or its number key); otherwise the user ticks or
- * types and presses Submit. Typed text is sent as the answer as is. Shown alone on the Agent page.
- */
 export function AgentQuestionCard({ approvals, sessions }: { approvals: AgentApprovals; sessions: AgentSessionSummary[] }) {
   const t = useTranslation();
   const request = approvals.current;
@@ -41,7 +35,6 @@ export function AgentQuestionCard({ approvals, sessions }: { approvals: AgentApp
   const toTerminal = () => {
     if (!request) return;
     approvals.decide("terminal");
-    // A remote session has no window here by its id; one connected to that computer may be found by folder and title.
     void focusAgentWindow(request.agent, cwd, session?.title ?? null, request.remoteHost ? "" : request.sessionId).catch((error: unknown) =>
       console.error("Failed to focus the agent window", error),
     );
@@ -64,8 +57,6 @@ export function AgentQuestionCard({ approvals, sessions }: { approvals: AgentApp
     if (armed && answers) approvals.decide("answer", answers);
   };
 
-  // Number keys pick an option of the first question still open (or the first one); the listener
-  // is renewed every render, so it always sees the current picks.
   const activeIndex = Math.max(0, questions.findIndex((_, index) => !answerOf(picks[index])));
   useEffect(() => {
     if (!armed) return;

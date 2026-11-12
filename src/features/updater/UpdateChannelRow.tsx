@@ -3,7 +3,6 @@ import { useTranslation } from "../../i18n";
 import type { UpdateChannel } from "./storage";
 import { setUpdateChannel } from "./updaterController";
 
-/** Stable or beta: only users who pick beta are ever offered a pre-release. */
 export function UpdateChannelRow({ channel, disabled }: { channel: UpdateChannel; disabled: boolean }) {
   const text = useTranslation().settings.project.update;
 

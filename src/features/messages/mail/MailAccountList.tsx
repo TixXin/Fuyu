@@ -4,10 +4,8 @@ import { useErrorText, useTranslation } from "../../../i18n";
 import type { MailSnapshot } from "./api";
 import "./MailSettings.css";
 
-/** The settings page's mailboxes: status, unread count, and pause, re-authorize, disconnect. */
 export function MailAccountList({ mailboxes, hosts, busy, onSetEnabled, onReauthorize, onDisconnect }: {
   mailboxes: MailSnapshot[];
-  /** The IMAP server saved for each address; empty means imap.<domain>. */
   hosts: Record<string, string>;
   busy: boolean;
   onSetEnabled: (email: string, enabled: boolean) => void;
@@ -16,8 +14,6 @@ export function MailAccountList({ mailboxes, hosts, busy, onSetEnabled, onReauth
 }) {
   const t = useTranslation();
   const errorText = useErrorText();
-  // Disconnecting deletes the saved code, which has to be generated again on the webmail
-  // site, so it takes a second click on the same row.
   const [confirming, setConfirming] = useState<string | null>(null);
   if (mailboxes.length === 0) return <p className="mail-settings__empty">{t.mail.noMailbox}</p>;
 

@@ -7,10 +7,8 @@ import type { useIslandNotices } from "./useIslandNotices";
 import type { IslandMode, IslandPage } from "./types";
 import { useOutsideClick } from "./useOutsideClick";
 
-/** While the cursor rests on the island (it holds the focus then), closing waits this long more. */
 const HOVER_RETRY_MS = 1000;
 
-/** A row and what opening it needs: the mail it names, or the plugin that sent it. */
 export type PanelArrival = ArrivalMessage & { mail?: { message: MailMessage; account: string | null }; pluginId?: string };
 
 type PanelNotices = Pick<ReturnType<typeof useIslandNotices>, "preview" | "qqNotifications" | "wechatReminders" | "qqMail" | "pluginNotifications" | "setMessagePanelOpen">;
@@ -26,13 +24,6 @@ type MessagePanelOptions = {
   onOpenMessages: (source: MessageSource) => void;
 };
 
-/**
- * The third way new messages show (roadmap C11), like the Agent page's alert: the collapsed island
- * opens on the Messages page with only what arrived, newest first, and closes again after
- * `durationMs`. Resting the cursor on it holds it; a press inside means the user took it over and
- * it no longer closes by itself, and a press outside the rows brings back the whole page. Messages
- * arriving while it shows join it; with the island opened by the user, none of this happens.
- */
 export function useIslandMessagePanel({ enabled, durationMs, notices, mode, page, openIslandPage, collapseIsland, onOpenMessages }: MessagePanelOptions) {
   const { preview, qqNotifications, wechatReminders, qqMail, pluginNotifications, setMessagePanelOpen } = notices;
   const [arrivals, setArrivals] = useState<PanelArrival[] | null>(null);
@@ -59,7 +50,6 @@ export function useIslandMessagePanel({ enabled, durationMs, notices, mode, page
     if (wasOpen) latest.current.collapseIsland();
   }, [end]);
 
-  // A new arrival: open the panel, or join the one this opened.
   const incoming = enabled && preview ? toArrival(preview, notices) : null;
   const incomingKey = incoming ? `${arrivalKey(incoming)}:${incoming.receivedAt}` : null;
   const incomingRef = useRef(incoming);
@@ -70,8 +60,6 @@ export function useIslandMessagePanel({ enabled, durationMs, notices, mode, page
     handledKeyRef.current = incomingKey;
     const current = latest.current;
     if (current.mode !== "collapsed" && !autoOpenedRef.current) return;
-    // A now-playing message with the player's buttons replaces the plugin's last one: pressing
-    // next brings the next song's message, which should not stack up below the old one.
     setArrivals((list) => addArrival((list ?? []).filter((item) => !(message.mediaControls && item.mediaControls && item.pluginId === message.pluginId)), message));
     setMessagePanelOpen(true);
     autoOpenedRef.current = true;
@@ -88,7 +76,6 @@ export function useIslandMessagePanel({ enabled, durationMs, notices, mode, page
     closeTimerRef.current = window.setTimeout(closeLater, current.durationMs);
   }, [incomingKey, close, setMessagePanelOpen]);
 
-  // A press inside is the user taking the panel over; outside the rows it is the whole page again.
   const showing = arrivals !== null;
   const showAll = useCallback(() => {
     autoOpenedRef.current = false;
@@ -99,19 +86,15 @@ export function useIslandMessagePanel({ enabled, durationMs, notices, mode, page
   useEffect(() => {
     if (!showing) return;
     const takeOver = (event: PointerEvent) => {
-      // The player's buttons leave the popup to close on its own time; clearing closes it.
       if (event.target instanceof Element && event.target.closest(".message-arrivals__media, .message-arrivals__clear")) return;
       autoOpenedRef.current = false;
       window.clearTimeout(closeTimerRef.current);
-      // The title row too: without the island's header (C11b) it is the way to the whole page.
       if (!(event.target instanceof Element && event.target.closest(".message-arrivals__list"))) showAll();
     };
     window.addEventListener("pointerdown", takeOver, true);
     return () => window.removeEventListener("pointerdown", takeOver, true);
   }, [showing, showAll]);
 
-  // Collapsing, or moving to another page (an Agent card, say), ends it. Not while collapsed:
-  // the panel sets its rows just before the island opens.
   const wasExpandedRef = useRef(mode === "expanded");
   useEffect(() => {
     const collapsedNow = mode === "collapsed" && wasExpandedRef.current;
@@ -159,11 +142,6 @@ export function useIslandMessagePanel({ enabled, durationMs, notices, mode, page
     else setArrivals(rest);
   }, [arrivals, close, pluginNotifications]);
 
-  /**
-   * Clears every reminder on the island at once (issue #45): the popup, the collapsed preview and
-   * banner, and the QQ and WeChat lists; a plugin's message is dismissed. Opens no app and leaves
-   * QQ's and WeChat's own unread state, and the mail's, as it is.
-   */
   const clearAll = useCallback(() => {
     void qqNotifications.clear();
     void wechatReminders.clear();
@@ -176,19 +154,15 @@ export function useIslandMessagePanel({ enabled, durationMs, notices, mode, page
 
   return {
     clearAll,
-    /** The rows while the page shows only the new messages, else null. */
     arrivals: showing && page === "qq" ? arrivals : null,
-    /** The rows' measured height, for the island's height. */
     height,
     measure: setHeight,
     open,
     runAction,
-    /** The whole Messages page instead of the popup. */
     showAll,
   };
 }
 
-/** The panel row for the newest preview, with what opening it needs. */
 function toArrival(preview: NonNullable<PanelNotices["preview"]>, notices: PanelNotices): PanelArrival {
   const base: PanelArrival = { ...preview, actions: [] };
   const { qqMail, pluginNotifications } = notices;

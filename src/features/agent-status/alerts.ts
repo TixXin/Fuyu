@@ -3,21 +3,14 @@ import type { AgentAlertStarted, IslandSettings } from "../appearance/types";
 import { sessionKey } from "./unseen.ts";
 import { rememberedPhase, replyEnding } from "./sessionLight.ts";
 
-/** What a session just did that the island pops up for. */
 export type AgentAlertKind = "started" | "completed" | "failed" | "waiting";
 
 export type AgentAlert = { kind: AgentAlertKind; session: AgentSessionSummary };
 
-/** Which alerts are on: a switch for each kind, and for starts, which ones. */
 export type AgentAlertKinds = Record<Exclude<AgentAlertKind, "started">, boolean> & { started: AgentAlertStarted };
 
 type Phase = AgentSessionSummary["phase"];
 
-/**
- * The phase each session was in at the last look, by `provider:sessionId`, and the sessions seen
- * working since the island started watching (all of them at the first look), which tells a new
- * session's first turn from a later one.
- */
 export type SessionPhases = { phases: ReadonlyMap<string, Phase>; worked: ReadonlySet<string> };
 
 const isWorking = (phase: Phase) => phase === "running" || phase === "waiting" || phase === "stale";
@@ -34,18 +27,6 @@ export function alertKindsOf(settings: Pick<IslandSettings, "agentAlertStarted" 
   return { started: settings.agentAlertStarted, completed: settings.agentAlertCompleted, failed: settings.agentAlertFailed, waiting: settings.agentAlertWaiting };
 }
 
-/**
- * The alert a change from `before` to `after` calls for. A session seen for the first time
- * (`before` undefined) alerts when it is already waiting for the user or working (it just
- * started); one that shows up finished is an old session coming into the listed time window,
- * not a turn that just ended. A turn starts when a finished session runs again; a stalled one
- * running again, or a waiting one answered, carries on the same turn.
- *
- * How a finished turn ended (`replyEnding`: the reply status marker of roadmap B9, else whether the
- * reply asks something) decides its alert: one
- * that waits for the user's reply alerts as waiting, one that waits for its own background task
- * does not alert (it goes on by itself), and a done one alerts as completed.
- */
 export function alertKind(before: Phase | undefined, after: Phase, marker: ReplyMarker | null = null): AgentAlertKind | null {
   if (after === "waiting" && before !== "waiting") return "waiting";
   if (after === "running" && (before === undefined || before === "completed" || before === "failed")) return "started";
@@ -57,10 +38,6 @@ export function alertKind(before: Phase | undefined, after: Phase, marker: Reply
   return null;
 }
 
-/**
- * Alerts for the sessions whose phase changed since `previous`, of the kinds switched on.
- * The first look (`previous` null) only takes note of where every session stands.
- */
 export function detectAlerts(
   previous: SessionPhases | null,
   sessions: AgentSessionSummary[],
@@ -78,19 +55,12 @@ export function detectAlerts(
   });
 }
 
-/** A session that needs the user: waiting for approval or an answer, or (with the reply status marker) a finished turn ending on "your turn". */
 export function isWaitingOnUser(session: AgentSessionSummary) {
   return session.phase === "waiting" || (session.phase === "completed" && session.replyMarker === "yourTurn");
 }
 
-/** Since when each session has waited on the user (`provider:sessionId` → Unix ms), and those already reminded. */
 export type WaitingReminders = { since: Map<string, number>; reminded: Set<string> };
 
-/**
- * Notes which sessions wait on the user now: a session starts its wait when first seen waiting,
- * and one that stopped waiting is forgotten, so its next wait gets its own reminder. Run on every
- * change of the session list, so a wait answered between two reminder checks still ends.
- */
 export function trackWaiting(state: WaitingReminders, sessions: AgentSessionSummary[], now: number) {
   const waiting = new Set<string>();
   for (const session of sessions) {
@@ -107,10 +77,6 @@ export function trackWaiting(state: WaitingReminders, sessions: AgentSessionSumm
   }
 }
 
-/**
- * The sessions due a reminder: waiting on the user for `delayMs` or more and not reminded yet in
- * this wait. `looked` ones (the user already saw them, roadmap B15) are not reminded about.
- */
 export function takeDueReminders(state: WaitingReminders, sessions: AgentSessionSummary[], now: number, delayMs: number, looked: (session: AgentSessionSummary) => boolean = () => false) {
   trackWaiting(state, sessions, now);
   const due: AgentSessionSummary[] = [];

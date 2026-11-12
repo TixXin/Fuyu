@@ -11,10 +11,6 @@ import { DEFAULT_PROVIDER_MODELS, TRANSLATION_PROVIDERS } from "./providers";
 import type { TranslationSettings } from "./storage";
 import "./TranslationSettingsSection.css";
 
-/**
- * Service, model, key and behavior of quick translation. The page holds the settings: its
- * shortcut group edits the same copy, and two copies in one window would undo each other.
- */
 export function TranslationSettingsSection({ settings, setSettings }: {
   settings: TranslationSettings;
   setSettings: Dispatch<SetStateAction<TranslationSettings>>;
@@ -28,7 +24,6 @@ export function TranslationSettingsSection({ settings, setSettings }: {
   const provider = settings.provider;
   const defaultModel = DEFAULT_PROVIDER_MODELS[provider];
 
-  // Keys are stored per service, so the saved state follows the selected one.
   useEffect(() => {
     let didCancel = false;
     void hasTranslationSecret(provider)

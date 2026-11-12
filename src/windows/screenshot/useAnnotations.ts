@@ -16,26 +16,18 @@ import {
 import { loadAnnotationStyle, saveAnnotationStyle } from "../../features/screenshot/storage";
 import type { Point } from "../../features/screenshot/selection";
 
-/**
- * The annotations of the open screenshot (C41.3): the chosen tool, colour and thickness, what is
- * drawn (with undo and redo), the stroke being dragged, and the text box being typed in. A new
- * screenshot starts empty; the colour and thickness carry over (storage.ts). `scale` is picture
- * pixels per CSS pixel, so lines look as thick on every monitor.
- */
 export function useAnnotations(sessionId: number | undefined, scale: number) {
   const [tool, setTool] = useState<AnnotationTool | null>(null);
   const [style, setStyle] = useState<AnnotationStyle>(loadAnnotationStyle);
   const [history, setHistory] = useState<AnnotationHistory>(EMPTY_HISTORY);
   const [draft, setDraftState] = useState<Annotation | null>(null);
   const [editing, setEditing] = useState<Point | null>(null);
-  // The draft is read in pointer handlers right after it is set, so it also lives in a ref.
   const draftRef = useRef<Annotation | null>(null);
   const setDraft = (next: Annotation | null) => {
     draftRef.current = next;
     setDraftState(next);
   };
 
-  /** Drops everything drawn and turns the tool off (a new screenshot, or the selection was cleared). */
   const reset = useCallback(() => {
     draftRef.current = null;
     setDraftState(null);
@@ -48,11 +40,9 @@ export function useAnnotations(sessionId: number | undefined, scale: number) {
 
   useEffect(() => saveAnnotationStyle(style), [style]);
 
-  /** A press inside the selection with a tool on. */
   const begin = (point: Point) => {
     if (!tool) return;
     if (tool === "text") {
-      // A press while a box is open only closes it (its blur keeps the text).
       if (!editing) setEditing(point);
       return;
     }
@@ -65,7 +55,6 @@ export function useAnnotations(sessionId: number | undefined, scale: number) {
     if (draftRef.current) setDraft(extendAnnotation(draftRef.current, point));
   };
 
-  /** Ends the drag; false when no annotation was being drawn. */
   const finish = () => {
     const done = draftRef.current;
     if (!done) return false;
@@ -74,7 +63,6 @@ export function useAnnotations(sessionId: number | undefined, scale: number) {
     return true;
   };
 
-  /** The text box closed: what was typed becomes an annotation where it was opened. */
   const commitText = (text: string) => {
     const at = editing;
     setEditing(null);
@@ -84,7 +72,6 @@ export function useAnnotations(sessionId: number | undefined, scale: number) {
 
   return {
     tool,
-    /** Choosing the tool that is on turns it off (back to moving and resizing the selection). */
     chooseTool: (next: AnnotationTool) => setTool((current) => (current === next ? null : next)),
     clearTool: () => setTool(null),
     style,

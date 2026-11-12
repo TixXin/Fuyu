@@ -1,10 +1,6 @@
 import { useTranslation } from "../../../i18n";
 import { SONG_OFFSET_STEP_MS } from "./songOffsets";
 
-/**
- * Moves this song's lyrics earlier or later in half-second steps, next to the music page's
- * settings button; the value between them resets to 0 when clicked.
- */
 export function LyricsOffsetControl({ offsetMs, onChange }: { offsetMs: number; onChange: (ms: number) => void }) {
   const text = useTranslation().music.lyricsOffset;
   const seconds = offsetMs / 1000;

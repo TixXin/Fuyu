@@ -1,6 +1,3 @@
-/* The music page sits straight on the island like the Agent page (AgentSessionsPanel.css): no
-   panel, border or shadow of its own, told apart by size and brightness, and only what the
-   pointer is on lights up. What plays is one line at the top, the lyrics take the full width. */
 .music-player {
   position: relative;
   height: 100%;
@@ -9,8 +6,6 @@
   gap: 10px;
   min-width: 0;
   padding: 2px 0 0;
-  /* With no panel of its own, the text follows the island background: light on dark, dark on
-     light (stageStyle.ts sets --island-ink-rgb), as on the Agent page. */
   --music-ink: var(--island-ink-rgb, 241, 240, 246);
   --text-1: rgba(var(--music-ink), 0.96);
   --text-2: rgba(var(--music-ink), 0.68);
@@ -23,7 +18,6 @@
   color: var(--text-2);
 }
 
-/* Cover, title and artist · player, then the hints and the page's own buttons. */
 .music-player__head {
   display: flex;
   align-items: center;
@@ -79,8 +73,6 @@
   font-weight: 500;
 }
 
-/* The song's lyrics offset and the music settings: fine adjustments, shown while the pointer
-   is on the page or one of them has focus. */
 .music-player__tune {
   display: inline-flex;
   flex: 0 0 auto;
@@ -120,7 +112,6 @@
   outline-offset: 2px;
 }
 
-/* No lyrics for a Chinese song with only LRCLIB asked: a quiet link to the setting. */
 .music-player__lyrics-hint {
   flex: 0 1 auto;
   min-width: 0;
@@ -156,7 +147,6 @@
   text-align: center;
 }
 
-/* The lyrics, or the waveform without them, in the middle of the page. */
 .music-player__stage {
   flex: 1;
   min-height: 0;
@@ -169,8 +159,6 @@
   height: 64px;
 }
 
-/* The player reports no position: the lyrics follow the island's own timing, and the user can
-   align it by picking a line. */
 .music-player__estimate {
   display: flex;
   flex-wrap: wrap;
@@ -208,7 +196,6 @@
   border-radius: 4px;
 }
 
-/* Previous and next as bare icons; play in a small solid circle in the ink colour. */
 .music-player__controls {
   display: flex;
   align-items: center;

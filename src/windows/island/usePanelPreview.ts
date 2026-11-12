@@ -2,7 +2,6 @@ import { useEffect, useRef } from "react";
 import { PANEL_PREVIEW_STORAGE_KEY, parsePanelPreview } from "../settings/storage";
 import type { IslandMode } from "./types";
 
-// A preview closes this long after the last slider change in the settings window.
 const PREVIEW_IDLE_MS = 1_500;
 
 type PanelPreviewOptions = {
@@ -12,12 +11,6 @@ type PanelPreviewOptions = {
   onReveal: () => void;
 };
 
-/**
- * Shows the island in the state a settings slider affects while it moves: expanded
- * for the panel size, collapsed for the collapsed size. A panel opened for a preview
- * closes once the slider rests, unless the user pressed inside it; a panel the user
- * opened is left alone.
- */
 export function usePanelPreview({ mode, onExpand, onCollapse, onReveal }: PanelPreviewOptions) {
   const modeRef = useRef(mode);
   const openedByPreviewRef = useRef(false);
@@ -69,7 +62,6 @@ export function usePanelPreview({ mode, onExpand, onCollapse, onReveal }: PanelP
         if (openedByPreviewRef.current) {
           closePreview();
         } else if (modeRef.current === "collapsed") {
-          // A tucked island slides back into view so its new size is visible.
           onReveal();
         }
       }

@@ -1,15 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { listenDeviceAlerts, setDeviceAlertsEnabled, type DeviceAlert } from "./api";
 
-/** How long an alert stays on the collapsed island. */
 export const DEVICE_ALERT_MS = 3000;
 
-/**
- * The device alert the collapsed island shows now, or null. `watch` runs the native watcher (the
- * setting is on); `show` says whether the island may show it now (collapsed, not tucked away, not
- * quiet for a game). Alerts that arrive while it may not are dropped; a newer one replaces the
- * one showing.
- */
 export function useDeviceAlert(watch: boolean, show: boolean): DeviceAlert | null {
   const [alert, setAlert] = useState<DeviceAlert | null>(null);
   const showRef = useRef(show);

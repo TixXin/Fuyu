@@ -1,5 +1,3 @@
-/* Rows, the toolbar and the accent (the theme's) are IslandList.css. */
-
 .shelf-page__error {
   flex: none;
   margin: 0;
@@ -9,7 +7,6 @@
   overflow-wrap: anywhere;
 }
 
-/* File types keep a hint of colour on the lead square. */
 .shelf-item__icon--folder { color: #f2c94c; }
 .shelf-item__icon--image { color: #c792ea; }
 .shelf-item__icon--video { color: #ff8a65; }
@@ -22,7 +19,6 @@
   text-decoration: line-through;
 }
 
-/* Just dropped (or already there): a mint wash that fades. */
 .shelf-item--recent {
   animation: shelfItemArrive 1200ms ease both;
 }

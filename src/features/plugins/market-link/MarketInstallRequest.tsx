@@ -5,12 +5,6 @@ import type { MarketPlugin, MarketSnapshot } from "../api";
 import { marketRequestState } from "./requestState";
 import "./MarketInstallRequest.css";
 
-/**
- * The plugin a website Install button asked for, pinned above the market list in a
- * highlighted card. Nothing is installed from here by itself: the card holds the
- * market's own item, whose Install / Update / Installed button and trust prompts the
- * user goes through as usual.
- */
 export function MarketInstallRequest({
   id,
   market,
@@ -32,7 +26,6 @@ export function MarketInstallRequest({
   const state = marketRequestState(id, market, loading, loadError);
   const card = useRef<HTMLElement>(null);
 
-  // The window may open scrolled elsewhere on the page; bring the card into view once it has its plugin.
   useEffect(() => {
     if (state.kind === "found") card.current?.scrollIntoView({ block: "nearest" });
   }, [state.kind, id]);

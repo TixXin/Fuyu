@@ -7,15 +7,10 @@ import {
 } from "./api";
 
 export type PluginPermissionPrompts = {
-  /** The prompt shown now; others wait behind it. */
   current: PluginPermissionRequest | null;
   answer: (answer: PluginPermissionAnswer) => void;
 };
 
-/**
- * Sensitive-permission questions from plugins, one at a time. A question drops
- * out when its time is up, since Rust has refused the call by then.
- */
 export function usePluginPermissionPrompts(): PluginPermissionPrompts {
   const [queue, setQueue] = useState<(PluginPermissionRequest & { expiresAt: number })[]>([]);
 

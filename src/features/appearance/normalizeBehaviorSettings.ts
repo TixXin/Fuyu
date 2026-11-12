@@ -1,4 +1,3 @@
-// Reading saved settings, part 3 (normalizeSettings in settings.ts): behaviour and modules.
 import { clamp } from "../../utils/number.ts";
 import { normalizeLyricsSettings } from "../media/lyrics/lyricsSettings.ts";
 import { normalizeCalendarSettings } from "../calendar/calendarSettings.ts";
@@ -11,7 +10,6 @@ import {
 } from "./settingsLimits.ts";
 import type { IslandSettings, LegacyIslandSettings } from "./types";
 
-/** Todos, tucking and hovering, page shortcuts, module switches, the file shelf, lyrics, calendar, game mode. */
 export function normalizeBehaviorSettings(settings: LegacyIslandSettings | null | undefined) {
   return {
     showIdleTodoCount:
@@ -60,7 +58,6 @@ export function normalizeBehaviorSettings(settings: LegacyIslandSettings | null 
     pageDigitModifiers: normalizePageDigitModifiers(settings?.pageDigitModifiers),
     pageNextShortcut: normalizePageCycleShortcut(settings?.pageNextShortcut, DEFAULT_PAGE_NEXT_SHORTCUT),
     pagePreviousShortcut: normalizePageCycleShortcut(settings?.pagePreviousShortcut, DEFAULT_PAGE_PREVIOUS_SHORTCUT),
-    // Module switches: anything but an explicit false keeps the module on.
     todoEnabled: settings?.todoEnabled !== false,
     musicEnabled: settings?.musicEnabled !== false,
     agentStatusEnabled: settings?.agentStatusEnabled !== false,
@@ -70,7 +67,6 @@ export function normalizeBehaviorSettings(settings: LegacyIslandSettings | null 
     shelfEnabled: settings?.shelfEnabled !== false,
     translationEnabled: settings?.translationEnabled !== false,
     translationTarget: settings?.translationTarget === "island" ? "island" : "window",
-    // Unlike the other modules, off unless turned on: its shortcuts take keys from other apps.
     screenshotEnabled: settings?.screenshotEnabled === true,
     screenshotGuides: settings?.screenshotGuides !== false,
     shelfExpandOnDrop: settings?.shelfExpandOnDrop !== false,

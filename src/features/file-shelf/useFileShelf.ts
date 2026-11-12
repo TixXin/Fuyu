@@ -18,18 +18,14 @@ import {
 } from "./api";
 import { getDropResult } from "./fileShelf";
 
-// How long the entries a drop added (or moved to the top) stay highlighted.
 const RECENT_DROP_MS = 1_200;
 
 export type FileShelfController = ReturnType<typeof useFileShelf>;
 
-/** What the last drop did; `key` changes on every drop so the panel can react to it. */
 export type FileShelfDrop = { key: number; ids: string[]; allExisting: boolean };
 
-/** The shelf's settings, from the island settings. */
 export type FileShelfPreferences = FileShelfOptions & { removeAfterDragOut: boolean };
 
-/** Shelf entries, their actions, and the last native error to show on the page. */
 export function useFileShelf(
   enabled: boolean,
   { maxItems, maxAgeDays, removeMissing, removeAfterDragOut }: FileShelfPreferences,
@@ -42,8 +38,6 @@ export function useFileShelf(
   useEffect(() => {
     itemsRef.current = items;
   }, [items]);
-  // Set while a shelf item is being dragged out, so dropping it back on the island
-  // is not taken as a new file arriving.
   const draggingOutRef = useRef(false);
 
   const run = useCallback(async (action: () => Promise<FileShelfSnapshot | void>) => {
@@ -51,7 +45,6 @@ export function useFileShelf(
       const snapshot = await action();
       if (snapshot) setItems(snapshot.items);
       setError(null);
-      // Commands without a snapshot resolve to undefined; only a failure gives null.
       return snapshot;
     } catch (caught) {
       setError(errorText(caught));
@@ -61,12 +54,10 @@ export function useFileShelf(
 
   const refresh = useCallback(() => run(getFileShelf), [run]);
 
-  // Sending the options also loads the list, cleaned up by them.
   useEffect(() => {
     if (enabled) void run(() => setFileShelfOptions({ maxItems, maxAgeDays, removeMissing }));
   }, [enabled, maxAgeDays, maxItems, removeMissing, run]);
 
-  // Plugins (shelf.add / shelf.remove) change the list behind this window's back.
   useEffect(() => {
     if (!enabled) return;
     let cancelled = false;

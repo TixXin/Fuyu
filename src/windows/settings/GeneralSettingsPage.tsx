@@ -6,7 +6,6 @@ import type { IslandSettings } from "../../features/appearance/types";
 import { requestIslandPositionReset } from "./storage";
 import { useLaunchAtStartup } from "./useLaunchAtStartup";
 
-/** Settings → General: app-wide settings (start-up, language, minimising), where the island sits, and backup. How it reacts is on Behavior. */
 export function GeneralSettingsPage({
   locale,
   settings,

@@ -1,4 +1,3 @@
-/** The todo page in the island style (Settings → Todos → Style). */
 export type TodoIslandText = {
   tabsLabel: string;
   today: string;
@@ -6,28 +5,21 @@ export type TodoIslandText = {
   note: string;
   upcoming: string;
   archive: string;
-  /** Open todos on the Today tab, for screen readers. */
   openCount: (count: number) => string;
   addPlaceholder: string;
   addPlaceholderFor: (date: string) => string;
   emptyTitle: string;
   emptyHint: string;
   notePlaceholder: string;
-  /** The save button, by state. */
   save: { idle: string; saving: string; saved: string; needsPath: string; error: string };
   backToArchive: string;
-  /** "3 of 5 done" on a saved day and in the archive list. */
   doneOf: (done: number, total: number) => string;
   noArchives: string;
   noArchiveTasks: string;
   inProgress: string;
-  /** The progress on the Today header. */
   todayDone: (done: number, total: number) => string;
-  /** In the header's ⋯ menu. */
   clearDone: (count: number) => string;
-  /** The fold under the open todos. */
   doneSection: (count: number) => string;
-  /** Projects (issue #44): the filter, its "all" choice, the group of todos without one, and how to name one. */
   projectFilter: string;
   allProjects: string;
   noProject: string;

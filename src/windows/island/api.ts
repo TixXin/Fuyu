@@ -5,10 +5,8 @@ import type { IslandCornerShape, IslandMonitor } from "../../features/appearance
 import type { IslandPosition } from "./storage";
 import type { IslandMode, NativeGlassState } from "./types";
 
-// Mirrors TOP_ATTACHMENT_CHANGED_EVENT in src-tauri/src/island/top_edge.rs.
 export const TOP_ATTACHMENT_CHANGED_EVENT = "island-top-attachment-changed";
 
-/** Whether the island currently sits flush with the top edge of its monitor. */
 export function getIslandTopAttachment(): Promise<boolean> {
   return invoke<boolean>("get_island_top_attachment");
 }
@@ -19,58 +17,40 @@ export function listenIslandTopAttachment(
   return listen<boolean>(TOP_ATTACHMENT_CHANGED_EVENT, ({ payload }) => handler(payload));
 }
 
-// Mirrors ISLAND_HOVER_CHANGED_EVENT in src-tauri/src/island/passthrough.rs.
 export const ISLAND_HOVER_CHANGED_EVENT = "island-hover-changed";
 
-/** Calls `handler` whenever the cursor enters (`true`) or leaves (`false`) the island shape. */
 export function listenIslandHover(
   handler: (inside: boolean) => void,
 ): Promise<UnlistenFn> {
   return listen<boolean>(ISLAND_HOVER_CHANGED_EVENT, ({ payload }) => handler(payload));
 }
 
-// Mirrors ISLAND_REVEAL_REQUESTED_EVENT in src-tauri/src/island/mod.rs.
 export const ISLAND_REVEAL_REQUESTED_EVENT = "island-reveal-requested";
 
-/** Calls `handler` when the tray's Show asks a tucked island to come out (issue #37). */
 export function listenIslandRevealRequested(handler: () => void): Promise<UnlistenFn> {
   return listen(ISLAND_REVEAL_REQUESTED_EVENT, () => handler());
 }
 
-// Mirrors ISLAND_MOVE_ARMED_CHANGED_EVENT in src-tauri/src/island/passthrough.rs.
 export const ISLAND_MOVE_ARMED_CHANGED_EVENT = "island-move-armed-changed";
 
-/**
- * What an Alt press over the island does (C25), or the edge a resize under way drags; ModifierTarget
- * in src-tauri/src/island/modifier.rs. Left and right change the width, which grows on both sides.
- */
 export type IslandModifierTarget = "none" | "move" | "left" | "right" | "bottom" | "bottomLeft" | "bottomRight";
 
-/** Calls `handler` whenever what an Alt press over the island would do changes. */
 export function listenIslandMoveArmed(
   handler: (target: IslandModifierTarget) => void,
 ): Promise<UnlistenFn> {
   return listen<IslandModifierTarget>(ISLAND_MOVE_ARMED_CHANGED_EVENT, ({ payload }) => handler(payload));
 }
 
-// Mirrors ISLAND_HOLD_CHANGED_EVENT in src-tauri/src/island/passthrough.rs.
 const ISLAND_HOLD_CHANGED_EVENT = "island-hold-changed";
 
-/** Calls `handler` when holding Alt (or a resize) starts (`true`) or stops keeping the panel open. */
 export function listenIslandHold(handler: (held: boolean) => void): Promise<UnlistenFn> {
   return listen<boolean>(ISLAND_HOLD_CHANGED_EVENT, ({ payload }) => handler(payload));
 }
 
-// Mirrors ISLAND_RESIZE_EVENT and ResizeDelta in src-tauri/src/island/modifier.rs.
 const ISLAND_RESIZE_EVENT = "island-resize";
 
-/**
- * How much wider and taller (px, before the scale) an Alt + edge drag has made the island so far:
- * the panel, or with `collapsed` the collapsed island (only its width).
- */
 export type IslandResizeDelta = { width: number; height: number; collapsed: boolean; done: boolean };
 
-/** Lets Alt + dragging the open panel's edges resize it (`false` while a popup shows its card). */
 export function setIslandPanelResizable(resizable: boolean): Promise<void> {
   return invoke("set_island_panel_resizable", { resizable });
 }
@@ -79,20 +59,16 @@ export function listenIslandResize(handler: (delta: IslandResizeDelta) => void):
   return listen<IslandResizeDelta>(ISLAND_RESIZE_EVENT, ({ payload }) => handler(payload));
 }
 
-// 与 src-tauri/src/island/mod.rs 中 start_island_drag 推送的事件名一致。
 export const ISLAND_POSITION_CHANGED_EVENT = "island-position-changed";
 
-/** 对应 src-tauri/src/island/mod.rs 的 IslandLayout。 */
 export type IslandLayout = { collapsedScale: number; expandedScale: number; marginY: number };
 
-/** set_island_interaction 的参数，字段名与 src-tauri/src/island/mod.rs 中的命令参数一致。 */
 export type IslandInteraction = {
   mode: IslandMode;
   collapsedScale: number;
   expandedScale: number;
   marginY: number;
   expandedHeight: number;
-  /** The full panel's 560, or less while a popup shows only its card. */
   expandedWidth: number;
   collapsedWidth: number;
   customPosition: IslandPosition | null;
@@ -101,11 +77,8 @@ export type IslandInteraction = {
   glassEnabled: boolean;
   glassIntensity: number;
   glassTint: string;
-  /** Expanded bottom corner radius; the native hit test scales its other corners from it. */
   cornerRadius: number;
-  /** The native hit test follows the island's corner shape. */
   cornerShape: IslandCornerShape;
-  /** Which monitor the island sits on; Rust moves it there (src-tauri/src/island/follow.rs). */
   monitorFollow: IslandMonitor;
 };
 
@@ -125,45 +98,29 @@ export function minimizeIsland() {
   return invoke("minimize_island");
 }
 
-/**
- * Focuses the island and remembers the window it took the focus from
- * (src-tauri/src/island/focus.rs). Resolves `false` when it did nothing because a
- * mouse button is held; ask again once it is released.
- */
 export function takeIslandHoverFocus() {
   return invoke<boolean>("take_island_hover_focus");
 }
 
-/** Hands the focus back to that window unless the user has since clicked elsewhere; `false` as above. */
 export function releaseIslandHoverFocus() {
   return invoke<boolean>("release_island_hover_focus");
 }
 
-/**
- * Whether the island window is in front. It still is while the keyboard focus sits in a plugin
- * page, which Tauri reports as the island losing focus (issue #12).
- */
 export function islandIsForeground() {
   return invoke<boolean>("island_is_foreground");
 }
 
-/** Calls `handler` when the island window gains (`true`) or loses (`false`) the keyboard focus. */
 export function listenIslandFocus(handler: (focused: boolean) => void): Promise<UnlistenFn> {
   return getCurrentWindow().onFocusChanged(({ payload }) => handler(payload));
 }
 
-// Mirrors FOREGROUND_FULLSCREEN_CHANGED_EVENT in src-tauri/src/system/fullscreen.rs.
 export const FOREGROUND_FULLSCREEN_CHANGED_EVENT = "foreground-fullscreen-changed";
 
-/** Mirrors ForegroundFullscreen in src-tauri/src/system/fullscreen.rs. */
 export type ForegroundFullscreen = {
-  /** A full-screen app (game, full-screen video, slides) is in the foreground. */
   active: boolean;
-  /** It fills the monitor the island is on. */
   onIslandMonitor: boolean;
 };
 
-/** The full-screen state at the last native check (every 800 ms). */
 export function getForegroundFullscreen() {
   return invoke<ForegroundFullscreen>("get_foreground_fullscreen");
 }
@@ -176,7 +133,6 @@ export function startIslandDrag() {
   return invoke("start_island_drag");
 }
 
-/** Alt + left-button drag; works collapsed or expanded and is a no-op unless Alt is held. */
 export function startIslandModifierDrag() {
   return invoke("start_island_modifier_drag");
 }
@@ -189,19 +145,14 @@ export function listenIslandPositionChanged(handler: EventCallback<IslandPositio
   return listen<IslandPosition>(ISLAND_POSITION_CHANGED_EVENT, handler);
 }
 
-// Mirrors ISLAND_POSITION_CLEARED_EVENT in src-tauri/src/island/follow.rs: following another
-// monitor replaced the dragged position.
 export const ISLAND_POSITION_CLEARED_EVENT = "island-position-cleared";
 
 export function listenIslandPositionCleared(handler: EventCallback<null>) {
   return listen<null>(ISLAND_POSITION_CLEARED_EVENT, handler);
 }
 
-// Mirrors OUTSIDE_CLICK_EVENT in src-tauri/src/island/outside_click.rs: a mouse press outside the
-// island window while watching for one.
 export const OUTSIDE_CLICK_EVENT = "island-outside-click";
 
-/** Starts or stops looking for mouse presses outside the island window (only while an alert shows). */
 export function setIslandOutsideClickWatch(watch: boolean) {
   return invoke<void>("set_island_outside_click_watch", { watch });
 }
@@ -210,23 +161,18 @@ export function listenIslandOutsideClick(handler: () => void) {
   return listen<null>(OUTSIDE_CLICK_EVENT, () => handler());
 }
 
-/** The tray menu (src-tauri/src/tray.rs) follows the island's language. */
 export function setTrayLanguage(locale: string) {
   return invoke<void>("set_tray_language", { locale });
 }
 
-/** Mirrors BannerRect in src-tauri/src/island/banner_hit.rs: the stage window's CSS pixels. */
 export type IslandBannerRect = { x: number; y: number; width: number; height: number };
 
-/** Lets the message banner below the collapsed island take clicks (`null` once it is gone). */
 export function setIslandBannerRect(rect: IslandBannerRect | null) {
   return invoke<void>("set_island_banner_rect", { rect });
 }
 
-// Mirrors ISLAND_BANNER_HOVER_CHANGED_EVENT in src-tauri/src/island/banner_hit.rs.
 export const ISLAND_BANNER_HOVER_CHANGED_EVENT = "island-banner-hover-changed";
 
-/** Calls `handler` whenever the cursor enters (`true`) or leaves (`false`) the message banner. */
 export function listenIslandBannerHover(handler: (inside: boolean) => void): Promise<UnlistenFn> {
   return listen<boolean>(ISLAND_BANNER_HOVER_CHANGED_EVENT, ({ payload }) => handler(payload));
 }

@@ -9,13 +9,6 @@ function logFocusError(error: unknown) {
   return true;
 }
 
-/**
- * While the cursor rests on the expanded island, the island holds the keyboard focus,
- * so its shortcuts work even when it opened on hover with another app focused. The
- * focus goes back to that app when the cursor leaves or the island collapses; a text
- * field being edited keeps it until the island collapses or the field loses focus.
- * `blocked` (game mode) stops it taking the focus. Rules in hoverFocus.ts.
- */
 export function useHoverFocus(mode: IslandMode, blocked: boolean) {
   const [isHovering, setIsHovering] = useState(false);
   const stateRef = useRef({ mode, isHovering });
@@ -49,8 +42,6 @@ export function useHoverFocus(mode: IslandMode, blocked: boolean) {
 
     let cancelled = false;
     let timer: number | undefined;
-    // The native side answers false while a mouse button is held (a drag in progress)
-    // and the change waits until it is released.
     const run = (delayMs: number) => {
       timer = window.setTimeout(() => {
         const call = action === "take" ? takeIslandHoverFocus() : releaseIslandHoverFocus();
@@ -66,8 +57,6 @@ export function useHoverFocus(mode: IslandMode, blocked: boolean) {
     };
   }, [blocked, isHovering, mode]);
 
-  // A draft kept the focus when the cursor left; once its field loses focus while the
-  // cursor is still away, hand the focus back without waiting for the island to close.
   useEffect(() => {
     const handleFocusOut = () => {
       window.setTimeout(() => {

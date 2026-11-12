@@ -2,11 +2,6 @@ import { useState, type MouseEvent as ReactMouseEvent } from "react";
 import { isTauri } from "@tauri-apps/api/core";
 import { openProjectLink } from "./api";
 
-/**
- * Click handler for a link to a project page: in the app the system browser opens
- * it (a WebView link would open inside the settings window); in a plain browser
- * the link behaves as usual. `failed` is true when the browser could not be opened.
- */
 export function useOpenInBrowser() {
   const [failed, setFailed] = useState(false);
 

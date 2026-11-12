@@ -2,9 +2,7 @@ export type SettingsBackupText = {
   title: string;
   save: string;
   restore: string;
-  /** Link text at the end of the export row. */
   saveAction: string;
-  /** Link text at the end of the restore row. */
   restoreAction: string;
   hint: string;
   saved: (path: string) => string;

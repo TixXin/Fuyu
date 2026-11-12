@@ -4,7 +4,6 @@ import type { SavePathState } from "./types";
 
 const SAVED_CONFIRMATION_MS = 2_500;
 
-/** The save directory field in the settings window: an editable draft saved on demand. */
 export function useSaveDirectorySetting() {
   const [saveDirectoryDraft, setSaveDirectoryDraft] =
     useState(loadSaveDirectory);
@@ -28,12 +27,10 @@ export function useSaveDirectorySetting() {
   const saveDirectory = useCallback(() => {
     const nextDirectory = saveDirectoryDraft.trim();
 
-    // Storage unavailable: keep the draft and do not report "saved".
     if (!saveSaveDirectory(nextDirectory)) return;
     setSaveDirectoryDraft(nextDirectory);
     setHighlightSavePath(false);
     setSavePathState("saved");
-    // Restart the timer on every save so a second save keeps the confirmation up for the full time.
     window.clearTimeout(savedTimer.current);
     savedTimer.current = window.setTimeout(() => setSavePathState("idle"), SAVED_CONFIRMATION_MS);
   }, [saveDirectoryDraft]);

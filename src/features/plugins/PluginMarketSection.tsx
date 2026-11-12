@@ -12,17 +12,10 @@ import { MarketInstallRequest } from "./market-link/MarketInstallRequest";
 import { usePluginMarket } from "./usePluginMarket";
 import "./PluginMarketSection.css";
 
-/** The filter button for the starred plugins, next to All and the categories. */
 const FAVORITES = "favorites";
 
 const time = (at: number) => new Date(at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false });
 
-/**
- * Plugins from the market index: a status line with Refresh, search and
- * categories (with the user's favorites) on one row, then every plugin, two cards
- * a row: updates first, then the ones that can be installed, then the installed
- * ones. `onManage` opens an installed plugin on the plugins page.
- */
 export function PluginMarketSection({
   onInstalled,
   onManage,
@@ -31,7 +24,6 @@ export function PluginMarketSection({
 }: {
   onInstalled?: (snapshot: PluginsSnapshot) => void;
   onManage?: (id: string) => void;
-  /** A plugin a website Install link asked for, pinned above the list. */
   requestedId?: string | null;
   onDismissRequest?: () => void;
 } = {}) {
@@ -82,12 +74,10 @@ export function PluginMarketSection({
         <div className="plugin-market__grid">{plugins.map(renderItem)}</div>
       </div>
     ) : null;
-  // Search and categories stay in place while the list loads; only an index that is known to be empty hides them.
   const showFilters = hasPlugins || (market === null && !loadError);
 
   return (
     <section className="settings-section settings-section--list plugins-panel">
-      {/* The page title already says where you are: this line says what was loaded and when. */}
       <div className="plugin-market__header">
         <span className="plugin-market__status" aria-live="polite">
           {status}

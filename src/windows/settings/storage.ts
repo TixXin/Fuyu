@@ -1,6 +1,5 @@
 import { writeJson } from "../../lib/storage.ts";
 
-// Main island -> settings window request to reveal a section; survives the window being created.
 export const SETTINGS_FOCUS_STORAGE_KEY = "fuyu-settings-focus";
 
 export type SettingsFocusSection = "savePath" | "translation" | "music" | "calendar" | "mail" | "updates" | "agentConnect";
@@ -42,9 +41,6 @@ export function requestSettingsFocus(section: SettingsFocusSection) {
   );
 }
 
-// Settings window -> island: put the island back at the top center of the primary
-// screen, as its own reset button does. The time makes every request a change that
-// fires a storage event, and lets a leftover from an earlier session be ignored.
 export const ISLAND_POSITION_RESET_STORAGE_KEY = "fuyu-position-reset";
 
 const POSITION_RESET_MAX_AGE_MS = 5_000;
@@ -53,7 +49,6 @@ export function requestIslandPositionReset() {
   writeJson(ISLAND_POSITION_RESET_STORAGE_KEY, { requestedAt: Date.now() });
 }
 
-/** Whether a stored reset request is fresh and well formed. */
 export function isFreshPositionReset(stored: string | null, now = Date.now()) {
   if (stored === null) {
     return false;
@@ -67,21 +62,16 @@ export function isFreshPositionReset(stored: string | null, now = Date.now()) {
   }
 }
 
-// Settings window -> island: show the island expanded or collapsed while a size slider
-// moves, so the change is visible. Each request carries a fresh time, which also makes
-// every write a change that fires a storage event in the island window.
 export const PANEL_PREVIEW_STORAGE_KEY = "fuyu-panel-preview";
 
 export type PanelPreviewMode = "expanded" | "collapsed";
 
-// Requests older than this are leftovers from an earlier session, not a slider moving now.
 const PANEL_PREVIEW_MAX_AGE_MS = 2_000;
 
 export function requestPanelPreview(mode: PanelPreviewMode) {
   writeJson(PANEL_PREVIEW_STORAGE_KEY, { mode, requestedAt: Date.now() });
 }
 
-/** The mode a stored preview request asks for, or null if it is malformed or stale. */
 export function parsePanelPreview(stored: string | null, now = Date.now()): PanelPreviewMode | null {
   if (stored === null) {
     return null;

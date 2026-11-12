@@ -5,7 +5,6 @@ import { mailBadgeCount } from "../messagePreview";
 import type { MailSnapshot } from "./api";
 import { MAX_MAIL_ACCOUNTS } from "./mailAccounts";
 
-/** One tab per mailbox (status, address, unread count), and "+" to add one in settings. */
 export function MailAccountTabs({ mailboxes, selected, busy, onSelect, onAdd }: {
   mailboxes: MailSnapshot[];
   selected: string | null;

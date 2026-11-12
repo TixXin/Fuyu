@@ -5,50 +5,37 @@ import { inkOn } from "../../utils/color";
 import { accentVariables } from "../../features/appearance/themeMode";
 import type { IslandMode } from "./types";
 
-/** CSS custom properties for the island stage, derived from the appearance settings and current size. */
 export function getIslandStageStyle(
   settings: IslandSettings,
   mode: IslandMode,
   collapsedIslandWidth: number,
   expandedIslandHeight: number,
   expandedIslandWidth: number,
-  /** The accent from the theme (C33.5), or null for the default and the light island's own. */
   accent: string | null = null,
-  /** `window.devicePixelRatio`, passed in so the style follows a change of screen scale. */
   devicePixelRatio = window.devicePixelRatio,
 ) {
   const glassStrength = settings.glassIntensity / 100;
   const glassMaskOpacity = settings.opacity / 100;
 
   return ({
-    // Classic opacity fades the fill only, so text and icons on it stay solid.
     "--island-fill": hexToRgba(settings.islandBackgroundColor, settings.opacity / 100),
-    // The shell's size follows the current mode's scale; each content layer keeps its own
-    // (IslandShell.css), so neither relays out at a new scale while the island opens or closes.
     "--island-scale": mode === "collapsed" ? settings.collapsedScale : settings.expandedScale,
     "--island-collapsed-scale": settings.collapsedScale,
     "--island-expanded-scale": settings.expandedScale,
     "--collapsed-island-width": `${collapsedIslandWidth}px`,
     "--expanded-island-height": `${expandedIslandHeight}px`,
     "--expanded-island-width": `${expandedIslandWidth}px`,
-    // Unitless so IslandTopEdge.css can also fade the fillet layers out at 0.
     "--island-top-fillet-size": settings.topFilletRadius,
-    // One device pixel, for IslandTopEdge.css to round the scaled fillet radius to.
     "--island-device-pixel": `${1 / devicePixelRatio}px`,
-    // Keeps rounded edges on the pixel's side where 1 / ratio is inexact (IslandShell.css).
     "--island-pixel-nudge": Number.isInteger(devicePixelRatio) ? "0px" : "0.001px",
-    // Unitless; IslandShell.css derives the collapsed, detached and inner panel radii from it.
     "--island-corner-radius-size": settings.islandCornerRadius,
-    // The corner-shape of the island and every layer that inherits its radius (IslandShell.css).
     "--island-corner-shape": settings.islandCornerShape,
     "--task-text-color": settings.taskTextColor,
     "--island-pulse-color": settings.pulseColor,
     "--island-pulse-glow-color": hexToRgba(settings.pulseColor, 0.72),
-    // Inline, so it wins over the default and .island-light's; left out, those apply.
     ...accentVariables(accent),
     "--island-pulse-brightness": `${settings.pulseBrightness}%`,
     "--island-background-color": settings.islandBackgroundColor,
-    // Text drawn straight on the island (the Agent page) flips to dark on a light background.
     "--island-ink-rgb": inkOn(settings.islandBackgroundColor),
     "--glass-intensity": glassStrength,
     "--glass-mask-opacity": glassMaskOpacity,

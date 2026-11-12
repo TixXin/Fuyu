@@ -8,7 +8,6 @@ import type { IslandSettings } from "./types";
 
 type ColorKey = "islandBackgroundColor" | "taskTextColor" | "pulseColor";
 
-/** Appearance → Colours: one row per colour, then how bright the status light glows. */
 export function ColorSettingsSection({
   settings,
   onSettingsChange,

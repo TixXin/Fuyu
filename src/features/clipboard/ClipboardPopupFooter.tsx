@@ -7,12 +7,10 @@ const SEPARATORS: readonly MergeSeparator[] = ["newline", "space", "comma"];
 
 const Enter = () => <CornerDownLeft size={10} strokeWidth={2.4} />;
 
-/** Whether recording is paused as of `now`: a timed pause that ran out is over. */
 export function pausedNow(capture: ClipboardCaptureStatus | undefined, now: number) {
   return Boolean(capture?.paused && !(capture.pausedUntil && now >= capture.pausedUntil));
 }
 
-/** The bar above the list while recording is paused or the next copy is skipped (C38). */
 export function ClipboardPauseBar({ capture, now, onResume }: { capture?: ClipboardCaptureStatus; now: number; onResume: () => void }) {
   const text = useTranslation().clipboard.popup.actions;
   const paused = pausedNow(capture, now);
@@ -31,11 +29,6 @@ export function ClipboardPauseBar({ capture, now, onResume }: { capture?: Clipbo
   );
 }
 
-/**
- * The window's footer (C22.2, C38): the keys; while entries are picked, starting the sequence or
- * pasting them merged; after a delete, undo; otherwise a short notice. On the right, whether copies
- * are recorded (a click pauses or resumes).
- */
 export function ClipboardPopupFooter({ onSnippets, wide, queued, separator, onSeparator, deleted, onUndo, notice, capture, now, onToggleRecord }: {
   onSnippets: boolean;
   wide: boolean;

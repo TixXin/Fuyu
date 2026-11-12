@@ -1,6 +1,4 @@
-/* Shared design tokens. Values are the exact literals they replaced; changing one restyles every user. */
 :root {
-  /* Neutrals */
   --color-white: #ffffff;
   --color-black: #000;
   --color-text: #f8f6f0;
@@ -10,8 +8,6 @@
   --color-page-text: #f7f5ef;
   --color-surface-dark: #111112;
 
-  /* The usage rings' colours (usageRing.ts): against their track (the island's ink at 12%) on a
-     #2f2f37 island the normal ones are at least 4.5:1, warning, danger and stale at least 3:1. */
   --usage-claude: #ffb27a;
   --usage-codex: #e6e6eb;
   --usage-glm: #a99bff;
@@ -20,18 +16,13 @@
   --usage-danger: #ff7a7a;
   --usage-stale: #a3a3aa;
 
-  /* Island text: one hue (--color-text), four alphas. Contrast on the island #030303 /
-     an inner panel #1e1e22: 1 = 17.5 / 14.2, 2 = 8.7 / 7.8, 3 = 5.7 / 5.4, placeholder = 3.8 / 3.8.
-     The first three are for reading (>= 4.5:1); placeholder only for input hints. */
   --text-1: rgba(248, 246, 240, 0.96);
   --text-2: rgba(248, 246, 240, 0.68);
   --text-3: rgba(248, 246, 240, 0.54);
   --text-placeholder: rgba(248, 246, 240, 0.42);
 
-  /* One type family; weights 400 and 600, 700 only at 15px and up. */
   --font-ui: "Segoe UI Variable Text", "Segoe UI", "Microsoft YaHei UI", "Microsoft YaHei", system-ui, sans-serif;
 
-  /* Translucent white overlays and borders */
   --color-white-a04: rgba(255, 255, 255, 0.04);
   --color-white-a06: rgba(255, 255, 255, 0.06);
   --color-white-a08: rgba(255, 255, 255, 0.08);
@@ -41,13 +32,10 @@
   --color-white-a16: rgba(255, 255, 255, 0.16);
   --color-white-a18: rgba(255, 255, 255, 0.18);
 
-  /* Dark text on light surfaces (inputs, light chips) */
   --color-ink: #1f1b16;
   --color-ink-muted: rgba(31, 27, 22, 0.58);
 
-  /* Accents and states */
   --color-accent: #74d6ff;
-  /* Text on an accent fill (a filled button, today in the month); themeMode.ts sets it for a picked accent. */
   --color-on-accent: #06202c;
   --color-sky: #a8d8ea;
   --color-success: #2f8c61;
@@ -56,7 +44,6 @@
   --color-agent-idle: #35e985;
   --color-agent-running: #3d8bff;
   --color-agent-waiting: #ff9f43;
-  /* A session's light (agent-status/sessionLight.ts); the session ring draws the same colours. */
   --color-light-needs: #ff453a;
   --color-light-your-turn: #ffd60a;
   --color-light-working: #34c759;
@@ -64,7 +51,6 @@
   --color-focus-ring: rgba(143, 216, 255, 0.88);
   --color-focus-ring-soft: rgba(143, 216, 255, 0.72);
 
-  /* Radii */
   --radius-sm: 6px;
   --radius-md: 8px;
   --radius-lg: 10px;
@@ -72,7 +58,6 @@
   --radius-pill: 999px;
   --radius-circle: 50%;
 
-  /* Spacing (gaps) */
   --space-xs: 4px;
   --space-sm: 6px;
   --space-md: 8px;
@@ -81,13 +66,7 @@
   --space-2xl: 14px;
 }
 
-/*
- * A light island (C31: the light theme, or a light colour picked by hand): the same tokens, as dark
- * ink and dark translucent overlays, so text and surfaces on the island stay readable. Only inside
- * the island window's stage; the settings window keeps its dark look.
- */
 .island-light {
-  /* The usage rings' colours for a light island (usageRing.ts); see :root for the dark ones. */
   --usage-claude: #93400f;
   --usage-codex: #3a3a42;
   --usage-glm: #5b47e0;
@@ -118,21 +97,13 @@
   --color-warning: #b7791f;
   --color-focus-ring: rgba(10, 127, 209, 0.8);
   --color-focus-ring-soft: rgba(10, 127, 209, 0.6);
-  /* Neutral overlays, borders and text written as rgba(var(--overlay-rgb, 255, 255, 255), a): unset
-     on a dark island, so the white literal stays as it was. */
   --overlay-rgb: 24, 24, 30;
-  /* The pale pinks and yellows of error and warning text are unreadable on light grey. */
   --error-text: #c0283f;
   --warning-text: #9a6700;
-  /* The pale blues of links and info text on a dark island. */
   --info-text: #0a6db3;
-  /* Log and code boxes, a dark wash on a dark island. */
   --code-fill: rgba(24, 24, 30, 0.05);
-  /* Pages that draw their own panel (translation, plugin views) instead of the island's. */
   --panel-fill: rgba(255, 255, 255, 0.6);
-  /* Menus and notices that float over the page. */
   --popover-fill: rgba(252, 252, 254, 0.97);
-  /* The messages page's pale mint (on, unread, connected). */
   --mint: #2fae74;
   --mint-text: #1f8a5b;
   --mint-border: rgba(47, 174, 116, 0.45);

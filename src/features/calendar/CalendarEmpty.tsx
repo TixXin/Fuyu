@@ -3,10 +3,6 @@ import { CalendarPlus } from "lucide-react";
 import { useErrorText, useTranslation } from "../../i18n";
 import { addChinaHolidays } from "./holidays";
 
-/**
- * The calendar page before any calendar is added: what it is for, a one-click subscription to
- * China's holidays (no account), and the way to Settings for a work calendar.
- */
 export function CalendarEmpty({ onAdded, onOpenSettings }: { onAdded: () => void; onOpenSettings: () => void }) {
   const t = useTranslation();
   const errorText = useErrorText();

@@ -9,7 +9,6 @@ import "./ClipboardSnippetSettings.css";
 
 type Draft = { id: string | null; title: string; text: string };
 
-/** Settings → Clipboard → Snippets (C24.6): the list, and a form to add or change one. */
 export function ClipboardSnippetSettings() {
   const t = useTranslation();
   const errorText = useErrorText();

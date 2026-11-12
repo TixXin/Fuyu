@@ -1,10 +1,8 @@
 export type SettingsPositionText = {
   title: string;
   moveHint: string;
-  /** Row that puts the island back where it starts. */
   resetRow: string;
   reset: string;
-  /** Which monitor the island sits on (roadmap C1). */
   monitor: string;
   monitorOptions: Record<"primary" | "cursor" | "foreground", string>;
   monitorHint: string;

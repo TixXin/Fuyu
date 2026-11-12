@@ -16,7 +16,6 @@ import { BUILTIN_PACK, DEFAULT_AGENT_SOUND_SETTINGS, type AgentSoundSettings } f
 import { useAgentSoundSettings } from "./useAgentSoundSettings";
 import "./SoundSettingsSection.css";
 
-/** Settings → Sounds: agent sounds on or off, volume, which pack, each event, quiet times and packs. */
 export function SoundSettingsSection() {
   const t = useTranslation();
   const { locale } = useLocale();
@@ -37,7 +36,6 @@ export function SoundSettingsSection() {
     { value: BUILTIN_PACK, label: text.builtinPack },
     ...packs.map((pack) => ({ value: pack.id, label: soundPackName(pack, locale) })),
   ];
-  // A removed pack falls back to the built-in sounds.
   const packValue = packOptions.some((option) => option.value === settings.pack) ? settings.pack : BUILTIN_PACK;
 
   return (

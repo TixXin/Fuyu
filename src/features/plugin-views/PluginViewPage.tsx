@@ -11,26 +11,19 @@ import { WebviewTemplate } from "./templates/WebviewTemplate";
 import { usePluginViewModel } from "./usePluginViewModel";
 import "./PluginViewPage.css";
 
-/**
- * A plugin's page on the expanded island: its title, then the template filled
- * with the plugin's model, or why there is nothing to show.
- */
 export function PluginViewPage({
   entry,
   isOpen,
   onRowsChange,
 }: {
   entry: PluginViewEntry;
-  /** The island is expanded on this page. */
   isOpen: boolean;
-  /** Rows the list shows, for the island's height. */
   onRowsChange?: (rows: number) => void;
 }) {
   const t = useTranslation();
   const { locale } = useLocale();
   const running = entry.status === "running";
   const stopped = entry.status === "crashed" || entry.status === "stopped";
-  // Showing the page also starts an idle (on-demand) plugin, so it counts as shown too.
   const { model, loaded } = usePluginViewModel(entry.pluginId, entry.viewId, isOpen && !stopped);
   const webview = entry.template === "webview";
   const [restarting, setRestarting] = useState(false);
@@ -60,7 +53,6 @@ export function PluginViewPage({
   } else if (!running) {
     body = <p className="plugin-view__state">{t.pluginViews.starting}</p>;
   } else if (webview) {
-    // The plugin's own page: it talks to its plugin directly and needs no model.
     body = <WebviewTemplate pluginId={entry.pluginId} viewId={entry.viewId} active={isOpen} frameless={entry.frame === "none"} />;
   } else if (!loaded || model === null) {
     body = <p className="plugin-view__state">{t.pluginViews.waiting}</p>;
@@ -74,8 +66,6 @@ export function PluginViewPage({
     body = <StatusTemplate pluginId={entry.pluginId} viewId={entry.viewId} model={model} />;
   }
 
-  // A frameless page (E15) draws on the island itself; while it cannot show (stopped, starting)
-  // the card stays, so the user still sees whose page it is.
   const frameless = webview && running && entry.frame === "none";
   return (
     <section

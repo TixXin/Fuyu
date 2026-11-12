@@ -9,10 +9,6 @@ function oneLine(text: string) {
   return text.replace(/\s+/g, " ").trim();
 }
 
-/**
- * Translates whatever the selection shortcut captured and keeps a one-line result
- * for the collapsed island. The full text is handed to the translation window.
- */
 export function useQuickTranslation(enabled: boolean) {
   const t = useTranslation();
   const errorText = useErrorText();

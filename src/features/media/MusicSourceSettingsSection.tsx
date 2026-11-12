@@ -6,10 +6,8 @@ import { MusicSourceList } from "./MusicSourceList";
 import "./MusicSourceSettingsSection.css";
 import { useMusicSourcePriority } from "./useMusicSourcePriority";
 
-// Often enough for the playing dots to follow a source that starts or stops.
 const LIVE_SESSION_POLL_MS = 3_000;
 
-/** Which media sessions exist now, read while the settings page is open. */
 function useLiveMediaSessions() {
   const [sessions, setSessions] = useState<MediaState["sessions"]>([]);
 
@@ -35,7 +33,6 @@ function useLiveMediaSessions() {
   return sessions;
 }
 
-/** Settings > Music: the order in which the island prefers media sources. */
 export function MusicSourceSettingsSection() {
   const t = useTranslation();
   const liveSessions = useLiveMediaSessions();

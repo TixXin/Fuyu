@@ -26,7 +26,6 @@ export type FileShelfText = {
   pinned: string;
   emptyHint: string;
   open: string;
-  /** The selection bar's short "remove from shelf". */
   remove: string;
   copy: string;
 };

@@ -16,7 +16,6 @@ import type { ShortcutOwner } from "./shortcutConflicts";
 import { useShortcutOwners } from "./useShortcutOwners";
 import "./ShortcutsSettingsPage.css";
 
-/** Keys that cannot be changed, listed for reference: one row each, the keys as a keycap. */
 function ReferenceSection({ title, rows, footer, action }: { title: string; rows: [string, string][]; footer?: string; action?: ReactNode }) {
   return (
     <SettingsGroup title={title} footer={footer} action={action}>
@@ -27,12 +26,6 @@ function ReferenceSection({ title, rows, footer, action }: { title: string; rows
   );
 }
 
-/**
- * Every keyboard shortcut in one place, by the feature it belongs to. The same recorders
- * also sit on each feature's own page; here each group links there, a feature that is off
- * keeps its group with a switch to turn it on, and the finder at the top says what any key
- * combination is used for.
- */
 export function ShortcutsSettingsPage({
   settings,
   onSettingsChange,
@@ -97,7 +90,6 @@ export function ShortcutsSettingsPage({
   );
 }
 
-/** A feature page's link to the Shortcuts page, at the end of its shortcut group's title. */
 export function AllShortcutsLink({ onOpen }: { onOpen: () => void }) {
   const t = useTranslation();
   return <SettingsLinkButton onClick={onOpen}>{t.settings.shortcuts.allShortcuts}</SettingsLinkButton>;

@@ -1,14 +1,8 @@
-// A small Markdown subset for text from outside the app (plugin READMEs and
-// changelogs): headings, paragraphs, lists, quotes, fenced code, rules, and inline
-// code, bold, italics and links. HTML in the source stays plain text; images show
-// their alt text. The result is data, rendered by Markdown.tsx without innerHTML.
-
 export type Inline =
   | { type: "text"; text: string }
   | { type: "code"; text: string }
   | { type: "strong"; text: string }
   | { type: "em"; text: string }
-  /** Only http(s) links; anything else is kept as its text. */
   | { type: "link"; text: string; href: string };
 
 export type Block =
@@ -92,7 +86,6 @@ export function parseMarkdown(source: string): Block[] {
       for (; index < lines.length; index += 1) {
         const next = LIST_ITEM.exec(lines[index]);
         if (next && (next[2] !== undefined) === ordered) items.push(next[3]);
-        // An indented line continues the item above it.
         else if (items.length > 0 && /^\s{2,}\S/.test(lines[index])) items[items.length - 1] += ` ${lines[index].trim()}`;
         else break;
       }

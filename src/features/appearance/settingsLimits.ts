@@ -1,4 +1,3 @@
-// The ranges and choices island settings are kept within, and the fallbacks they rest on.
 import type { AgentArchiveMotion, AgentCardEffects, AgentHostDisplay, AgentSessionGroup, AgentSessionSort, AgentSessionView } from "./types";
 
 export const AGENT_HOST_DISPLAYS: readonly AgentHostDisplay[] = ["both", "icon", "name", "off"];
@@ -7,23 +6,16 @@ export const AGENT_SESSION_SORTS: readonly AgentSessionSort[] = ["status", "rece
 export const AGENT_SESSION_GROUPS: readonly AgentSessionGroup[] = ["computer", "project", "none"];
 export const AGENT_ARCHIVE_MOTIONS: readonly AgentArchiveMotion[] = ["slide", "dissolve"];
 export const AGENT_CARD_EFFECTS: readonly AgentCardEffects[] = ["off", "sparkle", "gradient"];
-/** Choices for how far back the Agent page lists sessions, in hours. */
 export const AGENT_SESSION_HOURS = [1, 2, 6, 24] as const;
-/** How long a page opened for an agent alert stays, in seconds. */
 export const AGENT_ALERT_SECONDS = [3, 5, 8, 15, 30] as const;
-/** The same choices as the Agent alert, for the panel new messages open (roadmap C11). */
 export const MESSAGE_PANEL_SECONDS = AGENT_ALERT_SECONDS;
 export const MESSAGE_NOTICES = ["line", "banner", "panel"] as const;
-/** Reminding again about a session still waiting on the user: after this many seconds; 0 is off. */
 export const AGENT_REMIND_SECONDS = [0, 30, 60, 120, 300] as const;
-/** Usage level (percent) that pops up an alert; 0 is off. */
 export const AGENT_QUOTA_ALERT_PERCENTS = [0, 70, 80, 90] as const;
 
 export const MAX_CUSTOM_SETTING_PRESETS = 6;
 export const MIN_TOP_FILLET_RADIUS = 0;
-// The island window leaves room beside the island for fillets up to this size.
 export const MAX_TOP_FILLET_RADIUS = 12;
-// Bottom corner radius of the expanded island; every other island radius scales from it.
 export const DEFAULT_ISLAND_CORNER_RADIUS = 32;
 export const MIN_ISLAND_CORNER_RADIUS = 16;
 export const MAX_ISLAND_CORNER_RADIUS = 40;
@@ -33,40 +25,26 @@ export const MAX_HOVER_EXPAND_DELAY_MS = 1_000;
 export const DEFAULT_HOVER_COLLAPSE_DELAY_MS = 0;
 export const MIN_HOVER_COLLAPSE_DELAY_MS = 0;
 export const MAX_HOVER_COLLAPSE_DELAY_MS = 2_000;
-/** Pointer rest time (ms) on a page dot before its page opens, with "switch pages on hover" on. */
 export const DEFAULT_HOVER_SWITCH_DELAY_MS = 0;
 export const MIN_HOVER_SWITCH_DELAY_MS = 0;
 export const MAX_HOVER_SWITCH_DELAY_MS = 1_000;
 export const DEFAULT_AUTO_TUCK_RETRACT_DELAY_MS = 500;
 export const MIN_AUTO_TUCK_RETRACT_DELAY_MS = 0;
 export const MAX_AUTO_TUCK_RETRACT_DELAY_MS = 3_000;
-// Tallest panel before the todo list and other long pages scroll. Before this was a setting
-// the todo page reached 490 (six rows), which is what saved settings without it keep
-// (LEGACY_FALLBACKS); new installs start at the compact minimum.
 export const DEFAULT_MAX_PANEL_HEIGHT = 360;
-// Every page is this tall (C27): low enough for a compact panel, tall enough that the translation
-// and music pages still fit.
 export const MIN_MAX_PANEL_HEIGHT = 360;
-// Below the tallest expanded height the native window accepts (656).
 export const MAX_MAX_PANEL_HEIGHT = 640;
-// Expanded panel width (C25), before the scale; wider pages (calendar, plugin pages) stay wider.
-// The widest also has to fit the island window at the scale (maxExpandedIslandWidth in layout.ts).
 export const DEFAULT_PANEL_WIDTH = 800;
 export const MIN_PANEL_WIDTH = 480;
 export const MAX_PANEL_WIDTH = 800;
-// Added to the collapsed island's text-driven width (280-340, layout.ts); also set by Alt + dragging
-// its sides. Mirrors MIN / MAX_ADJUSTED_COLLAPSED_WIDTH in src-tauri/src/island/geometry.rs.
 export const MIN_COLLAPSED_WIDTH_EXTRA = -60;
 export const MAX_COLLAPSED_WIDTH_EXTRA = 180;
-// File shelf cap; matches MAX_ITEMS and MIN / MAX_MAX_ITEMS in src-tauri/src/file_shelf/store.rs.
 export const DEFAULT_SHELF_ITEMS = 100;
 export const MIN_SHELF_ITEMS = 20;
 export const MAX_SHELF_ITEMS = 200;
-/** Auto-cleanup choices for the file shelf, in days; 0 never cleans up. */
 export const SHELF_CLEANUP_DAYS = [0, 1, 7, 30] as const;
 export const DEFAULT_TASK_TEXT_COLOR = "#ffffff";
 
-/** `value` when it is one of `allowed`, else `fallback`: a saved choice from an older or newer build. */
 export function oneOf<T>(allowed: readonly T[], value: unknown, fallback: T): T {
   return (allowed as readonly unknown[]).includes(value) ? (value as T) : fallback;
 }

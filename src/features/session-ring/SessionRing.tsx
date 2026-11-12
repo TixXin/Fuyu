@@ -14,10 +14,8 @@ import {
 } from "./ringCounts.ts";
 import "./SessionRing.css";
 
-/** Outer size of the ring in px; it takes the blue session count's place. */
 export const SESSION_RING_SIZE = 24;
 
-/** The plugin's "style" setting. */
 export const SESSION_RING_STYLES = ["grid", "ring", "bar", "signal"] as const;
 export type SessionRingStyle = (typeof SESSION_RING_STYLES)[number];
 
@@ -25,23 +23,15 @@ const STATE_COLORS: Record<string, string> = Object.fromEntries(SESSION_RING_STA
 const colorOf = (state: string | undefined) => (state && STATE_COLORS[state] ? ({ "--cell-color": STATE_COLORS[state] } as CSSProperties) : undefined);
 
 type SessionRingProps = {
-  /** The sessions the Agent page lists. */
   sessions: readonly AgentSessionSummary[];
   unseen: ReadonlySet<string>;
   counts: SessionRingCounts;
   style: SessionRingStyle;
-  /** The ring's and the state bar's count (the plugin's "showCount" setting). */
   showCount: boolean;
-  /** Stops the pulsing while the bar is not on screen. */
   paused: boolean;
-  /** Opens the Agent page. */
   onOpen: () => void;
 };
 
-/**
- * One cell per session, coloured by its state, on a 2 × 2 board (up to four sessions) or a
- * 3 × 3 one; unused cells stay as faint dots so the board keeps its shape.
- */
 function SessionGrid({ counts }: { counts: SessionRingCounts }) {
   const cells = sessionGridCells(counts);
   const side = cells.length <= 4 ? 2 : 3;
@@ -54,7 +44,6 @@ function SessionGrid({ counts }: { counts: SessionRingCounts }) {
   );
 }
 
-/** The count, then one capsule split by state, each part as long as its share of sessions. */
 function SessionBar({ counts, showCount }: { counts: SessionRingCounts; showCount: boolean }) {
   return (
     <span className="session-bar" aria-hidden="true">
@@ -68,10 +57,6 @@ function SessionBar({ counts, showCount }: { counts: SessionRingCounts; showCoun
   );
 }
 
-/**
- * Signal bars: a column per colour that has sessions, least urgent on the left, a bar lit per
- * session from the bottom, the rest dim, like a level meter.
- */
 function SessionSignal({ counts }: { counts: SessionRingCounts }) {
   const { columns, slots, bar } = sessionSignal(counts);
   return (
@@ -87,10 +72,6 @@ function SessionSignal({ counts }: { counts: SessionRingCounts }) {
   );
 }
 
-/**
- * The Agent page's sessions on the collapsed bar: a pixel grid, a segmented ring with the count
- * in the middle, a count with a state bar, or signal bars.
- */
 export function SessionRing({ sessions, unseen, counts, style, showCount, paused, onOpen }: SessionRingProps) {
   const t = useTranslation();
   const summary = sessionRingSummary(counts, t.sessionRing);
@@ -105,7 +86,6 @@ export function SessionRing({ sessions, unseen, counts, style, showCount, paused
         type="button"
         aria-label={t.sessionRing.openAgents(summary)}
         onClick={(event) => {
-          // The bar itself opens the island on a click; this one goes to the Agent page.
           event.stopPropagation();
           onOpen();
         }}

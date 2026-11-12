@@ -9,11 +9,6 @@ import { usePendingDelete } from "./usePendingDelete";
 
 const NOTICE_MS = 2_500;
 
-/**
- * What the clipboard window's actions do (C38). Pasting an entry goes through `onPaste` from the
- * window; the rest calls the native side here. Failures and results that need saying show for a
- * moment in the footer (`notice`).
- */
 export function usePopupHandlers({ onPaste, onToggleFavorite, onEdit }: {
   onPaste: (id: string, plain: boolean, options?: { enter?: boolean; copyAs?: ClipboardCopyAs }) => void;
   onToggleFavorite: (id: string) => void;

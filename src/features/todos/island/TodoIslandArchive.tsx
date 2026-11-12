@@ -2,10 +2,6 @@ import { ChevronRight } from "lucide-react";
 import { useTranslation } from "../../../i18n";
 import type { TodoArchive } from "../types";
 
-/**
- * The saved days: one list, newest first, grouped by month. Each day is a row like the island's
- * other lists: the date in a small square, its first task, and how much of it got done under it.
- */
 export function TodoIslandArchive({ archives, onSelect }: { archives: TodoArchive[]; onSelect: (date: string) => void }) {
   const t = useTranslation();
   const text = t.todoIsland;

@@ -20,19 +20,12 @@ const MENUS: PluginMenu[] = [TODO_CONTEXT_MENU, ...ITEM_CONTEXT_MENUS];
 
 type OpenMenu = { x: number; y: number; menu: PluginMenu; itemId: string };
 
-/**
- * Right-clicking a todo, a clipboard text entry, a file shelf entry or a QQ
- * notification or mail opens a menu of what running plugins add to that
- * menu (contributes.menus). Rows say what they are with data attributes (see
- * menuTarget.ts). Without such plugins the right click is left alone.
- */
 export function PluginContextMenus() {
   const t = useTranslation();
   const { locale } = useLocale();
   const [entries, setEntries] = useState<Partial<Record<PluginMenu, PluginMenuEntry[]>>>({});
   const [open, setOpen] = useState<OpenMenu | null>(null);
 
-  // Plugins start and stop from the settings window, so look again whenever the island gets focus.
   const refresh = useCallback(() => {
     for (const menu of MENUS) {
       listPluginMenu(menu)

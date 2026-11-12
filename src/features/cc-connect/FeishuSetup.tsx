@@ -2,13 +2,8 @@ import { useEffect, useState } from "react";
 import { useErrorText, useTranslation } from "../../i18n";
 import { cancelCcConnectFeishuSetup, getCcConnectFeishuSetup, openCcConnectLink, type CcConnectFeishuSetup } from "./api";
 
-/** How often the QR setup is asked how it goes. */
 const POLL_MS = 1_000;
 
-/**
- * Feishu's QR setup once started (cc-connect's own `feishu new`): the QR code to scan in the
- * Feishu app, then the outcome. `onEnd` goes back to the start button, after a cancel or failure.
- */
 export function FeishuSetup({ onEnd }: { onEnd: () => void }) {
   const t = useTranslation().settings.plugins.ccConnect.setup;
   const errorText = useErrorText();
@@ -51,7 +46,6 @@ export function FeishuSetup({ onEnd }: { onEnd: () => void }) {
     return (
       <>
         <p className="settings-section__hint">{t.feishuDone(state.allowFrom)}</p>
-        {/* cc-connect could not tell who scanned: the bot is open to everyone in the organization. */}
         {state.allowFrom ? null : <p className="plugin-card__error">{t.feishuNoOwner}</p>}
       </>
     );

@@ -3,7 +3,6 @@ import { normalizeMailAccounts, type MailAccountSettings } from "./mailAccounts.
 export const SETTINGS_KEY = "fuyu-qq-mail-settings";
 export const REMOTE_IMAGES_KEY = "fuyu-qq-mail-remote-images";
 
-/** Saved mailboxes; the single-account format of older versions is read too. */
 export function loadMailAccounts(): MailAccountSettings[] {
   try {
     return normalizeMailAccounts(JSON.parse(localStorage.getItem(SETTINGS_KEY) ?? "null"));
@@ -25,5 +24,5 @@ export function loadRemoteImagePreference() {
 }
 
 export function saveRemoteImagePreference(allow: boolean) {
-  try { localStorage.setItem(REMOTE_IMAGES_KEY, String(allow)); } catch { /* 偏好保存失败不影响本次阅读 */ }
+  try { localStorage.setItem(REMOTE_IMAGES_KEY, String(allow)); } catch {}
 }

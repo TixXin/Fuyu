@@ -6,7 +6,6 @@ import { useTranslation } from "../../i18n";
 import { ModuleSwitchSection } from "./ModuleSwitchSection";
 import "./ScreenshotSettingsPage.css";
 
-/** Screenshots (C41): the module switch and, while on, its shortcuts. Changing them comes later. */
 export function ScreenshotSettingsPage({
   settings,
   onSettingsChange,

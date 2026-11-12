@@ -12,16 +12,9 @@ type Props = {
   onChange: (settings: AgentPushSettings) => void;
   cc: ReturnType<typeof useCcConnect>;
   remote: ReturnType<typeof useRemoteCcConnect>;
-  /** Whether the channel is cc-connect, so each computer's bots are listed under it. */
   targets: boolean;
 };
 
-/**
- * Settings → AI Agent → Alerts → Phone push, by computer: this one, then each SSH computer whose
- * sessions the island reads. Each has a switch for pushing its sessions; with the cc-connect
- * channel, under it a project picked from its own cc-connect's, and under that the project's bots
- * (chats) to push to. Chats of several projects can be on at once; the list shows one project.
- */
 export function CcConnectPushTargets({ settings, onChange, cc, remote, targets }: Props) {
   const text = useTranslation().settings.agent.push.ccConnect;
   const setHost = (host: string, entry: CcConnectPushHost) => onChange({ ...settings, ccConnect: { ...settings.ccConnect, [host]: entry } });
@@ -94,7 +87,6 @@ function ProjectChats({
     return <SettingsRow indent={2} searchable={false} title={text.noProjects} description={error ?? undefined} control={<SettingsLinkButton onClick={onRefresh}>{text.refresh}</SettingsLinkButton>} />;
   }
   const pickedIn = (name: string) => entry.chats.filter((chat) => chat.project === name).length;
-  // Until one is picked: the first project already pushing, else the first.
   const project = projects.find((each) => each.name === shown) ?? projects.find((each) => pickedIn(each.name) > 0) ?? projects[0];
   const label = (each: CcConnectProject) => {
     const name = text.project(each.name, each.agent ? (CC_CONNECT_AGENT_LABELS[each.agent] ?? each.agent) : "?");

@@ -15,7 +15,6 @@ import "./ClipboardHistoryPanel.css";
 
 type Tools = { id: string; page: "transforms" | "ai" };
 
-// "5 分钟前" moves on while the page stays open.
 const CLOCK_MS = 30_000;
 
 export function ClipboardHistoryPanel({
@@ -65,8 +64,6 @@ export function ClipboardHistoryPanel({
   };
 
   const toolsItem = tools ? snapshot.items.find((item) => item.id === tools.id) : undefined;
-  // The island is not a place to paste into, so a transformed or rewritten text is copied (C43);
-  // the history records it like any other copy.
   const copyResult = (id: string, value: string) => {
     void navigator.clipboard.writeText(value).then(
       () => showCopiedState(id),

@@ -4,14 +4,8 @@ import { useTranslation } from "../../i18n";
 import type { AgentSessionSummary } from "./api";
 import "./ArchivedNotice.css";
 
-/**
- * "Archived · Undo" as a small pill floating at the list's bottom left, over the rows rather than
- * below them, so the island keeps its height. It slides in from the left, and slides back out
- * when the undo time is up or the session is put back.
- */
 export function ArchivedNotice({ removed, onUndo }: { removed: AgentSessionSummary | null; onUndo: () => void }) {
   const t = useTranslation();
-  // Kept after `removed` clears, until the pill has slid out.
   const [shown, setShown] = useState(removed);
   if (removed && removed !== shown) setShown(removed);
   if (!shown) return null;

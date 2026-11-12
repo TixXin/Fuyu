@@ -5,10 +5,8 @@ import type { SaveState, TodoArchive, TodoPageMode } from "../types";
 
 type Tab = "today" | "daily" | "upcoming" | "archive";
 
-/** Which tab a page belongs to: a saved day is opened from the archive. */
 const tabOf = (mode: TodoPageMode): Tab => (mode === "review" ? "archive" : mode);
 
-/** "今天完成 2/6" with a thin bar; nothing for an empty list. */
 function Progress({ done, total, label }: { done: number; total: number; label: string }) {
   if (total === 0) return null;
   return (
@@ -19,12 +17,6 @@ function Progress({ done, total, label }: { done: number; total: number; label: 
   );
 }
 
-/**
- * The todo page's header, like the clipboard and shelf pages' toolbar: chips for the four pages,
- * and on the right today's progress and "⋯" (save today, clear what is done). While saving says
- * something (saving, saved, needs a folder, failed) its button shows next to "⋯". A saved day
- * shows the way back and how much of it got done.
- */
 export function TodoIslandHeader({
   pageMode,
   openCount,
@@ -72,7 +64,6 @@ export function TodoIslandHeader({
   const tabs: { id: Tab; label: string; count?: number; open: () => void }[] = [
     { id: "today", label: text.today, count: openCount, open: onShowToday },
     { id: "daily", label: text.note, open: onShowDaily },
-    // Only while something is scheduled (or the page is open).
     ...(scheduledCount > 0 || active === "upcoming" ? [{ id: "upcoming" as const, label: text.upcoming, count: scheduledCount, open: onShowUpcoming }] : []),
     { id: "archive", label: text.archive, open: onShowArchive },
   ];
@@ -112,7 +103,6 @@ export function TodoIslandHeader({
   );
 }
 
-/** Saving, saved, or what went wrong; clicking it saves again (or asks for a folder). */
 function SaveStatus({ state, onSave }: { state: SaveState; onSave: () => void }) {
   const text = useTranslation().todoIsland.save;
   const label = state === "saving" ? text.saving : state === "saved" ? text.saved : state === "needs-path" ? text.needsPath : text.error;

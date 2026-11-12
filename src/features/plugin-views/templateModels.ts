@@ -1,7 +1,5 @@
 import { asRecord, readActions, readText, type ViewAction, type ViewLocale } from "./model.ts";
 
-/** Detail, form and status template data; see model.ts for the rules. */
-
 export type DetailModel = {
   title: string | null;
   markdown: string | null;
@@ -13,7 +11,6 @@ export type DetailModel = {
 
 const MAX_META = 20;
 
-/** `{ title?, markdown?, meta?: [{ label, value }], actions?, loading?, error? }`. */
 export function normalizeDetailModel(value: unknown, locale: ViewLocale): DetailModel {
   const record = asRecord(value);
   const meta: DetailModel["meta"] = [];
@@ -47,7 +44,6 @@ export type FormField = {
   options: { value: string; title: string }[];
   min: number | null;
   max: number | null;
-  /** Longest text for string and multiline fields. */
   maxLength: number;
 };
 
@@ -100,7 +96,6 @@ function readField(value: unknown, locale: ViewLocale): FormField | null {
   };
 }
 
-/** `{ fields: [{ key, type, title, description?, placeholder?, value?, options?, min?, max? }], submitTitle?, message?, error? }`. */
 export function normalizeFormModel(value: unknown, locale: ViewLocale): FormModel {
   const record = asRecord(value);
   const fields: FormField[] = [];
@@ -117,7 +112,6 @@ export function normalizeFormModel(value: unknown, locale: ViewLocale): FormMode
   };
 }
 
-/** The values to send with view.submit: numbers clamped, texts cut. */
 export function formValues(fields: FormField[], edits: Record<string, FormValue>): Record<string, FormValue> {
   const values: Record<string, FormValue> = {};
   for (const field of fields) {
@@ -139,7 +133,6 @@ export type StatusModel = {
   primary: string | null;
   secondary: string | null;
   caption: string | null;
-  /** 0..1, or null for no progress bar. */
   progress: number | null;
   tone: StatusTone;
   actions: ViewAction[];
@@ -147,7 +140,6 @@ export type StatusModel = {
 
 const TONES: StatusTone[] = ["neutral", "accent", "warning", "danger"];
 
-/** `{ primary, secondary?, caption?, progress? (0-1), tone?, actions? }`. */
 export function normalizeStatusModel(value: unknown, locale: ViewLocale): StatusModel {
   const record = asRecord(value);
   const progress = typeof record.progress === "number" && Number.isFinite(record.progress) ? Math.min(Math.max(record.progress, 0), 1) : null;

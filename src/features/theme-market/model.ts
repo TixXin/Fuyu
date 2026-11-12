@@ -4,13 +4,11 @@ import type { IslandSettings } from "../appearance/types";
 
 type Text = { "zh-CN": string; en: string };
 
-/** One theme of the market, checked: names, author and the theme fields it sets. */
 export type MarketTheme = {
   id: string;
   name: Text;
   description: Text | null;
   author: string;
-  /** Only theme fields (THEME_SETTING_KEYS); values are checked when applied. */
   appearance: Partial<Record<(typeof THEME_SETTING_KEYS)[number], unknown>>;
 };
 
@@ -25,7 +23,6 @@ function readText(value: unknown, max: number): Text | null {
   return zh || en ? { "zh-CN": zh || en, en: en || zh } : null;
 }
 
-/** The market's entries that make sense, in their order; anything odd is left out. */
 export function readMarketThemes(entries: readonly unknown[]): MarketTheme[] {
   const themes: MarketTheme[] = [];
   const seen = new Set<string>();
@@ -50,17 +47,13 @@ export function readMarketThemes(entries: readonly unknown[]): MarketTheme[] {
   return themes;
 }
 
-/** `current` with the theme applied: only theme fields change, every value checked. */
 export function withMarketTheme(current: IslandSettings, theme: MarketTheme): IslandSettings {
-  // A theme from before the two colour sets (C33.3) puts its colours into the set they look like.
   const sets = hasThemeSets(theme.appearance) ? {} : themeSetsFromSingleColors({ ...current, themeMode: "custom", ...theme.appearance });
   return withThemeFrom(current, normalizeSettings({ ...current, ...theme.appearance, ...sets } as IslandSettings));
 }
 
-/** Whether `current` already looks like the theme. */
 export function isThemeInUse(current: IslandSettings, theme: MarketTheme) {
   const applied = withMarketTheme(current, theme);
-  // The three single colours are only a copy of the set in use (C33.3), so they are not compared.
   const copies = new Set<string>(["islandBackgroundColor", "taskTextColor", "pulseColor"]);
   return THEME_SETTING_KEYS.every((key) => copies.has(key) || applied[key] === current[key]);
 }

@@ -1,13 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { listenScreenshotTaken, type ScreenshotTaken } from "./api";
 
-/** How long the card stays without the pointer on it. */
 export const CARD_MS = 8_000;
 
-/**
- * The island's screenshot card (C41.5): the last screenshot copied or saved, for a few seconds.
- * The pointer on the card holds it; leaving starts the time again.
- */
 export function useScreenshotCard() {
   const [current, setCurrent] = useState<ScreenshotTaken | null>(null);
   const timer = useRef(0);

@@ -15,7 +15,6 @@ export const TRANSLATIONS: Record<LocaleCode, Translations> = {
 
 export const LOCALE_CODES = Object.keys(TRANSLATIONS) as LocaleCode[];
 
-/** The project is Chinese-first, so an unrecognized system locale stays on zh-CN. */
 export const FALLBACK_LOCALE: LocaleCode = "zh-CN";
 
 export function isLocaleCode(value: unknown): value is LocaleCode {
@@ -50,7 +49,6 @@ export function loadLocale(): LocaleCode {
     const stored = window.localStorage.getItem(LOCALE_STORAGE_KEY);
     if (isLocaleCode(stored)) return stored;
   } catch {
-    // A blocked storage area must not prevent the interface from opening.
   }
   return detectLocale([...(navigator.languages ?? []), navigator.language]);
 }
@@ -59,7 +57,6 @@ export function saveLocale(locale: LocaleCode) {
   try {
     window.localStorage.setItem(LOCALE_STORAGE_KEY, locale);
   } catch {
-    // The current session can still switch languages when storage is unavailable.
   }
 }
 
@@ -99,7 +96,6 @@ export function useTranslation() {
   return useContext(TranslationContext);
 }
 
-/** Words an error for the page: a native one in the island's language (task D15), anything else as it is. */
 export function useErrorText() {
   const t = useContext(TranslationContext);
   return useCallback((error: unknown) => errorText(error, t), [t]);

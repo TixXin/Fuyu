@@ -7,14 +7,9 @@ export type PluginNotificationsController = {
   notification: ShownPluginNotification | null;
   dismiss: () => void;
   runAction: (action: string) => void;
-  /** Shows a message the island makes itself (the first-run guide's greetings), like a plugin's. */
   post: (notification: PluginNotification) => void;
 };
 
-/**
- * The plugin message the collapsed island shows (island.notify), cleared after its durationMs.
- * With `enabled` false (expanded, game mode, tucked away) messages are dropped, like the other previews.
- */
 export function usePluginNotifications(enabled: boolean): PluginNotificationsController {
   const [notification, setNotification] = useState<ShownPluginNotification | null>(null);
   const enabledRef = useRef(enabled);

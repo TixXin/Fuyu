@@ -2,10 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import type { AgentSessionSummary, ExternalAgentStatus } from "./api";
 import { agentSessionExpiresAt, pickAgentSession, type AgentSession } from "./session";
 
-/**
- * The agent session to name on the collapsed island, or null; re-checks when a completed title
- * expires. `sessions` is the Agent page's list; `others` are plugin and local API sources.
- */
 export function useAgentSession(
   sessions: AgentSessionSummary[],
   others: ExternalAgentStatus[] | undefined,
@@ -13,7 +9,6 @@ export function useAgentSession(
 ): AgentSession | null {
   const [now, setNow] = useState(() => Date.now());
 
-  // New data is the moment phases changed, so measure the completed hold from here.
   useEffect(() => {
     setNow(Date.now());
   }, [sessions, others]);

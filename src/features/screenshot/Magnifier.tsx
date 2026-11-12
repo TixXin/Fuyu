@@ -2,18 +2,11 @@ import { useEffect, useRef } from "react";
 import { magnifierPosition, type Point, type Size } from "./selection";
 import "./Magnifier.css";
 
-/** Pixels across the zoomed square; odd, so one sits in the middle. */
 const SPAN = 15;
-/** The zoomed square's side, in CSS pixels. */
 const ZOOM_SIZE = 120;
-/** The whole box (square and text) for keeping it inside the view. */
 const BOX: Size = { width: 132, height: 196 };
 const GAP = 20;
 
-/**
- * The magnifier beside the pointer on a screenshot overlay: the pixels around `pixel` (picture
- * pixels) blown up without smoothing, the middle one outlined, and `lines` of text below.
- */
 export function Magnifier({
   picture,
   pixel,
@@ -24,10 +17,8 @@ export function Magnifier({
 }: {
   picture: HTMLCanvasElement | null;
   pixel: Point;
-  /** The pointer in CSS pixels, to place the box. */
   pointer: Point;
   view: Size;
-  /** The colour under the pointer, `#RRGGBB`. */
   color: string;
   lines: string[];
 }) {

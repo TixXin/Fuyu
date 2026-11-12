@@ -8,15 +8,6 @@ import { bannerClock } from "../banner/bannerMessages";
 import { arrivalKey, type ArrivalMessage } from "./messageArrivals";
 import "./MessageArrivalsPanel.css";
 
-/**
- * The Messages page while it opened by itself for new messages (roadmap C11): only what arrived
- * since, newest first. A row does what clicking the one-line preview does; plugin rows carry
- * their buttons. Reports its height so the island fits it. Shown as a popup without the island's
- * header (C11b), so its title row carries the way to the whole Messages page. A plugin message
- * that asked for the inline layout, alone in the popup, drops the title row and the card: the
- * island is the message (C11c); a press beside it still opens the whole page. One that asked for
- * the player's buttons shows them where its time would be.
- */
 export function MessageArrivalsPanel({
   arrivals,
   onOpen,
@@ -31,9 +22,7 @@ export function MessageArrivalsPanel({
   onAction: (message: ArrivalMessage, action: string) => void;
   onMeasure: (height: number) => void;
   onShowAll: () => void;
-  /** Clears every reminder on the island without opening an app. */
   onClearAll: () => void;
-  /** The player, for messages that asked for its buttons; without it they show none. */
   media?: ArrivalMedia;
 }) {
   const t = useTranslation().messages;

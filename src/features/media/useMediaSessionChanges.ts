@@ -1,10 +1,6 @@
 import { useEffect } from "react";
 import { listenMediaSessionChanges, type MediaSessionChange } from "./api";
 
-/**
- * Reads the player's state the moment it announces a new track, play or pause
- * (src-tauri/src/media_control/events.rs), instead of at the next 1.5 s poll.
- */
 export function useMediaSessionChanges(enabled: boolean, onChange: (change: MediaSessionChange) => void) {
   useEffect(() => {
     if (!enabled) return;

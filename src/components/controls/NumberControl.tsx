@@ -3,10 +3,6 @@ import { Minus, Plus } from "lucide-react";
 import { clamp } from "../../utils/number";
 import "./NumberControl.css";
 
-/**
- * Whole-number field with − / + steppers. Typing is kept as a draft and applied on
- * Enter or blur, so a value below `min` can be typed digit by digit; ↑ / ↓ step by one.
- */
 export function NumberControl({
   label,
   value,
@@ -39,7 +35,6 @@ export function NumberControl({
     <div className="number-control">
       <label htmlFor={inputId}>{label}</label>
       <div className="number-control__field">
-        {/* Mouse-only shortcuts; keyboard users step with the arrow keys. */}
         <button type="button" tabIndex={-1} aria-hidden="true" disabled={value <= min} onClick={() => step(-1)}>
           <Minus size={13} strokeWidth={2.6} />
         </button>

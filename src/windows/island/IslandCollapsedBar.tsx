@@ -10,8 +10,6 @@ import { useAudible } from "../../features/media/useAudible";
 import type { CurrentLyric } from "../../features/media/lyrics/useCurrentLyric";
 import { KaraokeText } from "../../features/media/lyrics/KaraokeText";
 import { CollapsedMessageContent } from "../../features/messages/CollapsedMessageContent";
-// After CollapsedMessageContent, matching the original stylesheet order: it brings the
-// message icon, music wave and device-use styles in that order.
 import { collapsedBarItems, type CollapsedBarItem } from "./collapsedBarItems";
 import type { DeviceUse } from "../../features/device-use/api";
 import type { LevelChange } from "../../features/system-levels/api";
@@ -52,50 +50,33 @@ type IslandCollapsedBarProps = {
   collapsedTaskTitle: string | null;
   collapsedTodoCount: number | null;
   agentSession: AgentSession | null;
-  /** The line being sung; shown while no agent is named. */
   lyricLine: CurrentLyric | null;
-  /**
-   * Agent sessions still working, shown where the tuck dot was; null while the AI Agent switch
-   * is off, which keeps the tuck dot.
-   */
   agentSessionCount: number | null;
   mediaState: MediaState;
-  /** False while music is switched off, which hides the waveform button. */
   showMusic: boolean;
-  /** Files on the shelf, or null when the count is not shown. */
   shelfCount: number | null;
-  /** Apps using the camera and microphone; their icons show while any do. */
   deviceUse: DeviceUse;
-  /** A volume or brightness change just made; it takes the place of the text while shown. */
   levelPopup: LevelChange | null;
-  /** Headphones connecting, a battery running low or the charger; it comes before the level popup. */
   deviceAlert: DeviceAlert | null;
-  /** Claude's or Codex's usage reaching the alert level, or resetting; shown like a device alert, after it. */
   quotaAlert?: QuotaAlert | null;
-  /** A meeting about to start; it takes the summary's place, after alerts and translation. */
   meeting: CollapsedMeeting | null;
   agentVisualState: AgentVisualState;
   onOpenPage: (page: IslandPage) => void;
   onOpenMessages: (source: MessageSource) => void;
-  /** Quick translation line; it takes the place of the agent or todo text while shown. */
   translationPeek: string | null;
   onOpenTranslationPeek: () => void;
   onWindowDragStart: () => void;
   onTuck: () => void;
-  /** The plugin pages on the island, so a plugin status opens its plugin's page; plugin statuses wait while a message preview or a translation line shows. */
   pluginViews?: readonly PluginViewEntry[];
   onOpenPluginPage?: (page: `plugin:${string}`) => void;
-  /** Built-in plugins' centre, gauge and session-count slots. */
   slots?: CollapsedSlots;
 };
 
 const NO_SLOTS: CollapsedSlots = {};
 const NO_VIEWS: readonly PluginViewEntry[] = [];
 const ignorePage = () => {};
-/** Clicking an item marked with it does what a click on the bar's empty space does. */
 const OPENS_BAR = "data-opens-bar";
 
-/** The items of one zone; neighbours of one group share a wrapper. */
 function renderZone(items: readonly CollapsedBarItem[]) {
   const out: ReactNode[] = [];
   for (let index = 0; index < items.length; index += 1) {
@@ -111,7 +92,6 @@ function renderZone(items: readonly CollapsedBarItem[]) {
   return out;
 }
 
-/** The collapsed island: agent pulse, todo or message summary, mail badge, music button and tuck handle. */
 export function IslandCollapsedBar({
   qqMail,
   qqNotifications,
@@ -149,7 +129,6 @@ export function IslandCollapsedBar({
   slots = NO_SLOTS,
 }: IslandCollapsedBarProps) {
   const t = useTranslation();
-  // A newer version found by the background check, unless the user skipped it.
   const updateVersion = useUpdateReminder();
   const audible = useAudible(mediaState.audioActive);
   const { didDragRef, prepareWindowDrag, handleWindowDragMove, cancelWindowDrag } =
@@ -158,12 +137,9 @@ export function IslandCollapsedBar({
     "island__pulse",
     `island__pulse--agent-${agentVisualState}`,
   ].join(" ");
-  // While the island names a running agent, opening it shows the Agent page.
-  // While the island names a meeting or a running agent, opening it shows that page.
   const showMeeting = showCollapsedText && meeting !== null;
   const openTarget: IslandPage = showMeeting ? "calendar" : agentSession ? "agents" : lyricLine ? "music" : page;
   const lyric = !agentSession && lyricLine?.text ? lyricLine : null;
-  // The centre slot takes the summary's place while the bar has no summary.
   const showCenter = Boolean(slots.center) && !preview && !translationPeek
     && !(showCollapsedText && (showTitle || agentSession !== null || lyric !== null || collapsedTaskTitle !== null || collapsedTodoCount !== null));
   const pluginStatus = usePluginStatusItems(pluginViews, onOpenPluginPage);
@@ -178,7 +154,6 @@ export function IslandCollapsedBar({
     pluginStatus: showCollapsedText && !preview && !translationPeek && !levelPopup && !deviceAlert && !quotaAlert ? pluginStatus : [],
     deviceUse,
     shelfCount,
-    // No sound, no waveform: it comes with the music and goes after a quiet moment.
     showMusic: showMusic && audible,
     mediaState,
     agentSessionCount,
@@ -268,7 +243,6 @@ export function IslandCollapsedBar({
             </span>
           )}
           {showCollapsedText && lyric && (
-            // Keyed by the line, so each one fades in like a new task title.
             <span className="island__agent-session island__lyric" key={`lyric:${lyric.index}`}>
               {showTitle && <span className="island__agent-session-separator">·</span>}
               <Music2 className="island__agent-session-bot" size={16} strokeWidth={1.5} absoluteStrokeWidth aria-hidden="true" />
@@ -288,7 +262,6 @@ export function IslandCollapsedBar({
           {showCollapsedText && !agentSession && !lyric && !collapsedTaskTitle && collapsedTodoCount !== null && (
             <span className="island__todo-count">
               {showTitle ? "· " : ""}
-              {/* The count is all the bar says while idle, so the pattern keeps showing, in front of it. */}
               {slots.center && <span className="island__todo-center">{slots.center}</span>}
               {t.island.pendingTodos(collapsedTodoCount)}
             </span>

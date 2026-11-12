@@ -8,7 +8,6 @@ function subscribe(onChange: () => void): () => void {
   return () => media.removeEventListener("change", onChange);
 }
 
-/** The system "reduce motion" preference, following changes while the page is open. */
 export function useReducedMotion(): boolean {
   return useSyncExternalStore(subscribe, () => window.matchMedia(QUERY).matches, () => false);
 }

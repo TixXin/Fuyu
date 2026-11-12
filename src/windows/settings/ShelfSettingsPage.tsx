@@ -8,7 +8,6 @@ import type { IslandSettings, ShelfDoubleClick } from "../../features/appearance
 import { useTranslation } from "../../i18n";
 import { ModuleSwitchSection } from "./ModuleSwitchSection";
 
-/** File shelf: how dropping and opening files works, then when files leave the shelf. */
 export function ShelfSettingsPage({
   settings,
   onSettingsChange,

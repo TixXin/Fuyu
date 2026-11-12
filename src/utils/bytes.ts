@@ -1,4 +1,3 @@
-/** A byte count for people: "820 B", "12.4 KB", "3.1 MB". */
 export function formatBytes(bytes: number): string {
   if (!Number.isFinite(bytes) || bytes < 1024) return `${Math.max(0, Math.round(bytes || 0))} B`;
   const units = ["KB", "MB", "GB"];

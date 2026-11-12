@@ -25,9 +25,7 @@ import type { ErrorsText } from "./sections/errors";
 export type LocaleCode = "zh-CN" | "en";
 
 export type Translations = {
-  /** Native language name shown in the locale picker. */
   localeLabel: string;
-  /** BCP-47 tag handed to Intl for dates and numbers. */
   localeTag: string;
 
   common: CommonText;
@@ -59,11 +57,8 @@ export type Translations = {
 
   screenshot: ScreenshotText;
 
-  /** Pages and status texts plugins put on the island (drawn from templates). */
   pluginViews: PluginViewsText;
   settings: SettingsText;
-  /** The first-run guide's window. */
   onboarding: OnboardingText;
-  /** Errors from the native side, by code (nativeError.ts). */
   errors: ErrorsText;
 };

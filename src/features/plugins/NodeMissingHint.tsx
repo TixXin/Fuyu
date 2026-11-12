@@ -2,7 +2,6 @@ import { ExternalLink } from "lucide-react";
 import { useLocale, useTranslation } from "../../i18n";
 import { NODE_DOWNLOAD_URL, openPluginHomepage } from "./api";
 
-/** Shown for plugins that need Node.js when it was not found, with a link to get it. */
 export function NodeMissingHint() {
   const t = useTranslation();
   const { locale } = useLocale();

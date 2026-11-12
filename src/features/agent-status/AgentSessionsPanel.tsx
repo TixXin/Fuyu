@@ -32,11 +32,6 @@ import "./AgentSessionsPanel.css";
 const NOT_FOUND_NOTICE_MS = 3000;
 const AGE_REFRESH_MS = 30_000;
 
-/**
- * The island's Agent page: recent sessions; clicking one brings its editor or terminal forward.
- * Sessions still working get a two-line row with the latest reply; finished ones fold to one line,
- * except on an alert's card, where a finished or failed session shows up to three lines of it.
- */
 export function AgentSessionsPanel({
   sessions: listed,
   view = "list",
@@ -56,52 +51,35 @@ export function AgentSessionsPanel({
   approvals,
 }: {
   sessions: AgentSessionSummary[];
-  /** Flat rows (the default), cards framed in their light, or one-line rows (AgentSessionCard). */
   view?: AgentSessionView;
-  /** The order and the headings (sessionList.ts arrangeSessions). */
   sort?: AgentSessionSort;
   group?: AgentSessionGroup;
-  /** How an archived session leaves: sliding out, or dissolving into dust (useArchiveMotion). */
   archiveMotion?: AgentArchiveMotion;
-  /** Light effects on cards and compact rows (AgentCardEffects.css); the list layout has none. */
   cardEffects?: AgentCardEffects;
-  /** How the program a session runs in is shown; "off" hides it. */
   hostDisplay: AgentHostDisplay;
   showElapsed?: boolean;
   showModel?: boolean;
-  /** The latest prompt and the tool in use, on working rows. */
   showActivity?: boolean;
-  /** Finished sessions not looked at yet; they stand out until clicked. */
   unseen?: UnseenSessions;
-  /** Removing a session from the page (an x at a row's right end), and undoing it. */
   removal?: SessionRemoval;
-  /** The session an alert opened the page for; the page then shows it alone, like a card. */
   reveal?: AlertedSession | null;
-  /** Claude's and Codex's usage limits above the list. */
   showUsage?: boolean;
-  /** Those limits as the island read them; without them the usage lines read their own. */
   usages?: AgentUsages;
-  /** Permission requests agents wait on; the page shows the first one alone. */
   approvals?: AgentApprovals;
 }) {
   const t = useTranslation();
-  // An alert's session alone, kept current from the list; the list may leave it out (only
-  // running sessions listed), and then it shows as the alert saw it.
   const sessions = reveal ? [listed.find((session) => sessionKey(session) === reveal.key) ?? reveal.session] : listed;
   const showUsage = usageOn && !reveal;
   const [now, setNow] = useState(() => Date.now());
   const effortLabels = useEffortLabels();
   const [notFoundId, setNotFoundId] = useState<string | null>(null);
-  // Offered after a click lands in an editor without the island's extension.
   const extensionHint = useEditorExtensionHint();
-  // Fade out an end of the list that has more sessions past it, rather than cutting a row in half.
   const list = useScrollFade<HTMLUListElement>(sessions);
   const motion = useArchiveMotion(list.element, removal, archiveMotion);
   const cardRef = useRef<HTMLLIElement>(null);
   const measure = reveal?.measure;
   const cardKey = reveal?.key;
 
-  // The island fits the card: report its row's height now and whenever it changes (a new reply).
   useLayoutEffect(() => {
     const row = cardRef.current;
     if (!measure || !row) return;
@@ -126,9 +104,6 @@ export function AgentSessionsPanel({
   const focus = (session: AgentSessionSummary) => {
     setNotFoundId(null);
     unseen?.markSeen(session);
-    // A session on another computer runs in a terminal tab or editor window connected to it
-    // (a WezTerm SSH tab, VS Code Remote): found by title and folder only, as its process and
-    // session id mean nothing here.
     void focusAgentWindow(session.provider, session.cwd, session.title, session.remoteHost ? "" : session.sessionId)
       .then((found) => {
         if (!found) setNotFoundId(session.sessionId);
@@ -139,7 +114,6 @@ export function AgentSessionsPanel({
       });
   };
 
-  // A request an agent is waiting on comes before everything else on the page.
   if (approvals?.current) {
     return (
       <section className="agent-sessions" aria-label={t.agent.sessions.title}>
@@ -178,7 +152,6 @@ export function AgentSessionsPanel({
         onScroll={list.onScroll}
       >
         {arrangeSessions(sessions, sort, group).flatMap(({ key: groupKey, host, project, sessions: members }, _, groups) => [
-          // By computer, headings only once another computer is listed; never on an alert's card.
           !reveal && (group === "project" || (group === "computer" && (groups.length > 1 || host !== null))) ? (
             <li key={`group:${groupKey}`} className="agent-sessions__computer" aria-hidden="true">
               {group === "project"
@@ -195,8 +168,6 @@ export function AgentSessionsPanel({
           const notFound = notFoundId === session.sessionId
             ? session.remoteHost ? t.agent.sessions.remoteOnly(session.remoteHost) : isActivePhase(session.phase) ? t.agent.sessions.notFound : t.agent.sessions.notFoundEnded
             : null;
-          // Right of the provider icon, grey, shown while the cursor is on the row: some sessions
-          // never report that they ended. A session that writes again comes back by itself.
           const archive = removal && !reveal && (
             <button className="agent-session__archive" type="button" aria-label={t.agent.sessions.remove(title)} title={t.agent.sessions.remove(title)} onClick={() => motion.archive(session)}>
               <Archive size={14} strokeWidth={2} aria-hidden="true" />
@@ -225,19 +196,14 @@ export function AgentSessionsPanel({
             );
           }
           const minutes = minutesAgo(session.updatedAt, now);
-          // A working session with nothing to say yet (a turn just started) has no second line.
           const active = isActivePhase(session.phase);
-          // On an alert's card a finished or failed session shows its last reply (its summary).
           const cardReply = reveal && !active ? session.lastMessage : null;
           const full = Boolean(cardReply) || (active && Boolean(session.lastMessage || (showActivity && (session.lastPrompt || session.currentTool))));
-          // A finished turn that asked something (the marker, or a reply ending in a question).
           const light = sessionLight(session);
           const yourTurn = light === "yourTurn";
           const phaseLabel = session.compacting ? t.agent.sessions.compacting : yourTurn ? t.agent.sessions.yourTurn : getAgentPhaseLabel(session.phase, t);
-          // Running and done are told apart by the dot; the other states need words.
           const showPhase = session.compacting || yourTurn || (session.phase !== "running" && session.phase !== "completed");
           const elapsed = showElapsed && session.turnStartedAt !== null;
-          // A running session's age is always about now; its running time says more.
           const showAge = session.phase !== "running" || !elapsed;
           const status = [
             showPhase && phaseLabel,
@@ -279,12 +245,9 @@ export function AgentSessionsPanel({
                       <span className="agent-session__meta">{status}</span>
                     )}
                     {session.host && hostDisplay !== "off" && <SessionHostLabel host={session.host} display={hostDisplay} />}
-                    {/* With icons only, an unknown host still takes an icon's room, so the host icons
-                        form a column too; names differ in width, so there is no column to keep. */}
                     {!session.host && hostDisplay === "icon" && (
                       <span className="agent-session__host agent-session__host--unknown" aria-hidden="true" />
                     )}
-                    {/* Last on the line, so the provider icons line up however long the status is. */}
                     <AgentProviderIcon provider={session.provider} size={14} />
                   </span>
                   {cardReply ? (

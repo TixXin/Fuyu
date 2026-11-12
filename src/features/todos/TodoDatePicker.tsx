@@ -4,7 +4,6 @@ import { useTranslation } from "../../i18n";
 import { addDays } from "./schedule";
 import "./TodoDatePicker.css";
 
-/** Picks the day a new todo is for; a later day schedules it instead of adding it now. */
 export function TodoDatePicker({
   value,
   today,
@@ -12,12 +11,10 @@ export function TodoDatePicker({
   onChange,
   labels,
 }: {
-  /** Chosen day (YYYY-MM-DD), or null for the list's own day. */
   value: string | null;
   today: string;
   disabled: boolean;
   onChange: (date: string | null) => void;
-  /** Words for today and tomorrow, where the page wants its own. */
   labels?: { today: string; tomorrow: string };
 }) {
   const t = useTranslation();

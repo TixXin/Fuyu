@@ -1,5 +1,3 @@
-// Where the guide's card sits on the overlay. Pure, so tests/unit/onboarding-placement.test.mjs
-// can load it directly.
 import type { IslandSpot } from "./api";
 
 export type Viewport = { width: number; height: number };
@@ -10,14 +8,8 @@ const CARD_WIDTH = 460;
 const MARGIN = 16;
 const GAP = 28;
 const DOCK_BOTTOM = 40;
-/** Height the card needs below the island before it goes beside it instead. */
 const ROOM_BELOW = 380;
 
-/**
- * Never over the island, open or closed: below it, centred on it, while there is room; beside it
- * when the open island leaves too little room below; at the bottom of the screen when there is
- * no island to point at, or no room beside it either.
- */
 export function cardPlacement(island: IslandSpot | null, viewport: Viewport): CardPlacement {
   const width = Math.min(CARD_WIDTH, viewport.width - MARGIN * 2);
   const docked: CardPlacement = { left: (viewport.width - width) / 2, width, bottom: DOCK_BOTTOM, maxHeight: viewport.height - DOCK_BOTTOM - MARGIN };

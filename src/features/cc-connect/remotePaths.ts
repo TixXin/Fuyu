@@ -3,7 +3,6 @@ import { readJson, writeJson } from "../../lib/storage.ts";
 
 export const CC_CONNECT_REMOTE_PATHS_KEY = "fuyu-cc-connect-remote-paths";
 
-/** Where cc-connect is on each SSH computer, set on the plugin page; missing or empty finds it there. */
 export type CcConnectRemotePaths = Record<string, string>;
 
 const MAX_HOSTS = 20;
@@ -21,12 +20,10 @@ export function loadRemotePaths(): CcConnectRemotePaths {
   return normalizeRemotePaths(readJson(CC_CONNECT_REMOTE_PATHS_KEY));
 }
 
-/** The program path set for `host`; "" finds it. */
 export function remotePath(host: string) {
   return loadRemotePaths()[host] ?? "";
 }
 
-/** The paths, saved on every change and kept in sync between windows. */
 export function useRemotePaths() {
   const [paths, setPaths] = useState<CcConnectRemotePaths>(loadRemotePaths);
 

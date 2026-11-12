@@ -13,15 +13,12 @@ import {
   type Size,
 } from "../../features/screenshot/selection";
 
-/** How close to an edge a press grabs it, in CSS pixels. */
 export const GRAB = 6;
 
-/** Keeps the pointer's moves coming while it is dragged off the overlay; a pointer the browser no longer tracks is left alone. */
 export function capturePointer(event: PointerEvent<HTMLElement>) {
   try {
     event.currentTarget.setPointerCapture(event.pointerId);
   } catch {
-    // Not an active pointer (already released): nothing to capture.
   }
 }
 
@@ -30,18 +27,11 @@ type Drag =
   | { kind: "move"; origin: Point; start: PixelRect }
   | { kind: "resize"; handle: Handle; start: PixelRect };
 
-/**
- * The selection on this overlay's picture and the pointer over it, both in picture pixels, and
- * the pointer handlers that draw, move and resize it. A whole-monitor screenshot starts with the
- * monitor selected on the overlay under the pointer. Starting a selection here clears the other
- * monitors' overlays, so only one selection exists.
- */
 export function useSelection(session: ScreenshotSession | null, bounds: Size | null, scale: number) {
   const [selection, setSelection] = useState<PixelRect | null>(null);
   const [pointer, setPointer] = useState<Point | null>(null);
   const [dragging, setDragging] = useState<Drag["kind"] | null>(null);
   const drag = useRef<Drag | null>(null);
-  /** The highlighted window or control (C41.2), which a click selects; set by the overlay. */
   const hovered = useRef<PixelRect | null>(null);
 
   const id = session?.id ?? null;
@@ -49,7 +39,6 @@ export function useSelection(session: ScreenshotSession | null, bounds: Size | n
   const wholeWidth = whole?.width ?? 0;
   const wholeHeight = whole?.height ?? 0;
   useEffect(() => {
-    // A new screenshot (or none): start over.
     setSelection(wholeWidth > 0 ? { x: 0, y: 0, width: wholeWidth, height: wholeHeight } : null);
     setPointer(null);
     setDragging(null);
@@ -98,13 +87,11 @@ export function useSelection(session: ScreenshotSession | null, bounds: Size | n
     if (!current) return;
     if (current.kind === "draw") setSelection(rectFromPoints(current.origin, point, bounds));
     else if (current.kind === "move") setSelection(moveRect(current.start, point.x - current.origin.x, point.y - current.origin.y, bounds));
-    // From the selection at the press, so dragging past the opposite edge flips it cleanly.
     else setSelection(resizeRect(current.start, current.handle, point, bounds));
   };
 
   const onPointerUp = () => {
     if (drag.current?.kind === "draw") {
-      // A click (no real drag) selects the highlighted window or control.
       const picked = hovered.current;
       setSelection((rect) => (rect && isSelection(rect) ? rect : picked));
     }
@@ -112,7 +99,6 @@ export function useSelection(session: ScreenshotSession | null, bounds: Size | n
     setDragging(null);
   };
 
-  /** The pointer went to another monitor: this overlay highlights nothing. */
   const onPointerLeave = () => {
     if (!drag.current) setPointer(null);
   };

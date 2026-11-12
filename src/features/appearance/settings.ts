@@ -6,17 +6,9 @@ import { DEFAULT_SETTINGS } from "./settingsDefaults.ts";
 import { MAX_CUSTOM_SETTING_PRESETS } from "./settingsLimits.ts";
 import type { IslandPreset, IslandSettings, LegacyIslandSettings } from "./types";
 
-// Island settings (fuyu-settings): limits in settingsLimits.ts, first-launch values in
-// settingsDefaults.ts, and reading saved ones in normalize*Settings.ts by area. New settings go in
-// those files; this one keeps the entry points other code imports.
 export * from "./settingsLimits.ts";
 export { DEFAULT_SETTINGS } from "./settingsDefaults.ts";
 
-/**
- * What the island looks like (Settings → Theme): what a theme file and a saved theme carry, and
- * what applying one or Reset theme changes. Since C26 the sizes and what the bar shows are not
- * part of a theme, so someone else's theme does not change your layout.
- */
 export const THEME_SETTING_KEYS = [
   "themeMode",
   "collapsedDark",
@@ -41,10 +33,6 @@ export const THEME_SETTING_KEYS = [
   "islandBackgroundColor",
 ] as const satisfies readonly (keyof IslandSettings)[];
 
-/**
- * Sizes and what the collapsed bar shows (Settings → Appearance), reset by its own button. The
- * top margin (general page) and the idle todo count (todos page) are in neither list.
- */
 export const LAYOUT_SETTING_KEYS = [
   "collapsedScale",
   "expandedScale",
@@ -59,12 +47,10 @@ function withKeysFrom(keys: readonly (keyof IslandSettings)[], settings: IslandS
   return { ...settings, ...Object.fromEntries(keys.map((key) => [key, source[key]])) };
 }
 
-/** `settings` with its theme fields taken from `source`. */
 export function withThemeFrom(settings: IslandSettings, source: IslandSettings): IslandSettings {
   return withKeysFrom(THEME_SETTING_KEYS, settings, source);
 }
 
-/** `settings` with its size and display fields taken from `source`. */
 export function withLayoutFrom(settings: IslandSettings, source: IslandSettings): IslandSettings {
   return withKeysFrom(LAYOUT_SETTING_KEYS, settings, source);
 }

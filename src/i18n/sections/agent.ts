@@ -26,22 +26,16 @@ export type AgentText = {
     duration: (parts: { hours: number; minutes: number; seconds: number }) => string;
     elapsedRunning: (duration: string) => string;
     elapsedDone: (duration: string) => string;
-    /** Badges for the modes in which a session acts without asking; the default mode has none. */
     permissionModes: Record<"auto" | "bypass" | "acceptEdits" | "plan", string>;
     subagents: (count: number) => string;
-    /** The agent's own task list (roadmap B6.5.4): steps done of all, and the step running. */
     todos: (done: number, total: number) => string;
     todosCurrent: (step: string) => string;
     backgroundTasks: (count: number) => string;
-    /** The context size a card shows at its right end (formatTokens). */
     contextTokens: (size: string) => string;
     remove: (title: string) => string;
     remoteOnly: (host: string) => string;
-    /** The Agent page's heading over this computer's sessions, when others are listed too. */
     thisComputer: string;
-    /** Heading of sessions without a known folder, when grouped by project. */
     noProject: string;
-    /** The Agent page's arrange menu in the island header: the order and the headings. */
     arrange: {
       label: string;
       sort: string;
@@ -51,29 +45,22 @@ export type AgentText = {
     };
     removed: string;
     undo: string;
-    /** Offered once per editor after clicking a session whose editor lacks the extension (task A9). */
     extensionHint: (editor: string) => string;
     extensionInstall: string;
     extensionInstalling: string;
     extensionDone: string;
     extensionDismiss: string;
-    /** A finished session whose reply ends on the "your turn" marker. */
     yourTurn: string;
-    /** A session compacting its context (PreCompact hook); it can take a minute or two. */
     compacting: string;
   };
-  /** The usage line at the top of the Agent page. */
   usage: {
     label: string;
     codexLabel: string;
     fiveHour: string;
     sevenDay: string;
-    /** Compact time left: "1d10h", "3h20m", "42m". */
     resetsIn: (parts: { days: number; hours: number; minutes: number }) => string;
-    /** Read out after the line when the snapshot is old. */
     stale: string;
   };
-  /** The card for a permission request an agent waits on (roadmap B6 phase 2). */
   approval: {
     label: (tool: string) => string;
     more: (count: number) => string;
@@ -82,25 +69,21 @@ export type AgentText = {
     deny: string;
     allow: string;
     allowAlways: string;
-    /** The tooltip of "always allow", with the rule it adds for this session. */
     allowAlwaysHint: (rule: string) => string;
     terminal: string;
     terminalHint: string;
   };
-  /** The card for a question Claude Code asks with AskUserQuestion (roadmap B6 phase 3). */
   question: {
     label: string;
     other: string;
     submit: string;
   };
-  /** The collapsed island's line when a usage limit runs low or resets (roadmap B6.5.2). */
   quota: {
     low: (agent: string, window: string, used: number) => string;
     reset: (agent: string, window: string) => string;
     fiveHour: string;
     sevenDay: string;
   };
-  /** The body of a phone push (roadmap B6.5.5); the title is the session's name. `takeover` leads the commands of a cc-connect push. */
   push: Record<"waiting" | "completed" | "failed", (agent: string) => string> & { takeover: string };
 };
 

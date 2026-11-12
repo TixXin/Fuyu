@@ -6,10 +6,6 @@ import "./WindowControls.css";
 
 const ICON = { size: 8, strokeWidth: 3, "aria-hidden": true } as const;
 
-/**
- * The window's own buttons (it has no Windows title bar): Windows-style at the top right, or mac-
- * style dots for the sidebar card, grey at rest and coloured while the cursor is on them.
- */
 export function WindowControls({ style }: { style: "windows" | "mac" }) {
   const text = useTranslation().settings.windowControls;
   const [maximized, setMaximized] = useState(false);
@@ -36,8 +32,6 @@ export function WindowControls({ style }: { style: "windows" | "mac" }) {
   const close = run((window) => window.close());
   const maximizeLabel = maximized ? text.restore : text.maximize;
 
-  // Windows for now: minimize, maximize and close at the window's top right, close turning red.
-  // The mac dots below stay for when the app runs on macOS (user request 2026-11-10).
   if (style === "windows") {
     return (
       <div className="window-buttons">

@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from "react";
 import { loadTodoArchives, saveTodoArchives } from "./storage";
 import type { TodoArchive, TodoItem } from "./types";
 
-/** Archived days, newest first; one entry per date. */
 export function useTodoArchives() {
   const [archives, setArchives] = useState<TodoArchive[]>(loadTodoArchives);
 

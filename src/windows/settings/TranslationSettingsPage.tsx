@@ -11,7 +11,6 @@ import { SettingsChoice } from "../../components/settings/SettingsChoice";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsRow } from "../../components/settings/SettingsRow";
 
-/** Settings → Translation. Its shortcuts are recorded here as well as on the Shortcuts page. */
 export function TranslationSettingsPage({
   settings,
   onSettingsChange,
@@ -22,7 +21,6 @@ export function TranslationSettingsPage({
   onOpenShortcuts: () => void;
 }) {
   const t = useTranslation();
-  // The one copy on this page: the service section and the shortcut group both edit it.
   const [translationSettings, setTranslationSettings] = useTranslationSettings();
   const [clipboardSettings] = useClipboardSettings();
   const { takenBy } = useShortcutOwners({ settings, clipboard: clipboardSettings, translation: translationSettings });

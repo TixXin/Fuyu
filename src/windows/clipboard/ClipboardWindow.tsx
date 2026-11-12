@@ -9,10 +9,6 @@ import "./ClipboardWindow.css";
 const NO_SHORTCUT = () => {};
 const reportError = (action: string) => (error: unknown) => console.error(`Failed to ${action}`, error);
 
-/**
- * The clipboard window (C22.2), opened by the clipboard shortcut (or Win+V) unless the settings
- * keep it on the island. It stays loaded while hidden; the native side shows and places it.
- */
 export function ClipboardWindow() {
   const { clipboardHistory, toggleClipboardHistoryFavorite } = useClipboardHistory(NO_SHORTCUT);
   const [openCount, setOpenCount] = useState(0);
@@ -27,9 +23,7 @@ export function ClipboardWindow() {
     let cancelled = false;
     const stops: (() => void)[] = [];
     const keep = (stop: () => void) => (cancelled ? stop() : stops.push(stop));
-    // The history hook keeps the entries current; opening only starts a fresh search.
     void listenClipboardPopupOpened(() => setOpenCount((count) => count + 1)).then(keep);
-    // Clicking elsewhere closes it, like Windows' own clipboard history.
     void listenClipboardPopupBlur(close).then(keep);
     return () => {
       cancelled = true;

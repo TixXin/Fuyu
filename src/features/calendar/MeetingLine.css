@@ -27,7 +27,6 @@
   color: var(--color-accent);
 }
 
-/* Beside the bar, not in it: the bar is one button, and a button cannot hold another. */
 .island-meeting-join {
   flex: 0 0 auto;
   height: 22px;

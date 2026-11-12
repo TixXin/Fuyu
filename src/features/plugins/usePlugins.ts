@@ -21,10 +21,8 @@ import {
 } from "./api";
 import type { PromptedPermission } from "./promptedPermissions";
 
-// Status and log lines change in the background; refreshed while the page is open.
 const REFRESH_MS = 2000;
 
-/** Installed plugins and their actions, for the settings page. */
 export function usePlugins() {
   const errorText = useErrorText();
   const [snapshot, setSnapshot] = useState<PluginsSnapshot | null>(null);

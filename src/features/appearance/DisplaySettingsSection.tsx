@@ -3,7 +3,6 @@ import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
 import { useTranslation } from "../../i18n";
 import type { IslandSettings } from "./types";
 
-/** Appearance → Display: what the collapsed island shows besides its status light. */
 export function DisplaySettingsSection({
   settings,
   onSettingsChange,

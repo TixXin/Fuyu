@@ -4,51 +4,36 @@ import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import type { PixelRect } from "./selection";
 import type { Target } from "./targets";
 
-/** Mirrored by SESSION_EVENT in src-tauri/src/screenshot/session.rs. */
 export const SCREENSHOT_SESSION_EVENT = "screenshot-session";
-/** Mirrored by ENDED_EVENT in src-tauri/src/screenshot/session.rs. */
 export const SCREENSHOT_ENDED_EVENT = "screenshot-ended";
-/** Mirrored by TARGETS_EVENT in src-tauri/src/screenshot/targets.rs; the payload is the session id. */
 export const SCREENSHOT_TARGETS_EVENT = "screenshot-targets";
-/** Between the overlays only: one started a selection, so the others drop theirs. */
 export const SCREENSHOT_SELECTING_EVENT = "screenshot-selecting";
-/** Mirrored by ASSIGNED_EVENT in src-tauri/src/screenshot/pin.rs: the ready pin window got a picture. */
 export const PIN_ASSIGNED_EVENT = "screenshot-pin-assigned";
-/** Mirrored by TAKEN_EVENT in src-tauri/src/screenshot/mod.rs: copied or saved, for the island's card. */
 export const SCREENSHOT_TAKEN_EVENT = "screenshot-taken";
-/** Mirrored by TEXT_EVENT in src-tauri/src/screenshot/mod.rs: the text read and copied, or "". */
 export const SCREENSHOT_TEXT_EVENT = "screenshot-text";
 
-// 与 src-tauri/src/screenshot/session.rs 中的 Mode 对应。
 export type ScreenshotMode = "region" | "copy" | "text" | "translate" | "fullscreen";
 
-// 与 src-tauri/src/screenshot/session.rs 中的 OverlaySession 对应。
 export type ScreenshotSession = {
   id: number;
   mode: ScreenshotMode;
-  /** The monitor picture's size in physical pixels. */
   width: number;
   height: number;
-  /** This overlay's monitor has the pointer: it has the keyboard and the whole-monitor selection. */
   underPointer: boolean;
 };
 
-/** Turns the screenshot shortcuts on or off (the module switch). */
 export function configureScreenshot(enabled: boolean) {
   return invoke<void>("screenshot_configure", { enabled });
 }
 
-/** The open screenshot as this overlay shows it, or null. */
 export function getScreenshotSession() {
   return invoke<ScreenshotSession | null>("screenshot_session");
 }
 
-/** This overlay's monitor picture: RGBA rows, `width` × `height` from the session. */
 export function getScreenshotFrame() {
   return invoke<ArrayBuffer>("screenshot_frame");
 }
 
-/** What this overlay can snap to: windows, then controls once they are read. */
 export function getScreenshotTargets() {
   return invoke<Target[]>("screenshot_targets");
 }
@@ -61,32 +46,22 @@ export function screenshotOverlayReady(session: number) {
   return invoke<void>("screenshot_overlay_ready", { session });
 }
 
-/** What to do with the chosen picture (mirrored by Action in src-tauri/src/screenshot/mod.rs). */
 export type ScreenshotAction = "copy" | "save" | "pin" | "text" | "translate";
 
-/** What the shortcuts that act as soon as a region is chosen do; the others open the toolbar. */
 export type QuickAction = Extract<ScreenshotAction, "copy" | "text" | "translate">;
 
 export function quickAction(mode: ScreenshotMode | undefined): QuickAction | null {
   return mode === "copy" || mode === "text" || mode === "translate" ? mode : null;
 }
 
-/** Where a save goes: the folder from the settings (none yet: Pictures) and the default subfolder's name. */
 export type SaveTarget = { folder?: string; folderName: string };
 
 function rawBytes(image: ImageData) {
   return new Uint8Array(image.data.buffer, image.data.byteOffset, image.data.byteLength);
 }
 
-/** Annotated pixels to lay over the frozen picture: `image` at `at`, in the monitor's picture. */
 export type ScreenshotPatch = { at: PixelRect; image: ImageData };
 
-/**
- * Takes `selection` (in the monitor's picture) to the clipboard, a file or a pin, and closes the
- * screenshot; a failed save leaves it open. The native side cuts the selection from its frozen
- * picture; with annotations, `patch` is the part they cover, sent as raw RGBA (not JSON) and laid
- * over it. Gives the saved file's path when saving.
- */
 export function finishScreenshot(selection: PixelRect, patch: ScreenshotPatch | null, action: ScreenshotAction, save?: SaveTarget) {
   const whole = (value: number) => String(Math.max(0, Math.round(value)));
   const headers: Record<string, string> = {
@@ -102,7 +77,6 @@ export function finishScreenshot(selection: PixelRect, patch: ScreenshotPatch | 
     headers["x-patch-width"] = String(patch.image.width);
     headers["x-patch-height"] = String(patch.image.height);
   }
-  // Header values must be ASCII; folder names need not be.
   if (save?.folder) headers["x-folder"] = encodeURIComponent(save.folder);
   if (save) headers["x-folder-name"] = encodeURIComponent(save.folderName);
   return invoke<string | null>("screenshot_finish", patch ? rawBytes(patch.image) : new Uint8Array(0), { headers });
@@ -120,7 +94,6 @@ export function listenScreenshotEnded(handler: EventCallback<unknown>) {
   return listen(SCREENSHOT_ENDED_EVENT, handler);
 }
 
-/** This overlay window's label, `screenshot-<monitor>`. */
 export function overlayLabel() {
   return getCurrentWebviewWindow().label;
 }
@@ -133,10 +106,8 @@ export function listenSelecting(handler: EventCallback<string>) {
   return listen<string>(SCREENSHOT_SELECTING_EVENT, handler);
 }
 
-// 与 src-tauri/src/screenshot/pin.rs 中的 PinInfo 对应。
 export type PinInfo = { width: number; height: number };
 
-/** The calling pin page's picture size, or null before it is given one. */
 export function getPinInfo() {
   return invoke<PinInfo | null>("screenshot_pin_info");
 }
@@ -145,7 +116,6 @@ export function listenPinAssigned(handler: EventCallback<PinInfo>) {
   return listen<PinInfo>(PIN_ASSIGNED_EVENT, handler);
 }
 
-/** The calling pin's picture, as PNG bytes. */
 export function getPinImage() {
   return invoke<ArrayBuffer>("screenshot_pin_image");
 }
@@ -154,7 +124,6 @@ export function pinReady() {
   return invoke<void>("screenshot_pin_ready");
 }
 
-/** Zooms the pin to `scale` of its picture, keeping `anchor` (fractions of the window) in place. */
 export function zoomPin(scale: number, anchor: { x: number; y: number }) {
   return invoke<void>("screenshot_pin_zoom", { scale, anchorX: anchor.x, anchorY: anchor.y });
 }
@@ -167,7 +136,6 @@ export function copyPin() {
   return invoke<void>("screenshot_pin_copy");
 }
 
-/** Saves the pin's picture; gives the file's path. */
 export function savePin(target: SaveTarget) {
   return invoke<string>("screenshot_pin_save", { folder: target.folder ?? null, folderName: target.folderName });
 }
@@ -176,7 +144,6 @@ export function closePin() {
   return invoke<void>("screenshot_pin_close");
 }
 
-/** Hides every pin, or shows them all again (T). */
 export function togglePins() {
   return invoke<void>("screenshot_pins_toggle");
 }
@@ -185,16 +152,12 @@ export function closeAllPins() {
   return invoke<void>("screenshot_pins_close_all");
 }
 
-/** The text a screenshot's OCR read and copied (Ctrl+Shift+3, or the toolbar); "" when none. */
 export function listenScreenshotText(handler: EventCallback<string>) {
   return listen<string>(SCREENSHOT_TEXT_EVENT, handler);
 }
 
-// 与 src-tauri/src/screenshot/mod.rs 中的 Taken 对应。
 export type ScreenshotTaken = {
-  /** The PNG: kept in the app data folder for a copy, the user's file for a save. */
   path: string;
-  /** A small PNG data URL. */
   thumbnail: string | null;
   saved: boolean;
 };
@@ -203,12 +166,10 @@ export function listenScreenshotTaken(handler: EventCallback<ScreenshotTaken>) {
   return listen<ScreenshotTaken>(SCREENSHOT_TAKEN_EVENT, handler);
 }
 
-/** Drags the screenshot file `path` out of this window, as Explorer would. */
 export function dragScreenshot(path: string) {
   return invoke<void>("screenshot_drag", { path });
 }
 
-/** Pastes the screenshot file `path` into the window in front, as the file and its quoted path. */
 export function pasteScreenshotToFront(path: string) {
   return invoke<void>("screenshot_paste_to_front", { path });
 }

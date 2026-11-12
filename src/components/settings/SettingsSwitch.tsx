@@ -1,6 +1,5 @@
 import "./SettingsSwitch.css";
 
-/** On / off switch in the settings window's accent colour. Named by a label pointing at `id`. */
 export function SettingsSwitch({
   id,
   checked,

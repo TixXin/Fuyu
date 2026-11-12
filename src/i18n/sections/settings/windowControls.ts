@@ -1,4 +1,3 @@
-/** The settings window's own buttons, drawn on the sidebar card in place of Windows' title bar. */
 export type SettingsWindowControlsText = {
   close: string;
   minimize: string;

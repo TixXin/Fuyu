@@ -1,17 +1,9 @@
 import { isViewIconName, type ViewIconName } from "./iconNames.ts";
 
-/**
- * Plugin data for the island's view templates. Everything a plugin sends is
- * `unknown` until it passes through here: wrong types are dropped, texts are
- * cut to their limits and picked for the island's language, links must be
- * https. Pure, so tests cover it; the templates only draw what comes out.
- */
-
 export type ViewLocale = "zh-CN" | "en";
 
 const PAGE_PREFIX = "plugin:";
 
-/** The island page id of a plugin view: `plugin:<plugin id>/<view id>`. */
 export function pluginPageId(pluginId: string, viewId: string) {
   return `${PAGE_PREFIX}${pluginId}/${viewId}` as const;
 }
@@ -28,7 +20,6 @@ export function asRecord(value: unknown): Record<string, unknown> {
   return value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
 }
 
-/** A plain string, or `{ "zh-CN", "en" }` picked for `locale` (falling back to the other). */
 export function readText(value: unknown, locale: ViewLocale, max: number): string | null {
   let text: unknown = value;
   if (value && typeof value === "object" && !Array.isArray(value)) {
@@ -43,7 +34,6 @@ export function readText(value: unknown, locale: ViewLocale, max: number): strin
   return characters.length > max ? `${characters.slice(0, max - 1).join("")}…` : trimmed;
 }
 
-/** Ids of items and actions: same rule as views::is_action_id in Rust. */
 export function readId(value: unknown): string | null {
   return typeof value === "string" && /^[A-Za-z0-9\-_.:/]{1,128}$/.test(value) ? value : null;
 }
@@ -52,7 +42,6 @@ export function readIcon(value: unknown): ViewIconName | null {
   return isViewIconName(value) ? value : null;
 }
 
-/** An https link, or null. */
 export function readLink(value: unknown): string | null {
   if (typeof value !== "string" || !value.startsWith("https://") || value.length > 2000) return null;
   try {
@@ -64,7 +53,6 @@ export function readLink(value: unknown): string | null {
 
 export type ViewAction = { id: string; title: string; icon: ViewIconName | null };
 
-/** At most `max` actions with an id and a title. */
 export function readActions(value: unknown, locale: ViewLocale, max: number): ViewAction[] {
   if (!Array.isArray(value)) return [];
   const actions: ViewAction[] = [];
@@ -84,11 +72,8 @@ export type ListItem = {
   subtitle: string | null;
   note: string | null;
   icon: ViewIconName | null;
-  /** Null: no check box. */
   checked: boolean | null;
-  /** Opened in the browser on click. */
   url: string | null;
-  /** Sent as view.action on click when there is no url. */
   action: string | null;
   actions: ViewAction[];
 };
@@ -100,7 +85,6 @@ export type ListModel = {
   empty: string | null;
   loading: boolean;
   error: string | null;
-  /** Null: no search box. "local" filters here; "remote" sends view.search. */
   search: { placeholder: string | null; mode: "local" | "remote" } | null;
 };
 
@@ -125,7 +109,6 @@ function readItem(value: unknown, locale: ViewLocale): ListItem | null {
   };
 }
 
-/** `{ items?, groups?: [{ title?, items }], empty?, loading?, error?, search? }`. */
 export function normalizeListModel(value: unknown, locale: ViewLocale): ListModel {
   const record = asRecord(value);
   const seen = new Set<string>();
@@ -165,7 +148,6 @@ export function normalizeListModel(value: unknown, locale: ViewLocale): ListMode
   };
 }
 
-/** The groups with only the items whose texts contain `query` (any case). */
 export function filterListGroups(groups: ListGroup[], query: string): ListGroup[] {
   const needle = query.trim().toLocaleLowerCase();
   if (!needle) return groups;
@@ -176,7 +158,6 @@ export function filterListGroups(groups: ListGroup[], query: string): ListGroup[
     .filter((group) => group.items.length > 0);
 }
 
-/** Rows the list takes, for the island's height: items plus group titles. */
 export function listRowCount(groups: ListGroup[]): number {
   return groups.reduce((rows, group) => rows + group.items.length + (group.title ? 1 : 0), 0);
 }

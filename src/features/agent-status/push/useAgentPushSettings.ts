@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { AGENT_PUSH_STORAGE_KEY, loadAgentPushSettings, saveAgentPushSettings, type AgentPushSettings } from "./storage";
 
-/** Phone push settings, saved on every change and kept in sync between the settings window and the island. */
 export function useAgentPushSettings() {
   const [settings, setSettings] = useState<AgentPushSettings>(loadAgentPushSettings);
 

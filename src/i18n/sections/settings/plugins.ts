@@ -5,7 +5,6 @@ export type SettingsPluginsText = {
   openFolder: string;
   reload: string;
   empty: string;
-  /** The installed list's two groups, with how many each holds. */
   groupBuiltin: (count: number) => string;
   groupThirdParty: (count: number) => string;
   enable: string;
@@ -13,19 +12,16 @@ export type SettingsPluginsText = {
   homepage: string;
   permissions: string;
   noPermissions: string;
-  /** Marks a permission the plugin asks for only while it runs. */
   optionalPermission: string;
   permissionCount: (count: number) => string;
   permission: Record<"todos:read" | "todos:write" | "notes:read" | "notes:write" | "agent-status:read" | "agent-status:write" | "island:notify" | "secrets" | "clipboard:read" | "messages:read" | "media:read" | "media:control" | "shelf:read" | "shelf:write", string>;
   needsApproval: string;
   keybindingConflict: (shortcuts: string) => string;
-  /** Sensitive permissions: the island asks before the first use. */
   sensitive: {
     prompt: (plugin: string, action: string) => string;
     allow: string;
     once: string;
     deny: string;
-    /** Every permission (sensitive ones, and any of them as an optional permission) and links. */
     action: Record<
       | "todos:read" | "todos:write" | "notes:read" | "notes:write" | "agent-status:read" | "agent-status:write"
       | "island:notify" | "secrets" | "clipboard:read" | "messages:read" | "media:read" | "media:control"
@@ -44,7 +40,6 @@ export type SettingsPluginsText = {
   invalid: string;
   log: string;
   noLog: string;
-  /** The plugin's last host API calls on its own page. */
   calls: {
     title: string;
     hint: string;
@@ -52,15 +47,12 @@ export type SettingsPluginsText = {
     outcome: Record<"ok" | "denied" | "unknown" | "error", string>;
   };
   status: Record<"stopped" | "starting" | "running" | "restarting" | "crashed" | "idle", string>;
-  /** How a plugin runs: on demand, its own memory (P9). */
   run: {
     onDemand: string;
     memory: (megabytes: string) => string;
     highCpu: string;
     keepAlive: (reason: string) => string;
   };
-  /** Settings > Plugins > Developer: development mode (P10). */
-  /** The switch at the top of the Plugins page. */
   dev: {
     title: string;
     badge: string;
@@ -122,17 +114,14 @@ export type SettingsPluginsText = {
     update: (version: string) => string;
     installed: string;
     incompatible: string;
-    /** Search, categories, publishers and details (P11). */
     search: string;
     noMatches: string;
     allCategories: string;
     category: Record<"productivity" | "todos" | "developer" | "media" | "messages" | "information" | "utilities" | "sounds", string>;
     official: string;
-    /** Verified publishers (plugin-author-signing.md §4). */
     publisher: (name: string) => string;
     trustAndInstall: string;
     trustHint: (publisher: string) => string;
-    /** Author signatures (docs/architecture/plugins/author-signing.md). */
     signed: string;
     keyChanged: (keyId: string) => string;
     signatureDropped: string;
@@ -145,17 +134,14 @@ export type SettingsPluginsText = {
     readme: string;
     changelog: string;
     customUi: string;
-    /** The status line above the list and the two groups. */
     status: (count: number, time: string) => string;
     statusCount: (count: number) => string;
     refreshing: string;
     groupInstallable: (count: number) => string;
     groupInstalled: (count: number) => string;
     groupUpdates: (count: number) => string;
-    /** The user's starred plugins (issue #16): the filter button, the empty list and the card's star. */
     favorites: (count: number) => string;
     noFavorites: string;
-    /** A website Install button (fuyu://market/install/<id>) pinned above the list (market-link/MarketInstallRequest.tsx). */
     request: {
       title: (name: string) => string;
       titleUnknown: string;
@@ -167,7 +153,6 @@ export type SettingsPluginsText = {
     };
     favorite: (name: string) => string;
     unfavorite: (name: string) => string;
-    /** Likes from each plugin's discussion on GitHub (E14): the card's button and the sort menu. */
     like: (name: string, count: number) => string;
     sortLabel: string;
     sortIndex: string;
@@ -177,7 +162,6 @@ export type SettingsPluginsText = {
     noPermissions: string;
     runtime: Record<"node" | "powershell" | "exe", string>;
   };
-  /** Plugin updates and trusted publishers on the plugins page (P11). */
   updates: {
     title: string;
     autoUpdate: string;
@@ -196,7 +180,6 @@ export type SettingsPluginsText = {
     preReleaseAvailable: (version: string) => string;
     preReleaseOffered: (version: string) => string;
   };
-  /** What the cc-connect phone link found, on its plugin page (src/features/cc-connect). */
   ccConnect: {
     title: string;
     hint: string;
@@ -212,33 +195,26 @@ export type SettingsPluginsText = {
     download: string;
     downloading: string;
     downloadHint: string;
-    /** Picking this computer or an SSH computer (AI Agent → Remote computers) to look at. */
     computer: string;
     thisComputer: string;
     reading: string;
-    /** An SSH computer's cc-connect: where the program is (kept on this page) and what it is not. */
     remotePath: string;
     remotePathHint: string;
     remoteNotRunning: string;
     remoteSetup: string;
-    /** The island's own cc-connect (the "run" setting) and how it is doing. */
     runnerLabel: string;
     runner: Record<"off" | "starting" | "running" | "external" | "noConfig" | "failed", string>;
-    /** Platform names by cc-connect's platform type; an unknown type shows as it is. */
     platforms: Record<string, string>;
-    /** Setting a bot up (src/features/cc-connect/CcConnectSetup.tsx). */
     setup: {
       title: string;
       hint: string;
       platform: string;
-      /** Which agent the bot drives; labels from CC_CONNECT_AGENT_LABELS. */
       agent: string;
       agentHint: string;
       project: string;
       projectHint: string;
       workDir: string;
       workDirHint: string;
-      /** What to do on each platform, in order. */
       steps: Record<"telegram" | "discord" | "feishu", string[]>;
       token: string;
       check: string;
@@ -264,7 +240,6 @@ export type SettingsPluginsText = {
       feishuNoOwner: string;
     };
   };
-  /** The SSH proxy tunnel's hosts on its plugin page (src/features/ssh-tunnel). */
   sshTunnel: {
     title: string;
     hint: string;
@@ -274,14 +249,11 @@ export type SettingsPluginsText = {
     needsPort: string;
     checking: string;
     state: Record<"off" | "connecting" | "connected" | "portInUse" | "error", string>;
-    /** Shown while the plugin is off: switched-on hosts wait for it. */
     waitingForPlugin: string;
     confirm: (host: string, port: number) => string;
-    /** The port check could not run there; `reason` is why. */
     unchecked: (host: string, port: number, reason: string) => string;
     yes: string;
     no: string;
-    /** The local proxy in the plugin's running info. */
     proxy: {
       label: string;
       looking: string;

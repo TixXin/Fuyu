@@ -1,33 +1,24 @@
-/** The screenshot overlay (the toolbar beside the selection, the magnifier by the pointer) and pins. */
 export type ScreenshotText = {
   toolbar: string;
   copy: string;
   save: string;
   pin: string;
-  /** The folder under Pictures that saves go to until one is chosen in the settings. */
   saveFolderName: string;
   saved: (path: string) => string;
   cancel: string;
-  /** Under the magnifier: the key that copies the colour under the pointer. */
   copyColorHint: string;
   colorCopied: (hex: string) => string;
-  /** Shown before anything is selected. */
   selectHint: string;
-  /** The same for the shortcuts that act as soon as a region is chosen (quickAction in api.ts). */
   quickHints: Record<"copy" | "text" | "translate", string>;
   readText: string;
-  /** On the island: the text read in a screenshot, now on the clipboard. */
   textCopied: (line: string) => string;
   noText: string;
-  /** The annotation tools (AnnotationTool in src/features/screenshot/annotations.ts). */
   tools: Record<"rect" | "ellipse" | "arrow" | "pen" | "highlighter" | "text" | "mosaic" | "number", string>;
   undo: string;
   redo: string;
-  /** Line thickness, thin to thick (StrokeLevel). */
   sizes: Record<0 | 1 | 2, string>;
   color: (hex: string) => string;
   textPlaceholder: string;
-  /** A pin's right-click menu. */
   pinMenu: {
     copy: string;
     save: string;
@@ -38,7 +29,6 @@ export type ScreenshotText = {
     closeAll: string;
   };
   pinCopied: string;
-  /** The island's screenshot card (ScreenshotCard.tsx). */
   card: {
     copied: string;
     saved: string;

@@ -54,7 +54,6 @@ export type TranslatorText = {
   emptySource: string;
   tooLong: string;
   clipboard: (text: string) => string;
-  /** The island page's direction choice (TranslationPanel). */
   dirAuto: string;
   dirZhEn: string;
   dirEnZh: string;

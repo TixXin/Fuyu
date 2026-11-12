@@ -16,13 +16,6 @@ function join(link: string) {
   void openMeetingLink(link).catch((error: unknown) => console.error("Failed to open the meeting link", error));
 }
 
-/**
- * The island's calendar page: the day list on the left (today and tomorrow, or the day picked in
- * the month), each event with its time, title and place and a "Join" button for a meeting until
- * it ends; the month on the right, with lunar dates and holiday marks. Opening the page reads the
- * calendars again. With no calendar added, it shows how to add one (CalendarEmpty.tsx). With
- * `todos`, today and later days take a todo (issue #43), and planned todos show among the events.
- */
 export function CalendarPanel({
   snapshot,
   now,
@@ -34,7 +27,6 @@ export function CalendarPanel({
   now: number;
   onRefresh: () => void;
   onOpenSettings: () => void;
-  /** Todos planned for later days, and adding one for a day (YYYY-MM-DD); off with todos. */
   todos?: { scheduled: readonly { id: string; title: string; date: string }[]; onAdd: (title: string, date: string) => void };
 }) {
   const t = useTranslation();
@@ -42,7 +34,6 @@ export function CalendarPanel({
   const errorText = useErrorText();
   const lunar = useLocale().locale === "zh-CN";
   const today = startOfDay(now);
-  // Null: today (so the page follows midnight); a month of null follows the picked day.
   const [picked, setPicked] = useState<number | null>(null);
   const [month, setMonth] = useState<number | null>(null);
   const selected = picked ?? today;

@@ -1,5 +1,3 @@
-/* Three rows; the current one may take two lines, so the block grows a little rather than
-   cutting a long line off. The music page leaves room for it (MusicPlayerPanel.css). */
 .lyrics-view {
   min-height: 62px;
   flex: 0 0 auto;
@@ -12,7 +10,6 @@
   text-align: center;
 }
 
-/* An empty line still holds its row, so the lines never shift into another one's place. */
 .lyrics-view__line {
   min-height: 1.35em;
   line-height: 1.35;
@@ -59,7 +56,6 @@
   }
 }
 
-/* This song's offset, beside the music page's settings button. */
 .lyrics-offset {
   display: inline-flex;
   align-items: center;
@@ -92,7 +88,6 @@
   background: transparent;
 }
 
-/* While the island only estimates where the song is, each line aligns the timing to itself. */
 .lyrics-view__pick {
   padding: 0 6px;
   font: inherit;

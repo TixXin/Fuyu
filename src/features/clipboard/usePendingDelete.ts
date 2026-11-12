@@ -1,14 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ClipboardHistoryItem } from "./api";
 
-/** How long the footer offers to bring a deleted entry back; the native side keeps it a little longer. */
 const UNDO_MS = 6_000;
 
-/**
- * Deleting with undo (C38, C42): `commit` deletes the entry at once, so quitting the app keeps it
- * deleted; for UNDO_MS, or until another one is deleted or the window opens again (`flush`),
- * Ctrl+Z calls `restore`, which puts it back where it was with its image.
- */
 export function usePendingDelete(commit: (id: string) => void, restore: (id: string) => void) {
   const [pending, setPending] = useState<ClipboardHistoryItem | null>(null);
   const pendingRef = useRef<ClipboardHistoryItem | null>(null);

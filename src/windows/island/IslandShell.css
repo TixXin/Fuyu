@@ -1,26 +1,3 @@
-/*
- * Scale (Appearance → Layout). The shell has no text: it is sized and rounded at the scaled size
- * itself, by --island-scale, the scale of the current mode (stageStyle.ts), and animates that size.
- * Each content layer is zoomed by its own mode's scale, which never changes while the island opens
- * or closes. A scale that animates, by zoom or by transform, relays the contents out at a new size
- * every frame, and the rounding moves rows and words up and down by a device pixel
- * (docs/investigations/island-jitter.md). A transform transition would also run on the compositor
- * and blur every word (roadmap F14). The box is still base size x scale, centred at the top, as
- * Rust's hit test (island/passthrough.rs) assumes.
- */
-/*
- * The shell's width as it animates. While a content layer fades, WebView2 draws it as a layer of
- * its own, placed from the shell's centre; the shell's fractional width each frame left that
- * place a sixty-fourth of a device pixel either way, and the text jumped a whole device pixel
- * left and right through the width spring (docs/investigations/island-jitter.md, fourth round).
- * So the shell's left edge is rounded to a whole device pixel (--island-shell-left, the width
- * follows from it), and each layer sits at its own rounded resting place on the stage, measured
- * from that edge: the same whole device pixel on every frame. The stage is the container (100cqw
- * is its width). 1/1.5 and 1/1.75 are not exact, and a hair short of a pixel snaps to the one
- * before: a 0.001px nudge keeps each edge on the pixel's side (a sixty-fourth of a pixel is
- * 0.016px). At a whole-number ratio the pixel is exact and the nudge is 0 (--island-pixel-nudge,
- * stageStyle.ts): at 100% it put the calendar's dates a third of a pixel off until the fade ended.
- */
 @property --island-shell-width {
   syntax: "<length>";
   inherits: true;
@@ -31,49 +8,26 @@
   --glass-pointer-x: 50%;
   --glass-pointer-y: 18%;
   --glass-page-accent: var(--color-accent);
-  /*
-   * Island corner radii, all scaled from the expanded bottom radius in the appearance
-   * settings (stageStyle.ts) with the ratios of the original 30 / 22 / 14 px design.
-   * Rust scales its hit-test corners the same way (island/state.rs).
-   */
   --island-radius: calc(var(--island-corner-radius-size, 30) * 1px);
   --island-radius-collapsed: calc(var(--island-radius) * 22 / 30);
   --island-radius-expanded-top: calc(var(--island-radius) * 22 / 30);
   --island-radius-collapsed-top: calc(var(--island-radius) * 14 / 30);
-  /* Inner panels sit 20px inside the expanded island, so this keeps their corners concentric. */
   --island-panel-radius: max(8px, calc(var(--island-radius) - 20px));
-  /* The shell's own corners, at the scaled size; the radii above are for the zoomed contents. */
   --island-shell-radius: calc(var(--island-radius) * var(--island-scale, 1));
   --island-shell-radius-collapsed: calc(var(--island-radius-collapsed) * var(--island-scale, 1));
   --island-shell-radius-expanded-top: calc(var(--island-radius-expanded-top) * var(--island-scale, 1));
   --island-shell-radius-collapsed-top: calc(var(--island-radius-collapsed-top) * var(--island-scale, 1));
-  /*
-   * Squircle (default) or round, from the appearance settings (stageStyle.ts). Every layer that
-   * inherits the island's radius, and the inner panels, take the same shape so the rims, glass and
-   * panels stay concentric; Rust hit-tests the same curve (island/passthrough.rs).
-   */
   corner-shape: var(--island-corner-shape, round);
   position: relative;
   flex: 0 0 auto;
   color: var(--color-text);
-  /* A flat fill, the same colour the collapsed island shows, without grid lines or shading.
-     The opacity setting fades only this fill (stageStyle.ts), never the text on it. */
   background: var(--island-fill, var(--island-background-color));
   border: 0;
   box-shadow: inset 0 0 0 1px var(--color-white-a08);
   overflow: visible;
-  /* A stacking context, as the island had while it scaled with a transform. No will-change: a
-     layer of its own is resampled while it resizes and blurs the text. */
   isolation: isolate;
-  /*
-   * Opening and closing as the "open and close" setting picks (C49, islandMotion.ts sets the
-   * --island-motion-* variables on the stage); the fallbacks are the spring opening, as on the
-   * website's top island. Never wider than the window, so an overshoot is not cut at its edge.
-   */
-  /* Never past the stage's edges: an overshoot stops at the window, as max-width: 100vw did. */
   --island-shell-left: calc(max(0px, round(nearest, (100cqw - var(--island-shell-width)) / 2, var(--island-device-pixel, 1px))) + var(--island-pixel-nudge, 0.001px));
   width: calc(100cqw - 2 * var(--island-shell-left));
-  /* background-color: a light island kept dark while collapsed (C33.2) turns light as it opens. */
   transition:
     --island-shell-width var(--island-motion-width, 550ms) var(--island-motion-width-ease, cubic-bezier(0.34, 1.36, 0.5, 1)),
     height var(--island-motion-height, 500ms) var(--island-motion-height-ease, cubic-bezier(0.22, 1, 0.36, 1)),
@@ -214,15 +168,11 @@
   --island-shell-width: calc(var(--collapsed-island-width) * var(--island-scale, 1));
   height: calc(38px * var(--island-scale, 1));
   border-radius: 0 0 var(--island-shell-radius-collapsed) var(--island-shell-radius-collapsed);
-  /* The island is a surface, not a link: only its small buttons show the hand. */
   cursor: default;
-  /* Classic is one flat fill, like the expanded island: a pure black island blends into the
-     screen's black bezel and notch. The shading it had showed as a grey band on black. */
   background: var(--island-fill, var(--island-background-color));
   box-shadow: none;
 }
 
-/* Keyboard focus only: a click on one of its buttons used to leave the island lit. */
 .island--collapsed:has(:focus-visible) {
   box-shadow:
     inset 0 -1px 0 rgba(255, 255, 255, 0.26),
@@ -311,15 +261,8 @@
 .island__expanded {
   position: absolute;
   top: 0;
-  /* Where the layer rests, centred on the stage, measured from the shell's edge (see
-     --island-shell-width above); in the layer's own zoomed pixels, as the zoom scales `left`. */
   left: calc((round(nearest, (100cqw - var(--layer-width) * var(--layer-zoom)) / 2, var(--island-device-pixel, 1px)) - var(--island-shell-left) + 2 * var(--island-pixel-nudge, 0.001px)) / var(--layer-zoom));
   z-index: 2;
-  /* The layers only fade; the shell's resize is the motion. A slide, even of `top`, ends on a
-     frame that moves the layer by a hair, and text of different sizes rounds to device pixels
-     differently on it: a 12px label stepped one pixel against the 14px title beside it
-     (docs/investigations/island-jitter.md). A transform slide would blur the text instead
-     (roadmap F14). Nothing is promoted ahead (no will-change), for the same reason. */
   transition: opacity var(--island-motion-layer, 120ms) ease;
 }
 
@@ -337,8 +280,6 @@
   transition-delay: var(--island-motion-collapsed-delay, 140ms);
 }
 
-/* Tucked, only the island's bottom rim is on screen: show it empty, not cut-off contents.
-   They fade back in after the island slides out (the 140ms delay above). */
 .island--tucked .island__collapsed {
   pointer-events: none;
   opacity: 0;
@@ -351,8 +292,6 @@
   transition-delay: 0s;
 }
 
-/* Not transitioned: going from a popup to the whole page, the page lays out at its full width at
-   once and the shell, growing from the middle, uncovers it, rather than every line rewrapping. */
 .island__expanded {
   --layer-width: var(--expanded-island-width, 560px);
   --layer-zoom: var(--island-expanded-scale, 1);
@@ -379,18 +318,15 @@
 .island--expanded .island__expanded {
   pointer-events: auto;
   opacity: 1;
-  /* Height follows the shell (.island) when switching between pages of different heights. */
   transition:
     opacity var(--island-motion-fade, 250ms) ease var(--island-motion-fade-delay, 120ms),
     height var(--island-motion-height, 500ms) var(--island-motion-height-ease, cubic-bezier(0.22, 1, 0.36, 1));
 }
 
-/* A popup (new messages, an Agent alert) shows only its card on a narrower island (C11b). */
 .island--popup .island__header {
   display: none;
 }
 
-/* As little above the card as below it: an Agent row's own 8px plus 8 here match the 16 under it. */
 .island--popup .island__expanded {
   padding-top: 8px;
 }

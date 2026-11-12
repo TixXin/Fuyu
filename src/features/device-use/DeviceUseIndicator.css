@@ -17,7 +17,6 @@
   transition: background 140ms ease;
 }
 
-/* Green camera, orange microphone, as phones and macOS mark them. */
 .device-use__button--camera {
   color: #35e985;
   background: rgba(53, 233, 133, 0.14);

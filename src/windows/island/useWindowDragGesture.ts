@@ -1,9 +1,5 @@
 import { useCallback, useRef, type PointerEvent as ReactPointerEvent } from "react";
 
-/**
- * Starts a native window drag once the primary pointer moves 3px from where
- * it was pressed; `didDragRef` lets the following click be ignored.
- */
 export function useWindowDragGesture(isTucked: boolean, onWindowDragStart: () => void) {
   const didDragRef = useRef(false);
   const windowDragRef = useRef<{

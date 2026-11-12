@@ -11,22 +11,13 @@ import type { Translations } from "../../i18n";
 import { openSettingsWindow } from "../settings/api";
 import type { CollapsedSlots, IslandPage } from "./types";
 
-/**
- * An icon that stays on the collapsed bar. The ids are what the user's order
- * refers to (features/appearance/collapsedItems.ts): status-light, mail, update,
- * plugin:<plugin>/<item>, device-use, shelf, music, usage:<provider>, session-count.
- * Items of one `group` that end up next to each other share a wrapper (the
- * usage rings keep their tighter spacing).
- */
 export type CollapsedBarItem = { id: string; node: ReactNode; group?: "gauges" };
 
 type CollapsedBarItemsInput = {
   t: Translations;
   qqMail: MailController;
   updateVersion: string | null;
-  /** The Agent status light. */
   statusLight: ReactNode;
-  /** One item per plugin status; none while something else takes the summary's place. */
   pluginStatus: readonly { id: string; node: ReactNode }[];
   deviceUse: DeviceUse;
   shelfCount: number | null;
@@ -38,7 +29,6 @@ type CollapsedBarItemsInput = {
   onOpenMessages: (source: MessageSource) => void;
 };
 
-/** The bar's icons in their default order; empty ones are left out. */
 export function collapsedBarItems({
   t,
   statusLight,

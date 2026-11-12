@@ -3,19 +3,10 @@ import { wordFill, type LyricWord } from "./lrc";
 import type { KaraokeLook } from "./lyricsSettings";
 import "./KaraokeText.css";
 
-/** Starts sliding a little before the word reaches the right edge. */
 const FOLLOW_MARGIN_PX = 24;
 
 type Follow = { delayMs: number; durationMs: number; shift: number };
 
-/**
- * A line timed word by word: each word fills from the unsung to the sung colour as it is sung
- * (or lights at once with fill "word"). The timings are taken once, when the line appears or the
- * player reports a new position (the caller re-keys it), and the browser runs them from there;
- * pausing pauses them. With `look.follow`, a line wider than its box slides left from the word
- * that would leave it, so the word being sung stays in view. Shared by the music page and the
- * collapsed island.
- */
 export function KaraokeText({ words, positionMs, playing, look }: { words: LyricWord[]; positionMs: number; playing: boolean; look: KaraokeLook }) {
   const [start] = useState(positionMs);
   const box = useRef<HTMLSpanElement>(null);

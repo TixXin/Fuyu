@@ -4,7 +4,6 @@ export type SettingsLayoutText = {
   showCollapsedText: string;
   showIdleTodoCount: string;
   title: string;
-  /** Appearance page groups: the island's scale and panel height, then its corners. */
   sizeTitle: string;
   cornersTitle: string;
   opacity: string;
@@ -31,7 +30,6 @@ export type SettingsLayoutText = {
   autoTuckRetractDelay: string;
   autoTuckHint: string;
   minimizeHint: string;
-  /** A duration in seconds, already rounded, as a settings value shows it. */
   seconds: (value: number) => string;
   minutes: (value: number) => string;
   resetToDefault: string;

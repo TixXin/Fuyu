@@ -1,4 +1,3 @@
-// What the island window and the plugin page use from the center pattern.
 export {
   AGENT_ICON_PET_HEIGHT,
   CollapsedCenter,

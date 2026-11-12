@@ -14,12 +14,6 @@ import type { TranslationSettings } from "../../features/translation/storage";
 import { useLocale, useTranslation } from "../../i18n";
 import { findShortcutOwner, type ShortcutOwner } from "./shortcutConflicts";
 
-/**
- * Every shortcut the island has registered or listens for, each with the page it is set on, so
- * a recorder refuses the same keys whichever page it is on (the Shortcuts page or a feature's
- * own). The translation and clipboard settings come from the page, which holds the one copy it
- * edits: a second copy in the same window would not see the page's changes.
- */
 export function useShortcutOwners({ settings, clipboard, translation }: {
   settings: IslandSettings;
   clipboard: ClipboardHistorySettings;
@@ -40,8 +34,6 @@ export function useShortcutOwners({ settings, clipboard, translation }: {
     return () => window.removeEventListener("focus", refreshPlugins);
   }, [refreshPlugins]);
 
-  // A global hotkey swallows its keys everywhere, so it may not reuse another global
-  // shortcut or the island's page keys.
   const digitModifiers = normalizePageDigitModifiers(settings.pageDigitModifiers);
   const owners: ShortcutOwner[] = [
     ...(settings.translationEnabled ? [

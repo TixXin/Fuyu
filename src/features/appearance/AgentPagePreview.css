@@ -1,9 +1,3 @@
-/*
- * The expanded island's Agent page in the island's real proportions (IslandHeader.css,
- * AgentUsageBar.css, AgentSessionsPanel.css): every size is its real pixel value times --u, one
- * real pixel at the preview's width (IslandPreview.css), so the drawing grows with the pane
- * instead of leaving small text in a wide island. Text in the island's ink at its text levels.
- */
 .agent-page-preview {
   --ink-1: rgba(var(--preview-ink), 0.96);
   --ink-2: rgba(var(--preview-ink), 0.68);
@@ -165,7 +159,6 @@
   font-weight: 600;
 }
 
-/* Finished sessions recede by colour alone, as on the island. */
 .agent-page-preview__row--done .agent-page-preview__title {
   color: var(--ink-2);
 }

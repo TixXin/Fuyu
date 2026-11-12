@@ -1,5 +1,3 @@
-/* The screenshot card (ScreenshotCard.tsx): one row over the top of the island, the same height
-   as the collapsed bar, like the plugin permission prompt, so it fits collapsed and expanded. */
 .screenshot-card {
   position: absolute;
   top: 0;
@@ -7,7 +5,6 @@
   right: 0;
   z-index: 6;
   height: 38px;
-  /* Outside the island's zoomed content layers (IslandShell.css), so it takes the scale itself. */
   zoom: var(--island-scale, 1);
   display: flex;
   align-items: center;

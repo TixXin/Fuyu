@@ -5,7 +5,6 @@ import type { IslandMode, IslandPage } from "./types";
 
 type FileShelfDropOptions = {
   enabled: boolean;
-  /** False: files are only taken while the shelf page is already open. */
   expandOnDrop: boolean;
   mode: IslandMode;
   page: IslandPage;
@@ -19,17 +18,10 @@ type FileShelfDropOptions = {
   minimizeToEdge: () => void;
 };
 
-/**
- * Files dragged onto the island open the shelf page as a drop zone and are added when
- * dropped. A drag that leaves without dropping puts the island back the way it was
- * (collapsed, tucked or on its earlier page). Returns whether files are over it.
- */
 export function useFileShelfDrop(options: FileShelfDropOptions) {
   const [isDropping, setIsDropping] = useState(false);
   const latestRef = useRef(options);
-  // How to undo the page change a drag made, until it drops or leaves.
   const restoreRef = useRef<(() => void) | null>(null);
-  // The current drag is not for the shelf (it is closed and may not open for drops).
   const ignoringRef = useRef(false);
 
   useEffect(() => {
@@ -42,7 +34,6 @@ export function useFileShelfDrop(options: FileShelfDropOptions) {
 
     void listenFileDrop((event) => {
       const current = latestRef.current;
-      // A shelf item dragged out and back over the island is not a new file.
       if (!current.enabled || current.shelf.isDraggingOut()) return;
 
       if (event.type === "enter") {

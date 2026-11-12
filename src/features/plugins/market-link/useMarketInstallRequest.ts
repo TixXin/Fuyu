@@ -2,12 +2,6 @@ import { useCallback, useEffect, useState } from "react";
 import { isTauri } from "@tauri-apps/api/core";
 import { listenMarketInstallRequests, takeMarketInstallRequest } from "./api";
 
-/**
- * The plugin a `fuyu://market/install/<id>` link asked to install, for the settings
- * window: taken when the window starts (a link that opened it) and whenever an open
- * window hears of a new one. `onRequest` runs with each id, to show the market page.
- * `dismiss` clears it once the user is done with it.
- */
 export function useMarketInstallRequest(onRequest: (id: string) => void) {
   const [requestedId, setRequestedId] = useState<string | null>(null);
 

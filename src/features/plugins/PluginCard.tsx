@@ -11,7 +11,6 @@ import "./PluginCard.css";
 const isPermission = (name: string): name is PluginPermission =>
   (PLUGIN_PERMISSIONS as readonly string[]).includes(name);
 
-/** The permissions folded into a count; opening it lists them, sensitive ones marked, optional ones last. */
 function PermissionSummary({ permissions, optional }: { permissions: string[]; optional: string[] }) {
   const t = useTranslation();
   if (permissions.length + optional.length === 0) {
@@ -39,13 +38,8 @@ function PermissionSummary({ permissions, optional }: { permissions: string[]; o
   );
 }
 
-/** Clicks on these inside a card do their own thing rather than open the plugin's page. */
 const OWN_CLICK = "button, a, input, label, summary, details";
 
-/**
- * One installed plugin: name, status and switch on one row, a two-line description, notes, then
- * permissions and actions. Clicking anywhere else on the card opens the plugin's own page.
- */
 export function PluginCard({
   plugin,
   allowed,
@@ -60,17 +54,14 @@ export function PluginCard({
   nodeAvailable: boolean;
   busy: boolean;
   onEnabledChange: (enabled: boolean) => void;
-  /** Opens the plugin's own page (info, settings, actions, log). */
   onOpenDetail: () => void;
   onUninstall: () => void;
 }) {
-  // Uninstalling takes a second click, so a stray click cannot delete a plugin.
   const [confirmingUninstall, setConfirmingUninstall] = useState(false);
   const t = useTranslation();
   const { locale } = useLocale();
   const name = plugin.name?.[locale] ?? plugin.id;
   const isOn = plugin.enabled && !plugin.needsApproval;
-  // Built-in and development plugins run without "allow third-party plugins".
   const canRun = allowed || plugin.builtin || plugin.dev;
   const showStatus = plugin.hasProcess && canRun && isOn;
   const description = plugin.description?.[locale];
@@ -180,7 +171,6 @@ export function PluginCard({
               onClick={() => (confirmingUninstall ? onUninstall() : setConfirmingUninstall(true))}
             >
               <Trash2 size={12} strokeWidth={2.4} />
-              {/* An icon until pressed; the second press needs the words. */}
               {confirmingUninstall ? <span>{t.settings.plugins.confirmUninstall}</span> : null}
             </button>
           ) : null}

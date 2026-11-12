@@ -3,7 +3,6 @@ import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
 import type { IslandSettings } from "../appearance/types";
 
-/** Settings → General: headphone, Bluetooth battery and charger alerts on the collapsed island. */
 export function DeviceAlertSettingsSection({
   settings,
   onSettingsChange,

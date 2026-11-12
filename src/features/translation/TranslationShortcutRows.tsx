@@ -9,11 +9,6 @@ import "../clipboard/ClipboardSettingsSection.css";
 
 export type TranslationShortcutTarget = "window" | "selection";
 
-/**
- * The two global translation shortcuts, recorded in place. Opening the rows registers
- * the saved keys again, so one taken by another program shows its error here; one
- * taken by another row of the page (`takenBy`) is refused before it is registered.
- */
 export function TranslationShortcutRows({ settings, onSettingsChange, takenBy }: {
   settings: TranslationSettings;
   onSettingsChange: Dispatch<SetStateAction<TranslationSettings>>;
@@ -35,7 +30,6 @@ export function TranslationShortcutRows({ settings, onSettingsChange, takenBy }:
     check("window", setTranslationShortcut(settings.shortcut));
     check("selection", setTranslationSelectionShortcut(settings.selectionShortcut));
     return () => { didCancel = true; };
-    // Checks the saved keys once when the rows open; recording reports its own result.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -51,7 +45,6 @@ export function TranslationShortcutRows({ settings, onSettingsChange, takenBy }:
     apply(target, shortcut);
   };
 
-  /** Registers new keys and saves them; refused keys keep the old ones and say why. */
   const apply = (target: TranslationShortcutTarget, shortcut: string) => {
     const owner = takenBy(shortcut, target);
     if (owner) { setError(target, t.settings.shortcuts.taken(shortcut, owner)); return; }

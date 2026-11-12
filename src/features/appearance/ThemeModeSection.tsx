@@ -8,14 +8,8 @@ import { AccentSettingsRow } from "./AccentSettingsRow";
 import { THEME_COLORS, THEME_MODES, withThemeColors, type ThemeTone } from "./themeMode";
 import type { IslandSettings, ThemeMode } from "./types";
 
-/**
- * Settings → Theme → Light and dark (C31, C33.3): which colour set the island uses (dark, light or
- * the system's), which set the colour rows below adjust, and keeping a light island dark while
- * collapsed (C33.2).
- */
 export function ThemeModeSection({ settings, editing, onEditingChange, onSettingsChange }: {
   settings: IslandSettings;
-  /** The set the colour rows show and change. */
   editing: ThemeTone;
   onEditingChange: (tone: ThemeTone) => void;
   onSettingsChange: (settings: IslandSettings) => void;
@@ -33,7 +27,6 @@ export function ThemeModeSection({ settings, editing, onEditingChange, onSetting
             options={THEME_MODES.map((mode) => ({ value: mode, label: text.modes[mode] }))}
             onChange={(themeMode) => {
               onSettingsChange({ ...settings, themeMode });
-              // Adjust what was just chosen; "system" keeps whichever set it shows now.
               if (themeMode !== "system") onEditingChange(themeMode);
             }}
           />

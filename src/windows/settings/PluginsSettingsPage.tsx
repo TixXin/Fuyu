@@ -9,18 +9,12 @@ import { AllShortcutsLink } from "./ShortcutsSettingsPage";
 import { useShortcutOwners } from "./useShortcutOwners";
 import "./ShortcutsSettingsPage.css";
 
-/**
- * Plugins: what is installed, the plugins' island pages, their shortcuts (also on the Shortcuts
- * page; left out while no plugin has a command) and, last and folded, the developer tools. The
- * market has its own page; Manage there opens that plugin here.
- */
 export function PluginsSettingsPage({
   settings,
   managedPluginId,
   onOpenShortcuts,
 }: {
   settings: IslandSettings;
-  /** The plugin Manage was pressed for in the market, opened at once. */
   managedPluginId: string | null;
   onOpenShortcuts: () => void;
 }) {

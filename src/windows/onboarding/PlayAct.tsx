@@ -10,12 +10,10 @@ import { ActHeading } from "./ActHeading";
 import type { OnboardingModule } from "./personas";
 import "./PlayAct.css";
 
-/** How often the shelf is read while waiting for a file to land on it. */
 const SHELF_POLL_MS = 800;
 
 type Task = "expand" | "drop" | "shortcut";
 
-/** Counts the shelf's files and says when one more than at the start has landed. */
 function useShelfGrew(watch: boolean, onGrow: () => void) {
   useEffect(() => {
     if (!watch) return;
@@ -38,10 +36,6 @@ function useShelfGrew(watch: boolean, onGrow: () => void) {
   }, [watch, onGrow]);
 }
 
-/**
- * Act 4: three tasks on the real island, each earning a star when the island shows it was done:
- * it opens (the overlay sees it grow), a file lands on its shelf, and the clipboard popup opens.
- */
 export function PlayAct({ settings, modules, clipboard, islandOpen, onSettingsChange, onClipboardChange }: {
   settings: IslandSettings;
   modules: ReadonlySet<OnboardingModule>;
@@ -64,7 +58,6 @@ export function PlayAct({ settings, modules, clipboard, islandOpen, onSettingsCh
   if (islandOpen && !done.has("expand")) finish("expand");
   useShelfGrew(tasks.includes("drop") && !done.has("drop"), finishDrop);
 
-  // The real shortcut opens the real clipboard window, which tells this window too.
   useEffect(() => {
     let cancelled = false;
     let unlisten: (() => void) | undefined;

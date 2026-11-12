@@ -9,11 +9,6 @@ import { RemoteHostForm } from "./RemoteHostForm";
 import { customAddress, useRemoteHosts, type RemoteHostEntry } from "./useRemoteHosts";
 import "./AgentRemoteHostsSettings.css";
 
-/**
- * Settings → AI Agent → Remote computers: which computers the island reads agent sessions from
- * over SSH (src-tauri/src/agent_status/remote_sessions.rs), how the last read of each went, and
- * computers added by address next to the Hosts of ~/.ssh/config.
- */
 export function AgentRemoteHostsSettings() {
   const text = useTranslation().settings.agent;
   const remote = useRemoteHosts();

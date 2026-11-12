@@ -5,11 +5,6 @@ import type { TodoItem } from "../types";
 
 const ICON = { size: 14, strokeWidth: 1.5, absoluteStrokeWidth: true, "aria-hidden": true } as const;
 
-/**
- * One todo: a round check, the title, and its actions, which show on hover or
- * focus. The todo being worked on keeps its stop button and an accent bar. `data-todo-id` and the
- * `.todo-list` around it are what dragging and plugin menus look for (plugins/menuTarget.ts).
- */
 export function TodoIslandRow({
   todo,
   showProject = false,
@@ -33,13 +28,11 @@ export function TodoIslandRow({
   onDragCancel,
 }: {
   todo: TodoItem;
-  /** Today's list; a saved day is read-only. */
   editable: boolean;
   isActive: boolean;
   canReorder: boolean;
   isDragging: boolean;
   isDragOver: boolean;
-  /** Show the todo's project before its title (rows outside a project group). */
   showProject?: boolean;
   isEditing: boolean;
   titleDraft: string;
@@ -118,7 +111,6 @@ export function TodoIslandRow({
           {isActive ? (
             <button className="todo-island-row__stop" type="button" aria-label={t.todo.actionOnTask(t.todo.stop, todo.title)} onClick={() => onStart(todo.id)}>
               <Square size={10} strokeWidth={0} fill="currentColor" aria-hidden="true" />
-              {/* Says what it is; on hover, what clicking does. */}
               <span className="todo-island-row__stop-state">{t.todoIsland.inProgress}</span>
               <span className="todo-island-row__stop-action">{t.todo.stop}</span>
             </button>

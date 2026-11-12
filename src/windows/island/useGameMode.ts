@@ -17,13 +17,6 @@ type GameModeActions = {
   revealIsland: () => void;
 };
 
-/**
- * Game mode: watches for a full-screen app in the foreground while either game
- * setting is on, and returns what to hold back. When quiet starts, an open panel
- * closes (hover closing is held back too, so it would stay over the game). When the
- * app takes the island's screen, the island tucks, and comes back afterwards if it is
- * still tucked; revealing it by hand during the game keeps it out.
- */
 export function useGameMode(
   settings: GameModeSettings,
   { mode, isTucked, collapseIsland, tuckIsland, revealIsland }: GameModeActions,

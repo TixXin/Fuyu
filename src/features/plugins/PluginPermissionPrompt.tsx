@@ -3,7 +3,6 @@ import { useLocale, useTranslation } from "../../i18n";
 import type { PluginPermissionPrompts } from "./usePluginPermissionPrompts";
 import "./PluginPermissionPrompt.css";
 
-/** "<plugin> wants to read your clipboard history: allow / once / deny", over the top row of the island. */
 export function PluginPermissionPrompt({ prompts }: { prompts: PluginPermissionPrompts }) {
   const t = useTranslation();
   const { locale } = useLocale();

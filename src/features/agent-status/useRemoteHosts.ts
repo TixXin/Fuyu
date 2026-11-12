@@ -12,29 +12,20 @@ import {
   type RemoteHostStatus,
 } from "./api";
 
-/** The status of a chosen host is re-read this often while the page is open. */
 const STATUS_POLL_MS = 3_000;
 
-/** One computer on the Remote computers page. */
 export type RemoteHostEntry = {
   name: string;
-  /** Added in the island; null for a Host from ~/.ssh/config. */
   custom: CustomRemoteHost | null;
-  /** How reading it goes; null while it is off. */
   status: RemoteHostStatus | null;
 };
 
-/** What ssh is pointed at for an added computer, as the user would type it: `user@host:port`. */
 export function customAddress(custom: CustomRemoteHost) {
   const user = custom.user ? `${custom.user}@` : "";
   const host = custom.host.includes(":") ? `[${custom.host}]` : custom.host;
   return `${user}${host}${custom.port ? `:${custom.port}` : ""}`;
 }
 
-/**
- * The computers the Remote computers page lists: the Hosts of ~/.ssh/config, then the ones added
- * in the island, then chosen ones found in neither (so they can still be switched off).
- */
 export function useRemoteHosts() {
   const errorText = useErrorText();
   const [available, setAvailable] = useState<string[] | null>(null);

@@ -29,7 +29,6 @@
   font-size: 12px;
 }
 
-/* A short number as a row's control, at the right end of the title line. */
 .settings-input--number {
   width: 88px;
   text-align: right;

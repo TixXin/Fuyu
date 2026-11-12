@@ -11,21 +11,16 @@ import { MailCompose } from "./MailCompose";
 import "./MailPanel.css";
 import type { MailController } from "./useMail";
 
-// 图片保留 src：https 远程图（发件人 CDN）和 data:image/* 内嵌图都要显示；
-// 统一关闭 referrer 并延迟加载，避免把当前页地址带给发件人。
-// 远程图默认不加载，避免一打开邮件就把时间和 IP 暴露给发件人，由阅读页的开关放行。
 let allowRemoteImages = false;
 DOMPurify.addHook("afterSanitizeAttributes", (node) => {
   if (node.nodeName !== "IMG") return;
   const src = node.getAttribute("src");
-  // 没有可用地址的图片（cid 未内联、http 混合内容、被拦下的远程图）直接去掉，避免留下裂图占位
   if (!src || (!allowRemoteImages && /^https?:/i.test(src))) { node.remove(); return; }
   node.setAttribute("loading", "lazy");
   node.setAttribute("decoding", "async");
   node.setAttribute("referrerpolicy", "no-referrer");
 });
 
-// 只有「多行多列、首行是表头」的表才算数据表，图表和布局表不再画满屏灰格子。
 function markDataTables(html: string) {
   const template = document.createElement("template");
   template.innerHTML = html;
@@ -54,7 +49,6 @@ export function sanitizeMailHtml(content: string, options?: { allowRemoteImages?
   }
 }
 
-// 统计正文里有多少张远程图被拦下，用于提示条；template 里的图片不会发起请求。
 export function countRemoteImages(content: string) {
   const template = document.createElement("template");
   template.innerHTML = content;
@@ -72,7 +66,6 @@ function formatMailTime(time: number, locale: string) {
 export function MailPanel({ controller, navigation, onRead, onBack, onOpenSettings }: {
   controller: MailController;
   navigation: ReactNode;
-  /** Opens the mail settings page, where mailboxes are added and re-authorized. */
   onOpenSettings?: () => void;
   onRead?: (message: MailMessage) => void;
   onBack?: () => void;
@@ -85,20 +78,15 @@ export function MailPanel({ controller, navigation, onRead, onBack, onOpenSettin
   const listScroll = useRef(0);
   const returnFocus = useRef<string | null>(null);
   const { selectedMail, content, reading, readError, readMail, closeReader, openLink, readerAccount, markRead, compose, startCompose, startReply, closeCompose } = controller;
-  // The open mail as listed now, so the button goes once it is marked read here or elsewhere.
   const readerStillUnread = Boolean(selectedMail && mailboxes.find((mailbox) => mailbox.email === readerAccount)?.items.find((item) => item.id === selectedMail.id)?.unread);
   const [remoteImages, setRemoteImages] = useState(loadRemoteImagePreference);
   const html = useMemo(() => content?.contentType === "text/html" ? sanitizeMailHtml(content.content, { allowRemoteImages: remoteImages }) : "", [content, remoteImages]);
-  // React 19 rewrites innerHTML whenever this object is new, even with the same text. A
-  // re-render while a link is held down (focus and hover change on the press) would swap
-  // the <a> for a copy, so the release lands elsewhere and no click fires (issue #18).
   const bodyHtml = useMemo(() => ({ __html: html || DOMPurify.sanitize(`<p>${t.mail.emptyHtml}</p>`) }), [html, t.mail.emptyHtml]);
   const blockedImages = useMemo(() => content?.contentType === "text/html" && !remoteImages ? countRemoteImages(content.content) : 0, [content, remoteImages]);
   const toggleRemoteImages = () => setRemoteImages((previous) => { saveRemoteImagePreference(!previous); return !previous; });
   const readerRef = useRef<HTMLDivElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
 
-  // 远程图可能失效或被 CDN 拒绝，出错时就地隐藏，避免正文里出现裂图占位
   useEffect(() => {
     const node = bodyRef.current;
     if (!node) return;

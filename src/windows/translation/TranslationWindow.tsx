@@ -26,7 +26,6 @@ export function TranslationWindow() {
   const [shortcutError, setShortcutError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [hasSecret, setHasSecret] = useState(false);
-  // Bumped when the window opens, so a key saved in the settings window meanwhile is seen.
   const [secretCheck, setSecretCheck] = useState(0);
   const [didCopy, setDidCopy] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -42,7 +41,6 @@ export function TranslationWindow() {
       ? t.translator.chinese
       : t.translator.bilingual;
 
-  // Keys are stored per service, so the saved state follows the selected one.
   useEffect(() => {
     let didCancel = false;
     void hasTranslationSecret(settings.provider)
@@ -54,8 +52,6 @@ export function TranslationWindow() {
     void setTranslationShortcut(settings.shortcut)
       .then(() => setShortcutError(""))
       .catch((failure) => setShortcutError(errorText(failure)));
-    // Registers the saved shortcut once on mount; the settings window registers edits
-    // as they are recorded.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -144,7 +140,6 @@ export function TranslationWindow() {
     setDidCopy,
     onStart: noteAutoSource,
   });
-  // Service and model in use, e.g. "DeepSeek · deepseek-flash", so a wrong model is easy to spot.
   const model = settings.models[settings.provider]?.trim() || DEFAULT_PROVIDER_MODELS[settings.provider];
   const providerLabel = model ? `${t.translator.providers[settings.provider]} · ${model}` : t.translator.providers[settings.provider];
   const autoTranslateKey = `${settings.direction}\0${settings.provider}\0${settings.customBaseUrl}\0${settings.models[settings.provider] ?? ""}`;
@@ -152,8 +147,6 @@ export function TranslationWindow() {
 
   const openSettings = () => openSettingsWindow("translation");
   const close = useCallback(() => { requestId.current += 1; clipboardRequestId.current += 1; void hideTranslationWindow(); }, []);
-  // Esc closes the window, as it does the clipboard window; not while the IME is choosing a word,
-  // and not when something inside (a menu) already used the key.
   useEffect(() => {
     const handleEscape = (event: globalThis.KeyboardEvent) => {
       if (event.key !== "Escape" || event.isComposing || event.defaultPrevented) return;

@@ -1,4 +1,3 @@
-/** An act's title and one line under it. */
 export function ActHeading({ title, lead }: { title: string; lead: string }) {
   return (
     <div className="onboarding__heading">

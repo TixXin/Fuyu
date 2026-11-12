@@ -17,7 +17,6 @@ const ICONS: Record<ViewIconName, LucideIcon> = {
   "circle-check": CircleCheck, info: Info,
 };
 
-/** The icon for a name from a plugin; unknown names get the puzzle piece. */
 export function viewIcon(name: string | null | undefined): LucideIcon {
   return isViewIconName(name) ? ICONS[name] : Puzzle;
 }

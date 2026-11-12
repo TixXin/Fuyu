@@ -1,16 +1,9 @@
-/*
- * List pages straight on the island (clipboard, file shelf), as the Agent and music pages are:
- * no panel of their own, rows without a fill that light up under the cursor, text that follows
- * the island background (stageStyle.ts sets --island-ink-rgb). Each page sets --list-accent,
- * used only for what is selected, starred or pinned.
- */
 .island-list-page {
   --list-ink: var(--island-ink-rgb, 241, 240, 246);
   --list-accent: var(--color-accent);
   --text-1: rgba(var(--list-ink), 0.95);
   --text-2: rgba(var(--list-ink), 0.68);
   --text-3: rgba(var(--list-ink), 0.48);
-  /* Accent text leans toward the ink, so it stays readable on a light island too. */
   --list-accent-text: color-mix(in srgb, var(--list-accent) 62%, rgb(var(--list-ink)));
   position: relative;
   height: 100%;
@@ -23,12 +16,10 @@
   color: var(--text-1);
 }
 
-/* 48% ink is under 3:1 on a light island. */
 .island-light .island-list-page {
   --text-3: rgba(var(--list-ink), 0.6);
 }
 
-/* Filters on the left, the count and "⋯" on the right. */
 .island-list-bar {
   flex: none;
   display: flex;
@@ -184,8 +175,6 @@
   flex: 1;
   min-height: 0;
   display: grid;
-  /* Each row as tall as its content. With "auto" rows, once the list scrolls they shrink to a
-     minimum that undercounts a two-line clamped preview, which then spills onto its neighbours. */
   grid-auto-rows: max-content;
   align-content: start;
   gap: 1px;
@@ -196,10 +185,6 @@
   scrollbar-width: thin;
 }
 
-/*
- * A row: a lead icon, then the content and a quieter line under it. The whole row is one
- * button (__hit, under everything); the tags, the note editor and the actions sit above it.
- */
 .island-list-row {
   position: relative;
   display: flex;
@@ -218,7 +203,6 @@
   box-shadow: inset 0 0 0 1px rgba(var(--list-ink), 0.09);
 }
 
-/* Lights up only once the cursor rests, as Agent rows do; leaving fades out at once. */
 .island-list-row:hover {
   transition-delay: 80ms;
 }
@@ -373,7 +357,6 @@
   height: 26px;
 }
 
-/* The note editor takes the quiet line's place. */
 .island-list-row__editor {
   display: flex;
   align-items: center;

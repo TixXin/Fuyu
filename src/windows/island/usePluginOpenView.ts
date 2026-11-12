@@ -3,11 +3,6 @@ import { listenPluginOpenView } from "../../features/plugin-views/api";
 import { pluginPageId } from "../../features/plugin-views/model";
 import type { PluginPageId } from "./types";
 
-/**
- * Opens a plugin's page when it asks with island.openView (Rust has already
- * checked the user just used the plugin). A page the user hid in settings is
- * not on the island, so nothing opens.
- */
 export function usePluginOpenView(pageIds: readonly PluginPageId[], onOpen: (page: PluginPageId) => void) {
   const latest = useRef({ pageIds, onOpen });
   latest.current = { pageIds, onOpen };

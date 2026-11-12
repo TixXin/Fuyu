@@ -3,12 +3,10 @@ import { listen, type EventCallback } from "@tauri-apps/api/event";
 import type { TranslationProvider } from "./providers";
 import type { Direction } from "./storage";
 
-// 与 translation/mod.rs 中推送的事件名一致。
 export const TRANSLATION_WINDOW_OPENED_EVENT = "translation-window-opened";
 export const TRANSLATION_SELECTION_EVENT = "translation-selection";
 export const TRANSLATION_ISLAND_SHORTCUT_EVENT = "translation-island-shortcut";
 
-/** Service, base URL (custom provider only) and model for a translation request. */
 export type TranslationService = {
   provider: TranslationProvider;
   baseUrl: string | null;
@@ -19,12 +17,10 @@ export function hasTranslationSecret(provider: TranslationProvider) {
   return invoke<boolean>("has_translation_secret", { provider });
 }
 
-/** Off unregisters the global shortcut; on lets set_translation_shortcut register it again. */
 export function setTranslationEnabled(enabled: boolean) {
   return invoke("set_translation_enabled", { enabled });
 }
 
-/** True sends the window shortcut to the island page instead of the translation window. */
 export function setTranslationTarget(island: boolean) {
   return invoke("set_translation_target", { island });
 }
@@ -69,7 +65,6 @@ export function toggleTranslationWindow() {
   return invoke("toggle_translation_window");
 }
 
-/** Shows the translation window without hiding it when it is already open. */
 export function presentTranslationWindow() {
   return invoke("present_translation_window");
 }
@@ -82,13 +77,8 @@ export function listenTranslationIslandShortcut(handler: EventCallback<unknown>)
   return listen(TRANSLATION_ISLAND_SHORTCUT_EVENT, handler);
 }
 
-/** What the clipboard window's AI transforms ask for (C38). */
 export type RewriteTask = "summarize" | "polish" | "grammar" | "translate" | "custom";
 
-/**
- * Rewrites text with the translation's service, key and model (C38): `prompt` for a "custom" task,
- * `onChunk` gets the answer as it is written (C43); resolves to the whole answer.
- */
 export function rewriteText(text: string, task: RewriteTask, service: TranslationService, options: { prompt?: string; onChunk?: (piece: string) => void } = {}) {
   const onChunk = new Channel<string>(options.onChunk);
   return invoke<string>("rewrite_text", { text, task, prompt: options.prompt ?? null, ...service, onChunk });

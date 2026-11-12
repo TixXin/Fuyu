@@ -9,10 +9,6 @@ import "../../../components/list/IslandList.css";
 import "./TodoIslandPage.css";
 import "./TodoIslandRow.css";
 
-/**
- * The todo page: today, the daily note, upcoming and the archive, drawn like the island's other
- * pages, on the island's own surface in its ink.
- */
 export function TodoIslandPage(props: TodoPageProps) {
   const t = useTranslation();
   const { pageMode, todos, selectedArchive } = props;

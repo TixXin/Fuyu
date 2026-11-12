@@ -1,4 +1,3 @@
-/* The "⋯" menu: the island's own background and ink, a thin ring and a shadow. */
 .row-menu {
   --row-ink: var(--row-menu-ink, 241, 240, 246);
   position: fixed;

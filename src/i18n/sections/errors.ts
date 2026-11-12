@@ -1,7 +1,3 @@
-/**
- * The wording of errors from the native side (task D15), by the code it sends
- * (src-tauri/src/user_error.rs). What an outside program or service said comes after it, as it is.
- */
 export type ErrorArgs = Record<string, string | number>;
 type Wording = string | ((args: ErrorArgs) => string);
 
@@ -194,7 +190,6 @@ export type ErrorCode =
   | "mail.update";
 
 export type ErrorsText = {
-  /** The wording, then what the program or service said. */
   withDetail: (text: string, detail: string) => string;
   codes: Record<ErrorCode, Wording>;
 };

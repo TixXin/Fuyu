@@ -6,11 +6,6 @@ import { useTranslation } from "../../i18n";
 import { errorText } from "../../i18n/nativeError";
 import { getEditorExtensionStates, installEditorExtension, type EditorExtensionState } from "./api";
 
-/**
- * Settings → AI Agent → Connection: the island's VS Code extension, which lets a click on a session
- * switch to its terminal inside the editor. Lists the editors found on this computer, each with
- * whether it has the extension and a button that installs it through the editor's command line.
- */
 export function AgentEditorExtensionSettings() {
   const t = useTranslation();
   const text = t.settings.agent.editorExtension;

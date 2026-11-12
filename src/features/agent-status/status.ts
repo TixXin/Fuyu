@@ -21,12 +21,9 @@ export const AGENT_PROVIDER_LABELS: Record<AgentProvider, string> = {
   codex: "Codex",
   claudeCode: "Claude Code",
 };
-/** One row of agent status: a built-in provider or a source reported by a plugin or the local API. */
 export type AgentStatusEntry = {
-  /** The provider for built-ins, the source id for the others; what clear_agent_status takes. */
   key: string;
   label: string;
-  /** Null for reported sources, which have no brand icon. */
   provider: AgentProvider | null;
   status: AgentTaskStatus;
 };
@@ -43,7 +40,6 @@ export function listAgentStatuses(snapshot: AgentStatusSnapshot): AgentStatusEnt
   ];
 }
 
-/** The snapshot with the agents switched off in Settings → AI Agent shown as idle. */
 export function withoutHiddenProviders(snapshot: AgentStatusSnapshot, shown: SessionFilter): AgentStatusSnapshot {
   const hidden = AGENT_PROVIDERS.filter((provider) => !shown[provider]);
   if (hidden.length === 0) return snapshot;
@@ -54,10 +50,6 @@ export function isAgentAttentionPhase(phase: AgentTaskPhase) {
   return phase === "failed" || phase === "stale";
 }
 
-/**
- * `activeSessions`: sessions the session list still counts as working. The light turns blue
- * for them too, so it never shows green beside the island's blue session count.
- */
 export function getAgentVisualState(snapshot: AgentStatusSnapshot, activeSessions = 0): AgentVisualState {
   const statuses = listAgentStatuses(snapshot).map((entry) => entry.status);
 
@@ -72,7 +64,6 @@ export function getAgentVisualState(snapshot: AgentStatusSnapshot, activeSession
   return "idle";
 }
 
-/** What the settings page should say about the installed hooks, or null when they are current. */
 export type AgentHooksNotice = "update" | "install";
 
 export function getAgentHooksNotice(state: AgentHooksState | null): AgentHooksNotice | null {
@@ -83,7 +74,6 @@ export function getAgentHooksNotice(state: AgentHooksState | null): AgentHooksNo
   return AGENT_PROVIDERS.every((provider) => state[provider] === "notInstalled") ? "install" : null;
 }
 
-/** What the status light says (its aria-label); `activeSessions` running in the session list also count as running. */
 export function getAgentStatusLabel(snapshot: AgentStatusSnapshot, t: Translations, activeSessions = 0) {
   const entries = listAgentStatuses(snapshot);
   const attention = entries.find((entry) => isAgentAttentionPhase(entry.status.phase));

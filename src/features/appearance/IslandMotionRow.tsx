@@ -8,13 +8,8 @@ import { islandMotionTiming, islandMotionVariables } from "./islandMotion";
 import type { IslandMotion } from "./types";
 import "./IslandMotionRow.css";
 
-// How long the preview stays open before it closes again.
 const HOLD_MS = 700;
 
-/**
- * Settings → General → Opening: how the island opens and closes (C49), with a small island under
- * it that opens and closes with the picked timing, on each pick and on the play button.
- */
 export function IslandMotionRow({ value, onChange }: { value: IslandMotion; onChange: (value: IslandMotion) => void }) {
   const text = useTranslation().settings.expand;
   const reducedMotion = useReducedMotion();

@@ -7,12 +7,6 @@ import { hasUsageNumbers, isStale, tightestWindow, untilReset, usageLevel, usage
 import { useAgentUsages } from "./useAgentUsages";
 import "./AgentUsageBar.css";
 
-/**
- * The Agent page's top lines: Claude's, then Codex's 5-hour and 7-day usage (Claude's per-model
- * windows too) and when the fullest window resets; a line only for an agent that reports numbers.
- * `usages` comes from the island, which sizes the page for the lines; without it the bar reads
- * them itself.
- */
 export function AgentUsageBar({ usages: given }: { usages?: AgentUsages }) {
   const own = useAgentUsages(given === undefined);
   const usages = given ?? own;
@@ -35,8 +29,6 @@ function UsageLine({ provider, usage, now }: { provider: AgentProvider; usage: A
   const reset = tightest ? untilReset(tightest.resetsAt, now) : null;
   const stale = isStale(usage, now);
 
-  // Resting on the line names its source and age, as the usage ring's card does. ":scope" puts
-  // the card right under this line rather than under the island, which is the whole panel here.
   return (
     <IslandHoverCard lines={usageSourceLines(usage, now, t.claudeUsage)} alignTo=":scope" anchorClassName="agent-usage__hover">
       <div

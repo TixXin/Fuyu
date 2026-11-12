@@ -12,7 +12,6 @@ import {
 import type { AgentArchiveMotion, AgentCardEffects, AgentHostDisplay, AgentSessionView, IslandSettings } from "../appearance/types";
 import { useTranslation } from "../../i18n";
 
-/** Settings → AI Agent → Session list: which sessions the island's Agent page lists, and what each card shows. */
 export function AgentSessionListSettings({
   settings,
   onSettingsChange,

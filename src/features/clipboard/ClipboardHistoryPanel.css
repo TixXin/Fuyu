@@ -1,13 +1,9 @@
-/* Rows, toolbar and the accent (the theme's) are IslandList.css. */
-
-/* The program's icon fills the lead square. */
 .clipboard-page .island-list-row__lead .clipboard-entry-icon,
 .clipboard-page .island-list-row__lead .clipboard-entry-icon__app {
   width: 18px;
   height: 18px;
 }
 
-/* A copied colour leads with its swatch (C43). */
 .clipboard-page .clipboard-swatch {
   width: 16px;
   height: 16px;
@@ -15,12 +11,10 @@
   box-shadow: inset 0 0 0 1px rgba(var(--list-ink), 0.2);
 }
 
-/* The transform and AI pages of the clipboard window, over the island's page (C43). */
 .clipboard-page .clipboard-island-tools {
   --pop-ink: var(--list-ink);
   --pop-accent: var(--list-accent);
   --pop-accent-text: var(--list-accent-text);
-  /* The island's own colour, so the panel matches any theme, light or dark. */
   --pop-fill: var(--island-background-color, #111114);
   position: absolute;
   inset: 0;

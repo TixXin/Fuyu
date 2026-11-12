@@ -13,11 +13,9 @@ const signedPixels = (value: number) => `${value > 0 ? "+" : ""}${Math.round(val
 type LayoutSectionProps = {
   settings: IslandSettings;
   onSettingsChange: (settings: IslandSettings) => void;
-  /** Called while a slider moves with the island state it changes: expanded or not. */
   onPreviewIsland?: (expanded: boolean) => void;
 };
 
-/** Saves the change and, when it shows on one island state, opens that state to preview it. */
 function changeWith({ onSettingsChange, onPreviewIsland }: LayoutSectionProps) {
   return (next: IslandSettings, previewExpanded?: boolean) => {
     onSettingsChange(next);
@@ -27,10 +25,6 @@ function changeWith({ onSettingsChange, onPreviewIsland }: LayoutSectionProps) {
   };
 }
 
-/**
- * Appearance → Size: the island's scale, collapsed and open, and the panel's width and height
- * (also set by Alt + dragging the panel's edges, C25).
- */
 export function SizeSettingsSection(props: LayoutSectionProps) {
   const { settings } = props;
   const text = useTranslation().settings.layout;
@@ -99,7 +93,6 @@ export function SizeSettingsSection(props: LayoutSectionProps) {
   );
 }
 
-/** Theme → Corners: the island's corner shape and radii. */
 export function CornerSettingsSection(props: LayoutSectionProps) {
   const { settings } = props;
   const text = useTranslation().settings.layout;

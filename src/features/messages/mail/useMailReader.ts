@@ -4,14 +4,12 @@ import type { Translations } from "../../../i18n";
 import { errorText } from "../../../i18n/nativeError";
 import { openMailLink, readMailContent, type MailContent, type MailMessage } from "./api";
 
-/** The in-island reader: which mail of which mailbox is open, its body, and loading state. */
 export function useMailReader(t: Translations, onOpen: () => void, onError: (message: string) => void) {
   const [selectedMail, setSelectedMail] = useState<MailMessage | null>(null);
   const [readerAccount, setReaderAccount] = useState<string | null>(null);
   const [content, setContent] = useState<MailContent | null>(null);
   const [reading, setReading] = useState(false);
   const [readError, setReadError] = useState<string | null>(null);
-  // A request counter: bumping it makes responses of older reads land nowhere.
   const requestRef = useRef(0);
 
   useEffect(() => {

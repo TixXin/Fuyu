@@ -1,10 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { installEditorExtension, listenEditorExtensionMissing, type EditorExtensionMissing } from "./api";
 
-/** Editors whose hint the user turned off for good (task A9); see docs/architecture/contracts.md. */
 const DISMISSED_KEY = "fuyu-agent-editor-extension-dismissed";
 const MAX_DISMISSED = 20;
-/** A hint nobody acts on goes away by itself; a finished install shows a little longer. */
 const HINT_MS = 9000;
 const DONE_MS = 5000;
 
@@ -30,14 +28,9 @@ function dismissEditor(app: string) {
   try {
     localStorage.setItem(DISMISSED_KEY, JSON.stringify(next));
   } catch {
-    // Ignore storage errors so dismissing still closes the hint.
   }
 }
 
-/**
- * After clicking a session whose editor lacks the island's extension, offers to install it: once
- * per editor while the island runs, never again for an editor the user dismissed.
- */
 export function useEditorExtensionHint() {
   const [hint, setHint] = useState<EditorExtensionHint | null>(null);
   const offered = useRef(new Set<string>());

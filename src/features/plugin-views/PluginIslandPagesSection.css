@@ -1,4 +1,3 @@
-/* Settings → plugins → island pages: one row per plugin page. */
 .plugin-pages {
   display: grid;
   gap: var(--space-sm);

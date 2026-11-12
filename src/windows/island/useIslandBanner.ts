@@ -9,10 +9,8 @@ import { listenIslandBannerHover, setIslandBannerRect } from "./api";
 import type { useIslandNotices } from "./useIslandNotices";
 import type { IslandMode } from "./types";
 
-/** A banner message and what clicking it opens: the mail it names, or the plugin that sent it. */
 type IslandBannerMessage = BannerMessage & { mail?: { message: MailMessage; account: string | null }; pluginId?: string };
 
-/** What the banner reads of the island's notices (useIslandNotices). */
 type BannerNotices = Pick<ReturnType<typeof useIslandNotices>, "preview" | "hasMessagePreview" | "qqNotifications" | "wechatReminders" | "qqMail" | "pluginNotifications">;
 
 type IslandBannerOptions = {
@@ -24,12 +22,6 @@ type IslandBannerOptions = {
   onOpenMessages: (source: MessageSource) => void;
 };
 
-/**
- * The message banner below the collapsed island (roadmap C10), when the messages setting asks for
- * it. Returns the banner, the preview left for the collapsed bar (every preview without banners),
- * and the banner's handlers. Its rectangle goes to the native side, which then lets it take
- * clicks and reports the pointer resting on it.
- */
 export function useIslandBanner({ messageNotice, notices, mode, isTucked, quiet, onOpenMessages }: IslandBannerOptions) {
   const { preview, qqNotifications, wechatReminders, qqMail, pluginNotifications } = notices;
   const usesBanner = messageNotice === "banner";
@@ -64,7 +56,6 @@ export function useIslandBanner({ messageNotice, notices, mode, isTucked, quiet,
       void setIslandBannerRect({ x: rect.x, y: rect.y, width: rect.width, height: rect.height }).catch(() => undefined);
     };
     send();
-    // The entrance animation moves the card; the size changes with the text and the plugin buttons.
     const observer = new ResizeObserver(send);
     observer.observe(element);
     element.addEventListener("animationend", send);
@@ -106,10 +97,7 @@ export function useIslandBanner({ messageNotice, notices, mode, isTucked, quiet,
   return {
     banner,
     bannerRef,
-    /** What the collapsed bar shows in place of its summary. */
-    // The banner and the panel (useIslandMessagePanel) take every source, so the bar shows none.
     barPreview: usesBanner || messageNotice === "panel" ? null : preview,
-    /** The bar shows a message line (as `hasMessagePreview` with neither banners nor the panel). */
     hasLinePreview: usesBanner || messageNotice === "panel" ? false : notices.hasMessagePreview,
     showing,
     open,
@@ -118,7 +106,6 @@ export function useIslandBanner({ messageNotice, notices, mode, isTucked, quiet,
   };
 }
 
-/** The banner message for the newest preview, with what opening it needs. */
 function bannerMessage(preview: MessagePreview, notices: BannerNotices): IslandBannerMessage {
   const base: IslandBannerMessage = { ...preview, durationMs: BANNER_MS, actions: [] };
   const { qqMail, pluginNotifications } = notices;

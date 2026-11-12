@@ -12,12 +12,6 @@ import "./CalendarSourcesSection.css";
 
 const EMPTY_FORM = { name: "", address: "", username: "", password: "" };
 
-/**
- * Settings → Calendar: the calendars added, with a delete button each, a one-click subscription
- * to China's holidays, and the form to add one. The user picks a service (Feishu, DingTalk, ...)
- * and gets its steps; the server is filled in where it is fixed, so mostly only an account and
- * password are asked. Adding reads the calendar once, so a wrong address or password is said at once.
- */
 export function CalendarSourcesSection() {
   const text = useTranslation().settings.calendar;
   const errorText = useErrorText();
@@ -29,7 +23,6 @@ export function CalendarSourcesSection() {
   const reload = useCallback(async () => {
     try {
       const listed = await listCalendarSources();
-      // An older native side, or a page mocking it, may give nothing usable.
       setSources(Array.isArray(listed) ? listed : []);
     } catch (error) {
       console.error("Failed to list calendars", error);
@@ -40,7 +33,6 @@ export function CalendarSourcesSection() {
   }, [reload]);
 
   const preset = presetOf(service);
-  // "Other" takes either a server or a subscription link, told apart by what is pasted.
   const kind = service === "other" ? guessKind(form.address) : preset.kind;
   const askServer = needsServer(preset, kind);
   const run = async (action: () => Promise<unknown>, after?: () => void) => {

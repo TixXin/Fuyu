@@ -24,10 +24,6 @@ function TraceList({ entries, empty }: { entries: PluginTraceEntry[]; empty: str
   );
 }
 
-/**
- * Settings > Plugins > Developer (collapsed at first): development mode, plugins
- * loaded from folders, their raw JSON-RPC lines and sending them an event by hand.
- */
 export function PluginDevSection() {
   const t = useTranslation();
   const text = t.settings.plugins.dev;

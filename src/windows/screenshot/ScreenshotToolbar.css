@@ -1,4 +1,3 @@
-/* The screenshot toolbar's rows (ScreenshotToolbar.tsx); the box and buttons are in ScreenshotOverlay.css. */
 .screenshot-overlay__toolbar-row {
   display: flex;
   align-items: center;
@@ -53,7 +52,6 @@
   outline-offset: 2px;
 }
 
-/* Annotations over the frozen picture; the pointer goes through to the overlay. */
 .screenshot-overlay__annotations {
   position: absolute;
   inset: 0;
@@ -62,7 +60,6 @@
   pointer-events: none;
 }
 
-/* The box a text annotation is typed in, drawn where the text will be. */
 .screenshot-overlay__text-input {
   position: absolute;
   z-index: 3;

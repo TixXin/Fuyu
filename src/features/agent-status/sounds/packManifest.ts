@@ -1,13 +1,9 @@
-// Reading a sound pack folder: which file plays for which agent event. Pure; the Sounds page
-// reads the folder and hands the file names and any JSON manifests here.
 import { AGENT_SOUND_EVENTS, isAgentSoundEvent, type AgentSoundEvent } from "./events.ts";
 
-/** The manifest a fly-island sound pack carries at its top level. */
 export const PACK_MANIFEST_NAME = "focusd-sound-pack.json";
 
 export const SOUND_FILE_EXTENSIONS = ["wav", "mp3", "ogg", "m4a", "flac"] as const;
 
-/** CESP categories (the format other agent sound tools share) and the event each one plays for. */
 const CESP_EVENTS: Record<string, AgentSoundEvent> = {
   "session.start": "start",
   "task.complete": "complete",
@@ -15,14 +11,12 @@ const CESP_EVENTS: Record<string, AgentSoundEvent> = {
   "input.required": "approval",
   "input.question": "question",
   "task.acknowledge": "ack",
-  // The context window filling up, not the subscription's usage.
   "resource.limit": "compact",
   "idle.reminder": "idle",
   "usage.warning": "quotaLow",
   "usage.reset": "quotaReset",
 };
 
-/** Words in a file name that give away its event, checked in this order. */
 const NAME_HINTS: [AgentSoundEvent, string[]][] = [
   ["start", ["session-start", "start"]],
   ["complete", ["task-complete", "complete", "done", "finish"]],
@@ -32,7 +26,6 @@ const NAME_HINTS: [AgentSoundEvent, string[]][] = [
   ["ack", ["task-acknowledge", "acknowledge", "ack"]],
   ["compact", ["resource-limit", "compact", "context"]],
   ["idle", ["idle"]],
-  // Not plain "reset": other packs have sounds such as "reset-card".
   ["quotaReset", ["usage-reset", "quota-reset"]],
   ["quotaLow", ["usage-warning", "quota-low", "quota"]],
 ];
@@ -41,7 +34,6 @@ export type SoundPackPlan = {
   name: string;
   author: string;
   license: string;
-  /** Event to the file's path as given, relative to the chosen folder. */
   sounds: Partial<Record<AgentSoundEvent, string>>;
 };
 
@@ -63,7 +55,6 @@ function eventFor(key: string): AgentSoundEvent | null {
   return CESP_EVENTS[key.trim().toLowerCase()] ?? null;
 }
 
-/** Finds `file` (as a manifest names it) among the sound files, relative to the manifest's folder. */
 function resolve(file: unknown, manifestPath: string, soundFiles: string[]): string | null {
   if (typeof file !== "string" || !file.trim()) return null;
   const wanted = [folderOf(manifestPath), file.trim()].filter(Boolean).join("/").replace(/\\/g, "/").toLowerCase();
@@ -80,17 +71,11 @@ function parseJson(text: string): unknown {
   }
 }
 
-/** Entries of a CESP-style list: `[{ file, cesp_category }]`, or the same under `sounds`. */
 function listEntries(value: unknown): Record<string, unknown>[] {
   const list = Array.isArray(value) ? value : value && typeof value === "object" && Array.isArray((value as { sounds?: unknown }).sounds) ? (value as { sounds: unknown[] }).sounds : [];
   return list.filter((entry): entry is Record<string, unknown> => !!entry && typeof entry === "object");
 }
 
-/**
- * Works out what a pack folder plays: from its fly-island manifest, else from a CESP-style
- * manifest, else from words in the file names. Events a pack leaves out fall back to the
- * built-in sounds when it plays.
- */
 export function planSoundPack(folderName: string, paths: string[], jsonFiles: JsonFile[]): SoundPackPlan | SoundPackProblem {
   const soundFiles = paths.filter(isSoundFile);
   const plan: SoundPackPlan = { name: folderName.trim() || "Sound pack", author: "", license: "", sounds: {} };
@@ -127,7 +112,6 @@ export function planSoundPack(folderName: string, paths: string[], jsonFiles: Js
     if (hit) plan.sounds[hit[0]] = path;
   }
 
-  // A pack without its own question sound asks with its approval sound.
   if (!plan.sounds.question && plan.sounds.approval) plan.sounds.question = plan.sounds.approval;
   return AGENT_SOUND_EVENTS.some((event) => plan.sounds[event]) ? plan : "noSounds";
 }

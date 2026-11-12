@@ -6,7 +6,6 @@ import {
   checkInBackground, getUpdateState, notifyAvailableUpdate, reminderVersion, subscribeToUpdate,
 } from "./updaterController";
 
-/** One scheduler in the main window; About only reads its shared native state. */
 export function useBackgroundUpdateCheck(onOpen: () => void) {
   const text = useTranslation().settings.project.update;
   useEffect(() => {
@@ -26,7 +25,6 @@ export function useBackgroundUpdateCheck(onOpen: () => void) {
       if (stopped || running || !navigator.onLine) return;
       const deadline = nextUpdateCheckAt(getUpdateState());
       if (deadline === null) return;
-      // Re-evaluate at least once a minute to recover from sleep and clock changes.
       timer = window.setTimeout(() => {
         if (deadline > Date.now()) { arm(); return; }
         running = true;

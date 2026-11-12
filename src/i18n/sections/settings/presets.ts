@@ -7,10 +7,8 @@ export type SettingsPresetsText = {
   apply: string;
   delete: string;
   deleteNamed: (name: string) => string;
-  /** Link on the title line that opens a theme file. */
   import: string;
   exportNamed: (name: string) => string;
-  /** Name of an imported preset whose file has none. */
   importedName: string;
   hint: string;
   exported: (path: string) => string;

@@ -5,7 +5,6 @@ import type { QQNotificationsController } from "../../features/messages/qq-notif
 import type { WeChatRemindersController } from "../../features/messages/wechat/WeChatReminders";
 import type { PluginNotificationsController } from "../../features/plugins/usePluginNotifications";
 import { useTranslation } from "../../i18n";
-/** The newest message preview of all sources; one that a newer preview replaced does not come back. */
 export function useLatestMessagePreview(
   qqNotifications: QQNotificationsController,
   wechatReminders: WeChatRemindersController,

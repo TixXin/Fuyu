@@ -2,7 +2,6 @@ import "./SettingsChoice.css";
 
 export type SettingsChoiceOption<T extends string> = { value: T; label: string };
 
-/** Two or three side-by-side options, one of them chosen. More options belong in a SettingsSelect. */
 export function SettingsChoice<T extends string>({
   value,
   options,

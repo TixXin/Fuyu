@@ -5,7 +5,6 @@ import type { MediaState } from "./api";
 import type { KnownMediaSource } from "./storage";
 import "./MusicSourceList.css";
 
-/** The preferred media sources in order, reordered by dragging; sources not playing now can be removed. */
 export function MusicSourceList({
   sourcePriority,
   liveSessions,

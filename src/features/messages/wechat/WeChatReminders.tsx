@@ -40,7 +40,6 @@ export function WeChatReminderPanel({ controller, navigation }: { controller: We
           <span>{label}</span>
         </div>
       ) : (
-        // One row per message read from the chat list, as on the QQ page; a reminder that came without one says why.
         <div className="qq-panel__list" role="list" aria-label={t.wechat.list}>
           {snapshot.items.map((item) => {
             const title = item.message?.contact ?? t.messages.newReminder;

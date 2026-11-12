@@ -3,10 +3,6 @@ import { chatsOf, InfoRow, projectLabel } from "./CcConnectInfo";
 import { useRemotePaths } from "./remotePaths";
 import type { useRemoteCcConnect } from "./useRemoteCcConnect";
 
-/**
- * The plugin page for an SSH computer: what cc-connect there has (read over ssh), and where the
- * program is when it cannot be found. Bots there are set up on that computer, not from here.
- */
 export function CcConnectRemote({ host, remote }: { host: string; remote: ReturnType<typeof useRemoteCcConnect> }) {
   const t = useTranslation().settings.plugins.ccConnect;
   const [paths, setPath] = useRemotePaths();

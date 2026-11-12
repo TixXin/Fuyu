@@ -1,4 +1,3 @@
-/* Structure only: TodoIslandPage.css draws the list (colours, row look). */
 .scheduled-list {
   min-height: 0;
   display: grid;

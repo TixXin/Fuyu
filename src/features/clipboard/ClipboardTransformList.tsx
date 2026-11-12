@@ -5,7 +5,6 @@ import { convertChineseText, type ClipboardHistoryItem } from "./api";
 import { htmlToMarkdown } from "./htmlToMarkdown";
 import { TRANSFORMS, type Transform, type TransformInput } from "./textTransforms";
 
-/** The transformed text, or null when the transform does not apply; Chinese scripts ask Windows. */
 export async function transformText(transform: Transform, input: TransformInput): Promise<string | null> {
   if (transform.block?.(input)) return null;
   if (transform.id === "simplified" || transform.id === "traditional") return convertChineseText(input.text, transform.id);
@@ -13,11 +12,6 @@ export async function transformText(transform: Transform, input: TransformInput)
   return transform.run(input);
 }
 
-/**
- * The actions panel's second page (C38): every local transform, the ones that would not change
- * this text greyed out with why, and what the picked one would paste. ↑↓ pick, Enter or a click
- * pastes, 1–9 paste that one.
- */
 export function ClipboardTransformList({ item, query, copy = false, onPaste }: { item: ClipboardHistoryItem; query: string; copy?: boolean; onPaste: (text: string) => void }) {
   const t = useTranslation();
   const actions = t.clipboard.popup.actions;
@@ -66,7 +60,6 @@ export function ClipboardTransformList({ item, query, copy = false, onPaste }: {
         paste(Number(event.key) - 1);
       }
     };
-    // Capture on the panel: its own handler stops keys on their way up.
     const panel = listRef.current?.closest(".clipboard-panel");
     panel?.addEventListener("keydown", onKey as EventListener, true);
     return () => panel?.removeEventListener("keydown", onKey as EventListener, true);

@@ -4,7 +4,6 @@ import { useTranslation } from "../../i18n";
 import type { LevelChange } from "./api";
 import "./LevelPopup.css";
 
-/** The collapsed island's volume or brightness line: an icon, a bar and the percentage. */
 export function LevelPopup({ change }: { change: LevelChange }) {
   const t = useTranslation();
   const text = t.island.levelPopup;

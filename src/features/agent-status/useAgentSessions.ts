@@ -4,10 +4,6 @@ import { sameAgentSessions } from "./sessionList";
 
 const NO_SESSIONS: AgentSessionSummary[] = [];
 
-/**
- * Recent agent sessions, re-read every `intervalMs` while `enabled`. Keeps the previous array
- * when nothing changed so the island does not re-render on every poll.
- */
 export function useAgentSessions(enabled: boolean, intervalMs: number, windowHours?: number) {
   const [sessions, setSessions] = useState<AgentSessionSummary[]>(NO_SESSIONS);
   const isLoading = useRef(false);

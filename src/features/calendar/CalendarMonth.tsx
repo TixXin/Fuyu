@@ -8,11 +8,6 @@ import "./CalendarMonth.css";
 
 const KEY_STEPS: Record<string, number> = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7 };
 
-/**
- * The calendar page's month: six weeks from Monday, each day with its lunar date, festival or
- * solar term (Chinese only), a holiday calendar's 休 / 班 mark and a dot when it has events.
- * Clicking a day, or moving with the arrow keys, picks it for the day list beside it.
- */
 export function CalendarMonth({
   month,
   today,
@@ -21,18 +16,15 @@ export function CalendarMonth({
   onSelect,
   onMonth,
 }: {
-  /** Local midnight on the 1st of the month shown. */
   month: number;
   today: number;
   selected: number;
   events: readonly CalendarEvent[];
   onSelect: (day: number) => void;
-  /** Shows the month `delta` months on from this one. */
   onMonth: (delta: number) => void;
 }) {
   const t = useTranslation();
   const text = t.calendar;
-  // Lunar dates, festivals and solar terms are shown in Chinese only.
   const lunar = useLocale().locale === "zh-CN";
   const shown = new Date(month);
   const keyed = useRef(false);
@@ -44,10 +36,8 @@ export function CalendarMonth({
     }),
     [events, month],
   );
-  // The day the keyboard starts from: the picked one when it is shown, else the 1st.
   const anchor = days.some(({ day }) => day === selected) ? selected : month;
 
-  // A day picked with the keyboard takes the focus, also after the month turned over.
   useEffect(() => {
     if (!keyed.current) return;
     keyed.current = false;

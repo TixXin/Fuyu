@@ -2,10 +2,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { getAgentStatus, type AgentStatusSnapshot } from "./api";
 import { DEFAULT_AGENT_STATUS, listAgentStatuses } from "./status";
 
-/**
- * Polls agent status and keeps the previous snapshot when nothing the island renders has changed.
- * With `enabled` false (the status light switched off) it stops polling and reports idle.
- */
 export function useAgentStatus(enabled = true) {
   const [agentStatus, setAgentStatus] =
     useState<AgentStatusSnapshot>(DEFAULT_AGENT_STATUS);

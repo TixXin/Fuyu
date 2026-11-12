@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from "react";
 import { clearClipboardHistory, copyClipboardItem, deleteClipboardItem, getClipboardHistory, listenClipboardHistoryChanged, listenClipboardHistoryShortcut, setClipboardItemNote, toggleClipboardFavorite, type ClipboardCopyAs, type ClipboardHistorySnapshot } from "./api";
 import { DEFAULT_CLIPBOARD_HISTORY } from "./settings";
 
-/** Clipboard history snapshot, its item actions, and the native change and shortcut listeners. */
 export function useClipboardHistory(onShortcut: () => void) {
   const [clipboardHistory, setClipboardHistory] =
     useState<ClipboardHistorySnapshot>(DEFAULT_CLIPBOARD_HISTORY);

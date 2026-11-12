@@ -8,7 +8,6 @@ import "./ListTemplate.css";
 
 const SEARCH_DELAY_MS = 250;
 
-/** The list template: groups of items with check boxes and up to 3 actions, a search box, empty and loading states. */
 export function ListTemplate({
   pluginId,
   viewId,
@@ -23,12 +22,9 @@ export function ListTemplate({
   const t = useTranslation();
   const { locale } = useLocale();
   const list = useMemo(() => normalizeListModel(model, locale), [locale, model]);
-  // Null until the user types, so a remote search is not sent for nothing.
   const [query, setQuery] = useState<string | null>(null);
   const remote = list.search?.mode === "remote";
   const groups = remote ? list.groups : filterListGroups(list.groups, query ?? "");
-  // Items and group titles, plus the search box and error line, for the island's height.
-  // The empty and loading box is about three rows tall.
   const rows = Math.max(listRowCount(groups), groups.length === 0 ? 3 : 0) + (list.search ? 1 : 0) + (list.error ? 1 : 0);
 
   useEffect(() => {

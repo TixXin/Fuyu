@@ -1,7 +1,6 @@
 import type { PluginNotification } from "./api";
 import "./PluginNotificationActions.css";
 
-/** The buttons of a plugin's island.notify message, beside the collapsed preview. */
 export function PluginNotificationActions({
   actions,
   onAction,

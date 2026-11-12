@@ -7,10 +7,6 @@ import { useTranslation } from "../../i18n";
 import { getAgentHooksState } from "./api";
 import { getAgentHooksNotice, type AgentHooksNotice as Notice } from "./status";
 
-/**
- * On the Sessions page, a row saying the hooks are missing or old, with the way to the
- * Connection page where they are installed. Nothing while they are current.
- */
 export function AgentHooksNotice({ onOpenConnect }: { onOpenConnect: () => void }) {
   const text = useTranslation().settings.agent;
   const [notice, setNotice] = useState<Notice | null>(null);
@@ -19,7 +15,6 @@ export function AgentHooksNotice({ onOpenConnect }: { onOpenConnect: () => void 
     let cancelled = false;
     void getAgentHooksState()
       .then((state) => {
-        // An older native side, or a page mocking it, may give nothing usable.
         if (!cancelled) setNotice(state && typeof state === "object" ? getAgentHooksNotice(state) : null);
       })
       .catch((error: unknown) => console.error("Failed to read agent hooks state", error));

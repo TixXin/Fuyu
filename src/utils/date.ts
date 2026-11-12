@@ -6,7 +6,6 @@ export function getLocalDateString(date = new Date()) {
   return `${year}-${month}-${day}`;
 }
 
-// 只需要 Translations 中的 localeTag；用结构类型避免 utils/ 依赖 i18n。
 export function getDisplayDateParts(date: string, t: { localeTag: string }) {
   const [fallbackYear = date, fallbackMonth = "", fallbackDay = ""] =
     date.split("-");

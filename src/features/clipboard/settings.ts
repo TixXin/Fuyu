@@ -31,10 +31,8 @@ export const DEFAULT_CLIPBOARD_HISTORY: ClipboardHistorySnapshot = {
   items: [],
 };
 
-/** Choices for automatic clean-up, in days; 0 keeps entries until the count limit. */
 export const CLIPBOARD_RETENTION_DAYS = [0, 1, 7, 30, 90] as const;
 
-/** Program names as typed ("KeePass.exe, 1Password"): lower case, ".exe" added, no blanks. */
 export function parseExcludedApps(text: string): string[] {
   return text
     .split(/[,，;\n]/)

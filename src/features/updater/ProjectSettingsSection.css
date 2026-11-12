@@ -1,4 +1,3 @@
-/* 「关于」页和「更新」页的 UpdatePanel 共用这里的 project-link 卡片样式，两处都导入本文件。 */
 .about-identity {
   display: flex;
   align-items: flex-start;
@@ -6,7 +5,6 @@
   min-width: 0;
 }
 
-/* The logo's spot while the logo call is open: an empty dashed tile in the call's violet. */
 .about-identity__slot {
   --about-logo-call: #9b7bff;
   display: grid;
@@ -169,8 +167,6 @@
   line-height: 1.5;
 }
 
-/* In a grouped-list card: the identity and the update panel sit inset like rows, and each link is a
-   row of the card rather than a card of its own. */
 .settings-group__card > .about-identity {
   padding: 16px;
 }

@@ -1,9 +1,7 @@
 import { useCallback, useState } from "react";
 
-/** Plugin ids the user starred in the market, kept on this computer only (issue #16). */
 export const MARKET_FAVORITES_KEY = "fuyu-plugin-market-favorites";
 
-/** The saved ids; anything that is not a list of strings reads as none. */
 export function loadMarketFavorites(): string[] {
   try {
     const value: unknown = JSON.parse(localStorage.getItem(MARKET_FAVORITES_KEY) ?? "[]");
@@ -18,7 +16,6 @@ function saveMarketFavorites(ids: string[]) {
   else localStorage.setItem(MARKET_FAVORITES_KEY, JSON.stringify(ids));
 }
 
-/** The starred plugin ids and a toggle that saves at once. */
 export function useMarketFavorites() {
   const [favorites, setFavorites] = useState(loadMarketFavorites);
   const toggleFavorite = useCallback((id: string) => {

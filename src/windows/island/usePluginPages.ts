@@ -6,10 +6,6 @@ import { usePluginViews } from "../../features/plugin-views/usePluginViews";
 import { isPluginPage } from "./features";
 import type { IslandPage, PluginPageId } from "./types";
 
-/**
- * The plugin pages the island shows (in the order set in settings, hidden ones
- * left out) and the entry of the open one (null on a built-in page).
- */
 export function usePluginPages(page: IslandPage) {
   const allViews = usePluginViews();
   const [prefs] = usePluginPagePrefs();

@@ -4,7 +4,6 @@ import claudeCodeIcon from "../../assets/brands/claude-code.png";
 import { useTranslation } from "../../i18n";
 import "./AgentPagePreview.css";
 
-/** Product names, the same in every language. */
 const SAMPLE_MODEL = "Opus 5.5 · Xhigh";
 const SAMPLE_TOOL = "PowerShell";
 const SAMPLE_TOOL_DETAIL = "pnpm verify";
@@ -21,7 +20,6 @@ function Row({ light, project, title, status, model, below }: {
   title: string;
   status: string;
   model?: string;
-  /** The working line under the title, on a session mid-turn. */
   below?: ReactNode;
 }) {
   return (
@@ -41,11 +39,6 @@ function Row({ light, project, title, status, model, below }: {
   );
 }
 
-/**
- * The expanded island in the appearance preview, drawn small: the header (Agent light, page dots,
- * window buttons), the usage line and the Agent page's list view, laid out as on the island
- * (IslandHeader, AgentUsageBar, AgentSessionsPanel) with sample sessions.
- */
 export function AgentPagePreview() {
   const t = useTranslation();
   const { sessions } = t.settings.appearance.preview;

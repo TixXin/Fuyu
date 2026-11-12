@@ -8,11 +8,6 @@ import { useTranslation } from "../../i18n";
 import type { SettingsCategory } from "./categories";
 import { findShortcutOwnerRow, type ShortcutOwner } from "./shortcutConflicts";
 
-/**
- * The Shortcuts page's first group: press any key combination and it says which shortcut of
- * the island uses it, with a link to the page it is set on, or that it is free. Answers
- * "can I use this?" before recording, and "what does this do?" for keys that do something.
- */
 export function ShortcutFinder({ owners, onOpenPage }: {
   owners: readonly ShortcutOwner[];
   onOpenPage: (page: SettingsCategory) => void;

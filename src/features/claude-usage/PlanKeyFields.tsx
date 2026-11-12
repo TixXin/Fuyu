@@ -9,11 +9,6 @@ type PlanUsageProvider = UsageProvider & { id: PlanProvider };
 
 const isPlan = (provider: UsageProvider): provider is PlanUsageProvider => provider.id === "glm" || provider.id === "kimi";
 
-/**
- * The usage plugin's page: an API key field for each coding plan switched on (GLM, Kimi). Plugin
- * settings are plain JSON on disk, so keys go to the Windows Credential Manager instead and are
- * never read back into the page: it only learns whether one is saved.
- */
 export function PlanKeyFields({ settings, disabled }: { settings: Record<string, unknown>; disabled: boolean }) {
   const t = useTranslation();
   const providers = shownUsageProviders(settings).filter(isPlan);

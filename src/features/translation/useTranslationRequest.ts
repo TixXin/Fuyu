@@ -26,7 +26,6 @@ export function useTranslationRequest({
   setError: (value: string) => void;
   setIsLoading: (value: boolean) => void;
   setDidCopy: (value: boolean) => void;
-  /** Called once a request is actually sent, so auto-translate does not send it again. */
   onStart?: () => void;
 }) {
   const t = useTranslation();

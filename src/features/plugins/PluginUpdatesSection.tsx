@@ -3,7 +3,6 @@ import { ToggleControl } from "../../components/controls/ToggleControl";
 import { useTranslation } from "../../i18n";
 import type { PluginsSnapshot } from "./api";
 
-/** Plugins page > Updates: automatic updates (off by default), checking now, trusted publishers. */
 export function PluginUpdatesSection({
   snapshot,
   busy,

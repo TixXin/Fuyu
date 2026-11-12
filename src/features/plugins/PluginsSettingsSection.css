@@ -3,7 +3,6 @@
   gap: var(--space-lg);
 }
 
-/* The plugins folder as the folder row's description: one line, losing its start when long. */
 .plugins-folder__path {
   display: block;
   min-width: 0;
@@ -14,7 +13,6 @@
   white-space: nowrap;
 }
 
-/* Third-party and built-in plugins: a small title over two cards a row (one when narrow). */
 .plugins-list {
   display: grid;
   gap: 8px;

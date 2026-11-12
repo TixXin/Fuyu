@@ -49,6 +49,5 @@ export function saveMusicSourcePriority(priority: KnownMediaSource[]) {
       JSON.stringify(priority),
     );
   } catch {
-    // Ignore storage write failures (private mode, quota, etc.).
   }
 }

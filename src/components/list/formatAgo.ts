@@ -2,7 +2,6 @@ import type { CommonText } from "../../i18n/sections/common";
 
 const pad = (value: number) => String(value).padStart(2, "0");
 
-/** "刚刚", "5 分钟前", "3 小时前", "昨天 18:02" or "11月7日", from a time in milliseconds. */
 export function formatAgo(time: number, now: number, text: CommonText["ago"]) {
   const minutes = Math.floor((now - time) / 60_000);
   if (minutes < 1) return text.justNow;

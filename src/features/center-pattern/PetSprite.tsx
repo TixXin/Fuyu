@@ -3,21 +3,15 @@ import { PET_CELL_HEIGHT, PET_CELL_WIDTH, petSheetRows, petSpriteLayout, type Pe
 import "./PetSprite.css";
 
 type PetSpriteProps = {
-  /** The spritesheet URL from `getPetSpritesheet`. */
   src: string;
   mood: PetMood;
-  /** Freeze on the current frame: the island is expanded or tucked away. */
   paused?: boolean;
-  /** CSS pixels of one frame's height; the width keeps the 192:208 cell. */
   height?: number;
 };
 
-// Rows of the sheets already shown, so a pet that reappears does not blank until its image loads.
 const knownRows = new Map<string, number | null>();
 
-/** A Codex pet (petdex spritesheet) playing the row for `mood` with CSS `steps()`. */
 export function PetSprite({ src, mood, paused = false, height = 22 }: PetSpriteProps) {
-  // Rows are only known once the image has loaded: 9, or 11 for a v2 atlas.
   const [sheet, setSheet] = useState<{ src: string; rows: number | null } | null>(null);
   const rows = sheet?.src === src ? sheet.rows : (knownRows.get(src) ?? null);
   const layout = petSpriteLayout(mood, rows ?? 9);
@@ -41,7 +35,6 @@ export function PetSprite({ src, mood, paused = false, height = 22 }: PetSpriteP
     >
       <span className="pet-sprite-row">
         <img
-          // Restart the loop from the first frame when the row changes.
           key={mood}
           className="pet-sprite-sheet"
           src={src}
@@ -50,7 +43,6 @@ export function PetSprite({ src, mood, paused = false, height = 22 }: PetSpriteP
           onLoad={(event) => {
             const image = event.currentTarget;
             const loaded = petSheetRows(image.naturalWidth, image.naturalHeight);
-            // shortcut: keeps one entry per sheet URL for the window's life; pets are few.
             knownRows.set(src, loaded);
             setSheet({ src, rows: loaded });
           }}

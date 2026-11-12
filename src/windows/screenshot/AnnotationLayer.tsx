@@ -3,10 +3,6 @@ import type { Annotation } from "../../features/screenshot/annotations";
 import { drawAnnotations } from "../../features/screenshot/drawAnnotations";
 import type { PixelRect, Size } from "../../features/screenshot/selection";
 
-/**
- * The annotations over the frozen picture, at the picture's own resolution (so lines stay sharp
- * on a high-DPI monitor) and clipped to the selection. Redrawn whenever they change.
- */
 export function AnnotationLayer({
   picture,
   bounds,

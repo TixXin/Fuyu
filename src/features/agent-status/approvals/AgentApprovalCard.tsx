@@ -14,16 +14,11 @@ import "./AgentApprovalCard.css";
 
 export { APPROVAL_ARM_MS } from "./useApprovalCard";
 
-/**
- * A permission request an agent waits on: what it wants to run, and deny / allow / always /
- * back to the terminal. Shown alone on the Agent page while it lasts.
- */
 export function AgentApprovalCard({ approvals, sessions }: { approvals: AgentApprovals; sessions: AgentSessionSummary[] }) {
   const t = useTranslation();
   const request = approvals.current;
   const [expanded, setExpanded] = useState(false);
   const id = request?.id;
-  // Keys answer the card only once it is armed, and only while it shows.
   const { armed, cardRef, actRef } = useApprovalCard(approvals, APPROVAL_HOTKEYS);
 
   useEffect(() => {
@@ -41,7 +36,6 @@ export function AgentApprovalCard({ approvals, sessions }: { approvals: AgentApp
 
   const toTerminal = () => {
     approvals.decide("terminal");
-    // A remote session has no window here by its id; one connected to that computer may be found by folder and title.
     void focusAgentWindow(request.agent, cwd, session?.title ?? null, request.remoteHost ? "" : request.sessionId).catch((error: unknown) =>
       console.error("Failed to focus the agent window", error),
     );

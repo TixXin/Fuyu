@@ -3,7 +3,6 @@ export type TodoText = {
   emptyReview: string;
   complete: string;
   markIncomplete: string;
-  /** Screen-reader label pairing an action with the task it targets. */
   actionOnTask: (action: string, taskTitle: string) => string;
   editTitle: string;
   start: string;
@@ -11,7 +10,6 @@ export type TodoText = {
   delete: string;
   deleteTask: (taskTitle: string) => string;
   reorderTask: (taskTitle: string) => string;
-  /** The right-click menu plugins add commands to. */
   pluginMenu: string;
 };
 

@@ -7,19 +7,11 @@ import { useClaudeUsage } from "./useClaudeUsage";
 import "./ClaudeUsageGauge.css";
 
 type ClaudeUsageGaugeProps = {
-  /** Whose usage, in its colour (Claude Code when left out). */
   provider?: UsageProvider;
-  /** False once the cursor has left the island, which closes the card. */
   islandHovered?: boolean;
-  /** Shows what is left instead of what is used (the plugin's "show" setting). */
   showRemaining?: boolean;
 };
 
-/**
- * One agent's usage ring on the collapsed bar: 5 hours outside, 7 days (or the month) inside.
- * Resting on it shows the details under the island, headed by the agent's name and plan; a
- * click asks again.
- */
 export function ClaudeUsageGauge({ provider = USAGE_PROVIDERS[0], islandHovered = true, showRemaining = false }: ClaudeUsageGaugeProps) {
   const t = useTranslation();
   const { usage, now, refresh } = useClaudeUsage(provider.id);

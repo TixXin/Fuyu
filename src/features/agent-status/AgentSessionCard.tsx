@@ -10,16 +10,8 @@ import { AGENT_PROVIDER_LABELS, getAgentPhaseLabel } from "./status";
 import "./AgentSessionCard.css";
 import "./AgentCardEffects.css";
 
-/** Lights whose frame and state are drawn in their colour: working, or waiting on the user. */
 const LIVELY: ReadonlySet<SessionLight> = new Set(["needs", "yourTurn", "working", "failed"]);
 
-/**
- * One session on the Agent page in the card and compact views (Settings → AI Agent → Sessions;
- * the list view stays in AgentSessionsPanel). A card is framed in its light's colour: the title
- * with mode, model and time on the first line; the state, what it is doing and the context size on
- * the second. A compact row puts a bar in that colour, the title, state and time on one line.
- * Only the button: the row, its archive button and the click stay with the panel.
- */
 export function AgentSessionCard({
   session,
   now,
@@ -41,17 +33,11 @@ export function AgentSessionCard({
   hostDisplay: AgentHostDisplay;
   showElapsed: boolean;
   showActivity: boolean;
-  /** Model and effort as the page shows them; null when hidden or unknown. */
   model: string | null;
-  /** Finished and not looked at yet: stands out until clicked. */
   unseen: boolean;
-  /** Waiting on the user or failed, and already looked at: the words stay, the alarm goes. */
   looked: boolean;
-  /** What a click found no window for, said in place of the time for a moment. */
   notFound: string | null;
-  /** On an alert's card, a finished or failed session's last reply, below the lines. */
   cardReply: string | null;
-  /** The sparkle band with a glowing frame, or a gradient wash (AgentCardEffects.css). */
   effects?: AgentCardEffects;
   onOpen: () => void;
 }) {
@@ -69,7 +55,6 @@ export function AgentSessionCard({
 
   const tool = showActivity && active ? session.currentTool : null;
   const prompt = showActivity && active ? session.lastPrompt : null;
-  // What it is doing: the tool it calls, else its latest reply, else the prompt it works on.
   const doing = cardReply ? null : tool ? (
     <span key="doing" className="agent-card__tool">
       <span className="agent-card__tool-name">{tool.name}</span>

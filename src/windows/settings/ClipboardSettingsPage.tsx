@@ -11,10 +11,6 @@ import { ClipboardShortcutGroup } from "./ShortcutGroups";
 import { AllShortcutsLink } from "./ShortcutsSettingsPage";
 import { useShortcutOwners } from "./useShortcutOwners";
 
-/**
- * Settings → Clipboard. Its page on the island has the panel's size like every page (C27); its
- * shortcut is recorded here, under how it opens, as well as on the Shortcuts page.
- */
 export function ClipboardSettingsPage({ settings, onOpenShortcuts }: { settings: IslandSettings; onOpenShortcuts: () => void }) {
   const t = useTranslation();
   const [clipboardSettings, updateClipboardSettings] = useClipboardSettings();

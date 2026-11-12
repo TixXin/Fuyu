@@ -1,8 +1,6 @@
 export type SettingsResetAppearanceText = {
-  /** Theme page: the look. */
   label: string;
   hint: string;
-  /** Appearance page: sizes and what the bar shows. */
   layoutLabel: string;
   layoutHint: string;
   confirm: string;

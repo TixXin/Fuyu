@@ -3,7 +3,6 @@ import { emit, listen } from "@tauri-apps/api/event";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import type { PluginSensitiveChoice, PromptedPermission } from "./promptedPermissions";
 
-// 与 src-tauri/src/plugin_host/permissions.rs 中的 PERMISSIONS 对应。
 export const PLUGIN_PERMISSIONS = [
   "todos:read",
   "todos:write",
@@ -22,36 +21,27 @@ export const PLUGIN_PERMISSIONS = [
 ] as const;
 export type PluginPermission = (typeof PLUGIN_PERMISSIONS)[number];
 
-// 与 src-tauri/src/plugin_host/manifest.rs 中的 LocalizedText、PluginCommand 对应。
 export type LocalizedText = { "zh-CN": string; en: string };
 export type PluginCommand = {
   id: string;
   title: LocalizedText;
-  /** A global shortcut such as "Ctrl+Alt+P" (API version 2). */
   keybinding?: string;
-  /** When the shortcut runs the command; see when.ts. */
   when?: string;
 };
 
-// 与 src-tauri/src/plugin_host/manifest.rs 中的 runtime_requirement 对应：插件运行需要另外安装什么。
 export type PluginRuntimeRequirement = "exe" | "powershell" | "node" | "none" | "builtin";
 
-// 与 src-tauri/src/plugin_host/runtime.rs 中的 RuntimeStatus 对应。
 export type PluginStatus = "stopped" | "starting" | "running" | "restarting" | "crashed" | "idle";
 
-// 与 src-tauri/src/plugin_host/runtime.rs 中的 Resources 对应：插件进程树占用的内存和 CPU。
 export type PluginProcess = { name: string; memoryBytes: number; workingSetBytes: number };
 export type PluginResources = {
-  /** Private bytes of every process in the plugin's job. */
   memoryBytes: number;
-  /** The idle runtime's share (PowerShell, Node.js); null for native plugins or until measured. */
   runtimeBytes: number | null;
   processes: PluginProcess[];
   cpuPercent: number;
   highCpu: boolean;
 };
 
-// 与 src-tauri/src/plugin_host/settings.rs 中的 SettingSpec、InfoItem 对应。
 export type PluginSettingSpec = {
   key: string;
   type: "boolean" | "string" | "number" | "select";
@@ -70,22 +60,17 @@ export type PluginInfoItem = {
   secret: boolean;
 };
 
-// 与 src-tauri/src/plugin_host/runtime/calls.rs 中的 CallRecord 对应。
 export type PluginCallRecord = {
   method: string;
   outcome: "ok" | "denied" | "unknown" | "error";
   status: number | null;
   count: number;
-  /** ms since 1970 */
   at: number;
 };
 
-// 与 src-tauri/src/plugin_host/mod.rs 中的 PluginInfo、PluginsSnapshot 对应。
 export type PluginInfo = {
   id: string;
-  /** Comes with the island: needs no "allow third-party plugins" and cannot be uninstalled. */
   builtin: boolean;
-  /** Loaded in development mode from a folder: always on, with every permission it asks for (P10). */
   dev: boolean;
   invalidReason: string | null;
   name: LocalizedText | null;
@@ -94,9 +79,7 @@ export type PluginInfo = {
   author: string;
   homepage: string;
   permissions: string[];
-  /** Asked for while the plugin runs (permissions.request); the answers are in `sensitive`. */
   optionalPermissions: string[];
-  /** Its last host API calls, newest first (method and outcome only). */
   calls: PluginCallRecord[];
   commands: PluginCommand[];
   runtime: PluginRuntimeRequirement;
@@ -107,40 +90,24 @@ export type PluginInfo = {
   error: string | null;
   log: string[];
   settingsSchema: PluginSettingSpec[];
-  /** Every declared setting with its value, defaults filled in. */
   settings: Record<string, unknown>;
   info: PluginInfoItem[];
-  /** The user turned off its island.notify messages. */
   notificationsMuted: boolean;
-  /** Command shortcuts that could not be registered because something else uses them. */
   keybindingConflicts: string[];
-  /** The user's shortcuts per command id ("" = off); other commands use their manifest keybinding. */
   keybindings: Record<string, string>;
-  /** Remembered answers for sensitive permissions; the user can revoke them. */
   sensitive: Partial<Record<PromptedPermission, PluginSensitiveChoice>>;
-  /** "startup": runs while the island runs; "onDemand": starts on its activation events. */
   activation: "startup" | "onDemand";
   activationEvents: string[];
-  /** From starting the process to its first message. */
   startupMs: number | null;
   resources: PluginResources | null;
-  /** Why an on-demand plugin asked to keep running (host.keepAlive). */
   keepAlive: string | null;
-  /** This version was taken off the market (revoked.json), and why (P11). */
   revoked: LocalizedText | null;
-  /** A newer version in the market. */
   updateAvailable: string | null;
-  /** The market's update is not signed by the installed version's author key; it waits for the user. */
   signingKeyChanged: boolean;
-  /** The author key that signed the installed version, if it was signed. */
   authorKey: string | null;
-  /** The version an automatic update installed while the island has been running. */
   autoUpdated: string | null;
-  /** Updates may install this plugin's pre-releases. */
   preRelease: boolean;
-  /** A pre-release in the market newer than the stable version. */
   preReleaseAvailable: string | null;
-  /** The memory limit in MB that applies to the plugin; one of PLUGIN_MEMORY_LIMITS_MB. */
   memoryLimitMb: number;
 };
 
@@ -149,16 +116,13 @@ export type PluginsSnapshot = {
   nodeAvailable: boolean;
   pluginsDir: string;
   plugins: PluginInfo[];
-  /** Install market updates that ask for no new permissions by themselves (default off). */
   autoUpdate: boolean;
   trustedPublishers: string[];
 };
 
-// 与 scripts/plugins/build-plugin-index.mjs 中的 CATEGORIES 对应。
 export const MARKET_CATEGORIES = ["productivity", "todos", "developer", "media", "messages", "information", "utilities", "sounds"] as const;
 export type MarketCategory = (typeof MARKET_CATEGORIES)[number];
 
-// 与 src-tauri/src/plugin_host/market.rs 中的 MarketEntry，以及 plugin_host/commands.rs 中的 MarketPlugin、MarketSnapshot 对应。
 export type MarketPlugin = {
   id: string;
   name: LocalizedText;
@@ -169,33 +133,22 @@ export type MarketPlugin = {
   author: string;
   homepage: string;
   permissions: string[];
-  /** Asked for while the plugin runs; missing when there are none. */
   optionalPermissions?: string[];
-  /** Missing in indexes written before the field existed. */
   runtime: PluginRuntimeRequirement | null;
   download: { url: string; sha256: string; size: number };
-  /** GitHub user or organization; null in indexes written before publishers existed (the official one). */
   publisher: string | null;
-  /** "owner/name" of the plugin's repository. */
   repo: string | null;
   categories: string[];
-  /** It has pages with its own HTML (custom UI). */
   webview?: boolean;
-  /** README.md and CHANGELOG.md from the plugin, Markdown, carried in the signed index. */
   readme?: string;
   changelog?: string;
   installedVersion: string | null;
   incompatible: string | null;
-  /** This version was taken off the market, and why. */
   revoked: LocalizedText | null;
-  /** The author's signature and keys (plugin_host/author_signing.rs), when the author signs. */
   authorSignature?: { keyId: string; signature: string };
   authorKeys?: { keyId: string; publicKey: string }[];
-  /** The author key that signed this version, when the signature holds. */
   signedBy: string | null;
-  /** The publisher is verified: a GitHub organization with a verified domain, or its own domain. */
   verified?: { via: "github" } | { via: "domain"; domain: string };
-  /** Updating would replace the installed version's author key (or drop the signature): the user confirms it. */
   signingKeyChanged: boolean;
 };
 
@@ -204,23 +157,19 @@ export type MarketSnapshot = {
   nodeAvailable: boolean;
   plugins: MarketPlugin[];
   trustedPublishers: string[];
-  /** Always trusted; plugins without a publisher are its. */
   officialPublisher: string;
 };
 
 export const marketPublisher = (plugin: MarketPlugin, market: MarketSnapshot) => plugin.publisher || market.officialPublisher;
 
-/** Turns on or off installing updates that ask for no new permissions by themselves. */
 export function setPluginAutoUpdate(enabled: boolean) {
   return invoke<PluginsSnapshot>("set_plugin_auto_update", { enabled });
 }
 
-/** Trusting a publisher lets its plugins be installed. */
 export function setPluginPublisherTrusted(publisher: string, trusted: boolean) {
   return invoke<PluginsSnapshot>("set_plugin_publisher_trusted", { publisher, trusted });
 }
 
-/** Reads the market now: revocations, available updates, automatic updates. */
 export function checkPluginUpdates() {
   return invoke<PluginsSnapshot>("check_plugin_updates");
 }
@@ -229,12 +178,10 @@ export function getPluginMarket() {
   return invoke<MarketSnapshot>("get_plugin_market");
 }
 
-/** The market as the island last read it (page or background check), without going online; null before that. */
 export function getCachedPluginMarket() {
   return invoke<MarketSnapshot | null>("get_cached_plugin_market");
 }
 
-/** `acceptKeyChange`: the user confirmed an update signed by another author key than the installed version. */
 export function installMarketPlugin(id: string, acceptKeyChange = false) {
   return invoke<PluginsSnapshot>("install_market_plugin", { id, acceptKeyChange });
 }
@@ -265,7 +212,6 @@ export function openPluginsFolder() {
 
 export const NODE_DOWNLOAD_URL = { "zh-CN": "https://nodejs.org/zh-cn/download", en: "https://nodejs.org/en/download" } as const;
 
-/** Opens a plugin's homepage (or the Node.js download page) in the browser; only https links are allowed. */
 export function openPluginHomepage(url: string) {
   return url.startsWith("https://") ? openUrl(url) : Promise.resolve();
 }
@@ -278,7 +224,6 @@ export function runPluginCommand(id: string, command: string) {
   return invoke<void>("run_plugin_command", { id, command });
 }
 
-// 与 src-tauri/src/plugin_host/events.rs 中的 HOST_EVENT、EVENTS 对应。
 const PLUGIN_HOST_EVENT = "plugin-host-event";
 export type PluginHostEventName =
   | "todos.changed"
@@ -288,75 +233,60 @@ export type PluginHostEventName =
   | "island.collapsed"
   | "app.locale.changed";
 
-/** Tells the plugin host that something plugins can subscribe to changed; it merges bursts. */
 export function emitPluginHostEvent(name: PluginHostEventName, payload: Record<string, unknown>) {
   return emit(PLUGIN_HOST_EVENT, { name, payload });
 }
 
-// 与 src-tauri/src/plugin_host/notify.rs 中的 NOTIFICATION_EVENT、Notification 对应。
 const PLUGIN_NOTIFICATION_EVENT = "plugin-notification";
 export type PluginNotification = {
   pluginId: string;
-  /** Null if the plugin was removed in the meantime. */
   pluginName: LocalizedText | null;
   title: string;
   body: string;
   durationMs: number;
   actions: { id: string; title: string }[];
-  icon?: "plugin" | "media"; layout?: "card" | "inline"; /** "media": the island's player buttons beside it. */ controls?: "none" | "media"; /** The playing app's icon for icon "media" (notify.rs). */ iconUrl?: string | null;
+  icon?: "plugin" | "media"; layout?: "card" | "inline"; controls?: "none" | "media"; iconUrl?: string | null;
 };
 
-/** Calls `onNotification` for each plugin island.notify message; resolves to the unlisten function. */
 export function listenPluginNotifications(onNotification: (notification: PluginNotification) => void) {
   return listen<PluginNotification>(PLUGIN_NOTIFICATION_EVENT, (event) => onNotification(event.payload));
 }
 
-// 与 src-tauri/src/plugin_host/menus.rs 中的 TODO_CONTEXT、PluginMenuEntry 对应。
 export const TODO_CONTEXT_MENU = "todo/context";
-// 与 menus.rs 中的 CLIPBOARD_CONTEXT、SHELF_CONTEXT、MESSAGE_CONTEXT 对应。
 export const ITEM_CONTEXT_MENUS = ["clipboard/context", "shelf/context", "message/context"] as const;
 export type PluginItemMenu = (typeof ITEM_CONTEXT_MENUS)[number];
 export type PluginMenu = typeof TODO_CONTEXT_MENU | PluginItemMenu;
 export type PluginMenuEntry = { pluginId: string; pluginName: LocalizedText; command: string; title: LocalizedText };
 
-/** What running plugins add to an island menu (contributes.menus). */
 export function listPluginMenu(menu: PluginMenu) {
   return invoke<PluginMenuEntry[]>("list_plugin_menu", { menu });
 }
 
-/** Sends the plugin `command` with `args.todoId`. */
 export function runPluginMenuCommand(id: string, menu: typeof TODO_CONTEXT_MENU, command: string, todoId: string) {
   return invoke<void>("run_plugin_menu_command", { id, menu, command, todoId });
 }
 
-/** Sends the plugin `command` with the clipboard, shelf or message entry `itemId` in `args.item` (Rust looks it up). */
 export function runPluginItemMenuCommand(id: string, menu: PluginItemMenu, command: string, itemId: string) {
   return invoke<void>("run_plugin_item_menu_command", { id, menu, command, itemId });
 }
 
-// 与 src-tauri/src/plugin_host/keybindings.rs 中的 KEYBINDING_EVENT 对应。
 const PLUGIN_KEYBINDING_EVENT = "plugin-keybinding";
 export type PluginKeybindingPress = { pluginId: string; command: string; when: string | null };
 
-/** Calls `onPress` when a plugin command's global shortcut is pressed; resolves to the unlisten function. */
 export function listenPluginKeybindings(onPress: (press: PluginKeybindingPress) => void) {
   return listen<PluginKeybindingPress>(PLUGIN_KEYBINDING_EVENT, (event) => onPress(event.payload));
 }
 
-// 与 src-tauri/src/plugin_host/sensitive.rs 中的 REQUEST_EVENT 对应。
 const PLUGIN_PERMISSION_REQUEST_EVENT = "plugin-permission-request";
 export type PluginPermissionRequest = {
   requestId: number;
   pluginId: string;
-  /** Null if the plugin was removed in the meantime. */
   pluginName: LocalizedText | null;
   permission: PromptedPermission;
-  /** The plugin's call is refused if there is no answer within this time. */
   timeoutMs: number;
 };
 export type PluginPermissionAnswer = "allow" | "deny" | "once";
 
-/** Calls `onRequest` when a plugin first uses a sensitive permission; resolves to the unlisten function. */
 export function listenPluginPermissionRequests(onRequest: (request: PluginPermissionRequest) => void) {
   return listen<PluginPermissionRequest>(PLUGIN_PERMISSION_REQUEST_EVENT, (event) => onRequest(event.payload));
 }
@@ -365,7 +295,6 @@ export function answerPluginPermission(requestId: number, answer: PluginPermissi
   return invoke<void>("answer_plugin_permission", { requestId, answer });
 }
 
-/** Forgets the answer for one sensitive permission; the plugin's next use asks again. */
 export function revokePluginSensitivePermission(id: string, permission: PromptedPermission) {
   return invoke<PluginsSnapshot>("revoke_plugin_sensitive_permission", { id, permission });
 }
@@ -374,14 +303,12 @@ export function runPluginNotificationAction(id: string, action: string) {
   return invoke<void>("run_plugin_notification_action", { id, action });
 }
 
-/** Memory limits to pick from, as MEMORY_LIMIT_CHOICES_MB in src-tauri/src/plugin_host/lifecycle.rs. */
 export const PLUGIN_MEMORY_LIMITS_MB = [256, 512, 1024, 2048] as const;
 
 export function setPluginMemoryLimit(id: string, megabytes: number) {
   return invoke<PluginsSnapshot>("set_plugin_memory_limit", { id, megabytes });
 }
 
-/** `null` goes back to the manifest's keybinding, `""` turns the shortcut off. */
 export function setPluginKeybinding(id: string, command: string, keybinding: string | null) {
   return invoke<PluginsSnapshot>("set_plugin_keybinding", { id, command, keybinding });
 }
@@ -394,7 +321,6 @@ export function setPluginNotificationsMuted(id: string, muted: boolean) {
   return invoke<PluginsSnapshot>("set_plugin_notifications_muted", { id, muted });
 }
 
-/** Deletes what the plugin stored (its data folder and secrets); a running plugin is restarted. */
 export function clearPluginData(id: string) {
   return invoke<PluginsSnapshot>("clear_plugin_data", { id });
 }

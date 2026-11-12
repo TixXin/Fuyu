@@ -1,7 +1,6 @@
 import { useEffect, useRef } from "react";
 import { ISLAND_POSITION_RESET_STORAGE_KEY, isFreshPositionReset } from "../settings/storage";
 
-/** Runs `reset` when the settings window's Position > Reset button asks for it. */
 export function useSettingsPositionReset(reset: () => void) {
   const resetRef = useRef(reset);
 

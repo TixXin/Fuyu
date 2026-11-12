@@ -18,13 +18,6 @@ import { FeishuSetup } from "./FeishuSetup";
 import type { useCcConnect } from "./useCcConnect";
 import "./CcConnectSetup.css";
 
-/**
- * The plugin page's "Set up a bot": a project for one Telegram, Discord or Feishu bot added to
- * cc-connect's config (src-tauri/src/cc_connect/config_file.rs), so chatting with that bot is
- * using Claude Code or Codex on this computer. Telegram and Discord take the bot's token and who may use
- * it; on Telegram the people who wrote to the bot are listed to pick from. Feishu is cc-connect's
- * own QR setup (FeishuSetup).
- */
 export function CcConnectSetup({ cc }: { cc: ReturnType<typeof useCcConnect> }) {
   const texts = useTranslation().settings.plugins.ccConnect;
   const errorText = useErrorText();
@@ -44,7 +37,6 @@ export function CcConnectSetup({ cc }: { cc: ReturnType<typeof useCcConnect> }) 
   const status = cc.status;
   if (!status) return null;
   const name = project ?? freeProjectName([...status.configProjects, ...status.projects.map((entry) => entry.name)]);
-  // An empty folder of the island's, not the user's own: Claude Code reads what is in it without asking.
   const folder = workDir ?? status.defaultWorkDir ?? "";
   const ids = allowFrom.split(",").map((id) => id.trim()).filter(Boolean);
 

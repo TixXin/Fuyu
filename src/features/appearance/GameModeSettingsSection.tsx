@@ -3,7 +3,6 @@ import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
 import type { IslandSettings } from "./types";
 
-/** Game mode: what the island holds back while a full-screen app is in front. */
 export function GameModeSettingsSection({
   settings,
   onSettingsChange,

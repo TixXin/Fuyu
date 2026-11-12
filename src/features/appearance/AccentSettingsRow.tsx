@@ -4,7 +4,6 @@ import { SettingsRow } from "../../components/settings/SettingsRow";
 import { useTranslation } from "../../i18n";
 import type { AccentMode, IslandSettings } from "./types";
 
-/** Settings → Theme → the accent (C33.5): as it ships, Windows', or a picked colour. */
 export function AccentSettingsRow({ settings, onSettingsChange }: {
   settings: IslandSettings;
   onSettingsChange: (settings: IslandSettings) => void;

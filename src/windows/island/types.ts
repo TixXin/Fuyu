@@ -2,44 +2,21 @@ import type { ReactNode } from "react";
 
 export type IslandMode = "collapsed" | "expanded";
 
-/** The pages built into the island. */
 export type BuiltinPage = "todo" | "calendar" | "music" | "clipboard" | "shelf" | "qq" | "agents" | "translation";
 
-/** A page a plugin adds: `plugin:<plugin id>/<view id>` (see features/plugin-views/model.ts). */
 export type PluginPageId = `plugin:${string}`;
 
-/** Any page the expanded island can show. */
 export type IslandPage = BuiltinPage | PluginPageId;
 
 export type NativeGlassState = "active" | "css-fallback" | "disabled";
 
-/**
- * What built-in plugins add to the collapsed bar (filled in useCollapsedSlots.tsx). A slot
- * left empty (undefined, null or false) renders nothing, so the bar looks as it does today.
- */
 export type CollapsedSlots = {
-  /**
-   * In the summary's place, only while the bar shows no summary (message, translation, agent
-   * title, todo, name): centred between the status light and the items on the right. Inside
-   * the bar's open button, so phrasing content only (span, svg) and no buttons of its own.
-   * While the summary is only the pending todo count, it stands in front of the count instead.
-   */
   center?: ReactNode;
-  /**
-   * In place of the agent icon before the session title the bar shows. Keep it about 16 px
-   * wide: the collapsed width reserves the icon's room, not this slot's.
-   */
   agentIcon?: ReactNode;
-  /** Small gauges such as rings, one bar item each (id `usage:<provider>`), placed like the bar's other items. */
   gauges?: { id: string; node: ReactNode }[];
-  /** Drawn in the Agent status light's place instead of the dot. */
   statusLight?: ReactNode;
-  /** Shown instead of the blue running-session count while AI Agent is on; empty keeps the count. */
   agentCount?: ReactNode;
-  /** Px `agentIcon` needs beyond the 16 px icon it replaces; the collapsed island widens by it while the bar names an agent. */
   agentIconWidth?: number;
-  /** Px that `center` needs; the collapsed island widens by it while the centre shows. */
   centerWidth?: number;
-  /** Px that the shown `gauges`, `agentCount` and `statusLight` need beyond the bar's own; the collapsed island widens by it. */
   sideWidth?: number;
 };

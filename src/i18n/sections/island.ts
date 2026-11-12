@@ -3,9 +3,7 @@ export type IslandText = {
   focusing: (taskTitle: string) => string;
   pendingTodos: (count: number) => string;
   agentSession: (provider: string, title: string) => string;
-  /** The collapsed island shows the line being sung. */
   lyricLine: (text: string) => string;
-  /** The collapsed island names the playing song, which has no lyrics. */
   nowPlaying: (text: string) => string;
   openMusic: string;
   collapse: string;
@@ -21,12 +19,9 @@ export type IslandText = {
   shelf: string;
   calendar: string;
   shelfCount: (count: number) => string;
-  /** The collapsed island's camera and microphone icons, naming the apps using them. */
   deviceInUse: Record<"camera" | "microphone", (apps: string) => string>;
   deviceAppSeparator: string;
-  /** The volume and brightness popup on the collapsed island. */
   levelPopup: { volume: (percent: number) => string; brightness: (percent: number) => string; muted: string; mutedShort: string };
-  /** Headphones and Bluetooth audio connecting, a Bluetooth battery running low, the charger. */
   deviceAlert: {
     connected: (name: string) => string;
     disconnected: (name: string) => string;

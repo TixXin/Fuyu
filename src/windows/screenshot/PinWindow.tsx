@@ -21,14 +21,8 @@ import { getErrorMessage } from "../../utils/error";
 import "./PinWindow.css";
 
 const NOTICE_MS = 1600;
-/** How long the fade-out runs before the window goes (PinWindow.css, pin-window--closing). */
 const CLOSE_MS = 140;
 
-/**
- * The picture this page was given: the native side keeps one pin window ready, hidden, and hands
- * it a picture when something is pinned. The PNG is decoded off the main thread before the window
- * shows, so it appears with its picture already drawn.
- */
 function usePinPicture() {
   const [info, setInfo] = useState<PinInfo | null>(null);
   const [url, setUrl] = useState<string | null>(null);
@@ -72,13 +66,6 @@ function usePinPicture() {
   return { info, url };
 }
 
-/**
- * A pin (`?window=pin`, label `pin-<n>`): a screenshot kept on top of everything. Drag to move it,
- * the wheel zooms about the pointer, Ctrl + wheel fades it; the right-click menu copies, saves,
- * makes it click-through or closes it. Esc closes it, Ctrl+C / Ctrl+S copy and save, T hides all
- * pins (T on the island shows them again). It lifts off the screen as it appears and fades as it
- * closes.
- */
 export function PinWindow() {
   const t = useTranslation().screenshot;
   const errorText = useErrorText();
@@ -90,8 +77,6 @@ export function PinWindow() {
   const [opacity, setOpacity] = useState(1);
   const [notice, setNotice] = useState<string | null>(null);
 
-  // The decoded picture is in the <img>: show the window (the screenshot goes a frame later), then
-  // lift it. Not from requestAnimationFrame: a hidden WebView may not run it.
   const onLoaded = useCallback(() => {
     pinReady()
       .then(() => setShown(true))

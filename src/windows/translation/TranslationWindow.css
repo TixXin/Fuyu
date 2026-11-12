@@ -28,7 +28,6 @@
   color-scheme: dark;
 }
 
-/* Light as the island is (C33.6): the same layout on a pale surface with near-black text. */
 .island-light .translation-window {
   --translation-surface: #f6f6f8;
   --translation-control: #e6e6eb;

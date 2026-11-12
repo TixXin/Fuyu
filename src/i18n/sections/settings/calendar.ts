@@ -17,7 +17,6 @@ export type SettingsCalendarText = {
   add: string;
   service: string;
   services: Record<Service, string>;
-  /** Where to get the account and password, or the link, in each service. */
   steps: Record<Service, string[]>;
   name: string;
   server: string;

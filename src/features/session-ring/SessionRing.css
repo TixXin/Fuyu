@@ -18,7 +18,6 @@
   outline-offset: 2px;
 }
 
-/* The ring's count was 9px at 20px; 12px reads at a glance, two digits 10px to clear the ring. */
 .session-ring .mini-ring__label {
   font-size: 12px;
 }
@@ -28,7 +27,6 @@
   letter-spacing: -0.02em;
 }
 
-/* Pixel grid: 8px cells on the 2 × 2 board, 6px on the 3 × 3 one, both about the ring's size. */
 .session-grid {
   --cell: 8px;
   display: inline-grid;
@@ -56,7 +54,6 @@
   box-shadow: 0 0 5px color-mix(in srgb, var(--cell-color) 55%, transparent);
 }
 
-/* Past nine sessions the last cell is a small plus. */
 .session-grid__cell[data-state="more"] {
   background:
     linear-gradient(rgba(var(--overlay-rgb, 255, 255, 255), 0.75), rgba(var(--overlay-rgb, 255, 255, 255), 0.75)) center / 4px 1px no-repeat,
@@ -64,7 +61,6 @@
   box-shadow: none;
 }
 
-/* State bar: the count, then one 6px capsule split by state with hairline breaks. */
 .session-bar {
   display: inline-flex;
   align-items: center;
@@ -93,11 +89,6 @@
   flex-basis: 0;
 }
 
-/*
- * Signal bars: 6px columns 3px apart, five 3px bars each with 1px between (19px), lit from the
- * bottom; past five sessions in a column, up to seven 2px bars (20px). Unlit bars are the grid's
- * faint dots.
- */
 .session-signal {
   --signal-bar: 3;
   display: inline-flex;
@@ -115,17 +106,14 @@
   height: calc(var(--signal-bar) * 1px);
   background: rgba(var(--overlay-rgb, 255, 255, 255), 0.1);
   transition: background 200ms ease, box-shadow 200ms ease;
-  /* The collapsed island's corners (Appearance → Corners) scaled from its 38px height to the bar's. */
   border-radius: min(calc(var(--signal-bar) * 0.5px), calc(var(--island-radius-collapsed, 22px) * var(--signal-bar) / 38));
   corner-shape: var(--island-corner-shape, round);
 }
 
-/* A smaller glow than the grid's: 1px from the next bar, 5px would tint the dim ones. */
 .session-signal__bar[data-state] {
   box-shadow: 0 0 2px color-mix(in srgb, var(--cell-color) 55%, transparent);
 }
 
-/* Waiting on you pulses; running breathes slower; the rest hold still. */
 .session-grid__cell[data-state="needs"],
 .session-bar__part[data-state="needs"],
 .session-signal__bar[data-state="needs"] {

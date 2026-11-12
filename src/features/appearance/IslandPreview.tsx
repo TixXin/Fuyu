@@ -7,16 +7,8 @@ import { hexToRgba } from "./settings";
 import type { IslandSettings } from "./types";
 import "./IslandPreview.css";
 
-/**
- * Appearance, first: the island drawn from the current settings, collapsed and expanded, on a
- * colourful wallpaper so opacity and glass show. Both show an Agent session, as the island does
- * while one is working: collapsed, the bar with its title and session ring; expanded, the Agent
- * page (AgentPagePreview). A drawing with sample content, not the island itself; the variables
- * mirror windows/island/stageStyle.ts, which features cannot import.
- */
 export function IslandPreview({ settings, compact = false }: {
   settings: IslandSettings;
-  /** Only the collapsed island, without captions: the theme market's cards. */
   compact?: boolean;
 }) {
   const text = useTranslation().settings.appearance.preview;

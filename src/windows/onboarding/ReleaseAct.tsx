@@ -6,7 +6,6 @@ import { openSettingsWindow } from "../settings/api";
 import { ActHeading } from "./ActHeading";
 import type { OnboardingModule } from "./personas";
 
-/** Act 5: starting with Windows, and the setups that need more than a switch. */
 export function ReleaseAct({ modules, launchAtStartup, onLaunchAtStartupChange }: {
   modules: ReadonlySet<OnboardingModule>;
   launchAtStartup: boolean;

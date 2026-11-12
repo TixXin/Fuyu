@@ -5,16 +5,10 @@ export type UpdateChannel = "stable" | "beta";
 export const CHANNEL_KEY = "fuyu-update-channel";
 export const UPDATE_PREFERENCES_KEY = "fuyu-update-preferences";
 
-/** A pre-release version such as 0.3.1-beta.1. */
 export function isPrerelease(version: string) {
   return /^\d+\.\d+\.\d+-/.test(version);
 }
 
-/**
- * The channel the user picked. Without a choice, a pre-release build stays on
- * the beta channel (someone installed it on purpose) and every other build is
- * on stable, so nobody gets a beta without asking for one.
- */
 export function normalizeUpdateChannel(stored: unknown, version: string): UpdateChannel {
   if (stored === "stable" || stored === "beta") return stored;
   return isPrerelease(version) ? "beta" : "stable";
@@ -31,7 +25,6 @@ export function saveUpdateChannel(channel: UpdateChannel) {
 export const CHECK_INTERVAL_HOURS = [1, 6, 12, 24] as const;
 export type CheckIntervalHours = (typeof CHECK_INTERVAL_HOURS)[number];
 export type UpdateReminderMode = "badge" | "notification";
-/** "download": fetch new versions in the background; "install": and install them when idle (D18). */
 export type AutoUpdateMode = "off" | "download" | "install";
 
 export function normalizeCheckInterval(value: unknown): CheckIntervalHours {
@@ -44,10 +37,8 @@ export type UpdatePreferences = {
   reminderMode: UpdateReminderMode;
   autoUpdate: AutoUpdateMode;
   notificationUnavailable: boolean;
-  /** channel:version, so reopening the app does not repeat a system notification. */
   lastNotifiedKey: string | null;
   skippedVersion: string | null;
-  /** Last successful check, retained across app restarts. */
   lastCheckedAt: number | null;
 };
 

@@ -17,10 +17,6 @@ type IslandTodosOptions = {
   collapseIsland: () => void;
 };
 
-/**
- * The todos and what serves them to the outside: the local API, the events plugins subscribe
- * to and plugins' keybindings; the background update check runs alongside.
- */
 export function useIslandTodos({ settings, mode, page, agentStatus, collapseIsland }: IslandTodosOptions) {
   const openSavePathSettings = useCallback(() => {
     openSettingsWindow("savePath");

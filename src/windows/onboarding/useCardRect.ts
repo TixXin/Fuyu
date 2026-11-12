@@ -1,11 +1,6 @@
 import { useEffect, type RefObject } from "react";
 import { setOnboardingCardRects } from "./api";
 
-/**
- * Hands the card's rectangle to the native side, which then lets the card take the pointer while
- * everything else on the overlay lets it through to the island and the desktop. Sent again when the
- * card changes size or finishes moving; `placementKey` changes whenever it is placed elsewhere.
- */
 export function useCardRect(card: RefObject<HTMLElement | null>, placementKey: string) {
   useEffect(() => {
     const element = card.current;

@@ -23,18 +23,14 @@ export type MessagesText = {
   badge: (count: number, wechat: boolean) => string;
   label: (text: string) => string;
   qqPreview: (title: string, body: string) => string;
-  /** The banner card below the collapsed island (roadmap C10). */
   banner: {
     more: (count: number) => string;
     close: string;
     actions: string;
   };
-  /** The Messages page opened for new messages (roadmap C11). */
   arrivals: {
     title: string;
-    /** Opens the whole Messages page from the popup. */
     showAll: string;
-    /** Clears the island's reminders (issue #45); the hint says it marks nothing read in QQ or WeChat. */
     clearAll: string;
     clearAllHint: string;
   };

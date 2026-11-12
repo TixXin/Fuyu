@@ -14,7 +14,6 @@ export const MODIFIER_KEY_NAMES = new Set([
 ]);
 
 export function normalizeShortcutKeyLabel(key: string) {
-  // The space key is a single character too; check it before the letter case.
   if (key === " " || key === "Spacebar") {
     return "Space";
   }

@@ -6,7 +6,6 @@
   display: inline-block;
 }
 
-/* The real checkbox covers the switch, so clicks and keyboard focus land on it. */
 .settings-switch input {
   position: absolute;
   inset: 0;

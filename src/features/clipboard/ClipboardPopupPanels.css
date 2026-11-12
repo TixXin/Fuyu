@@ -1,8 +1,3 @@
-/*
- * The clipboard window's second round (C38): recognised kinds in the rows, the pause bar and the
- * footer's record switch, and what opens over the list (actions panel, Space preview, editor).
- * Same ink and pink as ClipboardPopup.css.
- */
 .clipboard-popup__body {
   position: relative;
 }
@@ -106,7 +101,6 @@
   background: transparent;
 }
 
-/* Over the list: the actions panel rises from the bottom, Raycast-like. */
 .clipboard-panel {
   position: absolute;
   inset: 0;
@@ -277,7 +271,6 @@
   overflow-wrap: anywhere;
 }
 
-/* Space: the entry in full over the list. */
 .clipboard-look {
   position: absolute;
   inset: 4px 8px 8px;
@@ -302,7 +295,6 @@
   font-size: 11px;
 }
 
-/* Edit, then paste. */
 .clipboard-editor {
   flex: 1;
   min-width: 0;
@@ -381,7 +373,6 @@
   cursor: default;
 }
 
-/* Recognised kinds in the wide pane. */
 .clipboard-kind {
   min-height: 0;
   display: grid;
@@ -492,6 +483,5 @@
 .island-light .clipboard-code__k { color: #1d6fd1; }
 .island-light .clipboard-code__s { color: #b0336a; }
 .island-light .clipboard-code__n { color: #a86b00; }
-/* Hints at 45% ink are under 3:1 on a light popup; :where keeps the states' own colours winning. */
 :where(.island-light) :is(.clipboard-popup__index, .clipboard-popup__note, .clipboard-panel__note,
   .clipboard-panel__result span, .clipboard-editor__head span, .clipboard-kind__format b) { color: rgba(var(--pop-ink), 0.62); }

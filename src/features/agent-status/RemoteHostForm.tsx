@@ -4,7 +4,6 @@ import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton
 import { useTranslation } from "../../i18n";
 import type { CustomRemoteHost } from "./api";
 
-/** Adds a computer by address on the Remote computers page; kept in the island's own settings. */
 export function RemoteHostForm({ onAdd, onCancel }: {
   onAdd: (host: CustomRemoteHost) => Promise<boolean>;
   onCancel: () => void;

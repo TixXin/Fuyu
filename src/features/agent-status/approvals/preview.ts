@@ -1,12 +1,9 @@
-/** What an approval card shows of a tool call: the command, the file, the address, or the raw input. */
 export type ApprovalPreview = {
   kind: "command" | "file" | "url" | "input";
   text: string;
-  /** The agent's own one-line explanation, when it gave one (Bash's `description`). */
   note: string | null;
 };
 
-/** Longest raw input shown; the agent's terminal has the rest. */
 const MAX_INPUT_CHARS = 600;
 
 const FILE_KEYS = ["file_path", "notebook_path", "path"];
@@ -19,7 +16,6 @@ function text(value: unknown): string | null {
   return typeof value === "string" && value.trim() ? value : null;
 }
 
-/** Codex sends a command as an argument list, Claude Code as one string. */
 function commandText(value: unknown): string | null {
   if (Array.isArray(value)) {
     const parts = value.filter((part): part is string => typeof part === "string");
@@ -48,10 +44,6 @@ export function approvalPreview(toolInput: unknown): ApprovalPreview {
   return { kind: "input", text: raw.length > MAX_INPUT_CHARS ? `${raw.slice(0, MAX_INPUT_CHARS)}…` : raw, note };
 }
 
-/**
- * The rule "always allow" would add, as Claude Code writes it (`Bash(npm test:*)`), from the
- * first `addRules` suggestion; null when there is none, and then the card leaves the button out.
- */
 export function alwaysAllowRule(suggestions: unknown[] | null | undefined): string | null {
   for (const suggestion of suggestions ?? []) {
     const entry = record(suggestion);

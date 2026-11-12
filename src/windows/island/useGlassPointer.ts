@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, type PointerEvent as ReactPointerEvent } from "react";
 import { clamp } from "../../utils/number";
 
-/** Moves the liquid-glass highlight with the pointer, at most once per frame. */
 export function useGlassPointer(isLiquidGlass: boolean) {
   const glassFrameRef = useRef<number | null>(null);
 

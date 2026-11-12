@@ -7,7 +7,6 @@ import { formatFileSize } from "./fileShelf";
 import { FileShelfItemIcon } from "./FileShelfItemIcon";
 import type { SelectMode } from "./selection";
 
-// Movement (px) that turns a press on a row into a drag, so double-clicks still open.
 const DRAG_THRESHOLD_PX = 4;
 const COPIED_FLASH_MS = 1_100;
 
@@ -16,16 +15,11 @@ function selectMode(event: ReactMouseEvent): SelectMode {
   return event.ctrlKey || event.metaKey ? "toggle" : "single";
 }
 
-/** The folder an entry sits in, from its path and name. */
 function folderOf(item: FileShelfItem) {
   const folder = item.path.slice(0, Math.max(0, item.path.length - item.name.length)).replace(/[\\/]+$/, "");
   return folder || item.path;
 }
 
-/**
- * One entry on the shelf page (IslandList.css): click selects (Ctrl / Shift for more), a double
- * click opens, a drag takes it out; pin and copy show on hover, the rest is under "⋯".
- */
 export function FileShelfItemRow({
   item,
   isRecent,
@@ -42,16 +36,13 @@ export function FileShelfItemRow({
   onRemove,
 }: {
   item: FileShelfItem;
-  /** Just added (or moved to the top) by a drop. */
   isRecent: boolean;
   isSelected: boolean;
   menuOpen: boolean;
   onMenuOpenChange: (open: boolean) => void;
   onSelect: (id: string, mode: SelectMode) => void;
-  /** Drags this entry out, with the rest of the selection when it is selected. */
   onDragOut: (id: string) => void;
   onOpen: (id: string) => void;
-  /** "Open" in the menu: always opens, whatever a double click does. */
   onOpenFile: (id: string) => void;
   onCopy: (id: string) => Promise<boolean>;
   onReveal: (id: string) => void;

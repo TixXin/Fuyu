@@ -12,10 +12,8 @@ import {
   type PluginTraceEntry,
 } from "./api";
 
-// The trace grows while the plugin runs; refreshed only while it is shown.
 const TRACE_REFRESH_MS = 1000;
 
-/** Development mode for the settings page: its switch, loaded folders and one plugin's JSON-RPC trace. */
 export function usePluginDev(open: boolean) {
   const errorText = useErrorText();
   const [state, setState] = useState<PluginDevState | null>(null);
@@ -42,7 +40,6 @@ export function usePluginDev(open: boolean) {
   useEffect(() => {
     if (!open) return;
     let didCancel = false;
-    // The CLI loads folders through the local API, so this list changes on its own too.
     const refresh = () =>
       void getPluginDevState()
         .then((next) => !didCancel && setState(next))

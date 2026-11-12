@@ -3,7 +3,6 @@ import { SettingsToggleRow } from "../../../components/settings/SettingsToggleRo
 import { useTranslation } from "../../../i18n";
 import { useAgentApprovalSettings } from "./useAgentApprovalSettings";
 
-/** Settings → AI Agent: whether agents' permission requests wait for a card on the island. */
 export function AgentApprovalSettings() {
   const text = useTranslation().settings.agent.approval;
   const [settings, setSettings] = useAgentApprovalSettings();

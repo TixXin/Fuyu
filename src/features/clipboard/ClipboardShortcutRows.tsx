@@ -7,11 +7,6 @@ import { getClipboardShortcutError, listenClipboardShortcutStatus, type Clipboar
 import { buildShortcutFromEvent, DEFAULT_CLIPBOARD_SHORTCUT, normalizeClipboardShortcut } from "./shortcut";
 import "./ClipboardSettingsSection.css";
 
-/**
- * The global shortcut that opens clipboard history: its switch and the recorded keys.
- * Registration happens in the background service, which reports a failure afterwards;
- * keys taken by another row of the page (`takenBy`) are refused before saving.
- */
 export function ClipboardShortcutRows({ clipboardSettings, onClipboardSettingsChange, takenBy }: {
   clipboardSettings: ClipboardHistorySettings;
   onClipboardSettingsChange: (settings: ClipboardHistorySettings) => void;
@@ -45,7 +40,6 @@ export function ClipboardShortcutRows({ clipboardSettings, onClipboardSettingsCh
     apply(next);
   };
 
-  /** Saves new keys for the service to register; keys another row uses are refused. */
   const apply = (next: string) => {
     const owner = takenBy(next);
     setConflict(owner ? t.settings.shortcuts.taken(next, owner) : "");

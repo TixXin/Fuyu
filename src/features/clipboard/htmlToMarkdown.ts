@@ -1,8 +1,3 @@
-/**
- * Copied HTML as Markdown (C38, "paste as Markdown"), done in the window with its own HTML parser:
- * headings, paragraphs, bold, italics, code, links, images, lists, quotes and simple tables.
- * Scripts and styles are dropped; nothing is fetched.
- */
 export function htmlToMarkdown(html: string): string {
   const doc = new DOMParser().parseFromString(html, "text/html");
   doc.querySelectorAll("script, style, noscript, template, head").forEach((node) => node.remove());

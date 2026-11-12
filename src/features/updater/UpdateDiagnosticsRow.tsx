@@ -6,7 +6,6 @@ import { getUpdateDiagnostics } from "./api";
 import { getUpdateState } from "./updaterController";
 import "./UpdateDiagnosticsRow.css";
 
-/** Copies exactly the allowlisted text the user previewed, never raw errors or paths. */
 export function UpdateDiagnosticsRow() {
   const t = useTranslation().settings.project;
   const text = t.diagnostics;

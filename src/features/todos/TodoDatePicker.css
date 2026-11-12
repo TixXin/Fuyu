@@ -45,7 +45,6 @@
   outline-offset: 2px;
 }
 
-/* Kept under the button so the native calendar opens next to it. */
 .todo-date-picker__input {
   position: absolute;
   inset: 0;

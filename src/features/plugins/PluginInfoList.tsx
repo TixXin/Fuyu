@@ -3,7 +3,6 @@ import { Check, Copy, Eye, EyeOff } from "lucide-react";
 import { useLocale, useTranslation } from "../../i18n";
 import type { PluginInfoItem } from "./api";
 
-/** What a running plugin shares with `ui.setInfo`: label, value, Copy and Show for secrets. */
 export function PluginInfoList({ items }: { items: PluginInfoItem[] }) {
   const t = useTranslation();
   const { locale } = useLocale();

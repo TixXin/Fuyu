@@ -1,17 +1,12 @@
-/** The first-run guide (windows/onboarding): an overlay that lights up the real island, in five acts. */
 export type OnboardingText = {
   windowTitle: string;
-  /** "Step 2 of 5", for the progress dots. */
   stepOf: (step: number, total: number) => string;
   skip: string;
   back: string;
   next: string;
   close: string;
-  /** Under the card: Esc leaves the guide. */
   escHint: string;
-  /** The island's own name, for its greetings. */
   islandName: string;
-  /** Shown while the island is hidden in the tray, so there is nothing to light up. */
   noIsland: string;
   hello: {
     title: string;
@@ -60,9 +55,7 @@ export type OnboardingText = {
     openSettings: string;
     finish: string;
   };
-  /** What the island says in its message panel as the guide opens and as it ends. */
   greeting: Record<"hello" | "ready", { title: string; body: string }>;
-  /** The song and agent session the island plays while the guide runs. */
   demo: {
     song: string;
     artist: string;

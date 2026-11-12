@@ -10,7 +10,6 @@ import { useTranslation } from "../../i18n";
 import type { ClipboardHistorySettings, ClipboardSecretHandling } from "./api";
 import { CLIPBOARD_RETENTION_DAYS, parseExcludedApps } from "./settings";
 
-/** The clipboard history's "what is recorded and kept" group (C22.4, C24). */
 export function ClipboardRecordSettings({ clipboardSettings, onChange }: {
   clipboardSettings: ClipboardHistorySettings;
   onChange: (patch: Partial<ClipboardHistorySettings>) => void;

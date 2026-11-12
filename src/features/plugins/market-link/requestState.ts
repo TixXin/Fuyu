@@ -1,7 +1,3 @@
-/**
- * What the market page shows for a plugin a website link asked to install: wait
- * while the market loads, the plugin once it is found, or say it isn't listed.
- */
 export type MarketRequestState<P> = { kind: "loading" } | { kind: "failed" } | { kind: "missing" } | { kind: "found"; plugin: P };
 
 export function marketRequestState<P extends { id: string }>(

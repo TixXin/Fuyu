@@ -5,10 +5,8 @@
   gap: var(--space-lg);
 }
 
-/* A stand-in wallpaper with colour behind the island, so opacity and glass are visible. */
 .island-preview__desktop {
   position: relative;
-  /* Sizes the expanded island's drawing (its --u), so the pane's height follows its width. */
   container-type: inline-size;
   min-height: 196px;
   padding-bottom: 44px;
@@ -55,11 +53,6 @@
   font-weight: 600;
 }
 
-/*
- * Drawn in the real island's proportions: --u is one pixel of the 660px-wide island at 92% of
- * the pane, and the padding, corners and everything inside (AgentPagePreview.css) are real
- * pixel values times --u, so a wider pane draws a bigger island rather than a sparser one.
- */
 .island-preview__island--expanded {
   --u: calc(92cqw / 660);
   --preview-radius-expanded: calc(var(--preview-radius-px) * var(--u));
@@ -69,7 +62,6 @@
   transform: scale(var(--preview-expanded-scale));
 }
 
-/* Away from the top edge (Position → distance from the top) the island is rounded all round. */
 .island-preview__island--detached {
   margin-top: 10px;
 }
@@ -109,7 +101,6 @@
   border-radius: 3px;
 }
 
-/* The session ring (built-in plugin) with the number of sessions, at the bar's right end. */
 .island-preview__ring {
   width: 20px;
   height: 20px;
@@ -147,7 +138,6 @@
   }
 }
 
-/* The theme market's cards: the collapsed island on its wallpaper, nothing else. */
 .island-preview--compact {
   grid-template-columns: minmax(0, 1fr);
 }

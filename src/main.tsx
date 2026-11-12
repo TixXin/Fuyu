@@ -1,4 +1,3 @@
-// Before every other import: the settings from before the rename (D17).
 import "./lib/copyRenamedKeys";
 import React from "react";
 import ReactDOM from "react-dom/client";
@@ -41,7 +40,6 @@ window.addEventListener(
   true,
 );
 
-// Settings changed in settings.json go into localStorage before anything reads them (D30.2).
 void loadSettingsFile().then(() => ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
     <I18nProvider>

@@ -22,7 +22,6 @@ export function useWeChatReminders(canPreview: boolean) {
   const [busy, setBusy] = useState(isTauri);
   const [actionError, setActionError] = useState<string | null>(null);
   const [previewReceivedAt, setPreviewReceivedAt] = useState<number | null>(null);
-  /** The chat message the preview shows; null for the plain "new reminder". */
   const [previewMessage, setPreviewMessage] = useState<ChatMessage | null>(null);
   const canPreviewRef = useRef(canPreview);
   const revisionRef = useRef(-1);
@@ -40,7 +39,6 @@ export function useWeChatReminders(canPreview: boolean) {
     revisionRef.current = next.revision;
     attentionRef.current = next.lastAttentionAt;
     messageAtRef.current = next.message?.at ?? null;
-    // A snapshot from an island without the list (or a test's short mock) has no items.
     setSnapshot({ ...next, items: next.items ?? [] });
     return true;
   }, []);
@@ -53,7 +51,6 @@ export function useWeChatReminders(canPreview: boolean) {
       unlisten = await listenWeChatReminderChanged(({ payload }) => {
         const newlyPending = payload.snapshot.pending
           && payload.snapshot.lastAttentionAt !== attentionRef.current;
-        // Each message read from the chat list is its own preview, pending or not.
         const message = payload.snapshot.message;
         const newMessage = message !== null && message.at !== messageAtRef.current;
         if (cancelled || !acceptSnapshot(payload.snapshot)) return;
@@ -73,7 +70,6 @@ export function useWeChatReminders(canPreview: boolean) {
         isWeChatRemindersEnabled(),
       );
       if (!cancelled) acceptSnapshot(next);
-      // A setting that changes comes back as an event; one already in place changes nothing.
       await setWeChatExposeUi(isWeChatExposeUiEnabled());
       await setWeChatHideTaskbarButton(isWeChatHideTaskbarButtonEnabled());
     })().catch((error: unknown) => {
@@ -118,13 +114,11 @@ export function useWeChatReminders(canPreview: boolean) {
     if (!enabled) setPreviewReceivedAt(null);
   }), [acceptSnapshot, run]);
 
-  /** Switches WeChat's accessibility on (or back off) so the chat list can be read. */
   const setExposeUi = useCallback((enabled: boolean) => run(async () => {
     acceptSnapshot(await setWeChatExposeUi(enabled));
     saveWeChatExposeUiEnabled(enabled);
   }), [acceptSnapshot, run]);
 
-  /** Takes a minimized WeChat off the taskbar (or stops doing so). */
   const setHideTaskbarButton = useCallback((enabled: boolean) => run(async () => {
     acceptSnapshot(await setWeChatHideTaskbarButton(enabled));
     saveWeChatHideTaskbarButtonEnabled(enabled);
@@ -134,13 +128,11 @@ export function useWeChatReminders(canPreview: boolean) {
     acceptSnapshot(await clearWeChatReminders());
   }), [acceptSnapshot, run]);
 
-  /** Brings WeChat up; `chat` (a preview's) also opens that chat. */
   const openWeChat = useCallback((chat?: string | null) => run(async () => {
     await launchWeChat(chat);
     setPreviewReceivedAt(null);
   }), [run]);
 
-  /** Takes the reminder off the collapsed island and the banner; WeChat's own state is unchanged. */
   const dismissPreview = useCallback(() => setPreviewReceivedAt(null), []);
 
   const showing = canPreview && snapshot.pending && previewReceivedAt !== null;

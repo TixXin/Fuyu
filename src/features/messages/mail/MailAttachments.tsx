@@ -7,7 +7,6 @@ import { saveMailAttachment, type MailAttachment } from "./api";
 
 type SaveState = { status: "saving" } | { status: "saved"; path: string } | { status: "error"; message: string };
 
-/** The open mail's attachments; 保存 writes one into Downloads and shows it in Explorer. */
 export function MailAttachments({ account, messageId, attachments }: { account: string; messageId: string; attachments: MailAttachment[] }) {
   const t = useTranslation();
   const errorText = useErrorText();

@@ -10,10 +10,6 @@ import { useTranslationSettings } from "../../features/translation/useTranslatio
 import { AllShortcutsLink } from "./ShortcutsSettingsPage";
 import { useShortcutOwners } from "./useShortcutOwners";
 
-/**
- * Settings → Behavior: how the island reacts: opening and tucking, moving between its pages,
- * games, and the passing popups. The page keys are recorded here as well as on the Shortcuts page.
- */
 export function BehaviorSettingsPage({
   settings,
   onSettingsChange,

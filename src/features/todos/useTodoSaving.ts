@@ -19,11 +19,9 @@ type TodoSavingOptions = {
   todos: TodoItem[];
   dailyNote: string;
   upsertArchive: UpsertArchive;
-  /** Called when a manual save has no directory to write to. */
   onMissingSaveDirectory: () => void;
 };
 
-/** Saving the day as markdown: the save directory, manual save with its status, and auto-save. */
 export function useTodoSaving({
   currentTodoDate,
   todos,

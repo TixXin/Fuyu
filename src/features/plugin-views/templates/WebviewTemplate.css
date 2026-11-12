@@ -1,4 +1,3 @@
-/* The box a plugin's own page is placed over; the page draws everything inside it. */
 .plugin-webview {
   min-height: 0;
   min-width: 0;

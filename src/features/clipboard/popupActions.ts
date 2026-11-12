@@ -2,7 +2,6 @@ import type { ClipboardActionsText } from "../../i18n/sections/clipboardActions"
 import type { ClipboardCaptureStatus, ClipboardCopyAs, ClipboardHistoryItem } from "./api";
 import { colorFormats, contentKind } from "./contentKind.ts";
 
-/** One line of the actions panel (C38). `next` opens another page of the panel instead of running. */
 export type PopupAction = {
   id: string;
   group: "paste" | "entry" | "record";
@@ -16,7 +15,6 @@ export type PopupAction = {
 
 export type ActionIcon = "paste" | "plain" | "enter" | "edit" | "wand" | "file" | "image" | "qr" | "star" | "tag" | "snippet" | "trash" | "pause" | "play" | "skip" | "ai";
 
-/** What the actions do; the window supplies them. */
 export type PopupActionHandlers = {
   paste: (id: string, options?: { plain?: boolean; enter?: boolean; copyAs?: ClipboardCopyAs }) => void;
   pasteText: (text: string, enter?: boolean) => void;
@@ -30,7 +28,6 @@ export type PopupActionHandlers = {
   ignoreNext: () => void;
 };
 
-/** The actions for `item` (none when nothing is picked), then the recording ones. */
 export function popupActions(item: ClipboardHistoryItem | undefined, capture: ClipboardCaptureStatus | undefined, handlers: PopupActionHandlers, text: ClipboardActionsText): PopupAction[] {
   const actions: PopupAction[] = [];
   const add = (action: PopupAction) => actions.push(action);
@@ -75,13 +72,11 @@ export function popupActions(item: ClipboardHistoryItem | undefined, capture: Cl
   return actions;
 }
 
-/** The actions whose label or note contain every word of `query`. */
 export function filterActions(actions: readonly PopupAction[], query: string): PopupAction[] {
   const words = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
   return actions.filter((action) => words.every((word) => `${action.label} ${action.note ?? ""} ${action.keys ?? ""}`.toLowerCase().includes(word)));
 }
 
-/** The text a set of entries gives when pasted together (C38): text, file paths, or the text read in an image. */
 export function mergedText(items: readonly ClipboardHistoryItem[], separator: "newline" | "space" | "comma"): string {
   const join = separator === "newline" ? "\n" : separator === "space" ? " " : ", ";
   return items

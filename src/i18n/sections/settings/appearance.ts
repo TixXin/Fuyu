@@ -8,15 +8,10 @@ export type SettingsAppearanceText = {
   liquidGlass: string;
   glassStrength: string;
   styleTitle: string;
-  /** The island preview at the top of the page: sample content and the two captions. */
   preview: {
     label: string;
     collapsed: string;
     expanded: string;
-    /**
-     * Sample Agent sessions: one waiting for approval (also the collapsed bar's title), one
-     * asking, one done. Their states and times come from the Agent page's own strings.
-     */
     sessions: {
       needs: { project: string; title: string };
       yourTurn: { project: string; title: string };

@@ -1,9 +1,7 @@
 import type { MailSnapshot } from "./api";
 
-/** One saved mailbox. `host` is the IMAP server the user typed; empty means imap.<domain>. */
 export type MailAccountSettings = { email: string; host: string; enabled: boolean };
 
-/** Up to this many accounts are kept, matching MAX_ACCOUNTS in mail/accounts.rs. */
 export const MAX_MAIL_ACCOUNTS = 5;
 
 function account(value: unknown): MailAccountSettings | null {
@@ -13,10 +11,6 @@ function account(value: unknown): MailAccountSettings | null {
   return { email: email.trim().toLowerCase(), host: typeof host === "string" ? host.trim() : "", enabled };
 }
 
-/**
- * Reads `fuyu-qq-mail-settings`: `{ accounts: [...] }`, or the single
- * `{ email, enabled }` that versions before multi-account saved.
- */
 export function normalizeMailAccounts(stored: unknown): MailAccountSettings[] {
   if (!stored || typeof stored !== "object") return [];
   const list = (stored as { accounts?: unknown }).accounts;
@@ -33,12 +27,10 @@ export function normalizeMailAccounts(stored: unknown): MailAccountSettings[] {
   return accounts;
 }
 
-/** The backend publishes this for a mailbox it has forgotten. */
 export function isRemovedMailbox(snapshot: MailSnapshot) {
   return !snapshot.configured && snapshot.status === "disconnected";
 }
 
-/** Replaces the mailbox's snapshot in place, appends a new one, or drops a removed one. */
 export function upsertMailbox(snapshots: MailSnapshot[], next: MailSnapshot): MailSnapshot[] {
   if (!next.email) return snapshots;
   const index = snapshots.findIndex((snapshot) => snapshot.email === next.email);
@@ -47,7 +39,6 @@ export function upsertMailbox(snapshots: MailSnapshot[], next: MailSnapshot): Ma
   return snapshots.map((snapshot, i) => (i === index ? next : snapshot));
 }
 
-/** Snapshots in the order the accounts were saved; unsaved ones keep their order at the end. */
 export function orderMailboxes(snapshots: MailSnapshot[], saved: MailAccountSettings[]): MailSnapshot[] {
   const rank = (email: string | null) => {
     const index = saved.findIndex((entry) => entry.email === email);
@@ -59,11 +50,6 @@ export function orderMailboxes(snapshots: MailSnapshot[], saved: MailAccountSett
     .map(({ snapshot }) => snapshot);
 }
 
-/**
- * The saved list after a snapshot: connected mailboxes are kept, forgotten ones dropped.
- * `typedHost` is the server this window's connect form sent; it wins over the saved one,
- * because the island and the settings window both save and either may save first.
- */
 export function rememberMailbox(saved: MailAccountSettings[], next: MailSnapshot, typedHost = ""): MailAccountSettings[] {
   if (!next.email) return saved;
   const others = saved.filter((entry) => entry.email !== next.email);
@@ -75,7 +61,6 @@ export function rememberMailbox(saved: MailAccountSettings[], next: MailSnapshot
   return index < 0 ? [...saved, entry] : saved.map((old, i) => (i === index ? entry : old));
 }
 
-/** Unread mail across the mailboxes that are receiving. */
 export function totalUnread(snapshots: MailSnapshot[]) {
   return snapshots.reduce((sum, snapshot) => sum + (snapshot.enabled ? snapshot.unreadCount ?? 0 : 0), 0);
 }

@@ -11,11 +11,6 @@ import { PluginUpdatesSection } from "./PluginUpdatesSection";
 import { usePlugins } from "./usePlugins";
 import "./PluginsSettingsSection.css";
 
-/**
- * The plugins page: the third-party switch and the plugins folder, then the installed plugins,
- * third-party and built-in apart, two cards a row; or one plugin's own page once a card is
- * opened. The market is its own page.
- */
 export function PluginsSettingsSection({ initialOpenId = null }: { initialOpenId?: string | null } = {}) {
   const t = useTranslation();
   const {
@@ -38,7 +33,6 @@ export function PluginsSettingsSection({ initialOpenId = null }: { initialOpenId
     untrustPublisher,
     checkUpdates,
   } = usePlugins();
-  // Opened from the market's Manage button: that plugin's own page.
   const [openId, setOpenId] = useState<string | null>(initialOpenId);
   const allowed = snapshot?.allowThirdParty ?? false;
   const openPlugin = snapshot?.plugins.find((plugin) => plugin.id === openId);
@@ -94,7 +88,6 @@ export function PluginsSettingsSection({ initialOpenId = null }: { initialOpenId
         <SettingsRow
           title={t.settings.plugins.folder}
           description={
-            // Right-to-left so a long path loses its start, not the plugins folder at its end.
             <code className="plugins-folder__path" dir="rtl" data-search="off">
               <bdi>{snapshot?.pluginsDir ?? ""}</bdi>
             </code>

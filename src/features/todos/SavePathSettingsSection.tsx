@@ -8,7 +8,6 @@ import { useTranslation } from "../../i18n";
 import type { SavePathState } from "./types";
 import "./SavePathSettingsSection.css";
 
-/** Todos → Saving: the folder daily Markdown files go to; Save keeps a typed path. */
 export function SavePathSettingsSection({ saveDirectoryDraft, savePathState, highlightSavePath, onSaveDirectoryDraftChange, onSaveDirectory }: {
   saveDirectoryDraft: string;
   savePathState: SavePathState;
@@ -20,7 +19,6 @@ export function SavePathSettingsSection({ saveDirectoryDraft, savePathState, hig
   const panelRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
-  // Opened from the island to set a folder: bring the field into view and focus it.
   useEffect(() => {
     if (!highlightSavePath) return;
     const frame = window.requestAnimationFrame(() => {

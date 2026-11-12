@@ -1,4 +1,3 @@
-/* Settings → AI Agent → Remote computers: the intro card, host rows and the add-host form. */
 .agent-remote__intro {
   display: flex;
   align-items: flex-start;
@@ -93,7 +92,6 @@
   gap: var(--space-xl);
 }
 
-/* Address and port share a line, then user and name: the port is short. */
 .agent-remote__fields {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);

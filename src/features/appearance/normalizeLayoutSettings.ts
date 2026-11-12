@@ -1,4 +1,3 @@
-// Reading saved settings, part 1 (normalizeSettings in settings.ts): the island's look and size.
 import { clamp } from "../../utils/number.ts";
 import { getColorSetting } from "../../utils/color.ts";
 import { DEFAULT_SETTINGS, LEGACY_FALLBACKS } from "./settingsDefaults.ts";
@@ -12,7 +11,6 @@ import { oneOf } from "./settingsLimits.ts";
 import { ISLAND_MOTIONS } from "./islandMotion.ts";
 import type { IslandSettings, LegacyIslandSettings } from "./types";
 
-/** The look and size: scales, margin, corners, panel height, colours, what the bar shows. */
 export function normalizeLayoutSettings(settings: LegacyIslandSettings | null | undefined) {
   const taskTextColor = getColorSetting(
     settings?.taskTextColor ?? settings?.pendingTodoColor,
@@ -24,7 +22,7 @@ export function normalizeLayoutSettings(settings: LegacyIslandSettings | null | 
     ? 0.82
     : settings?.collapsedScale ?? settings?.sizeScale ?? DEFAULT_SETTINGS.collapsedScale;
   const expandedScale = hasPreviousDefaultScales
-    ? 1.05 // The default these settings moved to back then, not today's.
+    ? 1.05
     : settings?.expandedScale ?? settings?.sizeScale ?? DEFAULT_SETTINGS.expandedScale;
   const marginY = settings?.marginY ?? settings?.margin ?? DEFAULT_SETTINGS.marginY;
   const hasPreviousDefaultMargin =
@@ -58,14 +56,11 @@ export function normalizeLayoutSettings(settings: LegacyIslandSettings | null | 
     islandCornerRadius: typeof settings?.islandCornerRadius === "number" && Number.isFinite(settings.islandCornerRadius)
       ? clamp(Math.round(settings.islandCornerRadius), MIN_ISLAND_CORNER_RADIUS, MAX_ISLAND_CORNER_RADIUS)
       : LEGACY_FALLBACKS.islandCornerRadius,
-    // Squircle for upgrades too: it replaced the round corners as the island's look.
     islandCornerShape: settings?.islandCornerShape === "round" ? "round" : "squircle",
-    // Missing before C49: the island opened with the spring, the first-launch one.
     islandMotion: oneOf(ISLAND_MOTIONS, settings?.islandMotion, DEFAULT_SETTINGS.islandMotion),
     maxPanelHeight: typeof settings?.maxPanelHeight === "number" && Number.isFinite(settings.maxPanelHeight)
       ? clamp(Math.round(settings.maxPanelHeight), MIN_MAX_PANEL_HEIGHT, MAX_MAX_PANEL_HEIGHT)
       : LEGACY_FALLBACKS.maxPanelHeight,
-    // Older settings had no width: the panel was 560px.
     panelWidth: typeof settings?.panelWidth === "number" && Number.isFinite(settings.panelWidth)
       ? clamp(Math.round(settings.panelWidth), MIN_PANEL_WIDTH, MAX_PANEL_WIDTH)
       : LEGACY_FALLBACKS.panelWidth,
@@ -101,10 +96,6 @@ export function normalizeLayoutSettings(settings: LegacyIslandSettings | null | 
   } satisfies Partial<IslandSettings>;
 }
 
-/**
- * The mode and the two colour sets (C33.3). Settings from before the sets put their one set of
- * colours into the set it looks like (themeSetsFromSingleColors), so nothing changes on upgrade.
- */
 function normalizeThemeSets(settings: LegacyIslandSettings | null | undefined) {
   const source = (settings ?? {}) as Record<string, unknown>;
   const merged = hasThemeSets(source) ? source : { ...source, ...themeSetsFromSingleColors(source) };

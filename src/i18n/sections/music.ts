@@ -3,13 +3,9 @@ export type MusicText = {
   controlFailed: string;
   noMedia: string;
   lyricsLabel: string;
-  /** The time played and the length, for the progress bar. */
   progress: (played: string, length: string) => string;
-  /** A lyric line that aligns the island's timing to itself. */
   alignToLine: (line: string) => string;
-  /** The player reports no position; the island times the track itself. */
   estimate: { timed: string; unsure: string; inflink: string };
-  /** No lyrics for a Chinese song while only LRCLIB is asked; opens Settings → Music. */
   lyricsChineseHint: { text: string; label: string };
   lyricsOffset: { label: string; earlier: string; later: string; reset: (seconds: number) => string };
   unknownArtist: string;

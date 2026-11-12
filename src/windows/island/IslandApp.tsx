@@ -1,9 +1,7 @@
 import { useCallback, useMemo } from "react";
-// First: the message panels it loads bring CSS that must come before the page panels' and the shell's.
 import { useIslandNotices } from "./useIslandNotices";
 import { PluginPermissionPrompt } from "../../features/plugins/PluginPermissionPrompt";
 import { PluginContextMenus } from "../../features/plugins/PluginContextMenu";
-// The page panels; before IslandShell so their CSS keeps its place in the cascade.
 import { useCalendar } from "../../features/calendar/useCalendar";
 import { todoEvents } from "../../features/calendar/todoEvents";
 import { IslandPages } from "./IslandPages";
@@ -15,7 +13,6 @@ import { useScreenshotCard } from "../../features/screenshot/useScreenshotCard";
 import { ScreenshotCard } from "../../features/screenshot/ScreenshotCard";
 import { useIslandSettings } from "../../features/appearance/useIslandSettings";
 import { useClipboardHistory } from "../../features/clipboard/useClipboardHistory";
-// Imported after the page panels so its CSS keeps its place in the cascade.
 import { IslandShell } from "./IslandShell";
 import { useMediaState } from "../../features/media/useMediaState";
 import type { TodoItem } from "../../features/todos/types";
@@ -62,44 +59,30 @@ import { useFirstRunGuide } from "./useFirstRunGuide";
 import { useSettingsFileSync } from "../../features/settings-backup/useSettingsFileSync";
 import { useOnboardingDemo, withDemoMedia } from "./useOnboardingDemo";
 import { useIslandLyrics } from "./useIslandLyrics";
-// Must stay the last import: IslandApp.css overrides the feature styles above.
 import "./IslandApp.css";
 
-// Stands in for the todo list while todos are switched off, so the collapsed island shows none.
 const NO_TODOS: TodoItem[] = [];
 
-/**
- * The island window: puts the feature hooks together and hands their state to the shell and the
- * page panels. Each concern's wiring lives in its own use* hook next to this file; add new wiring
- * there rather than here, so parallel changes do not all meet in this file.
- */
 export function IslandApp() {
   const t = useTranslation();
   useTrayLanguage();
-  // Copies the settings into settings.json in the data folder when they change (D30.2).
   useSettingsFileSync();
   const navigation = useIslandNavigation();
   const { mode, isTucked, page, setPage, collapseIsland, tuckIsland, revealIsland, minimizeToEdge, openIslandPage, toggleClipboardHistory } = navigation;
   const pluginPages = usePluginPages(page);
   const [storedSettings, setSettings] = useIslandSettings();
-  // The colours of the dark or light set the theme uses now (C31, C33.3).
   const settings = useResolvedTheme(storedSettings);
-  // Quiet while a full-screen app (usually a game) is in front, if game mode asks for it.
   const game = useGameMode(settings, { mode, isTucked, collapseIsland, tuckIsland, revealIsland });
   const notices = useIslandNotices(settings, { mode, isTucked, quiet: game.quiet });
   const { qqNotifications, wechatReminders, qqMail, pluginNotifications, permissionPrompts, hasMessagePreview } = notices;
-  // Reads whether the island ran before in this first render, before its effects save the settings.
   useFirstRunGuide(pluginNotifications);
-  // A demo song and agent session while the first-run guide runs, so its practice has something to show.
   const demo = useOnboardingDemo();
   const { messageSource, setMessageSource, openMessages } = useMessageView(qqMail.closeReader, openIslandPage);
   const banner = useIslandBanner({ messageNotice: settings.messageNotice, notices, mode, isTucked, quiet: game.quiet, onOpenMessages: openMessages });
-  // A banner holds the island like a preview line does, but leaves the bar's summary in place.
   const showsMessage = hasMessagePreview || banner.showing;
   const media = withDemoMedia(useMediaState(settings.musicEnabled), demo);
   const { agentStatus, agentSessions, listedAgentSessions, activeAgentSessionCount, unseenAgentSessions, agentRemoval, agentSession: namedAgent, agentInterjection, agentActivity, agentUsages } =
     useIslandAgents(settings, demo.sessions);
-  // Downloads updates in the background and installs them when idle (D18).
   useIslandAutoUpdate({ mode, sessions: agentSessions });
   const quotaAlert = useQuotaAlert(agentUsages, settings.agentStatusEnabled ? settings.agentQuotaAlertPercent : 0, {
     quiet: game.quiet,
@@ -109,7 +92,6 @@ export function IslandApp() {
   const collapsedSlots = useCollapsedSlots({
     paused: mode !== "collapsed" || isTucked || game.quiet,
     agents: agentActivity,
-    // The Agent page's list, so the ring leaves out what the page hides (quit sessions, say).
     sessions: listedAgentSessions,
     unseen: unseenAgentSessions.keys,
     agentsOn: settings.agentStatusEnabled,
@@ -118,7 +100,6 @@ export function IslandApp() {
   });
   const { todos, activeTodoId, notebookProps, addTodoOn } = useIslandTodos({ settings, mode, page, agentStatus, collapseIsland });
 
-  // A screenshot's text (C41.5) shows like a selection translation, and opens in the translator.
   const screenshotText = useScreenshotText();
   const screenshotCard = useScreenshotCard();
   const translationPeek = useQuickTranslation(settings.translationEnabled) ?? screenshotText;
@@ -126,8 +107,6 @@ export function IslandApp() {
     page,
     barShown: mode === "collapsed" && !isTucked && settings.showCollapsedText,
   });
-  // While a line is sung, lyrics first: an agent only for a moment when its session changes, or
-  // while it waits on the user. Agents first: the lyric line only while no agent is named.
   const agentSession = settings.agentTitleMode === "changes" || (currentLyric && settings.lyricsIslandPriority === "lyrics") ? agentInterjection : namedAgent;
   const lyricLine = agentSession ? null : currentLyric;
   const { collapsedTaskTitle, collapsedTodoCount, collapsedIslandWidth } =
@@ -145,7 +124,6 @@ export function IslandApp() {
     settings,
     navigation,
     hasMessagePreview: showsMessage,
-    // A screenshot card brings a tucked island out, as a permission prompt does.
     hasPermissionPrompt: permissionPrompts.current !== null || screenshotCard.current !== null,
     hasTranslationPeek: Boolean(translationPeek),
     holdTuck: holdsTuck(settings, {
@@ -157,7 +135,6 @@ export function IslandApp() {
 
 
   const clipboard = useClipboardHistory(toggleClipboardHistory);
-  // Todos starting with a time ("15:00 周会") count down like meetings, with no calendar needed.
   const timedTodos = useMemo(() => (settings.todoEnabled ? todoEvents(todos, Date.now(), t.island.todoList) : []), [settings.todoEnabled, t, todos]);
   const calendar = useCalendar(settings.calendarEnabled, settings.calendarRemindMinutes, timedTodos);
   const { clipboardHistory } = clipboard;
@@ -193,11 +170,9 @@ export function IslandApp() {
   const { popup, expandedIslandWidth } = useIslandPopup(
     mode,
     messagePanel.arrivals !== null || alertPopup,
-    // One width for every page (C27); a popup is narrower.
     null,
     panelIslandWidth(settings.panelWidth, settings.expandedScale),
   );
-  // Alt + dragging the panel's edges (C25); a height drag shows the panel at the height being set.
   const { resizingHeight, resizing } = useIslandResize(settings, setSettings, popup);
   const pageIslandHeight = getExpandedIslandHeight({
     page,
@@ -207,7 +182,6 @@ export function IslandApp() {
     popup,
   });
   const expandedIslandHeight = resizingHeight && !popup ? settings.maxPanelHeight : pageIslandHeight;
-  // The colours the island shows now: a light island may stay dark while collapsed (C33.2).
   const look = useMemo(() => (mode === "collapsed" ? collapsedThemeColors(settings) : settings), [mode, settings]);
   const accent = useAccentColor(settings);
   const devicePixelRatio = useDevicePixelRatio();
@@ -215,7 +189,6 @@ export function IslandApp() {
   const stageStyle = useMemo(
     () => ({
       ...getIslandStageStyle(look, mode, collapsedIslandWidth, expandedIslandHeight, expandedIslandWidth, accent, devicePixelRatio),
-      // Opening as the island goes to expanded, closing as it goes to collapsed (C49).
       ...islandMotionVariables(settings.islandMotion, mode === "collapsed" ? "close" : "open", reducedMotion),
     }),
     [collapsedIslandWidth, expandedIslandHeight, expandedIslandWidth, mode, look, accent, devicePixelRatio, settings.islandMotion, reducedMotion],
@@ -315,7 +288,6 @@ export function IslandApp() {
         onResetPosition={resetIslandPosition}
         minimizesToTray={settings.minimizeAction === "tray"}
         onMinimize={settings.minimizeAction === "tray" ? minimizeIsland : minimizeToEdge}
-        // In its own window, translation opens from its shortcut or the tray; the button is for the page.
         onOpenTranslator={settings.translationEnabled && settings.translationTarget === "island" ? openTranslator : null}
         translationPeek={translationPeek}
         onOpenTranslationPeek={openTranslationPeek}

@@ -8,11 +8,6 @@ import { groupByProject, projectsOf } from "../project";
 import { TodoIslandRow } from "./TodoIslandRow";
 import { TodoProjectFilter, TodoProjectHeading } from "./TodoProjectFilter";
 
-/**
- * Today's list with the field to add to it, or a saved day's list (read-only, no field). Once a
- * todo has a project (issue #44) the open ones group under their projects, with a filter above;
- * with no projects the list looks as before.
- */
 export function TodoIslandTasks({
   todos,
   editable,
@@ -59,8 +54,6 @@ export function TodoIslandTasks({
   const filter = pickedProject !== null && projects.includes(pickedProject) ? pickedProject : null;
   const shown = filter === null ? todos : todos.filter((todo) => todo.project === filter);
   const grouped = projects.length > 0 && filter === null;
-  // Today's list keeps what is done under its own fold, below what is still open; a saved day
-  // reads in the order it was written.
   const open = editable ? shown.filter((todo) => !todo.completed) : shown;
   const done = editable ? shown.filter((todo) => todo.completed) : [];
   const row = (todo: TodoItem, inGroup = false) => (

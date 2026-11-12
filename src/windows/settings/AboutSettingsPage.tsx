@@ -10,13 +10,8 @@ import { useTranslation } from "../../i18n";
 import { openOnboardingWindow } from "../onboarding/api";
 import { quitIsland } from "./api";
 
-// An unanswered confirmation falls back, so a stray click later cannot reset.
 const CONFIRM_TIMEOUT_MS = 4_000;
 
-/**
- * About: the island, its version and updates (the former Updates page), links, and last the two
- * actions that end something: resetting every setting (after a confirmation) and quitting.
- */
 export function AboutSettingsPage({ onSettingsChange }: { onSettingsChange: (settings: IslandSettings) => void }) {
   const t = useTranslation();
   const text = t.settings.project;

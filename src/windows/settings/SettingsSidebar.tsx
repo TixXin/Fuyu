@@ -21,7 +21,6 @@ const CATEGORY_ICONS: Record<SettingsCategory, LucideIcon> = {
   translation: Languages,
   shelf: Inbox,
   screenshot: Crop,
-  // The AI Agent folder itself shows the robot; its first page is the island's top bar.
   agents: PanelTop,
   agentSessions: MessagesSquare,
   agentRemote: Server,
@@ -34,10 +33,8 @@ const CATEGORY_ICONS: Record<SettingsCategory, LucideIcon> = {
   about: Info,
 };
 
-/** Every setting row of every page, both languages (`pnpm settings:index` writes the file). */
 const SEARCH_ENTRIES = searchIndex.entries as SettingsSearchEntry[];
 
-/** Each group is a row its pages fold under. */
 const GROUP_ICONS: Record<SettingsGroup, LucideIcon> = {
   basics: Settings2,
   features: LayoutGrid,
@@ -45,14 +42,6 @@ const GROUP_ICONS: Record<SettingsGroup, LucideIcon> = {
   extensions: Blocks,
 };
 
-/**
- * The settings window's page list: a search box, each group as a row its pages fold under (all
- * open at first), and About pinned to the bottom. Searching matches page names, group names and
- * each page's keywords, and the settings on each page (titles, descriptions and choices, in
- * either language, settingsSearch.ts). It shows only the pages it found, folded ones too, with
- * the settings it found under each; clicking one opens its page at that row. Enter opens the
- * best: a setting whose title holds the query, else the first page, else the best setting.
- */
 export function SettingsSidebar({
   category,
   onCategoryChange,
@@ -60,14 +49,12 @@ export function SettingsSidebar({
 }: {
   category: SettingsCategory;
   onCategoryChange: (category: SettingsCategory) => void;
-  /** Opens `page` and shows the row titled `title` there; without it, search lists pages only. */
   onRowOpen?: (page: SettingsCategory, title: string) => void;
 }) {
   const t = useTranslation();
   const { locale } = useLocale();
   const text = t.settings.categories;
   const [query, setQuery] = useState("");
-  // Every group starts open; folding lasts while the window is open.
   const [folded, setFolded] = useState<ReadonlySet<SettingsGroup>>(() => new Set());
   const toggle = (group: SettingsGroup) => {
     const next = new Set(folded);
@@ -80,7 +67,6 @@ export function SettingsSidebar({
     return `${text[item]} ${group ? text.groups[group] : ""} ${text.keywords[item]}`;
   };
   const listRef = useRef<HTMLDivElement>(null);
-  // Unfolded, the list can outgrow a short window; keep the open page in sight.
   useEffect(() => {
     listRef.current?.querySelector(".settings-sidebar__item--active")?.scrollIntoView({ block: "nearest" });
   }, [category, folded]);
@@ -168,7 +154,6 @@ export function SettingsSidebar({
           if (items.length === 0 || name === null) return null;
           const label = text.groups[name];
           const GroupIcon = GROUP_ICONS[name];
-          // Folded, only the open page stays listed, so the sidebar still shows where you are.
           const open = searching || !folded.has(name);
           const children = open ? items : items.filter((entry) => entry === category);
           const holdsActive = items.includes(category);

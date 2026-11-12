@@ -1,4 +1,3 @@
-/* Transparent, like its window: until the picture is painted the real screen shows through. */
 html:has(.screenshot-overlay),
 body:has(.screenshot-overlay) {
   margin: 0;
@@ -25,7 +24,6 @@ body:has(.screenshot-overlay) {
   position: absolute;
   inset: 0;
   background: rgba(0, 0, 0, 0.42);
-  /* Eases in so the screen does not snap darker. */
   animation: screenshot-dim-in 120ms ease-out both;
 }
 
@@ -41,7 +39,6 @@ body:has(.screenshot-overlay) {
   }
 }
 
-/* The selection stays clear; its huge shadow dims everything around it. */
 .screenshot-overlay__selection {
   position: absolute;
   box-sizing: border-box;
@@ -49,7 +46,6 @@ body:has(.screenshot-overlay) {
   box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.42);
 }
 
-/* The window or control a click would select: outlined, the rest dimmed like a selection. */
 .screenshot-overlay__target {
   position: absolute;
   box-sizing: border-box;
@@ -58,7 +54,6 @@ body:has(.screenshot-overlay) {
   pointer-events: none;
 }
 
-/* Dashed guide lines across the whole monitor: through the pointer, and along the selection's edges. */
 .screenshot-overlay__guide {
   --guide-color: var(--color-accent, #74d6ff);
   position: absolute;

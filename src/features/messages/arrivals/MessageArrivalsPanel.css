@@ -1,9 +1,6 @@
-/* The Messages page opened for new messages: a title and one row per arrival, like the banner's. */
 .message-arrivals {
-  /* Its own content height, never the page's: the island's height is measured from it. */
   flex: none;
   align-self: start;
-  /* align-self: start would otherwise shrink the rows to their text. */
   width: 100%;
   display: grid;
   gap: 8px;
@@ -26,7 +23,6 @@
   gap: 2px;
 }
 
-/* Quiet until pointed at: the rows are what the popup is for. */
 .message-arrivals__clear {
   display: inline-grid;
   place-items: center;
@@ -199,8 +195,6 @@
   outline-offset: -2px;
 }
 
-/* One inline plugin message (C11c): no card, the island is the message; the icon is bigger and
-   centred on the two lines beside it. 8px above the text, with the popup's 8px top padding. */
 .message-arrivals--inline .message-arrivals__item {
   background: transparent;
 }

@@ -4,7 +4,6 @@ import { viewIcon } from "../icons";
 import type { ViewAction } from "../model";
 import "./TemplateActions.css";
 
-/** The buttons at the bottom of a detail or status page; a click sends view.action. */
 export function TemplateActions({ pluginId, viewId, actions }: { pluginId: string; viewId: string; actions: ViewAction[] }) {
   const t = useTranslation();
   if (actions.length === 0) return null;

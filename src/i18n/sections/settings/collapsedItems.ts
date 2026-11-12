@@ -1,4 +1,3 @@
-/** Appearance → Items on the collapsed bar (C12, issue #17). */
 export type SettingsCollapsedItemsText = {
   title: string;
   hint: string;

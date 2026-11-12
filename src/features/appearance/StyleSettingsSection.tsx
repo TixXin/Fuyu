@@ -8,7 +8,6 @@ import type { AppearanceMode, IslandFont, IslandSettings } from "./types";
 
 const percent = (value: number) => `${Math.round(value)}%`;
 
-/** Appearance → Style: classic or liquid glass, the font, and how see-through the island is. */
 export function StyleSettingsSection({
   settings,
   onSettingsChange,

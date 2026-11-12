@@ -1,5 +1,3 @@
-/* The extension offer reuses the archived pill (ArchivedNotice.css) but spans the page's width and
-   wraps its sentence, which is longer than "Archived". */
 .agent-extension-hint {
   right: 6px;
   height: auto;

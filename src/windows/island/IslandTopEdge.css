@@ -1,80 +1,38 @@
-/*
- * Top-edge attachment. Rust reports it on the root element as
- * data-island-top-edge (see topEdge.ts). Before the first report, and in the
- * browser preview, the docked class from App stands in. Every "attached" rule
- * below uses the same pair of selectors for that reason.
- */
-
 .island {
-  /*
-   * Radius of the concave fillets that flare the flat top into the screen edge.
-   * The unitless size comes from the appearance settings (stageStyle.ts). Rounded to whole
-   * device pixels: Chromium snaps the fillet mask tiles to them, so a fractional radius (8 at a
-   * 1.15 scale is 9.2px) left a 1px slit between the left fillet and the island.
-   */
   --island-top-fillet: round(
     calc(var(--island-top-fillet-size, 8) * 1px * var(--island-scale, 1)),
     var(--island-device-pixel, 1px)
   );
-  /* The rim layer reaches this far into the island so it can take over its side rim. */
   --island-top-fillet-box: calc(var(--island-top-fillet) + 4px);
-  /* Rim that continues the island outline along the fillet curve. */
   --island-top-fillet-rim: transparent;
   --island-top-fillet-rim-inset: 0px;
   --island-top-fillet-rim-width: 1px;
-  /* Soft falloff on the island side of the rim, to match a side rim that has an inner glow. */
   --island-top-fillet-rim-glow: transparent;
   --island-top-fillet-rim-glow-width: 0px;
-  /*
-   * Where the fillet rim hands over to the island's side rim. They are drawn two ways (a radial
-   * gradient and an inset shadow) that round to device pixels differently, so a hard switch at
-   * the bottom of the fillet showed a knot and a 1px jog. Below this point down the fillet, the
-   * ring fades out while the side rim fades in; both run near-vertical there.
-   */
   --island-top-fillet-handover: 35%;
-  /*
-   * Classic draws its rim with an all-round inset shadow. The opaque fill layer
-   * repaints the 1px top edge, and the 1px sides beside the fillets, so
-   * the outline follows the fillet rim instead. Glass is translucent, so it hides
-   * its rim through the refraction mask and shadow override below instead.
-   */
   --island-top-fillet-cover: #000;
-  /*
-   * The glass layers inside the island (.island__glass::after in App.css) lift the
-   * edges with a white top sheen and cyan / pink side tints. The fillet fill only
-   * gets the island background, so the same lift is layered on top of it.
-   */
   --island-top-fillet-sheen: transparent;
   --island-top-fillet-tint-left: transparent;
   --island-top-fillet-tint-right: transparent;
 }
 
-/* Classic: the expanded island draws a 1px rim from its own inset shadow. */
 .island--expanded {
   --island-top-fillet-rim: rgba(255, 255, 255, 0.08);
 }
 
-/*
- * Liquid glass: the rim is the refraction border, 1px wide and 1px inside the edge,
- * softened inwards by its 2px white inset glow. The fillet rim copies both, so it
- * does not thicken into a hook where it leaves the side.
- */
 .island--appearance-liquidGlass {
   --island-top-fillet-rim: rgba(255, 255, 255, var(--glass-border-alpha));
   --island-top-fillet-rim-inset: 1px;
   --island-top-fillet-rim-width: 1px;
   --island-top-fillet-rim-glow: rgba(255, 255, 255, calc(var(--glass-border-alpha) * 0.35));
   --island-top-fillet-rim-glow-width: 1.5px;
-  /* A colour, not a size: a zero-sized mask layer makes Chromium drop the whole mask. */
   --island-top-fillet-cover: transparent;
-  /* The refraction clip cuts the glass side rim off sharply, so its ring must not fade. */
   --island-top-fillet-handover: 100%;
   --island-top-fillet-sheen: rgba(255, 255, 255, calc(0.13 * var(--glass-refraction-opacity)));
   --island-top-fillet-tint-left: rgba(116, 214, 255, calc(0.1 * var(--glass-refraction-opacity)));
   --island-top-fillet-tint-right: rgba(255, 156, 224, calc(0.08 * var(--glass-refraction-opacity)));
 }
 
-/* A dragged island dropped flush with the top gets the docked flat top. */
 :root[data-island-top-edge="attached"] .island--detached.island--collapsed {
   border-radius: 0 0 var(--island-shell-radius-collapsed) var(--island-shell-radius-collapsed);
 }
@@ -83,13 +41,6 @@
   border-radius: 0 0 var(--island-shell-radius) var(--island-shell-radius);
 }
 
-/*
- * Fillet fill. The layer spans the full island height plus one fillet on each
- * side and paints the island's own background, so vertical gradients, glass
- * tints and custom colours line up at the seam. The mask keeps only the two
- * cut-out corners outside the island. The fillets sit outside the native hit
- * area, so clicks there reach the desktop.
- */
 .island::before,
 .island::after {
   content: "";
@@ -99,7 +50,6 @@
   right: calc(-1 * var(--island-top-fillet));
   opacity: 0;
   pointer-events: none;
-  /* Fades with the corner-radius morph on .island. */
   transition: opacity var(--island-motion-radius, 450ms) var(--island-motion-ease, cubic-bezier(0.22, 1, 0.36, 1));
 }
 
@@ -148,13 +98,6 @@
       1px var(--island-top-fillet) no-repeat;
 }
 
-/*
- * Fillet rim and glass lift, above the glass layers. Each ring is centred on the
- * fillet's circle and offset by the rim inset, so at the bottom of the fillet it
- * lands exactly on the island's side rim and then curves out into the screen edge.
- * The mask keeps the fillet shape plus a thin strip of the island edge, where the
- * ring takes over from the island's own side rim.
- */
 .island::after {
   --rim-from: calc(var(--island-top-fillet) + var(--island-top-fillet-rim-inset));
   --rim-to: calc(var(--rim-from) + var(--island-top-fillet-rim-width));
@@ -209,26 +152,12 @@
 :root[data-island-top-edge="attached"] .island::after,
 :root:not([data-island-top-edge]) .island--docked::before,
 :root:not([data-island-top-edge]) .island--docked::after {
-  /*
-   * Hidden at size 0 rather than drawn with zero-sized masks, which Chromium
-   * drops entirely. Any size of 1px or more clamps to fully visible.
-   */
   opacity: min(1, var(--island-top-fillet-size, 8));
 }
 
-/*
- * The fillet rim takes over the island's side rim at the top corners, and the
- * screen edge replaces the lit top rim, so the outline runs as one line.
- */
 :root[data-island-top-edge="attached"] .island__glass-refraction,
 :root:not([data-island-top-edge]) .island--docked .island__glass-refraction {
   --refraction-band: calc(var(--island-top-fillet) - 1px);
-  /*
-   * Clip rather than mask: a masked refraction changes how the screen-blended
-   * .island__glass::after composites over it in Chromium, which shows as a
-   * lighter block. The clip drops the top glow along the screen edge and the
-   * side rim beside the fillets, where the fillet rim takes over.
-   */
   clip-path: polygon(
     5px 4px,
     calc(100% - 5px) 4px,
@@ -241,7 +170,6 @@
   );
 }
 
-/* Same shadows as App.css without the inset top highlight. */
 :root[data-island-top-edge="attached"] .island--appearance-liquidGlass.island--expanded,
 :root:not([data-island-top-edge]) .island--docked.island--appearance-liquidGlass.island--expanded {
   box-shadow:
@@ -262,12 +190,6 @@
     inset -1px 0 0 rgba(255, 156, 224, 0.08);
 }
 
-/*
- * Keyboard focus inside the collapsed island (Tab onto one of its buttons) lights its
- * edges with an inner glow. The fillets carry only the island fill, so a glow running up
- * the sides to the screen edge leaves a seam where they meet. Attached, the glow rises
- * from the bottom edge only and fades out before the fillets.
- */
 :root[data-island-top-edge="attached"] .island--collapsed:has(:focus-visible),
 :root:not([data-island-top-edge]) .island--docked.island--collapsed:has(:focus-visible) {
   box-shadow:

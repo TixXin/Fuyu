@@ -2,11 +2,6 @@ import type { ClipboardHistoryItem } from "./api";
 import { matchesClipboardQuery } from "./clipboardSearch.ts";
 import { contentKind } from "./contentKind.ts";
 
-/**
- * The clipboard window's search (C38): words as on the island's page, plus Chinese matched by its
- * pinyin or the pinyin's first letters ("hy" finds 会议), and "/" rules: /app:微信, /today,
- * /yesterday, /week, /img, /file, /link, /color, /json, /text, /fav.
- */
 export type PopupQuery = { words: string[]; rules: QueryRule[] };
 
 export type QueryRule =
@@ -32,19 +27,16 @@ export function parsePopupQuery(query: string): PopupQuery {
     }
     const keyword = ALIASES[body] ?? KEYWORDS.find((known) => known === body);
     if (keyword) rules.push({ rule: keyword });
-    // A rule still being typed ("/to") narrows nothing yet.
     else if (![...KEYWORDS, "app:"].some((known) => known.startsWith(body))) words.push(token);
   }
   return { words, rules };
 }
 
-/** Pinyin of a text: every syllable joined, and their first letters joined, lower case. */
 export type PinyinOf = (text: string) => { full: string; initials: string };
 
 let pinyinOf: PinyinOf | null = null;
 let loading: Promise<PinyinOf | null> | null = null;
 
-/** Loads the pinyin table once (about 300 KB; the island's page loads it on its first search). */
 export function loadPinyin(): Promise<PinyinOf | null> {
   loading ??= import("pinyin-pro")
     .then(({ pinyin }) => {
@@ -105,7 +97,6 @@ function ruleMatches(item: ClipboardHistoryItem, rule: QueryRule, now: number): 
   }
 }
 
-/** Whether an entry passes every rule and every word (a word may match by pinyin when loaded). */
 export function matchesPopupQuery(item: ClipboardHistoryItem, query: PopupQuery, now: number, pinyin: PinyinOf | null = pinyinOf): boolean {
   if (!query.rules.every((rule) => ruleMatches(item, rule, now))) return false;
   return query.words.every((word) =>

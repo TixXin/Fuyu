@@ -1,4 +1,3 @@
-/* A now-playing message's own buttons, where the time would be (ArrivalMediaControls.tsx). */
 .message-arrivals__item--media {
   display: flex;
   align-items: center;

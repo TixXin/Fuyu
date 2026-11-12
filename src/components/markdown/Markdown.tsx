@@ -19,7 +19,6 @@ function renderInline(content: Inline[], onOpenLink: (href: string) => void): Re
   });
 }
 
-/** Markdown text from outside the app, rendered as elements only (see parseMarkdown.ts). */
 export function Markdown({ text, onOpenLink, className }: { text: string; onOpenLink: (href: string) => void; className?: string }) {
   const blocks = useMemo(() => parseMarkdown(text), [text]);
   return (
@@ -27,7 +26,6 @@ export function Markdown({ text, onOpenLink, className }: { text: string; onOpen
       {blocks.map((block, index) => {
         switch (block.type) {
           case "heading": {
-            // Page headings are taken; a README's # starts one level below the panel's own.
             const Tag = (["h3", "h4", "h5", "h6", "h6", "h6"] as const)[block.level - 1];
             return <Tag key={index}>{renderInline(block.content, onOpenLink)}</Tag>;
           }

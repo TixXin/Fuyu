@@ -8,7 +8,6 @@ import { exportClipboardHistory, importClipboardHistory, revealExportedFile } fr
 
 type Status = { kind: "exported"; path: string } | { kind: "imported"; items: number; snippets: number } | { kind: "error"; message: string } | null;
 
-/** Settings → Clipboard → Import and export (C24.8): the history, its images and the snippets in one file. */
 export function ClipboardTransferSettings() {
   const t = useTranslation();
   const errorText = useErrorText();

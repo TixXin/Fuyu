@@ -14,9 +14,7 @@ export function FileShelfPanel({
   revealOnDoubleClick,
 }: {
   shelf: FileShelfController;
-  /** Files are being dragged over the island. */
   isDropTarget: boolean;
-  /** Double-clicking (or Enter on) an entry shows it in its folder instead of opening it. */
   revealOnDoubleClick: boolean;
 }) {
   const t = useTranslation();
@@ -32,16 +30,13 @@ export function FileShelfPanel({
     [items, query, view],
   );
   const visibleIds = useMemo(() => visible.map((item) => item.id), [visible]);
-  // Entries that left the list (removed, cleaned up, filtered out) leave the selection.
   const selection = keepVisible(rawSelection, visibleIds);
   const selected = new Set(selection.ids);
 
-  // Files may have moved since the page was last open.
   useEffect(() => {
     void refresh();
   }, [refresh]);
 
-  // Dropped files land on top; clear the search and filter and bring them into view.
   useEffect(() => {
     if (!recentDrop) return;
     setQuery("");

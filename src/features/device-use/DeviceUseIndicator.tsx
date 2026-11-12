@@ -4,11 +4,6 @@ import { openDevicePrivacySettings, type DeviceUse } from "./api";
 import { devicesInUse } from "./deviceUse";
 import "./DeviceUseIndicator.css";
 
-/**
- * Camera and microphone icons on the collapsed island while an app uses them: green for the
- * camera, orange for the microphone, like the dots on phones. Clicking one opens Windows' privacy
- * settings for that device; the apps are named for screen readers.
- */
 export function DeviceUseIndicator({ deviceUse }: { deviceUse: DeviceUse }) {
   const t = useTranslation();
   const devices = devicesInUse(deviceUse);

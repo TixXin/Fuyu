@@ -4,7 +4,6 @@ import { getClipboardImagePreview, type ClipboardHistoryItem, type ClipboardSnip
 import { ClipboardKindPane } from "./ClipboardKindPane";
 import { contentKind } from "./contentKind";
 
-// Larger images already read this time the window has run; the native side scales them each time.
 const previews = new Map<string, Promise<string | null>>();
 
 function useImagePreview(item: ClipboardHistoryItem | undefined) {
@@ -25,11 +24,6 @@ function useImagePreview(item: ClipboardHistoryItem | undefined) {
   return url;
 }
 
-/**
- * The wide clipboard window's right side: the picked entry in full, so it can be checked before it
- * is pasted. Text wraps and scrolls, an image shows large with the text read in it, files are
- * listed; a masked key stays masked. Under it, where and when it was copied and its tags.
- */
 export function ClipboardPopupPreview({ entry, snippet, linkPreview = false, onPasteText }: {
   entry?: ClipboardHistoryItem;
   snippet?: ClipboardSnippet;

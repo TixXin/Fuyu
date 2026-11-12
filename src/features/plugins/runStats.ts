@@ -1,8 +1,5 @@
-// Numbers for a plugin card's run line: memory split into the runtime's share and the
-// plugin's own, and the per-process detail.
 import type { PluginResources } from "./api";
 
-/** Display names of the runtimes baseline.rs measures, by process file name. */
 const RUNTIME_NAMES: Record<string, string> = {
   "powershell.exe": "PowerShell",
   "node.exe": "Node.js",
@@ -14,7 +11,6 @@ export function megabytes(bytes: number): string {
 
 export type MemorySplit = {
   total: string;
-  /** Present when the runtime's idle size is known: runtime name, its share, the rest. */
   runtime: { name: string; megabytes: string; plugin: string } | null;
 };
 
@@ -23,7 +19,6 @@ export function memorySplit(resources: PluginResources): MemorySplit {
   const host = resources.processes[0]?.name.toLowerCase() ?? "";
   const name = RUNTIME_NAMES[host];
   if (!name || resources.runtimeBytes === null || resources.runtimeBytes <= 0) return { total, runtime: null };
-  // A runtime can be measured a little above a plugin that just started; never show a negative share.
   const runtimeBytes = Math.min(resources.runtimeBytes, resources.memoryBytes);
   return {
     total,

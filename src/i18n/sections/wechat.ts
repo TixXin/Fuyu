@@ -7,7 +7,6 @@ export type WechatText = {
   clear: string;
   list: string;
   openItem: (title: string) => string;
-  /** Under a reminder that came without a contact and message: why. */
   plainReason: {
     tray: string;
     unreadable: string;

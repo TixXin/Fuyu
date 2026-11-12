@@ -3,36 +3,20 @@ import { createPortal } from "react-dom";
 import { CARD_OFFSET, cardLeft } from "./hoverCardPlacement";
 import "./IslandHoverCard.css";
 
-/** One line of the card; `color` draws a small dot before it (a ring's colour, a status). */
 export type HoverCardLine = { text: string; color?: string; muted?: boolean };
 
 type IslandHoverCardProps = {
-  /** Lines from top to bottom; the caller translates them. */
   lines: readonly HoverCardLine[];
-  /** The trigger, normally a button so keyboard focus shows the card too. */
   children: ReactNode;
-  /** Pause before the card shows, in ms (default 200). */
   delayMs?: number;
-  /**
-   * Keeps the card shut, e.g. once the native side says the cursor left the island: the page
-   * misses pointerleave when the window stops taking the cursor outside the island shape.
-   */
   suppressed?: boolean;
-  /** The element whose bottom edge the card sits under, centred (default ".island"; else the trigger). */
   alignTo?: string;
-  /** Where the card is drawn; it inherits that element's CSS variables (default ".stage"; else body). */
   portalTo?: string;
-  /** Extra class on the wrapper around `children`, e.g. to make it a block. */
   anchorClassName?: string;
 };
 
 type Place = { top: number; center: number; root: Element };
 
-/**
- * A small dark card under the island while the cursor rests on (or keyboard focus is in) its
- * trigger. Drawn outside the island so the island's clipping and scale do not touch it; it takes
- * no pointer events, so it never holds the island open or steals focus.
- */
 export function IslandHoverCard({
   lines,
   children,
@@ -47,7 +31,6 @@ export function IslandHoverCard({
   const timerRef = useRef<number | undefined>(undefined);
   const [place, setPlace] = useState<Place | null>(null);
   const [left, setLeft] = useState<number | null>(null);
-  // Where the pointer is across, while it is on the trigger; null for keyboard focus.
   const pointerRef = useRef<number | null>(null);
   const [pointerX, setPointerX] = useState<number | null>(null);
 
@@ -68,7 +51,6 @@ export function IslandHoverCard({
     pointerRef.current = event.clientX;
     schedule();
   };
-  // Along a wide trigger the card keeps stepping out of the cursor's way.
   const onPointerMove = (event: PointerEvent) => {
     pointerRef.current = event.clientX;
     if (place) setPointerX(event.clientX);
@@ -88,7 +70,6 @@ export function IslandHoverCard({
   }, [suppressed]);
   useEffect(() => () => window.clearTimeout(timerRef.current), []);
 
-  // Centred under the island, kept inside the window and out from under the cursor.
   useLayoutEffect(() => {
     const card = cardRef.current;
     if (!place || !card) return;

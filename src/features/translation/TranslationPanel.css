@@ -1,9 +1,3 @@
-/*
- * Translation as an island page (docs/design/translation.md): on the island itself, no card of its
- * own. A direction bar over the source and result panes, side by side once the page is wide
- * enough, stacked below that. Colours take the island's ink and the accent, so a light island or
- * another accent carries over.
- */
 .translation-panel {
   --tp-ink: var(--island-ink-rgb, 241, 240, 246);
   height: 100%;
@@ -102,7 +96,6 @@
   white-space: nowrap;
 }
 
-/* Green with a saved key, amber without. */
 .translation-panel__dot {
   width: 6px;
   height: 6px;
@@ -278,7 +271,6 @@
   cursor: default;
 }
 
-/* Translating: three soft lines where the result will be. */
 .translation-panel__skeleton {
   display: grid;
   gap: 8px;
@@ -305,7 +297,6 @@
   to { background-position: -200% 0; }
 }
 
-/* No key, or an error: said where the result would be, with what to do next. */
 .translation-panel__state {
   min-height: 0;
   flex: 1;

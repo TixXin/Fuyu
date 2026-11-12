@@ -1,9 +1,7 @@
-/* A karaoke line (KaraokeText.tsx): the colours come in as --karaoke-lit and --karaoke-dim. */
 .karaoke {
   color: var(--karaoke-dim);
 }
 
-/* Following: the line is clipped by its own box and its track slides inside it. */
 .karaoke--follow {
   display: block;
   min-width: 0;
@@ -16,8 +14,6 @@
   animation: karaoke-follow linear both;
 }
 
-/* Each word: the sung half of a double-width gradient slides in behind the text over the
-   word's time (KaraokeText sets the delay and duration). */
 .karaoke__word {
   color: transparent;
   background: linear-gradient(90deg, var(--karaoke-lit) 50%, var(--karaoke-dim) 50%) 100% 0 / 200% 100% no-repeat;
@@ -26,7 +22,6 @@
   animation: karaoke-fill linear both;
 }
 
-/* Fill "word": each word lights at once when it is sung. */
 .karaoke--word .karaoke__word {
   animation-timing-function: step-start;
 }
@@ -48,7 +43,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  /* The word still lights when it is sung, all at once instead of filling; long lines stay put. */
   .karaoke__word {
     animation-timing-function: step-start;
   }

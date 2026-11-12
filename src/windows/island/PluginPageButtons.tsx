@@ -7,7 +7,6 @@ import type { IslandPage } from "./types";
 import { usePageHoverSwitch } from "./usePageHoverSwitch";
 import "./PluginPageButtons.css";
 
-/** One small icon button per plugin page, after the built-in page dots. */
 export function PluginPageButtons({
   views,
   page,
@@ -21,7 +20,6 @@ export function PluginPageButtons({
   page: IslandPage;
   features: IslandFeatures;
   modifiers: string;
-  /** Resting the pointer on a button opens its page. */
   hoverSwitchPage: boolean;
   hoverSwitchDelayMs: number;
   onOpen: (page: IslandPage) => void;
