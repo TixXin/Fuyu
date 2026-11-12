@@ -16,6 +16,8 @@ import {
   type PinInfo,
 } from "../../features/screenshot/api";
 import { nextOpacity, nextScale } from "../../features/screenshot/pin";
+import { saveFolderOf } from "../../features/screenshot/settings";
+import { loadScreenshotSettings } from "../../features/screenshot/storage";
 import { useErrorText, useTranslation } from "../../i18n";
 import { getErrorMessage } from "../../utils/error";
 import "./PinWindow.css";
@@ -91,7 +93,7 @@ export function PinWindow() {
 
   const report = useCallback((error: unknown) => setNotice(errorText(error)), [errorText]);
   const copy = useCallback(() => copyPin().then(() => setNotice(t.pinCopied), report), [report, t]);
-  const save = useCallback(() => savePin({ folderName: t.saveFolderName }).then((path) => setNotice(t.saved(path)), report), [report, t]);
+  const save = useCallback(() => savePin({ folder: saveFolderOf(loadScreenshotSettings()), folderName: t.saveFolderName }).then((path) => setNotice(t.saved(path)), report), [report, t]);
   const close = useCallback(() => {
     setClosing(true);
     window.setTimeout(() => void closePin(), CLOSE_MS);

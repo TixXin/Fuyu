@@ -1,6 +1,8 @@
 import type { Dispatch, ReactNode, SetStateAction } from "react";
 import type { ClipboardHistorySettings } from "../../features/clipboard/api";
 import { ClipboardShortcutRows } from "../../features/clipboard/ClipboardShortcutRows";
+import { ScreenshotShortcutRows } from "../../features/screenshot/ScreenshotShortcutRows";
+import type { ScreenshotSettings } from "../../features/screenshot/settings";
 import type { TranslationSettings } from "../../features/translation/storage";
 import { TranslationShortcutRows } from "../../features/translation/TranslationShortcutRows";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
@@ -42,6 +44,25 @@ export function TranslationShortcutGroup({ title, action, enabled, translation, 
       {enabled
         ? <TranslationShortcutRows settings={translation} onSettingsChange={onTranslationChange} takenBy={takenBy} />
         : onTurnOn && <FeatureOffRow feature={t.settings.categories.translation} onTurnOn={onTurnOn} />}
+    </SettingsGroup>
+  );
+}
+
+export function ScreenshotShortcutGroup({ title, action, enabled, screenshot, onScreenshotChange, takenBy, onTurnOn }: {
+  title: string;
+  action: ReactNode;
+  enabled: boolean;
+  screenshot: ScreenshotSettings;
+  onScreenshotChange: (settings: ScreenshotSettings) => void;
+  takenBy: TakenBy;
+  onTurnOn: () => void;
+}) {
+  const t = useTranslation();
+  return (
+    <SettingsGroup title={title} action={action} footer={enabled ? t.settings.screenshot.shortcutsHint : undefined}>
+      {enabled
+        ? <ScreenshotShortcutRows settings={screenshot} onSettingsChange={onScreenshotChange} takenBy={(shortcut, target) => takenBy(shortcut, `screenshot:${target}`)} />
+        : <FeatureOffRow feature={t.settings.categories.screenshot} onTurnOn={onTurnOn} />}
     </SettingsGroup>
   );
 }

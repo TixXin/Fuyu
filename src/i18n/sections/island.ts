@@ -12,6 +12,7 @@ export type IslandText = {
   tuckToTop: string;
   resetPosition: string;
   resetPositionLabel: string;
+  screenshot: string;
   editor: string;
   todoList: string;
   music: string;
@@ -47,6 +48,7 @@ export const zhCN: IslandText = {
   tuckToTop: "收起到屏幕顶部",
   resetPosition: "复位",
   resetPositionLabel: "回到主屏顶部居中",
+  screenshot: "截图",
   editor: "岛屿编辑",
   todoList: "任务清单",
   music: "Music",
@@ -85,6 +87,7 @@ export const en: IslandText = {
   tuckToTop: "Tuck to top edge",
   resetPosition: "Reset",
   resetPositionLabel: "Reset island to the top center of the primary screen",
+  screenshot: "Screenshot",
   editor: "Island editor",
   todoList: "Tasks",
   music: "Music",

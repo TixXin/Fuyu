@@ -40,6 +40,13 @@ pub(crate) fn translate_label(language: TrayLanguage) -> &'static str {
     }
 }
 
+pub(crate) fn screenshot_label(language: TrayLanguage) -> &'static str {
+    match language {
+        TrayLanguage::Chinese => "截图",
+        TrayLanguage::English => "Screenshot",
+    }
+}
+
 pub(crate) fn clipboard_label(language: TrayLanguage, paused: bool) -> &'static str {
     match (language, paused) {
         (TrayLanguage::Chinese, false) => "暂停剪贴板记录",
@@ -52,10 +59,11 @@ pub(crate) fn clipboard_label(language: TrayLanguage, paused: bool) -> &'static 
 struct TrayMenu {
     toggle: MenuItem<Wry>,
     translate: MenuItem<Wry>,
+    screenshot: MenuItem<Wry>,
     clipboard: MenuItem<Wry>,
     settings: MenuItem<Wry>,
     quit: MenuItem<Wry>,
-    shown: Mutex<(TrayLanguage, bool, bool, bool)>,
+    shown: Mutex<(TrayLanguage, bool, bool, bool, bool)>,
 }
 
 fn island_visible(app: &AppHandle) -> bool {
@@ -68,7 +76,7 @@ fn refresh(app: &AppHandle, language: Option<TrayLanguage>) {
     let Some(menu) = app.try_state::<TrayMenu>() else { return };
     let visible = island_visible(app);
     let mut shown = menu.shown.lock().unwrap_or_else(PoisonError::into_inner);
-    let next = (language.unwrap_or(shown.0), visible, translation::is_enabled(), crate::clipboard_history::clipboard_capture_paused());
+    let next = (language.unwrap_or(shown.0), visible, translation::is_enabled(), crate::clipboard_history::clipboard_capture_paused(), crate::screenshot::is_enabled());
     if *shown == next {
         return;
     }
@@ -76,6 +84,8 @@ fn refresh(app: &AppHandle, language: Option<TrayLanguage>) {
     let _ = menu.toggle.set_text(toggle);
     let _ = menu.translate.set_text(translate_label(next.0));
     let _ = menu.translate.set_enabled(next.2);
+    let _ = menu.screenshot.set_text(screenshot_label(next.0));
+    let _ = menu.screenshot.set_enabled(next.4);
     let _ = menu.clipboard.set_text(clipboard_label(next.0, next.3));
     let _ = menu.settings.set_text(settings);
     let _ = menu.quit.set_text(quit);
@@ -94,8 +104,9 @@ pub(crate) fn build_tray(app: &App) -> tauri::Result<()> {
     let quit = MenuItem::with_id(app, "quit", quit_text, true, None::<&str>)?;
     let translate = MenuItem::with_id(app, "translate", translate_label(TrayLanguage::Chinese), true, None::<&str>)?;
     let clipboard = MenuItem::with_id(app, "clipboard_pause", clipboard_label(TrayLanguage::Chinese, false), true, None::<&str>)?;
-    let menu = Menu::with_items(app, &[&toggle, &translate, &clipboard, &settings, &quit])?;
-    app.manage(TrayMenu { toggle, translate, clipboard, settings, quit, shown: Mutex::new((TrayLanguage::Chinese, true, true, false)) });
+    let screenshot = MenuItem::with_id(app, "screenshot", screenshot_label(TrayLanguage::Chinese), false, None::<&str>)?;
+    let menu = Menu::with_items(app, &[&toggle, &translate, &screenshot, &clipboard, &settings, &quit])?;
+    app.manage(TrayMenu { toggle, translate, screenshot, clipboard, settings, quit, shown: Mutex::new((TrayLanguage::Chinese, true, true, false, false)) });
 
     let mut tray = TrayIconBuilder::new()
         .tooltip("Fuyu")
@@ -111,6 +122,7 @@ pub(crate) fn build_tray(app: &App) -> tauri::Result<()> {
                 refresh(app, None);
             }
             "translate" => translation::open_translator(app),
+            "screenshot" => crate::screenshot::start_from_tray(app),
             "clipboard_pause" => {
                 crate::clipboard_history::actions::toggle_capture_pause();
                 refresh(app, None);
@@ -169,5 +181,6 @@ mod tests {
         assert_eq!(translate_label(TrayLanguage::Chinese), "快捷翻译");
         assert_eq!(translate_label(TrayLanguage::English), "Quick Translate");
         assert_eq!(super::clipboard_label(TrayLanguage::Chinese, true), "恢复剪贴板记录");
+        assert_eq!(super::screenshot_label(TrayLanguage::English), "Screenshot");
     }
 }

@@ -25,7 +25,7 @@ const SESSION = { provider: "claude", sessionId: "s1", cwd: "E:\\Projects\\demo"
 let setSessions: (sessions: AgentSessionSummary[]) => void = () => {};
 
 function Harness() {
-  const card = useScreenshotCard();
+  const card = useScreenshotCard(8);
   const [sessions, set] = useState<AgentSessionSummary[]>([SESSION]);
   setSessions = set;
   return (

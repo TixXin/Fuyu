@@ -16,6 +16,7 @@ export const BACKUP_KEYS = [
   "fuyu-plugin-pages",
   "fuyu-plugin-market-favorites",
   "fuyu-screenshot-annotation",
+  "fuyu-screenshot-settings",
   "fuyu-save-directory",
   "fuyu-update-channel",
   "fuyu-update-preferences",

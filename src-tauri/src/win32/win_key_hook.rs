@@ -32,6 +32,40 @@ static NUMPAD_WINDOW: AtomicIsize = AtomicIsize::new(0);
 static NUMPAD_MESSAGE: AtomicU32 = AtomicU32::new(0);
 static NUMPAD_DIGITS: AtomicU32 = AtomicU32::new(0);
 static SWALLOWING_NUMPAD: AtomicU32 = AtomicU32::new(0);
+static PRINT_WINDOW: AtomicIsize = AtomicIsize::new(0);
+static PRINT_MESSAGE: AtomicU32 = AtomicU32::new(0);
+static SWALLOWING_PRINT: AtomicBool = AtomicBool::new(false);
+const KEY_PRINT_SCREEN: u32 = 0x2C;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) struct PrintScreenStep {
+    pub(crate) take: bool,
+    pub(crate) post: bool,
+    pub(crate) swallowing: bool,
+}
+
+pub(crate) fn print_screen_step(pressed: bool, modifiers_down: bool, swallowing: bool) -> PrintScreenStep {
+    match (pressed, swallowing) {
+        (true, _) if modifiers_down => PrintScreenStep { take: false, post: false, swallowing },
+        (true, already) => PrintScreenStep { take: true, post: !already, swallowing: true },
+        (false, true) => PrintScreenStep { take: true, post: false, swallowing: false },
+        (false, false) => PrintScreenStep { take: !modifiers_down, post: !modifiers_down, swallowing: false },
+    }
+}
+
+fn take_print_screen(event: &KBDLLHOOKSTRUCT, pressed: bool) -> bool {
+    let window = PRINT_WINDOW.load(Ordering::SeqCst);
+    if window == 0 || event.vkCode != KEY_PRINT_SCREEN {
+        return false;
+    }
+    let modifiers = [VK_CONTROL, VK_MENU, VK_SHIFT, VK_LWIN, VK_RWIN].into_iter().any(is_down);
+    let step = print_screen_step(pressed, modifiers, SWALLOWING_PRINT.load(Ordering::SeqCst));
+    SWALLOWING_PRINT.store(step.swallowing, Ordering::SeqCst);
+    if step.post {
+        post(window, PRINT_MESSAGE.load(Ordering::SeqCst));
+    }
+    step.take
+}
 
 fn post(window: isize, message: u32) {
     post_with(window, message, 0);
@@ -98,7 +132,7 @@ unsafe extern "system" fn keyboard_proc(code: i32, wparam: WPARAM, lparam: LPARA
         let event = unsafe { &*(lparam.0 as *const KBDLLHOOKSTRUCT) };
         let injected = event.flags.0 & LLKHF_INJECTED.0 != 0;
         let pressed = wparam.0 as u32 == WM_KEYDOWN || wparam.0 as u32 == WM_SYSKEYDOWN;
-        if !injected && take_numpad(event, pressed) {
+        if !injected && (take_numpad(event, pressed) || take_print_screen(event, pressed)) {
             return LRESULT(1);
         }
         if event.vkCode == KEY_V && !injected {
@@ -146,8 +180,16 @@ pub(crate) fn set_numpad(target: Option<(HWND, u32, u32)>) -> windows::core::Res
     sync_hook()
 }
 
+pub(crate) fn set_print_screen(target: Option<(HWND, u32)>) -> windows::core::Result<()> {
+    store(target, &PRINT_WINDOW, &PRINT_MESSAGE);
+    if target.is_none() {
+        SWALLOWING_PRINT.store(false, Ordering::SeqCst);
+    }
+    sync_hook()
+}
+
 fn sync_hook() -> windows::core::Result<()> {
-    let needed = [&TARGET_WINDOW, &PASTE_WINDOW, &NUMPAD_WINDOW]
+    let needed = [&TARGET_WINDOW, &PASTE_WINDOW, &NUMPAD_WINDOW, &PRINT_WINDOW]
         .iter()
         .any(|window| window.load(Ordering::SeqCst) != 0);
     let mut hook = HOOK.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
@@ -185,6 +227,18 @@ mod tests {
         assert_eq!(numpad_digit(key(VK_NUMPAD7), false, true, true, true, false), Some(7));
         assert_eq!(numpad_digit(key(VK_NUMPAD1), false, true, true, false, false), None);
         assert_eq!(numpad_digit(u32::from(b'1'), false, true, true, true, false), None);
+    }
+
+    #[test]
+    fn a_plain_print_screen_is_taken_once_and_its_release_swallowed() {
+        use super::{print_screen_step, PrintScreenStep};
+        let step = |take, post, swallowing| PrintScreenStep { take, post, swallowing };
+        assert_eq!(print_screen_step(true, false, false), step(true, true, true));
+        assert_eq!(print_screen_step(true, false, true), step(true, false, true), "auto-repeat starts nothing new");
+        assert_eq!(print_screen_step(false, false, true), step(true, false, false));
+        assert_eq!(print_screen_step(true, true, false), step(false, false, false), "Alt+PrtSc and the like stay Windows'");
+        assert_eq!(print_screen_step(false, false, false), step(true, true, false), "a release seen without its press still counts");
+        assert_eq!(print_screen_step(false, true, false), step(false, false, false));
     }
 
     #[test]

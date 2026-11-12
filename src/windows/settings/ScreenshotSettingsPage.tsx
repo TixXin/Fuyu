@@ -1,21 +1,41 @@
+import { useState } from "react";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
+import { SettingsInput } from "../../components/settings/SettingsInput";
 import { SettingsRow } from "../../components/settings/SettingsRow";
+import { SettingsSelect } from "../../components/settings/SettingsSelect";
 import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
 import type { IslandSettings } from "../../features/appearance/types";
+import { useClipboardSettings } from "../../features/clipboard/useClipboardSettings";
+import { ScreenshotShortcutRows } from "../../features/screenshot/ScreenshotShortcutRows";
+import { CARD_SECONDS, type CardSeconds } from "../../features/screenshot/settings";
+import { useScreenshotSettings } from "../../features/screenshot/useScreenshotSettings";
+import { useTranslationSettings } from "../../features/translation/useTranslationSettings";
 import { useTranslation } from "../../i18n";
 import { ModuleSwitchSection } from "./ModuleSwitchSection";
-import "./ScreenshotSettingsPage.css";
+import { AllShortcutsLink } from "./ShortcutsSettingsPage";
+import { useShortcutOwners } from "./useShortcutOwners";
 
 export function ScreenshotSettingsPage({
   settings,
   onSettingsChange,
+  onOpenShortcuts,
 }: {
   settings: IslandSettings;
   onSettingsChange: (settings: IslandSettings) => void;
+  onOpenShortcuts: () => void;
 }) {
   const t = useTranslation();
   const text = t.settings.screenshot;
-  const keys = (label: string) => <kbd className="screenshot-settings__keys">{label}</kbd>;
+  const [screenshot, setScreenshot] = useScreenshotSettings();
+  const [clipboard] = useClipboardSettings();
+  const [translation] = useTranslationSettings();
+  const { takenBy } = useShortcutOwners({ settings, clipboard, translation, screenshot });
+  const [folderDraft, setFolderDraft] = useState(screenshot.saveFolder);
+  const saveFolder = () => {
+    const folder = folderDraft.trim();
+    setFolderDraft(folder);
+    if (folder !== screenshot.saveFolder) setScreenshot({ ...screenshot, saveFolder: folder });
+  };
 
   return (
     <>
@@ -24,6 +44,21 @@ export function ScreenshotSettingsPage({
         checked={settings.screenshotEnabled}
         onChange={(screenshotEnabled) => onSettingsChange({ ...settings, screenshotEnabled })}
       />
+      {settings.screenshotEnabled && (
+        <SettingsGroup title={text.shortcutsTitle} footer={text.shortcutsHint} action={<AllShortcutsLink onOpen={onOpenShortcuts} />}>
+          <ScreenshotShortcutRows
+            settings={screenshot}
+            onSettingsChange={setScreenshot}
+            takenBy={(shortcut, action) => takenBy(shortcut, `screenshot:${action}`)}
+          />
+          <SettingsToggleRow
+            title={text.printScreen}
+            description={text.printScreenHint}
+            checked={screenshot.printScreen}
+            onChange={(printScreen) => setScreenshot({ ...screenshot, printScreen })}
+          />
+        </SettingsGroup>
+      )}
       {settings.screenshotEnabled && (
         <SettingsGroup title={text.whileCapturingTitle}>
           <SettingsToggleRow
@@ -35,12 +70,33 @@ export function ScreenshotSettingsPage({
         </SettingsGroup>
       )}
       {settings.screenshotEnabled && (
-        <SettingsGroup title={text.shortcutsTitle} footer={text.shortcutsHint}>
-          <SettingsRow title={text.region} description={text.regionHint} control={keys("Ctrl+Shift+1")} />
-          <SettingsRow title={text.copy} description={text.copyHint} control={keys("Ctrl+Shift+2")} />
-          <SettingsRow title={text.text} description={text.textHint} control={keys("Ctrl+Shift+3")} />
-          <SettingsRow title={text.translate} description={text.translateHint} control={keys("Ctrl+Shift+4")} />
-          <SettingsRow title={text.fullscreen} description={text.fullscreenHint} control={keys("Ctrl+Shift+7")} />
+        <SettingsGroup title={text.afterTitle}>
+          <SettingsRow
+            title={text.saveFolder}
+            description={text.saveFolderHint}
+            control={
+              <SettingsInput
+                value={folderDraft}
+                placeholder={text.saveFolderPlaceholder}
+                aria-label={text.saveFolder}
+                onChange={(event) => setFolderDraft(event.target.value)}
+                onBlur={saveFolder}
+                onKeyDown={(event) => { if (event.key === "Enter") saveFolder(); }}
+              />
+            }
+          />
+          <SettingsRow
+            title={text.cardSeconds}
+            description={text.cardSecondsHint}
+            control={
+              <SettingsSelect
+                value={String(screenshot.cardSeconds)}
+                options={CARD_SECONDS.map((seconds) => ({ value: String(seconds), label: text.cardSecondsOption(seconds) }))}
+                ariaLabel={text.cardSeconds}
+                onChange={(seconds) => setScreenshot({ ...screenshot, cardSeconds: Number(seconds) as CardSeconds })}
+              />
+            }
+          />
         </SettingsGroup>
       )}
     </>

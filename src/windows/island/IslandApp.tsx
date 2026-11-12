@@ -101,7 +101,8 @@ export function IslandApp() {
   const { todos, activeTodoId, notebookProps, addTodoOn } = useIslandTodos({ settings, setSettings, mode, page, agentStatus, collapseIsland });
 
   const screenshotText = useScreenshotText();
-  const screenshotCard = useScreenshotCard();
+  const screenshot = useIslandScreenshot(settings.screenshotEnabled, collapseIsland);
+  const screenshotCard = useScreenshotCard(screenshot.settings.cardSeconds);
   const translationPeek = useQuickTranslation(settings.translationEnabled) ?? screenshotText;
   const { lyrics, lyricLine: currentLyric } = useIslandLyrics(settings, media.mediaState, {
     page,
@@ -195,7 +196,6 @@ export function IslandApp() {
   );
 
   const { fileShelf, isShelfDropping } = useIslandShelf(settings, navigation);
-  useIslandScreenshot(settings.screenshotEnabled);
 
   const {
     isPositionDetached,
@@ -289,6 +289,7 @@ export function IslandApp() {
         minimizesToTray={settings.minimizeAction === "tray"}
         onMinimize={settings.minimizeAction === "tray" ? minimizeIsland : minimizeToEdge}
         onOpenTranslator={settings.translationEnabled && settings.translationTarget === "island" ? openTranslator : null}
+        onScreenshot={screenshot.start}
         translationPeek={translationPeek}
         onOpenTranslationPeek={openTranslationPeek}
         onOpenSettings={openSettingsWindow}
