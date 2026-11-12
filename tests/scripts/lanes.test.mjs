@@ -9,6 +9,7 @@ import { laneOf, lanePath, ownerOf } from "../../scripts/lanes/laneRegistry.mjs"
 import { ACTIVE_MS, UNKNOWN_OWNER_MS, judge, usable } from "../../scripts/lanes/laneState.mjs";
 import { listLanes, openLane, releaseLane, takeLane } from "../../scripts/lanes/lanePool.mjs";
 import { listLine } from "../../scripts/lanes/lanes.mjs";
+import { hintFor } from "../../scripts/lanes/session-hint.mjs";
 
 const NOW = Date.UTC(2026, 10, 12, 12);
 const quiet = { lane: 3, worktree: true, work: null, owner: null, task: null, lastActivityMs: NOW - ACTIVE_MS - 1 };
@@ -49,6 +50,14 @@ test("lanes are found from any folder inside them", () => {
   assert.equal(laneOf(main, path.join(lanePath(main, 21), "src", "x")), 21);
   assert.equal(laneOf(main, main), null);
   assert.equal(laneOf(main, path.join("E:", "Projects", "fly-island-lanes", "_prtools")), null);
+});
+
+test("a session starting in the main checkout is told to open a lane first, one in a lane is not", () => {
+  const main = path.join("E:", "Projects", "fly-island");
+  assert.match(hintFor(main, main), /lane:open/);
+  assert.match(hintFor(main, path.join(main, "src")), /EnterWorktree/);
+  assert.equal(hintFor(main, path.join(lanePath(main, 4), "src")), null);
+  assert.equal(hintFor(main, path.join("E:", "Projects", "other")), null);
 });
 
 test("the list says whose a lane is and why", () => {
