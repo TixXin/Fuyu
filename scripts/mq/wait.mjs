@@ -35,6 +35,7 @@ async function reportStranded() {
 
 async function afterMerge(commit) {
   const branch = tryGit(["rev-parse", "--abbrev-ref", "HEAD"]).out.trim();
+  tryGit(["fetch", "origin", INTEGRATION_BRANCH, "--quiet"]);
   sync();
   if (commit) fireOnLand(commit, branch);
   await reportStranded();
