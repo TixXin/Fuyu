@@ -79,10 +79,10 @@ export function OnboardingWindow() {
   const last = index === ACTS.length - 1;
   const light = activeTone(settings.themeMode, useSystemDark()) === "light";
   const modules = enabledModules(settings, clipboard.enabled);
-  const { spot, anchor } = useIslandSpot();
+  const spot = useIslandSpot();
   const viewport = useViewport();
   const card = useRef<HTMLDivElement | null>(null);
-  const placement = cardPlacement(anchor, viewport, act === "play");
+  const placement = cardPlacement(spot, viewport);
   useCardRect(card, `${act}:${placement.left}:${placement.top}:${placement.bottom}`);
   useWindowAccent(settings);
   useShowWhenPainted();

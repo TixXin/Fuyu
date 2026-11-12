@@ -8,27 +8,31 @@ export type CardPlacement = { left: number; width: number; top?: number; bottom?
 
 const CARD_WIDTH = 460;
 const MARGIN = 16;
-const GAP_BELOW_ISLAND = 28;
+const GAP = 28;
 const DOCK_BOTTOM = 40;
+/** Height the card needs below the island before it goes beside it instead. */
+const ROOM_BELOW = 380;
 
 /**
- * Below the island, centred on it as far as the screen allows. `anchor` is the island as last
- * seen closed, so the card stays put while the island opens over it. `dock` (the practice act,
- * or no island to point at) puts it at the bottom of the screen instead, clear of the open island.
+ * Never over the island, open or closed: below it, centred on it, while there is room; beside it
+ * when the open island leaves too little room below; at the bottom of the screen when there is
+ * no island to point at, or no room beside it either.
  */
-export function cardPlacement(anchor: IslandSpot | null, viewport: Viewport, dock: boolean): CardPlacement {
+export function cardPlacement(island: IslandSpot | null, viewport: Viewport): CardPlacement {
   const width = Math.min(CARD_WIDTH, viewport.width - MARGIN * 2);
-  const centred = (viewport.width - width) / 2;
-  if (dock || !anchor) {
-    return { left: centred, width, bottom: DOCK_BOTTOM, maxHeight: viewport.height - DOCK_BOTTOM - MARGIN };
-  }
-  const left = Math.min(Math.max(anchor.x + anchor.width / 2 - width / 2, MARGIN), viewport.width - width - MARGIN);
-  const top = Math.max(anchor.y + anchor.height + GAP_BELOW_ISLAND, MARGIN);
-  return { left, width, top, maxHeight: Math.max(viewport.height - top - MARGIN, 0) };
-}
+  const docked: CardPlacement = { left: (viewport.width - width) / 2, width, bottom: DOCK_BOTTOM, maxHeight: viewport.height - DOCK_BOTTOM - MARGIN };
+  if (!island) return docked;
 
-/** The island as last seen closed: what `cardPlacement` anchors to. */
-export function nextAnchor(previous: IslandSpot | null, spot: IslandSpot | null): IslandSpot | null {
-  if (!spot) return previous;
-  return spot.expanded ? previous ?? spot : spot;
+  const below = Math.max(island.y + island.height + GAP, MARGIN);
+  if (viewport.height - below - MARGIN >= ROOM_BELOW) {
+    const left = Math.min(Math.max(island.x + island.width / 2 - width / 2, MARGIN), viewport.width - width - MARGIN);
+    return { left, width, top: below, maxHeight: viewport.height - below - MARGIN };
+  }
+
+  const top = Math.max(island.y + MARGIN, MARGIN);
+  const right = island.x + island.width + GAP;
+  if (viewport.width - right - MARGIN >= width) return { left: right, width, top, maxHeight: viewport.height - top - MARGIN };
+  const left = island.x - GAP - width;
+  if (left >= MARGIN) return { left, width, top, maxHeight: viewport.height - top - MARGIN };
+  return docked;
 }

@@ -84,6 +84,7 @@
 .onboarding__body {
   min-height: 0;
   overflow-y: auto;
+  scrollbar-width: thin;
   padding: 0 20px 8px;
   animation: onboardingAct 300ms ease-out;
 }

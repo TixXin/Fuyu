@@ -116,6 +116,8 @@ if (!automated) {
 
     await press("下一步");
     check(title() === "把它捏成你喜欢的样子", "Act 2 shapes the island");
+    await press("圆角");
+    check(stored().islandCornerShape === "round", "The corner shape can be picked");
     await press("浅色");
     check(stored().themeMode === "light" && document.querySelector(".onboarding--light"), "Picking light saves it for the real island and turns the card light");
     const slider = document.querySelector<HTMLInputElement>("input[type='range']")!;
@@ -138,11 +140,11 @@ if (!automated) {
 
     await press("下一步");
     check(title() === "在真岛上试一下" && document.querySelectorAll(".play-act__task").length === 3, "Act 4 has three tasks while the shelf and clipboard are on");
-    check(card().style.bottom !== "" && card().style.top === "", "The card moves to the bottom, clear of the opening island");
     await press("点击");
     check(stored().expandTrigger === "click", "The island can be set to open on click");
     await placeIsland(open);
     check(stars() === 1 && document.querySelector(".onboarding-spotlight--open"), "Opening the real island earns a star, and the light grows with it");
+    check(parseFloat(card().style.top || "0") !== closed.height + 28, "The card moves out of the way of the open island");
     await wait(900);
     shelfItems = [{ id: "dropped" }];
     await wait(900);

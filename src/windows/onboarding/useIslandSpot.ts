@@ -1,18 +1,17 @@
 import { useEffect, useState } from "react";
 import { listenOnboardingIsland, type IslandSpot } from "./api";
-import { nextAnchor } from "./placement";
 
 /**
- * Where the real island is on the overlay now (null while it is hidden), and where it was when
- * last closed. Sent by onboarding_window/overlay.rs whenever it moves, grows or shrinks.
+ * Where the real island is on the overlay now, or null while it is hidden. Sent by
+ * onboarding_window/overlay.rs whenever it moves, opens or closes.
  */
 export function useIslandSpot() {
-  const [state, setState] = useState<{ spot: IslandSpot | null; anchor: IslandSpot | null }>({ spot: null, anchor: null });
+  const [spot, setSpot] = useState<IslandSpot | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     let unlisten: (() => void) | undefined;
-    void listenOnboardingIsland((spot) => setState((current) => ({ spot, anchor: nextAnchor(current.anchor, spot) })))
+    void listenOnboardingIsland(setSpot)
       .then((stop) => (cancelled ? stop() : (unlisten = stop)))
       .catch((error: unknown) => console.error("Failed to follow the island", error));
     return () => {
@@ -21,5 +20,5 @@ export function useIslandSpot() {
     };
   }, []);
 
-  return state;
+  return spot;
 }
