@@ -45,7 +45,7 @@ CI 失败时，PR 保持打开、自动合并保持开启。会话在同一个 l
 ## 分步
 
 - [ ] **第 1 步：GitHub 设置（需要你）。** 仓库 Settings → General 打开 Allow auto-merge 和 Automatically delete head branches。规则集先不动。另外建一个 fine-grained token（只给这个仓库，Contents 和 Pull requests 读写），存成仓库 secret `PR_UPDATER_TOKEN`，第 5 步用：用 Actions 自带的 `GITHUB_TOKEN` 更新分支，不会触发新的 CI，PR 会永远卡在等 `check`。
-- [ ] **第 2 步：CI 准备。** `ci.yml` 加上 `merge_group` 触发（现在不生效，第 9 步直接用上）。只改了 Markdown 的 PR 走快速路径：第一步判断改动范围，只改文档时跳过构建、Rust 和回归页，只装依赖跑 `pnpm check:tasks`；`check` 照常报告结果，否则 PR 会一直等。`main` 上的推送始终跑全套。验证：分别开一个只改文档的 PR 和一个改代码的 PR，看耗时和跳过的步骤。
+- [x] **第 2 步：CI 准备。**（`ci: skip the build jobs for a pull request that only changes Markdown`）`ci.yml` 加上 `merge_group` 触发（现在不生效，第 9 步直接用上）。新任务 `scope` 取 PR 改动的文件（改名的连旧名一起），交给 `land-check.mjs` 的 `docsOnly()` 判断，和本地 land 的规则一致：全是 `.md`，且不含 `docs/plugins/api.md`。只改文档时 `frontend`、`regression`、`rust` 跳过，`docs` 任务在 Ubuntu 上只跑 `node scripts/tasks/tasks.mjs check`，不装依赖；`check` 照常汇总，否则 PR 会一直等。`main` 上的推送和 merge queue 始终跑全套。
 - [ ] **第 3 步：`mq:land` 改成开 PR。** 按「新流程」重写 `scripts/mq/land.mjs` 的推送部分，新增 `mq:wait`（`scripts/mq/wait.mjs`），删掉 `queueLock.mjs` 和 `fireOnLand`。本机的完整检查从必跑改成可选（`pnpm mq:land --check`，或先 `pnpm verify`），因为 CI 会跑同样的检查。测试：`tests/scripts/mq.test.mjs` 里用本地 bare 仓库验证 rebase、分支名和冲突处理，`gh` 调用换成可注入的函数。
 - [ ] **第 4 步：pre-push 改规则。** `checkPush.mjs`：任何人推 `main` 都拒绝（只剩 `CLAUDE_CODE_MERGE_QUEUE_EMERGENCY_PUSH=1` 能绕过），删掉 `CLAUDE_CODE_MERGE_QUEUE_LANDING`；推其他分支时不再跑完整检查，交给 CI。
 - [ ] **第 5 步：把落后的 PR 依次更新（代替 merge queue）。** 新工作流 `.github/workflows/update-behind-prs.yml`：`main` 每有新提交，就在开着自动合并、落后于 `main` 的 PR 里，挑开启自动合并最早的那**一个**，用 `PR_UPDATER_TOKEN` 执行 `update-branch`。一次只更新一个，相当于先来先合，不会每合一个就让所有 PR 重跑 CI。那个 PR 合入后 `main` 又变了，工作流再挑下一个。
