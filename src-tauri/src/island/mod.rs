@@ -24,8 +24,9 @@ use std::{
 use tauri::{AppHandle, Emitter, Manager, WebviewWindow};
 
 use geometry::{
-    monitor_for_island_position, out_at_top_after, COLLAPSED_ISLAND_WIDTH, DEFAULT_EXPANDED_ISLAND_HEIGHT,
-    EXPANDED_ISLAND_HEIGHT_RANGE, max_expanded_width, MAX_CORNER_RADIUS, MIN_COLLAPSED_ISLAND_WIDTH, MIN_CORNER_RADIUS,
+    monitor_for_island_position, out_at_top_after, DEFAULT_EXPANDED_ISLAND_HEIGHT, EXPANDED_ISLAND_HEIGHT_RANGE,
+    max_expanded_width, MAX_ADJUSTED_COLLAPSED_WIDTH, MAX_CORNER_RADIUS, MIN_ADJUSTED_COLLAPSED_WIDTH,
+    MIN_COLLAPSED_ISLAND_WIDTH, MIN_CORNER_RADIUS,
     MIN_EXPANDED_ISLAND_HEIGHT, POSITION_ANIMATION_GENERATION,
 };
 use glass::apply_glass_material;
@@ -123,7 +124,7 @@ pub fn set_island_interaction(
         }
         if let Some(collapsed_width) = collapsed_width {
             state.collapsed_width =
-                collapsed_width.clamp(MIN_COLLAPSED_ISLAND_WIDTH, COLLAPSED_ISLAND_WIDTH);
+                collapsed_width.clamp(MIN_ADJUSTED_COLLAPSED_WIDTH, MAX_ADJUSTED_COLLAPSED_WIDTH);
         }
         if state.custom_position.is_none() {
             state.custom_position = restored_custom_position;
@@ -161,8 +162,8 @@ pub fn start_island_drag(app: AppHandle) -> Result<(), String> {
     drag_island(window, current_state)
 }
 
-/// Alt + left-button drag (C25): on an edge of the expanded panel it resizes the panel
-/// (modifier.rs), anywhere else on the shape it moves the island, collapsed or expanded. The
+/// Alt + left-button drag (C25): on the expanded panel's sides or bottom it resizes the panel, on
+/// the collapsed island's sides its width (modifier.rs); anywhere else on the shape it moves it. The
 /// frontend calls it on pointer down while the passthrough loop reports Alt held over the island.
 #[tauri::command]
 pub fn start_island_modifier_drag(app: AppHandle) -> Result<(), String> {

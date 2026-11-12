@@ -19,6 +19,10 @@ pub(super) const DEFAULT_COLLAPSED_SCALE: f64 = 0.89;
 pub(super) const DEFAULT_EXPANDED_SCALE: f64 = 0.91;
 pub(super) const MIN_COLLAPSED_ISLAND_WIDTH: f64 = 280.0;
 pub(super) const COLLAPSED_ISLAND_WIDTH: f64 = 340.0;
+// The collapsed width with the width adjustment (Alt + drag on its sides) added: the text-driven
+// 280-340 shifted by MIN / MAX_COLLAPSED_WIDTH_EXTRA in src/features/appearance/settingsLimits.ts.
+pub(super) const MIN_ADJUSTED_COLLAPSED_WIDTH: f64 = 220.0;
+pub(super) const MAX_ADJUSTED_COLLAPSED_WIDTH: f64 = 520.0;
 pub(super) const COLLAPSED_ISLAND_HEIGHT: f64 = 38.0;
 pub(super) const COLLAPSED_RADIUS: f64 = 22.0;
 pub(super) const EXPANDED_ISLAND_WIDTH: f64 = 560.0;

@@ -23,9 +23,10 @@ use crate::win32;
 pub(crate) const ISLAND_HOVER_CHANGED_EVENT: &str = "island-hover-changed";
 
 // Mirrored by ISLAND_MOVE_ARMED_CHANGED_EVENT in src/windows/island/api.ts. The payload
-// says what an Alt + left-button press over the island would do (modifier.rs ModifierTarget:
-// "none", "move", "width", "height", "both"). Polled here because the webview cannot see Alt
-// while another window has keyboard focus.
+// says what an Alt + left-button press over the island would do, or which edge a resize under
+// way is dragging (modifier.rs ModifierTarget: "none", "move", "left", "right", "bottom",
+// "bottomLeft", "bottomRight"). Polled here because the webview cannot see Alt while another
+// window has keyboard focus.
 pub(crate) const ISLAND_MOVE_ARMED_CHANGED_EVENT: &str = "island-move-armed-changed";
 
 // Mirrored by ISLAND_HOLD_CHANGED_EVENT in src/windows/island/api.ts. The payload says whether
@@ -91,7 +92,8 @@ pub(crate) fn start_cursor_passthrough_loop(window: WebviewWindow) {
 
             let alt = win32::input::is_alt_key_down();
             let is_move_armed = match hwnd {
-                Some(hwnd) if is_inside && alt && !modifier::is_resizing() => modifier::target(hwnd),
+                _ if modifier::is_resizing() => modifier::resize_target(),
+                Some(hwnd) if is_inside && alt => modifier::target(hwnd),
                 _ => ModifierTarget::None,
             };
             if is_move_armed != was_move_armed {

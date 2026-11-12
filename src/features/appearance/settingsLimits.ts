@@ -54,6 +54,10 @@ export const MAX_MAX_PANEL_HEIGHT = 640;
 export const DEFAULT_PANEL_WIDTH = 800;
 export const MIN_PANEL_WIDTH = 480;
 export const MAX_PANEL_WIDTH = 800;
+// Added to the collapsed island's text-driven width (280-340, layout.ts); also set by Alt + dragging
+// its sides. Mirrors MIN / MAX_ADJUSTED_COLLAPSED_WIDTH in src-tauri/src/island/geometry.rs.
+export const MIN_COLLAPSED_WIDTH_EXTRA = -60;
+export const MAX_COLLAPSED_WIDTH_EXTRA = 180;
 // File shelf cap; matches MAX_ITEMS and MIN / MAX_MAX_ITEMS in src-tauri/src/file_shelf/store.rs.
 export const DEFAULT_SHELF_ITEMS = 100;
 export const MIN_SHELF_ITEMS = 20;

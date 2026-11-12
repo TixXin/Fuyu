@@ -50,6 +50,7 @@ export const LAYOUT_SETTING_KEYS = [
   "expandedScale",
   "maxPanelHeight",
   "panelWidth",
+  "collapsedWidthExtra",
   "showTitle",
   "showCollapsedText",
 ] as const satisfies readonly (keyof IslandSettings)[];

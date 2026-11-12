@@ -34,8 +34,11 @@ export const POPUP_HEADER_SAVING = 58;
 export const AGENT_POPUP_LIST_SAVING = 4;
 export const TODO_ROW_HEIGHT = 46;
 export const TODO_GROW_START_ROWS = 2;
-/** Collapsed width for the summary `text`, plus `extraWidth` px for plugin slots, up to the widest. */
-export function getCollapsedIslandWidth(text: string, extraWidth = 0) {
+/**
+ * Collapsed width for the summary `text`, plus `extraWidth` px for plugin slots, up to the widest;
+ * then moved by `widthExtra`, the collapsed width setting (Alt + dragging the island's sides).
+ */
+export function getCollapsedIslandWidth(text: string, extraWidth = 0, widthExtra = 0) {
   const visualUnits = getCollapsedTextUnits(text);
   const widthProgress =
     (clamp(
@@ -53,7 +56,7 @@ export function getCollapsedIslandWidth(text: string, extraWidth = 0) {
         widthProgress * (MAX_COLLAPSED_ISLAND_WIDTH - MIN_COLLAPSED_ISLAND_WIDTH) +
         Math.max(0, extraWidth),
     ),
-  );
+  ) + Math.round(widthExtra);
 }
 
 // Widest nudge allowed when aligning; covers the 1.25x and 1.75x display scales.
@@ -63,12 +66,14 @@ const MAX_ALIGNMENT_NUDGE = 4;
  * The stage centres the island, so an odd width leaves it on a half pixel. The
  * compositor draws it there while the collapse animation runs and snaps it to
  * a whole device pixel when the animation ends, which shows as a jump. This
- * picks the nearest width whose centred left edge is a whole device pixel.
+ * picks the nearest width whose centred left edge is a whole device pixel,
+ * within the range the width setting moved the widths to (`widthExtra`).
  */
 export function alignCollapsedIslandWidth(
   width: number,
   stageWidth: number,
   devicePixelRatio: number,
+  widthExtra = 0,
 ) {
   const isAligned = (candidate: number) => {
     const left = ((stageWidth - candidate) / 2) * devicePixelRatio;
@@ -78,8 +83,8 @@ export function alignCollapsedIslandWidth(
   for (let nudge = 0; nudge <= MAX_ALIGNMENT_NUDGE; nudge++) {
     for (const candidate of [width - nudge, width + nudge]) {
       if (
-        candidate >= MIN_COLLAPSED_ISLAND_WIDTH &&
-        candidate <= MAX_COLLAPSED_ISLAND_WIDTH &&
+        candidate >= MIN_COLLAPSED_ISLAND_WIDTH + widthExtra &&
+        candidate <= MAX_COLLAPSED_ISLAND_WIDTH + widthExtra &&
         isAligned(candidate)
       ) {
         return candidate;

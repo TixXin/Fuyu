@@ -35,6 +35,18 @@ test("plugin slots widen the collapsed island by the width they need, up to the 
   assert.equal(getCollapsedIslandWidth("abcdefg", 1000), MAX_COLLAPSED_ISLAND_WIDTH);
 });
 
+test("the collapsed width setting moves the whole range, and alignment stays inside it", () => {
+  assert.equal(getCollapsedIslandWidth("", 0, 60), MIN_COLLAPSED_ISLAND_WIDTH + 60);
+  assert.equal(getCollapsedIslandWidth("x".repeat(200), 0, -40), MAX_COLLAPSED_ISLAND_WIDTH - 40);
+  assert.equal(getCollapsedIslandWidth("abcdefg", 1000, 100), MAX_COLLAPSED_ISLAND_WIDTH + 100);
+  for (const extra of [-60, 37, 180]) {
+    for (let width = MIN_COLLAPSED_ISLAND_WIDTH + extra; width <= MAX_COLLAPSED_ISLAND_WIDTH + extra; width++) {
+      const aligned = alignCollapsedIslandWidth(width, 820, 1.25, extra);
+      assert.ok(aligned >= MIN_COLLAPSED_ISLAND_WIDTH + extra && aligned <= MAX_COLLAPSED_ISLAND_WIDTH + extra, `${width} ${extra}`);
+    }
+  }
+});
+
 test("the todo list scrolls after as many rows as fit under the max panel height", () => {
   // 490px is the default and keeps the six rows the todo page always had.
   assert.equal(getTodoScrollStartRows(490), 6);

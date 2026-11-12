@@ -5,7 +5,7 @@ import { DEFAULT_SETTINGS, LEGACY_FALLBACKS } from "./settingsDefaults.ts";
 import {
   MAX_ISLAND_CORNER_RADIUS, MAX_MAX_PANEL_HEIGHT, MAX_TOP_FILLET_RADIUS,
   MIN_ISLAND_CORNER_RADIUS, MIN_MAX_PANEL_HEIGHT, MIN_TOP_FILLET_RADIUS,
-  MAX_PANEL_WIDTH, MIN_PANEL_WIDTH,
+  MAX_PANEL_WIDTH, MIN_PANEL_WIDTH, MAX_COLLAPSED_WIDTH_EXTRA, MIN_COLLAPSED_WIDTH_EXTRA,
 } from "./settingsLimits.ts";
 import { hasThemeSets, THEME_COLOR_KEYS, THEME_COLORS, THEME_MODES, themeSetsFromSingleColors } from "./themeMode.ts";
 import { oneOf } from "./settingsLimits.ts";
@@ -66,6 +66,9 @@ export function normalizeLayoutSettings(settings: LegacyIslandSettings | null | 
     panelWidth: typeof settings?.panelWidth === "number" && Number.isFinite(settings.panelWidth)
       ? clamp(Math.round(settings.panelWidth), MIN_PANEL_WIDTH, MAX_PANEL_WIDTH)
       : LEGACY_FALLBACKS.panelWidth,
+    collapsedWidthExtra: typeof settings?.collapsedWidthExtra === "number" && Number.isFinite(settings.collapsedWidthExtra)
+      ? clamp(Math.round(settings.collapsedWidthExtra), MIN_COLLAPSED_WIDTH_EXTRA, MAX_COLLAPSED_WIDTH_EXTRA)
+      : DEFAULT_SETTINGS.collapsedWidthExtra,
     taskTextColor,
     pulseColor: getColorSetting(
       settings?.pulseColor,

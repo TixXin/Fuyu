@@ -78,6 +78,8 @@ export type IslandSettings = CalendarSettingValues & {
   maxPanelHeight: number;
   /** Width (px, before the scale) of the expanded panel's usual pages (C25). */
   panelWidth: number;
+  /** Px added to (or, below 0, taken from) the collapsed island's text-driven width. */
+  collapsedWidthExtra: number;
   agentHostDisplay: AgentHostDisplay;
   agentSessionView: AgentSessionView;
   agentSessionSort: AgentSessionSort;

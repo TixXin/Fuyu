@@ -70,11 +70,12 @@ export function useCollapsedTodo(
     const patternWidth = !center ? 0 : countShown ? centerWidth + TODO_CENTER_GAP : text === "" && !isPeeking ? centerWidth : 0;
     const extraWidth = sideWidth + iconWidth + patternWidth;
     return alignCollapsedIslandWidth(
-      getCollapsedIslandWidth(text, extraWidth),
+      getCollapsedIslandWidth(text, extraWidth, settings.collapsedWidthExtra),
       window.innerWidth,
       window.devicePixelRatio,
+      settings.collapsedWidthExtra,
     );
-  }, [agentIconWidth, agentTitle, lyricWidthText, center, centerWidth, collapsedTaskTitle, collapsedTodoCount, isPeeking, settings.showCollapsedText, settings.showTitle, sideWidth, t]);
+  }, [agentIconWidth, agentTitle, lyricWidthText, center, centerWidth, collapsedTaskTitle, collapsedTodoCount, isPeeking, settings.collapsedWidthExtra, settings.showCollapsedText, settings.showTitle, sideWidth, t]);
 
   return { collapsedTaskTitle, collapsedTodoCount, collapsedIslandWidth };
 }

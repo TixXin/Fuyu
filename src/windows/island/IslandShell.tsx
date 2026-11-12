@@ -26,6 +26,7 @@ import { usePageFadeIn } from "./usePageFadeIn";
 import "./IslandShell.css";
 // After the shell: the light island's glass overrides it (C33.4).
 import "./IslandGlassLight.css";
+import { IslandResizeHints } from "./IslandResizeHints";
 
 type IslandShellProps = {
   qqMail: MailController;
@@ -282,6 +283,7 @@ export function IslandShell({
           <div ref={contentRef} className="island__content">{children}</div>
         </div>
         {overlay}
+        <IslandResizeHints isExpanded={isExpanded} />
       </div>
     </section>
   );
