@@ -10,14 +10,17 @@ import type { ClipboardHistorySettings } from "../../features/clipboard/api";
 import { normalizeClipboardShortcut } from "../../features/clipboard/shortcut";
 import { listPlugins } from "../../features/plugins/api";
 import { pluginShortcutRows, type PluginShortcutRow } from "../../features/plugins/pluginShortcuts";
+import { SHORTCUT_ACTIONS, type ScreenshotSettings } from "../../features/screenshot/settings";
+import { loadScreenshotSettings } from "../../features/screenshot/storage";
 import type { TranslationSettings } from "../../features/translation/storage";
 import { useLocale, useTranslation } from "../../i18n";
 import { findShortcutOwner, type ShortcutOwner } from "./shortcutConflicts";
 
-export function useShortcutOwners({ settings, clipboard, translation }: {
+export function useShortcutOwners({ settings, clipboard, translation, screenshot }: {
   settings: IslandSettings;
   clipboard: ClipboardHistorySettings;
   translation: TranslationSettings;
+  screenshot?: ScreenshotSettings;
 }) {
   const t = useTranslation();
   const { locale } = useLocale();
@@ -42,6 +45,12 @@ export function useShortcutOwners({ settings, clipboard, translation }: {
     ] : []),
     ...(clipboard.enabled && clipboard.shortcutEnabled
       ? [{ id: "clipboard", label: t.settings.clipboard.shortcut, shortcut: normalizeClipboardShortcut(clipboard.shortcut), home: "clipboard" as const }]
+      : []),
+    ...(settings.screenshotEnabled
+      ? SHORTCUT_ACTIONS.flatMap((action) => {
+        const shortcut = (screenshot ?? loadScreenshotSettings()).shortcuts[action];
+        return shortcut ? [{ id: `screenshot:${action}`, label: t.settings.screenshot.actions[action], shortcut, home: "screenshot" as const }] : [];
+      })
       : []),
     ...pluginRows.flatMap((row) => row.shortcut
       ? [{ id: row.key, label: `${row.title[locale]} · ${row.pluginName[locale]}`, shortcut: row.shortcut, home: "plugins" as const }]

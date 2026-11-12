@@ -2,6 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { emit, listen, type EventCallback } from "@tauri-apps/api/event";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import type { PixelRect } from "./selection";
+import { shortcutConfig, type ScreenshotSettings, type ShortcutAction } from "./settings";
 import type { Target } from "./targets";
 
 export const SCREENSHOT_SESSION_EVENT = "screenshot-session";
@@ -22,8 +23,24 @@ export type ScreenshotSession = {
   underPointer: boolean;
 };
 
-export function configureScreenshot(enabled: boolean) {
-  return invoke<void>("screenshot_configure", { enabled });
+export const SCREENSHOT_SHORTCUT_STATUS_EVENT = "screenshot-shortcut-status";
+
+export type ShortcutStatus = { action: ShortcutAction; problem: "invalid" | "duplicate" | "taken" };
+
+export function configureScreenshot(enabled: boolean, settings: ScreenshotSettings) {
+  return invoke<void>("screenshot_configure", { enabled, shortcuts: shortcutConfig(settings), printScreen: settings.printScreen });
+}
+
+export function getScreenshotShortcutStatus() {
+  return invoke<ShortcutStatus[]>("screenshot_shortcut_status");
+}
+
+export function listenScreenshotShortcutStatus(handler: EventCallback<ShortcutStatus[]>) {
+  return listen<ShortcutStatus[]>(SCREENSHOT_SHORTCUT_STATUS_EVENT, handler);
+}
+
+export function startScreenshot(mode: ScreenshotMode) {
+  return invoke<void>("screenshot_start", { mode });
 }
 
 export function getScreenshotSession() {

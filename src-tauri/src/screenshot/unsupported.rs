@@ -29,15 +29,29 @@ crate::user_error::unsupported_commands!(
     screenshot_pins_close_all,
     screenshot_drag,
     screenshot_paste_to_front,
+    screenshot_start,
 );
+
+pub(crate) fn is_enabled() -> bool {
+    false
+}
+
+pub(crate) fn start_from_tray(_app: &AppHandle) {}
 
 #[tauri::command]
 pub fn screenshot_configure() {}
+
+#[tauri::command]
+pub fn screenshot_shortcut_status() -> Vec<()> {
+    Vec::new()
+}
 
 macro_rules! tauri_commands {
     ($next:ident [$($done:tt)*] $($rest:tt)*) => {
         $next!([$($done)*
             crate::screenshot::screenshot_configure,
+            crate::screenshot::screenshot_shortcut_status,
+            crate::screenshot::screenshot_start,
             crate::screenshot::screenshot_session,
             crate::screenshot::screenshot_frame,
             crate::screenshot::screenshot_targets,

@@ -1688,6 +1688,19 @@
     {
       "page": "screenshot",
       "zh-CN": {
+        "group": "快捷键",
+        "title": "按 PrintScreen 截图",
+        "description": "单独按 PrintScreen 时打开浮屿的截图，不再交给系统截图工具。Alt+PrintScreen 等组合键不受影响。"
+      },
+      "en": {
+        "group": "Shortcuts",
+        "title": "Screenshot with PrintScreen",
+        "description": "PrintScreen on its own opens Fuyu's screenshot instead of the Windows snipping tool. Alt+PrintScreen and other combinations are left alone."
+      }
+    },
+    {
+      "page": "screenshot",
+      "zh-CN": {
         "group": "截图时",
         "title": "显示辅助线",
         "description": "虚线贯穿整个屏幕，方便对齐边缘：一横一竖跟着鼠标（选好区域后隐藏），选区的四条边也各延长一条。"
@@ -1701,66 +1714,27 @@
     {
       "page": "screenshot",
       "zh-CN": {
-        "group": "快捷键",
-        "title": "截图",
-        "description": "屏幕定格后，单击选中鼠标下的窗口或控件（滚轮切换到外层或内层），或拖动选择区域；工具栏里可以画矩形、箭头、文字、马赛克等标注（Ctrl+Z 撤销）；按 Enter 复制到剪贴板（图片和 PNG 文件，聊天软件、画图、终端都能贴），Ctrl+S 保存到「图片 › 浮屿截图」，T 贴到屏幕上，Esc 取消；放大镜下按 C 复制颜色。贴图可以拖动，滚轮缩放，Ctrl+滚轮调透明度，右键有更多操作；在贴图或浮屿上按 T 隐藏或显示所有贴图。"
+        "group": "截完之后",
+        "title": "保存位置",
+        "description": "Ctrl+S 和贴图的「保存」放到这里，文件名带时间。要写完整路径，例如 D:\\截图；留空就是「图片 › 浮屿截图」。"
       },
       "en": {
-        "group": "Shortcuts",
-        "title": "Screenshot",
-        "description": "The screen freezes; click the window or control under the pointer (scroll to step out or in) or drag a region; the toolbar draws rectangles, arrows, text, mosaic and more (Ctrl+Z undoes). Enter copies to the clipboard (as a picture and a PNG file, for chat apps, Paint and terminals alike), Ctrl+S saves to Pictures › Fuyu Screenshots, T pins it to the screen and Esc cancels. Under the magnifier, C copies the colour. Drag a pin to move it, scroll to zoom, Ctrl + scroll to fade it, right-click for more; T on a pin or the island hides or shows all pins."
+        "group": "After capturing",
+        "title": "Save to",
+        "description": "Where Ctrl+S and a pin's Save put files, named by the time. Use a full path such as D:\\Screenshots; empty means Pictures › Fuyu Screenshots."
       }
     },
     {
       "page": "screenshot",
       "zh-CN": {
-        "group": "快捷键",
-        "title": "截图并复制",
-        "description": "单击选中窗口或控件，或拖动选择区域，松开鼠标就复制，不出工具栏。"
+        "group": "截完之后",
+        "title": "岛上的截图卡片",
+        "description": "复制或保存后，浮屿顶部显示缩略图：可以拖到别的应用、放进文件中转、发给 Agent。鼠标停在上面时不会收起。"
       },
       "en": {
-        "group": "Shortcuts",
-        "title": "Screenshot and copy",
-        "description": "Click a window or control or drag a region; it is copied as soon as you let go, without the toolbar."
-      }
-    },
-    {
-      "page": "screenshot",
-      "zh-CN": {
-        "group": "快捷键",
-        "title": "截图并识别文字",
-        "description": "选好区域就用 Windows 自带的文字识别读出文字并复制，浮屿上显示识别结果，点它在翻译里打开。工具栏里的「识别文字」也一样。"
-      },
-      "en": {
-        "group": "Shortcuts",
-        "title": "Screenshot and read text",
-        "description": "Once a region is chosen, Windows' own text recognition reads it and the text is copied; the island shows it, and a click opens it in the translator. The toolbar's Read text does the same."
-      }
-    },
-    {
-      "page": "screenshot",
-      "zh-CN": {
-        "group": "快捷键",
-        "title": "截图并翻译",
-        "description": "选好区域就识别文字，交给快捷翻译，浮屿上显示译文。需要打开翻译功能。"
-      },
-      "en": {
-        "group": "Shortcuts",
-        "title": "Screenshot and translate",
-        "description": "Once a region is chosen its text is read and handed to quick translation; the island shows the translation. Needs translation turned on."
-      }
-    },
-    {
-      "page": "screenshot",
-      "zh-CN": {
-        "group": "快捷键",
-        "title": "截取整个屏幕",
-        "description": "选中鼠标所在的显示器，按 Enter 复制。"
-      },
-      "en": {
-        "group": "Shortcuts",
-        "title": "Whole screen",
-        "description": "Selects the monitor under the pointer; Enter copies it."
+        "group": "After capturing",
+        "title": "Screenshot card on the island",
+        "description": "After a copy or save, the island shows a thumbnail you can drag into another app, put on the file shelf or send to an agent. It stays while the pointer is on it."
       }
     },
     {

@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { listenScreenshotTaken, type ScreenshotTaken } from "./api";
 
-export const CARD_MS = 8_000;
-
-export function useScreenshotCard() {
+export function useScreenshotCard(seconds: number) {
   const [current, setCurrent] = useState<ScreenshotTaken | null>(null);
   const timer = useRef(0);
+  const shownFor = useRef(seconds * 1000);
+  useEffect(() => { shownFor.current = seconds * 1000; }, [seconds]);
 
   const dismiss = useCallback(() => {
     window.clearTimeout(timer.current);
@@ -13,7 +13,7 @@ export function useScreenshotCard() {
   }, []);
   const release = useCallback(() => {
     window.clearTimeout(timer.current);
-    timer.current = window.setTimeout(() => setCurrent(null), CARD_MS);
+    timer.current = window.setTimeout(() => setCurrent(null), shownFor.current);
   }, []);
   const hold = useCallback(() => window.clearTimeout(timer.current), []);
 
@@ -21,6 +21,7 @@ export function useScreenshotCard() {
     let cancelled = false;
     let stop: (() => void) | null = null;
     void listenScreenshotTaken((event) => {
+      if (shownFor.current <= 0) return;
       setCurrent(event.payload);
       release();
     }).then((unlisten) => {

@@ -19,6 +19,8 @@ import {
 } from "../../features/screenshot/selection";
 import { layersAt, layersKey, stepLayer } from "../../features/screenshot/targets";
 import { loadSettings } from "../../features/appearance/storage";
+import { saveFolderOf } from "../../features/screenshot/settings";
+import { loadScreenshotSettings } from "../../features/screenshot/storage";
 import { useErrorText, useTranslation } from "../../i18n";
 import { AnnotationLayer } from "./AnnotationLayer";
 import { AnnotationTextInput } from "./AnnotationTextInput";
@@ -83,7 +85,7 @@ export function ScreenshotOverlay() {
     const area = annotationArea(items, chosen);
     const image = area ? composeArea(picture, area, chosen, items) : null;
     const patch = area && image ? { at: area, image } : null;
-    const save = action === "save" ? { folderName: t.saveFolderName } : undefined;
+    const save = action === "save" ? { folder: saveFolderOf(loadScreenshotSettings()), folderName: t.saveFolderName } : undefined;
     if (action === "pin") setLeaving(true);
     finishScreenshot(chosen, patch, action, save).catch((error: unknown) => {
       setLeaving(false);

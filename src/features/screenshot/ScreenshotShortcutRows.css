@@ -1,0 +1,7 @@
+.screenshot-shortcut-hint {
+  margin: 0;
+  color: rgba(var(--overlay-rgb, 248, 246, 240), 0.62);
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}

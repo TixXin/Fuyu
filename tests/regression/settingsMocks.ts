@@ -38,6 +38,7 @@ mockIPC((command, payload) => {
         { app: "cursor", name: "Cursor", installed: false, canInstall: true },
       ];
     case "install_editor_extension": return null;
+    case "screenshot_shortcut_status": return [{ action: "translate", problem: "taken" }];
     case "set_reply_marker": replyMarkerCalls.push(replyMarkerOn = Boolean(args.enabled)); return replyMarker();
     case "get_launch_at_startup": return false;
     case "get_data_home": return { home: "C:\\Users\\demo\\.fuyu", defaultHome: "C:\\Users\\demo\\.fuyu", source: "default" };

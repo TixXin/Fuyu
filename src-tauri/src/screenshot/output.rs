@@ -187,10 +187,19 @@ pub(super) fn copy_text(text: &str) -> Result<(), String> {
 
 pub(super) fn save(picture: &Picture, folder: Option<&str>, default_name: &str) -> Result<PathBuf, String> {
     let folder = match folder.map(str::trim).filter(|folder| !folder.is_empty()) {
-        Some(folder) => PathBuf::from(folder),
+        Some(folder) => chosen_folder(folder)?,
         None => win32::known_folder::pictures().ok_or_else(|| "The Pictures folder is unavailable.".to_string())?.join(sanitized_name(default_name)),
     };
     write_png(&folder, &encode_png(picture)?)
+}
+
+pub(super) fn chosen_folder(folder: &str) -> Result<PathBuf, String> {
+    let path = PathBuf::from(folder);
+    if path.is_absolute() && !path.components().any(|part| matches!(part, std::path::Component::ParentDir)) {
+        Ok(path)
+    } else {
+        Err(format!("The save folder must be a full path such as D:\\Screenshots, not {folder}."))
+    }
 }
 
 pub(super) fn sanitized_name(name: &str) -> String {

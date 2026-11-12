@@ -66,6 +66,7 @@ type IslandShellProps = {
   minimizesToTray: boolean;
   onMinimize: () => void;
   onOpenTranslator: (() => void) | null;
+  onScreenshot?: (() => void) | null;
   translationPeek: string | null;
   onOpenTranslationPeek: () => void;
   onOpenSettings: (section?: "updates") => void;
@@ -123,6 +124,7 @@ export function IslandShell({
   minimizesToTray,
   onMinimize,
   onOpenTranslator,
+  onScreenshot,
   translationPeek,
   onOpenTranslationPeek,
   onOpenSettings,
@@ -255,6 +257,7 @@ export function IslandShell({
             onOpenSettings={onOpenSettings}
             onOpenMessages={onOpenMessages}
             onOpenTranslator={onOpenTranslator}
+            onScreenshot={onScreenshot}
             onResetPosition={onResetPosition}
             minimizesToTray={minimizesToTray}
             onMinimize={onMinimize}

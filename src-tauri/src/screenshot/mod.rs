@@ -39,12 +39,41 @@ pub(crate) fn cancel(app: &AppHandle) {
     session::end(app);
 }
 
+pub(crate) fn is_enabled() -> bool {
+    hotkeys::is_enabled()
+}
+
 #[tauri::command]
-pub async fn screenshot_configure(app: AppHandle, enabled: bool) {
-    hotkeys::set_enabled(enabled);
+pub async fn screenshot_configure(app: AppHandle, enabled: bool, shortcuts: Option<Vec<hotkeys::ShortcutConfig>>, print_screen: Option<bool>) {
+    hotkeys::configure(enabled, shortcuts, print_screen);
     if enabled {
         session::prepare(&app);
     }
+}
+
+pub(crate) fn start_from_tray(app: &AppHandle) {
+    if !hotkeys::is_enabled() {
+        return;
+    }
+    let app = app.clone();
+    std::thread::spawn(move || {
+        std::thread::sleep(std::time::Duration::from_millis(250));
+        session::start(&app, session::Mode::Region);
+    });
+}
+
+#[tauri::command]
+pub fn screenshot_shortcut_status() -> Vec<hotkeys::ShortcutStatus> {
+    hotkeys::status()
+}
+
+#[tauri::command]
+pub fn screenshot_start(app: AppHandle, mode: session::Mode) -> Result<(), String> {
+    if !hotkeys::is_enabled() {
+        return Err("Screenshots are turned off in Settings.".to_string());
+    }
+    session::start(&app, mode);
+    Ok(())
 }
 
 #[tauri::command]
@@ -279,6 +308,8 @@ macro_rules! tauri_commands {
     ($next:ident [$($done:tt)*] $($rest:tt)*) => {
         $next!([$($done)*
             crate::screenshot::screenshot_configure,
+            crate::screenshot::screenshot_shortcut_status,
+            crate::screenshot::screenshot_start,
             crate::screenshot::screenshot_session,
             crate::screenshot::screenshot_frame,
             crate::screenshot::screenshot_targets,

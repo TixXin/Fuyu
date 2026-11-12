@@ -1,5 +1,6 @@
 import { readJson, writeJson } from "../../lib/storage.ts";
 import { ANNOTATION_COLORS, STROKE_LEVELS, type AnnotationStyle, type StrokeLevel } from "./annotations.ts";
+import { normalizeScreenshotSettings, type ScreenshotSettings } from "./settings.ts";
 
 export const ANNOTATION_STYLE_KEY = "fuyu-screenshot-annotation";
 
@@ -18,4 +19,14 @@ export function loadAnnotationStyle(): AnnotationStyle {
 
 export function saveAnnotationStyle(style: AnnotationStyle) {
   writeJson(ANNOTATION_STYLE_KEY, style);
+}
+
+export const SCREENSHOT_SETTINGS_KEY = "fuyu-screenshot-settings";
+
+export function loadScreenshotSettings(): ScreenshotSettings {
+  return normalizeScreenshotSettings(readJson(SCREENSHOT_SETTINGS_KEY));
+}
+
+export function saveScreenshotSettings(settings: ScreenshotSettings) {
+  writeJson(SCREENSHOT_SETTINGS_KEY, settings);
 }
