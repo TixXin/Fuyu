@@ -62,26 +62,25 @@ const NONE: MotionTiming = {
 };
 
 /**
- * Jelly: the width is a spring that swings out, in and out again. With a wide panel the window
- * (820px) cuts the swings past the panel's width short, but the swings back in are not cut, so
- * it still wobbles. The height lands: it reaches its end and bounces back from it, never past
- * (the window is only as tall as the island), and is done before the native side's 600ms wait.
- * The height lands as the width swings back in, so the island looks squeezed tall, then wide.
- * The corners have a spring of their own. Closing bounces too: the width dips past the bar's
- * and swings back, the height lands on the bar and bounces up once; the bar fades in once the
- * deepest dip, which would cut its ends, is over.
+ * Bouncy, tuned on docs/investigations/island-motion-lab.html (2026-11-12): the width springs out
+ * past the panel, swings back in a little and settles (damping 0.55); with a wide panel the window
+ * (820px) cuts the swing out, and the swing back in still shows. The height lands: it reaches its
+ * end and bounces back from it, never past (the window is only as tall as the island), within the
+ * native side's 600ms wait. Closing bounces too, less: the width dips past the bar's and back, the
+ * height lands on the bar and bounces up once; the bar fades in once the narrowest dip is over.
+ * At both 800 and 560px panels: out 20-28px, back 4-7px, settled by about 540ms.
  */
 const JELLY_OPEN: MotionTiming = {
-  width: 900, widthEase: springCurve(0.32),
-  height: 560, heightEase: landingCurve(0.5, [{ depth: 0.1, length: 0.24 }, { depth: 0.025, length: 0.16 }]),
-  radius: 760, radiusEase: springCurve(0.3), ease: EASE_OUT,
+  width: 680, widthEase: springCurve(0.55),
+  height: 560, heightEase: landingCurve(0.5, [{ depth: 0.06, length: 0.24 }, { depth: 0.015, length: 0.16 }]),
+  radius: 578, radiusEase: springCurve(0.5), ease: EASE_OUT,
   fade: 250, fadeDelay: 160, layer: 120, collapsedDelay: 140, bloom: 440, bounces: true,
 };
 const JELLY_CLOSE: MotionTiming = {
-  width: 760, widthEase: springCurve(0.42),
-  height: 540, heightEase: landingCurve(0.42, [{ depth: 0.12, length: 0.3 }, { depth: 0.03, length: 0.18 }]),
-  radius: 640, radiusEase: springCurve(0.34), ease: EASE_OUT,
-  fade: 120, fadeDelay: 0, layer: 200, collapsedDelay: 260, bloom: 360, bounces: true,
+  width: 600, widthEase: springCurve(0.64),
+  height: 540, heightEase: landingCurve(0.42, [{ depth: 0.05, length: 0.24 }, { depth: 0.0125, length: 0.16 }]),
+  radius: 510, radiusEase: springCurve(0.55), ease: EASE_OUT,
+  fade: 120, fadeDelay: 0, layer: 200, collapsedDelay: 287, bloom: 360, bounces: true,
 };
 
 const PRESETS: Record<IslandMotion, { open: MotionTiming; close: MotionTiming }> = {

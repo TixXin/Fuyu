@@ -34,20 +34,23 @@ const points = (ease) => ease.slice("linear(".length, -1).split(",").map(Number)
 /** How many times a curve turns back: a swing past its end and back is two. */
 const turns = (values) => values.slice(1, -1).filter((value, i) => (value - values[i]) * (values[i + 2] - value) < 0).length;
 
-test("bouncy wobbles its width both ways, and its height bounces back from its end without passing it", () => {
+test("bouncy springs out, swings back a little and settles; its height bounces back without passing its end", () => {
   for (const direction of ["open", "close"]) {
     const timing = islandMotionTiming("bouncy", direction);
     const width = points(timing.widthEase);
-    // Out, back in past the end, out again: what a wide panel still shows with the swing out cut.
-    assert.ok(turns(width) >= 3, `${direction} width`);
-    assert.ok(Math.min(...width.slice(width.indexOf(Math.max(...width)))) < 0.96, `${direction} swings back in`);
+    const peak = Math.max(...width);
+    // Past the end and back in: enough to see, not the jelly that wobbled too much (2026-11-12).
+    assert.ok(peak > 1.05 && peak < 1.2, `${direction} width out ${peak}`);
+    const back = 1 - Math.min(...width.slice(width.indexOf(peak)));
+    assert.ok(back > 0.005 && back < 0.03, `${direction} width back ${back}`);
     const height = points(timing.heightEase);
     assert.equal(Math.max(...height), 1, `${direction} height never past its end`);
     assert.ok(turns(height) >= 2, `${direction} height bounces`);
+    assert.ok(1 - Math.min(...height.slice(height.indexOf(1))) <= 0.07, `${direction} height bounce`);
     assert.equal(width.at(-1), 1);
     assert.equal(height.at(-1), 1);
   }
-  // The bar fades in after the closing width's deepest dip, which would cut its ends.
+  // The bar fades in after the closing width's narrowest dip, which would cut its ends.
   const close = islandMotionTiming("bouncy", "close");
   const width = points(close.widthEase);
   const deepest = width.indexOf(Math.max(...width)) / (width.length - 1) * close.width;

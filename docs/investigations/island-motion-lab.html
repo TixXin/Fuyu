@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>Q 弹开合动画调试</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;padding:20px;background:#17181c;color:#e6e6ea;font:13px/1.5 "Segoe UI","Microsoft YaHei",sans-serif}
+h1{font-size:18px;margin:0 0 4px}
+.sub{color:#9a9aa6;margin:0 0 16px}
+.layout{display:grid;grid-template-columns:820px minmax(360px,1fr);gap:24px;align-items:start}
+.desktop{position:relative;width:820px;height:380px;border-radius:10px;background:radial-gradient(circle at 25% 30%,#c98a5a,transparent 45%),radial-gradient(circle at 75% 60%,#4a74d6,transparent 50%),#3b3550;overflow:hidden}
+.win{position:absolute;top:0;left:0;width:820px;height:62px;overflow:hidden;outline:1px dashed rgba(255,255,255,.4);outline-offset:-1px}
+.island{position:absolute;top:0;left:50%;translate:-50% 0;width:340px;height:38px;background:#000;border-radius:0 0 22px 22px;overflow:hidden}
+.layer{position:absolute;top:0;left:50%;translate:-50% 0}
+.bar{width:340px;height:38px;display:flex;align-items:center;gap:10px;padding:0 18px;color:#fff;font-weight:600}
+.dot{width:8px;height:8px;border-radius:50%;background:#3ae489;box-shadow:0 0 8px #3ae489}
+.panel{width:800px;height:306px;padding:18px 20px;color:#fff;opacity:0}
+.icons{display:flex;gap:14px;margin-bottom:18px}
+.icons i{width:18px;height:18px;border-radius:5px;background:#ffffff40}
+.row{height:38px;border-radius:10px;background:#ffffff14;margin-bottom:10px;display:flex;align-items:center;padding:0 12px;color:#ffffffcc}
+.legend{position:absolute;right:12px;bottom:10px;color:#fffc;font-size:12px;text-align:right}
+.controls{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0;align-items:center}
+button,select{font:inherit;color:#e6e6ea;background:#2a2b31;border:1px solid #3a3b42;border-radius:8px;padding:6px 12px;cursor:pointer}
+button.on{background:#3a5bd9;border-color:#3a5bd9}
+label.chk{display:inline-flex;align-items:center;gap:6px;padding:6px 4px}
+.side h2{font-size:14px;margin:18px 0 8px}
+.side h2:first-child{margin-top:0}
+.slider{display:grid;grid-template-columns:140px 1fr 52px;gap:8px;align-items:center;margin:4px 0}
+.slider output{text-align:right;color:#9ad;font-variant-numeric:tabular-nums}
+table{border-collapse:collapse;width:100%}
+td{padding:4px 6px;border-bottom:1px solid #2a2b31}
+td.v{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.ok{color:#5fd38d}.bad{color:#ff7b7b}
+#verdict{font-weight:600;margin-top:8px}
+canvas{background:#202127;border-radius:8px;display:block;margin-bottom:8px}
+.note{color:#9a9aa6;font-size:12px}
+pre{white-space:pre-wrap;background:#202127;padding:8px;border-radius:8px;font-size:12px}
+</style>
+</head>
+<body>
+<h1>Q 弹开合动画调试</h1>
+<p class="sub">虚线框是岛屿窗口（820 宽，高度是岛屿高度加 24，变矮时等 600ms 再缩，和应用一致），超出窗口的部分会被截掉。右侧「标准」在 800 和 560 两种面板宽度下都通过才算合格。</p>
+<div class="layout">
+  <div>
+    <div class="desktop">
+      <div class="win" id="win"><div class="island" id="island">
+        <div class="layer bar" id="bar"><span class="dot"></span>剩余 3 个待办<span style="margin-left:auto;color:#fff8;font-weight:400">15:42</span></div>
+        <div class="layer panel" id="panel"><div class="icons"><i></i><i></i><i></i><i></i><i></i></div><div class="row">评审待办页的岛屿风格</div><div class="row">回复 issue #31：快捷翻译在多屏下的位置</div><div class="row">买咖啡豆</div><div class="row">跑步 5 公里</div></div>
+      </div></div>
+      <div class="legend" id="legend"></div>
+    </div>
+    <div class="controls" id="presets"></div>
+    <div class="controls">
+      <button id="toggle">展开</button>
+      <label class="chk"><input type="checkbox" id="loop" checked>循环播放</label>
+      <label class="chk"><input type="checkbox" id="slow">慢放 4 倍</label>
+      <label class="chk">面板宽 <select id="pw"><option value="800" selected>800（你的设置）</option><option value="560">560（默认）</option></select></label>
+    </div>
+    <canvas id="plotOpen" width="820" height="170"></canvas>
+    <canvas id="plotClose" width="820" height="170"></canvas>
+    <p class="note">蓝线是宽度进度，橙线是高度进度，灰色虚线是起点和终点，红线是窗口边缘（展开时宽度超过它的部分看不到）。</p>
+  </div>
+  <div class="side">
+    <h2>参数</h2><div id="sliders"></div>
+    <h2>标准</h2><table id="checks"></table><div id="verdict"></div>
+    <h2>导出</h2><button id="copy">复制参数</button><pre id="out"></pre>
+  </div>
+</div>
+<script>
+const $ = (id) => document.getElementById(id);
+
+// Same curves as src/features/appearance/motionCurves.ts.
+function springFn(d) {
+  const s = Math.log(1000), sw = Math.sqrt(1 - d * d), w = s / d;
+  return (t) => t >= 1 ? 1 : 1 - Math.exp(-d * w * t) * (Math.cos(sw * w * t) + (d / sw) * Math.sin(sw * w * t));
+}
+function landingFn(reach, bounces) {
+  return (t) => {
+    if (t >= 1) return 1;
+    if (t < reach) { const u = t / reach; return u * (1.6 - 0.6 * u); }
+    let s = reach;
+    for (const b of bounces) {
+      if (t < s + b.length) { const u = (t - s) / b.length; return 1 - b.depth * 4 * u * (1 - u); }
+      s += b.length;
+    }
+    return 1;
+  };
+}
+function bezierFn(x1, y1, x2, y2) {
+  return (t) => {
+    if (t <= 0) return 0; if (t >= 1) return 1;
+    let lo = 0, hi = 1, s = t;
+    for (let i = 0; i < 40; i++) { s = (lo + hi) / 2; const x = 3 * (1 - s) ** 2 * s * x1 + 3 * (1 - s) * s * s * x2 + s ** 3; if (x < t) lo = s; else hi = s; }
+    return 3 * (1 - s) ** 2 * s * y1 + 3 * (1 - s) * s * s * y2 + s ** 3;
+  };
+}
+const lin = (f) => { const p = []; for (let i = 0; i <= 72; i++) p.push(i === 72 ? 1 : Math.round(f(i / 72) * 1e4) / 1e4); return { fn: f, css: `linear(${p.join(", ")})` }; };
+const bez = (...a) => ({ fn: bezierFn(...a), css: `cubic-bezier(${a.join(", ")})` });
+const EASE_OUT = bez(0.22, 1, 0.36, 1);
+const land = (reach, depth) => depth > 0 ? lin(landingFn(reach, [{ depth, length: 0.24 }, { depth: depth / 4, length: 0.16 }])) : EASE_OUT;
+
+function build(p) {
+  const open = { w: p.ow, we: lin(springFn(p.od)), h: 560, he: land(0.5, p.oh), r: Math.round(p.ow * 0.85), re: lin(springFn(p.rd)), fade: 250, fadeDelay: 160 };
+  const close = { w: p.cw, we: lin(springFn(p.cd)), h: 540, he: land(0.42, p.ch), r: Math.round(p.cw * 0.85), re: lin(springFn(Math.min(0.9, p.rd + 0.05))), layer: 200 };
+  // The bar fades in once the closing width's narrowest moment is over.
+  let tMax = 0, vMax = -1;
+  for (let i = 0; i <= 400; i++) { const v = close.we.fn(i / 400); if (v > vMax) { vMax = v; tMax = i / 400; } }
+  close.collapsedDelay = Math.round(tMax * close.w + 60);
+  return { open, close };
+}
+const SPRING_WEB = bez(0.34, 1.36, 0.5, 1);
+const WEB = {
+  open: { w: 550, we: SPRING_WEB, h: 500, he: EASE_OUT, r: 450, re: EASE_OUT, fade: 250, fadeDelay: 120 },
+  close: { w: 550, we: SPRING_WEB, h: 500, he: EASE_OUT, r: 450, re: EASE_OUT, layer: 250, collapsedDelay: 220 },
+};
+const PRESETS = [
+  { id: "now", name: "现在的 Q 弹", p: { od: 0.32, ow: 900, oh: 0.10, cd: 0.42, cw: 760, ch: 0.12, rd: 0.30 } },
+  { id: "a", name: "A 轻弹", p: { od: 0.66, ow: 620, oh: 0.04, cd: 0.72, cw: 560, ch: 0.04, rd: 0.60 } },
+  { id: "b", name: "B 适中", p: { od: 0.55, ow: 680, oh: 0.06, cd: 0.64, cw: 600, ch: 0.05, rd: 0.50 } },
+  { id: "c", name: "C 明显", p: { od: 0.46, ow: 760, oh: 0.08, cd: 0.56, cw: 660, ch: 0.07, rd: 0.42 } },
+  { id: "web", name: "弹性（官网，参照）", fixed: WEB },
+];
+const SLIDERS = [
+  ["od", "展开：宽度阻尼", 0.3, 0.9, 0.01], ["ow", "展开：宽度时长 ms", 400, 1000, 10], ["oh", "展开：高度回弹", 0, 0.15, 0.005],
+  ["cd", "收起：宽度阻尼", 0.3, 0.9, 0.01], ["cw", "收起：宽度时长 ms", 400, 900, 10], ["ch", "收起：高度回弹", 0, 0.15, 0.005],
+  ["rd", "圆角阻尼", 0.3, 0.9, 0.01],
+];
+
+function lobes(series, target) { let n = 0, sign = 0; for (const y of series) { const d = y - target; if (Math.abs(d) >= 1) { const s = Math.sign(d); if (s !== sign) { n++; sign = s; } } } return n; }
+function metrics(v, W) {
+  const o = v.open, c = v.close, T = W - 340, H = 268;
+  const ow = [], oh = [], cw = [], ch = [];
+  for (let ms = 0; ms <= o.w; ms++) ow.push(Math.min(820, 340 + T * o.we.fn(ms / o.w)));
+  for (let ms = 0; ms <= o.h; ms++) oh.push(38 + H * o.he.fn(ms / o.h));
+  for (let ms = 0; ms <= c.w; ms++) cw.push(W - T * c.we.fn(ms / c.w));
+  for (let ms = 0; ms <= c.h; ms++) ch.push(306 - H * c.he.fn(ms / c.h));
+  const settle = (s, t) => { let last = 0; s.forEach((y, i) => { if (Math.abs(y - t) >= 1) last = i; }); return last; };
+  const reach = (s, t, up) => Math.max(0, s.findIndex((y) => up ? y >= t - 0.5 : y <= t + 0.5));
+  const peak = ow.indexOf(Math.max(...ow));
+  return {
+    openOver: Math.max(...ow) - W,
+    openBack: W - Math.min(...ow.slice(peak)),
+    openSwings: Math.max(0, lobes(ow, W) - 1),
+    openSettle: Math.max(settle(ow, W), settle(oh, 306)),
+    openHeightBack: 306 - Math.min(...oh.slice(reach(oh, 306, true))),
+    closeUnder: 340 - Math.min(...cw),
+    closeSwings: Math.max(0, lobes(cw, 340) - 1),
+    closeSettle: Math.max(settle(cw, 340), settle(ch, 38)),
+    closeHeightUp: Math.max(...ch.slice(reach(ch, 38, false))) - 38,
+  };
+}
+const px = (v) => `${Math.round(v)} px`, ms = (v) => `${Math.round(v)} ms`, times = (v) => `${v} 次`;
+const CRITERIA = [
+  ["展开：冲出可见", "openOver", px, (v) => v >= 8 && v <= 40, "8–40 px，看得出弹，不夸张"],
+  ["展开：回摆", "openBack", px, (v) => v <= 12, "≤ 12 px，只轻轻回一下"],
+  ["展开：来回", "openSwings", times, (v) => v <= 2, "≤ 2（冲出、回摆）"],
+  ["展开：停稳", "openSettle", ms, (v) => v <= 700, "≤ 700 ms"],
+  ["展开：高度回弹", "openHeightBack", px, (v) => v >= 4 && v <= 18, "4–18 px"],
+  ["收起：比折叠条窄", "closeUnder", px, (v) => v <= 45, "≤ 45 px"],
+  ["收起：来回", "closeSwings", times, (v) => v <= 2, "≤ 2"],
+  ["收起：停稳", "closeSettle", ms, (v) => v <= 650, "≤ 650 ms"],
+  ["收起：高度上弹", "closeHeightUp", px, (v) => v <= 15, "≤ 15 px"],
+];
+
+let cur = PRESETS[2], params = { ...cur.p }, isOpen = false, loopTimer = 0, shrinkTimer = 0;
+const variant = () => cur.fixed ?? build(params);
+const slowK = () => $("slow").checked ? 4 : 1;
+
+function apply(open) {
+  const v = variant(), t = open ? v.open : v.close, k = slowK(), W = +$("pw").value;
+  const I = $("island"), P = $("panel"), B = $("bar");
+  I.style.transition = `width ${t.w * k}ms ${t.we.css}, height ${t.h * k}ms ${t.he.css}, border-radius ${t.r * k}ms ${t.re.css}`;
+  I.style.width = (open ? W : 340) + "px";
+  I.style.height = (open ? 306 : 38) + "px";
+  I.style.borderRadius = open ? "0 0 30px 30px" : "0 0 22px 22px";
+  P.style.transition = open ? `opacity ${t.fade * k}ms ease ${t.fadeDelay * k}ms` : `opacity ${t.layer * k}ms ease`;
+  P.style.opacity = open ? 1 : 0;
+  B.style.transition = open ? `opacity ${120 * k}ms ease` : `opacity ${t.layer * k}ms ease ${t.collapsedDelay * k}ms`;
+  B.style.opacity = open ? 0 : 1;
+  clearTimeout(shrinkTimer);
+  if (open) $("win").style.height = "330px"; else shrinkTimer = setTimeout(() => { $("win").style.height = "62px"; }, 600 * k);
+  isOpen = open;
+  $("toggle").textContent = open ? "收起" : "展开";
+}
+function loopStep() { apply(!isOpen); loopTimer = setTimeout(loopStep, (isOpen ? 1700 : 1300) * slowK()); }
+function setLoop() { clearTimeout(loopTimer); if ($("loop").checked) loopTimer = setTimeout(loopStep, 400); }
+
+function plot(canvas, v, dir, W) {
+  const g = canvas.getContext("2d"), cw = canvas.width, chh = canvas.height;
+  g.clearRect(0, 0, cw, chh);
+  const t = dir === "open" ? v.open : v.close, dur = Math.max(t.w, t.h, t.r) + 60;
+  const x = (m) => 36 + m / dur * (cw - 50), y = (p) => chh - 16 - (p + 0.15) / 1.7 * (chh - 34);
+  const hline = (p, color, dash) => { g.strokeStyle = color; g.setLineDash(dash ? [4, 4] : []); g.beginPath(); g.moveTo(36, y(p)); g.lineTo(cw - 14, y(p)); g.stroke(); g.setLineDash([]); };
+  hline(0, "#555", true); hline(1, "#777", true);
+  if (dir === "open") hline((820 - 340) / (W - 340), "#e05555", false);
+  const curve = (fn, d, color) => { g.strokeStyle = color; g.lineWidth = 2; g.beginPath(); for (let m = 0; m <= d; m += 2) { const px = x(m), py = y(fn(m / d)); m ? g.lineTo(px, py) : g.moveTo(px, py); } g.lineTo(x(dur), y(1)); g.stroke(); g.lineWidth = 1; };
+  curve(t.he.fn, t.h, "#f0a040"); curve(t.we.fn, t.w, "#5aa0ff");
+  g.fillStyle = "#bbb"; g.font = "12px Segoe UI, Microsoft YaHei";
+  g.fillText(`${dir === "open" ? "展开" : "收起"}  宽度 ${t.w}ms · 高度 ${t.h}ms`, 40, 14);
+  g.fillText("0", 8, y(0) + 4); g.fillText("终点", 4, y(1) + 4);
+  for (let m = 0; m <= dur; m += 100) g.fillText(m, x(m) - 6, chh - 2);
+}
+
+function refresh() {
+  const v = variant(), m8 = metrics(v, 800), m5 = metrics(v, 560);
+  $("checks").innerHTML = '<tr><td></td><td class="v">800</td><td class="v">560</td><td class="note">要求</td></tr>' +
+    CRITERIA.map(([name, key, fmt, ok, req]) => `<tr><td>${name}</td>${[m8, m5].map((m) => `<td class="v ${ok(m[key]) ? "ok" : "bad"}">${fmt(m[key])}</td>`).join("")}<td class="note">${req}</td></tr>`).join("");
+  const all = CRITERIA.every(([, key, , ok]) => ok(m8[key]) && ok(m5[key]));
+  $("verdict").textContent = all ? "全部通过" : "有未通过的项";
+  $("verdict").className = all ? "ok" : "bad";
+  const W = +$("pw").value;
+  plot($("plotOpen"), v, "open", W); plot($("plotClose"), v, "close", W);
+  $("legend").textContent = cur.name;
+  document.querySelectorAll("#presets button").forEach((b) => b.classList.toggle("on", b.dataset.id === cur.id));
+  $("out").textContent = cur.fixed ? "（参照，不可调）" : JSON.stringify(params);
+  window.__state = { m8, m5, all };
+}
+function renderSliders() {
+  $("sliders").innerHTML = "";
+  for (const [key, label, min, max, step] of SLIDERS) {
+    const row = document.createElement("div"); row.className = "slider";
+    const value = cur.fixed ? "" : params[key];
+    row.innerHTML = `<span>${label}</span><input type="range" min="${min}" max="${max}" step="${step}" value="${value}" ${cur.fixed ? "disabled" : ""}><output>${value}</output>`;
+    const input = row.querySelector("input"), out = row.querySelector("output");
+    input.addEventListener("input", () => {
+      params[key] = +input.value; out.textContent = input.value;
+      if (cur.id !== "custom") cur = { id: "custom", name: "自定义", p: params };
+      refresh();
+    });
+    $("sliders").append(row);
+  }
+}
+for (const preset of PRESETS) {
+  const b = document.createElement("button"); b.textContent = preset.name; b.dataset.id = preset.id;
+  b.addEventListener("click", () => { cur = preset; if (preset.p) params = { ...preset.p }; renderSliders(); refresh(); });
+  $("presets").append(b);
+}
+$("toggle").addEventListener("click", () => { $("loop").checked = false; setLoop(); apply(!isOpen); });
+$("loop").addEventListener("change", setLoop);
+$("pw").addEventListener("change", () => { $("panel").style.width = $("pw").value + "px"; if (isOpen) apply(true); refresh(); });
+$("copy").addEventListener("click", () => navigator.clipboard?.writeText($("out").textContent).catch(() => {}));
+window.__api = { PRESETS, build, metrics, CRITERIA, WEB };
+renderSliders(); refresh(); setLoop();
+</script>
+</body>
+</html>
