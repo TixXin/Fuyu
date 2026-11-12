@@ -179,7 +179,7 @@
 
 - 源码保持项目当前编码风格；中文文档使用 UTF-8。
 - README 包含中英文说明，更新时不要破坏现有的双语结构。
-- 界面方向的决定记录在 `DESIGN.md`（全局方向）和 `docs/design/<区域>.md`（各区域，改哪块只改那一份）；新文档按 [docs/README.md](docs/README.md) 的表放进对应目录（功能说明放 `docs/features/`）；架构变化更新 `docs/architecture/overview.md`，数据存放位置写进 `data-storage.md`，对外契约（localStorage key、事件、命令、文件格式）写进 `contracts.md`。
+- 界面方向的决定记录在 `DESIGN.md`（全局方向）和 `docs/design/<区域>.md`（各区域，改哪块只改那一份）；新文档按 [docs/README.md](docs/README.md) 的表放进对应目录（功能说明放 `docs/features/`）；架构变化更新 `docs/architecture/overview.md`，数据存放位置写进 `data-storage.md`，对外契约（localStorage key、事件、命令、文件格式）写进 `contracts.md`。某个功能在 Windows 或 macOS 上的支持情况变了（含新增功能），在同一个提交里改 [docs/architecture/platforms.md](docs/architecture/platforms.md) 的对应行；macOS 适配的进度和决定记在 [macos-port-plan.md](docs/architecture/macos-port-plan.md)。
 - **调研**：用户让你联网搜索、搜 GitHub、对比竞品或参考软件并整理时，结果写成 `docs/research/<主题>.md`，不只在对话里回答；格式和规则见 [docs/research/README.md](docs/research/README.md)。
 - **任务**的规则、分组、字段和流程都在 [docs/tasks/README.md](docs/tasks/README.md)，开工前读它。查任务用命令，不逐个打开文件：`pnpm tasks next`（能认领的，按优先级）、`pnpm tasks show <编号>`（一项的全文和关系）、`pnpm tasks`（看板）。没结束的任务在 `docs/tasks/<分组>/`，已完成和不做的在 `docs/tasks/0-archive/<分组>/`，分组是编号的首字母。
 - **认领以 `origin/main` 为准，不等其他会话回消息**：在 lane 里 `pnpm task:claim <编号> --as <会话名> --scope <要改的目录/,文件>`，会话名用 ListAgents 里自己的名字；做完 `pnpm tasks done <编号>`，和功能改动放在同一个提交里；land 时会核对已完成任务记下的提交。
