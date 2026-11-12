@@ -12,7 +12,7 @@ overrides:
   minimatch@>=7.0.0 <11.0.1: ^11.0.5
 
 patchedDependencies:
-  claude-code-merge-queue@0.7.1: a2f0bc120c6c258670ad1aad67278d0d2b8794dca5745fae1458d1a14897ebf6
+  claude-code-merge-queue@0.7.1: 75c3f4df812e8bf8fdd6e52db227343c642dfb9e03ee4fa1ca35c3675d81ae22
 
 importers:
 
@@ -57,7 +57,7 @@ importers:
         version: 4.7.0(vite@7.3.7)
       claude-code-merge-queue:
         specifier: 0.7.1
-        version: 0.7.1(patch_hash=a2f0bc120c6c258670ad1aad67278d0d2b8794dca5745fae1458d1a14897ebf6)
+        version: 0.7.1(patch_hash=75c3f4df812e8bf8fdd6e52db227343c642dfb9e03ee4fa1ca35c3675d81ae22)
       eslint:
         specifier: ^10.14.0
         version: 10.14.0
@@ -1807,7 +1807,7 @@ snapshots:
 
   caniuse-lite@1.0.30001820: {}
 
-  claude-code-merge-queue@0.7.1(patch_hash=a2f0bc120c6c258670ad1aad67278d0d2b8794dca5745fae1458d1a14897ebf6): {}
+  claude-code-merge-queue@0.7.1(patch_hash=75c3f4df812e8bf8fdd6e52db227343c642dfb9e03ee4fa1ca35c3675d81ae22): {}
 
   convert-source-map@2.0.0: {}
 

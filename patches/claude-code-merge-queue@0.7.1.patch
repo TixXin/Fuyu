@@ -1,5 +1,5 @@
 diff --git a/dist/hooks/worktree-create.js b/dist/hooks/worktree-create.js
-index 558e886b00a53edf989b804182f90ef4431d0912..53a662b2e15c58374cdf8b0a244b73f73785c07c 100644
+index 558e886b00a53edf989b804182f90ef4431d0912..92ae5d331e818491b980041ca28ff3c4bfc23215 100644
 --- a/dist/hooks/worktree-create.js
 +++ b/dist/hooks/worktree-create.js
 @@ -30,6 +30,8 @@ import { fileURLToPath } from "node:url";
@@ -172,17 +172,17 @@ index 0000000000000000000000000000000000000000..0073d781e559f8732a83018c07f3e7ec
 +}
 diff --git a/dist/lib/lane-pool.js b/dist/lib/lane-pool.js
 new file mode 100644
-index 0000000000000000000000000000000000000000..5b77a3c6bf49bb0849ee30de8c01e8693637ae41
+index 0000000000000000000000000000000000000000..913790afd6f50168ea22044d89d7dca65f43f144
 --- /dev/null
 +++ b/dist/lib/lane-pool.js
-@@ -0,0 +1,147 @@
+@@ -0,0 +1,141 @@
 +// fly-island patch: a pool of lanes instead of a new one per session. The stock
 +// hook only takes a lane number whose folder does not exist, so every /clear,
 +// restart or new session added a lane and they piled up (27 on one machine).
 +// Before creating one, the WorktreeCreate hook now takes back an idle lane:
 +//   1. the lane the session is already in (a /clear asks for a worktree again);
 +//   2. a lane the same claude.exe asked for earlier;
-+//   3. the lowest-numbered lane nobody uses.
++//   (3. the lowest-numbered lane nobody uses: off until lanes record who uses them.)
 +// A lane is reused only when it has no uncommitted or untracked files and
 +// nothing that is not already in the main checkout's HEAD, so no work is lost.
 +// "Nobody uses it": its recorded owner is not another live claude.exe, and its
@@ -193,7 +193,7 @@ index 0000000000000000000000000000000000000000..5b77a3c6bf49bb0849ee30de8c01e869
 +import { execFileSync } from "node:child_process";
 +import { existsSync, mkdirSync, renameSync, rmSync, statSync } from "node:fs";
 +import { basename, dirname, join, resolve, sep } from "node:path";
-+import { readLaneOwners, pidAlive } from "./lane-owner.js";
++import { readLaneOwners } from "./lane-owner.js";
 +
 +const MAX_LANE = 200;
 +const LOCK_STALE_MS = 60 * 1000;
@@ -298,23 +298,17 @@ index 0000000000000000000000000000000000000000..5b77a3c6bf49bb0849ee30de8c01e869
 +        }
 +        const current = fromCwd ? laneOf(mainTop, cfg, fromCwd) : null;
 +        const ownedBy = (lane) => owners[key(lanePath(mainTop, cfg, lane))]?.pid ?? null;
++        // Only the session's own lane for now. Most sessions work in a lane from the main
++        // checkout by absolute paths, or take one over from another session, and nothing
++        // records that yet, so a lane that looks idle may well be someone's (F23 follow-up).
 +        const order = [
 +            ...existing.filter((lane) => lane === current),
 +            ...existing.filter((lane) => lane !== current && claudePid && ownedBy(lane) === claudePid),
-+            ...existing.filter((lane) => lane !== current && !(claudePid && ownedBy(lane) === claudePid)),
 +        ];
 +        for (const lane of order) {
 +            const wt = lanePath(mainTop, cfg, lane);
 +            if (workIn(wt, mainHead))
 +                continue;
-+            const mine = lane === current || (claudePid && ownedBy(lane) === claudePid);
-+            if (!mine) {
-+                const owner = ownedBy(lane);
-+                if (owner && pidAlive(owner))
-+                    continue;
-+                if (folderBusy(wt))
-+                    continue;
-+            }
 +            const branch = `${cfg.branchPrefix}${lane}`;
 +            if (!tryGit(["checkout", "-q", "-B", branch, mainHead], wt).ok)
 +                continue;
