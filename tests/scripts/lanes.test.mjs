@@ -4,11 +4,11 @@ import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSy
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { currentSession, laneOf, lanePath, ownerOf, sessionAlive } from "../../scripts/lanes/laneRegistry.mjs";
+import { currentSession, laneOf, lanePath, ownerKey, ownerOf, sessionAlive } from "../../scripts/lanes/laneRegistry.mjs";
 import { ACTIVE_MS, UNKNOWN_OWNER_MS, judge, ownerAlive, usable } from "../../scripts/lanes/laneState.mjs";
 import { finishLane, listLanes, openLane, takeLane } from "../../scripts/lanes/lanePool.mjs";
 import { doneLines, listLine } from "../../scripts/lanes/lanes.mjs";
-import { lanesToFinish } from "../../scripts/lanes/session-end.mjs";
+import { laneOfKey, lanesToFinish } from "../../scripts/lanes/session-end.mjs";
 import { hintFor } from "../../scripts/lanes/session-hint.mjs";
 
 const NOW = Date.UTC(2026, 10, 12, 12);
@@ -77,6 +77,15 @@ test("leaving a session releases the lane it is in and the lanes its claude.exe 
   assert.deepEqual(lanesToFinish({ main, cwd: lanePath(main, 4), reason: "resume", pid: 7, owners }), []);
   const bySession = { [key(2)]: { pid: 7, session: "s-a" }, [key(3)]: { pid: 7, session: "s-b" }, [key(6)]: { pid: null, session: "s-a" } };
   assert.deepEqual(lanesToFinish({ main, cwd: path.join("C:", "Temp", "magpie"), reason: "other", session: "s-a", pid: 7, owners: bySession }), [2, 6], "a magpie session started elsewhere still releases its lanes, by session id");
+});
+
+test("owner records are keyed by the lowercased path, and still map back to lanes of a mixed-case checkout (macOS)", () => {
+  const main = path.join("E:", "Projects", "Fuyu");
+  assert.equal(laneOfKey(main, ownerKey(lanePath(main, 2))), 2);
+  assert.equal(laneOfKey(main, ownerKey(path.join("E:", "Projects", "Other-lanes", "2"))), null);
+  assert.equal(laneOfKey(main, ownerKey(path.join(lanePath(main, 2), "src"))), null);
+  const owners = { [ownerKey(lanePath(main, 2))]: { pid: null, session: "s-mac" } };
+  assert.deepEqual(lanesToFinish({ main, cwd: main, reason: "prompt_input_exit", session: "s-mac", owners }), [2]);
 });
 
 test("a session that exits inside a lane someone else recorded leaves that lane alone", () => {
