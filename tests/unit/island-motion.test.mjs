@@ -13,13 +13,19 @@ test("every preset ends its height before the native side shrinks the window (60
   }
 });
 
-test("closing is quicker than opening and does not overshoot (C49)", () => {
-  for (const motion of ISLAND_MOTIONS.filter((motion) => motion !== "none")) {
-    const open = islandMotionTiming(motion, "open");
-    const close = islandMotionTiming(motion, "close");
-    assert.ok(close.width < open.width && close.height < open.height, motion);
+test("the spring is the website's top island both ways; the others close quicker without overshoot (C49)", () => {
+  const open = islandMotionTiming("spring", "open");
+  const close = islandMotionTiming("spring", "close");
+  for (const key of ["width", "widthEase", "height", "radius", "ease"]) assert.equal(close[key], open[key], key);
+  // The website's menu fades out in 250ms; its bar comes back as the panel has gone.
+  assert.equal(close.layer, 250);
+  assert.ok(close.collapsedDelay >= 200);
+  for (const motion of ["smooth", "fast", "bouncy"]) {
+    const opening = islandMotionTiming(motion, "open");
+    const closing = islandMotionTiming(motion, "close");
+    assert.ok(closing.width < opening.width && closing.height < opening.height, motion);
     // An overshooting curve has a control point above 1.
-    assert.ok(!/,\s*1\.\d+,/.test(close.widthEase), motion);
+    assert.ok(!/,\s*1\.\d+,/.test(closing.widthEase), motion);
   }
 });
 

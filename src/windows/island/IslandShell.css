@@ -8,6 +8,23 @@
  * and blur every word (roadmap F14). The box is still base size x scale, centred at the top, as
  * Rust's hit test (island/passthrough.rs) assumes.
  */
+/*
+ * The shell's width as it animates. While a content layer fades, WebView2 draws it as a layer of
+ * its own, placed from the shell's centre; the shell's fractional width each frame left that
+ * place a sixty-fourth of a device pixel either way, and the text jumped a whole device pixel
+ * left and right through the width spring (docs/investigations/island-jitter.md, fourth round).
+ * So the shell's left edge is rounded to a whole device pixel (--island-shell-left, the width
+ * follows from it), and each layer sits at its own rounded resting place on the stage, measured
+ * from that edge: the same whole device pixel on every frame. The stage is the container (100cqw
+ * is its width). 1/1.5 and 1/1.75 are not exact, and a hair short of a pixel snaps to the one
+ * before: the 0.001px keep each edge on the pixel's side (a sixty-fourth of a pixel is 0.016px).
+ */
+@property --island-shell-width {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 0px;
+}
+
 .island {
   --glass-pointer-x: 50%;
   --glass-pointer-y: 18%;
@@ -51,10 +68,12 @@
    * --island-motion-* variables on the stage); the fallbacks are the spring opening, as on the
    * website's top island. Never wider than the window, so an overshoot is not cut at its edge.
    */
-  max-width: 100vw;
+  /* Never past the stage's edges: an overshoot stops at the window, as max-width: 100vw did. */
+  --island-shell-left: calc(max(0px, round(nearest, (100cqw - var(--island-shell-width)) / 2, var(--island-device-pixel, 1px))) + 0.001px);
+  width: calc(100cqw - 2 * var(--island-shell-left));
   /* background-color: a light island kept dark while collapsed (C33.2) turns light as it opens. */
   transition:
-    width var(--island-motion-width, 550ms) var(--island-motion-width-ease, cubic-bezier(0.34, 1.36, 0.5, 1)),
+    --island-shell-width var(--island-motion-width, 550ms) var(--island-motion-width-ease, cubic-bezier(0.34, 1.36, 0.5, 1)),
     height var(--island-motion-height, 500ms) var(--island-motion-ease, cubic-bezier(0.22, 1, 0.36, 1)),
     border-radius var(--island-motion-radius, 450ms) var(--island-motion-ease, cubic-bezier(0.22, 1, 0.36, 1)),
     background-color 360ms ease;
@@ -190,7 +209,7 @@
 }
 
 .island--collapsed {
-  width: calc(var(--collapsed-island-width) * var(--island-scale, 1));
+  --island-shell-width: calc(var(--collapsed-island-width) * var(--island-scale, 1));
   height: calc(38px * var(--island-scale, 1));
   border-radius: 0 0 var(--island-shell-radius-collapsed) var(--island-shell-radius-collapsed);
   /* The island is a surface, not a link: only its small buttons show the hand. */
@@ -272,7 +291,7 @@
 }
 
 .island--expanded {
-  width: calc(var(--expanded-island-width, 560px) * var(--island-scale, 1));
+  --island-shell-width: calc(var(--expanded-island-width, 560px) * var(--island-scale, 1));
   height: calc(var(--expanded-island-height, 306px) * var(--island-scale, 1));
   border-radius: 0 0 var(--island-shell-radius) var(--island-shell-radius);
   cursor: default;
@@ -290,9 +309,9 @@
 .island__expanded {
   position: absolute;
   top: 0;
-  /* Centred on the shell even while it is narrower than the layer; the zoom scales the negative
-     margin with the layer, and the percentage is of the shell. */
-  left: 50%;
+  /* Where the layer rests, centred on the stage, measured from the shell's edge (see
+     --island-shell-width above); in the layer's own zoomed pixels, as the zoom scales `left`. */
+  left: calc((round(nearest, (100cqw - var(--layer-width) * var(--layer-zoom)) / 2, var(--island-device-pixel, 1px)) - var(--island-shell-left) + 0.002px) / var(--layer-zoom));
   z-index: 2;
   /* The layers only fade; the shell's resize is the motion. A slide, even of `top`, ends on a
      frame that moves the layer by a hair, and text of different sizes rounds to device pixels
@@ -303,9 +322,10 @@
 }
 
 .island__collapsed {
+  --layer-width: var(--collapsed-island-width);
+  --layer-zoom: var(--island-collapsed-scale, 1);
   width: var(--collapsed-island-width);
   height: 38px;
-  margin-left: calc(var(--collapsed-island-width) / -2);
   zoom: var(--island-collapsed-scale, 1);
   display: flex;
   align-items: center;
@@ -332,9 +352,10 @@
 /* Not transitioned: going from a popup to the whole page, the page lays out at its full width at
    once and the shell, growing from the middle, uncovers it, rather than every line rewrapping. */
 .island__expanded {
+  --layer-width: var(--expanded-island-width, 560px);
+  --layer-zoom: var(--island-expanded-scale, 1);
   width: var(--expanded-island-width, 560px);
   height: var(--expanded-island-height, 306px);
-  margin-left: calc(var(--expanded-island-width, 560px) / -2);
   zoom: var(--island-expanded-scale, 1);
   display: flex;
   flex-direction: column;

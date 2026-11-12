@@ -14,9 +14,14 @@ type MotionTiming = {
   height: number;
   radius: number;
   ease: string;
-  /** The expanded layer's fade-in and its delay after the shell starts. */
+  /** The expanded layer's fade-in and its delay after the shell starts (opening only). */
   fade: number;
   fadeDelay: number;
+  /**
+   * The fade of the layer that goes away: the collapsed one as the island opens, the expanded one
+   * as it closes; closing, the collapsed layer also fades back in this long.
+   */
+  layer: number;
   /** How long the collapsed layer waits before fading back in as the island closes. */
   collapsedDelay: number;
   /** The liquid-glass bloom. */
@@ -31,34 +36,43 @@ const SPRING = "cubic-bezier(0.34, 1.36, 0.5, 1)";
 // window is only as tall as the target; the width is capped at the window's (IslandShell.css).
 const BOUNCE = "cubic-bezier(0.34, 1.56, 0.64, 1)";
 
-// Closing is quicker than opening and never overshoots: the user is done with the panel.
-const CLOSE: MotionTiming = {
+/**
+ * The website's top island (fuyu-site src/components/TopIsland.astro), the same both ways: the
+ * width springs 550ms (closing, it dips past the collapsed width and back), the height eases out
+ * in 500ms and the corners in 450ms. Its menu fades in 250ms after 120ms and out in 250ms at once;
+ * its bar stays, which here is the collapsed layer coming back as the panel has faded.
+ */
+const WEBSITE_OPEN: MotionTiming = {
+  width: 550, widthEase: SPRING, height: 500, radius: 450, ease: EASE_OUT,
+  fade: 250, fadeDelay: 120, layer: 120, collapsedDelay: 140, bloom: 440,
+};
+const WEBSITE_CLOSE: MotionTiming = { ...WEBSITE_OPEN, layer: 250, collapsedDelay: 220, bloom: 360 };
+
+// The other presets close quicker than they open and never overshoot.
+const QUICK_CLOSE: MotionTiming = {
   width: 400, widthEase: EASE_OUT, height: 380, radius: 340, ease: EASE_OUT,
-  fade: 120, fadeDelay: 0, collapsedDelay: 100, bloom: 360,
+  fade: 120, fadeDelay: 0, layer: 120, collapsedDelay: 100, bloom: 360,
+};
+const NONE: MotionTiming = {
+  width: 0, widthEase: EASE_OUT, height: 0, radius: 0, ease: EASE_OUT, fade: 0, fadeDelay: 0, layer: 0, collapsedDelay: 0, bloom: 0,
 };
 
 const PRESETS: Record<IslandMotion, { open: MotionTiming; close: MotionTiming }> = {
-  spring: {
-    open: { width: 550, widthEase: SPRING, height: 500, radius: 450, ease: EASE_OUT, fade: 250, fadeDelay: 120, collapsedDelay: 140, bloom: 440 },
-    close: CLOSE,
-  },
+  spring: { open: WEBSITE_OPEN, close: WEBSITE_CLOSE },
   // The island before the website's rhythm (before 2026-11-12): one ease-out, no overshoot.
   smooth: {
-    open: { width: 560, widthEase: EASE_OUT_EXPO, height: 560, radius: 560, ease: EASE_OUT_EXPO, fade: 260, fadeDelay: 160, collapsedDelay: 140, bloom: 440 },
-    close: { ...CLOSE, widthEase: EASE_OUT_EXPO, ease: EASE_OUT_EXPO },
+    open: { width: 560, widthEase: EASE_OUT_EXPO, height: 560, radius: 560, ease: EASE_OUT_EXPO, fade: 260, fadeDelay: 160, layer: 120, collapsedDelay: 140, bloom: 440 },
+    close: { ...QUICK_CLOSE, widthEase: EASE_OUT_EXPO, ease: EASE_OUT_EXPO },
   },
   fast: {
-    open: { width: 280, widthEase: EASE_OUT, height: 260, radius: 240, ease: EASE_OUT, fade: 160, fadeDelay: 40, collapsedDelay: 60, bloom: 240 },
-    close: { width: 200, widthEase: EASE_OUT, height: 200, radius: 180, ease: EASE_OUT, fade: 100, fadeDelay: 0, collapsedDelay: 50, bloom: 200 },
+    open: { width: 280, widthEase: EASE_OUT, height: 260, radius: 240, ease: EASE_OUT, fade: 160, fadeDelay: 40, layer: 100, collapsedDelay: 60, bloom: 240 },
+    close: { width: 200, widthEase: EASE_OUT, height: 200, radius: 180, ease: EASE_OUT, fade: 100, fadeDelay: 0, layer: 100, collapsedDelay: 50, bloom: 200 },
   },
   bouncy: {
-    open: { width: 580, widthEase: BOUNCE, height: 520, radius: 480, ease: EASE_OUT, fade: 250, fadeDelay: 120, collapsedDelay: 140, bloom: 440 },
-    close: CLOSE,
+    open: { ...WEBSITE_OPEN, width: 580, widthEase: BOUNCE, height: 520, radius: 480 },
+    close: QUICK_CLOSE,
   },
-  none: {
-    open: { width: 0, widthEase: EASE_OUT, height: 0, radius: 0, ease: EASE_OUT, fade: 0, fadeDelay: 0, collapsedDelay: 0, bloom: 0 },
-    close: { width: 0, widthEase: EASE_OUT, height: 0, radius: 0, ease: EASE_OUT, fade: 0, fadeDelay: 0, collapsedDelay: 0, bloom: 0 },
-  },
+  none: { open: NONE, close: NONE },
 };
 
 /**
@@ -85,7 +99,6 @@ export function islandMotionVariables(motion: IslandMotion, direction: "open" | 
     "--island-motion-fade-delay": `${timing.fadeDelay}ms`,
     "--island-motion-collapsed-delay": `${timing.collapsedDelay}ms`,
     "--island-motion-bloom": `${timing.bloom}ms`,
-    // The quick cross-fade of a layer going away: no longer than it was (120ms), none for "none".
-    "--island-motion-layer": `${Math.min(120, timing.fade)}ms`,
+    "--island-motion-layer": `${timing.layer}ms`,
   };
 }

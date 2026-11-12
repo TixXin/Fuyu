@@ -35,6 +35,8 @@
   --glass-collapsed-tint-color: rgba(47, 47, 55, 0.8);
   width: 100vw;
   height: 100vh;
+  /* The island's shell and layers measure the stage's width as 100cqw (IslandShell.css). */
+  container-type: inline-size;
   display: flex;
   align-items: flex-start;
   justify-content: center;
