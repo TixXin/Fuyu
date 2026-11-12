@@ -13,7 +13,7 @@ export function getTodoSignature(date: string, todos: TodoItem[], dailyNote: str
 
 export function formatTodosAsMarkdown(todos: TodoItem[]) {
   return todos
-    .map((todo) => `- [${todo.completed ? "x" : " "}] ${todo.title}`)
+    .map((todo) => `- [${todo.completed ? "x" : " "}] ${todo.project ? `[${todo.project}] ` : ""}${todo.title}`)
     .join("\n");
 }
 

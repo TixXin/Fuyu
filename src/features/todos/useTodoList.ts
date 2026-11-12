@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { createTodoId, loadActiveTodoId, loadTodos, saveActiveTodoId, saveTodos } from "./storage";
+import { splitProjectPrefix } from "./project";
 import type { TodoItem } from "./types";
 import { useTodoFileField } from "./useTodoFileField";
 
@@ -13,8 +14,9 @@ export function useTodoList(onStartTodo: () => void) {
   useTodoFileField("todos", setTodos);
   useTodoFileField("activeTodoId", setActiveTodoId);
 
-  const addTodo = useCallback(() => {
-    const title = draftTodo.trim();
+  /** Adds the draft; "#name title" puts it in that project, else `defaultProject` (issue #44). */
+  const addTodo = useCallback((defaultProject?: string) => {
+    const { title, project = typeof defaultProject === "string" ? defaultProject : undefined } = splitProjectPrefix(draftTodo);
 
     if (!title) {
       return;
@@ -26,6 +28,7 @@ export function useTodoList(onStartTodo: () => void) {
         title,
         completed: false,
         createdAt: Date.now(),
+        ...(project ? { project } : {}),
       },
       ...currentTodos,
     ]);

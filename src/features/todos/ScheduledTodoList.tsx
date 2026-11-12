@@ -32,7 +32,7 @@ export function ScheduledTodoList({
             <div className="scheduled-list__date">{label}</div>
             {items.map((todo) => (
               <div key={todo.id} className="scheduled-list__item" role="listitem">
-                <span>{todo.title}</span>
+                <span>{todo.project && <span className="todo-project-tag">{todo.project}</span>}{todo.title}</span>
                 <button
                   type="button"
                   aria-label={t.notebook.deleteScheduled(todo.title)}

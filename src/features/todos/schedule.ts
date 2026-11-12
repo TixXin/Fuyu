@@ -1,4 +1,5 @@
 import { getLocalDateString } from "../../utils/date.ts";
+import { readProject } from "./project.ts";
 import type { ScheduledTodo, TodoItem } from "./types";
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
@@ -33,7 +34,7 @@ export function splitDueTodos(todos: ScheduledTodo[], date: string) {
 
 /** Due scheduled todos as list items, earliest first at the top of the list. */
 export function toTodoItems(todos: ScheduledTodo[]): TodoItem[] {
-  return todos.map(({ id, title, createdAt }) => ({ id, title, completed: false, createdAt }));
+  return todos.map(({ id, title, createdAt, project }) => ({ id, title, completed: false, createdAt, ...(project ? { project } : {}) }));
 }
 
 export function normalizeScheduledTodo(value: Partial<ScheduledTodo>): ScheduledTodo | null {
@@ -44,5 +45,6 @@ export function normalizeScheduledTodo(value: Partial<ScheduledTodo>): Scheduled
     title,
     date: value.date,
     createdAt: typeof value.createdAt === "number" ? value.createdAt : 0,
+    ...(readProject(value.project) ? { project: readProject(value.project) } : {}),
   };
 }

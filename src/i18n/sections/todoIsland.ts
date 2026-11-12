@@ -27,6 +27,12 @@ export type TodoIslandText = {
   clearDone: (count: number) => string;
   /** The fold under the open todos. */
   doneSection: (count: number) => string;
+  /** Projects (issue #44): the filter, its "all" choice, the group of todos without one, and how to name one. */
+  projectFilter: string;
+  allProjects: string;
+  noProject: string;
+  projectHint: string;
+  projectCount: (project: string, open: number) => string;
 };
 
 export const zhCN: TodoIslandText = {
@@ -57,6 +63,11 @@ export const zhCN: TodoIslandText = {
   todayDone: (done, total) => `今天完成 ${done}/${total}`,
   clearDone: (count) => (count > 0 ? `清除已完成（${count} 件）` : "清除已完成"),
   doneSection: (count) => `已完成 ${count}`,
+  projectFilter: "按项目筛选",
+  allProjects: "全部",
+  noProject: "未分组",
+  projectHint: "开头写 #项目名 加空格，就归到这个项目，例如「#论文 写引言」",
+  projectCount: (project, open) => `${project}，${open} 件未完成`,
 };
 
 export const en: TodoIslandText = {
@@ -87,4 +98,9 @@ export const en: TodoIslandText = {
   todayDone: (done, total) => `${done} of ${total} done today`,
   clearDone: (count) => (count > 0 ? `Clear done (${count})` : "Clear done"),
   doneSection: (count) => `Done ${count}`,
+  projectFilter: "Filter by project",
+  allProjects: "All",
+  noProject: "No project",
+  projectHint: "Start with #name and a space to put it in a project, such as \"#thesis Write the intro\"",
+  projectCount: (project, open) => `${project}, ${open} open`,
 };

@@ -17,6 +17,9 @@ pub struct TodoItem {
     pub completed: bool,
     /// Milliseconds since 1970 as JavaScript wrote it; kept as the exact number text.
     pub created_at: Number,
+    /// The project it belongs to (issue #44); left out when it has none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub project: Option<String>,
 }
 
 /// Mirrored by `ScheduledTodo` in src/features/todos/types.ts.
@@ -28,6 +31,8 @@ pub struct ScheduledTodo {
     /// Local date, YYYY-MM-DD.
     pub date: String,
     pub created_at: Number,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub project: Option<String>,
 }
 
 /// Mirrored by `TodoArchive` in src/features/todos/types.ts.

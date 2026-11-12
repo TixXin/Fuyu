@@ -68,13 +68,13 @@ pub(crate) fn run(method: &str, params: &Value, data: &TodosData, id: &str, now:
             match date {
                 Some(date) if date < data.date => Err(bad(format!("\"date\" cannot be before the list's day ({}).", data.date))),
                 Some(date) if date > data.date => {
-                    let todo = ScheduledTodo { id: id.to_string(), title, date, created_at: Number::from(now) };
+                    let todo = ScheduledTodo { id: id.to_string(), title, date, created_at: Number::from(now), project: None };
                     next.scheduled.push(todo.clone());
                     sort_scheduled(&mut next.scheduled);
                     changed(json!(todo), next)
                 }
                 _ => {
-                    let todo = TodoItem { id: id.to_string(), title, completed: false, created_at: Number::from(now) };
+                    let todo = TodoItem { id: id.to_string(), title, completed: false, created_at: Number::from(now), project: None };
                     next.todos.insert(0, todo.clone());
                     changed(json!(todo), next)
                 }

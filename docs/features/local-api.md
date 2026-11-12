@@ -52,7 +52,7 @@
 | PUT | `/v1/agent-status/{source}` | `{ "phase": "running", "name"?: "Aider", "title"?: "...", "taskId"?: "...", "host"?: "dev-box", "agent"?: "claudeCode", "cwd"?: "..." }` | 上报一个 AI Agent 的状态，见下文 |
 | DELETE | `/v1/agent-status/{source}` | — | 移除这个来源 |
 
-待办对象的格式为 `{ id, title, completed, createdAt }`。标题不能为空，最长 500 个字符。
+待办对象的格式为 `{ id, title, completed, createdAt, project? }`；`project` 是待办所属的项目（2026-11-12 起，issue #44），没有项目时不出现这个字段，接口和插件新建的待办不带项目。标题不能为空，最长 500 个字符。
 
 状态码：`400` 参数错误，`401` 令牌错误，`403` 被拒绝（网页请求、Host 不对、未允许修改），`404` 路径或待办不存在，`405` 方法不对，`413` 请求体太大，`503` / `504` 岛屿暂时没有响应。
 

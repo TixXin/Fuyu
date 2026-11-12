@@ -505,3 +505,17 @@ mod call_tests {
         assert_ne!(id, new_todo_id().expect("id"));
     }
 }
+
+#[test]
+fn a_todos_project_survives_a_save_and_none_adds_no_key() {
+    let mut value = serde_json::to_value(sample()).expect("encode");
+    value["todos"][0]["project"] = json!("论文");
+    value["scheduled"][0]["project"] = json!("组会");
+    let file: TodosFile = serde_json::from_value(value).expect("decode");
+    assert_eq!(file.data.todos[0].project.as_deref(), Some("论文"));
+    assert_eq!(file.data.scheduled[0].project.as_deref(), Some("组会"));
+    let text = serde_json::to_string(&file).expect("encode");
+    assert_eq!(text.matches("\"project\"").count(), 2, "{text}");
+    // Todos without one keep the file as it was before projects (issue #44).
+    assert!(!serde_json::to_string(&sample()).expect("encode").contains("project"));
+}

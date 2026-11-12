@@ -1,0 +1,93 @@
+/* Projects on the todo page (issue #44): the filter chips, the group headings and the small tag in
+   front of a title outside its group. Colours follow the todo page's ink (TodoIslandPage.css). */
+.todo-project-filter {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 4px;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.todo-project-filter__chip {
+  flex: none;
+  max-width: 120px;
+  height: 22px;
+  padding: 0 9px;
+  overflow: hidden;
+  color: var(--text-2);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: rgba(var(--todo-ink), 0.06);
+  border: 0;
+  border-radius: var(--radius-pill);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.todo-project-filter__chip:hover {
+  color: var(--text-1);
+  background: rgba(var(--todo-ink), 0.1);
+}
+
+.todo-project-filter__chip[aria-pressed="true"] {
+  color: var(--todo-accent);
+  background: rgba(var(--todo-accent-rgb), 0.16);
+}
+
+.todo-project-filter__chip:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: -2px;
+}
+
+.todo-project-heading {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 8px 10px 2px;
+  color: var(--text-3);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.todo-project-heading__name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.todo-project-heading__count {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+}
+
+.todo-project-tag {
+  display: inline-block;
+  max-width: 8em;
+  margin-right: 6px;
+  padding: 0 6px;
+  overflow: hidden;
+  color: var(--text-2);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: top;
+  background: rgba(var(--todo-ink, 241, 240, 246), 0.08);
+  border-radius: var(--radius-pill);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 19px;
+  text-decoration: none;
+}
+
+/* The filter is one more row above the list (TodoIslandPage.css lays the page out in rows). */
+.todo-island:has(> .todo-project-filter) {
+  grid-template-rows: auto auto auto minmax(0, 1fr);
+}
+
+.todo-island--archive:has(> .todo-project-filter) {
+  grid-template-rows: auto auto minmax(0, 1fr);
+}

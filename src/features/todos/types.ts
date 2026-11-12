@@ -5,6 +5,8 @@ export type TodoItem = {
   title: string;
   completed: boolean;
   createdAt: number;
+  /** The project it belongs to (issue #44); absent for none. Older versions drop it when they save. */
+  project?: string;
 };
 
 /** A todo planned for a later day; it joins that day's list when the day arrives. */
@@ -14,6 +16,8 @@ export type ScheduledTodo = {
   /** Local date, YYYY-MM-DD. */
   date: string;
   createdAt: number;
+  /** As TodoItem.project; it keeps it when the day comes. */
+  project?: string;
 };
 
 export type TodoArchive = {
@@ -47,7 +51,8 @@ export type TodoPageProps = {
   scheduledTodos: ScheduledTodo[];
   onDraftChange: (value: string) => void;
   onDraftDateChange: (date: string | null) => void;
-  onAddTodo: () => void;
+  /** Adds the draft; `project`, the one the list is filtered to, unless the draft names its own ("#name title"). */
+  onAddTodo: (project?: string) => void;
   onShowUpcoming: () => void;
   onDeleteScheduledTodo: (id: string) => void;
   onToggleTodo: (id: string) => void;

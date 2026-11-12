@@ -1,6 +1,7 @@
 import type { LocalTodoKeys, TodosData } from "./api";
 import type { ScheduledTodo, TodoArchive, TodoItem } from "./types";
 import { getLocalDateString } from "../../utils/date.ts";
+import { readProject } from "./project.ts";
 import { normalizeScheduledTodo, sortScheduledTodos } from "./schedule.ts";
 
 /**
@@ -23,7 +24,14 @@ export function normalizeTodo(todo: Partial<TodoItem>): TodoItem {
     title: todo.title?.trim() ?? "",
     completed: Boolean(todo.completed),
     createdAt: typeof todo.createdAt === "number" ? todo.createdAt : Date.now(),
+    ...withProject(todo.project),
   };
+}
+
+/** `{ project }` for a usable project name, else nothing, so todos without one keep their old shape. */
+export function withProject(value: unknown): { project?: string } {
+  const project = readProject(value);
+  return project ? { project } : {};
 }
 
 export function parseScheduledTodos(stored: string | null): ScheduledTodo[] {

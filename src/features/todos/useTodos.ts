@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { createTodoId, loadCurrentTodoDate, loadDailyNote, saveCurrentTodoDate, saveDailyNote } from "./storage";
+import { splitProjectPrefix } from "./project";
 import type { TodoItem, TodoPageMode } from "./types";
 import { useTodoArchives } from "./useTodoArchives";
 import { useTodoList } from "./useTodoList";
@@ -41,26 +42,27 @@ export function useTodos({
   const draftTodo = list.draftTodo;
   const addListTodo = list.addTodo;
 
-  const addTodo = useCallback(() => {
-    const title = draftTodo.trim();
+  const addTodo = useCallback((defaultProject?: string) => {
+    const fallback = typeof defaultProject === "string" ? defaultProject : undefined;
+    const { title, project = fallback } = splitProjectPrefix(draftTodo);
 
     if (draftDate && draftDate > currentTodoDate && title) {
-      scheduleTodo(title, draftDate);
+      scheduleTodo(title, draftDate, project);
       setDraftTodo("");
     } else {
-      addListTodo();
+      addListTodo(fallback);
     }
     setDraftDate(null);
   }, [addListTodo, currentTodoDate, draftDate, draftTodo, scheduleTodo, setDraftTodo]);
   /** A todo for `date` (YYYY-MM-DD) from elsewhere (the calendar page): today's list, or planned for a later day. */
   const addTodoOn = useCallback((title: string, date: string) => {
-    const text = title.trim();
+    const { title: text, project } = splitProjectPrefix(title);
     if (!text) return;
     if (date > currentTodoDate) {
-      scheduleTodo(text, date);
+      scheduleTodo(text, date, project);
       return;
     }
-    setTodos((current) => [{ id: createTodoId(), title: text, completed: false, createdAt: Date.now() }, ...current]);
+    setTodos((current) => [{ id: createTodoId(), title: text, completed: false, createdAt: Date.now(), ...(project ? { project } : {}) }, ...current]);
   }, [currentTodoDate, scheduleTodo, setTodos]);
   const [todoPageMode, setTodoPageMode] = useState<TodoPageMode>("today");
   const [selectedArchiveDate, setSelectedArchiveDate] = useState<string | null>(

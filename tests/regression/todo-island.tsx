@@ -48,6 +48,10 @@ const FRAMES: { id: string; caption: string; props: Props; light?: boolean; tall
   { id: "upcoming", caption: "已安排", props: props("upcoming") },
   { id: "archive", caption: "归档", props: props("archive") },
   { id: "review", caption: "回看某一天", props: props("review") },
+  { id: "projects", caption: "按项目分组（issue #44）", tall: true, props: props("today", { activeTodoId: null, todos: [
+    { ...todo("p1", "写引言"), project: "论文" }, todo("p2", "买菜"), { ...todo("p3", "做 PPT"), project: "组会" },
+    { ...todo("p4", "跑对比"), project: "论文" }, { ...todo("p5", "交初稿", true), project: "论文" },
+  ] }) },
   { id: "light", caption: "浅色岛屿底色", props: props("today", { saveState: "needs-path", draftDate: "2026-11-10" }), light: true, tall: true },
 ];
 
@@ -124,6 +128,21 @@ try {
   await click(fold);
   check($$("today", ".todo-list [data-todo-id]").length === 2 && fold.getAttribute("aria-expanded") === "false", "「已完成」可以折叠");
   await click(fold);
+
+  // Projects (issue #44).
+  check(!$("today", ".todo-project-filter") && !$("today", ".todo-project-heading"), "没有项目时界面不变：没有筛选和组标题");
+  const chips = $$("projects", ".todo-project-filter__chip");
+  check(chips.map((chip) => chip.textContent).join("|") === "全部|论文|组会" && chips[0].getAttribute("aria-pressed") === "true", "有项目时上面多一行筛选：全部和各个项目");
+  const headings = () => $$("projects", ".todo-project-heading").map((heading) => heading.textContent);
+  check(headings().join("|") === "论文2|组会1|未分组1", "未完成的按项目分组，组标题写未完成数，没项目的放最后");
+  const titlesIn = (frame: string) => $$(frame, ".todo-list [data-todo-id] .todo-island-row__title").map((title) => title.textContent);
+  check(titlesIn("projects").join("|") === "写引言|跑对比|做 PPT|买菜|论文交初稿", "组内保持原来的顺序；已完成的不分组，标题前写项目");
+  await click(chips[1]);
+  check(titlesIn("projects").join("|") === "写引言|跑对比|交初稿" && headings().length === 0, "选一个项目只看它的待办，不再分组");
+  check(($("projects", ".todo-island__composer input") as HTMLInputElement).placeholder === "论文", "筛选时输入框提示加到哪个项目");
+  await act(async () => { ($("projects", ".todo-island__composer") as HTMLFormElement).requestSubmit(); });
+  check(calls.includes("add:论文"), "筛选时新加的待办归到这个项目");
+  await click($$("projects", ".todo-project-filter__chip")[0]);
 
   const text = (frame: string) => getComputedStyle($(frame, ".todo-island-row__title")!).color;
   check(text("today") !== text("light") && text("light").startsWith("rgba(28, 27, 31"), "文字颜色跟着岛屿底色：浅底深字");

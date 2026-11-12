@@ -12,6 +12,7 @@ const ICON = { size: 14, strokeWidth: 1.5, absoluteStrokeWidth: true, "aria-hidd
  */
 export function TodoIslandRow({
   todo,
+  showProject = false,
   editable,
   isActive,
   canReorder,
@@ -38,6 +39,8 @@ export function TodoIslandRow({
   canReorder: boolean;
   isDragging: boolean;
   isDragOver: boolean;
+  /** Show the todo's project before its title (rows outside a project group). */
+  showProject?: boolean;
   isEditing: boolean;
   titleDraft: string;
   onTitleDraftChange: (value: string) => void;
@@ -103,10 +106,11 @@ export function TodoIslandRow({
           />
         ) : editable ? (
           <button className="todo-island-row__title todo-island-row__title--editable" type="button" onClick={() => onStartEdit(todo)}>
+            {showProject && todo.project && <span className="todo-project-tag">{todo.project}</span>}
             {todo.title}
           </button>
         ) : (
-          <span className="todo-island-row__title">{todo.title}</span>
+          <span className="todo-island-row__title">{showProject && todo.project && <span className="todo-project-tag">{todo.project}</span>}{todo.title}</span>
         )}
       </span>
       {editable && (
