@@ -28,6 +28,7 @@ pub(super) const MAX_STATUS_CELLS: usize = 4;
 const MAX_CELL_LABEL_CHARS: usize = 6;
 const MAX_CELL_VALUE_CHARS: usize = 8;
 pub(super) const MAX_STATUS_BATTERIES: usize = 4;
+pub(super) const MAX_STATUS_SLICES: usize = 4;
 
 type Slot = (String, String);
 
@@ -43,6 +44,14 @@ pub struct StatusText {
     ring: Option<f64>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     batteries: Vec<StatusBattery>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pie: Vec<StatusSlice>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct StatusSlice {
+    value: f64,
+    tone: &'static str,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
@@ -175,7 +184,19 @@ pub(super) fn parse_status(params: &Value) -> Result<Option<StatusText>, (u16, S
         Some(Value::Array(batteries)) if batteries.len() <= MAX_STATUS_BATTERIES => batteries.iter().map(parse_battery).collect::<Result<_, _>>()?,
         Some(_) => return Err(bad(format!("\"batteries\" must be a list of at most {MAX_STATUS_BATTERIES} batteries."))),
     };
-    Ok((!text.is_empty()).then(|| StatusText { text: text.to_string(), tooltip, tone, cells, ring, batteries }))
+    let pie = match params.get("pie") {
+        None | Some(Value::Null) => Vec::new(),
+        Some(Value::Array(slices)) if slices.len() <= MAX_STATUS_SLICES => slices.iter().map(parse_slice).collect::<Result<_, _>>()?,
+        Some(_) => return Err(bad(format!("\"pie\" must be a list of at most {MAX_STATUS_SLICES} slices."))),
+    };
+    Ok((!text.is_empty()).then(|| StatusText { text: text.to_string(), tooltip, tone, cells, ring, batteries, pie }))
+}
+
+fn parse_slice(slice: &Value) -> Result<StatusSlice, (u16, String)> {
+    match slice.get("value").and_then(Value::as_f64) {
+        Some(value) if value >= 0.0 => Ok(StatusSlice { value, tone: parse_tone(slice.get("tone"), "pie[].tone")? }),
+        _ => Err(bad("Each pie slice needs \"value\" as a number of 0 or more.")),
+    }
 }
 
 fn parse_battery(battery: &Value) -> Result<StatusBattery, (u16, String)> {

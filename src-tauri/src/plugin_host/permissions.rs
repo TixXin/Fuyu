@@ -45,9 +45,9 @@ pub(super) const METHODS: [(&str, &str); 27] = [
     ("shelf.remove", "shelf:write"),
 ];
 
-pub(super) const CAPABILITIES: [&str; 13] = [
+pub(super) const CAPABILITIES: [&str; 14] = [
     "events", "notifications", "storage", "secrets", "views", "status", "webview", "permissions", "openView", "statusCells", "notifyStyle",
-    "notifyControls", "statusBatteries",
+    "notifyControls", "statusBatteries", "statusPie",
 ];
 
 pub(super) fn is_known_permission(name: &str) -> bool {

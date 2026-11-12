@@ -52,12 +52,13 @@
 | `status` | 收起条状态：`status.update` |
 | `statusCells` | `status.update` 的 `cells` 和 `ring` |
 | `statusBatteries` | `status.update` 的 `batteries` |
+| `statusPie` | `status.update` 的 `pie` |
 | `notifyStyle` | `island.notify` 的 `icon` 和 `layout` |
 | `notifyControls` | `island.notify` 的 `controls` |
 | `permissions` | 可选权限和 `permissions.request` |
 | `openView` | `island.openView` |
 
-只是给已有方法多加一个可选字段的能力（`statusCells`、`statusBatteries`、`notifyStyle`、`notifyControls`），旧版岛屿会忽略不认识的字段，照常发就行，不用先判断。
+只是给已有方法多加一个可选字段的能力（`statusCells`、`statusBatteries`、`statusPie`、`notifyStyle`、`notifyControls`），旧版岛屿会忽略不认识的字段，照常发就行，不用先判断。
 
 ## 停止与重启
 
