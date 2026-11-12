@@ -83,8 +83,7 @@ pub struct SoundPackFile {
 }
 
 fn packs_dir(app: &AppHandle) -> Result<PathBuf, String> {
-    app.path()
-        .app_data_dir()
+    crate::home_dir::fuyu_home(app.path())
         .map(|dir| dir.join(PACKS_DIR))
         .map_err(|error| format!("找不到应用数据目录：{error}"))
 }

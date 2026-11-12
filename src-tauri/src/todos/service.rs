@@ -92,9 +92,7 @@ struct TodosHost {
 static HOST: OnceLock<TodosHost> = OnceLock::new();
 
 pub(crate) fn init(app: &AppHandle) -> Result<(), String> {
-    let dir = app
-        .path()
-        .app_data_dir()
+    let dir = crate::home_dir::fuyu_home(app.path())
         .map_err(|error| format!("Failed to resolve app data directory: {error}"))?;
     let host = TodosHost {
         app: app.clone(),

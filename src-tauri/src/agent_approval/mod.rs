@@ -59,9 +59,7 @@ struct ClosedPayload {
 /// Starts the endpoint, on the port saved last time when it is free. It answers every request
 /// by handing it back until the island switches approvals on (`set_agent_approval_enabled`).
 pub fn init(app: &AppHandle) -> Result<(), String> {
-    let path = app
-        .path()
-        .app_data_dir()
+    let path = crate::home_dir::fuyu_home(app.path())
         .map_err(|error| format!("Failed to resolve app data directory: {error}"))?
         .join(config::CONFIG_FILE_NAME);
     let (mut saved, mut changed) = config::load_config(&path)?;

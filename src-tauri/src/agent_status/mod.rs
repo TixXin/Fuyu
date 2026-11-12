@@ -123,9 +123,7 @@ pub async fn get_agent_status(app: AppHandle) -> Result<AgentStatusSnapshot, Str
 }
 
 fn read_agent_status(app: AppHandle) -> Result<AgentStatusSnapshot, String> {
-    let app_dir = app
-        .path()
-        .app_data_dir()
+    let app_dir = crate::home_dir::fuyu_home(app.path())
         .map_err(|error| format!("Failed to resolve app data directory: {error}"))?;
     fs::create_dir_all(&app_dir)
         .map_err(|error| format!("Failed to create app data directory: {error}"))?;
@@ -154,9 +152,7 @@ pub fn clear_agent_status(app: AppHandle, provider: String) -> Result<AgentStatu
             Err("Unsupported agent provider.".to_string())
         };
     }
-    let app_dir = app
-        .path()
-        .app_data_dir()
+    let app_dir = crate::home_dir::fuyu_home(app.path())
         .map_err(|error| format!("Failed to resolve app data directory: {error}"))?;
     fs::create_dir_all(&app_dir)
         .map_err(|error| format!("Failed to create app data directory: {error}"))?;
@@ -257,9 +253,7 @@ pub async fn install_agent_status_hooks(app: AppHandle) -> Result<AgentHooksInst
 
 fn install_agent_status_hooks_now(app: &AppHandle) -> Result<AgentHooksInstallResult, String> {
     crate::dev_lane::refuse_in_preview("install the AI agents' status hooks")?;
-    let app_dir = app
-        .path()
-        .app_data_dir()
+    let app_dir = crate::home_dir::fuyu_home(app.path())
         .map_err(|error| format!("Failed to resolve app data directory: {error}"))?;
     fs::create_dir_all(&app_dir)
         .map_err(|error| format!("Failed to create app data directory: {error}"))?;
@@ -313,9 +307,7 @@ fn remove_legacy_hook_scripts(app_dir: &Path) {
 /// at the old folder's scripts and status file, so they are written again, for the agents that
 /// had them only. `Ok(false)` when none had them.
 pub(crate) fn reinstall_hooks_after_rename(app: &AppHandle) -> Result<bool, String> {
-    let app_dir = app
-        .path()
-        .app_data_dir()
+    let app_dir = crate::home_dir::fuyu_home(app.path())
         .map_err(|error| format!("Failed to resolve app data directory: {error}"))?;
     let state = read_agent_hooks_state(&app_dir)?;
     let codex = state.codex != HookInstallState::NotInstalled;
@@ -362,9 +354,7 @@ pub async fn list_agent_sessions(
     let window_ms = window_hours
         .map(|hours| i64::from(hours.clamp(1, 24)) * 60 * 60 * 1000)
         .unwrap_or(session_scan::ACTIVE_WINDOW_MS);
-    let app_dir = app
-        .path()
-        .app_data_dir()
+    let app_dir = crate::home_dir::fuyu_home(app.path())
         .map_err(|error| format!("Failed to resolve app data directory: {error}"))?;
     tauri::async_runtime::spawn_blocking(move || {
         let waiting = notifications::waiting_notifications(&app_dir);
@@ -396,9 +386,7 @@ pub async fn get_agent_push_detail(
     }
     let home_dir = match remote_host {
         Some(host) => {
-            let app_dir = app
-                .path()
-                .app_data_dir()
+            let app_dir = crate::home_dir::fuyu_home(app.path())
                 .map_err(|error| format!("Failed to resolve app data directory: {error}"))?;
             remote_sessions::mirrored_home(&app_dir, &host).ok_or_else(|| format!("Unknown SSH computer {host}."))?
         }
@@ -425,9 +413,7 @@ pub async fn list_ssh_hosts() -> Result<Vec<String>, String> {
 /// The computers whose sessions are read over SSH, and how the last read of each went.
 #[tauri::command]
 pub async fn get_agent_remote_hosts(app: AppHandle) -> Result<Vec<remote_sessions::RemoteHostStatus>, String> {
-    let app_dir = app
-        .path()
-        .app_data_dir()
+    let app_dir = crate::home_dir::fuyu_home(app.path())
         .map_err(|error| format!("Failed to resolve app data directory: {error}"))?;
     Ok(remote_sessions::statuses(&app_dir))
 }
@@ -435,9 +421,7 @@ pub async fn get_agent_remote_hosts(app: AppHandle) -> Result<Vec<remote_session
 /// Chooses the computers whose sessions are read over SSH (Host aliases from ~/.ssh/config).
 #[tauri::command]
 pub async fn set_agent_remote_hosts(app: AppHandle, hosts: Vec<String>) -> Result<Vec<String>, String> {
-    let app_dir = app
-        .path()
-        .app_data_dir()
+    let app_dir = crate::home_dir::fuyu_home(app.path())
         .map_err(|error| format!("Failed to resolve app data directory: {error}"))?;
     let saved = remote_hosts::write(&app_dir, &hosts)?;
     remote_sessions::refresh_soon();
@@ -473,8 +457,7 @@ pub async fn refresh_agent_remote_hosts() {
 }
 
 fn remote_app_dir(app: &AppHandle) -> Result<std::path::PathBuf, String> {
-    app.path()
-        .app_data_dir()
+    crate::home_dir::fuyu_home(app.path())
         .map_err(|error| format!("Failed to resolve app data directory: {error}"))
 }
 
@@ -490,7 +473,7 @@ pub async fn focus_agent_window(
     title: Option<String>,
     session_id: Option<String>,
 ) -> Result<bool, String> {
-    let app_dir = app.path().app_data_dir().ok();
+    let app_dir = crate::home_dir::fuyu_home(app.path()).ok();
     let focused = tauri::async_runtime::spawn_blocking(move || {
         focus::focus_session(app_dir.as_deref(), &provider, cwd.as_deref(), title.as_deref(), session_id.as_deref())
     })
@@ -527,7 +510,7 @@ pub async fn install_editor_extension(app: String) -> Result<(), crate::user_err
 /// seen. Returns their session ids.
 #[tauri::command]
 pub async fn agent_sessions_in_front(app: AppHandle, sessions: Vec<focus::SessionRef>) -> Result<Vec<String>, String> {
-    let app_dir = app.path().app_data_dir().ok();
+    let app_dir = crate::home_dir::fuyu_home(app.path()).ok();
     tauri::async_runtime::spawn_blocking(move || focus::sessions_in_front(app_dir.as_deref(), &sessions))
         .await
         .map_err(|error| format!("Failed to join the window check: {error}"))
@@ -597,9 +580,7 @@ pub async fn get_agent_host_icon(path: String) -> Result<Option<String>, String>
 /// Compares the installed hooks with what Install/Repair would write. Only reads files.
 #[tauri::command]
 pub async fn get_agent_hooks_state(app: AppHandle) -> Result<AgentHooksState, String> {
-    let app_dir = app
-        .path()
-        .app_data_dir()
+    let app_dir = crate::home_dir::fuyu_home(app.path())
         .map_err(|error| format!("Failed to resolve app data directory: {error}"))?;
     tauri::async_runtime::spawn_blocking(move || read_agent_hooks_state(&app_dir))
         .await

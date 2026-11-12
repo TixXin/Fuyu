@@ -58,7 +58,7 @@ fn state() -> MutexGuard<'static, State> {
 
 /// Remembers the app data folder; runs before the plugin host starts built-in plugins.
 pub fn init(app: &AppHandle) -> Result<(), String> {
-    let dir = app.path().app_data_dir().map_err(|error| format!("Failed to resolve app data directory: {error}"))?;
+    let dir = crate::home_dir::fuyu_home(app.path()).map_err(|error| format!("Failed to resolve app data directory: {error}"))?;
     let _ = APP_DIR.set(dir);
     Ok(())
 }

@@ -38,9 +38,7 @@ pub(crate) struct LocalApiStatus {
 }
 
 pub fn init(app: &AppHandle) -> Result<(), String> {
-    let path = app
-        .path()
-        .app_data_dir()
+    let path = crate::home_dir::fuyu_home(app.path())
         .map_err(|error| format!("Failed to resolve app data directory: {error}"))?
         .join(CONFIG_FILE_NAME);
     let (config, changed) = load_config(&path)?;

@@ -575,9 +575,7 @@ pub fn init(app: &AppHandle) -> Result<(), String> {
         return Ok(());
     }
 
-    let app_dir = app
-        .path()
-        .app_data_dir()
+    let app_dir = crate::home_dir::fuyu_home(app.path())
         .map_err(|error| format!("Failed to resolve app data directory: {error}"))?;
     let history_path = app_dir.join(HISTORY_FILE_NAME);
     let image_dir = app_dir.join(IMAGE_DIRECTORY_NAME);

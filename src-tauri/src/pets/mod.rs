@@ -85,7 +85,7 @@ pub(crate) use tauri_commands;
 
 fn pet_roots(app: &AppHandle) -> Vec<(PetSource, PathBuf)> {
     let mut roots = Vec::new();
-    if let Ok(dir) = app.path().app_data_dir() {
+    if let Ok(dir) = crate::home_dir::fuyu_home(app.path()) {
         roots.push((PetSource::App, dir.join("pets")));
     }
     if let Ok(home) = windows_home_dir() {

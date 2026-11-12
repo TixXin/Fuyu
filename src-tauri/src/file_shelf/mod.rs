@@ -166,9 +166,7 @@ pub fn init(app: &AppHandle) -> Result<(), String> {
     if FILE_SHELF.get().is_some() {
         return Ok(());
     }
-    let path = app
-        .path()
-        .app_data_dir()
+    let path = crate::home_dir::fuyu_home(app.path())
         .map_err(|error| format!("Failed to resolve app data directory: {error}"))?
         .join(FILE_SHELF_FILE_NAME);
     let items = Mutex::new(load_items(&path));

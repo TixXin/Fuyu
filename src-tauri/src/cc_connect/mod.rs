@@ -40,7 +40,7 @@ static APP_DIR: OnceLock<PathBuf> = OnceLock::new();
 
 /// Remembers the app data folder, where a downloaded cc-connect lives; runs before plugins start.
 pub fn init(app: &AppHandle) -> Result<(), String> {
-    let dir = app.path().app_data_dir().map_err(|error| format!("Failed to resolve app data directory: {error}"))?;
+    let dir = crate::home_dir::fuyu_home(app.path()).map_err(|error| format!("Failed to resolve app data directory: {error}"))?;
     let _ = APP_DIR.set(dir);
     Ok(())
 }

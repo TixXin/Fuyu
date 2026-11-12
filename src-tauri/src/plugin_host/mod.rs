@@ -128,9 +128,7 @@ struct InstalledPlugin {
 }
 
 pub fn init(app: &AppHandle) -> Result<(), String> {
-    let app_dir = app
-        .path()
-        .app_data_dir()
+    let app_dir = crate::home_dir::fuyu_home(app.path())
         .map_err(|error| format!("Failed to resolve app data directory: {error}"))?;
     let plugins_dir = app_dir.join(PLUGINS_DIR_NAME);
     fs::create_dir_all(&plugins_dir)

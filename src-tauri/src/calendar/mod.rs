@@ -71,7 +71,7 @@ fn window(now: DateTime<Local>) -> (DateTime<Utc>, DateTime<Utc>) {
 }
 
 fn app_dir(app: &AppHandle) -> Result<std::path::PathBuf, UserError> {
-    app.path().app_data_dir().map_err(|error| UserError::new("internal", "Something went wrong inside the island.").detail(error))
+    crate::home_dir::fuyu_home(app.path()).map_err(|error| UserError::new("internal", "Something went wrong inside the island.").detail(error))
 }
 
 async fn fetch_ics(link: &str) -> Result<String, UserError> {

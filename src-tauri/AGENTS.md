@@ -38,6 +38,7 @@ src-tauri/src/
 ├── translation/             # 快捷翻译：窗口、全局快捷键、凭据与翻译请求（mod.rs）
 ├── settings_window/         # 设置窗口：按需创建与显示（mod.rs）
 ├── onboarding_window/       # 新手引导：按需创建的透明遮罩，铺满岛所在屏幕的工作区（mod.rs）；跟着真岛发位置、只在卡片上接住鼠标（overlay.rs）
+├── home_dir.rs              # 浮屿的数据目录只从这里取：fuyu_home(app.path())，不要直接调 app_data_dir()（#50，D30；现在仍是 %APPDATA%\com.tixxin.fuyu，D30.3 换成 FUYU_HOME）
 ├── fs_write.rs              # 整份替换应用数据目录里的文件：先写旁边的 .tmp 再改名；别的程序暂时占着（拒绝访问、共享冲突）时稍等重试
 ├── dev_lane.rs              # lane 预览（pnpm dev:lane）：调试版的独立应用标识、默认位置，不改用户的链接、自启和 hook
 ├── messenger_activation.rs

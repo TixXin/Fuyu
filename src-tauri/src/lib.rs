@@ -9,6 +9,7 @@ mod device_events;
 mod device_use;
 mod file_shelf;
 mod fs_write;
+mod home_dir;
 mod island;
 mod local_api;
 mod lyrics;

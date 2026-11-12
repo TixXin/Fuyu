@@ -222,9 +222,7 @@ pub fn init(app: &AppHandle) -> Result<(), String> {
         return Ok(());
     }
     let (wake, receiver) = mpsc::sync_channel(1);
-    let folder = app
-        .path()
-        .app_data_dir()
+    let folder = crate::home_dir::fuyu_home(app.path())
         .unwrap_or_else(|_| std::env::temp_dir())
         .join("wechat-gate");
     let service = Arc::new(ReminderService {

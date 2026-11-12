@@ -236,7 +236,7 @@ pub(super) fn upgrade_installed() {
 #[tauri::command]
 pub async fn set_reply_marker(app: tauri::AppHandle, enabled: bool) -> Result<ReplyMarkerState, String> {
     use tauri::Manager;
-    let app_dir = app.path().app_data_dir().ok();
+    let app_dir = crate::home_dir::fuyu_home(app.path()).ok();
     tauri::async_runtime::spawn_blocking(move || {
         let dir = claude_dir()?;
         let path = dir.join(RULES_FILE);

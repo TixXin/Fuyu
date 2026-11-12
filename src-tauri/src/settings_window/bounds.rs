@@ -27,7 +27,7 @@ pub(super) struct SavedBounds {
 pub(super) type WorkArea = (i32, i32, u32, u32);
 
 pub(super) fn load(app: &AppHandle) -> Option<SavedBounds> {
-    let path = app.path().app_data_dir().ok()?.join(BOUNDS_FILE_NAME);
+    let path = crate::home_dir::fuyu_home(app.path()).ok()?.join(BOUNDS_FILE_NAME);
     let bounds: SavedBounds = serde_json::from_str(&fs::read_to_string(path).ok()?).ok()?;
     (bounds.width.is_finite() && bounds.height.is_finite()).then_some(bounds)
 }
@@ -52,7 +52,7 @@ pub(super) fn save(window: &WebviewWindow) {
         width: size.width,
         height: size.height,
     };
-    let Ok(directory) = window.app_handle().path().app_data_dir() else {
+    let Ok(directory) = crate::home_dir::fuyu_home(window.app_handle().path()) else {
         return;
     };
     let Ok(json) = serde_json::to_string(&bounds) else {

@@ -233,7 +233,7 @@ pub async fn get_lyrics(app: AppHandle, query: LyricsQuery) -> Result<Option<Lyr
     if !query.online {
         return Ok(None);
     }
-    let cache_dir = app.path().app_data_dir().map_err(|error| error.to_string())?.join(CACHE_DIR_NAME);
+    let cache_dir = crate::home_dir::fuyu_home(app.path()).map_err(|error| error.to_string())?.join(CACHE_DIR_NAME);
     // A miss with LRCLIB alone says nothing about the Chinese sources.
     let mut key = cache_key(&query.title, &query.artist, query.duration_ms);
     if query.chinese {

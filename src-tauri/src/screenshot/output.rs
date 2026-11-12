@@ -109,7 +109,7 @@ fn screenshots_dir(app: &AppHandle) -> Option<PathBuf> {
     if let Some(dir) = SCREENSHOTS_DIR.get() {
         return Some(dir.clone());
     }
-    let dir = app.path().app_data_dir().ok()?.join(FOLDER);
+    let dir = crate::home_dir::fuyu_home(app.path()).ok()?.join(FOLDER);
     Some(SCREENSHOTS_DIR.get_or_init(|| dir).clone())
 }
 
