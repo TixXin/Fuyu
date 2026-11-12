@@ -54,6 +54,18 @@ export type TranslatorText = {
   emptySource: string;
   tooLong: string;
   clipboard: (text: string) => string;
+  /** The island page's direction choice (TranslationPanel). */
+  dirAuto: string;
+  dirZhEn: string;
+  dirEnZh: string;
+  autoHint: string;
+  toEnglish: string;
+  toChinese: string;
+  charCount: (count: number) => string;
+  noSecretTitle: (provider: string) => string;
+  noSecretBody: string;
+  openSettings: string;
+  retry: string;
 };
 
 export const zhCN: TranslatorText = {
@@ -112,6 +124,17 @@ export const zhCN: TranslatorText = {
   emptySource: "请输入原文，或按 Tab 填入剪贴板内容。",
   tooLong: "单次最多翻译 5000 个字符。",
   clipboard: (text) => `剪贴板：${text}`,
+  dirAuto: "自动",
+  dirZhEn: "中 → 英",
+  dirEnZh: "英 → 中",
+  autoHint: "中文翻成英文，其他翻成中文",
+  toEnglish: "翻成英文",
+  toChinese: "翻成中文",
+  charCount: (count) => `${count} 字`,
+  noSecretTitle: (provider) => `还没有配置${provider}的密钥`,
+  noSecretBody: "密钥保存在 Windows 凭据管理器里，只用来请求翻译。",
+  openSettings: "去设置",
+  retry: "重试",
 };
 
 export const en: TranslatorText = {
@@ -170,4 +193,15 @@ export const en: TranslatorText = {
   emptySource: "Enter source text, or press Tab to paste from the clipboard.",
   tooLong: "Translate up to 5,000 characters at a time.",
   clipboard: (text) => `Clipboard: ${text}`,
+  dirAuto: "Auto",
+  dirZhEn: "ZH → EN",
+  dirEnZh: "EN → ZH",
+  autoHint: "Chinese into English, anything else into Chinese",
+  toEnglish: "Into English",
+  toChinese: "Into Chinese",
+  charCount: (count) => `${count} chars`,
+  noSecretTitle: (provider) => `No key for ${provider} yet`,
+  noSecretBody: "The key is kept in Windows Credential Manager and only used for translation requests.",
+  openSettings: "Open settings",
+  retry: "Retry",
 };

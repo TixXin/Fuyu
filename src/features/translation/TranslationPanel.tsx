@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowRight, Check, Clipboard, Copy, LoaderCircle, X } from "lucide-react";
+import { Check, Clipboard, Copy, X } from "lucide-react";
 import { useErrorText, useTranslation } from "../../i18n";
 import { hasTranslationSecret, readTranslationClipboard } from "./api";
+import { DEFAULT_PROVIDER_MODELS } from "./providers";
 import { takeTranslationHandoff, type Direction } from "./storage";
 import { useAutoTranslate } from "./useAutoTranslate";
 import { useTranslationRequest } from "./useTranslationRequest";
@@ -27,9 +28,13 @@ export function TranslationPanel({ isOpen, onOpenSettings }: { isOpen: boolean; 
   const skipAutoSource = useRef<string | null>(null);
   const latest = useRef({ input, pasteOnOpen: settings.pasteClipboardOnOpen });
   latest.current = { input, pasteOnOpen: settings.pasteClipboardOnOpen };
-  const targetLanguage = settings.direction === "zh-en"
-    ? t.translator.english
-    : settings.direction === "en-zh" ? t.translator.chinese : t.translator.bilingual;
+  const text = t.translator;
+  const directions: { value: Direction; label: string }[] = [
+    { value: "auto", label: text.dirAuto }, { value: "zh-en", label: text.dirZhEn }, { value: "en-zh", label: text.dirEnZh },
+  ];
+  const directionHint = settings.direction === "zh-en" ? text.toEnglish : settings.direction === "en-zh" ? text.toChinese : text.autoHint;
+  const providerName = text.providers[settings.provider];
+  const model = settings.models[settings.provider] || DEFAULT_PROVIDER_MODELS[settings.provider];
 
   // Checked each time the page opens, so a key saved in the settings window meanwhile is seen.
   useEffect(() => {
@@ -83,32 +88,69 @@ export function TranslationPanel({ isOpen, onOpenSettings }: { isOpen: boolean; 
   const autoTranslateKey = `${settings.direction}\0${settings.provider}\0${settings.customBaseUrl}\0${settings.models[settings.provider] ?? ""}`;
   useAutoTranslate(isOpen && settings.autoTranslate && hasSecret && !isLoading, input, autoTranslateKey, skipAutoSource, submit);
 
+  const setDirection = (direction: Direction) => setSettings((current) => ({ ...current, direction }));
+  const count = [...input].length;
+
   return (
     <div className="translation-panel">
-      <div className="translation-panel__toolbar">
-        <select aria-label={t.translator.direction} value={settings.direction} disabled={isLoading} onChange={(event) => { const direction = event.target.value as Direction; setSettings((current) => ({ ...current, direction })); }}>
-          <option value="auto">{t.translator.auto}</option><option value="zh-en">{t.translator.chinese}</option><option value="en-zh">{t.translator.english}</option>
-        </select>
-        <ArrowRight size={13} aria-hidden="true" />
-        <span>{targetLanguage}</span>
-        <span className="translation-panel__provider">{t.translator.providers[settings.provider]}</span>
-      </div>
-      <div className="translation-panel__source">
-        <textarea ref={inputRef} aria-label={t.translator.source} value={input} placeholder={t.translator.panelPlaceholder} onKeyDown={handleInputKeyDown} onChange={(event) => { setInput(event.target.value); setError(""); setDidCopy(false); }} />
-        {input && <button type="button" className="translation-panel__icon" onClick={clearSource} aria-label={t.translator.clearSource}><X size={13} /></button>}
-      </div>
-      <div className={`translation-panel__result${output ? " translation-panel__result--filled" : ""}`} aria-live="polite" aria-busy={isLoading} aria-label={t.translator.result}>
-        {output || <span className="translation-panel__empty">{isLoading && <LoaderCircle className="translation-panel__spinner" size={14} aria-hidden="true" />}{isLoading ? t.translator.loading : t.translator.emptyResult}</span>}
-      </div>
-      <div className="translation-panel__footer">
-        <div className="translation-panel__status">
-          {error
-            ? <span className="translation-panel__error" role="alert">{error}</span>
-            : !hasSecret && <button type="button" className="translation-panel__setup" onClick={onOpenSettings}>{t.translator.configureSecret}</button>}
+      <div className="translation-panel__bar">
+        <div className="translation-panel__directions" role="radiogroup" aria-label={text.direction}>
+          {directions.map(({ value, label }) => (
+            <button key={value} type="button" role="radio" aria-checked={settings.direction === value}
+              className={settings.direction === value ? "is-on" : undefined} disabled={isLoading} onClick={() => setDirection(value)}>
+              {label}
+            </button>
+          ))}
         </div>
-        <button type="button" className="translation-panel__icon" onClick={() => void paste()} aria-label={t.translator.paste}><Clipboard size={14} /></button>
-        <button type="button" className="translation-panel__icon" onClick={() => void copyResult()} disabled={!output} aria-label={didCopy ? t.translator.copied : t.translator.copy}>{didCopy ? <Check size={14} /> : <Copy size={14} />}</button>
-        <button type="button" className="translation-panel__primary" onClick={() => void submit()} disabled={isLoading}>{isLoading ? t.translator.loading : t.translator.translate}</button>
+        <span className="translation-panel__hint">{directionHint}</span>
+        <button type="button" className={`translation-panel__provider${hasSecret ? "" : " translation-panel__provider--no-key"}`} onClick={onOpenSettings} title={text.settings}>
+          <span className="translation-panel__dot" aria-hidden="true" />
+          <span className="translation-panel__provider-name">{model ? `${providerName} · ${model}` : providerName}</span>
+        </button>
+      </div>
+      <div className="translation-panel__panes">
+        <div className="translation-panel__pane translation-panel__pane--source">
+          <span className="translation-panel__label">{text.source}</span>
+          <textarea ref={inputRef} aria-label={text.source} value={input} placeholder={text.panelPlaceholder} onKeyDown={handleInputKeyDown} onChange={(event) => { setInput(event.target.value); setError(""); setDidCopy(false); }} />
+          <div className="translation-panel__foot">
+            <span className="translation-panel__count">{count > 0 ? text.charCount(count) : ""}</span>
+            <button type="button" className="translation-panel__icon" onClick={() => void paste()} aria-label={text.paste} title={text.paste}><Clipboard size={15} /></button>
+            <button type="button" className="translation-panel__icon" onClick={clearSource} disabled={!input} aria-label={text.clearSource} title={text.clearSource}><X size={15} /></button>
+            <button type="button" className="translation-panel__primary" onClick={() => void submit()} disabled={isLoading || !input.trim()}>
+              {text.translate}<kbd aria-hidden="true">Enter</kbd>
+            </button>
+          </div>
+        </div>
+        <div className="translation-panel__pane translation-panel__pane--result" aria-live="polite" aria-busy={isLoading} aria-label={text.result}>
+          <span className="translation-panel__label">{text.result}</span>
+          {isLoading ? (
+            <div className="translation-panel__skeleton" aria-label={text.loading}><i /><i /><i /></div>
+          ) : error ? (
+            <div className="translation-panel__state translation-panel__state--error" role="alert">
+              <strong>{error}</strong>
+              <div className="translation-panel__state-actions">
+                {input.trim() && <button type="button" className="translation-panel__ghost" onClick={() => void submit()}>{text.retry}</button>}
+                <button type="button" className="translation-panel__ghost" onClick={onOpenSettings}>{text.openSettings}</button>
+              </div>
+            </div>
+          ) : !hasSecret && !output ? (
+            <div className="translation-panel__state">
+              <strong>{text.noSecretTitle(providerName)}</strong>
+              <span>{text.noSecretBody}</span>
+              <div className="translation-panel__state-actions">
+                <button type="button" className="translation-panel__ghost" onClick={onOpenSettings}>{text.openSettings}</button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="translation-panel__output">{output || <span className="translation-panel__empty">{text.emptyResult}</span>}</div>
+              <div className="translation-panel__foot">
+                {didCopy && <span className="translation-panel__copied">{text.copied}</span>}
+                <button type="button" className="translation-panel__icon" onClick={() => void copyResult()} disabled={!output} aria-label={didCopy ? text.copied : text.copy} title={text.copy}>{didCopy ? <Check size={15} /> : <Copy size={15} />}</button>
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
