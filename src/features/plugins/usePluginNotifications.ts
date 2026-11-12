@@ -7,6 +7,8 @@ export type PluginNotificationsController = {
   notification: ShownPluginNotification | null;
   dismiss: () => void;
   runAction: (action: string) => void;
+  /** Shows a message the island makes itself (the first-run guide's greetings), like a plugin's. */
+  post: (notification: PluginNotification) => void;
 };
 
 /**
@@ -60,5 +62,9 @@ export function usePluginNotifications(enabled: boolean): PluginNotificationsCon
     [notification],
   );
 
-  return { notification, dismiss, runAction };
+  const post = useCallback((next: PluginNotification) => {
+    if (enabledRef.current) setNotification({ ...next, receivedAt: Date.now() });
+  }, []);
+
+  return { notification, dismiss, runAction, post };
 }

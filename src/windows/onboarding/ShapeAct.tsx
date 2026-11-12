@@ -8,24 +8,14 @@ import { THEME_MODES } from "../../features/appearance/themeMode";
 import type { IslandSettings, ThemeMode } from "../../features/appearance/types";
 import { useTranslation } from "../../i18n";
 import { ActHeading } from "./ActHeading";
-import { MiniDesk } from "./MiniDesk";
-import { MiniIsland } from "./MiniIsland";
-import type { OnboardingModule } from "./personas";
 
-/** Act 2: dark or light, the accent and the corners, each seen at once on the island above. */
-export function ShapeAct({ settings, shown, modules, onSettingsChange }: {
-  settings: IslandSettings;
-  /** The same settings in the colours of the tone in use. */
-  shown: IslandSettings;
-  modules: ReadonlySet<OnboardingModule>;
-  onSettingsChange: (settings: IslandSettings) => void;
-}) {
+/** Act 2: dark or light, the accent and the corners, each seen at once on the real island. */
+export function ShapeAct({ settings, onSettingsChange }: { settings: IslandSettings; onSettingsChange: (settings: IslandSettings) => void }) {
   const t = useTranslation();
   const text = t.onboarding.shape;
 
   return (
     <>
-      <MiniDesk island={<MiniIsland settings={shown} modules={modules} label={t.onboarding.islandName} />} />
       <ActHeading title={text.title} lead={text.lead} />
       <SettingsGroup>
         <SettingsRow

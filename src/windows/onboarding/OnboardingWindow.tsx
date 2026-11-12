@@ -1,29 +1,35 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { X } from "lucide-react";
 import { activeTone } from "../../features/appearance/themeMode";
 import { useIslandSettings } from "../../features/appearance/useIslandSettings";
-import { useResolvedTheme, useSystemDark } from "../../features/appearance/useResolvedTheme";
+import { useSystemDark } from "../../features/appearance/useResolvedTheme";
 import { useWindowAccent } from "../../features/appearance/useWindowAccent";
 import { useClipboardSettings } from "../../features/clipboard/useClipboardSettings";
 import { useTranslation } from "../../i18n";
 import { useLaunchAtStartup } from "../settings/useLaunchAtStartup";
-import { flyOnboardingToIsland, showOnboardingWindow } from "./api";
-import { LandingAct } from "./LandingAct";
+import { showOnboardingWindow } from "./api";
+import { HelloAct } from "./HelloAct";
 import { OutfitAct } from "./OutfitAct";
 import { enabledModules, withModules, type OnboardingModule } from "./personas";
+import { cardPlacement } from "./placement";
 import { PlayAct } from "./PlayAct";
 import { ReleaseAct } from "./ReleaseAct";
 import { ShapeAct } from "./ShapeAct";
-import { requestIslandWelcome } from "./storage";
+import { Spotlight } from "./Spotlight";
+import { endIslandDemo, requestIslandWelcome } from "./storage";
+import { useCardRect } from "./useCardRect";
+import { useDemoHeartbeat } from "./useDemoHeartbeat";
+import { useIslandSpot } from "./useIslandSpot";
 import "./OnboardingWindow.css";
 
-const ACTS = ["landing", "shape", "outfit", "play", "release"] as const;
+const ACTS = ["hello", "shape", "outfit", "play", "release"] as const;
 
-/** How long the guide takes to shrink into the island (OnboardingWindow.css, onboarding_window/mod.rs). */
-const FLY_MS = 620;
+// StrictMode runs effects twice; the island says hello once per guide.
+let greeted = false;
 
-function closeWindow() {
+function closeGuide() {
+  endIslandDemo();
   void getCurrentWindow().close().catch((error: unknown) => console.error("Failed to close the onboarding window", error));
 }
 
@@ -46,85 +52,108 @@ function useShowWhenPainted() {
   }, []);
 }
 
+function useViewport() {
+  const [size, setSize] = useState(() => ({ width: window.innerWidth, height: window.innerHeight }));
+  useEffect(() => {
+    const update = () => setSize({ width: window.innerWidth, height: window.innerHeight });
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+  return size;
+}
+
 /**
- * The first-run guide (?window=onboarding): five short acts on a small desktop whose island is
- * drawn from the settings being chosen. Every choice is saved as it is made, through the same
- * storage as the settings window, so closing at any act keeps what was chosen. The last act flies
- * the window into the real island, which then greets the user.
+ * The first-run guide (?window=onboarding): a transparent overlay over the island's screen that
+ * dims everything but the real island and walks through it in five acts on a card beside it.
+ * Every choice is saved as it is made and shows on the island at once; while the guide runs the
+ * island plays a demo song and agent session. The overlay takes the pointer only on the card.
  */
 export function OnboardingWindow() {
   const t = useTranslation();
   const text = t.onboarding;
   const [settings, setSettings] = useIslandSettings();
-  const shown = useResolvedTheme(settings);
   const [clipboard, updateClipboard] = useClipboardSettings();
   const [launchAtStartup, updateLaunchAtStartup] = useLaunchAtStartup();
   const [index, setIndex] = useState(0);
-  const [flying, setFlying] = useState(false);
   const act = ACTS[index];
   const last = index === ACTS.length - 1;
   const light = activeTone(settings.themeMode, useSystemDark()) === "light";
   const modules = enabledModules(settings, clipboard.enabled);
+  const { spot, anchor } = useIslandSpot();
+  const viewport = useViewport();
+  const card = useRef<HTMLDivElement | null>(null);
+  const placement = cardPlacement(anchor, viewport, act === "play");
+  useCardRect(card, `${act}:${placement.left}:${placement.top}:${placement.bottom}`);
   useWindowAccent(settings);
   useShowWhenPainted();
+  useDemoHeartbeat();
 
   useEffect(() => {
     void getCurrentWindow().setTitle(text.windowTitle).catch((error) => console.error("Failed to set the onboarding window title", error));
   }, [text.windowTitle]);
 
+  useEffect(() => {
+    if (greeted) return;
+    greeted = true;
+    requestIslandWelcome("hello");
+  }, []);
+
+  useEffect(() => {
+    const leave = (event: KeyboardEvent) => {
+      if (event.key === "Escape") closeGuide();
+    };
+    window.addEventListener("keydown", leave);
+    return () => window.removeEventListener("keydown", leave);
+  }, []);
+
   const changeModules = (next: ReadonlySet<OnboardingModule>) => {
     setSettings(withModules(settings, next));
     if (next.has("clipboard") !== clipboard.enabled) void updateClipboard({ ...clipboard, enabled: next.has("clipboard") });
   };
-  const changeClipboard = (next: typeof clipboard) => void updateClipboard(next);
-
-  const release = () => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      requestIslandWelcome();
-      closeWindow();
-      return;
-    }
-    setFlying(true);
-    void flyOnboardingToIsland(FLY_MS).catch((error: unknown) => {
-      console.error("Failed to fly the onboarding window to the island", error);
-      closeWindow();
-    });
-    window.setTimeout(requestIslandWelcome, FLY_MS - 80);
+  const finish = () => {
+    requestIslandWelcome("ready");
+    closeGuide();
   };
-
-  const stageClass = ["onboarding", `stage--font-${settings.fontFamily}`, light && "island-light onboarding--light", flying && "onboarding--flying"]
-    .filter(Boolean)
-    .join(" ");
+  const cardStyle: CSSProperties = { left: placement.left, width: placement.width, top: placement.top, bottom: placement.bottom, maxHeight: placement.maxHeight };
 
   return (
-    <main className={stageClass} data-act={act}>
-      <div className="onboarding__card">
-        <header className="onboarding__bar" data-tauri-drag-region>
-          <span className="onboarding__progress" role="img" aria-label={text.stepOf(index + 1, ACTS.length)} data-tauri-drag-region>
+    <main className={`onboarding stage--font-${settings.fontFamily}${light ? " island-light onboarding--light" : ""}`} data-act={act}>
+      <Spotlight spot={spot} />
+      <div className="onboarding__card" ref={card} style={cardStyle} role="dialog" aria-label={text.windowTitle}>
+        <header className="onboarding__bar">
+          <span className="onboarding__progress" role="img" aria-label={text.stepOf(index + 1, ACTS.length)}>
             {ACTS.map((name, at) => (
               <span key={name} className={at === index ? "onboarding__dot onboarding__dot--active" : at < index ? "onboarding__dot onboarding__dot--done" : "onboarding__dot"} />
             ))}
           </span>
-          <button className="onboarding__close" type="button" aria-label={text.close} onClick={closeWindow}>
-            <X size={15} strokeWidth={1.4} aria-hidden="true" />
+          <button className="onboarding__close" type="button" aria-label={text.close} onClick={closeGuide}>
+            <X size={15} strokeWidth={1.6} aria-hidden="true" />
           </button>
         </header>
         <section className="onboarding__body" key={act}>
-          {act === "landing" && <LandingAct settings={shown} modules={modules} onBegin={() => setIndex(1)} />}
-          {act === "shape" && <ShapeAct settings={settings} shown={shown} modules={modules} onSettingsChange={setSettings} />}
-          {act === "outfit" && <OutfitAct shown={shown} modules={modules} onModulesChange={changeModules} />}
+          {!spot && <p className="onboarding__notice">{text.noIsland}</p>}
+          {act === "hello" && <HelloAct />}
+          {act === "shape" && <ShapeAct settings={settings} onSettingsChange={setSettings} />}
+          {act === "outfit" && <OutfitAct modules={modules} onModulesChange={changeModules} />}
           {act === "play" && (
-            <PlayAct settings={settings} shown={shown} modules={modules} clipboard={clipboard} onSettingsChange={setSettings} onClipboardChange={changeClipboard} />
+            <PlayAct
+              settings={settings}
+              modules={modules}
+              clipboard={clipboard}
+              islandOpen={spot?.expanded ?? false}
+              onSettingsChange={setSettings}
+              onClipboardChange={(next) => void updateClipboard(next)}
+            />
           )}
           {act === "release" && (
-            <ReleaseAct shown={shown} modules={modules} launchAtStartup={launchAtStartup} onLaunchAtStartupChange={(enabled) => void updateLaunchAtStartup(enabled)} />
+            <ReleaseAct modules={modules} launchAtStartup={launchAtStartup} onLaunchAtStartupChange={(enabled) => void updateLaunchAtStartup(enabled)} />
           )}
         </section>
         <footer className="onboarding__footer">
-          {last ? <span /> : <button className="onboarding__button onboarding__button--quiet" type="button" onClick={closeWindow}>{text.skip}</button>}
+          {last ? <span className="onboarding__esc">{text.escHint}</span> : <button className="onboarding__button onboarding__button--quiet" type="button" onClick={closeGuide}>{text.skip}</button>}
           <div className="onboarding__nav">
             {index > 0 && <button className="onboarding__button" type="button" onClick={() => setIndex(index - 1)}>{text.back}</button>}
-            <button className="onboarding__button onboarding__button--primary" type="button" onClick={() => (last ? release() : setIndex(index + 1))}>
+            <button className="onboarding__button onboarding__button--primary" type="button" onClick={() => (last ? finish() : setIndex(index + 1))}>
               {last ? text.release.finish : text.next}
             </button>
           </div>

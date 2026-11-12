@@ -146,6 +146,36 @@ fn cursor_is_on_banner(hwnd: HWND) -> bool {
     cursor_in_window(hwnd).is_some_and(|point| rect.contains(point.x, point.y))
 }
 
+/// The island shape's box on screen in physical pixels, and whether it is open: the first-run
+/// guide's overlay lights it up and waits for it to open (onboarding_window/overlay.rs).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub(crate) struct IslandOnScreen {
+    pub left: f64,
+    pub top: f64,
+    pub width: f64,
+    pub height: f64,
+    pub expanded: bool,
+}
+
+pub(crate) fn island_on_screen(hwnd: HWND) -> Option<IslandOnScreen> {
+    let window_rect = win32::window::window_rect(hwnd)?;
+    let window_width = (window_rect.right - window_rect.left).max(1) as f64;
+    let physical_scale = window_width / STAGE_WINDOW_WIDTH;
+    let state = read_window_state();
+    let (base_width, base_height) = state
+        .mode
+        .base_size(state.collapsed_width, state.expanded_width, state.expanded_height);
+    let width = base_width * state.active_scale() * physical_scale;
+    let height = base_height * state.active_scale() * physical_scale;
+    Some(IslandOnScreen {
+        left: window_rect.left as f64 + (window_width - width) / 2.0,
+        top: window_rect.top as f64,
+        width,
+        height,
+        expanded: matches!(state.mode, IslandMode::Expanded),
+    })
+}
+
 pub(super) fn cursor_is_inside_island(hwnd: HWND) -> bool {
     let Some(window_rect) = win32::window::window_rect(hwnd) else {
         return true;

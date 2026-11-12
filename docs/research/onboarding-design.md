@@ -3,6 +3,8 @@
 > 日期：2026-11-11。问题：用户觉得第一版新手引导（C47，四步表单）「太普通」，要求发挥想象力，全网搜索参考后整理出新方案。范围：WebSearch / WebFetch 搜了 Linear、Superhuman、Raycast、Arc、Warp、PowerToys、Duolingo、macOS 刘海岛工具（NotchNook、Boring Notch、Alcove）、Windows 上的同类岛（DynamicWin、WinIsland 等）、游戏教学关卡（超级马里奥 1-1）和几篇引导设计总结。关键词：onboarding、first launch、learn by doing、progressive disclosure、aha moment。相关任务：C47（第一版）、C48（改版）、C50（岛上的「第一次」提示）。
 >
 > 2026-11-12 按这个方案做完了五幕（C48），和下文的不同：开机启动放在第 5 幕里，不在真岛的横幅上；真岛的招呼是收起条上的一行字，不是横幅。做成什么样见 [新手引导](../features/onboarding.md)。
+>
+> 同一天又改了（C51）：迷你桌面上画的岛和真岛长得不一样，改成透明遮罩压暗屏幕、照亮真岛，在真岛上演示；引导开着时岛放演示歌曲和演示 Agent 会话，打招呼改成岛的消息面板。
 
 ## 结论
 

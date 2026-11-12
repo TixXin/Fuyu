@@ -1,66 +1,43 @@
-import { useState, type DragEvent } from "react";
-import { Check } from "lucide-react";
-import type { IslandSettings } from "../../features/appearance/types";
+import { useState } from "react";
+import { Bot, Camera, Check, ClipboardList, FolderInput, Languages, ListTodo, Mail, Music, type LucideIcon } from "lucide-react";
 import { useTranslation } from "../../i18n";
 import { ActHeading } from "./ActHeading";
-import { MiniDesk } from "./MiniDesk";
-import { MiniIsland, MODULE_ICONS } from "./MiniIsland";
 import { MODULES, PERSONAS, modulesFor, type OnboardingModule, type Persona } from "./personas";
 import "./OutfitAct.css";
 
-const STICKER_TYPE = "application/x-fuyu-module";
+const MODULE_ICONS: Record<OnboardingModule, LucideIcon> = {
+  todo: ListTodo,
+  music: Music,
+  agents: Bot,
+  translation: Languages,
+  shelf: FolderInput,
+  mail: Mail,
+  screenshot: Camera,
+  clipboard: ClipboardList,
+};
 
-/**
- * Act 3: one question picks a set of modules; the stickers below then add or remove one each,
- * by a click or by dragging one onto the island, whose bar shows an icon per module.
- */
-export function OutfitAct({ shown, modules, onModulesChange }: {
-  shown: IslandSettings;
+/** Act 3: one question picks a set of modules, and stickers add or remove one each; the real island follows. */
+export function OutfitAct({ modules, onModulesChange }: {
   modules: ReadonlySet<OnboardingModule>;
   onModulesChange: (modules: ReadonlySet<OnboardingModule>) => void;
 }) {
-  const t = useTranslation();
-  const text = t.onboarding.outfit;
+  const text = useTranslation().onboarding.outfit;
   const [personas, setPersonas] = useState<Persona[]>([]);
-  const [dropping, setDropping] = useState(false);
 
   const togglePersona = (persona: Persona) => {
     const next = personas.includes(persona) ? personas.filter((chosen) => chosen !== persona) : [...personas, persona];
     setPersonas(next);
     if (next.length > 0) onModulesChange(modulesFor(next));
   };
-  const setModule = (module: OnboardingModule, on: boolean) => {
+  const toggleModule = (module: OnboardingModule) => {
     const next = new Set(modules);
-    if (on) next.add(module);
-    else next.delete(module);
+    if (next.has(module)) next.delete(module);
+    else next.add(module);
     onModulesChange(next);
-  };
-  const drop = (event: DragEvent<HTMLElement>) => {
-    event.preventDefault();
-    setDropping(false);
-    const module = MODULES.find((known) => known === event.dataTransfer.getData(STICKER_TYPE));
-    if (module) setModule(module, true);
   };
 
   return (
     <>
-      <MiniDesk
-        island={
-          <MiniIsland
-            settings={shown}
-            modules={modules}
-            label={t.onboarding.islandName}
-            highlight={dropping}
-            onDragOver={(event) => {
-              if (!event.dataTransfer.types.includes(STICKER_TYPE)) return;
-              event.preventDefault();
-              setDropping(true);
-            }}
-            onDragLeave={() => setDropping(false)}
-            onDrop={drop}
-          />
-        }
-      />
       <ActHeading title={text.title} lead={text.lead} />
       <p className="outfit-act__question">{text.personaQuestion}</p>
       <div className="outfit-act__personas">
@@ -91,13 +68,8 @@ export function OutfitAct({ shown, modules, onModulesChange }: {
               key={module}
               className={on ? "outfit-act__sticker outfit-act__sticker--on" : "outfit-act__sticker"}
               type="button"
-              draggable
               aria-pressed={on}
-              onClick={() => setModule(module, !on)}
-              onDragStart={(event) => {
-                event.dataTransfer.setData(STICKER_TYPE, module);
-                event.dataTransfer.effectAllowed = "copy";
-              }}
+              onClick={() => toggleModule(module)}
             >
               <Icon size={14} aria-hidden="true" />
               {text.modules[module]}

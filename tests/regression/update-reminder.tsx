@@ -28,7 +28,7 @@ async function update(action: () => void | Promise<unknown>) {
   if (automated) await act(async () => { await action(); });
   else await action();
 }
-const NO_PLUGIN_NOTIFICATIONS: PluginNotificationsController = { notification: null, dismiss: () => {}, runAction: () => {} };
+const NO_PLUGIN_NOTIFICATIONS: PluginNotificationsController = { notification: null, dismiss: () => {}, runAction: () => {}, post: () => {} };
 // Same values as MediaState::empty() in src-tauri/src/media_control/session.rs.
 const UNAVAILABLE_MEDIA: MediaState = {
   available: false, audioActive: false, audioPeak: 0, playbackStatus: "unavailable",

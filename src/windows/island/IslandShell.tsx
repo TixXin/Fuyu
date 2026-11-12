@@ -65,8 +65,6 @@ type IslandShellProps = {
   shelfCount: number | null;
   deviceUse: DeviceUse;
   levelPopup?: LevelChange | null;
-  /** The greeting after the first-run guide flies into the island (useFirstRunGuide). */
-  welcomeLine?: string | null;
   deviceAlert?: DeviceAlert | null;
   /** Claude's or Codex's usage reaching the alert level, or resetting. */
   quotaAlert?: QuotaAlert | null;
@@ -133,7 +131,6 @@ export function IslandShell({
   shelfCount,
   deviceUse,
   levelPopup = null,
-  welcomeLine = null,
   deviceAlert = null,
   quotaAlert = null,
   meeting = null,
@@ -245,7 +242,6 @@ export function IslandShell({
           shelfCount={shelfCount}
           deviceUse={deviceUse}
           levelPopup={levelPopup}
-          welcomeLine={welcomeLine}
           deviceAlert={deviceAlert}
           quotaAlert={quotaAlert}
           meeting={meeting}

@@ -26,7 +26,8 @@
 | `fuyu-screenshot-annotation`（截图标注上次用的颜色和粗细：`{ color, level }`，C41.3） | `features/screenshot/storage.ts` |
 | `fuyu-position-reset`（设置窗口 → 主窗口：让岛回到主屏顶部居中，`{ requestedAt }`，超过 5 秒的请求忽略） | `windows/settings/storage.ts` |
 | `fuyu-panel-preview`（设置窗口 → 主窗口：拖动尺寸滑块时让岛展开或收起预览，`{ mode, requestedAt }`，超过 2 秒的请求忽略） | `windows/settings/storage.ts` |
-| `fuyu-onboarding-welcome`（新手引导 → 主窗口：引导飞回岛里时让岛打个招呼，`{ requestedAt }`，超过 5 秒的请求忽略；2026-11-12 起） | `windows/onboarding/storage.ts` |
+| `fuyu-onboarding-welcome`（新手引导 → 主窗口：让岛在消息面板里打招呼，`{ kind: "hello" \| "ready", requestedAt }`，超过 5 秒的请求忽略；2026-11-12 起，没有 `kind` 的旧请求当作 `ready`） | `windows/onboarding/storage.ts` |
+| `fuyu-onboarding-demo`（新手引导 → 主窗口：引导开着时岛放演示歌曲和演示 Agent 会话，`{ until }`（Unix 毫秒），引导每 3 秒续一次，关掉时删除，过了 `until` 也停；2026-11-12 起，C51） | `windows/onboarding/storage.ts` |
 | `fuyu-qq-mail-settings` | `features/messages/mail/storage.ts`（`{ accounts: [{ email, host, enabled }] }`，兼容读取旧的单账户 `{ email, enabled }`，解析在 `mailAccounts.ts`） |
 | `fuyu-qq-mail-remote-images` | `features/messages/mail/storage.ts` |
 | `fuyu-qq-notifications-enabled` | `features/messages/qq-notifications/storage.ts` |
@@ -94,7 +95,7 @@
 ## 其他
 
 - 窗口 label：`main`、`translation`、`clipboard`（2026-11-09 起，剪贴板独立窗口）、`settings`、`onboarding`（2026-11-12 起，新手引导，按需创建）、`screenshot-<显示器序号>`（2026-11-10 起，截图时每个显示器一个，运行时创建）；前端分发参数为 `?window=translation`、`?window=clipboard`、`?window=settings`、`?window=onboarding`、`?window=screenshot`。
-- 新手引导（2026-11-12 起）：Tauri 命令 `open_onboarding_window`、`show_onboarding_window`（都没有参数）、`fly_onboarding_to_island`（`durationMs`，最多 2000：把引导窗口移到岛上再关掉，C48）；事件 `clipboard-popup-opened` 也发给 `onboarding` 窗口（引导的练习一步等它）。是否第一次启动看有没有 `fuyu-settings`（`features/appearance/installState.ts`），不另存标记；`fuyu-settings-focus` 的 `section` 多了 `agentConnect`。
+- 新手引导（2026-11-12 起）：Tauri 命令 `open_onboarding_window`、`show_onboarding_window`（都没有参数）、`set_onboarding_card_rects`（`rects`：`[{ x, y, width, height }]`，遮罩上卡片的 CSS 像素矩形，只有这些地方接住鼠标；C51）；`fly_onboarding_to_island`（C48 加的）在 C51 删掉，它只被引导自己调用。事件 `onboarding-island`（发给 `onboarding` 窗口：`{ x, y, width, height, expanded }`，真岛在遮罩上的 CSS 像素位置，岛藏起来时是 `null`；C51）；事件 `clipboard-popup-opened` 也发给 `onboarding` 窗口（引导的练习一步等它）。`onboarding` 窗口从 C51 起是透明、置顶、不进任务栏的遮罩，铺满岛所在屏幕的工作区。是否第一次启动看有没有 `fuyu-settings`（`features/appearance/installState.ts`），不另存标记；`fuyu-settings-focus` 的 `section` 多了 `agentConnect`。
 - 截图（C41.1，2026-11-10 起）：`fuyu-settings` 新增 `screenshotEnabled`（缺省 `false`）；开着时注册全局快捷键 `Ctrl+Shift+1`（截图）、`Ctrl+Shift+7`（全屏），主键盘用 `RegisterHotKey`，小键盘由低级键盘钩子认；Tauri 命令 `screenshot_configure`（`enabled`）、`screenshot_session`、`screenshot_frame`（返回原始 RGBA 字节）、`screenshot_overlay_ready`（`session`）、`screenshot_copy`（`rect`：`{ x, y, width, height }`，物理像素）、`screenshot_cancel`；C41.2 起还有 `screenshot_targets`（返回 `[{ window, element, x, y, width, height }]`，窗口在屏幕上的位置和其中控件的位置，物理像素，`window` 是窗口的上下层次，0 在最上）；C41.3 起还有 `screenshot_copy_pixels`（请求体是原始 RGBA 字节，`x-width`、`x-height` 两个请求头给尺寸；有标注时前端合成后用它复制，没有标注时仍用 `screenshot_copy`）；事件 `screenshot-targets`（发给各截图窗口，载荷是截图 id，表示又读到了一批控件）、`screenshot-session`（发给各截图窗口：`{ id, mode: "region" | "fullscreen", width, height, underPointer }`）、`screenshot-ended`（无载荷）、`screenshot-selecting`（截图窗口之间，载荷是开始选区的窗口 label）。
 - 开合动画（C49，2026-11-12 起）：`fuyu-settings` 新增 `islandMotion`（`spring` / `smooth` / `fast` / `bouncy` / `none`；缺省和未知值按 `spring`，即之前的动画）。不属于主题，主题文件不带它。
 - 强调色（C33.5，2026-11-10 起）：`fuyu-settings` 和主题文件新增 `accentMode`（`default` / `windows` / `pick`）、`accentColor`；Tauri 命令 `get_windows_accent_color`（读 `HKCU\Software\Microsoft\Windows\DWM` 的 `AccentColor`，返回 `#rrggbb` 或 null）。

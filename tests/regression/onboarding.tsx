@@ -1,6 +1,7 @@
-// pnpm dev, then open /tests/regression/onboarding.html (860 × 680 is the window's size).
-// Without ?test=1 the page is for visual QA: ?act=<1-5> opens that act, ?locale=en switches
-// the language, ?light=1 shows the light theme. ?test=1 runs the checks below.
+// pnpm dev, then open /tests/regression/onboarding.html (a full-screen overlay; the island is faked
+// at the top centre). Without ?test=1 the page is for visual QA: ?act=<1-5> opens that act,
+// ?locale=en switches the language, ?light=1 shows the light theme, ?open=1 shows the island open.
+// ?test=1 runs the checks below.
 import { act, StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { emit } from "@tauri-apps/api/event";
@@ -18,6 +19,7 @@ Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: automated }
 const commands: { command: string; args: Record<string, unknown> }[] = [];
 let clipboard: Record<string, unknown> = { enabled: true, winV: false, shortcut: "Ctrl+Shift+W", shortcutEnabled: true };
 let launchAtStartup = false;
+let shelfItems: { id: string }[] = [];
 mockIPC((command, payload) => {
   const args = (payload ?? {}) as Record<string, unknown>;
   commands.push({ command, args });
@@ -28,6 +30,7 @@ mockIPC((command, payload) => {
       return { settings: clipboard, items: [] };
     case "get_launch_at_startup": return launchAtStartup;
     case "set_launch_at_startup": launchAtStartup = Boolean(args.enabled); return null;
+    case "get_file_shelf": return { items: shelfItems };
     default: return null;
   }
 }, { shouldMockEvents: true });
@@ -45,7 +48,13 @@ window.addEventListener("beforeunload", restore);
 localStorage.setItem(LOCALE_STORAGE_KEY, query.get("locale") === "en" ? "en" : "zh-CN");
 localStorage.removeItem("fuyu-settings");
 localStorage.removeItem("fuyu-onboarding-welcome");
+localStorage.removeItem("fuyu-onboarding-demo");
 if (query.has("light")) localStorage.setItem("fuyu-settings", JSON.stringify({ themeMode: "light" }));
+document.body.style.background = "linear-gradient(135deg, #3a3f55, #6a5a7a 50%, #2b4a6a)";
+
+const closed = { x: innerWidth / 2 - 130, y: 0, width: 260, height: 38, expanded: false };
+const open = { x: innerWidth / 2 - 280, y: 0, width: 560, height: 380, expanded: true };
+const placeIsland = (spot: typeof closed | null) => act(async () => { await emit("onboarding-island", spot); });
 
 const root = createRoot(document.getElementById("root")!);
 const mount = () => root.render(<StrictMode><I18nProvider><OnboardingWindow /></I18nProvider></StrictMode>);
@@ -63,25 +72,15 @@ const press = async (label: string) => {
   await wait(10);
 };
 const title = () => document.querySelector(".onboarding__title")?.textContent;
-const island = () => document.querySelector<HTMLElement>(".mini-island")!;
-const islandIcons = () => island().querySelectorAll(".mini-island__icon").length;
+const card = () => document.querySelector<HTMLElement>(".onboarding__card")!;
 const stored = () => JSON.parse(localStorage.getItem("fuyu-settings") ?? "{}") as Record<string, unknown>;
-const fitsWindow = () => {
-  const body = document.querySelector<HTMLElement>(".onboarding__body")!;
-  return body.scrollWidth <= body.clientWidth;
-};
-const dropSticker = async (module: string) => {
-  const data = new DataTransfer();
-  data.setData("application/x-fuyu-module", module);
-  await act(async () => {
-    island().dispatchEvent(new DragEvent("dragover", { bubbles: true, cancelable: true, dataTransfer: data }));
-    island().dispatchEvent(new DragEvent("drop", { bubbles: true, cancelable: true, dataTransfer: data }));
-  });
-  await wait(10);
-};
+const stars = () => document.querySelectorAll(".play-act__task--done").length;
+const welcome = () => JSON.parse(localStorage.getItem("fuyu-onboarding-welcome") ?? "{}") as { kind?: string };
 
 if (!automated) {
   mount();
+  // Once the page listens; act() outside the checks would swallow the render.
+  setTimeout(() => void emit("onboarding-island", query.has("open") ? open : closed), 300);
   const target = Number(query.get("act") ?? 1);
   const advance = (left: number) => {
     if (left <= 0) return;
@@ -98,68 +97,73 @@ if (!automated) {
   try {
     await act(async () => { mount(); });
     await wait(30);
-    check(commands.some(({ command }) => command === "show_onboarding_window"), "The window is shown once the page has painted");
-    check(title() === "一座岛刚刚落在你的屏幕上" && !button("上一步") && button("跳过"), "Act 1 lands the island, with Skip and no Back");
-    check(document.querySelectorAll(".onboarding__dot").length === 5, "The progress shows five acts");
-    const firstHello = island().querySelector(".mini-island__label")?.textContent;
-    await wait(1_450);
-    check(island().querySelector(".mini-island__label")?.textContent !== firstHello, "The island says hello in turn");
-    await press("English");
-    check(title() === "An island just landed on your screen", "Picking English switches the guide at once");
-    await press("简体中文");
-    await act(async () => { island().click(); });
-    await wait(10);
-    check(title() === "把它捏成你喜欢的样子", "Clicking the island begins");
+    check(commands.some(({ command }) => command === "show_onboarding_window"), "The overlay is shown once the page has painted");
+    check(welcome().kind === "hello", "The island is asked to say hello as the guide opens");
+    check(JSON.parse(localStorage.getItem("fuyu-onboarding-demo") ?? "{}").until > Date.now(), "The island's demo runs while the guide is open");
+    check(document.querySelector(".onboarding-spotlight--none") && document.querySelector(".onboarding__notice"), "Without an island the screen dims and the card says how to bring it back");
 
+    await placeIsland(closed);
+    const spotlight = document.querySelector<HTMLElement>(".onboarding-spotlight")!;
+    check(!document.querySelector(".onboarding__notice") && parseFloat(spotlight.style.width) === closed.width + 16, "The spotlight lights up the real island");
+    check(parseFloat(card().style.top) === closed.height + 28, "The card sits below the island");
+    check(commands.some(({ command, args }) => command === "set_onboarding_card_rects" && Array.isArray(args.rects) && args.rects.length === 1),
+      "The card's rectangle goes to the native side, so only the card takes the pointer");
+    check(title() === "你好，这就是浮屿" && !button("上一步") && button("跳过"), "Act 1 says hello, with Skip and no Back");
+    check(document.querySelectorAll(".onboarding__dot").length === 5, "The progress shows five acts");
+    await press("English");
+    check(title() === "Hi, this is Fuyu", "Picking English switches the guide at once");
+    await press("简体中文");
+
+    await press("下一步");
+    check(title() === "把它捏成你喜欢的样子", "Act 2 shapes the island");
     await press("浅色");
-    check(stored().themeMode === "light" && document.querySelector(".onboarding--light"), "Picking light saves it and turns the window light");
-    const radius = () => island().style.getPropertyValue("--mini-radius");
-    const before = radius();
+    check(stored().themeMode === "light" && document.querySelector(".onboarding--light"), "Picking light saves it for the real island and turns the card light");
     const slider = document.querySelector<HTMLInputElement>("input[type='range']")!;
     await act(async () => {
       Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(slider, "40");
       slider.dispatchEvent(new Event("input", { bubbles: true }));
     });
-    check(stored().islandCornerRadius === 40 && radius() !== before, "The corners change on the small island as they are saved");
+    check(stored().islandCornerRadius === 40, "The corners are saved as they change");
 
     await press("下一步");
-    check(title() === "给岛装上功能" && fitsWindow(), "Act 3 fits the window's width");
+    const body = document.querySelector<HTMLElement>(".onboarding__body")!;
+    check(title() === "给岛装上功能" && body.scrollWidth <= body.clientWidth, "Act 3 fits the card's width");
     await act(async () => { document.querySelector<HTMLButtonElement>(".outfit-act__persona:nth-child(4)")!.click(); });
     await wait(20);
     check(stored().musicEnabled === true && stored().agentStatusEnabled === false && stored().todoEnabled === false && clipboard.enabled === false,
       "Answering Leisure puts on music and the shelf and takes the rest off");
-    check(islandIcons() === 2, "The island's bar shows an icon per module");
     await press("剪贴板");
-    check(clipboard.enabled === true, "Clicking a sticker puts that module on");
-    await dropSticker("agents");
-    check(stored().agentStatusEnabled === true && islandIcons() === 4, "Dropping a sticker on the island puts it on too");
+    await press("AI Agent");
+    check(clipboard.enabled === true && stored().agentStatusEnabled === true, "Clicking a sticker puts that module on");
 
     await press("下一步");
-    check(title() === "试着用一下" && document.querySelectorAll(".play-act__task").length === 3, "Act 4 has three tasks while the shelf and clipboard are on");
+    check(title() === "在真岛上试一下" && document.querySelectorAll(".play-act__task").length === 3, "Act 4 has three tasks while the shelf and clipboard are on");
+    check(card().style.bottom !== "" && card().style.top === "", "The card moves to the bottom, clear of the opening island");
     await press("点击");
     check(stored().expandTrigger === "click", "The island can be set to open on click");
-    await act(async () => { island().click(); });
-    check(island().classList.contains("mini-island--expanded") && document.querySelectorAll(".play-act__task--done").length === 1, "Opening the island earns a star");
-    await press("放进去");
-    check(island().textContent?.includes("旅行计划.pdf") && document.querySelectorAll(".play-act__task--done").length === 2, "Putting the file on the island shows it on the shelf");
+    await placeIsland(open);
+    check(stars() === 1 && document.querySelector(".onboarding-spotlight--open"), "Opening the real island earns a star, and the light grows with it");
+    await wait(900);
+    shelfItems = [{ id: "dropped" }];
+    await wait(900);
+    check(stars() === 2, "A file landing on the shelf earns a star");
     await act(async () => { await emit("clipboard-popup-opened"); });
     await wait(10);
-    check(document.querySelectorAll(".play-act__task--done").length === 3 && document.querySelector(".onboarding__lead")?.textContent === "全部完成，你已经会用了。",
-      "The real clipboard popup opening earns the last star");
+    check(stars() === 3 && document.querySelector(".onboarding__lead")?.textContent === "全部完成，你已经会用了。", "The real clipboard popup opening earns the last star");
     await act(async () => { document.querySelector<HTMLInputElement>("#onboarding-winv")!.click(); });
     await wait(10);
     check(clipboard.winV === true, "Win+V is saved in the clipboard settings");
+    await placeIsland(closed);
 
     await press("下一步");
     check(title() === "准备好了" && button("开始使用") && !button("跳过"), "The last act finishes instead of skipping");
+    check(parseFloat(card().style.top) === closed.height + 28, "Back below the island after the practice");
     await press("连接 AI 编程工具");
     check(localStorage.getItem("fuyu-settings-focus")?.includes("agentConnect"), "Connect opens Settings on the Agent connect page");
     localStorage.removeItem("fuyu-settings-focus");
     await press("开始使用");
-    const flight = commands.find(({ command }) => command === "fly_onboarding_to_island");
-    check(flight?.args.durationMs === 620 && document.querySelector(".onboarding--flying"), "Get started flies the window into the island");
-    await wait(600);
-    check(localStorage.getItem("fuyu-onboarding-welcome")?.includes("requestedAt"), "The island is asked to greet the user as the window lands");
+    check(welcome().kind === "ready" && localStorage.getItem("fuyu-onboarding-demo") === null, "Get started asks the island to say it is ready and ends the demo");
+    check(commands.some(({ command }) => command.includes("close")), "Get started closes the overlay");
 
     await act(async () => { root.unmount(); });
     document.documentElement.dataset.testResult = "passed";

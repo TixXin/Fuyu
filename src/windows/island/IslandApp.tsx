@@ -56,6 +56,7 @@ import { PluginPageButtons } from "./PluginPageButtons";
 import { useCollapsedSlots } from "./useCollapsedSlots";
 import { useTrayLanguage } from "./useTrayLanguage";
 import { useFirstRunGuide } from "./useFirstRunGuide";
+import { useOnboardingDemo, withDemoMedia } from "./useOnboardingDemo";
 import { useIslandLyrics } from "./useIslandLyrics";
 // Must stay the last import: IslandApp.css overrides the feature styles above.
 import "./IslandApp.css";
@@ -71,8 +72,6 @@ const NO_TODOS: TodoItem[] = [];
 export function IslandApp() {
   const t = useTranslation();
   useTrayLanguage();
-  // Before useIslandSettings saves the settings, which marks the install as having run.
-  const welcome = useFirstRunGuide();
   const navigation = useIslandNavigation();
   const { mode, isTucked, page, setPage, collapseIsland, tuckIsland, revealIsland, minimizeToEdge, openIslandPage, toggleClipboardHistory } = navigation;
   const pluginPages = usePluginPages(page);
@@ -83,13 +82,17 @@ export function IslandApp() {
   const game = useGameMode(settings, { mode, isTucked, collapseIsland, tuckIsland, revealIsland });
   const notices = useIslandNotices(settings, { mode, isTucked, quiet: game.quiet });
   const { qqNotifications, wechatReminders, qqMail, pluginNotifications, permissionPrompts, hasMessagePreview } = notices;
+  // Reads whether the island ran before in this first render, before its effects save the settings.
+  useFirstRunGuide(pluginNotifications);
+  // A demo song and agent session while the first-run guide runs, so its practice has something to show.
+  const demo = useOnboardingDemo();
   const { messageSource, setMessageSource, openMessages } = useMessageView(qqMail.closeReader, openIslandPage);
   const banner = useIslandBanner({ messageNotice: settings.messageNotice, notices, mode, isTucked, quiet: game.quiet, onOpenMessages: openMessages });
   // A banner holds the island like a preview line does, but leaves the bar's summary in place.
   const showsMessage = hasMessagePreview || banner.showing;
-  const media = useMediaState(settings.musicEnabled);
+  const media = withDemoMedia(useMediaState(settings.musicEnabled), demo);
   const { agentStatus, agentSessions, listedAgentSessions, activeAgentSessionCount, unseenAgentSessions, agentRemoval, agentSession: namedAgent, agentInterjection, agentActivity, agentUsages } =
-    useIslandAgents(settings);
+    useIslandAgents(settings, demo.sessions);
   // Downloads updates in the background and installs them when idle (D18).
   useIslandAutoUpdate({ mode, sessions: agentSessions });
   const quotaAlert = useQuotaAlert(agentUsages, settings.agentStatusEnabled ? settings.agentQuotaAlertPercent : 0, {
@@ -126,7 +129,7 @@ export function IslandApp() {
       mode !== "collapsed" || isTucked || !settings.showCollapsedText || banner.hasLinePreview,
       agentSession?.title ?? null,
       collapsedSlots,
-      banner.hasLinePreview || translationPeek !== null || welcome,
+      banner.hasLinePreview || translationPeek !== null,
       lyricLine?.longest ?? null,
     );
   useIslandTucking({
@@ -293,7 +296,6 @@ export function IslandApp() {
         shelfCount={settings.shelfEnabled && settings.shelfShowCount ? fileShelf.items.length : null}
         deviceUse={notices.deviceUse}
         levelPopup={notices.levelPopup}
-        welcomeLine={welcome ? t.onboarding.islandWelcome : null}
         deviceAlert={notices.deviceAlert}
         quotaAlert={quotaAlert}
         meeting={calendar.upcoming && settings.calendarEnabled ? { upcoming: calendar.upcoming, showTitle: settings.calendarShowTitle } : null}

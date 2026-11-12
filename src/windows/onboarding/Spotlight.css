@@ -1,0 +1,53 @@
+/* Everything but the island is dimmed by the hole's shadow; the hole itself lets the island show. */
+.onboarding-spotlight {
+  position: fixed;
+  border-radius: 0 0 var(--spot-radius) var(--spot-radius);
+  box-shadow: 0 0 0 200vmax rgba(6, 8, 14, 0.5);
+  pointer-events: none;
+  transition: left 220ms ease, top 220ms ease, width 220ms ease, height 220ms ease, border-radius 220ms ease;
+  animation: spotlightIn 500ms ease-out backwards;
+}
+
+/* A ring that grows out of the island and fades, asking for a touch. */
+.onboarding-spotlight::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 2px solid var(--color-accent);
+  border-top: 0;
+  border-radius: inherit;
+  animation: spotlightCall 1.8s ease-out infinite;
+}
+
+.onboarding-spotlight--open::after {
+  animation: none;
+  opacity: 0.6;
+}
+
+.onboarding-spotlight--none {
+  inset: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: rgba(6, 8, 14, 0.5);
+}
+
+.onboarding-spotlight--none::after {
+  display: none;
+}
+
+@keyframes spotlightIn {
+  from { box-shadow: 0 0 0 200vmax rgba(6, 8, 14, 0); }
+}
+
+@keyframes spotlightCall {
+  from { opacity: 0.9; transform: scale(1); }
+  to { opacity: 0; transform: scale(1.06, 1.25); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .onboarding-spotlight,
+  .onboarding-spotlight::after,
+  .onboarding-spotlight--open::after {
+    animation: none;
+  }
+}

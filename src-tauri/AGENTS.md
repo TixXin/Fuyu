@@ -37,7 +37,7 @@ src-tauri/src/
 ├── wechat_reminders/        # 提醒服务与命令；source.rs 为托盘闪烁监听（examples 通过 #[path] 复用）
 ├── translation/             # 快捷翻译：窗口、全局快捷键、凭据与翻译请求（mod.rs）
 ├── settings_window/         # 设置窗口：按需创建与显示（mod.rs）
-├── onboarding_window/       # 新手引导窗口：按需创建，居中在岛所在的屏幕上（mod.rs）
+├── onboarding_window/       # 新手引导：按需创建的透明遮罩，铺满岛所在屏幕的工作区（mod.rs）；跟着真岛发位置、只在卡片上接住鼠标（overlay.rs）
 ├── fs_write.rs              # 整份替换应用数据目录里的文件：先写旁边的 .tmp 再改名；别的程序暂时占着（拒绝访问、共享冲突）时稍等重试
 ├── dev_lane.rs              # lane 预览（pnpm dev:lane）：调试版的独立应用标识、默认位置，不改用户的链接、自启和 hook
 ├── messenger_activation.rs

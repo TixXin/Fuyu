@@ -12,7 +12,7 @@ src/
 │   ├── clipboard/           # 剪贴板独立窗口（列表在 features/clipboard/ClipboardPopup.tsx，弹出、定位和粘贴在 src-tauri/src/clipboard_history/popup.rs）
 │   ├── screenshot/          # 截图的选区窗口（?window=screenshot，每个显示器一个）：冻结画面、选区拖动（useSelection.ts）、工具栏和放大镜
 │   ├── settings/            # 设置窗口
-│   ├── onboarding/          # 新手引导窗口（?window=onboarding）：语言与外观、功能开关、常用选项、去设置的入口；新装第一次启动时由 island/useFirstRunGuide.ts 打开，设置 → 关于里能再打开
+│   ├── onboarding/          # 新手引导（?window=onboarding）：透明遮罩压暗屏幕、照亮真岛，旁边的卡片分五幕（语言、外观、功能、在真岛上练习、开机启动）；新装第一次启动时由 island/useFirstRunGuide.ts 打开，设置 → 关于里能再打开；引导开着时岛放演示内容（island/useOnboardingDemo.ts）
 │   └── translation/         # 快捷翻译窗口
 ├── features/                # 业务领域，每个领域自包含
 │   ├── todos/               # 待办、每日笔记、归档、Markdown 导出

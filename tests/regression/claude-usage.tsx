@@ -9,7 +9,7 @@ import { IslandShell } from "../../src/windows/island/IslandShell";
 import { useLatestMessagePreview } from "../../src/windows/island/useLatestMessagePreview";
 import type { PluginNotificationsController } from "../../src/features/plugins/usePluginNotifications";
 
-const NO_PLUGIN_NOTIFICATIONS: PluginNotificationsController = { notification: null, dismiss: () => {}, runAction: () => {} };
+const NO_PLUGIN_NOTIFICATIONS: PluginNotificationsController = { notification: null, dismiss: () => {}, runAction: () => {}, post: () => {} };
 import { ClaudeUsageGauge } from "../../src/features/claude-usage/ClaudeUsageGauge";
 import { PlanKeyFields } from "../../src/features/claude-usage/PlanKeyFields";
 import "../../src/features/plugins/PluginCard.css";

@@ -1,21 +1,22 @@
-//! The first-run guide's window (`?window=onboarding`): language, theme, modules and a few
-//! choices, built on demand like the settings window and closed when the guide is done.
+//! The first-run guide's window (`?window=onboarding`): a transparent overlay over the work area
+//! of the island's screen that lights up the real island and walks through it (overlay.rs).
+//! Built on demand like the settings window and closed when the guide is done.
 
-mod fly;
+pub(crate) mod overlay;
 
 use std::{thread, time::Duration};
-use tauri::{AppHandle, Manager, Monitor, PhysicalPosition, WebviewWindow, WebviewWindowBuilder};
+use tauri::{AppHandle, Manager, PhysicalPosition, PhysicalSize, WebviewWindow, WebviewWindowBuilder};
 
 pub const WINDOW_LABEL: &str = "onboarding";
 
 /// Shows a new guide window even if its page never reports in, so it cannot stay invisible.
 const SHOW_FALLBACK_DELAY: Duration = Duration::from_secs(2);
 
-/// Opens the guide, or brings an open one to the front. A new window starts hidden and the
-/// page shows it after its first paint (show_onboarding_window), centered on the island's screen.
+/// Opens the guide, or brings an open one to the front. A new window starts hidden and the page
+/// shows it after its first paint (show_onboarding_window). It covers the work area, not the whole
+/// screen, so it never counts as a full-screen app (which would quiet or tuck the island).
 pub fn open(app: &AppHandle) -> Result<(), String> {
     if let Some(window) = app.get_webview_window(WINDOW_LABEL) {
-        let _ = window.unminimize();
         return reveal(&window);
     }
 
@@ -27,15 +28,18 @@ pub fn open(app: &AppHandle) -> Result<(), String> {
         .find(|window| window.label == WINDOW_LABEL)
         .ok_or_else(|| "Onboarding window config was not found.".to_string())?
         .clone();
-    let (width, height) = (config.width, config.height);
     let window = WebviewWindowBuilder::from_config(app, &config)
         .map_err(|error| error.to_string())?
         .visible(false)
         .build()
         .map_err(|error| error.to_string())?;
     if let Some(screen) = crate::settings_window::island_screen(app) {
-        let _ = window.set_position(centered(&screen, width, height));
+        let area = screen.work_area();
+        let _ = window.set_position(PhysicalPosition::new(area.position.x, area.position.y));
+        let _ = window.set_size(PhysicalSize::new(area.size.width, area.size.height));
     }
+    let _ = window.set_ignore_cursor_events(true);
+    overlay::start(app, window.clone());
 
     thread::spawn(move || {
         thread::sleep(SHOW_FALLBACK_DELAY);
@@ -44,19 +48,6 @@ pub fn open(app: &AppHandle) -> Result<(), String> {
         }
     });
     Ok(())
-}
-
-/// Where a window of this logical size sits centered in the screen's work area.
-fn centered(monitor: &Monitor, width: f64, height: f64) -> PhysicalPosition<i32> {
-    let area = monitor.work_area();
-    let scale = monitor.scale_factor();
-    let offset = |available: u32, length: f64| {
-        ((f64::from(available) - length * scale) / 2.0).max(0.0) as i32
-    };
-    PhysicalPosition::new(
-        area.position.x + offset(area.size.width, width),
-        area.position.y + offset(area.size.height, height),
-    )
 }
 
 fn reveal(window: &WebviewWindow) -> Result<(), String> {
@@ -68,12 +59,6 @@ fn reveal(window: &WebviewWindow) -> Result<(), String> {
 #[tauri::command]
 pub async fn open_onboarding_window(app: AppHandle) -> Result<(), String> {
     open(&app)
-}
-
-/// The guide's finish: flies the window over the island and closes it (fly.rs).
-#[tauri::command]
-pub async fn fly_onboarding_to_island(app: AppHandle, duration_ms: u32) -> Result<(), String> {
-    fly::fly_to_island(&app, duration_ms)
 }
 
 /// Called by the guide once it has painted, to show its hidden new window.
@@ -92,7 +77,7 @@ macro_rules! tauri_commands {
         $next!([$($done)*
             crate::onboarding_window::open_onboarding_window,
             crate::onboarding_window::show_onboarding_window,
-            crate::onboarding_window::fly_onboarding_to_island,
+            crate::onboarding_window::overlay::set_onboarding_card_rects,
         ] $($rest)*)
     };
 }

@@ -1,21 +1,32 @@
 import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 
-/** Opens the first-run guide's window, or brings it to the front (onboarding_window/mod.rs). */
+/** Mirrored by ISLAND_EVENT in src-tauri/src/onboarding_window/overlay.rs. */
+const ONBOARDING_ISLAND_EVENT = "onboarding-island";
+
+/** The real island in the overlay's CSS pixels (overlay.rs `IslandRect`). */
+export type IslandSpot = { x: number; y: number; width: number; height: number; expanded: boolean };
+
+export type CardRect = { x: number; y: number; width: number; height: number };
+
+/** Opens the first-run guide's overlay, or brings it to the front (onboarding_window/mod.rs). */
 export function openOnboardingWindow() {
   void invoke("open_onboarding_window").catch((error) => {
     console.error("Failed to open the onboarding window", error);
   });
 }
 
-/**
- * Moves this window over the real island for `durationMs` while the page shrinks into an island
- * shape, then closes it (onboarding_window/fly.rs). Resolves as soon as the flight has started.
- */
-export function flyOnboardingToIsland(durationMs: number) {
-  return invoke("fly_onboarding_to_island", { durationMs });
-}
-
 /** Shows this window, which a fresh open creates hidden until the page has painted. */
 export function showOnboardingWindow() {
   return invoke("show_onboarding_window");
+}
+
+/** The overlay's cards; the pointer falls through everywhere else (overlay.rs). */
+export function setOnboardingCardRects(rects: CardRect[]) {
+  return invoke("set_onboarding_card_rects", { rects });
+}
+
+/** Where the real island is now, or null while it is hidden; resolves to the unlisten function. */
+export function listenOnboardingIsland(handler: (spot: IslandSpot | null) => void) {
+  return listen<IslandSpot | null>(ONBOARDING_ISLAND_EVENT, (event) => handler(event.payload));
 }

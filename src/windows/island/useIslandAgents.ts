@@ -6,6 +6,9 @@ import { useAgentInterjection } from "../../features/agent-status/useAgentInterj
 import { useIslandAgentSessions } from "../../features/agent-status/useIslandAgentSessions";
 import { isRemoteSessionReport } from "../../features/agent-status/remoteSessions";
 import { useAgentUsages } from "../../features/agent-status/useAgentUsages";
+import type { AgentSessionSummary } from "../../features/agent-status/api";
+
+const NO_SESSIONS: AgentSessionSummary[] = [];
 
 /**
  * The agent status, the island's agent sessions, the one the collapsed island names while it runs
@@ -13,9 +16,9 @@ import { useAgentUsages } from "../../features/agent-status/useAgentUsages";
  * default, and over lyrics when they come first), and every
  * agent's phase for the center pattern's pet, and Claude's and Codex's usage limits for the Agent page.
  */
-export function useIslandAgents(settings: IslandSettings) {
+export function useIslandAgents(settings: IslandSettings, demoSessions: AgentSessionSummary[] = NO_SESSIONS) {
   const agentStatus = useAgentStatus(settings.agentStatusEnabled);
-  const sessions = useIslandAgentSessions(settings, agentStatus.others);
+  const sessions = useIslandAgentSessions(settings, agentStatus.others, demoSessions);
   // Reports from other computers are among the sessions already; the rest stay as reports.
   const others = useMemo(() => agentStatus.others?.filter((report) => !isRemoteSessionReport(report)), [agentStatus.others]);
   const titlesOn = settings.agentStatusEnabled && settings.agentTitleEnabled;

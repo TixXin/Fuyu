@@ -68,8 +68,6 @@ type IslandCollapsedBarProps = {
   deviceUse: DeviceUse;
   /** A volume or brightness change just made; it takes the place of the text while shown. */
   levelPopup: LevelChange | null;
-  /** The greeting after the first-run guide; it comes before everything else. */
-  welcomeLine: string | null;
   /** Headphones connecting, a battery running low or the charger; it comes before the level popup. */
   deviceAlert: DeviceAlert | null;
   /** Claude's or Codex's usage reaching the alert level, or resetting; shown like a device alert, after it. */
@@ -136,7 +134,6 @@ export function IslandCollapsedBar({
   shelfCount,
   deviceUse,
   levelPopup,
-  welcomeLine,
   deviceAlert,
   quotaAlert = null,
   meeting,
@@ -178,7 +175,7 @@ export function IslandCollapsedBar({
       : <span className={pulseClassName} {...{ [OPENS_BAR]: "" }} />,
     qqMail,
     updateVersion,
-    pluginStatus: showCollapsedText && !preview && !translationPeek && !levelPopup && !deviceAlert && !quotaAlert && !welcomeLine ? pluginStatus : [],
+    pluginStatus: showCollapsedText && !preview && !translationPeek && !levelPopup && !deviceAlert && !quotaAlert ? pluginStatus : [],
     deviceUse,
     shelfCount,
     // No sound, no waveform: it comes with the music and goes after a quiet moment.
@@ -245,9 +242,7 @@ export function IslandCollapsedBar({
         }}
       >
         <CollapsedMessageContent preview={preview} enabled={!isExpanded && !isTucked}>
-          {welcomeLine ? (
-            <span className="island__active-task island__welcome" role="status">{welcomeLine}</span>
-          ) : deviceAlert ? (
+          {deviceAlert ? (
             <DeviceAlertPopup alert={deviceAlert} />
           ) : quotaAlert ? (
             <QuotaAlertPopup alert={quotaAlert} />

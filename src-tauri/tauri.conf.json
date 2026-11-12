@@ -75,14 +75,15 @@
         "create": false,
         "title": "Fuyu",
         "url": "index.html?window=onboarding",
-        "width": 860,
-        "height": 680,
-        "center": true,
+        "width": 1280,
+        "height": 720,
         "resizable": false,
         "maximizable": false,
         "decorations": false,
         "transparent": true,
-        "shadow": false
+        "shadow": false,
+        "alwaysOnTop": true,
+        "skipTaskbar": true
       }
     ],
     "security": {
