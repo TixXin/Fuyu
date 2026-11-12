@@ -79,7 +79,10 @@ pub fn run() {
         rename_migration::before_start();
     }
     home_dir::init(&context.config().identifier);
-    let result = tauri::Builder::default()
+    let builder = tauri::Builder::default();
+    #[cfg(target_os = "macos")]
+    let builder = builder.plugin(tauri_nspanel::init());
+    let result = builder
         .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
             let _ = island::show_island(app);
             if let Some(link) = plugin_host::find_link(&args) {
@@ -119,6 +122,8 @@ pub fn run() {
 
         })
         .setup(move |app| {
+            #[cfg(target_os = "macos")]
+            app.set_activation_policy(tauri::ActivationPolicy::Accessory);
             tray::build_tray(app)?;
             if let Err(error) = clipboard_history::init(app.handle()) {
                 eprintln!("failed to initialize clipboard history: {error}");
@@ -167,6 +172,10 @@ pub fn run() {
                 eprintln!("failed to initialize notification diagnostics: {error}");
             }
             if let Ok(window) = island::main_window(app.handle()) {
+                #[cfg(target_os = "macos")]
+                if let Err(error) = macos::island_panel::make_panel(&window) {
+                    eprintln!("failed to make the island a panel: {error}");
+                }
                 let stage = window.clone();
                 let sized = app.handle().run_on_main_thread(move || {
                     if let Err(error) = island::apply_stage_geometry(&stage, island::IslandWindowState::default(), false) {

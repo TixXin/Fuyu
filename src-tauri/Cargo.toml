@@ -53,6 +53,10 @@ window-vibrancy = "0.6"
 zip = { version = "9.3.0", default-features = false, features = ["deflate"] }
 rqrr = { version = "0.11", default-features = false }
 
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2-app-kit = { version = "0.3", default-features = false, features = ["std", "NSEvent"] }
+tauri-nspanel = "2.1"
+
 [target.'cfg(windows)'.dependencies]
 clipboard-win = "5"
 webview2-com = "0.39"

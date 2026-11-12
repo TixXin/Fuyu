@@ -10,7 +10,7 @@ mod glass;
 pub(crate) mod modifier;
 #[cfg_attr(not(windows), path = "outside_click_unsupported.rs")]
 pub(crate) mod outside_click;
-#[cfg_attr(not(windows), path = "passthrough_unsupported.rs")]
+#[cfg_attr(target_os = "macos", path = "passthrough_macos.rs")]
 pub(crate) mod passthrough;
 mod state;
 pub(crate) mod top_edge;
@@ -181,9 +181,9 @@ fn alt_key_down() -> bool {
     win32::input::is_alt_key_down()
 }
 
-#[cfg(not(windows))]
+#[cfg(target_os = "macos")]
 fn alt_key_down() -> bool {
-    false
+    crate::macos::input::is_option_key_down()
 }
 
 #[cfg(windows)]
@@ -191,9 +191,9 @@ fn left_button_down() -> bool {
     win32::input::is_left_button_down()
 }
 
-#[cfg(not(windows))]
+#[cfg(target_os = "macos")]
 fn left_button_down() -> bool {
-    false
+    crate::macos::input::is_left_button_down()
 }
 
 fn drag_island(window: WebviewWindow, current_state: IslandWindowState) -> Result<(), String> {

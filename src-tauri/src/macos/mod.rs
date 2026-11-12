@@ -1,4 +1,6 @@
 pub(crate) mod icon;
+pub(crate) mod input;
+pub(crate) mod island_panel;
 pub(crate) mod job;
 pub(crate) mod process;
 pub(crate) mod process_env;
