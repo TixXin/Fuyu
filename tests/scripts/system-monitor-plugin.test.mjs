@@ -51,9 +51,11 @@ test("an opened page gets the programs using the most CPU and memory", windowsOn
     await host.waitForRequest("host.keepAlive");
     openPage(host);
     // CPU shares need two scans a second apart, so the list comes with a later sample.
-    const { processes } = (await host.waitFor((h) => h.webviewMessages.find((sent) => sent.message.processes))).message;
+    const { processes, layout } = (await host.waitFor((h) => h.webviewMessages.find((sent) => sent.message.processes))).message;
+    // The page lays itself out by the "layout" setting; automatic by default.
+    assert.equal(layout, "auto");
     for (const list of [processes.byCpu, processes.byMemory]) {
-      assert.equal(list.length, 6);
+      assert.equal(list.length, 10);
       for (const program of list) {
         assert.ok(program.name && !/\.exe$/i.test(program.name), `name: ${JSON.stringify(program)}`);
         assert.ok(program.count >= 1 && program.memory >= 0 && program.cpu >= 0 && program.cpu <= 100, JSON.stringify(program));

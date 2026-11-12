@@ -1,6 +1,6 @@
 /* The island gives every page its colors as --focusd-* variables; the chart colors are the
    monitor's own so CPU, GPU, memory and the two directions stay apart. The page asks for no
-   card (frame "none"), so it sits on the island itself: no boxes, just two columns. On a light
+   card (frame "none"), so it sits on the island itself: no boxes, two columns or one. On a light
    island the island gives a light color scheme and dark text; light-dark() picks the chart
    colors that read on it. */
 :root {
@@ -28,6 +28,12 @@ body {
   user-select: none;
 }
 
+/* The page fills the island's panel, whose size the user sets (480–800 × 360–640 since 0.3.5):
+   the layout follows the page's own size. */
+body {
+  container: page / size;
+}
+
 *,
 *::before {
   box-sizing: border-box;
@@ -50,6 +56,7 @@ body {
   height: 100%;
   display: grid;
   grid-template-columns: minmax(0, 1fr) 236px;
+  grid-template-rows: minmax(0, 1fr);
   gap: 24px;
   padding: 2px 2px 0;
   overflow: hidden;
@@ -65,9 +72,8 @@ body {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  /* Rows spread over the height, so a computer with fewer rows (no battery, no VRAM) leaves no gap at the bottom. */
-  justify-content: space-between;
-  gap: 10px;
+  /* A taller panel makes the charts taller, not the gaps between the rows. */
+  gap: 12px;
   padding-bottom: 4px;
 }
 
@@ -75,6 +81,8 @@ body {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
+  flex: 3 1 0;
+  min-height: 84px;
 }
 
 /* No GPU to read at all: the CPU takes the whole row. */
@@ -82,33 +90,23 @@ body {
   grid-template-columns: 1fr;
 }
 
+/* The figures, then the chart and the cores or engines sharing the height. A GPU without engines
+   has no third row, so its chart takes the whole height. */
 .unit {
   min-width: 0;
+  min-height: 0;
   display: grid;
-  gap: 8px;
-  container-type: inline-size;
+  grid-template-rows: auto;
+  grid-auto-rows: minmax(14px, 1fr) minmax(30px, 1.25fr);
+  gap: 6px;
 }
 
 .gauge {
   min-width: 0;
   display: grid;
-  grid-template-columns: 28px minmax(0, 1fr) 56px;
+  grid-template-columns: 28px minmax(0, 1fr);
   align-items: center;
   gap: 8px;
-}
-
-/* A narrow CPU or GPU column (a large expanded scale caps the island's width): the chart moves
-   under the figures, over the cores or engines, so the GPU's name keeps its room. */
-@container (max-width: 230px) {
-  .gauge {
-    grid-template-columns: 28px minmax(0, 1fr);
-    row-gap: 4px;
-  }
-
-  .gauge .spark {
-    grid-column: 1 / -1;
-    height: 14px;
-  }
 }
 
 .gauge__text {
@@ -183,6 +181,10 @@ body {
   overflow: visible;
 }
 
+.unit > .spark {
+  height: 100%;
+}
+
 .spark__line {
   fill: none;
   stroke-width: 1.4;
@@ -204,7 +206,7 @@ body {
 
 /* Under the CPU: one thin bar per logical core, lit from the bottom (the gap narrows with many cores). */
 .cores {
-  height: 30px;
+  min-height: 0;
   display: flex;
   align-items: stretch;
   gap: var(--core-gap, 3px);
@@ -230,7 +232,7 @@ body {
 
 /* Under the GPU: its engines (3D, copy, video decode and encode), each a bar with its name. */
 .engines {
-  height: 30px;
+  min-height: 0;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 6px;
@@ -318,9 +320,13 @@ body {
 .meter--warm > span { background: var(--warm); }
 .meter--hot > span { background: var(--hot); }
 
+/* The network charts grow with the panel too, up to a point; past it the CPU and GPU take the rest. */
 .line--net {
+  flex: 1 1 0;
+  max-height: 72px;
   display: grid;
   grid-template-columns: 1fr 1fr;
+  align-items: stretch;
   gap: 20px;
 }
 
@@ -333,7 +339,8 @@ body {
 }
 
 .net__item .spark {
-  height: 16px;
+  height: 100%;
+  min-height: 16px;
 }
 
 .net__arrow {
@@ -445,7 +452,11 @@ body {
   outline-offset: 1px;
 }
 
+/* As many rows as fit (monitor.js counts them), so a taller panel shows more programs. */
 .processes__list {
+  flex: 1 1 0;
+  min-height: 0;
+  align-content: start;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -521,10 +532,9 @@ body {
   color: var(--hot);
 }
 
-/* Narrower than asked (a large expanded scale caps the island, or an island before 0.3.4 shows
-   the page in its 520px card): a narrower program column. The charts stay; the CPU and GPU
-   ones move under their figures (the @container rule above). */
-@media (max-width: 640px) {
+/* A narrow page in two columns (or an island before 0.3.4 showing it in its 520px card): a
+   narrower program column. */
+@container page (max-width: 640px) {
   .monitor {
     grid-template-columns: minmax(0, 1fr) 190px;
     gap: 16px;
@@ -538,6 +548,22 @@ body {
   .processes__count {
     display: none;
   }
+}
+
+/* One column, the programs under the figures: on a narrow page by default, or chosen in the
+   plugin's settings ("layout"). */
+@container page (max-width: 599px) {
+  .monitor:not(.monitor--double) {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(min-content, 1.4fr) minmax(0, 1fr);
+    gap: 12px;
+  }
+}
+
+.monitor.monitor--single {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(min-content, 1.4fr) minmax(0, 1fr);
+  gap: 12px;
 }
 
 @media (prefers-reduced-motion: reduce) {
