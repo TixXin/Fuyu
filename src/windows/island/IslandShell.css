@@ -17,7 +17,9 @@
  * follows from it), and each layer sits at its own rounded resting place on the stage, measured
  * from that edge: the same whole device pixel on every frame. The stage is the container (100cqw
  * is its width). 1/1.5 and 1/1.75 are not exact, and a hair short of a pixel snaps to the one
- * before: the 0.001px keep each edge on the pixel's side (a sixty-fourth of a pixel is 0.016px).
+ * before: a 0.001px nudge keeps each edge on the pixel's side (a sixty-fourth of a pixel is
+ * 0.016px). At a whole-number ratio the pixel is exact and the nudge is 0 (--island-pixel-nudge,
+ * stageStyle.ts): at 100% it put the calendar's dates a third of a pixel off until the fade ended.
  */
 @property --island-shell-width {
   syntax: "<length>";
@@ -69,7 +71,7 @@
    * website's top island. Never wider than the window, so an overshoot is not cut at its edge.
    */
   /* Never past the stage's edges: an overshoot stops at the window, as max-width: 100vw did. */
-  --island-shell-left: calc(max(0px, round(nearest, (100cqw - var(--island-shell-width)) / 2, var(--island-device-pixel, 1px))) + 0.001px);
+  --island-shell-left: calc(max(0px, round(nearest, (100cqw - var(--island-shell-width)) / 2, var(--island-device-pixel, 1px))) + var(--island-pixel-nudge, 0.001px));
   width: calc(100cqw - 2 * var(--island-shell-left));
   /* background-color: a light island kept dark while collapsed (C33.2) turns light as it opens. */
   transition:
@@ -311,7 +313,7 @@
   top: 0;
   /* Where the layer rests, centred on the stage, measured from the shell's edge (see
      --island-shell-width above); in the layer's own zoomed pixels, as the zoom scales `left`. */
-  left: calc((round(nearest, (100cqw - var(--layer-width) * var(--layer-zoom)) / 2, var(--island-device-pixel, 1px)) - var(--island-shell-left) + 0.002px) / var(--layer-zoom));
+  left: calc((round(nearest, (100cqw - var(--layer-width) * var(--layer-zoom)) / 2, var(--island-device-pixel, 1px)) - var(--island-shell-left) + 2 * var(--island-pixel-nudge, 0.001px)) / var(--layer-zoom));
   z-index: 2;
   /* The layers only fade; the shell's resize is the motion. A slide, even of `top`, ends on a
      frame that moves the layer by a hair, and text of different sizes rounds to device pixels

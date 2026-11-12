@@ -35,6 +35,8 @@ export function getIslandStageStyle(
     "--island-top-fillet-size": settings.topFilletRadius,
     // One device pixel, for IslandTopEdge.css to round the scaled fillet radius to.
     "--island-device-pixel": `${1 / devicePixelRatio}px`,
+    // Keeps rounded edges on the pixel's side where 1 / ratio is inexact (IslandShell.css).
+    "--island-pixel-nudge": Number.isInteger(devicePixelRatio) ? "0px" : "0.001px",
     // Unitless; IslandShell.css derives the collapsed, detached and inner panel radii from it.
     "--island-corner-radius-size": settings.islandCornerRadius,
     // The corner-shape of the island and every layer that inherits its radius (IslandShell.css).
