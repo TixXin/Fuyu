@@ -1,10 +1,10 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, renameSync, statSync } from "node:fs";
 import path from "node:path";
-import { lanePath, ownerOf, pidAlive } from "./laneRegistry.mjs";
+import { lanePath, ownerOf, pidAlive, releasedAt } from "./laneRegistry.mjs";
 import { readAll, staleOf } from "../tasks/taskRepo.mjs";
 
-export const ACTIVE_MS = 2 * 60 * 60 * 1000;
+export const ACTIVE_MS = 30 * 60 * 1000;
 export const UNKNOWN_OWNER_MS = 24 * 60 * 60 * 1000;
 
 function tryGit(args, cwd) {
@@ -40,7 +40,7 @@ export function tasksByLane(main) {
   return byLane;
 }
 
-export function laneFacts(main, lane, { mainHead, owners, tasks }) {
+export function laneFacts(main, lane, { mainHead, owners, tasks, released = {} }) {
   const wt = lanePath(main, lane);
   const facts = { lane, wt, exists: existsSync(wt), worktree: existsSync(path.join(wt, ".git")) };
   if (!facts.worktree) return { ...facts, work: facts.exists ? "不是 worktree" : null };
@@ -64,6 +64,7 @@ export function laneFacts(main, lane, { mainHead, owners, tasks }) {
     owner: owner ? { pid: owner.pid ?? null, name: owner.name ?? null, alive: owner.pid ? pidAlive(owner.pid) : null, seenMs: seen } : null,
     task: tasks.get(lane) ?? null,
     lastActivityMs,
+    releasedMs: releasedAt(main, lane, released),
   };
 }
 
@@ -92,7 +93,8 @@ export function judge(facts, requester = {}, { now = Date.now(), busy = () => fa
   }
   if (task) users.push(`任务 ${task.id}（${task.owner ?? "无人"}，${task.status}）`);
   const quiet = now - (facts.lastActivityMs ?? 0);
-  if (quiet < ACTIVE_MS) users.push(`${Math.max(0, Math.round(quiet / 60000))} 分钟前有改动`);
+  const releasedSince = Boolean(facts.releasedMs) && (facts.lastActivityMs ?? 0) <= facts.releasedMs;
+  if (quiet < ACTIVE_MS && !releasedSince) users.push(`${Math.max(0, Math.round(quiet / 60000))} 分钟前有改动`);
   if (!users.length && busy()) users.push("有进程的当前目录在里面");
   return { mine, users };
 }

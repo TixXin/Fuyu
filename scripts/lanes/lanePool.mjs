@@ -1,7 +1,7 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, rmSync, statSync } from "node:fs";
 import path from "node:path";
-import { BRANCH_PREFIX, MAX_LANE, commonDir, forgetOwner, lanePath, laneOf, readOwners, recordOwner } from "./laneRegistry.mjs";
+import { BRANCH_PREFIX, MAX_LANE, commonDir, forgetOwner, lanePath, laneOf, markReleased, readOwners, readReleased, recordOwner } from "./laneRegistry.mjs";
 import { folderBusy, judge, laneFacts, tasksByLane, usable } from "./laneState.mjs";
 
 const LOCK_STALE_MS = 60 * 1000;
@@ -50,7 +50,7 @@ function existingLanes(main) {
 }
 
 export function listLanes(main, requester = {}, { now = Date.now(), probe = true } = {}) {
-  const context = { mainHead: git(["rev-parse", "HEAD"], main), owners: readOwners(main), tasks: tasksByLane(main) };
+  const context = { mainHead: git(["rev-parse", "HEAD"], main), owners: readOwners(main), tasks: tasksByLane(main), released: readReleased(main) };
   return existingLanes(main).map((lane) => {
     const facts = laneFacts(main, lane, context);
     const verdict = judge(facts, requester, { now, busy: () => probe && facts.worktree && folderBusy(facts.wt) });
@@ -112,6 +112,20 @@ export function takeLane(main, lane, { pid = null, name = null, force = false, n
   });
 }
 
-export function releaseLane(main, lane) {
+export function releaseLane(main, lane, now = new Date()) {
   forgetOwner(main, lane);
+  markReleased(main, lane, now);
+}
+
+export function finishLane(main, lane, { force = false } = {}) {
+  const context = { mainHead: git(["rev-parse", "HEAD"], main), owners: readOwners(main), tasks: tasksByLane(main) };
+  const facts = laneFacts(main, lane, context);
+  if (!facts.worktree) return { lane, released: false, problems: [`lane ${lane} 不存在或不是 worktree`] };
+  const problems = [];
+  if (facts.work) problems.push(facts.work);
+  const dirty = tryGit(["status", "--short", "--untracked-files=all"], facts.wt);
+  const files = dirty ? dirty.split("\n").filter(Boolean).slice(0, 10) : [];
+  if (problems.length && !force) return { lane, released: false, problems, files, task: facts.task };
+  releaseLane(main, lane);
+  return { lane, released: true, problems, files, task: facts.task };
 }

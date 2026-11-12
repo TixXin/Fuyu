@@ -78,7 +78,7 @@
 | 改版本号、起草发布说明 | `pnpm release:version <版本号>`（四处版本号一起改，不要手动改） |
 | 发布 | `pnpm release`（流程见 `docs/features/updater.md`） |
 | 合入 main（在 lane 里） | `pnpm mq:land`；主工作区快进 `pnpm mq:sync`；列出无人使用的 lane `pnpm mq:reconcile` |
-| lane 分配与归属 | `pnpm lane:open --as <会话名>`（钩子不可用时开 lane）、`pnpm lane:take <N> --as <会话名>`（接手）、`pnpm lane:release <N>`、`pnpm lane:list`（谁在用哪个 lane、为什么） |
+| lane 分配与归属 | `pnpm lane:open --as <会话名>`（钩子不可用时开 lane）、`pnpm lane:take <N> --as <会话名>`（接手）、`pnpm lane:done`（退出会话前检查并释放）、`pnpm lane:release <N>`、`pnpm lane:list`（谁在用哪个 lane、为什么） |
 
 如果运行环境禁止派生子进程（例如受限沙箱），`node --test` 需要加 `--test-isolation=none`。此时 `tests/scripts/release-manifest.test.mjs` 仍会因 `spawnSync` 被拦截而失败，这是环境限制，报告时应如实说明。如果 `vite build` 报错无法删除系统临时目录中的 esbuild 文件（Access is denied），可以把 `TEMP` / `TMP` 指向 `node_modules/.cache/` 下的目录后重试。
 
@@ -163,7 +163,7 @@
   - **开工先开 lane 并进入它**：会话从仓库目录启动时用 EnterWorktree（`claude -w`）；不是时（magpie 会话）在主工作区 `pnpm lane:open --as <会话名>`，再 EnterWorktree(path=<最后一行的路径>)。接手别人的 lane 用 `pnpm lane:take <N> --as <会话名>` 后同样进入。会话当前目录要在 lane 里，不要留在主工作区用绝对路径改 lane。
   - **不要手动 `git worktree add`**，没有归属记录的 lane `pnpm verify` 和 land 会拒绝。不要删别人的 lane；`../fly-island-lanes/` 里只放 lane。
   - **主工作区留给用户**（例如 `pnpm tauri dev`），保持干净、停在 `main` 上，代理不在里面改文件或提交。`main` 只经 land 或在 GitHub 上合入 PR 移动，不手动推送。
-  - **一个功能单元完成并提交后，在 lane 里 `pnpm mq:land`，不用问用户**；land 失败（冲突、检查没过）不算完成。别人提的 PR 不走 land，按 lanes.md「外部 PR」合入。
+  - **一个功能单元完成并提交后，在 lane 里 `pnpm mq:land`，不用问用户**；land 失败（冲突、检查没过）不算完成。别人提的 PR 不走 land，按 lanes.md「外部 PR」合入。**退出会话前在 lane 里 `pnpm lane:done`**：干净就释放，有没合入的东西会列出来，先处理掉。
   - 代理的 Rust 构建用 `src-tauri/target/agents`，不要用用户 dev 的 `debug`；在 lane 里不要跑 `pnpm tauri dev`，预览用 `pnpm dev:lane`。
 - 修改前先查看 `git status --short`，不要覆盖用户已有改动。
 - 不要使用 `git reset --hard`、`git checkout --` 等破坏性命令，除非用户明确要求。

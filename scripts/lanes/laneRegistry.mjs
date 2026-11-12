@@ -39,6 +39,24 @@ function sessionsFile(main) {
   return path.join(commonDir(main), "claude-code-merge-queue", "lane-sessions.json");
 }
 
+function releasedFile(main) {
+  return path.join(commonDir(main), "claude-code-merge-queue", "lane-released.json");
+}
+
+export function readReleased(main) {
+  return readJson(releasedFile(main));
+}
+
+export function releasedAt(main, lane, released = readReleased(main)) {
+  return Date.parse(released[ownerKey(lanePath(main, lane))] ?? "") || 0;
+}
+
+export function markReleased(main, lane, now = new Date()) {
+  const released = readReleased(main);
+  released[ownerKey(lanePath(main, lane))] = now.toISOString();
+  writeJson(releasedFile(main), released);
+}
+
 function readJson(file) {
   try {
     return JSON.parse(readFileSync(file, "utf8"));
@@ -73,6 +91,11 @@ export function recordOwner(main, lane, { pid, name }, now = new Date()) {
   if (pid) queue[key] = { pid, since };
   else delete queue[key];
   writeJson(queueFile(main), queue);
+  const released = readReleased(main);
+  if (released[key]) {
+    delete released[key];
+    writeJson(releasedFile(main), released);
+  }
 }
 
 export function touchOwner(main, lane, now = new Date()) {

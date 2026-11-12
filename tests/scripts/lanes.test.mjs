@@ -7,8 +7,9 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { laneOf, lanePath, ownerOf } from "../../scripts/lanes/laneRegistry.mjs";
 import { ACTIVE_MS, UNKNOWN_OWNER_MS, judge, usable } from "../../scripts/lanes/laneState.mjs";
-import { listLanes, openLane, releaseLane, takeLane } from "../../scripts/lanes/lanePool.mjs";
-import { listLine } from "../../scripts/lanes/lanes.mjs";
+import { finishLane, listLanes, openLane, takeLane } from "../../scripts/lanes/lanePool.mjs";
+import { doneLines, listLine } from "../../scripts/lanes/lanes.mjs";
+import { lanesToFinish } from "../../scripts/lanes/session-end.mjs";
 import { hintFor } from "../../scripts/lanes/session-hint.mjs";
 
 const NOW = Date.UTC(2026, 10, 12, 12);
@@ -60,6 +61,30 @@ test("a session starting in the main checkout is told to open a lane first, one 
   assert.equal(hintFor(main, path.join("E:", "Projects", "other")), null);
 });
 
+test("changes made before a lane was released do not keep it in use", () => {
+  const recent = { ...quiet, lastActivityMs: NOW - 5 * 60000 };
+  assert.deepEqual(judge(recent, {}, { now: NOW }).users, ["5 分钟前有改动"]);
+  assert.deepEqual(judge({ ...recent, releasedMs: NOW - 60000 }, {}, { now: NOW }).users, []);
+  assert.deepEqual(judge({ ...recent, releasedMs: NOW - 10 * 60000 }, {}, { now: NOW }).users, ["5 分钟前有改动"], "changed again after the release");
+});
+
+test("leaving a session releases the lane it is in and the lanes its claude.exe recorded, but not on /clear", () => {
+  const main = path.join("E:", "Projects", "fly-island");
+  const key = (n) => path.resolve(lanePath(main, n)).toLowerCase();
+  const owners = { [key(2)]: { pid: 7 }, [key(3)]: { pid: 8 }, [key(5)]: { pid: 7 } };
+  assert.deepEqual(lanesToFinish({ main, cwd: path.join(lanePath(main, 4), "src"), reason: "prompt_input_exit", pid: 7, owners }), [2, 4, 5]);
+  assert.deepEqual(lanesToFinish({ main, cwd: main, reason: "other", pid: null, owners }), []);
+  assert.deepEqual(lanesToFinish({ main, cwd: lanePath(main, 4), reason: "clear", pid: 7, owners }), []);
+});
+
+test("lane:done says what still keeps the lane", () => {
+  assert.match(doneLines({ lane: 3, released: true })[0], /已释放。可以退出会话/);
+  const kept = doneLines({ lane: 3, released: false, problems: ["2 个未提交的文件"], files: [" M a.ts"], task: { id: "C1", status: "进行中" } });
+  assert.match(kept[0], /还不能释放：2 个未提交的文件/);
+  assert.equal(kept[1], "     M a.ts");
+  assert.match(kept[2], /任务 C1/);
+});
+
 test("the list says whose a lane is and why", () => {
   const line = listLine({ ...quiet, branch: "lane/3", owner: { pid: 7, name: "a", alive: false }, users: [], lastActivityMs: NOW - 3 * 3600000 }, NOW);
   assert.match(line, /^ {2}3 {2}lane\/3 .*a（已退出）.*3 小时前.*空闲，可复用$/);
@@ -79,7 +104,6 @@ test("lanes are handed back, reused when idle, created when none is, and taken o
     assert.ok(path.resolve(main, git(["rev-parse", "--git-dir"])).startsWith(root + path.sep), "git must run in the temp repo");
     git(["commit", "-q", "--allow-empty", "-m", "one"]);
     const alive = process.pid;
-    const later = Date.now() + ACTIVE_MS + 60000;
 
     const a = openLane({ main, pid: alive, name: "a", install: false });
     assert.deepEqual([a.lane, a.reused], [1, false]);
@@ -93,9 +117,12 @@ test("lanes are handed back, reused when idle, created when none is, and taken o
     assert.equal(git(["rev-parse", "HEAD"], again.wt), git(["rev-parse", "HEAD"]), "reset to main");
     assert.equal(openLane({ main, fromCwd: path.join(again.wt, "src"), install: false }).lane, 1, "a session sitting in its lane");
 
-    releaseLane(main, 1);
-    const c = openLane({ main, pid: 999998, name: "c", install: false, now: later });
-    assert.equal(c.lane, 1, "an idle lane nobody uses goes to the next session");
+    const refused = finishLane(main, 2);
+    assert.deepEqual([refused.released, refused.files], [false, ["?? wip.txt"]], "lane:done keeps a lane with work");
+    assert.equal(ownerOf(main, 2).name, "b");
+    assert.equal(finishLane(main, 1).released, true, "lane:done releases a clean, landed lane");
+    const c = openLane({ main, pid: 999998, name: "c", install: false });
+    assert.equal(c.lane, 1, "a released lane goes to the next session at once, changed a moment ago or not");
     assert.equal(git(["status", "--porcelain"], b.wt), "?? wip.txt", "the lane with work is left alone");
     assert.equal(openLane({ main, pid: 999997, install: false }).lane, 3, "lane 1 changed just now, so not yet");
 
