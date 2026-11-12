@@ -1,9 +1,9 @@
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
-import { homedir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createZip, listFiles, packFolder, readPackedFile, sha256 } from "../../packages/fuyu-plugin/src/pack.mjs";
 import { loadSigningKey, publicKeyOf, writePackageSignature } from "../../packages/fuyu-plugin/src/sign.mjs";
+import { signingDir } from "../signing-dir.mjs";
 import { loadPrivateKey, signIndex } from "./plugin-signing.mjs";
 
 export { createZip, listFiles, readPackedFile, sha256 };
@@ -18,7 +18,7 @@ export const REVOKED_PATH = "plugins/revoked.json";
 const MARKET_DIR = "plugins/market";
 const MANIFEST = "focusd-plugin.json";
 export const AUTHOR_KEY_PATH = "plugins/author-key.json";
-export const AUTHOR_KEY_FILE = path.join(homedir(), ".tauri", "fly-island", "plugin-author-signing.key");
+export const AUTHOR_KEY_FILE = path.join(signingDir(), "plugin-author-signing.key");
 export const OFFICIAL_PUBLISHER = "TixXin";
 export const CATEGORIES = ["productivity", "todos", "developer", "media", "messages", "information", "utilities"];
 

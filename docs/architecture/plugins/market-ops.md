@@ -11,7 +11,7 @@
 
 本仓库 `plugins/examples/` 里的示例插件是官方插件，发布方式不同：
 
-1. 修改插件并提高 `version`，在本机运行 `pnpm plugins:index`（需要旧索引的签名私钥，见下文；以及官方作者密钥 `~/.tauri/fly-island/plugin-author-signing.key`，公钥在 `plugins/author-key.json`）。脚本把插件打成 `plugins/packages/<id>-<version>.zip` 并写出作者签名 `<zip>.sig`，重写并签名 `plugins/index.json` 和 `plugins/revoked.json`。文本文件打包时统一成 LF，时间戳固定，所以同一份源码每次得到同一个哈希。
+1. 修改插件并提高 `version`，在本机运行 `pnpm plugins:index`（需要旧索引的签名私钥，见下文；以及官方作者密钥 `~/.tauri/fuyu/plugin-author-signing.key`，改名前的 `~/.tauri/fly-island/` 在新目录不存在时照常读，公钥在 `plugins/author-key.json`）。脚本把插件打成 `plugins/packages/<id>-<version>.zip` 并写出作者签名 `<zip>.sig`，重写并签名 `plugins/index.json` 和 `plugins/revoked.json`。文本文件打包时统一成 LF，时间戳固定，所以同一份源码每次得到同一个哈希。
 2. 提交并 land。
 3. 不用再去 `fuyu-plugins` 改地址：它的 CI 每小时（以及 `main` 有变化时）读 `plugins/<id>.json` 的 `path` 里的清单，版本比 `package` 地址里的新，就改用同一文件夹里那个版本的 zip（`fuyu-plugins` 的 `scripts/lib/official.mjs`，2026-11-12 起，E20）。所以 land 之后一小时内市场就会更新；作者签名照样要通过，要的权限比上一版多时会开 `review-needed` issue，等维护者在 `plugins/<id>.json` 里写 `"approved": "<版本>"`。以前要手动改地址，漏改过两次（系统监控停在 1.2.0、待办进度环停在 1.0.1，见 PR #49）。
 
@@ -47,7 +47,7 @@
 
 - **算法**：Ed25519。签名对象是 LF 换行的 `index.json`（`revoked.json` 同理）。签名文件的格式为 `{ "keyId", "signature" }`，或者这种对象的数组（多把密钥各签一份，例如换密钥的过渡期）；数组中任一由可信公钥做出的有效签名即可通过。
 - **公钥**：放在 `plugins/signing-keys.json` 中，编译时嵌入岛屿；`fuyu-plugins` 的 `keys/trusted.json` 与它一致。要换密钥，先把新公钥加进这个文件并发布一个新版本的岛屿。
-- **私钥**：有两把。`fuyu-plugins` 的市场索引由 CI 签名（密钥 `e862885af5bba3dc`，存在该仓库 `release` 环境的 secret 里，只有 `main` 分支能用）。本仓库给旧版岛屿的 `plugins/index.json` 用较早的密钥签名：由 `pnpm plugins:keygen` 生成，保存在 `~/.tauri/fly-island/plugin-index-signing.key`，用 Windows DPAPI 加密，只有生成它的 Windows 账户能解开；也可以用环境变量 `FUYU_PLUGIN_SIGNING_KEY`（PEM 文本）提供。
+- **私钥**：有两把。`fuyu-plugins` 的市场索引由 CI 签名（密钥 `e862885af5bba3dc`，存在该仓库 `release` 环境的 secret 里，只有 `main` 分支能用）。本仓库给旧版岛屿的 `plugins/index.json` 用较早的密钥签名：由 `pnpm plugins:keygen` 生成，保存在 `~/.tauri/fuyu/plugin-index-signing.key`（新目录不存在时读改名前的 `~/.tauri/fly-island/`），用 Windows DPAPI 加密，只有生成它的 Windows 账户能解开；也可以用环境变量 `FUYU_PLUGIN_SIGNING_KEY`（PEM 文本）提供。
 - **备份私钥**：私钥丢失后，已经安装的岛屿不会接受用新密钥签名的索引，只能随新版岛屿换密钥。DPAPI 加密的文件换了电脑或账户就解不开，所以备份时要另外导出一份明文 PEM，放在安全的地方。
 
 ## 岛屿怎么下载索引

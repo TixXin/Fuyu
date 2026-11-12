@@ -1,11 +1,11 @@
 import { spawnSync } from "node:child_process";
 import { createHash, createPrivateKey, createPublicKey, generateKeyPairSync, sign, verify } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { homedir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { signingDir } from "../signing-dir.mjs";
 
-export const KEY_FILE = path.join(homedir(), ".tauri", "fly-island", "plugin-index-signing.key");
+export const KEY_FILE = path.join(signingDir(), "plugin-index-signing.key");
 export const TRUSTED_KEYS_PATH = "plugins/signing-keys.json";
 const SPKI_PREFIX = Buffer.from("302a300506032b6570032100", "hex");
 

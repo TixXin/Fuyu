@@ -2,7 +2,9 @@ use super::history::{NotificationBuffer, MAX_ITEMS};
 use super::launcher::{
     activate_existing_qq, existing_qq_windows, preferred_qq_window, qq_executable, QQWindow,
 };
-use super::listener::{read_notifications, registration_error, should_repair_registration};
+use super::listener::{
+    is_diagnostic, read_notifications, registration_error, should_repair_registration,
+};
 use super::*;
 use crate::messenger_activation::is_interactive_window;
 use std::{thread, time::Duration};
@@ -297,4 +299,16 @@ fn reads_a_real_qq_system_notification() {
         );
         thread::sleep(Duration::from_secs(1));
     }
+}
+
+#[test]
+fn the_repair_test_toast_is_skipped_under_its_new_and_old_titles() {
+    let toast = |title: &str, body: &str| vec![title.to_string(), body.to_string()];
+    let english = "Local channel test; this is not a chat message.";
+    assert!(is_diagnostic(&toast("Fuyu QQ notification diagnostic", english)));
+    assert!(is_diagnostic(&toast("FocuSD QQ notification diagnostic", english)));
+    assert!(is_diagnostic(&toast("FocuSD QQ 通知诊断", "这是本机通道测试，不是聊天消息。")));
+    assert!(!is_diagnostic(&toast("Fuyu QQ notification diagnostic", "hi")));
+    assert!(!is_diagnostic(&toast("Alice", english)));
+    assert!(!is_diagnostic(&[]));
 }

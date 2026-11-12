@@ -40,7 +40,7 @@ powershell -NoProfile -File src-tauri/src/qq_notifications/repair-qq-notificatio
 
 脚本确认开始菜单中的 QQ 标识和腾讯签名，备份 QQ 通知设置，再用一条静默、明确标注「不是聊天消息」的本机测试通知初始化 Windows 发送者记录。结束后仅移除这一条测试通知。已有正常注册时直接返回，不做修改。
 
-备份位于 `%LOCALAPPDATA%\FocuSD\diagnostics\`。脚本不重置系统通知数据库、不清除聊天记录、不修改 QQ 程序或安全设置，也不会把用户或组策略关闭的通知强制开启。
+备份位于 `%LOCALAPPDATA%\com.tixxin.fuyu\diagnostics\`（2026-11-13 之前的版本放在 `%LOCALAPPDATA%\FocuSD\diagnostics\`，那些备份留在原处）。脚本不重置系统通知数据库、不清除聊天记录、不修改 QQ 程序或安全设置，也不会把用户或组策略关闭的通知强制开启。
 
 测试通知只用于验证和恢复系统通道，不证明 QQ 会发送真实聊天通知；岛屿监听器和下面的诊断工具都会忽略该测试通知。
 

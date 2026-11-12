@@ -25,9 +25,25 @@ const QQ_APP_ID: &str = "QQ";
 const REGISTRATION_REPAIR: &str =
     include_str!("repair-qq-notification-registration.ps1");
 
-const DIAGNOSTIC_TITLE: &str = "FocuSD QQ 通知诊断";
+const DIAGNOSTICS: [(&str, &str); 3] = [
+    (
+        "Fuyu QQ notification diagnostic",
+        "Local channel test; this is not a chat message.",
+    ),
+    (
+        "FocuSD QQ notification diagnostic",
+        "Local channel test; this is not a chat message.",
+    ),
+    ("FocuSD QQ 通知诊断", "这是本机通道测试，不是聊天消息。"),
+];
 
-const DIAGNOSTIC_BODY: &str = "这是本机通道测试，不是聊天消息。";
+pub(super) fn is_diagnostic(parts: &[String]) -> bool {
+    parts.first().is_some_and(|title| {
+        DIAGNOSTICS
+            .iter()
+            .any(|(known, body)| title == known && parts.iter().any(|part| part == body))
+    })
+}
 
 pub(super) fn monitor(service: Arc<NotificationService>, receiver: mpsc::Receiver<()>) {
     let mut repair_generation = None;
@@ -250,18 +266,7 @@ fn read_qq_notification(
             }
         }
     }
-    if parts.first().is_some_and(|title| title == DIAGNOSTIC_TITLE)
-        && parts.iter().any(|body| body == DIAGNOSTIC_BODY)
-    {
-        return Ok(None);
-    }
-    if parts
-        .first()
-        .is_some_and(|title| title == "FocuSD QQ notification diagnostic")
-        && parts
-            .iter()
-            .any(|body| body == "Local channel test; this is not a chat message.")
-    {
+    if is_diagnostic(&parts) {
         return Ok(None);
     }
     let title = parts
