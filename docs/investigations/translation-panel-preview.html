@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>岛内翻译页重新设计预览</title>
+<!--
+  Standalone preview (no build step) for the island's translation page (TranslationPanel.tsx).
+  Open in Edge or Chrome 139+ (the island's WebView2 engine) so corner-shape renders. Colours are
+  the app's tokens: dark ink rgba(248,246,240), --color-accent #74d6ff / light #0a7fd1.
+-->
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 24px 32px 48px; background: #111214; color: #e8e8ea; font: 14px/1.6 "Segoe UI", "Microsoft YaHei UI", sans-serif; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  h2 { font-size: 16px; margin: 28px 0 6px; }
+  p.note { color: #9a9aa0; margin: 0 0 12px; max-width: 1000px; }
+  ul.points { color: #c8c8cc; max-width: 1000px; padding-left: 20px; }
+  ul.points li { margin: 4px 0; }
+  code, kbd { background: #232428; padding: 1px 6px; border-radius: 4px; font: 12px Consolas, monospace; }
+  .controls { display: flex; flex-wrap: wrap; gap: 10px 26px; align-items: center; background: #1b1c1f; padding: 12px 16px; border-radius: 10px; margin: 12px 0; }
+  .group { display: flex; gap: 6px; align-items: center; }
+  .group > span { color: #9a9aa0; margin-right: 2px; }
+  button.seg { background: #2a2b30; color: #ddd; border: 1px solid #3a3b40; border-radius: 6px; padding: 2px 10px; font: inherit; cursor: pointer; }
+  button.seg.on { background: #3b4d74; border-color: #5a7ab8; color: #fff; }
+  .stage { padding: 0 0 28px; border-radius: 12px; display: flex; justify-content: center; }
+  .stage.dark { background: radial-gradient(120% 140% at 20% 0%, #3b4d74 0%, #1d2233 45%, #0c0d12 100%); }
+  .stage.light { background: radial-gradient(120% 140% at 20% 0%, #f4f1ea 0%, #dfe6f0 55%, #c9d3e2 100%); }
+
+  /* ---- The island ---- */
+  .island { --ink: 248, 246, 240; --accent: #74d6ff; --on-accent: #06202c; --danger: #ff9aa9;
+    --shape: squircle; width: 800px; height: 360px; background: #000; color: rgba(var(--ink), .96);
+    border-radius: 0 0 30px 30px; corner-shape: var(--shape); display: flex; flex-direction: column;
+    padding: 12px 20px 18px; box-shadow: 0 14px 40px #0007; transition: width 300ms ease; }
+  .light .island { --ink: 24, 24, 30; --accent: #0a7fd1; --on-accent: #fff; --danger: #c4314b; background: #f7f7f9; box-shadow: 0 14px 40px #0002; }
+  .island.narrow { width: 560px; }
+  .header { display: flex; align-items: center; gap: 14px; height: 34px; margin-bottom: 12px; color: rgba(var(--ink), .7); }
+  .header i { width: 16px; height: 16px; border: 1.6px solid currentColor; border-radius: 4px; opacity: .8; }
+  .header i.on { color: var(--accent); opacity: 1; }
+  .header .sp { flex: 1; }
+  .header b { width: 30px; height: 30px; border-radius: 50%; background: rgba(var(--ink), .08); }
+  .header b.on { background: rgba(var(--ink), .16); }
+
+  /* ---- Translation page ---- */
+  .tp { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 10px; font-size: 13px; }
+  .tp-bar { display: flex; align-items: center; gap: 8px; height: 28px; }
+  .tp-dir { display: inline-flex; padding: 2px; gap: 2px; border-radius: 999px; background: rgba(var(--ink), .07); }
+  .tp-dir button { height: 24px; padding: 0 12px; border: 0; border-radius: 999px; background: none; color: rgba(var(--ink), .68); font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+  .tp-dir button:hover { color: rgba(var(--ink), .96); }
+  .tp-dir button.on { background: rgba(var(--ink), .14); color: rgba(var(--ink), .96); }
+  .tp-target { color: rgba(var(--ink), .55); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tp-provider { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 10px; border: 0; border-radius: 999px; background: none; color: rgba(var(--ink), .6); font: inherit; font-size: 12px; cursor: pointer; white-space: nowrap; }
+  .tp-provider:hover { background: rgba(var(--ink), .08); color: rgba(var(--ink), .9); }
+  .tp-provider .dot { width: 6px; height: 6px; border-radius: 50%; background: #4cd38a; }
+  .tp-provider.nokey .dot { background: #f5a524; }
+
+  .tp-panes { flex: 1; min-height: 0; display: grid; gap: 10px; grid-template-columns: 1fr 1fr; }
+  .stacked .tp-panes { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
+  .tp-pane { position: relative; min-height: 0; display: flex; flex-direction: column; border-radius: 14px; corner-shape: var(--shape);
+    background: rgba(var(--ink), .06); transition: box-shadow 140ms ease, background 140ms ease; }
+  .tp-pane--source:focus-within { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 55%, transparent); background: rgba(var(--ink), .075); }
+  .tp-pane--result { background: color-mix(in srgb, var(--accent) 7%, rgba(var(--ink), .04)); }
+  .tp-label { padding: 9px 12px 0; font-size: 11px; font-weight: 600; letter-spacing: .02em; color: rgba(var(--ink), .5); }
+  .tp-pane--result .tp-label { color: color-mix(in srgb, var(--accent) 80%, rgba(var(--ink), .5)); }
+  textarea { flex: 1; min-height: 0; resize: none; border: 0; outline: none; background: none; color: inherit; font: inherit; font-size: 14px; line-height: 1.55; padding: 4px 12px 0; }
+  textarea::placeholder { color: rgba(var(--ink), .4); }
+  .tp-out { flex: 1; min-height: 0; overflow-y: auto; padding: 4px 12px 0; font-size: 14px; line-height: 1.55; white-space: pre-wrap; user-select: text; scrollbar-width: thin; }
+  .tp-hint { color: rgba(var(--ink), .4); }
+  .tp-foot { display: flex; align-items: center; gap: 4px; padding: 6px 8px 8px 12px; min-height: 42px; }
+  .tp-count { color: rgba(var(--ink), .38); font-size: 11px; font-variant-numeric: tabular-nums; }
+  .tp-foot .sp { flex: 1; }
+  .ib { width: 28px; height: 28px; border: 0; border-radius: 50%; background: none; color: rgba(var(--ink), .7); display: inline-grid; place-items: center; cursor: pointer; }
+  .ib:hover:not(:disabled) { background: rgba(var(--ink), .1); color: rgba(var(--ink), .96); }
+  .ib:disabled { opacity: .3; cursor: default; }
+  .ib svg { width: 15px; height: 15px; }
+  .primary { height: 28px; padding: 0 8px 0 14px; border: 0; border-radius: 999px; background: var(--accent); color: var(--on-accent); font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; margin-left: 4px; }
+  .primary kbd { background: color-mix(in srgb, var(--on-accent) 16%, transparent); color: inherit; padding: 0 5px; font-size: 10px; border-radius: 4px; }
+  .primary:disabled { opacity: .55; cursor: default; }
+  .copied { color: var(--accent); font-size: 12px; font-weight: 600; }
+
+  /* Loading: three soft lines. */
+  .skel { display: grid; gap: 8px; padding-top: 6px; }
+  .skel i { height: 10px; border-radius: 5px; background: linear-gradient(90deg, rgba(var(--ink), .06), rgba(var(--ink), .16), rgba(var(--ink), .06)); background-size: 200% 100%; animation: shimmer 1.2s linear infinite; }
+  .skel i:nth-child(2) { width: 82%; } .skel i:nth-child(3) { width: 56%; }
+  @keyframes shimmer { to { background-position: -200% 0; } }
+  @media (prefers-reduced-motion: reduce) { .skel i { animation: none; } }
+
+  /* No key / error: said in the result pane, where the result would be. */
+  .tp-state { flex: 1; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 8px; padding: 0 14px 6px; color: rgba(var(--ink), .7); }
+  .tp-state strong { color: rgba(var(--ink), .92); font-size: 13px; }
+  .tp-state.err strong { color: var(--danger); }
+  .ghost { height: 26px; padding: 0 12px; border-radius: 999px; border: 1px solid rgba(var(--ink), .18); background: none; color: rgba(var(--ink), .9); font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+  .ghost:hover { background: rgba(var(--ink), .08); }
+
+  .old { display: block; max-width: 760px; border-radius: 10px; border: 1px solid #333; }
+</style>
+</head>
+<body>
+<h1>岛内翻译页重新设计预览</h1>
+<p class="note">上面是工具栏，可以切换布局、背景、面板宽度和各种状态。原文框可以直接输入，按 <kbd>Enter</kbd> 或点"翻译"会给出一段假译文，<kbd>Shift+Enter</kbd> 换行。</p>
+
+<div class="controls">
+  <div class="group"><span>布局</span><button class="seg" data-k="layout" data-v="auto">自动（宽时左右）</button><button class="seg" data-k="layout" data-v="stacked">始终上下</button></div>
+  <div class="group"><span>面板宽</span><button class="seg" data-k="width" data-v="800">800（默认）</button><button class="seg" data-k="width" data-v="560">560</button></div>
+  <div class="group"><span>背景</span><button class="seg" data-k="theme" data-v="dark">深色</button><button class="seg" data-k="theme" data-v="light">浅色</button></div>
+  <div class="group"><span>状态</span><button class="seg" data-k="state" data-v="empty">空</button><button class="seg" data-k="state" data-v="done">已翻译</button><button class="seg" data-k="state" data-v="loading">翻译中</button><button class="seg" data-k="state" data-v="nokey">没有密钥</button><button class="seg" data-k="state" data-v="error">出错</button></div>
+</div>
+
+<div class="stage dark" id="stage">
+  <div class="island" id="island">
+    <div class="header"><i></i><i></i><i></i><i></i><i></i><i></i><i class="on"></i><span class="sp"></span><b></b><b></b><b class="on"></b><b></b><b></b></div>
+    <div class="tp" id="tp">
+      <div class="tp-bar">
+        <div class="tp-dir" role="radiogroup" aria-label="翻译方向">
+          <button data-dir="auto">自动</button><button data-dir="zh-en">中 → 英</button><button data-dir="en-zh">英 → 中</button>
+        </div>
+        <span class="tp-target" id="target"></span>
+        <button class="tp-provider" id="provider" title="翻译设置"><span class="dot"></span>硅基流动 · DeepSeek-V3</button>
+      </div>
+      <div class="tp-panes">
+        <div class="tp-pane tp-pane--source">
+          <div class="tp-label" id="srcLabel">原文</div>
+          <textarea id="src" placeholder="输入或粘贴要翻译的文字"></textarea>
+          <div class="tp-foot">
+            <span class="tp-count" id="count"></span><span class="sp"></span>
+            <button class="ib" id="paste" title="粘贴剪贴板"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg></button>
+            <button class="ib" id="clear" title="清空"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+            <button class="primary" id="go">翻译 <kbd>Enter</kbd></button>
+          </div>
+        </div>
+        <div class="tp-pane tp-pane--result" aria-live="polite">
+          <div class="tp-label" id="outLabel">译文</div>
+          <div id="outBody" style="flex:1;min-height:0;display:flex;flex-direction:column"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2>改了什么、为什么</h2>
+<ul class="points">
+  <li><b>去掉"卡片套卡片"。</b>现在翻译页在岛里又画了一张带阴影和描边的卡片，其他页面都是直接放在岛上的。新版直接放在岛上，原文和译文是两块同样圆角（跟随岛的方圆形状）的浅色区域。</li>
+  <li><b>方向改成三段选择：自动 / 中 → 英 / 英 → 中。</b>原来是下拉框加"→ 中英互译"，"自动识别 → 中英互译"读起来像两件事。三段和设置里的三个值一一对应，点一下就切，旁边小字说明会翻成什么。</li>
+  <li><b>宽面板左右并排、窄面板上下排列。</b>面板宽度默认已是 800，左右对照更好读；面板调窄（低于约 640）时自动改成上下。</li>
+  <li><b>操作放回各自的框里。</b>粘贴、清空和"翻译"在原文框底部，复制在译文框底部；字数显示在原文框左下。"翻译"按钮带 <kbd>Enter</kbd> 提示，告诉用户不用点。</li>
+  <li><b>颜色跟主题色走。</b>原来的浅绿按钮和浅绿译文是写死的颜色，和岛上其他地方的主题色（默认蓝）不一致。新版按钮和译文框的淡底色都用 <code>--color-accent</code>，换主题色会跟着变；译文本身用正文颜色，长文更好读。</li>
+  <li><b>服务名变成右上角的小按钮。</b>带一个状态点（绿：密钥已配置，橙：没有），点它打开翻译设置。</li>
+  <li><b>没有密钥、出错在译文框里说。</b>原来是左下角一条下划线链接，容易被忽略。现在译文框直接说明原因，并给"去设置"或"重试"按钮。</li>
+  <li><b>翻译中显示三条骨架线</b>，代替"处理中…"文字；系统开了"减少动画"时不闪动。</li>
+</ul>
+
+<script>
+const S = { layout: 'auto', width: '800', theme: 'dark', state: 'empty', dir: 'auto', src: '', out: '' };
+const SAMPLE = '却会带来一堆 git 和验证上的问题。';
+const SAMPLE_OUT = 'But it brings a pile of problems with git and verification.';
+const $ = (id) => document.getElementById(id);
+const ICON_COPY = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+let copiedTimer;
+
+function body() {
+  if (S.state === 'loading') return '<div class="tp-out"><div class="skel"><i></i><i></i><i></i></div></div><div class="tp-foot"></div>';
+  if (S.state === 'nokey') return '<div class="tp-state"><strong>还没有配置硅基流动的密钥</strong><span>密钥保存在 Windows 凭据管理器里，只用来请求翻译。</span><button class="ghost">去设置</button></div>';
+  if (S.state === 'error') return '<div class="tp-state err"><strong>翻译失败：服务返回 401</strong><span>密钥可能已失效，检查后再试一次。</span><span style="display:flex;gap:6px"><button class="ghost" id="retry">重试</button><button class="ghost">去设置</button></span></div>';
+  const has = S.state === 'done' && S.out;
+  return `<div class="tp-out">${has ? S.out.replace(/</g, '&lt;') : '<span class="tp-hint">译文会显示在这里</span>'}</div>
+    <div class="tp-foot"><span class="sp"></span><span class="copied" id="copied" hidden>已复制</span><button class="ib" id="copy" title="复制译文" ${has ? '' : 'disabled'}>${ICON_COPY}</button></div>`;
+}
+
+function render() {
+  const st = $('stage'), isl = $('island');
+  st.className = 'stage ' + S.theme;
+  isl.classList.toggle('narrow', S.width === '560');
+  isl.classList.toggle('stacked', S.layout === 'stacked' || S.width === '560');
+  document.querySelectorAll('button.seg').forEach((b) => b.classList.toggle('on', S[b.dataset.k] === b.dataset.v));
+  document.querySelectorAll('.tp-dir button').forEach((b) => { b.classList.toggle('on', b.dataset.dir === S.dir); b.setAttribute('aria-checked', b.dataset.dir === S.dir); });
+  $('target').textContent = S.dir === 'auto' ? '中文翻成英文，其他翻成中文' : S.dir === 'zh-en' ? '翻成英文' : '翻成中文';
+  $('srcLabel').textContent = S.dir === 'en-zh' ? '原文 · 英文' : S.dir === 'zh-en' ? '原文 · 中文' : '原文';
+  $('outLabel').textContent = S.dir === 'en-zh' ? '译文 · 中文' : S.dir === 'zh-en' ? '译文 · 英文' : '译文';
+  $('provider').classList.toggle('nokey', S.state === 'nokey');
+  if ($('src').value !== S.src) $('src').value = S.src;
+  $('count').textContent = S.src ? `${[...S.src].length} 字` : '';
+  $('clear').disabled = !S.src;
+  $('go').disabled = S.state === 'loading' || !S.src.trim();
+  $('outBody').innerHTML = body();
+  $('copy')?.addEventListener('click', () => { $('copied').hidden = false; clearTimeout(copiedTimer); copiedTimer = setTimeout(() => { const c = $('copied'); if (c) c.hidden = true; }, 1400); });
+  $('retry')?.addEventListener('click', translate);
+}
+
+function translate() {
+  if (!S.src.trim() || S.state === 'nokey') return;
+  S.state = 'loading'; render();
+  setTimeout(() => { S.state = 'done'; S.out = S.src.trim() === SAMPLE ? SAMPLE_OUT : `[${S.dir === 'en-zh' ? '中文' : 'English'}] ${S.src.trim()}`; render(); }, 700);
+}
+
+document.querySelectorAll('button.seg').forEach((b) => b.addEventListener('click', () => {
+  S[b.dataset.k] = b.dataset.v;
+  if (b.dataset.k === 'state') {
+    if (b.dataset.v === 'empty') { S.src = ''; S.out = ''; }
+    else { S.src ||= SAMPLE; if (b.dataset.v === 'done') S.out = S.src === SAMPLE ? SAMPLE_OUT : S.out || SAMPLE_OUT; }
+  }
+  render();
+}));
+document.querySelectorAll('.tp-dir button').forEach((b) => b.addEventListener('click', () => { S.dir = b.dataset.dir; render(); }));
+$('src').addEventListener('input', (e) => { S.src = e.target.value; if (S.state !== 'nokey') { S.state = S.src ? S.state === 'done' ? 'done' : 'empty' : 'empty'; } render(); });
+$('src').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); translate(); } });
+$('go').addEventListener('click', translate);
+$('clear').addEventListener('click', () => { S.src = ''; S.out = ''; if (S.state !== 'nokey') S.state = 'empty'; render(); $('src').focus(); });
+$('paste').addEventListener('click', () => { S.src = SAMPLE; render(); $('src').focus(); });
+render();
+</script>
+</body>
+</html>
