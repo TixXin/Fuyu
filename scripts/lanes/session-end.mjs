@@ -1,13 +1,18 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { mainCheckout } from "../build-dirs.mjs";
-import { laneOf, lanePath, readOwners } from "./laneRegistry.mjs";
+import { laneOf, lanePath, ownerKey, readOwners } from "./laneRegistry.mjs";
 import { finishLane } from "./lanePool.mjs";
 
 const KEEP_REASONS = new Set(["clear", "resume"]);
 
 export function scriptMain(scriptFile = fileURLToPath(import.meta.url)) {
   return mainCheckout(path.resolve(path.dirname(scriptFile), "..", ".."));
+}
+
+export function laneOfKey(main, key) {
+  const lane = Number(path.basename(key));
+  return Number.isInteger(lane) && lane > 0 && ownerKey(lanePath(main, lane)) === key ? lane : null;
 }
 
 function belongsTo(owner, session, pid) {
@@ -19,12 +24,11 @@ export function lanesToFinish({ main, cwd, reason, session = null, pid = null, o
   if (KEEP_REASONS.has(reason)) return [];
   const lanes = new Set();
   const current = cwd ? laneOf(main, cwd) : null;
-  const currentOwner = current ? owners[path.resolve(lanePath(main, current)).toLowerCase()] : null;
+  const currentOwner = current ? owners[ownerKey(lanePath(main, current))] : null;
   if (current && (!currentOwner || belongsTo(currentOwner, session, pid))) lanes.add(current);
   for (const [key, owner] of Object.entries(owners)) {
-    const lane = laneOf(main, key);
-    if (!lane || key !== path.resolve(lanePath(main, lane)).toLowerCase()) continue;
-    if (belongsTo(owner, session, pid)) lanes.add(lane);
+    const lane = laneOfKey(main, key);
+    if (lane && belongsTo(owner, session, pid)) lanes.add(lane);
   }
   return [...lanes].sort((a, b) => a - b);
 }
