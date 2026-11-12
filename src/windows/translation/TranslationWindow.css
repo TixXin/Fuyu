@@ -28,6 +28,22 @@
   color-scheme: dark;
 }
 
+/* Light as the island is (C33.6): the same layout on a pale surface with near-black text. */
+.island-light .translation-window {
+  --translation-surface: #f6f6f8;
+  --translation-control: #e6e6eb;
+  --translation-text: #18181e;
+  --translation-muted: rgba(24, 24, 30, 0.62);
+  --translation-border: rgba(24, 24, 30, 0.1);
+  --translation-accent: #1f8a5b;
+  --translation-wash: rgba(24, 24, 30, 0.04);
+  --translation-scrollbar: rgba(24, 24, 30, 0.24);
+  box-shadow: 0 10px 32px rgba(30, 40, 60, 0.14);
+  color-scheme: light;
+}
+.island-light .translation-window__primary { color: #ffffff; }
+.island-light .translation-window__primary:not(:disabled):hover { background: #2fae74; }
+
 .translation-window button,
 .translation-window select,
 .translation-window input,
@@ -222,7 +238,7 @@
   padding: 6px 8px;
   color: var(--translation-muted);
   text-align: left;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--translation-wash, rgba(255, 255, 255, 0.04));
   border: 1px solid var(--translation-border);
   border-radius: 7px;
   font-size: 12px;
@@ -261,7 +277,7 @@
   border-top: 1px solid var(--translation-border);
 }
 .translation-window__footer-info { min-width: 0; flex: 1; color: var(--translation-muted); font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }
-.translation-window__error { color: #ffb4b8; }
+.translation-window__error { color: var(--error-text, #ffb4b8); }
 .translation-window__setup { padding: 0; color: var(--translation-accent); background: transparent; border: 0; text-align: left; }
 .translation-window__setup:hover { text-decoration: underline; }
 .translation-window__primary {
@@ -287,7 +303,7 @@
 .translation-window__result,
 .translation-window textarea {
   scrollbar-width: thin;
-  scrollbar-color: #55555e transparent;
+  scrollbar-color: var(--translation-scrollbar, #55555e) transparent;
 }
 .translation-window__resize { position: absolute; z-index: 4; }
 .translation-window__resize--east { top: 54px; right: 0; bottom: 18px; width: 7px; cursor: ew-resize; }

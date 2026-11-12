@@ -187,6 +187,10 @@
   color: #f8f4e9;
 }
 
+.island-light .island--expanded.island--todo {
+  color: var(--text-1);
+}
+
 .island--collapsed {
   width: calc(var(--collapsed-island-width) * var(--island-scale, 1));
   height: calc(38px * var(--island-scale, 1));
