@@ -1,0 +1,26 @@
+{
+  "hooks": {
+    "WorktreeCreate": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh -c 'PATH=\"$PATH:/opt/homebrew/bin:/usr/local/bin\" exec node \"$CLAUDE_PROJECT_DIR/scripts/lanes/worktree-hooks.mjs\" create'",
+            "timeout": 300
+          }
+        ]
+      }
+    ],
+    "WorktreeRemove": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh -c 'PATH=\"$PATH:/opt/homebrew/bin:/usr/local/bin\" exec node \"$CLAUDE_PROJECT_DIR/scripts/lanes/worktree-hooks.mjs\" remove'",
+            "timeout": 60
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -25,8 +25,10 @@ src-tauri/tauri.release.conf.json
 *.dpapi
 *.local
 
-# Local Claude Code skills. This machine only; not part of the repo.
-.claude/
+# Claude Code: only the shared hooks and skills are tracked.
+.claude/*
+!.claude/settings.json
+!.claude/skills/
 
 # Editor directories and files
 .vscode/*
