@@ -13,8 +13,13 @@ async function reconcile() {
   return 0;
 }
 
+function option(args, name) {
+  const at = args.indexOf(name);
+  return at >= 0 ? args[at + 1] ?? "" : null;
+}
+
 const COMMANDS = {
-  land: (args) => land({ wait: args.includes("--wait") }),
+  land: (args) => land({ wait: args.includes("--wait"), bodyFile: option(args, "--body"), title: option(args, "--title") }),
   wait: (args) => waitCommand(args),
   sync: () => sync(),
   reconcile,

@@ -29,11 +29,12 @@ description: >
 
 1. 提交（不带 Claude 署名行）。修补自己没 land 的提交用 `--amend` / `--fixup`。
 2. 想在本机先验一遍用 `pnpm verify`，放后台。land 不在本机跑 `pnpm check` / `cargo test`，由 PR 上 CI 的 `check` 把关。
-3. `pnpm mq:land`：rebase 到 `origin/main`，推 `land/<用户名>/<机器名>-<分支名>`，开 PR 并开启自动合并。它返回只代表 PR 开好了。
-4. 接着后台 `pnpm mq:wait`，等 CI 通过、GitHub 合入后它快进主工作区；PR 合入才算完成。也可以 `pnpm mq:land --wait` 一起等。
-5. 失败时按 lanes.md「开发、验证、合入」第 3 条处理：冲突就 `git fetch origin main && git rebase origin/main` 后重新 land；CI 失败就修了再 land；`mq:wait` 已报合入但快进失败，只在主工作区 `pnpm mq:sync`，不重复 land。PR 一直落后时可以 `pnpm mq:wait --update`。
-6. 改到应用代码时，按 AGENTS.md「验证」另外跑 `pnpm build:exe`（合入后，只在 Windows 上）。
-7. 收工或用户说要退出会话时：在 lane 里 `pnpm lane:done`。它释放干净、已合入的 lane；列出没提交或没合入的东西时先处理（提交并 land，或问用户要不要），再跑一次。释放后 ExitWorktree(action="keep")；不要删 lane。
+3. 写中文 PR 正文到 scratchpad 里的一个文件，格式照 lanes.md「PR 的标题和正文」：`## 改了什么` / `## 为什么` / `## 验证`（写实际跑过的命令和结果）/ `## 注意`（可省）/ `## 关联`，每段不手动折行。标题沿用英文提交标题；多个提交时用 `--title` 给一个英文总标题。
+4. `pnpm mq:land --body <文件>`：rebase 到 `origin/main`，推 `land/<用户名>/<机器名>-<分支名>`，开 PR 并开启自动合并。它返回只代表 PR 开好了。重新 land 时再给 `--body` 会更新 PR 正文。
+5. 接着后台 `pnpm mq:wait`，等 CI 通过、GitHub 合入后它快进主工作区；PR 合入才算完成。也可以 `pnpm mq:land --body <文件> --wait` 一起等。
+6. 失败时按 lanes.md「开发、验证、合入」第 3 条处理：冲突就 `git fetch origin main && git rebase origin/main` 后重新 land；CI 失败就修了再 land；`mq:wait` 已报合入但快进失败，只在主工作区 `pnpm mq:sync`，不重复 land。PR 一直落后时可以 `pnpm mq:wait --update`。
+7. 改到应用代码时，按 AGENTS.md「验证」另外跑 `pnpm build:exe`（合入后，只在 Windows 上）。
+8. 收工或用户说要退出会话时：在 lane 里 `pnpm lane:done`。它释放干净、已合入的 lane；列出没提交或没合入的东西时先处理（提交并 land，或问用户要不要），再跑一次。释放后 ExitWorktree(action="keep")；不要删 lane。
 
 发插件：改 `plugins/` 后同样走上面的合入；插件市场的索引和发布步骤见 `docs/architecture/plugins/market-ops.md`。
 

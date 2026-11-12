@@ -1,5 +1,6 @@
 import { spawnSync } from "node:child_process";
-import { existsSync } from "node:fs";
+import { existsSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { laneNumber, mainCheckout } from "../build-dirs.mjs";
@@ -62,11 +63,18 @@ function syncedLane(root, what) {
   return lane;
 }
 
-function commitAndLand(paths, message, options) {
+export function claimPrBody(summary) {
+  return `## 改了什么\n\n${summary}\n\n只改了任务文件，CI 走文档的快速路径。\n`;
+}
+
+function commitAndLand(paths, message, options, summary) {
   git(["add", "-A", "--", ...paths]);
   git(["commit", "-q", "-m", message]);
   if (options["no-land"]) return 0;
-  const status = run("pnpm", ["mq:land", "--wait"]);
+  const bodyFile = path.join(tmpdir(), `fuyu-task-pr-${process.pid}.md`);
+  writeFileSync(bodyFile, claimPrBody(summary));
+  const status = run("pnpm", ["mq:land", "--wait", "--body", bodyFile.includes(" ") ? `"${bodyFile}"` : bodyFile]);
+  rmSync(bodyFile, { force: true });
   if (status !== 0) console.error("认领的 PR 没有合入。冲突说明别人刚改了同一个任务：git rebase --abort（land 时冲突的话）后 pnpm tasks 看看，换一项；检查失败就按上面的提示修。");
   return status;
 }
@@ -113,7 +121,8 @@ async function claim(root, main, options, added = []) {
   checkInLane(main, lane, owner);
   if (taking.length === 0) return 0;
   const verb = added.length ? "adds and takes" : "takes";
-  return commitAndLand(taking.map((id) => taskPath(id, false)), `docs(tasks): ${owner} ${verb} ${taking.join(", ")}`, options);
+  const summary = `- ${added.length ? "新建并认领" : "认领"}任务 ${taking.join("、")}（${owner}${lane ? `，lane ${lane}` : ""}）`;
+  return commitAndLand(taking.map((id) => taskPath(id, false)), `docs(tasks): ${owner} ${verb} ${taking.join(", ")}`, options, summary);
 }
 
 function add(root, main, options) {
@@ -174,7 +183,7 @@ function release(root, options) {
   let next = unclaimed(task, "待做");
   if (options.reason) next = { ...next, body: addLine(next.body, "交接", `${nowText()} ${task.fields.owner}：放回，${options.reason}`) };
   save(root, next);
-  return commitAndLand([taskPath(id, false)], `docs(tasks): ${task.fields.owner} gives back ${id}`, options);
+  return commitAndLand([taskPath(id, false)], `docs(tasks): ${task.fields.owner} gives back ${id}`, options, `- 放回任务 ${id}（${task.fields.owner}）${options.reason ? `：${options.reason}` : ""}`);
 }
 
 function conflicts(root) {
