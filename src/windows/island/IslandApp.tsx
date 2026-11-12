@@ -47,6 +47,8 @@ import { panelIslandWidth } from "./layout";
 import { useIslandResize } from "./useIslandResize";
 import { useResolvedTheme } from "../../features/appearance/useResolvedTheme";
 import { collapsedThemeColors } from "../../features/appearance/themeMode";
+import { islandMotionVariables } from "../../features/appearance/islandMotion";
+import { useReducedMotion } from "../../features/center-pattern/useReducedMotion";
 import { useAccentColor } from "../../features/appearance/useAccentColor";
 import { isLightIsland } from "../../utils/color";
 import { MessageBanner } from "../../features/messages/banner/MessageBanner";
@@ -196,9 +198,14 @@ export function IslandApp() {
   const look = useMemo(() => (mode === "collapsed" ? collapsedThemeColors(settings) : settings), [mode, settings]);
   const accent = useAccentColor(settings);
   const devicePixelRatio = useDevicePixelRatio();
+  const reducedMotion = useReducedMotion();
   const stageStyle = useMemo(
-    () => getIslandStageStyle(look, mode, collapsedIslandWidth, expandedIslandHeight, expandedIslandWidth, accent, devicePixelRatio),
-    [collapsedIslandWidth, expandedIslandHeight, expandedIslandWidth, mode, look, accent, devicePixelRatio],
+    () => ({
+      ...getIslandStageStyle(look, mode, collapsedIslandWidth, expandedIslandHeight, expandedIslandWidth, accent, devicePixelRatio),
+      // Opening as the island goes to expanded, closing as it goes to collapsed (C49).
+      ...islandMotionVariables(settings.islandMotion, mode === "collapsed" ? "close" : "open", reducedMotion),
+    }),
+    [collapsedIslandWidth, expandedIslandHeight, expandedIslandWidth, mode, look, accent, devicePixelRatio, settings.islandMotion, reducedMotion],
   );
 
   const { fileShelf, isShelfDropping } = useIslandShelf(settings, navigation);

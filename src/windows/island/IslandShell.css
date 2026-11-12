@@ -47,18 +47,16 @@
      layer of its own is resampled while it resizes and blurs the text. */
   isolation: isolate;
   /*
-   * Opening and closing as on the website's top island: the width springs a little past its
-   * target (about 4%) and settles, the height and the corners ease out. Never wider than the
-   * window, so the widest panel's overshoot is not cut at the window's edge.
+   * Opening and closing as the "open and close" setting picks (C49, islandMotion.ts sets the
+   * --island-motion-* variables on the stage); the fallbacks are the spring opening, as on the
+   * website's top island. Never wider than the window, so an overshoot is not cut at its edge.
    */
-  --island-ease-spring: cubic-bezier(0.34, 1.36, 0.5, 1);
-  --island-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   max-width: 100vw;
   /* background-color: a light island kept dark while collapsed (C33.2) turns light as it opens. */
   transition:
-    width 550ms var(--island-ease-spring),
-    height 500ms var(--island-ease-out),
-    border-radius 450ms var(--island-ease-out),
+    width var(--island-motion-width, 550ms) var(--island-motion-width-ease, cubic-bezier(0.34, 1.36, 0.5, 1)),
+    height var(--island-motion-height, 500ms) var(--island-motion-ease, cubic-bezier(0.22, 1, 0.36, 1)),
+    border-radius var(--island-motion-radius, 450ms) var(--island-motion-ease, cubic-bezier(0.22, 1, 0.36, 1)),
     background-color 360ms ease;
 }
 
@@ -234,11 +232,11 @@
 }
 
 .island--appearance-liquidGlass.island--expanded .island__glass::after {
-  animation: glassBloomExpand 440ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  animation: glassBloomExpand var(--island-motion-bloom, 440ms) cubic-bezier(0.16, 1, 0.3, 1) backwards;
 }
 
 .island--appearance-liquidGlass.island--collapsed .island__glass::after {
-  animation: glassBloomCollapse 360ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  animation: glassBloomCollapse var(--island-motion-bloom, 360ms) cubic-bezier(0.16, 1, 0.3, 1) backwards;
 }
 
 @keyframes glassBloomExpand {
@@ -301,7 +299,7 @@
      differently on it: a 12px label stepped one pixel against the 14px title beside it
      (docs/investigations/island-jitter.md). A transform slide would blur the text instead
      (roadmap F14). Nothing is promoted ahead (no will-change), for the same reason. */
-  transition: opacity 120ms ease;
+  transition: opacity var(--island-motion-layer, 120ms) ease;
 }
 
 .island__collapsed {
@@ -314,7 +312,7 @@
   gap: var(--space-md);
   padding: 0 18px;
   opacity: 1;
-  transition-delay: 140ms;
+  transition-delay: var(--island-motion-collapsed-delay, 140ms);
 }
 
 /* Tucked, only the island's bottom rim is on screen: show it empty, not cut-off contents.
@@ -360,8 +358,8 @@
   opacity: 1;
   /* Height follows the shell (.island) when switching between pages of different heights. */
   transition:
-    opacity 250ms ease 120ms,
-    height 500ms var(--island-ease-out);
+    opacity var(--island-motion-fade, 250ms) ease var(--island-motion-fade-delay, 120ms),
+    height var(--island-motion-height, 500ms) var(--island-motion-ease, cubic-bezier(0.22, 1, 0.36, 1));
 }
 
 /* A popup (new messages, an Agent alert) shows only its card on a narrower island (C11b). */

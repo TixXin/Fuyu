@@ -99,8 +99,8 @@
   right: calc(-1 * var(--island-top-fillet));
   opacity: 0;
   pointer-events: none;
-  /* Fades with the 450ms corner-radius morph on .island. */
-  transition: opacity 450ms cubic-bezier(0.22, 1, 0.36, 1);
+  /* Fades with the corner-radius morph on .island. */
+  transition: opacity var(--island-motion-radius, 450ms) var(--island-motion-ease, cubic-bezier(0.22, 1, 0.36, 1));
 }
 
 .island::before {

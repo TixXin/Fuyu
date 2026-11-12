@@ -19,6 +19,7 @@ import {
   MIN_HOVER_EXPAND_DELAY_MS,
   MIN_HOVER_SWITCH_DELAY_MS,
 } from "./settings";
+import { IslandMotionRow } from "./IslandMotionRow";
 import type { ExpandTrigger, IslandSettings, TuckedHoverAction } from "./types";
 
 /** Idle times offered before tucking, in seconds. A saved value outside the list is offered too. */
@@ -116,6 +117,7 @@ export function ExpandSettingsSection({
             onChange={(hoverSwitchDelayMs) => update({ hoverSwitchDelayMs })}
           />
         )}
+        <IslandMotionRow value={settings.islandMotion} onChange={(islandMotion) => update({ islandMotion })} />
       </SettingsGroup>
 
       <SettingsGroup title={expand.tuckTitle}>
