@@ -5,12 +5,14 @@
 pub(crate) mod overlay;
 
 use std::{thread, time::Duration};
-use tauri::{AppHandle, Manager, PhysicalPosition, PhysicalSize, WebviewWindow, WebviewWindowBuilder};
+use tauri::{AppHandle, Manager, PhysicalPosition, PhysicalSize, WebviewWindow, WebviewWindowBuilder, WindowEvent};
 
 pub const WINDOW_LABEL: &str = "onboarding";
 
 /// Shows a new guide window even if its page never reports in, so it cannot stay invisible.
 const SHOW_FALLBACK_DELAY: Duration = Duration::from_secs(2);
+/// The taskbar's minimize-all animation, which the guide waits out before it appears.
+const DESKTOP_CLEAR_DELAY: Duration = Duration::from_millis(350);
 
 /// Opens the guide, or brings an open one to the front. A new window starts hidden and the page
 /// shows it after its first paint (show_onboarding_window). It covers the work area, not the whole
@@ -28,6 +30,12 @@ pub fn open(app: &AppHandle) -> Result<(), String> {
         .find(|window| window.label == WINDOW_LABEL)
         .ok_or_else(|| "Onboarding window config was not found.".to_string())?
         .clone();
+    // Clear the screen first, like Win+D, so the island stands alone; the windows come back
+    // when the guide closes. Wait for the taskbar's minimize animation before covering it.
+    let cleared = crate::win32::desktop::minimize_all_windows();
+    if cleared {
+        thread::sleep(DESKTOP_CLEAR_DELAY);
+    }
     let window = WebviewWindowBuilder::from_config(app, &config)
         .map_err(|error| error.to_string())?
         .visible(false)
@@ -39,6 +47,13 @@ pub fn open(app: &AppHandle) -> Result<(), String> {
         let _ = window.set_size(PhysicalSize::new(area.size.width, area.size.height));
     }
     let _ = window.set_ignore_cursor_events(true);
+    if cleared {
+        window.on_window_event(|event| {
+            if matches!(event, WindowEvent::Destroyed) {
+                crate::win32::desktop::undo_minimize_all_windows();
+            }
+        });
+    }
     overlay::start(app, window.clone());
 
     thread::spawn(move || {
