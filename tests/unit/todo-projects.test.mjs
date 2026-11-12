@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { groupByProject, mapProjects, normalizeTodoProjects, projectChanges, readProject, splitProjectPrefix } from "../../src/features/todos/project.ts";
+import { groupByProject, mapProjects, normalizeTodoProjects, readProject, splitProjectPrefix } from "../../src/features/todos/project.ts";
+import { applyProjectEdit, readTodoProjectEdit } from "../../src/features/todos/projectEdits.ts";
 import { formatTodosAsMarkdown } from "../../src/features/todos/markdown.ts";
 import { parseScheduledTodos, parseTodos } from "../../src/features/todos/normalize.ts";
 import { toTodoItems } from "../../src/features/todos/schedule.ts";
@@ -45,15 +46,38 @@ test("the saved list follows its order first when grouping, and keeps each id an
   assert.deepEqual(normalizeTodoProjects("论文"), []);
 });
 
-test("a rename and a removal are told apart by id, and todos follow them", () => {
-  const before = [{ id: "1", name: "论文" }, { id: "2", name: "组会" }, { id: "3", name: "杂事" }];
-  const after = [{ id: "3", name: "杂事" }, { id: "1", name: "毕业论文" }];
-  const { renamed, removed } = projectChanges(before, after);
-  assert.deepEqual([...renamed], [["论文", "毕业论文"]]);
-  assert.deepEqual([...removed], ["组会"]);
-  const todos = [{ id: "a", project: "论文" }, { id: "b", project: "组会" }, { id: "c" }, { id: "d", project: "杂事" }];
-  const next = mapProjects(todos, (name) => renamed.get(name) ?? (removed.has(name) ? undefined : name));
-  assert.deepEqual(next, [{ id: "a", project: "毕业论文" }, { id: "b" }, { id: "c" }, { id: "d", project: "杂事" }]);
+test("project edits from the settings page are explicit: rename and remove by id, add and move", () => {
+  const projects = [{ id: "1", name: "论文" }, { id: "2", name: "组会" }, { id: "3", name: "杂事" }];
+  const newId = () => "new";
+  const renamed = applyProjectEdit(projects, { type: "rename", id: "1", name: " 毕业论文 " }, newId);
+  assert.deepEqual(renamed?.renamed, { from: "论文", to: "毕业论文" });
+  assert.deepEqual(renamed?.projects.map((project) => project.name), ["毕业论文", "组会", "杂事"]);
+  assert.equal(applyProjectEdit(projects, { type: "rename", id: "1", name: "组会" }, newId), null, "a taken name is refused");
+  const removed = applyProjectEdit(projects, { type: "remove", id: "2" }, newId);
+  assert.equal(removed?.removed, "组会");
+  assert.deepEqual(removed?.projects.map((project) => project.id), ["1", "3"]);
+  assert.equal(applyProjectEdit(projects, { type: "remove", id: "9" }, newId), null, "an unknown id changes nothing");
+  assert.deepEqual(applyProjectEdit(projects, { type: "move", id: "3", by: -1 }, newId)?.projects.map((project) => project.id), ["1", "3", "2"]);
+  assert.equal(applyProjectEdit(projects, { type: "move", id: "1", by: -1 }, newId), null);
+  assert.deepEqual(applyProjectEdit(projects, { type: "add", name: "读书" }, newId)?.projects.at(-1), { id: "new", name: "读书" });
+  assert.equal(applyProjectEdit(projects, { type: "add", name: "论文" }, newId), null);
+  const full = Array.from({ length: 50 }, (_, index) => ({ id: String(index), name: `p${index}` }));
+  assert.equal(applyProjectEdit(full, { type: "add", name: "x" }, newId), null, "no more than 50");
+
+  const todos = [{ id: "a", project: "论文" }, { id: "b", project: "组会" }, { id: "c" }];
+  const next = mapProjects(todos, (name) => (name === "组会" ? undefined : name));
+  assert.deepEqual(next, [{ id: "a", project: "论文" }, { id: "b" }, { id: "c" }]);
   assert.equal(next[2], todos[2]);
   assert.equal(mapProjects(todos, (name) => name), todos, "nothing changed keeps the same array");
+});
+
+test("edit requests are read only when fresh and well formed", () => {
+  const now = 1_000_000;
+  const request = (edit, requestedAt = now) => JSON.stringify({ edit, requestedAt, nonce: 1 });
+  assert.deepEqual(readTodoProjectEdit(request({ type: "remove", id: "2" }), now), { type: "remove", id: "2" });
+  assert.equal(readTodoProjectEdit(request({ type: "remove", id: "2" }, now - 6_000), now), null, "stale");
+  assert.equal(readTodoProjectEdit(request({ type: "move", id: "2", by: 3 }), now), null);
+  assert.equal(readTodoProjectEdit(request({ type: "drop" }), now), null);
+  assert.equal(readTodoProjectEdit("{", now), null);
+  assert.equal(readTodoProjectEdit(null, now), null);
 });

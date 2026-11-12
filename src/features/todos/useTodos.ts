@@ -35,15 +35,16 @@ export function useTodos({
   const { archives, setArchives, upsertArchive } = useTodoArchives();
   const { scheduledTodos, setScheduledTodos, scheduleTodo, deleteScheduledTodo } =
     useScheduledTodos(currentTodoDate, setTodos);
-  useTodoProjectSync({
+  const editProjects = useTodoProjectSync({
     projects, onProjectsChange, currentDate: currentTodoDate, todos, setTodos, scheduledTodos, setScheduledTodos, archives, setArchives,
   });
   const projectNames = useMemo(() => projects.map((project) => project.name), [projects]);
   const createProject = useCallback((value: string) => {
     const name = readProject(value);
-    if (!name || projects.length >= MAX_TODO_PROJECTS || projects.some((project) => project.name === name)) return;
-    onProjectsChange([...projects, { id: createTodoId(), name }]);
-  }, [onProjectsChange, projects]);
+    if (!name) return undefined;
+    if (projects.some((project) => project.name === name)) return name;
+    return editProjects({ type: "add", name }) ? name : undefined;
+  }, [editProjects, projects]);
   const apiHandlers = useTodoApiHandlers({
     date: currentTodoDate, todos, scheduledTodos, activeTodoId, dailyNote, archives,
     setTodos, setDailyNote, scheduleTodo,
@@ -177,6 +178,7 @@ export function useTodos({
       onDraftDateChange: setDraftDate,
       onAddTodo: addTodo,
       projects: projectNames,
+      canCreateProject: projects.length < MAX_TODO_PROJECTS,
       onCreateProject: createProject,
       onShowUpcoming: showUpcoming,
       onDeleteScheduledTodo: deleteScheduledTodo,

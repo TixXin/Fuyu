@@ -48,7 +48,8 @@ export type TodoPageProps = {
   onDraftDateChange: (date: string | null) => void;
   onAddTodo: (project?: string) => void;
   projects: readonly string[];
-  onCreateProject: (name: string) => void;
+  canCreateProject: boolean;
+  onCreateProject: (name: string) => string | undefined;
   onShowUpcoming: () => void;
   onDeleteScheduledTodo: (id: string) => void;
   onToggleTodo: (id: string) => void;

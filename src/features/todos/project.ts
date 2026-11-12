@@ -39,17 +39,6 @@ export function normalizeTodoProjects(value: unknown): TodoProject[] {
   return projects.slice(0, MAX_TODO_PROJECTS);
 }
 
-export function projectChanges(before: readonly TodoProject[], after: readonly TodoProject[]) {
-  const renamed = new Map<string, string>();
-  const removed = new Set<string>();
-  for (const project of before) {
-    const now = after.find((item) => item.id === project.id);
-    if (!now) removed.add(project.name);
-    else if (now.name !== project.name) renamed.set(project.name, now.name);
-  }
-  return { renamed, removed };
-}
-
 export function mapProjects<T extends { project?: string }>(items: T[], to: (name: string) => string | undefined): T[] {
   let changed = false;
   const next = items.map((item) => {

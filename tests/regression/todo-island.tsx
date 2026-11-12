@@ -28,7 +28,7 @@ function props(pageMode: TodoPageMode, extra: Partial<Props> = {}): Props {
     archives: ARCHIVES, selectedArchive: pageMode === "review" ? ARCHIVES[0] : null, saveState: "idle",
     enableTodoReorder: true, scrollStartRows: 5, draftDate: null,
     scheduledTodos: [{ id: "s", title: "牙医复诊", date: "2026-11-12", createdAt: 0 }],
-    onDraftChange: spy("draft"), onDraftDateChange: spy("date"), onAddTodo: spy("add"), projects: [], onCreateProject: spy("createProject"), onShowUpcoming: spy("upcoming"),
+    onDraftChange: spy("draft"), onDraftDateChange: spy("date"), onAddTodo: spy("add"), projects: [], canCreateProject: true, onCreateProject: (name: string) => { spy("createProject")(name); return undefined; }, onShowUpcoming: spy("upcoming"),
     onDeleteScheduledTodo: spy("deleteScheduled"), onToggleTodo: spy("toggle"), onUpdateTodo: spy("update"), onStartTodo: spy("start"),
     onDeleteTodo: spy("delete"), onReorderTodo: spy("reorder"), onSaveToday: spy("save"), onShowArchive: spy("archive"),
     onShowDaily: spy("daily"), onShowToday: spy("today"), onDailyNoteChange: spy("note"),

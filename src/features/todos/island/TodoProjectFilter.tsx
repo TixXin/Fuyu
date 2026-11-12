@@ -5,11 +5,12 @@ import "./TodoProjects.css";
 
 export const INBOX = "";
 
-export function TodoProjectFilter({ projects, value, onChange, onCreate }: {
+export function TodoProjectFilter({ projects, value, onChange, inbox = false, onCreate }: {
   projects: readonly string[];
   value: string | null;
   onChange: (project: string | null) => void;
-  onCreate?: (name: string) => void;
+  inbox?: boolean;
+  onCreate?: (name: string) => string | undefined;
 }) {
   const text = useTranslation().todoIsland;
   const [naming, setNaming] = useState(false);
@@ -21,7 +22,7 @@ export function TodoProjectFilter({ projects, value, onChange, onCreate }: {
   return (
     <div className="todo-project-filter" role="group" aria-label={text.projectFilter}>
       {chip(null, text.allProjects)}
-      {onCreate && chip(INBOX, text.noProject)}
+      {inbox && chip(INBOX, text.noProject)}
       {projects.map((project) => chip(project, project))}
       {onCreate && (naming ? (
         <input
@@ -38,12 +39,9 @@ export function TodoProjectFilter({ projects, value, onChange, onCreate }: {
             }
             if (event.key !== "Enter" || event.nativeEvent.isComposing) return;
             event.preventDefault();
-            const name = event.currentTarget.value.trim();
+            const name = onCreate(event.currentTarget.value);
             setNaming(false);
-            if (name) {
-              onCreate(name);
-              onChange(name);
-            }
+            if (name) onChange(name);
           }}
         />
       ) : (

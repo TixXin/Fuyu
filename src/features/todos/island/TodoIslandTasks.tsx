@@ -41,7 +41,7 @@ export function TodoIslandTasks({
   onDraftDateChange: (date: string | null) => void;
   onAddTodo: (project?: string) => void;
   projects: readonly string[];
-  onCreateProject: (name: string) => void;
+  onCreateProject?: (name: string) => string | undefined;
   onToggleTodo: (id: string) => void;
   onUpdateTodo: (id: string, title: string) => void;
   onStartTodo: (id: string) => void;
@@ -124,7 +124,7 @@ export function TodoIslandTasks({
         </form>
       )}
       {(editable || projects.length > 0) && (
-        <TodoProjectFilter projects={projects} value={filter} onChange={pickFilter} onCreate={editable ? onCreateProject : undefined} />
+        <TodoProjectFilter projects={projects} value={filter} onChange={pickFilter} inbox={editable} onCreate={editable ? onCreateProject : undefined} />
       )}
       <div className={todos.length > scrollStartRows ? "todo-list todo-island__list todo-island__list--scroll" : "todo-list todo-island__list"} role="list">
         {todos.length === 0 ? (

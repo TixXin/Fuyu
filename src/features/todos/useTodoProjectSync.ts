@@ -1,7 +1,8 @@
-import { useEffect, useRef, type Dispatch, type SetStateAction } from "react";
+import { useCallback, useEffect, useRef, type Dispatch, type SetStateAction } from "react";
 import { saveTodoMarkdown } from "./api";
 import { formatTodoDocumentAsMarkdown } from "./markdown";
-import { mapProjects, MAX_TODO_PROJECTS, projectChanges, projectsOf } from "./project";
+import { mapProjects, MAX_TODO_PROJECTS, projectsOf } from "./project";
+import { applyProjectEdit, readTodoProjectEdit, TODO_PROJECT_EDIT_STORAGE_KEY, type TodoProjectEdit } from "./projectEdits";
 import { createTodoId } from "./storage";
 import type { ScheduledTodo, TodoArchive, TodoItem, TodoProject } from "./types";
 
@@ -20,30 +21,55 @@ type TodoProjectSyncOptions = {
 export function useTodoProjectSync({
   projects, onProjectsChange, currentDate, todos, setTodos, scheduledTodos, setScheduledTodos, archives, setArchives,
 }: TodoProjectSyncOptions) {
-  const seen = useRef(projects);
+  const latest = useRef({ projects, currentDate, archives });
+  useEffect(() => {
+    latest.current = { projects, currentDate, archives };
+  }, [archives, currentDate, projects]);
+
+  const editProjects = useCallback((edit: TodoProjectEdit) => {
+    const applied = applyProjectEdit(latest.current.projects, edit, createTodoId);
+    if (!applied) return null;
+    latest.current = { ...latest.current, projects: applied.projects };
+    onProjectsChange(applied.projects);
+    const { renamed, removed } = applied;
+    if (renamed) {
+      const rename = (name: string) => (name === renamed.from ? renamed.to : name);
+      setTodos((items) => mapProjects(items, rename));
+      setScheduledTodos((items) => mapProjects(items, rename));
+      renameInArchives(rename, latest.current.currentDate, latest.current.archives, setArchives);
+    }
+    if (removed) {
+      const remove = (name: string) => (name === removed ? undefined : name);
+      setTodos((items) => mapProjects(items, remove));
+      setScheduledTodos((items) => mapProjects(items, remove));
+    }
+    return applied;
+  }, [onProjectsChange, setArchives, setScheduledTodos, setTodos]);
 
   useEffect(() => {
-    const before = seen.current;
-    seen.current = projects;
-    const { renamed, removed } = projectChanges(before, projects);
-    if (renamed.size > 0 || removed.size > 0) {
-      const current = (name: string) => renamed.get(name) ?? (removed.has(name) ? undefined : name);
-      setTodos((items) => mapProjects(items, current));
-      setScheduledTodos((items) => mapProjects(items, current));
-      if (renamed.size > 0) renameInArchives(renamed, currentDate, archives, setArchives);
-      return;
-    }
+    const handleRequest = (event: StorageEvent) => {
+      if (event.key !== TODO_PROJECT_EDIT_STORAGE_KEY) return;
+      const edit = readTodoProjectEdit(event.newValue);
+      if (edit) editProjects(edit);
+    };
+    window.addEventListener("storage", handleRequest);
+    return () => window.removeEventListener("storage", handleRequest);
+  }, [editProjects]);
+
+  useEffect(() => {
     const known = new Set(projects.map((project) => project.name));
     const missing = projectsOf([...todos, ...scheduledTodos]).filter((name) => !known.has(name));
     if (missing.length > 0 && projects.length < MAX_TODO_PROJECTS) {
       onProjectsChange([...projects, ...missing.map((name) => ({ id: createTodoId(), name }))].slice(0, MAX_TODO_PROJECTS));
     }
-  }, [archives, currentDate, onProjectsChange, projects, scheduledTodos, setArchives, setScheduledTodos, setTodos, todos]);
+  }, [onProjectsChange, projects, scheduledTodos, todos]);
+
+  return editProjects;
 }
 
-function renameInArchives(renamed: ReadonlyMap<string, string>, currentDate: string, archives: TodoArchive[], setArchives: Dispatch<SetStateAction<TodoArchive[]>>) {
+function renameInArchives(rename: (name: string) => string, currentDate: string, archives: TodoArchive[], setArchives: Dispatch<SetStateAction<TodoArchive[]>>) {
   const changed = archives.flatMap((archive) => {
-    const todos = mapProjects(archive.todos, (name) => renamed.get(name) ?? name);
+    const todos = mapProjects(archive.todos, rename);
     return todos === archive.todos ? [] : [{ ...archive, todos }];
   });
   if (changed.length === 0) return;

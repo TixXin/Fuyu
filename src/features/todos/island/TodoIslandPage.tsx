@@ -45,7 +45,7 @@ export function TodoIslandPage(props: TodoPageProps) {
           onDraftDateChange={props.onDraftDateChange}
           onAddTodo={props.onAddTodo}
           projects={props.projects}
-          onCreateProject={props.onCreateProject}
+          onCreateProject={props.canCreateProject ? props.onCreateProject : undefined}
           onToggleTodo={props.onToggleTodo}
           onUpdateTodo={props.onUpdateTodo}
           onStartTodo={props.onStartTodo}

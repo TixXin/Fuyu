@@ -4,36 +4,25 @@ import { SettingsInput } from "../../components/settings/SettingsInput";
 import { SettingsRow } from "../../components/settings/SettingsRow";
 import { useTranslation } from "../../i18n";
 import { MAX_TODO_PROJECTS, readProject } from "../todos/project.ts";
+import { requestTodoProjectEdit } from "../todos/projectEdits.ts";
 import type { IslandSettings } from "./types";
 import "../plugin-views/PluginIslandPagesSection.css";
 
-type Projects = IslandSettings["todoProjects"];
-
-export function TodoProjectsSection({ settings, onSettingsChange }: {
-  settings: IslandSettings;
-  onSettingsChange: (settings: IslandSettings) => void;
-}) {
+export function TodoProjectsSection({ projects }: { projects: IslandSettings["todoProjects"] }) {
   const text = useTranslation().settings.todo;
-  const projects = settings.todoProjects;
-  const save = (todoProjects: Projects) => onSettingsChange({ ...settings, todoProjects });
   const taken = (name: string, id?: string) => projects.some((project) => project.name === name && project.id !== id);
-  const move = (index: number, by: -1 | 1) => {
-    const next = [...projects];
-    [next[index], next[index + by]] = [next[index + by], next[index]];
-    save(next);
-  };
   const rename = (input: HTMLInputElement, id: string, old: string) => {
     const name = readProject(input.value);
     if (!name || taken(name, id)) {
       input.value = old;
       return;
     }
-    if (name !== old) save(projects.map((project) => (project.id === id ? { ...project, name } : project)));
+    if (name !== old) requestTodoProjectEdit({ type: "rename", id, name });
   };
   const add = (input: HTMLInputElement) => {
     const name = readProject(input.value);
     if (!name || taken(name) || projects.length >= MAX_TODO_PROJECTS) return;
-    save([...projects, { id: crypto.randomUUID(), name }]);
+    requestTodoProjectEdit({ type: "add", name });
     input.value = "";
   };
 
@@ -57,13 +46,13 @@ export function TodoProjectsSection({ settings, onSettingsChange }: {
                   }
                 }}
               />
-              <button className="plugin-card__button" type="button" disabled={index === 0} aria-label={text.moveUp(project.name)} onClick={() => move(index, -1)}>
+              <button className="plugin-card__button" type="button" disabled={index === 0} aria-label={text.moveUp(project.name)} onClick={() => requestTodoProjectEdit({ type: "move", id: project.id, by: -1 })}>
                 <ArrowUp size={12} strokeWidth={2.4} />
               </button>
-              <button className="plugin-card__button" type="button" disabled={index === projects.length - 1} aria-label={text.moveDown(project.name)} onClick={() => move(index, 1)}>
+              <button className="plugin-card__button" type="button" disabled={index === projects.length - 1} aria-label={text.moveDown(project.name)} onClick={() => requestTodoProjectEdit({ type: "move", id: project.id, by: 1 })}>
                 <ArrowDown size={12} strokeWidth={2.4} />
               </button>
-              <button className="plugin-card__button" type="button" aria-label={text.removeProject(project.name)} onClick={() => save(projects.filter((item) => item.id !== project.id))}>
+              <button className="plugin-card__button" type="button" aria-label={text.removeProject(project.name)} onClick={() => requestTodoProjectEdit({ type: "remove", id: project.id })}>
                 <Trash2 size={12} strokeWidth={2.4} />
               </button>
             </li>

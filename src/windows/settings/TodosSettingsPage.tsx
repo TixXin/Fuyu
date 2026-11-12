@@ -25,7 +25,7 @@ export function TodosSettingsPage({
         onChange={(todoEnabled) => onSettingsChange({ ...settings, todoEnabled })}
       />
       <TodoSettingsSection settings={settings} onSettingsChange={onSettingsChange} />
-      <TodoProjectsSection settings={settings} onSettingsChange={onSettingsChange} />
+      <TodoProjectsSection projects={settings.todoProjects} />
       <SavePathSettingsSection
         saveDirectoryDraft={saveDirectory.saveDirectoryDraft}
         savePathState={saveDirectory.savePathState}
