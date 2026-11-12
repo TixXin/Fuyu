@@ -161,8 +161,19 @@ export function setAutoUpdate(autoUpdate: AutoUpdateMode) {
 }
 
 const downloadTried = new Set<string>();
+let backgroundDownloadRunning = false;
 
 export async function downloadInBackground() {
+  if (backgroundDownloadRunning) return false;
+  backgroundDownloadRunning = true;
+  try {
+    return await downloadOnce();
+  } finally {
+    backgroundDownloadRunning = false;
+  }
+}
+
+async function downloadOnce() {
   await initialize();
   reloadPreferences();
   const version = state.nextVersion;
