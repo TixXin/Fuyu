@@ -1,10 +1,10 @@
-import { sendCcConnectMessage } from "../../cc-connect/api";
+import { remotePath, sendCcConnectMessage, sendCcConnectRemoteMessage } from "../../cc-connect";
 import type { AgentAlert, AgentAlertKind } from "../alerts";
 import { sessionProject } from "../sessionList";
 import { AGENT_PROVIDER_LABELS } from "../status";
 import { getAgentPushDetail, getUserIdleSeconds, isSessionLocked, NO_PUSH_DETAIL, sendBarkPush } from "./api";
 import { ccConnectText, pushBody, takeoverCommands } from "./pushText";
-import type { AgentPushSettings } from "./storage";
+import { LOCAL_HOST, pushRoute, type AgentPushSettings } from "./storage";
 
 /** Groups the pushes on the phone. */
 export const PUSH_GROUP = "Fuyu";
@@ -24,13 +24,16 @@ export async function isAway(minutes: number) {
 }
 
 /**
- * Sends one alert to the phone. Bark gets the session's name and what happened, never a command
- * or a reply. A cc-connect chat is the user's own bot, so it gets what the session waits on and the
+ * Sends one alert to the phone, unless its computer is muted. Bark gets the session's name and what
+ * happened, never a command or a reply. A cc-connect chat is the user's own bot, so it gets what
+ * the session waits on and, from a project of the session's agent on the session's computer, the
  * commands to take it over there. `ccConnectPath`: the cc-connect plugin's program setting, null
  * while that plugin is off.
  */
 export async function sendPush({ kind, session }: AgentAlert, push: AgentPushSettings, labels: PushLabels, ccConnectPath: string | null) {
   if (kind === "started") return;
+  const host = session.remoteHost ?? LOCAL_HOST;
+  if (push.mutedHosts.includes(host)) return;
   const agent = AGENT_PROVIDER_LABELS[session.provider];
   const title = session.title ?? sessionProject(session.cwd) ?? agent;
   if (push.channel === "bark") return sendBarkPush(push.server, title, labels.kinds[kind](agent), PUSH_GROUP);
@@ -41,10 +44,15 @@ export async function sendPush({ kind, session }: AgentAlert, push: AgentPushSet
   if (detail.entrypoint === "sdk-cli") return;
   const heading = `${session.remoteHost ? `${session.remoteHost} · ` : ""}${title} · ${labels.kinds[kind](agent)}`;
   const body = pushBody({ kind, session }, detail);
-  const commands = takeoverCommands(session, detail);
-  const { project, chats } = push.ccConnect;
+  const route = pushRoute(push, host);
   const results = await Promise.allSettled(
-    chats.map((key) => sendCcConnectMessage(ccConnectPath, project, key, ccConnectText(heading, body, commands, labels.takeover, key.split(":")[0]))),
+    route.chats.map(({ project, key, agent: projectAgent }) => {
+      const commands = route.takeover ? takeoverCommands(session, projectAgent) : [];
+      const text = ccConnectText(heading, body, commands, labels.takeover, key.split(":")[0]);
+      return route.via === LOCAL_HOST
+        ? sendCcConnectMessage(ccConnectPath, project, key, text)
+        : sendCcConnectRemoteMessage(route.via, remotePath(route.via), project, key, text);
+    }),
   );
   const failed = results.find((result) => result.status === "rejected");
   if (failed) throw failed.reason;

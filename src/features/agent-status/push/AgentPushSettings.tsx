@@ -6,13 +6,12 @@ import { SettingsRow } from "../../../components/settings/SettingsRow";
 import { SettingsSelect } from "../../../components/settings/SettingsSelect";
 import { SettingsToggleRow } from "../../../components/settings/SettingsToggleRow";
 import { useErrorText, useTranslation } from "../../../i18n";
-import { sendCcConnectMessage, useCcConnect } from "../../cc-connect";
+import { remotePath, sendCcConnectMessage, sendCcConnectRemoteMessage, useCcConnect, useRemoteCcConnect } from "../../cc-connect";
 import { deleteBarkKey, hasBarkKey, saveBarkKey, sendBarkPush } from "./api";
 import { CcConnectPushTargets } from "./CcConnectPushTargets";
 import { PUSH_GROUP } from "./sendPush";
-import { AGENT_PUSH_AWAY_MINUTES, AGENT_PUSH_CHANNELS, AGENT_PUSH_EVENTS, type AgentPushChannel } from "./storage";
+import { AGENT_PUSH_AWAY_MINUTES, AGENT_PUSH_CHANNELS, AGENT_PUSH_EVENTS, LOCAL_HOST, type AgentPushChannel } from "./storage";
 import { useAgentPushSettings } from "./useAgentPushSettings";
-
 
 /** Settings → AI Agent → Alerts: pushing agent events to the phone with Bark or a cc-connect bot (roadmap B6.5.5). */
 export function AgentPushSettings() {
@@ -25,6 +24,7 @@ export function AgentPushSettings() {
   const [busy, setBusy] = useState(false);
   const cc = useCcConnect();
   const bark = settings.channel === "bark";
+  const remote = useRemoteCcConnect(settings.enabled && !bark && cc.enabled);
 
   useEffect(() => {
     void hasBarkKey().then(setKeySaved).catch(() => setKeySaved(false));
@@ -53,16 +53,25 @@ export function AgentPushSettings() {
       await deleteBarkKey();
       setKeySaved(false);
     }, text.keyCleared);
-  const { project, chats } = settings.ccConnect;
+  // Every chat that gets pushes, each through its own computer's cc-connect.
+  const testChats = Object.entries(settings.ccConnect)
+    .filter(([host, entry]) => !settings.mutedHosts.includes(host) && !entry.viaLocal)
+    .flatMap(([host, entry]) => entry.chats.map((chat) => ({ ...chat, host })));
   const test = () =>
     run(
       () =>
         bark
           ? sendBarkPush(settings.server, text.testTitle, text.testBody, PUSH_GROUP)
-          : Promise.all(chats.map((key) => sendCcConnectMessage(cc.path, project, key, text.ccConnect.testBody))),
+          : Promise.all(
+              testChats.map(({ host, project, key }) =>
+                host === LOCAL_HOST
+                  ? sendCcConnectMessage(cc.path, project, key, text.ccConnect.testBody)
+                  : sendCcConnectRemoteMessage(host, remotePath(host), project, key, `${text.ccConnect.testBody} · ${host}`),
+              ),
+            ),
       text.testSent,
     );
-  const canTest = bark ? keySaved === true : cc.enabled && project !== "" && chats.length > 0;
+  const canTest = bark ? keySaved === true : cc.enabled && testChats.length > 0;
 
   const awayOptions = AGENT_PUSH_AWAY_MINUTES.map((minutes) => ({ value: String(minutes), label: text.awayValue(minutes) }));
   const channelOptions = AGENT_PUSH_CHANNELS.map((channel) => ({ value: channel, label: text.channels[channel] }));
@@ -84,7 +93,11 @@ export function AgentPushSettings() {
               />
             }
           />
-          {!bark && <CcConnectPushTargets cc={cc} target={settings.ccConnect} onChange={(ccConnect) => setSettings({ ...settings, ccConnect })} />}
+          {!bark && !cc.enabled ? <SettingsRow indent title={text.ccConnect.off} description={text.ccConnect.offHint} /> : null}
+          {/* Bark with no SSH computer has only this one, which the switch above already covers. */}
+          {!bark || remote.hosts.length > 0 ? (
+            <CcConnectPushTargets settings={settings} onChange={setSettings} cc={cc} remote={remote} targets={!bark && cc.enabled} />
+          ) : null}
           {bark && (
             <>
               <SettingsRow indent title={text.server} description={text.serverHint}>

@@ -5,10 +5,13 @@ import { useErrorText, useTranslation } from "../../i18n";
 import {
   addCcConnectProject,
   allowFromValid,
+  CC_CONNECT_AGENT_LABELS,
+  CC_CONNECT_SETUP_AGENTS,
   CC_CONNECT_SETUP_PLATFORMS,
   checkCcConnectBot,
   freeProjectName,
   type CcConnectBotCheck,
+  type CcConnectSetupAgent,
   type CcConnectSetupPlatform,
 } from "./api";
 import { FeishuSetup } from "./FeishuSetup";
@@ -18,7 +21,7 @@ import "./CcConnectSetup.css";
 /**
  * The plugin page's "Set up a bot": a project for one Telegram, Discord or Feishu bot added to
  * cc-connect's config (src-tauri/src/cc_connect/config_file.rs), so chatting with that bot is
- * using Claude Code on this computer. Telegram and Discord take the bot's token and who may use
+ * using Claude Code or Codex on this computer. Telegram and Discord take the bot's token and who may use
  * it; on Telegram the people who wrote to the bot are listed to pick from. Feishu is cc-connect's
  * own QR setup (FeishuSetup).
  */
@@ -28,6 +31,7 @@ export function CcConnectSetup({ cc }: { cc: ReturnType<typeof useCcConnect> }) 
   const t = texts.setup;
   const [platform, setPlatform] = useState<CcConnectSetupPlatform>("telegram");
   const [project, setProject] = useState<string | null>(null);
+  const [agent, setAgent] = useState<CcConnectSetupAgent>("claudecode");
   const [workDir, setWorkDir] = useState<string | null>(null);
   const [token, setToken] = useState("");
   const [allowFrom, setAllowFrom] = useState("");
@@ -70,7 +74,7 @@ export function CcConnectSetup({ cc }: { cc: ReturnType<typeof useCcConnect> }) 
     setBusy("add");
     setError(null);
     try {
-      await addCcConnectProject(cc.path, { project: name, workDir: folder, platform, token, allowFrom });
+      await addCcConnectProject(cc.path, { project: name, agent, workDir: folder, platform, token, allowFrom });
       if (platform === "feishu") {
         setFeishu(true);
       } else {
@@ -104,6 +108,15 @@ export function CcConnectSetup({ cc }: { cc: ReturnType<typeof useCcConnect> }) 
           ariaLabel={t.platform}
           disabled={feishu}
           onChange={pick}
+        />
+      </Field>
+      <Field label={t.agent} hint={t.agentHint}>
+        <SelectControl
+          value={agent}
+          options={CC_CONNECT_SETUP_AGENTS.map((value) => ({ value, label: CC_CONNECT_AGENT_LABELS[value] }))}
+          ariaLabel={t.agent}
+          disabled={feishu}
+          onChange={(next) => setAgent(next as CcConnectSetupAgent)}
         />
       </Field>
       <Field label={t.project} hint={t.projectHint}>

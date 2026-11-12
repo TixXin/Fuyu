@@ -8,7 +8,23 @@ export const CC_CONNECT_PLUGIN_ID = "focusd.cc-connect";
 /** A chat a cc-connect project has talked to; `key` is what `cc-connect send -s` takes. */
 export type CcConnectChat = { key: string; platform: string; userName: string | null };
 
-export type CcConnectProject = { name: string; chats: CcConnectChat[] };
+/** `agent`: its agent type in the config (`[projects.agent] type`, such as "claudecode"); null when not there. */
+export type CcConnectProject = { name: string; agent: string | null; chats: CcConnectChat[] };
+
+/** The agents a bot can be set up for on the plugin page, as cc-connect's config names them. */
+export const CC_CONNECT_SETUP_AGENTS = ["claudecode", "codex"] as const;
+export type CcConnectSetupAgent = (typeof CC_CONNECT_SETUP_AGENTS)[number];
+
+/** How an agent type is shown; one cc-connect knows but the island does not keeps its own name. */
+export const CC_CONNECT_AGENT_LABELS: Record<string, string> = { claudecode: "Claude Code", codex: "Codex" };
+
+/** cc-connect on an SSH computer; mirrors RemoteStatus in src-tauri/src/cc_connect/remote.rs. */
+export type CcConnectRemoteStatus = {
+  /** The program there; null when it is nowhere to be found. */
+  exe: string | null;
+  running: boolean;
+  projects: CcConnectProject[];
+};
 
 /** The island's own cc-connect (the plugin's "run" setting); mirrors RunState in src-tauri/src/cc_connect/runner.rs. */
 export type CcConnectRunState = "off" | "starting" | "running" | "external" | "noConfig" | "failed";
@@ -51,7 +67,14 @@ export type CcConnectFeishuSetup = {
   error: NativeError | string | null;
 };
 
-export type CcConnectNewProject = { project: string; workDir: string; platform: CcConnectSetupPlatform; token: string; allowFrom: string };
+export type CcConnectNewProject = {
+  project: string;
+  agent: CcConnectSetupAgent;
+  workDir: string;
+  platform: CcConnectSetupPlatform;
+  token: string;
+  allowFrom: string;
+};
 
 /** `path`: the plugin's program setting; empty finds the program. */
 export function getCcConnectStatus(path: string) {
@@ -60,6 +83,16 @@ export function getCcConnectStatus(path: string) {
 
 export function sendCcConnectMessage(path: string, project: string, sessionKey: string, text: string) {
   return invoke<void>("send_cc_connect_message", { path: path.trim() || null, project, sessionKey, text });
+}
+
+/** cc-connect on the SSH computer `host`, read with one ssh; `path` empty finds the program there. */
+export function getCcConnectRemoteStatus(host: string, path: string) {
+  return invoke<CcConnectRemoteStatus>("get_cc_connect_remote_status", { host, path: path.trim() || null });
+}
+
+/** Sends through the cc-connect on the SSH computer `host`, so its own bots carry the message. */
+export function sendCcConnectRemoteMessage(host: string, path: string, project: string, sessionKey: string, text: string) {
+  return invoke<void>("send_cc_connect_remote_message", { host, path: path.trim() || null, project, sessionKey, text });
 }
 
 /** Downloads the latest cc-connect into the island's data folder; resolves to where it is. */

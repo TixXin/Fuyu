@@ -212,6 +212,15 @@ export type SettingsPluginsText = {
     download: string;
     downloading: string;
     downloadHint: string;
+    /** Picking this computer or an SSH computer (AI Agent → Remote computers) to look at. */
+    computer: string;
+    thisComputer: string;
+    reading: string;
+    /** An SSH computer's cc-connect: where the program is (kept on this page) and what it is not. */
+    remotePath: string;
+    remotePathHint: string;
+    remoteNotRunning: string;
+    remoteSetup: string;
     /** The island's own cc-connect (the "run" setting) and how it is doing. */
     runnerLabel: string;
     runner: Record<"off" | "starting" | "running" | "external" | "noConfig" | "failed", string>;
@@ -222,6 +231,9 @@ export type SettingsPluginsText = {
       title: string;
       hint: string;
       platform: string;
+      /** Which agent the bot drives; labels from CC_CONNECT_AGENT_LABELS. */
+      agent: string;
+      agentHint: string;
       project: string;
       projectHint: string;
       workDir: string;
@@ -526,6 +538,13 @@ export const zhCN: SettingsPluginsText = {
     download: "下载 cc-connect",
     downloading: "正在下载…",
     downloadHint: "从 GitHub 下载最新正式版，按发布的校验值核对后放在岛的数据文件夹里。",
+    computer: "电脑",
+    thisComputer: "本机",
+    reading: "正在经 SSH 读取…",
+    remotePath: "程序路径",
+    remotePathHint: "留空自动找：正在运行的那个，或登录 shell 的 PATH 里的。改了点刷新",
+    remoteNotRunning: "没在运行：推送要那台电脑上的 cc-connect 在运行，请在那台电脑上启动它。",
+    remoteSetup: "远程电脑的机器人在那台电脑上用 cc-connect 自己配置，岛只读取和经它发送。",
     runnerLabel: "由岛启动",
     runner: {
       off: "未开启",
@@ -538,8 +557,10 @@ export const zhCN: SettingsPluginsText = {
     platforms: { telegram: "Telegram", discord: "Discord", feishu: "飞书", lark: "Lark", weixin: "微信", qqbot: "QQ", qq: "QQ", slack: "Slack", dingtalk: "钉钉", wecom: "企业微信" },
     setup: {
       title: "新建机器人",
-      hint: "一个机器人对应 cc-connect 里的一个项目：在手机上和它聊，就是在这台电脑的工作文件夹里用 Claude Code，每次用工具都要你在手机上同意。",
+      hint: "一个机器人对应 cc-connect 里的一个项目：在手机上和它聊，就是在这台电脑的工作文件夹里用 Claude Code 或 Codex，Claude Code 每次用工具都要你在手机上同意。",
       platform: "平台",
+      agent: "Agent",
+      agentHint: "一个机器人只接一种 Agent，也只能接管这种 Agent 的会话。Codex 从只读模式开始（它没法在手机上问你），要改文件时在手机上用 /mode 切换。",
       project: "项目名",
       projectHint: "只用字母、数字、- 和 _。",
       workDir: "工作文件夹",
@@ -871,6 +892,13 @@ export const en: SettingsPluginsText = {
     download: "Download cc-connect",
     downloading: "Downloading…",
     downloadHint: "Gets the latest release from GitHub, checks it against the published checksum, and keeps it in the island's data folder.",
+    computer: "Computer",
+    thisComputer: "This computer",
+    reading: "Reading over SSH…",
+    remotePath: "Program path",
+    remotePathHint: "Leave empty to find it: the one running, or the one on a login shell's PATH. Refresh after a change",
+    remoteNotRunning: "Not running: pushes need cc-connect running on that computer; start it there.",
+    remoteSetup: "A remote computer's bots are set up with cc-connect on that computer; the island only reads them and sends through it.",
     runnerLabel: "Run by the island",
     runner: {
       off: "Off",
@@ -883,8 +911,10 @@ export const en: SettingsPluginsText = {
     platforms: { telegram: "Telegram", discord: "Discord", feishu: "Feishu", lark: "Lark", weixin: "WeChat", qqbot: "QQ", qq: "QQ", slack: "Slack", dingtalk: "DingTalk", wecom: "WeCom" },
     setup: {
       title: "Set up a bot",
-      hint: "One bot is one project in cc-connect: chatting with it on your phone is using Claude Code in the work folder on this computer, and every tool use asks you on the phone first.",
+      hint: "One bot is one project in cc-connect: chatting with it on your phone is using Claude Code or Codex in the work folder on this computer; Claude Code asks you on the phone before every tool use.",
       platform: "Platform",
+      agent: "Agent",
+      agentHint: "A bot drives one agent, and takes over only that agent's sessions. Codex starts read-only (it cannot ask you on the phone); switch with /mode on the phone when it should change files.",
       project: "Project name",
       projectHint: "Letters, digits, - and _ only.",
       workDir: "Work folder",

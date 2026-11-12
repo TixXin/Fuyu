@@ -4,7 +4,8 @@ import "./SettingsRow.css";
 /**
  * One setting: its title, with an optional one-sentence consequence under it, on the
  * left and its control on the right. Children (a slider) span the row below them.
- * An indented row belongs to the switch above it and is only shown while that is on.
+ * An indented row belongs to the switch above it and is only shown while that is on; `indent`
+ * 2 or 3 nests it under an indented row (a computer, then a project, then its bots).
  */
 export function SettingsRow({
   title,
@@ -20,7 +21,7 @@ export function SettingsRow({
   control?: ReactNode;
   /** Id of the input the title names; clicking the title then focuses or toggles it. */
   labelFor?: string;
-  indent?: boolean;
+  indent?: boolean | 2 | 3;
   /**
    * False for a row that is data rather than a setting (a plugin, a host, a saved preset, an
    * empty list's note): the settings search index (`pnpm settings:index`) leaves it out.
@@ -29,7 +30,7 @@ export function SettingsRow({
   children?: ReactNode;
 }) {
   return (
-    <div className={indent ? "settings-row settings-row--indent" : "settings-row"} data-search={searchable ? undefined : "off"}>
+    <div className={rowClass(indent)} data-search={searchable ? undefined : "off"}>
       <div className="settings-row__main">
         <div className="settings-row__text">
           {labelFor ? (
@@ -44,4 +45,9 @@ export function SettingsRow({
       {children}
     </div>
   );
+}
+
+function rowClass(indent: boolean | 2 | 3) {
+  if (!indent) return "settings-row";
+  return indent === true ? "settings-row settings-row--indent" : `settings-row settings-row--indent settings-row--indent-${indent}`;
 }
