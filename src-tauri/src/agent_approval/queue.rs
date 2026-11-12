@@ -1,66 +1,47 @@
-//! Approval requests waiting for the user, queued per session: the island shows one card per
-//! session at a time, and the next request of that session only once the one before it closes.
-//! Each request's connection thread waits here for the user's choice.
-
 use serde::Serialize;
 use serde_json::Value;
 
 use super::decision::{Activity, Agent, Answers, Decision, HookInput, Kind, Settled};
 
-/// A request as the island's card shows it (event `agent-approval-requested`).
 #[derive(Debug, Clone, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ApprovalRequest {
     pub id: u64,
     pub agent: Agent,
-    /// An approval, or a question (Claude Code's AskUserQuestion; `tool_input.questions`).
     pub kind: Kind,
     pub session_id: String,
     pub cwd: Option<String>,
     pub tool_name: String,
     pub tool_input: Value,
     pub permission_suggestions: Option<Value>,
-    /// Unix milliseconds.
     pub received_at: i64,
-    /// The subagent that asked; None for the main agent. Not shown, only matched (B6.2.7).
     #[serde(skip)]
     pub agent_id: Option<String>,
-    /// The SSH remote computer the session runs on; left out for this one.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub remote_host: Option<String>,
 }
 
-/// Why a card went away (event `agent-approval-closed`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) enum CloseReason {
-    /// Allowed, denied or answered on the island.
     Decided,
-    /// Waited past the limit: handed back to the terminal.
     Timeout,
-    /// The agent hung up (the user pressed Esc, or the agent quit).
     Disconnected,
-    /// "Handle in terminal" on the island.
     HandedBack,
-    /// The island quit: handed back to the terminal.
     Shutdown,
-    /// The session went on without the island (the user answered in the terminal).
     AnsweredElsewhere,
 }
 
-/// The user's answer, waiting for the request's thread to pick it up.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Outcome {
     pub decision: Decision,
     pub message: Option<String>,
-    /// For `Decision::Answer`.
     pub answers: Option<Answers>,
 }
 
 struct Entry {
     request: ApprovalRequest,
     outcome: Option<Outcome>,
-    /// Answered without the island; the request's thread closes the card.
     elsewhere: bool,
 }
 
@@ -72,7 +53,6 @@ pub(super) struct Queue {
 }
 
 impl Queue {
-    /// Queues a request. Returns it, and whether it is the first of its session (shown now).
     pub fn push(&mut self, agent: Agent, kind: Kind, input: HookInput, received_at: i64) -> (ApprovalRequest, bool) {
         self.last_id += 1;
         let request = ApprovalRequest {
@@ -93,10 +73,6 @@ impl Queue {
         (request, shown)
     }
 
-    /// `agent`'s session did `activity`, so what it waited for was answered elsewhere. A finished
-    /// turn settles all of that agent's requests; a tool call settles the oldest request for the
-    /// same call, or, when none has exactly that input, the only request for that tool. Returns
-    /// the ids settled now; the island answers them with `{}`, which the agent no longer reads.
     pub fn settle_elsewhere(&mut self, agent: Agent, activity: &Activity) -> Vec<u64> {
         let open = |entry: &&mut Entry| {
             let request = &entry.request;
@@ -128,13 +104,10 @@ impl Queue {
         settled
     }
 
-    /// Whether `id` was answered without the island.
     pub fn answered_elsewhere(&self, id: u64) -> bool {
         self.entries.iter().any(|entry| entry.request.id == id && entry.elsewhere)
     }
 
-    /// Records the user's choice for a shown request. A question takes answers or a hand-back;
-    /// an approval takes anything but answers.
     pub fn decide(&mut self, id: u64, outcome: Outcome) -> Result<(), String> {
         let shown = self.shown_ids();
         let entry = self
@@ -155,12 +128,10 @@ impl Queue {
         Ok(())
     }
 
-    /// The choice made for `id`, if any.
     pub fn outcome(&self, id: u64) -> Option<Outcome> {
         self.entries.iter().find(|entry| entry.request.id == id)?.outcome.clone()
     }
 
-    /// Takes a request out. Returns the next request of its session, which is shown now.
     pub fn remove(&mut self, id: u64) -> Option<ApprovalRequest> {
         let index = self.entries.iter().position(|entry| entry.request.id == id)?;
         let removed = self.entries.remove(index).request;
@@ -174,7 +145,6 @@ impl Queue {
             .map(|entry| entry.request.clone())
     }
 
-    /// The requests shown now: the first of each session, oldest first.
     pub fn shown(&self) -> Vec<ApprovalRequest> {
         let ids = self.shown_ids();
         self.entries.iter().filter(|entry| ids.contains(&entry.request.id)).map(|entry| entry.request.clone()).collect()
@@ -190,7 +160,6 @@ impl Queue {
         ids
     }
 
-    /// From now on every waiting request hands back to the terminal, and new ones do at once.
     pub fn shut_down(&mut self) {
         self.shutting_down = true;
     }

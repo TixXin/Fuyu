@@ -1,6 +1,3 @@
-//! Answers a plugin's JSON-RPC requests: checks the permission each method
-//! needs and hands the call to the part of the island that owns the data.
-
 use serde_json::{json, Value};
 
 use super::{current_entry, lock, set_keep_alive, Context};
@@ -17,29 +14,24 @@ pub(super) fn initialize_params(context: &Context) -> Value {
     let spec = &context.spec;
     let mut params = json!({
         "apiVersion": spec.api_version,
-        // Every capability so far needs API version 2.
         "capabilities": if spec.api_version >= 2 { &CAPABILITIES[..] } else { &[] },
         "appVersion": spec.app_version,
         "pluginId": spec.plugin_id,
         "dataDir": spec.data_dir.display().to_string(),
-        // What it may use now: `permissions`, plus the optional ones the user allowed.
         "permissions": optional::usable(&spec.plugin_id, &spec.granted, &spec.optional),
         "settings": *lock(&context.settings),
     });
     if spec.api_version >= 2 {
-        // Why this process was started: onStartup, onCommand:<id>, onSchedule:<minutes>, ...
         params["activationEvent"] = json!(spec.activation_event);
         params["optionalPermissions"] = json!(spec.optional);
     }
     if !spec.experimental_apis.is_empty() {
-        // Development plugins only: which of the experimental APIs they listed the island has.
         params["experimentalApis"] = json!(dev::granted_experimental(&spec.experimental_apis));
     }
     params
 }
 
 pub(super) fn answer_request(context: &Context, id: &Value, method: &str, params: Value) -> String {
-    // Methods about the plugin itself need no permission.
     match method {
         "host.info" => return rpc::result_line(id, initialize_params(context)),
         "settings.get" => return rpc::result_line(id, Value::Object(lock(&context.settings).clone())),
@@ -55,7 +47,6 @@ pub(super) fn answer_request(context: &Context, id: &Value, method: &str, params
                 Err(message) => rpc::error_line(id, rpc::HOST_ERROR, &message, Some(json!({ "status": 400 }))),
             };
         }
-        // Version 1 plugins keep getting "unknown method" for these.
         "events.subscribe" | "events.unsubscribe" if context.spec.api_version >= 2 => {
             return change_subscriptions(context, id, method == "events.subscribe", &params);
         }
@@ -114,7 +105,6 @@ pub(super) fn answer_request(context: &Context, id: &Value, method: &str, params
     answer(id, result)
 }
 
-/// Why the plugin may not use `permission` now, or None when it may.
 fn missing_permission(context: &Context, permission: &str) -> Option<String> {
     let spec = &context.spec;
     if optional::has(&spec.plugin_id, &spec.granted, &spec.optional, permission) {
@@ -134,9 +124,6 @@ fn answer(id: &Value, answer: Result<Value, (u16, String)>) -> String {
     }
 }
 
-/// `events.subscribe` / `events.unsubscribe` with `{ events: [name] }`. Every
-/// name is checked before any is applied; answers `{ events }`, the plugin's
-/// subscriptions afterwards.
 fn change_subscriptions(context: &Context, id: &Value, subscribe: bool, params: &Value) -> String {
     let bad_params = |message: &str| rpc::error_line(id, rpc::HOST_ERROR, message, Some(json!({ "status": 400 })));
     let Some(requested) = params.get("events").and_then(Value::as_array) else {
@@ -176,16 +163,12 @@ fn change_subscriptions(context: &Context, id: &Value, subscribe: bool, params: 
         }
         rpc::result_line(id, json!({ "events": *subscriptions }))
     };
-    // After the subscription is in place, so the watcher sees it.
     if subscribe && names.contains(&"media.changed") {
         feeds::watch_media();
     }
     answer
 }
 
-/// `settings.set { values: { key: value } }`: the plugin changes its own declared
-/// settings (e.g. the account it signed in to), so the settings page shows them.
-/// No `settings.changed` comes back for its own change; answers `{ settings }`.
 fn set_own_settings(context: &Context, params: &Value) -> Result<Value, (u16, String)> {
     let values = params
         .get("values")
@@ -197,8 +180,6 @@ fn set_own_settings(context: &Context, params: &Value) -> Result<Value, (u16, St
     Ok(json!({ "settings": resolved }))
 }
 
-/// `host.keepAlive { reason }`: an on-demand plugin asks not to be stopped when
-/// idle (the settings page shows why); `reason: null` lets it be stopped again.
 fn keep_alive(context: &Context, params: &Value) -> Result<Value, (u16, String)> {
     let reason = match params.get("reason") {
         None | Some(Value::Null) => None,

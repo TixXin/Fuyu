@@ -1,13 +1,8 @@
-//! The approval endpoint's address, kept in `agent-approval.json` in the app data folder. The
-//! hooks installed into Claude Code and Codex carry the port and token, so both stay the same
-//! across restarts; the port only changes when the saved one is taken.
-
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::{fs, path::Path};
 
 pub(super) const CONFIG_FILE_NAME: &str = "agent-approval.json";
-/// Tried first; a free port is picked when it is taken.
 pub(super) const PREFERRED_PORT: u16 = 47830;
 const TOKEN_BYTES: usize = 32;
 
@@ -30,8 +25,6 @@ impl Default for ApprovalConfig {
     }
 }
 
-/// Reads the config; a missing or broken file gives the defaults. A missing or malformed token
-/// is replaced, and `changed` tells the caller to save.
 pub(super) fn load_config(path: &Path) -> Result<(ApprovalConfig, bool), String> {
     let mut config = fs::read_to_string(path)
         .ok()
@@ -64,8 +57,6 @@ fn generate_token() -> Result<String, String> {
     Ok(bytes.iter().map(|byte| format!("{byte:02x}")).collect())
 }
 
-/// The token an SSH remote computer's hooks carry (remote_setup.rs), told from the island's own
-/// by its `X-Fuyu-Remote` host (`X-FocuSD-Remote` before the rename): one leaked from a shared server names only that server.
 pub(super) fn remote_token(token: &str, host: &str) -> String {
     Sha256::digest(format!("focusd-remote:{host}:{token}")).iter().map(|byte| format!("{byte:02x}")).collect()
 }

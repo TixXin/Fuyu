@@ -1,7 +1,3 @@
-//! Pushing agent events to the user's phone through Bark (roadmap B6.5.5). The island decides what
-//! to send (src/features/agent-status/push); this sends it. The device key is a secret that lets
-//! anyone push to the phone, so it lives in Windows Credential Manager, never in localStorage.
-
 use std::time::Duration;
 
 use keyring::{Entry, Error as KeyringError};
@@ -14,7 +10,6 @@ use crate::{
 
 const CREDENTIAL_SERVICE: &str = "com.tixxin.fuyu.bark";
 const CREDENTIAL_USER: &str = "device-key";
-/// Bark's own server; a self-hosted bark-server works the same.
 const DEFAULT_SERVER: &str = "https://api.day.app";
 const MAX_FIELD_CHARS: usize = 300;
 
@@ -30,7 +25,6 @@ fn read_key() -> Result<Option<String>, UserError> {
     }
 }
 
-/// The address to post to: `<server>/push`. Only http(s); http is for a bark-server on the LAN.
 pub(crate) fn push_url(server: &str) -> Result<reqwest::Url, UserError> {
     let server = server.trim().trim_end_matches('/');
     let server = if server.is_empty() { DEFAULT_SERVER } else { server };
@@ -42,13 +36,11 @@ pub(crate) fn push_url(server: &str) -> Result<reqwest::Url, UserError> {
     Ok(url)
 }
 
-/// What Bark's `POST /push` takes. A Bark device key is what the app shows after its server URL.
 pub(crate) fn push_body(key: &str, title: &str, body: &str, group: &str) -> Value {
     let cut = |text: &str| text.chars().take(MAX_FIELD_CHARS).collect::<String>();
     json!({ "device_key": key, "title": cut(title), "body": cut(body), "group": cut(group) })
 }
 
-/// A key as pasted: the app shows `https://api.day.app/<key>/...`, so a whole URL works too.
 pub(crate) fn normalize_key(input: &str) -> Option<String> {
     let input = input.trim();
     let candidate = match input.split_once("://") {
@@ -81,7 +73,6 @@ pub fn delete_bark_key() -> Result<(), UserError> {
     }
 }
 
-/// Sends one push to the saved device; `server` empty means Bark's own server.
 #[tauri::command]
 pub async fn send_bark_push(server: String, title: String, body: String, group: String) -> Result<(), UserError> {
     let key = read_key()?.ok_or_else(|| UserError::new("bark.noKey", "No Bark device key yet."))?;
@@ -109,19 +100,16 @@ pub async fn send_bark_push(server: String, title: String, body: String, group: 
     })
 }
 
-/// Seconds since the last keyboard or mouse input; a locked screen keeps counting. None if unknown.
 #[tauri::command]
 pub fn get_user_idle_seconds() -> Option<u32> {
     session_notifications::idle_millis().map(|millis| millis / 1000)
 }
 
-/// Whether the screen is locked now; a locked screen pushes at once, however short the idle time.
 #[tauri::command]
 pub fn is_session_locked() -> bool {
     session_notifications::is_locked()
 }
 
-/// This module's Tauri commands. `lib.rs` chains every module's list into one `generate_handler!`.
 macro_rules! tauri_commands {
     ($next:ident [$($done:tt)*] $($rest:tt)*) => {
         $next!([$($done)*

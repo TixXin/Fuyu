@@ -1,7 +1,3 @@
-//! `agent-focus.log` in the app data folder: one line per click on an Agent session, saying how
-//! its window was looked for and what was found, so "没找到对应的窗口" can be traced on another
-//! computer. It holds program names and how each step went, not window titles or conversation text.
-
 use std::{
     fs::{self, OpenOptions},
     io::Write,
@@ -12,7 +8,6 @@ use std::{
 use super::snapshot::current_unix_millis;
 
 pub(super) const FILE_NAME: &str = "agent-focus.log";
-/// Past this the file is cut to its newer half.
 const MAX_BYTES: u64 = 64 * 1024;
 
 pub(super) struct Attempt {
@@ -32,7 +27,6 @@ impl Attempt {
         self.steps.push(step.into());
     }
 
-    /// The line written for this attempt.
     pub(super) fn line(&self, outcome: &str) -> String {
         format!(
             "{} {} | {} | {outcome} in {} ms\n",
@@ -43,7 +37,6 @@ impl Attempt {
         )
     }
 
-    /// Appends the attempt to the log; best effort.
     pub(super) fn finish(self, app_dir: Option<&Path>, outcome: &str) {
         let Some(app_dir) = app_dir else { return };
         let path = app_dir.join(FILE_NAME);

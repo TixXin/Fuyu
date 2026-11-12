@@ -1,41 +1,30 @@
-//! The todo data in `todos.json`. Field names and shapes match what
-//! src/features/todos/normalize.ts produces from localStorage, so the island
-//! window, plugins and the local API all see the same JSON as before.
-
 use serde::{Deserialize, Serialize};
 use serde_json::Number;
 
-/// Format of `todos.json`; bumped only for changes old readers cannot handle.
 pub(crate) const FILE_VERSION: u32 = 1;
 
-/// Mirrored by `TodoItem` in src/features/todos/types.ts.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TodoItem {
     pub id: String,
     pub title: String,
     pub completed: bool,
-    /// Milliseconds since 1970 as JavaScript wrote it; kept as the exact number text.
     pub created_at: Number,
-    /// The project it belongs to (issue #44); left out when it has none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub project: Option<String>,
 }
 
-/// Mirrored by `ScheduledTodo` in src/features/todos/types.ts.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ScheduledTodo {
     pub id: String,
     pub title: String,
-    /// Local date, YYYY-MM-DD.
     pub date: String,
     pub created_at: Number,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub project: Option<String>,
 }
 
-/// Mirrored by `TodoArchive` in src/features/todos/types.ts.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TodoArchive {
@@ -48,11 +37,9 @@ pub struct TodoArchive {
     pub file_path: Option<String>,
 }
 
-/// Everything the six migrated localStorage keys held.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TodosData {
-    /// The day the list is for (`focusd-island-current-date`).
     pub date: String,
     pub todos: Vec<TodoItem>,
     pub scheduled: Vec<ScheduledTodo>,
@@ -61,24 +48,19 @@ pub struct TodosData {
     pub active_todo_id: Option<String>,
 }
 
-/// Where the data came from, written once by the localStorage migration.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Migration {
     pub version: u32,
     pub from_app_version: String,
-    /// Milliseconds since 1970.
     pub at: u64,
-    /// SHA-256 (hex) of the localStorage text the data was read from.
     pub source_hash: String,
 }
 
-/// The whole `todos.json`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TodosFile {
     pub version: u32,
-    /// Goes up by one with every saved change.
     pub revision: u64,
     #[serde(default)]
     pub migration: Option<Migration>,
@@ -86,8 +68,6 @@ pub struct TodosFile {
     pub data: TodosData,
 }
 
-/// Checks what normalize.ts guarantees; anything else means a bug or a
-/// damaged file, and is refused rather than saved.
 pub(crate) fn validate(data: &TodosData) -> Result<(), String> {
     for todo in &data.todos {
         check_item(&todo.id, &todo.title)?;
@@ -122,7 +102,6 @@ fn check_item(id: &str, title: &str) -> Result<(), String> {
     Ok(())
 }
 
-/// A real calendar day written as YYYY-MM-DD.
 pub(crate) fn is_date(value: &str) -> bool {
     let bytes = value.as_bytes();
     if bytes.len() != 10 || bytes[4] != b'-' || bytes[7] != b'-' {

@@ -1,11 +1,3 @@
-//! revoked.json: plugin versions taken off the market. The list is signed like
-//! the index (signature.rs), read with every index refresh (updates.rs) and kept
-//! in plugins.json, so it still applies when the island starts offline.
-//! A revoked plugin is stopped and switched off and cannot be switched on again
-//! (`action: "uninstall"` also deletes its folder, keeping plugins-data/). This
-//! covers plugins put into the plugins folder by hand; development plugins
-//! (dev.rs) are exempt.
-
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::fs;
@@ -26,7 +18,6 @@ pub(super) enum RevokeAction {
     Uninstall,
 }
 
-/// `"*"` (every version) or a list of versions.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub(super) enum RevokedVersions {
@@ -34,7 +25,6 @@ pub(super) enum RevokedVersions {
     Some(Vec<String>),
 }
 
-/// One entry of revoked.json; also kept in plugins.json (`revoked`).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub(super) struct Revocation {
@@ -61,7 +51,6 @@ struct RevokedFile {
     revoked: Vec<Value>,
 }
 
-/// Parses revoked.json; entries that do not check out are left out.
 pub(super) fn parse_revoked(text: &str) -> Result<Vec<Revocation>, String> {
     let file: RevokedFile = serde_json::from_str(text).map_err(|error| format!("The revocation list is not valid: {error}"))?;
     if file.version != REVOKED_VERSION {
@@ -75,15 +64,10 @@ pub(super) fn parse_revoked(text: &str) -> Result<Vec<Revocation>, String> {
         .collect())
 }
 
-/// The entry that revokes this version of the plugin, if one does.
 pub(super) fn find<'a>(list: &'a [Revocation], id: &str, version: &str) -> Option<&'a Revocation> {
     list.iter().find(|item| item.covers(id, version))
 }
 
-/// The fetched list plus every entry seen before. Revocations are never taken
-/// back by a download: a stale CDN copy, an older (validly signed) list or a
-/// missing revoked.json must not let a revoked version run again. A wrongly
-/// revoked plugin comes back with a new version instead.
 pub(super) fn merge(saved: &[Revocation], fetched: Vec<Revocation>) -> Vec<Revocation> {
     let mut list = fetched;
     for item in saved {
@@ -94,8 +78,6 @@ pub(super) fn merge(saved: &[Revocation], fetched: Vec<Revocation>) -> Vec<Revoc
     list
 }
 
-/// Adds `fetched` to the current revocations (see `merge`): matching plugins
-/// are switched off, those marked "uninstall" deleted, and running ones stopped.
 pub(super) fn apply(fetched: Vec<Revocation>) -> Result<(), String> {
     let host = host()?;
     let list = merge(&lock(&host.state).revoked, fetched);

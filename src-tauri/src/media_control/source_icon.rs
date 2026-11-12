@@ -1,12 +1,7 @@
-//! The icon of the app playing media, for a plugin notification that asks for it
-//! (`island.notify` with `icon: "media"`).
-
 use super::service;
 use crate::agent_status::host_icon;
 use crate::win32;
 
-/// Executable names a media session's app id may stand for: a desktop app reports its exe name,
-/// sometimes without ".exe"; a packaged app ("Publisher.App_hash!App") has no exe to read.
 pub(super) fn executable_names(source_app: &str) -> Vec<String> {
     let name = source_app.rsplit(['\\', '/']).next().unwrap_or_default().trim();
     if name.is_empty() || name.contains('!') {
@@ -19,7 +14,6 @@ pub(super) fn executable_names(source_app: &str) -> Vec<String> {
     }
 }
 
-/// The playing app's icon as a PNG data URL, or `None` when nothing plays or its icon cannot be read.
 pub(crate) fn current_source_icon() -> Option<String> {
     let source_app = service::get_state(None).ok()?.source_app?;
     let names = executable_names(&source_app);

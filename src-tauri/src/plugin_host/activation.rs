@@ -1,8 +1,3 @@
-//! `activationEvents` (API version 2): when the host starts a plugin's process.
-//! Like VS Code since 1.74, commands and views imply `onCommand:<id>` and
-//! `onView:<id>`. A manifest without the field runs from start-up, as before;
-//! so do all version 1 plugins.
-
 use serde_json::Value;
 
 use super::{events::event_permission, manifest::PluginCommand, view_specs::ViewSpec};
@@ -13,17 +8,12 @@ const MAX_SCHEDULE_MINUTES: u32 = 24 * 60;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) enum ActivationEvent {
-    /// Runs while the island runs (and is not stopped when idle).
     Startup,
-    /// Started 10 s after the island starts.
     StartupFinished,
     Command(String),
     View(String),
-    /// One of the events plugins subscribe to, e.g. `todos.changed`.
     Event(&'static str),
-    /// Woken every N minutes.
     Schedule(u32),
-    /// A `focusd://plugin/<id>/...` link was opened (uri.rs).
     Uri,
 }
 
@@ -49,7 +39,6 @@ impl ActivationEvent {
         }
     }
 
-    /// As written in the manifest; also told to the plugin in `initialize.activationEvent`.
     pub(super) fn label(&self) -> String {
         match self {
             Self::Startup => "onStartup".into(),
@@ -63,8 +52,6 @@ impl ActivationEvent {
     }
 }
 
-/// When a plugin runs. Eager plugins run from start-up; the others start on one
-/// of `events` and stop again when idle.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Activation {
     pub events: Vec<ActivationEvent>,
@@ -85,7 +72,6 @@ impl Activation {
         self.events.iter().any(|event| matches!(event, ActivationEvent::Event(known) if *known == name))
     }
 
-    /// Whether the plugin handles `focusd://plugin/<id>/...` links.
     pub(super) fn on_uri(&self) -> bool {
         self.events.contains(&ActivationEvent::Uri)
     }
@@ -94,7 +80,6 @@ impl Activation {
         self.events.contains(&ActivationEvent::StartupFinished)
     }
 
-    /// The shortest `onSchedule` interval, if any.
     pub(super) fn schedule_minutes(&self) -> Option<u32> {
         self.events
             .iter()
@@ -106,8 +91,6 @@ impl Activation {
     }
 }
 
-/// Reads `activationEvents` as written and adds what the contributions imply.
-/// `permissions` is what the manifest asks for: an `onEvent` needs the event's permission.
 pub(super) fn read(
     raw: &Value,
     api_version: u32,

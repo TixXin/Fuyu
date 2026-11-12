@@ -1,12 +1,7 @@
-//! Media for plugins: `media.nowPlaying` and `media.cover` (sensitive
-//! `media:read`), and play / pause / next / previous, seek, shuffle, repeat
-//! and the system volume (`media:control`).
-
 use serde_json::{json, Value};
 
 use super::service::{self, MediaCommand, MediaState};
 
-/// A larger cover is not handed to plugins (one JSON-RPC line each).
 const MAX_COVER_BYTES: usize = 1024 * 1024;
 
 fn now_playing_value(state: &MediaState) -> Value {
@@ -22,26 +17,20 @@ fn now_playing_value(state: &MediaState) -> Value {
         "canSeek": state.can_seek,
         "canNext": state.can_next,
         "canPrevious": state.can_previous,
-        // null when the player does not say (or cannot shuffle).
         "shuffle": if state.can_shuffle { json!(state.shuffle_active) } else { Value::Null },
-        // "none", "track", "list" or "unknown".
         "repeat": state.repeat_mode,
-        // The system volume, 0-1; null when Windows cannot say.
         "volume": (state.volume >= 0.0).then_some(state.volume),
     })
 }
 
-/// What `media.changed` compares: a change of track, player or play state, not the position.
 pub(crate) fn now_playing_key(value: &Value) -> Value {
     json!([value["status"], value["title"], value["artist"], value["album"], value["sourceApp"]])
 }
 
-/// `media.nowPlaying`. Errors carry an HTTP-style status.
 pub(crate) fn plugin_now_playing() -> Result<Value, (u16, String)> {
     service::get_state(None).map(|state| now_playing_value(&state)).map_err(|error| (500, error))
 }
 
-/// `media.cover`: the cover of what plays, as a data: URL, or null.
 pub(crate) fn plugin_cover() -> Result<Value, (u16, String)> {
     let state = service::get_state(None).map_err(|error| (500, error))?;
     Ok(json!({ "cover": cover_for_plugins(state.thumbnail) }))
@@ -51,7 +40,6 @@ pub(crate) fn cover_for_plugins(cover: Option<String>) -> Option<String> {
     cover.filter(|cover| cover.len() <= MAX_COVER_BYTES)
 }
 
-/// The media:control methods; answers like `media.nowPlaying`.
 pub(crate) fn plugin_media_command(method: &str, params: &Value) -> Result<Value, (u16, String)> {
     let state = match method {
         "media.seek" => {

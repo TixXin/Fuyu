@@ -1,14 +1,7 @@
-//! Replacing a file in the app data folder whole: write beside it, then rename over it, so a crash
-//! never leaves half a file. A file another program has open for a moment (a scanner, an island
-//! that is still exiting) refuses the write or the rename with "Access is denied"; those are tried
-//! again a few times before giving up.
-
 use std::{fs, io, path::Path, thread, time::Duration};
 
-/// Waits before each further try; about a third of a second in all.
 const RETRY_WAITS: [Duration; 3] = [Duration::from_millis(50), Duration::from_millis(100), Duration::from_millis(150)];
 
-/// Writes `content` to `path`, replacing what was there.
 pub(crate) fn replace_file(path: &Path, content: &[u8]) -> io::Result<()> {
     let mut temporary = path.as_os_str().to_owned();
     temporary.push(".tmp");
@@ -32,7 +25,6 @@ fn retrying(mut step: impl FnMut() -> io::Result<()>) -> io::Result<()> {
     }
 }
 
-/// "Access is denied" (5) or a sharing violation (32): another program has the file open.
 fn held_by_another_program(error: &io::Error) -> bool {
     const ERROR_SHARING_VIOLATION: i32 = 32;
     error.kind() == io::ErrorKind::PermissionDenied || error.raw_os_error() == Some(ERROR_SHARING_VIOLATION)
@@ -61,7 +53,6 @@ mod tests {
         fs::create_dir_all(&dir).unwrap();
         let path = dir.join("history.json");
         fs::write(&path, b"old").unwrap();
-        // Open with no sharing, as a scanner might: a rename over it is refused until it closes.
         let held = fs::OpenOptions::new().read(true).share_mode(0).open(&path).unwrap();
         let release = thread::spawn(move || {
             thread::sleep(Duration::from_millis(80));

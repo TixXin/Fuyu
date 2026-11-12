@@ -1,7 +1,3 @@
-//! Declarative plugin UI: settings a plugin declares in `contributes.settings`
-//! (the island draws and stores them) and info items it shows with `ui.setInfo`
-//! (address, token, last sync...). Plugins never ship UI code of their own.
-
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 
@@ -27,7 +23,6 @@ pub struct SettingOption {
     title: LocalizedText,
 }
 
-/// One declared setting. Mirrored by `PluginSettingSpec` in src/features/plugins/api.ts.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SettingSpec {
@@ -57,7 +52,6 @@ fn is_valid_key(key: &str) -> bool {
     (1..=32).contains(&key.len()) && key.bytes().all(|byte| byte.is_ascii_alphanumeric() || byte == b'-' || byte == b'_')
 }
 
-/// Checks the declared settings when the manifest is read.
 pub(super) fn validate_specs(specs: &[SettingSpec]) -> Result<(), String> {
     if specs.len() > MAX_SETTINGS {
         return Err(format!("A plugin can declare at most {MAX_SETTINGS} settings."));
@@ -79,7 +73,6 @@ pub(super) fn validate_specs(specs: &[SettingSpec]) -> Result<(), String> {
     Ok(())
 }
 
-/// Checks a value against its setting; returns the value to store.
 pub(super) fn coerce(spec: &SettingSpec, value: &Value) -> Result<Value, String> {
     match spec.kind {
         SettingKind::Boolean => value.as_bool().map(Value::Bool).ok_or_else(|| "must be true or false".into()),
@@ -114,8 +107,6 @@ fn fallback(spec: &SettingSpec) -> Value {
     }
 }
 
-/// Every declared setting with its value: the stored one if still valid,
-/// else the default. Stored values for settings that are gone are dropped.
 pub(super) fn resolve(specs: &[SettingSpec], stored: &Map<String, Value>) -> Map<String, Value> {
     specs
         .iter()
@@ -130,16 +121,12 @@ pub(super) fn resolve(specs: &[SettingSpec], stored: &Map<String, Value>) -> Map
         .collect()
 }
 
-/// One line of information a running plugin shows on its settings page.
-/// Mirrored by `PluginInfoItem` in src/features/plugins/api.ts.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct InfoItem {
     label: LocalizedText,
     value: String,
-    /// Offer a Copy button.
     #[serde(default)]
     copy: bool,
-    /// Hidden until the user asks to see it (tokens, passwords).
     #[serde(default)]
     secret: bool,
 }
@@ -150,7 +137,6 @@ impl InfoItem {
     }
 }
 
-/// `ui.setInfo` params: `{ items: [...] }`; an empty list clears the info.
 pub(super) fn parse_info(params: &Value) -> Result<Vec<InfoItem>, String> {
     let items = params.get("items").cloned().unwrap_or(Value::Array(Vec::new()));
     let items: Vec<InfoItem> =

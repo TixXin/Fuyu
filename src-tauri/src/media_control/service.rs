@@ -1,5 +1,3 @@
-//! Media state and commands, each run on a COM-initialized media thread.
-
 use serde::Serialize;
 use std::{thread, time::Duration};
 use windows::Win32::UI::Input::KeyboardAndMouse::{
@@ -28,7 +26,6 @@ pub(crate) struct MediaState {
     pub(super) artist: Option<String>,
     pub(super) album: Option<String>,
     pub(super) thumbnail: Option<String>,
-    /// A song id a player plugin gives (`NCM-<id>`, `QQ-<id>`); the lyrics use it to skip a search.
     pub(super) track_id: Option<String>,
     pub(super) position_ms: i64,
     pub(super) duration_ms: i64,
@@ -83,9 +80,6 @@ pub(crate) fn run_command(
     target: Option<String>,
 ) -> Result<MediaState, String> {
     on_media_thread(move || {
-        // When a source is explicitly selected, operate only on it: never fall
-        // back to another session or to global media keys, which could control
-        // an unexpected player.
         if let Some(id) = target.as_deref() {
             let manager = request_manager()?;
             let session = session_by_id(&manager, id)?
@@ -97,8 +91,6 @@ pub(crate) fn run_command(
             return Err("The selected media source did not accept the command.".to_string());
         }
 
-        // No source specified: control the active session, then fall back to
-        // global media keys.
         if let Ok(manager) = request_manager() {
             if let Ok(Some(session)) = target_session(&manager) {
                 if run_session_command(&session, command).unwrap_or(false) {

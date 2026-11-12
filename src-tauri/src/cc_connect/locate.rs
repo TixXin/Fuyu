@@ -1,10 +1,3 @@
-//! Where the cc-connect program is, the first found wins: the path set on the plugin page, the
-//! running one, the first on PATH (`npm i -g cc-connect` puts a `cc-connect.cmd` there), the one
-//! the island downloaded (`<app data>/cc-connect/<version>/`, install.rs), then a `cc-connect`
-//! folder where installers put programs (Program Files and Program Files (x86) on C: and D:, and
-//! `%LOCALAPPDATA%\Programs`): the exe in it, or in a version folder under it. No search of the
-//! disks: that takes an index kept in memory (as Everything keeps), far too much for one file.
-
 use crate::user_error::UserError;
 use std::{
     env,
@@ -14,15 +7,9 @@ use std::{
 };
 
 pub(super) const EXE_NAME: &str = "cc-connect.exe";
-/// The folder cc-connect is looked for in under each place programs go, the island's data folder too.
 pub(super) const FOLDER: &str = "cc-connect";
-/// Tried in each PATH folder in this order.
 const PATH_NAMES: [&str; 2] = [EXE_NAME, "cc-connect.cmd"];
 
-/// The program and how it was found ("setting", "running", "path", "downloaded" or "installed");
-/// None when it is nowhere. `app_dir`: the island's data folder. A path set on the plugin page
-/// that is not a file is an error rather than a reason to look elsewhere, so a wrong setting is
-/// seen instead of quietly passed over.
 pub(super) fn find(setting: Option<&str>, app_dir: Option<&Path>) -> Result<Option<(PathBuf, &'static str)>, UserError> {
     if let Some(path) = setting.map(str::trim).filter(|path| !path.is_empty()) {
         let path = PathBuf::from(path.trim_matches('"'));
@@ -44,14 +31,12 @@ pub(super) fn find(setting: Option<&str>, app_dir: Option<&Path>) -> Result<Opti
     Ok(install_roots().iter().find_map(|root| in_folder(&root.join(FOLDER))).map(|path| (path, "installed")))
 }
 
-/// The first of PATH_NAMES in the folders of `paths`, as `is_file` says.
 fn on_path(paths: &OsStr, is_file: impl Fn(&Path) -> bool) -> Option<PathBuf> {
     env::split_paths(paths)
         .flat_map(|dir| PATH_NAMES.map(|name| dir.join(name)))
         .find(|path| is_file(path))
 }
 
-/// Where installers put programs: Program Files, 64- and 32-bit, on C: and D:, and the per-user one.
 fn install_roots() -> Vec<PathBuf> {
     let mut roots: Vec<PathBuf> = ["C:", "D:"]
         .iter()
@@ -61,7 +46,6 @@ fn install_roots() -> Vec<PathBuf> {
     roots
 }
 
-/// `folder/cc-connect.exe`, else the newest `folder/<version>/cc-connect.exe`.
 fn in_folder(folder: &Path) -> Option<PathBuf> {
     let direct = folder.join(EXE_NAME);
     if direct.is_file() {

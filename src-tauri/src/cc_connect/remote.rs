@@ -1,10 +1,3 @@
-//! cc-connect on an SSH computer (one of AI Agent → Remote computers), so that computer's sessions
-//! are pushed by its own bots, which can take them over there. Each call is one ssh running a short
-//! `sh` script: the status finds the program and hands back its session files and, of its config,
-//! only the section headers and `name` / `type` lines (base64, one per line) to be read like this
-//! computer's; a send pipes the text into `cc-connect send`. Nothing is installed there and no
-//! token leaves it.
-
 use base64::{engine::general_purpose::STANDARD, Engine};
 use serde::Serialize;
 
@@ -12,20 +5,16 @@ use super::{chats, check_message, join_error};
 use crate::agent_status::{remote_fetch::run_ssh, remote_hosts};
 use crate::user_error::UserError;
 
-/// Larger session files are left out of the status: cc-connect's stay well under this.
 const MAX_FILE_BYTES: u32 = 4 * 1024 * 1024;
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RemoteStatus {
-    /// The program there; None when it is nowhere to be found.
     exe: Option<String>,
-    /// Some cc-connect of this user runs there; `send` only works then.
     running: bool,
     projects: Vec<chats::Project>,
 }
 
-/// cc-connect on `host`. `path`: the program there; None finds it.
 #[tauri::command]
 pub async fn get_cc_connect_remote_status(host: String, path: Option<String>) -> Result<RemoteStatus, UserError> {
     let target = target(&host, path.as_deref())?;
@@ -37,7 +26,6 @@ pub async fn get_cc_connect_remote_status(host: String, path: Option<String>) ->
     .map_err(join_error)?
 }
 
-/// Sends `text` to one chat of `project` through the cc-connect on `host`.
 #[tauri::command]
 pub async fn send_cc_connect_remote_message(host: String, path: Option<String>, project: String, session_key: String, text: String) -> Result<(), UserError> {
     let text = check_message(&project, &session_key, &text)?;
@@ -68,18 +56,14 @@ fn ssh_error(host: &str, error: String) -> UserError {
     UserError::new("ccConnect.remoteFailed", format!("cc-connect on {host} could not be reached.")).arg("host", host).detail(error)
 }
 
-/// A word for `sh`: single-quoted, with each `'` closed, escaped and reopened.
 fn sh_quote(value: &str) -> String {
     format!("'{}'", value.replace('\'', r"'\''"))
 }
 
 const NOT_FOUND: &str = "NOTFOUND";
 
-/// Sets `exe` to the program: `path` when given, else the one running for this user, else the one
-/// a login shell finds (the PATH the user's profile adds); empty when none can be run.
 fn find_script(path: Option<&str>) -> String {
     let mut script = format!("exe={}\n", sh_quote(path.unwrap_or_default().trim()));
-    // A quoted `~` is not expanded, so a path typed as `~/…` is made the home folder's here.
     script.push_str(
         r#"case $exe in "~/"*) exe="$HOME/${exe#??}" ;; esac
 if [ -z "$exe" ]; then
@@ -113,7 +97,6 @@ exit 0
 fn send_script(path: Option<&str>, project: &str, session_key: &str, text: &str) -> String {
     let mut script = find_script(path);
     script.push_str(&format!("[ -n \"$exe\" ] || {{ echo {NOT_FOUND}; exit 0; }}\n"));
-    // `timeout` keeps a stuck cc-connect from holding the ssh; where there is none, it runs without.
     script.push_str("set --\ncommand -v timeout >/dev/null 2>&1 && set -- timeout 20\n");
     script.push_str(&format!(
         "printf '%s' {} | base64 -d | \"$@\" \"$exe\" send -p {} -s {} --stdin\n",

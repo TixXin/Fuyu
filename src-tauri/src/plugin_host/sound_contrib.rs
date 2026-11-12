@@ -1,8 +1,3 @@
-//! Sound packs from the plugin market (roadmap B6.1.11): a plugin with `runtime: none` whose
-//! manifest lists sound files under `contributes.sounds`. Nothing runs; the Sounds page lists
-//! the pack while the plugin is installed and switched on (agent_status/sound_packs.rs), so
-//! switching it off or uninstalling it takes the pack away with no files left behind.
-
 use std::{
     collections::BTreeMap,
     path::{Component, Path, PathBuf},
@@ -15,23 +10,17 @@ use crate::agent_status::sound_packs::{sound_extension, SOUND_EVENTS};
 
 const MAX_LICENSE_CHARS: usize = 120;
 
-/// `contributes.sounds`: the pack's licence and, per agent event, a file in the plugin folder.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(super) struct SoundContribution {
-    /// SPDX id or a short name such as "CC0-1.0"; the market only lists packs that may be shared.
     pub license: String,
-    /// Event (`complete`, `approval`, ...) to a path relative to the plugin folder.
     pub files: BTreeMap<String, String>,
 }
 
-/// A relative path that stays inside the plugin folder.
 fn is_inner_path(path: &str) -> bool {
     let path = Path::new(path);
     !path.as_os_str().is_empty() && path.components().all(|part| matches!(part, Component::Normal(_)))
 }
 
-/// Checks `contributes.sounds`. Events this build does not know are dropped, so a pack made for a
-/// newer island still installs here.
 pub(super) fn check(sounds: &mut Option<SoundContribution>) -> Result<(), String> {
     let Some(contribution) = sounds else { return Ok(()) };
     contribution.license = contribution.license.trim().to_string();
@@ -52,7 +41,6 @@ pub(super) fn check(sounds: &mut Option<SoundContribution>) -> Result<(), String
     Ok(())
 }
 
-/// A sound pack an installed plugin brings.
 pub(crate) struct PluginSoundPack {
     pub id: String,
     pub dir: PathBuf,
@@ -63,7 +51,6 @@ pub(crate) struct PluginSoundPack {
     pub files: BTreeMap<String, String>,
 }
 
-/// Sound packs of plugins that are installed, switched on and not revoked.
 pub(crate) fn plugin_sound_packs() -> Vec<PluginSoundPack> {
     let Ok(host) = host() else { return Vec::new() };
     let state = lock(&host.state);

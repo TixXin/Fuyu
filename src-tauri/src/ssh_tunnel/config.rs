@@ -1,7 +1,3 @@
-//! Which hosts get a proxy tunnel, and on which port there, kept in `ssh-tunnels.json` in the app
-//! data folder; the local proxy port is a setting of the built-in plugin. A host switched off
-//! keeps its port; one without a port has no entry.
-
 use std::{fs, path::Path};
 
 use serde::{Deserialize, Serialize};
@@ -9,12 +5,9 @@ use serde::{Deserialize, Serialize};
 use crate::agent_status::remote_hosts::is_valid_alias;
 
 pub(super) const FILE_NAME: &str = "ssh-tunnels.json";
-/// More than the SSH list holds (Host aliases plus 16 added computers) would be a broken file.
 const MAX_HOSTS: usize = 32;
-/// Below 1024 only root may listen on a Linux server.
 pub(super) const MIN_REMOTE_PORT: u16 = 1024;
 
-/// One host's tunnel: `-R 127.0.0.1:<remote_port>` there to the local proxy here.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub(super) struct HostTunnel {
@@ -33,7 +26,6 @@ fn is_valid(tunnel: &HostTunnel) -> bool {
     is_valid_alias(&tunnel.host) && tunnel.remote_port >= MIN_REMOTE_PORT
 }
 
-/// The hosts with a port; none when the file is missing or unreadable.
 pub(super) fn read(app_dir: &Path) -> Vec<HostTunnel> {
     let file = fs::read_to_string(app_dir.join(FILE_NAME))
         .ok()
@@ -49,7 +41,6 @@ pub(super) fn read(app_dir: &Path) -> Vec<HostTunnel> {
     hosts
 }
 
-/// Saves `host`'s switch and port; no port removes it, and it cannot then be on.
 pub(super) fn set(app_dir: &Path, host: &str, enabled: bool, remote_port: Option<u16>) -> Result<Vec<HostTunnel>, String> {
     let host = host.trim();
     if !is_valid_alias(host) {

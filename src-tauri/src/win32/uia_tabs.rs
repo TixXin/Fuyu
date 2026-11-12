@@ -1,7 +1,3 @@
-//! Tabs of another app's window through UI Automation: read their titles and select one. Windows
-//! Terminal has no API to switch to a tab by session (microsoft/terminal#19783), but its tab strip
-//! exposes each tab as a TabItem element named after the tab title.
-
 use windows::Win32::{
     Foundation::HWND,
     System::Variant::VARIANT,
@@ -13,21 +9,15 @@ use windows::Win32::{
 
 use super::{com::ComApartment, uia_list};
 
-/// Reads the titles of the tabs in `window` and selects the one `choose` picks from them. False
-/// when the window has no tabs, `choose` picks none, or any call fails or times out.
 pub(crate) fn select_tab(window: HWND, choose: impl FnOnce(&[String]) -> Option<usize>) -> bool {
     if window.is_invalid() {
         return false;
     }
-    // A thread already in a single-threaded apartment can still use UI Automation.
     let _com = ComApartment::multithreaded().ok();
     select(window, choose).unwrap_or(false)
 }
 
 fn select(window: HWND, choose: impl FnOnce(&[String]) -> Option<usize>) -> windows::core::Result<bool> {
-    // SAFETY: COM is initialized on this thread (above) for the whole call; every interface here
-    // is an owned, reference-counted value used only within it, and the HWND is passed by value
-    // (UI Automation fails for windows that do not exist).
     unsafe {
         let automation = uia_list::automation()?;
         let root = automation.ElementFromHandle(window)?;

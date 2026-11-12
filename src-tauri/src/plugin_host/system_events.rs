@@ -1,15 +1,9 @@
-//! System events for plugins: `system.locked` / `system.unlocked`,
-//! `system.suspended` / `system.resumed` and `system.idle` / `system.active`.
-//! They need no permission (a plugin process could ask Windows itself); what
-//! they add is that `onEvent:system.resumed` and the like wake on-demand plugins.
-
 use serde_json::json;
 use std::{thread, time::Duration};
 
 use super::events::publish_known;
 use crate::win32::session_notifications::{self, SessionChange};
 
-/// No keyboard or mouse input for this long is idle.
 pub(super) const IDLE_AFTER: Duration = Duration::from_secs(5 * 60);
 const IDLE_CHECK_EVERY: Duration = Duration::from_secs(5);
 
@@ -23,8 +17,6 @@ fn on_change(change: SessionChange) {
     publish_known(name, json!({}));
 }
 
-/// Idle or back, from the idle time now and whether the user was idle at the
-/// last check: Some(true) when idle starts, Some(false) when input comes back.
 pub(super) fn idle_transition(idle_for: Duration, was_idle: bool) -> Option<bool> {
     let idle = idle_for >= IDLE_AFTER;
     (idle != was_idle).then_some(idle)

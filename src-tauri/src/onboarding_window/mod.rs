@@ -1,7 +1,3 @@
-//! The first-run guide's window (`?window=onboarding`): a transparent overlay over the work area
-//! of the island's screen that lights up the real island and walks through it (overlay.rs).
-//! Built on demand like the settings window and closed when the guide is done.
-
 pub(crate) mod overlay;
 
 use std::{thread, time::Duration};
@@ -9,14 +5,9 @@ use tauri::{AppHandle, Manager, PhysicalPosition, PhysicalSize, WebviewWindow, W
 
 pub const WINDOW_LABEL: &str = "onboarding";
 
-/// Shows a new guide window even if its page never reports in, so it cannot stay invisible.
 const SHOW_FALLBACK_DELAY: Duration = Duration::from_secs(2);
-/// The taskbar's minimize-all animation, which the guide waits out before it appears.
 const DESKTOP_CLEAR_DELAY: Duration = Duration::from_millis(350);
 
-/// Opens the guide, or brings an open one to the front. A new window starts hidden and the page
-/// shows it after its first paint (show_onboarding_window). It covers the work area, not the whole
-/// screen, so it never counts as a full-screen app (which would quiet or tuck the island).
 pub fn open(app: &AppHandle) -> Result<(), String> {
     if let Some(window) = app.get_webview_window(WINDOW_LABEL) {
         return reveal(&window);
@@ -30,8 +21,6 @@ pub fn open(app: &AppHandle) -> Result<(), String> {
         .find(|window| window.label == WINDOW_LABEL)
         .ok_or_else(|| "Onboarding window config was not found.".to_string())?
         .clone();
-    // Clear the screen first, like Win+D, so the island stands alone; the windows come back
-    // when the guide closes. Wait for the taskbar's minimize animation before covering it.
     let cleared = crate::win32::desktop::minimize_all_windows();
     if cleared {
         thread::sleep(DESKTOP_CLEAR_DELAY);
@@ -70,13 +59,11 @@ fn reveal(window: &WebviewWindow) -> Result<(), String> {
     window.set_focus().map_err(|error| error.to_string())
 }
 
-// Async keeps window creation off the IPC thread, which can deadlock on Windows.
 #[tauri::command]
 pub async fn open_onboarding_window(app: AppHandle) -> Result<(), String> {
     open(&app)
 }
 
-/// Called by the guide once it has painted, to show its hidden new window.
 #[tauri::command]
 pub async fn show_onboarding_window(app: AppHandle) -> Result<(), String> {
     let window = app
@@ -85,8 +72,6 @@ pub async fn show_onboarding_window(app: AppHandle) -> Result<(), String> {
     reveal(&window)
 }
 
-/// This module's Tauri commands. `lib.rs` chains every module's list into one
-/// `generate_handler!`, so adding a command only touches this file.
 macro_rules! tauri_commands {
     ($next:ident [$($done:tt)*] $($rest:tt)*) => {
         $next!([$($done)*

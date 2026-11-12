@@ -1,5 +1,3 @@
-//! WinRT user notification listener: reads QQ toasts and repairs the QQ registration.
-
 use base64::{engine::general_purpose::STANDARD, Engine};
 use std::{
     os::windows::process::CommandExt,
@@ -147,7 +145,6 @@ pub(super) fn registration_error(
 }
 
 fn repair_registration(service: &NotificationService, generation: u64) -> Result<(), String> {
-    // Embed the existing guarded repair so installed builds do not depend on the repository.
     let script = format!("& {{\n{REGISTRATION_REPAIR}\n}} -Repair");
     let bytes: Vec<u8> = script.encode_utf16().flat_map(u16::to_le_bytes).collect();
     let system_root = std::env::var_os("SystemRoot").ok_or("无法定位 Windows 通知修复工具。")?;

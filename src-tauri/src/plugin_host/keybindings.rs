@@ -1,10 +1,3 @@
-//! Global shortcuts from running plugins' `contributes.commands[].keybinding`.
-//! A hidden window of its own registers them; a press goes to the island
-//! window as `plugin-keybinding`, which checks the command's `when` clause
-//! (src/features/plugins/when.ts) and runs it. Combinations that cannot be
-//! registered (another app or the island already uses them) are listed per
-//! plugin for its settings card.
-
 use serde_json::json;
 use std::{
     collections::{BTreeMap, HashMap},
@@ -28,12 +21,9 @@ use crate::{
     },
 };
 
-/// Mirrored by `PLUGIN_KEYBINDING_EVENT` in src/features/plugins/api.ts.
 const KEYBINDING_EVENT: &str = "plugin-keybinding";
 const REFRESH_MESSAGE: u32 = WM_APP + 0x61;
 const FIRST_HOTKEY_ID: i32 = 0x5100;
-/// The island's own shortcuts register while the app starts; plugins wait so
-/// they cannot take those first.
 const STARTUP_DELAY: Duration = Duration::from_secs(2);
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -48,12 +38,9 @@ struct Binding {
 
 #[derive(Default)]
 struct State {
-    /// The hidden window, once its thread has started.
     window: Option<isize>,
     wanted: Vec<Binding>,
-    /// Registered as FIRST_HOTKEY_ID + index.
     registered: Vec<Binding>,
-    /// Shortcut labels per plugin id that could not be registered.
     conflicts: HashMap<String, Vec<String>>,
 }
 
@@ -62,12 +49,10 @@ fn state() -> &'static Mutex<State> {
     STATE.get_or_init(Mutex::default)
 }
 
-/// Shortcuts of `plugin_id` that another app or plugin already uses.
 pub(super) fn conflicts(plugin_id: &str) -> Vec<String> {
     lock(state()).conflicts.get(plugin_id).cloned().unwrap_or_default()
 }
 
-/// Starts the shortcut window's thread.
 pub(super) fn start() {
     let _ = thread::Builder::new().name("plugin-hotkeys".into()).spawn(|| {
         thread::sleep(STARTUP_DELAY);
@@ -85,8 +70,6 @@ pub(super) fn start() {
     });
 }
 
-/// The shortcut that applies to a command: the user's own (`""` means off),
-/// else the manifest's keybinding.
 pub(super) fn effective<'a>(manifest: Option<&'a str>, user: Option<&'a str>) -> Option<&'a str> {
     match user {
         Some("") => None,
@@ -95,10 +78,8 @@ pub(super) fn effective<'a>(manifest: Option<&'a str>, user: Option<&'a str>) ->
     }
 }
 
-/// Registers the shortcuts of the plugins running now, replacing the old ones.
 pub(super) fn refresh() {
     let Ok(host) = host() else { return };
-    // Plugins that may run: pressing a shortcut starts an on-demand one.
     let running = lifecycle::runnable_ids();
     let installed = lock(&host.installed);
     let overrides: HashMap<String, BTreeMap<String, String>> =
@@ -132,13 +113,11 @@ pub(super) fn refresh() {
         state.wanted = wanted;
         state.window
     };
-    // Before the window exists, its thread registers `wanted` when it starts.
     if let Some(window) = window {
         let _ = message_window::post_message(HWND(window as *mut _), REFRESH_MESSAGE);
     }
 }
 
-/// Runs on the window's thread, which owns the registrations.
 fn apply(window: HWND) {
     let mut state = lock(state());
     for index in 0..state.registered.len() {

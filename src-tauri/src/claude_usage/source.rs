@@ -1,8 +1,3 @@
-//! Where the usage numbers come from: Claude Code's OAuth usage endpoint, read
-//! with the access token Claude Code saved, through a proxy (never direct).
-//! The credentials file is only read: the token is never refreshed here and the
-//! file is never written, so Claude Code stays the only owner of the login.
-
 use super::{UsageErrorKind, UsageWindow};
 use serde::Deserialize;
 use serde_json::Value;
@@ -14,10 +9,8 @@ use std::{
 const USAGE_URL: &str = "https://api.anthropic.com/api/oauth/usage";
 const OAUTH_BETA: &str = "oauth-2025-04-20";
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(20);
-/// A bad Retry-After must not stop the ring for hours.
 const MAX_RETRY_AFTER: Duration = Duration::from_secs(60 * 60);
 
-/// The two windows the ring shows; either can be missing from an answer.
 #[derive(Debug, Default, PartialEq)]
 pub(super) struct Limits {
     pub five_hour: Option<UsageWindow>,
@@ -28,7 +21,6 @@ pub(super) struct Limits {
 pub(super) struct FetchError {
     pub kind: UsageErrorKind,
     pub message: String,
-    /// From a 429's Retry-After.
     pub retry_after: Option<Duration>,
 }
 
@@ -42,7 +34,6 @@ impl FetchError {
     }
 }
 
-/// Only the fields needed; the refresh token is not even kept in memory.
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct OAuthCredentials {
@@ -56,7 +47,6 @@ struct CredentialsFile {
     claude_ai_oauth: Option<OAuthCredentials>,
 }
 
-/// `%CLAUDE_CONFIG_DIR%\.credentials.json`, else `%USERPROFILE%\.claude\.credentials.json`.
 fn credentials_path() -> Option<PathBuf> {
     let non_empty = |key: &str| std::env::var_os(key).filter(|value| !value.is_empty());
     let dir = non_empty("CLAUDE_CONFIG_DIR")
@@ -82,7 +72,6 @@ pub(super) fn parse_access_token(text: &str, now_ms: u64) -> Result<String, Fetc
         .access_token
         .filter(|token| !token.trim().is_empty())
         .ok_or_else(missing)?;
-    // Claude Code renews the token while it runs; an expired one would only earn a 401.
     if oauth
         .expires_at
         .is_some_and(|expires| expires < now_ms as f64)
@@ -95,9 +84,6 @@ pub(super) fn parse_access_token(text: &str, now_ms: u64) -> Result<String, Fetc
     Ok(token)
 }
 
-/// The proxy to ask through: the setting, else HTTPS_PROXY, else the Windows
-/// proxy (what Clash and similar tools switch on as the "system proxy"); None
-/// when there is none, as the request never goes direct.
 pub(super) fn resolve_proxy(configured: Option<&str>) -> Option<String> {
     let env = ["HTTPS_PROXY", "https_proxy"]
         .iter()
@@ -116,7 +102,6 @@ pub(super) fn pick_proxy(configured: Option<&str>, env: Option<&str>, system: Op
 
 const INTERNET_SETTINGS: &str = r"Software\Microsoft\Windows\CurrentVersion\Internet Settings";
 
-/// The current user's Windows proxy when it is switched on.
 fn windows_proxy() -> Option<String> {
     use windows::Win32::System::Registry::HKEY_CURRENT_USER;
     let enabled = crate::win32::registry::read_u32(HKEY_CURRENT_USER, INTERNET_SETTINGS, "ProxyEnable")?;
@@ -124,8 +109,6 @@ fn windows_proxy() -> Option<String> {
     (enabled != 0).then(|| https_entry(&server)).flatten()
 }
 
-/// The proxy for https from a `ProxyServer` value: `host:port` for every
-/// scheme, or `http=a:1;https=b:2;socks=c:3`, where `https=` wins over `http=`.
 pub(super) fn https_entry(server: &str) -> Option<String> {
     let server = server.trim();
     if !server.contains('=') {
@@ -140,8 +123,6 @@ pub(super) fn https_entry(server: &str) -> Option<String> {
     entry("https").or_else(|| entry("http"))
 }
 
-/// Only http(s) proxies: reqwest's proxy matcher skips other schemes and would
-/// then send the token straight to api.anthropic.com. `host:port` means http.
 pub(super) fn proxy_url(raw: &str) -> Result<reqwest::Url, FetchError> {
     let with_scheme = if raw.contains("://") {
         raw.to_string()
@@ -159,7 +140,6 @@ pub(super) fn proxy_url(raw: &str) -> Result<reqwest::Url, FetchError> {
         })
 }
 
-/// `scheme://host:port`, without any `user:pass@`, for error messages.
 pub(super) fn proxy_label(url: &reqwest::Url) -> String {
     let host = url.host_str().unwrap_or_default();
     match url.port_or_known_default() {
@@ -210,7 +190,6 @@ pub(super) async fn fetch_api(proxy: Option<&str>, now_ms: u64) -> Result<Limits
     let client = reqwest::Client::builder()
         .timeout(REQUEST_TIMEOUT)
         .proxy(proxy_setting)
-        // A redirect could lead the token somewhere else.
         .redirect(reqwest::redirect::Policy::none())
         .user_agent(concat!("Fuyu/", env!("CARGO_PKG_VERSION")))
         .build()
@@ -250,7 +229,6 @@ pub(super) fn status_error(status: u16, retry_after: Option<&str>) -> Option<Fet
             UsageErrorKind::LoginRequired,
             "api.anthropic.com refused the login (HTTP 401).",
         )),
-        // Can be a token without the usage scope, which signing in again may not fix.
         403 => Some(FetchError::new(
             UsageErrorKind::Forbidden,
             "api.anthropic.com refused to show the usage (HTTP 403).",
@@ -269,7 +247,6 @@ pub(super) fn status_error(status: u16, retry_after: Option<&str>) -> Option<Fet
     }
 }
 
-/// shortcut: only the delta-seconds form; an HTTP-date falls back to the backoff, parse it if the API starts sending one.
 pub(super) fn parse_retry_after(value: &str) -> Option<Duration> {
     value
         .trim()
@@ -278,7 +255,6 @@ pub(super) fn parse_retry_after(value: &str) -> Option<Duration> {
         .map(|seconds| Duration::from_secs(seconds).min(MAX_RETRY_AFTER))
 }
 
-/// A window from `{<percent key>: 0–100, resets_at: ISO}`; the first finite key wins.
 fn window(value: Option<&Value>, keys: &[&str]) -> Option<UsageWindow> {
     let value = value?;
     let percent = keys.iter().find_map(|key| {
@@ -293,7 +269,6 @@ fn window(value: Option<&Value>, keys: &[&str]) -> Option<UsageWindow> {
     })
 }
 
-/// An ISO 8601 string as given, or Unix seconds / milliseconds turned into one.
 fn reset_time(value: &Value) -> Option<String> {
     if let Some(text) = value.as_str() {
         return Some(text.to_string());
@@ -309,7 +284,6 @@ fn reset_time(value: &Value) -> Option<String> {
     Some(iso_from_unix_seconds(seconds))
 }
 
-/// `YYYY-MM-DDTHH:MM:SSZ` (civil-from-days, H. Hinnant), to avoid a date crate for one field.
 pub(super) fn iso_from_unix_seconds(seconds: i64) -> String {
     let (days, time) = (seconds.div_euclid(86_400), seconds.rem_euclid(86_400));
     let z = days + 719_468;
@@ -329,8 +303,6 @@ pub(super) fn iso_from_unix_seconds(seconds: i64) -> String {
     )
 }
 
-/// The `oauth/usage` answer. Newer answers list `limits[]` (`session`, `weekly_all`),
-/// which wins over the older `five_hour` / `seven_day` objects.
 pub(super) fn parse_api_usage(body: &str) -> Result<Limits, FetchError> {
     let invalid = |message: &str| FetchError::new(UsageErrorKind::InvalidResponse, message);
     let value: Value =

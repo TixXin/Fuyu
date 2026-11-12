@@ -1,17 +1,11 @@
-//! A larger copy of an image entry for the clipboard window's side pane: the thumbnail kept with
-//! the entry is 128px, too small to tell one screenshot from another.
-
 use std::path::Path;
 
 use base64::{engine::general_purpose, Engine as _};
 
 use super::store::encode_png;
 
-/// Longest side of the preview, in pixels: the side pane is about 300 CSS px wide, twice that for
-/// a high-density screen.
 const PREVIEW_MAX_SIDE: u32 = 720;
 
-/// The image at `path` scaled down to PREVIEW_MAX_SIDE, as a PNG data URL.
 pub(super) fn image_data_url(path: &Path) -> Result<String, String> {
     let image = image::open(path)
         .map_err(|error| format!("Failed to read the clipboard image: {error}"))?

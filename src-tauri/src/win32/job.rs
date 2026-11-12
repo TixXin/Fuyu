@@ -1,7 +1,3 @@
-//! Job objects for plugin processes: a plugin and every process it starts go
-//! into one job that is set to end all of them when its handle closes, so
-//! stopping a plugin (or the island crashing) leaves nothing behind.
-
 use std::{mem::size_of, os::windows::io::AsRawHandle, process::Child};
 use windows::Win32::{
     Foundation::{CloseHandle, HANDLE},
@@ -20,34 +16,23 @@ use windows::Win32::{
 
 use super::process::{image_path, open_for_limited_query, ProcessHandle};
 
-/// Creation flag for a process that should not run until it is in its job; see `resume`.
 pub(crate) const START_SUSPENDED: u32 = CREATE_SUSPENDED.0;
 
-/// Lets a process started with `START_SUSPENDED` run, once it has been put in its job,
-/// so nothing it starts can slip out before the job is in place. Resumes every thread
-/// of the process; an error means none could be resumed.
 pub(crate) fn resume(process_id: u32) -> Result<(), String> {
-    // SAFETY: a thread snapshot takes no pointers; the returned handle is owned by
-    // ProcessHandle, which closes it (CloseHandle closes snapshot handles too).
     let snapshot = unsafe { CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0) }
         .map(ProcessHandle)
         .map_err(|error| format!("Could not list the plugin's threads: {error}"))?;
     let mut entry = THREADENTRY32 { dwSize: size_of::<THREADENTRY32>() as u32, ..Default::default() };
     let mut resumed = 0;
-    // SAFETY: the snapshot handle is live and `entry` is a THREADENTRY32 with dwSize set.
     let mut more = unsafe { Thread32First(snapshot.0, &mut entry) }.is_ok();
     while more {
         if entry.th32OwnerProcessID == process_id {
-            // SAFETY: OpenThread takes no pointers; a returned handle is owned by
-            // ProcessHandle, which closes it.
             if let Ok(thread) = unsafe { OpenThread(THREAD_SUSPEND_RESUME, false, entry.th32ThreadID) }.map(ProcessHandle) {
-                // SAFETY: `thread.0` is a live handle opened with THREAD_SUSPEND_RESUME.
                 if unsafe { ResumeThread(thread.0) } != u32::MAX {
                     resumed += 1;
                 }
             }
         }
-        // SAFETY: as for Thread32First.
         more = unsafe { Thread32Next(snapshot.0, &mut entry) }.is_ok();
     }
     if resumed == 0 {
@@ -56,50 +41,33 @@ pub(crate) fn resume(process_id: u32) -> Result<(), String> {
     Ok(())
 }
 
-/// Most process ids read from a job at once; plugins rarely start more.
 const MAX_LISTED_PROCESSES: usize = 64;
 
-/// A job that ends its processes when dropped.
 pub(crate) struct Job(HANDLE);
 
-// SAFETY: a job handle is a kernel object handle; the calls made on it here
-// are thread-safe, and it is closed exactly once in Drop.
 unsafe impl Send for Job {}
-// SAFETY: as above; the methods take &self and only make thread-safe kernel calls.
 unsafe impl Sync for Job {}
 
-/// What the processes of a job use now.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub(crate) struct JobUsage {
-    /// Private bytes (commit) of every process still in the job.
     pub memory_bytes: u64,
-    /// User plus kernel time of every process that ran in the job, in 100 ns ticks.
     pub cpu_ticks: u64,
-    /// Each process still in the job, in the order the job lists them.
     pub processes: Vec<JobProcess>,
 }
 
-/// One process of a job and its memory.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub(crate) struct JobProcess {
-    /// File name of its executable, e.g. `powershell.exe`; empty if unreadable.
     pub name: String,
-    /// Private bytes (commit charge): memory only this process uses.
     pub private_bytes: u64,
-    /// Working set: memory in RAM now, including pages shared with other processes.
     pub working_set_bytes: u64,
 }
 
 impl Job {
-    /// A new job that ends its processes when its last handle closes.
     pub(crate) fn new() -> Result<Self, String> {
-        // SAFETY: no security attributes and no name; a returned handle is owned by Job.
         let handle = unsafe { CreateJobObjectW(None, None) }.map_err(|error| format!("Could not create a job object: {error}"))?;
         let job = Self(handle);
         let mut limits = JOBOBJECT_EXTENDED_LIMIT_INFORMATION::default();
         limits.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
-        // SAFETY: `job.0` is a live job handle and `limits` is a valid
-        // JOBOBJECT_EXTENDED_LIMIT_INFORMATION whose size is passed with it.
         unsafe {
             SetInformationJobObject(
                 job.0,
@@ -112,19 +80,13 @@ impl Job {
         Ok(job)
     }
 
-    /// Puts `child` (and so every process it starts from now on) into the job.
     pub(crate) fn assign(&self, child: &Child) -> Result<(), String> {
         let process = HANDLE(child.as_raw_handle());
-        // SAFETY: both handles are live: the job is owned by self, and the
-        // process handle is owned by `child`, which outlives this call.
         unsafe { AssignProcessToJobObject(self.0, process) }.map_err(|error| format!("Could not put the plugin in a job object: {error}"))
     }
 
-    /// Memory and CPU time of the job's processes; `None` if the job cannot be read.
     pub(crate) fn usage(&self) -> Option<JobUsage> {
         let mut accounting = JOBOBJECT_BASIC_ACCOUNTING_INFORMATION::default();
-        // SAFETY: `self.0` is a live job handle and `accounting` is a valid
-        // output buffer of the size passed.
         unsafe {
             QueryInformationJobObject(
                 Some(self.0),
@@ -142,15 +104,12 @@ impl Job {
     }
 
     fn process_ids(&self) -> Vec<u32> {
-        // The list header is followed by room for MAX_LISTED_PROCESSES ids.
         #[repr(C)]
         struct IdList {
             header: JOBOBJECT_BASIC_PROCESS_ID_LIST,
             more: [usize; MAX_LISTED_PROCESSES - 1],
         }
         let mut list = IdList { header: JOBOBJECT_BASIC_PROCESS_ID_LIST::default(), more: [0; MAX_LISTED_PROCESSES - 1] };
-        // SAFETY: `self.0` is a live job handle; `list` is a JOBOBJECT_BASIC_PROCESS_ID_LIST
-        // followed by space for more ids, and its full size is passed.
         let read = unsafe {
             QueryInformationJobObject(
                 Some(self.0),
@@ -160,7 +119,6 @@ impl Job {
                 None,
             )
         };
-        // ERROR_MORE_DATA still fills the list as far as it goes.
         if read.is_err() && list.header.NumberOfProcessIdsInList == 0 {
             return Vec::new();
         }
@@ -173,12 +131,9 @@ impl Job {
     }
 }
 
-/// Name and memory of a process, or `None` if it cannot be read.
 fn process_memory(process_id: u32) -> Option<JobProcess> {
     let process = open_for_limited_query(process_id)?;
     let mut counters = PROCESS_MEMORY_COUNTERS::default();
-    // SAFETY: `process.0` is a live handle opened with PROCESS_QUERY_LIMITED_INFORMATION,
-    // which GetProcessMemoryInfo accepts, and `counters` is a valid output of the size passed.
     unsafe { GetProcessMemoryInfo(process.0, &mut counters, size_of::<PROCESS_MEMORY_COUNTERS>() as u32) }.ok()?;
     let name = image_path(process_id)
         .and_then(|path| path.rsplit(['\\', '/']).next().map(str::to_string))
@@ -192,8 +147,6 @@ fn process_memory(process_id: u32) -> Option<JobProcess> {
 
 impl Drop for Job {
     fn drop(&mut self) {
-        // SAFETY: the handle came from CreateJobObjectW, is owned only by this
-        // value and is closed once here; closing it ends the job's processes.
         let _ = unsafe { CloseHandle(self.0) };
     }
 }
@@ -242,7 +195,6 @@ mod tests {
     #[test]
     fn closing_the_job_ends_the_process_tree() {
         let job = Job::new().expect("job");
-        // cmd starts a second, long-running process; both are in the job.
         let mut child = Command::new("cmd")
             .args(["/c", "ping -n 30 127.0.0.1 >nul"])
             .stdout(Stdio::null())
@@ -257,8 +209,6 @@ mod tests {
         assert!(usage.processes.iter().any(|process| process.name.eq_ignore_ascii_case("cmd.exe") && process.working_set_bytes > 0), "{:?}", usage.processes);
         assert_eq!(usage.memory_bytes, usage.processes.iter().map(|process| process.private_bytes).sum::<u64>());
         drop(job);
-        // Ending a process tree is asynchronous; under a parallel test run it can take
-        // well over the half second this used to wait, so poll with a generous deadline.
         let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
         let mut ended = || child_ended(&mut child) && ids.iter().all(|id| !alive(*id));
         while !ended() && std::time::Instant::now() < deadline {
@@ -274,8 +224,6 @@ mod tests {
         child.try_wait().is_ok_and(|status| status.is_some())
     }
 
-    /// Whether a process with exactly this id is running. Matches the PID column, not
-    /// any digits in the output (a memory column like "14,927 K" contains "4927").
     fn alive(process_id: u32) -> bool {
         let output = Command::new("tasklist")
             .args(["/FI", &format!("PID eq {process_id}"), "/FO", "CSV", "/NH"])

@@ -1,8 +1,3 @@
-//! Downloads cc-connect's latest release for this Windows from GitHub into
-//! `<app data>/cc-connect/<tag>/cc-connect.exe`, where `locate` finds it. The zip must match the
-//! SHA-256 in the release's `checksums.txt`, and both must come from the project's own release
-//! downloads. Through the same proxy as the update check.
-
 use crate::user_error::UserError;
 use std::{
     fs::{self, File},
@@ -36,7 +31,6 @@ struct Asset {
     browser_download_url: String,
 }
 
-/// The program, downloaded unless this release is there already.
 pub(super) async fn install(app_dir: PathBuf) -> Result<PathBuf, UserError> {
     let client = client()?;
     let release: Release =
@@ -96,7 +90,6 @@ async fn get(client: &reqwest::Client, url: &str, limit: u64) -> Result<Vec<u8>,
     Ok(bytes.to_vec())
 }
 
-/// `cc-connect-<tag>-windows-<amd64|arm64>.zip`, the release's name for this CPU.
 fn asset_name(tag: &str, arch: &str) -> Result<String, UserError> {
     let arch = match arch {
         "x86_64" => "amd64",
@@ -106,7 +99,6 @@ fn asset_name(tag: &str, arch: &str) -> Result<String, UserError> {
     Ok(format!("cc-connect-{tag}-windows-{arch}.zip"))
 }
 
-/// The lowercase SHA-256 `checksums.txt` gives `name` (`<hash>  <name>` lines, as sha256sum writes).
 fn checksum_for(sums: &str, name: &str) -> Option<String> {
     sums.lines().find_map(|line| {
         let (hash, file) = line.trim().split_once(char::is_whitespace)?;
@@ -115,7 +107,6 @@ fn checksum_for(sums: &str, name: &str) -> Option<String> {
     })
 }
 
-/// Writes the zip's one .exe to `exe` (in `dir`), through a `.part` file so a cut-off write is never found.
 fn unpack(zip: &[u8], dir: &Path, exe: &Path) -> Result<(), UserError> {
     let mut archive = zip::ZipArchive::new(Cursor::new(zip)).map_err(|error| UserError::new("ccConnect.zip", "Could not read the cc-connect zip.").detail(error))?;
     let index = (0..archive.len())
@@ -149,7 +140,6 @@ mod tests {
         let exe = tauri::async_runtime::block_on(install(dir.clone())).unwrap();
         let version = std::process::Command::new(&exe).arg("--version").output().unwrap();
         assert!(String::from_utf8_lossy(&version.stdout).contains("cc-connect"), "{version:?}");
-        // A second time finds it there.
         assert_eq!(tauri::async_runtime::block_on(install(dir.clone())).unwrap(), exe);
         let _ = fs::remove_dir_all(&dir);
     }

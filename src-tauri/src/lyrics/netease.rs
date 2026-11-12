@@ -1,9 +1,3 @@
-//! Lyrics from NetEase Cloud Music (网易云音乐), an unofficial source used only when the user
-//! turns Chinese sources on. The plain web endpoints need only a Referer, no key or login: a
-//! song search, then the lyrics of a song id, which come as LRC with the translation as a second
-//! LRC (`tlyric`). When the player says which NetEase song plays (the InfLink plugin puts
-//! `NCM-<id>` among the genres), the search is skipped.
-
 use serde_json::Value;
 
 use super::found::{browser_client, from_lines, lrc_lines, FoundLyrics};
@@ -13,8 +7,6 @@ const SEARCH: &str = "http://music.163.com/api/search/get/web";
 const LYRIC: &str = "https://music.163.com/api/song/lyric";
 const REFERER: &str = "https://music.163.com/";
 
-/// The id of the search result that is the playing track; the closest length wins, or the first
-/// result when the playing length is not known.
 pub(super) fn best_song(search: &Value, title: &str, artist: &str, duration_ms: i64) -> Option<u64> {
     search["result"]["songs"]
         .as_array()?
@@ -31,7 +23,6 @@ pub(super) fn best_song(search: &Value, title: &str, artist: &str, duration_ms: 
         .map(|(_, (id, _))| id)
 }
 
-/// The song id the player gave (`NCM-<id>`), if any.
 pub(super) fn track_id(player_id: Option<&str>) -> Option<u64> {
     player_id?.strip_prefix("NCM-")?.parse().ok()
 }
@@ -50,7 +41,6 @@ async fn get_json(client: &reqwest::Client, url: &str, query: &[(&str, String)])
     response.json().await.map_err(|error| format!("NetEase sent something unexpected: {error}"))
 }
 
-/// The lyrics of a song id: its LRC with the translation lines matched by time.
 pub(super) fn lyrics_of(answer: &Value, title: &str) -> Option<FoundLyrics> {
     let lines = lrc_lines(answer["lrc"]["lyric"].as_str()?);
     let translated = lrc_lines(answer["tlyric"]["lyric"].as_str().unwrap_or_default());
@@ -62,7 +52,6 @@ pub(super) fn lyrics_of(answer: &Value, title: &str) -> Option<FoundLyrics> {
     from_lines(&lines, has_translation.then_some(translations.as_slice()), title)
 }
 
-/// Synced lyrics, with a translation when NetEase has one. `Ok(None)` when it has none.
 pub(super) async fn fetch(title: &str, artist: &str, duration_ms: i64, player_id: Option<&str>) -> Result<Option<FoundLyrics>, String> {
     let client = browser_client()?;
     let id = match track_id(player_id) {

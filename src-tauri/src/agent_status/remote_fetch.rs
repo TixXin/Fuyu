@@ -1,18 +1,3 @@
-//! Reads another computer's recent Claude Code and Codex session files over SSH (key login only,
-//! `BatchMode`), as excerpts: the first lines (first prompt, starting folder, Codex's session
-//! meta) and the last `TAIL_BYTES` (state, model, latest reply), the same parts the local scan
-//! reads. Files the island already has unchanged are only named, and a file whose head it has
-//! gets only its tail. Claude Code's registry of running sessions (`~/.claude/sessions`) comes
-//! along as the ids whose process is alive, so a session quit there leaves the list here too.
-//!
-//! Each host keeps one SSH connection open (`Connection`): the script is sent once and answers a
-//! request every few seconds, so no fetch pays for a new login. It connects with a config of the
-//! island's own (`island_config`): what `ssh -G` resolves for the host, the user's tunnels left
-//! out, and a reverse forward to the approval endpoint added, so a remote session's approvals
-//! reach the island's cards (remote_setup.rs). `~/.ssh/config` is never changed. The forward's
-//! port there is one sshd picks (`127.0.0.1:0`), so it never collides with someone else's on a
-//! shared server; the script keeps it in `APPROVAL_PORT_FILE` for the hooks while it runs.
-
 use std::{
     collections::HashMap,
     io::{BufRead, BufReader, Write},
@@ -30,25 +15,10 @@ use std::os::windows::process::CommandExt;
 #[cfg(windows)]
 use crate::system::CREATE_NO_WINDOW;
 
-/// Matches session_scan's TAIL_BYTES: the parsers expect at most this much of a file's end.
 pub(super) const TAIL_BYTES: u64 = 256 * 1024;
-/// The first lines sent for a file's head: enough for the first prompt and Codex's meta line.
 const HEAD_LINES: u32 = 40;
 const HEAD_MAX_BYTES: u64 = 1024 * 1024;
 
-/// Runs on the remote shell (`sh -s`) for as long as the connection is open. Once it has been
-/// read whole it prints `FOCUSD_READY`; only then may requests follow (dash reads a script in
-/// blocks and could swallow them). A request is the window in minutes, lines of
-/// `<size> <mtime> <path>` the island has, and `FOCUSD_KNOWN`. The reply prints, per file,
-/// `S <path>` (unchanged) or `F <size> <mtime> <head bytes> <tail bytes> <path>` followed by those
-/// bytes; then, when the registry exists, `R` and `L <session id>` per running session; then `E`.
-/// Its errors go nowhere: over days they would fill the stderr pipe and stall the connection.
-/// A request's first line may add the forward's port there, the endpoint's port here and the
-/// host's approval token: they go into the port file with this node's name, and the file goes
-/// when the script ends (the island closed stdin, or the connection dropped), unless another
-/// connection has written its own since. Everything it writes is the user's alone (`umask 077`):
-/// the port file holds the token, and the hooks read it from there rather than from
-/// `~/.claude/settings.json`, which other users of a shared server may be able to read.
 const SCRIPT: &str = r#"exec 2>/dev/null
 umask 077
 T=__TAIL__
@@ -116,29 +86,21 @@ while read -r W N P K; do
   fetch
 done
 "#;
-/// Ends a request's list of known files.
 const END_OF_KNOWN: &str = "FOCUSD_KNOWN";
 const READY: &[u8] = b"FOCUSD_READY";
-/// Under the remote home, readable only by its owner: `<forward port there> <endpoint port here>
-/// <node name> <approval token>` while a connection with the forward is open.
 pub(super) const APPROVAL_PORT_FILE: &str = ".fuyu/approval-port";
-/// Where hooks from before the rename (D17) read it; written too while that folder exists.
 const LEGACY_APPROVAL_PORT_FILE: &str = ".focusd-island/approval-port";
 
-/// A file as the remote computer last reported it.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct RemoteFile {
     pub(super) size: u64,
-    /// Seconds since 1970.
     pub(super) mtime: i64,
 }
 
-/// One file in a reply: unchanged, or new bytes.
 #[derive(Debug, PartialEq, Eq)]
 pub(super) enum Reply {
     Same(String),
     Changed { path: String, file: RemoteFile, head: Vec<u8>, tail: Vec<u8> },
-    /// The host keeps Claude Code's registry; the `Running` replies after it are all it lists.
     Registry,
     Running(String),
 }
@@ -152,9 +114,6 @@ fn session_script() -> String {
         .replace("__PORT_FILE__", APPROVAL_PORT_FILE)
 }
 
-/// One request: files changed in the last `window_minutes`, minus what `known` has, and the
-/// forward's port there with the endpoint's here and the host's token when there is one. A path
-/// with a line break would end the list early; session files never have one.
 pub(super) fn request(window_minutes: i64, known: &HashMap<String, RemoteFile>, forward: Option<(u16, &Forward)>) -> String {
     let mut request = match forward {
         Some((there, forward)) => format!("{} {there} {} {}\n", window_minutes.max(1), forward.port, forward.token),
@@ -166,13 +125,9 @@ pub(super) fn request(window_minutes: i64, known: &HashMap<String, RemoteFile>, 
     request + END_OF_KNOWN + "\n"
 }
 
-/// What ssh says on stderr while a connection is open; the last lines are kept.
 const STDERR_KEPT_BYTES: usize = 4096;
-/// What ssh prints when the server would not open the reverse forward (the port taken there).
 const FORWARD_FAILED: &str = "remote port forwarding failed";
 
-/// The port sshd picked for the reverse forward: ssh says
-/// `Allocated port 43495 for remote forward to 127.0.0.1:47830`.
 fn allocated_port(said: &str) -> Option<u16> {
     said.lines()
         .rev()
@@ -180,30 +135,21 @@ fn allocated_port(said: &str) -> Option<u16> {
         .find_map(|line| line.split_once("Allocated port ")?.1.split(' ').next()?.parse().ok())
 }
 
-/// The approval endpoint a connection's reverse forward leads to, and the token that host's hooks
-/// carry (agent_approval `remote_hook_token`, hex).
 pub(super) struct Forward {
     pub(super) port: u16,
     pub(super) token: String,
 }
 
-/// A standing connection to one host running the fetch script, one request at a time. Dropping
-/// it ends ssh; should the island itself die, its closed stdin ends the remote loop.
 pub(super) struct Connection {
     child: Child,
     stdin: ChildStdin,
     stdout: BufReader<ChildStdout>,
-    /// Read all along, so a talkative ssh never fills the pipe and stalls.
     stderr: Arc<Mutex<String>>,
-    /// The endpoint port the island config forwards to, and the port sshd picked for it there
-    /// once ssh has said so.
     forward_to: Option<Forward>,
     forward: Option<u16>,
 }
 
 impl Connection {
-    /// Connects with `config` (`island_config`, forwarding to `forward_to`), or with the user's
-    /// own ssh config and every forward cleared when there is none.
     pub(super) fn open(target: &SshTarget, config: Option<&Path>, forward_to: Option<Forward>) -> Result<Self, String> {
         let mut child = ssh_command(target, config).spawn().map_err(|error| format!("Failed to start ssh: {error}"))?;
         let (Some(stdin), Some(stdout), Some(stderr)) = (child.stdin.take(), child.stdout.take(), child.stderr.take()) else {
@@ -229,7 +175,6 @@ impl Connection {
         if connection.stdin.write_all(session_script().as_bytes()).and_then(|()| connection.stdin.flush()).is_err() {
             return Err(connection.failure("Failed to send the script to ssh".into()));
         }
-        // Whatever a login prints first (a chatty startup file) is skipped.
         loop {
             let mut line = Vec::new();
             match connection.stdout.read_until(b'\n', &mut line) {
@@ -251,18 +196,14 @@ impl Connection {
         read_reply(&mut self.stdout).map_err(|error| self.failure(error))
     }
 
-    /// Why approvals cannot come through this connection: the server refused the forward.
     pub(super) fn forward_error(&self) -> Option<String> {
         let said = self.stderr.lock().unwrap_or_else(PoisonError::into_inner);
         said.lines().find(|line| line.contains(FORWARD_FAILED)).map(|line| line.trim().to_string())
     }
 
-    /// Why the connection broke: how ssh ended and the last thing it said, when it has ended or
-    /// ends within two seconds; else `error`, and ssh is stopped.
     fn failure(&mut self, error: String) -> String {
         for _ in 0..20 {
             if let Ok(Some(status)) = self.child.try_wait() {
-                // The drain thread reads the last words soon after ssh ends.
                 std::thread::sleep(Duration::from_millis(100));
                 let said = self.stderr.lock().unwrap_or_else(PoisonError::into_inner).clone();
                 return exit_reason(status.code(), &said);
@@ -289,8 +230,6 @@ fn exit_reason(code: Option<i32>, stderr: &str) -> String {
     }
 }
 
-/// `sh -s` on `target` (a Host from ~/.ssh/config, or a computer added in the island), all pipes
-/// open; with `config`, through the island's own config (`island_config`).
 fn ssh_command(target: &SshTarget, config: Option<&Path>) -> Command {
     let mut command = Command::new("ssh");
     if let Some(config) = config {
@@ -304,7 +243,6 @@ fn ssh_command(target: &SshTarget, config: Option<&Path>) -> Command {
         "-T",
     ]);
     if config.is_none() {
-        // The user's tunnels (RemoteForward and the like) must not be opened again, or fail.
         command.args(["-o", "ClearAllForwardings=yes"]);
     }
     if let (Some(port), None) = (target.port, config) {
@@ -320,8 +258,6 @@ fn ssh_command(target: &SshTarget, config: Option<&Path>) -> Command {
     command
 }
 
-/// What `ssh -G` resolves that the island's config leaves out: the user's tunnels, whatever
-/// would run more than the script, and what would hand the server more than it needs.
 const LEFT_OUT: [&str; 21] = [
     "localforward", "remoteforward", "dynamicforward", "clearallforwardings", "exitonforwardfailure",
     "remotecommand", "requesttty", "sessiontype", "stdinnull", "forkafterauthentication",
@@ -329,13 +265,6 @@ const LEFT_OUT: [&str; 21] = [
     "forwardagent", "forwardx11", "forwardx11trusted", "tunnel", "proxyjump", "loglevel",
 ];
 
-/// The island's ssh config for one host from what `ssh -G` printed for it (`resolved`): every
-/// option but `LEFT_OUT`, a ProxyJump turned into the ProxyCommand it means (under `-F` the jump
-/// would read this file too), and the reverse forward to `forward_port` when given, from a port
-/// sshd picks there (`LogLevel INFO` so ssh says which). A refused forward leaves the connection
-/// up (`ExitOnForwardFailure no`): the sessions still come.
-// shortcut: values are written back as `ssh -G` prints them, so a path with a space in it (a key
-// file under such a folder) breaks; quote such values if one turns up.
 pub(super) fn island_config(resolved: &str, forward_port: Option<u16>) -> String {
     let mut config = String::from("# Written by Fuyu from `ssh -G` each time it connects; changes here are lost.\nHost *\n");
     for line in resolved.lines().map(str::trim).filter(|line| !line.is_empty()) {
@@ -358,8 +287,6 @@ pub(super) fn island_config(resolved: &str, forward_port: Option<u16>) -> String
     config
 }
 
-/// Writes the island's config for `host` to `<app data>/ssh/<host>.conf` and returns its path.
-/// `host` only names the file: the SSH proxy tunnel passes `tunnel-<host>` for a file of its own.
 pub(crate) fn write_island_config(app_dir: &Path, host: &str, target: &SshTarget, forward_port: Option<u16>) -> Result<PathBuf, String> {
     let mut command = Command::new("ssh");
     command.arg("-G");
@@ -380,7 +307,6 @@ pub(crate) fn write_island_config(app_dir: &Path, host: &str, target: &SshTarget
     Ok(path)
 }
 
-/// Runs `script` once on `target` and returns its output.
 pub(crate) fn run_ssh(target: &SshTarget, script: &str) -> Result<Vec<u8>, String> {
     let mut child = ssh_command(target, None).spawn().map_err(|error| format!("Failed to start ssh: {error}"))?;
     if let Some(mut stdin) = child.stdin.take() {
@@ -395,7 +321,6 @@ pub(crate) fn run_ssh(target: &SshTarget, script: &str) -> Result<Vec<u8>, Strin
     Ok(output.stdout)
 }
 
-/// Reads one reply, up to its closing `E`; an error when it stops before.
 pub(super) fn read_reply(reader: &mut impl BufRead) -> Result<Vec<Reply>, String> {
     let mut replies = Vec::new();
     loop {
@@ -425,7 +350,6 @@ pub(super) fn read_reply(reader: &mut impl BufRead) -> Result<Vec<Reply>, String
         let mut number = || parts.next().and_then(|part| part.parse::<u64>().ok()).ok_or("Malformed file line");
         let (size, mtime, head_len, tail_len) = (number()?, number()?, number()?, number()?);
         let path = parts.next().filter(|path| !path.is_empty()).ok_or("File line without a path")?;
-        // The script never sends more; the check keeps a bad reply from asking for any memory.
         if head_len > HEAD_MAX_BYTES || tail_len > TAIL_BYTES {
             return Err("File excerpt too large".into());
         }
@@ -471,13 +395,11 @@ mod tests {
         assert!(read_reply(&mut &b"F 10 1 0 10 a\nshort"[..]).is_err());
         assert!(read_reply(&mut &b"X\nE\n"[..]).is_err());
         assert!(read_reply(&mut &b"F 1 1 0 99999999999 a\nE\n"[..]).is_err());
-        // Replies in a row on one connection: each read stops at its own end.
         let mut stream = &b"S a\nE\nS b\nE\n"[..];
         assert_eq!(read_reply(&mut stream).unwrap(), [Reply::Same("a".into())]);
         assert_eq!(read_reply(&mut stream).unwrap(), [Reply::Same("b".into())]);
     }
 
-    /// Against a real host: `FOCUSD_SSH_TEST_HOST=zcm6 cargo test --lib standing -- --ignored`.
     #[test]
     #[ignore]
     fn a_standing_connection_answers_request_after_request() {
@@ -485,7 +407,6 @@ mod tests {
         let target = SshTarget { destination: host, port: None };
         let started = std::time::Instant::now();
         let app_dir = std::env::temp_dir().join(format!("focusd-ssh-config-{}", std::process::id()));
-        // Forwarding a port nothing listens on here: Claude Code there would get "refused".
         let config = write_island_config(&app_dir, "test", &target, Some(47_839)).unwrap();
         let forward = Forward { port: 47_839, token: "ab12".into() };
         let mut connection = Connection::open(&target, Some(&config), Some(forward)).unwrap();

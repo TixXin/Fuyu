@@ -1,15 +1,3 @@
-//! Plugin pages with the plugin's own HTML: the `webview` view template (P8).
-//!
-//! The page is not a Tauri webview (see win32/webview_page.rs), so it has no
-//! way to call island commands. It is served from a made-up origin,
-//! `https://<plugin id>.plugin.focusd.invalid`, whose files come only from the
-//! folder of the view's `entry`; every other request and every navigation
-//! away is refused, and each file is sent with a fixed Content-Security-Policy.
-//! The page talks only to its own plugin process: `acquireFuyuApi()` gives it
-//! `postMessage` / `onMessage` and a small `getState` / `setState` store the
-//! island keeps while it runs. The page is created when it comes on screen and
-//! closed when it leaves (the island window reports where it is).
-
 use serde::Deserialize;
 use serde_json::{json, Value};
 use std::{
@@ -38,22 +26,16 @@ const HOST_SUFFIX: &str = ".plugin.focusd.invalid";
 const MAX_MESSAGE_BYTES: usize = 256 * 1024;
 const MAX_STATE_BYTES: usize = 64 * 1024;
 const MAX_FILE_BYTES: u64 = 20 * 1024 * 1024;
-/// Sent with every file. Pages can add rules with <meta>, never remove these.
-/// connect-src 'self' lets a page fetch its own files; nothing else is reachable.
 pub(super) const CSP: &str = "default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; \
 img-src 'self' data: blob:; font-src 'self' data:; media-src 'self' data: blob:; connect-src 'self'; frame-src 'self'; \
 worker-src 'none'; manifest-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'";
 
-/// A plugin and one of its views.
 type Key = (String, String);
 
-/// The origin a plugin's pages are served from.
 pub(super) fn origin(plugin_id: &str) -> String {
     format!("https://{plugin_id}{HOST_SUFFIX}")
 }
 
-/// The file `url` names under `root`, if it is the plugin's origin, a plain
-/// relative path without "..", and an existing file inside `root`.
 pub(super) fn resource_path(root: &Path, origin: &str, url: &str) -> Option<PathBuf> {
     let path = url.strip_prefix(origin)?.strip_prefix('/')?;
     let path = path.split(['?', '#']).next().unwrap_or_default();
@@ -68,7 +50,6 @@ pub(super) fn resource_path(root: &Path, origin: &str, url: &str) -> Option<Path
         }
         file.push(part);
     }
-    // Links inside the folder could still point outside it.
     let real_root = fs::canonicalize(root).ok()?;
     let real_file = fs::canonicalize(&file).ok()?;
     (real_file.starts_with(&real_root) && real_file.is_file()).then_some(real_file)
@@ -115,14 +96,11 @@ pub(super) fn content_type(path: &Path) -> &'static str {
     }
 }
 
-/// The top document may only stay on the plugin's origin; frames may also be
-/// about:blank / about:srcdoc, which inherit the page's policy.
 pub(super) fn may_navigate(origin: &str, url: &str, frame: bool) -> bool {
     let own = url.strip_prefix(origin).is_some_and(|rest| rest.starts_with('/'));
     own || (frame && (url == "about:blank" || url == "about:srcdoc"))
 }
 
-/// What a page posts through `acquireFuyuApi()`.
 #[derive(Debug, PartialEq)]
 pub(super) enum PageMessage {
     Message(Value),
@@ -151,10 +129,6 @@ pub(super) fn parse_page_message(json: &str) -> Result<PageMessage, String> {
     }
 }
 
-/// The page's colors. A page in the island's card is on a dark surface; a page without the card
-/// (frame "none", E15) is on the island itself, so its text takes the island's ink: dark on a
-/// light island. `ink` is "r, g, b" (--island-ink-rgb); anything else counts as no ink.
-/// Every `--fuyu-*` variable is also set as `--focusd-*`, its name before the rename (D17).
 fn theme_css(ink: Option<&str>) -> String {
     const FONT: &str = r#"--fuyu-radius:8px;--fuyu-font:"Segoe UI Variable Text","Segoe UI","Microsoft YaHei UI",sans-serif"#;
     const ACCENTS: &str = "--fuyu-accent:#74d6ff;--fuyu-success:#2f8c61;--fuyu-warning:#ffd166;--fuyu-danger:#c75065";
@@ -177,9 +151,6 @@ fn theme_css(ink: Option<&str>) -> String {
     format!(":root{{color-scheme:{scheme};{variables};{legacy}}}")
 }
 
-/// Runs first in every document and frame of the page: the island's colors,
-/// no WebRTC (it reaches the network around CSP), and `acquireFuyuApi()`
-/// (also under its name before the rename, `acquireFocusdApi()`).
 pub(super) fn init_script(state: &Value, locale: &str, ink: Option<&str>) -> String {
     let locale = if locale == "zh-CN" { "zh-CN" } else { "en" };
     INIT_SCRIPT
@@ -226,32 +197,25 @@ const INIT_SCRIPT: &str = r#"(() => {
   }
 })();"#;
 
-/// Each view's last `setState`, kept while the island runs so a page that was
-/// closed and opened again picks up where it left off.
 fn states() -> &'static Mutex<HashMap<Key, Value>> {
     static STATES: std::sync::OnceLock<Mutex<HashMap<Key, Value>>> = std::sync::OnceLock::new();
     STATES.get_or_init(Mutex::default)
 }
 
-/// Forgets the saved page state of an uninstalled plugin.
 pub(super) fn forget_plugin(plugin_id: &str) {
     lock(states()).retain(|(plugin, _), _| plugin != plugin_id);
 }
 
-/// Views whose page is on screen now (any thread may ask).
 fn open() -> &'static Mutex<HashSet<Key>> {
     static OPEN: std::sync::OnceLock<Mutex<HashSet<Key>>> = std::sync::OnceLock::new();
     OPEN.get_or_init(Mutex::default)
 }
 
-/// What the island needs to open a view's page.
 struct PageSpec {
     root: PathBuf,
     file: String,
     dev: bool,
-    /// The island's language, "zh-CN" or "en".
     locale: String,
-    /// The island's ink for a page drawn without the card; None in the card.
     ink: Option<String>,
 }
 
@@ -260,7 +224,6 @@ fn page_spec(plugin_id: &str, view_id: &str) -> Result<PageSpec, String> {
     let installed = lock(&host.installed);
     let plugin = installed.iter().find(|plugin| plugin.folder == plugin_id).ok_or("Plugin not found.")?;
     let manifest = plugin.manifest.as_ref().map_err(|_| "The plugin's manifest is not valid.".to_string())?;
-    // Development plugins (dev.rs) are on without a switch, like in grants.rs.
     let enabled = plugin.dev || lock(&host.state).plugins.get(plugin_id).is_some_and(|grant| grant.enabled);
     if !enabled || plugin.builtin {
         return Err("The plugin is not switched on.".into());
@@ -277,7 +240,6 @@ fn page_spec(plugin_id: &str, view_id: &str) -> Result<PageSpec, String> {
     Ok(PageSpec { root, file: file.to_string(), dev: plugin.dev, locale: String::new(), ink: None })
 }
 
-/// The page's side of one view: what it may load and where its messages go.
 struct PluginPage {
     plugin_id: String,
     view_id: String,
@@ -335,7 +297,6 @@ impl PageHost for PluginPage {
     }
 }
 
-/// Where a page goes, in physical pixels of the island window's client area.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 struct Rect {
     x: i32,
@@ -344,11 +305,9 @@ struct Rect {
     height: i32,
 }
 
-/// Pages that exist or are being created, on the main thread.
 struct Slot {
     page: Option<Page>,
     rect: Rect,
-    /// Tells a page that finished creating whether it is still wanted.
     generation: u64,
 }
 
@@ -358,7 +317,6 @@ thread_local! {
 
 static GENERATION: AtomicU64 = AtomicU64::new(0);
 
-/// Where the island window shows a view's page, in CSS pixels of the window.
 #[derive(Debug, Clone, Copy, Deserialize)]
 pub struct WebviewBounds {
     x: f64,
@@ -377,10 +335,6 @@ fn to_rect(bounds: WebviewBounds, scale: f64) -> Result<Rect, String> {
     Ok(Rect { x: pixel(bounds.x)?, y: pixel(bounds.y)?, width: pixel(bounds.width)?.max(0), height: pixel(bounds.height)?.max(0) })
 }
 
-/// The island shows a webview page at `bounds` (creating it the first time)
-/// or moves it there. `locale` is the island's language, given to the page; `ink` (optional,
-/// "r, g, b") the island's text color for a page drawn without the card. Both apply when the
-/// page is created.
 #[tauri::command]
 pub fn show_plugin_webview(app: AppHandle, id: String, view_id: String, bounds: WebviewBounds, locale: String, ink: Option<String>) -> Result<(), String> {
     let spec = PageSpec { locale, ink, ..page_spec(&id, &view_id)? };
@@ -393,7 +347,6 @@ pub fn show_plugin_webview(app: AppHandle, id: String, view_id: String, bounds: 
         .map_err(|error| format!("Could not show the plugin page: {error}"))
 }
 
-/// The page left the screen: it is closed (its state is kept).
 #[tauri::command]
 pub fn hide_plugin_webview(app: AppHandle, id: String, view_id: String) -> Result<(), String> {
     let key = (id, view_id);
@@ -456,7 +409,6 @@ fn start_page(
                 return;
             }
         };
-        // Hidden again while it was being made: dropping it closes it.
         let unwanted = PAGES.with(|pages| {
             let mut pages = pages.borrow_mut();
             match pages.get_mut(&key).filter(|slot| slot.generation == generation) {
@@ -472,7 +424,6 @@ fn start_page(
     })
 }
 
-/// `webview.postMessage { viewId, message }` from the plugin process.
 pub(super) fn post_from_plugin(app: &AppHandle, plugin_id: &str, params: &Value) -> Result<Value, (u16, String)> {
     let view_id = params.get("viewId").and_then(Value::as_str).ok_or((400, "viewId is required.".to_string()))?;
     if page_spec(plugin_id, view_id).is_err() {
@@ -497,7 +448,6 @@ pub(super) fn post_from_plugin(app: &AppHandle, plugin_id: &str, params: &Value)
     Ok(json!({ "shown": shown }))
 }
 
-/// The page height a view asks for on the island.
 pub(super) fn page_height(height: Option<u32>) -> u32 {
     height.unwrap_or(DEFAULT_WEBVIEW_HEIGHT)
 }

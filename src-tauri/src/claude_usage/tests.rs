@@ -211,7 +211,6 @@ fn error_kind(state: &State) -> Option<UsageErrorKind> {
     state.usage.error.as_ref().map(|error| error.kind)
 }
 
-/// The wait right after a request made at `now`.
 fn wait_after_request(state: &mut State, now: Instant) -> Duration {
     state.last_request = Some(now);
     wait_before_poll(state, now)
@@ -281,7 +280,6 @@ fn local_failures_do_not_back_off() {
         wait_after_request(&mut state, now),
         Duration::from_secs(300)
     );
-    // A network failure, then a local one: the backoff starts over.
     apply(
         &mut state,
         failure(UsageErrorKind::Network, None),
@@ -350,7 +348,6 @@ fn requests_are_gated_by_flight_cooldown_and_manual_gap() {
     assert!(may_request(&state, now + Duration::from_secs(901), true));
 }
 
-/// Prints the percentages only, never the token.
 #[test]
 #[ignore = "Calls api.anthropic.com with this account's Claude Code login through the proxy"]
 fn live_usage_endpoint() {

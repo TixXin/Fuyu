@@ -1,8 +1,3 @@
-//! The last host API calls of each plugin, for its settings page: which
-//! method, how it ended and when. Only the method name is kept, never the
-//! parameters or the answer, so the log holds none of the user's data. The
-//! same call ending the same way several times in a row is one entry with a count.
-
 use serde::Serialize;
 use serde_json::Value;
 use std::{
@@ -13,27 +8,19 @@ use std::{
 use super::{update_entry, Context};
 use crate::plugin_host::rpc;
 
-/// Entries kept per plugin.
 pub(super) const CALL_LOG_ENTRIES: usize = 200;
-/// Plugins may send any method name; longer ones are cut.
 const MAX_METHOD_CHARS: usize = 64;
 
-/// Mirrored by `PluginCallRecord` in src/features/plugins/api.ts.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CallRecord {
     pub method: String,
-    /// "ok", "denied" (no permission, or the user said no), "unknown" (no such method) or "error".
     pub outcome: &'static str,
-    /// The host's status for "error" (400, 404, 409, 413, 429, 500, 504).
     pub status: Option<u16>,
-    /// Times in a row this method ended this way.
     pub count: u32,
-    /// The last time, in ms since 1970.
     pub at: u64,
 }
 
-/// How an answer line ended: ("ok" | "denied" | "unknown" | "error", status).
 pub(super) fn outcome_of(answer: &str) -> (&'static str, Option<u16>) {
     let Ok(message) = serde_json::from_str::<Value>(answer) else { return ("error", None) };
     let Some(error) = message.get("error") else { return ("ok", None) };
@@ -45,7 +32,6 @@ pub(super) fn outcome_of(answer: &str) -> (&'static str, Option<u16>) {
     }
 }
 
-/// Adds a call to `log`, folding it into the newest entry when it is the same call with the same end.
 pub(super) fn push(log: &mut VecDeque<CallRecord>, method: &str, (outcome, status): (&'static str, Option<u16>), at: u64) {
     let method: String = method.chars().take(MAX_METHOD_CHARS).collect();
     if let Some(last) = log.back_mut().filter(|last| last.method == method && last.outcome == outcome && last.status == status) {
@@ -59,7 +45,6 @@ pub(super) fn push(log: &mut VecDeque<CallRecord>, method: &str, (outcome, statu
     }
 }
 
-/// Records how a request of the plugin was answered.
 pub(super) fn record(context: &Context, method: &str, answer: &str) {
     let at = SystemTime::now().duration_since(UNIX_EPOCH).map_or(0, |time| u64::try_from(time.as_millis()).unwrap_or(u64::MAX));
     let outcome = outcome_of(answer);

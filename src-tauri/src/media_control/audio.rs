@@ -1,5 +1,3 @@
-//! Default render endpoint: master volume and the output peak meter.
-
 use super::session::media_error;
 use crate::win32::audio::{AudioDevices, OutputRole};
 

@@ -1,16 +1,3 @@
-//! Built-in plugins: optional parts of the island that are compiled in but are
-//! listed, switched on, granted permissions and configured like any plugin
-//! (runtime type "builtin"). They need no download and no "allow third-party
-//! plugins", and cannot be uninstalled. Today: the local API and the collapsed
-//! island's center pattern, agent usage rings and agent session ring, the SSH
-//! proxy tunnel and the cc-connect phone link.
-//!
-//! A built-in plugin whose work happens in the island window (a collapsed-bar
-//! ring, say) needs only an entry in BUILTINS with `native` false: it starts and
-//! stops as a no-op, and the window follows it with `useBuiltinPlugin(id)`, which
-//! re-reads the plugin on the `plugin-view-changed` reset sent when it starts,
-//! stops or its settings change (grants.rs, commands.rs).
-
 use serde_json::{Map, Value};
 
 use super::manifest::{parse_builtin_manifest, LocalizedText, PluginManifest};
@@ -48,8 +35,6 @@ const LOCAL_API_MANIFEST: &str = r#"{
   }
 }"#;
 
-// Works only in the island window (src/features/center-pattern). `pet` holds a pet's folder
-// name; the plugin page offers the pets found on disk as a list (PluginDetailPage).
 const CENTER_PATTERN_MANIFEST: &str = r#"{
   "id": "focusd.center-pattern",
   "name": { "zh-CN": "中心图案", "en": "Center pattern" },
@@ -238,8 +223,6 @@ const SESSION_RING_MANIFEST: &str = r#"{
 
 pub(super) const SSH_TUNNEL_ID: &str = "focusd.ssh-proxy-tunnel";
 
-// The hosts, their switches and ports there are not plugin settings: the plugin page lists them
-// from the SSH list (src/features/ssh-tunnel) and they live in ssh-tunnels.json (ssh_tunnel/).
 const SSH_TUNNEL_MANIFEST: &str = r#"{
   "id": "focusd.ssh-proxy-tunnel",
   "name": { "zh-CN": "SSH 代理隧道", "en": "SSH proxy tunnel" },
@@ -281,8 +264,6 @@ const SSH_TUNNEL_MANIFEST: &str = r#"{
   }
 }"#;
 
-// Works in the windows (src/features/cc-connect): the plugin page shows what was found, and the
-// phone push (Settings → AI Agent → Alerts) sends through it. Nothing runs here yet.
 pub(super) const CC_CONNECT_ID: &str = "focusd.cc-connect";
 
 const CC_CONNECT_MANIFEST: &str = r#"{
@@ -322,8 +303,6 @@ const CC_CONNECT_MANIFEST: &str = r#"{
   }
 }"#;
 
-/// Every built-in plugin: its id, its manifest (whose "id" must match), and
-/// whether it has work in this process (`native`, see `start` and `stop`).
 pub(super) const BUILTINS: &[(&str, &str, bool)] = &[
     (LOCAL_API_ID, LOCAL_API_MANIFEST, true),
     ("focusd.center-pattern", CENTER_PATTERN_MANIFEST, false),
@@ -333,7 +312,6 @@ pub(super) const BUILTINS: &[(&str, &str, bool)] = &[
     (CC_CONNECT_ID, CC_CONNECT_MANIFEST, true),
 ];
 
-/// Every built-in plugin's id and manifest.
 pub(super) fn manifests(app_version: &str) -> Vec<(&'static str, Result<PluginManifest, String>)> {
     BUILTINS.iter().map(|&(id, text, _)| (id, parse_builtin_manifest(text, id, app_version))).collect()
 }
@@ -342,8 +320,6 @@ pub(super) fn is_builtin(id: &str) -> bool {
     BUILTINS.iter().any(|&(builtin, _, _)| builtin == id)
 }
 
-/// Whether built-in plugin `id` has work in this process; an error for an id
-/// that is not in `builtins`.
 pub(super) fn has_native_work(builtins: &[(&str, &str, bool)], id: &str) -> Result<bool, String> {
     builtins
         .iter()
@@ -356,7 +332,6 @@ fn allow_write(settings: &Map<String, Value>) -> bool {
     settings.get(LOCAL_API_ALLOW_WRITE).and_then(Value::as_bool).unwrap_or(false)
 }
 
-/// The usage ring's direct-request settings; None while "ask Anthropic directly" is off.
 pub(super) fn claude_usage_config(settings: &Map<String, Value>) -> Option<claude_usage::UsageConfig> {
     if !settings.get(CLAUDE_USAGE_ASK_ANTHROPIC).and_then(Value::as_bool).unwrap_or(false) {
         return None;
@@ -373,7 +348,6 @@ pub(super) fn claude_usage_config(settings: &Map<String, Value>) -> Option<claud
     })
 }
 
-/// Starts or stops the direct requests to match the settings; the ring itself lives in the window.
 fn apply_claude_usage(settings: &Map<String, Value>) -> Result<(), String> {
     match claude_usage_config(settings) {
         Some(config) => claude_usage::start(config),
@@ -392,8 +366,6 @@ fn local_api_info(status: local_api::LocalApiStatus) -> Vec<InfoItem> {
     ]
 }
 
-/// Starts a built-in plugin; returns the info for its page. Plugins that live in
-/// the island window have nothing to start here.
 pub(super) fn start(id: &str, settings: &Map<String, Value>) -> Result<Vec<InfoItem>, String> {
     if !has_native_work(BUILTINS, id)? {
         return Ok(Vec::new());
@@ -439,7 +411,6 @@ pub(super) fn settings_changed(id: &str, settings: &Map<String, Value>) -> Resul
     }
 }
 
-/// Runs one of the plugin's commands; returns its new info.
 pub(super) fn run_command(id: &str, command: &str) -> Result<Vec<InfoItem>, String> {
     match (id, command) {
         (LOCAL_API_ID, "reset-token") => local_api::reset_token().map(local_api_info),

@@ -1,6 +1,3 @@
-//! Main island window: Tauri commands, window access, and the submodules for state,
-//! stage geometry, liquid glass, cursor passthrough and top-edge attachment.
-
 pub(crate) mod banner_hit;
 pub(crate) mod focus;
 mod follow;
@@ -39,9 +36,7 @@ pub(crate) use passthrough::start_cursor_passthrough_loop;
 pub(crate) use state::{record_dragged_position, IslandPosition, IslandWindowState};
 
 pub(crate) const WINDOW_LABEL: &str = "main";
-// Mirrored by ISLAND_REVEAL_REQUESTED_EVENT in src/windows/island/api.ts.
 const ISLAND_REVEAL_REQUESTED_EVENT: &str = "island-reveal-requested";
-// Mirrored by ISLAND_POSITION_CHANGED_EVENT in src/windows/island/api.ts.
 const ISLAND_POSITION_CHANGED_EVENT: &str = "island-position-changed";
 
 #[derive(Debug, Deserialize)]
@@ -82,8 +77,6 @@ pub fn set_island_interaction(
     is_tucked: Option<bool>,
     animate_position: Option<bool>,
     glass_enabled: Option<bool>,
-    // Still sent by the front end; CSS draws the glass material now (glass.rs), so the
-    // native side has no use for them. Kept so the IPC parameter names stay the same.
     glass_intensity: Option<f64>,
     glass_tint: Option<String>,
     corner_radius: Option<f64>,
@@ -162,9 +155,6 @@ pub fn start_island_drag(app: AppHandle) -> Result<(), String> {
     drag_island(window, current_state)
 }
 
-/// Alt + left-button drag (C25): on the expanded panel's sides or bottom it resizes the panel, on
-/// the collapsed island's sides its width (modifier.rs); anywhere else on the shape it moves it. The
-/// frontend calls it on pointer down while the passthrough loop reports Alt held over the island.
 #[tauri::command]
 pub fn start_island_modifier_drag(app: AppHandle) -> Result<(), String> {
     let window = main_window(&app)?;
@@ -191,7 +181,6 @@ fn drag_island(window: WebviewWindow, current_state: IslandWindowState) -> Resul
             x: position.x,
             y: position.y,
         });
-        // Dragged from where it shows now, so that is the new position.
         state.out_at_top = false;
         state.is_dragging = true;
         *state
@@ -278,7 +267,6 @@ pub(crate) fn show_island(app: &AppHandle) -> Result<(), String> {
     apply_stage_geometry(&window, read_window_state(), false)?;
     window.show().map_err(|error| error.to_string())?;
     window.set_focus().map_err(|error| error.to_string())?;
-    // A tucked island shows only its strip; asking to see it brings it out (issue #37).
     if read_window_state().is_tucked {
         let _ = window.emit(ISLAND_REVEAL_REQUESTED_EVENT, ());
     }
@@ -297,8 +285,6 @@ pub fn get_island_top_attachment() -> bool {
     top_edge::is_attached()
 }
 
-/// This module's Tauri commands. `lib.rs` chains every module's list into one
-/// `generate_handler!`, so adding a command only touches this file.
 macro_rules! tauri_commands {
     ($next:ident [$($done:tt)*] $($rest:tt)*) => {
         $next!([$($done)*

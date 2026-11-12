@@ -1,17 +1,3 @@
-//! Coding-plan usage of GLM (智谱 / Z.ai) and Kimi for the usage rings, asked of each
-//! provider with the API key the user saved on the usage ring's plugin page. The key
-//! lives in the Windows Credential Manager, never in a file, and is sent nowhere but its
-//! provider. Answers are kept for a minute, so several readers cost one request.
-//!
-//! - GLM: `GET open.bigmodel.cn/api/monitor/usage/quota/limit`, the raw key as
-//!   `Authorization` (no "Bearer"). `data.limits[]` is told apart by `type`, `unit`
-//!   (3 hours, 6 weeks, 5 months) and `number`: TOKENS_LIMIT 3/5 is the 5-hour window,
-//!   TOKENS_LIMIT 6/1 the weekly one, TIME_LIMIT 5/1 the monthly MCP calls.
-//! - Kimi For Coding: `GET api.kimi.com/coding/v1/usages` with a Bearer key. Since
-//!   2026-09 `usages.limit_5h` / `limit_7d` / `limit_month_total` carry a `used_ratio`
-//!   (0–1, maybe a string) and an ISO `reset_time`; older answers carry `usage` (the
-//!   week) and `limits[]` (300 minutes is the 5-hour window) with used/limit strings.
-
 use crate::user_error::{credential, UserError};
 use std::{
     collections::HashMap,
@@ -28,11 +14,8 @@ use crate::claude_usage::{UsageError, UsageErrorKind};
 
 const CREDENTIAL_SERVICE: &str = "com.tixxin.fuyu.plan-usage";
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(15);
-/// A read within this long of the last request gets the same answer.
 const CACHE_MS: i64 = 60_000;
-/// A click asks again unless the last request was this recent.
 const REFRESH_GAP_MS: i64 = 10_000;
-/// The window names the island translates (src/features/claude-usage/usageRing.ts).
 const MONTH: &str = "month";
 const MCP_MONTH: &str = "mcpMonth";
 
@@ -80,7 +63,6 @@ impl PlanProvider {
     }
 }
 
-/// The windows an answer carried; the rest of AgentUsage is filled in by `read`.
 #[derive(Debug, Default, PartialEq)]
 pub(super) struct PlanWindows {
     pub(super) five_hour: Option<UsageWindow>,
@@ -97,7 +79,6 @@ fn window(name: &str, used: f64, resets_at: Option<i64>) -> UsageWindow {
     UsageWindow { name: name.to_string(), used: used.clamp(0.0, 100.0), resets_at }
 }
 
-/// A number the providers send as a number or a decimal string.
 fn number(value: &Value) -> Option<f64> {
     value.as_f64().or_else(|| value.as_str()?.trim().parse().ok()).filter(|number| number.is_finite())
 }
@@ -107,7 +88,6 @@ pub(super) fn parse_glm(text: &str) -> Result<PlanWindows, UsageError> {
     let answer = serde_json::from_str::<Value>(text).map_err(|_| invalid())?;
     let code = answer["code"].as_i64();
     if answer["success"] == Value::Bool(false) || code.is_some_and(|code| code != 200 && code != 0) {
-        // "当前用户不存在coding plan": the key works but has no coding plan.
         let message = answer["msg"].as_str().unwrap_or("GLM refused the request.").to_string();
         return Err(error(UsageErrorKind::Forbidden, message));
     }
@@ -134,7 +114,6 @@ fn capitalize(word: &str) -> String {
     chars.next().map(|first| first.to_uppercase().chain(chars).collect()).unwrap_or_default()
 }
 
-/// Percent used from Kimi's older used/limit/remaining strings; None without a usable limit.
 fn kimi_old_percent(detail: &Value) -> Option<f64> {
     let limit = number(&detail["limit"]).filter(|limit| *limit > 0.0)?;
     let used = number(&detail["used"]).or_else(|| Some(limit - number(&detail["remaining"])?))?;
@@ -149,7 +128,6 @@ pub(super) fn parse_kimi(text: &str) -> Result<PlanWindows, UsageError> {
     if usages.is_object() {
         let quota = |key: &str, name: &str| {
             let ratio = number(&usages[key]["used_ratio"])?;
-            // Kimi's own client rounds up, so a sliver used never reads as 0%.
             let used = (ratio * 100.0).ceil();
             Some(window(name, used, usages[key]["reset_time"].as_str().and_then(parse_timestamp_ms)))
         };
@@ -176,7 +154,6 @@ pub(super) fn parse_kimi(text: &str) -> Result<PlanWindows, UsageError> {
     Ok(windows)
 }
 
-/// What an HTTP status means for the key; None for success.
 pub(super) fn status_error(provider: PlanProvider, status: u16) -> Option<UsageError> {
     let name = if provider == PlanProvider::Glm { "GLM" } else { "Kimi" };
     match status {
@@ -189,7 +166,6 @@ pub(super) fn status_error(provider: PlanProvider, status: u16) -> Option<UsageE
 }
 
 async fn fetch(provider: PlanProvider, key: &str) -> Result<PlanWindows, UsageError> {
-    // Straight to the provider: the key never passes through a proxy from the environment.
     let client = reqwest::Client::builder()
         .timeout(REQUEST_TIMEOUT)
         .no_proxy()
@@ -225,7 +201,6 @@ fn read_key(provider: PlanProvider) -> Result<Option<String>, UserError> {
     }
 }
 
-/// Saves the key (an empty one removes it); returns whether one is saved now.
 pub(super) fn save_key(provider: PlanProvider, key: &str) -> Result<bool, UserError> {
     let key = key.trim();
     let entry = entry(provider)?;
@@ -235,7 +210,6 @@ pub(super) fn save_key(provider: PlanProvider, key: &str) -> Result<bool, UserEr
             Err(error) => return Err(credential::delete(error)),
         }
     } else {
-        // A pasted key never holds whitespace; one that does is not a key.
         if key.chars().any(char::is_whitespace) || key.len() > 512 {
             return Err(UserError::new("planUsage.key", "That does not look like an API key."));
         }
@@ -249,7 +223,6 @@ pub(super) fn has_key(provider: PlanProvider) -> Result<bool, UserError> {
     read_key(provider).map(|key| key.is_some())
 }
 
-/// The last answer per provider and when it was asked for (Unix ms).
 fn cache() -> &'static Mutex<HashMap<PlanProvider, (i64, AgentUsage)>> {
     static CACHE: OnceLock<Mutex<HashMap<PlanProvider, (i64, AgentUsage)>>> = OnceLock::new();
     CACHE.get_or_init(|| Mutex::new(HashMap::new()))
@@ -263,9 +236,6 @@ fn empty(provider: PlanProvider) -> AgentUsage {
     AgentUsage { updated_at: None, five_hour: None, seven_day: None, models: Vec::new(), plan: None, source: provider.source(), error: None }
 }
 
-/// The provider's usage: asked again when the last answer is over a minute old (ten seconds
-/// with `refresh`). A failure keeps the last numbers and says why; without a saved key there
-/// are no numbers, only that error.
 pub(super) async fn read(provider: PlanProvider, refresh: bool) -> AgentUsage {
     let now = now_ms();
     let previous = cache().lock().unwrap_or_else(PoisonError::into_inner).get(&provider).cloned();

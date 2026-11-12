@@ -1,14 +1,7 @@
-//! Errors the user reads (task D15). A command fails with a code that the frontend words in the
-//! island's language (src/i18n/sections/errors.ts), the values that wording needs, and what an
-//! outside program or service said, passed on as it is. `message` says the same in English, for
-//! logs, plugins and a page that does not know the code yet. Commands still answering with a plain
-//! string keep working: the frontend shows a string as it is.
-
 use serde::Serialize;
 use serde_json::{Map, Value};
 use std::fmt;
 
-/// Mirrored by NativeError in src/i18n/nativeError.ts.
 #[derive(Debug, Clone, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct UserError {
@@ -21,25 +14,21 @@ pub(crate) struct UserError {
 }
 
 impl UserError {
-    /// `code` names the wording in src/i18n/sections/errors.ts; `message` is it in English.
     pub(crate) fn new(code: &'static str, message: impl Into<String>) -> Self {
         Self { code, args: Map::new(), detail: None, message: message.into() }
     }
 
-    /// A value the wording puts in, like a file path or a status code.
     pub(crate) fn arg(mut self, name: &str, value: impl Into<Value>) -> Self {
         self.args.insert(name.to_string(), value.into());
         self
     }
 
-    /// What an outside program, service or Windows said; shown after the wording, untranslated.
     pub(crate) fn detail(mut self, detail: impl fmt::Display) -> Self {
         let text = detail.to_string();
         self.detail = (!text.trim().is_empty()).then_some(text);
         self
     }
 
-    /// Takes `secret` (a token in a URL, say) out of everything the error says.
     pub(crate) fn redact(mut self, secret: &str) -> Self {
         if secret.is_empty() {
             return self;
@@ -70,7 +59,6 @@ impl fmt::Display for UserError {
     }
 }
 
-/// A message not given a code yet: the page shows it as it is.
 impl From<String> for UserError {
     fn from(message: String) -> Self {
         Self::new("plain", message)
@@ -83,7 +71,6 @@ impl From<&str> for UserError {
     }
 }
 
-/// Windows Credential Manager, where the island keeps keys, passwords and tokens.
 pub(crate) mod credential {
     use super::UserError;
 

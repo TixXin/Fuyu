@@ -1,7 +1,3 @@
-//! The chats each cc-connect project has talked to, from its session files
-//! (`<data dir>/sessions/<project>_<hash>.json`): a chat shows up once its user has sent the bot a
-//! message. Its key (`telegram:<chat>:<user>`) is what `cc-connect send -s` takes.
-
 use std::{collections::BTreeMap, fs, path::Path};
 
 use serde::Serialize;
@@ -11,7 +7,6 @@ use serde_json::Value;
 #[serde(rename_all = "camelCase")]
 pub struct Project {
     pub name: String,
-    /// Its agent type in the config (`[projects.agent] type`, such as "claudecode"); None when not there.
     pub agent: Option<String>,
     pub chats: Vec<Chat>,
 }
@@ -19,17 +14,11 @@ pub struct Project {
 #[derive(Debug, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Chat {
-    /// `<platform>:<chat id>:<user id>`.
     pub key: String,
-    /// "telegram", "discord", "feishu" and so on: the key's first part.
     pub platform: String,
-    /// The user's name as cc-connect saw it; None when it kept none.
     pub user_name: Option<String>,
 }
 
-/// The project a session file belongs to, undoing cc-connect's `sessionStorePath`: `<name>.json`,
-/// the older `<name>.sessions.json`, and `<name>_<8 hex>.json` or `<name>_ws_<8 hex>.json` (a hash
-/// of the work folder).
 pub(super) fn project_name(file_name: &str) -> Option<&str> {
     let base = file_name.strip_suffix(".json")?;
     let base = base.strip_suffix(".sessions").unwrap_or(base);
@@ -42,7 +31,6 @@ pub(super) fn project_name(file_name: &str) -> Option<&str> {
     (!name.is_empty()).then_some(name)
 }
 
-/// The chats in one session file, by key.
 pub(super) fn chats_of(text: &str) -> Vec<Chat> {
     let Ok(store) = serde_json::from_str::<Value>(text) else { return Vec::new() };
     let Some(sessions) = store["user_sessions"].as_object() else { return Vec::new() };
@@ -56,9 +44,6 @@ pub(super) fn chats_of(text: &str) -> Vec<Chat> {
         .collect()
 }
 
-/// Every project with a session file among `files` (file name, text), by name, with its chats and
-/// its agent type from the config text; a project whose work folder changed has a file for each,
-/// and their chats are put together.
 pub(super) fn projects_from(files: impl IntoIterator<Item = (String, String)>, config: Option<&str>) -> Vec<Project> {
     let mut projects: BTreeMap<String, BTreeMap<String, Chat>> = BTreeMap::new();
     for (file_name, text) in files {
@@ -75,7 +60,6 @@ pub(super) fn projects_from(files: impl IntoIterator<Item = (String, String)>, c
         .collect()
 }
 
-/// The projects with a session file under `data_dir` (see `projects_from`).
 pub(super) fn read_projects(data_dir: &Path, config: Option<&str>) -> Vec<Project> {
     let files = fs::read_dir(data_dir.join("sessions")).into_iter().flatten().flatten().filter_map(|entry| {
         let name = entry.file_name().to_str()?.to_string();

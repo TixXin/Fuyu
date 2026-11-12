@@ -1,7 +1,3 @@
-//! Moves the island to the monitor the pointer or the foreground window is on (roadmap C1), when
-//! the appearance settings ask for it (`MonitorFollow`). Polls, because neither the pointer nor the
-//! foreground window tells the island when it crosses to another monitor.
-
 use std::{thread, time::Duration};
 use tauri::{Emitter, WebviewWindow};
 
@@ -11,13 +7,9 @@ use super::{
 };
 use crate::win32;
 
-// Mirrored by ISLAND_POSITION_CLEARED_EVENT in src/windows/island/api.ts: following another monitor
-// replaced the dragged position, which the window then forgets too.
 pub(crate) const ISLAND_POSITION_CLEARED_EVENT: &str = "island-position-cleared";
 
 const POLL_INTERVAL: Duration = Duration::from_millis(300);
-/// Looks in a row the target must stay on another monitor before the island moves, so passing
-/// over a monitor on the way to a third one, or a window flashing up, does not move it.
 const SETTLE_POLLS: u32 = 2;
 
 pub(crate) fn start_monitor_follow_loop(window: WebviewWindow) {
@@ -51,8 +43,6 @@ pub(crate) fn start_monitor_follow_loop(window: WebviewWindow) {
     });
 }
 
-/// Where the island should be, by the setting: the pointer, or the middle of the foreground
-/// window. None when it stays put: on the primary monitor, or the island itself is in front.
 fn followed_point(window: &WebviewWindow, state: IslandWindowState) -> Option<(i32, i32)> {
     match state.monitor_follow {
         MonitorFollow::Primary => None,
@@ -70,8 +60,6 @@ fn followed_point(window: &WebviewWindow, state: IslandWindowState) -> Option<(i
     }
 }
 
-/// Only a collapsed island that is not being dragged moves; an open panel stays under the user's
-/// pointer until it collapses.
 pub(super) fn may_move(state: IslandWindowState) -> bool {
     matches!(state.mode, IslandMode::Collapsed) && !state.is_dragging
 }
@@ -82,8 +70,6 @@ fn monitor_bounds(window: &WebviewWindow, point: (i32, i32)) -> Option<(i32, i32
     Some((position.x, position.y, size.width as i32, size.height as i32))
 }
 
-/// The monitor the island's window sits on now, by the middle of the window: a tucked island's
-/// top edge is above its monitor, but the stage below it is not.
 fn island_bounds(window: &WebviewWindow) -> Option<(i32, i32, i32, i32)> {
     let position = window.outer_position().ok()?;
     let size = window.outer_size().ok()?;

@@ -35,7 +35,6 @@ fn todos_json_keeps_the_javascript_shape_and_numbers() {
     assert!(text.contains("\"createdAt\":1762300000000"), "{text}");
     assert!(text.contains("\"savedAt\":1.5"));
     assert!(text.contains("\"activeTodoId\":\"a\""));
-    // An archive without a file path has no filePath key, as in localStorage.
     assert_eq!(text.matches("filePath").count(), 1);
     let back: TodosFile = serde_json::from_str(&text).expect("decode");
     assert_eq!(back, file);
@@ -56,7 +55,6 @@ fn validation_refuses_what_normalize_never_produces() {
     assert!(broken(|data| data.scheduled[0].date = "2026-02-30".into()).is_err());
     assert!(broken(|data| data.archives[0].date.clear()).is_err());
     assert!(broken(|data| data.active_todo_id = Some(String::new())).is_err());
-    // The list's own date is kept as stored, whatever it is.
     assert!(broken(|data| data.date = "not a date".into()).is_ok());
 }
 
@@ -94,7 +92,6 @@ fn damaged_newer_or_invalid_files_are_errors_not_empty_data() {
     assert!(matches!(load(&path), Err(LoadError::Damaged(_))));
     let mut newer = serde_json::to_value(sample()).expect("value");
     newer["version"] = json!(FILE_VERSION + 1);
-    // A newer format may change anything, even the shape of todos.
     newer["todos"] = json!({ "byId": {} });
     fs::write(&path, newer.to_string()).expect("write");
     assert!(matches!(load(&path), Err(LoadError::Newer(_))));
@@ -175,7 +172,6 @@ mod migration_tests {
         assert_eq!(plan(&some, "h", false, false), Ok(Plan::UseFile));
         assert_eq!(plan(&some, "other", true, false), Ok(Plan::UseFile));
         assert_eq!(plan(&some, "other", false, false), Ok(Plan::Import { keep_old: true, reimport: true }));
-        // Text imported once before is a stale copy of another build, not a change.
         assert_eq!(plan(&some, "other", false, true), Ok(Plan::UseFile));
         assert_eq!(plan(&Ok(None), "h", true, false), Ok(Plan::Import { keep_old: false, reimport: false }));
         assert_eq!(plan(&Err(LoadError::Damaged("x".into())), "h", false, false), Ok(Plan::Import { keep_old: true, reimport: false }));
@@ -204,11 +200,8 @@ mod migration_tests {
         assert_eq!(backup["keys"]["focusd-island-todos"], "[raw]");
         assert_eq!(backup["keys"]["focusd-island-daily-note"], serde_json::Value::Null);
 
-        // Same localStorage again (restart, or crash before the marker): the file wins,
-        // even if the window would now normalize differently.
         let (again, notice) = migrate(&dir, &keys("[raw]"), data("ignored"), "0.3.0").expect("again");
         assert_eq!((again.data.todos[0].title.as_str(), notice), ("one", None));
-        // Cleared localStorage keeps the file too.
         let (cleared, _) = migrate(&dir, &LocalTodoKeys::default(), data("ignored"), "0.3.0").expect("cleared");
         assert_eq!(cleared.data.todos[0].title, "one");
         assert_eq!(backups(&dir, "todos.before-reimport-"), 0);
@@ -226,7 +219,6 @@ mod migration_tests {
         let copies: Vec<_> = fs::read_dir(&dir).expect("list").map(|e| e.expect("entry").path()).filter(|p| p.to_string_lossy().contains("before-reimport")).collect();
         assert_eq!(copies.len(), 1);
         assert_eq!(fs::read_to_string(&copies[0]).expect("copy"), before);
-        // The first backup keeps its name and text; the new text gets its own file.
         assert_eq!(backups(&dir, "todos-migration-backup"), 2);
         let _ = fs::remove_dir_all(dir);
     }
@@ -261,11 +253,8 @@ mod migration_tests {
     #[test]
     fn switching_between_two_builds_does_not_reimport_their_old_copies() {
         let dir = temp_dir("migrate-two-builds");
-        // The installed app migrates its localStorage; then `pnpm tauri dev`, whose own
-        // localStorage still holds different pre-migration text, takes it once.
         migrate(&dir, &keys("[release]"), data("one"), "0.3.0").expect("release");
         migrate(&dir, &keys("[dev]"), data("two"), "0.3.0").expect("dev");
-        // Todos made since then must survive every later switch.
         let path = dir.join("todos.json");
         let mut file: crate::todos::model::TodosFile = serde_json::from_str(&fs::read_to_string(&path).expect("file")).expect("json");
         file.data.todos[0].title = "made in dev".into();
@@ -365,7 +354,6 @@ mod call_tests {
         for params in [json!({}), json!({ "title": "   " }), json!({ "title": 5 }), json!({ "title": "x".repeat(501) })] {
             assert!(call("todos.add", params).expect_err("title").1.contains("title"));
         }
-        // 500 characters is fine, counted like JavaScript (an emoji is two).
         assert!(call("todos.add", json!({ "title": "x".repeat(500) })).is_ok());
         assert!(call("todos.add", json!({ "title": "😀".repeat(251) })).is_err());
         assert_eq!(call("todos.add", json!({ "title": "x", "date": "2026-1-5" })).expect_err("date").0, 400);
@@ -516,6 +504,5 @@ fn a_todos_project_survives_a_save_and_none_adds_no_key() {
     assert_eq!(file.data.scheduled[0].project.as_deref(), Some("组会"));
     let text = serde_json::to_string(&file).expect("encode");
     assert_eq!(text.matches("\"project\"").count(), 2, "{text}");
-    // Todos without one keep the file as it was before projects (issue #44).
     assert!(!serde_json::to_string(&sample()).expect("encode").contains("project"));
 }

@@ -1,13 +1,8 @@
-//! Reading a streamed chat completion (server-sent events, OpenAI style): each `data:` line's
-//! `choices[0].delta.content` goes to the window as it arrives (C43), and the whole text is the
-//! command's answer.
-
 use tauri::ipc::Channel;
 
 use super::provider::Provider;
 use crate::user_error::UserError;
 
-/// What one event line adds: text, the end, a cut-off, or nothing.
 #[derive(Debug, PartialEq, Eq)]
 pub(super) enum Event {
     Text(String),
@@ -40,7 +35,6 @@ pub(super) async fn read(mut response: reqwest::Response, provider: &Provider, o
     let mut output = String::new();
     'body: while let Some(chunk) = response.chunk().await.map_err(unreadable)? {
         pending.extend_from_slice(&chunk);
-        // Whole lines only: a chunk may end inside a line, or inside a character.
         while let Some(end) = pending.iter().position(|&byte| byte == b'\n') {
             let line: Vec<u8> = pending.drain(..=end).collect();
             match parse_line(&String::from_utf8_lossy(&line)) {

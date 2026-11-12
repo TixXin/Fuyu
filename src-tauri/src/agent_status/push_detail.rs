@@ -1,10 +1,3 @@
-//! What a phone push needs from a Claude Code session's transcript (src/features/agent-status/push):
-//! what it waits on (the question it asks with AskUserQuestion, the plan it put up with
-//! ExitPlanMode, or else its last reply, in full rather than cut to a title), and how it was
-//! started (`entrypoint`: "cli" for the terminal, "sdk-cli" for `claude -p`, as cc-connect runs it,
-//! "sdk-ts" for an Agent SDK host such as Happy). Read from the tail on demand, so the session list
-//! sent every few seconds does not carry it.
-
 use std::path::{Path, PathBuf};
 
 use serde::Serialize;
@@ -22,13 +15,10 @@ pub struct PushDetail {
 #[derive(Debug, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct WaitText {
-    /// "question", "plan" or "reply".
     pub kind: &'static str,
     pub text: String,
 }
 
-/// `~/.claude/projects/<project>/<session_id>.jsonl` under `home_dir` (a mirrored home works too);
-/// None for an id that is not a plain file name.
 pub(super) fn claude_transcript(home_dir: &Path, session_id: &str) -> Option<PathBuf> {
     if session_id.is_empty() || !session_id.chars().all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_') {
         return None;
@@ -49,8 +39,6 @@ pub(super) fn claude_push_detail(tail: &str) -> PushDetail {
     }
 }
 
-/// The newest main-chain assistant record that says something: an open question or plan, or text.
-/// None when it called some other tool (a permission prompt; the caller names the tool instead).
 fn claude_wait_text(newest_first: impl Iterator<Item = Value>) -> Option<WaitText> {
     for record in newest_first {
         if record["type"] != "assistant" || record["isSidechain"] == Value::Bool(true) {
@@ -71,7 +59,6 @@ fn claude_wait_text(newest_first: impl Iterator<Item = Value>) -> Option<WaitTex
             .filter_map(|block| block["text"].as_str())
             .collect::<Vec<_>>()
             .join("\n");
-        // A record of thinking alone says nothing; the reply is in an older one.
         let reply = split_reply(&text).1.trim();
         if !reply.is_empty() {
             return Some(WaitText { kind: "reply", text: reply.to_string() });
@@ -80,7 +67,6 @@ fn claude_wait_text(newest_first: impl Iterator<Item = Value>) -> Option<WaitTex
     None
 }
 
-/// The questions one after another, each with its options numbered from 1, as the terminal shows them.
 fn question_text(input: &Value) -> String {
     let mut lines = Vec::new();
     for question in input["questions"].as_array().into_iter().flatten() {

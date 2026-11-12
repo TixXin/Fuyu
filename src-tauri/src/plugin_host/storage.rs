@@ -1,10 +1,3 @@
-//! Per-plugin data kept by the host: `storage.*` (JSON values in
-//! `plugins-data/<id>/storage.json`, no permission needed) and `secrets.*`
-//! (strings in the Windows Credential Manager under
-//! `com.tixxin.fuyu.plugin.<id>`, needs the `secrets` permission). The names
-//! of a plugin's secrets are kept in `plugin-secrets.json` next to
-//! `plugins.json`, so clearing a plugin's data can find them again.
-
 use keyring::{Entry, Error as KeyringError};
 use serde_json::{json, Map, Value};
 use std::{
@@ -26,7 +19,6 @@ const MAX_SECRET_KEY_CHARS: usize = 64;
 const MAX_SECRET_CHARS: usize = 1024;
 const MAX_SECRETS: usize = 32;
 
-/// One storage or secrets call at a time, so read-change-write cannot interleave.
 static FILES: Mutex<()> = Mutex::new(());
 
 type Answer = Result<Value, (u16, String)>;
@@ -45,7 +37,6 @@ fn key_param(params: &Value, max: usize, secret: bool) -> Result<String, (u16, S
     Ok(key.to_string())
 }
 
-/// Puts `value` under `key` unless that breaks the size limits.
 pub(super) fn set_value(values: &mut Map<String, Value>, key: String, value: Value) -> Result<(), String> {
     let size = value.to_string().len();
     if size > MAX_VALUE_BYTES {
@@ -69,7 +60,6 @@ fn read_map(path: &Path) -> Map<String, Value> {
         .unwrap_or_default()
 }
 
-/// Writes next to the file and renames, so a crash leaves the old file whole.
 fn write_json(path: &Path, value: &Value) -> Result<(), (u16, String)> {
     let fail = |error: std::io::Error| (500, format!("Could not write {}: {error}", path.display()));
     if let Some(dir) = path.parent() {
@@ -80,7 +70,6 @@ fn write_json(path: &Path, value: &Value) -> Result<(), (u16, String)> {
     fs::rename(&temp, path).map_err(fail)
 }
 
-/// Answers `storage.get` / `storage.set` / `storage.delete` / `storage.keys`.
 pub(super) fn answer_storage(data_dir: &Path, method: &str, params: &Value) -> Answer {
     let _files = lock(&FILES);
     let path = data_dir.join(STORAGE_FILE_NAME);
@@ -123,7 +112,6 @@ fn entry(plugin_id: &str, key: &str) -> Result<Entry, (u16, String)> {
         .map_err(|_| (500, "Could not open the Windows Credential Manager.".to_string()))
 }
 
-/// Answers `secrets.get` / `secrets.set` / `secrets.delete`.
 pub(super) fn answer_secret(plugin_id: &str, method: &str, params: &Value) -> Answer {
     let key = key_param(params, MAX_SECRET_KEY_CHARS, true)?;
     let _files = lock(&FILES);
@@ -171,8 +159,6 @@ pub(super) fn answer_secret(plugin_id: &str, method: &str, params: &Value) -> An
     }
 }
 
-/// "清除数据": deletes the plugin's data folder (storage.json and whatever the
-/// plugin wrote to dataDir) and its secrets. The plugin must be stopped.
 pub(super) fn clear_plugin_data(plugin_id: &str, data_dir: &Path) -> Result<(), String> {
     let _files = lock(&FILES);
     if data_dir.exists() {

@@ -102,7 +102,6 @@ fn codex_index_and_folder_titles() {
     assert_eq!(folder_title(r"C:\"), None);
 }
 
-/// A fresh directory per test with `home/` and `app/` inside.
 fn temp_dirs() -> (PathBuf, PathBuf) {
     static COUNTER: AtomicUsize = AtomicUsize::new(0);
     let base = std::env::temp_dir().join(format!(
@@ -134,7 +133,6 @@ fn first_prompt_uses_slash_command_arguments_and_drops_headings() {
         prompt_title("## 任务：继续适配").as_deref(),
         Some("任务：继续适配")
     );
-    // A message that is only a screenshot placeholder moves on to the next prompt.
     let image_only = [
         user_line(json!([{"type": "text", "text": "[Image #1]"}])),
         user_line(json!("下一句")),
@@ -174,20 +172,14 @@ fn session_windows_are_matched_by_folder_and_title() {
         )
     };
 
-    // The terminal showing the session title beats the editor with the folder.
     assert_eq!(
         find(Some("fly-island"), Some("插件市场功能"), false),
         Some(3)
     );
-    // A title cut with an ellipsis still matches.
     assert_eq!(find(None, Some("插件市场…"), false), Some(3));
-    // Folder only: the editor naming it as a whole segment, not Chrome.
     assert_eq!(find(Some("fly-island"), Some("别的标题"), false), Some(2));
-    // A folder called "code" is not every "Visual Studio Code" window: only the segment.
     assert_eq!(find(Some("code"), None, false), Some(1));
-    // A terminal showing the working directory.
     assert_eq!(find(Some("MioPicFlow"), None, false), Some(4));
-    // Codex sessions fall back to the Codex app; others do not.
     assert_eq!(find(Some("elsewhere"), None, true), Some(5));
     assert_eq!(find(Some("elsewhere"), None, false), None);
     assert_eq!(find(None, Some("x"), false), None);
@@ -234,7 +226,6 @@ fn claude_session_tail_gives_state_model_and_latest_reply() {
         Some("做完了")
     );
     assert_eq!(parse_claude_tail(&done).reply_marker, None);
-    // The reply status marker (reply_marker.rs) is read and cut from the shown reply.
     let asked = [working.clone(), assistant(Some("end_turn"), text("要用哪个方案？\n\n↩"))].concat();
     let parsed = parse_claude_tail(&asked);
     assert_eq!((parsed.reply_marker, parsed.last_message.as_deref()), (Some("yourTurn"), Some("要用哪个方案？")));
@@ -256,7 +247,6 @@ fn claude_session_tail_gives_state_model_and_latest_reply() {
     .concat();
     let parsed = parse_claude_tail(&failed);
     assert_eq!(parsed.state, TurnState::Failed);
-    // The synthetic error record does not hide the real model.
     assert_eq!(parsed.model.as_deref(), Some("Opus 5.5"));
 
     assert_eq!(
@@ -285,11 +275,9 @@ fn session_tails_give_the_permission_mode_and_running_subagents() {
     let parsed = parse_claude_tail(&[prompt.clone(), calls.clone(), one_answered.clone()].join("\n"));
     assert_eq!(parsed.permission_mode, Some("bypass"));
     assert_eq!(parsed.subagents, 1);
-    // Subagents of an earlier turn do not count once a new prompt is sent.
     let next = line(json!({ "type": "user", "permissionMode": "default", "message": { "role": "user", "content": "继续" } }));
     let parsed = parse_claude_tail(&[prompt, calls, one_answered, next].join("\n"));
     assert_eq!((parsed.permission_mode, parsed.subagents), (Some("default"), 0));
-    // A finished turn has no running subagents.
     let done = line(json!({ "type": "assistant", "message": { "model": "claude-opus-5-5", "stop_reason": "end_turn", "content": [
         { "type": "tool_use", "id": "a3", "name": "Agent", "input": {} },
     ] } }));
@@ -352,7 +340,6 @@ fn codex_session_tail_and_meta() {
         Some(("01a1".to_string(), Some(r"E:\p".to_string())))
     );
     assert_eq!(parse_codex_meta("{\"type\":\"turn_context\"}"), None);
-    // A spawned subagent and Codex's own review thread are not sessions of their own.
     let thread = |source: serde_json::Value| {
         json!({"type": "session_meta", "payload": {"id": "02b2", "session_id": "01a1", "cwd": "E:\\p", "source": source}})
             .to_string()
@@ -379,7 +366,6 @@ fn session_phase_turns_stale_after_the_limit() {
     assert_eq!(session_phase(TurnState::Done, 1, 600_000), "completed");
     assert_eq!(session_phase(TurnState::Unknown, 1, 600_000), "completed");
     assert_eq!(session_phase(TurnState::Failed, 1, 600_000), "failed");
-    // Waiting on the user never turns stale.
     assert_eq!(session_phase(TurnState::AwaitingUser, 600_000, 600_000), "waiting");
 }
 
@@ -397,15 +383,12 @@ fn a_session_compacts_from_pre_compact_until_post_compact() {
     let file = app.join(CLAUDE_CODE_NOTIFICATION_FILE_NAME);
     let save = |text: &str| {
         fs::write(&file, text).unwrap();
-        // The log rereads the file when its size or time changes; a later write may share the time.
         std::thread::sleep(std::time::Duration::from_millis(20));
     };
     let now = current_unix_millis();
     save(r#"{"hook_event_name":"PreCompact","session_id":"compact-a","trigger":"manual"}"#);
     assert!(compacting_sessions(&app, now).contains_key("compact-a"));
-    // A compaction is not a wait for the user.
     assert!(!waiting_notifications(&app).contains_key("compact-a"));
-    // Past the limit it no longer counts, in case PostCompact never came.
     assert!(!compacting_sessions(&app, now + 11 * 60 * 1000).contains_key("compact-a"));
     save(r#"{"hook_event_name":"PostCompact","session_id":"compact-a","trigger":"manual" }"#);
     assert!(!compacting_sessions(&app, now).contains_key("compact-a"));
@@ -428,7 +411,6 @@ fn background_tasks_of_the_newest_turn_count_until_they_end() {
     let running = parse_claude_tail(&tail(&[prompt("跑测试"), started("b1"), done.clone()]));
     assert_eq!((running.state, running.background_tasks), (TurnState::Done, 1));
     assert_eq!(parse_claude_tail(&tail(&[prompt("跑测试"), started("b1"), done.clone(), notified("b1")])).background_tasks, 0);
-    // A task an earlier turn started (a dev server, say) does not hold a later turn open.
     assert_eq!(parse_claude_tail(&tail(&[prompt("开服务"), started("b1"), done.clone(), prompt("改个字"), done])).background_tasks, 0);
 }
 
@@ -450,7 +432,6 @@ fn an_open_question_or_plan_waits_on_the_user_and_a_finished_reply_may_ask() {
         line(json!({"type": "assistant", "sessionId": "s", "message": {"model": "claude-opus-5-5", "stop_reason": "end_turn",
             "content": [{"type": "text", "text": text}]}}))
     };
-    // The question is past the 200 characters kept for display, and still counts.
     let long = format!("{}\n\n要按这个方案做吗？", "改动说明。".repeat(60));
     let asks = parse_claude_tail(&tail(&[reply(&long)]));
     assert!(asks.reply_asks && !asks.last_message.unwrap_or_default().contains("要按这个方案做吗"));
@@ -499,7 +480,6 @@ fn recent_sessions_are_listed_running_first() {
         .unwrap()
         .set_modified(long_ago)
         .unwrap();
-    // Subagent transcripts are not sessions of their own.
     fs::create_dir_all(project.join("done").join("subagents")).unwrap();
     fs::write(
         project.join("done").join("subagents").join("a.jsonl"),
@@ -546,7 +526,6 @@ fn recent_sessions_are_listed_running_first() {
     assert_eq!(by_id("c1").title.as_deref(), Some("恢复网络"));
     assert_eq!(by_id("c1").cwd.as_deref(), Some(r"E:\Projects\MioPicFlow"));
 
-    // A second call is answered from the cache and gives the same list.
     assert_eq!(list_sessions(&home, None, &WaitingNotifications::new(), super::session_scan::ACTIVE_WINDOW_MS), sessions);
 }
 
@@ -595,8 +574,6 @@ fn hooks_state_matches_what_the_installers_write() {
     let running = Path::new(r"C:\a b\focusd-agent-running.cmd");
     let status = Path::new(r"C:\a b\focusd-agent-status.ps1");
 
-    // Codex: the block written now is current; an older block (from before, with `capture`)
-    // or one pointing elsewhere is outdated.
     let current = format!(
         "model = \"x\"\r\n\r\n{}",
         build_codex_hook_block(running, status, false)
@@ -624,8 +601,6 @@ fn hooks_state_matches_what_the_installers_write() {
         codex_hooks_state(None, running, status, None),
         HookInstallState::NotInstalled
     );
-    // Once a rollout shows a Codex that runs hooks in the background, the waiting block asks for
-    // a repair, and the other way round; an unknown version accepts both.
     let background = format!("model = \"x\"\n\n{}", build_codex_hook_block(running, status, true));
     let state = |config: &str, runs_async| codex_hooks_state(Some(config), running, status, runs_async);
     assert_eq!(state(&current, Some(false)), HookInstallState::Current);
@@ -634,8 +609,6 @@ fn hooks_state_matches_what_the_installers_write() {
     assert_eq!(state(&background, Some(false)), HookInstallState::Outdated);
     assert_eq!(state(&background, None), HookInstallState::Current);
 
-    // Claude Code: every installed entry has to be there; without the Notification hook (as
-    // installed before waiting states) it is outdated.
     let settings = |skip: Option<&str>| {
         let mut hooks = serde_json::Map::new();
         let entries = claude_code_hook_entries(running, status).into_iter().filter(|(event_name, _)| Some(*event_name) != skip).collect();
@@ -659,7 +632,6 @@ fn hooks_state_matches_what_the_installers_write() {
         HookInstallState::NotInstalled
     );
 
-    // Scripts: compared ignoring line endings; missing only matters while hooks point at it.
     assert!(!script_outdated(Some("a\r\nb\r\n"), "a\nb\n", true));
     assert!(script_outdated(Some("a\nold\n"), "a\nb\n", true));
     assert!(script_outdated(None, "a", true));
@@ -687,7 +659,6 @@ fn only_permission_and_input_notifications_mean_waiting() {
         .as_deref(),
         Some("s1")
     );
-    // The idle prompt comes after the turn ended; it is not a wait mid-turn.
     assert_eq!(waiting_session_id(&notification("idle_prompt")), None);
     assert_eq!(
         waiting_session_id("{\"notification_type\":\"permission_prompt\"}"),
@@ -696,10 +667,8 @@ fn only_permission_and_input_notifications_mean_waiting() {
     assert_eq!(waiting_session_id("not json"), None);
 
     let waiting = WaitingNotifications::from([("s1".to_string(), 10_000)]);
-    // The transcript last changed before the notification, or just after it: still waiting.
     assert!(is_waiting(&waiting, "s1", 9_000));
     assert!(is_waiting(&waiting, "s1", 11_500));
-    // The tool ran after the answer, so the transcript moved on.
     assert!(!is_waiting(&waiting, "s1", 13_000));
     assert!(!is_waiting(&waiting, "other", 9_000));
 }
@@ -738,7 +707,6 @@ fn a_session_asking_for_permission_is_listed_as_waiting() {
         )])),
         "waiting"
     );
-    // A notification older than the latest transcript change has been answered.
     assert_eq!(
         listed(&WaitingNotifications::from([(
             "ask".to_string(),
@@ -774,16 +742,12 @@ fn a_session_quit_mid_turn_is_no_longer_waiting() {
         list_sessions(&home, Some(&app), &asked, ACTIVE_WINDOW_MS)[0].phase
     };
 
-    // Started, its process not found: nothing says it ended.
     assert_eq!(phase(r#"{"provider":"claudeCode","startedAt":1}"#), "waiting");
-    // SessionEnd ran: the user quit while the question was open.
     assert_eq!(
         phase(r#"{"provider":"claudeCode","startedAt":1,"endedAt":2,"endReason":"prompt_input_exit"}"#),
         "completed"
     );
-    // The recorded process is gone without a SessionEnd (killed, terminal closed).
     assert_eq!(phase(r#"{"provider":"claudeCode","startedAt":1,"pid":4294967292}"#), "completed");
-    // Without the records folder nothing changes.
     assert_eq!(list_sessions(&home, None, &asked, ACTIVE_WINDOW_MS)[0].phase, "waiting");
 }
 
@@ -820,7 +784,6 @@ fn a_claude_session_gone_from_its_registry_is_no_longer_running() {
         phases.sort();
         phases
     };
-    // A Claude Code without the registry: nothing says any of them ended.
     assert!(phases().iter().all(|(_, phase)| *phase == "running"));
 
     let registry = home.join(".claude").join("sessions");
@@ -828,7 +791,6 @@ fn a_claude_session_gone_from_its_registry_is_no_longer_running() {
     let pid = std::process::id();
     let started = crate::win32::process_times::start_time(pid).unwrap();
     fs::write(registry.join(format!("{pid}.json")), json!({"pid": pid, "sessionId": "live", "procStart": started.to_string()}).to_string()).unwrap();
-    // Registered and alive: running. Not registered: ended, unless its file changed just now.
     assert_eq!(
         phases(),
         [("closed".to_string(), "completed"), ("fresh".to_string(), "running"), ("live".to_string(), "running")]
@@ -840,7 +802,6 @@ fn a_claude_session_gone_from_its_registry_is_no_longer_running() {
     };
     assert_eq!(closed(list_sessions(&home, None, &WaitingNotifications::new(), ACTIVE_WINDOW_MS)), ["closed"]);
 
-    // A mirrored home is judged by the registry its computer sent, not by local processes.
     fs::remove_file(registry.join(format!("{pid}.json"))).unwrap();
     fs::remove_dir(&registry).unwrap();
     let mirrored = |registry| super::session_scan::list_mirrored_sessions(&home, &Default::default(), ACTIVE_WINDOW_MS, registry);
@@ -887,7 +848,6 @@ fn install_deletes_the_prompt_copies_older_versions_saved() {
     remove_legacy_hook_inputs(&app);
     assert!(!app.join("agent-codex-hook-input.json").exists());
     assert!(!app.join("agent-claudeCode-hook-input.json").exists());
-    // The notification file is current and stays.
     assert!(app.join("agent-claudeCode-notification.json").exists());
 }
 
@@ -896,7 +856,6 @@ fn the_session_process_chain_picks_its_nearest_window() {
     use super::window_focus::{window_of_process_chain, SessionHints, WindowCandidate};
 
     let window = |title: &str, app: &str| WindowCandidate { title: title.to_string(), app: app.to_string() };
-    // Orca's single window (pid 10), two VS Code windows (pid 20) and Explorer (pid 1).
     let candidates = [
         window("Orca", "orca"),
         window("main.rs - other - Visual Studio Code", "code"),
@@ -906,13 +865,9 @@ fn the_session_process_chain_picks_its_nearest_window() {
     let owners = [10, 20, 20, 1];
     let hints = SessionHints { folder: Some("fly-island"), ancestors: &[], title: Some("Commit 频率约束"), is_codex: false };
 
-    // claude (100) <- pwsh (90) <- Orca terminal host (11, no window) <- Orca (10).
     assert_eq!(window_of_process_chain(&candidates, &owners, &[100, 90, 11, 10, 1], &hints), Some(0));
-    // An editor with several windows: the folder picks one.
     assert_eq!(window_of_process_chain(&candidates, &owners, &[100, 90, 20], &hints), Some(2));
-    // The chain ends at Explorer: never focus the desktop.
     assert_eq!(window_of_process_chain(&candidates, &owners, &[100, 1], &hints), None);
-    // No running process: nothing from the chain.
     assert_eq!(window_of_process_chain(&candidates, &owners, &[], &hints), None);
 }
 
@@ -943,7 +898,6 @@ fn the_ancestor_chain_stops_at_reused_ids_and_cycles() {
     let started = |pid: u32| Some(u64::from(pid));
     assert_eq!(ancestor_chain(100, &parents, started), vec![100, 90, 11, 10, 1]);
 
-    // 90's real parent exited and its id now belongs to a newer process.
     let reused = |pid: u32| Some(if pid == 11 { 5_000 } else { u64::from(pid) });
     assert_eq!(ancestor_chain(100, &parents, reused), vec![100, 90]);
 
@@ -992,7 +946,6 @@ fn orca_terminal_records_name_their_session() {
     fs::create_dir_all(&records).unwrap();
     fs::write(records.join("term_aaaa.json"), r#"{"session_id":"s1"}"#).unwrap();
     fs::write(records.join("term_bbbb.json"), r#"{"session_id":"s2"}"#).unwrap();
-    // A file whose name is not a handle is never used, whatever it says.
     fs::write(records.join("bad name.json"), r#"{"session_id":"s3"}"#).unwrap();
     assert_eq!(terminal_handle_for(&app_dir, "s2"), Some("term_bbbb".to_string()));
     assert_eq!(terminal_handle_for(&app_dir, "s3"), None);
@@ -1018,7 +971,6 @@ fn session_hosts_are_named_from_their_executable_or_codex_origin() {
     assert_eq!(codex_host("codex_vscode").name, "VS Code");
     assert!(codex_host("Codex Desktop").exe.is_none());
 
-    // claude (100) <- pwsh (90) <- Orca (10) <- Explorer (1).
     let windows = HashMap::from([
         (10, r"C:\orca\Orca.exe".to_string()),
         (1, r"C:\Windows\explorer.exe".to_string()),
@@ -1045,7 +997,6 @@ fn a_session_with_a_broken_parent_chain_finds_its_host_in_its_environment() {
     let open = |app: &str| Some(format!("C:/apps/{app}.exe"));
     let wezterm = env(&[("TERM_PROGRAM", "WezTerm"), ("WEZTERM_EXECUTABLE", "D:/WezTerm/wezterm-gui.exe")]);
     assert_eq!(host_from_env(wezterm, open).as_deref(), Some("D:/WezTerm/wezterm-gui.exe"));
-    // VS Code started from a WezTerm shell still has WezTerm's variables; TERM_PROGRAM decides.
     let vscode = env(&[("TERM_PROGRAM", "vscode"), ("WEZTERM_EXECUTABLE", "D:/WezTerm/wezterm-gui.exe"), ("VSCODE_GIT_ASKPASS_NODE", "D:/VS Code/Code.exe")]);
     assert_eq!(host_from_env(vscode, open).as_deref(), Some("D:/VS Code/Code.exe"));
     assert_eq!(host_from_env(env(&[("TERM_PROGRAM", "vscode")]), open).as_deref(), Some("C:/apps/code.exe"));
@@ -1086,7 +1037,6 @@ fn the_turn_starts_at_the_newest_typed_prompt() {
         line(json!({"type": "user", "timestamp": "2026-11-06T07:00:00Z", "message": {"role": "user", "content": "first"}})),
         line(json!({"type": "user", "timestamp": "2026-11-06T07:10:00Z", "message": {"role": "user", "content": "second"}})),
         line(json!({"type": "assistant", "timestamp": "2026-11-06T07:10:05Z", "message": {"role": "assistant", "content": [{"type": "tool_use", "id": "t", "name": "Bash", "input": {}}]}})),
-        // Tool results are user records too, but not a new prompt.
         line(json!({"type": "user", "timestamp": "2026-11-06T07:11:00Z", "message": {"role": "user", "content": [{"type": "tool_result", "tool_use_id": "t", "content": "ok"}]}})),
     ]
     .concat();
@@ -1124,13 +1074,11 @@ fn a_working_turn_shows_its_prompt_and_latest_tool() {
     let current = parsed.current_tool.expect("a tool in the working turn");
     assert_eq!((current.name.as_str(), current.detail.as_deref()), ("Edit", Some("App.tsx")));
 
-    // Commands collapse to one line; unknown tools have no detail.
     let bash = parse_claude_tail(&[line(json!({"type": "user", "message": {"role": "user", "content": "go"}})), tool("Bash", json!({"command": "git status\n  && git log -1"}))].concat());
     assert_eq!(bash.current_tool.and_then(|tool| tool.detail).as_deref(), Some("git status && git log -1"));
     let other = parse_claude_tail(&[line(json!({"type": "user", "message": {"role": "user", "content": "go"}})), tool("TodoWrite", json!({"todos": []}))].concat());
     assert_eq!(other.current_tool.map(|tool| (tool.name, tool.detail)), Some(("TodoWrite".to_string(), None)));
 
-    // A finished turn keeps its prompt but has no current tool, nor does a turn before any tool.
     let finished = [claude.clone(), line(json!({"type": "assistant", "message": {"role": "assistant", "stop_reason": "end_turn", "content": [{"type": "text", "text": "all done"}]}}))].concat();
     let parsed = parse_claude_tail(&finished);
     assert_eq!((parsed.last_prompt.as_deref(), parsed.current_tool), (Some("release 0.5.3"), None));
@@ -1167,12 +1115,10 @@ fn editor_titles_match_through_their_markers_and_parent_folders() {
     ];
     let hints = |folder, ancestors| SessionHints { folder: Some(folder), ancestors, title: None, is_codex: false };
     assert_eq!(best_window(&windows, &hints("fly-island", &[])), Some(1));
-    // A session in a worktree below the folder the editor has open.
     let above = ["fly-island-lanes".to_string(), "Projects".to_string()];
     let repo = [window("README.md - fly-island-lanes - Visual Studio Code")];
     assert_eq!(best_window(&repo, &hints("3", &above)), Some(0));
     assert_eq!(best_window(&repo, &hints("3", &[])), None);
-    // A session on an SSH computer, in an editor window connected to it with a folder above open.
     assert_eq!(bare_segment("app (workspace) [ssh: dev-box]"), "app");
     assert_eq!(bare_segment("notes [draft]"), "notes [draft]");
     let home = ["mywork".to_string(), "louis".to_string(), "home".to_string()];
@@ -1191,9 +1137,7 @@ fn session_folders_and_remembered_processes() {
     );
     assert_eq!(folder_names("E:/"), (None, vec![]));
     let seen = SeenSession { pid: 6528, started: Some(42), host_exe: None, orca_handle: None, seen_at: 0 };
-    // /clear keeps the process: same id, same start time.
     assert!(still_running(&seen, Some(42)));
-    // The id now belongs to another process, or nothing runs under it.
     assert!(!still_running(&seen, Some(43)));
     assert!(!still_running(&seen, None));
 }
@@ -1228,10 +1172,8 @@ fn orca_tabs_are_found_by_the_session_title() {
     .to_string();
     assert_eq!(agent_terminal_titled(&list, "claude", "0.3.1 正式版发布").as_deref(), Some("term_aa"));
     assert_eq!(agent_terminal_titled(&list, "codex", "0.3.1 正式版发布").as_deref(), Some("term_ee"));
-    // A title the island cut short matches the start of the tab title.
     assert_eq!(agent_terminal_titled(&list, "claude", "插件市场功能…").as_deref(), Some("term_bb"));
     assert_eq!(agent_terminal_titled(&list, "claude", "插件市场功能"), None);
-    // Two tabs with the same title: never guess.
     assert_eq!(agent_terminal_titled(&list, "claude", "Terminal 1"), None);
 }
 
@@ -1241,10 +1183,8 @@ fn windows_terminal_tabs_are_picked_by_the_session_title() {
         .map(String::from)
         .to_vec();
     assert_eq!(only_tab_titled(&tabs, "设置界面完善思路"), Some(1));
-    // Claude Code's working spinner in front of the title is ignored, and a cut title matches the start.
     assert_eq!(only_tab_titled(&tabs, "插件市场功能…"), Some(2));
     assert_eq!(only_tab_titled(&tabs, "插件市场功能"), None);
-    // Two tabs with the same title, no match, or a title too short to tell: never guess.
     assert_eq!(only_tab_titled(&tabs, "Ubuntu"), None);
     assert_eq!(only_tab_titled(&tabs, "另一个会话"), None);
     assert_eq!(only_tab_titled(&tabs, "✳"), None);
@@ -1285,13 +1225,10 @@ fn editor_terminals_are_asked_for_through_the_extension_link() {
     assert_eq!(show_session_terminal(&home, "windowsterminal", &[1], None), None);
     fs::create_dir_all(extensions.join("tixxin.focusd-island-0.1.0")).unwrap();
     assert_eq!(installed_extension(&extensions), Some("tixxin.focusd-island"));
-    // Nothing to identify the terminal by: no link is opened.
     assert_eq!(show_session_terminal(&home, "code", &[], Some("")), Some(EditorTerminal::Failed));
-    // Uninstalled but not yet removed by the editor.
     fs::write(extensions.join(".obsolete"), r#"{"tixxin.focusd-island-0.1.0":true}"#).unwrap();
     assert_eq!(installed_extension(&extensions), None);
     assert_eq!(installed_extension(&home.join("missing")), None);
-    // The extension under its name after the rename (D17) is preferred.
     fs::create_dir_all(extensions.join("tixxin.fuyu-0.2.0")).unwrap();
     fs::write(extensions.join(".obsolete"), "{}").unwrap();
     assert_eq!(installed_extension(&extensions), Some("tixxin.fuyu"));
@@ -1302,7 +1239,6 @@ fn editor_terminals_are_asked_for_through_the_extension_link() {
 fn the_extension_is_packaged_as_a_vsix_with_its_manifest() {
     use super::editor_extension::{build_vsix, Package};
 
-    // What gets installed is the id the island looks for first (editor_terminal.rs).
     assert_eq!(Package::read().id(), "tixxin.fuyu");
 
     let vsix = build_vsix().unwrap();
@@ -1333,7 +1269,6 @@ fn an_editors_command_line_is_found_next_to_it_on_path_or_in_its_install_folder(
     fs::write(on_path.join("cursor.cmd"), "").unwrap();
     assert_eq!(find_cli("cursor", None, std::slice::from_ref(&on_path), &[]), Some(on_path.join("cursor.cmd")));
 
-    // Installed per user, its script named differently: the only script in its bin folder.
     let programs = root.join("Programs");
     let bin = programs.join("Kiro").join("bin");
     fs::create_dir_all(&bin).unwrap();
@@ -1364,7 +1299,6 @@ fn session_records_name_a_live_process_and_its_tab() {
 
     assert!(is_session_id("23e370fd-7e26-4a93-abff-e6aa3b791ac1"));
     assert!(!is_session_id("../x") && !is_session_id(""));
-    // WMI start times keep microseconds; the kernel's have 100 ns ticks.
     assert!(same_start(Some(134383392529449190), Some(134383392529449197)));
     assert!(!same_start(Some(134383392529449190), Some(134383392529449290)));
     assert!(same_start(None, Some(1)) && !same_start(Some(1), None));
@@ -1375,7 +1309,6 @@ fn session_records_name_a_live_process_and_its_tab() {
         "\u{feff}{{\"provider\":\"codex\",\"source\":\"clear\",\"pid\":{me},\"pidStarted\":{started},\"orcaHandle\":\"term_ab-12\",\"wtSession\":null,\"endedAt\":5,\"endReason\":\"clear\"}}"
     ))
     .expect("record");
-    // Ended by /clear, but the process carries on under the new session id.
     assert_eq!(record.live_pid(), Some(me));
     assert_eq!(record.orca_handle().as_deref(), Some("term_ab-12"));
     let reused = parse(&format!("{{\"pid\":{me},\"pidStarted\":{}}}", started + 1_000_000)).expect("record");
@@ -1398,7 +1331,6 @@ fn permission_requests_mark_a_session_waiting() {
     assert_eq!(waiting_session_id(&request).as_deref(), Some("s1"));
     let needs_input = json!({ "session_id": "s2", "hook_event_name": "Notification", "notification_type": "agent_needs_input" }).to_string();
     assert_eq!(waiting_session_id(&needs_input).as_deref(), Some("s2"));
-    // An idle prompt comes after the turn ended; the session is not waiting mid-turn.
     let idle = json!({ "session_id": "s3", "hook_event_name": "Notification", "notification_type": "idle_prompt" }).to_string();
     assert_eq!(waiting_session_id(&idle), None);
 }
@@ -1423,7 +1355,6 @@ fn usage_comes_from_the_claude_hud_snapshot() {
     assert_eq!(usage.seven_day.as_ref().map(|w| (w.used, w.resets_at)), Some((38.5, None)));
     assert_eq!(usage.models.iter().map(|w| w.name.as_str()).collect::<Vec<_>>(), ["Fable"]);
     assert_eq!(usage.plan.as_deref(), Some("Ultra 20x"));
-    // Out-of-range values are clamped; a snapshot without any window is no usage.
     let over = parse_snapshot(&json!({ "five_hour": { "used_percentage": 140 } }).to_string()).unwrap();
     assert_eq!(over.five_hour.map(|w| w.used), Some(100.0));
     assert_eq!(parse_snapshot(&json!({ "five_hour": { "used_percentage": null } }).to_string()), None);
@@ -1439,7 +1370,6 @@ fn usage_comes_from_the_claude_hud_snapshot() {
     fs::create_dir_all(&hud).unwrap();
     fs::write(hud.join("config.json"), json!({ "display": { "externalUsageWritePath": "~/hud-usage.json" } }).to_string()).unwrap();
     assert_eq!(snapshot_path(&claude, &home), Some(home.join("hud-usage.json")));
-    // A snapshot the HUD reads takes precedence over one it writes.
     let read_path = home.join("gateway-usage.json");
     fs::write(hud.join("config.json"), json!({ "display": { "externalUsagePath": read_path, "externalUsageWritePath": "~/hud-usage.json" } }).to_string()).unwrap();
     assert_eq!(snapshot_path(&claude, &home), Some(read_path));
@@ -1466,7 +1396,6 @@ fn direct_usage_replaces_an_older_hud_snapshot_and_keeps_its_error() {
         error: error.map(|kind| UsageError { kind, message: "m".into() }),
     };
 
-    // Off: claude-hud alone, as before.
     assert_eq!(merge(hud(), None), hud());
     assert_eq!(merge(None, None), None);
 
@@ -1478,13 +1407,11 @@ fn direct_usage_replaces_an_older_hud_snapshot_and_keeps_its_error() {
     assert!(newer.models.is_empty());
     assert_eq!(newer.plan.as_deref(), Some("Ultra 20x"));
 
-    // An older direct answer leaves the snapshot, but its error still shows.
     let older = merge(hud(), Some(api(hud_at - 1, Some(UsageErrorKind::LoginRequired)))).unwrap();
     assert_eq!(older.source, UsageSource::Hud);
     assert_eq!(older.five_hour.map(|w| w.used), Some(27.0));
     assert_eq!(older.error.map(|e| e.kind), Some(UsageErrorKind::LoginRequired));
 
-    // No snapshot and no answer yet: an empty usage that names the failure.
     let failed = merge(None, Some(ClaudeUsage { error: Some(UsageError { kind: UsageErrorKind::NoProxy, message: "m".into() }), ..ClaudeUsage::default() })).unwrap();
     assert_eq!((failed.five_hour, failed.seven_day, failed.source), (None, None, UsageSource::Hud));
     assert_eq!(failed.error.map(|e| e.kind), Some(UsageErrorKind::NoProxy));
@@ -1511,7 +1438,6 @@ fn magpie_is_asked_only_on_this_computer_with_claude_codes_gateway_token() {
         let settings = json!({ "env": { "ANTHROPIC_BASE_URL": base, "ANTHROPIC_AUTH_TOKEN": "t" } });
         assert_eq!(gateway_from(Some(&settings), &none), None, "{base}");
     }
-    // Claude Code's settings win over the process environment, which fills in the rest.
     let process = |key: &str| match key {
         "ANTHROPIC_BASE_URL" => Some("http://127.0.0.1:9".to_string()),
         "ANTHROPIC_API_KEY" => Some("k".to_string()),
@@ -1544,14 +1470,12 @@ fn magpie_quotas_become_usage_by_window_name() {
     assert_eq!(usage.seven_day.as_ref().map(|w| w.used), Some(44.0));
     assert_eq!(usage.models.iter().map(|w| (w.name.as_str(), w.used)).collect::<Vec<_>>(), [("Fable", 0.0)]);
 
-    // The account magpie served last wins over the first Claude one.
     let two = json!({ "data": [
         { "provider": "a/claude", "windows": [{ "name": "5 hours", "used": 1 }] },
         { "provider": "b/claude", "last": true, "windows": [{ "name": "5 hours", "used": 2 }] }
     ] })
     .to_string();
     assert_eq!(parse_quotas(&two, 0).and_then(|u| u.five_hour).map(|w| w.used), Some(2.0));
-    // No account (magpie lists none without the gateway token), or none with known windows.
     assert_eq!(parse_quotas(r#"{"data":[],"object":"list"}"#, 0), None);
     assert_eq!(parse_quotas(&json!({ "data": [{ "provider": "x", "windows": [{ "name": "Limit", "used": 3 }] }] }).to_string(), 0), None);
     assert_eq!(parse_quotas("not json", 0), None);
@@ -1579,7 +1503,6 @@ fn codex_usage_comes_from_the_newest_token_count_with_a_window() {
     let week = usage.seven_day.as_ref().unwrap();
     assert_eq!((week.used, week.resets_at), (19.0, Some(at_ms + 3_600_000)));
 
-    // Slots can come swapped: the window's length decides.
     let swapped = count(at, json!({
         "primary": { "used_percent": 40, "window_minutes": 10080 },
         "secondary": { "used_percent": 5, "window_minutes": 300 }
@@ -1587,7 +1510,6 @@ fn codex_usage_comes_from_the_newest_token_count_with_a_window() {
     let usage = parse_rollout(&swapped).unwrap();
     assert_eq!((usage.five_hour.unwrap().used, usage.seven_day.unwrap().used), (5.0, 40.0));
 
-    // Null windows (as an API-key or gateway login writes them) are skipped for an older event with numbers.
     let empty = count("2026-11-07T04:00:00Z", json!({ "limit_id": "premium", "primary": null, "secondary": null, "plan_type": "pro" }));
     let mixed = [full.clone(), empty.clone(), line(json!({ "type": "event_msg", "payload": { "type": "agent_message" } }))].concat();
     assert_eq!(parse_rollout(&mixed).unwrap().updated_at, Some(at_ms));
@@ -1622,7 +1544,6 @@ fn a_symlinked_file_is_not_written() {
     let target = dir.join("target.md");
     let link = dir.join("link.md");
     std::fs::write(&target, "old").unwrap();
-    // Creating symlinks needs Developer Mode or an elevated process on Windows.
     if std::os::windows::fs::symlink_file(&target, &link).is_err() {
         let _ = std::fs::remove_file(&target);
         let _ = std::fs::remove_dir(&dir);
@@ -1653,25 +1574,21 @@ fn each_saved_notification_is_a_file_and_the_newest_of_a_session_decides() {
     save("claudeCode-3.json", r#"{"hook_event_name":"PreCompact","session_id":"s3"}"#);
     save("claudeCode-4.json", r#"{"hook_event_name":"PreCompact","session_id":"s4"}"#);
     save("claudeCode-5.json", r#"{"hook_event_name":"PostCompact","session_id":"s4"}"#);
-    // A later event of s1 that is not a wait: s1 has moved on.
     save("claudeCode-6.json", r#"{"hook_event_name":"Notification","notification_type":"idle_prompt","session_id":"s1"}"#);
     save("claudeCode-7.json", "not json");
     let now = current_unix_millis();
 
-    // Two sessions waiting at once are both seen; read only, nothing is deleted.
     let saved = saved_notifications(&dir, now, false);
     assert_eq!(saved.waiting.keys().collect::<Vec<_>>(), vec!["s2"]);
     assert_eq!(saved.compacting.keys().collect::<Vec<_>>(), vec!["s3"]);
     assert_eq!(saved.sessions.len(), 4);
     assert_eq!(fs::read_dir(&dir).unwrap().count(), 7);
 
-    // Pruning drops the files a newer one of the same session replaced, and keeps what decides.
     assert_eq!(saved_notifications(&dir, now, true), saved);
     let mut left: Vec<String> = fs::read_dir(&dir).unwrap().map(|entry| entry.unwrap().file_name().to_string_lossy().into_owned()).collect();
     left.sort();
     assert_eq!(left, ["claudeCode-2.json", "claudeCode-3.json", "claudeCode-5.json", "claudeCode-6.json", "claudeCode-7.json"]);
 
-    // Past a day every file goes, and a compaction past its limit no longer counts.
     assert!(saved_notifications(&dir, now + 11 * 60 * 1000, false).compacting.is_empty());
     assert_eq!(saved_notifications(&dir, now + 25 * 60 * 60 * 1000, true), Default::default());
     assert_eq!(fs::read_dir(&dir).unwrap().count(), 0);
@@ -1682,12 +1599,10 @@ fn a_background_task_waking_the_session_is_not_a_prompt() {
     use super::sessions::parse_claude_tail;
     use super::title::user_prompt_in_record;
 
-    // As Claude Code writes it (issue #15): a plain user record, told apart by origin.kind.
     let notification = "<task-notification>\n<task-id>b1</task-id>\n<status>completed</status>\n</task-notification>";
     let wake = line(json!({"type": "user", "timestamp": "2026-11-06T07:20:00Z", "origin": {"kind": "task-notification", "producer": "session-task"},
         "message": {"role": "user", "content": notification}}));
     assert_eq!(user_prompt_in_record(&wake), None);
-    // Without origin (older Claude Code), the opening tag alone is enough.
     assert_eq!(user_prompt_in_record(&user_line(json!(notification))), None);
 
     let transcript = [
@@ -1717,7 +1632,6 @@ fn hooks_from_before_the_rename_count_as_outdated_and_are_replaced() {
     let running = Path::new(r"C:\Users\me\AppData\Roaming\com.tixxin.fuyu\fuyu-agent-running.cmd");
     let status = Path::new(r"C:\Users\me\AppData\Roaming\com.tixxin.fuyu\fuyu-agent-status.ps1");
 
-    // Codex: the old block, under its old markers, is the island's and goes away whole.
     let old_block = build_codex_hook_block(old_running, old_status, false)
         .replace("# BEGIN Fuyu Agent Status Hooks", "# BEGIN FocuSD Agent Status Hooks")
         .replace("# END Fuyu Agent Status Hooks", "# END FocuSD Agent Status Hooks");
@@ -1727,8 +1641,6 @@ fn hooks_from_before_the_rename_count_as_outdated_and_are_replaced() {
     assert!(!cleaned.contains("focusd-agent-") && !cleaned.contains("FocuSD Agent Status Hooks"), "{cleaned}");
     assert!(cleaned.contains("[profiles.mine]") && cleaned.starts_with("model = \"x\""));
 
-    // Claude Code: entries with the old signature are outdated, and installing replaces them
-    // while the user's own hook stays.
     let mut hooks = serde_json::Map::new();
     let users = json!({ "hooks": [{ "type": "command", "command": "notify-send hi" }] });
     hooks.insert("Stop".into(), json!([users.clone()]));

@@ -1,7 +1,3 @@
-//! Sound packs for agent events. Each imported pack is a folder under the app data
-//! directory, `sound-packs/<id>/`, holding `pack.json` and one file per event named
-//! `<event>.<ext>`. The Sounds page reads the folder the user picks and sends the files here.
-
 use std::{
     collections::BTreeMap,
     fs,
@@ -16,16 +12,13 @@ use crate::plugin_host::{plugin_sound_packs, PluginSoundPack};
 
 const PACKS_DIR: &str = "sound-packs";
 const MANIFEST: &str = "pack.json";
-/// Mirrors AGENT_SOUND_EVENTS in src/features/agent-status/sounds/events.ts.
 pub(crate) const SOUND_EVENTS: [&str; 10] = [
     "start", "complete", "error", "approval", "question", "ack", "compact", "idle", "quotaLow", "quotaReset",
 ];
 const EXTENSIONS: [&str; 5] = ["wav", "mp3", "ogg", "m4a", "flac"];
-/// Short notification sounds; anything larger is not one.
 const MAX_FILE_BYTES: usize = 4 * 1024 * 1024;
 const MAX_TEXT_CHARS: usize = 120;
 
-/// Mirrors SoundPack in src/features/agent-status/sounds/api.ts.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct SoundPack {
@@ -33,17 +26,13 @@ pub struct SoundPack {
     pub name: String,
     pub author: String,
     pub license: String,
-    /// Event to the file name inside the pack's folder.
     pub sounds: BTreeMap<String, String>,
-    /// A pack from an installed plugin (id `plugin:<plugin id>`): removed by uninstalling the
-    /// plugin, and named in both languages (`name` is the Chinese one).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub name_en: Option<String>,
     #[serde(default)]
     pub from_plugin: bool,
 }
 
-/// How a plugin's pack is named among the sound packs.
 const PLUGIN_PACK_PREFIX: &str = "plugin:";
 
 fn plugin_pack(pack: PluginSoundPack) -> (SoundPack, PathBuf) {
@@ -59,13 +48,11 @@ fn plugin_pack(pack: PluginSoundPack) -> (SoundPack, PathBuf) {
     (sound_pack, pack.dir)
 }
 
-/// A plugin's pack by its sound pack id, with the plugin's folder.
 fn find_plugin_pack(id: &str) -> Option<(SoundPack, PathBuf)> {
     let plugin_id = id.strip_prefix(PLUGIN_PACK_PREFIX)?;
     plugin_sound_packs().into_iter().find(|pack| pack.id == plugin_id).map(plugin_pack)
 }
 
-/// Mirrors SoundPackImport in src/features/agent-status/sounds/api.ts.
 #[derive(Deserialize)]
 pub struct SoundPackImport {
     name: String,
@@ -77,7 +64,6 @@ pub struct SoundPackImport {
 #[derive(Deserialize)]
 pub struct SoundPackFile {
     event: String,
-    /// The original file name; only its extension is kept.
     name: String,
     bytes: Vec<u8>,
 }
@@ -92,12 +78,10 @@ fn clean_text(value: &str) -> String {
     value.trim().chars().filter(|c| !c.is_control()).take(MAX_TEXT_CHARS).collect()
 }
 
-/// Ids are what `pack_id` makes: lowercase letters, digits and dashes.
 pub(crate) fn is_valid_id(id: &str) -> bool {
     !id.is_empty() && id.len() <= 64 && id.bytes().all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-')
 }
 
-/// A new pack's id: its name in ASCII, plus the time so two packs with one name stay apart.
 pub(crate) fn pack_id(name: &str, now_ms: u128) -> String {
     let mut slug = String::new();
     for c in name.chars() {
@@ -115,16 +99,13 @@ pub(crate) fn pack_id(name: &str, now_ms: u128) -> String {
     format!("{slug}-{now_ms:x}")
 }
 
-/// The lowercase extension of a sound file name, when it is one the island plays.
 pub(crate) fn sound_extension(name: &str) -> Option<String> {
     let extension = Path::new(name).extension()?.to_str()?.to_ascii_lowercase();
     EXTENSIONS.contains(&extension.as_str()).then_some(extension)
 }
 
-/// A file to write into a pack's folder: its stored name and contents.
 type PackFile = (String, Vec<u8>);
 
-/// Checks an import and turns it into the pack to save and the files to write.
 pub(crate) fn plan_import(pack: SoundPackImport, id: String) -> Result<(SoundPack, Vec<PackFile>), String> {
     let mut sounds = BTreeMap::new();
     let mut files = Vec::new();
@@ -162,7 +143,6 @@ fn read_pack(dir: &Path) -> Option<SoundPack> {
     (pack.id == folder_id && is_valid_id(&pack.id)).then_some(pack)
 }
 
-/// The imported sound packs and those of switched-on plugins, by name.
 #[tauri::command]
 pub async fn list_sound_packs(app: AppHandle) -> Result<Vec<SoundPack>, String> {
     let dir = packs_dir(&app)?;
@@ -174,14 +154,12 @@ pub async fn list_sound_packs(app: AppHandle) -> Result<Vec<SoundPack>, String> 
     Ok(packs)
 }
 
-/// Copies a sound pack into the app data directory and returns it.
 #[tauri::command]
 pub async fn import_sound_pack(app: AppHandle, pack: SoundPackImport) -> Result<SoundPack, String> {
     let now_ms = SystemTime::now().duration_since(UNIX_EPOCH).map(|d| d.as_millis()).unwrap_or_default();
     let id = pack_id(&pack.name, now_ms);
     let (pack, files) = plan_import(pack, id)?;
     let dir = packs_dir(&app)?;
-    // Written next to its final place and renamed, so a half-written pack never lists.
     let staging = dir.join(format!("{}.importing", pack.id));
     let write = || -> Result<(), String> {
         fs::create_dir_all(&staging).map_err(|error| format!("无法创建 {}：{error}", staging.display()))?;
@@ -199,7 +177,6 @@ pub async fn import_sound_pack(app: AppHandle, pack: SoundPackImport) -> Result<
     Ok(pack)
 }
 
-/// Deletes an imported sound pack.
 #[tauri::command]
 pub async fn remove_sound_pack(app: AppHandle, id: String) -> Result<(), String> {
     if id.starts_with(PLUGIN_PACK_PREFIX) {
@@ -215,8 +192,6 @@ pub async fn remove_sound_pack(app: AppHandle, id: String) -> Result<(), String>
     fs::remove_dir_all(&dir).map_err(|error| format!("无法删除音效包：{error}"))
 }
 
-/// Opens a pack's folder in File Explorer: the imported copy, or the plugin's own folder. Takes
-/// only the id, so nothing but a listed pack's folder can be opened.
 #[tauri::command]
 pub async fn open_sound_pack_folder(app: AppHandle, id: String) -> Result<(), String> {
     let dir = if id.starts_with(PLUGIN_PACK_PREFIX) {
@@ -231,7 +206,6 @@ pub async fn open_sound_pack_folder(app: AppHandle, id: String) -> Result<(), St
     tauri_plugin_opener::open_path(&dir, None::<&str>).map_err(|error| format!("无法打开文件夹：{error}"))
 }
 
-/// One sound file of an imported pack, as raw bytes. Only files the pack's manifest lists are served.
 #[tauri::command]
 pub async fn read_sound_pack_file(app: AppHandle, id: String, file: String) -> Result<Response, String> {
     let (pack, dir) = if id.starts_with(PLUGIN_PACK_PREFIX) {
@@ -242,7 +216,6 @@ pub async fn read_sound_pack_file(app: AppHandle, id: String, file: String) -> R
     } else {
         return Err("音效包 id 无效。".into());
     };
-    // Plugin paths were checked to stay inside the plugin folder when its manifest was read.
     if !pack.sounds.values().any(|listed| listed == &file) {
         return Err("音效包里没有这个文件。".into());
     }

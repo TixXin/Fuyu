@@ -1,10 +1,3 @@
-//! CalDAV (RFC 4791), which Feishu, DingTalk, WeCom and iCloud offer with an account and an app
-//! password made in their calendar settings. The address may be a calendar: its events in a
-//! time range are asked for with one REPORT. Otherwise it is a server or an account, and its
-//! calendars are found first (current-user-principal, calendar-home-set, then the collections
-//! that are calendars), as clients do; Feishu's discovery is not complete, so the calendar's own
-//! address can always be given instead.
-
 use crate::user_error::UserError;
 use std::time::Duration;
 
@@ -14,25 +7,18 @@ use reqwest::{Method, Url};
 
 use crate::system::updater::get_updater_proxy;
 
-/// A calendar answer far past this is not a few days of events.
 const MAX_RESPONSE_BYTES: usize = 8 * 1024 * 1024;
-/// Calendars of one account asked, at most.
 const MAX_CALENDARS: usize = 20;
 
-/// What a multistatus answer says, per `<response>`: its href and the elements in it.
 #[derive(Debug, Default, PartialEq, Eq)]
 pub(super) struct DavResponse {
     pub(super) href: String,
-    /// `calendar-data` texts (a calendar-query answer).
     pub(super) calendar_data: Vec<String>,
-    /// `resourcetype` contains `calendar`.
     pub(super) is_calendar: bool,
-    /// The hrefs inside `current-user-principal` and `calendar-home-set`.
     pub(super) principal: Option<String>,
     pub(super) home: Option<String>,
 }
 
-/// The responses of a multistatus document, by element local names (prefixes vary by server).
 pub(super) fn parse_multistatus(xml: &str) -> Vec<DavResponse> {
     let mut reader = Reader::from_str(xml);
     let mut responses = Vec::new();
@@ -116,7 +102,6 @@ pub(super) struct Account<'a> {
     pub(super) password: &'a str,
 }
 
-/// One WebDAV request; the multistatus answer, or `Err` naming what went wrong.
 async fn dav(client: &reqwest::Client, account: &Account<'_>, method: &str, url: &Url, depth: &str, body: String) -> Result<String, UserError> {
     let method = Method::from_bytes(method.as_bytes()).map_err(|error| UserError::new("internal", "Something went wrong inside the island.").detail(error))?;
     let response = client
@@ -163,7 +148,6 @@ const PROPFIND_DISCOVERY: &str = r#"<?xml version="1.0" encoding="utf-8"?>
   <d:prop><d:current-user-principal/><c:calendar-home-set/><d:resourcetype/></d:prop>
 </d:propfind>"#;
 
-/// The calendars an address leads to: itself when it is one, else those of its account.
 async fn calendars(client: &reqwest::Client, account: &Account<'_>, base: &Url) -> Result<Vec<Url>, UserError> {
     let answer = parse_multistatus(&dav(client, account, "PROPFIND", base, "0", PROPFIND_DISCOVERY.into()).await?);
     if answer.iter().any(|response| response.is_calendar) {
@@ -183,7 +167,6 @@ async fn calendars(client: &reqwest::Client, account: &Account<'_>, base: &Url) 
     listed.iter().filter(|response| response.is_calendar).take(MAX_CALENDARS).map(|response| join(&response.href)).collect()
 }
 
-/// The iCalendar texts of the events in `[from, to)` in every calendar the account leads to.
 pub(super) async fn fetch(account: &Account<'_>, from: DateTime<Utc>, to: DateTime<Utc>) -> Result<Vec<String>, UserError> {
     let base = Url::parse(account.url.trim()).map_err(|_| UserError::new("calendar.address", "The calendar address is not valid."))?;
     if base.scheme() != "https" {

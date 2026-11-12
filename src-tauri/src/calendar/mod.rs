@@ -1,9 +1,3 @@
-//! Calendars for the island: the events of last month to next month (the calendar page's month
-//! view, today's and tomorrow's list) and the next meeting, from the
-//! calendars the user added (sources.rs): ICS subscription links and CalDAV accounts. Nothing is
-//! fetched until a calendar is added. Events are read again every 15 minutes, or at once when the
-//! island asks (it opened the calendar page), and kept in memory only.
-
 mod caldav;
 mod ics;
 mod meeting_link;
@@ -22,9 +16,7 @@ use tauri::{AppHandle, Manager};
 use ics::{events_between, CalendarEvent};
 use sources::{CalendarSource, SourceKind, MAX_SOURCES};
 
-/// Events are read again after this long.
 const REFRESH_AFTER: Duration = Duration::from_secs(15 * 60);
-/// An ICS file far past this is not one person's calendar.
 const MAX_ICS_BYTES: usize = 16 * 1024 * 1024;
 
 #[derive(Debug, Clone, Serialize)]
@@ -37,31 +29,22 @@ pub struct SourceProblem {
 #[derive(Debug, Clone, Default, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CalendarSnapshot {
-    /// The events of every calendar between `from_ms` and `to_ms`, by start.
     events: Vec<CalendarEvent>,
-    /// Calendars that could not be read this time, and why.
     problems: Vec<SourceProblem>,
-    /// When the events were read (Unix ms); 0 before the first read.
     fetched_at: i64,
-    /// The time the events were read for (Unix ms): local midnight on the 1st of last month, to
-    /// that of the month after next. Both 0 before the first read.
     from_ms: i64,
     to_ms: i64,
-    /// How many calendars are added; the island shows its calendar page only with one.
     source_count: usize,
 }
 
 struct Cached {
     snapshot: CalendarSnapshot,
     at: Instant,
-    /// The sources it was read from, so adding or removing one reads again.
     sources: Vec<CalendarSource>,
 }
 
 static CACHE: Mutex<Option<Cached>> = Mutex::new(None);
 
-/// From this computer's midnight on the 1st of last month to that of the month after next: the
-/// months the calendar page shows events in (this one, and one either side).
 fn window(now: DateTime<Local>) -> (DateTime<Utc>, DateTime<Utc>) {
     let midnight = |date: NaiveDate| date.and_hms_opt(0, 0, 0).and_then(|naive| Local.from_local_datetime(&naive).earliest()).unwrap_or(now);
     let first = now.date_naive().with_day(1).unwrap_or(now.date_naive());
@@ -98,8 +81,6 @@ async fn fetch_ics(link: &str) -> Result<String, UserError> {
     Ok(text)
 }
 
-/// The body as sent, unpacked when it is gzip: Apple's calendar servers send gzip even to clients
-/// that did not ask for it.
 fn ungzip(bytes: &[u8]) -> Result<Vec<u8>, UserError> {
     use std::io::Read;
     if !bytes.starts_with(&[0x1f, 0x8b]) {
@@ -116,7 +97,6 @@ fn ungzip(bytes: &[u8]) -> Result<Vec<u8>, UserError> {
     Ok(unpacked)
 }
 
-/// The events of one calendar in the window.
 async fn read_source(source: &CalendarSource, secret: &str, from: DateTime<Utc>, to: DateTime<Utc>) -> Result<Vec<CalendarEvent>, UserError> {
     let texts = match source.kind {
         SourceKind::Ics => vec![fetch_ics(secret).await?],
@@ -152,14 +132,11 @@ async fn read_all(sources: &[CalendarSource]) -> CalendarSnapshot {
             Err(message) => snapshot.problems.push(SourceProblem { source_id: source.id.clone(), message }),
         }
     }
-    // The same event in two calendars (shared, or added twice) shows once.
     snapshot.events.sort_by(|a, b| (a.start_ms, &a.uid).cmp(&(b.start_ms, &b.uid)));
     snapshot.events.dedup_by(|a, b| a.uid == b.uid && a.start_ms == b.start_ms);
     snapshot
 }
 
-/// The events of last month to next month. Read again when 15 minutes old, when the calendars changed, or
-/// with `refresh`; with no calendar added, nothing is read and the list is empty.
 #[tauri::command]
 pub async fn get_calendar_events(app: AppHandle, refresh: bool) -> Result<CalendarSnapshot, UserError> {
     let sources = sources::read(&app_dir(&app)?);
@@ -182,8 +159,6 @@ pub fn list_calendar_sources(app: AppHandle) -> Result<Vec<CalendarSource>, User
     Ok(sources::read(&app_dir(&app)?))
 }
 
-/// Adds a calendar after reading it once, so a wrong link or password is said at once.
-/// `secret` is the ICS link, or the CalDAV password.
 #[tauri::command]
 pub async fn add_calendar_source(
     app: AppHandle,
@@ -241,7 +216,6 @@ pub fn remove_calendar_source(app: AppHandle, id: String) -> Result<(), UserErro
     sources::delete_secret(&id)
 }
 
-/// This module's Tauri commands, chained into `lib.rs`'s `generate_handler!`.
 macro_rules! tauri_commands {
     ($next:ident [$($done:tt)*] $($rest:tt)*) => {
         $next!([$($done)*

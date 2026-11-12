@@ -1,7 +1,3 @@
-//! The clipboard window (C22.2): pops up by the pointer on the shortcut, and pastes what the user
-//! picks into the window that was in front, as Ditto does: the window takes the focus for the
-//! search box and the keys, then hands it back and sends Ctrl+V.
-
 use std::{
     path::Path,
     sync::Mutex,
@@ -15,11 +11,8 @@ use super::{command_text, service, ClipboardHistoryItemKind, ClipboardHistorySet
 use crate::win32;
 
 pub(crate) const WINDOW_LABEL: &str = "clipboard";
-/// Mirrored by `CLIPBOARD_POPUP_OPENED_EVENT` in src/features/clipboard/api.ts.
 const OPENED_EVENT: &str = "clipboard-popup-opened";
-/// Gap between the pointer and the window's corner.
 const POINTER_GAP: i32 = 12;
-/// The window's logical size per layout; tauri.conf.json declares the standard one.
 pub(super) fn popup_size(layout: PopupLayout) -> (f64, f64) {
     match layout {
         PopupLayout::Standard => (380.0, 500.0),
@@ -27,13 +20,10 @@ pub(super) fn popup_size(layout: PopupLayout) -> (f64, f64) {
     }
 }
 
-/// Time for the window that gets the focus back to take keys again before Ctrl+V arrives.
 const FOCUS_SETTLE: Duration = Duration::from_millis(70);
 
-/// The window that was in front when the popup opened, as an HWND value.
 static TARGET_WINDOW: Mutex<Option<isize>> = Mutex::new(None);
 
-/// Terminals whose image paste goes as a path (Claude Code and other CLIs read it as an image).
 const TERMINAL_PROCESSES: &[&str] = &[
     "windowsterminal.exe",
     "openconsole.exe",
@@ -57,8 +47,6 @@ pub(super) fn is_terminal_process(path: &str) -> bool {
     TERMINAL_PROCESSES.contains(&name.as_str())
 }
 
-/// Where the popup's top-left goes for a pointer at `pointer` on a work area `(left, top, right,
-/// bottom)`: below and right of the pointer, flipped to the other side when it would not fit.
 pub(super) fn place_by_pointer(pointer: (i32, i32), size: (i32, i32), area: (i32, i32, i32, i32), gap: i32) -> (i32, i32) {
     let (left, top, right, bottom) = area;
     let mut x = pointer.0 + gap;
@@ -77,16 +65,13 @@ fn popup_window(app: &AppHandle) -> Result<WebviewWindow, String> {
         .ok_or_else(|| "The clipboard window is missing.".to_string())
 }
 
-/// Shows the popup, remembering the window in front to paste into later; the shortcut again closes it.
 pub(super) fn toggle(app: &AppHandle, settings: &ClipboardHistorySettings) -> Result<(), String> {
     let (position, layout) = (settings.popup_position, settings.popup_layout);
     let window = popup_window(app)?;
     if window.is_visible().unwrap_or(false) {
         return hide(app);
     }
-    // Screen sharing and recordings see an empty area instead of the history (C38).
     let _ = window.set_content_protected(settings.hide_from_capture);
-    // Opening the window again ends a paste sequence still running (C24.7).
     super::sequence::stop();
     let foreground = win32::window::foreground_window();
     let own = window.hwnd().map(|hwnd| hwnd.0 as isize).unwrap_or_default();
@@ -109,7 +94,6 @@ pub(super) fn toggle(app: &AppHandle, settings: &ClipboardHistorySettings) -> Re
             work.position.y + work.size.height as i32,
         );
         let scale = monitor.scale_factor();
-        // Sized for the screen it opens on, before it is placed, so a wide window fits too.
         let (width, height) = popup_size(layout);
         let size = ((width * scale).round() as i32, (height * scale).round() as i32);
         let _ = window.set_size(Size::Physical(PhysicalSize::new(size.0 as u32, size.1 as u32)));
@@ -120,7 +104,6 @@ pub(super) fn toggle(app: &AppHandle, settings: &ClipboardHistorySettings) -> Re
         let _ = window.set_position(Position::Physical(PhysicalPosition::new(x, y)));
     }
     let _ = window.emit_to(WINDOW_LABEL, OPENED_EVENT, ());
-    // The first-run guide's practice step waits for the user to open the popup.
     let _ = window.emit_to(crate::onboarding_window::WINDOW_LABEL, OPENED_EVENT, ());
     window.show().map_err(|error| error.to_string())?;
     let _ = window.set_focus();
@@ -142,7 +125,6 @@ fn take_target() -> Option<HWND> {
         .map(|value| HWND(value as *mut core::ffi::c_void))
 }
 
-/// How the window pastes an entry: without formatting, with Enter after it, or in a chosen form.
 #[derive(Debug, Clone, Copy, Default)]
 pub(super) struct PasteOptions {
     pub(super) plain: bool,
@@ -150,10 +132,6 @@ pub(super) struct PasteOptions {
     pub(super) copy_as: Option<CopyAs>,
 }
 
-/// Puts the entry on the clipboard, closes the popup and, with auto-paste on, pastes it into the
-/// window that was in front. An image or files go as their path into a terminal when that is on;
-/// `plain` drops the formatting (C24.4); a command split over lines goes into a terminal as one
-/// line when that is on (C38).
 pub(super) fn paste(app: &AppHandle, id: &str, options: PasteOptions) -> Result<(), String> {
     let service = service()?;
     let snapshot = service.snapshot()?;
@@ -185,7 +163,6 @@ pub(super) fn paste(app: &AppHandle, id: &str, options: PasteOptions) -> Result<
     Ok(())
 }
 
-/// Puts `text` on the clipboard (not into the history) and pastes it like an entry (C24.6).
 pub(super) fn paste_text(app: &AppHandle, text: &str, enter: bool) -> Result<(), String> {
     let auto_paste = service()?.snapshot()?.settings.auto_paste;
     super::suspend_clipboard_capture(Duration::from_millis(800));
@@ -195,19 +172,16 @@ pub(super) fn paste_text(app: &AppHandle, text: &str, enter: bool) -> Result<(),
     Ok(())
 }
 
-/// Hands the focus back to `target` and sends Ctrl+V there, when auto-paste is on; then Enter.
 fn paste_into(target: Option<HWND>, auto_paste: bool, enter: bool) {
     let (Some(target), true) = (target, auto_paste) else {
         return;
     };
-    // An HWND is not Send; the thread rebuilds it from the value.
     let target = target.0 as isize;
     thread::spawn(move || {
         if win32::window::force_foreground(HWND(target as *mut core::ffi::c_void)) {
             thread::sleep(FOCUS_SETTLE);
             win32::input::send_paste_shortcut();
             if enter {
-                // Chat boxes and terminals take the paste before the key that sends it.
                 thread::sleep(FOCUS_SETTLE);
                 win32::input::send_enter();
             }
@@ -231,9 +205,7 @@ mod tests {
     fn the_popup_stays_on_the_work_area() {
         let area = (0, 0, 1920, 1040);
         assert_eq!(place_by_pointer((100, 100), (380, 480), area, 12), (112, 112));
-        // Near the right and bottom edges it flips to the pointer's other side.
         assert_eq!(place_by_pointer((1900, 1000), (380, 480), area, 12), (1508, 508));
-        // A window larger than the area still starts on it.
         assert_eq!(place_by_pointer((10, 10), (2000, 480), area, 12), (0, 22));
     }
 }

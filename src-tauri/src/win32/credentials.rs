@@ -1,6 +1,3 @@
-//! Copying the current user's generic credentials (Credential Manager) to new
-//! target names, for the rename of the app's credential services (D17).
-
 use windows::{
     core::{HSTRING, PCWSTR, PWSTR},
     Win32::{
@@ -9,19 +6,16 @@ use windows::{
     },
 };
 
-/// Frees a buffer the credential API returned.
 struct CredBuffer(*const core::ffi::c_void);
 
 impl Drop for CredBuffer {
     fn drop(&mut self) {
-        // SAFETY: the pointer came from CredEnumerateW / CredReadW and is freed once.
         unsafe { CredFree(self.0) };
     }
 }
 
 fn exists(target: &HSTRING) -> bool {
     let mut found: *mut CREDENTIALW = std::ptr::null_mut();
-    // SAFETY: `target` is NUL-terminated and `found` is a valid out-pointer.
     let read = unsafe { CredReadW(PCWSTR(target.as_ptr()), CRED_TYPE_GENERIC, None, &mut found) };
     if read.is_ok() {
         drop(CredBuffer(found as *const _));
@@ -29,13 +23,9 @@ fn exists(target: &HSTRING) -> bool {
     read.is_ok()
 }
 
-/// Copies each generic credential whose target name `rename` maps to a new name,
-/// unless a credential of that name exists already; the original stays. Returns
-/// how many were copied.
 pub(crate) fn copy_generic_credentials(rename: impl Fn(&str) -> Option<String>) -> Result<usize, String> {
     let mut count = 0u32;
     let mut list: *mut *mut CREDENTIALW = std::ptr::null_mut();
-    // SAFETY: both out-pointers are valid; on success `list` holds `count` credentials.
     if let Err(error) = unsafe { CredEnumerateW(PCWSTR::null(), None, &mut count, &mut list) } {
         if error.code() == ERROR_NOT_FOUND.to_hresult() {
             return Ok(0);
@@ -43,16 +33,13 @@ pub(crate) fn copy_generic_credentials(rename: impl Fn(&str) -> Option<String>) 
         return Err(format!("Could not list the saved credentials: {error}"));
     }
     let _buffer = CredBuffer(list as *const _);
-    // SAFETY: CredEnumerateW returned `count` valid pointers, alive until `_buffer` drops.
     let items = unsafe { std::slice::from_raw_parts(list, count as usize) };
     let mut copied = 0;
     for &item in items {
-        // SAFETY: each pointer is a valid CREDENTIALW while `_buffer` lives.
         let credential = unsafe { *item };
         if credential.Type != CRED_TYPE_GENERIC || credential.TargetName.is_null() {
             continue;
         }
-        // SAFETY: TargetName is a NUL-terminated string from the system.
         let Ok(target) = (unsafe { credential.TargetName.to_string() }) else {
             continue;
         };
@@ -65,9 +52,7 @@ pub(crate) fn copy_generic_credentials(rename: impl Fn(&str) -> Option<String>) 
         }
         let mut copy = credential;
         copy.TargetName = PWSTR(new_target.as_ptr() as *mut u16);
-        // CredWriteW takes no other flag than this one.
         copy.Flags = CRED_FLAGS(credential.Flags.0 & CRED_FLAGS_USERNAME_TARGET.0);
-        // SAFETY: `copy` points at `new_target` and at the original's buffers, all alive here.
         unsafe { CredWriteW(&copy, 0) }.map_err(|error| format!("Could not copy the credential {target}: {error}"))?;
         copied += 1;
     }

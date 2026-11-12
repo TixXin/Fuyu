@@ -1,25 +1,17 @@
-//! The tool a session called last, as the Agent page shows it: the tool's name and a short
-//! summary of what it was given (a command, a file name, a pattern). Pure parsing of the
-//! undocumented Claude Code and Codex records; anything unexpected gives no tool or no detail.
-
 use serde::Serialize;
 use serde_json::Value;
 
 use super::title::shorten;
 
-/// The detail fits one line next to the tool name.
 const DETAIL_MAX_CHARS: usize = 80;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ToolCall {
-    /// "Bash", "Edit"; an MCP tool by its own name ("browser_click"), without the server prefix.
     pub(super) name: String,
-    /// The command, file name, pattern or the like, when the tool has an obvious one.
     pub(super) detail: Option<String>,
 }
 
-/// The newest `tool_use` block in the content of a Claude Code assistant message.
 pub(super) fn claude_tool_call(content: &Value) -> Option<ToolCall> {
     let block = content
         .as_array()?
@@ -44,7 +36,6 @@ pub(super) fn claude_tool_call(content: &Value) -> Option<ToolCall> {
     Some(ToolCall { name, detail: detail.and_then(|text| shorten(&text, DETAIL_MAX_CHARS)) })
 }
 
-/// A tool call in the payload of a Codex `response_item` record.
 pub(super) fn codex_tool_call(payload: &Value) -> Option<ToolCall> {
     let (name, detail) = match payload["type"].as_str()? {
         "function_call" => {
@@ -64,14 +55,11 @@ pub(super) fn codex_tool_call(payload: &Value) -> Option<ToolCall> {
     Some(ToolCall { name, detail: detail.and_then(|text| shorten(&text, DETAIL_MAX_CHARS)) })
 }
 
-/// The last part of an MCP tool name (`mcp__server__tool`), or the name as it is.
 fn tool_name(raw: &str) -> Option<String> {
     let name = raw.rsplit("__").next().unwrap_or(raw).trim();
     (!name.is_empty()).then(|| name.to_string())
 }
 
-/// A command given as a string, or as an argument list where `["bash", "-lc", "…"]` and the
-/// like show only the script.
 fn command_text(value: &Value) -> Option<String> {
     match value {
         Value::String(text) => Some(text.clone()),

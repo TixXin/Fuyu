@@ -1,6 +1,3 @@
-//! Windows integration: launch at startup, updater proxy and config, todo Markdown
-//! export, full-screen app detection, settings backups.
-
 pub(crate) mod accent_color;
 pub(crate) mod fullscreen;
 pub(crate) mod network_cost;
@@ -32,8 +29,6 @@ pub(crate) fn windows_home_dir() -> Result<PathBuf, String> {
     }
 }
 
-/// This module's Tauri commands. `lib.rs` chains every module's list into one
-/// `generate_handler!`, so adding a command only touches this file.
 macro_rules! tauri_commands {
     ($next:ident [$($done:tt)*] $($rest:tt)*) => {
         $next!([$($done)*

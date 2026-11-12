@@ -1,17 +1,10 @@
-//! Just enough HTTP/1.1 for the approval endpoint: one request per connection, read whole, and
-//! one JSON answer, after which the connection closes. Written against the standard library so
-//! the server keeps the socket and can tell when the agent hangs up while the user decides.
-
 use std::io::{BufRead, Read, Write};
 
 use super::config::remote_token;
 
-/// Names the SSH remote computer a request came from, through the island's reverse forward.
 pub(super) const REMOTE_HEADER: &str = "x-fuyu-remote";
-/// The header's name before the rename (D17), sent by remote hooks not yet repaired.
 const LEGACY_REMOTE_HEADER: &str = "x-focusd-remote";
 
-/// A hook's input: a command with its full output, or a file being written, can be large.
 pub(super) const MAX_BODY_BYTES: usize = 4 * 1024 * 1024;
 const MAX_LINE_BYTES: usize = 8 * 1024;
 const MAX_HEADERS: usize = 64;
@@ -19,9 +12,7 @@ const MAX_HEADERS: usize = 64;
 #[derive(Debug, Default, PartialEq, Eq)]
 pub(super) struct HttpRequest {
     pub method: String,
-    /// The path without its query.
     pub path: String,
-    /// Names in lower case.
     pub headers: Vec<(String, String)>,
     pub body: Vec<u8>,
 }
@@ -32,7 +23,6 @@ impl HttpRequest {
     }
 }
 
-/// Why a request was turned away, with the status to answer.
 #[derive(Debug, PartialEq, Eq)]
 pub(super) struct HttpError {
     pub status: u16,
@@ -95,7 +85,6 @@ fn read_chunked(reader: &mut impl BufRead) -> Result<Vec<u8>, HttpError> {
         let size_text = size_line.split(';').next().unwrap_or_default().trim();
         let size = usize::from_str_radix(size_text, 16).map_err(|_| error(400, "Bad chunk size."))?;
         if size == 0 {
-            // Trailers, if any, end with an empty line.
             while !read_line(reader)?.is_empty() {}
             return Ok(body);
         }
@@ -111,7 +100,6 @@ fn read_chunked(reader: &mut impl BufRead) -> Result<Vec<u8>, HttpError> {
     }
 }
 
-/// One line without its CRLF (or bare LF).
 fn read_line(reader: &mut impl BufRead) -> Result<String, HttpError> {
     let mut line = Vec::new();
     let read = reader
@@ -132,7 +120,6 @@ fn read_line(reader: &mut impl BufRead) -> Result<String, HttpError> {
     String::from_utf8(line).map_err(|_| error(400, "The request is not UTF-8."))
 }
 
-/// Answers with `body` as JSON and closes the connection.
 pub(super) fn write_response(writer: &mut impl Write, status: u16, body: &str) -> std::io::Result<()> {
     let reason = match status {
         200 => "OK",
@@ -153,10 +140,6 @@ pub(super) fn write_response(writer: &mut impl Write, status: u16, body: &str) -
     writer.flush()
 }
 
-/// Whether the request may reach the endpoint: from this machine's agents, or a remote
-/// computer's through the forward on the same port, not from a web page (no Origin, and a Host
-/// naming this port, which DNS rebinding cannot fake), with the token; a remote one carries that
-/// computer's own. Returns the remote computer.
 pub(super) fn check_access(request: &HttpRequest, token: &str, port: u16) -> Result<Option<String>, HttpError> {
     if request.header("origin").is_some() {
         return Err(error(403, "Requests from web pages are not accepted."));
@@ -179,7 +162,6 @@ pub(super) fn check_access(request: &HttpRequest, token: &str, port: u16) -> Res
     Ok(remote)
 }
 
-/// Compares in time that does not depend on where the first difference is.
 fn same_secret(a: &[u8], b: &[u8]) -> bool {
     a.len() == b.len() && a.iter().zip(b).fold(0u8, |acc, (x, y)| acc | (x ^ y)) == 0
 }

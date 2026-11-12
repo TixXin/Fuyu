@@ -1,8 +1,3 @@
-//! Clicking a session on the Agent page: find the window that shows it and bring it forward, and
-//! in Orca, Windows Terminal or VS Code switch to its tab or terminal. The order tried is in
-//! docs/features/agent-status-hooks.md, "Switching to a Session's Window". Every attempt is written to
-//! agent-focus.log (focus_log.rs).
-
 use std::path::Path;
 
 use super::editor_terminal::{self, EditorTerminal};
@@ -16,13 +11,10 @@ use super::window_focus::{self, app_name, SessionHints};
 use crate::system::windows_home_dir;
 use crate::win32;
 
-/// Windows Terminal's executable name; its tabs are switched through UI Automation.
 const WINDOWS_TERMINAL_APP: &str = "windowsterminal";
 
-/// Folder names above a session's folder that an editor might have open instead.
 const MAX_ANCESTORS: usize = 4;
 
-/// The last folder name of `cwd`, then the ones above it, nearest first.
 pub(super) fn folder_names(cwd: &str) -> (Option<String>, Vec<String>) {
     let mut names = cwd
         .trim_end_matches(['\\', '/'])
@@ -34,14 +26,10 @@ pub(super) fn folder_names(cwd: &str) -> (Option<String>, Vec<String>) {
     (folder, names.take(MAX_ANCESTORS).collect())
 }
 
-/// Whether the process remembered for a session is still the same one (not a reused id).
 pub(super) fn still_running(seen: &SeenSession, started_now: Option<u64>) -> bool {
     started_now.is_some() && seen.started.is_none_or(|started| Some(started) == started_now)
 }
 
-/// The session's process and its ancestors: from its SessionStart record (Claude Code and Codex),
-/// else Claude Code's registry, else the process remembered for it. A session cleared or resumed
-/// under a new id keeps running in the recorded process.
 fn process_chain(
     is_codex: bool,
     session_id: Option<&str>,
@@ -57,7 +45,6 @@ fn process_chain(
         log.note(format!("process=hook({})", chain.len()));
         return chain;
     }
-    // Only Claude Code keeps a registry of running sessions.
     if let (false, Ok(home_dir)) = (is_codex, windows_home_dir()) {
         let chain = session_process_chain(&home_dir, id);
         if !chain.is_empty() {
@@ -91,8 +78,6 @@ struct Lookup<'a> {
     title: Option<&'a str>,
 }
 
-/// The session's Orca tab: from its process's environment, what was remembered, the SessionStart
-/// record, then (no process, Orca open) Orca's own list by tab title or, for Codex, by folder.
 fn orca_handle(lookup: &Lookup, chain: &[u32], seen: Option<&SeenSession>, log: &mut Attempt) -> Option<String> {
     let found = |source: &str, handle: Option<String>, log: &mut Attempt| {
         if handle.is_some() {
@@ -130,16 +115,11 @@ fn orca_handle(lookup: &Lookup, chain: &[u32], seen: Option<&SeenSession>, log: 
     found("orca-folder", by_folder, log)
 }
 
-/// What came of clicking a session.
 pub(super) struct Focused {
-    /// Whether a window was found and brought forward (or flashed).
     pub(super) found: bool,
-    /// The editor (executable name) the session's window belongs to when it lacks the extension
-    /// that switches to the session's terminal; the Agent page offers to install it.
     pub(super) missing_extension: Option<String>,
 }
 
-/// Finds and brings forward the window of a session.
 pub(super) fn focus_session(
     app_dir: Option<&Path>,
     provider: &str,
@@ -159,7 +139,6 @@ pub(super) fn focus_session(
     let lookup = Lookup { app_dir, record: record.as_ref(), is_codex, session_id, cwd, title };
     let handle = orca_handle(&lookup, &chain, seen.as_ref(), &mut log);
 
-    // With no process to follow, the program the session was last seen in is the best guess.
     let remembered_app = seen.as_ref().and_then(|seen| seen.host_exe.as_deref()).map(app_name);
     let prefer_app = if handle.is_some() { Some(orca::ORCA_APP.to_string()) } else { remembered_app };
     if let Some(app) = &prefer_app {
@@ -169,8 +148,6 @@ pub(super) fn focus_session(
     let hints = SessionHints { folder: folder.as_deref(), ancestors: &ancestors, title, is_codex };
     let mut wezterm_tab = false;
     let focused = window_focus::focus_session_window(&hints, &chain, prefer_app.as_deref()).or_else(|| {
-        // No process chain and no window titled so: the session may sit in a background WezTerm
-        // tab. Bring that tab forward, after which its window carries the title.
         wezterm_tab = wezterm::activate_tab_titled(None, title?);
         wezterm_tab.then(|| window_focus::focus_session_window(&hints, &chain, Some(WEZTERM_APP)))?
     });
@@ -197,7 +174,6 @@ pub(super) fn focus_session(
         log.note(if selected { "wt-tab=selected" } else { "wt-tab=none" });
     }
     let mut missing_extension = None;
-    // The link goes to the editor window used last, so only once the session's window is in front.
     if let (true, Ok(home_dir)) = (focused.in_front, windows_home_dir()) {
         let shown = editor_terminal::show_session_terminal(&home_dir, &focused.app, &chain, title);
         match shown {
@@ -214,7 +190,6 @@ pub(super) fn focus_session(
     Focused { found: true, missing_extension }
 }
 
-/// A session asked about by `sessions_in_front`.
 #[derive(Debug, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SessionRef {
@@ -222,10 +197,6 @@ pub struct SessionRef {
     session_id: String,
 }
 
-/// Ids of the sessions whose window is the one in front: the foreground window belongs to the
-/// session's process or one of its ancestors (the terminal or editor it runs in). A session whose
-/// process is not known is never in front. Shell hosts such as Explorer, which can be ancestors of
-/// anything, do not count.
 pub(super) fn sessions_in_front(app_dir: Option<&Path>, sessions: &[SessionRef]) -> Vec<String> {
     let front = win32::process::window_process_id(win32::window::foreground_window());
     let front_app = win32::process::image_path(front).map(|path| app_name(&path));
@@ -236,7 +207,6 @@ pub(super) fn sessions_in_front(app_dir: Option<&Path>, sessions: &[SessionRef])
         .iter()
         .filter(|session| {
             let id = session.session_id.as_str();
-            // Only to satisfy process_chain; never written to agent-focus.log.
             let mut log = Attempt::new(&session.provider, Some(id));
             let seen = session_memory::get(app_dir, id);
             let record = app_dir.and_then(|dir| session_records::read(dir, id));

@@ -1,8 +1,3 @@
-//! Synced lyrics from LRCLIB (https://lrclib.net), a free, open lyrics database with no key.
-//! Its rules (https://lrclib.net/docs.md): send a User-Agent naming the app; `/api/get` matches
-//! a track by name, artist, album and duration (within 2 s); `/api/search` finds candidates.
-//! Only used when the user turned online lyrics on.
-
 use std::time::Duration;
 
 use serde::Deserialize;
@@ -21,15 +16,11 @@ pub(super) struct Record {
     track_name: String,
     #[serde(default)]
     artist_name: String,
-    /// Seconds.
     #[serde(default)]
     duration: f64,
     synced_lyrics: Option<String>,
 }
 
-/// The synced lyrics of the search result that is the playing track: same cleaned title, a
-/// shared artist and a close duration. A track named in simplified Chinese prefers lyrics
-/// written in simplified characters; then the closest duration wins. `None` when none is.
 pub(super) fn best_match(records: &[Record], title: &str, artist: &str, duration_ms: i64) -> Option<String> {
     let simplified = named_in_simplified(title, artist);
     let title = clean_title(title);
@@ -45,14 +36,12 @@ pub(super) fn best_match(records: &[Record], title: &str, artist: &str, duration
         .and_then(|record| record.synced_lyrics.clone())
 }
 
-/// Lyrics with more than a couple of traditional characters are taken as written in traditional.
 fn is_traditional(lyrics: &str) -> bool {
     traditional_chars(lyrics) > 2
 }
 
 fn client() -> Result<reqwest::Client, String> {
     let mut builder = reqwest::Client::builder().timeout(REQUEST_TIMEOUT).user_agent(USER_AGENT);
-    // Same proxy as the updater: env vars first, then the Windows system proxy.
     if let Some(proxy) = get_updater_proxy() {
         let proxy = reqwest::Proxy::all(&proxy).map_err(|error| format!("Invalid proxy {proxy}: {error}"))?;
         builder = builder.proxy(proxy);
@@ -60,7 +49,6 @@ fn client() -> Result<reqwest::Client, String> {
     builder.build().map_err(|error| format!("Could not create the HTTP client: {error}"))
 }
 
-/// One JSON answer; `None` for 404, which LRCLIB gives when it has no such track.
 async fn get_json<T: for<'de> Deserialize<'de>>(client: &reqwest::Client, path: &str, query: &[(&str, String)]) -> Result<Option<T>, String> {
     let url = reqwest::Url::parse_with_params(&format!("{BASE}/{path}"), query).map_err(|error| error.to_string())?;
     let response = client.get(url).send().await.map_err(|error| format!("Could not reach LRCLIB: {error}"))?;
@@ -73,8 +61,6 @@ async fn get_json<T: for<'de> Deserialize<'de>>(client: &reqwest::Client, path: 
     response.json().await.map(Some).map_err(|error| format!("LRCLIB sent something unexpected: {error}"))
 }
 
-/// Synced lyrics for the track: an exact lookup when the duration is known, then a search.
-/// `Ok(None)` when LRCLIB has none; `Err` when it could not be asked.
 pub(super) async fn fetch(title: &str, artist: &str, album: &str, duration_ms: i64) -> Result<Option<String>, String> {
     let client = client()?;
     let mut exact = None;
@@ -87,7 +73,6 @@ pub(super) async fn fetch(title: &str, artist: &str, album: &str, duration_ms: i
         ];
         let record: Option<Record> = get_json(&client, "get", &query).await?;
         exact = record.and_then(|record| record.synced_lyrics).filter(|lyrics| !lyrics.trim().is_empty());
-        // Traditional lyrics for a track named in simplified: a search may find a simplified copy.
         if exact.as_deref().is_some_and(|lyrics| !named_in_simplified(title, artist) || !is_traditional(lyrics)) {
             return Ok(exact);
         }
@@ -134,7 +119,6 @@ mod tests {
         ];
         assert!(best_match(&records, "余香", "张小九", 0).is_some_and(|lyrics| lyrics.contains("划一根")));
         assert!(best_match(&records, "余香", "张小九", 230_000).is_some_and(|lyrics| lyrics.contains("划一根")));
-        // Only traditional lyrics exist: they are still used.
         assert!(best_match(&records[..1], "余香", "张小九", 0).is_some_and(|lyrics| lyrics.contains("劃")));
     }
 

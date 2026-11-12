@@ -88,7 +88,6 @@ fn a_typed_imap_host_must_be_a_bare_domain() {
     assert_eq!(resolve_host("x@163.com", None).unwrap(), "imap.163.com");
     assert_eq!(resolve_host("x@example.edu.cn", Some(" ")).unwrap(), "imap.example.edu.cn");
     assert_eq!(resolve_host("x@foxmail.com", Some("IMAP.QQ.COM")).unwrap(), "imap.qq.com");
-    // A port is kept unless it is the default 993.
     assert_eq!(resolve_host("x@qq.com", Some("imap.qq.com:993")).unwrap(), "imap.qq.com");
     assert_eq!(resolve_host("x@corp.cn", Some("mail.corp.cn:9993")).unwrap(), "mail.corp.cn:9993");
     assert_eq!(super::credentials::server_address("mail.corp.cn:9993"), ("mail.corp.cn", 9993));
@@ -158,7 +157,6 @@ fn inlines_only_images_referenced_by_cid() {
         replace_cid_references("中文 cid:x", &[("x".into(), "图".into())]),
         "中文 图"
     );
-    // cid:image1 不能吃掉 cid:image10 的前缀
     assert_eq!(
         replace_cid_references(
             r#"<img src="cid:image10"><img src="cid:image1">"#,
@@ -166,7 +164,6 @@ fn inlines_only_images_referenced_by_cid() {
         ),
         format!(r#"<img src="cid:image10"><img src="{png}">"#)
     );
-    // 整个 cid:token 都要换掉，不能留下 "cid:data:image/..." 这种无效地址
     assert_eq!(
         replace_cid_references(r#"<img src="cid:x">"#, &[("x".into(), png.clone())]),
         format!(r#"<img src="{png}">"#)
@@ -593,7 +590,6 @@ fn attachments_are_listed_decoded_and_only_listed_parts_are_fetched() {
     assert_eq!(bytes, b"hello");
     assert!(String::from_utf8_lossy(&output.lock().unwrap()).contains("a4 UID FETCH 9 (UID BODY.PEEK[2.MIME] BODY.PEEK[2])"));
 
-    // The text body is not an attachment, so it cannot be fetched this way.
     let script = format!("* OK ready\r\na1 OK login\r\n* 1 EXISTS\r\n* OK [UIDVALIDITY 7] valid\r\na2 OK [READ-ONLY] examined\r\n* 1 FETCH (UID 9 BODYSTRUCTURE {structure})\r\na3 OK structure\r\n");
     let (imap, output) = client(script);
     let mut session = imap.login("user@qq.com", "test-secret").unwrap();
@@ -650,7 +646,6 @@ fn marking_read_selects_the_inbox_and_stores_seen_on_that_uid() {
     assert!(sent.contains("a2 SELECT \"INBOX\""), "{sent}");
     assert!(sent.contains("a3 UID STORE 9 +FLAGS.SILENT (\\Seen)"), "{sent}");
 
-    // An id from before the inbox was rebuilt flags nothing.
     let stale = "* OK ready\r\na1 OK login\r\n* OK [UIDVALIDITY 8] valid\r\na2 OK [READ-WRITE] selected\r\n".to_string();
     let (imap, output) = client(stale);
     let mut session = imap.login("user@qq.com", "test-secret").unwrap();
@@ -711,7 +706,6 @@ fn split_fetch_responses_still_build_the_body() {
         "(\"TEXT\" \"PLAIN\" (\"CHARSET\" \"UTF-8\") NIL NIL \"BASE64\" {} 1)",
         body.len()
     );
-    // 续包只带了分段、没重复 UID（QQ 的拆包形态），正文和报文头都要能拼出来。
     let script = format!("* OK ready\r\na1 OK login\r\n* 1 EXISTS\r\n* OK [UIDVALIDITY 7] valid\r\na2 OK [READ-ONLY] examined\r\n* 1 FETCH (UID 9 BODYSTRUCTURE {structure})\r\na3 OK structure\r\n* 1 FETCH (UID 9 BODY[HEADER] {{{}}}\r\n{mime})\r\n* 1 FETCH (BODY[1] {{{}}}\r\n{body})\r\na4 OK body\r\n", mime.len(), body.len());
     let (client, _) = client(script);
     let mut session = client.login("user@qq.com", "test-secret").unwrap();
@@ -748,8 +742,6 @@ fn images_split_across_fetch_responses_without_repeated_uid_are_all_inlined() {
         first.len(),
         second.len()
     );
-    // 图片多时服务器会把分段拆成多条 FETCH 响应，而且只有第一条带 UID，后面的响应
-    // 只给分段——按 uid 过滤的话就只能拿到第一批，两张图都得内联才算过。
     let script = format!(
         "* OK ready\r\na1 OK login\r\n* 1 EXISTS\r\n* OK [UIDVALIDITY 7] valid\r\na2 OK [READ-ONLY] examined\r\n* 1 FETCH (UID 9 BODYSTRUCTURE {structure})\r\na3 OK structure\r\n* 1 FETCH (UID 9 BODY[1.MIME] {{{}}}\r\n{mime} BODY[1] {{{}}}\r\n{body})\r\na4 OK body\r\n* 1 FETCH (UID 9 BODY[2] {{{}}}\r\n{first})\r\n* 1 FETCH (BODY[3] {{{}}}\r\n{second})\r\na5 OK images\r\n",
         mime.len(),
@@ -781,7 +773,6 @@ fn an_image_missing_from_the_batches_is_fetched_again_on_its_own() {
         first.len(),
         second.len()
     );
-    // 服务器只把第一批发回来（第二张图缺失），得单独再取一次这个分段补上。
     let script = format!(
         "* OK ready\r\na1 OK login\r\n* 1 EXISTS\r\n* OK [UIDVALIDITY 7] valid\r\na2 OK [READ-ONLY] examined\r\n* 1 FETCH (UID 9 BODYSTRUCTURE {structure})\r\na3 OK structure\r\n* 1 FETCH (UID 9 BODY[1.MIME] {{{}}}\r\n{mime} BODY[1] {{{}}}\r\n{body})\r\na4 OK body\r\n* 1 FETCH (UID 9 BODY[2] {{{}}}\r\n{first})\r\na5 OK images\r\n* 1 FETCH (UID 9 BODY[3] {{{}}}\r\n{second})\r\na6 OK retry\r\n",
         mime.len(),
@@ -854,8 +845,6 @@ fn oversized_bodies_and_text_attachments_are_not_downloaded() {
     assert!(fetch_content(&mut session, "7:9").is_err());
     assert!(!String::from_utf8(output.lock().unwrap().clone()).unwrap().contains("BODY.PEEK"));
 
-    // A message that is only a text attachment opens with the attachment listed,
-    // and its content is not downloaded as the body.
     let attachment = "(\"TEXT\" \"PLAIN\" (\"NAME\" \"secret.txt\") NIL NIL \"8BIT\" 8 1 NIL (\"ATTACHMENT\" (\"FILENAME\" \"secret.txt\")) NIL NIL)";
     let (mut session, output) = body_client(attachment, "HEADER", "1", "", "");
     let content = fetch_content(&mut session, "7:9").unwrap();
@@ -893,6 +882,5 @@ fn crashes_long_ago_do_not_count_toward_the_limit() {
     for minute in [0, 1, 2] {
         assert!(policy.allow_restart(start + Duration::from_secs(minute * 60)));
     }
-    // Ten minutes after the first crash it has left the window.
     assert!(policy.allow_restart(start + Duration::from_secs(10 * 60 + 1)));
 }

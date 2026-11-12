@@ -1,5 +1,3 @@
-//! Global shortcut that opens the clipboard page: parsing and registration.
-
 use std::sync::{Mutex, OnceLock};
 use tauri::Emitter;
 use windows::Win32::{
@@ -15,25 +13,20 @@ use crate::win32;
 
 pub(super) const HOTKEY_EVENT: &str = "clipboard-history-shortcut";
 
-/// Sent after each registration attempt; the payload is the error, or null when the
-/// shortcut is registered or turned off.
 const HOTKEY_STATUS_EVENT: &str = "clipboard-history-shortcut-status";
 
 pub(super) const HOTKEY_ID: i32 = 0x4643;
 
 pub(super) const HOTKEY_REFRESH_MESSAGE: u32 = WM_APP + 0x51;
 
-/// Posted by the Win+V hook (win32::win_key_hook) to the hotkey window, which opens the history.
 pub(super) const WIN_V_MESSAGE: u32 = WM_APP + 0x52;
 
-/// Posted by the same hook when the user releases Ctrl+V during a paste sequence (C24.7).
 pub(super) const PASTED_MESSAGE: u32 = WM_APP + 0x53;
 
 pub(super) static CLIPBOARD_HOTKEY_WINDOW: OnceLock<Mutex<Option<isize>>> = OnceLock::new();
 
 static CLIPBOARD_HOTKEY_REGISTERED: OnceLock<Mutex<bool>> = OnceLock::new();
 
-/// Why the last registration failed, kept so a settings page opened later can show it.
 static CLIPBOARD_HOTKEY_ERROR: Mutex<Option<String>> = Mutex::new(None);
 
 pub(super) fn hotkey_error() -> Option<String> {
@@ -69,7 +62,6 @@ pub(super) fn refresh_registered_hotkey(hwnd: HWND) {
 
     let snapshot = service().ok().and_then(|service| service.snapshot().ok());
 
-    // Win+V (C22.3) is separate from the recorded shortcut: either or both can be on.
     let win_v = snapshot
         .as_ref()
         .is_some_and(|snapshot| snapshot.settings.enabled && snapshot.settings.win_v);
@@ -78,7 +70,6 @@ pub(super) fn refresh_registered_hotkey(hwnd: HWND) {
         eprintln!("failed to take Win+V: {error}");
     }
 
-    // Turning clipboard history off also frees its shortcut for other apps.
     if snapshot
         .as_ref()
         .is_some_and(|snapshot| !snapshot.settings.enabled || !snapshot.settings.shortcut_enabled)
@@ -252,7 +243,6 @@ mod tests {
         let binding = parse_shortcut_binding("Ctrl+Space").expect("Ctrl+Space is valid");
         assert_eq!(binding.label, "Ctrl+Space");
         assert_eq!(binding.key_code, 0x20);
-        // What the settings recorder produced before the space key fix.
         assert!(parse_shortcut_binding("Ctrl+ ").is_none());
     }
 

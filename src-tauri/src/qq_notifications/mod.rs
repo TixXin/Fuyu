@@ -1,5 +1,3 @@
-//! QQ notifications: commands, snapshot types and the background listener service.
-
 mod history;
 mod launcher;
 mod listener;
@@ -264,8 +262,6 @@ pub async fn open_qq() -> Result<(), String> {
         .map_err(|error| format!("打开 QQ 的线程失败：{error}"))?
 }
 
-/// This module's Tauri commands. `lib.rs` chains every module's list into one
-/// `generate_handler!`, so adding a command only touches this file.
 macro_rules! tauri_commands {
     ($next:ident [$($done:tt)*] $($rest:tt)*) => {
         $next!([$($done)*

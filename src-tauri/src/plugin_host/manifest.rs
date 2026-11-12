@@ -1,6 +1,3 @@
-//! `fuyu-plugin.json` (or the older `focusd-plugin.json`): parsing, validation and
-//! how a plugin's process is launched.
-
 use serde::{Deserialize, Serialize};
 use std::{
     ffi::OsString,
@@ -17,11 +14,8 @@ use super::sound_contrib::{self, SoundContribution};
 use crate::clipboard_history::parse_shortcut_binding;
 
 pub(super) const MANIFEST_FILE_NAME: &str = "fuyu-plugin.json";
-/// The manifest's name before the rename (D17). Published plugins carry it and
-/// third-party plugins may never change, so it is read until the next major API.
 const LEGACY_MANIFEST_FILE_NAME: &str = "focusd-plugin.json";
 
-/// Reads the manifest in `dir`: `fuyu-plugin.json`, else `focusd-plugin.json`.
 pub(super) fn read_manifest_text(dir: &Path) -> std::io::Result<String> {
     match std::fs::read_to_string(dir.join(MANIFEST_FILE_NAME)) {
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
@@ -32,9 +26,6 @@ pub(super) fn read_manifest_text(dir: &Path) -> std::io::Result<String> {
         result => result,
     }
 }
-/// The newest host API version this build speaks. Plugins declare the one they
-/// were written for; any version from MIN_API_VERSION up to this one runs, and
-/// the plugin is told the version it declared (see docs/plugins/README.md).
 pub(super) const HOST_API_VERSION: u32 = 2;
 pub(super) const MIN_API_VERSION: u32 = 1;
 
@@ -75,29 +66,21 @@ impl LocalizedText {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "camelCase")]
 pub(super) enum PluginRuntime {
-    /// A program the host starts and talks to over stdio (JSON-RPC, one message per line).
     Process {
         command: String,
         #[serde(default)]
         args: Vec<String>,
     },
-    /// Nothing to run; the manifest only describes the plugin.
     None,
-    /// Compiled into the island (builtin.rs); refused in plugins from disk.
     Builtin,
 }
 
-/// A button the settings page shows for the plugin. Mirrored by `PluginCommand`
-/// in src/features/plugins/api.ts.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct PluginCommand {
     id: String,
     title: LocalizedText,
-    /// A global shortcut such as "Ctrl+Alt+P" (API version 2; see keybindings.rs).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     keybinding: Option<String>,
-    /// When the shortcut runs the command, e.g. "island.expanded && !todos.hasActive";
-    /// read by src/features/plugins/when.ts.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     when: Option<String>,
 }
@@ -122,8 +105,6 @@ impl PluginCommand {
 
 const MAX_WHEN_CHARS: usize = 200;
 
-/// Checks a command's keybinding and when clause; version 1 plugins never had
-/// them, so theirs are dropped to keep version 1 behaviour.
 fn check_keybinding(command: &mut PluginCommand, api_version: u32) -> Result<(), String> {
     if api_version < 2 {
         command.keybinding = None;
@@ -149,27 +130,20 @@ fn check_keybinding(command: &mut PluginCommand, api_version: u32) -> Result<(),
 pub(super) struct PluginContributions {
     #[serde(default)]
     pub commands: Vec<PluginCommand>,
-    /// Drawn and stored by the island; see settings.rs.
     #[serde(default)]
     pub settings: Vec<SettingSpec>,
-    /// Commands listed in island menus (API version 2); see menus.rs.
     #[serde(default)]
     pub menus: PluginMenus,
-    /// As written; read by view_specs::check, which version 1 plugins skip.
     #[serde(default, rename = "views", skip_serializing)]
     pub views_raw: serde_json::Value,
     #[serde(default, rename = "statusItems", skip_serializing)]
     pub status_items_raw: serde_json::Value,
-    /// How the Agent page names a session's effort, per agent; see effort_labels.rs.
     #[serde(default, rename = "agentEffortLabels", skip_serializing_if = "EffortLabels::is_empty")]
     pub agent_effort_labels: EffortLabels,
-    /// A sound pack for agent events; see sound_contrib.rs.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub sounds: Option<SoundContribution>,
-    /// Pages on the expanded island (API version 2); see view_specs.rs.
     #[serde(skip)]
     pub views: Vec<ViewSpec>,
-    /// Short texts on the collapsed bar (API version 2).
     #[serde(skip)]
     pub status_items: Vec<StatusItemSpec>,
 }
@@ -192,19 +166,14 @@ pub(super) struct PluginManifest {
     pub runtime: PluginRuntime,
     #[serde(default)]
     pub permissions: Vec<String>,
-    /// Permissions the plugin asks for while it runs (`permissions.request`,
-    /// API version 2) instead of when it is switched on; see optional.rs.
     #[serde(default)]
     pub optional_permissions: Vec<String>,
     #[serde(default)]
     pub contributes: PluginContributions,
-    /// As written; read by activation::read, which version 1 plugins skip.
     #[serde(default, rename = "activationEvents", skip_serializing)]
     pub activation_raw: serde_json::Value,
-    /// When the host starts the plugin's process (API version 2); see activation.rs.
     #[serde(skip)]
     pub activation: Activation,
-    /// APIs still being designed; only development plugins may list them (dev.rs).
     #[serde(default)]
     pub experimental_apis: Vec<String>,
 }
@@ -216,7 +185,6 @@ fn empty_text() -> LocalizedText {
     }
 }
 
-/// Parses and checks a manifest found in the folder `folder_name`.
 pub(super) fn parse_manifest(text: &str, folder_name: &str, app_version: &str) -> Result<PluginManifest, String> {
     let manifest = parse_any_manifest(text, folder_name, app_version)?;
     if manifest.runtime == PluginRuntime::Builtin {
@@ -225,7 +193,6 @@ pub(super) fn parse_manifest(text: &str, folder_name: &str, app_version: &str) -
     Ok(manifest)
 }
 
-/// Parses a manifest compiled into the island (builtin.rs).
 pub(super) fn parse_builtin_manifest(text: &str, id: &str, app_version: &str) -> Result<PluginManifest, String> {
     parse_any_manifest(text, id, app_version)
 }
@@ -273,7 +240,6 @@ fn parse_any_manifest(text: &str, folder_name: &str, app_version: &str) -> Resul
         return Err(format!("Unknown permission \"{unknown}\" in optionalPermissions."));
     }
     if manifest.api_version < 2 {
-        // Version 1 had no permissions.request; its manifests keep behaving as before.
         manifest.optional_permissions.clear();
     }
     let required = manifest.permissions.clone();
@@ -318,7 +284,6 @@ fn parse_any_manifest(text: &str, folder_name: &str, app_version: &str) -> Resul
     Ok(manifest)
 }
 
-/// An experimental API name such as `views.chart`.
 fn is_valid_api_name(name: &str) -> bool {
     (1..=64).contains(&name.len())
         && name.starts_with(|first: char| first.is_ascii_lowercase())
@@ -338,8 +303,6 @@ fn is_valid_command_id(id: &str) -> bool {
     (1..=32).contains(&id.len()) && id.bytes().all(|byte| byte.is_ascii_alphanumeric() || byte == b'-')
 }
 
-/// `have >= need`, comparing dot-separated numbers; missing parts count as 0 and
-/// anything after `-` / `+` (pre-release, build) is ignored.
 pub(super) fn version_at_least(have: &str, need: &str) -> bool {
     let parts = |version: &str| -> Vec<u64> {
         version
@@ -363,9 +326,6 @@ pub(super) fn version_at_least(have: &str, need: &str) -> bool {
     true
 }
 
-/// Semantic-version order, pre-releases included: `1.3.0-beta.1` < `1.3.0-beta.2`
-/// < `1.3.0`. Used to decide whether a market version is newer than the installed
-/// one; `version_at_least` (app compatibility) still ignores the pre-release part.
 pub(super) fn compare_versions(left: &str, right: &str) -> std::cmp::Ordering {
     use std::cmp::Ordering;
     let split = |version: &str| -> (Vec<u64>, Option<String>) {
@@ -407,7 +367,6 @@ pub(super) fn compare_versions(left: &str, right: &str) -> std::cmp::Ordering {
     }
 }
 
-/// The command must stay inside the plugin folder.
 fn relative_command_path(command: &str) -> Result<PathBuf, String> {
     let path = Path::new(command);
     let inside = !command.trim().is_empty()
@@ -441,8 +400,6 @@ pub(super) fn launch_kind(command: &str) -> Result<LaunchKind, String> {
     }
 }
 
-/// What a plugin needs installed to run, shown on the settings page: "exe" and
-/// "powershell" need nothing, "node" needs Node.js, "none" runs nothing.
 pub(super) fn runtime_requirement(runtime: &PluginRuntime) -> &'static str {
     match runtime {
         PluginRuntime::None => "none",
@@ -456,9 +413,6 @@ pub(super) fn runtime_requirement(runtime: &PluginRuntime) -> &'static str {
     }
 }
 
-/// The program and arguments that start a plugin. Scripts go through their
-/// interpreter: Windows PowerShell or `node` on PATH. Batch files are not
-/// supported: stopping cmd.exe would leave the program it started running.
 pub(super) fn launch_command(plugin_dir: &Path, command: &str, args: &[String]) -> Result<(OsString, Vec<OsString>), String> {
     let script = plugin_dir.join(relative_command_path(command)?);
     let extra = args.iter().map(OsString::from);

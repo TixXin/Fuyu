@@ -76,7 +76,6 @@ fn hosts_keep_their_port_when_switched_off_and_lose_it_when_cleared() {
     assert_eq!(config::set(&dir, " zcm6 ", true, Some(10_089)).unwrap(), [zcm6(true)]);
     config::set(&dir, "a6", false, Some(20_089)).unwrap();
     assert_eq!(config::set(&dir, "zcm6", false, Some(10_089)).unwrap()[0], zcm6(false));
-    // Order stays as first saved.
     assert_eq!(config::read(&dir).iter().map(|tunnel| tunnel.host.as_str()).collect::<Vec<_>>(), ["zcm6", "a6"]);
     assert_eq!(config::set(&dir, "zcm6", false, None).unwrap().len(), 1);
     assert_eq!(config::read(&dir)[0].host, "a6");
@@ -132,7 +131,6 @@ fn what_ssh_says_tells_up_port_taken_and_the_reason_it_ended() {
 
 #[test]
 fn listening_ports_are_read_from_netstat_and_ss() {
-    // netstat on zcm6 (CentOS 7): the user's own tunnel listens on 37897.
     let netstat = "Active Internet connections (only servers)\n\
         Proto Recv-Q Send-Q Local Address           Foreign Address         State      \n\
         tcp        0      0 127.0.0.1:6034          0.0.0.0:*               LISTEN     \n\
@@ -159,7 +157,6 @@ fn retries_wait_longer_up_to_two_minutes() {
     assert_eq!(backoff(u32::MAX), Duration::from_secs(120));
 }
 
-/// Starts real ssh processes, against nothing: `cargo test --lib ssh_tunnel -- --ignored`.
 #[test]
 #[ignore = "starts ssh"]
 fn a_tunnel_says_why_it_failed_and_ends_its_ssh_when_stopped() {
@@ -178,7 +175,6 @@ fn a_tunnel_says_why_it_failed_and_ends_its_ssh_when_stopped() {
         (status, stop, thread)
     };
 
-    // Nothing listens on port 9 here: ssh ends at once and says so.
     let (status, stop, thread) = run("127.0.0.1", 9);
     let deadline = Instant::now() + Duration::from_secs(20);
     while *status.lock().unwrap() == Status::Connecting && Instant::now() < deadline {
@@ -189,7 +185,6 @@ fn a_tunnel_says_why_it_failed_and_ends_its_ssh_when_stopped() {
     thread.join().unwrap();
     assert!(matches!(&seen, Status::Failed(reason) if reason.contains("refused")), "{seen:?}");
 
-    // An address that never answers: stopping mid-connect ends ssh within a poll.
     let (status, stop, thread) = run("10.255.255.1", 22);
     std::thread::sleep(Duration::from_secs(2));
     let stopping = Instant::now();

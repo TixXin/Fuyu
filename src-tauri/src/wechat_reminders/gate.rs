@@ -1,9 +1,3 @@
-//! WeChat 4.x is a Qt app whose accessibility is gated by one byte in Weixin.dll: 0 (the default)
-//! shows UI Automation only the window frame, 1 exposes the controls, chat list included. This
-//! finds that byte and sets it in the running WeChat, keeps it set across WeChat restarts while
-//! the setting asks for it, and sets it back. Approach and byte pattern from wechatauto-replica's
-//! wake_uia.py (Apache-2.0); first written as the plugin `dev.shenglin1001.wechat-preview`.
-
 use serde_json::{json, Value};
 use std::{
     path::{Path, PathBuf},
@@ -20,21 +14,14 @@ use crate::win32::{
 const CORE_STRING: &[u8] = b"qt.accessibility.core";
 const EXECUTE: u32 = 0x2000_0000;
 const WRITE: u32 = 0x8000_0000;
-/// Gate checks this far from code that names the accessibility logging category rank first.
 const NEAR: u32 = 0x20000;
-/// Unverified addresses tried before giving up: only the best-ranked one. Each try writes a byte
-/// into WeChat, and a pattern that matched some other flag could upset WeChat while it is set.
 const MAX_TRIES: usize = 1;
-/// A restarted WeChat starts with the byte back at 0; look for one this often.
 const CHECK: Duration = Duration::from_secs(5);
 
-/// The byte the island set to 1, and what it held before.
 struct Gate {
     process_id: u32,
     address: usize,
     original: u8,
-    /// `gate-on.json`: which byte is still on, so a run that ended before it could put the byte
-    /// back is put right by the next one (`adopt`).
     marker: PathBuf,
 }
 
@@ -44,7 +31,6 @@ impl Gate {
             .is_some_and(|memory| memory.read_byte(self.address) == Some(1))
     }
 
-    /// Puts the byte back; nothing to do when it was 1 before (a screen reader, say).
     fn restore(&self) {
         if self.original != 1 {
             if let Some(memory) = ProcessMemory::open(self.process_id) {
@@ -57,14 +43,11 @@ impl Gate {
     }
 }
 
-/// Keeps WeChat's UI exposed while `on`, and puts it back otherwise.
 pub(super) struct Keeper {
     folder: PathBuf,
     gate: Option<Gate>,
-    /// The WeChat process the byte could not be found in; not tried again until WeChat restarts.
     failed: Option<u32>,
     next: Option<Instant>,
-    /// What the settings show about it; `None` while off.
     pub(super) status: Option<String>,
 }
 
@@ -79,8 +62,6 @@ impl Keeper {
         }
     }
 
-    /// Call often; acts every few seconds, looking WeChat's main window up with `window`.
-    /// Returns whether `status` changed.
     pub(super) fn tick(&mut self, on: bool, window: impl FnOnce() -> Option<HWND>) -> bool {
         if !on {
             return self.off();
@@ -93,7 +74,6 @@ impl Keeper {
         self.set_status(Some(status))
     }
 
-    /// Whether the island has WeChat's UI exposed right now.
     pub(super) fn is_on(&self) -> bool {
         self.gate.is_some()
     }
@@ -128,7 +108,6 @@ impl Keeper {
         {
             return ON.into();
         }
-        // A WeChat that exited took its byte with it.
         self.gate = None;
         if let Some(error) = self
             .failed
@@ -157,14 +136,12 @@ impl Keeper {
 
 const ON: &str = "已公开微信界面。微信关在托盘里时读不到会话列表，最小化可以。";
 
-/// The byte an earlier run left on in WeChat process `process_id`, if any.
 fn adopt(process_id: u32, folder: &Path) -> Option<Gate> {
     let marker = folder.join("gate-on.json");
     let left: Value = serde_json::from_slice(&std::fs::read(&marker).ok()?).ok()?;
     let address = left["address"].as_u64()? as usize;
     let same = left["pid"].as_u64() == Some(u64::from(process_id));
     if !same || ProcessMemory::open(process_id)?.read_byte(address) != Some(1) {
-        // WeChat restarted since, which put the byte back by itself.
         let _ = std::fs::remove_file(&marker);
         return None;
     }
@@ -176,9 +153,6 @@ fn adopt(process_id: u32, folder: &Path) -> Option<Gate> {
     })
 }
 
-/// Sets the byte in WeChat process `process_id` and waits until `exposed()` says the controls
-/// show. Addresses come from the cache in `folder`, else from scanning Weixin.dll on disk (about
-/// 200 MB, a few seconds, once per WeChat version).
 fn activate(process_id: u32, folder: &Path, exposed: impl Fn() -> bool) -> Result<Gate, String> {
     let (base, dll) = process_memory::module(process_id, "Weixin.dll")
         .ok_or("微信进程里没有 Weixin.dll（不是 4.x 版？）")?;
@@ -268,7 +242,6 @@ fn save(path: &Path, cache: &Value) {
     }
 }
 
-/// Changes with the WeChat version: its folder, the file size and time.
 fn dll_identity(dll: &Path) -> String {
     let folder = dll
         .parent()
@@ -323,9 +296,6 @@ fn sections(data: &[u8]) -> Vec<Section> {
     parse().unwrap_or_default()
 }
 
-/// The gate's RVA candidates in Weixin.dll's bytes, most likely first. The gate is
-/// read by `test rcx,rcx; jz ..; cmp byte ptr [rip+disp32],0; jz ..`; matches closest
-/// to a `lea reg,[rip+..]` of "qt.accessibility.core" win.
 fn scan(data: &[u8]) -> Vec<u32> {
     let sections = sections(data);
     let code = || {
@@ -411,7 +381,6 @@ fn scan(data: &[u8]) -> Vec<u32> {
 mod tests {
     use super::*;
 
-    /// A PE with a code section at RVA 0x1000 (file 0x200) and a data section at 0x3000 (file 0x400).
     fn image(code: &[u8], data: &[u8]) -> Vec<u8> {
         let mut bytes = vec![0u8; 0x600];
         bytes[0x3C..0x40].copy_from_slice(&0x80u32.to_le_bytes());
@@ -444,10 +413,9 @@ mod tests {
 
     #[test]
     fn finds_the_gate_next_to_the_logging_category() {
-        // Two gate-shaped checks: one far from the string's lea (at 0x1000), one right after it (at 0x1100).
         let mut code = vec![0x90u8; 0x200];
         code[..18].copy_from_slice(&gate_check(0x1000, 0x3080));
-        let lea_disp = (0x3010i64 - (0x10F0 + 6)) as i32; // lea rcx,[rip+..] -> "qt.accessibility.core" at 0x3010
+        let lea_disp = (0x3010i64 - (0x10F0 + 6)) as i32;
         code[0xEF..0xF6].copy_from_slice(&[0x48, 0x8D, 0x0D, 0, 0, 0, 0]);
         code[0xF2..0xF6].copy_from_slice(&lea_disp.to_le_bytes());
         code[0x100..0x112].copy_from_slice(&gate_check(0x1100, 0x3040));

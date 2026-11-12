@@ -1,9 +1,3 @@
-//! Update channels. The stable channel reads the endpoints in tauri.conf.json,
-//! which point at the GitHub "latest" release; GitHub never marks a pre-release
-//! as latest, so stable users never see a beta. The beta channel reads a
-//! separate manifest that the release script keeps on the `beta-channel`
-//! release, so only users who opt in are offered pre-releases.
-
 use std::time::{Duration, Instant};
 
 use super::update_runtime::{change, Stage};
@@ -25,8 +19,6 @@ pub struct UpdateInfo {
     body: Option<String>,
 }
 
-/// Mirrors the download events of `@tauri-apps/plugin-updater`, so the
-/// settings panel handles them the same way.
 #[derive(Clone, Serialize)]
 #[serde(tag = "event", content = "data")]
 pub enum DownloadEvent {
@@ -41,10 +33,6 @@ pub enum DownloadEvent {
     Finished,
 }
 
-/// The endpoints to check for `channel`. The beta manifest sits next to the
-/// stable one on every configured mirror. The stable endpoints follow it, so a
-/// missing or unreachable beta manifest still lets beta users get final releases
-/// (the updater moves on to the next endpoint when one fails).
 pub(crate) fn channel_endpoints(configured: &[Url], channel: &str) -> Result<Vec<Url>, String> {
     match channel {
         "stable" => Ok(configured.to_vec()),
@@ -103,7 +91,6 @@ pub async fn updater_check(
         return Err(format!("Unknown update channel: {channel}").into());
     }
     change(&app, |runtime| runtime.begin_check(&channel))?;
-    // This operation belongs to the application, not the invoking webview.
     let task_app = app.clone();
     let result = tauri::async_runtime::spawn(async move {
         match check(&task_app, &channel, proxy).await {
@@ -138,9 +125,6 @@ pub async fn updater_check(
     }
 }
 
-/// Downloads `update`, checking it against its signature, and moves the shared progress along.
-/// Every change is an event to each window and a download comes in thousands of chunks, so the
-/// shared progress moves at most every PROGRESS_EVERY (`on_event` still gets each chunk).
 async fn download(app: &AppHandle, update: &Update, on_event: Option<&Channel<DownloadEvent>>) -> Result<Vec<u8>, String> {
     let mut started = false;
     let mut pending: usize = 0;
@@ -165,7 +149,6 @@ async fn download(app: &AppHandle, update: &Update, on_event: Option<&Channel<Do
         },
         || {
             let _ = change(app, |runtime| {
-                // Chunks held back since the last report: the download is whole now.
                 if runtime.snapshot.total > 0 {
                     runtime.snapshot.downloaded = usize::try_from(runtime.snapshot.total).unwrap_or(usize::MAX);
                 }
@@ -182,8 +165,6 @@ fn join_error(app: &AppHandle, error: impl std::fmt::Display) -> UserError {
     UserError::from(detail)
 }
 
-/// Downloads the update the island found, in the background, and keeps it to install later
-/// (Stage::Ready). A failure leaves it to install by hand.
 #[tauri::command]
 pub async fn updater_download(app: AppHandle, expected_version: String, expected_channel: String) -> Result<(), UserError> {
     let mut update = change(&app, |runtime| runtime.begin_download(&expected_version, &expected_channel))?;
@@ -201,8 +182,6 @@ pub async fn updater_download(app: AppHandle, expected_version: String, expected
     result.unwrap_or_else(|error| Err(join_error(&app, error)))
 }
 
-/// Installs the update: the installer downloaded earlier, or downloaded now. Windows runs the
-/// installer and this process exits.
 #[tauri::command]
 pub async fn updater_install(
     app: AppHandle,

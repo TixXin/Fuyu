@@ -1,5 +1,3 @@
-//! Message body fetching: text part selection and inline cid images.
-
 use crate::user_error::UserError;
 use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
 use imap::{
@@ -83,7 +81,6 @@ fn text_part(body: &BodyStructure<'_>, path: Vec<u32>) -> Option<TextPart> {
                 let mut nested = path.clone();
                 nested.push(index as u32 + 1);
                 if let Some(part) = text_part(body, nested) {
-                    // 优先渲染 HTML 版本：纯文本副本里没有排版和图片，图片只有在 HTML 里才存在。
                     if part.mime == "text/html" {
                         return Some(part);
                     }
@@ -94,7 +91,6 @@ fn text_part(body: &BodyStructure<'_>, path: Vec<u32>) -> Option<TextPart> {
             }
             fallback
         }
-        // Forwarded messages and text attachments are separate from the mail's own body.
         _ => None,
     }
 }
@@ -108,7 +104,6 @@ struct InlineImage {
     quoted_printable: bool,
 }
 
-// cid 引用的结束位置：遇到分隔符才算 token 结束，否则 cid:image1 会把 cid:image10 一起吞掉。
 fn cid_token_end(html: &str, start: usize) -> usize {
     html[start..]
         .find(|character: char| {
@@ -118,7 +113,6 @@ fn cid_token_end(html: &str, start: usize) -> usize {
         .map_or(html.len(), |offset| start + offset)
 }
 
-// 只内联正文里真正用 cid: 引用的图片，避免为未被引用的附件白拉数据。
 pub(super) fn cid_references(html: &str) -> Vec<String> {
     let lower = html.to_ascii_lowercase();
     let mut ids: Vec<String> = Vec::new();
@@ -186,13 +180,11 @@ fn collect_inline_images(
     }
 }
 
-// 按完整 cid token 替换，避免 cid:image1 命中 cid:image10 的前缀。
 pub(super) fn replace_cid_references(html: &str, replacements: &[(String, String)]) -> String {
     let lower = html.to_ascii_lowercase();
     let mut out = String::with_capacity(html.len());
     let mut cursor = 0;
     while let Some(found) = lower[cursor..].find("cid:") {
-        // 整个 cid:token 都要换掉，只换 token 会留下 "cid:data:image/..." 这种废地址。
         let reference_start = cursor + found;
         let token_start = reference_start + 4;
         let token_end = cid_token_end(&lower, token_start);
@@ -210,9 +202,6 @@ pub(super) fn replace_cid_references(html: &str, replacements: &[(String, String
     out
 }
 
-// UID FETCH 只查这一封邮件，但服务器可以把分段拆成多条 FETCH 响应发回来，而且续包不一定
-// 重复 UID（QQ 实测就只给第一条带 UID）。按 uid 相等过滤会把续包整批丢掉，只剩下第一批分段，
-// 所以这里只把带 UID 的响应排在前面，其余响应照样参与合并。
 fn responses_for_message(messages: &Fetches, uid: u32) -> Vec<&Fetch<'_>> {
     let (mut mine, others): (Vec<&Fetch<'_>>, Vec<&Fetch<'_>>) =
         messages.iter().partition(|item| item.uid == Some(uid));
@@ -220,7 +209,6 @@ fn responses_for_message(messages: &Fetches, uid: u32) -> Vec<&Fetch<'_>> {
     mine
 }
 
-// 内嵌图只是锦上添花：任何一步失败都退回原正文，不能把已经拿到的文字一起弄丢。
 fn inline_cid_images<T: Read + Write>(
     session: &mut Session<T>,
     uid: u32,
@@ -247,7 +235,6 @@ fn inline_cid_images<T: Read + Write>(
                     .map(u32::to_string)
                     .collect::<Vec<_>>()
                     .join(".");
-                // 和正文一样避开 QQ 不应答的部分取回，图片大小由 octets 限额兜底。
                 format!("BODY.PEEK[{section}]")
             })
             .collect::<Vec<_>>()
@@ -267,8 +254,6 @@ fn inline_cid_images<T: Read + Write>(
             continue;
         }
         let path = SectionPath::Part(image.path.clone(), None);
-        // 批量响应里缺这一段时（服务器把后面的批次丢了）再单独要一次：一条命令只请求一个分段，
-        // 就谈不上「分批」，保证后面的图片不会漏。
         let retry;
         let bytes = match responses.iter().find_map(|item| item.section(&path)) {
             Some(bytes) => Some(bytes),
@@ -339,7 +324,6 @@ pub(super) fn fetch_content<T: Read + Write>(
         .ok_or_else(|| UserError::new("mail.unavailable", "The mail was removed or is not available; refresh the inbox."))?;
     let mut attachments = Vec::new();
     super::attachments::collect(structure, Vec::new(), &mut attachments);
-    // A message that is only attachments still opens, with its list and no text.
     let Some(part) = text_part(structure, Vec::new()) else {
         if attachments.is_empty() {
             return Err(UserError::new("mail.noText", "This mail has no text to read; open it in the web mail."));
@@ -358,20 +342,15 @@ pub(super) fn fetch_content<T: Read + Write>(
     let multipart = matches!(structure, BodyStructure::Multipart { .. });
     let mime_path = SectionPath::Part(part.path.clone(), Some(MessageSection::Mime));
     let body_path = SectionPath::Part(part.path, None);
-    // 单段邮件的正文就是整封信，没有 [1.MIME] 这个分段（QQ 会直接不返回），只能取报文头。
     let header_query = if multipart {
         format!("BODY.PEEK[{section}.MIME]")
     } else {
         "BODY.PEEK[HEADER]".to_string()
     };
-    // QQ 的 IMAP 对分段的部分取回（BODY[1]<0.n>）不应答，会一直挂到超时；整段取回秒回。
-    // 大小仍由 BODYSTRUCTURE 的 octets 和下面的长度校验兜底。
     let query = format!("(UID {header_query} BODY.PEEK[{section}])");
     let messages = session
         .uid_fetch(uid.to_string(), query)
         .map_err(|_| UserError::new("mail.bodyLoad", "Could not load the mail body; check the network and try again."))?;
-    // 服务器可能把两个分段拆到不同的 FETCH 响应里（续包甚至不重复 UID），合并全部响应，
-    // 别要求同一条响应都带齐，也别要求每条响应都带 UID。
     let mut header = None;
     let mut body = None;
     for item in responses_for_message(&messages, uid) {

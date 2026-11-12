@@ -1,8 +1,3 @@
-//! WeChat reminders: watches WeChat's tray flash and restores its window on request. With the
-//! "show the contact and message" setting on, a flash also reads the chat list to tell who wrote
-//! and what; the setting exposes WeChat's UI (Qt accessibility) in the running WeChat (gate.rs),
-//! unless a screen reader has already. Off, the list is not read even when the UI is exposed.
-
 mod button;
 mod chats;
 mod gate;
@@ -44,41 +39,28 @@ pub struct ReminderSnapshot {
     pending: bool,
     last_attention_at: Option<u64>,
     error: Option<String>,
-    /// The newest message read from WeChat's chat list; `None` while the list is not readable.
     message: Option<ChatMessage>,
-    /// The reminders since the island started (or the list was cleared), newest first.
     items: Vec<ReminderItem>,
-    /// Setting: switch WeChat's Qt accessibility on so its chat list can be read.
     expose_ui: bool,
-    /// How that is going, for the settings; `None` while off.
     expose_status: Option<String>,
-    /// Setting: a minimized WeChat leaves the taskbar, so it can stay minimized (and readable)
-    /// rather than closed to the tray (button.rs).
     hide_taskbar_button: bool,
 }
 
-/// One chat with a new message, as WeChat's chat list shows it.
 #[derive(Clone, Debug, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ChatMessage {
-    /// What opens the chat again (`open_wechat`).
     chat: String,
     contact: String,
-    /// The last message, as WeChat cuts it short; a group's starts with the sender.
     preview: String,
     unread: Option<u32>,
-    /// When it was read, in ms; unique per message, so each one is its own preview.
     at: u64,
 }
 
-/// One row of the panel's list: a chat message, or a reminder that came without one.
 #[derive(Clone, Debug, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ReminderItem {
-    /// When it came, in ms; unique, so also the row's key.
     at: u64,
     message: Option<ChatMessage>,
-    /// Why there is no message; `None` too when the chat list is not read at all (setting off).
     reason: Option<PlainReason>,
 }
 
@@ -166,7 +148,6 @@ impl ReminderState {
         true
     }
 
-    /// A flash without a message: one reminder (and one row) until WeChat is looked at.
     fn remind(&mut self, generation: u64, now: u64, reason: Option<PlainReason>) -> bool {
         if !self.snapshot.enabled || self.generation != generation || self.snapshot.pending {
             return false;
@@ -187,7 +168,6 @@ impl ReminderState {
         self.snapshot.items.truncate(MAX_ITEMS);
     }
 
-    /// A message read from the chat list: pending as for a flash, plus the message to show.
     fn receive(&mut self, generation: u64, message: ChatMessage) -> bool {
         if !self.snapshot.enabled || self.generation != generation {
             return false;
@@ -210,9 +190,7 @@ impl ReminderState {
 struct ReminderService {
     app: AppHandle,
     state: Mutex<ReminderState>,
-    /// WeChat's accessibility byte, when the island set it.
     gate: Mutex<gate::Keeper>,
-    /// WeChat's taskbar button, when the island took it off.
     button: Mutex<button::Keeper>,
     wake: mpsc::SyncSender<()>,
 }
@@ -292,8 +270,6 @@ pub fn set_wechat_reminders_enabled(enabled: bool) -> Result<ReminderSnapshot, S
     Ok(snapshot)
 }
 
-/// Turns the "expose WeChat's UI" setting on or off. Off puts WeChat's byte back right away; on
-/// takes effect on the listener's next round (it may scan Weixin.dll for a few seconds once).
 #[tauri::command]
 pub fn set_wechat_expose_ui(enabled: bool) -> Result<ReminderSnapshot, String> {
     let service = service()?;
@@ -315,7 +291,6 @@ pub fn set_wechat_expose_ui(enabled: bool) -> Result<ReminderSnapshot, String> {
     Ok(snapshot)
 }
 
-/// Turns the "minimized WeChat leaves the taskbar" setting on or off; the listener applies it.
 #[tauri::command]
 pub fn set_wechat_hide_taskbar_button(enabled: bool) -> Result<ReminderSnapshot, String> {
     let service = service()?;
@@ -331,7 +306,6 @@ pub fn set_wechat_hide_taskbar_button(enabled: bool) -> Result<ReminderSnapshot,
     Ok(snapshot)
 }
 
-/// Empties the panel's list; a pending reminder stays pending.
 #[tauri::command]
 pub fn clear_wechat_reminders() -> Result<ReminderSnapshot, String> {
     let service = service()?;
@@ -348,7 +322,6 @@ pub fn clear_wechat_reminders() -> Result<ReminderSnapshot, String> {
     Ok(snapshot)
 }
 
-/// Puts WeChat's byte and taskbar button back when the island exits.
 pub(crate) fn shutdown() {
     if let Some(service) = SERVICE.get() {
         let _ = service.gate.lock().map(|mut gate| gate.off());
@@ -356,8 +329,6 @@ pub(crate) fn shutdown() {
     }
 }
 
-/// Keeps a minimized WeChat off the taskbar while the setting (and the chat list reading it is
-/// for) is on.
 fn keep_button(service: &ReminderService, executable: &Path) {
     let on = service.state.lock().is_ok_and(|state| {
         let snapshot = &state.snapshot;
@@ -368,8 +339,6 @@ fn keep_button(service: &ReminderService, executable: &Path) {
     }
 }
 
-/// Keeps WeChat's UI exposed while the setting asks for it, and tells the settings how it goes.
-/// True when the island has just exposed it.
 fn keep_gate(service: &ReminderService, executable: &Path) -> bool {
     let on = service
         .state
@@ -403,7 +372,6 @@ fn now_ms() -> u64 {
         .as_millis() as u64
 }
 
-/// Changes the state with `change` and publishes it when that says something changed.
 fn update(service: &ReminderService, change: impl FnOnce(&mut ReminderState) -> bool) {
     let snapshot = {
         let Ok(mut state) = service.state.lock() else {
@@ -421,14 +389,12 @@ fn signal(service: &ReminderService, generation: u64, event: ReminderSignal) {
     update(service, |state| state.apply(generation, event, now_ms()));
 }
 
-/// WeChat's chat list as it is now, for the reader.
 fn look(executable: &Path) -> Listing {
     let Some(window) = main_window(executable) else {
         return Listing::Unreadable;
     };
     match chats::read(window) {
         Some(rows) => Listing::Rows(rows),
-        // Closed to the tray, WeChat hides its main window and lists no rows.
         None if !win32::window::is_visible(window) => Listing::Tray,
         None => Listing::Unreadable,
     }
@@ -489,13 +455,11 @@ fn monitor(service: Arc<ReminderService>, receiver: mpsc::Receiver<()>) {
                         .lock()
                         .is_ok_and(|state| state.snapshot.enabled && state.generation == generation)
                     {
-                        // Reminders off: WeChat's UI goes back to hidden too.
                         keep_gate(&service, &executable);
                         keep_button(&service, &executable);
                         break;
                     }
                     if keep_gate(&service, &executable) {
-                        // Readable from now on: take the list as it is as the baseline.
                         reader.rebaseline();
                     }
                     keep_button(&service, &executable);
@@ -552,15 +516,12 @@ fn monitor(service: Arc<ReminderService>, receiver: mpsc::Receiver<()>) {
     }
 }
 
-/// Brings WeChat up; with `chat` (a `ChatMessage`'s) it also opens that chat when its row is in
-/// view, otherwise WeChat stays on the chat it showed last.
 #[tauri::command]
 pub async fn open_wechat(chat: Option<String>) -> Result<(), String> {
     tauri::async_runtime::spawn_blocking(move || {
         let executable = installed_executable()?;
         if activate_existing_wechat(&executable)? {
             if let Some(chat) = chat {
-                // A window just restored lays its list out a moment later.
                 thread::sleep(Duration::from_millis(300));
                 let opened = main_window(&executable)
                     .ok_or("no main window")
@@ -591,7 +552,6 @@ struct WindowSearch {
 }
 
 fn preferred_window(windows: &[WeChatWindow]) -> Option<&WeChatWindow> {
-    // Only full main windows qualify; prefer the visible window, then the older instance.
     windows
         .iter()
         .filter(|window| window.main_sized)
@@ -647,7 +607,6 @@ fn activate_existing_wechat(executable: &std::path::Path) -> Result<bool, String
     let original = preferred_window(&search.found)
         .ok_or("微信已在运行，但未定位到主窗口，请先从系统托盘打开并登录微信。")?;
     let expected_process = win32::process::window_process_id(original.handle);
-    // The registered handler restores Qt's own UI state. Showing its HWND directly can leave it blank.
     tauri_plugin_opener::open_url("weixin://", None::<&str>).map_err(|error| {
         format!("无法通过微信注册入口唤回客户端，请从系统托盘打开微信：{error}")
     })?;
@@ -667,8 +626,6 @@ fn activate_existing_wechat(executable: &std::path::Path) -> Result<bool, String
     Err("微信未能恢复原来的主窗口，请双击系统托盘中的微信图标。".into())
 }
 
-/// This module's Tauri commands. `lib.rs` chains every module's list into one
-/// `generate_handler!`, so adding a command only touches this file.
 macro_rules! tauri_commands {
     ($next:ident [$($done:tt)*] $($rest:tt)*) => {
         $next!([$($done)*

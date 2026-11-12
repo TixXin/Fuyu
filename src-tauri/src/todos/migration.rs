@@ -1,13 +1,3 @@
-//! Moving the todo keys out of the island window's localStorage into
-//! `todos.json`. Rust cannot read localStorage, so the window sends the stored
-//! text of each key together with the same data run through normalize.ts.
-//! Rules: docs/architecture/plugins/v2-platform.md, P6 「从已发布的旧版本升级」.
-//!
-//! The old keys stay in localStorage, the stored text goes to
-//! `todos-migration-backup.json` (never deleted: their hashes tell stale copies
-//! from real changes), and a `todos.json` that is replaced is first copied to
-//! `todos.before-reimport-<ms>.json`, of which only the newest few are kept.
-
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use sha2::{Digest, Sha256};
@@ -27,11 +17,8 @@ pub(crate) const FILE_NAME: &str = "todos.json";
 const BACKUP_FILE_NAME: &str = "todos-migration-backup.json";
 const MIGRATION_VERSION: u32 = 1;
 const REIMPORT_COPY_PREFIX: &str = "todos.before-reimport-";
-/// Each copy is a whole todos.json; before e52809b switching builds left one per switch.
 const REIMPORT_COPIES_KEPT: usize = 3;
 
-/// The stored text of each migrated localStorage key (`None`: not set), named
-/// as in localStorage. Mirrored by `LocalTodoKeys` in src/features/todos/api.ts.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct LocalTodoKeys {
     #[serde(rename = "focusd-island-todos", default)]
@@ -54,8 +41,6 @@ impl LocalTodoKeys {
     }
 }
 
-/// SHA-256 (hex) of the keys' text in a fixed order; tells whether an older
-/// Fuyu changed localStorage after the migration.
 pub(crate) fn source_hash(keys: &LocalTodoKeys) -> String {
     let canonical = json!([
         keys.todos,
@@ -71,17 +56,10 @@ pub(crate) fn source_hash(keys: &LocalTodoKeys) -> String {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum Plan {
-    /// `todos.json` holds the data; localStorage is what it was migrated from (or empty).
     UseFile,
-    /// Read localStorage into `todos.json`. `keep_old` copies the current file
-    /// first; `reimport` tells the user an older version's changes were taken.
     Import { keep_old: bool, reimport: bool },
 }
 
-/// What to do at start-up. An unreadable file, or one from a newer version,
-/// is never replaced: the caller falls back to localStorage instead.
-/// `already_imported`: this exact localStorage text was imported before (a
-/// migration backup has its hash), so todos.json holds everything since.
 pub(crate) fn plan(
     existing: &Result<Option<TodosFile>, LoadError>,
     hash: &str,
@@ -91,31 +69,22 @@ pub(crate) fn plan(
     match existing {
         Ok(None) => Ok(Plan::Import { keep_old: false, reimport: false }),
         Ok(Some(file)) if file.migration.as_ref().is_some_and(|migration| migration.source_hash == hash) => Ok(Plan::UseFile),
-        // Cleared localStorage (new WebView profile) must not empty the list.
         Ok(Some(_)) if local_empty => Ok(Plan::UseFile),
-        // Another build of the island (`pnpm tauri dev` next to the installed app) keeps
-        // its own localStorage with its own pre-migration text. Switching builds must not
-        // import that stale copy again over the todos made since.
         Ok(Some(_)) if already_imported => Ok(Plan::UseFile),
-        // localStorage changed after the migration: an older version was used.
         Ok(Some(_)) => Ok(Plan::Import { keep_old: true, reimport: true }),
         Err(LoadError::Damaged(_)) => Ok(Plan::Import { keep_old: true, reimport: false }),
         Err(error) => Err(error.message().to_string()),
     }
 }
 
-/// What the island window gets back. Mirrored by `TodosSnapshot` in src/features/todos/api.ts.
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TodosSnapshot {
     pub revision: u64,
     pub data: TodosData,
-    /// "reimported" when an older version's changes replaced todos.json.
     pub notice: Option<&'static str>,
 }
 
-/// Runs the migration in `dir` (the app data folder). Returns the data now in
-/// use and the notice for the user, or why localStorage must stay in use.
 pub(crate) fn migrate(
     dir: &Path,
     keys: &LocalTodoKeys,
@@ -162,8 +131,6 @@ pub(crate) fn migrate(
     Ok((file, reimport.then_some("reimported")))
 }
 
-/// Deletes all but the newest `REIMPORT_COPIES_KEPT` copies, by the time in
-/// their name. Best effort: a copy that cannot be deleted now is tried next start.
 pub(crate) fn prune_reimport_copies(dir: &Path) {
     let Ok(entries) = fs::read_dir(dir) else {
         return;
@@ -182,8 +149,6 @@ pub(crate) fn prune_reimport_copies(dir: &Path) {
     }
 }
 
-/// The source hashes of every localStorage text imported so far, from the
-/// migration backups (`todos-migration-backup*.json`), which are never deleted.
 fn imported_hashes(dir: &Path) -> HashSet<String> {
     let Ok(entries) = fs::read_dir(dir) else {
         return HashSet::new();
@@ -201,8 +166,6 @@ fn imported_hashes(dir: &Path) -> HashSet<String> {
         .collect()
 }
 
-/// Keeps the stored text before anything is written. The first backup keeps
-/// its name for good; a later one with different text gets a timestamp.
 fn backup_local(dir: &Path, keys: &LocalTodoKeys, hash: &str, app_version: &str, now: u64) -> Result<(), String> {
     let content = json!({ "at": now, "fromAppVersion": app_version, "sourceHash": hash, "keys": keys });
     let first = dir.join(BACKUP_FILE_NAME);

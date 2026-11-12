@@ -1,19 +1,11 @@
-//! Which computers the island reads agent sessions from over SSH (Settings → AI Agent → Remote
-//! computers), kept in `agent-remote-hosts.json` in the app data folder: the chosen ones (`hosts`,
-//! by name), and the computers added in the island itself (`custom`) next to the Host aliases of
-//! ~/.ssh/config. The island never writes ~/.ssh/config.
-
 use std::{fs, path::Path};
 
 use serde::{Deserialize, Serialize};
 
 pub(super) const FILE_NAME: &str = "agent-remote-hosts.json";
-/// More would mean an ssh process every few seconds.
 const MAX_HOSTS: usize = 8;
 const MAX_CUSTOM: usize = 16;
 
-/// A computer added in the island: listed and stored by `name` (like a Host alias), reached as
-/// `ssh -p <port> <user>@<host>`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CustomHost {
@@ -28,26 +20,22 @@ pub struct CustomHost {
 #[derive(Debug, Default, Serialize, Deserialize)]
 struct RemoteHostsFile {
     hosts: Vec<String>,
-    /// Missing in files written before computers could be added in the island.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     custom: Vec<CustomHost>,
 }
 
-/// What ssh is given for a chosen computer.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct SshTarget {
     pub(crate) destination: String,
     pub(crate) port: Option<u16>,
 }
 
-/// Whether `alias` can be given to ssh as a host name: no option (`-`), spaces or patterns.
 pub(crate) fn is_valid_alias(alias: &str) -> bool {
     (1..=64).contains(&alias.len())
         && !alias.starts_with('-')
         && alias.chars().all(|c| c.is_ascii_alphanumeric() || matches!(c, '.' | '_' | '-' | '@'))
 }
 
-/// A DNS name or an IPv4 / IPv6 address, never read by ssh as an option.
 fn is_valid_host_name(host: &str) -> bool {
     (1..=253).contains(&host.len())
         && !host.starts_with('-')
@@ -79,23 +67,19 @@ fn save(app_dir: &Path, file: &RemoteHostsFile) -> Result<(), String> {
         .map_err(|error| format!("Failed to save the remote computers: {error}"))
 }
 
-/// The chosen hosts; none when the file is missing or unreadable.
 pub(super) fn read(app_dir: &Path) -> Vec<String> {
     read_file(app_dir).hosts
 }
 
-/// The computers added in the island.
 pub(crate) fn custom(app_dir: &Path) -> Vec<CustomHost> {
     read_file(app_dir).custom
 }
 
-/// The chosen hosts with what ssh is given for each: an added computer's address, else the alias.
 pub(super) fn chosen_targets(app_dir: &Path) -> Vec<(String, SshTarget)> {
     let file = read_file(app_dir);
     file.hosts.iter().map(|name| (name.clone(), target_in(&file.custom, name))).collect()
 }
 
-/// What ssh is given for the computer called `name`, chosen or not (the SSH proxy tunnel's hosts).
 pub(crate) fn target(app_dir: &Path, name: &str) -> SshTarget {
     target_in(&read_file(app_dir).custom, name)
 }
@@ -131,7 +115,6 @@ pub(super) fn write(app_dir: &Path, hosts: &[String]) -> Result<Vec<String>, Str
     Ok(chosen)
 }
 
-/// Trims an added computer and says what is wrong with it; an empty name becomes the host.
 fn check(custom: &CustomHost) -> Result<CustomHost, String> {
     let host = custom.host.trim().to_string();
     if !is_valid_host_name(&host) {
@@ -154,7 +137,6 @@ fn check(custom: &CustomHost) -> Result<CustomHost, String> {
     Ok(CustomHost { name, user: user.map(str::to_string), host, port: custom.port })
 }
 
-/// Adds a computer (or replaces the one of the same name) and switches it on when there is room.
 pub(super) fn add_custom(app_dir: &Path, custom: &CustomHost) -> Result<Vec<CustomHost>, String> {
     let custom = check(custom)?;
     let mut file = read_file(app_dir);
@@ -170,7 +152,6 @@ pub(super) fn add_custom(app_dir: &Path, custom: &CustomHost) -> Result<Vec<Cust
     Ok(file.custom)
 }
 
-/// Removes an added computer, and stops reading it.
 pub(super) fn remove_custom(app_dir: &Path, name: &str) -> Result<Vec<CustomHost>, String> {
     let mut file = read_file(app_dir);
     file.custom.retain(|custom| custom.name != name);
@@ -179,7 +160,6 @@ pub(super) fn remove_custom(app_dir: &Path, name: &str) -> Result<Vec<CustomHost
     Ok(file.custom)
 }
 
-/// The Host aliases in an ssh config, in order, without patterns (`*`, `?`, `!`).
 pub(crate) fn ssh_config_hosts(config: &str) -> Vec<String> {
     let mut hosts: Vec<String> = Vec::new();
     for line in config.lines() {
@@ -252,7 +232,6 @@ mod tests {
                 ("gpu.example.org".into(), SshTarget { destination: "gpu.example.org".into(), port: None }),
             ]
         );
-        // Switching hosts off keeps the added computers.
         write(&dir, &["zcm6".into()]).unwrap();
         assert_eq!(custom(&dir).len(), 2);
         assert_eq!(remove_custom(&dir, "lab").unwrap().len(), 1);
@@ -267,7 +246,6 @@ mod tests {
         assert!(add_custom(&dir, &with(Some("-l"), "host", None)).is_err());
         assert!(add_custom(&dir, &with(None, "a b", None)).is_err());
         assert!(add_custom(&dir, &with(None, "host", Some(0))).is_err());
-        // An IPv6 address needs a name, since it cannot be one.
         assert!(add_custom(&dir, &with(None, "fe80::1", None)).is_err());
         cleanup(&dir);
     }

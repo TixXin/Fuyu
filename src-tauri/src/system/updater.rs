@@ -1,5 +1,3 @@
-//! Updater support: proxy discovery and whether this build can check for updates.
-
 use tauri::AppHandle;
 use windows::Win32::System::Registry::HKEY_CURRENT_USER;
 
@@ -24,7 +22,6 @@ pub(super) fn normalize_proxy(raw: &str) -> String {
     }
 }
 
-/// Proxy for the updater: explicit env vars win, else the Windows system proxy.
 #[tauri::command]
 pub fn get_updater_proxy() -> Option<String> {
     for key in ["HTTPS_PROXY", "https_proxy", "HTTP_PROXY", "http_proxy"] {
@@ -51,9 +48,6 @@ pub fn get_updater_proxy() -> Option<String> {
     Some(normalize_proxy(&server))
 }
 
-/// Whether this build carries an updater public key. tauri.conf.json ships the
-/// fork's key, so every build can update; a build whose config clears it (for
-/// example another fork's) cannot, and the settings panel hides the action.
 #[tauri::command]
 pub fn updater_configured(app: AppHandle) -> bool {
     app.config()
@@ -69,10 +63,6 @@ pub fn updater_configured(app: AppHandle) -> bool {
 mod tests {
     use serde_json::{json, Value};
 
-    // tauri-plugin-updater declares `pubkey` as a mandatory config field with no
-    // serde default, so dropping the key aborts startup with "missing field
-    // `pubkey`". The shipped config carries the fork's public key; release
-    // builds pass the same key again through `src-tauri/tauri.release.conf.json`.
     fn shipped_updater_config() -> Value {
         let config: Value = serde_json::from_str(include_str!("../../tauri.conf.json"))
             .expect("tauri.conf.json must be valid JSON");
@@ -87,8 +77,6 @@ mod tests {
         let parsed: tauri_plugin_updater::Config = serde_json::from_value(shipped_updater_config())
             .expect("plugins.updater must deserialize or the app aborts at startup");
 
-        // The key is the base64 of a minisign `.pub` file; its first line is
-        // "untrusted comment: minisign public key: ...".
         assert!(parsed.pubkey.starts_with("dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6"));
         assert!(!parsed.endpoints.is_empty());
     }

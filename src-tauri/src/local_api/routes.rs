@@ -1,5 +1,3 @@
-//! Pure request checks and routing: HTTP method + path + body to an API call.
-
 use serde_json::{json, Map, Value};
 
 pub(super) const API_VERSION: u32 = 1;
@@ -7,8 +5,6 @@ pub(super) const MAX_BODY_BYTES: usize = 64 * 1024;
 
 #[derive(Debug, Clone, PartialEq)]
 pub(super) struct ApiCall {
-    /// Method name handled by the island window, e.g. `todos.add`; `health` is
-    /// answered by Rust directly.
     pub method: &'static str,
     pub params: Value,
     pub writes: bool,
@@ -29,7 +25,6 @@ impl ApiError {
     }
 }
 
-/// The request headers that matter for access checks.
 #[derive(Debug, Default)]
 pub(super) struct RequestHeaders {
     pub host: Option<String>,
@@ -37,8 +32,6 @@ pub(super) struct RequestHeaders {
     pub authorization: Option<String>,
 }
 
-/// Rejects browser requests (any `Origin`), foreign `Host` names (DNS
-/// rebinding) and requests without the right token.
 pub(super) fn check_access(headers: &RequestHeaders, token: &str, port: u16) -> Result<(), ApiError> {
     if headers.origin.is_some() {
         return Err(ApiError::new(403, "Requests from web pages are not allowed."));
@@ -103,8 +96,6 @@ pub(super) fn route(method: &str, url: &str, body: &[u8]) -> Result<ApiCall, Api
             params.insert("source".into(), Value::String((*source).to_string()));
             Ok(call("agentStatus.clear", Value::Object(params), true))
         }
-        // Development mode (plugin_host/dev.rs), for `fuyu-plugin dev`.
-        // Loading runs code from any folder, so it also needs "allow changes".
         ("POST", ["v1", "dev", "plugins"]) => Ok(call("dev.load", body_object(body)?, true)),
         ("POST", ["v1", "dev", "plugins", id, "reload"]) => Ok(call("dev.reload", json!({ "id": id }), true)),
         ("DELETE", ["v1", "dev", "plugins", id]) => Ok(call("dev.unload", json!({ "id": id }), true)),
@@ -119,7 +110,6 @@ pub(super) fn route(method: &str, url: &str, body: &[u8]) -> Result<ApiCall, Api
     }
 }
 
-/// A non-negative number from the query string, 0 when missing or not a number.
 fn query_number(url: &str, name: &str) -> u64 {
     url.split_once('?')
         .map(|(_, query)| query)
@@ -146,7 +136,6 @@ fn body_map(body: &[u8]) -> Result<Map<String, Value>, ApiError> {
     }
 }
 
-/// Todo ids are UUIDs (or the older fallback ids); anything else cannot exist.
 fn todo_id(segment: &str) -> Result<String, ApiError> {
     let valid = !segment.is_empty()
         && segment.len() <= 64

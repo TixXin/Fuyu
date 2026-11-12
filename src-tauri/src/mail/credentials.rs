@@ -1,5 +1,3 @@
-//! Authorization code storage in the Windows Credential Manager, and address validation.
-
 use crate::user_error::{credential as cred_err, UserError};
 use keyring::{Entry, Error as KeyringError};
 
@@ -38,7 +36,6 @@ fn is_domain(value: &str) -> bool {
         })
 }
 
-// The address is also the IMAP login and the credential key, so only plain ASCII is accepted.
 pub(super) fn normalize_email(email: &str) -> Result<String, UserError> {
     let email = email.trim().to_ascii_lowercase();
     let valid = email.split_once('@').is_some_and(|(local, domain)| {
@@ -55,18 +52,13 @@ pub(super) fn normalize_email(email: &str) -> Result<String, UserError> {
     Ok(email)
 }
 
-/// `imap.<domain>` serves QQ, 163, 126 and most school and company mail.
 pub(super) fn imap_host(email: &str) -> String {
     let domain = email.split_once('@').map_or(email, |(_, domain)| domain);
     format!("imap.{domain}")
 }
 
-/// The IMAPS port used when the server is given without one.
 pub(super) const DEFAULT_IMAP_PORT: u16 = 993;
 
-/// The IMAP server the user typed, or `imap.<domain>` when left empty: a domain,
-/// optionally with `:port`; no path or scheme. The connection is always TLS, so a
-/// port is for servers that offer IMAPS somewhere other than 993. `:993` is dropped.
 pub(super) fn resolve_host(email: &str, host: Option<&str>) -> Result<String, UserError> {
     let host = match host.map(str::trim).filter(|host| !host.is_empty()) {
         Some(host) => host.to_ascii_lowercase(),
@@ -86,7 +78,6 @@ pub(super) fn resolve_host(email: &str, host: Option<&str>) -> Result<String, Us
     Ok(if port == DEFAULT_IMAP_PORT { name.to_string() } else { format!("{name}:{port}") })
 }
 
-/// Splits a resolved server into its name and port.
 pub(super) fn server_address(server: &str) -> (&str, u16) {
     match server.split_once(':') {
         Some((name, port)) => (name, port.parse().unwrap_or(DEFAULT_IMAP_PORT)),

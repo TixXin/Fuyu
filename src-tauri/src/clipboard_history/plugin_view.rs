@@ -1,17 +1,11 @@
-//! What plugins with the sensitive `clipboard:read` permission see of the
-//! history: text items only (never images), newest first, and nothing while
-//! the user has clipboard history switched off.
-
 use serde_json::{json, Value};
 
 use super::{service, ClipboardHistoryItem, ClipboardHistoryItemKind};
 
 const DEFAULT_LIMIT: usize = 20;
 const MAX_LIMIT: usize = 50;
-/// Longer texts are cut; `truncated` says so.
 const MAX_TEXT_CHARS: usize = 4000;
 
-/// `clipboard.history { limit? }`. Errors carry an HTTP-style status.
 pub(crate) fn plugin_history(params: &Value) -> Result<Value, (u16, String)> {
     let limit = match params.get("limit") {
         None | Some(Value::Null) => DEFAULT_LIMIT,
@@ -28,8 +22,6 @@ pub(crate) fn plugin_history(params: &Value) -> Result<Value, (u16, String)> {
     Ok(json!({ "items": text_items(&snapshot.items, limit, false) }))
 }
 
-/// `GET /v1/clipboard?limit=` on the local API (C38), for AI tools: like `clipboard.history`, but
-/// only while "let the local API read the history" is on, and a masked key stays masked.
 pub(crate) fn local_api_history(params: &Value) -> Result<Value, (u16, String)> {
     let snapshot = service().map_err(|error| (503, error))?.snapshot().map_err(|error| (500, error))?;
     if !snapshot.settings.local_api_read {
@@ -58,8 +50,6 @@ fn format_text_item(item: &ClipboardHistoryItem, hide_masked: bool) -> Value {
     })
 }
 
-/// The newest `limit` text items as plugins see them; with `hide_masked`, a masked key gives its
-/// masked preview.
 pub(super) fn text_items(items: &[ClipboardHistoryItem], limit: usize, hide_masked: bool) -> Vec<Value> {
     let mut texts: Vec<&ClipboardHistoryItem> = items
         .iter()
@@ -73,9 +63,6 @@ pub(super) fn text_items(items: &[ClipboardHistoryItem], limit: usize, hide_mask
         .collect()
 }
 
-/// One text item as `clipboard.history` shows it, for the `clipboard/context`
-/// plugin menu (the user picked it, so no permission is needed); None for an
-/// image, an unknown id, or while the history is off.
 pub(crate) fn plugin_item(id: &str) -> Option<Value> {
     let snapshot = service().ok()?.snapshot().ok()?;
     if !snapshot.settings.enabled {
@@ -88,7 +75,6 @@ pub(crate) fn plugin_item(id: &str) -> Option<Value> {
         .map(|item| format_text_item(item, false))
 }
 
-/// Tells subscribed plugins the history changed, if it is on.
 pub(super) fn publish_changed(enabled: bool) {
     if enabled {
         crate::plugin_host::publish_event("clipboard.changed", json!({}));

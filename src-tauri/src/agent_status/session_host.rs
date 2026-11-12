@@ -1,8 +1,3 @@
-//! Where an agent session runs (Orca, Windows Terminal, VS Code, the Codex app, ...), shown on the
-//! island's Agent page. A running Claude Code session leads to its process (session_process.rs);
-//! the nearest ancestor that owns a window is its host. A host stays known after the session ends
-//! (session_memory.rs). Codex records its origin in the rollout instead.
-
 use std::{
     collections::{HashMap, HashSet},
     path::Path,
@@ -19,19 +14,14 @@ use super::sessions::AgentSessionSummary;
 use super::window_focus::{app_name, NOT_SESSION_HOSTS};
 use crate::win32;
 
-/// The program an agent session runs in.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SessionHost {
-    /// Product name, such as "Windows Terminal". Not translated.
     pub(super) name: String,
-    /// Its executable, for the icon; `None` when unknown (Codex CLI and other origins).
     pub(super) exe: Option<String>,
-    /// "terminal", "editor" or "app": the fallback icon when the executable has none.
     pub(super) kind: &'static str,
 }
 
-/// Known hosts by executable name (lowercase, no `.exe`): product name and kind.
 const KNOWN_HOSTS: &[(&str, &str, &str)] = &[
     ("orca", "Orca", "terminal"),
     ("windowsterminal", "Windows Terminal", "terminal"),
@@ -60,7 +50,6 @@ const KNOWN_HOSTS: &[(&str, &str, &str)] = &[
     ("codex", "Codex", "app"),
 ];
 
-/// The host for an executable path: its known name, else the file name as is.
 pub(super) fn host_for_exe(exe: &str) -> SessionHost {
     let app = app_name(exe);
     let (name, kind) = KNOWN_HOSTS
@@ -77,7 +66,6 @@ pub(super) fn host_for_exe(exe: &str) -> SessionHost {
     SessionHost { name, exe: Some(exe.to_string()), kind }
 }
 
-/// Where a Codex session started, from the `originator` of its rollout.
 pub(super) fn codex_host(originator: &str) -> SessionHost {
     let (name, kind) = match originator {
         "Codex Desktop" => ("Codex", "app"),
@@ -88,8 +76,6 @@ pub(super) fn codex_host(originator: &str) -> SessionHost {
     SessionHost { name: name.to_string(), exe: None, kind }
 }
 
-/// The host of the nearest process in `chain` that owns a window; `windows` maps a process id to
-/// its executable for every process with a visible top-level window.
 pub(super) fn host_of_chain(chain: &[u32], windows: &HashMap<u32, String>) -> Option<String> {
     chain.iter().find_map(|pid| {
         windows
@@ -99,19 +85,13 @@ pub(super) fn host_of_chain(chain: &[u32], windows: &HashMap<u32, String>) -> Op
     })
 }
 
-/// The host named by the environment the session inherited from its terminal or editor, for when
-/// the parent chain breaks: Git Bash's fork and exec (as when Happy starts the session) leave a
-/// parent process that has already exited. `var` reads the session's variable, `open` gives the
-/// executable of an open window of an app.
 pub(super) fn host_from_env(
     var: impl Fn(&str) -> Option<String>,
     open: impl Fn(&str) -> Option<String>,
 ) -> Option<String> {
     let var = |name: &str| var(name).filter(|value| !value.is_empty());
-    // TERM_PROGRAM is the innermost terminal's; the others leak into programs started from it.
     match var("TERM_PROGRAM").map(|program| program.to_lowercase()).as_deref() {
         Some("wezterm") => var("WEZTERM_EXECUTABLE").or_else(|| open("wezterm-gui")),
-        // VS Code and editors built on it point Git's askpass at their own executable.
         Some("vscode") => var("VSCODE_GIT_ASKPASS_NODE").or_else(|| open("code")),
         Some("mintty") => open("mintty"),
         _ if var("WT_SESSION").is_some() => open("windowsterminal"),
@@ -119,15 +99,8 @@ pub(super) fn host_from_env(
     }
 }
 
-/// A session without a host is looked at again after this long (its window may not exist yet).
 const HOST_RETRY_MS: i64 = 30_000;
 
-/// Works out, for each running session not seen yet (or now in another process), its process,
-/// host program and Orca terminal, and remembers them (session_memory.rs) so they outlive the
-/// session. The process comes from the session's SessionStart record (session_records.rs, Claude
-/// Code and Codex), else Claude Code's registry. Then fills in `host` for the listed sessions; a
-/// Codex session found this way shows its real program instead of the origin in its rollout.
-/// Windows are only enumerated when such a session exists.
 pub(super) fn attach_hosts(home_dir: &Path, app_dir: Option<&Path>, sessions: &mut [AgentSessionSummary]) {
     let now = current_unix_millis();
     let running = running_sessions(home_dir);
@@ -175,7 +148,6 @@ pub(super) fn attach_hosts(home_dir: &Path, app_dir: Option<&Path>, sessions: &m
     }
 }
 
-/// Process id -> executable path, for every process with a visible, unowned, titled window.
 fn window_owners() -> HashMap<u32, String> {
     let mut owners = HashSet::new();
     let _ = win32::window::for_each_top_level_window(|window| {

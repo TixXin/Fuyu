@@ -6,7 +6,6 @@ use super::{renamed_credential, MigrationState};
 const OLD: &str = "com.focusd.island";
 const NEW: &str = "com.tixxin.fuyu";
 
-/// A Roaming and a Local folder in a fresh temporary directory.
 fn bases(name: &str) -> (PathBuf, [PathBuf; 2]) {
     let root = std::env::temp_dir().join(format!("fuyu-rename-{name}-{}", std::process::id()));
     let _ = fs::remove_dir_all(&root);
@@ -41,11 +40,9 @@ fn the_old_folders_are_copied_once_without_the_webview_caches() {
     let profile = bases[1].join(NEW).join("EBWebView").join("Default");
     assert!(profile.join("Local Storage").join("leveldb").join("000003.log").is_file());
     assert!(!profile.join("Cache").exists() && !profile.join("Code Cache").exists());
-    // The old folders stay for going back to an old version; nothing is left half-made.
     assert!(bases[0].join(OLD).join("todos.json").is_file() && bases[1].join(OLD).join("EBWebView").is_dir());
     assert!(!bases[0].join(format!("{NEW}.migrating")).exists() && !bases[1].join(format!("{NEW}.migrating")).exists());
 
-    // Already migrated: a later start changes nothing, even when the old data changed.
     write(bases[0].join(OLD).join("todos.json"), "newer in the old version");
     assert!(!copy_data_dirs(&bases, OLD, NEW, "{}").expect("second start"));
     assert_eq!(fs::read_to_string(bases[0].join(NEW).join("todos.json")).expect("todos"), "todos");
@@ -56,7 +53,6 @@ fn the_old_folders_are_copied_once_without_the_webview_caches() {
 fn a_copy_cut_short_is_thrown_away_and_done_again() {
     let (root, bases) = bases("half");
     old_install(&bases);
-    // The state a crash leaves: staging folders, and the Local folder already renamed.
     write(bases[0].join(format!("{NEW}.migrating")).join("todos.json"), "half");
     write(bases[1].join(NEW).join("EBWebView").join("stale"), "half");
     assert!(copy_data_dirs(&bases, OLD, NEW, "{}").expect("copy"));
@@ -71,7 +67,6 @@ fn nothing_is_copied_without_old_data_or_over_a_fresh_start() {
     let (root, bases) = bases("none");
     assert!(!copy_data_dirs(&bases, OLD, NEW, "{}").expect("no old data"));
     assert!(!bases[0].join(NEW).exists());
-    // The new version ran before the old data appeared: its own data wins.
     old_install(&bases);
     write(bases[0].join(NEW).join("todos.json"), "fresh");
     assert!(!copy_data_dirs(&bases, OLD, NEW, "{}").expect("fresh start"));

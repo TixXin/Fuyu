@@ -1,9 +1,3 @@
-//! Reading one environment variable of another process (the island's own user), such as the
-//! `ORCA_TERMINAL_HANDLE` Orca gives every program in a terminal tab. Windows has no API for
-//! this, so it follows the documented-in-practice x64 layout: the PEB's ProcessParameters
-//! (offset 0x20), whose Environment pointer is at 0x80 and EnvironmentSize at 0x3F0.
-//! Anything that does not read back cleanly gives `None`.
-
 use std::{ffi::c_void, mem::size_of};
 
 use windows::{
@@ -19,10 +13,8 @@ use super::process::ProcessHandle;
 const PEB_PROCESS_PARAMETERS: usize = 0x20;
 const PARAMETERS_ENVIRONMENT: usize = 0x80;
 const PARAMETERS_ENVIRONMENT_SIZE: usize = 0x3F0;
-/// Environment blocks are a few KB; a larger size means the layout did not match.
 const MAX_ENVIRONMENT_BYTES: usize = 1024 * 1024;
 
-/// PROCESS_BASIC_INFORMATION, declared here so only the PEB address is needed.
 #[repr(C)]
 #[derive(Default)]
 struct BasicInformation {
@@ -34,21 +26,15 @@ struct BasicInformation {
     inherited_from_unique_process_id: usize,
 }
 
-/// The value of `name` (matched case-insensitively, like Windows does) in the environment of
-/// `process_id`; `None` when it is unset or the process cannot be read.
 pub(crate) fn environment_variable(process_id: u32, name: &str) -> Option<String> {
     if cfg!(not(target_pointer_width = "64")) {
         return None;
     }
-    // SAFETY: OpenProcess takes no pointers; a returned handle is owned by
-    // ProcessHandle, which closes it.
     let process = unsafe { OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION | PROCESS_VM_READ, false, process_id) }
         .ok()
         .map(ProcessHandle)?;
 
     let mut info = BasicInformation::default();
-    // SAFETY: the handle is live; `info` is a writable buffer of the size passed, laid out like
-    // PROCESS_BASIC_INFORMATION, which ProcessBasicInformation fills.
     let status = unsafe {
         NtQueryInformationProcess(
             process.0,
@@ -73,14 +59,12 @@ pub(crate) fn environment_variable(process_id: u32, name: &str) -> Option<String
     find_variable(&block, name)
 }
 
-/// `NAME=value` entries of a UTF-16 environment block, separated by NULs.
 pub(crate) fn find_variable(block: &[u16], name: &str) -> Option<String> {
     block
         .split(|&unit| unit == 0)
         .take_while(|entry| !entry.is_empty())
         .map(String::from_utf16_lossy)
         .find_map(|entry| {
-            // Entries such as "=C:=C:\" start with '=', so the separator is searched from 1.
             let split = entry.get(1..)?.find('=')? + 1;
             entry[..split]
                 .eq_ignore_ascii_case(name)
@@ -96,8 +80,6 @@ fn read_usize(process: &ProcessHandle, address: usize) -> Option<usize> {
 
 fn read_into(process: &ProcessHandle, address: usize, buffer: *mut c_void, length: usize) -> Option<()> {
     let mut read = 0usize;
-    // SAFETY: the handle has PROCESS_VM_READ; `buffer` points to `length` writable bytes owned
-    // by the caller; a bad `address` in the other process makes the call fail, not crash.
     unsafe { ReadProcessMemory(process.0, address as *const c_void, buffer, length, Some(&mut read)) }.ok()?;
     (read == length).then_some(())
 }

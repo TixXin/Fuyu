@@ -1,8 +1,3 @@
-//! Whether Codex runs hooks marked `async` in the background (task A8), judged from the
-//! `cli_version` in its newest rollout. Codex does from 0.148.0 on; before that it skips such a
-//! hook entirely, so Install/Repair marks the SessionStart hook `async` only once a rollout shows
-//! a version that runs it, and keeps it waiting (about a second per session) otherwise.
-
 use std::{
     fs::File,
     io::{BufRead, BufReader, Read},
@@ -13,12 +8,9 @@ use serde_json::Value;
 
 use super::codex_usage::{codex_home, newest_rollouts};
 
-/// The first Codex release with background hooks (openai/codex#37533), as (major, minor).
 const FIRST_ASYNC_HOOKS_RELEASE: (u64, u64) = (0, 148);
-/// The `session_meta` line carries Codex's instructions, so it can be long.
 const HEAD_BYTES: u64 = 4 * 1024 * 1024;
 
-/// Whether the Codex on this computer runs `async` hooks; `None` without a rollout naming its version.
 pub(super) fn codex_runs_async_hooks(home_dir: &Path) -> Option<bool> {
     newest_rollouts(&codex_home(home_dir))
         .iter()
@@ -26,7 +18,6 @@ pub(super) fn codex_runs_async_hooks(home_dir: &Path) -> Option<bool> {
         .and_then(|version| runs_async_hooks(&version))
 }
 
-/// The Codex version from a rollout's first line (`session_meta`).
 pub(super) fn rollout_cli_version(first_line: &str) -> Option<String> {
     let record = serde_json::from_str::<Value>(first_line).ok()?;
     if record["type"] != "session_meta" {
@@ -38,7 +29,6 @@ pub(super) fn rollout_cli_version(first_line: &str) -> Option<String> {
         .map(str::to_string)
 }
 
-/// Whether a Codex version ("0.148.0", "0.149.0-alpha.2") runs `async` hooks; `None` when unreadable.
 pub(super) fn runs_async_hooks(version: &str) -> Option<bool> {
     let mut parts = version.split(['.', '-', '+']);
     let major = parts.next()?.parse::<u64>().ok()?;

@@ -1,8 +1,3 @@
-//! Agent sessions for the island's Agent page, read straight from the Claude Code and Codex
-//! session files, so every recent session shows up whether or not it ran with FocuSD's hooks.
-//! Pure parsing only; reading and caching the files is in session_scan.rs. Both formats are
-//! undocumented, so anything unexpected is skipped rather than reported.
-
 use std::collections::HashSet;
 
 use serde::Serialize;
@@ -17,8 +12,6 @@ use super::title::{display_title, prompt_title, shorten, user_prompt_in_record};
 use super::todo_list::{claude_todo_list, codex_plan, unfinished, TodoProgress};
 use super::tool_call::{claude_tool_call, codex_tool_call, ToolCall};
 
-/// The latest reply shown under each session: two lines on the Agent page, up to three on an
-/// alert's card (about 36 CJK or 70 Latin characters a line).
 pub(super) const LAST_MESSAGE_MAX_CHARS: usize = 200;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -28,70 +21,40 @@ pub struct AgentSessionSummary {
     pub(super) session_id: String,
     pub(super) cwd: Option<String>,
     pub(super) title: Option<String>,
-    /// "Opus 5.5" for Claude models, the raw name otherwise.
     pub(super) model: Option<String>,
     pub(super) effort: Option<String>,
-    /// "running", "waiting" (asked the user mid-turn, Claude Code only), "completed", "failed" or
-    /// "stale" (still working after a long silence).
     pub(super) phase: &'static str,
     pub(super) last_message: Option<String>,
-    /// What the last reply's marker line says ("yourTurn", "background" or "done"), when the
-    /// optional reply status marker is on (reply_marker.rs); Claude Code only.
     pub(super) reply_marker: Option<&'static str>,
-    /// Whether the last reply ends by asking the user something (reply_text.rs); how a finished
-    /// turn without a marker tells "your turn" from "done".
     pub(super) reply_asks: bool,
-    /// Last change of the session file, Unix milliseconds.
     pub(super) updated_at: i64,
-    /// The program the session runs in, when known (session_host.rs).
     pub(super) host: Option<SessionHost>,
-    /// When the newest prompt was sent, Unix milliseconds; how long the current (or last) turn
-    /// has run is counted from here. `None` when the prompt is not in the excerpt read.
     pub(super) turn_started_at: Option<i64>,
-    /// That newest prompt, shortened like a title.
     pub(super) last_prompt: Option<String>,
-    /// The tool the current turn called last; `None` once the turn is over.
     pub(super) current_tool: Option<ToolCall>,
-    /// "default", "auto", "bypass", "acceptEdits" or "plan" (session_mode.rs); `None` when unknown.
     pub(super) permission_mode: Option<&'static str>,
-    /// Subagents the current turn started that have not answered yet (Claude Code only).
     pub(super) subagents: u32,
-    /// Background tasks the newest turn started that have not ended (background_tasks.rs; Claude
-    /// Code only). A finished turn with one running goes on by itself when it ends.
     pub(super) background_tasks: u32,
-    /// Compacting its context now (PreCompact seen, PostCompact not yet; notifications.rs).
     pub(super) compacting: bool,
-    /// The agent's own task list while some of it is left (todo_list.rs).
     pub(super) todos: Option<TodoProgress>,
-    /// The agent has quit: SessionEnd ran, its process is gone, or Claude Code no longer lists it
-    /// as running. Set by `list_sessions`; false while that is unknown.
     pub(super) closed: bool,
-    /// The SSH host the session runs on, for sessions read from another computer
-    /// (remote_sessions.rs); left out for local ones.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(super) remote_host: Option<String>,
-    /// Tokens in the context at the newest model call (prompt, cache and reply); `None` when the
-    /// excerpt read has none. Shown on the Agent page's cards.
     pub(super) context_tokens: Option<u64>,
 }
 
-/// Where the newest turn of a session stands, before the age of the file is considered.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub(super) enum TurnState {
     #[default]
     Unknown,
     Working,
-    /// Working, but the turn's last call is a tool that waits for the user (a question, or a
-    /// plan to approve): the session waits on the user even without the hooks saying so.
     AwaitingUser,
     Done,
     Failed,
 }
 
-/// Claude Code tools that stop the turn until the user answers.
 const USER_BLOCKING_TOOLS: [&str; 2] = ["AskUserQuestion", "ExitPlanMode"];
 
-/// What the end of a session file says. `None` fields were not found in the excerpt.
 #[derive(Debug, Default, PartialEq, Eq)]
 pub(super) struct SessionTail {
     pub(super) session_id: Option<String>,
@@ -100,30 +63,21 @@ pub(super) struct SessionTail {
     pub(super) model: Option<String>,
     pub(super) effort: Option<String>,
     pub(super) last_message: Option<String>,
-    /// The last reply's marker (reply_marker.rs), already cut from `last_message`.
     pub(super) reply_marker: Option<&'static str>,
     pub(super) reply_asks: bool,
     pub(super) state: TurnState,
-    /// Timestamp of the newest prompt, Unix milliseconds.
     pub(super) turn_started_at: Option<i64>,
     pub(super) last_prompt: Option<String>,
-    /// The newest tool call after the newest prompt, while the turn is still working.
     pub(super) current_tool: Option<ToolCall>,
     pub(super) permission_mode: Option<&'static str>,
-    /// Subagents started after the newest prompt with no result yet, while the turn is working.
     pub(super) subagents: u32,
-    /// Background tasks started after the newest prompt that have not ended, however the turn ended.
     pub(super) background_tasks: u32,
-    /// The newest task list in the excerpt, whichever turn wrote it; `None` once it is all done.
     pub(super) todos: Option<TodoProgress>,
-    /// Whether a task list was found yet (reading from the end, the first one found is the newest).
     todos_seen: bool,
-    /// Tokens in the context at the newest model call.
     pub(super) context_tokens: Option<u64>,
 }
 
 impl SessionTail {
-    /// A finished turn has no current tool.
     fn settle(mut self) -> Self {
         if !matches!(self.state, TurnState::Working | TurnState::AwaitingUser) {
             self.current_tool = None;
@@ -133,7 +87,6 @@ impl SessionTail {
     }
 }
 
-/// "2026-11-06T07:24:44.123Z" (or with an offset such as "+08:00") as Unix milliseconds.
 pub(super) fn parse_timestamp_ms(text: &str) -> Option<i64> {
     let number = |range: std::ops::Range<usize>| text.get(range)?.parse::<i64>().ok();
     let bytes = text.as_bytes();
@@ -162,7 +115,6 @@ pub(super) fn parse_timestamp_ms(text: &str) -> Option<i64> {
             sign * (digits[..2].parse::<i64>().ok()? * 60 + digits[2..].parse::<i64>().ok()?)
         }
     };
-    // Days since 1970-01-01 for a proleptic Gregorian date (Howard Hinnant's days_from_civil).
     let y = if month <= 2 { year - 1 } else { year };
     let era = y.div_euclid(400);
     let yoe = y - era * 400;
@@ -174,25 +126,19 @@ pub(super) fn parse_timestamp_ms(text: &str) -> Option<i64> {
     Some(seconds * 1_000 + millis)
 }
 
-/// Turns the state and the file age into the phase shown, using the same stale limit as the
-/// running markers.
 pub(super) fn session_phase(state: TurnState, idle_ms: i64, stale_after_ms: i64) -> &'static str {
     match state {
         TurnState::Failed => "failed",
         TurnState::Working if idle_ms >= stale_after_ms => "stale",
         TurnState::Working => "running",
-        // Waiting on the user is not a stall, however long it takes.
         TurnState::AwaitingUser => "waiting",
         TurnState::Done | TurnState::Unknown => "completed",
     }
 }
 
-/// Reads a Claude Code transcript excerpt from its end.
 pub(super) fn parse_claude_tail(tail: &str) -> SessionTail {
     let mut result = SessionTail::default();
-    // Read from the end, so a subagent's result comes before the call that started it.
     let mut answered = HashSet::new();
-    // Background tasks seen ending; read from the end, so before the calls that started them.
     let mut ended: HashSet<String> = HashSet::new();
     for (line, record) in tail
         .lines()
@@ -239,7 +185,6 @@ pub(super) fn parse_claude_tail(tail: &str) -> SessionTail {
                     result.last_message = shorten(&plain, LAST_MESSAGE_MAX_CHARS);
                 }
             }
-            // Only tools called after the newest prompt belong to the current turn.
             if result.current_tool.is_none() && result.last_prompt.is_none() {
                 result.current_tool = claude_tool_call(&message["content"]);
             }
@@ -262,7 +207,6 @@ pub(super) fn parse_claude_tail(tail: &str) -> SessionTail {
         if result.state == TurnState::Unknown {
             result.state = claude_turn_state(kind, &record);
         }
-        // A prompt the user typed, not tool results, an interruption note or a command's output.
         if result.last_prompt.is_none() && kind == "user" {
             if let Some(prompt) = user_prompt_in_record(&record.to_string()) {
                 result.last_prompt = Some(prompt);
@@ -281,12 +225,10 @@ fn claude_turn_state(kind: &str, record: &Value) -> TurnState {
         }
         return match message["stop_reason"].as_str() {
             Some("end_turn" | "stop_sequence" | "max_tokens" | "refusal") => TurnState::Done,
-            // The newest record: nothing answered this call yet.
             _ if calls_user_blocking_tool(&message["content"]) => TurnState::AwaitingUser,
             _ => TurnState::Working,
         };
     }
-    // A user record: a new prompt or tool results keep the turn going; an interruption ends it.
     let interrupted = text_blocks(&message["content"])
         .or_else(|| message["content"].as_str().map(str::to_string))
         .is_some_and(|text| text.contains("[Request interrupted by user"));
@@ -297,7 +239,6 @@ fn claude_turn_state(kind: &str, record: &Value) -> TurnState {
     }
 }
 
-/// "claude-opus-5-5" or "group/auto-claude-opus-5-5" → "Opus 5.5"; other names unchanged.
 pub(super) fn claude_model_label(model: &str) -> String {
     let name = model.rsplit('/').next().unwrap_or(model);
     let Some(rest) = name.split_once("claude-").map(|(_, rest)| rest) else {
@@ -321,8 +262,6 @@ pub(super) fn claude_model_label(model: &str) -> String {
     }
 }
 
-/// Reads a Codex rollout excerpt from its end. The session id and folder come from the
-/// `session_meta` record on the first line (see `parse_codex_meta`).
 pub(super) fn parse_codex_tail(tail: &str) -> SessionTail {
     let mut result = SessionTail::default();
     for record in tail
@@ -347,7 +286,6 @@ pub(super) fn parse_codex_tail(tail: &str) -> SessionTail {
                 result.permission_mode = codex_permission_mode(payload);
             }
         }
-        // Only tools called after the newest prompt belong to the current turn.
         if kind == "response_item" && result.current_tool.is_none() && result.last_prompt.is_none() {
             result.current_tool = codex_tool_call(payload);
         }
@@ -391,10 +329,6 @@ pub(super) fn parse_codex_tail(tail: &str) -> SessionTail {
     result.settle()
 }
 
-/// `(session id, cwd)` from a Codex rollout's first line; `None` for a subagent's or Codex's own
-/// internal thread. Those have rollouts of their own (their `id` is the thread, not the session
-/// the hooks report), so listing them would add sessions no hook ever updates. A user's session
-/// has a plain `source` ("cli", "vscode", "exec", ...) or `{"custom": ...}`.
 pub(super) fn parse_codex_meta(first_line: &str) -> Option<(String, Option<String>)> {
     let record = serde_json::from_str::<Value>(first_line).ok()?;
     if record["type"] != "session_meta" {
@@ -409,8 +343,6 @@ pub(super) fn parse_codex_meta(first_line: &str) -> Option<(String, Option<Strin
     Some((id, string_field(payload, "cwd")))
 }
 
-/// Where a Codex session started ("Codex Desktop", "codex_cli_rs", ...), from the
-/// `session_meta` record on the first line of its rollout.
 pub(super) fn codex_originator(first_line: &str) -> Option<String> {
     let record = serde_json::from_str::<Value>(first_line).ok()?;
     (record["type"] == "session_meta")
@@ -418,7 +350,6 @@ pub(super) fn codex_originator(first_line: &str) -> Option<String> {
         .flatten()
 }
 
-/// The first prompt the user typed in a Codex rollout line, if this line is one.
 pub(super) fn codex_user_prompt(line: &str) -> Option<String> {
     if !line.contains("\"user_message\"") {
         return None;
@@ -431,7 +362,6 @@ pub(super) fn codex_user_prompt(line: &str) -> Option<String> {
         .and_then(super::title::prompt_title)
 }
 
-/// The `cwd` a Claude Code transcript line records, if it has one.
 pub(super) fn record_cwd(line: &str) -> Option<String> {
     if !line.contains("\"cwd\"") {
         return None;
@@ -440,8 +370,6 @@ pub(super) fn record_cwd(line: &str) -> Option<String> {
     string_field(&record, "cwd")
 }
 
-/// What a Claude call had in its context: the prompt, read from and written to the cache or not,
-/// plus the reply.
 fn claude_context_tokens(usage: &Value) -> Option<u64> {
     let fields = ["input_tokens", "cache_creation_input_tokens", "cache_read_input_tokens", "output_tokens"];
     let total: u64 = fields.iter().filter_map(|field| usage[*field].as_u64()).sum();

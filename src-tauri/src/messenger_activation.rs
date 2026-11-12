@@ -7,7 +7,6 @@ pub fn is_interactive_window(window: HWND) -> bool {
 }
 
 pub fn activate_existing_window(window: HWND, name: &str) -> Result<(), String> {
-    // The client must restore its own UI first; Win32 restore commands can expose a hidden webview.
     if !is_interactive_window(window) {
         return Err(format!("{name}尚未恢复可交互的主窗口，请从系统托盘打开。"));
     }
@@ -31,8 +30,6 @@ mod tests {
 
     #[test]
     fn a_hidden_preloaded_window_is_never_forced_visible() {
-        // SAFETY: creates, inspects and destroys a test-owned window on this thread;
-        // the class and title are static wide strings.
         unsafe {
             let window = CreateWindowExW(
                 WINDOW_EX_STYLE::default(),

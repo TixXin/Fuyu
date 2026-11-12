@@ -52,28 +52,21 @@ fn run() -> Result<(), String> {
     };
     let window = HWND(handle as *mut _);
     verify_wechat_window(window)?;
-    // SAFETY: CoInitializeEx takes no pointers here; a success is paired with the
-    // CoUninitialize below on this thread.
     unsafe { CoInitializeEx(None, COINIT_MULTITHREADED) }
         .ok()
         .map_err(|error| error.to_string())?;
     let result = inspect(window);
-    // SAFETY: pairs the successful CoInitializeEx above, on the same thread.
     unsafe { CoUninitialize() };
     result
 }
 
 fn verify_wechat_window(window: HWND) -> Result<(), String> {
     let mut process_id = 0;
-    // SAFETY: GetWindowThreadProcessId accepts any HWND and writes into a valid local.
     unsafe { GetWindowThreadProcessId(window, Some(&mut process_id)) };
-    // SAFETY: OpenProcess takes no pointers; the handle is closed below.
     let process = unsafe { OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, process_id) }
         .map_err(|error| error.to_string())?;
     let mut path = [0u16; 32768];
     let mut length = path.len() as u32;
-    // SAFETY: process is a live handle with limited query access; path is a
-    // writable buffer of length units and length is a valid in/out pointer.
     let result = unsafe {
         QueryFullProcessImageNameW(
             process,
@@ -82,7 +75,6 @@ fn verify_wechat_window(window: HWND) -> Result<(), String> {
             &mut length,
         )
     };
-    // SAFETY: closes the handle opened above exactly once.
     unsafe {
         let _ = CloseHandle(process);
     }
@@ -95,8 +87,6 @@ fn verify_wechat_window(window: HWND) -> Result<(), String> {
 }
 
 fn inspect(window: HWND) -> Result<(), String> {
-    // SAFETY: COM is initialized on this thread by run() for the whole call; the
-    // automation interfaces are owned values used only within it.
     unsafe {
         let automation: IUIAutomation =
             CoCreateInstance(&CUIAutomation8, None, CLSCTX_INPROC_SERVER)
@@ -134,7 +124,6 @@ fn inspect(window: HWND) -> Result<(), String> {
             if let Ok(class) = element.CurrentClassName() {
                 *classes.entry(class.to_string()).or_default() += 1;
             }
-            // Count exposed text without printing, saving, or hashing message contents.
             let named = element.CurrentName().is_ok_and(|name| !name.is_empty());
             if named && kind == UIA_ListItemControlTypeId {
                 named_list_items += 1;

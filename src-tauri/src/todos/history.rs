@@ -1,14 +1,8 @@
-//! Reading other days: `todos.list { date }`, `note.get { date }` and
-//! `todos.days { from, to }`. A past day is read from its archive, a later day
-//! from the scheduled list. Same rules and messages as
-//! src/features/todos/todoHistory.ts.
-
 use serde_json::{json, Map, Value};
 
 use super::calls::CallError;
 use super::model::{is_date, TodosData};
 
-/// The `date` asked for: None for today (missing, or the list's own day).
 fn asked_date(input: &Map<String, Value>, data: &TodosData) -> Result<Option<String>, CallError> {
     match input.get("date") {
         None | Some(Value::Null) => Ok(None),
@@ -21,7 +15,6 @@ fn no_archive(date: &str) -> CallError {
     (404, format!("Nothing was archived for {date}."))
 }
 
-/// `todos.list` for another day; None means today (answered as before).
 pub(super) fn list(input: &Map<String, Value>, data: &TodosData) -> Result<Option<Value>, CallError> {
     let Some(date) = asked_date(input, data)? else { return Ok(None) };
     if date > data.date {
@@ -32,7 +25,6 @@ pub(super) fn list(input: &Map<String, Value>, data: &TodosData) -> Result<Optio
     Ok(Some(json!({ "date": date, "todos": archive.todos, "scheduled": [], "activeTodoId": null, "archived": true })))
 }
 
-/// `note.get` for another day; None means today.
 pub(super) fn note(input: &Map<String, Value>, data: &TodosData) -> Result<Option<Value>, CallError> {
     let Some(date) = asked_date(input, data)? else { return Ok(None) };
     if date > data.date {
@@ -42,7 +34,6 @@ pub(super) fn note(input: &Map<String, Value>, data: &TodosData) -> Result<Optio
     Ok(Some(json!({ "date": date, "note": archive.daily_note, "archived": true })))
 }
 
-/// `todos.days { from, to }`: a summary of today and each archived day in the range, oldest first.
 pub(super) fn days(input: &Map<String, Value>, data: &TodosData) -> Result<Value, CallError> {
     let bound = |key: &str| match input.get(key) {
         Some(Value::String(date)) if is_date(date) => Ok(date.clone()),

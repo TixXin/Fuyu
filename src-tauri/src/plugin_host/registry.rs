@@ -1,7 +1,3 @@
-//! Which plugins are installed: built-in ones plus the plugins folder, the
-//! one-time carry-over of the old local API switches, and the snapshot the
-//! settings pages show.
-
 use serde::Serialize;
 use serde_json::{Map, Value};
 use std::{collections::BTreeMap, fs, path::PathBuf};
@@ -20,16 +16,12 @@ use super::{
     updates, InstalledPlugin, PluginHost,
 };
 
-/// Mirrored by `PluginInfo` in src/features/plugins/api.ts.
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PluginInfo {
     id: String,
-    /// Comes with the island: no "allow third-party" needed, cannot be uninstalled.
     builtin: bool,
-    /// Loaded in development mode from a folder (dev.rs): always on, every permission granted.
     dev: bool,
-    /// Why the plugin cannot be used (bad manifest); the other fields are then empty.
     invalid_reason: Option<String>,
     name: Option<LocalizedText>,
     description: Option<LocalizedText>,
@@ -37,77 +29,49 @@ pub struct PluginInfo {
     author: String,
     homepage: String,
     permissions: Vec<String>,
-    /// Asked for while it runs (`permissions.request`); see optional.rs.
     optional_permissions: Vec<String>,
     commands: Vec<PluginCommand>,
-    /// What it needs installed: "exe", "powershell", "node" or "none".
     runtime: &'static str,
     has_process: bool,
     enabled: bool,
-    /// On, but the plugin now asks for permissions the user has not granted.
     needs_approval: bool,
     status: RuntimeStatus,
     error: Option<String>,
     log: Vec<String>,
-    /// Its last host API calls, newest first: method and outcome only.
     calls: Vec<CallRecord>,
-    /// Declared settings and their current values (defaults filled in).
     settings_schema: Vec<SettingSpec>,
     settings: Map<String, Value>,
-    /// What the running plugin shows with `ui.setInfo`.
     info: Vec<InfoItem>,
-    /// The user turned off its `island.notify` messages.
     notifications_muted: bool,
-    /// Command shortcuts another app or plugin already uses.
     keybinding_conflicts: Vec<String>,
-    /// The user's shortcuts per command id ("" = off); others use the manifest's keybinding.
     keybindings: BTreeMap<String, String>,
-    /// Remembered answers for sensitive permissions, which the user can revoke.
     sensitive: BTreeMap<String, SensitiveChoice>,
-    /// "startup" (runs while the island runs) or "onDemand" (activationEvents).
     activation: &'static str,
-    /// The activation events, as written plus those the contributions imply.
     activation_events: Vec<String>,
-    /// From starting the process to its first message, in ms.
     startup_ms: Option<u64>,
-    /// Memory and CPU of the plugin's process tree while it runs.
     resources: Option<Resources>,
-    /// Why an on-demand plugin asked to keep running (`host.keepAlive`).
     keep_alive: Option<String>,
-    /// This version was taken off the market (revocations.rs), and why.
     revoked: Option<LocalizedText>,
-    /// A newer version in the market (updates.rs).
     update_available: Option<String>,
-    /// The version an automatic update installed while the island has been running.
     auto_updated: Option<String>,
-    /// Updates may install pre-releases of this plugin (the user's choice).
     pre_release: bool,
-    /// The memory limit in MB that applies to the plugin (lifecycle.rs).
     memory_limit_mb: u32,
-    /// A pre-release in the market newer than the stable version.
     pre_release_available: Option<String>,
-    /// The author key that signed the installed version (author_signing.rs).
     author_key: Option<String>,
-    /// The market's update is signed by another key (or not at all); it waits for the user.
     signing_key_changed: bool,
 }
 
-/// Mirrored by `PluginsSnapshot` in src/features/plugins/api.ts.
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PluginsSnapshot {
     allow_third_party: bool,
-    /// Whether Node.js was found, for plugins whose runtime is "node".
     node_available: bool,
     plugins_dir: String,
     plugins: Vec<PluginInfo>,
-    /// Install market updates that ask for no new permissions by themselves.
     auto_update: bool,
-    /// Market publishers the user trusts.
     trusted_publishers: Vec<String>,
 }
 
-/// Built-in plugins first, then the plugins folder sorted by id.
 pub(super) fn scan(plugins_dir: &PathBuf, app_version: &str) -> Vec<InstalledPlugin> {
     let mut plugins: Vec<InstalledPlugin> = builtin::manifests(app_version)
         .into_iter()
@@ -123,8 +87,6 @@ pub(super) fn scan(plugins_dir: &PathBuf, app_version: &str) -> Vec<InstalledPlu
     plugins
 }
 
-/// The plugins folder, sorted by id, with development plugins (dev.rs) in place
-/// of an installed plugin with the same id.
 fn scan_folder(plugins_dir: &PathBuf, app_version: &str) -> Vec<InstalledPlugin> {
     let development = dev::plugins();
     let mut found: Vec<InstalledPlugin> = development
@@ -166,9 +128,6 @@ fn scan_folder(plugins_dir: &PathBuf, app_version: &str) -> Vec<InstalledPlugin>
     found
 }
 
-/// The local API used to have its own switches in local-api.json. The first
-/// time the plugin host sees no entry for it, those become the plugin's switch
-/// and its "allow changes" setting, so scripts keep working. True if changed.
 pub(super) fn migrate_local_api(state: &mut PluginsState, installed: &[InstalledPlugin], legacy: Option<(bool, bool)>) -> bool {
     if state.plugins.contains_key(builtin::LOCAL_API_ID) {
         return false;
@@ -190,7 +149,6 @@ pub(super) fn migrate_local_api(state: &mut PluginsState, installed: &[Installed
     true
 }
 
-/// Reads the plugins folder again and starts what should run.
 pub(super) fn rescan() -> Result<(), String> {
     let host = host()?;
     *lock(&host.installed) = scan(&host.plugins_dir, &app_version(&host.app));

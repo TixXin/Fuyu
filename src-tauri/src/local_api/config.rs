@@ -1,13 +1,7 @@
-//! Local API settings, kept in `local-api.json` in the app data folder. Scripts
-//! read the same file to find the port and token, so the saved port is always
-//! the one the server is actually listening on.
-
 use serde::{Deserialize, Serialize};
 use std::{fs, path::Path};
 
 pub(super) const CONFIG_FILE_NAME: &str = "local-api.json";
-/// Tried first so the address stays the same across restarts; a free port is
-/// picked when it is taken.
 pub(super) const PREFERRED_PORT: u16 = 39271;
 const TOKEN_BYTES: usize = 32;
 
@@ -39,8 +33,6 @@ impl Default for LocalApiConfig {
     }
 }
 
-/// Reads the config; a missing or broken file gives the defaults. A missing or
-/// too short token is replaced, and `changed` tells the caller to save.
 pub(super) fn load_config(path: &Path) -> Result<(LocalApiConfig, bool), String> {
     let mut config = fs::read_to_string(path)
         .ok()

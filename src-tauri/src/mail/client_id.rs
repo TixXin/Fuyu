@@ -1,11 +1,3 @@
-//! The RFC 2971 `ID` exchange that 163 and 126 (NetEase Coremail) require
-//! before `SELECT INBOX`; without it they answer "Unsafe Login".
-//!
-//! imap 2.x cannot parse the `* ID (...)` reply and then panics on the
-//! leftover tagged line, so the exchange runs directly on the TLS stream
-//! while the session sits idle between commands. Ported from
-//! flyl1u/fly-island#39 by ShengLin1001.
-
 use imap::extensions::idle::SetReadTimeout;
 use std::{
     io::{Read, Write},
@@ -13,7 +5,6 @@ use std::{
     time::Duration,
 };
 
-/// Shares the TLS stream between the imap session and `send_client_id`.
 #[derive(Debug)]
 pub(super) struct SharedStream<T>(pub(super) Arc<Mutex<T>>);
 
@@ -52,11 +43,8 @@ impl<T: SetReadTimeout> SetReadTimeout for SharedStream<T> {
 
 const ID_COMMAND: &[u8] =
     b"fly0 ID (\"name\" \"fly-island\" \"version\" \"1.0\" \"vendor\" \"fly-island\")\r\n";
-/// Longest reply line accepted before giving up on a misbehaving server.
 const MAX_LINE: usize = 8_192;
 
-/// Sends `ID` and reads up to and including its own tagged reply. Callers drop
-/// the connection on error, because a half-read reply would trip imap later.
 pub(super) fn send_client_id<T: Read + Write>(stream: &Mutex<T>) -> std::io::Result<()> {
     let mut stream = stream
         .lock()
@@ -65,7 +53,6 @@ pub(super) fn send_client_id<T: Read + Write>(stream: &Mutex<T>) -> std::io::Res
     stream.flush()?;
     let mut line = Vec::new();
     let mut byte = [0u8; 1];
-    // One byte at a time so nothing after our tagged reply is taken from the session.
     loop {
         if stream.read(&mut byte)? == 0 {
             return Err(std::io::ErrorKind::UnexpectedEof.into());

@@ -1,9 +1,3 @@
-//! Noticing a mouse press outside the island window (roadmap B6.5.3), so an alert that opened the
-//! island closes when the user clicks elsewhere. The island window never hears such a press, and a
-//! global mouse hook would sit in every click on the desktop; instead, only while the front end
-//! asks (an alert is showing, a few seconds), a thread looks at the buttons and the cursor every
-//! 40 ms. A press shorter than that can be missed, which only means the alert closes on its timer.
-
 use std::{
     sync::atomic::{AtomicU64, Ordering},
     thread,
@@ -16,23 +10,17 @@ use windows::Win32::Foundation::{HWND, POINT, RECT};
 use super::{main_window, WINDOW_LABEL};
 use crate::win32;
 
-/// Mirrored by OUTSIDE_CLICK_EVENT in src/windows/island/api.ts.
 const OUTSIDE_CLICK_EVENT: &str = "island-outside-click";
 const POLL_INTERVAL: Duration = Duration::from_millis(40);
-/// Watching stops by itself after this long, should the front end never say stop.
 const MAX_WATCH: Duration = Duration::from_secs(120);
 
-/// Bumped by every start and stop; a watching thread ends once it no longer matches.
 static GENERATION: AtomicU64 = AtomicU64::new(0);
 
-/// Whether a button went down between two looks with the cursor outside `rect`.
 pub(super) fn pressed_outside(was_down: bool, is_down: bool, cursor: POINT, rect: RECT) -> bool {
     let inside = cursor.x >= rect.left && cursor.x < rect.right && cursor.y >= rect.top && cursor.y < rect.bottom;
     !was_down && is_down && !inside
 }
 
-/// Starts (`watch` true) or stops looking for presses outside the island; each press found is sent
-/// to the island window as `island-outside-click`.
 #[tauri::command]
 pub async fn set_island_outside_click_watch(app: AppHandle, watch: bool) -> Result<(), String> {
     let generation = GENERATION.fetch_add(1, Ordering::SeqCst) + 1;
@@ -49,7 +37,6 @@ pub async fn set_island_outside_click_watch(app: AppHandle, watch: bool) -> Resu
 }
 
 fn watch_presses(app: &AppHandle, window: HWND, generation: u64) {
-    // A button already held (the click that is showing the alert, say) is not a new press.
     let mut was_down = win32::input::is_any_button_down();
     let polls = MAX_WATCH.as_millis() / POLL_INTERVAL.as_millis();
     for _ in 0..polls {

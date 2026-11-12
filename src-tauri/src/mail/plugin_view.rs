@@ -1,7 +1,3 @@
-//! What plugins with the sensitive `messages:read` permission see of the mail:
-//! sender and subject of the listed mail, from every mailbox that is switched on.
-//! Never the body, the address (so not which mailbox) or the authorization code.
-
 use serde_json::{json, Value};
 
 use super::{accounts, MailMessage, MailSnapshot};
@@ -17,7 +13,6 @@ fn entry(item: &MailMessage) -> Value {
     })
 }
 
-/// The mail the island lists for every mailbox that is set up and switched on.
 pub(crate) fn plugin_messages() -> Vec<Value> {
     accounts::all()
         .iter()
@@ -30,7 +25,6 @@ pub(crate) fn plugin_messages() -> Vec<Value> {
         .collect()
 }
 
-/// `messages.received` for the mail that just arrived.
 pub(super) fn publish_received(snapshot: &MailSnapshot, newest_id: Option<&str>) {
     let Some(item) = newest_id.and_then(|id| snapshot.items.iter().find(|item| item.id == id)) else { return };
     if snapshot.enabled {

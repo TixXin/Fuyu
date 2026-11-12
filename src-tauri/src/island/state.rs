@@ -1,5 +1,3 @@
-//! Native-side island window state shared by the commands, geometry and cursor passthrough.
-
 use serde::{Deserialize, Serialize};
 use std::sync::{Mutex, OnceLock, PoisonError};
 use tauri::PhysicalPosition;
@@ -42,8 +40,6 @@ impl IslandMode {
     }
 }
 
-/// Which monitor the island sits on (roadmap C1): the primary one, or the one the pointer or the
-/// foreground window is on, moving there when that changes (follow.rs).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum MonitorFollow {
     Primary,
@@ -52,7 +48,6 @@ pub(crate) enum MonitorFollow {
 }
 
 impl MonitorFollow {
-    /// `primary`, `cursor` or `foreground`; anything else is not a choice the settings offer.
     pub(super) fn from_value(value: &str) -> Option<Self> {
         match value {
             "primary" => Some(Self::Primary),
@@ -63,16 +58,13 @@ impl MonitorFollow {
     }
 }
 
-/// The island's corner shape from the appearance settings, as CSS draws it with `corner-shape`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum CornerShape {
     Round,
-    /// `corner-shape: squircle`, the superellipse |x|^4 + |y|^4 = r^4.
     Squircle,
 }
 
 impl CornerShape {
-    /// `round` or `squircle`; anything else is not a shape the island draws.
     pub(super) fn from_value(value: &str) -> Option<Self> {
         match value {
             "round" => Some(Self::Round),
@@ -81,7 +73,6 @@ impl CornerShape {
         }
     }
 
-    /// Whether a point `(dx, dy)` from the corner's centre lies inside a corner of `radius`.
     pub(super) fn contains(self, dx: f64, dy: f64, radius: f64) -> bool {
         match self {
             Self::Round => dx * dx + dy * dy <= radius * radius,
@@ -98,29 +89,20 @@ pub(crate) struct IslandWindowState {
     pub(super) expanded_scale: f64,
     pub(super) margin_y: f64,
     pub(super) collapsed_width: f64,
-    /// Narrower than the full panel while a message or Agent popup shows only its card.
     pub(super) expanded_width: f64,
     pub(super) expanded_height: f64,
     pub(super) custom_position: Option<IslandPosition>,
-    /// Came out of a tuck and shows at the top edge, at the dragged position's x, so it slides
-    /// out under the pointer that reached the tucked strip (issue #37). It goes back down to the
-    /// dragged height once a panel closes, and ends with the next tuck or drag (out_at_top_after).
     pub(super) out_at_top: bool,
     pub(super) is_dragging: bool,
     pub(super) top_attached: bool,
     pub(super) glass_enabled: bool,
-    /// Expanded bottom corner radius from the appearance settings. The other corner
-    /// radii keep their default ratios to it, matching IslandShell.css.
     pub(super) corner_radius: f64,
     pub(super) corner_shape: CornerShape,
     pub(super) monitor_follow: MonitorFollow,
-    /// A physical point on the monitor the island followed the pointer or the foreground window
-    /// to; `None` on the primary monitor. A dragged position (`custom_position`) comes first.
     pub(super) followed_monitor: Option<(i32, i32)>,
 }
 
 impl IslandWindowState {
-    /// How much the corner radius setting enlarges or shrinks the default radii.
     fn corner_radius_factor(self) -> f64 {
         self.corner_radius / EXPANDED_RADIUS
     }
@@ -169,7 +151,6 @@ impl Default for IslandWindowState {
             top_attached: true,
             glass_enabled: false,
             corner_radius: EXPANDED_RADIUS,
-            // The front end's default; it reports the setting with the first interaction sync.
             corner_shape: CornerShape::Squircle,
             monitor_follow: MonitorFollow::Primary,
             followed_monitor: None,
@@ -184,9 +165,6 @@ pub(super) fn window_state() -> &'static Mutex<IslandWindowState> {
 pub(super) fn mutate_window_state(
     update: impl FnOnce(&mut IslandWindowState) -> IslandWindowState,
 ) -> IslandWindowState {
-    // The state is plain Copy values. A panic in another update leaves at worst a
-    // partly applied update, which is better to keep using than to turn into a
-    // panic in every later window call.
     let mut state = window_state()
         .lock()
         .unwrap_or_else(PoisonError::into_inner);

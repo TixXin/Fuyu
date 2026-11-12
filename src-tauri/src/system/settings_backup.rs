@@ -1,7 +1,3 @@
-//! Settings backups and appearance theme files: the settings window builds the JSON (only it can
-//! read localStorage) and this writes it to the Downloads folder. Restoring and importing read
-//! the file in the window itself.
-
 use std::{
     fs::{self, OpenOptions},
     io::Write,
@@ -10,13 +6,9 @@ use std::{
 
 use tauri::AppHandle;
 
-/// Larger "backups" are not settings; refuse rather than write them.
 const MAX_BACKUP_BYTES: usize = 2 * 1024 * 1024;
-/// Tried names per save: `name.json`, `name (2).json`, ... up to this many.
 const MAX_NAME_TRIES: u32 = 50;
 
-/// Whether `file_name` is one the settings window builds: `fly-island-settings-<date-time>.json`
-/// for a backup, `fly-island-theme-<date-time>.json` for a theme.
 pub(crate) fn is_backup_file_name(file_name: &str) -> bool {
     file_name
         .strip_prefix("fly-island-settings-")
@@ -25,7 +17,6 @@ pub(crate) fn is_backup_file_name(file_name: &str) -> bool {
         .is_some_and(|stamp| !stamp.is_empty() && stamp.chars().all(|c| c.is_ascii_digit() || c == '-'))
 }
 
-/// Whether `content` is a settings backup or a theme: JSON naming this app as its source.
 pub(crate) fn is_backup_content(content: &str) -> bool {
     content.len() <= MAX_BACKUP_BYTES
         && serde_json::from_str::<serde_json::Value>(content).is_ok_and(|value| {
@@ -34,7 +25,6 @@ pub(crate) fn is_backup_content(content: &str) -> bool {
         })
 }
 
-/// `dir/file_name`, or `dir/<stem> (2).json` and so on when it exists; never overwrites.
 pub(crate) fn write_new_file(dir: &Path, file_name: &str, content: &str) -> Result<PathBuf, String> {
     let stem = file_name.trim_end_matches(".json");
     for attempt in 1..=MAX_NAME_TRIES {
@@ -56,7 +46,6 @@ pub(crate) fn write_new_file(dir: &Path, file_name: &str, content: &str) -> Resu
     Err(format!("Too many files named {stem} in {}.", dir.display()))
 }
 
-/// Saves a settings backup to the Downloads folder and returns the file's full path.
 #[tauri::command]
 pub fn save_settings_backup(file_name: String, content: String) -> Result<String, String> {
     if !is_backup_file_name(&file_name) {
@@ -70,7 +59,6 @@ pub fn save_settings_backup(file_name: String, content: String) -> Result<String
     write_new_file(&dir, &file_name, &content).map(|path| path.to_string_lossy().to_string())
 }
 
-/// Restarts the island, so restored settings that are only read at start-up take effect.
 #[tauri::command]
 pub fn restart_island(app: AppHandle) {
     app.restart();

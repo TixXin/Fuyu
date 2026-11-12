@@ -1,12 +1,3 @@
-//! `fuyu://market/install/<plugin id>` (and the same under `focusd://`): the Install
-//! button on the website's plugin pages. It never installs anything by itself: it
-//! opens Settings → Plugin market with that plugin pinned at the top, where the user
-//! presses Install (or Update) and goes through the usual trust and permission steps.
-//!
-//! The settings window may not exist yet, so the request waits here until the page
-//! takes it (`take_market_install_request`), whether it was just created or was
-//! already open and heard `MARKET_INSTALL_EVENT`.
-
 use std::{
     sync::{Mutex, PoisonError},
     thread,
@@ -16,17 +7,12 @@ use tauri::{AppHandle, Emitter};
 
 use super::{manifest::is_valid_id, uri::SCHEMES};
 
-/// Tells an open settings window that a request is waiting. Mirrored by
-/// `MARKET_INSTALL_EVENT` in src/features/plugins/market-link/api.ts.
 pub(super) const MARKET_INSTALL_EVENT: &str = "plugin-market-install-requested";
 const MAX_LINK_LENGTH: usize = 512;
-/// A link that started the island waits this long, so the app is set up before
-/// the settings window is built.
 const COLD_START_DELAY: Duration = Duration::from_millis(1500);
 
 static PENDING: Mutex<Option<String>> = Mutex::new(None);
 
-/// The plugin id of `fuyu://market/install/<id>[/][?…][#…]`; `None` for anything else.
 pub(super) fn parse(link: &str) -> Option<String> {
     if link.len() > MAX_LINK_LENGTH || link.chars().any(|c| c.is_control() || c.is_whitespace()) {
         return None;
@@ -44,11 +30,9 @@ pub(super) fn parse(link: &str) -> Option<String> {
     is_valid_id(id).then(|| id.to_string())
 }
 
-/// Opens the settings window on the market with `id` waiting to be confirmed.
 pub(super) fn open(app: &AppHandle, id: String, cold_start: bool) {
     *PENDING.lock().unwrap_or_else(PoisonError::into_inner) = Some(id);
     let app = app.clone();
-    // Built off the caller's thread: window creation on the event loop's own thread can deadlock on Windows.
     let spawned = thread::Builder::new().name("market-link".into()).spawn(move || {
         if cold_start {
             thread::sleep(COLD_START_DELAY);
@@ -64,8 +48,6 @@ pub(super) fn open(app: &AppHandle, id: String, cold_start: bool) {
     }
 }
 
-/// The plugin a market link asked for, once: the settings page calls this when it
-/// starts and whenever it hears `MARKET_INSTALL_EVENT`.
 #[tauri::command]
 pub fn take_market_install_request() -> Option<String> {
     PENDING.lock().unwrap_or_else(PoisonError::into_inner).take()

@@ -1,17 +1,11 @@
-//! Telling keys and tokens apart from other text (C24.1), so the history can skip them or show
-//! them masked. Known prefixes first; then one long token that mixes letters and digits.
-
-/// Prefixes services give their keys and tokens.
 const KEY_PREFIXES: &[&str] = &[
     "sk-", "sk_live_", "sk_test_", "rk_live_", "pk_live_", "ghp_", "gho_", "ghu_", "ghs_", "ghr_",
     "github_pat_", "glpat-", "xoxb-", "xoxp-", "xoxa-", "xoxs-", "AKIA", "ASIA", "AIza", "hf_",
     "npm_", "pypi-", "dop_v1_", "shpat_", "SG.",
 ];
 
-/// A long single token at least this long, mixing letters and digits, counts as a key.
 const MIN_TOKEN_LENGTH: usize = 32;
 
-/// Whether `text` looks like a key, token or private key rather than something to keep in history.
 pub(crate) fn looks_like_secret(text: &str) -> bool {
     let text = text.trim();
     if text.contains("-----BEGIN") && text.contains("PRIVATE KEY-----") {
@@ -20,7 +14,6 @@ pub(crate) fn looks_like_secret(text: &str) -> bool {
     if looks_like_card_number(text) || looks_like_id_number(text) {
         return true;
     }
-    // One token only: a sentence or a code snippet that mentions a key is not the key.
     if text.is_empty() || text.chars().any(char::is_whitespace) || text.len() > 512 {
         return false;
     }
@@ -31,7 +24,6 @@ pub(crate) fn looks_like_secret(text: &str) -> bool {
     if KEY_PREFIXES.iter().any(|prefix| text.starts_with(prefix) && text.len() >= prefix.len() + 16) {
         return true;
     }
-    // A JSON web token: three base64url parts, the first one a JSON object ("eyJ").
     if text.starts_with("eyJ") && text.split('.').count() == 3 && text.len() >= 40 {
         return true;
     }
@@ -48,8 +40,6 @@ pub(crate) fn looks_like_secret(text: &str) -> bool {
         && lower >= 2
 }
 
-/// A payment card number (C38): 13–19 digits, spaces or dashes allowed between them, passing the
-/// Luhn check that card numbers carry.
 pub(crate) fn looks_like_card_number(text: &str) -> bool {
     if !text.chars().all(|c| c.is_ascii_digit() || c == ' ' || c == '-') {
         return false;
@@ -67,8 +57,6 @@ pub(crate) fn looks_like_card_number(text: &str) -> bool {
     sum.is_multiple_of(10)
 }
 
-/// A mainland Chinese resident ID number (C38): 17 digits and a check character (0–9 or X) that
-/// matches them (GB 11643), with a plausible birth date.
 pub(crate) fn looks_like_id_number(text: &str) -> bool {
     const WEIGHTS: [u32; 17] = [7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2];
     const CHECKS: &[u8; 11] = b"10X98765432";
@@ -87,7 +75,6 @@ pub(crate) fn looks_like_id_number(text: &str) -> bool {
     bytes[17].to_ascii_uppercase() == CHECKS[(sum % 11) as usize]
 }
 
-/// The masked preview: the first four characters, then dots.
 pub(crate) fn mask(text: &str) -> String {
     let start: String = text.trim().chars().take(4).collect();
     format!("{start}••••••••")
@@ -115,13 +102,11 @@ mod tests {
 
     #[test]
     fn card_and_id_numbers_count_as_secrets() {
-        // Standard test card numbers; one digit off fails the check.
         assert!(looks_like_secret("4111 1111 1111 1111"));
         assert!(looks_like_secret("5555-5555-5555-4444"));
         assert!(!looks_like_secret("4111 1111 1111 1112"));
         assert!(!looks_like_secret("0000 0000 0000 0000"));
         assert!(!looks_like_secret("2026 11 10"));
-        // The example number from GB 11643.
         assert!(looks_like_secret("11010519491231002X"));
         assert!(!looks_like_secret("110105194912310021"));
     }

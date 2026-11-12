@@ -1,9 +1,3 @@
-//! Agent sessions seen running, kept after they stop being listed as running
-//! (`agent-sessions-seen.json` in the app data folder): their process, its start time, its Orca
-//! terminal and the program hosting it. `/clear` or `/resume` gives a Claude Code session a new id
-//! while its process and terminal tab carry on, and an ended session leaves Claude Code's process
-//! registry; this is then the only link from the old id back to its window. Kept for two days.
-
 use std::{
     collections::HashMap,
     fs,
@@ -23,18 +17,14 @@ const MAX_KEPT: usize = 256;
 #[serde(rename_all = "camelCase")]
 pub(super) struct SeenSession {
     pub(super) pid: u32,
-    /// Start time of `pid` (100 ns ticks since 1601), so a reused id is not taken for it.
     pub(super) started: Option<u64>,
-    /// Executable of the program whose window shows the session.
     pub(super) host_exe: Option<String>,
     pub(super) orca_handle: Option<String>,
-    /// When this was last worked out, Unix milliseconds.
     pub(super) seen_at: i64,
 }
 
 type Sessions = HashMap<String, SeenSession>;
 
-/// `None` until first used; loaded from the app data folder then.
 static STORE: Mutex<Option<Sessions>> = Mutex::new(None);
 
 fn load(app_dir: &Path) -> Sessions {
@@ -50,13 +40,11 @@ fn save(app_dir: &Path, sessions: &Sessions) {
     };
     let path = app_dir.join(FILE_NAME);
     let temporary = app_dir.join(format!("{FILE_NAME}.tmp"));
-    // Best effort: losing this file only loses the way back to ended sessions' windows.
     if fs::write(&temporary, text).is_ok() {
         let _ = fs::rename(&temporary, &path);
     }
 }
 
-/// Drops entries older than KEEP_MS, then the oldest ones past MAX_KEPT.
 pub(super) fn prune(sessions: &mut Sessions, now: i64) {
     sessions.retain(|_, seen| now - seen.seen_at <= KEEP_MS);
     if sessions.len() > MAX_KEPT {
@@ -73,12 +61,10 @@ fn with_store<T>(app_dir: Option<&Path>, run: impl FnOnce(&mut Sessions) -> T) -
     run(sessions)
 }
 
-/// What was last seen of `session_id`.
 pub(super) fn get(app_dir: Option<&Path>, session_id: &str) -> Option<SeenSession> {
     with_store(app_dir, |sessions| sessions.get(session_id).cloned())
 }
 
-/// Records `seen` for `session_id` and writes the file.
 pub(super) fn remember(app_dir: Option<&Path>, session_id: &str, seen: SeenSession) {
     with_store(app_dir, |sessions| {
         sessions.insert(session_id.to_string(), seen);

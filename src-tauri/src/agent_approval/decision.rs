@@ -1,12 +1,6 @@
-//! What the hooks send, and what they get back for each choice on the island: `PermissionRequest`
-//! for approvals, and Claude Code's `PreToolUse` on `AskUserQuestion` for questions (phase 3).
-//! The answer format is Claude Code's (docs/architecture/agent/island-interaction-notes.md,
-//! 实测记录); Codex's command hook forwards the same input and passes the answer back.
-
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value};
 
-/// The agent a request came from, named as the session list names providers.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub enum Agent {
@@ -14,7 +8,6 @@ pub enum Agent {
     Codex,
 }
 
-/// What the island is asked for: an approval, or answers to a question.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub enum Kind {
@@ -22,13 +15,9 @@ pub enum Kind {
     Question,
 }
 
-/// Where Claude Code's `PreToolUse` hook for `AskUserQuestion` posts.
 pub(super) const QUESTION_PATH: &str = "/claude/ask-user-question";
-/// Where Claude Code's activity hook posts (`PostToolUse`, `Stop`, ...): the session moved on,
-/// so an approval it asked for was answered elsewhere (B6.2.7).
 pub(super) const ACTIVITY_PATH: &str = "/claude/activity";
 
-/// The agent and the kind of request an endpoint path takes.
 pub(super) fn route(path: &str) -> Option<(Agent, Kind)> {
     match path {
         "/claude/permission-request" => Some((Agent::ClaudeCode, Kind::Permission)),
@@ -39,7 +28,6 @@ pub(super) fn route(path: &str) -> Option<(Agent, Kind)> {
 }
 
 impl Agent {
-    /// The path of each agent's approval hook.
     pub(super) fn path(self) -> &'static str {
         match self {
             Self::ClaudeCode => "/claude/permission-request",
@@ -48,18 +36,14 @@ impl Agent {
     }
 }
 
-/// The parts of a hook's input the island shows and answers with.
 #[derive(Debug, Clone, PartialEq)]
 pub(super) struct HookInput {
     pub session_id: String,
     pub cwd: Option<String>,
     pub tool_name: String,
     pub tool_input: Value,
-    /// Claude Code's "always allow" rules for this call, passed back for "allow always".
     pub permission_suggestions: Option<Value>,
-    /// The subagent that asked, when it was not the main agent.
     pub agent_id: Option<String>,
-    /// The SSH remote computer it came from (http.rs `check_access`); None for this one.
     pub remote_host: Option<String>,
 }
 
@@ -78,8 +62,6 @@ impl HookInput {
         })
     }
 
-    /// Claude Code's AskUserQuestion, answered through its PreToolUse hook. Handed back there, or
-    /// with no such hook, it then comes through PermissionRequest, which lets the terminal ask.
     pub(super) fn is_question(&self) -> bool {
         self.tool_name == "AskUserQuestion"
     }
@@ -89,29 +71,20 @@ fn text_field(input: &Value, key: &str) -> Option<String> {
     input[key].as_str().filter(|value| !value.is_empty()).map(str::to_string)
 }
 
-/// What a Claude Code session did after asking, which means its request was answered without the
-/// island: in the terminal, which can show its own prompt while the hook waits and then leaves the
-/// hook's connection open (found on Claude Code 2.1.x; the hooks used to block the prompt).
 #[derive(Debug, Clone, PartialEq)]
 pub(super) struct Activity {
     pub session_id: String,
-    /// The subagent the event is about; None for the main agent.
     pub agent_id: Option<String>,
     pub settled: Settled,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub(super) enum Settled {
-    /// One tool call ran, failed or was denied (`PostToolUse`, `PostToolUseFailure`,
-    /// `PermissionDenied`): the request for that call is over.
     ToolCall { tool_name: String, tool_input: Value },
-    /// The agent's turn ended or a new prompt came in (`Stop`, `SubagentStop`, `UserPromptSubmit`):
-    /// nothing of that agent waits any more.
     Turn,
 }
 
 impl Activity {
-    /// None for events that say nothing about a waiting request.
     pub(super) fn parse(body: &[u8]) -> Result<Option<Self>, &'static str> {
         let input: Value = serde_json::from_slice(body).map_err(|_| "The body is not JSON.")?;
         let session_id = text_field(&input, "session_id").ok_or("No session_id.")?;
@@ -122,7 +95,6 @@ impl Activity {
                 tool_input: input["tool_input"].clone(),
             },
             "Stop" | "UserPromptSubmit" => return Ok(Some(Self { session_id, agent_id: None, settled: Settled::Turn })),
-            // Without its agent_id a SubagentStop cannot say whose requests ended.
             "SubagentStop" if agent_id.is_some() => Settled::Turn,
             _ => return Ok(None),
         };
@@ -130,22 +102,17 @@ impl Activity {
     }
 }
 
-/// The user's choice on the island.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum Decision {
     Allow,
     Deny,
-    /// Allow, and keep allowing calls like it for the rest of this session (Claude Code).
     AllowAlways,
-    /// Hand it back: the agent shows its own approval prompt in the terminal.
     Terminal,
-    /// Answers to a question, given with the decision.
     Answer,
 }
 
 impl Decision {
-    /// Whether a request of `kind` takes this decision: questions are answered or handed back.
     pub(super) fn fits(self, kind: Kind) -> bool {
         match kind {
             Kind::Permission => self != Self::Answer,
@@ -154,12 +121,10 @@ impl Decision {
     }
 }
 
-/// A question's answers by question text: an option's label, several joined by ", ", or free text.
 pub type Answers = std::collections::BTreeMap<String, String>;
 
 const DEFAULT_DENY_MESSAGE: &str = "Denied in Fuyu";
 
-/// The hook's answer. `{}` gives the decision back to the agent, which then asks in the terminal.
 pub(super) fn hook_response(decision: Option<Decision>, message: Option<&str>, suggestions: Option<&Value>) -> String {
     let decision = match decision {
         None | Some(Decision::Terminal | Decision::Answer) => return "{}".to_string(),
@@ -176,8 +141,6 @@ pub(super) fn hook_response(decision: Option<Decision>, message: Option<&str>, s
     json!({ "hookSpecificOutput": { "hookEventName": "PermissionRequest", "decision": decision } }).to_string()
 }
 
-/// The `PreToolUse` hook's answer to a question: the tool runs with `answers` added to its input,
-/// and the terminal shows no prompt. Without answers, `{}` lets the terminal ask as usual.
 pub(super) fn question_response(answers: Option<&Answers>, tool_input: &Value) -> String {
     let Some(answers) = answers.filter(|answers| !answers.is_empty()) else {
         return "{}".to_string();
@@ -194,7 +157,6 @@ pub(super) fn question_response(answers: Option<&Answers>, tool_input: &Value) -
     .to_string()
 }
 
-/// The suggested rules, each kept for this session only rather than written to a settings file.
 fn session_only(suggestions: &Value) -> Option<Value> {
     let rules: Vec<Value> = suggestions
         .as_array()?

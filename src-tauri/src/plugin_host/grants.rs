@@ -1,6 +1,3 @@
-//! Applies the user's choices in `plugins.json`: saves them, and starts the
-//! plugins that are allowed to run and stops the rest.
-
 use serde_json::{Map, Value};
 use std::{
     collections::HashMap,
@@ -20,8 +17,6 @@ use super::{
 };
 use crate::agent_status;
 
-/// Starts and stops built-in plugins like sync_processes does for processes;
-/// they do not need "allow third-party plugins".
 fn sync_builtins(host: &PluginHost) {
     let mut wanted: HashMap<String, Map<String, Value>> = HashMap::new();
     {
@@ -40,7 +35,6 @@ fn sync_builtins(host: &PluginHost) {
         running.remove(&id);
         let result = builtin::stop(&id);
         record_builtin_stop(lock(&host.runtimes).entry(id.clone()).or_default(), result);
-        // The island window re-reads the plugin (useBuiltinPlugin).
         views::runtime_changed(&host.app, &id, RuntimeStatus::Stopped);
     }
     for (id, settings) in wanted {
@@ -62,9 +56,6 @@ fn sync_builtins(host: &PluginHost) {
     }
 }
 
-/// Records a built-in plugin's start in its runtime entry. True when its status
-/// changed and the island window should hear of it: a start that keeps failing
-/// is retried every sync and is not announced again each time.
 pub(super) fn record_builtin_start(entry: &mut RuntimeInfo, started: Result<Vec<InfoItem>, String>) -> bool {
     let before = entry.status;
     match started {
@@ -82,21 +73,13 @@ pub(super) fn record_builtin_start(entry: &mut RuntimeInfo, started: Result<Vec<
     entry.status != before
 }
 
-/// Records a built-in plugin's stop in its runtime entry.
 pub(super) fn record_builtin_stop(entry: &mut RuntimeInfo, stopped: Result<(), String>) {
     entry.status = RuntimeStatus::Stopped;
     entry.error = stopped.err();
     entry.info.clear();
 }
 
-/// Starts plugins that should run and stops the rest. A plugin may run when
-/// third-party plugins are allowed, it is on, it has a process, and every
-/// permission it asks for was granted; it runs when it is eager or one of its
-/// activation events started it (lifecycle.rs).
 pub(super) fn sync_processes() -> Result<(), String> {
-    // One sync at a time: it runs from the lifecycle tick, activation threads
-    // and commands, and a sync that decided what to run before another one
-    // started an on-demand plugin would stop that plugin again.
     static SYNC: Mutex<()> = Mutex::new(());
     let _one_at_a_time = lock(&SYNC);
     let host = host()?;
@@ -106,9 +89,7 @@ pub(super) fn sync_processes() -> Result<(), String> {
         for plugin in lock(&host.installed).iter() {
             let Ok(manifest) = &plugin.manifest else { continue };
             let PluginRuntime::Process { command, args } = &manifest.runtime else { continue };
-            // Development plugins (dev.rs) are on, with every permission they ask for.
             let grant = state.plugins.get(&manifest.id).cloned();
-            // A version taken off the market (revocations.rs) never runs.
             let revoked = revocations::find(&state.revoked, &manifest.id, &manifest.version).is_some();
             let allowed = plugin.dev
                 || !revoked
@@ -157,7 +138,6 @@ pub(super) fn sync_processes() -> Result<(), String> {
                 wanted.insert(spec.plugin_id.clone(), spec);
             }
             None => {
-                // Waits for an activation event; shown as idle, not stopped.
                 let mut runtimes = lock(&host.runtimes);
                 let entry = runtimes.entry(spec.plugin_id).or_default();
                 if entry.status == RuntimeStatus::Stopped {
@@ -196,7 +176,6 @@ pub(super) fn sync_processes() -> Result<(), String> {
     Ok(())
 }
 
-/// Stops one plugin (if running) and drops the agent statuses it reported.
 pub(super) fn stop_plugin(id: &str) -> Result<(), String> {
     let supervisor = lock(&host()?.supervisors).remove(id);
     if let Some(supervisor) = supervisor {
@@ -206,7 +185,6 @@ pub(super) fn stop_plugin(id: &str) -> Result<(), String> {
     Ok(())
 }
 
-/// Stops every running plugin so the next sync starts them with fresh files.
 pub(super) fn stop_all() -> Result<(), String> {
     let stopping: Vec<Supervisor> = lock(&host()?.supervisors).drain().map(|(_, supervisor)| supervisor).collect();
     for supervisor in stopping {

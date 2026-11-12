@@ -1,6 +1,3 @@
-//! The history service: the entries and settings, what each command does to them, and storing
-//! what the listener captures.
-
 use base64::{engine::general_purpose, Engine as _};
 use image::RgbaImage;
 use std::{fs, path::Path, time::Duration};
@@ -26,18 +23,14 @@ use crate::win32;
 
 const DAY_MS: i64 = 24 * 60 * 60 * 1000;
 
-/// Whether an entry last copied at `copied_at` is older than the retention `cutoff` (both ms).
 pub(super) fn is_expired(copied_at: i64, cutoff: i64) -> bool {
     copied_at < cutoff
 }
 
-/// How long a deleted entry's image is kept for undo; the clipboard window offers undo for 6 s.
 const UNDO_WINDOW: Duration = Duration::from_secs(10);
 
-/// How long a "paste as .txt file" file is kept (C42).
 const TEXT_FILE_KEEP: Duration = Duration::from_secs(60 * 60);
 
-/// Deletes the files in `dir` last changed more than `age` ago.
 pub(super) fn remove_files_older_than(dir: &Path, age: Duration) {
     let Ok(entries) = fs::read_dir(dir) else { return };
     for entry in entries.flatten() {
@@ -48,10 +41,7 @@ pub(super) fn remove_files_older_than(dir: &Path, age: Duration) {
     }
 }
 
-/// The image files in `dir` no entry refers to: left by an entry deleted just before the app quit,
-/// before its undo time ran out (C42).
 pub(super) fn remove_unreferenced_images(dir: &Path, items: &[ClipboardHistoryItem]) {
-    // By file name: the app data folder may have moved since the paths were saved (D17).
     let name = |path: &str| Path::new(path).file_name().map(|name| name.to_string_lossy().to_lowercase());
     let kept: std::collections::HashSet<String> = items
         .iter()
@@ -68,7 +58,6 @@ pub(super) fn remove_unreferenced_images(dir: &Path, items: &[ClipboardHistoryIt
     }
 }
 
-/// Long enough for the listener to see the path written by "copy path" and skip it.
 const PATH_CAPTURE_PAUSE: Duration = Duration::from_millis(800);
 
 
@@ -99,8 +88,6 @@ impl ClipboardHistoryService {
         self.copy_item_as(id, CopyAs::Original)
     }
 
-    /// Puts an item back on the clipboard; an image may go as the saved file or its path (C22.1),
-    /// which terminal CLIs such as Claude Code take as an image where a bitmap often fails.
     pub(super) fn copy_item_as(&self, id: &str, copy_as: CopyAs) -> Result<ClipboardHistorySnapshot, String> {
         let item = {
             let state = self.state.lock().map_err(|error| error.to_string())?;
@@ -118,7 +105,6 @@ impl ClipboardHistoryService {
                     .text
                     .clone()
                     .ok_or_else(|| "Clipboard text item has no text.".to_string())?;
-                // With its formatting unless asked for plain text (C24.4); or as a .txt file (C38).
                 match (&item.html, copy_as) {
                     (_, CopyAs::TextFile) => write_clipboard_file(&self.write_text_file(&text)?)?,
                     (Some(html), CopyAs::Original) => write_clipboard_html(html, &text)?,
@@ -145,7 +131,6 @@ impl ClipboardHistoryService {
                     .as_ref()
                     .ok_or_else(|| "Clipboard image item has no image.".to_string())?;
                 if copy_as == CopyAs::Path || copy_as == CopyAs::Plain {
-                    // The path is not something the user copied: keep it out of the history.
                     super::suspend_clipboard_capture(PATH_CAPTURE_PAUSE);
                     write_clipboard_text(&quoted_path(Path::new(&image.original_path)))?;
                 } else {
@@ -206,7 +191,6 @@ impl ClipboardHistoryService {
             .iter_mut()
             .find(|item| item.id == id)
             .ok_or_else(|| "Clipboard history item was not found.".to_string())?;
-        // "#tag" words in the note are its tags (C24.5).
         let (note, tags) = super::split_note_tags(note);
         item.note = note;
         item.tags = tags;
@@ -222,7 +206,6 @@ impl ClipboardHistoryService {
         let mut state = self.state.lock().map_err(|error| error.to_string())?;
         if let Some(index) = state.items.iter().position(|item| item.id == id) {
             let item = state.items.remove(index);
-            // Gone from the saved history at once; its image stays a moment for undo (C42).
             if let Some((earlier, _)) = state.recently_deleted.replace((item, index)) {
                 self.remove_item_files(&earlier);
             }
@@ -242,7 +225,6 @@ impl ClipboardHistoryService {
         Ok(snapshot)
     }
 
-    /// Puts the entry deleted last back where it was, while it can still be undone (C42).
     pub(super) fn restore_item(&self, id: &str) -> Result<ClipboardHistorySnapshot, String> {
         let mut state = self.state.lock().map_err(|error| error.to_string())?;
         if state.recently_deleted.as_ref().is_some_and(|(item, _)| item.id == id) {
@@ -259,7 +241,6 @@ impl ClipboardHistoryService {
         Ok(snapshot)
     }
 
-    /// The undo time is over: the deleted entry's image goes too.
     fn forget_deleted(&self, id: &str) {
         let Ok(mut state) = self.state.lock() else { return };
         if state.recently_deleted.as_ref().is_some_and(|(item, _)| item.id == id) {
@@ -283,9 +264,6 @@ impl ClipboardHistoryService {
         Ok(snapshot)
     }
 
-    /// Writes a text entry to `<app data>/clipboard-text/<first words>.txt`, replacing the file
-    /// an earlier paste left there, for pasting into chat apps as a file (C38). Files older than
-    /// an hour go first: the program pasted into has read them by then (C42).
     fn write_text_file(&self, text: &str) -> Result<std::path::PathBuf, String> {
         let dir = self.image_dir.with_file_name("clipboard-text");
         fs::create_dir_all(&dir).map_err(|error| format!("Failed to create the text file folder: {error}"))?;
@@ -299,7 +277,6 @@ impl ClipboardHistoryService {
         if super::clipboard_capture_suspended() {
             return;
         }
-        // Paused, or this is the copy to leave out (C38).
         if super::capture_pause::skips_capture(current_unix_millis()) {
             return;
         }
@@ -315,12 +292,10 @@ impl ClipboardHistoryService {
         if !settings.enabled {
             return;
         }
-        // A password manager's copy: Windows' own history skips it too (C22.4).
         if settings.skip_sensitive && win32::clipboard::is_marked_private() {
             return;
         }
 
-        // Whose copy it is (C24.2): the clipboard's owner, else the window in front.
         let source = source_app();
         if source.as_ref().is_some_and(|source| is_excluded(&settings.excluded_apps, &source.path)) {
             return;
@@ -336,7 +311,6 @@ impl ClipboardHistoryService {
             }
         };
 
-        // Keys and tokens (C24.1): skipped, or kept with a masked preview.
         let secret = matches!(&capture, ClipboardCapture::Text { text, .. } if looks_like_secret(text));
         if secret && settings.secrets == SecretHandling::Skip {
             return;
@@ -415,7 +389,6 @@ impl ClipboardHistoryService {
             }
         };
 
-        // A new image is read by OCR in the background (C24.9).
         let ocr_job = (state.settings.ocr)
             .then(|| item.image.as_ref().map(|image| (item.id.clone(), image.original_path.clone())))
             .flatten();
@@ -545,7 +518,6 @@ impl ClipboardHistoryService {
         }
     }
 
-    /// Called after the state lock is released.
     pub(super) fn emit_changed(&self) {
         let _ = self.app.emit(HISTORY_CHANGED_EVENT, ());
         let enabled = self.state.lock().map(|state| state.settings.enabled).unwrap_or(false);
@@ -553,7 +525,6 @@ impl ClipboardHistoryService {
     }
 
     pub(super) fn emit_shortcut(&self) {
-        // The clipboard window (C22.2), unless the settings ask for the island's page.
         let settings = self.state.lock().map(|state| state.settings.clone()).ok();
         if let Some(settings) = settings.filter(|settings| settings.open_in == super::OpenIn::Window) {
             if let Err(error) = super::popup::toggle(&self.app, &settings) {
@@ -571,7 +542,6 @@ impl ClipboardHistoryService {
 }
 
 
-/// The text Windows' OCR finds in the saved image, shrunk first when larger than OCR takes.
 fn read_image_text(path: &str) -> Option<String> {
     const OCR_MAX_SIDE: u32 = 2600;
     let image = image::open(path).ok()?;
@@ -584,7 +554,6 @@ fn read_image_text(path: &str) -> Option<String> {
     win32::ocr::recognize(rgba.width(), rgba.height(), rgba.as_raw())
 }
 
-/// The program that put the current contents on the clipboard, or the one in front.
 fn source_app() -> Option<ClipboardSource> {
     let window = win32::clipboard::owner_window().unwrap_or_else(win32::window::foreground_window);
     let path = win32::process::image_path(win32::process::window_process_id(window))?;
@@ -592,7 +561,6 @@ fn source_app() -> Option<ClipboardSource> {
     Some(ClipboardSource { path, name })
 }
 
-/// A file name from the text's first words: no characters Windows forbids, at most 40, or "clipboard".
 pub(super) fn text_file_stem(text: &str) -> String {
     let stem: String = text
         .split_whitespace()
@@ -614,7 +582,6 @@ fn text_files_are_named_by_their_first_words() {
     assert_eq!(text_file_stem(&"字".repeat(60)).chars().count(), 40);
 }
 
-/// Whether the program at `path` is on the "do not record" list (lower-case executable names).
 pub(super) fn is_excluded(excluded: &[String], path: &str) -> bool {
     let name = Path::new(path).file_name().map(|name| name.to_string_lossy().to_lowercase());
     name.is_some_and(|name| excluded.contains(&name))
@@ -643,7 +610,6 @@ fn only_images_no_entry_refers_to_are_swept() {
     for name in ["kept.png", "kept-thumb.png", "orphan.png", "notes.txt"] {
         fs::write(dir.join(name), b"x").expect("file");
     }
-    // Saved under another folder (the app data folder moved): matched by file name.
     let item: ClipboardHistoryItem = serde_json::from_value(serde_json::json!({
         "id": "a", "kind": "image", "hash": "a", "createdAt": 0, "copiedAt": 0, "preview": "p", "text": null,
         "image": { "width": 1, "height": 1, "byteSize": 1, "originalPath": r"C:\old\Kept.png", "thumbnailPath": r"C:\old\kept-thumb.png" }

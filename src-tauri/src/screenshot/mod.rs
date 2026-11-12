@@ -1,7 +1,3 @@
-//! Built-in screenshots (C41; plan in docs/architecture/screenshot-plan.md): the shortcuts, the
-//! frozen picture of every monitor, the overlay windows where a region is chosen, and where the
-//! chosen picture goes: the clipboard, a file, or a pin on the screen.
-
 mod hotkeys;
 mod output;
 mod pin;
@@ -15,21 +11,14 @@ use tauri::{AppHandle, Emitter, WebviewWindow};
 pub(crate) use output::is_screenshot_file;
 pub(crate) use pin::{forget as forget_pin, WINDOW_PREFIX as PIN_PREFIX};
 pub(crate) use session::WINDOW_PREFIX;
-/// The text read in a screenshot (Ctrl+Shift+3), already on the clipboard; empty when none was
-/// found. Mirrored by SCREENSHOT_TEXT_EVENT in src/features/screenshot/api.ts.
 const TEXT_EVENT: &str = "screenshot-text";
-/// A screenshot was copied or saved: the island shows its card (C41.5). Mirrored by
-/// SCREENSHOT_TAKEN_EVENT in src/features/screenshot/api.ts.
 const TAKEN_EVENT: &str = "screenshot-taken";
 
-/// The island's screenshot card (mirrored by `ScreenshotTaken` in api.ts).
 #[derive(Clone, Debug, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct Taken {
     path: String,
-    /// A small PNG data URL.
     thumbnail: Option<String>,
-    /// Saved to the user's folder rather than copied.
     saved: bool,
 }
 
@@ -46,12 +35,10 @@ pub(crate) fn init(app: &AppHandle) {
     output::prune_at_start(app);
 }
 
-/// Closing an overlay (Alt+F4) cancels the screenshot instead.
 pub(crate) fn cancel(app: &AppHandle) {
     session::end(app);
 }
 
-/// Turns the module on or off: its shortcuts, and the overlay windows kept ready while on.
 #[tauri::command]
 pub async fn screenshot_configure(app: AppHandle, enabled: bool) {
     hotkeys::set_enabled(enabled);
@@ -60,13 +47,11 @@ pub async fn screenshot_configure(app: AppHandle, enabled: bool) {
     }
 }
 
-/// The open screenshot as the calling overlay shows it, for an overlay that loaded late.
 #[tauri::command]
 pub fn screenshot_session(window: WebviewWindow) -> Option<OverlaySession> {
     session::current(window.label())
 }
 
-/// The calling overlay's monitor picture: RGBA, rows top to bottom, size from the session.
 #[tauri::command]
 pub async fn screenshot_frame(window: WebviewWindow) -> Result<tauri::ipc::Response, String> {
     session::frame(window.label())
@@ -74,27 +59,22 @@ pub async fn screenshot_frame(window: WebviewWindow) -> Result<tauri::ipc::Respo
         .ok_or_else(|| "No screenshot is open.".to_string())
 }
 
-/// What the calling overlay can snap to: windows, then controls once they are read.
 #[tauri::command]
 pub fn screenshot_targets(window: WebviewWindow) -> Vec<LocalTarget> {
     session::targets_for(window.label())
 }
 
-/// The calling overlay has drawn screenshot `session`'s picture and can be shown.
 #[tauri::command]
 pub fn screenshot_overlay_ready(window: WebviewWindow, session: u64) {
     session::overlay_ready(&window, session);
 }
 
-/// What to do with the chosen picture (mirrored by `ScreenshotAction` in api.ts).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum Action {
     Copy,
     Save,
     Pin,
-    /// Read the text (OCR) and copy it.
     Text,
-    /// Read the text and translate it on the island.
     Translate,
 }
 
@@ -111,17 +91,6 @@ impl Action {
     }
 }
 
-/// Takes the chosen picture to the clipboard, a file or a pin, and closes the screenshot. The
-/// headers say what and where: `x-action`, the selection in the monitor's picture (`x-left`,
-/// `x-top`, `x-width`, `x-height`), and for saving `x-folder` and `x-folder-name`, percent-encoded.
-/// The selection is cut from the frozen picture here. With annotations the body is the part they
-/// cover, raw RGBA rows (not JSON), laid over it at `x-patch-left`, `x-patch-top` (in the
-/// selection), `x-patch-width` × `x-patch-height`: only that much crosses from the page, since a
-/// whole 4K selection through the WebView made copying stall. Gives the saved file's path.
-///
-/// Copying closes the overlays first, so the screen is back at once while the picture is encoded.
-/// Pinning keeps them until the pin has drawn, then swaps the two (pin.rs). A failed save keeps
-/// the screenshot open, to try again.
 #[tauri::command]
 pub async fn screenshot_finish(app: AppHandle, window: WebviewWindow, request: tauri::ipc::Request<'_>) -> Result<Option<String>, String> {
     let tauri::ipc::InvokeBody::Raw(body) = request.body() else {
@@ -184,8 +153,6 @@ pub async fn screenshot_finish(app: AppHandle, window: WebviewWindow, request: t
     }
 }
 
-/// The text Windows' OCR reads in `picture`, empty when it finds none. On a blocking thread: it
-/// waits for WinRT.
 async fn read_text(picture: Picture) -> String {
     tauri::async_runtime::spawn_blocking(move || crate::win32::ocr::recognize(picture.width, picture.height, &picture.rgba))
         .await
@@ -194,12 +161,10 @@ async fn read_text(picture: Picture) -> String {
         .unwrap_or_default()
 }
 
-/// Whether `len` bytes are exactly `width` × `height` RGBA pixels, none of them zero.
 pub(crate) fn pixels_fit(len: usize, width: u32, height: u32) -> bool {
     width > 0 && height > 0 && (width as usize).checked_mul(height as usize).and_then(|pixels| pixels.checked_mul(4)) == Some(len)
 }
 
-/// Undoes `encodeURIComponent`: header values must be ASCII, folder names need not be.
 pub(crate) fn percent_decode(text: &str) -> Option<String> {
     let bytes = text.as_bytes();
     let mut out = Vec::with_capacity(bytes.len());
@@ -222,28 +187,22 @@ pub fn screenshot_cancel(app: AppHandle) {
     session::end(&app);
 }
 
-/// The calling pin page's picture size, once it has been given one.
 #[tauri::command]
 pub fn screenshot_pin_info(window: WebviewWindow) -> Option<pin::PinInfo> {
     pin::info(window.label())
 }
 
-/// The calling pin's picture as a PNG: a tenth of the raw pixels to send, and the page decodes it
-/// off its main thread.
 #[tauri::command]
 pub async fn screenshot_pin_image(window: WebviewWindow) -> Result<tauri::ipc::Response, String> {
     let picture = pin::picture(window.label()).ok_or_else(|| "This pin is closed.".to_string())?;
     output::encode_png(&picture).map(tauri::ipc::Response::new)
 }
 
-/// The calling pin has drawn its picture: it shows, and the screenshot it came from goes.
 #[tauri::command]
 pub fn screenshot_pin_ready(app: AppHandle, window: WebviewWindow) {
     pin::ready(&app, &window);
 }
 
-/// Zooms the calling pin to `scale` of its picture, keeping (`anchor_x`, `anchor_y`), fractions
-/// of the window, in place.
 #[tauri::command]
 pub fn screenshot_pin_zoom(window: WebviewWindow, scale: f64, anchor_x: f64, anchor_y: f64) -> Result<(), String> {
     pin::zoom(&window, scale, (anchor_x, anchor_y))
@@ -260,7 +219,6 @@ pub async fn screenshot_pin_copy(app: AppHandle, window: WebviewWindow) -> Resul
     output::copy(&app, &picture).map(|_| ())
 }
 
-/// Saves the calling pin's picture like the toolbar's save; gives the file's path.
 #[tauri::command]
 pub async fn screenshot_pin_save(window: WebviewWindow, folder: Option<String>, folder_name: String) -> Result<String, String> {
     let picture = pin::picture(window.label()).ok_or_else(|| "This pin is closed.".to_string())?;
@@ -272,7 +230,6 @@ pub fn screenshot_pin_close(window: WebviewWindow) {
     pin::close(&window);
 }
 
-/// Hides every pin, or shows them all again (T, from a pin or the island).
 #[tauri::command]
 pub fn screenshot_pins_toggle(app: AppHandle) {
     pin::toggle_all(&app);
@@ -283,7 +240,6 @@ pub fn screenshot_pins_close_all(app: AppHandle) {
     pin::close_all(&app);
 }
 
-/// A screenshot file the card may hand on: a PNG that exists.
 fn card_file(path: &str) -> Result<std::path::PathBuf, String> {
     let path = std::path::PathBuf::from(path);
     let png = path.extension().is_some_and(|extension| extension.eq_ignore_ascii_case("png"));
@@ -294,13 +250,11 @@ fn card_file(path: &str) -> Result<std::path::PathBuf, String> {
     }
 }
 
-/// Drags the card's screenshot file out of the calling window (the island), as Explorer would.
 #[tauri::command]
 pub async fn screenshot_drag(window: WebviewWindow, path: String) -> Result<(), String> {
     let path = card_file(&path)?;
     let (sender, receiver) = std::sync::mpsc::channel();
     let target = window.clone();
-    // The OLE drag loop has to run on the window's UI thread.
     window
         .run_on_main_thread(move || {
             let result = target.hwnd().map_err(|error| error.to_string()).and_then(|hwnd| crate::win32::ole::drag_files(hwnd, &[path]));
@@ -313,8 +267,6 @@ pub async fn screenshot_drag(window: WebviewWindow, path: String) -> Result<(), 
         .map_err(|_| "The drag ended unexpectedly.".to_string())?
 }
 
-/// Pastes the card's screenshot into the window in front, which the island has just made an
-/// agent's terminal: as the file and its quoted path.
 #[tauri::command]
 pub async fn screenshot_paste_to_front(path: String) -> Result<(), String> {
     let path = card_file(&path)?;

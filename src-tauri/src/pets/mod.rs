@@ -1,7 +1,3 @@
-//! Codex Pets (petdex format: `pet.json` + `spritesheet.webp|png`) for the collapsed
-//! island's center pattern. Read from `~/.codex/pets` and `<app data>/pets`; nothing is
-//! ever written there.
-
 mod sheet;
 #[cfg(test)]
 mod tests;
@@ -22,28 +18,20 @@ use sheet::{image_header, sheet_rows, HEADER_BYTES};
 const MANIFEST_FILE_NAME: &str = "pet.json";
 const DEFAULT_SHEETS: [&str; 2] = ["spritesheet.webp", "spritesheet.png"];
 const MAX_MANIFEST_BYTES: u64 = 64 * 1024;
-// The local petdex sheets are 0.5–2.3 MB; together with the pixel cap in sheet.rs
-// this keeps a hostile file from becoming a decompression bomb.
 const MAX_SHEET_BYTES: u64 = 4 * 1024 * 1024;
-// Win32 FILE_FLAG_OPEN_REPARSE_POINT: open a link itself instead of what it points to.
 const FILE_FLAG_OPEN_REPARSE_POINT: u32 = 0x0020_0000;
 const MAX_DISPLAY_NAME_CHARS: usize = 64;
 
-/// Where a pet was found. Mirrors `PetSource` in src/features/center-pattern/api.ts.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub enum PetSource {
-    /// `<app data>/pets`, listed first so it can override a Codex pet with the same id.
     App,
-    /// `~/.codex/pets`.
     Codex,
 }
 
-/// Mirrors `PetInfo` in src/features/center-pattern/api.ts.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PetInfo {
-    /// The pet's folder name; the key for `get_pet_spritesheet`.
     pub id: String,
     pub display_name: String,
     pub source: PetSource,
@@ -67,7 +55,6 @@ pub async fn list_pets(app: AppHandle) -> Result<Vec<PetInfo>, String> {
     Ok(list_pets_in(&pet_roots(&app)))
 }
 
-/// The pet's spritesheet as a `data:` URL, shown only through `<img>`.
 #[tauri::command]
 pub async fn get_pet_spritesheet(app: AppHandle, id: String) -> Result<String, String> {
     read_spritesheet_in(&pet_roots(&app), &id)
@@ -94,7 +81,6 @@ fn pet_roots(app: &AppHandle) -> Vec<(PetSource, PathBuf)> {
     roots
 }
 
-/// Every valid pet under the roots; the first root wins when two share an id.
 pub(crate) fn list_pets_in(roots: &[(PetSource, PathBuf)]) -> Vec<PetInfo> {
     let mut pets: Vec<PetInfo> = Vec::new();
     for (source, root) in roots {
@@ -105,7 +91,6 @@ pub(crate) fn list_pets_in(roots: &[(PetSource, PathBuf)]) -> Vec<PetInfo> {
             .filter_map(Result::ok)
             .filter_map(|entry| entry.file_name().into_string().ok())
             .filter_map(|id| load_pet(*source, root, &id).map(|pet| pet.info))
-            // Windows folder names ignore case, so `Chispa` and `chispa` are one pet.
             .filter(|pet| {
                 pets.iter()
                     .all(|known| !known.id.eq_ignore_ascii_case(&pet.id))
@@ -143,7 +128,6 @@ pub(crate) fn read_spritesheet_in(
     ))
 }
 
-/// A folder name that cannot step out of its root: no separators, no `..`, no drive.
 pub(crate) fn is_valid_id(id: &str) -> bool {
     (1..=64).contains(&id.len())
         && !id.starts_with('.')
@@ -152,7 +136,6 @@ pub(crate) fn is_valid_id(id: &str) -> bool {
             .all(|c| c.is_ascii_alphanumeric() || matches!(c, '-' | '_' | '.'))
 }
 
-/// A plain `*.webp` / `*.png` file name in the pet's own folder.
 fn is_valid_sheet_name(name: &str) -> bool {
     let lower = name.to_ascii_lowercase();
     Path::new(name).file_name().and_then(|n| n.to_str()) == Some(name)
@@ -165,7 +148,6 @@ fn load_pet(source: PetSource, root: &Path, id: &str) -> Option<Pet> {
         return None;
     }
     let root = root.canonicalize().ok()?;
-    // canonicalize resolves junctions and symlinks, so a linked folder cannot escape.
     let dir = root.join(id).canonicalize().ok()?;
     if !dir.starts_with(&root) || !dir.is_dir() {
         return None;
@@ -176,7 +158,6 @@ fn load_pet(source: PetSource, root: &Path, id: &str) -> Option<Pet> {
     }
     let manifest_text = read_capped(&manifest_path, MAX_MANIFEST_BYTES).ok()?;
     let manifest: PetManifest = serde_json::from_slice(&manifest_text).ok()?;
-    // Like petdex: the named sheet when it is usable, otherwise the default names.
     let (sheet, mime) = manifest
         .spritesheet_path
         .as_deref()
@@ -223,7 +204,6 @@ fn check_sheet(root: &Path, dir: &Path, name: &str) -> Option<(PathBuf, &'static
     Some((path, header.mime))
 }
 
-/// Opens a plain file; a link swapped in after `canonicalize` opens as itself and is refused.
 fn open_regular_file(path: &Path) -> Result<fs::File, String> {
     let file = fs::OpenOptions::new()
         .read(true)
@@ -240,7 +220,6 @@ fn open_regular_file(path: &Path) -> Result<fs::File, String> {
     Ok(file)
 }
 
-/// Reads at most `max` bytes; a longer file is an error, even if it grew after a size check.
 fn read_capped(path: &Path, max: u64) -> Result<Vec<u8>, String> {
     let file = open_regular_file(path)?;
     let mut bytes = Vec::new();

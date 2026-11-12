@@ -17,7 +17,6 @@ const HSHELL_RUDEAPPACTIVATED: u32 = HSHELL_WINDOWACTIVATED | 0x8000;
 pub enum ReminderSignal {
     Attention,
     Activated,
-    /// Another app's window came to the front.
     ActivatedElsewhere,
     Redraw,
     WindowCreated,
@@ -40,12 +39,8 @@ thread_local! {
     static CONTEXT: RefCell<Option<ListenerContext>> = const { RefCell::new(None) };
 }
 
-/// Weixin 4.x first, then the older WeChat 3.x.
 const EXECUTABLES: [(&str, &str); 2] = [("Weixin", "Weixin.exe"), ("WeChat", "WeChat.exe")];
 
-/// Where WeChat is installed. The installer's own key is only written for the user who ran it
-/// (or under HKLM for every user); portable copies and copies moved to another folder have no
-/// key at all, so the uninstall entries and, last, a running WeChat are tried as well.
 pub fn installed_executable() -> Result<PathBuf, String> {
     let existing = |path: PathBuf, name: &str| {
         let named = path
@@ -106,8 +101,6 @@ fn matches_window(window: HWND, executable: &str) -> Result<bool, ()> {
 struct ReminderWindow;
 
 impl WindowMessages for ReminderWindow {
-    /// Records shell hook notifications; every message, handled or not, still
-    /// goes on to `DefWindowProcW`.
     fn handle(_: HWND, message: u32, kind: WPARAM, target: LPARAM) -> Option<LRESULT> {
         CONTEXT.with(|slot| {
             let Ok(mut context) = slot.try_borrow_mut() else {
@@ -125,7 +118,7 @@ impl WindowMessages for ReminderWindow {
                 HSHELL_WINDOWACTIVATED | HSHELL_RUDEAPPACTIVATED => ReminderSignal::Activated,
                 HSHELL_REDRAW => ReminderSignal::Redraw,
                 HSHELL_WINDOWCREATED => ReminderSignal::WindowCreated,
-                _ => return, // Other messages may contain pointers instead of window handles.
+                _ => return,
             };
             match matches_window(HWND(target.0 as *mut _), &context.executable) {
                 Ok(true) => {
@@ -184,8 +177,6 @@ impl ReminderListener {
                 stats: SourceStats::default(),
             })
         });
-        // Built before registering the hook so a failure below still cleans up
-        // through Drop.
         let listener = Self { window, instance };
         shell_hook::register_window(window)
             .map_err(|error| format!("无法监听微信任务栏提醒：{error}"))?;

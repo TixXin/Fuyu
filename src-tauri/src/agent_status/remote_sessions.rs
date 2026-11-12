@@ -1,9 +1,3 @@
-//! Agent sessions on other computers, read over SSH (remote_fetch.rs) into a mirror in the app
-//! data folder (`remote-sessions/<host>/` laid out like a home folder, file times kept) that the
-//! local scan reads like the user's own home. Each host is fetched in the background at most
-//! every REFRESH_MS while sessions are being listed, so listing never waits for the network, over
-//! a connection kept open between fetches (remote_fetch.rs).
-
 use std::{
     collections::{HashMap, HashSet},
     fs::{self, File},
@@ -25,38 +19,28 @@ use super::snapshot::current_unix_millis;
 
 pub(super) const MIRROR_DIR: &str = "remote-sessions";
 const REFRESH_MS: i64 = 3_000;
-/// After a failure (offline, key refused) the host is tried less often.
 const RETRY_AFTER_ERROR_MS: i64 = 60_000;
 
-/// What the island knows of one host.
 #[derive(Default)]
 struct HostState {
     files: HashMap<String, MirroredFile>,
-    /// The sessions the host's Claude Code registry lists as running; `None` without a registry.
     registry: Option<HashSet<String>>,
     in_flight: bool,
     attempted_at: i64,
     fetched_at: Option<i64>,
     error: Option<String>,
-    /// Why the host's approvals cannot reach the island's cards (no reverse forward).
     approval_error: Option<String>,
-    /// Sessions the last listing found in the host's mirror.
     sessions: usize,
 }
 
 struct MirroredFile {
     remote: RemoteFile,
-    /// The file's first lines, kept so later fetches can send only the tail.
     head: Vec<u8>,
 }
 
 static HOSTS: Mutex<Option<HashMap<String, HostState>>> = Mutex::new(None);
-/// Each host's open connection, between fetches; a fetch holds it meanwhile.
-// shortcut: a connection stays open while the island lists no sessions (the Agent status switched
-// off); close idle ones if the remote shells left waiting ever matter.
 static CONNECTIONS: Mutex<Option<HashMap<String, Connection>>> = Mutex::new(None);
 
-/// How reading a host went, for the settings page.
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RemoteHostStatus {
@@ -64,15 +48,10 @@ pub struct RemoteHostStatus {
     fetched_at: Option<i64>,
     error: Option<String>,
     fetching: bool,
-    /// Sessions of the listing window found there, once it has been read.
     sessions: usize,
-    /// Why approvals from there cannot reach the island's cards; None when they can, or before
-    /// the first connection.
     approval_error: Option<String>,
 }
 
-/// The chosen hosts' sessions from their mirrors, starting a background fetch for each host that
-/// is due. `window_ms` is how far back a session may have changed, as for local sessions.
 pub(super) fn sessions(app_dir: &Path, window_ms: i64) -> Vec<AgentSessionSummary> {
     let targets = remote_hosts::chosen_targets(app_dir);
     let hosts: Vec<String> = targets.iter().map(|(host, _)| host.clone()).collect();
@@ -143,8 +122,6 @@ pub(super) fn statuses(app_dir: &Path) -> Vec<RemoteHostStatus> {
         .collect()
 }
 
-/// Lets the next listing fetch every host at once, over new connections (after the hosts were
-/// changed, so a computer added in the island may now point elsewhere).
 pub(super) fn refresh_soon() {
     CONNECTIONS.lock().unwrap_or_else(PoisonError::into_inner).take();
     if let Some(states) = HOSTS.lock().unwrap_or_else(PoisonError::into_inner).as_mut() {
@@ -158,8 +135,6 @@ fn mirror_root(app_dir: &Path, host: &str) -> PathBuf {
     app_dir.join(MIRROR_DIR).join(host)
 }
 
-/// The mirrored home of SSH computer `host`, if the island keeps one; None for a name that is not
-/// one folder (it comes from the window).
 pub(super) fn mirrored_home(app_dir: &Path, host: &str) -> Option<PathBuf> {
     let plain = !host.is_empty() && host != "." && host != ".." && !host.contains(['/', '\\', ':']);
     Some(mirror_root(app_dir, host)).filter(|root| plain && root.is_dir())
@@ -175,7 +150,6 @@ fn fetch(host: &str, target: &SshTarget, app_dir: &Path, window_ms: i64) {
             .unwrap_or_default()
     };
     let open = CONNECTIONS.lock().unwrap_or_else(PoisonError::into_inner).as_mut().and_then(|connections| connections.remove(host));
-    // Kept from when the connection opened unless it says otherwise now.
     let reused = open.is_some();
     let mut approval_error = None;
     let result = open.map_or_else(|| open_connection(host, target, app_dir, &mut approval_error), Ok).and_then(|mut connection| {
@@ -206,11 +180,6 @@ fn fetch(host: &str, target: &SshTarget, app_dir: &Path, window_ms: i64) {
     }
 }
 
-/// Opens a connection through the island's ssh config, which forwards the approval endpoint's
-/// port back here; when that config cannot be made, or connecting through it fails, through the
-/// user's own with no forward, and `approval_error` says why. The island's config is rebuilt from
-/// `ssh -G` and can miss what the user's works with (a value with a space, a rewritten
-/// ProxyJump), and the sessions must still come.
 fn open_connection(host: &str, target: &SshTarget, app_dir: &Path, approval_error: &mut Option<String>) -> Result<Connection, String> {
     let endpoint = crate::agent_approval::endpoint()
         .map(|endpoint| endpoint.port)
@@ -230,8 +199,6 @@ fn open_connection(host: &str, target: &SshTarget, app_dir: &Path, approval_erro
     }
 }
 
-/// Writes the changed files into the mirror and removes those the host no longer lists; returns
-/// what the mirror now holds, and the host's registry of running sessions.
 fn apply(root: &Path, host: &str, replies: Vec<Reply>) -> (HashMap<String, MirroredFile>, Option<HashSet<String>>) {
     let mut previous = {
         let mut states = HOSTS.lock().unwrap_or_else(PoisonError::into_inner);
@@ -273,7 +240,6 @@ fn apply(root: &Path, host: &str, replies: Vec<Reply>) -> (HashMap<String, Mirro
             }
         }
     }
-    // Left the window, or deleted on the host.
     for path in previous.keys() {
         if let Some(target) = mirror_path(root, path) {
             let _ = fs::remove_file(target);
@@ -282,8 +248,6 @@ fn apply(root: &Path, host: &str, replies: Vec<Reply>) -> (HashMap<String, Mirro
     (files, registry)
 }
 
-/// Where a remote path goes in the mirror; `None` for anything but session files and the Codex
-/// index, so a reply can never write elsewhere.
 fn mirror_path(root: &Path, remote: &str) -> Option<PathBuf> {
     let path = Path::new(remote);
     let plain = path.components().all(|component| matches!(component, Component::Normal(_)));
@@ -297,7 +261,6 @@ fn mirror_path(root: &Path, remote: &str) -> Option<PathBuf> {
     (plain && allowed).then(|| root.join(path))
 }
 
-/// The head the fetch script would send: the first lines, at most 40.
 fn first_lines(bytes: &[u8]) -> Vec<u8> {
     let end = bytes
         .iter()
@@ -308,7 +271,6 @@ fn first_lines(bytes: &[u8]) -> Vec<u8> {
     bytes[..end].to_vec()
 }
 
-/// Writes through a temporary file, so a scan never reads half a file, with the remote time.
 fn write_mirrored(target: &Path, content: &[u8], mtime: i64) -> Result<(), String> {
     let parent = target.parent().ok_or("No parent folder")?;
     fs::create_dir_all(parent).map_err(|error| error.to_string())?;
@@ -367,7 +329,6 @@ mod tests {
         assert_eq!(modified, UNIX_EPOCH + Duration::from_secs(1_700_000_000));
         assert_eq!(files[&path].head, b"{}\n");
 
-        // The host keeps the mirror's files while it fetches; put them back as `fetch` would.
         HOSTS.lock().unwrap().get_or_insert_with(HashMap::new).insert(
             "test-host-a".into(),
             HostState { files, ..HostState::default() },

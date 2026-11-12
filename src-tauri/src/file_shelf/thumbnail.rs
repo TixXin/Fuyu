@@ -1,5 +1,3 @@
-//! Small previews for image files on the shelf, decoded from the file itself.
-
 use base64::{engine::general_purpose, Engine as _};
 use image::{ImageFormat, ImageReader};
 use std::{
@@ -11,17 +9,12 @@ use std::{
     time::SystemTime,
 };
 
-/// Longest side of a preview, in pixels; the row shows it at 38 css px, so this stays
-/// sharp at up to 250% scaling.
 const THUMBNAIL_SIDE: u32 = 96;
-/// Larger files are not decoded: the preview is not worth the memory and time.
 const MAX_SOURCE_BYTES: u64 = 40 * 1024 * 1024;
-/// Cached previews; the cache is dropped as a whole once it grows past this.
 const MAX_CACHED: usize = 256;
 
 const IMAGE_EXTENSIONS: [&str; 6] = ["png", "jpg", "jpeg", "gif", "webp", "bmp"];
 
-/// Whether `path` looks like an image this module can preview, by extension.
 pub(super) fn is_previewable(path: &str) -> bool {
     Path::new(path)
         .extension()
@@ -31,13 +24,10 @@ pub(super) fn is_previewable(path: &str) -> bool {
 
 #[derive(Default)]
 pub(super) struct Thumbnails {
-    // Keyed by path and modification time, so an edited image gets a new preview.
     cache: Mutex<HashMap<(String, SystemTime), String>>,
 }
 
 impl Thumbnails {
-    /// A PNG data URL previewing the image at `path`, or `None` when it is not an
-    /// image, too large, or cannot be read or decoded.
     pub(super) fn preview(&self, path: &str) -> Option<String> {
         if !is_previewable(path) {
             return None;

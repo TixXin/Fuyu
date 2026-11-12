@@ -1,5 +1,3 @@
-//! Icons of the programs agent sessions run in, as PNG data URLs, cached by executable path.
-
 use std::{
     collections::HashMap,
     io::Cursor,
@@ -13,11 +11,8 @@ use image::{ImageFormat, RgbaImage};
 use crate::win32;
 
 static ICONS: Mutex<Option<HashMap<String, Option<String>>>> = Mutex::new(None);
-/// Distinct executables cached at most; the cache is dropped as a whole past this.
 const MAX_CACHED: usize = 64;
 
-/// Whether `path` may be asked for an icon: an existing absolute `.exe` file. The page only
-/// passes paths the island itself reported as session hosts.
 pub(super) fn is_icon_source(path: &str) -> bool {
     let path = Path::new(path);
     path.is_absolute()
@@ -27,7 +22,6 @@ pub(super) fn is_icon_source(path: &str) -> bool {
         && path.is_file()
 }
 
-/// The icon of the executable at `path` as a PNG data URL, or `None` when it has none.
 pub(crate) fn icon_data_url(path: &str) -> Option<String> {
     if !is_icon_source(path) {
         return None;

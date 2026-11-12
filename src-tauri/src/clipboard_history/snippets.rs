@@ -1,6 +1,3 @@
-//! Snippets (C24.6): texts the user keeps for pasting again, with a few variables filled in when
-//! pasted: {date}, {time}, {datetime}, {weekday} and {clipboard} (what is on the clipboard now).
-
 use chrono::{DateTime, Datelike, Local};
 use serde::{Deserialize, Serialize};
 
@@ -20,7 +17,6 @@ pub struct ClipboardSnippet {
     text: String,
 }
 
-/// The snippet's text with its variables filled in; `{{` and `}}` stay literal braces.
 pub(super) fn expand_snippet(text: &str, now: DateTime<Local>, clipboard: Option<&str>) -> String {
     const WEEKDAYS: [&str; 7] = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"];
     text.replace("{{", "\u{0}")
@@ -41,7 +37,6 @@ impl ClipboardSnippet {
 }
 
 impl ClipboardHistoryService {
-    /// Adds a snippet (no `id`) or changes one; the title falls back to the text's first line.
     pub(super) fn save_snippet(&self, id: Option<&str>, title: &str, text: &str) -> Result<ClipboardHistorySnapshot, String> {
         let text: String = text.chars().take(MAX_TEXT_CHARACTERS).collect();
         if text.trim().is_empty() {
@@ -84,7 +79,6 @@ impl ClipboardHistoryService {
         Ok(snapshot)
     }
 
-    /// The snippet's text ready to paste, its variables filled in.
     pub(super) fn snippet_text(&self, id: &str) -> Result<String, String> {
         let text = {
             let state = self.state.lock().map_err(|error| error.to_string())?;

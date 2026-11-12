@@ -42,7 +42,6 @@ fn api_versions_1_and_2_are_both_accepted() {
     assert_eq!(parse(json!({ "apiVersion": 2 })).expect("v2").api_version, 2);
 }
 
-/// plugins/schema/ is the protocol's source of truth; the host must match it.
 #[test]
 fn the_host_matches_the_protocol_description() {
     use super::permissions::{CAPABILITIES, METHODS, PERMISSIONS};
@@ -79,7 +78,6 @@ fn the_host_matches_the_protocol_description() {
         .filter_map(|method| Some((method["name"].as_str()?, method["permission"].as_str()?)))
         .collect();
     assert_eq!(gated, METHODS);
-    // Methods without a permission are answered in runtime/dispatch.rs.
     let open: Vec<&str> = methods.iter().filter(|method| method["permission"].is_null()).filter_map(|method| method["name"].as_str()).collect();
     assert_eq!(
         open,
@@ -241,7 +239,6 @@ mod market_tests {
     fn the_repository_index_is_signed_by_a_trusted_key() {
         use super::super::signature::{verify_index, TRUSTED_KEYS};
         verify_index(INDEX, SIGNATURE, TRUSTED_KEYS).expect("signed");
-        // The same index with CRLF line ends (a Windows checkout) still verifies.
         let crlf = INDEX.replace("\r\n", "\n").replace('\n', "\r\n");
         verify_index(&crlf, SIGNATURE, TRUSTED_KEYS).expect("CRLF");
 
@@ -423,7 +420,7 @@ mod settings_tests {
     #[test]
     fn resolving_fills_defaults_and_drops_stale_values() {
         let mut stored = Map::new();
-        stored.insert("interval".into(), json!(99)); // out of range now
+        stored.insert("interval".into(), json!(99));
         stored.insert("mode".into(), json!("slow"));
         stored.insert("removed".into(), json!(1));
         let resolved = resolve(&specs(), &stored);
@@ -537,7 +534,6 @@ mod builtin_tests {
 
         assert!(record_builtin_start(&mut entry, Err("port busy".into())));
         assert_eq!(entry.status, RuntimeStatus::Crashed);
-        // Retried on every sync; the window already knows it failed.
         assert!(!record_builtin_start(&mut entry, Err("port busy".into())));
         assert!(record_builtin_start(&mut entry, Ok(Vec::new())));
         assert_eq!((entry.status, entry.error.as_deref()), (RuntimeStatus::Running, None));
@@ -559,7 +555,6 @@ mod builtin_tests {
         assert!(grant.enabled);
         assert_eq!(grant.granted_permissions.len(), 5);
         assert_eq!(grant.settings[LOCAL_API_ALLOW_WRITE], true);
-        // Already migrated (or set by the user): left alone.
         assert!(!migrate_local_api(&mut state, &plugins, Some((false, false))));
         assert!(state.plugins[LOCAL_API_ID].enabled);
 
@@ -609,7 +604,6 @@ fn notifications_take_an_icon_and_a_layout() {
     assert_eq!((plain.icon, plain.layout), (NotificationIcon::Plugin, NotificationLayout::Card));
     let styled = parse_notification(&json!({ "title": "x", "icon": "media", "layout": "inline" })).expect("valid");
     assert_eq!((styled.icon, styled.layout), (NotificationIcon::Media, NotificationLayout::Inline));
-    // A value from a newer SDK falls back, so the message still shows.
     let newer = parse_notification(&json!({ "title": "x", "icon": "app", "layout": "hero" })).expect("valid");
     assert_eq!((newer.icon, newer.layout), (NotificationIcon::Plugin, NotificationLayout::Card));
     assert!(parse_notification(&json!({ "title": "x", "icon": 1 })).expect_err("invalid").contains("icon"));
@@ -624,7 +618,6 @@ fn notifications_can_ask_for_the_media_buttons() {
     let media = parse_notification(&json!({ "title": "x", "controls": "media" })).expect("valid");
     assert_eq!(media.controls, NotificationControls::Media);
     assert_eq!(serde_json::to_value(&media).expect("serializes")["controls"].as_str(), Some("media"));
-    // A value from a newer SDK falls back to none, so the message still shows.
     assert_eq!(parse_notification(&json!({ "title": "x", "controls": "video" })).expect("valid").controls, NotificationControls::None);
     assert!(parse_notification(&json!({ "title": "x", "controls": true })).expect_err("invalid").contains("controls"));
 }
@@ -655,7 +648,6 @@ fn storage_keeps_values_within_the_limits() {
     }
     assert!(Value::Object(values.clone()).to_string().len() <= MAX_TOTAL_BYTES);
     assert!(!values.contains_key(&format!("k{stored}")));
-    // Replacing a value with one that does not fit keeps the old one.
     assert!(set_value(&mut values, "a".into(), chunk).is_err());
     assert_eq!(values["a"], json!({ "n": 1 }));
 
@@ -744,7 +736,6 @@ mod sensitive_tests {
         assert_eq!(outcome(Some(Answer::Allow)), Outcome { allowed: true, remember: Some(SensitiveChoice::Allowed), this_run: false });
         assert_eq!(outcome(Some(Answer::Deny)), Outcome { allowed: false, remember: Some(SensitiveChoice::Denied), this_run: false });
         assert_eq!(outcome(Some(Answer::AllowOnce)), Outcome { allowed: true, remember: None, this_run: true });
-        // Timing out denies this call only; the next one asks again.
         assert_eq!(outcome(None), Outcome { allowed: false, remember: None, this_run: false });
         assert_eq!(Answer::parse("once"), Some(Answer::AllowOnce));
         assert_eq!(Answer::parse("yes"), None);
@@ -800,7 +791,6 @@ fn views_and_status_items_are_checked_for_version_2_and_dropped_for_version_1() 
     assert!(reason(json!([board.clone(), second, third]), json!([])).contains("at most 2"));
     let mut bad_template = board.clone();
     bad_template["template"] = json!("webview");
-    // A webview page needs its HTML file.
     assert!(reason(json!([bad_template]), json!([])).contains("entry"));
     assert!(reason(json!([]), json!([{ "id": "t", "priority": 101 }])).contains("priority"));
     assert!(reason(json!([]), json!([{ "id": "a b" }])).contains("a b"));
@@ -989,14 +979,12 @@ mod lifecycle_tests {
         assert!(!is_idle(&IdleState { busy: true, ..idle(after) }, &activation, false), "a request in flight keeps it");
         assert!(!is_idle(&IdleState { keep_alive: true, ..idle(after) }, &activation, false));
         assert!(!is_idle(&IdleState { ready: false, ..idle(after) }, &activation, false));
-        // Events that would wake it again do not keep it; others do.
         assert!(is_idle(&IdleState { subscriptions: vec!["todos.changed"], ..idle(after) }, &activation, false));
         assert!(!is_idle(&IdleState { subscriptions: vec!["island.expanded"], ..idle(after) }, &activation, false));
     }
 
     #[test]
     fn cpu_use_is_a_share_of_the_whole_machine() {
-        // 1 s of CPU time in 1 s on 4 cores is 25 %.
         assert!((cpu_percent(10_000_000, 0, Duration::from_secs(1), 4) - 25.0).abs() < 0.01);
         assert_eq!(cpu_percent(5, 10, Duration::from_secs(1), 4), 0.0);
         assert_eq!(cpu_percent(10, 0, Duration::ZERO, 4), 0.0);
@@ -1008,7 +996,6 @@ mod lifecycle_tests {
         assert_eq!(memory_limit_mb(None), 512);
         assert_eq!(memory_limit_mb(Some(2048)), 2048);
         assert_eq!(memory_limit_mb(Some(256)), 256);
-        // A hand-edited plugins.json cannot lift the limit to any size.
         assert_eq!(memory_limit_mb(Some(100_000)), 512);
         assert_eq!(memory_limit_mb(Some(0)), 512);
     }
@@ -1016,11 +1003,8 @@ mod lifecycle_tests {
     #[test]
     fn the_memory_limit_counts_only_the_plugins_own_share() {
         const MB: u64 = 1024 * 1024;
-        // 65 MB in total, of which PowerShell itself takes 62.7 MB: the plugin uses about 2.3 MB.
         assert_eq!(plugin_own_bytes(65 * MB, Some(62 * MB + 700 * 1024)), 2 * MB + 324 * 1024);
-        // Unknown runtime size (a plugin's own executable): everything counts.
         assert_eq!(plugin_own_bytes(65 * MB, None), 65 * MB);
-        // A runtime measured above a plugin that just started never wraps around.
         assert_eq!(plugin_own_bytes(60 * MB, Some(62 * MB)), 0);
     }
 }
@@ -1038,7 +1022,6 @@ mod dev_tests {
         assert!(parse(json!({ "experimentalApis": ["Bad Name"] })).expect_err("invalid").contains("experimentalApis"));
         let eleven: Vec<String> = (0..11).map(|index| format!("api{index}")).collect();
         assert!(parse(json!({ "experimentalApis": eleven })).is_err());
-        // Nothing is experimental right now, so a development plugin is told none.
         assert!(super::super::dev::granted_experimental(&["views.chart".into()]).is_empty());
         let schema: Value = serde_json::from_str(include_str!("../../../plugins/schema/manifest.schema.json")).expect("schema");
         assert_eq!(schema["properties"]["experimentalApis"]["maxItems"], 10);
@@ -1047,7 +1030,6 @@ mod dev_tests {
     #[test]
     fn log_lines_are_numbered_for_the_cli() {
         let log: VecDeque<String> = ["c", "d", "e"].into_iter().map(String::from).collect();
-        // Five lines were logged, the first two already dropped: c is 3, e is 5.
         let numbers = |after| super::super::dev::lines_after(&log, 5, after).iter().map(|line| line["seq"].as_u64().expect("seq")).collect::<Vec<_>>();
         assert_eq!(numbers(0), vec![3, 4, 5]);
         assert_eq!(numbers(3), vec![4, 5]);
@@ -1241,9 +1223,7 @@ mod webview_tests {
         assert!(script.contains(r#"let state = {"done":1};"#) && script.contains(r#"locale: "en""#));
         assert!(script.contains("RTCPeerConnection") && !script.contains("__STATE__") && !script.contains("__THEME__"));
         assert!(script.contains("--fuyu-text:#f8f6f0") && script.contains("color-scheme:dark"));
-        // Pages written before the rename keep their API and colors.
         assert!(script.contains(r#"["acquireFuyuApi", "acquireFocusdApi"]"#) && script.contains("--focusd-text:#f8f6f0"));
-        // A page without the card on a light island gets the island's dark ink.
         let light = init_script(&json!(null), "zh-CN", Some("24, 24, 30"));
         assert!(light.contains("color-scheme:light") && light.contains("--fuyu-text:rgb(24,24,30)") && light.contains("--focusd-text:rgb(24,24,30)"));
         assert!(init_script(&json!(null), "en", Some("241, 240, 246")).contains("color-scheme:dark;--fuyu-text:rgb(241,240,246)"));
@@ -1353,7 +1333,6 @@ mod pre_release_tests {
         assert_eq!(version(data.entry_for("a.one", false)), Some("1.2.0"));
         assert_eq!(version(data.entry_for("a.one", true)), Some("1.3.0-beta.1"));
 
-        // Once 1.3.0 is out the old beta is not offered, opted in or not, and an installed beta updates to it.
         let released = market(vec![entry("a.one", "1.3.0", false), entry("a.one", "1.3.0-beta.1", true)]);
         assert_eq!(version(released.entry_for("a.one", true)), Some("1.3.0"));
         assert!(released.pre_release_of("a.one").is_none());

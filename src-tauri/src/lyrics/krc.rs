@@ -1,9 +1,3 @@
-//! Kugou's KRC lyrics. A download is base64 of `krc1` followed by zlib data XORed with a fixed
-//! 16-byte key (the same in every open-source reader, e.g. Lyricify-Lyrics-Helper,
-//! Apache-2.0: Decrypter/Krc/Decrypter.cs). Decrypted, each line is `[start,length]` in ms with
-//! `<offset,length,0>word` pieces, and a `[language:<base64 JSON>]` header holds a translation
-//! per line (the content entry of type 1).
-
 use std::io::Read;
 
 use base64::{engine::general_purpose::STANDARD, Engine};
@@ -13,10 +7,8 @@ use serde_json::Value;
 use super::found::word_tag;
 
 const KEY: [u8; 16] = [0x40, 0x47, 0x61, 0x77, 0x5e, 0x32, 0x74, 0x47, 0x51, 0x36, 0x31, 0x2d, 0xce, 0xd2, 0x6e, 0x69];
-/// Decrypted lyrics are a few KiB; anything far larger is not lyrics.
 const MAX_TEXT_BYTES: u64 = 1024 * 1024;
 
-/// The KRC text of a download's base64 `content`; `None` when it is not KRC.
 pub(super) fn decrypt(content: &str) -> Option<String> {
     let raw = STANDARD.decode(content.trim()).ok()?;
     let body = raw.strip_prefix(b"krc1")?;
@@ -26,7 +18,6 @@ pub(super) fn decrypt(content: &str) -> Option<String> {
     Some(text.trim_start_matches('\u{feff}').to_string())
 }
 
-/// One line of KRC: when it starts (ms), its words joined, and each word's timing.
 #[derive(Debug, PartialEq, Eq)]
 pub(super) struct KrcLine {
     pub(super) start_ms: u64,
@@ -34,7 +25,6 @@ pub(super) struct KrcLine {
     pub(super) words: Vec<KrcWord>,
 }
 
-/// A word (or syllable) of a KRC line: when it starts after the line does, and for how long.
 #[derive(Debug, PartialEq, Eq)]
 pub(super) struct KrcWord {
     pub(super) offset_ms: u64,
@@ -43,8 +33,6 @@ pub(super) struct KrcWord {
 }
 
 impl KrcLine {
-    /// The line's text with a word time before each word and one after the last
-    /// (enhanced LRC: `<00:17.51>Oh <00:17.80>I <00:19.75>`); the plain text when no word has text.
     pub(super) fn timed_text(&self) -> String {
         if self.words.iter().all(|word| word.text.trim().is_empty()) {
             return self.text.clone();
@@ -62,7 +50,6 @@ impl KrcLine {
     }
 }
 
-/// The timed lines of KRC text, in order.
 pub(super) fn lines(krc: &str) -> Vec<KrcLine> {
     krc.lines()
         .filter_map(|line| {
@@ -74,7 +61,6 @@ pub(super) fn lines(krc: &str) -> Vec<KrcLine> {
         .collect()
 }
 
-/// `<0,150,0>张<150,250,0>小` -> `张小`.
 fn words_of(words: &str) -> String {
     let mut text = String::new();
     let mut rest = words;
@@ -91,8 +77,6 @@ fn words_of(words: &str) -> String {
     text.trim().to_string()
 }
 
-/// `<0,150,0>张<150,250,0>小` -> 张 at 0 for 150 ms, 小 at 150 for 250 ms. Text before the first
-/// tag, or after a broken one, is dropped here (it still shows in the plain text).
 fn timed_words(words: &str) -> Vec<KrcWord> {
     words
         .split('<')
@@ -108,8 +92,6 @@ fn timed_words(words: &str) -> Vec<KrcWord> {
         .collect()
 }
 
-/// The translation of each timed line, in order, from the `[language:...]` header; `None`
-/// without one.
 pub(super) fn translations(krc: &str) -> Option<Vec<String>> {
     let start = krc.find("[language:")? + "[language:".len();
     let encoded = &krc[start..start + krc[start..].find(']')?];
@@ -147,7 +129,6 @@ mod tests {
         let parsed = lines(&text);
         assert_eq!(parsed.iter().map(|line| (line.start_ms, line.text.as_str())).collect::<Vec<_>>(), [(17_518, "Oh I believe"), (22_474, "")]);
         assert_eq!(parsed[0].words[1], KrcWord { offset_ms: 285, duration_ms: 407, text: "I ".into() });
-        // Absolute word times, and the end of the last word.
         assert_eq!(parsed[0].timed_text(), "<00:17.51>Oh <00:17.80>I <00:18.21>believe<00:19.75>");
         assert_eq!(parsed[1].timed_text(), "");
         assert_eq!(translations(&text), Some(vec!["哦 我相信昨天".to_string(), String::new()]));

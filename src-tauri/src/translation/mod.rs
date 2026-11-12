@@ -44,21 +44,13 @@ static HAS_POSITIONED_WINDOW: AtomicBool = AtomicBool::new(false);
 static HOTKEY_WINDOW: Mutex<Option<isize>> = Mutex::new(None);
 static ACTIVE_BINDING: Mutex<Option<ShortcutBinding>> = Mutex::new(None);
 static SELECTION_BINDING: Mutex<Option<ShortcutBinding>> = Mutex::new(None);
-/// Off when translation is switched off in settings: the shortcut is unregistered,
-/// so its keys reach other programs again, and stays so until it is switched on.
 static ENABLED: AtomicBool = AtomicBool::new(true);
-/// On when translation opens as a page of the island: the window shortcut then
-/// brings the island forward and asks it to toggle that page.
 static OPENS_IN_ISLAND: AtomicBool = AtomicBool::new(false);
-/// A requested shortcut (None to unregister) and where to report the result (the
-/// registered label, empty after unregistering, or an error).
 type PendingBinding = (Option<ShortcutBinding>, mpsc::Sender<Result<String, UserError>>);
 
 static PENDING_BINDING: Mutex<Option<PendingBinding>> = Mutex::new(None);
 static PENDING_SELECTION_BINDING: Mutex<Option<PendingBinding>> = Mutex::new(None);
 
-/// Translates `text` as if it had been selected and the selection shortcut pressed: the island
-/// shows the result and hands it to the translation window (screenshot OCR, C41.5).
 pub(crate) fn translate_text_from_elsewhere(app: &AppHandle, text: String) {
     let _ = app.emit(TRANSLATION_SELECTION_EVENT, text);
 }
@@ -135,8 +127,6 @@ pub fn toggle_translation_window(app: AppHandle) -> Result<(), String> {
     Ok(())
 }
 
-/// Shows the translation window and asks its page to read a prepared handoff.
-/// Unlike the shortcut toggle, this does not hide a window that is already open.
 #[tauri::command]
 pub fn present_translation_window(app: AppHandle) -> Result<(), String> {
     let window = app
@@ -175,7 +165,6 @@ pub fn copy_translation_result(text: String) -> Result<(), UserError> {
         .map_err(|error| UserError::new("translation.copy", "Could not copy the translation.").detail(error))
 }
 
-// One key per provider. DeepSeek keeps the "deepseek" entry older versions created.
 fn entry(provider: &Provider) -> Result<Entry, UserError> {
     Entry::new("com.tixxin.fuyu.translation", provider.id).map_err(credential::open)
 }
@@ -211,8 +200,6 @@ pub fn delete_translation_secret(provider: Option<String>) -> Result<(), UserErr
     }
 }
 
-/// `provider`, `base_url` and `model` are optional so that a request without them
-/// behaves as before: DeepSeek with its default model.
 #[tauri::command]
 pub async fn translate_text(
     text: String,
@@ -252,7 +239,6 @@ pub async fn translate_text(
     complete(&instruction, text, provider.as_deref(), base_url.as_deref(), model.as_deref(), None).await
 }
 
-/// One chat completion with the chosen service: `instruction` as the system message, `text` as the user's.
 async fn complete(
     instruction: &str,
     text: &str,
@@ -267,7 +253,6 @@ async fn complete(
     let name = provider.name;
     let secret = read_secret(provider)?.ok_or_else(|| UserError::new("translation.noKey", format!("Set up the API key for {name} first.")).arg("service", name))?;
     let client = reqwest::Client::builder()
-        // Self-hosted gateways and relays can be slow to answer a long text.
         .timeout(Duration::from_secs(30))
         .build()
         .map_err(|error| UserError::new("http.client", "Could not set up the connection.").detail(error))?;
@@ -292,7 +277,6 @@ async fn complete(
             .arg("service", name)
             .arg("status", status));
     }
-    // A service that ignores "stream" answers with one JSON body, read as usual.
     let streamed = response.headers().get(reqwest::header::CONTENT_TYPE).and_then(|value| value.to_str().ok()).is_some_and(|kind| kind.starts_with("text/event-stream"));
     if let (Some(on_chunk), true) = (on_chunk, streamed) {
         return stream::read(response, provider, on_chunk).await;
@@ -309,7 +293,6 @@ pub async fn set_translation_shortcut(shortcut: String) -> Result<String, UserEr
     let binding = parse_shortcut_binding(&shortcut)
         .ok_or_else(|| UserError::new("shortcut.invalid", "That shortcut is not valid; use at least one modifier key."))?;
     if !ENABLED.load(Ordering::SeqCst) {
-        // Remembered by the frontend and registered when translation is switched on.
         return Ok(binding.label);
     }
     tauri::async_runtime::spawn_blocking(move || change_hotkey(Some(binding)))
@@ -317,8 +300,6 @@ pub async fn set_translation_shortcut(shortcut: String) -> Result<String, UserEr
         .map_err(|error| UserError::new("internal", "Something went wrong inside the island.").detail(error))?
 }
 
-/// Switching off unregisters the shortcut; switching on registers nothing by itself,
-/// the frontend then calls set_translation_shortcut with the saved shortcut.
 #[tauri::command]
 pub async fn set_translation_enabled(enabled: bool) -> Result<(), UserError> {
     ENABLED.store(enabled, Ordering::SeqCst);
@@ -334,7 +315,6 @@ pub async fn set_translation_enabled(enabled: bool) -> Result<(), UserError> {
     Ok(())
 }
 
-/// Chooses where the window shortcut opens translation: its own window or the island page.
 #[tauri::command]
 pub fn set_translation_target(island: bool) {
     OPENS_IN_ISLAND.store(island, Ordering::SeqCst);
@@ -352,7 +332,6 @@ pub async fn set_translation_selection_shortcut(shortcut: String) -> Result<Stri
         .map_err(|error| UserError::new("internal", "Something went wrong inside the island.").detail(error))?
 }
 
-/// Hands `binding` to the hotkey thread, which owns the registration, and waits for it.
 fn change_hotkey(binding: Option<ShortcutBinding>) -> Result<String, UserError> {
     post_binding(&PENDING_BINDING, CHANGE_HOTKEY_MESSAGE, binding)
 }
@@ -462,14 +441,10 @@ fn apply_binding_change(
     let _ = sender.send(result);
 }
 
-/// Whether translation is switched on in settings.
 pub(crate) fn is_enabled() -> bool {
     ENABLED.load(Ordering::SeqCst)
 }
 
-/// What the translation shortcut and the tray's "Quick translate" do: toggle the translation
-/// window, or bring the island forward and ask it to toggle its translation page. Nothing while
-/// translation is off.
 pub(crate) fn open_translator(app: &AppHandle) {
     if !is_enabled() {
         return;
@@ -516,8 +491,6 @@ impl WindowMessages for TranslationHotkeyWindow {
     }
 }
 
-/// This module's Tauri commands. `lib.rs` chains every module's list into one
-/// `generate_handler!`, so adding a command only touches this file.
 macro_rules! tauri_commands {
     ($next:ident [$($done:tt)*] $($rest:tt)*) => {
         $next!([$($done)*

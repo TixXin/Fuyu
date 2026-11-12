@@ -1,13 +1,3 @@
-//! Sensitive permissions (docs/architecture/plugins/v2-platform.md §3.2): granted
-//! when the plugin is switched on like any other, but the first call that
-//! uses one also asks the user on the island: allow, deny or allow once. The
-//! request waits for the answer for at most ANSWER_TIMEOUT; no answer is a
-//! denial that is not remembered, so the next call asks again.
-//!
-//! "Allow" and "deny" are kept in plugins.json (`sensitive`) until the user
-//! revokes them on the plugin's settings page; "allow once" lasts until the
-//! plugin process restarts.
-
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::{
@@ -23,11 +13,8 @@ use tauri::{AppHandle, Emitter};
 use super::{grants::update_state, host, lock, manifest::LocalizedText};
 use crate::island;
 
-/// Permissions whose first use the user confirms. Each is also in
-/// permissions::PERMISSIONS once its methods exist.
 pub(super) const SENSITIVE_PERMISSIONS: [&str; 5] = ["clipboard:read", "messages:read", "media:read", "shelf:read", "shelf:write"];
 
-/// Mirrored by `PLUGIN_PERMISSION_REQUEST_EVENT` in src/features/plugins/api.ts.
 const REQUEST_EVENT: &str = "plugin-permission-request";
 pub(super) const ANSWER_TIMEOUT: Duration = Duration::from_secs(30);
 
@@ -35,7 +22,6 @@ pub(super) fn is_sensitive(permission: &str) -> bool {
     SENSITIVE_PERMISSIONS.contains(&permission)
 }
 
-/// What plugins.json remembers. Mirrored by `PluginSensitiveChoice` in src/features/plugins/api.ts.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum SensitiveChoice {
@@ -43,7 +29,6 @@ pub enum SensitiveChoice {
     Denied,
 }
 
-/// The user's answer on the island.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum Answer {
     Allow,
@@ -69,7 +54,6 @@ pub(super) enum Decision {
     Ask,
 }
 
-/// Before a call: whether to run it, refuse it, or ask first.
 pub(super) fn decide(stored: Option<SensitiveChoice>, allowed_this_run: bool) -> Decision {
     match stored {
         Some(SensitiveChoice::Allowed) => Decision::Allow,
@@ -79,8 +63,6 @@ pub(super) fn decide(stored: Option<SensitiveChoice>, allowed_this_run: bool) ->
     }
 }
 
-/// After asking (`None`: no answer in time): whether the call runs, what to
-/// remember in plugins.json, and whether to allow it for this run.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) struct Outcome {
     pub allowed: bool,
@@ -97,7 +79,6 @@ pub(super) fn outcome(answer: Option<Answer>) -> Outcome {
     }
 }
 
-/// An open question: which plugin asks, for which permission, and its answer.
 type OpenPrompt = (String, &'static str, Arc<Prompt>);
 
 #[derive(Default)]
@@ -108,9 +89,7 @@ struct Prompt {
 
 struct Prompts {
     next_id: AtomicU64,
-    /// Open prompts by request id, with the plugin and permission they ask about.
     open: Mutex<HashMap<u64, OpenPrompt>>,
-    /// (plugin, permission) allowed until the plugin process restarts.
     this_run: Mutex<HashSet<(String, &'static str)>>,
 }
 
@@ -123,13 +102,10 @@ fn prompts() -> &'static Prompts {
     })
 }
 
-/// Forgets "allow once" answers; called when the plugin's process (re)starts.
 pub(super) fn forget_this_run(plugin_id: &str) {
     lock(&prompts().this_run).retain(|(plugin, _)| plugin != plugin_id);
 }
 
-/// Whether `plugin_id` may use `permission` now, asking the user if needed.
-/// Blocks the calling (request) thread for at most ANSWER_TIMEOUT.
 pub(super) fn check(app: &AppHandle, plugin_id: &str, permission: &'static str) -> bool {
     let stored = host()
         .ok()
@@ -156,8 +132,6 @@ pub(super) fn check(app: &AppHandle, plugin_id: &str, permission: &'static str) 
     result.allowed
 }
 
-/// Shows the prompt (or joins one already open for the same plugin and
-/// permission) and waits for the answer.
 fn ask(app: &AppHandle, plugin_id: &str, permission: &'static str) -> Option<Answer> {
     let prompts = prompts();
     let (id, prompt, is_new) = {
@@ -211,7 +185,6 @@ fn ask(app: &AppHandle, plugin_id: &str, permission: &'static str) -> Option<Ans
     result
 }
 
-/// The user's answer to a prompt; an unknown id (already timed out) is ignored.
 pub(super) fn answer(request_id: u64, answer: Answer) {
     let prompt = lock(&prompts().open).get(&request_id).map(|(_, _, prompt)| Arc::clone(prompt));
     if let Some(prompt) = prompt {
@@ -220,9 +193,6 @@ pub(super) fn answer(request_id: u64, answer: Answer) {
     }
 }
 
-/// Whether `plugin_id` may use `permission` right now without asking: the
-/// user allowed it, or allowed it once for this run. Checked before each
-/// event that carries sensitive data.
 pub(super) fn allowed_now(plugin_id: &str, permission: &str) -> bool {
     let stored = host()
         .ok()
@@ -231,9 +201,6 @@ pub(super) fn allowed_now(plugin_id: &str, permission: &str) -> bool {
     decide(stored, this_run) == Decision::Allow
 }
 
-/// Removes a remembered answer and any "allow once": the next call asks
-/// again. The running plugin also loses its subscriptions to events that need
-/// the permission, so data stops flowing at once, not after a restart.
 pub(super) fn revoke(plugin_id: &str, permission: &str) -> Result<(), String> {
     lock(&prompts().this_run).retain(|(plugin, asked)| !(plugin == plugin_id && *asked == permission));
     update_state(|state, _| {

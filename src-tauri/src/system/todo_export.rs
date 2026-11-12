@@ -1,5 +1,3 @@
-//! Daily todo Markdown export and its default directory.
-
 use serde::Serialize;
 use std::{fs, path::PathBuf};
 

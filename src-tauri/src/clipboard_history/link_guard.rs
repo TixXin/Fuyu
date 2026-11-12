@@ -1,7 +1,3 @@
-//! Keeps link previews (C38, C42) on the public internet: a copied link to this computer or the
-//! local network (a router page, an intranet service, a local dev server) is never visited, also
-//! not through a redirect or a name that resolves to such an address.
-
 use std::{
     net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr, ToSocketAddrs},
     sync::Arc,
@@ -12,7 +8,6 @@ use reqwest::{
     Url,
 };
 
-/// Whether `ip` is an address on the public internet.
 pub(super) fn is_public_ip(ip: IpAddr) -> bool {
     match ip {
         IpAddr::V4(ip) => is_public_v4(ip),
@@ -34,7 +29,6 @@ fn is_public_v4(ip: Ipv4Addr) -> bool {
         || ip.is_multicast()
         || a == 0
         || a >= 240
-        // Shared address space (carrier NAT) and benchmarking.
         || (a == 100 && (64..128).contains(&b))
         || (a == 198 && (b == 18 || b == 19)))
 }
@@ -44,14 +38,11 @@ fn is_public_v6(ip: Ipv6Addr) -> bool {
     !(ip.is_unspecified()
         || ip.is_loopback()
         || ip.is_multicast()
-        // Unique local fc00::/7, link-local fe80::/10, documentation 2001:db8::/32.
         || (first & 0xfe00) == 0xfc00
         || (first & 0xffc0) == 0xfe80
         || (first == 0x2001 && ip.segments()[1] == 0x0db8))
 }
 
-/// Whether a link may be visited as far as its address says: http(s), not a local name, and not a
-/// non-public literal address. Names are checked again when they resolve.
 pub(super) fn allowed_url(url: &Url) -> bool {
     if !matches!(url.scheme(), "http" | "https") {
         return false;
@@ -64,8 +55,6 @@ pub(super) fn allowed_url(url: &Url) -> bool {
     name.contains('.') && ![".localhost", ".local", ".internal", ".lan", ".home.arpa"].iter().any(|suffix| name.ends_with(suffix))
 }
 
-/// Resolves names like the system does, then drops every non-public address; a name with none
-/// left fails, so a public-looking name pointing inside is not visited either.
 struct PublicOnly;
 
 impl Resolve for PublicOnly {
@@ -84,8 +73,6 @@ impl Resolve for PublicOnly {
     }
 }
 
-/// A client for link previews: names resolve to public addresses only, every redirect is checked,
-/// and no proxy is used (a proxy would resolve the names itself, past the check).
 pub(super) fn client(timeout: std::time::Duration, user_agent: &str) -> Result<reqwest::Client, String> {
     let redirects = reqwest::redirect::Policy::custom(|attempt| {
         if attempt.previous().len() >= 5 {

@@ -1,5 +1,3 @@
-//! Windows media sessions (SMTC) and the system audio endpoint behind the music page.
-
 mod audio;
 mod events;
 mod plugin_view;
@@ -76,8 +74,6 @@ async fn run_media_command(
         .map_err(|error| format!("Failed to join the media command task: {error}"))?
 }
 
-/// This module's Tauri commands. `lib.rs` chains every module's list into one
-/// `generate_handler!`, so adding a command only touches this file.
 macro_rules! tauri_commands {
     ($next:ident [$($done:tt)*] $($rest:tt)*) => {
         $next!([$($done)*

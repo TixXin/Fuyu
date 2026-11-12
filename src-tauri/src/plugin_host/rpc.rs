@@ -1,11 +1,8 @@
-//! JSON-RPC 2.0 messages between the host and a plugin, one JSON object per line.
-
 use serde_json::{json, Value};
 
 pub(super) const PARSE_ERROR: i64 = -32700;
 pub(super) const INVALID_REQUEST: i64 = -32600;
 pub(super) const METHOD_NOT_FOUND: i64 = -32601;
-/// The island answered with an error; `data.status` carries its HTTP-style status.
 pub(super) const HOST_ERROR: i64 = -32000;
 pub(super) const PERMISSION_DENIED: i64 = -32001;
 
@@ -13,9 +10,7 @@ pub(super) const PERMISSION_DENIED: i64 = -32001;
 pub(super) enum Incoming {
     Request { id: Value, method: String, params: Value },
     Notification { method: String, params: Value },
-    /// A response to something the host sent; the host sends no requests yet.
     Response,
-    /// Answered with an error when it carries an id.
     Invalid { id: Value, code: i64, message: String },
 }
 

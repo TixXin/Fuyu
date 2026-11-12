@@ -1,7 +1,3 @@
-//! The clipboard window's actions panel (C38): pasting any text (transformed, merged, edited),
-//! saving an edit as a new entry, pausing the history, converting Chinese scripts, reading a QR
-//! code in an image and a link's title.
-
 use std::sync::atomic::{AtomicU64, Ordering};
 use tauri::AppHandle;
 
@@ -12,8 +8,6 @@ use super::{capture_pause, current_unix_millis, link_preview, popup, service, Cl
 
 static PAUSE_TIMER_GEN: AtomicU64 = AtomicU64::new(0);
 
-/// Puts `text` on the clipboard (not into the history) and pastes it into the window that was in
-/// front; `enter` presses Enter after it.
 #[tauri::command]
 pub async fn paste_clipboard_text(app: AppHandle, text: String, enter: Option<bool>) -> Result<(), String> {
     if text.is_empty() {
@@ -22,7 +16,6 @@ pub async fn paste_clipboard_text(app: AppHandle, text: String, enter: Option<bo
     popup::paste_text(&app, &text, enter.unwrap_or(false))
 }
 
-/// Adds `text` to the history as a new entry, as if just copied (an edit saved from the window).
 #[tauri::command]
 pub fn add_clipboard_history_text(text: String) -> Result<ClipboardHistorySnapshot, String> {
     if text.trim().is_empty() {
@@ -40,13 +33,11 @@ pub fn add_clipboard_history_text(text: String) -> Result<ClipboardHistorySnapsh
     service.snapshot()
 }
 
-/// Stops recording copies for `minutes`, or until resumed when none.
 #[tauri::command]
 pub fn pause_clipboard_capture(minutes: Option<u32>) -> Result<ClipboardHistorySnapshot, String> {
     let minutes = minutes.map(|minutes| minutes.clamp(1, 24 * 60));
     let generation = PAUSE_TIMER_GEN.fetch_add(1, Ordering::SeqCst) + 1;
     capture_pause::pause(minutes, current_unix_millis());
-    // A timed pause tells the windows when it ends, so the pause bar goes at once (C42).
     if let Some(minutes) = minutes {
         std::thread::spawn(move || {
             std::thread::sleep(std::time::Duration::from_secs(u64::from(minutes) * 60 + 1));
@@ -65,14 +56,12 @@ pub fn resume_clipboard_capture() -> Result<ClipboardHistorySnapshot, String> {
     changed()
 }
 
-/// The next copy is not recorded.
 #[tauri::command]
 pub fn ignore_next_clipboard_copy() -> Result<ClipboardHistorySnapshot, String> {
     capture_pause::ignore_next();
     changed()
 }
 
-/// Pauses until resumed, or resumes: the tray menu's item.
 pub(crate) fn toggle_capture_pause() {
     PAUSE_TIMER_GEN.fetch_add(1, Ordering::SeqCst);
     if capture_pause::paused() {
@@ -89,7 +78,6 @@ fn changed() -> Result<ClipboardHistorySnapshot, String> {
     service.snapshot()
 }
 
-/// `text` in simplified (`to` = "simplified") or traditional characters, by Windows' own tables.
 #[tauri::command]
 pub fn convert_chinese_text(text: String, to: String) -> Result<String, String> {
     let converted = match to.as_str() {
@@ -100,7 +88,6 @@ pub fn convert_chinese_text(text: String, to: String) -> Result<String, String> 
     converted.ok_or_else(|| "Windows could not convert the text.".to_string())
 }
 
-/// The text of a QR code in an image entry; null when it has none.
 #[tauri::command]
 pub async fn read_clipboard_image_qr(id: String) -> Result<Option<String>, String> {
     let path = service()?
@@ -130,7 +117,6 @@ fn read_qr(path: &str) -> Result<Option<String>, String> {
     Ok(prepared.detect_grids().into_iter().find_map(|grid| grid.decode().ok().map(|(_, content)| content)))
 }
 
-/// A link's page title and icon, when link previews are on in the settings.
 #[tauri::command]
 pub async fn get_clipboard_link_preview(url: String) -> Result<link_preview::LinkPreview, String> {
     if !service()?.snapshot()?.settings.link_preview {

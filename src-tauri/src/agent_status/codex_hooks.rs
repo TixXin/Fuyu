@@ -1,5 +1,3 @@
-//! Managed hook block in the Codex `config.toml`.
-
 use std::{fs, path::Path};
 
 use super::{
@@ -9,7 +7,6 @@ use super::{
 
 pub(super) const FOCUSD_AGENT_HOOK_BLOCK_BEGIN: &str = "# BEGIN Fuyu Agent Status Hooks";
 pub(super) const FOCUSD_AGENT_HOOK_BLOCK_END: &str = "# END Fuyu Agent Status Hooks";
-/// The block's markers before the rename (D17); such a block is removed like the island's own.
 const LEGACY_HOOK_BLOCK: (&str, &str) = ("# BEGIN FocuSD Agent Status Hooks", "# END FocuSD Agent Status Hooks");
 
 pub(super) fn install_codex_status_hooks(
@@ -37,18 +34,11 @@ pub(super) fn build_codex_hook_block(
 ) -> String {
     let submit_command = agent_running_command(running_script_path, "codex");
     let stop_command = agent_status_command(status_script_path, "codex", "completed");
-    // Looking up the agent's process takes about a second. Codex 0.148 and later run the start
-    // record in the background (`async_session_start`, codex_version.rs); older ones would skip
-    // an `async` hook, so there it delays the first turn, once per session.
     let session_start_async = if async_session_start { "\nasync = true" } else { "" };
     let session_script_path = status_script_path.with_file_name(AGENT_SESSION_SCRIPT_FILE_NAME);
     let session_start_command = agent_status_command(&session_script_path, "codex", "start");
     let session_end_command = agent_status_command(&session_script_path, "codex", "end");
-    // Makes no decision, so Codex goes on to its normal approval prompt.
     let permission_command = agent_running_command_with(running_script_path, "codex", AGENT_RUNNING_NOTIFICATION_ARG);
-    // Holds the request for the island's card (roadmap B6 2.2): Codex has no HTTP hooks, so a
-    // script forwards it. It reads the endpoint's address itself and answers nothing (back to the
-    // terminal prompt) while the island is closed or approving there is off.
     let approval_script_path = status_script_path.with_file_name(AGENT_APPROVAL_SCRIPT_FILE_NAME);
     let approval_command = agent_status_command(&approval_script_path, "codex", "permission");
 
@@ -117,7 +107,6 @@ pub(super) fn remove_managed_codex_hook_block(content: &str) -> String {
     remove_legacy_codex_focusd_hooks(&remove_hook_blocks(&current, legacy_begin, legacy_end))
 }
 
-/// `content` without the blocks from `begin` to `end` (and the line break after each).
 fn remove_hook_blocks(content: &str, begin: &str, end_marker: &str) -> String {
     let mut remaining = content;
     let mut next_content = String::new();
@@ -229,7 +218,6 @@ pub(super) fn agent_running_command(script_path: &Path, provider: &str) -> Strin
     )
 }
 
-/// `agent_running_command` with a second argument, such as `notification`.
 pub(super) fn agent_running_command_with(script_path: &Path, provider: &str, arg: &str) -> String {
     format!(
         "cmd.exe /d /s /c \"\"{}\" {} {}\"",

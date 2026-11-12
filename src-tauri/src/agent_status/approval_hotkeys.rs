@@ -1,8 +1,3 @@
-//! Shortcuts for the island's agent permission card (roadmap B6 2.5). They are system-wide, so
-//! they are registered only while a card is showing and released as soon as it goes; the rest of
-//! the time the keys belong to other apps. A press goes to the island as `agent-approval-hotkey`
-//! with the card action, which the card handles like a click.
-
 use serde::Deserialize;
 use serde_json::json;
 use std::{
@@ -24,13 +19,11 @@ use crate::{
     },
 };
 
-/// Mirrored by `APPROVAL_HOTKEY_EVENT` in src/features/agent-status/approvals/api.ts.
 const HOTKEY_EVENT: &str = "agent-approval-hotkey";
 const REFRESH_MESSAGE: u32 = WM_APP + 0x63;
 const FIRST_HOTKEY_ID: i32 = 0x5300;
 const CLASS_NAME: &str = "FocuSDAgentApprovalHotkeys";
 
-/// One card action and the shortcut that answers it, e.g. `allow` / `Ctrl+Alt+Y`.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 pub struct ApprovalHotkey {
     action: String,
@@ -40,11 +33,9 @@ pub struct ApprovalHotkey {
 #[derive(Default)]
 struct State {
     app: Option<AppHandle>,
-    /// The hidden window, once its thread has started.
     window: Option<isize>,
     started: bool,
     wanted: Vec<ApprovalHotkey>,
-    /// The action of each registered hotkey, as FIRST_HOTKEY_ID + index.
     registered: Vec<String>,
 }
 
@@ -53,8 +44,6 @@ fn state() -> MutexGuard<'static, State> {
     STATE.get_or_init(Mutex::default).lock().unwrap_or_else(PoisonError::into_inner)
 }
 
-/// Registers `hotkeys` while the card shows; an empty list releases them all. Shortcuts another
-/// app already holds are skipped, and the card's buttons still work.
 #[tauri::command]
 pub fn set_agent_approval_hotkeys(app: AppHandle, hotkeys: Vec<ApprovalHotkey>) {
     let (window, start) = {
@@ -75,7 +64,6 @@ pub fn set_agent_approval_hotkeys(app: AppHandle, hotkeys: Vec<ApprovalHotkey>) 
     }
 }
 
-/// The hidden window's thread, which owns the registrations; it registers what is wanted when it starts.
 fn run_window() {
     let Ok(instance) = message_window::module_instance() else { return };
     if message_window::register_class::<ApprovalHotkeyWindow>(instance, CLASS_NAME).is_err() {

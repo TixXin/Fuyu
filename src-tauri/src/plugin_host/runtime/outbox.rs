@@ -1,8 +1,3 @@
-//! Messages to a plugin go through a bounded queue that one thread writes to
-//! the plugin's stdin. Writing to a pipe blocks once the plugin stops reading;
-//! with the queue only that thread waits, never the caller (which may hold the
-//! host's locks). A plugin that lets the queue fill up is not reading its input.
-
 use std::{
     io::Write,
     process::ChildStdin,
@@ -10,7 +5,6 @@ use std::{
     thread,
 };
 
-/// Messages waiting for the plugin; more than this means it stopped reading.
 pub(super) const CAPACITY: usize = 512;
 
 pub(super) struct Outbox {
@@ -18,15 +12,11 @@ pub(super) struct Outbox {
 }
 
 pub(super) enum SendError {
-    /// The plugin is not running (or its input is closed).
     Closed,
-    /// The plugin has not read its last `CAPACITY` messages.
     Full,
 }
 
 impl Outbox {
-    /// Starts the writer thread. Dropping the outbox closes stdin once the
-    /// queued messages are written (or writing fails because the process ended).
     pub fn new(mut stdin: ChildStdin) -> Result<Self, String> {
         let (sender, receiver) = sync_channel::<String>(CAPACITY);
         thread::Builder::new()
@@ -65,7 +55,6 @@ mod tests {
 
     #[test]
     fn a_process_that_never_reads_fills_the_queue_without_blocking_the_sender() {
-        // ping waits ~20 s and never reads stdin.
         let mut child = Command::new("ping")
             .args(["-n", "20", "127.0.0.1"])
             .stdin(Stdio::piped())

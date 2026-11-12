@@ -1,7 +1,3 @@
-//! The theme market (C26): themes.json in TixXin/fuyu-plugins, built from its themes/ folder.
-//! A theme is data only (what the island looks like) and runs no code, so the file is not
-//! signed; the island checks every value again (features/theme-market/model.ts) before showing
-//! or applying one. Here only the shape is checked: a known format and plausible ids.
 use serde::Deserialize;
 use serde_json::Value;
 
@@ -25,7 +21,6 @@ fn is_theme_id(value: &Value) -> bool {
     })
 }
 
-/// The themes in themes.json that have an id and an appearance object, up to MAX_THEMES.
 fn parse_themes(text: &str) -> Result<Vec<Value>, String> {
     let file: ThemesFile = serde_json::from_str(text).map_err(|error| format!("themes.json is not valid: {error}"))?;
     if file.version != THEMES_VERSION {
@@ -39,7 +34,6 @@ fn parse_themes(text: &str) -> Result<Vec<Value>, String> {
         .collect())
 }
 
-/// The theme market's themes; empty while themes.json does not exist yet.
 #[tauri::command]
 pub async fn get_theme_market() -> Result<Vec<Value>, String> {
     let client = client()?;

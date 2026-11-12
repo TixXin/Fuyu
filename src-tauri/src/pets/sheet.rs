@@ -1,14 +1,8 @@
-//! Spritesheet headers: the image type and pixel size, read from the first bytes only,
-//! so a sheet with the wrong shape or a huge canvas is refused before anything decodes it.
-
-/// Bytes `image_header` needs: PNG's IHDR and every WebP first chunk fit in 30.
 pub(super) const HEADER_BYTES: usize = 30;
-/// Twice petdex's 1536 px; caps the decoded size of a sheet at about 3072 × 4576.
 pub(super) const MAX_SHEET_WIDTH: u32 = 3072;
 const COLUMNS: f64 = 8.0;
 const CELL_WIDTH: f64 = 192.0;
 const CELL_HEIGHT: f64 = 208.0;
-/// petdex's 8×9 grid, or its v2 8×11 grid (mirrors petSheetRows in center-pattern/patterns.ts).
 const ROW_COUNTS: [u32; 2] = [9, 11];
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -18,7 +12,6 @@ pub(super) struct ImageHeader {
     pub height: u32,
 }
 
-/// WebP (VP8X, VP8L or lossy VP8) or PNG; anything else, whatever its extension, is `None`.
 pub(super) fn image_header(bytes: &[u8]) -> Option<ImageHeader> {
     if bytes.starts_with(b"\x89PNG\r\n\x1a\n") && bytes.get(12..16)? == b"IHDR" {
         let width = u32::from_be_bytes(bytes.get(16..20)?.try_into().ok()?);
@@ -58,8 +51,6 @@ pub(super) fn image_header(bytes: &[u8]) -> Option<ImageHeader> {
     })
 }
 
-/// Rows of 192:208 cells in an 8-column sheet of this size, if it is a petdex grid
-/// (any clean scale) no wider than `MAX_SHEET_WIDTH`.
 pub(super) fn sheet_rows(width: u32, height: u32) -> Option<u32> {
     if width == 0 || width > MAX_SHEET_WIDTH {
         return None;

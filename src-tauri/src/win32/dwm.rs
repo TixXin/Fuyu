@@ -1,6 +1,3 @@
-//! Desktop Window Manager attributes: turning off our windows' transitions, and reading where
-//! other windows really are on screen.
-
 use std::{ffi::c_void, mem::size_of};
 
 use windows::{
@@ -14,12 +11,8 @@ use windows::{
     },
 };
 
-/// Turns off the animations Windows plays when `window` is shown or hidden (the zoom and fade).
-/// The screenshot overlays cover a whole monitor and must appear and vanish at once.
 pub(crate) fn disable_transitions(window: HWND) -> windows::core::Result<()> {
     let disabled = BOOL::from(true);
-    // SAFETY: `disabled` is a BOOL that outlives the call, and its size is passed with it;
-    // DWMWA_TRANSITIONS_FORCEDISABLED takes exactly a BOOL.
     unsafe {
         DwmSetWindowAttribute(
             window,
@@ -30,12 +23,8 @@ pub(crate) fn disable_transitions(window: HWND) -> windows::core::Result<()> {
     }
 }
 
-/// The window as drawn, without the invisible resize border and shadow GetWindowRect includes
-/// on Windows 10 and later. `None` when DWM does not know the window.
 pub(crate) fn frame_bounds(window: HWND) -> Option<RECT> {
     let mut rect = RECT::default();
-    // SAFETY: `rect` is a RECT that outlives the call, and its size is passed with it;
-    // DWMWA_EXTENDED_FRAME_BOUNDS writes exactly a RECT.
     unsafe {
         DwmGetWindowAttribute(
             window,
@@ -48,12 +37,8 @@ pub(crate) fn frame_bounds(window: HWND) -> Option<RECT> {
     Some(rect)
 }
 
-/// Whether DWM hides `window` though it counts as visible: suspended Store apps, windows on
-/// other virtual desktops.
 pub(crate) fn is_cloaked(window: HWND) -> bool {
     let mut cloaked = 0u32;
-    // SAFETY: `cloaked` is a u32 that outlives the call, and its size is passed with it;
-    // DWMWA_CLOAKED writes exactly a DWORD.
     let read = unsafe {
         DwmGetWindowAttribute(
             window,

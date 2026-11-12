@@ -1,8 +1,3 @@
-//! Checks a bot token during the setup, before cc-connect runs with it: the bot's name, and on
-//! Telegram who has written to it (`getUpdates`), so `allow_from` is picked rather than typed;
-//! on Discord the link that invites the bot to a server. Through the update check's proxy. The
-//! token is in Telegram's URLs, so it is cut out of every error.
-
 use crate::user_error::UserError;
 use std::time::Duration;
 
@@ -12,17 +7,13 @@ use serde_json::Value;
 use crate::system::updater::get_updater_proxy;
 
 const TIMEOUT: Duration = Duration::from_secs(20);
-/// What cc-connect's Discord guide asks for: view channels, send messages, read message history,
-/// create public threads, send messages in threads.
 const DISCORD_PERMISSIONS: u64 = (1 << 10) | (1 << 11) | (1 << 16) | (1 << 35) | (1 << 38);
 
 #[derive(Serialize, Debug, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct BotCheck {
-    /// "@name_bot" on Telegram, the bot's user name on Discord.
     name: String,
     invite_url: Option<String>,
-    /// Who has written to the bot lately (Telegram); their ids go into `allow_from`.
     senders: Vec<Sender>,
 }
 
@@ -88,12 +79,10 @@ async fn telegram_call(client: &reqwest::Client, token: &str, method: &str) -> R
 async fn telegram(client: &reqwest::Client, token: &str) -> Result<BotCheck, UserError> {
     let me = telegram_call(client, token, "getMe").await?;
     let name = format!("@{}", me["username"].as_str().unwrap_or_default());
-    // Without an offset nothing is taken off Telegram's queue: cc-connect still gets these.
     let updates = telegram_call(client, token, "getUpdates?timeout=0&limit=100").await?;
     Ok(BotCheck { name, invite_url: None, senders: telegram_senders(&updates) })
 }
 
-/// Each person (not bot) who wrote to the bot in `updates`, once, newest last.
 fn telegram_senders(updates: &Value) -> Vec<Sender> {
     let mut senders: Vec<Sender> = Vec::new();
     for update in updates.as_array().into_iter().flatten() {

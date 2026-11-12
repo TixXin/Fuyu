@@ -35,8 +35,6 @@ fn window_activation_reuses_the_existing_wechat_process() {
     let before = existing_wechat_windows(&executable).unwrap();
     let original = preferred_window(&before.found).expect("WeChat main window is required");
     let mut expected_process = 0;
-    // SAFETY: GetWindowThreadProcessId accepts any HWND and writes the id into a
-    // valid local.
     unsafe {
         GetWindowThreadProcessId(original.handle, Some(&mut expected_process));
     }
@@ -47,13 +45,10 @@ fn window_activation_reuses_the_existing_wechat_process() {
         let window =
             preferred_window(&after.found).expect("The existing main window must be visible");
         let mut process_id = 0;
-        // SAFETY: GetWindowThreadProcessId accepts any HWND and writes the id into a
-        // valid local.
         unsafe {
             GetWindowThreadProcessId(window.handle, Some(&mut process_id));
         }
         assert_eq!(process_id, expected_process);
-        // SAFETY: IsIconic takes the HWND by value and returns false for invalid windows.
         assert!(!unsafe { IsIconic(window.handle) }.as_bool());
     }
 }
@@ -179,7 +174,6 @@ fn the_list_keeps_each_message_and_one_row_per_plain_reminder() {
         at,
     };
     assert!(state.remind(generation, 1000, Some(PlainReason::Tray)));
-    // Still pending: a second flash is the same reminder.
     assert!(!state.remind(generation, 2000, Some(PlainReason::Tray)));
     assert!(state.receive(generation, message("a", 3000)));
     assert!(state.apply(generation, ReminderSignal::Activated, 4000));
@@ -228,17 +222,12 @@ fn chat(key: &str, preview: &str, unread: u32, open: bool) -> chats::Session {
 
 #[test]
 fn the_users_own_message_is_not_news() {
-    // Sent on the phone and synced to a minimized WeChat (issue #40): the text changes and the
-    // chat moves to the top, but WeChat counts no unread.
     let before = [chat("x", "早", 0, false), chat("a", "对方: 在吗", 0, false)];
     let now = [chat("a", "我: 在", 0, false), chat("x", "早", 0, false)];
     assert!(chats::new_messages(&before, &now, true).is_empty());
     assert!(!chats::muted_changed(&before, &now, true));
-    // A message from them does raise the count.
     let now = [chat("a", "对方: 好", 1, false), chat("x", "早", 0, false)];
     assert_eq!(chats::new_messages(&before, &now, true).len(), 1);
-    // The chat open in WeChat gets no unread count, so its new text counts, unless the user has
-    // been in WeChat since the last read and may have written it.
     let before = [chat("a", "对方: 在吗", 0, true)];
     let now = [chat("a", "对方: 人呢", 0, true)];
     assert_eq!(chats::new_messages(&before, &now, true).len(), 1);
@@ -263,7 +252,6 @@ fn a_reply_written_while_a_flash_was_being_read_is_not_news() {
             .expect("an outcome")
     };
     let start = Instant::now();
-    // The flash's read is due when the user goes into WeChat, replies and leaves again.
     reader.flashed(start);
     reader.activated(true, start);
     reader.activated(false, start);
@@ -273,7 +261,6 @@ fn a_reply_written_while_a_flash_was_being_read_is_not_news() {
         outcome(&mut reader, start),
         Flash::Plain(Some(PlainReason::Unchanged))
     );
-    // Back out of WeChat, their next message in the open chat counts again.
     looks
         .borrow_mut()
         .push_back(Listing::Rows(vec![chat("a", "对方: 好", 0, true)]));

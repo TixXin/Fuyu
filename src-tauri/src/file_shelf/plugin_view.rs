@@ -1,15 +1,9 @@
-//! The file shelf for plugins: `shelf.list` (sensitive `shelf:read`) and
-//! `shelf.add` / `shelf.remove` (sensitive `shelf:write`). Only paths and what
-//! the island shows about them; plugins never get file contents from here.
-
 use serde_json::{json, Value};
 use tauri::{AppHandle, Emitter};
 
 use super::{current_unix_millis, describe, insert_items, service, FileShelfSnapshot};
 use crate::island;
 
-/// Sent to the island window after a plugin changed the shelf. Mirrored by
-/// `FILE_SHELF_CHANGED_EVENT` in src/features/file-shelf/api.ts.
 const CHANGED_EVENT: &str = "file-shelf-changed";
 const MAX_PATHS: usize = 20;
 
@@ -17,7 +11,6 @@ fn answer(snapshot: Result<FileShelfSnapshot, String>) -> Result<Value, (u16, St
     snapshot.map(|snapshot| json!(snapshot)).map_err(|error| (500, error))
 }
 
-/// Up to `MAX_PATHS` strings from `params[key]`.
 pub(super) fn strings(params: &Value, key: &str) -> Result<Vec<String>, (u16, String)> {
     let bad = || (400, format!("\"{key}\" must be a list of 1-{MAX_PATHS} strings."));
     let list = params.get(key).and_then(Value::as_array).filter(|list| (1..=MAX_PATHS).contains(&list.len())).ok_or_else(bad)?;
@@ -28,7 +21,6 @@ pub(crate) fn plugin_shelf_list() -> Result<Value, (u16, String)> {
     answer(service().and_then(|service| service.update(|items| items)))
 }
 
-/// `shelf.add { paths }`: absolute paths of existing files or folders; others are skipped.
 pub(crate) fn plugin_shelf_add(app: &AppHandle, params: &Value) -> Result<Value, (u16, String)> {
     let paths = strings(params, "paths")?;
     let now = current_unix_millis();
@@ -40,7 +32,6 @@ pub(crate) fn plugin_shelf_add(app: &AppHandle, params: &Value) -> Result<Value,
     result
 }
 
-/// `shelf.remove { ids }`: takes entries off the shelf; the files stay where they are.
 pub(crate) fn plugin_shelf_remove(app: &AppHandle, params: &Value) -> Result<Value, (u16, String)> {
     let ids = strings(params, "ids")?;
     let result = answer(service().and_then(|service| {

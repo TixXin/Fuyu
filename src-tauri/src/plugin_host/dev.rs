@@ -1,10 +1,3 @@
-//! Development mode: plugins loaded from any folder (Settings > Plugins >
-//! Developer, or `fuyu-plugin dev` through the local API's /v1/dev routes).
-//! It lives in memory only, so after a restart the user turns it on again.
-//! Development plugins run without "allow third-party plugins", get every
-//! permission they ask for (sensitive ones are still confirmed on first use),
-//! may list `experimentalApis`, and their raw JSON-RPC lines are recorded.
-
 use serde::Serialize;
 use serde_json::{json, Value};
 use std::{
@@ -23,19 +16,15 @@ use super::{
     runtime::TraceEntry,
 };
 
-/// Experimental APIs this island has (none right now); a development plugin
-/// that lists one in `experimentalApis` is told so in `initialize`.
 pub(super) const EXPERIMENTAL_APIS: &[&str] = &[];
 
 struct DevState {
     enabled: bool,
-    /// Plugin id -> the folder it was loaded from.
     plugins: BTreeMap<String, PathBuf>,
 }
 
 static DEV: Mutex<DevState> = Mutex::new(DevState { enabled: false, plugins: BTreeMap::new() });
 
-/// Mirrored by `PluginDevState` in src/features/plugins/api.ts.
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DevSnapshot {
@@ -50,19 +39,16 @@ pub struct DevPlugin {
     path: String,
 }
 
-/// An error with an HTTP-style status, for the local API.
 type DevResult<T> = Result<T, (u16, String)>;
 
 pub(super) fn is_dev(id: &str) -> bool {
     lock(&DEV).plugins.contains_key(id)
 }
 
-/// The loaded development plugins: id and folder.
 pub(super) fn plugins() -> Vec<(String, PathBuf)> {
     lock(&DEV).plugins.iter().map(|(id, path)| (id.clone(), path.clone())).collect()
 }
 
-/// Reads a development plugin's manifest. Its folder may have any name.
 pub(super) fn read_manifest(dir: &Path, app_version: &str) -> Result<PluginManifest, String> {
     let text = read_manifest_text(dir)
         .map_err(|error| format!("Could not read {MANIFEST_FILE_NAME} in {}: {error}", dir.display()))?;
@@ -73,7 +59,6 @@ pub(super) fn read_manifest(dir: &Path, app_version: &str) -> Result<PluginManif
     parse_manifest(&text, &id, app_version)
 }
 
-/// `experimentalApis` outside development mode is refused (the market does the same).
 pub(super) fn check_installed(manifest: PluginManifest) -> Result<PluginManifest, String> {
     if manifest.experimental_apis.is_empty() {
         Ok(manifest)
@@ -82,7 +67,6 @@ pub(super) fn check_installed(manifest: PluginManifest) -> Result<PluginManifest
     }
 }
 
-/// The experimental APIs a plugin listed that the island has.
 pub(super) fn granted_experimental(listed: &[String]) -> Vec<String> {
     listed.iter().filter(|name| EXPERIMENTAL_APIS.contains(&name.as_str())).cloned().collect()
 }
@@ -116,7 +100,6 @@ pub(super) fn snapshot() -> DevSnapshot {
     }
 }
 
-/// Turning development mode off unloads every development plugin.
 pub(super) fn set_enabled(enabled: bool) -> Result<(), String> {
     let unloaded: Vec<String> = {
         let mut state = lock(&DEV);
@@ -136,12 +119,10 @@ pub(super) fn set_enabled(enabled: bool) -> Result<(), String> {
     rescan()
 }
 
-/// Loads (or loads again) the plugin in `path`; returns its id.
 pub(super) fn load(path: &str) -> DevResult<String> {
     require_enabled()?;
     let host = host().map_err(internal)?;
     let dir = fs::canonicalize(path).map_err(|error| (400, format!("{path}: {error}")))?;
-    // canonicalize gives \\?\C:\...; the plugin and its logs see the usual form.
     let dir = PathBuf::from(dir.display().to_string().trim_start_matches(r"\\?\"));
     let manifest = read_manifest(&dir, &app_version(&host.app)).map_err(|error| (400, error))?;
     if builtin::is_builtin(&manifest.id) {
@@ -149,15 +130,12 @@ pub(super) fn load(path: &str) -> DevResult<String> {
     }
     let id = manifest.id;
     lock(&DEV).plugins.insert(id.clone(), dir);
-    // A running copy (installed, or loaded before) starts again from this folder,
-    // with a fresh log and trace (`fuyu-plugin dev` prints the log from the start).
     stop_plugin(&id).map_err(internal)?;
     lock(&host.runtimes).remove(&id);
     rescan().map_err(internal)?;
     Ok(id)
 }
 
-/// Reads the manifest again and restarts the plugin (after a file changed).
 pub(super) fn reload(id: &str) -> DevResult<()> {
     require_loaded(id)?;
     stop_plugin(id).map_err(internal)?;
@@ -174,7 +152,6 @@ pub(super) fn unload(id: &str) -> DevResult<bool> {
     Ok(removed)
 }
 
-/// Log lines after sequence number `after`, and the plugin's status.
 pub(super) fn log_since(id: &str, after: u64) -> DevResult<Value> {
     require_loaded(id)?;
     let host = host().map_err(internal)?;
@@ -186,7 +163,6 @@ pub(super) fn log_since(id: &str, after: u64) -> DevResult<Value> {
     Ok(json!({ "lines": lines, "next": info.log_seq, "status": info.status, "error": info.error }))
 }
 
-/// The lines of `log` numbered above `after`; the last line is number `log_seq`.
 pub(super) fn lines_after(log: &VecDeque<String>, log_seq: u64, after: u64) -> Vec<Value> {
     let first = (log_seq + 1).saturating_sub(log.len() as u64);
     log.iter()
@@ -196,13 +172,11 @@ pub(super) fn lines_after(log: &VecDeque<String>, log_seq: u64, after: u64) -> V
         .collect()
 }
 
-/// The raw JSON-RPC lines of a development plugin, oldest first.
 pub(super) fn trace(id: &str) -> Result<Vec<TraceEntry>, String> {
     let host = host()?;
     Ok(lock(&host.runtimes).get(id).map(|info| info.trace.iter().cloned().collect()).unwrap_or_default())
 }
 
-/// Sends a development plugin an `event` notification, subscribed or not.
 pub(super) fn send_event(id: &str, name: &str, payload: Value) -> Result<(), String> {
     if !is_dev(id) {
         return Err("Events can only be sent to development plugins.".into());
@@ -213,7 +187,6 @@ pub(super) fn send_event(id: &str, name: &str, payload: Value) -> Result<(), Str
     supervisor.notify("event", json!({ "name": name, "payload": payload }))
 }
 
-/// `/v1/dev/...` calls from the local API (routes in local_api/routes.rs).
 pub(crate) fn answer_local_api(method: &str, params: &Value) -> DevResult<Value> {
     let text = |key: &str| params.get(key).and_then(Value::as_str).unwrap_or_default().to_string();
     match method {
@@ -236,7 +209,6 @@ fn plain<T>(result: DevResult<T>) -> Result<T, String> {
     result.map_err(|(_, message)| message)
 }
 
-/// Runs a change that starts or stops processes off the main thread.
 async fn blocking<T: Send + 'static>(change: impl FnOnce() -> Result<T, String> + Send + 'static) -> Result<DevSnapshot, String> {
     tauri::async_runtime::spawn_blocking(change)
         .await
@@ -269,7 +241,6 @@ pub async fn unload_dev_plugin(id: String) -> Result<DevSnapshot, String> {
     blocking(move || plain(unload(&id))).await
 }
 
-/// The last raw JSON-RPC lines between the island and a development plugin.
 #[tauri::command]
 pub fn get_plugin_rpc_trace(id: String) -> Result<Vec<TraceEntry>, String> {
     trace(&id)

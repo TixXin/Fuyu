@@ -1,5 +1,3 @@
-//! Stage window size and placement: which monitor, where on it, and the tuck animation.
-
 use std::{
     sync::{
         atomic::{AtomicU64, Ordering},
@@ -19,30 +17,19 @@ pub(super) const DEFAULT_COLLAPSED_SCALE: f64 = 0.89;
 pub(super) const DEFAULT_EXPANDED_SCALE: f64 = 0.91;
 pub(super) const MIN_COLLAPSED_ISLAND_WIDTH: f64 = 280.0;
 pub(super) const COLLAPSED_ISLAND_WIDTH: f64 = 340.0;
-// The collapsed width with the width adjustment (Alt + drag on its sides) added: the text-driven
-// 280-340 shifted by MIN / MAX_COLLAPSED_WIDTH_EXTRA in src/features/appearance/settingsLimits.ts.
 pub(super) const MIN_ADJUSTED_COLLAPSED_WIDTH: f64 = 220.0;
 pub(super) const MAX_ADJUSTED_COLLAPSED_WIDTH: f64 = 520.0;
 pub(super) const COLLAPSED_ISLAND_HEIGHT: f64 = 38.0;
 pub(super) const COLLAPSED_RADIUS: f64 = 22.0;
 pub(super) const EXPANDED_ISLAND_WIDTH: f64 = 560.0;
 
-/// The widest the expanded island may be at `scale` and still fit the island window, with 2px to
-/// spare on each side; never below the usual width. A plugin page asking for more gets this.
-/// Mirrored by maxExpandedIslandWidth in src/windows/island/layout.ts.
 pub(super) fn max_expanded_width(scale: f64) -> f64 {
     ((STAGE_WINDOW_WIDTH - 4.0) / scale).floor().max(EXPANDED_ISLAND_WIDTH)
 }
 pub(super) const DEFAULT_EXPANDED_ISLAND_HEIGHT: f64 = 306.0;
-// Low enough for a popup that only holds one message card (no header); a taller floor left an
-// invisible strip below it that caught the cursor.
 pub(super) const MIN_EXPANDED_ISLAND_HEIGHT: f64 = 72.0;
-// Up to 656px: six clipboard rows (MAX_CLIPBOARD_VISIBLE_ROWS in
-// src/features/appearance/settings.ts); the panel height setting stops at 546.
 pub(super) const EXPANDED_ISLAND_HEIGHT_RANGE: f64 = 350.0;
 pub(super) const EXPANDED_RADIUS: f64 = 30.0;
-// Range of the expanded bottom radius setting; matches MIN / MAX_ISLAND_CORNER_RADIUS in
-// src/features/appearance/settings.ts.
 pub(super) const MIN_CORNER_RADIUS: f64 = 16.0;
 pub(super) const MAX_CORNER_RADIUS: f64 = 40.0;
 pub(super) const STAGE_WINDOW_PADDING_Y: f64 = 24.0;
@@ -50,18 +37,11 @@ pub(super) const TUCKED_VISIBLE_EDGE_HEIGHT: f64 = 10.0;
 pub(super) const POSITION_ANIMATION_DURATION: Duration = Duration::from_millis(320);
 
 pub(super) static POSITION_ANIMATION_GENERATION: AtomicU64 = AtomicU64::new(0);
-/// The slide in progress: its generation and where it ends.
 static RUNNING_SLIDE: Mutex<Option<(u64, (i32, i32))>> = Mutex::new(None);
 
-/// Whether an update that does not animate should leave the running slide alone:
-/// it ends where the update would put the window anyway. Jumping there instead cut
-/// the slide-out short when the panel opened from a tucked island mid-slide.
 pub(super) fn continues_slide(running: Option<(u64, (i32, i32))>, current_generation: u64, target: (i32, i32), animate: bool) -> bool {
     !animate && running == Some((current_generation, target))
 }
-// A shorter stage waits for the island's 500ms height transition (.island in
-// src/windows/island/IslandShell.css) to finish; shrinking at once would cut off the
-// bottom of the island while it is still animating down from a taller page.
 const STAGE_SHRINK_DELAY: Duration = Duration::from_millis(600);
 static STAGE_SHRINK_GENERATION: AtomicU64 = AtomicU64::new(0);
 
@@ -70,7 +50,6 @@ pub(crate) fn apply_stage_geometry(
     state: IslandWindowState,
     animate_position: bool,
 ) -> Result<(), String> {
-    // Keep room for the closing animation at every supported panel scale.
     let stage_height = STAGE_WINDOW_HEIGHT
         .max((state.expanded_height * state.expanded_scale).ceil() + STAGE_WINDOW_PADDING_Y);
 
@@ -86,7 +65,6 @@ pub(crate) fn apply_stage_geometry(
         .custom_position
         .and_then(|position| monitor_for_island_position(window, position).ok().flatten());
     let has_custom_monitor = custom_monitor.is_some();
-    // The monitor the island followed the pointer or the foreground window to (follow.rs).
     let followed_monitor = match state.monitor_follow {
         MonitorFollow::Primary => None,
         _ => state.followed_monitor.and_then(|point| monitor_at(window, point).ok().flatten()),
@@ -162,8 +140,6 @@ pub(crate) fn apply_stage_geometry(
     Ok(())
 }
 
-/// Grows the stage at once, so a taller page has room from the first frame, and
-/// shrinks it only after the height transition; a newer resize cancels a pending one.
 fn resize_stage(window: &WebviewWindow, stage_size: LogicalSize<f64>) -> Result<(), String> {
     let generation = STAGE_SHRINK_GENERATION.fetch_add(1, Ordering::SeqCst) + 1;
     let scale_factor = window.scale_factor().map_err(|error| error.to_string())?;
@@ -224,7 +200,6 @@ pub(super) fn monitor_for_island_position(
     }))
 }
 
-/// The monitor holding the physical point `(x, y)`.
 pub(super) fn monitor_at(window: &WebviewWindow, (x, y): (i32, i32)) -> Result<Option<Monitor>, String> {
     let monitors = window.available_monitors().map_err(|error| error.to_string())?;
     Ok(monitors.into_iter().find(|monitor| {
@@ -233,20 +208,14 @@ pub(super) fn monitor_at(window: &WebviewWindow, (x, y): (i32, i32)) -> Result<O
     }))
 }
 
-/// Whether the rectangle `(left, top, width, height)` holds the point.
 pub(super) fn contains((left, top, width, height): (i32, i32, i32, i32), (x, y): (i32, i32)) -> bool {
     x >= left && x < left + width && y >= top && y < top + height
 }
 
-// A top-docked taskbar shrinks the monitor work area instead of the monitor itself,
-// so the island has to be anchored below it or the taskbar covers the island.
 pub(super) fn work_area_top_inset(monitor_top: i32, work_area_top: i32) -> i32 {
     (work_area_top - monitor_top).max(0)
 }
 
-/// Whether the island keeps to the top edge (`out_at_top`) after an interaction update that
-/// moves it from `was_tucked` / `was_expanded` to `is_tucked` / `mode`. Leaving a tuck starts it;
-/// tucking again, or a panel closing back to the collapsed island, ends it.
 pub(super) fn out_at_top_after(
     out_at_top: bool,
     was_tucked: bool,
@@ -263,8 +232,6 @@ pub(super) fn out_at_top_after(
     }
 }
 
-/// The dragged position the island shows at: while out at the top edge, its x at the top
-/// (`normal_y`), so the pointer that reached the tucked strip lands on it, not in the gap above.
 pub(super) fn shown_custom_position(state: IslandWindowState, normal_y: i32) -> Option<IslandPosition> {
     state.custom_position.map(|position| {
         if state.out_at_top && !state.is_tucked {

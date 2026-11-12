@@ -1,7 +1,3 @@
-//! The guide is a transparent overlay over the island's screen. It takes the pointer only over its
-//! cards (their rectangles come from the page), so the real island below and the desktop stay
-//! usable, and it tells the page where the island is now, so the page can light it up.
-
 use serde::{Deserialize, Serialize};
 use std::{
     sync::{Mutex, PoisonError},
@@ -12,12 +8,9 @@ use tauri::{AppHandle, Emitter, Manager, WebviewWindow};
 
 use crate::{island::passthrough::island_on_screen, win32};
 
-/// Mirrored by ONBOARDING_ISLAND_EVENT in src/windows/onboarding/api.ts. The payload is the
-/// island in the overlay's CSS pixels with whether it is open, or null while it is hidden.
 const ISLAND_EVENT: &str = "onboarding-island";
 const TICK: Duration = Duration::from_millis(30);
 
-/// A rectangle in the overlay's CSS pixels, as `getBoundingClientRect` gives it.
 #[derive(Debug, Clone, Copy, PartialEq, Deserialize, Serialize)]
 pub struct Rect {
     pub x: f64,
@@ -49,14 +42,12 @@ struct IslandRect {
 
 static CARDS: Mutex<Vec<Rect>> = Mutex::new(Vec::new());
 
-/// The overlay's cards, which take the pointer; everywhere else it falls through.
 #[tauri::command]
 pub fn set_onboarding_card_rects(rects: Vec<Rect>) {
     let usable = rects.into_iter().filter(|rect| rect.is_usable()).collect();
     *CARDS.lock().unwrap_or_else(PoisonError::into_inner) = usable;
 }
 
-/// Runs while the overlay exists: follows the island and lets the pointer through outside the cards.
 pub fn start(app: &AppHandle, overlay: WebviewWindow) {
     let island = app.get_webview_window(crate::island::WINDOW_LABEL);
     thread::spawn(move || {
@@ -64,7 +55,6 @@ pub fn start(app: &AppHandle, overlay: WebviewWindow) {
         let mut ignoring = None;
         let mut last: Option<Option<IslandRect>> = None;
         loop {
-            // The overlay was closed: stop.
             let Ok(origin) = overlay.outer_position() else { break };
             let Ok(scale) = overlay.scale_factor() else { break };
             let to_css = |x: f64, y: f64| ((x - f64::from(origin.x)) / scale, (y - f64::from(origin.y)) / scale);

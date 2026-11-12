@@ -1,7 +1,3 @@
-//! Likes on the market cards (issue #16): stars.json next to the index in
-//! TixXin/fuyu-plugins, counted every hour from the 👍 on one discussion per
-//! plugin. Not signed, because it is only shown; a link must point at a discussion
-//! of that repository, and anything odd is dropped rather than failing the page.
 use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
@@ -10,16 +6,12 @@ use super::market::{client, download_unless_missing};
 
 const LIKES_URL: &str = "https://raw.githubusercontent.com/TixXin/fuyu-plugins/main/stars.json";
 const LIKES_VERSION: u32 = 1;
-/// The market's discussions, under its name now and before the rename (D17): stars.json may
-/// carry either, and GitHub redirects the old one.
 const DISCUSSION_PREFIXES: [&str; 2] = ["https://github.com/TixXin/fuyu-plugins/discussions/", "https://github.com/TixXin/focusd-plugins/discussions/"];
 const MAX_LIKES_BYTES: u64 = 256 * 1024;
 
-/// One plugin's likes. Mirrored by `MarketLike` in src/features/plugins/api.ts.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct MarketLike {
     count: u32,
-    /// The discussion to give the like on.
     url: String,
 }
 
@@ -41,7 +33,6 @@ fn is_discussion(url: &str) -> bool {
     })
 }
 
-/// The likes in stars.json; entries with a bad id or link are left out.
 fn parse_likes(text: &str) -> Result<BTreeMap<String, MarketLike>, String> {
     let file: LikesFile = serde_json::from_str(text).map_err(|error| format!("stars.json is not valid: {error}"))?;
     if file.version != LIKES_VERSION {
@@ -56,7 +47,6 @@ fn parse_likes(text: &str) -> Result<BTreeMap<String, MarketLike>, String> {
         .collect())
 }
 
-/// The market's likes per plugin id; empty while the file does not exist yet.
 #[tauri::command]
 pub async fn get_plugin_market_likes() -> Result<BTreeMap<String, MarketLike>, String> {
     let client = client()?;
@@ -84,7 +74,6 @@ mod tests {
             } }"#,
         )
         .unwrap();
-        // The market under its name before the rename (D17) still counts.
         assert_eq!(likes.len(), 2);
         assert_eq!(likes["dev.focusd.old-name"].count, 2);
         assert_eq!(likes["dev.focusd.pomodoro"], MarketLike { count: 3, url: "https://github.com/TixXin/fuyu-plugins/discussions/4".into() });

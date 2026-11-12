@@ -1,9 +1,6 @@
 #[path = "../src/wechat_reminders/source.rs"]
 mod wechat_reminder_source;
 
-// source.rs uses crate::win32::{message_window, process, registry, shell_hook, window}.
-// The probe needs only part of message_window, registry and window, so their other
-// functions are unused here.
 mod win32 {
     #[path = "../../src/win32/message_window.rs"]
     #[allow(dead_code)]

@@ -1,11 +1,3 @@
-//! SSH proxy tunnel (built-in plugin `focusd.ssh-proxy-tunnel`, off by default): for each host of
-//! the SSH list switched on in the plugin page, a resident `ssh -R` lends the server this
-//! computer's proxy (Clash Verge, v2rayN or any port), so `http_proxy=http://127.0.0.1:<port>`
-//! there goes out through it. Separate from the session fetch's connection, which carries the
-//! approval forward (agent_status/remote_fetch.rs). Which hosts and their ports there live in
-//! `ssh-tunnels.json` (config.rs); each tunnel runs on a thread of its own (tunnel.rs), and a
-//! watcher keeps looking where the local proxy is (local_proxy.rs), moving the tunnels with it.
-
 mod config;
 mod local_proxy;
 #[cfg(test)]
@@ -28,12 +20,10 @@ use crate::agent_status::{remote_fetch::run_ssh, remote_hosts};
 use local_proxy::{Choice, LocalProxy};
 use tunnel::{Spec, Status};
 
-/// How often the watcher looks again where the local proxy is.
 const WATCH_EVERY: Duration = Duration::from_secs(15);
 
 static APP_DIR: OnceLock<PathBuf> = OnceLock::new();
 
-/// A running tunnel; dropping it (its stop sender) ends its thread and ssh.
 struct Tunnel {
     spec: Spec,
     status: Arc<Mutex<Status>>,
@@ -42,11 +32,8 @@ struct Tunnel {
 
 #[derive(Default)]
 struct State {
-    /// The local proxy the settings pick; Some while the plugin runs.
     choice: Option<Choice>,
-    /// Where the watcher last found it; the tunnels forward to its port.
     proxy: Option<LocalProxy>,
-    /// Wakes the watcher; dropping it ends the watcher.
     watcher: Option<mpsc::Sender<()>>,
     tunnels: HashMap<String, Tunnel>,
 }
@@ -56,7 +43,6 @@ fn state() -> MutexGuard<'static, State> {
     STATE.get_or_init(Mutex::default).lock().unwrap_or_else(PoisonError::into_inner)
 }
 
-/// Remembers the app data folder; runs before the plugin host starts built-in plugins.
 pub fn init(app: &AppHandle) -> Result<(), String> {
     let dir = crate::home_dir::fuyu_home(app.path()).map_err(|error| format!("Failed to resolve app data directory: {error}"))?;
     let _ = APP_DIR.set(dir);
@@ -67,8 +53,6 @@ fn app_dir() -> Result<PathBuf, String> {
     APP_DIR.get().cloned().ok_or_else(|| "The SSH proxy tunnel is not set up yet".to_string())
 }
 
-/// Starts the watcher, which finds the local proxy and then starts the tunnels of the hosts
-/// switched on; after a settings change, wakes it to look again at once.
 pub(crate) fn start(settings: &Map<String, Value>) -> Result<(), String> {
     let choice = local_proxy::choice(settings)?;
     let mut state = state();
@@ -86,7 +70,6 @@ pub(crate) fn start(settings: &Map<String, Value>) -> Result<(), String> {
     Ok(())
 }
 
-/// Ends the watcher and every tunnel.
 pub(crate) fn stop() {
     let mut state = state();
     state.choice = None;
@@ -95,8 +78,6 @@ pub(crate) fn stop() {
     state.tunnels.clear();
 }
 
-/// Looks where the local proxy is (at once, when woken and every WATCH_EVERY) and moves the
-/// tunnels when its port changed, until the plugin stops.
 fn watch_proxy(woken: &mpsc::Receiver<()>) {
     loop {
         let (choice, current) = {
@@ -104,16 +85,13 @@ fn watch_proxy(woken: &mpsc::Receiver<()>) {
             (state.choice, state.proxy)
         };
         let Some(choice) = choice else { return };
-        // Unlocked: a port nothing listens on takes a moment to refuse.
         let found = local_proxy::find(choice, current);
         {
             let mut state = state();
-            // A settings change meanwhile has woken this loop to look again.
             if state.choice == Some(choice) {
                 let moved = state.proxy.map(|proxy| proxy.port) != Some(found.port);
                 state.proxy = Some(found);
                 if moved {
-                    // Fails only without the app folder or a thread, which set_ssh_tunnel reports.
                     let _ = apply(&mut state);
                 }
             }
@@ -124,8 +102,6 @@ fn watch_proxy(woken: &mpsc::Receiver<()>) {
     }
 }
 
-/// Makes the running tunnels match the saved hosts: ends those switched off or changed, starts
-/// the missing ones.
 fn apply(state: &mut State) -> Result<(), String> {
     let app_dir = app_dir()?;
     let wanted: Vec<Spec> = match state.proxy {
@@ -158,20 +134,16 @@ fn apply(state: &mut State) -> Result<(), String> {
     Ok(())
 }
 
-/// One host of the SSH list and its tunnel. Mirrored by `SshTunnelHost` in src/features/ssh-tunnel/api.ts.
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TunnelHost {
     host: String,
     enabled: bool,
     remote_port: Option<u16>,
-    /// off, connecting, connected, portInUse or error.
     state: &'static str,
     error: Option<String>,
 }
 
-/// The hosts of ~/.ssh/config, then those added in the island (Settings → AI Agent), then saved
-/// ones found in neither, so they can still be switched off.
 fn listing() -> Result<Vec<TunnelHost>, String> {
     let app_dir = app_dir()?;
     let saved = config::read(&app_dir);
@@ -207,13 +179,11 @@ fn listing() -> Result<Vec<TunnelHost>, String> {
         .collect())
 }
 
-/// The SSH list with each host's tunnel switch, port there and how it is doing.
 #[tauri::command]
 pub async fn get_ssh_tunnels() -> Result<Vec<TunnelHost>, String> {
     listing()
 }
 
-/// Saves a host's tunnel switch and port there (no port: forgotten, and off) and applies it.
 #[tauri::command]
 pub async fn set_ssh_tunnel(host: String, enabled: bool, remote_port: Option<u16>) -> Result<Vec<TunnelHost>, String> {
     config::set(&app_dir()?, &host, enabled, remote_port)?;
@@ -221,15 +191,11 @@ pub async fn set_ssh_tunnel(host: String, enabled: bool, remote_port: Option<u16
     listing()
 }
 
-/// The local proxy the tunnels forward to and whether something listens there; None while the
-/// plugin is off or has not looked yet.
 #[tauri::command]
 pub async fn get_ssh_tunnel_proxy() -> Result<Option<LocalProxy>, String> {
     Ok(state().proxy)
 }
 
-/// Whether something already listens on `remote_port` on `host` (another tunnel, say), asked
-/// with one short ssh before a tunnel is set up there.
 #[tauri::command]
 pub async fn check_ssh_tunnel_port(host: String, remote_port: u16) -> Result<bool, String> {
     if !remote_hosts::is_valid_alias(&host) {

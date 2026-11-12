@@ -1,14 +1,7 @@
-//! The island's settings as a file, `settings.json` in its data folder (#50, D30.2), so they can
-//! be opened, backed up and moved with the rest of the data. localStorage stays where the pages
-//! read and write them; the island window copies them here when they change, and every window
-//! reads the file once at start (src/features/settings-backup/settingsFile.ts). The format is
-//! the settings backup's: `{ app, version, exportedAt, keys }`.
-
 use serde_json::Value;
 use tauri::AppHandle;
 
 pub(crate) const FILE_NAME: &str = "settings.json";
-/// Far above what the settings take (a few hundred KB with many presets).
 const MAX_BYTES: usize = 4 * 1024 * 1024;
 
 fn file_path(app: &AppHandle) -> Result<std::path::PathBuf, String> {
@@ -18,7 +11,6 @@ fn file_path(app: &AppHandle) -> Result<std::path::PathBuf, String> {
         .map_err(|error| format!("Failed to resolve app data directory: {error}"))
 }
 
-/// Whether `text` is a settings file this module may write: the backup format, every value text.
 fn is_settings_file(text: &str) -> bool {
     if text.len() > MAX_BYTES {
         return false;
@@ -34,7 +26,6 @@ fn is_settings_file(text: &str) -> bool {
             .is_some_and(|keys| keys.iter().all(|(key, value)| key.starts_with("fuyu-") && value.is_string()))
 }
 
-/// The file's text, or null when there is none yet (or it cannot be read).
 #[tauri::command]
 pub async fn read_settings_file(app: AppHandle) -> Result<Option<String>, String> {
     let path = file_path(&app)?;
@@ -43,7 +34,6 @@ pub async fn read_settings_file(app: AppHandle) -> Result<Option<String>, String
         .map_err(|error| error.to_string())
 }
 
-/// Replaces the file with `text`, which must be in the settings backup format.
 #[tauri::command]
 pub async fn write_settings_file(app: AppHandle, text: String) -> Result<(), String> {
     if !is_settings_file(&text) {
@@ -60,8 +50,6 @@ pub async fn write_settings_file(app: AppHandle, text: String) -> Result<(), Str
     .map_err(|error| error.to_string())?
 }
 
-/// This module's Tauri commands. `lib.rs` chains every module's list into one
-/// `generate_handler!`, so adding a command only touches this file.
 macro_rules! tauri_commands {
     ($next:ident [$($done:tt)*] $($rest:tt)*) => {
         $next!([$($done)*

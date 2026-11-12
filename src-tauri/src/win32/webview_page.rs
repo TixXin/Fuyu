@@ -1,14 +1,3 @@
-//! A WebView2 page that is not a Tauri webview, for plugin pages (P8).
-//!
-//! Tauri injects its IPC script and invoke key into every frame of the
-//! webviews it creates (docs/investigations/p8-webview-validation.md), so plugin
-//! markup never goes into one of them. This page is a separate WebView2
-//! controller on the same environment: nothing of Tauri is added to it, it
-//! runs InPrivate (no storage shared with the island or kept on disk), and
-//! every request, navigation, new window, permission and download goes
-//! through the `PageHost` the caller gives, which refuses anything it does not
-//! serve itself. Everything here runs on the window's (main) thread.
-
 use std::rc::Rc;
 use webview2_com::{
     take_pwstr, AddScriptToExecuteOnDocumentCreatedCompletedHandler, CreateCoreWebView2ControllerCompletedHandler,
@@ -29,77 +18,50 @@ use windows::{
 
 pub(crate) use webview2_com::Microsoft::Web::WebView2::Win32::{ICoreWebView2Controller, ICoreWebView2Environment};
 
-/// An answer to one request of the page.
 pub(crate) struct Resource {
     pub status: u16,
-    /// "Name: value" lines.
     pub headers: Vec<String>,
     pub body: Vec<u8>,
 }
 
-/// What the page may do; called on the main thread.
 pub(crate) trait PageHost {
-    /// Every request the page makes (documents, frames, scripts, images,
-    /// fetch, workers). None refuses it with 403; nothing reaches the network.
     fn resource(&self, url: &str) -> Option<Resource>;
-    /// Whether the top document (`frame` false) or a frame may navigate to `url`.
     fn may_navigate(&self, url: &str, frame: bool) -> bool;
-    /// A message the top document posted with `chrome.webview.postMessage`, as JSON.
     fn message(&self, source: &str, json: String);
 }
 
 pub(crate) struct PageOptions {
     pub start_url: String,
-    /// Runs before any page script, in every frame.
     pub init_script: String,
-    /// Developer tools, the context menu and browser keys (F12, F5) for plugins
-    /// loaded in development mode.
     pub dev_tools: bool,
 }
 
-/// A live page; closed when dropped.
 pub(crate) struct Page {
     controller: ICoreWebView2Controller,
     webview: ICoreWebView2,
-    /// The child window WebView2 made for the page. It starts below the
-    /// island's own webview, which covers the whole window and would hide it,
-    /// so `place` raises it.
     window: Option<HWND>,
 }
 
-/// The direct child windows of `parent`, top of the z-order first.
 fn child_windows(parent: HWND) -> Vec<HWND> {
     let mut windows = Vec::new();
-    // SAFETY: GetWindow only reads the window list; invalid or vanished
-    // handles end the walk with an error instead of misbehaving.
     let mut next = unsafe { GetWindow(parent, GW_CHILD) };
     while let Ok(window) = next {
         if window.is_invalid() || windows.len() >= 64 {
             break;
         }
         windows.push(window);
-        // SAFETY: as above.
         next = unsafe { GetWindow(window, GW_HWNDNEXT) };
     }
     windows
 }
 
-/// The top-level window a Tauri webview sits in, to put a page in the same window.
-///
-/// Not the webview's direct parent: that is wry's container, which fills the
-/// client area and, when it gets the focus, passes it to its topmost child, which
-/// would then be the plugin page instead of the island.
 pub(crate) fn parent_window(controller: &ICoreWebView2Controller) -> Result<HWND, String> {
     let mut hwnd = HWND::default();
-    // SAFETY: `controller` is a live controller and `hwnd` a valid out pointer.
     unsafe { controller.ParentWindow(&mut hwnd) }.map_err(|error| format!("Could not find the island window: {error}"))?;
-    // SAFETY: GetAncestor only reads the window tree; a null result is handled.
     let root = unsafe { GetAncestor(hwnd, GA_ROOT) };
     Ok(if root.is_invalid() { hwnd } else { root })
 }
 
-/// Starts creating a page in `parent`; `done` gets it (hidden, with zero size)
-/// once WebView2 has made it and the start page is loading.
 pub(crate) fn create(
     env: &ICoreWebView2Environment,
     parent: HWND,
@@ -111,7 +73,6 @@ pub(crate) fn create(
         .cast()
         .map_err(|_| "Plugin pages need a newer WebView2 runtime.".to_string())?;
     let page_env = env.clone();
-    // WebView2 has no call that returns the page's window; it is the child that is new afterwards.
     let before = child_windows(parent);
     let handler = CreateCoreWebView2ControllerCompletedHandler::create(Box::new(move |result, controller| {
         let window = child_windows(parent).into_iter().find(|window| !before.contains(window));
@@ -122,8 +83,6 @@ pub(crate) fn create(
         done(page);
         Ok(())
     }));
-    // SAFETY: `env10` is a live environment, `parent` a window of this thread,
-    // and the options and handler are live COM objects kept alive by the calls.
     unsafe {
         let controller_options = env10
             .CreateCoreWebView2ControllerOptions()
@@ -145,8 +104,6 @@ fn set_up(
     host: Rc<dyn PageHost>,
 ) -> Result<Page, String> {
     let fail = |error: windows::core::Error| format!("Could not set up the page: {error}");
-    // SAFETY: every call is on a live controller / webview of this thread, with
-    // owned HSTRINGs and handler objects that WebView2 keeps alive itself.
     let webview = unsafe {
         controller.SetIsVisible(false).map_err(fail)?;
         if let Ok(controller2) = controller.cast::<ICoreWebView2Controller2>() {
@@ -162,45 +119,32 @@ fn set_up(
     let page = Page { controller, webview, window };
     let navigate_webview = page.webview.clone();
     let start_url = HSTRING::from(options.start_url);
-    // Navigate only after the script is registered, so it runs before the page's own.
     let after_script = AddScriptToExecuteOnDocumentCreatedCompletedHandler::create(Box::new(move |_, _| {
-        // SAFETY: the webview is live (the handler holds a reference) and on this thread.
         unsafe { navigate_webview.Navigate(&start_url) }
     }));
-    // SAFETY: as above; the script text is an owned HSTRING.
     unsafe { page.webview.AddScriptToExecuteOnDocumentCreated(&HSTRING::from(options.init_script), &after_script) }.map_err(fail)?;
     Ok(page)
 }
 
-/// Turns off what a plugin page does not need: host objects, dialogs, zoom,
-/// autofill, swipe navigation, and (outside development) tools and menus.
-///
-/// # Safety
-/// `webview` must be a live webview of the calling thread.
 unsafe fn harden(webview: &ICoreWebView2, dev_tools: bool) -> windows::core::Result<()> {
-    // Handled without a new window: window.open gets null.
     let new_window = NewWindowRequestedEventHandler::create(Box::new(|_, args| {
         if let Some(args) = args {
-            // SAFETY: event args are valid during the event.
             unsafe { args.SetHandled(true)? };
         }
         Ok(())
     }));
     let permission = PermissionRequestedEventHandler::create(Box::new(|_, args| {
         if let Some(args) = args {
-            // SAFETY: event args are valid during the event.
             unsafe { args.SetState(COREWEBVIEW2_PERMISSION_STATE_DENY)? };
         }
         Ok(())
     }));
     let download = DownloadStartingEventHandler::create(Box::new(|_, args| {
         if let Some(args) = args {
-            // SAFETY: event args are valid during the event.
             unsafe { args.SetCancel(true)? };
         }
         Ok(())
     }));
-    // SAFETY: the caller guarantees a live webview on this thread.
     unsafe {
         let settings = webview.Settings()?;
         settings.SetIsScriptEnabled(true)?;
@@ -230,16 +174,11 @@ unsafe fn harden(webview: &ICoreWebView2, dev_tools: bool) -> windows::core::Res
     }
 }
 
-/// Sends every request of the page, from any frame or worker, to the host.
-///
-/// # Safety
-/// `webview` must be a live webview of the calling thread.
 unsafe fn guard_requests(webview: &ICoreWebView2, env: &ICoreWebView2Environment, host: Rc<dyn PageHost>) -> windows::core::Result<()> {
     let filter = HSTRING::from("*");
     let env = env.clone();
     let handler = WebResourceRequestedEventHandler::create(Box::new(move |_, args| {
         let Some(args) = args else { return Ok(()) };
-        // SAFETY: event args, the request and the environment are live during the event.
         unsafe {
             let mut uri = PWSTR::null();
             args.Request()?.Uri(&mut uri)?;
@@ -259,10 +198,8 @@ unsafe fn guard_requests(webview: &ICoreWebView2, env: &ICoreWebView2Environment
             args.SetResponse(&response)
         }
     }));
-    // SAFETY: the caller guarantees a live webview on this thread.
     unsafe {
         match webview.cast::<ICoreWebView2_22>() {
-            // Also covers shared and service workers, which the older call misses.
             Ok(webview22) => webview22.AddWebResourceRequestedFilterWithRequestSourceKinds(
                 &filter,
                 COREWEBVIEW2_WEB_RESOURCE_CONTEXT_ALL,
@@ -283,15 +220,10 @@ fn reason(status: u16) -> &'static str {
     }
 }
 
-/// Cancels navigations of the page or its frames that the host does not allow.
-///
-/// # Safety
-/// `webview` must be a live webview of the calling thread.
 unsafe fn guard_navigation(webview: &ICoreWebView2, host: Rc<dyn PageHost>) -> windows::core::Result<()> {
     let handler = |frame: bool, host: Rc<dyn PageHost>| {
         NavigationStartingEventHandler::create(Box::new(move |_, args| {
             let Some(args) = args else { return Ok(()) };
-            // SAFETY: event args are valid during the event.
             unsafe {
                 let mut uri = PWSTR::null();
                 args.Uri(&mut uri)?;
@@ -303,21 +235,15 @@ unsafe fn guard_navigation(webview: &ICoreWebView2, host: Rc<dyn PageHost>) -> w
         }))
     };
     let mut token = 0i64;
-    // SAFETY: the caller guarantees a live webview on this thread.
     unsafe {
         webview.add_NavigationStarting(&handler(false, host.clone()), &mut token)?;
         webview.add_FrameNavigationStarting(&handler(true, host), &mut token)
     }
 }
 
-/// Hands the top document's `chrome.webview.postMessage` calls to the host.
-///
-/// # Safety
-/// `webview` must be a live webview of the calling thread.
 unsafe fn listen_for_messages(webview: &ICoreWebView2, host: Rc<dyn PageHost>) -> windows::core::Result<()> {
     let handler = WebMessageReceivedEventHandler::create(Box::new(move |_, args| {
         let Some(args) = args else { return Ok(()) };
-        // SAFETY: event args are valid during the event.
         unsafe {
             let mut source = PWSTR::null();
             args.Source(&mut source)?;
@@ -328,37 +254,28 @@ unsafe fn listen_for_messages(webview: &ICoreWebView2, host: Rc<dyn PageHost>) -
         Ok(())
     }));
     let mut token = 0i64;
-    // SAFETY: the caller guarantees a live webview on this thread.
     unsafe { webview.add_WebMessageReceived(&handler, &mut token) }
 }
 
 impl Page {
-    /// Places the page at `x`, `y` (physical pixels in the window's client
-    /// area) with the given size, and shows it.
     pub(crate) fn place(&self, x: i32, y: i32, width: i32, height: i32) {
         let bounds = RECT { left: x, top: y, right: x + width.max(0), bottom: y + height.max(0) };
-        // SAFETY: a live controller of this thread.
         unsafe {
             let _ = self.controller.SetBounds(bounds);
             let _ = self.controller.SetIsVisible(width > 0 && height > 0);
         }
         if let Some(window) = self.window {
-            // SAFETY: only changes the z-order of the page's own child window;
-            // a handle that is gone makes the call fail, which is ignored.
             let _ = unsafe { SetWindowPos(window, Some(HWND_TOP), 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE) };
         }
     }
 
-    /// Sends JSON to the page (`chrome.webview` "message" event).
     pub(crate) fn post_json(&self, json: &str) -> Result<(), String> {
-        // SAFETY: a live webview of this thread and an owned HSTRING.
         unsafe { self.webview.PostWebMessageAsJson(&HSTRING::from(json)) }.map_err(|error| format!("Could not reach the page: {error}"))
     }
 }
 
 impl Drop for Page {
     fn drop(&mut self) {
-        // SAFETY: closing a live controller once; it is not used afterwards.
         unsafe {
             let _ = self.controller.Close();
         }

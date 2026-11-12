@@ -1,44 +1,21 @@
-//! `fuyu://plugin/<id>/<path>?<query>` links (activation event `onUri`), and the same
-//! under `focusd://`, the scheme before the rename (D17) that existing pages and OAuth
-//! redirect addresses use,
-//! like VS Code's `vscode://<publisher>.<name>/...`: a web page or another
-//! program hands something to a plugin, e.g. the code of a sign-in.
-//!
-//! The island registers the scheme for the current user at start-up. Windows
-//! starts it with the link as its argument, or, when it already runs, the
-//! single-instance plugin passes the link on (lib.rs). Only plugins that list
-//! `onUri` get links, and the first one asks the user on the island like a
-//! sensitive permission (sensitive.rs) does, because anyone can put a link in
-//! a page: "allow" and "deny" are remembered until revoked on the plugin's
-//! settings page.
-
 use serde_json::json;
 use std::{thread, time::Duration};
 use tauri::AppHandle;
 
 use super::{host, lifecycle, lock, sensitive};
 
-/// Both are registered and both open plugins; neither is preferred.
 pub(super) const SCHEMES: [&str; 2] = ["fuyu", "focusd"];
-/// The key of the remembered answer in `PluginGrant.sensitive`. Mirrored by
-/// `PLUGIN_URI_PERMISSION` in src/features/plugins/api.ts.
 pub(super) const URI_PERMISSION: &str = "uri";
 const MAX_LINK_LENGTH: usize = 2048;
-/// A link that started the island waits this long for the island window to
-/// listen, so that the question can be shown.
 const COLD_START_DELAY: Duration = Duration::from_secs(3);
 
-/// A link meant for one plugin.
 #[derive(Debug, PartialEq, Eq)]
 pub(super) struct PluginLink {
     pub plugin_id: String,
-    /// What follows the plugin id, starting with "/" (or "" when nothing does).
     pub path: String,
-    /// After "?", without "#fragment"; still percent-encoded.
     pub query: String,
 }
 
-/// Reads `fuyu://` or `focusd://plugin/<id>[/path][?query][#fragment]`; `None` for anything else.
 pub(super) fn parse(link: &str) -> Option<PluginLink> {
     if link.len() > MAX_LINK_LENGTH || link.chars().any(|c| c.is_control() || c.is_whitespace()) {
         return None;
@@ -61,7 +38,6 @@ pub(super) fn parse(link: &str) -> Option<PluginLink> {
     valid_id.then(|| PluginLink { plugin_id: plugin_id.to_string(), path, query: query.to_string() })
 }
 
-/// The link among a program's arguments, if any.
 pub(crate) fn find_link(args: &[String]) -> Option<&str> {
     args.iter().map(String::as_str).find(|arg| {
         SCHEMES.iter().any(|scheme| {
@@ -71,17 +47,13 @@ pub(crate) fn find_link(args: &[String]) -> Option<&str> {
     })
 }
 
-/// Points `fuyu://` and `focusd://` at this executable.
 pub(super) fn register_scheme() -> Result<(), String> {
     let exe = std::env::current_exe().map_err(|error| format!("Could not resolve the executable: {error}"))?;
     let command = format!("\"{}\" \"%1\"", exe.display());
     SCHEMES.iter().try_for_each(|scheme| crate::win32::url_protocol::register(scheme, "Fuyu", &command))
 }
 
-/// Hands `link` to its plugin, asking the user first if needed. `cold_start`:
-/// the link started the island, whose window is not listening yet.
 pub(crate) fn open(app: &AppHandle, link: &str, cold_start: bool) {
-    // The website's Install buttons: fuyu://market/install/<id> (market_link.rs).
     if let Some(id) = super::market_link::parse(link) {
         super::market_link::open(app, id, cold_start);
         return;
@@ -91,7 +63,6 @@ pub(crate) fn open(app: &AppHandle, link: &str, cold_start: bool) {
         return;
     };
     let (app, link) = (app.clone(), link.to_string());
-    // Asking blocks for up to sensitive::ANSWER_TIMEOUT.
     let spawned = thread::Builder::new().name("plugin-uri".into()).spawn(move || {
         if cold_start {
             thread::sleep(COLD_START_DELAY);

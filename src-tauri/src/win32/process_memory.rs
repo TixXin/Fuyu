@@ -1,6 +1,3 @@
-//! Reading and writing single bytes in another process, and finding where a module is loaded in
-//! it. Used to switch WeChat's Qt accessibility on (wechat_reminders/gate.rs).
-
 use std::{ffi::c_void, path::PathBuf};
 
 use windows::Win32::{
@@ -20,14 +17,12 @@ use windows::Win32::{
     },
 };
 
-/// An open handle to another process's memory, closed on drop.
 pub(crate) struct ProcessMemory(HANDLE);
 
 impl ProcessMemory {
     pub(crate) fn open(process_id: u32) -> Option<Self> {
         let access =
             PROCESS_VM_READ | PROCESS_VM_WRITE | PROCESS_VM_OPERATION | PROCESS_QUERY_INFORMATION;
-        // SAFETY: OpenProcess takes plain values; a failure returns an error, not a handle.
         unsafe { OpenProcess(access, false, process_id) }
             .ok()
             .map(Self)
@@ -36,8 +31,6 @@ impl ProcessMemory {
     pub(crate) fn read_byte(&self, address: usize) -> Option<u8> {
         let mut byte = 0u8;
         let mut done = 0usize;
-        // SAFETY: the handle is open for VM_READ; the target address is only read by the kernel,
-        // which fails for unmapped memory, and one byte is written into the valid local `byte`.
         unsafe {
             ReadProcessMemory(
                 self.0,
@@ -53,8 +46,6 @@ impl ProcessMemory {
 
     pub(crate) fn write_byte(&self, address: usize, value: u8) -> bool {
         let mut done = 0usize;
-        // SAFETY: the handle is open for VM_WRITE; one byte is read from the valid local `value`
-        // and the kernel fails for an address not writable in the target.
         let written = unsafe {
             WriteProcessMemory(
                 self.0,
@@ -70,16 +61,11 @@ impl ProcessMemory {
 
 impl Drop for ProcessMemory {
     fn drop(&mut self) {
-        // SAFETY: the handle came from OpenProcess and is closed exactly once.
         let _ = unsafe { CloseHandle(self.0) };
     }
 }
 
-/// Where module `name` (e.g. "Weixin.dll") is loaded in process `process_id`: its base address
-/// and its path on disk.
 pub(crate) fn module(process_id: u32, name: &str) -> Option<(usize, PathBuf)> {
-    // SAFETY: CreateToolhelp32Snapshot takes plain values and returns an owned handle, closed by
-    // the guard on every way out.
     let guard = Snapshot(unsafe { CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, process_id) }.ok()?);
     let snapshot = guard.0;
     let mut entry = MODULEENTRY32W {
@@ -91,7 +77,6 @@ pub(crate) fn module(process_id: u32, name: &str) -> Option<(usize, PathBuf)> {
         String::from_utf16_lossy(&chars[..end])
     };
     let mut found = None;
-    // SAFETY: `entry` is a valid MODULEENTRY32W with dwSize set, written by the call.
     let mut more = unsafe { Module32FirstW(snapshot, &mut entry) }.is_ok();
     while more {
         if text(&entry.szModule).eq_ignore_ascii_case(name) {
@@ -101,18 +86,15 @@ pub(crate) fn module(process_id: u32, name: &str) -> Option<(usize, PathBuf)> {
             ));
             break;
         }
-        // SAFETY: as for Module32FirstW.
         more = unsafe { Module32NextW(snapshot, &mut entry) }.is_ok();
     }
     found
 }
 
-/// A ToolHelp snapshot handle, closed on drop.
 struct Snapshot(HANDLE);
 
 impl Drop for Snapshot {
     fn drop(&mut self) {
-        // SAFETY: the handle came from CreateToolhelp32Snapshot and is closed exactly once.
         let _ = unsafe { CloseHandle(self.0) };
     }
 }

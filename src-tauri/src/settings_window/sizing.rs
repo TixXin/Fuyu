@@ -1,19 +1,11 @@
-//! Fitting the settings window to the screen it opens on, so it is never larger
-//! than that screen.
-
-/// A size in logical pixels, like the window config.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub(super) struct Size {
     pub width: f64,
     pub height: f64,
 }
 
-/// Room left on each side of a window, so its frame stays clear of the screen
-/// edges and the taskbar.
 const SCREEN_MARGIN: f64 = 48.0;
 
-/// The wanted size shrunk to fit the screen with a margin, but never below the
-/// window's minimum size.
 pub(super) fn fit(wanted: Size, min: Size, screen: Size) -> Size {
     let axis =
         |wanted: f64, min: f64, usable: f64| wanted.min(usable - SCREEN_MARGIN * 2.0).max(min);

@@ -1,5 +1,3 @@
-//! IMAP connection, IDLE waiting, inbox sync and header parsing.
-
 use crate::user_error::UserError;
 use imap::{
     extensions::idle::{SetReadTimeout, WaitOutcome},
@@ -85,8 +83,6 @@ impl<T: Write> Write for BoundedStream<T> {
 
 impl<T: SetReadTimeout> SetReadTimeout for BoundedStream<T> {
     fn set_read_timeout(&mut self, timeout: Option<Duration>) -> imap::Result<()> {
-        // imap 2.4 clears the timeout before IDLE's DONE response is read.
-        // Keep that response bounded too, including after a dropped connection.
         self.0.set_read_timeout(Some(timeout.unwrap_or(IO_TIMEOUT)))
     }
 }
@@ -133,13 +129,9 @@ pub(super) fn wait_for_mail<T: Read + Write + SetReadTimeout>(
     };
     *registered = Some(cloned);
     drop(registered);
-    // Register before checking the queue: a command arriving at either side of
-    // this check must interrupt IDLE rather than wait for its keepalive deadline.
     let result = if let Some(work) = queued_work(receiver) {
         work
     } else {
-        // No keepalive: on the timeout this returns TimedOut and the caller decides
-        // whether to IDLE again, as imap 2's wait_with_timeout did.
         match session
             .idle()
             .timeout(timeout)
@@ -154,8 +146,6 @@ pub(super) fn wait_for_mail<T: Read + Write + SetReadTimeout>(
     if let Ok(mut registered) = interrupt.lock() {
         *registered = None;
     }
-    // A deliberate socket interruption is a queued user action, not a network
-    // error. Process it before considering any server response.
     match result {
         MailWake::Work(_) | MailWake::Closed => result,
         _ => queued_work(receiver).unwrap_or(result),
@@ -186,7 +176,6 @@ impl SyncConnection {
         email: &str,
         secret: Option<&str>,
     ) -> Result<Inbox, MailFailure> {
-        // Only a failed connection needs another TLS handshake, login and credential lookup.
         if let Some(session) = &mut self.session {
             if let Ok(inbox) = fetch_inbox_cached(session, self.cached.as_ref()) {
                 self.cached = Some(inbox.clone());
@@ -338,12 +327,7 @@ pub(super) fn fetch_inbox_cached<T: Read + Write>(
         .uid_validity
         .filter(|value| *value > 0)
         .ok_or_else(MailFailure::network)?;
-    // STATUS returns the total without enumerating every unread UID in a large inbox.
     session.take_all_unsolicited().for_each(drop);
-    // STATUS's own Mailbox.unseen is the unread total (EXAMINE's means something else).
-    // imap 3 matches the mailbox name exactly: a server answering for "inbox" gets
-    // MissingStatusResponse, and its answer waits among the unsolicited responses,
-    // which drain_mail_updates reads.
     let mut unread_count = match session.status("INBOX", "(UNSEEN)") {
         Ok(status) => status.unseen.map(|count| count as usize),
         Err(imap::Error::MissingStatusResponse) => None,
@@ -430,8 +414,6 @@ pub(super) fn fetch_inbox_cached<T: Read + Write>(
     if items.len() != expected {
         return Err(MailFailure::network());
     }
-    // UIDNEXT can advance while this snapshot is being fetched. Acknowledge
-    // only headers actually received, or the next arrival's preview can be lost.
     let high_water = items.iter().map(|item| item.uid).max().unwrap_or(0);
     drain_mail_updates(
         session,
@@ -462,9 +444,6 @@ pub(super) fn parse_header(raw: &[u8]) -> (String, String) {
     )
 }
 
-/// Marks one message read on the server (`\Seen`). Opens the inbox writable with
-/// SELECT, unlike reading, and checks UIDVALIDITY so an id from an older listing
-/// can never flag a different message.
 pub(super) fn mark_seen<T: Read + Write>(session: &mut Session<T>, message_id: &str) -> Result<(), UserError> {
     let (validity, uid) = super::content::parse_message_id(message_id)?;
     let mailbox = session.select("INBOX").map_err(|_| UserError::new("mail.inbox", "Could not open the inbox; try again later."))?;

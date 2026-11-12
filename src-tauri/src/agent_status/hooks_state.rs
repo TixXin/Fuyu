@@ -1,7 +1,3 @@
-//! Whether the installed hooks match what this version would install, so the settings page can
-//! ask for Install/Repair after an update instead of silently missing features. The check builds
-//! the hooks Install/Repair would write and compares, so it follows any future hook change.
-
 use std::path::Path;
 
 use serde::Serialize;
@@ -14,9 +10,7 @@ use super::{is_island_hook_text, normalize_windows_line_endings};
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(super) enum HookInstallState {
-    /// No island hook in this agent's config.
     NotInstalled,
-    /// Island hooks from an older version (or from before the rename): Install/Repair would change them.
     Outdated,
     Current,
 }
@@ -26,12 +20,9 @@ pub(super) enum HookInstallState {
 pub struct AgentHooksState {
     pub(super) codex: HookInstallState,
     pub(super) claude_code: HookInstallState,
-    /// The hook scripts in the app data folder differ from the ones in this build.
     pub(super) scripts_outdated: bool,
 }
 
-/// Claude Code `settings.json`: current when every hook Install/Repair writes is there as is,
-/// including the approval hook with the endpoint's present address (`approval`).
 pub(super) fn claude_code_hooks_state(
     settings_json: Option<&str>,
     running_script_path: &Path,
@@ -61,9 +52,6 @@ pub(super) fn claude_code_hooks_state(
     }
 }
 
-/// Codex `config.toml`: current when it holds the managed block Install/Repair writes. That block
-/// runs SessionStart in the background when Codex can (`runs_async`, codex_version.rs); while the
-/// version is unknown either form counts, so a missing rollout does not ask for a repair.
 pub(super) fn codex_hooks_state(
     config_toml: Option<&str>,
     running_script_path: &Path,
@@ -91,8 +79,6 @@ pub(super) fn codex_hooks_state(
     }
 }
 
-/// Whether an installed script needs rewriting. A missing script only matters while some agent
-/// config still points at it (`hooks_installed`).
 pub(super) fn script_outdated(
     installed: Option<&str>,
     bundled: &str,

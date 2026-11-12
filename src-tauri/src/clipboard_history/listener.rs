@@ -1,6 +1,3 @@
-//! The clipboard listener: a message-only window for WM_CLIPBOARDUPDATE and the shortcut's
-//! WM_HOTKEY, falling back to polling, and the worker that captures each change.
-
 use std::{
     sync::{
         mpsc::{self, SyncSender},
@@ -29,8 +26,6 @@ const POLL_INTERVAL: Duration = Duration::from_secs(2);
 static CLIPBOARD_NOTIFY_TX: OnceLock<Mutex<Option<SyncSender<()>>>> = OnceLock::new();
 
 pub(super) fn start_workers() {
-    // Clipboard reads can block while another process owns the clipboard. Keep at most one
-    // pending read so a busy clipboard cannot build an unbounded backlog of work.
     let (tx, rx) = mpsc::sync_channel::<()>(1);
     let _ = CLIPBOARD_NOTIFY_TX.set(Mutex::new(Some(tx)));
 

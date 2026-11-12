@@ -1,8 +1,3 @@
-//! What the selection snaps to (C41.2): every window on screen, then the controls inside the top
-//! few. The windows are listed right after the capture, so they match the frozen picture; the
-//! controls come from UI Automation on a background thread and reach the overlays as they arrive
-//! (`TARGETS_EVENT`), since a big app can take a few hundred milliseconds to answer.
-
 use std::{thread, time::Instant};
 
 use serde::Serialize;
@@ -12,27 +7,18 @@ use windows::Win32::Foundation::{HWND, RECT};
 use super::session;
 use crate::win32::capture_targets;
 
-/// Mirrored by `SCREENSHOT_TARGETS_EVENT` in src/features/screenshot/api.ts; the payload is the
-/// screenshot's id.
 const TARGETS_EVENT: &str = "screenshot-targets";
-/// Windows, top first, whose controls are read; the ones below are mostly covered.
 const WINDOWS_WITH_CONTROLS: usize = 8;
-/// Controls kept per window; past this the app is too big to be worth more.
 const CONTROLS_PER_WINDOW: usize = 4000;
-/// After this long no further window's controls are read.
 const BUDGET_MS: u128 = 2500;
 
-/// A rectangle the selection can snap to, on the virtual screen.
 #[derive(Clone, Copy, Debug)]
 pub(crate) struct Target {
-    /// The window's place in the z-order, 0 on top; a control has its window's.
     window: u32,
     element: bool,
     rect: RECT,
 }
 
-/// A target as one overlay sees it, in its monitor picture's pixels (mirrored by `Target` in
-/// src/features/screenshot/targets.ts).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct LocalTarget {
@@ -44,7 +30,6 @@ pub(crate) struct LocalTarget {
     height: u32,
 }
 
-/// The windows on screen as targets, and their handles (as values) for reading controls.
 pub(super) fn windows_on_screen() -> (Vec<Target>, Vec<(u32, isize, RECT)>) {
     let shown = capture_targets::shown_windows();
     let targets = shown
@@ -65,7 +50,6 @@ fn intersect(a: RECT, b: RECT) -> Option<RECT> {
     (rect.right > rect.left && rect.bottom > rect.top).then_some(rect)
 }
 
-/// `targets` on the monitor at `origin` of `size`, clipped to it and moved into its pixels.
 pub(crate) fn localize(targets: &[Target], origin: (i32, i32), size: (u32, u32)) -> Vec<LocalTarget> {
     let monitor = RECT { left: origin.0, top: origin.1, right: origin.0 + size.0 as i32, bottom: origin.1 + size.1 as i32 };
     targets
@@ -84,8 +68,6 @@ pub(crate) fn localize(targets: &[Target], origin: (i32, i32), size: (u32, u32))
         .collect()
 }
 
-/// Reads the controls of the top windows for screenshot `id` and hands each window's to the
-/// session as it is read; stops once the screenshot is closed or the budget is spent.
 pub(super) fn read_controls(app: &AppHandle, id: u64, windows: Vec<(u32, isize, RECT)>) {
     let app = app.clone();
     thread::spawn(move || {
@@ -96,7 +78,6 @@ pub(super) fn read_controls(app: &AppHandle, id: u64, windows: Vec<(u32, isize, 
             }
             let controls: Vec<Target> = capture_targets::control_rects(HWND(handle as *mut core::ffi::c_void), CONTROLS_PER_WINDOW)
                 .into_iter()
-                // Controls scrolled out of their window are not on screen.
                 .filter_map(|rect| intersect(rect, window_rect))
                 .map(|rect| Target { window: index, element: true, rect })
                 .collect();

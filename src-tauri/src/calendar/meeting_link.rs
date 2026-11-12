@@ -1,8 +1,3 @@
-//! The link to join an event's online meeting, found in its URL, location or description, in
-//! that order, as MeetingBar does (MeetingLinkDetector.swift). Only links of known meeting
-//! services are taken, so the island never opens an arbitrary link from someone's invitation.
-
-/// Hosts (and the path a join link starts with) of meeting services.
 const SERVICES: &[(&str, &str)] = &[
     ("meeting.tencent.com", "/dm/"),
     ("meeting.tencent.com", "/p/"),
@@ -18,7 +13,6 @@ const SERVICES: &[(&str, &str)] = &[
     ("webex.com", "/"),
 ];
 
-/// The meeting service a link belongs to, if it is a join link of a known one.
 fn is_meeting_link(link: &str) -> bool {
     let Some(rest) = link.strip_prefix("https://") else {
         return false;
@@ -30,7 +24,6 @@ fn is_meeting_link(link: &str) -> bool {
     })
 }
 
-/// The https links in a text, cut at whitespace, quotes and angle brackets.
 fn links(text: &str) -> impl Iterator<Item = &str> {
     text.match_indices("https://").map(move |(start, _)| {
         let rest = &text[start..];
@@ -39,7 +32,6 @@ fn links(text: &str) -> impl Iterator<Item = &str> {
     })
 }
 
-/// The first meeting link in the fields, given in priority order; the longest one within a field.
 pub(super) fn meeting_link(fields: &[Option<&str>]) -> Option<String> {
     fields.iter().flatten().find_map(|field| links(field).filter(|link| is_meeting_link(link)).max_by_key(|link| link.len()).map(str::to_string))
 }
@@ -58,7 +50,6 @@ mod tests {
         );
         assert_eq!(meeting_link(&[None, Some("<https://us02web.zoom.us/j/8812345?pwd=abc>")]).as_deref(), Some("https://us02web.zoom.us/j/8812345?pwd=abc"));
         assert_eq!(meeting_link(&[Some("https://meet.google.com/abc-defg-hij.")]).as_deref(), Some("https://meet.google.com/abc-defg-hij"));
-        // Not a join link, or not a meeting service, or not https.
         assert_eq!(meeting_link(&[Some("https://zoom.us/pricing"), Some("https://example.com/j/1"), Some("http://zoom.us/j/1")]), None);
         assert_eq!(meeting_link(&[Some("https://meet.google.com/")]), None);
     }

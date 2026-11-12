@@ -1,9 +1,3 @@
-//! Feishu's part of the setup, done by cc-connect itself: `cc-connect feishu new` shows a QR code
-//! that, scanned in the Feishu app, makes the bot app, writes its credentials into the project
-//! the island added, and puts whoever scanned into `allow_from`. It runs hidden; the plugin page
-//! shows the QR code (cc-connect saves it as a PNG) and asks here how it goes. Failed or
-//! cancelled, the project the island added is taken out of the config again.
-
 use crate::user_error::UserError;
 use std::{
     fs,
@@ -25,14 +19,11 @@ use crate::{
     win32::job::{self, Job},
 };
 
-/// How it is going, for the plugin page. Mirrored by `CcConnectFeishuSetup` in src/features/cc-connect/api.ts.
 #[derive(Serialize, Default, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct FeishuProgress {
     running: bool,
-    /// The QR code as a `data:image/png` URL, while waiting for the scan.
     qr: Option<String>,
-    /// What the QR code opens, for a phone that cannot scan the screen.
     url: Option<String>,
     done: bool,
     allow_from: Option<String>,
@@ -45,7 +36,6 @@ struct Setup {
     output: Arc<Mutex<Vec<String>>>,
     qr: PathBuf,
     config: PathBuf,
-    /// The config before the project was added, to put back.
     original: Option<String>,
     ended: Option<Result<(), UserError>>,
 }
@@ -55,7 +45,6 @@ fn setup() -> MutexGuard<'static, Option<Setup>> {
     SETUP.get_or_init(Mutex::default).lock().unwrap_or_else(PoisonError::into_inner)
 }
 
-/// Adds `project` (with an empty Feishu platform) and starts the QR setup in it.
 pub(super) fn start(exe: &Path, config: &Path, project: &config_file::NewProject, app_dir: &Path, today: &str, stamp: &str) -> Result<(), UserError> {
     let mut current = setup();
     if current.as_ref().is_some_and(|setup| setup.ended.is_none()) {
@@ -87,7 +76,6 @@ pub(super) fn start(exe: &Path, config: &Path, project: &config_file::NewProject
         });
     }
     *current = Some(Setup { child, _job: job, output, qr, config: config.to_path_buf(), original, ended: None });
-    // Settles the end even with the plugin page closed meanwhile.
     thread::spawn(|| loop {
         thread::sleep(Duration::from_secs(1));
         match setup().as_mut() {
@@ -124,18 +112,14 @@ fn spawn(exe: &Path, config: &Path, project: &str, qr: &Path) -> Result<(Child, 
     }
 }
 
-/// A line of cc-connect's output, unless it is part of the QR code drawn in blocks or empty.
 fn worth_keeping(line: &str) -> Option<String> {
     let line = line.trim();
     let drawn = line.chars().any(|ch| matches!(ch, '█' | '▀' | '▄'));
     (!line.is_empty() && !drawn).then(|| line.to_string())
 }
 
-/// Once cc-connect ended: puts the config back unless it succeeded, and restarts the island's
-/// cc-connect if it did, so the new bot comes up.
 fn settle(setup: &mut Setup) {
     let Ok(Some(exit)) = setup.child.try_wait() else { return };
-    // The readers take in cc-connect's last words just after it ends.
     thread::sleep(Duration::from_millis(150));
     let output = setup.output.lock().unwrap_or_else(PoisonError::into_inner).clone();
     let succeeded = exit.success() && output.iter().any(|line| line.starts_with('✅'));
@@ -148,7 +132,6 @@ fn settle(setup: &mut Setup) {
     let _ = fs::remove_file(&setup.qr);
 }
 
-/// Where the setup is.
 pub(super) fn progress() -> FeishuProgress {
     let mut current = setup();
     let Some(setup) = current.as_mut() else { return FeishuProgress::default() };
@@ -168,14 +151,11 @@ pub(super) fn progress() -> FeishuProgress {
     }
 }
 
-/// Why it did not finish: cc-connect's last error line, else its last line.
 fn failure(output: &[String]) -> UserError {
     let line = output.iter().rev().find(|line| line.starts_with("Error")).or(output.last());
     UserError::new("ccConnect.feishuUnfinished", "The Feishu QR setup did not finish.").detail(line.map_or("", String::as_str))
 }
 
-/// Stops a setup still waiting for the scan and takes its project out again. One that made the app
-/// in the second before nothing settled it yet keeps it: Feishu has the app, the config its keys.
 pub(super) fn cancel() {
     let Some(mut setup) = setup().take() else { return };
     if setup.ended.is_none() {
@@ -206,13 +186,11 @@ mod tests {
             *setup() = Some(Setup { child, _job: Job::new().unwrap(), output, qr, config: config.clone(), original: Some("before".into()), ended: None });
         };
 
-        // cc-connect made the app and ended, and nothing has settled that yet.
         begin("cmd", &["/c", "exit 0"], &["✅ Feishu app created"]);
         setup().as_mut().unwrap().child.wait().unwrap();
         cancel();
         assert_eq!(fs::read_to_string(&config).unwrap(), "with the app");
 
-        // Still waiting for the scan.
         begin("ping", &["-n", "30", "127.0.0.1"], &["URL: https://open.feishu.cn/x"]);
         cancel();
         assert_eq!(fs::read_to_string(&config).unwrap(), "before");

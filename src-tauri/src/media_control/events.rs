@@ -1,8 +1,3 @@
-//! Tells the island the moment a player changes track or plays / pauses, from the media
-//! sessions' own events. Players that report no position (NetEase Cloud Music) are timed by the
-//! island (src/features/media/trackClock.ts); with only the 1.5 s state poll, each track start,
-//! pause and resume was found up to 1.5 s late and the lyrics drifted by that much.
-
 use serde::Serialize;
 use std::{
     collections::HashMap,
@@ -23,25 +18,16 @@ use super::audio::{read_system_audio_peak, AUDIO_ACTIVE_THRESHOLD};
 use super::session::{current_unix_millis, media_error, request_manager, session_id};
 use crate::win32;
 
-// Mirrored by MEDIA_SESSION_CHANGED_EVENT in src/features/media/api.ts. The payload is a
-// SessionChange.
 pub(crate) const MEDIA_SESSION_CHANGED_EVENT: &str = "media-session-changed";
 
-// A new track starts after the old one goes quiet: NetEase Cloud Music announced the next track
-// about 0.4 s before its sound (measured). Not quiet this soon after the change means the tracks
-// run into each other, and the change is the start.
 const QUIET_GRACE: Duration = Duration::from_millis(300);
-// Silent this long after the change (paused, or still buffering), the change is the start.
 const SOUND_WAIT: Duration = Duration::from_millis(2000);
 const SOUND_STEP: Duration = Duration::from_millis(15);
 
-/// Mirrored by MediaSessionChange in src/features/media/api.ts.
 #[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 struct SessionChange {
-    /// "track": another song started (`at` is when its sound began); "playback": it played or paused.
     kind: &'static str,
-    /// Unix milliseconds.
     at: i64,
     session_id: Option<String>,
 }
@@ -81,7 +67,6 @@ fn watch(app: &AppHandle) -> Result<(), String> {
         }))
         .map_err(|error| media_error("Failed to watch the media sessions", error))?;
 
-    // The song each session last announced, so a change of cover or album alone is no new track.
     let mut songs: HashMap<Option<String>, String> = HashMap::new();
     let mut watched = Vec::new();
     let mut resubscribe = true;
@@ -153,12 +138,10 @@ fn song(session: &MediaSession) -> String {
     format!("{title}\u{1f}{artist}")
 }
 
-/// When the new track's sound began: the first sound after the old one went quiet.
 fn sound_onset(changed_at: i64) -> i64 {
     let started = Instant::now();
     let mut quiet = false;
     while started.elapsed() < SOUND_WAIT {
-        // Unreadable counts as sound, so the change stands as the start.
         let loud = read_system_audio_peak().map_or(true, |peak| peak > AUDIO_ACTIVE_THRESHOLD);
         if !loud {
             quiet = true;

@@ -1,5 +1,3 @@
-//! The shelf list on disk (`file-shelf.json`) and the rules that keep it tidy.
-
 use serde::{Deserialize, Serialize};
 use std::{collections::HashSet, fs, path::Path};
 
@@ -7,24 +5,17 @@ use super::{availability::Presence, FileShelfItem};
 
 pub(super) const FILE_SHELF_FILE_NAME: &str = "file-shelf.json";
 
-/// Default cap; the oldest entries drop off once the shelf holds more.
 pub(super) const MAX_ITEMS: usize = 100;
-/// Range of the item cap setting; matches MIN / MAX_SHELF_ITEMS in
-/// src/features/appearance/settings.ts.
 pub(super) const MIN_MAX_ITEMS: usize = 20;
 pub(super) const MAX_MAX_ITEMS: usize = 200;
 
 const DAY_MILLIS: i64 = 24 * 60 * 60 * 1_000;
 
-/// Cleanup rules from the shelf's settings page. Mirrored by `FileShelfOptions` in
-/// src/features/file-shelf/api.ts. Not stored here: the island sends them on start.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FileShelfOptions {
     pub(super) max_items: usize,
-    /// Entries added more than this many days ago are dropped; 0 keeps them.
     pub(super) max_age_days: u32,
-    /// Entries whose file no longer exists are dropped instead of shown as missing.
     pub(super) remove_missing: bool,
 }
 
@@ -56,15 +47,12 @@ struct StoredFileShelfRef<'a> {
     items: &'a [FileShelfItem],
 }
 
-/// The saved list, or an empty one when the file is missing or unreadable.
 pub(super) fn load_items(path: &Path) -> Vec<FileShelfItem> {
     fs::read_to_string(path)
         .map(|content| parse_items(&content))
         .unwrap_or_default()
 }
 
-/// Entries that fail to parse are skipped one by one, so a single bad entry does
-/// not empty the whole shelf. The user's cap is applied later, by `prune`.
 pub(super) fn parse_items(content: &str) -> Vec<FileShelfItem> {
     let Ok(stored) = serde_json::from_str::<StoredFileShelf>(content) else {
         return Vec::new();
@@ -78,8 +66,6 @@ pub(super) fn parse_items(content: &str) -> Vec<FileShelfItem> {
     normalize(items, MAX_MAX_ITEMS)
 }
 
-/// `added` goes on top in the given order (below pinned entries). A path already on
-/// the shelf moves up instead of appearing twice, and stays pinned if it was.
 pub(super) fn insert_items(
     existing: Vec<FileShelfItem>,
     added: Vec<FileShelfItem>,
@@ -97,9 +83,6 @@ pub(super) fn insert_items(
     normalize(added.chain(existing).collect(), max_items)
 }
 
-/// Applies the cleanup options: drops entries past the age limit, entries whose
-/// file is known to be gone (when asked to; `presence` checks a path), and the
-/// oldest ones over the cap. Pinned entries never age out or count toward the cap.
 pub(super) fn prune(
     items: Vec<FileShelfItem>,
     options: FileShelfOptions,
@@ -110,14 +93,11 @@ pub(super) fn prune(
     let kept = items
         .into_iter()
         .filter(|item| item.pinned || max_age == 0 || now - item.added_at <= max_age)
-        // An unreachable share or unplugged drive is not proof the file is gone.
         .filter(|item| !options.remove_missing || presence(&item.path) != Presence::Missing)
         .collect();
     normalize(kept, options.max_items)
 }
 
-/// Pinned entries first, then the rest, each in their own order; keeps the first
-/// entry for each path and at most `max_items` unpinned entries.
 fn normalize(items: Vec<FileShelfItem>, max_items: usize) -> Vec<FileShelfItem> {
     let mut seen = HashSet::new();
     let (pinned, rest): (Vec<_>, Vec<_>) = items
@@ -127,7 +107,6 @@ fn normalize(items: Vec<FileShelfItem>, max_items: usize) -> Vec<FileShelfItem> 
     pinned.into_iter().chain(rest.into_iter().take(max_items)).collect()
 }
 
-/// Windows paths are case-insensitive and accept either slash.
 pub(super) fn path_key(path: &str) -> String {
     path.replace('/', "\\").to_lowercase()
 }
@@ -140,7 +119,6 @@ pub(super) fn save_items(path: &Path, items: &[FileShelfItem]) -> Result<(), Str
             .map_err(|error| format!("Failed to create {}: {error}", parent.display()))?;
     }
 
-    // Write beside the target and rename, so a crash never leaves half a file.
     let temporary_path = path.with_extension("tmp");
     fs::write(&temporary_path, content)
         .map_err(|error| format!("Failed to write {}: {error}", temporary_path.display()))?;

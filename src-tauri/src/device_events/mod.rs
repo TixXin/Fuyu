@@ -1,8 +1,3 @@
-//! Device alerts: headphones and Bluetooth audio connecting or disconnecting (with the Bluetooth
-//! battery level when Windows has one), a Bluetooth device running low, and a laptop's charger
-//! being plugged in or pulled out. A background thread polls while the island asks for it
-//! (`set_device_alerts_enabled`); what it finds at the start is a starting point, not news.
-
 mod tracker;
 
 use std::{
@@ -20,16 +15,13 @@ use tracker::{DeviceAlert, Output, OutputTracker, PowerTracker};
 
 pub(crate) const DEVICE_ALERT_EVENT: &str = "device-alert";
 
-/// Outputs are listed this often, so plugging in headphones shows within a second.
 const OUTPUT_POLL: Duration = Duration::from_secs(1);
-/// Battery levels change slowly; they are read this often unless a new device waits for one.
 const BATTERY_POLL: Duration = Duration::from_secs(60);
 const POWER_POLL: Duration = Duration::from_secs(2);
 const IDLE_POLL: Duration = Duration::from_millis(500);
 
 static ENABLED: AtomicBool = AtomicBool::new(false);
 
-/// The outputs worth announcing, each tied to its physical device when Windows knows it.
 fn read_outputs() -> Vec<Output> {
     let Ok(outputs) = audio_outputs::active_outputs() else {
         return Vec::new();
@@ -89,7 +81,6 @@ fn watch(app: &AppHandle) {
     }
 }
 
-/// Starts the watching thread; it stays idle until the island turns the alerts on.
 pub(crate) fn init(app: &AppHandle) {
     let app = app.clone();
     let started = thread::Builder::new().name("device-events".into()).spawn(move || watch(&app));
@@ -98,13 +89,11 @@ pub(crate) fn init(app: &AppHandle) {
     }
 }
 
-/// Turns the watching on or off; the island turns it off while the setting is off.
 #[tauri::command]
 pub fn set_device_alerts_enabled(enabled: bool) {
     ENABLED.store(enabled, Ordering::Relaxed);
 }
 
-/// This module's Tauri commands, chained into `lib.rs`'s `generate_handler!`.
 macro_rules! tauri_commands {
     ($next:ident [$($done:tt)*] $($rest:tt)*) => {
         $next!([$($done)*

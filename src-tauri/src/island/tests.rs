@@ -38,8 +38,6 @@ fn custom_position_survives_tuck_and_reveal() {
 
 #[test]
 fn a_dragged_island_slides_out_of_its_tuck_at_the_top_edge() {
-    // Issue #37: dragged below the top, it came out at the dragged height, so the pointer on the
-    // tucked strip sat in the gap above it and it bounced in and out.
     let mut custom = state(IslandMode::Collapsed, 1.0, DEFAULT_EXPANDED_ISLAND_HEIGHT);
     custom.custom_position = Some(IslandPosition { x: 420, y: 180 });
     custom.out_at_top = true;
@@ -51,14 +49,11 @@ fn a_dragged_island_slides_out_of_its_tuck_at_the_top_edge() {
     assert_eq!(shown_custom_position(custom, 12), Some(IslandPosition { x: 420, y: 180 }));
 
     let (collapsed, expanded) = (IslandMode::Collapsed, IslandMode::Expanded);
-    // Leaving a tuck starts it, for the collapsed island and a panel opened from it.
     assert!(out_at_top_after(false, true, false, false, collapsed));
     assert!(out_at_top_after(true, false, false, false, expanded));
     assert!(out_at_top_after(true, false, true, false, expanded));
-    // A panel closing back to the collapsed island, or tucking again, ends it.
     assert!(!out_at_top_after(true, false, true, false, collapsed));
     assert!(!out_at_top_after(true, false, false, true, collapsed));
-    // Without a tuck it never starts.
     assert!(!out_at_top_after(false, false, true, false, collapsed));
 }
 
@@ -238,16 +233,12 @@ fn corner_radius_setting_scales_every_hit_test_radius() {
 
 #[test]
 fn squircle_corners_take_the_area_css_draws_beyond_a_circle() {
-    // A 100 x 60 island at the top edge with 30px bottom corners. The point sits on the
-    // bottom-left corner's diagonal, 1.1 r from the corner's centre: past the circle (r),
-    // inside the squircle, which meets the diagonal at 2^(-1/4) r per axis, about 1.19 r.
     let r = 30.0;
     let along_axis = 1.1 * r * std::f64::consts::FRAC_1_SQRT_2;
     let (x, y) = (r - along_axis, 60.0 - r + along_axis);
     let contains = |shape| point_in_notch(x, y, 0.0, 0.0, 100.0, 60.0, r, 0.0, shape);
     assert!(!contains(CornerShape::Round));
     assert!(contains(CornerShape::Squircle));
-    // The very corner stays outside both.
     for shape in [CornerShape::Round, CornerShape::Squircle] {
         assert!(!point_in_notch(0.5, 59.5, 0.0, 0.0, 100.0, 60.0, r, 0.0, shape));
         assert!(point_in_notch(50.0, 59.5, 0.0, 0.0, 100.0, 60.0, r, 0.0, shape));
@@ -260,10 +251,7 @@ fn squircle_corners_take_the_area_css_draws_beyond_a_circle() {
 #[test]
 fn an_update_heading_where_the_slide_ends_lets_it_finish() {
     let running = Some((7, (900, 12)));
-    // Opening the panel mid-slide: same place, no animation of its own.
     assert!(continues_slide(running, 7, (900, 12), false));
-    // Anything else takes over: another place, an animated tuck, or a slide another
-    // update (a drag, a reset) already stopped.
     assert!(!continues_slide(running, 7, (900, -24), false));
     assert!(!continues_slide(running, 7, (900, 12), true));
     assert!(!continues_slide(running, 8, (900, 12), false));
@@ -280,7 +268,6 @@ fn the_island_follows_only_when_asked_and_only_while_collapsed() {
     assert_eq!(MonitorFollow::from_value("all"), None);
     assert_eq!(IslandWindowState::default().monitor_follow, MonitorFollow::Primary);
 
-    // A second monitor left of the primary one, with negative coordinates.
     let left = (-1920, 0, 1920, 1080);
     assert!(contains(left, (-1, 0)) && contains(left, (-1920, 1079)));
     assert!(!contains(left, (0, 0)) && !contains(left, (-100, 1080)));
@@ -307,7 +294,6 @@ fn banner_rect_takes_its_own_area_only() {
 
     set_island_banner_rect(Some(rect));
     assert_eq!(banner_rect(), Some(rect));
-    // An empty or broken rectangle from the page clears it rather than taking clicks nowhere.
     set_island_banner_rect(Some(BannerRect { width: 0.0, ..rect }));
     assert_eq!(banner_rect(), None);
     set_island_banner_rect(Some(BannerRect { x: f64::NAN, ..rect }));
@@ -322,7 +308,6 @@ fn popup_width_narrows_the_expanded_hit_area() {
     let (full, _) = IslandMode::Expanded.base_size(COLLAPSED_ISLAND_WIDTH, EXPANDED_ISLAND_WIDTH, 120.0);
     let (popup, height) = IslandMode::Expanded.base_size(COLLAPSED_ISLAND_WIDTH, 400.0, 120.0);
     assert_eq!((full, popup, height), (EXPANDED_ISLAND_WIDTH, 400.0, 120.0));
-    // Centred in the stage: just past the popup's edge is outside it but inside the full panel.
     let left = (STAGE_WINDOW_WIDTH - popup) / 2.0;
     let contains = |x: f64, width: f64| {
         point_in_notch(x, 40.0, (STAGE_WINDOW_WIDTH - width) / 2.0, 0.0, width, height, EXPANDED_RADIUS, 0.0, CornerShape::Round)
@@ -336,7 +321,6 @@ fn popup_width_narrows_the_expanded_hit_area() {
 fn a_wide_plugin_page_fits_the_island_window_at_any_scale() {
     assert_eq!(max_expanded_width(1.0), 816.0);
     assert_eq!(max_expanded_width(0.91), 896.0);
-    // At the largest scale the usual width still holds; wider pages are capped to fit.
     assert_eq!(max_expanded_width(1.4), 582.0);
     assert!(max_expanded_width(1.4) * 1.4 <= STAGE_WINDOW_WIDTH);
 }

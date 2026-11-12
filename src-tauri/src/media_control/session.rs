@@ -1,5 +1,3 @@
-//! Media session lookup, playback commands, metadata and album art.
-
 use base64::Engine;
 use std::{
     sync::{Mutex, OnceLock},
@@ -26,15 +24,10 @@ use super::service::*;
 use crate::win32;
 
 pub(super) const MAX_THUMBNAIL_BYTES: u64 = 4_000_000;
-/// 100ns ticks between the Windows epoch (1601-01-01) and the Unix epoch.
 pub(super) const WINDOWS_EPOCH_OFFSET_TICKS: i64 = 116_444_736_000_000_000;
 
-/// Cache key (source app, title and artist) and the data URL decoded for it.
 pub(super) type CachedThumbnail = (String, Option<String>);
 
-/// Caches the last decoded album-art data URL so the 1.5s state poll does not
-/// re-read and re-encode the same artwork on every tick. Keyed by the current
-/// source app, title and artist, which is stable while a track is playing.
 pub(super) static THUMBNAIL_CACHE: OnceLock<Mutex<Option<CachedThumbnail>>> = OnceLock::new();
 
 pub(super) fn on_media_thread<T, F>(operation: F) -> Result<T, String>
@@ -430,9 +423,6 @@ pub(super) fn read_timeline(
     let duration = (end - start).max(0);
     let mut elapsed = (position - start).clamp(0, duration);
 
-    // `Position` is the position sampled at `LastUpdatedTime`. While playing,
-    // extrapolate forward so the progress bar keeps advancing for players that
-    // only report the timeline once per track; never extrapolate while paused.
     if is_playing && duration > 0 {
         if let Ok(last_updated) = timeline.LastUpdatedTime() {
             let now_ticks =
@@ -453,19 +443,15 @@ pub(super) fn read_timeline(
     (elapsed, duration)
 }
 
-/// What the media session says about the playing track.
 #[derive(Default)]
 pub(super) struct Metadata {
     pub(super) title: Option<String>,
     pub(super) artist: Option<String>,
     pub(super) album: Option<String>,
     pub(super) thumbnail: Option<String>,
-    /// A song id a player plugin put among the genres (`player_track_id`).
     pub(super) track_id: Option<String>,
 }
 
-/// The song id a player plugin puts among the genres: `NCM-<id>` from NetEase Cloud Music's
-/// InfLink plugin, `QQ-<id>` from QQ Music's; players without one leave genres to genres.
 pub(super) fn player_track_id(genres: impl IntoIterator<Item = String>) -> Option<String> {
     genres.into_iter().map(|genre| genre.trim().to_string()).find(|genre| {
         genre
@@ -545,9 +531,6 @@ pub(super) fn read_thumbnail(reference: &IRandomAccessStreamReference) -> Option
         return None;
     }
 
-    // Detect the image type from the bytes rather than the stream's reported
-    // content type: some apps (e.g. NetEase Cloud Music) report a comma-joined
-    // list like "image/jpeg,image/jpe,image/jpg", which breaks the data URL.
     let mime = detect_image_mime(&buffer);
     let encoded = base64::engine::general_purpose::STANDARD.encode(&buffer);
     Some(format!("data:{mime};base64,{encoded}"))
@@ -578,8 +561,6 @@ pub(super) fn repeat_mode_label(mode: RepeatMode) -> &'static str {
     }
 }
 
-/// Turns a raw AppUserModelId (e.g. `Spotify.exe`, `chrome.exe`, a packaged app
-/// family name) into a short, human-friendly source label for the island.
 pub(super) fn friendly_app_label(id: &str) -> String {
     let lowered = id.to_ascii_lowercase();
     let known = [

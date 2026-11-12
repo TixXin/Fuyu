@@ -1,13 +1,3 @@
-//! What plugins show on the island (API version 2): the models of their views
-//! (`view.update`, `view.patch`) and their status texts (`status.update`).
-//! The island window draws them from templates; this only keeps the latest
-//! value of each, limits how often the window hears about a change, and hands
-//! the user's actions back to the plugin.
-//!
-//! A view's model is sent to the window only while the view is on screen
-//! (`set_plugin_view_visible`); status texts always are, for the collapsed bar.
-//! When a plugin process starts or stops, its models and texts are dropped.
-
 use serde::Serialize;
 use serde_json::{json, Map, Value};
 use std::{
@@ -26,25 +16,19 @@ use super::{
 };
 use crate::island;
 
-/// Sent to the island window. Mirrored by `PLUGIN_VIEW_CHANGED_EVENT` in
-/// src/features/plugin-views/api.ts.
 const VIEW_EVENT: &str = "plugin-view-changed";
 pub(super) const MAX_MODEL_BYTES: usize = 256 * 1024;
 const MAX_VALUES_BYTES: usize = 64 * 1024;
-/// At most one update per view (or status item) every GAP: 10 a second.
 const GAP: Duration = Duration::from_millis(100);
 pub(super) const MAX_STATUS_CHARS: usize = 24;
 const MAX_TOOLTIP_CHARS: usize = 200;
 const MAX_QUERY_CHARS: usize = 200;
 const TONES: [&str; 4] = ["neutral", "accent", "warning", "danger"];
-/// `status.update { cells }`: at most this many label-over-value columns.
 pub(super) const MAX_STATUS_CELLS: usize = 4;
 const MAX_CELL_LABEL_CHARS: usize = 6;
 const MAX_CELL_VALUE_CHARS: usize = 8;
-/// `status.update { batteries }`: at most this many upright batteries.
 pub(super) const MAX_STATUS_BATTERIES: usize = 4;
 
-/// A plugin and one of its views or status items ("view:<id>" / "status:<id>").
 type Slot = (String, String);
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
@@ -53,26 +37,20 @@ pub struct StatusText {
     text: String,
     tooltip: Option<String>,
     tone: &'static str,
-    /// Drawn instead of the text when set. The text still names the item for screen readers,
-    /// and islands without the `statusCells` capability show only the text.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     cells: Vec<StatusCell>,
-    /// A small progress ring (0-1) in the item's tone, before the text or cells.
     #[serde(skip_serializing_if = "Option::is_none")]
     ring: Option<f64>,
-    /// Upright batteries drawn instead of the text and the cells.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     batteries: Vec<StatusBattery>,
 }
 
-/// One upright battery of a status item: how full it is (0-1) and its tone.
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct StatusBattery {
     level: f64,
     tone: &'static str,
 }
 
-/// One label-over-value column of a status item.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct StatusCell {
     label: String,
@@ -85,7 +63,6 @@ struct Store {
     models: HashMap<Slot, Value>,
     status: HashMap<Slot, StatusText>,
     visible: HashSet<Slot>,
-    /// Slots whose change waits for GAP to pass; the latest value is sent then.
     pending: HashSet<Slot>,
 }
 
@@ -102,7 +79,6 @@ fn bad(message: impl Into<String>) -> (u16, String) {
     (400, message.into())
 }
 
-/// The plugin's declared views and status items.
 fn declared(plugin_id: &str) -> Option<(Vec<ViewSpec>, Vec<StatusItemSpec>)> {
     let host = host().ok()?;
     let installed = lock(&host.installed);
@@ -128,7 +104,6 @@ fn check_size(model: &Value) -> Result<(), (u16, String)> {
     Ok(())
 }
 
-/// `view.update`, `view.patch` and `status.update` from `plugin_id`.
 pub(super) fn answer(app: &AppHandle, plugin_id: &str, method: &str, params: &Value) -> Result<Value, (u16, String)> {
     match method {
         "view.update" => {
@@ -172,7 +147,6 @@ pub(super) fn answer(app: &AppHandle, plugin_id: &str, method: &str, params: &Va
     }
 }
 
-/// `{ text, tooltip?, tone?, cells?, ring?, batteries? }`; an empty text clears the item.
 pub(super) fn parse_status(params: &Value) -> Result<Option<StatusText>, (u16, String)> {
     let text = params.get("text").and_then(Value::as_str).ok_or_else(|| bad("Expected \"text\" as a string."))?.trim();
     if text.chars().count() > MAX_STATUS_CHARS {
@@ -204,7 +178,6 @@ pub(super) fn parse_status(params: &Value) -> Result<Option<StatusText>, (u16, S
     Ok((!text.is_empty()).then(|| StatusText { text: text.to_string(), tooltip, tone, cells, ring, batteries }))
 }
 
-/// `{ level, tone? }`: how full the battery is, from 0 to 1.
 fn parse_battery(battery: &Value) -> Result<StatusBattery, (u16, String)> {
     match battery.get("level").and_then(Value::as_f64) {
         Some(level) if (0.0..=1.0).contains(&level) => Ok(StatusBattery { level, tone: parse_tone(battery.get("tone"), "batteries[].tone")? }),
@@ -222,7 +195,6 @@ fn parse_tone(value: Option<&Value>, field: &str) -> Result<&'static str, (u16, 
     }
 }
 
-/// `{ label, value, tone? }`: a short label over a short value.
 fn parse_cell(cell: &Value) -> Result<StatusCell, (u16, String)> {
     let field = |name: &str, max: usize| match cell.get(name).and_then(Value::as_str).map(str::trim) {
         Some(text) if text.chars().count() <= max => Ok(text.to_string()),
@@ -235,11 +207,6 @@ fn parse_cell(cell: &Value) -> Result<StatusCell, (u16, String)> {
     })
 }
 
-/// `view.patch { items?, remove?, add? }`: `items` replace the items with the
-/// same ids, `remove` deletes ids, and `add` inserts `{ item, before?, group? }`
-/// before the item `before`, else at the end of `model.groups[group].items`, else
-/// at the end of `model.items`. Returns the new model and the ids not found
-/// (an `add` whose `before` is missing goes at the end and lists that id).
 pub(super) fn patch_model(model: &Value, params: &Value) -> Result<(Value, Vec<String>), (u16, String)> {
     let list = |name: &str| match params.get(name) {
         None | Some(Value::Null) => Ok(&[][..]),
@@ -315,7 +282,6 @@ pub(super) fn patch_model(model: &Value, params: &Value) -> Result<(Value, Vec<S
     Ok((next, missing))
 }
 
-/// Calls `visit` on `model.items` and each `model.groups[].items` until it returns true.
 fn for_each_list(model: &mut Value, mut visit: impl FnMut(&mut Vec<Value>) -> bool) -> bool {
     if let Some(list) = model.get_mut("items").and_then(Value::as_array_mut) {
         if visit(list) {
@@ -332,8 +298,6 @@ fn for_each_list(model: &mut Value, mut visit: impl FnMut(&mut Vec<Value>) -> bo
     false
 }
 
-/// Replaces the items with the same `id` in `model.items` and every
-/// `model.groups[].items`; returns the new model and the ids not found.
 pub(super) fn patch_items(model: &Value, items: &[Value]) -> Result<(Value, Vec<String>), (u16, String)> {
     let mut by_id: Map<String, Value> = Map::new();
     for item in items {
@@ -363,8 +327,6 @@ pub(super) fn patch_items(model: &Value, items: &[Value]) -> Result<(Value, Vec<
     Ok((next, missing))
 }
 
-/// Sends the slot's latest value to the window after GAP, unless a send is
-/// already waiting (which will carry this value).
 fn schedule(app: &AppHandle, key: Slot) {
     if !lock(store()).pending.insert(key.clone()) {
         return;
@@ -399,8 +361,6 @@ fn send(app: &AppHandle, key: &Slot) {
     let _ = app.emit_to(island::WINDOW_LABEL, VIEW_EVENT, payload);
 }
 
-/// The plugin process started, stopped or crashed: what it showed is gone,
-/// and the window looks at the list again.
 pub(super) fn runtime_changed(app: &AppHandle, plugin_id: &str, status: RuntimeStatus) {
     {
         let mut store = lock(store());
@@ -410,12 +370,10 @@ pub(super) fn runtime_changed(app: &AppHandle, plugin_id: &str, status: RuntimeS
     let _ = app.emit_to(island::WINDOW_LABEL, VIEW_EVENT, json!({ "kind": "reset", "pluginId": plugin_id, "status": status }));
 }
 
-/// Whether one of the plugin's pages is on screen (keeps an on-demand plugin running).
 pub(super) fn any_visible(plugin_id: &str) -> bool {
     lock(store()).visible.iter().any(|(plugin, _)| plugin == plugin_id)
 }
 
-/// The window shows or hides a view. Returns its model when it becomes visible.
 pub(super) fn set_visible(plugin_id: &str, view: &str, visible: bool) -> Option<Value> {
     let key = slot(plugin_id, "view", view);
     let mut store = lock(store());
@@ -446,7 +404,6 @@ pub(super) fn check_query(query: &str) -> Result<(), String> {
     Ok(())
 }
 
-/// Ids users click on (actions, items): short and plain.
 pub(super) fn is_action_id(id: &str) -> bool {
     (1..=128).contains(&id.len()) && id.bytes().all(|byte| byte.is_ascii_alphanumeric() || b"-_.:/".contains(&byte))
 }
@@ -455,7 +412,6 @@ pub(super) fn declares_view(plugin_id: &str, view: &str) -> bool {
     declared(plugin_id).is_some_and(|(views, _)| views.iter().any(|spec| spec.id == view))
 }
 
-/// One page a plugin adds. Mirrored by `PluginViewEntry` in src/features/plugin-views/api.ts.
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PluginViewEntry {
@@ -465,20 +421,16 @@ pub struct PluginViewEntry {
     title: LocalizedText,
     icon: String,
     template: ViewTemplate,
-    /// Webview pages only: their height on the island in pixels.
     #[serde(skip_serializing_if = "Option::is_none")]
     height: Option<u32>,
-    /// Webview pages only: the width they ask for, when they do.
     #[serde(skip_serializing_if = "Option::is_none")]
     width: Option<u32>,
-    /// Webview pages only: "none" when the page is drawn without the island's card.
     #[serde(skip_serializing_if = "Option::is_none")]
     frame: Option<ViewFrame>,
     status: RuntimeStatus,
     error: Option<String>,
 }
 
-/// One status text. Mirrored by `PluginStatusEntry` in src/features/plugin-views/api.ts.
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PluginStatusEntry {
@@ -489,8 +441,6 @@ pub struct PluginStatusEntry {
     text: StatusText,
 }
 
-/// A status item a plugin declares, set or not: the collapsed bar settings list them
-/// so the user can place them (C12). Mirrored by `PluginStatusItemEntry` in src/features/plugin-views/api.ts.
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PluginStatusItemEntry {
@@ -499,7 +449,6 @@ pub struct PluginStatusItemEntry {
     item_id: String,
 }
 
-/// Mirrored by `PluginViewsSnapshot` in src/features/plugin-views/api.ts.
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PluginViewsSnapshot {
@@ -508,8 +457,6 @@ pub struct PluginViewsSnapshot {
     status_items: Vec<PluginStatusItemEntry>,
 }
 
-/// The views of plugins that are switched on and allowed to run, with each
-/// plugin's run state, and the status texts set now.
 pub(super) fn snapshot() -> Result<PluginViewsSnapshot, String> {
     let host = host()?;
     let state = lock(&host.state).clone();
@@ -520,7 +467,6 @@ pub(super) fn snapshot() -> Result<PluginViewsSnapshot, String> {
     let mut status_items = Vec::new();
     for plugin in lock(&host.installed).iter() {
         let Ok(manifest) = &plugin.manifest else { continue };
-        // Development plugins (dev.rs) are on without a switch, like in grants.rs.
         let on = plugin.dev || state.plugins.get(&manifest.id).is_some_and(|grant| grant.enabled) && (plugin.builtin || state.allow_third_party);
         if !on || !matches!(manifest.runtime, PluginRuntime::Process { .. }) {
             continue;

@@ -1,11 +1,3 @@
-//! Claude usage from a local magpie gateway (github.com/yetone/magpie), for
-//! users whose Claude Code goes through it: its `GET /v1/magpie/quotas` lists
-//! each account's usage windows, so neither claude-hud nor a helper script is
-//! needed. Only asked when Claude Code's `ANTHROPIC_BASE_URL` points at this
-//! computer, with the gateway token Claude Code sends there (without it magpie
-//! lists no accounts); nothing goes anywhere else. At most once a minute, as
-//! the plain endpoint asks the vendor (`?kept=1` was empty on a live gateway).
-
 use std::{
     env, fs,
     path::Path,
@@ -20,19 +12,15 @@ use super::usage::{AgentUsage, UsageSource, UsageWindow};
 
 const QUOTAS_PATH: &str = "/v1/magpie/quotas";
 const MIN_GAP: Duration = Duration::from_secs(60);
-/// A gateway without the endpoint (not magpie, or an older one) is asked again after this.
 const NOT_MAGPIE_GAP: Duration = Duration::from_secs(10 * 60);
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(15);
 
-/// Where Claude Code sends its requests and the token it sends, when that is this computer.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Gateway {
     pub(super) base_url: String,
     pub(super) token: Option<String>,
 }
 
-/// Claude Code's gateway from its settings' `env` (it wins, as in Claude Code), else this
-/// process's environment; `None` unless the base URL is http(s) on a loopback host.
 pub(super) fn gateway_from(settings: Option<&Value>, process_env: &dyn Fn(&str) -> Option<String>) -> Option<Gateway> {
     let read = |key: &str| {
         settings
@@ -60,7 +48,6 @@ fn gateway(claude_dir: &Path) -> Option<Gateway> {
     gateway_from(settings.as_ref(), &|key| env::var(key).ok())
 }
 
-/// The account to show: the one magpie served last, else a Claude one, else any with a 5-hour window.
 fn pick_account(accounts: &[Value]) -> Option<&Value> {
     let has_windows = |account: &&Value| account["windows"].as_array().is_some_and(|windows| !windows.is_empty());
     accounts
@@ -76,8 +63,6 @@ fn pick_account(accounts: &[Value]) -> Option<&Value> {
         .or_else(|| accounts.iter().find(|account| account["windows"].as_array().is_some_and(|windows| windows.iter().any(|window| window["name"] == "5 hours"))))
 }
 
-/// The answer of `/v1/magpie/quotas` as usage read at `now_ms`. Windows are matched by
-/// magpie's names: "5 hours", "7 days" and "7 days · <model>"; `None` without any of them.
 pub(super) fn parse_quotas(text: &str, now_ms: i64) -> Option<AgentUsage> {
     let answer = serde_json::from_str::<Value>(text).ok()?;
     let account = pick_account(answer["data"].as_array()?)?;
@@ -111,7 +96,6 @@ pub(super) fn parse_quotas(text: &str, now_ms: i64) -> Option<AgentUsage> {
     (usage.five_hour.is_some() || usage.seven_day.is_some() || !usage.models.is_empty()).then_some(usage)
 }
 
-/// "max" → "Max"; magpie names the plan, not its size.
 fn plan_label(plan: &str) -> String {
     let mut chars = plan.trim().chars();
     chars.next().map(|first| first.to_uppercase().chain(chars).collect()).unwrap_or_default()
@@ -130,8 +114,6 @@ fn cache() -> std::sync::MutexGuard<'static, Cache> {
     CACHE.get_or_init(Mutex::default).lock().unwrap_or_else(PoisonError::into_inner)
 }
 
-/// The local magpie's usage, asked at most once a minute; `None` when Claude Code does not
-/// go through a local gateway, it is not magpie, or it lists no usable account.
 pub(super) async fn read_usage(claude_dir: &Path) -> Option<AgentUsage> {
     let gateway = gateway(claude_dir)?;
     {
@@ -151,7 +133,6 @@ pub(super) async fn read_usage(claude_dir: &Path) -> Option<AgentUsage> {
         let now_ms = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .map_or(0, |elapsed| i64::try_from(elapsed.as_millis()).unwrap_or(i64::MAX));
-        // A failed parse keeps the last numbers until they go stale on their own.
         if let Some(usage) = parse_quotas(&text, now_ms) {
             cache.usage = Some(usage);
         }
@@ -161,11 +142,9 @@ pub(super) async fn read_usage(claude_dir: &Path) -> Option<AgentUsage> {
     cache.usage.clone()
 }
 
-/// The endpoint's body; the HTTP status when it is not a success, `None` when nothing answered.
 async fn ask(gateway: &Gateway) -> Result<String, Option<u16>> {
     let client = reqwest::Client::builder()
         .timeout(REQUEST_TIMEOUT)
-        // Loopback only: no proxy, and no redirect that could carry the token elsewhere.
         .no_proxy()
         .redirect(reqwest::redirect::Policy::none())
         .build()

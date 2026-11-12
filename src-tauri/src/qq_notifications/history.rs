@@ -1,5 +1,3 @@
-//! Bounded, de-duplicated buffer of recent QQ notifications.
-
 use std::collections::HashMap;
 
 use super::QQNotification;

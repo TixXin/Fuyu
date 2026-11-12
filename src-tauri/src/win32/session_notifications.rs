@@ -1,8 +1,3 @@
-//! The user's session: locked or unlocked, the computer going to sleep or
-//! waking, and how long since the last keyboard or mouse input. A hidden
-//! message-only window registers for the session and power notifications
-//! (which are sent to it directly, so it needs no broadcasts).
-
 use std::sync::{
     atomic::{AtomicBool, Ordering},
     OnceLock,
@@ -34,20 +29,17 @@ pub(crate) enum SessionChange {
     Resumed,
 }
 
-/// What a window message says about the session, if anything.
 pub(crate) fn classify(message: u32, wparam: usize) -> Option<SessionChange> {
     match (message, wparam as u32) {
         (WM_WTSSESSION_CHANGE, WTS_SESSION_LOCK) => Some(SessionChange::Locked),
         (WM_WTSSESSION_CHANGE, WTS_SESSION_UNLOCK) => Some(SessionChange::Unlocked),
         (WM_POWERBROADCAST, PBT_APMSUSPEND) => Some(SessionChange::Suspended),
-        // Sent on every wake, whether or not someone is at the keyboard.
         (WM_POWERBROADCAST, PBT_APMRESUMEAUTOMATIC) => Some(SessionChange::Resumed),
         _ => None,
     }
 }
 
 static ON_CHANGE: OnceLock<fn(SessionChange)> = OnceLock::new();
-/// Locked since the last lock or unlock this process saw; starts unlocked (the island starts at sign-in).
 static LOCKED: AtomicBool = AtomicBool::new(false);
 
 struct SessionWindow;
@@ -63,12 +55,10 @@ impl WindowMessages for SessionWindow {
         if let Some(on_change) = ON_CHANGE.get() {
             on_change(change);
         }
-        // WM_POWERBROADCAST wants TRUE; WM_WTSSESSION_CHANGE ignores the result.
         Some(LRESULT(1))
     }
 }
 
-/// Unregisters both notifications when the window's thread ends.
 struct Registrations {
     window: HWND,
     power: Option<HPOWERNOTIFY>,
@@ -78,18 +68,14 @@ struct Registrations {
 impl Drop for Registrations {
     fn drop(&mut self) {
         if let Some(power) = self.power.take() {
-            // SAFETY: `power` came from RegisterSuspendResumeNotification and is unregistered once.
             let _ = unsafe { UnregisterSuspendResumeNotification(power) };
         }
         if self.session {
-            // SAFETY: the window registered above and still exists on this thread.
             let _ = unsafe { WTSUnRegisterSessionNotification(self.window) };
         }
     }
 }
 
-/// Calls `on_change` for every session change, on the calling thread, until the
-/// process ends. Run it on a thread of its own; call it once.
 pub(crate) fn watch(on_change: fn(SessionChange)) -> Result<(), String> {
     ON_CHANGE.set(on_change).map_err(|_| "Session changes are already watched.".to_string())?;
     const CLASS_NAME: &str = "FocuSDSessionNotifications";
@@ -97,30 +83,23 @@ pub(crate) fn watch(on_change: fn(SessionChange)) -> Result<(), String> {
     message_window::register_class::<SessionWindow>(instance, CLASS_NAME).map_err(|error| error.to_string())?;
     let window = message_window::create_message_only_window(instance, CLASS_NAME, "FocuSD Session")
         .map_err(|error| error.to_string())?;
-    // SAFETY: `window` is a live window of this thread; the flag asks for this session only.
     let session = unsafe { WTSRegisterSessionNotification(window, NOTIFY_FOR_THIS_SESSION) }.is_ok();
-    // SAFETY: as above; DEVICE_NOTIFY_WINDOW_HANDLE says the handle is a window.
     let power = unsafe { RegisterSuspendResumeNotification(HANDLE(window.0), DEVICE_NOTIFY_WINDOW_HANDLE) }.ok();
     let _registrations = Registrations { window, power, session };
     message_window::run_message_loop();
     Ok(())
 }
 
-/// Whether this session's screen is locked, as far as the watcher (`watch`) has seen.
 pub(crate) fn is_locked() -> bool {
     LOCKED.load(Ordering::Relaxed)
 }
 
-/// Milliseconds since the last keyboard or mouse input in this session; None if Windows cannot say.
 pub(crate) fn idle_millis() -> Option<u32> {
     let mut info = LASTINPUTINFO { cbSize: std::mem::size_of::<LASTINPUTINFO>() as u32, dwTime: 0 };
-    // SAFETY: `info` is a valid LASTINPUTINFO with cbSize set, which GetLastInputInfo fills in.
     if !unsafe { GetLastInputInfo(&mut info) }.as_bool() {
         return None;
     }
-    // SAFETY: GetTickCount takes no arguments.
     let now = unsafe { GetTickCount() };
-    // Both are tick counts that wrap after 49.7 days.
     Some(now.wrapping_sub(info.dwTime))
 }
 

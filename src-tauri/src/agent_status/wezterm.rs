@@ -1,9 +1,3 @@
-//! WezTerm tabs. WezTerm draws its own tabs and its window title is only the active tab's, so a
-//! session in a background tab cannot be found by title, and a session started outside WezTerm's
-//! process tree (by Happy, say) has no process chain to it either. `wezterm cli list` names every
-//! pane with the title Claude Code set; `wezterm cli activate-pane` brings one forward, after
-//! which its window carries the session's title.
-
 use std::os::windows::process::CommandExt;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -24,7 +18,6 @@ struct Pane {
     title: String,
 }
 
-/// The `wezterm` command beside the running WezTerm, or beside `gui_exe` when given.
 fn cli_beside(gui_exe: Option<&Path>) -> Option<PathBuf> {
     let gui = match gui_exe {
         Some(path) => path.to_path_buf(),
@@ -39,15 +32,12 @@ fn run(cli: &Path, args: &[&str]) -> Option<Vec<u8>> {
     output.status.success().then_some(output.stdout)
 }
 
-/// The id of the only pane whose title shows the session titled `title`.
 fn pane_titled(list: &[u8], title: &str) -> Option<u64> {
     let panes: Vec<Pane> = serde_json::from_slice(list).ok()?;
     let titles: Vec<String> = panes.iter().map(|pane| pane.title.clone()).collect();
     only_tab_titled(&titles, title).map(|index| panes[index].pane_id)
 }
 
-/// Brings forward the WezTerm tab showing the session titled `title`, in the WezTerm at `gui_exe`
-/// or else any running one. False when WezTerm is not running or no single tab shows the title.
 pub(super) fn activate_tab_titled(gui_exe: Option<&Path>, title: &str) -> bool {
     let Some(cli) = cli_beside(gui_exe) else {
         return false;

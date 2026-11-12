@@ -1,33 +1,3 @@
-//! Plugin host: finds plugins in `plugins/<id>/fuyu-plugin.json` under the app
-//! data folder, keeps the user's choices in `plugins.json`, and runs the enabled
-//! ones as child processes. Design: docs/architecture/plugins/v1-design.md; guide for
-//! plugin authors: docs/plugins/README.md.
-//!
-//! - registry.rs: which plugins are installed, and the settings-page snapshot
-//! - grants.rs: saves the user's choices and starts / stops plugins to match
-//! - commands.rs: the Tauri commands
-//! - dev.rs: development mode (plugins loaded from any folder, `/v1/dev` routes)
-//! - events.rs: island events plugins subscribe to
-//! - feeds.rs: messages and media for plugins (`messages.list`, `media.changed`)
-//! - activation.rs / lifecycle.rs: when plugin processes run (`activationEvents`),
-//!   stopping idle ones, and their memory and CPU
-//! - keybindings.rs: global shortcuts of plugin commands
-//! - views.rs: what plugins show on the island (`view.*`, `status.update`)
-//! - view_specs.rs: `contributes.views` / `statusItems` in the manifest
-//! - menus.rs: plugin commands in island menus (`contributes.menus`)
-//! - notify.rs: messages plugins show on the island (`island.notify`)
-//! - storage.rs: `storage.*` and `secrets.*`, and clearing a plugin's data
-//! - sensitive.rs: asking the user before a sensitive permission is first used
-//! - reveal.rs: a plugin opening its own page right after the user used it (`island.openView`)
-//! - uri.rs: `focusd://plugin/<id>/...` links (`onUri`)
-//! - market_link.rs: `fuyu://market/install/<id>`, the website's Install buttons
-//! - system_events.rs: lock, sleep and idle events (`system.*`)
-//! - runtime.rs: one plugin process; runtime/dispatch.rs answers its requests
-//! - market.rs / signature.rs: the market index and its signatures
-//! - author_signing.rs: authors' package signatures and the key kept per plugin
-//! - revocations.rs / updates.rs: revoked versions, background update checks,
-//!   automatic updates and trusted publishers
-
 mod activation;
 mod author_signing;
 mod baseline;
@@ -71,8 +41,6 @@ mod webviews;
 
 pub use commands::*;
 pub(crate) use uri::{find_link, open as open_link};
-// The Tauri commands of development mode and updates (the macro needs its
-// generated items re-exported too).
 pub use dev::*;
 pub use effort_labels::*;
 pub use market_likes::*;
@@ -112,18 +80,15 @@ struct PluginHost {
     state: Mutex<PluginsState>,
     installed: Mutex<Vec<InstalledPlugin>>,
     supervisors: Mutex<HashMap<String, Supervisor>>,
-    /// Built-in plugins that are running (they have no supervisor).
     builtins_running: Mutex<HashSet<String>>,
     runtimes: RuntimeTable,
 }
 
 struct InstalledPlugin {
     folder: String,
-    /// Empty for built-in plugins.
     dir: PathBuf,
     manifest: Result<PluginManifest, String>,
     builtin: bool,
-    /// Loaded in development mode from `dir` (dev.rs).
     dev: bool,
 }
 
@@ -153,7 +118,6 @@ pub fn init(app: &AppHandle) -> Result<(), String> {
     if HOST.set(host).is_err() {
         return Err("The plugin host was initialized twice.".into());
     }
-    // A lane preview must not take fuyu:// or focusd:// links away from the user's island.
     if crate::dev_lane::lane().is_none() {
         if let Err(error) = uri::register_scheme() {
             eprintln!("could not register fuyu:// and focusd:// links: {error}");
@@ -167,8 +131,6 @@ pub fn init(app: &AppHandle) -> Result<(), String> {
     sync_processes()
 }
 
-/// Tells subscribed plugins about a change made outside the island window,
-/// e.g. `todos.changed` after a write to todos.json.
 pub(crate) fn publish_event(name: &str, payload: serde_json::Value) {
     events::publish_known(name, payload);
 }
@@ -185,8 +147,6 @@ fn app_version(app: &AppHandle) -> String {
     app.package_info().version.to_string()
 }
 
-/// This module's Tauri commands. `lib.rs` chains every module's list into one
-/// `generate_handler!`, so adding a command only touches this file.
 macro_rules! tauri_commands {
     ($next:ident [$($done:tt)*] $($rest:tt)*) => {
         $next!([$($done)*

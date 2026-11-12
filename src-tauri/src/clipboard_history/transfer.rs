@@ -1,7 +1,3 @@
-//! Export and import (C24.8): the history and snippets as one JSON file in Downloads, images
-//! inside it as base64 PNG, so it can move to another computer. Importing adds what is not there
-//! yet (by content hash) and never removes anything.
-
 use base64::{engine::general_purpose, Engine as _};
 use serde::{Deserialize, Serialize};
 use std::{collections::HashSet, fs, path::PathBuf};
@@ -13,7 +9,6 @@ use super::{
 
 const APP: &str = "fly-island-clipboard";
 const VERSION: u32 = 1;
-/// A larger file is not read: the history holds at most 200 entries of 10 MB images.
 const MAX_IMPORT_BYTES: usize = 512 * 1024 * 1024;
 
 #[derive(Serialize, Deserialize)]
@@ -21,7 +16,6 @@ const MAX_IMPORT_BYTES: usize = 512 * 1024 * 1024;
 struct ExportedEntry {
     #[serde(flatten)]
     item: ClipboardHistoryItem,
-    /// The image as base64 PNG; the paths in `item.image` are this computer's and are not used.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     image_png: Option<String>,
 }
@@ -37,7 +31,6 @@ struct ExportFile {
     snippets: Vec<ClipboardSnippet>,
 }
 
-/// What an import added.
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ImportReport {
@@ -45,7 +38,6 @@ pub struct ImportReport {
     snippets: usize,
 }
 
-/// `fly-island-clipboard-2026-11-09-1430.json`, with " (2)" and so on when it exists already.
 fn free_path(dir: &std::path::Path, stamp: &str) -> PathBuf {
     let base = format!("{APP}-{stamp}");
     (1..)
@@ -55,7 +47,6 @@ fn free_path(dir: &std::path::Path, stamp: &str) -> PathBuf {
 }
 
 impl ClipboardHistoryService {
-    /// Writes the history and snippets to Downloads; returns the file's path.
     pub(super) fn export(&self) -> Result<String, String> {
         let (items, snippets) = {
             let state = self.state.lock().map_err(|error| error.to_string())?;
@@ -81,7 +72,6 @@ impl ClipboardHistoryService {
         Ok(path.to_string_lossy().into_owned())
     }
 
-    /// Adds the entries and snippets of an exported file that are not here yet.
     pub(super) fn import(&self, content: &str) -> Result<ImportReport, String> {
         if content.len() > MAX_IMPORT_BYTES {
             return Err("The file is too large.".into());
@@ -104,7 +94,6 @@ impl ClipboardHistoryService {
                 continue;
             }
             if item.kind == ClipboardHistoryItemKind::Image {
-                // Saved again under this computer's image folder.
                 let Some(rgba) = image_png
                     .and_then(|png| general_purpose::STANDARD.decode(png).ok())
                     .and_then(|bytes| image::load_from_memory(&bytes).ok())

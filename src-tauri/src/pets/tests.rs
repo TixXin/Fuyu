@@ -3,16 +3,14 @@ use super::*;
 use std::process::Command;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
-/// The start of a PNG of this size (signature + IHDR).
 fn png(width: u32, height: u32) -> Vec<u8> {
     let mut bytes = b"\x89PNG\r\n\x1a\n\x00\x00\x00\x0dIHDR".to_vec();
     bytes.extend(width.to_be_bytes());
     bytes.extend(height.to_be_bytes());
-    bytes.extend([8, 6, 0, 0, 0, 0, 0, 0, 0]); // depth, color type, ..., CRC
+    bytes.extend([8, 6, 0, 0, 0, 0, 0, 0, 0]);
     bytes
 }
 
-/// The start of an extended (VP8X) WebP of this size.
 fn webp_vp8x(width: u32, height: u32) -> Vec<u8> {
     let mut bytes = b"RIFF\x00\x00\x00\x00WEBPVP8X\x0a\x00\x00\x00\x10\x00\x00\x00".to_vec();
     bytes.extend(&(width - 1).to_le_bytes()[..3]);
@@ -20,7 +18,6 @@ fn webp_vp8x(width: u32, height: u32) -> Vec<u8> {
     bytes
 }
 
-/// The start of a lossless (VP8L) WebP of this size, the format of the petdex sheets.
 fn webp_vp8l(width: u32, height: u32) -> Vec<u8> {
     let mut bytes = b"RIFF\x00\x00\x00\x00WEBPVP8L\x00\x00\x00\x00\x2f".to_vec();
     bytes.extend(((width - 1) | (height - 1) << 14 | 1 << 28).to_le_bytes());
@@ -32,7 +29,6 @@ fn sheet_webp() -> Vec<u8> {
     webp_vp8l(1536, 1872)
 }
 
-/// A fresh `app/` and `codex/` pet root per test.
 fn temp_roots() -> (PathBuf, Vec<(PetSource, PathBuf)>) {
     static COUNTER: AtomicUsize = AtomicUsize::new(0);
     let base = std::env::temp_dir().join(format!(
@@ -74,7 +70,6 @@ fn lists_valid_pets_and_skips_broken_ones() {
         "spritesheet.webp",
         &sheet,
     );
-    // No displayName: the folder name.
     write_pet(codex, "pixel", "{}", "spritesheet.png", &png(768, 936));
     write_pet(
         codex,
@@ -84,7 +79,6 @@ fn lists_valid_pets_and_skips_broken_ones() {
         b"<svg onload=alert(1)>",
     );
     write_pet(codex, "bad-json", "{nope", "spritesheet.webp", &sheet);
-    // Only x.webp, named through an escaping path: invalid, and no default sheet either.
     write_pet(
         codex,
         "escape",
@@ -175,7 +169,6 @@ fn rejects_oversized_sheets() {
 #[test]
 fn reads_sheets_as_data_urls_by_header_not_extension() {
     let (_base, roots) = temp_roots();
-    // A PNG saved as .webp is served as what it is.
     let sheet = png(1536, 1872);
     write_pet(&roots[1].1, "mislabeled", "{}", "spritesheet.webp", &sheet);
     let url = read_spritesheet_in(&roots, "mislabeled").unwrap();
@@ -191,7 +184,6 @@ fn reads_sheets_as_data_urls_by_header_not_extension() {
 #[test]
 fn ids_cannot_escape_the_pet_roots() {
     let (base, roots) = temp_roots();
-    // A pet folder right next to the roots, which only a path escape could reach.
     write_pet(&base, "outside", "{}", "spritesheet.webp", &sheet_webp());
     for id in [
         "../outside",
@@ -232,7 +224,6 @@ fn a_junction_out_of_the_root_is_refused() {
         &sheet_webp(),
     );
     let link = roots[1].1.join("linked");
-    // A directory junction needs no administrator rights, unlike a symbolic link.
     let status = Command::new("cmd")
         .args(["/c", "mklink", "/J"])
         .arg(&link)
@@ -247,7 +238,6 @@ fn a_junction_out_of_the_root_is_refused() {
 
     assert_eq!(ids(&list_pets_in(&roots)), ["inside"]);
     assert!(read_spritesheet_in(&roots, "linked").is_err());
-    // The same folder is fine when it is a root's own child.
     assert!(read_spritesheet_in(&[(PetSource::Codex, base.clone())], "outside").is_ok());
     fs::remove_dir(&link).unwrap();
 }
@@ -293,7 +283,7 @@ fn headers_give_the_image_type_and_size() {
     );
     let mut lossy =
         b"RIFF\x00\x00\x00\x00WEBPVP8 \x00\x00\x00\x00\x00\x00\x00\x9d\x01\x2a".to_vec();
-    lossy.extend([0x00, 0x06, 0x50, 0x07]); // 1536 × 1872
+    lossy.extend([0x00, 0x06, 0x50, 0x07]);
     assert_eq!(image_header(&lossy), header("image/webp", 1536, 1872));
     assert_eq!(image_header(b"RIFF\x10\x00\x00\x00AVI LIST"), None);
     assert_eq!(image_header(b"GIF89a"), None);

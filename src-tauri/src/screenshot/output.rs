@@ -1,8 +1,3 @@
-//! Where a screenshot goes (C41.4): the clipboard as a bitmap, a PNG and a file at once, a PNG in
-//! the user's folder, or a pin (pin.rs). The PNGs the clipboard and pins need are kept in the app
-//! data folder's `screenshots/`, the newest 50 from the last 7 days; screenshots often show
-//! passwords and chats, so they never leave this machine and are never logged.
-
 use std::{
     fs,
     path::{Path, PathBuf},
@@ -21,23 +16,18 @@ use tauri::{AppHandle, Manager};
 use super::session::PixelRect;
 use crate::win32;
 
-/// Another program may hold the clipboard for a moment; opening it is tried this many times.
 const OPEN_ATTEMPTS: usize = 10;
-/// Between bringing an agent's terminal forward and pasting into it.
 const PASTE_DELAY: Duration = Duration::from_millis(220);
 const FOLDER: &str = "screenshots";
 const KEEP_FILES: usize = 50;
 const KEEP_FOR: Duration = Duration::from_secs(7 * 24 * 60 * 60);
 
-/// A screenshot's pixels: RGBA rows, top to bottom.
 pub(super) struct Picture {
     pub(super) width: u32,
     pub(super) height: u32,
     pub(super) rgba: Vec<u8>,
 }
 
-/// Lays `pixels` (RGBA rows, `at.width` × `at.height`) over `picture` at (`at.x`, `at.y`); false,
-/// changing nothing, when they do not match their size or do not fit inside it.
 pub(super) fn lay_over(picture: &mut Picture, at: PixelRect, pixels: &[u8]) -> bool {
     let fits = |start: u32, length: u32, limit: u32| start.checked_add(length).is_some_and(|end| end <= limit);
     if !super::pixels_fit(pixels.len(), at.width, at.height) || !fits(at.x, at.width, picture.width) || !fits(at.y, at.height, picture.height) {
@@ -51,8 +41,6 @@ pub(super) fn lay_over(picture: &mut Picture, at: PixelRect, pixels: &[u8]) -> b
     true
 }
 
-/// The fastest PNG that still stays small: screenshots are mostly flat colour, which the "Up"
-/// filter and fast deflate shrink well, and copying should not wait on a slow encode.
 pub(super) fn encode_png(picture: &Picture) -> Result<Vec<u8>, String> {
     let mut png = Vec::with_capacity(picture.rgba.len() / 4);
     PngEncoder::new_with_quality(&mut png, CompressionType::Fast, FilterType::Up)
@@ -61,8 +49,6 @@ pub(super) fn encode_png(picture: &Picture) -> Result<Vec<u8>, String> {
     Ok(png)
 }
 
-/// The picture as a CF_DIB: a BITMAPINFOHEADER, then 32-bit BGRA rows bottom to top. Windows
-/// makes CF_BITMAP and CF_DIBV5 from it for programs that ask for those.
 pub(super) fn dib(picture: &Picture) -> Vec<u8> {
     const HEADER: u32 = 40;
     let row = picture.width as usize * 4;
@@ -70,11 +56,11 @@ pub(super) fn dib(picture: &Picture) -> Vec<u8> {
     for field in [HEADER, picture.width, picture.height] {
         out.extend_from_slice(&field.to_le_bytes());
     }
-    out.extend_from_slice(&1u16.to_le_bytes()); // planes
-    out.extend_from_slice(&32u16.to_le_bytes()); // bits per pixel
-    out.extend_from_slice(&0u32.to_le_bytes()); // BI_RGB
+    out.extend_from_slice(&1u16.to_le_bytes());
+    out.extend_from_slice(&32u16.to_le_bytes());
+    out.extend_from_slice(&0u32.to_le_bytes());
     out.extend_from_slice(&(picture.rgba.len() as u32).to_le_bytes());
-    out.extend_from_slice(&[0; 16]); // resolution and palette: none
+    out.extend_from_slice(&[0; 16]);
     for line in picture.rgba.chunks_exact(row).rev() {
         for &[red, green, blue, alpha] in line.as_chunks::<4>().0 {
             out.extend_from_slice(&[blue, green, red, alpha]);
@@ -83,7 +69,6 @@ pub(super) fn dib(picture: &Picture) -> Vec<u8> {
     out
 }
 
-/// `Fuyu_2026-11-12_10-30-15.png`, with `_2`, `_3`... when that name is taken in `folder`.
 pub(super) fn file_name_in(folder: &Path, now: chrono::DateTime<chrono::Local>) -> PathBuf {
     let stem = format!("Fuyu_{}", now.format("%Y-%m-%d_%H-%M-%S"));
     let mut path = folder.join(format!("{stem}.png"));
@@ -102,7 +87,6 @@ fn write_png(folder: &Path, png: &[u8]) -> Result<PathBuf, String> {
     Ok(path)
 }
 
-/// The app data folder's `screenshots/`, found once at startup.
 static SCREENSHOTS_DIR: OnceLock<PathBuf> = OnceLock::new();
 
 fn screenshots_dir(app: &AppHandle) -> Option<PathBuf> {
@@ -113,13 +97,10 @@ fn screenshots_dir(app: &AppHandle) -> Option<PathBuf> {
     Some(SCREENSHOTS_DIR.get_or_init(|| dir).clone())
 }
 
-/// Whether `path` is one of the PNGs a screenshot copy put on the clipboard, so the clipboard
-/// history keeps that copy as an image rather than as a file.
 pub(crate) fn is_screenshot_file(path: &Path) -> bool {
     SCREENSHOTS_DIR.get().is_some_and(|dir| path.parent() == Some(dir.as_path()))
 }
 
-/// Writes the PNG kept for the clipboard; the old ones are dropped afterwards, off this thread.
 fn keep_png(app: &AppHandle, png: &[u8]) -> Result<PathBuf, String> {
     let dir = screenshots_dir(app).ok_or_else(|| "The app data folder is unavailable.".to_string())?;
     let path = write_png(&dir, png)?;
@@ -127,7 +108,6 @@ fn keep_png(app: &AppHandle, png: &[u8]) -> Result<PathBuf, String> {
     Ok(path)
 }
 
-/// Keeps the newest `KEEP_FILES` PNGs younger than `KEEP_FOR`.
 pub(super) fn prune(dir: &Path) {
     let Ok(entries) = fs::read_dir(dir) else {
         return;
@@ -143,7 +123,6 @@ pub(super) fn prune(dir: &Path) {
     }
 }
 
-/// The files to delete: past the newest `KEEP_FILES`, or older than `KEEP_FOR`.
 pub(super) fn stale(files: &mut [(SystemTime, PathBuf)], now: SystemTime) -> Vec<PathBuf> {
     files.sort_by_key(|(modified, _)| std::cmp::Reverse(*modified));
     files
@@ -154,18 +133,12 @@ pub(super) fn stale(files: &mut [(SystemTime, PathBuf)], now: SystemTime) -> Vec
         .collect()
 }
 
-/// Drops old PNGs at startup.
 pub(super) fn prune_at_start(app: &AppHandle) {
     if let Some(dir) = screenshots_dir(app) {
         thread::spawn(move || prune(&dir));
     }
 }
 
-/// Puts the screenshot on the clipboard as a bitmap (CF_DIB), a PNG and the PNG file (CF_HDROP),
-/// all in one go so clipboard watchers (our own history too) read it once: image editors paste the
-/// bitmap, browsers the PNG, chat apps and Explorer the file, terminals its path. Without the app
-/// data folder it goes as a bitmap and PNG only. The PNG is encoded once, fast, for both. Gives
-/// the kept file, for the island's screenshot card.
 pub(super) fn copy(app: &AppHandle, picture: &Picture) -> Result<Option<PathBuf>, String> {
     let png = encode_png(picture)?;
     let file = keep_png(app, &png).map_err(|error| eprintln!("screenshot copied without its file: {error}")).ok();
@@ -183,7 +156,6 @@ pub(super) fn copy(app: &AppHandle, picture: &Picture) -> Result<Option<PathBuf>
     Ok(file)
 }
 
-/// A small PNG of the picture as a data URL, for the island's screenshot card.
 pub(super) fn thumbnail(picture: &Picture) -> Option<String> {
     use base64::Engine;
     const BOX: (u32, u32) = (192, 108);
@@ -195,9 +167,6 @@ pub(super) fn thumbnail(picture: &Picture) -> Option<String> {
     Some(format!("data:image/png;base64,{}", base64::engine::general_purpose::STANDARD.encode(png)))
 }
 
-/// Pastes `path` into the window in front (an agent's terminal the island just brought forward):
-/// on the clipboard as the file and as its quoted path, which Claude Code and Codex take as an
-/// image, then Ctrl+V.
 pub(super) fn paste_path(path: &Path) -> Result<(), String> {
     {
         let _open = clipboard_win::Clipboard::new_attempts(OPEN_ATTEMPTS).map_err(|error| format!("Failed to open the clipboard: {error}"))?;
@@ -206,19 +175,16 @@ pub(super) fn paste_path(path: &Path) -> Result<(), String> {
         raw::set_file_list_with(&[path.to_string_lossy()], NoClear).map_err(failed)?;
         raw::set_string_with(&format!("\"{}\"", path.display()), NoClear).map_err(failed)?;
     }
-    // Let the terminal take the focus it was just given.
     thread::sleep(PASTE_DELAY);
     win32::input::send_paste_shortcut();
     Ok(())
 }
 
-/// Puts the text read in a screenshot on the clipboard.
 pub(super) fn copy_text(text: &str) -> Result<(), String> {
     let _open = clipboard_win::Clipboard::new_attempts(OPEN_ATTEMPTS).map_err(|error| format!("Failed to open the clipboard: {error}"))?;
     raw::set_string(text).map_err(|error| format!("Failed to copy the text: {error}"))
 }
 
-/// Saves the screenshot as a PNG in `folder`, or in Pictures\`default_name` without one.
 pub(super) fn save(picture: &Picture, folder: Option<&str>, default_name: &str) -> Result<PathBuf, String> {
     let folder = match folder.map(str::trim).filter(|folder| !folder.is_empty()) {
         Some(folder) => PathBuf::from(folder),
@@ -227,7 +193,6 @@ pub(super) fn save(picture: &Picture, folder: Option<&str>, default_name: &str) 
     write_png(&folder, &encode_png(picture)?)
 }
 
-/// A folder name without the characters Windows does not allow in one, never empty.
 pub(super) fn sanitized_name(name: &str) -> String {
     let name: String = name.chars().filter(|c| !matches!(c, '<' | '>' | ':' | '"' | '/' | '\\' | '|' | '?' | '*') && !c.is_control()).collect();
     let name = name.trim().trim_end_matches('.').to_string();

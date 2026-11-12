@@ -1,27 +1,19 @@
-//! The "minimized WeChat leaves the taskbar" setting. Closed to the tray, WeChat hides its window
-//! and Qt then shows no chat list at all; minimized, the list stays readable. Taking a minimized
-//! WeChat's button off the taskbar makes minimizing look like closing to the tray.
-
 use std::time::{Duration, Instant};
 use windows::Win32::Foundation::HWND;
 
 use crate::win32;
 
-/// How often WeChat's window is checked, and looked for again when it has gone.
 const POLL: Duration = Duration::from_millis(500);
 const SEARCH: Duration = Duration::from_secs(5);
 
-/// What to do with WeChat's taskbar button: `Some(false)` remove it, `Some(true)` put it back.
 fn step(removed: bool, visible: bool, minimized: bool) -> Option<bool> {
     match (removed, visible && minimized) {
         (false, true) => Some(false),
-        // Hidden (closed to the tray) is left alone: the taskbar adds the button when it shows.
         (true, false) if visible => Some(true),
         _ => None,
     }
 }
 
-/// HWNDs are kept as numbers so the keeper can sit in the service's Mutex.
 #[derive(Default)]
 pub(super) struct Keeper {
     window: Option<isize>,
@@ -74,7 +66,6 @@ impl Keeper {
         }
     }
 
-    /// Puts the button back (setting off, reminders off, island exiting).
     pub(super) fn restore(&mut self) {
         if let Some(window) = self.window.map(handle) {
             if self.removed && alive(window) && win32::window::is_visible(window) {
@@ -95,7 +86,6 @@ mod tests {
         assert_eq!(step(true, true, true), None);
         assert_eq!(step(true, true, false), Some(true));
         assert_eq!(step(false, true, false), None);
-        // Hidden in the tray: nothing to do either way.
         assert_eq!(step(true, false, false), None);
         assert_eq!(step(false, false, false), None);
     }

@@ -1,6 +1,3 @@
-//! Reading what is on the clipboard into a capture, and writing entries back (with retries while
-//! another program holds the clipboard).
-
 use arboard::{Clipboard, ImageData};
 use image::RgbaImage;
 use std::{
@@ -21,10 +18,8 @@ pub(super) enum ClipboardCapture {
         hash: String,
         text: String,
         preview: String,
-        /// The same text as HTML, when the program that copied it gave one (C24.4).
         html: Option<String>,
     },
-    /// Files copied in Explorer (CF_HDROP), C24.3.
     Files {
         hash: String,
         paths: Vec<String>,
@@ -46,7 +41,6 @@ impl ClipboardCapture {
     }
 }
 
-/// What to read besides text: the capture settings.
 #[derive(Clone, Copy)]
 pub(super) struct CaptureKinds {
     pub(super) images: bool,
@@ -54,7 +48,6 @@ pub(super) struct CaptureKinds {
     pub(super) html: bool,
 }
 
-/// One line for a list of files: the first name, and how many more.
 pub(super) fn files_preview(paths: &[String]) -> String {
     let first = paths
         .first()
@@ -70,10 +63,8 @@ pub(super) fn files_preview(paths: &[String]) -> String {
 pub(super) fn read_clipboard_capture(kinds: CaptureKinds) -> Result<Option<ClipboardCapture>, String> {
     let mut clipboard = Clipboard::new().map_err(|error| error.to_string())?;
 
-    // Files first: Explorer puts no text next to them, but some programs add the paths as text.
     if kinds.files {
         if let Ok(paths) = clipboard.get().file_list() {
-            // A screenshot copy (C41.4) adds its PNG as a file next to the bitmap; keep it as the image.
             let screenshot = kinds.images && matches!(paths.as_slice(), [path] if crate::screenshot::is_screenshot_file(path));
             let paths: Vec<String> = paths.iter().map(|path: &PathBuf| path.display().to_string()).collect();
             if !paths.is_empty() && !screenshot {
@@ -125,7 +116,6 @@ pub(super) fn write_clipboard_text(text: &str) -> Result<(), String> {
     })
 }
 
-/// Rich text with its plain text beside it, so programs without HTML still get the words (C24.4).
 pub(super) fn write_clipboard_html(html: &str, text: &str) -> Result<(), String> {
     retry_clipboard_write("set clipboard html", || {
         Clipboard::new()
@@ -135,7 +125,6 @@ pub(super) fn write_clipboard_html(html: &str, text: &str) -> Result<(), String>
     })
 }
 
-/// Files, as Explorer copies them (C24.3).
 pub(super) fn write_clipboard_files(paths: &[String]) -> Result<(), String> {
     retry_clipboard_write("set clipboard files", || {
         let mut clipboard = Clipboard::new().map_err(|error| format!("Failed to open clipboard: {error}"))?;
@@ -147,8 +136,6 @@ pub(super) fn write_clipboard_files(paths: &[String]) -> Result<(), String> {
     })
 }
 
-/// Adds the file to what is on the clipboard (CF_HDROP next to the bitmap and PNG): chat apps and
-/// Explorer paste the file, image editors the bitmap.
 pub(super) fn write_clipboard_file(path: &Path) -> Result<(), String> {
     retry_clipboard_write("set clipboard file", || {
         Clipboard::new()
@@ -159,7 +146,6 @@ pub(super) fn write_clipboard_file(path: &Path) -> Result<(), String> {
     })
 }
 
-/// The path in double quotes, as a terminal's drag and drop gives it; spaces stay one argument.
 pub(super) fn quoted_path(path: &Path) -> String {
     format!("\"{}\"", path.display())
 }

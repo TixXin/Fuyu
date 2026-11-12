@@ -1,21 +1,13 @@
-//! Translation services. Every provider speaks the OpenAI-compatible chat completions
-//! API, so they differ only in base URL, model and stored key.
-
 use crate::user_error::UserError;
 use reqwest::Url;
 
 pub(super) struct Provider {
-    /// Stable id shared with the frontend; also the Windows credential user name.
     pub(super) id: &'static str,
-    /// Name used in error messages, which the translation window shows as they are.
     pub(super) name: &'static str,
-    /// `None` for the custom provider, whose base URL comes from the user.
     base_url: Option<&'static str>,
-    /// `None` where the user has to name a model from the provider's catalogue.
     default_model: Option<&'static str>,
 }
 
-// Mirrored by TRANSLATION_PROVIDERS in src/features/translation/providers.ts.
 const PROVIDERS: &[Provider] = &[
     Provider {
         id: "deepseek",
@@ -61,7 +53,6 @@ const PROVIDERS: &[Provider] = &[
     },
 ];
 
-/// The provider older versions used for everything; requests without one go here.
 pub(super) const DEFAULT_PROVIDER_ID: &str = "deepseek";
 
 const MAX_BASE_URL_LENGTH: usize = 500;
@@ -75,7 +66,6 @@ pub(super) fn find_provider(id: Option<&str>) -> Result<&'static Provider, UserE
         .ok_or_else(|| UserError::new("translation.provider", format!("Unsupported translation service: {id}")).arg("service", id))
 }
 
-/// The chat completions URL: the preset base URL, or a checked custom one.
 pub(super) fn completions_url(
     provider: &Provider,
     custom_base_url: Option<&str>,
@@ -93,8 +83,6 @@ pub(super) fn completions_url(
     Url::parse(&endpoint).map_err(|error| UserError::new("translation.url", "The service address is not valid.").detail(error))
 }
 
-/// Keys travel in the request, so only HTTPS is accepted, plus plain HTTP to this
-/// machine for locally hosted models.
 fn validate_custom_base_url(raw: &str) -> Result<String, UserError> {
     let raw = raw.trim();
     if raw.is_empty() {
@@ -129,7 +117,6 @@ pub(super) fn resolve_model(provider: &Provider, model: Option<&str>) -> Result<
     }
 }
 
-/// The translation in a chat completions response, or why there is none.
 pub(super) fn parse_completion(
     provider: &Provider,
     result: &serde_json::Value,
@@ -139,7 +126,6 @@ pub(super) fn parse_completion(
         .get("choices")
         .and_then(|choices| choices.get(0))
         .ok_or_else(|| UserError::new("translation.noResult", format!("{name} returned no translation.")).arg("service", name))?;
-    // Some compatible services omit finish_reason; only a reported cut-off is an error.
     match choice.get("finish_reason").and_then(|value| value.as_str()) {
         None | Some("stop") => {}
         Some("length") => return Err(UserError::new("translation.cutOff", format!("{name} did not finish the translation; try again or shorten the text.")).arg("service", name)),

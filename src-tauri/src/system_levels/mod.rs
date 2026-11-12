@@ -1,9 +1,3 @@
-//! Volume and brightness popups: a background thread watches the default output's volume and
-//! mute and the built-in display's brightness, and tells the island when either changes, however
-//! it was changed (keys, the taskbar, another app). It only reads while the island asks for it
-//! (`set_level_popup_enabled`); the first reading after starting, or after the default output
-//! changes, is taken as the starting point and shows nothing.
-
 use std::{
     sync::atomic::{AtomicBool, Ordering},
     thread,
@@ -22,20 +16,14 @@ use crate::win32::{
 
 pub(crate) const LEVEL_CHANGED_EVENT: &str = "system-level-changed";
 
-/// Volume is read this often, so a held key's steps show as they happen.
 const VOLUME_POLL: Duration = Duration::from_millis(100);
-/// Brightness goes through WMI, a few milliseconds a read, so less often.
 const BRIGHTNESS_POLL: Duration = Duration::from_millis(400);
-/// The default output is looked up again this often, to follow a switch to headphones.
 const DEVICE_REFRESH: Duration = Duration::from_secs(2);
-/// After WMI found no built-in display, it is asked again this rarely.
 const BRIGHTNESS_RETRY: Duration = Duration::from_secs(60);
-/// While the popup is off, the thread checks this often whether it was turned on.
 const IDLE_POLL: Duration = Duration::from_millis(500);
 
 static ENABLED: AtomicBool = AtomicBool::new(false);
 
-/// A reading sent to the island: `level` is 0–1.
 #[derive(Debug, Clone, Copy, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase", tag = "kind")]
 pub(crate) enum LevelChange {
@@ -43,27 +31,23 @@ pub(crate) enum LevelChange {
     Brightness { level: f32 },
 }
 
-/// Remembers the last reading of one level and says when a new one differs from it.
 #[derive(Debug, Default)]
 pub(crate) struct LevelTracker<T> {
     last: Option<T>,
 }
 
 impl<T: PartialEq + Copy> LevelTracker<T> {
-    /// True when `reading` differs from the last one; the first reading is only remembered.
     pub(crate) fn changed(&mut self, reading: T) -> bool {
         let changed = self.last.is_some_and(|last| last != reading);
         self.last = Some(reading);
         changed
     }
 
-    /// Forgets the last reading, so the next one is a new starting point.
     pub(crate) fn reset(&mut self) {
         self.last = None;
     }
 }
 
-/// Volume in whole percent, so float noise between reads is not a change.
 fn volume_reading(volume: &OutputVolume) -> Option<(u32, bool)> {
     let level = volume.level().ok()?.clamp(0.0, 1.0);
     Some(((level * 100.0).round() as u32, volume.muted().ok()?))
@@ -96,7 +80,6 @@ fn watch(app: &AppHandle) {
         let mut has_brightness = true;
         while ENABLED.load(Ordering::Relaxed) {
             if volume_opened.elapsed() >= DEVICE_REFRESH {
-                // Another device may have become the default; its level is a new starting point.
                 volume = open_volume();
                 volume_opened = Instant::now();
                 volume_tracker.reset();
@@ -120,7 +103,6 @@ fn watch(app: &AppHandle) {
     }
 }
 
-/// Starts the watching thread; it stays idle until the island turns the popup on.
 pub(crate) fn init(app: &AppHandle) {
     let app = app.clone();
     let started = thread::Builder::new().name("system-levels".into()).spawn(move || watch(&app));
@@ -129,13 +111,11 @@ pub(crate) fn init(app: &AppHandle) {
     }
 }
 
-/// Turns the watching on or off; the island turns it off while the popup setting is off.
 #[tauri::command]
 pub fn set_level_popup_enabled(enabled: bool) {
     ENABLED.store(enabled, Ordering::Relaxed);
 }
 
-/// This module's Tauri commands, chained into `lib.rs`'s `generate_handler!`.
 macro_rules! tauri_commands {
     ($next:ident [$($done:tt)*] $($rest:tt)*) => {
         $next!([$($done)*

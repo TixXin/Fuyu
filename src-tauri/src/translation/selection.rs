@@ -1,5 +1,3 @@
-//! Copies the foreground selection without keeping it on the clipboard or in history.
-
 use std::{borrow::Cow, thread, time::Duration};
 
 use arboard::{Clipboard, ImageData};
@@ -16,10 +14,6 @@ struct SavedClipboard {
     image: Option<(usize, usize, Vec<u8>)>,
 }
 
-/// The text a selection shortcut should translate.
-///
-/// A clipboard that changed after Ctrl+C is the selection. Otherwise the text that
-/// was already there is the fallback. Nothing either way means there is nothing to translate.
 pub(super) fn chosen_text(original: Option<String>, after: Option<String>) -> Option<String> {
     let changed = match (&original, &after) {
         (_, Some(after)) if meaningful(after) => original.as_deref().map(str::trim) != Some(after.trim()),
@@ -35,9 +29,6 @@ fn meaningful(text: &str) -> bool {
     !text.trim().is_empty()
 }
 
-/// Ctrl+C the foreground selection, then put the clipboard back. History ignores the
-/// temporary copy. Returns the selection, or the previous clipboard text when nothing
-/// was selected.
 pub(super) fn capture_selection_text() -> Option<String> {
     suspend_clipboard_capture(CAPTURE_SUSPEND);
     let saved = snapshot_clipboard();

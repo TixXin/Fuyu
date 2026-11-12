@@ -1,6 +1,5 @@
 use super::session::{crop, PixelRect};
 
-/// A 4 × 3 picture whose pixel (x, y) is [x, y, 0, 255].
 fn picture() -> Vec<u8> {
     (0..3u8).flat_map(|y| (0..4u8).flat_map(move |x| [x, y, 0, 255])).collect()
 }
@@ -18,7 +17,6 @@ fn a_selection_past_the_edge_is_clipped_and_one_outside_is_nothing() {
     assert_eq!((width, height), (1, 1));
     assert!(crop(&picture(), 4, 3, PixelRect { x: 4, y: 0, width: 1, height: 1 }).is_none());
     assert!(crop(&picture(), 4, 3, PixelRect { x: 0, y: 0, width: 0, height: 3 }).is_none());
-    // A picture shorter than its size says is not read past its end.
     assert!(crop(&picture()[..8], 4, 3, PixelRect { x: 0, y: 0, width: 1, height: 1 }).is_none());
 }
 
@@ -45,7 +43,6 @@ fn the_clipboard_bitmap_is_bgra_bottom_up_behind_its_header() {
     assert_eq!(&bitmap[..4], &40u32.to_le_bytes());
     assert_eq!(&bitmap[4..12], &[4, 0, 0, 0, 3, 0, 0, 0]);
     assert_eq!(&bitmap[14..16], &32u16.to_le_bytes());
-    // The first row stored is the picture's last (y = 2), each pixel as B, G, R, A.
     assert_eq!(&bitmap[40..48], &[0, 2, 0, 255, 0, 2, 1, 255]);
 }
 
@@ -61,7 +58,6 @@ fn composed_pixels_must_match_their_size() {
 #[test]
 fn targets_are_clipped_to_each_monitor_and_moved_into_its_pixels() {
     use super::targets::{localize, target};
-    // A window across two monitors: the left one at (-1920, 0), the right one at (0, 0).
     let targets = [target(0, false, (-100, 50, 300, 450)), target(0, true, (10, 60, 90, 80)), target(1, false, (2000, 0, 2100, 100))];
     let json = |target| serde_json::to_value(target).expect("serializes");
     let right = localize(&targets, (0, 0), (2560, 1440));
@@ -91,13 +87,9 @@ fn folder_names_and_actions_come_through_headers() {
 
 #[test]
 fn a_zoomed_pin_keeps_the_point_under_the_pointer() {
-    // Positions and sizes are the picture's, inside the window's shadow margin.
     use super::pin::zoomed;
-    // A 200 × 100 picture at (1000, 500), shown at its own size, zoomed to 2× about its middle.
     assert_eq!(zoomed((1000, 500), (200, 100), (200, 100), 2.0, (0.5, 0.5)), (900, 450, 400, 200));
-    // About its top-left corner it grows right and down.
     assert_eq!(zoomed((1000, 500), (200, 100), (200, 100), 0.5, (0.0, 0.0)), (1000, 500, 100, 50));
-    // Never smaller than a grabbable size, never past 8×, and a broken scale is 1×.
     assert_eq!(zoomed((0, 0), (20, 20), (20, 20), 0.01, (0.0, 0.0)).2, 16);
     assert_eq!(zoomed((0, 0), (10, 10), (10, 10), 100.0, (0.0, 0.0)).2, 80);
     assert_eq!(zoomed((0, 0), (20, 20), (20, 20), f64::NAN, (0.0, 0.0)).2, 20);

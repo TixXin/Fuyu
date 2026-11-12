@@ -1,6 +1,3 @@
-//! Sending plain-text mail over SMTP with the mailbox's authorization code, and
-//! the reply draft for a listed message.
-
 use crate::user_error::UserError;
 use imap::Session;
 use lettre::{
@@ -16,13 +13,11 @@ use std::{
 
 use super::content::parse_message_id;
 
-/// The SMTPS port; other ports are used with STARTTLS (still required).
 const SMTPS_PORT: u16 = 465;
 const MAX_RECIPIENTS: usize = 20;
 const MAX_SUBJECT_CHARS: usize = 500;
 const MAX_BODY_BYTES: usize = 200 * 1024;
 
-/// What the user wrote. Mirrored by `OutgoingMail` in src/features/messages/mail/api.ts.
 #[derive(Debug, Clone, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct OutgoingMail {
@@ -33,14 +28,12 @@ pub struct OutgoingMail {
     pub body: String,
 }
 
-/// Threading headers of the message being answered, read from the server.
 #[derive(Debug, Clone, Default, PartialEq)]
 pub(super) struct Thread {
     pub message_id: Option<String>,
     pub references: Option<String>,
 }
 
-/// A reply's starting point. Mirrored by `MailReplyDraft` in api.ts.
 #[derive(Debug, Clone, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ReplyDraft {
@@ -48,9 +41,6 @@ pub struct ReplyDraft {
     pub subject: String,
 }
 
-/// The outgoing server: `smtp.<rest>` when the IMAP server is `imap.<rest>`
-/// (which covers a hand-entered one, e.g. Foxmail on `imap.qq.com`), else
-/// `smtp.<domain>`, as QQ Mail, 163, 126 and most school and company mail use.
 pub(super) fn smtp_server(email: &str, imap_host: &str) -> String {
     let name = imap_host.split_once(':').map_or(imap_host, |(name, _)| name);
     match name.strip_prefix("imap.") {
@@ -63,14 +53,12 @@ fn mailbox(address: &str) -> Result<Mailbox, UserError> {
     address.trim().parse::<Mailbox>().map_err(|_| UserError::new("mail.recipient", format!("Not a valid recipient address: {}", address.trim())).arg("address", address.trim()))
 }
 
-/// A header value from the server, safe to send back: one line, a sane length.
 fn header_value(value: Option<String>) -> Option<String> {
     value
         .map(|value| value.split_whitespace().collect::<Vec<_>>().join(" "))
         .filter(|value| !value.is_empty() && value.len() <= 2_000 && !value.chars().any(char::is_control))
 }
 
-/// Builds the message, checking every field a page could send.
 pub(super) fn build(email: &str, mail: &OutgoingMail, thread: &Thread) -> Result<Message, UserError> {
     let to: Vec<&String> = mail.to.iter().filter(|address| !address.trim().is_empty()).collect();
     let cc: Vec<&String> = mail.cc.iter().filter(|address| !address.trim().is_empty()).collect();
@@ -103,7 +91,6 @@ pub(super) fn build(email: &str, mail: &OutgoingMail, thread: &Thread) -> Result
     builder.body(mail.body.replace("\r\n", "\n")).map_err(|error| UserError::new("mail.build", "Could not put the mail together.").detail(error))
 }
 
-/// Sends `message` through `server` (host, optionally `:port`), always over TLS.
 pub(super) fn deliver(server: &str, email: &str, secret: &str, message: &Message) -> Result<(), UserError> {
     let (host, port) = match server.split_once(':') {
         Some((host, port)) => (host, port.parse().unwrap_or(SMTPS_PORT)),
@@ -125,7 +112,6 @@ pub(super) fn deliver(server: &str, email: &str, secret: &str, message: &Message
     })
 }
 
-/// Reads the answered message's header: who to reply to, its subject and threading.
 pub(super) fn reply_source<T: Read + Write>(session: &mut Session<T>, message_id: &str) -> Result<(ReplyDraft, Thread), UserError> {
     let (validity, uid) = parse_message_id(message_id)?;
     let mailbox = session.examine("INBOX").map_err(|_| UserError::new("mail.inbox", "Could not open the inbox; try again later."))?;

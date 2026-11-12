@@ -1,8 +1,3 @@
-//! The screenshot shortcuts: Ctrl+Shift + a digit, on the number row (RegisterHotKey) and on the
-//! numpad (the low-level keyboard hook, win32::win_key_hook, since Shift turns numpad digits into
-//! navigation keys). They are registered only while the module is on, so turning it off gives the
-//! keys back to other apps. A message-only window on its own thread receives them.
-
 use std::sync::{
     atomic::{AtomicBool, AtomicIsize, Ordering},
     OnceLock,
@@ -24,20 +19,15 @@ use crate::win32::{
     message_window::{self, WindowMessages},
 };
 
-/// The digit after Ctrl+Shift and what it does (plan: docs/architecture/screenshot-plan.md,
-/// "快捷键"). Shortcuts for features not built yet are not registered, so they take no keys.
 const SHORTCUTS: [(u32, Mode); 5] = [(1, Mode::Region), (2, Mode::Copy), (3, Mode::Text), (4, Mode::Translate), (7, Mode::Fullscreen)];
-/// RegisterHotKey ids: this base plus the digit.
 const HOTKEY_BASE: i32 = 0x5300;
 const REFRESH_MESSAGE: u32 = WM_APP + 0x61;
-/// Posted by the keyboard hook for a numpad digit, the digit as wparam.
 const NUMPAD_MESSAGE: u32 = WM_APP + 0x62;
 
 static APP: OnceLock<AppHandle> = OnceLock::new();
 static WINDOW: AtomicIsize = AtomicIsize::new(0);
 static ENABLED: AtomicBool = AtomicBool::new(false);
 
-/// Starts the thread that owns the shortcuts; they stay off until `set_enabled(true)`.
 pub(super) fn start(app: &AppHandle) {
     let _ = APP.set(app.clone());
     thread::spawn(|| {
@@ -47,7 +37,6 @@ pub(super) fn start(app: &AppHandle) {
     });
 }
 
-/// Turns the shortcuts on or off (the module switch).
 pub(super) fn set_enabled(enabled: bool) {
     ENABLED.store(enabled, Ordering::SeqCst);
     let window = WINDOW.load(Ordering::SeqCst);
@@ -92,7 +81,6 @@ fn refresh(window: HWND) {
     }
 }
 
-/// The mode a digit starts, if it is one of the shortcuts.
 fn mode_for(digit: u32) -> Option<Mode> {
     SHORTCUTS.iter().find(|(key, _)| *key == digit).map(|(_, mode)| *mode)
 }

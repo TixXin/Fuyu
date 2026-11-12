@@ -1,6 +1,3 @@
-//! File shelf: files dropped on the island, kept as path references (never copied)
-//! so they can be dragged out, copied, opened or shown in Explorer later.
-
 mod availability;
 mod plugin_view;
 mod store;
@@ -31,7 +28,6 @@ static FILE_SHELF: OnceLock<FileShelfService> = OnceLock::new();
 
 static NEXT_ID: AtomicU64 = AtomicU64::new(0);
 
-/// One stored entry. Mirrored by `FileShelfItem` in src/features/file-shelf/api.ts.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FileShelfItem {
@@ -40,12 +36,10 @@ pub struct FileShelfItem {
     name: String,
     #[serde(default)]
     is_dir: bool,
-    /// Bytes for a file; 0 for a folder, whose contents are not walked.
     #[serde(default)]
     size: u64,
     #[serde(default)]
     added_at: i64,
-    /// Kept at the top, and never removed by auto cleanup or the entry cap.
     #[serde(default)]
     pinned: bool,
 }
@@ -55,10 +49,7 @@ pub struct FileShelfItem {
 pub struct FileShelfEntry {
     #[serde(flatten)]
     item: FileShelfItem,
-    /// The path no longer exists (moved, renamed or deleted). Worked out on each
-    /// snapshot, never stored.
     missing: bool,
-    /// Its drive or network share did not answer, so whether it exists is unknown.
     unreachable: bool,
 }
 
@@ -85,20 +76,15 @@ impl FileShelfService {
         *self.options.lock().unwrap_or_else(PoisonError::into_inner)
     }
 
-    /// Applies `change` and the cleanup options, saves the result when it differs and
-    /// only then keeps it in memory. Every read goes through here too, so entries
-    /// age out and missing files drop off without any other trigger.
     fn update(
         &self,
         change: impl FnOnce(Vec<FileShelfItem>) -> Vec<FileShelfItem>,
     ) -> Result<FileShelfSnapshot, String> {
         let options = self.options();
-        // Checked before taking the list lock: a slow volume may take a moment.
         let paths: Vec<String> = self.items().iter().map(|item| item.path.clone()).collect();
         let known = self.availability.check(&paths);
         let presence = |path: &str| {
             known.get(path).copied().unwrap_or_else(|| {
-                // Just added, so on a volume that answered a moment ago.
                 if Path::new(path).exists() {
                     Presence::Present
                 } else {
@@ -111,7 +97,6 @@ impl FileShelfService {
         if next != *items {
             save_items(&self.path, &next)?;
             *items = next.clone();
-            // Plugins with shelf:read call shelf.list for the entries.
             crate::plugin_host::publish_event("shelf.changed", serde_json::json!({ "count": items.len() }));
         }
         drop(items);
@@ -126,8 +111,6 @@ impl FileShelfService {
             .ok_or_else(|| "This item is no longer on the shelf.".to_string())
     }
 
-    /// Paths of `ids` that still exist, in shelf order. Only paths already on the
-    /// shelf are ever handed to the shell.
     fn existing_paths(&self, ids: &[String]) -> Result<Vec<String>, String> {
         let candidates: Vec<String> = self
             .items()
@@ -193,7 +176,6 @@ fn current_unix_millis() -> i64 {
         .unwrap_or_default()
 }
 
-/// A new entry for an existing absolute path; `None` for anything else.
 fn describe(path: &str, now: i64) -> Option<FileShelfItem> {
     let file_path = Path::new(path);
     if !file_path.is_absolute() {
@@ -221,7 +203,6 @@ pub async fn get_file_shelf() -> Result<FileShelfSnapshot, String> {
     service()?.update(|items| items)
 }
 
-/// Takes the cleanup options from the settings page and applies them at once.
 #[tauri::command]
 pub async fn set_file_shelf_options(
     options: FileShelfOptions,
@@ -258,8 +239,6 @@ pub async fn toggle_file_shelf_pin(id: String) -> Result<FileShelfSnapshot, Stri
     })
 }
 
-/// A small PNG data URL previewing an image entry; `None` for other files or when the
-/// image cannot be read. Decoding runs off the async runtime's threads.
 #[tauri::command]
 pub async fn get_file_shelf_thumbnail(id: String) -> Result<Option<String>, String> {
     let path = service()?.path_of(&id)?;
@@ -278,7 +257,6 @@ pub async fn clear_file_shelf() -> Result<FileShelfSnapshot, String> {
     service()?.update(|_| Vec::new())
 }
 
-/// Puts the files on the clipboard the way Explorer's Copy does, ready for Ctrl+V.
 #[tauri::command]
 pub async fn copy_file_shelf_items(ids: Vec<String>) -> Result<(), String> {
     let paths = service()?.existing_paths(&ids)?;
@@ -302,9 +280,6 @@ pub async fn reveal_file_shelf_item(id: String) -> Result<(), String> {
         .map_err(|error| format!("Failed to show {path} in its folder: {error}"))
 }
 
-/// Drags the files out of the island; resolves once they are dropped or the drag
-/// is cancelled, with a fresh snapshot (a Shift-drag may have moved them). With
-/// `remove_after`, entries a target accepted leave the shelf.
 #[tauri::command]
 pub async fn start_file_shelf_drag(
     window: WebviewWindow,
@@ -314,7 +289,6 @@ pub async fn start_file_shelf_drag(
     let paths = service()?.existing_paths(&ids)?;
     let (sender, receiver) = mpsc::channel();
     let target = window.clone();
-    // The OLE drag loop has to run on the window's UI thread.
     window
         .run_on_main_thread(move || {
             let result = target
@@ -337,8 +311,6 @@ pub async fn start_file_shelf_drag(
     })
 }
 
-/// This module's Tauri commands. `lib.rs` chains every module's list into one
-/// `generate_handler!`, so adding a command only touches this file.
 macro_rules! tauri_commands {
     ($next:ident [$($done:tt)*] $($rest:tt)*) => {
         $next!([$($done)*

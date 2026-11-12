@@ -1,8 +1,3 @@
-//! The approval listener on 127.0.0.1. Each hook request gets its own thread, which holds the
-//! connection open while the user decides, and answers when they do, when the wait runs out,
-//! or when the island quits. Meanwhile it watches the socket: the agent closes it when the user
-//! presses Esc in the terminal, and the card has to go.
-
 use std::{
     io::{BufReader, ErrorKind},
     net::{TcpListener, TcpStream},
@@ -20,14 +15,10 @@ use super::{
     queue::{ApprovalRequest, CloseReason, Outcome, Queue},
 };
 
-/// How long a request may take to arrive in full.
 const READ_TIMEOUT: Duration = Duration::from_secs(10);
-/// How often a waiting request looks for a hang-up.
 const POLL_INTERVAL: Duration = Duration::from_millis(250);
-/// How long quitting waits for the waiting requests to be answered.
 const SHUTDOWN_WAIT: Duration = Duration::from_secs(1);
 
-/// What the island hears about: a card to show, or one to take away.
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum ApprovalEvent {
     Requested(ApprovalRequest),
@@ -36,11 +27,9 @@ pub(crate) enum ApprovalEvent {
 
 pub(super) type Notify = Arc<dyn Fn(ApprovalEvent) + Send + Sync>;
 
-/// State shared by the listener, the request threads and the commands.
 pub(super) struct Shared {
     queue: Mutex<Queue>,
     changed: Condvar,
-    /// Off: requests are handed back at once, so installed hooks cost nothing.
     enabled: AtomicBool,
     token: String,
     wait_limit: Duration,
@@ -66,7 +55,6 @@ impl Shared {
         self.queue().shown()
     }
 
-    /// The session moved on without the island: its waiting threads close their cards.
     pub fn settle_elsewhere(&self, agent: Agent, activity: &Activity) -> Vec<u64> {
         let settled = self.queue().settle_elsewhere(agent, activity);
         if !settled.is_empty() {
@@ -75,7 +63,6 @@ impl Shared {
         settled
     }
 
-    /// Hands every waiting request back to the terminal, waiting a moment for the answers to go out.
     pub fn shut_down(&self) {
         self.queue().shut_down();
         self.changed.notify_all();
@@ -91,7 +78,6 @@ impl Shared {
     }
 }
 
-/// Listens on `preferred_port`, or a free port when it is taken. Returns the state and the port.
 pub(super) fn listen(preferred_port: u16, token: String, wait_limit: Duration, notify: Notify) -> Result<(Arc<Shared>, u16), String> {
     let listener = TcpListener::bind(("127.0.0.1", preferred_port))
         .or_else(|_| TcpListener::bind(("127.0.0.1", 0)))
@@ -126,7 +112,6 @@ pub(super) fn listen(preferred_port: u16, token: String, wait_limit: Duration, n
 fn handle(shared: &Shared, stream: TcpStream, port: u16) {
     let (status, body) = match answer(shared, &stream, port) {
         Ok(Some(body)) => (200, body),
-        // The agent hung up: nobody to answer.
         Ok(None) => return,
         Err(error) => (error.status, serde_json::json!({ "error": error.message }).to_string()),
     };
@@ -134,7 +119,6 @@ fn handle(shared: &Shared, stream: TcpStream, port: u16) {
     let _ = write_response(&mut &stream, status, &body);
 }
 
-/// The hook's answer, or None when the agent hung up while waiting.
 fn answer(shared: &Shared, stream: &TcpStream, port: u16) -> Result<Option<String>, HttpError> {
     let _ = stream.set_read_timeout(Some(READ_TIMEOUT));
     let request = read_request(&mut BufReader::new(stream))?;
@@ -147,7 +131,6 @@ fn answer(shared: &Shared, stream: &TcpStream, port: u16) -> Result<Option<Strin
     }
     let remote_host = check_access(&request, &shared.token, port)?;
     let Some((agent, kind)) = route else {
-        // ACTIVITY_PATH: answered at once; the hook runs in the background and reads nothing back.
         let activity = Activity::parse(&request.body).map_err(|message| HttpError { status: 400, message })?;
         if let Some(activity) = activity {
             shared.settle_elsewhere(Agent::ClaudeCode, &activity);
@@ -157,9 +140,6 @@ fn answer(shared: &Shared, stream: &TcpStream, port: u16) -> Result<Option<Strin
     let mut input = HookInput::parse(&request.body).map_err(|message| HttpError { status: 400, message })?;
     input.remote_host = remote_host;
 
-    // A question comes through PermissionRequest too, after its PreToolUse hook gave it back
-    // (or when that hook is not installed): let the terminal ask at once. And the PreToolUse path
-    // only takes AskUserQuestion, whatever matcher the hook was installed with.
     let question_elsewhere = match kind {
         Kind::Permission => input.is_question(),
         Kind::Question => !input.is_question(),
@@ -199,7 +179,6 @@ fn answer(shared: &Shared, stream: &TcpStream, port: u16) -> Result<Option<Strin
     }))
 }
 
-/// Waits for the user's choice, the deadline, a hang-up or the island quitting.
 fn wait(shared: &Shared, stream: &TcpStream, id: u64, deadline: Instant) -> (Option<Outcome>, CloseReason) {
     loop {
         {
@@ -229,7 +208,6 @@ fn wait(shared: &Shared, stream: &TcpStream, id: u64, deadline: Instant) -> (Opt
     }
 }
 
-/// Whether the agent closed its end: a read that would block means the connection is alive.
 fn hung_up(stream: &TcpStream) -> bool {
     if stream.set_nonblocking(true).is_err() {
         return false;

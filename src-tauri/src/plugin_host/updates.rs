@@ -1,12 +1,3 @@
-//! Keeping market plugins current: the index and revocation list are read 30 s
-//! after start and then every 6 hours while third-party plugins are allowed
-//! (and whenever the market page loads). Revocations are applied at once;
-//! newer versions are shown on the plugin cards, and installed by themselves
-//! only when the user turned on automatic updates, the publisher is trusted,
-//! the new version asks for no permission the installed one did not, and it
-//! is signed by its author with the key the installed version had
-//! (author_signing.rs). An update on another key waits for the user to confirm.
-
 use std::{
     collections::{BTreeMap, BTreeSet},
     sync::Mutex,
@@ -31,13 +22,9 @@ const CHECK_EVERY: Duration = Duration::from_secs(6 * 60 * 60);
 
 #[derive(Default)]
 struct Status {
-    /// Plugin id -> the newer version in the market.
     available: BTreeMap<String, String>,
-    /// Plugin id -> the version an automatic update installed this run.
     updated: BTreeMap<String, String>,
-    /// Plugin id -> a pre-release in the market newer than its stable version.
     pre_releases: BTreeMap<String, String>,
-    /// Plugins whose available update is not signed by the key the installed version had.
     key_changed: BTreeSet<String>,
 }
 
@@ -48,43 +35,32 @@ static STATUS: Mutex<Status> = Mutex::new(Status {
     key_changed: BTreeSet::new(),
 });
 
-/// How `entry` compares with the author key remembered for the installed plugin;
-/// None when its signature is wrong (it cannot be installed at all).
 pub(super) fn key_check(state: &PluginsState, entry: &MarketEntry) -> Option<KeyCheck> {
     let remembered = state.plugins.get(&entry.id).map(|grant| grant.author_keys.as_slice()).unwrap_or_default();
     entry.key_check(remembered).ok()
 }
 
-/// Whether the update the market offers for `id` is signed by another key than the installed version.
 pub(super) fn signing_key_changed(id: &str) -> bool {
     lock(&STATUS).key_changed.contains(id)
 }
 
-/// Whether updates of `id` may install pre-releases.
 pub(super) fn wants_pre_release(state: &PluginsState, id: &str) -> bool {
     state.plugins.get(id).is_some_and(|grant| grant.pre_release)
 }
 
-/// (newer version in the market, version installed by an automatic update) for a plugin card.
-/// For an installed plugin: the update available, the version auto-updated to,
-/// and the pre-release the market offers.
 pub(super) fn status_for(id: &str) -> (Option<String>, Option<String>, Option<String>) {
     let status = lock(&STATUS);
     (status.available.get(id).cloned(), status.updated.get(id).cloned(), status.pre_releases.get(id).cloned())
 }
 
-/// Whether the user trusts the publisher (the island's own always is).
 pub(super) fn trusts(state: &PluginsState, publisher: &str) -> bool {
     publisher == OFFICIAL_PUBLISHER || state.trusted_publishers.iter().any(|name| name == publisher)
 }
 
-/// A GitHub user or organization name.
 fn is_valid_publisher(name: &str) -> bool {
     (1..=39).contains(&name.len()) && name.bytes().all(|byte| byte.is_ascii_alphanumeric() || byte == b'-')
 }
 
-/// Applies a freshly read market: revocations, and which installed plugins have
-/// a newer version. Returns the updates to install by themselves.
 pub(super) fn absorb(data: &MarketData) -> Result<Vec<MarketEntry>, String> {
     revocations::apply(data.revoked.clone())?;
     let host = host()?;
@@ -124,9 +100,6 @@ pub(super) fn absorb(data: &MarketData) -> Result<Vec<MarketEntry>, String> {
     Ok(automatic)
 }
 
-/// Stops the plugin, swaps in the new package and starts what should run, then
-/// remembers the author key that signed it. A package signed by another key
-/// than the installed version (or no longer signed) needs `accept_key_change`.
 pub(super) fn install_entry(entry: &MarketEntry, bytes: &[u8], accept_key_change: bool) -> Result<(), String> {
     let host = host()?;
     let signer = entry.signer()?;
@@ -152,7 +125,6 @@ pub(super) fn install_entry(entry: &MarketEntry, bytes: &[u8], accept_key_change
     Ok(())
 }
 
-/// Reads the market and applies it; installs automatic updates.
 async fn check() -> Result<(), String> {
     let data = market::fetch_market().await?;
     let automatic = tauri::async_runtime::spawn_blocking(move || absorb(&data))
@@ -177,7 +149,6 @@ pub(super) fn start() {
     let _ = thread::Builder::new().name("plugin-updates".into()).spawn(|| {
         thread::sleep(FIRST_CHECK_AFTER);
         loop {
-            // No network traffic for people who do not use third-party plugins.
             if third_party_allowed() {
                 if let Err(error) = tauri::async_runtime::block_on(check()) {
                     eprintln!("plugin update check failed: {error}");
@@ -188,9 +159,6 @@ pub(super) fn start() {
     });
 }
 
-/// Why `entry` may not be installed: revoked (in this market or in the saved
-/// list), older than the installed version, or from a publisher the user has
-/// not trusted.
 pub(super) fn install_refusal(entry: &MarketEntry, revoked: &[revocations::Revocation]) -> Option<String> {
     let host = host().ok()?;
     let state = lock(&host.state);
@@ -209,12 +177,10 @@ pub(super) fn install_refusal(entry: &MarketEntry, revoked: &[revocations::Revoc
     (!trusts(&state, entry.publisher())).then(|| format!("Trust the publisher \"{}\" first.", entry.publisher()))
 }
 
-/// True when `offered` is older than `installed` (an old or stale index must not roll a plugin back).
 pub(super) fn downgrade(installed: &str, offered: &str) -> bool {
     installed != offered && version_at_least(installed, offered)
 }
 
-/// The reason a revoked plugin version shows.
 pub(super) fn revoked_reason(state: &PluginsState, id: &str, version: &str) -> Option<LocalizedText> {
     revocations::find(&state.revoked, id, version).map(|item| item.reason.clone())
 }
@@ -228,8 +194,6 @@ pub async fn set_plugin_auto_update(enabled: bool) -> Result<PluginsSnapshot, St
     snapshot()
 }
 
-/// Lets updates of an installed plugin install its pre-releases, or go back to
-/// stable versions only (an installed pre-release stays until a newer stable).
 #[tauri::command]
 pub async fn set_plugin_pre_release(id: String, enabled: bool) -> Result<PluginsSnapshot, String> {
     update_state(|state, installed| {
@@ -239,14 +203,12 @@ pub async fn set_plugin_pre_release(id: String, enabled: bool) -> Result<Plugins
         state.plugins.entry(id.clone()).or_default().pre_release = enabled;
         Ok(())
     })?;
-    // Show the right update at once when the market was read this session.
     if let Some(data) = market::recent_market(Duration::from_secs(CHECK_EVERY.as_secs())) {
         let _ = absorb(&data);
     }
     snapshot()
 }
 
-/// Trusting a publisher lets its plugins be installed (the market asks first).
 #[tauri::command]
 pub async fn set_plugin_publisher_trusted(publisher: String, trusted: bool) -> Result<PluginsSnapshot, String> {
     if !is_valid_publisher(&publisher) {
@@ -266,7 +228,6 @@ pub async fn set_plugin_publisher_trusted(publisher: String, trusted: bool) -> R
     snapshot()
 }
 
-/// Checks the market now (Settings > Plugins > Check for updates).
 #[tauri::command]
 pub async fn check_plugin_updates() -> Result<PluginsSnapshot, String> {
     check().await?;

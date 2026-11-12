@@ -38,7 +38,6 @@ mod win32;
 
 use tauri::{Manager, WindowEvent};
 
-/// Chains each module's `tauri_commands!` list into a single `generate_handler!`.
 macro_rules! collect_commands {
     ([$($done:tt)*]) => {
         tauri::generate_handler![$($done)*]
@@ -54,11 +53,9 @@ pub fn run() {
     if let Some(identifier) = notification_diagnostics::verification_identifier() {
         context.config_mut().identifier = identifier;
     }
-    // `pnpm dev:lane`: a preview next to the user's island, with its own data.
     if let Some(lane) = dev_lane::lane() {
         context.config_mut().identifier = dev_lane::identifier(lane);
     }
-    // Data from before the rename must be in place before any WebView opens it.
     let migrate = context.config().identifier == rename_migration::NEW_IDENTIFIER;
     if migrate {
         rename_migration::before_start();
@@ -66,7 +63,6 @@ pub fn run() {
     let result = tauri::Builder::default()
         .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
             let _ = island::show_island(app);
-            // A focusd:// link opened while the island runs (plugin_host/uri.rs).
             if let Some(link) = plugin_host::find_link(&args) {
                 plugin_host::open_link(app, link, false);
             }
@@ -102,8 +98,6 @@ pub fn run() {
                 island::record_dragged_position(*position);
             }
 
-            // Native Acrylic/Region is intentionally not reapplied on DPI
-            // changes. Liquid glass is rendered inside the island element.
         })
         .setup(move |app| {
             tray::build_tray(app)?;
@@ -153,9 +147,6 @@ pub fn run() {
                 eprintln!("failed to initialize notification diagnostics: {error}");
             }
             if let Ok(window) = island::main_window(app.handle()) {
-                // The window is not in the runtime's window list until setup returns, so sizing
-                // it here failed with "failed to receive message from webview"; size it once the
-                // event loop runs instead.
                 let stage = window.clone();
                 let sized = app.handle().run_on_main_thread(move || {
                     if let Err(error) = island::apply_stage_geometry(&stage, island::IslandWindowState::default(), false) {
@@ -209,10 +200,8 @@ pub fn run() {
         .build(context)
         .map(|app| {
             app.run(|_, event| {
-                // Hooks still waiting go back to the terminal rather than hit their timeout.
                 if let tauri::RunEvent::Exit = event {
                     agent_approval::shutdown();
-                    // WeChat's accessibility byte goes back as it was.
                     wechat_reminders::shutdown();
                 }
             })

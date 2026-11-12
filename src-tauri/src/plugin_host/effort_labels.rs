@@ -1,27 +1,18 @@
-//! `contributes.agentEffortLabels`: how the Agent page names a session's reasoning effort, per
-//! agent, e.g. `{ "claudeCode": { "medium": "xhigh" } }`. Only the shown text changes; the
-//! session keeps the effort the agent reported. A manifest-only plugin (`runtime: none`) is
-//! enough, so nothing runs for it.
-
 use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
 
 use super::{host, lock, permissions::missing_permissions, revocations};
 
-/// The agents whose effort can be renamed, as in AgentProvider (src/features/agent-status/api.ts).
 const AGENTS: [&str; 2] = ["claudeCode", "codex"];
 const MAX_LABELS: usize = 8;
 const MAX_CHARS: usize = 16;
 
-/// Per agent, effort as reported -> effort as shown.
 pub(super) type EffortLabels = BTreeMap<String, BTreeMap<String, String>>;
 
-/// What the Agent page applies; mirrored by `AgentEffortLabels` in src/features/agent-status/effortLabels.ts.
 #[derive(Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct AgentEffortLabels(EffortLabels);
 
-/// Checks the manifest's labels: known agents, short labels, effort names in lower case.
 pub(super) fn check(labels: &mut EffortLabels) -> Result<(), String> {
     for (agent, map) in labels.iter_mut() {
         if !AGENTS.contains(&agent.as_str()) {
@@ -46,8 +37,6 @@ pub(super) fn check(labels: &mut EffortLabels) -> Result<(), String> {
     Ok(())
 }
 
-/// Merges the labels of the plugins in `plugins`, in id order; the first plugin to rename an
-/// effort wins.
 pub(super) fn merge<'a>(plugins: impl IntoIterator<Item = (&'a str, &'a EffortLabels)>) -> EffortLabels {
     let mut plugins: Vec<_> = plugins.into_iter().collect();
     plugins.sort_by_key(|(id, _)| *id);
@@ -63,7 +52,6 @@ pub(super) fn merge<'a>(plugins: impl IntoIterator<Item = (&'a str, &'a EffortLa
     merged
 }
 
-/// The effort labels of the plugins that are switched on.
 #[tauri::command]
 pub fn list_agent_effort_labels() -> Result<AgentEffortLabels, String> {
     let host = host()?;

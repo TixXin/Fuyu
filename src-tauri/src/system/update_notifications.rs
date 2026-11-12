@@ -1,5 +1,3 @@
-//! Best-effort update notifications and a deliberately small diagnostic payload.
-
 use std::{collections::HashSet, sync::{Mutex, OnceLock}};
 
 use serde::Serialize;
@@ -21,8 +19,6 @@ const CURRENT_VERSION_KEY: &str = r"SOFTWARE\Microsoft\Windows NT\CurrentVersion
 #[derive(Default)]
 struct Notifications {
     shown: HashSet<String>,
-    // Keep the event source alive after the command returns. Only the current
-    // update needs an actionable notification in this running application.
     active: Option<ToastNotification>,
 }
 
@@ -61,8 +57,6 @@ fn show_notification(app: AppHandle, version: String, title: String, body: Strin
     toast.SetGroup(&HSTRING::from("application"))?;
     let app_for_click = app.clone();
     toast.Activated(&TypedEventHandler::<ToastNotification, IInspectable>::new(move |_, _| {
-        // Main owns the existing section-focus storage protocol. It handles this
-        // event even when the settings window has not been created yet.
         let _ = app_for_click.emit_to(crate::island::WINDOW_LABEL, OPEN_SETTINGS_EVENT, ());
         Ok(())
     }))?;
@@ -72,7 +66,6 @@ fn show_notification(app: AppHandle, version: String, title: String, body: Strin
     Ok(true)
 }
 
-/// A notification failure must never fail the update check itself.
 #[tauri::command]
 pub async fn updater_notify(app: AppHandle, version: String, title: String, body: String) -> bool {
     if version.is_empty() || version.len() > 128 || title.len() > 512 || body.len() > 4096 {
@@ -89,7 +82,6 @@ pub struct UpdateDiagnostics {
     architecture: &'static str,
 }
 
-/// Reads only public OS version fields, never user paths, environment or credentials.
 #[tauri::command]
 pub async fn updater_diagnostics() -> UpdateDiagnostics {
     let build = registry::read_string(HKEY_LOCAL_MACHINE, CURRENT_VERSION_KEY, "CurrentBuildNumber")

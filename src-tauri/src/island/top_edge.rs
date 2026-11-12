@@ -1,22 +1,15 @@
-//! Tracks whether the island sits flush with the top edge of its monitor. While it
-//! does, the frontend draws a flat top whose corners flare into the screen edge.
-
 use tauri::{Emitter, PhysicalPosition, Position, WebviewWindow};
 
 use super::geometry::{monitor_for_island_position, work_area_top_inset};
 use super::state::{mutate_window_state, read_window_state, IslandPosition, IslandWindowState};
 
-// Mirrored by TOP_ATTACHMENT_CHANGED_EVENT in src/windows/island/api.ts.
 pub(crate) const TOP_ATTACHMENT_CHANGED_EVENT: &str = "island-top-attachment-changed";
-// Dropping the island this close to the top edge (logical px) pulls it flush.
 const SNAP_DISTANCE: f64 = 16.0;
 
 pub(crate) fn is_attached() -> bool {
     read_window_state().top_attached
 }
 
-/// Recomputes the attachment once the stage geometry has resolved the window position.
-/// `top` is the physical y of the monitor top, below a top-docked taskbar.
 pub(crate) fn sync_from_stage(window: &WebviewWindow, state: IslandWindowState, top: i32) {
     set_attached(
         window,
@@ -24,7 +17,6 @@ pub(crate) fn sync_from_stage(window: &WebviewWindow, state: IslandWindowState, 
     );
 }
 
-/// Pulls a dropped island flush with the top edge when it lands close to it.
 pub(crate) fn snap_to_top(window: &WebviewWindow, position: IslandPosition) -> IslandPosition {
     let Ok(Some(monitor)) = monitor_for_island_position(window, position) else {
         set_attached(window, false);
@@ -64,7 +56,6 @@ pub(crate) fn set_attached(window: &WebviewWindow, attached: bool) {
     }
 }
 
-// A custom position ignores the vertical margin, so only its own y decides.
 fn is_top_attached(custom_position: Option<IslandPosition>, margin_y: f64, top: i32) -> bool {
     match custom_position {
         Some(position) => position.y == top,

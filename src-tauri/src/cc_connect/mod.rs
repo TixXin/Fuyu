@@ -1,16 +1,3 @@
-//! cc-connect (github.com/chenhg5/cc-connect) as a phone push channel: it already runs bots on
-//! Telegram, Discord, Feishu and more for the user's coding agents, so a push to the phone is a
-//! message from that bot, and the reply can take the session over. This finds the program, lists
-//! the chats each project has talked to, and sends one message with `cc-connect send`, which hands
-//! it to the running cc-connect. What to push and when is decided in the island
-//! (src/features/agent-status/push); the built-in plugin `focusd.cc-connect` holds the settings.
-//!
-//! For a start from nothing the plugin page also downloads the program (install.rs), checks a
-//! bot token (bots.rs), adds a project to cc-connect's config (config_file.rs; Feishu's through
-//! cc-connect's own QR setup, feishu.rs), and keeps cc-connect running (runner.rs). The cc-connect
-//! of an SSH computer is read and sent through over ssh (remote.rs), so its sessions are pushed by
-//! its own bots, which can take them over.
-
 mod bots;
 mod chats;
 mod config_file;
@@ -38,7 +25,6 @@ use crate::system::{windows_home_dir, CREATE_NO_WINDOW};
 
 static APP_DIR: OnceLock<PathBuf> = OnceLock::new();
 
-/// Remembers the app data folder, where a downloaded cc-connect lives; runs before plugins start.
 pub fn init(app: &AppHandle) -> Result<(), String> {
     let dir = crate::home_dir::fuyu_home(app.path()).map_err(|error| format!("Failed to resolve app data directory: {error}"))?;
     let _ = APP_DIR.set(dir);
@@ -55,40 +41,27 @@ const MAX_TEXT_CHARS: usize = 16_000;
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CcConnectStatus {
-    /// The program; None when it is nowhere to be found.
     exe: Option<String>,
-    /// How it was found: "setting", "running", "path", "downloaded" or "installed".
     exe_source: Option<&'static str>,
-    /// Why the path set on the plugin page cannot be used.
     exe_error: Option<UserError>,
-    /// Some cc-connect is running; `send` only works then.
     running: bool,
-    /// The island's own cc-connect (the "run" setting): "off", "starting", "running", "external",
-    /// "noConfig" or "failed" with `runner_error`.
     runner: &'static str,
     runner_error: Option<UserError>,
-    /// Its data folder, `~/.cc-connect`.
     data_dir: String,
-    /// The work folder a new bot is offered: an empty one in the island's data folder.
     default_work_dir: Option<String>,
-    /// Whether `config.toml` is there.
     config: bool,
-    /// The projects in it, chats or not.
     config_projects: Vec<String>,
     projects: Vec<chats::Project>,
 }
 
-/// Starts empty, so Claude Code there reads nothing of the user's without asking.
 fn default_work_dir() -> Option<PathBuf> {
     app_dir().map(|dir| dir.join("cc-connect").join("work"))
 }
 
 fn data_dir() -> Result<PathBuf, String> {
-    // shortcut: a `data_dir` set in cc-connect's config is not followed; read it once someone sets one.
     windows_home_dir().map(|home| home.join(".cc-connect"))
 }
 
-/// Starts or stops the island's cc-connect to match the plugin's settings (plugin_host/builtin.rs).
 pub(crate) fn apply(settings: &serde_json::Map<String, serde_json::Value>) -> Result<(), String> {
     runner::apply(settings, app_dir(), config_file::config_path(&data_dir()?)).map_err(|error| error.to_string())
 }
@@ -98,7 +71,6 @@ pub(crate) fn stop() {
     feishu::cancel();
 }
 
-/// The program, whether it runs, and the chats of each project. `path`: the plugin's setting.
 #[tauri::command]
 pub async fn get_cc_connect_status(path: Option<String>) -> Result<CcConnectStatus, UserError> {
     let data_dir = data_dir()?;
@@ -127,7 +99,6 @@ pub async fn get_cc_connect_status(path: Option<String>) -> Result<CcConnectStat
     .map_err(join_error)
 }
 
-/// Sends `text` to one chat (`session_key`, as listed by `get_cc_connect_status`) of `project`.
 #[tauri::command]
 pub async fn send_cc_connect_message(path: Option<String>, project: String, session_key: String, text: String) -> Result<(), UserError> {
     let text = check_message(&project, &session_key, &text)?;
@@ -139,21 +110,17 @@ pub async fn send_cc_connect_message(path: Option<String>, project: String, sess
     .map_err(join_error)?
 }
 
-/// Downloads the latest cc-connect for this computer into the island's data folder; returns where.
 #[tauri::command]
 pub async fn install_cc_connect() -> Result<String, UserError> {
     let app_dir = app_dir().ok_or_else(|| UserError::new("ccConnect.notReady", "cc-connect is not ready yet."))?.to_path_buf();
     install::install(app_dir).await.map(|exe| exe.display().to_string())
 }
 
-/// The bot behind a Telegram or Discord token, and on Telegram who has written to it.
 #[tauri::command]
 pub async fn check_cc_connect_bot(platform: String, token: String) -> Result<bots::BotCheck, UserError> {
     bots::check(&platform, &token).await
 }
 
-/// Adds a project for one bot to cc-connect's config and restarts the island's cc-connect. For
-/// Feishu it starts the QR setup instead (`get_cc_connect_feishu_setup` follows it).
 #[tauri::command]
 pub async fn add_cc_connect_project(
     path: Option<String>,
@@ -167,7 +134,6 @@ pub async fn add_cc_connect_project(
     let config = config_file::config_path(&data_dir()?);
     let app_dir = app_dir().ok_or_else(|| UserError::new("ccConnect.notReady", "cc-connect is not ready yet."))?.to_path_buf();
     tauri::async_runtime::spawn_blocking(move || {
-        // The offered folder is made on first use; any other folder must already exist.
         if let Some(default) = default_work_dir().filter(|dir| Path::new(work_dir.trim()) == dir) {
             std::fs::create_dir_all(&default).map_err(|error| UserError::new("ccConnect.workDirCreate", format!("The work folder could not be made: {}", default.display())).arg("path", default.display().to_string()).detail(error))?;
         }
@@ -195,7 +161,6 @@ pub async fn add_cc_connect_project(
     .map_err(join_error)?
 }
 
-// Off the main thread: both may wait on cc-connect a moment.
 #[tauri::command]
 pub async fn get_cc_connect_feishu_setup() -> Result<feishu::FeishuProgress, UserError> {
     tauri::async_runtime::spawn_blocking(feishu::progress)
@@ -210,7 +175,6 @@ pub async fn cancel_cc_connect_feishu_setup() -> Result<(), UserError> {
         .map_err(join_error)
 }
 
-/// The text to send, cut to fit, if the project and chat are plain enough to hand to cc-connect.
 fn check_message(project: &str, session_key: &str, text: &str) -> Result<String, UserError> {
     let plain = |value: &str| !value.is_empty() && value.len() <= 256 && !value.chars().any(char::is_control);
     if !plain(project) || !plain(session_key) || !session_key.contains(':') {
@@ -235,7 +199,6 @@ fn send(exe: &Path, project: &str, session_key: &str, text: &str) -> Result<(), 
         .creation_flags(CREATE_NO_WINDOW)
         .spawn()
         .map_err(|error| UserError::new("ccConnect.run", "Could not run cc-connect.").detail(error))?;
-    // Dropping stdin after the write closes it, which ends the message.
     if let Some(mut stdin) = child.stdin.take() {
         stdin.write_all(text.as_bytes()).map_err(|error| UserError::new("ccConnect.stdin", "Could not hand the text to cc-connect.").detail(error))?;
     }
@@ -259,12 +222,10 @@ fn send(exe: &Path, project: &str, session_key: &str, text: &str) -> Result<(), 
     if let Some(mut pipe) = child.stderr.take() {
         let _ = pipe.read_to_string(&mut stderr);
     }
-    // "Error: cc-connect is not running (socket not found: ...)" and the like; the first line says it.
     let reason = stderr.lines().map(str::trim).find(|line| !line.is_empty()).map(str::to_string);
     Err(UserError::new("ccConnect.failed", "cc-connect failed.").detail(reason.unwrap_or_else(|| format!("exit code {}", status.code().unwrap_or(-1)))))
 }
 
-/// This module's Tauri commands. `lib.rs` chains every module's list into one `generate_handler!`.
 macro_rules! tauri_commands {
     ($next:ident [$($done:tt)*] $($rest:tt)*) => {
         $next!([$($done)*

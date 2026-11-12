@@ -1,14 +1,9 @@
-//! Lyrics from a folder of .lrc files the user keeps, named "Artist - Title.lrc",
-//! "Title - Artist.lrc" or "Title.lrc". Only the folder itself is searched, not its subfolders.
-
 use std::{fs, path::Path};
 
 use super::matching::{clean_title, fold, same_artist};
 
-/// .lrc files larger than this are not lyrics.
 const MAX_FILE_BYTES: u64 = 512 * 1024;
 
-/// How well a file stem names the track: 2 for title and artist, 1 for the title alone.
 pub(super) fn stem_score(stem: &str, title: &str, artist: &str) -> u8 {
     let title = clean_title(title);
     if title.is_empty() {
@@ -26,8 +21,6 @@ pub(super) fn stem_score(stem: &str, title: &str, artist: &str) -> u8 {
     u8::from(named(&stem))
 }
 
-/// The text of the best-named .lrc file in `folder`; a title-only name is used only when it is
-/// the only file with that title.
 pub(super) fn find(folder: &Path, title: &str, artist: &str) -> Option<String> {
     let mut best: Option<(u8, std::path::PathBuf)> = None;
     let mut title_only = 0;
@@ -54,7 +47,6 @@ pub(super) fn find(folder: &Path, title: &str, artist: &str) -> Option<String> {
         return None;
     }
     let bytes = fs::read(path).ok()?;
-    // Some .lrc files are saved with a byte order mark.
     let text = String::from_utf8_lossy(&bytes).trim_start_matches('\u{feff}').to_string();
     Some(text)
 }

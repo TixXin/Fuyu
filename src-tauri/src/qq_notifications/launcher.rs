@@ -1,5 +1,3 @@
-//! Finds and activates the running QQ window, or starts QQ.
-
 use crate::messenger_activation::{activate_existing_window, is_interactive_window};
 use crate::win32::{self, process, registry};
 use std::{
@@ -32,7 +30,6 @@ pub(super) fn qq_executable() -> Result<PathBuf, String> {
             }
         }
     }
-    // Portable copies and copies moved to another folder have no uninstall entry.
     process::running_executable(&["QQ.exe"])
         .map(PathBuf::from)
         .ok_or_else(|| "未找到 QQ 安装路径。请先打开 QQ，再试一次。".into())
@@ -132,9 +129,6 @@ pub(super) fn activate_existing_qq(executable: &Path) -> Result<(), String> {
     if trays.next().is_some() {
         return Err("QQ 有多个托盘入口，无法确认主入口，请从系统托盘打开 QQ。".into());
     }
-    // Electron allocates icon ids from 2 and uses WM_APP + 1. Resolve the live id from the shell,
-    // since QQ may recreate its tray icon after login. Never invoke an ambiguous icon.
-    // https://github.com/electron/electron/blob/main/shell/browser/ui/win/notify_icon_host.cc
     let mut icon_id = None;
     let lookup_deadline = Instant::now() + Duration::from_secs(1);
     for id in 2..=256 {

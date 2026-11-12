@@ -1,6 +1,3 @@
-//! Whether shelf paths still exist, without hanging on a network share or drive that
-//! stopped answering: each volume is probed on its own thread with a short deadline.
-
 use std::{
     collections::{HashMap, HashSet},
     path::Path,
@@ -9,23 +6,16 @@ use std::{
     time::{Duration, Instant},
 };
 
-/// How long one check waits for every volume to answer.
 const PROBE_DEADLINE: Duration = Duration::from_millis(300);
-/// A volume that missed the deadline is not probed again for this long.
 const SLOW_VOLUME_BACKOFF: Duration = Duration::from_secs(30);
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum Presence {
     Present,
-    /// The volume answered and the path is gone (moved, renamed or deleted).
     Missing,
-    /// The volume did not answer in time or is gone (a disconnected share, an
-    /// unplugged drive); whether the file still exists is unknown.
     Unreachable,
 }
 
-/// The volume a Windows path lives on, lower-cased: `c:\` or `\\server\share\`.
-/// `None` for paths that are neither.
 pub(super) fn volume_root(path: &str) -> Option<String> {
     let path = path.replace('/', "\\").to_lowercase();
     if let Some(rest) = path.strip_prefix(r"\\") {
@@ -44,8 +34,6 @@ pub(super) struct Availability {
 }
 
 impl Availability {
-    /// Presence of each of `paths`. Volumes are probed in parallel; one that is slow or
-    /// gone makes its paths `Unreachable` instead of holding up the others.
     pub(super) fn check(&self, paths: &[String]) -> HashMap<String, Presence> {
         let roots: HashSet<String> = paths.iter().filter_map(|path| volume_root(path)).collect();
         let reachable = self.reachable_roots(roots);
@@ -72,7 +60,6 @@ impl Availability {
         for root in roots.into_iter().filter(|root| !slow_until.contains_key(root)) {
             let sender = sender.clone();
             pending.insert(root.clone());
-            // A probe stuck on a dead share finishes on its own later; nothing waits on it.
             thread::spawn(move || {
                 let exists = Path::new(&root).exists();
                 let _ = sender.send((root, exists));

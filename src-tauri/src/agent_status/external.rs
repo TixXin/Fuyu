@@ -1,7 +1,3 @@
-//! Agent statuses reported by plugins and the local API, next to the built-in
-//! Codex / Claude Code ones. Kept in memory only: a source is gone after a
-//! restart, and a plugin's sources are cleared when the plugin stops.
-
 use serde::Serialize;
 use serde_json::Value;
 use std::sync::{Mutex, PoisonError};
@@ -16,11 +12,9 @@ const MAX_TASK_ID_CHARS: usize = 100;
 const MAX_HOST_CHARS: usize = 64;
 const MAX_CWD_CHARS: usize = 260;
 
-/// One reported source. Mirrored by `ExternalAgentStatus` in src/features/agent-status/api.ts.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ExternalAgentStatus {
-    /// `<owner>/<source>`, e.g. `dev.example.cursor/cursor` or `local-api/aider`.
     id: String,
     name: String,
     phase: String,
@@ -28,11 +22,8 @@ pub struct ExternalAgentStatus {
     task_id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     title: Option<String>,
-    /// The machine the agent runs on, for a session on another computer (an SSH server, a dev
-    /// container). With `agent` set too, the Agent page lists it as a session.
     #[serde(skip_serializing_if = "Option::is_none")]
     host: Option<String>,
-    /// `claudeCode` or `codex`, when the source is one of those agents.
     #[serde(skip_serializing_if = "Option::is_none")]
     agent: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -56,7 +47,6 @@ pub(super) struct AgentReport {
     pub cwd: Option<String>,
 }
 
-/// Checks `{ source, phase, name?, title?, taskId?, host?, agent?, cwd? }`.
 pub(super) fn parse_report(params: &Value) -> Result<AgentReport, String> {
     let source = params.get("source").and_then(Value::as_str).unwrap_or_default();
     if !is_valid_source(source) {
@@ -102,7 +92,6 @@ fn optional_text(params: &Value, key: &str, max_chars: usize) -> Result<Option<S
     }
 }
 
-/// Saves a report from `owner`. `default_name` is shown when the report has no name.
 pub(super) fn report(owner: &str, default_name: &str, report: AgentReport) -> Result<ExternalAgentStatus, String> {
     let id = format!("{owner}/{}", report.source);
     let mut sources = SOURCES.lock().unwrap_or_else(PoisonError::into_inner);
@@ -120,8 +109,6 @@ pub(super) fn report(owner: &str, default_name: &str, report: AgentReport) -> Re
         name,
         phase: report.phase,
         task_id: report.task_id,
-        // Hooks know different things at different events (only a prompt brings the title), so
-        // what a report leaves out stays as the last one said.
         title: report.title.or_else(|| previous.and_then(|status| status.title.clone())),
         host: report.host.or_else(|| previous.and_then(|status| status.host.clone())),
         agent: report.agent.or_else(|| previous.and_then(|status| status.agent.clone())),
@@ -136,7 +123,6 @@ pub(super) fn report(owner: &str, default_name: &str, report: AgentReport) -> Re
     Ok(status)
 }
 
-/// Removes one source of `owner`, or all of them with `None`. Returns how many went.
 pub(super) fn clear(owner: &str, source: Option<&str>) -> usize {
     let mut sources = SOURCES.lock().unwrap_or_else(PoisonError::into_inner);
     let before = sources.len();
@@ -144,7 +130,6 @@ pub(super) fn clear(owner: &str, source: Option<&str>) -> usize {
     before - sources.len()
 }
 
-/// Removes a source by its full id (the settings page's clear button).
 pub(super) fn clear_by_id(id: &str) -> bool {
     let mut sources = SOURCES.lock().unwrap_or_else(PoisonError::into_inner);
     let before = sources.len();
@@ -152,8 +137,6 @@ pub(super) fn clear_by_id(id: &str) -> bool {
     before != sources.len()
 }
 
-/// Current sources for a snapshot; a source running for too long without a new
-/// report shows as `stale`, like the built-in agents.
 pub(super) fn current() -> Vec<ExternalAgentStatus> {
     let now = current_unix_millis();
     SOURCES
@@ -208,7 +191,6 @@ mod tests {
         let first = report_as("test.owner-a", "one", None);
         assert_eq!((first.id.as_str(), first.name.as_str()), ("test.owner-a/one", "Default"));
         report_as("test.owner-a", "one", Some("Named"));
-        // A later report without a name keeps the earlier one.
         assert_eq!(report_as("test.owner-a", "one", None).name, "Named");
         let remote = |params: serde_json::Value| report("test.owner-r", "Default", parse_report(&params).expect("valid")).expect("stored");
         remote(json!({ "source": "r-1", "phase": "running", "title": "修复登录", "host": "dev-box", "agent": "codex" }));

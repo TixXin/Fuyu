@@ -1,7 +1,3 @@
-//! Mail over IMAP (QQ Mail first, any `imap.<domain>` server): commands,
-//! snapshot types and the background service. The module keeps its mail
-//! name because the command names are a contract with the frontend.
-
 mod accounts;
 mod attachments;
 mod send;
@@ -46,7 +42,6 @@ pub struct MailContent {
     id: String,
     content: String,
     content_type: String,
-    /// The message's attachments; saved one at a time with save_qq_mail_attachment.
     attachments: Vec<attachments::AttachmentInfo>,
 }
 
@@ -145,8 +140,6 @@ pub async fn connect_qq_mail(
     result
 }
 
-/// A mailbox whose first connection failed has no saved code; drop it so it
-/// neither lingers as a tab nor counts toward the account limit.
 fn forget_if_never_connected(service: &MailService) {
     let Ok(mut state) = service.lock() else { return };
     if state.snapshot.configured {
@@ -210,7 +203,6 @@ pub async fn set_qq_mail_enabled(
 pub async fn refresh_qq_mail(email: String) -> Result<MailSnapshot, UserError> {
     let service = accounts::find(&normalize_email(&email)?)?;
     if !service.is_alive() {
-        // Checked first: begin_sync would mark it syncing with no worker to finish.
         return Err(UserError::new("mail.stopped", "The mail connection stopped; authorize again in Settings, or pause and resume receiving."));
     }
     let Some((generation, _)) = service.begin_sync() else {
@@ -263,7 +255,6 @@ fn configured_service(email: &str) -> Result<std::sync::Arc<MailService>, UserEr
     Ok(service)
 }
 
-/// Recipient and subject to start a reply to a listed message with.
 #[tauri::command]
 pub async fn get_qq_mail_reply(email: String, message_id: String) -> Result<send::ReplyDraft, UserError> {
     parse_message_id(&message_id)?;
@@ -274,8 +265,6 @@ pub async fn get_qq_mail_reply(email: String, message_id: String) -> Result<send
         .map_err(|_| UserError::new("mail.read", "Could not read the mail."))?
 }
 
-/// Sends plain-text mail from a connected mailbox over SMTP (smtp.<domain>, TLS),
-/// as a reply to `reply_to` when given; the threading headers are read from the server.
 #[tauri::command]
 pub async fn send_qq_mail(email: String, mail: send::OutgoingMail, reply_to: Option<String>) -> Result<(), UserError> {
     if let Some(message_id) = &reply_to {
@@ -288,8 +277,6 @@ pub async fn send_qq_mail(email: String, mail: send::OutgoingMail, reply_to: Opt
         .map_err(|_| UserError::new("mail.sendUnfinished", "Sending did not finish."))?
 }
 
-/// Saves one attachment of a listed message into the Downloads folder and shows it
-/// in Explorer. Returns the path written (never an existing file).
 #[tauri::command]
 pub async fn save_qq_mail_attachment(email: String, message_id: String, part: String) -> Result<String, UserError> {
     parse_message_id(&message_id)?;
@@ -311,7 +298,6 @@ pub async fn save_qq_mail_attachment(email: String, message_id: String, part: St
     Ok(saved.to_string_lossy().into_owned())
 }
 
-/// Marks a listed message read on the server; reading in the island never does.
 #[tauri::command]
 pub async fn mark_qq_mail_read(email: String, message_id: String) -> Result<MailSnapshot, UserError> {
     parse_message_id(&message_id)?;
@@ -342,7 +328,6 @@ pub async fn disconnect_qq_mail(email: String) -> Result<MailSnapshot, UserError
             ..MailSnapshot::default()
         };
         let Ok(service) = accounts::find(&email) else {
-            // Nothing running for it: still make sure no code stays behind.
             delete_secret(&email)?;
             return Ok(disconnected(accounts::next_revision()));
         };
@@ -382,8 +367,6 @@ async fn await_reply<T: Send + 'static>(
     .map_err(|_| UserError::new("mail.connectUnfinished", "Connecting did not finish."))?
 }
 
-/// This module's Tauri commands. `lib.rs` chains every module's list into one
-/// `generate_handler!`, so adding a command only touches this file.
 macro_rules! tauri_commands {
     ($next:ident [$($done:tt)*] $($rest:tt)*) => {
         $next!([$($done)*

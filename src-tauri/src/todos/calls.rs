@@ -1,8 +1,3 @@
-//! The todo and note calls of plugins and the local API (docs/features/local-api.md),
-//! answered from todos.json. Same rules, messages and results as
-//! src/features/todos/apiCommands.ts, which still answers them while the todos
-//! are in localStorage.
-
 use serde_json::{json, Number, Value};
 
 use super::history;
@@ -10,7 +5,6 @@ use super::model::{is_date, ScheduledTodo, TodoItem, TodosData};
 
 const MAX_TITLE_LENGTH: usize = 500;
 
-/// A call's answer, and the data to save if it changed anything.
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct CallOutcome {
     pub result: Value,
@@ -19,7 +13,6 @@ pub(crate) struct CallOutcome {
 
 pub(crate) type CallError = (u16, String);
 
-/// The methods answered here; anything else is not a todo call.
 pub(crate) fn is_todo_call(method: &str) -> bool {
     matches!(method, "todos.list" | "todos.days" | "todos.add" | "todos.update" | "todos.remove" | "note.get" | "note.set")
 }
@@ -32,13 +25,11 @@ fn title_error() -> CallError {
     bad(format!("\"title\" must be a non-empty string of at most {MAX_TITLE_LENGTH} characters."))
 }
 
-/// A trimmed, non-empty title; length is counted like JavaScript (UTF-16 units).
 fn read_title(value: Option<&Value>) -> Option<String> {
     let title = value?.as_str()?.trim();
     (!title.is_empty() && title.encode_utf16().count() <= MAX_TITLE_LENGTH).then(|| title.to_string())
 }
 
-/// `id` is a new todo id and `now` the time in ms, used only by `todos.add`.
 pub(crate) fn run(method: &str, params: &Value, data: &TodosData, id: &str, now: u64) -> Result<CallOutcome, CallError> {
     let input = params.as_object().cloned().unwrap_or_default();
     let unchanged = |result: Value| Ok(CallOutcome { result, next: None });
@@ -95,7 +86,6 @@ pub(crate) fn run(method: &str, params: &Value, data: &TodosData, id: &str, now:
             }
             let mut next = data.clone();
             next.todos[index] = todo.clone();
-            // The island drops a finished todo from "in progress"; so does this.
             if todo.completed && next.active_todo_id.as_deref() == Some(todo.id.as_str()) {
                 next.active_todo_id = None;
             }
@@ -136,14 +126,11 @@ pub(crate) fn run(method: &str, params: &Value, data: &TodosData, id: &str, now:
     }
 }
 
-/// By date, then in the order they were added (schedule.ts sortScheduledTodos).
 pub(crate) fn sort_scheduled(todos: &mut [ScheduledTodo]) {
     let time = |todo: &ScheduledTodo| todo.created_at.as_f64().unwrap_or(0.0);
     todos.sort_by(|a, b| a.date.cmp(&b.date).then(time(a).total_cmp(&time(b))));
 }
 
-/// Why the todos changed, for the `todos.changed` event; None if only the note
-/// or the archives changed.
 pub(crate) fn todos_reason(old: &TodosData, new: &TodosData) -> Option<&'static str> {
     if old.date != new.date {
         return Some("dayChanged");
@@ -164,7 +151,6 @@ pub(crate) fn todos_reason(old: &TodosData, new: &TodosData) -> Option<&'static 
     (old.todos != new.todos || old.scheduled != new.scheduled || old.active_todo_id != new.active_todo_id).then_some("update")
 }
 
-/// A random (version 4) UUID, the format crypto.randomUUID() gives the island.
 pub(crate) fn new_todo_id() -> Result<String, String> {
     let mut bytes = [0u8; 16];
     getrandom::fill(&mut bytes).map_err(|error| format!("Could not make a todo id: {error}"))?;

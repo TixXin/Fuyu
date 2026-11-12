@@ -18,7 +18,6 @@ fn speakers_and_hdmi_are_ignored_but_headphones_and_bluetooth_are_not() {
     assert_eq!(output("a", 5, "USB", "x").kind, AudioKind::Headset);
     let speaker = output("a", 1, "BTHENUM", "x");
     assert_eq!((speaker.kind, speaker.bluetooth), (AudioKind::Speaker, true));
-    // Without a container the endpoint stands for itself.
     let alone = Output::classify("id".into(), "n".into(), 3, "USB", None).expect("announced");
     assert_eq!(alone.device, "id");
 }
@@ -44,7 +43,6 @@ fn wired_headphones_connect_and_disconnect_at_once() {
 fn a_bluetooth_headset_is_announced_once_with_its_battery() {
     let mut tracker = OutputTracker::default();
     tracker.update(Vec::new(), &HashMap::new());
-    // Stereo and hands-free endpoints of one headset; the battery shows up a poll later.
     let both = vec![output("hands-free", 5, "BTHHFENUM", "x"), output("stereo", 3, "BTHENUM", "x")];
     assert!(tracker.update(both.clone(), &HashMap::new()).is_empty());
     assert!(tracker.wants_batteries());
@@ -87,7 +85,6 @@ fn low_battery_warns_once_per_level_and_again_after_charging() {
     assert!(tracker.update(headset.clone(), &levels(&[("x", 15)])).is_empty());
     assert_eq!(tracker.update(headset.clone(), &levels(&[("x", 10)])).len(), 1);
     assert!(tracker.update(headset.clone(), &levels(&[("x", 5)])).is_empty());
-    // Charged, then running down again.
     assert!(tracker.update(headset.clone(), &levels(&[("x", 90)])).is_empty());
     assert_eq!(tracker.update(headset.clone(), &levels(&[("x", 18)])).len(), 1);
 }
@@ -124,7 +121,6 @@ fn alerts_reach_the_island_as_tagged_json() {
     assert_eq!(value, serde_json::json!({ "kind": "powerDisconnected", "battery": null }));
 }
 
-/// Prints what this computer reports; run by hand with `--ignored --nocapture`.
 #[test]
 #[ignore = "reads the real devices of the computer it runs on"]
 fn probe_this_computer() {

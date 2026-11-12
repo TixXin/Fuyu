@@ -1,19 +1,9 @@
-//! Switching to a session's terminal inside VS Code and editors built on it. They have no way to
-//! select a terminal from outside, so the island opens a link handled by its own extension
-//! (packages/vscode-extension), which shows the terminal whose shell is one of the session's
-//! processes. The link is only opened when the extension is installed in that editor: otherwise the
-//! editor would offer to install it.
-
 use std::{fs, path::Path};
 
 use serde_json::Value;
 
-/// `<publisher>.<name>` of the extension, also the authority of the links it handles: the one
-/// published after the rename (D17) first, then the one before it, which users may still have.
 const EXTENSION_IDS: [&str; 2] = ["tixxin.fuyu", "tixxin.focusd-island"];
 
-/// Editors by executable name (lowercase, no ".exe"): their link scheme and the folder under the
-/// user's home that holds their extensions.
 const EDITORS: &[(&str, &str, &str)] = &[
     ("code", "vscode", ".vscode"),
     ("code - insiders", "vscode-insiders", ".vscode-insiders"),
@@ -24,7 +14,6 @@ const EDITORS: &[(&str, &str, &str)] = &[
     ("kiro", "kiro", ".kiro"),
 ];
 
-/// The link scheme and extensions folder (under the home folder) of an editor app.
 pub(super) fn editor_of_app(app: &str) -> Option<(&'static str, &'static str)> {
     EDITORS
         .iter()
@@ -32,8 +21,6 @@ pub(super) fn editor_of_app(app: &str) -> Option<(&'static str, &'static str)> {
         .map(|&(_, scheme, folder)| (scheme, folder))
 }
 
-/// The id of the extension installed in `extensions_dir`: a `<id>-<version>` folder that is not
-/// listed in `.obsolete`, where the editor keeps uninstalled extensions until it restarts.
 pub(super) fn installed_extension(extensions_dir: &Path) -> Option<&'static str> {
     EXTENSION_IDS.into_iter().find(|id| extension_installed(extensions_dir, id))
 }
@@ -57,8 +44,6 @@ fn extension_installed(extensions_dir: &Path, id: &str) -> bool {
     })
 }
 
-/// The link that asks the extension to show the terminal of the session: `chain` is the session's
-/// process and its ancestors, `title` its title for when no process is known.
 pub(super) fn focus_link(scheme: &str, extension: &str, chain: &[u32], title: Option<&str>) -> String {
     let pids = chain.iter().map(u32::to_string).collect::<Vec<_>>().join(",");
     let mut link = format!("{scheme}://{extension}/focus?pids={pids}");
@@ -78,19 +63,13 @@ fn percent_encode(text: &str) -> String {
         .collect()
 }
 
-/// What happened when asking an editor to show the session's terminal.
 #[derive(Debug, PartialEq, Eq)]
 pub(super) enum EditorTerminal {
-    /// The link was opened.
     Sent,
-    /// The editor does not have the extension.
     NoExtension,
-    /// Nothing identifies the session's terminal, or the link could not be opened.
     Failed,
 }
 
-/// Asks the editor `app`, whose window is in front, to show the session's terminal. `None` when
-/// `app` is not an editor built on VS Code.
 pub(super) fn show_session_terminal(
     home_dir: &Path,
     app: &str,

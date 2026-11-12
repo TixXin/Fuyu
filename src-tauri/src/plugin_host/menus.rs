@@ -1,17 +1,3 @@
-//! `contributes.menus`: plugin commands the island lists in its own right-click
-//! menus (API version 2). Picking an entry sends the plugin `command` with
-//! `args` describing what was right-clicked:
-//!
-//! - `todo/context`: a todo, `{ todoId }`
-//! - `clipboard/context`: a text entry of the clipboard history, `{ item }` as
-//!   in `clipboard.history`
-//! - `shelf/context`: a file shelf entry, `{ item }` as in `shelf.list`
-//! - `message/context`: a QQ notification or mail, `{ item }` as in `messages.list`
-//!
-//! The island window only says which entry; Rust looks it up, so a plugin gets
-//! exactly the entry the user picked. Picking it is the user's consent, so the
-//! read permission of that data is not needed for this one entry.
-
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
@@ -26,7 +12,6 @@ const MENUS: [&str; 4] = [TODO_CONTEXT, CLIPBOARD_CONTEXT, SHELF_CONTEXT, MESSAG
 const MAX_MENU_ITEMS: usize = 4;
 const MAX_ITEM_ID_CHARS: usize = 128;
 
-/// Mirrored by the `menus` field documented in plugins/schema/manifest.schema.json.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub(super) struct PluginMenus {
     #[serde(rename = "todo/context", default, skip_serializing_if = "Vec::is_empty")]
@@ -53,11 +38,9 @@ impl PluginMenus {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(super) struct MenuItem {
-    /// The id of one of the plugin's `contributes.commands`.
     pub command: String,
 }
 
-/// One entry of an island menu. Mirrored by `PluginMenuEntry` in src/features/plugins/api.ts.
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PluginMenuEntry {
@@ -67,8 +50,6 @@ pub struct PluginMenuEntry {
     title: LocalizedText,
 }
 
-/// Checks a manifest's menus against its commands; version 1 plugins never had
-/// menus, so theirs are dropped to keep version 1 behaviour.
 pub(super) fn check(menus: &mut PluginMenus, command_ids: &[&str], api_version: u32) -> Result<(), String> {
     if api_version < 2 {
         *menus = PluginMenus::default();
@@ -99,11 +80,9 @@ fn known_menu(menu: &str) -> Result<(), String> {
     }
 }
 
-/// What running plugins add to `menu`, in plugin order.
 pub(super) fn entries(menu: &str) -> Result<Vec<PluginMenuEntry>, String> {
     known_menu(menu)?;
     let host = host()?;
-    // Plugins that may run: picking an entry starts an on-demand one.
     let running = lifecycle::runnable_ids();
     let entries = lock(&host.installed)
         .iter()
@@ -124,9 +103,6 @@ pub(super) fn entries(menu: &str) -> Result<Vec<PluginMenuEntry>, String> {
     Ok(entries)
 }
 
-/// Checks `item_id` for `menu`: the todo menu's whole `args` right away, None
-/// for menus whose entry is looked up (`menu_args`). Kept apart so tests need
-/// not link the clipboard, shelf and message readers.
 pub(super) fn check_item(menu: &str, item_id: &str) -> Result<Option<Value>, String> {
     known_menu(menu)?;
     if item_id.is_empty() || item_id.chars().count() > MAX_ITEM_ID_CHARS {
@@ -135,7 +111,6 @@ pub(super) fn check_item(menu: &str, item_id: &str) -> Result<Option<Value>, Str
     Ok((menu == TODO_CONTEXT).then(|| json!({ "todoId": item_id })))
 }
 
-/// The `args` a plugin gets for `item_id` in `menu`, looked up where the data lives.
 fn menu_args(menu: &str, item_id: &str) -> Result<Value, String> {
     if let Some(args) = check_item(menu, item_id)? {
         return Ok(args);
@@ -151,7 +126,6 @@ fn menu_args(menu: &str, item_id: &str) -> Result<Value, String> {
     item.map(|item| json!({ "item": item })).ok_or_else(gone)
 }
 
-/// Sends the plugin `command` with `{ id, args }` for the entry `item_id` of `menu`, if `menu` lists it.
 pub(super) fn run(id: &str, menu: &str, command: &str, item_id: &str) -> Result<(), String> {
     known_menu(menu)?;
     let host = host()?;

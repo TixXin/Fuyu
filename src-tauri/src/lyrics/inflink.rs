@@ -1,9 +1,3 @@
-//! InfLink-rs (https://github.com/apoint123/InfLink-rs), a BetterNCM plugin that makes NetEase
-//! Cloud Music report its playback position and song id to Windows. With it the music page has
-//! a real progress bar and lyrics are looked up by id. The island installs only the plugin: one
-//! `.plugin` file put in BetterNCM's `plugins` folder. BetterNCM itself, a DLL placed in NetEase's
-//! program folder, is left for the user to install; the island never writes there.
-
 use std::{
     fs,
     io::{Cursor, Read},
@@ -21,18 +15,13 @@ const FILE_NAME: &str = "InfLink-rs.plugin";
 const LATEST_RELEASE: &str = "https://api.github.com/repos/apoint123/InfLink-rs/releases/latest";
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(20);
 const USER_AGENT: &str = concat!("Fuyu/", env!("CARGO_PKG_VERSION"), " (https://github.com/TixXin/fuyu)");
-/// The 3.4.0 package is 1.6 MB; anything far larger is not the plugin.
 const MAX_PACKAGE_BYTES: u64 = 32 * 1024 * 1024;
 
-/// What the settings page shows. Mirrored by `InflinkState` in src/features/media/lyrics/inflink.ts.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct InflinkState {
-    /// BetterNCM's data folder, when one was found; without it the plugin has nowhere to go.
     better_ncm: Option<String>,
-    /// The version of the InfLink-rs package in its plugins folder.
     installed: Option<String>,
-    /// The newest release on GitHub; null when GitHub could not be asked.
     latest: Option<String>,
 }
 
@@ -57,13 +46,10 @@ struct Asset {
     browser_download_url: String,
     #[serde(default)]
     size: u64,
-    /// `sha256:<hex>`, which GitHub computes for each asset.
     #[serde(default)]
     digest: Option<String>,
 }
 
-/// Where BetterNCM keeps its data, in the order it looks: `BETTERNCM_PROFILE`, then `C:\betterncm`.
-/// The user folder is also tried, where some installers put it.
 fn data_dir_candidates() -> Vec<PathBuf> {
     let mut candidates = Vec::new();
     if let Some(profile) = std::env::var_os("BETTERNCM_PROFILE").filter(|value| !value.is_empty()) {
@@ -80,7 +66,6 @@ fn find_data_dir() -> Option<PathBuf> {
     data_dir_candidates().into_iter().find(|dir| dir.is_dir())
 }
 
-/// The name and version in a `.plugin` package (a zip with `manifest.json` at its root).
 fn read_manifest(package: &[u8]) -> Result<(String, String), String> {
     let mut archive = zip::ZipArchive::new(Cursor::new(package)).map_err(|error| format!("The package is not a valid zip: {error}"))?;
     let mut file = archive.by_name("manifest.json").map_err(|_| "The package has no manifest.json".to_string())?;
@@ -90,8 +75,6 @@ fn read_manifest(package: &[u8]) -> Result<(String, String), String> {
     Ok((manifest.name, manifest.version))
 }
 
-/// The InfLink-rs package already in `plugins`, with its version: the usual file name first,
-/// then any other `.plugin` whose manifest names it (a copy the user put there by hand).
 fn installed_package(plugins: &Path) -> Option<(PathBuf, String)> {
     let usual = plugins.join(FILE_NAME);
     let others = fs::read_dir(plugins).ok()?.filter_map(Result::ok).map(|entry| entry.path());
@@ -105,12 +88,10 @@ fn installed_package(plugins: &Path) -> Option<(PathBuf, String)> {
         })
 }
 
-/// `v3.4.0` → `3.4.0`.
 fn version_of_tag(tag: &str) -> String {
     tag.trim().trim_start_matches(['v', 'V']).to_string()
 }
 
-/// The release's `.plugin` asset and the SHA-256 GitHub gives for it.
 fn plugin_asset(release: &Release) -> Result<(&Asset, String), String> {
     let asset = release
         .assets
@@ -128,7 +109,6 @@ fn plugin_asset(release: &Release) -> Result<(&Asset, String), String> {
 
 fn client() -> Result<reqwest::Client, String> {
     let mut builder = reqwest::Client::builder().timeout(REQUEST_TIMEOUT).user_agent(USER_AGENT);
-    // Same proxy as the updater: GitHub is often slow or blocked without one.
     if let Some(proxy) = get_updater_proxy() {
         let proxy = reqwest::Proxy::all(&proxy).map_err(|error| format!("Invalid proxy {proxy}: {error}"))?;
         builder = builder.proxy(proxy);
@@ -172,7 +152,6 @@ fn sha256_hex(bytes: &[u8]) -> String {
     Sha256::digest(bytes).iter().map(|byte| format!("{byte:02x}")).collect()
 }
 
-/// Writes the package next to the old one, then swaps it in, so a failed write leaves the old one.
 fn write_package(target: &Path, package: &[u8]) -> Result<(), String> {
     let partial = target.with_extension("plugin.download");
     fs::write(&partial, package).map_err(|error| format!("Could not write {}: {error}", partial.display()))?;
@@ -194,7 +173,6 @@ async fn local_state_off_thread() -> Result<(Option<PathBuf>, Option<(PathBuf, S
         .map_err(|error| format!("Failed to look for BetterNCM: {error}"))
 }
 
-/// Whether BetterNCM and InfLink-rs are installed and, when asked, the newest InfLink-rs release.
 pub(super) async fn state(check_latest: bool) -> Result<InflinkState, String> {
     let (data_dir, installed) = local_state_off_thread().await?;
     let latest = if check_latest && data_dir.is_some() {
@@ -212,8 +190,6 @@ pub(super) async fn state(check_latest: bool) -> Result<InflinkState, String> {
     })
 }
 
-/// Downloads the newest InfLink-rs, checks it against GitHub's checksum and its manifest, and
-/// puts it in BetterNCM's plugins folder (over the old package, wherever that was).
 pub(super) async fn install() -> Result<InflinkState, String> {
     let (data_dir, installed) = local_state_off_thread().await?;
     let data_dir = data_dir.ok_or("BetterNCM was not found. Install BetterNCM first, open NetEase Cloud Music once, then try again.")?;

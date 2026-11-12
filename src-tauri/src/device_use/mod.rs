@@ -1,11 +1,3 @@
-//! Which apps are using the camera or the microphone right now, for the indicator on the collapsed
-//! island. Windows records each app's last use under
-//! `HKCU\Software\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\<webcam|microphone>`:
-//! Store apps as direct subkeys ("Microsoft.WindowsCamera_8wekyb3d8bbwe"), desktop programs under
-//! `NonPackaged` with `#` in place of `\` ("C:#Program Files#Zoom#Zoom.exe"). An app whose
-//! `LastUsedTimeStart` is set while `LastUsedTimeStop` is 0 is using the device now; the taskbar's
-//! privacy icons read the same. Undocumented, so anything unexpected counts as not in use.
-
 use serde::Serialize;
 use windows::Win32::System::Registry::HKEY_CURRENT_USER;
 
@@ -17,19 +9,14 @@ const NON_PACKAGED: &str = "NonPackaged";
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DeviceUse {
-    /// Names of the apps using the camera, sorted, without repeats.
     camera: Vec<String>,
     microphone: Vec<String>,
 }
 
-/// Whether a use recorded as `start` and `stop` (FILETIMEs; 0 or missing when never) is ongoing.
 fn in_use(start: Option<u64>, stop: Option<u64>) -> bool {
     start.is_some_and(|start| start > 0) && stop == Some(0)
 }
 
-/// A readable name for a consent store key: the program of a desktop path
-/// ("C:#Program Files#Zoom#Zoom.exe" → "Zoom"), the app of a Store package
-/// ("Microsoft.WindowsCamera_8wekyb3d8bbwe" → "WindowsCamera").
 fn app_label(key: &str, packaged: bool) -> String {
     if !packaged {
         let file = key.rsplit(['#', '\\', '/']).next().unwrap_or(key);
@@ -62,14 +49,11 @@ fn apps_using(device: &str) -> Vec<String> {
     apps
 }
 
-/// The apps using the camera and the microphone now. Reads a few dozen registry values, well
-/// under a millisecond, so the island asks every couple of seconds while the indicator is on.
 #[tauri::command]
 pub fn get_device_use() -> DeviceUse {
     DeviceUse { camera: apps_using("webcam"), microphone: apps_using("microphone") }
 }
 
-/// Opens Windows' privacy page listing the apps allowed to use `device` ("camera" or "microphone").
 #[tauri::command]
 pub fn open_device_privacy_settings(device: String) -> Result<(), String> {
     let page = match device.as_str() {
@@ -80,7 +64,6 @@ pub fn open_device_privacy_settings(device: String) -> Result<(), String> {
     tauri_plugin_opener::open_url(page, None::<&str>).map_err(|error| error.to_string())
 }
 
-/// This module's Tauri commands, chained into `lib.rs`'s `generate_handler!`.
 macro_rules! tauri_commands {
     ($next:ident [$($done:tt)*] $($rest:tt)*) => {
         $next!([$($done)*

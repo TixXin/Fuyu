@@ -1,5 +1,3 @@
-//! Process-wide updater state. Webviews only observe snapshots of this state.
-
 use std::sync::{Mutex, MutexGuard, OnceLock};
 
 use serde::Serialize;
@@ -18,7 +16,6 @@ pub(super) enum Stage {
     Latest,
     Available,
     Downloading,
-    /// Downloaded and checked against its signature; installs when asked (or idle, by setting).
     Ready,
     Installing,
     Done,
@@ -46,7 +43,6 @@ pub(super) struct Runtime<T> {
     pub snapshot: UpdateSnapshot,
     pub pending: Option<T>,
     pub pending_channel: Option<String>,
-    /// The installer of `pending`, downloaded in the background; in memory only.
     pub ready: Option<Vec<u8>>,
     checking_channel: Option<String>,
 }
@@ -101,7 +97,6 @@ impl<T> Runtime<T> {
         self.snapshot.downloaded = 0;
         self.snapshot.total = 0;
         if let Some((update, version, notes)) = found {
-            // The same version on the same channel keeps its downloaded installer.
             let same = self.ready.is_some() && version == self.snapshot.next_version && self.pending_channel == self.snapshot.channel;
             self.pending = Some(update);
             if !same {
@@ -139,8 +134,6 @@ impl<T> Runtime<T> {
         Ok(())
     }
 
-    /// Takes the candidate to download in the background; it comes back with
-    /// `finish_download` or `download_failed`.
     pub fn begin_download(&mut self, version: &str, channel: &str) -> Result<T, UserError> {
         self.ensure_idle()?;
         self.check_target(Some(version), Some(channel))?;
@@ -161,14 +154,12 @@ impl<T> Runtime<T> {
         self.snapshot.stage = Stage::Ready;
     }
 
-    /// A failed background download leaves the update to install by hand, as before.
     pub fn download_failed(&mut self, update: T, error: &str) {
         self.pending = Some(update);
         self.snapshot.stage = Stage::Available;
         self.snapshot.detail = error.chars().take(240).collect();
     }
 
-    /// The candidate and, when it was downloaded already, its installer.
     pub fn begin_install(&mut self, version: Option<&str>, channel: Option<&str>) -> Result<(T, Option<Vec<u8>>), UserError> {
         self.ensure_idle()?;
         self.check_target(version, channel)?;
@@ -196,7 +187,6 @@ fn now() -> i64 {
     chrono::Utc::now().timestamp_millis()
 }
 
-/// Mutations are short and atomic. Never hold this lock over a network await.
 pub(super) fn change<T>(app: &AppHandle, update: impl FnOnce(&mut Runtime<Update>) -> Result<T, UserError>) -> Result<T, UserError> {
     let (result, snapshot) = {
         let mut runtime = state();
@@ -204,8 +194,6 @@ pub(super) fn change<T>(app: &AppHandle, update: impl FnOnce(&mut Runtime<Update
         runtime.snapshot.revision += 1;
         (result, runtime.snapshot.clone())
     };
-    // A closed window must never interrupt the operation. Revision orders events
-    // when callbacks from different threads publish after releasing the mutex.
     let _ = app.emit(STATE_EVENT, snapshot);
     Ok(result)
 }
@@ -283,7 +271,6 @@ mod tests {
         assert!(runtime.begin_check("stable").is_err());
         runtime.finish_download(update, vec![7]);
         assert_eq!(runtime.snapshot.stage, Stage::Ready);
-        // Checking again finds the same version: the installer stays.
         runtime.begin_check("stable").unwrap();
         runtime.complete_check(Some((2, "1.2.0".into(), "Notes".into())));
         assert_eq!(runtime.snapshot.stage, Stage::Ready);

@@ -1,10 +1,3 @@
-//! `island.openView { viewId }` (capability `openView`): a plugin opens one of
-//! its own pages on the island, e.g. after a sign-in link came back (onUri) or
-//! the user clicked a button of its message. So that plugins cannot pop the
-//! island open on their own, it works only within OPEN_WINDOW of the user
-//! doing something with the plugin: a command or its shortcut, a message
-//! button, a link, or an action, form or webview message on one of its pages.
-
 use serde_json::{json, Value};
 use std::{
     collections::HashMap,
@@ -17,9 +10,7 @@ use super::{host, lock};
 use crate::island;
 
 pub(super) const OPEN_WINDOW: Duration = Duration::from_secs(15);
-/// Mirrored by `PLUGIN_OPEN_VIEW_EVENT` in src/features/plugin-views/api.ts.
 const OPEN_VIEW_EVENT: &str = "plugin-open-view";
-/// What the island sends a plugin because the user did something.
 const USER_ACTIONS: [&str; 6] = ["command", "notification.action", "uri", "view.action", "view.submit", "webview.message"];
 
 fn last_actions() -> &'static Mutex<HashMap<String, Instant>> {
@@ -27,19 +18,16 @@ fn last_actions() -> &'static Mutex<HashMap<String, Instant>> {
     LAST.get_or_init(Mutex::default)
 }
 
-/// Called for everything the island sends a plugin (lifecycle::deliver).
 pub(super) fn note_delivery(plugin_id: &str, method: &str) {
     if USER_ACTIONS.contains(&method) {
         lock(last_actions()).insert(plugin_id.to_string(), Instant::now());
     }
 }
 
-/// Whether a plugin whose user last acted at `last` may open a page `now`.
 pub(super) fn may_open(last: Option<Instant>, now: Instant) -> bool {
     last.is_some_and(|last| now.saturating_duration_since(last) <= OPEN_WINDOW)
 }
 
-/// Shows the island and opens the plugin's page `viewId`.
 pub(super) fn open_view(app: &AppHandle, plugin_id: &str, params: &Value) -> Result<Value, (u16, String)> {
     let view_id = params.get("viewId").and_then(Value::as_str).ok_or((400, "Expected { viewId }.".to_string()))?;
     let declared = {

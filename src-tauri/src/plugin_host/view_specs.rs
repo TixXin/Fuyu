@@ -1,10 +1,3 @@
-//! `contributes.views` and `contributes.statusItems` (API version 2): pages a
-//! plugin adds to the expanded island and short texts it shows on the
-//! collapsed bar. The island draws both from templates (views.rs, and
-//! src/features/plugin-views/); plugins never send markup to the island
-//! window. The one exception, the `webview` template (P8), shows the plugin's
-//! own HTML in a separate, locked-down page (webviews.rs).
-
 use serde::{Deserialize, Serialize};
 
 use super::manifest::LocalizedText;
@@ -12,16 +5,10 @@ use super::manifest::LocalizedText;
 const MAX_VIEWS: usize = 2;
 const MAX_STATUS_ITEMS: usize = 2;
 const MAX_PRIORITY: i32 = 100;
-/// Height of a webview page on the island when the manifest does not say, and the allowed range.
 pub(super) const DEFAULT_WEBVIEW_HEIGHT: u32 = 240;
 const WEBVIEW_HEIGHTS: std::ops::RangeInclusive<u32> = 80..=480;
-/// Widths a webview page may ask for. The island is 40px wider (its padding); the island window
-/// caps it further at large expanded scales (island::geometry::max_expanded_width).
 const WEBVIEW_WIDTHS: std::ops::RangeInclusive<u32> = 320..=860;
 
-/// lucide icon names a view may use; anything else is refused. Listed in
-/// plugins/schema/manifest.schema.json and src/features/plugin-views/icons.ts
-/// too (checked by tests).
 pub(super) const VIEW_ICONS: [&str; 47] = [
     "list", "list-checks", "list-todo", "kanban", "square-check", "timer", "clock", "calendar", "bell", "book-open",
     "bookmark", "star", "heart", "folder", "file-text", "git-pull-request", "bug", "code", "terminal", "cloud", "sun",
@@ -37,12 +24,9 @@ pub enum ViewTemplate {
     Detail,
     Form,
     Status,
-    /// The plugin's own HTML page (P8).
     Webview,
 }
 
-/// How the island frames a webview page (E15): in the card with the page's title (default), or
-/// not at all, the page drawing on the island itself like the island's own pages.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum ViewFrame {
@@ -50,7 +34,6 @@ pub enum ViewFrame {
     None,
 }
 
-/// One page on the island. Mirrored by `PluginViewSpec` in src/features/plugin-views/api.ts.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ViewSpec {
     pub id: String,
@@ -58,22 +41,16 @@ pub struct ViewSpec {
     #[serde(default = "default_icon")]
     pub icon: String,
     pub template: ViewTemplate,
-    /// `webview` only: the page, relative to the plugin folder (`ui/index.html`).
-    /// The page can load files from the folder it is in and below.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub entry: Option<String>,
-    /// `webview` only: the page's height on the island in pixels.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub height: Option<u32>,
-    /// `webview` only: the page's width on the island in pixels; the island widens for it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub width: Option<u32>,
-    /// `webview` only: "none" draws the page without the island's card and title.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub frame: Option<ViewFrame>,
 }
 
-/// A relative path inside the plugin folder: no "..", no drive or root, "/" separators, ends in .html.
 pub(super) fn is_valid_entry(entry: &str) -> bool {
     let lower = entry.to_ascii_lowercase();
     (1..=200).contains(&entry.len())
@@ -108,7 +85,6 @@ fn default_icon() -> String {
     "puzzle".into()
 }
 
-/// One status text slot on the collapsed bar; the highest priority with text wins.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct StatusItemSpec {
     pub id: String,
@@ -127,8 +103,6 @@ fn read<T: serde::de::DeserializeOwned>(raw: &serde_json::Value, field: &str) ->
     serde_json::from_value(raw.clone()).map_err(|error| format!("contributes.{field} is not valid: {error}"))
 }
 
-/// Reads and checks the manifest's views and status items. Version 1 plugins
-/// never had them, so whatever they wrote there is ignored, as before.
 pub(super) fn check(
     views_raw: &serde_json::Value,
     status_raw: &serde_json::Value,

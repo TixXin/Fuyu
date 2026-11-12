@@ -1,5 +1,3 @@
-//! The persisted agent status file and the snapshot returned to the frontend.
-
 use serde::{Deserialize, Serialize};
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -42,7 +40,6 @@ pub struct AgentStatusSnapshot {
     pub(super) claude_code: AgentTaskStatus,
     pub(super) updated_at: i64,
     pub(super) status_path: String,
-    /// Sources reported by plugins and the local API (see external.rs).
     pub(super) others: Vec<super::external::ExternalAgentStatus>,
 }
 

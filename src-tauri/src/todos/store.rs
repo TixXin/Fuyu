@@ -1,7 +1,3 @@
-//! Reading and writing `todos.json` so that a crash or power cut never leaves
-//! a half-written or wrong file: write a temporary file, flush it to disk,
-//! rename it over the old one, then read it back and compare.
-
 use std::{
     fs::{self, File, OpenOptions},
     io::Write,
@@ -10,15 +6,10 @@ use std::{
 
 use super::model::{validate, TodosFile, FILE_VERSION};
 
-/// Why `todos.json` cannot be used. Only a damaged file may be replaced; the
-/// others are left alone.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum LoadError {
-    /// It exists but could not be read (locked, no access).
     Unreadable(String),
-    /// Not valid JSON, or data normalize.ts would never produce.
     Damaged(String),
-    /// Written by a newer Fuyu.
     Newer(String),
 }
 
@@ -30,7 +21,6 @@ impl LoadError {
     }
 }
 
-/// The file, `None` if there is none yet, or why it cannot be used.
 pub(crate) fn load(path: &Path) -> Result<Option<TodosFile>, LoadError> {
     let text = match fs::read_to_string(path) {
         Ok(text) => text,
@@ -51,7 +41,6 @@ pub(crate) fn load(path: &Path) -> Result<Option<TodosFile>, LoadError> {
     Ok(Some(file))
 }
 
-/// Saves `file` and checks that reading it back gives the same data.
 pub(crate) fn save(path: &Path, file: &TodosFile) -> Result<(), String> {
     validate(&file.data)?;
     let text = serde_json::to_string(file).map_err(|error| format!("Could not encode the todos: {error}"))?;
@@ -71,7 +60,6 @@ pub(crate) fn save(path: &Path, file: &TodosFile) -> Result<(), String> {
     }
 }
 
-/// Writes a file that must not replace anything (backups); fails if it exists.
 pub(crate) fn write_new(path: &Path, bytes: &[u8]) -> Result<(), String> {
     write_synced(path, bytes, true)
 }

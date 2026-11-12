@@ -1,7 +1,3 @@
-//! Plugin market: the index (index.json in TixXin/fuyu-plugins), package
-//! download with size and SHA-256 checks, safe unzip and the folder swap that
-//! installs or updates a plugin. Packages are built by scripts/plugins/build-plugin-index.mjs.
-
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use sha2::{Digest, Sha256};
@@ -20,24 +16,16 @@ use super::revocations::{parse_revoked, Revocation};
 use super::signature::{verify_file, verify_index, TRUSTED_KEYS};
 use crate::system::updater::get_updater_proxy;
 
-/// The index repository (TixXin/focusd-plugins before the rename, D17; GitHub redirects the
-/// old name, which islands already out there ask for): index.json, revoked.json and their signatures at its
-/// root, rebuilt and signed by its CI (key e862885af5bba3dc). Builds before
-/// this change read plugins/ in TixXin/fly-island (now TixXin/fuyu; main, or dev before that),
-/// which `pnpm plugins:index` keeps signed with the older key for them.
 const MARKET_REPO: &str = "TixXin/fuyu-plugins";
 const MARKET_BRANCH: &str = "main";
-/// Shown on the settings page; the index itself is read at the branch's newest commit.
 pub(super) const INDEX_URL: &str = "https://raw.githubusercontent.com/TixXin/fuyu-plugins/main/index.json";
 const INDEX_VERSION: u32 = 1;
-/// The island's own publisher, shown as "official".
 pub(super) const OFFICIAL_PUBLISHER: &str = "TixXin";
 const MAX_INDEX_BYTES: usize = 1024 * 1024;
 const MAX_PACKAGE_BYTES: u64 = 20 * 1024 * 1024;
 const MAX_UNPACKED_BYTES: u64 = 100 * 1024 * 1024;
 const MAX_PACKAGE_FILES: usize = 2000;
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(30);
-/// Folders the host itself uses inside plugins/; skipped when listing plugins.
 pub(super) const WORK_DIR_PREFIX: char = '.';
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -47,7 +35,6 @@ pub struct PackageDownload {
     size: u64,
 }
 
-/// One plugin in the index. Mirrored by `MarketPlugin` in src/features/plugins/api.ts.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MarketEntry {
@@ -65,47 +52,33 @@ pub struct MarketEntry {
     homepage: String,
     #[serde(default)]
     pub(super) permissions: Vec<String>,
-    /// Asked for while it runs (manifest optionalPermissions); not part of the install consent.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     optional_permissions: Vec<String>,
-    /// "exe", "powershell", "node" or "none"; missing in indexes written before it existed.
     #[serde(default)]
     runtime: Option<String>,
     download: PackageDownload,
-    /// The GitHub user or organization that publishes it; missing means the
-    /// island's own publisher (indexes written before publishers existed).
     #[serde(default)]
     publisher: Option<String>,
-    /// The plugin's repository, "owner/name".
     #[serde(default)]
     repo: Option<String>,
     #[serde(default)]
     categories: Vec<String>,
-    /// Offered only to installed plugins whose user opted in (`PluginGrant::pre_release`).
     #[serde(default)]
     pub(super) pre_release: bool,
-    /// It has pages with its own HTML (template webview); shown as custom UI.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     webview: bool,
-    /// The plugin's README.md, Markdown, shown in the market details (at most MAX_MARKET_TEXT).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     readme: Option<String>,
-    /// The plugin's CHANGELOG.md, Markdown, shown as its version history.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     changelog: Option<String>,
-    /// The author's signature of this package (author_signing.rs), when the author signs.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     author_signature: Option<AuthorSignature>,
-    /// The keys the author registered with the market.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     author_keys: Vec<AuthorKey>,
-    /// The publisher is verified (docs/architecture/plugins/author-signing.md §4).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     verified: Option<VerifiedPublisher>,
 }
 
-/// How the market verified the publisher: a GitHub organization with a verified
-/// domain ("github"), or the publisher's own domain ("domain"). Only shown.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct VerifiedPublisher {
@@ -115,7 +88,6 @@ pub struct VerifiedPublisher {
 }
 
 impl VerifiedPublisher {
-    /// A known way, and for "domain" a plain lower-case host name, so the page shows nothing odd.
     fn is_sane(&self) -> bool {
         match (self.via.as_str(), self.domain.as_deref()) {
             ("github", None) => true,
@@ -130,10 +102,8 @@ impl VerifiedPublisher {
     }
 }
 
-/// Longest README / changelog text kept from the index (MAX_MARKET_TEXT in build-plugin-index.mjs).
 const MAX_MARKET_TEXT: usize = 16 * 1024;
 
-/// `text` cut to MAX_MARKET_TEXT characters; the index is signed, but a page of text is enough.
 fn cap_text(text: String) -> String {
     match text.char_indices().nth(MAX_MARKET_TEXT) {
         Some((end, _)) => format!("{}\n\n…", &text[..end]),
@@ -146,13 +116,10 @@ impl MarketEntry {
         self.publisher.as_deref().filter(|name| !name.is_empty()).unwrap_or(OFFICIAL_PUBLISHER)
     }
 
-    /// The author key that signed this package, None when unsigned; an error when the signature is wrong.
     pub(super) fn signer(&self) -> Result<Option<String>, String> {
         author_signing::signer(&self.id, &self.version, &self.download.sha256, self.author_signature.as_ref(), &self.author_keys)
     }
 
-    /// How this version's signer compares with the keys remembered for the installed
-    /// plugin, counting keys they endorsed; an error when the signature is wrong.
     pub(super) fn key_check(&self, remembered: &[String]) -> Result<author_signing::KeyCheck, String> {
         let trusted = author_signing::endorsed_keys(&self.id, remembered, &self.author_keys);
         Ok(author_signing::check_key(&trusted, self.signer()?.as_deref()))
@@ -163,19 +130,14 @@ impl MarketEntry {
     }
 }
 
-/// The index and the revocation list, read from the same commit.
 #[derive(Clone)]
 pub(super) struct MarketData {
-    /// Stable entries, one per plugin; what the market page lists.
     pub entries: Vec<MarketEntry>,
-    /// The newest pre-release of each plugin that has one.
     pub pre_releases: Vec<MarketEntry>,
     pub revoked: Vec<Revocation>,
 }
 
 impl MarketData {
-    /// What to install or update `id` to: its pre-release when the user opted in and
-    /// it is newer than the stable version (or there is no stable one), else stable.
     pub(super) fn entry_for(&self, id: &str, pre_release: bool) -> Option<&MarketEntry> {
         let stable = self.entries.iter().find(|entry| entry.id == id);
         match (stable, self.pre_release_of(id).filter(|_| pre_release)) {
@@ -185,7 +147,6 @@ impl MarketData {
         }
     }
 
-    /// The newest pre-release of `id` that is newer than its stable version.
     pub(super) fn pre_release_of(&self, id: &str) -> Option<&MarketEntry> {
         let pre = self.pre_releases.iter().find(|entry| entry.id == id)?;
         let stable = self.entries.iter().find(|entry| entry.id == id);
@@ -193,11 +154,8 @@ impl MarketData {
     }
 }
 
-/// The last market read that passed its signature checks, and when. Lets the
-/// market page show something at once and an install skip a second download.
 static LAST_MARKET: Mutex<Option<(Instant, MarketData)>> = Mutex::new(None);
 
-/// The last verified market, if it was read within `max_age`.
 pub(super) fn recent_market(max_age: Duration) -> Option<MarketData> {
     lock(&LAST_MARKET)
         .as_ref()
@@ -212,14 +170,11 @@ struct MarketIndex {
     plugins: Vec<Value>,
 }
 
-/// The index's stable entries, one per plugin.
 #[cfg(test)]
 pub(super) fn parse_index(text: &str) -> Result<Vec<MarketEntry>, String> {
     split_index(text).map(|(stable, _)| stable)
 }
 
-/// Parses the index into stable entries and the newest pre-release of each plugin.
-/// Entries that do not check out are left out rather than failing the whole index.
 pub(super) fn split_index(text: &str) -> Result<(Vec<MarketEntry>, Vec<MarketEntry>), String> {
     let index: MarketIndex =
         serde_json::from_str(text).map_err(|error| format!("The plugin index is not valid: {error}"))?;
@@ -243,7 +198,6 @@ pub(super) fn split_index(text: &str) -> Result<(Vec<MarketEntry>, Vec<MarketEnt
         .partition(|entry| entry.pre_release);
     entries.sort_by(|left, right| left.id.cmp(&right.id));
     entries.dedup_by(|left, right| left.id == right.id);
-    // Newest first within each plugin, so dedup keeps the newest pre-release.
     pre_releases.sort_by(|left, right| left.id.cmp(&right.id).then_with(|| compare_versions(&right.version, &left.version)));
     pre_releases.dedup_by(|left, right| left.id == right.id);
     Ok((entries, pre_releases))
@@ -261,7 +215,6 @@ fn is_valid_entry(entry: &MarketEntry) -> bool {
         && entry.id.bytes().all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'.' || byte == b'-')
 }
 
-/// Why this build cannot install `entry`, if it cannot.
 pub(super) fn incompatibility(entry: &MarketEntry, app_version: &str) -> Option<String> {
     if !supports_api_version(entry.api_version) {
         return Some(format!("Needs plugin API version {}.", entry.api_version));
@@ -276,7 +229,6 @@ pub(super) fn client() -> Result<reqwest::Client, String> {
     let mut builder = reqwest::Client::builder()
         .timeout(REQUEST_TIMEOUT)
         .user_agent(concat!("Fuyu/", env!("CARGO_PKG_VERSION")));
-    // Same proxy as the updater: env vars first, then the Windows system proxy.
     if let Some(proxy) = get_updater_proxy() {
         let proxy = reqwest::Proxy::all(&proxy).map_err(|error| format!("Invalid proxy {proxy}: {error}"))?;
         builder = builder.proxy(proxy);
@@ -290,7 +242,6 @@ async fn download(client: &reqwest::Client, url: &str, limit: u64) -> Result<Vec
         .ok_or_else(|| format!("{url} answered 404 Not Found."))
 }
 
-/// None when the file does not exist (404).
 pub(super) async fn download_unless_missing(client: &reqwest::Client, url: &str, limit: u64) -> Result<Option<Vec<u8>>, String> {
     let response = client
         .get(url)
@@ -316,9 +267,6 @@ pub(super) async fn download_unless_missing(client: &reqwest::Client, url: &str,
     Ok(Some(bytes.to_vec()))
 }
 
-/// The newest commit on the market branch, so the index and its signature are
-/// read from the same commit and not from a stale CDN copy of the branch.
-/// None when the GitHub API cannot be used (offline, rate limited).
 async fn market_commit(client: &reqwest::Client) -> Option<String> {
     let response = client
         .get(format!("https://api.github.com/repos/{MARKET_REPO}/commits/{MARKET_BRANCH}"))
@@ -333,13 +281,11 @@ async fn market_commit(client: &reqwest::Client) -> Option<String> {
     (sha.len() == 40 && sha.bytes().all(|byte| byte.is_ascii_hexdigit())).then_some(sha)
 }
 
-/// Starts downloading one market file (up to the index size limit) on its own task.
 fn spawn_download(client: &reqwest::Client, url: String) -> tauri::async_runtime::JoinHandle<Result<Option<Vec<u8>>, String>> {
     let client = client.clone();
     tauri::async_runtime::spawn(async move { download_unless_missing(&client, &url, MAX_INDEX_BYTES as u64).await })
 }
 
-/// The text of a file from `spawn_download`, or None when it does not exist.
 async fn finish_download(
     name: &str,
     task: tauri::async_runtime::JoinHandle<Result<Option<Vec<u8>>, String>>,
@@ -350,11 +296,6 @@ async fn finish_download(
         .transpose()
 }
 
-/// Downloads the index and the revocation list with their signatures from the
-/// same commit, checks the signatures, then parses them. A market without
-/// revoked.json (older ones) has nothing revoked; one that has it must have it signed.
-/// The four files are fetched at once over one client: each GitHub request costs
-/// a TLS handshake, and one after another they made the market page slow.
 pub(super) async fn fetch_market() -> Result<MarketData, String> {
     let client = client()?;
     let reference = market_commit(&client).await.unwrap_or_else(|| MARKET_BRANCH.to_string());
@@ -386,7 +327,6 @@ pub(super) async fn fetch_market() -> Result<MarketData, String> {
     Ok(data)
 }
 
-/// Downloads the package and checks its size and SHA-256 against the index.
 pub(super) async fn fetch_package(entry: &MarketEntry) -> Result<Vec<u8>, String> {
     let bytes = download(&client()?, &entry.download.url, entry.download.size).await?;
     verify_package(&bytes, &entry.download)?;
@@ -404,8 +344,6 @@ pub(super) fn verify_package(bytes: &[u8], download: &PackageDownload) -> Result
     Ok(())
 }
 
-/// Unzips into `target` (which must not exist), refusing paths that leave it
-/// and archives that unpack too large.
 pub(super) fn extract_package(bytes: &[u8], target: &Path) -> Result<(), String> {
     let mut archive = zip::ZipArchive::new(Cursor::new(bytes)).map_err(|error| format!("The package is not a valid zip: {error}"))?;
     if archive.len() > MAX_PACKAGE_FILES {
@@ -442,9 +380,6 @@ pub(super) fn extract_package(bytes: &[u8], target: &Path) -> Result<(), String>
     Ok(())
 }
 
-/// Unpacks `bytes` for `entry` next to the installed plugins, checks the
-/// manifest, then swaps it in for any older version. The caller stops the
-/// plugin first.
 pub(super) fn install_package(plugins_dir: &Path, entry: &MarketEntry, bytes: &[u8], app_version: &str) -> Result<(), String> {
     let staging = plugins_dir.join(format!("{WORK_DIR_PREFIX}installing-{}", entry.id));
     let old = plugins_dir.join(format!("{WORK_DIR_PREFIX}old-{}", entry.id));
@@ -468,7 +403,6 @@ pub(super) fn install_package(plugins_dir: &Path, entry: &MarketEntry, bytes: &[
         })?;
     }
     if let Err(error) = fs::rename(&staging, &target) {
-        // Put the old version back so the plugin keeps working.
         if old.exists() {
             let _ = fs::rename(&old, &target);
         }
@@ -479,8 +413,6 @@ pub(super) fn install_package(plugins_dir: &Path, entry: &MarketEntry, bytes: &[
     Ok(())
 }
 
-/// The unpacked manifest must be the plugin and version the index described,
-/// asking for no permission the index did not list (those are what the user saw).
 fn check_unpacked(dir: &Path, entry: &MarketEntry, app_version: &str) -> Result<(), String> {
     let text = read_manifest_text(dir)
         .map_err(|_| format!("The package has no {MANIFEST_FILE_NAME} at its top level."))?;

@@ -1,5 +1,3 @@
-//! Lets clicks fall through the transparent stage everywhere outside the island shape.
-
 use serde::Serialize;
 use std::{
     sync::atomic::{AtomicBool, Ordering},
@@ -17,27 +15,13 @@ use super::{
 };
 use crate::win32;
 
-// Mirrored by ISLAND_HOVER_CHANGED_EVENT in src/windows/island/api.ts. The payload says
-// whether the cursor is over the island shape. The webview's own mouseleave is unreliable
-// here, because the window stops receiving the cursor as soon as it leaves the shape.
 pub(crate) const ISLAND_HOVER_CHANGED_EVENT: &str = "island-hover-changed";
 
-// Mirrored by ISLAND_MOVE_ARMED_CHANGED_EVENT in src/windows/island/api.ts. The payload
-// says what an Alt + left-button press over the island would do, or which edge a resize under
-// way is dragging (modifier.rs ModifierTarget: "none", "move", "left", "right", "bottom",
-// "bottomLeft", "bottomRight"). Polled here because the webview cannot see Alt while another
-// window has keyboard focus.
 pub(crate) const ISLAND_MOVE_ARMED_CHANGED_EVENT: &str = "island-move-armed-changed";
 
-// Mirrored by ISLAND_HOLD_CHANGED_EVENT in src/windows/island/api.ts. The payload says whether
-// the expanded island should stay open: Alt held, or a resize under way (C25).
 pub(crate) const ISLAND_HOLD_CHANGED_EVENT: &str = "island-hold-changed";
 
-// Mirrored by ISLAND_CURSOR_MOVED_EVENT in src/features/center-pattern/api.ts. The payload
-// is the cursor in the window's CSS pixels, also outside the window, so the center
-// pattern's eyes can follow it anywhere. Sent only while the page asks for it.
 pub(crate) const ISLAND_CURSOR_MOVED_EVENT: &str = "island-cursor-moved";
-// Every third 12 ms poll: about 28 updates a second, only when the cursor moved.
 const CURSOR_EVENT_EVERY_TICKS: u32 = 3;
 
 static CURSOR_TRACKING: AtomicBool = AtomicBool::new(false);
@@ -48,8 +32,6 @@ struct CursorPoint {
     y: f64,
 }
 
-/// Turns `island-cursor-moved` on while a cursor-following center pattern is shown; the
-/// main window counts its users (acquireIslandCursor in center-pattern/api.ts).
 #[tauri::command]
 pub fn set_island_cursor_tracking(enabled: bool) {
     CURSOR_TRACKING.store(enabled, Ordering::Relaxed);
@@ -62,9 +44,6 @@ pub(crate) fn start_cursor_passthrough_loop(window: WebviewWindow) {
         let mut was_on_banner = false;
         let mut was_move_armed = ModifierTarget::None;
         let mut was_held = false;
-        // Asked once: every `window.hwnd()` is a round trip to the main event loop, which at
-        // this loop's 83 Hz kept the main thread busy even with the cursor nowhere near. The
-        // handle stays the same for the window's life.
         let hwnd = window.hwnd().ok();
         let mut tick: u32 = 0;
         let mut last_cursor: Option<CursorPoint> = None;
@@ -108,7 +87,6 @@ pub(crate) fn start_cursor_passthrough_loop(window: WebviewWindow) {
 
             tick = tick.wrapping_add(1);
             if !CURSOR_TRACKING.load(Ordering::Relaxed) {
-                // Forget the last point, so turning tracking back on sends the cursor at once.
                 last_cursor = None;
             } else if tick.is_multiple_of(CURSOR_EVENT_EVERY_TICKS) {
                 let point = hwnd.and_then(cursor_in_window);
@@ -134,7 +112,6 @@ fn cursor_in_window(hwnd: HWND) -> Option<CursorPoint> {
     })
 }
 
-/// Whether the cursor is on the message banner below the collapsed island (banner_hit.rs).
 fn cursor_is_on_banner(hwnd: HWND) -> bool {
     let Some(rect) = banner_rect() else {
         return false;
@@ -146,8 +123,6 @@ fn cursor_is_on_banner(hwnd: HWND) -> bool {
     cursor_in_window(hwnd).is_some_and(|point| rect.contains(point.x, point.y))
 }
 
-/// The island shape's box on screen in physical pixels, and whether it is open: the first-run
-/// guide's overlay lights it up and waits for it to open (onboarding_window/overlay.rs).
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub(crate) struct IslandOnScreen {
     pub left: f64,

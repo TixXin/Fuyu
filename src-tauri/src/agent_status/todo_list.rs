@@ -1,14 +1,8 @@
-//! An agent's own task list, for the progress on its session row (roadmap B6.5.4): Claude Code
-//! writes the whole list with each `TodoWrite` call, Codex with each `update_plan` call. The
-//! newest call is the list as it stands. Pure; both formats are undocumented, so anything
-//! unexpected reads as no list.
-
 use serde::Serialize;
 use serde_json::Value;
 
 use super::title::shorten;
 
-/// Longest step text shown on the row.
 const STEP_MAX_CHARS: usize = 60;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -16,11 +10,9 @@ const STEP_MAX_CHARS: usize = 60;
 pub struct TodoProgress {
     pub(super) done: u32,
     pub(super) total: u32,
-    /// The step in progress (Claude Code's `activeForm`, else its text); `None` between steps.
     pub(super) current: Option<String>,
 }
 
-/// Counts steps given as (text, text while it runs, status).
 fn progress<'a>(steps: impl Iterator<Item = (&'a str, Option<&'a str>, &'a str)>) -> Option<TodoProgress> {
     let mut result = TodoProgress { done: 0, total: 0, current: None };
     for (text, active, status) in steps {
@@ -36,7 +28,6 @@ fn progress<'a>(steps: impl Iterator<Item = (&'a str, Option<&'a str>, &'a str)>
     (result.total > 0).then_some(result)
 }
 
-/// The list in a Claude Code assistant message's `TodoWrite` call, if it makes one.
 pub(super) fn claude_todo_list(content: &Value) -> Option<TodoProgress> {
     let call = content
         .as_array()?
@@ -49,7 +40,6 @@ pub(super) fn claude_todo_list(content: &Value) -> Option<TodoProgress> {
     }))
 }
 
-/// The plan in a Codex `response_item` payload's `update_plan` call, if it is one.
 pub(super) fn codex_plan(payload: &Value) -> Option<TodoProgress> {
     if payload["type"] != "function_call" || payload["name"] != "update_plan" {
         return None;
@@ -59,7 +49,6 @@ pub(super) fn codex_plan(payload: &Value) -> Option<TodoProgress> {
     progress(plan.iter().filter_map(|step| Some((step["step"].as_str()?, None, step["status"].as_str().unwrap_or_default()))))
 }
 
-/// A list worth showing: not every step done (a finished list is just noise on the row).
 pub(super) fn unfinished(list: Option<TodoProgress>) -> Option<TodoProgress> {
     list.filter(|list| list.done < list.total)
 }

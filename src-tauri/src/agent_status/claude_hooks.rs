@@ -1,5 +1,3 @@
-//! Managed hook entries in the Claude Code `settings.json`.
-
 use serde_json::{json, Map, Value};
 use std::{fs, path::Path};
 
@@ -8,27 +6,18 @@ use super::{
     AGENT_HOOK_SIGNATURE,
 };
 
-/// Where the approval hook posts (`agent_approval`), and the token it shows.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct ApprovalHook {
     pub url: String,
-    /// Where the AskUserQuestion hook posts (roadmap B6 phase 3); None installs no question hook.
     pub question_url: Option<String>,
-    /// Where the activity hook posts (B6.2.7); None installs none.
     pub activity_url: Option<String>,
     pub token: String,
 }
 
-/// After these the session has moved on, so a card still waiting for it was answered in the
-/// terminal (`agent_approval::decision::Activity`).
 pub(super) const ACTIVITY_EVENTS: [&str; 6] = ["PostToolUse", "PostToolUseFailure", "PermissionDenied", "Stop", "SubagentStop", "UserPromptSubmit"];
 
-/// The island waits up to 120 s for the user (`agent_approval::WAIT_LIMIT`); the hook waits
-/// longer, so the island hands the request back before Claude Code gives up on it.
 pub(super) const APPROVAL_HOOK_TIMEOUT_SECONDS: i64 = 150;
 
-/// Marks the approval hook as the island's: an HTTP hook has no script path to carry the
-/// signature. Hooks from before the rename (D17) carry `X-FocuSD-Hook`, found by its value.
 pub(super) const APPROVAL_HOOK_MARKER_HEADER: &str = "X-Fuyu-Hook";
 
 pub(super) fn install_claude_code_status_hooks(
@@ -67,12 +56,9 @@ pub(super) fn install_claude_code_status_hooks(
     write_text_file(config_path, &json)
 }
 
-/// Notifications that mean the session waits for the user mid-turn: a tool permission prompt, an
-/// MCP server asking for input, or an agent needing input. Matched against the notification type.
 pub(super) const CLAUDE_CODE_WAITING_NOTIFICATIONS: &str =
     "permission_prompt|elicitation_dialog|agent_needs_input";
 
-/// Every FocuSD hook for Claude Code, by event name.
 pub(super) fn claude_code_hook_entries(
     running_script_path: &Path,
     status_script_path: &Path,
@@ -88,14 +74,11 @@ pub(super) fn claude_code_hook_entries(
         );
     }
 
-    // PermissionRequest fires before every permission prompt: the surest sign the session waits.
     let mut permission = claude_code_running_hook_entry(running_script_path);
     if let Some(args) = permission["hooks"][0]["args"].as_array_mut() {
         args.push(Value::String(AGENT_RUNNING_NOTIFICATION_ARG.to_string()));
     }
 
-    // PreCompact / PostCompact: the session is compacting its context (roadmap B3b). The same
-    // input-saving call; it prints nothing, so it adds no instructions to the summary.
     let compaction = || {
         let mut entry = claude_code_running_hook_entry(running_script_path);
         if let Some(args) = entry["hooks"][0]["args"].as_array_mut() {
@@ -105,7 +88,6 @@ pub(super) fn claude_code_hook_entries(
     };
 
     let session_script_path = status_script_path.with_file_name(AGENT_SESSION_SCRIPT_FILE_NAME);
-    // In the background: looking up the session's process takes about a second.
     let mut session_start = claude_code_session_hook_entry(&session_script_path, "start");
     if let Some(hook) = session_start["hooks"][0].as_object_mut() {
         hook.insert("async".to_string(), Value::Bool(true));
@@ -137,9 +119,6 @@ pub(super) fn claude_code_hook_entries(
     ]
 }
 
-/// What Install/Repair writes: the status hooks, and the approval hooks when the island's endpoint
-/// runs. They sit beside the status hooks of the same events (`PermissionRequest`, `PreToolUse`)
-/// as separate entries; Claude Code runs them side by side.
 pub(super) fn claude_code_installed_entries(
     running_script_path: &Path,
     status_script_path: &Path,
@@ -164,10 +143,6 @@ pub(super) fn claude_code_installed_entries(
     entries
 }
 
-/// Tells the island the session moved on (B6.2.7). A command hook in the background rather than
-/// an HTTP hook: it runs after every tool call, and with the island closed Windows takes about 2 s
-/// to refuse a local connection, which Claude Code would otherwise wait for. curl.exe ships with
-/// Windows 10 and 11; it sends the hook's stdin as the body and prints nothing.
 fn claude_code_activity_hook_entry(url: &str, token: &str) -> Value {
     let args = [
         "-s",
@@ -194,7 +169,6 @@ fn claude_code_activity_hook_entry(url: &str, token: &str) -> Value {
     entry
 }
 
-/// An HTTP hook that holds a request for the island's card (roadmap B6 phases 2 and 3).
 fn claude_code_http_hook_entry(url: &str, token: &str, marker: &str) -> Value {
     json!({
         "hooks": [
@@ -211,8 +185,6 @@ fn claude_code_http_hook_entry(url: &str, token: &str, marker: &str) -> Value {
     })
 }
 
-/// Adds `entries` under their events, after dropping the FocuSD hooks already there. Each event
-/// is cleared once, so an event with two entries (PermissionRequest) keeps both.
 pub(super) fn install_claude_code_hook_events(
     hooks: &mut Map<String, Value>,
     entries: Vec<(&'static str, Value)>,
@@ -228,8 +200,6 @@ pub(super) fn install_claude_code_hook_events(
             list.push(entry);
         }
     }
-    // FocuSD hooks under events this install no longer writes (the approval and activity hooks
-    // when the endpoint is not running): dropped, and the event too when nothing is left.
     let others: Vec<String> = hooks.keys().filter(|name| !cleared.contains(&name.as_str())).cloned().collect();
     for event_name in others {
         if !matches!(hooks.get(&event_name), Some(Value::Array(list)) if list.iter().any(value_contains_focusd_hook_signature)) {
@@ -242,7 +212,6 @@ pub(super) fn install_claude_code_hook_events(
     }
 }
 
-/// The user's own entries of `event_name`, taken out of `hooks`.
 fn unmanaged_entries(hooks: &mut Map<String, Value>, event_name: &str) -> Vec<Value> {
     hooks
         .remove(event_name)
@@ -295,9 +264,6 @@ pub(super) fn claude_code_match_all_hook_entry(mut entry: Value) -> Value {
 }
 
 pub(super) fn claude_code_running_hook_entry(script_path: &Path) -> Value {
-    // Claude Code spawns `args` with MSVC-style escaping, which turns embedded
-    // quotes into `\"` that cmd.exe cannot parse. Pass the path as its own
-    // argument and let the spawner add plain quotes only when it needs them.
     let args = vec![
         "/d".to_string(),
         "/c".to_string(),
@@ -323,7 +289,6 @@ pub(super) fn claude_code_status_hook_entry(script_path: &Path, phase: &str) -> 
     )
 }
 
-/// The session script (focusd-agent-session.ps1) for SessionStart (`start`) or SessionEnd (`end`).
 pub(super) fn claude_code_session_hook_entry(script_path: &Path, event: &str) -> Value {
     claude_code_hook_entry(
         "powershell.exe",
@@ -389,7 +354,6 @@ mod tests {
                 .last()
                 .cloned()
         };
-        // Prompts and tool calls only mark the session as running; nothing is saved.
         assert_eq!(last_arg("UserPromptSubmit"), Some(json!("claudeCode")));
         assert_eq!(last_arg("PreToolUse"), Some(json!("claudeCode")));
         assert_eq!(last_arg("Notification"), Some(json!("notification")));
@@ -398,7 +362,6 @@ mod tests {
             json!("permission_prompt|elicitation_dialog|agent_needs_input")
         );
         assert_eq!(last_arg("Stop"), Some(json!("completed")));
-        // Session start and end record the session's process and terminal, the start in the background.
         assert_eq!(last_arg("SessionStart"), Some(json!("start")));
         assert_eq!(hooks["SessionStart"][0]["hooks"][0]["async"], json!(true));
         assert_eq!(last_arg("SessionEnd"), Some(json!("end")));
@@ -425,7 +388,6 @@ mod tests {
         hooks.insert("PermissionRequest".to_string(), json!([mine]));
 
         install_claude_code_hook_events(&mut hooks, claude_code_installed_entries(running, status, Some(&approval(47830))));
-        // The endpoint moved to another port: Install/Repair writes the new address once.
         install_claude_code_hook_events(&mut hooks, claude_code_installed_entries(running, status, Some(&approval(51000))));
 
         let entries = hooks["PermissionRequest"].as_array().unwrap();
@@ -439,7 +401,6 @@ mod tests {
         assert_eq!(hook["timeout"], json!(APPROVAL_HOOK_TIMEOUT_SECONDS));
         assert!(value_contains_focusd_hook_signature(hook));
 
-        // The question hook: after the match-all status hook, only for AskUserQuestion.
         let pre_tool = hooks["PreToolUse"].as_array().unwrap();
         assert_eq!(pre_tool.len(), 2, "the status hook and the question hook");
         assert_eq!(pre_tool[0]["matcher"], json!("*"));
@@ -449,7 +410,6 @@ mod tests {
         assert_eq!(question["timeout"], json!(APPROVAL_HOOK_TIMEOUT_SECONDS));
         assert!(value_contains_focusd_hook_signature(question));
 
-        // The activity hook: in the background, posting stdin to the new address, after each status hook.
         for event in ACTIVITY_EVENTS {
             let activity = &hooks[event].as_array().unwrap().last().unwrap()["hooks"][0];
             assert_eq!((activity["command"].as_str(), activity["async"].as_bool()), (Some("curl.exe"), Some(true)), "{event}");
@@ -459,7 +419,6 @@ mod tests {
         assert_eq!(hooks["Stop"].as_array().unwrap().len(), 2, "the status hook and one activity hook");
         assert_eq!(hooks["PostToolUse"].as_array().unwrap().len(), 1);
 
-        // Without the endpoint only the status hooks are written, and the old approval hooks go.
         install_claude_code_hook_events(&mut hooks, claude_code_installed_entries(running, status, None));
         assert_eq!(hooks["PermissionRequest"].as_array().unwrap().len(), 2);
         assert_eq!(hooks["PreToolUse"].as_array().unwrap().len(), 1);

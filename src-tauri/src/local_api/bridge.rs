@@ -1,7 +1,3 @@
-//! Answers todo and note calls from todos.json (crate::todos) or, when the
-//! todos are still in the island window's localStorage (the migration failed),
-//! hands them to the window and waits for its answer.
-
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::{
@@ -17,8 +13,6 @@ use tauri::{AppHandle, Emitter};
 use super::routes::{ApiCall, ApiError};
 use crate::{island, todos};
 
-/// Sent to the island window. Mirrored by `LOCAL_API_REQUEST_EVENT` in
-/// src/features/local-api/api.ts.
 pub(super) const REQUEST_EVENT: &str = "local-api-request";
 const ANSWER_TIMEOUT: Duration = Duration::from_secs(5);
 const TODOS_READY_TIMEOUT: Duration = Duration::from_secs(10);
@@ -33,8 +27,6 @@ struct BridgeRequest {
     params: Value,
 }
 
-/// The island window's answer. Mirrored by `LocalApiResponse` in
-/// src/features/local-api/api.ts.
 #[derive(Debug, Clone, Deserialize)]
 pub struct BridgeResponse {
     ok: bool,
@@ -51,11 +43,8 @@ fn pending() -> &'static Mutex<HashMap<u64, mpsc::Sender<BridgeResponse>>> {
 }
 
 pub(super) fn dispatch(app: &AppHandle, call: ApiCall) -> Result<Value, ApiError> {
-    // Right after start-up the window first moves the todos to todos.json and
-    // only then listens; hold todo calls until it has.
     if call.method.starts_with("todos.") || call.method.starts_with("note.") {
         todos::wait_until_decided(TODOS_READY_TIMEOUT);
-        // Once they are in todos.json, Rust answers without the window.
         if let Some(answer) = todos::call(call.method, &call.params) {
             return answer.map_err(|(status, message)| ApiError::new(status, message));
         }
@@ -89,8 +78,6 @@ pub(super) fn dispatch(app: &AppHandle, call: ApiCall) -> Result<Value, ApiError
     }
 }
 
-/// Called by the island window with its answer. An unknown id means the call
-/// already timed out, which is not an error for the window.
 pub(super) fn complete(id: u64, response: BridgeResponse) {
     let sender = pending()
         .lock()

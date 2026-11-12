@@ -1,10 +1,3 @@
-//! One host's tunnel: a resident `ssh -N -R 127.0.0.1:<there>:127.0.0.1:<here>`, started again
-//! with a backoff whenever it ends, until its stop channel is dropped. It connects through a
-//! config of the island's own, `<app data>/ssh/tunnel-<host>.conf` from `ssh -G` with the user's
-//! tunnels left out (agent_status/remote_fetch.rs `island_config`): ClearAllForwardings would
-//! clear the `-R` given here too. ssh and whatever it starts (a ProxyCommand) run in a job
-//! object, so stopping the tunnel or the island ending leaves no ssh behind.
-
 use std::{
     io::{BufRead, BufReader},
     os::windows::process::CommandExt,
@@ -21,17 +14,14 @@ use crate::{
     win32::job::{self, Job},
 };
 
-/// How a tunnel is doing. Mirrored by `SshTunnelState` in src/features/ssh-tunnel/api.ts.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) enum Status {
     Connecting,
     Connected,
-    /// The server would not listen on the port: taken there, likely by another tunnel.
     PortInUse,
     Failed(String),
 }
 
-/// What one tunnel is told to keep up.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Spec {
     pub(super) host: String,
@@ -40,22 +30,16 @@ pub(super) struct Spec {
     pub(super) local_port: u16,
 }
 
-/// How often the tunnel looks whether ssh ended or it was stopped.
 const POLL: Duration = Duration::from_millis(250);
-/// A tunnel up this long that then drops starts the backoff over.
 const STABLE: Duration = Duration::from_secs(60);
 const FIRST_RETRY_SECONDS: u64 = 5;
-/// Each retry is a login to the server; more often could look like an attack there.
 const MAX_RETRY_SECONDS: u64 = 120;
 
-/// The wait before retrying after `failures` ends in a row: 5 s, doubling up to two minutes.
 pub(super) fn backoff(failures: u32) -> Duration {
     let doublings = failures.saturating_sub(1).min(8);
     Duration::from_secs((FIRST_RETRY_SECONDS << doublings).min(MAX_RETRY_SECONDS))
 }
 
-/// ssh's arguments after `-F <config>`. `-v` makes ssh say when the server accepted the forward;
-/// a refused one ends it (ExitOnForwardFailure) rather than leave a tunnel that carries nothing.
 pub(super) fn ssh_args(remote_port: u16, local_port: u16, destination: &str) -> Vec<String> {
     let options = [
         "BatchMode=yes",
@@ -77,12 +61,10 @@ pub(super) fn ssh_args(remote_port: u16, local_port: u16, destination: &str) -> 
     args
 }
 
-/// What one line of ssh's stderr means for the tunnel.
 #[derive(Debug, PartialEq, Eq)]
 pub(super) enum Heard {
     Up,
     PortTaken,
-    /// Something a person would read as the reason it ended.
     Said(String),
     Noise,
 }
@@ -100,14 +82,9 @@ pub(super) fn hear(line: &str) -> Heard {
     }
 }
 
-/// Run on the host (`sh -s`): its listening TCP ports. `ss` and `netstat` sit in /usr/sbin on
-/// some servers (CentOS 7), outside a plain login's PATH.
 pub(super) const PORT_CHECK_SCRIPT: &str =
     "PATH=\"$PATH:/usr/sbin:/sbin\"\nss -ltn 2>/dev/null || netstat -ltn 2>/dev/null || echo FOCUSD_NO_PORT_TOOL\n";
 
-/// Whether `port` is listed as listening in what PORT_CHECK_SCRIPT printed. Both tools give the
-/// local address as `<address>:<port>` (`127.0.0.1:10089`, `[::1]:10089`, `:::10089`); peers of
-/// listeners end in `:*`.
 pub(super) fn port_listening(output: &str, port: u16) -> Result<bool, String> {
     if output.contains("FOCUSD_NO_PORT_TOOL") {
         return Err("Neither ss nor netstat runs on the server".into());
@@ -116,7 +93,6 @@ pub(super) fn port_listening(output: &str, port: u16) -> Result<bool, String> {
     Ok(output.lines().any(|line| line.split_whitespace().any(|field| field.ends_with(&suffix))))
 }
 
-/// What a run of ssh learned before it ended.
 #[derive(Default)]
 struct Run {
     up: bool,
@@ -128,7 +104,6 @@ fn set(status: &Mutex<Status>, next: Status) {
     *status.lock().unwrap_or_else(PoisonError::into_inner) = next;
 }
 
-/// Keeps `spec`'s tunnel up until `stop`'s sender is dropped; `status` says how it is doing.
 pub(super) fn supervise(app_dir: &Path, spec: &Spec, status: &Mutex<Status>, stop: &mpsc::Receiver<()>) {
     let mut failures = 0u32;
     loop {
@@ -146,7 +121,6 @@ pub(super) fn supervise(app_dir: &Path, spec: &Spec, status: &Mutex<Status>, sto
     }
 }
 
-/// One ssh, from start to end: how it ended and whether it had been up; None when stopped.
 fn run_once(app_dir: &Path, spec: &Spec, status: &Mutex<Status>, stop: &mpsc::Receiver<()>) -> Option<(Status, bool)> {
     let failed = |error: String| Some((Status::Failed(error), false));
     let config = match write_island_config(app_dir, &format!("tunnel-{}", spec.host), &spec.target, None) {
@@ -166,7 +140,6 @@ fn run_once(app_dir: &Path, spec: &Spec, status: &Mutex<Status>, stop: &mpsc::Re
         Ok(child) => child,
         Err(error) => return failed(format!("Failed to start ssh: {error}")),
     };
-    // Started suspended, so a ProxyCommand it starts is in the job too. Dropped on return.
     let _job = match Job::new().and_then(|job| job.assign(&child).map(|()| job)).and_then(|job| job::resume(child.id()).map(|()| job)) {
         Ok(job) => job,
         Err(error) => {
@@ -178,7 +151,6 @@ fn run_once(app_dir: &Path, spec: &Spec, status: &Mutex<Status>, stop: &mpsc::Re
     let run = Arc::new(Mutex::new(Run::default()));
     if let Some(stderr) = child.stderr.take() {
         let run = Arc::clone(&run);
-        // Read all along: `-v` talks on every forwarded connection, and a full pipe would stall ssh.
         thread::spawn(move || {
             for line in BufReader::new(stderr).lines().map_while(Result::ok) {
                 let mut run = run.lock().unwrap_or_else(PoisonError::into_inner);
@@ -205,7 +177,6 @@ fn run_once(app_dir: &Path, spec: &Spec, status: &Mutex<Status>, stop: &mpsc::Re
         match child.try_wait() {
             Ok(None) => continue,
             Ok(Some(exit)) => {
-                // The reader takes in ssh's last words just after it ends.
                 thread::sleep(Duration::from_millis(150));
                 let run = run.lock().unwrap_or_else(PoisonError::into_inner);
                 let ended = if run.port_taken {

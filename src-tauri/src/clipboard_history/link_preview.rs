@@ -1,7 +1,3 @@
-//! A copied link's page title and icon (C38), only when "link previews" is on: it visits the
-//! address. The page is read up to MAX_PAGE_BYTES and the icon up to MAX_ICON_BYTES; nothing else
-//! on the page is loaded and no cookies are kept.
-
 use base64::{engine::general_purpose, Engine as _};
 use reqwest::Url;
 use serde::Serialize;
@@ -16,13 +12,11 @@ const MAX_TITLE_CHARS: usize = 200;
 #[serde(rename_all = "camelCase")]
 pub struct LinkPreview {
     title: Option<String>,
-    /// The site icon as a data URL.
     icon: Option<String>,
 }
 
 pub(super) async fn fetch(url: &str) -> Result<LinkPreview, String> {
     let url = Url::parse(url).map_err(|error| format!("Not a link: {error}"))?;
-    // Never this computer or the local network (C42).
     if !super::link_guard::allowed_url(&url) {
         return Err("Only links to public websites are read.".into());
     }
@@ -43,9 +37,7 @@ pub(super) async fn fetch(url: &str) -> Result<LinkPreview, String> {
     Ok(LinkPreview { title, icon })
 }
 
-/// The body (cut at `limit`), its content type, and the address after redirects.
 async fn read(client: &reqwest::Client, url: Url, limit: usize) -> Result<((Vec<u8>, Option<String>), Url), String> {
-    // The icon's address comes from the page, so it is checked like the link.
     if !super::link_guard::allowed_url(&url) {
         return Err("Only public websites are read.".into());
     }
@@ -70,7 +62,6 @@ async fn read(client: &reqwest::Client, url: Url, limit: usize) -> Result<((Vec<
     Ok(((body, kind), final_url))
 }
 
-/// The `<... name="value">` attribute of one tag, case-insensitive, quoted either way.
 fn attribute(tag: &str, name: &str) -> Option<String> {
     let lower = tag.to_ascii_lowercase();
     let mut from = 0;
@@ -94,7 +85,6 @@ fn attribute(tag: &str, name: &str) -> Option<String> {
     None
 }
 
-/// Every `<name ...>` tag in the page head, as written.
 fn tags<'a>(html: &'a str, name: &str) -> Vec<&'a str> {
     let lower = html.to_ascii_lowercase();
     let open = format!("<{name}");

@@ -75,7 +75,6 @@ fn routes_reject_bad_requests() {
     assert_eq!(status("POST", "/v1/todos", b"not json"), Err(400));
     assert_eq!(status("POST", "/v1/todos", b"[1,2]"), Err(400));
     assert_eq!(status("DELETE", "/v1/todos/..%2F", b""), Err(404));
-    // An id field in the body cannot point the update at another todo.
     let update = route("PATCH", "/v1/todos/a", br#"{"id":"b"}"#).expect("update");
     assert_eq!(update.params["id"], "a");
 }
@@ -110,7 +109,6 @@ fn tokens_are_random_hex() {
 #[test]
 fn development_routes_reach_the_plugin_host() {
     let load = route("POST", "/v1/dev/plugins", br#"{"path":"C:/work/plugin"}"#).expect("load");
-    // Loading runs code, so it needs "allow changes" like other writes.
     assert_eq!((load.method, load.params, load.writes), ("dev.load", json!({ "path": "C:/work/plugin" }), true));
     let reload = route("POST", "/v1/dev/plugins/me.x/reload", b"").expect("reload");
     assert_eq!((reload.params, reload.writes), (json!({ "id": "me.x" }), true));

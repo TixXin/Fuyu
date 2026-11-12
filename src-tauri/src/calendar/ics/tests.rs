@@ -53,13 +53,11 @@ END:VCALENDAR\r
 
 #[test]
 fn events_in_a_range_with_repeats_exceptions_and_moved_occurrences() {
-    // Monday 9 Nov 2026, Shanghai time (UTC+8), and the week before.
     let events = events_between(CALENDAR, utc(2026, 11, 5, 16, 0), utc(2026, 11, 9, 16, 0));
     let summary: Vec<(&str, i64, i64)> = events.iter().map(|event| (event.title.as_str(), event.start_ms, event.end_ms)).collect();
     assert_eq!(
         summary,
         [
-            // Friday 6 Nov is excluded; Monday 9 Nov at 10:00 moved to 15:00 for 30 minutes.
             ("1:1", ms(2026, 11, 9, 1, 0), ms(2026, 11, 9, 1, 30)),
             ("周会（改到下午）", ms(2026, 11, 9, 7, 0), ms(2026, 11, 9, 7, 30)),
         ]
@@ -71,9 +69,7 @@ fn events_in_a_range_with_repeats_exceptions_and_moved_occurrences() {
     let weekly = &friday[0];
     assert_eq!((weekly.title.as_str(), weekly.start_ms, weekly.end_ms), ("周会", ms(2026, 11, 13, 2, 0), ms(2026, 11, 13, 3, 0)));
     assert_eq!(weekly.location.as_deref(), Some("3 楼, 大会议室"));
-    // The folded description still gives the whole link; the alarm's description is not taken.
     assert_eq!(weekly.meeting_link.as_deref(), Some("https://meeting.tencent.com/dm/jvAnxAmrDfHt"));
-    // UNTIL ends the series.
     assert!(events_between(CALENDAR, utc(2027, 1, 3, 16, 0), utc(2027, 1, 8, 16, 0)).is_empty());
 }
 

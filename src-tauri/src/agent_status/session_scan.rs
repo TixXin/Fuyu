@@ -1,6 +1,3 @@
-//! Finds the Claude Code and Codex sessions active in the last two hours and summarizes them,
-//! re-reading a session file only when its size or modification time changed.
-
 use std::{
     collections::{HashMap, HashSet},
     fs::{self, File},
@@ -22,24 +19,14 @@ use super::sessions::{
 use super::snapshot::{current_unix_millis, system_time_to_unix_millis};
 use super::title::{codex_thread_name, folder_title, user_prompt_in_record};
 
-/// Sessions untouched for longer are left out of the list.
 pub(super) const ACTIVE_WINDOW_MS: i64 = 2 * 60 * 60 * 1000;
-/// The list shows at most this many sessions, running ones first.
 const MAX_SESSIONS: usize = 12;
-/// A session file quiet for less than this is never taken as ended for missing from the registry.
 const REGISTRY_GRACE_MS: i64 = 30_000;
-/// Session files and the Codex index are read this far from the end for the state, model, latest
-/// reply and thread names.
 const TAIL_BYTES: u64 = 256 * 1024;
-/// Session files are scanned this far from the start for the first prompt.
 const HEAD_BYTES: u64 = 4 * 1024 * 1024;
 
 static SESSION_CACHE: Mutex<SessionCache> = Mutex::new(SessionCache::new());
 
-/// `waiting` names the Claude Code sessions that asked the user something (notifications.rs).
-/// `app_dir` holds the SessionStart / SessionEnd records (session_records.rs), which tell a
-/// session that was quit mid-turn from one still working.
-/// `window_ms`: how far back a session file may have last changed (ACTIVE_WINDOW_MS by default).
 pub(super) fn list_sessions(
     home_dir: &Path,
     app_dir: Option<&Path>,
@@ -50,9 +37,6 @@ pub(super) fn list_sessions(
     scan(home_dir, app_dir, waiting, &compacting, window_ms, None)
 }
 
-/// The sessions of a mirrored home (remote_sessions.rs). `registry`: the ids the other computer's
-/// `~/.claude/sessions` lists as running, or `None` when it keeps no registry. `saved`: what its
-/// hooks reported (remote_setup.rs).
 pub(super) fn list_mirrored_sessions(
     home_dir: &Path,
     saved: &SavedNotifications,
@@ -75,11 +59,8 @@ fn scan(
     let mut sessions = Vec::new();
 
     let codex_index = read_tail(&home_dir.join(".codex").join("session_index.jsonl"));
-    // Claude Code's registry of live sessions, read once and only if some session needs it.
     let mut live_claude = registry;
     for (provider, path, modified) in recent_session_files(home_dir, now, window_ms) {
-        // The phase is worked out here, because a working session turns stale, or stops
-        // waiting, without its file changing.
         if let Some((mut summary, state)) =
             cache.summary(provider, &path, modified, codex_index.as_deref())
         {
@@ -88,16 +69,12 @@ fn scan(
             summary.closed = has_ended(app_dir, &summary.session_id)
                 .unwrap_or_else(|| left_claude_registry(home_dir, &summary, now, &mut live_claude));
             let ended = mid_turn && summary.closed;
-            // Compacting writes nothing to the transcript until it is done, for up to minutes;
-            // the session works meanwhile, whether the turn or `/compact` started it.
             summary.compacting = compacting.contains_key(&summary.session_id) && !ended;
             summary.phase = if ended {
-                // Quit mid-turn (often while a question was open): nothing left to wait for.
                 "completed"
             } else if summary.compacting {
                 "running"
             } else if state == TurnState::Working && asked_user {
-                // Waiting on the user is not a stall, however long it takes.
                 "waiting"
             } else {
                 session_phase(
@@ -117,9 +94,6 @@ fn scan(
     sessions
 }
 
-/// Whether the session's agent has quit, from its SessionStart / SessionEnd record: SessionEnd
-/// ran after the latest start, or the recorded process is gone (killed, or the terminal closed).
-/// `None` when the record says nothing either way (no record, or no process recorded).
 fn has_ended(app_dir: Option<&Path>, session_id: &str) -> Option<bool> {
     let record = app_dir.and_then(|dir| session_records::read(dir, session_id))?;
     if record.has_ended() {
@@ -128,11 +102,6 @@ fn has_ended(app_dir: Option<&Path>, session_id: &str) -> Option<bool> {
     record.live_pid().map(|_| false)
 }
 
-/// For a Claude Code session the hooks did not record: whether it has left Claude Code's own
-/// registry of running sessions (`~/.claude/sessions`). Sessions closed in the VS Code extension
-/// often skip SessionEnd, and would otherwise stay listed as running. Only once the file has been
-/// quiet for a while, as a session just started may not be registered yet, and only when this
-/// Claude Code keeps the registry at all.
 fn left_claude_registry(
     home_dir: &Path,
     summary: &AgentSessionSummary,
@@ -162,7 +131,6 @@ fn recent_session_files(home_dir: &Path, now: i64, window_ms: i64) -> Vec<Sessio
         }
     };
 
-    // ~/.claude/projects/<project>/<session>.jsonl; subagent transcripts live in subfolders.
     for project in read_dir_paths(&home_dir.join(".claude").join("projects")) {
         for path in read_dir_paths(&project) {
             if path
@@ -174,7 +142,6 @@ fn recent_session_files(home_dir: &Path, now: i64, window_ms: i64) -> Vec<Sessio
         }
     }
 
-    // ~/.codex/sessions/<year>/<month>/<day>/rollout-*.jsonl; the newest two days cover up to a day.
     let mut days = Vec::new();
     for year in read_dir_paths(&home_dir.join(".codex").join("sessions")) {
         for month in read_dir_paths(&year) {
@@ -205,12 +172,9 @@ struct CachedSession {
     stamp: (u64, Option<SystemTime>),
     summary: AgentSessionSummary,
     state: TurnState,
-    /// What the start of the file says, kept once found: later reads skip the head scan.
     head: SessionHead,
 }
 
-/// The first prompt and the folder the session started in. A Claude Code record carries the
-/// shell's current folder, which moves when the agent runs `cd`; the project is where it began.
 #[derive(Clone, Default)]
 struct SessionHead {
     first_prompt: Option<String>,
@@ -238,7 +202,6 @@ impl SessionCache {
         let sessions = self.sessions.get_or_insert_with(HashMap::new);
         if let Some(cached) = sessions.get(path).filter(|cached| cached.stamp == stamp) {
             let mut summary = cached.summary.clone();
-            // The Codex index gains a thread name later than the session file changes.
             if provider == "codex" {
                 if let Some(name) =
                     codex_index.and_then(|index| codex_thread_name(index, &summary.session_id))
@@ -249,10 +212,8 @@ impl SessionCache {
             return Some((summary, cached.state));
         }
 
-        // A long turn can push its prompt out of the tail read; keep the start and prompt found before.
         let known_turn_start = sessions.get(path).and_then(|cached| cached.summary.turn_started_at);
         let known_prompt = sessions.get(path).and_then(|cached| cached.summary.last_prompt.clone());
-        // Claude Code notes the mode only on typed prompts, which a long turn pushes out too.
         let known_mode = sessions.get(path).and_then(|cached| cached.summary.permission_mode);
         let known_head = sessions
             .get(path)
@@ -304,8 +265,6 @@ impl SessionCache {
         Some((summary, state))
     }
 
-    /// Drops files under `home_dir` that left the two-hour window so the cache does not grow for
-    /// ever. Files of other homes (remote mirrors, remote_sessions.rs) are left to their own scans.
     fn forget_missing(&mut self, home_dir: &Path, listed: &[AgentSessionSummary]) {
         if let Some(sessions) = &mut self.sessions {
             sessions.retain(|path, cached| {
@@ -333,7 +292,6 @@ fn summary_from(
         title,
         model: parsed.model,
         effort: parsed.effort,
-        // Set by `list_sessions` for the current time.
         phase: "completed",
         last_message: parsed.last_message,
         reply_marker: parsed.reply_marker,
@@ -346,7 +304,6 @@ fn summary_from(
         permission_mode: parsed.permission_mode,
         subagents: parsed.subagents,
         background_tasks: parsed.background_tasks,
-        // Set by `list_sessions`.
         compacting: false,
         todos: parsed.todos,
         closed: false,
@@ -355,8 +312,6 @@ fn summary_from(
     }
 }
 
-/// Scans whole lines from the start (a first message with a screenshot is one line of several
-/// hundred KiB) until the first prompt and, for Claude Code, the starting folder are found.
 fn scan_head(path: &Path, provider: &str) -> SessionHead {
     let mut head = SessionHead::default();
     let Ok(file) = File::open(path) else {
@@ -395,7 +350,6 @@ fn read_first_line(path: &Path) -> Option<String> {
     Some(String::from_utf8_lossy(&line).into_owned())
 }
 
-/// The last `TAIL_BYTES` of a file, starting at a whole line.
 pub(super) fn read_tail(path: &Path) -> Option<String> {
     let mut file = File::open(path).ok()?;
     let len = file.metadata().ok()?.len();

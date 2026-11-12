@@ -1,10 +1,3 @@
-//! Adds a project to cc-connect's `config.toml` for the setup on the plugin page: one
-//! `[[projects]]` block appended as text, so what the user wrote, comments too, stays as it was
-//! (a TOML library would rewrite the file). The old file is copied to
-//! `config.toml.bak-focusd-<time>` first; a file is made when there is none. The agent is Claude
-//! Code in `default` mode, so every tool call still asks on the phone, or Codex in `suggest` mode
-//! (read-only: `codex exec` cannot ask), until `/mode` on the phone says otherwise.
-
 use crate::user_error::UserError;
 use std::{
     collections::BTreeMap,
@@ -14,20 +7,15 @@ use std::{
 
 pub(super) const FILE_NAME: &str = "config.toml";
 pub(super) const PLATFORMS: [&str; 3] = ["telegram", "discord", "feishu"];
-/// The agents a project can be set up for, each with the mode it starts in.
 const AGENTS: [(&str, &str); 2] = [("claudecode", "default"), ("codex", "suggest")];
 
-/// What the setup asks for. Feishu has no token or `allow_from` here: its QR setup in cc-connect
-/// fills the app's credentials and the owner (feishu.rs).
 pub(super) struct NewProject<'a> {
     pub(super) name: &'a str,
-    /// "claudecode" or "codex".
     pub(super) agent: &'a str,
     pub(super) work_dir: &'a str,
     pub(super) platform: &'a str,
     pub(super) token: &'a str,
     pub(super) allow_from: &'a str,
-    /// For the bot's own requests: Telegram and Discord are out of reach without one in some places.
     pub(super) proxy: Option<&'a str>,
 }
 
@@ -39,7 +27,6 @@ fn id_like(value: &str) -> bool {
     (1..=64).contains(&value.len()) && value.bytes().all(|byte| byte.is_ascii_alphanumeric() || byte == b'_' || byte == b'-')
 }
 
-/// Why `project` cannot be added to a config whose projects are `taken`, if it cannot.
 pub(super) fn check(project: &NewProject, taken: &[String]) -> Result<(), UserError> {
     if !id_like(project.name) {
         return Err(UserError::new("ccConnect.projectName", "A project name takes letters, digits, - and _, up to 64 characters."));
@@ -63,7 +50,6 @@ pub(super) fn check(project: &NewProject, taken: &[String]) -> Result<(), UserEr
     if project.token.is_empty() || project.token.len() > 512 || project.token.chars().any(|ch| ch.is_whitespace() || ch.is_control()) {
         return Err(UserError::new("ccConnect.token", "That bot token does not look right."));
     }
-    // Empty or "*" lets anyone who finds the bot work on this computer.
     let ids: Vec<&str> = project.allow_from.split(',').map(str::trim).collect();
     if ids.iter().any(|id| !id_like(id)) {
         return Err(UserError::new("ccConnect.allowFrom", "Fill in your own user ID (several separated by commas), or anyone who finds the bot can use this computer."));
@@ -71,7 +57,6 @@ pub(super) fn check(project: &NewProject, taken: &[String]) -> Result<(), UserEr
     Ok(())
 }
 
-/// A TOML basic string.
 pub(super) fn toml_string(value: &str) -> String {
     let mut out = String::with_capacity(value.len() + 2);
     out.push('"');
@@ -90,7 +75,6 @@ pub(super) fn toml_string(value: &str) -> String {
     out
 }
 
-/// The `[[projects]]` block for `project`, dated `today`.
 pub(super) fn project_block(project: &NewProject, today: &str) -> String {
     let mode = AGENTS.iter().find(|(agent, _)| *agent == project.agent).map_or("default", |(_, mode)| mode);
     let mut block = format!(
@@ -111,7 +95,6 @@ pub(super) fn project_block(project: &NewProject, today: &str) -> String {
     block
 }
 
-/// The names of the `[[projects]]` in `text`: the first `name = "…"` under each.
 pub(super) fn project_names(text: &str) -> Vec<String> {
     let mut names = Vec::new();
     let mut in_project = false;
@@ -133,8 +116,6 @@ pub(super) fn project_names(text: &str) -> Vec<String> {
     names
 }
 
-/// Each project's agent type (`type` under its `[projects.agent]`), by project name; read line by
-/// line like `project_names`.
 pub(super) fn project_agents(text: &str) -> BTreeMap<String, String> {
     let mut agents = BTreeMap::new();
     let mut section = "";
@@ -162,8 +143,6 @@ pub(super) fn project_agents(text: &str) -> BTreeMap<String, String> {
     agents
 }
 
-/// Appends `project` to the config at `path`; returns the text it had (None: there was no file),
-/// to put back if the setup does not finish.
 pub(super) fn add_project(path: &Path, project: &NewProject, today: &str, stamp: &str) -> Result<Option<String>, UserError> {
     let original = match fs::read_to_string(path) {
         Ok(text) => Some(text),
@@ -188,7 +167,6 @@ pub(super) fn add_project(path: &Path, project: &NewProject, today: &str, stamp:
     Ok(original)
 }
 
-/// Puts back what `add_project` found: the old text, or no file.
 pub(super) fn restore(path: &Path, original: Option<&str>) -> Result<(), UserError> {
     match original {
         Some(text) => write(path, text),
@@ -196,7 +174,6 @@ pub(super) fn restore(path: &Path, original: Option<&str>) -> Result<(), UserErr
     }
 }
 
-/// Through a `.tmp` file, so cc-connect never reads half a config.
 fn write(path: &Path, text: &str) -> Result<(), UserError> {
     let temp = path.with_file_name(format!("{FILE_NAME}.focusd.tmp"));
     fs::write(&temp, text).map_err(|error| UserError::new("file.write", format!("Could not write {}.", temp.display())).arg("path", temp.display().to_string()).detail(error))?;

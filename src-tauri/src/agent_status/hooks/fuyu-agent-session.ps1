@@ -8,11 +8,6 @@ param(
   [string]$Event
 )
 
-# SessionStart / SessionEnd hook of Claude Code and Codex. Records which process and which
-# terminal run the session, as agent-sessions\<session id>.json in the island's data folder, so
-# the island can bring that window (and, in Orca, that tab) forward. SessionStart output is added
-# to the conversation, so this prints nothing, and it never fails the hook (always exit 0).
-
 $ErrorActionPreference = "Stop"
 
 function Get-StatusDirectory {
@@ -21,12 +16,9 @@ function Get-StatusDirectory {
   return Join-Path $env:LOCALAPPDATA "com.tixxin.fuyu"
 }
 
-# The agent's own process: the nearest ancestor of this hook named like the agent.
 function Find-AgentProcess {
   param([string]$Provider)
   $names = if ($Provider -eq "codex") { @("codex.exe", "node.exe") } else { @("claude.exe", "node.exe") }
-  # [wmi] is about twice as fast as Get-CimInstance here, which matters for Codex: its hooks
-  # cannot run in the background yet, so this delays its first turn.
   $process = [wmi]"Win32_Process.Handle='$PID'"
   for ($depth = 0; $depth -lt 6 -and $process; $depth++) {
     $parent = $null
@@ -63,7 +55,6 @@ try {
       wtSession = $env:WT_SESSION
       termProgram = $env:TERM_PROGRAM
     }
-    # Records of terminals long gone; the island ignores them after two days anyway.
     Get-ChildItem -LiteralPath $directory -Filter *.json |
       Where-Object { $_.LastWriteTimeUtc -lt [DateTime]::UtcNow.AddDays(-7) } |
       Remove-Item -Force -ErrorAction SilentlyContinue
@@ -79,6 +70,5 @@ try {
   [System.IO.File]::WriteAllText($temporary, $json, (New-Object System.Text.UTF8Encoding $false))
   Move-Item -LiteralPath $temporary -Destination $path -Force
 } catch {
-  # A missing record only costs the island a less exact window match.
 }
 exit 0

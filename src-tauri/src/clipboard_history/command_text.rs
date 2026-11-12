@@ -1,8 +1,3 @@
-//! Shell commands copied over several lines (C38), pasted into a terminal as one line when that
-//! setting is on. Mirrors `flattenCommand` in src/features/clipboard/textTransforms.ts, which the
-//! clipboard window's "paste transformed" uses.
-
-/// Strips a prompt copied with the command: "$ ", "> ", "PS C:\x> ", "C:\x>".
 fn without_prompt(line: &str) -> &str {
     let trimmed = line.trim_start();
     for prefix in ["$ ", "> "] {
@@ -19,7 +14,6 @@ fn without_prompt(line: &str) -> &str {
     line
 }
 
-/// The line without a trailing bash "\", PowerShell "`" or cmd "^", and whether it had one.
 fn continuation(line: &str) -> (&str, bool) {
     let trimmed = line.trim_end();
     for mark in ['\\', '`', '^'] {
@@ -32,14 +26,11 @@ fn continuation(line: &str) -> (&str, bool) {
     (trimmed, false)
 }
 
-/// Whether the text is a command split over lines with continuation marks.
 pub(super) fn looks_like_split_command(text: &str) -> bool {
     let lines: Vec<&str> = text.trim().lines().collect();
     (2..=30).contains(&lines.len()) && lines[..lines.len() - 1].iter().any(|line| continuation(line).1)
 }
 
-/// The command on one line: continued, indented and "-option" lines join with a space, other
-/// lines are separate commands joined with " && ".
 pub(super) fn flatten_command(text: &str) -> String {
     let mut out = String::new();
     let mut carry = true;

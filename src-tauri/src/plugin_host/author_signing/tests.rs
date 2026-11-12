@@ -15,7 +15,6 @@ fn sign(signing: &SigningKey, key: &AuthorKey, id: &str, version: &str, sha: &st
     sign_text(signing, key, &signed_text(id, version, sha))
 }
 
-/// `new`, vouched for by `old` for plugin `id`.
 fn endorse(id: &str, old: (&SigningKey, &AuthorKey), new: &AuthorKey) -> AuthorKey {
     AuthorKey { endorsed_by: Some(sign_text(old.0, old.1, &endorsement_text(id, new))), ..new.clone() }
 }
@@ -37,7 +36,6 @@ fn a_signature_holds_only_for_its_plugin_version_hash_and_listed_key() {
     assert!(signer("a.b", "1.0.0", &sha, Some(&signature), &[lying]).is_err(), "keyId of another key");
 }
 
-/// The SDK (sign.mjs) signed the official packages; the island must read them the same way.
 #[test]
 fn an_official_package_signed_by_the_sdk_verifies() {
     let zip = include_bytes!("../../../../plugins/packages/dev.focusd.todo-ring-1.0.1.zip");
@@ -73,12 +71,10 @@ fn keys_endorsed_by_the_remembered_key_count_as_it_even_through_a_chain() {
     let trusted = endorsed_keys("a.b", &remembered, &keys);
     assert_eq!(trusted, vec![k1.key_id.clone(), k2.key_id.clone(), k3.key_id.clone()]);
     assert_eq!(check_key(&trusted, Some(&k3.key_id)), KeyCheck::SameKey);
-    // Order in the list does not matter.
     let reversed = [k3.clone(), k2.clone(), k1.clone()];
     assert_eq!(endorsed_keys("a.b", &remembered, &reversed).len(), 3);
 }
 
-/// A key change made by the SDK (`endorseKey` in sign.mjs) is read the same way here.
 #[test]
 fn a_key_change_endorsed_by_the_sdk_verifies() {
     #[derive(Deserialize)]
@@ -99,15 +95,11 @@ fn endorsements_for_another_plugin_or_by_unknown_keys_do_not_count() {
     let (s9, k9) = key(9);
     let (_, k2) = key(2);
     let remembered = [k1.key_id.clone()];
-    // Signed for another plugin id.
     let elsewhere = endorse("other.plugin", (&s1, &k1), &k2);
     assert_eq!(endorsed_keys("a.b", &remembered, &[k1.clone(), elsewhere]), remembered.to_vec());
-    // Endorsed by a key the user never had (an attacker's own chain).
     let foreign = endorse("a.b", (&s9, &k9), &k2);
     assert_eq!(endorsed_keys("a.b", &remembered, &[k1.clone(), k9, foreign]), remembered.to_vec());
-    // A forged signature naming the remembered key.
     let forged = AuthorKey { endorsed_by: Some(AuthorSignature { key_id: k1.key_id.clone(), signature: STANDARD.encode([7u8; 64]) }), ..k2 };
     assert_eq!(endorsed_keys("a.b", &remembered, &[k1, forged]), remembered.to_vec());
-    // Nothing remembered: nothing is trusted through endorsements.
     assert!(endorsed_keys("a.b", &[], &[]).is_empty());
 }

@@ -1,23 +1,10 @@
-//! Copying the data folders from the old app identifier to the new one.
-//!
-//! Both AppData folders (Roaming: settings and data files; Local: the WebView's
-//! storage, so localStorage) are copied to `<new>.migrating` first and renamed
-//! into place at the end, the Roaming one last, so a Roaming folder under the new
-//! identifier means the copy finished (or the app started there fresh). A copy
-//! cut short leaves only `.migrating` folders, which the next start removes
-//! before trying again. The old folders are never changed.
-
 use std::{
     fs, io,
     path::{Path, PathBuf},
 };
 
-/// Written into the new Roaming folder when the copy is done (`MigrationState` in mod.rs).
 pub(crate) const STATE_FILE: &str = "rename-migration.json";
 
-/// Copies `<base>/<old>` to `<base>/<new>` for each base (Roaming first, then
-/// Local) when the new Roaming folder does not exist yet and an old folder does.
-/// `state` is written into the new Roaming folder. Returns whether it copied.
 pub(crate) fn copy_data_dirs(bases: &[PathBuf], old: &str, new: &str, state: &str) -> io::Result<bool> {
     let Some(roaming) = bases.first() else {
         return Ok(false);
@@ -38,7 +25,6 @@ pub(crate) fn copy_data_dirs(bases: &[PathBuf], old: &str, new: &str, state: &st
         }
         fs::write(staging(roaming).join(STATE_FILE), state)?;
         for base in bases.iter().skip(1).chain(std::iter::once(roaming)) {
-            // Only a copy cut short between the renames leaves a folder here.
             remove_if_present(&base.join(new))?;
             fs::rename(staging(base), base.join(new))?;
         }
@@ -59,7 +45,6 @@ fn remove_if_present(dir: &Path) -> io::Result<()> {
     }
 }
 
-/// The WebView rebuilds its caches; they are large and not worth copying.
 fn is_cache(name: &str) -> bool {
     name.to_ascii_lowercase().ends_with("cache")
 }

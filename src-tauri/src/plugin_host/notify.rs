@@ -1,9 +1,3 @@
-//! `island.notify`: a plugin shows a short message in the collapsed island's
-//! message preview, optionally with buttons the plugin hears about as a
-//! `notification.action` notification. With the `notifyStyle` capability it may
-//! also ask for the playing app's icon and a layout without a card; with `notifyControls`, for
-//! the island's own previous / play-pause / next buttons beside it.
-
 use serde::Serialize;
 use serde_json::{json, Value};
 use std::{
@@ -16,7 +10,6 @@ use tauri::{AppHandle, Emitter};
 use super::{host, lock, manifest::LocalizedText};
 use crate::{island, media_control};
 
-/// Mirrored by `PLUGIN_NOTIFICATION_EVENT` in src/features/plugins/api.ts.
 const NOTIFICATION_EVENT: &str = "plugin-notification";
 pub(super) const RATE_LIMIT: usize = 6;
 const RATE_WINDOW: Duration = Duration::from_secs(60);
@@ -33,7 +26,6 @@ pub(super) struct NotificationAction {
     pub title: String,
 }
 
-/// The icon beside the message: the plugin's, or the app playing media's (`"media"`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(super) enum NotificationIcon {
@@ -41,8 +33,6 @@ pub(super) enum NotificationIcon {
     Media,
 }
 
-/// `"inline"`: alone in the new-messages popup, the island itself is the message, with no title
-/// row or card around it. `"card"` (the default) is a row like any other message's.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(super) enum NotificationLayout {
@@ -50,8 +40,6 @@ pub(super) enum NotificationLayout {
     Inline,
 }
 
-/// `"media"`: the island draws previous, play / pause and next beside the message and runs them
-/// itself, so the plugin needs no `media:control` and hears nothing about the presses.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(super) enum NotificationControls {
@@ -59,7 +47,6 @@ pub(super) enum NotificationControls {
     Media,
 }
 
-/// Mirrored by `PluginNotification` in src/features/plugins/api.ts.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(super) struct Notification {
@@ -72,7 +59,6 @@ pub(super) struct Notification {
     pub controls: NotificationControls,
 }
 
-/// Same rule as command ids: letters, digits and '-', 1 to 32 long.
 pub(super) fn is_action_id(id: &str) -> bool {
     (1..=32).contains(&id.len()) && id.chars().all(|c| c.is_ascii_alphanumeric() || c == '-')
 }
@@ -94,8 +80,6 @@ fn text(params: &Value, key: &str, max: usize, required: bool) -> Result<String,
     }
 }
 
-/// A string choice; a value this island does not know (from a newer SDK) is the default, so the
-/// message still shows.
 fn choice<T>(params: &Value, key: &str, default: T, known: &[(&str, T)]) -> Result<T, String>
 where
     T: Copy,
@@ -107,7 +91,6 @@ where
     }
 }
 
-/// Checks `{ title, body?, durationMs?, actions?, icon?, layout?, controls? }`.
 pub(super) fn parse_notification(params: &Value) -> Result<Notification, String> {
     let title = text(params, "title", MAX_TITLE, true)?;
     let body = text(params, "body", MAX_BODY, false)?;
@@ -142,8 +125,6 @@ pub(super) fn parse_notification(params: &Value) -> Result<Notification, String>
     Ok(Notification { title, body, duration_ms, actions, icon, layout, controls })
 }
 
-/// Drops times older than RATE_WINDOW and records `now` unless RATE_LIMIT
-/// notifications were already shown in the window.
 pub(super) fn take_slot(times: &mut VecDeque<Instant>, now: Instant) -> bool {
     while times.front().is_some_and(|time| now.duration_since(*time) >= RATE_WINDOW) {
         times.pop_front();
@@ -160,7 +141,6 @@ fn shown_times() -> &'static Mutex<HashMap<String, VecDeque<Instant>>> {
     SHOWN.get_or_init(Mutex::default)
 }
 
-/// Answers `island.notify` with `{ muted }`. Errors are (HTTP-like status, message).
 pub(super) fn show(app: &AppHandle, plugin_id: &str, params: &Value) -> Result<Value, (u16, String)> {
     let notification = parse_notification(params).map_err(|message| (400, message))?;
     if !take_slot(lock(shown_times()).entry(plugin_id.to_string()).or_default(), Instant::now()) {
@@ -177,7 +157,6 @@ pub(super) fn show(app: &AppHandle, plugin_id: &str, params: &Value) -> Result<V
         let mut payload = json!(notification);
         payload["pluginId"] = json!(plugin_id);
         payload["pluginName"] = json!(plugin_name);
-        // Read here, not by the page: the music page may be off, and the page cannot read exe icons.
         if notification.icon == NotificationIcon::Media {
             payload["iconUrl"] = json!(media_control::current_source_icon());
         }

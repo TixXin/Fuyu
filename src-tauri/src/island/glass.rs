@@ -1,5 +1,3 @@
-//! Liquid glass: the native window stays clear and the material is drawn in CSS.
-
 use std::sync::OnceLock;
 use tauri::WebviewWindow;
 
@@ -20,13 +18,6 @@ pub(super) fn apply_glass_material(
     window: &WebviewWindow,
     state: IslandWindowState,
 ) -> Result<String, String> {
-    // The main window is a fixed, transparent stage (820x460), while the island
-    // itself is much smaller. Windows 11's DWM Acrylic backdrop is applied to
-    // the whole HWND and cannot be reliably clipped by SetWindowRgn, leaving a
-    // large blurred rectangle around the island. Keep the native state clear
-    // and render the glass effect on the island element with CSS instead.
-    // CSS owns the material for the lifetime of the main window. Reapplying
-    // these native resets on every toggle needlessly invalidates its surface.
     if NATIVE_GLASS_INITIALIZED.get().is_none() {
         let _ = window_vibrancy::clear_acrylic(window);
         clear_window_glass_region(window)?;

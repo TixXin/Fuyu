@@ -1,5 +1,3 @@
-//! Background mail worker: owns the IMAP connection, schedules syncs and answers commands.
-
 use crate::user_error::UserError;
 use serde::Serialize;
 use std::{
@@ -130,7 +128,6 @@ pub(super) enum Work {
         reply: Reply,
     },
     Wake,
-    /// The mailbox was disconnected: end the worker thread.
     Stop,
 }
 
@@ -160,13 +157,10 @@ impl MailService {
         Ok(())
     }
 
-    /// False once the worker thread is gone for good, so commands cannot reach it.
     pub(super) fn is_alive(&self) -> bool {
         self.sender.send(Work::Wake).is_ok()
     }
 
-    /// After the worker crashed: show the error and, when it restarts, sync again
-    /// after the usual back-off. A lock poisoned by the crash is cleared first.
     pub(super) fn recover_after_crash(&self, restarting: bool) {
         self.state.clear_poison();
         self.idle_socket.clear_poison();
@@ -314,7 +308,6 @@ impl MailService {
         result
     }
 
-    /// Who and what a reply to `message_id` starts with.
     pub(super) fn reply_draft(&self, email: &str, message_id: &str) -> Result<super::send::ReplyDraft, UserError> {
         let secret = read_secret(email)?.ok_or_else(|| UserError::new("mail.codeMissing", "The saved authorization code was not found; connect again."))?;
         let mut session =
@@ -324,7 +317,6 @@ impl MailService {
         source.map(|(draft, _)| draft)
     }
 
-    /// Sends a message; as a reply to `reply_to` (a listed message) when given.
     pub(super) fn send_mail(&self, email: &str, mail: &super::send::OutgoingMail, reply_to: Option<&str>) -> Result<(), UserError> {
         let secret = read_secret(email)?.ok_or_else(|| UserError::new("mail.codeMissing", "The saved authorization code was not found; connect again."))?;
         let thread = match reply_to {
@@ -341,7 +333,6 @@ impl MailService {
         super::send::deliver(&super::send::smtp_server(email, &self.host()), email, &secret, &message)
     }
 
-    /// Downloads one attachment and writes it to the Downloads folder.
     pub(super) fn save_attachment(&self, email: &str, message_id: &str, part: &str) -> Result<std::path::PathBuf, UserError> {
         let dir = crate::win32::known_folder::downloads().ok_or_else(|| UserError::new("mail.noDownloads", "The Downloads folder was not found."))?;
         let secret = read_secret(email)?.ok_or_else(|| UserError::new("mail.codeMissing", "The saved authorization code was not found; connect again."))?;
@@ -353,8 +344,6 @@ impl MailService {
         super::attachments::write_unused(&dir, &super::attachments::safe_file_name(&info.name), &bytes)
     }
 
-    /// Marks a message read on the server, then shows it read at once instead of
-    /// waiting for the next sync.
     pub(super) fn mark_read(&self, generation: u64, email: &str, message_id: &str) -> Result<MailSnapshot, UserError> {
         let secret = read_secret(email)?.ok_or_else(|| UserError::new("mail.codeMissing", "The saved authorization code was not found; connect again."))?;
         let mut session =
@@ -381,7 +370,6 @@ impl MailService {
     }
 }
 
-/// How a worker loop ended: told to stop, or unable to go on (see supervisor.rs).
 #[derive(Debug, PartialEq)]
 pub(super) enum WorkerExit {
     Stopped,

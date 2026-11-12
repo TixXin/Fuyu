@@ -1,9 +1,3 @@
-//! How much memory a plugin runtime takes before running any plugin code: an
-//! idle PowerShell is about 60 MB of commit on its own, which is most of what
-//! a small PowerShell plugin shows. Measured once per runtime, in the background,
-//! by starting the runtime with nothing to do, so the settings page can show
-//! "runtime + plugin" instead of one large number.
-
 use std::{
     collections::HashMap,
     io::{BufRead, BufReader},
@@ -16,9 +10,7 @@ use std::{
 
 use crate::{system::CREATE_NO_WINDOW, win32::job::Job};
 
-/// How long the runtime may take to start before the measurement gives up.
 const START_TIMEOUT: Duration = Duration::from_secs(15);
-/// Time after start-up before reading, so the runtime has finished loading.
 const SETTLE: Duration = Duration::from_secs(2);
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -29,7 +21,6 @@ enum Measurement {
 
 static MEASUREMENTS: Mutex<Option<HashMap<&'static str, Measurement>>> = Mutex::new(None);
 
-/// Runtimes measured here, by the file name of the process a plugin runs in.
 fn runtime_for(image: &str) -> Option<&'static str> {
     if image.eq_ignore_ascii_case("powershell.exe") {
         Some("powershell.exe")
@@ -40,8 +31,6 @@ fn runtime_for(image: &str) -> Option<&'static str> {
     }
 }
 
-/// The idle runtime's private bytes for a plugin whose first process is `image`.
-/// `None` for other executables, while measuring (which this starts), or if it failed.
 pub(super) fn runtime_bytes(image: &str) -> Option<u64> {
     let runtime = runtime_for(image)?;
     let mut measurements = MEASUREMENTS.lock().unwrap_or_else(PoisonError::into_inner);
@@ -66,14 +55,12 @@ pub(super) fn runtime_bytes(image: &str) -> Option<u64> {
     }
 }
 
-/// Starts `runtime` with nothing to do but say it is ready, as plugins are started.
 fn idle_command(runtime: &str) -> Command {
     let mut command = if runtime == "node.exe" {
         let mut command = Command::new("node");
         command.args(["-e", "console.log('ready'); setTimeout(() => {}, 60000)"]);
         command
     } else {
-        // The flags plugins run with (manifest.rs, launch_command).
         let mut command = Command::new("powershell.exe");
         command.args([
             "-NoProfile",
@@ -102,7 +89,6 @@ fn measure(runtime: &str) -> Option<u64> {
     }
     let stdout = child.stdout.take()?;
     let (ready, started) = mpsc::channel();
-    // Dropping the job below ends the process, which ends this read too.
     let _ = thread::Builder::new().name("plugin-runtime-baseline-read".into()).spawn(move || {
         let mut line = String::new();
         let _ = BufReader::new(stdout).read_line(&mut line);

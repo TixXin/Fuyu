@@ -1,9 +1,3 @@
-//! System tray icon and menu. The menu follows the island's language, which the
-//! island window reports with `set_tray_language` (Chinese until it does, the
-//! interface's own fallback), and has one item that shows or hides the island,
-//! named for what it will do, and "Quick translate", greyed out while translation is off:
-//! both are checked whenever the cursor reaches the tray icon, before the menu opens.
-
 use std::sync::{Mutex, PoisonError};
 
 use tauri::{
@@ -21,7 +15,6 @@ pub(crate) enum TrayLanguage {
 }
 
 impl TrayLanguage {
-    /// The island's locale code ("zh-CN", "en"); anything else is Chinese, as in the interface.
     pub(crate) fn from_locale(locale: &str) -> Self {
         if locale.to_ascii_lowercase().starts_with("en") {
             Self::English
@@ -31,7 +24,6 @@ impl TrayLanguage {
     }
 }
 
-/// The menu's texts: the show / hide item for a visible or hidden island, Settings and Quit.
 pub(crate) fn labels(language: TrayLanguage, island_visible: bool) -> [&'static str; 3] {
     match (language, island_visible) {
         (TrayLanguage::Chinese, true) => ["隐藏岛屿", "设置", "退出"],
@@ -41,8 +33,6 @@ pub(crate) fn labels(language: TrayLanguage, island_visible: bool) -> [&'static 
     }
 }
 
-/// The "Quick translate" item's text: the way into translation when its button is not on the
-/// island (translation opening in its own window).
 pub(crate) fn translate_label(language: TrayLanguage) -> &'static str {
     match language {
         TrayLanguage::Chinese => "快捷翻译",
@@ -50,7 +40,6 @@ pub(crate) fn translate_label(language: TrayLanguage) -> &'static str {
     }
 }
 
-/// The clipboard item's text: pause the history, or resume it while paused (C38).
 pub(crate) fn clipboard_label(language: TrayLanguage, paused: bool) -> &'static str {
     match (language, paused) {
         (TrayLanguage::Chinese, false) => "暂停剪贴板记录",
@@ -66,7 +55,6 @@ struct TrayMenu {
     clipboard: MenuItem<Wry>,
     settings: MenuItem<Wry>,
     quit: MenuItem<Wry>,
-    /// The language, visibility, translation switch and clipboard pause the items were last set for.
     shown: Mutex<(TrayLanguage, bool, bool, bool)>,
 }
 
@@ -76,7 +64,6 @@ fn island_visible(app: &AppHandle) -> bool {
         .unwrap_or(true)
 }
 
-/// Sets the menu's texts for `language` (None: keep the current one) and the island's visibility now.
 fn refresh(app: &AppHandle, language: Option<TrayLanguage>) {
     let Some(menu) = app.try_state::<TrayMenu>() else { return };
     let visible = island_visible(app);
@@ -95,7 +82,6 @@ fn refresh(app: &AppHandle, language: Option<TrayLanguage>) {
     *shown = next;
 }
 
-/// The island's interface language changed (or the island started); the tray menu follows it.
 #[tauri::command]
 pub fn set_tray_language(app: AppHandle, locale: String) {
     refresh(&app, Some(TrayLanguage::from_locale(&locale)));
@@ -141,8 +127,6 @@ pub(crate) fn build_tray(app: &App) -> tauri::Result<()> {
             _ => {}
         })
         .on_tray_icon_event(|tray, event| match event {
-            // The cursor reaching the icon comes before any click, so the menu opens with the
-            // right show / hide text even when the island was hidden some other way.
             TrayIconEvent::Enter { .. } | TrayIconEvent::Move { .. } => refresh(tray.app_handle(), None),
             TrayIconEvent::Click { button: MouseButton::Left, button_state: MouseButtonState::Up, .. } => {
                 let _ = island::show_island(tray.app_handle());

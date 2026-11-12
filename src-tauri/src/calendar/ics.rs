@@ -1,8 +1,3 @@
-//! iCalendar (RFC 5545) events, as ICS subscription links and CalDAV servers send them: the
-//! VEVENTs of a calendar, with repeating ones expanded (the `rrule` crate) into the occurrences
-//! within a time range. Only what the island shows is read: title, times, location, description
-//! and URL. Anything malformed is skipped rather than failing the whole calendar.
-
 use std::{collections::HashMap, str::FromStr};
 
 use chrono::{DateTime, Duration, NaiveDate, NaiveDateTime, TimeZone, Utc};
@@ -10,27 +5,21 @@ use rrule::{RRule, Tz, Unvalidated};
 
 use super::meeting_link::meeting_link;
 
-/// Occurrences of one repeating event looked at, at most, per range.
 const MAX_OCCURRENCES: u16 = 500;
 
-/// One occurrence of an event, as the island shows it.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CalendarEvent {
     pub(super) uid: String,
     pub(super) title: String,
-    /// Unix ms; an all-day event runs from local midnight to local midnight.
     pub(super) start_ms: i64,
     pub(super) end_ms: i64,
     pub(super) all_day: bool,
     pub(super) location: Option<String>,
-    /// A join link of a known meeting service (meeting_link.rs).
     pub(super) meeting_link: Option<String>,
-    /// The name of the calendar it came from; set by the caller.
     pub(super) calendar: String,
 }
 
-/// One content line: its name (upper case), parameters and value, unfolded.
 #[derive(Debug)]
 struct Property {
     name: String,
@@ -38,7 +27,6 @@ struct Property {
     value: String,
 }
 
-/// Content lines with folded continuations (a line starting with a space or tab) joined.
 fn unfold(text: &str) -> Vec<String> {
     let mut lines: Vec<String> = Vec::new();
     for line in text.split('\n').map(|line| line.trim_end_matches('\r')) {
@@ -52,7 +40,6 @@ fn unfold(text: &str) -> Vec<String> {
 }
 
 fn property(line: &str) -> Option<Property> {
-    // The value starts after the first colon outside a quoted parameter value.
     let mut quoted = false;
     let split = line.char_indices().find(|&(_, c)| {
         if c == '"' {
@@ -70,7 +57,6 @@ fn property(line: &str) -> Option<Property> {
     Some(Property { name, params, value: value.to_string() })
 }
 
-/// TEXT values: `\n`, `\,`, `\;` and `\\`.
 fn unescape(text: &str) -> String {
     let mut result = String::with_capacity(text.len());
     let mut chars = text.chars();
@@ -88,7 +74,6 @@ fn unescape(text: &str) -> String {
     result.trim().to_string()
 }
 
-/// Windows time zone names that Outlook and Exchange write as TZID, mapped to IANA names.
 const WINDOWS_ZONES: &[(&str, &str)] = &[
     ("China Standard Time", "Asia/Shanghai"),
     ("Taipei Standard Time", "Asia/Taipei"),
@@ -107,8 +92,6 @@ const WINDOWS_ZONES: &[(&str, &str)] = &[
     ("UTC", "UTC"),
 ];
 
-/// The zone a TZID names: an IANA name (also at the end of a path, as some servers write), a
-/// Windows name, else this computer's zone.
 pub(super) fn zone(tzid: Option<&str>) -> Tz {
     let Some(tzid) = tzid.map(str::trim).filter(|tzid| !tzid.is_empty()) else {
         return Tz::LOCAL;
@@ -124,7 +107,6 @@ pub(super) fn zone(tzid: Option<&str>) -> Tz {
         .unwrap_or(Tz::LOCAL)
 }
 
-/// A DATE-TIME or DATE value with its TZID; a date is all-day, at local midnight.
 fn moment(property: &Property) -> Option<(DateTime<Tz>, bool)> {
     let value = property.value.trim();
     if property.params.get("VALUE").is_some_and(|kind| kind == "DATE") || value.len() == 8 {
@@ -139,7 +121,6 @@ fn moment(property: &Property) -> Option<(DateTime<Tz>, bool)> {
     zone(property.params.get("TZID").map(String::as_str)).from_local_datetime(&naive).earliest().map(|at| (at, false))
 }
 
-/// `PT1H30M`, `P1D`, `-PT15M` and the like.
 fn duration(value: &str) -> Option<Duration> {
     let (sign, rest) = match value.trim().strip_prefix('-') {
         Some(rest) => (-1, rest),
@@ -165,7 +146,6 @@ fn duration(value: &str) -> Option<Duration> {
     Some(Duration::seconds(sign * total))
 }
 
-/// One VEVENT as written.
 #[derive(Debug, Default)]
 struct RawEvent {
     uid: String,
@@ -209,7 +189,6 @@ impl RawEvent {
 fn raw_events(text: &str) -> Vec<RawEvent> {
     let mut events = Vec::new();
     let mut current: Option<RawEvent> = None;
-    // Nested components (VALARM) inside an event are skipped.
     let mut nested = 0usize;
     for property in unfold(text).iter().filter_map(|line| property(line)) {
         match (property.name.as_str(), property.value.trim().to_ascii_uppercase().as_str()) {
@@ -246,8 +225,6 @@ fn raw_events(text: &str) -> Vec<RawEvent> {
     events
 }
 
-/// The rule without UNTIL, and UNTIL as Unix ms. `rrule` insists UNTIL share DTSTART's zone,
-/// which calendars do not always do, so the end is applied here.
 fn split_until(rule: &str) -> (String, Option<i64>) {
     let mut until = None;
     let parts: Vec<&str> = rule
@@ -264,15 +241,12 @@ fn split_until(rule: &str) -> (String, Option<i64>) {
     (parts.join(";"), until)
 }
 
-/// The starts of a repeating event within `[from - length, to)`; only the first start when the
-/// rule cannot be read.
 fn repeats(rule: &str, start: DateTime<Tz>, length: Duration, from: DateTime<Utc>, to: DateTime<Utc>) -> Vec<DateTime<Tz>> {
     let (rule, until) = split_until(rule);
     let Ok(set) = rule.parse::<RRule<Unvalidated>>().and_then(|rule| rule.build(start)) else {
         return vec![start];
     };
     let tz = start.timezone();
-    // A second before, as `after` is exclusive.
     let after = (from - length - Duration::seconds(1)).with_timezone(&tz);
     let before = to.with_timezone(&tz);
     set.after(after)
@@ -284,13 +258,11 @@ fn repeats(rule: &str, start: DateTime<Tz>, length: Duration, from: DateTime<Utc
         .collect()
 }
 
-/// The occurrences of the calendar's events that overlap `[from, to)`, sorted by start.
 pub(super) fn events_between(text: &str, from: DateTime<Utc>, to: DateTime<Utc>) -> Vec<CalendarEvent> {
     let raw = raw_events(text);
     let overlaps = |event: &CalendarEvent| {
         event.end_ms.max(event.start_ms + 1) > from.timestamp_millis() && event.start_ms < to.timestamp_millis()
     };
-    // Changed occurrences of a repeating event: uid -> the starts they replace.
     let mut moved: HashMap<&str, Vec<i64>> = HashMap::new();
     for event in raw.iter().filter(|event| event.recurrence_id.is_some()) {
         moved.entry(event.uid.as_str()).or_default().extend(event.recurrence_id);

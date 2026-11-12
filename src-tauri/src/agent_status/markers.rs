@@ -1,5 +1,3 @@
-//! Running markers written by the hook scripts while an agent turn is in progress.
-
 use std::{fs, path::Path};
 
 use super::snapshot::{
@@ -10,16 +8,11 @@ pub(super) const CODEX_RUNNING_MARKER_FILE_NAME: &str = "agent-codex-running.fla
 pub(super) const CODEX_RUNNING_HOLD_FILE_NAME: &str = "agent-codex-running-hold.flag";
 pub(super) const CLAUDE_CODE_RUNNING_MARKER_FILE_NAME: &str = "agent-claudeCode-running.flag";
 pub(super) const CLAUDE_CODE_RUNNING_HOLD_FILE_NAME: &str = "agent-claudeCode-running-hold.flag";
-/// Claude Code's latest waiting notification, saved by `focusd-agent-running.cmd claudeCode
-/// notification`; see notifications.rs.
 pub(super) const CLAUDE_CODE_NOTIFICATION_FILE_NAME: &str = "agent-claudeCode-notification.json";
-/// The prompt-submit hook input that versions before titles came from the session files saved
-/// (`capture`). It holds the whole prompt and nothing reads it any more, so it is deleted.
 const LEGACY_HOOK_INPUT_FILE_NAMES: [&str; 2] = [
     "agent-codex-hook-input.json",
     "agent-claudeCode-hook-input.json",
 ];
-/// Hook input saved per provider, deleted when its status is cleared.
 pub(super) const CODEX_NOTIFICATION_FILE_NAME: &str = "agent-codex-notification.json";
 pub(super) const CODEX_SAVED_INPUT_FILE_NAMES: &[&str] =
     &["agent-codex-hook-input.json", CODEX_NOTIFICATION_FILE_NAME];
@@ -101,7 +94,6 @@ pub(super) fn active_agent_running_marker_status(
     }
 }
 
-/// Removes the running markers and any hook input saved for the provider.
 pub(super) fn remove_agent_marker_files(
     app_dir: &Path,
     running_file_name: &str,
@@ -115,7 +107,6 @@ pub(super) fn remove_agent_marker_files(
     }
 }
 
-/// Deletes the prompt copies older versions saved; done on Install/Repair.
 pub(super) fn remove_legacy_hook_inputs(app_dir: &Path) {
     for file_name in LEGACY_HOOK_INPUT_FILE_NAMES {
         fs::remove_file(app_dir.join(file_name)).ok();

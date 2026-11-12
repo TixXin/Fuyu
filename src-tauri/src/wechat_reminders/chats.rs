@@ -1,7 +1,3 @@
-//! WeChat's chat list as the reminders read it: each row's name is one string of
-//! newline-separated lines (contact, status labels, unread count, last message, time). Line
-//! rules follow wechat-message-notifier's SessionParser (MIT).
-
 use std::collections::HashMap;
 
 use windows::Win32::Foundation::HWND;
@@ -10,16 +6,13 @@ use crate::win32::uia_list;
 
 #[derive(Clone, Debug, PartialEq)]
 pub(super) struct Session {
-    /// The AutomationId after `session_item_`, else the contact name.
     pub(super) key: String,
     pub(super) contact: String,
     pub(super) preview: String,
     pub(super) unread: Option<u32>,
     pub(super) muted: bool,
-    /// Someone mentioned the user (or everyone): WeChat flashes for that even in a muted chat.
     pub(super) mentioned: bool,
     pub(super) pinned: bool,
-    /// The chat open in WeChat (its row is selected): a message to it raises no unread count.
     pub(super) open: bool,
 }
 
@@ -37,7 +30,6 @@ const STATUS_LINES: [&str; 10] = [
 ];
 const MUTED_LINES: [&str; 3] = ["消息免打扰", "免打扰", "静音"];
 const PINNED_LINES: [&str; 2] = ["已置顶", "置顶聊天"];
-/// WeChat's own marks: a status line of its own, or in brackets in front of the message.
 const MENTION_MARKS: [&str; 3] = ["有人@我", "@我", "@所有人"];
 const SERVICE_ACCOUNTS: &str = "服务号";
 
@@ -68,7 +60,6 @@ pub(super) fn parse(automation_id: &str, name: &str) -> Option<Session> {
                 && *line != SERVICE_ACCOUNTS
         })
         .collect();
-    // The service-account folder lists several summaries newest first; elsewhere the last line is the message.
     let preview = if lines[1] == SERVICE_ACCOUNTS {
         parts.first()
     } else {
@@ -86,7 +77,6 @@ pub(super) fn parse(automation_id: &str, name: &str) -> Option<Session> {
     })
 }
 
-/// Only the mark itself counts: "有事@我" inside a message is not a mention.
 fn is_mention(line: &str) -> bool {
     MENTION_MARKS.iter().any(|mark| {
         let bracketed = line.strip_prefix('[').and_then(|rest| rest.strip_prefix(mark));
@@ -94,10 +84,6 @@ fn is_mention(line: &str) -> bool {
     })
 }
 
-/// Whether `row` got a message since `before`: a higher unread count. A new last message alone
-/// is also what the user's own message looks like, sent here or synced from the phone (issue #40),
-/// so it counts only in the chat open in WeChat (`open_counts`), whose messages raise no count. A
-/// row scrolled into view counts only with unread messages.
 fn changed(before: &HashMap<&str, &Session>, row: &Session, open_counts: bool) -> bool {
     match before.get(row.key.as_str()) {
         Some(old) => {
@@ -112,7 +98,6 @@ fn by_key(rows: &[Session]) -> HashMap<&str, &Session> {
     rows.iter().map(|row| (row.key.as_str(), row)).collect()
 }
 
-/// Whether a muted chat got a message since `before` that `new_messages` leaves out.
 pub(super) fn muted_changed(before: &[Session], now: &[Session], open_counts: bool) -> bool {
     let before = by_key(before);
     now.iter().any(|row| {
@@ -120,10 +105,6 @@ pub(super) fn muted_changed(before: &[Session], now: &[Session], open_counts: bo
     })
 }
 
-/// Rows that got a message since `before` (see `changed`); the open chat also by a move to the top
-/// of the unpinned chats, for a message that repeats the last one. `open_counts`: the user has not
-/// been in WeChat since `before`, so a change to the open chat is not their own reply. Muted chats
-/// count only when the message mentions the user.
 pub(super) fn new_messages<'a>(
     before: &[Session],
     now: &'a [Session],
@@ -134,7 +115,6 @@ pub(super) fn new_messages<'a>(
             .find(|row| !row.pinned)
             .map(|row| row.key.as_str())
     };
-    // Only while the list shows the same first row: a scrolled list moves every row.
     let same_start = before.first().map(|row| &row.key) == now.first().map(|row| &row.key);
     let old_top = before
         .iter()
@@ -153,8 +133,6 @@ pub(super) fn new_messages<'a>(
 
 const ROW_PREFIX: &str = "session_item_";
 
-/// The chat list in `window`; `None` while WeChat keeps its UI hidden, or sits in the tray (then
-/// the list has no rows).
 pub(super) fn read(window: HWND) -> Option<Vec<Session>> {
     let rows = uia_list::list_rows(window, ROW_PREFIX)?;
     let chats: Vec<Session> = rows
@@ -168,7 +146,6 @@ pub(super) fn read(window: HWND) -> Option<Vec<Session>> {
     (!chats.is_empty()).then_some(chats)
 }
 
-/// Opens the chat `key` by clicking its row; the error says why not.
 pub(super) fn open(window: HWND, key: &str) -> Result<(), &'static str> {
     let rows = uia_list::list_rows(window, ROW_PREFIX).ok_or("the chat list is not readable")?;
     let row = rows
@@ -214,7 +191,6 @@ fn is_date(text: &str) -> bool {
             .all(|part| (1..=4).contains(&part.len()) && part.bytes().all(|b| b.is_ascii_digit()))
 }
 
-/// `[3条]`, `[3]`, `3条未读`, `3条未读消息` or `3条新消息`.
 fn unread_count(line: &str) -> Option<u32> {
     let digits = match line
         .strip_prefix('[')
@@ -371,10 +347,8 @@ mod tests {
             .map(|r| r.key.as_str())
             .collect();
         assert_eq!(keys, ["b"]);
-        // Scrolled: the list no longer starts with the same row, so order means nothing.
         let scrolled = [row("x", "很久以前", None), row("a", "早", None)];
         assert!(new_messages(&before, &scrolled, true).is_empty());
-        // The top chat stays on top: nothing moved.
         assert!(new_messages(&before, &before, true).is_empty());
     }
 }

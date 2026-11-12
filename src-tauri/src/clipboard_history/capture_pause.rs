@@ -1,6 +1,3 @@
-//! Pausing the history (C38): for a while, until resumed, or for the next copy only. Kept in
-//! memory, so starting the app again records as before.
-
 use serde::{Deserialize, Serialize};
 use std::sync::{Mutex, PoisonError};
 
@@ -8,14 +5,11 @@ use std::sync::{Mutex, PoisonError};
 #[serde(rename_all = "camelCase")]
 pub struct CaptureStatus {
     paused: bool,
-    /// When a timed pause ends (ms since the epoch); none while paused until resumed.
     paused_until: Option<i64>,
-    /// The next copy is not recorded.
     ignore_next: bool,
 }
 
 impl CaptureStatus {
-    /// As of `now`: a timed pause that has run out is over.
     fn at(mut self, now: i64) -> Self {
         if self.paused && self.paused_until.is_some_and(|until| now >= until) {
             self.paused = false;
@@ -39,12 +33,10 @@ pub(super) fn status(now: i64) -> CaptureStatus {
     })
 }
 
-/// Whether recording is paused now, for the tray menu.
 pub(crate) fn paused() -> bool {
     status(super::current_unix_millis()).paused
 }
 
-/// Pauses for `minutes`, or until resumed when none.
 pub(super) fn pause(minutes: Option<u32>, now: i64) {
     with_status(|status| {
         status.paused = true;
@@ -60,7 +52,6 @@ pub(super) fn ignore_next() {
     with_status(|status| status.ignore_next = true);
 }
 
-/// Whether the copy happening now is left out; uses up "ignore the next copy".
 pub(super) fn skips_capture(now: i64) -> bool {
     with_status(|status| {
         *status = status.at(now);

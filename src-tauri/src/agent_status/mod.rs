@@ -1,5 +1,3 @@
-//! AI agent status: the snapshot shown on the island and the Codex / Claude Code hooks that write it.
-
 pub(crate) mod approval_hotkeys;
 mod background_tasks;
 mod claude_hooks;
@@ -8,7 +6,6 @@ mod editor_extension;
 mod editor_terminal;
 mod external;
 mod hooks_state;
-// Also gives media_control the playing app's icon for plugin notifications.
 pub(crate) mod host_icon;
 mod codex_usage;
 mod codex_version;
@@ -74,31 +71,21 @@ pub(super) const AGENT_RUNNING_SCRIPT_FILE_NAME: &str = "fuyu-agent-running.cmd"
 pub(super) const AGENT_STATUS_SCRIPT_FILE_NAME: &str = "fuyu-agent-status.ps1";
 pub(super) const AGENT_SESSION_SCRIPT_FILE_NAME: &str = "fuyu-agent-session.ps1";
 
-/// In every hook the island writes (script names, markers), so Install/Repair finds its own.
 pub(super) const AGENT_HOOK_SIGNATURE: &str = "fuyu-agent-";
-/// The signature before the rename (D17): those hooks are still recognised and replaced.
 const LEGACY_AGENT_HOOK_SIGNATURE: &str = "focusd-agent-";
-/// The script files islands before the rename wrote into the app data folder.
 const LEGACY_SCRIPT_FILE_NAMES: [&str; 4] =
     ["focusd-agent-running.cmd", "focusd-agent-status.ps1", "focusd-agent-session.ps1", "focusd-agent-approval.ps1"];
 
-/// Whether `text` belongs to a hook the island wrote, under either signature.
 pub(super) fn is_island_hook_text(text: &str) -> bool {
     text.contains(AGENT_HOOK_SIGNATURE) || text.contains(LEGACY_AGENT_HOOK_SIGNATURE)
 }
-/// Second argument of the running script for the Notification and PermissionRequest hooks (Claude
-/// Code and Codex): save the hook input instead of marking the session as running (see
-/// focusd-agent-running.cmd). Installs from before the session script also pass `session` from
-/// SessionStart, which the script still handles.
 pub(super) const AGENT_RUNNING_NOTIFICATION_ARG: &str = "notification";
 pub(super) const AGENT_RUNNING_SCRIPT: &str =
     include_str!("hooks/fuyu-agent-running.cmd");
 pub(super) const AGENT_STATUS_SCRIPT: &str =
     include_str!("hooks/fuyu-agent-status.ps1");
-/// SessionStart / SessionEnd: records the session's process and terminal (session_records.rs).
 pub(super) const AGENT_SESSION_SCRIPT: &str =
     include_str!("hooks/fuyu-agent-session.ps1");
-/// Codex PermissionRequest: forwards the request to the island's approval endpoint (agent_approval).
 pub(super) const AGENT_APPROVAL_SCRIPT_FILE_NAME: &str = "fuyu-agent-approval.ps1";
 pub(super) const AGENT_APPROVAL_SCRIPT: &str =
     include_str!("hooks/fuyu-agent-approval.ps1");
@@ -111,7 +98,6 @@ pub struct AgentHooksInstallResult {
     pub(super) codex_config_path: String,
     pub(super) claude_config_path: String,
     pub(super) installed_at: i64,
-    /// Install/Repair on each chosen SSH remote computer.
     pub(super) remotes: Vec<remote_setup::RemoteResult>,
 }
 
@@ -145,7 +131,6 @@ fn read_agent_status(app: AppHandle) -> Result<AgentStatusSnapshot, String> {
 #[tauri::command]
 pub fn clear_agent_status(app: AppHandle, provider: String) -> Result<AgentStatusSnapshot, String> {
     if provider != "codex" && provider != "claudeCode" {
-        // A plugin or local API source, named by its full id.
         return if external::clear_by_id(&provider) {
             read_agent_status(app)
         } else {
@@ -196,7 +181,6 @@ pub fn clear_agent_status(app: AppHandle, provider: String) -> Result<AgentStatu
         }
     }
 
-    // Its saved notifications too, one file each (notifications.rs).
     let prefix = format!("{provider}-");
     for entry in fs::read_dir(app_dir.join(notifications::NOTIFICATIONS_DIR)).into_iter().flatten().flatten() {
         if entry.file_name().to_string_lossy().starts_with(&prefix) {
@@ -215,9 +199,6 @@ pub fn clear_agent_status(app: AppHandle, provider: String) -> Result<AgentStatu
     ))
 }
 
-/// `agentStatus.report` for plugins (`owner` = plugin id) and the local API
-/// (`owner` = `local-api`). Errors carry an HTTP-style status.
-/// Startup work: a reply marker rules file in an older wording is updated (reply_marker.rs).
 pub fn init() {
     std::thread::spawn(reply_marker::upgrade_installed);
 }
@@ -228,7 +209,6 @@ pub(crate) fn report_external_status(owner: &str, default_name: &str, params: &V
     serde_json::to_value(status).map_err(|error| (500, error.to_string()))
 }
 
-/// `agentStatus.clear`: one source (`{ source }`) or all of the owner's (`{}`).
 pub(crate) fn clear_external_status(owner: &str, params: &Value) -> Result<Value, (u16, String)> {
     let source = match params.get("source") {
         None | Some(Value::Null) => None,
@@ -238,12 +218,10 @@ pub(crate) fn clear_external_status(owner: &str, params: &Value) -> Result<Value
     Ok(json!({ "cleared": external::clear(owner, source) }))
 }
 
-/// Drops every source a stopped plugin reported.
 pub(crate) fn clear_external_owner(owner: &str) {
     external::clear(owner, None);
 }
 
-/// In the background: the remote computers are reached over SSH.
 #[tauri::command]
 pub async fn install_agent_status_hooks(app: AppHandle) -> Result<AgentHooksInstallResult, String> {
     tauri::async_runtime::spawn_blocking(move || install_agent_status_hooks_now(&app))
@@ -296,16 +274,12 @@ fn install_agent_status_hooks_now(app: &AppHandle) -> Result<AgentHooksInstallRe
     })
 }
 
-/// The scripts from before the rename, once no agent config points at them any more.
 fn remove_legacy_hook_scripts(app_dir: &Path) {
     for name in LEGACY_SCRIPT_FILE_NAMES {
         let _ = fs::remove_file(app_dir.join(name));
     }
 }
 
-/// After the data moved to the new app identifier (D17): the hooks the user had installed point
-/// at the old folder's scripts and status file, so they are written again, for the agents that
-/// had them only. `Ok(false)` when none had them.
 pub(crate) fn reinstall_hooks_after_rename(app: &AppHandle) -> Result<bool, String> {
     let app_dir = crate::home_dir::fuyu_home(app.path())
         .map_err(|error| format!("Failed to resolve app data directory: {error}"))?;
@@ -344,9 +318,7 @@ pub(crate) fn reinstall_hooks_after_rename(app: &AppHandle) -> Result<bool, Stri
     Ok(true)
 }
 
-/// Claude Code and Codex sessions active in the last two hours, running and waiting ones first.
 #[tauri::command]
-/// `window_hours` (1-24, default 2): how long ago a listed session may have last changed.
 pub async fn list_agent_sessions(
     app: AppHandle,
     window_hours: Option<u32>,
@@ -371,9 +343,6 @@ pub async fn list_agent_sessions(
     .map_err(|error| format!("Failed to join the agent sessions task: {error}"))?
 }
 
-/// What a phone push needs from a Claude Code session (push_detail.rs): how it was started and what
-/// it waits on. `remote_host` reads the session's copy from that SSH computer. Empty for Codex, or
-/// when the transcript is not found.
 #[tauri::command]
 pub async fn get_agent_push_detail(
     app: AppHandle,
@@ -402,7 +371,6 @@ pub async fn get_agent_push_detail(
     .map_err(|error| format!("Failed to join the push detail task: {error}"))
 }
 
-/// The Host aliases in ~/.ssh/config, offered as remote computers in Settings → AI Agent.
 #[tauri::command]
 pub async fn list_ssh_hosts() -> Result<Vec<String>, String> {
     let home_dir = windows_home_dir()?;
@@ -410,7 +378,6 @@ pub async fn list_ssh_hosts() -> Result<Vec<String>, String> {
     Ok(remote_hosts::ssh_config_hosts(&config))
 }
 
-/// The computers whose sessions are read over SSH, and how the last read of each went.
 #[tauri::command]
 pub async fn get_agent_remote_hosts(app: AppHandle) -> Result<Vec<remote_sessions::RemoteHostStatus>, String> {
     let app_dir = crate::home_dir::fuyu_home(app.path())
@@ -418,7 +385,6 @@ pub async fn get_agent_remote_hosts(app: AppHandle) -> Result<Vec<remote_session
     Ok(remote_sessions::statuses(&app_dir))
 }
 
-/// Chooses the computers whose sessions are read over SSH (Host aliases from ~/.ssh/config).
 #[tauri::command]
 pub async fn set_agent_remote_hosts(app: AppHandle, hosts: Vec<String>) -> Result<Vec<String>, String> {
     let app_dir = crate::home_dir::fuyu_home(app.path())
@@ -428,13 +394,11 @@ pub async fn set_agent_remote_hosts(app: AppHandle, hosts: Vec<String>) -> Resul
     Ok(saved)
 }
 
-/// The computers added in the island (not from ~/.ssh/config), by name.
 #[tauri::command]
 pub async fn get_agent_custom_hosts(app: AppHandle) -> Result<Vec<remote_hosts::CustomHost>, String> {
     Ok(remote_hosts::custom(&remote_app_dir(&app)?))
 }
 
-/// Adds a computer in the island (or replaces the one of that name) and switches it on.
 #[tauri::command]
 pub async fn add_agent_remote_host(app: AppHandle, host: remote_hosts::CustomHost) -> Result<Vec<remote_hosts::CustomHost>, String> {
     let added = remote_hosts::add_custom(&remote_app_dir(&app)?, &host)?;
@@ -442,7 +406,6 @@ pub async fn add_agent_remote_host(app: AppHandle, host: remote_hosts::CustomHos
     Ok(added)
 }
 
-/// Removes a computer added in the island.
 #[tauri::command]
 pub async fn remove_agent_remote_host(app: AppHandle, name: String) -> Result<Vec<remote_hosts::CustomHost>, String> {
     let remaining = remote_hosts::remove_custom(&remote_app_dir(&app)?, &name)?;
@@ -450,7 +413,6 @@ pub async fn remove_agent_remote_host(app: AppHandle, name: String) -> Result<Ve
     Ok(remaining)
 }
 
-/// Reads every chosen computer again at the next listing instead of waiting out its interval.
 #[tauri::command]
 pub async fn refresh_agent_remote_hosts() {
     remote_sessions::refresh_soon();
@@ -461,10 +423,6 @@ fn remote_app_dir(app: &AppHandle) -> Result<std::path::PathBuf, String> {
         .map_err(|error| format!("Failed to resolve app data directory: {error}"))
 }
 
-/// Brings the editor or terminal window of an agent session to the front: the window of the
-/// session's own process chain when it is running, else one matched by folder (`cwd`) and title.
-/// In Orca, also switches to the session's terminal tab. Returns false when no window matched.
-/// `session_id` is optional so older callers keep working.
 #[tauri::command]
 pub async fn focus_agent_window(
     app: AppHandle,
@@ -487,18 +445,13 @@ pub async fn focus_agent_window(
     Ok(focused.found)
 }
 
-/// Sent to the island when a clicked session's editor lacks the extension that switches to its
-/// terminal: `{ app, name }` (`code`, `VS Code`).
 const EDITOR_EXTENSION_MISSING_EVENT: &str = "agent-editor-extension-missing";
 
-/// The editors built on VS Code on this computer and whether each has the island's extension.
 #[tauri::command]
 pub async fn get_editor_extension_states() -> Vec<editor_extension::EditorExtensionState> {
     tauri::async_runtime::spawn_blocking(editor_extension::states).await.unwrap_or_default()
 }
 
-/// Installs the island's extension into the editor `app` (its executable name, as listed by
-/// `get_editor_extension_states`).
 #[tauri::command]
 pub async fn install_editor_extension(app: String) -> Result<(), crate::user_error::UserError> {
     tauri::async_runtime::spawn_blocking(move || editor_extension::install(&app))
@@ -506,8 +459,6 @@ pub async fn install_editor_extension(app: String) -> Result<(), crate::user_err
         .map_err(|error| crate::user_error::UserError::new("internal", "Something went wrong inside the island.").detail(error))?
 }
 
-/// Which of `sessions` have their window in front (focus.rs); the Agent page counts those as
-/// seen. Returns their session ids.
 #[tauri::command]
 pub async fn agent_sessions_in_front(app: AppHandle, sessions: Vec<focus::SessionRef>) -> Result<Vec<String>, String> {
     let app_dir = crate::home_dir::fuyu_home(app.path()).ok();
@@ -516,13 +467,9 @@ pub async fn agent_sessions_in_front(app: AppHandle, sessions: Vec<focus::Sessio
         .map_err(|error| format!("Failed to join the window check: {error}"))
 }
 
-/// Claude usage limits from a local magpie gateway (magpie.rs), else claude-hud's usage
-/// snapshot, merged with asking Anthropic directly when the usage ring has that on
-/// (usage.rs); null when there is none of them.
 #[tauri::command]
 pub async fn get_agent_usage() -> Result<Option<usage::AgentUsage>, String> {
     let home_dir = windows_home_dir()?;
-    // magpie answers live and needs no claude-hud, so it wins over the snapshot.
     let magpie = magpie::read_usage(&usage::claude_dir(&home_dir)).await;
     tauri::async_runtime::spawn_blocking(move || {
         let local = magpie.or_else(|| usage::read_usage(&home_dir));
@@ -532,7 +479,6 @@ pub async fn get_agent_usage() -> Result<Option<usage::AgentUsage>, String> {
         .map_err(|error| format!("Failed to join the usage task: {error}"))
 }
 
-/// Codex's usage limits from its rollout files (codex_usage.rs); null when none reports them.
 #[tauri::command]
 pub async fn get_codex_usage() -> Result<Option<usage::AgentUsage>, String> {
     let home_dir = windows_home_dir()?;
@@ -541,16 +487,12 @@ pub async fn get_codex_usage() -> Result<Option<usage::AgentUsage>, String> {
         .map_err(|error| format!("Failed to join the Codex usage task: {error}"))
 }
 
-/// GLM's or Kimi's coding plan usage (`provider` "glm" or "kimi") for the usage rings, asked with
-/// the API key saved for it; `refresh` (a click on the ring) asks again unless it just did.
 #[tauri::command]
 pub async fn get_plan_usage(provider: String, refresh: bool) -> Result<usage::AgentUsage, String> {
     let provider = plan_usage::PlanProvider::parse(&provider)?;
     Ok(plan_usage::read(provider, refresh).await)
 }
 
-/// Saves GLM's or Kimi's API key in the Windows Credential Manager (empty removes it); returns
-/// whether one is saved now.
 #[tauri::command]
 pub async fn set_plan_key(provider: String, key: String) -> Result<bool, crate::user_error::UserError> {
     let provider = plan_usage::PlanProvider::parse(&provider)?;
@@ -559,7 +501,6 @@ pub async fn set_plan_key(provider: String, key: String) -> Result<bool, crate::
         .map_err(|error| crate::user_error::UserError::new("internal", "Something went wrong inside the island.").detail(error))?
 }
 
-/// Whether an API key is saved for GLM or Kimi; the key itself never leaves the native side.
 #[tauri::command]
 pub async fn has_plan_key(provider: String) -> Result<bool, crate::user_error::UserError> {
     let provider = plan_usage::PlanProvider::parse(&provider)?;
@@ -568,8 +509,6 @@ pub async fn has_plan_key(provider: String) -> Result<bool, crate::user_error::U
         .map_err(|error| crate::user_error::UserError::new("internal", "Something went wrong inside the island.").detail(error))?
 }
 
-/// The icon of a session host (`host.exe` of a listed session) as a PNG data URL; null when the
-/// path is not an existing .exe or it has no icon.
 #[tauri::command]
 pub async fn get_agent_host_icon(path: String) -> Result<Option<String>, String> {
     tauri::async_runtime::spawn_blocking(move || host_icon::icon_data_url(&path))
@@ -577,7 +516,6 @@ pub async fn get_agent_host_icon(path: String) -> Result<Option<String>, String>
         .map_err(|error| format!("Failed to join the host icon task: {error}"))
 }
 
-/// Compares the installed hooks with what Install/Repair would write. Only reads files.
 #[tauri::command]
 pub async fn get_agent_hooks_state(app: AppHandle) -> Result<AgentHooksState, String> {
     let app_dir = crate::home_dir::fuyu_home(app.path())
@@ -590,7 +528,6 @@ pub async fn get_agent_hooks_state(app: AppHandle) -> Result<AgentHooksState, St
 fn read_agent_hooks_state(app_dir: &Path) -> Result<AgentHooksState, String> {
     let home_dir = windows_home_dir()?;
     let read = |path: &Path| fs::read_to_string(path).ok();
-    // Install/Repair always points the hooks at the scripts in the app data folder.
     let running_script_path = app_dir.join(AGENT_RUNNING_SCRIPT_FILE_NAME);
     let status_script_path = app_dir.join(AGENT_STATUS_SCRIPT_FILE_NAME);
     let codex = codex_hooks_state(
@@ -652,8 +589,6 @@ pub(super) fn install_agent_hook_scripts(app_dir: &Path) -> Result<(), String> {
     )
 }
 
-/// Where Claude Code's approval hook posts; None when the endpoint did not start, and then only
-/// the status hooks are installed.
 fn approval_hook() -> Option<claude_hooks::ApprovalHook> {
     use crate::agent_approval::{activity_hook_url, endpoint, hook_url, question_hook_url, Agent};
     Some(claude_hooks::ApprovalHook {
@@ -664,9 +599,6 @@ fn approval_hook() -> Option<claude_hooks::ApprovalHook> {
     })
 }
 
-/// Refuses a symlink: replacing the link would cut it off from the file it points to, and
-/// writing through it would change a file kept elsewhere (a dotfiles or instructions repository),
-/// which is the user's to change.
 pub(super) fn write_text_file(path: &Path, content: &str) -> Result<(), String> {
     if let Ok(target) = fs::read_link(path) {
         return Err(format!(
@@ -695,8 +627,6 @@ pub(super) fn normalize_windows_line_endings(content: &str) -> String {
     content.replace("\r\n", "\n").replace('\n', "\r\n")
 }
 
-/// This module's Tauri commands. `lib.rs` chains every module's list into one
-/// `generate_handler!`, so adding a command only touches this file.
 macro_rules! tauri_commands {
     ($next:ident [$($done:tt)*] $($rest:tt)*) => {
         $next!([$($done)*

@@ -1,6 +1,3 @@
-//! The HTTP listener on 127.0.0.1. Each request runs on its own thread because
-//! it may wait for the island window's answer.
-
 use serde_json::{json, Value};
 use std::{
     io::Read,
@@ -17,7 +14,6 @@ use super::{
     routes::{self, ApiError, RequestHeaders, API_VERSION, MAX_BODY_BYTES},
 };
 
-/// Owner of agent statuses reported over HTTP; their ids are `local-api/<source>`.
 pub(super) const LOCAL_API_OWNER: &str = "local-api";
 
 struct RunningServer {
@@ -27,8 +23,6 @@ struct RunningServer {
 
 static RUNNING: Mutex<Option<RunningServer>> = Mutex::new(None);
 
-/// Starts listening, trying `preferred_port` first. Returns the actual port.
-/// Already running: keeps the current listener.
 pub(super) fn start(app: AppHandle, preferred_port: u16) -> Result<u16, String> {
     let mut running = RUNNING.lock().unwrap_or_else(PoisonError::into_inner);
     if let Some(current) = running.as_ref() {
@@ -48,7 +42,6 @@ pub(super) fn start(app: AppHandle, preferred_port: u16) -> Result<u16, String> 
     thread::Builder::new()
         .name("local-api".into())
         .spawn(move || {
-            // Ends when `stop` unblocks the server.
             for request in listener.incoming_requests() {
                 let app = app.clone();
                 let _ = thread::Builder::new()
@@ -115,7 +108,6 @@ fn answer(app: &AppHandle, request: &mut Request, port: u16) -> Result<Value, Ap
             "allowWrite": config.allow_write,
         }));
     }
-    // Agent statuses live natively; everything else is answered by the island window.
     let to_api_error = |(status, message): (u16, String)| ApiError::new(status, message);
     match call.method {
         "agentStatus.report" => {
@@ -123,7 +115,6 @@ fn answer(app: &AppHandle, request: &mut Request, port: u16) -> Result<Value, Ap
             agent_status::report_external_status(LOCAL_API_OWNER, &name, &call.params).map_err(to_api_error)
         }
         "agentStatus.clear" => agent_status::clear_external_status(LOCAL_API_OWNER, &call.params).map_err(to_api_error),
-        // Off unless the user lets AI tools read the history (C38).
         "clipboard.list" => crate::clipboard_history::local_api_history(&call.params).map_err(to_api_error),
         "dev.load" | "dev.reload" | "dev.unload" | "dev.log" => plugin_host::answer_dev_api(call.method, &call.params).map_err(to_api_error),
         _ => bridge::dispatch(app, call),

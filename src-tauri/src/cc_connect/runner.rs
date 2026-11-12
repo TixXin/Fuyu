@@ -1,8 +1,3 @@
-//! Keeps cc-connect running while the plugin's "run" setting is on: hidden, in a job object (it
-//! and the agents it started end with the island), started again with a backoff when it ends.
-//! A cc-connect the island did not start is left alone: while one runs, this only waits. Its
-//! output goes to `<app data>/cc-connect/cc-connect.log`, written anew at each start.
-
 use crate::user_error::UserError;
 use std::{
     fs::{self, File},
@@ -25,20 +20,15 @@ use crate::{
 
 const LOG_NAME: &str = "cc-connect.log";
 const POLL: Duration = Duration::from_millis(250);
-/// How often a wait (no config, another cc-connect) looks again.
 const RECHECK: Duration = Duration::from_secs(15);
-/// Up this long, an end starts the backoff over.
 const STABLE: Duration = Duration::from_secs(60);
 
-/// How the island's cc-connect is doing. Mirrored by `CcConnectRunState` in src/features/cc-connect/api.ts.
 #[derive(Debug, Clone, PartialEq)]
 pub(super) enum RunState {
     Off,
     Starting,
     Running,
-    /// One the island did not start runs; left alone.
     External,
-    /// No `config.toml` yet: set a bot up first.
     NoConfig,
     Failed(UserError),
 }
@@ -63,16 +53,13 @@ impl RunState {
     }
 }
 
-/// The wait before starting again after `failures` ends in a row: 5 s, doubling up to two minutes.
 fn backoff(failures: u32) -> Duration {
     Duration::from_secs((5u64 << failures.saturating_sub(1).min(5)).min(120))
 }
 
-/// A running supervisor; dropping it (its sender) stops it and cc-connect.
 struct Runner {
     setting: Option<String>,
     status: Arc<Mutex<RunState>>,
-    /// A message restarts cc-connect at once (the config changed).
     restart: mpsc::Sender<()>,
 }
 
@@ -85,7 +72,6 @@ fn set(status: &Mutex<RunState>, next: RunState) {
     *status.lock().unwrap_or_else(PoisonError::into_inner) = next;
 }
 
-/// Starts or stops the supervisor to match the plugin's settings (`run`, `path`).
 pub(crate) fn apply(settings: &Map<String, Value>, app_dir: Option<&Path>, config: PathBuf) -> Result<(), UserError> {
     if !settings.get("run").and_then(Value::as_bool).unwrap_or(false) {
         stop();
@@ -115,7 +101,6 @@ pub(crate) fn stop() {
     *runner() = None;
 }
 
-/// Starts the island's cc-connect again at once, so it reads a changed config.
 pub(super) fn restart() {
     if let Some(runner) = runner().as_ref() {
         let _ = runner.restart.send(());
@@ -126,9 +111,7 @@ pub(super) fn state() -> RunState {
     runner().as_ref().map_or(RunState::Off, |runner| runner.status.lock().unwrap_or_else(PoisonError::into_inner).clone())
 }
 
-/// How one run went.
 enum Ended {
-    /// Not started; waits RECHECK in this state.
     Waiting(RunState),
     Exited { stable: bool, reason: UserError },
     Restart,
@@ -201,7 +184,6 @@ fn run_once(setting: Option<&str>, app_dir: &Path, config: &Path, status: &Mutex
     }
 }
 
-/// cc-connect started hidden in a job, its output into `log`; the job ends what it started too.
 fn start(exe: &Path, config: &Path, log: &Path) -> Result<(Child, Job), UserError> {
     if let Some(dir) = log.parent() {
         fs::create_dir_all(dir).map_err(|error| UserError::new("file.create", format!("Could not create {}.", dir.display())).arg("path", dir.display().to_string()).detail(error))?;
@@ -220,7 +202,6 @@ fn start(exe: &Path, config: &Path, log: &Path) -> Result<(Child, Job), UserErro
         command.current_dir(dir);
     }
     let mut child = command.spawn().map_err(|error| UserError::new("ccConnect.run", "Could not run cc-connect.").detail(error))?;
-    // Started suspended, so the agents it starts are in the job too.
     match Job::new().and_then(|job| job.assign(&child).map(|()| job)).and_then(|job| job::resume(child.id()).map(|()| job)) {
         Ok(job) => Ok((child, job)),
         Err(error) => {
@@ -231,7 +212,6 @@ fn start(exe: &Path, config: &Path, log: &Path) -> Result<(Child, Job), UserErro
     }
 }
 
-/// The last line of `log` worth showing, from its last 8 KB.
 fn last_line(log: &Path) -> Option<String> {
     let mut file = File::open(log).ok()?;
     let length = file.metadata().ok()?.len();

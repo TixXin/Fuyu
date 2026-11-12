@@ -1,15 +1,3 @@
-//! Where the todos live right now, and saving changes to them.
-//!
-//! Until the island window has run the migration the source is `Pending`, and
-//! callers that need the todos wait (see `wait_until_decided`). After it, the
-//! todos are in `todos.json` (`File`), or, if the migration failed, still in
-//! the window's localStorage (`Local`), as in older versions.
-//!
-//! With `File`, plugins and the local API change todos.json directly (`call`),
-//! and the window is sent `todos-changed`. The window saves what the user did
-//! with `apply`; a field an outside caller changed after the revision the
-//! window last saw is not overwritten (the window gets the current data back).
-
 use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::{json, Value};
 use std::{
@@ -28,11 +16,8 @@ use super::{
 };
 use crate::{island, plugin_host};
 
-/// Sent to the island window after a plugin or the local API changed the
-/// todos. Mirrored by `TODOS_CHANGED_EVENT` in src/features/todos/api.ts.
 const CHANGED_EVENT: &str = "todos-changed";
 
-/// The revision at which an outside caller last changed each field.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub(crate) struct OutsideChanges {
     pub todos: u64,
@@ -55,7 +40,6 @@ impl OutsideChanges {
     }
 }
 
-/// The fields (as named in JSON) that differ between `old` and `new`.
 pub(crate) fn changed_fields(old: &TodosData, new: &TodosData) -> Vec<&'static str> {
     [
         ("date", old.date != new.date),
@@ -112,8 +96,6 @@ fn lock<T>(mutex: &Mutex<T>) -> MutexGuard<'_, T> {
     mutex.lock().unwrap_or_else(PoisonError::into_inner)
 }
 
-/// Waits (at most `timeout`) until the island window has decided where the
-/// todos live. True if they are in todos.json.
 pub(crate) fn wait_until_decided(timeout: Duration) -> bool {
     let Ok(host) = host() else { return false };
     let deadline = Instant::now() + timeout;
@@ -128,11 +110,9 @@ pub(crate) fn wait_until_decided(timeout: Duration) -> bool {
     matches!(*source, Source::File(_))
 }
 
-/// The island window's start-up handoff. On error the todos stay in localStorage.
 pub(crate) fn migrate(keys: LocalTodoKeys, normalized: TodosData) -> Result<TodosSnapshot, String> {
     let host = host()?;
     let mut source = lock(&host.source);
-    // The window was reloaded: what is in memory is what is on disk.
     if let Source::File(loaded) = &*source {
         return Ok(snapshot(&loaded.file, None));
     }
@@ -152,7 +132,6 @@ pub(crate) fn migrate(keys: LocalTodoKeys, normalized: TodosData) -> Result<Todo
     answer
 }
 
-/// A file another program has open (backup, antivirus) is often readable a moment later.
 fn migrate_with_retry(host: &TodosHost, keys: &LocalTodoKeys, normalized: TodosData) -> Result<(TodosFile, Option<&'static str>), String> {
     for _ in 0..3 {
         if !matches!(store::load(&host.dir.join(FILE_NAME)), Err(LoadError::Unreadable(_))) {
@@ -175,13 +154,9 @@ pub(crate) fn current() -> Result<TodosSnapshot, String> {
     }
 }
 
-/// Fields the island window replaces; missing ones stay as they are.
-/// Mirrored by `TodosChange` in src/features/todos/api.ts.
 #[derive(Debug, Clone, Default, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TodosChange {
-    /// The revision the window last saw; fields changed by outside callers
-    /// after it are kept. Missing: take every field.
     #[serde(default)]
     pub base_revision: Option<u64>,
     pub date: Option<String>,
@@ -189,7 +164,6 @@ pub struct TodosChange {
     pub scheduled: Option<Vec<ScheduledTodo>>,
     pub archives: Option<Vec<TodoArchive>>,
     pub daily_note: Option<String>,
-    /// Missing: unchanged; null: no active todo.
     #[serde(default, deserialize_with = "present")]
     pub active_todo_id: Option<Option<String>>,
 }
@@ -198,8 +172,6 @@ fn present<'de, D: Deserializer<'de>, T: Deserialize<'de>>(deserializer: D) -> R
     T::deserialize(deserializer).map(Some)
 }
 
-/// `change` without the fields an outside caller changed after the window's
-/// base revision, and the names of those fields.
 pub(crate) fn without_conflicts(change: &TodosChange, outside: &OutsideChanges) -> (TodosChange, Vec<&'static str>) {
     let Some(base) = change.base_revision else {
         return (change.clone(), Vec::new());
@@ -225,7 +197,6 @@ pub(crate) fn without_conflicts(change: &TodosChange, outside: &OutsideChanges) 
     (kept, dropped)
 }
 
-/// `data` with the fields of `change` replaced.
 pub(crate) fn patched(data: &TodosData, change: &TodosChange) -> TodosData {
     let mut next = data.clone();
     if let Some(date) = &change.date {
@@ -249,18 +220,14 @@ pub(crate) fn patched(data: &TodosData, change: &TodosChange) -> TodosData {
     next
 }
 
-/// Mirrored by `AppliedTodosChange` in src/features/todos/api.ts.
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AppliedTodosChange {
     pub revision: u64,
-    /// Fields that were not saved because a plugin or script changed them
-    /// first; take their values from `data`, which is what is saved now.
     pub conflicts: Vec<&'static str>,
     pub data: Option<TodosData>,
 }
 
-/// Saves a change from the island window.
 pub(crate) fn apply(change: &TodosChange) -> Result<AppliedTodosChange, String> {
     let host = host()?;
     let mut source = lock(&host.source);
@@ -279,9 +246,6 @@ pub(crate) fn apply(change: &TodosChange) -> Result<AppliedTodosChange, String> 
     Ok(AppliedTodosChange { revision: loaded.file.revision, conflicts, data })
 }
 
-/// Answers a todo or note call of a plugin or the local API from todos.json.
-/// None when the todos are not in todos.json (the island window answers then)
-/// or `method` is not a todo call.
 pub(crate) fn call(method: &str, params: &Value) -> Option<Result<Value, CallError>> {
     if !calls::is_todo_call(method) {
         return None;
@@ -313,8 +277,6 @@ fn call_loaded(host: &TodosHost, loaded: &mut Loaded, method: &str, params: &Val
     Ok(outcome.result)
 }
 
-/// `todos.changed` / `note.changed` for subscribed plugins (they used to come
-/// from the island window, which no longer sees outside changes first).
 fn publish_plugin_events(old: &TodosData, new: &TodosData) {
     if let Some(reason) = todos_reason(old, new) {
         plugin_host::publish_event("todos.changed", json!({ "date": new.date, "reason": reason }));
