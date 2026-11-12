@@ -79,6 +79,8 @@ test("land rebases onto main, pushes, fast-forwards the main checkout, and backs
   try {
     git(["init", "-q", "--bare", "-b", "main", remote], root);
     git(["clone", "-q", remote, main], root);
+    git(["config", "user.email", "t@t"], main);
+    git(["config", "user.name", "t"], main);
     assert.ok(path.resolve(main, git(["rev-parse", "--git-dir"], main)).startsWith(root + path.sep), "git must run in the temp repo");
     writeFileSync(path.join(main, "a.txt"), "a\n");
     git(["add", "."], main);

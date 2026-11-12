@@ -1,6 +1,6 @@
 # AI Agent Status Hooks
 
-FocuSD can mirror Codex and Claude Code task activity on the collapsed island status light:
+Fuyu can mirror Codex and Claude Code task activity on the collapsed island status light:
 
 - running task: blue
 - completed, idle, or no task: green
@@ -31,7 +31,7 @@ It then updates:
 %USERPROFILE%\.claude\settings.json
 ```
 
-The operation is repeatable. Running **安装/修复** again rewrites FocuSD's managed hooks to the current app-data script path and removes older FocuSD hook entries that referenced development paths such as `D:\FocuSD\scripts`. FocuSD hooks under events it no longer writes are removed too, and an event left with no hooks is dropped.
+The operation is repeatable. Running **安装/修复** again rewrites Fuyu's managed hooks to the current app-data script path and removes older Fuyu hook entries that referenced development paths such as `D:\FocuSD\scripts`. Fuyu hooks under events it no longer writes are removed too, and an event left with no hooks is dropped.
 
 While the approval endpoint runs (approving on the island), Claude Code also gets the approval hooks: an HTTP `PermissionRequest` hook, a `PreToolUse` hook for `AskUserQuestion`, and an activity hook on `PostToolUse`, `PostToolUseFailure`, `PermissionDenied`, `Stop`, `SubagentStop` and `UserPromptSubmit`. The activity hook runs `curl.exe` (part of Windows 10 and 11) in the background (`"async": true`) to post the hook's input to `/claude/activity`; it never delays Claude Code, and with the island closed it gives up after a second. It lets the island close a card whose request was already answered in the terminal (docs/architecture/agent/island-interaction.md, 第 2 条). Installs from before 2026-11-07 lack it and show as needing repair.
 
@@ -44,7 +44,7 @@ agent-codex-running.flag
 agent-claudeCode-running.flag
 ```
 
-FocuSD polls these marker files every 200ms. If either marker exists and is fresh, the island turns blue. If a marker is still present after 10 minutes, FocuSD treats it as stale and turns the island yellow instead of leaving the user waiting on a permanent blue light.
+Fuyu polls these marker files every 200ms. If either marker exists and is fresh, the island turns blue. If a marker is still present after 10 minutes, Fuyu treats it as stale and turns the island yellow instead of leaving the user waiting on a permanent blue light.
 
 When the turn finishes, `fuyu-agent-status.ps1` removes the marker, writes `agent-status.json`, and keeps a short hold marker when the task completed too quickly. This makes very short prompts still visibly flash blue for about 800ms.
 
@@ -83,7 +83,7 @@ With `notification`, the script copies the hook's stdin JSON (session id, the ev
 
 **Session records.** `SessionStart` and `SessionEnd` (both agents) run `fuyu-agent-session.ps1 <provider> start|end`. The start writes `agent-sessions/<session id>.json`: the source (`startup`, `resume`, `clear`, `compact`, `fork`), the folder, the agent's process id and start time (the nearest ancestor of the hook named `claude.exe` / `codex.exe` / `node.exe`, looked up through WMI), `ORCA_TERMINAL_HANDLE`, `WT_SESSION` and `TERM_PROGRAM`. The end adds `endedAt` and the reason (`clear`, `resume`, `logout`, `prompt_input_exit`, `other`). It prints nothing, never fails the hook, only accepts session ids made of letters, digits, `-` and `_`, and deletes records older than 7 days. The process lookup takes about a second, so Claude Code runs the start hook with `async: true` (in the background). Codex hooks cannot run in the background yet, so a Codex session's first turn waits for it once. These records come from documented hooks and are preferred over Claude Code's undocumented `~/.claude/sessions` registry (`session_records.rs`). After `/clear` or `/resume` the process carries on under a new id, so the old record still leads to it. Codex reviews new hooks before running them: after Install/Repair, trust them with `/hooks`.
 
-The settings page reads `get_agent_hooks_state` when it opens and after **安装/修复**. It builds the hooks Install/Repair would write and compares: each agent is `current` when all of them are there as written, `outdated` when FocuSD hooks differ (for example installed before the `Notification` hook, or pointing at an old script folder), or `notInstalled`; it also reports whether the app-data scripts differ from the ones in this build. When anything is outdated, the page shows a yellow notice and highlights **安装/修复**; nothing is changed until the user clicks it. Design notes: [architecture/agent-session-title.md](../architecture/agent/session-title.md).
+The settings page reads `get_agent_hooks_state` when it opens and after **安装/修复**. It builds the hooks Install/Repair would write and compares: each agent is `current` when all of them are there as written, `outdated` when Fuyu hooks differ (for example installed before the `Notification` hook, or pointing at an old script folder), or `notInstalled`; it also reports whether the app-data scripts differ from the ones in this build. When anything is outdated, the page shows a yellow notice and highlights **安装/修复**; nothing is changed until the user clicks it. Design notes: [architecture/agent-session-title.md](../architecture/agent/session-title.md).
 
 **Bringing the window forward**: Windows refuses to activate another app's window unless the island got the last input, so the island attaches to the foreground thread's input first (`win32::window::force_foreground`). If Windows still keeps the window behind, its taskbar button flashes and the click counts as found. **Diagnosing**: each click appends one line to `agent-focus.log` in the app data folder (`%APPDATA%\com.tixxin.fuyu`), naming each step and its result (for example `process=registry(5), tab=process, window=orca | focused`), without window titles or conversation text; ask for it when someone reports "没找到对应的窗口". An ended session that was never seen running by an island with this version cannot be traced and says so ("会话可能已经关掉了").
 
@@ -157,18 +157,18 @@ Claude Code or Codex running on another computer (an SSH server, a dev container
      RemoteForward 39271 127.0.0.1:39271
    ```
 
-3. On the server, save this as `~/.local/bin/focusd-remote-hook.sh` and make it executable. It needs `curl` and `python3`, gives up after a second and always exits 0, so a closed tunnel never holds the session up.
+3. On the server, save this as `~/.local/bin/fuyu-remote-hook.sh` and make it executable. It needs `curl` and `python3`, gives up after a second and always exits 0, so a closed tunnel never holds the session up. A script set up before the rename as `focusd-remote-hook.sh` with `FOCUSD_TOKEN` keeps working; the names are only what this example uses.
 
    ```sh
    #!/bin/sh
-   # focusd-remote-hook.sh <running|waiting|completed|end> [claudeCode|codex]
-   # Reports this session to FocuSD Island through the SSH tunnel. Needs FOCUSD_TOKEN.
-   phase="$1"; agent="${2:-claudeCode}"; port="${FOCUSD_PORT:-39271}"
+   # fuyu-remote-hook.sh <running|waiting|completed|end> [claudeCode|codex]
+   # Reports this session to Fuyu through the SSH tunnel. Needs FUYU_TOKEN.
+   phase="$1"; agent="${2:-claudeCode}"; port="${FUYU_PORT:-39271}"
    input=$(cat)
    source=$(printf '%s' "$input" | python3 -c 'import json,sys; print("r-" + json.load(sys.stdin).get("session_id", "x")[:24].lower())') || exit 0
    url="http://127.0.0.1:$port/v1/agent-status/$source"
    if [ "$phase" = end ]; then
-     curl -s -m 1 -X DELETE -H "Authorization: Bearer $FOCUSD_TOKEN" "$url" >/dev/null 2>&1
+     curl -s -m 1 -X DELETE -H "Authorization: Bearer $FUYU_TOKEN" "$url" >/dev/null 2>&1
      exit 0
    fi
    body=$(printf '%s' "$input" | PHASE="$phase" AGENT="$agent" HOST_NAME="$(hostname)" python3 -c '
@@ -179,20 +179,20 @@ Claude Code or Codex running on another computer (an SSH server, a dev container
    if hook.get("cwd"): report["cwd"] = hook["cwd"][:260]
    if hook.get("prompt"): report["title"] = " ".join(hook["prompt"].split())[:120]
    print(json.dumps(report))') || exit 0
-   curl -s -m 1 -X PUT -H "Authorization: Bearer $FOCUSD_TOKEN" -H "Content-Type: application/json" \
+   curl -s -m 1 -X PUT -H "Authorization: Bearer $FUYU_TOKEN" -H "Content-Type: application/json" \
      --data "$body" "$url" >/dev/null 2>&1
    exit 0
    ```
 
-4. Set `FOCUSD_TOKEN` on the server (for example in `~/.profile`) and add the hooks to `~/.claude/settings.json` there. Fields left out of a report keep their last value, so the title from the prompt stays after the turn ends.
+4. Set `FUYU_TOKEN` on the server (for example in `~/.profile`) and add the hooks to `~/.claude/settings.json` there. Fields left out of a report keep their last value, so the title from the prompt stays after the turn ends.
 
    ```json
    {
      "hooks": {
-       "UserPromptSubmit": [{ "hooks": [{ "type": "command", "command": "~/.local/bin/focusd-remote-hook.sh running" }] }],
-       "Notification": [{ "hooks": [{ "type": "command", "command": "~/.local/bin/focusd-remote-hook.sh waiting" }] }],
-       "Stop": [{ "hooks": [{ "type": "command", "command": "~/.local/bin/focusd-remote-hook.sh completed" }] }],
-       "SessionEnd": [{ "hooks": [{ "type": "command", "command": "~/.local/bin/focusd-remote-hook.sh end" }] }]
+       "UserPromptSubmit": [{ "hooks": [{ "type": "command", "command": "~/.local/bin/fuyu-remote-hook.sh running" }] }],
+       "Notification": [{ "hooks": [{ "type": "command", "command": "~/.local/bin/fuyu-remote-hook.sh waiting" }] }],
+       "Stop": [{ "hooks": [{ "type": "command", "command": "~/.local/bin/fuyu-remote-hook.sh completed" }] }],
+       "SessionEnd": [{ "hooks": [{ "type": "command", "command": "~/.local/bin/fuyu-remote-hook.sh end" }] }]
      }
    }
    ```
@@ -203,7 +203,7 @@ Without the tunnel the requests fail at once and nothing else changes. A remote 
 
 ## Other Agents
 
-Tools other than Codex and Claude Code can report their status too, with no FocuSD release needed: either from a plugin with the `agent-status:write` permission (`agentStatus.report`), or over the local API (`PUT /v1/agent-status/{source}`). These reports are kept in memory only and appear in the snapshot's `others` list. They light the island and name their session in the same way as the built-in agents, using a robot icon instead of a brand icon. See [local-api.md](local-api.md#ai-agent-状态) and [plugins/README.md](../plugins/README.md).
+Tools other than Codex and Claude Code can report their status too, with no Fuyu release needed: either from a plugin with the `agent-status:write` permission (`agentStatus.report`), or over the local API (`PUT /v1/agent-status/{source}`). These reports are kept in memory only and appear in the snapshot's `others` list. They light the island and name their session in the same way as the built-in agents, using a robot icon instead of a brand icon. See [local-api.md](local-api.md#ai-agent-状态) and [plugins/README.md](../plugins/README.md).
 
 ## Manual Smoke Test
 

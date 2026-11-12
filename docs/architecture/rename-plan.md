@@ -1,6 +1,6 @@
 # 改名为浮屿 / Fuyu：分步计划
 
-> 任务：[D17](/docs/tasks/D/D17.md)。定名和查重见 [project-rename.md](../research/project-rename.md)。用户 2026-11-10 决定：上游留下的 `fly-island` / `FocuSD` 名字和内部标识全部改掉，旧数据要迁移。
+> 任务：[D17](/docs/tasks/0-archive/D/D17.md)。定名和查重见 [project-rename.md](../research/project-rename.md)。用户 2026-11-10 决定：上游留下的 `fly-island` / `FocuSD` 名字和内部标识全部改掉，旧数据要迁移。
 
 每一步做完勾选，写上提交号。搬迁和行为改动按 [AGENTS.md](../../AGENTS.md)「重构约定」分开提交。
 
