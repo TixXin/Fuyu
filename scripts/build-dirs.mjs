@@ -5,7 +5,13 @@
 //   target/debug, target/release  the user's `pnpm tauri dev` and release builds
 //                                 (the desktop shortcut runs target/release)
 //   target/agents                 agents' cargo test / clippy (land-check.mjs)
-//   target/lane-<N>               lane N's preview (dev-lane.mjs)
+//   target/lane-<N>               lane N's preview exe (dev-lane.mjs)
+//   target/lane-build             what the lane previews compile on the way there: cargo's
+//                                 build-dir, shared, so the dependencies build once for all
+//                                 lanes while each lane's exe stays in its own folder
+//
+// cargo never deletes the incremental caches and old artifacts it leaves here;
+// prune-build-cache.mjs does.
 import { execFileSync } from "node:child_process";
 import path from "node:path";
 
@@ -27,11 +33,15 @@ export function laneNumber(worktree) {
   return parts.at(-2) === "fly-island-lanes" && Number.isInteger(number) && number > 0 && number < 1000 ? number : null;
 }
 
-/** Port, identifier and build folder of lane `lane`'s preview. */
+/** The build-dir every lane preview shares. */
+export const LANE_BUILD_DIR = "lane-build";
+
+/** Port, identifier, exe folder and shared build folder of lane `lane`'s preview. */
 export function lanePreview(main, lane) {
   return {
     port: LANE_PORT_BASE + lane,
     identifier: `com.tixxin.fuyu.lane-${lane}`,
     target: targetDir(main, `lane-${lane}`),
+    buildDir: targetDir(main, LANE_BUILD_DIR),
   };
 }

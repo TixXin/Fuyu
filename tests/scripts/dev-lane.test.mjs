@@ -25,6 +25,9 @@ test("each lane previews on its own port, identifier and build folder, apart fro
   assert.equal(two.identifier, "com.tixxin.fuyu.lane-2");
   assert.equal(two.target, targetDir(main, "lane-2"));
   assert.notEqual(lanePreview(main, 3).port, two.port);
+  assert.notEqual(lanePreview(main, 3).target, two.target, "each lane's exe in its own folder");
+  assert.equal(lanePreview(main, 3).buildDir, two.buildDir, "the dependencies are compiled once for all lanes");
+  assert.equal(two.buildDir, targetDir(main, "lane-build"));
   const config = previewConfig(two.port);
   assert.equal(config.build.devUrl, `http://localhost:${two.port}`);
   assert.doesNotMatch(config.build.beforeDevCommand, /stop-running-island/, "the user's island keeps running");

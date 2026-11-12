@@ -14,6 +14,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { mainCheckout, targetDir } from "./build-dirs.mjs";
 import { backgroundBuildEnv, lowerPriority } from "./build-load.mjs";
+import { pruneMainTarget } from "./prune-build-cache.mjs";
 import { readVersion, VERSION_FILES, writeVersion } from "./release/versions.mjs";
 
 /** src-tauri itself (including the scripts it embeds with include_str!) and plugins/ (keys, index and schema its tests read). */
@@ -197,6 +198,8 @@ function main() {
   const target = process.env.CARGO_TARGET_DIR ?? targetDir(mainCheckout(), "agents");
   if (run("cargo test --manifest-path src-tauri/Cargo.toml", { CARGO_TARGET_DIR: target, ...backgroundBuildEnv() }) !== 0) return 1;
   record("cargo");
+  // Each lane's path gives the app's crates new hashes, and cargo keeps every old cache.
+  pruneMainTarget();
   return 0;
 }
 

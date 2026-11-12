@@ -2,7 +2,9 @@
 // Plain `pnpm tauri dev` would stop every running island first and needs port
 // 1420, which the main checkout's dev server uses. The preview instead:
 //   - serves Vite on 1500 + <lane number>;
-//   - builds into src-tauri/target/lane-<N> of the main checkout;
+//   - puts its exe in src-tauri/target/lane-<N> of the main checkout, and compiles
+//     in target/lane-build, which every lane shares (cargo's build-dir), so only
+//     the first preview builds the dependencies;
 //   - runs as com.tixxin.fuyu.lane-<N> (FOCUSD_DEV_LANE, src-tauri/src/dev_lane.rs),
 //     with its own data, and without touching focusd:// links, launch at
 //     startup or the agents' status hooks.
@@ -36,13 +38,14 @@ function main() {
   const preview = lanePreview(mainCheckout(root), lane);
   const configFile = path.join(tmpdir(), `fly-island-lane-${lane}.tauri.json`);
   writeFileSync(configFile, JSON.stringify(previewConfig(preview.port)));
-  console.log(`[dev:lane] lane ${lane}: ${preview.identifier}, Vite on ${preview.port}, building into ${preview.target}`);
-  console.log("[dev:lane] The first build takes a few minutes. Close the preview from its tray icon or with Ctrl+C.");
+  console.log(`[dev:lane] lane ${lane}: ${preview.identifier}, Vite on ${preview.port}, exe in ${preview.target}, compiling in ${preview.buildDir}`);
+  console.log("[dev:lane] The first preview on this machine builds the dependencies (a few minutes); later lanes reuse them. Close the preview from its tray icon or with Ctrl+C.");
   const child = spawn(`pnpm tauri dev --config "${configFile}"`, {
     shell: true,
     stdio: "inherit",
     // Fewer rustc jobs, but normal priority: the user is watching this preview.
-    env: { ...process.env, CARGO_TARGET_DIR: preview.target, FOCUSD_DEV_LANE: String(lane), ...backgroundBuildEnv() },
+    // Another preview compiling at the same time waits on the build-dir's lock.
+    env: { ...process.env, CARGO_TARGET_DIR: preview.target, CARGO_BUILD_BUILD_DIR: preview.buildDir, FOCUSD_DEV_LANE: String(lane), ...backgroundBuildEnv() },
   });
   return new Promise((resolve) => child.on("exit", (code) => resolve(code ?? 1)));
 }

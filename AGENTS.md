@@ -72,6 +72,7 @@
 | 提交前总检查 | `pnpm check`（类型检查 + 回归页类型检查 + packages 类型检查 + lint + 行数检查 + 任务检查 + 单元测试） |
 | Rust 单元测试 | `cargo test --manifest-path src-tauri/Cargo.toml` |
 | 仅生成 release 可执行文件 | `pnpm build:exe`（在主工作区或任意 lane 运行，写到主工作区的 `src-tauri/target/release`，岛屿在运行也不用关） |
+| 清理 Rust 构建缓存 | `pnpm prune:target [--dry-run]`（删 `src-tauri/target` 里 3 天没用的增量缓存、本应用的旧产物和已删 lane 的预览目录；land 时自动跑） |
 | 完整打包 | `pnpm tauri build` |
 | 改版本号、起草发布说明 | `pnpm release:version <版本号>`（四处版本号一起改，不要手动改） |
 | 发布 | `pnpm release`（流程见 `docs/features/updater.md`） |
@@ -170,7 +171,7 @@
     4. 外部提交可以带 Claude 署名行，`land-check.mjs` 只查作者是本机 `user.email` 的提交。
   - 别人留下的、没有会话在用的 lane（land 或会话开始时输出里带 `⚠`，`pnpm mq:reconcile` 会列出）：问用户怎么处理，不要删除。已经合入、没有未提交改动、而且建它的会话（钩子记下的 `claude.exe`）已经退出的 lane，会在下次 land 时自动删除；会话还开着的 lane 不会删。手动建的 lane 没有这条记录，不会被自动删除，用完自己 `git worktree remove` 并删除分支。Windows 上 `git worktree remove` 常常删不掉 `node_modules`，会留下只剩 `node_modules` 的 `../fly-island-lanes/<N>` 文件夹；钩子会把它当成还在用的 lane 而跳过这个编号，所以删完要确认文件夹已经不在，残留的用 `cmd /c rmdir /s /q <路径>` 删除（不会顺着 pnpm 的目录联接删到 store）。
   - 工具在 Windows 上的几个问题（找不到 `pwd` 导致各 lane 的队列锁互不相通、调用 `pnpm` 时没开 shell），以及清理 lane 时路径对不上、没有 `lsof`、删不掉 `node_modules` 导致 lane 越积越多，都由 `patches/claude-code-merge-queue@0.7.1.patch` 修复（`pnpm-workspace.yaml` 的 `patchedDependencies`）。升级这个包时要重新做补丁，并确认两个 lane 同时 land 会排队。
-  - Rust 构建分几个目录，都在主工作区的 `src-tauri/target` 下（`scripts/build-dirs.mjs`）：用户的 `pnpm tauri dev` 用 `debug`，release 用 `release`，代理的 `cargo test` / `clippy` 用 `agents`（`land-check.mjs` 已经这样设置；在 lane 里手动跑时设 `CARGO_TARGET_DIR=<主工作区>/src-tauri/target/agents`），lane 预览用 `lane-<N>`。代理不要用 `debug`，否则会和用户的 dev 互相等锁、互相触发重编译。
+  - Rust 构建分几个目录，都在主工作区的 `src-tauri/target` 下（`scripts/build-dirs.mjs`）：用户的 `pnpm tauri dev` 用 `debug`，release 用 `release`，代理的 `cargo test` / `clippy` 用 `agents`（`land-check.mjs` 已经这样设置；在 lane 里手动跑时设 `CARGO_TARGET_DIR=<主工作区>/src-tauri/target/agents`），lane 预览的 exe 在 `lane-<N>`、编译过程共用 `lane-build`（cargo 的 build-dir，依赖只在第一个预览时编一次）。代理不要用 `debug`，否则会和用户的 dev 互相等锁、互相触发重编译。cargo 从不清理旧的增量缓存和旧产物（每个 lane 路径都会生成一份新的，曾涨到 360 GB）：`pnpm prune:target` 删掉 3 天没用的那部分和已删 lane 的预览目录，land 跑完 `cargo test` 后会自动跑一次；`--dry-run` 只看能省多少。
   - 多个 lane 同时编译时不拖慢桌面（`scripts/build-load.mjs`）：`land-check` / `pnpm verify` 和 `pnpm build:exe` 以"低于正常"优先级运行（它启动的 pnpm、cargo、rustc 都继承），cargo 并行数默认是逻辑 CPU 的一半；lane 预览只限并行数。环境里已设 `CARGO_BUILD_JOBS` 时以它为准。在 lane 里手动跑 `cargo test` / `clippy` 时也设 `CARGO_BUILD_JOBS`（例如逻辑 CPU 的一半）。用户的 `pnpm tauri dev` 不受影响。
   - Rust 版本固定在 `rust-toolchain.toml`（CI 的 `ci.yml` 写同一个版本，改时一起改），本机、lane 和 CI 用同一个编译器，本机 clippy 通过 CI 也会通过。
 - 修改前先查看 `git status --short`，不要覆盖用户已有改动。
