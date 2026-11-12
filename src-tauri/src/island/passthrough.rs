@@ -10,7 +10,7 @@ use windows::Win32::Foundation::HWND;
 use super::{
     banner_hit::{banner_rect, ISLAND_BANNER_HOVER_CHANGED_EVENT},
     modifier::{self, ModifierTarget},
-    geometry::{point_in_notch, STAGE_WINDOW_WIDTH},
+    geometry::{cursor_on_island, stage_point, STAGE_WINDOW_WIDTH},
     state::{read_window_state, IslandMode},
 };
 use crate::win32;
@@ -104,12 +104,14 @@ pub(crate) fn start_cursor_passthrough_loop(window: WebviewWindow) {
 fn cursor_in_window(hwnd: HWND) -> Option<CursorPoint> {
     let window_rect = win32::window::window_rect(hwnd)?;
     let cursor = win32::window::cursor_position()?;
-    let physical_scale = (window_rect.right - window_rect.left).max(1) as f64 / STAGE_WINDOW_WIDTH;
-    let round = |value: f64| (value * 10.0).round() / 10.0;
-    Some(CursorPoint {
-        x: round((cursor.x - window_rect.left) as f64 / physical_scale),
-        y: round((cursor.y - window_rect.top) as f64 / physical_scale),
-    })
+    let (x, y) = stage_point(
+        window_rect.left as f64,
+        window_rect.top as f64,
+        (window_rect.right - window_rect.left).max(1) as f64,
+        cursor.x as f64,
+        cursor.y as f64,
+    );
+    Some(CursorPoint { x, y })
 }
 
 fn cursor_is_on_banner(hwnd: HWND) -> bool {
@@ -159,31 +161,12 @@ pub(super) fn cursor_is_inside_island(hwnd: HWND) -> bool {
         return true;
     };
 
-    let window_width = (window_rect.right - window_rect.left).max(1) as f64;
-    let physical_scale = window_width / STAGE_WINDOW_WIDTH;
-    let local_x = (cursor.x - window_rect.left) as f64;
-    let local_y = (cursor.y - window_rect.top) as f64;
-    let state = read_window_state();
-
-    let (base_width, base_height) = state
-        .mode
-        .base_size(state.collapsed_width, state.expanded_width, state.expanded_height);
-    let island_width = base_width * state.active_scale() * physical_scale;
-    let island_height = base_height * state.active_scale() * physical_scale;
-    let island_left = (window_width - island_width) / 2.0;
-    let island_top = 0.0;
-    let radius = state.bottom_corner_radius() * state.active_scale() * physical_scale;
-    let top_radius = state.top_corner_radius() * state.active_scale() * physical_scale;
-
-    point_in_notch(
-        local_x,
-        local_y,
-        island_left,
-        island_top,
-        island_width,
-        island_height,
-        radius,
-        top_radius,
-        state.corner_shape,
+    cursor_on_island(
+        window_rect.left as f64,
+        window_rect.top as f64,
+        (window_rect.right - window_rect.left).max(1) as f64,
+        cursor.x as f64,
+        cursor.y as f64,
+        read_window_state(),
     )
 }
