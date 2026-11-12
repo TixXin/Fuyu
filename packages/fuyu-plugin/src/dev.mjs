@@ -1,25 +1,19 @@
-// `fuyu-plugin dev`: loads a plugin folder into the running island in
-// development mode through its local API (/v1/dev/...), restarts the plugin
-// when a file changes and prints the plugin's log until Ctrl+C.
 import { existsSync, readFileSync, watch } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { isIgnored, loadIgnore } from "./ignore.mjs";
 import { report, validatePlugin } from "./validate.mjs";
 
-/** The island's app identifiers, newest first: com.focusd.island is the one before the rename (D17). */
 const APP_IDENTIFIERS = ["com.tixxin.fuyu", "com.focusd.island"];
 const RELOAD_DELAY_MS = 300;
 const LOG_POLL_MS = 500;
 
-/** Where the island keeps local-api.json (port and token): the newest identifier's that exists. */
 export function defaultConfigPath() {
   const appData = process.env.APPDATA ?? path.join(os.homedir(), "AppData", "Roaming");
   const paths = APP_IDENTIFIERS.map((identifier) => path.join(appData, identifier, "local-api.json"));
   return paths.find((file) => existsSync(file)) ?? paths[0];
 }
 
-/** A client for the island's /v1/dev endpoints. */
 export function devClient(configPath = defaultConfigPath()) {
   if (!existsSync(configPath)) {
     throw new Error(`${configPath} not found. Start Fuyu and turn on its Local API plugin (Settings > Plugins).`);
@@ -93,7 +87,6 @@ export async function runDev(dir, { config } = {}) {
     while (!stopped) {
       try {
         let log = await client.log(id, after);
-        // "Reload plugins" in Settings starts the numbering again.
         if (log.next < after) log = await client.log(id, 0);
         for (const line of log.lines) console.log(`[${stamp()}] ${line.text}`);
         after = log.next;

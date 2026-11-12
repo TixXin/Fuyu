@@ -1,7 +1,3 @@
-// `fuyu-plugin mcp`: an MCP server on stdin / stdout (newline-delimited JSON-RPC 2.0) that lets AI
-// tools such as Claude Code read the island's clipboard history, today's todos and the daily note
-// through its local API. Read-only. The clipboard needs Settings > Clipboard > "Let the local API
-// read the history" as well as the Local API plugin.
 import { existsSync, readFileSync } from "node:fs";
 import { createInterface } from "node:readline";
 import { defaultConfigPath } from "./dev.mjs";
@@ -24,7 +20,6 @@ export const TOOLS = [
   { name: "daily_note", description: "Today's note in Fuyu.", inputSchema: { type: "object", properties: {} } },
 ];
 
-/** GET `path` from the island's local API; the config is read each time, the port may change. */
 export function localApiGetter(configPath = defaultConfigPath()) {
   return async (path) => {
     if (!existsSync(configPath)) throw new Error(`${configPath} not found. Start Fuyu and turn on its Local API plugin (Settings > Plugins).`);
@@ -45,7 +40,6 @@ async function callTool(name, args, get) {
   if (name === "clipboard_history") {
     const limit = Number.isInteger(args.limit) ? Math.min(50, Math.max(1, args.limit)) : 20;
     const query = typeof args.query === "string" ? args.query.trim().toLowerCase() : "";
-    // Ask for the most when filtering, so a match a little further back is still found.
     const data = await get(`/v1/clipboard?limit=${query ? 50 : limit}`);
     const items = (data.items ?? []).filter((item) => !query || String(item.text).toLowerCase().includes(query)).slice(0, limit);
     return items.map((item) => ({ copiedAt: new Date(item.copiedAt).toISOString(), favorite: item.favorite, truncated: item.truncated, text: item.text }));
@@ -55,7 +49,6 @@ async function callTool(name, args, get) {
   throw Object.assign(new Error(`Unknown tool: ${name}`), { code: -32602 });
 }
 
-/** Answers one JSON-RPC message; null for notifications. */
 export async function handleMessage(message, get) {
   const { id, method, params = {} } = message;
   const reply = (result) => ({ jsonrpc: "2.0", id, result });

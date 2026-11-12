@@ -1,16 +1,6 @@
-// `fuyu-plugin keys rotate`: replaces the signing key and has the old key
-// vouch for the new one (docs/architecture/plugins/author-signing.md §3.5), so
-// islands that remember the old key take updates signed by the new one without
-// asking. The endorsement names the plugin, so a key shared by several plugins
-// is endorsed once per plugin id.
 import { existsSync, renameSync } from "node:fs";
 import { endorseKey, generateSigningKey, keyEnvName, loadSigningKey, publicKeyOf } from "./sign.mjs";
 
-/**
- * Moves the old key file aside (`<file>.<old keyId>.old`) and creates the new key
- * in its place, or in `newFile`. With the old key in the environment, `newFile`
- * is required. Returns { oldKeyId, retiredFile, newFile, endorsed: [{ id, key }] }.
- */
 export function rotateKey({ file, newFile, ids, env = process.env }) {
   if (ids.length === 0) throw new Error("Name the plugin ids the key signs.");
   const fromEnv = keyEnvName(env);

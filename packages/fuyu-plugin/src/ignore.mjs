@@ -1,14 +1,8 @@
-// `.fuyuignore` (or `.focusdignore`, its name before the rename): files left out of a plugin's zip, one pattern per line, a
-// small part of .gitignore: `#` comments, `*` (within a name), `**` (any folders),
-// a trailing `/` for folders only, a leading `/` (or any other `/`) for paths
-// from the plugin folder, `!` to bring a file back.
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 
 export const IGNORE_FILE = ".fuyuignore";
-/** The ignore file's name before the rename (D17), read when there is no .fuyuignore. */
 export const LEGACY_IGNORE_FILE = ".focusdignore";
-/** Never packed, whatever the ignore file says (.package/ is where `pack` writes). */
 const ALWAYS_IGNORED = [".git/", "/.package/", IGNORE_FILE, LEGACY_IGNORE_FILE];
 
 function patternToRegExp(pattern) {
@@ -30,7 +24,6 @@ function patternToRegExp(pattern) {
   return source;
 }
 
-/** Turns ignore file text into rules: { negate, dirOnly, regexp }. */
 export function parseIgnore(text) {
   return [...ALWAYS_IGNORED, ...text.split(/\r?\n/)]
     .map((line) => line.trim())
@@ -47,10 +40,6 @@ export function parseIgnore(text) {
     });
 }
 
-/**
- * Whether a path (with '/', relative to the plugin folder) is left out. A file
- * inside an ignored folder is left out too, unless a later `!` rule names it.
- */
 export function isIgnored(rules, relativePath) {
   const parts = relativePath.split("/");
   let ignored = false;
@@ -68,12 +57,10 @@ export function isIgnored(rules, relativePath) {
   return ignored;
 }
 
-/** The ignore file a plugin folder uses: .fuyuignore, else .focusdignore (null: neither). */
 export function ignoreFileOf(dir) {
   return [IGNORE_FILE, LEGACY_IGNORE_FILE].find((name) => existsSync(path.join(dir, name))) ?? null;
 }
 
-/** The rules of a plugin folder (the built-in ones when it has no ignore file). */
 export function loadIgnore(dir) {
   const file = ignoreFileOf(dir);
   return parseIgnore(file ? readFileSync(path.join(dir, file), "utf8") : "");

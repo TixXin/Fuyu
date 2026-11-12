@@ -1,5 +1,3 @@
-// Handles <editor>://tixxin.fuyu/focus?pids=...&title=... links that Fuyu opens
-// after bringing this window forward, and shows the terminal running the clicked session.
 const vscode = require("vscode");
 const { parseQuery, pickTerminal } = require("./match.js");
 
@@ -16,7 +14,6 @@ async function showSessionTerminal(uri) {
     terminals.map((terminal, i) => ({ processId: processIds[i], name: terminal.name })),
     query,
   );
-  // No match: the session runs in another window or has ended; leave this window as it is.
   if (index >= 0) {
     terminals[index].show(false);
   }

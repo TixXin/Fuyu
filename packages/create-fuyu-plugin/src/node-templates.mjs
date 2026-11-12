@@ -1,6 +1,3 @@
-// main.mjs / src/main.mts of a new plugin written in JavaScript or TypeScript.
-// The same code serves both; `ts` adds the few type annotations TypeScript needs.
-
 const json = (value) => JSON.stringify(value);
 
 function header(options) {
@@ -94,12 +91,10 @@ plugin.onEvent("todos.changed", () => refresh());
 `,
 };
 
-/** The plugin's main file for JavaScript (main.mjs) or TypeScript (src/main.mts). */
 export function nodeMain(options) {
   return header(options) + bodies[options.template](options.language === "typescript");
 }
 
-/** test/plugin.test.mjs: drives the plugin with the mock host. */
 export function nodeTest(options) {
   const checks = {
     blank: `  host.changeSettings({});

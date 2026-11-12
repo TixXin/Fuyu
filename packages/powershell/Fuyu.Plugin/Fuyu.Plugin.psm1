@@ -1,22 +1,10 @@
-# Fuyu.Plugin: helpers for Fuyu plugins written for Windows
-# PowerShell 5.1, which every Windows 10/11 has, so plugins built on it need
-# nothing installed. Protocol reference: docs/plugins/README.md in the
-# Fuyu repository. Never write other text to stdout; use
-# Write-FuyuLog (or stderr) for logs. Keep this file ASCII: PowerShell 5.1
-# reads files without a BOM as ANSI.
-
 $ErrorActionPreference = 'Stop'
 $fuyuUtf8 = New-Object System.Text.UTF8Encoding $false
-# Set before the console streams are first used, so todo titles in any language survive.
 [Console]::InputEncoding = $fuyuUtf8
 [Console]::OutputEncoding = $fuyuUtf8
 $script:FuyuNextId = 0
 $script:FuyuQueue = New-Object System.Collections.Queue
 $script:FuyuPendingLine = $null
-# Lines from the island are read through this rather than [Console]::In: on Windows
-# PowerShell 5.1 that is a synchronized reader whose ReadLineAsync blocks until a line
-# arrives, so a wait with a timeout never timed out and timer-driven plugins stalled
-# between messages. A StreamReader on the raw input reads on the thread pool.
 $script:FuyuIn = New-Object System.IO.StreamReader -ArgumentList ([Console]::OpenStandardInput()), $fuyuUtf8, $false
 
 function Send-FuyuMessage([hashtable]$Message) {
@@ -29,8 +17,6 @@ function Write-FuyuLog([string]$Text) {
     Send-FuyuMessage @{ method = 'log'; params = @{ message = $Text } }
 }
 
-# The next line from the island, or $null when none arrives within TimeoutMs.
-# Exits when stdin closes: that is the island stopping the plugin.
 function Read-FuyuLine([int]$TimeoutMs) {
     if ($null -eq $script:FuyuPendingLine) {
         $script:FuyuPendingLine = $script:FuyuIn.ReadLineAsync()
@@ -46,9 +32,6 @@ function Read-FuyuLine([int]$TimeoutMs) {
     return $line
 }
 
-# Calls a host method (todos.list, note.set, ...) and returns its result; throws
-# the host's error message. Notifications that arrive meanwhile are kept for
-# Receive-FuyuNotification.
 function Invoke-FuyuMethod([string]$Method, $Params = $null) {
     $script:FuyuNextId++
     $id = $script:FuyuNextId
@@ -58,7 +41,6 @@ function Invoke-FuyuMethod([string]$Method, $Params = $null) {
     }
     Send-FuyuMessage $message
     while ($true) {
-        # Up to 40 s: the first use of a sensitive permission waits up to 30 s for the user.
         $line = Read-FuyuLine 40000
         if ($null -eq $line) {
             throw "No answer to $Method."
@@ -75,8 +57,6 @@ function Invoke-FuyuMethod([string]$Method, $Params = $null) {
     }
 }
 
-# The next notification from the island (initialize, command, event, shutdown,
-# ...), or $null when none arrives within TimeoutMs.
 function Receive-FuyuNotification([int]$TimeoutMs) {
     if ($script:FuyuQueue.Count -gt 0) {
         return $script:FuyuQueue.Dequeue()
@@ -88,10 +68,6 @@ function Receive-FuyuNotification([int]$TimeoutMs) {
     return $line | ConvertFrom-Json
 }
 
-# Runs the plugin: calls $Handlers[<method>] with the notification's params for
-# each notification (initialize, command, event, view.visible, ...) and $OnIdle
-# when nothing arrived within TimeoutMs. An error in a handler is logged and the
-# loop goes on. Returns on shutdown, after the 'shutdown' handler if there is one.
 function Invoke-FuyuLoop([hashtable]$Handlers, [int]$TimeoutMs = 5000, [scriptblock]$OnIdle = $null) {
     while ($true) {
         $message = Receive-FuyuNotification $TimeoutMs
@@ -104,24 +80,18 @@ function Invoke-FuyuLoop([hashtable]$Handlers, [int]$TimeoutMs = 5000, [scriptbl
             if ($Handlers.ContainsKey($method)) { & $Handlers[$method] $message.params }
             if ($method -eq 'shutdown') { return }
         } catch {
-            # One failed call should not make the island restart the plugin.
             Write-FuyuLog "error: $($_.Exception.Message)"
         }
     }
 }
 
-# A text in both languages, for view models and messages.
 function New-FuyuText([string]$ZhCN, [string]$En) {
     return @{ 'zh-CN' = $ZhCN; en = $En }
 }
 
-# Turns backslash-u escapes (a backslash, u and four hex digits per character)
-# into text, so a script file can stay ASCII and still show Chinese text.
 function ConvertFrom-FuyuEscape([string]$Escaped) {
     return [regex]::Unescape($Escaped)
 }
-
-# API version 2 from here on.
 
 function Register-FuyuEvent([string[]]$Events) {
     return (Invoke-FuyuMethod 'events.subscribe' @{ events = @($Events) }).events
@@ -131,13 +101,6 @@ function Unregister-FuyuEvent([string[]]$Events) {
     return (Invoke-FuyuMethod 'events.unsubscribe' @{ events = @($Events) }).events
 }
 
-# Shows a message on the island (permission island:notify). Actions are
-# @(@{ id = 'again'; title = 'Again' }); a click sends notification.action { id }.
-# -Icon 'media' shows the icon of the app playing media, -Layout 'inline' shows
-# the message alone in the popup without a card; both need the notifyStyle
-# capability (older islands ignore them). -Controls 'media' puts previous,
-# play / pause and next beside it, run by the island (capability notifyControls).
-# Returns $true when the user muted the plugin's messages.
 function Show-FuyuNotification([string]$Title, [string]$Body = $null, [object[]]$Actions = $null, [int]$DurationMs = 0, [string]$Icon = $null, [string]$Layout = $null, [string]$Controls = $null) {
     $params = @{ title = $Title }
     if ($Body) { $params.body = $Body }
@@ -149,22 +112,15 @@ function Show-FuyuNotification([string]$Title, [string]$Body = $null, [object[]]
     return [bool](Invoke-FuyuMethod 'island.notify' $params).muted
 }
 
-# Asks the user for optional permissions (manifest optionalPermissions), e.g.
-# Request-FuyuPermission 'clipboard:read'. Returns @{ granted = @(...); denied = @(...) }.
 function Request-FuyuPermission([string[]]$Permissions) {
     $answer = Invoke-FuyuMethod 'permissions.request' @{ permissions = @($Permissions) }
     return @{ granted = @($answer.granted); denied = @($answer.denied) }
 }
 
-# Replaces the model of one of the plugin's contributes.views.
 function Update-FuyuView([string]$ViewId, [hashtable]$Model) {
     [void](Invoke-FuyuMethod 'view.update' @{ viewId = $ViewId; model = $Model })
 }
 
-# Changes a list page: -Items replaces items by id, -Remove deletes ids, and
-# -Add inserts entries like @{ item = @{ id = 'x'; title = 'X' }; before = 'b' }
-# (or group = 0 for the end of a group; neither: the end of the list).
-# Returns the ids that were not found.
 function Update-FuyuViewItems([string]$ViewId, [object[]]$Items = $null, [string[]]$Remove = $null, [object[]]$Add = $null) {
     $params = @{ viewId = $ViewId }
     if ($null -ne $Items -and $Items.Count -gt 0) { $params.items = @($Items) }
@@ -173,17 +129,10 @@ function Update-FuyuViewItems([string]$ViewId, [object[]]$Items = $null, [string
     return @((Invoke-FuyuMethod 'view.patch' $params).missing)
 }
 
-# Sends a message to one of the plugin's webview pages (template "webview").
-# Returns $true when the page is on screen; a closed page drops the message.
 function Send-FuyuWebviewMessage([string]$ViewId, $Message) {
     [bool](Invoke-FuyuMethod 'webview.postMessage' @{ viewId = $ViewId; message = $Message }).shown
 }
 
-# Sets the collapsed-bar text (max 24 characters) of one of the plugin's statusItems.
-# -Cells: up to 4 @{ label = 'CPU'; value = '23%'; tone = 'warning' } columns drawn instead of
-# the text, -Ring: a 0-1 progress ring; both need the statusCells capability (older islands show the text).
-# -Batteries: up to 4 @{ level = 0.8; tone = 'warning' } upright batteries drawn instead of the
-# text and cells (capability statusBatteries).
 function Update-FuyuStatus([string]$ItemId, [string]$Text, [string]$Tooltip = $null, [string]$Tone = $null, [object[]]$Cells = $null, [Nullable[double]]$Ring = $null, [object[]]$Batteries = $null) {
     $params = @{ itemId = $ItemId; text = $Text }
     if ($Tooltip) { $params.tooltip = $Tooltip }
@@ -210,7 +159,6 @@ function Remove-FuyuStorage([string]$Key) {
     return [bool](Invoke-FuyuMethod 'storage.delete' @{ key = $Key }).deleted
 }
 
-# Secrets live in the Windows Credential Manager (permission secrets).
 function Get-FuyuSecret([string]$Key) {
     return (Invoke-FuyuMethod 'secrets.get' @{ key = $Key }).value
 }
@@ -223,27 +171,20 @@ function Remove-FuyuSecret([string]$Key) {
     return [bool](Invoke-FuyuMethod 'secrets.delete' @{ key = $Key }).deleted
 }
 
-# Keeps an on-demand plugin running, with a reason shown on its page; no reason
-# lets it stop again after 60 s with nothing to do.
 function Set-FuyuKeepAlive([string]$Reason = $null) {
     $value = $null
     if ($Reason) { $value = $Reason }
     [void](Invoke-FuyuMethod 'host.keepAlive' @{ reason = $value })
 }
 
-# Changes some of the plugin's declared settings (all or none), e.g.
-# @{ account = 'me@example.com' }; the settings page shows them.
 function Set-FuyuSetting([hashtable]$Values) {
     [void](Invoke-FuyuMethod 'settings.set' @{ values = $Values })
 }
 
-# Opens one of the plugin's pages on the island. Works only right after the
-# user used the plugin (a command, a message button, a link or its page).
 function Open-FuyuView([string]$ViewId) {
     [void](Invoke-FuyuMethod 'island.openView' @{ viewId = $ViewId })
 }
 
-# The function names before the rename (D17), for plugins written against them.
 foreach ($fuyuFunction in @(Get-ChildItem Function:\*-Fuyu*)) {
     Set-Alias -Name ($fuyuFunction.Name -replace '-Fuyu', '-Focusd') -Value $fuyuFunction.Name
 }

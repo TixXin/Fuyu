@@ -1,4 +1,3 @@
-// Writes a new plugin folder from the chosen language and template.
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -10,15 +9,12 @@ export const LANGUAGES = ["powershell", "typescript", "javascript"];
 export const TEMPLATES = ["command", "list", "status", "blank"];
 export const ID_PATTERN = /^[a-z0-9][a-z0-9.-]{2,63}$/;
 const SDK_DIR = new URL("../sdk/", import.meta.url);
-/** The AI assistant skill, generated from packages/fuyu-plugin/ai (pnpm sdk:build). */
 const AI_DIR = new URL("../ai/", import.meta.url);
 
-/** The SDK version new plugins depend on: this package's own version. */
 export function sdkVersion() {
   return JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")).version;
 }
 
-/** Why `id` cannot be a plugin id, or null when it can. */
 export function idProblem(id) {
   if (!ID_PATTERN.test(id) || id.includes("..")) return "3-64 lowercase letters, digits, '.' and '-', starting with a letter or digit";
   const kept = ["fuyu", "focusd"].find((name) => id.includes(name));
@@ -26,7 +22,6 @@ export function idProblem(id) {
   return null;
 }
 
-/** Fills in defaults and checks the choices; throws with a readable message. */
 export function normalizeOptions(input) {
   const language = input.language ?? "powershell";
   const template = input.template ?? "list";
@@ -49,7 +44,6 @@ export function normalizeOptions(input) {
   };
 }
 
-/** Repository-relative file name -> contents for a new plugin. */
 export function pluginFiles(options) {
   const files = new Map([
     ["fuyu-plugin.json", `${JSON.stringify(manifest(options), null, 2)}\n`],
@@ -70,10 +64,6 @@ export function pluginFiles(options) {
   return files;
 }
 
-/**
- * The skill that teaches AI coding assistants to build a Fuyu plugin, as
- * `fuyu-plugin skill` installs it: .claude/skills/fuyu-plugin/ and AGENTS.md.
- */
 export function aiFiles(dir = fileURLToPath(AI_DIR)) {
   const walk = (sub) =>
     readdirSync(path.join(dir, sub), { withFileTypes: true })
@@ -84,12 +74,10 @@ export function aiFiles(dir = fileURLToPath(AI_DIR)) {
   return files;
 }
 
-/** The SDK files a plugin carries in lib/, so it needs nothing installed to run. */
 function sdkFiles(language) {
   return language === "powershell" ? ["fuyu.ps1"] : ["fuyu.mjs", "fuyu.d.mts", "protocol.d.mts"];
 }
 
-/** Writes the plugin folder; refuses a folder that exists and is not empty. Returns the written paths. */
 export function scaffold(input) {
   const options = normalizeOptions(input);
   if (existsSync(options.dir) && readdirSync(options.dir).length > 0) {

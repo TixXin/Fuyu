@@ -1,6 +1,3 @@
-// Creates every language x template, checks it with `fuyu-plugin validate`,
-// compiles the TypeScript ones and runs each plugin's own test against the mock
-// host (PowerShell plugins get the same test file).
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
@@ -58,7 +55,6 @@ async function checkTemplate(language, template) {
   assert.ok(written.includes("fuyu-plugin.json") && written.includes(".github/workflows/plugin.yml"));
   if (language === "powershell") {
     assert.ok([...readFileSync(path.join(dir, "main.ps1"), "utf8")].every((char) => char.charCodeAt(0) < 128), "main.ps1 is ASCII");
-    // The test the Node templates get, so the PowerShell code runs too.
     mkdirSync(path.join(dir, "test"));
     writeFileSync(path.join(dir, "test/plugin.test.mjs"), nodeTest(normalizeOptions({ id, language, template })));
   }

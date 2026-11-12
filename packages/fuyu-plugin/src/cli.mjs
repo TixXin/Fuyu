@@ -1,5 +1,3 @@
-// `fuyu-plugin`: validate, pack, dev, test and publish Fuyu plugins.
-// Guide: docs/plugins/README.md (快速开始) in the Fuyu repository.
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { installAi } from "./ai.mjs";
@@ -13,7 +11,6 @@ import { report, validatePlugin } from "./validate.mjs";
 
 export { report };
 
-/** Packages are written here (inside the plugin folder; never packed themselves). */
 export const PACKAGE_OUT_DIR = ".package";
 
 const HELP = `Usage: fuyu-plugin <command> [plugin folder] [options]
@@ -59,7 +56,6 @@ Commands:
 
 The folder defaults to the current one.`;
 
-/** Splits argv into a command, positional arguments and --options. */
 export function parseArgs(argv) {
   const [command = "help", ...rest] = argv;
   const positional = [];
@@ -82,7 +78,6 @@ export function parseArgs(argv) {
   return { command, dir: path.resolve(positional[0] ?? "."), options };
 }
 
-/** Validates and writes the package (and its signature with `signWith`); returns { file, zip, manifest } or null when invalid. */
 export function pack(dir, outDir = path.join(dir, PACKAGE_OUT_DIR), out = console, signWith = null) {
   const result = validatePlugin(dir);
   if (!report(result, out)) return null;
@@ -185,7 +180,6 @@ export async function main(argv = process.argv.slice(2)) {
     case "sign":
       return signZip(dir, options);
     case "keys": {
-      // "keys rotate [folder] [options]": the rest parses like a command of its own.
       const sub = parseArgs(argv.slice(1));
       if (sub.command !== "rotate") {
         console.error(`Unknown "keys" command "${sub.command}"; try "keys rotate".`);

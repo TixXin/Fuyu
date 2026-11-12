@@ -126,7 +126,6 @@ test(".fuyuignore leaves files out of the package", () => {
   assert.equal(isIgnored(rules, "lib/.package/x"), false);
 
   withPlugin(base, { "main.mjs": "a", ".fuyuignore": "test/\n", "test/x.test.mjs": "b", ".package/old.zip": "c" }, (dir) => {
-    // The manifest goes in under its old name too, for islands from before the rename.
     const files = packageFiles(dir);
     assert.deepEqual(files.map(([name]) => name), ["fuyu-plugin.json", "focusd-plugin.json", "main.mjs"]);
     assert.ok(files[0][1].equals(files[1][1]));

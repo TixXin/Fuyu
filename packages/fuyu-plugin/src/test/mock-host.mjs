@@ -1,6 +1,3 @@
-// The mock host (`fuyu-plugin/test`): starts a plugin's process the way the
-// island does, talks JSON-RPC with it over stdio and answers every host method
-// from memory, so plugins can be tested in Node (and in CI) without the island.
 import { spawn } from "node:child_process";
 import { EventEmitter } from "node:events";
 import { mkdtempSync, readFileSync, rmSync } from "node:fs";
@@ -14,7 +11,6 @@ import { PERMISSION_DENIED, RpcError, answer, emptyTodos } from "./methods.mjs";
 const DEFAULT_TIMEOUT_MS = 10_000;
 const STOP_GRACE_MS = 3_000;
 
-/** How the island starts runtime.command (src-tauri/src/plugin_host/manifest.rs launch_command). */
 export function launchCommand(dir, runtime) {
   if (runtime?.type !== "process") throw new Error("The plugin has no process (runtime.type is not \"process\").");
   const script = path.join(dir, runtime.command);
@@ -37,7 +33,6 @@ function resolveSettings(manifest, overrides) {
   return { ...values, ...overrides };
 }
 
-/** The variables the island gives a plugin's process, under `prefix` (FUYU, or FOCUSD from before the rename). */
 const pluginEnv = (prefix, host) => ({
   [`${prefix}_PLUGIN_ID`]: host.manifest.id,
   [`${prefix}_PLUGIN_DATA_DIR`]: host.dataDir,
@@ -52,7 +47,6 @@ export class MockHost extends EventEmitter {
     this.apiVersion = this.manifest.apiVersion;
     this.granted = options.permissions ?? this.manifest.permissions ?? [];
     this.denied = new Set(options.deny ?? []);
-    // optionalPermissions (API version 2): usable once permissions.request was answered yes.
     this.optional = this.apiVersion >= 2 ? (this.manifest.optionalPermissions ?? []).filter((name) => !this.granted.includes(name)) : [];
     this.allowedOptional = new Set();
     this.settings = resolveSettings(this.manifest, options.settings);
@@ -62,31 +56,25 @@ export class MockHost extends EventEmitter {
     this.dataDir = options.dataDir ?? mkdtempSync(path.join(os.tmpdir(), "fuyu-mock-"));
     this.timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
     this.todos = options.todos ? structuredClone(options.todos) : emptyTodos();
-    /** Archived days for todos.list / note.get / todos.days with a date: [{ date, todos, dailyNote }]. */
     this.archives = structuredClone(options.archives ?? []);
     this.note = options.note ?? "";
     this.data = {
       clipboard: options.clipboard ?? [],
       messages: options.messages ?? [],
       media: options.media ?? { available: false, status: "stopped", title: "", artist: "", album: "", sourceApp: "", positionMs: 0, durationMs: 0, canSeek: false, canNext: false, canPrevious: false, shuffle: null, repeat: "unknown", volume: null },
-      /** media.cover's answer: a data: URL or null. */
       cover: options.cover ?? null,
       shelf: options.shelf ?? [],
     };
     this.muted = Boolean(options.muted);
-    /** Every request the plugin sent: { method, params, result?, error? }. */
     this.requests = [];
-    /** Messages from `log` notifications, and stderr lines prefixed with "stderr: ". */
     this.logs = [];
     this.views = new Map();
     this.statuses = new Map();
-    // Webview pages open now (viewVisible) and what the plugin sent them.
     this.openWebviews = new Set();
     this.webviewMessages = [];
     this.notifications = [];
     this.info = [];
     this.keepAlive = null;
-    /** View ids the plugin opened with island.openView, in order. */
     this.openedViews = [];
     this.storage = new Map(Object.entries(options.storage ?? {}));
     this.secrets = new Map(Object.entries(options.secrets ?? {}));
@@ -187,7 +175,6 @@ export class MockHost extends EventEmitter {
     if (this.child?.stdin.writable) this.child.stdin.write(`${JSON.stringify({ jsonrpc: "2.0", ...message })}\n`);
   }
 
-  /** Sends a notification to the plugin, e.g. send("command", { id }). */
   send(method, params = {}) {
     this.write({ method, params });
   }
@@ -196,13 +183,11 @@ export class MockHost extends EventEmitter {
     this.send("command", args === undefined ? { id } : { id, args });
   }
 
-  /** Opens focusd://plugin/<id><path>?<query> as if the user allowed it, e.g. openUri("/auth", "code=1"). */
   openUri(path = "", query = "") {
     const id = this.manifest?.id ?? "plugin";
     this.send("uri", { uri: `focusd://plugin/${id}${path}${query ? `?${query}` : ""}`, path, query });
   }
 
-  /** Sends an island event if the plugin subscribed to it; returns whether it did. */
   publish(name, payload = {}) {
     if (!this.subscriptions.has(name)) return false;
     this.send("event", { name, payload });
@@ -220,7 +205,6 @@ export class MockHost extends EventEmitter {
     this.send("view.visible", { viewId, visible });
   }
 
-  /** Sends what the plugin's webview page would post with acquireFuyuApi().postMessage. */
   webviewMessage(viewId, message) {
     this.send("webview.message", { viewId, message });
   }
@@ -241,7 +225,6 @@ export class MockHost extends EventEmitter {
     this.send("notification.action", { id });
   }
 
-  /** Resolves with predicate(host)'s first truthy value; rejects on timeout or when the plugin exits first. */
   waitFor(predicate, timeoutMs = this.timeoutMs) {
     return new Promise((resolve, reject) => {
       const check = () => {
@@ -274,12 +257,10 @@ export class MockHost extends EventEmitter {
     });
   }
 
-  /** The next request (after `from` requests) with this method name. */
   waitForRequest(method, from = 0) {
     return this.waitFor((host) => host.requests.slice(from).find((request) => request.method === method));
   }
 
-  /** The view's model once `predicate(model)` holds (by default: once there is one). */
   waitForView(viewId, predicate = () => true) {
     return this.waitFor((host) => (host.views.has(viewId) && predicate(host.views.get(viewId)) ? host.views.get(viewId) : undefined));
   }
@@ -289,7 +270,6 @@ export class MockHost extends EventEmitter {
     return this.waitFor((host) => host.logs.find(test));
   }
 
-  /** Sends shutdown, closes stdin and waits for the exit (kills it after 3 s). Resolves with the exit code. */
   async stop() {
     if (this.exitCode === undefined) {
       this.send("shutdown");
@@ -303,7 +283,6 @@ export class MockHost extends EventEmitter {
   }
 }
 
-/** Starts the plugin in `dir` under a mock host. Options: see test.d.ts. */
 export function startMockHost(dir, options = {}) {
   return new MockHost(dir, options).start(options.command);
 }

@@ -1,6 +1,3 @@
-// `fuyu-plugin validate`: the manifest against plugins/schema/manifest.schema.json,
-// plus the rules a schema cannot express and the island would refuse at install
-// time, and warnings for likely mistakes (unused or missing permissions).
 import { existsSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import { IGNORE_FILE, ignoreFileOf, isIgnored, loadIgnore } from "./ignore.mjs";
@@ -8,7 +5,6 @@ import { validateSchema } from "./json-schema.mjs";
 import { listFiles, manifestFileOf } from "./pack.mjs";
 import { eventPermissions, methodPermissions, protocol } from "./schema.mjs";
 
-/** The market refuses larger packages. */
 export const MAX_PACKAGE_BYTES = 20 * 1024 * 1024;
 const MAX_SOUND_BYTES = 4 * 1024 * 1024;
 const SOUND_EVENTS = new Set([
@@ -24,9 +20,7 @@ const SOUND_EVENTS = new Set([
 ]);
 const SOURCE_EXTENSIONS = new Set([".ps1", ".psm1", ".js", ".mjs", ".cjs", ".ts", ".mts", ".cts"]);
 const SKIPPED_DIRS = new Set(["node_modules", ".git"]);
-/** The SDK files list every method; they say nothing about what the plugin uses (old and new names, D17). */
 const SDK_FILES = /(^|\/)((fuyu|focusd)\.(mjs|ps1|d\.mts)|protocol\.d\.mts|(Fuyu|FlyIsland)\.Plugin\.psm1)$/;
-/** SDK helpers whose names differ from the method they call. */
 const HELPER_METHODS = [
   [/\bnotify\s*\(/, "island.notify"],
   [/Show-(Fuyu|Focusd)Notification\b/i, "island.notify"],
@@ -45,11 +39,9 @@ function sourceTexts(dir) {
     .map(([, full]) => readFileSync(full, "utf8"));
 }
 
-/** Permissions the plugin's code seems to need, from the method and event names it mentions. */
 export function permissionsUsed(texts) {
   const used = new Set();
   const mentions = (name) => {
-    // Also matches SDK helpers named like the method: plugin.todos.list().
     const pattern = new RegExp(`(^|[^A-Za-z0-9_])${name.replaceAll(".", "\\.")}($|[^A-Za-z0-9_])`);
     return texts.some((text) => pattern.test(text));
   };
@@ -104,7 +96,6 @@ function checkContributions(manifest, errors, warnings) {
   }
 }
 
-/** Webview views need an entry page that exists; other templates take neither entry, height, width nor frame. */
 function checkWebviews(dir, manifest, errors) {
   for (const view of manifest.contributes?.views ?? []) {
     if (view?.template !== "webview") {
@@ -155,11 +146,6 @@ function checkRuntime(dir, manifest, rules, errors) {
   else if (isIgnored(rules, command)) errors.push(`runtime.command "${command}" is left out by ${ignoreFileOf(dir) ?? IGNORE_FILE}.`);
 }
 
-/**
- * Checks a plugin folder. Returns { manifest, errors, warnings }; errors are what
- * the island or the market would refuse. `allowExperimental` is for development
- * mode, the only place experimentalApis may be used.
- */
 export function validatePlugin(dir, { allowExperimental = false } = {}) {
   const errors = [];
   const warnings = [];
@@ -203,7 +189,6 @@ export function validatePlugin(dir, { allowExperimental = false } = {}) {
   for (const permission of declared) {
     if (!used.has(permission)) warnings.push(`The permission ${permission} seems unused (no method or event that needs it was found in the code).`);
   }
-  // An optional permission is asked for while the plugin runs (permissions.request).
   const optional = new Set(manifest.optionalPermissions ?? []);
   for (const permission of used) {
     if (!declared.has(permission) && !optional.has(permission)) warnings.push(`The code seems to use ${permission}, which the manifest does not ask for (calls will fail with -32001).`);
@@ -211,7 +196,6 @@ export function validatePlugin(dir, { allowExperimental = false } = {}) {
   return { manifest, errors, warnings };
 }
 
-/** Prints a validation result; returns true when there are no errors. */
 export function report(result, out = console) {
   for (const warning of result.warnings) out.log(`warning: ${warning}`);
   for (const error of result.errors) out.error(`error: ${error}`);

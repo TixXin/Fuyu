@@ -1,5 +1,3 @@
-// `fuyu-plugin skill`: the AI assistant skill goes into a plugin folder, files the
-// user changed are kept, and the zip leaves it all out.
 import assert from "node:assert/strict";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import os from "node:os";
@@ -17,7 +15,6 @@ test("the skill has SKILL.md with its name and AGENTS.md", () => {
   const skill = files.get(`${SKILL_DIR}/SKILL.md`);
   assert.match(skill, /^---\nname: fuyu-plugin\ndescription: .+\n---\n/);
   assert.ok(files.has("AGENTS.md"));
-  // Every reference SKILL.md links to is in the skill.
   for (const [, link] of skill.matchAll(/\]\((references\/[^)#]+)/g)) assert.ok(files.has(`${SKILL_DIR}/${link}`), link);
 });
 
@@ -47,7 +44,6 @@ test("an existing ignore file gets only the missing lines, and the zip leaves th
   const ignore = readFileSync(path.join(dir, ".fuyuignore"), "utf8").split("\n");
   for (const line of AI_IGNORE_LINES) assert.equal(ignore.filter((item) => item === line).length, 1, line);
   const packed = packageFiles(dir).map(([name]) => name);
-  // Only the manifest (pack adds its copy under the old name for older islands).
   assert.deepEqual(packed, ["fuyu-plugin.json", "focusd-plugin.json"]);
 });
 

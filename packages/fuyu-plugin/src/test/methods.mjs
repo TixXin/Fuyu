@@ -1,6 +1,3 @@
-// What the mock host answers: every host method from plugins/schema/rpc.json,
-// with data kept in memory, the same permission rules as the island and the
-// limits plugin authors most often run into.
 import { eventPermissions, methodPermissions } from "../schema.mjs";
 
 export const METHOD_NOT_FOUND = -32601;
@@ -10,10 +7,8 @@ const MAX_MODEL_BYTES = 256 * 1024;
 const MAX_VALUE_BYTES = 64 * 1024;
 const MAX_STORAGE_BYTES = 1024 * 1024;
 const NOTIFY_PER_MINUTE = 6;
-/** Methods only plugins on API version 2 have; version 1 gets "unknown method". */
 const V2_OPEN = new Set(["events.subscribe", "events.unsubscribe", "host.keepAlive", "view.update", "view.patch", "status.update", "webview.postMessage", "storage.get", "storage.set", "storage.delete", "storage.keys", "permissions.request", "island.openView", "settings.set"]);
 
-/** permissions.request like plugin_host/optional.rs: the user (the mock's `deny` option) answers each name. */
 function requestPermissions(host, params) {
   const names = Array.isArray(params?.permissions) ? params.permissions : [];
   if (names.length === 0 || names.length > 14) fail(400, "Expected { permissions: [name] } with 1-14 names.");
@@ -122,7 +117,6 @@ function viewMethod(host, method, params) {
   return patchModel(model, params);
 }
 
-/** view.patch like plugin_host/views.rs patch_model: replace `items`, delete `remove`, insert `add`. */
 function patchModel(model, params) {
   const list = (name) => {
     const value = params[name];
@@ -223,7 +217,6 @@ function subscriptions(host, subscribe, params) {
 
 function notify(host, params) {
   text(params?.title, 80, "title");
-  // Like the island: unknown values fall back to the default, other types are refused.
   for (const key of ["icon", "layout", "controls"]) {
     if (params?.[key] != null && typeof params[key] !== "string") fail(400, `"${key}" must be a string.`);
   }
@@ -248,7 +241,6 @@ function secretMethod(host, method, params) {
 
 const isDate = (value) => typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value);
 
-/** Another day, like src-tauri/src/todos/history.rs: an archive (host.archives) or the scheduled list. */
 function dayOf(host, date, what) {
   if (!isDate(date)) fail(400, "\"date\" must look like YYYY-MM-DD.");
   const state = host.todos;
@@ -342,7 +334,6 @@ function dataMethod(host, method, params) {
   }
 }
 
-/** Answers one request like the island would; throws RpcError for errors. */
 export function answer(host, method, params) {
   const v2 = host.apiVersion >= 2;
   switch (method) {
@@ -379,7 +370,6 @@ export function answer(host, method, params) {
       return { settings: { ...host.settings } };
     }
     if (method === "island.openView") {
-      // The mock host has no user, so the "right after the user used it" rule is not checked.
       if (!(host.manifest.contributes?.views ?? []).some((view) => view.id === params?.viewId)) fail(404, `"${params?.viewId}" is not one of the plugin's contributes.views.`);
       host.openedViews.push(params.viewId);
       return {};

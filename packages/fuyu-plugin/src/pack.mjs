@@ -1,14 +1,10 @@
-// Deterministic plugin zips: the same files always give the same bytes, so a
-// package can be rebuilt and compared (the market index and `fuyu-plugin pack`).
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { crc32, deflateRawSync } from "node:zlib";
 import { isIgnored, loadIgnore } from "./ignore.mjs";
 
-// 1980-01-01 00:00 in DOS format, so the same files always give the same bytes.
 const DOS_DATE = (0 << 9) | (1 << 5) | 1;
-// Text files are packed with LF line ends, so a CRLF checkout (core.autocrlf) packs the same bytes.
 const TEXT_EXTENSIONS = new Set([".json", ".js", ".mjs", ".cjs", ".ps1", ".md", ".txt", ".css", ".html"]);
 
 export function readPackedFile(full) {
@@ -18,7 +14,6 @@ export function readPackedFile(full) {
     : data;
 }
 
-/** Files under `dir` as [zip path with '/', absolute path], sorted. */
 export function listFiles(dir, prefix = "") {
   return readdirSync(dir, { withFileTypes: true })
     .sort((left, right) => left.name.localeCompare(right.name))
@@ -29,7 +24,6 @@ export function listFiles(dir, prefix = "") {
     });
 }
 
-/** A deflate zip of `files` ([name, Buffer][]) with fixed timestamps. */
 export function createZip(files) {
   const locals = [];
   const centrals = [];
@@ -45,8 +39,8 @@ export function createZip(files) {
     };
     const local = header(0x04034b50, 30);
     local.writeUInt16LE(20, 4);
-    local.writeUInt16LE(0x0800, 6); // UTF-8 names
-    local.writeUInt16LE(8, 8); // deflate
+    local.writeUInt16LE(0x0800, 6);
+    local.writeUInt16LE(8, 8);
     local.writeUInt16LE(0, 10);
     local.writeUInt16LE(DOS_DATE, 12);
     local.writeUInt32LE(crc, 14);
@@ -83,24 +77,16 @@ export function createZip(files) {
 export const sha256 = (buffer) => createHash("sha256").update(buffer).digest("hex");
 
 export const MANIFEST_FILE = "fuyu-plugin.json";
-/** The manifest's name before the rename (D17), the only one islands before it read. */
 export const LEGACY_MANIFEST_FILE = "focusd-plugin.json";
 
-/** The manifest file a plugin folder uses: fuyu-plugin.json, else focusd-plugin.json. */
 export function manifestFileOf(dir) {
   return existsSync(path.join(dir, MANIFEST_FILE)) || !existsSync(path.join(dir, LEGACY_MANIFEST_FILE)) ? MANIFEST_FILE : LEGACY_MANIFEST_FILE;
 }
 
-/** The parsed manifest of a plugin folder (either name). */
 export function readManifest(dir) {
   return JSON.parse(readFileSync(path.join(dir, manifestFileOf(dir)), "utf8").replace(/^\uFEFF/, ""));
 }
 
-/**
- * The files that go into a plugin's zip: [zip path, bytes], without what the
- * ignore file leaves out. A fuyu-plugin.json is packed under the old name too,
- * so islands from before the rename can install the package.
- */
 export function packageFiles(dir) {
   const rules = loadIgnore(dir);
   const files = listFiles(dir)
@@ -111,11 +97,6 @@ export function packageFiles(dir) {
   return files;
 }
 
-/**
- * Packs one plugin folder: its manifest, package file name (<id>-<version>.zip)
- * and zip bytes. The folder must be named after the plugin id, as the island
- * installs it under that name.
- */
 export function packFolder(dir) {
   const manifest = readManifest(dir);
   if (path.basename(path.resolve(dir)) !== manifest.id) {

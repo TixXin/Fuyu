@@ -1,5 +1,3 @@
-// Type-checked by `pnpm check` (packages/tsconfig.json): the SDK's types work
-// for the ways plugins use them. Not run.
 import { createPlugin, type ListModel, type Plugin } from "../src/index.mjs";
 import { startMockHost, type MockHost } from "../src/test/index.mjs";
 

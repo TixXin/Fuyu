@@ -1,5 +1,3 @@
-// `fuyu-plugin test`: the plugin's own tests (test/*.test.mjs, run with
-// node --test), or a smoke test under the mock host when it has none.
 import { spawnSync } from "node:child_process";
 import { existsSync, readdirSync } from "node:fs";
 import path from "node:path";
@@ -21,11 +19,6 @@ function testFiles(dir) {
 
 const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-/**
- * Starts the plugin, runs each command and opens each view, then stops it.
- * Fails when it exits by itself or a request fails with "unknown method" or
- * "permission denied" (other host errors depend on data and only show up in the log).
- */
 export async function smokeTest(dir, out = console) {
   const host = startMockHost(dir);
   const problems = [];

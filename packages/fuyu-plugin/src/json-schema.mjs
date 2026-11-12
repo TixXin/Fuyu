@@ -1,9 +1,3 @@
-// A small JSON Schema checker for the keywords plugins/schema/manifest.schema.json
-// uses (type, required, properties, propertyNames, additionalProperties,
-// min/maxProperties, enum, const, pattern, min/maxLength, minimum/maximum,
-// min/maxItems, items, oneOf, anyOf, $ref to #/$defs). Kept here so the CLI
-// needs no dependencies.
-
 const typeOf = (value) => {
   if (value === null) return "null";
   if (Array.isArray(value)) return "array";
@@ -80,7 +74,6 @@ function check(root, schemaIn, value, path, errors) {
     });
     const passing = results.filter((list) => list.length === 0).length;
     if (keyword === "oneOf" ? passing !== 1 : passing === 0) {
-      // Report the closest option, which is usually the one the author meant.
       const closest = results.reduce((best, list) => (list.length < best.length ? list : best), results[0] ?? []);
       if (passing > 1 || closest.length === 0) fail("matches more than one allowed form");
       else errors.push(...closest);
@@ -88,7 +81,6 @@ function check(root, schemaIn, value, path, errors) {
   }
 }
 
-/** Checks `value` against `schema`; returns [{ path, message }], empty when it is valid. */
 export function validateSchema(schema, value) {
   const errors = [];
   check(schema, schema, value, "", errors);

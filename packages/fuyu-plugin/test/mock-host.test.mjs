@@ -7,7 +7,6 @@ import { PERMISSION_DENIED, METHOD_NOT_FOUND, startMockHost } from "../src/test/
 
 const CLIENT = new URL("../src/client.mjs", import.meta.url);
 
-// A plugin that exercises the SDK: each command runs one scenario.
 const MAIN = `import { createPlugin } from "./client.mjs";
 const plugin = createPlugin();
 const report = (name, value) => plugin.log(name + " " + JSON.stringify(value));

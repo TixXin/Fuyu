@@ -18,7 +18,6 @@
     )
     CmdletsToExport = @()
     VariablesToExport = @()
-    # The function names before the rename (D17).
     AliasesToExport = @(
         'Send-FocusdMessage', 'Write-FocusdLog', 'Read-FocusdLine', 'Invoke-FocusdMethod',
         'Receive-FocusdNotification', 'Invoke-FocusdLoop', 'New-FocusdText', 'ConvertFrom-FocusdEscape',

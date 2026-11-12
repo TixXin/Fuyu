@@ -1,14 +1,5 @@
-// Fuyu plugin SDK for Node.js: no dependencies, one file. Plugins that use
-// it need Node.js installed (`node` on PATH). Protocol: docs/plugins/README.md.
-// Types: the .d.mts file of the same name (also in the npm package `fuyu-plugin`).
 import readline from "node:readline";
 
-/**
- * Connects to Fuyu over stdin/stdout (JSON-RPC 2.0, one message per line).
- * The process exits when the island closes stdin or sends `shutdown`.
- * Write logs with `plugin.log()` or to stderr; never print other text to stdout.
- * Options (for tests): input and output streams instead of stdin / stdout, and exit.
- */
 export function createPlugin(options = {}) {
   const input = options.input ?? process.stdin;
   const output = options.output ?? process.stdout;
@@ -16,12 +7,9 @@ export function createPlugin(options = {}) {
   let nextId = 1;
   const pending = new Map();
   const listeners = new Map();
-  /** Events asked for with onEvent; subscribed when the island is ready. */
   const wantedEvents = new Set();
-  /** The initialize params, once they arrived. */
   let context = null;
   const shutdownHandlers = [];
-  /** Settles when the shutdown handlers are done (set on `shutdown`). */
   let shuttingDown = null;
 
   const send = (message) => output.write(`${JSON.stringify({ jsonrpc: "2.0", ...message })}\n`);
@@ -34,7 +22,6 @@ export function createPlugin(options = {}) {
     return () => listeners.set(method, (listeners.get(method) ?? []).filter((item) => item !== handler));
   };
 
-  /** Calls a host method; rejects with an Error carrying `code` and `data` (data.status for host errors). */
   const call = (method, params) =>
     new Promise((resolve, reject) => {
       const id = nextId++;
@@ -88,7 +75,6 @@ export function createPlugin(options = {}) {
     }
     dispatch(message.method, message.params);
   });
-  // The island closes stdin right after `shutdown`: let the shutdown handlers finish first.
   lines.on("close", () => void (shuttingDown ?? Promise.resolve()).then(() => exit(0)));
 
   const forView = (method, viewId, handler) => on(method, (params) => (params?.viewId === viewId ? handler(params) : undefined));
@@ -96,27 +82,18 @@ export function createPlugin(options = {}) {
   return {
     call,
     log,
-    /** Runs `handler` for every notification `method` from the island; returns a function that removes it. */
     on,
-    /** The initialize params ({ apiVersion, capabilities, activationEvent, pluginId, dataDir, permissions, settings, ... }), or null before. */
     get context() {
       return context;
     },
-    /** True when the island offers a capability, e.g. "views" (see initialize.capabilities). */
     hasCapability,
-    /** Runs once the island has started the plugin; receives the initialize params. */
     onReady: (handler) => on("initialize", handler),
-    /** Runs when the user runs one of the commands from `contributes.commands`; receives `args` (todo menu: { todoId }). */
     onCommand: (id, handler) => on("command", (params) => (params?.id === id ? handler(params?.args ?? {}) : undefined)),
-    /** Runs when a focusd://plugin/<id>/<path>?<query> link is opened (needs activationEvents onUri); receives { uri, path, query }. */
     onUri: (handler) => on("uri", handler),
-    /** Runs with all setting values when the user changes one on the plugin's page. */
     onSettingsChanged: (handler) => on("settings.changed", (params) => handler(params?.settings ?? {})),
-    /** Runs before the process exits on `shutdown` (awaited). */
     onShutdown: (handler) => {
       shutdownHandlers.push(handler);
     },
-    /** Subscribes to an island event (once the island is ready) and runs `handler` with its payload. */
     onEvent: (name, handler) => {
       const off = on("event", (params) => (params?.name === name ? handler(params?.payload ?? {}) : undefined));
       if (!wantedEvents.has(name)) {
@@ -125,47 +102,33 @@ export function createPlugin(options = {}) {
       }
       return off;
     },
-    /** Runs when the user clicks button `id` of a message shown with notify(). */
     onNotificationAction: (id, handler) => on("notification.action", (params) => (params?.id === id ? handler() : undefined)),
-    /** Current values of the plugin's declared settings (contributes.settings). */
     settings: () => call("settings.get"),
-    /** Changes declared settings (all or none); resolves to every setting afterwards. Since API version 2. */
     setSettings: async (values) => (await call("settings.set", { values }))?.settings ?? {},
-    /** Replaces the Info shown on the plugin's page: [{ label: { "zh-CN", en }, value, copy?, secret? }]. */
     setInfo: (items) => call("ui.setInfo", { items }),
     info: () => call("host.info"),
-    /** Shows a message on the island (permission island:notify). Resolves to { muted }. */
     notify: (title, options = {}) => call("island.notify", { title, ...options }),
-    /** Keeps an on-demand plugin running with a reason shown on its page; null lets it stop when idle again. */
     keepAlive: (reason) => call("host.keepAlive", { reason }),
-    /** Opens one of the plugin's pages on the island; only right after the user used the plugin (capability openView). */
     openView: (viewId) => call("island.openView", { viewId }),
     permissions: {
-      /** Asks the user for optional permissions (manifest optionalPermissions); resolves to { granted, denied }. */
       request: (...names) =>
         call("permissions.request", { permissions: names.flat() }).then((result) => {
           if (context) context.permissions = [...new Set([...(context.permissions ?? []), ...(result?.granted ?? [])])];
           return result;
         }),
-      /** True when the plugin may use `name` now (its permissions, or an optional one the user allowed). */
       has: (name) => Array.isArray(context?.permissions) && context.permissions.includes(name),
     },
     views: {
-      /** Replaces the model of one of the plugin's views (contributes.views). */
       update: (viewId, model) => call("view.update", { viewId, model }),
-      /** A list replaces items by id; { items, remove, add } also deletes and inserts. Resolves to { missing }. */
       patch: (viewId, change) => call("view.patch", Array.isArray(change) ? { viewId, items: change } : { ...change, viewId }),
       onVisible: (viewId, handler) => forView("view.visible", viewId, (params) => handler(Boolean(params.visible))),
       onAction: (viewId, handler) => forView("view.action", viewId, handler),
       onSubmit: (viewId, handler) => forView("view.submit", viewId, (params) => handler(params.values ?? {})),
       onSearch: (viewId, handler) => forView("view.search", viewId, (params) => handler(String(params.query ?? ""))),
-      /** Sends a message to a webview page (template "webview"); resolves to { shown }: false when the page is closed. */
       postMessage: (viewId, message) => call("webview.postMessage", { viewId, message }),
-      /** Messages a webview page sends with acquireFuyuApi().postMessage. */
       onMessage: (viewId, handler) => forView("webview.message", viewId, (params) => handler(params.message)),
     },
     status: {
-      /** Sets the text (max 24 characters) of one of the plugin's statusItems; "" clears it. */
       update: (itemId, text, options = {}) => call("status.update", { itemId, text, ...options }),
       clear: (itemId) => call("status.update", { itemId, text: "" }),
     },
@@ -181,9 +144,7 @@ export function createPlugin(options = {}) {
       delete: async (key) => Boolean((await call("secrets.delete", { key }))?.deleted),
     },
     todos: {
-      /** Today's todos, or another day's: a past day from its archive, a later one from the scheduled list. */
       list: (date) => call("todos.list", date ? { date } : undefined),
-      /** { days: [{ date, total, completed, hasNote, archived }] } for today and each archived day from `from` to `to`. */
       days: (from, to) => call("todos.days", { from, to }),
       add: (title, date) => call("todos.add", date ? { title, date } : { title }),
       update: (id, changes) => call("todos.update", { ...changes, id }),
@@ -205,10 +166,8 @@ export function createPlugin(options = {}) {
       playPause: () => call("media.playPause"),
       next: () => call("media.next"),
       previous: () => call("media.previous"),
-      /** { cover }: the cover as a data: URL, or null. */
       cover: () => call("media.cover"),
       seek: (positionMs) => call("media.seek", { positionMs }),
-      /** The system volume, 0-1. */
       setVolume: (level) => call("media.setVolume", { level }),
       toggleShuffle: () => call("media.toggleShuffle"),
       cycleRepeat: () => call("media.cycleRepeat"),

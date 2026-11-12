@@ -1,8 +1,3 @@
-// Everything in a new plugin folder besides its main file: manifest, ignore
-// files, README, LICENSE, package.json / tsconfig.json and the GitHub workflow.
-
-// An empty activationEvents makes a plugin start only when its commands or
-// views are used (they imply onCommand / onView) and stop when idle.
 const CONTRIBUTIONS = {
   blank: { contributes: {} },
   command: {

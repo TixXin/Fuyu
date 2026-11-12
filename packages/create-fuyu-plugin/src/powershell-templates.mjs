@@ -1,10 +1,5 @@
-// main.ps1 of a new plugin written for Windows PowerShell 5.1. The file has to
-// stay ASCII (PowerShell 5.1 reads files without a BOM as ANSI), so Chinese
-// text is written as escapes and turned back with ConvertFrom-FuyuEscape.
-
 const BACKSLASH = String.fromCharCode(92);
 
-/** A PowerShell expression for `text` that keeps the script ASCII. */
 export function psText(text) {
   if (/^[\x20-\x7e]*$/.test(text)) return `'${text.replaceAll("'", "''")}'`;
   const escaped = [...text]
@@ -128,7 +123,6 @@ Invoke-FuyuLoop @{
 `,
 };
 
-/** The plugin's main.ps1. */
 export function powershellMain(options) {
   return header(options) + bodies[options.template]();
 }

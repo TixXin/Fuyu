@@ -1,7 +1,3 @@
-// `npm create fuyu-plugin@latest [folder]`: asks for the language, the
-// template, the id and the names, then writes a plugin folder (scaffold.mjs).
-// Options skip the questions: --language, --template, --id, --name, --name-zh,
-// --author, --yes (defaults for the rest).
 import path from "node:path";
 import { createInterface } from "node:readline/promises";
 import { LANGUAGES, TEMPLATES, idProblem, scaffold } from "./scaffold.mjs";
