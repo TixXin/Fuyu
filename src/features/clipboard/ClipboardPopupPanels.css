@@ -492,3 +492,6 @@
 .island-light .clipboard-code__k { color: #1d6fd1; }
 .island-light .clipboard-code__s { color: #b0336a; }
 .island-light .clipboard-code__n { color: #a86b00; }
+/* Hints at 45% ink are under 3:1 on a light popup; :where keeps the states' own colours winning. */
+:where(.island-light) :is(.clipboard-popup__index, .clipboard-popup__note, .clipboard-panel__note,
+  .clipboard-panel__result span, .clipboard-editor__head span, .clipboard-kind__format b) { color: rgba(var(--pop-ink), 0.62); }

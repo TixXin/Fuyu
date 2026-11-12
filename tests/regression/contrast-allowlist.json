@@ -1,0 +1,4 @@
+{
+  "description": "浅色岛对比度检查（scripts/regression-contrast.mjs）里已知可以低于 3:1 的文字，按回归页列出元素（标签.第一个 class）。每条都应有理由；能修的就修，不往这里加。",
+  "pages": {}
+}

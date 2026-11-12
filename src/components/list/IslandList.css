@@ -23,6 +23,11 @@
   color: var(--text-1);
 }
 
+/* 48% ink is under 3:1 on a light island. */
+.island-light .island-list-page {
+  --text-3: rgba(var(--list-ink), 0.6);
+}
+
 /* Filters on the left, the count and "⋯" on the right. */
 .island-list-bar {
   flex: none;

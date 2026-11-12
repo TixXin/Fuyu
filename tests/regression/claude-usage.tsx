@@ -259,8 +259,6 @@ async function runChecks() {
 
 await act(async () => { createRoot(document.getElementById("fixture")!).render(<StrictMode><Fixture /><Fixture all /></StrictMode>); });
 const keysHost = Object.assign(document.createElement("div"), { id: "plan-keys" });
-// The settings window's background (SettingsWindow.css), for the demo's look.
-keysHost.style.cssText = "width: 460px; margin: 24px; padding: 16px; background: #17191d; color: var(--color-text);";
 document.getElementById("fixture")!.after(keysHost);
 await act(async () => { createRoot(keysHost).render(<PlanKeyFields settings={{ glm: true, kimi: !automated }} disabled={false} />); });
 if (automated) await runChecks();
