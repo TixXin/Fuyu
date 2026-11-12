@@ -18,7 +18,7 @@ type MiniRingProps = {
   strokeWidth?: number;
   /** Space between concentric rings, and between segments, in px (default 1.5). */
   gap?: number;
-  /** Track under every ring that sets none (default rgba(255, 255, 255, 0.16)). */
+  /** Track under every ring that sets none (default: the island's ink at 12%, so light on a dark island and dark on a light one). */
   trackColor?: string;
   /** Short text in the middle, e.g. a count. */
   label?: string;
@@ -29,7 +29,7 @@ type MiniRingProps = {
   className?: string;
 };
 
-const DEFAULT_TRACK = "rgba(255, 255, 255, 0.16)";
+const DEFAULT_TRACK = "rgba(var(--island-ink-rgb, 241, 240, 246), 0.12)";
 
 /** A small SVG progress ring: concentric rings, or one ring in coloured segments. */
 export function MiniRing({
@@ -52,7 +52,8 @@ export function MiniRing({
       cx={center}
       cy={center}
       r={radius}
-      stroke={color}
+      // A style, not the stroke attribute: colours may be CSS variables (the usage rings' are).
+      style={{ stroke: color }}
       strokeWidth={strokeWidth}
       strokeDasharray={arc === "track" ? undefined : arc?.dashArray}
       strokeDashoffset={arc === "track" ? undefined : arc?.dashOffset}

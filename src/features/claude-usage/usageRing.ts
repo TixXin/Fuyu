@@ -12,25 +12,31 @@ export const CLAUDE_USAGE_GAUGE_WIDTH = CLAUDE_USAGE_RING_SIZE + 6;
 /** Older numbers turn the ring grey (the Agent page's usage line uses the same age). */
 export const USAGE_STALE_MS = 15 * 60_000;
 
+/**
+ * CSS colours (tokens.css, --usage-*), one set for the dark island and one for the light: against
+ * the ring's track the normal colour is at least 4.5:1 and the others 3:1 (issue #42), and the
+ * 70% yellow stays apart from Claude's orange.
+ */
 export const USAGE_COLORS = {
-  normal: "#E5A385",
-  warn: "#E5C890",
-  danger: "#E78284",
-  stale: "#8E8E93",
+  normal: "var(--usage-claude)",
+  warn: "var(--usage-warn)",
+  danger: "var(--usage-danger)",
+  stale: "var(--usage-stale)",
 } as const;
 
 export type UsageProviderId = "claudeCode" | "codex" | "glm" | "kimi";
 
 /**
  * The agents the usage plugin can put on the bar, in bar order, each with its own colour while
- * under 70%: Claude's orange, OpenAI's black-and-white as a near white for Codex, the blue-violet
+ * under 70%: Claude's orange, OpenAI's black-and-white as a near white (near black on a light
+ * island) for Codex, the blue-violet
  * of Zhipu's mark for GLM and Kimi's brand blue. `id` is also the plugin's on/off setting.
  */
 export const USAGE_PROVIDERS: readonly { id: UsageProviderId; name: string; color: string; defaultOn: boolean }[] = [
   { id: "claudeCode", name: "Claude Code", color: USAGE_COLORS.normal, defaultOn: true },
-  { id: "codex", name: "Codex", color: "#E6E6EB", defaultOn: false },
-  { id: "glm", name: "GLM", color: "#8B7BFF", defaultOn: false },
-  { id: "kimi", name: "Kimi", color: "#3A8DFF", defaultOn: false },
+  { id: "codex", name: "Codex", color: "var(--usage-codex)", defaultOn: false },
+  { id: "glm", name: "GLM", color: "var(--usage-glm)", defaultOn: false },
+  { id: "kimi", name: "Kimi", color: "var(--usage-kimi)", defaultOn: false },
 ];
 
 export type UsageProvider = (typeof USAGE_PROVIDERS)[number];
