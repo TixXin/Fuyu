@@ -18,6 +18,9 @@ export const github = {
   autoMerge: (number) => gh(["pr", "merge", String(number), "--auto", "--merge"]),
   view: (number) => JSON.parse(gh(["pr", "view", String(number), "--json", "state,mergeStateStatus,mergeCommit,url,statusCheckRollup"])),
   updateBranch: (number) => gh(["pr", "update-branch", String(number)]),
+  openPrs: () => JSON.parse(gh(["pr", "list", "--state", "open", "--limit", "100", "--json", "number,url,isDraft,autoMergeRequest,mergeable,headRefOid,statusCheckRollup"])),
+  mainSha: (branch) => gh(["api", `repos/{owner}/{repo}/commits/${branch}`, "-q", ".sha"]),
+  behindBy: (baseSha, headSha) => Number(gh(["api", `repos/{owner}/{repo}/compare/${baseSha}...${headSha}`, "-q", ".behind_by"])),
 };
 
 function slug(text) {
