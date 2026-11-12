@@ -10,8 +10,8 @@ use windows::Win32::Foundation::HWND;
 use super::{
     banner_hit::{banner_rect, ISLAND_BANNER_HOVER_CHANGED_EVENT},
     modifier::{self, ModifierTarget},
-    geometry::STAGE_WINDOW_WIDTH,
-    state::{read_window_state, CornerShape, IslandMode},
+    geometry::{point_in_notch, STAGE_WINDOW_WIDTH},
+    state::{read_window_state, IslandMode},
 };
 use crate::win32;
 
@@ -186,51 +186,4 @@ pub(super) fn cursor_is_inside_island(hwnd: HWND) -> bool {
         top_radius,
         state.corner_shape,
     )
-}
-
-#[expect(
-    clippy::too_many_arguments,
-    reason = "a point and the notch's rectangle, two radii and their shape, all plain values"
-)]
-pub(super) fn point_in_notch(
-    x: f64,
-    y: f64,
-    left: f64,
-    top: f64,
-    width: f64,
-    height: f64,
-    radius: f64,
-    top_radius: f64,
-    shape: CornerShape,
-) -> bool {
-    let right = left + width;
-    let bottom = top + height;
-
-    if x < left || x > right || y < top || y > bottom {
-        return false;
-    }
-
-    let top_radius = top_radius.min(width / 2.0).min(height / 2.0);
-    if y < top + top_radius && (x < left + top_radius || x > right - top_radius) {
-        let dx = x - x.clamp(left + top_radius, right - top_radius);
-        let dy = y - (top + top_radius);
-        return shape.contains(dx, dy, top_radius);
-    }
-
-    let radius = radius.min(width / 2.0).min(height);
-    if y <= bottom - radius || (x >= left + radius && x <= right - radius) {
-        return true;
-    }
-    let center_x = if x < left + radius {
-        left + radius
-    } else if x > right - radius {
-        right - radius
-    } else {
-        x
-    };
-    let center_y = y.min(bottom - radius);
-    let dx = x - center_x;
-    let dy = y - center_y;
-
-    shape.contains(dx, dy, radius)
 }

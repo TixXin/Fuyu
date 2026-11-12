@@ -1,7 +1,6 @@
 use tauri::PhysicalPosition;
 
 use super::geometry::*;
-use super::passthrough::point_in_notch;
 use super::state::*;
 
 fn state(mode: IslandMode, scale: f64, expanded_height: f64) -> IslandWindowState {
