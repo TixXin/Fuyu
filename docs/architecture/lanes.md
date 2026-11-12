@@ -10,11 +10,13 @@
 - 钩子用不了时（例如会话不是从仓库目录启动的，magpie 会话就是这样）：在主工作区运行 `pnpm lane:open --as <会话名>`，最后一行是 lane 的路径，**紧接着 EnterWorktree(path=<lane 路径>) 进入它**。会话名用 ListAgents 里自己的名字。
 - 接手别人的 lane（交接）：`pnpm lane:take <N> --as <会话名>`，再 EnterWorktree(path) 进入。对方还在用时会拒绝，确认对方不用了再加 `--force`。
 - 退出会话前：`pnpm lane:done`（在 lane 里不用写编号）。lane 干净、提交都在 `main` 上时释放它，否则列出未提交的文件和未合入的提交、不释放，还会提醒写着这个 lane 的任务。确认不要那些改动了才加 `--force`。释放后再 ExitWorktree(action="keep")；lane 本身留着，下一个会话立刻就能复用。
-- 从仓库目录启动的会话退出时（两次 Ctrl+C、`/exit`、Ctrl+D），`SessionEnd` 钩子（`scripts/lanes/session-end.mjs`）自动做同样的检查：释放会话所在的 lane 和它的 `claude.exe` 登记过的 lane，有工作的保留；`/clear` 不释放。直接关掉终端或进程被杀时钩子不一定跑，magpie 会话读不到仓库的钩子，所以退出前仍要自己 `lane:done`。
+- 会话退出时（两次 Ctrl+C、`/exit`、Ctrl+D），`SessionEnd` 钩子（`scripts/lanes/session-end.mjs`）自动做同样的检查：释放会话所在的 lane 和登记在这个会话 ID 名下的 lane，有工作的保留；`/clear`、`/resume` 不释放。钩子配在用户级 `~/.claude/settings.json`，所以 magpie 这类从别处启动的会话也会跑；脚本按自己所在位置找仓库，`timeout` 设为 30 秒（SessionEnd 默认只有 1.5 秒）。直接关掉终端或进程被杀时钩子不一定跑，所以收工前仍要 `lane:done`。
 - 只想放掉登记、不做检查：`pnpm lane:release <N>`。
 - **不要手动 `git worktree add`**：那样不留归属记录，别的会话会把它当成空闲的 lane；`pnpm verify` 和 land 也会拒绝没有归属记录的 lane。
 
 会话的当前目录必须在 lane 里，不要留在主工作区用绝对路径改 lane：那样状态栏显示 `main`，“有进程的当前目录在里面”这条在用判断失效，`cd` 失败时命令还会落进别人的 lane。
+
+一个会话用 EnterWorktree(path) 进过某个 lane 后，不能再切到另一个 lane（EnterWorktree 只允许切到 `.claude/worktrees/` 下的 worktree）。这时就在当前 lane 里 `pnpm lane:open`，它会把这个 lane 还给你；要换 lane 只能新开会话。
 
 ## 分配和归属
 
@@ -28,7 +30,7 @@
 
 `pnpm lane:list` 列出每个 lane 是谁的、为什么算在用。以下任一情况都算有人在用，不会分给别的会话：
 
-- 登记的会话（`claude.exe`）还在运行；找不到它的进程时（命令经 magpie 跑），24 小时内登记过。`lane:open`、`lane:take`、`task:claim` 和每次 land 都会登记。
+- 登记的会话还在运行：`~/.claude/sessions/<pid>.json` 里有它的会话 ID，对应进程还在（岛屿的 AI 代理状态也这样判断）。会话身份取自 Claude Code 给命令设的环境变量 `CLAUDE_CODE_SESSION_ID`、`CLAUDE_PID`，magpie 会话也有；`--as` 不写时用会话记录里的名字。旧登记既没有会话 ID 也没有进程号时，2 小时内登记过才算在用。`lane:open`、`lane:take`、`task:claim` 和每次 land 都会登记。
 - 有「进行中」（没过期）或「待用户确认」的任务写着这个 lane。lane 编号会被复用，所以 lane 已登记给另一个会话时，写着它的旧认领算过期。
 - 30 分钟内有改动，而且是在最近一次释放之后。释放（`lane:done`、`lane:release`、退出时的钩子）是明确的“不用了”，释放前的改动不再算；兜底的“最近有改动”只为没登记的会话。
 - 有进程的当前目录在里面（Windows 上这时文件夹改不了名）。
@@ -38,7 +40,7 @@
 归属记录有两份，都在 `.git/claude-code-merge-queue/`：
 
 - `lane-owners.json`：合并队列自己读的，只写进程号已知的登记；
-- `lane-sessions.json`：所有登记，带会话名和最近一次登记时间；
+- `lane-sessions.json`：所有登记，带会话名、会话 ID 和最近一次登记时间；
 - `lane-released.json`：每个 lane 最近一次释放的时间，再次登记时清掉。
 
 进程号未知的登记不能写进 `lane-owners.json`：合并队列会把空进程号当成“会话已退出”，2026-11-12 两次因此误删了还在用的 lane 21。

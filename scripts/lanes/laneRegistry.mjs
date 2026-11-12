@@ -1,5 +1,6 @@
 import { execFileSync } from "node:child_process";
-import { mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, readdirSync, renameSync, writeFileSync } from "node:fs";
+import { homedir } from "node:os";
 import path from "node:path";
 
 export const LANES_FOLDER_SUFFIX = "-lanes";
@@ -80,12 +81,12 @@ export function ownerOf(main, lane, owners = readOwners(main)) {
   return owners[ownerKey(lanePath(main, lane))] ?? null;
 }
 
-export function recordOwner(main, lane, { pid, name }, now = new Date()) {
+export function recordOwner(main, lane, { pid, name, session = null }, now = new Date()) {
   const key = ownerKey(lanePath(main, lane));
   const sessions = readJson(sessionsFile(main));
   const known = sessions[key];
   const since = known && known.pid === (pid ?? null) && known.name === name ? known.since : now.toISOString();
-  sessions[key] = { pid: pid ?? null, ...(name ? { name } : {}), since, seen: now.toISOString() };
+  sessions[key] = { pid: pid ?? null, ...(name ? { name } : {}), ...(session ? { session } : {}), since, seen: now.toISOString() };
   writeJson(sessionsFile(main), sessions);
   const queue = readJson(queueFile(main));
   if (pid) queue[key] = { pid, since };
@@ -127,7 +128,35 @@ export function pidAlive(pid) {
   }
 }
 
+export function claudeSessionsDir() {
+  return path.join(homedir(), ".claude", "sessions");
+}
+
+function readSessions(dir) {
+  let names = [];
+  try {
+    names = readdirSync(dir).filter((name) => name.endsWith(".json"));
+  } catch {
+    return [];
+  }
+  return names.map((name) => readJson(path.join(dir, name))).filter((entry) => entry.sessionId && entry.pid);
+}
+
+export function sessionAlive(sessionId, dir = claudeSessionsDir()) {
+  if (!sessionId) return null;
+  return readSessions(dir).some((entry) => entry.sessionId === sessionId && pidAlive(entry.pid));
+}
+
+export function currentSession(env = process.env, dir = claudeSessionsDir()) {
+  const session = env.CLAUDE_CODE_SESSION_ID || null;
+  const pid = Number(env.CLAUDE_PID) || null;
+  const entry = readSessions(dir).find((item) => (session && item.sessionId === session) || (pid && item.pid === pid));
+  return { session: session ?? entry?.sessionId ?? null, pid: pid ?? entry?.pid ?? null, name: entry?.name ?? null };
+}
+
 export function claudePid(start = process.pid) {
+  const fromEnv = Number(process.env.CLAUDE_PID);
+  if (fromEnv && pidAlive(fromEnv)) return fromEnv;
   if (process.platform !== "win32") return null;
   let rows;
   try {

@@ -1,7 +1,7 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { mainCheckout } from "../build-dirs.mjs";
-import { claudePid, laneOf } from "./laneRegistry.mjs";
+import { currentSession, laneOf } from "./laneRegistry.mjs";
 import { finishLane, listLanes, openLane, releaseLane, takeLane } from "./lanePool.mjs";
 
 function option(args, name) {
@@ -41,9 +41,10 @@ export function doneLines({ lane, released, problems = [], files = [], task = nu
 function main(argv) {
   const [command, ...args] = argv;
   const root = mainCheckout();
-  const name = option(args, "--as");
+  const me = currentSession();
+  const name = option(args, "--as") ?? me.name;
   if (command === "open") {
-    const lane = openLane({ main: root, fromCwd: process.cwd(), pid: claudePid(), name, install: !args.includes("--no-install") });
+    const lane = openLane({ main: root, fromCwd: process.cwd(), pid: me.pid, session: me.session, name, install: !args.includes("--no-install") });
     console.log(`[lanes] lane ${lane.lane}（${lane.reused ? "复用" : "新建"}），已重置到主工作区的 HEAD。下一步在会话里用 EnterWorktree(path) 进入它：`);
     console.log(lane.wt);
     return 0;
@@ -51,7 +52,7 @@ function main(argv) {
   if (command === "take") {
     const lane = Number(args[0]);
     if (!Number.isInteger(lane) || lane < 1) throw new Error("用法：pnpm lane:take <N> [--as <会话名>] [--force]");
-    const entry = takeLane(root, lane, { pid: claudePid(), name, force: args.includes("--force") });
+    const entry = takeLane(root, lane, { pid: me.pid, session: me.session, name, force: args.includes("--force") });
     console.log(`[lanes] lane ${lane} 记为${name ? ` ${name} ` : "这个会话"}在用：${entry.wt}${entry.work ? `（${entry.work}）` : ""}`);
     return 0;
   }
@@ -70,7 +71,7 @@ function main(argv) {
     return result.released ? 0 : 1;
   }
   if (command === "list" || !command) {
-    const lanes = listLanes(root, { pid: claudePid(), name, fromLane: laneOf(root, process.cwd()) });
+    const lanes = listLanes(root, { pid: me.pid, session: me.session, name, fromLane: laneOf(root, process.cwd()) });
     if (args.includes("--json")) console.log(JSON.stringify(lanes, null, 2));
     else if (!lanes.length) console.log("[lanes] 没有 lane");
     else for (const entry of lanes) console.log(listLine(entry));

@@ -1,11 +1,11 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, renameSync, statSync } from "node:fs";
 import path from "node:path";
-import { lanePath, ownerOf, pidAlive, releasedAt } from "./laneRegistry.mjs";
+import { claudeSessionsDir, lanePath, ownerOf, pidAlive, releasedAt, sessionAlive } from "./laneRegistry.mjs";
 import { readAll, staleOf } from "../tasks/taskRepo.mjs";
 
 export const ACTIVE_MS = 30 * 60 * 1000;
-export const UNKNOWN_OWNER_MS = 24 * 60 * 60 * 1000;
+export const UNKNOWN_OWNER_MS = 2 * 60 * 60 * 1000;
 
 function tryGit(args, cwd) {
   try {
@@ -40,7 +40,12 @@ export function tasksByLane(main) {
   return byLane;
 }
 
-export function laneFacts(main, lane, { mainHead, owners, tasks, released = {} }) {
+export function ownerAlive(owner, sessionsDir = claudeSessionsDir()) {
+  if (owner.session) return sessionAlive(owner.session, sessionsDir);
+  return owner.pid ? pidAlive(owner.pid) : null;
+}
+
+export function laneFacts(main, lane, { mainHead, owners, tasks, released = {}, sessionsDir = claudeSessionsDir() }) {
   const wt = lanePath(main, lane);
   const facts = { lane, wt, exists: existsSync(wt), worktree: existsSync(path.join(wt, ".git")) };
   if (!facts.worktree) return { ...facts, work: facts.exists ? "不是 worktree" : null };
@@ -61,7 +66,7 @@ export function laneFacts(main, lane, { mainHead, owners, tasks, released = {} }
     ...facts,
     branch,
     work,
-    owner: owner ? { pid: owner.pid ?? null, name: owner.name ?? null, alive: owner.pid ? pidAlive(owner.pid) : null, seenMs: seen } : null,
+    owner: owner ? { pid: owner.pid ?? null, name: owner.name ?? null, session: owner.session ?? null, alive: ownerAlive(owner, sessionsDir), seenMs: seen } : null,
     task: tasks.get(lane) ?? null,
     lastActivityMs,
     releasedMs: releasedAt(main, lane, released),
@@ -83,6 +88,7 @@ export function folderBusy(wt) {
 export function judge(facts, requester = {}, { now = Date.now(), busy = () => false } = {}) {
   const { owner, task } = facts;
   const mine = facts.lane === requester.fromLane
+    || Boolean(requester.session && owner?.session === requester.session)
     || Boolean(requester.pid && owner?.pid === requester.pid)
     || Boolean(requester.name && (owner?.name === requester.name || task?.owner === requester.name));
   if (mine) return { mine, users: [] };

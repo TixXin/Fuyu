@@ -29,7 +29,7 @@ async function main() {
     cwd = process.cwd();
   }
   try {
-    const hint = hintFor(mainCheckout(cwd), cwd);
+    const hint = hintFor(mainCheckout(path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..")), cwd);
     if (hint) console.log(hint);
   } catch {
     return;
