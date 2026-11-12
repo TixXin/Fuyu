@@ -1,5 +1,7 @@
 <div align="center">
-  <img src="src-tauri/icons/mark.svg" alt="浮屿 Fuyu logo" width="96" height="96">
+  <a href="https://fuyu.ing/logo/"><img src="docs/assets/logo-placeholder.svg" alt="浮屿 Logo 征集中" width="96" height="96"></a>
+  <br>
+  <sub><a href="https://fuyu.ing/logo/">Logo 征集中，欢迎投稿</a></sub>
 
   <h1>浮屿 Fuyu</h1>
 

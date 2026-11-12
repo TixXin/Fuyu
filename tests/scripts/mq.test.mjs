@@ -120,9 +120,15 @@ test("land rebases onto main, pushes, fast-forwards the main checkout, and backs
 test("the worktree hooks hand out lanes and keep a lane with work from being removed", () => {
   const main = path.join("E:", "Projects", "fly-island");
   const asked = [];
-  const created = createWorktree({ cwd: main, session_id: "s1" }, { main, env: { CLAUDE_PID: "42" }, open: (options) => { asked.push(options); return { wt: "E:\\lane\\3" }; } });
-  assert.deepEqual(created, { code: 0, stdout: "E:\\lane\\3" });
-  assert.deepEqual([asked[0].pid, asked[0].session, asked[0].install], [42, "s1", true]);
+  const sessionsDir = mkdtempSync(path.join(tmpdir(), "mq-sessions-"));
+  writeFileSync(path.join(sessionsDir, `${process.pid}.json`), JSON.stringify({ pid: process.pid, sessionId: "s1", name: "fly-island-c5" }));
+  try {
+    const created = createWorktree({ cwd: main, session_id: "s1" }, { main, env: {}, sessionsDir, open: (options) => { asked.push(options); return { wt: "E:\\lane\\3" }; } });
+    assert.deepEqual(created, { code: 0, stdout: "E:\\lane\\3" });
+    assert.deepEqual([asked[0].pid, asked[0].session, asked[0].name, asked[0].install], [process.pid, "s1", "fly-island-c5", true], "the session's name and pid come from ~/.claude/sessions");
+  } finally {
+    rmSync(sessionsDir, { recursive: true, force: true });
+  }
 
   const lanePath = path.join("E:", "Projects", "fly-island-lanes", "3");
   const clean = removeWorktree({ worktree_path: lanePath }, { main, finish: () => ({ released: true, problems: [] }) });

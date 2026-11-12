@@ -1,5 +1,7 @@
 <div align="center">
-  <img src="src-tauri/icons/mark.svg" alt="Fuyu logo" width="96" height="96">
+  <a href="https://fuyu.ing/en/logo/"><img src="docs/assets/logo-placeholder.svg" alt="Fuyu logo wanted" width="96" height="96"></a>
+  <br>
+  <sub><a href="https://fuyu.ing/en/logo/">We're looking for a logo — send yours</a></sub>
 
   <h1>Fuyu</h1>
 

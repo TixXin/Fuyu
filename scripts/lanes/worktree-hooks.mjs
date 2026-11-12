@@ -1,19 +1,22 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { mainCheckout } from "../build-dirs.mjs";
-import { laneOf } from "./laneRegistry.mjs";
+import { currentSession, laneOf } from "./laneRegistry.mjs";
 import { finishLane, openLane } from "./lanePool.mjs";
 
 function repoMain() {
   return mainCheckout(path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", ".."));
 }
 
-export function createWorktree(input, { main = repoMain(), env = process.env, open = openLane } = {}) {
+export function createWorktree(input, { main = repoMain(), env = process.env, open = openLane, sessionsDir } = {}) {
+  const session = input.session_id ?? env.CLAUDE_CODE_SESSION_ID ?? null;
+  const known = currentSession({ ...env, CLAUDE_CODE_SESSION_ID: session ?? "" }, ...(sessionsDir ? [sessionsDir] : []));
   const lane = open({
     main,
     fromCwd: input.cwd ?? null,
-    pid: Number(env.CLAUDE_PID) || null,
-    session: input.session_id ?? env.CLAUDE_CODE_SESSION_ID ?? null,
+    pid: Number(env.CLAUDE_PID) || known.pid || null,
+    session,
+    name: known.name,
     install: true,
   });
   return { code: 0, stdout: lane.wt };
