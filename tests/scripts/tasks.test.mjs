@@ -67,6 +67,8 @@ test("stale claims: lane gone, its session exited, or a quiet day", () => {
   assert.match(staleReason(claim, { laneExists: false, now }), /不存在/);
   assert.match(staleReason(claim, { laneExists: true, ownerPidAlive: false, now }), /退出/);
   assert.equal(staleReason(claim, { laneExists: true, ownerPidAlive: true, now }), null);
+  assert.match(staleReason(claim, { laneExists: true, laneOwnerName: "someone-else", ownerPidAlive: true, now }), /已登记给 someone-else/);
+  assert.equal(staleReason(claim, { laneExists: true, laneOwnerName: claim.fields.owner, ownerPidAlive: true, now }), null);
   const later = Date.parse("2026-11-08T03:00");
   assert.match(staleReason(claim, { laneExists: true, ownerPidAlive: null, now: later }), /24 小时/);
   assert.equal(staleReason(claim, { laneExists: true, ownerPidAlive: null, lastLaneCommitMs: later - 1000, now: later }), null);

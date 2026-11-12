@@ -6,6 +6,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, statSync,
 import path from "node:path";
 import { CLOSED_STATUSES, formatTask, groupOf, parseTask } from "./taskFile.mjs";
 import { checkEntries, parseGroups } from "./taskRules.mjs";
+import { readOwners as readLaneOwners } from "../lanes/laneRegistry.mjs";
 
 export const TASKS_DIR = "docs/tasks";
 export const ARCHIVE_DIR = "docs/tasks/0-archive";
@@ -118,14 +119,6 @@ function laneDir(main, lane) {
   return path.join(path.dirname(main), `${path.basename(main)}-lanes`, String(lane));
 }
 
-export function laneOwners(main) {
-  try {
-    return JSON.parse(readFileSync(path.join(main, ".git", "claude-code-merge-queue", "lane-owners.json"), "utf8"));
-  } catch {
-    return {};
-  }
-}
-
 function alive(pid) {
   try {
     process.kill(pid, 0);
@@ -136,9 +129,10 @@ function alive(pid) {
 }
 
 /** Why a claim no longer holds, or null: its lane is gone, the session that made the lane exited, or a day without moves. */
-export function staleReason({ fields }, { laneExists, ownerPidAlive, lastLaneCommitMs, now = Date.now() }) {
+export function staleReason({ fields }, { laneExists, laneOwnerName, ownerPidAlive, lastLaneCommitMs, now = Date.now() }) {
   if (fields.status !== "进行中" || !fields.lane) return null;
   if (!laneExists) return `lane ${fields.lane} 已不存在`;
+  if (laneOwnerName && fields.owner && laneOwnerName !== fields.owner) return `lane ${fields.lane} 已登记给 ${laneOwnerName}`;
   if (ownerPidAlive === false) return `建 lane ${fields.lane} 的会话已退出`;
   const claimedAt = Date.parse(fields.claimed?.replace(" ", "T") ?? "");
   const quietSince = Math.max(Number.isNaN(claimedAt) ? 0 : claimedAt, lastLaneCommitMs ?? 0);
@@ -148,9 +142,14 @@ export function staleReason({ fields }, { laneExists, ownerPidAlive, lastLaneCom
 
 function laneFacts(main, lane) {
   const dir = laneDir(main, lane);
-  const owner = laneOwners(main)[path.resolve(dir).toLowerCase()];
+  const owner = readLaneOwners(main)[path.resolve(dir).toLowerCase()];
   const last = existsSync(dir) ? tryGit(["-C", dir, "log", "-1", "--format=%ct"]) : null;
-  return { laneExists: existsSync(dir), ownerPidAlive: owner ? alive(owner.pid) : null, lastLaneCommitMs: last ? Number(last) * 1000 : null };
+  return {
+    laneExists: existsSync(dir),
+    laneOwnerName: owner?.name ?? null,
+    ownerPidAlive: owner?.pid ? alive(owner.pid) : null,
+    lastLaneCommitMs: last ? Number(last) * 1000 : null,
+  };
 }
 
 /** `staleReason` for `task` against the lanes next to the main checkout `main`. */
