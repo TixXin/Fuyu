@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useMemo, useState, type PointerEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
 import { Magnifier } from "../../features/screenshot/Magnifier";
 import { textSize } from "../../features/screenshot/annotations";
-import { cancelScreenshot, copyScreenshot, copyScreenshotPixels } from "../../features/screenshot/api";
+import { cancelScreenshot, finishScreenshot, type ScreenshotAction } from "../../features/screenshot/api";
 import { composeSelection } from "../../features/screenshot/drawAnnotations";
 import {
   HANDLES,
@@ -50,8 +50,10 @@ function colorAt(canvas: HTMLCanvasElement | null, pixel: Point): string {
  * the magnifier by the pointer. Before anything is selected, the window or control under the pointer
  * is outlined (the wheel steps out to its parents and back) and a click selects it. With an
  * annotation tool on, a drag inside the selection draws (its handles still resize it); Ctrl+Z / Ctrl+Y
- * undo and redo. Enter or a double click copies, with the annotations; Esc or a right click with
- * nothing selected leaves, C copies the colour under the pointer.
+ * undo and redo. Enter, Ctrl+C or a double click copies, with the annotations; Ctrl+S saves, T pins
+ * it to the screen; Esc or a right click with nothing selected leaves, C copies the colour under
+ * the pointer. Opened with Ctrl+Shift+2 (mode "copy"), the selection is copied as soon as it is
+ * chosen, without the toolbar.
  */
 export function ScreenshotOverlay() {
   const t = useTranslation().screenshot;
@@ -88,12 +90,23 @@ export function ScreenshotOverlay() {
   }, [choosing, resetAnnotations]);
 
   const { items } = annotations;
-  const copy = useCallback(() => {
-    if (!chosen) return;
+  const finish = useCallback((action: ScreenshotAction) => {
     const picture = canvasRef.current;
-    const composed = items.length > 0 && picture ? composeSelection(picture, chosen, items) : null;
-    (composed ? copyScreenshotPixels(composed) : copyScreenshot(chosen)).catch((error: unknown) => setNotice(errorText(error)));
-  }, [chosen, items, canvasRef, errorText]);
+    const composed = chosen && picture ? composeSelection(picture, chosen, items) : null;
+    if (!chosen || !composed) return;
+    const save = action === "save" ? { folderName: t.saveFolderName } : undefined;
+    finishScreenshot(composed, chosen, action, save).catch((error: unknown) => setNotice(errorText(error)));
+  }, [chosen, items, canvasRef, errorText, t]);
+  const copy = useCallback(() => finish("copy"), [finish]);
+
+  // Ctrl+Shift+2: copied as soon as a region or target is chosen, once per screenshot.
+  const quick = session?.mode === "copy";
+  const copiedFor = useRef<number | null>(null);
+  useEffect(() => {
+    if (!quick || !chosen || dragging || sessionId === undefined || copiedFor.current === sessionId) return;
+    copiedFor.current = sessionId;
+    copy();
+  }, [quick, chosen, dragging, sessionId, copy]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -108,15 +121,22 @@ export function ScreenshotOverlay() {
       } else if (ctrl && letter === "y") {
         event.preventDefault();
         annotations.redo();
+      } else if (ctrl && letter === "s") {
+        event.preventDefault();
+        finish("save");
+      } else if (ctrl && letter === "c") {
+        event.preventDefault();
+        copy();
       } else if (event.key === "Escape") void cancelScreenshot();
       else if (event.key === "Enter") copy();
+      else if (letter === "t" && !ctrl && chosen) finish("pin");
       else if (letter === "c" && !ctrl && color) {
         void navigator.clipboard.writeText(color).then(() => setNotice(t.colorCopied(color)));
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [annotations, color, copy, t]);
+  }, [annotations, chosen, color, copy, finish, t]);
 
   useEffect(() => setNotice(null), [sessionId]);
 
@@ -204,9 +224,9 @@ export function ScreenshotOverlay() {
         // hidden window's last painted frame then has nothing on it (see session.rs, transparent).
         ready && <div key={sessionId} className="screenshot-overlay__dim" />
       )}
-      {!area && ready && session?.underPointer && <div className="screenshot-overlay__hint">{t.selectHint}</div>}
-      {area && chosen && !dragging && !annotations.drafting && (
-        <ScreenshotToolbar area={area} view={view} annotations={annotations} notice={notice} onCancel={() => void cancelScreenshot()} onCopy={copy} />
+      {!area && ready && session?.underPointer && <div className="screenshot-overlay__hint">{quick ? t.copySelectHint : t.selectHint}</div>}
+      {area && chosen && !dragging && !annotations.drafting && !quick && (
+        <ScreenshotToolbar area={area} view={view} annotations={annotations} notice={notice} onCancel={() => void cancelScreenshot()} onFinish={finish} />
       )}
       {annotations.editing && (
         <AnnotationTextInput
@@ -219,7 +239,7 @@ export function ScreenshotOverlay() {
           onCancel={annotations.cancelText}
         />
       )}
-      {!area && notice && <div className="screenshot-overlay__hint">{notice}</div>}
+      {(!area || quick) && notice && <div className="screenshot-overlay__hint">{notice}</div>}
       {guides && ready && cssPointer && (choosing || dragging === "draw" || dragging === "resize") && (
         <>
           <div className="screenshot-overlay__guide screenshot-overlay__guide--h" style={{ top: cssPointer.y }} />

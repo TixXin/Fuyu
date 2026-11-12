@@ -1,10 +1,14 @@
 import { useEffect } from "react";
 import { matchesClipboardShortcut } from "../../features/clipboard/shortcut";
+import { togglePins } from "../../features/screenshot/api";
 import { pageCycleDirection, pageDigitFromEvent } from "../../features/appearance/pageShortcuts";
 import { cycleShortcutPage, pageForAltDigit, type IslandFeatures } from "./features";
 import type { IslandMode, IslandPage } from "./types";
 
-/** In-window keys: the clipboard history shortcut toggles its page, Escape collapses the island. */
+/**
+ * In-window keys: the clipboard history shortcut toggles its page, Escape collapses the island, T
+ * hides or shows the screenshot pins (C41.4; nothing without pins, and not while typing).
+ */
 export function useIslandKeyboard(
   clipboardShortcutEnabled: boolean,
   clipboardShortcut: string,
@@ -51,6 +55,11 @@ export function useIslandKeyboard(
 
       if (event.key === "Escape") {
         onCollapse();
+        return;
+      }
+
+      if (event.key.toLowerCase() === "t" && !event.ctrlKey && !event.altKey && !event.metaKey && !isTyping(event.target)) {
+        void togglePins();
       }
     };
 
@@ -69,4 +78,8 @@ export function useIslandKeyboard(
     pageNextShortcut,
     pagePreviousShortcut,
   ]);
+}
+
+function isTyping(target: EventTarget | null) {
+  return target instanceof HTMLElement && (target.isContentEditable || target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement);
 }

@@ -14,7 +14,7 @@ export const SCREENSHOT_TARGETS_EVENT = "screenshot-targets";
 export const SCREENSHOT_SELECTING_EVENT = "screenshot-selecting";
 
 // 与 src-tauri/src/screenshot/session.rs 中的 Mode 对应。
-export type ScreenshotMode = "region" | "fullscreen";
+export type ScreenshotMode = "region" | "copy" | "fullscreen";
 
 // 与 src-tauri/src/screenshot/session.rs 中的 OverlaySession 对应。
 export type ScreenshotSession = {
@@ -55,20 +55,34 @@ export function screenshotOverlayReady(session: number) {
   return invoke<void>("screenshot_overlay_ready", { session });
 }
 
-/** Copies `rect` of this overlay's picture and closes the screenshot. */
-export function copyScreenshot(rect: PixelRect) {
-  return invoke<void>("screenshot_copy", { rect });
+/** What to do with the chosen picture (mirrored by Action in src-tauri/src/screenshot/mod.rs). */
+export type ScreenshotAction = "copy" | "save" | "pin";
+
+/** Where a save goes: the folder from the settings (none yet: Pictures) and the default subfolder's name. */
+export type SaveTarget = { folder?: string; folderName: string };
+
+function rawBytes(image: ImageData) {
+  return new Uint8Array(image.data.buffer, image.data.byteOffset, image.data.byteLength);
 }
 
 /**
- * Copies a picture the overlay composed (the selection with its annotations) and closes the
- * screenshot. The pixels go as raw RGBA, not JSON.
+ * Takes the picture this overlay composed (the selection with its annotations) to the clipboard, a
+ * file or a pin, and closes the screenshot; a failed copy or save leaves it open. The pixels go
+ * as raw RGBA, not JSON; `at` is where the selection is in the monitor's picture (for a pin).
+ * Gives the saved file's path when saving.
  */
-export function copyScreenshotPixels(image: ImageData) {
-  const bytes = new Uint8Array(image.data.buffer, image.data.byteOffset, image.data.byteLength);
-  return invoke<void>("screenshot_copy_pixels", bytes, {
-    headers: { "x-width": String(image.width), "x-height": String(image.height) },
-  });
+export function finishScreenshot(image: ImageData, at: PixelRect, action: ScreenshotAction, save?: SaveTarget) {
+  const headers: Record<string, string> = {
+    "x-action": action,
+    "x-width": String(image.width),
+    "x-height": String(image.height),
+    "x-left": String(Math.max(0, Math.round(at.x))),
+    "x-top": String(Math.max(0, Math.round(at.y))),
+  };
+  // Header values must be ASCII; folder names need not be.
+  if (save?.folder) headers["x-folder"] = encodeURIComponent(save.folder);
+  if (save) headers["x-folder-name"] = encodeURIComponent(save.folderName);
+  return invoke<string | null>("screenshot_finish", rawBytes(image), { headers });
 }
 
 export function cancelScreenshot() {
@@ -94,4 +108,44 @@ export function announceSelecting(label: string) {
 
 export function listenSelecting(handler: EventCallback<string>) {
   return listen<string>(SCREENSHOT_SELECTING_EVENT, handler);
+}
+
+/** The calling pin's picture: RGBA rows, its size in the page's URL. */
+export function getPinImage() {
+  return invoke<ArrayBuffer>("screenshot_pin_image");
+}
+
+export function pinReady() {
+  return invoke<void>("screenshot_pin_ready");
+}
+
+/** Zooms the pin to `scale` of its picture, keeping `anchor` (fractions of the window) in place. */
+export function zoomPin(scale: number, anchor: { x: number; y: number }) {
+  return invoke<void>("screenshot_pin_zoom", { scale, anchorX: anchor.x, anchorY: anchor.y });
+}
+
+export function setPinClickThrough(through: boolean) {
+  return invoke<void>("screenshot_pin_click_through", { through });
+}
+
+export function copyPin() {
+  return invoke<void>("screenshot_pin_copy");
+}
+
+/** Saves the pin's picture; gives the file's path. */
+export function savePin(target: SaveTarget) {
+  return invoke<string>("screenshot_pin_save", { folder: target.folder ?? null, folderName: target.folderName });
+}
+
+export function closePin() {
+  return invoke<void>("screenshot_pin_close");
+}
+
+/** Hides every pin, or shows them all again (T). */
+export function togglePins() {
+  return invoke<void>("screenshot_pins_toggle");
+}
+
+export function closeAllPins() {
+  return invoke<void>("screenshot_pins_close_all");
 }

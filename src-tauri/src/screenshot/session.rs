@@ -14,7 +14,7 @@ use std::{
     thread,
 };
 
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager, Monitor, PhysicalPosition, PhysicalSize, WebviewUrl, WebviewWindow, WebviewWindowBuilder};
 
 use super::targets::{self, LocalTarget, Target};
@@ -27,11 +27,13 @@ const SESSION_EVENT: &str = "screenshot-session";
 /// Mirrored by `SCREENSHOT_ENDED_EVENT` in src/features/screenshot/api.ts.
 const ENDED_EVENT: &str = "screenshot-ended";
 
-/// How the screenshot starts: choose a region, or with the whole monitor under the pointer chosen.
+/// How the screenshot starts: choose a region, choose one and copy it at once (no toolbar), or
+/// with the whole monitor under the pointer chosen.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) enum Mode {
     Region,
+    Copy,
     Fullscreen,
 }
 
@@ -46,15 +48,6 @@ pub(crate) struct OverlaySession {
     height: u32,
     /// This monitor has the pointer: it gets the keyboard, and the whole-monitor selection.
     under_pointer: bool,
-}
-
-/// A rectangle of a monitor's picture, in its physical pixels (mirrored by `PixelRect` in api.ts).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
-pub(crate) struct PixelRect {
-    pub(crate) x: u32,
-    pub(crate) y: u32,
-    pub(crate) width: u32,
-    pub(crate) height: u32,
 }
 
 /// One monitor's frozen picture.
@@ -254,28 +247,9 @@ pub(crate) fn overlay_ready(window: &WebviewWindow, id: u64) {
     }
 }
 
-/// The pixels of `rect` in the overlay `label`'s picture, clipped to it: (width, height, RGBA).
-pub(crate) fn selection(label: &str, rect: PixelRect) -> Option<(u32, u32, Vec<u8>)> {
-    let guard = session();
-    let frame = guard.as_ref()?.frames.iter().find(|frame| frame.label == label)?;
-    crop(&frame.rgba, frame.width, frame.height, rect)
-}
-
-/// `rect` cut out of an RGBA picture `width` × `height`, clipped to it; `None` when nothing is left.
-pub(crate) fn crop(rgba: &[u8], width: u32, height: u32, rect: PixelRect) -> Option<(u32, u32, Vec<u8>)> {
-    let right = rect.x.saturating_add(rect.width).min(width);
-    let bottom = rect.y.saturating_add(rect.height).min(height);
-    if rect.x >= right || rect.y >= bottom || rgba.len() < width as usize * height as usize * 4 {
-        return None;
-    }
-    let (cut_width, cut_height) = (right - rect.x, bottom - rect.y);
-    let row = width as usize * 4;
-    let mut out = Vec::with_capacity(cut_width as usize * cut_height as usize * 4);
-    for y in rect.y..bottom {
-        let start = y as usize * row + rect.x as usize * 4;
-        out.extend_from_slice(&rgba[start..start + cut_width as usize * 4]);
-    }
-    Some((cut_width, cut_height, out))
+/// The top-left of the overlay `label`'s monitor on the virtual screen, in physical pixels.
+pub(crate) fn origin(label: &str) -> Option<(i32, i32)> {
+    session().as_ref()?.frames.iter().find(|frame| frame.label == label).map(|frame| frame.origin)
 }
 
 /// Closes the screenshot: hides every overlay and lets go of the pictures.

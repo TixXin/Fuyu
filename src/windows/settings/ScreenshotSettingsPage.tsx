@@ -38,6 +38,7 @@ export function ScreenshotSettingsPage({
       {settings.screenshotEnabled && (
         <SettingsGroup title={text.shortcutsTitle} footer={text.shortcutsHint}>
           <SettingsRow title={text.region} description={text.regionHint} control={keys("Ctrl+Shift+1")} />
+          <SettingsRow title={text.copy} description={text.copyHint} control={keys("Ctrl+Shift+2")} />
           <SettingsRow title={text.fullscreen} description={text.fullscreenHint} control={keys("Ctrl+Shift+7")} />
         </SettingsGroup>
       )}

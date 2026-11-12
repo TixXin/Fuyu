@@ -11,6 +11,7 @@ import { TranslationWindow } from "./windows/translation/TranslationWindow";
 import { SettingsWindow } from "./windows/settings/SettingsWindow";
 import { ClipboardWindow } from "./windows/clipboard/ClipboardWindow";
 import { ScreenshotOverlay } from "./windows/screenshot/ScreenshotOverlay";
+import { PinWindow } from "./windows/screenshot/PinWindow";
 import { OnboardingWindow } from "./windows/onboarding/OnboardingWindow";
 import { I18nProvider } from "./i18n";
 import { trackIslandTopEdge } from "./windows/island/topEdge";
@@ -50,6 +51,8 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
         <ClipboardWindow />
       ) : windowKind === "screenshot" ? (
         <ScreenshotOverlay />
+      ) : windowKind === "pin" ? (
+        <PinWindow />
       ) : windowKind === "onboarding" ? (
         <OnboardingWindow />
       ) : (

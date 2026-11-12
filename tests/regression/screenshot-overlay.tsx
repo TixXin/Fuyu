@@ -1,8 +1,10 @@
 // pnpm dev, then open /tests/regression/screenshot-overlay.html.
-// The screenshot overlay (C41.1–C41.3) with the Tauri boundary mocked: a grey frozen picture the
-// size of the page, choosing a region, the annotation tools, undo / redo and what copying sends.
+// The screenshot overlay (C41.1–C41.4) with the Tauri boundary mocked: a grey frozen picture the
+// size of the page, choosing a region, the annotation tools, undo / redo, and what copying, saving
+// and pinning send, and Ctrl+Shift+2 copying as soon as a region is chosen.
 import { act, StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import { emit } from "@tauri-apps/api/event";
 import { mockIPC, mockWindows } from "@tauri-apps/api/mocks";
 import "../../src/styles/tokens.css";
 import { I18nProvider } from "../../src/i18n";
@@ -12,9 +14,8 @@ Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
 
 const WIDTH = window.innerWidth;
 const HEIGHT = window.innerHeight;
-const calls: { command: string; payload: unknown }[] = [];
-mockIPC((command, payload) => {
-  calls.push({ command, payload });
+const calls: { command: string; payload: unknown; headers: Record<string, string> }[] = [];
+mockIPC((command) => {
   switch (command) {
     case "screenshot_session": return { id: 1, mode: "region", width: WIDTH, height: HEIGHT, underPointer: true };
     // Opaque grey, as the native capture is (win32/screen_capture.rs makes every alpha 255).
@@ -24,6 +25,14 @@ mockIPC((command, payload) => {
   }
 }, { shouldMockEvents: true });
 mockWindows("screenshot-0");
+// mockIPC does not pass the invoke options on; the headers carry the action and the size.
+type Internals = { invoke: (command: string, payload: unknown, options?: { headers?: Record<string, string> }) => Promise<unknown> };
+const internals = (window as unknown as { __TAURI_INTERNALS__: Internals }).__TAURI_INTERNALS__;
+const mockedInvoke = internals.invoke;
+internals.invoke = (command, payload, options) => {
+  calls.push({ command, payload, headers: options?.headers ?? {} });
+  return mockedInvoke(command, payload, options);
+};
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -72,8 +81,15 @@ async function runChecks() {
     check(document.querySelectorAll(".screenshot-overlay__toolbar button[aria-pressed]").length === 8, "A chosen region gets the toolbar with the eight annotation tools");
     check(button("撤销（Ctrl+Z）")?.disabled && button("重做（Ctrl+Y）")?.disabled, "Undo and redo start disabled");
     await key({ key: "Enter" });
-    const plain = last("screenshot_copy")?.payload as { rect?: unknown } | undefined;
-    check(JSON.stringify(plain?.rect) === JSON.stringify({ x: 40, y: 40, width: 200, height: 160 }), "Without annotations Enter copies the region from the native picture");
+    const plain = last("screenshot_finish");
+    check(plain?.headers["x-action"] === "copy" && (plain.payload as Uint8Array).byteLength === 200 * 160 * 4 && plain.headers["x-width"] === "200", "Enter copies the region's pixels");
+    await key({ key: "s", ctrlKey: true });
+    const saved = last("screenshot_finish");
+    check(saved?.headers["x-action"] === "save" && decodeURIComponent(saved.headers["x-folder-name"]) === "浮屿截图", "Ctrl+S saves it, to the Pictures subfolder named in the current language");
+    await key({ key: "t" });
+    const pinned = last("screenshot_finish");
+    check(pinned?.headers["x-action"] === "pin" && pinned.headers["x-left"] === "40" && pinned.headers["x-top"] === "40", "T pins it where the selection is");
+    check(button("贴到屏幕上（T）") && button("保存（Ctrl+S）"), "The toolbar has pin and save buttons");
 
     await click("矩形");
     check(button("矩形")?.getAttribute("aria-pressed") === "true" && document.querySelectorAll(".screenshot-overlay__swatch").length === 8, "Choosing the rectangle shows the colours and thicknesses");
@@ -118,10 +134,20 @@ async function runChecks() {
     check(!document.querySelector('.screenshot-overlay__toolbar button[aria-pressed="true"]') && document.querySelector(".screenshot-overlay__selection"), "A right click turns the tool off and keeps the selection");
 
     await key({ key: "Enter" });
-    const composed = last("screenshot_copy_pixels")?.payload as Uint8Array | undefined;
+    const composed = last("screenshot_finish")?.payload as Uint8Array | undefined;
     check(composed instanceof Uint8Array && composed.byteLength === 200 * 160 * 4, "With annotations Enter sends the composed region as raw pixels");
     const at = (x: number, y: number) => Array.from(composed!.slice((y * 200 + x) * 4, (y * 200 + x) * 4 + 4));
     check(isRed(at(20, 50)) && at(5, 5).join() === "128,128,128,255", `…the rectangle drawn on the frozen picture (${at(20, 50).join()} / ${at(5, 5).join()})`);
+
+    const before = calls.filter((call) => call.command === "screenshot_finish").length;
+    await act(async () => { await emit("screenshot-ended"); });
+    await act(async () => { await emit("screenshot-session", { id: 2, mode: "copy", width: WIDTH, height: HEIGHT, underPointer: true }); });
+    for (let tries = 0; tries < 50 && calls.filter((call) => call.command === "screenshot_overlay_ready").length < 2; tries += 1) await wait(20);
+    check(document.querySelector(".screenshot-overlay__hint")?.textContent?.includes("选好就复制"), "Ctrl+Shift+2 says the region is copied once chosen");
+    await drag([300, 100], [400, 180]);
+    const quick = calls.filter((call) => call.command === "screenshot_finish");
+    check(quick.length === before + 1 && quick[quick.length - 1].headers["x-action"] === "copy", "…copies it as the drag ends");
+    check(!document.querySelector(".screenshot-overlay__toolbar"), "…without the toolbar");
 
     results.textContent = `${messages.join("\n")}\n\n全部 ${messages.length} 项检查通过。`;
     results.dataset.result = "passed";

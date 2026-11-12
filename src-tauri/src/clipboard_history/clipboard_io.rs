@@ -73,8 +73,10 @@ pub(super) fn read_clipboard_capture(kinds: CaptureKinds) -> Result<Option<Clipb
     // Files first: Explorer puts no text next to them, but some programs add the paths as text.
     if kinds.files {
         if let Ok(paths) = clipboard.get().file_list() {
+            // A screenshot copy (C41.4) adds its PNG as a file next to the bitmap; keep it as the image.
+            let screenshot = kinds.images && matches!(paths.as_slice(), [path] if crate::screenshot::is_screenshot_file(path));
             let paths: Vec<String> = paths.iter().map(|path: &PathBuf| path.display().to_string()).collect();
-            if !paths.is_empty() {
+            if !paths.is_empty() && !screenshot {
                 let hash = hash_bytes([b"files:".as_slice(), paths.join("\n").as_bytes()].concat().as_slice());
                 return Ok(Some(ClipboardCapture::Files { hash, preview: files_preview(&paths), paths }));
             }

@@ -4,7 +4,7 @@
 
 export type Point = { x: number; y: number };
 export type Size = { width: number; height: number };
-// Mirrored by PixelRect in src-tauri/src/screenshot/session.rs.
+// A rectangle of a monitor picture, in its physical pixels.
 export type PixelRect = { x: number; y: number; width: number; height: number };
 export type Handle = "n" | "s" | "e" | "w" | "ne" | "nw" | "se" | "sw";
 
