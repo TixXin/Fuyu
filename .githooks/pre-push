@@ -1,7 +1,2 @@
 #!/usr/bin/env sh
-cli=node_modules/claude-code-merge-queue/dist/bin/claude-code-merge-queue.js
-if [ ! -f "$cli" ]; then
-  echo "pre-push: $cli is missing; run pnpm install in this worktree first." >&2
-  exit 1
-fi
-exec node "$cli" check-push
+exec node scripts/mq/mq.mjs check-push

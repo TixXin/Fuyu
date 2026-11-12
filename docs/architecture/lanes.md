@@ -2,7 +2,17 @@
 
 代理会话怎样开 lane、在 lane 里工作、合入 `main`，以及背后的设计和排障。必须遵守的几条在 [AGENTS.md](../../AGENTS.md)「Git 与协作」；本机的 `lanes` skill 按这份文档的顺序带着做。
 
-工具是 [claude-code-merge-queue](https://github.com/funador/claude-code-merge-queue)，配置在 `claude-code-merge-queue.config.mjs`，Windows 上的问题由 `patches/claude-code-merge-queue@0.7.1.patch` 修复；lane 的分配和归属在 `scripts/lanes/`。
+全部在仓库里：合并队列（排队、rebase、推送、快进主工作区、pre-push 检查）在 `scripts/mq/`，lane 的分配、归属和 Claude Code 钩子在 `scripts/lanes/`。2026-11-12 之前用的是 [claude-code-merge-queue](https://github.com/funador/claude-code-merge-queue) 加一份补丁，F29 收回了仓库；数据目录 `.git/claude-code-merge-queue/` 和环境变量 `CLAUDE_CODE_MERGE_QUEUE_LANDING`、`CLAUDE_CODE_MERGE_QUEUE_EMERGENCY_PUSH` 沿用原名，排队锁的格式也没变。
+
+钩子：
+
+| 钩子 | 在哪里配 | 脚本 |
+|---|---|---|
+| WorktreeCreate | 主工作区 `.claude/settings.json` | `node scripts/lanes/worktree-hooks.mjs create`：同 `lane:open` |
+| WorktreeRemove | 主工作区 `.claude/settings.json` | `node scripts/lanes/worktree-hooks.mjs remove`：同 `lane:done`；干净的释放回池子、目录留着，有工作的退出码 1，Claude Code 就不删 |
+| SessionStart | 用户级 `~/.claude/settings.json` | `scripts/lanes/session-hint.mjs`：在主工作区启动时提醒先开 lane，并列出被遗弃的 lane |
+| SessionEnd | 用户级 `~/.claude/settings.json`（`timeout` 30） | `scripts/lanes/session-end.mjs` |
+| pre-push | `.githooks/pre-push`（`core.hooksPath`） | `node scripts/mq/mq.mjs check-push` |
 
 ## 开 lane、进入 lane
 
@@ -105,7 +115,7 @@ land 从 git 的 pre-push 钩子里跑检查，环境里带着 `GIT_DIR` 等变�
 ## 清理和排障
 
 - `../fly-island-lanes/` 里只放 lane。日志、临时工具和实验放在自己的 lane 或系统临时目录。
-- land 不再自动删除 lane（补丁里的 `prune-lanes.js`）：按进程判断会误删经 magpie 跑命令的会话还在用的 lane。空闲的 lane 留着复用。
-- 别人留下、没有会话在用的 lane（land 或会话开始时输出里带 `⚠`，`pnpm mq:reconcile` 会列出）：问用户怎么处理，不要删。
+- land 不删除任何 lane：按进程判断曾经误删过经 magpie 跑命令的会话还在用的 lane。空闲的 lane 留着复用。
+- 被遗弃的 lane（有没合入的工作，登记的会话已经不在，也没有任务写着它）：land 结束时和会话开始时输出里带 `⚠`，`pnpm mq:reconcile` 也会列出。问用户怎么处理，不要删。
 - 真要删 lane 时：Windows 上 `git worktree remove` 常常删不掉 `node_modules`，会留下只剩 `node_modules` 的文件夹，分配时会把它当成已占用的编号。删完确认文件夹已经不在，残留的用 `cmd /c rmdir /s /q <路径>` 删除，它不会顺着 pnpm 的目录联接删到 store。
-- 补丁修了这些：Windows 上找不到 `pwd` 导致各 lane 的队列锁互不相通、调用 `pnpm` 时没开 shell、清理 lane 时路径对不上、没有 `lsof`、删不掉 `node_modules`，以及 WorktreeCreate 钩子改为调用 `scripts/lanes/lanePool.mjs`。升级这个包时要重新做补丁，并确认两个 lane 同时 land 会排队；`tests/scripts/lanes.test.mjs` 会发现钩子没有接上 `scripts/lanes`。
+- 排队锁在 `.git/claude-code-merge-queue/land-queue/`：每个等待的 land 一张票（`<时间>-<pid>`），先到先得；持锁或排队的进程死了，下一个检查的会话立刻回收，没有超时。持锁超过 5 分钟会提醒去看那个进程。`tests/scripts/mq.test.mjs` 覆盖排队、回收，以及在临时仓库里真的 land 一次（rebase、推送、快进、冲突时中止）。

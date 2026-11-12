@@ -4,7 +4,6 @@ import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSy
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { fileURLToPath } from "node:url";
 import { currentSession, laneOf, lanePath, ownerOf, sessionAlive } from "../../scripts/lanes/laneRegistry.mjs";
 import { ACTIVE_MS, UNKNOWN_OWNER_MS, judge, ownerAlive, usable } from "../../scripts/lanes/laneState.mjs";
 import { finishLane, listLanes, openLane, takeLane } from "../../scripts/lanes/lanePool.mjs";
@@ -161,9 +160,4 @@ test("lanes are handed back, reused when idle, created when none is, and taken o
     for (const [name, value] of hookEnv) process.env[name] = value;
     rmSync(root, { recursive: true, force: true });
   }
-});
-
-test("the patched merge queue hook hands out lanes through scripts/lanes", () => {
-  const hook = path.join(fileURLToPath(new URL("../..", import.meta.url)), "node_modules", "claude-code-merge-queue", "dist", "hooks", "worktree-create.js");
-  assert.match(readFileSync(hook, "utf8"), /"scripts", "lanes", "lanePool\.mjs"/);
 });

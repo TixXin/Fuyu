@@ -45,7 +45,7 @@
 ├── tests/               # unit/ 前端单元测试、scripts/ 脚本测试（node:test，*.test.mjs）；regression/ 浏览器回归页（*.html + *.tsx）
 ├── packages/            # 插件开发者工具（pnpm workspace）：fuyu-plugin（Node SDK、CLI、模拟宿主）、create-fuyu-plugin（脚手架）、powershell/Fuyu.Plugin；vscode-extension（切到会话终端的 VS Code 扩展，不在 workspace 里，`pnpm dlx @vscode/vsce package --no-dependencies` 打包）；不进入岛屿的发布产物
 ├── plugins/             # 插件市场：examples/ 示例插件源码（PowerShell，含 lib/focusd.ps1），schema/ 协议描述，sdk/ 单文件 SDK（pnpm sdk:build 从 packages/ 生成），packages/ 打包好的 zip，index.json 与 index.json.sig 给切换前的旧版岛屿的市场索引（pnpm plugins:index 生成；新版岛屿读 TixXin/fuyu-plugins），signing-keys.json 可信公钥（编译进岛屿）；不进入发布产物
-├── scripts/             # release/ 发布、签名与 latest.json 生成；plugins/ 插件索引、签名与 SDK 生成；lanes/ lane 的分配与归属（`pnpm lane:*`，合并队列的钩子也调用它）；根目录放开发流程脚本：合并队列的检查（land-check.mjs）与 dev 同步（land-sync-dev.mjs）、行数检查、浏览器回归页运行器（run-regression.mjs）、dev 前停止运行中的岛屿
+├── scripts/             # release/ 发布、签名与 latest.json 生成；plugins/ 插件索引、签名与 SDK 生成；lanes/ lane 的分配与归属和 Claude Code 钩子（`pnpm lane:*`）；mq/ 合并队列（`pnpm mq:*` 和 pre-push 检查）；根目录放开发流程脚本：合并队列的检查（land-check.mjs）与 dev 同步（land-sync-dev.mjs）、行数检查、浏览器回归页运行器（run-regression.mjs）、dev 前停止运行中的岛屿
 ├── .githooks/           # pre-push：合并队列的推送保护与检查；commit-msg：拒绝 Claude 署名行（只管本仓库自己的提交，合入的外部 PR 可以带；core.hooksPath 指向这里）
 ├── docs/                # 按文档性质分目录，索引和各目录放什么见 docs/README.md：features/ 功能说明，architecture/ 架构与契约（agent/、plugins/ 内部设计，history/ 做完的计划），design/ 界面约定，plugins/ 插件开发，investigations/ 自己应用的排查与验收，research/ 外部调研，reviews/ PR 评审，releases/ 发布说明，assets/ 演示视频与图片，tasks/ 任务（README.md 是规则，按编号首字母分文件夹，0-archive/ 放已结束的）
 ├── DESIGN.md            # 已确认的界面设计约定：全局方向；各区域的约定在 docs/design/
@@ -77,7 +77,7 @@
 | 完整打包 | `pnpm tauri build` |
 | 改版本号、起草发布说明 | `pnpm release:version <版本号>`（四处版本号一起改，不要手动改） |
 | 发布 | `pnpm release`（流程见 `docs/features/updater.md`） |
-| 合入 main（在 lane 里） | `pnpm mq:land`；主工作区快进 `pnpm mq:sync`；列出无人使用的 lane `pnpm mq:reconcile` |
+| 合入 main（在 lane 里） | `pnpm mq:land`；主工作区快进 `pnpm mq:sync`；列出被遗弃的 lane `pnpm mq:reconcile`（都在 `scripts/mq/`） |
 | lane 分配与归属 | `pnpm lane:open --as <会话名>`（钩子不可用时开 lane）、`pnpm lane:take <N> --as <会话名>`（接手）、`pnpm lane:done`（退出会话前检查并释放）、`pnpm lane:release <N>`、`pnpm lane:list`（谁在用哪个 lane、为什么） |
 
 如果运行环境禁止派生子进程（例如受限沙箱），`node --test` 需要加 `--test-isolation=none`。此时 `tests/scripts/release-manifest.test.mjs` 仍会因 `spawnSync` 被拦截而失败，这是环境限制，报告时应如实说明。如果 `vite build` 报错无法删除系统临时目录中的 esbuild 文件（Access is denied），可以把 `TEMP` / `TMP` 指向 `node_modules/.cache/` 下的目录后重试。
