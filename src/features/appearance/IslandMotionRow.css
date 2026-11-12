@@ -26,8 +26,8 @@
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
   transition:
     width var(--island-motion-width) var(--island-motion-width-ease),
-    height var(--island-motion-height) var(--island-motion-ease),
-    border-radius var(--island-motion-radius) var(--island-motion-ease);
+    height var(--island-motion-height) var(--island-motion-height-ease),
+    border-radius var(--island-motion-radius) var(--island-motion-radius-ease);
 }
 
 .island-motion-preview__island--open {

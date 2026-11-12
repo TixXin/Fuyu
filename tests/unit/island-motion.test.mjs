@@ -13,14 +13,14 @@ test("every preset ends its height before the native side shrinks the window (60
   }
 });
 
-test("the spring is the website's top island both ways; the others close quicker without overshoot (C49)", () => {
+test("the spring is the website's top island both ways; smooth and fast close quicker without overshoot (C49)", () => {
   const open = islandMotionTiming("spring", "open");
   const close = islandMotionTiming("spring", "close");
   for (const key of ["width", "widthEase", "height", "radius", "ease"]) assert.equal(close[key], open[key], key);
   // The website's menu fades out in 250ms; its bar comes back as the panel has gone.
   assert.equal(close.layer, 250);
   assert.ok(close.collapsedDelay >= 200);
-  for (const motion of ["smooth", "fast", "bouncy"]) {
+  for (const motion of ["smooth", "fast"]) {
     const opening = islandMotionTiming(motion, "open");
     const closing = islandMotionTiming(motion, "close");
     assert.ok(closing.width < opening.width && closing.height < opening.height, motion);
@@ -29,8 +29,37 @@ test("the spring is the website's top island both ways; the others close quicker
   }
 });
 
+/** The values a linear() curve passes through. */
+const points = (ease) => ease.slice("linear(".length, -1).split(",").map(Number);
+/** How many times a curve turns back: a swing past its end and back is two. */
+const turns = (values) => values.slice(1, -1).filter((value, i) => (value - values[i]) * (values[i + 2] - value) < 0).length;
+
+test("bouncy wobbles its width both ways, and its height bounces back from its end without passing it", () => {
+  for (const direction of ["open", "close"]) {
+    const timing = islandMotionTiming("bouncy", direction);
+    const width = points(timing.widthEase);
+    // Out, back in past the end, out again: what a wide panel still shows with the swing out cut.
+    assert.ok(turns(width) >= 3, `${direction} width`);
+    assert.ok(Math.min(...width.slice(width.indexOf(Math.max(...width)))) < 0.96, `${direction} swings back in`);
+    const height = points(timing.heightEase);
+    assert.equal(Math.max(...height), 1, `${direction} height never past its end`);
+    assert.ok(turns(height) >= 2, `${direction} height bounces`);
+    assert.equal(width.at(-1), 1);
+    assert.equal(height.at(-1), 1);
+  }
+  // The bar fades in after the closing width's deepest dip, which would cut its ends.
+  const close = islandMotionTiming("bouncy", "close");
+  const width = points(close.widthEase);
+  const deepest = width.indexOf(Math.max(...width)) / (width.length - 1) * close.width;
+  assert.ok(close.collapsedDelay > deepest);
+});
+
 test("reduce motion takes the bounce out, not the animation", () => {
-  for (const motion of ["spring", "bouncy"]) {
+  for (const direction of ["open", "close"]) {
+    const reduced = islandMotionTiming("bouncy", direction, true);
+    for (const key of ["widthEase", "heightEase", "radiusEase"]) assert.doesNotMatch(reduced[key], /^linear/, key);
+  }
+  for (const motion of ["spring"]) {
     assert.match(islandMotionTiming(motion, "open").widthEase, /,\s*1\.\d+,/);
     const reduced = islandMotionTiming(motion, "open", true);
     assert.doesNotMatch(reduced.widthEase, /,\s*1\.\d+,/);

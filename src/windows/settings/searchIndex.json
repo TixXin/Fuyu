@@ -169,12 +169,12 @@
       "zh-CN": {
         "group": "展开",
         "title": "开合动画",
-        "description": "弹性和官网顶部的岛一样；其余几种收起比展开快，也不回弹"
+        "description": "弹性同官网；Q 弹像果冻一样来回晃；平滑和快速收起更快、不回弹"
       },
       "en": {
         "group": "Opening",
         "title": "Open and close",
-        "description": "Spring moves as the website's top island; the others close quicker, without the bounce"
+        "description": "Spring moves as the website's island; Bouncy wobbles like jelly; Smooth and Fast close quicker, without a bounce"
       }
     },
     {
