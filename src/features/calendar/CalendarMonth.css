@@ -162,11 +162,11 @@
 }
 
 .calendar-month__day--off .calendar-month__mark {
-  color: #6fd39b;
+  color: var(--mint-text, #6fd39b);
 }
 
 .calendar-month__day--work .calendar-month__mark {
-  color: #ff8a8a;
+  color: var(--error-text, #ff8a8a);
 }
 
 .calendar-month__day--today .calendar-month__mark {

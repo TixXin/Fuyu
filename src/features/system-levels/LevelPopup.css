@@ -12,7 +12,7 @@
 }
 
 .level-popup--brightness .level-popup__icon {
-  color: #ffd166;
+  color: var(--warning-text, #ffd166);
 }
 
 .level-popup__track {

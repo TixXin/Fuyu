@@ -3,7 +3,7 @@
 .shelf-page__error {
   flex: none;
   margin: 0;
-  color: #ff8a95;
+  color: var(--error-text, #ff8a95);
   font-size: 12px;
   font-weight: 600;
   overflow-wrap: anywhere;

@@ -317,7 +317,7 @@
 }
 
 .island-list-row__warn {
-  color: #e0a43a;
+  color: var(--warning-text, #e0a43a);
 }
 
 .island-list-tag {

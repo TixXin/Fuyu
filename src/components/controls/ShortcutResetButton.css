@@ -6,7 +6,7 @@
   align-items: center;
   justify-content: center;
   padding: 0;
-  color: rgba(248, 246, 240, 0.72);
+  color: rgba(var(--overlay-rgb, 248, 246, 240), 0.72);
   background: var(--color-white-a08);
   border: 0;
   border-radius: var(--radius-pill);

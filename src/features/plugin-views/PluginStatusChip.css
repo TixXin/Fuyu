@@ -66,7 +66,7 @@
 }
 
 .plugin-status-chip__cell--accent .plugin-status-chip__value {
-  color: rgba(190, 232, 255, 0.95);
+  color: var(--info-text, rgba(190, 232, 255, 0.95));
 }
 
 .plugin-status-chip__cell--warning .plugin-status-chip__value {
@@ -141,7 +141,7 @@
 }
 
 .plugin-status-chip__battery--accent {
-  color: rgba(190, 232, 255, 0.95);
+  color: var(--info-text, rgba(190, 232, 255, 0.95));
 }
 
 .plugin-status-chip__battery--warning {
@@ -157,7 +157,7 @@
 }
 
 .plugin-status-chip--accent {
-  color: rgba(190, 232, 255, 0.95);
+  color: var(--info-text, rgba(190, 232, 255, 0.95));
   background: rgba(116, 214, 255, 0.14);
 }
 

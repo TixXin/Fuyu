@@ -123,6 +123,10 @@
   /* The pale pinks and yellows of error and warning text are unreadable on light grey. */
   --error-text: #c0283f;
   --warning-text: #9a6700;
+  /* The pale blues of links and info text on a dark island. */
+  --info-text: #0a6db3;
+  /* Log and code boxes, a dark wash on a dark island. */
+  --code-fill: rgba(24, 24, 30, 0.05);
   /* Pages that draw their own panel (translation, plugin views) instead of the island's. */
   --panel-fill: rgba(255, 255, 255, 0.6);
   /* Menus and notices that float over the page. */

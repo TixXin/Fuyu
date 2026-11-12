@@ -185,7 +185,7 @@
 
 .qq-panel__error {
   margin: 6px 0 8px;
-  color: #ffbcaf;
+  color: var(--error-text, #ffbcaf);
   font-size: 11px;
   line-height: 1.5;
   overflow-wrap: anywhere;

@@ -276,7 +276,7 @@
   padding: 8px;
   overflow: auto;
   color: var(--color-text);
-  background: rgba(0, 0, 0, 0.24);
+  background: var(--code-fill, rgba(0, 0, 0, 0.24));
   border-radius: var(--radius-md);
   font-size: 11px;
   line-height: 1.45;

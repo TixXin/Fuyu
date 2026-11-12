@@ -28,7 +28,7 @@
 
 .plugin-view__title > svg {
   flex: 0 0 auto;
-  color: rgba(204, 195, 228, 0.8);
+  color: rgba(var(--overlay-rgb, 204, 195, 228), 0.8);
 }
 
 .plugin-view__title strong,

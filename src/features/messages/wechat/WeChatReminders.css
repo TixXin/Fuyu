@@ -65,7 +65,7 @@
 }
 
 .wechat-reminder-state--pending .message-empty-icon {
-  color: #c6ebd9;
+  color: var(--mint-text, #c6ebd9);
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -34,7 +34,7 @@
 }
 
 .agent-remote__error {
-  color: #ff8a9a;
+  color: var(--error-text, #ff8a9a);
 }
 
 .agent-remote__remove {
@@ -51,7 +51,7 @@
 }
 
 .agent-remote__remove:hover {
-  color: #ff8a9a;
+  color: var(--error-text, #ff8a9a);
   background: var(--color-white-a08);
 }
 

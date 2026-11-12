@@ -13,12 +13,12 @@
 }
 
 .agent-quota-alert--low .agent-quota-alert__icon {
-  color: #ff9f0a;
+  color: var(--warning-text, #ff9f0a);
 }
 
 /* The session ring's "running" green. */
 .agent-quota-alert--reset .agent-quota-alert__icon {
-  color: #34c759;
+  color: var(--mint-text, #34c759);
 }
 
 .agent-quota-alert__text {

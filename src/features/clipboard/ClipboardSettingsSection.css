@@ -23,7 +23,7 @@
 .shortcut-control__meta strong {
   min-width: 0;
   overflow: hidden;
-  color: rgba(248, 246, 240, 0.94);
+  color: rgba(var(--overlay-rgb, 248, 246, 240), 0.94);
   font-size: 13px;
   font-weight: 900;
   text-overflow: ellipsis;
@@ -38,7 +38,7 @@
   justify-content: center;
   gap: 7px;
   padding: 0 10px;
-  color: rgba(248, 246, 240, 0.82);
+  color: rgba(var(--overlay-rgb, 248, 246, 240), 0.82);
   background: var(--color-white-a08);
   border: 0;
   border-radius: var(--radius-pill);
@@ -69,7 +69,7 @@
 }
 
 .shortcut-record-button:disabled {
-  color: rgba(248, 246, 240, 0.42);
+  color: rgba(var(--overlay-rgb, 248, 246, 240), 0.42);
   background: rgba(var(--overlay-rgb, 255, 255, 255), 0.05);
   cursor: default;
 }
@@ -90,7 +90,7 @@
 
 .shortcut-control__error {
   margin: 0;
-  color: #ff9aa9;
+  color: var(--error-text, #ff9aa9);
   font-size: 12px;
   line-height: 1.5;
   overflow-wrap: anywhere;

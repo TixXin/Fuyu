@@ -3,7 +3,7 @@
   gap: 4px;
   margin: 0;
   padding-left: 18px;
-  color: rgba(248, 246, 240, 0.72);
+  color: rgba(var(--overlay-rgb, 248, 246, 240), 0.72);
   font-size: 12px;
   line-height: 1.5;
 }

@@ -87,7 +87,7 @@
   justify-content: space-between;
   gap: var(--space-md);
   padding: 0 9px;
-  color: rgba(248, 246, 240, 0.82);
+  color: rgba(var(--overlay-rgb, 248, 246, 240), 0.82);
   border-radius: 6px;
   font-size: 12px;
   font-weight: 700;
@@ -107,7 +107,7 @@
 }
 
 .select-control__option[aria-selected="true"] {
-  color: #ffd166;
+  color: var(--warning-text, #ffd166);
 }
 
 @keyframes select-control-in {

@@ -27,18 +27,18 @@
   display: grid;
   gap: 2px;
   margin: 0;
-  color: rgba(248, 246, 240, 0.62);
+  color: rgba(var(--overlay-rgb, 248, 246, 240), 0.62);
   font-size: 11px;
 }
 
 .ssh-tunnel__state--connected {
-  color: rgba(110, 231, 200, 0.95);
+  color: var(--mint-text, rgba(110, 231, 200, 0.95));
 }
 
 .ssh-tunnel__state--portInUse,
 .ssh-tunnel__state--error,
 .ssh-tunnel__port[aria-invalid="true"] {
-  color: rgba(255, 210, 120, 0.95);
+  color: var(--warning-text, rgba(255, 210, 120, 0.95));
 }
 
 .ssh-tunnel__reason {
