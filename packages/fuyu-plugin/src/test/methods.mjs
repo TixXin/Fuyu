@@ -94,8 +94,8 @@ function viewMethod(host, method, params) {
     const ring = params.ring ?? undefined;
     if (ring !== undefined && (typeof ring !== "number" || !(ring >= 0 && ring <= 1))) fail(400, '"ring" must be a number from 0 to 1.');
     if (params.batteries != null && !(Array.isArray(params.batteries) && params.batteries.length <= 4 && params.batteries.every((battery) => typeof battery?.level === "number" && battery.level >= 0 && battery.level <= 1 && (battery.tone == null || ["neutral", "accent", "warning", "danger"].includes(battery.tone))))) fail(400, '"batteries" must be a list of at most 4 batteries, each with "level" as a number from 0 to 1 and, when it has a "tone", one of neutral, accent, warning, danger.');
-    if (params.text === "") host.statuses.delete(params.itemId);
-    else host.statuses.set(params.itemId, { text: params.text, tooltip: params.tooltip, tone: params.tone, cells, ring, batteries: params.batteries ?? undefined });
+    if (params.pie != null && !(Array.isArray(params.pie) && params.pie.length <= 4 && params.pie.every((slice) => typeof slice?.value === "number" && slice.value >= 0 && (slice.tone == null || ["neutral", "accent", "warning", "danger"].includes(slice.tone))))) fail(400, '"pie" must be a list of at most 4 slices, each with "value" as a number of 0 or more and, when it has a "tone", one of neutral, accent, warning, danger.');
+    if (params.text === "") host.statuses.delete(params.itemId); else host.statuses.set(params.itemId, { text: params.text, tooltip: params.tooltip, tone: params.tone, cells, ring, batteries: params.batteries ?? undefined, pie: params.pie ?? undefined });
     return {};
   }
   if (!views.includes(params?.viewId)) fail(404, `Unknown view "${params?.viewId}".`);

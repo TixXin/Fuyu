@@ -142,13 +142,14 @@ function Send-FuyuWebviewMessage([string]$ViewId, $Message) {
     [bool](Invoke-FuyuMethod 'webview.postMessage' @{ viewId = $ViewId; message = $Message }).shown
 }
 
-function Update-FuyuStatus([string]$ItemId, [string]$Text, [string]$Tooltip = $null, [string]$Tone = $null, [object[]]$Cells = $null, [Nullable[double]]$Ring = $null, [object[]]$Batteries = $null) {
+function Update-FuyuStatus([string]$ItemId, [string]$Text, [string]$Tooltip = $null, [string]$Tone = $null, [object[]]$Cells = $null, [Nullable[double]]$Ring = $null, [object[]]$Batteries = $null, [object[]]$Pie = $null) {
     $params = @{ itemId = $ItemId; text = $Text }
     if ($Tooltip) { $params.tooltip = $Tooltip }
     if ($Tone) { $params.tone = $Tone }
     if ($null -ne $Cells -and $Cells.Count -gt 0) { $params.cells = @($Cells) }
     if ($null -ne $Ring) { $params.ring = $Ring }
     if ($null -ne $Batteries -and $Batteries.Count -gt 0) { $params.batteries = @($Batteries) }
+    if ($null -ne $Pie -and $Pie.Count -gt 0) { $params.pie = @($Pie) }
     [void](Invoke-FuyuMethod 'status.update' $params)
 }
 

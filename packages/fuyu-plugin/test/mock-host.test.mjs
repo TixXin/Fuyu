@@ -31,11 +31,12 @@ plugin.onCommand("view", async () => {
   report("patch", await plugin.views.patch("board", [{ id: "b", title: "B2" }, { id: "c", title: "C" }]));
   report("change", await plugin.views.patch("board", { remove: ["a"], add: [{ item: { id: "z", title: "Z" }, before: "b" }, { item: { id: "y", title: "Y" } }] }));
   await attempt("twice", () => plugin.views.patch("board", { add: [{ item: { id: "z" } }] }));
-  await plugin.status.update("count", "2 items", { cells: [{ label: "CPU", value: "23%" }], ring: 0.5, batteries: [{ level: 0.8, tone: "warning" }] });
+  await plugin.status.update("count", "2 items", { cells: [{ label: "CPU", value: "23%" }], ring: 0.5, batteries: [{ level: 0.8, tone: "warning" }], pie: [{ value: 3 }, { value: 1, tone: "danger" }] });
   await attempt("long", () => plugin.status.update("count", "x".repeat(25)));
   await attempt("badCell", () => plugin.status.update("count", "x", { cells: [{ label: "toolong", value: "1" }] }));
   await attempt("badRing", () => plugin.status.update("count", "x", { ring: 2 }));
   await attempt("badBattery", () => plugin.status.update("count", "x", { batteries: [{ level: 2 }] }));
+  await attempt("badSlice", () => plugin.status.update("count", "x", { pie: [{ value: -1 }] }));
   await attempt("badTone", () => plugin.status.update("count", "x", { batteries: [{ level: 0.5, tone: "red" }] }));
   await attempt("unknown", () => plugin.views.update("nope", {}));
   await plugin.openView("board");
@@ -107,7 +108,7 @@ test("the mock host runs a plugin like the island does", async () => {
     const ready = await logged(host, "ready");
     assert.equal(ready.pluginId, "me.mock");
     assert.equal(ready.activationEvent, "onCommand:todos");
-    assert.deepEqual(ready.capabilities, ["events", "notifications", "storage", "secrets", "views", "status", "webview", "permissions", "openView", "statusCells", "notifyStyle", "notifyControls", "statusBatteries"]);
+    assert.deepEqual(ready.capabilities, ["events", "notifications", "storage", "secrets", "views", "status", "webview", "permissions", "openView", "statusCells", "notifyStyle", "notifyControls", "statusBatteries", "statusPie"]);
     assert.deepEqual(ready.settings, { repo: "a/b", extra: true });
     await host.waitFor((state) => state.subscriptions.has("todos.changed"));
 
@@ -146,6 +147,8 @@ test("the mock host runs a plugin like the island does", async () => {
     assert.deepEqual(await logged(host, "badBattery"), { code: -32000, status: 400 });
     assert.deepEqual(await logged(host, "badTone"), { code: -32000, status: 400 });
     assert.deepEqual(host.statuses.get("count").batteries, [{ level: 0.8, tone: "warning" }]);
+    assert.deepEqual(await logged(host, "badSlice"), { code: -32000, status: 400 });
+    assert.deepEqual(host.statuses.get("count").pie, [{ value: 3 }, { value: 1, tone: "danger" }]);
     assert.deepEqual(await logged(host, "unknown"), { code: -32000, status: 404 });
     assert.deepEqual(await logged(host, "openUnknown"), { code: -32000, status: 404 });
     assert.deepEqual(host.openedViews, ["board"]);

@@ -42,7 +42,7 @@ A Fuyu plugin is a folder the island runs as a child process. They talk JSON-RPC
 | The user wants | Use |
 |---|---|
 | A page they open on the island | `contributes.views` with template `list` (rows, check boxes, search, inline buttons), `detail` (markdown and facts), `form` (inputs and submit) or `status` (one big number, progress) |
-| Something always visible when collapsed | `contributes.statusItems` + `status.update` (text; `cells` columns, a `ring`, or `batteries` when the island supports them) |
+| Something always visible when collapsed | `contributes.statusItems` + `status.update` (text; `cells` columns, a `ring`, `batteries` or a `pie` when the island supports them) |
 | A one-off action | `contributes.commands` (+ `keybinding`, `when`), shown on the plugin's settings page; `menus` to put it on the todo / clipboard / shelf / message right-click menu |
 | A heads-up | `island.notify` (`island:notify`), with up to 2 buttons |
 | A chart or something templates can't draw | template `webview` (a local HTML page, no network, talks to the plugin through `acquireFuyuApi()`). Last resort: templates match the island's look |
