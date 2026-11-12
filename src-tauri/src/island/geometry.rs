@@ -55,7 +55,7 @@ static RUNNING_SLIDE: Mutex<Option<(u64, (i32, i32))>> = Mutex::new(None);
 pub(super) fn continues_slide(running: Option<(u64, (i32, i32))>, current_generation: u64, target: (i32, i32), animate: bool) -> bool {
     !animate && running == Some((current_generation, target))
 }
-// A shorter stage waits for the island's 560ms height transition (.island in
+// A shorter stage waits for the island's 500ms height transition (.island in
 // src/windows/island/IslandShell.css) to finish; shrinking at once would cut off the
 // bottom of the island while it is still animating down from a taller page.
 const STAGE_SHRINK_DELAY: Duration = Duration::from_millis(600);

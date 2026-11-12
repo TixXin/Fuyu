@@ -17,7 +17,7 @@
  */
 export type PageHoverGate = { last: { x: number; y: number } | null; settleUntil: number };
 
-/** Most of the island's 560ms resize (IslandShell.css); what is left moves the buttons a pixel or two. */
+/** Most of the island's 550ms width spring (IslandShell.css); what is left moves the buttons a pixel or two. */
 export const PAGE_SWITCH_SETTLE_MS = 450;
 /** How long the pointer rests on a button before it counts as aiming there, not passing over. */
 export const PAGE_HOVER_INTENT_MS = 120;
