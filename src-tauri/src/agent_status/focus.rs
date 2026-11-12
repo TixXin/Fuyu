@@ -9,7 +9,7 @@ use super::session_records::{self, SessionRecord};
 use super::wezterm::{self, WEZTERM_APP};
 use super::window_focus::{self, app_name, SessionHints};
 use crate::system::windows_home_dir;
-use crate::win32;
+use crate::platform;
 
 const WINDOWS_TERMINAL_APP: &str = "windowsterminal";
 
@@ -41,7 +41,7 @@ fn process_chain(
         return Vec::new();
     };
     if let Some(pid) = record.and_then(SessionRecord::live_pid) {
-        let chain = ancestor_chain(pid, &win32::process_tree::parent_process_ids(), win32::process_times::start_time);
+        let chain = ancestor_chain(pid, &platform::process_tree::parent_process_ids(), platform::process_times::start_time);
         log.note(format!("process=hook({})", chain.len()));
         return chain;
     }
@@ -53,8 +53,8 @@ fn process_chain(
         }
     }
     match seen {
-        Some(seen) if still_running(seen, win32::process_times::start_time(seen.pid)) => {
-            let chain = ancestor_chain(seen.pid, &win32::process_tree::parent_process_ids(), win32::process_times::start_time);
+        Some(seen) if still_running(seen, platform::process_times::start_time(seen.pid)) => {
+            let chain = ancestor_chain(seen.pid, &platform::process_tree::parent_process_ids(), platform::process_times::start_time);
             log.note(format!("process=remembered({})", chain.len()));
             chain
         }
@@ -160,12 +160,12 @@ pub(super) fn focus_session(
     };
     log.note(format!("window={}", focused.app));
     if let Some(handle) = handle.filter(|_| focused.app == orca::ORCA_APP) {
-        let switched = win32::process::image_path(focused.process_id)
+        let switched = platform::process::image_path(focused.process_id)
             .is_some_and(|orca_exe| orca::switch_terminal(Path::new(&orca_exe), &handle));
         log.note(if switched { "switch=sent" } else { "switch=failed" });
     }
     if let Some(title) = title.filter(|_| focused.app == WEZTERM_APP && !wezterm_tab) {
-        let exe = win32::process::image_path(focused.process_id);
+        let exe = platform::process::image_path(focused.process_id);
         let selected = wezterm::activate_tab_titled(exe.as_deref().map(Path::new), title);
         log.note(if selected { "wezterm-tab=selected" } else { "wezterm-tab=none" });
     }
@@ -190,6 +190,16 @@ pub(super) fn focus_session(
     Focused { found: true, missing_extension }
 }
 
+#[cfg(windows)]
+fn foreground_process_id() -> u32 {
+    crate::win32::process::window_process_id(crate::win32::window::foreground_window())
+}
+
+#[cfg(not(windows))]
+fn foreground_process_id() -> u32 {
+    0
+}
+
 #[derive(Debug, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SessionRef {
@@ -198,8 +208,8 @@ pub struct SessionRef {
 }
 
 pub(super) fn sessions_in_front(app_dir: Option<&Path>, sessions: &[SessionRef]) -> Vec<String> {
-    let front = win32::process::window_process_id(win32::window::foreground_window());
-    let front_app = win32::process::image_path(front).map(|path| app_name(&path));
+    let front = foreground_process_id();
+    let front_app = platform::process::image_path(front).map(|path| app_name(&path));
     if front == 0 || front_app.is_none_or(|app| window_focus::NOT_SESSION_HOSTS.contains(&app.as_str())) {
         return Vec::new();
     }

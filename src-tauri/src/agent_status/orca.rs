@@ -1,7 +1,7 @@
+use crate::system::CommandExt;
 use std::{
     fs,
     io::Read,
-    os::windows::process::CommandExt,
     path::{Path, PathBuf},
     process::{Command, Stdio},
     thread,
@@ -65,7 +65,7 @@ pub(super) fn terminal_handle_for(app_dir: &Path, session_id: &str) -> Option<St
 }
 
 pub(super) fn terminal_handle_of_process(process_id: u32) -> Option<String> {
-    crate::win32::process_env::environment_variable(process_id, TERMINAL_HANDLE_VARIABLE)
+    crate::platform::process_env::environment_variable(process_id, TERMINAL_HANDLE_VARIABLE)
         .filter(|handle| is_terminal_handle(handle))
 }
 

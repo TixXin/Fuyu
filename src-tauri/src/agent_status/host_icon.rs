@@ -8,7 +8,7 @@ use std::{
 use base64::{engine::general_purpose, Engine as _};
 use image::{ImageFormat, RgbaImage};
 
-use crate::win32;
+use crate::platform;
 
 static ICONS: Mutex<Option<HashMap<String, Option<String>>>> = Mutex::new(None);
 const MAX_CACHED: usize = 64;
@@ -35,7 +35,7 @@ pub(crate) fn icon_data_url(path: &str) -> Option<String> {
     {
         return cached.clone();
     }
-    let url = win32::icon::exe_icon(path).and_then(|icon| {
+    let url = platform::icon::exe_icon(path).and_then(|icon| {
         let image = RgbaImage::from_raw(icon.width, icon.height, icon.rgba)?;
         let mut png = Cursor::new(Vec::new());
         image.write_to(&mut png, ImageFormat::Png).ok()?;

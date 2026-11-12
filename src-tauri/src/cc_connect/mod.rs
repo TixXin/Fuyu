@@ -8,9 +8,9 @@ pub(crate) mod remote;
 mod runner;
 
 use crate::user_error::UserError;
+use crate::system::CommandExt;
 use std::{
     io::{Read, Write},
-    os::windows::process::CommandExt,
     path::{Path, PathBuf},
     process::{Command, Stdio},
     sync::OnceLock,

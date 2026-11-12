@@ -1,6 +1,6 @@
 use base64::{engine::general_purpose::STANDARD, Engine};
+use crate::system::CommandExt;
 use std::{
-    os::windows::process::CommandExt,
     path::PathBuf,
     process::{Command, Stdio},
     sync::{mpsc, Arc},

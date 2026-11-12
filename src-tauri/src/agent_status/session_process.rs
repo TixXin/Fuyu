@@ -2,7 +2,7 @@ use std::{collections::HashMap, fs, path::Path};
 
 use serde_json::Value;
 
-use crate::win32;
+use crate::platform;
 
 const MAX_CHAIN: usize = 12;
 
@@ -34,7 +34,7 @@ pub(super) fn running_sessions(home_dir: &Path) -> HashMap<String, u32> {
         .filter_map(|entry| fs::read_to_string(entry.path()).ok())
         .filter_map(|text| session_entry(&text))
         .filter(|(_, process)| {
-            let actual = win32::process_times::start_time(process.pid);
+            let actual = platform::process_times::start_time(process.pid);
             actual.is_some() && process.started.is_none_or(|started| Some(started) == actual)
         })
         .map(|(id, process)| (id, process.pid))
@@ -74,5 +74,5 @@ pub(super) fn session_process_chain(home_dir: &Path, session_id: &str) -> Vec<u3
     let Some(pid) = find_session_process(home_dir, session_id) else {
         return Vec::new();
     };
-    ancestor_chain(pid, &win32::process_tree::parent_process_ids(), win32::process_times::start_time)
+    ancestor_chain(pid, &platform::process_tree::parent_process_ids(), platform::process_times::start_time)
 }

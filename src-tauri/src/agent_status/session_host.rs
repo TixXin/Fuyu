@@ -1,7 +1,4 @@
-use std::{
-    collections::{HashMap, HashSet},
-    path::Path,
-};
+use std::{collections::HashMap, path::Path};
 
 use serde::Serialize;
 
@@ -12,7 +9,7 @@ use super::session_records;
 use super::snapshot::current_unix_millis;
 use super::sessions::AgentSessionSummary;
 use super::window_focus::{app_name, NOT_SESSION_HOSTS};
-use crate::win32;
+use crate::platform;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -123,14 +120,14 @@ pub(super) fn attach_hosts(home_dir: &Path, app_dir: Option<&Path>, sessions: &m
         .collect();
     if !unknown.is_empty() {
         let windows = window_owners();
-        let parents = win32::process_tree::parent_process_ids();
+        let parents = platform::process_tree::parent_process_ids();
         for (id, pid, recorded_tab) in unknown {
-            let chain = ancestor_chain(pid, &parents, win32::process_times::start_time);
+            let chain = ancestor_chain(pid, &parents, platform::process_times::start_time);
             let seen = SeenSession {
                 pid,
-                started: win32::process_times::start_time(pid),
+                started: platform::process_times::start_time(pid),
                 host_exe: host_of_chain(&chain, &windows).or_else(|| {
-                    let var = |name: &str| win32::process_env::environment_variable(pid, name);
+                    let var = |name: &str| platform::process_env::environment_variable(pid, name);
                     host_from_env(var, |app| windows.values().find(|exe| app_name(exe) == app).cloned())
                 }),
                 orca_handle: orca::terminal_handle_of_process(pid).or(recorded_tab),
@@ -148,7 +145,10 @@ pub(super) fn attach_hosts(home_dir: &Path, app_dir: Option<&Path>, sessions: &m
     }
 }
 
+#[cfg(windows)]
 fn window_owners() -> HashMap<u32, String> {
+    use crate::win32;
+    use std::collections::HashSet;
     let mut owners = HashSet::new();
     let _ = win32::window::for_each_top_level_window(|window| {
         if win32::window::is_visible(window)
@@ -162,4 +162,9 @@ fn window_owners() -> HashMap<u32, String> {
         .into_iter()
         .filter_map(|pid| win32::process::image_path(pid).map(|exe| (pid, exe)))
         .collect()
+}
+
+#[cfg(not(windows))]
+fn window_owners() -> HashMap<u32, String> {
+    HashMap::new()
 }

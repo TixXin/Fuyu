@@ -1,4 +1,4 @@
-use std::os::windows::process::CommandExt;
+use crate::system::CommandExt;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
@@ -6,7 +6,7 @@ use serde::Deserialize;
 
 use super::title::only_tab_titled;
 use crate::system::CREATE_NO_WINDOW;
-use crate::win32;
+use crate::platform;
 
 pub(super) const WEZTERM_APP: &str = "wezterm-gui";
 const GUI_EXE: &str = "wezterm-gui.exe";
@@ -21,7 +21,7 @@ struct Pane {
 fn cli_beside(gui_exe: Option<&Path>) -> Option<PathBuf> {
     let gui = match gui_exe {
         Some(path) => path.to_path_buf(),
-        None => PathBuf::from(win32::process::running_executable(&[GUI_EXE])?),
+        None => PathBuf::from(platform::process::running_executable(&[GUI_EXE])?),
     };
     let cli = gui.with_file_name(CLI_EXE);
     cli.is_file().then_some(cli)

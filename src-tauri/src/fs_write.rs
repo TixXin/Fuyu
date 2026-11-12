@@ -33,7 +33,6 @@ fn held_by_another_program(error: &io::Error) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::os::windows::fs::OpenOptionsExt;
 
     #[test]
     fn replaces_the_file_and_leaves_no_temporary_behind() {
@@ -47,8 +46,10 @@ mod tests {
         fs::remove_dir_all(&dir).unwrap();
     }
 
+    #[cfg(windows)]
     #[test]
     fn waits_out_a_program_that_holds_the_file_for_a_moment() {
+        use std::os::windows::fs::OpenOptionsExt;
         let dir = std::env::temp_dir().join(format!("focusd-fs-write-held-{}", std::process::id()));
         fs::create_dir_all(&dir).unwrap();
         let path = dir.join("history.json");

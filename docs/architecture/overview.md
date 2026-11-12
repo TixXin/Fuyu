@@ -26,7 +26,16 @@
 └────────────┬─────────────────────────────────────────────────────────────────────────┘
              ▼
    Windows：Win32 / WinRT（SMTC 媒体、音频端点、通知监听、注册表、窗口）、凭据管理器
+   macOS（适配中，G1）：平台层 macos/；暂不支持的模块编译成 unsupported 空实现
 ```
+
+### 平台层
+
+- 系统 API 的 `unsafe` 调用只放在平台层：`src-tauri/src/win32/`（Windows）和 `src-tauri/src/macos/`（macOS，决定 M10）。业务模块不直接调系统 API。
+- 两个平台都有的能力（进程树、进程启动时间、可执行文件路径、进程环境变量、程序图标、作业对象）在 `win32/` 和 `macos/` 里用同名模块和同样的函数签名，业务代码经 `src-tauri/src/platform.rs` 引用，不写 `cfg`。
+- 只在 Windows 上有的模块，在 `lib.rs`（或所在模块的 `mod` 声明）上用 `#[cfg_attr(not(windows), path = "…unsupported.rs")]` 换成 Mac 上的空实现：命令名、参数和其他模块用到的函数保持不变，命令返回错误码 `platform.unsupported`（`user_error::unsupported_commands!` 批量生成）或无害的默认值。Windows 上原文件一行不改。
+- 只差几处的文件在原处用 `#[cfg(windows)]` / `#[cfg(not(windows))]` 写两份函数。
+- 各功能在每个平台上的状态见 [platforms.md](platforms.md)，迁移表见 [macos-port-plan.md](macos-port-plan.md)「第 0 步的迁移表」。
 
 各项数据存在哪里见 [data-storage.md](data-storage.md)。
 

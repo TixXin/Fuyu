@@ -100,8 +100,15 @@ pub(super) fn pick_proxy(configured: Option<&str>, env: Option<&str>, system: Op
         .map(str::to_string)
 }
 
+#[cfg(windows)]
 const INTERNET_SETTINGS: &str = r"Software\Microsoft\Windows\CurrentVersion\Internet Settings";
 
+#[cfg(not(windows))]
+fn windows_proxy() -> Option<String> {
+    None
+}
+
+#[cfg(windows)]
 fn windows_proxy() -> Option<String> {
     use windows::Win32::System::Registry::HKEY_CURRENT_USER;
     let enabled = crate::win32::registry::read_u32(HKEY_CURRENT_USER, INTERNET_SETTINGS, "ProxyEnable")?;
@@ -109,6 +116,7 @@ fn windows_proxy() -> Option<String> {
     (enabled != 0).then(|| https_entry(&server)).flatten()
 }
 
+#[cfg(any(windows, test))]
 pub(super) fn https_entry(server: &str) -> Option<String> {
     let server = server.trim();
     if !server.contains('=') {

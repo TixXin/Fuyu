@@ -1,4 +1,5 @@
-use std::{os::windows::process::CommandExt, path::Path, process::Command, thread, time::Duration};
+use crate::system::CommandExt;
+use std::{path::Path, process::Command, thread, time::Duration};
 
 use windows::Win32::System::Registry::HKEY_CURRENT_USER;
 

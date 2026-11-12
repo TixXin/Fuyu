@@ -12,7 +12,7 @@ concurrency:
   group: ci-${{ github.ref }}-${{ github.event_name == 'push' && github.sha || 'pr' }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
-# The three jobs run side by side; `check` gathers them, because the main ruleset requires a check named `check`.
+# The jobs run side by side; `check` gathers them, because the main ruleset requires a check named `check`.
 jobs:
   scope:
     runs-on: ubuntu-latest
@@ -135,9 +135,36 @@ jobs:
       - name: Clippy
         run: cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings
 
+  # macOS 适配（G1）：Mac 上暂不支持的模块用 *_unsupported.rs / unsupported.rs，这里保证它们编得过、测试能跑。
+  rust-macos:
+    needs: scope
+    if: needs.scope.outputs.docs != 'true'
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.99.1
+          components: clippy
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Placeholder frontend
+        shell: bash
+        run: mkdir -p dist
+
+      - name: Rust tests
+        run: cargo test --manifest-path src-tauri/Cargo.toml
+
+      - name: Clippy
+        run: cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings
+
   check:
     if: always()
-    needs: [scope, docs, frontend, regression, rust]
+    needs: [scope, docs, frontend, regression, rust, rust-macos]
     runs-on: ubuntu-latest
     steps:
       - name: All jobs passed
@@ -148,11 +175,12 @@ jobs:
           FRONTEND: ${{ needs.frontend.result }}
           REGRESSION: ${{ needs.regression.result }}
           RUST: ${{ needs.rust.result }}
+          RUST_MACOS: ${{ needs.rust-macos.result }}
         run: |
-          echo "scope=$SCOPE docs-only=$DOCS_ONLY docs=$DOCS frontend=$FRONTEND regression=$REGRESSION rust=$RUST"
+          echo "scope=$SCOPE docs-only=$DOCS_ONLY docs=$DOCS frontend=$FRONTEND regression=$REGRESSION rust=$RUST rust-macos=$RUST_MACOS"
           [ "$SCOPE" = success ] || exit 1
           if [ "$DOCS_ONLY" = true ]; then
             [ "$DOCS" = success ]
           else
-            [ "$FRONTEND" = success ] && [ "$REGRESSION" = success ] && [ "$RUST" = success ]
+            [ "$FRONTEND" = success ] && [ "$REGRESSION" = success ] && [ "$RUST" = success ] && [ "$RUST_MACOS" = success ]
           fi

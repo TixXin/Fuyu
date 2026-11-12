@@ -119,7 +119,9 @@ fn bad_manifests_say_why() {
     assert!(reason(json!({ "name": { "zh-CN": "同步", "en": " " } })).contains("name"));
     assert!(reason(json!({ "permissions": ["camera:read"] })).contains("camera:read"));
     assert!(reason(json!({ "runtime": { "type": "process", "command": "../evil.exe" } })).contains("inside"));
-    assert!(reason(json!({ "runtime": { "type": "process", "command": "C:\\evil.exe" } })).contains("inside"));
+    if cfg!(windows) {
+        assert!(reason(json!({ "runtime": { "type": "process", "command": "C:\\evil.exe" } })).contains("inside"));
+    }
     assert!(reason(json!({ "runtime": { "type": "process", "command": "run.bat" } })).contains(".exe"));
     assert!(reason(json!({ "contributes": { "commands": [{ "id": "a b", "title": { "zh-CN": "x", "en": "x" } }] } })).contains("a b"));
     assert!(reason(json!({ "version": "" })).contains("version"));
@@ -1160,6 +1162,7 @@ mod market_trust_tests {
     }
 }
 
+#[cfg(windows)]
 mod webview_tests {
     use serde_json::json;
     use std::fs;
@@ -1386,6 +1389,7 @@ mod optional_tests {
     }
 }
 
+#[cfg(windows)]
 mod keybinding_tests {
     use super::super::keybindings::effective;
 

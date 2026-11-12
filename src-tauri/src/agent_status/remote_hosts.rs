@@ -80,6 +80,7 @@ pub(super) fn chosen_targets(app_dir: &Path) -> Vec<(String, SshTarget)> {
     file.hosts.iter().map(|name| (name.clone(), target_in(&file.custom, name))).collect()
 }
 
+#[cfg_attr(not(windows), allow(dead_code))]
 pub(crate) fn target(app_dir: &Path, name: &str) -> SshTarget {
     target_in(&read_file(app_dir).custom, name)
 }

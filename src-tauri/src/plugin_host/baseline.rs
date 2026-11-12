@@ -1,14 +1,14 @@
+use crate::system::CommandExt;
 use std::{
     collections::HashMap,
     io::{BufRead, BufReader},
-    os::windows::process::CommandExt,
     process::{Command, Stdio},
     sync::{mpsc, Mutex, PoisonError},
     thread,
     time::Duration,
 };
 
-use crate::{system::CREATE_NO_WINDOW, win32::job::Job};
+use crate::{platform::job::Job, system::CREATE_NO_WINDOW};
 
 const START_TIMEOUT: Duration = Duration::from_secs(15);
 const SETTLE: Duration = Duration::from_secs(2);
@@ -80,6 +80,7 @@ fn idle_command(runtime: &str) -> Command {
     command
 }
 
+#[cfg_attr(not(windows), allow(clippy::drop_non_drop))]
 fn measure(runtime: &str) -> Option<u64> {
     let job = Job::new().ok()?;
     let mut child = idle_command(runtime).spawn().ok()?;
@@ -108,7 +109,9 @@ fn measure(runtime: &str) -> Option<u64> {
 
 #[cfg(test)]
 mod tests {
-    use super::{measure, runtime_for};
+    #[cfg(windows)]
+    use super::measure;
+    use super::runtime_for;
 
     #[test]
     fn only_script_runtimes_have_a_baseline() {
@@ -118,6 +121,7 @@ mod tests {
         assert_eq!(runtime_for(""), None);
     }
 
+    #[cfg(windows)]
     #[test]
     fn an_idle_powershell_takes_tens_of_megabytes() {
         let bytes = measure("powershell.exe").expect("measured");

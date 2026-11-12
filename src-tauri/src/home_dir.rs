@@ -62,7 +62,7 @@ pub(crate) fn resolve(env: Option<&str>, pointer: Option<&str>, profile: Option<
 }
 
 fn profile() -> Option<PathBuf> {
-    std::env::var_os("USERPROFILE").map(PathBuf::from)
+    std::env::var_os(if cfg!(windows) { "USERPROFILE" } else { "HOME" }).map(PathBuf::from)
 }
 
 pub(crate) fn default_home() -> Option<PathBuf> {
@@ -86,7 +86,10 @@ pub(crate) fn init(identifier: &str) {
     };
     if source != Source::AppData {
         if let Some(holder) = lock::conflict(&home) {
+            #[cfg(windows)]
             crate::win32::message_box::show_warning("浮屿 Fuyu", &lock::conflict_message(&home, &holder));
+            #[cfg(not(windows))]
+            eprintln!("{}", lock::conflict_message(&home, &holder));
             std::process::exit(0);
         }
     }
@@ -127,22 +130,28 @@ pub(crate) use tauri_commands;
 
 #[cfg(test)]
 mod tests {
-    use super::{pointed_home, resolve, Source};
+    #[cfg(windows)]
+    use super::pointed_home;
+    use super::{resolve, Source};
     use std::path::Path;
 
     const APP_DATA: &str = r"C:\Users\me\AppData\Roaming\com.tixxin.fuyu";
+    #[cfg(windows)]
     const PROFILE: &str = r"C:\Users\me";
 
+    #[cfg(windows)]
     fn home(env: Option<&str>, pointer: Option<&str>) -> (String, Source) {
         let (home, source) = resolve(env, pointer, Some(Path::new(PROFILE)), Path::new(APP_DATA));
         (home.display().to_string(), source)
     }
 
+    #[cfg(windows)]
     #[test]
     fn the_default_home_is_dot_fuyu_in_the_profile() {
         assert_eq!(home(None, None), (r"C:\Users\me\.fuyu".into(), Source::Default));
     }
 
+    #[cfg(windows)]
     #[test]
     fn the_environment_comes_first_then_the_pointer() {
         let pointer = r#"{ "home": "D:\\Sync\\fuyu" }"#;
@@ -151,6 +160,7 @@ mod tests {
         assert_eq!(home(Some("  "), Some(pointer)).1, Source::Pointer);
     }
 
+    #[cfg(windows)]
     #[test]
     fn relative_or_broken_paths_are_ignored() {
         assert_eq!(home(Some("fuyu"), None).1, Source::Default);

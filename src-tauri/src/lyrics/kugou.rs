@@ -69,7 +69,7 @@ pub(super) async fn fetch(title: &str, artist: &str, duration_ms: i64) -> Result
     Ok(from_lines(&lines, krc::translations(&text).as_deref(), title))
 }
 
-#[cfg(test)]
+#[cfg(all(test, windows))]
 mod tests {
     use super::*;
     use serde_json::json;

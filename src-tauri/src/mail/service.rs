@@ -334,7 +334,7 @@ impl MailService {
     }
 
     pub(super) fn save_attachment(&self, email: &str, message_id: &str, part: &str) -> Result<std::path::PathBuf, UserError> {
-        let dir = crate::win32::known_folder::downloads().ok_or_else(|| UserError::new("mail.noDownloads", "The Downloads folder was not found."))?;
+        let dir = crate::system::downloads_dir().ok_or_else(|| UserError::new("mail.noDownloads", "The Downloads folder was not found."))?;
         let secret = read_secret(email)?.ok_or_else(|| UserError::new("mail.codeMissing", "The saved authorization code was not found; connect again."))?;
         let mut session =
             open_session(&self.host(), email, &secret).map_err(|failure| failure.error)?;

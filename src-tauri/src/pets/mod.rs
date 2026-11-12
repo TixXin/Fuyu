@@ -7,10 +7,13 @@ use serde::{Deserialize, Serialize};
 use std::{
     fs,
     io::Read,
-    os::windows::fs::OpenOptionsExt,
     path::{Path, PathBuf},
 };
 use tauri::{AppHandle, Manager};
+#[cfg(unix)]
+use std::os::unix::fs::OpenOptionsExt;
+#[cfg(windows)]
+use std::os::windows::fs::OpenOptionsExt;
 
 use crate::system::windows_home_dir;
 use sheet::{image_header, sheet_rows, HEADER_BYTES};
@@ -19,7 +22,10 @@ const MANIFEST_FILE_NAME: &str = "pet.json";
 const DEFAULT_SHEETS: [&str; 2] = ["spritesheet.webp", "spritesheet.png"];
 const MAX_MANIFEST_BYTES: u64 = 64 * 1024;
 const MAX_SHEET_BYTES: u64 = 4 * 1024 * 1024;
+#[cfg(windows)]
 const FILE_FLAG_OPEN_REPARSE_POINT: u32 = 0x0020_0000;
+#[cfg(target_os = "macos")]
+const O_NOFOLLOW: i32 = 0x0100;
 const MAX_DISPLAY_NAME_CHARS: usize = 64;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
@@ -205,9 +211,13 @@ fn check_sheet(root: &Path, dir: &Path, name: &str) -> Option<(PathBuf, &'static
 }
 
 fn open_regular_file(path: &Path) -> Result<fs::File, String> {
-    let file = fs::OpenOptions::new()
-        .read(true)
-        .custom_flags(FILE_FLAG_OPEN_REPARSE_POINT)
+    let mut options = fs::OpenOptions::new();
+    options.read(true);
+    #[cfg(windows)]
+    options.custom_flags(FILE_FLAG_OPEN_REPARSE_POINT);
+    #[cfg(target_os = "macos")]
+    options.custom_flags(O_NOFOLLOW);
+    let file = options
         .open(path)
         .map_err(|error| error.to_string())?;
     if !file

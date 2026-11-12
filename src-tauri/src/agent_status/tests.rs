@@ -80,6 +80,7 @@ fn titles_are_cut_by_characters() {
     assert_eq!(display_title(" \n\t "), None);
 }
 
+#[cfg(windows)]
 #[test]
 fn codex_index_and_folder_titles() {
     let index = [
@@ -141,6 +142,7 @@ fn first_prompt_uses_slash_command_arguments_and_drops_headings() {
     assert_eq!(first_prompt(&image_only).as_deref(), Some("下一句"));
 }
 
+#[cfg(windows)]
 #[test]
 fn session_windows_are_matched_by_folder_and_title() {
     use super::window_focus::{app_name, best_window, SessionHints, WindowCandidate};
@@ -751,6 +753,7 @@ fn a_session_quit_mid_turn_is_no_longer_waiting() {
     assert_eq!(list_sessions(&home, None, &asked, ACTIVE_WINDOW_MS)[0].phase, "waiting");
 }
 
+#[cfg(windows)]
 #[test]
 fn a_claude_session_gone_from_its_registry_is_no_longer_running() {
     use super::session_scan::{list_sessions, ACTIVE_WINDOW_MS};
@@ -926,6 +929,7 @@ fn an_agent_terminal_is_only_picked_when_it_is_the_only_one_in_its_folder() {
     assert_eq!(only_agent_terminal("not json", "codex", "E:"), None);
 }
 
+#[cfg(windows)]
 #[test]
 fn orca_terminal_records_name_their_session() {
     use super::orca::{cli_path, is_terminal_handle, record_session_id, terminal_handle_for, AGENT_TERMINALS_DIR_NAME};
@@ -953,6 +957,7 @@ fn orca_terminal_records_name_their_session() {
     let _ = fs::remove_dir_all(&app_dir);
 }
 
+#[cfg(windows)]
 #[test]
 fn session_hosts_are_named_from_their_executable_or_codex_origin() {
     use super::session_host::{codex_host, host_for_exe, host_of_chain};
@@ -1006,6 +1011,7 @@ fn a_session_with_a_broken_parent_chain_finds_its_host_in_its_environment() {
     assert_eq!(host_from_env(env(&[]), |_| None), None);
 }
 
+#[cfg(windows)]
 #[test]
 fn host_icons_are_only_read_from_existing_executables() {
     use super::host_icon::{icon_data_url, is_icon_source};
@@ -1191,6 +1197,7 @@ fn windows_terminal_tabs_are_picked_by_the_session_title() {
     assert_eq!(only_tab_titled(&[], "设置界面完善思路"), None);
 }
 
+#[cfg(windows)]
 #[test]
 fn tab_selection_gives_up_on_a_window_that_does_not_exist() {
     use windows::Win32::Foundation::HWND;
@@ -1293,6 +1300,7 @@ fn focus_attempts_log_their_steps_without_titles() {
 }
 
 
+#[cfg(windows)]
 #[test]
 fn session_records_name_a_live_process_and_its_tab() {
     use super::session_records::{is_session_id, parse, read, same_start, DIR_NAME};
@@ -1537,6 +1545,7 @@ fn context_tokens_come_from_the_newest_model_call() {
     .concat();
     assert_eq!(parse_codex_tail(&codex).context_tokens, Some(24_800));
 }
+#[cfg(windows)]
 #[test]
 fn a_symlinked_file_is_not_written() {
     let dir = std::env::temp_dir().join(format!("focusd-symlink-{}", std::process::id()));

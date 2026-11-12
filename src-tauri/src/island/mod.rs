@@ -1,10 +1,16 @@
 pub(crate) mod banner_hit;
+#[cfg_attr(not(windows), path = "focus_unsupported.rs")]
 pub(crate) mod focus;
+#[cfg_attr(not(windows), path = "follow_unsupported.rs")]
 mod follow;
 mod geometry;
+#[cfg_attr(not(windows), path = "glass_unsupported.rs")]
 mod glass;
+#[cfg_attr(not(windows), path = "modifier_unsupported.rs")]
 pub(crate) mod modifier;
+#[cfg_attr(not(windows), path = "outside_click_unsupported.rs")]
 pub(crate) mod outside_click;
+#[cfg_attr(not(windows), path = "passthrough_unsupported.rs")]
 pub(crate) mod passthrough;
 mod state;
 pub(crate) mod top_edge;
@@ -27,6 +33,7 @@ use geometry::{
     MIN_EXPANDED_ISLAND_HEIGHT, POSITION_ANIMATION_GENERATION,
 };
 use glass::apply_glass_material;
+#[cfg(windows)]
 use crate::win32;
 use state::{mutate_window_state, read_window_state, window_state, CornerShape, IslandMode, MonitorFollow};
 
@@ -159,7 +166,7 @@ pub fn start_island_drag(app: AppHandle) -> Result<(), String> {
 pub fn start_island_modifier_drag(app: AppHandle) -> Result<(), String> {
     let window = main_window(&app)?;
 
-    if !win32::input::is_alt_key_down() {
+    if !alt_key_down() {
         return Ok(());
     }
     if modifier::start_resize(&window) {
@@ -167,6 +174,26 @@ pub fn start_island_modifier_drag(app: AppHandle) -> Result<(), String> {
     }
 
     drag_island(window, read_window_state())
+}
+
+#[cfg(windows)]
+fn alt_key_down() -> bool {
+    win32::input::is_alt_key_down()
+}
+
+#[cfg(not(windows))]
+fn alt_key_down() -> bool {
+    false
+}
+
+#[cfg(windows)]
+fn left_button_down() -> bool {
+    win32::input::is_left_button_down()
+}
+
+#[cfg(not(windows))]
+fn left_button_down() -> bool {
+    false
 }
 
 fn drag_island(window: WebviewWindow, current_state: IslandWindowState) -> Result<(), String> {
@@ -197,7 +224,7 @@ fn drag_island(window: WebviewWindow, current_state: IslandWindowState) -> Resul
     }
 
     thread::spawn(move || {
-        while win32::input::is_left_button_down() {
+        while left_button_down() {
             thread::sleep(Duration::from_millis(8));
         }
         thread::sleep(Duration::from_millis(8));

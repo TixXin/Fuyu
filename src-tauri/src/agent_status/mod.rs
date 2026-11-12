@@ -1,3 +1,4 @@
+#[cfg_attr(not(windows), path = "approval_hotkeys_unsupported.rs")]
 pub(crate) mod approval_hotkeys;
 mod background_tasks;
 mod claude_hooks;

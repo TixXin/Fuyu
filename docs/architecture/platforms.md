@@ -21,7 +21,7 @@ macOS 的计划和决定见 [macos-port-plan.md](macos-port-plan.md)，各功能
 
 ## 支持情况
 
-更新：2026-11-13（macOS 版尚未开工，Rust 端在 Mac 上还编译不过）。
+更新：2026-11-13（G1.2：Rust 端在 Mac 上能编译、clippy 与测试通过，`pnpm dev:lane` 能起窗口；功能都还没做，表里的 macOS 状态不变）。
 
 | 功能 | 模块 | Windows | macOS | macOS 的做法与权限 | 子任务 | 最后验证（macOS） |
 |---|---|---|---|---|---|---|

@@ -3,6 +3,7 @@ const MOD_CONTROL: u32 = 0x0002;
 const MOD_SHIFT: u32 = 0x0004;
 const MOD_WIN: u32 = 0x0008;
 
+#[cfg_attr(not(windows), allow(dead_code))]
 #[derive(Clone)]
 pub(crate) struct ShortcutBinding {
     pub(crate) label: String,

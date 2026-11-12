@@ -23,7 +23,7 @@
 | `onboarding` | `?window=onboarding` | 新手引导，`create: false`；透明全屏遮罩，在真岛上演示；新装第一次启动时打开，设置 → 关于里能再打开 |
 | `screenshot-<n>` | `?window=screenshot` | 截图的选区窗口，每个显示器一个；打开截图模块时创建，平时隐藏 |
 
-**结构重构已完成（Phase 0–6，收尾与待人工验收项见 [refactor-plan.md](docs/architecture/history/refactor-plan.md)）。** 代码已按 [overview.md](docs/architecture/overview.md) 的目标结构组织：Rust 侧的 `unsafe` 只在 `src-tauri/src/win32/` 中，生产代码不用 `unwrap` / `expect`，clippy 与 ESLint 均为 0 告警。新代码沿用这套结构与子目录规则。
+**结构重构已完成（Phase 0–6，收尾与待人工验收项见 [refactor-plan.md](docs/architecture/history/refactor-plan.md)）。** 代码已按 [overview.md](docs/architecture/overview.md) 的目标结构组织：Rust 侧的 `unsafe` 只在平台层 `src-tauri/src/win32/`、`src-tauri/src/macos/` 中，生产代码不用 `unwrap` / `expect`，clippy 与 ESLint 均为 0 告警。新代码沿用这套结构与子目录规则。
 
 ## 技术栈
 

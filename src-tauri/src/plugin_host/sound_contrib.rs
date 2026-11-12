@@ -95,7 +95,9 @@ mod tests {
 
         assert!(check(&mut contribution(&[("complete", "done.wav")], "")).is_err());
         assert!(check(&mut contribution(&[("complete", "../done.wav")], "MIT")).is_err());
-        assert!(check(&mut contribution(&[("complete", "C:/done.wav")], "MIT")).is_err());
+        if cfg!(windows) {
+            assert!(check(&mut contribution(&[("complete", "C:/done.wav")], "MIT")).is_err());
+        }
         assert!(check(&mut contribution(&[("complete", "done.exe")], "MIT")).is_err());
         assert!(check(&mut contribution(&[("someNewEvent", "x.wav")], "MIT")).is_err());
         assert!(check(&mut None).is_ok());

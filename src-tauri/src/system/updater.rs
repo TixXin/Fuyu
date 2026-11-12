@@ -1,6 +1,8 @@
 use tauri::AppHandle;
+#[cfg(windows)]
 use windows::Win32::System::Registry::HKEY_CURRENT_USER;
 
+#[cfg(windows)]
 const INTERNET_SETTINGS_SUBKEY: &str =
     r"Software\Microsoft\Windows\CurrentVersion\Internet Settings";
 
@@ -33,6 +35,11 @@ pub fn get_updater_proxy() -> Option<String> {
         }
     }
 
+    system_proxy()
+}
+
+#[cfg(windows)]
+fn system_proxy() -> Option<String> {
     if crate::win32::registry::read_u32(HKEY_CURRENT_USER, INTERNET_SETTINGS_SUBKEY, "ProxyEnable")?
         == 0
     {
@@ -46,6 +53,11 @@ pub fn get_updater_proxy() -> Option<String> {
     }
 
     Some(normalize_proxy(&server))
+}
+
+#[cfg(not(windows))]
+fn system_proxy() -> Option<String> {
+    None
 }
 
 #[tauri::command]
