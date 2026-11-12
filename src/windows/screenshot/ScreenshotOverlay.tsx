@@ -157,6 +157,7 @@ export function ScreenshotOverlay() {
   const grabbedAt = (point: Point) => (chosen ? hitTest(chosen, point, GRAB * scale) : null);
 
   const handlePointerDown = (event: PointerEvent<HTMLElement>) => {
+    if (leaving) return;
     if (annotations.tool && chosen && event.button === 0) {
       const point = at(event);
       const grab = grabbedAt(point);
@@ -172,6 +173,7 @@ export function ScreenshotOverlay() {
   };
 
   const handlePointerMove = (event: PointerEvent<HTMLElement>) => {
+    if (leaving) return;
     onPointerMove(event);
     annotations.extend(at(event));
   };
@@ -253,13 +255,13 @@ export function ScreenshotOverlay() {
         />
       )}
       {(!area || quick) && notice && <div className="screenshot-overlay__hint">{notice}</div>}
-      {guides && ready && cssPointer && (choosing || dragging === "draw" || dragging === "resize") && (
+      {guides && !leaving && ready && cssPointer && (choosing || dragging === "draw" || dragging === "resize") && (
         <>
           <div className="screenshot-overlay__guide screenshot-overlay__guide--h" style={{ top: cssPointer.y }} />
           <div className="screenshot-overlay__guide screenshot-overlay__guide--v" style={{ left: cssPointer.x }} />
         </>
       )}
-      {guides && area && (
+      {guides && area && !leaving && (
         // The selection's four edges carried across the monitor, on its 1px border.
         <>
           <div className="screenshot-overlay__guide screenshot-overlay__guide--h" style={{ top: area.y }} />

@@ -15,6 +15,7 @@ body:has(.pin-window) {
   --pin-shadow: 0 3px 8px rgba(0, 0, 0, 0.32);
   position: fixed;
   inset: 0;
+  cursor: move;
   user-select: none;
 }
 

@@ -57,7 +57,6 @@ pub async fn screenshot_configure(app: AppHandle, enabled: bool) {
     hotkeys::set_enabled(enabled);
     if enabled {
         session::prepare(&app);
-        pin::prepare(&app);
     }
 }
 
@@ -166,10 +165,7 @@ pub async fn screenshot_finish(app: AppHandle, window: WebviewWindow, request: t
             let origin = session::origin(window.label()).ok_or_else(|| "No screenshot is open.".to_string())?;
             let at = (origin.0.saturating_add_unsigned(left), origin.1.saturating_add_unsigned(top));
             let scale = window.scale_factor().unwrap_or(1.0);
-            if let Err(error) = pin::open(&app, picture, at, scale, session::id()) {
-                session::end(&app);
-                return Err(error);
-            }
+            pin::open(&app, picture, at, scale, session::id());
             Ok(None)
         }
         Action::Text | Action::Translate => {

@@ -168,9 +168,9 @@ export function PinWindow() {
 
   const state = closing ? " pin-window--closing" : shown ? " pin-window--shown" : "";
   return (
-    <div className={`pin-window${state}`} onWheel={onWheel} onContextMenu={(event) => void onContextMenu(event)}>
+    <div className={`pin-window${state}`} onPointerDown={onPointerDown} onWheel={onWheel} onContextMenu={(event) => void onContextMenu(event)}>
       {info && url && (
-        <div ref={frameRef} className="pin-window__frame" style={{ opacity }} onPointerDown={onPointerDown}>
+        <div ref={frameRef} className="pin-window__frame" style={{ opacity }}>
           <img className="pin-window__picture" src={url} alt="" draggable={false} onLoad={onLoaded} />
         </div>
       )}

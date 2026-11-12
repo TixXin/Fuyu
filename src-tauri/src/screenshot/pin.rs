@@ -35,8 +35,9 @@ const MIN_SCALE: f64 = 0.1;
 const MAX_SCALE: f64 = 8.0;
 /// The smallest a zoomed pin gets, in physical pixels, so it can still be grabbed.
 const MIN_SIDE: f64 = 16.0;
-/// A pin that has not drawn by then still takes the screenshot away, so it never stays frozen.
-const HANDOFF_TIMEOUT: Duration = Duration::from_millis(1500);
+/// A pin that has not drawn by then is shown anyway and the screenshot goes, so the screen never
+/// stays frozen.
+const HANDOFF_TIMEOUT: Duration = Duration::from_millis(600);
 /// How long the screenshot stays under a pin that has just shown.
 const SWAP_DELAY: Duration = Duration::from_millis(50);
 
@@ -72,6 +73,7 @@ fn spare() -> MutexGuard<'static, Option<String>> {
 }
 
 fn build(app: &AppHandle) -> Result<WebviewWindow, String> {
+    let _building = session::building();
     let label = format!("{WINDOW_PREFIX}{}", NEXT_ID.fetch_add(1, Ordering::SeqCst));
     let window = WebviewWindowBuilder::new(app, &label, WebviewUrl::App("index.html?window=pin".into()))
         .title("Fuyu")
@@ -119,7 +121,48 @@ fn take_window(app: &AppHandle) -> Result<WebviewWindow, String> {
 
 /// Pins `picture` with its top-left at `at` on the virtual screen (physical pixels, `scale` the
 /// monitor's). The screenshot `session` stays open until the pin shows (`ready`).
-pub(super) fn open(app: &AppHandle, picture: Picture, at: (i32, i32), scale: f64, session: Option<u64>) -> Result<(), String> {
+///
+/// Returns at once: the window work runs on its own thread, and whatever happens to it, the
+/// screenshot closes within `HANDOFF_TIMEOUT`.
+pub(super) fn open(app: &AppHandle, picture: Picture, at: (i32, i32), scale: f64, session: Option<u64>) {
+    if let Some(id) = session {
+        let app = app.clone();
+        thread::spawn(move || {
+            thread::sleep(HANDOFF_TIMEOUT);
+            give_up_waiting(&app, id);
+        });
+    }
+    let app = app.clone();
+    thread::spawn(move || {
+        if let Err(error) = place(&app, picture, at, scale, session) {
+            eprintln!("failed to pin the screenshot: {error}");
+            if let Some(id) = session {
+                session::end_if(&app, id);
+            }
+        }
+    });
+}
+
+/// The pins still waiting for screenshot `id` show as they are, and the screenshot goes.
+fn give_up_waiting(app: &AppHandle, id: u64) {
+    let waiting: Vec<String> = pins()
+        .iter_mut()
+        .filter(|(_, pin)| pin.session == Some(id))
+        .map(|(label, pin)| {
+            pin.session = None;
+            label.clone()
+        })
+        .collect();
+    for label in waiting {
+        if let Some(window) = app.get_webview_window(&label).filter(|_| !HIDDEN.load(Ordering::SeqCst)) {
+            let _ = window.show();
+            let _ = window.set_focus();
+        }
+    }
+    session::end_if(app, id);
+}
+
+fn place(app: &AppHandle, picture: Picture, at: (i32, i32), scale: f64, session: Option<u64>) -> Result<(), String> {
     if HIDDEN.swap(false, Ordering::SeqCst) {
         set_all_visible(app, true);
     }
@@ -140,13 +183,6 @@ pub(super) fn open(app: &AppHandle, picture: Picture, at: (i32, i32), scale: f64
     }
     // A page still loading misses this and asks with `info` once it has loaded.
     let _ = app.emit_to(label.as_str(), ASSIGNED_EVENT, info);
-    if let Some(id) = session {
-        let app = app.clone();
-        thread::spawn(move || {
-            thread::sleep(HANDOFF_TIMEOUT);
-            session::end_if(&app, id);
-        });
-    }
     prepare(app);
     Ok(())
 }

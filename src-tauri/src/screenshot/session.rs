@@ -175,10 +175,19 @@ fn place_windows(app: &AppHandle, monitors: &[Monitor]) -> Result<(), String> {
     Ok(())
 }
 
+/// Held while a screenshot window (an overlay or a pin) is built: building WebViews from two
+/// threads at once can hang on Windows, and a hung build left a pin's screenshot frozen.
+static BUILDING: Mutex<()> = Mutex::new(());
+
+pub(crate) fn building() -> std::sync::MutexGuard<'static, ()> {
+    BUILDING.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
+}
+
 fn overlay_window(app: &AppHandle, label: &str) -> Result<WebviewWindow, String> {
     if let Some(window) = app.get_webview_window(label) {
         return Ok(window);
     }
+    let _building = building();
     let window = WebviewWindowBuilder::new(app, label, WebviewUrl::App("index.html?window=screenshot".into()))
         .title("Fuyu")
         // A hidden WebView stops painting, so the first frame after `show` can be the last one it
@@ -209,6 +218,7 @@ pub(crate) fn prepare(app: &AppHandle) {
         if let Err(error) = placed {
             eprintln!("failed to prepare the screenshot windows: {error}");
         }
+        super::pin::prepare(&app);
     });
 }
 
