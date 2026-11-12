@@ -1,12 +1,13 @@
 import assert from "node:assert/strict";
-import { execFileSync, spawn } from "node:child_process";
-import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { mkdtempSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { parseRefUpdates, pushBlock } from "../../scripts/mq/checkPush.mjs";
 import { land, landRefusal } from "../../scripts/mq/land.mjs";
-import { createQueueLock, liveTickets } from "../../scripts/mq/queueLock.mjs";
+import { failedChecks, landBranchName, prText } from "../../scripts/mq/github.mjs";
+import { waitFor } from "../../scripts/mq/wait.mjs";
 import { lockfileChanged, removedDependencies } from "../../scripts/mq/sync.mjs";
 import { createWorktree, removeWorktree } from "../../scripts/lanes/worktree-hooks.mjs";
 
@@ -44,72 +45,94 @@ test("dependencies are reinstalled only for a lockfile change, and never over a 
   assert.deepEqual(removedDependencies(new Set(["a", "b"]), new Set(["a", "c"])), ["b"]);
 });
 
-test("the queue is first come, first served, and a dead holder's lock is taken back", async () => {
-  assert.deepEqual(liveTickets(["30-1", "10-3", "20-2", "5-9"], (pid) => pid !== 9), ["10-3", "20-2", "30-1"]);
-  const dir = mkdtempSync(path.join(tmpdir(), "mq-queue-"));
-  const other = spawn(process.execPath, ["-e", "setTimeout(() => {}, 20000)"], { stdio: "ignore" });
-  try {
-    writeFileSync(path.join(dir, "lock"), JSON.stringify({ pid: 999999, label: "gone", ts: 0 }));
-    const first = createQueueLock(dir, { label: "first" });
-    await first.acquire();
-    assert.equal(first.held, true, "a lock whose holder exited is reclaimed");
-    const second = createQueueLock(dir, { pid: other.pid, label: "second" });
-    let waited = false;
-    const turn = second.acquire({ onWait: () => { waited = true; } });
-    await new Promise((resolve) => setTimeout(resolve, 600));
-    assert.equal(second.held, false, "waits while the first holds the lock");
-    assert.equal(waited, true);
-    first.release();
-    await turn;
-    assert.equal(second.held, true);
-    second.release();
-  } finally {
-    other.kill();
-    rmSync(dir, { recursive: true, force: true });
-  }
+test("the land branch is unique per account, machine and lane, and the PR text comes from the commits", () => {
+  assert.equal(landBranchName("TixXin", "TixxindeMacBook-Air.local", "lane/3"), "land/TixXin/tixxindemacbook-air-lane-3");
+  assert.equal(landBranchName("ShengLin1001", "DESKTOP-AB12", "feat/x y"), "land/ShengLin1001/desktop-ab12-feat-x-y");
+  assert.deepEqual(prText([{ subject: "fix(a): one", body: "why\n" }], "lane/1"), { title: "fix(a): one", body: "why\n\n由 `pnpm mq:land` 从 `lane/1` 开出，CI 通过后自动合入。" });
+  const many = prText([{ subject: "first", body: "" }, { subject: "second", body: "b" }], "lane/1");
+  assert.equal(many.title, "first");
+  assert.match(many.body, /^- first\n- second\n/);
+  assert.deepEqual(failedChecks([
+    { name: "scope", conclusion: "SUCCESS" },
+    { name: "rust", status: "IN_PROGRESS", conclusion: null },
+    { name: "check", conclusion: "FAILURE", detailsUrl: "u" },
+    { context: "legacy", state: "ERROR", targetUrl: "t" },
+  ]), [{ name: "check", url: "u" }, { name: "legacy", url: "t" }]);
 });
 
-test("land rebases onto main, pushes, fast-forwards the main checkout, and backs out of a conflict", () => withoutGitEnv(async () => {
+function fakeGitHub() {
+  const calls = { created: [], autoMerged: [], updated: [] };
+  const prs = new Map();
+  return {
+    calls,
+    login: () => "tester",
+    findPr: (head) => prs.get(head) ?? null,
+    createPr: (pr) => {
+      calls.created.push(pr);
+      const created = { number: 7, url: "https://example.invalid/pull/7" };
+      prs.set(pr.head, created);
+      return created;
+    },
+    autoMerge: (number) => calls.autoMerged.push(number),
+    updateBranch: (number) => calls.updated.push(number),
+  };
+}
+
+test("land rebases onto main, pushes its own branch, opens one PR with auto-merge, and backs out of a conflict", () => withoutGitEnv(async () => {
   const root = realpathSync(mkdtempSync(path.join(tmpdir(), "mq-land-")));
   const git = (args, cwd) => execFileSync("git", ["-c", "user.email=t@t", "-c", "user.name=t", ...args], { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim();
   const remote = path.join(root, "remote.git");
   const main = path.join(root, "app");
   const lane = path.join(root, "app-lanes", "1");
   const other = path.join(root, "other");
+  const remoteLog = (ref) => git(["log", "--format=%s", ref], remote);
+  const commit = (cwd, file, text, message) => {
+    writeFileSync(path.join(cwd, file), text);
+    git(["add", "."], cwd);
+    git(["commit", "-q", "-m", message], cwd);
+  };
   try {
     git(["init", "-q", "--bare", "-b", "main", remote], root);
     git(["clone", "-q", remote, main], root);
     git(["config", "user.email", "t@t"], main);
     git(["config", "user.name", "t"], main);
     assert.ok(path.resolve(main, git(["rev-parse", "--git-dir"], main)).startsWith(root + path.sep), "git must run in the temp repo");
-    writeFileSync(path.join(main, "a.txt"), "a\n");
-    git(["add", "."], main);
-    git(["commit", "-q", "-m", "one"], main);
+    commit(main, "a.txt", "a\n", "one");
     git(["push", "-q", "origin", "main"], main);
     git(["clone", "-q", remote, other], root);
     git(["worktree", "add", "-q", lane, "-b", "lane/1"], main);
     writeFileSync(path.join(lane, "b.txt"), "b\n");
     git(["add", "."], lane);
-    git(["commit", "-q", "-m", "lane work"], lane);
-    writeFileSync(path.join(other, "c.txt"), "c\n");
-    git(["add", "."], other);
-    git(["commit", "-q", "-m", "someone else landed"], other);
+    git(["commit", "-q", "-m", "lane work", "-m", "because"], lane);
+    commit(other, "c.txt", "c\n", "someone else landed");
     git(["push", "-q", "origin", "main"], other);
 
     process.chdir(lane);
-    assert.equal(await land(), 0);
-    assert.equal(git(["log", "--format=%s", "-3", "origin/main"], lane), "lane work\nsomeone else landed\none");
-    assert.equal(git(["rev-parse", "HEAD"], main), git(["rev-parse", "origin/main"], main), "the main checkout was fast-forwarded");
+    const gh = fakeGitHub();
+    const branch = "land/tester/test-pc-lane-1";
+    assert.equal(await land({ github: gh, host: "Test-PC" }), 0);
+    assert.equal(remoteLog(branch), "lane work\nsomeone else landed\none", "rebased onto main and pushed to its own branch");
+    assert.equal(remoteLog("main"), "someone else landed\none", "main itself is left to the PR");
+    assert.deepEqual(gh.calls.created.map(({ head, base, title }) => [head, base, title]), [[branch, "main", "lane work"]]);
+    assert.match(gh.calls.created[0].body, /^because/);
+    assert.deepEqual(gh.calls.autoMerged, [7]);
+
+    commit(other, "d.txt", "d\n", "more on main");
+    git(["push", "-q", "origin", "main"], other);
+    commit(lane, "e.txt", "e\n", "follow-up");
+    assert.equal(await land({ github: gh, host: "Test-PC" }), 0);
+    assert.equal(remoteLog(branch), "follow-up\nlane work\nmore on main\nsomeone else landed\none", "the rebased branch replaced the old one");
+    assert.equal(gh.calls.created.length, 1, "the open PR is reused");
+    assert.deepEqual(gh.calls.autoMerged, [7, 7]);
 
     git(["pull", "-q", "--rebase", "origin", "main"], other);
-    writeFileSync(path.join(other, "b.txt"), "theirs\n");
-    git(["commit", "-q", "-am", "conflicting"], other);
+    commit(other, "b.txt", "theirs\n", "conflicting");
     git(["push", "-q", "origin", "main"], other);
-    writeFileSync(path.join(lane, "b.txt"), "mine\n");
-    git(["commit", "-q", "-am", "mine"], lane);
-    assert.equal(await land(), 1);
+    commit(lane, "b.txt", "mine\n", "mine");
+    assert.equal(await land({ github: gh, host: "Test-PC" }), 1);
     assert.equal(git(["status", "--porcelain"], lane), "", "the rebase was aborted and the tree left clean");
     assert.equal(git(["log", "-1", "--format=%s"], lane), "mine");
+    assert.equal(gh.calls.autoMerged.length, 2, "nothing was pushed or merged after the conflict");
   } finally {
     try {
       rmSync(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
@@ -118,6 +141,20 @@ test("land rebases onto main, pushes, fast-forwards the main checkout, and backs
     }
   }
 }));
+
+test("wait updates a PR that fell behind and reports the merge, a failed check or a conflict", async () => {
+  const run = async (states) => {
+    const gh = { ...fakeGitHub(), view: () => states.shift() };
+    const merged = [];
+    const code = await waitFor(7, { github: gh, sleep: async () => {}, onMerged: (sha) => { merged.push(sha); } });
+    return { code, merged, updated: gh.calls.updated };
+  };
+  const open = (mergeStateStatus, statusCheckRollup = []) => ({ state: "OPEN", mergeStateStatus, statusCheckRollup, url: "u" });
+  assert.deepEqual(await run([open("BEHIND"), open("BLOCKED", [{ name: "check", status: "IN_PROGRESS" }]), { state: "MERGED", mergeCommit: { oid: "abc123" } }]), { code: 0, merged: ["abc123"], updated: [7] });
+  assert.deepEqual(await run([open("BLOCKED", [{ name: "check", conclusion: "FAILURE", detailsUrl: "x" }])]), { code: 1, merged: [], updated: [] });
+  assert.deepEqual(await run([open("DIRTY")]), { code: 1, merged: [], updated: [] });
+  assert.deepEqual(await run([{ state: "CLOSED", url: "u" }]), { code: 1, merged: [], updated: [] });
+});
 
 test("the worktree hooks hand out lanes and keep a lane with work from being removed", () => {
   const main = path.join("E:", "Projects", "fly-island");
