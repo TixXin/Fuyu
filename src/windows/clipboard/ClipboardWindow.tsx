@@ -2,9 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { ClipboardPopup } from "../../features/clipboard/ClipboardPopup";
 import { hideClipboardPopup, listenClipboardPopupBlur, listenClipboardPopupOpened, pasteClipboardItem, pasteClipboardSequence, pasteClipboardSnippet } from "../../features/clipboard/api";
 import { useClipboardHistory } from "../../features/clipboard/useClipboardHistory";
-import { activeTone } from "../../features/appearance/themeMode";
-import { STORAGE_KEY, loadSettings } from "../../features/appearance/storage";
-import { useSystemDark } from "../../features/appearance/useResolvedTheme";
+import { useWindowLight } from "../../features/appearance/useWindowLight";
 import { useWindowAccent } from "../../features/appearance/useWindowAccent";
 import "./ClipboardWindow.css";
 
@@ -18,17 +16,7 @@ const reportError = (action: string) => (error: unknown) => console.error(`Faile
 export function ClipboardWindow() {
   const { clipboardHistory, toggleClipboardHistoryFavorite } = useClipboardHistory(NO_SHORTCUT);
   const [openCount, setOpenCount] = useState(0);
-  // Light or dark as the island is; the island saves its settings in the shared storage.
-  const systemDark = useSystemDark();
-  const [themeMode, setThemeMode] = useState(() => loadSettings().themeMode);
-  useEffect(() => {
-    const sync = (event: StorageEvent) => {
-      if (event.key === STORAGE_KEY) setThemeMode(loadSettings().themeMode);
-    };
-    window.addEventListener("storage", sync);
-    return () => window.removeEventListener("storage", sync);
-  }, []);
-  const light = activeTone(themeMode, systemDark) === "light";
+  const light = useWindowLight();
   useWindowAccent();
 
   const close = useCallback(() => {

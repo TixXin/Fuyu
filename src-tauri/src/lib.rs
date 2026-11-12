@@ -15,6 +15,7 @@ mod lyrics;
 mod media_control;
 mod messenger_activation;
 mod notification_diagnostics;
+mod onboarding_window;
 mod pets;
 mod phone_push;
 mod plugin_host;
@@ -189,6 +190,7 @@ pub fn run() {
             translation;
             screenshot;
             settings_window;
+            onboarding_window;
             ssh_tunnel;
             phone_push;
             cc_connect;

@@ -1,4 +1,4 @@
-import { ChevronRight } from "lucide-react";
+import { CheckCheck, ChevronRight } from "lucide-react";
 import { useLayoutEffect, useRef } from "react";
 import { useTranslation } from "../../../i18n";
 import { MessageSourceIcon } from "../MessageSourceIcon";
@@ -23,6 +23,7 @@ export function MessageArrivalsPanel({
   onAction,
   onMeasure,
   onShowAll,
+  onClearAll,
   media,
 }: {
   arrivals: readonly ArrivalMessage[];
@@ -30,6 +31,8 @@ export function MessageArrivalsPanel({
   onAction: (message: ArrivalMessage, action: string) => void;
   onMeasure: (height: number) => void;
   onShowAll: () => void;
+  /** Clears every reminder on the island without opening an app. */
+  onClearAll: () => void;
   /** The player, for messages that asked for its buttons; without it they show none. */
   media?: ArrivalMedia;
 }) {
@@ -52,10 +55,15 @@ export function MessageArrivalsPanel({
       {!inline && (
         <div className="message-arrivals__top">
           <h2 className="message-arrivals__title">{t.arrivals.title}</h2>
-          <button className="message-arrivals__all" type="button" onClick={onShowAll}>
-            {t.arrivals.showAll}
-            <ChevronRight size={14} strokeWidth={1.5} absoluteStrokeWidth aria-hidden="true" />
-          </button>
+          <span className="message-arrivals__tools">
+            <button className="message-arrivals__clear" type="button" aria-label={t.arrivals.clearAll} title={t.arrivals.clearAllHint} onClick={onClearAll}>
+              <CheckCheck size={14} strokeWidth={1.5} absoluteStrokeWidth aria-hidden="true" />
+            </button>
+            <button className="message-arrivals__all" type="button" onClick={onShowAll}>
+              {t.arrivals.showAll}
+              <ChevronRight size={14} strokeWidth={1.5} absoluteStrokeWidth aria-hidden="true" />
+            </button>
+          </span>
         </div>
       )}
       <ul className="message-arrivals__list">

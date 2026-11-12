@@ -121,6 +121,8 @@ export function useMail(canPreview: boolean) {
     /** Reading or writing a mail: the island gives the panel more height. */
     wantsTallPanel: Boolean(reader.selectedMail) || compose !== null,
     preview, previewAccount: preview ? previewWindow?.email ?? null : null,
+    /** Takes the new mail off the collapsed island and the banner; it stays unread. */
+    dismissPreview: clearPreview,
     previewReceivedAt: preview ? previewWindow?.receivedAt ?? null : null,
   };
 }

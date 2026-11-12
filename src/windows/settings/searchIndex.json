@@ -370,6 +370,19 @@
       "page": "appearance",
       "zh-CN": {
         "group": "尺寸",
+        "title": "折叠岛屿宽度",
+        "description": "在随内容变化的宽度上加宽或收窄。也可以按住 Alt 拖动折叠岛屿的左右边缘来调。"
+      },
+      "en": {
+        "group": "Size",
+        "title": "Collapsed island width",
+        "description": "Widens or narrows the width that follows the content. Or hold Alt and drag the collapsed island's sides."
+      }
+    },
+    {
+      "page": "appearance",
+      "zh-CN": {
+        "group": "尺寸",
         "title": "面板宽度",
         "description": "所有页面都用这个宽度和高度，内容多了在页面里滚动。也可以按住 Alt 拖动展开面板的左右边缘或底边来调。"
       },
@@ -2511,6 +2524,19 @@
         "group": "Links",
         "title": "Diagnostics",
         "description": "Preview and copy the app version, system and update status for a bug report."
+      }
+    },
+    {
+      "page": "about",
+      "zh-CN": {
+        "group": "",
+        "title": "新手引导",
+        "description": "第一次启动时打开的那个窗口：语言、外观、功能开关和几个常用选项。"
+      },
+      "en": {
+        "group": "",
+        "title": "Welcome guide",
+        "description": "The window shown on first start: language, appearance, modules and a few common choices."
       }
     },
     {

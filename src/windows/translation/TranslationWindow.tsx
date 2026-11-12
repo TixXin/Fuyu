@@ -7,6 +7,7 @@ import { takeTranslationHandoff, type Direction } from "../../features/translati
 import { DEFAULT_PROVIDER_MODELS } from "../../features/translation/providers";
 import { useTranslationSettings } from "../../features/translation/useTranslationSettings";
 import { useWindowAccent } from "../../features/appearance/useWindowAccent";
+import { useWindowLight } from "../../features/appearance/useWindowLight";
 import { openSettingsWindow } from "../settings/api";
 import { useAutoTranslate } from "../../features/translation/useAutoTranslate";
 import { useTranslationRequest } from "../../features/translation/useTranslationRequest";
@@ -17,6 +18,7 @@ export function TranslationWindow() {
   const errorText = useErrorText();
   const [settings, setSettings] = useTranslationSettings();
   useWindowAccent();
+  const light = useWindowLight();
   const [input, setInput] = useState("");
   const [clipboardPreview, setClipboardPreview] = useState("");
   const [output, setOutput] = useState("");
@@ -173,7 +175,7 @@ export function TranslationWindow() {
   };
 
   return (
-    <main className="translation-stage">
+    <main className={`translation-stage${light ? " island-light" : ""}`}>
       <section className="translation-window" aria-label={t.translator.label}>
         <header className="translation-window__header" onPointerDown={startWindowDrag}>
           <span className="translation-window__mark" aria-hidden="true"><Languages size={18} /></span>

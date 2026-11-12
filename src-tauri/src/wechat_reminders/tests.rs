@@ -212,3 +212,73 @@ fn the_list_keeps_each_message_and_one_row_per_plain_reminder() {
     state.set_enabled(false);
     assert!(state.snapshot.items.is_empty());
 }
+
+fn chat(key: &str, preview: &str, unread: u32, open: bool) -> chats::Session {
+    chats::Session {
+        key: key.into(),
+        contact: key.into(),
+        preview: preview.into(),
+        unread: Some(unread),
+        muted: false,
+        mentioned: false,
+        pinned: false,
+        open,
+    }
+}
+
+#[test]
+fn the_users_own_message_is_not_news() {
+    // Sent on the phone and synced to a minimized WeChat (issue #40): the text changes and the
+    // chat moves to the top, but WeChat counts no unread.
+    let before = [chat("x", "早", 0, false), chat("a", "对方: 在吗", 0, false)];
+    let now = [chat("a", "我: 在", 0, false), chat("x", "早", 0, false)];
+    assert!(chats::new_messages(&before, &now, true).is_empty());
+    assert!(!chats::muted_changed(&before, &now, true));
+    // A message from them does raise the count.
+    let now = [chat("a", "对方: 好", 1, false), chat("x", "早", 0, false)];
+    assert_eq!(chats::new_messages(&before, &now, true).len(), 1);
+    // The chat open in WeChat gets no unread count, so its new text counts, unless the user has
+    // been in WeChat since the last read and may have written it.
+    let before = [chat("a", "对方: 在吗", 0, true)];
+    let now = [chat("a", "对方: 人呢", 0, true)];
+    assert_eq!(chats::new_messages(&before, &now, true).len(), 1);
+    assert!(chats::new_messages(&before, &now, false).is_empty());
+}
+
+#[test]
+fn a_reply_written_while_a_flash_was_being_read_is_not_news() {
+    use std::{cell::RefCell, collections::VecDeque, rc::Rc, time::Duration};
+    let looks = Rc::new(RefCell::new(VecDeque::from([Listing::Rows(vec![chat(
+        "a", "对方: 在吗", 0, true,
+    )])])));
+    let queue = looks.clone();
+    let mut reader = ChatReader::new(
+        move || queue.borrow_mut().pop_front().unwrap_or(Listing::Unreadable),
+        true,
+    );
+    let outcome = |reader: &mut ChatReader<_>, start: Instant| {
+        reader.flashed(start);
+        (1..20)
+            .find_map(|step| reader.tick(start + Duration::from_millis(250 * step)))
+            .expect("an outcome")
+    };
+    let start = Instant::now();
+    // The flash's read is due when the user goes into WeChat, replies and leaves again.
+    reader.flashed(start);
+    reader.activated(true, start);
+    reader.activated(false, start);
+    let replied = || Listing::Rows(vec![chat("a", "我: 在", 0, true)]);
+    looks.borrow_mut().extend([replied(), replied(), replied()]);
+    assert_eq!(
+        outcome(&mut reader, start),
+        Flash::Plain(Some(PlainReason::Unchanged))
+    );
+    // Back out of WeChat, their next message in the open chat counts again.
+    looks
+        .borrow_mut()
+        .push_back(Listing::Rows(vec![chat("a", "对方: 好", 0, true)]));
+    assert!(matches!(
+        outcome(&mut reader, start + Duration::from_secs(10)),
+        Flash::Messages(_)
+    ));
+}

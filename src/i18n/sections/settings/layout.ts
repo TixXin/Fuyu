@@ -16,6 +16,8 @@ export type SettingsLayoutText = {
   cornerShapeRound: string;
   maxPanelHeight: string;
   panelWidth: string;
+  collapsedWidthExtra: string;
+  collapsedWidthHint: string;
   panelSizeHint: string;
   launchAtStartup: string;
   showTitle: string;
@@ -52,6 +54,8 @@ export const zhCN: SettingsLayoutText = {
   cornerShapeRound: "圆角",
   maxPanelHeight: "面板高度",
   panelWidth: "面板宽度",
+  collapsedWidthExtra: "折叠岛屿宽度",
+  collapsedWidthHint: "在随内容变化的宽度上加宽或收窄。也可以按住 Alt 拖动折叠岛屿的左右边缘来调。",
   panelSizeHint: "所有页面都用这个宽度和高度，内容多了在页面里滚动。也可以按住 Alt 拖动展开面板的左右边缘或底边来调。",
   launchAtStartup: "开机自启动",
   showTitle: "显示岛屿名称",
@@ -87,6 +91,8 @@ export const en: SettingsLayoutText = {
   cornerShapeRound: "Round",
   maxPanelHeight: "Panel height",
   panelWidth: "Panel width",
+  collapsedWidthExtra: "Collapsed island width",
+  collapsedWidthHint: "Widens or narrows the width that follows the content. Or hold Alt and drag the collapsed island's sides.",
   panelSizeHint: "Every page has this width and height and scrolls inside when it holds more. Or hold Alt and drag the open panel's side or bottom edge.",
   launchAtStartup: "Launch at startup",
   showTitle: "Show island name",

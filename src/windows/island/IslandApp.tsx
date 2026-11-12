@@ -53,6 +53,7 @@ import { MessageBanner } from "../../features/messages/banner/MessageBanner";
 import { PluginPageButtons } from "./PluginPageButtons";
 import { useCollapsedSlots } from "./useCollapsedSlots";
 import { useTrayLanguage } from "./useTrayLanguage";
+import { useFirstRunGuide } from "./useFirstRunGuide";
 import { useIslandLyrics } from "./useIslandLyrics";
 // Must stay the last import: IslandApp.css overrides the feature styles above.
 import "./IslandApp.css";
@@ -68,6 +69,8 @@ const NO_TODOS: TodoItem[] = [];
 export function IslandApp() {
   const t = useTranslation();
   useTrayLanguage();
+  // Before useIslandSettings saves the settings, which marks the install as having run.
+  useFirstRunGuide();
   const navigation = useIslandNavigation();
   const { mode, isTucked, page, setPage, collapseIsland, tuckIsland, revealIsland, minimizeToEdge, openIslandPage, toggleClipboardHistory } = navigation;
   const pluginPages = usePluginPages(page);

@@ -7,6 +7,7 @@ import type { IslandSettings } from "../../features/appearance/types";
 import { ProjectIdentitySection, ProjectLinksSection } from "../../features/updater/ProjectSettingsSection";
 import { UpdateSettingsSection } from "../../features/updater/UpdateSettingsSection";
 import { useTranslation } from "../../i18n";
+import { openOnboardingWindow } from "../onboarding/api";
 import { quitIsland } from "./api";
 
 // An unanswered confirmation falls back, so a stray click later cannot reset.
@@ -33,6 +34,11 @@ export function AboutSettingsPage({ onSettingsChange }: { onSettingsChange: (set
       <UpdateSettingsSection />
       <ProjectLinksSection />
       <SettingsGroup>
+        <SettingsRow
+          title={text.guide}
+          description={text.guideHint}
+          control={<SettingsLinkButton onClick={openOnboardingWindow}>{text.guideAction}</SettingsLinkButton>}
+        />
         <SettingsRow
           title={text.resetAll}
           description={text.resetAllHint}

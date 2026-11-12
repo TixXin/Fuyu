@@ -2,14 +2,15 @@ import { useEffect, useRef } from "react";
 import * as islandApi from "./api";
 import "./ModifierWindowDrag.css";
 
-/** Set on <html> while holding Alt over the island would move it or resize the panel. */
+/** Set on <html> while holding Alt over the island would move or resize it, or a resize is under way. */
 const MOVE_ARMED_CLASS = "island-move-armed";
-/** The cursor's shape for each kind of Alt drag, as `data-island-drag` on <html>. */
+/** What an Alt drag would do, or the edge being dragged, as `data-island-drag` on <html>: the cursor and the resize hints. */
 const DRAG_KIND_ATTRIBUTE = "islandDrag";
 
 /**
  * Alt + left-button drag moves the island from anywhere on its shape, collapsed or expanded, and
- * from the expanded panel's side or bottom edge resizes it (C25; native side decides which). The
+ * from the expanded panel's side or bottom edge, or the collapsed island's side, resizes it (C25;
+ * native side decides which). The
  * press is taken in the capture phase so buttons and inputs under the cursor never see it.
  */
 export function useModifierWindowDrag(onDragStart: () => void) {

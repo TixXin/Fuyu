@@ -1,0 +1,209 @@
+/* The first-run guide: the settings window's colours, one column, a step at a time. */
+.onboarding {
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  color: var(--color-page-text);
+  background: #131417;
+  user-select: none;
+}
+
+.onboarding--light {
+  background: #eceef2;
+}
+
+.onboarding--light .settings-group__card {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+/* The top row drags the window; the dots show where the user is. */
+.onboarding__bar {
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0 0 28px;
+}
+
+.onboarding__progress {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.onboarding__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--color-white-a16);
+  transition: width 160ms ease, background 160ms ease;
+}
+
+.onboarding__dot--done {
+  background: var(--color-text-muted);
+}
+
+.onboarding__dot--active {
+  width: 18px;
+  background: var(--color-accent);
+}
+
+.onboarding__close {
+  width: 46px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  color: var(--color-text-muted);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.onboarding__close:hover {
+  color: #ffffff;
+  background: #c42b1c;
+}
+
+.onboarding__body {
+  min-height: 0;
+  overflow-y: auto;
+  padding: 12px 40px 16px;
+}
+
+.onboarding__title {
+  margin: 0 0 var(--space-md);
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.onboarding__lead {
+  max-width: 560px;
+  margin: 0 0 var(--space-2xl);
+  color: var(--color-text-muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.onboarding__content {
+  margin-top: var(--space-xl);
+}
+
+.onboarding__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-xl);
+  padding: 14px 40px 22px;
+}
+
+.onboarding__nav {
+  display: flex;
+  gap: var(--space-md);
+}
+
+.onboarding__button {
+  min-width: 84px;
+  height: 32px;
+  padding: 0 16px;
+  color: var(--color-text);
+  font: inherit;
+  font-size: 13px;
+  background: var(--color-white-a06);
+  border: 1px solid var(--color-white-a06);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+.onboarding__button:hover {
+  background: var(--color-white-a10);
+}
+
+.onboarding__button--quiet {
+  min-width: 0;
+  padding: 0 4px;
+  color: var(--color-text-muted);
+  background: transparent;
+  border-color: transparent;
+}
+
+.onboarding__button--quiet:hover {
+  color: var(--color-text);
+  background: transparent;
+}
+
+.onboarding__button--primary,
+.onboarding__button--primary:hover {
+  color: var(--color-on-accent);
+  font-weight: 600;
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.onboarding__button--primary:hover {
+  filter: brightness(1.08);
+}
+
+:is(.onboarding__button, .onboarding__close, .onboarding-done__link):focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* The welcome step's island preview: a short strip above the two choices. */
+.onboarding .island-preview {
+  margin-bottom: var(--space-xl);
+}
+
+.onboarding-modules {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: var(--space-xl);
+}
+
+/* Side by side, not one after the other: no gap above the second column. */
+.onboarding-modules .settings-group + .settings-group {
+  margin-top: 0;
+}
+
+/* The last step: two tips, then buttons for the setups that need more than a switch. */
+.onboarding-done__tips {
+  display: grid;
+  gap: var(--space-md);
+  margin: 0 0 var(--space-2xl);
+  padding-left: 18px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.onboarding-done__lead {
+  margin: 0 0 var(--space-xl);
+  color: var(--color-text-muted);
+  font-size: 13px;
+}
+
+.onboarding-done__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+}
+
+.onboarding-done__link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+  height: 34px;
+  padding: 0 14px;
+  color: var(--color-text);
+  font: inherit;
+  font-size: 13px;
+  background: var(--color-white-a04);
+  border: 1px solid var(--color-white-a06);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+.onboarding-done__link:hover {
+  border-color: var(--color-accent);
+}

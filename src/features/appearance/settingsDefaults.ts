@@ -26,6 +26,7 @@ export const DEFAULT_SETTINGS: IslandSettings = {
   islandCornerShape: "squircle",
   maxPanelHeight: DEFAULT_MAX_PANEL_HEIGHT,
   panelWidth: DEFAULT_PANEL_WIDTH,
+  collapsedWidthExtra: 0,
   agentHostDisplay: "icon",
   agentSessionView: "list",
   agentSessionSort: "status",

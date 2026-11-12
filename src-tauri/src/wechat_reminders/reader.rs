@@ -57,6 +57,9 @@ pub(super) struct ChatReader<L: FnMut() -> Listing> {
     /// not news at the next flash.
     rebase: Option<Instant>,
     in_wechat: bool,
+    /// The user has been in WeChat since `seen` was read: a change to the open chat may be their
+    /// own reply, also when a flash's read was already due as they left (issue #40).
+    visited: bool,
     /// The "show the contact and message" setting. Off, the list is never read, even while a
     /// screen reader has WeChat's UI exposed: who wrote and what shows only when the user asked.
     allowed: bool,
@@ -72,6 +75,7 @@ impl<L: FnMut() -> Listing> ChatReader<L> {
             muted_changed: false,
             rebase: None,
             in_wechat: false,
+            visited: false,
             allowed,
         };
         reader.rebaseline();
@@ -84,6 +88,7 @@ impl<L: FnMut() -> Listing> ChatReader<L> {
             Some(Listing::Rows(rows)) => Some(rows),
             _ => None,
         };
+        self.visited = self.in_wechat;
     }
 
     /// Follows the setting; turned on, the list as it is becomes the baseline.
@@ -111,6 +116,7 @@ impl<L: FnMut() -> Listing> ChatReader<L> {
 
     pub(super) fn activated(&mut self, in_wechat: bool, now: Instant) {
         let left = std::mem::replace(&mut self.in_wechat, in_wechat) && !in_wechat;
+        self.visited |= in_wechat;
         if left && self.due.is_none() {
             self.rebase = Some(now + SETTLE);
         }
@@ -122,6 +128,7 @@ impl<L: FnMut() -> Listing> ChatReader<L> {
             self.rebase = None;
             if let Some(Listing::Rows(rows)) = self.allowed.then(|| (self.look)()) {
                 self.seen = Some(rows);
+                self.visited = self.in_wechat;
             }
         }
         if !self.due.is_some_and(|at| now >= at) {
@@ -133,12 +140,14 @@ impl<L: FnMut() -> Listing> ChatReader<L> {
         }
         let reason = match ((self.look)(), self.seen.take()) {
             (Listing::Rows(rows), Some(before)) => {
-                let fresh: Vec<Session> = chats::new_messages(&before, &rows)
+                let open_counts = !self.visited;
+                let fresh: Vec<Session> = chats::new_messages(&before, &rows, open_counts)
                     .into_iter()
                     .cloned()
                     .collect();
-                self.muted_changed |= chats::muted_changed(&before, &rows);
+                self.muted_changed |= chats::muted_changed(&before, &rows, open_counts);
                 self.seen = Some(rows);
+                self.visited = self.in_wechat;
                 if !fresh.is_empty() {
                     self.due = None;
                     return Some(Flash::Messages(fresh));
@@ -151,6 +160,7 @@ impl<L: FnMut() -> Listing> ChatReader<L> {
             }
             (Listing::Rows(rows), None) => {
                 self.seen = Some(rows);
+                self.visited = self.in_wechat;
                 self.due = None;
                 return Some(Flash::Plain(Some(PlainReason::Baseline)));
             }
@@ -199,6 +209,8 @@ mod tests {
             muted,
             mentioned: false,
             pinned: false,
+            // The open chat: a new last message counts without an unread count.
+            open: true,
         }
     }
 

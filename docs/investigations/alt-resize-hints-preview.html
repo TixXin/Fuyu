@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>Alt 拖拽 / 改尺寸提示预览</title>
+<!--
+  Standalone preview (no build step) for the Alt move / resize hints on the island (C25 follow-up).
+  Open it in Edge or Chrome 139+ (the island's WebView2 engine) so corner-shape: squircle renders.
+  Sizes, radii and accents are the app's defaults: collapsed 340 x 38 (radii 14 / 22), expanded
+  560 x 306 (radii 22 / 30), --color-accent #74d6ff dark / #0a7fd1 light, 12 px edge zones as in
+  src-tauri/src/island/modifier.rs. The hint lines sit 4 px inside the edge, on the island's own
+  (inset, concentric) outline, so every line lies inside the zone it stands for.
+-->
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 24px 32px 48px; background: #111214; color: #e8e8ea; font: 14px/1.6 "Segoe UI", "Microsoft YaHei UI", sans-serif; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  h2 { font-size: 16px; margin: 28px 0 6px; }
+  p.note { color: #9a9aa0; margin: 0 0 12px; max-width: 980px; }
+  ul.points { color: #c8c8cc; max-width: 980px; padding-left: 20px; }
+  ul.points li { margin: 4px 0; }
+  kbd { background: #2a2b30; border: 1px solid #44454b; border-bottom-width: 2px; border-radius: 4px; padding: 0 6px; font: 12px/1.6 Consolas, monospace; }
+  code { background: #232428; padding: 1px 6px; border-radius: 4px; }
+  .controls { display: flex; flex-wrap: wrap; gap: 10px 26px; align-items: center; background: #1b1c1f; padding: 12px 16px; border-radius: 10px; margin: 12px 0; }
+  .group { display: flex; gap: 6px; align-items: center; }
+  .group > span { color: #9a9aa0; margin-right: 2px; }
+  button.seg { background: #2a2b30; color: #ddd; border: 1px solid #3a3b40; border-radius: 6px; padding: 2px 10px; font: inherit; cursor: pointer; }
+  button.seg.on { background: #3b4d74; border-color: #5a7ab8; color: #fff; }
+  button.swatch { width: 20px; height: 20px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; padding: 0; }
+  button.swatch.on { border-color: #fff; }
+
+  .stage { position: relative; height: 620px; border-radius: 12px; overflow: hidden; user-select: none; transition: background .2s; }
+  .stage.dark { background: radial-gradient(120% 140% at 20% 0%, #3b4d74 0%, #1d2233 45%, #0c0d12 100%); }
+  .stage.light { background: radial-gradient(120% 140% at 20% 0%, #f4f1ea 0%, #dfe6f0 55%, #c9d3e2 100%); }
+  .status { position: absolute; left: 16px; bottom: 12px; right: 16px; font-size: 13px; color: #c8c8cc; background: #000a; padding: 6px 12px; border-radius: 8px; pointer-events: none; }
+  .stage.light .status { background: #fffc; color: #333; }
+
+  .island { position: absolute; corner-shape: var(--shape); --accent: #74d6ff; background: #000; color: #e8e8ea;
+    box-shadow: inset 0 0 0 1px #ffffff14, 0 10px 30px #0006; touch-action: none;
+    transition: width 420ms cubic-bezier(0.16, 1, 0.3, 1), height 420ms cubic-bezier(0.16, 1, 0.3, 1),
+      left 420ms cubic-bezier(0.16, 1, 0.3, 1), border-radius 420ms cubic-bezier(0.16, 1, 0.3, 1); }
+  .island.no-anim { transition: none; }
+  .stage.light .island { background: #f7f7f9; color: #1c1c1e; box-shadow: inset 0 0 0 1px #0000001a, 0 10px 30px #0002; }
+  .content { position: absolute; inset: 0; overflow: hidden; border-radius: inherit; corner-shape: var(--shape); transition: opacity 200ms; }
+  .collapsed-c { display: flex; align-items: center; gap: 10px; padding: 0 18px; font-size: 13px; }
+  .collapsed-c .time { font-variant-numeric: tabular-nums; font-weight: 600; }
+  .collapsed-c .mid { flex: 1; text-align: center; opacity: .8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .collapsed-c .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+  .expanded-c { padding: 18px 22px; }
+  .tabs { display: flex; gap: 16px; font-size: 13px; opacity: .7; margin-bottom: 14px; }
+  .tabs b { opacity: 1; color: var(--accent); }
+  .row { display: flex; align-items: center; gap: 10px; padding: 9px 12px; margin-bottom: 8px; border-radius: 10px; background: #ffffff0d; font-size: 13px; }
+  .stage.light .row { background: #0000000a; }
+  .row i { width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid currentColor; opacity: .5; flex: none; }
+  .island[data-mode="collapsed"] .expanded-c, .island[data-mode="expanded"] .collapsed-c { opacity: 0; }
+
+  svg.hints { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+  .hint { fill: none; stroke: var(--accent); stroke-linecap: round; stroke-width: 2.5; opacity: 0;
+    transition: opacity 120ms ease, stroke-width 120ms ease; }
+  .armed .hint { opacity: .4; }
+  .armed.only-hot .hint { opacity: 0; }
+  .armed .hint.linked { opacity: .75; }
+  .armed .hint.hot { opacity: 1; stroke-width: 3.5; filter: drop-shadow(0 0 3px var(--accent)); }
+  @media (prefers-reduced-motion: reduce) { .hint, .island { transition: none; } }
+
+  .chip { position: absolute; transform: translateX(-50%); padding: 1px 10px; border-radius: 999px; font: 12px/20px Consolas, monospace;
+    background: var(--accent); color: #000; pointer-events: none; opacity: 0; transition: opacity 120ms; }
+  .chip.show { opacity: 1; }
+</style>
+</head>
+<body>
+<h1>Alt 拖拽 / 改尺寸提示预览</h1>
+<p class="note">先点一下页面让它拿到键盘，然后按住 <kbd>Alt</kbd> 把鼠标移到岛屿上（也可以点"模拟按住 Alt"）。展开面板的左边、右边、下边和两个下角可以拖动改尺寸，收起的岛屿只有左右两边能改宽度，其余地方是移动。默认是悬浮展开：不按 Alt 移上去 300ms 后展开；按住 Alt 移上去不会展开。</p>
+
+<div class="controls">
+  <div class="group"><span>背景</span><button class="seg" data-k="theme" data-v="dark">深色</button><button class="seg" data-k="theme" data-v="light">浅色</button></div>
+  <div class="group"><span>圆角</span><button class="seg" data-k="shape" data-v="squircle">方圆</button><button class="seg" data-k="shape" data-v="round">圆角</button></div>
+  <div class="group"><span>主题色</span><span id="swatches" class="group"></span></div>
+  <div class="group"><span>展开方式</span><button class="seg" data-k="trigger" data-v="hover">悬浮</button><button class="seg" data-k="trigger" data-v="click">点击</button></div>
+  <div class="group"><span>提示</span><button class="seg" data-k="variant" data-v="all">全部淡显 + 光标处加亮</button><button class="seg" data-k="variant" data-v="hot">只显示光标处</button></div>
+  <div class="group"><button class="seg" id="latch">模拟按住 Alt</button><button class="seg" id="reset">复位</button></div>
+</div>
+
+<div class="stage dark" id="stage">
+  <div class="island" id="island" data-mode="collapsed">
+    <div class="content collapsed-c"><span class="time">09:41</span><span class="mid">专注中 · 写周报 · 剩余 25:00</span><span class="dot"></span></div>
+    <div class="content expanded-c">
+      <div class="tabs"><b>待办</b><span>笔记</span><span>剪贴板</span><span>翻译</span></div>
+      <div class="row"><i></i>整理 Alt 改尺寸的提示方案</div>
+      <div class="row"><i></i>回复 issue #31</div>
+      <div class="row"><i></i>周五前发 0.3.6</div>
+      <div class="row"><i></i>看一下剪贴板窗口的滚动</div>
+      <div class="row"><i></i>午饭</div>
+    </div>
+    <svg class="hints" id="hints"></svg>
+  </div>
+  <div class="chip" id="chip"></div>
+  <div class="status" id="status"></div>
+</div>
+
+<h2>要点</h2>
+<ul class="points">
+  <li>线条画在离边框 4px 的同心轮廓上，落在 12px 的拖动热区里：看到线的地方就是能拖的地方。顶边不能拖，所以没有线。</li>
+  <li>改宽度时岛屿保持居中，拖一边、两边一起动，所以光标那一侧全亮，另一侧半亮。拖下角时同样，另一个下角半亮。</li>
+  <li>下角的 L 形线条沿圆角走，并向两边各延伸 10px。预览里整个下角（圆角半径范围内的热区）都算"同时改宽高"；现在 Rust 只认角上 12×12 的小方块，大部分圆弧会被判成只改宽度，实现时要一起放大。</li>
+  <li>左下角用 <code>nesw-resize</code> 光标，右下角用 <code>nwse-resize</code>。现在两个角都是 <code>nwse-resize</code>，左下角的方向是反的。</li>
+  <li>拖动时线条保持高亮，岛屿下方显示当前尺寸。松开 Alt 不会中断正在进行的拖动。</li>
+  <li>悬浮展开：按住 Alt 移上去、或在等待展开时按下 Alt，这一次都不展开；松开 Alt 也不展开，要移出再移回来才重新计时。展开的面板在按住 Alt 时不会收起。</li>
+</ul>
+
+<script>
+const EDGE = 12, INSET = 4, HOVER_DELAY = 300, COLLAPSE_DELAY = 400;
+const ACCENTS = { dark: ['#74d6ff', '#ff9f0a', '#30d158', '#bf5af2', '#ff6482'], light: ['#0a7fd1', '#c96a00', '#1f9d4c', '#8e44c9', '#d6335a'] };
+const DEFAULTS = { cw: 340, ew: 560, eh: 306, ox: 0, oy: 0 };
+const S = { theme: 'dark', shape: 'squircle', accent: 0, trigger: 'hover', variant: 'all', mode: 'collapsed', ...DEFAULTS,
+  keyAlt: false, latch: false, eventAlt: false, hovering: false, suppress: false, zone: { t: 'none' }, drag: null, pending: false };
+const $ = (id) => document.getElementById(id);
+const stage = $('stage'), island = $('island'), hints = $('hints'), chip = $('chip'), status = $('status');
+let expandTimer = null, collapseTimer = null;
+
+const alt = () => S.keyAlt || S.latch || S.eventAlt;
+const size = () => (S.mode === 'collapsed' ? [S.cw, 38] : [S.ew, S.eh]);
+const radii = () => (S.mode === 'collapsed' ? [14, 22] : [22, 30]);
+const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+
+// The island's outline, inset and concentric, sampled clockwise from the top centre, with the
+// arc length at every point and named anchors for where each hint line is centred.
+function outline(W, H, rt, rb) {
+  const n = S.shape === 'squircle' ? 4 : 2, e = 2 / n;
+  const x0 = INSET, y0 = INSET, x1 = W - INSET, y1 = H - INSET, a = Math.max(rt - INSET, 0), b = Math.max(rb - INSET, 0);
+  const pts = [], marks = {};
+  const p = (x, y) => pts.push([x, y]);
+  const mark = (k) => { marks[k] = pts.length - 1; };
+  const corner = (cx, cy, r, a0, a1, key) => {
+    for (let i = 0; i <= 24; i++) {
+      const t = ((a0 + ((a1 - a0) * i) / 24) * Math.PI) / 180, c = Math.cos(t), s = Math.sin(t);
+      p(cx + r * Math.sign(c) * Math.abs(c) ** e, cy + r * Math.sign(s) * Math.abs(s) ** e);
+      if (i === 0) mark(key + '0');
+      if (i === 24) mark(key + '1');
+    }
+  };
+  p(W / 2, y0);
+  corner(x1 - a, y0 + a, a, -90, 0, 'tr');
+  p(x1, (y0 + a + y1 - b) / 2); mark('right');
+  corner(x1 - b, y1 - b, b, 0, 90, 'br');
+  p(W / 2, y1); mark('bottom');
+  corner(x0 + b, y1 - b, b, 90, 180, 'bl');
+  p(x0, (y0 + a + y1 - b) / 2); mark('left');
+  corner(x0 + a, y0 + a, a, 180, 270, 'tl');
+  p(W / 2, y0);
+  const L = [0];
+  for (let i = 1; i < pts.length; i++) L.push(L[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
+  const at = (k) => L[marks[k]];
+  return { pts, L, at, side: y1 - b - (y0 + a) };
+}
+
+function subpath({ pts, L }, s0, s1) {
+  const point = (s) => {
+    let i = 1;
+    while (i < L.length - 1 && L[i] < s) i++;
+    const t = (s - L[i - 1]) / (L[i] - L[i - 1] || 1);
+    return [pts[i - 1][0] + (pts[i][0] - pts[i - 1][0]) * t, pts[i - 1][1] + (pts[i][1] - pts[i - 1][1]) * t];
+  };
+  const out = [point(s0)];
+  for (let i = 0; i < L.length; i++) if (L[i] > s0 && L[i] < s1) out.push(pts[i]);
+  out.push(point(s1));
+  return 'M' + out.map(([x, y]) => `${x.toFixed(1)} ${y.toFixed(1)}`).join(' L');
+}
+
+function drawHints() {
+  const W = island.offsetWidth, H = island.offsetHeight, cs = getComputedStyle(island);
+  const o = outline(W, H, parseFloat(cs.borderTopLeftRadius), parseFloat(cs.borderBottomLeftRadius));
+  const around = (k, len) => subpath(o, o.at(k) - len / 2, o.at(k) + len / 2);
+  const segs = {};
+  if (S.mode === 'collapsed') {
+    segs.left = around('left', 24);
+    segs.right = around('right', 24);
+  } else {
+    const side = Math.min(56, Math.max(24, o.side * 0.3));
+    segs.left = around('left', side);
+    segs.right = around('right', side);
+    segs.bottom = around('bottom', 64);
+    segs.bl = subpath(o, o.at('bl0') - 10, o.at('bl1') + 10);
+    segs.br = subpath(o, o.at('br0') - 10, o.at('br1') + 10);
+  }
+  const { hot, linked } = highlight();
+  hints.innerHTML = Object.entries(segs)
+    .map(([k, d]) => `<path class="hint${k === hot ? ' hot' : ''}${k === linked ? ' linked' : ''}" d="${d}"/>`).join('');
+}
+
+function highlight() {
+  const z = S.zone;
+  if (z.t === 'width') return z.side < 0 ? { hot: 'left', linked: 'right' } : { hot: 'right', linked: 'left' };
+  if (z.t === 'height') return { hot: 'bottom' };
+  if (z.t === 'both') return z.side < 0 ? { hot: 'bl', linked: 'br' } : { hot: 'br', linked: 'bl' };
+  return {};
+}
+
+// What an Alt press at (x, y) on the island does. Unlike modifier.rs today, the whole bottom
+// corner (within its radius) counts as both, so the corner line and its zone agree.
+function zoneAt(x, y) {
+  const [W, H] = size();
+  if (S.mode === 'collapsed') return x < EDGE ? { t: 'width', side: -1 } : x > W - EDGE ? { t: 'width', side: 1 } : { t: 'move' };
+  const rb = radii()[1];
+  let side = x < EDGE ? -1 : x > W - EDGE ? 1 : 0, bottom = y > H - EDGE;
+  if ((side || bottom) && y > H - rb && (x < rb || x > W - rb)) { side = x < rb ? -1 : 1; bottom = true; }
+  return { t: side && bottom ? 'both' : side ? 'width' : bottom ? 'height' : 'move', side };
+}
+
+const CURSORS = { move: 'move', width: 'ew-resize', height: 'ns-resize' };
+function render() {
+  const [W, H] = size(), [rt, rb] = radii();
+  const sw = stage.clientWidth, sh = stage.clientHeight;
+  S.ox = clamp(S.ox, -(sw - W) / 2, (sw - W) / 2);
+  S.oy = clamp(S.oy, 0, Math.max(0, sh - H - 70));
+  Object.assign(island.style, { width: W + 'px', height: H + 'px', left: (sw - W) / 2 + S.ox + 'px', top: 10 + S.oy + 'px', borderRadius: `${rt}px ${rt}px ${rb}px ${rb}px` });
+  island.dataset.mode = S.mode;
+  island.style.setProperty('--shape', S.shape);
+  island.style.setProperty('--accent', ACCENTS[S.theme][S.accent]);
+  chip.style.setProperty('--accent', ACCENTS[S.theme][S.accent]);
+  const armed = (alt() && S.hovering) || !!S.drag;
+  if (!armed && !S.drag) S.zone = { t: 'none' };
+  island.classList.toggle('armed', armed);
+  island.classList.toggle('only-hot', S.variant === 'hot');
+  const z = S.zone.t;
+  island.style.cursor = !armed || z === 'none' ? (S.mode === 'collapsed' ? 'pointer' : 'default')
+    : z === 'both' ? (S.zone.side < 0 ? 'nesw-resize' : 'nwse-resize') : CURSORS[z];
+  stage.className = 'stage ' + S.theme;
+  const resizing = S.drag && S.drag.t !== 'move';
+  chip.classList.toggle('show', !!resizing);
+  chip.textContent = S.mode === 'collapsed' ? `宽 ${S.cw}` : `${S.ew} × ${S.eh}`;
+  chip.style.left = sw / 2 + S.ox + 'px';
+  chip.style.top = 10 + S.oy + H + 10 + 'px';
+  document.querySelectorAll('button.seg[data-k]').forEach((b) => b.classList.toggle('on', S[b.dataset.k] === b.dataset.v));
+  $('latch').classList.toggle('on', S.latch);
+  document.querySelectorAll('button.swatch').forEach((b, i) => {
+    b.style.background = ACCENTS[S.theme][i];
+    b.classList.toggle('on', i === S.accent);
+  });
+  drawHints();
+  status.textContent = describe(armed);
+}
+
+function describe(armed) {
+  const parts = [`${S.mode === 'collapsed' ? '收起' : '展开'}`, alt() ? 'Alt 按住' : 'Alt 未按'];
+  const names = { move: '移动', width: '改宽度（两边一起动）', height: '改高度', both: '同时改宽高' };
+  if (S.drag) parts.push(`正在${names[S.drag.t]}`);
+  else if (armed && names[S.zone.t]) parts.push(`按下会${names[S.zone.t]}`);
+  if (S.pending) parts.push(`${HOVER_DELAY}ms 后展开…`);
+  if (S.suppress && S.hovering && S.mode === 'collapsed' && S.trigger === 'hover') parts.push('这次悬浮不展开（移出再移回来才会）');
+  if (S.mode === 'expanded' && alt() && !S.hovering) parts.push('按住 Alt，面板不收起');
+  return parts.join(' · ');
+}
+
+function expand() { S.mode = 'expanded'; clearExpand(); render(); }
+function collapse() { S.mode = 'collapsed'; clearTimeout(collapseTimer); render(); }
+function clearExpand() { clearTimeout(expandTimer); expandTimer = null; S.pending = false; }
+function maybeExpand() {
+  if (S.mode !== 'collapsed' || S.trigger !== 'hover' || !S.hovering || alt() || S.suppress || S.pending) return;
+  S.pending = true;
+  expandTimer = setTimeout(() => { S.pending = false; if (S.hovering && !alt()) expand(); }, HOVER_DELAY);
+}
+function maybeCollapse() {
+  clearTimeout(collapseTimer);
+  if (S.mode === 'expanded' && S.trigger === 'hover' && !S.hovering && !alt() && !S.drag) collapseTimer = setTimeout(collapse, COLLAPSE_DELAY);
+}
+
+function onAltChange() {
+  if (alt()) {
+    if (S.hovering) { S.suppress = true; clearExpand(); }
+    clearTimeout(collapseTimer);
+  } else {
+    maybeCollapse();
+  }
+  render();
+}
+
+function local(e) {
+  const r = island.getBoundingClientRect();
+  return [e.clientX - r.left, e.clientY - r.top];
+}
+
+island.addEventListener('pointerenter', (e) => {
+  S.hovering = true;
+  S.eventAlt = e.altKey;
+  clearTimeout(collapseTimer);
+  if (alt()) S.suppress = true;
+  S.zone = zoneAt(...local(e));
+  maybeExpand();
+  render();
+});
+island.addEventListener('pointerleave', () => {
+  if (S.drag) return;
+  S.hovering = false;
+  S.suppress = false;
+  clearExpand();
+  maybeCollapse();
+  render();
+});
+island.addEventListener('pointermove', (e) => {
+  if (S.drag) return dragTo(e);
+  const was = alt();
+  S.eventAlt = e.altKey;
+  S.zone = zoneAt(...local(e));
+  if (was !== alt()) onAltChange(); else render();
+});
+island.addEventListener('pointerdown', (e) => {
+  if (e.button !== 0) return;
+  if (!alt() && !e.altKey) { if (S.mode === 'collapsed') expand(); return; }
+  e.preventDefault();
+  island.setPointerCapture(e.pointerId);
+  const z = zoneAt(...local(e));
+  S.zone = z;
+  S.drag = { t: z.t, side: z.side, x: e.clientX, y: e.clientY, from: { cw: S.cw, ew: S.ew, eh: S.eh, ox: S.ox, oy: S.oy } };
+  island.classList.add('no-anim');
+  clearExpand();
+  render();
+});
+function dragTo(e) {
+  const d = S.drag, dx = e.clientX - d.x, dy = e.clientY - d.y, f = d.from;
+  if (d.t === 'move') { S.ox = f.ox + dx; S.oy = f.oy + dy; }
+  if (d.t === 'width' || d.t === 'both') {
+    if (S.mode === 'collapsed') S.cw = Math.round(clamp(f.cw + d.side * 2 * dx, 240, 520));
+    else S.ew = Math.round(clamp(f.ew + d.side * 2 * dx, 420, 820));
+  }
+  if (d.t === 'height' || d.t === 'both') S.eh = Math.round(clamp(f.eh + dy, 220, 540));
+  render();
+}
+island.addEventListener('pointerup', (e) => {
+  if (!S.drag) return;
+  S.drag = null;
+  island.classList.remove('no-anim');
+  const r = island.getBoundingClientRect();
+  S.hovering = e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
+  S.eventAlt = e.altKey;
+  if (S.hovering) S.zone = zoneAt(...local(e)); else { S.suppress = false; maybeCollapse(); }
+  render();
+});
+stage.addEventListener('pointerdown', (e) => { if (e.target === stage && S.mode === 'expanded') collapse(); });
+
+window.addEventListener('keydown', (e) => {
+  if (e.key !== 'Alt') return;
+  e.preventDefault();
+  if (!S.keyAlt) { S.keyAlt = true; onAltChange(); }
+});
+window.addEventListener('keyup', (e) => {
+  if (e.key !== 'Alt') return;
+  e.preventDefault();
+  S.keyAlt = false; S.eventAlt = false;
+  onAltChange();
+});
+window.addEventListener('blur', () => { S.keyAlt = false; S.eventAlt = false; onAltChange(); });
+
+document.querySelectorAll('button.seg[data-k]').forEach((b) => b.addEventListener('click', () => {
+  S[b.dataset.k] = b.dataset.v;
+  if (b.dataset.k === 'trigger') { clearExpand(); S.suppress = false; }
+  render();
+}));
+ACCENTS.dark.forEach((_, i) => {
+  const b = document.createElement('button');
+  b.className = 'swatch';
+  b.addEventListener('click', () => { S.accent = i; render(); });
+  $('swatches').append(b);
+});
+$('latch').addEventListener('click', () => { S.latch = !S.latch; onAltChange(); });
+$('reset').addEventListener('click', () => { Object.assign(S, DEFAULTS); collapse(); });
+new ResizeObserver(drawHints).observe(island);
+window.addEventListener('resize', render);
+render();
+</script>
+</body>
+</html>

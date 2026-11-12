@@ -3,11 +3,12 @@ import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsRow } from "../../components/settings/SettingsRow";
 import { SettingsSliderRow } from "../../components/settings/SettingsSliderRow";
 import { useTranslation } from "../../i18n";
-import { DEFAULT_SETTINGS, MAX_ISLAND_CORNER_RADIUS, MAX_MAX_PANEL_HEIGHT, MAX_PANEL_WIDTH, MAX_TOP_FILLET_RADIUS, MIN_ISLAND_CORNER_RADIUS, MIN_MAX_PANEL_HEIGHT, MIN_PANEL_WIDTH, MIN_TOP_FILLET_RADIUS } from "./settings";
+import { DEFAULT_SETTINGS, MAX_COLLAPSED_WIDTH_EXTRA, MAX_ISLAND_CORNER_RADIUS, MAX_MAX_PANEL_HEIGHT, MAX_PANEL_WIDTH, MAX_TOP_FILLET_RADIUS, MIN_COLLAPSED_WIDTH_EXTRA, MIN_ISLAND_CORNER_RADIUS, MIN_MAX_PANEL_HEIGHT, MIN_PANEL_WIDTH, MIN_TOP_FILLET_RADIUS } from "./settings";
 import type { IslandCornerShape, IslandSettings } from "./types";
 
 const scale = (value: number) => `${value.toFixed(2)}x`;
 const pixels = (value: number) => `${Math.round(value)} px`;
+const signedPixels = (value: number) => `${value > 0 ? "+" : ""}${Math.round(value)} px`;
 
 type LayoutSectionProps = {
   settings: IslandSettings;
@@ -58,6 +59,18 @@ export function SizeSettingsSection(props: LayoutSectionProps) {
           defaultValue={DEFAULT_SETTINGS.expandedScale}
           resetLabel={text.resetToDefault}
           onChange={(expandedScale) => change({ ...settings, expandedScale }, true)}
+        />
+        <SettingsSliderRow
+          title={text.collapsedWidthExtra}
+          description={text.collapsedWidthHint}
+          value={settings.collapsedWidthExtra}
+          min={MIN_COLLAPSED_WIDTH_EXTRA}
+          max={MAX_COLLAPSED_WIDTH_EXTRA}
+          step={1}
+          format={signedPixels}
+          defaultValue={DEFAULT_SETTINGS.collapsedWidthExtra}
+          resetLabel={text.resetToDefault}
+          onChange={(collapsedWidthExtra) => change({ ...settings, collapsedWidthExtra }, false)}
         />
         <SettingsSliderRow
           title={text.panelWidth}

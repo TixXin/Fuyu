@@ -10,6 +10,16 @@
   --color-page-text: #f7f5ef;
   --color-surface-dark: #111112;
 
+  /* The usage rings' colours (usageRing.ts): against their track (the island's ink at 12%) on a
+     #2f2f37 island the normal ones are at least 4.5:1, warning, danger and stale at least 3:1. */
+  --usage-claude: #ffb27a;
+  --usage-codex: #e6e6eb;
+  --usage-glm: #a99bff;
+  --usage-kimi: #6aabff;
+  --usage-warn: #f5e06e;
+  --usage-danger: #ff7a7a;
+  --usage-stale: #a3a3aa;
+
   /* Island text: one hue (--color-text), four alphas. Contrast on the island #030303 /
      an inner panel #1e1e22: 1 = 17.5 / 14.2, 2 = 8.7 / 7.8, 3 = 5.7 / 5.4, placeholder = 3.8 / 3.8.
      The first three are for reading (>= 4.5:1); placeholder only for input hints. */
@@ -77,6 +87,14 @@
  * the island window's stage; the settings window keeps its dark look.
  */
 .island-light {
+  /* The usage rings' colours for a light island (usageRing.ts); see :root for the dark ones. */
+  --usage-claude: #93400f;
+  --usage-codex: #3a3a42;
+  --usage-glm: #5b47e0;
+  --usage-kimi: #1666d6;
+  --usage-warn: #8a6400;
+  --usage-danger: #c42b2b;
+  --usage-stale: #6a6a72;
   --color-text: #18181e;
   --color-text-strong: rgba(24, 24, 30, 0.88);
   --color-text-muted: rgba(24, 24, 30, 0.72);
@@ -105,6 +123,8 @@
   /* The pale pinks and yellows of error and warning text are unreadable on light grey. */
   --error-text: #c0283f;
   --warning-text: #9a6700;
+  /* Pages that draw their own panel (translation, plugin views) instead of the island's. */
+  --panel-fill: rgba(255, 255, 255, 0.6);
   /* Menus and notices that float over the page. */
   --popover-fill: rgba(252, 252, 254, 0.97);
   /* The messages page's pale mint (on, unread, connected). */

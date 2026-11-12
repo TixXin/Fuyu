@@ -5,7 +5,10 @@ export type SettingsProjectText = {
   description: string;
   versionTitle: string;
   linksTitle: string;
-  /** The last card of About: resetting every setting, and quitting the island. */
+  /** The last card of About: the first-run guide again, resetting every setting, and quitting the island. */
+  guide: string;
+  guideHint: string;
+  guideAction: string;
   resetAll: string;
   resetAllHint: string;
   resetAllConfirm: string;
@@ -106,6 +109,9 @@ export const zhCN: SettingsProjectText = {
   description: "在屏幕顶部集中待办、剪贴板、音乐、快捷翻译、AI 状态和消息提醒。",
   versionTitle: "版本",
   linksTitle: "链接",
+  guide: "新手引导",
+  guideHint: "第一次启动时打开的那个窗口：语言、外观、功能开关和几个常用选项。",
+  guideAction: "打开",
   resetAll: "重置所有设置",
   resetAllHint: "外观、行为和各功能的设置恢复默认。待办、笔记、邮箱、插件、密钥、样式预设和界面语言都保留。",
   resetAllConfirm: "确认重置",
@@ -204,6 +210,9 @@ export const en: SettingsProjectText = {
   description: "Todos, clipboard, music, quick translation, AI status, and message alerts, gathered at the top of the screen.",
   versionTitle: "Version",
   linksTitle: "Links",
+  guide: "Welcome guide",
+  guideHint: "The window shown on first start: language, appearance, modules and a few common choices.",
+  guideAction: "Open",
   resetAll: "Reset all settings",
   resetAllHint: "Appearance, behaviour and every feature's settings go back to their defaults. Todos, notes, mailboxes, plugins, keys, style presets and the interface language are kept.",
   resetAllConfirm: "Reset",

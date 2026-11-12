@@ -126,7 +126,7 @@ const button = () => document.querySelector<HTMLButtonElement>(".island__gauge-s
 const anchor = () => button().parentElement!;
 const card = () => document.querySelector<HTMLElement>(".island-hover-card");
 const cardLines = () => [...card()!.querySelectorAll(".island-hover-card__line")].map((line) => line.textContent);
-const arcColors = () => [...button().querySelectorAll(".mini-ring__arc")].map((arc) => arc.getAttribute("stroke"));
+const arcColors = () => [...button().querySelectorAll(".mini-ring__arc")].map((arc) => (arc as SVGElement).style.stroke);
 const wait = (ms: number) => act(async () => { await new Promise((resolve) => setTimeout(resolve, ms)); });
 // A click re-reads the snapshot, so a new one shows without waiting for the 30-second timer.
 const push = async (next: AgentUsage | null) => {
@@ -148,6 +148,19 @@ async function runChecks() {
     check(!button().title && !button().querySelector("[title]"), "不用原生 title 提示");
     check(button().querySelectorAll(".mini-ring__track").length === 2, "同心双环：两条底轨");
     check(arcColors().join() === [USAGE_COLORS.normal, USAGE_COLORS.warn].join(), "外环 42% 常态色，内环 76% 用 ≥70% 的颜色");
+    // Issue #42: each colour has a dark-island and a light-island value, and the track follows the ink.
+    const arc = button().querySelector(".mini-ring__arc")!;
+    const track = button().querySelector(".mini-ring__track")!;
+    (arc as SVGElement).style.transition = "none"; // the colour change is animated
+    const dark = [getComputedStyle(arc).stroke, getComputedStyle(track).stroke];
+    document.body.classList.add("island-light");
+    document.body.style.setProperty("--island-ink-rgb", "24, 24, 30");
+    const light = [getComputedStyle(arc).stroke, getComputedStyle(track).stroke];
+    document.body.classList.remove("island-light");
+    document.body.style.removeProperty("--island-ink-rgb");
+    (arc as SVGElement).style.transition = "";
+    check(dark.join("|") === "rgb(255, 178, 122)|rgba(241, 240, 246, 0.12)" && light.join("|") === "rgb(147, 64, 15)|rgba(24, 24, 30, 0.12)",
+      `深色岛和浅色岛各用一套颜色，轨道跟着岛的深浅（${dark.join(" / ")}；${light.join(" / ")}）`);
 
     await act(async () => { anchor().dispatchEvent(new PointerEvent("pointerover", { bubbles: true })); });
     await wait(100);
@@ -200,7 +213,7 @@ async function runChecks() {
     // Every agent switched on: one ring each, in order and colour, side by side inside the island.
     const all = [...document.querySelectorAll<HTMLButtonElement>(".stage--all .claude-usage-gauge")];
     check(all.map((gauge) => gauge.dataset.provider).join() === "claudeCode,codex,glm,kimi", "四个环按 Claude Code、Codex、GLM、Kimi 排列");
-    const colorsOf = (gauge: HTMLElement) => [...gauge.querySelectorAll(".mini-ring__arc")].map((arc) => arc.getAttribute("stroke"));
+    const colorsOf = (gauge: HTMLElement) => [...gauge.querySelectorAll(".mini-ring__arc")].map((arc) => (arc as SVGElement).style.stroke);
     check(USAGE_PROVIDERS.slice(1).every((provider, index) => colorsOf(all[index + 1]).every((color) => color === provider.color)), "Codex、GLM、Kimi 各用自己的颜色");
     const allIsland = document.querySelector(".stage--all .island")!.getBoundingClientRect();
     const boxes = all.map((gauge) => gauge.getBoundingClientRect());

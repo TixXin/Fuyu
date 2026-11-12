@@ -20,6 +20,7 @@ import * as fileShelf from "../sections/fileShelf.ts";
 import * as screenshot from "../sections/screenshot.ts";
 import * as pluginViews from "../sections/pluginViews.ts";
 import * as settings from "../sections/settings/index.ts";
+import * as onboarding from "../sections/onboarding.ts";
 import * as errors from "../sections/errors.ts";
 
 const zhCN: Translations = {
@@ -59,6 +60,7 @@ const zhCN: Translations = {
 
   pluginViews: pluginViews.zhCN,
   settings: settings.zhCN,
+  onboarding: onboarding.zhCN,
   errors: errors.zhCN,
 };
 

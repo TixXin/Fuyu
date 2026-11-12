@@ -12,7 +12,7 @@
 
 浮屿 / Fuyu（仓库 `TixXin/fuyu`，改名前叫 FocuSD Island，仓库名 fly-island）是 Windows 优先的桌面效率工具，以透明、无边框、始终置顶的 Tauri 悬浮岛形式运行。主要功能：待办、每日笔记与归档，外观设置与预设，媒体控制，剪贴板历史，快捷翻译，QQ 通知、QQ 邮箱和微信提醒，AI 代理状态，以及自动更新。
 
-应用有四个窗口，外加截图时每个显示器一个选区窗口，前端通过同一入口的 `?window=` 参数分发：
+应用有五个窗口，外加截图时每个显示器一个选区窗口，前端通过同一入口的 `?window=` 参数分发：
 
 | 窗口 label | 前端入口 | 说明 |
 |---|---|---|
@@ -20,6 +20,7 @@
 | `translation` | `?window=translation` | 快捷翻译窗口，常驻、隐藏显示 |
 | `clipboard` | `?window=clipboard` | 剪贴板独立窗口，常驻、隐藏显示，快捷键或 Win+V 弹出 |
 | `settings` | `?window=settings` | 设置窗口，`create: false`，按需创建 |
+| `onboarding` | `?window=onboarding` | 新手引导，`create: false`；新装第一次启动时打开，设置 → 关于里能再打开 |
 | `screenshot-<n>` | `?window=screenshot` | 截图的选区窗口，每个显示器一个；打开截图模块时创建，平时隐藏 |
 
 **结构重构已完成（Phase 0–6，收尾与待人工验收项见 [refactor-plan.md](docs/architecture/history/refactor-plan.md)）。** 代码已按 [overview.md](docs/architecture/overview.md) 的目标结构组织：Rust 侧的 `unsafe` 只在 `src-tauri/src/win32/` 中，生产代码不用 `unwrap` / `expect`，clippy 与 ESLint 均为 0 告警。新代码沿用这套结构与子目录规则。
@@ -170,6 +171,7 @@
   - 别人留下的、没有会话在用的 lane（land 或会话开始时输出里带 `⚠`，`pnpm mq:reconcile` 会列出）：问用户怎么处理，不要删除。已经合入、没有未提交改动、而且建它的会话（钩子记下的 `claude.exe`）已经退出的 lane，会在下次 land 时自动删除；会话还开着的 lane 不会删。手动建的 lane 没有这条记录，不会被自动删除，用完自己 `git worktree remove` 并删除分支。Windows 上 `git worktree remove` 常常删不掉 `node_modules`，会留下只剩 `node_modules` 的 `../fly-island-lanes/<N>` 文件夹；钩子会把它当成还在用的 lane 而跳过这个编号，所以删完要确认文件夹已经不在，残留的用 `cmd /c rmdir /s /q <路径>` 删除（不会顺着 pnpm 的目录联接删到 store）。
   - 工具在 Windows 上的几个问题（找不到 `pwd` 导致各 lane 的队列锁互不相通、调用 `pnpm` 时没开 shell），以及清理 lane 时路径对不上、没有 `lsof`、删不掉 `node_modules` 导致 lane 越积越多，都由 `patches/claude-code-merge-queue@0.7.1.patch` 修复（`pnpm-workspace.yaml` 的 `patchedDependencies`）。升级这个包时要重新做补丁，并确认两个 lane 同时 land 会排队。
   - Rust 构建分几个目录，都在主工作区的 `src-tauri/target` 下（`scripts/build-dirs.mjs`）：用户的 `pnpm tauri dev` 用 `debug`，release 用 `release`，代理的 `cargo test` / `clippy` 用 `agents`（`land-check.mjs` 已经这样设置；在 lane 里手动跑时设 `CARGO_TARGET_DIR=<主工作区>/src-tauri/target/agents`），lane 预览用 `lane-<N>`。代理不要用 `debug`，否则会和用户的 dev 互相等锁、互相触发重编译。
+  - 多个 lane 同时编译时不拖慢桌面（`scripts/build-load.mjs`）：`land-check` / `pnpm verify` 和 `pnpm build:exe` 以"低于正常"优先级运行（它启动的 pnpm、cargo、rustc 都继承），cargo 并行数默认是逻辑 CPU 的一半；lane 预览只限并行数。环境里已设 `CARGO_BUILD_JOBS` 时以它为准。在 lane 里手动跑 `cargo test` / `clippy` 时也设 `CARGO_BUILD_JOBS`（例如逻辑 CPU 的一半）。用户的 `pnpm tauri dev` 不受影响。
   - Rust 版本固定在 `rust-toolchain.toml`（CI 的 `ci.yml` 写同一个版本，改时一起改），本机、lane 和 CI 用同一个编译器，本机 clippy 通过 CI 也会通过。
 - 修改前先查看 `git status --short`，不要覆盖用户已有改动。
 - 不要使用 `git reset --hard`、`git checkout --` 等破坏性命令，除非用户明确要求。

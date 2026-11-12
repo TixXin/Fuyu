@@ -19,6 +19,10 @@ pub(super) const DEFAULT_COLLAPSED_SCALE: f64 = 0.89;
 pub(super) const DEFAULT_EXPANDED_SCALE: f64 = 0.91;
 pub(super) const MIN_COLLAPSED_ISLAND_WIDTH: f64 = 280.0;
 pub(super) const COLLAPSED_ISLAND_WIDTH: f64 = 340.0;
+// The collapsed width with the width adjustment (Alt + drag on its sides) added: the text-driven
+// 280-340 shifted by MIN / MAX_COLLAPSED_WIDTH_EXTRA in src/features/appearance/settingsLimits.ts.
+pub(super) const MIN_ADJUSTED_COLLAPSED_WIDTH: f64 = 220.0;
+pub(super) const MAX_ADJUSTED_COLLAPSED_WIDTH: f64 = 520.0;
 pub(super) const COLLAPSED_ISLAND_HEIGHT: f64 = 38.0;
 pub(super) const COLLAPSED_RADIUS: f64 = 22.0;
 pub(super) const EXPANDED_ISLAND_WIDTH: f64 = 560.0;
@@ -55,7 +59,7 @@ static RUNNING_SLIDE: Mutex<Option<(u64, (i32, i32))>> = Mutex::new(None);
 pub(super) fn continues_slide(running: Option<(u64, (i32, i32))>, current_generation: u64, target: (i32, i32), animate: bool) -> bool {
     !animate && running == Some((current_generation, target))
 }
-// A shorter stage waits for the island's 560ms height transition (.island in
+// A shorter stage waits for the island's 500ms height transition (.island in
 // src/windows/island/IslandShell.css) to finish; shrinking at once would cut off the
 // bottom of the island while it is still animating down from a taller page.
 const STAGE_SHRINK_DELAY: Duration = Duration::from_millis(600);

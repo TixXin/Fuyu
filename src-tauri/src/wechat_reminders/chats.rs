@@ -19,6 +19,8 @@ pub(super) struct Session {
     /// Someone mentioned the user (or everyone): WeChat flashes for that even in a muted chat.
     pub(super) mentioned: bool,
     pub(super) pinned: bool,
+    /// The chat open in WeChat (its row is selected): a message to it raises no unread count.
+    pub(super) open: bool,
 }
 
 const STATUS_LINES: [&str; 10] = [
@@ -80,6 +82,7 @@ pub(super) fn parse(automation_id: &str, name: &str) -> Option<Session> {
         muted: lines.iter().any(|line| MUTED_LINES.contains(line)),
         mentioned: lines[1..end].iter().any(|line| is_mention(line)),
         pinned: lines.iter().any(|line| PINNED_LINES.contains(line)),
+        open: false,
     })
 }
 
@@ -91,12 +94,15 @@ fn is_mention(line: &str) -> bool {
     })
 }
 
-/// Whether `row` shows a message `before` did not: a new last message or a higher unread count; a
+/// Whether `row` got a message since `before`: a higher unread count. A new last message alone
+/// is also what the user's own message looks like, sent here or synced from the phone (issue #40),
+/// so it counts only in the chat open in WeChat (`open_counts`), whose messages raise no count. A
 /// row scrolled into view counts only with unread messages.
-fn changed(before: &HashMap<&str, &Session>, row: &Session) -> bool {
+fn changed(before: &HashMap<&str, &Session>, row: &Session, open_counts: bool) -> bool {
     match before.get(row.key.as_str()) {
         Some(old) => {
-            old.preview != row.preview || row.unread.unwrap_or(0) > old.unread.unwrap_or(0)
+            row.unread.unwrap_or(0) > old.unread.unwrap_or(0)
+                || (open_counts && row.open && old.preview != row.preview)
         }
         None => row.unread.unwrap_or(0) > 0,
     }
@@ -107,18 +113,22 @@ fn by_key(rows: &[Session]) -> HashMap<&str, &Session> {
 }
 
 /// Whether a muted chat got a message since `before` that `new_messages` leaves out.
-pub(super) fn muted_changed(before: &[Session], now: &[Session]) -> bool {
+pub(super) fn muted_changed(before: &[Session], now: &[Session], open_counts: bool) -> bool {
     let before = by_key(before);
     now.iter().any(|row| {
-        row.muted && !row.mentioned && !row.preview.is_empty() && changed(&before, row)
+        row.muted && !row.mentioned && !row.preview.is_empty() && changed(&before, row, open_counts)
     })
 }
 
-/// Rows that got a message since `before`: a new last message, a higher unread count, or (when
-/// the text repeats the last one and the chat counts no unread) a move to the top of the unpinned
-/// chats. Muted chats count only when the message mentions the user; a row scrolled into view
-/// counts only with unread messages.
-pub(super) fn new_messages<'a>(before: &[Session], now: &'a [Session]) -> Vec<&'a Session> {
+/// Rows that got a message since `before` (see `changed`); the open chat also by a move to the top
+/// of the unpinned chats, for a message that repeats the last one. `open_counts`: the user has not
+/// been in WeChat since `before`, so a change to the open chat is not their own reply. Muted chats
+/// count only when the message mentions the user.
+pub(super) fn new_messages<'a>(
+    before: &[Session],
+    now: &'a [Session],
+    open_counts: bool,
+) -> Vec<&'a Session> {
     let top = |rows: &'a [Session]| {
         rows.iter()
             .find(|row| !row.pinned)
@@ -134,7 +144,10 @@ pub(super) fn new_messages<'a>(before: &[Session], now: &'a [Session]) -> Vec<&'
     let before = by_key(before);
     now.iter()
         .filter(|row| (!row.muted || row.mentioned) && !row.preview.is_empty())
-        .filter(|row| moved_up == Some(row.key.as_str()) || changed(&before, row))
+        .filter(|row| {
+            (open_counts && row.open && moved_up == Some(row.key.as_str()))
+                || changed(&before, row, open_counts)
+        })
         .collect()
 }
 
@@ -146,7 +159,11 @@ pub(super) fn read(window: HWND) -> Option<Vec<Session>> {
     let rows = uia_list::list_rows(window, ROW_PREFIX)?;
     let chats: Vec<Session> = rows
         .iter()
-        .filter_map(|row| parse(&row.id, &row.name))
+        .filter_map(|row| {
+            let mut chat = parse(&row.id, &row.name)?;
+            chat.open = row.selected;
+            Some(chat)
+        })
         .collect();
     (!chats.is_empty()).then_some(chats)
 }
@@ -227,6 +244,7 @@ mod tests {
             muted: false,
             mentioned: false,
             pinned: false,
+            open: false,
         }
     }
 
@@ -296,18 +314,18 @@ mod tests {
             row("c", "滚进来的", None),
             row("d", "新聊天", Some(1)),
         ];
-        let keys: Vec<&str> = new_messages(&before, &now)
+        let keys: Vec<&str> = new_messages(&before, &now, true)
             .iter()
             .map(|r| r.key.as_str())
             .collect();
-        assert_eq!(keys, ["a", "b", "d"]);
+        assert_eq!(keys, ["b", "d"]);
 
         let mut muted = row("a", "又一条", Some(3));
         muted.muted = true;
         let now = [muted, row("b", "好", Some(1))];
-        assert!(new_messages(&before, &now).is_empty());
-        assert!(muted_changed(&before, &now));
-        assert!(!muted_changed(&before, &before));
+        assert!(new_messages(&before, &now, true).is_empty());
+        assert!(muted_changed(&before, &now, true));
+        assert!(!muted_changed(&before, &before, true));
     }
 
     #[test]
@@ -316,12 +334,12 @@ mod tests {
         for name in [
             "项目群\n[2条]\n有人@我\n李四: 看一下\n12:41\n消息免打扰",
             "项目群\n[2条]\n[有人@我] 李四: 看一下\n12:41\n消息免打扰",
-            "项目群\n[@所有人] 李四: 开会\n12:41\n消息免打扰",
+            "项目群\n[1条]\n[@所有人] 李四: 开会\n12:41\n消息免打扰",
         ] {
             let now = [parse("session_item_g", name).unwrap()];
             assert!(now[0].muted && now[0].mentioned, "{name}");
-            assert_eq!(new_messages(&before, &now).len(), 1, "{name}");
-            assert!(!muted_changed(&before, &now), "{name}");
+            assert_eq!(new_messages(&before, &now, true).len(), 1, "{name}");
+            assert!(!muted_changed(&before, &now, true), "{name}");
         }
         assert!(!before[0].mentioned);
     }
@@ -331,31 +349,32 @@ mod tests {
         let before = [parse("session_item_g", "项目群\n消息免打扰\n张三: 收到\n昨天").unwrap()];
         for name in [
             "项目群\n[2条]\n李四: 有事@我\n12:41\n消息免打扰",
-            "项目群\n李四: @我们组的同学 开会\n12:41\n消息免打扰",
-            "项目群\n李四: 记得@所有人\n12:41\n消息免打扰",
+            "项目群\n[1条]\n李四: @我们组的同学 开会\n12:41\n消息免打扰",
+            "项目群\n[1条]\n李四: 记得@所有人\n12:41\n消息免打扰",
         ] {
             let now = [parse("session_item_g", name).unwrap()];
             assert!(now[0].muted && !now[0].mentioned, "{name}");
-            assert!(new_messages(&before, &now).is_empty(), "{name}");
-            assert!(muted_changed(&before, &now), "{name}");
+            assert!(new_messages(&before, &now, true).is_empty(), "{name}");
+            assert!(muted_changed(&before, &now, true), "{name}");
         }
     }
 
     #[test]
-    fn a_repeated_text_counts_when_its_chat_jumps_to_the_top() {
+    fn a_repeated_text_counts_when_the_open_chat_jumps_to_the_top() {
         let mut pinned = row("p", "置顶的", None);
         pinned.pinned = true;
-        let before = [pinned.clone(), row("a", "早", None), row("b", "好的", None)];
-        let now = [pinned.clone(), row("b", "好的", None), row("a", "早", None)];
-        let keys: Vec<&str> = new_messages(&before, &now)
+        let b = Session { open: true, ..row("b", "好的", None) };
+        let before = [pinned.clone(), row("a", "早", None), b.clone()];
+        let now = [pinned.clone(), b, row("a", "早", None)];
+        let keys: Vec<&str> = new_messages(&before, &now, true)
             .iter()
             .map(|r| r.key.as_str())
             .collect();
         assert_eq!(keys, ["b"]);
         // Scrolled: the list no longer starts with the same row, so order means nothing.
         let scrolled = [row("x", "很久以前", None), row("a", "早", None)];
-        assert!(new_messages(&before, &scrolled).is_empty());
+        assert!(new_messages(&before, &scrolled, true).is_empty());
         // The top chat stays on top: nothing moved.
-        assert!(new_messages(&before, &before).is_empty());
+        assert!(new_messages(&before, &before, true).is_empty());
     }
 }

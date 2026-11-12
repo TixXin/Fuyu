@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { isIslandHeld } from "./islandHold";
-import { listenIslandHover } from "./api";
+import { listenIslandHover, listenIslandMoveArmed } from "./api";
 import type { IslandMode } from "./types";
 
 // Controls on the collapsed island that act on their own (message preview, mail,
@@ -98,6 +98,28 @@ export function useHoverExpand({ enabled, delayMs, paused, collapseDelayMs, mode
       window.removeEventListener("pointerup", release, true);
       window.removeEventListener("pointercancel", release, true);
       window.removeEventListener("blur", release);
+    };
+  }, []);
+
+  // Alt over the collapsed island is for moving or resizing it (C25): a pending open is dropped,
+  // and the cursor has to leave and come back before hovering opens it, so letting go of Alt after
+  // a resize does not open the panel either.
+  useEffect(() => {
+    let didCancel = false;
+    let unlisten: (() => void) | null = null;
+    void listenIslandMoveArmed((target) => {
+      if (target === "none" || modeRef.current !== "collapsed") return;
+      window.clearTimeout(expandTimerRef.current);
+      armedRef.current = false;
+    })
+      .then((nextUnlisten) => {
+        if (didCancel) nextUnlisten();
+        else unlisten = nextUnlisten;
+      })
+      .catch((error) => console.error("Failed to listen for the island move modifier", error));
+    return () => {
+      didCancel = true;
+      unlisten?.();
     };
   }, []);
 

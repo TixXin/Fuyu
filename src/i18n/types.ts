@@ -19,6 +19,7 @@ import type { FileShelfText } from "./sections/fileShelf";
 import type { ScreenshotText } from "./sections/screenshot";
 import type { PluginViewsText } from "./sections/pluginViews";
 import type { SettingsText } from "./sections/settings/index";
+import type { OnboardingText } from "./sections/onboarding";
 import type { ErrorsText } from "./sections/errors";
 
 export type LocaleCode = "zh-CN" | "en";
@@ -61,6 +62,8 @@ export type Translations = {
   /** Pages and status texts plugins put on the island (drawn from templates). */
   pluginViews: PluginViewsText;
   settings: SettingsText;
+  /** The first-run guide's window. */
+  onboarding: OnboardingText;
   /** Errors from the native side, by code (nativeError.ts). */
   errors: ErrorsText;
 };

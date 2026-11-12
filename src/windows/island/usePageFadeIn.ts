@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef } from "react";
 import type { IslandMode, IslandPage } from "./types";
 
-// Short enough to finish well inside the 560ms height transition it plays alongside.
+// Short enough to finish well inside the 500ms height transition it plays alongside.
 const FADE_IN_DURATION_MS = 220;
 
 /**

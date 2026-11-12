@@ -14,7 +14,7 @@
   gap: 5px;
   padding: 0 10px 0 14px;
   color: var(--text-1);
-  background: rgba(20, 22, 26, 0.97);
+  background: var(--popover-fill, rgba(20, 22, 26, 0.97));
   border-radius: inherit;
   font-size: 11px;
   font-weight: 600;

@@ -19,7 +19,32 @@
   min-width: 0;
 }
 
+.message-arrivals__tools {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 2px;
+}
+
 /* Quiet until pointed at: the rows are what the popup is for. */
+.message-arrivals__clear {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--text-3);
+  cursor: pointer;
+}
+
+.message-arrivals__clear:hover {
+  background: var(--color-white-a08);
+  color: var(--text-1);
+}
+
 .message-arrivals__all {
   display: inline-flex;
   flex: 0 0 auto;
@@ -168,6 +193,7 @@
 
 .message-arrivals__row:focus-visible,
 .message-arrivals__all:focus-visible,
+.message-arrivals__clear:focus-visible,
 .message-arrivals__action:focus-visible {
   outline: 2px solid var(--color-focus-ring);
   outline-offset: -2px;

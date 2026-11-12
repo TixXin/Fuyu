@@ -40,8 +40,11 @@ export function listenIslandRevealRequested(handler: () => void): Promise<Unlist
 // Mirrors ISLAND_MOVE_ARMED_CHANGED_EVENT in src-tauri/src/island/passthrough.rs.
 export const ISLAND_MOVE_ARMED_CHANGED_EVENT = "island-move-armed-changed";
 
-/** What an Alt press over the island does (C25); ModifierTarget in src-tauri/src/island/modifier.rs. */
-export type IslandModifierTarget = "none" | "move" | "width" | "height" | "both";
+/**
+ * What an Alt press over the island does (C25), or the edge a resize under way drags; ModifierTarget
+ * in src-tauri/src/island/modifier.rs. Left and right change the width, which grows on both sides.
+ */
+export type IslandModifierTarget = "none" | "move" | "left" | "right" | "bottom" | "bottomLeft" | "bottomRight";
 
 /** Calls `handler` whenever what an Alt press over the island would do changes. */
 export function listenIslandMoveArmed(
@@ -61,8 +64,11 @@ export function listenIslandHold(handler: (held: boolean) => void): Promise<Unli
 // Mirrors ISLAND_RESIZE_EVENT and ResizeDelta in src-tauri/src/island/modifier.rs.
 const ISLAND_RESIZE_EVENT = "island-resize";
 
-/** How much wider and taller (px, before the scale) an Alt + edge drag has made the panel so far. */
-export type IslandResizeDelta = { width: number; height: number; done: boolean };
+/**
+ * How much wider and taller (px, before the scale) an Alt + edge drag has made the island so far:
+ * the panel, or with `collapsed` the collapsed island (only its width).
+ */
+export type IslandResizeDelta = { width: number; height: number; collapsed: boolean; done: boolean };
 
 export function listenIslandResize(handler: (delta: IslandResizeDelta) => void): Promise<UnlistenFn> {
   return listen<IslandResizeDelta>(ISLAND_RESIZE_EVENT, ({ payload }) => handler(payload));
