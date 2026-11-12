@@ -5,7 +5,7 @@
 ## 两份索引
 
 - **现行市场**：[`TixXin/fuyu-plugins`](https://github.com/TixXin/fuyu-plugins) 根目录的 `index.json`、`revoked.json` 和它们的签名。作者向它提 PR 新增 `plugins/<插件 id>.json`，它的 CI 每小时检查各插件仓库的新 Release，校验后重建索引并签名。
-- **给旧版岛屿的副本**：本仓库的 `plugins/index.json`、`plugins/revoked.json`，只给切换到 `fuyu-plugins` 之前发布的岛屿（它们读 `main`，更早的读 `dev`，`dev` 与 `main` 保持同一个提交），只含官方插件，由 `pnpm plugins:index` 生成。
+- **给旧版岛屿的副本**：本仓库的 `plugins/index.json`、`plugins/revoked.json`，只给切换到 `fuyu-plugins` 之前发布的岛屿（它们读 `main`；更早读 `dev` 的版本，2026-11-13 删掉 `dev` 分支后市场打不开，要升级岛屿），只含官方插件，由 `pnpm plugins:index` 生成。
 
 ## 官方插件
 
