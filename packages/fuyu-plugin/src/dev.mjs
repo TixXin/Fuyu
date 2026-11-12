@@ -8,10 +8,22 @@ const APP_IDENTIFIERS = ["com.tixxin.fuyu", "com.focusd.island"];
 const RELOAD_DELAY_MS = 300;
 const LOG_POLL_MS = 500;
 
-export function defaultConfigPath() {
-  const appData = process.env.APPDATA ?? path.join(os.homedir(), "AppData", "Roaming");
-  const paths = APP_IDENTIFIERS.map((identifier) => path.join(appData, identifier, "local-api.json"));
-  return paths.find((file) => existsSync(file)) ?? paths[0];
+export function islandHome(env = process.env, home = os.homedir(), read = (file) => readFileSync(file, "utf8")) {
+  if (env.FUYU_HOME?.trim() && path.isAbsolute(env.FUYU_HOME.trim())) return env.FUYU_HOME.trim();
+  const appData = env.APPDATA ?? path.join(home, "AppData", "Roaming");
+  try {
+    const pointed = String(JSON.parse(read(path.join(appData, APP_IDENTIFIERS[0], "home.json")).replace(/^﻿/, "")).home ?? "").trim();
+    if (pointed && path.isAbsolute(pointed)) return pointed;
+  } catch {
+    return path.join(home, ".fuyu");
+  }
+  return path.join(home, ".fuyu");
+}
+
+export function defaultConfigPath(env = process.env, exists = existsSync) {
+  const appData = env.APPDATA ?? path.join(os.homedir(), "AppData", "Roaming");
+  const paths = [path.join(islandHome(env), "local-api.json"), ...APP_IDENTIFIERS.map((identifier) => path.join(appData, identifier, "local-api.json"))];
+  return paths.find((file) => exists(file)) ?? paths[0];
 }
 
 export function devClient(configPath = defaultConfigPath()) {

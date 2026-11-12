@@ -27,8 +27,10 @@ $exe = Join-Path $dir "fuyu.exe"
 if (-not (Test-Path $exe)) { Fail "No fuyu.exe in $dir" }
 Write-Host "Installed $($entry.DisplayVersion) to $dir"
 
-$data = Join-Path $env:APPDATA "com.tixxin.fuyu"
-if (Test-Path $data) { Fail "$data exists before the first start; the runner is not clean" }
+$data = Join-Path $env:USERPROFILE ".fuyu"
+foreach ($old in @($data, (Join-Path $env:APPDATA "com.tixxin.fuyu"))) {
+  if (Test-Path $old) { Fail "$old exists before the first start; the runner is not clean" }
+}
 $app = Start-Process -FilePath $exe -WorkingDirectory $dir -PassThru
 
 Add-Type @"

@@ -36,12 +36,20 @@ pub fn save_todo_markdown(
     })
 }
 
+fn legacy_default_directory() -> Result<PathBuf, String> {
+    Ok(windows_home_dir()?.join("Documents").join("FocuSD"))
+}
+
 #[tauri::command]
-pub fn get_default_todo_save_directory() -> Result<String, String> {
-    let home_dir = windows_home_dir()?;
-    Ok(home_dir
-        .join("Documents")
-        .join("FocuSD")
-        .to_string_lossy()
-        .to_string())
+pub fn get_default_todo_save_directory(app: tauri::AppHandle) -> Result<String, String> {
+    use tauri::Manager;
+    let home = crate::home_dir::fuyu_home(app.path()).map_err(|error| error.to_string())?;
+    let app_data = app.path().app_data_dir().map_err(|error| error.to_string())?;
+    let directory = if home == app_data { legacy_default_directory()? } else { home.join(crate::home_dir::TODO_DIR) };
+    Ok(directory.to_string_lossy().to_string())
+}
+
+#[tauri::command]
+pub fn get_legacy_todo_save_directory() -> Result<String, String> {
+    Ok(legacy_default_directory()?.to_string_lossy().to_string())
 }

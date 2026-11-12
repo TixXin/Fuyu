@@ -14,6 +14,10 @@ export function getDefaultTodoSaveDirectory() {
   return invoke<string>("get_default_todo_save_directory");
 }
 
+export function getLegacyTodoSaveDirectory() {
+  return invoke<string>("get_legacy_todo_save_directory");
+}
+
 export type TodosData = {
   date: string;
   todos: TodoItem[];

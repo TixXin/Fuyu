@@ -12,8 +12,7 @@ $ErrorActionPreference = "Stop"
 
 function Get-StatusDirectory {
   if ($env:FOCUSD_AGENT_STATUS_DIR) { return $env:FOCUSD_AGENT_STATUS_DIR }
-  if ($env:APPDATA) { return Join-Path $env:APPDATA "com.tixxin.fuyu" }
-  return Join-Path $env:LOCALAPPDATA "com.tixxin.fuyu"
+  return $PSScriptRoot
 }
 
 function Find-AgentProcess {

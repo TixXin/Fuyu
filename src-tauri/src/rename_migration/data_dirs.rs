@@ -49,7 +49,7 @@ fn is_cache(name: &str) -> bool {
     name.to_ascii_lowercase().ends_with("cache")
 }
 
-fn copy_tree(from: &Path, to: &Path) -> io::Result<()> {
+pub(crate) fn copy_tree(from: &Path, to: &Path) -> io::Result<()> {
     fs::create_dir_all(to)?;
     for entry in fs::read_dir(from)? {
         let entry = entry?;

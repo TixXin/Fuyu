@@ -1,6 +1,6 @@
 # 数据存放位置
 
-应用数据目录是 `%APPDATA%\com.tixxin.fuyu`，WebView2 的数据（含 `localStorage`）在 `%LOCALAPPDATA%\com.tixxin.fuyu\EBWebView`。2026-11-10 改名（D17）前两者都是 `com.focusd.island`；新版第一次启动时把旧目录复制过来，旧目录保留，见 [contracts.md](contracts.md)「改名」。
+2026-11-12 起（D30.3，#50）浮屿的文件放在家目录：`FUYU_HOME`，或 `%APPDATA%\com.tixxin.fuyu\home.json` 指向的文件夹，默认 `%USERPROFILE%\.fuyu`；升级时把旧的应用数据目录复制过去，旧目录保留，见 [家目录](../features/data-home.md)。下表里的「应用数据目录」都指家目录。之前的应用数据目录是 `%APPDATA%\com.tixxin.fuyu`，WebView2 的数据（含 `localStorage`）在 `%LOCALAPPDATA%\com.tixxin.fuyu\EBWebView`。2026-11-10 改名（D17）前两者都是 `com.focusd.island`；新版第一次启动时把旧目录复制过来，旧目录保留，见 [contracts.md](contracts.md)「改名」。
 
 | 数据 | 位置 | 负责方 |
 |---|---|---|

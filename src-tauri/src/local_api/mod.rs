@@ -33,8 +33,13 @@ pub fn init(app: &AppHandle) -> Result<(), String> {
     let path = crate::home_dir::fuyu_home(app.path())
         .map_err(|error| format!("Failed to resolve app data directory: {error}"))?
         .join(CONFIG_FILE_NAME);
+    if let Ok(app_data) = app.path().app_data_dir() {
+        if path.parent() != Some(app_data.as_path()) {
+            config::set_mirror(app_data.join(CONFIG_FILE_NAME));
+        }
+    }
     let (config, changed) = load_config(&path)?;
-    if changed {
+    if changed || config::has_mirror() {
         save_config(&path, &config)?;
     }
     let _ = SERVICE.set(LocalApiService {

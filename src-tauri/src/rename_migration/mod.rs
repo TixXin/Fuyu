@@ -1,4 +1,4 @@
-mod data_dirs;
+pub(crate) mod data_dirs;
 mod legacy;
 #[cfg(test)]
 mod tests;

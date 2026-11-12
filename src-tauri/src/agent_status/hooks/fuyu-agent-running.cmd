@@ -12,15 +12,9 @@ if /I "%PROVIDER%"=="codex" (
   exit /b 2
 )
 
-if defined FOCUSD_AGENT_STATUS_DIR (
-  set "STATUS_DIR=%FOCUSD_AGENT_STATUS_DIR%"
-) else (
-  if defined APPDATA (
-    set "STATUS_DIR=%APPDATA%\com.tixxin.fuyu"
-  ) else (
-    set "STATUS_DIR=%LOCALAPPDATA%\com.tixxin.fuyu"
-  )
-)
+set "STATUS_DIR=%~dp0"
+set "STATUS_DIR=%STATUS_DIR:~0,-1%"
+if defined FOCUSD_AGENT_STATUS_DIR set "STATUS_DIR=%FOCUSD_AGENT_STATUS_DIR%"
 
 if not exist "%STATUS_DIR%" mkdir "%STATUS_DIR%" >nul 2>nul
 

@@ -60,6 +60,7 @@ pub fn run() {
     if migrate {
         rename_migration::before_start();
     }
+    home_dir::init(&context.config().identifier);
     let result = tauri::Builder::default()
         .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
             let _ = island::show_island(app);
@@ -118,6 +119,7 @@ pub fn run() {
             if migrate {
                 rename_migration::after_start(app.handle().clone());
             }
+            home_dir::after_start(app.handle().clone());
             if let Err(error) = local_api::init(app.handle()) {
                 eprintln!("failed to initialize the local API: {error}");
             }

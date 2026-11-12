@@ -73,11 +73,7 @@ function Get-DefaultStatusPath {
     return $env:FOCUSD_AGENT_STATUS_PATH
   }
 
-  if ($env:APPDATA) {
-    return Join-Path $env:APPDATA "com.tixxin.fuyu\agent-status.json"
-  }
-
-  return Join-Path $env:LOCALAPPDATA "com.tixxin.fuyu\agent-status.json"
+  return Join-Path $PSScriptRoot "agent-status.json"
 }
 
 function Get-AgentMarkerNames {

@@ -50,14 +50,34 @@ pub(super) fn load_config(path: &Path) -> Result<(LocalApiConfig, bool), String>
     Ok((config, changed))
 }
 
-pub(super) fn save_config(path: &Path, config: &LocalApiConfig) -> Result<(), String> {
+static MIRROR: std::sync::OnceLock<std::path::PathBuf> = std::sync::OnceLock::new();
+
+pub(super) fn set_mirror(path: std::path::PathBuf) {
+    let _ = MIRROR.set(path);
+}
+
+pub(super) fn has_mirror() -> bool {
+    MIRROR.get().is_some()
+}
+
+fn write_config(path: &Path, text: &str) -> Result<(), String> {
     if let Some(dir) = path.parent() {
         fs::create_dir_all(dir)
             .map_err(|error| format!("Could not create {}: {error}", dir.display()))?;
     }
-    let text = serde_json::to_string_pretty(config).map_err(|error| error.to_string())?;
     crate::fs_write::replace_file(path, text.as_bytes())
         .map_err(|error| format!("Could not write {}: {error}", path.display()))
+}
+
+pub(super) fn save_config(path: &Path, config: &LocalApiConfig) -> Result<(), String> {
+    let text = serde_json::to_string_pretty(config).map_err(|error| error.to_string())?;
+    write_config(path, &text)?;
+    if let Some(mirror) = MIRROR.get().filter(|mirror| mirror.as_path() != path) {
+        if let Err(error) = write_config(mirror, &text) {
+            eprintln!("could not copy the local API settings for older tools: {error}");
+        }
+    }
+    Ok(())
 }
 
 pub(super) fn generate_token() -> Result<String, String> {

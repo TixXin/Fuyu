@@ -34,6 +34,7 @@ macro_rules! tauri_commands {
         $next!([$($done)*
             crate::system::todo_export::save_todo_markdown,
             crate::system::todo_export::get_default_todo_save_directory,
+            crate::system::todo_export::get_legacy_todo_save_directory,
             crate::system::fullscreen::get_foreground_fullscreen,
             crate::system::accent_color::get_windows_accent_color,
             crate::system::startup::get_launch_at_startup,

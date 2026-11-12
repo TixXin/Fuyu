@@ -1,4 +1,5 @@
-import { copyFileSync, cpSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { copyFileSync, cpSync, existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { islandHome } from "../../packages/fuyu-plugin/src/dev.mjs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { mainCheckout } from "../build-dirs.mjs";
@@ -6,8 +7,10 @@ import { mainCheckout } from "../build-dirs.mjs";
 const ID = "dev.focusd.dev-tasks";
 const here = path.dirname(fileURLToPath(import.meta.url));
 
-export function pluginsDir(env = process.env) {
+export function pluginsDir(env = process.env, exists = existsSync) {
   if (!env.APPDATA) throw new Error("APPDATA is not set; this installs into the Windows Fuyu only.");
+  const home = islandHome(env);
+  if (exists(path.join(home, "home-migration.json"))) return path.join(home, "plugins");
   return path.join(env.APPDATA, "com.tixxin.fuyu", "plugins");
 }
 

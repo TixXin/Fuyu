@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { getDefaultTodoSaveDirectory } from "./api";
+import { getDefaultTodoSaveDirectory, getLegacyTodoSaveDirectory } from "./api";
+import { movedSaveDirectory } from "./saveDirectory.ts";
 import { TODO_SAVE_DIRECTORY_STORAGE_KEY, hasStoredSaveDirectory, loadSaveDirectory, saveSaveDirectory } from "./storage";
 
 export function useTodoSaveDirectory(onExternalChange: () => void) {
@@ -50,6 +51,22 @@ export function useTodoSaveDirectory(onExternalChange: () => void) {
       defaultSaveDirectoryRequestInFlight.current = false;
     };
   }, [saveDirectory]);
+
+  useEffect(() => {
+    if (shouldInitializeDefaultSaveDirectory.current) return;
+    let didCancel = false;
+    void Promise.all([getLegacyTodoSaveDirectory(), getDefaultTodoSaveDirectory()])
+      .then(([legacyDefault, currentDefault]) => {
+        if (didCancel || typeof legacyDefault !== "string" || typeof currentDefault !== "string") return;
+        setSaveDirectory((current) => movedSaveDirectory(current, legacyDefault, currentDefault) ?? current);
+      })
+      .catch((error) => {
+        console.error("Failed to check the todo save path against the home folder", error);
+      });
+    return () => {
+      didCancel = true;
+    };
+  }, []);
 
   useEffect(() => {
     const syncFromSettingsWindow = (event: StorageEvent) => {
