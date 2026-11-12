@@ -207,6 +207,7 @@ impl SessionCache {
                     codex_index.and_then(|index| codex_thread_name(index, &summary.session_id))
                 {
                     summary.title = Some(name);
+                    summary.title_source = Some(TITLE_FROM_AGENT);
                 }
             }
             return Some((summary, cached.state));
@@ -215,6 +216,10 @@ impl SessionCache {
         let known_turn_start = sessions.get(path).and_then(|cached| cached.summary.turn_started_at);
         let known_prompt = sessions.get(path).and_then(|cached| cached.summary.last_prompt.clone());
         let known_mode = sessions.get(path).and_then(|cached| cached.summary.permission_mode);
+        let known_rename = sessions
+            .get(path)
+            .filter(|cached| cached.summary.title_source == Some(TITLE_FROM_RENAME))
+            .and_then(|cached| cached.summary.title.clone());
         let known_head = sessions
             .get(path)
             .map(|cached| cached.head.clone())
@@ -238,17 +243,21 @@ impl SessionCache {
         let cwd = cwd
             .or_else(|| head.first_cwd.clone())
             .or_else(|| parsed.cwd.take());
-        let first_prompt = head.first_prompt.clone();
-        let title = match provider {
+        let agent_title = match provider {
             "codex" => codex_index.and_then(|index| codex_thread_name(index, &session_id)),
             _ => parsed.title.take(),
-        }
-        .or_else(|| first_prompt.clone())
-        .or_else(|| cwd.as_deref().and_then(folder_title));
+        };
+        let (title, title_source) = pick_title(
+            parsed.custom_title.take().or(known_rename),
+            agent_title,
+            head.first_prompt.clone(),
+            cwd.as_deref().and_then(folder_title),
+        );
 
         let state = parsed.state;
         let turn_started_at = parsed.turn_started_at.or(known_turn_start);
         let mut summary = summary_from(provider, session_id, cwd, title, parsed, modified);
+        summary.title_source = title_source;
         summary.turn_started_at = turn_started_at;
         summary.last_prompt = summary.last_prompt.take().or(known_prompt);
         summary.permission_mode = summary.permission_mode.or(known_mode);
@@ -277,6 +286,26 @@ impl SessionCache {
     }
 }
 
+pub(super) const TITLE_FROM_RENAME: &str = "rename";
+pub(super) const TITLE_FROM_AGENT: &str = "agent";
+
+pub(super) fn pick_title(
+    renamed: Option<String>,
+    agent: Option<String>,
+    first_prompt: Option<String>,
+    folder: Option<String>,
+) -> (Option<String>, Option<&'static str>) {
+    [
+        (renamed, TITLE_FROM_RENAME),
+        (agent, TITLE_FROM_AGENT),
+        (first_prompt, "prompt"),
+        (folder, "folder"),
+    ]
+    .into_iter()
+    .find_map(|(title, source)| title.map(|title| (Some(title), Some(source))))
+    .unwrap_or((None, None))
+}
+
 fn summary_from(
     provider: &'static str,
     session_id: String,
@@ -290,6 +319,7 @@ fn summary_from(
         session_id,
         cwd,
         title,
+        title_source: None,
         model: parsed.model,
         effort: parsed.effort,
         phase: "completed",

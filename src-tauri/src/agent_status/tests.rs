@@ -1652,3 +1652,25 @@ fn hooks_from_before_the_rename_count_as_outdated_and_are_replaced() {
     assert!(!text.contains("focusd-agent-") && text.contains("fuyu-agent-"), "{text}");
     assert!(hooks["Stop"].as_array().unwrap().contains(&users));
 }
+
+#[test]
+fn a_rename_wins_over_the_agent_title_and_the_newest_one_counts() {
+    use super::session_scan::pick_title;
+    use super::sessions::parse_claude_tail;
+    let line = |value: serde_json::Value| format!("{value}\n");
+    let tail = [
+        line(serde_json::json!({"type": "custom-title", "customTitle": "旧名字", "sessionId": "s1"})),
+        line(serde_json::json!({"type": "ai-title", "aiTitle": "自动生成的标题", "sessionId": "s1"})),
+        line(serde_json::json!({"type": "custom-title", "customTitle": "  发版\n准备  ", "sessionId": "s1"})),
+    ]
+    .concat();
+    let parsed = parse_claude_tail(&tail);
+    assert_eq!(parsed.custom_title.as_deref(), Some("发版 准备"));
+    assert_eq!(parsed.title.as_deref(), Some("自动生成的标题"));
+    let some = |text: &str| Some(text.to_string());
+    assert_eq!(pick_title(some("发版 准备"), some("自动"), some("问"), some("fuyu")), (some("发版 准备"), Some("rename")));
+    assert_eq!(pick_title(None, some("自动"), some("问"), some("fuyu")), (some("自动"), Some("agent")));
+    assert_eq!(pick_title(None, None, some("问"), some("fuyu")), (some("问"), Some("prompt")));
+    assert_eq!(pick_title(None, None, None, some("fuyu")), (some("fuyu"), Some("folder")));
+    assert_eq!(pick_title(None, None, None, None), (None, None));
+}

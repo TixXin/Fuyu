@@ -21,6 +21,7 @@ pub struct AgentSessionSummary {
     pub(super) session_id: String,
     pub(super) cwd: Option<String>,
     pub(super) title: Option<String>,
+    pub(super) title_source: Option<&'static str>,
     pub(super) model: Option<String>,
     pub(super) effort: Option<String>,
     pub(super) phase: &'static str,
@@ -60,6 +61,7 @@ pub(super) struct SessionTail {
     pub(super) session_id: Option<String>,
     pub(super) cwd: Option<String>,
     pub(super) title: Option<String>,
+    pub(super) custom_title: Option<String>,
     pub(super) model: Option<String>,
     pub(super) effort: Option<String>,
     pub(super) last_message: Option<String>,
@@ -152,6 +154,9 @@ pub(super) fn parse_claude_tail(tail: &str) -> SessionTail {
         }
         if result.title.is_none() && kind == "ai-title" {
             result.title = record["aiTitle"].as_str().and_then(display_title);
+        }
+        if result.custom_title.is_none() && kind == "custom-title" {
+            result.custom_title = record["customTitle"].as_str().and_then(display_title);
         }
         if result.session_id.is_none() {
             result.session_id = string_field(&record, "sessionId");
