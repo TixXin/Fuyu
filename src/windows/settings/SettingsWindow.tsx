@@ -196,7 +196,7 @@ export function SettingsWindow() {
         {category === "clipboard" && <ClipboardSettingsPage settings={settings} onOpenShortcuts={openShortcuts} />}
         {category === "music" && <MusicSettingsPage settings={settings} onSettingsChange={setSettings} />}
         {category === "shelf" && <ShelfSettingsPage settings={settings} onSettingsChange={setSettings} />}
-        {category === "screenshot" && <ScreenshotSettingsPage settings={settings} onSettingsChange={setSettings} />}
+        {category === "screenshot" && <ScreenshotSettingsPage settings={settings} onSettingsChange={setSettings} onOpenShortcuts={openShortcuts} />}
         {category === "calendar" && <CalendarSettingsPage settings={settings} onSettingsChange={setSettings} />}
         {category === "agents" && <AgentSettingsPage settings={settings} onSettingsChange={setSettings} onOpenConnect={() => setCategory("agentConnect")} />}
         {category === "agentRemote" && <AgentRemoteHostsSettings />}

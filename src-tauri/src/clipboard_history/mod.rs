@@ -12,7 +12,7 @@ mod preview;
 mod secrets;
 mod sequence;
 mod service;
-mod shortcut;
+pub(crate) mod shortcut;
 mod snippets;
 mod store;
 mod transfer;

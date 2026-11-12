@@ -11,7 +11,8 @@ import { SettingsRow } from "../../components/settings/SettingsRow";
 import { useTranslation } from "../../i18n";
 import type { SettingsCategory } from "./categories";
 import { ShortcutFinder } from "./ShortcutFinder";
-import { ClipboardShortcutGroup, TranslationShortcutGroup } from "./ShortcutGroups";
+import { useScreenshotSettings } from "../../features/screenshot/useScreenshotSettings";
+import { ClipboardShortcutGroup, ScreenshotShortcutGroup, TranslationShortcutGroup } from "./ShortcutGroups";
 import type { ShortcutOwner } from "./shortcutConflicts";
 import { useShortcutOwners } from "./useShortcutOwners";
 import "./ShortcutsSettingsPage.css";
@@ -39,7 +40,8 @@ export function ShortcutsSettingsPage({
   const text = t.settings.shortcuts;
   const [clipboardSettings, updateClipboardSettings] = useClipboardSettings();
   const [translationSettings, setTranslationSettings] = useTranslationSettings();
-  const { owners, takenBy, refreshPlugins } = useShortcutOwners({ settings, clipboard: clipboardSettings, translation: translationSettings });
+  const [screenshotSettings, setScreenshotSettings] = useScreenshotSettings();
+  const { owners, takenBy, refreshPlugins } = useShortcutOwners({ settings, clipboard: clipboardSettings, translation: translationSettings, screenshot: screenshotSettings });
   const pageLink = (page: SettingsCategory) => <SettingsLinkButton onClick={() => onOpenPage(page)}>{text.openFeaturePage}</SettingsLinkButton>;
 
   const approvalLabels: Partial<Record<AgentApprovalDecision, string>> = { allow: t.agent.approval.allow, deny: t.agent.approval.deny, terminal: t.agent.approval.terminal };
@@ -67,6 +69,15 @@ export function ShortcutsSettingsPage({
         onClipboardChange={updateClipboardSettings}
         takenBy={takenBy}
         onTurnOn={() => updateClipboardSettings({ ...clipboardSettings, enabled: true })}
+      />
+      <ScreenshotShortcutGroup
+        title={t.settings.categories.screenshot}
+        action={pageLink("screenshot")}
+        enabled={settings.screenshotEnabled}
+        screenshot={screenshotSettings}
+        onScreenshotChange={setScreenshotSettings}
+        takenBy={takenBy}
+        onTurnOn={() => onSettingsChange({ ...settings, screenshotEnabled: true })}
       />
       <PluginShortcutSection takenBy={takenBy} onChanged={refreshPlugins} action={pageLink("plugins")} />
       <PageShortcutSection settings={settings} onSettingsChange={onSettingsChange} takenBy={takenBy} action={pageLink("behavior")} />

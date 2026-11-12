@@ -16,7 +16,7 @@ pub(crate) const WINDOW_PREFIX: &str = "screenshot-";
 const SESSION_EVENT: &str = "screenshot-session";
 const ENDED_EVENT: &str = "screenshot-ended";
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) enum Mode {
     Region,

@@ -10,9 +10,9 @@
 
 ## 项目概览
 
-浮屿 / Fuyu（仓库 `TixXin/fuyu`，改名前叫 FocuSD Island，仓库名 fly-island）是 Windows 优先的桌面效率工具，以透明、无边框、始终置顶的 Tauri 悬浮岛形式运行。主要功能：待办、每日笔记与归档，日历与会议提醒，外观设置、预设与主题市场，媒体控制与同步歌词，剪贴板历史与文件中转，快捷翻译，截图（开发中），QQ 通知、多邮箱和微信提醒，音量亮度与摄像头麦克风提示，手机推送，AI 代理状态，以及自动更新。
+浮屿 / Fuyu（仓库 `TixXin/fuyu`，改名前叫 FocuSD Island，仓库名 fly-island）是 Windows 优先的桌面效率工具，以透明、无边框、始终置顶的 Tauri 悬浮岛形式运行。主要功能：待办、每日笔记与归档，日历与会议提醒，外观设置、预设与主题市场，媒体控制与同步歌词，剪贴板历史与文件中转，快捷翻译，截图与贴图，QQ 通知、多邮箱和微信提醒，音量亮度与摄像头麦克风提示，手机推送，AI 代理状态，以及自动更新。
 
-应用有五个窗口，外加截图时每个显示器一个选区窗口，前端通过同一入口的 `?window=` 参数分发：
+应用有五个窗口，外加截图时每个显示器一个选区窗口、每张贴图一个窗口，前端通过同一入口的 `?window=` 参数分发：
 
 | 窗口 label | 前端入口 | 说明 |
 |---|---|---|
@@ -22,6 +22,7 @@
 | `settings` | `?window=settings` | 设置窗口，`create: false`，按需创建 |
 | `onboarding` | `?window=onboarding` | 新手引导，`create: false`；透明全屏遮罩，在真岛上演示；新装第一次启动时打开，设置 → 关于里能再打开 |
 | `screenshot-<n>` | `?window=screenshot` | 截图的选区窗口，每个显示器一个；打开截图模块时创建，平时隐藏 |
+| `pin-<n>` | `?window=pin` | 贴到屏幕上的截图，每张一个，按需创建 |
 
 **结构重构已完成（Phase 0–6，收尾与待人工验收项见 [refactor-plan.md](docs/architecture/history/refactor-plan.md)）。** 代码已按 [overview.md](docs/architecture/overview.md) 的目标结构组织：Rust 侧的 `unsafe` 只在平台层 `src-tauri/src/win32/`、`src-tauri/src/macos/` 中，生产代码不用 `unwrap` / `expect`，clippy 与 ESLint 均为 0 告警。新代码沿用这套结构与子目录规则。
 

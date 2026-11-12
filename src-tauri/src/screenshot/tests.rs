@@ -125,3 +125,12 @@ fn saved_files_get_a_time_in_their_name_and_never_overwrite() {
     assert_eq!(sanitized_name("a/b:c*."), "abc");
     assert_eq!(sanitized_name(" ?? "), "Fuyu");
 }
+
+#[test]
+fn a_chosen_save_folder_must_be_a_full_path_without_parent_steps() {
+    use super::output::chosen_folder;
+    assert!(chosen_folder(r"D:\Screenshots").is_ok());
+    assert!(chosen_folder(r"\\nas\shots").is_ok());
+    assert!(chosen_folder("Screenshots").is_err());
+    assert!(chosen_folder(r"D:\Screenshots\..\Windows").is_err());
+}

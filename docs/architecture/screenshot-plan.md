@@ -64,7 +64,7 @@
 - [x] **第 3 步：标注。**（[C41.3](/docs/tasks/0-archive/C/C41.3.md)）矩形、椭圆、箭头、画笔、荧光笔、文字、马赛克、序号；颜色和粗细；撤销 / 重做；选区确定后还能调整。合成在前端的 canvas 里做，导出 PNG 交给原生端。验证：单元测试（标注的数据和合成）、回归页（工具栏和快捷键）、实测高 DPI 下线条和文字清楚。
 - [x] **第 4 步：去处之一：复制、保存、贴图。**（[C41.4](/docs/tasks/0-archive/C/C41.4.md)）复制同时写入位图、PNG 和文件引用（聊天软件、画图、终端都能贴）；保存到设置的文件夹（默认「图片\浮屿截图」），文件名带时间；贴图窗口：置顶、可拖动、滚轮缩放、`Ctrl+滚轮` 调透明度、右键菜单（复制、保存、关闭、鼠标穿透），可以同时贴多张；`T` 贴图和隐藏 / 显示所有贴图；`Ctrl+Shift+2` 截图并复制。验证：`cargo test`、实测往微信、Word、画图、Windows Terminal 里贴。
 - [x] **第 5 步：去处之二：浮屿特有的。**（[C41.5](/docs/tasks/0-archive/C/C41.5.md)，`ba22f516`、`8e0350d2`，2026-11-12 用户实测通过）岛上的截图卡片（拖出、放进文件中转、发给 Agent）；进剪贴板历史（复用它的图片条目）；识别文字（OCR 结果复制，或打开快捷翻译）和 `Ctrl+Shift+3` / `4`；发给 Agent（存 PNG、切到会话的终端、贴路径）。验证：回归页（截图卡片）、实测发给 Windows Terminal 和 VS Code 里的 Claude Code、Codex，确认它们认出是图片。
-- [ ] **第 6 步：设置、开关和收尾。**（[C41.6](/docs/tasks/C/C41.6.md)）「设置 → 功能 → 截图」页、模块开关、快捷键录制和冲突检查（复用 `shortcutConflicts.ts`）、接管 PrintScreen、托盘菜单和岛上的入口、中英文文案、`pnpm settings:index`、`docs/features/screenshot.md`、[contracts.md](/docs/architecture/contracts.md) 和 [data-storage.md](/docs/architecture/data-storage.md)。验证：`pnpm check`、`pnpm test:regression`、`cargo test`、`pnpm build:exe` 后整套走一遍。
+- [x] **第 6 步：设置、开关和收尾。**（[C41.6](/docs/tasks/0-archive/C/C41.6.md)，2026-11-13）「设置 → 功能 → 截图」页、模块开关、快捷键录制和冲突检查（复用 `shortcutConflicts.ts`）、接管 PrintScreen、托盘菜单和岛上的入口、中英文文案、`pnpm settings:index`、`docs/features/screenshot.md`、[contracts.md](/docs/architecture/contracts.md) 和 [data-storage.md](/docs/architecture/data-storage.md)。验证：`pnpm check`、`pnpm test:regression`、`cargo test`、`pnpm build:exe` 后整套走一遍。
 
 ### 第二版（第一版合完再开工）
 
@@ -85,7 +85,7 @@
 
 ## 待定
 
-- **模块默认开不开**：第 6 步时再定。默认开要考虑快捷键和用户已有截图软件冲突。
+- ~~**模块默认开不开**~~：2026-11-13 用户定默认关，「按 PrintScreen 截图」也默认关；快捷键会和 Excel、部分输入法撞，打开后在设置里能改。
 
 ## 风险
 

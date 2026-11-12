@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Bell, Bot, CalendarDays, ClipboardList, Inbox, Languages, ListTodo, Minus, Music, RotateCcw, Settings, type LucideIcon } from "lucide-react";
+import { Bell, Bot, CalendarDays, ClipboardList, Inbox, Languages, ListTodo, Minus, Music, RotateCcw, Scissors, Settings, type LucideIcon } from "lucide-react";
 import type { AgentVisualState } from "../../features/agent-status/status";
 import type { MessageSource } from "../../features/messages/messagePreview";
 import { useUpdateReminder } from "../../features/updater/useBackgroundUpdateCheck";
@@ -33,6 +33,7 @@ type IslandHeaderProps = {
   onOpenSettings: (section?: "updates") => void;
   onOpenMessages: (source: MessageSource) => void;
   onOpenTranslator: (() => void) | null;
+  onScreenshot?: (() => void) | null;
   onResetPosition: () => void;
   minimizesToTray: boolean;
   onMinimize: () => void;
@@ -57,6 +58,7 @@ export function IslandHeader({
   onOpenSettings,
   onOpenMessages,
   onOpenTranslator,
+  onScreenshot = null,
   onResetPosition,
   minimizesToTray,
   onMinimize,
@@ -174,6 +176,19 @@ export function IslandHeader({
             }}
           >
             <Languages size={16} strokeWidth={1.5} absoluteStrokeWidth aria-hidden="true" />
+          </button>
+        )}
+        {onScreenshot && (
+          <button
+            className="icon-button island-screenshot-button"
+            type="button"
+            aria-label={t.island.screenshot}
+            onClick={(event) => {
+              event.stopPropagation();
+              onScreenshot();
+            }}
+          >
+            <Scissors size={16} strokeWidth={1.5} absoluteStrokeWidth aria-hidden="true" />
           </button>
         )}
         <button
