@@ -1,0 +1,77 @@
+/* The screenshot card (ScreenshotCard.tsx): one row over the top of the island, the same height
+   as the collapsed bar, like the plugin permission prompt, so it fits collapsed and expanded. */
+.screenshot-card {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 6;
+  height: 38px;
+  /* Outside the island's zoomed content layers (IslandShell.css), so it takes the scale itself. */
+  zoom: var(--island-scale, 1);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 8px 0 6px;
+  color: var(--text-1);
+  background: var(--popover-fill, rgba(20, 22, 26, 0.97));
+  border-radius: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  animation: screenshot-card-in 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes screenshot-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .screenshot-card {
+    animation: none;
+  }
+}
+
+.screenshot-card__thumb {
+  flex: 0 0 auto;
+  max-width: 52px;
+  height: 28px;
+  object-fit: cover;
+  border-radius: 5px;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.16);
+  cursor: grab;
+}
+
+.screenshot-card__text {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin-left: 4px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.screenshot-card__button {
+  flex: 0 0 auto;
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  color: var(--text-1);
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.screenshot-card__button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.screenshot-card__button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}

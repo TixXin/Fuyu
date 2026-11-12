@@ -50,6 +50,7 @@ export const PAGES = [
   "clipboard-popup.html?test=1",
   "screenshot-overlay.html",
   "screenshot-pin.html",
+  "screenshot-card.html",
   "todo-island.html",
 ];
 

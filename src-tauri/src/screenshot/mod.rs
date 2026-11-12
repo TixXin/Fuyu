@@ -18,6 +18,25 @@ pub(crate) use session::WINDOW_PREFIX;
 /// The text read in a screenshot (Ctrl+Shift+3), already on the clipboard; empty when none was
 /// found. Mirrored by SCREENSHOT_TEXT_EVENT in src/features/screenshot/api.ts.
 const TEXT_EVENT: &str = "screenshot-text";
+/// A screenshot was copied or saved: the island shows its card (C41.5). Mirrored by
+/// SCREENSHOT_TAKEN_EVENT in src/features/screenshot/api.ts.
+const TAKEN_EVENT: &str = "screenshot-taken";
+
+/// The island's screenshot card (mirrored by `ScreenshotTaken` in api.ts).
+#[derive(Clone, Debug, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct Taken {
+    path: String,
+    /// A small PNG data URL.
+    thumbnail: Option<String>,
+    /// Saved to the user's folder rather than copied.
+    saved: bool,
+}
+
+fn announce(app: &AppHandle, picture: &Picture, path: &std::path::Path, saved: bool) {
+    let taken = Taken { path: path.display().to_string(), thumbnail: output::thumbnail(picture), saved };
+    let _ = app.emit_to(crate::island::WINDOW_LABEL, TAKEN_EVENT, taken);
+}
 use output::Picture;
 use session::{OverlaySession, PixelRect};
 use targets::LocalTarget;
@@ -130,7 +149,9 @@ pub async fn screenshot_finish(app: AppHandle, window: WebviewWindow, request: t
     match action {
         Action::Copy => {
             session::end(&app);
-            output::copy(&app, &picture).inspect_err(|error| eprintln!("{error}"))?;
+            if let Some(path) = output::copy(&app, &picture).inspect_err(|error| eprintln!("{error}"))? {
+                announce(&app, &picture, &path, false);
+            }
             Ok(None)
         }
         Action::Save => {
@@ -138,6 +159,7 @@ pub async fn screenshot_finish(app: AppHandle, window: WebviewWindow, request: t
             let name = header("x-folder-name").and_then(percent_decode).unwrap_or_default();
             let path = output::save(&picture, folder.as_deref(), &name)?;
             session::end(&app);
+            announce(&app, &picture, &path, true);
             Ok(Some(path.display().to_string()))
         }
         Action::Pin => {
@@ -239,7 +261,7 @@ pub fn screenshot_pin_click_through(window: WebviewWindow, through: bool) -> Res
 #[tauri::command]
 pub async fn screenshot_pin_copy(app: AppHandle, window: WebviewWindow) -> Result<(), String> {
     let picture = pin::picture(window.label()).ok_or_else(|| "This pin is closed.".to_string())?;
-    output::copy(&app, &picture)
+    output::copy(&app, &picture).map(|_| ())
 }
 
 /// Saves the calling pin's picture like the toolbar's save; gives the file's path.
@@ -265,6 +287,46 @@ pub fn screenshot_pins_close_all(app: AppHandle) {
     pin::close_all(&app);
 }
 
+/// A screenshot file the card may hand on: a PNG that exists.
+fn card_file(path: &str) -> Result<std::path::PathBuf, String> {
+    let path = std::path::PathBuf::from(path);
+    let png = path.extension().is_some_and(|extension| extension.eq_ignore_ascii_case("png"));
+    if png && path.is_file() {
+        Ok(path)
+    } else {
+        Err("The screenshot file is gone.".to_string())
+    }
+}
+
+/// Drags the card's screenshot file out of the calling window (the island), as Explorer would.
+#[tauri::command]
+pub async fn screenshot_drag(window: WebviewWindow, path: String) -> Result<(), String> {
+    let path = card_file(&path)?;
+    let (sender, receiver) = std::sync::mpsc::channel();
+    let target = window.clone();
+    // The OLE drag loop has to run on the window's UI thread.
+    window
+        .run_on_main_thread(move || {
+            let result = target.hwnd().map_err(|error| error.to_string()).and_then(|hwnd| crate::win32::ole::drag_files(hwnd, &[path]));
+            let _ = sender.send(result.map(|_| ()));
+        })
+        .map_err(|error| format!("Failed to start the drag: {error}"))?;
+    tauri::async_runtime::spawn_blocking(move || receiver.recv())
+        .await
+        .map_err(|error| format!("Failed to finish the drag: {error}"))?
+        .map_err(|_| "The drag ended unexpectedly.".to_string())?
+}
+
+/// Pastes the card's screenshot into the window in front, which the island has just made an
+/// agent's terminal: as the file and its quoted path.
+#[tauri::command]
+pub async fn screenshot_paste_to_front(path: String) -> Result<(), String> {
+    let path = card_file(&path)?;
+    tauri::async_runtime::spawn_blocking(move || output::paste_path(&path))
+        .await
+        .map_err(|error| format!("Failed to paste the screenshot: {error}"))?
+}
+
 macro_rules! tauri_commands {
     ($next:ident [$($done:tt)*] $($rest:tt)*) => {
         $next!([$($done)*
@@ -285,6 +347,8 @@ macro_rules! tauri_commands {
             crate::screenshot::screenshot_pin_close,
             crate::screenshot::screenshot_pins_toggle,
             crate::screenshot::screenshot_pins_close_all,
+            crate::screenshot::screenshot_drag,
+            crate::screenshot::screenshot_paste_to_front,
         ] $($rest)*)
     };
 }

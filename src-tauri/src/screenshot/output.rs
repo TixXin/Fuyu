@@ -23,6 +23,8 @@ use crate::win32;
 
 /// Another program may hold the clipboard for a moment; opening it is tried this many times.
 const OPEN_ATTEMPTS: usize = 10;
+/// Between bringing an agent's terminal forward and pasting into it.
+const PASTE_DELAY: Duration = Duration::from_millis(220);
 const FOLDER: &str = "screenshots";
 const KEEP_FILES: usize = 50;
 const KEEP_FOR: Duration = Duration::from_secs(7 * 24 * 60 * 60);
@@ -162,8 +164,9 @@ pub(super) fn prune_at_start(app: &AppHandle) {
 /// Puts the screenshot on the clipboard as a bitmap (CF_DIB), a PNG and the PNG file (CF_HDROP),
 /// all in one go so clipboard watchers (our own history too) read it once: image editors paste the
 /// bitmap, browsers the PNG, chat apps and Explorer the file, terminals its path. Without the app
-/// data folder it goes as a bitmap and PNG only. The PNG is encoded once, fast, for both.
-pub(super) fn copy(app: &AppHandle, picture: &Picture) -> Result<(), String> {
+/// data folder it goes as a bitmap and PNG only. The PNG is encoded once, fast, for both. Gives
+/// the kept file, for the island's screenshot card.
+pub(super) fn copy(app: &AppHandle, picture: &Picture) -> Result<Option<PathBuf>, String> {
     let png = encode_png(picture)?;
     let file = keep_png(app, &png).map_err(|error| eprintln!("screenshot copied without its file: {error}")).ok();
     let dib = dib(picture);
@@ -174,9 +177,38 @@ pub(super) fn copy(app: &AppHandle, picture: &Picture) -> Result<(), String> {
     if let Some(format) = raw::register_format("PNG") {
         raw::set_without_clear(format.get(), &png).map_err(failed)?;
     }
-    if let Some(path) = file {
+    if let Some(path) = &file {
         raw::set_file_list_with(&[path.to_string_lossy()], NoClear).map_err(failed)?;
     }
+    Ok(file)
+}
+
+/// A small PNG of the picture as a data URL, for the island's screenshot card.
+pub(super) fn thumbnail(picture: &Picture) -> Option<String> {
+    use base64::Engine;
+    const BOX: (u32, u32) = (192, 108);
+    let scale = (f64::from(BOX.0) / f64::from(picture.width)).min(f64::from(BOX.1) / f64::from(picture.height)).min(1.0);
+    let size = (((f64::from(picture.width) * scale).round() as u32).max(1), ((f64::from(picture.height) * scale).round() as u32).max(1));
+    let image = image::RgbaImage::from_raw(picture.width, picture.height, picture.rgba.clone())?;
+    let small = image::imageops::thumbnail(&image, size.0, size.1);
+    let png = encode_png(&Picture { width: size.0, height: size.1, rgba: small.into_raw() }).ok()?;
+    Some(format!("data:image/png;base64,{}", base64::engine::general_purpose::STANDARD.encode(png)))
+}
+
+/// Pastes `path` into the window in front (an agent's terminal the island just brought forward):
+/// on the clipboard as the file and as its quoted path, which Claude Code and Codex take as an
+/// image, then Ctrl+V.
+pub(super) fn paste_path(path: &Path) -> Result<(), String> {
+    {
+        let _open = clipboard_win::Clipboard::new_attempts(OPEN_ATTEMPTS).map_err(|error| format!("Failed to open the clipboard: {error}"))?;
+        let failed = |error: clipboard_win::ErrorCode| format!("Failed to copy the screenshot: {error}");
+        raw::empty().map_err(failed)?;
+        raw::set_file_list_with(&[path.to_string_lossy()], NoClear).map_err(failed)?;
+        raw::set_string_with(&format!("\"{}\"", path.display()), NoClear).map_err(failed)?;
+    }
+    // Let the terminal take the focus it was just given.
+    thread::sleep(PASTE_DELAY);
+    win32::input::send_paste_shortcut();
     Ok(())
 }
 

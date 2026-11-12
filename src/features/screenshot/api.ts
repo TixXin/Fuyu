@@ -14,6 +14,8 @@ export const SCREENSHOT_TARGETS_EVENT = "screenshot-targets";
 export const SCREENSHOT_SELECTING_EVENT = "screenshot-selecting";
 /** Mirrored by ASSIGNED_EVENT in src-tauri/src/screenshot/pin.rs: the ready pin window got a picture. */
 export const PIN_ASSIGNED_EVENT = "screenshot-pin-assigned";
+/** Mirrored by TAKEN_EVENT in src-tauri/src/screenshot/mod.rs: copied or saved, for the island's card. */
+export const SCREENSHOT_TAKEN_EVENT = "screenshot-taken";
 /** Mirrored by TEXT_EVENT in src-tauri/src/screenshot/mod.rs: the text read and copied, or "". */
 export const SCREENSHOT_TEXT_EVENT = "screenshot-text";
 
@@ -186,4 +188,27 @@ export function closeAllPins() {
 /** The text a screenshot's OCR read and copied (Ctrl+Shift+3, or the toolbar); "" when none. */
 export function listenScreenshotText(handler: EventCallback<string>) {
   return listen<string>(SCREENSHOT_TEXT_EVENT, handler);
+}
+
+// 与 src-tauri/src/screenshot/mod.rs 中的 Taken 对应。
+export type ScreenshotTaken = {
+  /** The PNG: kept in the app data folder for a copy, the user's file for a save. */
+  path: string;
+  /** A small PNG data URL. */
+  thumbnail: string | null;
+  saved: boolean;
+};
+
+export function listenScreenshotTaken(handler: EventCallback<ScreenshotTaken>) {
+  return listen<ScreenshotTaken>(SCREENSHOT_TAKEN_EVENT, handler);
+}
+
+/** Drags the screenshot file `path` out of this window, as Explorer would. */
+export function dragScreenshot(path: string) {
+  return invoke<void>("screenshot_drag", { path });
+}
+
+/** Pastes the screenshot file `path` into the window in front, as the file and its quoted path. */
+export function pasteScreenshotToFront(path: string) {
+  return invoke<void>("screenshot_paste_to_front", { path });
 }

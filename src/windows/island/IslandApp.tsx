@@ -11,6 +11,8 @@ import { useTranslation } from "../../i18n";
 import { openSettingsWindow } from "../settings/api";
 import { useQuickTranslation } from "../../features/translation/useQuickTranslation";
 import { useScreenshotText } from "../../features/screenshot/useScreenshotText";
+import { useScreenshotCard } from "../../features/screenshot/useScreenshotCard";
+import { ScreenshotCard } from "../../features/screenshot/ScreenshotCard";
 import { useIslandSettings } from "../../features/appearance/useIslandSettings";
 import { useClipboardHistory } from "../../features/clipboard/useClipboardHistory";
 // Imported after the page panels so its CSS keeps its place in the cascade.
@@ -115,6 +117,7 @@ export function IslandApp() {
 
   // A screenshot's text (C41.5) shows like a selection translation, and opens in the translator.
   const screenshotText = useScreenshotText();
+  const screenshotCard = useScreenshotCard();
   const translationPeek = useQuickTranslation(settings.translationEnabled) ?? screenshotText;
   const { lyrics, lyricLine: currentLyric } = useIslandLyrics(settings, media.mediaState, {
     page,
@@ -139,7 +142,8 @@ export function IslandApp() {
     settings,
     navigation,
     hasMessagePreview: showsMessage,
-    hasPermissionPrompt: permissionPrompts.current !== null,
+    // A screenshot card brings a tucked island out, as a permission prompt does.
+    hasPermissionPrompt: permissionPrompts.current !== null || screenshotCard.current !== null,
     hasTranslationPeek: Boolean(translationPeek),
     holdTuck: holdsTuck(settings, {
       todoInProgress: activeTodoId !== null && todos.some((todo) => todo.id === activeTodoId && !todo.completed),
@@ -319,7 +323,8 @@ export function IslandApp() {
         pageDigitModifiers={settings.pageDigitModifiers}
         hoverSwitchPage={settings.hoverSwitchPage}
         hoverSwitchDelayMs={settings.hoverSwitchDelayMs}
-        overlay={<PluginPermissionPrompt prompts={permissionPrompts} />}
+        overlay={permissionPrompts.current ? <PluginPermissionPrompt prompts={permissionPrompts} />
+          : <ScreenshotCard key={screenshotCard.current?.path} card={screenshotCard} sessions={agentSessions} />}
         pluginViews={pluginPages.views}
         onOpenPluginPage={openEnabledPage}
         collapsedSlots={collapsedSlots}

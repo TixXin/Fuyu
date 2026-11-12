@@ -38,6 +38,18 @@ export type ScreenshotText = {
     closeAll: string;
   };
   pinCopied: string;
+  /** The island's screenshot card (ScreenshotCard.tsx). */
+  card: {
+    copied: string;
+    saved: string;
+    dragHint: string;
+    shelf: string;
+    shelved: string;
+    sendToAgent: string;
+    noAgent: string;
+    agentNotFound: string;
+    close: string;
+  };
 };
 
 export const zhCN: ScreenshotText = {
@@ -84,6 +96,17 @@ export const zhCN: ScreenshotText = {
     closeAll: "关闭所有贴图",
   },
   pinCopied: "已复制",
+  card: {
+    copied: "截图已复制",
+    saved: "截图已保存",
+    dragHint: "拖到别处，作为文件放下",
+    shelf: "放进文件中转",
+    shelved: "已放进文件中转",
+    sendToAgent: "发给 Agent",
+    noAgent: "没有正在运行的 Agent 会话",
+    agentNotFound: "找不到这个会话的窗口",
+    close: "关闭",
+  },
 };
 
 export const en: ScreenshotText = {
@@ -130,4 +153,15 @@ export const en: ScreenshotText = {
     closeAll: "Close all pins",
   },
   pinCopied: "Copied",
+  card: {
+    copied: "Screenshot copied",
+    saved: "Screenshot saved",
+    dragHint: "Drag it somewhere to drop it as a file",
+    shelf: "Put on the file shelf",
+    shelved: "On the file shelf",
+    sendToAgent: "Send to an agent",
+    noAgent: "No agent session is running",
+    agentNotFound: "Could not find this session's window",
+    close: "Close",
+  },
 };
