@@ -31,7 +31,7 @@ test("lanes are found under any <repo>-lanes folder", () => {
 });
 
 test("the rename moves the checkout and its lanes, and git, hooks and lane records follow", () => {
-  const root = realpathSync(mkdtempSync(path.join(tmpdir(), "rename-")));
+  const root = realpathSync.native(mkdtempSync(path.join(tmpdir(), "rename-")));
   const hookEnv = Object.keys(process.env).filter((name) => name.startsWith("GIT_")).map((name) => [name, process.env[name]]);
   for (const [name] of hookEnv) delete process.env[name];
   const main = path.join(root, "old-app");
