@@ -79,6 +79,17 @@ test("leaving a session releases the lane it is in and the lanes its claude.exe 
   assert.deepEqual(lanesToFinish({ main, cwd: path.join("C:", "Temp", "magpie"), reason: "other", session: "s-a", pid: 7, owners: bySession }), [2, 6], "a magpie session started elsewhere still releases its lanes, by session id");
 });
 
+test("a session that exits inside a lane someone else recorded leaves that lane alone", () => {
+  const main = path.join("E:", "Projects", "fuyu");
+  const key = (n) => path.resolve(lanePath(main, n)).toLowerCase();
+  const owners = { [key(1)]: { pid: null, name: "fuyu-b7", session: "s-owner" }, [key(3)]: { pid: 8 }, [key(4)]: { pid: null, name: "old" } };
+  assert.deepEqual(lanesToFinish({ main, cwd: lanePath(main, 1), reason: "other", session: "s-child", pid: 9, owners }), [], "a headless claude -p started in the lane");
+  assert.deepEqual(lanesToFinish({ main, cwd: lanePath(main, 3), reason: "other", session: "s-child", pid: 9, owners }), []);
+  assert.deepEqual(lanesToFinish({ main, cwd: lanePath(main, 4), reason: "other", session: "s-child", pid: 9, owners }), [], "a record without session or pid may be anyone's");
+  assert.deepEqual(lanesToFinish({ main, cwd: lanePath(main, 1), reason: "other", session: "s-owner", pid: null, owners }), [1]);
+  assert.deepEqual(lanesToFinish({ main, cwd: lanePath(main, 3), reason: "other", session: null, pid: 8, owners }), [3]);
+});
+
 test("a session is alive while ~/.claude/sessions lists it with a running process", () => {
   const dir = mkdtempSync(path.join(tmpdir(), "claude-sessions-"));
   try {

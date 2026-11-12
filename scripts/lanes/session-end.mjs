@@ -10,17 +10,21 @@ export function scriptMain(scriptFile = fileURLToPath(import.meta.url)) {
   return mainCheckout(path.resolve(path.dirname(scriptFile), "..", ".."));
 }
 
+function belongsTo(owner, session, pid) {
+  if (owner?.session) return Boolean(session && owner.session === session);
+  return Boolean(pid && owner?.pid === pid);
+}
+
 export function lanesToFinish({ main, cwd, reason, session = null, pid = null, owners }) {
   if (KEEP_REASONS.has(reason)) return [];
   const lanes = new Set();
   const current = cwd ? laneOf(main, cwd) : null;
-  if (current) lanes.add(current);
+  const currentOwner = current ? owners[path.resolve(lanePath(main, current)).toLowerCase()] : null;
+  if (current && (!currentOwner || belongsTo(currentOwner, session, pid))) lanes.add(current);
   for (const [key, owner] of Object.entries(owners)) {
     const lane = laneOf(main, key);
     if (!lane || key !== path.resolve(lanePath(main, lane)).toLowerCase()) continue;
-    const bySession = Boolean(session && owner?.session === session);
-    const byPid = Boolean(!owner?.session && pid && owner?.pid === pid);
-    if (bySession || byPid) lanes.add(lane);
+    if (belongsTo(owner, session, pid)) lanes.add(lane);
   }
   return [...lanes].sort((a, b) => a - b);
 }
