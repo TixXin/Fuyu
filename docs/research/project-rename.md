@@ -1,8 +1,8 @@
 # 项目改名：同类产品的名字和候选名查重
 
-> **2026-11-10 用户定名：浮屿 / Fuyu**，英文不带 `-island`。没有采用下面「推荐」一节的结论，取舍和定名后的查重见文末「定名」一节和 [D17](/docs/tasks/D/D17.md)。
+> **2026-11-10 用户定名：浮屿 / Fuyu**，英文不带 `-island`。没有采用下面「推荐」一节的结论，取舍和定名后的查重见文末「定名」一节和 [D17](/docs/tasks/0-archive/D/D17.md)。
 
-> 日期：2026-11-09。问题：`fly-island` 和 `FocuSD` 都是上游的名字，项目要重新取名；先看 GitHub 上同类产品都叫什么，新名字不能和它们重名。范围：GitHub 仓库搜索（`gh search repos`，关键词 `dynamic island`、`dynamic island windows`、`灵动岛`、`桌面 灵动岛`、`topic:dynamic-island`，以及名字里带 `island` 或 `notch`、150 star 以上的仓库）；89 个拉丁字母候选名逐个查 GitHub 仓库名、npm、crates.io 和 GitHub 账号名；18 个中文候选名查 GitHub 仓库的名字和简介；入围的名字再查域名和网页搜索。相关任务：[D17](/docs/tasks/D/D17.md)
+> 日期：2026-11-09。问题：`fly-island` 和 `FocuSD` 都是上游的名字，项目要重新取名；先看 GitHub 上同类产品都叫什么，新名字不能和它们重名。范围：GitHub 仓库搜索（`gh search repos`，关键词 `dynamic island`、`dynamic island windows`、`灵动岛`、`桌面 灵动岛`、`topic:dynamic-island`，以及名字里带 `island` 或 `notch`、150 star 以上的仓库）；89 个拉丁字母候选名逐个查 GitHub 仓库名、npm、crates.io 和 GitHub 账号名；18 个中文候选名查 GitHub 仓库的名字和简介；入围的名字再查域名和网页搜索。相关任务：[D17](/docs/tasks/0-archive/D/D17.md)
 >
 > star 数、创建时间和各项占用情况都是 2026-11-09 查到的。商标只做了网页搜索，没有查商标局的数据库。
 
@@ -86,7 +86,7 @@
 
 ### 接下来
 
-名字要用户来定，记在 [D17](/docs/tasks/D/D17.md)。定名后建议分两步：先改不碰用户数据的部分（仓库名、README、显示名、新的 npm 包名），再写计划改内部标识并做迁移。
+名字要用户来定，记在 [D17](/docs/tasks/0-archive/D/D17.md)。定名后建议分两步：先改不碰用户数据的部分（仓库名、README、显示名、新的 npm 包名），再写计划改内部标识并做迁移。
 
 ## 详细
 

@@ -29,7 +29,7 @@
 
 ## 数据
 
-新 localStorage key `focusd-island-collapsed-items`（写进 contracts.md）：
+新 localStorage key `fuyu-collapsed-items`（写进 contracts.md）：
 
 ```json
 { "version": 1, "items": [{ "id": "status-light", "zone": "left" }, { "id": "music", "zone": "right", "hidden": true }] }

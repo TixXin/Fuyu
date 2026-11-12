@@ -1,6 +1,6 @@
 # 截图软件：该有什么、优秀的软件有什么独特做法
 
-> 日期：2026-11-10。问题：浮屿要内置截图，先弄清楚一个截图软件应该具备什么功能，优秀的截图软件有哪些先进、独特的做法，以及在 Windows 上用 Rust / Tauri 怎么实现。范围：Snipaste、PixPin、ShareX、Greenshot、Flameshot、ksnip、Snagit、Windows 截图工具、微信 / QQ 截图，macOS 的 CleanShot X、Shottr、Xnip，新项目 Snow Shot；官网、更新日志、GitHub issue、V2EX、少数派等评测；Microsoft Learn 的截屏和 DPI 文档；crates.io / GitHub 上的 Rust 截图库。star 数、版本和价格都是当天查的。相关任务：[C40](/docs/tasks/C/C40.md)。
+> 日期：2026-11-10。问题：浮屿要内置截图，先弄清楚一个截图软件应该具备什么功能，优秀的截图软件有哪些先进、独特的做法，以及在 Windows 上用 Rust / Tauri 怎么实现。范围：Snipaste、PixPin、ShareX、Greenshot、Flameshot、ksnip、Snagit、Windows 截图工具、微信 / QQ 截图，macOS 的 CleanShot X、Shottr、Xnip，新项目 Snow Shot；官网、更新日志、GitHub issue、V2EX、少数派等评测；Microsoft Learn 的截屏和 DPI 文档；crates.io / GitHub 上的 Rust 截图库。star 数、版本和价格都是当天查的。相关任务：[C40](/docs/tasks/0-archive/C/C40.md)。
 
 ## 结论
 

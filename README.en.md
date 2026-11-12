@@ -36,10 +36,12 @@ Fuyu (浮屿, "floating islet") is a lightweight, borderless, always-on-top floa
 - **Tasks and notes**: today's tasks, the one you are focused on, a daily note and past archives.
 - **Clipboard and file shelf**: text and image clipboard history; drop files on the island and drag them into another app later.
 - **Messages**: QQ and WeChat alerts and several mailboxes, with mail you can read and answer on the island.
+- **Calendar**: today's and tomorrow's events next to a month view with lunar dates and holidays, a countdown on the island before a meeting, and one-click join.
 - **Quick translation**: one shortcut away, with a choice of LLM translation services.
-- **AI agents**: the state of your Claude Code and Codex sessions; click one to jump to its window.
-- **Music**: control what is playing, with a live audio waveform.
-- **Plugins**: extend the island from the plugin market; sensitive data needs your permission.
+- **AI agents**: the state and usage of your Claude Code and Codex sessions; click one to jump to its window, and get pushed to your phone while you are away.
+- **Music**: control what is playing, with a live audio waveform and synced lyrics.
+- **System hints**: volume and brightness changes, and which app is using your camera or microphone.
+- **Plugins and themes**: extend the island from the plugin market (sensitive data needs your permission), and pick a ready-made look from the theme market.
 
 The look, size, tucking, shortcuts and every feature can be adjusted in the Settings window, and the app updates itself. Your data stays on your computer.
 
