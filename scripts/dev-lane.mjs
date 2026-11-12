@@ -58,7 +58,7 @@ function main() {
   const root = process.cwd();
   const lane = laneNumber(root);
   if (lane === null) {
-    console.error("pnpm dev:lane runs in a lane (../fly-island-lanes/<N>). In the main checkout use pnpm tauri dev.");
+    console.error("pnpm dev:lane runs in a lane (pnpm lane:open). In the main checkout use pnpm tauri dev.");
     return Promise.resolve(1);
   }
   const preview = lanePreview(mainCheckout(root), lane);

@@ -64,7 +64,7 @@ function checkInLane(main, lane, name) {
 /** The lane this runs in, synced with origin/main and with no uncommitted tracked changes. */
 function syncedLane(root, what) {
   const lane = laneNumber(root);
-  if (lane === null) throw new Error(`${what}要在 lane 里做（../fly-island-lanes/N），主工作区留给用户`);
+  if (lane === null) throw new Error(`${what}要在 lane 里做（pnpm lane:open 开的 lane），主工作区留给用户`);
   if (tryGit(["status", "--porcelain", "--untracked-files=no"])) throw new Error(`工作区有未提交的改动，先提交或暂存再${what}`);
   const scripts = () => tryGit(["rev-parse", "HEAD:scripts/tasks"]);
   const before = scripts();

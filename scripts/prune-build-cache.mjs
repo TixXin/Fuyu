@@ -17,6 +17,7 @@ import { existsSync, lstatSync, readdirSync, rmSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { LANE_BUILD_DIR, mainCheckout, PUBLISH_DIR, targetDir } from "./build-dirs.mjs";
+import { lanePath } from "./lanes/laneRegistry.mjs";
 
 export const MAX_AGE_DAYS = 3;
 /** Kept per crate whatever their age: the lib, its tests and a clippy run each have their own hash. */
@@ -189,8 +190,7 @@ export function summary({ bytes, counts, failed, unknown }, dryRun = false) {
 export function pruneMainTarget(options = {}) {
   try {
     const main = mainCheckout();
-    const lanes = path.join(path.dirname(main), "fly-island-lanes");
-    const result = prune(targetDir(main), { laneExists: (n) => existsSync(path.join(lanes, String(n))), ...options });
+    const result = prune(targetDir(main), { laneExists: (n) => existsSync(lanePath(main, n)), ...options });
     console.log(`[prune] ${summary(result, options.dryRun)}`);
   } catch (error) {
     console.warn(`[prune] skipped: ${error.message}`);

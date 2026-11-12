@@ -43,7 +43,7 @@ function main(argv) {
   const name = option(args, "--as");
   if (command === "open") {
     const lane = openLane({ main: root, fromCwd: process.cwd(), pid: claudePid(), name, install: !args.includes("--no-install") });
-    console.log(`[lanes] lane ${lane.lane}（${lane.reused ? "复用" : "新建"}），已重置到主工作区的 HEAD：`);
+    console.log(`[lanes] lane ${lane.lane}（${lane.reused ? "复用" : "新建"}），已重置到主工作区的 HEAD。下一步在会话里用 EnterWorktree(path) 进入它：`);
     console.log(lane.wt);
     return 0;
   }

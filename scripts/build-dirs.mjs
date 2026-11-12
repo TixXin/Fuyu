@@ -26,11 +26,10 @@ export function mainCheckout(cwd = process.cwd()) {
 
 export const targetDir = (main, name = "") => path.join(main, "src-tauri", "target", name);
 
-/** The lane number of a worktree at `.../fly-island-lanes/<N>`, or null. */
 export function laneNumber(worktree) {
   const parts = path.resolve(worktree).split(/[\\/]/);
   const number = Number(parts.at(-1));
-  return parts.at(-2) === "fly-island-lanes" && Number.isInteger(number) && number > 0 && number < 1000 ? number : null;
+  return /.-lanes$/.test(parts.at(-2) ?? "") && Number.isInteger(number) && number > 0 && number < 1000 ? number : null;
 }
 
 /**
