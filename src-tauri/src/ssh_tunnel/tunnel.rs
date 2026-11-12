@@ -1,6 +1,6 @@
+use crate::system::CommandExt;
 use std::{
     io::{BufRead, BufReader},
-    os::windows::process::CommandExt,
     path::Path,
     process::{Command, Stdio},
     sync::{mpsc, Arc, Mutex, PoisonError},

@@ -19,7 +19,13 @@ use tauri::{AppHandle, Manager};
 use found::FoundLyrics;
 pub use inflink::InflinkState;
 use matching::{cache_key, named_in_simplified, stable_hash, traditional_chars};
+#[cfg(windows)]
 use crate::win32::chinese::to_simplified;
+
+#[cfg(not(windows))]
+fn to_simplified(_text: &str) -> Option<String> {
+    None
+}
 
 const CACHE_DIR_NAME: &str = "lyrics-cache";
 const MISSING_TTL: Duration = Duration::from_secs(7 * 24 * 60 * 60);
@@ -264,6 +270,7 @@ mod tests {
         fs::remove_dir_all(&dir).unwrap();
     }
 
+    #[cfg(windows)]
     #[test]
     fn traditional_lyrics_are_shown_simplified_for_a_track_named_in_simplified() {
         let lrc = "[00:31.50] 劃一根火柴 將慵倦的夜點亮";

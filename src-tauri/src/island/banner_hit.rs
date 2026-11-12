@@ -1,3 +1,5 @@
+#![cfg_attr(not(windows), allow(dead_code))]
+
 use serde::Deserialize;
 use std::sync::{Mutex, PoisonError};
 

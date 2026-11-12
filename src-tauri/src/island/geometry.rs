@@ -8,7 +8,7 @@ use std::{
 };
 use tauri::{LogicalSize, Monitor, PhysicalPosition, Position, Size, WebviewWindow};
 
-use super::state::{IslandMode, IslandPosition, IslandWindowState, MonitorFollow};
+use super::state::{CornerShape, IslandMode, IslandPosition, IslandWindowState, MonitorFollow};
 
 pub(super) const STAGE_WINDOW_WIDTH: f64 = 820.0;
 pub(super) const STAGE_WINDOW_HEIGHT: f64 = 460.0;
@@ -20,6 +20,7 @@ pub(super) const COLLAPSED_ISLAND_WIDTH: f64 = 340.0;
 pub(super) const MIN_ADJUSTED_COLLAPSED_WIDTH: f64 = 220.0;
 pub(super) const MAX_ADJUSTED_COLLAPSED_WIDTH: f64 = 520.0;
 pub(super) const COLLAPSED_ISLAND_HEIGHT: f64 = 38.0;
+#[cfg_attr(not(windows), allow(dead_code))]
 pub(super) const COLLAPSED_RADIUS: f64 = 22.0;
 pub(super) const EXPANDED_ISLAND_WIDTH: f64 = 560.0;
 
@@ -254,4 +255,52 @@ pub(super) fn resolve_stage_position(
         (None, true) => (centered_x, tucked_y),
         (None, false) => (centered_x, normal_y),
     }
+}
+
+#[expect(
+    clippy::too_many_arguments,
+    reason = "a point and the notch's rectangle, two radii and their shape, all plain values"
+)]
+#[cfg_attr(not(windows), allow(dead_code))]
+pub(super) fn point_in_notch(
+    x: f64,
+    y: f64,
+    left: f64,
+    top: f64,
+    width: f64,
+    height: f64,
+    radius: f64,
+    top_radius: f64,
+    shape: CornerShape,
+) -> bool {
+    let right = left + width;
+    let bottom = top + height;
+
+    if x < left || x > right || y < top || y > bottom {
+        return false;
+    }
+
+    let top_radius = top_radius.min(width / 2.0).min(height / 2.0);
+    if y < top + top_radius && (x < left + top_radius || x > right - top_radius) {
+        let dx = x - x.clamp(left + top_radius, right - top_radius);
+        let dy = y - (top + top_radius);
+        return shape.contains(dx, dy, top_radius);
+    }
+
+    let radius = radius.min(width / 2.0).min(height);
+    if y <= bottom - radius || (x >= left + radius && x <= right - radius) {
+        return true;
+    }
+    let center_x = if x < left + radius {
+        left + radius
+    } else if x > right - radius {
+        right - radius
+    } else {
+        x
+    };
+    let center_y = y.min(bottom - radius);
+    let dx = x - center_x;
+    let dy = y - center_y;
+
+    shape.contains(dx, dy, radius)
 }

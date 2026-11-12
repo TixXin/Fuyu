@@ -1,5 +1,6 @@
 use super::sheet::{image_header, sheet_rows, ImageHeader};
 use super::*;
+#[cfg(windows)]
 use std::process::Command;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
@@ -206,6 +207,7 @@ fn ids_cannot_escape_the_pet_roots() {
     assert!(is_valid_id("dimo-stand") && is_valid_id("hanli_aiesst") && is_valid_id("v1.2"));
 }
 
+#[cfg(windows)]
 #[test]
 fn a_junction_out_of_the_root_is_refused() {
     let (base, roots) = temp_roots();

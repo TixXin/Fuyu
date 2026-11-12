@@ -1,11 +1,15 @@
 mod agent_approval;
 mod agent_status;
 mod calendar;
+#[cfg_attr(not(windows), path = "cc_connect/unsupported.rs")]
 mod cc_connect;
 mod claude_usage;
+#[cfg_attr(not(windows), path = "clipboard_history/unsupported.rs")]
 mod clipboard_history;
 mod dev_lane;
+#[cfg_attr(not(windows), path = "device_events/unsupported.rs")]
 mod device_events;
+#[cfg_attr(not(windows), path = "device_use/unsupported.rs")]
 mod device_use;
 mod file_shelf;
 mod fs_write;
@@ -13,27 +17,41 @@ mod home_dir;
 mod island;
 mod local_api;
 mod lyrics;
+#[cfg_attr(not(windows), path = "media_control/unsupported.rs")]
 mod media_control;
+#[cfg(windows)]
 mod messenger_activation;
 mod notification_diagnostics;
+#[cfg_attr(not(windows), path = "onboarding_window/unsupported.rs")]
 mod onboarding_window;
 mod pets;
 mod phone_push;
 mod plugin_host;
 mod mail;
+#[cfg_attr(not(windows), path = "qq_notifications/unsupported.rs")]
 mod qq_notifications;
+#[cfg_attr(not(windows), path = "rename_migration/unsupported.rs")]
 mod rename_migration;
+#[cfg_attr(not(windows), path = "screenshot/unsupported.rs")]
 mod screenshot;
 mod settings_file;
 mod settings_window;
+#[cfg_attr(not(windows), path = "ssh_tunnel/unsupported.rs")]
 mod ssh_tunnel;
 mod system;
+#[cfg_attr(not(windows), path = "system_levels/unsupported.rs")]
 mod system_levels;
 mod todos;
+#[cfg_attr(not(windows), path = "translation/unsupported.rs")]
 mod translation;
 mod tray;
 mod user_error;
+#[cfg_attr(not(windows), path = "wechat_reminders/unsupported.rs")]
 mod wechat_reminders;
+#[cfg(target_os = "macos")]
+mod macos;
+mod platform;
+#[cfg(windows)]
 mod win32;
 
 use tauri::{Manager, WindowEvent};

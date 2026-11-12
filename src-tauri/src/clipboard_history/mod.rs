@@ -12,6 +12,7 @@ mod preview;
 mod secrets;
 mod sequence;
 mod service;
+mod shortcut;
 mod snippets;
 mod store;
 mod transfer;
@@ -28,7 +29,7 @@ use tauri::{AppHandle, Manager};
 use listener::{notify_clipboard_changed, start_workers};
 use store::{load_history, HISTORY_FILE_NAME, IMAGE_DIRECTORY_NAME};
 
-pub(crate) use hotkey::parse_shortcut_binding;
+pub(crate) use shortcut::{parse_shortcut_binding, ShortcutBinding};
 pub(crate) use capture_pause::paused as clipboard_capture_paused;
 pub(crate) use plugin_view::{local_api_history, plugin_history, plugin_item};
 pub(crate) use popup::WINDOW_LABEL as POPUP_WINDOW_LABEL;
@@ -264,13 +265,6 @@ pub(crate) enum CopyAs {
     Plain,
     Text,
     TextFile,
-}
-
-#[derive(Clone)]
-pub(crate) struct ShortcutBinding {
-    pub(crate) label: String,
-    pub(crate) modifiers: u32,
-    pub(crate) key_code: u32,
 }
 
 fn default_true() -> bool {

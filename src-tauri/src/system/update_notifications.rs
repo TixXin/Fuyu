@@ -1,7 +1,11 @@
+#[cfg(windows)]
 use std::{collections::HashSet, sync::{Mutex, OnceLock}};
 
 use serde::Serialize;
-use tauri::{AppHandle, Emitter};
+use tauri::AppHandle;
+#[cfg(windows)]
+use tauri::Emitter;
+#[cfg(windows)]
 use windows::{
     core::{HSTRING, IInspectable},
     Data::Xml::Dom::XmlDocument,
@@ -10,20 +14,27 @@ use windows::{
     Win32::System::Registry::HKEY_LOCAL_MACHINE,
 };
 
+#[cfg(windows)]
 use crate::win32::{com::WinRtApartment, registry};
+#[cfg(windows)]
 use super::update_runtime::{updater_state, Stage};
 
+#[cfg(windows)]
 const OPEN_SETTINGS_EVENT: &str = "updater-open-settings";
+#[cfg(windows)]
 const CURRENT_VERSION_KEY: &str = r"SOFTWARE\Microsoft\Windows NT\CurrentVersion";
 
+#[cfg(windows)]
 #[derive(Default)]
 struct Notifications {
     shown: HashSet<String>,
     active: Option<ToastNotification>,
 }
 
+#[cfg(windows)]
 static NOTIFICATIONS: OnceLock<Mutex<Notifications>> = OnceLock::new();
 
+#[cfg(any(windows, test))]
 fn escape_xml(value: &str) -> String {
     value.chars().filter(|c| !c.is_control() || matches!(c, '\n' | '\r' | '\t'))
         .collect::<String>()
@@ -34,6 +45,7 @@ fn escape_xml(value: &str) -> String {
         .replace('\'', "&apos;")
 }
 
+#[cfg(windows)]
 fn show_notification(app: AppHandle, version: String, title: String, body: String) -> windows::core::Result<bool> {
     let _apartment = WinRtApartment::multithreaded()?;
     let snapshot = updater_state();
@@ -66,6 +78,11 @@ fn show_notification(app: AppHandle, version: String, title: String, body: Strin
     Ok(true)
 }
 
+#[cfg(not(windows))]
+fn show_notification(_app: AppHandle, _version: String, _title: String, _body: String) -> Result<bool, String> {
+    Ok(false)
+}
+
 #[tauri::command]
 pub async fn updater_notify(app: AppHandle, version: String, title: String, body: String) -> bool {
     if version.is_empty() || version.len() > 128 || title.len() > 512 || body.len() > 4096 {
@@ -82,6 +99,20 @@ pub struct UpdateDiagnostics {
     architecture: &'static str,
 }
 
+#[cfg(not(windows))]
+#[tauri::command]
+pub async fn updater_diagnostics() -> UpdateDiagnostics {
+    let version = std::process::Command::new("sw_vers")
+        .arg("-productVersion")
+        .output()
+        .ok()
+        .map(|output| String::from_utf8_lossy(&output.stdout).trim().to_string())
+        .filter(|version| !version.is_empty())
+        .unwrap_or_else(|| "unknown".into());
+    UpdateDiagnostics { os_version: format!("macOS {version}"), architecture: std::env::consts::ARCH }
+}
+
+#[cfg(windows)]
 #[tauri::command]
 pub async fn updater_diagnostics() -> UpdateDiagnostics {
     let build = registry::read_string(HKEY_LOCAL_MACHINE, CURRENT_VERSION_KEY, "CurrentBuildNumber")

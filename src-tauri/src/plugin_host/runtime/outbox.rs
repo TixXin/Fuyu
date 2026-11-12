@@ -44,11 +44,11 @@ impl Outbox {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, windows))]
 mod tests {
     use super::*;
+    use crate::system::CommandExt;
     use std::{
-        os::windows::process::CommandExt,
         process::{Command, Stdio},
         time::{Duration, Instant},
     };

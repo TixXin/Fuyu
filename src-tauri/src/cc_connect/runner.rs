@@ -1,8 +1,8 @@
 use crate::user_error::UserError;
+use crate::system::CommandExt;
 use std::{
     fs::{self, File},
     io::{Read, Seek, SeekFrom},
-    os::windows::process::CommandExt,
     path::{Path, PathBuf},
     process::{Child, Command, Stdio},
     sync::{mpsc, Arc, Mutex, MutexGuard, OnceLock, PoisonError},

@@ -86,14 +86,43 @@
 
 ## 第 0 步的迁移表
 
-（G1.2 开工时填写：模块 | 用到的 Windows API | Mac 上的处理 | 所在子任务）
+2026-11-13 G1.2 的做法见 [overview.md](overview.md)「平台层」。「暂不支持」= Mac 上用 `unsupported.rs` / `*_unsupported.rs` 空实现，命令返回 `platform.unsupported`；「换实现」= 原处写 Windows / Mac 两份；「平台层」= 经 `platform.rs` 取 `win32/` 或 `macos/` 的同名模块，`macos/` 里目前是空实现。
+
+| 模块 | 用到的 Windows API | Mac 上的处理（第 0 步） | 正式实现的子任务 |
+|---|---|---|---|
+| `island`（focus、follow、glass、modifier、outside_click、passthrough） | 窗口、前台、按键与鼠标状态、窗口区域 | 这几个子模块暂不支持；`mod.rs` 的 Alt / 左键判断换实现（Mac 上为 false）；几何、状态、贴边照常编译 | G1.3 |
+| `onboarding_window` | 最小化全部窗口、光标位置、岛的窗口矩形 | 暂不支持 | G1.3 |
+| `system`：`startup`、`network_cost` | 注册表（reg.exe）、WinRT 网络计费 | 暂不支持（自启返回 false、设置时报 unsupported；不计费） | G1.4、G1.6 |
+| `system`：`accent_color`、`fullscreen`、`updater`、`update_notifications`、`settings_backup` | 注册表、前台全屏、系统代理、Toast、下载文件夹 | 换实现：强调色 None、全屏 false、只读环境变量代理、不弹系统通知、诊断报 `sw_vers` 版本、下载文件夹 `~/Downloads` | G1.4、G1.6 |
+| `system`：`CommandExt` / `CREATE_NO_WINDOW` | `CreationFlags` | 换实现：`system/command_flags.rs`，Mac 上 `creation_flags` 什么都不做 | — |
+| `home_dir`、`system::windows_home_dir` | `USERPROFILE`、消息框 | 换实现：Mac 上用 `HOME`，冲突提示打到 stderr | G1.4 |
+| `clipboard_history`、`translation` | 剪贴板监听、热键、弹窗、UIA 选中文字 | 暂不支持；快捷键文字解析（`shortcut.rs`）照常编译 | G1.6 |
+| `screenshot` | 屏幕截图、热键、钉图窗口、剪贴板 | 暂不支持 | G1.6 |
+| `file_shelf` | 剪贴板文件列表、OLE 拖出 | 复制和拖出暂不支持，列表、预览、打开照常 | G1.6 |
+| `device_use`、`device_events`、`system_levels` | 注册表、音频端点、设备节点、WMI 亮度、电源 | 暂不支持 | G1.6、G1.9 |
+| `phone_push` | 锁屏与空闲时间 | 换实现：空闲 None、未锁屏 | G1.6 |
+| `lyrics` | 繁简转换 | 换实现：Mac 上不转换 | G1.9 |
+| `mail` | 下载文件夹 | 换实现：`system::downloads_dir()` | — |
+| `pets` | `FILE_FLAG_OPEN_REPARSE_POINT` | 换实现：`O_NOFOLLOW` | — |
+| `claude_usage` | 注册表里的系统代理 | 换实现：Mac 上只看插件设置和环境变量 | G1.7 |
+| `agent_status`（focus、session_*、window_focus、wezterm、orca、host_icon） | 进程树、进程启动时间与环境变量、窗口枚举与前台、UIA 标签页、程序图标 | 进程相关走平台层；窗口跳转、前台进程换实现（找不到）；`approval_hotkeys` 暂不支持 | G1.7 |
+| `plugin_host`（runtime、baseline） | 作业对象、挂起启动 | 平台层：Mac 上 `Job` 什么都不管，进程直接启动 | G1.8 |
+| `plugin_host`（keybindings、system_events、webviews、uri） | 热键、会话通知、WebView2 页面、注册 `fuyu://` | 暂不支持；`uri` 注册换实现（Mac 上不做，等 Info.plist） | G1.4、G1.8 |
+| `media_control` | SMTC、音频峰值、程序图标 | 暂不支持 | G1.9 |
+| `qq_notifications`、`wechat_reminders`、`messenger_activation` | 通知监听、窗口闪烁、UIA | 暂不支持 | G1.10 |
+| `cc_connect`、`ssh_tunnel` | 作业对象、注册表代理、程序查找 | 暂不支持（内置插件在 Mac 上开不起来） | G1.8 |
+| `rename_migration` | 注册表、凭据、卸载旧版 | 暂不支持（Mac 上没有旧版可迁移）；`data_dirs::copy_tree` 照常给 `home_dir` 用 | 不做 |
+| `examples/` 四个探测程序 | 全部 | Mac 上只打印「只能在 Windows 上运行」 | 不做 |
+
+Mac 上跳过的测试（依赖 Windows 路径、程序或 API，标了 `#[cfg(windows)]`）：`agent_status` 的 9 个（会话宿主、窗口匹配、Codex 标题、Orca 记录、程序图标、Windows Terminal 标签页、进程启动时间、符号链接）、`home_dir` 的 3 个（盘符路径）、`lyrics` 的 2 个（繁简转换）、`pets` 的 1 个（目录联接）、`fs_write` 的 1 个（共享锁）、`plugin_host` 的基线内存、stdin 队列、快捷键与网页视图两组测试，以及插件清单和音效包里两条 `C:\` 路径断言。对应子任务做 Mac 实现时补上 Mac 版测试。
 
 ## 进度记录
 
 | 日期 | 子任务 | 提交 | 改了什么 | 验证 |
 |---|---|---|---|---|
 | 2026-11-13 | — | — | 4 份调研、本计划、[platforms.md](platforms.md)、任务 G1 | 仅文档 |
-| 2026-11-13 | G1.1 | （本次提交） | 用户拍板 M1–M14，写进决定表；界面形态（M4–M6）写进 [design/macos.md](../design/macos.md) | 仅文档 |
+| 2026-11-13 | G1.1 | 3ccc9b6c | 用户拍板 M1–M14，写进决定表；界面形态（M4–M6）写进 [design/macos.md](../design/macos.md) | 仅文档 |
+| 2026-11-13 | G1.2（Rust 部分） | （本次提交） | Windows 依赖只在 Windows 上编译；`macos/` 平台层与 `platform.rs`；Mac 上暂不支持的模块用 unsupported 空实现；CI 加 `rust-macos`；迁移表 | Mac：`cargo clippy --all-targets -D warnings`、`cargo test`（421 过）、`pnpm dev:lane` 起窗口；Windows：在 Mac 上交叉 `clippy --target x86_64-pc-windows-gnu --all-targets` 通过，测试看 CI |
 
 ## 待人工验收
 

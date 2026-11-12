@@ -1,9 +1,13 @@
+#[cfg(windows)]
 use windows::Win32::System::Registry::HKEY_CURRENT_USER;
 
+#[cfg(windows)]
 use crate::win32;
 
+#[cfg(windows)]
 const DWM_KEY: &str = r"Software\Microsoft\Windows\DWM";
 
+#[cfg(any(windows, test))]
 pub(crate) fn accent_hex(abgr: u32) -> String {
     let red = abgr & 0xff;
     let green = (abgr >> 8) & 0xff;
@@ -11,9 +15,16 @@ pub(crate) fn accent_hex(abgr: u32) -> String {
     format!("#{red:02x}{green:02x}{blue:02x}")
 }
 
+#[cfg(windows)]
 #[tauri::command]
 pub fn get_windows_accent_color() -> Option<String> {
     win32::registry::read_u32(HKEY_CURRENT_USER, DWM_KEY, "AccentColor").map(accent_hex)
+}
+
+#[cfg(not(windows))]
+#[tauri::command]
+pub fn get_windows_accent_color() -> Option<String> {
+    None
 }
 
 #[cfg(test)]

@@ -54,7 +54,7 @@ pub fn save_settings_backup(file_name: String, content: String) -> Result<String
     if !is_backup_content(&content) {
         return Err("Not a settings backup.".into());
     }
-    let dir = crate::win32::known_folder::downloads().ok_or("找不到下载文件夹。")?;
+    let dir = crate::system::downloads_dir().ok_or("找不到下载文件夹。")?;
     fs::create_dir_all(&dir).map_err(|error| format!("Could not create {}: {error}", dir.display()))?;
     write_new_file(&dir, &file_name, &content).map(|path| path.to_string_lossy().to_string())
 }

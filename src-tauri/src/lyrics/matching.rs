@@ -54,7 +54,7 @@ pub(super) fn same_artist(a: &str, b: &str) -> bool {
 }
 
 pub(super) fn same_track(playing: (&str, &str, i64), found: (&str, &str, i64)) -> bool {
-    let simple = |text: &str| crate::win32::chinese::to_simplified(text).unwrap_or_else(|| text.to_string());
+    let simple = |text: &str| super::to_simplified(text).unwrap_or_else(|| text.to_string());
     clean_title(&simple(found.0)) == clean_title(&simple(playing.0))
         && same_artist(&simple(found.1), &simple(playing.1))
         && close_duration(playing.2, found.2)

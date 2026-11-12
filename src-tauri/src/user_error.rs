@@ -29,6 +29,7 @@ impl UserError {
         self
     }
 
+    #[cfg_attr(not(windows), allow(dead_code))]
     pub(crate) fn redact(mut self, secret: &str) -> Self {
         if secret.is_empty() {
             return self;
@@ -70,6 +71,25 @@ impl From<&str> for UserError {
         Self::new("plain", message)
     }
 }
+
+#[cfg(not(windows))]
+pub(crate) fn unsupported() -> UserError {
+    UserError::new("platform.unsupported", "Not available on this platform yet.")
+}
+
+#[cfg(not(windows))]
+macro_rules! unsupported_commands {
+    ($($name:ident),* $(,)?) => {
+        $(
+            #[tauri::command]
+            pub fn $name() -> Result<(), crate::user_error::UserError> {
+                Err(crate::user_error::unsupported())
+            }
+        )*
+    };
+}
+#[cfg(not(windows))]
+pub(crate) use unsupported_commands;
 
 pub(crate) mod credential {
     use super::UserError;

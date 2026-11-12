@@ -2,6 +2,7 @@ use serde::Serialize;
 use std::{sync::Mutex, thread, time::Duration};
 use tauri::{AppHandle, Emitter};
 
+#[cfg(windows)]
 use crate::{island, win32};
 
 pub(crate) const FOREGROUND_FULLSCREEN_CHANGED_EVENT: &str = "foreground-fullscreen-changed";
@@ -20,6 +21,7 @@ static STATE: Mutex<ForegroundFullscreen> = Mutex::new(ForegroundFullscreen {
     on_island_monitor: false,
 });
 
+#[cfg(windows)]
 fn read(app: &AppHandle) -> ForegroundFullscreen {
     let active = win32::notification_state::fullscreen_app_in_front();
     let on_island_monitor = active
@@ -29,6 +31,11 @@ fn read(app: &AppHandle) -> ForegroundFullscreen {
                 win32::window::share_monitor(win32::window::foreground_window(), island)
             });
     ForegroundFullscreen { active, on_island_monitor }
+}
+
+#[cfg(not(windows))]
+fn read(_app: &AppHandle) -> ForegroundFullscreen {
+    ForegroundFullscreen::default()
 }
 
 pub(crate) fn start(app: &AppHandle) {

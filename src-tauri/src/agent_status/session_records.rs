@@ -2,7 +2,7 @@ use std::{fs, path::Path};
 
 use serde::Deserialize;
 
-use crate::win32;
+use crate::platform;
 
 pub(super) const DIR_NAME: &str = "agent-sessions";
 const START_TIME_TOLERANCE: u64 = 10;
@@ -48,7 +48,7 @@ pub(super) fn same_start(recorded: Option<u64>, actual: Option<u64>) -> bool {
 impl SessionRecord {
     pub(super) fn live_pid(&self) -> Option<u32> {
         let pid = self.pid.filter(|pid| *pid != 0)?;
-        same_start(self.pid_started, win32::process_times::start_time(pid)).then_some(pid)
+        same_start(self.pid_started, platform::process_times::start_time(pid)).then_some(pid)
     }
 
     pub(super) fn has_ended(&self) -> bool {

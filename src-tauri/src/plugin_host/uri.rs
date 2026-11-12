@@ -47,6 +47,12 @@ pub(crate) fn find_link(args: &[String]) -> Option<&str> {
     })
 }
 
+#[cfg(not(windows))]
+pub(super) fn register_scheme() -> Result<(), String> {
+    Ok(())
+}
+
+#[cfg(windows)]
 pub(super) fn register_scheme() -> Result<(), String> {
     let exe = std::env::current_exe().map_err(|error| format!("Could not resolve the executable: {error}"))?;
     let command = format!("\"{}\" \"%1\"", exe.display());

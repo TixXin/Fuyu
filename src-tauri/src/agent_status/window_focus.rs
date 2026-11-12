@@ -1,8 +1,13 @@
+#![cfg_attr(not(windows), allow(dead_code))]
+
 use std::path::Path;
 
+#[cfg(windows)]
 use windows::Win32::Foundation::HWND;
 
+#[cfg(windows)]
 use super::title::only_tab_titled;
+#[cfg(windows)]
 use crate::win32;
 
 const EDITORS: &[&str] = &[
@@ -144,6 +149,34 @@ pub(super) fn window_of_process_chain(
     })
 }
 
+#[cfg(not(windows))]
+pub(super) fn open_app_exe(_app: &str) -> Option<String> {
+    None
+}
+
+#[cfg(not(windows))]
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(super) struct FocusedWindow {
+    pub(super) process_id: u32,
+    pub(super) app: String,
+    pub(super) in_front: bool,
+}
+
+#[cfg(not(windows))]
+pub(super) fn focus_session_window(
+    _hints: &SessionHints,
+    _chain: &[u32],
+    _prefer_app: Option<&str>,
+) -> Option<FocusedWindow> {
+    None
+}
+
+#[cfg(not(windows))]
+pub(super) fn select_terminal_tab(_focused: &FocusedWindow, _title: &str) -> bool {
+    false
+}
+
+#[cfg(windows)]
 pub(super) fn open_app_exe(app: &str) -> Option<String> {
     let mut found = None;
     let _ = win32::window::for_each_top_level_window(|window| {
@@ -158,6 +191,7 @@ pub(super) fn open_app_exe(app: &str) -> Option<String> {
     found
 }
 
+#[cfg(windows)]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct FocusedWindow {
     pub(super) window: HWND,
@@ -166,6 +200,7 @@ pub(super) struct FocusedWindow {
     pub(super) in_front: bool,
 }
 
+#[cfg(windows)]
 pub(super) fn focus_session_window(
     hints: &SessionHints,
     chain: &[u32],
@@ -218,6 +253,7 @@ pub(super) fn focus_session_window(
     })
 }
 
+#[cfg(windows)]
 pub(super) fn select_terminal_tab(focused: &FocusedWindow, title: &str) -> bool {
     let choose = |tabs: &[String]| only_tab_titled(tabs, title);
     if win32::uia_tabs::select_tab(focused.window, choose) {

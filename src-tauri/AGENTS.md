@@ -44,8 +44,11 @@ src-tauri/src/
 ├── dev_lane.rs              # lane 预览（pnpm dev:lane）：调试版的独立应用标识、默认位置，不改用户的链接、自启和 hook
 ├── messenger_activation.rs
 ├── notification_diagnostics.rs
-├── user_error.rs            # 用户看到的错误：错误码、文案参数和外部原话（D15），前端按界面语言显示；凭据管理器的通用错误
-└── win32/                   # Win32 / COM 的安全封装，crate 中唯一允许 unsafe 的地方：window（窗口查询、枚举、前台切换）、
+├── user_error.rs            # 用户看到的错误：错误码、文案参数和外部原话（D15），前端按界面语言显示；凭据管理器的通用错误；
+│                            #   Mac 上的 unsupported()（错误码 platform.unsupported）和批量生成「暂不支持」命令的 unsupported_commands!
+├── platform.rs              # 两个平台都有的平台层模块（icon、job、process、process_env、process_times、process_tree）：Windows 上取 win32/，macOS 上取 macos/
+├── macos/                   # macOS 平台层（G1，决定 M10），和 win32/ 一样是允许 unsafe 的地方；第 0 步只有和 win32/ 同名同签名的空实现
+└── win32/                   # Win32 / COM 的安全封装，和 macos/ 一起是 crate 中允许 unsafe 的地方：window（窗口查询、枚举、前台切换）、
                              # message_window（隐藏消息窗口与安全的窗口过程）、hotkey、win_key_hook、clipboard、shell_hook、input、
                              # com（COM / WinRT 初始化守卫）、audio、ole（文件拖出）、process / process_times / process_env /
                              # process_memory / process_tree、registry、credentials、dwm、icon、ocr、chinese、screen_capture、
@@ -88,9 +91,18 @@ src-tauri/src/
 - `let _ = ...` 忽略错误只用于尽力而为的操作，例如推送事件、清理临时文件。
 - 错误转换就近写 `map_err(|error| error.to_string())` 或带上下文的 `format!`，不吞掉原始错误信息。
 
+## 平台（Windows 与 macOS）
+
+- 做法见 [overview.md](../docs/architecture/overview.md)「平台层」，计划与迁移表见 [macos-port-plan.md](../docs/architecture/macos-port-plan.md)。
+- `windows`、`windows-future`、`webview2-com`、`clipboard-win` 在 `Cargo.toml` 的 `[target.'cfg(windows)'.dependencies]` 里，只在 Windows 上编译；用到它们的代码必须在 `cfg(windows)` 下。
+- 只在 Windows 上有的模块（或子模块）用 `#[cfg_attr(not(windows), path = "<名字>_unsupported.rs")]`（目录模块用 `<目录>/unsupported.rs`）换成 Mac 上的空实现：保留同样的命令名和参数、`tauri_commands!` 清单，以及其他模块用到的函数；命令用 `crate::user_error::unsupported_commands!` 生成，返回 `platform.unsupported`；开关类命令写成空函数。Windows 上的原文件不为 Mac 改动。
+- 两个平台都要用的系统能力放在 `win32/` 和 `macos/` 的同名模块里，签名一致，业务代码写 `crate::platform::<模块>`。
+- 只在 Windows 上用到、Mac 上因此成了「未使用」的纯函数，用 `#[cfg(any(windows, test))]` 或 `#[cfg_attr(not(windows), allow(dead_code))]`；依赖 Windows 路径、程序或 API 的测试加 `#[cfg(windows)]`。
+- 改动后两个平台都要过 clippy：Windows 上照常跑；在 Mac 上跑 `cargo clippy --all-targets -- -D warnings` 和 `cargo test`，CI 的 `rust-macos` job 也会跑。在 Mac 上交叉检查 Windows：`brew install mingw-w64`、`rustup target add x86_64-pc-windows-gnu` 后 `cargo clippy --target x86_64-pc-windows-gnu --all-targets -- -D warnings`（只检查，不能运行测试）。
+
 ## unsafe 与 Windows API
 
-- **`unsafe` 只能写在 `win32/` 中**，对外暴露安全函数，参数尽量用 Rust 类型（`&str`、`u32`），不让调用方传裸指针。生产代码中 `win32/` 以外没有 `unsafe`；窗口过程实现 `win32::message_window::WindowMessages`，枚举窗口用 `win32::window::for_each_top_level_window` 的闭包。
+- **`unsafe` 只能写在 `win32/` 和 `macos/` 中**，对外暴露安全函数，参数尽量用 Rust 类型（`&str`、`u32`），不让调用方传裸指针。生产代码中这两个目录以外没有 `unsafe`；窗口过程实现 `win32::message_window::WindowMessages`，枚举窗口用 `win32::window::for_each_top_level_window` 的闭包。
 - `wechat_reminders/source.rs` 及它用到的 `win32/` 文件也被 `examples/wechat_reminder_probe.rs` 通过 `#[path]` 编译，这些文件只能依赖 `windows` crate，不能引用 crate 内其他模块。
 - `unsafe` 块不写 `// SAFETY:` 注释（代码不写注释，见根目录 AGENTS.md），前置条件靠 `win32/` 对外的安全函数签名保证，有特殊前提时写进提交说明。
 - 句柄、COM 对象等资源用 RAII 类型包装，在 `Drop` 中释放，不手动配对 close。

@@ -94,10 +94,12 @@ impl PluginCommand {
         &self.title
     }
 
+    #[cfg_attr(not(windows), allow(dead_code))]
     pub(super) fn keybinding(&self) -> Option<&str> {
         self.keybinding.as_deref()
     }
 
+    #[cfg_attr(not(windows), allow(dead_code))]
     pub(super) fn when(&self) -> Option<&str> {
         self.when.as_deref()
     }

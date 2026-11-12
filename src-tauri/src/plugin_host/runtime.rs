@@ -1,10 +1,10 @@
 use serde::Serialize;
 use serde_json::{json, Map, Value};
+use crate::system::CommandExt;
 use std::{
     collections::{BTreeSet, HashMap, VecDeque},
     ffi::OsString,
     io::{BufRead, BufReader, ErrorKind, Read},
-    os::windows::process::CommandExt,
     path::PathBuf,
     process::{Child, ChildStderr, ChildStdout, Command, Stdio},
     sync::{
@@ -25,7 +25,7 @@ pub use calls::CallRecord;
 pub use trace::TraceEntry;
 
 use super::{rpc, settings::InfoItem};
-use crate::{agent_status, system::CREATE_NO_WINDOW, win32::job::{self, Job, JobUsage}};
+use crate::{agent_status, platform::job::{self, Job, JobUsage}, system::CREATE_NO_WINDOW};
 use dispatch::{answer_request, initialize_params};
 use outbox::{Outbox, SendError};
 

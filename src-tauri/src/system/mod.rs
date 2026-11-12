@@ -1,7 +1,10 @@
 pub(crate) mod accent_color;
+mod command_flags;
 pub(crate) mod fullscreen;
+#[cfg_attr(not(windows), path = "network_cost_unsupported.rs")]
 pub(crate) mod network_cost;
 pub(crate) mod settings_backup;
+#[cfg_attr(not(windows), path = "startup_unsupported.rs")]
 pub(crate) mod startup;
 pub(crate) mod todo_export;
 pub(crate) mod update_channel;
@@ -11,8 +14,29 @@ pub(crate) mod updater;
 
 use std::{env, path::PathBuf};
 
-pub(crate) const CREATE_NO_WINDOW: u32 = 0x08000000;
+pub(crate) use command_flags::{CommandExt, CREATE_NO_WINDOW};
 
+#[cfg(windows)]
+pub(crate) fn downloads_dir() -> Option<PathBuf> {
+    crate::win32::known_folder::downloads()
+}
+
+#[cfg(not(windows))]
+pub(crate) fn downloads_dir() -> Option<PathBuf> {
+    windows_home_dir().ok().map(|home| home.join("Downloads"))
+}
+
+#[cfg(not(windows))]
+pub(crate) fn windows_home_dir() -> Result<PathBuf, String> {
+    env::var("HOME")
+        .ok()
+        .map(|home| home.trim().to_string())
+        .filter(|home| !home.is_empty())
+        .map(PathBuf::from)
+        .ok_or_else(|| "Failed to resolve the user home directory.".to_string())
+}
+
+#[cfg(windows)]
 pub(crate) fn windows_home_dir() -> Result<PathBuf, String> {
     if let Ok(user_profile) = env::var("USERPROFILE") {
         let user_profile = user_profile.trim();

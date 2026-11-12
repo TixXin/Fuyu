@@ -1,7 +1,6 @@
 use tauri::PhysicalPosition;
 
 use super::geometry::*;
-use super::passthrough::point_in_notch;
 use super::state::*;
 
 fn state(mode: IslandMode, scale: f64, expanded_height: f64) -> IslandWindowState {
@@ -258,6 +257,7 @@ fn an_update_heading_where_the_slide_ends_lets_it_finish() {
     assert!(!continues_slide(None, 7, (900, 12), false));
 }
 
+#[cfg(windows)]
 #[test]
 fn the_island_follows_only_when_asked_and_only_while_collapsed() {
     use super::follow::may_move;

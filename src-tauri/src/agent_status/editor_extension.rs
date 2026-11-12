@@ -1,7 +1,7 @@
+use crate::system::CommandExt;
 use std::{
     env, fs,
     io::{Cursor, Write},
-    os::windows::process::CommandExt,
     path::{Path, PathBuf},
     process::Command,
 };
