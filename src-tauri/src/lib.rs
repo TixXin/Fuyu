@@ -24,6 +24,7 @@ mod mail;
 mod qq_notifications;
 mod rename_migration;
 mod screenshot;
+mod settings_file;
 mod settings_window;
 mod ssh_tunnel;
 mod system;
@@ -197,6 +198,7 @@ pub fn run() {
             translation;
             screenshot;
             settings_window;
+            settings_file;
             onboarding_window;
             ssh_tunnel;
             phone_push;

@@ -23,6 +23,7 @@
 | `fuyu-position` | `windows/island/storage.ts` |
 | `fuyu-music-sources` | `features/media/storage.ts` |
 | `fuyu-settings-focus`（主窗口 → 设置窗口的跳转请求） | `windows/settings/storage.ts` |
+| `fuyu-settings-file-synced`（2026-11-12 起，D30.2：上次在 localStorage 和 `settings.json` 之间同步时设置的指纹，`settingsFile.ts` 的 `fingerprint`；不是设置，不进备份） | `features/settings-backup/storage.ts` |
 | `fuyu-screenshot-annotation`（截图标注上次用的颜色和粗细：`{ color, level }`，C41.3） | `features/screenshot/storage.ts` |
 | `fuyu-position-reset`（设置窗口 → 主窗口：让岛回到主屏顶部居中，`{ requestedAt }`，超过 5 秒的请求忽略） | `windows/settings/storage.ts` |
 | `fuyu-panel-preview`（设置窗口 → 主窗口：拖动尺寸滑块时让岛展开或收起预览，`{ mode, requestedAt }`，超过 2 秒的请求忽略） | `windows/settings/storage.ts` |
@@ -46,6 +47,7 @@
 | `fuyu-agent-seen-turns`（`{ "<provider>:<sessionId>": 轮次 }`：在 Agent 页看过的会话，轮次是这一轮的开始时间，卡在半路时是最后写入时间；重启岛屿后看过的不再提醒，最多 300 条） | `features/agent-status/unseen.ts` |
 | `fuyu-agent-session-filters`（`[{ kind: "folder" | "prompt", value }]`，最多 50 条：按所在目录（含子目录，不分大小写和斜杠方向）或标题 / 最近提示词包含的文字隐藏会话，B6.4.3；读取时丢掉格式不对、为空和重复的条目；设置备份包含它） | `features/agent-status/sessionFilters.ts` |
 | 设置备份文件（`fuyu-settings-<日期时间>.json`（改名前是 `fly-island-settings-*`），写到「下载」文件夹；`{ app: "fuyu"（改名前的文件是 "fly-island"，照样能导入，旧 key 名换成新的）, version: 1, exportedAt, keys }`，`keys` 只含 `features/settings-backup/backup.ts` 的 `BACKUP_KEYS`：不含待办、窗口位置、凭据和一次性请求；恢复时只写这些 key，未知 key 和非字符串值丢弃） | `features/settings-backup/` |
+| 设置文件 `settings.json`（2026-11-12 起，D30.2，#50；在数据目录 `home_dir::fuyu_home()` 下，现在即 `%APPDATA%\com.tixxin.fuyu`）：格式和设置备份文件相同，`keys` 是 `BACKUP_KEYS` 的当前值。localStorage 仍是各页面读写的地方，旧 key 照常写；主窗口在设置变化时（其他窗口改的立刻、自己改的 2 秒内）整份写入。每个窗口渲染前读一次：文件的指纹和 `fuyu-settings-file-synced` 不同（被手动改过或从别处拿来）就把文件里的值写进 localStorage，相同就以 localStorage 为准。Tauri 命令 `read_settings_file`（无参数，返回文本或 null）、`write_settings_file`（`text`，只接受这个格式，最大 4 MB，先写临时文件再改名） | `src-tauri/src/settings_file.rs`、`features/settings-backup/settingsFile.ts` |
 | 外观主题文件（2026-11-08 起；`fuyu-theme-<日期时间>.json`（改名前是 `fly-island-theme-*`），写到「下载」文件夹，和设置备份共用命令 `save_settings_backup`，Rust 端按文件名前缀和内容放行；`{ app: "fuyu"（改名前是 "fly-island"，照样能导入）, kind: "theme", version: 1, name, exportedAt, appearance }`，`appearance` 只含 `features/appearance/settings.ts` 的 `THEME_SETTING_KEYS`（风格、字体、透明度、玻璃强度、圆角、颜色；2026-11-10 起，C26）；2026-11-10 之前写出的文件还带尺寸和显示开关（`collapsedScale`、`expandedScale`、`maxPanelHeight`、`panelWidth`、`showTitle`、`showCollapsedText`），版本号不变，导入时忽略这些字段；导入时只读主题字段，叠在当前设置上经 `normalizeSettings` 校验后存成一个新的样式预设，不自动应用） | `features/appearance/theme.ts` |
 | `fuyu-translation-handoff`（主窗口 → 翻译窗口：选中文字的快捷翻译结果 `{ source, output, requestedAt, openRequestedAt }`；点击岛上那一行后 5 秒内打开才会带入，结果超过 60 秒忽略） | `features/translation/storage.ts` |
 | `fuyu-locale` | `i18n/index.ts` |

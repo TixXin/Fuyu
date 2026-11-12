@@ -59,6 +59,7 @@ import { PluginPageButtons } from "./PluginPageButtons";
 import { useCollapsedSlots } from "./useCollapsedSlots";
 import { useTrayLanguage } from "./useTrayLanguage";
 import { useFirstRunGuide } from "./useFirstRunGuide";
+import { useSettingsFileSync } from "../../features/settings-backup/useSettingsFileSync";
 import { useOnboardingDemo, withDemoMedia } from "./useOnboardingDemo";
 import { useIslandLyrics } from "./useIslandLyrics";
 // Must stay the last import: IslandApp.css overrides the feature styles above.
@@ -75,6 +76,8 @@ const NO_TODOS: TodoItem[] = [];
 export function IslandApp() {
   const t = useTranslation();
   useTrayLanguage();
+  // Copies the settings into settings.json in the data folder when they change (D30.2).
+  useSettingsFileSync();
   const navigation = useIslandNavigation();
   const { mode, isTucked, page, setPage, collapseIsland, tuckIsland, revealIsland, minimizeToEdge, openIslandPage, toggleClipboardHistory } = navigation;
   const pluginPages = usePluginPages(page);

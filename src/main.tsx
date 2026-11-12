@@ -14,6 +14,7 @@ import { ScreenshotOverlay } from "./windows/screenshot/ScreenshotOverlay";
 import { PinWindow } from "./windows/screenshot/PinWindow";
 import { OnboardingWindow } from "./windows/onboarding/OnboardingWindow";
 import { I18nProvider } from "./i18n";
+import { loadSettingsFile } from "./features/settings-backup/loadSettingsFile";
 import { trackIslandTopEdge } from "./windows/island/topEdge";
 
 const windowKind = new URLSearchParams(window.location.search).get("window");
@@ -40,7 +41,8 @@ window.addEventListener(
   true,
 );
 
-ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
+// Settings changed in settings.json go into localStorage before anything reads them (D30.2).
+void loadSettingsFile().then(() => ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
     <I18nProvider>
       {windowKind === "translation" ? (
@@ -62,4 +64,4 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
       )}
     </I18nProvider>
   </React.StrictMode>,
-);
+));
