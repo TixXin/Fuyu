@@ -61,7 +61,7 @@
 | 安装依赖 | `pnpm install` |
 | 前端开发服务器 | `pnpm dev` |
 | 桌面开发模式 | `pnpm tauri dev`（主工作区，用户自己跑） |
-| lane 的预览岛屿 | `pnpm dev:lane`（在 lane 里运行，和用户的岛屿并排，见下文）；`pnpm dev:lane:center` 让预览岛屿像正式安装那样停在屏幕顶部正中 |
+| lane 的预览岛屿 | `pnpm dev:lane`（在 lane 里运行，和用户的岛屿并排，见下文）；`pnpm dev:lane:center` 让预览岛屿像正式安装那样停在屏幕顶部正中；`pnpm dev:lane:fresh`（`--center --fresh`）先删掉这个预览自己的数据，像新装一样启动（会弹新手引导） |
 | 类型检查并构建前端 | `pnpm build` |
 | 前端单元测试 | `pnpm test`（即 `node --test "tests/**/*.test.mjs" "packages/*/test/**/*.test.mjs"`） |
 | 前端静态检查 | `pnpm lint`（ESLint，配置见 `eslint.config.js`） |
@@ -165,7 +165,7 @@
   - 在 lane 里开发、验证、提交。验证用 `pnpm verify`（和 land 时跑的检查相同：`pnpm check`，改到 Rust 相关文件时加 `cargo test`；只改 Markdown 文档时只跑文档检查）；通过的代码树会被记住，land 时同一棵树不再重跑。一个功能单元完成并提交后，在 lane 里运行 `pnpm mq:land`，不用问用户。它会排队、rebase 到 `origin/main`、跑 `scripts/land-check.mjs`（`pnpm check`，改到 Rust 相关文件时再加 `cargo test`），然后推送 `origin/main`，并把主工作区快进到新的 `main`。land 成功后会自动把 fork 的 `dev` 推到同一提交（旧版本岛屿从 `dev` 读插件市场），结果记在 `.git/land-sync-dev.log`。
   - land 失败不算完成：rebase 冲突时它会自动中止，自己 `git fetch origin main && git rebase origin/main` 解决冲突后重新 land；检查失败就修好再 land。如果输出里已经有 `landed`，只是后面的快进主工作区失败了，不要重复 land，在主工作区运行 `pnpm mq:sync`。
   - `release` 可执行文件构建（`pnpm build:exe`）不在队列里，按"验证"一节在 land 之后另外做；它会同步桌面快捷方式，多个 lane 同时构建时后来的会等前一个做完（`target/release/.build-exe.lock`）。不要为了构建让用户关掉岛屿或 dev：`build:exe` 会把正在运行的 exe 改名挪开再写新的（Windows 允许改名正在运行的 exe），下次启动就是新版本。
-  - **预览**：用户想看某个 lane 的效果时，在那个 lane 里运行 `pnpm dev:lane`。它起一个和用户的岛屿并排的预览岛屿：Vite 端口 1500+lane 编号，应用标识 `com.tixxin.fuyu.lane-<N>`（数据、WebView 存储、单实例都和用户的分开，开始时没有数据），不注册 focusd:// 链接，不能改开机自启，也不能安装 AI 代理状态 hook。预览岛屿默认放在屏幕左侧四分之一处，不压住用户的岛；要看正式位置的效果（例如新手引导）用 `pnpm dev:lane:center`，它停在顶部正中，会和用户的岛叠在一起。不要在 lane 里直接跑 `pnpm tauri dev`：它会先关掉所有正在运行的岛屿，还要占用主工作区的 1420 端口。只看界面时也可以起 lane 的 Vite，打开 `tests/regression/*.html`。
+  - **预览**：用户想看某个 lane 的效果时，在那个 lane 里运行 `pnpm dev:lane`。它起一个和用户的岛屿并排的预览岛屿：Vite 端口 1500+lane 编号，应用标识 `com.tixxin.fuyu.lane-<N>`（数据、WebView 存储、单实例都和用户的分开，开始时没有数据），不注册 focusd:// 链接，不能改开机自启，也不能安装 AI 代理状态 hook。预览岛屿默认放在屏幕左侧四分之一处，不压住用户的岛；要看正式位置的效果（例如新手引导）用 `pnpm dev:lane:center`，它停在顶部正中，会和用户的岛叠在一起。预览的数据跑过一次就留着，再看新装的效果（新手引导）加 `--fresh` 或用 `pnpm dev:lane:fresh`，它只删 `%APPDATA%` 和 `%LOCALAPPDATA%` 下 `com.tixxin.fuyu.lane-<N>` 两个文件夹，要先关掉正在跑的预览。不要在 lane 里直接跑 `pnpm tauri dev`：它会先关掉所有正在运行的岛屿，还要占用主工作区的 1420 端口。只看界面时也可以起 lane 的 Vite，打开 `tests/regression/*.html`。
   - 主工作区留给用户（例如运行 `pnpm tauri dev`），必须保持干净并停在 `main` 上，代理不要在里面改文件或提交。`main` 只通过 land 或在 GitHub 上合入 PR 移动，不手动推送：`.githooks/pre-push`（`git config core.hooksPath .githooks`）会拒绝直接推送 `main`，紧急情况才设 `CLAUDE_CODE_MERGE_QUEUE_EMERGENCY_PUSH=1`。
   - **外部 PR 例外**（协作者的 PR 由仓库管理员来合时也一样）：别人提的 PR 不走 land。land 推送前会 rebase，PR 的提交号随之改变，GitHub 认不出 PR 已合并（#10 就是这样，只能手动关闭）。做法：
     1. 在 lane 里 `git fetch origin pull/<编号>/head:pr-<编号>`，用 `git merge --no-ff pr-<编号>` 合到最新的 `origin/main` 上，跑 `pnpm check`、`cargo test`、clippy 和 `pnpm test:regression`（范围按「验证」一节）。这一步只用来检查，lane 里的合并提交不推送。

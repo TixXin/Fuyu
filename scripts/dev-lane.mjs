@@ -11,8 +11,10 @@
 // It starts with empty data; the user's island keeps running. It sits on the left quarter of
 // the screen so it does not cover the user's island; `--center` (`pnpm dev:lane:center`) puts it
 // at the top centre like a real install, e.g. to check the first-run guide where users see it.
+// `--fresh` deletes the preview's own data first (its app data folder and WebView storage), so it
+// starts like a new install again and opens the first-run guide; the user's data is not touched.
 import { spawn } from "node:child_process";
-import { writeFileSync } from "node:fs";
+import { rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -30,6 +32,28 @@ export function previewConfig(port) {
   };
 }
 
+/**
+ * The preview's own data: its app data folder (todos, clipboard, plugins) and its WebView storage
+ * (localStorage, where the island's settings are). Only folders named after the preview's identifier.
+ */
+export function previewDataDirs(identifier, env = process.env) {
+  if (!identifier.startsWith("com.tixxin.fuyu.lane-")) throw new Error(`Not a lane preview: ${identifier}`);
+  return [env.APPDATA, env.LOCALAPPDATA].filter(Boolean).map((base) => path.join(base, identifier));
+}
+
+/** Deletes the preview's data so it starts like a new install; false when the preview is still running. */
+function clearPreviewData(identifier) {
+  for (const dir of previewDataDirs(identifier)) {
+    try {
+      rmSync(dir, { recursive: true, force: true });
+    } catch (error) {
+      console.error(`[dev:lane] Could not delete ${dir} (${error.code ?? error}). Close the running preview first (its tray icon, or Ctrl+C).`);
+      return false;
+    }
+  }
+  return true;
+}
+
 function main() {
   const root = process.cwd();
   const lane = laneNumber(root);
@@ -39,6 +63,10 @@ function main() {
   }
   const preview = lanePreview(mainCheckout(root), lane);
   const centred = process.argv.includes("--center");
+  if (process.argv.includes("--fresh")) {
+    if (!clearPreviewData(preview.identifier)) return Promise.resolve(1);
+    console.log(`[dev:lane] --fresh: deleted ${preview.identifier}'s data; it starts like a new install.`);
+  }
   const configFile = path.join(tmpdir(), `fly-island-lane-${lane}.tauri.json`);
   writeFileSync(configFile, JSON.stringify(previewConfig(preview.port)));
   console.log(`[dev:lane] lane ${lane}: ${preview.identifier}, Vite on ${preview.port}, exe in ${preview.target}, compiling in ${preview.buildDir}${centred ? ", at the top centre" : ""}`);
