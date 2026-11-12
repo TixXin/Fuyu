@@ -4,6 +4,10 @@
 
 npm 包 `fuyu-plugin` 和 `create-fuyu-plugin` 的版本单独标在括号里。
 
+## 下一版
+
+- **收起条上的饼图**：`status.update` 多了 `pie`（最多 4 块 `{ value, tone? }`，按占比画成小饼），能力 `statusPie`。SDK：Node `StatusOptions.pie`、PowerShell `Update-FuyuStatus -Pie`，模拟宿主会校验。见 [岛上界面 · 饼图](ui.md#饼图)。
+
 ## 0.3.6
 
 - **安装链接**：`fuyu://market/install/<插件 id>` 打开插件市场并把这个插件置顶，官网插件页的「在浮屿中安装」按钮用的就是它，作者也可以放进 README。链接不会直接安装，用户照常确认。见 [发布 · 安装链接](publish.md#安装链接)。

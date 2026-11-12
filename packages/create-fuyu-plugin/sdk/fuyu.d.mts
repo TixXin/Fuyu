@@ -135,6 +135,14 @@ export interface StatusBattery {
   tone?: Tone;
 }
 
+/** One slice of the pie on the collapsed bar (capability `statusPie`). */
+export interface StatusSlice {
+  /** 0 or more; the slice's share of the pie is its value over the sum of all values. */
+  value: number;
+  /** Without one the slice takes its place's color (green, orange, blue, magenta: running, waiting, finishing, other). */
+  tone?: Tone;
+}
+
 export interface StatusOptions {
   tooltip?: string;
   tone?: Tone;
@@ -144,6 +152,8 @@ export interface StatusOptions {
   ring?: number;
   /** At most 4 upright batteries, drawn instead of the text and cells (capability `statusBatteries`); older islands show the text. */
   batteries?: StatusBattery[];
+  /** At most 4 slices of a small pie, drawn instead of the text and cells (capability `statusPie`); batteries win when both are set, older islands show the text. */
+  pie?: StatusSlice[];
 }
 
 /** What `views.patch` changes in a list page. */

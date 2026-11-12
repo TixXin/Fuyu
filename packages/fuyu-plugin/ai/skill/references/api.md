@@ -27,7 +27,7 @@ No permission: `host.info`, `host.keepAlive`, `settings.get`, `settings.set`, `u
 
 `initialize { apiVersion, capabilities, activationEvent?, appVersion, pluginId, dataDir, permissions, optionalPermissions?, settings }`, `command { id, args? }`, `settings.changed { settings }`, `event { name, payload }`, `notification.action { id }`, `uri { uri, path, query }`, `view.visible { viewId, visible }`, `view.action { viewId, actionId, itemId?, checked? }`, `view.submit { viewId, values }`, `view.search { viewId, query }`, `webview.message { viewId, message }`, `shutdown {}` (then stdin closes; the process is ended 2 s later).
 
-Check `initialize.capabilities` before newer features (`views`, `status`, `statusCells`, `statusBatteries`, `notifyStyle`, `permissions`, `openView`, `webview`...); fields older islands don't know are ignored, so extra fields are safe.
+Check `initialize.capabilities` before newer features (`views`, `status`, `statusCells`, `statusBatteries`, `statusPie`, `notifyStyle`, `permissions`, `openView`, `webview`...); fields older islands don't know are ignored, so extra fields are safe.
 
 ## Node SDK (`lib/fuyu.mjs`)
 
@@ -46,7 +46,7 @@ plugin.onSettingsChanged((settings) => { /* ... */ });
 async function show() {
   await plugin.views.update("main", { items: [{ id: "1", title: { "zh-CN": "一项", en: "An item" }, checked: false }] });
 }
-// Also: plugin.status.update(id, text, { tooltip, tone, cells, ring, batteries }), plugin.notify(title, { body, actions }),
+// Also: plugin.status.update(id, text, { tooltip, tone, cells, ring, batteries, pie }), plugin.notify(title, { body, actions }),
 // plugin.storage.get/set/delete/keys, plugin.secrets.*, plugin.todos.*, plugin.note.*, plugin.clipboard.history(),
 // plugin.media.*, plugin.shelf.*, plugin.permissions.request/has, plugin.keepAlive(reason), plugin.setInfo(items),
 // plugin.setSettings(values), plugin.openView(id), plugin.call(method, params) for anything else.

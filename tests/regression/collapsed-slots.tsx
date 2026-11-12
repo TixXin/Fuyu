@@ -243,6 +243,18 @@ async function runChecks() {
     check(new Set(batteries.map((battery) => getComputedStyle(battery).color)).size === 4, "相邻的电池颜色不同，电量低的是黄色和红色");
     check(chip().getAttribute("aria-label") === `${STATUS.text} · PC 100% / 耳机 30%` && chip().title === "PC 100% / 耳机 30%", "电池的读屏名称和悬停提示来自文字和 tooltip");
     check(chip().getBoundingClientRect().right <= bar().getBoundingClientRect().right && bar().scrollWidth <= bar().clientWidth + 1, "四个电池不撑出收起条");
+    const slices = [{ value: 6, tone: "neutral" }, { value: 2, tone: "neutral" }, { value: 0, tone: "neutral" }, { value: 1, tone: "danger" }] as const;
+    await set({ status: [{ ...STATUS, cells: [...cells], pie: [...slices], tooltip: "R 6 · PD 2 · CG 0 · 其他 1" }] });
+    const pie = chip().querySelector<SVGSVGElement>(".plugin-status-chip__pie");
+    const wedges = [...chip().querySelectorAll<SVGPathElement>(".plugin-status-chip__slice")];
+    check(pie !== null && !chip().querySelector(".plugin-status-chip__cell, .plugin-status-chip__text, .plugin-status-chip__battery"), "有饼图时画饼，不显示文字、列和电池");
+    check(wedges.length === 4 && wedges[2].getAttribute("d") === "" && wedges[0].getBBox().width > wedges[3].getBBox().width, "饼的每块按数值占比，0 的那块不画但保留位置");
+    check(new Set([wedges[0], wedges[1], wedges[3]].map((wedge) => getComputedStyle(wedge).color)).size === 3, "饼的各块颜色不同，danger 是红色");
+    check(Math.abs(pie!.getBoundingClientRect().height - 16) < 1 && chip().title === "R 6 · PD 2 · CG 0 · 其他 1", "饼和进度环一样大，悬停提示来自 tooltip");
+    await set({ status: [{ ...STATUS, pie: [{ value: 0, tone: "neutral" }] }] });
+    check(chip().querySelector(".plugin-status-chip__pie-empty") !== null && !chip().querySelector(".plugin-status-chip__slice"), "全为 0 时画一个空灰圈");
+    await set({ status: [{ ...STATUS, pie: [...slices], batteries: [...levels] }] });
+    check(chip().querySelectorAll(".plugin-status-chip__battery").length === 4 && !chip().querySelector(".plugin-status-chip__pie"), "同时给电池和饼时画电池");
     await set({ status: [], task: null });
 
     await act(async () => createRoot(rings).render(<>

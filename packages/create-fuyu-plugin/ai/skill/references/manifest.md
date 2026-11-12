@@ -60,6 +60,6 @@ All text fields take a string or `{ "zh-CN", "en" }`.
 
 Models up to 256 KB; at most 10 shown updates per second per view.
 
-## Status (`status.update { itemId, text, tooltip?, tone?, cells?, ring?, batteries? }`)
+## Status (`status.update { itemId, text, tooltip?, tone?, cells?, ring?, batteries?, pie? }`)
 
-`text` required, max 24 chars, `""` clears. `cells`: up to 4 `{ label (6), value (8), tone? }`; `ring`: 0-1; `batteries`: up to 4 `{ level, tone? }`. Older islands show `text` only, so always send it.
+`text` required, max 24 chars, `""` clears. `cells`: up to 4 `{ label (6), value (8), tone? }`; `ring`: 0-1; `batteries`: up to 4 `{ level, tone? }`; `pie`: up to 4 `{ value (>= 0), tone? }` slices sized by their share of the total (batteries win when both are set). Older islands show `text` only, so always send it.

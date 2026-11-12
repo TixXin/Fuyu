@@ -133,16 +133,50 @@
   color: color-mix(in srgb, #e86aa6 72%, rgb(var(--island-ink-rgb, 241, 240, 246)));
 }
 
-.plugin-status-chip__battery--accent {
+.plugin-status-chip__battery--accent,
+.plugin-status-chip__slice--accent {
   color: var(--info-text, rgba(190, 232, 255, 0.95));
 }
 
-.plugin-status-chip__battery--warning {
+.plugin-status-chip__battery--warning,
+.plugin-status-chip__slice--warning {
   color: var(--color-warning);
 }
 
-.plugin-status-chip__battery--danger {
+.plugin-status-chip__battery--danger,
+.plugin-status-chip__slice--danger {
   color: color-mix(in srgb, #f0425c 72%, rgb(var(--island-ink-rgb, 241, 240, 246)));
+}
+
+.plugin-status-chip__pie {
+  flex: 0 0 auto;
+  display: block;
+}
+
+.plugin-status-chip__slice {
+  fill: currentColor;
+}
+
+.plugin-status-chip__slice--neutral:nth-child(4n + 1) {
+  color: var(--pie-1);
+}
+
+.plugin-status-chip__slice--neutral:nth-child(4n + 2) {
+  color: var(--pie-2);
+}
+
+.plugin-status-chip__slice--neutral:nth-child(4n + 3) {
+  color: var(--pie-3);
+}
+
+.plugin-status-chip__slice--neutral:nth-child(4n) {
+  color: var(--pie-4);
+}
+
+.plugin-status-chip__pie-empty {
+  fill: none;
+  stroke: rgba(var(--island-ink-rgb, 241, 240, 246), 0.35);
+  stroke-width: 1.5;
 }
 
 .plugin-status-chip:disabled {
