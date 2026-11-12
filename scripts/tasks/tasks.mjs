@@ -3,7 +3,7 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { laneNumber, mainCheckout } from "../build-dirs.mjs";
-import { claudePid, recordOwner } from "../lanes/laneRegistry.mjs";
+import { currentSession, recordOwner } from "../lanes/laneRegistry.mjs";
 import { boardLines, blockers, index, jsonRows, nextLines, relationLines } from "./taskBoard.mjs";
 import {
   CLOSED_STATUSES, OPEN_STATUSES, addLine, claimState, claimed, filesInScope, formatTask, isTaskId,
@@ -39,7 +39,8 @@ function run(command, args) {
 function checkInLane(main, lane, name) {
   if (!lane) return;
   try {
-    recordOwner(main, lane, { pid: claudePid(), name: name || null });
+    const me = currentSession();
+    recordOwner(main, lane, { pid: me.pid, session: me.session, name: name || me.name });
   } catch {
   }
 }

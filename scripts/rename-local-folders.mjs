@@ -105,6 +105,7 @@ const NEXT_STEPS = [
   "在新的主工作区跑 pnpm build:exe（桌面快捷方式改指新路径；Rust 会全量重编一次）",
   "Orca / VS Code / magpie 里的工作区路径改成新文件夹，从新文件夹开会话",
   "岛上的任务看板插件：设置里的仓库目录改成新路径",
+  "~/.claude/settings.json 里 SessionStart / SessionEnd 的 lane 钩子（scripts/lanes/session-*.mjs）改成新路径",
   "新会话里更新记忆中写着旧路径的条目",
 ];
 

@@ -2,6 +2,23 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { mainCheckout } from "../build-dirs.mjs";
 import { laneOf } from "./laneRegistry.mjs";
+import { listLanes } from "./lanePool.mjs";
+
+export function strandedFrom(lanes) {
+  return lanes
+    .filter((lane) => lane.work && lane.owner?.alive !== true && !lane.task && !lane.users?.length)
+    .map((lane) => `⚠ lane ${lane.lane}（${lane.branch ?? "?"}）有没合入的工作（${lane.work}），登记的会话${lane.owner?.name ? ` ${lane.owner.name}` : ""}已经不在。问用户怎么处理，不要删。`);
+}
+
+export function strandedLines(main) {
+  return strandedFrom(listLanes(main, {}, { probe: false }));
+}
+
+function inRepo(main, cwd) {
+  if (laneOf(main, cwd) !== null) return true;
+  const relative = path.relative(path.resolve(main), path.resolve(cwd));
+  return !relative.startsWith("..") && !path.isAbsolute(relative);
+}
 
 export function hintFor(main, cwd) {
   if (laneOf(main, cwd) !== null) return null;
@@ -29,8 +46,11 @@ async function main() {
     cwd = process.cwd();
   }
   try {
-    const hint = hintFor(mainCheckout(cwd), cwd);
+    const main = mainCheckout(path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", ".."));
+    if (!inRepo(main, cwd)) return;
+    const hint = hintFor(main, cwd);
     if (hint) console.log(hint);
+    for (const line of strandedLines(main)) console.log(line);
   } catch {
     return;
   }

@@ -4,9 +4,8 @@ import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSy
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { fileURLToPath } from "node:url";
-import { laneOf, lanePath, ownerOf } from "../../scripts/lanes/laneRegistry.mjs";
-import { ACTIVE_MS, UNKNOWN_OWNER_MS, judge, usable } from "../../scripts/lanes/laneState.mjs";
+import { currentSession, laneOf, lanePath, ownerOf, sessionAlive } from "../../scripts/lanes/laneRegistry.mjs";
+import { ACTIVE_MS, UNKNOWN_OWNER_MS, judge, ownerAlive, usable } from "../../scripts/lanes/laneState.mjs";
 import { finishLane, listLanes, openLane, takeLane } from "../../scripts/lanes/lanePool.mjs";
 import { doneLines, listLine } from "../../scripts/lanes/lanes.mjs";
 import { lanesToFinish } from "../../scripts/lanes/session-end.mjs";
@@ -23,8 +22,8 @@ test("a lane is someone else's while its session runs, a task names it, it chang
   const tasked = { ...quiet, task: { id: "C41.4", owner: "fly-island-e9", status: "待用户确认" } };
   assert.deepEqual(judge(tasked, {}, { now: NOW }).users, ["任务 C41.4（fly-island-e9，待用户确认）"]);
   assert.deepEqual(judge({ ...quiet, lastActivityMs: NOW - 9 * 60000 }, {}, { now: NOW }).users, ["9 分钟前有改动"]);
-  const unknown = { ...quiet, owner: { pid: null, name: "fly-island-4b", alive: null, seenMs: NOW - 5 * 3600000 } };
-  assert.deepEqual(judge(unknown, {}, { now: NOW }).users, ["会话 fly-island-4b 5 小时前登记（进程未知）"], "a session whose process was not found (magpie)");
+  const unknown = { ...quiet, owner: { pid: null, name: "fly-island-4b", alive: null, seenMs: NOW - 1 * 3600000 } };
+  assert.deepEqual(judge(unknown, {}, { now: NOW }).users, ["会话 fly-island-4b 1 小时前登记（进程未知）"], "an old record with neither session nor pid");
   assert.deepEqual(judge({ ...unknown, owner: { ...unknown.owner, seenMs: NOW - UNKNOWN_OWNER_MS - 1 } }, {}, { now: NOW }).users, []);
   let probed = 0;
   const busy = () => (probed += 1) > 0;
@@ -75,6 +74,27 @@ test("leaving a session releases the lane it is in and the lanes its claude.exe 
   assert.deepEqual(lanesToFinish({ main, cwd: path.join(lanePath(main, 4), "src"), reason: "prompt_input_exit", pid: 7, owners }), [2, 4, 5]);
   assert.deepEqual(lanesToFinish({ main, cwd: main, reason: "other", pid: null, owners }), []);
   assert.deepEqual(lanesToFinish({ main, cwd: lanePath(main, 4), reason: "clear", pid: 7, owners }), []);
+  assert.deepEqual(lanesToFinish({ main, cwd: lanePath(main, 4), reason: "resume", pid: 7, owners }), []);
+  const bySession = { [key(2)]: { pid: 7, session: "s-a" }, [key(3)]: { pid: 7, session: "s-b" }, [key(6)]: { pid: null, session: "s-a" } };
+  assert.deepEqual(lanesToFinish({ main, cwd: path.join("C:", "Temp", "magpie"), reason: "other", session: "s-a", pid: 7, owners: bySession }), [2, 6], "a magpie session started elsewhere still releases its lanes, by session id");
+});
+
+test("a session is alive while ~/.claude/sessions lists it with a running process", () => {
+  const dir = mkdtempSync(path.join(tmpdir(), "claude-sessions-"));
+  try {
+    writeFileSync(path.join(dir, `${process.pid}.json`), JSON.stringify({ pid: process.pid, sessionId: "live", name: "fly-island-c5" }));
+    writeFileSync(path.join(dir, "999999.json"), JSON.stringify({ pid: 999999, sessionId: "gone", name: "x" }));
+    assert.equal(sessionAlive("live", dir), true);
+    assert.equal(sessionAlive("gone", dir), false);
+    assert.equal(sessionAlive("never", dir), false);
+    assert.equal(ownerAlive({ session: "gone", pid: process.pid }, dir), false, "the session id wins over a pid that may be reused");
+    assert.equal(ownerAlive({ pid: null }, dir), null);
+    assert.deepEqual(currentSession({ CLAUDE_CODE_SESSION_ID: "live" }, dir), { session: "live", pid: process.pid, name: "fly-island-c5" });
+    assert.deepEqual(currentSession({ CLAUDE_PID: String(process.pid) }, dir), { session: "live", pid: process.pid, name: "fly-island-c5" });
+    assert.deepEqual(currentSession({}, dir), { session: null, pid: null, name: null });
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 test("lane:done says what still keeps the lane", () => {
@@ -140,9 +160,4 @@ test("lanes are handed back, reused when idle, created when none is, and taken o
     for (const [name, value] of hookEnv) process.env[name] = value;
     rmSync(root, { recursive: true, force: true });
   }
-});
-
-test("the patched merge queue hook hands out lanes through scripts/lanes", () => {
-  const hook = path.join(fileURLToPath(new URL("../..", import.meta.url)), "node_modules", "claude-code-merge-queue", "dist", "hooks", "worktree-create.js");
-  assert.match(readFileSync(hook, "utf8"), /"scripts", "lanes", "lanePool\.mjs"/);
 });

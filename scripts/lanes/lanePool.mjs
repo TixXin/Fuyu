@@ -74,10 +74,10 @@ function createLane(main, mainHead) {
   throw new Error(`no free lane number up to ${MAX_LANE}`);
 }
 
-export function openLane({ main, fromCwd = null, pid = null, name = null, install = true, now = Date.now() }) {
+export function openLane({ main, fromCwd = null, pid = null, name = null, session = null, install = true, now = Date.now() }) {
   const picked = withPoolLock(main, () => {
     const mainHead = git(["rev-parse", "HEAD"], main);
-    const requester = { pid, name, fromLane: laneOf(main, fromCwd) };
+    const requester = { pid, name, session, fromLane: laneOf(main, fromCwd) };
     const lanes = listLanes(main, requester, { now, probe: false });
     const order = [...lanes.filter((lane) => lane.mine && lane.lane === requester.fromLane), ...lanes.filter((lane) => lane.mine), ...lanes];
     for (const lane of order) {
@@ -85,11 +85,11 @@ export function openLane({ main, fromCwd = null, pid = null, name = null, instal
       if (!lane.mine && folderBusy(lane.wt)) continue;
       const branch = `${BRANCH_PREFIX}${lane.lane}`;
       if (tryGit(["checkout", "-q", "-B", branch, mainHead], lane.wt) === null) continue;
-      recordOwner(main, lane.lane, { pid, name });
+      recordOwner(main, lane.lane, { pid, name, session });
       return { lane: lane.lane, wt: lane.wt, branch, reused: true };
     }
     const created = createLane(main, mainHead);
-    recordOwner(main, created.lane, { pid, name });
+    recordOwner(main, created.lane, { pid, name, session });
     return created;
   });
   if (install) {
@@ -102,12 +102,12 @@ export function openLane({ main, fromCwd = null, pid = null, name = null, instal
   return picked;
 }
 
-export function takeLane(main, lane, { pid = null, name = null, force = false, now = Date.now() }) {
+export function takeLane(main, lane, { pid = null, name = null, session = null, force = false, now = Date.now() }) {
   return withPoolLock(main, () => {
-    const entry = listLanes(main, { pid, name }, { now }).find((item) => item.lane === lane);
+    const entry = listLanes(main, { pid, name, session }, { now }).find((item) => item.lane === lane);
     if (!entry?.worktree) throw new Error(`lane ${lane} 不存在或不是 worktree`);
     if (entry.users.length && !force) throw new Error(`lane ${lane} 有人在用：${entry.users.join("；")}。确认对方已经不用了再加 --force`);
-    recordOwner(main, lane, { pid, name });
+    recordOwner(main, lane, { pid, name, session });
     return entry;
   });
 }

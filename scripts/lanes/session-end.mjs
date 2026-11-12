@@ -1,19 +1,26 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { mainCheckout } from "../build-dirs.mjs";
-import { claudePid, laneOf, lanePath, readOwners } from "./laneRegistry.mjs";
+import { laneOf, lanePath, readOwners } from "./laneRegistry.mjs";
 import { finishLane } from "./lanePool.mjs";
 
-export function lanesToFinish({ main, cwd, reason, pid, owners }) {
-  if (reason === "clear") return [];
+const KEEP_REASONS = new Set(["clear", "resume"]);
+
+export function scriptMain(scriptFile = fileURLToPath(import.meta.url)) {
+  return mainCheckout(path.resolve(path.dirname(scriptFile), "..", ".."));
+}
+
+export function lanesToFinish({ main, cwd, reason, session = null, pid = null, owners }) {
+  if (KEEP_REASONS.has(reason)) return [];
   const lanes = new Set();
-  const current = laneOf(main, cwd);
+  const current = cwd ? laneOf(main, cwd) : null;
   if (current) lanes.add(current);
-  if (pid) {
-    for (const [key, owner] of Object.entries(owners)) {
-      const lane = laneOf(main, key);
-      if (lane && owner?.pid === pid && key === path.resolve(lanePath(main, lane)).toLowerCase()) lanes.add(lane);
-    }
+  for (const [key, owner] of Object.entries(owners)) {
+    const lane = laneOf(main, key);
+    if (!lane || key !== path.resolve(lanePath(main, lane)).toLowerCase()) continue;
+    const bySession = Boolean(session && owner?.session === session);
+    const byPid = Boolean(!owner?.session && pid && owner?.pid === pid);
+    if (bySession || byPid) lanes.add(lane);
   }
   return [...lanes].sort((a, b) => a - b);
 }
@@ -31,10 +38,17 @@ async function main() {
   } catch {
     input = {};
   }
-  const cwd = input.cwd ?? process.cwd();
   try {
-    const root = mainCheckout(cwd);
-    for (const lane of lanesToFinish({ main: root, cwd, reason: input.reason, pid: claudePid(), owners: readOwners(root) })) {
+    const root = scriptMain();
+    const lanes = lanesToFinish({
+      main: root,
+      cwd: input.cwd ?? null,
+      reason: input.reason,
+      session: input.session_id ?? process.env.CLAUDE_CODE_SESSION_ID ?? null,
+      pid: Number(process.env.CLAUDE_PID) || null,
+      owners: readOwners(root),
+    });
+    for (const lane of lanes) {
       const result = finishLane(root, lane);
       console.error(result.released ? `[lanes] lane ${lane} 已释放` : `[lanes] lane ${lane} 有没合入的工作，保留：${result.problems.join("；")}`);
     }

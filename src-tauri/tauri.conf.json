@@ -106,7 +106,7 @@
   "bundle": {
     "active": true,
     "targets": "all",
-    "homepage": "https://fuyu.tix.xin",
+    "homepage": "https://fuyu.ing",
     "windows": {
       "nsis": {
         "template": "windows/installer.nsi",
