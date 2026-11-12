@@ -13,6 +13,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { lanePreview, laneNumber, mainCheckout } from "./build-dirs.mjs";
+import { backgroundBuildEnv } from "./build-load.mjs";
 
 /** The `tauri dev --config` override for a preview on `port`. */
 export function previewConfig(port) {
@@ -40,7 +41,8 @@ function main() {
   const child = spawn(`pnpm tauri dev --config "${configFile}"`, {
     shell: true,
     stdio: "inherit",
-    env: { ...process.env, CARGO_TARGET_DIR: preview.target, FOCUSD_DEV_LANE: String(lane) },
+    // Fewer rustc jobs, but normal priority: the user is watching this preview.
+    env: { ...process.env, CARGO_TARGET_DIR: preview.target, FOCUSD_DEV_LANE: String(lane), ...backgroundBuildEnv() },
   });
   return new Promise((resolve) => child.on("exit", (code) => resolve(code ?? 1)));
 }

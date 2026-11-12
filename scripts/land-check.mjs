@@ -13,6 +13,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { mainCheckout, targetDir } from "./build-dirs.mjs";
+import { backgroundBuildEnv, lowerPriority } from "./build-load.mjs";
 import { readVersion, VERSION_FILES, writeVersion } from "./release/versions.mjs";
 
 /** src-tauri itself (including the scripts it embeds with include_str!) and plugins/ (keys, index and schema its tests read). */
@@ -156,6 +157,7 @@ function ownEmail() {
 }
 
 function main() {
+  lowerPriority("land-check");
   const attributed = attributedCommits(landingCommits(), ownEmail());
   if (attributed.length) {
     console.error(`[land-check] remove the Claude attribution lines from: ${attributed.join("; ")}`);
@@ -193,7 +195,7 @@ function main() {
   // Lanes share one build cache, apart from the user's `pnpm tauri dev` (build-dirs.mjs):
   // sharing target/debug made each wait on and rebuild after the other.
   const target = process.env.CARGO_TARGET_DIR ?? targetDir(mainCheckout(), "agents");
-  if (run("cargo test --manifest-path src-tauri/Cargo.toml", { CARGO_TARGET_DIR: target }) !== 0) return 1;
+  if (run("cargo test --manifest-path src-tauri/Cargo.toml", { CARGO_TARGET_DIR: target, ...backgroundBuildEnv() }) !== 0) return 1;
   record("cargo");
   return 0;
 }

@@ -18,6 +18,7 @@ import { closeSync, copyFileSync, existsSync, mkdirSync, openSync, readFileSync,
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { mainCheckout, targetDir } from "./build-dirs.mjs";
+import { backgroundBuildEnv, lowerPriority } from "./build-load.mjs";
 
 export const EXE_NAME = "fuyu.exe";
 const OLD_PREFIX = `${EXE_NAME}.old-`;
@@ -168,6 +169,7 @@ export function installExe(source) {
 }
 
 function main() {
+  lowerPriority("build:exe");
   return withReleaseDir(build);
 }
 
@@ -179,7 +181,7 @@ function build(releaseDir) {
   const status = spawnSync("pnpm tauri build --no-bundle", {
     shell: true,
     stdio: "inherit",
-    env: { ...process.env, CARGO_TARGET_DIR: targetDir(mainCheckout()) },
+    env: { ...process.env, CARGO_TARGET_DIR: targetDir(mainCheckout()), ...backgroundBuildEnv() },
   }).status;
   if (status !== 0 || !existsSync(exe)) {
     if (aside && !existsSync(exe)) renameSync(aside, exe);
