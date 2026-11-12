@@ -63,7 +63,7 @@
 - [x] **第 2 步：自动识别窗口和控件。**（[C41.2](/docs/tasks/0-archive/C/C41.2.md)）截图前取好顶层窗口的矩形（去掉不可见、最小化、DWM 阴影），鼠标悬停时高亮最内层的控件（UI Automation，取不到就退回窗口），滚轮切换层级。用户 2026-11-10 加了「显示辅助线」开关（默认开）：虚线贯穿整屏：一横一竖跟着鼠标（选好区域后隐藏），选区的四条边也各延长一条。验证：单元测试（命中测试、层级）、实测资源管理器、浏览器、VS Code。
 - [x] **第 3 步：标注。**（[C41.3](/docs/tasks/0-archive/C/C41.3.md)）矩形、椭圆、箭头、画笔、荧光笔、文字、马赛克、序号；颜色和粗细；撤销 / 重做；选区确定后还能调整。合成在前端的 canvas 里做，导出 PNG 交给原生端。验证：单元测试（标注的数据和合成）、回归页（工具栏和快捷键）、实测高 DPI 下线条和文字清楚。
 - [x] **第 4 步：去处之一：复制、保存、贴图。**（[C41.4](/docs/tasks/0-archive/C/C41.4.md)）复制同时写入位图、PNG 和文件引用（聊天软件、画图、终端都能贴）；保存到设置的文件夹（默认「图片\浮屿截图」），文件名带时间；贴图窗口：置顶、可拖动、滚轮缩放、`Ctrl+滚轮` 调透明度、右键菜单（复制、保存、关闭、鼠标穿透），可以同时贴多张；`T` 贴图和隐藏 / 显示所有贴图；`Ctrl+Shift+2` 截图并复制。验证：`cargo test`、实测往微信、Word、画图、Windows Terminal 里贴。
-- [ ] **第 5 步：去处之二：浮屿特有的。**（[C41.5](/docs/tasks/C/C41.5.md)）岛上的截图卡片（拖出、放进文件中转、发给 Agent）；进剪贴板历史（复用它的图片条目）；识别文字（OCR 结果复制，或打开快捷翻译）和 `Ctrl+Shift+3` / `4`；发给 Agent（存 PNG、切到会话的终端、贴路径）。验证：回归页（截图卡片）、实测发给 Windows Terminal 和 VS Code 里的 Claude Code、Codex，确认它们认出是图片。
+- [x] **第 5 步：去处之二：浮屿特有的。**（[C41.5](/docs/tasks/0-archive/C/C41.5.md)，`ba22f516`、`8e0350d2`，2026-11-12 用户实测通过）岛上的截图卡片（拖出、放进文件中转、发给 Agent）；进剪贴板历史（复用它的图片条目）；识别文字（OCR 结果复制，或打开快捷翻译）和 `Ctrl+Shift+3` / `4`；发给 Agent（存 PNG、切到会话的终端、贴路径）。验证：回归页（截图卡片）、实测发给 Windows Terminal 和 VS Code 里的 Claude Code、Codex，确认它们认出是图片。
 - [ ] **第 6 步：设置、开关和收尾。**（[C41.6](/docs/tasks/C/C41.6.md)）「设置 → 功能 → 截图」页、模块开关、快捷键录制和冲突检查（复用 `shortcutConflicts.ts`）、接管 PrintScreen、托盘菜单和岛上的入口、中英文文案、`pnpm settings:index`、`docs/features/screenshot.md`、[contracts.md](/docs/architecture/contracts.md) 和 [data-storage.md](/docs/architecture/data-storage.md)。验证：`pnpm check`、`pnpm test:regression`、`cargo test`、`pnpm build:exe` 后整套走一遍。
 
 ### 第二版（第一版合完再开工）
