@@ -2,7 +2,7 @@
 
 代理会话怎样开 lane、在 lane 里工作、合入 `main`，以及背后的设计和排障。必须遵守的几条在 [AGENTS.md](../../AGENTS.md)「Git 与协作」；本机的 `lanes` skill 按这份文档的顺序带着做。
 
-全部在仓库里：合并队列（rebase、推分支开 PR 并开启自动合并、等合入后快进主工作区、pre-push 检查）在 `scripts/mq/`，lane 的分配、归属和 Claude Code 钩子在 `scripts/lanes/`。2026-11-12 之前用的是 [claude-code-merge-queue](https://github.com/funador/claude-code-merge-queue) 加一份补丁，F29 收回了仓库；数据目录 `.git/claude-code-merge-queue/` 和环境变量 `CLAUDE_CODE_MERGE_QUEUE_LANDING`、`CLAUDE_CODE_MERGE_QUEUE_EMERGENCY_PUSH` 沿用原名。2026-11-13 起 land 不再直接推 `main`，改成开 PR、由 GitHub 在 CI 通过后合入（F30，计划见 [land-via-pr-plan.md](land-via-pr-plan.md)），本机的排队锁随之删除。
+全部在仓库里：合并队列（rebase、推分支开 PR 并开启自动合并、等合入后快进主工作区、pre-push 检查）在 `scripts/mq/`，lane 的分配、归属和 Claude Code 钩子在 `scripts/lanes/`。2026-11-12 之前用的是 [claude-code-merge-queue](https://github.com/funador/claude-code-merge-queue) 加一份补丁，F29 收回了仓库；数据目录 `.git/claude-code-merge-queue/` 和环境变量 `CLAUDE_CODE_MERGE_QUEUE_EMERGENCY_PUSH` 沿用原名（`CLAUDE_CODE_MERGE_QUEUE_LANDING` 在 F30 第 4 步删掉了）。2026-11-13 起 land 不再直接推 `main`，改成开 PR、由 GitHub 在 CI 通过后合入（F30，计划见 [land-via-pr-plan.md](land-via-pr-plan.md)），本机的排队锁随之删除。
 
 钩子：
 
@@ -57,8 +57,8 @@
 
 ## 开发、验证、合入
 
-1. 在 lane 里开发、提交。验证用 `pnpm verify`，它和 land 跑的检查相同：`pnpm check`，改到 `src-tauri/` 或 `plugins/` 时加 `cargo test`，只改 Markdown 时只跑文档检查。通过的代码树会被记住，land 时同一棵树不再重跑。
-2. 一个功能单元完成并提交后，在 lane 里 `pnpm mq:land`，不用问用户。它 rebase 到 `origin/main`，推到远程分支 `land/<GitHub 用户名>/<机器名>-<分支名>`（pre-push 钩子照旧跑 `scripts/land-check.mjs`），没有 PR 就开一个（标题和正文取提交说明），再开启自动合并（`--merge`，提交号不变）。然后在后台跑 `pnpm mq:wait`：CI 的 `check` 通过、GitHub 合入后，它把主工作区快进到新的 `main`，再把 `dev` 推到合并提交（旧版本岛屿从 `dev` 读插件市场）；PR 落后于 `main` 时它会更新分支。`pnpm mq:land --wait` 把两步合在一起，在前台等。
+1. 在 lane 里开发、提交。想在本机先验一遍时用 `pnpm verify`：`pnpm check`，改到 `src-tauri/` 或 `plugins/` 时加 `cargo test`，只改 Markdown 时只跑文档检查；通过的代码树会被记住，同一棵树不再重跑。land 不再在本机跑这些，由 PR 上 CI 的 `check` 把关。
+2. 一个功能单元完成并提交后，在 lane 里 `pnpm mq:land`，不用问用户。它 rebase 到 `origin/main`，推到远程分支 `land/<GitHub 用户名>/<机器名>-<分支名>`（pre-push 钩子跑 `scripts/land-check.mjs --light`：lane 的归属记录、Claude 署名行、已完成任务的提交记录、只改文档或版本号时的轻量检查，不跑 `pnpm check` 和 `cargo test`），没有 PR 就开一个（标题和正文取提交说明），再开启自动合并（`--merge`，提交号不变）。然后在后台跑 `pnpm mq:wait`：CI 的 `check` 通过、GitHub 合入后，它把主工作区快进到新的 `main`，再把 `dev` 推到合并提交（旧版本岛屿从 `dev` 读插件市场）；PR 落后于 `main` 时它会更新分支。`pnpm mq:land --wait` 把两步合在一起，在前台等。
 3. PR 合入才算完成，`mq:wait` 报告失败就不算：
    - rebase 冲突（land 时，或 `mq:wait` 报 PR 冲突）：land 会自动中止 rebase。`git fetch origin main && git rebase origin/main` 解决冲突后重新 land。
    - 本机检查或 CI 失败：在同一个 lane 修好、提交，再 land，PR 自动更新。计时类测试在机器负载高时偶尔失败，单独重跑通过就重新 land。
@@ -66,7 +66,7 @@
    - `dev` 同步看 `.git/land-sync-dev.log`，`exit=0` 才算成功；没成功时，确认是快进后 `git push --no-verify origin <提交号>:refs/heads/dev`。
 4. 需要 release 可执行文件时，land 之后另外跑 `pnpm build:exe`（见「Rust 构建」）。
 
-`main` 只通过在 GitHub 上合入 PR 移动（land 也是开 PR）。`.githooks/pre-push`（`core.hooksPath` 指向 `.githooks`）会拒绝直接推送 `main`，紧急情况才设 `CLAUDE_CODE_MERGE_QUEUE_EMERGENCY_PUSH=1`。主工作区留给用户（例如 `pnpm tauri dev`），保持干净、停在 `main` 上。
+`main` 只通过在 GitHub 上合入 PR 移动（land 也是开 PR）。`.githooks/pre-push`（`core.hooksPath` 指向 `.githooks`）对任何人都拒绝直接推送 `main`，紧急情况才设 `CLAUDE_CODE_MERGE_QUEUE_EMERGENCY_PUSH=1`。主工作区留给用户（例如 `pnpm tauri dev`），保持干净、停在 `main` 上。
 
 land 从 git 的 pre-push 钩子里跑检查，环境里带着 `GIT_DIR` 等变量。凡是在临时仓库里跑 git 的测试，开头都要去掉 `GIT_*` 变量，并确认 git 指向临时仓库：2026-11-12 一个测试因此把真实仓库改成了 `core.bare=true`，还往 `main` 上留下了作者 `t <t@t>` 的提交 `852a7aab`。
 
