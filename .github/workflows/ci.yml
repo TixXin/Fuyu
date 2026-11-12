@@ -11,8 +11,9 @@ concurrency:
   group: ci-${{ github.ref }}-${{ github.event_name == 'push' && github.sha || 'pr' }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
+# The three jobs run side by side; `check` gathers them, because the main ruleset requires a check named `check`.
 jobs:
-  check:
+  frontend:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -26,6 +27,41 @@ jobs:
           node-version: 26
           cache: pnpm
 
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Type check, lint, file size, unit tests
+        run: pnpm check
+
+      - name: Build frontend
+        run: pnpm build
+
+  regression:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 26
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # 自带 Vite，用 runner 上预装的 Chrome 跑 tests/regression/ 下的全部回归页。
+      - name: Browser regression pages
+        run: pnpm test:regression
+
+  rust:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
       # Same version as rust-toolchain.toml; change both together.
       - uses: dtolnay/rust-toolchain@master
         with:
@@ -36,18 +72,10 @@ jobs:
         with:
           workspaces: src-tauri
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Type check, lint, file size, unit tests
-        run: pnpm check
-
-      - name: Build frontend
-        run: pnpm build
-
-      # 自带 Vite，用 runner 上预装的 Chrome 跑 tests/regression/ 下的全部回归页。
-      - name: Browser regression pages
-        run: pnpm test:regression
+      # tauri.conf.json points frontendDist at ../dist; this job does not build the frontend.
+      - name: Placeholder frontend
+        shell: bash
+        run: mkdir -p dist
 
       - name: Rust tests
         run: cargo test --manifest-path src-tauri/Cargo.toml
@@ -55,3 +83,13 @@ jobs:
       # 结构重构后 clippy 为 0 告警（AGENTS.md），新告警直接让检查失败。
       - name: Clippy
         run: cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings
+
+  check:
+    if: always()
+    needs: [frontend, regression, rust]
+    runs-on: ubuntu-latest
+    steps:
+      - name: All jobs passed
+        run: |
+          echo "frontend=${{ needs.frontend.result }} regression=${{ needs.regression.result }} rust=${{ needs.rust.result }}"
+          [ "${{ needs.frontend.result }}" = success ] && [ "${{ needs.regression.result }}" = success ] && [ "${{ needs.rust.result }}" = success ]
