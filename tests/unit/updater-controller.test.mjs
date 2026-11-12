@@ -208,6 +208,30 @@ test("a found update downloads once in the background, but not when off, skipped
   }
 });
 
+test("the island's download-on-available listener does not re-enter itself", async () => {
+  const failing = async () => { throw new Error("offline"); };
+  for (const [label, options, downloads, stage] of [
+    ["auto", {}, 1, "ready"],
+    ["off", { preferences: { autoUpdate: "off" } }, 0, "available"],
+    ["failed", { download: failing }, 1, "available"],
+  ]) {
+    const native = runtime({ check: async () => ({ version: "0.3.6", body: "" }), ...options });
+    const app = await native.controller();
+    let runs = 0;
+    const pending = [];
+    app.subscribeToUpdate(() => {
+      if (app.getUpdateState().stage !== "available" || ++runs > 50) return;
+      pending.push(app.downloadInBackground());
+    });
+    await app.checkInBackground();
+    await app.notifyAvailableUpdate("title", (version) => version);
+    while (pending.length) await pending.shift();
+    assert.ok(runs <= 10, `${label}: ${runs} runs`);
+    assert.equal(native.calls.filter((call) => call.command === "updater_download").length, downloads, label);
+    assert.equal(native.snapshot().stage, stage, label);
+  }
+});
+
 test("a failed background download is not retried in the same run and stays installable", async () => {
   const failing = runtime({ check: async () => ({ version: "0.3.6", body: "" }), download: async () => { throw new Error("offline"); } });
   const window = await failing.controller();
