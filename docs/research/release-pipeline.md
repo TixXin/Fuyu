@@ -6,7 +6,7 @@
 
 我们的发布已经比多数开源 Tauri 项目完整：草稿上传、核对 SHA-256 后才公开，两个通道读回核对，自动在 issue 下留言，本机快捷方式同步，回滚步骤写在 `docs/features/updater.md`。外部资料里值得做的，集中在**省时间**和**发布前多验一步**两件事上：
 
-1. **最划算：发布构建换到共享的构建目录。** 现在 `pnpm release` 在 lane 自己的 `src-tauri/target` 里编译，新 lane 第一次发布基本是冷编译（beta.1 是 4 分 18 秒，beta.2 在同一个 lane 里是 2 分 30 秒）。改成主工作区下固定的 `target/publish`（和 `build-dirs.mjs` 的做法一致），每次都是增量编译，预计稳定在 2 分半以内。
+1. **最划算：发布构建换到共享的构建目录。** 现在 `pnpm release` 在 lane 自己的 `src-tauri/target` 里编译，新 lane 第一次发布基本是冷编译。改成主工作区下固定的 `target/publish`（和 `build-dirs.mjs` 的做法一致），每次都是增量编译，lane 里也不再各留一份 2 GB 多的 release 目录（`pnpm prune:target` 只清主工作区的 `target`，管不到 lane 自己的）。beta.1 的 4 分 18 秒和 beta.2 的 2 分 30 秒不能直接比：两次之间还合入了 F22（`b5fd654f`，crate-type 只留 `rlib`），省掉的时间里有多少来自缓存、多少来自 F22 没法分开，要在新目录上实测一次冷编译和一次增量编译。
 2. **改版本号那次 land 不必跑完整的 `pnpm check`**（约 1 分 40 秒）。只改了四处版本号和 `docs/releases/` 时，代码和上一次通过检查的 main 一样；`land-check.mjs` 已经会跳过 cargo test，可以再把这种情况当作只改文档处理，只跑任务检查和版本号一致性检查。
 3. **公开之前加一次安装冒烟测试。** 外部经验一再提到，构建成功不等于用户第一次启动没问题（[来源](https://dev.to/qnbs/green-build-broken-first-boot-12ap)）。在 Release 还是草稿时，把 NSIS 安装包静默装到临时目录，用全新的数据目录启动一次，确认进程活着、主窗口出现，再卸载。约 20–30 秒，能挡住「装上就打不开」这类最伤用户的问题。
 4. **Rust 编译本身可以再快一点，但收益有限：** Windows 上把 `CARGO_HOME`、项目和 `target` 放到 Dev Drive，并让 Defender 对它用性能模式或加排除，微软给的是整体构建快 20–30%（[来源](https://blogs.windows.com/windowsdeveloper/2023/06/01/dev-drive-performance-security-and-control-for-developers/)），Cargo 的具体数字没找到可靠来源（未核实）。换 `rust-lld` 链接器在 Windows 上只省一两秒（[论坛实测](https://users.rust-lang.org/t/rust-on-windows/134315)），不值得。先跑一次 `cargo build --release --timings` 看是哪个 crate 拖慢（[Cargo 文档](https://doc.rust-lang.org/cargo/reference/timings.html)），再决定要不要裁依赖或 `windows` crate 的 features。
@@ -57,6 +57,17 @@
 ### 在 CI 里发布
 
 - Tauri 官方的 GitHub 流水线用 `tauri-apps/tauri-action`、`swatinem/rust-cache` 缓存，先建草稿 Release（[来源](https://tauri.app/distribute/pipelines/github/)）。`docs/features/updater.md` 已经写了在 CI 里复用我们步骤的做法。现在不迁：本机有共享构建缓存，比 CI 的 Windows 机器快；私钥不用上传到 GitHub。
+
+### 2026-11-12 补充：构建和 lane 流程改动之后
+
+同一天 fly-island-44 合入了几项构建和 lane 改动，逐条看对发布的影响：
+
+- **F22，crate-type 只留 `rlib`（`b5fd654f`）**：v0.3.7-beta.2 已经包含它，那次 `pnpm release` 完整打出了 NSIS、MSI 和更新签名，安装包构建没有问题，不用再单独验证。release profile 没改。
+- **`pnpm prune:target`**：只扫主工作区 `target` 下的 `debug`、`release`、`agents`、`lane-build`，每个本应用 crate 留最新 3 份。它不碰 lane 里的 `target`，所以现在每个发过版的 lane 都留着自己的 release 产物（lane 4 约 2.3 GB）。发布构建换到 `target/publish` 时，要把它加进清理脚本认识的目录。另外 `pnpm release` 会把发布的 exe 复制到主工作区的 `target/release/fuyu.exe`，清理只删 `deps/`、`build/` 里的旧单元，不影响这个 exe。
+- **lane 池（F23/F24）**：空闲 lane 会被复用并重置到主工作区的 HEAD，lane 文件夹和它的 `target` 留着，所以发版有时会碰上热缓存、有时是冷编译，耗时不稳定。这正好是改用共享发布目录的理由。
+- **land 的归属检查（F25）**：`land-check` 和 `pnpm verify` 拒绝没有归属记录的 lane。发版前提交版本号要 land，所以发版的 lane 必须由 EnterWorktree 或 `pnpm lane:open` 建，或先 `pnpm lane:take`。`pnpm release` 本身不调用 land-check，不受影响。可以在 `docs/features/updater.md` 的发版步骤里写一句。
+- **land 不再自动删 lane**：发完版的 lane 要自己 `pnpm lane:release`，否则一直占着。
+- **在临时仓库里跑 git 的测试要先去掉 `GIT_*` 环境变量**：查过，发布脚本的测试（`tests/scripts/release-*.test.mjs`）只在临时目录里写文件，不跑 git，不受影响。以后给发布流程加测试（例如冒烟测试）时照这条做。
 
 ## 建议的任务
 
