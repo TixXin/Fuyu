@@ -48,6 +48,7 @@ export type AgentSessionSummary = {
   sessionId: string;
   cwd: string | null;
   title: string | null;
+  titleSource?: "rename" | "agent" | "prompt" | "folder" | null;
   model: string | null;
   effort: string | null;
   phase: Exclude<AgentTaskPhase, "idle">;
