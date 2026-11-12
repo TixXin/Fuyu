@@ -8,7 +8,7 @@
   <p>A desktop island for Windows: tasks, clipboard, messages, translation, music and AI status on one small island at the top of your screen.</p>
 
   <p>
-    <a href="https://fuyu.tix.xin">Website</a>
+    <a href="https://fuyu.ing">Website</a>
     ·
     <a href="https://github.com/TixXin/fuyu/releases/latest">Download</a>
     ·
