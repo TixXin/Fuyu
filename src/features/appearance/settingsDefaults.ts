@@ -24,6 +24,7 @@ export const DEFAULT_SETTINGS: IslandSettings = {
   topFilletRadius: 8,
   islandCornerRadius: DEFAULT_ISLAND_CORNER_RADIUS,
   islandCornerShape: "squircle",
+  islandMotion: "spring",
   maxPanelHeight: DEFAULT_MAX_PANEL_HEIGHT,
   panelWidth: DEFAULT_PANEL_WIDTH,
   collapsedWidthExtra: 0,

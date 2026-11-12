@@ -1,0 +1,84 @@
+/* The small island under the open-and-close setting (C49): it moves with the same
+   --island-motion-* variables, and the same properties, as .island in IslandShell.css. */
+.island-motion-preview {
+  position: relative;
+  height: 92px;
+  margin-top: var(--space-md);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 8px;
+  background: var(--color-white-a04);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.island-motion-preview__island {
+  width: 104px;
+  height: 22px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 18px;
+  background: #0b0b0d;
+  border-radius: 11px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+  transition:
+    width var(--island-motion-width) var(--island-motion-width-ease),
+    height var(--island-motion-height) var(--island-motion-ease),
+    border-radius var(--island-motion-radius) var(--island-motion-ease);
+}
+
+.island-motion-preview__island--open {
+  width: 232px;
+  height: 72px;
+  border-radius: 20px;
+}
+
+.island-motion-preview__line {
+  width: 100%;
+  height: 6px;
+  flex: 0 0 auto;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 3px;
+  opacity: 0;
+  transition: opacity var(--island-motion-layer) ease;
+}
+
+.island-motion-preview__line--short {
+  width: 56%;
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.island-motion-preview__island--open .island-motion-preview__line {
+  opacity: 1;
+  transition: opacity var(--island-motion-fade) ease var(--island-motion-fade-delay);
+}
+
+.island-motion-preview__play {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  color: var(--text-2);
+  background: var(--color-white-a08);
+  border: 0;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+}
+
+.island-motion-preview__play:hover {
+  color: var(--text-1);
+  background: var(--color-white-a16);
+}
+
+.island-motion-preview__play:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}

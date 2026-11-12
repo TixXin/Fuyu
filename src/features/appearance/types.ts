@@ -42,6 +42,8 @@ export type AgentArchiveMotion = "slide" | "dissolve";
 export type AgentCardEffects = "off" | "sparkle" | "gradient";
 /** Which session starts open the Agent page: every turn, a new session's first turn only, or none. */
 export type AgentAlertStarted = "everyTurn" | "newSession" | "off";
+/** How the island opens and closes (C49); islandMotion.ts has the timings. */
+export type IslandMotion = "spring" | "smooth" | "fast" | "bouncy" | "none";
 /** What double-clicking a file shelf entry does. */
 export type ShelfDoubleClick = "open" | "reveal";
 
@@ -60,6 +62,7 @@ export type IslandSettings = CalendarSettingValues & {
   /** Bottom corner radius (px) of the expanded island; the collapsed, detached and inner panel radii follow it. */
   islandCornerRadius: number;
   islandCornerShape: IslandCornerShape;
+  islandMotion: IslandMotion;
   themeMode: ThemeMode;
   /** The dark and light colour sets, each adjustable (C33.3); the three colours above copy one. */
   darkBackgroundColor: string;

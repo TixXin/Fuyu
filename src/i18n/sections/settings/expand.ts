@@ -25,6 +25,15 @@ export type SettingsExpandText = {
   tuckedHover: string;
   tuckedHoverReveal: string;
   tuckedHoverExpand: string;
+  /** How the island opens and closes (C49), the presets and the preview's play button. */
+  motion: string;
+  motionHint: string;
+  motionSpring: string;
+  motionSmooth: string;
+  motionFast: string;
+  motionBouncy: string;
+  motionNone: string;
+  motionPlay: string;
 };
 
 export const zhCN: SettingsExpandText = {
@@ -49,6 +58,14 @@ export const zhCN: SettingsExpandText = {
   tuckedHover: "鼠标移到隐藏的岛上",
   tuckedHoverReveal: "只露出岛屿",
   tuckedHoverExpand: "展开面板",
+  motion: "开合动画",
+  motionHint: "收起比展开快，也不回弹",
+  motionSpring: "弹性",
+  motionSmooth: "平滑",
+  motionFast: "快速",
+  motionBouncy: "Q 弹",
+  motionNone: "无动画",
+  motionPlay: "播放一次",
 };
 
 export const en: SettingsExpandText = {
@@ -73,4 +90,12 @@ export const en: SettingsExpandText = {
   tuckedHover: "Pointer on a tucked island",
   tuckedHoverReveal: "Slides it out",
   tuckedHoverExpand: "Opens the panel",
+  motion: "Open and close",
+  motionHint: "Closing is quicker than opening and never bounces",
+  motionSpring: "Spring",
+  motionSmooth: "Smooth",
+  motionFast: "Fast",
+  motionBouncy: "Bouncy",
+  motionNone: "None",
+  motionPlay: "Play it",
 };

@@ -9,6 +9,7 @@ import {
 } from "./settingsLimits.ts";
 import { hasThemeSets, THEME_COLOR_KEYS, THEME_COLORS, THEME_MODES, themeSetsFromSingleColors } from "./themeMode.ts";
 import { oneOf } from "./settingsLimits.ts";
+import { ISLAND_MOTIONS } from "./islandMotion.ts";
 import type { IslandSettings, LegacyIslandSettings } from "./types";
 
 /** The look and size: scales, margin, corners, panel height, colours, what the bar shows. */
@@ -59,6 +60,8 @@ export function normalizeLayoutSettings(settings: LegacyIslandSettings | null | 
       : LEGACY_FALLBACKS.islandCornerRadius,
     // Squircle for upgrades too: it replaced the round corners as the island's look.
     islandCornerShape: settings?.islandCornerShape === "round" ? "round" : "squircle",
+    // Missing before C49: the island opened with the spring, the first-launch one.
+    islandMotion: oneOf(ISLAND_MOTIONS, settings?.islandMotion, DEFAULT_SETTINGS.islandMotion),
     maxPanelHeight: typeof settings?.maxPanelHeight === "number" && Number.isFinite(settings.maxPanelHeight)
       ? clamp(Math.round(settings.maxPanelHeight), MIN_MAX_PANEL_HEIGHT, MAX_MAX_PANEL_HEIGHT)
       : LEGACY_FALLBACKS.maxPanelHeight,

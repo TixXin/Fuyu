@@ -167,6 +167,19 @@
     {
       "page": "behavior",
       "zh-CN": {
+        "group": "展开",
+        "title": "开合动画",
+        "description": "收起比展开快，也不回弹"
+      },
+      "en": {
+        "group": "Opening",
+        "title": "Open and close",
+        "description": "Closing is quicker than opening and never bounces"
+      }
+    },
+    {
+      "page": "behavior",
+      "zh-CN": {
         "group": "贴边隐藏",
         "title": "闲置时贴边隐藏",
         "description": "一段时间没有操作后，岛屿贴到屏幕顶部，只露出一条边。"
