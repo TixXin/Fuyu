@@ -2,7 +2,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { mainCheckout } from "../build-dirs.mjs";
 import { claudePid, laneOf } from "./laneRegistry.mjs";
-import { listLanes, openLane, releaseLane, takeLane } from "./lanePool.mjs";
+import { finishLane, listLanes, openLane, releaseLane, takeLane } from "./lanePool.mjs";
 
 function option(args, name) {
   const at = args.indexOf(name);
@@ -28,6 +28,16 @@ export function listLine(entry, now = Date.now()) {
   return `${String(entry.lane).padStart(3)}  ${(entry.branch ?? "").padEnd(14)} ${who.padEnd(20)} 最近改动 ${minutesAgo(entry.lastActivityMs, now).padEnd(9)} ${state}`;
 }
 
+export function doneLines({ lane, released, problems = [], files = [], task = null }) {
+  const lines = [];
+  if (released && !problems.length) lines.push(`[lanes] lane ${lane} 干净、已合入，已释放。可以退出会话；还在 lane 里时先 ExitWorktree(action="keep")。`);
+  else if (released) lines.push(`[lanes] lane ${lane} 已强制释放，但还有：${problems.join("；")}。这些改动留在 lane 里，下一个会话不会分到它，直到处理掉。`);
+  else lines.push(`[lanes] lane ${lane} 还不能释放：${problems.join("；")}。先提交并 pnpm mq:land，或确认不要了再 pnpm lane:done ${lane} --force。`);
+  for (const file of files) lines.push(`    ${file}`);
+  if (task) lines.push(`[lanes] 任务 ${task.id}（${task.status}）还写着这个 lane：做完用 pnpm tasks done，要交接用 pnpm tasks note。`);
+  return lines;
+}
+
 function main(argv) {
   const [command, ...args] = argv;
   const root = mainCheckout();
@@ -51,6 +61,13 @@ function main(argv) {
     releaseLane(root, lane);
     console.log(`[lanes] lane ${lane} 不再记为谁在用`);
     return 0;
+  }
+  if (command === "done") {
+    const lane = args[0] && !args[0].startsWith("--") ? Number(args[0]) : laneOf(root, process.cwd());
+    if (!lane) throw new Error("用法：pnpm lane:done [N] [--force]（不在 lane 里时要写编号）");
+    const result = finishLane(root, lane, { force: args.includes("--force") });
+    for (const line of doneLines(result)) console.log(line);
+    return result.released ? 0 : 1;
   }
   if (command === "list" || !command) {
     const lanes = listLanes(root, { pid: claudePid(), name, fromLane: laneOf(root, process.cwd()) });

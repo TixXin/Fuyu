@@ -78,7 +78,7 @@
 | 改版本号、起草发布说明 | `pnpm release:version <版本号>`（四处版本号一起改，不要手动改） |
 | 发布 | `pnpm release`（流程见 `docs/features/updater.md`） |
 | 合入 main（在 lane 里） | `pnpm mq:land`；主工作区快进 `pnpm mq:sync`；列出无人使用的 lane `pnpm mq:reconcile` |
-| lane 分配与归属 | `pnpm lane:open --as <会话名>`（钩子不可用时开 lane）、`pnpm lane:take <N> --as <会话名>`（接手）、`pnpm lane:release <N>`、`pnpm lane:list`（谁在用哪个 lane、为什么） |
+| lane 分配与归属 | `pnpm lane:open --as <会话名>`（钩子不可用时开 lane）、`pnpm lane:take <N> --as <会话名>`（接手）、`pnpm lane:done`（退出会话前检查并释放）、`pnpm lane:release <N>`、`pnpm lane:list`（谁在用哪个 lane、为什么） |
 
 如果运行环境禁止派生子进程（例如受限沙箱），`node --test` 需要加 `--test-isolation=none`。此时 `tests/scripts/release-manifest.test.mjs` 仍会因 `spawnSync` 被拦截而失败，这是环境限制，报告时应如实说明。如果 `vite build` 报错无法删除系统临时目录中的 esbuild 文件（Access is denied），可以把 `TEMP` / `TMP` 指向 `node_modules/.cache/` 下的目录后重试。
 
@@ -159,25 +159,12 @@
   - **仓库管理员的会话**：用下面的 lane + `pnpm mq:land`。land 先 rebase 到最新的 `origin/main`，再检查、推送；检查期间要是别人往 `main` 推了提交，这次推送不是快进，会被 git 拒绝，`main` 不会被覆盖，重新 land 即可。
   - **协作者（Write 权限，目前是 ShengLin1001）和外部贡献者**：不用 `pnpm mq:land`，跑了也会被规则集拒绝。在自己的分支上开发。协作者把分支直接推到本仓库（`TixXin/fuyu`）再提 PR；外部贡献者从本仓库 fork 后提 PR。本仓库 2026-11-10 起已脱离 `flyl1u/fly-island` 的 fork 网络，从上游 fork 出来的仓库不能再向本仓库提 PR。不要从上游同步或合并提交；CI 通过、分支跟上最新 `main` 后再合入。协作者可以自己合，也可以等仓库管理员按下面「外部 PR」的做法合。合入用 merge 或 squash，不改写别人已经推送的分支。
   - 开发期间不要求分支一直跟着 `main`：开工前、land 或合入前各同步一次，开发时间长的分支隔天同步一次。不管哪种方式，合入那一刻都基于最新的 `main`，这一点由 land 的 rebase 和规则集保证。
-- **每个代理会话在自己的 lane（worktree + 分支）上工作，经合并队列合入 `main`**（工具是 [claude-code-merge-queue](https://github.com/funador/claude-code-merge-queue)，配置在 `claude-code-merge-queue.config.mjs`）：
-  - 开 lane：用 `claude -w <任务名>` 启动，或在会话里调用 EnterWorktree（WorktreeCreate 钩子）。钩子不可用时（例如会话不是从仓库目录启动的）在主工作区运行 `pnpm lane:open --as <会话名>`，最后一行就是 lane 的路径，**紧接着用 EnterWorktree(path=<lane 路径>) 进入它**（magpie 会话、不是从仓库目录启动的会话也能进）；接手别人的 lane 时 `lane:take` 之后同样 EnterWorktree(path) 进入。会话当前目录在 lane 里，状态栏才显示 `lane/N`，判断 lane 有没有人在用的“有进程的当前目录在里面”才有效，命令也不会因为 `cd` 失败落进别的目录。两者走同一套分配（`scripts/lanes/`）：先把会话自己的空闲 lane 还给它，再复用没人用的 lane，都没有才新建，所以 lane 数量大致等于同时开的会话数。分到的 lane 会重置到主工作区的 `HEAD`，保留 `node_modules` 和编译缓存，并跑一次 `pnpm install`。**不要再手动 `git worktree add`**：那样不留归属记录，别的会话会把它当成空闲的 lane 拿走。
-  - **lane 归属**：`pnpm lane:list` 列出每个 lane 是谁的、为什么算在用。以下任一情况都算有人在用，不会分给别的会话：记下的会话（`claude.exe`）还在运行，或找不到它的进程（例如经 magpie 跑命令的会话）时 24 小时内登记过（`lane:open`、`lane:take`、`task:claim` 和每次 land 都会登记）；有「进行中」（没过期）或「待用户确认」的任务写着这个 lane；2 小时内有改动；有进程的当前目录在里面。有未提交、未跟踪的文件或不在 main 上的提交的 lane，谁也不会被分到，也不会被重置。接手别人的 lane（例如交接）用 `pnpm lane:take <N> --as <会话名>`，对方还在用时会拒绝，确认对方不用了再加 `--force`；不用了 `pnpm lane:release <N>`。不要让会话当前目录留在主工作区、用绝对路径改 lane；没有归属记录的 lane（手动 `git worktree add` 建的）`pnpm verify` 和 land 会直接拒绝。
-  - `../fly-island-lanes/` 里只放 lane。日志、临时工具和实验放在自己的 lane 或系统临时目录，不要放在这个文件夹的根目录。
-  - 在 lane 里开发、验证、提交。验证用 `pnpm verify`（和 land 时跑的检查相同：`pnpm check`，改到 Rust 相关文件时加 `cargo test`；只改 Markdown 文档时只跑文档检查）；通过的代码树会被记住，land 时同一棵树不再重跑。一个功能单元完成并提交后，在 lane 里运行 `pnpm mq:land`，不用问用户。它会排队、rebase 到 `origin/main`、跑 `scripts/land-check.mjs`（`pnpm check`，改到 Rust 相关文件时再加 `cargo test`），然后推送 `origin/main`，并把主工作区快进到新的 `main`。land 成功后会自动把 fork 的 `dev` 推到同一提交（旧版本岛屿从 `dev` 读插件市场），结果记在 `.git/land-sync-dev.log`，`exit=0` 才算成功；没成功时，确认是快进后手动 `git push --no-verify origin <提交号>:refs/heads/dev`。
-  - land 失败不算完成：rebase 冲突时它会自动中止，自己 `git fetch origin main && git rebase origin/main` 解决冲突后重新 land；检查失败就修好再 land。如果输出里已经有 `landed`，只是后面的快进主工作区失败了，不要重复 land，在主工作区运行 `pnpm mq:sync`。
-  - `release` 可执行文件构建（`pnpm build:exe`）不在队列里，按"验证"一节在 land 之后另外做；它会同步桌面快捷方式，多个 lane 同时构建时后来的会等前一个做完（`target/release/.build-exe.lock`）。不要为了构建让用户关掉岛屿或 dev：`build:exe` 会把正在运行的 exe 改名挪开再写新的（Windows 允许改名正在运行的 exe），下次启动就是新版本。
-  - **预览**：用户想看某个 lane 的效果时，在那个 lane 里运行 `pnpm dev:lane`。它起一个和用户的岛屿并排的预览岛屿：Vite 端口 1500+lane 编号，应用标识 `com.tixxin.fuyu.lane-<N>`（数据、WebView 存储、单实例都和用户的分开，开始时没有数据），不注册 focusd:// 链接，不能改开机自启，也不能安装 AI 代理状态 hook。预览岛屿默认放在屏幕左侧四分之一处，不压住用户的岛；要看正式位置的效果（例如新手引导）用 `pnpm dev:lane:center`，它停在顶部正中，会和用户的岛叠在一起。预览的数据跑过一次就留着，再看新装的效果（新手引导）加 `--fresh` 或用 `pnpm dev:lane:fresh`，它只删 `%APPDATA%` 和 `%LOCALAPPDATA%` 下 `com.tixxin.fuyu.lane-<N>` 两个文件夹，要先关掉正在跑的预览。不要在 lane 里直接跑 `pnpm tauri dev`：它会先关掉所有正在运行的岛屿，还要占用主工作区的 1420 端口。只看界面时也可以起 lane 的 Vite，打开 `tests/regression/*.html`。
-  - 主工作区留给用户（例如运行 `pnpm tauri dev`），必须保持干净并停在 `main` 上，代理不要在里面改文件或提交。`main` 只通过 land 或在 GitHub 上合入 PR 移动，不手动推送：`.githooks/pre-push`（`git config core.hooksPath .githooks`）会拒绝直接推送 `main`，紧急情况才设 `CLAUDE_CODE_MERGE_QUEUE_EMERGENCY_PUSH=1`。
-  - **外部 PR 例外**（协作者的 PR 由仓库管理员来合时也一样）：别人提的 PR 不走 land。land 推送前会 rebase，PR 的提交号随之改变，GitHub 认不出 PR 已合并（#10 就是这样，只能手动关闭）。做法：
-    1. 在 lane 里 `git fetch origin pull/<编号>/head:pr-<编号>`，用 `git merge --no-ff pr-<编号>` 合到最新的 `origin/main` 上，跑 `pnpm check`、`cargo test`、clippy 和 `pnpm test:regression`（范围按「验证」一节）。这一步只用来检查，lane 里的合并提交不推送。
-    2. 检查通过后用 `gh pr merge <编号> --merge` 由 GitHub 合并（保留 PR 的提交号，PR 自动关闭），再在主工作区 `pnpm mq:sync`。`gh pr merge` 在 GitHub 端合并，不经过本地 pre-push 钩子，所以第 1 步的检查不能省；推送后 GitHub 上的 CI 会再跑一遍。
-    3. 要补的修改另开 lane，照常 land。PR 落后 `main` 太多、GitHub 报冲突时，请作者 rebase，或问用户怎么处理，不要自己改写别人的分支。
-    4. 外部提交可以带 Claude 署名行，`land-check.mjs` 只查作者是本机 `user.email` 的提交。
-  - 别人留下的、没有会话在用的 lane（land 或会话开始时输出里带 `⚠`，`pnpm mq:reconcile` 会列出）：问用户怎么处理，不要删除。land 不再自动删除 lane（补丁里的 `prune-lanes.js`）：按进程判断会误删经 magpie 跑命令的会话还在用的 lane；空闲的 lane 留着，下一个会话会复用，所以 lane 数量最多是同时开的会话数。Windows 上 `git worktree remove` 常常删不掉 `node_modules`，会留下只剩 `node_modules` 的 `../fly-island-lanes/<N>` 文件夹；钩子会把它当成还在用的 lane 而跳过这个编号，所以删完要确认文件夹已经不在，残留的用 `cmd /c rmdir /s /q <路径>` 删除（不会顺着 pnpm 的目录联接删到 store）。
-  - 工具在 Windows 上的几个问题（找不到 `pwd` 导致各 lane 的队列锁互不相通、调用 `pnpm` 时没开 shell），以及清理 lane 时路径对不上、没有 `lsof`、删不掉 `node_modules` 导致 lane 越积越多，都由 `patches/claude-code-merge-queue@0.7.1.patch` 修复（`pnpm-workspace.yaml` 的 `patchedDependencies`）。升级这个包时要重新做补丁，并确认两个 lane 同时 land 会排队。
-  - Rust 构建分几个目录，都在主工作区的 `src-tauri/target` 下（`scripts/build-dirs.mjs`）：用户的 `pnpm tauri dev` 用 `debug`，release 用 `release`，代理的 `cargo test` / `clippy` 用 `agents`（`land-check.mjs` 已经这样设置；在 lane 里手动跑时设 `CARGO_TARGET_DIR=<主工作区>/src-tauri/target/agents`），lane 预览的 exe 在 `lane-<N>`、编译过程共用 `lane-build`（cargo 的 build-dir，依赖只在第一个预览时编一次）。代理不要用 `debug`，否则会和用户的 dev 互相等锁、互相触发重编译。cargo 从不清理旧的增量缓存和旧产物（每个 lane 路径都会生成一份新的，曾涨到 360 GB）：`pnpm prune:target` 删掉 3 天没用的那部分和已删 lane 的预览目录，land 跑完 `cargo test` 后会自动跑一次；`--dry-run` 只看能省多少。
-  - 多个 lane 同时编译时不拖慢桌面（`scripts/build-load.mjs`）：`land-check` / `pnpm verify` 和 `pnpm build:exe` 以"低于正常"优先级运行（它启动的 pnpm、cargo、rustc 都继承），cargo 并行数默认是逻辑 CPU 的一半；lane 预览只限并行数。环境里已设 `CARGO_BUILD_JOBS` 时以它为准。在 lane 里手动跑 `cargo test` / `clippy` 时也设 `CARGO_BUILD_JOBS`（例如逻辑 CPU 的一半）。用户的 `pnpm tauri dev` 不受影响。
-  - Rust 版本固定在 `rust-toolchain.toml`（CI 的 `ci.yml` 写同一个版本，改时一起改），本机、lane 和 CI 用同一个编译器，本机 clippy 通过 CI 也会通过。
+- **每个代理会话在自己的 lane（worktree + 分支）上工作，经合并队列合入 `main`**。怎么开、接手、验证、land、预览、处理外部 PR 和排障，见 [docs/architecture/lanes.md](docs/architecture/lanes.md)（本机的 `lanes` skill 按它带着做）。必须遵守的是这几条：
+  - **开工先开 lane 并进入它**：会话从仓库目录启动时用 EnterWorktree（`claude -w`）；不是时（magpie 会话）在主工作区 `pnpm lane:open --as <会话名>`，再 EnterWorktree(path=<最后一行的路径>)。接手别人的 lane 用 `pnpm lane:take <N> --as <会话名>` 后同样进入。会话当前目录要在 lane 里，不要留在主工作区用绝对路径改 lane。
+  - **不要手动 `git worktree add`**，没有归属记录的 lane `pnpm verify` 和 land 会拒绝。不要删别人的 lane；`../fly-island-lanes/` 里只放 lane。
+  - **主工作区留给用户**（例如 `pnpm tauri dev`），保持干净、停在 `main` 上，代理不在里面改文件或提交。`main` 只经 land 或在 GitHub 上合入 PR 移动，不手动推送。
+  - **一个功能单元完成并提交后，在 lane 里 `pnpm mq:land`，不用问用户**；land 失败（冲突、检查没过）不算完成。别人提的 PR 不走 land，按 lanes.md「外部 PR」合入。**退出会话前在 lane 里 `pnpm lane:done`**：干净就释放，有没合入的东西会列出来，先处理掉。
+  - 代理的 Rust 构建用 `src-tauri/target/agents`，不要用用户 dev 的 `debug`；在 lane 里不要跑 `pnpm tauri dev`，预览用 `pnpm dev:lane`。
 - 修改前先查看 `git status --short`，不要覆盖用户已有改动。
 - 不要使用 `git reset --hard`、`git checkout --` 等破坏性命令，除非用户明确要求。
 - 如果工作区已有与当前任务无关的修改，保留它们，只处理本次任务相关的文件。
