@@ -92,15 +92,21 @@ export function freePort() {
   });
 }
 
-async function connect(port) {
-  const deadline = Date.now() + 15_000;
+const BROWSER_START_MS = 60_000;
+
+async function connect(port, browser, browserLog) {
+  const deadline = Date.now() + BROWSER_START_MS;
   let page;
-  while (!page && Date.now() < deadline) {
+  while (!page && Date.now() < deadline && browser.exitCode === null) {
     try {
       page = (await (await fetch(`http://127.0.0.1:${port}/json`)).json()).find((target) => target.type === "page");
-    } catch { await sleep(200); }
+    } catch {}
+    if (!page) await sleep(250);
   }
-  if (!page) throw new Error("The browser's DevTools endpoint did not come up.");
+  if (!page) {
+    const why = browser.exitCode === null ? `its DevTools endpoint did not come up within ${BROWSER_START_MS / 1000}s` : `it exited with code ${browser.exitCode} before its DevTools endpoint came up`;
+    throw new Error(`The browser did not start: ${why}. Browser output:\n${browserLog().trim() || "(none)"}`);
+  }
   const socket = new WebSocket(page.webSocketDebuggerUrl);
   await new Promise((resolve, reject) => {
     socket.addEventListener("open", resolve);
@@ -167,8 +173,10 @@ export async function withRegressionBrowser(root, firstPage, use) {
     await waitForHttp(`${base}${firstPage.split("?")[0]}`, 30_000);
     if (vite.exitCode !== null) throw new Error(`Vite exited (port ${vitePort} taken?); not testing whatever answers there.`);
     const language = process.env.REGRESSION_LANG ?? "zh-CN";
-    browser = spawn(findBrowser(), ["--headless=new", "--disable-gpu", "--no-first-run", "--no-default-browser-check", `--remote-debugging-port=${debugPort}`, `--user-data-dir=${profile}`, `--lang=${language}`, `--accept-lang=${language}`, "--window-size=1280,900", "about:blank"], { stdio: "ignore" });
-    const session = await connect(debugPort);
+    browser = spawn(findBrowser(), ["--headless=new", "--disable-gpu", "--no-first-run", "--no-default-browser-check", `--remote-debugging-port=${debugPort}`, `--user-data-dir=${profile}`, `--lang=${language}`, `--accept-lang=${language}`, "--window-size=1280,900", "about:blank"], { stdio: ["ignore", "ignore", "pipe"] });
+    let browserLog = "";
+    browser.stderr.on("data", (chunk) => { browserLog = (browserLog + chunk).slice(-4000); });
+    const session = await connect(debugPort, browser, () => browserLog);
     const result = await use({ session, base });
     session.close();
     return result;

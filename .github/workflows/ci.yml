@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
+  merge_group:
 
 # Pull requests only need their newest push checked. Every commit on main gets its own run that
 # is never cancelled, so a failure is pinned to the commit that caused it.
@@ -13,7 +14,53 @@ concurrency:
 
 # The three jobs run side by side; `check` gathers them, because the main ruleset requires a check named `check`.
 jobs:
+  scope:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      docs: ${{ steps.scope.outputs.docs }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 26
+
+      - name: Docs-only pull request?
+        id: scope
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          docs=false
+          if [ "$EVENT" = pull_request ]; then
+            gh api "repos/$GITHUB_REPOSITORY/pulls/$PR/files" --paginate -q '.[] | .filename, (.previous_filename // empty)' > "$RUNNER_TEMP/changed.txt"
+            docs=$(node --input-type=module -e 'import { readFileSync } from "node:fs"; import { docsOnly } from "./scripts/land-check.mjs"; console.log(docsOnly(readFileSync(process.argv[1], "utf8").split("\n").filter(Boolean)))' "$RUNNER_TEMP/changed.txt")
+          fi
+          echo "docs=$docs"
+          echo "docs=$docs" >> "$GITHUB_OUTPUT"
+
+  docs:
+    needs: scope
+    if: needs.scope.outputs.docs == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 26
+
+      - name: Task files
+        run: node scripts/tasks/tasks.mjs check
+
   frontend:
+    needs: scope
+    if: needs.scope.outputs.docs != 'true'
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -37,6 +84,8 @@ jobs:
         run: pnpm build
 
   regression:
+    needs: scope
+    if: needs.scope.outputs.docs != 'true'
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -58,6 +107,8 @@ jobs:
         run: pnpm test:regression
 
   rust:
+    needs: scope
+    if: needs.scope.outputs.docs != 'true'
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -86,10 +137,22 @@ jobs:
 
   check:
     if: always()
-    needs: [frontend, regression, rust]
+    needs: [scope, docs, frontend, regression, rust]
     runs-on: ubuntu-latest
     steps:
       - name: All jobs passed
+        env:
+          SCOPE: ${{ needs.scope.result }}
+          DOCS_ONLY: ${{ needs.scope.outputs.docs }}
+          DOCS: ${{ needs.docs.result }}
+          FRONTEND: ${{ needs.frontend.result }}
+          REGRESSION: ${{ needs.regression.result }}
+          RUST: ${{ needs.rust.result }}
         run: |
-          echo "frontend=${{ needs.frontend.result }} regression=${{ needs.regression.result }} rust=${{ needs.rust.result }}"
-          [ "${{ needs.frontend.result }}" = success ] && [ "${{ needs.regression.result }}" = success ] && [ "${{ needs.rust.result }}" = success ]
+          echo "scope=$SCOPE docs-only=$DOCS_ONLY docs=$DOCS frontend=$FRONTEND regression=$REGRESSION rust=$RUST"
+          [ "$SCOPE" = success ] || exit 1
+          if [ "$DOCS_ONLY" = true ]; then
+            [ "$DOCS" = success ]
+          else
+            [ "$FRONTEND" = success ] && [ "$REGRESSION" = success ] && [ "$RUST" = success ]
+          fi
