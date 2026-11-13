@@ -8,6 +8,7 @@ import { AGENT_PROVIDER_LABELS } from "../status";
 import { APPROVAL_HOTKEYS, type AgentApprovalDecision } from "./api";
 import type { AgentApprovals } from "./useAgentApprovals";
 import { ApprovalShortcut, ApprovalShortcutModifiers } from "./ApprovalShortcut";
+import { ariaShortcut, shortcutTitle } from "./approvalShortcutText";
 import { useApprovalCard } from "./useApprovalCard";
 import { alwaysAllowRule, approvalPreview } from "./preview";
 import "./AgentApprovalCard.css";
@@ -73,11 +74,11 @@ export function AgentApprovalCard({ approvals, sessions }: { approvals: AgentApp
       </button>
       <div className="agent-approval__actions">
         <ApprovalShortcutModifiers shortcut={keyOf("terminal")} />
-        <button className="agent-approval__button agent-approval__button--terminal" type="button" disabled={!armed} title={`${labels.terminalHint} (${keyOf("terminal")})`} aria-keyshortcuts={keyOf("terminal")} onClick={toTerminal}>
+        <button className="agent-approval__button agent-approval__button--terminal" type="button" disabled={!armed} title={`${labels.terminalHint} (${shortcutTitle(keyOf("terminal"))})`} aria-keyshortcuts={ariaShortcut(keyOf("terminal"))} onClick={toTerminal}>
           <span className="agent-approval__label">{labels.terminal}</span>
           <ApprovalShortcut shortcut={keyOf("terminal")} />
         </button>
-        <button className="agent-approval__button agent-approval__button--deny" type="button" disabled={!armed} title={keyOf("deny")} aria-keyshortcuts={keyOf("deny")} onClick={() => approvals.decide("deny")}>
+        <button className="agent-approval__button agent-approval__button--deny" type="button" disabled={!armed} title={shortcutTitle(keyOf("deny"))} aria-keyshortcuts={ariaShortcut(keyOf("deny"))} onClick={() => approvals.decide("deny")}>
           <span className="agent-approval__label">{labels.deny}</span>
           <ApprovalShortcut shortcut={keyOf("deny")} />
         </button>
@@ -86,7 +87,7 @@ export function AgentApprovalCard({ approvals, sessions }: { approvals: AgentApp
             <span className="agent-approval__label">{labels.allowAlways}</span>
           </button>
         )}
-        <button className="agent-approval__button agent-approval__button--allow" type="button" disabled={!armed} title={keyOf("allow")} aria-keyshortcuts={keyOf("allow")} onClick={() => approvals.decide("allow")}>
+        <button className="agent-approval__button agent-approval__button--allow" type="button" disabled={!armed} title={shortcutTitle(keyOf("allow"))} aria-keyshortcuts={ariaShortcut(keyOf("allow"))} onClick={() => approvals.decide("allow")}>
           <span className="agent-approval__label">{labels.allow}</span>
           <ApprovalShortcut shortcut={keyOf("allow")} />
         </button>

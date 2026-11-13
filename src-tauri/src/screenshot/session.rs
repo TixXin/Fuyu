@@ -1,9 +1,10 @@
 use std::{
     sync::{
         atomic::{AtomicBool, AtomicU64, Ordering},
-        Mutex,
+        Condvar, Mutex,
     },
     thread,
+    time::{Duration, Instant},
 };
 
 use serde::Serialize;
@@ -15,7 +16,8 @@ use crate::island::screen;
 pub(crate) const WINDOW_PREFIX: &str = "screenshot-";
 const SESSION_EVENT: &str = "screenshot-session";
 const ENDED_EVENT: &str = "screenshot-ended";
-const CAPTURE_SETTLE: std::time::Duration = std::time::Duration::from_millis(80);
+const CAPTURE_SETTLE: Duration = Duration::from_millis(80);
+const CAPTURE_WAIT: Duration = Duration::from_secs(5);
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -61,9 +63,12 @@ struct Session {
     frames: Vec<Frame>,
     pointer_label: String,
     targets: Vec<Target>,
+    captured: bool,
+    shown: Vec<String>,
 }
 
 static SESSION: Mutex<Option<Session>> = Mutex::new(None);
+static CAPTURED: Condvar = Condvar::new();
 static NEXT_ID: AtomicU64 = AtomicU64::new(1);
 static STARTING: AtomicBool = AtomicBool::new(false);
 
@@ -95,36 +100,117 @@ fn open(app: &AppHandle, mode: Mode) -> Result<(), String> {
         thread::sleep(CAPTURE_SETTLE);
     }
     let monitors = app.available_monitors().map_err(|error| error.to_string())?;
-    let pointer = screen::cursor_position().map(|(x, y)| (x.round() as i32, y.round() as i32));
-    let mut frames = Vec::new();
-    let mut pointer_label = None;
-    for (index, monitor) in monitors.iter().enumerate() {
-        let Some(grab) = super::capture::monitor(monitor) else {
-            continue;
-        };
-        if pointer.is_some_and(|point| contains(monitor, point)) {
-            pointer_label = Some(label(index));
-        }
-        frames.push(Frame { label: label(index), origin: grab.origin, width: grab.width, height: grab.height, scale: grab.scale, rgba: grab.rgba });
+    if monitors.is_empty() {
+        return Err("no monitor is connected".to_string());
     }
-    let (window_targets, window_handles) = targets::windows_on_screen();
-    let Some(first) = frames.first() else {
-        return Err("no monitor could be captured".to_string());
-    };
-    let pointer_label = pointer_label.unwrap_or_else(|| first.label.clone());
+    let pointer = screen::cursor_position().map(|(x, y)| (x.round() as i32, y.round() as i32));
+    let pointer_index = monitors.iter().position(|monitor| pointer.is_some_and(|point| contains(monitor, point))).unwrap_or(0);
+    let frames: Vec<Frame> = monitors.iter().enumerate().map(|(index, monitor)| grabbed(index, super::capture::planned(monitor))).collect();
     place_windows(app, &monitors)?;
+    hold_overlays(app, true);
 
     let id = NEXT_ID.fetch_add(1, Ordering::SeqCst);
-    let announcements: Vec<(String, OverlaySession)> = frames
-        .iter()
-        .map(|frame| (frame.label.clone(), overlay_session(id, mode, frame, &pointer_label)))
-        .collect();
-    *session() = Some(Session { id, mode, frames, pointer_label, targets: window_targets });
+    *session() = Some(Session { id, mode, frames, pointer_label: label(pointer_index), targets: Vec::new(), captured: false, shown: Vec::new() });
+    announce(app, id);
+
+    let grabs: Vec<Option<super::capture::Grab>> = thread::scope(|scope| {
+        let shots: Vec<_> = monitors.iter().map(|monitor| scope.spawn(move || super::capture::monitor(monitor))).collect();
+        shots.into_iter().map(|shot| shot.join().ok().flatten()).collect()
+    });
+    let (window_targets, window_handles) = targets::windows_on_screen();
+    finish_capture(app, id, grabs, window_targets);
     targets::read_controls(app, id, window_handles);
+    Ok(())
+}
+
+fn grabbed(index: usize, grab: super::capture::Grab) -> Frame {
+    Frame { label: label(index), origin: grab.origin, width: grab.width, height: grab.height, scale: grab.scale, rgba: grab.rgba }
+}
+
+fn announce(app: &AppHandle, id: u64) {
+    let announcements: Vec<(String, OverlaySession)> = match session().as_ref() {
+        Some(session) if session.id == id => session
+            .frames
+            .iter()
+            .map(|frame| (frame.label.clone(), overlay_session(id, session.mode, frame, &session.pointer_label)))
+            .collect(),
+        _ => return,
+    };
     for (label, announcement) in announcements {
         let _ = app.emit_to(label.as_str(), SESSION_EVENT, announcement);
     }
-    Ok(())
+}
+
+fn hold_overlays(app: &AppHandle, held: bool) {
+    for (name, window) in app.webview_windows() {
+        if name.starts_with(WINDOW_PREFIX) {
+            let _ = window.set_ignore_cursor_events(held);
+        }
+    }
+}
+
+fn finish_capture(app: &AppHandle, id: u64, grabs: Vec<Option<super::capture::Grab>>, window_targets: Vec<Target>) {
+    let mut resized = false;
+    let mut failed = Vec::new();
+    let focus = {
+        let mut guard = session();
+        let Some(session) = guard.as_mut().filter(|session| session.id == id) else {
+            return;
+        };
+        for (index, grab) in grabs.into_iter().enumerate() {
+            let Some(planned) = session.frames.iter_mut().find(|frame| frame.label == label(index)) else {
+                continue;
+            };
+            match grab {
+                Some(grab) => {
+                    resized |= (grab.width, grab.height) != (planned.width, planned.height);
+                    *planned = grabbed(index, grab);
+                }
+                None => failed.push(planned.label.clone()),
+            }
+        }
+        session.frames.retain(|frame| !failed.contains(&frame.label));
+        if session.frames.is_empty() {
+            drop(guard);
+            eprintln!("screenshot failed: no monitor could be captured");
+            end(app);
+            return;
+        }
+        if failed.contains(&session.pointer_label) {
+            session.pointer_label = session.frames[0].label.clone();
+            resized = true;
+        }
+        session.targets = window_targets;
+        session.captured = true;
+        CAPTURED.notify_all();
+        session.shown.contains(&session.pointer_label).then(|| session.pointer_label.clone())
+    };
+    for label in &failed {
+        if let Some(window) = app.get_webview_window(label) {
+            let _ = window.hide();
+        }
+    }
+    hold_overlays(app, false);
+    if resized {
+        announce(app, id);
+    }
+    for (name, _) in app.webview_windows().into_iter().filter(|(name, _)| name.starts_with(WINDOW_PREFIX)) {
+        let _ = app.emit_to(name.as_str(), targets::TARGETS_EVENT, id);
+    }
+    if let Some(window) = focus.and_then(|label| app.get_webview_window(&label)) {
+        focus_overlay(&window);
+    }
+}
+
+pub(crate) fn wait_for_capture() {
+    let deadline = Instant::now() + CAPTURE_WAIT;
+    let mut guard = session();
+    while guard.as_ref().is_some_and(|session| !session.captured) {
+        let Some(left) = deadline.checked_duration_since(Instant::now()) else {
+            return;
+        };
+        guard = CAPTURED.wait_timeout(guard, left).unwrap_or_else(std::sync::PoisonError::into_inner).0;
+    }
 }
 
 fn overlay_session(id: u64, mode: Mode, frame: &Frame, pointer_label: &str) -> OverlaySession {
@@ -219,12 +305,15 @@ pub(super) fn add_targets(id: u64, more: Vec<Target>) -> Option<Vec<String>> {
 }
 
 pub(crate) fn frame(label: &str) -> Option<Vec<u8>> {
-    session().as_ref()?.frames.iter().find(|frame| frame.label == label).map(|frame| frame.rgba.clone())
+    session().as_ref()?.frames.iter().find(|frame| frame.label == label && !frame.rgba.is_empty()).map(|frame| frame.rgba.clone())
 }
 
 pub(crate) fn overlay_ready(window: &WebviewWindow, id: u64) {
-    let focus = match session().as_ref() {
-        Some(session) if session.id == id => session.pointer_label == window.label(),
+    let focus = match session().as_mut() {
+        Some(session) if session.id == id => {
+            session.shown.push(window.label().to_string());
+            session.captured && session.pointer_label == window.label()
+        }
         _ => return,
     };
     let _ = window.show();
@@ -302,6 +391,7 @@ pub(crate) fn end_if(app: &AppHandle, id: u64) {
 
 pub(crate) fn end(app: &AppHandle) {
     let ended = session().take().is_some();
+    CAPTURED.notify_all();
     for (name, window) in app.webview_windows() {
         if name.starts_with(WINDOW_PREFIX) {
             let _ = window.hide();

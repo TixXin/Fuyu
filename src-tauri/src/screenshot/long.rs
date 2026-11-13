@@ -147,7 +147,6 @@ fn overlays(app: &AppHandle) -> Vec<WebviewWindow> {
 
 fn hold_overlays(windows: &[WebviewWindow], on: bool) {
     for window in windows {
-        capture::exclude_from_capture(window, on);
         let _ = window.set_ignore_cursor_events(on);
     }
 }

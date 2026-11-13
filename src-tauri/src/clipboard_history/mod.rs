@@ -43,7 +43,7 @@ use store::{load_history, HISTORY_FILE_NAME, IMAGE_DIRECTORY_NAME};
 
 pub(crate) use shortcut::{parse_shortcut_binding, ShortcutBinding};
 #[cfg(target_os = "macos")]
-pub(crate) use shortcut_macos::to_hotkey;
+pub(crate) use shortcut_macos::{mac_label, to_hotkey};
 pub(crate) use capture_pause::paused as clipboard_capture_paused;
 pub(crate) use plugin_view::{local_api_history, plugin_history, plugin_item};
 pub(crate) use popup::WINDOW_LABEL as POPUP_WINDOW_LABEL;

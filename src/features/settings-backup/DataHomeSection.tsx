@@ -7,6 +7,7 @@ import { SettingsRow } from "../../components/settings/SettingsRow";
 import { useErrorText, useTranslation } from "../../i18n";
 import { isMacOS } from "../../lib/platform";
 import { getDataHome, restartIsland, revealFolder, setDataHome, type DataHome } from "./api";
+import { expandHome, shortenHome, userHomeOf } from "./homePath";
 import "./SettingsBackupSection.css";
 
 type Status = { kind: "idle" } | { kind: "moved"; path: string } | { kind: "error"; message: string };
@@ -25,7 +26,7 @@ export function DataHomeSection({ onMoved }: { onMoved: (from: string, to: strin
       .then((current) => {
         if (cancelled || !current) return;
         setHome(current);
-        setDraft(current.home);
+        setDraft(shortenHome(current.home, isMacOS ? userHomeOf(current.defaultHome) : null));
       })
       .catch((error: unknown) => console.error("Failed to read the data folder", error));
     return () => {
@@ -35,14 +36,16 @@ export function DataHomeSection({ onMoved }: { onMoved: (from: string, to: strin
 
   if (!home) return null;
   const locked = home.source === "env" || home.source === "appData";
+  const userHome = isMacOS ? userHomeOf(home.defaultHome) : null;
 
   const move = (path: string | null) => {
-    const target = path?.trim() || home.defaultHome;
-    if (!target || target === home.home || !window.confirm(text.confirm(target))) return;
-    void setDataHome(path?.trim() || null)
+    const typed = path?.trim() ? expandHome(path.trim(), userHome) : null;
+    const target = typed || home.defaultHome;
+    if (!target || target === home.home || !window.confirm(text.confirm(shortenHome(target, userHome)))) return;
+    void setDataHome(typed)
       .then((moved) => {
         onMoved(home.home, moved);
-        setStatus({ kind: "moved", path: moved });
+        setStatus({ kind: "moved", path: shortenHome(moved, userHome) });
       })
       .catch((error: unknown) => setStatus({ kind: "error", message: errorText(error) }));
   };

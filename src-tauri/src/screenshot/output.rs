@@ -160,12 +160,14 @@ pub(super) fn save(picture: &Picture, folder: Option<&str>, default_name: &str) 
     write_png(&folder, &encode_png(picture)?)
 }
 
+const FOLDER_EXAMPLE: &str = if cfg!(windows) { "D:\\Screenshots" } else { "/Users/you/Pictures/Screenshots" };
+
 pub(super) fn chosen_folder(folder: &str) -> Result<PathBuf, String> {
     let path = PathBuf::from(folder);
     if path.is_absolute() && !path.components().any(|part| matches!(part, std::path::Component::ParentDir)) {
         Ok(path)
     } else {
-        Err(format!("The save folder must be a full path such as D:\\Screenshots, not {folder}."))
+        Err(format!("The save folder must be a full path such as {FOLDER_EXAMPLE}, not {folder}."))
     }
 }
 

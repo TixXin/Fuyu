@@ -56,6 +56,7 @@ export type ClipboardActionsText = {
   blocks: Record<TransformBlock, string>;
   result: string;
   resultNative: string;
+  resultNativeMac: string;
   merge: string;
   mergeSeparator: Record<"newline" | "space" | "comma", string>;
   editTitle: string;
@@ -64,12 +65,13 @@ export type ClipboardActionsText = {
   saveAsNew: string;
   cancel: string;
   closePreview: string;
+  releaseToClose: string;
   kinds: Record<"link" | "color" | "json", string>;
   linkCleaned: string;
   linkOffline: string;
   colorPick: string;
   failed: string;
-  copy: Pick<ClipboardActionsText, "transform" | "transformTitle" | "ai" | "aiHint" | "aiPasteAgain" | "result" | "resultNative">;
+  copy: Pick<ClipboardActionsText, "transform" | "transformTitle" | "ai" | "aiHint" | "aiPasteAgain" | "result" | "resultNative" | "resultNativeMac">;
 };
 
 export const zhCN: ClipboardActionsText = {
@@ -147,6 +149,7 @@ export const zhCN: ClipboardActionsText = {
   blocks: { notJson: "不是 JSON", noLink: "没有链接", noHtml: "没有格式", noChange: "不会改变" },
   result: "粘贴的会是",
   resultNative: "粘贴时由 Windows 转换",
+  resultNativeMac: "粘贴时由 macOS 转换",
   merge: "合并粘贴",
   mergeSeparator: { newline: "换行分隔", space: "空格分隔", comma: "逗号分隔" },
   editTitle: "编辑后粘贴",
@@ -155,6 +158,7 @@ export const zhCN: ClipboardActionsText = {
   saveAsNew: "另存为新记录",
   cancel: "取消",
   closePreview: "关闭",
+  releaseToClose: "松开关闭",
   kinds: { link: "网址", color: "颜色", json: "JSON" },
   linkCleaned: "去掉追踪参数后",
   linkOffline: "标题和图标要联网读，在 设置 → 剪贴板 里打开",
@@ -168,6 +172,7 @@ export const zhCN: ClipboardActionsText = {
     aiPasteAgain: "再按 Enter 复制",
     result: "复制的会是",
     resultNative: "复制时由 Windows 转换",
+    resultNativeMac: "复制时由 macOS 转换",
   },
 };
 
@@ -246,6 +251,7 @@ export const en: ClipboardActionsText = {
   blocks: { notJson: "not JSON", noLink: "no link", noHtml: "no formatting", noChange: "no change" },
   result: "This will paste",
   resultNative: "Windows converts it on paste",
+  resultNativeMac: "macOS converts it on paste",
   merge: "paste merged",
   mergeSeparator: { newline: "one per line", space: "with spaces", comma: "with commas" },
   editTitle: "Edit, then paste",
@@ -254,6 +260,7 @@ export const en: ClipboardActionsText = {
   saveAsNew: "Save as a new entry",
   cancel: "Cancel",
   closePreview: "Close",
+  releaseToClose: "Release to close",
   kinds: { link: "Link", color: "Colour", json: "JSON" },
   linkCleaned: "Without tracking",
   linkOffline: "Titles and icons need the network; turn them on in Settings → Clipboard",
@@ -267,5 +274,6 @@ export const en: ClipboardActionsText = {
     aiPasteAgain: "Enter again copies",
     result: "This will copy",
     resultNative: "Windows converts it on copy",
+    resultNativeMac: "macOS converts it on copy",
   },
 };

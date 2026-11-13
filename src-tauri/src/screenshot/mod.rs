@@ -102,9 +102,14 @@ pub fn screenshot_session(window: WebviewWindow) -> Option<OverlaySession> {
 
 #[tauri::command]
 pub async fn screenshot_frame(window: WebviewWindow) -> Result<tauri::ipc::Response, String> {
+    wait_for_capture().await;
     session::frame(window.label())
         .map(tauri::ipc::Response::new)
         .ok_or_else(|| "No screenshot is open.".to_string())
+}
+
+async fn wait_for_capture() {
+    let _ = tauri::async_runtime::spawn_blocking(session::wait_for_capture).await;
 }
 
 #[tauri::command]
@@ -151,6 +156,7 @@ pub async fn screenshot_finish(app: AppHandle, window: WebviewWindow, request: t
     let action = header("x-action").and_then(Action::parse).ok_or_else(|| "Unknown screenshot action.".to_string())?;
     let (width, height) = number("x-width").zip(number("x-height")).ok_or_else(|| "The screenshot size is missing.".to_string())?;
     let (left, top) = (number("x-left").unwrap_or(0), number("x-top").unwrap_or(0));
+    wait_for_capture().await;
     let (width, height, rgba) = session::selection(window.label(), PixelRect { x: left, y: top, width, height }).ok_or_else(|| "Nothing is selected.".to_string())?;
     let mut picture = Picture { width, height, rgba };
     if !body.is_empty() {
@@ -325,6 +331,7 @@ pub(crate) fn offset_words(lines: Vec<Vec<crate::platform::ocr::OcrWord>>, left:
 
 #[tauri::command]
 pub async fn screenshot_find_words(window: WebviewWindow, x: u32, y: u32, width: u32, height: u32) -> Result<Vec<Vec<crate::platform::ocr::OcrWord>>, String> {
+    wait_for_capture().await;
     let (cut_width, cut_height, rgba) = session::selection(window.label(), PixelRect { x, y, width, height }).ok_or_else(|| "Nothing is selected.".to_string())?;
     let lines = tauri::async_runtime::spawn_blocking(move || crate::platform::ocr::recognize_words(cut_width, cut_height, &rgba))
         .await

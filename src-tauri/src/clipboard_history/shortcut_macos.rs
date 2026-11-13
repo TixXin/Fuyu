@@ -62,10 +62,26 @@ pub(crate) fn to_hotkey(binding: &ShortcutBinding) -> Option<HotKey> {
     Some(HotKey::new(Some(modifiers), key_code(binding.key_code)?))
 }
 
+const MAC_SYMBOLS: [(&str, &str); 4] = [("Ctrl", "⌃"), ("Alt", "⌥"), ("Shift", "⇧"), ("Win", "⌘")];
+
+pub(crate) fn mac_label(label: &str) -> String {
+    let parts: Vec<&str> = label.split('+').filter(|part| !part.is_empty()).collect();
+    let modifiers: String = MAC_SYMBOLS.iter().filter(|(name, _)| parts.contains(name)).map(|(_, symbol)| *symbol).collect();
+    let key = parts.iter().filter(|part| MAC_SYMBOLS.iter().all(|(name, _)| name != *part)).copied().collect::<Vec<_>>().join("+");
+    modifiers + &key
+}
+
 #[cfg(test)]
 mod tests {
     use super::super::parse_shortcut_binding;
-    use super::{key_code, to_hotkey, Code, HotKey, Modifiers};
+    use super::{key_code, mac_label, to_hotkey, Code, HotKey, Modifiers};
+
+    #[test]
+    fn labels_use_the_mac_modifier_symbols_in_mac_order() {
+        assert_eq!(mac_label("Shift+Win+V"), "⇧⌘V");
+        assert_eq!(mac_label("Ctrl+Alt+F5"), "⌃⌥F5");
+        assert_eq!(mac_label("Win+Ctrl+Space"), "⌃⌘Space");
+    }
 
     #[test]
     fn saved_shortcuts_map_to_mac_keys() {
