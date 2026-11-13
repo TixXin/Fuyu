@@ -33,11 +33,13 @@ pub struct LocalTodoKeys {
     pub active_todo: Option<String>,
     #[serde(rename = "focusd-island-current-date", default)]
     pub current_date: Option<String>,
+    #[serde(rename = "fuyu-todos-migrated-v1", default)]
+    pub migrated: Option<String>,
 }
 
 impl LocalTodoKeys {
     fn is_empty(&self) -> bool {
-        *self == Self::default()
+        Self { migrated: None, ..self.clone() } == Self::default()
     }
 }
 
@@ -96,10 +98,19 @@ pub(crate) fn migrate(
     let hash = source_hash(keys);
     let existing = store::load(&path);
     let already_imported = imported_hashes(dir).contains(&hash);
-    let (keep_old, reimport) = match plan(&existing, &hash, keys.is_empty(), already_imported)? {
+    let migrated_before = keys.migrated.is_some();
+    let (keep_old, reimport) = match plan(&existing, &hash, keys.is_empty(), already_imported || migrated_before)? {
         Plan::UseFile => {
             return match existing {
-                Ok(Some(file)) => Ok((file, None)),
+                Ok(Some(file)) => {
+                    let unseen = !already_imported && !keys.is_empty() && !file.migration.as_ref().is_some_and(|migration| migration.source_hash == hash);
+                    if unseen {
+                        if let Err(error) = backup_local(dir, keys, &hash, app_version, now_ms()) {
+                            eprintln!("failed to back up the todos left in localStorage: {error}");
+                        }
+                    }
+                    Ok((file, None))
+                }
                 _ => Err("todos.json disappeared while reading it.".into()),
             };
         }

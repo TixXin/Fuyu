@@ -34,6 +34,7 @@ export type LocalTodoKeys = {
   "focusd-island-daily-note": string | null;
   "focusd-island-active-todo": string | null;
   "focusd-island-current-date": string | null;
+  "fuyu-todos-migrated-v1"?: string | null;
 };
 
 export type TodosSnapshot = {

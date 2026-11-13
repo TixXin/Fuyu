@@ -13,7 +13,8 @@ pub use service::{AppliedTodosChange, TodosChange};
 pub(crate) use service::{call, init, wait_until_decided};
 
 #[tauri::command]
-pub async fn migrate_todos(keys: LocalTodoKeys, normalized: TodosData) -> Result<TodosSnapshot, String> {
+pub async fn migrate_todos(app: tauri::AppHandle, keys: LocalTodoKeys, normalized: TodosData) -> Result<TodosSnapshot, String> {
+    service::init(&app)?;
     tauri::async_runtime::spawn_blocking(move || service::migrate(keys, normalized))
         .await
         .map_err(|error| format!("The migration task failed: {error}"))?
