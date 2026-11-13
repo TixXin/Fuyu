@@ -43,6 +43,7 @@ mod wezterm;
 mod window_focus;
 mod workbuddy;
 mod antigravity;
+mod dsh;
 
 use serde::Serialize;
 use serde_json::{json, Value};

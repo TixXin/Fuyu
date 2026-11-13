@@ -18,7 +18,7 @@ use super::sessions::{
 };
 use super::snapshot::{current_unix_millis, system_time_to_unix_millis};
 use super::title::{codex_thread_name, folder_title, user_prompt_in_record};
-use super::{antigravity, workbuddy};
+use super::{antigravity, dsh, workbuddy};
 
 pub(super) const ACTIVE_WINDOW_MS: i64 = 2 * 60 * 60 * 1000;
 const MAX_SESSIONS: usize = 12;
@@ -62,6 +62,7 @@ fn scan(
     let codex_index = read_tail(&home_dir.join(".codex").join("session_index.jsonl"));
     let mut live_claude = registry;
     let mut live_workbuddy = None;
+    let mut workbuddy_running = None;
     for (provider, path, modified) in recent_session_files(home_dir, now, window_ms) {
         if let Some((mut summary, state)) =
             cache.summary(provider, &path, modified, codex_index.as_deref())
@@ -70,7 +71,10 @@ fn scan(
             let mid_turn = matches!(state, TurnState::Working | TurnState::AwaitingUser);
             summary.closed = has_ended(app_dir, &summary.session_id).unwrap_or_else(|| match summary.provider {
                 "claudeCode" => left_registry(&home_dir.join(".claude"), &summary, now, &mut live_claude),
-                workbuddy::PROVIDER => left_registry(&home_dir.join(workbuddy::DIR), &summary, now, &mut live_workbuddy),
+                workbuddy::PROVIDER => {
+                    left_registry(&home_dir.join(workbuddy::DIR), &summary, now, &mut live_workbuddy)
+                        && !*workbuddy_running.get_or_insert_with(workbuddy::app_running)
+                }
                 _ => false,
             });
             let ended = mid_turn && summary.closed;
@@ -94,6 +98,7 @@ fn scan(
     cache.forget_missing(home_dir, &sessions);
     if let Some(app_dir) = app_dir {
         sessions.extend(antigravity::sessions(app_dir, now, window_ms));
+        sessions.extend(dsh::sessions(home_dir, now, window_ms));
     }
 
     let is_active = |phase: &str| matches!(phase, "running" | "waiting");
