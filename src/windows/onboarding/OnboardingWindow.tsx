@@ -7,11 +7,13 @@ import { useSystemDark } from "../../features/appearance/useResolvedTheme";
 import { useWindowAccent } from "../../features/appearance/useWindowAccent";
 import { useClipboardSettings } from "../../features/clipboard/useClipboardSettings";
 import { useTranslation } from "../../i18n";
+import { settingsWindowOpening } from "../settings/api";
+import type { SettingsFocusSection } from "../settings/storage";
 import { useLaunchAtStartup } from "../settings/useLaunchAtStartup";
 import { showOnboardingWindow } from "./api";
 import { HelloAct } from "./HelloAct";
 import { OutfitAct } from "./OutfitAct";
-import { enabledModules, withModules, type OnboardingModule } from "./personas";
+import { NO_ANSWER, enabledModules, withModules, type OnboardingModule } from "./personas";
 import { cardPlacement } from "./placement";
 import { PlayAct } from "./PlayAct";
 import { ReleaseAct } from "./ReleaseAct";
@@ -67,6 +69,7 @@ export function OnboardingWindow() {
   const [clipboard, updateClipboard] = useClipboardSettings();
   const [launchAtStartup, updateLaunchAtStartup] = useLaunchAtStartup();
   const [index, setIndex] = useState(0);
+  const [answer, setAnswer] = useState(NO_ANSWER);
   const act = ACTS[index];
   const last = index === ACTS.length - 1;
   const light = activeTone(settings.themeMode, useSystemDark()) === "light";
@@ -106,6 +109,7 @@ export function OnboardingWindow() {
     requestIslandWelcome("ready");
     closeGuide();
   };
+  const leaveForSettings = (section?: SettingsFocusSection) => void settingsWindowOpening(section).then(finish);
   const cardStyle: CSSProperties = { left: placement.left, width: placement.width, top: placement.top, bottom: placement.bottom, maxHeight: placement.maxHeight };
 
   return (
@@ -126,7 +130,7 @@ export function OnboardingWindow() {
           {!spot && <p className="onboarding__notice">{text.noIsland}</p>}
           {act === "hello" && <HelloAct />}
           {act === "shape" && <ShapeAct settings={settings} onSettingsChange={setSettings} />}
-          {act === "outfit" && <OutfitAct modules={modules} onModulesChange={changeModules} />}
+          {act === "outfit" && <OutfitAct modules={modules} answer={answer} onAnswerChange={setAnswer} onModulesChange={changeModules} />}
           {act === "play" && (
             <PlayAct
               settings={settings}
@@ -138,7 +142,12 @@ export function OnboardingWindow() {
             />
           )}
           {act === "release" && (
-            <ReleaseAct modules={modules} launchAtStartup={launchAtStartup} onLaunchAtStartupChange={(enabled) => void updateLaunchAtStartup(enabled)} />
+            <ReleaseAct
+              modules={modules}
+              launchAtStartup={launchAtStartup}
+              onLaunchAtStartupChange={(enabled) => void updateLaunchAtStartup(enabled)}
+              onLeaveForSettings={leaveForSettings}
+            />
           )}
         </section>
         <footer className="onboarding__footer">

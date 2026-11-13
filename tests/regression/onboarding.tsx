@@ -15,7 +15,7 @@ Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: automated }
 const commands: { command: string; args: Record<string, unknown> }[] = [];
 let clipboard: Record<string, unknown> = { enabled: true, winV: false, shortcut: "Ctrl+Shift+W", shortcutEnabled: true };
 let launchAtStartup = false;
-let shelfItems: { id: string }[] = [];
+let shelfItems: { id: string; addedAt: number }[] = [{ id: "earlier", addedAt: 1 }];
 mockIPC((command, payload) => {
   const args = (payload ?? {}) as Record<string, unknown>;
   commands.push({ command, args });
@@ -124,26 +124,46 @@ if (!automated) {
 
     await press("下一步");
     const body = document.querySelector<HTMLElement>(".onboarding__body")!;
-    check(title() === "给岛装上功能" && body.scrollWidth <= body.clientWidth, "Act 3 fits the card's width");
-    await act(async () => { document.querySelector<HTMLButtonElement>(".outfit-act__persona:nth-child(4)")!.click(); });
+    check(title() === "留下你用得上的功能" && body.scrollWidth <= body.clientWidth, "Act 3 fits the card's width");
+    const persona = (at: number) => document.querySelector<HTMLButtonElement>(`.outfit-act__persona:nth-child(${at})`)!;
+    const removed = () => document.querySelector(".outfit-act__removed")?.textContent ?? "";
+    check(persona(1).textContent === "写代码AI Agent、剪贴板、截图、待办、文件中转" && persona(4).textContent === "娱乐音乐、文件中转",
+      "Each answer lists every module it puts on");
+    check(!removed(), "Nothing is listed as taken off before an answer");
+    await act(async () => { persona(4).click(); });
     await wait(20);
     check(stored().musicEnabled === true && stored().agentStatusEnabled === false && stored().todoEnabled === false && clipboard.enabled === false,
-      "Answering Leisure puts on music and the shelf and takes the rest off");
+      "Answering Leisure keeps music and the shelf and takes the rest off");
+    check(removed() === "已卸下：待办、AI Agent、翻译、邮箱、剪贴板。点贴纸就能装回，以后在设置里也行。", "The card says what the answer took off");
+    await act(async () => { persona(4).click(); });
+    await wait(20);
+    check(stored().todoEnabled === true && stored().agentStatusEnabled === true && stored().screenshotEnabled === false && clipboard.enabled === true && !removed(),
+      "Taking the answer back restores the modules that were on before it");
+    await act(async () => { persona(4).click(); });
+    await wait(20);
     await press("剪贴板");
     await press("AI Agent");
     check(clipboard.enabled === true && stored().agentStatusEnabled === true, "Clicking a sticker puts that module on");
+    check(removed().startsWith("已卸下：待办、翻译、邮箱。"), "A sticker put back leaves the taken-off list");
+    await press("下一步");
+    await press("上一步");
+    check(persona(4).getAttribute("aria-pressed") === "true" && removed().startsWith("已卸下：待办、翻译、邮箱。"), "The answer is still there after leaving the act and coming back");
 
+    await placeIsland(open);
     await press("下一步");
     check(title() === "在真岛上试一下" && document.querySelectorAll(".play-act__task").length === 3, "Act 4 has three tasks while the shelf and clipboard are on");
+    check(document.querySelector(".onboarding__lead")?.textContent === "岛上正放着一首演示歌曲，还有一个演示 Agent 在干活。完成下面的小任务。", "The practice names the demo song and agent while both modules are on");
+    check(stars() === 0, "An island that was already open when the practice began earns nothing");
+    await placeIsland(closed);
     await press("点击");
     check(stored().expandTrigger === "click", "The island can be set to open on click");
     await placeIsland(open);
     check(stars() === 1 && document.querySelector(".onboarding-spotlight--open"), "Opening the real island earns a star, and the light grows with it");
     check(parseFloat(card().style.top || "0") !== closed.height + 28, "The card moves out of the way of the open island");
     await wait(900);
-    shelfItems = [{ id: "dropped" }];
+    shelfItems = [{ id: "dropped", addedAt: 2 }];
     await wait(900);
-    check(stars() === 2, "A file landing on the shelf earns a star");
+    check(stars() === 2, "A file landing on the shelf earns a star, even when the shelf holds as many entries as before");
     await act(async () => { await emit("clipboard-popup-opened"); });
     await wait(10);
     check(stars() === 3 && document.querySelector(".onboarding__lead")?.textContent === "全部完成，你已经会用了。", "The real clipboard popup opening earns the last star");
@@ -155,12 +175,19 @@ if (!automated) {
     await press("下一步");
     check(title() === "准备好了" && button("开始使用") && !button("跳过"), "The last act finishes instead of skipping");
     check(parseFloat(card().style.top) === closed.height + 28, "Back below the island after the practice");
+    check(document.body.textContent?.includes("右键托盘里的浮屿图标"), "The last act says where Settings is found later");
+    const closes = () => commands.filter(({ command }) => command.includes("close")).length;
     await press("连接 AI 编程工具");
     check(localStorage.getItem("fuyu-settings-focus")?.includes("agentConnect"), "Connect opens Settings on the Agent connect page");
+    const order = commands.map(({ command }) => command);
+    check(closes() === 1 && order.indexOf("open_settings_window") !== -1 && order.indexOf("open_settings_window") < order.findIndex((command) => command.includes("close")),
+      "Connect opens Settings first and then closes the overlay, so Settings is not left under the dimming");
+    check(welcome().kind === "ready" && localStorage.getItem("fuyu-onboarding-demo") === null, "Leaving for Settings ends the guide like Get started does");
     localStorage.removeItem("fuyu-settings-focus");
+    localStorage.removeItem("fuyu-onboarding-welcome");
     await press("开始使用");
     check(welcome().kind === "ready" && localStorage.getItem("fuyu-onboarding-demo") === null, "Get started asks the island to say it is ready and ends the demo");
-    check(commands.some(({ command }) => command.includes("close")), "Get started closes the overlay");
+    check(closes() === 2, "Get started closes the overlay");
 
     await act(async () => { root.unmount(); });
     document.documentElement.dataset.testResult = "passed";

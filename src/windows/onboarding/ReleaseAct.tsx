@@ -2,14 +2,15 @@ import { Bot, Mail, Settings } from "lucide-react";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
 import { useTranslation } from "../../i18n";
-import { openSettingsWindow } from "../settings/api";
+import type { SettingsFocusSection } from "../settings/storage";
 import { ActHeading } from "./ActHeading";
 import type { OnboardingModule } from "./personas";
 
-export function ReleaseAct({ modules, launchAtStartup, onLaunchAtStartupChange }: {
+export function ReleaseAct({ modules, launchAtStartup, onLaunchAtStartupChange, onLeaveForSettings }: {
   modules: ReadonlySet<OnboardingModule>;
   launchAtStartup: boolean;
   onLaunchAtStartupChange: (enabled: boolean) => void;
+  onLeaveForSettings: (section?: SettingsFocusSection) => void;
 }) {
   const text = useTranslation().onboarding.release;
 
@@ -22,22 +23,23 @@ export function ReleaseAct({ modules, launchAtStartup, onLaunchAtStartupChange }
       <p className="onboarding-release__later">{text.later}</p>
       <div className="onboarding-release__links">
         {modules.has("agents") && (
-          <button className="onboarding-release__link" type="button" onClick={() => openSettingsWindow("agentConnect")}>
+          <button className="onboarding-release__link" type="button" onClick={() => onLeaveForSettings("agentConnect")}>
             <Bot size={16} aria-hidden="true" />
             {text.connectAgents}
           </button>
         )}
         {modules.has("mail") && (
-          <button className="onboarding-release__link" type="button" onClick={() => openSettingsWindow("mail")}>
+          <button className="onboarding-release__link" type="button" onClick={() => onLeaveForSettings("mail")}>
             <Mail size={16} aria-hidden="true" />
             {text.addMail}
           </button>
         )}
-        <button className="onboarding-release__link" type="button" onClick={() => openSettingsWindow()}>
+        <button className="onboarding-release__link" type="button" onClick={() => onLeaveForSettings()}>
           <Settings size={16} aria-hidden="true" />
           {text.openSettings}
         </button>
       </div>
+      <p className="onboarding-release__later">{text.findLater}</p>
     </>
   );
 }

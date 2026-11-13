@@ -1,14 +1,18 @@
 import { invoke } from "@tauri-apps/api/core";
 import { requestSettingsFocus, type SettingsFocusSection } from "./storage";
 
-export function openSettingsWindow(section?: SettingsFocusSection) {
+export function settingsWindowOpening(section?: SettingsFocusSection): Promise<void> {
   if (section) {
     requestSettingsFocus(section);
   }
 
-  void invoke("open_settings_window").catch((error) => {
+  return invoke<void>("open_settings_window").catch((error) => {
     console.error("Failed to open settings window", error);
   });
+}
+
+export function openSettingsWindow(section?: SettingsFocusSection) {
+  void settingsWindowOpening(section);
 }
 
 export function showSettingsWindow() {

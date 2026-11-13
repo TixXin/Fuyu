@@ -23,14 +23,16 @@ export type OnboardingText = {
     title: string;
     lead: string;
     personaQuestion: string;
-    personas: Record<"code" | "office" | "study" | "fun", [string, string]>;
+    personas: Record<"code" | "office" | "study" | "fun", string>;
+    list: (names: string[]) => string;
+    takenOff: (names: string) => string;
     stickers: string;
     stickersHint: string;
     modules: Record<"todo" | "music" | "agents" | "translation" | "shelf" | "mail" | "screenshot" | "clipboard", string>;
   };
   play: {
     title: string;
-    lead: string;
+    lead: (song: boolean, agent: boolean) => string;
     stars: (done: number, total: number) => string;
     allDone: string;
     hover: string;
@@ -53,6 +55,7 @@ export type OnboardingText = {
     connectAgents: string;
     addMail: string;
     openSettings: string;
+    findLater: string;
     finish: string;
   };
   greeting: Record<"hello" | "ready", { title: string; body: string }>;
@@ -87,15 +90,17 @@ export const zhCN: OnboardingText = {
     corners: "圆角",
   },
   outfit: {
-    title: "给岛装上功能",
-    lead: "回答一个问题，岛会替你装好一组；再点贴纸增减。看看岛上的图标怎么变。",
-    personaQuestion: "你平时主要用电脑做什么？可以多选。",
+    title: "留下你用得上的功能",
+    lead: "岛上已经装着常用的功能。回答一个问题，只留下你用得上的那一组；再点贴纸增减。看看岛上的图标怎么变。",
+    personaQuestion: "你平时主要用电脑做什么？可以多选，再点一次取消。",
     personas: {
-      code: ["写代码", "AI Agent、剪贴板、截图"],
-      office: ["办公", "待办、邮箱、翻译"],
-      study: ["学习", "待办、翻译、音乐"],
-      fun: ["娱乐", "音乐、文件中转"],
+      code: "写代码",
+      office: "办公",
+      study: "学习",
+      fun: "娱乐",
     },
+    list: (names) => names.join("、"),
+    takenOff: (names) => `已卸下：${names}。点贴纸就能装回，以后在设置里也行。`,
     stickers: "功能贴纸",
     stickersHint: "亮着的已经装上，点一下装上或卸下。",
     modules: {
@@ -111,7 +116,11 @@ export const zhCN: OnboardingText = {
   },
   play: {
     title: "在真岛上试一下",
-    lead: "岛上正放着一首演示歌曲，还有一个演示 Agent 在干活。完成下面的小任务。",
+    lead: (song, agent) =>
+      song && agent ? "岛上正放着一首演示歌曲，还有一个演示 Agent 在干活。完成下面的小任务。"
+        : song ? "岛上正放着一首演示歌曲。完成下面的小任务。"
+          : agent ? "岛上有一个演示 Agent 在干活。完成下面的小任务。"
+            : "完成下面的小任务，每完成一个亮一颗星。",
     stars: (done, total) => `${done} / ${total}`,
     allDone: "全部完成，你已经会用了。",
     hover: "把鼠标停在岛上，让它展开",
@@ -127,13 +136,14 @@ export const zhCN: OnboardingText = {
   },
   release: {
     title: "准备好了",
-    lead: "演示的歌和 Agent 会在引导结束时消失，岛会留在原地。",
+    lead: "演示的内容会在引导结束时消失，岛会留在原地。",
     launchAtStartup: "开机时启动",
     launchAtStartupHint: "登录 Windows 后岛自动出现",
-    later: "下面这些要多一步设置，现在或以后都行：",
+    later: "下面这些要多一步设置。点一下会结束引导并打开设置，以后再弄也行：",
     connectAgents: "连接 AI 编程工具",
     addMail: "添加邮箱",
     openSettings: "打开设置",
+    findLater: "以后想改什么：右键托盘里的浮屿图标，选「设置」。",
     finish: "开始使用",
   },
   greeting: {
@@ -171,15 +181,17 @@ export const en: OnboardingText = {
     corners: "Corners",
   },
   outfit: {
-    title: "Give it some features",
-    lead: "Answer one question and the island picks a set; then click stickers to add or remove. Watch its icons change.",
-    personaQuestion: "What do you mostly use your computer for? Pick any.",
+    title: "Keep the features you'll use",
+    lead: "The island comes with the common features on. Answer one question to keep just the set that fits; then click stickers to add or remove. Watch its icons change.",
+    personaQuestion: "What do you mostly use your computer for? Pick any; click again to undo.",
     personas: {
-      code: ["Coding", "AI agents, clipboard, screenshots"],
-      office: ["Work", "Todos, mail, translation"],
-      study: ["Study", "Todos, translation, music"],
-      fun: ["Leisure", "Music, file shelf"],
+      code: "Coding",
+      office: "Work",
+      study: "Study",
+      fun: "Leisure",
     },
+    list: (names) => names.join(", "),
+    takenOff: (names) => `Taken off: ${names}. Click a sticker to put one back, or do it in Settings later.`,
     stickers: "Feature stickers",
     stickersHint: "Lit ones are on. Click to add or remove.",
     modules: {
@@ -195,7 +207,11 @@ export const en: OnboardingText = {
   },
   play: {
     title: "Try it on the real island",
-    lead: "The island is playing a demo song and a demo agent is at work. Do the little tasks below.",
+    lead: (song, agent) =>
+      song && agent ? "The island is playing a demo song and a demo agent is at work. Do the little tasks below."
+        : song ? "The island is playing a demo song. Do the little tasks below."
+          : agent ? "A demo agent is at work on the island. Do the little tasks below."
+            : "Do the little tasks below. Each one lights a star.",
     stars: (done, total) => `${done} / ${total}`,
     allDone: "All done. You know how it works.",
     hover: "Rest the pointer on the island to open it",
@@ -211,13 +227,14 @@ export const en: OnboardingText = {
   },
   release: {
     title: "You're all set",
-    lead: "The demo song and agent go away when the guide ends; the island stays where it is.",
+    lead: "The demo content goes away when the guide ends; the island stays where it is.",
     launchAtStartup: "Start with Windows",
     launchAtStartupHint: "The island appears after you sign in",
-    later: "These take one more step, now or later:",
+    later: "These take one more step. Clicking one ends the guide and opens Settings; later is fine too:",
     connectAgents: "Connect AI coding tools",
     addMail: "Add a mail account",
     openSettings: "Open Settings",
+    findLater: "To change anything later, right-click the Fuyu icon in the tray and pick Settings.",
     finish: "Get started",
   },
   greeting: {

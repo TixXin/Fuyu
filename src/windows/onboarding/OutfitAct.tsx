@@ -1,8 +1,7 @@
-import { useState } from "react";
 import { Bot, Camera, Check, ClipboardList, FolderInput, Languages, ListTodo, Mail, Music, type LucideIcon } from "lucide-react";
 import { useTranslation } from "../../i18n";
 import { ActHeading } from "./ActHeading";
-import { MODULES, PERSONAS, modulesFor, type OnboardingModule, type Persona } from "./personas";
+import { MODULES, PERSONAS, personaModules, takenOff, togglePersona, type OnboardingModule, type Persona, type PersonaAnswer } from "./personas";
 import "./OutfitAct.css";
 
 const MODULE_ICONS: Record<OnboardingModule, LucideIcon> = {
@@ -16,17 +15,20 @@ const MODULE_ICONS: Record<OnboardingModule, LucideIcon> = {
   clipboard: ClipboardList,
 };
 
-export function OutfitAct({ modules, onModulesChange }: {
+export function OutfitAct({ modules, answer, onAnswerChange, onModulesChange }: {
   modules: ReadonlySet<OnboardingModule>;
+  answer: PersonaAnswer;
+  onAnswerChange: (answer: PersonaAnswer) => void;
   onModulesChange: (modules: ReadonlySet<OnboardingModule>) => void;
 }) {
   const text = useTranslation().onboarding.outfit;
-  const [personas, setPersonas] = useState<Persona[]>([]);
+  const names = (list: readonly OnboardingModule[]) => text.list(list.map((module) => text.modules[module]));
+  const removed = takenOff(answer, modules);
 
-  const togglePersona = (persona: Persona) => {
-    const next = personas.includes(persona) ? personas.filter((chosen) => chosen !== persona) : [...personas, persona];
-    setPersonas(next);
-    if (next.length > 0) onModulesChange(modulesFor(next));
+  const pick = (persona: Persona) => {
+    const next = togglePersona(answer, persona, modules);
+    onAnswerChange(next.answer);
+    onModulesChange(next.modules);
   };
   const toggleModule = (module: OnboardingModule) => {
     const next = new Set(modules);
@@ -41,17 +43,17 @@ export function OutfitAct({ modules, onModulesChange }: {
       <p className="outfit-act__question">{text.personaQuestion}</p>
       <div className="outfit-act__personas">
         {PERSONAS.map((persona) => {
-          const chosen = personas.includes(persona);
+          const chosen = answer.personas.includes(persona);
           return (
             <button
               key={persona}
               className={chosen ? "outfit-act__persona outfit-act__persona--chosen" : "outfit-act__persona"}
               type="button"
               aria-pressed={chosen}
-              onClick={() => togglePersona(persona)}
+              onClick={() => pick(persona)}
             >
-              <span className="outfit-act__persona-name">{text.personas[persona][0]}</span>
-              <span className="outfit-act__persona-hint">{text.personas[persona][1]}</span>
+              <span className="outfit-act__persona-name">{text.personas[persona]}</span>
+              <span className="outfit-act__persona-hint">{names(personaModules(persona))}</span>
               {chosen && <Check className="outfit-act__persona-check" size={14} aria-hidden="true" />}
             </button>
           );
@@ -76,6 +78,7 @@ export function OutfitAct({ modules, onModulesChange }: {
           );
         })}
       </div>
+      {removed.length > 0 && <p className="outfit-act__removed" role="status">{text.takenOff(names(removed))}</p>}
     </>
   );
 }
