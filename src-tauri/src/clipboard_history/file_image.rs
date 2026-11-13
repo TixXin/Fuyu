@@ -1,7 +1,7 @@
 use std::{io::Cursor, path::Path};
 
 use base64::{engine::general_purpose, Engine as _};
-use image::{DynamicImage, ImageFormat, ImageReader};
+use image::{DynamicImage, ImageFormat, ImageReader, RgbaImage};
 
 use super::{store::make_thumbnail, ClipboardFileImage, ClipboardHistoryItem, ClipboardHistoryItemKind};
 
@@ -32,7 +32,17 @@ pub(super) fn read(path: &str) -> Option<ClipboardFileImage> {
         return None;
     }
     let image = ImageReader::open(path).ok()?.with_guessed_format().ok()?.decode().ok()?.to_rgba8();
-    let thumbnail = make_thumbnail(&image);
+    describe(&image, byte_size)
+}
+
+pub(super) fn from_pixels(path: &str, width: usize, height: usize, rgba: Vec<u8>) -> Option<ClipboardFileImage> {
+    let image = RgbaImage::from_raw(u32::try_from(width).ok()?, u32::try_from(height).ok()?, rgba)?;
+    let byte_size = std::fs::metadata(path).map(|meta| meta.len()).unwrap_or(0);
+    describe(&image, byte_size)
+}
+
+fn describe(image: &RgbaImage, byte_size: u64) -> Option<ClipboardFileImage> {
+    let thumbnail = make_thumbnail(image);
     let mut bytes = Cursor::new(Vec::new());
     DynamicImage::ImageRgba8(thumbnail).write_to(&mut bytes, ImageFormat::Png).ok()?;
     Some(ClipboardFileImage {
@@ -65,6 +75,8 @@ mod tests {
         assert_eq!((found.width, found.height), (400, 200));
         assert!(found.thumbnail_data_url.starts_with("data:image/png;base64,"));
         assert!(read(&dir.join("missing.png").to_string_lossy()).is_none());
+        let pasted = super::from_pixels(&dir.join("locked.jpg").to_string_lossy(), 2, 1, vec![0; 8]).expect("pixels");
+        assert_eq!((pasted.width, pasted.height, pasted.byte_size), (2, 1, 0));
         let _ = std::fs::remove_dir_all(&dir);
     }
 }

@@ -376,7 +376,8 @@ impl ClipboardHistoryService {
                 masked,
                 ..base(hash, ClipboardHistoryItemKind::Text, String::new())
             },
-            ClipboardCapture::Files { hash, paths, preview } => ClipboardHistoryItem {
+            ClipboardCapture::Files { hash, paths, preview, pixels } => ClipboardHistoryItem {
+                file_image: pixels.and_then(|(width, height, rgba)| super::file_image::from_pixels(paths.first()?, width, height, rgba)),
                 files: Some(paths),
                 ..base(hash, ClipboardHistoryItemKind::Files, preview)
             },
@@ -412,6 +413,20 @@ impl ClipboardHistoryService {
             });
         }
         Ok(())
+    }
+
+    pub(super) fn drag_paths(&self, id: &str) -> Result<Vec<String>, String> {
+        let state = self.state.lock().map_err(|_| "Clipboard history is unavailable.".to_string())?;
+        let item = state.items.iter().find(|item| item.id == id).ok_or_else(|| "That clipboard entry is gone.".to_string())?;
+        let paths: Vec<String> = match (&item.image, &item.files) {
+            (Some(image), _) => vec![image.original_path.clone()],
+            (None, Some(files)) => files.iter().filter(|path| Path::new(path).exists()).cloned().collect(),
+            (None, None) => Vec::new(),
+        };
+        if paths.is_empty() {
+            return Err("Only images and files can be dragged out.".to_string());
+        }
+        Ok(paths)
     }
 
     fn set_file_images(&self, found: Vec<(String, ClipboardFileImage)>) {

@@ -22,7 +22,7 @@ export function ClipboardEntryIcon({ item, className }: { item: ClipboardHistory
   const several = item.kind === "files" && (item.files?.length ?? 0) > 1;
   const Fallback = item.masked ? KeyRound : fileKind ? (several && fileKind === "other" ? Files : FILE_ICONS[fileKind]) : ClipboardList;
   return (
-    <span className={`clipboard-entry-icon${className ? ` ${className}` : ""}`} title={sourceName(item, t.settings.project.appName)}>
+    <span className={`clipboard-entry-icon${className ? ` ${className}` : ""}`} title={sourceName(item, t.settings.project.appName, t.clipboard.popup.screenshotSource)}>
       <Fallback size={16} strokeWidth={1.5} absoluteStrokeWidth aria-hidden="true" />
       {appIcon && <img className="clipboard-entry-icon__app" src={appIcon} alt="" aria-hidden="true" />}
     </span>

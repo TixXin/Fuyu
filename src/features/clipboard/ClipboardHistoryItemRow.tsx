@@ -58,7 +58,7 @@ export function ClipboardHistoryItemRow({
   const extraFiles = item.kind === "files" && item.files && item.files.length > 1 ? item.files.length - 1 : 0;
   const meta = [
     kind ? text.popup.actions.kinds[kind.kind] : null,
-    sourceName(item, t.settings.project.appName),
+    sourceName(item, t.settings.project.appName, text.popup.screenshotSource),
     formatAgo(item.copiedAt, now, t.common.ago),
     fileImageLabel(item, formatBytes),
     item.kind === "files" && item.files?.[0] ? fileFolder(item.files[0]) : null,

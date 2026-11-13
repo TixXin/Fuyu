@@ -12,6 +12,7 @@ const KINDS: Record<Exclude<FileKind, "other">, readonly string[]> = {
 };
 
 const OWN_SOURCE = /^(fuyu|浮屿)$/i;
+const PLAIN_FOLDERS = /^(te?mp|rwtemp|caches?|\d{4}(-\d{2}){1,2})$/i;
 
 function parts(path: string) {
   return path.split(/[\\/]+/).filter(Boolean);
@@ -28,7 +29,8 @@ export function fileKind(path: string): FileKind {
 
 export function fileFolder(path: string): string | null {
   const segments = parts(path);
-  return segments.length >= 2 ? segments[segments.length - 2] : null;
+  const folder = segments.length >= 2 ? segments[segments.length - 2] : null;
+  return folder && !PLAIN_FOLDERS.test(folder) ? folder : null;
 }
 
 export function itemFileKind(item: ClipboardHistoryItem): FileKind | null {
@@ -39,10 +41,12 @@ export function itemFileKind(item: ClipboardHistoryItem): FileKind | null {
 
 export function fileImageLabel(item: ClipboardHistoryItem, formatBytes: (bytes: number) => string): string | null {
   const image = item.kind === "files" ? item.fileImage : undefined;
-  return image ? `${image.width}×${image.height} · ${formatBytes(image.byteSize)}` : null;
+  if (!image) return null;
+  return image.byteSize > 0 ? `${image.width}×${image.height} · ${formatBytes(image.byteSize)}` : `${image.width}×${image.height}`;
 }
 
-export function sourceName(item: ClipboardHistoryItem, appName: string): string | undefined {
+export function sourceName(item: ClipboardHistoryItem, appName: string, screenshot = appName): string | undefined {
   const name = item.source?.name;
-  return name && OWN_SOURCE.test(name) ? appName : name;
+  if (!name || !OWN_SOURCE.test(name)) return name;
+  return item.kind === "image" ? screenshot : appName;
 }

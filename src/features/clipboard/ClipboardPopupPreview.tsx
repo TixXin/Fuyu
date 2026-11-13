@@ -78,7 +78,7 @@ export function ClipboardPopupPreview({ entry, snippet, linkPreview = false, onP
       )}
       <dl className="clipboard-popup__pane-meta">
         <dt>{text.source}</dt>
-        <dd>{sourceName(item, t.settings.project.appName) ?? text.none}</dd>
+        <dd>{sourceName(item, t.settings.project.appName, t.clipboard.popup.screenshotSource) ?? text.none}</dd>
         <dt>{text.copiedAt}</dt>
         <dd>{copiedAt}</dd>
         <dt>{text.tags}</dt>

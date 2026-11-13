@@ -229,8 +229,24 @@ pub(crate) fn overlay_ready(window: &WebviewWindow, id: u64) {
     };
     let _ = window.show();
     if focus {
-        let _ = window.set_focus();
+        focus_overlay(window);
     }
+}
+
+#[cfg(target_os = "macos")]
+fn focus_overlay(window: &WebviewWindow) {
+    let (app, label) = (window.app_handle().clone(), window.label().to_string());
+    let target = window.clone();
+    let _ = window.run_on_main_thread(move || {
+        if !crate::macos::island_panel::make_panel_key(&app, &label) {
+            let _ = target.set_focus();
+        }
+    });
+}
+
+#[cfg(not(target_os = "macos"))]
+fn focus_overlay(window: &WebviewWindow) {
+    let _ = window.set_focus();
 }
 
 pub(crate) fn origin(label: &str) -> Option<(i32, i32)> {

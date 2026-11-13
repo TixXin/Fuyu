@@ -186,6 +186,10 @@ export function getClipboardImagePreview(id: string) {
   return invoke<string | null>("get_clipboard_image_preview", { id });
 }
 
+export function startClipboardDrag(id: string) {
+  return invoke<void>("start_clipboard_drag", { id });
+}
+
 export function hideClipboardPopup(blurred = false) {
   return invoke<void>("hide_clipboard_popup", { blurred });
 }

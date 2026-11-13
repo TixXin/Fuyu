@@ -2,6 +2,7 @@ pub(crate) mod actions;
 mod capture_pause;
 mod clipboard_io;
 mod command_text;
+pub(crate) mod drag;
 #[cfg_attr(target_os = "macos", path = "hotkey_macos.rs")]
 mod hotkey;
 mod link_guard;
@@ -615,6 +616,7 @@ macro_rules! tauri_commands {
             crate::clipboard_history::copy_clipboard_history_item_as,
             crate::clipboard_history::paste_clipboard_history_item,
             crate::clipboard_history::hide_clipboard_popup,
+            crate::clipboard_history::drag::start_clipboard_drag,
             crate::clipboard_history::paste_clipboard_sequence,
             crate::clipboard_history::export_clipboard_history,
             crate::clipboard_history::import_clipboard_history,

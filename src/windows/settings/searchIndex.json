@@ -1375,12 +1375,12 @@
       "zh-CN": {
         "group": "打开方式",
         "title": "共享屏幕时隐藏",
-        "description": "开会共享屏幕、录屏、截图时，剪贴板窗口显示为空白，不露出历史。"
+        "description": "开会共享屏幕、录屏、用别的软件截图时，剪贴板窗口显示为空白，不露出历史；浮屿自己的截图照样截得到它。"
       },
       "en": {
         "group": "Opening",
         "title": "Hide while sharing the screen",
-        "description": "Screen sharing, recordings and screenshots show the clipboard window as blank."
+        "description": "Screen sharing, recordings and other apps' screenshots show the clipboard window as blank; Fuyu's own screenshots still include it."
       }
     },
     {
@@ -1388,12 +1388,12 @@
       "zh-CN": {
         "group": "打开方式",
         "title": "读取链接标题和图标",
-        "description": "宽版里显示复制的链接对应网页的标题和图标。会访问那个网址，默认关。"
+        "description": "列表里的网址显示网站图标，宽版里再显示网页标题。会访问那个网址，默认关。"
       },
       "en": {
         "group": "Opening",
         "title": "Read link titles and icons",
-        "description": "The wide window shows a copied link's page title and icon. This visits the address; off by default."
+        "description": "Copied links show the site's icon in the list, and the page title in the wide window. This visits the address; off by default."
       }
     },
     {
@@ -1561,7 +1561,7 @@
       "zh-CN": {
         "group": "导入导出",
         "title": "导出剪贴板历史",
-        "description": "历史记录（含图片）和常用片段写成一个 JSON 文件，放在「下载」文件夹。里面可能有你复制过的密码和私人内容，注意保管。"
+        "description": "历史记录（含图片）和常用语写成一个 JSON 文件，放在「下载」文件夹。里面可能有你复制过的密码和私人内容，注意保管。"
       },
       "en": {
         "group": "Import and export",
@@ -1574,7 +1574,7 @@
       "zh-CN": {
         "group": "导入导出",
         "title": "从文件导入",
-        "description": "导入另一台电脑导出的文件：只加入这里还没有的记录和片段，不删除任何东西。"
+        "description": "导入另一台电脑导出的文件：只加入这里还没有的记录和常用语，不删除任何东西。"
       },
       "en": {
         "group": "Import and export",
