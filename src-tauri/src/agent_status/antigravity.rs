@@ -73,10 +73,12 @@ pub(super) fn sessions(app_dir: &Path, now: i64, window_ms: i64) -> Vec<AgentSes
 
 fn summary(session_id: String, saved: &Saved, now: i64) -> AgentSessionSummary {
     let input = &saved.input;
-    let cwd = input["workspacePaths"]
-        .as_array()
-        .and_then(|paths| paths.iter().find_map(text))
-        .map(|path| path.strip_prefix("file:///").map(str::to_string).unwrap_or(path));
+    let cwd = text(&input["cwd"]).or_else(|| {
+        input["workspacePaths"]
+            .as_array()
+            .and_then(|paths| paths.iter().find_map(text))
+            .map(|path| path.strip_prefix("file:///").map(str::to_string).unwrap_or(path))
+    });
     let prompt = input["lastUserInput"].as_str().and_then(prompt_title);
     let (title, title_source) = pick_title(None, None, prompt.clone(), cwd.as_deref().and_then(folder_title));
     let state = if saved.running { TurnState::Working } else { TurnState::Done };
@@ -179,6 +181,7 @@ mod tests {
         file.set_modified(SystemTime::now() - Duration::from_millis(ago_ms)).unwrap();
     }
 
+    const CLI_STOP: &str = r#"{"conversationId":"a2706318","cwd":"C:\\work\\demo","workspacePaths":["C:/work/demo"],"hookEventName":"Stop","fullyIdle":true,"terminationReason":"NO_TOOL_CALL","lastUserInput":"Reply with the single word: pong","modelName":"gemini-3.8-flash-high"}"#;
     const INPUT: &str = r#"{"conversationId":"c1","workspacePaths":["D:\\work\\demo"],"modelName":"Gemini 3.8 Flash","lastUserInput":"fix the login page"}"#;
 
     #[test]
@@ -201,6 +204,9 @@ mod tests {
         assert_eq!(first.model.as_deref(), Some("Gemini 3.8 Flash"));
         assert_eq!(listed[1].cwd.as_deref(), Some(r"D:/work\demo"));
         assert!(!app_dir.join(SAVED_DIR).join("running-1.json").exists());
+        save(&app_dir, "stop-6.json", CLI_STOP, 1_000);
+        let cli = sessions(&app_dir, now, 60 * 60 * 1000).into_iter().find(|s| s.session_id == "a2706318").unwrap();
+        assert_eq!((cli.phase, cli.cwd.as_deref()), ("completed", Some(r"C:\work\demo")));
         fs::remove_dir_all(&app_dir).unwrap();
     }
 

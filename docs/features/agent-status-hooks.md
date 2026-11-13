@@ -217,10 +217,10 @@ Only the session format was checked against real files (WorkBuddy 5.3.8 and 5.9.
 
 ## Antigravity
 
-Google Antigravity (the IDE and the `agy` CLI) is listed on the Agent page with its own icon (task B23.3, issue #155). It was written from Antigravity's hook documentation and has not been run against a real Antigravity; what is known, with sources, is in [agent-harnesses.md](../research/agent-harnesses.md).
+Google Antigravity (the IDE and the `agy` CLI) is listed on the Agent page with its own icon (task B23.3, issue #155). It was written from Antigravity's hook documentation; on 2026-11-13 the hooks were run with the `agy` CLI 1.5.8 on Windows (SessionStart, PreInvocation and Stop all fired, with the input fields below), but not yet with the island showing the result, nor with the App or IDE; what is known, with sources, is in [agent-harnesses.md](../research/agent-harnesses.md).
 
 - **Hooks**: **安装/修复** writes a `fuyu` group to `~/.gemini/config/hooks.json` (`enabled`, `SessionStart` and `PreInvocation` run `fuyu-agent-running.cmd antigravity running`, `Stop` runs `... antigravity stop`), but only when `~/.gemini/antigravity`, `antigravity-ide` or `antigravity-cli` exists. Other groups in the file are kept. The script saves each hook's input in `agent-antigravity\<running|stop>-*.json`.
-- **Sessions**: one per `conversationId`, from the newest saved input: folder from `workspacePaths`, title from `lastUserInput` (otherwise the folder), model from `modelName`. `running` shows as running (stale after the usual 10 minutes), `stop` as done. The transcript format is unknown, so the island does not read it; older inputs of a conversation and inputs over a day old are deleted.
+- **Sessions**: one per `conversationId`, from the newest saved input: folder from `cwd` (otherwise the first of `workspacePaths`, which the CLI writes as `C:/...`), title from `lastUserInput` (otherwise the folder), model from `modelName`. `running` shows as running (stale after the usual 10 minutes), `stop` as done. The transcript format is unknown, so the island does not read it; older inputs of a conversation and inputs over a day old are deleted.
 - **Clicking a session** brings up the Antigravity window.
 - Not done: "waiting on you" (Antigravity's hooks have no approval or notification event), usage, approving from the island, SSH.
 

@@ -51,12 +51,12 @@
 - 格式：`{"<钩子名>": {"enabled": true, "<事件>": [...]}}`。`PreToolUse` / `PostToolUse` 的元素是 `{"matcher": "<工具正则>", "hooks": [{"type": "command", "command": "...", "timeout": 30}]}`，其余事件直接写 handler 列表。超时单位是秒，默认 30。
 - 事件只有 6 个：`SessionStart`、`PreToolUse`、`PostToolUse`、`PreInvocation`（每次调模型之前，可以当「这一轮开始」）、`PostInvocation`、`Stop`（带 `terminationReason`，后台任务还在跑时 `fullyIdle` 为 false）。
 - **没有** `Notification` 或 `PermissionRequest`，所以看不出它在等用户确认，「等你」做不了。
-- 输入（camelCase）：`conversationId`、`workspacePaths[]`、`transcriptPath`、`artifactDirectoryPath`、`modelName`、`lastUserInput`。没有 `cwd`，工作目录取 `workspacePaths[0]`；属于哪个产品要从 `transcriptPath` 反推。
+- 输入（camelCase）：`conversationId`、`workspacePaths[]`、`transcriptPath`、`artifactDirectoryPath`、`modelName`、`lastUserInput`。属于哪个产品要从 `transcriptPath` 反推。2026-11-13 用 `agy` CLI 1.5.8 实测：输入里其实有 `cwd`（Windows 反斜杠路径），还有 `hookEventName`；`workspacePaths` 是 `C:/...` 正斜杠写法；PreInvocation 多 `invocationNum`，Stop 多 `fullyIdle`、`terminationReason`、`error`。
 - `PreToolUse` 能在 stdout 返回 `decision`（`allow`、`deny`、`ask` 等），所以以后可以做成从岛上应答审批：钩子阻塞，等岛上点了再回答。
 
 **会话文件**：
 
-- 记录在 `<数据目录>/brain/<conversationId>/.system_generated/logs/transcript.jsonl` [1]。每行的格式没找到文档，B23.3 要做成读不懂的记录就跳过。
+- 记录在 `<数据目录>/brain/<conversationId>/.system_generated/logs/transcript.jsonl` [1]；CLI 1.5.8 实测文件名是 `transcript_full.jsonl`。每行的格式没找到文档，B23.3 要做成读不懂的记录就跳过。
 - 标题：CLI 有 `conversation_summaries.db`（SQLite，表 `conversation_summaries` 有 `title`、`status`、`last_modified_time`）和 `annotations/<id>.pbtxt`（`title:"..."`）[12]（未核实）。App 和 IDE 的 `conversations/*.pb` 是加密的 protobuf，新版 IDE 改成 `*.db` [13]（未核实）。为了不读加密文件、不加 SQLite 依赖，标题先用第一条用户输入，读不到就用文件夹名，和 Claude Code 没有标题时的做法一样。
 
 **用量**：`/usage` 按模型组（Gemini、第三方模型）给出 5 小时和每周两个窗口，显示剩余量 [2]，和现在的用量环正好对得上。Atoll 的做法 [14]：
