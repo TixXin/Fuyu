@@ -76,6 +76,7 @@
 
 - [ ] **G1.9 媒体控制、歌词与亮度（私有 API，按 M7）。** 媒体读取用 mediaremote-adapter 的思路，失败时对 Apple Music / Spotify 用 AppleScript 兜底；亮度参考 MonitorControl。设置里显示当前来源和失效提示。每个 macOS 大版本发布后复测。
 - [x] **G1.10 QQ / 微信提醒的技术验证（按 M8）。**（2026-11-13 已做：验证见 [macos-messengers.md](../investigations/macos-messengers.md)，并按结论做了只显示未读数的 Mac 版） 先验证读 Dock 角标未读数；微信会话列表（AX）和 NTQQ 的 `AXManualAccessibility` 只做验证、写进 `docs/investigations/`，结论出来后再决定对外承诺什么。
+- [ ] **G1.15 插件自定义网页界面（待研究）。** Windows 用独立的 WebView2 页面，Mac 上暂不支持；Tauri 子 webview 有安全问题，要么自己用 WKWebView 做，见任务 G1.15。
 - [ ] **G1.11 刘海形态（可选，按 M4）。** 读 `safeAreaInsets` 和 `auxiliaryTop*Area` 得到刘海几何；折叠态和刘海融为一体；无刘海屏回退到顶部正中。
 
 ## 第 3 步：签名与发布
