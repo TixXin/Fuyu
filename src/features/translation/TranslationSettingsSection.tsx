@@ -1,4 +1,4 @@
-import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
+import { useEffect, useState, type Dispatch, type SetStateAction, type ReactNode } from "react";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsInput } from "../../components/settings/SettingsInput";
 import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton";
@@ -13,7 +13,9 @@ import type { TranslationSettings } from "./storage";
 import "./TranslationSettingsSection.css";
 import { isMacOS } from "../../lib/platform";
 
-export function TranslationSettingsSection({ settings, setSettings }: {
+export function TranslationSettingsSection({ settings, setSettings, lead, useFooter }: {
+  lead?: ReactNode;
+  useFooter?: ReactNode;
   settings: TranslationSettings;
   setSettings: Dispatch<SetStateAction<TranslationSettings>>;
 }) {
@@ -61,6 +63,11 @@ export function TranslationSettingsSection({ settings, setSettings }: {
 
   return (
     <>
+      <SettingsGroup title={t.settings.translation.behaviorTitle} footer={useFooter}>
+        {lead}
+        <SettingsToggleRow title={t.settings.translation.pasteOnOpen} description={t.settings.translation.pasteOnOpenHint} checked={settings.pasteClipboardOnOpen} onChange={(pasteClipboardOnOpen) => setSettings((current) => ({ ...current, pasteClipboardOnOpen }))} />
+        <SettingsToggleRow title={t.settings.translation.autoTranslate} description={t.settings.translation.autoTranslateHint} checked={settings.autoTranslate} onChange={(autoTranslate) => setSettings((current) => ({ ...current, autoTranslate }))} />
+      </SettingsGroup>
       <SettingsGroup title={t.settings.translation.serviceTitle} footer={footer}>
         <SettingsRow
           title={t.translator.provider}
@@ -97,10 +104,6 @@ export function TranslationSettingsSection({ settings, setSettings }: {
         >
           <SettingsInput type="password" autoComplete="off" aria-label={t.translator.secret} value={secretDraft} onChange={(event) => setSecretDraft(event.currentTarget.value)} onKeyDown={(event) => { if (event.key === "Enter") void saveSecret(); }} placeholder={hasSecret ? t.translator.replaceSecret : t.translator.enterSecret} />
         </SettingsRow>
-      </SettingsGroup>
-      <SettingsGroup title={t.settings.translation.behaviorTitle}>
-        <SettingsToggleRow title={t.settings.translation.pasteOnOpen} description={t.settings.translation.pasteOnOpenHint} checked={settings.pasteClipboardOnOpen} onChange={(pasteClipboardOnOpen) => setSettings((current) => ({ ...current, pasteClipboardOnOpen }))} />
-        <SettingsToggleRow title={t.settings.translation.autoTranslate} description={t.settings.translation.autoTranslateHint} checked={settings.autoTranslate} onChange={(autoTranslate) => setSettings((current) => ({ ...current, autoTranslate }))} />
       </SettingsGroup>
     </>
   );

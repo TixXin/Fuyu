@@ -1,0 +1,36 @@
+{
+  "id": "dev.focusd.launcher",
+  "name": { "zh-CN": "启动台", "en": "Launcher" },
+  "description": {
+    "zh-CN": "按快捷键在岛上搜索并打开这台电脑上的应用，最近用过的排在前面。",
+    "en": "Press a shortcut to search and open the apps on this computer from the island, recent ones first."
+  },
+  "version": "0.1.0",
+  "apiVersion": 2,
+  "minAppVersion": "0.3.1",
+  "author": "TixXin",
+  "homepage": "https://github.com/TixXin/fuyu/tree/main/plugins/examples/dev.focusd.launcher",
+  "platforms": ["windows", "macos"],
+  "runtime": { "type": "process", "command": "main.mjs" },
+  "activationEvents": [],
+  "permissions": [],
+  "contributes": {
+    "commands": [
+      { "id": "open", "title": { "zh-CN": "打开启动台", "en": "Open the launcher" }, "keybinding": "Ctrl+Alt+Space" },
+      { "id": "rescan", "title": { "zh-CN": "重新查找应用", "en": "Look for apps again" } }
+    ],
+    "views": [
+      { "id": "apps", "title": { "zh-CN": "应用", "en": "Apps" }, "icon": "rocket", "template": "list" }
+    ],
+    "settings": [
+      {
+        "key": "recentCount",
+        "type": "number",
+        "default": 6,
+        "min": 0,
+        "max": 12,
+        "title": { "zh-CN": "最近用过的应用显示几个", "en": "Recent apps to show" }
+      }
+    ]
+  }
+}

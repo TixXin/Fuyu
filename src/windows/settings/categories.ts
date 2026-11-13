@@ -15,10 +15,16 @@ export const SETTINGS_CATEGORIES = [
   "todos",
   "calendar",
   "music",
+  "musicLyrics",
+  "musicLyricsStyle",
   "translation",
   "clipboard",
+  "clipboardHistory",
+  "clipboardSnippets",
+  "clipboardData",
   "shelf",
   "screenshot",
+  "screenshotRecord",
   "messages",
   "agents",
   "agentSessions",
@@ -47,16 +53,19 @@ export const SETTINGS_GROUPS: readonly { label: SettingsGroup | null; categories
 
 export const DEFAULT_SETTINGS_CATEGORY: SettingsCategory = "overview";
 
-export type SettingsEntry = "behavior" | "appearance" | "shortcuts" | "agents";
+export type SettingsEntry = "behavior" | "appearance" | "shortcuts" | "music" | "clipboard" | "screenshot" | "agents";
 
 export const SETTINGS_TABS: Readonly<Record<SettingsEntry, readonly TabbedCategory[]>> = {
   behavior: ["behavior", "behaviorTuck", "behaviorAlerts"],
   appearance: ["theme", "appearance", "themeMarket"],
   shortcuts: ["shortcuts", "shortcutsIsland"],
+  music: ["music", "musicLyrics", "musicLyricsStyle"],
+  clipboard: ["clipboard", "clipboardHistory", "clipboardSnippets", "clipboardData"],
+  screenshot: ["screenshot", "screenshotRecord"],
   agents: ["agents", "agentSessions", "agentAlerts", "sounds", "agentApprovals", "agentConnect", "agentRemote"],
 };
 
-export type TabbedCategory = "behavior" | "behaviorTuck" | "behaviorAlerts" | "shortcuts" | "shortcutsIsland" | "theme" | "appearance" | "themeMarket" | "agents" | "agentSessions" | "agentAlerts" | "sounds" | "agentApprovals" | "agentConnect" | "agentRemote";
+export type TabbedCategory = "music" | "musicLyrics" | "musicLyricsStyle" | "clipboard" | "clipboardHistory" | "clipboardSnippets" | "clipboardData" | "screenshot" | "screenshotRecord" | "behavior" | "behaviorTuck" | "behaviorAlerts" | "shortcuts" | "shortcutsIsland" | "theme" | "appearance" | "themeMarket" | "agents" | "agentSessions" | "agentAlerts" | "sounds" | "agentApprovals" | "agentConnect" | "agentRemote";
 
 export function entryOf(category: SettingsCategory): SettingsEntry | null {
   return (Object.keys(SETTINGS_TABS) as SettingsEntry[]).find((entry) => (SETTINGS_TABS[entry] as readonly SettingsCategory[]).includes(category)) ?? null;
@@ -81,11 +90,11 @@ export type SettingsFeature = (typeof SETTINGS_FEATURES)[number];
 export const FEATURE_PAGES: Readonly<Record<SettingsFeature, readonly SettingsCategory[]>> = {
   todos: ["todos"],
   calendar: ["calendar"],
-  music: ["music"],
+  music: ["music", "musicLyrics", "musicLyricsStyle"],
   translation: ["translation"],
-  clipboard: ["clipboard"],
+  clipboard: ["clipboard", "clipboardHistory", "clipboardSnippets", "clipboardData"],
   shelf: ["shelf"],
-  screenshot: ["screenshot"],
+  screenshot: ["screenshot", "screenshotRecord"],
   agents: ["agents", "agentSessions", "agentAlerts", "sounds", "agentApprovals", "agentConnect", "agentRemote"],
 };
 
@@ -95,14 +104,21 @@ export function pagesOfFeaturesOff(on: Readonly<Record<SettingsFeature, boolean>
 
 const PAGE_FEATURES: Partial<Record<SettingsCategory, PlatformFeature>> = {
   music: "music",
+  musicLyrics: "music",
+  musicLyricsStyle: "music",
   translation: "translation",
   clipboard: "clipboard",
+  clipboardHistory: "clipboard",
+  clipboardSnippets: "clipboard",
+  clipboardData: "clipboard",
   screenshot: "screenshot",
+  screenshotRecord: "screenshot",
   agentConnect: "agentConnect",
   agentRemote: "agentRemote",
 };
 
-export function isCategoryAvailable(category: SettingsCategory, unsupported: ReadonlySet<PlatformFeature>): boolean {
+export function isCategoryAvailable(category: SettingsCategory, unsupported: ReadonlySet<PlatformFeature>, mac = false): boolean {
+  if (mac && category === "screenshotRecord") return false;
   const feature = PAGE_FEATURES[category];
   return feature === undefined || !unsupported.has(feature);
 }

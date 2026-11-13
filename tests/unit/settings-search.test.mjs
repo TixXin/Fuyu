@@ -80,7 +80,7 @@ test("the settings window opens on the overview, and a feature that is off takes
   const allOn = Object.fromEntries(Object.keys(FEATURE_PAGES).map((feature) => [feature, true]));
   assert.equal(pagesOfFeaturesOff(allOn).size, 0);
   const off = pagesOfFeaturesOff({ ...allOn, agents: false, music: false });
-  assert.deepEqual([...off].sort(), [...FEATURE_PAGES.agents, "music"].sort());
+  assert.deepEqual([...off].sort(), [...FEATURE_PAGES.agents, ...FEATURE_PAGES.music].sort());
   assert.ok(!off.has("overview") && !off.has("messages") && !off.has("general"));
   for (const pages of Object.values(FEATURE_PAGES)) for (const page of pages) assert.ok(SETTINGS_CATEGORIES.includes(page), page);
 });

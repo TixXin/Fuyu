@@ -6,7 +6,7 @@ import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
 import { CalendarSourcesSection } from "../../features/calendar/CalendarSourcesSection";
 import { CALENDAR_REMIND_MINUTES, type CalendarRemindMinutes } from "../../features/calendar/calendarSettings";
 import { useTranslation } from "../../i18n";
-import { ModuleSwitchSection } from "./ModuleSwitchSection";
+import { FeatureHeader } from "./FeatureHeader";
 
 export function CalendarSettingsPage({
   settings,
@@ -20,8 +20,8 @@ export function CalendarSettingsPage({
 
   return (
     <>
-      <ModuleSwitchSection
-        label={t.settings.modules.calendar}
+      <FeatureHeader
+        feature="calendar"
         checked={settings.calendarEnabled}
         onChange={(calendarEnabled) => onSettingsChange({ ...settings, calendarEnabled })}
       />

@@ -1,6 +1,6 @@
 <div align="center">
   <a name="readme-top"></a>
-  <a href="https://fuyu.ing/zh/"><img src="docs/assets/readme/island-zh.svg" alt="挂在页面顶上的一座小岛，写着「浮屿 Fuyu」，它会不时展开提示 Logo 征集；右下方手写着官网地址 fuyu.ing，一条小箭头指向小岛" width="480" height="100"></a>
+  <a href="https://fuyu.ing/zh/"><img src="docs/assets/readme/island-zh.svg" alt="挂在页面顶上的一座小岛，写着「浮屿 Fuyu」，它会不时展开提示 Logo 征集；右下方用连笔手写着官网地址 https://fuyu.ing，一条小箭头指向小岛" width="540" height="100"></a>
 
   <h1>浮屿 Fuyu</h1>
 
@@ -10,6 +10,7 @@
 
   <p>
     <a href="https://github.com/TixXin/fuyu/releases/latest"><img src="docs/assets/readme/download-windows.svg" alt="下载 Windows 版（x64）" width="180" height="44"></a>
+    &nbsp;&nbsp;
     <a href="https://github.com/TixXin/fuyu/releases"><img src="docs/assets/readme/download-macos.svg" alt="下载 macOS 版（Apple 芯片）" width="180" height="44"></a>
   </p>
 

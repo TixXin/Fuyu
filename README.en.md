@@ -1,6 +1,6 @@
 <div align="center">
   <a name="readme-top"></a>
-  <a href="https://fuyu.ing"><img src="docs/assets/readme/island-en.svg" alt="A small island hanging from the top of the page, labelled Fuyu 浮屿, that opens now and then to say a logo is wanted; the website address fuyu.ing is handwritten below it, with a small arrow pointing at the island" width="480" height="100"></a>
+  <a href="https://fuyu.ing"><img src="docs/assets/readme/island-en.svg" alt="A small island hanging from the top of the page, labelled Fuyu 浮屿, that opens now and then to say a logo is wanted; the website address https://fuyu.ing is handwritten in script below it, with a small arrow pointing at the island" width="540" height="100"></a>
 
   <h1>Fuyu</h1>
 
@@ -10,6 +10,7 @@
 
   <p>
     <a href="https://github.com/TixXin/fuyu/releases/latest"><img src="docs/assets/readme/download-windows.svg" alt="Download for Windows (x64)" width="180" height="44"></a>
+    &nbsp;&nbsp;
     <a href="https://github.com/TixXin/fuyu/releases"><img src="docs/assets/readme/download-macos.svg" alt="Download for macOS (Apple silicon)" width="180" height="44"></a>
   </p>
 

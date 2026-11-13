@@ -1,5 +1,6 @@
 export type SettingsClipboardText = {
   title: string;
+  headerShortcut: (keys: string) => string;
   captureImages: string;
   maxItems: string;
   shortcut: string;
@@ -98,6 +99,7 @@ export type SettingsClipboardText = {
 
 export const zhCN: SettingsClipboardText = {
   title: "剪贴板历史",
+  headerShortcut: (keys) => `按 ${keys} 打开`,
   captureImages: "记录图片",
   maxItems: "最大历史条数",
   shortcut: "展开快捷键",
@@ -196,6 +198,7 @@ export const zhCN: SettingsClipboardText = {
 
 export const en: SettingsClipboardText = {
   title: "Clipboard history",
+  headerShortcut: (keys) => `Opens with ${keys}`,
   captureImages: "Record images",
   maxItems: "Max entries",
   shortcut: "Expand shortcut",
