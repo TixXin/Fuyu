@@ -85,7 +85,7 @@ export function ClipboardSettingsSection({ clipboardSettings, onClipboardSetting
           <SettingsToggleRow
             indent
             title={text.terminalImagePath}
-            description={text.terminalImagePathHint}
+            description={isMacOS ? text.terminalImagePathHintMac : text.terminalImagePathHint}
             checked={clipboardSettings.terminalImagePath}
             onChange={(terminalImagePath) => change({ terminalImagePath })}
           />

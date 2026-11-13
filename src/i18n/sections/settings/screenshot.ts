@@ -8,7 +8,11 @@ export type SettingsScreenshotText = {
   actions: Record<ShortcutAction, string>;
   actionHints: Record<ShortcutAction, string>;
   shortcutsHint: string;
+  shortcutsHintMac: string;
   shortcutOff: string;
+  textHintMac: string;
+  regionHintMac: string;
+  shortcutInvalidMac: string;
   setShortcut: string;
   turnOffShortcut: (action: string) => string;
   shortcutProblem: Record<"invalid" | "duplicate" | "taken", string>;
@@ -17,6 +21,7 @@ export type SettingsScreenshotText = {
   afterTitle: string;
   saveFolder: string;
   saveFolderHint: string;
+  saveFolderHintMac: string;
   saveFolderPlaceholder: string;
   cardSeconds: string;
   cardSecondsHint: string;
@@ -50,7 +55,11 @@ export const zhCN: SettingsScreenshotText = {
     pins: "在任何地方都能用。不设的话，在贴图或浮屿上按 T 也能隐藏或显示。",
   },
   shortcutsHint: "点按钮后按下新的组合键；Esc 放弃。Ctrl+Shift+数字时，右侧小键盘的数字也可以（要开着 NumLock）。",
+  shortcutsHintMac: "点按钮后按下新的组合键；Esc 放弃。",
   shortcutOff: "未设置",
+  textHintMac: "选好区域就用 macOS 自带的文字识别读出文字并复制，浮屿上显示识别结果，点它在翻译里打开。",
+  regionHintMac: "屏幕定格后，单击选中鼠标下的窗口或控件（滚轮切换到外层或内层），或拖动选择区域；工具栏里可以画矩形、箭头、文字、马赛克等标注（⌘Z 撤销）；↩ 复制，⌘S 保存，T 贴到屏幕上，Esc 取消；放大镜下按 C 复制颜色。",
+  shortcutInvalidMac: "这个组合键用不了：要带 ⌃、⌥、⇧ 或 ⌘，再加一个字母、数字或功能键。",
   setShortcut: "设置",
   turnOffShortcut: (action) => `关闭「${action}」的快捷键`,
   shortcutProblem: {
@@ -63,6 +72,7 @@ export const zhCN: SettingsScreenshotText = {
   afterTitle: "截完之后",
   saveFolder: "保存位置",
   saveFolderHint: "Ctrl+S 和贴图的「保存」放到这里，文件名带时间。要写完整路径，例如 D:\\截图；留空就是「图片 › 浮屿截图」。",
+  saveFolderHintMac: "⌘S 和贴图的「保存」放到这里，文件名带时间。要写完整路径，例如 /Users/你的用户名/Desktop/截图；留空就是「图片 › 浮屿截图」。",
   saveFolderPlaceholder: "图片 › 浮屿截图",
   cardSeconds: "岛上的截图卡片",
   cardSecondsHint: "复制或保存后，浮屿顶部显示缩略图：可以拖到别的应用、放进文件中转、发给 Agent。鼠标停在上面时不会收起。",
@@ -96,7 +106,11 @@ export const en: SettingsScreenshotText = {
     pins: "Works anywhere. Without it, T on a pin or the island hides or shows them too.",
   },
   shortcutsHint: "Click a button, then press the new keys; Esc gives up. With Ctrl+Shift+digit, the numpad digit works too (with NumLock on).",
+  shortcutsHintMac: "Click a button, then press the new keys; Esc gives up.",
   shortcutOff: "Not set",
+  textHintMac: "Once a region is chosen, macOS's own text recognition reads it and the text is copied; the island shows it, and a click opens it in the translator.",
+  regionHintMac: "The screen freezes; click the window or control under the pointer (scroll to step out or in) or drag a region. The toolbar draws rectangles, arrows, text, mosaic and more (⌘Z undoes). Return copies, ⌘S saves, T pins it to the screen, Esc cancels; under the magnifier, C copies the colour.",
+  shortcutInvalidMac: "These keys can't be used: add ⌃, ⌥, ⇧ or ⌘ to a letter, digit or function key.",
   setShortcut: "Set",
   turnOffShortcut: (action) => `Turn off the shortcut for ${action}`,
   shortcutProblem: {
@@ -109,6 +123,7 @@ export const en: SettingsScreenshotText = {
   afterTitle: "After capturing",
   saveFolder: "Save to",
   saveFolderHint: "Where Ctrl+S and a pin's Save put files, named by the time. Use a full path such as D:\\Screenshots; empty means Pictures › Fuyu Screenshots.",
+  saveFolderHintMac: "Where ⌘S and a pin's Save put files, named by the time. Use a full path such as /Users/your-name/Desktop/Screenshots; empty means Pictures › Fuyu Screenshots.",
   saveFolderPlaceholder: "Pictures › Fuyu Screenshots",
   cardSeconds: "Screenshot card on the island",
   cardSecondsHint: "After a copy or save, the island shows a thumbnail you can drag into another app, put on the file shelf or send to an agent. It stays while the pointer is on it.",

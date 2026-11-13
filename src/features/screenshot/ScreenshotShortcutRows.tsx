@@ -2,6 +2,7 @@ import { useState, type KeyboardEvent } from "react";
 import { Keyboard, X } from "lucide-react";
 import { ShortcutResetButton } from "../../components/controls/ShortcutResetButton";
 import { useTranslation } from "../../i18n";
+import { isMacOS } from "../../lib/platform";
 import { buildShortcutFromEvent, shortcutLabel } from "../clipboard/shortcut";
 import { DEFAULT_SHORTCUTS, SHORTCUT_ACTIONS, type ScreenshotSettings, type ShortcutAction } from "./settings";
 import { useShortcutStatus } from "./useShortcutStatus";
@@ -44,7 +45,8 @@ export function ScreenshotShortcutRows({ settings, onSettingsChange, takenBy }: 
   const problemOf = (action: ShortcutAction) => {
     if (conflict?.action === action) return conflict.message;
     const found = status.find((entry) => entry.action === action);
-    return found ? text.shortcutProblem[found.problem] : "";
+    if (!found) return "";
+    return isMacOS && found.problem === "invalid" ? text.shortcutInvalidMac : text.shortcutProblem[found.problem];
   };
 
   return SHORTCUT_ACTIONS.map((action) => {
@@ -77,7 +79,7 @@ export function ScreenshotShortcutRows({ settings, onSettingsChange, takenBy }: 
             </button>
           </div>
         </div>
-        <p className="screenshot-shortcut-hint">{text.actionHints[action]}</p>
+        <p className="screenshot-shortcut-hint">{isMacOS && action === "region" ? text.regionHintMac : isMacOS && action === "text" ? text.textHintMac : text.actionHints[action]}</p>
         {problem && <p className="shortcut-control__error" role="alert">{problem}</p>}
       </div>
     );

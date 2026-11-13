@@ -11,6 +11,7 @@ import { CARD_SECONDS, HISTORY_DAYS, type CardSeconds, type HistoryDays } from "
 import { useScreenshotSettings } from "../../features/screenshot/useScreenshotSettings";
 import { useTranslationSettings } from "../../features/translation/useTranslationSettings";
 import { useTranslation } from "../../i18n";
+import { isMacOS } from "../../lib/platform";
 import { ModuleSwitchSection } from "./ModuleSwitchSection";
 import { AllShortcutsLink } from "./ShortcutsSettingsPage";
 import { useShortcutOwners } from "./useShortcutOwners";
@@ -45,18 +46,20 @@ export function ScreenshotSettingsPage({
         onChange={(screenshotEnabled) => onSettingsChange({ ...settings, screenshotEnabled })}
       />
       {settings.screenshotEnabled && (
-        <SettingsGroup title={text.shortcutsTitle} footer={text.shortcutsHint} action={<AllShortcutsLink onOpen={onOpenShortcuts} />}>
+        <SettingsGroup title={text.shortcutsTitle} footer={isMacOS ? text.shortcutsHintMac : text.shortcutsHint} action={<AllShortcutsLink onOpen={onOpenShortcuts} />}>
           <ScreenshotShortcutRows
             settings={screenshot}
             onSettingsChange={setScreenshot}
             takenBy={(shortcut, action) => takenBy(shortcut, `screenshot:${action}`)}
           />
-          <SettingsToggleRow
-            title={text.printScreen}
-            description={text.printScreenHint}
-            checked={screenshot.printScreen}
-            onChange={(printScreen) => setScreenshot({ ...screenshot, printScreen })}
-          />
+          {!isMacOS && (
+            <SettingsToggleRow
+              title={text.printScreen}
+              description={text.printScreenHint}
+              checked={screenshot.printScreen}
+              onChange={(printScreen) => setScreenshot({ ...screenshot, printScreen })}
+            />
+          )}
         </SettingsGroup>
       )}
       {settings.screenshotEnabled && (
@@ -73,7 +76,7 @@ export function ScreenshotSettingsPage({
         <SettingsGroup title={text.afterTitle}>
           <SettingsRow
             title={text.saveFolder}
-            description={text.saveFolderHint}
+            description={isMacOS ? text.saveFolderHintMac : text.saveFolderHint}
             control={
               <SettingsInput
                 value={folderDraft}

@@ -19,8 +19,10 @@ export type SettingsClipboardText = {
   autoPasteHintMac: string;
   terminalImagePath: string;
   terminalImagePathHint: string;
+  terminalImagePathHintMac: string;
   skipSensitive: string;
   skipSensitiveHint: string;
+  skipSensitiveHintMac: string;
   retention: string;
   retentionHint: string;
   retentionOption: (days: number) => string;
@@ -28,15 +30,19 @@ export type SettingsClipboardText = {
   winVHint: string;
   ocr: string;
   ocrHint: string;
+  ocrHintMac: string;
   captureFiles: string;
   captureFilesHint: string;
+  captureFilesHintMac: string;
   captureHtml: string;
   captureHtmlHint: string;
+  captureHtmlHintMac: string;
   secrets: string;
   secretsHint: string;
   secretsOptions: Record<"mask" | "skip" | "keep", string>;
   excludedApps: string;
   excludedAppsHint: string;
+  excludedAppsHintMac: string;
   flattenTerminalCommands: string;
   flattenTerminalCommandsHint: string;
   hideFromCapture: string;
@@ -57,10 +63,12 @@ export type SettingsClipboardText = {
     imported: (items: number, snippets: number) => string;
     failed: string;
     show: string;
+    showMac: string;
   };
   aiPrompts: {
     title: string;
     hintTitle: string;
+    hintTitleMac: string;
     hint: string;
     add: string;
     adding: string;
@@ -109,8 +117,10 @@ export const zhCN: SettingsClipboardText = {
   autoPasteHintMac: "自动粘贴要在「系统设置 → 隐私与安全性 → 辅助功能」里允许浮屿，第一次用时系统会提示；没允许或关掉时只复制，回到原来的窗口自己按 ⌘V。",
   terminalImagePath: "粘贴图片到终端时贴文件路径",
   terminalImagePathHint: "Windows Terminal 等终端里粘贴图片时改贴它的文件路径，Claude Code 会把路径当成图片附上（直接粘贴位图常常贴不上）。",
+  terminalImagePathHintMac: "在终端、iTerm、Ghostty 等终端里粘贴图片时改贴它的文件路径，Claude Code 会把路径当成图片附上（直接粘贴位图常常贴不上）。",
   skipSensitive: "不记录密码",
   skipSensitiveHint: "密码管理器（KeePass、Bitwarden、1Password 等）复制的密码带着「不要记录」的标记，和系统剪贴板历史一样跳过它们。",
+  skipSensitiveHintMac: "密码管理器（1Password、Bitwarden 等）复制的密码带着「不要记录」的标记，浮屿跳过它们。",
   retention: "自动清理",
   retentionHint: "超过这个时间没再复制过的记录自动删除，收藏的不删。",
   retentionOption: (days) => (days === 0 ? "不清理" : `${days} 天`),
@@ -118,15 +128,19 @@ export const zhCN: SettingsClipboardText = {
   winVHint: "按 Win+V 打开岛屿的剪贴板，代替系统自带的剪贴板历史；关掉后 Win+V 还给系统。",
   ocr: "识别图片里的文字",
   ocrHint: "用 Windows 自带的文字识别在本机识别，不联网。识别出的文字可以搜索，也可以单独复制。",
+  ocrHintMac: "用 macOS 自带的文字识别在本机识别，不联网。识别出的文字可以搜索，也可以单独复制。",
   captureFiles: "记录复制的文件",
   captureFilesHint: "在资源管理器里复制的文件也进历史，粘贴回去仍是文件；贴到终端里是文件路径。",
+  captureFilesHintMac: "在访达里复制的文件也进历史，粘贴回去仍是文件；贴到终端里是文件路径。",
   captureHtml: "保留格式",
   captureHtmlHint: "从网页、Word 复制的文字连同格式一起记下，粘贴时带格式；独立窗口里按 Shift+Enter 粘贴成纯文本。",
+  captureHtmlHintMac: "从网页、Pages、Word 复制的文字连同格式一起记下，粘贴时带格式；独立窗口里按 ⇧↩ 粘贴成纯文本。",
   secrets: "密钥和令牌",
   secretsHint: "看起来像 API Key、GitHub 令牌、私钥的内容：打码显示（粘贴时仍是原文）、不记录，或照常记录。",
   secretsOptions: { mask: "打码", skip: "不记录", keep: "照常" },
   excludedApps: "不记录这些程序复制的内容",
   excludedAppsHint: "填程序名，逗号分隔，比如 keepass.exe。每条记录旁边会显示它来自哪个程序。",
+  excludedAppsHintMac: "填应用名，逗号分隔，比如 1Password.app。每条记录旁边会显示它来自哪个应用。",
   flattenTerminalCommands: "多行命令贴到终端时合成一行",
   flattenTerminalCommandsHint: "带 \ 续行的多行命令粘贴到终端时去掉续行，合成一行；剪贴板窗口的「转换后粘贴」里也能手动选。",
   hideFromCapture: "共享屏幕时隐藏",
@@ -147,10 +161,12 @@ export const zhCN: SettingsClipboardText = {
     imported: (items, snippets) => `导入了 ${items} 条记录、${snippets} 个片段`,
     failed: "没有成功",
     show: "在文件夹中显示",
+    showMac: "在访达中显示",
   },
   aiPrompts: {
     title: "AI 提示词",
     hintTitle: "剪贴板窗口里 Ctrl+I 的改写",
+    hintTitleMac: "剪贴板窗口里 ⌃I 的改写",
     hint: "除了总结、润色、改错字、中英互译，再加自己的，比如「改成正式的邮件语气」「提取里面的待办」。用快捷翻译设置的服务、Key 和模型。",
     add: "添加提示词",
     adding: "新提示词",
@@ -199,8 +215,10 @@ export const en: SettingsClipboardText = {
   autoPasteHintMac: "Pasting needs Fuyu allowed in System Settings > Privacy & Security > Accessibility; macOS asks the first time. Until then, or when off, it is only copied and you press ⌘V back in your window.",
   terminalImagePath: "Paste images into terminals as their path",
   terminalImagePathHint: "In Windows Terminal and other terminals an image is pasted as its file path, which Claude Code attaches as an image (pasting the bitmap often fails there).",
+  terminalImagePathHintMac: "In Terminal, iTerm, Ghostty and other terminals an image is pasted as its file path, which Claude Code attaches as an image (pasting the bitmap often fails there).",
   skipSensitive: "Do not record passwords",
   skipSensitiveHint: "Password managers (KeePass, Bitwarden, 1Password...) mark the passwords they copy; like Windows' own clipboard history, these are skipped.",
+  skipSensitiveHintMac: "Password managers (1Password, Bitwarden...) mark the passwords they copy, and Fuyu skips them.",
   retention: "Clean up",
   retentionHint: "Entries not copied again for this long are deleted; favourites stay.",
   retentionOption: (days) => (days === 0 ? "Never" : days === 1 ? "1 day" : `${days} days`),
@@ -208,15 +226,19 @@ export const en: SettingsClipboardText = {
   winVHint: "Win+V opens the island's clipboard instead of Windows' own clipboard history; turned off, Win+V goes back to Windows.",
   ocr: "Read the text in images",
   ocrHint: "Windows' own text recognition, on this computer, offline. The text can be searched and copied on its own.",
+  ocrHintMac: "macOS's own text recognition, on this computer, offline. The text can be searched and copied on its own.",
   captureFiles: "Record copied files",
   captureFilesHint: "Files copied in Explorer join the history and paste back as files; into a terminal they go as paths.",
+  captureFilesHintMac: "Files copied in Finder join the history and paste back as files; into a terminal they go as paths.",
   captureHtml: "Keep formatting",
   captureHtmlHint: "Text copied from web pages or Word keeps its formatting when pasted; Shift+Enter in the window pastes plain text.",
+  captureHtmlHintMac: "Text copied from web pages, Pages or Word keeps its formatting when pasted; ⇧↩ in the window pastes plain text.",
   secrets: "Keys and tokens",
   secretsHint: "What looks like an API key, GitHub token or private key: shown masked (pasted as it is), not recorded, or recorded as usual.",
   secretsOptions: { mask: "Mask", skip: "Skip", keep: "Keep" },
   excludedApps: "Do not record copies from these programs",
   excludedAppsHint: "Program names separated by commas, such as keepass.exe. Each entry shows the program it came from.",
+  excludedAppsHintMac: "App names separated by commas, such as 1Password.app. Each entry shows the app it came from.",
   flattenTerminalCommands: "Paste multi-line commands into terminals as one line",
   flattenTerminalCommandsHint: "A command continued over lines with \ goes into a terminal as one line. Also available by hand under \"Paste transformed\" in the clipboard window.",
   hideFromCapture: "Hide while sharing the screen",
@@ -237,10 +259,12 @@ export const en: SettingsClipboardText = {
     imported: (items, snippets) => `Imported ${items} ${items === 1 ? "entry" : "entries"} and ${snippets} ${snippets === 1 ? "snippet" : "snippets"}`,
     failed: "That did not work",
     show: "Show in folder",
+    showMac: "Show in Finder",
   },
   aiPrompts: {
     title: "AI prompts",
     hintTitle: "Ctrl+I rewrites in the clipboard window",
+    hintTitleMac: "⌃I rewrites in the clipboard window",
     hint: "Besides summarize, polish, fix grammar and translate, add your own, such as \"make it a formal email\" or \"list the to-dos in it\". Uses the quick translation's service, key and model.",
     add: "Add a prompt",
     adding: "New prompt",
