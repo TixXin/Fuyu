@@ -47,6 +47,12 @@ export type OnboardingText = {
     shortcutHint: string;
     winV: string;
   };
+  permissions: {
+    title: string;
+    lead: string;
+    allGranted: string;
+    later: string;
+  };
   release: {
     title: string;
     lead: string;
@@ -137,6 +143,12 @@ export const zhCN: OnboardingText = {
     shortcut: (keys) => `按一下 ${keys}，剪贴板会弹出来`,
     shortcutHint: "在任何程序里都能这样打开。",
     winV: "也用 Win+V 打开",
+  },
+  permissions: {
+    title: "给浮屿开几个权限",
+    lead: "你选的功能要用到下面这些 macOS 权限。点「去允许」，在打开的系统设置里把浮屿的开关打开。",
+    allGranted: "都允许好了，你选的功能都能用。",
+    later: "现在不开也行，以后在「设置 → 通用 → 系统权限」里也能开；没开的功能用到时会提醒你。",
   },
   release: {
     title: "准备好了",
@@ -231,6 +243,12 @@ export const en: OnboardingText = {
     shortcut: (keys) => `Press ${keys} and the clipboard pops up`,
     shortcutHint: "It works in any app.",
     winV: "Win+V opens it too",
+  },
+  permissions: {
+    title: "Give Fuyu a few permissions",
+    lead: "The features you picked need these macOS permissions. Click Allow and turn Fuyu on in the System Settings page that opens.",
+    allGranted: "All set: every feature you picked can work.",
+    later: "You can also do this later in Settings > General > System permissions; a feature that needs one tells you when you use it.",
   },
   release: {
     title: "You're all set",

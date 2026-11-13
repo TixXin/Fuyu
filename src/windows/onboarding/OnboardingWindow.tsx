@@ -15,6 +15,7 @@ import { HelloAct } from "./HelloAct";
 import { OutfitAct } from "./OutfitAct";
 import { NO_ANSWER, enabledModules, withModules, type OnboardingModule } from "./personas";
 import { cardPlacement } from "./placement";
+import { neededPermissions, PermissionsAct } from "./PermissionsAct";
 import { PlayAct } from "./PlayAct";
 import { ReleaseAct } from "./ReleaseAct";
 import { ShapeAct } from "./ShapeAct";
@@ -26,7 +27,8 @@ import { useIslandSpot } from "./useIslandSpot";
 import "./OnboardingWindow.css";
 import { isMacOS } from "../../lib/platform";
 
-const ACTS = ["hello", "shape", "outfit", "play", "release"] as const;
+const ACTS = ["hello", "shape", "outfit", "play", "permissions", "release"] as const;
+type Act = (typeof ACTS)[number];
 
 let greeted = false;
 
@@ -71,10 +73,12 @@ export function OnboardingWindow() {
   const [launchAtStartup, updateLaunchAtStartup] = useLaunchAtStartup();
   const [index, setIndex] = useState(0);
   const [answer, setAnswer] = useState(NO_ANSWER);
-  const act = ACTS[index];
-  const last = index === ACTS.length - 1;
   const light = activeTone(settings.themeMode, useSystemDark()) === "light";
   const modules = enabledModules(settings, clipboard.enabled);
+  const permissionKinds = isMacOS ? neededPermissions(modules) : [];
+  const acts: readonly Act[] = ACTS.filter((name) => name !== "permissions" || permissionKinds.length > 0);
+  const act = acts[Math.min(index, acts.length - 1)];
+  const last = act === "release";
   const spot = useIslandSpot();
   const viewport = useViewport();
   const card = useRef<HTMLDivElement | null>(null);
@@ -118,8 +122,8 @@ export function OnboardingWindow() {
       <Spotlight spot={spot} />
       <div className="onboarding__card" ref={card} style={cardStyle} role="dialog" aria-label={text.windowTitle}>
         <header className="onboarding__bar">
-          <span className="onboarding__progress" role="img" aria-label={text.stepOf(index + 1, ACTS.length)}>
-            {ACTS.map((name, at) => (
+          <span className="onboarding__progress" role="img" aria-label={text.stepOf(index + 1, acts.length)}>
+            {acts.map((name, at) => (
               <span key={name} className={at === index ? "onboarding__dot onboarding__dot--active" : at < index ? "onboarding__dot onboarding__dot--done" : "onboarding__dot"} />
             ))}
           </span>
@@ -142,6 +146,7 @@ export function OnboardingWindow() {
               onClipboardChange={(next) => void updateClipboard(next)}
             />
           )}
+          {act === "permissions" && <PermissionsAct kinds={permissionKinds} />}
           {act === "release" && (
             <ReleaseAct
               modules={modules}
