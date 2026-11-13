@@ -4,6 +4,7 @@ import { ShortcutResetButton } from "../../components/controls/ShortcutResetButt
 import { useTranslation } from "../../i18n";
 import { isMacOS } from "../../lib/platform";
 import { buildShortcutFromEvent, shortcutLabel } from "../clipboard/shortcut";
+import { useShortcutCapture } from "../clipboard/useShortcutCapture";
 import { DEFAULT_SHORTCUTS, SHORTCUT_ACTIONS, type ScreenshotSettings, type ShortcutAction } from "./settings";
 import { useShortcutStatus } from "./useShortcutStatus";
 import "../clipboard/ClipboardSettingsSection.css";
@@ -29,6 +30,12 @@ export function ScreenshotShortcutRows({ settings, onSettingsChange, takenBy }: 
     setConflict(null);
     onSettingsChange({ ...settings, shortcuts: { ...settings.shortcuts, [action]: shortcut } });
   };
+
+  useShortcutCapture(recording !== null, (shortcut) => {
+    if (!recording) return;
+    setRecording(null);
+    apply(recording, shortcut);
+  });
 
   const record = (event: KeyboardEvent<HTMLButtonElement>) => {
     const action = recording;

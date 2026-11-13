@@ -40,6 +40,7 @@ src-tauri/src/
 ├── settings_window/         # 设置窗口：按需创建与显示（mod.rs）
 ├── onboarding_window/       # 新手引导：按需创建的透明遮罩，铺满岛所在屏幕的工作区（mod.rs）；跟着真岛发位置、只在卡片上接住鼠标（overlay.rs）
 ├── settings_file.rs         # 数据目录里的 settings.json（D30.2）：BACKUP_KEYS 设置的文件镜像，格式同设置备份；命令 read_settings_file / write_settings_file
+├── shortcut_capture.rs      # 设置窗口录快捷键期间（命令 set_shortcut_capture）：浮屿自己的全局快捷键被按下不执行，改发 shortcut-captured 给录制按钮；Mac 在 macos/hotkeys.rs 的分发里拦，Windows 在各模块的 WM_HOTKEY 里拦
 ├── home_dir.rs              # 家目录（#50，D30）：浮屿的数据目录只从这里取 fuyu_home(app.path())，不要直接调 app_data_dir()；FUYU_HOME → home.json 指针 → ~/.fuyu；home_dir/migration.rs 为升级时复制旧数据、重装钩子、复制待办 Markdown，见 docs/features/data-home.md
 ├── fs_write.rs              # 整份替换应用数据目录里的文件：先写旁边的 .tmp 再改名；别的程序暂时占着（拒绝访问、共享冲突）时稍等重试
 ├── dev_lane.rs              # lane 时期的预览（设了 FOCUSD_DEV_LANE 的调试版）：独立应用标识、默认位置，不改用户的链接、自启和 hook；启动脚本已删（F32），等 G1.6 收尾后删掉

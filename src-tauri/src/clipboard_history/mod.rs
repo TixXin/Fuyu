@@ -20,7 +20,7 @@ mod sequence_watch_macos;
 mod service;
 pub(crate) mod shortcut;
 #[cfg(target_os = "macos")]
-mod shortcut_macos;
+pub(crate) mod shortcut_macos;
 mod snippets;
 mod store;
 #[cfg_attr(target_os = "macos", path = "system_macos.rs")]

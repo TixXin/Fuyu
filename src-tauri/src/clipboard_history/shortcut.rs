@@ -78,6 +78,36 @@ pub(crate) fn parse_shortcut_binding(shortcut: &str) -> Option<ShortcutBinding> 
     })
 }
 
+pub(crate) fn binding_label(modifiers: u32, key_code: u32) -> Option<String> {
+    let key = match key_code {
+        0x30..=0x39 | 0x41..=0x5A => char::from_u32(key_code)?.to_string(),
+        0x70..=0x87 => format!("F{}", key_code - 0x70 + 1),
+        0x1B => "Esc".to_string(),
+        0x09 => "Tab".to_string(),
+        0x0D => "Enter".to_string(),
+        0x20 => "Space".to_string(),
+        0x08 => "Backspace".to_string(),
+        0x2E => "Delete".to_string(),
+        0x2D => "Insert".to_string(),
+        0x24 => "Home".to_string(),
+        0x23 => "End".to_string(),
+        0x21 => "PageUp".to_string(),
+        0x22 => "PageDown".to_string(),
+        0x26 => "Up".to_string(),
+        0x28 => "Down".to_string(),
+        0x25 => "Left".to_string(),
+        0x27 => "Right".to_string(),
+        _ => return None,
+    };
+    let names = [(MOD_CONTROL, "Ctrl"), (MOD_ALT, "Alt"), (MOD_SHIFT, "Shift"), (MOD_WIN, "Win")];
+    let mut parts: Vec<String> = names.iter().filter(|(flag, _)| modifiers & flag != 0).map(|(_, name)| (*name).to_string()).collect();
+    if parts.is_empty() {
+        return None;
+    }
+    parts.push(key);
+    Some(parts.join("+"))
+}
+
 fn shortcut_key_code(key: &str) -> Option<(String, u32)> {
     let upper = key.trim().to_ascii_uppercase();
 
@@ -128,5 +158,15 @@ mod tests {
         assert_eq!(binding.label, "Ctrl+Space");
         assert_eq!(binding.key_code, 0x20);
         assert!(parse_shortcut_binding("Ctrl+ ").is_none());
+    }
+
+    #[test]
+    fn a_pressed_binding_reads_back_as_the_saved_shortcut() {
+        for shortcut in ["Ctrl+Shift+1", "Ctrl+Alt+T", "Shift+Win+V", "Alt+F5", "Ctrl+Space", "Ctrl+Shift+Left"] {
+            let binding = parse_shortcut_binding(shortcut).expect("valid");
+            assert_eq!(binding_label(binding.modifiers, binding.key_code).as_deref(), Some(shortcut));
+        }
+        assert_eq!(binding_label(0, 0x41), None);
+        assert_eq!(binding_label(MOD_CONTROL, 0xBA), None);
     }
 }

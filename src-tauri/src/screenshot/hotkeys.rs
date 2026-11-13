@@ -140,7 +140,10 @@ fn run_action(action: ShortcutAction) {
 struct ShortcutWindow;
 
 impl WindowMessages for ShortcutWindow {
-    fn handle(window: HWND, message: u32, wparam: WPARAM, _: LPARAM) -> Option<LRESULT> {
+    fn handle(window: HWND, message: u32, wparam: WPARAM, lparam: LPARAM) -> Option<LRESULT> {
+        if message == WM_HOTKEY && crate::shortcut_capture::capture_hotkey_message(lparam.0) {
+            return Some(LRESULT(0));
+        }
         let action = match message {
             WM_HOTKEY => {
                 let index = wparam.0.checked_sub(HOTKEY_BASE as usize);

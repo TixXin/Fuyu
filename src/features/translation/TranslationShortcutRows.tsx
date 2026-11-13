@@ -3,6 +3,7 @@ import { Keyboard } from "lucide-react";
 import { ShortcutResetButton } from "../../components/controls/ShortcutResetButton";
 import { useErrorText, useTranslation } from "../../i18n";
 import { buildShortcutFromEvent, shortcutLabel } from "../clipboard/shortcut";
+import { useShortcutCapture } from "../clipboard/useShortcutCapture";
 import { setTranslationSelectionShortcut, setTranslationShortcut } from "./api";
 import { DEFAULT_SETTINGS, type TranslationSettings } from "./storage";
 import "../clipboard/ClipboardSettingsSection.css";
@@ -32,6 +33,12 @@ export function TranslationShortcutRows({ settings, onSettingsChange, takenBy }:
     return () => { didCancel = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useShortcutCapture(recording !== null, (shortcut) => {
+    if (!recording) return;
+    setRecording(null);
+    apply(recording, shortcut);
+  });
 
   const record = (event: KeyboardEvent<HTMLButtonElement>) => {
     const target = recording;

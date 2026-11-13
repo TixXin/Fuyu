@@ -32,6 +32,7 @@ mod rename_migration;
 mod screenshot;
 mod settings_file;
 mod settings_window;
+mod shortcut_capture;
 #[cfg_attr(not(windows), path = "ssh_tunnel/unsupported.rs")]
 mod ssh_tunnel;
 mod system;
@@ -219,6 +220,7 @@ pub fn run() {
             screenshot;
             settings_window;
             settings_file;
+            shortcut_capture;
             home_dir;
             onboarding_window;
             ssh_tunnel;

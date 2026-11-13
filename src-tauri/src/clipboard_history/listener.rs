@@ -95,7 +95,10 @@ fn run_windows_clipboard_listener() -> Result<(), String> {
 struct ClipboardWindow;
 
 impl WindowMessages for ClipboardWindow {
-    fn handle(hwnd: HWND, message: u32, wparam: WPARAM, _: LPARAM) -> Option<LRESULT> {
+    fn handle(hwnd: HWND, message: u32, wparam: WPARAM, lparam: LPARAM) -> Option<LRESULT> {
+        if message == WM_HOTKEY && crate::shortcut_capture::capture_hotkey_message(lparam.0) {
+            return Some(LRESULT(0));
+        }
         if message == WM_CLIPBOARDUPDATE {
             notify_clipboard_changed();
             return Some(LRESULT(0));

@@ -223,3 +223,13 @@ export function listenClipboardHistoryShortcut(handler: () => void) {
 export function listenClipboardShortcutStatus(handler: (error: string | null) => void) {
   return listen<string | null>(CLIPBOARD_SHORTCUT_STATUS_EVENT, (event) => handler(event.payload));
 }
+
+export const SHORTCUT_CAPTURED_EVENT = "shortcut-captured";
+
+export function setShortcutCapture(enabled: boolean) {
+  return invoke<void>("set_shortcut_capture", { enabled });
+}
+
+export function listenShortcutCaptured(handler: (shortcut: string) => void) {
+  return listen<string>(SHORTCUT_CAPTURED_EVENT, ({ payload }) => handler(payload));
+}

@@ -1,6 +1,7 @@
 import { useState, type KeyboardEvent } from "react";
 import { Keyboard } from "lucide-react";
 import { buildShortcutFromEvent, shortcutLabel } from "../../features/clipboard/shortcut";
+import { useShortcutCapture } from "../../features/clipboard/useShortcutCapture";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton";
 import { SettingsRow } from "../../components/settings/SettingsRow";
@@ -17,6 +18,11 @@ export function ShortcutFinder({ owners, onOpenPage }: {
   const [recording, setRecording] = useState(false);
   const [pressed, setPressed] = useState<string | null>(null);
   const owner = pressed ? findShortcutOwnerRow(pressed, owners, "") : undefined;
+
+  useShortcutCapture(recording, (shortcut) => {
+    setRecording(false);
+    setPressed(shortcut);
+  });
 
   const record = (event: KeyboardEvent<HTMLButtonElement>) => {
     if (!recording) return;
