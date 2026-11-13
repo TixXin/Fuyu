@@ -12,7 +12,7 @@ use windows::{
                 FLASHWINFO, FLASHW_ALL, FLASHW_TIMERNOFG, GetClassNameW, GetCursorPos,
                 GetForegroundWindow, GetWindow, GetWindowLongPtrW, GetWindowPlacement,
                 GetWindowRect, GetWindowTextW, GetWindowThreadProcessId, IsIconic, IsWindowVisible, SendMessageTimeoutW,
-                SetForegroundWindow, ShowWindow, GWL_EXSTYLE, GW_OWNER, SMTO_ABORTIFHUNG,
+                SetForegroundWindow, SetWindowDisplayAffinity, ShowWindow, GWL_EXSTYLE, WDA_EXCLUDEFROMCAPTURE, WDA_NONE, GW_OWNER, SMTO_ABORTIFHUNG,
                 SMTO_BLOCK, SMTO_ERRORONEXIT, SW_RESTORE, WINDOWPLACEMENT, WM_NULL,
                 WS_EX_NOACTIVATE, WS_EX_TOOLWINDOW,
             },
@@ -120,6 +120,11 @@ pub(crate) fn cursor_position() -> Option<POINT> {
     let mut cursor = POINT::default();
     unsafe { GetCursorPos(&mut cursor) }.ok()?;
     Some(cursor)
+}
+
+pub(crate) fn exclude_from_capture(window: HWND, excluded: bool) -> bool {
+    let affinity = if excluded { WDA_EXCLUDEFROMCAPTURE } else { WDA_NONE };
+    unsafe { SetWindowDisplayAffinity(window, affinity) }.is_ok()
 }
 
 pub(crate) fn clear_window_region(window: HWND) -> bool {

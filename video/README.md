@@ -37,6 +37,7 @@ winget install Gyan.FFmpeg
 |---|---|---|
 | `001-one-island` | 总览《一座岛》：待办、音乐、消息、剪贴板、翻译、AI Agent 各几秒 | 48 秒 |
 | `002-agents` | 功能短片：AI Agent。岛上看会话、弹出审批、看用量、点一下回到终端 | 24 秒 |
+| `003-messages` | 功能短片：消息。Windows 桌面录屏的样子，带旁白和配乐；新消息弹出，在岛上读邮件 | 约 28 秒，随旁白长短变 |
 
 ## 横版和竖版
 
@@ -76,6 +77,20 @@ video/
 ## 渲染是怎么保证每次一样的
 
 渲染器把浏览器的时钟接管了：每一帧先让虚拟时间前进 1/60 秒，再让浏览器画一帧并截图。`setTimeout`、`Date.now()`、CSS 过渡和动画都跟着虚拟时间走，所以岛屿自己的展开回弹、歌词滚动、消息滑入都是真实的动效，而且每次渲染结果一样，和机器快慢无关。页面里的日期固定在 2026-11-18 10:24。
+
+## 录屏风格、旁白和配乐
+
+`003-messages` 起，视频可以做成 Windows 桌面录屏的样子：
+
+- **桌面**：视频模块给出 `backdrop`（`stage/desktop/WindowsDesktop`：壁纸、应用窗口、任务栏）和 `look: "recording"`（白色光标、字幕条）。窗口和任务栏是 HTML 画的，文字清楚；壁纸是生成的图片。`stage.set({ scene })` 切换桌面的状态，`busy` 时任务栏上带角标的图标闪烁。
+- **旁白**：台词写在视频文件夹的 `narration.json`（中英各一份，一句一个 id）。`voice/synth.py` 用本机的 CosyVoice 3 按参考音色合成每一句，存成 `assets/voice/<视频>/<语言>/<id>.mp3`，并把每句的时长写进 `assets/voice/<视频>/durations.json`。时间表从这份时长算出每一句的起点，所以换台词或换语言后重新合成，画面会自动跟上。时间表里 `sound("voice:<id>")` 放一句旁白。
+- **配乐**：视频模块的 `bgm` 是 `assets/bgm/` 里的文件名。渲染时配乐循环铺满全片，开头结尾淡入淡出，有旁白时自动压低。
+
+合成旁白（CosyVoice 装在仓库外面，参考音频不进仓库）：
+
+```powershell
+& E:\Projects\tools\CosyVoice\.venv\Scripts\python.exe voice\synth.py --video 003-messages --cosyvoice E:\Projects\tools\CosyVoice --reference <参考音频.wav> --reference-text "<参考音频里说的话>"
+```
 
 ## 声音
 

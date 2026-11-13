@@ -163,3 +163,26 @@ body:has(.screenshot-overlay) {
   color: rgba(245, 245, 247, 0.8);
   white-space: nowrap;
 }
+
+.screenshot-overlay--long .screenshot-overlay__picture {
+  visibility: hidden;
+}
+
+.screenshot-overlay__selection--long {
+  border: 0;
+  outline: 2px dashed var(--color-accent, #74d6ff);
+  outline-offset: 2px;
+  animation: screenshot-long-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes screenshot-long-pulse {
+  50% {
+    outline-color: var(--long-shot-pulse, rgba(116, 214, 255, 0.45));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .screenshot-overlay__selection--long {
+    animation: none;
+  }
+}

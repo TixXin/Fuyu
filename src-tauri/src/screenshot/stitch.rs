@@ -125,6 +125,40 @@ impl Stitcher {
         Step::Added(shift)
     }
 
+    pub(crate) fn band(&self) -> u32 {
+        let (top, bottom) = self.fixed.unwrap_or((0, 0));
+        self.height.saturating_sub(top + bottom)
+    }
+
+    fn row(&self, y: u32) -> &[u8] {
+        let row_bytes = self.width as usize * 4;
+        let body_rows = (self.body.len() / row_bytes) as u32;
+        let (source, at) = match self.fixed {
+            Some((_, bottom)) if y >= body_rows => (&self.last, (self.height - bottom + y - body_rows) as usize),
+            Some(_) => (&self.body, y as usize),
+            None => (&self.last, y as usize),
+        };
+        &source[at * row_bytes..(at + 1) * row_bytes]
+    }
+
+    pub(crate) fn tail_preview(&self, width: u32, max_height: u32) -> (u32, u32, Vec<u8>) {
+        let total = self.height();
+        let width = width.clamp(1, self.width);
+        let scale = f64::from(width) / f64::from(self.width);
+        let height = ((f64::from(total) * scale).round() as u32).clamp(1, max_height.max(1));
+        let first = f64::from(total) - f64::from(height) / scale;
+        let mut out = Vec::with_capacity(width as usize * height as usize * 4);
+        for y in 0..height {
+            let source_y = ((first + (f64::from(y) + 0.5) / scale) as u32).min(total - 1);
+            let row = self.row(source_y);
+            for x in 0..width {
+                let source_x = (((f64::from(x) + 0.5) / scale) as usize).min(self.width as usize - 1);
+                out.extend_from_slice(&row[source_x * 4..source_x * 4 + 4]);
+            }
+        }
+        (width, height, out)
+    }
+
     pub(crate) fn finish(self) -> (u32, u32, Vec<u8>) {
         let Some((_, bottom)) = self.fixed else {
             return (self.width, self.height, self.last);

@@ -104,6 +104,33 @@ export function cancelScreenshot() {
   return invoke<void>("screenshot_cancel");
 }
 
+export const SCREENSHOT_LONG_EVENT = "screenshot-long";
+export const SCREENSHOT_LONG_PROGRESS_EVENT = "screenshot-long-progress";
+
+export type LongState = "scrolling" | "paused" | "end" | "fast" | "full";
+export type LongProgress = { state: LongState; height: number; frames: number; preview: string | null };
+export type LongEnding = "copy" | "save" | "cancel";
+
+export function listenLongStarted(handler: EventCallback<string>) {
+  return listen<string>(SCREENSHOT_LONG_EVENT, handler);
+}
+
+export function listenLongProgress(handler: EventCallback<LongProgress>) {
+  return listen<LongProgress>(SCREENSHOT_LONG_PROGRESS_EVENT, handler);
+}
+
+export function reportLongBar(rect: PixelRect) {
+  return invoke<void>("screenshot_long_bar", { x: rect.x, y: rect.y, width: rect.width, height: rect.height });
+}
+
+export function pauseLongShot(paused?: boolean) {
+  return invoke<boolean | null>("screenshot_long_pause", { paused: paused ?? null });
+}
+
+export function endLongShot(action: LongEnding, save?: SaveTarget) {
+  return invoke<void>("screenshot_long_end", { action, folder: save?.folder ?? null, folderName: save?.folderName ?? null });
+}
+
 export function findScreenshotWords(rect: PixelRect) {
   return invoke<OcrWord[][]>("screenshot_find_words", { x: rect.x, y: rect.y, width: rect.width, height: rect.height });
 }

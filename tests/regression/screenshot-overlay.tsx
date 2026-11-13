@@ -155,6 +155,33 @@ async function runChecks() {
     check(quick.length === before + 1 && quick[quick.length - 1].headers["x-action"] === "copy", "…copies it as the drag ends");
     check(!document.querySelector(".screenshot-overlay__toolbar"), "…without the toolbar");
 
+    await act(async () => { await emit("screenshot-ended"); });
+    await act(async () => { await emit("screenshot-session", { id: 3, mode: "region", width: WIDTH, height: HEIGHT, underPointer: true }); });
+    for (let tries = 0; tries < 50 && calls.filter((call) => call.command === "screenshot_overlay_ready").length < 3; tries += 1) await wait(20);
+    await drag([60, 60], [260, 300]);
+    await click("长截图（自动往下滚动拼接，也可以自己滚）");
+    const longStart = last("screenshot_finish");
+    check(longStart?.headers["x-action"] === "long" && longStart.headers["x-width"] === "200", "The long-screenshot button sends the selection off to be scrolled");
+    check(document.querySelector(".screenshot-overlay__toolbar"), "…and nothing goes away until the native side starts");
+    await act(async () => { await emit("screenshot-long", "screenshot-0"); });
+    await act(async () => { await emit("screenshot-long-progress", { state: "scrolling", height: 1240, frames: 3, preview: null }); });
+    await wait(30);
+    const longBar = document.querySelector<HTMLElement>(".long-shot-bar");
+    check(longBar && overlay().classList.contains("screenshot-overlay--long") && document.querySelector(".screenshot-overlay__selection--long"), "Once it starts, the frame stays on screen with its own control bar");
+    check(!document.querySelector(".screenshot-overlay__toolbar") && !document.querySelector(".screenshot-overlay__handle"), "…in place of the toolbar and the handles");
+    check(getComputedStyle(document.querySelector(".screenshot-overlay__picture")!).visibility === "hidden", "…and the frozen picture steps aside so the live page shows through");
+    check(longBar!.textContent?.includes("1,240") && longBar!.textContent?.includes("3 屏"), "The bar shows the height so far and how many screens");
+    check(calls.some((call) => call.command === "screenshot_long_bar"), "…and tells the native side where it is, so it can be clicked");
+    await act(async () => { longBar!.querySelector<HTMLButtonElement>('button[aria-label="暂停自动滚动（空格）"]')!.click(); });
+    check(calls.some((call) => call.command === "screenshot_long_pause"), "Pause asks the native side to stop scrolling");
+    await act(async () => { await emit("screenshot-long-progress", { state: "end", height: 2400, frames: 5, preview: null }); });
+    check(longBar!.classList.contains("long-shot-bar--end") && longBar!.querySelector('button[aria-label="继续自动滚动（空格）"]'), "At the end it says so and offers to resume");
+    const finishes = calls.filter((call) => call.command === "screenshot_finish").length;
+    await key({ key: "Enter" });
+    const ended = calls.filter((call) => call.command === "screenshot_long_end");
+    check(ended.length === 1 && JSON.stringify(ended[0].payload).includes('"action":"copy"'), "Enter finishes and copies the long picture");
+    check(calls.filter((call) => call.command === "screenshot_finish").length === finishes, "…without the overlay's own Enter copying the frozen selection");
+
     results.textContent = `${messages.join("\n")}\n\n全部 ${messages.length} 项检查通过。`;
     results.dataset.result = "passed";
   } catch (error) {
