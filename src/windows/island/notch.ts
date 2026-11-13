@@ -56,6 +56,16 @@ export function notchFittedWidth(width: number, notch: IslandNotch | null, colla
   return Math.min(Math.max(width + gap, least), Math.max(MAX_FITTED_WIDTH, least));
 }
 
+export const NOTCH_CONTENT_GAP = 8;
+const EXPANDED_TOP_PADDING = 18;
+const POPUP_TOP_PADDING = 8;
+
+export function notchExpandedExtra(notch: IslandNotch | null, expandedScale: number, popup: boolean) {
+  if (!notch) return 0;
+  const inset = notch.height / Math.max(expandedScale, 0.01) + NOTCH_CONTENT_GAP;
+  return Math.max(0, Math.ceil(inset - (popup ? POPUP_TOP_PADDING : EXPANDED_TOP_PADDING)));
+}
+
 export function notchLook(settings: IslandSettings): IslandSettings {
   return { ...settings, ...themeColors(settings, "dark"), islandBackgroundColor: "#000000", opacity: 100 };
 }

@@ -22,6 +22,10 @@
   padding: 0 12px;
 }
 
+:root[data-island-notch="on"] .island__expanded {
+  padding-top: calc(var(--island-notch-height) / var(--island-expanded-scale, 1) + 8px);
+}
+
 .island__notch-wing {
   display: flex;
   flex: 1 1 0;

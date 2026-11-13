@@ -63,7 +63,7 @@ import { useIslandLyrics } from "./useIslandLyrics";
 import { useIslandFirstHints } from "./useIslandFirstHints";
 import { FirstHintActions, FirstHintNotice } from "../../features/first-hints/FirstHintNotice";
 import { useIslandSide } from "./useIslandSide";
-import { notchFittedWidth, notchLook, useIslandNotch } from "./notch";
+import { notchExpandedExtra, notchFittedWidth, notchLook, useIslandNotch } from "./notch";
 import "./IslandApp.css";
 
 const NO_TODOS: TodoItem[] = [];
@@ -202,7 +202,7 @@ export function IslandApp() {
     messageArrivalsHeight: messagePanel.arrivals ? messagePanel.height : undefined,
     popup,
   });
-  const expandedIslandHeight = resizingHeight && !popup ? settings.maxPanelHeight : pageIslandHeight;
+  const expandedIslandHeight = (resizingHeight && !popup ? settings.maxPanelHeight : pageIslandHeight) + notchExpandedExtra(notch, settings.expandedScale, popup);
   const look = useMemo(() => (mode !== "collapsed" ? settings : notch ? notchLook(settings) : collapsedThemeColors(settings)), [mode, notch, settings]);
   const accent = useAccentColor(settings);
   const devicePixelRatio = useDevicePixelRatio();

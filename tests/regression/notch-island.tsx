@@ -4,7 +4,7 @@ import { mockIPC } from "@tauri-apps/api/mocks";
 import "../../src/styles/tokens.css";
 import "../../src/windows/island/IslandApp";
 import { IslandShell } from "../../src/windows/island/IslandShell";
-import { applyIslandNotch, notchFittedWidth } from "../../src/windows/island/notch";
+import { applyIslandNotch, notchExpandedExtra, notchFittedWidth } from "../../src/windows/island/notch";
 import type { IslandNotch } from "../../src/windows/island/api";
 import type { PluginNotificationsController } from "../../src/features/plugins/usePluginNotifications";
 import { useQQNotifications } from "../../src/features/messages/qq-notifications/QQNotifications";
@@ -87,6 +87,10 @@ async function runChecks() {
     check(box(text).left >= hole.right - 0.5, "待办文字在刘海右边，不被刘海挡住");
     check(bar().querySelector(".island__notch-wing--left .island__pulse"), "状态灯在刘海左边");
     check(bar().scrollWidth <= bar().clientWidth + 1, "两翼的内容不撑出收起条");
+    const expanded = document.querySelector<HTMLElement>(".island__expanded")!;
+    check(parseFloat(getComputedStyle(expanded).paddingTop) === NOTCH.height + 8, "展开和弹出的内容从刘海下面开始，不被刘海挡住");
+    check(notchExpandedExtra(NOTCH, 1, false) === NOTCH.height + 8 - 18 && notchExpandedExtra(NOTCH, 1, true) === NOTCH.height && notchExpandedExtra(null, 1, true) === 0,
+      "展开的岛按让出的高度加高，内容区不变小");
 
     await set({ tucked: true });
     await settleTransitions();
