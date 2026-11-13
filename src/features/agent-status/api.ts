@@ -3,6 +3,7 @@ import { listen } from "@tauri-apps/api/event";
 import type { AgentEffortLabels } from "./effortLabels";
 
 export type AgentProvider = "codex" | "claudeCode";
+export type SessionProvider = AgentProvider | "workbuddy";
 export type AgentTaskPhase = "idle" | "running" | "waiting" | "completed" | "failed" | "stale";
 
 export type AgentTaskStatus = {
@@ -44,7 +45,7 @@ export type AgentHooksState = Record<AgentProvider, HookInstallState> & {
 };
 
 export type AgentSessionSummary = {
-  provider: AgentProvider;
+  provider: SessionProvider;
   sessionId: string;
   cwd: string | null;
   title: string | null;
@@ -155,7 +156,7 @@ export function setAgentRemoteHosts(hosts: string[]) {
   return invoke<string[]>("set_agent_remote_hosts", { hosts });
 }
 
-export function focusAgentWindow(provider: AgentProvider, cwd: string | null, title: string | null, sessionId: string) {
+export function focusAgentWindow(provider: SessionProvider, cwd: string | null, title: string | null, sessionId: string) {
   return invoke<boolean>("focus_agent_window", { provider, cwd, title, sessionId });
 }
 

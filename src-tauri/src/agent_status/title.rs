@@ -46,7 +46,7 @@ fn user_message_text(content: &Value) -> Option<String> {
     (!is_command_output).then_some(text)
 }
 
-fn tag_content<'a>(text: &'a str, tag: &str) -> Option<&'a str> {
+pub(super) fn tag_content<'a>(text: &'a str, tag: &str) -> Option<&'a str> {
     let open = format!("<{tag}>");
     let start = text.find(&open)? + open.len();
     let end = text[start..].find(&format!("</{tag}>"))?;

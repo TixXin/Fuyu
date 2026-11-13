@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   countActiveSessions,
+  filterSessions,
   minutesAgo,
   modelLabel,
   sameAgentSessions,
@@ -140,4 +141,13 @@ test("sessions arrange by light or time, under computer, project or no headings"
   const first = [s("a", 100), s("b", 200)];
   assert.deepEqual(ids(arrangeSessions(first, "firstSeen", "none"))[0][2], ["b", "a"]);
   assert.deepEqual(ids(arrangeSessions([s("a", 900), s("b", 200), s("c", 300)], "firstSeen", "none"))[0][2], ["c", "b", "a"]);
+});
+
+test("the provider filter hides Codex or Claude Code but always shows WorkBuddy", () => {
+  const list = [session(), session({ provider: "codex", sessionId: "c" }), session({ provider: "workbuddy", sessionId: "w" })];
+  const ids = (filter) => filterSessions(list, filter).map((item) => item.sessionId);
+  assert.deepEqual(ids({ claudeCode: true, codex: true }), ["s1", "c", "w"]);
+  assert.deepEqual(ids({ claudeCode: false, codex: true }), ["c", "w"]);
+  assert.deepEqual(ids({ claudeCode: true, codex: false }), ["s1", "w"]);
+  assert.equal(shownEffort("workbuddy", "high", { claudeCode: { high: "max" } }), "high");
 });

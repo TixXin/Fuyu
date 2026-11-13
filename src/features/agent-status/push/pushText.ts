@@ -5,7 +5,7 @@ import type { AgentPushDetail } from "./api";
 export const MAX_BODY_CHARS = 600;
 export const DISCORD_MAX_BODY_CHARS = 3500;
 
-const TAKEOVER_AGENTS: Record<AgentSessionSummary["provider"], string> = { claudeCode: "claudecode", codex: "codex" };
+const TAKEOVER_AGENTS: Partial<Record<AgentSessionSummary["provider"], string>> = { claudeCode: "claudecode", codex: "codex" };
 
 export function takeoverCommands(session: AgentSessionSummary, agent: string | null): string[] {
   if (!session.cwd || agent !== TAKEOVER_AGENTS[session.provider]) return [];

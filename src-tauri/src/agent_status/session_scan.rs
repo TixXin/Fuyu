@@ -10,7 +10,7 @@ use std::{
 use super::markers::AGENT_RUNNING_STALE_AFTER_MS;
 use super::notifications::{compacting_sessions, is_waiting, SavedNotifications, WaitingNotifications};
 use super::session_host::codex_host;
-use super::session_process::running_sessions;
+use super::session_process::running_sessions_in;
 use super::session_records;
 use super::sessions::{
     codex_originator, codex_user_prompt, parse_claude_tail, parse_codex_meta, parse_codex_tail, record_cwd,
@@ -18,6 +18,7 @@ use super::sessions::{
 };
 use super::snapshot::{current_unix_millis, system_time_to_unix_millis};
 use super::title::{codex_thread_name, folder_title, user_prompt_in_record};
+use super::workbuddy;
 
 pub(super) const ACTIVE_WINDOW_MS: i64 = 2 * 60 * 60 * 1000;
 const MAX_SESSIONS: usize = 12;
@@ -60,14 +61,18 @@ fn scan(
 
     let codex_index = read_tail(&home_dir.join(".codex").join("session_index.jsonl"));
     let mut live_claude = registry;
+    let mut live_workbuddy = None;
     for (provider, path, modified) in recent_session_files(home_dir, now, window_ms) {
         if let Some((mut summary, state)) =
             cache.summary(provider, &path, modified, codex_index.as_deref())
         {
             let asked_user = is_waiting(waiting, &summary.session_id, summary.updated_at);
             let mid_turn = matches!(state, TurnState::Working | TurnState::AwaitingUser);
-            summary.closed = has_ended(app_dir, &summary.session_id)
-                .unwrap_or_else(|| left_claude_registry(home_dir, &summary, now, &mut live_claude));
+            summary.closed = has_ended(app_dir, &summary.session_id).unwrap_or_else(|| match summary.provider {
+                "claudeCode" => left_registry(&home_dir.join(".claude"), &summary, now, &mut live_claude),
+                workbuddy::PROVIDER => left_registry(&home_dir.join(workbuddy::DIR), &summary, now, &mut live_workbuddy),
+                _ => false,
+            });
             let ended = mid_turn && summary.closed;
             summary.compacting = compacting.contains_key(&summary.session_id) && !ended;
             summary.phase = if ended {
@@ -102,17 +107,17 @@ fn has_ended(app_dir: Option<&Path>, session_id: &str) -> Option<bool> {
     record.live_pid().map(|_| false)
 }
 
-fn left_claude_registry(
-    home_dir: &Path,
+fn left_registry(
+    agent_dir: &Path,
     summary: &AgentSessionSummary,
     now: i64,
     live: &mut Option<HashSet<String>>,
 ) -> bool {
-    summary.provider == "claudeCode"
-        && now - summary.updated_at > REGISTRY_GRACE_MS
-        && (live.is_some() || home_dir.join(".claude").join("sessions").is_dir())
+    let registry = agent_dir.join("sessions");
+    now - summary.updated_at > REGISTRY_GRACE_MS
+        && (live.is_some() || registry.is_dir())
         && !live
-            .get_or_insert_with(|| running_sessions(home_dir).into_keys().collect())
+            .get_or_insert_with(|| running_sessions_in(&registry).into_keys().collect())
             .contains(&summary.session_id)
 }
 
@@ -138,6 +143,14 @@ fn recent_session_files(home_dir: &Path, now: i64, window_ms: i64) -> Vec<Sessio
                 .is_some_and(|extension| extension == "jsonl")
             {
                 push_recent("claudeCode", path);
+            }
+        }
+    }
+
+    for project in read_dir_paths(&home_dir.join(workbuddy::DIR).join("projects")) {
+        for path in read_dir_paths(&project) {
+            if path.extension().is_some_and(|extension| extension == "jsonl") {
+                push_recent(workbuddy::PROVIDER, path);
             }
         }
     }
@@ -232,7 +245,11 @@ impl SessionCache {
             host = codex_originator(&first_line).map(|origin| codex_host(&origin));
             (parse_codex_tail(&tail), id, cwd)
         } else {
-            let parsed = parse_claude_tail(&tail);
+            let parsed = if provider == workbuddy::PROVIDER {
+                workbuddy::parse_tail(&tail)
+            } else {
+                parse_claude_tail(&tail)
+            };
             let id = parsed.session_id.clone().or_else(|| {
                 path.file_stem()
                     .map(|stem| stem.to_string_lossy().to_string())
@@ -348,10 +365,10 @@ fn scan_head(path: &Path, provider: &str) -> SessionHead {
         return head;
     };
     let is_codex = provider == "codex";
-    let prompt_in_line = if is_codex {
-        codex_user_prompt
-    } else {
-        user_prompt_in_record
+    let prompt_in_line = match provider {
+        "codex" => codex_user_prompt,
+        workbuddy::PROVIDER => workbuddy::user_query,
+        _ => user_prompt_in_record,
     };
     for line in BufReader::new(file.take(HEAD_BYTES))
         .split(b'\n')

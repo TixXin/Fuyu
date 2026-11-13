@@ -31,6 +31,8 @@ It then updates:
 %USERPROFILE%\.claude\settings.json
 ```
 
+When WorkBuddy is installed (`%USERPROFILE%\.workbuddy` exists), it also updates `%USERPROFILE%\.workbuddy\settings.json`; see [WorkBuddy](#workbuddy).
+
 The operation is repeatable. Running **安装/修复** again rewrites Fuyu's managed hooks to the current app-data script path and removes older Fuyu hook entries that referenced development paths such as `D:\FocuSD\scripts`. Fuyu hooks under events it no longer writes are removed too, and an event left with no hooks is dropped.
 
 While the approval endpoint runs (approving on the island), Claude Code also gets the approval hooks: an HTTP `PermissionRequest` hook, a `PreToolUse` hook for `AskUserQuestion`, and an activity hook on `PostToolUse`, `PostToolUseFailure`, `PermissionDenied`, `Stop`, `SubagentStop` and `UserPromptSubmit`. The activity hook runs `curl.exe` (part of Windows 10 and 11) in the background (`"async": true`) to post the hook's input to `/claude/activity`; it never delays Claude Code, and with the island closed it gives up after a second. It lets the island close a card whose request was already answered in the terminal (docs/architecture/agent/island-interaction.md, 第 2 条). Installs from before 2026-11-07 lack it and show as needing repair.
@@ -200,6 +202,18 @@ Claude Code or Codex running on another computer (an SSH server, a dev container
    Codex takes the same script with `codex` as the second argument, on its `UserPromptSubmit`, `PermissionRequest` (waiting), `Stop` and `SessionEnd` hooks.
 
 Without the tunnel the requests fail at once and nothing else changes. A remote session that never sends `end` can be removed from the Agent page by hand like any other.
+
+## WorkBuddy
+
+WorkBuddy (Tencent's desktop agent, the Chinese edition that keeps its data in `~/.workbuddy`) is listed on the Agent page with its own icon (task B23.2, issue #155). The international edition, WorkBuddy AI (`~/.workbuddy-ai`), is a different product and is not read. What is known about both, with sources, is in [agent-harnesses.md](../research/agent-harnesses.md).
+
+- **Sessions**: `~/.workbuddy/projects/<encoded folder>/<session id>.jsonl`, read like Claude Code's transcripts (first lines and last 256 KiB, same session window). The title is the newest `ai-title` record, otherwise the first `<user_query>` of the session, otherwise the folder; the model is `providerData.requestModelName`. A turn is running from a user message, a `function_call`, a `function_call_result` or a `reasoning` record, and done at an assistant message; an assistant message with `status: "incomplete"` fails the turn, unless its error is `Interrupted by user`.
+- **Quit sessions**: `~/.workbuddy/sessions/<pid>.json` lists the running sessions (`pid`, `sessionId`), like `~/.claude/sessions`, so a session whose process is gone counts as quit.
+- **Waiting on you**: **安装/修复** adds one `PermissionRequest` hook to `~/.workbuddy/settings.json` (Claude Code's format; a single `command` string, since WorkBuddy's support for `args` is unknown) that saves the hook's input in `agent-notifications\workbuddy-*.json`, as for Claude Code. WorkBuddy reads the file only at start, so quit and reopen it after installing. The rest of the file is kept, and the hook is only added when `~/.workbuddy` already exists.
+- **Clicking a session** brings up the WorkBuddy window (`WorkBuddy.exe`).
+- Not done: usage, approving from the island, SSH (WorkBuddy has no server edition).
+
+Only the session format was checked against real files (WorkBuddy 5.3.8, 2026-11-13). The hook path and the `PermissionRequest` event come from a community test, not from WorkBuddy's documentation (which names `~/.codebuddy/settings.json`), and need a check on a machine with WorkBuddy.
 
 ## Other Agents
 

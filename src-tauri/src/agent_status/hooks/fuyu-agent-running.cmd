@@ -8,6 +8,8 @@ if /I "%PROVIDER%"=="codex" (
 ) else if /I "%PROVIDER%"=="claudeCode" (
   set "MARKER=agent-claudeCode-running.flag"
   set "HOLD=agent-claudeCode-running-hold.flag"
+) else if /I "%PROVIDER%"=="workbuddy" (
+  if /I not "%~2"=="notification" exit /b 2
 ) else (
   exit /b 2
 )

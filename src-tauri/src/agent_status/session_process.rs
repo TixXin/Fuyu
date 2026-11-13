@@ -25,7 +25,11 @@ pub(super) fn session_entry(entry: &str) -> Option<(String, SessionProcess)> {
 }
 
 pub(super) fn running_sessions(home_dir: &Path) -> HashMap<String, u32> {
-    let Ok(entries) = fs::read_dir(home_dir.join(".claude").join("sessions")) else {
+    running_sessions_in(&home_dir.join(".claude").join("sessions"))
+}
+
+pub(super) fn running_sessions_in(registry: &Path) -> HashMap<String, u32> {
+    let Ok(entries) = fs::read_dir(registry) else {
         return HashMap::new();
     };
     entries

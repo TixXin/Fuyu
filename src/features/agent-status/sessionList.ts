@@ -29,7 +29,7 @@ export function countActiveSessions(sessions: AgentSessionSummary[]) {
 export type SessionFilter = { claudeCode: boolean; codex: boolean };
 
 export function filterSessions(sessions: AgentSessionSummary[], filter: SessionFilter) {
-  const shown = sessions.filter((session) => (session.provider === "codex" ? filter.codex : filter.claudeCode));
+  const shown = sessions.filter((session) => session.provider === "workbuddy" || filter[session.provider]);
   return shown.length === sessions.length ? sessions : shown;
 }
 
