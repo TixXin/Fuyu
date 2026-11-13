@@ -1,4 +1,5 @@
 pub(crate) mod accessibility;
+pub(crate) mod appearance;
 pub(crate) mod apps;
 pub(crate) mod audio;
 pub(crate) mod audio_devices;
@@ -13,6 +14,7 @@ pub(crate) mod input;
 pub(crate) mod island_panel;
 pub(crate) mod job;
 pub(crate) mod login_item;
+pub(crate) mod network;
 pub(crate) mod ocr;
 pub(crate) mod pasteboard;
 pub(crate) mod power;

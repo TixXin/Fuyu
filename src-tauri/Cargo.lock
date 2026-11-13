@@ -1626,6 +1626,7 @@ dependencies = [
  "chrono",
  "chrono-tz",
  "clipboard-win",
+ "dispatch2",
  "drag",
  "ed25519-dalek",
  "flate2",

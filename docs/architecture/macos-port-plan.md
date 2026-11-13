@@ -92,8 +92,8 @@
 |---|---|---|---|
 | `island`（focus、follow、glass、modifier、outside_click、passthrough） | 窗口、前台、按键与鼠标状态、窗口区域 | 这几个子模块暂不支持；`mod.rs` 的 Alt / 左键判断换实现（Mac 上为 false）；几何、状态、贴边照常编译 | G1.3 |
 | `onboarding_window` | 最小化全部窗口、光标位置、岛的窗口矩形 | 换实现（G1.3 已做）：隐藏其他应用、Tauri 的光标位置和窗口矩形 | G1.3 |
-| `system`：`startup`、`network_cost` | 注册表（reg.exe）、WinRT 网络计费 | 自启换实现（G1.4 已做：`SMAppService`）；网络计费暂不支持（不计费） | G1.4、G1.6 |
-| `system`：`accent_color`、`fullscreen`、`updater`、`update_notifications`、`settings_backup` | 注册表、前台全屏、系统代理、Toast、下载文件夹 | 换实现：强调色 None、全屏 false、只读环境变量代理、不弹系统通知、诊断报 `sw_vers` 版本、下载文件夹 `~/Downloads` | G1.4、G1.6 |
+| `system`：`startup`、`network_cost` | 注册表（reg.exe）、WinRT 网络计费 | 自启换实现（G1.4 已做：`SMAppService`）；网络计费换实现（G1.6 已做：`network_cost_macos.rs`，平台层 `macos/network.rs`） | G1.4、G1.6 |
+| `system`：`accent_color`、`fullscreen`、`updater`、`update_notifications`、`settings_backup` | 注册表、前台全屏、系统代理、Toast、下载文件夹 | 换实现：强调色读系统强调色（G1.6，`macos/appearance.rs`）、全屏 false、只读环境变量代理、不弹系统通知、诊断报 `sw_vers` 版本、下载文件夹 `~/Downloads` | G1.4、G1.6 |
 | `system`：`CommandExt` / `CREATE_NO_WINDOW` | `CreationFlags` | 换实现：`system/command_flags.rs`，Mac 上 `creation_flags` 什么都不做 | — |
 | `home_dir`、`system::windows_home_dir` | `USERPROFILE`、消息框 | 换实现：Mac 上用 `HOME`，冲突提示打到 stderr；G1.4 补上应用数据目录（`~/Library/Application Support/<标识>`）和锁文件的电脑名 | G1.4 |
 | `clipboard_history`、`translation` | 剪贴板监听、热键、弹窗、UIA 选中文字 | 剪贴板换实现（G1.6 已做：`*_macos.rs` 的监听、热键、弹窗、system，平台层 `macos/pasteboard.rs`、`apps.rs`、`input.rs`）；翻译换实现（G1.6 已做：`translation/hotkey_macos.rs`、`placement_macos.rs`，划词在 `selection.rs` 里先读 AX，平台层 `macos/hotkeys.rs`、`accessibility.rs`） | G1.6 |
@@ -122,6 +122,7 @@ Mac 上跳过的测试（依赖 Windows 路径、程序或 API，标了 `#[cfg(w
 |---|---|---|---|---|
 | 2026-11-13 | — | — | 4 份调研、本计划、[platforms.md](platforms.md)、任务 G1 | 仅文档 |
 | 2026-11-13 | G1.1 | 3ccc9b6c | 用户拍板 M1–M14，写进决定表；界面形态（M4–M6）写进 [design/macos.md](../design/macos.md) | 仅文档 |
+| 2026-11-13 | G1.6 强调色、网络计费、授权状态 | （本次提交） | 「跟随系统」强调色读 `NSColor.controlAccentColor`；更新的「按流量计费」读 Network.framework 的 `nw_path_is_expensive` / `is_constrained`；设置 → 通用里新增「系统权限」，显示辅助功能、屏幕录制是否已允许，没允许的能一键打开系统设置 | Mac：clippy、`cargo test`、`pnpm test`、设置回归页、`pnpm build`、`pnpm build:exe`；本机实测强调色 `#007aff`、Wi-Fi 不计费；Windows：交叉 clippy 通过 |
 | 2026-11-13 | G1.6 截图与识字 | 48d26bb8、75bbc594、77efc7e6（搬迁），（本次提交） | 截图的剪贴板、快捷键类型、平台调用先搬到可替换的文件（Windows 零行为变化）；Mac 上截屏（ScreenCaptureKit）、选区窗口（NSPanel）、复制 / 保存 / 贴图 / 拖出 / 长截图 / 历史、窗口吸附、快捷键；识字（Vision）同时给截图和剪贴板图片用 | Mac：`cargo clippy --all-targets -D warnings`、`cargo test`（519 过）；Vision 识别 README 截图实测中英文都对、词框位置对；截屏在没授权的终端里返回失败、不崩；Windows：交叉 `clippy --target x86_64-pc-windows-gnu --all-targets` 通过 |
 | 2026-11-13 | G1.2（Rust 部分） | （本次提交） | Windows 依赖只在 Windows 上编译；`macos/` 平台层与 `platform.rs`；Mac 上暂不支持的模块用 unsupported 空实现；CI 加 `rust-macos`；迁移表 | Mac：`cargo clippy --all-targets -D warnings`、`cargo test`（421 过）、`pnpm dev:lane` 起窗口；Windows：在 Mac 上交叉 `clippy --target x86_64-pc-windows-gnu --all-targets` 通过，测试看 CI |
 
@@ -142,7 +143,8 @@ Mac 上跳过的测试（依赖 Windows 路径、程序或 API，标了 `#[cfg(w
 - 开机自启：打包后的 `.app` 在设置里打开自启，「系统设置 → 通用 → 登录项」里出现浮屿，重新登录后岛自动起来；关掉后登录项消失（G1.4）
 - 新手引导：遮罩是否盖到岛所在的位置、卡片能点、其他应用被隐藏，关掉引导后全部显示回来（G1.3）
 - Retina 内屏 + 1x 外接屏：岛在两块屏上都停在顶部正中，拖到另一块屏后贴顶和点穿都正确（G1.3；开发机只有一块屏，没测到）
-- 辅助功能、屏幕录制、自动化的授权弹窗和设置里的状态（G1.6、G1.7）
+- 辅助功能、屏幕录制、自动化的授权弹窗和设置里的状态（G1.6、G1.7）：设置 → 通用 →「系统权限」里两项的状态和真实授权一致，在系统设置里改完切回设置窗口会刷新；「打开系统设置」打开对应的隐私页
+- 强调色：外观里强调色选「跟随系统」后，用系统设置 → 外观里的强调色；改了系统强调色后重开设置窗口能跟上（G1.6）
 - 签名、公证后的 dmg 在一台没装过浮屿的 Mac 上首次打开（G1.13）
 
 ## 备注

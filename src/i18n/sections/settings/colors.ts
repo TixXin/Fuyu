@@ -15,6 +15,8 @@ export type SettingsColorsText = {
   collapsedDarkHint: string;
   accent: string;
   accentHint: string;
+  accentHintMac: string;
+  accentSystem: string;
   accentModes: Record<"default" | "windows" | "pick", string>;
   accentColor: string;
 };
@@ -34,6 +36,8 @@ export const zhCN: SettingsColorsText = {
   resetSet: "恢复这套的默认颜色",
   accent: "强调色",
   accentHint: "焦点框、当前页的图标、链接用的颜色。跟随 Windows 用「设置 → 个性化 → 颜色」里的主题色。",
+  accentHintMac: "焦点框、当前页的图标、链接用的颜色。跟随系统用「系统设置 → 外观」里的强调色。",
+  accentSystem: "跟随系统",
   accentModes: { default: "默认", windows: "跟随 Windows", pick: "自选" },
   accentColor: "强调色颜色",
   collapsedDark: "收起时保持深色",
@@ -55,6 +59,8 @@ export const en: SettingsColorsText = {
   resetSet: "Reset this set's colors",
   accent: "Accent",
   accentHint: "The color of focus rings, the open page's icon and links. Windows uses the accent from Settings > Personalization > Colors.",
+  accentHintMac: "The color of focus rings, the open page's icon and links. System uses the accent from System Settings > Appearance.",
+  accentSystem: "System",
   accentModes: { default: "Default", windows: "Windows", pick: "Pick" },
   accentColor: "Accent color",
   collapsedDark: "Stay dark when collapsed",
