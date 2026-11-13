@@ -9,7 +9,7 @@ pub struct PlatformSupport {
 #[cfg(target_os = "macos")]
 const SUPPORT: PlatformSupport = PlatformSupport {
     os: "macos",
-    unsupported: &["qq", "wechat", "agentConnect", "agentRemote"],
+    unsupported: &["agentConnect", "agentRemote"],
 };
 
 #[cfg(not(target_os = "macos"))]

@@ -24,6 +24,7 @@ export type QqText = {
     error: string;
   };
   openNotification: (title: string) => string;
+  permissionRequiredMac: string;
 };
 
 export const zhCN: QqText = {
@@ -51,6 +52,7 @@ export const zhCN: QqText = {
     permissionRequired: "需要通知权限",
     error: "连接失败",
   },
+  permissionRequiredMac: "需要在系统设置里允许浮屿使用辅助功能",
   openNotification: (title) => `打开 QQ：${title}`,
 };
 
@@ -79,5 +81,6 @@ export const en: QqText = {
     permissionRequired: "Notification access required",
     error: "Connection failed",
   },
+  permissionRequiredMac: "Allow Fuyu under Accessibility in System Settings",
   openNotification: (title) => `Open QQ: ${title}`,
 };

@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { ArrowUpRight, KeyRound, Power, RefreshCw, Settings2, Trash2 } from "lucide-react";
 import { MessageSourceIcon } from "../MessageSourceIcon";
 import "./QQNotifications.css";
+import { isMacOS } from "../../../lib/platform";
 import type { QQNotificationsController } from "./useQQNotifications";
 
 export { useQQNotifications } from "./useQQNotifications";
@@ -33,7 +34,7 @@ export function QQNotificationControls({ controller, compact = false }: { contro
 export function QQNotificationPanel({ controller, navigation }: { controller: QQNotificationsController; navigation: ReactNode }) {
   const { snapshot, busy, actionError, refresh, clear, openQQ } = controller;
   const t = useTranslation();
-  const error = actionError || snapshot.error || (snapshot.status === "permissionRequired" || snapshot.status === "permissionDenied" ? t.qq.status[snapshot.status] : null);
+  const error = actionError || snapshot.error || (snapshot.status === "permissionRequired" || snapshot.status === "permissionDenied" ? (isMacOS ? t.qq.permissionRequiredMac : t.qq.status[snapshot.status]) : null);
   return (
     <section className="qq-panel" aria-label={t.qq.recent}>
       <header className="qq-panel__header">
@@ -53,7 +54,7 @@ export function QQNotificationPanel({ controller, navigation }: { controller: QQ
           <article className="qq-panel__item" key={item.id} role="listitem" data-message-id={item.id}>
             <button type="button" disabled={busy} onClick={() => void openQQ()} aria-label={t.qq.openNotification(item.title)}>
               <div className="qq-panel__item-heading"><strong>{item.title}</strong><time dateTime={new Date(item.createdAt).toISOString()}>{new Date(item.createdAt).toLocaleTimeString(t.localeTag, { hour: "2-digit", minute: "2-digit" })}</time></div>
-              {item.body && <p>{item.body}</p>}
+              {(item.unread ? t.messages.unreadCount(item.unread) : item.body) && <p>{item.unread ? t.messages.unreadCount(item.unread) : item.body}</p>}
             </button>
           </article>
         ))}

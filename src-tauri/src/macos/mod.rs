@@ -8,6 +8,7 @@ pub(crate) mod brightness;
 pub(crate) mod camera;
 pub(crate) mod capture_targets;
 pub(crate) mod desktop;
+pub(crate) mod dock_badges;
 pub(crate) mod fullscreen;
 pub(crate) mod hotkeys;
 pub(crate) mod icon;

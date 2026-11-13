@@ -6,6 +6,7 @@ export type QQNotification = {
   title: string;
   body: string;
   createdAt: number;
+  unread?: number | null;
 };
 
 export type QQNotificationSnapshot = {

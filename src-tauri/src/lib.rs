@@ -24,7 +24,7 @@ mod pets;
 mod phone_push;
 mod plugin_host;
 mod mail;
-#[cfg_attr(not(windows), path = "qq_notifications/unsupported.rs")]
+#[cfg_attr(target_os = "macos", path = "qq_notifications/macos.rs")]
 mod qq_notifications;
 #[cfg_attr(not(windows), path = "rename_migration/unsupported.rs")]
 mod rename_migration;
@@ -42,7 +42,7 @@ mod tray;
 #[cfg(target_os = "macos")]
 mod tray_mark;
 mod user_error;
-#[cfg_attr(not(windows), path = "wechat_reminders/unsupported.rs")]
+#[cfg_attr(target_os = "macos", path = "wechat_reminders/macos.rs")]
 mod wechat_reminders;
 #[cfg(target_os = "macos")]
 mod macos;

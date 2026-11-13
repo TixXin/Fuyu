@@ -75,7 +75,7 @@
 ## 第 2 步：和系统深度绑定的功能
 
 - [ ] **G1.9 媒体控制、歌词与亮度（私有 API，按 M7）。** 媒体读取用 mediaremote-adapter 的思路，失败时对 Apple Music / Spotify 用 AppleScript 兜底；亮度参考 MonitorControl。设置里显示当前来源和失效提示。每个 macOS 大版本发布后复测。
-- [ ] **G1.10 QQ / 微信提醒的技术验证（按 M8）。** 先验证读 Dock 角标未读数；微信会话列表（AX）和 NTQQ 的 `AXManualAccessibility` 只做验证、写进 `docs/investigations/`，结论出来后再决定对外承诺什么。
+- [x] **G1.10 QQ / 微信提醒的技术验证（按 M8）。**（2026-11-13 已做：验证见 [macos-messengers.md](../investigations/macos-messengers.md)，并按结论做了只显示未读数的 Mac 版） 先验证读 Dock 角标未读数；微信会话列表（AX）和 NTQQ 的 `AXManualAccessibility` 只做验证、写进 `docs/investigations/`，结论出来后再决定对外承诺什么。
 - [ ] **G1.11 刘海形态（可选，按 M4）。** 读 `safeAreaInsets` 和 `auxiliaryTop*Area` 得到刘海几何；折叠态和刘海融为一体；无刘海屏回退到顶部正中。
 
 ## 第 3 步：签名与发布
@@ -109,7 +109,7 @@
 | `plugin_host`（runtime、baseline） | 作业对象、挂起启动 | 平台层：Mac 上 `Job` 管进程组（G1.8 已做：`killpg`，按组统计内存），不挂起启动 | G1.8 |
 | `plugin_host`（keybindings、system_events、webviews、uri） | 热键、会话通知、WebView2 页面、注册 `fuyu://` | 快捷键、系统事件换实现（G1.8 已做，在原文件里按平台分开）；网页视图暂不支持；`uri` 注册换实现（Mac 上不做，等 Info.plist） | G1.4、G1.8 |
 | `media_control` | SMTC、音频峰值、程序图标 | 换实现（G1.9 已做）：`service_macos.rs`、`events_macos.rs`、`adapter_macos.rs`（mediaremote-adapter）、`applescript_macos.rs`（兜底）；状态类型在共用的 `state.rs` | G1.9 |
-| `qq_notifications`、`wechat_reminders`、`messenger_activation` | 通知监听、窗口闪烁、UIA | 暂不支持 | G1.10 |
+| `qq_notifications`、`wechat_reminders`、`messenger_activation` | 通知监听、窗口闪烁、UIA | QQ、微信换实现（G1.10 已做：`qq_notifications/macos.rs`、`wechat_reminders/macos.rs`，平台层 `macos/dock_badges.rs`，插件动态复用 `plugin_view.rs`）；`messenger_activation` 仍暂不支持 | G1.10 |
 | `cc_connect`、`ssh_tunnel` | 作业对象、注册表代理、程序查找 | 暂不支持（内置插件在 Mac 上开不起来） | G1.8 |
 | `rename_migration` | 注册表、凭据、卸载旧版 | 暂不支持（Mac 上没有旧版可迁移）；`data_dirs::copy_tree` 照常给 `home_dir` 用 | 不做 |
 | `examples/` 四个探测程序 | 全部 | Mac 上只打印「只能在 Windows 上运行」 | 不做 |
@@ -122,6 +122,7 @@ Mac 上跳过的测试（依赖 Windows 路径、程序或 API，标了 `#[cfg(w
 |---|---|---|---|---|
 | 2026-11-13 | — | — | 4 份调研、本计划、[platforms.md](platforms.md)、任务 G1 | 仅文档 |
 | 2026-11-13 | G1.1 | 3ccc9b6c | 用户拍板 M1–M14，写进决定表；界面形态（M4–M6）写进 [design/macos.md](../design/macos.md) | 仅文档 |
+| 2026-11-13 | G1.10 QQ / 微信未读数 | （本次提交） | 程序坞角标读取；QQ、微信的 Mac 模块；未读数在消息页、横幅、收起预览里显示；Mac 专用的设置说明和授权提示 | Mac：clippy、`cargo test`（548）、`pnpm test`（674）、类型检查、设置与消息回归页；本机实测读到「系统设置」角标 1，微信、QQ 在程序坞里且无角标；Windows：交叉 clippy 通过 |
 | 2026-11-13 | G1.9 媒体控制与亮度 | f97cfffc（搬迁），（本次提交） | mediaremote-adapter 的构建脚本与打包；正在播放、播放控制、进度、封面；AppleScript 兜底；内建屏亮度提示 | Mac：clippy、`cargo test`、`pnpm test`、音乐回归页、`pnpm build:exe`；打包后的 `.app` 里适配器读到正在播放（汽水音乐，含封面）；本机读到亮度 25%；Windows：交叉 clippy 通过 |
 | 2026-11-13 | G1.8 插件宿主 | （本次提交） | 进程组、`node` / `pwsh` 查找、`.exe` 插件拒绝启动；清单 `platforms` 字段（schema、文档、SDK 同步）；设置和市场里的平台与 PowerShell 提示；插件快捷键、系统事件 | Mac：clippy、`cargo test`、`pnpm test`、类型检查、设置回归页、`pnpm build`、`pnpm build:exe`；Windows：交叉 clippy 通过 |
 | 2026-11-13 | G1.7 AI 代理状态 | （本次提交） | `/bin/sh` 版 hook 脚本和 Claude Code / Codex 的 hook 命令；Mac 进程平台层；点会话跳到终端或编辑器（Terminal、iTerm2 按 tty 选标签页）；审批快捷键；编辑器扩展的安装；用量的钥匙串凭据 | Mac：clippy、`cargo test`（含真跑四个脚本再用 Rust 读结果的测试）、`pnpm test`、`pnpm build`、`pnpm build:exe`；本机实测进程链从 CLI 一路走到前台应用；Windows：交叉 clippy 通过 |
@@ -146,6 +147,7 @@ Mac 上跳过的测试（依赖 Windows 路径、程序或 API，标了 `#[cfg(w
 - AI 代理（G1.7）：在设置里安装 hook 后，`~/.claude/settings.json` 和 `~/.codex/config.toml` 里是 `/bin/sh` 加 `~/.fuyu/fuyu-agent-*.sh` 的命令；在 Terminal、iTerm2、VS Code 里跑 Claude Code，岛上显示运行中、完成、等待确认；点会话能切到对应的应用，Terminal 和 iTerm2 切到对应标签页（第一次要允许「自动化」）；VS Code 里装了浮屿扩展时切到对应终端；在岛上审批和审批快捷键能用；开了「直接向 Anthropic 查询」时系统问一次是否允许读钥匙串，允许后用量环有数
 - 插件（G1.8）：装一个 Node 插件和一个 PowerShell 插件（装了 pwsh 时）都能跑起来；停用插件或退出浮屿后 `ps` 里没有残留的插件进程；没装 pwsh 时卡片上出现安装提示；`.exe` 插件标为只支持 Windows；插件的快捷键能触发；锁屏、解锁、合盖再打开后插件收到对应事件
 - 媒体（G1.9）：Apple Music、Spotify、网易云、QQ 音乐、汽水音乐、浏览器里的视频播放时，岛上和音乐页显示曲名、歌手、封面、进度，播放 / 暂停 / 上下首 / 拖进度 / 随机 / 循环都生效；暂停后状态跟上；浮屿自己的提示音不出现在音乐页；歌词能对上；按亮度键时岛上出现亮度提示
+- QQ / 微信（G1.10）：设置里打开 QQ、微信提醒；有人发消息、程序坞图标出现角标时，岛上出现「N 条未读」提醒，消息页列出；点条目打开对应应用；没允许辅助功能时显示「需要授权」，按钮打开系统设置
 - 手机推送：离开电脑（空闲）或锁屏后，Agent 完成的推送能发出（G1.6）
 - 剪贴板：复制文字、图片、Finder 里的文件都进历史；密码管理器复制的不进；⌘⇧V 在鼠标旁弹出，选中后贴回原来的应用（第一次要允许辅助功能）；贴到终端时多行命令合成一行；有没有系统的剪贴板隐私提示（G1.6）
 - `fuyu://` 链接：装好的 `.app` 在浏览器里点 `fuyu://plugin/<id>/...` 能唤起岛并打开插件，岛没开时也能（G1.4）

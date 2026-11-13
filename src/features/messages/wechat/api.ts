@@ -4,7 +4,7 @@ import { listen, type EventCallback } from "@tauri-apps/api/event";
 export type ReminderSnapshot = {
   revision: number;
   enabled: boolean;
-  status: "disabled" | "waiting" | "listening" | "error";
+  status: "disabled" | "waiting" | "listening" | "error" | "permissionRequired";
   pending: boolean;
   lastAttentionAt: number | null;
   error: string | null;
@@ -23,12 +23,13 @@ export type ChatMessage = {
   at: number;
 };
 
-export type PlainReason = "tray" | "unreadable" | "baseline" | "unchanged" | "muted";
+export type PlainReason = "tray" | "unreadable" | "baseline" | "unchanged" | "muted" | "unread";
 
 export type ReminderItem = {
   at: number;
   message: ChatMessage | null;
   reason: PlainReason | null;
+  unread?: number | null;
 };
 
 export type ReminderEvent = { snapshot: ReminderSnapshot; windowVisible: boolean };
