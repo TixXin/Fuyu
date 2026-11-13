@@ -111,16 +111,10 @@ if (!automated) {
 
     await press("下一步");
     check(title() === "把它捏成你喜欢的样子", "Act 2 shapes the island");
-    await press("圆角");
-    check(stored().islandCornerShape === "round", "The corner shape can be picked");
+    check(!button("圆角") && !document.querySelector("input[type='range']") && document.querySelectorAll(".onboarding__body .settings-row").length === 2,
+      "Act 2 only asks for dark or light and the accent; corners and motion are left to Settings");
     await press("浅色");
     check(stored().themeMode === "light" && document.querySelector(".onboarding--light"), "Picking light saves it for the real island and turns the card light");
-    const slider = document.querySelector<HTMLInputElement>("input[type='range']")!;
-    await act(async () => {
-      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(slider, "40");
-      slider.dispatchEvent(new Event("input", { bubbles: true }));
-    });
-    check(stored().islandCornerRadius === 40, "The corners are saved as they change");
 
     await press("下一步");
     const body = document.querySelector<HTMLElement>(".onboarding__body")!;

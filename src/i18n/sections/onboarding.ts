@@ -17,7 +17,6 @@ export type OnboardingText = {
     title: string;
     lead: string;
     theme: string;
-    corners: string;
   };
   outfit: {
     title: string;
@@ -85,9 +84,8 @@ export const zhCN: OnboardingText = {
   },
   shape: {
     title: "把它捏成你喜欢的样子",
-    lead: "改动马上出现在真正的岛上。",
+    lead: "改动马上出现在真正的岛上。圆角、动画这些细节以后在设置里调。",
     theme: "深色还是浅色",
-    corners: "圆角",
   },
   outfit: {
     title: "留下你用得上的功能",
@@ -176,9 +174,8 @@ export const en: OnboardingText = {
   },
   shape: {
     title: "Shape it your way",
-    lead: "Changes show on the real island at once.",
+    lead: "Changes show on the real island at once. Corners, motion and other details are in Settings later.",
     theme: "Dark or light",
-    corners: "Corners",
   },
   outfit: {
     title: "Keep the features you'll use",
