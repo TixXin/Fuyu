@@ -64,6 +64,7 @@ import { useIslandFirstHints } from "./useIslandFirstHints";
 import { FirstHintActions, FirstHintNotice } from "../../features/first-hints/FirstHintNotice";
 import { useIslandSide } from "./useIslandSide";
 import { useDevIslandActions } from "./useDevIslandActions";
+import { hasNotchAlert } from "./NotchAlert";
 import { hasNotchDrop, notchExpandedExtra, notchFittedWidth, notchLook, notchPanelWidth, useIslandNotch, useNotchDropSync } from "./notch";
 import "./IslandApp.css";
 
@@ -142,7 +143,7 @@ export function IslandApp() {
       lyricLine?.longest ?? null,
       firstHints.current ? t.island.firstHint[firstHints.current] : null,
     );
-  const collapsedIslandWidth = notchFittedWidth(textWidth, notch, settings.collapsedScale);
+  const collapsedIslandWidth = notchFittedWidth(textWidth, notch, settings.collapsedScale, hasNotchAlert({ deviceAlert: notices.deviceAlert, quotaAlert, levelPopup: notices.levelPopup }));
   useIslandTucking({
     settings,
     navigation,
@@ -238,8 +239,7 @@ export function IslandApp() {
   });
 
   useNotchDropSync(notch !== null && mode === "collapsed" && !isTucked && hasNotchDrop({
-    preview: banner.barPreview, notice: screenshotNotice.taken ?? firstHints.current, deviceAlert: notices.deviceAlert,
-    quotaAlert, levelPopup: notices.levelPopup, translationPeek,
+    preview: banner.barPreview, notice: screenshotNotice.taken ?? firstHints.current, translationPeek,
   }));
   useDevIslandActions({ openPage: openEnabledPage, collapse: collapseIsland, tuck: tuckIsland, reveal: revealIsland });
   const hoverTucked = useIslandHover({

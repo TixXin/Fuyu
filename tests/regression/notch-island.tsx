@@ -11,6 +11,8 @@ import { useQQNotifications } from "../../src/features/messages/qq-notifications
 import { useWeChatReminders } from "../../src/features/messages/wechat/WeChatReminders";
 import { useMail } from "../../src/features/messages/mail/MailPanel";
 import type { MediaState } from "../../src/features/media/api";
+import type { LevelChange } from "../../src/features/system-levels/api";
+import type { DeviceAlert } from "../../src/features/device-events/api";
 
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
 const automated = new URLSearchParams(location.search).has("test");
@@ -28,16 +30,16 @@ mockIPC((command) => {
   if (command === "get_qq_mail_state") return [];
 }, { shouldMockEvents: true });
 
-type State = { notch: IslandNotch | null; tucked: boolean; peek: string | null; expanded: boolean };
+type State = { notch: IslandNotch | null; tucked: boolean; peek: string | null; expanded: boolean; level: LevelChange | null; device: DeviceAlert | null };
 let change: (next: Partial<State>) => void;
 
 function Fixture() {
-  const [state, setState] = useState<State>({ notch: NOTCH, tucked: false, peek: null, expanded: false });
+  const [state, setState] = useState<State>({ notch: NOTCH, tucked: false, peek: null, expanded: false, level: null, device: null });
   change = (next) => setState((current) => ({ ...current, ...next }));
   const qq = useQQNotifications(true);
   const wechat = useWeChatReminders(true);
   const qqMail = useMail(true);
-  const width = notchFittedWidth(300, state.notch, 1);
+  const width = notchFittedWidth(300, state.notch, 1, Boolean(state.level || state.device));
   return <div className="stage" style={{ "--collapsed-island-width": `${width}px`, "--island-scale": 1, "--island-collapsed-scale": 1, "--island-expanded-scale": 1, "--expanded-island-width": `${notchPanelWidth(560, state.notch, 1, false)}px`, "--expanded-island-height": "306px" } as CSSProperties}>
     <IslandShell deviceUse={{ camera: [], microphone: [] }} qqNotifications={qq} wechatReminders={wechat} qqMail={qqMail} pluginNotifications={NO_PLUGIN_NOTIFICATIONS} preview={null}
       mode={state.expanded ? "expanded" : "collapsed"} page="todo" isTucked={state.tucked} isDetached={false} showTitle={false}
@@ -48,7 +50,7 @@ function Fixture() {
       shelfCount={null}
       onOpenPage={() => {}} onOpenMessages={() => {}}
       onPageChange={() => {}} onWindowDragStart={() => {}} onCollapse={() => {}}
-      onResetPosition={() => {}} minimizesToTray onMinimize={() => {}} onOpenSettings={() => {}} onOpenTranslator={() => {}} translationPeek={state.peek} onOpenTranslationPeek={() => {}} onTuck={() => {}} onReveal={() => {}} pageDigitModifiers="Alt" hoverSwitchPage={false} hoverSwitchDelayMs={0}>
+      onResetPosition={() => {}} minimizesToTray onMinimize={() => {}} onOpenSettings={() => {}} onOpenTranslator={() => {}} translationPeek={state.peek} levelPopup={state.level} deviceAlert={state.device} onOpenTranslationPeek={() => {}} onTuck={() => {}} onReveal={() => {}} pageDigitModifiers="Alt" hoverSwitchPage={false} hoverSwitchDelayMs={0}>
       <span>待办清单</span>
     </IslandShell>
   </div>;
@@ -111,6 +113,22 @@ async function runChecks() {
     await set({ peek: null });
     await settleTransitions();
     check(!bar().querySelector(".island__notch-drop") && Math.abs(box(island()).height - NOTCH.height) < 1, "提示结束后岛缩回刘海高");
+
+    await set({ level: { kind: "volume", level: 0.45, muted: false } });
+    await settleTransitions();
+    const leftWing = bar().querySelector(".island__notch-wing--left")!;
+    const rightWing = bar().querySelector(".island__notch-wing--right")!;
+    check(leftWing.querySelector(".notch-alert__icon .level-popup__icon") && !leftWing.querySelector(".island__pulse"), "音量提示：刘海左边换成喇叭图标");
+    check(rightWing.querySelector(".level-popup__track") && rightWing.textContent?.includes("45"), "音量提示：刘海右边是进度条和数字");
+    check(!bar().querySelector(".island__notch-drop") && Math.abs(box(island()).height - NOTCH.height) < 1, "短提示不往下长");
+    check(box(rightWing.querySelector(".level-popup")!).right <= box(island()).right && box(leftWing).right <= box(island()).left + (box(island()).width - NOTCH.width) / 2 + 0.5, "两边的内容不出岛、不压刘海");
+    await set({ level: null, device: { kind: "batteryLow", name: "AirPods Pro", battery: 10 } });
+    await settleTransitions();
+    check(bar().querySelector(".island__notch-wing--left .device-alert--warn") && bar().querySelector(".island__notch-wing--right")?.textContent?.trim() === "10%", "低电量：左边电池图标，右边 10%");
+    check(bar().querySelector(".island__notch-wing--right [role=status]")?.getAttribute("aria-label")?.includes("AirPods Pro"), "读屏仍读完整的一句");
+    await set({ device: null });
+    await settleTransitions();
+    check(bar().querySelector(".island__notch-wing--left .island__pulse"), "提示结束后刘海左边换回状态灯");
 
     await set({ tucked: true });
     await settleTransitions();

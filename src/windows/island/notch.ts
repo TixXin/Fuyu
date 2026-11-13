@@ -49,10 +49,13 @@ export function useIslandNotch(): IslandNotch | null {
   return useSyncExternalStore(subscribe, () => current, () => null);
 }
 
-export function notchFittedWidth(width: number, notch: IslandNotch | null, collapsedScale: number) {
+export const ALERT_NOTCH_WING = 90;
+
+export function notchFittedWidth(width: number, notch: IslandNotch | null, collapsedScale: number, alerted = false) {
   if (!notch) return width;
   const gap = Math.ceil(notch.width / Math.max(collapsedScale, 0.01));
-  const wing = Math.min(MAX_NOTCH_WING, Math.max(NOTCH_WING, NOTCH_WING + width - MIN_COLLAPSED_ISLAND_WIDTH));
+  const least = alerted ? ALERT_NOTCH_WING : NOTCH_WING;
+  const wing = Math.min(MAX_NOTCH_WING, Math.max(least, NOTCH_WING + width - MIN_COLLAPSED_ISLAND_WIDTH));
   return gap + 2 * wing;
 }
 
@@ -82,9 +85,6 @@ export function notchLook(settings: IslandSettings): IslandSettings {
 export type NotchDropSources = {
   preview: unknown;
   notice: unknown;
-  deviceAlert: unknown;
-  quotaAlert: unknown;
-  levelPopup: unknown;
   translationPeek: unknown;
 };
 

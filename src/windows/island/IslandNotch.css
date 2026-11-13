@@ -135,3 +135,30 @@
 :root[data-island-notch="on"] .island--collapsed.island--tucked::after {
   opacity: 0;
 }
+
+.notch-alert__icon {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+}
+
+.notch-alert__value {
+  flex: 1;
+  justify-content: flex-end;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.notch-alert__value .device-alert__text,
+.notch-alert__value .agent-quota-alert__text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.notch-alert__level .level-popup__icon {
+  display: none;
+}
+
+.island__notch-wing--left:has(.notch-alert__icon) {
+  justify-content: flex-start;
+}
