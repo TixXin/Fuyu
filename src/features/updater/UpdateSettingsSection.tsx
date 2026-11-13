@@ -6,6 +6,7 @@ import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
 import { useLocale, useTranslation } from "../../i18n";
 import { CHECK_INTERVAL_HOURS } from "./storage";
 import { getUpdateState, setAutoCheck, setAutoUpdate, setCheckInterval, setReminderMode, subscribeToUpdate } from "./updaterController";
+import { UpdateChannelRow } from "./UpdateChannelRow";
 import { UpdatePanel } from "./UpdatePanel";
 
 export function UpdateSettingsSection() {
@@ -42,6 +43,7 @@ export function UpdateSettingsSection() {
     )}>
       <div className="about-update"><UpdatePanel /></div>
       {stage !== "disabled" && <>
+        <UpdateChannelRow channel={state.channel} disabled={["checking", "downloading", "installing", "done"].includes(stage)} />
         <SettingsToggleRow title={text.autoCheck} description={text.autoCheckHint} checked={autoCheck} onChange={setAutoCheck} />
         {autoCheck && <>
           <SettingsRow indent title={text.checkFrequency} description={text.checkFrequencyHint} control={

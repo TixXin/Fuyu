@@ -56,11 +56,12 @@ export type SettingsProjectText = {
   };
   update: {
     title: string;
-    hint: string;
+    retry: string;
+    recheck: string;
     versionLabel: (version: string) => string;
     check: string;
     checking: string;
-    upToDate: (version: string) => string;
+    upToDate: string;
     available: (version: string) => string;
     download: string;
     downloading: (percent: number) => string;
@@ -70,6 +71,8 @@ export type SettingsProjectText = {
     error: string;
     errorDetail: (reason: string) => string;
     notesTitle: (version: string) => string;
+    notesShow: string;
+    notesHide: string;
     unavailable: string;
     channel: string;
     channelStable: string;
@@ -97,8 +100,8 @@ export type SettingsProjectText = {
     autoUpdateOff: string;
     autoUpdateDownload: string;
     autoUpdateInstall: string;
-    ready: (version: string) => string;
-    readyIdle: (version: string) => string;
+    readyHint: string;
+    readyIdleHint: string;
     installNow: string;
     nextCheck: (time: string) => string;
     retryCheck: (time: string) => string;
@@ -173,20 +176,23 @@ export const zhCN: SettingsProjectText = {
   },
   update: {
     title: "检查更新",
-    hint: "点一下看看有没有新版本",
+    retry: "重试",
+    recheck: "重新检查",
     versionLabel: (version) => `当前版本 v${version}`,
     check: "检查",
     checking: "正在检查更新…",
-    upToDate: (version) => `已是最新版本 v${version}`,
+    upToDate: "已是最新版本",
     available: (version) => `发现新版本 v${version}`,
     download: "下载并安装",
     downloading: (percent) => `正在下载 ${percent}%`,
     downloadingUnknown: "正在下载…",
-    installing: "正在安装，小岛会自动重启",
+    installing: "正在安装…",
     done: "更新完成，小岛正在重启…",
-    error: "检查更新失败，请稍后再试。",
+    error: "请稍后再试，或到官网手动下载。",
     errorDetail: (reason) => `原因：${reason}`,
     notesTitle: (version) => `v${version} 更新内容`,
+    notesShow: "展开",
+    notesHide: "收起",
     unavailable: "这里不能应用内更新，请到 Release 页手动下载。",
     channel: "更新通道",
     channelStable: "稳定版",
@@ -197,7 +203,7 @@ export const zhCN: SettingsProjectText = {
     openPageHint: "在「更新」页检查新版本、选择更新通道",
     skip: "跳过这个版本",
     unskip: "取消跳过",
-    skipHint: "不想装这个版本？跳过后岛上不再提醒，以后的新版本照常提醒",
+    skipHint: "跳过后岛上不再提醒这个版本，以后的新版本照常提醒",
     skipped: (version) => `已跳过 v${version}，岛上不再提醒；仍可在这里手动安装`,
     autoTitle: "自动检查",
     autoCheck: "自动检查更新",
@@ -214,8 +220,8 @@ export const zhCN: SettingsProjectText = {
     autoUpdateOff: "只提醒",
     autoUpdateDownload: "自动下载，手动安装",
     autoUpdateInstall: "自动下载，空闲时安装",
-    ready: (version) => `v${version} 已下载，点击安装`,
-    readyIdle: (version) => `v${version} 已下载，空闲时自动安装`,
+    readyHint: "安装时小岛会重启一次",
+    readyIdleHint: "空闲时自动安装，也可以现在就装；安装时小岛会重启一次",
     installNow: "立即安装",
     nextCheck: (time) => `下次检查：${time}`,
     retryCheck: (time) => `下次重试：${time}`,
@@ -290,20 +296,23 @@ export const en: SettingsProjectText = {
   },
   update: {
     title: "Check for updates",
-    hint: "See whether a newer island washed ashore",
+    retry: "Try again",
+    recheck: "Check again",
     versionLabel: (version) => `Version v${version}`,
     check: "Check",
     checking: "Checking for updates…",
-    upToDate: (version) => `Already on the latest version v${version}`,
+    upToDate: "You're on the latest version",
     available: (version) => `Version v${version} is available`,
     download: "Download & install",
     downloading: (percent) => `Downloading ${percent}%`,
     downloadingUnknown: "Downloading…",
-    installing: "Installing — the island will restart itself",
+    installing: "Installing…",
     done: "Update installed, restarting…",
-    error: "Couldn't check for updates. Please try again later.",
+    error: "Try again later, or download it from the website.",
     errorDetail: (reason) => `Reason: ${reason}`,
     notesTitle: (version) => `What's new in v${version}`,
+    notesShow: "Show",
+    notesHide: "Hide",
     unavailable: "In-app updates aren't available here. Grab new versions from the release page.",
     channel: "Update channel",
     channelStable: "Stable",
@@ -314,7 +323,7 @@ export const en: SettingsProjectText = {
     openPageHint: "Check for new versions and pick an update channel on the Updates page",
     skip: "Skip this version",
     unskip: "Don't skip",
-    skipHint: "Not this one? Skipping stops the island's reminder for it; later versions still remind you",
+    skipHint: "Skipping stops the island's reminder for this version; later versions still remind you",
     skipped: (version) => `v${version} is skipped, so the island won't remind you. You can still install it here`,
     autoTitle: "Automatic checks",
     autoCheck: "Check for updates automatically",
@@ -331,8 +340,8 @@ export const en: SettingsProjectText = {
     autoUpdateOff: "Remind only",
     autoUpdateDownload: "Download, install by hand",
     autoUpdateInstall: "Download, install when idle",
-    ready: (version) => `v${version} is downloaded; click to install`,
-    readyIdle: (version) => `v${version} is downloaded and installs when the computer is idle`,
+    readyHint: "The island restarts once to install",
+    readyIdleHint: "Installs when the computer is idle, or install now; the island restarts once",
     installNow: "Install now",
     nextCheck: (time) => `Next check: ${time}`,
     retryCheck: (time) => `Next retry: ${time}`,
