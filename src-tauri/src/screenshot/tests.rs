@@ -60,11 +60,11 @@ fn targets_are_clipped_to_each_monitor_and_moved_into_its_pixels() {
     use super::targets::{localize, target};
     let targets = [target(0, false, (-100, 50, 300, 450)), target(0, true, (10, 60, 90, 80)), target(1, false, (2000, 0, 2100, 100))];
     let json = |target| serde_json::to_value(target).expect("serializes");
-    let right = localize(&targets, (0, 0), (2560, 1440));
+    let right = localize(&targets, (0, 0), (2560, 1440), 1.0);
     assert_eq!(right.len(), 3);
     assert_eq!(json(right[0]), serde_json::json!({ "window": 0, "element": false, "x": 0, "y": 50, "width": 300, "height": 400 }));
     assert_eq!(json(right[1])["element"], true);
-    let left = localize(&targets, (-1920, 0), (1920, 1080));
+    let left = localize(&targets, (-1920, 0), (1920, 1080), 1.0);
     assert_eq!(left.len(), 1);
     assert_eq!(json(left[0]), serde_json::json!({ "window": 0, "element": false, "x": 1820, "y": 50, "width": 100, "height": 400 }));
 }
@@ -184,7 +184,7 @@ fn kept_days_take_only_the_offered_choices() {
 
 #[test]
 fn words_read_from_a_selection_come_back_in_screen_pixels() {
-    use crate::win32::ocr::OcrWord;
+    use crate::platform::ocr::OcrWord;
     let word = |text: &str, x: f32| OcrWord { text: text.to_string(), x, y: 2.0, width: 10.0, height: 8.0 };
     let moved = super::offset_words(vec![vec![word("a", 1.0), word("b", 20.0)]], 100, 50);
     assert_eq!(moved, vec![vec![OcrWord { y: 52.0, ..word("a", 101.0) }, OcrWord { y: 52.0, ..word("b", 120.0) }]]);

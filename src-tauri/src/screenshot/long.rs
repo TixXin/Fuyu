@@ -7,10 +7,12 @@ use std::{
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager, WebviewWindow};
 
+use super::capture;
 use super::output::{self, Picture};
 use super::session::{self, WINDOW_PREFIX};
 use super::stitch::{Step, Stitcher};
-use crate::win32;
+use crate::island::screen;
+use crate::platform::input;
 
 const TICK: Duration = Duration::from_millis(45);
 const START_DELAY: Duration = Duration::from_millis(180);
@@ -115,20 +117,20 @@ fn on_bar(origin: (i32, i32), scale: f64) -> bool {
     let Some(bar) = control().as_ref().and_then(|control| control.bar) else {
         return false;
     };
-    win32::window::cursor_position().is_some_and(|point| {
-        let x = (f64::from(point.x) - f64::from(origin.0)) / scale;
-        let y = (f64::from(point.y) - f64::from(origin.1)) / scale;
+    screen::cursor_position().is_some_and(|point| {
+        let x = (point.0 - f64::from(origin.0)) / scale;
+        let y = (point.1 - f64::from(origin.1)) / scale;
         contains(bar, (x, y))
     })
 }
 
 fn scroll(centre: (i32, i32), delta: i32) {
-    let back = win32::window::cursor_position().map(|point| (point.x, point.y));
-    win32::input::move_cursor(centre.0, centre.1);
-    win32::input::send_wheel(delta);
+    let back = screen::cursor_position().map(|point| (point.0.round() as i32, point.1.round() as i32));
+    input::move_cursor(centre.0, centre.1);
+    input::send_wheel(delta);
     thread::sleep(WHEEL_SETTLE);
     if let Some((x, y)) = back {
-        win32::input::move_cursor(x, y);
+        input::move_cursor(x, y);
     }
 }
 
@@ -145,9 +147,7 @@ fn overlays(app: &AppHandle) -> Vec<WebviewWindow> {
 
 fn hold_overlays(windows: &[WebviewWindow], on: bool) {
     for window in windows {
-        if let Ok(hwnd) = window.hwnd() {
-            win32::window::exclude_from_capture(hwnd, on);
-        }
+        capture::exclude_from_capture(window, on);
         let _ = window.set_ignore_cursor_events(on);
     }
 }
@@ -169,24 +169,25 @@ where
         let windows = overlays(&app);
         hold_overlays(&windows, true);
         let owner_window = windows.iter().find(|window| window.label() == owner).cloned();
-        let scale = owner_window.as_ref().and_then(|window| window.scale_factor().ok()).unwrap_or(1.0);
+        let scale = owner_window.as_ref().and_then(|window| screen::window_scale(window).ok()).unwrap_or(1.0);
+        let density = session::scale(&owner).unwrap_or(1.0);
         let origin = session::origin(&owner).unwrap_or((area.0, area.1));
-        let (ending, picture) = run(&app, &owner, owner_window.as_ref(), id, area, origin, scale);
+        let (ending, picture) = run(&app, &owner, owner_window.as_ref(), id, (area, density), origin, scale);
         hold_overlays(&windows, false);
         *control() = None;
         deliver(&app, ending, picture);
     });
 }
 
-fn run(app: &AppHandle, owner: &str, owner_window: Option<&WebviewWindow>, id: u64, area: (i32, i32, u32, u32), origin: (i32, i32), scale: f64) -> (Ending, Picture) {
+fn run(app: &AppHandle, owner: &str, owner_window: Option<&WebviewWindow>, id: u64, (area, density): ((i32, i32, u32, u32), f64), origin: (i32, i32), scale: f64) -> (Ending, Picture) {
     let (x, y, width, height) = area;
-    let capture = || win32::screen_capture::capture(x, y, width, height);
+    let capture = || capture::area(area, density).map(|(_, _, rgba)| rgba);
     thread::sleep(START_DELAY);
-    let Some(first) = capture() else {
+    let Some((width_px, height_px, first)) = capture::area(area, density) else {
         return (Ending::Cancel, Picture { width: 1, height: 1, rgba: vec![0; 4] });
     };
     let centre = (x + (width / 2) as i32, y + (height / 2) as i32);
-    let mut stitcher = Stitcher::new(width, height, first.clone());
+    let mut stitcher = Stitcher::new(width_px, height_px, first.clone());
     let mut previous = first.clone();
     let mut tried = first;
     let mut notches = START_NOTCHES;
@@ -203,7 +204,7 @@ fn run(app: &AppHandle, owner: &str, owner_window: Option<&WebviewWindow>, id: u
     emit(state, frames, &stitcher, true);
 
     let ending = loop {
-        if session::id() != Some(id) || win32::input::is_escape_down() {
+        if session::id() != Some(id) || input::is_escape_down() {
             break Ending::Cancel;
         }
         if let Some(ending) = take_ending() {
