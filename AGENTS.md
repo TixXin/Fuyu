@@ -150,10 +150,8 @@
 
 ## 本机更新与桌面快捷方式
 
-- 每次完成应用更新后运行 `pnpm build:exe`。构建成功后它会自动把当前用户桌面上的岛屿快捷方式（名字含 FocuSD / fly-island / Fuyu，或目标是 `fuyu.exe` 或改名前的 `focusd-island.exe` 的；都没有时新建 `浮屿.lnk`，和安装包建的同名）指向本次构建的 `src-tauri/target/release/fuyu.exe`，并重新读取确认，输出里会列出改了哪几个；仅文档改动不需要重新构建。`pnpm release` 发布成功后会用同样的方式把刚发布的 exe 放到这里，发布之后不用再跑 `build:exe`。
-- 优先更新已有的 FocuSD / fly-island / Fuyu 快捷方式；不存在时创建 `浮屿.lnk`。使用 Windows 当前用户的实际桌面目录，不硬编码用户名或桌面路径。
-- 快捷方式目标应指向当前仓库的 `src-tauri/target/release/fuyu.exe` 绝对路径，工作目录设为该程序所在目录，图标使用该可执行文件。不得指向 debug 程序、旧备份或临时构建目录。
-- 构建失败时不切换快捷方式。更新后重新读取快捷方式，确认目标文件存在、目标路径与本次成功构建产物一致，再报告完成；不要修改其他应用的快捷方式。
+- 每次完成应用更新后运行 `pnpm build:exe`，在主工作区的 `src-tauri/target/release/fuyu.exe` 生成最新程序；仅文档改动不需要重新构建。`pnpm release` 发布成功后也会把刚发布的 exe 复制到这里，发布之后不用再跑 `build:exe`。
+- **不改桌面快捷方式**（2026-11-13 起，用户定）：用户桌面上的快捷方式指向安装的正式版，`build:exe` 和 `pnpm release` 默认都不碰它。只有用户明确要求时，才设环境变量 `FUYU_SYNC_SHORTCUT=1` 再跑，把名字含 FocuSD / fly-island / Fuyu、或目标是 `fuyu.exe` 的快捷方式指向本次构建（都没有时新建 `浮屿.lnk`），并重新读取确认。
 
 ## Git 与协作
 

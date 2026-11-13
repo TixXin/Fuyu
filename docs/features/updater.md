@@ -142,7 +142,7 @@ pnpm tauri signer generate -w $env:USERPROFILE\.tauri\fly-island.key
    - 比较 GitHub 上每个文件的 SHA-256 与本地产物；
    - 冒烟测试（D26）：触发 `.github/workflows/release-smoke.yml`，在干净的 Windows runner 上下载草稿里的 NSIS 安装包，静默安装，像新用户一样启动，确认进程活着、有可见窗口，再卸载（`scripts/release/smoke-test.ps1`），`pnpm release` 等它跑完。本机做不了：release 构建和你自己的岛屿用同一个应用标识、数据目录和单实例锁。没通过时 Release 留在草稿，不会公开。约 2–4 分钟，加 `--no-smoke-test` 跳过；
    - 以上都通过才公开并设为最新版本；已存在的版本会被拒绝，避免覆盖用户正在下载的更新包；
-   - 把刚发布的 `fuyu.exe` 复制到主工作区的 `src-tauri/target/release`，并把桌面快捷方式指过去（和 `pnpm build:exe` 一样：正在运行的旧 exe 先改名挪开，等它的构建锁）。本机跑的就是用户拿到的那一份，不用再花几分钟重编；复制失败只打印提示，不影响发布；
+   - 把刚发布的 `fuyu.exe` 复制到主工作区的 `src-tauri/target/release`（和 `pnpm build:exe` 一样：正在运行的旧 exe 先改名挪开，等它的构建锁）；不改桌面快捷方式，设了 `FUYU_SYNC_SHORTCUT=1` 才改。本机跑的就是用户拿到的那一份，不用再花几分钟重编；复制失败只打印提示，不影响发布；
    - 刷新 beta 通道的清单；
    - 用 `gh` 读回两个通道的 `latest.json`（直接用 curl 访问下载地址，GitHub 有时返回 504），确认正式版两个通道都是新版本，测试版只有 beta 通道是新版本、稳定通道不是。GitHub 切换 Latest 可能要几秒，读不对时隔 5 秒重试，最多 4 次，还不对就报错并指向下面的「撤回有问题的版本」；
    - 找出这次发布的提交范围里完成的任务（任务文件的 `issue` 字段和「提交」列表），在对应的 GitHub issue 下留言「已随 vX.Y.Z 发布」，附 Release 地址和任务文档。每个 issue 每个版本只留一次（留言里有标记），所以重跑不会重复。不想留言时加 `--no-issue-comments`。
@@ -150,7 +150,7 @@ pnpm tauri signer generate -w $env:USERPROFILE\.tauri\fly-island.key
    只出包不上传用 `pnpm release --no-upload`；安装包走镜像分发用 `pnpm release --base-url "https://..."`。
 
 5. 发布后已装「带更新功能」版本的用户点「检查更新」就能收到。更早的版本（v0.2.11 及以前）没有这段逻辑，需要手动下载安装一次。
-6. 本机的 release 程序和桌面快捷方式已由 `pnpm release` 换成新版本，不用再跑 `pnpm build:exe`；输出里提示复制失败时才手动跑一次。两个通道的清单已由 `pnpm release` 核对过，不用再手动检查；需要时也可以手动看：
+6. 本机主工作区的 release 程序已由 `pnpm release` 换成新版本，不用再跑 `pnpm build:exe`；输出里提示复制失败时才手动跑一次。两个通道的清单已由 `pnpm release` 核对过，不用再手动检查；需要时也可以手动看：
 
    ```powershell
    gh release download --repo TixXin/fuyu --pattern latest.json --dir $env:TEMP\stable --clobber
