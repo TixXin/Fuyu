@@ -1,6 +1,9 @@
+#[cfg_attr(target_os = "macos", path = "capture_macos.rs")]
 mod capture;
+#[cfg_attr(target_os = "macos", path = "clipboard_macos.rs")]
 mod clipboard;
 mod history;
+#[cfg_attr(target_os = "macos", path = "hotkeys_macos.rs")]
 mod hotkeys;
 mod long;
 mod output;
@@ -8,6 +11,7 @@ mod pin;
 mod session;
 mod shortcuts;
 mod stitch;
+#[cfg_attr(target_os = "macos", path = "targets_macos.rs")]
 mod targets;
 #[cfg(test)]
 mod tests;

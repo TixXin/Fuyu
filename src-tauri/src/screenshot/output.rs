@@ -45,6 +45,7 @@ pub(super) fn encode_png(picture: &Picture) -> Result<Vec<u8>, String> {
     Ok(png)
 }
 
+#[cfg_attr(not(windows), allow(dead_code))]
 pub(super) fn dib(picture: &Picture) -> Vec<u8> {
     const HEADER: u32 = 40;
     let row = picture.width as usize * 4;

@@ -205,6 +205,7 @@ pub(crate) fn targets_for(label: &str) -> Vec<LocalTarget> {
         .unwrap_or_default()
 }
 
+#[cfg_attr(not(windows), allow(dead_code))]
 pub(super) fn add_targets(id: u64, more: Vec<Target>) -> Option<Vec<String>> {
     let mut guard = session();
     let session = guard.as_mut().filter(|session| session.id == id)?;

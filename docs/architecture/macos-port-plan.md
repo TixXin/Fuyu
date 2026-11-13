@@ -97,7 +97,7 @@
 | `system`：`CommandExt` / `CREATE_NO_WINDOW` | `CreationFlags` | 换实现：`system/command_flags.rs`，Mac 上 `creation_flags` 什么都不做 | — |
 | `home_dir`、`system::windows_home_dir` | `USERPROFILE`、消息框 | 换实现：Mac 上用 `HOME`，冲突提示打到 stderr；G1.4 补上应用数据目录（`~/Library/Application Support/<标识>`）和锁文件的电脑名 | G1.4 |
 | `clipboard_history`、`translation` | 剪贴板监听、热键、弹窗、UIA 选中文字 | 剪贴板换实现（G1.6 已做：`*_macos.rs` 的监听、热键、弹窗、system，平台层 `macos/pasteboard.rs`、`apps.rs`、`input.rs`）；翻译换实现（G1.6 已做：`translation/hotkey_macos.rs`、`placement_macos.rs`，划词在 `selection.rs` 里先读 AX，平台层 `macos/hotkeys.rs`、`accessibility.rs`） | G1.6 |
-| `screenshot` | 屏幕截图、热键、钉图窗口、剪贴板 | 暂不支持 | G1.6 |
+| `screenshot` | 屏幕截图、热键、钉图窗口、剪贴板 | 换实现（G1.6 已做：`capture_macos.rs`、`clipboard_macos.rs`、`hotkeys_macos.rs`、`targets_macos.rs`，平台层 `macos/screen_capture.rs`、`ocr.rs`、`capture_targets.rs`，选区窗口用 `island_panel::make_overlay_panel`；`session.rs`、`pin.rs`、`long.rs` 两个平台共用，帧里记每个窗口单位几个像素） | G1.6 |
 | `file_shelf` | 剪贴板文件列表、OLE 拖出 | 换实现（G1.6 已做：`transfer_macos.rs`，复制走 `NSPasteboard`，拖出用 `drag` crate）；列表、预览、打开照常 | G1.6 |
 | `device_use`、`device_events`、`system_levels` | 注册表、音频端点、设备节点、WMI 亮度、电源 | `device_events` 换实现（G1.6 已做：`readers_macos.rs`，平台层 `macos/audio_devices.rs`、`bluetooth.rs`、`power.rs`）；音量换实现（G1.6 已做）；`device_use` 换实现（G1.6 已做：`device_use/macos.rs`，平台层 `macos/camera.rs`）；亮度暂不支持 | G1.6、G1.9 |
 | `phone_push` | 锁屏与空闲时间 | 换实现：空闲 None、未锁屏 | G1.6 |
@@ -122,6 +122,7 @@ Mac 上跳过的测试（依赖 Windows 路径、程序或 API，标了 `#[cfg(w
 |---|---|---|---|---|
 | 2026-11-13 | — | — | 4 份调研、本计划、[platforms.md](platforms.md)、任务 G1 | 仅文档 |
 | 2026-11-13 | G1.1 | 3ccc9b6c | 用户拍板 M1–M14，写进决定表；界面形态（M4–M6）写进 [design/macos.md](../design/macos.md) | 仅文档 |
+| 2026-11-13 | G1.6 截图与识字 | 48d26bb8、75bbc594、77efc7e6（搬迁），（本次提交） | 截图的剪贴板、快捷键类型、平台调用先搬到可替换的文件（Windows 零行为变化）；Mac 上截屏（ScreenCaptureKit）、选区窗口（NSPanel）、复制 / 保存 / 贴图 / 拖出 / 长截图 / 历史、窗口吸附、快捷键；识字（Vision）同时给截图和剪贴板图片用 | Mac：`cargo clippy --all-targets -D warnings`、`cargo test`（519 过）；Vision 识别 README 截图实测中英文都对、词框位置对；截屏在没授权的终端里返回失败、不崩；Windows：交叉 `clippy --target x86_64-pc-windows-gnu --all-targets` 通过 |
 | 2026-11-13 | G1.2（Rust 部分） | （本次提交） | Windows 依赖只在 Windows 上编译；`macos/` 平台层与 `platform.rs`；Mac 上暂不支持的模块用 unsupported 空实现；CI 加 `rust-macos`；迁移表 | Mac：`cargo clippy --all-targets -D warnings`、`cargo test`（421 过）、`pnpm dev:lane` 起窗口；Windows：在 Mac 上交叉 `clippy --target x86_64-pc-windows-gnu --all-targets` 通过，测试看 CI |
 
 ## 待人工验收
@@ -134,6 +135,7 @@ Mac 上跳过的测试（依赖 Windows 路径、程序或 API，标了 `#[cfg(w
 - 摄像头 / 麦克风：开 FaceTime、Photo Booth 或浏览器里的视频会议时岛上出现摄像头和麦克风图标，悬停的说明里麦克风写着应用名（浏览器写浏览器名，不是 Helper），摄像头写「摄像头正在使用」；关掉后图标消失；点图标打开系统设置对应的隐私页（G1.6）
 - 文件中转：从 Finder 拖文件进来；从中转拖到 Finder、桌面、邮件附件里，放下的地方收到文件，开着「拖出后移除」时条目消失、拖到一半取消时还在；多选后一起拖；「复制」后在 Finder 里 ⌘V 能粘贴出文件（G1.6）
 - 快捷翻译：⌃⇧F 在光标所在屏幕正中打开翻译窗口，再按一次关掉；在备忘录、Safari、Chrome、VS Code 里选中文字按 ⌃⌥T，翻译出选中的文字，剪贴板里原来的内容还在；没给辅助功能授权时系统弹一次提示；设置里改快捷键后旧的失效、新的生效；剪贴板的 ⌘⇧V 同时还能用（G1.6）
+- 截图：第一次按 ⌃⇧1 时系统弹「屏幕录制」提示，授权并重开浮屿后再按，所有显示器都盖上冻结的画面，菜单栏和岛也被盖住；在全屏应用里也能截；框选、标注、复制后在备忘录里 ⌘V 是图片、在 Finder 里 ⌘V 是 PNG 文件；保存进「图片」文件夹；贴图停在原位、Retina 屏上不模糊、滚轮缩放正常；⌃⇧3 识字、⌃⇧4 翻译；悬停时能吸附到整个窗口；长截图在 Safari 里自动往下滚并拼接（滚动方向要确认），按 Esc 能停；岛上的截图卡片能拖到 Finder（G1.6）
 - 手机推送：离开电脑（空闲）或锁屏后，Agent 完成的推送能发出（G1.6）
 - 剪贴板：复制文字、图片、Finder 里的文件都进历史；密码管理器复制的不进；⌘⇧V 在鼠标旁弹出，选中后贴回原来的应用（第一次要允许辅助功能）；贴到终端时多行命令合成一行；有没有系统的剪贴板隐私提示（G1.6）
 - `fuyu://` 链接：装好的 `.app` 在浏览器里点 `fuyu://plugin/<id>/...` 能唤起岛并打开插件，岛没开时也能（G1.4）

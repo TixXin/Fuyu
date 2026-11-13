@@ -129,6 +129,7 @@ fn saved_files_get_a_time_in_their_name_and_never_overwrite() {
     assert_eq!(sanitized_name(" ?? "), "Fuyu");
 }
 
+#[cfg(windows)]
 #[test]
 fn a_chosen_save_folder_must_be_a_full_path_without_parent_steps() {
     use super::output::chosen_folder;
@@ -136,6 +137,24 @@ fn a_chosen_save_folder_must_be_a_full_path_without_parent_steps() {
     assert!(chosen_folder(r"\\nas\shots").is_ok());
     assert!(chosen_folder("Screenshots").is_err());
     assert!(chosen_folder(r"D:\Screenshots\..\Windows").is_err());
+}
+
+#[cfg(target_os = "macos")]
+#[test]
+fn a_chosen_save_folder_on_the_mac_must_be_a_full_path_without_parent_steps() {
+    use super::output::chosen_folder;
+    assert!(chosen_folder("/Users/me/Pictures/Fuyu").is_ok());
+    assert!(chosen_folder("Pictures").is_err());
+    assert!(chosen_folder("/Users/me/../Shared").is_err());
+}
+
+#[test]
+fn a_retina_selection_lands_at_its_point_on_the_screen() {
+    use super::session::offset;
+    assert_eq!(offset((1710, 0), (200, 101), 2.0), (1810, 51));
+    assert_eq!(offset((-1920, 0), (200, 101), 1.0), (-1720, 101));
+    assert_eq!(super::pin::shown_size((3000, 1001), 2.0), (1500, 501));
+    assert_eq!(super::pin::shown_size((3000, 1001), 1.0), (3000, 1001));
 }
 
 #[test]

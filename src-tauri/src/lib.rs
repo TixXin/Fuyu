@@ -29,7 +29,6 @@ mod mail;
 mod qq_notifications;
 #[cfg_attr(not(windows), path = "rename_migration/unsupported.rs")]
 mod rename_migration;
-#[cfg_attr(not(windows), path = "screenshot/unsupported.rs")]
 mod screenshot;
 mod settings_file;
 mod settings_window;

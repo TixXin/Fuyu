@@ -27,6 +27,11 @@ pub(crate) fn pictures_dir() -> Option<PathBuf> {
 }
 
 #[cfg(not(windows))]
+pub(crate) fn pictures_dir() -> Option<PathBuf> {
+    windows_home_dir().ok().map(|home| home.join("Pictures"))
+}
+
+#[cfg(not(windows))]
 pub(crate) fn downloads_dir() -> Option<PathBuf> {
     windows_home_dir().ok().map(|home| home.join("Downloads"))
 }
