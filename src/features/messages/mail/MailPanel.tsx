@@ -1,6 +1,6 @@
 import { useErrorText, useTranslation } from "../../../i18n";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { ArrowLeft, ArrowUpRight, Image, ImageOff, KeyRound, LoaderCircle, MailCheck, PenSquare, Power, RefreshCw, Reply, Settings2 } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, CheckCheck, Image, ImageOff, KeyRound, LoaderCircle, MailCheck, PenSquare, Power, RefreshCw, Reply, Settings2 } from "lucide-react";
 import DOMPurify from "dompurify";
 import { MessageSourceIcon } from "../MessageSourceIcon";
 import type { MailMessage } from "./api";
@@ -70,7 +70,7 @@ export function MailPanel({ controller, navigation, onRead, onBack, onOpenSettin
   onRead?: (message: MailMessage) => void;
   onBack?: () => void;
 }) {
-  const { snapshot, mailboxes, busy, actionError, setEnabled, refresh, openMail, selectMailbox } = controller;
+  const { snapshot, mailboxes, busy, actionError, setEnabled, refresh, openMail, selectMailbox, markAllRead } = controller;
   const t = useTranslation();
   const errorText = useErrorText();
   const error = actionError || (snapshot.error ? errorText(snapshot.error) : null);
@@ -147,6 +147,7 @@ export function MailPanel({ controller, navigation, onRead, onBack, onOpenSettin
           {snapshot.configured && snapshot.status !== "authRequired" ? <button className="icon-button" type="button" aria-label={t.mail.compose} disabled={busy} onClick={startCompose}><PenSquare size={16} strokeWidth={1.8} /></button> : null}
           <button className="icon-button" type="button" aria-label={t.mail.openLabel} onClick={() => void openMail()}><ArrowUpRight size={16} strokeWidth={1.8} /></button>
           {snapshot.configured && <button className="icon-button" type="button" aria-label={t.mail.refreshLabel} disabled={busy || snapshot.syncing || !snapshot.enabled || snapshot.status === "authRequired"} onClick={() => void refresh()}><RefreshCw size={16} strokeWidth={1.8} className={snapshot.syncing ? "qq-mail-spinning" : undefined} /></button>}
+          {snapshot.configured && snapshot.email && snapshot.status !== "authRequired" && <button className="icon-button" type="button" aria-label={t.mail.markAllRead} disabled={busy || !(snapshot.unreadCount || snapshot.items.some((item) => item.unread))} onClick={() => { if (snapshot.email) void markAllRead(snapshot.email); }}><CheckCheck size={16} strokeWidth={1.8} /></button>}
         </div>
       </header>
       {mailboxes.length > 0 && <MailAccountTabs mailboxes={mailboxes} selected={snapshot.email} busy={busy} onSelect={selectMailbox} onAdd={onOpenSettings} />}

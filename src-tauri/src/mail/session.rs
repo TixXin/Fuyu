@@ -456,6 +456,19 @@ pub(super) fn mark_seen<T: Read + Write>(session: &mut Session<T>, message_id: &
     Ok(())
 }
 
+pub(super) fn mark_all_seen<T: Read + Write>(session: &mut Session<T>) -> Result<(u32, Vec<u32>), UserError> {
+    let later = || UserError::new("mail.markReadLater", "Could not mark the mail as read; try again later.");
+    let mailbox = session.select("INBOX").map_err(|_| UserError::new("mail.inbox", "Could not open the inbox; try again later."))?;
+    let validity = mailbox.uid_validity.ok_or_else(later)?;
+    let mut uids = session.uid_search("UNSEEN").map_err(|_| later())?.into_iter().collect::<Vec<_>>();
+    uids.sort_unstable();
+    for chunk in uids.chunks(500) {
+        let set = chunk.iter().map(u32::to_string).collect::<Vec<_>>().join(",");
+        session.uid_store(set, "+FLAGS.SILENT (\\Seen)").map_err(|_| later())?;
+    }
+    Ok((validity, uids))
+}
+
 pub(super) fn display_header(value: &str, fallback: &str) -> String {
     let value = value.split_whitespace().collect::<Vec<_>>().join(" ");
     if value.is_empty() {

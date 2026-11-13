@@ -319,6 +319,22 @@ pub async fn mark_qq_mail_read(email: String, message_id: String) -> Result<Mail
 }
 
 #[tauri::command]
+pub async fn mark_all_qq_mail_read(email: String) -> Result<MailSnapshot, UserError> {
+    let email = normalize_email(&email)?;
+    let service = accounts::find(&email)?;
+    let generation = {
+        let state = service.lock()?;
+        if !state.snapshot.configured || state.snapshot.status == MailStatus::AuthRequired {
+            return Err(UserError::new("mail.connect", "Connect a mailbox first."));
+        }
+        state.generation
+    };
+    tauri::async_runtime::spawn_blocking(move || service.mark_all_read(generation, &email))
+        .await
+        .map_err(|_| UserError::new("mail.markRead", "Could not mark the mail as read."))?
+}
+
+#[tauri::command]
 pub async fn disconnect_qq_mail(email: String) -> Result<MailSnapshot, UserError> {
     let email = normalize_email(&email)?;
     tauri::async_runtime::spawn_blocking(move || {
@@ -376,6 +392,7 @@ macro_rules! tauri_commands {
             crate::mail::refresh_qq_mail,
             crate::mail::read_qq_mail,
             crate::mail::mark_qq_mail_read,
+            crate::mail::mark_all_qq_mail_read,
             crate::mail::save_qq_mail_attachment,
             crate::mail::get_qq_mail_reply,
             crate::mail::send_qq_mail,

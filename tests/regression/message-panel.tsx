@@ -56,6 +56,10 @@ mockIPC((command, payload) => {
   if (command === "get_qq_mail_state") return [mail];
   if (command === "clear_qq_notifications") return { revision: ++revision, enabled: true, status: "listening", items: [], error: null };
   if (command === "clear_wechat_reminders") return { revision: ++revision, enabled: true, status: "listening", pending: true, lastAttentionAt: revision, error: null, items: [] };
+  if (command === "mark_qq_mail_read") {
+    mail = { ...mail, revision: ++revision, unreadCount: 0, items: mail.items.map((item) => item.id === args.messageId ? { ...item, unread: false } : item) };
+    return mail;
+  }
   if (command === "read_qq_mail") return { id: args.messageId, content: "本周项目进度已更新", contentType: "text/plain", attachments: [] };
 }, { shouldMockEvents: true });
 
@@ -223,6 +227,18 @@ async function runChecks() {
     check(rows().length === 0 && document.querySelector(".message-panel-full"), "点「全部消息」回到完整消息页");
     await waitFor(() => Math.round(islandBox().width) === 560, "岛回到完整宽度", 1500);
     check(headerShown() && !document.querySelector(".island--popup"), "完整消息页显示顶部栏，岛宽 560");
+    const iconButton = [...document.querySelectorAll<HTMLButtonElement>(".island button[aria-label]")].find((button) => !button.textContent?.trim())!;
+    const tooltip = () => document.querySelector<HTMLElement>('[role="tooltip"]');
+    await act(async () => { iconButton.dispatchEvent(new PointerEvent("pointerover", { bubbles: true, clientX: 0 })); });
+    check(!tooltip(), "悬停名称不会马上出现");
+    await waitFor(() => tooltip()?.textContent === iconButton.getAttribute("aria-label"), "停一会儿后只有图标的按钮显示名称");
+    check(tooltip()!.getBoundingClientRect().top >= iconButton.getBoundingClientRect().bottom, "名称显示在按钮下方");
+    await act(async () => { iconButton.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true })); });
+    check(!tooltip(), "按下按钮时名称收起");
+    const textButton = [...document.querySelectorAll<HTMLButtonElement>(".island button[aria-label]")].find((button) => (button.textContent?.trim().length ?? 0) > 3)!;
+    await act(async () => { textButton.dispatchEvent(new PointerEvent("pointerover", { bubbles: true })); });
+    await wait(500);
+    check(!tooltip(), `带文字的按钮（${textButton.textContent}）不显示悬停名称`);
     await wait(DURATION_MS + 200);
     check(state.mode === "expanded", "按过之后不再自动收起");
     await notify("qq", "小张");
@@ -235,7 +251,8 @@ async function runChecks() {
     await notify("plugin", "构建完成");
     await waitFor(() => rows().length === 4, "四个来源都在面板里");
     const clear = document.querySelector<HTMLButtonElement>(".message-arrivals__clear")!;
-    check(clear.getAttribute("aria-label") === "清除提醒" && clear.title.includes("不会标为已读"), "标题行有「清除提醒」，说明不会标为已读");
+    check(clear.getAttribute("aria-label") === "清除提醒" && clear.dataset.tooltip?.includes("邮箱里标为已读"), "标题行有「清除提醒」，说明列出的邮件会标为已读");
+    const listedMail = mail.items[0].id;
     const before = commands.length;
     await act(async () => {
       clear.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
@@ -245,7 +262,8 @@ async function runChecks() {
     const after = commands.slice(before).map((entry) => entry.command);
     check(rows().length === 0 && latestPreview === null, "清除后面板没有了，收起条也不再显示预览");
     check(after.includes("clear_qq_notifications") && after.includes("clear_wechat_reminders"), "清空 QQ 和微信的提醒列表");
-    check(!after.some((command) => /launch|open_|read_qq_mail|mark_qq_mail/.test(command)), `不打开任何应用，也不把邮件标为已读（${after.join(",")}）`);
+    check(!after.some((command) => /launch|open_|read_qq_mail|mark_all_qq_mail_read/.test(command)), `不打开任何应用，也不读邮件正文（${after.join(",")}）`);
+    await waitFor(() => commands.some((entry) => entry.command === "mark_qq_mail_read" && entry.args.messageId === listedMail), "弹出页里列出的那封邮件标为已读");
 
     await act(async () => setUserMode("collapsed"));
     await wait(30);

@@ -126,6 +126,7 @@ export function useWeChatReminders(canPreview: boolean) {
 
   const clear = useCallback(() => run(async () => {
     acceptSnapshot(await clearWeChatReminders());
+    setPreviewReceivedAt(null);
   }), [acceptSnapshot, run]);
 
   const openWeChat = useCallback((chat?: string | null) => run(async () => {
