@@ -67,7 +67,7 @@ pub(super) fn toggle(app: &AppHandle, settings: &ClipboardHistorySettings) -> Re
     window.show().map_err(|error| error.to_string())?;
     let handle = app.clone();
     let shown = app.run_on_main_thread(move || {
-        if !crate::macos::island_panel::make_island_panel_key(&handle, WINDOW_LABEL) {
+        if !crate::macos::island_panel::make_panel_key(&handle, WINDOW_LABEL) {
             if let Ok(window) = popup_window(&handle) {
                 let _ = window.set_focus();
             }

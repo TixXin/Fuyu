@@ -62,7 +62,7 @@ pub(crate) fn make_popup_panel(window: &WebviewWindow) -> Result<(), String> {
         .map_err(|error| format!("Could not make {} a non-activating panel: {error:?}", window.label()))
 }
 
-pub(crate) fn make_island_panel_key<R: tauri::Runtime>(app: &tauri::AppHandle<R>, label: &str) -> bool {
+pub(crate) fn make_panel_key<R: tauri::Runtime>(app: &tauri::AppHandle<R>, label: &str) -> bool {
     let Ok(panel) = app.get_webview_panel(label) else {
         return false;
     };
