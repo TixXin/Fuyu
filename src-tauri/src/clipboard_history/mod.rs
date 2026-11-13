@@ -6,6 +6,7 @@ mod command_text;
 mod hotkey;
 mod link_guard;
 mod link_preview;
+mod file_image;
 #[cfg_attr(target_os = "macos", path = "listener_macos.rs")]
 mod listener;
 mod plugin_view;
@@ -322,6 +323,8 @@ pub struct ClipboardHistoryItem {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     files: Option<Vec<String>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    file_image: Option<ClipboardFileImage>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     source: Option<ClipboardSource>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     tags: Vec<String>,
@@ -379,6 +382,15 @@ pub struct ClipboardHistoryImage {
     original_path: String,
     thumbnail_path: String,
     thumbnail_data_url: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct ClipboardFileImage {
+    width: u32,
+    height: u32,
+    byte_size: u64,
+    thumbnail_data_url: String,
 }
 
 struct ClipboardHistoryState {
@@ -572,6 +584,7 @@ pub fn init(app: &AppHandle) -> Result<(), String> {
     };
 
     let _ = CLIPBOARD_HISTORY.set(service);
+    service::fill_file_images(None);
     start_workers();
     notify_clipboard_changed();
     Ok(())

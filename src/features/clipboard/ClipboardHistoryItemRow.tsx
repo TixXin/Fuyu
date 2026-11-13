@@ -5,6 +5,8 @@ import { useTranslation } from "../../i18n";
 import type { ClipboardCopyAs, ClipboardHistoryItem } from "./api";
 import { ClipboardEntryIcon } from "./ClipboardEntryIcon";
 import { contentKind, linkLabel } from "./contentKind";
+import { fileFolder, fileImageLabel, sourceName } from "./fileEntry";
+import { formatBytes } from "../../utils/bytes";
 
 export function ClipboardHistoryItemRow({
   item,
@@ -56,8 +58,10 @@ export function ClipboardHistoryItemRow({
   const extraFiles = item.kind === "files" && item.files && item.files.length > 1 ? item.files.length - 1 : 0;
   const meta = [
     kind ? text.popup.actions.kinds[kind.kind] : null,
-    item.source?.name,
+    sourceName(item, t.settings.project.appName),
     formatAgo(item.copiedAt, now, t.common.ago),
+    fileImageLabel(item, formatBytes),
+    item.kind === "files" && item.files?.[0] ? fileFolder(item.files[0]) : null,
     extraFiles > 0 ? text.moreFiles(extraFiles) : null,
     item.note,
   ].filter((part): part is string => Boolean(part));
@@ -94,6 +98,8 @@ export function ClipboardHistoryItemRow({
       <span className="island-list-row__lead" aria-hidden="true">
         {item.kind === "image" ? (
           image?.thumbnailDataUrl ? <img src={image.thumbnailDataUrl} alt="" /> : <ImageIcon size={16} strokeWidth={1.8} />
+        ) : item.kind === "files" && item.fileImage ? (
+          <img src={item.fileImage.thumbnailDataUrl} alt="" />
         ) : kind?.kind === "color" ? (
           <span className="clipboard-swatch" style={{ background: `rgba(${kind.color.r}, ${kind.color.g}, ${kind.color.b}, ${kind.color.a})` }} />
         ) : kind?.kind === "link" ? (

@@ -14,7 +14,7 @@ use super::store::{
     create_item_id, encode_png, make_thumbnail, PersistedClipboardHistory, MAX_IMAGE_PNG_BYTES,
 };
 use super::{
-    current_unix_millis, ClipboardHistoryImage, ClipboardHistoryItem, ClipboardSource, SecretHandling,
+    current_unix_millis, ClipboardFileImage, ClipboardHistoryImage, ClipboardHistoryItem, ClipboardSource, SecretHandling,
     ClipboardHistoryItemKind, ClipboardHistoryService, CopyAs, ClipboardHistorySettings,
     ClipboardHistorySnapshot, ClipboardHistoryState, HISTORY_CHANGED_EVENT,
     SHORT_DUPLICATE_WINDOW_MS,
@@ -362,6 +362,7 @@ impl ClipboardHistoryService {
             image: None,
             html: None,
             files: None,
+            file_image: None,
             source: source.clone(),
             tags: Vec::new(),
             ocr_text: None,
@@ -388,6 +389,7 @@ impl ClipboardHistoryService {
             }
         };
 
+        let file_image_job = super::file_image::single_image_file(&item).map(|_| item.id.clone());
         let ocr_job = (state.settings.ocr)
             .then(|| item.image.as_ref().map(|image| (item.id.clone(), image.original_path.clone())))
             .flatten();
@@ -397,6 +399,9 @@ impl ClipboardHistoryService {
         drop(state);
 
         self.emit_changed();
+        if file_image_job.is_some() {
+            fill_file_images(file_image_job);
+        }
         if let Some((id, path)) = ocr_job {
             std::thread::spawn(move || {
                 if let Some(text) = read_image_text(&path) {
@@ -407,6 +412,23 @@ impl ClipboardHistoryService {
             });
         }
         Ok(())
+    }
+
+    fn set_file_images(&self, found: Vec<(String, ClipboardFileImage)>) {
+        let Ok(mut state) = self.state.lock() else {
+            return;
+        };
+        let mut changed = false;
+        for (id, image) in found {
+            if let Some(item) = state.items.iter_mut().find(|item| item.id == id) {
+                item.file_image = Some(image);
+                changed = true;
+            }
+        }
+        if changed && self.persist_locked(&state).is_ok() {
+            drop(state);
+            self.emit_changed();
+        }
     }
 
     fn set_ocr_text(&self, id: &str, text: String) {
@@ -551,6 +573,36 @@ fn read_image_text(path: &str) -> Option<String> {
     };
     let rgba = image.to_rgba8();
     super::system::recognize_text(rgba.width(), rgba.height(), rgba.as_raw())
+}
+
+pub(super) fn fill_file_images(only: Option<String>) {
+    let Ok(service) = super::service() else {
+        return;
+    };
+    let wanted: Vec<(String, String)> = match service.state.lock() {
+        Ok(state) => state
+            .items
+            .iter()
+            .filter(|item| only.as_ref().is_none_or(|id| *id == item.id))
+            .filter_map(|item| super::file_image::single_image_file(item).map(|path| (item.id.clone(), path.to_string())))
+            .take(super::file_image::BACKFILL_LIMIT)
+            .collect(),
+        Err(_) => return,
+    };
+    if wanted.is_empty() {
+        return;
+    }
+    std::thread::spawn(move || {
+        let found: Vec<_> = wanted
+            .into_iter()
+            .filter_map(|(id, path)| super::file_image::read(&path).map(|image| (id, image)))
+            .collect();
+        if !found.is_empty() {
+            if let Ok(service) = super::service() {
+                service.set_file_images(found);
+            }
+        }
+    });
 }
 
 fn source_app() -> Option<ClipboardSource> {

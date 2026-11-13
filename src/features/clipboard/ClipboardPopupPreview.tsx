@@ -3,6 +3,7 @@ import { useTranslation } from "../../i18n";
 import { getClipboardImagePreview, type ClipboardHistoryItem, type ClipboardSnippet } from "./api";
 import { ClipboardKindPane } from "./ClipboardKindPane";
 import { contentKind } from "./contentKind";
+import { sourceName } from "./fileEntry";
 
 const previews = new Map<string, Promise<string | null>>();
 
@@ -77,7 +78,7 @@ export function ClipboardPopupPreview({ entry, snippet, linkPreview = false, onP
       )}
       <dl className="clipboard-popup__pane-meta">
         <dt>{text.source}</dt>
-        <dd>{item.source?.name ?? text.none}</dd>
+        <dd>{sourceName(item, t.settings.project.appName) ?? text.none}</dd>
         <dt>{text.copiedAt}</dt>
         <dd>{copiedAt}</dd>
         <dt>{text.tags}</dt>

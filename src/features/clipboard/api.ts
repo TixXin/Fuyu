@@ -50,6 +50,13 @@ export type ClipboardHistoryImage = {
   thumbnailDataUrl?: string;
 };
 
+export type ClipboardFileImage = {
+  width: number;
+  height: number;
+  byteSize: number;
+  thumbnailDataUrl: string;
+};
+
 export type ClipboardHistoryItem = {
   id: string;
   kind: "text" | "image" | "files";
@@ -63,6 +70,7 @@ export type ClipboardHistoryItem = {
   image?: ClipboardHistoryImage;
   html?: string;
   files?: string[];
+  fileImage?: ClipboardFileImage;
   source?: ClipboardSource;
   tags?: string[];
   ocrText?: string;

@@ -5,6 +5,8 @@ import { useTranslation } from "../../i18n";
 import type { ClipboardHistoryItem, ClipboardSnippet } from "./api";
 import { ClipboardEntryIcon } from "./ClipboardEntryIcon";
 import { contentKind, linkLabel } from "./contentKind";
+import { fileFolder, fileImageLabel, sourceName } from "./fileEntry";
+import { formatBytes } from "../../utils/bytes";
 
 export function ClipboardPopupRow({ index, now, selected, queued, entry, snippet, onPick, onHover, onToggleFavorite, onMenu }: {
   index: number;
@@ -21,11 +23,13 @@ export function ClipboardPopupRow({ index, now, selected, queued, entry, snippet
   const t = useTranslation();
   const text = t.clipboard;
   const image = entry?.kind === "image" ? entry.image : undefined;
+  const fileThumbnail = entry?.kind === "files" ? entry.fileImage?.thumbnailDataUrl : undefined;
+  const folder = entry?.kind === "files" && entry.files?.[0] ? fileFolder(entry.files[0]) : null;
   const kind = entry ? contentKind(entry) : null;
   const main = entry ? (image ? text.imageLabel(image.width, image.height) : kind?.kind === "link" ? linkLabel(kind.url) : entry.preview) : snippet?.title ?? "";
   const extraFiles = entry?.kind === "files" && entry.files && entry.files.length > 1 ? entry.files.length - 1 : 0;
   const meta = entry
-    ? [entry.source?.name, formatAgo(entry.copiedAt, now, t.common.ago), extraFiles > 0 ? text.moreFiles(extraFiles) : null, entry.note]
+    ? [sourceName(entry, t.settings.project.appName), formatAgo(entry.copiedAt, now, t.common.ago), fileImageLabel(entry, formatBytes), folder, extraFiles > 0 ? text.moreFiles(extraFiles) : null, entry.note]
       .filter((part): part is string => Boolean(part))
       .join(" · ")
     : snippet?.text.replace(/\s*\n\s*/g, " ⏎ ") ?? "";
@@ -53,6 +57,8 @@ export function ClipboardPopupRow({ index, now, selected, queued, entry, snippet
         <span className="clipboard-popup__lead" aria-hidden="true">
           {image ? (
             image.thumbnailDataUrl ? <img src={image.thumbnailDataUrl} alt="" /> : <ImageIcon size={15} strokeWidth={1.8} />
+          ) : fileThumbnail ? (
+            <img src={fileThumbnail} alt="" />
           ) : kind?.kind === "color" ? (
             <span className="clipboard-popup__swatch" style={{ background: `rgba(${kind.color.r}, ${kind.color.g}, ${kind.color.b}, ${kind.color.a})` }} />
           ) : kind?.kind === "link" ? (
