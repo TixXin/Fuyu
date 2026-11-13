@@ -1,7 +1,8 @@
 use std::{ffi::c_void, ptr::NonNull};
 
 use objc2_core_audio::{
-    kAudioDevicePropertyDeviceUID, kAudioDevicePropertyStreams, kAudioDevicePropertyTransportType,
+    kAudioDevicePropertyDeviceIsRunningSomewhere, kAudioDevicePropertyDeviceUID, kAudioDevicePropertyStreams,
+    kAudioHardwarePropertyProcessObjectList, kAudioProcessPropertyIsRunningInput, kAudioProcessPropertyPID, kAudioDevicePropertyTransportType,
     kAudioDeviceTransportTypeBluetooth, kAudioDeviceTransportTypeBluetoothLE, kAudioDeviceTransportTypeUSB,
     kAudioHardwarePropertyDevices, kAudioObjectPropertyElementMain, kAudioObjectPropertyName, kAudioObjectPropertyScopeGlobal,
     kAudioObjectPropertyScopeInput, kAudioObjectPropertyScopeOutput, kAudioObjectSystemObject, AudioObjectGetPropertyData,
@@ -49,25 +50,48 @@ fn data_size(object: AudioObjectID, selector: u32, scope: u32) -> Option<u32> {
     (status == 0).then_some(size)
 }
 
-fn devices() -> Vec<AudioObjectID> {
-    let Ok(system) = AudioObjectID::try_from(kAudioObjectSystemObject) else {
-        return Vec::new();
-    };
+fn system_list(selector: u32) -> Option<Vec<AudioObjectID>> {
+    let system = AudioObjectID::try_from(kAudioObjectSystemObject).ok()?;
     let item = std::mem::size_of::<AudioObjectID>();
-    let Some(mut size) = data_size(system, kAudioHardwarePropertyDevices, kAudioObjectPropertyScopeGlobal) else {
-        return Vec::new();
-    };
+    let mut size = data_size(system, selector, kAudioObjectPropertyScopeGlobal)?;
     let mut ids: Vec<AudioObjectID> = vec![0; size as usize / item];
-    let Some(buffer) = NonNull::new(ids.as_mut_ptr().cast::<c_void>()).filter(|_| !ids.is_empty()) else {
-        return Vec::new();
-    };
-    let mut address = address(kAudioHardwarePropertyDevices, kAudioObjectPropertyScopeGlobal);
+    if ids.is_empty() {
+        return Some(ids);
+    }
+    let buffer = NonNull::new(ids.as_mut_ptr().cast::<c_void>())?;
+    let mut address = address(selector, kAudioObjectPropertyScopeGlobal);
     let status = unsafe { AudioObjectGetPropertyData(system, NonNull::from(&mut address), 0, std::ptr::null(), NonNull::from(&mut size), buffer) };
     if status != 0 {
-        return Vec::new();
+        return None;
     }
     ids.truncate(size as usize / item);
-    ids
+    Some(ids)
+}
+
+fn devices() -> Vec<AudioObjectID> {
+    system_list(kAudioHardwarePropertyDevices).unwrap_or_default()
+}
+
+fn global_u32(object: AudioObjectID, selector: u32) -> Option<u32> {
+    read::<u32>(object, selector, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMain)
+}
+
+pub(crate) fn recording_pids() -> Option<Vec<i32>> {
+    let processes = system_list(kAudioHardwarePropertyProcessObjectList)?;
+    Some(
+        processes
+            .into_iter()
+            .filter(|&process| global_u32(process, kAudioProcessPropertyIsRunningInput).is_some_and(|running| running != 0))
+            .filter_map(|process| read::<i32>(process, kAudioProcessPropertyPID, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMain))
+            .filter(|&pid| pid > 0)
+            .collect(),
+    )
+}
+
+pub(crate) fn any_input_running() -> bool {
+    devices().into_iter().any(|device| {
+        has_streams(device, kAudioObjectPropertyScopeInput) && global_u32(device, kAudioDevicePropertyDeviceIsRunningSomewhere).is_some_and(|running| running != 0)
+    })
 }
 
 fn has_streams(device: AudioObjectID, scope: u32) -> bool {
@@ -87,8 +111,7 @@ pub(crate) fn outputs() -> Vec<AudioOutput> {
         .filter_map(|device| {
             let uid = text(device, kAudioDevicePropertyDeviceUID)?;
             let name = text(device, kAudioObjectPropertyName).unwrap_or_else(|| uid.clone());
-            let transport = read::<u32>(device, kAudioDevicePropertyTransportType, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMain)
-                .map_or(Transport::Other, Transport::from_code);
+            let transport = global_u32(device, kAudioDevicePropertyTransportType).map_or(Transport::Other, Transport::from_code);
             Some(AudioOutput { uid, name, transport, has_input: has_streams(device, kAudioObjectPropertyScopeInput) })
         })
         .collect()

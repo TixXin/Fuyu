@@ -66,8 +66,8 @@ export const zhCN: IslandText = {
   calendar: "日历",
   shelfCount: (count) => `文件中转里有 ${count} 个文件`,
   deviceInUse: {
-    camera: (apps) => `${apps} 正在使用摄像头，点击打开隐私设置`,
-    microphone: (apps) => `${apps} 正在使用麦克风，点击打开隐私设置`,
+    camera: (apps) => (apps ? `${apps} 正在使用摄像头，点击打开隐私设置` : "摄像头正在使用，点击打开隐私设置"),
+    microphone: (apps) => (apps ? `${apps} 正在使用麦克风，点击打开隐私设置` : "麦克风正在使用，点击打开隐私设置"),
   },
   deviceAppSeparator: "、",
   levelPopup: { volume: (percent) => `音量 ${percent}%`, brightness: (percent) => `亮度 ${percent}%`, muted: "已静音", mutedShort: "静音" },
@@ -113,8 +113,8 @@ export const en: IslandText = {
   calendar: "Calendar",
   shelfCount: (count) => (count === 1 ? "1 file on the shelf" : `${count} files on the shelf`),
   deviceInUse: {
-    camera: (apps) => `${apps} using the camera; click for privacy settings`,
-    microphone: (apps) => `${apps} using the microphone; click for privacy settings`,
+    camera: (apps) => (apps ? `${apps} using the camera; click for privacy settings` : "Camera in use; click for privacy settings"),
+    microphone: (apps) => (apps ? `${apps} using the microphone; click for privacy settings` : "Microphone in use; click for privacy settings"),
   },
   deviceAppSeparator: ", ",
   levelPopup: { volume: (percent) => `Volume ${percent}%`, brightness: (percent) => `Brightness ${percent}%`, muted: "Muted", mutedShort: "Off" },

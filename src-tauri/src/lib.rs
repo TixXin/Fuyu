@@ -7,7 +7,7 @@ mod claude_usage;
 mod clipboard_history;
 mod dev_lane;
 mod device_events;
-#[cfg_attr(not(windows), path = "device_use/unsupported.rs")]
+#[cfg_attr(target_os = "macos", path = "device_use/macos.rs")]
 mod device_use;
 mod file_shelf;
 mod fs_write;
