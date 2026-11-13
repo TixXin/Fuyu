@@ -69,8 +69,14 @@ pub(crate) fn default_home() -> Option<PathBuf> {
     profile().map(|profile| profile.join(DEFAULT_DIR))
 }
 
+#[cfg(not(target_os = "macos"))]
 pub(crate) fn app_data_dir(identifier: &str) -> Option<PathBuf> {
     std::env::var_os("APPDATA").map(|roaming| PathBuf::from(roaming).join(identifier))
+}
+
+#[cfg(target_os = "macos")]
+pub(crate) fn app_data_dir(identifier: &str) -> Option<PathBuf> {
+    profile().map(|profile| profile.join("Library").join("Application Support").join(identifier))
 }
 
 pub(crate) fn init(identifier: &str) {
@@ -173,5 +179,19 @@ mod tests {
     fn without_a_profile_the_app_data_folder_stays() {
         let (home, source) = resolve(None, None, None, Path::new(APP_DATA));
         assert_eq!((home.display().to_string(), source), (APP_DATA.into(), Source::AppData));
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn on_macos_the_app_data_folder_is_tauris_application_support_folder() {
+        let dir = super::app_data_dir("com.tixxin.fuyu").expect("HOME is set");
+        assert!(dir.ends_with("Library/Application Support/com.tixxin.fuyu"));
+        assert_eq!(super::default_home().expect("HOME is set").file_name().and_then(|name| name.to_str()), Some(".fuyu"));
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn on_macos_the_lock_names_this_computer() {
+        assert!(!super::lock::this_computer().is_empty());
     }
 }

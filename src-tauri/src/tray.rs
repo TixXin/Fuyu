@@ -147,6 +147,11 @@ pub(crate) fn build_tray(app: &App) -> tauri::Result<()> {
             _ => {}
         });
 
+    #[cfg(target_os = "macos")]
+    {
+        tray = tray.icon(crate::tray_mark::image()).icon_as_template(true);
+    }
+    #[cfg(not(target_os = "macos"))]
     if let Some(icon) = app.default_window_icon() {
         tray = tray.icon(icon.clone());
     }

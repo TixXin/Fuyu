@@ -95,7 +95,7 @@
 | `system`：`startup`、`network_cost` | 注册表（reg.exe）、WinRT 网络计费 | 自启换实现（G1.4 已做：`SMAppService`）；网络计费暂不支持（不计费） | G1.4、G1.6 |
 | `system`：`accent_color`、`fullscreen`、`updater`、`update_notifications`、`settings_backup` | 注册表、前台全屏、系统代理、Toast、下载文件夹 | 换实现：强调色 None、全屏 false、只读环境变量代理、不弹系统通知、诊断报 `sw_vers` 版本、下载文件夹 `~/Downloads` | G1.4、G1.6 |
 | `system`：`CommandExt` / `CREATE_NO_WINDOW` | `CreationFlags` | 换实现：`system/command_flags.rs`，Mac 上 `creation_flags` 什么都不做 | — |
-| `home_dir`、`system::windows_home_dir` | `USERPROFILE`、消息框 | 换实现：Mac 上用 `HOME`，冲突提示打到 stderr | G1.4 |
+| `home_dir`、`system::windows_home_dir` | `USERPROFILE`、消息框 | 换实现：Mac 上用 `HOME`，冲突提示打到 stderr；G1.4 补上应用数据目录（`~/Library/Application Support/<标识>`）和锁文件的电脑名 | G1.4 |
 | `clipboard_history`、`translation` | 剪贴板监听、热键、弹窗、UIA 选中文字 | 暂不支持；快捷键文字解析（`shortcut.rs`）照常编译 | G1.6 |
 | `screenshot` | 屏幕截图、热键、钉图窗口、剪贴板 | 暂不支持 | G1.6 |
 | `file_shelf` | 剪贴板文件列表、OLE 拖出 | 复制和拖出暂不支持，列表、预览、打开照常 | G1.6 |
