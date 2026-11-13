@@ -5,7 +5,8 @@ import { BehaviorSettingsPage } from "./BehaviorSettingsPage";
 import { ThemeSettingsPage } from "./ThemeSettingsPage";
 import { ThemeMarketPage } from "../../features/theme-market/ThemeMarketPage";
 import { buildTheme } from "../../features/appearance/theme";
-import { DEFAULT_SETTINGS_CATEGORY, type SettingsCategory } from "./categories";
+import { DEFAULT_SETTINGS_CATEGORY, isCategoryAvailable, type SettingsCategory } from "./categories";
+import { useUnsupportedFeatures } from "../../lib/platform";
 import { GeneralSettingsPage } from "./GeneralSettingsPage";
 import { AgentSettingsPage } from "./AgentSettingsPage";
 import { AgentAlertsSettingsPage } from "./AgentAlertsSettingsPage";
@@ -57,7 +58,9 @@ export function SettingsWindow() {
   const systemDark = useSystemDark();
   const presets = useSettingPresets(settings, setSettings);
   const saveDirectory = useSaveDirectorySetting();
-  const [category, setCategory] = useState<SettingsCategory>(DEFAULT_SETTINGS_CATEGORY);
+  const [chosenCategory, setCategory] = useState<SettingsCategory>(DEFAULT_SETTINGS_CATEGORY);
+  const unsupported = useUnsupportedFeatures();
+  const category = isCategoryAvailable(chosenCategory, unsupported) ? chosenCategory : DEFAULT_SETTINGS_CATEGORY;
   const highlightSaveDirectory = saveDirectory.highlight;
 
   const focusSavePath = useCallback(() => {
@@ -190,7 +193,7 @@ export function SettingsWindow() {
           />
         )}
         {category === "messages" && (
-          <MessagesSettingsPage settings={settings} qqNotifications={qqNotifications} wechatReminders={wechatReminders} onSettingsChange={setSettings} />
+          <MessagesSettingsPage settings={settings} qqNotifications={qqNotifications} wechatReminders={wechatReminders} unsupported={unsupported} onSettingsChange={setSettings} />
         )}
         {category === "translation" && <TranslationSettingsPage settings={settings} onSettingsChange={setSettings} onOpenShortcuts={openShortcuts} />}
         {category === "clipboard" && <ClipboardSettingsPage settings={settings} onOpenShortcuts={openShortcuts} />}

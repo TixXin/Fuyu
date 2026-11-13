@@ -7,6 +7,7 @@ import { SettingsSelect } from "../../components/settings/SettingsSelect";
 import { MESSAGE_PANEL_SECONDS } from "../../features/appearance/settings";
 import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
 import type { IslandSettings, MessageNotice } from "../../features/appearance/types";
+import type { PlatformFeature } from "../../lib/platform";
 import { MailAccountList } from "../../features/messages/mail/MailAccountList";
 import { MailConnectForm } from "../../features/messages/mail/MailConnectForm";
 import { MAX_MAIL_ACCOUNTS } from "../../features/messages/mail/mailAccounts";
@@ -21,11 +22,13 @@ export function MessagesSettingsPage({
   settings,
   qqNotifications,
   wechatReminders,
+  unsupported,
   onSettingsChange,
 }: {
   settings: IslandSettings;
   qqNotifications: QQNotificationsController;
   wechatReminders: WeChatRemindersController;
+  unsupported: ReadonlySet<PlatformFeature>;
   onSettingsChange: (settings: IslandSettings) => void;
 }) {
   const t = useTranslation();
@@ -60,8 +63,8 @@ export function MessagesSettingsPage({
           />
         )}
       </SettingsGroup>
-      <QQGroup controller={qqNotifications} title={labels.qqTitle} hint={labels.qqHint} />
-      <SettingsGroup title={labels.wechatTitle} footer={<Problem error={wechatReminders.actionError || wechatReminders.snapshot.error} hint={labels.wechatHint} />}>
+      {!unsupported.has("qq") && <QQGroup controller={qqNotifications} title={labels.qqTitle} hint={labels.qqHint} />}
+      {!unsupported.has("wechat") && <SettingsGroup title={labels.wechatTitle} footer={<Problem error={wechatReminders.actionError || wechatReminders.snapshot.error} hint={labels.wechatHint} />}>
         <SettingsToggleRow
           title={t.wechat.receive}
           checked={wechatReminders.snapshot.enabled}
@@ -85,7 +88,7 @@ export function MessagesSettingsPage({
             onChange={(enabled) => void wechatReminders.setHideTaskbarButton(enabled)}
           />
         )}
-      </SettingsGroup>
+      </SettingsGroup>}
       <MailGroups settings={settings} onSettingsChange={onSettingsChange} />
     </>
   );

@@ -1,4 +1,5 @@
 import type { MessageSource } from "../../features/messages/messagePreview";
+import type { PlatformFeature } from "../../lib/platform.ts";
 import type { BuiltinPage, IslandPage, PluginPageId } from "./types";
 
 export type IslandFeatures = {
@@ -15,6 +16,19 @@ export type IslandFeatures = {
   translation: boolean;
   pluginPages?: readonly PluginPageId[];
 };
+
+export function withoutUnsupported(features: IslandFeatures, unsupported: ReadonlySet<PlatformFeature>): IslandFeatures {
+  if (unsupported.size === 0) return features;
+  return {
+    ...features,
+    music: features.music && !unsupported.has("music"),
+    clipboard: features.clipboard && !unsupported.has("clipboard"),
+    screenshots: (features.screenshots ?? false) && !unsupported.has("screenshot"),
+    qq: features.qq && !unsupported.has("qq"),
+    wechat: features.wechat && !unsupported.has("wechat"),
+    translation: features.translation && !unsupported.has("translation"),
+  };
+}
 
 export function isPluginPage(page: IslandPage): page is PluginPageId {
   return page.startsWith("plugin:");

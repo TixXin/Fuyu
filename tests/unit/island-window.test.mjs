@@ -134,3 +134,16 @@ test("the translation page comes last in the page shortcuts, and only when it is
   assert.equal(pageForAltDigit({ ...all, translation: true }, 7), "translation");
   assert.equal(pageForAltDigit({ ...all, translation: true }, 1), "agents");
 });
+
+test("pages the system lacks are switched off and the island skips them", async () => {
+  const { withoutUnsupported, resolveIslandPage } = await import("../../src/windows/island/features.ts");
+  const all = { todo: true, calendar: true, music: true, clipboard: true, shelf: true, screenshots: true, qq: true, wechat: true, qqMail: true, agents: true, translation: true };
+  const mac = withoutUnsupported(all, new Set(["music", "clipboard", "screenshot", "qq", "wechat", "translation"]));
+  assert.equal(mac.music, false);
+  assert.equal(mac.clipboard, false);
+  assert.equal(mac.screenshots, false);
+  assert.equal(mac.translation, false);
+  assert.equal(mac.qqMail, true);
+  assert.equal(resolveIslandPage("music", mac), "todo");
+  assert.equal(withoutUnsupported(all, new Set()), all);
+});

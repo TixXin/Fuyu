@@ -50,6 +50,7 @@ mod wechat_reminders;
 #[cfg(target_os = "macos")]
 mod macos;
 mod platform;
+mod platform_support;
 #[cfg(windows)]
 mod win32;
 
@@ -224,6 +225,7 @@ pub fn run() {
             phone_push;
             cc_connect;
             pets;
+            platform_support;
             tray
         ))
         .build(context)
