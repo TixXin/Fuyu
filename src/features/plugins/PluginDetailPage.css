@@ -12,7 +12,7 @@
 
 .plugin-info__row {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  grid-template-columns: minmax(4.5em, auto) minmax(0, 1fr) auto auto;
   align-items: center;
   gap: 8px;
   min-width: 0;
@@ -95,4 +95,41 @@
   flex: 0 0 auto;
   font-style: normal;
   opacity: 0.7;
+}
+
+.plugin-detail__hero {
+  display: grid;
+  gap: 12px;
+  padding: 12px 14px 16px;
+  background:
+    radial-gradient(120% 160% at 0% 0%, color-mix(in srgb, var(--color-accent) 12%, transparent), transparent 55%),
+    var(--color-white-a06);
+  border: 1px solid var(--color-white-a10);
+  border-radius: var(--radius-lg);
+}
+
+.plugin-detail__hero--error {
+  border-color: color-mix(in srgb, var(--error-text, #ffb4a8) 45%, transparent);
+}
+
+.plugin-detail__identity {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.plugin-detail__title {
+  flex: 1;
+}
+
+.plugin-detail__title strong {
+  font-size: 17px;
+}
+
+.plugin-detail__description {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  line-height: 1.6;
 }
