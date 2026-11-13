@@ -7,6 +7,8 @@ export type ScreenshotText = {
   saved: (path: string) => string;
   cancel: string;
   copyColorHint: string;
+  measureHint: string;
+  ruler: (length: number, dx: number, dy: number) => string;
   colorCopied: (hex: string) => string;
   selectHint: string;
   quickHints: Record<"copy" | "text" | "translate" | "long", string>;
@@ -80,6 +82,8 @@ export const zhCN: ScreenshotText = {
   saved: (path) => `已保存到 ${path}`,
   cancel: "取消（Esc）",
   copyColorHint: "按 C 复制颜色",
+  measureHint: "按住 M 测量距离",
+  ruler: (length, dx, dy) => `${length} px（横 ${dx}，竖 ${dy}）`,
   colorCopied: (hex) => `已复制 ${hex}`,
   selectHint: "单击选中窗口或控件，拖动选择区域 · 滚轮切换层级 · 右键或 Esc 退出",
   quickHints: {
@@ -174,6 +178,8 @@ export const en: ScreenshotText = {
   saved: (path) => `Saved to ${path}`,
   cancel: "Cancel (Esc)",
   copyColorHint: "Press C to copy the colour",
+  measureHint: "Hold M to measure",
+  ruler: (length, dx, dy) => `${length} px (${dx} across, ${dy} down)`,
   colorCopied: (hex) => `Copied ${hex}`,
   selectHint: "Click a window or control, or drag a region · Scroll to step out or in · Right-click or Esc to exit",
   quickHints: {

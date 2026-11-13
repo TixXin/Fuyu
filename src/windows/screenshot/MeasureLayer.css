@@ -1,0 +1,57 @@
+.screenshot-measure {
+  --measure-color: var(--screenshot-measure-color, #ff2d78);
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.screenshot-measure__line {
+  position: absolute;
+  box-sizing: border-box;
+  background: var(--measure-color);
+}
+
+.screenshot-measure__line--h {
+  height: 1px;
+  border-inline: 1px solid var(--measure-color);
+  box-shadow: 0 -4px 0 -3px var(--measure-color), 0 4px 0 -3px var(--measure-color);
+}
+
+.screenshot-measure__line--v {
+  width: 1px;
+  border-block: 1px solid var(--measure-color);
+  box-shadow: -4px 0 0 -3px var(--measure-color), 4px 0 0 -3px var(--measure-color);
+}
+
+.screenshot-measure__ruler {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.screenshot-measure__ruler line {
+  stroke: var(--measure-color);
+  stroke-width: 1.5;
+}
+
+.screenshot-measure__ruler circle {
+  fill: var(--measure-color);
+}
+
+.screenshot-measure__label {
+  position: absolute;
+  padding: 1px 6px;
+  font: 12px/18px ui-monospace, "Cascadia Mono", Consolas, monospace;
+  color: var(--screenshot-measure-text, #ffffff);
+  white-space: nowrap;
+  background: var(--measure-color);
+  border-radius: 4px;
+  transform: translate(-50%, -150%);
+}
+
+.screenshot-measure__label--edges {
+  transform: translate(calc(-100% - 8px), calc(-100% - 8px));
+}
