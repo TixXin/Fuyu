@@ -38,6 +38,7 @@ winget install Gyan.FFmpeg
 | `001-one-island` | 总览《一座岛》：待办、音乐、消息、剪贴板、翻译、AI Agent 各几秒 | 48 秒 |
 | `002-agents` | 功能短片：AI Agent。岛上看会话、弹出审批、看用量、点一下回到终端 | 24 秒 |
 | `003-messages` | 功能短片：消息。Windows 桌面录屏的样子，带旁白和配乐；新消息弹出，在岛上读邮件 | 约 28 秒，随旁白长短变 |
+| `004-one-day` | 全面介绍《浮屿的一天》：从早到晚八个时刻，待办、日历、消息、AI Agent、剪贴板、翻译、音乐；海报式排版，带旁白和配乐 | 约 45 秒 |
 
 ## README 里的动图和截图
 
@@ -120,6 +121,11 @@ video/
 & E:\Projects\tools\CosyVoice\.venv\Scripts\python.exe voice\synth.py --video 003-messages --cosyvoice E:\Projects\tools\CosyVoice --reference <参考音频.wav> --reference-text "<参考音频里说的话>"
 ```
 
+## 海报式排版和时间线
+
+`004-one-day` 用的是另一种舞台：视频模块给出 `scenery`（`stage/day/DayScenery`）和 `look: "editorial"`。`scenery` 画在镜头外面，镜头只缩放岛屿，所以背景上的大数字和时间轴不会跟着放大。一个场景是一个时刻：时间、功能名、天色的两个颜色、太阳的位置、字用深色还是浅色。时间表里 `stage.set({ scene, ink })` 换场景，天色、太阳、数字和时间轴上的小岛一起过渡。
+
+页面里的时钟默认是 10:24。要让界面上显示别的时间（例如新消息的到达时间），在视频文件夹里放 `render.json`：`{ "clock": "11:19:55" }`。
 ## 声音
 
 `sound("名字")` 在时间表里记一个声音，渲染结束时由 ffmpeg 混进去。`start`、`approval`、`ack`、`complete` 是岛屿自带的音效（`src/assets/sounds/thumb-piano/`，原创，MIT）；`click` 和 `whoosh` 是 ffmpeg 现合成的。没有配乐：要加的话放一首确认可商用的曲子进 `video/assets/`，在这里记下来源和授权。
