@@ -56,6 +56,7 @@
 | `minAppVersion` | | 需要的最低浮屿版本，不够时插件显示为「无法加载」。用到某个版本才有的功能时写上，见 [更新日志](changelog.md) |
 | `author`、`homepage` | | 主页只显示 `https://` 链接 |
 | `runtime` | ✅ | 怎么运行，见下文的「运行方式」 |
+| `platforms` | | 插件能在哪些系统上运行：`windows`、`macos`。不写时 `.exe` 插件只算 Windows，其他两个系统都算。不支持当前系统的插件在设置和市场里标出来，不会启动。Mac 上 `.ps1` 插件要装 PowerShell 7（`pwsh`，比如 `brew install powershell`），`.js` 插件要装 Node.js；浮屿在 PATH、`/opt/homebrew/bin`、`/usr/local/bin` 里找 |
 | `activationEvents` | | 什么时候启动插件进程，最多 20 个。不写时随岛屿一直运行。见 [按需启动](runtime.md#按需启动) |
 | `permissions` | | 启用插件时要用户同意的权限，见 [权限与安全](permissions.md) |
 | `optionalPermissions` | | 用到时才申请的权限，见 [可选权限](permissions.md#可选权限) |

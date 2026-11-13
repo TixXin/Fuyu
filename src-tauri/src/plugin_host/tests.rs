@@ -147,6 +147,7 @@ fn versions_compare_by_number() {
     assert!(!version_at_least("0.2", "0.2.1"));
 }
 
+#[cfg(windows)]
 #[test]
 fn launch_uses_the_right_interpreter() {
     let dir = Path::new("C:\\plugins\\dev.example.sync");
@@ -164,6 +165,34 @@ fn launch_uses_the_right_interpreter() {
     assert_eq!(program, OsString::from("powershell.exe"));
     assert_eq!(arguments.last(), Some(&dir.join("main.ps1").into_os_string()));
     assert!(arguments.contains(&OsString::from("-File")));
+}
+
+#[cfg(not(windows))]
+#[test]
+fn mac_launch_refuses_windows_programs_and_finds_pwsh_or_explains() {
+    let dir = Path::new("/Users/a/.fuyu/plugins/dev.example.sync");
+    let error = launch_command(dir, "bin/app.exe", &[]).expect_err("a Windows program");
+    assert!(error.contains("Windows program"));
+    let (_, arguments) = launch_command(dir, "main.mjs", &["--flag".to_string()]).expect("node");
+    assert_eq!(arguments, vec![dir.join("main.mjs").into_os_string(), OsString::from("--flag")]);
+    match launch_command(dir, "main.ps1", &[]) {
+        Ok((program, arguments)) => {
+            assert!(Path::new(&program).ends_with("pwsh"));
+            assert_eq!(arguments.last(), Some(&dir.join("main.ps1").into_os_string()));
+        }
+        Err(error) => assert!(error.contains("brew install powershell")),
+    }
+}
+
+#[test]
+fn platforms_default_from_the_runtime_and_unknown_names_are_refused() {
+    use super::manifest::platforms_of;
+    assert_eq!(platforms_of(&[], "exe"), ["windows"]);
+    assert_eq!(platforms_of(&[], "powershell"), ["windows", "macos"]);
+    assert_eq!(platforms_of(&["macos".to_string()], "node"), ["macos"]);
+    let manifest = |platforms: &str| format!(r#"{{"id":"dev.example.sync","name":{{"zh-CN":"同步","en":"Sync"}},"version":"1.0.0","apiVersion":2,"runtime":{{"type":"none"}},"platforms":{platforms}}}"#);
+    assert_eq!(parse_manifest(&manifest(r#"["macos","windows","macos"]"#), "dev.example.sync", "9.0.0").expect("valid").platforms, ["macos", "windows"]);
+    assert!(parse_manifest(&manifest(r#"["linux"]"#), "dev.example.sync", "9.0.0").expect_err("unknown").contains("linux"));
 }
 
 #[test]

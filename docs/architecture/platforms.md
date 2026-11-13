@@ -37,7 +37,7 @@ macOS 的计划和决定见 [macos-port-plan.md](macos-port-plan.md)，各功能
 | 凭据存储 | `mail`、`rename_migration` | 已支持 | 已支持 | Keychain：`keyring` 的 v1 在 Mac 上自动用 apple-native 后端，代码不用改；条目名和 Windows 相同；不弹授权框 | G1.4 | macOS 27.2，2026-11-13 |
 | 跟随系统的强调色 | `system::accent_color` | 已支持 | 开发中 | `NSColor.controlAccentColor` 转成 sRGB（`macos/appearance.rs`）；设置里这一项在 Mac 上叫「跟随系统」。打开设置窗口时读一次，系统里改了不会立刻跟上 | G1.6 | — |
 | 系统权限状态 | `system::permissions` | 不需要 | 开发中 | 设置 → 通用 →「系统权限」：辅助功能（`AXIsProcessTrusted`）、屏幕录制（`CGPreflightScreenCaptureAccess`）是否已允许，没允许时一键打开系统设置的对应隐私页；切回设置窗口时重新检查。自动化权限随 G1.7 加 | G1.6 | — |
-| 全局快捷键 | `win32/hotkey` | 已支持 | 部分支持 | `global-hotkey`（Carbon `RegisterEventHotKey`，在主线程注册），不要权限、不接管系统组合键。剪贴板（默认 ⌘⇧V）、翻译、截图在用；审批和插件快捷键随各自功能做。F21–F24 在 Mac 上不能用作全局快捷键 | G1.6 | — |
+| 全局快捷键 | `win32/hotkey` | 已支持 | 部分支持 | `global-hotkey`（Carbon `RegisterEventHotKey`，在主线程注册），不要权限、不接管系统组合键。剪贴板（默认 ⌘⇧V）、翻译、截图在用；审批、插件快捷键也在用。F21–F24 在 Mac 上不能用作全局快捷键 | G1.6 | — |
 | `fuyu://` 链接 | `win32/url_protocol` | 已支持 | 开发中 | `src-tauri/Info.plist` 声明 `fuyu` / `focusd`，打包时合并进 `.app`，只在打包后的 `.app` 可用；链接经 Apple Event 到 `RunEvent::Opened`，启动 5 秒内按冷启动处理；单实例由系统和 single-instance 插件保证 | G1.4 | — |
 | 单实例 | `tauri-plugin-single-instance` | 已支持 | 已支持 | 同一个 `.app` 系统只开一个；插件在 Mac 上用本地 socket，第二个进程把参数交给第一个后退出；lane 预览标识不同，和用户的岛互不影响 | G1.4 | macOS 27.2，2026-11-13（lane 预览与主工作区并存） |
 | 自动更新 | `system` | 已支持 | 未开始 | 同一个 updater，`latest.json` 加 darwin 键；需签名公证。「按流量计费时不自动下载」已能在 Mac 上判断：Network.framework 的 `nw_path_is_expensive`（个人热点等）或 `is_constrained`（低数据模式）（`macos/network.rs`，G1.6） | G1.13 | — |
@@ -62,7 +62,7 @@ macOS 的计划和决定见 [macos-port-plan.md](macos-port-plan.md)，各功能
 | Antigravity 会话（B23.3） | `agent_status` | 部分支持 | 未开始 | Windows：按官方文档的钩子写，没实测；只有运行中和完成，没有「等你」。Mac：钩子配置同在 `~/.gemini/config/hooks.json`，脚本要换成 sh | G1.7 | — |
 | 点会话跳到终端 / 编辑器 | `agent_status` | 已支持 | 开发中 | 从会话进程往上找到第一个前台应用并激活（`NSRunningApplication`）；父进程是 launchd 的进程（如 iTermServer）用系统的「负责进程」接上 iTerm2、VS Code。Terminal 和 iTerm2 再按会话进程的 tty 用 AppleScript 选中对应标签页（`macos/terminal_tabs.rs`，第一次要「自动化」授权）；VS Code 等编辑器和 Windows 一样用 `vscode://` 链接交给浮屿扩展切终端，扩展安装用 `.app` 里的 `Contents/Resources/app/bin/code`。没有：按窗口标题挑同一应用的多个窗口 | G1.7 | — |
 | Claude 用量 | `claude_usage` | 已支持 | 开发中 | 本地日志的读取是通用代码。可选的「直接向 Anthropic 查询」在没有 `~/.claude/.credentials.json` 时读钥匙串里 Claude Code 存的 `Claude Code-credentials`（账户是当前用户名），第一次读时系统会问是否允许 | G1.7 | — |
-| 插件 | `plugin_host` | 已支持 | 未开始 | 进程组代替 Job Object；PowerShell 插件需用户装 pwsh | G1.8 | — |
+| 插件 | `plugin_host` | 已支持 | 部分支持 | 插件进程放进自己的进程组，停用、重启或岛退出时整组结束（`macos/job.rs`，`killpg`），内存按进程组统计；岛崩溃时插件读 stdin 收到结束会自己退出。`node`、`pwsh` 在 PATH、`/opt/homebrew/bin`、`/usr/local/bin` 里找（从 Finder 打开的应用拿不到终端的 PATH）；`.ps1` 插件用 PowerShell 7，没装时设置和市场里给出安装链接；`.exe` 插件不能运行。清单新增可选的 `platforms`，不支持当前系统的插件在设置和市场里标出、不启动。插件快捷键（共用 `macos/hotkeys.rs`）和系统事件（锁屏、空闲、睡眠唤醒，轮询判断）可用。没有：插件的自定义网页视图（Windows 用独立的 WebView2 页面，Mac 上要换成 Tauri 的 webview，后续）、cc-connect 和 SSH 隧道这两个内置插件 | G1.8 | — |
 | 本地 API、SSH 隧道、cc-connect | `local_api`、`ssh_tunnel`、`cc_connect` | 已支持 | 未开始 | 通用代码；系统代理读 SCDynamicStore | G1.2 | — |
 | 宠物 | `pets` | 已支持 | 未开始 | 通用代码 | G1.2 | — |
 | 刘海形态 | `island/notch.rs`、`macos/notch.rs` | 不支持（没有刘海） | 开发中 | 读 `NSScreen` 的 `safeAreaInsets` 和 `auxiliaryTop*Area`；设置 → 位置 → 菜单栏「贴合刘海」（默认）；无刘海屏照常顶部正中；无需权限 | G1.11 | — |

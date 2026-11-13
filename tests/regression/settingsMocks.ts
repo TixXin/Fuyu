@@ -82,6 +82,7 @@ mockIPC((command, payload) => {
     case "get_plugin_market": return {
       indexUrl: "https://raw.githubusercontent.com/TixXin/fuyu-plugins/main/index.json",
       nodeAvailable: false,
+      powershellAvailable: true,
       trustedPublishers: [],
       officialPublisher: "TixXin",
       plugins: [
@@ -90,10 +91,11 @@ mockIPC((command, payload) => {
       ],
     };
     case "list_plugins": {
-      const base = { dev: false, notificationsMuted: false, keybindingConflicts: [], keybindings: {}, optionalPermissions: [], calls: [], sensitive: {}, activation: "startup", activationEvents: [], startupMs: null, resources: null, keepAlive: null, revoked: null, updateAvailable: null, autoUpdated: null, preRelease: false, preReleaseAvailable: null, memoryLimitMb: 512, signingKeyChanged: false, authorKey: null };
+      const base = { dev: false, platforms: [], notificationsMuted: false, keybindingConflicts: [], keybindings: {}, optionalPermissions: [], calls: [], sensitive: {}, activation: "startup", activationEvents: [], startupMs: null, resources: null, keepAlive: null, revoked: null, updateAvailable: null, autoUpdated: null, preRelease: false, preReleaseAvailable: null, memoryLimitMb: 512, signingKeyChanged: false, authorKey: null };
       return {
       allowThirdParty: true,
       nodeAvailable: false,
+      powershellAvailable: true,
       autoUpdate: false,
       trustedPublishers: ["someone"],
       pluginsDir: "C:\\Users\\demo\\AppData\\Roaming\\com.tixxin.fuyu\\plugins",

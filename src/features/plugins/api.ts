@@ -83,6 +83,7 @@ export type PluginInfo = {
   calls: PluginCallRecord[];
   commands: PluginCommand[];
   runtime: PluginRuntimeRequirement;
+  platforms: string[];
   hasProcess: boolean;
   enabled: boolean;
   needsApproval: boolean;
@@ -114,6 +115,7 @@ export type PluginInfo = {
 export type PluginsSnapshot = {
   allowThirdParty: boolean;
   nodeAvailable: boolean;
+  powershellAvailable: boolean;
   pluginsDir: string;
   plugins: PluginInfo[];
   autoUpdate: boolean;
@@ -135,6 +137,7 @@ export type MarketPlugin = {
   permissions: string[];
   optionalPermissions?: string[];
   runtime: PluginRuntimeRequirement | null;
+  platforms?: string[];
   download: { url: string; sha256: string; size: number };
   publisher: string | null;
   repo: string | null;
@@ -155,6 +158,7 @@ export type MarketPlugin = {
 export type MarketSnapshot = {
   indexUrl: string;
   nodeAvailable: boolean;
+  powershellAvailable: boolean;
   plugins: MarketPlugin[];
   trustedPublishers: string[];
   officialPublisher: string;
@@ -211,6 +215,10 @@ export function openPluginsFolder() {
 }
 
 export const NODE_DOWNLOAD_URL = { "zh-CN": "https://nodejs.org/zh-cn/download", en: "https://nodejs.org/en/download" } as const;
+export const POWERSHELL_DOWNLOAD_URL = {
+  "zh-CN": "https://learn.microsoft.com/zh-cn/powershell/scripting/install/installing-powershell-on-macos",
+  en: "https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-macos",
+} as const;
 
 export function openPluginHomepage(url: string) {
   return url.startsWith("https://") ? openUrl(url) : Promise.resolve();

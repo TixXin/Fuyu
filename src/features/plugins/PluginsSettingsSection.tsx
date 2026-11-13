@@ -80,6 +80,7 @@ export function PluginsSettingsSection({ initialOpenId = null }: { initialOpenId
               plugin={plugin}
               allowed={allowed}
               nodeAvailable={snapshot.nodeAvailable}
+              powershellAvailable={snapshot.powershellAvailable}
               busy={busy}
               onEnabledChange={(enabled) => setEnabled(plugin.id, enabled)}
               onOpenDetail={() => setOpenId(plugin.id)}

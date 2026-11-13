@@ -178,6 +178,33 @@ pub(super) struct PluginManifest {
     pub activation: Activation,
     #[serde(default)]
     pub experimental_apis: Vec<String>,
+    #[serde(default)]
+    pub platforms: Vec<String>,
+}
+
+pub(super) const PLATFORMS: [&str; 2] = ["windows", "macos"];
+#[cfg(windows)]
+pub(super) const CURRENT_PLATFORM: &str = "windows";
+#[cfg(not(windows))]
+pub(super) const CURRENT_PLATFORM: &str = "macos";
+
+pub(super) fn platforms_of(declared: &[String], runtime: &str) -> Vec<String> {
+    if !declared.is_empty() {
+        return declared.to_vec();
+    }
+    let all = if runtime == "exe" { &PLATFORMS[..1] } else { &PLATFORMS[..] };
+    all.iter().map(|platform| platform.to_string()).collect()
+}
+
+pub(super) fn runs_here(manifest: &PluginManifest) -> bool {
+    platforms_of(&manifest.platforms, runtime_requirement(&manifest.runtime)).iter().any(|platform| platform == CURRENT_PLATFORM)
+}
+
+#[cfg(not(windows))]
+pub(super) fn find_unix_program(name: &str) -> Option<std::path::PathBuf> {
+    let on_path = std::env::var_os("PATH").into_iter().flat_map(|path| std::env::split_paths(&path).collect::<Vec<_>>());
+    let usual = ["/opt/homebrew/bin", "/usr/local/bin", "/usr/bin"].into_iter().map(std::path::PathBuf::from);
+    on_path.chain(usual).map(|dir| dir.join(name)).find(|candidate| candidate.is_file())
 }
 
 fn empty_text() -> LocalizedText {
@@ -252,6 +279,11 @@ fn parse_any_manifest(text: &str, folder_name: &str, app_version: &str) -> Resul
         relative_command_path(command)?;
         launch_kind(command)?;
     }
+    if let Some(unknown) = manifest.platforms.iter().find(|platform| !PLATFORMS.contains(&platform.as_str())) {
+        return Err(format!("Unknown platform \"{unknown}\" in platforms; use \"windows\" or \"macos\"."));
+    }
+    manifest.platforms.sort();
+    manifest.platforms.dedup();
     validate_specs(&manifest.contributes.settings)?;
     if manifest.experimental_apis.len() > MAX_EXPERIMENTAL_APIS || !manifest.experimental_apis.iter().all(|name| is_valid_api_name(name)) {
         return Err(format!("experimentalApis takes at most {MAX_EXPERIMENTAL_APIS} names like \"views.chart\"."));
@@ -419,7 +451,22 @@ pub(super) fn launch_command(plugin_dir: &Path, command: &str, args: &[String]) 
     let script = plugin_dir.join(relative_command_path(command)?);
     let extra = args.iter().map(OsString::from);
     let (program, mut arguments): (OsString, Vec<OsString>) = match launch_kind(command)? {
+        #[cfg(not(windows))]
+        LaunchKind::Executable => return Err("This plugin is a Windows program and does not run on macOS.".to_string()),
+        #[cfg(not(windows))]
+        LaunchKind::PowerShell => (
+            find_unix_program("pwsh")
+                .ok_or_else(|| "This plugin needs PowerShell 7 (pwsh). Install it, for example with `brew install powershell`, then restart the plugin.".to_string())?
+                .into_os_string(),
+            ["-NoProfile", "-NonInteractive", "-File"]
+                .into_iter()
+                .map(OsString::from)
+                .chain([script.into_os_string()])
+                .collect(),
+        ),
+        #[cfg(windows)]
         LaunchKind::Executable => (script.into_os_string(), Vec::new()),
+        #[cfg(windows)]
         LaunchKind::PowerShell => (
             "powershell.exe".into(),
             ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File"]
