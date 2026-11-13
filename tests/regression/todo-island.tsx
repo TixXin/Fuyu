@@ -91,13 +91,13 @@ try {
 
   const rows = $$("today", ".todo-list [data-todo-id]");
   check(rows.length === 3, "每个待办一行，带 data-todo-id（插件菜单和拖动用）");
-  check(Math.abs(rows[0].getBoundingClientRect().height + 4 - TODO_ROW_HEIGHT) < 1, "一行加间距正好是岛屿按行长高的 46px");
+  check(Math.abs(rows[0].getBoundingClientRect().height + 2 - TODO_ROW_HEIGHT) < 1, "一行加间距正好是岛屿按行长高的 34px");
   check(Math.abs(rows[1].getBoundingClientRect().height - rows[0].getBoundingClientRect().height - 19) < 1, "两行标题多 19px，和岛屿增高的行高一致");
   check(rows[0].classList.contains("todo-island-row--active") && $("today", ".todo-island-row__stop")?.textContent === "进行中结束", "进行中的待办有强调条和结束按钮");
   check(getComputedStyle(rows[2].querySelector(".todo-island-row__title")!).textDecorationLine === "line-through", "已完成的划掉");
   check(getComputedStyle(rows[1].querySelector(".todo-island-row__action")!).opacity === "0", "其他操作平时隐藏");
   const heights = rows.map((row) => [Math.round(row.querySelector<HTMLElement>(".todo-island-row__title")!.offsetHeight / 19), row.offsetHeight]);
-  check(heights.every(([lines, height]) => height === 23 + 19 * lines) && heights.some(([lines]) => lines > 1), `行高跟着标题实际换行：一行 42px，每多一行加 19px（${heights.map(([l, h]) => l + "行 " + h + "px").join("，")}）`);
+  check(heights.every(([lines, height]) => height === 13 + 19 * lines) && heights.some(([lines]) => lines > 1), `行高跟着标题实际换行：一行 32px，每多一行加 19px（${heights.map(([l, h]) => l + "行 " + h + "px").join("，")}）`);
   await click(rows[1].querySelector<HTMLElement>(".todo-island-row__check"));
   await click(rows[1].querySelector<HTMLElement>(".todo-island-row__action"));
   check(calls.includes("toggle:b") && calls.includes("start:b"), "勾选和开始");

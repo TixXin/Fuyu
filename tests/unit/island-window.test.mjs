@@ -48,9 +48,9 @@ test("the collapsed width setting moves the whole range, and alignment stays ins
 });
 
 test("the todo list scrolls after as many rows as fit under the max panel height", () => {
-  assert.equal(getTodoScrollStartRows(490), 6);
-  assert.equal(getTodoScrollStartRows(351), 2);
-  assert.equal(getTodoScrollStartRows(352), 3);
+  assert.equal(getTodoScrollStartRows(490), 7);
+  assert.equal(getTodoScrollStartRows(339), 2);
+  assert.equal(getTodoScrollStartRows(340), 3);
 });
 
 test("the collapsed width is nudged so the centred island starts on a whole device pixel", () => {
