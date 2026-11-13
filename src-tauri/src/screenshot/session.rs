@@ -23,6 +23,7 @@ pub(crate) enum Mode {
     Copy,
     Text,
     Translate,
+    Long,
     Fullscreen,
 }
 

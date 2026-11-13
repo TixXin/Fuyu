@@ -14,7 +14,7 @@ export const PIN_ASSIGNED_EVENT = "screenshot-pin-assigned";
 export const SCREENSHOT_TAKEN_EVENT = "screenshot-taken";
 export const SCREENSHOT_TEXT_EVENT = "screenshot-text";
 
-export type ScreenshotMode = "region" | "copy" | "text" | "translate" | "fullscreen";
+export type ScreenshotMode = "region" | "copy" | "text" | "translate" | "long" | "fullscreen";
 
 export type ScreenshotSession = {
   id: number;
@@ -64,12 +64,12 @@ export function screenshotOverlayReady(session: number) {
   return invoke<void>("screenshot_overlay_ready", { session });
 }
 
-export type ScreenshotAction = "copy" | "save" | "pin" | "text" | "translate";
+export type ScreenshotAction = "copy" | "save" | "pin" | "text" | "translate" | "long";
 
-export type QuickAction = Extract<ScreenshotAction, "copy" | "text" | "translate">;
+export type QuickAction = Extract<ScreenshotAction, "copy" | "text" | "translate" | "long">;
 
 export function quickAction(mode: ScreenshotMode | undefined): QuickAction | null {
-  return mode === "copy" || mode === "text" || mode === "translate" ? mode : null;
+  return mode === "copy" || mode === "text" || mode === "translate" || mode === "long" ? mode : null;
 }
 
 export type SaveTarget = { folder?: string; folderName: string };

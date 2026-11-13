@@ -33,6 +33,7 @@ pub(crate) enum ShortcutAction {
     Copy,
     Text,
     Translate,
+    Long,
     Fullscreen,
     Pins,
 }
@@ -44,6 +45,7 @@ impl ShortcutAction {
             Self::Copy => Some(Mode::Copy),
             Self::Text => Some(Mode::Text),
             Self::Translate => Some(Mode::Translate),
+            Self::Long => Some(Mode::Long),
             Self::Fullscreen => Some(Mode::Fullscreen),
             Self::Pins => None,
         }
@@ -65,7 +67,7 @@ pub(crate) struct ShortcutStatus {
 }
 
 pub(crate) fn default_shortcuts() -> Vec<ShortcutConfig> {
-    [(ShortcutAction::Region, "Ctrl+Shift+1"), (ShortcutAction::Copy, "Ctrl+Shift+2"), (ShortcutAction::Text, "Ctrl+Shift+3"), (ShortcutAction::Translate, "Ctrl+Shift+4"), (ShortcutAction::Fullscreen, "Ctrl+Shift+7")]
+    [(ShortcutAction::Region, "Ctrl+Shift+1"), (ShortcutAction::Copy, "Ctrl+Shift+2"), (ShortcutAction::Text, "Ctrl+Shift+3"), (ShortcutAction::Translate, "Ctrl+Shift+4"), (ShortcutAction::Long, "Ctrl+Shift+5"), (ShortcutAction::Fullscreen, "Ctrl+Shift+7")]
         .into_iter()
         .map(|(action, shortcut)| ShortcutConfig { action, shortcut: shortcut.to_string() })
         .collect()
@@ -254,6 +256,7 @@ mod tests {
             (ShortcutAction::Copy, Some(2)),
             (ShortcutAction::Text, Some(3)),
             (ShortcutAction::Translate, Some(4)),
+            (ShortcutAction::Long, Some(5)),
             (ShortcutAction::Fullscreen, Some(7)),
         ]);
         assert_eq!(ShortcutAction::Pins.mode(), None);
