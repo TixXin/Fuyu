@@ -66,6 +66,6 @@ macOS 的计划和决定见 [macos-port-plan.md](macos-port-plan.md)，各功能
 | 插件 | `plugin_host` | 已支持 | 部分支持 | 插件进程放进自己的进程组，停用、重启或岛退出时整组结束（`macos/job.rs`，`killpg`），内存按进程组统计；岛崩溃时插件读 stdin 收到结束会自己退出。`node`、`pwsh` 在 PATH、`/opt/homebrew/bin`、`/usr/local/bin` 里找（从 Finder 打开的应用拿不到终端的 PATH）；`.ps1` 插件用 PowerShell 7，没装时设置和市场里给出安装链接；`.exe` 插件不能运行。清单新增可选的 `platforms`，不支持当前系统的插件在设置和市场里标出、不启动。插件快捷键（共用 `macos/hotkeys.rs`）和系统事件（锁屏、空闲、睡眠唤醒，轮询判断）可用。没有：插件的自定义网页视图（Windows 用独立的 WebView2 页面，Mac 上要换成 Tauri 的 webview，后续）、cc-connect 和 SSH 隧道这两个内置插件 | G1.8 | — |
 | 本地 API、SSH 隧道、cc-connect | `local_api`、`ssh_tunnel`、`cc_connect` | 已支持 | 未开始 | 通用代码；系统代理读 SCDynamicStore | G1.2 | — |
 | 宠物 | `pets` | 已支持 | 未开始 | 通用代码 | G1.2 | — |
-| 刘海形态 | `island/notch.rs`、`macos/notch.rs` | 不支持（没有刘海） | 开发中 | 读 `NSScreen` 的 `safeAreaInsets` 和 `auxiliaryTop*Area`；设置 → 位置 → 菜单栏「贴合刘海」（默认）；无刘海屏照常顶部正中；无需权限 | G1.11 | — |
+| 刘海形态 | `island/notch.rs`、`macos/notch.rs` | 不支持（没有刘海） | 开发中 | 读 `NSScreen` 的 `safeAreaInsets` 和 `auxiliaryTop*Area`；设置 → 位置 → 菜单栏「压在菜单栏上（有刘海时贴合刘海）」（默认）；无刘海屏照常顶部正中；无需权限 | G1.11 | — |
 
 不对应用户功能、不单列的模块：`lib.rs`、`main.rs`、`dev_lane.rs`、`fs_write.rs`、`settings_file.rs`、`user_error.rs`。它们在 G1.2 里随平台隔离一起处理。
