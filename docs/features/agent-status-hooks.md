@@ -208,21 +208,32 @@ Without the tunnel the requests fail at once and nothing else changes. A remote 
 WorkBuddy (Tencent's desktop agent, the Chinese edition that keeps its data in `~/.workbuddy`) is listed on the Agent page with its own icon (task B23.2, issue #155). The international edition, WorkBuddy AI (`~/.workbuddy-ai`), is a different product and is not read. What is known about both, with sources, is in [agent-harnesses.md](../research/agent-harnesses.md).
 
 - **Sessions**: `~/.workbuddy/projects/<encoded folder>/<session id>.jsonl`, read like Claude Code's transcripts (first lines and last 256 KiB, same session window). The title is the newest `ai-title` record, otherwise the first `<user_query>` of the session, otherwise the folder; the model is `providerData.requestModelName`. A turn is running from a user message, a `function_call`, a `function_call_result` or a `reasoning` record, and done at an assistant message; an assistant message with `status: "incomplete"` fails the turn, unless its error is `Interrupted by user`.
-- **Quit sessions**: `~/.workbuddy/sessions/<pid>.json` lists the running sessions (`pid`, `sessionId`), like `~/.claude/sessions`, so a session whose process is gone counts as quit.
+- **Quit sessions**: a session counts as quit when it is not in `~/.workbuddy/sessions/<pid>.json` (`pid`, `sessionId`, like `~/.claude/sessions`) and `WorkBuddy.exe` is not running. 5.3.8 listed each session there; 5.9.3 lists only its host processes (`interactive-<pid>`, `prewarm-…`), so while the app runs its sessions stay listed.
 - **Waiting on you**: **安装/修复** adds one `PermissionRequest` hook to `~/.workbuddy/settings.json` (Claude Code's format; a single `command` string, since WorkBuddy's support for `args` is unknown) that saves the hook's input in `agent-notifications\workbuddy-*.json`, as for Claude Code. WorkBuddy reads the file only at start, so quit and reopen it after installing. The rest of the file is kept, and the hook is only added when `~/.workbuddy` already exists.
 - **Clicking a session** brings up the WorkBuddy window (`WorkBuddy.exe`).
 - Not done: usage, approving from the island, SSH (WorkBuddy has no server edition).
 
-Only the session format was checked against real files (WorkBuddy 5.3.8, 2026-11-13). The hook path and the `PermissionRequest` event come from a community test, not from WorkBuddy's documentation (which names `~/.codebuddy/settings.json`), and need a check on a machine with WorkBuddy.
+Only the session format was checked against real files (WorkBuddy 5.3.8 and 5.9.3, 2026-11-13). The hook path and the `PermissionRequest` event come from a community test, not from WorkBuddy's documentation (which names `~/.codebuddy/settings.json`), and need a check on a machine with WorkBuddy.
 
 ## Antigravity
 
-Google Antigravity (the IDE and the `agy` CLI) is listed on the Agent page with its own icon (task B23.3, issue #155). It was written from Antigravity's hook documentation and has not been run against a real Antigravity; what is known, with sources, is in [agent-harnesses.md](../research/agent-harnesses.md).
+Google Antigravity (the IDE and the `agy` CLI) is listed on the Agent page with its own icon (task B23.3, issue #155). It was written from Antigravity's hook documentation; on 2026-11-13 the hooks were run with the `agy` CLI 1.5.8 on Windows (SessionStart, PreInvocation and Stop all fired, with the input fields below), but not yet with the island showing the result, nor with the App or IDE; what is known, with sources, is in [agent-harnesses.md](../research/agent-harnesses.md).
 
 - **Hooks**: **安装/修复** writes a `fuyu` group to `~/.gemini/config/hooks.json` (`enabled`, `SessionStart` and `PreInvocation` run `fuyu-agent-running.cmd antigravity running`, `Stop` runs `... antigravity stop`), but only when `~/.gemini/antigravity`, `antigravity-ide` or `antigravity-cli` exists. Other groups in the file are kept. The script saves each hook's input in `agent-antigravity\<running|stop>-*.json`.
-- **Sessions**: one per `conversationId`, from the newest saved input: folder from `workspacePaths`, title from `lastUserInput` (otherwise the folder), model from `modelName`. `running` shows as running (stale after the usual 10 minutes), `stop` as done. The transcript format is unknown, so the island does not read it; older inputs of a conversation and inputs over a day old are deleted.
+- **Sessions**: one per `conversationId`, from the newest saved input: folder from `cwd` (otherwise the first of `workspacePaths`, which the CLI writes as `C:/...`), title from `lastUserInput` (otherwise the folder), model from `modelName`. `running` shows as running (stale after the usual 10 minutes), `stop` as done. The transcript format is unknown, so the island does not read it; older inputs of a conversation and inputs over a day old are deleted.
 - **Clicking a session** brings up the Antigravity window.
 - Not done: "waiting on you" (Antigravity's hooks have no approval or notification event), usage, approving from the island, SSH.
+
+## DeepSeek Harness
+
+DeepSeek Harness (DSH) sessions are listed on the Agent page with DeepSeek's icon (task B24, issue #155). The approach follows flyl1u/fly-island's DSH integration; DSH was not installed on the machine it was written on, so it has not been run against real data. Details and sources are in [agent-harnesses.md](../research/agent-harnesses.md).
+
+- **No hooks**: the island only reads. It looks in `~/.dsh` (the official app and anywhere-labs), `~/.dsh-beta` (anywhere-labs Beta) and `%APPDATA%\dsh-desktop\harness` (DataElement's DSH Desktop).
+- **Sessions**: one per `session-<UUID>` from DSH's projection checkpoint `storages/session_projcache/sessions/<id>.json`, which is plain JSON; the zstd-compressed conversation log is never opened, only checked to exist, so deleted sessions are skipped. Only checkpoint versions 3–7 and session formats 3–4 are read, each row checked by its `ver`; anything else is skipped. The same id in two stores shows once, from the newer checkpoint.
+- **State**: an open question in `userQuestions` is "waiting on you"; an open turn in `turnBoundary` is running (stale after the usual 10 minutes); otherwise done. Tool approvals are not in the checkpoint, so a session waiting for approval shows as running. Checkpoints are written in batches, so the state can lag the app by a little.
+- **Title, model, last prompt and reply** come from the `title`, `modelSelection`, `turnOutline` rows; the context size from `contextPressure`.
+- **Clicking a session** brings up the running DSH desktop window (`DeepSeek Harness.exe`, `DSH Desktop.exe`, `DSH NEXT.exe` and so on). There is no link to open a specific conversation.
+- Not done: wallet balance, approving from the island, SSH, custom data folders (`DSH_HOME`, anywhere-labs' folder picker), telling which desktop app a session belongs to.
 
 ## Other Agents
 

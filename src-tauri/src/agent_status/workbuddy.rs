@@ -12,6 +12,7 @@ use super::{write_text_file, AGENT_RUNNING_NOTIFICATION_ARG};
 pub(super) const PROVIDER: &str = "workbuddy";
 pub(super) const DIR: &str = ".workbuddy";
 pub(super) const APP: &str = "workbuddy";
+const EXE: &str = "WorkBuddy.exe";
 const INTERRUPTED: &str = "Interrupted by user";
 
 pub(super) fn user_query(line: &str) -> Option<String> {
@@ -95,6 +96,10 @@ fn output_text(content: &Value) -> Option<String> {
         .filter_map(|part| part["text"].as_str())
         .collect();
     (!parts.is_empty()).then(|| parts.join("\n"))
+}
+
+pub(super) fn app_running() -> bool {
+    crate::platform::process::running_executable(&[EXE]).is_some()
 }
 
 pub(super) fn has_hooks(home_dir: &Path) -> bool {

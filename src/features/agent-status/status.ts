@@ -22,6 +22,7 @@ export const AGENT_PROVIDER_LABELS: Record<SessionProvider, string> = {
   claudeCode: "Claude Code",
   workbuddy: "WorkBuddy",
   antigravity: "Antigravity",
+  dsh: "DeepSeek Harness",
 };
 export type AgentStatusEntry = {
   key: string;

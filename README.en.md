@@ -156,6 +156,12 @@ pnpm tauri build    # installers
 
 Built with Tauri 2, React 19 + TypeScript and Rust. Releases and in-app updates are described in [docs/features/updater.md](docs/features/updater.md) (in Chinese).
 
+## Community
+
+Questions, ideas, or just want to chat? Scan to join our WeChat user group (mostly in Chinese):
+
+<img src="docs/assets/readme/wechat-group.png" alt="QR code of the Fuyu WeChat user group" width="240">
+
 ## Contributing
 
 Fuyu is a shared effort, and there is room for you:
@@ -166,6 +172,17 @@ Fuyu is a shared effort, and there is room for you:
 - **Draw a logo**: Fuyu has no real logo yet, and the [logo call](https://fuyu.ing/logo/) is open.
 
 <a href="https://github.com/TixXin/fuyu/graphs/contributors"><img src="https://contrib.rocks/image?repo=TixXin/fuyu" alt="Fuyu's contributors"></a>
+
+## Star trend
+
+Every star keeps Fuyu moving.
+
+<a href="https://star-history.com/#TixXin/fuyu&amp;Date">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=TixXin/fuyu&amp;type=Date&amp;theme=dark">
+    <img alt="Fuyu's stars over time" src="https://api.star-history.com/svg?repos=TixXin/fuyu&amp;type=Date" width="600">
+  </picture>
+</a>
 
 ## License
 

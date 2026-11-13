@@ -144,13 +144,14 @@ test("sessions arrange by light or time, under computer, project or no headings"
   assert.deepEqual(ids(arrangeSessions([s("a", 900), s("b", 200), s("c", 300)], "firstSeen", "none"))[0][2], ["c", "b", "a"]);
 });
 
-test("the provider filter hides Codex or Claude Code but always shows WorkBuddy and Antigravity", () => {
-  const list = [session(), session({ provider: "codex", sessionId: "c" }), session({ provider: "workbuddy", sessionId: "w" }), session({ provider: "antigravity", sessionId: "a" })];
+test("the provider filter hides Codex or Claude Code but always shows WorkBuddy, Antigravity and DeepSeek Harness", () => {
+  const list = [session(), session({ provider: "codex", sessionId: "c" }), session({ provider: "workbuddy", sessionId: "w" }), session({ provider: "antigravity", sessionId: "a" }), session({ provider: "dsh", sessionId: "d" })];
   const ids = (filter) => filterSessions(list, filter).map((item) => item.sessionId);
-  assert.deepEqual(ids({ claudeCode: true, codex: true }), ["s1", "c", "w", "a"]);
-  assert.deepEqual(ids({ claudeCode: false, codex: true }), ["c", "w", "a"]);
-  assert.deepEqual(ids({ claudeCode: true, codex: false }), ["s1", "w", "a"]);
+  assert.deepEqual(ids({ claudeCode: true, codex: true }), ["s1", "c", "w", "a", "d"]);
+  assert.deepEqual(ids({ claudeCode: false, codex: true }), ["c", "w", "a", "d"]);
+  assert.deepEqual(ids({ claudeCode: true, codex: false }), ["s1", "w", "a", "d"]);
   assert.equal(shownEffort("workbuddy", "high", { claudeCode: { high: "max" } }), "high");
+  assert.equal(shownEffort("dsh", "high", { claudeCode: { high: "max" } }), "high");
 });
 
 test("the age column is as wide as its longest label", () => {
