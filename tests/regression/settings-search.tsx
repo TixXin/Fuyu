@@ -8,6 +8,7 @@ import { DEFAULT_SETTINGS } from "../../src/features/appearance/settings";
 import { I18nProvider, LOCALE_STORAGE_KEY } from "../../src/i18n";
 import searchIndex from "../../src/windows/settings/searchIndex.json";
 import type { SettingsRowText, SettingsSearchEntry } from "../../src/windows/settings/settingsSearch";
+import { entryOf, sidebarItemOf, type SettingsCategory } from "../../src/windows/settings/categories";
 import "./settingsMocks";
 
 const query = new URLSearchParams(location.search);
@@ -41,10 +42,21 @@ const check = (condition: unknown, message: string) => {
 };
 const wait = (ms: number) => act(() => new Promise<void>((resolve) => setTimeout(resolve, ms)));
 const text = (element: Element | null | undefined) => (element?.textContent ?? "").replace(/\s+/g, " ").trim();
-const categories = () => [...document.querySelectorAll<HTMLElement>(".settings-sidebar__item")].map((item) => item.dataset.category!);
+const categories = () => [...document.querySelectorAll<HTMLElement>(".settings-sidebar__item[data-category]")].map((item) => item.dataset.category!);
 const openPage = async (category: string) => {
-  await act(async () => { document.querySelector<HTMLButtonElement>(`.settings-sidebar__item[data-category='${category}']`)!.click(); });
+  const page = category as SettingsCategory;
+  await act(async () => { document.querySelector<HTMLButtonElement>(`.settings-sidebar__item[data-category='${sidebarItemOf(page)}']`)!.click(); });
+  if (entryOf(page)) await act(async () => { document.querySelector<HTMLButtonElement>(`.settings-tabs__tab[data-tab='${page}']`)!.click(); });
   await wait(60);
+};
+const allPages = async () => {
+  const pages: string[] = [];
+  for (const item of categories()) {
+    await openPage(item);
+    const tabs = [...document.querySelectorAll<HTMLElement>(".settings-tabs__tab")].map((tab) => tab.dataset.tab!);
+    pages.push(...(tabs.length > 0 ? tabs : [item]));
+  }
+  return pages;
 };
 
 function rowsOnPage(): SettingsRowText[] {
@@ -70,13 +82,14 @@ const pressEnter = () => act(async () => {
 });
 const hits = (page?: string) =>
   [...document.querySelectorAll<HTMLElement>(`.settings-sidebar__hit${page ? `[data-page='${page}']` : ""}`)].map((hit) => text(hit));
-const current = () => document.querySelector<HTMLElement>(".settings-sidebar__item--active")?.dataset.category;
+const current = () =>
+  document.querySelector<HTMLElement>(".settings-tabs__tab--active")?.dataset.tab ?? document.querySelector<HTMLElement>(".settings-sidebar__item--active")?.dataset.category;
 
 try {
   await act(async () => { root.render(<StrictMode><I18nProvider><SettingsWindow /></I18nProvider></StrictMode>); });
   if (collect) {
     const rows: ({ page: string } & SettingsRowText)[] = [];
-    for (const category of categories()) {
+    for (const category of await allPages()) {
       await openPage(category);
       rows.push(...rowsOnPage().map((row) => ({ page: category, ...row })));
     }
@@ -87,7 +100,7 @@ try {
     const entries = searchIndex.entries as SettingsSearchEntry[];
     check(entries.length > 50, "The index lists the settings of every page (run pnpm settings:index if it is empty)");
     const missing: string[] = [];
-    for (const category of categories()) {
+    for (const category of await allPages()) {
       await openPage(category);
       const known = new Set(entries.filter((entry) => entry.page === category).map((entry) => entry["zh-CN"].title));
       for (const row of rowsOnPage()) if (!known.has(row.title)) missing.push(`${category} › ${row.title}`);
@@ -104,7 +117,8 @@ try {
     check(text(found?.querySelector(".settings-row__title")) === "会话来源", "…and marks the row it found");
 
     await type("弹出提醒");
-    check(categories().includes("agentAlerts"), "Words written together find a page whose keywords have them apart");
+    check(document.querySelector(".settings-sidebar__hit--tab[data-tab='agentAlerts']") && categories().includes("agents"),
+      "Words written together find a page whose keywords have them apart, shown as a tab under its sidebar item");
     await type("隐藏已退出的会话");
     check(hits("agentSessions").includes("隐藏已退出的会话"), "A switch's title finds it");
     await type("进程");

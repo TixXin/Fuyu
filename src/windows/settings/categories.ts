@@ -2,6 +2,7 @@ import type { PlatformFeature } from "../../lib/platform.ts";
 import { normalizeSearchText, searchWords } from "./settingsSearch.ts";
 
 export const SETTINGS_CATEGORIES = [
+  "overview",
   "general",
   "behavior",
   "appearance",
@@ -33,14 +34,55 @@ export type SettingsCategory = (typeof SETTINGS_CATEGORIES)[number];
 export type SettingsGroup = "basics" | "features" | "agents" | "extensions";
 
 export const SETTINGS_GROUPS: readonly { label: SettingsGroup | null; categories: readonly SettingsCategory[] }[] = [
-  { label: "basics", categories: ["general", "behavior", "appearance", "theme", "themeMarket", "shortcuts"] },
+  { label: null, categories: ["overview"] },
+  { label: "basics", categories: ["general", "behavior", "appearance", "shortcuts"] },
   { label: "features", categories: ["todos", "calendar", "music", "translation", "clipboard", "shelf", "screenshot", "messages"] },
-  { label: "agents", categories: ["agents", "agentSessions", "agentAlerts", "sounds", "agentApprovals", "agentConnect", "agentRemote"] },
+  { label: null, categories: ["agents"] },
   { label: "extensions", categories: ["plugins", "market"] },
   { label: null, categories: ["about"] },
 ];
 
-export const DEFAULT_SETTINGS_CATEGORY: SettingsCategory = "general";
+export const DEFAULT_SETTINGS_CATEGORY: SettingsCategory = "overview";
+
+export type SettingsEntry = "appearance" | "agents";
+
+export const SETTINGS_TABS: Readonly<Record<SettingsEntry, readonly TabbedCategory[]>> = {
+  appearance: ["theme", "appearance", "themeMarket"],
+  agents: ["agents", "agentSessions", "agentAlerts", "sounds", "agentApprovals", "agentConnect", "agentRemote"],
+};
+
+export type TabbedCategory = "theme" | "appearance" | "themeMarket" | "agents" | "agentSessions" | "agentAlerts" | "sounds" | "agentApprovals" | "agentConnect" | "agentRemote";
+
+export function entryOf(category: SettingsCategory): SettingsEntry | null {
+  return (Object.keys(SETTINGS_TABS) as SettingsEntry[]).find((entry) => (SETTINGS_TABS[entry] as readonly SettingsCategory[]).includes(category)) ?? null;
+}
+
+export function sidebarItemOf(category: SettingsCategory): SettingsCategory {
+  return entryOf(category) ?? category;
+}
+
+export function entryPages(item: SettingsCategory): readonly SettingsCategory[] {
+  return item === "appearance" || item === "agents" ? SETTINGS_TABS[item] : [item];
+}
+
+export const SETTINGS_FEATURES = ["todos", "calendar", "music", "translation", "clipboard", "shelf", "screenshot", "agents"] as const;
+
+export type SettingsFeature = (typeof SETTINGS_FEATURES)[number];
+
+export const FEATURE_PAGES: Readonly<Record<SettingsFeature, readonly SettingsCategory[]>> = {
+  todos: ["todos"],
+  calendar: ["calendar"],
+  music: ["music"],
+  translation: ["translation"],
+  clipboard: ["clipboard"],
+  shelf: ["shelf"],
+  screenshot: ["screenshot"],
+  agents: ["agents", "agentSessions", "agentAlerts", "sounds", "agentApprovals", "agentConnect", "agentRemote"],
+};
+
+export function pagesOfFeaturesOff(on: Readonly<Record<SettingsFeature, boolean>>): ReadonlySet<SettingsCategory> {
+  return new Set(SETTINGS_FEATURES.filter((feature) => !on[feature]).flatMap((feature) => FEATURE_PAGES[feature]));
+}
 
 const PAGE_FEATURES: Partial<Record<SettingsCategory, PlatformFeature>> = {
   music: "music",

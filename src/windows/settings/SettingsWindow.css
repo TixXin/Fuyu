@@ -12,7 +12,7 @@
   background: #eceef2;
 }
 
-.settings-stage--light :is(.settings-group__card, .settings-section:not(.settings-section--list), .plugin-card, .plugin-market__item, .theme-market__item) {
+.settings-stage--light :is(.settings-group__card, .settings-section:not(.settings-section--list), .plugin-card, .plugin-market__item, .theme-market__item, .settings-overview__feature) {
   background: #ffffff;
   border-color: rgba(0, 0, 0, 0.08);
 }

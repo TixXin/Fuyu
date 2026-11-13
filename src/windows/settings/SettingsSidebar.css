@@ -74,6 +74,22 @@
   margin-top: 12px;
 }
 
+.settings-sidebar__top {
+  margin-bottom: 12px;
+}
+
+.settings-sidebar__group + .settings-sidebar__top {
+  margin-top: 12px;
+}
+
+.settings-sidebar__item.settings-sidebar__more {
+  color: var(--color-text-subtle);
+}
+
+.settings-sidebar__item.settings-sidebar__more:hover {
+  color: var(--color-accent);
+}
+
 .settings-sidebar ul {
   display: grid;
   gap: 1px;

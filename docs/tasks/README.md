@@ -77,7 +77,7 @@
 
 1. **挑**：`pnpm tasks next`，再 `pnpm tasks show <编号>` 读全文。
 2. **认领**：`pnpm task:claim <编号> --as <会话名> --scope <要改的目录/,文件>`。会话名用 ListAgents 里自己的名字，必须写。它先 `git fetch origin main`，本地或 `origin/main` 上已经有人认领就拒绝；否则写上会话名和机器名，在本地提交（只含任务文件），随下一批 PR 推上去（见 [workflow.md](/docs/architecture/workflow.md)）。会话名和机器名都对上才算「你的」，另一台机器上同名的会话不算（#153）。`--no-commit` 只改文件不提交。
-3. **新任务马上要做**：`pnpm tasks add <编号> --title .. --claim --as <会话名> --scope ..`，新建和认领在一个提交里。只是记下来以后做：`pnpm tasks add <编号> --title ..`，和别的改动一起提交。
+3. **新任务先提 issue**（见下文「自己新建的任务」），拿到编号后再建。马上要做：`pnpm tasks add <编号> --title .. --issue <N> --claim --as <会话名> --scope ..`，新建和认领在一个提交里。只是记下来以后做：`pnpm tasks add <编号> --title .. --issue <N>`，和别的改动一起提交。
 4. **做的过程中**：开发中途和 land 前跑 `pnpm tasks conflicts`，看和 main、和别人声明的范围有没有冲突。
 5. **停下来**：`pnpm tasks note <编号> "<进度和下一步>"`，随下一次提交带上。不打算做完了：`pnpm tasks release <编号> --reason ".."`，放回待做并留交接。
 6. **做完**：`pnpm tasks done <编号> --commit "<功能提交的标题>"`（可以写多个，也可以写已有的提交号），和功能改动放在同一个提交里。本地 `main` 上有别的会话的提交，所以 `--commit` 必须写。父任务在最后一个子任务结束后 `done`。
@@ -97,6 +97,17 @@ land 时会自动检查（`scripts/land-check.mjs` 调 `pnpm tasks landing`）�
 5. **关闭**：回复之后 `gh issue close <N>`。合入 main 就关，不等发版：回复里写明随哪个版本发布，没修好时报告人可以重新打开。不用提交说明里的 `Closes #N`：它会在完成回复之前就把 issue 关掉。
 
 回复用中文，署名 tixxin Agent Team，可以介绍真实的自动化流程（多个会话并行、攒批开 PR、合入前的检查），不写做不到的事；最后一行写「由 <模型名> 自动整理回复」，模型名用实际在用的（例如 Opus 5.5）。
+
+### 自己新建的任务
+
+会话自己发现、自己要记的任务也要有 issue（用户 2026-11-13 定），这样每项工作在 GitHub 上都看得到、能讨论。
+
+1. **先提 issue**：`gh issue create --repo TixXin/fuyu`，标题写 `[<编号>] <任务标题>`，正文写清要做什么、为什么、怎样算做完，和任务文件的「说明」「验收」一致，并给出任务文档的链接。语言、署名和最后一行同上。
+2. **再建任务**：`pnpm tasks add <编号> --title .. --issue <N>`。
+3. issue 是我们自己提的，正文已经写了判断和打算，上面的第 1、2 步（核实、先回复）不用再做；有人在 issue 里评论时照常回复。
+4. **做完回复、关闭**：和上面的第 4、5 步一样。决定不做时回复原因，`gh issue close <N> --reason "not planned"`，任务 `drop`。
+
+父任务下的子任务各提各的 issue。用户在对话里直接交代、当场做完的小改动不建任务，也就不用提 issue。
 
 ## GitHub PR
 

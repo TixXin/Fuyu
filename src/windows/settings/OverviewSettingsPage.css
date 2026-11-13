@@ -1,0 +1,113 @@
+.settings-overview__intro {
+  margin: 0 0 var(--space-lg);
+  padding: 0 var(--space-xs);
+  color: var(--color-text-muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.settings-overview__features {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: var(--space-md);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.settings-overview__feature {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  align-items: start;
+  gap: var(--space-lg);
+  padding: 14px;
+  background: var(--color-white-a04);
+  border: 1px solid var(--color-white-a06);
+  border-radius: var(--radius-xl);
+  transition: border-color 160ms ease, background 160ms ease;
+}
+
+.settings-overview__feature--on,
+.settings-stage--light .settings-overview__feature.settings-overview__feature--on {
+  border-color: color-mix(in srgb, var(--color-accent) 28%, transparent);
+}
+
+.settings-overview__feature-icon {
+  width: 34px;
+  height: 34px;
+  display: inline-grid;
+  place-items: center;
+  color: var(--color-text-subtle);
+  background: var(--color-white-a06);
+  border-radius: var(--radius-lg);
+  transition: color 160ms ease, background 160ms ease;
+}
+
+.settings-overview__feature--on .settings-overview__feature-icon {
+  color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 14%, transparent);
+}
+
+.settings-overview__feature-text {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.settings-overview__feature-name {
+  color: var(--color-text);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+label.settings-overview__feature-name {
+  cursor: pointer;
+}
+
+.settings-overview__feature-hint {
+  color: var(--color-text-subtle);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.settings-overview__feature-side {
+  display: grid;
+  justify-items: end;
+  align-content: space-between;
+  gap: var(--space-md);
+  align-self: stretch;
+}
+
+.settings-overview__open {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 4px;
+  color: var(--color-accent);
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-sm);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.settings-overview__open:hover {
+  background: var(--color-white-a08);
+}
+
+.settings-overview__open:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .settings-overview__feature,
+  .settings-overview__feature-icon {
+    transition: none;
+  }
+}
