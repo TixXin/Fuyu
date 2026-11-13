@@ -17,6 +17,12 @@ export type SettingsPluginsText = {
   empty: string;
   groupBuiltin: (count: number) => string;
   groupThirdParty: (count: number) => string;
+  overview: {
+    search: string;
+    filter: Record<"all" | "running" | "updates" | "attention", string>;
+    filterLabel: string;
+    noMatches: string;
+  };
   enable: string;
   by: (author: string) => string;
   homepage: string;
@@ -126,6 +132,7 @@ export type SettingsPluginsText = {
     installed: string;
     incompatible: string;
     search: string;
+    summary: (installed: number, updates: number, favorites: number) => string;
     noMatches: string;
     allCategories: string;
     category: Record<"productivity" | "todos" | "developer" | "media" | "messages" | "information" | "utilities" | "sounds", string>;
@@ -294,6 +301,12 @@ export const zhCN: SettingsPluginsText = {
   empty: "还没有安装插件。把插件文件夹放进插件目录，再点“重新加载”。",
   groupBuiltin: (count: number) => `内置（${count}）`,
   groupThirdParty: (count: number) => `第三方（${count}）`,
+  overview: {
+    search: "搜索已安装的插件",
+    filter: { all: "全部", running: "运行中", updates: "可更新", attention: "需处理" },
+    filterLabel: "按状态筛选",
+    noMatches: "没有符合条件的插件。",
+  },
   enable: "启用",
   by: (author: string) => `作者：${author}`,
   homepage: "主页",
@@ -443,6 +456,8 @@ export const zhCN: SettingsPluginsText = {
     installed: "已安装",
     incompatible: "不兼容",
     search: "搜索名称、说明或发布者",
+    summary: (installed: number, updates: number, favorites: number) =>
+      [`已装 ${installed} 个`, updates > 0 ? `${updates} 个可更新` : "", favorites > 0 ? `收藏 ${favorites} 个` : ""].filter(Boolean).join(" · "),
     noMatches: "没有符合条件的插件。",
     allCategories: "全部",
     category: {
@@ -659,6 +674,12 @@ export const en: SettingsPluginsText = {
   empty: "No plugins installed. Put a plugin folder in the plugins folder, then click Reload.",
   groupBuiltin: (count: number) => `Built in (${count})`,
   groupThirdParty: (count: number) => `Third-party (${count})`,
+  overview: {
+    search: "Search installed plugins",
+    filter: { all: "All", running: "Running", updates: "Updates", attention: "Needs attention" },
+    filterLabel: "Filter by state",
+    noMatches: "No plugins match.",
+  },
   enable: "Enabled",
   by: (author: string) => `by ${author}`,
   homepage: "Homepage",
@@ -808,6 +829,8 @@ export const en: SettingsPluginsText = {
     installed: "Installed",
     incompatible: "Not compatible",
     search: "Search names, descriptions or publishers",
+    summary: (installed: number, updates: number, favorites: number) =>
+      [`${installed} installed`, updates > 0 ? `${updates} to update` : "", favorites > 0 ? `${favorites} starred` : ""].filter(Boolean).join(" · "),
     noMatches: "No plugins match.",
     allCategories: "All",
     category: {

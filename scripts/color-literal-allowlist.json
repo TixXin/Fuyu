@@ -31,7 +31,6 @@
     "src/features/plugin-views/templates/ListTemplate.css": 3,
     "src/features/plugins/PluginCard.css": 3,
     "src/features/plugins/PluginDetailPage.css": 1,
-    "src/features/plugins/PluginMarketSection.css": 11,
     "src/features/ssh-tunnel/SshTunnelHosts.css": 2,
     "src/features/system-levels/LevelPopup.css": 1,
     "src/features/todos/island/TodoIslandPage.css": 3,

@@ -1,0 +1,76 @@
+.plugin-icon {
+  position: relative;
+  display: grid;
+  flex: none;
+  place-items: center;
+  color: var(--color-text-strong);
+  background: var(--plugin-tone);
+  box-shadow: inset 0 0 0 1px rgba(var(--overlay-rgb, 255, 255, 255), 0.08);
+  font-weight: 800;
+  line-height: 1;
+}
+
+.plugin-icon--md {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  font-size: 15px;
+}
+
+.plugin-icon--lg {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  font-size: 22px;
+}
+
+.plugin-icon--productivity { --plugin-tone: rgba(116, 214, 255, 0.24); }
+.plugin-icon--todos { --plugin-tone: rgba(47, 160, 107, 0.4); }
+.plugin-icon--developer { --plugin-tone: rgba(160, 132, 255, 0.32); }
+.plugin-icon--media { --plugin-tone: rgba(255, 138, 101, 0.32); }
+.plugin-icon--messages { --plugin-tone: rgba(255, 209, 102, 0.28); }
+.plugin-icon--information { --plugin-tone: rgba(110, 168, 255, 0.3); }
+.plugin-icon--utilities { --plugin-tone: rgba(var(--overlay-rgb, 248, 246, 240), 0.16); }
+.plugin-icon--sounds { --plugin-tone: rgba(255, 159, 67, 0.26); }
+
+.plugin-icon__dot {
+  position: absolute;
+  right: -3px;
+  bottom: -3px;
+  width: 11px;
+  height: 11px;
+  background: var(--plugin-dot);
+  border: 2px solid var(--plugin-dot-ring, #26272b);
+  border-radius: var(--radius-pill);
+}
+
+.plugin-icon--lg .plugin-icon__dot {
+  width: 14px;
+  height: 14px;
+}
+
+.plugin-icon__dot--running { --plugin-dot: var(--mint-text, #98d4bb); }
+.plugin-icon__dot--busy { --plugin-dot: var(--warning-text, #f2d27a); }
+.plugin-icon__dot--error { --plugin-dot: var(--error-text, #ffb4a8); }
+.plugin-icon__dot--idle { --plugin-dot: rgba(var(--overlay-rgb, 255, 255, 255), 0.45); }
+.plugin-icon__dot--off { --plugin-dot: rgba(var(--overlay-rgb, 255, 255, 255), 0.18); }
+
+.plugin-icon__dot--busy {
+  animation: plugin-icon-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes plugin-icon-pulse {
+  50% {
+    opacity: 0.4;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .plugin-icon__dot--busy {
+    animation: none;
+  }
+}
+
+.island-light .plugin-icon__dot {
+  border-color: #ffffff;
+}
