@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
 import { Magnifier } from "../../features/screenshot/Magnifier";
-import { annotationArea, textSize } from "../../features/screenshot/annotations";
-import { cancelScreenshot, finishScreenshot, quickAction, type ScreenshotAction } from "../../features/screenshot/api";
+import { annotationArea, autoMosaicAt, textSize } from "../../features/screenshot/annotations";
+import { cancelScreenshot, findScreenshotWords, finishScreenshot, quickAction, type ScreenshotAction } from "../../features/screenshot/api";
+import { newMosaics, redactionRects } from "../../features/screenshot/redact";
 import { composeArea } from "../../features/screenshot/drawAnnotations";
 import {
   HANDLES,
@@ -93,6 +94,18 @@ export function ScreenshotOverlay() {
     });
   }, [chosen, items, canvasRef, errorText, t]);
   const copy = useCallback(() => finish("copy"), [finish]);
+  const { addMany } = annotations;
+  const redact = useCallback(() => {
+    if (!chosen) return;
+    setNotice(t.redacting);
+    findScreenshotWords(chosen)
+      .then((lines) => {
+        const added = newMosaics(redactionRects(Array.isArray(lines) ? lines : [], chosen), items);
+        addMany(added);
+        setNotice(added.length > 0 ? t.redacted(added.length) : t.nothingToRedact);
+      })
+      .catch((error: unknown) => setNotice(errorText(error)));
+  }, [chosen, items, addMany, errorText, t]);
 
   const quickMode = quickAction(session?.mode);
   const quick = quickMode !== null;
@@ -142,6 +155,13 @@ export function ScreenshotOverlay() {
 
   const handlePointerDown = (event: PointerEvent<HTMLElement>) => {
     if (leaving) return;
+    if (!annotations.tool && chosen && event.button === 0) {
+      const spot = autoMosaicAt(annotations.items, at(event));
+      if (spot) {
+        annotations.remove(spot);
+        return;
+      }
+    }
     if (annotations.tool && chosen && event.button === 0) {
       const point = at(event);
       const grab = grabbedAt(point);
@@ -222,7 +242,7 @@ export function ScreenshotOverlay() {
       )}
       {!area && ready && session?.underPointer && <div className="screenshot-overlay__hint">{quickMode ? t.quickHints[quickMode] : t.selectHint}</div>}
       {area && chosen && !dragging && !annotations.drafting && !quick && !leaving && (
-        <ScreenshotToolbar area={area} view={view} annotations={annotations} notice={notice} onCancel={() => void cancelScreenshot()} onFinish={finish} />
+        <ScreenshotToolbar area={area} view={view} annotations={annotations} notice={notice} onCancel={() => void cancelScreenshot()} onFinish={finish} onRedact={redact} />
       )}
       {annotations.editing && (
         <AnnotationTextInput

@@ -2,7 +2,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   EMPTY_HISTORY,
   addAnnotation,
+  addAnnotations,
   extendAnnotation,
+  removeAnnotation,
   isMeaningful,
   redoAnnotation,
   startAnnotation,
@@ -82,6 +84,8 @@ export function useAnnotations(sessionId: number | undefined, scale: number) {
     drafting: draft !== null,
     canUndo: history.items.length > 0,
     canRedo: history.undone.length > 0,
+    addMany: (list: readonly Annotation[]) => setHistory((current) => addAnnotations(current, list)),
+    remove: (item: Annotation) => setHistory((current) => removeAnnotation(current, item)),
     undo: () => setHistory(undoAnnotation),
     redo: () => setHistory(redoAnnotation),
     editing,

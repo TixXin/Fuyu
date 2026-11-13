@@ -181,3 +181,11 @@ fn kept_days_take_only_the_offered_choices() {
     set_keep_days(5);
     assert_eq!(keep_for(), 7 * day);
 }
+
+#[test]
+fn words_read_from_a_selection_come_back_in_screen_pixels() {
+    use crate::win32::ocr::OcrWord;
+    let word = |text: &str, x: f32| OcrWord { text: text.to_string(), x, y: 2.0, width: 10.0, height: 8.0 };
+    let moved = super::offset_words(vec![vec![word("a", 1.0), word("b", 20.0)]], 100, 50);
+    assert_eq!(moved, vec![vec![OcrWord { y: 52.0, ..word("a", 101.0) }, OcrWord { y: 52.0, ..word("b", 120.0) }]]);
+}
