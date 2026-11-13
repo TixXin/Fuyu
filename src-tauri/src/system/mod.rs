@@ -4,7 +4,7 @@ pub(crate) mod fullscreen;
 #[cfg_attr(not(windows), path = "network_cost_unsupported.rs")]
 pub(crate) mod network_cost;
 pub(crate) mod settings_backup;
-#[cfg_attr(not(windows), path = "startup_unsupported.rs")]
+#[cfg_attr(target_os = "macos", path = "startup_macos.rs")]
 pub(crate) mod startup;
 pub(crate) mod todo_export;
 pub(crate) mod update_channel;
