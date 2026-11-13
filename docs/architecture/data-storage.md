@@ -2,6 +2,8 @@
 
 2026-11-12 起（D30.3，#50）浮屿的文件放在家目录：`FUYU_HOME`，或 `%APPDATA%\com.tixxin.fuyu\home.json` 指向的文件夹，默认 `%USERPROFILE%\.fuyu`；升级时把旧的应用数据目录复制过去，旧目录保留，见 [家目录](../features/data-home.md)。下表里的「应用数据目录」都指家目录。之前的应用数据目录是 `%APPDATA%\com.tixxin.fuyu`，WebView2 的数据（含 `localStorage`）在 `%LOCALAPPDATA%\com.tixxin.fuyu\EBWebView`。2026-11-10 改名（D17）前两者都是 `com.focusd.island`；新版第一次启动时把旧目录复制过来，旧目录保留，见 [contracts.md](contracts.md)「改名」。
 
+macOS 上（G1.4，2026-11-13 起）：家目录同样是 `FUYU_HOME`、指针文件或默认的 `~/.fuyu`；应用数据目录（指针文件 `home.json` 所在处）是 `~/Library/Application Support/com.tixxin.fuyu`；锁文件 `fuyu.lock` 的 `computer` 取 `scutil --get ComputerName`。WebView 的数据（含 `localStorage`）在 `~/Library/WebKit/com.tixxin.fuyu`；没打包的调试版按进程名存在 `~/Library/WebKit/fuyu`，lane 预览在 `~/Library/WebKit/fuyu-lane-<N>`。凭据在登录钥匙串里，服务名和用户名与 Windows 相同。
+
 | 数据 | 位置 | 负责方 |
 |---|---|---|
 | 设置、预设、各功能开关、语言 | WebView2 的 `localStorage`（页面读写的地方）；2026-11-12 起（D30.2）`BACKUP_KEYS` 里的设置还整份写到应用数据目录的 `settings.json`，格式同设置备份，手动改了它下次启动生效 | 前端各 feature 的 `storage.ts`；`settings_file`（Rust）、`features/settings-backup/settingsFile.ts` |
