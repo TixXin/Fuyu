@@ -11,6 +11,7 @@ pub(crate) struct Request {
     pub(crate) fps: Option<u32>,
     pub(crate) system_audio: Option<bool>,
     pub(crate) microphone: Option<bool>,
+    pub(crate) gif: Option<bool>,
     pub(crate) folder_name: String,
 }
 

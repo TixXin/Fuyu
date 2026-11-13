@@ -97,9 +97,9 @@ fn file_names_do_not_overwrite_earlier_recordings() {
     let folder = std::env::temp_dir().join(format!("fuyu-recording-names-{}", std::process::id()));
     std::fs::create_dir_all(&folder).unwrap();
     let now = chrono::Local::now();
-    let first = file_name_in(&folder, now);
+    let first = file_name_in(&folder, now, "mp4");
     std::fs::write(&first, b"").unwrap();
-    let second = file_name_in(&folder, now);
+    let second = file_name_in(&folder, now, "mp4");
     assert_ne!(first, second);
     assert!(second.to_string_lossy().ends_with("_2.mp4"));
     std::fs::remove_dir_all(&folder).unwrap();
@@ -109,7 +109,7 @@ fn file_names_do_not_overwrite_earlier_recordings() {
 #[ignore = "records the real screen for three seconds"]
 fn records_the_primary_screen_to_an_mp4() {
     let path = std::env::temp_dir().join(format!("fuyu-recording-{}.mp4", std::process::id()));
-    let options = super::session::Options { x: 101, y: 51, width: 1601, height: 901, fps: 60, system_audio: true, microphone: true, path: path.clone() };
+    let options = super::session::Options { x: 101, y: 51, width: 1601, height: 901, fps: 60, system_audio: true, microphone: true, path: path.clone(), gif: None };
     let recording = super::session::Recording::start(options).unwrap();
     std::thread::sleep(std::time::Duration::from_secs(3));
     let summary = recording.stop().unwrap();
@@ -209,4 +209,42 @@ mod timer {
         assert_eq!((counting.phase, counting.countdown), (Phase::Countdown, 3));
         assert_eq!(counting.paused(true, 10), counting);
     }
+}
+
+mod gif_rate {
+    use super::super::{gif::GifRate, pacing::TICKS_PER_SECOND};
+
+    const MS: i64 = TICKS_PER_SECOND / 1000;
+
+    #[test]
+    fn a_thirty_frame_video_gives_every_other_frame_to_the_gif() {
+        let mut rate = GifRate::new();
+        let kept: Vec<i64> = (0..10).map(|n| n * 33 * MS).filter(|&stamp| rate.take(stamp)).collect();
+        assert_eq!(kept, [0, 99 * MS, 165 * MS, 231 * MS, 297 * MS]);
+    }
+
+    #[test]
+    fn a_frame_after_a_long_still_stretch_is_kept() {
+        let mut rate = GifRate::new();
+        assert!(rate.take(0));
+        assert!(!rate.take(40 * MS));
+        assert!(rate.take(2_000 * MS));
+        assert!(!rate.take(2_010 * MS));
+    }
+}
+
+#[test]
+#[ignore = "records the real screen for three seconds"]
+fn records_the_primary_screen_to_a_gif() {
+    let folder = std::env::temp_dir();
+    let video = folder.join(format!("fuyu-recording-gif-{}.mp4", std::process::id()));
+    let gif = folder.join(format!("fuyu-recording-{}.gif", std::process::id()));
+    let options = super::session::Options { x: 0, y: 0, width: 1920, height: 1080, fps: 30, system_audio: false, microphone: false, path: video.clone(), gif: Some(gif.clone()) };
+    let recording = super::session::Recording::start(options).unwrap();
+    std::thread::sleep(std::time::Duration::from_secs(3));
+    let summary = recording.stop().unwrap();
+    println!("{summary:?}");
+    assert_eq!(summary.path, gif.display().to_string());
+    assert!(!video.exists());
+    assert!(std::fs::metadata(&gif).unwrap().len() > 1000);
 }

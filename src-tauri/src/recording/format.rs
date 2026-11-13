@@ -32,12 +32,12 @@ pub(crate) fn capture_buffers(fps: u32) -> u32 {
     (fps * 2).div_ceil(30).clamp(2, 4)
 }
 
-pub(crate) fn file_name_in(folder: &Path, now: chrono::DateTime<chrono::Local>) -> PathBuf {
+pub(crate) fn file_name_in(folder: &Path, now: chrono::DateTime<chrono::Local>, extension: &str) -> PathBuf {
     let stem = format!("Fuyu_{}", now.format("%Y-%m-%d_%H-%M-%S"));
-    let mut path = folder.join(format!("{stem}.mp4"));
+    let mut path = folder.join(format!("{stem}.{extension}"));
     let mut next = 2;
     while path.exists() {
-        path = folder.join(format!("{stem}_{next}.mp4"));
+        path = folder.join(format!("{stem}_{next}.{extension}"));
         next += 1;
     }
     path

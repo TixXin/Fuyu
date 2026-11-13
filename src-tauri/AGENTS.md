@@ -24,7 +24,7 @@ src-tauri/src/
 ├── clipboard_history/
 ├── file_shelf/              # 文件中转：路径列表（file-shelf.json）与命令；拖出调用 win32/ole.rs
 ├── screenshot/              # 截图（C41）：快捷键线程（hotkeys.rs，主键盘 RegisterHotKey、小键盘交给 win32/win_key_hook.rs），每个显示器先截图再给它一个常驻隐藏的选区窗口 screenshot-<n>（session.rs，截屏在 win32/screen_capture.rs），复制到剪贴板（output.rs、clipboard.rs）；系统调用经 capture.rs，Mac 上换成 `*_macos.rs`（ScreenCaptureKit、NSPanel、global-hotkey）
-├── recording/               # 录屏（C41.11）：命令、倒计时、暂停计时和浮屿窗口排除在录像外（control.rs，状态在 state.rs，发 recording-state / recording-finished 给岛），录制线程（session.rs：WGC 帧经有界队列交给编码线程，满了丢帧计数）、帧节奏（pacing.rs，静止 3 个间隔才补重复帧，暂停扣时长）、尺寸码率和文件名（format.rs）、声音（audio.rs 接采集、按视频时间轴放；mixer.rs 混成 48 kHz 立体声）；声音采集在 win32/audio_capture.rs，画面采集在 win32/graphics_capture.rs，编码写 MP4 在 win32/video_writer.rs
+├── recording/               # 录屏（C41.11）：命令、倒计时、暂停计时和浮屿窗口排除在录像外（control.rs，状态在 state.rs，发 recording-state / recording-finished 给岛），录制线程（session.rs：WGC 帧经有界队列交给编码线程，满了丢帧计数）、帧节奏（pacing.rs，静止 3 个间隔才补重复帧，暂停扣时长）、尺寸码率和文件名（format.rs）、声音（audio.rs 接采集、按视频时间轴放；mixer.rs 混成 48 kHz 立体声）、GIF（gif.rs：每 1/15 秒挑一帧读回内存交给 gifski 线程）；声音采集在 win32/audio_capture.rs，画面采集在 win32/graphics_capture.rs，编码写 MP4 在 win32/video_writer.rs
 ├── pets/                    # Codex Pets（petdex）：只读列出 ~/.codex/pets 与 <app data>/pets，校验后以 data URL 返回图集
 ├── local_api/               # 本地接口：127.0.0.1 HTTP（tiny_http）、鉴权与路由、转给 main 窗口的桥、local-api.json；由内置插件开关
 ├── plugin_host/             # 插件：清单校验、plugins.json、子进程监督与 stdio JSON-RPC、权限表、设置页、市场与签名、撤销名单（revocations.rs）、后台检查与自动更新（updates.rs）、自定义界面页面（webviews.rs）、内置插件（builtin.rs）、按需启动与资源（activation.rs、lifecycle.rs）、开发模式（dev.rs）、清单里的 Agent 强度名称（effort_labels.rs）

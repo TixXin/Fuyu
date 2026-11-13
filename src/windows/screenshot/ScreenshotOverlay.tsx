@@ -61,6 +61,7 @@ export function ScreenshotOverlay() {
   const { selection, setSelection, pointer, dragging, hovered, onPointerDown, onPointerMove, onPointerUp, onPointerLeave } = useSelection(session, bounds, scale);
   const [notice, setNotice] = useState<string | null>(null);
   const [leaving, setLeaving] = useState(false);
+  const [gif, setGif] = useState(false);
   const targets = useTargets(ready ? session?.id ?? null : null);
   const [level, setLevel] = useState({ key: "", value: 0 });
   const sessionId = session?.id;
@@ -93,13 +94,13 @@ export function ScreenshotOverlay() {
     const image = area ? composeArea(picture, area, chosen, items) : null;
     const patch = area && image ? { at: area, image } : null;
     const save = action === "save" ? { folder: saveFolderOf(loadScreenshotSettings()), folderName: t.saveFolderName }
-      : action === "record" ? { folderName: t.recordFolderName } : undefined;
+      : action === "record" ? { folderName: t.recordFolderName, format: gif ? "gif" as const : undefined } : undefined;
     if (action === "pin") setLeaving(true);
     finishScreenshot(chosen, patch, action, save).catch((error: unknown) => {
       setLeaving(false);
       setNotice(errorText(error));
     });
-  }, [chosen, items, drawn, canvasRef, errorText, t]);
+  }, [chosen, items, drawn, canvasRef, errorText, gif, t]);
   const copy = useCallback(() => finish("copy"), [finish]);
   const { addMany } = annotations;
   const redact = useCallback(() => {
@@ -143,6 +144,7 @@ export function ScreenshotOverlay() {
         copy();
       } else if (event.key === "Escape") void cancelScreenshot();
       else if (event.key === "Enter") copy();
+      else if (letter === "g" && !ctrl && quickMode === "record") setGif((value) => !value);
       else if (letter === "f" && !ctrl && quickMode === "record" && session && ready) setSelection({ x: 0, y: 0, width: session.width, height: session.height });
       else if (letter === "t" && !ctrl && chosen) finish("pin");
       else if (letter === "c" && !ctrl && color) {
@@ -156,6 +158,7 @@ export function ScreenshotOverlay() {
   useEffect(() => {
     setNotice(null);
     setLeaving(false);
+    setGif(false);
   }, [sessionId]);
 
   const at = (event: PointerEvent) => toPixels({ x: event.clientX, y: event.clientY }, scale);
@@ -265,7 +268,7 @@ export function ScreenshotOverlay() {
       ) : (
         ready && <div key={sessionId} className="screenshot-overlay__dim" />
       )}
-      {!area && !long.active && ready && session?.underPointer && <div className="screenshot-overlay__hint">{quickMode ? t.quickHints[quickMode] : t.selectHint}</div>}
+      {!area && !long.active && ready && session?.underPointer && <div className="screenshot-overlay__hint">{quickMode === "record" && gif ? t.recordGifHint : quickMode ? t.quickHints[quickMode] : t.selectHint}</div>}
       {long.mine && area && <LongShotBar area={area} view={view} long={long} />}
       {area && chosen && !dragging && !annotations.drafting && !quick && !leaving && !long.active && (
         <ScreenshotToolbar area={area} view={view} annotations={annotations} notice={notice} onCancel={() => void cancelScreenshot()} onFinish={finish} onRedact={redact} />

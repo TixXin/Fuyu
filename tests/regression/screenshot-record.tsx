@@ -50,6 +50,12 @@ async function runChecks() {
     for (let tries = 0; tries < 50 && !calls.some((call) => call.command === "screenshot_overlay_ready"); tries += 1) await wait(20);
     await wait(50);
     check(document.querySelector(".screenshot-overlay__hint")?.textContent?.includes("按 F 录整个屏幕"), "Record mode says how to pick the area and that F takes the whole screen");
+    const hint = () => document.querySelector(".screenshot-overlay__hint")?.textContent ?? "";
+    await key("g");
+    check(hint().startsWith("录成 GIF"), "G switches record mode to GIF and the hint says so");
+    await key("g");
+    check(hint().includes("按 G 改录 GIF"), "…and G again switches back to MP4");
+    await key("g");
     await key("f");
     await wait(20);
     const finish = finishes()[0];
@@ -57,6 +63,7 @@ async function runChecks() {
     check(finish.headers["x-left"] === "0" && finish.headers["x-top"] === "0" && finish.headers["x-width"] === String(WIDTH) && finish.headers["x-height"] === String(HEIGHT), "…covering the whole monitor");
     check(decodeURIComponent(finish.headers["x-folder-name"]) === "浮屿录屏", "…into the recordings folder named in the current language");
     check(!document.querySelector(".screenshot-overlay__toolbar"), "No toolbar shows in record mode");
+    check(finish.headers["x-format"] === "gif", "…as a GIF, since G was on");
 
     results.textContent = `${messages.join("\n")}\n\n全部 ${messages.length} 项检查通过。`;
     results.dataset.result = "passed";

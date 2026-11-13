@@ -73,7 +73,7 @@ export function quickAction(mode: ScreenshotMode | undefined): QuickAction | nul
   return mode === "copy" || mode === "text" || mode === "translate" || mode === "long" || mode === "record" ? mode : null;
 }
 
-export type SaveTarget = { folder?: string; folderName: string };
+export type SaveTarget = { folder?: string; folderName: string; format?: "gif" };
 
 function rawBytes(image: ImageData) {
   return new Uint8Array(image.data.buffer, image.data.byteOffset, image.data.byteLength);
@@ -98,6 +98,7 @@ export function finishScreenshot(selection: PixelRect, patch: ScreenshotPatch | 
   }
   if (save?.folder) headers["x-folder"] = encodeURIComponent(save.folder);
   if (save) headers["x-folder-name"] = encodeURIComponent(save.folderName);
+  if (save?.format) headers["x-format"] = save.format;
   return invoke<string | null>("screenshot_finish", patch ? rawBytes(patch.image) : new Uint8Array(0), { headers });
 }
 
