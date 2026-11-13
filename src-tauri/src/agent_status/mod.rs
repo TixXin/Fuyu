@@ -41,6 +41,7 @@ mod usage;
 mod push_detail;
 mod wezterm;
 mod window_focus;
+mod workbuddy;
 
 use serde::Serialize;
 use serde_json::{json, Value};
@@ -257,6 +258,7 @@ fn install_agent_status_hooks_now(app: &AppHandle) -> Result<AgentHooksInstallRe
         &status_script_path,
         approval_hook().as_ref(),
     )?;
+    workbuddy::install_hooks(&home_dir, &running_script_path)?;
 
     Ok(AgentHooksInstallResult {
         scripts_dir: app_dir.to_string_lossy().to_string(),
@@ -309,6 +311,9 @@ pub(crate) fn reinstall_hooks_after_rename(app: &AppHandle) -> Result<bool, Stri
             &status_script_path,
             approval_hook().as_ref(),
         )?;
+    }
+    if workbuddy::has_hooks(&home_dir) {
+        workbuddy::install_hooks(&home_dir, &running_script_path)?;
     }
     for remote in remote_setup::install_hooks(&app_dir) {
         if let Some(error) = remote.error {

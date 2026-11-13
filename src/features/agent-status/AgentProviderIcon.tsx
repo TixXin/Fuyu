@@ -1,14 +1,16 @@
 import claudeCodeIcon from "../../assets/brands/claude-code.png";
 import codexIcon from "../../assets/brands/codex.webp";
-import type { AgentProvider } from "./api";
+import workbuddyIcon from "../../assets/brands/workbuddy.svg";
+import type { SessionProvider } from "./api";
 import "./AgentProviderIcon.css";
 
-const PROVIDER_ICONS: Record<AgentProvider, string> = {
+const PROVIDER_ICONS: Record<SessionProvider, string> = {
   claudeCode: claudeCodeIcon,
   codex: codexIcon,
+  workbuddy: workbuddyIcon,
 };
 
-export function AgentProviderIcon({ provider, size = 16 }: { provider: AgentProvider; size?: number }) {
+export function AgentProviderIcon({ provider, size = 16 }: { provider: SessionProvider; size?: number }) {
   return (
     <img
       className={`agent-provider-icon agent-provider-icon--${provider}`}

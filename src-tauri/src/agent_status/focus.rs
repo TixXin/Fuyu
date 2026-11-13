@@ -8,6 +8,7 @@ use super::session_process::{ancestor_chain, session_process_chain};
 use super::session_records::{self, SessionRecord};
 use super::wezterm::{self, WEZTERM_APP};
 use super::window_focus::{self, app_name, SessionHints};
+use super::workbuddy;
 use crate::system::windows_home_dir;
 use crate::platform;
 
@@ -140,7 +141,8 @@ pub(super) fn focus_session(
     let handle = orca_handle(&lookup, &chain, seen.as_ref(), &mut log);
 
     let remembered_app = seen.as_ref().and_then(|seen| seen.host_exe.as_deref()).map(app_name);
-    let prefer_app = if handle.is_some() { Some(orca::ORCA_APP.to_string()) } else { remembered_app };
+    let prefer_app = if handle.is_some() { Some(orca::ORCA_APP.to_string()) } else { remembered_app }
+        .or_else(|| (provider == workbuddy::PROVIDER).then(|| workbuddy::APP.to_string()));
     if let Some(app) = &prefer_app {
         log.note(format!("prefer={app}"));
     }
