@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useRef } from "react";
 import type { IslandSettings } from "../../features/appearance/types";
 import type { MessageView } from "../../features/messages/Messages";
 import type { MailController } from "../../features/messages/mail/MailPanel";
-import { resolveIslandPage, resolveMessageSource, type IslandFeatures } from "./features";
+import { useUnsupportedFeatures } from "../../lib/platform";
+import { resolveIslandPage, resolveMessageSource, withoutUnsupported, type IslandFeatures } from "./features";
 import type { IslandPage, PluginPageId } from "./types";
 import { usePluginOpenView } from "./usePluginOpenView";
 
@@ -35,7 +36,8 @@ export function useIslandFeatures({
   openIslandPage,
   pluginPages,
 }: IslandFeatureOptions) {
-  const features = useMemo<IslandFeatures>(() => ({
+  const unsupported = useUnsupportedFeatures();
+  const features = useMemo<IslandFeatures>(() => withoutUnsupported({
     todo: settings.todoEnabled,
     calendar: settings.calendarEnabled,
     music: settings.musicEnabled,
@@ -48,7 +50,7 @@ export function useIslandFeatures({
     agents: settings.agentStatusEnabled,
     translation: settings.translationEnabled && settings.translationTarget === "island",
     pluginPages,
-  }), [pluginPages, clipboardEnabled, qqEnabled, settings.agentStatusEnabled, settings.calendarEnabled, settings.mailEnabled, settings.musicEnabled, settings.screenshotEnabled, settings.shelfEnabled, settings.todoEnabled, settings.translationEnabled, settings.translationTarget, wechatEnabled]);
+  }, unsupported), [unsupported, pluginPages, clipboardEnabled, qqEnabled, settings.agentStatusEnabled, settings.calendarEnabled, settings.mailEnabled, settings.musicEnabled, settings.screenshotEnabled, settings.shelfEnabled, settings.todoEnabled, settings.translationEnabled, settings.translationTarget, wechatEnabled]);
 
   useEffect(() => {
     const next = resolveIslandPage(page, features);

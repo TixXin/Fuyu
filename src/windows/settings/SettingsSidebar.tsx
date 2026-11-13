@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Bell, Blocks, Brush, Bot, CalendarDays, ChevronRight, ClipboardList, Crop, Inbox, Info, Keyboard, Languages, LayoutGrid, LayoutTemplate, ListTodo, MousePointerClick, MessageCircle, MessagesSquare, Music, PanelTop, Palette, Plug, Puzzle, Search, Server, Settings2, ShieldCheck, Store, SlidersHorizontal, Volume2, X, type LucideIcon } from "lucide-react";
 import { LOCALE_CODES, useLocale, useTranslation } from "../../i18n";
-import { SETTINGS_GROUPS, searchCategories, type SettingsCategory, type SettingsGroup } from "./categories";
+import { useUnsupportedFeatures } from "../../lib/platform";
+import { isCategoryAvailable, SETTINGS_GROUPS, searchCategories, type SettingsCategory, type SettingsGroup } from "./categories";
 import searchIndex from "./searchIndex.json";
 import { isTitleHit, MAX_HITS_PER_PAGE, searchSettingsRows, type SettingsRowHit, type SettingsSearchEntry } from "./settingsSearch";
 import "./SettingsSidebar.css";
@@ -53,6 +54,7 @@ export function SettingsSidebar({
 }) {
   const t = useTranslation();
   const { locale } = useLocale();
+  const unsupported = useUnsupportedFeatures();
   const text = t.settings.categories;
   const [query, setQuery] = useState("");
   const [folded, setFolded] = useState<ReadonlySet<SettingsGroup>>(() => new Set());
@@ -73,7 +75,8 @@ export function SettingsSidebar({
   const searching = query.trim() !== "";
   const matches = searchCategories(query, describe);
   const hits = onRowOpen && searching ? searchSettingsRows(query, SEARCH_ENTRIES, locale, LOCALE_CODES, describe) : [];
-  const shown = (item: SettingsCategory) => matches.includes(item) || hits.some((hit) => hit.page === item);
+  const shown = (item: SettingsCategory) =>
+    isCategoryAvailable(item, unsupported) && (matches.includes(item) || hits.some((hit) => hit.page === item));
   const openHit = (hit: SettingsRowHit) => onRowOpen?.(hit.page, hit.text.title);
   const openBest = () => {
     if (isTitleHit(hits[0], query)) openHit(hits[0]);

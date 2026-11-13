@@ -56,10 +56,10 @@
 
 不改任何功能，只让 Rust 端在 macOS 上编得过、`cargo test` 跑得起来。这一步的收益和要不要出 Mac 版无关：代理在 Mac 上就能跑 Rust 测试和 clippy。
 
-- [ ] **G1.2 平台隔离。**
+- [x] **G1.2 平台隔离。**
   - 先列迁移表：`src-tauri/src` 里直接用 `windows::` 或 `crate::win32` 的模块（2026-11-13 约 26 个，`win32/` 约 3400 行），每个模块写清楚 Mac 上是「暂不支持」「换实现」还是「通用」。表写在本节下面。
   - `windows`、`windows-future` 等依赖挪到 `[target.'cfg(windows)'.dependencies]`；`win32/` 和直接调 Windows API 的代码加 `cfg(windows)`，Mac 上先给「不支持」的空实现。
-  - 前端：新增查询平台和能力的命令，Mac 上不支持的功能在设置和岛上隐藏，不报错。
+  - 前端：新增查询平台和能力的命令，Mac 上不支持的功能在设置和岛上隐藏，不报错。（2026-11-13 已做：命令 `get_platform_support`；设置侧边栏隐藏音乐、翻译、剪贴板、截图、手机连接、远程主机，消息页隐藏 QQ 和微信；岛上这些页面关掉，快捷键跳过）
   - CI 加一个 `macos-latest` 的 `cargo check` + `cargo test` + clippy job，并入 `check` 汇总。
   - 验收：Mac 上 `cargo test`、clippy 通过；Windows 上 CI 全绿、行为不变；`pnpm tauri dev` 在 Mac 上能启动出一个窗口（形态不要求）。
 

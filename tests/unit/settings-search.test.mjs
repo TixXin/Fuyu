@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { searchCategories } from "../../src/windows/settings/categories.ts";
+import { isCategoryAvailable, searchCategories } from "../../src/windows/settings/categories.ts";
 import { isTitleHit, normalizeSearchText, searchSettingsRows, searchWords } from "../../src/windows/settings/settingsSearch.ts";
 import { mergeStates, pairLocales } from "../../scripts/settings-search-index.mjs";
 
@@ -57,4 +57,13 @@ test("the index keeps each row once and pairs the languages row by row", () => {
   assert.deepEqual(paired, [{ page: "agents", "zh-CN": { group: "组", title: "甲" }, en: { group: "G", title: "A" } }]);
   assert.throws(() => pairLocales({ "zh-CN": [{ page: "agents", group: "", title: "x" }], en: [] }));
   assert.throws(() => pairLocales({ "zh-CN": [{ page: "agents", group: "", title: "x" }], en: [{ page: "about", group: "", title: "x" }] }));
+});
+
+test("a page whose feature the system lacks is not offered", () => {
+  const mac = new Set(["clipboard", "music", "qq"]);
+  assert.equal(isCategoryAvailable("clipboard", mac), false);
+  assert.equal(isCategoryAvailable("music", mac), false);
+  assert.equal(isCategoryAvailable("messages", mac), true);
+  assert.equal(isCategoryAvailable("general", mac), true);
+  assert.equal(isCategoryAvailable("clipboard", new Set()), true);
 });

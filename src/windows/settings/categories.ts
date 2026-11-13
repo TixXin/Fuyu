@@ -1,3 +1,4 @@
+import type { PlatformFeature } from "../../lib/platform.ts";
 import { normalizeSearchText, searchWords } from "./settingsSearch.ts";
 
 export const SETTINGS_CATEGORIES = [
@@ -40,6 +41,20 @@ export const SETTINGS_GROUPS: readonly { label: SettingsGroup | null; categories
 ];
 
 export const DEFAULT_SETTINGS_CATEGORY: SettingsCategory = "general";
+
+const PAGE_FEATURES: Partial<Record<SettingsCategory, PlatformFeature>> = {
+  music: "music",
+  translation: "translation",
+  clipboard: "clipboard",
+  screenshot: "screenshot",
+  agentConnect: "agentConnect",
+  agentRemote: "agentRemote",
+};
+
+export function isCategoryAvailable(category: SettingsCategory, unsupported: ReadonlySet<PlatformFeature>): boolean {
+  const feature = PAGE_FEATURES[category];
+  return feature === undefined || !unsupported.has(feature);
+}
 
 const MERGED_CATEGORIES: Readonly<Record<string, SettingsCategory>> = {
   qq: "messages",

@@ -46,6 +46,7 @@ src-tauri/src/
 ├── notification_diagnostics.rs
 ├── user_error.rs            # 用户看到的错误：错误码、文案参数和外部原话（D15），前端按界面语言显示；凭据管理器的通用错误；
 │                            #   Mac 上的 unsupported()（错误码 platform.unsupported）和批量生成「暂不支持」命令的 unsupported_commands!
+├── platform_support.rs      # 命令 get_platform_support：当前系统和它还不支持的功能，前端据此在设置和岛上隐藏
 ├── platform.rs              # 两个平台都有的平台层模块（icon、job、process、process_env、process_times、process_tree）：Windows 上取 win32/，macOS 上取 macos/
 ├── macos/                   # macOS 平台层（G1，决定 M10），和 win32/ 一样是允许 unsafe 的地方；第 0 步只有和 win32/ 同名同签名的空实现
 └── win32/                   # Win32 / COM 的安全封装，和 macos/ 一起是 crate 中允许 unsafe 的地方：window（窗口查询、枚举、前台切换）、
