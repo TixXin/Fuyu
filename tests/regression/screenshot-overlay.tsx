@@ -164,6 +164,9 @@ async function runChecks() {
     check(longStart?.headers["x-action"] === "long" && longStart.headers["x-width"] === "200", "The long-screenshot button sends the selection off to be scrolled");
     check(document.querySelector(".screenshot-overlay__toolbar"), "…and nothing goes away until the native side starts");
     await act(async () => { await emit("screenshot-long", "screenshot-0"); });
+    await wait(30);
+    const ready = document.querySelector<HTMLElement>(".long-shot-bar");
+    check(ready?.classList.contains("long-shot-bar--ready") && ready.querySelector('button[aria-label="开始自动滚动（空格）"]') && !calls.some((call) => call.command === "screenshot_long_pause"), "The long screenshot waits for Space or ▶ instead of scrolling by itself");
     await act(async () => { await emit("screenshot-long-progress", { state: "scrolling", height: 1240, frames: 3, preview: null }); });
     await wait(30);
     const longBar = document.querySelector<HTMLElement>(".long-shot-bar");

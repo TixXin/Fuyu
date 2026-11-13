@@ -107,7 +107,7 @@ export function cancelScreenshot() {
 export const SCREENSHOT_LONG_EVENT = "screenshot-long";
 export const SCREENSHOT_LONG_PROGRESS_EVENT = "screenshot-long-progress";
 
-export type LongState = "scrolling" | "paused" | "end" | "fast" | "full";
+export type LongState = "ready" | "scrolling" | "paused" | "end" | "fast" | "full";
 export type LongProgress = { state: LongState; height: number; frames: number; preview: string | null };
 export type LongEnding = "copy" | "save" | "cancel";
 

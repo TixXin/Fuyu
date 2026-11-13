@@ -29,6 +29,7 @@ const PROGRESS_EVENT: &str = "screenshot-long-progress";
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) enum LongState {
+    Ready,
     Scrolling,
     Paused,
     End,
@@ -160,7 +161,7 @@ where
     if guard.is_some() {
         return;
     }
-    *guard = Some(Control { owner: owner.clone(), paused: false, ending: None, bar: None });
+    *guard = Some(Control { owner: owner.clone(), paused: true, ending: None, bar: None });
     drop(guard);
     let app = app.clone();
     let _ = app.emit(STARTED_EVENT, owner.clone());
@@ -192,8 +193,8 @@ fn run(app: &AppHandle, owner: &str, owner_window: Option<&WebviewWindow>, id: u
     let mut wheeled: Option<Instant> = None;
     let mut still = 0;
     let mut frames = 1;
-    let mut state = LongState::Scrolling;
-    let mut was_paused = false;
+    let mut state = LongState::Ready;
+    let mut was_paused = true;
     let mut ignoring = true;
     let emit = |state: LongState, frames: u32, stitcher: &Stitcher, with_preview: bool| {
         let progress = Progress { state, height: stitcher.height(), frames, preview: if with_preview { preview(stitcher) } else { None } };
@@ -244,7 +245,11 @@ fn run(app: &AppHandle, owner: &str, owner_window: Option<&WebviewWindow>, id: u
                         pause_by_itself();
                         was_paused = true;
                         LongState::Full
-                    } else if is_paused { LongState::Paused } else { LongState::Scrolling };
+                    } else if is_paused {
+                        if state == LongState::Ready { LongState::Ready } else { LongState::Paused }
+                    } else {
+                        LongState::Scrolling
+                    };
                     emit(state, frames, &stitcher, true);
                 }
                 Step::Lost => {

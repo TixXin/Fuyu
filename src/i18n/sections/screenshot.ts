@@ -16,7 +16,8 @@ export type ScreenshotText = {
     height: (px: number) => string;
     frames: (count: number) => string;
     size: (width: number, height: number) => string;
-    states: Record<"scrolling" | "paused" | "end" | "fast" | "full", string>;
+    states: Record<"ready" | "scrolling" | "paused" | "end" | "fast" | "full", string>;
+    start: string;
     pause: string;
     resume: string;
     cancel: string;
@@ -97,18 +98,20 @@ export const zhCN: ScreenshotText = {
     frames: (count) => `${count} 屏`,
     size: (width, height) => `${width} × ${height.toLocaleString()}`,
     states: {
+      ready: "按空格或 ▶ 开始自动滚动，也可以自己在框里滚",
       scrolling: "正在往下滚动拼接……",
       paused: "已暂停。可以自己在框里滚动，浮屿照样拼上",
       end: "到底了，点 ✓ 复制",
       fast: "这一下滚太多，接不上了。往回滚一点就好",
       full: "已到 2 万像素上限",
     },
+    start: "开始自动滚动（空格）",
     pause: "暂停自动滚动（空格）",
     resume: "继续自动滚动（空格）",
     cancel: "取消（Esc）",
     save: "保存（Ctrl+S）",
     done: "完成并复制（Enter）",
-    keys: "空格 暂停 · Enter 完成 · Esc 取消",
+    keys: "空格 开始 / 暂停 · Enter 完成 · Esc 取消",
   },
   redact: "自动打码（邮箱、手机号、IP、密钥）",
   redacting: "正在找要打码的内容…",
@@ -189,18 +192,20 @@ export const en: ScreenshotText = {
     frames: (count) => (count === 1 ? "1 screen" : `${count} screens`),
     size: (width, height) => `${width} × ${height.toLocaleString()}`,
     states: {
+      ready: "Press Space or ▶ to start scrolling, or scroll inside the frame yourself",
       scrolling: "Scrolling down and stitching…",
       paused: "Paused. Scroll inside the frame yourself and it keeps stitching",
       end: "Reached the end. Click ✓ to copy",
       fast: "That scroll went too far to join up. Scroll back a little",
       full: "Reached the 20,000 px limit",
     },
+    start: "Start auto-scroll (Space)",
     pause: "Pause auto-scroll (Space)",
     resume: "Resume auto-scroll (Space)",
     cancel: "Cancel (Esc)",
     save: "Save (Ctrl+S)",
     done: "Done, copy it (Enter)",
-    keys: "Space pause · Enter done · Esc cancel",
+    keys: "Space start / pause · Enter done · Esc cancel",
   },
   redact: "Auto-redact emails, phone numbers, IPs and keys",
   redacting: "Looking for things to redact…",
