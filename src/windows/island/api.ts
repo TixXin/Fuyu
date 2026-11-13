@@ -17,6 +17,20 @@ export function listenIslandTopAttachment(
   return listen<boolean>(TOP_ATTACHMENT_CHANGED_EVENT, ({ payload }) => handler(payload));
 }
 
+export type IslandEdge = "top" | "left" | "right";
+
+export const ISLAND_EDGE_CHANGED_EVENT = "island-edge-changed";
+
+export function getIslandEdge(): Promise<IslandEdge | null> {
+  return invoke<IslandEdge | null>("get_island_edge");
+}
+
+export function listenIslandEdge(
+  handler: (edge: IslandEdge | null) => void,
+): Promise<UnlistenFn> {
+  return listen<IslandEdge | null>(ISLAND_EDGE_CHANGED_EVENT, ({ payload }) => handler(payload));
+}
+
 export const ISLAND_HOVER_CHANGED_EVENT = "island-hover-changed";
 
 export function listenIslandHover(

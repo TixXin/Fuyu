@@ -24,7 +24,7 @@ fn top_docked_taskbar_pushes_island_below_the_work_area() {
 #[test]
 fn custom_position_survives_tuck_and_reveal() {
     let mut custom = state(IslandMode::Collapsed, 1.0, DEFAULT_EXPANDED_ISLAND_HEIGHT);
-    custom.custom_position = Some(IslandPosition { x: 420, y: 180 });
+    custom.custom_position = Some(IslandPosition::at(420, 180));
 
     assert_eq!(resolve_stage_position(custom, 100, 12, -48), (420, 180));
 
@@ -38,14 +38,14 @@ fn custom_position_survives_tuck_and_reveal() {
 #[test]
 fn a_dragged_island_slides_out_of_its_tuck_at_the_top_edge() {
     let mut custom = state(IslandMode::Collapsed, 1.0, DEFAULT_EXPANDED_ISLAND_HEIGHT);
-    custom.custom_position = Some(IslandPosition { x: 420, y: 180 });
+    custom.custom_position = Some(IslandPosition::at(420, 180));
     custom.out_at_top = true;
-    assert_eq!(shown_custom_position(custom, 12), Some(IslandPosition { x: 420, y: 12 }));
+    assert_eq!(shown_custom_position(custom, 12), Some(IslandPosition::at(420, 12)));
     custom.is_tucked = true;
-    assert_eq!(shown_custom_position(custom, 12), Some(IslandPosition { x: 420, y: 180 }));
+    assert_eq!(shown_custom_position(custom, 12), Some(IslandPosition::at(420, 180)));
     custom.is_tucked = false;
     custom.out_at_top = false;
-    assert_eq!(shown_custom_position(custom, 12), Some(IslandPosition { x: 420, y: 180 }));
+    assert_eq!(shown_custom_position(custom, 12), Some(IslandPosition::at(420, 180)));
 
     let (collapsed, expanded) = (IslandMode::Collapsed, IslandMode::Expanded);
     assert!(out_at_top_after(false, true, false, false, collapsed));
@@ -116,7 +116,7 @@ fn compact_messages_and_mail_reader_keep_the_correct_cursor_boundary() {
             );
         }
         let mut positioned = state(IslandMode::Expanded, 1.0, height);
-        positioned.custom_position = Some(IslandPosition { x: 420, y: 180 });
+        positioned.custom_position = Some(IslandPosition::at(420, 180));
         assert_eq!(resolve_stage_position(positioned, 100, 12, -48), (420, 180));
         positioned.is_tucked = true;
         assert_eq!(resolve_stage_position(positioned, 100, 12, -48), (420, -48));
@@ -128,7 +128,7 @@ fn detached_island_rounds_top_corners() {
     for mode in [IslandMode::Collapsed, IslandMode::Expanded] {
         let mut detached = state(mode, 1.0, DEFAULT_EXPANDED_ISLAND_HEIGHT);
         assert_eq!(detached.top_corner_radius(), 0.0);
-        detached.top_attached = false;
+        detached.attached_edge = None;
         assert_eq!(detached.top_corner_radius(), detached.bottom_corner_radius());
         let (width, height) =
             mode.base_size(COLLAPSED_ISLAND_WIDTH, EXPANDED_ISLAND_WIDTH, DEFAULT_EXPANDED_ISLAND_HEIGHT);
@@ -149,7 +149,7 @@ fn detached_island_rounds_top_corners() {
         assert!(!contains(80.0 + width, 0.0));
         assert!(contains(80.0 + width / 2.0, 0.0));
         assert!(!contains(79.0, 0.0));
-        detached.top_attached = true;
+        detached.attached_edge = Some(Edge::Top);
         assert_eq!(detached.top_corner_radius(), 0.0);
     }
 }
@@ -215,8 +215,8 @@ fn tuck_and_reveal_move_monotonically_between_physical_positions() {
 fn corner_radius_setting_scales_every_hit_test_radius() {
     let mut expanded = state(IslandMode::Expanded, 1.0, DEFAULT_EXPANDED_ISLAND_HEIGHT);
     let mut collapsed = state(IslandMode::Collapsed, 1.0, DEFAULT_EXPANDED_ISLAND_HEIGHT);
-    expanded.top_attached = false;
-    collapsed.top_attached = false;
+    expanded.attached_edge = None;
+    collapsed.attached_edge = None;
     assert_eq!(expanded.bottom_corner_radius(), EXPANDED_RADIUS);
     assert_eq!(collapsed.bottom_corner_radius(), COLLAPSED_RADIUS);
     assert_eq!(expanded.top_corner_radius(), EXPANDED_RADIUS);
@@ -323,4 +323,15 @@ fn a_wide_plugin_page_fits_the_island_window_at_any_scale() {
     assert_eq!(max_expanded_width(0.91), 896.0);
     assert_eq!(max_expanded_width(1.4), 582.0);
     assert!(max_expanded_width(1.4) * 1.4 <= STAGE_WINDOW_WIDTH);
+}
+
+#[test]
+fn stored_position_without_an_edge_reads_as_before() {
+    let old: IslandPosition = serde_json::from_str(r#"{"x":420,"y":180}"#).unwrap();
+    assert_eq!(old, IslandPosition::at(420, 180));
+    assert_eq!(serde_json::to_string(&old).unwrap(), r#"{"x":420,"y":180}"#);
+
+    let side: IslandPosition = serde_json::from_str(r#"{"x":0,"y":300,"edge":"left","along":0.25}"#).unwrap();
+    assert_eq!(side.edge, Some(Edge::Left));
+    assert_eq!(side.along, Some(0.25));
 }

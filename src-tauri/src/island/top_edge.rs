@@ -1,14 +1,15 @@
-use tauri::{Emitter, PhysicalPosition, WebviewWindow};
+use tauri::{PhysicalPosition, WebviewWindow};
 
+use super::edge;
 use super::geometry::{monitor_for_island_position, work_area_top_inset};
 use super::screen;
-use super::state::{mutate_window_state, read_window_state, IslandPosition, IslandWindowState};
+use super::state::{Edge, IslandPosition, IslandWindowState};
 
 pub(crate) const TOP_ATTACHMENT_CHANGED_EVENT: &str = "island-top-attachment-changed";
 const SNAP_DISTANCE: f64 = 16.0;
 
 pub(crate) fn is_attached() -> bool {
-    read_window_state().top_attached
+    edge::attached() == Some(Edge::Top)
 }
 
 pub(crate) fn sync_from_stage(window: &WebviewWindow, state: IslandWindowState, top: i32) {
@@ -26,10 +27,7 @@ pub(crate) fn snap_to_top(window: &WebviewWindow, position: IslandPosition) -> I
     let monitor_top = screen::monitor_origin(&monitor).y;
     let top = monitor_top + work_area_top_inset(monitor_top, screen::monitor_work_top(&monitor));
     let snap_distance = (SNAP_DISTANCE * screen::monitor_scale(&monitor)).round() as i32;
-    let snapped = IslandPosition {
-        x: position.x,
-        y: snapped_y(position.y, top, snap_distance),
-    };
+    let snapped = IslandPosition::at(position.x, snapped_y(position.y, top, snap_distance));
 
     if snapped != position {
         if let Err(error) = screen::set_window_position(window, PhysicalPosition::new(snapped.x, snapped.y)) {
@@ -44,16 +42,7 @@ pub(crate) fn snap_to_top(window: &WebviewWindow, position: IslandPosition) -> I
 }
 
 pub(crate) fn set_attached(window: &WebviewWindow, attached: bool) {
-    let mut changed = false;
-    mutate_window_state(|state| {
-        changed = state.top_attached != attached;
-        state.top_attached = attached;
-        *state
-    });
-
-    if changed {
-        let _ = window.emit(TOP_ATTACHMENT_CHANGED_EVENT, attached);
-    }
+    edge::set_attached(window, attached.then_some(Edge::Top));
 }
 
 fn is_top_attached(custom_position: Option<IslandPosition>, margin_y: f64, top: i32) -> bool {
@@ -84,7 +73,7 @@ mod tests {
 
     #[test]
     fn custom_position_is_attached_only_when_flush_with_the_top() {
-        let at = |y| Some(IslandPosition { x: 420, y });
+        let at = |y| Some(IslandPosition::at(420, y));
         assert!(is_top_attached(at(0), 0.0, 0));
         assert!(is_top_attached(at(0), 40.0, 0));
         assert!(is_top_attached(at(-1080), 0.0, -1080));

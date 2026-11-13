@@ -95,7 +95,7 @@ pub(crate) struct IslandWindowState {
     pub(super) custom_position: Option<IslandPosition>,
     pub(super) out_at_top: bool,
     pub(super) is_dragging: bool,
-    pub(super) top_attached: bool,
+    pub(super) attached_edge: Option<Edge>,
     pub(super) glass_enabled: bool,
     pub(super) corner_radius: f64,
     pub(super) corner_shape: CornerShape,
@@ -113,7 +113,7 @@ impl IslandWindowState {
     }
 
     pub(super) fn top_corner_radius(self) -> f64 {
-        if self.top_attached {
+        if self.attached_edge == Some(Edge::Top) {
             0.0
         } else {
             self.bottom_corner_radius()
@@ -128,10 +128,28 @@ impl IslandWindowState {
     }
 }
 
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub(crate) enum Edge {
+    Top,
+    Left,
+    Right,
+}
+
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct IslandPosition {
     pub(super) x: i32,
     pub(super) y: i32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(super) edge: Option<Edge>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(super) along: Option<f64>,
+}
+
+impl IslandPosition {
+    pub(super) fn at(x: i32, y: i32) -> Self {
+        Self { x, y, edge: None, along: None }
+    }
 }
 
 impl Default for IslandWindowState {
@@ -149,7 +167,7 @@ impl Default for IslandWindowState {
             custom_position: None,
             out_at_top: false,
             is_dragging: false,
-            top_attached: true,
+            attached_edge: Some(Edge::Top),
             glass_enabled: false,
             corner_radius: EXPANDED_RADIUS,
             corner_shape: CornerShape::Squircle,
@@ -181,10 +199,7 @@ pub(super) fn read_window_state() -> IslandWindowState {
 pub(crate) fn record_dragged_position(position: PhysicalPosition<i32>) {
     mutate_window_state(|state| {
         if state.is_dragging && !state.is_tucked {
-            state.custom_position = Some(IslandPosition {
-                x: position.x,
-                y: position.y,
-            });
+            state.custom_position = Some(IslandPosition::at(position.x, position.y));
         }
         *state
     });

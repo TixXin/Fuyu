@@ -1,17 +1,18 @@
 import { isTauri } from "@tauri-apps/api/core";
-import { getIslandTopAttachment, listenIslandTopAttachment } from "./api.ts";
+import { getIslandEdge, listenIslandEdge, type IslandEdge } from "./api.ts";
 import "./IslandTopEdge.css";
 
-function applyTopEdge(attached: boolean) {
-  document.documentElement.dataset.islandTopEdge = attached ? "attached" : "detached";
+function applyEdge(edge: IslandEdge | null) {
+  document.documentElement.dataset.islandTopEdge = edge === "top" ? "attached" : "detached";
+  document.documentElement.dataset.islandEdge = edge ?? "none";
 }
 
 export function trackIslandTopEdge() {
   if (!isTauri()) return;
 
-  void listenIslandTopAttachment(applyTopEdge)
-    .then(() => getIslandTopAttachment())
-    .then(applyTopEdge)
+  void listenIslandEdge(applyEdge)
+    .then(() => getIslandEdge())
+    .then(applyEdge)
     .catch((error) => {
       console.error("Failed to track the island top edge", error);
     });
