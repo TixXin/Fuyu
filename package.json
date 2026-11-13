@@ -5,6 +5,7 @@
   "version": "0.3.7",
   "type": "module",
   "scripts": {
+    "prepare": "node scripts/install-git-hooks.mjs",
     "dev": "vite",
     "dev:lane": "node scripts/dev-lane.mjs",
     "dev:lane:center": "node scripts/dev-lane.mjs --center",
