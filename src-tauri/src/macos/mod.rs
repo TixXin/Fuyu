@@ -5,6 +5,7 @@ pub(crate) mod input;
 pub(crate) mod island_panel;
 pub(crate) mod job;
 pub(crate) mod process;
+pub(crate) mod process_name;
 pub(crate) mod process_env;
 pub(crate) mod process_times;
 pub(crate) mod process_tree;

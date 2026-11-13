@@ -1,6 +1,6 @@
 import { spawn } from "node:child_process";
 import { rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { homedir, tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { lanePreview, laneNumber, mainCheckout } from "./build-dirs.mjs";
@@ -15,8 +15,18 @@ export function previewConfig(port) {
   };
 }
 
-export function previewDataDirs(identifier, env = process.env) {
-  if (!identifier.startsWith("com.tixxin.fuyu.lane-")) throw new Error(`Not a lane preview: ${identifier}`);
+export function previewDataDirs(identifier, env = process.env, platform = process.platform, home = homedir()) {
+  const lane = /^com\.tixxin\.fuyu\.lane-(\d+)$/.exec(identifier)?.[1];
+  if (!lane) throw new Error(`Not a lane preview: ${identifier}`);
+  if (platform === "darwin") {
+    const library = path.join(home, "Library");
+    return [
+      path.join(library, "Application Support", identifier),
+      path.join(library, "Caches", identifier),
+      path.join(library, "Caches", `fuyu-lane-${lane}`),
+      path.join(library, "WebKit", `fuyu-lane-${lane}`),
+    ];
+  }
   return [env.APPDATA, env.LOCALAPPDATA].filter(Boolean).map((base) => path.join(base, identifier));
 }
 

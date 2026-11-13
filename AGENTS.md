@@ -70,11 +70,11 @@
 | 文件行数检查 | `pnpm check:size` |
 | 深色专用颜色检查 | `pnpm check:colors`（CSS 里写死的颜色要写成 `var(--变量, 原值)`；存量记在 `scripts/color-literal-allowlist.json`，只减不增，规则见 `src/AGENTS.md`） |
 | 回归页类型检查 | `pnpm check:tests-types`（`tsconfig.tests.json`，检查 `tests/regression/*.tsx`） |
-| 浏览器回归页 | `pnpm test:regression [页面名中的词]`（自带 Vite，用无头 Chrome / Edge 跑 `tests/regression/` 下全部回归页并汇总结果，约 20 秒；每页检查通过后再把页面切成浅色岛，文字对比度低于 3:1 就算失败） |
+| 浏览器回归页 | `pnpm test:regression [页面名中的词]`（自带 Vite，用无头 Chrome / Edge 跑 `tests/regression/` 下全部回归页并汇总结果，约 20 秒；每页检查通过后再把页面切成浅色岛，文字对比度低于 3:1 就算失败；Mac 上找 /Applications 里的 Chrome、Edge 或 Chromium，都没有时设 `CHROME_PATH`） |
 | 设置搜索索引 | `pnpm settings:index`（新增、删除或改名设置项后运行，重写 `src/windows/settings/searchIndex.json`；漏跑时 `settings-search` 回归页会失败） |
 | 提交前总检查 | `pnpm check`（类型检查 + 回归页类型检查 + packages 类型检查 + lint + 行数检查 + 颜色检查 + 任务检查 + 单元测试） |
 | Rust 单元测试 | `cargo test --manifest-path src-tauri/Cargo.toml` |
-| 仅生成 release 可执行文件 | `pnpm build:exe`（在主工作区或任意 lane 运行，写到主工作区的 `src-tauri/target/release`，岛屿在运行也不用关） |
+| 仅生成 release 可执行文件 | `pnpm build:exe`（在主工作区或任意 lane 运行，写到主工作区的 `src-tauri/target/release`，岛屿在运行也不用关；Mac 上打成 `Fuyu.app`） |
 | 清理 Rust 构建缓存 | `pnpm prune:target [--dry-run]`（删 `src-tauri/target` 里 3 天没用的增量缓存、本应用的旧产物和已删 lane 的预览目录；land 时自动跑） |
 | 完整打包 | `pnpm tauri build` |
 | 改版本号、起草发布说明 | `pnpm release:version <版本号>`（四处版本号一起改，不要手动改） |
@@ -152,6 +152,7 @@
 
 - 每次完成应用更新后运行 `pnpm build:exe`，在主工作区的 `src-tauri/target/release/fuyu.exe` 生成最新程序；仅文档改动不需要重新构建。`pnpm release` 发布成功后也会把刚发布的 exe 复制到这里，发布之后不用再跑 `build:exe`。
 - **不改桌面快捷方式**（2026-11-13 起，用户定）：用户桌面上的快捷方式指向安装的正式版，`build:exe` 和 `pnpm release` 默认都不碰它。只有用户明确要求时，才设环境变量 `FUYU_SYNC_SHORTCUT=1` 再跑，把名字含 FocuSD / fly-island / Fuyu、或目标是 `fuyu.exe` 的快捷方式指向本次构建（都没有时新建 `浮屿.lnk`），并重新读取确认。
+- Mac 上 `pnpm build:exe` 打出 `src-tauri/target/release/bundle/macos/Fuyu.app`，默认不碰 `~/Applications`（那里是安装的正式版）；用户明确要求时设 `FUYU_SYNC_SHORTCUT=1`，先复制成 `~/Applications/Fuyu.app.new` 再换掉旧的 `Fuyu.app`。正在运行的岛屿不受影响，下次启动用新版。
 
 ## Git 与协作
 

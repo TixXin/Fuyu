@@ -121,7 +121,9 @@ land 从 git 的 pre-push 钩子里跑检查，环境里带着 `GIT_DIR` 等变�
 | `pnpm dev:lane:center` | 停在顶部正中，像正式安装那样（会和用户的岛叠在一起），看新手引导这类效果用 |
 | `pnpm dev:lane:fresh` | `--center --fresh`：先删这个预览自己的数据，像新装一样启动；要先关掉正在跑的预览 |
 
-预览的 Vite 端口是 1500 + lane 编号，应用标识 `com.tixxin.fuyu.lane-<N>`：数据、WebView 存储、单实例都和用户的分开，不注册 focusd:// 链接，不能改开机自启，也不能安装 AI 代理状态 hook。`--fresh` 只删 `%APPDATA%` 和 `%LOCALAPPDATA%` 下这两个文件夹。
+预览的 Vite 端口是 1500 + lane 编号，应用标识 `com.tixxin.fuyu.lane-<N>`：数据、WebView 存储、单实例都和用户的分开，不注册 focusd:// 链接，不能改开机自启，也不能安装 AI 代理状态 hook。`--fresh` 只删 `%APPDATA%` 和 `%LOCALAPPDATA%` 下这两个文件夹；Mac 上删 `~/Library` 下的 `Application Support/<标识>`、`Caches/<标识>`、`Caches/fuyu-lane-<N>` 和 `WebKit/fuyu-lane-<N>`。
+
+Mac 上没打包的调试版没有 bundle id，WebKit 按进程名存 localStorage，所有 lane 预览和主工作区的 `pnpm tauri dev` 会共用一份；所以 lane 预览启动时把进程名改成 `fuyu-lane-<N>`（`dev_lane::separate_webview_storage`），各用各的。Tauri 2.12 的 `dataStoreIdentifier` 配置在代码生成里类型不对（`Vec<u8>` 对 `[u8; 16]`），没法用。
 
 不要在 lane 里直接跑 `pnpm tauri dev`：它会先关掉所有正在运行的岛屿，还要占用主工作区的 1420 端口。只看界面时也可以起 lane 的 Vite，打开 `tests/regression/*.html`。
 
@@ -132,7 +134,7 @@ land 从 git 的 pre-push 钩子里跑检查，环境里带着 `GIT_DIR` 等变�
 | 目录 | 谁用 |
 |---|---|
 | `debug` | 用户的 `pnpm tauri dev`。代理不要用，否则互相等锁、互相触发重编译 |
-| `release` | `pnpm build:exe`（桌面快捷方式不指向这里，见 AGENTS.md「本机更新与桌面快捷方式」） |
+| `release` | `pnpm build:exe`（桌面快捷方式不指向这里，见 AGENTS.md「本机更新与桌面快捷方式」）；Mac 上的 `.app` 在 `bundle/macos/Fuyu.app` |
 | `agents` | 代理的 `cargo test` / clippy（`land-check.mjs` 已经设好；在 lane 里手动跑时设 `CARGO_TARGET_DIR=<主工作区>/src-tauri/target/agents`） |
 | `lane-<N>` | lane N 预览的 exe |
 | `lane-build` | 所有 lane 预览共用的编译目录（cargo 的 build-dir），依赖只在第一个预览时编一次 |
@@ -140,6 +142,7 @@ land 从 git 的 pre-push 钩子里跑检查，环境里带着 `GIT_DIR` 等变�
 - `pnpm build:exe` 不在队列里。它会把正在运行的 exe 改名挪开再写新的，不用让用户关岛屿；多个 lane 同时构建时后来的会等（`target/release/.build-exe.lock`）。
 - cargo 从不清理旧的增量缓存和旧产物，每个 lane 路径都会生成一份新的，曾涨到 360 GB。`pnpm prune:target` 删掉 3 天没用的部分和已删 lane 的预览目录，land 跑完 `cargo test` 后会自动跑一次；`--dry-run` 只看能省多少。
 - 多个 lane 同时编译时不拖慢桌面（`scripts/build-load.mjs`）：`land-check`、`pnpm verify`、`pnpm build:exe` 以“低于正常”优先级运行，cargo 并行数默认是逻辑 CPU 的一半；环境里已设 `CARGO_BUILD_JOBS` 时以它为准。在 lane 里手动跑 `cargo test` / clippy 时也设 `CARGO_BUILD_JOBS`。
+- Mac 上验证 Rust 改动：`cargo clippy --all-targets -- -D warnings` 和 `cargo test`，再交叉检查 Windows：`cargo clippy --all-targets --target x86_64-pc-windows-gnu -- -D warnings`（要 `brew install mingw-w64`、`rustup target add x86_64-pc-windows-gnu`，只检查不运行）；Windows 上的测试看 CI。`pnpm tauri dev` 前停掉的只是 `~/Applications` 等处 `.app` 里的岛，不动 lane 预览。
 - Rust 版本固定在 `rust-toolchain.toml`，CI 的 `ci.yml` 写同一个版本，改时一起改。
 
 ## 清理和排障

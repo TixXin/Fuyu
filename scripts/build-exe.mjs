@@ -2,6 +2,7 @@ import { spawnSync } from "node:child_process";
 import { closeSync, copyFileSync, existsSync, mkdirSync, openSync, readFileSync, readdirSync, renameSync, rmSync, unlinkSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { buildApp } from "./build-app-macos.mjs";
 import { mainCheckout, targetDir } from "./build-dirs.mjs";
 import { backgroundBuildEnv, lowerPriority } from "./build-load.mjs";
 
@@ -135,7 +136,7 @@ export function installExe(source) {
 
 function main() {
   lowerPriority("build:exe");
-  return withReleaseDir(build);
+  return withReleaseDir(process.platform === "darwin" ? buildApp : build);
 }
 
 function build(releaseDir) {
