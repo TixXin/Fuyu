@@ -78,6 +78,10 @@
   margin-bottom: 12px;
 }
 
+.settings-sidebar__group + .settings-sidebar__top {
+  margin-top: 12px;
+}
+
 .settings-sidebar__item.settings-sidebar__more {
   color: var(--color-text-subtle);
 }

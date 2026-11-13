@@ -35,14 +35,35 @@ export type SettingsGroup = "basics" | "features" | "agents" | "extensions";
 
 export const SETTINGS_GROUPS: readonly { label: SettingsGroup | null; categories: readonly SettingsCategory[] }[] = [
   { label: null, categories: ["overview"] },
-  { label: "basics", categories: ["general", "behavior", "appearance", "theme", "themeMarket", "shortcuts"] },
+  { label: "basics", categories: ["general", "behavior", "appearance", "shortcuts"] },
   { label: "features", categories: ["todos", "calendar", "music", "translation", "clipboard", "shelf", "screenshot", "messages"] },
-  { label: "agents", categories: ["agents", "agentSessions", "agentAlerts", "sounds", "agentApprovals", "agentConnect", "agentRemote"] },
+  { label: null, categories: ["agents"] },
   { label: "extensions", categories: ["plugins", "market"] },
   { label: null, categories: ["about"] },
 ];
 
 export const DEFAULT_SETTINGS_CATEGORY: SettingsCategory = "overview";
+
+export type SettingsEntry = "appearance" | "agents";
+
+export const SETTINGS_TABS: Readonly<Record<SettingsEntry, readonly TabbedCategory[]>> = {
+  appearance: ["theme", "appearance", "themeMarket"],
+  agents: ["agents", "agentSessions", "agentAlerts", "sounds", "agentApprovals", "agentConnect", "agentRemote"],
+};
+
+export type TabbedCategory = "theme" | "appearance" | "themeMarket" | "agents" | "agentSessions" | "agentAlerts" | "sounds" | "agentApprovals" | "agentConnect" | "agentRemote";
+
+export function entryOf(category: SettingsCategory): SettingsEntry | null {
+  return (Object.keys(SETTINGS_TABS) as SettingsEntry[]).find((entry) => (SETTINGS_TABS[entry] as readonly SettingsCategory[]).includes(category)) ?? null;
+}
+
+export function sidebarItemOf(category: SettingsCategory): SettingsCategory {
+  return entryOf(category) ?? category;
+}
+
+export function entryPages(item: SettingsCategory): readonly SettingsCategory[] {
+  return item === "appearance" || item === "agents" ? SETTINGS_TABS[item] : [item];
+}
 
 export const SETTINGS_FEATURES = ["todos", "calendar", "music", "translation", "clipboard", "shelf", "screenshot", "agents"] as const;
 

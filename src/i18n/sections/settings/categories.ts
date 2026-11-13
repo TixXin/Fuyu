@@ -13,6 +13,8 @@ export type SettingsCategoriesText = {
     | "plugins" | "market" | "about",
     string
   >;
+  entries: { appearance: string; agents: string };
+  tabs: Record<"theme" | "appearance" | "themeMarket" | "agents" | "agentSessions" | "agentAlerts" | "sounds" | "agentApprovals" | "agentConnect" | "agentRemote", string>;
   groups: {
     basics: string;
     features: string;
@@ -83,6 +85,19 @@ export const zhCN: SettingsCategoriesText = {
     market: "扩展 插件 下载 安装 搜索",
     about: "版本 更新 检查更新 测试版 通道 重置 退出 反馈 Star",
   },
+  entries: { appearance: "外观", agents: "AI Agent" },
+  tabs: {
+    theme: "样式",
+    appearance: "尺寸与内容",
+    themeMarket: "主题市场",
+    agents: "岛上显示",
+    agentSessions: "会话列表",
+    agentAlerts: "提醒",
+    sounds: "声音",
+    agentApprovals: "审批",
+    agentConnect: "连接",
+    agentRemote: "SSH 远程",
+  },
   groups: {
     basics: "基础",
     features: "功能",
@@ -152,6 +167,19 @@ export const en: SettingsCategoriesText = {
     plugins: "extensions installed folder developer updates island pages",
     market: "extensions plugins download install browse",
     about: "version updates check beta channel reset quit feedback star",
+  },
+  entries: { appearance: "Appearance", agents: "AI Agent" },
+  tabs: {
+    theme: "Style",
+    appearance: "Size and content",
+    themeMarket: "Theme market",
+    agents: "On the island",
+    agentSessions: "Session list",
+    agentAlerts: "Alerts",
+    sounds: "Sounds",
+    agentApprovals: "Approvals",
+    agentConnect: "Connection",
+    agentRemote: "SSH remote",
   },
   groups: {
     basics: "Basics",

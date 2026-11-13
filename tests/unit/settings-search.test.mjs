@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { DEFAULT_SETTINGS_CATEGORY, FEATURE_PAGES, SETTINGS_CATEGORIES, isCategoryAvailable, pagesOfFeaturesOff, searchCategories } from "../../src/windows/settings/categories.ts";
+import { DEFAULT_SETTINGS_CATEGORY, FEATURE_PAGES, SETTINGS_CATEGORIES, SETTINGS_GROUPS, entryOf, entryPages, isCategoryAvailable, pagesOfFeaturesOff, searchCategories, sidebarItemOf } from "../../src/windows/settings/categories.ts";
 import { shortcutLabel } from "../../src/features/clipboard/shortcut.ts";
 import { isTitleHit, normalizeSearchText, searchSettingsRows, searchWords } from "../../src/windows/settings/settingsSearch.ts";
 import { mergeStates, pairLocales } from "../../scripts/settings-search-index.mjs";
@@ -83,4 +83,17 @@ test("the settings window opens on the overview, and a feature that is off takes
   assert.deepEqual([...off].sort(), [...FEATURE_PAGES.agents, "music"].sort());
   assert.ok(!off.has("overview") && !off.has("messages") && !off.has("general"));
   for (const pages of Object.values(FEATURE_PAGES)) for (const page of pages) assert.ok(SETTINGS_CATEGORIES.includes(page), page);
+});
+
+test("Appearance and AI Agent are one sidebar item each, with their pages as tabs, and every page is reachable", () => {
+  assert.deepEqual(entryPages("appearance"), ["theme", "appearance", "themeMarket"]);
+  assert.equal(entryPages("agents").length, 7);
+  assert.equal(sidebarItemOf("sounds"), "agents");
+  assert.equal(sidebarItemOf("themeMarket"), "appearance");
+  assert.equal(sidebarItemOf("music"), "music");
+  assert.equal(entryOf("general"), null);
+  const listed = SETTINGS_GROUPS.flatMap((group) => group.categories);
+  assert.equal(new Set(listed).size, listed.length);
+  const reachable = new Set(listed.flatMap((item) => entryPages(item)));
+  assert.deepEqual([...reachable].sort(), [...SETTINGS_CATEGORIES].sort());
 });

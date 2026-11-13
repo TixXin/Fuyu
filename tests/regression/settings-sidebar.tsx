@@ -59,10 +59,11 @@ try {
 
   const groupRows = () => [...host.querySelectorAll<HTMLButtonElement>(".settings-sidebar__folder")];
   const group = (name: string) => element<HTMLButtonElement>(`.settings-sidebar__folder[data-group='${name}']`);
-  check(groupRows().map((row) => row.dataset.group).join() === "basics,features,agents,extensions"
+  check(groupRows().map((row) => row.dataset.group).join() === "basics,features,extensions"
     && groupRows().every((row) => row.getAttribute("aria-expanded") === "true"),
     "Every group is a row that folds, and all start unfolded");
-  check(listed().length === 25 && listed()[0] === "overview", "Every page is listed at first, the overview on top");
+  check(listed().join() === "overview,general,behavior,appearance,shortcuts,todos,calendar,music,translation,clipboard,shelf,screenshot,messages,agents,plugins,market,about",
+    "Every sidebar item is listed at first: the overview on top, Appearance and AI Agent once each");
   check(host.querySelector(".settings-sidebar__footer [data-category='about']"), "About is pinned below the page list");
   check(element(".settings-sidebar__item--active").dataset.category === "general", "The open page is marked");
 
@@ -87,20 +88,29 @@ try {
   check(search().value === "" && group("features").getAttribute("aria-expanded") === "false", "Escape clears the search; folded groups stay folded");
   await act(async () => { group("features").click(); });
   await act(async () => { group("basics").click(); });
-  check(listed().length === 24 + 1, "Unfolding shows the pages again");
+  check(listed().length === 17, "Unfolding shows the pages again");
   check(!host.querySelector(".settings-sidebar__more"), "With every feature on there is no link to turn more on");
 
   const off = new Set<SettingsCategory>([...FEATURE_PAGES.music, ...FEATURE_PAGES.agents]);
   await mount("general", off);
   check(!listed().includes("music") && !listed().some((page) => FEATURE_PAGES.agents.includes(page as SettingsCategory)) && listed().includes("todos"),
     "Pages of features that are off are left out");
-  check(!host.querySelector(".settings-sidebar__folder[data-group='agents']"), "A group whose pages are all off is left out");
+  check(!listed().includes("agents"), "AI Agent is left out when agents are off");
   await act(async () => { element<HTMLButtonElement>(".settings-sidebar__more").click(); });
   check(opened[opened.length - 1] === "overview", "The link under Features opens the overview, where features are turned on");
   await mount("music", off);
   check(listed().includes("music") && element(".settings-sidebar__item--active").dataset.category === "music", "The open page stays listed even when its feature is off");
   await type("岛上显示");
   check(listed().join() === "agents", "Search still finds the pages of features that are off");
+  await mount("sounds");
+  check(element(".settings-sidebar__item--active").dataset.category === "agents", "A tab marks the sidebar item it belongs to");
+  await type("音效");
+  check(listed().join() === "agents" && host.querySelector(".settings-sidebar__hit--tab[data-tab='sounds']"), "A tab found by search shows under its sidebar item");
+  await act(async () => { element<HTMLButtonElement>(".settings-sidebar__hit--tab[data-tab='sounds']").click(); });
+  check(opened[opened.length - 1] === "sounds", "…and opens that tab");
+  await press("Escape");
+  await act(async () => { element<HTMLButtonElement>(".settings-sidebar__item[data-category='appearance']").click(); });
+  check(opened[opened.length - 1] === "theme", "Appearance opens on its first tab, Style");
 
   document.documentElement.dataset.testResult = "passed";
 } catch (error) {
