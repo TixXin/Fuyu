@@ -76,18 +76,19 @@ const page = document.getElementById("page")!;
 const root = createRoot(page);
 const settle = () => act(async () => { await new Promise((resolve) => setTimeout(resolve, 30)); });
 const noop = () => undefined;
+let closed = 0;
 const render = async (localProxy: string) => {
   await act(async () => {
     root.render(
       <StrictMode><I18nProvider>
-        <PluginDetailPage plugin={plugin(localProxy)} busy={false} notice={null} onBack={noop} onSettingChange={noop} onRunCommand={noop}
+        <PluginDetailPage plugin={plugin(localProxy)} busy={false} notice={null} allowed nodeAvailable powershellAvailable onBack={() => { closed += 1; }} onEnabledChange={noop} onSettingChange={noop} onRunCommand={noop}
           onNotificationsMutedChange={noop} onPreReleaseChange={noop} onMemoryLimitChange={noop} onClearData={noop} onRevokeSensitive={noop} />
       </I18nProvider></StrictMode>,
     );
   });
   await settle();
 };
-const row = (host: string) => [...page.querySelectorAll<HTMLElement>(".ssh-tunnel__host")].find((found) => found.querySelector("label")?.textContent === host)!;
+const row = (host: string) => [...document.querySelectorAll<HTMLElement>(".ssh-tunnel__host")].find((found) => found.querySelector("label")?.textContent === host)!;
 const state = (host: string) => row(host).querySelector(".ssh-tunnel__state")?.textContent ?? "";
 const flip = async (host: string) => { await act(async () => { row(host).querySelector<HTMLInputElement>("[role='switch']")!.click(); }); await settle(); };
 const typePort = async (host: string, value: string) => {
@@ -95,17 +96,23 @@ const typePort = async (host: string, value: string) => {
   await act(async () => { input.value = value; input.dispatchEvent(new FocusEvent("focusout", { bubbles: true })); });
   await settle();
 };
-const dialog = () => page.querySelector<HTMLElement>("[role='alertdialog']");
+const dialog = () => document.querySelector<HTMLElement>("[role='alertdialog']");
 const answer = async (text: string) => {
   await act(async () => { [...dialog()!.querySelectorAll("button")].find((button) => button.textContent === text)!.click(); });
   await settle();
 };
 const lastSet = () => calls.filter((call) => call.command === "set_ssh_tunnel").slice(-1)[0]?.args;
 
-const info = () => page.querySelector<HTMLElement>(".plugin-info")?.closest(".settings-section");
+const shown = () => document.querySelector(".plugin-dialog")?.textContent ?? "";
+const info = () => document.querySelector<HTMLElement>(".plugin-info")?.closest(".settings-section");
 
 try {
   await render("auto");
+  const modal = document.querySelector<HTMLElement>(".plugin-dialog[role='dialog'][aria-modal='true']");
+  check(modal && !page.contains(modal) && document.activeElement === modal.querySelector(".plugin-dialog__close") && modal.querySelector("[role='switch']"),
+    "A plugin's settings open in a modal dialog over the list: focus goes to Close, and the header has the plugin's switch");
+  await act(async () => { modal!.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })); });
+  check(closed === 1, "Esc closes the dialog");
   check(info()?.querySelector(".plugin-info__row code")?.textContent === "127.0.0.1:7897"
     && info()?.textContent?.includes("端口来自 Clash Verge 的设置，代理正在监听。"),
   "The running info shows the local proxy found and that it listens");
@@ -117,9 +124,9 @@ try {
   proxy = { port: 7897, found: "clashVerge", listening: true };
 
   await render("clash-verge");
-  check(page.textContent?.includes("本地代理") && !page.textContent.includes("本地端口"), "The local port field stays hidden until Custom port is picked");
+  check(shown().includes("本地代理") && !shown().includes("本地端口"), "The local port field stays hidden until Custom port is picked");
   await render("custom");
-  check(page.textContent?.includes("本地端口"), "Picking Custom port shows the local port field");
+  check(shown().includes("本地端口"), "Picking Custom port shows the local port field");
 
   check(state("zcm6") === "已连接" && row("zcm6").querySelector("code")?.textContent
     === "export http_proxy=http://127.0.0.1:10089 https_proxy=http://127.0.0.1:10089 HTTPS_PROXY=http://127.0.0.1:10089",

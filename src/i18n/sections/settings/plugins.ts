@@ -439,7 +439,7 @@ export const zhCN: SettingsPluginsText = {
   notForWindows: "这个插件只支持 macOS，在 Windows 上不能运行。",
   detail: {
     open: "设置",
-    back: "返回插件列表",
+    back: "关闭",
     info: "运行信息",
     infoWhenRunning: "插件运行后，会在这里显示它提供的信息。",
     settings: "设置",
@@ -826,7 +826,7 @@ export const en: SettingsPluginsText = {
   notForWindows: "This plugin is for macOS only and does not run on Windows.",
   detail: {
     open: "Settings",
-    back: "Back to plugins",
+    back: "Close",
     info: "Info",
     infoWhenRunning: "Once the plugin runs, what it shares appears here.",
     settings: "Settings",

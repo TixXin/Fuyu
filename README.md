@@ -9,9 +9,11 @@
   <p>Windows 和 macOS 上的桌面灵动岛：待办、剪贴板、消息、翻译、音乐和 AI 状态，都在屏幕顶部的一座小岛上。</p>
 
   <p>
-    <a href="https://github.com/TixXin/fuyu/releases/latest"><img src="docs/assets/readme/download-windows.svg" alt="下载 Windows 版（x64）" width="180" height="44"></a>
-    &nbsp;&nbsp;
-    <a href="https://github.com/TixXin/fuyu/releases"><img src="docs/assets/readme/download-macos.svg" alt="下载 macOS 版（Apple 芯片）" width="180" height="44"></a>
+    <a href="https://github.com/TixXin/fuyu/releases/latest"><img src="docs/assets/readme/download-windows.svg" alt="下载 Windows 版（x64）" width="156" height="38"></a>
+    &nbsp;
+    <a href="https://github.com/TixXin/fuyu/releases"><img src="docs/assets/readme/download-macos.svg" alt="下载 macOS 版（Apple 芯片）" width="156" height="38"></a>
+    &nbsp;
+    <a href="docs/features/macos-install.md"><img src="docs/assets/readme/mac-guide-zh.svg" alt="Mac 安装教程：第一次打开要手动放行，照着做约 3 分钟" width="81" height="38"></a>
   </p>
 
   <p>
@@ -120,7 +122,7 @@
 
 1. **下载安装**：从 [Releases](https://github.com/TixXin/fuyu/releases/latest) 下载安装包并安装。
    - **Windows**：下载 `_x64-setup.exe`。安装包没有代码签名，SmartScreen 提示时点「更多信息 → 仍要运行」。
-   - **macOS**：在 [Releases 列表](https://github.com/TixXin/fuyu/releases)里找最新一个带 `_aarch64.dmg` 的版本下载（最新正式版里没有时，在它上面的测试版里），把 Fuyu 拖进「应用程序」。第一次打开要在「系统设置 → 隐私与安全性」里点「仍要打开」，步骤见[在 Mac 上安装浮屿](docs/features/macos-install.md)。
+   - **macOS**：在 [Releases 列表](https://github.com/TixXin/fuyu/releases)里找最新一个带 `_aarch64.dmg` 的版本下载（最新正式版里没有时，在它上面的测试版里），把 Fuyu 拖进「应用程序」。第一次打开要在「系统设置 → 隐私与安全性」里点「仍要打开」，一步步的说明见 [Mac 安装教程](docs/features/macos-install.md)。
 2. **展开小岛**：鼠标移到屏幕顶部的岛上即可展开，点齿轮或托盘图标（Mac 上是菜单栏图标）打开设置。Mac 上新手引导会带你打开要用到的系统权限。
 3. **配置一次**：邮箱、翻译和 AI Agent 需要先在设置里配置一次，具体见各自的说明：[邮箱](docs/features/mail.md)、[AI Agent](docs/features/agent-status-hooks.md)、[QQ 通知](docs/features/qq-notifications.md)、[微信提醒](docs/features/wechat-reminders.md)。
 

@@ -27,6 +27,11 @@ const DOWNLOADS = {
   "download-macos.svg": { label: "Download for macOS (Apple silicon, arm64)", name: "macOS", nameWidth: 52, tag: "arm64", tagWidth: 33 },
 };
 
+const GUIDES = {
+  "mac-guide-zh.svg": { label: "Mac 安装教程", text: "Mac 安装教程", textWidth: 76 },
+  "mac-guide-en.svg": { label: "Mac install guide", text: "Mac install guide", textWidth: 96 },
+};
+
 const n = (value) => Number(value.toFixed(3)).toString().replace(/^(-?)0\./, "$1.");
 const px = (value) => (value === 0 ? "0" : `${n(value)}px`);
 
@@ -266,11 +271,22 @@ function download({ label, name, nameWidth, tag, tagWidth }) {
 `;
 }
 
+function guide({ label, text, textWidth }) {
+  const width = textWidth + 18;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="44" viewBox="0 0 ${width} 44" role="img" aria-label="${label}">
+  <text y="26.4" font-family="${FONT}" font-size="12.5" fill="${LINE}" textLength="${textWidth}" lengthAdjust="spacing">${text}</text>
+  <path d="M0 31.5H${textWidth}" stroke="${LINE}" stroke-opacity=".5" stroke-dasharray="2 2"/>
+  <path d="M${textWidth + 5} 22.5h9m-3.5-3.5 3.5 3.5-3.5 3.5" fill="none" stroke="${LINE}" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+`;
+}
+
 export function readmeAssets() {
   return {
     ...Object.fromEntries(Object.entries(ISLANDS).map(([file, options]) => [file, island(options)])),
     "island-tuck.svg": tuck(),
     ...Object.fromEntries(Object.entries(DOWNLOADS).map(([file, options]) => [file, download(options)])),
+    ...Object.fromEntries(Object.entries(GUIDES).map(([file, options]) => [file, guide(options)])),
   };
 }
 

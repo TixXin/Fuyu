@@ -5,9 +5,8 @@ import { useLocale, useTranslation } from "../../i18n";
 import { openPluginHomepage, PLUGIN_PERMISSIONS, type PluginInfo, type PluginPermission } from "./api";
 import { isSensitivePermission } from "./promptedPermissions";
 import { pluginHealth } from "./installedFilter";
-import { RuntimeHints } from "./RuntimeHints";
 import { PluginIcon } from "./PluginIcon";
-import { PluginRunStats } from "./PluginRunStats";
+import { PluginNotes } from "./PluginNotes";
 import "./PluginCard.css";
 import { isMacOS } from "../../lib/platform";
 
@@ -127,32 +126,7 @@ export function PluginCard({
               {description}
             </p>
           ) : null}
-          <div className="plugin-card__notes">
-            {plugin.revoked ? (
-              <p className="plugin-card__error">{t.settings.plugins.updates.revoked(plugin.revoked[locale])}</p>
-            ) : null}
-            {plugin.autoUpdated ? <p className="plugin-card__hint">{t.settings.plugins.updates.autoUpdated(plugin.autoUpdated)}</p> : null}
-            {plugin.updateFailed ? <p className="plugin-card__error">{t.settings.plugins.updates.autoUpdateFailed(plugin.updateFailed)}</p> : null}
-            {plugin.updateAvailable && plugin.updateAvailable !== plugin.autoUpdated ? (
-              <p className={plugin.signingKeyChanged ? "plugin-card__hint plugin-card__hint--warn" : "plugin-card__hint"}>
-                {plugin.signingKeyChanged ? t.settings.plugins.updates.keyChanged(plugin.updateAvailable) : t.settings.plugins.updates.available(plugin.updateAvailable)}
-              </p>
-            ) : null}
-            {plugin.preReleaseAvailable && !plugin.preRelease ? (
-              <p className="plugin-card__hint">{t.settings.plugins.updates.preReleaseOffered(plugin.preReleaseAvailable)}</p>
-            ) : null}
-            {plugin.needsApproval ? <p className="plugin-card__hint plugin-card__hint--warn">{t.settings.plugins.needsApproval}</p> : null}
-            {isOn && !canRun ? <p className="plugin-card__hint plugin-card__hint--warn">{t.settings.plugins.notAllowed}</p> : null}
-            {!plugin.hasProcess ? <p className="plugin-card__hint">{t.settings.plugins.describedOnly}</p> : null}
-            <RuntimeHints runtime={plugin.runtime} platforms={plugin.platforms} nodeAvailable={nodeAvailable} powershellAvailable={powershellAvailable} />
-            {showStatus && plugin.error ? <p className="plugin-card__error">{plugin.error}</p> : null}
-            {showStatus ? <PluginRunStats plugin={plugin} /> : null}
-            {plugin.keybindingConflicts.length > 0 ? (
-              <p className="plugin-card__hint plugin-card__hint--warn">
-                {t.settings.plugins.keybindingConflict(plugin.keybindingConflicts.join(", "))}
-              </p>
-            ) : null}
-          </div>
+          <PluginNotes plugin={plugin} allowed={allowed} nodeAvailable={nodeAvailable} powershellAvailable={powershellAvailable} />
         </>
       )}
 

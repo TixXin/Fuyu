@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, Eraser, ExternalLink, Play } from "lucide-react";
+import { Eraser, ExternalLink, Play } from "lucide-react";
 import { SelectControl } from "../../components/controls/SelectControl";
 import { ToggleControl } from "../../components/controls/ToggleControl";
 import { useLocale, useTranslation } from "../../i18n";
@@ -9,7 +9,9 @@ import { PlanKeyFields } from "../claude-usage/PlanKeyFields";
 import { SSH_TUNNEL_PLUGIN_ID, SshTunnelHosts, useSshTunnelProxy } from "../ssh-tunnel";
 import { openPluginHomepage, PLUGIN_MEMORY_LIMITS_MB, type PluginInfo } from "./api";
 import { pluginHealth } from "./installedFilter";
+import { PluginDialog } from "./PluginDialog";
 import { PluginIcon } from "./PluginIcon";
+import { PluginNotes } from "./PluginNotes";
 import type { PromptedPermission } from "./promptedPermissions";
 import { PluginCallLog } from "./PluginCallLog";
 import { PluginInfoList } from "./PluginInfoList";
@@ -23,7 +25,11 @@ export function PluginDetailPage({
   plugin,
   busy,
   notice,
+  allowed,
+  nodeAvailable,
+  powershellAvailable,
   onBack,
+  onEnabledChange,
   onSettingChange,
   onRunCommand,
   onNotificationsMutedChange,
@@ -35,7 +41,11 @@ export function PluginDetailPage({
   plugin: PluginInfo;
   busy: boolean;
   notice: Notice | null;
+  allowed: boolean;
+  nodeAvailable: boolean;
+  powershellAvailable: boolean;
   onBack: () => void;
+  onEnabledChange: (enabled: boolean) => void;
   onSettingChange: (key: string, value: unknown) => void;
   onRunCommand: (command: string) => void;
   onNotificationsMutedChange: (muted: boolean) => void;
@@ -54,7 +64,7 @@ export function PluginDetailPage({
   const [confirmingClear, setConfirmingClear] = useState(false);
   const name = plugin.name?.[locale] ?? plugin.id;
   const description = plugin.description?.[locale];
-  const health = pluginHealth(plugin, true);
+  const health = pluginHealth(plugin, allowed);
   const meta = [
     plugin.version && `v${plugin.version}`,
     plugin.builtin && t.settings.plugins.builtin,
@@ -67,41 +77,43 @@ export function PluginDetailPage({
     (spec) => !(plugin.id === SSH_TUNNEL_PLUGIN_ID && spec.key === "customPort" && plugin.settings.localProxy !== "custom"),
   );
 
-  return (
+  const header = (
     <>
-      <section className={`plugin-detail__hero plugin-detail__hero--${health}`}>
-        <div className="plugin-detail__header">
-          <button className="plugin-card__button" type="button" onClick={onBack}>
-            <ArrowLeft size={12} strokeWidth={2.4} />
-            <span>{t.settings.plugins.detail.back}</span>
-          </button>
-          {plugin.hasProcess && plugin.enabled ? (
-            <span className={`plugin-card__status plugin-card__status--${plugin.status}`}>
-              {t.settings.plugins.status[plugin.status]}
-            </span>
-          ) : null}
-        </div>
-        <div className="plugin-detail__identity">
-          <PluginIcon id={plugin.id} name={name} size="lg" health={health} />
-          <div className="plugin-card__title plugin-detail__title">
+      <div className="plugin-detail__identity">
+        <PluginIcon id={plugin.id} name={name} size="lg" health={health} />
+        <div className="plugin-card__title plugin-detail__title">
+          <div className="plugin-card__name">
             <strong>{name}</strong>
-            <span>{meta}</span>
+            {plugin.hasProcess && plugin.enabled ? (
+              <span className={`plugin-card__status plugin-card__status--${plugin.status}`}>{t.settings.plugins.status[plugin.status]}</span>
+            ) : null}
           </div>
-          {plugin.homepage.startsWith("https://") ? (
-            <button
-              className="plugin-card__button plugin-card__button--icon"
-              type="button"
-              aria-label={t.settings.plugins.homepage}
-              title={t.settings.plugins.homepage}
-              onClick={() => void openPluginHomepage(plugin.homepage)}
-            >
-              <ExternalLink size={12} strokeWidth={2.4} />
-            </button>
-          ) : null}
+          <span>{meta}</span>
         </div>
-        {description ? <p className="plugin-detail__description">{description}</p> : null}
-        {plugin.error ? <p className="plugin-card__error">{plugin.error}</p> : null}
-      </section>
+        {plugin.homepage.startsWith("https://") ? (
+          <button
+            className="plugin-card__button plugin-card__button--icon"
+            type="button"
+            aria-label={t.settings.plugins.homepage}
+            title={t.settings.plugins.homepage}
+            onClick={() => void openPluginHomepage(plugin.homepage)}
+          >
+            <ExternalLink size={12} strokeWidth={2.4} />
+          </button>
+        ) : null}
+        {plugin.dev ? null : (
+          <div className="plugin-card__switch">
+            <ToggleControl label={t.settings.plugins.enable} checked={plugin.enabled && !plugin.needsApproval} onChange={(enabled) => !busy && onEnabledChange(enabled)} />
+          </div>
+        )}
+      </div>
+      {description ? <p className="plugin-detail__description">{description}</p> : null}
+    </>
+  );
+
+  return (
+    <PluginDialog label={name} closeLabel={t.settings.plugins.detail.back} tone={health} header={header} onClose={onBack}>
+      <PluginNotes plugin={plugin} allowed={allowed} nodeAvailable={nodeAvailable} powershellAvailable={powershellAvailable} />
 
       {plugin.hasProcess ? (
         <section className="settings-section plugins-panel">
@@ -272,6 +284,6 @@ export function PluginDetailPage({
           {plugin.hasProcess && !plugin.builtin ? <PluginCallLog calls={plugin.calls ?? []} /> : null}
         </section>
       ) : null}
-    </>
+    </PluginDialog>
   );
 }

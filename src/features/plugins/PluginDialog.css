@@ -1,0 +1,112 @@
+.plugin-dialog__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 44px 24px 28px;
+  background: var(--plugin-dialog-veil, rgba(8, 9, 11, 0.62));
+  backdrop-filter: blur(6px);
+  animation: plugin-dialog-veil 160ms ease both;
+}
+
+.island-light .plugin-dialog__backdrop {
+  --plugin-dialog-veil: rgba(60, 64, 72, 0.32);
+}
+
+.plugin-dialog {
+  --plugin-dialog-fill: #1b1c20;
+  width: min(720px, 100%);
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  color: var(--color-text);
+  background: var(--plugin-dialog-fill);
+  border: 1px solid var(--color-white-a12);
+  border-radius: 16px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45);
+  animation: plugin-dialog-in 200ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.island-light .plugin-dialog {
+  --plugin-dialog-fill: #f6f7f9;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.18);
+}
+
+.plugin-dialog__header {
+  position: relative;
+  flex: none;
+  display: grid;
+  gap: 10px;
+  padding: 18px 56px 16px 20px;
+  background:
+    radial-gradient(80% 200% at 0% 0%, color-mix(in srgb, var(--color-accent) 14%, transparent), transparent 62%),
+    var(--color-white-a04);
+  border-bottom: 1px solid var(--color-white-a08);
+}
+
+.plugin-dialog--error .plugin-dialog__header {
+  background:
+    radial-gradient(80% 200% at 0% 0%, color-mix(in srgb, var(--error-text, #ffb4a8) 16%, transparent), transparent 62%),
+    var(--color-white-a04);
+}
+
+.plugin-dialog--off .plugin-dialog__header {
+  background: var(--color-white-a04);
+}
+
+.plugin-dialog__close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  color: var(--color-text-muted);
+  background: var(--color-white-a08);
+  border: 0;
+  border-radius: var(--radius-circle);
+  cursor: pointer;
+}
+
+.plugin-dialog__close:hover {
+  color: var(--color-text);
+  background: var(--color-white-a16);
+}
+
+.plugin-dialog__close:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+.plugin-dialog__body {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  padding: 16px 20px 20px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+@keyframes plugin-dialog-veil {
+  from { opacity: 0; }
+}
+
+@keyframes plugin-dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .plugin-dialog__backdrop,
+  .plugin-dialog {
+    animation: none;
+  }
+}
