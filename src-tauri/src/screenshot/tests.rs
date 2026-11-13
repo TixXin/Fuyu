@@ -235,3 +235,33 @@ fn a_page_that_does_not_move_or_jumps_too_far_stops_the_capture() {
     assert_eq!(jumped.push(view(width, 0, body, 0, 5_000)), Step::Lost);
     assert_eq!(jumped.push(vec![0; 4]), Step::Lost);
 }
+
+#[test]
+fn the_live_preview_shows_the_newest_part_of_the_long_picture_scaled_to_its_width() {
+    use super::stitch::{Step, Stitcher};
+    let (width, header, body, footer) = (120, 30, 200, 20);
+    let mut stitcher = Stitcher::new(width, header + body + footer, view(width, header, body, footer, 0));
+    assert_eq!(stitcher.band(), header + body + footer);
+    assert_eq!(stitcher.push(view(width, header, body, footer, 57)), Step::Added(57));
+    assert_eq!(stitcher.band(), body);
+    let (w, h, rgba) = stitcher.tail_preview(60, 40);
+    assert_eq!((w, h), (60, 40));
+    assert_eq!(rgba.len(), 60 * 40 * 4);
+    let footer_row = page_row(width, 2_000_000 + footer - 1);
+    assert_eq!(&rgba[rgba.len() - 4..], &footer_row[footer_row.len() - 4..], "the last preview row is the footer's last row");
+    let (_, whole, _) = stitcher.tail_preview(60, 10_000);
+    assert_eq!(whole, 154, "307 rows at half size, rounded");
+}
+
+#[test]
+fn the_control_bar_catches_the_pointer_and_scrolling_speeds_up_when_steps_are_small() {
+    use super::long::{contains, next_notches};
+    let bar = (100.0, 50.0, 200.0, 40.0);
+    assert!(contains(bar, (100.0, 50.0)));
+    assert!(contains(bar, (300.0, 90.0)));
+    assert!(!contains(bar, (99.0, 60.0)));
+    assert!(!contains(bar, (150.0, 91.0)));
+    assert_eq!(next_notches(3, 40, 600), 4);
+    assert_eq!(next_notches(3, 300, 600), 3);
+    assert_eq!(next_notches(8, 10, 600), 8);
+}

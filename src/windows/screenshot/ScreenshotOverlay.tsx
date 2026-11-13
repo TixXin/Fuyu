@@ -25,7 +25,9 @@ import { loadScreenshotSettings } from "../../features/screenshot/storage";
 import { useErrorText, useTranslation } from "../../i18n";
 import { AnnotationLayer } from "./AnnotationLayer";
 import { AnnotationTextInput } from "./AnnotationTextInput";
+import { LongShotBar } from "./LongShotBar";
 import { ScreenshotToolbar } from "./ScreenshotToolbar";
+import { useLongShot } from "./useLongShot";
 import { useAnnotations } from "./useAnnotations";
 import { pictureContext, useScreenshotFrame } from "./useScreenshotFrame";
 import { capturePointer, GRAB, useSelection } from "./useSelection";
@@ -62,6 +64,7 @@ export function ScreenshotOverlay() {
   const sessionId = session?.id;
   const guides = useMemo(() => (sessionId === undefined ? false : loadSettings().screenshotGuides), [sessionId]);
   const annotations = useAnnotations(sessionId, scale);
+  const long = useLongShot(sessionId, t.saveFolderName);
 
   const pixel = pointer && bounds ? pixelAt(pointer, bounds) : null;
   const color = pixel ? colorAt(canvasRef.current, pixel) : null;
@@ -87,7 +90,7 @@ export function ScreenshotOverlay() {
     const image = area ? composeArea(picture, area, chosen, items) : null;
     const patch = area && image ? { at: area, image } : null;
     const save = action === "save" ? { folder: saveFolderOf(loadScreenshotSettings()), folderName: t.saveFolderName } : undefined;
-    if (action === "pin" || action === "long") setLeaving(true);
+    if (action === "pin") setLeaving(true);
     finishScreenshot(chosen, patch, action, save).catch((error: unknown) => {
       setLeaving(false);
       setNotice(errorText(error));
@@ -118,7 +121,7 @@ export function ScreenshotOverlay() {
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      if (event.target instanceof HTMLTextAreaElement || annotations.editing) return;
+      if (long.active || event.target instanceof HTMLTextAreaElement || annotations.editing) return;
       const ctrl = event.ctrlKey || event.metaKey;
       const letter = event.key.toLowerCase();
       if (ctrl && letter === "z") {
@@ -143,7 +146,7 @@ export function ScreenshotOverlay() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [annotations, chosen, color, copy, finish, t]);
+  }, [annotations, chosen, color, copy, finish, long.active, t]);
 
   useEffect(() => {
     setNotice(null);
@@ -209,7 +212,7 @@ export function ScreenshotOverlay() {
 
   return (
     <div
-      className="screenshot-overlay"
+      className={`screenshot-overlay${long.active ? " screenshot-overlay--long" : ""}`}
       style={{ cursor }}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
@@ -220,8 +223,16 @@ export function ScreenshotOverlay() {
       onContextMenu={onContextMenu}
     >
       <canvas ref={canvasRef} className="screenshot-overlay__picture" />
-      {bounds && <AnnotationLayer picture={canvasRef} bounds={bounds} items={annotations.items} draft={annotations.draft} selection={chosen} />}
-      {area ? (
+      {bounds && !long.active && <AnnotationLayer picture={canvasRef} bounds={bounds} items={annotations.items} draft={annotations.draft} selection={chosen} />}
+      {long.active && !long.mine ? (
+        <div className="screenshot-overlay__dim" />
+      ) : long.mine && area ? (
+        <div className="screenshot-overlay__selection screenshot-overlay__selection--long" style={{ left: area.x, top: area.y, width: area.width, height: area.height }}>
+          <span className={`screenshot-overlay__size${area.y < 28 ? " screenshot-overlay__size--inside" : ""}`}>
+            {t.long.size(selection?.width ?? 0, long.progress?.height ?? selection?.height ?? 0)}
+          </span>
+        </div>
+      ) : area ? (
         <div className="screenshot-overlay__selection" style={{ left: area.x, top: area.y, width: area.width, height: area.height }}>
           {!dragging && !annotations.drafting && !leaving && HANDLES.map((handle) => {
             const spot = handlePosition({ x: 0, y: 0, width: area.width, height: area.height }, handle);
@@ -240,8 +251,9 @@ export function ScreenshotOverlay() {
       ) : (
         ready && <div key={sessionId} className="screenshot-overlay__dim" />
       )}
-      {!area && ready && session?.underPointer && <div className="screenshot-overlay__hint">{quickMode ? t.quickHints[quickMode] : t.selectHint}</div>}
-      {area && chosen && !dragging && !annotations.drafting && !quick && !leaving && (
+      {!area && !long.active && ready && session?.underPointer && <div className="screenshot-overlay__hint">{quickMode ? t.quickHints[quickMode] : t.selectHint}</div>}
+      {long.mine && area && <LongShotBar area={area} view={view} long={long} />}
+      {area && chosen && !dragging && !annotations.drafting && !quick && !leaving && !long.active && (
         <ScreenshotToolbar area={area} view={view} annotations={annotations} notice={notice} onCancel={() => void cancelScreenshot()} onFinish={finish} onRedact={redact} />
       )}
       {annotations.editing && (
@@ -256,7 +268,7 @@ export function ScreenshotOverlay() {
         />
       )}
       {(!area || quick) && notice && <div className="screenshot-overlay__hint">{notice}</div>}
-      {guides && !leaving && ready && cssPointer && (choosing || dragging === "draw" || dragging === "resize") && (
+      {guides && !leaving && !long.active && ready && cssPointer && (choosing || dragging === "draw" || dragging === "resize") && (
         <>
           <div className="screenshot-overlay__guide screenshot-overlay__guide--h" style={{ top: cssPointer.y }} />
           <div className="screenshot-overlay__guide screenshot-overlay__guide--v" style={{ left: cssPointer.x }} />
@@ -270,7 +282,7 @@ export function ScreenshotOverlay() {
           <div className="screenshot-overlay__guide screenshot-overlay__guide--v" style={{ left: area.x + area.width - 1 }} />
         </>
       )}
-      {ready && pixel && cssPointer && color && dragging !== "move" && !annotations.tool && !leaving && (
+      {ready && pixel && cssPointer && color && dragging !== "move" && !annotations.tool && !leaving && !long.active && (
         <Magnifier picture={canvasRef.current} pixel={pixel} pointer={cssPointer} view={view} color={color} lines={lines} />
       )}
     </div>

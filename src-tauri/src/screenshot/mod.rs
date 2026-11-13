@@ -157,19 +157,7 @@ pub async fn screenshot_finish(app: AppHandle, window: WebviewWindow, request: t
         Action::Long => {
             let origin = session::origin(window.label()).ok_or_else(|| "No screenshot is open.".to_string())?;
             let at = (origin.0.saturating_add_unsigned(left), origin.1.saturating_add_unsigned(top));
-            session::end(&app);
-            let app = app.clone();
-            std::thread::spawn(move || {
-                let Some(long) = long::capture(at.0, at.1, picture.width, picture.height) else {
-                    eprintln!("the long screenshot could not be captured");
-                    return;
-                };
-                match output::copy(&app, &long) {
-                    Ok(Some(path)) => announce(&app, &long, &path, false),
-                    Ok(None) => {}
-                    Err(error) => eprintln!("{error}"),
-                }
-            });
+            long::start(&app, window.label().to_string(), (at.0, at.1, picture.width, picture.height), deliver_long);
             Ok(None)
         }
         Action::Copy => {
@@ -210,6 +198,49 @@ pub async fn screenshot_finish(app: AppHandle, window: WebviewWindow, request: t
             Ok(None)
         }
     }
+}
+
+fn deliver_long(app: &AppHandle, ending: long::Ending, picture: Picture) {
+    session::end(app);
+    match ending {
+        long::Ending::Cancel => {}
+        long::Ending::Copy => match output::copy(app, &picture) {
+            Ok(Some(path)) => announce(app, &picture, &path, false),
+            Ok(None) => {}
+            Err(error) => eprintln!("{error}"),
+        },
+        long::Ending::Save { folder, name } => match output::save(&picture, folder.as_deref(), &name) {
+            Ok(path) => {
+                remember(app, &picture);
+                announce(app, &picture, &path, true);
+            }
+            Err(error) => eprintln!("the long screenshot was not saved: {error}"),
+        },
+    }
+}
+
+#[tauri::command]
+pub fn screenshot_long_bar(window: WebviewWindow, x: f64, y: f64, width: f64, height: f64) {
+    long::set_bar(window.label(), (x, y, width, height));
+}
+
+#[tauri::command]
+pub fn screenshot_long_pause(paused: Option<bool>) -> Option<bool> {
+    long::set_paused(paused)
+}
+
+#[tauri::command]
+pub fn screenshot_long_end(action: String, folder: Option<String>, folder_name: Option<String>) -> Result<(), String> {
+    let ending = match action.as_str() {
+        "copy" => long::Ending::Copy,
+        "save" => long::Ending::Save { folder: folder.filter(|folder| !folder.trim().is_empty()), name: folder_name.unwrap_or_default() },
+        "cancel" => long::Ending::Cancel,
+        _ => return Err("Unknown way to end the long screenshot.".to_string()),
+    };
+    if let long::Ending::Save { folder: Some(folder), .. } = &ending {
+        output::chosen_folder(folder)?;
+    }
+    if long::end_with(ending) { Ok(()) } else { Err("No long screenshot is running.".to_string()) }
 }
 
 fn remember(app: &AppHandle, picture: &Picture) {
@@ -321,6 +352,9 @@ pub(crate) fn percent_decode(text: &str) -> Option<String> {
 
 #[tauri::command]
 pub fn screenshot_cancel(app: AppHandle) {
+    if long::end_with(long::Ending::Cancel) {
+        return;
+    }
     session::end(&app);
 }
 
@@ -419,6 +453,9 @@ macro_rules! tauri_commands {
             crate::screenshot::screenshot_shortcut_status,
             crate::screenshot::screenshot_start,
             crate::screenshot::screenshot_find_words,
+            crate::screenshot::screenshot_long_bar,
+            crate::screenshot::screenshot_long_pause,
+            crate::screenshot::screenshot_long_end,
             crate::screenshot::screenshot_history,
             crate::screenshot::screenshot_history_copy,
             crate::screenshot::screenshot_history_pin,

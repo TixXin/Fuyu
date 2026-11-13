@@ -1,0 +1,179 @@
+.long-shot-bar {
+  --long-ink: var(--long-shot-ink, #f5f5f7);
+  --long-dim: var(--long-shot-dim, rgba(245, 245, 247, 0.62));
+  --long-accent: var(--color-accent, #74d6ff);
+  position: absolute;
+  z-index: 3;
+  width: 176px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  color: var(--long-ink);
+  font: 12px/1.45 var(--font-ui, system-ui, sans-serif);
+  background: var(--long-shot-fill, rgba(20, 20, 24, 0.95));
+  border: 1px solid var(--long-shot-line, rgba(255, 255, 255, 0.14));
+  border-radius: 12px;
+  box-shadow: 0 10px 28px var(--long-shot-shadow, rgba(0, 0, 0, 0.45));
+  cursor: default;
+  animation: long-shot-bar-in 180ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes long-shot-bar-in {
+  from {
+    opacity: 0;
+    transform: translateX(-6px);
+  }
+}
+
+.long-shot-bar__head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--long-accent);
+}
+
+.long-shot-bar__head strong {
+  flex: 1;
+  color: var(--long-ink);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.long-shot-bar__height {
+  color: var(--long-dim);
+  font: 11px/1.4 ui-monospace, "Cascadia Mono", Consolas, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+.long-shot-bar__film {
+  position: relative;
+  height: 220px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  overflow: hidden;
+  background: var(--long-shot-film, rgba(255, 255, 255, 0.05));
+  border-radius: 8px;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 36px);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 36px);
+}
+
+.long-shot-bar__film img {
+  display: block;
+  width: 100%;
+  max-height: 100%;
+  object-fit: cover;
+  object-position: bottom;
+  border-radius: 4px;
+  transition: opacity 160ms ease;
+}
+
+.long-shot-bar__film-empty {
+  width: 100%;
+  height: 100%;
+}
+
+.long-shot-bar__frames {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  padding: 1px 6px;
+  color: var(--long-ink);
+  font-size: 11px;
+  background: var(--long-shot-badge, rgba(0, 0, 0, 0.6));
+  border-radius: 999px;
+}
+
+.long-shot-bar__meter {
+  height: 3px;
+  overflow: hidden;
+  background: var(--long-shot-track, rgba(255, 255, 255, 0.12));
+  border-radius: 2px;
+}
+
+.long-shot-bar__meter span {
+  display: block;
+  height: 100%;
+  background: var(--long-accent);
+  transform-origin: left;
+  transition: transform 200ms ease;
+}
+
+.long-shot-bar--full .long-shot-bar__meter span {
+  background: var(--warning-text, #ff9f0a);
+}
+
+.long-shot-bar__state {
+  min-height: 34px;
+  margin: 0;
+  color: var(--long-ink);
+}
+
+.long-shot-bar--fast .long-shot-bar__state,
+.long-shot-bar--full .long-shot-bar__state {
+  color: var(--warning-text, #ff9f0a);
+}
+
+.long-shot-bar--end .long-shot-bar__state {
+  color: var(--mint-text, #34c759);
+}
+
+.long-shot-bar__actions {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+}
+
+.long-shot-bar__button {
+  height: 32px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  color: var(--long-ink);
+  background: var(--long-shot-button, rgba(255, 255, 255, 0.07));
+  border: 0;
+  border-radius: 7px;
+  cursor: pointer;
+}
+
+.long-shot-bar__button:hover {
+  background: var(--long-shot-button-hover, rgba(255, 255, 255, 0.16));
+}
+
+.long-shot-bar__button:focus-visible {
+  outline: 2px solid var(--color-focus-ring, #74d6ff);
+  outline-offset: 1px;
+}
+
+.long-shot-bar__button--primary {
+  color: var(--long-shot-on-accent, #0b1b24);
+  background: var(--long-accent);
+}
+
+.long-shot-bar__button--primary:hover {
+  background: color-mix(in srgb, var(--long-accent) 82%, white);
+}
+
+.long-shot-bar--end .long-shot-bar__button--primary {
+  animation: long-shot-done 1.4s ease-in-out infinite;
+}
+
+@keyframes long-shot-done {
+  50% {
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--long-accent) 35%, transparent);
+  }
+}
+
+.long-shot-bar__keys {
+  margin: 0;
+  color: var(--long-dim);
+  font-size: 11px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .long-shot-bar,
+  .long-shot-bar--end .long-shot-bar__button--primary {
+    animation: none;
+  }
+}
