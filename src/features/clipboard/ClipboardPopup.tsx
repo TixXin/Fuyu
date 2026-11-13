@@ -47,6 +47,7 @@ export function ClipboardPopup({ items, snippets, openCount, wide, capture, link
   const [pinyinReady, setPinyinReady] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const listRef = useRef<HTMLUListElement | null>(null);
+  const pointerPickRef = useRef(false);
   const { handlers, notice, deletion, saveNote, saveAsNew, pasteText } = usePopupHandlers({ onPaste, onToggleFavorite, onEdit: () => setMode("edit") });
   const { flush } = deletion;
 
@@ -89,8 +90,17 @@ export function ClipboardPopup({ items, snippets, openCount, wide, capture, link
   const actions = useMemo(() => popupActions(item, capture, handlers, text.actions), [item, capture, handlers, text.actions]);
 
   useEffect(() => {
+    if (pointerPickRef.current) {
+      pointerPickRef.current = false;
+      return;
+    }
     listRef.current?.querySelector<HTMLElement>(`[data-index="${current}"]`)?.scrollIntoView({ block: "nearest" });
   }, [current, filter]);
+
+  const selectByPointer = (index: number) => {
+    pointerPickRef.current = true;
+    setSelected(index);
+  };
 
   const focusSearch = () => window.setTimeout(() => inputRef.current?.focus(), 0);
   const backToList = () => {
@@ -253,7 +263,7 @@ export function ClipboardPopup({ items, snippets, openCount, wide, capture, link
                   selected={index === current}
                   queued={0}
                   snippet={snippet}
-                  onHover={() => setSelected(index)}
+                  onHover={() => selectByPointer(index)}
                   onPick={() => onPasteSnippet(snippet.id)}
                 />
               ))
@@ -265,7 +275,7 @@ export function ClipboardPopup({ items, snippets, openCount, wide, capture, link
                   selected={index === current}
                   queued={queue.indexOf(entry.id) + 1}
                   entry={entry}
-                  onHover={() => mode === "list" && setSelected(index)}
+                  onHover={() => mode === "list" && selectByPointer(index)}
                   onPick={(event) => {
                     if (isPrimaryKey(event)) setQueue(toggleQueued(queue, entry.id));
                     else onPaste(entry.id, event.shiftKey);

@@ -68,6 +68,8 @@
 }
 
 .clipboard-popup__chips {
+  flex: none;
+  height: 23px;
   display: flex;
   align-items: center;
   gap: 2px;
@@ -414,6 +416,8 @@
 
 .clipboard-popup__hint {
   flex: none;
+  box-sizing: border-box;
+  height: 32px;
   display: flex;
   align-items: center;
   gap: 12px;
