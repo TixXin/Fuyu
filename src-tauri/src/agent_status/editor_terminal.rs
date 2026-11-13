@@ -12,6 +12,8 @@ const EDITORS: &[(&str, &str, &str)] = &[
     ("vscodium", "vscodium", ".vscode-oss"),
     ("trae", "trae", ".trae"),
     ("kiro", "kiro", ".kiro"),
+    ("visual studio code", "vscode", ".vscode"),
+    ("visual studio code - insiders", "vscode-insiders", ".vscode-insiders"),
 ];
 
 pub(super) fn editor_of_app(app: &str) -> Option<(&'static str, &'static str)> {

@@ -565,6 +565,7 @@ fn a_session_keeps_the_folder_it_started_in() {
     assert_eq!(sessions[0].cwd.as_deref(), Some(r"E:\Projects\fly-island"));
 }
 
+#[cfg(windows)]
 #[test]
 fn hooks_state_matches_what_the_installers_write() {
     use super::claude_hooks::{claude_code_hook_entries, install_claude_code_hook_events};
@@ -1260,6 +1261,7 @@ fn the_extension_is_packaged_as_a_vsix_with_its_manifest() {
     assert!(manifest.contains("<DisplayName>Fuyu</DisplayName>"));
 }
 
+#[cfg(not(target_os = "macos"))]
 #[test]
 fn an_editors_command_line_is_found_next_to_it_on_path_or_in_its_install_folder() {
     use super::editor_extension::find_cli;
@@ -1682,4 +1684,64 @@ fn a_rename_wins_over_the_agent_title_and_the_newest_one_counts() {
     assert_eq!(pick_title(None, None, some("问"), some("fuyu")), (some("问"), Some("prompt")));
     assert_eq!(pick_title(None, None, None, some("fuyu")), (some("fuyu"), Some("folder")));
     assert_eq!(pick_title(None, None, None, None), (None, None));
+}
+
+#[cfg(not(windows))]
+#[test]
+fn mac_hook_scripts_write_what_the_island_reads() {
+    use std::io::Write;
+    use std::process::{Command, Stdio};
+
+    let dir = std::env::temp_dir().join(format!("fuyu-mac-hooks-{}", std::process::id()));
+    let _ = fs::remove_dir_all(&dir);
+    super::install_agent_hook_scripts(&dir).unwrap();
+    let run = |script: &str, args: &[&str], input: &str| {
+        let mut child = Command::new("/bin/sh")
+            .arg(dir.join(script))
+            .args(args)
+            .stdin(Stdio::piped())
+            .spawn()
+            .unwrap();
+        child.stdin.take().unwrap().write_all(input.as_bytes()).unwrap();
+        assert!(child.wait().unwrap().success(), "{script} {args:?}");
+    };
+
+    run(super::AGENT_RUNNING_SCRIPT_FILE_NAME, &["claudeCode"], "");
+    assert!(dir.join("agent-claudeCode-running.flag").exists());
+    run(super::AGENT_STATUS_SCRIPT_FILE_NAME, &["codex", "running", "t-1"], "");
+    run(super::AGENT_STATUS_SCRIPT_FILE_NAME, &["claudeCode", "completed"], "");
+    let status: super::PersistedAgentStatus = serde_json::from_str(&fs::read_to_string(dir.join("agent-status.json")).unwrap()).unwrap();
+    assert_eq!(serde_json::to_value(&status.codex).unwrap()["phase"], json!("running"));
+    assert_eq!(serde_json::to_value(&status.claude_code).unwrap()["phase"], json!("completed"));
+    assert!(!dir.join("agent-claudeCode-running.flag").exists());
+
+    let start = r#"{"session_id":"s-1","cwd":"/Users/a/中文 \"q\"","source":"startup"}"#;
+    run(super::AGENT_SESSION_SCRIPT_FILE_NAME, &["claudeCode", "start"], start);
+    run(super::AGENT_SESSION_SCRIPT_FILE_NAME, &["claudeCode", "end"], r#"{"session_id":"s-1","reason":"exit"}"#);
+    let record = super::session_records::read(&dir, "s-1").unwrap();
+    assert_eq!(record.provider.as_deref(), Some("claudeCode"));
+    assert_eq!(record.source.as_deref(), Some("startup"));
+    assert_eq!(record.end_reason.as_deref(), Some("exit"));
+    assert!(record.ended_at.is_some());
+
+    run(super::AGENT_RUNNING_SCRIPT_FILE_NAME, &["claudeCode", "notification"], r#"{"hook_event_name":"Notification"}"#);
+    assert_eq!(fs::read_dir(dir.join("agent-notifications")).unwrap().count(), 1);
+    let _ = fs::remove_dir_all(&dir);
+}
+
+#[cfg(target_os = "macos")]
+#[test]
+fn a_mac_editors_command_line_is_found_inside_its_app_bundle() {
+    use super::editor_extension::find_mac_cli;
+    let root = std::env::temp_dir().join(format!("fuyu-mac-cli-{}", std::process::id()));
+    let _ = fs::remove_dir_all(&root);
+    let bundle = root.join("Visual Studio Code.app");
+    let bin = bundle.join("Contents").join("Resources").join("app").join("bin");
+    fs::create_dir_all(&bin).unwrap();
+    fs::write(bin.join("code"), "").unwrap();
+    let exe = bundle.join("Contents").join("MacOS").join("Code");
+    assert_eq!(find_mac_cli("visual studio code", Some(&exe), &[], &[]), Some(bin.join("code")));
+    assert_eq!(find_mac_cli("visual studio code", None, &[], std::slice::from_ref(&root)), Some(bin.join("code")));
+    assert_eq!(find_mac_cli("cursor", None, &[], std::slice::from_ref(&root)), None);
+    let _ = fs::remove_dir_all(&root);
 }

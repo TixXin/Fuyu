@@ -1,4 +1,4 @@
-use objc2_app_kit::{NSApplicationActivationOptions, NSRunningApplication, NSWorkspace};
+use objc2_app_kit::{NSApplicationActivationOptions, NSApplicationActivationPolicy, NSRunningApplication, NSWorkspace};
 
 extern "C" {
     fn responsibility_get_pid_responsible_for_pid(pid: i32) -> i32;
@@ -24,6 +24,19 @@ pub(crate) fn path(pid: i32) -> Option<String> {
 pub(crate) fn activate(pid: i32) -> bool {
     NSRunningApplication::runningApplicationWithProcessIdentifier(pid)
         .is_some_and(|app| app.activateWithOptions(NSApplicationActivationOptions::ActivateAllWindows))
+}
+
+fn executable_of(app: &NSRunningApplication) -> Option<String> {
+    Some(app.executableURL()?.path()?.to_string())
+}
+
+pub(crate) fn regular_apps() -> Vec<(u32, String)> {
+    NSWorkspace::sharedWorkspace()
+        .runningApplications()
+        .iter()
+        .filter(|app| app.activationPolicy() == NSApplicationActivationPolicy::Regular)
+        .filter_map(|app| Some((u32::try_from(app.processIdentifier()).ok()?, executable_of(&app)?)))
+        .collect()
 }
 
 pub(crate) fn responsible_pid(pid: i32) -> i32 {

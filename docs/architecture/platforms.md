@@ -57,11 +57,11 @@ macOS 的计划和决定见 [macos-port-plan.md](macos-port-plan.md)，各功能
 | QQ 通知 | `qq_notifications` | 已支持 | 未开始 | 读不到系统通知；最多读 Dock 角标未读数（辅助功能），待验证 | G1.10 | — |
 | 微信提醒 | `wechat_reminders` | 已支持 | 未开始 | 同上；会话列表的 AX 读取待验证 | G1.10 | — |
 | 手机推送 | `phone_push` | 已支持 | 已支持 | 空闲时间用 `CGEventSourceSecondsSinceLastEventType`（任意输入），锁屏读 `CGSessionCopyCurrentDictionary` 的 `CGSSessionScreenIsLocked`（`macos/session.rs`）；不要权限。Bark 和凭据是通用代码 | G1.6 | macOS 27.2，2026-11-13（单元测试） |
-| AI 代理状态与 hook | `agent_status`、`agent_approval` | 已支持 | 未开始 | `~/.claude` 等路径、sh 脚本、绝对路径 | G1.7 | — |
+| AI 代理状态与 hook | `agent_status`、`agent_approval` | 已支持 | 开发中 | 四个 hook 脚本换成 `/bin/sh` 版（`agent_status/hooks/fuyu-agent-*.sh`，装在 `~/.fuyu`，755），读写的文件和 Windows 版一样（`agent-status.json`、运行标记、`agent-notifications/`、`agent-sessions/`）；JSON 用系统自带的 `plutil` 读、`printf` 写，毫秒时间用系统自带的 perl，没有时退回秒。Claude Code 的 hook 写成 `/bin/sh <脚本>` 加参数、活动上报用 `/usr/bin/curl`；Codex 的 `config.toml` 命令写成 `/bin/sh '<脚本>' …`，都是绝对路径，不依赖 hook 环境的 PATH。在岛上审批（HTTP hook）和审批快捷键（`approval_hotkeys_macos.rs`，共用 `macos/hotkeys.rs`）照常可用。会话记录里没有进程启动时间（`pidStarted` 为 null），只按 pid 认进程 | G1.7 | — |
 | WorkBuddy 会话（国内版，B23.2） | `agent_status` | 部分支持 | 未开始 | Windows：会话列表、标题和三态已用 5.3.8 的真实会话核对；「等你」的钩子没实测。Mac：读 `~/.workbuddy` 同样的文件，钩子脚本要换成 sh | G1.7 | — |
 | Antigravity 会话（B23.3） | `agent_status` | 部分支持 | 未开始 | Windows：按官方文档的钩子写，没实测；只有运行中和完成，没有「等你」。Mac：钩子配置同在 `~/.gemini/config/hooks.json`，脚本要换成 sh | G1.7 | — |
-| 点会话跳到终端 / 编辑器 | `agent_status` | 已支持 | 未开始 | AppleScript（自动化权限）、VS Code URL、AX | G1.7 | — |
-| Claude 用量 | `claude_usage` | 已支持 | 未开始 | 读取路径换成 Mac 的位置 | G1.7 | — |
+| 点会话跳到终端 / 编辑器 | `agent_status` | 已支持 | 开发中 | 从会话进程往上找到第一个前台应用并激活（`NSRunningApplication`）；父进程是 launchd 的进程（如 iTermServer）用系统的「负责进程」接上 iTerm2、VS Code。Terminal 和 iTerm2 再按会话进程的 tty 用 AppleScript 选中对应标签页（`macos/terminal_tabs.rs`，第一次要「自动化」授权）；VS Code 等编辑器和 Windows 一样用 `vscode://` 链接交给浮屿扩展切终端，扩展安装用 `.app` 里的 `Contents/Resources/app/bin/code`。没有：按窗口标题挑同一应用的多个窗口 | G1.7 | — |
+| Claude 用量 | `claude_usage` | 已支持 | 开发中 | 本地日志的读取是通用代码。可选的「直接向 Anthropic 查询」在没有 `~/.claude/.credentials.json` 时读钥匙串里 Claude Code 存的 `Claude Code-credentials`（账户是当前用户名），第一次读时系统会问是否允许 | G1.7 | — |
 | 插件 | `plugin_host` | 已支持 | 未开始 | 进程组代替 Job Object；PowerShell 插件需用户装 pwsh | G1.8 | — |
 | 本地 API、SSH 隧道、cc-connect | `local_api`、`ssh_tunnel`、`cc_connect` | 已支持 | 未开始 | 通用代码；系统代理读 SCDynamicStore | G1.2 | — |
 | 宠物 | `pets` | 已支持 | 未开始 | 通用代码 | G1.2 | — |

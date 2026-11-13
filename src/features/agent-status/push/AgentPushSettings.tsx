@@ -11,6 +11,7 @@ import { deleteBarkKey, hasBarkKey, saveBarkKey, sendBarkPush } from "./api";
 import { CcConnectPushTargets } from "./CcConnectPushTargets";
 import { PUSH_GROUP } from "./sendPush";
 import { AGENT_PUSH_AWAY_MINUTES, AGENT_PUSH_CHANNELS, AGENT_PUSH_EVENTS, LOCAL_HOST, type AgentPushChannel } from "./storage";
+import { isMacOS } from "../../../lib/platform";
 import { useAgentPushSettings } from "./useAgentPushSettings";
 
 export function AgentPushSettings() {
@@ -109,7 +110,7 @@ export function AgentPushSettings() {
               <SettingsRow
                 indent
                 title={text.key}
-                description={keySaved ? text.keyIsSaved : text.keyHint}
+                description={keySaved ? (isMacOS ? text.keyIsSavedMac : text.keyIsSaved) : text.keyHint}
                 control={
                   keySaved ? (
                     <SettingsLinkButton tone="danger" disabled={busy} onClick={() => void clearKey()}>{text.clearKey}</SettingsLinkButton>

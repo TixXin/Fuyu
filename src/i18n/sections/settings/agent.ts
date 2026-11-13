@@ -123,6 +123,7 @@ export type SettingsAgentText = {
     key: string;
     keyHint: string;
     keyIsSaved: string;
+    keyIsSavedMac: string;
     keyPlaceholder: string;
     saveKey: string;
     clearKey: string;
@@ -305,6 +306,7 @@ export const zhCN: SettingsAgentText = {
     key: "设备 Key",
     keyHint: "在 Bark 里复制推送地址粘贴进来，或只粘贴其中那串字母数字",
     keyIsSaved: "已保存在 Windows 凭据管理器里",
+    keyIsSavedMac: "已保存在钥匙串里",
     keyPlaceholder: "https://api.day.app/xxxxxxxx",
     saveKey: "保存",
     clearKey: "清除",
@@ -487,6 +489,7 @@ export const en: SettingsAgentText = {
     key: "Device key",
     keyHint: "Copy the push URL in Bark and paste it here, or just the letters and digits in it",
     keyIsSaved: "Saved in Windows Credential Manager",
+    keyIsSavedMac: "Saved in the Keychain",
     keyPlaceholder: "https://api.day.app/xxxxxxxx",
     saveKey: "Save",
     clearKey: "Clear",
