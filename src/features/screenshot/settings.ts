@@ -1,7 +1,7 @@
 export const SHORTCUT_ACTIONS = ["region", "copy", "text", "translate", "fullscreen", "pins"] as const;
 export type ShortcutAction = (typeof SHORTCUT_ACTIONS)[number];
 
-export const CARD_SECONDS = [0, 4, 8, 15, 30] as const;
+export const CARD_SECONDS = [0, 3, 5, 8, 15, 30] as const;
 export type CardSeconds = (typeof CARD_SECONDS)[number];
 
 export type ScreenshotSettings = {
@@ -9,6 +9,7 @@ export type ScreenshotSettings = {
   printScreen: boolean;
   saveFolder: string;
   cardSeconds: CardSeconds;
+  version: 2;
 };
 
 export const DEFAULT_SHORTCUTS: Record<ShortcutAction, string> = {
@@ -24,7 +25,8 @@ export const DEFAULT_SCREENSHOT_SETTINGS: ScreenshotSettings = {
   shortcuts: DEFAULT_SHORTCUTS,
   printScreen: false,
   saveFolder: "",
-  cardSeconds: 8,
+  cardSeconds: 3,
+  version: 2,
 };
 
 const MAX_FOLDER_CHARS = 1024;
@@ -43,7 +45,8 @@ export function normalizeScreenshotSettings(value: unknown): ScreenshotSettings 
     shortcuts: Object.fromEntries(SHORTCUT_ACTIONS.map((action) => [action, shortcutOf(shortcuts[action], DEFAULT_SHORTCUTS[action])])) as Record<ShortcutAction, string>,
     printScreen: saved.printScreen === true,
     saveFolder: folder.length <= MAX_FOLDER_CHARS ? folder : "",
-    cardSeconds: (CARD_SECONDS as readonly unknown[]).includes(saved.cardSeconds) ? (saved.cardSeconds as CardSeconds) : DEFAULT_SCREENSHOT_SETTINGS.cardSeconds,
+    cardSeconds: saved.version === 2 && (CARD_SECONDS as readonly unknown[]).includes(saved.cardSeconds) ? (saved.cardSeconds as CardSeconds) : DEFAULT_SCREENSHOT_SETTINGS.cardSeconds,
+    version: 2,
   };
 }
 

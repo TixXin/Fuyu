@@ -5,7 +5,8 @@ import { mockIPC, mockWindows } from "@tauri-apps/api/mocks";
 import "../../src/styles/tokens.css";
 import { I18nProvider } from "../../src/i18n";
 import type { AgentSessionSummary } from "../../src/features/agent-status/api";
-import { ScreenshotCard } from "../../src/features/screenshot/ScreenshotCard";
+import { ScreenshotNotice, ScreenshotNoticeActions } from "../../src/features/screenshot/ScreenshotNotice";
+import { useScreenshotNotice } from "../../src/features/screenshot/useScreenshotNotice";
 import { useScreenshotCard } from "../../src/features/screenshot/useScreenshotCard";
 
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
@@ -28,9 +29,13 @@ function Harness() {
   const card = useScreenshotCard(8);
   const [sessions, set] = useState<AgentSessionSummary[]>([SESSION]);
   setSessions = set;
+  const notice = useScreenshotNotice(card, sessions);
   return (
     <div style={{ position: "relative", width: 360, height: 38, borderRadius: 19, overflow: "hidden" }}>
-      <ScreenshotCard key={card.current?.path} card={card} sessions={sessions} />
+      <div style={{ display: "flex", alignItems: "center", gap: 8, height: 38, padding: "0 18px", background: "#000" }}>
+        {notice.taken && <ScreenshotNotice key={notice.taken.path} notice={notice} />}
+        <ScreenshotNoticeActions notice={notice} />
+      </div>
     </div>
   );
 }
@@ -51,8 +56,8 @@ const check = (condition: unknown, message: string) => {
 };
 const wait = (ms: number) => act(async () => { await new Promise((resolve) => setTimeout(resolve, ms)); });
 const called = (command: string) => calls.filter((call) => call.command === command);
-const card = () => document.querySelector<HTMLElement>(".screenshot-card");
-const button = (label: string) => document.querySelector<HTMLButtonElement>(`.screenshot-card button[aria-label="${label}"]`);
+const card = () => document.querySelector<HTMLElement>(".screenshot-notice");
+const button = (label: string) => document.querySelector<HTMLButtonElement>(`.screenshot-notice__actions button[aria-label="${label}"]`);
 const PATH = "C:\\Users\\me\\AppData\\Roaming\\com.tixxin.fuyu\\screenshots\\Fuyu_2026-11-12_10-30-15.png";
 const THUMB = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
 
@@ -62,7 +67,7 @@ async function runChecks() {
     check(!card(), "Nothing shows before a screenshot");
 
     await act(async () => { await emit("screenshot-taken", { path: PATH, thumbnail: THUMB, saved: false }); });
-    check(card()?.textContent?.includes("截图已复制") && document.querySelector(".screenshot-card__thumb"), "A copied screenshot shows the card with its thumbnail");
+    check(card()?.textContent?.includes("截图已复制") && document.querySelector(".screenshot-notice__thumb"), "A copied screenshot shows the notice with its thumbnail");
 
     await act(async () => { button("放进文件中转")!.click(); });
     await wait(10);

@@ -25,7 +25,7 @@
 | `fuyu-settings-focus`（主窗口 → 设置窗口的跳转请求） | `windows/settings/storage.ts` |
 | `fuyu-settings-file-synced`（2026-11-12 起，D30.2：上次在 localStorage 和 `settings.json` 之间同步时设置的指纹，`settingsFile.ts` 的 `fingerprint`；不是设置，不进备份） | `features/settings-backup/storage.ts` |
 | `fuyu-screenshot-annotation`（截图标注上次用的颜色和粗细：`{ color, level }`，C41.3） | `features/screenshot/storage.ts` |
-| `fuyu-screenshot-settings`（截图设置，C41.6：`{ shortcuts: { region, copy, text, translate, fullscreen, pins }, printScreen, saveFolder, cardSeconds }`；快捷键为空字符串表示关掉，`pins` 缺省为空；`cardSeconds` 是 0、4、8、15、30 之一，0 不显示岛上的截图卡片；`saveFolder` 为空表示「图片\浮屿截图」） | `features/screenshot/storage.ts`、`settings.ts` |
+| `fuyu-screenshot-settings`（截图设置，C41.6：`{ shortcuts: { region, copy, text, translate, fullscreen, pins }, printScreen, saveFolder, cardSeconds }`；快捷键为空字符串表示关掉，`pins` 缺省为空；`cardSeconds` 是 0、3、5、8、15、30 之一，0 不显示岛上的截图卡片，缺省 3；`version: 2`（2026-11-13 起；没有它的旧数据里 `cardSeconds` 按缺省值处理，原来的缺省 8 秒因此变成 3 秒）；`saveFolder` 为空表示「图片\浮屿截图」） | `features/screenshot/storage.ts`、`settings.ts` |
 | `fuyu-position-reset`（设置窗口 → 主窗口：让岛回到主屏顶部居中，`{ requestedAt }`，超过 5 秒的请求忽略） | `windows/settings/storage.ts` |
 | `fuyu-todo-project-edit`（设置窗口 → 主窗口：改保存的待办项目，`{ edit, requestedAt, nonce }`，`edit` 是 `{ type: "add", name }` / `{ type: "rename", id, name }` / `{ type: "move", id, by: -1 \| 1 }` / `{ type: "remove", id }`，超过 5 秒的请求忽略；C53） | `features/todos/projectEdits.ts` |
 | `fuyu-panel-preview`（设置窗口 → 主窗口：拖动尺寸滑块时让岛展开或收起预览，`{ mode, requestedAt }`，超过 2 秒的请求忽略） | `windows/settings/storage.ts` |
