@@ -192,7 +192,7 @@ Every star keeps Fuyu moving.
 
 ## License
 
-[GPL-3.0](LICENSE). Plugin authors choose their own license. Third-party dependencies and bundled assets keep their own licenses; see the [font notices](src/assets/fonts/README.md) for bundled fonts.
+[GPL-3.0](LICENSE). Plugin authors choose their own license. Third-party dependencies and bundled assets keep their own licenses; see the [third-party notices](docs/THIRD_PARTY_NOTICES.md) for where they come from, and the [font notices](src/assets/fonts/README.md) for bundled fonts.
 
 > [!NOTE]
 > This project is maintained together by [TixXin](https://github.com/TixXin) and [ShengLin1001](https://github.com/ShengLin1001); it was renamed from fly-island to Fuyu in November 2026. The original author, [flyl1u](https://github.com/flyl1u/fly-island), prefers a lean, minimal island. To give the island more to do, and to let more people put their own DIY features on it, this project went its own way as a jointly maintained one and grew a plugin market. Pull requests are welcome (see [Contributing](CONTRIBUTING.md)), and so are your own components in the [plugin market](https://github.com/TixXin/fuyu-plugins), or plugins you install locally (see the [plugin docs](docs/plugins/README.md)).

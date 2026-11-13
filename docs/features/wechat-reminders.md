@@ -23,7 +23,7 @@
 
 微信 4.x（Qt）默认不向 UI Automation 公开控件，岛屿读不到任何文字，按上面的方式只显示「有新提醒」。Qt 在 `Weixin.dll` 里用一个字节记着「有没有辅助功能客户端」，默认 0；它变成 1 后（屏幕阅读器在运行，或者下面的开关），主窗口会公开左侧会话列表，每行的名字含联系人、未读数、最后一条消息和时间。岛屿只在「显示联系人和消息摘要」打开时读这个列表：开关关着时，即使读屏软件已经公开了微信界面，也只显示「有新提醒」。
 
-「设置 → 消息 → 微信提醒 → 显示联系人和消息摘要」（默认关）让岛屿自己改这个字节（`wechat_reminders/gate.rs`，做法和指令特征来自 wechatauto-replica 的 `wake_uia.py`，Apache-2.0，声明见仓库根目录 `THIRD_PARTY_NOTICES.md`；最早写成插件 `dev.shenglin1001.wechat-preview`，那个插件仍可单独加载）：
+「设置 → 消息 → 微信提醒 → 显示联系人和消息摘要」（默认关）让岛屿自己改这个字节（`wechat_reminders/gate.rs`，做法和指令特征来自 wechatauto-replica 的 `wake_uia.py`，Apache-2.0，声明见 [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md)；最早写成插件 `dev.shenglin1001.wechat-preview`，那个插件仍可单独加载）：
 
 - 第一次在 `Weixin.dll` 文件里扫出这个字节的候选地址（约 200 MB，几秒钟；按微信版本缓存在应用数据目录 `wechat-gate/gate-cache.json`），把运行中微信里的它从 0 写成 1，等界面公开后记下地址。只试排在最前的一个候选，没公开就写回原值，不再试别的地址：每试一次都要往微信里写一个字节，特征码万一匹配到别的标志位，写着的那 2 秒里微信可能出问题。
 - 每 5 秒看一眼：微信重启后字节回到 0，就再写一次；同一个微信进程里找不到就不再试，设置里显示原因。
