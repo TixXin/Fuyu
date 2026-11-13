@@ -21,6 +21,7 @@ export const AGENT_PROVIDER_LABELS: Record<SessionProvider, string> = {
   codex: "Codex",
   claudeCode: "Claude Code",
   workbuddy: "WorkBuddy",
+  antigravity: "Antigravity",
 };
 export type AgentStatusEntry = {
   key: string;

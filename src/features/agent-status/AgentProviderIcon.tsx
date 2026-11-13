@@ -1,3 +1,4 @@
+import antigravityIcon from "../../assets/brands/antigravity.png";
 import claudeCodeIcon from "../../assets/brands/claude-code.png";
 import codexIcon from "../../assets/brands/codex.webp";
 import workbuddyIcon from "../../assets/brands/workbuddy.svg";
@@ -8,6 +9,7 @@ const PROVIDER_ICONS: Record<SessionProvider, string> = {
   claudeCode: claudeCodeIcon,
   codex: codexIcon,
   workbuddy: workbuddyIcon,
+  antigravity: antigravityIcon,
 };
 
 export function AgentProviderIcon({ provider, size = 16 }: { provider: SessionProvider; size?: number }) {

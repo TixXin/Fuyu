@@ -3,7 +3,7 @@ import { listen } from "@tauri-apps/api/event";
 import type { AgentEffortLabels } from "./effortLabels";
 
 export type AgentProvider = "codex" | "claudeCode";
-export type SessionProvider = AgentProvider | "workbuddy";
+export type SessionProvider = AgentProvider | "workbuddy" | "antigravity";
 export type AgentTaskPhase = "idle" | "running" | "waiting" | "completed" | "failed" | "stale";
 
 export type AgentTaskStatus = {
