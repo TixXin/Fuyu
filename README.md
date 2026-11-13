@@ -1,45 +1,109 @@
 <div align="center">
-  <a href="https://fuyu.ing/logo/"><img src="docs/assets/logo-placeholder.svg" alt="浮屿 Logo 征集中" width="96" height="96"></a>
+  <a href="https://fuyu.ing/zh/logo/"><img src="docs/assets/logo-placeholder.svg" alt="浮屿 Logo 征集中" width="96" height="96"></a>
   <br>
-  <sub><a href="https://fuyu.ing/logo/">Logo 征集中，欢迎投稿</a></sub>
+  <sub><a href="https://fuyu.ing/zh/logo/">Logo 征集中，欢迎投稿</a></sub>
 
   <h1>浮屿 Fuyu</h1>
 
-  <p><a href="README.en.md">English</a> · 中文</p>
+  <p><b>一座岛，收下桌面的零碎</b></p>
 
   <p>Windows 上的桌面灵动岛：待办、剪贴板、消息、翻译、音乐和 AI 状态，都在屏幕顶部的一座小岛上。</p>
 
+  <p><a href="README.en.md">English</a> · 中文</p>
+
   <p>
-    <a href="https://fuyu.ing">官网</a>
+    <a href="https://github.com/TixXin/fuyu/releases/latest"><b>下载</b></a>
     ·
-    <a href="https://github.com/TixXin/fuyu/releases/latest">下载</a>
+    <a href="https://fuyu.ing/zh/">官网</a>
+    ·
+    <a href="https://fuyu.ing/zh/plugins/">插件市场</a>
+    ·
+    <a href="docs/plugins/README.md">写插件</a>
     ·
     <a href="https://github.com/TixXin/fuyu/issues">反馈问题</a>
   </p>
 
   <p>
-    <img alt="Version" src="https://img.shields.io/github/v/release/TixXin/fuyu?label=version">
-    <img alt="Platform" src="https://img.shields.io/badge/platform-Windows-0078D4">
+    <a href="https://github.com/TixXin/fuyu/releases/latest"><img alt="Version" src="https://img.shields.io/github/v/release/TixXin/fuyu?label=version"></a>
+    <img alt="Platform" src="https://img.shields.io/badge/platform-Windows%2010%20%2F%2011-0078D4">
     <img alt="Tauri" src="https://img.shields.io/badge/Tauri-2-24C8DB">
+    <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-GPL--3.0-3DA639"></a>
+    <a href="https://github.com/TixXin/fuyu/stargazers"><img alt="Stars" src="https://img.shields.io/github/stars/TixXin/fuyu?style=flat&label=stars"></a>
+  </p>
+
+  <p>
+    <a href="docs/assets/promo-001-one-island.mp4"><img src="docs/assets/readme/tour-zh.gif" alt="浮屿演示：桌面上散着的窗口收进屏幕顶部的岛，依次展开待办、音乐与歌词、新消息、剪贴板、翻译和 AI Agent 审批，最后自己收回去" width="800"></a>
+    <br>
+    <sub>43 秒看一圈。画面里的岛就是真的前端，不是录屏（<a href="video/README.md">怎么做的</a>）· <a href="docs/assets/promo-001-one-island.mp4">看带声音的完整视频</a></sub>
   </p>
 </div>
-
-> [!NOTE]
-> 本项目由 [TixXin](https://github.com/TixXin) 和 [ShengLin1001](https://github.com/ShengLin1001) 独立维护，2026 年 11 月由 fly-island 改名为浮屿。原作者 [flyl1u](https://github.com/flyl1u/fly-island) 偏向于精简的灵动岛界面；为了进一步丰富灵动岛的功能，让更多用户把自己 DIY 的功能放上岛，本项目开始独立维护，并发展出了插件市场模式。欢迎大家把自己的组件上传到[插件市场](https://github.com/TixXin/fuyu-plugins)，或者在本地安装自己的插件（见[插件文档](docs/plugins/README.md)）。
 
 ## 这是什么
 
 浮屿（Fuyu）是一座轻量、无边框、始终置顶的悬浮岛。平时收在屏幕顶部，需要时展开，用完自动收回。常用的东西都放在岛上，不用为了看一眼信息来回切窗口。
 
-## 功能
+<p align="center">
+  <img src="docs/assets/readme/collapsed-zh.webp" alt="收起的浮屿：屏幕顶部一条窄窄的黑色小岛，正在显示同步歌词和音频波形" width="800">
+  <br>
+  <sub>收起时只占屏幕顶部这一小条，图里它正跟着歌显示歌词和音频波形</sub>
+</p>
 
-- **待办与笔记**：每天的任务、当前专注的事项、每日笔记和历史归档。
-- **剪贴板与文件中转**：图文剪贴板历史；把文件先拖到岛上暂存，再拖去别的程序。
-- **消息**：QQ、微信提醒和多个邮箱，邮件可以直接在岛上阅读和回复。
+## 岛上有什么
+
+<table>
+  <tr>
+    <td width="50%" valign="top">
+      <img src="docs/assets/readme/todo-zh.webp" alt="展开的岛上是今天的待办，已完成的划掉收在下面">
+      <br>
+      <b>待办与笔记</b>
+      <br>
+      每天的任务、当前专注的事项、每日笔记和历史归档。
+    </td>
+    <td width="50%" valign="top">
+      <img src="docs/assets/readme/music-zh.webp" alt="岛上的音乐页：封面、同步歌词、进度条和播放控制">
+      <br>
+      <b>音乐</b>
+      <br>
+      控制正在播放的媒体，显示音频波形和同步歌词。
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <img src="docs/assets/readme/messages-zh.webp" alt="岛下弹出的新消息：一封邮件、一条微信和一条 QQ">
+      <br>
+      <b>消息</b>
+      <br>
+      QQ、微信提醒和多个邮箱，邮件可以直接在岛上阅读和回复。
+    </td>
+    <td width="50%" valign="top">
+      <img src="docs/assets/readme/clipboard-zh.webp" alt="岛上的剪贴板历史：命令、链接、一段文字和一张图片，各自标着来源">
+      <br>
+      <b>剪贴板与文件中转</b>
+      <br>
+      图文剪贴板历史；把文件先拖到岛上暂存，再拖去别的程序。
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <img src="docs/assets/readme/translate-zh.webp" alt="岛上的翻译页：左边原文，右边译文">
+      <br>
+      <b>快捷翻译</b>
+      <br>
+      一个快捷键打开，支持多家大模型翻译服务。
+    </td>
+    <td width="50%" valign="top">
+      <img src="docs/assets/readme/agents-zh.webp" alt="岛上弹出 Claude Code 的审批请求：要运行的命令，以及拒绝和允许两个按钮">
+      <br>
+      <b>AI Agent</b>
+      <br>
+      显示 Claude Code 和 Codex 会话的运行状态和用量，要你确认时直接在岛上批准，点一下切到对应窗口；离开电脑时可以推送到手机。
+    </td>
+  </tr>
+</table>
+
+还有：
+
 - **日历**：今天和明天的日程、带农历和节假日的月历，会议快开始时在岛上倒计时，可一键加入。
-- **快捷翻译**：一个快捷键打开，支持多家大模型翻译服务。
-- **AI Agent**：显示 Claude Code 和 Codex 会话的运行状态和用量，点一下切到对应窗口；离开电脑时可以推送到手机。
-- **音乐**：控制正在播放的媒体，显示音频波形和同步歌词。
 - **系统提示**：音量、亮度变化，摄像头和麦克风正在被哪个程序使用。
 - **插件与主题**：从插件市场安装插件来扩展岛屿，敏感数据需要你单独授权；主题市场里挑现成的外观。
 
@@ -47,7 +111,16 @@
 
 ## 占用
 
-收起、闲着、不放音乐时（默认设置，不装插件）：CPU 约占单核的 10%（20 核电脑上约占总量的 0.5%），浮屿本身占用的内存约 16 MB。Agent 页每秒刷新一次会话列表，实测只占单核的 0.1%。每装一个 PowerShell 插件约多 60 MB。测量方法和数据见 [idle-usage.md](docs/investigations/idle-usage.md)。
+收起、闲着、不放音乐时（默认设置，不装插件）：
+
+| | 实测 |
+|---|---|
+| CPU | 约占单核的 10%（20 核电脑上约占总量的 0.5%） |
+| 内存 | 浮屿本身约 16 MB |
+| Agent 页每秒刷新一次会话列表 | 单核的 0.1% |
+| 每装一个 PowerShell 插件 | 约多 60 MB |
+
+测量方法和数据见 [idle-usage.md](docs/investigations/idle-usage.md)。
 
 ## 上手
 
@@ -55,7 +128,19 @@
 2. 鼠标移到屏幕顶部的岛上即可展开，点齿轮或托盘图标打开设置。
 3. 邮箱、翻译和 AI Agent 需要先在设置里配置一次，具体见各自的说明：[邮箱](docs/features/mail.md)、[AI Agent](docs/features/agent-status-hooks.md)、[QQ 通知](docs/features/qq-notifications.md)、[微信提醒](docs/features/wechat-reminders.md)。
 
-想自己写插件，见 [插件文档](docs/plugins/README.md)。
+目前支持 Windows 10 / 11。macOS 版正在适配，各功能的进度见 [platforms.md](docs/architecture/platforms.md)。
+
+## 插件
+
+岛上缺什么，可以自己加。一个插件就是一个文件夹：一份清单，加一个由岛屿启动的程序（PowerShell 脚本、exe 或 Node.js 脚本）。插件只发数据，页面、收起条和设置页由岛屿按模板画，所以和岛上其他内容风格一致。
+
+```sh
+npm create fuyu-plugin@latest
+```
+
+- **装现成的**：在岛屿的「设置 → 插件市场」里安装，也可以先在[官网的插件市场](https://fuyu.ing/zh/plugins/)看看有哪些。
+- **自己写**：跟着[快速开始](docs/plugins/quickstart.md)从零做出一个插件，大约一小时；完整说明见[插件文档](docs/plugins/README.md)。
+- **分享给别人**：放进[插件市场](https://github.com/TixXin/fuyu-plugins)，或者只在自己的电脑上用，步骤见[发布](docs/plugins/publish.md)。
 
 ## 从源码构建
 
@@ -71,6 +156,20 @@ pnpm tauri build    # 打包安装程序
 
 技术栈：Tauri 2、React 19 + TypeScript、Rust。发布与应用内更新见 [docs/features/updater.md](docs/features/updater.md)。
 
+## 参与贡献
+
+浮屿是大家一起做的，欢迎你来添一块：
+
+- **提问题和想法**：到 [Issues](https://github.com/TixXin/fuyu/issues) 说说哪里不好用、还想要什么。
+- **改代码、文档或翻译**：直接提 PR。怎么提、提之前跑哪些检查，见 [CONTRIBUTING.md](CONTRIBUTING.md)；代码怎么组织，见 [AGENTS.md](AGENTS.md)。
+- **写插件**：不用改岛屿本体，做好了放进[插件市场](https://github.com/TixXin/fuyu-plugins)。
+- **画一个 Logo**：浮屿还没有正式的 Logo，[征集页](https://fuyu.ing/zh/logo/)一直开着。
+
+<a href="https://github.com/TixXin/fuyu/graphs/contributors"><img src="https://contrib.rocks/image?repo=TixXin/fuyu" alt="浮屿的贡献者"></a>
+
 ## 开源协议
 
 [GPL-3.0](LICENSE)。插件作者可以自己选协议。第三方依赖和内置资源遵循各自的许可证，内置字体见[字体说明](src/assets/fonts/README.md)。
+
+> [!NOTE]
+> 本项目由 [TixXin](https://github.com/TixXin) 和 [ShengLin1001](https://github.com/ShengLin1001) 共同维护，2026 年 11 月由 fly-island 改名为浮屿。原作者 [flyl1u](https://github.com/flyl1u/fly-island) 偏向于精简的灵动岛界面；为了进一步丰富灵动岛的功能，让更多用户把自己 DIY 的功能放上岛，本项目另起一支，由大家共同维护，并发展出了插件市场模式。欢迎大家提 PR 贡献代码（见[参与贡献](CONTRIBUTING.md)），把自己的组件上传到[插件市场](https://github.com/TixXin/fuyu-plugins)，或者在本地安装自己的插件（见[插件文档](docs/plugins/README.md)）。
