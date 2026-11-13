@@ -52,7 +52,7 @@ export type MailEvent = { snapshot: MailSnapshot; newestId: string | null; windo
 
 export const MAIL_CHANGED_EVENT = "qq-mail-changed";
 
-export type MailCommand = "connect_qq_mail" | "set_qq_mail_enabled" | "refresh_qq_mail" | "disconnect_qq_mail" | "mark_qq_mail_read";
+export type MailCommand = "connect_qq_mail" | "set_qq_mail_enabled" | "refresh_qq_mail" | "disconnect_qq_mail" | "mark_qq_mail_read" | "mark_all_qq_mail_read";
 
 export function getMailState() {
   return invoke<MailSnapshot[]>("get_qq_mail_state");

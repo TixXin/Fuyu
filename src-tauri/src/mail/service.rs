@@ -11,7 +11,7 @@ use super::accounts::next_revision;
 use super::content::fetch_content;
 use super::credentials::{credential, read_secret};
 use super::session::{
-    interrupt_idle, mark_seen, open_session, wait_for_mail, Cursor, Inbox, MailFailure, MailWake,
+    interrupt_idle, mark_all_seen, mark_seen, open_session, wait_for_mail, Cursor, Inbox, MailFailure, MailWake,
     SyncConnection,
 };
 use super::{MailContent, MailSnapshot, MailStatus, EVENT};
@@ -363,6 +363,32 @@ impl MailService {
         }
         item.unread = false;
         state.snapshot.unread_count = state.snapshot.unread_count.map(|count| count.saturating_sub(1));
+        let snapshot = state.changed();
+        drop(state);
+        self.publish(snapshot.clone(), None);
+        Ok(snapshot)
+    }
+
+    pub(super) fn mark_all_read(&self, generation: u64, email: &str) -> Result<MailSnapshot, UserError> {
+        let secret = read_secret(email)?.ok_or_else(|| UserError::new("mail.codeMissing", "The saved authorization code was not found; connect again."))?;
+        let mut session =
+            open_session(&self.host(), email, &secret).map_err(|failure| failure.error)?;
+        let result = mark_all_seen(&mut session);
+        let _ = session.logout();
+        let (validity, uids) = result?;
+        let mut state = self.lock()?;
+        if state.generation != generation {
+            return Err(UserError::new("mail.changedRefresh", "The mail connection changed; refresh the inbox."));
+        }
+        if uids.is_empty() {
+            return Ok(state.snapshot.clone());
+        }
+        for item in &mut state.snapshot.items {
+            if super::content::parse_message_id(&item.id).is_ok_and(|(v, uid)| v == validity && uids.binary_search(&uid).is_ok()) {
+                item.unread = false;
+            }
+        }
+        state.snapshot.unread_count = state.snapshot.unread_count.map(|count| count.saturating_sub(uids.len()));
         let snapshot = state.changed();
         drop(state);
         self.publish(snapshot.clone(), None);

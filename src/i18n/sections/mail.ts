@@ -10,6 +10,7 @@ export type MailText = {
   back: string;
   openWeb: string;
   markRead: string;
+  markAllRead: string;
   compose: string;
   reply: string;
   from: (email: string) => string;
@@ -94,6 +95,7 @@ export const zhCN: MailText = {
   back: "返回列表",
   openWeb: "在网页打开",
   markRead: "标为已读",
+  markAllRead: "这个邮箱全部标为已读（邮箱里也会变成已读，不删邮件）",
   compose: "写邮件",
   reply: "回复",
   from: (email: string) => `由 ${email} 发出`,
@@ -178,6 +180,7 @@ export const en: MailText = {
   back: "Back to list",
   openWeb: "Open in browser",
   markRead: "Mark as read",
+  markAllRead: "Mark everything in this mailbox as read (also read in the mailbox itself; nothing is deleted)",
   compose: "Write mail",
   reply: "Reply",
   from: (email: string) => `From ${email}`,

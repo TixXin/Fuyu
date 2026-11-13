@@ -143,6 +143,8 @@ export function useIslandMessagePanel({ enabled, durationMs, notices, mode, page
   }, [arrivals, close, pluginNotifications]);
 
   const clearAll = useCallback(() => {
+    const mails = (arrivals ?? []).flatMap((item) => item.mail?.account && item.mail.message.unread ? [{ account: item.mail.account, id: item.mail.message.id }] : []);
+    void (async () => { for (const mail of mails) await qqMail.markRead(mail.account, mail.id); })();
     void qqNotifications.clear();
     void wechatReminders.clear();
     qqNotifications.dismissPreview();
@@ -150,7 +152,7 @@ export function useIslandMessagePanel({ enabled, durationMs, notices, mode, page
     qqMail.dismissPreview();
     pluginNotifications.dismiss();
     close();
-  }, [close, pluginNotifications, qqMail, qqNotifications, wechatReminders]);
+  }, [arrivals, close, pluginNotifications, qqMail, qqNotifications, wechatReminders]);
 
   return {
     clearAll,

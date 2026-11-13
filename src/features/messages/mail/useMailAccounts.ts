@@ -98,13 +98,14 @@ export function useMailAccounts({ restore, onSnapshot, onEvent }: {
   const refresh = useCallback((email: string) => run("refresh_qq_mail", { email }), [run]);
   const disconnect = useCallback((email: string) => run("disconnect_qq_mail", { email }), [run]);
   const markRead = useCallback((email: string, messageId: string) => run("mark_qq_mail_read", { email, messageId }), [run]);
+  const markAllRead = useCallback((email: string) => run("mark_all_qq_mail_read", { email }), [run]);
   const openHelp = useCallback(async () => {
     try { await openMailLink("https://service.mail.qq.com/"); }
     catch { setActionError(t.mail.helpFailed); }
   }, [t]);
 
   return {
-    mailboxes, busy, actionError, setActionError, connect, setEnabled, setAllEnabled, refresh, disconnect, markRead, openHelp,
+    mailboxes, busy, actionError, setActionError, connect, setEnabled, setAllEnabled, refresh, disconnect, markRead, markAllRead, openHelp,
     unreadTotal: totalUnread(mailboxes),
     anyConfigured: mailboxes.some((mailbox) => mailbox.configured),
     anyReceiving: mailboxes.some((mailbox) => mailbox.configured && mailbox.enabled),

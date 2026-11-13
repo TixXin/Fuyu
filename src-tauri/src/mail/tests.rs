@@ -654,6 +654,23 @@ fn marking_read_selects_the_inbox_and_stores_seen_on_that_uid() {
 }
 
 #[test]
+fn marking_all_read_stores_seen_on_every_unseen_uid_only() {
+    let script = "* OK ready\r\na1 OK login\r\n* 3 EXISTS\r\n* OK [UIDVALIDITY 7] valid\r\na2 OK [READ-WRITE] selected\r\n* SEARCH 12 9\r\na3 OK searched\r\na4 OK stored\r\n".to_string();
+    let (imap, output) = client(script);
+    let mut session = imap.login("user@qq.com", "test-secret").unwrap();
+    assert_eq!(super::session::mark_all_seen(&mut session).unwrap(), (7, vec![9, 12]));
+    let sent = String::from_utf8_lossy(&output.lock().unwrap()).to_string();
+    assert!(sent.contains("a3 UID SEARCH UNSEEN"), "{sent}");
+    assert!(sent.contains("a4 UID STORE 9,12 +FLAGS.SILENT (\\Seen)"), "{sent}");
+
+    let none = "* OK ready\r\na1 OK login\r\n* OK [UIDVALIDITY 7] valid\r\na2 OK [READ-WRITE] selected\r\n* SEARCH\r\na3 OK searched\r\n".to_string();
+    let (imap, output) = client(none);
+    let mut session = imap.login("user@qq.com", "test-secret").unwrap();
+    assert_eq!(super::session::mark_all_seen(&mut session).unwrap(), (7, vec![]));
+    assert!(!String::from_utf8_lossy(&output.lock().unwrap()).contains("STORE"));
+}
+
+#[test]
 fn mail_ids_cannot_change_the_imap_query() {
     assert_eq!(parse_message_id("7:9").unwrap(), (7, 9));
     for id in [

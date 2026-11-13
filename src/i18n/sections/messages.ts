@@ -70,7 +70,7 @@ export const zhCN: MessagesText = {
     title: "新消息",
     showAll: "全部消息",
     clearAll: "清除提醒",
-    clearAllHint: "清除岛上的所有提醒，不打开应用；微信、QQ 和邮箱里的消息不会标为已读",
+    clearAllHint: "清除岛上的所有提醒，不打开应用；这里列出的邮件会在邮箱里标为已读，微信、QQ 里的消息不变",
   },
 };
 
@@ -108,6 +108,6 @@ export const en: MessagesText = {
     title: "New messages",
     showAll: "All messages",
     clearAll: "Clear reminders",
-    clearAllHint: "Clears every reminder on the island without opening an app; nothing is marked read in WeChat, QQ or mail",
+    clearAllHint: "Clears every reminder on the island without opening an app; the mails listed here are marked read in the mailbox, WeChat and QQ are left as they are",
   },
 };

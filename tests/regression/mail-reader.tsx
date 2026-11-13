@@ -42,6 +42,7 @@ mockIPC((command, payload) => {
     case "get_qq_mail_reply": return { to: "team@example.com", subject: "Re: 工作进展 2" };
     case "send_qq_mail": return null;
     case "save_qq_mail_attachment": return "C:\\Users\\demo\\Downloads\\季度报告.pdf";
+    case "mark_all_qq_mail_read": snapshot = { ...snapshot, revision: ++revision, unreadCount: 0, items: snapshot.items.map(item => ({ ...item, unread: false })) }; return snapshot;
     case "mark_qq_mail_read": snapshot = { ...snapshot, revision: ++revision, unreadCount: Math.max(0, (snapshot.unreadCount ?? 0) - 1), items: snapshot.items.map(item => item.id === args.messageId ? { ...item, unread: false } : item) }; return snapshot;
     case "set_qq_mail_enabled": snapshot = { ...snapshot, revision: ++revision, enabled: Boolean(args.enabled), status: args.enabled ? "connected" : "paused" }; return snapshot;
     case "request_qq_notification_access": return "allowed";
@@ -205,6 +206,13 @@ try {
     const writtenMail = written?.args.mail as { to: string[]; subject: string } | undefined;
     check(writtenMail?.to.join() === "a@163.com,b@126.com" && writtenMail.subject === "周会" && written?.args.replyTo === null && !compose(),
       "写邮件按逗号拆分收件人，不是回复，发送后回到列表");
+
+    const markAll = () => document.querySelector<HTMLButtonElement>('.qq-panel__toolbar button[aria-label^="这个邮箱全部标为已读"]');
+    check(markAll() && !markAll()!.disabled, "邮箱工具栏有「全部标为已读」，有未读时可点");
+    await click(markAll()!.getAttribute("aria-label")!);
+    check(calls.some(call => call.command === "mark_all_qq_mail_read" && call.args.email === "demo@qq.com")
+      && mail!.snapshot.unreadCount === 0 && !document.querySelector(".qq-mail-unread-dot") && markAll()!.disabled,
+      "全部标为已读只发给当前邮箱，之后没有未读圆点、按钮变灰");
 
     const late = deferred();
     readBehavior = () => late.promise;
