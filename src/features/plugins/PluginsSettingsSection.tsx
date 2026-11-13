@@ -127,6 +127,7 @@ export function PluginsSettingsSection({ initialOpenId = null }: { initialOpenId
           }
         />
       </SettingsGroup>
+      {snapshot?.brokenStateBackup ? <p className="plugin-card__error" role="alert">{t.settings.plugins.brokenState(snapshot.brokenStateBackup)}</p> : null}
       <PluginNotice notice={notice} action={["reload", "folder"]} />
       {error ? <p className="plugin-card__error">{error}</p> : null}
       {snapshot && plugins.length === 0 ? <p className="settings-section__hint">{t.settings.plugins.empty}</p> : null}

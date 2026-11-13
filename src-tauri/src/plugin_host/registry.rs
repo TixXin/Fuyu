@@ -55,6 +55,7 @@ pub struct PluginInfo {
     revoked: Option<LocalizedText>,
     update_available: Option<String>,
     auto_updated: Option<String>,
+    update_failed: Option<String>,
     pre_release: bool,
     memory_limit_mb: u32,
     pre_release_available: Option<String>,
@@ -72,6 +73,7 @@ pub struct PluginsSnapshot {
     plugins: Vec<PluginInfo>,
     auto_update: bool,
     trusted_publishers: Vec<String>,
+    broken_state_backup: Option<String>,
 }
 
 pub(super) fn scan(plugins_dir: &PathBuf, app_version: &str) -> Vec<InstalledPlugin> {
@@ -210,6 +212,7 @@ pub(super) fn snapshot() -> Result<PluginsSnapshot, String> {
                 revoked: None,
                 update_available: None,
                 auto_updated: None,
+                update_failed: None,
                 pre_release: grant.pre_release,
                 memory_limit_mb: super::lifecycle::memory_limit_mb(grant.memory_limit_mb),
                 pre_release_available: None,
@@ -219,6 +222,7 @@ pub(super) fn snapshot() -> Result<PluginsSnapshot, String> {
             if !plugin.builtin && !plugin.dev {
                 (info.update_available, info.auto_updated, info.pre_release_available) = updates::status_for(&plugin.folder);
                 info.signing_key_changed = updates::signing_key_changed(&plugin.folder);
+                info.update_failed = updates::update_failure(&plugin.folder);
             }
             match &plugin.manifest {
                 Ok(manifest) => {
@@ -257,5 +261,6 @@ pub(super) fn snapshot() -> Result<PluginsSnapshot, String> {
         plugins,
         auto_update: state.auto_update,
         trusted_publishers: state.trusted_publishers.clone(),
+        broken_state_backup: host.broken_state_backup.as_ref().map(|path| path.display().to_string()),
     })
 }

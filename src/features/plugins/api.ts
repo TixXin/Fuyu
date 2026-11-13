@@ -107,6 +107,7 @@ export type PluginInfo = {
   signingKeyChanged: boolean;
   authorKey: string | null;
   autoUpdated: string | null;
+  updateFailed: string | null;
   preRelease: boolean;
   preReleaseAvailable: string | null;
   memoryLimitMb: number;
@@ -120,6 +121,7 @@ export type PluginsSnapshot = {
   plugins: PluginInfo[];
   autoUpdate: boolean;
   trustedPublishers: string[];
+  brokenStateBackup: string | null;
 };
 
 export const MARKET_CATEGORIES = ["productivity", "todos", "developer", "media", "messages", "information", "utilities", "sounds"] as const;

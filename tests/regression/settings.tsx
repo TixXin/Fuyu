@@ -90,7 +90,7 @@ if (!automated) {
     }
 
     await openPage("plugins");
-    check(/^第三方（\d+）\|内置（\d+）$/.test(texts(".plugins-list__title")), "Installed plugins are grouped, third-party first, then built-in");
+    check(element(".plugin-card__error[role=alert]")?.textContent?.includes("plugins.broken-20261114-101500.json") && /^第三方（\d+）\|内置（\d+）$/.test(texts(".plugins-list__title")), "A broken plugins.json is reported with its backup (E22); installed plugins are grouped, third-party first");
     const cardNames = () => texts(".plugins-list__grid .plugin-card__title strong");
     check(texts(".plugins-toolbar__filter .plugin-chip__count") === "3|2|0|1" && element<HTMLButtonElement>(".plugins-toolbar__filter[data-filter='updates']").disabled, "The installed list counts all, running, updates and plugins that need attention");
     await click(".plugins-toolbar__filter[data-filter='attention']");

@@ -63,7 +63,7 @@ const plugin = (localProxy: string): PluginInfo => ({
   permissions: [], optionalPermissions: [], calls: [], commands: [], runtime: "builtin", platforms: ["windows", "macos"], hasProcess: true, enabled: true, needsApproval: false,
   status: "running", error: null, log: [], settingsSchema, settings: { localProxy, customPort: 7897 }, info: [], notificationsMuted: false,
   keybindingConflicts: [], keybindings: {}, sensitive: {}, activation: "startup", activationEvents: [], startupMs: null, resources: null,
-  keepAlive: null, revoked: null, updateAvailable: null, signingKeyChanged: false, authorKey: null, autoUpdated: null, preRelease: false,
+  keepAlive: null, revoked: null, updateAvailable: null, signingKeyChanged: false, authorKey: null, autoUpdated: null, updateFailed: null, preRelease: false,
   preReleaseAvailable: null, memoryLimitMb: 512,
 });
 

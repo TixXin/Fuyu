@@ -76,7 +76,7 @@
 认领看本地和 `origin/main`，不等其他会话回消息。
 
 1. **挑**：`pnpm tasks next`，再 `pnpm tasks show <编号>` 读全文。
-2. **认领**：`pnpm task:claim <编号> --as <会话名> --scope <要改的目录/,文件>`。会话名用 ListAgents 里自己的名字，必须写。它先 `git fetch origin main`，本地或 `origin/main` 上已经有人认领就拒绝；否则写上会话名和机器名，在本地提交（只含任务文件），随下一批 PR 推上去（见 [workflow.md](/docs/architecture/workflow.md)）。会话名和机器名都对上才算「你的」，另一台机器上同名的会话不算（#153）。`--no-commit` 只改文件不提交。
+2. **认领**：`pnpm task:claim <编号> --as <会话名> --scope <要改的目录/,文件>`。会话名用 ListAgents 里自己的名字，必须写。它先 `git fetch origin main`，本地或 `origin/main` 上已经有人认领就拒绝；否则写上会话名和机器名，在本地提交（只含任务文件），随下一批 PR 推上去（见 [workflow.md](/docs/architecture/workflow.md)）。会话名和机器名都对上才算「你的」，另一台机器上同名的会话不算（#153）。`--no-commit` 只改文件不提交。任务带 `issue` 时，**认领后、动手前先在 issue 下回复**：谁接手、核实的结果、打算怎么改，附任务文档链接（用户 2026-11-14 定，命令会提醒）。
 3. **新任务先提 issue**（见下文「自己新建的任务」），拿到编号后再建。马上要做：`pnpm tasks add <编号> --title .. --issue <N> --claim --as <会话名> --scope ..`，新建和认领在一个提交里。只是记下来以后做：`pnpm tasks add <编号> --title .. --issue <N>`，和别的改动一起提交。
 4. **做的过程中**：开发中途和 land 前跑 `pnpm tasks conflicts`，看和 main、和别人声明的范围有没有冲突。
 5. **停下来**：`pnpm tasks note <编号> "<进度和下一步>"`，随下一次提交带上。不打算做完了：`pnpm tasks release <编号> --reason ".."`，放回待做并留交接。
@@ -88,11 +88,11 @@ land 时会自动检查（`scripts/land-check.mjs` 调 `pnpm tasks landing`）�
 
 ## GitHub issue
 
-`TixXin/fly-island` 的 issue 一律按这个顺序处理（用户 2026-11-09 定）：
+`TixXin/fuyu` 的 issue 一律按这个顺序处理（用户 2026-11-09 定）：
 
 1. **核实**：读 issue，在代码里或真机上确认（能复现就先复现）。
 2. **先回复，再动手**：说明已收到、初步判断和打算怎么做；要报告人补信息就在这里问。不做的（重复、不是问题、超出范围）回复原因后 `gh issue close <N> --reason "not planned"`，到此为止。
-3. **建任务**：`pnpm tasks add <编号> --title .. --issue <N> --claim --as <会话名> --scope ..`。回复里引用任务文档的链接（`https://github.com/TixXin/fly-island/blob/main/docs/tasks/<分组>/<编号>.md`）；任务建好之前写的回复，在建好后补一条带链接的。
+3. **建任务**：`pnpm tasks add <编号> --title .. --issue <N> --claim --as <会话名> --scope ..`。回复里引用任务文档的链接（`https://github.com/TixXin/fuyu/blob/main/docs/tasks/<分组>/<编号>.md`）；任务建好之前写的回复，在建好后补一条带链接的。
 4. **做完回复**：合入 main 后回复原因、改了什么、怎么拿到（下个版本 / 插件市场 / npm），以及验证结果；引用任务文档（这时在 `docs/tasks/0-archive/<分组>/<编号>.md`），并列出这次的提交（短提交号加标题，GitHub 会自动链接）。
 5. **关闭**：回复之后 `gh issue close <N>`。合入 main 就关，不等发版：回复里写明随哪个版本发布，没修好时报告人可以重新打开。不用提交说明里的 `Closes #N`：它会在完成回复之前就把 issue 关掉。
 
@@ -104,7 +104,7 @@ land 时会自动检查（`scripts/land-check.mjs` 调 `pnpm tasks landing`）�
 
 1. **先提 issue**：`gh issue create --repo TixXin/fuyu`，标题写 `[<编号>] <任务标题>`，正文写清要做什么、为什么、怎样算做完，和任务文件的「说明」「验收」一致，并给出任务文档的链接。语言、署名和最后一行同上。
 2. **再建任务**：`pnpm tasks add <编号> --title .. --issue <N>`。
-3. issue 是我们自己提的，建任务时不用另外回复。**认领时先回复**（用户 2026-11-13 定）：`task:claim` 之前在 issue 里回一条，写明哪个会话在哪台机器上开始做、打算怎么做、哪些部分这次做不了。建任务时就认领（`--claim`）的，这些写进 issue 正文即可。有人在 issue 里评论时照常回复。
+3. **认领时先在 issue 下回复**（用户 2026-11-14 定）：认领任务的会话动手前回复一条，说明谁接手、核实的结果和打算怎么改，链接任务文档；提 issue 时已经写了判断的，这条回复写核实结果和具体改法。有人在 issue 里评论时照常回复。
 4. **做完回复、关闭**：和上面的第 4、5 步一样。决定不做时回复原因，`gh issue close <N> --reason "not planned"`，任务 `drop`。
 
 父任务下的子任务各提各的 issue。用户在对话里直接交代、当场做完的小改动不建任务，也就不用提 issue。
