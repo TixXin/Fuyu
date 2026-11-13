@@ -1,4 +1,5 @@
 pub(crate) mod audio;
+pub(crate) mod audio_capture;
 pub(crate) mod audio_outputs;
 pub(crate) mod brightness;
 pub(crate) mod capture_targets;

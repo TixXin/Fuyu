@@ -109,7 +109,7 @@ fn file_names_do_not_overwrite_earlier_recordings() {
 #[ignore = "records the real screen for three seconds"]
 fn records_the_primary_screen_to_an_mp4() {
     let path = std::env::temp_dir().join(format!("fuyu-recording-{}.mp4", std::process::id()));
-    let options = super::session::Options { x: 101, y: 51, width: 1601, height: 901, fps: 60, path: path.clone() };
+    let options = super::session::Options { x: 101, y: 51, width: 1601, height: 901, fps: 60, system_audio: true, microphone: true, path: path.clone() };
     let recording = super::session::Recording::start(options).unwrap();
     std::thread::sleep(std::time::Duration::from_secs(3));
     let summary = recording.stop().unwrap();
@@ -117,4 +117,74 @@ fn records_the_primary_screen_to_an_mp4() {
     assert!(summary.frames >= 1);
     assert!(summary.seconds > 2.5, "{summary:?}");
     assert!(std::fs::metadata(&path).unwrap().len() > 1000);
+}
+
+mod mixing {
+    use super::super::mixer::{frames_at, ticks_at, Mixer, RATE};
+
+    fn tone(frames: usize, value: f32) -> Vec<f32> {
+        vec![value; frames * 2]
+    }
+
+    #[test]
+    fn ticks_and_frames_convert_both_ways() {
+        assert_eq!(frames_at(10_000_000), RATE);
+        assert_eq!(ticks_at(RATE / 2), 5_000_000);
+    }
+
+    #[test]
+    fn packets_a_little_off_are_joined_without_a_click() {
+        let mut mixer = Mixer::new(1);
+        mixer.push(0, 0, &tone(480, 0.5));
+        mixer.push(0, 480 + 50, &tone(480, 0.5));
+        let out = mixer.take(960);
+        assert_eq!(out.len(), 1920);
+        assert!(out.iter().all(|&sample| sample == 0.5));
+    }
+
+    #[test]
+    fn a_real_gap_becomes_silence_and_an_overlap_is_dropped() {
+        let mut mixer = Mixer::new(1);
+        mixer.push(0, 0, &tone(480, 0.5));
+        mixer.push(0, 1480, &tone(480, 0.25));
+        let out = mixer.take(1960);
+        assert_eq!(out[2 * 479], 0.5);
+        assert_eq!(out[2 * 1000], 0.0);
+        assert_eq!(out[2 * 1500], 0.25);
+        mixer.push(0, 1000, &tone(500, 0.75));
+        assert_eq!(mixer.take(1970)[0], 0.0);
+    }
+
+    #[test]
+    fn two_sources_are_added_and_clipped() {
+        let mut mixer = Mixer::new(2);
+        mixer.push(0, 0, &tone(480, 0.25));
+        mixer.push(1, 0, &tone(480, 0.5));
+        assert_eq!(mixer.take(480)[0], 0.75);
+        mixer.push(0, 480, &tone(480, 0.75));
+        mixer.push(1, 480, &tone(480, 0.75));
+        assert_eq!(mixer.take(960)[0], 1.0);
+    }
+
+    #[test]
+    fn output_waits_for_the_slower_source_but_not_for_a_stalled_one() {
+        let mut mixer = Mixer::new(2);
+        mixer.push(0, 0, &tone(4800, 0.1));
+        mixer.push(1, 0, &tone(960, 0.1));
+        assert_eq!(mixer.ready(4800), Some(960));
+        mixer.push(1, 960, &tone(960, 0.1));
+        assert_eq!(mixer.ready(4800), Some(1920));
+        assert_eq!(mixer.ready(12_000), Some(4800));
+        assert_eq!(mixer.ready(RATE), Some(RATE - RATE / 5));
+        assert_eq!(Mixer::new(1).ready(RATE), Some(RATE - RATE / 5));
+    }
+
+    #[test]
+    fn audio_from_before_the_video_started_is_dropped() {
+        let mut mixer = Mixer::new(1);
+        mixer.push(0, -240, &tone(480, 0.5));
+        let out = mixer.take(480);
+        assert_eq!(out[0], 0.5);
+        assert_eq!(out[2 * 240], 0.0);
+    }
 }

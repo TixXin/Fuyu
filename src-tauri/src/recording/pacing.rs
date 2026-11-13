@@ -39,6 +39,13 @@ impl<T: Clone> Pacer<T> {
         self.interval
     }
 
+    pub(crate) fn timeline(&self, at: i64) -> Option<i64> {
+        if self.paused_at.is_some() {
+            return None;
+        }
+        self.origin.map(|origin| at - origin - self.paused_total)
+    }
+
     fn clock(&self, now: i64) -> i64 {
         self.origin.map_or(0, |origin| now - origin - self.paused_total)
     }

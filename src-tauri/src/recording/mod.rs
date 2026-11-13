@@ -1,4 +1,6 @@
+mod audio;
 mod format;
+mod mixer;
 mod pacing;
 mod session;
 #[cfg(test)]
@@ -9,6 +11,14 @@ use std::sync::{Mutex, PoisonError};
 use crate::user_error::UserError;
 use session::{Options, Recording, Summary};
 
+#[derive(serde::Deserialize)]
+pub struct Area {
+    x: i32,
+    y: i32,
+    width: u32,
+    height: u32,
+}
+
 static ACTIVE: Mutex<Option<Recording>> = Mutex::new(None);
 
 fn failed(error: impl std::fmt::Display) -> UserError {
@@ -16,7 +26,7 @@ fn failed(error: impl std::fmt::Display) -> UserError {
 }
 
 #[tauri::command]
-pub async fn screen_recording_start(x: i32, y: i32, width: u32, height: u32, fps: Option<u32>, folder_name: String) -> Result<String, UserError> {
+pub async fn screen_recording_start(area: Area, fps: Option<u32>, system_audio: Option<bool>, microphone: Option<bool>, folder_name: String) -> Result<String, UserError> {
     let mut active = ACTIVE.lock().unwrap_or_else(PoisonError::into_inner);
     if active.is_some() {
         return Err(UserError::new("recording.busy", "A recording is already running."));
@@ -25,7 +35,8 @@ pub async fn screen_recording_start(x: i32, y: i32, width: u32, height: u32, fps
     let folder = videos.join(crate::screenshot::sanitized_name(&folder_name));
     std::fs::create_dir_all(&folder).map_err(|error| failed(format!("Failed to create {}: {error}", folder.display())))?;
     let path = format::file_name_in(&folder, chrono::Local::now());
-    let options = Options { x, y, width, height, fps: format::fps(fps), path: path.clone() };
+    let Area { x, y, width, height } = area;
+    let options = Options { x, y, width, height, fps: format::fps(fps), system_audio: system_audio.unwrap_or(true), microphone: microphone.unwrap_or(false), path: path.clone() };
     *active = Some(Recording::start(options).map_err(failed)?);
     Ok(path.display().to_string())
 }

@@ -260,10 +260,14 @@ export type RecordingSummary = {
   repeats: number;
   dropped: number;
   hardware: boolean;
+  systemAudio: boolean;
+  microphone: boolean;
 };
 
-export function startRecording(area: RecordingArea, folderName: string, fps?: number) {
-  return invoke<string>("screen_recording_start", { ...area, fps, folderName });
+export type RecordingOptions = { fps?: number; systemAudio?: boolean; microphone?: boolean };
+
+export function startRecording(area: RecordingArea, folderName: string, options: RecordingOptions = {}) {
+  return invoke<string>("screen_recording_start", { area, folderName, ...options });
 }
 
 export function pauseRecording(paused: boolean) {
