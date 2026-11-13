@@ -25,6 +25,10 @@ export function getIslandNotch(): Promise<IslandNotch | null> {
   return invoke<IslandNotch | null>("get_island_notch");
 }
 
+export function setIslandNotchDrop(drop: boolean) {
+  return invoke<void>("set_island_notch_drop", { drop });
+}
+
 export function listenIslandNotch(handler: (notch: IslandNotch | null) => void): Promise<UnlistenFn> {
   return listen<IslandNotch | null>(ISLAND_NOTCH_CHANGED_EVENT, ({ payload }) => handler(payload));
 }

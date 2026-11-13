@@ -68,7 +68,7 @@
 | `island-position-changed` | `island/mod.rs` | 广播（通过主窗口对象调用 `emit`） |
 | `island-position-cleared`（无载荷：岛屿跟随鼠标或前台窗口换了显示器，拖动保存的位置作废，主窗口清掉 `fuyu-position`） | `island/follow.rs` | 主窗口 |
 | `island-top-attachment-changed`（载荷为 `bool`：岛屿是否贴住所在显示器顶边；C54.1 起由 `island-edge-changed` 派生，保留给旧插件和旧代码） | `island/edge.rs`（常量在 `island/top_edge.rs`） | 广播（通过主窗口对象调用 `emit`） |
-| `island-notch-changed`（载荷为 `{ width, height } \| null`，单位是逻辑点：岛在贴合刘海时是刘海的宽高，不贴合时是 `null`；命令 `get_island_notch` 读当前值；只在 macOS 上会非空；G1.11，2026-11-13） | `island/notch.rs` | 广播（通过主窗口对象调用 `emit`） |
+| `island-notch-changed`（载荷为 `{ width, height } \| null`，单位是逻辑点：岛在贴合刘海时是刘海的宽高，不贴合时是 `null`；命令 `get_island_notch` 读当前值；只在 macOS 上会非空；前端用命令 `set_island_notch_drop`（`drop: bool`）告诉 Rust 折叠岛有没有往下多长一行，点击判定跟着加高；G1.11，2026-11-13） | `island/notch.rs` | 广播（通过主窗口对象调用 `emit`） |
 | `island-edge-changed`（载荷为 `"top" \| "left" \| "right" \| null`：岛屿吸在所在显示器的哪条边，`null` 是没吸住；命令 `get_island_edge` 读当前值；C54.1，2026-11-13） | `island/edge.rs` | 广播（通过主窗口对象调用 `emit`） |
 | `island-reveal-requested`（无载荷：托盘「显示」时岛屿正贴边隐藏，主窗口把它滑出来；issue #37，2026-11-11） | `island/mod.rs` | 广播（通过主窗口对象调用 `emit`） |
 | `island-hover-changed`（载荷为 `bool`：光标是否在岛屿形状内，供悬停展开使用） | `island/passthrough.rs` | 广播（通过主窗口对象调用 `emit`） |
