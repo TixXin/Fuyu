@@ -1,3 +1,4 @@
+mod clipboard;
 mod history;
 mod hotkeys;
 mod long;
@@ -191,7 +192,7 @@ pub async fn screenshot_finish(app: AppHandle, window: WebviewWindow, request: t
                 crate::translation::translate_text_from_elsewhere(&app, text);
             } else {
                 if !text.is_empty() {
-                    output::copy_text(&text)?;
+                    clipboard::copy_text(&text)?;
                 }
                 let _ = app.emit(TEXT_EVENT, text);
             }
@@ -441,7 +442,7 @@ pub async fn screenshot_drag(window: WebviewWindow, path: String) -> Result<(), 
 #[tauri::command]
 pub async fn screenshot_paste_to_front(path: String) -> Result<(), String> {
     let path = card_file(&path)?;
-    tauri::async_runtime::spawn_blocking(move || output::paste_path(&path))
+    tauri::async_runtime::spawn_blocking(move || clipboard::paste_path(&path))
         .await
         .map_err(|error| format!("Failed to paste the screenshot: {error}"))?
 }
