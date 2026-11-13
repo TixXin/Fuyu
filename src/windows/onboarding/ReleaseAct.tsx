@@ -5,6 +5,7 @@ import { useTranslation } from "../../i18n";
 import type { SettingsFocusSection } from "../settings/storage";
 import { ActHeading } from "./ActHeading";
 import type { OnboardingModule } from "./personas";
+import { isMacOS } from "../../lib/platform";
 
 export function ReleaseAct({ modules, launchAtStartup, onLaunchAtStartupChange, onLeaveForSettings }: {
   modules: ReadonlySet<OnboardingModule>;
@@ -18,7 +19,7 @@ export function ReleaseAct({ modules, launchAtStartup, onLaunchAtStartupChange, 
     <>
       <ActHeading title={text.title} lead={text.lead} />
       <SettingsGroup>
-        <SettingsToggleRow title={text.launchAtStartup} description={text.launchAtStartupHint} checked={launchAtStartup} onChange={onLaunchAtStartupChange} />
+        <SettingsToggleRow title={text.launchAtStartup} description={isMacOS ? text.launchAtStartupHintMac : text.launchAtStartupHint} checked={launchAtStartup} onChange={onLaunchAtStartupChange} />
       </SettingsGroup>
       <p className="onboarding-release__later">{text.later}</p>
       <div className="onboarding-release__links">
@@ -39,7 +40,7 @@ export function ReleaseAct({ modules, launchAtStartup, onLaunchAtStartupChange, 
           {text.openSettings}
         </button>
       </div>
-      <p className="onboarding-release__later">{text.findLater}</p>
+      <p className="onboarding-release__later">{isMacOS ? text.findLaterMac : text.findLater}</p>
     </>
   );
 }

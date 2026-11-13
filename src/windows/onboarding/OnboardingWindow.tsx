@@ -24,6 +24,7 @@ import { useCardRect } from "./useCardRect";
 import { useDemoHeartbeat } from "./useDemoHeartbeat";
 import { useIslandSpot } from "./useIslandSpot";
 import "./OnboardingWindow.css";
+import { isMacOS } from "../../lib/platform";
 
 const ACTS = ["hello", "shape", "outfit", "play", "release"] as const;
 
@@ -127,7 +128,7 @@ export function OnboardingWindow() {
           </button>
         </header>
         <section className="onboarding__body" key={act}>
-          {!spot && <p className="onboarding__notice">{text.noIsland}</p>}
+          {!spot && <p className="onboarding__notice">{isMacOS ? text.noIslandMac : text.noIsland}</p>}
           {act === "hello" && <HelloAct />}
           {act === "shape" && <ShapeAct settings={settings} onSettingsChange={setSettings} />}
           {act === "outfit" && <OutfitAct modules={modules} answer={answer} onAnswerChange={setAnswer} onModulesChange={changeModules} />}

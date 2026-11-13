@@ -26,6 +26,7 @@ export type ClaudeUsageText = {
   keys: {
     title: string;
     hint: string;
+    hintMac: string;
     label: (name: string) => string;
     savedPlaceholder: string;
     emptyPlaceholder: string;
@@ -74,6 +75,7 @@ export const zhCN: ClaudeUsageText = {
   keys: {
     title: "API Key",
     hint: "GLM 填智谱开放平台（open.bigmodel.cn）的 API Key，Kimi 填 Kimi Code 控制台的 API Key。保存在 Windows 凭据管理器里，不写进设置文件，页面也不会再显示它。",
+    hintMac: "GLM 填智谱开放平台（open.bigmodel.cn）的 API Key，Kimi 填 Kimi Code 控制台的 API Key。保存在钥匙串里，不写进设置文件，页面也不会再显示它。",
     label: (name) => `${name} API Key`,
     savedPlaceholder: "已保存，粘贴新的 Key 可替换",
     emptyPlaceholder: "粘贴 API Key",
@@ -133,6 +135,7 @@ export const en: ClaudeUsageText = {
   keys: {
     title: "API keys",
     hint: "For GLM, an API key from Zhipu's open platform (open.bigmodel.cn); for Kimi, one from the Kimi Code console. Keys are kept in the Windows Credential Manager, not in the settings file, and this page never shows them again.",
+    hintMac: "For GLM, an API key from Zhipu's open platform (open.bigmodel.cn); for Kimi, one from the Kimi Code console. Keys are kept in the keychain, not in the settings file, and this page never shows them again.",
     label: (name) => `${name} API key`,
     savedPlaceholder: "Saved; paste a new key to replace it",
     emptyPlaceholder: "Paste an API key",

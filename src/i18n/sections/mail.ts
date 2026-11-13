@@ -53,6 +53,7 @@ export type MailText = {
   accounts: string;
   accountsTitle: string;
   accountsHint: string;
+  accountsHintMac: string;
   addTitle: string;
   reauthorizeTitle: (email: string) => string;
   noMailbox: string;
@@ -65,6 +66,7 @@ export type MailText = {
   cancel: string;
   confirmDisconnect: string;
   confirmDisconnectHint: string;
+  confirmDisconnectHintMac: string;
   defaultHost: string;
   limitReached: (max: number) => string;
   unread: (count: number) => string;
@@ -138,6 +140,7 @@ export const zhCN: MailText = {
   accounts: "邮箱账户",
   accountsTitle: "邮箱账户",
   accountsHint: "每个邮箱有独立的后台连接，岛上的邮箱面板按标签切换。授权码保存在 Windows 凭据管理器，断开时一并删除。",
+  accountsHintMac: "每个邮箱有独立的后台连接，岛上的邮箱面板按标签切换。授权码保存在钥匙串里，断开时一并删除。",
   addTitle: "添加邮箱",
   reauthorizeTitle: (email) => `重新授权 ${email}`,
   noMailbox: "还没有连接邮箱",
@@ -150,6 +153,7 @@ export const zhCN: MailText = {
   cancel: "取消",
   confirmDisconnect: "确认断开",
   confirmDisconnectHint: "断开会停止接收，并从 Windows 凭据管理器删除这个邮箱的授权码。以后再连接需要重新生成授权码。",
+  confirmDisconnectHintMac: "断开会停止接收，并从钥匙串删除这个邮箱的授权码。以后再连接需要重新生成授权码。",
   defaultHost: "默认服务器",
   limitReached: (max) => `最多同时连接 ${max} 个邮箱，请先断开一个再添加。`,
   unread: (count) => `${count} 封未读`,
@@ -223,6 +227,7 @@ export const en: MailText = {
   accounts: "Mailboxes",
   accountsTitle: "Mailboxes",
   accountsHint: "Each mailbox has its own background connection; the island's mail panel shows one tab each. Authorization codes are kept in Windows Credential Manager and removed on disconnect.",
+  accountsHintMac: "Each mailbox has its own background connection; the island's mail panel shows one tab each. Authorization codes are kept in the keychain and removed on disconnect.",
   addTitle: "Add a mailbox",
   reauthorizeTitle: (email) => `Re-authorize ${email}`,
   noMailbox: "No mailbox connected yet",
@@ -235,6 +240,7 @@ export const en: MailText = {
   cancel: "Cancel",
   confirmDisconnect: "Disconnect",
   confirmDisconnectHint: "Disconnecting stops receiving and deletes this mailbox's authorization code from Windows Credential Manager. Connecting again needs a new code.",
+  confirmDisconnectHintMac: "Disconnecting stops receiving and deletes this mailbox's authorization code from the keychain. Connecting again needs a new code.",
   defaultHost: "Default server",
   limitReached: (max) => `Up to ${max} mailboxes can be connected. Disconnect one to add another.`,
   unread: (count) => `${count} unread`,

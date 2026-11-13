@@ -58,6 +58,7 @@ export type ClipboardText = {
     };
   };
   copyAsFile: string;
+  copyAsFileMac: string;
   copyPath: string;
   copy: string;
   copied: string;
@@ -141,6 +142,7 @@ export const zhCN: ClipboardText = {
     },
   },
   copyAsFile: "复制为文件（聊天软件、资源管理器里粘贴成文件）",
+  copyAsFileMac: "复制为文件（聊天软件、访达里粘贴成文件）",
   copyPath: "复制图片路径（贴到 Claude Code 等终端里会当成图片）",
   copy: "复制",
   copied: "已复制",
@@ -224,6 +226,7 @@ export const en: ClipboardText = {
     },
   },
   copyAsFile: "Copy as a file (chat apps and Explorer paste the file)",
+  copyAsFileMac: "Copy as a file (chat apps and Finder paste the file)",
   copyPath: "Copy the image's path (Claude Code and other terminals take it as an image)",
   copy: "Copy",
   copied: "Copied",

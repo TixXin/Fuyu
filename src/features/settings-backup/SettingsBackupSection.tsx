@@ -45,7 +45,7 @@ export function SettingsBackupSection() {
 
   const footer = (
     <>
-      <p>{text.hint}</p>
+      <p>{isMacOS ? text.hintMac : text.hint}</p>
       {status.kind === "saved" && (
         <p className="settings-backup__status" role="status">
           <span>{text.saved(status.path)}</span>

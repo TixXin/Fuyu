@@ -6,6 +6,7 @@ import type { PixelRect, Size } from "../../features/screenshot/selection";
 import { useTranslation } from "../../i18n";
 import type { Annotations } from "./useAnnotations";
 import "./ScreenshotToolbar.css";
+import { isMacOS } from "../../lib/platform";
 
 const TOOL_ICONS: Record<AnnotationTool, LucideIcon> = {
   rect: Square,
@@ -94,10 +95,10 @@ export function ScreenshotToolbar({
           );
         })}
         <span className="screenshot-overlay__separator" />
-        <ToolButton label={t.undo} disabled={!annotations.canUndo} onClick={annotations.undo}>
+        <ToolButton label={isMacOS ? t.undoMac : t.undo} disabled={!annotations.canUndo} onClick={annotations.undo}>
           <Undo2 size={18} />
         </ToolButton>
-        <ToolButton label={t.redo} disabled={!annotations.canRedo} onClick={annotations.redo}>
+        <ToolButton label={isMacOS ? t.redoMac : t.redo} disabled={!annotations.canRedo} onClick={annotations.redo}>
           <Redo2 size={18} />
         </ToolButton>
         <span className="screenshot-overlay__separator" />
@@ -113,7 +114,7 @@ export function ScreenshotToolbar({
         <ToolButton label={t.pin} onClick={() => onFinish("pin")}>
           <Pin size={18} />
         </ToolButton>
-        <ToolButton label={t.save} onClick={() => onFinish("save")}>
+        <ToolButton label={isMacOS ? t.saveMac : t.save} onClick={() => onFinish("save")}>
           <Download size={18} />
         </ToolButton>
         <ToolButton label={t.cancel} onClick={onCancel}>

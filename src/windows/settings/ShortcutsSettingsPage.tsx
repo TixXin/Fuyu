@@ -17,6 +17,7 @@ import { ClipboardShortcutGroup, ScreenshotShortcutGroup, TranslationShortcutGro
 import type { ShortcutOwner } from "./shortcutConflicts";
 import { useShortcutOwners } from "./useShortcutOwners";
 import "./ShortcutsSettingsPage.css";
+import { shortcutLabel } from "../../features/clipboard/shortcut";
 
 function ReferenceSection({ title, rows, footer, action }: { title: string; rows: [string, string][]; footer?: string; action?: ReactNode }) {
   return (
@@ -94,7 +95,7 @@ export function ShortcutsSettingsPage({
       )}
       <ReferenceSection
         title={text.approvalTitle}
-        rows={APPROVAL_HOTKEYS.map(({ action, shortcut }) => [approvalLabel(action), shortcut])}
+        rows={APPROVAL_HOTKEYS.map(({ action, shortcut }) => [approvalLabel(action), shortcutLabel(shortcut)])}
         footer={text.approvalHint}
         action={pageLink("agentApprovals")}
       />

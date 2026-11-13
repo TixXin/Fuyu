@@ -4,6 +4,7 @@ export type SettingsPluginsText = {
   folder: string;
   openFolder: string;
   reload: string;
+  secretsPermissionMac: string;
   feedback: {
     checking: string;
     upToDate: string;
@@ -130,6 +131,7 @@ export type SettingsPluginsText = {
     loading: string;
     empty: string;
     loadFailed: string;
+    loadFailedMac: string;
     installFailed: (name: string) => string;
     install: string;
     installing: string;
@@ -293,6 +295,7 @@ export const zhCN: SettingsPluginsText = {
   folder: "插件目录",
   openFolder: "打开",
   reload: "重新加载",
+  secretsPermissionMac: "在钥匙串中保存密码和令牌",
   feedback: {
     checking: "正在检查…",
     upToDate: "已是最新（刚刚检查）",
@@ -459,6 +462,7 @@ export const zhCN: SettingsPluginsText = {
     loading: "正在加载插件列表…",
     empty: "市场里暂时还没有插件。",
     loadFailed: "暂时获取不到插件列表。请检查网络或 Windows 系统代理，然后点「刷新」重试。",
+    loadFailedMac: "暂时获取不到插件列表。请检查网络或代理设置，然后点「刷新」重试。",
     installFailed: (name: string) => `「${name}」没有装上，已有的插件不受影响。`,
     install: "安装",
     installing: "正在安装…",
@@ -671,6 +675,7 @@ export const en: SettingsPluginsText = {
   folder: "Plugins folder",
   openFolder: "Open",
   reload: "Reload",
+  secretsPermissionMac: "Keep passwords and tokens in the keychain",
   feedback: {
     checking: "Checking…",
     upToDate: "Up to date (just checked)",
@@ -837,6 +842,7 @@ export const en: SettingsPluginsText = {
     loading: "Loading plugins…",
     empty: "No plugins in the market yet.",
     loadFailed: "Could not load the plugin list. Check your network or the Windows proxy settings, then click Refresh.",
+    loadFailedMac: "Could not load the plugin list. Check your network or proxy settings, then click Refresh.",
     installFailed: (name: string) => `${name} was not installed. Your other plugins are unaffected.`,
     install: "Install",
     installing: "Installing…",

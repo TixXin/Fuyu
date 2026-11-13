@@ -22,7 +22,7 @@ export function QQNotificationControls({ controller, compact = false }: { contro
       </label>}
       {snapshot.enabled && (needsAccess || snapshot.status === "error" || snapshot.error || actionError) && <div className="qq-panel__actions">
         {snapshot.status === "permissionRequired" && <button className="message-action" type="button" aria-label={t.qq.allowLabel} disabled={busy} onClick={() => void requestAccess()}><KeyRound size={14} strokeWidth={1.8} />{t.qq.grant}</button>}
-        {(snapshot.status === "permissionDenied" || snapshot.error || actionError) && <button className="icon-button" type="button" aria-label={t.qq.settings} disabled={busy} onClick={() => void openSettings()}><Settings2 size={16} strokeWidth={1.8} /></button>}
+        {(snapshot.status === "permissionDenied" || snapshot.error || actionError) && <button className="icon-button" type="button" aria-label={isMacOS ? t.qq.settingsMac : t.qq.settings} disabled={busy} onClick={() => void openSettings()}><Settings2 size={16} strokeWidth={1.8} /></button>}
         {snapshot.status === "error" && <button className="icon-button" type="button" aria-label={t.qq.retryLabel} disabled={busy} onClick={() => void requestAccess()}><KeyRound size={16} strokeWidth={1.8} /></button>}
       </div>}
     </div>

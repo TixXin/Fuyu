@@ -7,6 +7,7 @@ import { ClipboardEntryIcon } from "./ClipboardEntryIcon";
 import { contentKind, linkLabel } from "./contentKind";
 import { fileFolder, fileImageLabel, sourceName } from "./fileEntry";
 import { formatBytes } from "../../utils/bytes";
+import { isMacOS } from "../../lib/platform";
 
 export function ClipboardHistoryItemRow({
   item,
@@ -76,7 +77,7 @@ export function ClipboardHistoryItemRow({
       : []),
     ...(item.kind === "image"
       ? [
-          { key: "file", label: text.copyAsFile, icon: <FileImage size={14} strokeWidth={2} />, onSelect: () => onCopy(item.id, "file") },
+          { key: "file", label: isMacOS ? text.copyAsFileMac : text.copyAsFile, icon: <FileImage size={14} strokeWidth={2} />, onSelect: () => onCopy(item.id, "file") },
           { key: "path", label: text.copyPath, icon: <SquareTerminal size={14} strokeWidth={2} />, onSelect: () => onCopy(item.id, "path") },
           ...(item.ocrText ? [{ key: "text", label: text.copyOcrText, icon: <ScanText size={14} strokeWidth={2} />, onSelect: () => onCopy(item.id, "text") }] : []),
         ]

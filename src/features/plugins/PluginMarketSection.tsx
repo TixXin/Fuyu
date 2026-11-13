@@ -12,6 +12,7 @@ import { MarketInstallRequest } from "./market-link/MarketInstallRequest";
 import { usePluginMarket } from "./usePluginMarket";
 import "./PluginToolbar.css";
 import "./PluginMarketSection.css";
+import { isMacOS } from "../../lib/platform";
 
 const FAVORITES = "favorites";
 
@@ -108,7 +109,7 @@ export function PluginMarketSection({
       ) : null}
       {loadError ? (
         <div className="plugin-market__failure" role="alert">
-          <p className="plugin-card__error">{text.loadFailed}</p>
+          <p className="plugin-card__error">{isMacOS ? text.loadFailedMac : text.loadFailed}</p>
           <p className="plugin-market__detail">{loadError}</p>
         </div>
       ) : null}
