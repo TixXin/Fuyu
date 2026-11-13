@@ -11,6 +11,19 @@ export type ScreenshotText = {
   selectHint: string;
   quickHints: Record<"copy" | "text" | "translate" | "long", string>;
   longShot: string;
+  long: {
+    title: string;
+    height: (px: number) => string;
+    frames: (count: number) => string;
+    size: (width: number, height: number) => string;
+    states: Record<"scrolling" | "paused" | "end" | "fast" | "full", string>;
+    pause: string;
+    resume: string;
+    cancel: string;
+    save: string;
+    done: string;
+    keys: string;
+  };
   readText: string;
   textCopied: (line: string) => string;
   noText: string;
@@ -72,12 +85,31 @@ export const zhCN: ScreenshotText = {
     copy: "单击选中窗口或控件，或拖动选择区域，选好就复制 · 右键或 Esc 退出",
     text: "单击选中窗口或控件，或拖动选择区域，选好就识别文字并复制 · 右键或 Esc 退出",
     translate: "单击选中窗口或控件，或拖动选择区域，选好就识别文字并翻译 · 右键或 Esc 退出",
-    long: "选好要滚动的区域，浮屿自动往下滚并拼成长图，滚到底就复制 · 滚动时按 Esc 提前结束",
+    long: "选好要滚动的区域，浮屿往下滚并拼成长图，旁边的控制条可以暂停、完成或取消 · 右键或 Esc 退出",
   },
   readText: "识别文字",
   textCopied: (line) => `已复制识别的文字：${line}`,
   noText: "截图里没有识别到文字",
-  longShot: "长截图（自动往下滚动拼接，按 Esc 提前结束）",
+  longShot: "长截图（自动往下滚动拼接，也可以自己滚）",
+  long: {
+    title: "长截图",
+    height: (px) => `高 ${px.toLocaleString()} px`,
+    frames: (count) => `${count} 屏`,
+    size: (width, height) => `${width} × ${height.toLocaleString()}`,
+    states: {
+      scrolling: "正在往下滚动拼接……",
+      paused: "已暂停。可以自己在框里滚动，浮屿照样拼上",
+      end: "到底了，点 ✓ 复制",
+      fast: "这一下滚太多，接不上了。往回滚一点就好",
+      full: "已到 2 万像素上限",
+    },
+    pause: "暂停自动滚动（空格）",
+    resume: "继续自动滚动（空格）",
+    cancel: "取消（Esc）",
+    save: "保存（Ctrl+S）",
+    done: "完成并复制（Enter）",
+    keys: "空格 暂停 · Enter 完成 · Esc 取消",
+  },
   redact: "自动打码（邮箱、手机号、IP、密钥）",
   redacting: "正在找要打码的内容…",
   redacted: (count) => `打了 ${count} 处码；点一处可以取消`,
@@ -145,12 +177,31 @@ export const en: ScreenshotText = {
     copy: "Click a window or control, or drag a region, and it is copied · Right-click or Esc to exit",
     text: "Click a window or control, or drag a region, and its text is read and copied · Right-click or Esc to exit",
     translate: "Click a window or control, or drag a region, and its text is read and translated · Right-click or Esc to exit",
-    long: "Choose the area that scrolls; Fuyu scrolls it down and stitches one tall picture, copied when it reaches the end · Esc while scrolling stops early",
+    long: "Choose the area that scrolls; Fuyu scrolls and stitches one tall picture, with a control bar to pause, finish or cancel · Right-click or Esc to exit",
   },
   readText: "Read text",
   textCopied: (line) => `Copied the text: ${line}`,
   noText: "No text found in the screenshot",
-  longShot: "Long screenshot (scrolls down and stitches; Esc stops early)",
+  longShot: "Long screenshot (scrolls and stitches; you can scroll yourself too)",
+  long: {
+    title: "Long screenshot",
+    height: (px) => `${px.toLocaleString()} px tall`,
+    frames: (count) => (count === 1 ? "1 screen" : `${count} screens`),
+    size: (width, height) => `${width} × ${height.toLocaleString()}`,
+    states: {
+      scrolling: "Scrolling down and stitching…",
+      paused: "Paused. Scroll inside the frame yourself and it keeps stitching",
+      end: "Reached the end. Click ✓ to copy",
+      fast: "That scroll went too far to join up. Scroll back a little",
+      full: "Reached the 20,000 px limit",
+    },
+    pause: "Pause auto-scroll (Space)",
+    resume: "Resume auto-scroll (Space)",
+    cancel: "Cancel (Esc)",
+    save: "Save (Ctrl+S)",
+    done: "Done, copy it (Enter)",
+    keys: "Space pause · Enter done · Esc cancel",
+  },
   redact: "Auto-redact emails, phone numbers, IPs and keys",
   redacting: "Looking for things to redact…",
   redacted: (count) => (count === 1 ? "Redacted 1 spot; click it to undo" : `Redacted ${count} spots; click one to undo it`),
