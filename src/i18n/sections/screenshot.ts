@@ -9,7 +9,8 @@ export type ScreenshotText = {
   copyColorHint: string;
   colorCopied: (hex: string) => string;
   selectHint: string;
-  quickHints: Record<"copy" | "text" | "translate", string>;
+  quickHints: Record<"copy" | "text" | "translate" | "long", string>;
+  longShot: string;
   readText: string;
   textCopied: (line: string) => string;
   noText: string;
@@ -71,10 +72,12 @@ export const zhCN: ScreenshotText = {
     copy: "单击选中窗口或控件，或拖动选择区域，选好就复制 · 右键或 Esc 退出",
     text: "单击选中窗口或控件，或拖动选择区域，选好就识别文字并复制 · 右键或 Esc 退出",
     translate: "单击选中窗口或控件，或拖动选择区域，选好就识别文字并翻译 · 右键或 Esc 退出",
+    long: "选好要滚动的区域，浮屿自动往下滚并拼成长图，滚到底就复制 · 滚动时按 Esc 提前结束",
   },
   readText: "识别文字",
   textCopied: (line) => `已复制识别的文字：${line}`,
   noText: "截图里没有识别到文字",
+  longShot: "长截图（自动往下滚动拼接，按 Esc 提前结束）",
   redact: "自动打码（邮箱、手机号、IP、密钥）",
   redacting: "正在找要打码的内容…",
   redacted: (count) => `打了 ${count} 处码；点一处可以取消`,
@@ -142,10 +145,12 @@ export const en: ScreenshotText = {
     copy: "Click a window or control, or drag a region, and it is copied · Right-click or Esc to exit",
     text: "Click a window or control, or drag a region, and its text is read and copied · Right-click or Esc to exit",
     translate: "Click a window or control, or drag a region, and its text is read and translated · Right-click or Esc to exit",
+    long: "Choose the area that scrolls; Fuyu scrolls it down and stitches one tall picture, copied when it reaches the end · Esc while scrolling stops early",
   },
   readText: "Read text",
   textCopied: (line) => `Copied the text: ${line}`,
   noText: "No text found in the screenshot",
+  longShot: "Long screenshot (scrolls down and stitches; Esc stops early)",
   redact: "Auto-redact emails, phone numbers, IPs and keys",
   redacting: "Looking for things to redact…",
   redacted: (count) => (count === 1 ? "Redacted 1 spot; click it to undo" : `Redacted ${count} spots; click one to undo it`),
