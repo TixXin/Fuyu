@@ -1,0 +1,116 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="88" viewBox="0 0 480 88" role="img" aria-label="Fuyu, an island at the top of your screen. Logo wanted">
+  <defs>
+    <linearGradient id="edge" x2="480" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#8b949e" stop-opacity="0"/>
+      <stop offset=".14" stop-color="#8b949e" stop-opacity=".55"/>
+      <stop offset=".86" stop-color="#8b949e" stop-opacity=".55"/>
+      <stop offset="1" stop-color="#8b949e" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="glow">
+      <stop offset="0" stop-color="#74d6ff" stop-opacity=".34"/>
+      <stop offset=".55" stop-color="#74d6ff" stop-opacity=".1"/>
+      <stop offset="1" stop-color="#74d6ff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <style>
+    text { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI Variable Text', 'Segoe UI', 'PingFang SC', 'Microsoft YaHei UI', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Noto Sans SC', sans-serif; }
+    .capl { animation: capl 12s infinite; }
+    .capr { animation: capr 12s infinite; }
+    .mid { animation: mid 12s infinite; }
+    .idle { animation: idle 12s infinite; }
+    .call { animation: call 12s infinite; opacity: 0; }
+    .glow { animation: glow 12s infinite; opacity: .55; }
+    .halo { animation: halo 2.4s ease-in-out infinite; }
+    .bar { animation: wave 1.2s ease-in-out infinite; }
+    .b0 { animation-duration: 1.1s; animation-delay: -.2s; }
+    .b1 { animation-duration: .9s; animation-delay: -.5s; }
+    .b2 { animation-duration: 1.3s; animation-delay: -.1s; }
+    .b3 { animation-duration: 1s; animation-delay: -.7s; }
+    .b4 { animation-duration: 1.2s; animation-delay: -.4s; }
+    @keyframes capl {
+      0%, 30% { transform: translateX(0); animation-timing-function: cubic-bezier(.3, .7, .3, 1); }
+      33.6% { transform: translateX(-32px); animation-timing-function: ease-in-out; }
+      35.4%, 80% { transform: translateX(-28px); animation-timing-function: cubic-bezier(.3, .7, .3, 1); }
+      83.6% { transform: translateX(3px); animation-timing-function: ease-in-out; }
+      85.4%, 100% { transform: translateX(0); }
+    }
+    @keyframes capr {
+      0%, 30% { transform: translateX(0); animation-timing-function: cubic-bezier(.3, .7, .3, 1); }
+      33.6% { transform: translateX(32px); animation-timing-function: ease-in-out; }
+      35.4%, 80% { transform: translateX(28px); animation-timing-function: cubic-bezier(.3, .7, .3, 1); }
+      83.6% { transform: translateX(-3px); animation-timing-function: ease-in-out; }
+      85.4%, 100% { transform: translateX(0); }
+    }
+    @keyframes mid {
+      0%, 30% { transform: scaleX(1); animation-timing-function: cubic-bezier(.3, .7, .3, 1); }
+      33.6% { transform: scaleX(1.356); animation-timing-function: ease-in-out; }
+      35.4%, 80% { transform: scaleX(1.311); animation-timing-function: cubic-bezier(.3, .7, .3, 1); }
+      83.6% { transform: scaleX(.967); animation-timing-function: ease-in-out; }
+      85.4%, 100% { transform: scaleX(1); }
+    }
+    @keyframes idle {
+      0%, 29.4% { opacity: 1; }
+      31.4%, 82.9% { opacity: 0; }
+      85.4%, 100% { opacity: 1; }
+    }
+    @keyframes call {
+      0%, 32.9% { opacity: 0; }
+      35.9%, 78.4% { opacity: 1; }
+      80.4%, 100% { opacity: 0; }
+    }
+    @keyframes glow {
+      0%, 30% { opacity: .55; }
+      35.4%, 80% { opacity: 1; }
+      85.4%, 100% { opacity: .55; }
+    }
+    @keyframes halo {
+      0%, 100% { opacity: .1; }
+      50% { opacity: .32; }
+    }
+    @keyframes wave {
+      0%, 100% { transform: scaleY(.3); }
+      50% { transform: scaleY(1); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .capl, .capr, .mid, .idle, .call, .glow, .halo, .bar { animation: none; }
+    }
+  </style>
+  <rect width="480" height="1" fill="url(#edge)"/>
+  <ellipse class="glow" cx="240" cy="44" rx="184" ry="42" fill="url(#glow)"/>
+  <g transform="translate(240 0)">
+    <g class="capl">
+      <path fill="#030303" d="M-119.5 0v1a9.5 9.5 0 0 1 9.5 9.5V32a20 20 0 0 0 20 20h1V0z"/>
+      <path fill="none" stroke="#4e5358" d="M-119.5 .5a10 10 0 0 1 10 10V32a19.5 19.5 0 0 0 19.5 19.5h1"/>
+    </g>
+    <g class="capr">
+      <g transform="scale(-1 1)">
+        <path fill="#030303" d="M-119.5 0v1a9.5 9.5 0 0 1 9.5 9.5V32a20 20 0 0 0 20 20h1V0z"/>
+        <path fill="none" stroke="#4e5358" d="M-119.5 .5a10 10 0 0 1 10 10V32a19.5 19.5 0 0 0 19.5 19.5h1"/>
+      </g>
+    </g>
+    <g class="mid">
+      <rect x="-90" width="180" height="52" fill="#030303"/>
+      <rect x="-90" y="51" width="180" height="1" fill="#4e5358"/>
+    </g>
+    <g class="capl">
+      <circle class="halo" cx="-86" cy="26" r="9" fill="#4ade9c"/>
+      <circle cx="-86" cy="26" r="4.5" fill="#4ade9c"/>
+    </g>
+    <text class="idle" y="31.6" text-anchor="middle" font-size="16" font-weight="600" letter-spacing=".4" fill="#f8f6f0">Fuyu 浮屿</text>
+    <g class="capr">
+      <g class="idle">
+        <g transform="translate(74 26)"><rect class="bar b0" x="-1.5" y="-9" width="3" height="18" rx="1.5" fill="#9fe8c5"/></g>
+        <g transform="translate(80 26)"><rect class="bar b1" x="-1.5" y="-9" width="3" height="18" rx="1.5" fill="#9fe8c5"/></g>
+        <g transform="translate(86 26)"><rect class="bar b2" x="-1.5" y="-9" width="3" height="18" rx="1.5" fill="#9fe8c5"/></g>
+        <g transform="translate(92 26)"><rect class="bar b3" x="-1.5" y="-9" width="3" height="18" rx="1.5" fill="#9fe8c5"/></g>
+        <g transform="translate(98 26)"><rect class="bar b4" x="-1.5" y="-9" width="3" height="18" rx="1.5" fill="#9fe8c5"/></g>
+      </g>
+      <path class="call" d="M79 26h14m-5-5 5 5-5 5" fill="none" stroke="#f8f6f0" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+    <g class="call">
+      <rect x="-93" y="15" width="48" height="22" rx="11" fill="#74d6ff" fill-opacity=".16"/>
+      <text x="-69" y="30.2" text-anchor="middle" font-size="12" font-weight="600" fill="#74d6ff">Open</text>
+      <text x="-35" y="31.4" font-size="15" font-weight="600" fill="#f8f6f0" textLength="122" lengthAdjust="spacing">Draw Fuyu a logo</text>
+    </g>
+  </g>
+</svg>

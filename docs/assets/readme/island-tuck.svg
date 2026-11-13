@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="64" viewBox="0 0 480 64" role="img" aria-label="Back to top">
+  <defs>
+    <linearGradient id="edge" x2="480" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#8b949e" stop-opacity="0"/>
+      <stop offset=".14" stop-color="#8b949e" stop-opacity=".55"/>
+      <stop offset=".86" stop-color="#8b949e" stop-opacity=".55"/>
+      <stop offset="1" stop-color="#8b949e" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="glow">
+      <stop offset="0" stop-color="#74d6ff" stop-opacity=".34"/>
+      <stop offset=".55" stop-color="#74d6ff" stop-opacity=".1"/>
+      <stop offset="1" stop-color="#74d6ff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <style>
+    .pill { animation: tuck 9s infinite; }
+    .glow { animation: fade 9s infinite; opacity: .7; }
+    .arrow { animation: nudge 1.8s ease-in-out infinite; }
+    @keyframes tuck {
+      0%, 52% { transform: translateY(0); animation-timing-function: cubic-bezier(.5, 0, .7, .4); }
+      60%, 84% { transform: translateY(-35px); animation-timing-function: cubic-bezier(.3, .7, .3, 1); }
+      91% { transform: translateY(2px); animation-timing-function: ease-in-out; }
+      94%, 100% { transform: translateY(0); }
+    }
+    @keyframes fade {
+      0%, 52% { opacity: .7; }
+      60%, 84% { opacity: .15; }
+      94%, 100% { opacity: .7; }
+    }
+    @keyframes nudge {
+      0%, 100% { transform: translateY(1.5px); }
+      50% { transform: translateY(-1.5px); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .pill, .glow, .arrow { animation: none; }
+    }
+  </style>
+  <rect width="480" height="1" fill="url(#edge)"/>
+  <ellipse class="glow" cx="240" cy="32" rx="130" ry="40" fill="url(#glow)"/>
+  <g transform="translate(240 0)">
+    <g class="pill">
+      <rect x="-60" y="-8" width="120" height="9" fill="#030303"/>
+      <g class="capl">
+        <path fill="#030303" d="M-67.5 0v1a7.5 7.5 0 0 1 7.5 7.5V24a16 16 0 0 0 16 16h1V0z"/>
+        <path fill="none" stroke="#4e5358" d="M-67.5 .5a8 8 0 0 1 8 8V24a15.5 15.5 0 0 0 15.5 15.5h1"/>
+      </g>
+      <g class="capr">
+        <g transform="scale(-1 1)">
+          <path fill="#030303" d="M-67.5 0v1a7.5 7.5 0 0 1 7.5 7.5V24a16 16 0 0 0 16 16h1V0z"/>
+          <path fill="none" stroke="#4e5358" d="M-67.5 .5a8 8 0 0 1 8 8V24a15.5 15.5 0 0 0 15.5 15.5h1"/>
+        </g>
+      </g>
+      <g class="mid">
+        <rect x="-44" width="88" height="40" fill="#030303"/>
+        <rect x="-44" y="39" width="88" height="1" fill="#4e5358"/>
+      </g>
+      <path class="arrow" d="M0 27V13m-6 6 6-6 6 6" fill="none" stroke="#f8f6f0" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+  </g>
+</svg>
