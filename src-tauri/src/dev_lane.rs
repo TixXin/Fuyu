@@ -12,6 +12,11 @@ pub(crate) fn identifier(lane: u32) -> String {
     format!("com.tixxin.fuyu.lane-{lane}")
 }
 
+#[cfg(target_os = "macos")]
+pub(crate) fn separate_webview_storage(lane: u32) {
+    crate::macos::process_name::set_process_name(&format!("fuyu-lane-{lane}"));
+}
+
 fn centred_preview() -> bool {
     std::env::var(CENTER_ENV).is_ok_and(|value| value == "1")
 }

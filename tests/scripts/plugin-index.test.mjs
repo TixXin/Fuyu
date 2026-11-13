@@ -5,7 +5,7 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { generateKeyPairSync } from "node:crypto";
-import { MARKET_BASE_URL, createZip, packPlugin, readPackedFile, runtimeRequirement, sha256 } from "../../scripts/plugins/build-plugin-index.mjs";
+import { MARKET_BASE_URL, createZip, packPlugin, readPackedFile, readZip, runtimeRequirement, sameZipContents, sha256 } from "../../scripts/plugins/build-plugin-index.mjs";
 import { keyIdOf, rawPublicKey, signIndex, verifyIndex } from "../../scripts/plugins/plugin-signing.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
@@ -37,6 +37,15 @@ test("zips are byte-for-byte reproducible", () => {
   assert.notEqual(sha256(createZip(files)), sha256(createZip([files[0]])));
 });
 
+test("a package is compared by what it unpacks to, whichever zlib compressed it", () => {
+  const files = [["main.ps1", Buffer.from("Write-Output 1\n".repeat(50))], ["lib/a.json", Buffer.from("{}\n")]];
+  const zip = createZip(files);
+  assert.deepEqual(readZip(zip).map(([name, data]) => [name, data.toString()]), files.map(([name, data]) => [name, data.toString()]));
+  assert.ok(sameZipContents(zip, createZip(files)));
+  assert.ok(!sameZipContents(zip, createZip([files[0], ["lib/a.json", Buffer.from("[]\n")]])));
+  assert.ok(!sameZipContents(zip, createZip([files[0]])));
+});
+
 test("text files are packed with LF line ends", () => {
   const dir = mkdtempSync(path.join(os.tmpdir(), "focusd-pack-"));
   try {
@@ -56,14 +65,15 @@ test("plugins/index.json and plugins/packages match the plugin sources (run pnpm
   assert.deepEqual(index.plugins.map((entry) => entry.id), ids);
 
   for (const id of ids) {
-    const { manifest, fileName, zip } = packPlugin(path.join(examplesDir, id));
+    const { manifest, fileName, zip: packed } = packPlugin(path.join(examplesDir, id));
     const entry = index.plugins.find((item) => item.id === id);
+    const zip = readFileSync(path.join(root, "plugins/packages", fileName));
     assert.equal(entry.version, manifest.version, id);
     assert.equal(entry.runtime, runtimeRequirement(manifest.runtime), id);
     assert.equal(entry.download.url, `${MARKET_BASE_URL}/packages/${fileName}`);
     assert.equal(entry.download.sha256, sha256(zip), `${id}: package is out of date`);
     assert.equal(entry.download.size, zip.length);
-    assert.ok(readFileSync(path.join(root, "plugins/packages", fileName)).equals(zip), `${fileName} differs from its sources`);
+    assert.ok(sameZipContents(zip, packed), `${fileName} differs from its sources`);
   }
 });
 

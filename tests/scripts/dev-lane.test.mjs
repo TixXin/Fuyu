@@ -36,7 +36,14 @@ test("each lane previews on its own port, identifier and build folder, apart fro
 
 test("--fresh only deletes the preview's own folders, never the user's island's", () => {
   const env = { APPDATA: "C:\\Users\\u\\AppData\\Roaming", LOCALAPPDATA: "C:\\Users\\u\\AppData\\Local" };
-  assert.deepEqual(previewDataDirs("com.tixxin.fuyu.lane-21", env), [
+  assert.deepEqual(previewDataDirs("com.tixxin.fuyu.lane-21", env, "darwin", "/Users/u"), [
+    path.join("/Users/u", "Library", "Application Support", "com.tixxin.fuyu.lane-21"),
+    path.join("/Users/u", "Library", "Caches", "com.tixxin.fuyu.lane-21"),
+    path.join("/Users/u", "Library", "Caches", "fuyu-lane-21"),
+    path.join("/Users/u", "Library", "WebKit", "fuyu-lane-21"),
+  ]);
+  assert.throws(() => previewDataDirs("com.tixxin.fuyu", env, "darwin", "/Users/u"), /Not a lane preview/);
+  assert.deepEqual(previewDataDirs("com.tixxin.fuyu.lane-21", env, "win32"), [
     path.join(env.APPDATA, "com.tixxin.fuyu.lane-21"),
     path.join(env.LOCALAPPDATA, "com.tixxin.fuyu.lane-21"),
   ]);

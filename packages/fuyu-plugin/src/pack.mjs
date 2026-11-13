@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
-import { crc32, deflateRawSync } from "node:zlib";
+import { crc32, deflateRawSync, inflateRawSync } from "node:zlib";
 import { isIgnored, loadIgnore } from "./ignore.mjs";
 
 const DOS_DATE = (0 << 9) | (1 << 5) | 1;
@@ -72,6 +72,34 @@ export function createZip(files) {
   end.writeUInt32LE(centralDir.length, 12);
   end.writeUInt32LE(offset, 16);
   return Buffer.concat([...locals, centralDir, end]);
+}
+
+export function readZip(zip) {
+  const end = zip.lastIndexOf(Buffer.from([0x50, 0x4b, 0x05, 0x06]));
+  if (end < 0) throw new Error("Not a zip file.");
+  const count = zip.readUInt16LE(end + 10);
+  let at = zip.readUInt32LE(end + 16);
+  const files = [];
+  for (let index = 0; index < count; index += 1) {
+    if (zip.readUInt32LE(at) !== 0x02014b50) throw new Error("Broken zip directory.");
+    const method = zip.readUInt16LE(at + 10);
+    const size = zip.readUInt32LE(at + 20);
+    const nameLength = zip.readUInt16LE(at + 28);
+    const skip = nameLength + zip.readUInt16LE(at + 30) + zip.readUInt16LE(at + 32);
+    const name = zip.toString("utf8", at + 46, at + 46 + nameLength);
+    const local = zip.readUInt32LE(at + 42);
+    const start = local + 30 + zip.readUInt16LE(local + 26) + zip.readUInt16LE(local + 28);
+    const stored = zip.subarray(start, start + size);
+    files.push([name, method === 8 ? inflateRawSync(stored) : Buffer.from(stored)]);
+    at += 46 + skip;
+  }
+  return files;
+}
+
+export function sameZipContents(left, right) {
+  const a = readZip(left);
+  const b = readZip(right);
+  return a.length === b.length && a.every(([name, data], index) => b[index][0] === name && b[index][1].equals(data));
 }
 
 export const sha256 = (buffer) => createHash("sha256").update(buffer).digest("hex");

@@ -73,6 +73,8 @@ pub fn run() {
     }
     if let Some(lane) = dev_lane::lane() {
         context.config_mut().identifier = dev_lane::identifier(lane);
+        #[cfg(target_os = "macos")]
+        dev_lane::separate_webview_storage(lane);
     }
     let migrate = context.config().identifier == rename_migration::NEW_IDENTIFIER;
     if migrate {
