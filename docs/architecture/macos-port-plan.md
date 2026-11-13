@@ -98,7 +98,7 @@
 | `home_dir`、`system::windows_home_dir` | `USERPROFILE`、消息框 | 换实现：Mac 上用 `HOME`，冲突提示打到 stderr；G1.4 补上应用数据目录（`~/Library/Application Support/<标识>`）和锁文件的电脑名 | G1.4 |
 | `clipboard_history`、`translation` | 剪贴板监听、热键、弹窗、UIA 选中文字 | 剪贴板换实现（G1.6 已做：`*_macos.rs` 的监听、热键、弹窗、system，平台层 `macos/pasteboard.rs`、`apps.rs`、`input.rs`）；翻译暂不支持 | G1.6 |
 | `screenshot` | 屏幕截图、热键、钉图窗口、剪贴板 | 暂不支持 | G1.6 |
-| `file_shelf` | 剪贴板文件列表、OLE 拖出 | 复制和拖出暂不支持，列表、预览、打开照常 | G1.6 |
+| `file_shelf` | 剪贴板文件列表、OLE 拖出 | 换实现（G1.6 已做：`transfer_macos.rs`，复制走 `NSPasteboard`，拖出用 `drag` crate）；列表、预览、打开照常 | G1.6 |
 | `device_use`、`device_events`、`system_levels` | 注册表、音频端点、设备节点、WMI 亮度、电源 | `device_events` 换实现（G1.6 已做：`readers_macos.rs`，平台层 `macos/audio_devices.rs`、`bluetooth.rs`、`power.rs`）；音量换实现（G1.6 已做）；`device_use` 换实现（G1.6 已做：`device_use/macos.rs`，平台层 `macos/camera.rs`）；亮度暂不支持 | G1.6、G1.9 |
 | `phone_push` | 锁屏与空闲时间 | 换实现：空闲 None、未锁屏 | G1.6 |
 | `lyrics` | 繁简转换 | 换实现：Mac 上不转换 | G1.9 |
@@ -132,6 +132,7 @@ Mac 上跳过的测试（依赖 Windows 路径、程序或 API，标了 `#[cfg(w
 - 音量提示：按键盘音量键、静音，收起的岛上出现音量提示；换输出设备（耳机、AirPods）后还能跟上（G1.6）
 - 设备插拔与电源：连上、断开蓝牙耳机（AirPods 等）时岛上有提醒，电量低于 20% / 10% 时提醒一次；插上 USB 耳麦有提醒；MacBook 插拔充电线有提醒并显示电量（G1.6）
 - 摄像头 / 麦克风：开 FaceTime、Photo Booth 或浏览器里的视频会议时岛上出现摄像头和麦克风图标，悬停的说明里麦克风写着应用名（浏览器写浏览器名，不是 Helper），摄像头写「摄像头正在使用」；关掉后图标消失；点图标打开系统设置对应的隐私页（G1.6）
+- 文件中转：从 Finder 拖文件进来；从中转拖到 Finder、桌面、邮件附件里，放下的地方收到文件，开着「拖出后移除」时条目消失、拖到一半取消时还在；多选后一起拖；「复制」后在 Finder 里 ⌘V 能粘贴出文件（G1.6）
 - 手机推送：离开电脑（空闲）或锁屏后，Agent 完成的推送能发出（G1.6）
 - 剪贴板：复制文字、图片、Finder 里的文件都进历史；密码管理器复制的不进；⌘⇧V 在鼠标旁弹出，选中后贴回原来的应用（第一次要允许辅助功能）；贴到终端时多行命令合成一行；有没有系统的剪贴板隐私提示（G1.6）
 - `fuyu://` 链接：装好的 `.app` 在浏览器里点 `fuyu://plugin/<id>/...` 能唤起岛并打开插件，岛没开时也能（G1.4）
