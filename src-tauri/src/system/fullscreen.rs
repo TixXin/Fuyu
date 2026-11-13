@@ -3,7 +3,8 @@ use std::{sync::Mutex, thread, time::Duration};
 use tauri::{AppHandle, Emitter};
 
 #[cfg(windows)]
-use crate::{island, win32};
+use crate::win32;
+use crate::island;
 
 pub(crate) const FOREGROUND_FULLSCREEN_CHANGED_EVENT: &str = "foreground-fullscreen-changed";
 
@@ -33,9 +34,19 @@ fn read(app: &AppHandle) -> ForegroundFullscreen {
     ForegroundFullscreen { active, on_island_monitor }
 }
 
-#[cfg(not(windows))]
-fn read(_app: &AppHandle) -> ForegroundFullscreen {
-    ForegroundFullscreen::default()
+#[cfg(target_os = "macos")]
+fn read(app: &AppHandle) -> ForegroundFullscreen {
+    let Some(display) = crate::macos::fullscreen::fullscreen_display_in_front() else {
+        return ForegroundFullscreen::default();
+    };
+    let island_center = island::main_window(app).ok().and_then(|window| {
+        let scale = window.scale_factor().ok()?;
+        let position = window.outer_position().ok()?.to_logical::<f64>(scale);
+        let size = window.outer_size().ok()?.to_logical::<f64>(scale);
+        Some((position.x + size.width / 2.0, position.y + 1.0))
+    });
+    let on_island_monitor = island_center.is_none_or(|(x, y)| display.contains(x, y));
+    ForegroundFullscreen { active: true, on_island_monitor }
 }
 
 pub(crate) fn start(app: &AppHandle) {
