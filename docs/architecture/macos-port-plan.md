@@ -99,7 +99,7 @@
 | `clipboard_history`、`translation` | 剪贴板监听、热键、弹窗、UIA 选中文字 | 剪贴板换实现（G1.6 已做：`*_macos.rs` 的监听、热键、弹窗、system，平台层 `macos/pasteboard.rs`、`apps.rs`、`input.rs`）；翻译暂不支持 | G1.6 |
 | `screenshot` | 屏幕截图、热键、钉图窗口、剪贴板 | 暂不支持 | G1.6 |
 | `file_shelf` | 剪贴板文件列表、OLE 拖出 | 复制和拖出暂不支持，列表、预览、打开照常 | G1.6 |
-| `device_use`、`device_events`、`system_levels` | 注册表、音频端点、设备节点、WMI 亮度、电源 | 暂不支持 | G1.6、G1.9 |
+| `device_use`、`device_events`、`system_levels` | 注册表、音频端点、设备节点、WMI 亮度、电源 | `device_events` 换实现（G1.6 已做：`readers_macos.rs`，平台层 `macos/audio_devices.rs`、`bluetooth.rs`、`power.rs`）；音量换实现（G1.6 已做）；`device_use`、亮度暂不支持 | G1.6、G1.9 |
 | `phone_push` | 锁屏与空闲时间 | 换实现：空闲 None、未锁屏 | G1.6 |
 | `lyrics` | 繁简转换 | 换实现：Mac 上不转换 | G1.9 |
 | `mail` | 下载文件夹 | 换实现：`system::downloads_dir()` | — |
@@ -130,6 +130,7 @@ Mac 上跳过的测试（依赖 Windows 路径、程序或 API，标了 `#[cfg(w
 
 - 全屏应用、多桌面、Mission Control 下岛的表现（G1.3）
 - 音量提示：按键盘音量键、静音，收起的岛上出现音量提示；换输出设备（耳机、AirPods）后还能跟上（G1.6）
+- 设备插拔与电源：连上、断开蓝牙耳机（AirPods 等）时岛上有提醒，电量低于 20% / 10% 时提醒一次；插上 USB 耳麦有提醒；MacBook 插拔充电线有提醒并显示电量（G1.6）
 - 手机推送：离开电脑（空闲）或锁屏后，Agent 完成的推送能发出（G1.6）
 - 剪贴板：复制文字、图片、Finder 里的文件都进历史；密码管理器复制的不进；⌘⇧V 在鼠标旁弹出，选中后贴回原来的应用（第一次要允许辅助功能）；贴到终端时多行命令合成一行；有没有系统的剪贴板隐私提示（G1.6）
 - `fuyu://` 链接：装好的 `.app` 在浏览器里点 `fuyu://plugin/<id>/...` 能唤起岛并打开插件，岛没开时也能（G1.4）

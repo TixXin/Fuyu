@@ -121,6 +121,7 @@ fn alerts_reach_the_island_as_tagged_json() {
     assert_eq!(value, serde_json::json!({ "kind": "powerDisconnected", "battery": null }));
 }
 
+#[cfg(windows)]
 #[test]
 #[ignore = "reads the real devices of the computer it runs on"]
 fn probe_this_computer() {
