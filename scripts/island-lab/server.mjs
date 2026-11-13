@@ -9,6 +9,7 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.ISLAND_LAB_PORT ?? 5199);
 const APP_ID = "com.tixxin.fuyu";
 const APPROVAL_TIMEOUT_MS = 150_000;
+const LAB_FILE = "island-lab.json";
 const STATIC = {
   "/": ["index.html", "text/html; charset=utf-8"],
   "/lab.mjs": ["lab.mjs", "text/javascript; charset=utf-8"],
@@ -72,14 +73,12 @@ function send(port, token, method, target, body, timeout) {
 }
 
 async function status() {
-  const local = readConfig("local-api.json");
+  const lab = readConfig(LAB_FILE);
   const approval = readConfig("agent-approval.json");
-  const result = { localApi: { found: Boolean(local), file: local?.file ?? null, enabled: Boolean(local?.enabled), allowWrite: Boolean(local?.allowWrite) }, approval: { found: Boolean(approval?.port) } };
-  if (local?.enabled) {
-    const health = await send(local.port, local.token, "GET", "/v1/health", "", 1500);
-    result.localApi.reachable = health.status === 200;
-    const probe = await send(local.port, local.token, "GET", "/v1/dev/island/emit", "", 1500);
-    result.localApi.devBuild = probe.status === 405;
+  const result = { lab: { found: Boolean(lab?.port), file: lab?.file ?? null, reachable: false }, approval: { found: Boolean(approval?.port) } };
+  if (lab?.port && lab?.token) {
+    const health = await send(lab.port, lab.token, "GET", "/v1/health", "", 1500);
+    result.lab.reachable = health.status === 200;
   }
   return result;
 }
@@ -106,9 +105,9 @@ async function handle(request, response) {
   if (!target) return reply(response, 404, JSON.stringify({ ok: false, error: "没有这个接口。" }));
   let body = "";
   for await (const chunk of request) body += chunk;
-  const config = readConfig(target.kind === "local" ? "local-api.json" : "agent-approval.json");
+  const config = readConfig(target.kind === "local" ? LAB_FILE : "agent-approval.json");
   if (!config?.port || !config?.token) {
-    return reply(response, 503, JSON.stringify({ ok: false, error: target.kind === "local" ? "找不到本地接口的配置：先在岛的设置里打开本地接口。" : "找不到审批端口的配置：先在岛的设置里打开 Agent 审批。" }));
+    return reply(response, 503, JSON.stringify({ ok: false, error: target.kind === "local" ? "找不到 island-lab.json：先跑 pnpm tauri dev。" : "找不到审批端口的配置：岛还没启动过？" }));
   }
   const answer = await send(config.port, config.token, request.method ?? "POST", target.path, body, target.kind === "approval" ? APPROVAL_TIMEOUT_MS : 8000);
   reply(response, answer.status, answer.text || "{}");

@@ -30,6 +30,10 @@ const agent = (phase) => call("PUT", "agent-status/lab", agentStatus(phase));
 function approval(kind, body) {
   note(`已向岛发起${kind === "question" ? "提问" : "审批"}，等你在岛上回答…`);
   return call("POST", `approval/${kind}`, body).then((answer) => {
+    if (answer && typeof answer === "object" && Object.keys(answer).length === 0) {
+      note("岛没有接这个请求：设置里的 Agent 审批没开（或这类请求交还给终端处理）", "error");
+      return;
+    }
     note(`岛上的回答：${JSON.stringify(answer)}`, "ok");
   });
 }
@@ -111,15 +115,12 @@ function render() {
 
 async function refreshStatus() {
   const status = await call("GET", "status").catch((error) => ({ error: error.message }));
-  const api = status.localApi ?? {};
+  const lab = status.lab ?? {};
   const problems = [];
   if (status.error) problems.push(status.error);
-  else if (!api.found) problems.push("找不到 local-api.json：岛还没启动过？");
-  else if (!api.enabled) problems.push("本地接口没开：设置 → 插件扩展 → 本地接口 → 启用");
-  else if (!api.reachable) problems.push("连不上本地接口：岛在运行吗？");
-  else if (!api.devBuild) problems.push("连上的是正式版：先退出正式版，再 pnpm tauri dev");
-  if (!api.allowWrite) problems.push("Agent 状态按钮要在本地接口设置里打开「允许修改」");
-  if (!status.approval?.found) problems.push("审批按钮要在设置里打开 Agent 审批");
+  else if (!lab.found) problems.push("找不到 island-lab.json：先跑 pnpm tauri dev（正式版不开实验台端口）");
+  else if (!lab.reachable) problems.push("连不上开发版的岛：pnpm tauri dev 在运行吗？改过 Rust 的话等它重新编译完");
+  if (!status.approval?.found) problems.push("找不到审批端口，审批和提问按钮用不了");
   statusLine.textContent = problems.length ? problems.join("；") : "已连上正在运行的开发版岛。";
   statusLine.dataset.state = problems.length ? "warn" : "ok";
 }

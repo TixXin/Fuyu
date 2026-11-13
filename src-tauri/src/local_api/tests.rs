@@ -131,3 +131,13 @@ fn dev_island_routes_need_no_write_permission() {
     assert_eq!(route("GET", "/v1/dev/island/emit", b"").map_err(|error| error.status), Err(405));
     assert_eq!(route("POST", "/v1/dev/island/emit", b"[]").map_err(|error| error.status), Err(400));
 }
+
+#[test]
+fn island_lab_serves_only_dev_island_and_agent_status() {
+    use super::lab::lab_call;
+    assert_eq!(lab_call("POST", "/v1/dev/island/emit", b"{}").expect("emit").method, "devIsland.emit");
+    assert_eq!(lab_call("PUT", "/v1/agent-status/lab", br#"{"phase":"running"}"#).expect("status").method, "agentStatus.report");
+    assert_eq!(lab_call("GET", "/v1/health", b"").expect("health").method, "health");
+    assert_eq!(lab_call("GET", "/v1/todos", b"").map_err(|error| error.status), Err(404));
+    assert_eq!(lab_call("POST", "/v1/dev/plugins", br#"{"path":"/tmp"}"#).map_err(|error| error.status), Err(404));
+}
