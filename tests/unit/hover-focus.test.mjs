@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { hoverFocusAction } from "../../src/windows/island/hoverFocus.ts";
 import { gameModeEffects } from "../../src/windows/island/gameMode.ts";
+import { holdsOpen, MAX_HOVER_HOLD_MS } from "../../src/windows/island/hoverHold.ts";
 
 const state = (overrides) => ({ expanded: true, hovering: true, editing: false, blocked: false, ...overrides });
 
@@ -39,4 +40,14 @@ test("game mode only acts while a full-screen app is in front", () => {
 
 test("a game on another monitor keeps the island quiet but not tucked", () => {
   assert.deepEqual(gameModeEffects(elsewhere, both), { quiet: true, tuck: false });
+});
+
+test("an auto-opened popup stays only while the cursor is on the island", () => {
+  assert.equal(holdsOpen(true, 1_000, 2_000), true);
+  assert.equal(holdsOpen(false, 1_000, 2_000), false);
+});
+
+test("hovering holds an auto-opened popup for a limited time", () => {
+  assert.equal(holdsOpen(true, 0, MAX_HOVER_HOLD_MS - 1), true);
+  assert.equal(holdsOpen(true, 0, MAX_HOVER_HOLD_MS), false);
 });

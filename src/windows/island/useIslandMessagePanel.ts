@@ -5,9 +5,9 @@ import type { MessageSource } from "../../features/messages/messagePreview";
 import { runPluginNotificationAction } from "../../features/plugins/api";
 import type { useIslandNotices } from "./useIslandNotices";
 import type { IslandMode, IslandPage } from "./types";
+import { HOVER_HOLD_RETRY_MS } from "./hoverHold";
+import { useHoverHold } from "./useHoverHold";
 import { useOutsideClick } from "./useOutsideClick";
-
-const HOVER_RETRY_MS = 1000;
 
 export type PanelArrival = ArrivalMessage & { mail?: { message: MailMessage; account: string | null }; pluginId?: string };
 
@@ -32,9 +32,10 @@ export function useIslandMessagePanel({ enabled, durationMs, notices, mode, page
   const closeTimerRef = useRef<number | undefined>(undefined);
   const handledKeyRef = useRef<string | null>(null);
   const isOnMessages = mode === "expanded" && page === "qq";
-  const latest = useRef({ mode, isOnMessages, durationMs, collapseIsland, openIslandPage });
+  const holdsOpen = useHoverHold();
+  const latest = useRef({ mode, isOnMessages, durationMs, collapseIsland, openIslandPage, holdsOpen });
   useLayoutEffect(() => {
-    latest.current = { mode, isOnMessages, durationMs, collapseIsland, openIslandPage };
+    latest.current = { mode, isOnMessages, durationMs, collapseIsland, openIslandPage, holdsOpen };
   });
 
   const end = useCallback(() => {
@@ -64,16 +65,16 @@ export function useIslandMessagePanel({ enabled, durationMs, notices, mode, page
     setMessagePanelOpen(true);
     autoOpenedRef.current = true;
     if (current.mode === "collapsed") current.openIslandPage("qq");
-    const closeLater = () => {
+    const closeLater = (heldSince: number) => {
       if (!autoOpenedRef.current) return;
-      if (document.hasFocus()) {
-        closeTimerRef.current = window.setTimeout(closeLater, HOVER_RETRY_MS);
+      if (latest.current.holdsOpen(heldSince)) {
+        closeTimerRef.current = window.setTimeout(() => closeLater(heldSince), HOVER_HOLD_RETRY_MS);
         return;
       }
       close();
     };
     window.clearTimeout(closeTimerRef.current);
-    closeTimerRef.current = window.setTimeout(closeLater, current.durationMs);
+    closeTimerRef.current = window.setTimeout(() => closeLater(Date.now()), current.durationMs);
   }, [incomingKey, close, setMessagePanelOpen]);
 
   const showing = arrivals !== null;
