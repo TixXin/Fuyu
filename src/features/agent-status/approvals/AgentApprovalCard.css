@@ -124,6 +124,11 @@
   white-space: nowrap;
 }
 
+.agent-approval__modifiers--symbols {
+  font: 500 12px/1 -apple-system, system-ui, sans-serif;
+  letter-spacing: 1px;
+}
+
 .agent-approval__button--terminal {
   margin-right: auto;
   color: rgba(var(--agent-ink), 0.6);

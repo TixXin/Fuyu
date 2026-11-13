@@ -8,6 +8,7 @@ import { AGENT_PROVIDER_LABELS } from "../status";
 import { APPROVAL_HOTKEYS } from "./api";
 import type { AgentApprovals } from "./useAgentApprovals";
 import { ApprovalShortcut, ApprovalShortcutModifiers } from "./ApprovalShortcut";
+import { ariaShortcut, shortcutTitle } from "./approvalShortcutText";
 import { useApprovalCard } from "./useApprovalCard";
 import { answerOf, answersFor, answersOnPick, EMPTY_PICK, parseQuestions, togglePick, type QuestionPick } from "./questions";
 import "./AgentApprovalCard.css";
@@ -141,8 +142,8 @@ export function AgentQuestionCard({ approvals, sessions }: { approvals: AgentApp
           className="agent-approval__button agent-approval__button--terminal"
           type="button"
           disabled={!armed}
-          title={`${t.agent.approval.terminalHint} (${QUESTION_HOTKEYS[0]?.shortcut ?? ""})`}
-          aria-keyshortcuts={QUESTION_HOTKEYS[0]?.shortcut}
+          title={`${t.agent.approval.terminalHint} (${shortcutTitle(QUESTION_HOTKEYS[0]?.shortcut)})`}
+          aria-keyshortcuts={ariaShortcut(QUESTION_HOTKEYS[0]?.shortcut)}
           onClick={toTerminal}
         >
           <span className="agent-approval__label">{t.agent.approval.terminal}</span>
