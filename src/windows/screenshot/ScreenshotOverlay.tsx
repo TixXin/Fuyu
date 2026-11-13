@@ -92,7 +92,8 @@ export function ScreenshotOverlay() {
     const area = annotationArea(items, chosen);
     const image = area ? composeArea(picture, area, chosen, items) : null;
     const patch = area && image ? { at: area, image } : null;
-    const save = action === "save" ? { folder: saveFolderOf(loadScreenshotSettings()), folderName: t.saveFolderName } : undefined;
+    const save = action === "save" ? { folder: saveFolderOf(loadScreenshotSettings()), folderName: t.saveFolderName }
+      : action === "record" ? { folderName: t.recordFolderName } : undefined;
     if (action === "pin") setLeaving(true);
     finishScreenshot(chosen, patch, action, save).catch((error: unknown) => {
       setLeaving(false);
@@ -142,6 +143,7 @@ export function ScreenshotOverlay() {
         copy();
       } else if (event.key === "Escape") void cancelScreenshot();
       else if (event.key === "Enter") copy();
+      else if (letter === "f" && !ctrl && quickMode === "record" && session && ready) setSelection({ x: 0, y: 0, width: session.width, height: session.height });
       else if (letter === "t" && !ctrl && chosen) finish("pin");
       else if (letter === "c" && !ctrl && color) {
         void navigator.clipboard.writeText(color).then(() => setNotice(t.colorCopied(color)));
@@ -149,7 +151,7 @@ export function ScreenshotOverlay() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [annotations, chosen, color, copy, finish, long.active, t]);
+  }, [annotations, chosen, color, copy, finish, long.active, quickMode, ready, session, setSelection, t]);
 
   useEffect(() => {
     setNotice(null);

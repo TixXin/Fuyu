@@ -1,59 +1,38 @@
 mod audio;
+mod control;
 mod format;
 mod mixer;
 mod pacing;
 mod session;
+mod state;
 #[cfg(test)]
 mod tests;
 
-use std::sync::{Mutex, PoisonError};
+use tauri::AppHandle;
 
 use crate::user_error::UserError;
-use session::{Options, Recording, Summary};
+pub(crate) use control::{begin, is_busy, stop_in_background, Request};
+use session::Summary;
+use state::State;
 
-#[derive(serde::Deserialize)]
-pub struct Area {
-    x: i32,
-    y: i32,
-    width: u32,
-    height: u32,
-}
-
-static ACTIVE: Mutex<Option<Recording>> = Mutex::new(None);
-
-fn failed(error: impl std::fmt::Display) -> UserError {
-    UserError::new("recording.failed", "The recording failed.").detail(error)
+#[tauri::command]
+pub async fn screen_recording_start(app: AppHandle, request: Request) -> Result<String, UserError> {
+    control::start_now(&app, request)
 }
 
 #[tauri::command]
-pub async fn screen_recording_start(area: Area, fps: Option<u32>, system_audio: Option<bool>, microphone: Option<bool>, folder_name: String) -> Result<String, UserError> {
-    let mut active = ACTIVE.lock().unwrap_or_else(PoisonError::into_inner);
-    if active.is_some() {
-        return Err(UserError::new("recording.busy", "A recording is already running."));
-    }
-    let videos = crate::win32::known_folder::videos().ok_or_else(|| failed("The Videos folder is unavailable."))?;
-    let folder = videos.join(crate::screenshot::sanitized_name(&folder_name));
-    std::fs::create_dir_all(&folder).map_err(|error| failed(format!("Failed to create {}: {error}", folder.display())))?;
-    let path = format::file_name_in(&folder, chrono::Local::now());
-    let Area { x, y, width, height } = area;
-    let options = Options { x, y, width, height, fps: format::fps(fps), system_audio: system_audio.unwrap_or(true), microphone: microphone.unwrap_or(false), path: path.clone() };
-    *active = Some(Recording::start(options).map_err(failed)?);
-    Ok(path.display().to_string())
+pub async fn screen_recording_pause(app: AppHandle, paused: bool) -> Result<(), UserError> {
+    control::pause(&app, paused)
 }
 
 #[tauri::command]
-pub async fn screen_recording_pause(paused: bool) -> Result<(), UserError> {
-    let active = ACTIVE.lock().unwrap_or_else(PoisonError::into_inner);
-    let recording = active.as_ref().ok_or_else(|| UserError::new("recording.idle", "Nothing is being recorded."))?;
-    recording.pause(paused);
-    Ok(())
+pub async fn screen_recording_stop(app: AppHandle) -> Result<Option<Summary>, UserError> {
+    control::stop(&app)
 }
 
 #[tauri::command]
-pub async fn screen_recording_stop() -> Result<Summary, UserError> {
-    let recording = ACTIVE.lock().unwrap_or_else(PoisonError::into_inner).take();
-    let recording = recording.ok_or_else(|| UserError::new("recording.idle", "Nothing is being recorded."))?;
-    recording.stop().map_err(failed)
+pub fn screen_recording_status() -> State {
+    control::state()
 }
 
 macro_rules! tauri_commands {
@@ -62,6 +41,7 @@ macro_rules! tauri_commands {
             crate::recording::screen_recording_start,
             crate::recording::screen_recording_pause,
             crate::recording::screen_recording_stop,
+            crate::recording::screen_recording_status,
         ] $($rest)*)
     };
 }

@@ -1,6 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { emit, listen, type EventCallback } from "@tauri-apps/api/event";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { revealItemInDir } from "@tauri-apps/plugin-opener";
 import type { OcrWord } from "./redact";
 import type { PixelRect } from "./selection";
 import { shortcutConfig, type ScreenshotSettings, type ShortcutAction } from "./settings";
@@ -14,7 +15,7 @@ export const PIN_ASSIGNED_EVENT = "screenshot-pin-assigned";
 export const SCREENSHOT_TAKEN_EVENT = "screenshot-taken";
 export const SCREENSHOT_TEXT_EVENT = "screenshot-text";
 
-export type ScreenshotMode = "region" | "copy" | "text" | "translate" | "long" | "fullscreen";
+export type ScreenshotMode = "region" | "copy" | "text" | "translate" | "long" | "record" | "fullscreen";
 
 export type ScreenshotSession = {
   id: number;
@@ -64,12 +65,12 @@ export function screenshotOverlayReady(session: number) {
   return invoke<void>("screenshot_overlay_ready", { session });
 }
 
-export type ScreenshotAction = "copy" | "save" | "pin" | "text" | "translate" | "long";
+export type ScreenshotAction = "copy" | "save" | "pin" | "text" | "translate" | "long" | "record";
 
-export type QuickAction = Extract<ScreenshotAction, "copy" | "text" | "translate" | "long">;
+export type QuickAction = Extract<ScreenshotAction, "copy" | "text" | "translate" | "long" | "record">;
 
 export function quickAction(mode: ScreenshotMode | undefined): QuickAction | null {
-  return mode === "copy" || mode === "text" || mode === "translate" || mode === "long" ? mode : null;
+  return mode === "copy" || mode === "text" || mode === "translate" || mode === "long" || mode === "record" ? mode : null;
 }
 
 export type SaveTarget = { folder?: string; folderName: string };
@@ -248,8 +249,19 @@ export function pasteScreenshotToFront(path: string) {
   return invoke<void>("screenshot_paste_to_front", { path });
 }
 
+export const RECORDING_STATE_EVENT = "recording-state";
+export const RECORDING_FINISHED_EVENT = "recording-finished";
 
-export type RecordingArea = { x: number; y: number; width: number; height: number };
+export type RecordingRequest = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  folderName: string;
+  fps?: number;
+  systemAudio?: boolean;
+  microphone?: boolean;
+};
 
 export type RecordingSummary = {
   path: string;
@@ -264,10 +276,18 @@ export type RecordingSummary = {
   microphone: boolean;
 };
 
-export type RecordingOptions = { fps?: number; systemAudio?: boolean; microphone?: boolean };
+export type RecordingState = {
+  phase: "idle" | "countdown" | "recording";
+  countdown: number;
+  paused: boolean;
+  elapsedMs: number;
+  sinceMs: number;
+};
 
-export function startRecording(area: RecordingArea, folderName: string, options: RecordingOptions = {}) {
-  return invoke<string>("screen_recording_start", { area, folderName, ...options });
+export type RecordingFinished = { summary: RecordingSummary | null; error: unknown };
+
+export function startRecording(request: RecordingRequest) {
+  return invoke<string>("screen_recording_start", { request });
 }
 
 export function pauseRecording(paused: boolean) {
@@ -275,5 +295,21 @@ export function pauseRecording(paused: boolean) {
 }
 
 export function stopRecording() {
-  return invoke<RecordingSummary>("screen_recording_stop");
+  return invoke<RecordingSummary | null>("screen_recording_stop");
+}
+
+export function getRecordingStatus() {
+  return invoke<RecordingState>("screen_recording_status");
+}
+
+export function listenRecordingState(handler: EventCallback<RecordingState>) {
+  return listen<RecordingState>(RECORDING_STATE_EVENT, handler);
+}
+
+export function listenRecordingFinished(handler: EventCallback<RecordingFinished>) {
+  return listen<RecordingFinished>(RECORDING_FINISHED_EVENT, handler);
+}
+
+export function revealRecording(path: string) {
+  return revealItemInDir(path);
 }

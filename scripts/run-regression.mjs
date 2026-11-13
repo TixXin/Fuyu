@@ -41,6 +41,8 @@ export const PAGES = [
   "screenshot-card.html",
   "screenshot-history.html",
   "screenshot-measure.html",
+  "screenshot-record.html",
+  "recording-notice.html",
   "todo-island.html",
 ];
 
