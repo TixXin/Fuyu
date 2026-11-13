@@ -64,6 +64,7 @@ type IslandCollapsedBarProps = {
   onOpenPage: (page: IslandPage) => void;
   onOpenMessages: (source: MessageSource) => void;
   translationPeek: string | null;
+  notice?: { content: ReactNode; actions: ReactNode } | null;
   onOpenTranslationPeek: () => void;
   onWindowDragStart: () => void;
   onTuck: () => void;
@@ -121,6 +122,7 @@ export function IslandCollapsedBar({
   onOpenPage,
   onOpenMessages,
   translationPeek,
+  notice = null,
   onOpenTranslationPeek,
   onWindowDragStart,
   onTuck,
@@ -140,7 +142,7 @@ export function IslandCollapsedBar({
   const showMeeting = showCollapsedText && meeting !== null;
   const openTarget: IslandPage = showMeeting ? "calendar" : agentSession ? "agents" : lyricLine ? "music" : page;
   const lyric = !agentSession && lyricLine?.text ? lyricLine : null;
-  const showCenter = Boolean(slots.center) && !preview && !translationPeek
+  const showCenter = Boolean(slots.center) && !preview && !translationPeek && !notice
     && !(showCollapsedText && (showTitle || agentSession !== null || lyric !== null || collapsedTaskTitle !== null || collapsedTodoCount !== null));
   const pluginStatus = usePluginStatusItems(pluginViews, onOpenPluginPage);
   const { placements: saved } = useCollapsedPlacements();
@@ -151,7 +153,7 @@ export function IslandCollapsedBar({
       : <span className={pulseClassName} {...{ [OPENS_BAR]: "" }} />,
     qqMail,
     updateVersion,
-    pluginStatus: showCollapsedText && !preview && !translationPeek && !levelPopup && !deviceAlert && !quotaAlert ? pluginStatus : [],
+    pluginStatus: showCollapsedText && !preview && !notice && !translationPeek && !levelPopup && !deviceAlert && !quotaAlert ? pluginStatus : [],
     deviceUse,
     shelfCount,
     showMusic: showMusic && audible,
@@ -217,7 +219,7 @@ export function IslandCollapsedBar({
         }}
       >
         <CollapsedMessageContent preview={preview} enabled={!isExpanded && !isTucked}>
-          {deviceAlert ? (
+          {notice ? notice.content : deviceAlert ? (
             <DeviceAlertPopup alert={deviceAlert} />
           ) : quotaAlert ? (
             <QuotaAlertPopup alert={quotaAlert} />
@@ -270,7 +272,8 @@ export function IslandCollapsedBar({
         </CollapsedMessageContent>
         {showCenter && <span className="island__center-slot">{slots.center}</span>}
       </button>
-      {showMeeting && !preview && !deviceAlert && !quotaAlert && !levelPopup && !translationPeek && meeting?.upcoming.event.meetingLink && (
+      {notice && !preview && notice.actions}
+      {showMeeting && !preview && !notice && !deviceAlert && !quotaAlert && !levelPopup && !translationPeek && meeting?.upcoming.event.meetingLink && (
         <button
           className="island-meeting-join"
           type="button"
