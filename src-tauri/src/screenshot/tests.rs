@@ -189,3 +189,49 @@ fn words_read_from_a_selection_come_back_in_screen_pixels() {
     let moved = super::offset_words(vec![vec![word("a", 1.0), word("b", 20.0)]], 100, 50);
     assert_eq!(moved, vec![vec![OcrWord { y: 52.0, ..word("a", 101.0) }, OcrWord { y: 52.0, ..word("b", 120.0) }]]);
 }
+
+fn page_row(width: u32, seed: u32) -> Vec<u8> {
+    (0..width).flat_map(|x| {
+        let v = ((x.wrapping_mul(7) ^ seed.wrapping_mul(2_654_435_761)) >> 3) as u8;
+        [v, v.wrapping_add(seed as u8), 200, 255]
+    }).collect()
+}
+
+fn view(width: u32, header: u32, body: u32, footer: u32, scroll: u32) -> Vec<u8> {
+    let mut out = Vec::new();
+    for y in 0..header { out.extend(page_row(width, 1_000_000 + y)); }
+    for y in 0..body { out.extend(page_row(width, scroll + y)); }
+    for y in 0..footer { out.extend(page_row(width, 2_000_000 + y)); }
+    out
+}
+
+#[test]
+fn scrolled_frames_stitch_into_the_whole_page_keeping_one_header_and_footer() {
+    use super::stitch::{Step, Stitcher};
+    let (width, header, body, footer) = (120, 30, 200, 20);
+    let height = header + body + footer;
+    let mut stitcher = Stitcher::new(width, height, view(width, header, body, footer, 0));
+    for (scroll, step) in [(57, 57), (114, 57), (171, 57), (240, 69)] {
+        assert_eq!(stitcher.push(view(width, header, body, footer, scroll)), Step::Added(step));
+    }
+    assert_eq!(stitcher.push(view(width, header, body, footer, 240)), Step::Unchanged);
+    let (w, h, rgba) = stitcher.finish();
+    assert_eq!((w, h), (width, header + 240 + body + footer));
+    let mut expected = Vec::new();
+    for y in 0..header { expected.extend(page_row(width, 1_000_000 + y)); }
+    for y in 0..240 + body { expected.extend(page_row(width, y)); }
+    for y in 0..footer { expected.extend(page_row(width, 2_000_000 + y)); }
+    assert!(rgba == expected, "the stitched page matches the original row for row");
+}
+
+#[test]
+fn a_page_that_does_not_move_or_jumps_too_far_stops_the_capture() {
+    use super::stitch::{Step, Stitcher};
+    let (width, body) = (100, 160);
+    let mut still = Stitcher::new(width, body, view(width, 0, body, 0, 0));
+    assert_eq!(still.push(view(width, 0, body, 0, 0)), Step::Unchanged);
+    assert_eq!(still.finish().1, body, "nothing scrolled: the single frame comes back");
+    let mut jumped = Stitcher::new(width, body, view(width, 0, body, 0, 0));
+    assert_eq!(jumped.push(view(width, 0, body, 0, 5_000)), Step::Lost);
+    assert_eq!(jumped.push(vec![0; 4]), Step::Lost);
+}

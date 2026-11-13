@@ -1,8 +1,10 @@
 mod history;
 mod hotkeys;
+mod long;
 mod output;
 mod pin;
 mod session;
+mod stitch;
 mod targets;
 #[cfg(test)]
 mod tests;
@@ -111,6 +113,7 @@ pub(crate) enum Action {
     Pin,
     Text,
     Translate,
+    Long,
 }
 
 impl Action {
@@ -121,6 +124,7 @@ impl Action {
             "pin" => Some(Self::Pin),
             "text" => Some(Self::Text),
             "translate" => Some(Self::Translate),
+            "long" => Some(Self::Long),
             _ => None,
         }
     }
@@ -150,6 +154,24 @@ pub async fn screenshot_finish(app: AppHandle, window: WebviewWindow, request: t
         }
     }
     match action {
+        Action::Long => {
+            let origin = session::origin(window.label()).ok_or_else(|| "No screenshot is open.".to_string())?;
+            let at = (origin.0.saturating_add_unsigned(left), origin.1.saturating_add_unsigned(top));
+            session::end(&app);
+            let app = app.clone();
+            std::thread::spawn(move || {
+                let Some(long) = long::capture(at.0, at.1, picture.width, picture.height) else {
+                    eprintln!("the long screenshot could not be captured");
+                    return;
+                };
+                match output::copy(&app, &long) {
+                    Ok(Some(path)) => announce(&app, &long, &path, false),
+                    Ok(None) => {}
+                    Err(error) => eprintln!("{error}"),
+                }
+            });
+            Ok(None)
+        }
         Action::Copy => {
             session::end(&app);
             if let Some(path) = output::copy(&app, &picture).inspect_err(|error| eprintln!("{error}"))? {

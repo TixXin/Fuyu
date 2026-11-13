@@ -87,7 +87,7 @@ export function ScreenshotOverlay() {
     const image = area ? composeArea(picture, area, chosen, items) : null;
     const patch = area && image ? { at: area, image } : null;
     const save = action === "save" ? { folder: saveFolderOf(loadScreenshotSettings()), folderName: t.saveFolderName } : undefined;
-    if (action === "pin") setLeaving(true);
+    if (action === "pin" || action === "long") setLeaving(true);
     finishScreenshot(chosen, patch, action, save).catch((error: unknown) => {
       setLeaving(false);
       setNotice(errorText(error));
