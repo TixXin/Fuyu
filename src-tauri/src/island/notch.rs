@@ -7,7 +7,7 @@ use super::state::{mutate_window_state, read_window_state, IslandWindowState};
 static DEV_NOTCH: Mutex<Option<Notch>> = Mutex::new(None);
 
 pub(crate) const ISLAND_NOTCH_CHANGED_EVENT: &str = "island-notch-changed";
-pub(super) const MIN_NOTCH_WING: f64 = 72.0;
+pub(super) const MIN_NOTCH_WING: f64 = 56.0;
 pub(super) const TUCKED_NOTCH_INSET: f64 = 2.0;
 
 #[derive(Debug, Clone, Copy, PartialEq, Serialize)]
