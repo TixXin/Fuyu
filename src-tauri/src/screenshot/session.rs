@@ -15,6 +15,7 @@ use crate::island::screen;
 pub(crate) const WINDOW_PREFIX: &str = "screenshot-";
 const SESSION_EVENT: &str = "screenshot-session";
 const ENDED_EVENT: &str = "screenshot-ended";
+const CAPTURE_SETTLE: std::time::Duration = std::time::Duration::from_millis(80);
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -78,6 +79,7 @@ pub(crate) fn start(app: &AppHandle, mode: Mode) {
     thread::spawn(move || {
         if let Err(error) = open(&app, mode) {
             eprintln!("screenshot failed: {error}");
+            crate::clipboard_history::refocus_popup(&app);
         }
         STARTING.store(false, Ordering::SeqCst);
     });
@@ -89,6 +91,9 @@ fn label(index: usize) -> String {
 
 fn open(app: &AppHandle, mode: Mode) -> Result<(), String> {
     super::capture::ensure_access()?;
+    if crate::clipboard_history::show_popup_in_screenshot(app) {
+        thread::sleep(CAPTURE_SETTLE);
+    }
     let monitors = app.available_monitors().map_err(|error| error.to_string())?;
     let pointer = screen::cursor_position().map(|(x, y)| (x.round() as i32, y.round() as i32));
     let mut frames = Vec::new();

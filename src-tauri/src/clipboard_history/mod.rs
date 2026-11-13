@@ -493,9 +493,23 @@ pub async fn hide_clipboard_popup(app: AppHandle, blurred: Option<bool>) -> Resu
 }
 
 pub(crate) fn refocus_popup(app: &AppHandle) {
+    if let Some(window) = app.get_webview_window(popup::WINDOW_LABEL) {
+        let hidden = service().and_then(|service| service.snapshot()).map(|snapshot| snapshot.settings.hide_from_capture).unwrap_or(true);
+        let _ = window.set_content_protected(hidden);
+    }
     if let Err(error) = popup::refocus(app) {
         eprintln!("failed to give the clipboard window its focus back: {error}");
     }
+}
+
+pub(crate) fn show_popup_in_screenshot(app: &AppHandle) -> bool {
+    let Some(window) = app.get_webview_window(popup::WINDOW_LABEL) else {
+        return false;
+    };
+    if !window.is_visible().unwrap_or(false) {
+        return false;
+    }
+    window.set_content_protected(false).is_ok()
 }
 
 #[tauri::command]
