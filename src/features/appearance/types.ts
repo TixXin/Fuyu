@@ -13,6 +13,7 @@ export type IslandCornerShape = "squircle" | "round";
 export type ThemeMode = "dark" | "light" | "system";
 export type AccentMode = "default" | "windows" | "pick";
 export type IslandMonitor = "primary" | "cursor" | "foreground";
+export type MenuBarPlacement = "over" | "below";
 export type ExpandTrigger = "click" | "hover";
 export type MinimizeAction = "tray" | "tuck";
 export type TuckedHoverAction = "reveal" | "expand";
@@ -38,6 +39,7 @@ export type IslandSettings = CalendarSettingValues & {
   expandedScale: number;
   marginY: number;
   islandMonitor: IslandMonitor;
+  menuBarPlacement: MenuBarPlacement;
   topFilletRadius: number;
   islandCornerRadius: number;
   islandCornerShape: IslandCornerShape;
