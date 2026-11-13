@@ -239,7 +239,7 @@ pub(super) fn out_at_top_after(
 pub(super) fn shown_custom_position(state: IslandWindowState, normal_y: i32) -> Option<IslandPosition> {
     state.custom_position.map(|position| {
         if state.out_at_top && !state.is_tucked {
-            IslandPosition { x: position.x, y: position.y.min(normal_y) }
+            IslandPosition::at(position.x, position.y.min(normal_y))
         } else {
             position
         }

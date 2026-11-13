@@ -3,6 +3,7 @@ pub(crate) mod banner_hit;
 pub(crate) mod focus;
 #[cfg_attr(not(windows), path = "follow_unsupported.rs")]
 mod follow;
+mod edge;
 mod geometry;
 #[cfg_attr(not(windows), path = "glass_unsupported.rs")]
 mod glass;
@@ -208,10 +209,7 @@ fn drag_island(window: WebviewWindow, current_state: IslandWindowState) -> Resul
     let position = screen::window_position(&window)?;
     POSITION_ANIMATION_GENERATION.fetch_add(1, Ordering::SeqCst);
     mutate_window_state(|state| {
-        state.custom_position = Some(IslandPosition {
-            x: position.x,
-            y: position.y,
-        });
+        state.custom_position = Some(IslandPosition::at(position.x, position.y));
         state.out_at_top = false;
         state.is_dragging = true;
         *state
@@ -236,10 +234,7 @@ fn drag_island(window: WebviewWindow, current_state: IslandWindowState) -> Resul
         let final_position = screen::window_position(&window).ok().map(|position| {
             top_edge::snap_to_top(
                 &window,
-                IslandPosition {
-                    x: position.x,
-                    y: position.y,
-                },
+                IslandPosition::at(position.x, position.y),
             )
         });
         let did_finish_drag = {
@@ -316,6 +311,11 @@ pub fn get_island_top_attachment() -> bool {
     top_edge::is_attached()
 }
 
+#[tauri::command]
+pub fn get_island_edge() -> Option<state::Edge> {
+    edge::attached()
+}
+
 macro_rules! tauri_commands {
     ($next:ident [$($done:tt)*] $($rest:tt)*) => {
         $next!([$($done)*
@@ -325,6 +325,7 @@ macro_rules! tauri_commands {
             crate::island::start_island_modifier_drag,
             crate::island::reset_island_position,
             crate::island::get_island_top_attachment,
+            crate::island::get_island_edge,
             crate::island::show_ready_island,
             crate::island::minimize_island,
             crate::island::focus::take_island_hover_focus,
