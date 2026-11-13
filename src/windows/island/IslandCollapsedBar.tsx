@@ -187,6 +187,7 @@ export function IslandCollapsedBar({
         aria-label={preview
           ? t.messages.openPreview(messagePreviewText(preview, t.messages), t.messages.sourceLabels[preview.source])
           : translationPeek ? t.translator.peekLabel(translationPeek) : t.messages.expand(collapsedLabel)}
+        data-tooltip=""
         aria-expanded={preview || translationPeek ? undefined : isExpanded}
         aria-controls={preview || translationPeek ? undefined : "island-panel"}
         onPointerDown={prepareWindowDrag}
@@ -294,6 +295,7 @@ export function IslandCollapsedBar({
           className="island__quiet-button"
           type="button"
           aria-label={t.island.collapseIsland}
+          data-tooltip=""
           onClick={(event) => {
             event.stopPropagation();
             onTuck();

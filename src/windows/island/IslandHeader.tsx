@@ -144,6 +144,7 @@ export function IslandHeader({
         className="island__collapse-target"
         type="button"
         aria-label={t.island.collapseIsland}
+        data-tooltip=""
         data-window-drag="false"
         onClick={onCollapse}
       />
