@@ -11,7 +11,7 @@ mod tests;
 
 use tauri::{AppHandle, Emitter, WebviewWindow};
 
-pub(crate) use output::is_screenshot_file;
+pub(crate) use output::{is_screenshot_file, sanitized_name};
 pub(crate) use pin::{forget as forget_pin, WINDOW_PREFIX as PIN_PREFIX};
 pub(crate) use session::WINDOW_PREFIX;
 const TEXT_EVENT: &str = "screenshot-text";

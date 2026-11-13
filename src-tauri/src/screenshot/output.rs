@@ -204,7 +204,7 @@ pub(super) fn chosen_folder(folder: &str) -> Result<PathBuf, String> {
     }
 }
 
-pub(super) fn sanitized_name(name: &str) -> String {
+pub(crate) fn sanitized_name(name: &str) -> String {
     let name: String = name.chars().filter(|c| !matches!(c, '<' | '>' | ':' | '"' | '/' | '\\' | '|' | '?' | '*') && !c.is_control()).collect();
     let name = name.trim().trim_end_matches('.').to_string();
     if name.is_empty() { "Fuyu".to_string() } else { name }

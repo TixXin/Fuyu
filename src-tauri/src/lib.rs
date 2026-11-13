@@ -27,6 +27,8 @@ mod plugin_host;
 mod mail;
 #[cfg_attr(not(windows), path = "qq_notifications/unsupported.rs")]
 mod qq_notifications;
+#[cfg_attr(not(windows), path = "recording/unsupported.rs")]
+mod recording;
 #[cfg_attr(not(windows), path = "rename_migration/unsupported.rs")]
 mod rename_migration;
 #[cfg_attr(not(windows), path = "screenshot/unsupported.rs")]
@@ -217,6 +219,7 @@ pub fn run() {
             clipboard_history;
             translation;
             screenshot;
+            recording;
             settings_window;
             settings_file;
             home_dir;

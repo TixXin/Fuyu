@@ -23,6 +23,9 @@ export type ErrorCode =
   | "net.said"
   | "net.tooLarge"
   | "bark.server"
+  | "recording.busy"
+  | "recording.idle"
+  | "recording.failed"
   | "bark.scheme"
   | "bark.key"
   | "bark.noKey"
@@ -223,6 +226,9 @@ export const zhCN: ErrorsText = {
     "net.said": ({ service }) => `${service} 返回了错误。`,
     "net.tooLarge": ({ service }) => `${service} 的内容太大，已放弃。`,
     "bark.server": "Bark 服务器地址无效。",
+    "recording.busy": "已经在录屏了。",
+    "recording.idle": "现在没有在录屏。",
+    "recording.failed": "录屏失败。",
     "bark.scheme": "Bark 服务器地址要以 https:// 或 http:// 开头。",
     "bark.key": "这不像 Bark 的设备 Key：在 Bark 里复制推送地址或其中那串字母数字。",
     "bark.noKey": "还没有填 Bark 设备 Key。",
@@ -420,6 +426,9 @@ export const en: ErrorsText = {
     "net.said": ({ service }) => `${service} answered with an error.`,
     "net.tooLarge": ({ service }) => `${service} sent more than expected; gave up.`,
     "bark.server": "The Bark server address is not valid.",
+    "recording.busy": "A recording is already running.",
+    "recording.idle": "Nothing is being recorded.",
+    "recording.failed": "The recording failed.",
     "bark.scheme": "The Bark server address must start with https:// or http://.",
     "bark.key": "That does not look like a Bark device key: copy the push URL in Bark, or the letters and digits in it.",
     "bark.noKey": "No Bark device key yet.",
