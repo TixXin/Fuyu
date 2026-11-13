@@ -24,7 +24,7 @@ description: >
 
 ## 顺序
 
-1. **开 lane、建任务**（`lanes` skill）：`pnpm tasks add D<n> --title .. --claim --as <会话名> --scope "video/"`。
+1. **建任务**：`pnpm tasks add D<n> --title .. --claim --as <会话名> --scope "video/"`。
 2. **定概念，先告诉用户再动手**：一句话的想法、时长、每段展示什么。一条视频只讲一个想法（总览、单个功能、一天的时间线），不是功能清单。用户让「全网学习」时，把结论写进 `docs/research/ai-promo-videos.md` 的一个带日期的新节。
 3. **新建视频模块**：复制最接近的一条（`video/src/videos/`），在 `src/main.tsx` 的 `VIDEOS` 登记。三种舞台按需要选：
    - 默认：自画壁纸，开头可以有一堆窗口（001、002）。
@@ -70,7 +70,7 @@ cd video
 
 ```powershell
 cd E:\Projects\tools\ACE-Step-1.5
-uv run python E:\Projects\fuyu-lanes\<N>\.claude\skills\fuyu-video\scripts\bgm.py --ace . --out E:\Projects\tools\ace-run\<视频 id> --caption "modern minimal electronic product film music, warm analog synth arpeggio, soft kick, airy pads, uplifting, clean, no vocals" --bpm 108 --duration 70 --seeds 5,31
+uv run python E:\Projects\fuyu\.claude\skills\fuyu-video\scripts\bgm.py --ace . --out E:\Projects\tools\ace-run\<视频 id> --caption "modern minimal electronic product film music, warm analog synth arpeggio, soft kick, airy pads, uplifting, clean, no vocals" --bpm 108 --duration 70 --seeds 5,31
 ```
 
 - 时长比视频长 15 秒以上。一次出两首（批量上限是 2），用可量的指标挑：`ebur128` 的 LRA 小（平稳）、中间没有静音、`readback.py` 回读是空的（没有人声）。

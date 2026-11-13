@@ -42,7 +42,7 @@ src-tauri/src/
 ├── settings_file.rs         # 数据目录里的 settings.json（D30.2）：BACKUP_KEYS 设置的文件镜像，格式同设置备份；命令 read_settings_file / write_settings_file
 ├── home_dir.rs              # 家目录（#50，D30）：浮屿的数据目录只从这里取 fuyu_home(app.path())，不要直接调 app_data_dir()；FUYU_HOME → home.json 指针 → ~/.fuyu；home_dir/migration.rs 为升级时复制旧数据、重装钩子、复制待办 Markdown，见 docs/features/data-home.md
 ├── fs_write.rs              # 整份替换应用数据目录里的文件：先写旁边的 .tmp 再改名；别的程序暂时占着（拒绝访问、共享冲突）时稍等重试
-├── dev_lane.rs              # lane 预览（pnpm dev:lane）：调试版的独立应用标识、默认位置，不改用户的链接、自启和 hook
+├── dev_lane.rs              # lane 时期的预览（设了 FOCUSD_DEV_LANE 的调试版）：独立应用标识、默认位置，不改用户的链接、自启和 hook；启动脚本已删（F32），等 G1.6 收尾后删掉
 ├── messenger_activation.rs
 ├── notification_diagnostics.rs
 ├── user_error.rs            # 用户看到的错误：错误码、文案参数和外部原话（D15），前端按界面语言显示；凭据管理器的通用错误；
@@ -131,5 +131,5 @@ src-tauri/src/
 - 修改 `tauri.conf.json` 中的窗口配置时，同步检查 `capabilities/default.json`、前端 `main.tsx` 的窗口分发，以及 Rust 中的 label 常量。
 - `agent_status/hooks/fuyu-agent-*.{cmd,ps1}` 和 `qq_notifications/repair-qq-notification-registration.ps1` 通过 `include_str!` 编入二进制，修改后需要完整的 Rust 验证。
 - clippy lint 在 `Cargo.toml` 的 `[lints.clippy]` 中声明（`undocumented_unsafe_blocks`、`unwrap_used`、`expect_used` 为 deny），测试代码的放行写在 `clippy.toml`；不要在源文件中用 `#![warn]` / `#[allow]` 重复声明这些 lint。`cargo clippy --all-targets` 保持 0 告警；个别确实无法消除的默认 lint（例如参数即 IPC 契约的命令触发 `too_many_arguments`）在该项上用带 `reason` 的 `#[expect(...)]`。
-- 验证：`cargo test --manifest-path src-tauri/Cargo.toml` + `pnpm build:exe`。涉及窗口、托盘、注册表行为的改动，在风险需要时用 `pnpm dev:lane`（lane 里）或 `pnpm tauri dev`（主工作区）手动检查折叠态、展开态、贴边收起和托盘隐藏。
-- 成功生成 release 可执行文件后，按根目录规则同步桌面快捷方式。
+- 验证：`cargo test --manifest-path src-tauri/Cargo.toml` + `pnpm build:exe`。涉及窗口、托盘、注册表行为的改动，在风险需要时请用户在 `pnpm tauri dev` 里手动检查折叠态、展开态、贴边收起和托盘隐藏。
+- 成功生成 release 可执行文件后，桌面快捷方式按根目录规则处理（默认不动）。

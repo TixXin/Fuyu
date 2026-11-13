@@ -1,4 +1,4 @@
-import { CLOSED_STATUSES, OPEN_STATUSES, compareIds, groupOf, sectionText } from "./taskFile.mjs";
+import { CLOSED_STATUSES, OPEN_STATUSES, claimText, compareIds, groupOf, sectionText } from "./taskFile.mjs";
 
 export function index(tasks) {
   const byId = new Map(tasks.map((task) => [task.fields.id, task]));
@@ -53,8 +53,8 @@ export function jsonRows(tasks, { stale, all = false }) {
 
 function marks(task, { byId, children, stale }) {
   const parts = [];
-  const { owner, lane, issue, needs } = task.fields;
-  if (owner) parts.push(`${owner}${lane ? ` · lane ${lane}` : ""}`);
+  const { owner, issue, needs } = task.fields;
+  if (owner) parts.push(claimText(task.fields));
   const reason = stale(task);
   if (reason) parts.push(`⚠ ${reason}`);
   const counts = progress(task, children);

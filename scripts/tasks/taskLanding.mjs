@@ -55,11 +55,10 @@ export function landingProblems(root) {
   });
 }
 
-export function laneReminders(root, lane) {
-  if (lane === null) return [];
+export function hostReminders(root, host) {
   const changed = lines(tryGit(["diff", "--name-only", "origin/main...HEAD"], root));
   if (!changed.some((file) => !file.startsWith(`${TASKS_DIR}/`))) return [];
   return readAll(root)
-    .filter((task) => claimState(task, lane) === "mine")
-    .map((task) => `lane ${lane} 认领的 ${task.fields.id} 还是进行中：做完了用 pnpm tasks done ${task.fields.id}，没做完用 pnpm tasks note ${task.fields.id} 留交接`);
+    .filter((task) => claimState(task, { host }) === "mine")
+    .map((task) => `本机（${host}）${task.fields.owner} 认领的 ${task.fields.id} 还是进行中：做完了用 pnpm tasks done ${task.fields.id} --commit <提交标题>，没做完用 pnpm tasks note ${task.fields.id} 留交接`);
 }

@@ -26,7 +26,7 @@
 | C | 竞品都有、我们还缺的 | 新功能模块 |
 | D | 质量与发布 | 测试、性能、无障碍、发布和更新 |
 | E | 插件平台 | 插件 API、插件市场和 SDK |
-| F | 多会话协作 | lane、合并队列、任务流程这些开发工具 |
+| F | 多会话协作 | 合入流程、任务流程这些开发工具 |
 | G | macOS 适配 | 让浮屿在 Mac 上可用并正式发布（G1 是总任务，计划见 `docs/architecture/macos-port-plan.md`） |
 
 编号：分组字母加数字（`C11`）；从某项拆出来的加小写字母（`C9b`）；分期的子任务用点（`B6.2.7`，第 2 期第 7 项），同时写 `parent`。
@@ -38,7 +38,7 @@
 | `id` | 和文件名一致 |
 | `title` | 一句话说清做什么；看板只显示这一行 |
 | `status` | 见下一节 |
-| `owner` / `lane` / `claimed` | 认领的会话名、lane 编号和时间，由 `task:claim` 写。结束后只留 `owner` 作记录 |
+| `owner` / `host` / `claimed` | 认领的会话名、机器名和时间，由 `task:claim` 写。结束后只留 `owner` 作记录。旧任务里的 `lane`（lane 编号，2026-11-13 前）照样能读 |
 | `scope` | 要改的目录（以 `/` 结尾）和文件，逗号分隔。认领时和别人的范围比对，`pnpm tasks conflicts` 也用它 |
 | `depends` | 要等哪些任务先结束，逗号分隔。没结束时看板标「等 X」，认领会被拒绝（`--force` 越过） |
 | `parent` | 父任务。有子任务的任务不能认领，认领子任务；看板显示「子任务 x/y」 |
@@ -52,7 +52,7 @@
 
 | 状态 | 含义 |
 |---|---|
-| `待做` | 没人认领。不能有 `owner` / `lane` |
+| `待做` | 没人认领。不能有 `owner` / `host` / `lane` |
 | `进行中` | 有会话在做（有子任务的父任务例外，它没有负责人） |
 | `待用户确认` | 做到一半，等用户回答或验收；写清楚等的是什么。看板放进「需要你」 |
 | `已完成` | 在 `0-archive/`，有 `done` 日期，`## 提交` 下至少一项 |
@@ -73,18 +73,18 @@
 
 ## 流程
 
-认领以 `origin/main` 为准，不等其他会话回消息。
+认领看本地和 `origin/main`，不等其他会话回消息。
 
 1. **挑**：`pnpm tasks next`，再 `pnpm tasks show <编号>` 读全文。
-2. **认领**：在 lane 里 `pnpm task:claim <编号> --as <会话名> --scope <要改的目录/,文件>`。会话名用 ListAgents 里自己的名字。它会同步 `origin/main`、提交，再 `mq:land --wait`：开一个只改任务文件的 PR，等它合入（只改文档，一两分钟）才算认领成功；已经是你的不会重复提交；两个会话抢同一项时，后合入的那个会冲突（land 时 rebase 冲突，或 PR 冲突），按提示换一项。
+2. **认领**：`pnpm task:claim <编号> --as <会话名> --scope <要改的目录/,文件>`。会话名用 ListAgents 里自己的名字，必须写。它先 `git fetch origin main`，本地或 `origin/main` 上已经有人认领就拒绝；否则写上会话名和机器名，在本地提交（只含任务文件），随下一批 PR 推上去（见 [workflow.md](/docs/architecture/workflow.md)）。会话名和机器名都对上才算「你的」，另一台机器上同名的会话不算（#153）。`--no-commit` 只改文件不提交。
 3. **新任务马上要做**：`pnpm tasks add <编号> --title .. --claim --as <会话名> --scope ..`，新建和认领在一个提交里。只是记下来以后做：`pnpm tasks add <编号> --title ..`，和别的改动一起提交。
 4. **做的过程中**：开发中途和 land 前跑 `pnpm tasks conflicts`，看和 main、和别人声明的范围有没有冲突。
 5. **停下来**：`pnpm tasks note <编号> "<进度和下一步>"`，随下一次提交带上。不打算做完了：`pnpm tasks release <编号> --reason ".."`，放回待做并留交接。
-6. **做完**：`pnpm tasks done <编号>`，和功能改动放在同一个提交里。它默认记下这个 lane 还没 land 的提交标题；功能还没提交时加 `--commit "<这次要用的提交标题>"`（可以写多个）。父任务在最后一个子任务结束后 `done`。
+6. **做完**：`pnpm tasks done <编号> --commit "<功能提交的标题>"`（可以写多个，也可以写已有的提交号），和功能改动放在同一个提交里。本地 `main` 上有别的会话的提交，所以 `--commit` 必须写。父任务在最后一个子任务结束后 `done`。
 7. **不做**：`pnpm tasks drop <编号> --reason ".."`。
-8. **失效的认领**：`pnpm tasks` / `pnpm tasks stale` 标出 lane 已删除、建 lane 的会话已退出、或 24 小时没提交的认领。接手前给原会话发一条消息说明，不必等回复，`pnpm task:claim <编号> --takeover`。
+8. **失效的认领**：`pnpm tasks` / `pnpm tasks stale` 标出认领后 24 小时任务文件没有新的交接或提交的认领（做得久的任务停下时 `tasks note` 留交接，也就续上了）。接手前给原会话发一条消息说明，不必等回复，`pnpm task:claim <编号> --takeover`。
 
-land 时会自动检查（`scripts/land-check.mjs` 调 `pnpm tasks landing`）：这次标成已完成的任务，`## 提交` 里的标题要在这次 land 或 main 上一字不差，提交号要存在，否则 land 失败；这个 lane 认领的任务还是「进行中」时会提醒先 `done` 或留交接。
+land 时会自动检查（`scripts/land-check.mjs` 调 `pnpm tasks landing`）：这次标成已完成的任务，`## 提交` 里的标题要在这次 land 或 main 上一字不差，提交号要存在，否则 land 失败；本机认领、还是「进行中」的任务会提醒先 `done` 或留交接。
 
 ## GitHub issue
 
@@ -96,16 +96,16 @@ land 时会自动检查（`scripts/land-check.mjs` 调 `pnpm tasks landing`）�
 4. **做完回复**：合入 main 后回复原因、改了什么、怎么拿到（下个版本 / 插件市场 / npm），以及验证结果；引用任务文档（这时在 `docs/tasks/0-archive/<分组>/<编号>.md`），并列出这次的提交（短提交号加标题，GitHub 会自动链接）。
 5. **关闭**：回复之后 `gh issue close <N>`。合入 main 就关，不等发版：回复里写明随哪个版本发布，没修好时报告人可以重新打开。不用提交说明里的 `Closes #N`：它会在完成回复之前就把 issue 关掉。
 
-回复用中文，署名 tixxin Agent Team，可以介绍真实的自动化流程（lane、合并队列、合入前的检查），不写做不到的事；最后一行写「由 <模型名> 自动整理回复」，模型名用实际在用的（例如 Opus 5.5）。
+回复用中文，署名 tixxin Agent Team，可以介绍真实的自动化流程（多个会话并行、攒批开 PR、合入前的检查），不写做不到的事；最后一行写「由 <模型名> 自动整理回复」，模型名用实际在用的（例如 Opus 5.5）。
 
 ## GitHub PR
 
-别人提的 PR（含协作者的）由仓库管理员的会话来合时，和 issue 一样先回复、后动手、合完再回复（用户 2026-11-09 定）。怎么合（不走 land）见 [lanes.md](/docs/architecture/lanes.md)「外部 PR」。
+别人提的 PR（含协作者的）由仓库管理员的会话来合时，和 issue 一样先回复、后动手、合完再回复（用户 2026-11-09 定）。怎么合（不走 land）见 [workflow.md](/docs/architecture/workflow.md)「外部 PR」。
 
-1. **核实**：读说明和改动，看 PR 上 CI 的 `check`；要看界面效果或改动风险大时，再在 lane 里把它合到最新的 `origin/main` 上验证，这个合并不推送。
+1. **核实**：读说明和改动，看 PR 上 CI 的 `check`；要看界面效果或改动风险大时，再在临时 worktree 里把它合到最新的 `origin/main` 上验证，验完删掉，这个合并不推送。
 2. **先回复，再合**：说明已收到、看法（合 / 要作者改 / 不合）、检查的结果和接下来怎么做。要作者改的，写清楚改哪里，等作者推上来再从第 1 步走。不合的回复原因后 `gh pr close <N>`，到此为止。
 3. **跟进建任务**：合入后还要我们自己补的（作者没做的部分、顺带发现的问题），`pnpm tasks add <编号> --title .. --issue <PR 号>`（PR 和 issue 共用编号，`issue` 字段写 PR 号即可），第 2 步的回复里引用任务文档；任务建好之前写的回复，建好后补一条带链接的。PR 本身就是做好的改动，不为它另建任务。
-4. **合入**：`gh pr merge <N> --auto --merge` 开启自动合并，CI 的 `check` 通过后 GitHub 合入，落后于 `main` 时由工作流排队更新；`pnpm mq:wait <N>` 等到合入并快进主工作区。合入时 PR 自动关闭。
+4. **合入**：`gh pr merge <N> --auto --merge` 开启自动合并，CI 的 `check` 通过后 GitHub 合入，落后于 `main` 时由工作流排队更新；`pnpm mq:wait <N>` 等到合入并把本地 `main` 跟上。合入时 PR 自动关闭。
 5. **合完回复**：写合并提交号、怎么拿到（下个版本 / 插件市场 / npm）和验证结果；有跟进任务的，任务做完后再回复一条，引用任务文档（这时在 `0-archive/`）并列出跟进的提交（短提交号加标题）。
 
 回复的语言、署名和最后一行同上一节。

@@ -1,25 +1,21 @@
 import { spawnSync } from "node:child_process";
-import { existsSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { laneNumber, mainCheckout } from "../build-dirs.mjs";
-import { currentSession, recordOwner } from "../lanes/laneRegistry.mjs";
 import { boardLines, blockers, index, jsonRows, nextLines, relationLines } from "./taskBoard.mjs";
 import {
-  CLOSED_STATUSES, OPEN_STATUSES, addLine, claimState, claimed, filesInScope, formatTask, isTaskId,
+  CLOSED_STATUSES, OPEN_STATUSES, addLine, claimState, claimText, claimed, filesInScope, formatTask, isTaskId,
   scopeOverlap, splitList, unclaimed,
 } from "./taskFile.mjs";
-import { landingProblems, laneReminders } from "./taskLanding.mjs";
+import { hostReminders, landingProblems } from "./taskLanding.mjs";
 import {
-  checkTasks, findTask, git, load, nowText, readAll, readGroups, save, staleOf, taskPath, todayText, tryGit,
+  checkTasks, findTask, git, load, machineName, nowText, readAll, readGroups, save, staleOf, taskOnMain, taskPath, todayText, tryGit,
 } from "./taskRepo.mjs";
 
 export { checkTasks } from "./taskRepo.mjs";
 export { staleReason } from "./taskRepo.mjs";
 
-const FLAGS = ["--all", "--json", "--takeover", "--no-land", "--claim", "--force"];
-const RERUN = "FOCUSD_TASKS_RERUN";
+const FLAGS = ["--all", "--json", "--takeover", "--no-commit", "--claim", "--force"];
 
 function parseArgs(argv) {
   const options = { _: [], commit: [] };
@@ -37,57 +33,38 @@ function run(command, args) {
   return spawnSync(command, args, { stdio: "inherit", shell: process.platform === "win32" }).status ?? 1;
 }
 
-function checkInLane(main, lane, name) {
-  if (!lane) return;
-  try {
-    const me = currentSession();
-    recordOwner(main, lane, { pid: me.pid, session: me.session, name: name || me.name });
-  } catch {
-  }
+function fetchMain() {
+  if (run("git", ["fetch", "-q", "origin", "main"]) !== 0) console.warn("取不到 origin/main，只按本地的任务文件判断");
 }
 
-function syncedLane(root, what) {
-  const lane = laneNumber(root);
-  if (lane === null) throw new Error(`${what}要在 lane 里做（pnpm lane:open 开的 lane），主工作区留给用户`);
-  if (tryGit(["status", "--porcelain", "--untracked-files=no"])) throw new Error(`工作区有未提交的改动，先提交或暂存再${what}`);
-  const scripts = () => tryGit(["rev-parse", "HEAD:scripts/tasks"]);
-  const before = scripts();
-  if (run("git", ["fetch", "-q", "origin"]) !== 0 || run("git", ["rebase", "-q", "origin/main"]) !== 0) {
-    throw new Error(`同步 origin/main 失败；先解决 rebase 再${what}`);
-  }
-  if (scripts() !== before && !process.env[RERUN]) {
-    console.log("任务脚本在 main 上更新了，用新版本重新运行这条命令");
-    const result = spawnSync(process.execPath, process.argv.slice(1), { stdio: "inherit", env: { ...process.env, [RERUN]: "1" } });
-    process.exit(result.status ?? 1);
-  }
-  return lane;
-}
-
-export function claimPrBody(summary) {
-  return `## 改了什么\n\n${summary}\n\n只改了任务文件，CI 走文档的快速路径。\n`;
-}
-
-function commitAndLand(paths, message, options, summary) {
+function commitTasks(paths, message, options) {
+  if (options["no-commit"]) return 0;
   git(["add", "-A", "--", ...paths]);
-  git(["commit", "-q", "-m", message]);
-  if (options["no-land"]) return 0;
-  const bodyFile = path.join(tmpdir(), `fuyu-task-pr-${process.pid}.md`);
-  writeFileSync(bodyFile, claimPrBody(summary));
-  const status = run("pnpm", ["mq:land", "--wait", "--body", bodyFile.includes(" ") ? `"${bodyFile}"` : bodyFile]);
-  rmSync(bodyFile, { force: true });
-  if (status !== 0) console.error("认领的 PR 没有合入。冲突说明别人刚改了同一个任务：git rebase --abort（land 时冲突的话）后 pnpm tasks 看看，换一项；检查失败就按上面的提示修。");
-  return status;
+  git(["commit", "-q", "-m", message, "--", ...paths]);
+  console.log(`已提交「${message}」（只含任务文件），随下一批 PR 推上去：pnpm mq:land`);
+  return 0;
 }
 
-function sessionName(options, lane) {
-  return options.as || process.env.FOCUSD_SESSION_NAME || (lane === null || lane === undefined ? "" : `lane ${lane}`);
+function sessionName(options) {
+  return options.as || process.env.FOCUSD_SESSION_NAME || "";
 }
 
-async function claim(root, main, options, added = []) {
+function me(options) {
+  return { owner: sessionName(options), host: machineName() };
+}
+
+function claimOf(root, task) {
+  const onMain = taskOnMain(root, task.fields.id);
+  return claimState(task, {}) === "free" && onMain && claimState(onMain, {}) !== "free" ? onMain : task;
+}
+
+async function claim(root, options, added = []) {
   const ids = options._;
   if (ids.length === 0 || !ids.every(isTaskId)) throw new Error("用法：pnpm task:claim <编号...> [--as 会话名] [--scope a/,b.ts]");
-  const lane = added.length ? laneNumber(root) : syncedLane(root, "认领");
-  const owner = sessionName(options, lane);
+  if (!added.length) fetchMain();
+  const owner = sessionName(options);
+  if (!owner) throw new Error("认领要写会话名：--as <会话名>（ListAgents 里自己的名字）");
+  const self = { owner, host: machineName() };
   const scope = options.scope ? splitList(options.scope) : undefined;
   const all = readAll(root);
   const { byId, children } = index(all);
@@ -96,36 +73,35 @@ async function claim(root, main, options, added = []) {
     const task = load(root, id);
     if (CLOSED_STATUSES.includes(task.fields.status)) throw new Error(`${id} 的状态是「${task.fields.status}」，不能认领`);
     if ((children.get(id) ?? []).length) throw new Error(`${id} 有子任务，认领其中一项：pnpm tasks show ${id}`);
-    const state = claimState(task, lane);
+    const current = claimOf(root, task);
+    const state = claimState(current, self);
     if (state === "mine") {
-      console.log(`${id} 已经是你的（${task.fields.owner} · lane ${lane}），不用再认领`);
+      console.log(`${id} 已经是你的（${claimText(current.fields)}），不用再认领`);
       continue;
     }
     if (state === "theirs") {
-      const stale = staleOf(main, task);
-      if (!stale) throw new Error(`${id} 正由 ${task.fields.owner}（lane ${task.fields.lane}）进行中；换一项`);
-      if (!options.takeover) throw new Error(`${id} 的认领已失效（${stale}）。先给 ${task.fields.owner} 发消息说明，再加 --takeover 接手`);
-      console.log(`接手 ${id}：原认领 ${task.fields.owner} 已失效（${stale}）`);
+      const stale = staleOf(root, current);
+      if (!stale) throw new Error(`${id} 正由 ${claimText(current.fields)} 进行中；换一项`);
+      if (!options.takeover) throw new Error(`${id} 的认领已失效（${stale}）。先给 ${current.fields.owner} 发消息说明，再加 --takeover 接手`);
+      console.log(`接手 ${id}：原认领 ${current.fields.owner} 已失效（${stale}）`);
     }
     const waiting = blockers(task, byId);
     if (waiting.length && !options.force) throw new Error(`${id} 还在等 ${waiting.join("、")} 完成；确实要先做，加 --force`);
     if (task.fields.needs === "user" && !options.force) throw new Error(`${id} 只有用户本人能做（needs: user）；用户让你做时加 --force`);
     for (const theirs of all) {
-      if (theirs.fields.id === id || claimState(theirs, lane) !== "theirs") continue;
+      if (theirs.fields.id === id || claimState(theirs, self) !== "theirs") continue;
       const overlap = scopeOverlap(scope ?? task.fields.scope, theirs.fields.scope);
       if (overlap.length) console.warn(`注意：${theirs.fields.id}（${theirs.fields.owner}）也在改 ${overlap.join("、")}`);
     }
-    save(root, claimed(task, { owner, lane, at: nowText(), scope }));
+    save(root, claimed(task, { owner, host: self.host, at: nowText(), scope }));
     taking.push(id);
   }
-  checkInLane(main, lane, owner);
   if (taking.length === 0) return 0;
   const verb = added.length ? "adds and takes" : "takes";
-  const summary = `- ${added.length ? "新建并认领" : "认领"}任务 ${taking.join("、")}（${owner}${lane ? `，lane ${lane}` : ""}）`;
-  return commitAndLand(taking.map((id) => taskPath(id, false)), `docs(tasks): ${owner} ${verb} ${taking.join(", ")}`, options, summary);
+  return commitTasks(taking.map((id) => taskPath(id, false)), `docs(tasks): ${owner} ${verb} ${taking.join(", ")}`, options);
 }
 
-function add(root, main, options) {
+function add(root, options) {
   const [id] = options._;
   if (!isTaskId(id ?? "") || !options.title) throw new Error("用法：pnpm tasks add <编号> --title .. [--parent ..] [--depends a,b] [--needs user] [--issue 13] [--body ..] [--claim]");
   if (findTask(root, id)) throw new Error(`${id} 已经存在`);
@@ -137,15 +113,11 @@ function add(root, main, options) {
   const status = options.status ?? "待做";
   if (!OPEN_STATUSES.includes(status)) throw new Error(`新任务的状态只能是 ${OPEN_STATUSES.join(" / ")}`);
   const fields = { id, title: options.title, status, scope: [], depends, parent: options.parent, needs: options.needs, issue: options.issue };
-  if (options.claim) syncedLane(root, "新建并认领");
+  if (options.claim) fetchMain();
   save(root, { fields, body: options.body ? `## 说明\n\n${options.body}` : "" });
-  if (options.claim) return claim(root, main, { ...options, _: [id] }, [id]);
-  console.log(`已建 ${taskPath(id, false)}；和其他改动一起提交（马上要做就用 --claim，一次提交并 land）`);
+  if (options.claim) return claim(root, { ...options, _: [id] }, [id]);
+  console.log(`已建 ${taskPath(id, false)}；和其他改动一起提交（马上要做就用 --claim，建好、认领并提交）`);
   return 0;
-}
-
-function laneSubjects() {
-  return (tryGit(["log", "--format=%s", "origin/main..HEAD"]) ?? "").split("\n").filter((subject) => subject && !subject.startsWith("docs(tasks)"));
 }
 
 function close(root, options, status) {
@@ -154,12 +126,12 @@ function close(root, options, status) {
   if (CLOSED_STATUSES.includes(task.fields.status)) throw new Error(`${id} 已经是「${task.fields.status}」`);
   const open = readAll(root).filter((child) => child.fields.parent === id && OPEN_STATUSES.includes(child.fields.status));
   if (open.length) throw new Error(`${id} 还有没结束的子任务：${open.map((child) => child.fields.id).join("、")}`);
-  const { lane: _lane, claimed: _claimed, ...fields } = task.fields;
+  const { host: _host, lane: _lane, claimed: _claimed, ...fields } = task.fields;
   fields.scope = [];
   let body = task.body;
   if (status === "已完成") {
-    const subjects = options.commit.length ? options.commit : laneSubjects();
-    if (subjects.length === 0) throw new Error("这个 lane 还没有功能提交。加 --commit \"<这次要用的提交标题>\"，然后和功能改动一起提交");
+    const subjects = options.commit;
+    if (subjects.length === 0) throw new Error("加 --commit \"<功能提交的标题>\"（或已有的提交号），然后和功能改动放在同一个提交里");
     for (const subject of subjects) body = addLine(body, "提交", /^[0-9a-f]{7,40}$/.test(subject) ? subject : `\`${subject}\``);
     fields.done = todayText();
   } else {
@@ -177,13 +149,12 @@ function close(root, options, status) {
 
 function release(root, options) {
   const [id] = options._;
-  const lane = syncedLane(root, "释放");
   const task = load(root, id);
-  if (claimState(task, lane) !== "mine") throw new Error(`${id} 不是这个 lane 认领的`);
+  if (claimState(task, me(options)) !== "mine") throw new Error(`${id} 不是你认领的（${claimText(task.fields)}）；用 --as <会话名> 说明你是谁`);
   let next = unclaimed(task, "待做");
   if (options.reason) next = { ...next, body: addLine(next.body, "交接", `${nowText()} ${task.fields.owner}：放回，${options.reason}`) };
   save(root, next);
-  return commitAndLand([taskPath(id, false)], `docs(tasks): ${task.fields.owner} gives back ${id}`, options, `- 放回任务 ${id}（${task.fields.owner}）${options.reason ? `：${options.reason}` : ""}`);
+  return commitTasks([taskPath(id, false)], `docs(tasks): ${task.fields.owner} gives back ${id}`, options);
 }
 
 function conflicts(root) {
@@ -194,14 +165,14 @@ function conflicts(root) {
   else if (result.status === 0) console.log("和 origin/main 没有冲突。");
   else console.error(result.stderr.trim());
   const changed = (tryGit(["diff", "--name-only", "origin/main...HEAD"]) ?? "").split("\n").filter(Boolean);
-  const lane = laneNumber(root);
+  const self = me({});
   let shared = 0;
   for (const task of readAll(root)) {
-    if (claimState(task, lane) !== "theirs") continue;
+    if (claimState(task, self) !== "theirs") continue;
     const touched = filesInScope(changed, task.fields.scope);
     if (touched.length) {
       shared += 1;
-      console.log(`${task.fields.id}（${task.fields.owner}，lane ${task.fields.lane}）声明了这些文件：${touched.join("、")}`);
+      console.log(`${task.fields.id}（${claimText(task.fields)}）声明了这些文件：${touched.join("、")}`);
     }
   }
   return result.status === 1 || shared > 0 ? 1 : 0;
@@ -219,8 +190,7 @@ function show(root, id) {
 }
 
 function landing(root) {
-  const lane = laneNumber(root);
-  for (const line of laneReminders(root, lane)) console.warn(`[tasks] ${line}`);
+  for (const line of hostReminders(root, machineName())) console.warn(`[tasks] ${line}`);
   const problems = landingProblems(root);
   for (const problem of problems) console.error(`[tasks] ${problem}`);
   return problems.length ? 1 : 0;
@@ -228,11 +198,10 @@ function landing(root) {
 
 async function main(argv) {
   const root = git(["rev-parse", "--show-toplevel"]);
-  const main = mainCheckout(root);
   const [command = "list", ...rest] = argv;
   const options = parseArgs(command.startsWith("--") ? argv : rest);
   const groups = () => readGroups(root);
-  const stale = (task) => staleOf(main, task);
+  const stale = (task) => staleOf(root, task);
   switch (command.startsWith("--") ? "list" : command) {
     case "list":
       if (options.json) console.log(JSON.stringify(jsonRows(readAll(root), { stale, all: options.all }), null, 2));
@@ -244,9 +213,9 @@ async function main(argv) {
     case "show":
       return show(root, options._[0]);
     case "claim":
-      return claim(root, main, options);
+      return claim(root, options);
     case "add":
-      return add(root, main, options);
+      return add(root, options);
     case "done":
       return close(root, options, "已完成");
     case "drop":
@@ -255,7 +224,7 @@ async function main(argv) {
       const [id, ...words] = options._;
       const task = load(root, id);
       if (words.length === 0) throw new Error("用法：pnpm tasks note <编号> <进度和下一步>");
-      const who = sessionName(options, laneNumber(root)) || task.fields.owner || "";
+      const who = sessionName(options) || task.fields.owner || "";
       save(root, { ...task, body: addLine(task.body, "交接", `${nowText()}${who ? ` ${who}` : ""}：${words.join(" ")}`) });
       return 0;
     }

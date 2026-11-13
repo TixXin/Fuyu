@@ -5,7 +5,6 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
-import { laneNumber } from "../../scripts/build-dirs.mjs";
 import { claudeProjectKey, planRename, rewriteKeys } from "../../scripts/rename-local-folders.mjs";
 
 const drive = (letter, ...parts) => (process.platform === "win32" ? path.join(`${letter}:`, ...parts) : path.join("/", letter, ...parts));
@@ -23,13 +22,6 @@ test("lane records move to the new folders and keep everything else", () => {
   const records = { [path.join(lanes, "4").toLowerCase()]: { pid: 1 }, [drive("E", "other").toLowerCase()]: { pid: 2 } };
   const moved = rewriteKeys(rewriteKeys(records, lanes, drive("E", "Projects", "fuyu-lanes")), main, drive("E", "Projects", "fuyu"));
   assert.deepEqual(Object.keys(moved).sort(), [drive("E", "Projects", "fuyu-lanes", "4").toLowerCase(), drive("E", "other").toLowerCase()].sort());
-});
-
-test("lanes are found under any <repo>-lanes folder", () => {
-  assert.equal(laneNumber(drive("E", "Projects", "fuyu-lanes", "7")), 7);
-  assert.equal(laneNumber(drive("E", "Projects", "fly-island-lanes", "7")), 7);
-  assert.equal(laneNumber(drive("E", "Projects", "-lanes", "7")), null);
-  assert.equal(laneNumber(drive("E", "Projects", "fuyu", "7")), null);
 });
 
 test("the rename moves the checkout and its lanes, and git, hooks and lane records follow", () => {

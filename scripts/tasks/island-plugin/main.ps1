@@ -36,7 +36,7 @@ function Format-Ago([string]$Claimed) {
 function New-Item-Row($task, [string]$Icon) {
     $parts = @(Get-Field $task 'id')
     if (Get-Field $task 'owner') { $parts += Get-Field $task 'owner' }
-    if (Get-Field $task 'lane') { $parts += "lane $(Get-Field $task 'lane')" }
+    if (Get-Field $task 'host') { $parts += Get-Field $task 'host' } elseif (Get-Field $task 'lane') { $parts += "lane $(Get-Field $task 'lane')" }
     if (Get-Field $task 'claimed') { $parts += Format-Ago (Get-Field $task 'claimed') }
     if ($task.stale) { $parts += [string]$task.stale }
     if (@($task.blockedBy).Count -gt 0) { $parts += "$(Text '\u7b49') $(@($task.blockedBy) -join ', ')" }
