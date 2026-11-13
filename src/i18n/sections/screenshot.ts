@@ -6,6 +6,7 @@ export type ScreenshotText = {
   pin: string;
   saveFolderName: string;
   recordFolderName: string;
+  recordGifHint: string;
   saved: (path: string) => string;
   cancel: string;
   copyColorHint: string;
@@ -100,6 +101,7 @@ export const zhCN: ScreenshotText = {
   pin: "贴到屏幕上（T）",
   saveFolderName: "浮屿截图",
   recordFolderName: "浮屿录屏",
+  recordGifHint: "录成 GIF（不带声音）：拖动选择区域，或单击选中窗口，按 F 录整个屏幕；按 G 改回 MP4 · 右键或 Esc 退出",
   saved: (path) => `已保存到 ${path}`,
   cancel: "取消（Esc）",
   copyColorHint: "按 C 复制颜色",
@@ -112,7 +114,7 @@ export const zhCN: ScreenshotText = {
     text: "单击选中窗口或控件，或拖动选择区域，选好就识别文字并复制 · 右键或 Esc 退出",
     translate: "单击选中窗口或控件，或拖动选择区域，选好就识别文字并翻译 · 右键或 Esc 退出",
     long: "选好要滚动的区域，浮屿往下滚并拼成长图，旁边的控制条可以暂停、完成或取消 · 右键或 Esc 退出",
-    record: "拖动选择要录的区域，或单击选中窗口，按 F 录整个屏幕；3 秒后开始，再按 Ctrl+Shift+6 停止 · 右键或 Esc 退出",
+    record: "拖动选择要录的区域，或单击选中窗口，按 F 录整个屏幕，按 G 改录 GIF；3 秒后开始，再按 Ctrl+Shift+6 停止 · 右键或 Esc 退出",
   },
   readText: "识别文字",
   textCopied: (line) => `已复制识别的文字：${line}`,
@@ -216,6 +218,7 @@ export const en: ScreenshotText = {
   pin: "Pin to screen (T)",
   saveFolderName: "Fuyu Screenshots",
   recordFolderName: "Fuyu Recordings",
+  recordGifHint: "Recording a GIF (no sound): drag an area, click a window, or press F for the whole screen; G switches back to MP4 · Right-click or Esc to exit",
   saved: (path) => `Saved to ${path}`,
   cancel: "Cancel (Esc)",
   copyColorHint: "Press C to copy the colour",
@@ -228,7 +231,7 @@ export const en: ScreenshotText = {
     text: "Click a window or control, or drag a region, and its text is read and copied · Right-click or Esc to exit",
     translate: "Click a window or control, or drag a region, and its text is read and translated · Right-click or Esc to exit",
     long: "Choose the area that scrolls; Fuyu scrolls and stitches one tall picture, with a control bar to pause, finish or cancel · Right-click or Esc to exit",
-    record: "Drag the area to record, click a window, or press F for the whole screen; recording starts after 3 seconds, Ctrl+Shift+6 again stops it · Right-click or Esc to exit",
+    record: "Drag the area to record, click a window, or press F for the whole screen; G records a GIF instead. Recording starts after 3 seconds, Ctrl+Shift+6 again stops it · Right-click or Esc to exit",
   },
   readText: "Read text",
   textCopied: (line) => `Copied the text: ${line}`,

@@ -29,6 +29,20 @@ export type SettingsScreenshotText = {
   historyDays: string;
   historyDaysHint: string;
   historyDaysOption: (days: number) => string;
+  recordTitle: string;
+  recordFps: string;
+  recordFpsHint: string;
+  recordFpsOption: (fps: number) => string;
+  recordQuality: string;
+  recordQualityHint: string;
+  recordQualities: Record<"standard" | "high", string>;
+  recordSystemAudio: string;
+  recordSystemAudioHint: string;
+  recordMicrophone: string;
+  recordMicrophoneHint: string;
+  recordFormat: string;
+  recordFormatHint: string;
+  recordFormats: Record<"mp4" | "gif", string>;
 };
 
 export const zhCN: SettingsScreenshotText = {
@@ -82,6 +96,20 @@ export const zhCN: SettingsScreenshotText = {
   historyDays: "截图历史保留",
   historyDaysHint: "复制、保存、贴图过的截图留在浮屿的「截图」页，可以再复制、贴到屏幕上或拖出去；最多 100 张，超过天数的自动删掉。",
   historyDaysOption: (days) => `${days} 天`,
+  recordTitle: "录屏",
+  recordFps: "帧率",
+  recordFpsHint: "60 帧更流畅，文件大一些。GIF 固定 15 帧。",
+  recordFpsOption: (fps) => `${fps} 帧/秒`,
+  recordQuality: "画质",
+  recordQualityHint: "高画质的码率是标准的两倍，文字和细线更清楚，文件也大一倍。",
+  recordQualities: { standard: "标准", high: "高" },
+  recordSystemAudio: "录系统声音",
+  recordSystemAudioHint: "电脑里正在播放的声音。GIF 没有声音。",
+  recordMicrophone: "录麦克风",
+  recordMicrophoneHint: "用系统默认的麦克风。打开时 Windows 会在任务栏显示麦克风正在使用。",
+  recordFormat: "默认格式",
+  recordFormatHint: "录屏时选区之前按 G 可以临时换成另一种。视频放在「视频 › 浮屿录屏」。",
+  recordFormats: { mp4: "MP4 视频", gif: "GIF 动图" },
 };
 
 export const en: SettingsScreenshotText = {
@@ -135,4 +163,18 @@ export const en: SettingsScreenshotText = {
   historyDays: "Keep screenshot history for",
   historyDaysHint: "Screenshots you copied, saved or pinned stay on the island's Screenshots page to copy, pin or drag out again; up to 100, older ones are deleted.",
   historyDaysOption: (days) => (days === 1 ? "1 day" : `${days} days`),
+  recordTitle: "Screen recording",
+  recordFps: "Frame rate",
+  recordFpsHint: "60 is smoother and makes bigger files. GIFs are always 15.",
+  recordFpsOption: (fps) => `${fps} fps`,
+  recordQuality: "Quality",
+  recordQualityHint: "High uses twice the bitrate of standard: sharper text and thin lines, files twice as big.",
+  recordQualities: { standard: "Standard", high: "High" },
+  recordSystemAudio: "Record system sound",
+  recordSystemAudioHint: "What the computer is playing. GIFs have no sound.",
+  recordMicrophone: "Record the microphone",
+  recordMicrophoneHint: "Uses the default microphone. Windows shows that the microphone is in use while it is on.",
+  recordFormat: "Default format",
+  recordFormatHint: "Press G before choosing the area to switch for one recording. Videos go to Videos › Fuyu Recordings.",
+  recordFormats: { mp4: "MP4 video", gif: "GIF animation" },
 };

@@ -57,7 +57,7 @@ export function ScreenshotShortcutRows({ settings, onSettingsChange, takenBy }: 
     return isMacOS && found.problem === "invalid" ? text.shortcutInvalidMac : text.shortcutProblem[found.problem];
   };
 
-  return SHORTCUT_ACTIONS.map((action) => {
+  return SHORTCUT_ACTIONS.filter((action) => !(isMacOS && action === "record")).map((action) => {
     const value = settings.shortcuts[action];
     const fallback = DEFAULT_SHORTCUTS[action];
     const problem = problemOf(action);

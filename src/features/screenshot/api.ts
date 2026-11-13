@@ -4,7 +4,7 @@ import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
 import type { OcrWord } from "./redact";
 import type { PixelRect } from "./selection";
-import { shortcutConfig, type ScreenshotSettings, type ShortcutAction } from "./settings";
+import { shortcutConfig, type RecordSettings, type ScreenshotSettings, type ShortcutAction } from "./settings";
 import type { Target } from "./targets";
 
 export const SCREENSHOT_SESSION_EVENT = "screenshot-session";
@@ -73,7 +73,7 @@ export function quickAction(mode: ScreenshotMode | undefined): QuickAction | nul
   return mode === "copy" || mode === "text" || mode === "translate" || mode === "long" || mode === "record" ? mode : null;
 }
 
-export type SaveTarget = { folder?: string; folderName: string };
+export type SaveTarget = { folder?: string; folderName: string; record?: RecordSettings };
 
 function rawBytes(image: ImageData) {
   return new Uint8Array(image.data.buffer, image.data.byteOffset, image.data.byteLength);
@@ -98,6 +98,13 @@ export function finishScreenshot(selection: PixelRect, patch: ScreenshotPatch | 
   }
   if (save?.folder) headers["x-folder"] = encodeURIComponent(save.folder);
   if (save) headers["x-folder-name"] = encodeURIComponent(save.folderName);
+  if (save?.record) {
+    headers["x-format"] = save.record.format;
+    headers["x-fps"] = String(save.record.fps);
+    headers["x-quality"] = save.record.quality;
+    headers["x-system-audio"] = String(save.record.systemAudio);
+    headers["x-microphone"] = String(save.record.microphone);
+  }
   return invoke<string | null>("screenshot_finish", patch ? rawBytes(patch.image) : new Uint8Array(0), { headers });
 }
 
