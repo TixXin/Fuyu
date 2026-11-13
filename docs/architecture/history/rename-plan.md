@@ -1,8 +1,8 @@
 # 改名为浮屿 / Fuyu：分步计划
 
-> 任务：[D17](/docs/tasks/0-archive/D/D17.md)。定名和查重见 [project-rename.md](../research/project-rename.md)。用户 2026-11-10 决定：上游留下的 `fly-island` / `FocuSD` 名字和内部标识全部改掉，旧数据要迁移。
+> 任务：[D17](/docs/tasks/0-archive/D/D17.md)。定名和查重见 [project-rename.md](../../research/project-rename.md)。用户 2026-11-10 决定：上游留下的 `fly-island` / `FocuSD` 名字和内部标识全部改掉，旧数据要迁移。
 
-每一步做完勾选，写上提交号。搬迁和行为改动按 [AGENTS.md](../../AGENTS.md)「重构约定」分开提交。
+每一步做完勾选，写上提交号。搬迁和行为改动按 [AGENTS.md](../../../AGENTS.md)「重构约定」分开提交。
 
 ## 新名字一览
 
@@ -85,7 +85,7 @@ Tauri 的 NSIS 安装包用 `productName` 决定安装目录（`%LOCALAPPDATA%\<
 - [x] **第 2 步：插件开发工具和插件协议的新名字。** 包目录改名（`packages/fuyu-plugin`、`packages/create-fuyu-plugin`、`packages/powershell/Fuyu.Plugin`），先做纯搬迁的提交，再做改名的提交。宿主同时认新旧清单名、忽略文件、环境变量、JS 接口和 CSS 变量；PowerShell SDK 加新函数名，旧名字做别名；示例插件改用新名字（id 不变）。npm 新包由用户发布，旧包标记弃用。
   - 做法：`pack` 把 `fuyu-plugin.json` 也以 `focusd-plugin.json` 的名字放进 zip，改名前的岛屿也能装新 SDK 打的包。签名私钥只有旧位置 `~/.fly-island-plugin/` 有时继续用它，`FLY_ISLAND_PLUGIN_SIGNING_KEY` 也认；`fuyu-plugin dev` 先找 `com.tixxin.fuyu` 再找 `com.focusd.island` 下的 `local-api.json`，第 3 步换标识后不用再改。页面来源 `*.plugin.focusd.invalid` 不改（插件页面的存储按来源分）。npm 包升到 0.5.0。
   - 留下的：**示例插件没有改用新名字**。`plugins/examples/` 的源码和已经签名发布的 `plugins/packages/*.zip` 要一致，改清单名或 `lib/` 就要升版本、用官方作者密钥重新打包签名，旧版本岛屿也从这里读市场；等第 5 步市场搬到 `TixXin/fuyu-plugins` 时，在那边随示例的下一个版本一起改。任务看板插件（`scripts/tasks/island-plugin`）同样留着旧名字，旧名字都还认。**npm 发布和旧包弃用**要用户做：推 `sdk-v0.5.0` 标签发新包（新包名第一次发布要先在 npm 上配好 Trusted Publisher 或用 token），然后 `npm deprecate fly-island-plugin "改名为 fuyu-plugin"`、`npm deprecate create-fly-island-plugin "改名为 create-fuyu-plugin"`；PowerShell Gallery 的 `Fuyu.Plugin` 同样等用户。
-- [x] **第 3 步：数据迁移。** 上面「迁移要解决的三件事」的 1、2 两件，连同新的 `identifier`、`productName`、可执行文件名、注册表值、凭据服务名、localStorage key 一起改，写进 [contracts.md](contracts.md) 的变更记录和 [data-storage.md](data-storage.md)。迁移逻辑要有单元测试（在临时目录里造旧目录、半成品、已迁移三种情况）。
+- [x] **第 3 步：数据迁移。** 上面「迁移要解决的三件事」的 1、2 两件，连同新的 `identifier`、`productName`、可执行文件名、注册表值、凭据服务名、localStorage key 一起改，写进 [contracts.md](../contracts.md) 的变更记录和 [data-storage.md](../data-storage.md)。迁移逻辑要有单元测试（在临时目录里造旧目录、半成品、已迁移三种情况）。
   - 做法：Rust 在 `src-tauri/src/rename_migration/`。数据目录先复制到 `<新标识>.migrating`，最后改名，Roaming 的最后改，所以「新的 Roaming 目录存在」就是「复制完了」（或新版是全新安装）；只有这时才不复制。凭据靠枚举凭据管理器复制（`win32/credentials.rs`），因为翻译、日历、插件秘密的账户名事先不知道，只复制一次，记在 `rename-migration.json`。开机自启和卸载旧版只在 release 构建里做，卸载旧版还要求本程序是安装版（旁边有 `uninstall.exe`），所以 `pnpm build:exe` 的开发版不会把开发机上装的旧版卸掉。前端在 `src/lib/renamedKeys.ts`，由 `main.tsx` 第一个导入；待办迁移命令 `migrate_todos` 的参数仍用旧 key 名（Rust 端按它们反序列化）。设置备份和主题文件写 `"app": "fuyu"`、文件名 `fuyu-settings-*` / `fuyu-theme-*`，旧文件照样导入。
   - Agent hook 脚本里的状态文件路径已改成 `com.tixxin.fuyu`，但用户机器上已经装好的 hook 还是旧路径，第 4 步要在迁移后自动重装；第 4 步合入前，在设置里手动重新安装一次 hook 就行。
   - 留下的：**卸载旧版失败时还没在关于页提示**，结果只记在 `rename-migration.json` 的 `oldInstall` 里；**用户自己建的、指向 `focusd-island.exe` 的快捷方式没有改**（旧版卸载程序删掉它自己建的快捷方式，新安装包建新的）。这两件放到第 6 步实机验收时看要不要补。
@@ -97,7 +97,7 @@ Tauri 的 NSIS 安装包用 `productName` 决定安装目录（`%LOCALAPPDATA%\<
   - 留下的：**市场仓库 `TixXin/fuyu-plugins` 自己的脚本**还写着旧名字（例如 `scripts/update-stars.mjs` 的 `NAME = "focusd-plugins"`），而且点赞地址取自 GitHub 讨论，改名后会变成 `fuyu-plugins/discussions/…`，旧版岛屿只认 `focusd-plugins` 前缀。那个仓库要另外改：查询用新名字，`stars.json` 里的地址写成旧前缀（新旧岛屿都认、GitHub 会重定向）。
 - [x] **第 6 步：发布和实机验收（需要用户）。** 在装了旧版本的电脑上走一遍应用内更新（和 [D5](/docs/tasks/D/D5.md) 一起做）：更新后只剩一个安装项，开机自启、设置、待办、剪贴板历史、邮箱和翻译的凭据、已装的插件、Agent hook 都还在且能用，`focusd://` 和 `fuyu://` 链接都能打开。
   - 2026-11-10 发 v0.3.5-beta.5（测试版通道），用户在旧版电脑上走应用内更新，逐项验收通过。第 3 步留下的两件（卸载旧版失败的提示、用户自建的旧快捷方式）验收时没遇到，不补。
-- [x] **第 7 步：收尾。** `AGENTS.md`、`src/AGENTS.md`、`src-tauri/AGENTS.md`、[overview.md](overview.md)、[contracts.md](contracts.md)、`build-exe.mjs` 找快捷方式的规则、lane 文件夹名（`../fly-island-lanes`，改的话同步合并队列配置和钩子）里的旧名字；历史文档（发布说明、做完的任务、调研）不改。
+- [x] **第 7 步：收尾。** `AGENTS.md`、`src/AGENTS.md`、`src-tauri/AGENTS.md`、[overview.md](../overview.md)、[contracts.md](../contracts.md)、`build-exe.mjs` 找快捷方式的规则、lane 文件夹名（`../fly-island-lanes`，改的话同步合并队列配置和钩子）里的旧名字；历史文档（发布说明、做完的任务、调研）不改。
   - 做法：AGENTS.md、src-tauri/AGENTS.md、overview.md、contracts.md 和几份功能、插件文档里给人看的名字换成浮屿 / Fuyu；`build-exe.mjs` 找快捷方式新旧名字都认，跳过快捷方式的环境变量新增 `FUYU_SKIP_SHORTCUT`（旧的 `FOCUSD_SKIP_SHORTCUT` 照常认）。
   - 不改的：**lane 文件夹名 `../fly-island-lanes` 和主工作区 `fly-island` 文件夹**，它们只在本机、不给用户看，改名要同时搬走其他会话正在用的 lane；内置和示例插件的 id（`focusd.*`、`dev.focusd.*`）、示例插件的 `lib/focusd.ps1`（签过名）；编译进程序的 hook 脚本里的注释（改了会让已装的 hook 显示要修复）。
 
