@@ -36,6 +36,7 @@ fn on_shortcut() {
 }
 
 fn refresh() {
+    super::sequence_watch_macos::ensure();
     if let Some(hotkey) = CURRENT.lock().unwrap_or_else(PoisonError::into_inner).take() {
         hotkeys::unregister(hotkey);
     }

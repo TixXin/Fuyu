@@ -30,6 +30,14 @@ pub(crate) fn is_escape_down() -> bool {
     CGEventSource::key_state(CGEventSourceStateID::CombinedSessionState, KEY_ESCAPE)
 }
 
+pub(crate) fn is_v_key_down() -> bool {
+    CGEventSource::key_state(CGEventSourceStateID::CombinedSessionState, KEY_V)
+}
+
+pub(crate) fn is_command_key_down() -> bool {
+    CGEventSource::flags_state(CGEventSourceStateID::CombinedSessionState).contains(CGEventFlags::MaskCommand)
+}
+
 pub(crate) fn move_cursor(x: i32, y: i32) -> bool {
     CGWarpMouseCursorPosition(CGPoint::new(f64::from(x), f64::from(y))) == CGError::Success
 }
