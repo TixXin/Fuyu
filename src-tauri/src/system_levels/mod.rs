@@ -1,3 +1,6 @@
+#[cfg_attr(target_os = "macos", path = "readers_macos.rs")]
+mod readers;
+
 use std::{
     sync::atomic::{AtomicBool, Ordering},
     thread,
@@ -8,11 +11,7 @@ use serde::Serialize;
 use tauri::{AppHandle, Emitter};
 
 use crate::island::WINDOW_LABEL;
-use crate::win32::{
-    audio::{AudioDevices, OutputRole, OutputVolume},
-    brightness::DisplayBrightness,
-    com::ComApartment,
-};
+use readers::{brightness_percent, open_brightness, open_volume, start_thread, volume_reading, OutputVolume};
 
 pub(crate) const LEVEL_CHANGED_EVENT: &str = "system-level-changed";
 
@@ -48,17 +47,8 @@ impl<T: PartialEq + Copy> LevelTracker<T> {
     }
 }
 
-fn volume_reading(volume: &OutputVolume) -> Option<(u32, bool)> {
-    let level = volume.level().ok()?.clamp(0.0, 1.0);
-    Some(((level * 100.0).round() as u32, volume.muted().ok()?))
-}
-
-fn open_volume() -> Option<OutputVolume> {
-    AudioDevices::open().ok()?.default_output(OutputRole::Multimedia).ok()?.volume().ok()
-}
-
 fn watch(app: &AppHandle) {
-    let Ok(_com) = ComApartment::multithreaded() else {
+    let Some(_thread) = start_thread() else {
         return;
     };
     let emit = |change: LevelChange| {
@@ -75,7 +65,7 @@ fn watch(app: &AppHandle) {
         }
         let mut volume: Option<OutputVolume> = None;
         let mut volume_opened = Instant::now() - DEVICE_REFRESH;
-        let brightness = DisplayBrightness::open().ok();
+        let brightness = open_brightness();
         let mut brightness_read = Instant::now() - BRIGHTNESS_POLL;
         let mut has_brightness = true;
         while ENABLED.load(Ordering::Relaxed) {
@@ -92,7 +82,7 @@ fn watch(app: &AppHandle) {
             let wait = if has_brightness { BRIGHTNESS_POLL } else { BRIGHTNESS_RETRY };
             if brightness_read.elapsed() >= wait {
                 brightness_read = Instant::now();
-                let percent = brightness.as_ref().and_then(DisplayBrightness::percent);
+                let percent = brightness.as_ref().and_then(brightness_percent);
                 has_brightness = percent.is_some();
                 if let Some(percent) = percent.filter(|&percent| brightness_tracker.changed(percent)) {
                     emit(LevelChange::Brightness { level: percent as f32 / 100.0 });

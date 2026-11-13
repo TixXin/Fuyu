@@ -1,4 +1,5 @@
 pub(crate) mod apps;
+pub(crate) mod audio;
 pub(crate) mod desktop;
 pub(crate) mod fullscreen;
 pub(crate) mod icon;
@@ -12,3 +13,4 @@ pub(crate) mod process_name;
 pub(crate) mod process_env;
 pub(crate) mod process_times;
 pub(crate) mod process_tree;
+pub(crate) mod session;
