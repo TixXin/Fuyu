@@ -88,6 +88,36 @@ body {
   text-align: center;
 }
 
+.stage-root--recording .caption-layer {
+  bottom: 58px;
+  height: 56px;
+  background: none;
+}
+
+.stage-root--recording .dim,
+.stage-root--recording .island-frame,
+.stage-root--recording .cursor {
+  z-index: 1;
+}
+
+.stage-root--recording .caption {
+  margin: 0;
+}
+
+.stage-root--recording .caption__text {
+  padding: 6px 18px 8px;
+  border-radius: 8px;
+  font-size: 26px;
+  font-weight: 600;
+  text-shadow: none;
+  background: rgba(8, 12, 20, 0.72);
+}
+
+.stage-root--recording .cursor svg path {
+  fill: #fff;
+  stroke: #111;
+}
+
 .camera {
   position: absolute;
   inset: 0;

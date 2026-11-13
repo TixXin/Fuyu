@@ -24,28 +24,67 @@ function findShell(dir = path.join(root, ".browser")) {
   return null;
 }
 
-function run(command, args) {
+function run(command, args, timeoutMs = 0) {
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, { stdio: ["ignore", "inherit", "inherit"] });
+    let timedOut = false;
+    const timer = timeoutMs > 0 ? setTimeout(() => { timedOut = true; child.kill(); }, timeoutMs) : null;
     child.on("error", reject);
-    child.on("close", (code) => code === 0 ? resolve() : reject(new Error(`${command} exited with ${code}`)));
+    child.on("close", (code) => {
+      if (timer) clearTimeout(timer);
+      if (timedOut) reject(new Error(`${command} timed out`));
+      else if (code === 0) resolve();
+      else reject(new Error(`${command} exited with ${code}`));
+    });
   });
 }
 
-async function addSound(ffmpeg, silent, file, cues, durationMs) {
-  if (cues.length === 0) {
+async function runWithRetry(command, args, timeoutMs, attempts) {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await run(command, args, timeoutMs);
+    } catch (error) {
+      if (attempt >= attempts) throw error;
+      console.log(`${error.message}; retrying (${attempt}/${attempts - 1})`);
+    }
+  }
+}
+
+const STEREO = "aformat=sample_rates=48000:channel_layouts=stereo";
+
+async function addSound(ffmpeg, silent, file, cues, durationMs, voiceDir, bgm) {
+  if (cues.length === 0 && !bgm) {
     renameSync(silent, file);
     return;
   }
+  const seconds = durationMs / 1000;
   const inputs = ["-i", silent];
+  const voices = [];
+  const others = [];
   const chains = cues.map((cue, index) => {
     const synth = SYNTH[cue.name];
+    const voice = cue.name.startsWith("voice:");
     if (synth) inputs.push("-f", "lavfi", "-i", synth.source);
+    else if (voice) inputs.push("-i", path.join(voiceDir, `${cue.name.slice(6)}.mp3`));
     else inputs.push("-i", path.join(SOUND_FILES, `${cue.name}.wav`));
-    return `[${index + 1}:a]aresample=48000,${synth ? synth.fx : "volume=1.6"},adelay=${cue.at}:all=1[a${index}]`;
+    (voice ? voices : others).push(`[a${index}]`);
+    return `[${index + 1}:a]${STEREO},${synth ? synth.fx : voice ? "volume=1.0" : "volume=1.6"},adelay=${cue.at}:all=1[a${index}]`;
   });
-  const mix = `${cues.map((_, index) => `[a${index}]`).join("")}amix=inputs=${cues.length}:normalize=0:duration=longest,apad,atrim=0:${(durationMs / 1000).toFixed(3)},aformat=channel_layouts=stereo[a]`;
-  await run(ffmpeg, ["-y", "-loglevel", "error", ...inputs, "-filter_complex", `${chains.join(";")};${mix}`, "-map", "0:v", "-map", "[a]", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", file]);
+  const finals = [...others];
+  if (voices.length > 0) {
+    chains.push(`${voices.join("")}amix=inputs=${voices.length}:normalize=0:duration=longest,apad=whole_dur=${seconds.toFixed(3)},asplit=2[voice][key]`);
+    finals.push("[voice]");
+  }
+  if (bgm) {
+    inputs.push("-stream_loop", "3", "-i", bgm);
+    const bed = `[${cues.length + 1}:a]${STEREO},atrim=0:${seconds.toFixed(3)},volume=0.8,afade=t=in:d=0.8,afade=t=out:st=${Math.max(0, seconds - 2).toFixed(3)}:d=2`;
+    chains.push(voices.length > 0 ? `${bed}[bed];[bed][key]sidechaincompress=threshold=0.05:ratio=2.5:attack=80:release=900[bgm]` : `${bed}[bgm]`);
+    finals.push("[bgm]");
+  } else if (voices.length > 0) {
+    chains.push("[key]anullsink");
+  }
+  const mix = `${finals.join("")}amix=inputs=${finals.length}:normalize=0:duration=longest,apad=whole_dur=${seconds.toFixed(3)},atrim=0:${seconds.toFixed(3)},${STEREO}[a]`;
+  await runWithRetry(ffmpeg, ["-y", "-loglevel", "error", ...inputs, "-filter_complex", `${chains.join(";")};${mix}`, "-map", "0:v", "-map", "[a]", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-t", seconds.toFixed(3), "-movflags", "+faststart", file], 90_000, 4);
   rmSync(silent);
 }
 const START_TIME = Date.UTC(2026, 10, 18, 2, 24, 0) / 1000;
@@ -200,7 +239,11 @@ async function main() {
     if (video) {
       await video.finish();
       const cues = first === 0 ? await stage.page.evaluate(() => [...globalThis.__video.sounds()]) : [];
-      await addSound(opts.ffmpeg, silent, file, cues, total * interval);
+      const bgmName = await stage.page.evaluate(() => globalThis.__video.bgm);
+      const bgmFile = bgmName && first === 0 ? path.join(root, "assets", "bgm", bgmName) : null;
+      const bgm = bgmFile && existsSync(bgmFile) ? bgmFile : null;
+      if (bgmFile && !bgm) console.log(`no background music: ${bgmFile} is missing`);
+      await addSound(opts.ffmpeg, silent, file, cues, total * interval, path.join(root, "assets", "voice", opts.v, opts.lang), bgm);
       console.log(`${file}  (${cues.length} sound cues)`);
     }
     if (stage.problems.length) console.log(`page errors:\n${[...new Set(stage.problems)].join("\n")}`);

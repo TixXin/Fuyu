@@ -9,7 +9,7 @@ const zh = {
   jump: ["跳转", "点一下，回到它的终端"],
   end: {
     name: "浮屿", latin: "Fuyu", tagline: "Claude Code 和 Codex 的状态，都在岛上",
-    facts: ["开源", "免费", "Windows"], url: "fuyu.ing",
+    facts: ["开源", "免费", "Windows"], url: "官网:https://fuyu.ing",
   },
   terminal: ["终端 · claude", "> 给剪贴板加搜索", "● 已修改 clipboard/search.ts", "● 想运行：pnpm test:regression clipboard", "  允许吗？ (y/n) ▌"],
   terminalAfter: ["终端 · claude", "> 给剪贴板加搜索", "● 已修改 clipboard/search.ts", "● Bash  pnpm test:regression clipboard", "  ✓ 全部检查通过", "● 正在补回归页的用例 ▌"],
@@ -28,7 +28,7 @@ const en: typeof zh = {
   jump: ["Jump", "One click takes you back to its terminal"],
   end: {
     name: "浮屿", latin: "Fuyu", tagline: "Claude Code and Codex status, on one island",
-    facts: ["Open source", "Free", "Windows"], url: "fuyu.ing",
+    facts: ["Open source", "Free", "Windows"], url: "Website: https://fuyu.ing",
   },
   terminal: ["Terminal · claude", "> Add search to the clipboard", "● Edited clipboard/search.ts", "● Wants to run: pnpm test:regression clipboard", "  Allow? (y/n) ▌"],
   terminalAfter: ["Terminal · claude", "> Add search to the clipboard", "● Edited clipboard/search.ts", "● Bash  pnpm test:regression clipboard", "  ✓ All checks passed", "● Adding regression cases ▌"],
