@@ -18,6 +18,7 @@ pub(crate) fn cursor_point() -> (f64, f64) {
     (point.x, main_height - point.y)
 }
 
+const KEY_C: CGKeyCode = 8;
 const KEY_V: CGKeyCode = 9;
 const KEY_RETURN: CGKeyCode = 36;
 
@@ -37,6 +38,10 @@ fn tap_key(key: CGKeyCode, flags: CGEventFlags) {
         CGEvent::set_flags(Some(&event), flags);
         CGEvent::post(CGEventTapLocation::HIDEventTap, Some(&event));
     }
+}
+
+pub(crate) fn send_copy_shortcut() {
+    tap_key(KEY_C, CGEventFlags::MaskCommand);
 }
 
 pub(crate) fn send_paste_shortcut() {

@@ -1,3 +1,4 @@
+pub(crate) mod accessibility;
 pub(crate) mod apps;
 pub(crate) mod audio;
 pub(crate) mod audio_devices;

@@ -2,7 +2,7 @@ import { useEffect, useState, type Dispatch, type KeyboardEvent, type SetStateAc
 import { Keyboard } from "lucide-react";
 import { ShortcutResetButton } from "../../components/controls/ShortcutResetButton";
 import { useErrorText, useTranslation } from "../../i18n";
-import { buildShortcutFromEvent } from "../clipboard/shortcut";
+import { buildShortcutFromEvent, shortcutLabel } from "../clipboard/shortcut";
 import { setTranslationSelectionShortcut, setTranslationShortcut } from "./api";
 import { DEFAULT_SETTINGS, type TranslationSettings } from "./storage";
 import "../clipboard/ClipboardSettingsSection.css";
@@ -47,7 +47,7 @@ export function TranslationShortcutRows({ settings, onSettingsChange, takenBy }:
 
   const apply = (target: TranslationShortcutTarget, shortcut: string) => {
     const owner = takenBy(shortcut, target);
-    if (owner) { setError(target, t.settings.shortcuts.taken(shortcut, owner)); return; }
+    if (owner) { setError(target, t.settings.shortcuts.taken(shortcutLabel(shortcut), owner)); return; }
     const register = target === "window" ? setTranslationShortcut : setTranslationSelectionShortcut;
     void register(shortcut)
       .then((registered) => {
@@ -69,10 +69,10 @@ export function TranslationShortcutRows({ settings, onSettingsChange, takenBy }:
       <div className="shortcut-control">
         <div className="shortcut-control__meta">
           <span>{label}</span>
-          <strong>{value}</strong>
+          <strong>{shortcutLabel(value)}</strong>
         </div>
         <div className="shortcut-control__actions">
-          <ShortcutResetButton label={t.settings.shortcuts.reset(fallback)} isDefault={value === fallback} onReset={() => apply(target, fallback)} />
+          <ShortcutResetButton label={t.settings.shortcuts.reset(shortcutLabel(fallback))} isDefault={value === fallback} onReset={() => apply(target, fallback)} />
           <button
             className={`shortcut-record-button${recording === target ? " shortcut-record-button--recording" : ""}`}
             type="button"
@@ -81,7 +81,7 @@ export function TranslationShortcutRows({ settings, onSettingsChange, takenBy }:
             onBlur={() => setRecording((current) => (current === target ? null : current))}
           >
             <Keyboard size={14} strokeWidth={2.3} />
-            <span>{recording === target ? t.translator.pressShortcut : value}</span>
+            <span>{recording === target ? t.translator.pressShortcut : shortcutLabel(value)}</span>
           </button>
         </div>
       </div>

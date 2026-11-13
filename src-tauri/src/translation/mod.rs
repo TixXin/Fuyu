@@ -1,4 +1,6 @@
+#[cfg_attr(target_os = "macos", path = "hotkey_macos.rs")]
 mod hotkey;
+#[cfg_attr(target_os = "macos", path = "placement_macos.rs")]
 mod placement;
 mod provider;
 pub(crate) mod rewrite;
@@ -35,6 +37,7 @@ static HAS_POSITIONED_WINDOW: AtomicBool = AtomicBool::new(false);
 static ENABLED: AtomicBool = AtomicBool::new(true);
 static OPENS_IN_ISLAND: AtomicBool = AtomicBool::new(false);
 
+#[cfg_attr(not(windows), allow(dead_code))]
 pub(crate) fn translate_text_from_elsewhere(app: &AppHandle, text: String) {
     let _ = app.emit(TRANSLATION_SELECTION_EVENT, text);
 }

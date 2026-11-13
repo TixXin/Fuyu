@@ -3,7 +3,10 @@ use std::{borrow::Cow, thread, time::Duration};
 use arboard::{Clipboard, ImageData};
 
 use crate::clipboard_history::suspend_clipboard_capture;
-use crate::win32;
+#[cfg(target_os = "macos")]
+use crate::macos::{input::send_copy_shortcut, pasteboard::empty as empty_clipboard};
+#[cfg(windows)]
+use crate::win32::{clipboard::empty as empty_clipboard, input::send_copy_shortcut};
 
 const SELECTION_WAIT: Duration = Duration::from_millis(450);
 const SELECTION_POLL: Duration = Duration::from_millis(40);
@@ -30,9 +33,19 @@ fn meaningful(text: &str) -> bool {
 }
 
 pub(super) fn capture_selection_text() -> Option<String> {
+    #[cfg(target_os = "macos")]
+    {
+        if let Some(text) = crate::macos::accessibility::selected_text().filter(|text| meaningful(text)) {
+            return Some(text);
+        }
+        if !crate::macos::input::can_post_keys() {
+            crate::macos::input::ask_to_post_keys();
+            return None;
+        }
+    }
     suspend_clipboard_capture(CAPTURE_SUSPEND);
     let saved = snapshot_clipboard();
-    win32::input::send_copy_shortcut();
+    send_copy_shortcut();
 
     let started = std::time::Instant::now();
     let mut after = read_clipboard_text();
@@ -92,7 +105,7 @@ fn restore_clipboard(saved: &SavedClipboard, after: Option<&str>) -> Result<(), 
             })
             .map_err(|error| error.to_string());
     }
-    win32::clipboard::empty().map_err(|error| error.to_string())
+    empty_clipboard().map_err(|error| error.to_string())
 }
 
 #[cfg(test)]

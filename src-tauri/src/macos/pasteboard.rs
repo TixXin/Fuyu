@@ -23,6 +23,11 @@ pub(crate) fn is_private_type(kind: &str) -> bool {
     PRIVATE_TYPES.contains(&kind)
 }
 
+pub(crate) fn empty() -> Result<(), String> {
+    NSPasteboard::generalPasteboard().clearContents();
+    Ok(())
+}
+
 pub(crate) fn write_files(paths: &[String]) -> bool {
     let writers: Vec<_> = paths
         .iter()
