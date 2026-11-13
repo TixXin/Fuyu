@@ -10,6 +10,13 @@ tauri_panel! {
         }
     })
 
+    panel!(PopupPanel {
+        config: {
+            can_become_key_window: true,
+            is_floating_panel: true
+        }
+    })
+
     panel!(OverlayPanel {
         config: {
             can_become_key_window: true,
@@ -36,6 +43,31 @@ pub(crate) fn make_overlay_panel(window: &WebviewWindow) -> Result<(), String> {
     panel
         .add_style_mask(StyleMask::empty().nonactivating_panel().into())
         .map_err(|error| format!("Could not make the screenshot overlay a non-activating panel: {error:?}"))
+}
+
+const POPUP_ABOVE_ISLAND: i64 = 1;
+
+pub(crate) fn make_popup_panel(window: &WebviewWindow) -> Result<(), String> {
+    let panel = window.to_panel::<PopupPanel>().map_err(|error| error.to_string())?;
+    panel.set_level(PanelLevel::MainMenu.value() + LEVELS_ABOVE_MENU_BAR + POPUP_ABOVE_ISLAND);
+    panel.set_collection_behavior(
+        CollectionBehavior::new()
+            .move_to_active_space()
+            .full_screen_auxiliary()
+            .ignores_cycle()
+            .into(),
+    );
+    panel
+        .add_style_mask(StyleMask::empty().nonactivating_panel().into())
+        .map_err(|error| format!("Could not make {} a non-activating panel: {error:?}", window.label()))
+}
+
+pub(crate) fn make_island_panel_key<R: tauri::Runtime>(app: &tauri::AppHandle<R>, label: &str) -> bool {
+    let Ok(panel) = app.get_webview_panel(label) else {
+        return false;
+    };
+    panel.make_key_and_order_front();
+    true
 }
 
 pub(crate) fn make_panel(window: &WebviewWindow) -> Result<(), String> {

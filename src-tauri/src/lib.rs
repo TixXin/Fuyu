@@ -171,6 +171,12 @@ pub fn run() {
             if let Err(error) = notification_diagnostics::start(app.handle()) {
                 eprintln!("failed to initialize notification diagnostics: {error}");
             }
+            #[cfg(target_os = "macos")]
+            if let Some(window) = app.get_webview_window(clipboard_history::POPUP_WINDOW_LABEL) {
+                if let Err(error) = macos::island_panel::make_popup_panel(&window) {
+                    eprintln!("failed to make the clipboard window a panel: {error}");
+                }
+            }
             if let Ok(window) = island::main_window(app.handle()) {
                 #[cfg(target_os = "macos")]
                 if let Err(error) = macos::island_panel::make_panel(&window) {

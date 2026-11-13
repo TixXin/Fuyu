@@ -65,8 +65,15 @@ pub(super) fn toggle(app: &AppHandle, settings: &ClipboardHistorySettings) -> Re
     let _ = window.emit_to(WINDOW_LABEL, OPENED_EVENT, ());
     let _ = window.emit_to(crate::onboarding_window::WINDOW_LABEL, OPENED_EVENT, ());
     window.show().map_err(|error| error.to_string())?;
-    let _ = window.set_focus();
-    Ok(())
+    let handle = app.clone();
+    let shown = app.run_on_main_thread(move || {
+        if !crate::macos::island_panel::make_island_panel_key(&handle, WINDOW_LABEL) {
+            if let Ok(window) = popup_window(&handle) {
+                let _ = window.set_focus();
+            }
+        }
+    });
+    shown.map_err(|error| error.to_string())
 }
 
 pub(super) fn hide(app: &AppHandle) -> Result<(), String> {
