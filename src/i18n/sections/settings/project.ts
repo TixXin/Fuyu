@@ -30,6 +30,7 @@ export type SettingsProjectText = {
   resetAllAction: string;
   quit: string;
   quitHint: string;
+  quitHintMac: string;
   quitAction: string;
   website: string;
   websiteHint: string;
@@ -145,6 +146,7 @@ export const zhCN: SettingsProjectText = {
   resetAllAction: "重置",
   quit: "退出岛屿",
   quitHint: "和托盘菜单里的「退出」一样；要再打开，从开始菜单或桌面快捷方式启动。",
+  quitHintMac: "和菜单栏图标菜单里的「退出」一样；要再打开，从「应用程序」文件夹或启动台打开。",
   quitAction: "退出",
   website: "官网",
   websiteHint: "fuyu.ing：功能介绍和下载",
@@ -261,6 +263,7 @@ export const en: SettingsProjectText = {
   resetAllAction: "Reset",
   quit: "Quit the island",
   quitHint: "Same as Quit in the tray menu; start it again from the Start menu or a desktop shortcut.",
+  quitHintMac: "Same as Quit in the menu bar icon's menu; open it again from the Applications folder or Launchpad.",
   quitAction: "Quit",
   website: "Website",
   websiteHint: "fuyu.ing: features and downloads",

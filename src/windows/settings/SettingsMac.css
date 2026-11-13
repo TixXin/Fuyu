@@ -1,0 +1,62 @@
+.settings-stage--mac {
+  --settings-mac-content: var(--settings-mac-content-dark, #131417);
+  background: transparent;
+}
+
+.settings-stage--mac.settings-stage--light {
+  --settings-mac-content: var(--settings-mac-content-light, #eceef2);
+}
+
+.settings-stage--mac .settings-layout {
+  grid-template-columns: 220px minmax(0, 1fr);
+  padding: 0;
+}
+
+.settings-stage--mac .settings-sidebar-card {
+  padding-top: 50px;
+  background: transparent;
+  border-radius: 0;
+  box-shadow: inset -1px 0 0 var(--settings-card-line);
+}
+
+.settings-stage--mac .settings-content {
+  background: var(--settings-mac-content);
+}
+
+.settings-stage--mac .settings-page__header {
+  padding: 10px 24px 0 28px;
+}
+
+.settings-stage--mac .editor-panel {
+  padding-left: 28px;
+}
+
+.settings-stage--mac .settings-sidebar__item--active,
+.settings-stage--mac .settings-sidebar__item--active:hover {
+  color: var(--settings-mac-selected-text, #ffffff);
+  background: var(--color-accent);
+  font-weight: 500;
+}
+
+.settings-stage--mac .settings-sidebar__item--active::before {
+  display: none;
+}
+
+.settings-stage--mac .settings-sidebar__item--active > svg {
+  color: inherit;
+}
+
+@media (max-width: 759px) {
+  .settings-stage--mac .settings-layout {
+    grid-template-columns: 52px minmax(0, 1fr);
+  }
+
+  .settings-stage--mac .settings-sidebar-card:is(:hover, :has(:focus-visible)) {
+    background: var(--settings-card);
+    border-radius: 0 12px 12px 0;
+  }
+
+  .settings-stage--mac .settings-page__header {
+    padding-left: 44px;
+  }
+}

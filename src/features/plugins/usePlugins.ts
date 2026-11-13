@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useFlash } from "../../components/settings/useFlash";
 import { useErrorText, useTranslation } from "../../i18n";
+import { isMacOS } from "../../lib/platform";
 import {
   checkPluginUpdates,
   clearPluginData,
@@ -83,7 +84,7 @@ export function usePlugins() {
       [run, feedback],
     ),
     openFolder: useCallback(
-      () => void run(openPluginsFolder, { action: "folder", text: () => feedback.folderOpened }),
+      () => void run(openPluginsFolder, { action: "folder", text: () => (isMacOS ? feedback.folderOpenedMac : feedback.folderOpened) }),
       [run, feedback],
     ),
     runCommand: useCallback(

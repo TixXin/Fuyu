@@ -10,6 +10,7 @@ export type SettingsPluginsText = {
     found: (count: number) => string;
     reloaded: (count: number) => string;
     folderOpened: string;
+    folderOpenedMac: string;
     dataCleared: string;
     saved: string;
     commandSent: string;
@@ -294,6 +295,7 @@ export const zhCN: SettingsPluginsText = {
     found: (count) => `找到 ${count} 个更新`,
     reloaded: (count) => `已重新加载，共 ${count} 个插件`,
     folderOpened: "已在资源管理器中打开",
+    folderOpenedMac: "已在访达中打开",
     dataCleared: "数据已清除",
     saved: "已保存",
     commandSent: "已发给插件",
@@ -667,6 +669,7 @@ export const en: SettingsPluginsText = {
     found: (count) => `${count} update${count === 1 ? "" : "s"} found`,
     reloaded: (count) => `Reloaded, ${count} plugin${count === 1 ? "" : "s"}`,
     folderOpened: "Opened in File Explorer",
+    folderOpenedMac: "Opened in Finder",
     dataCleared: "Data cleared",
     saved: "Saved",
     commandSent: "Sent to the plugin",

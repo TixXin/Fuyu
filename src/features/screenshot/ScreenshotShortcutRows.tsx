@@ -2,7 +2,7 @@ import { useState, type KeyboardEvent } from "react";
 import { Keyboard, X } from "lucide-react";
 import { ShortcutResetButton } from "../../components/controls/ShortcutResetButton";
 import { useTranslation } from "../../i18n";
-import { buildShortcutFromEvent } from "../clipboard/shortcut";
+import { buildShortcutFromEvent, shortcutLabel } from "../clipboard/shortcut";
 import { DEFAULT_SHORTCUTS, SHORTCUT_ACTIONS, type ScreenshotSettings, type ShortcutAction } from "./settings";
 import { useShortcutStatus } from "./useShortcutStatus";
 import "../clipboard/ClipboardSettingsSection.css";
@@ -22,7 +22,7 @@ export function ScreenshotShortcutRows({ settings, onSettingsChange, takenBy }: 
   const apply = (action: ShortcutAction, shortcut: string) => {
     const owner = shortcut ? takenBy(shortcut, action) : null;
     if (owner) {
-      setConflict({ action, message: t.settings.shortcuts.taken(shortcut, owner) });
+      setConflict({ action, message: t.settings.shortcuts.taken(shortcutLabel(shortcut), owner) });
       return;
     }
     setConflict(null);
@@ -56,10 +56,10 @@ export function ScreenshotShortcutRows({ settings, onSettingsChange, takenBy }: 
         <div className="shortcut-control">
           <div className="shortcut-control__meta">
             <span>{text.actions[action]}</span>
-            <strong>{value || text.shortcutOff}</strong>
+            <strong>{value ? shortcutLabel(value) : text.shortcutOff}</strong>
           </div>
           <div className="shortcut-control__actions">
-            {fallback && <ShortcutResetButton label={t.settings.shortcuts.reset(fallback)} isDefault={value === fallback} onReset={() => apply(action, fallback)} />}
+            {fallback && <ShortcutResetButton label={t.settings.shortcuts.reset(shortcutLabel(fallback))} isDefault={value === fallback} onReset={() => apply(action, fallback)} />}
             {value && (
               <button className="shortcut-reset-button" type="button" aria-label={text.turnOffShortcut(text.actions[action])} onClick={() => apply(action, "")}>
                 <X size={14} strokeWidth={2.3} aria-hidden="true" />
@@ -73,7 +73,7 @@ export function ScreenshotShortcutRows({ settings, onSettingsChange, takenBy }: 
               onBlur={() => setRecording((current) => (current === action ? null : current))}
             >
               <Keyboard size={14} strokeWidth={2.3} aria-hidden="true" />
-              <span>{recording === action ? t.translator.pressShortcut : value || text.setShortcut}</span>
+              <span>{recording === action ? t.translator.pressShortcut : value ? shortcutLabel(value) : text.setShortcut}</span>
             </button>
           </div>
         </div>

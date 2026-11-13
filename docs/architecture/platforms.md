@@ -28,7 +28,7 @@ macOS 的计划和决定见 [macos-port-plan.md](macos-port-plan.md)，各功能
 | 悬浮岛窗口（折叠、展开、贴边收起） | `island` | 已支持 | 开发中 | NSPanel（`tauri-nspanel`）+ Accessory；无需权限 | G1.3 | — |
 | 游戏模式（前台全屏时勿扰、贴边） | `system::fullscreen` | 已支持 | 开发中 | CoreGraphics 窗口列表：最前面的普通窗口盖住整块显示器；无需权限。Mac 上默认贴边开、勿扰关（M6） | G1.3 | — |
 | 新手引导 | `onboarding_window` | 已支持 | 开发中 | 透明遮罩铺满岛所在的整块屏幕（岛默认压在菜单栏上）；「最小化全部窗口」改为隐藏其他应用，关掉时全部显示回来；无需权限 | G1.3 | — |
-| 设置窗口 | `settings_window` | 已支持 | 未开始 | 普通窗口 | G1.4 | — |
+| 设置窗口 | `settings_window` | 已支持 | 开发中 | 普通窗口：系统红绿灯（Overlay 标题栏、隐藏标题），侧栏用系统的 Sidebar 半透明材质；⌘W 关闭、⌘M 最小化、⌘F 搜索设置；快捷键显示 ⌘⌥⇧⌃，文案按 Mac 用词（登录时打开、菜单栏、访达）；无需权限 | G1.4 | — |
 | 家目录与数据位置 | `home_dir` | 已支持 | 已支持 | 默认 `~/.fuyu`，`FUYU_HOME` 和指针文件同 Windows；应用数据目录 `~/Library/Application Support/com.tixxin.fuyu`；锁文件的电脑名取 `scutil --get ComputerName`；位置写在 data-storage.md 和 contracts.md | G1.4 | macOS 27.2，2026-11-13（单元测试） |
 | 从岛上打开 QQ / 微信 | `messenger_activation` | 已支持 | 未开始 | `NSWorkspace` 打开应用 | G1.10 | — |
 | 通知诊断 | `notification_diagnostics` | 已支持 | 不支持 | 读不到系统通知，Mac 上隐藏 | G1.2 | — |

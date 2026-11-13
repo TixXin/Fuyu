@@ -3,7 +3,7 @@ import { Keyboard } from "lucide-react";
 import { ShortcutResetButton } from "../../components/controls/ShortcutResetButton";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { useTranslation } from "../../i18n";
-import { buildShortcutFromEvent } from "../clipboard/shortcut.ts";
+import { buildShortcutFromEvent, shortcutLabel } from "../clipboard/shortcut.ts";
 import "../clipboard/ClipboardSettingsSection.css";
 import {
   digitModifiersFromEvent,
@@ -39,7 +39,7 @@ export function PageShortcutSection({
   const apply = (field: Recording, value: string) => {
     const tried = field === "digit" ? Array.from({ length: 9 }, (_, index) => `${value}+${index + 1}`) : [value];
     const taken = tried.map((shortcut) => [shortcut, takenBy(shortcut, field)] as const).find(([, owner]) => owner);
-    setConflict(taken?.[1] ? t.settings.shortcuts.taken(taken[0], taken[1]) : "");
+    setConflict(taken?.[1] ? t.settings.shortcuts.taken(shortcutLabel(taken[0]), taken[1]) : "");
     if (taken) return;
     if (field === "digit") onSettingsChange({ ...settings, pageDigitModifiers: value });
     else onSettingsChange({ ...settings, ...(field === "next" ? { pageNextShortcut: value } : { pagePreviousShortcut: value }) });
@@ -78,11 +78,11 @@ export function PageShortcutSection({
         <div className="shortcut-control" key={field}>
           <div className="shortcut-control__meta">
             <span>{label}</span>
-            <strong>{display}</strong>
+            <strong>{shortcutLabel(display)}</strong>
           </div>
           <div className="shortcut-control__actions">
             <ShortcutResetButton
-              label={t.settings.shortcuts.reset(field === "digit" ? `${fallback}+1–9` : fallback)}
+              label={t.settings.shortcuts.reset(shortcutLabel(field === "digit" ? `${fallback}+1–9` : fallback))}
               isDefault={value === fallback}
               onReset={() => apply(field, fallback)}
             />
@@ -94,7 +94,7 @@ export function PageShortcutSection({
               onBlur={() => setRecording((current) => (current === field ? null : current))}
             >
               <Keyboard size={14} strokeWidth={2.3} />
-              <span>{recording === field ? (field === "digit" ? t.settings.pageShortcuts.pressDigit : t.settings.pageShortcuts.pressKeys) : display}</span>
+              <span>{recording === field ? (field === "digit" ? t.settings.pageShortcuts.pressDigit : t.settings.pageShortcuts.pressKeys) : shortcutLabel(display)}</span>
             </button>
           </div>
         </div>
