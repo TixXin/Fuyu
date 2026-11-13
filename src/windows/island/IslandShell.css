@@ -10,13 +10,9 @@
   --glass-page-accent: var(--color-accent);
   --island-radius: calc(var(--island-corner-radius-size, 30) * 1px);
   --island-radius-collapsed: calc(var(--island-radius) * 22 / 30);
-  --island-radius-expanded-top: calc(var(--island-radius) * 22 / 30);
-  --island-radius-collapsed-top: calc(var(--island-radius) * 14 / 30);
   --island-panel-radius: max(8px, calc(var(--island-radius) - 20px));
   --island-shell-radius: calc(var(--island-radius) * var(--island-scale, 1));
   --island-shell-radius-collapsed: calc(var(--island-radius-collapsed) * var(--island-scale, 1));
-  --island-shell-radius-expanded-top: calc(var(--island-radius-expanded-top) * var(--island-scale, 1));
-  --island-shell-radius-collapsed-top: calc(var(--island-radius-collapsed-top) * var(--island-scale, 1));
   corner-shape: var(--island-corner-shape, round);
   position: relative;
   flex: 0 0 auto;
@@ -250,11 +246,11 @@
 }
 
 .island--detached.island--collapsed {
-  border-radius: var(--island-shell-radius-collapsed-top) var(--island-shell-radius-collapsed-top) var(--island-shell-radius-collapsed) var(--island-shell-radius-collapsed);
+  border-radius: var(--island-shell-radius-collapsed);
 }
 
 .island--detached.island--expanded {
-  border-radius: var(--island-shell-radius-expanded-top) var(--island-shell-radius-expanded-top) var(--island-shell-radius) var(--island-shell-radius);
+  border-radius: var(--island-shell-radius);
 }
 
 .island__collapsed,

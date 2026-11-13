@@ -113,12 +113,11 @@ impl IslandWindowState {
     }
 
     pub(super) fn top_corner_radius(self) -> f64 {
-        let radius = match (self.top_attached, self.mode) {
-            (true, _) => 0.0,
-            (false, IslandMode::Collapsed) => 14.0,
-            (false, IslandMode::Expanded) => 22.0,
-        };
-        radius * self.corner_radius_factor()
+        if self.top_attached {
+            0.0
+        } else {
+            self.bottom_corner_radius()
+        }
     }
 
     pub(super) fn active_scale(self) -> f64 {
