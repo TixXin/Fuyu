@@ -208,12 +208,12 @@ Without the tunnel the requests fail at once and nothing else changes. A remote 
 WorkBuddy (Tencent's desktop agent, the Chinese edition that keeps its data in `~/.workbuddy`) is listed on the Agent page with its own icon (task B23.2, issue #155). The international edition, WorkBuddy AI (`~/.workbuddy-ai`), is a different product and is not read. What is known about both, with sources, is in [agent-harnesses.md](../research/agent-harnesses.md).
 
 - **Sessions**: `~/.workbuddy/projects/<encoded folder>/<session id>.jsonl`, read like Claude Code's transcripts (first lines and last 256 KiB, same session window). The title is the newest `ai-title` record, otherwise the first `<user_query>` of the session, otherwise the folder; the model is `providerData.requestModelName`. A turn is running from a user message, a `function_call`, a `function_call_result` or a `reasoning` record, and done at an assistant message; an assistant message with `status: "incomplete"` fails the turn, unless its error is `Interrupted by user`.
-- **Quit sessions**: `~/.workbuddy/sessions/<pid>.json` lists the running sessions (`pid`, `sessionId`), like `~/.claude/sessions`, so a session whose process is gone counts as quit.
+- **Quit sessions**: a session counts as quit when it is not in `~/.workbuddy/sessions/<pid>.json` (`pid`, `sessionId`, like `~/.claude/sessions`) and `WorkBuddy.exe` is not running. 5.3.8 listed each session there; 5.9.3 lists only its host processes (`interactive-<pid>`, `prewarm-…`), so while the app runs its sessions stay listed.
 - **Waiting on you**: **安装/修复** adds one `PermissionRequest` hook to `~/.workbuddy/settings.json` (Claude Code's format; a single `command` string, since WorkBuddy's support for `args` is unknown) that saves the hook's input in `agent-notifications\workbuddy-*.json`, as for Claude Code. WorkBuddy reads the file only at start, so quit and reopen it after installing. The rest of the file is kept, and the hook is only added when `~/.workbuddy` already exists.
 - **Clicking a session** brings up the WorkBuddy window (`WorkBuddy.exe`).
 - Not done: usage, approving from the island, SSH (WorkBuddy has no server edition).
 
-Only the session format was checked against real files (WorkBuddy 5.3.8, 2026-11-13). The hook path and the `PermissionRequest` event come from a community test, not from WorkBuddy's documentation (which names `~/.codebuddy/settings.json`), and need a check on a machine with WorkBuddy.
+Only the session format was checked against real files (WorkBuddy 5.3.8 and 5.9.3, 2026-11-13). The hook path and the `PermissionRequest` event come from a community test, not from WorkBuddy's documentation (which names `~/.codebuddy/settings.json`), and need a check on a machine with WorkBuddy.
 
 ## Antigravity
 
