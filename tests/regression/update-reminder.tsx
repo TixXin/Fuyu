@@ -125,7 +125,7 @@ async function runChecks() {
     const stage = document.querySelector<HTMLElement>("#settings .overview-stage")!;
     const clipboardCard = document.querySelector<HTMLElement>("#settings .settings-overview__feature[data-feature='clipboard']")!;
     await update(() => { clipboardCard.dispatchEvent(new MouseEvent("mouseover", { bubbles: true })); });
-    check(stage.dataset.feature === "clipboard" && stage.querySelector(".overview-stage__demo")?.textContent === "已复制 · 会议纪要的第二段",
+    check(stage.dataset.feature === "clipboard" && stage.querySelector(".overview-stage__demo")?.textContent === "已复制 · 投喂给 AI 的提示词",
       "概览：鼠标移到功能卡片上，舞台上的小岛演示这个功能");
     await update(() => { clipboardCard.dispatchEvent(new MouseEvent("mouseout", { bubbles: true })); });
     check(stage.dataset.feature !== undefined && document.querySelectorAll("#settings .settings-overview__tile").length === 3
