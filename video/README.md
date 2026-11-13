@@ -25,7 +25,7 @@ winget install Gyan.FFmpeg
 | 渲染成片 | `pnpm render --v 001-one-island --lang zh` |
 | 英文版 | `pnpm render --lang en` |
 | 9:16 竖版 | `pnpm render --v 002-agents --format vertical`（1080×1920，文件名带 `-vertical`） |
-| 只出几张静帧 | `pnpm still 9.4,14.5,20`（秒，逗号分隔） |
+| 只出几张静帧 | `pnpm still '9.4,14.5,20'`（秒，逗号分隔；PowerShell 里要加引号，不然逗号会被拆开） |
 | 只渲染一段 | `pnpm render --from 18 --to 24`（没有声音） |
 | 类型检查 | `pnpm check` |
 
@@ -38,6 +38,34 @@ winget install Gyan.FFmpeg
 | `001-one-island` | 总览《一座岛》：待办、音乐、消息、剪贴板、翻译、AI Agent 各几秒 | 48 秒 |
 | `002-agents` | 功能短片：AI Agent。岛上看会话、弹出审批、看用量、点一下回到终端 | 24 秒 |
 | `003-messages` | 功能短片：消息。Windows 桌面录屏的样子，带旁白和配乐；新消息弹出，在岛上读邮件 | 约 28 秒，随旁白长短变 |
+
+## README 里的动图和截图
+
+仓库首页 README 的动图和截图都从 `001-one-island` 出，放在 `docs/assets/readme/`，中英各一份，文件名以 `-zh` / `-en` 结尾。README 里链接的完整视频是 `docs/assets/promo-001-one-island.mp4`（中文）和 `docs/assets/promo-001-one-island-en.mp4`（英文）。这条视频或岛屿的界面改了之后，在 `video/` 里重出一遍（下面是中文版，英文版把 `zh` 换成 `en`，成片的文件名加 `-en`）：
+
+```powershell
+pnpm render --v 001-one-island --lang zh
+pnpm still '11,15,18,22.6,27.2,32.6,37.2' --lang zh
+Copy-Item out\001-one-island\001-one-island-zh.mp4 ..\docs\assets\promo-001-one-island.mp4
+ffmpeg -y -t 43.15 -i out\001-one-island\001-one-island-zh.mp4 -filter_complex "fps=12.5,scale=800:-1:flags=lanczos,split[a][b];[a]palettegen=stats_mode=diff[p];[b][p]paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle" -loop 0 ..\docs\assets\readme\tour-zh.gif
+ffmpeg -y -i out\001-one-island\still-zh-011.00.png -vf "scale=1280:-1:flags=lanczos" -c:v libwebp -q:v 90 ..\docs\assets\readme\todo-zh.webp
+ffmpeg -y -i out\001-one-island\still-zh-018.00.png -vf "crop=1920:240:0:0,scale=1600:-1:flags=lanczos" -c:v libwebp -q:v 90 ..\docs\assets\readme\collapsed-zh.webp
+```
+
+| 文件 | 静帧（秒） | 画面 |
+|---|---|---|
+| `tour-*.gif` | 0 – 43.15 | 整条视频，不含结尾卡 |
+| `collapsed-*.webp` | 18 | 收起的岛在显示歌词，只留画面顶部一条 |
+| `todo-*.webp` | 11 | 待办 |
+| `music-*.webp` | 15 | 音乐和歌词 |
+| `messages-*.webp` | 22.6 | 新消息 |
+| `clipboard-*.webp` | 27.2 | 剪贴板 |
+| `translate-*.webp` | 32.6 | 翻译 |
+| `agents-*.webp` | 37.2 | AI Agent 审批 |
+
+- 动图在 43.15 秒截断：这时岛已经收回、字幕已经消失，循环回开头的画面是接得上的。结尾卡留给完整视频。
+- 动图用 12.5 帧：GIF 的帧间隔以 1/100 秒为单位，12.5 帧正好是 8，播放速度不会偏。宽 800 是 GitHub 上 README 正文的宽度，一个动图约 5 MB。
+- 截图存成 WebP，一张约 30 KB；六张功能截图都用上面 `todo` 那条命令，只换文件名。
 
 ## 横版和竖版
 
