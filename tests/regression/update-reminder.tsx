@@ -86,6 +86,17 @@ async function runChecks() {
     check(document.querySelector("#expanded .island-settings-button__dot"), "展开后设置按钮带提示圆点");
     const install = [...document.querySelectorAll<HTMLButtonElement>("#settings button")].find((button) => button.textContent?.includes("下载并安装"));
     check(install && !install.disabled, "设置的关于页给出「下载并安装」");
+    const status = document.querySelector<HTMLElement>("#settings .update-status")!;
+    check(status.querySelector(".update-status__copy strong")?.textContent === "发现新版本 v0.3.4" && status.querySelector(".update-status__copy span")?.textContent === "当前版本 v0.3.3",
+      "版本组第一块是状态卡：发现的版本和当前版本");
+    const notes = status.querySelector<HTMLButtonElement>(".update-notes__toggle")!;
+    check(notes.getAttribute("aria-expanded") === "true" && status.querySelectorAll(".update-notes__item").length === 3 && !status.querySelector(".update-notes__heading"),
+      "更新内容默认展开，不重复标题，不列安装包");
+    await update(() => notes.click());
+    check(notes.getAttribute("aria-expanded") === "false" && !status.querySelector(".update-notes__body"), "更新内容可以收起");
+    const channels = [...document.querySelectorAll<HTMLButtonElement>("#settings .settings-row .settings-choice__option")];
+    check(channels.map((option) => option.getAttribute("aria-pressed")).join() === "true,false" && channels.every((option) => !option.disabled),
+      "更新通道是一行分段选择，当前是稳定版");
 
     const settingsText = () => document.getElementById("settings")!.textContent ?? "";
     check(settingsText().includes("检查频率") && settingsText().includes("更新提醒方式"), "自动检查下面有检查频率和提醒方式");

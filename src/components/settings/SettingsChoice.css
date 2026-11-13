@@ -23,8 +23,13 @@
     background 140ms ease;
 }
 
-.settings-choice__option:hover {
+.settings-choice__option:hover:not(:disabled) {
   color: var(--color-text);
+}
+
+.settings-choice__option:disabled {
+  opacity: 0.55;
+  cursor: default;
 }
 
 .settings-choice__option--active {
