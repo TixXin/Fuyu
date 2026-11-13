@@ -75,7 +75,12 @@
 
 ### 第三版
 
-- [ ] **录屏**（[C41.11](/docs/tasks/C/C41.11.md)，`Ctrl+Shift+6`）：选区或整屏录制，开始前倒计时，岛上显示录制时长和停止按钮。用 Windows Graphics Capture 取帧、Media Foundation 的硬件编码器出 MP4（[windows-capture](https://github.com/NiiightmareXD/windows-capture) 两样都有，MIT，可以直接用或参考）。2026-11-13 用户定：要能出 GIF，要录系统声音和麦克风。实现方案见调研 [screen-recording.md](/docs/research/screen-recording.md)（不带 FFmpeg，全程 GPU + 硬件编码）。录屏是另一类功能，量比截图大，单独排期。
+- [ ] **录屏**（[C41.11](/docs/tasks/C/C41.11.md)，`Ctrl+Shift+6`）：选区或整屏录制，开始前倒计时，岛上显示录制时长和停止按钮。用 Windows Graphics Capture 取帧、Media Foundation 的硬件编码器出 MP4（[windows-capture](https://github.com/NiiightmareXD/windows-capture) 两样都有，MIT，可以直接用或参考）。2026-11-13 用户定：要能出 GIF，要录系统声音和麦克风。实现方案见调研 [screen-recording.md](/docs/research/screen-recording.md)（不带 FFmpeg，全程 GPU + 硬件编码）。录屏是另一类功能，量比截图大，单独排期。GIF 用 gifski（用户 2026-11-13 定；它是 AGPL-3.0，按 GPLv3 第 13 条可以和浮屿一起发布）。分 5 步：
+  - [ ] **第 1 步：录制管线**（[C41.11.1](/docs/tasks/C/C41.11.1.md)）：WGC 采集一个显示器，选区在 GPU 上裁剪，帧拷进纹理池（样本释放时还回池子），经有界队列交给编码线程；编码线程按帧节奏（真实时间戳，静止 3 个间隔才补重复帧，暂停扣时长）写进 Media Foundation Sink Writer（D3D 设备管理器 + 硬件编码器，失败换软件），出 H.264 MP4。宽高取偶数，超过 4096 等比缩小。先不接界面。验证：帧节奏、尺寸、码率的单元测试；一个 `#[ignore]` 的测试真录 3 秒，用 ffprobe 看帧率和时长；`cargo test`、`pnpm build:exe`。
+  - [ ] **第 2 步：声音**（[C41.11.2](/docs/tasks/C/C41.11.2.md)）：WASAPI loopback 录系统声音（同时开一路静音渲染流），WASAPI 录麦克风，QPC 时间戳，混成 48 kHz 立体声，Sink Writer 编 AAC。
+  - [ ] **第 3 步：界面**（[C41.11.3](/docs/tasks/C/C41.11.3.md)）：`Ctrl+Shift+6` 用截图的选区窗口选区域或整屏，3 秒倒计时；岛上显示时长、暂停和停止；浮屿自己的窗口用 `WDA_EXCLUDEFROMCAPTURE` 排除；存到「视频」下的浮屿录屏文件夹，岛上出卡片。
+  - [ ] **第 4 步：GIF**（[C41.11.4](/docs/tasks/C/C41.11.4.md)）：另一路低帧率（默认 15 fps）、限宽的帧拷回内存交给 gifski 的编码线程。
+  - [ ] **第 5 步：设置和文档**（[C41.11.5](/docs/tasks/C/C41.11.5.md)）：帧率、画质、声音、默认格式、快捷键；功能说明、契约、platforms.md。
 
 ## 不做
 
