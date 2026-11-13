@@ -13,6 +13,7 @@ import { useMail } from "../../src/features/messages/mail/MailPanel";
 import type { MediaState } from "../../src/features/media/api";
 import type { LevelChange } from "../../src/features/system-levels/api";
 import type { DeviceAlert } from "../../src/features/device-events/api";
+import type { MessagePreview } from "../../src/features/messages/messagePreview";
 
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
 const automated = new URLSearchParams(location.search).has("test");
@@ -30,18 +31,18 @@ mockIPC((command) => {
   if (command === "get_qq_mail_state") return [];
 }, { shouldMockEvents: true });
 
-type State = { notch: IslandNotch | null; tucked: boolean; peek: string | null; expanded: boolean; level: LevelChange | null; device: DeviceAlert | null };
+type State = { notch: IslandNotch | null; tucked: boolean; peek: string | null; expanded: boolean; level: LevelChange | null; device: DeviceAlert | null; preview: MessagePreview | null };
 let change: (next: Partial<State>) => void;
 
 function Fixture() {
-  const [state, setState] = useState<State>({ notch: NOTCH, tucked: false, peek: null, expanded: false, level: null, device: null });
+  const [state, setState] = useState<State>({ notch: NOTCH, tucked: false, peek: null, expanded: false, level: null, device: null, preview: null });
   change = (next) => setState((current) => ({ ...current, ...next }));
   const qq = useQQNotifications(true);
   const wechat = useWeChatReminders(true);
   const qqMail = useMail(true);
   const width = notchFittedWidth(300, state.notch, 1, Boolean(state.level || state.device));
   return <div className="stage" style={{ "--collapsed-island-width": `${width}px`, "--island-scale": 1, "--island-collapsed-scale": 1, "--island-expanded-scale": 1, "--expanded-island-width": `${notchPanelWidth(560, state.notch, 1, false)}px`, "--expanded-island-height": "306px" } as CSSProperties}>
-    <IslandShell deviceUse={{ camera: [], microphone: [] }} qqNotifications={qq} wechatReminders={wechat} qqMail={qqMail} pluginNotifications={NO_PLUGIN_NOTIFICATIONS} preview={null}
+    <IslandShell deviceUse={{ camera: [], microphone: [] }} qqNotifications={qq} wechatReminders={wechat} qqMail={qqMail} pluginNotifications={NO_PLUGIN_NOTIFICATIONS} preview={state.preview}
       mode={state.expanded ? "expanded" : "collapsed"} page="todo" isTucked={state.tucked} isDetached={false} showTitle={false}
       showCollapsedText={!state.notch} collapsedTaskTitle="写周报和整理会议记录" collapsedTodoCount={null} agentSession={null} activeAgentSessionCount={0}
       lyricLine={null} appearanceMode="classic" nativeGlassState="disabled" agentVisualState="idle" agentStatusLabel="AI Agent 空闲或已完成"
@@ -110,7 +111,14 @@ async function runChecks() {
     check(drop && drop.textContent?.includes("notch 刘海"), "有提示时往下多长出一行，提示放在这一行里");
     check(box(drop!).top >= box(island()).top + NOTCH.height - 0.5 && Math.abs(box(island()).height - (NOTCH.height + 38)) < 1, "这一行在刘海下面，岛加高一行");
     check(box(drop!).bottom <= box(island()).bottom + 0.5, "提示不出岛");
-    await set({ peek: null });
+    await set({ peek: null, preview: { source: "wechat", title: "李四", body: "新版设计稿放在共享盘了", chat: "产品群", receivedAt: Date.now() } });
+    await settleTransitions();
+    check(bar().querySelector(".island__notch-wing--left .message-source-icon, .island__notch-wing--left img"), "微信消息：刘海左边是微信图标");
+    check(bar().querySelector(".island__notch-wing--right")?.textContent?.trim() === "李四", "刘海右边是发消息的人");
+    const body = bar().querySelector(".island__notch-drop")?.textContent ?? "";
+    check(body.includes("新版设计稿放在共享盘了") && !body.includes("李四"), "刘海下面那一行只放正文，不重复名字");
+    check(box(bar().querySelector(".island__notch-drop")!).top >= box(island()).top + NOTCH.height - 0.5, "正文在刘海下面");
+    await set({ preview: null });
     await settleTransitions();
     check(!bar().querySelector(".island__notch-drop") && Math.abs(box(island()).height - NOTCH.height) < 1, "提示结束后岛缩回刘海高");
 

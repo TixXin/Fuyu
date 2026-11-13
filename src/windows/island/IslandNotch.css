@@ -162,3 +162,16 @@
 .island__notch-wing--left:has(.notch-alert__icon) {
   justify-content: flex-start;
 }
+
+.notch-message__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-1);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.notch-message__from {
+  display: inline-flex;
+  align-items: center;
+}
