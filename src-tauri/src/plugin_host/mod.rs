@@ -44,6 +44,8 @@ mod webviews;
 
 pub use commands::*;
 pub(crate) use uri::{find_link, open as open_link};
+#[cfg(target_os = "macos")]
+pub(crate) use uri::open_opened as open_opened_links;
 pub use dev::*;
 pub use effort_labels::*;
 pub use market_likes::*;
