@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  ageSlotWidth,
   countActiveSessions,
   filterSessions,
   minutesAgo,
@@ -150,4 +151,11 @@ test("the provider filter hides Codex or Claude Code but always shows WorkBuddy 
   assert.deepEqual(ids({ claudeCode: false, codex: true }), ["c", "w", "a"]);
   assert.deepEqual(ids({ claudeCode: true, codex: false }), ["s1", "w", "a"]);
   assert.equal(shownEffort("workbuddy", "high", { claudeCode: { high: "max" } }), "high");
+});
+
+test("the age column is as wide as its longest label", () => {
+  assert.equal(ageSlotWidth([]), 0);
+  assert.ok(ageSlotWidth(["<1m"]) < ageSlotWidth(["12 分"]));
+  assert.ok(ageSlotWidth(["1 分"]) < ageSlotWidth(["12 小时"]));
+  assert.equal(ageSlotWidth(["<1m", "12 小时", "3 分"]), ageSlotWidth(["12 小时"]));
 });

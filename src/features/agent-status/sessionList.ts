@@ -66,6 +66,12 @@ export function minutesAgo(updatedAt: number, now: number) {
   return Math.max(0, Math.floor((now - updatedAt) / 60_000));
 }
 
+const charWidth = (char: string) => (/[\u2e80-\u9fff\uff00-\uffef]/.test(char) ? 12 : char === " " ? 3.5 : /[mwMW]/.test(char) ? 10 : 7);
+
+export function ageSlotWidth(labels: readonly string[]) {
+  return Math.ceil(Math.max(0, ...labels.map((label) => [...label].reduce((sum, char) => sum + charWidth(char), 0))));
+}
+
 export function modelLabel(model: string | null, effort: string | null) {
   const effortLabel = effort ? effort.charAt(0).toUpperCase() + effort.slice(1) : null;
   return [model, effortLabel].filter(Boolean).join(" · ") || null;

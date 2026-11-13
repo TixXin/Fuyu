@@ -120,7 +120,7 @@
 }
 
 .agent-sessions__list--archivable .agent-session {
-  padding-right: 28px;
+  padding-right: calc(max(20px, var(--agent-age-width, 0px)) + 8px);
 }
 
 .agent-session__archive {
@@ -154,15 +154,11 @@
   outline: none;
 }
 
-.agent-sessions__list--archivable > li:has(.agent-session__age) .agent-session {
-  padding-right: 52px;
-}
-
 .agent-session__age {
   position: absolute;
   top: 8px;
   right: 6px;
-  width: 44px;
+  width: var(--agent-age-width, 44px);
   height: 20px;
   overflow: hidden;
   color: var(--text-3);
