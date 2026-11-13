@@ -4,6 +4,7 @@ pub(crate) mod apps;
 pub(crate) mod audio;
 pub(crate) mod audio_devices;
 pub(crate) mod bluetooth;
+pub(crate) mod brightness;
 pub(crate) mod camera;
 pub(crate) mod capture_targets;
 pub(crate) mod desktop;

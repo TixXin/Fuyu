@@ -108,7 +108,7 @@
 | `agent_status`（focus、session_*、window_focus、wezterm、orca、host_icon） | 进程树、进程启动时间与环境变量、窗口枚举与前台、UIA 标签页、程序图标 | 换实现（G1.7 已做）：hook 脚本 `hooks/*.sh`；平台层 `macos/proc_info.rs`（`proc_pidinfo`、`proc_pidpath`、tty）、`process_tree.rs`（launchd 下的进程接到负责进程）、`terminal_tabs.rs`；窗口跳转激活前台应用；`approval_hotkeys_macos.rs`；进程环境变量仍为空 | G1.7 |
 | `plugin_host`（runtime、baseline） | 作业对象、挂起启动 | 平台层：Mac 上 `Job` 管进程组（G1.8 已做：`killpg`，按组统计内存），不挂起启动 | G1.8 |
 | `plugin_host`（keybindings、system_events、webviews、uri） | 热键、会话通知、WebView2 页面、注册 `fuyu://` | 快捷键、系统事件换实现（G1.8 已做，在原文件里按平台分开）；网页视图暂不支持；`uri` 注册换实现（Mac 上不做，等 Info.plist） | G1.4、G1.8 |
-| `media_control` | SMTC、音频峰值、程序图标 | 暂不支持 | G1.9 |
+| `media_control` | SMTC、音频峰值、程序图标 | 换实现（G1.9 已做）：`service_macos.rs`、`events_macos.rs`、`adapter_macos.rs`（mediaremote-adapter）、`applescript_macos.rs`（兜底）；状态类型在共用的 `state.rs` | G1.9 |
 | `qq_notifications`、`wechat_reminders`、`messenger_activation` | 通知监听、窗口闪烁、UIA | 暂不支持 | G1.10 |
 | `cc_connect`、`ssh_tunnel` | 作业对象、注册表代理、程序查找 | 暂不支持（内置插件在 Mac 上开不起来） | G1.8 |
 | `rename_migration` | 注册表、凭据、卸载旧版 | 暂不支持（Mac 上没有旧版可迁移）；`data_dirs::copy_tree` 照常给 `home_dir` 用 | 不做 |
@@ -122,6 +122,7 @@ Mac 上跳过的测试（依赖 Windows 路径、程序或 API，标了 `#[cfg(w
 |---|---|---|---|---|
 | 2026-11-13 | — | — | 4 份调研、本计划、[platforms.md](platforms.md)、任务 G1 | 仅文档 |
 | 2026-11-13 | G1.1 | 3ccc9b6c | 用户拍板 M1–M14，写进决定表；界面形态（M4–M6）写进 [design/macos.md](../design/macos.md) | 仅文档 |
+| 2026-11-13 | G1.9 媒体控制与亮度 | f97cfffc（搬迁），（本次提交） | mediaremote-adapter 的构建脚本与打包；正在播放、播放控制、进度、封面；AppleScript 兜底；内建屏亮度提示 | Mac：clippy、`cargo test`、`pnpm test`、音乐回归页、`pnpm build:exe`；打包后的 `.app` 里适配器读到正在播放（汽水音乐，含封面）；本机读到亮度 25%；Windows：交叉 clippy 通过 |
 | 2026-11-13 | G1.8 插件宿主 | （本次提交） | 进程组、`node` / `pwsh` 查找、`.exe` 插件拒绝启动；清单 `platforms` 字段（schema、文档、SDK 同步）；设置和市场里的平台与 PowerShell 提示；插件快捷键、系统事件 | Mac：clippy、`cargo test`、`pnpm test`、类型检查、设置回归页、`pnpm build`、`pnpm build:exe`；Windows：交叉 clippy 通过 |
 | 2026-11-13 | G1.7 AI 代理状态 | （本次提交） | `/bin/sh` 版 hook 脚本和 Claude Code / Codex 的 hook 命令；Mac 进程平台层；点会话跳到终端或编辑器（Terminal、iTerm2 按 tty 选标签页）；审批快捷键；编辑器扩展的安装；用量的钥匙串凭据 | Mac：clippy、`cargo test`（含真跑四个脚本再用 Rust 读结果的测试）、`pnpm test`、`pnpm build`、`pnpm build:exe`；本机实测进程链从 CLI 一路走到前台应用；Windows：交叉 clippy 通过 |
 | 2026-11-13 | G1.6 强调色、网络计费、授权状态 | （本次提交） | 「跟随系统」强调色读 `NSColor.controlAccentColor`；更新的「按流量计费」读 Network.framework 的 `nw_path_is_expensive` / `is_constrained`；设置 → 通用里新增「系统权限」，显示辅助功能、屏幕录制是否已允许，没允许的能一键打开系统设置 | Mac：clippy、`cargo test`、`pnpm test`、设置回归页、`pnpm build`、`pnpm build:exe`；本机实测强调色 `#007aff`、Wi-Fi 不计费；Windows：交叉 clippy 通过 |
@@ -144,6 +145,7 @@ Mac 上跳过的测试（依赖 Windows 路径、程序或 API，标了 `#[cfg(w
 - 截图：第一次按 ⌃⇧1 时系统弹「屏幕录制」提示，授权并重开浮屿后再按，所有显示器都盖上冻结的画面，菜单栏和岛也被盖住；在全屏应用里也能截；框选、标注、复制后在备忘录里 ⌘V 是图片、在 Finder 里 ⌘V 是 PNG 文件；保存进「图片」文件夹；贴图停在原位、Retina 屏上不模糊、滚轮缩放正常；⌃⇧3 识字、⌃⇧4 翻译；悬停时能吸附到整个窗口；长截图在 Safari 里自动往下滚并拼接（滚动方向要确认），按 Esc 能停；岛上的截图卡片能拖到 Finder（G1.6）
 - AI 代理（G1.7）：在设置里安装 hook 后，`~/.claude/settings.json` 和 `~/.codex/config.toml` 里是 `/bin/sh` 加 `~/.fuyu/fuyu-agent-*.sh` 的命令；在 Terminal、iTerm2、VS Code 里跑 Claude Code，岛上显示运行中、完成、等待确认；点会话能切到对应的应用，Terminal 和 iTerm2 切到对应标签页（第一次要允许「自动化」）；VS Code 里装了浮屿扩展时切到对应终端；在岛上审批和审批快捷键能用；开了「直接向 Anthropic 查询」时系统问一次是否允许读钥匙串，允许后用量环有数
 - 插件（G1.8）：装一个 Node 插件和一个 PowerShell 插件（装了 pwsh 时）都能跑起来；停用插件或退出浮屿后 `ps` 里没有残留的插件进程；没装 pwsh 时卡片上出现安装提示；`.exe` 插件标为只支持 Windows；插件的快捷键能触发；锁屏、解锁、合盖再打开后插件收到对应事件
+- 媒体（G1.9）：Apple Music、Spotify、网易云、QQ 音乐、汽水音乐、浏览器里的视频播放时，岛上和音乐页显示曲名、歌手、封面、进度，播放 / 暂停 / 上下首 / 拖进度 / 随机 / 循环都生效；暂停后状态跟上；浮屿自己的提示音不出现在音乐页；歌词能对上；按亮度键时岛上出现亮度提示
 - 手机推送：离开电脑（空闲）或锁屏后，Agent 完成的推送能发出（G1.6）
 - 剪贴板：复制文字、图片、Finder 里的文件都进历史；密码管理器复制的不进；⌘⇧V 在鼠标旁弹出，选中后贴回原来的应用（第一次要允许辅助功能）；贴到终端时多行命令合成一行；有没有系统的剪贴板隐私提示（G1.6）
 - `fuyu://` 链接：装好的 `.app` 在浏览器里点 `fuyu://plugin/<id>/...` 能唤起岛并打开插件，岛没开时也能（G1.4）

@@ -1,0 +1,15 @@
+{
+  "build": {
+    "beforeDevCommand": "node scripts/stop-running-island.mjs && node scripts/macos/mediaremote-adapter.mjs && pnpm dev",
+    "beforeBuildCommand": "node scripts/macos/mediaremote-adapter.mjs && pnpm build"
+  },
+  "bundle": {
+    "resources": {
+      "target/mediaremote-adapter/mediaremote-adapter.pl": "mediaremote-adapter.pl",
+      "target/mediaremote-adapter/LICENSE": "mediaremote-adapter-LICENSE"
+    },
+    "macOS": {
+      "frameworks": ["target/mediaremote-adapter/MediaRemoteAdapter.framework"]
+    }
+  }
+}

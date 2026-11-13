@@ -1,4 +1,4 @@
-use crate::macos::audio;
+use crate::macos::{audio, brightness::{self, BuiltinBrightness}};
 
 pub(super) type OutputVolume = u32;
 
@@ -15,12 +15,12 @@ pub(super) fn open_volume() -> Option<OutputVolume> {
     audio::default_output()
 }
 
-pub(super) fn open_brightness() -> Option<()> {
-    None
+pub(super) fn open_brightness() -> Option<BuiltinBrightness> {
+    brightness::open()
 }
 
-pub(super) fn brightness_percent(_brightness: &()) -> Option<u32> {
-    None
+pub(super) fn brightness_percent(brightness: &BuiltinBrightness) -> Option<u32> {
+    brightness.level().map(|level| (level * 100.0).round() as u32)
 }
 
 #[cfg(test)]

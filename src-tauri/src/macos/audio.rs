@@ -3,7 +3,7 @@ use std::{ffi::c_void, ptr::NonNull};
 use objc2_core_audio::{
     kAudioDevicePropertyMute, kAudioDevicePropertyVolumeScalar, kAudioHardwarePropertyDefaultOutputDevice,
     kAudioObjectPropertyElementMain, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyScopeOutput,
-    kAudioObjectSystemObject, AudioObjectGetPropertyData, AudioObjectID, AudioObjectPropertyAddress,
+    kAudioObjectSystemObject, AudioObjectGetPropertyData, AudioObjectID, AudioObjectPropertyAddress, AudioObjectSetPropertyData,
 };
 
 const LEFT: u32 = 1;
@@ -43,4 +43,15 @@ pub(crate) fn volume(device: AudioObjectID) -> Option<f32> {
 pub(crate) fn muted(device: AudioObjectID) -> bool {
     read::<u32>(device, kAudioDevicePropertyMute, kAudioObjectPropertyScopeOutput, kAudioObjectPropertyElementMain)
         .is_some_and(|mute| mute != 0)
+}
+
+fn write_volume(device: AudioObjectID, element: u32, level: f32) -> bool {
+    let mut address = AudioObjectPropertyAddress { mSelector: kAudioDevicePropertyVolumeScalar, mScope: kAudioObjectPropertyScopeOutput, mElement: element };
+    let size = u32::try_from(std::mem::size_of::<f32>()).unwrap_or(4);
+    let status = unsafe { AudioObjectSetPropertyData(device, NonNull::from(&mut address), 0, std::ptr::null(), size, NonNull::from(&level).cast::<c_void>()) };
+    status == 0
+}
+
+pub(crate) fn set_volume(device: AudioObjectID, level: f32) -> bool {
+    write_volume(device, kAudioObjectPropertyElementMain, level) || [LEFT, RIGHT].into_iter().map(|channel| write_volume(device, channel, level)).fold(false, |any, done| any | done)
 }

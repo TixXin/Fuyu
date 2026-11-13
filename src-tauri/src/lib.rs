@@ -15,7 +15,6 @@ mod home_dir;
 mod island;
 mod local_api;
 mod lyrics;
-#[cfg_attr(not(windows), path = "media_control/unsupported.rs")]
 mod media_control;
 #[cfg(windows)]
 mod messenger_activation;
