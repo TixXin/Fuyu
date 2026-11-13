@@ -122,6 +122,7 @@ Mac 上跳过的测试（依赖 Windows 路径、程序或 API，标了 `#[cfg(w
 |---|---|---|---|---|
 | 2026-11-13 | — | — | 4 份调研、本计划、[platforms.md](platforms.md)、任务 G1 | 仅文档 |
 | 2026-11-13 | G1.1 | 3ccc9b6c | 用户拍板 M1–M14，写进决定表；界面形态（M4–M6）写进 [design/macos.md](../design/macos.md) | 仅文档 |
+| 2026-11-13 | G1.13（不需要证书的部分） | （本次提交） | `tauri.macos.conf.json` 加最低系统版本 15.0、`Entitlements.plist`（Apple Events，签名后才生效）、中英文 `InfoPlist.strings`；`Info.plist` 加 `NSAppleEventsUsageDescription`、本地化列表。签名、公证、发布工作流和 `latest.json` 的 darwin 条目等 G1.12 的证书 | `pnpm build:exe` 后检查 `Info.plist`（`LSMinimumSystemVersion` 15.0、用途说明、链接协议）、`Resources` 里的两种语言、可执行文件 `minos 15.0`；`cargo check` 通过 |
 | 2026-11-13 | G1.10 QQ / 微信未读数 | （本次提交） | 程序坞角标读取；QQ、微信的 Mac 模块；未读数在消息页、横幅、收起预览里显示；Mac 专用的设置说明和授权提示 | Mac：clippy、`cargo test`（548）、`pnpm test`（674）、类型检查、设置与消息回归页；本机实测读到「系统设置」角标 1，微信、QQ 在程序坞里且无角标；Windows：交叉 clippy 通过 |
 | 2026-11-13 | G1.9 媒体控制与亮度 | f97cfffc（搬迁），（本次提交） | mediaremote-adapter 的构建脚本与打包；正在播放、播放控制、进度、封面；AppleScript 兜底；内建屏亮度提示 | Mac：clippy、`cargo test`、`pnpm test`、音乐回归页、`pnpm build:exe`；打包后的 `.app` 里适配器读到正在播放（汽水音乐，含封面）；本机读到亮度 25%；Windows：交叉 clippy 通过 |
 | 2026-11-13 | G1.8 插件宿主 | （本次提交） | 进程组、`node` / `pwsh` 查找、`.exe` 插件拒绝启动；清单 `platforms` 字段（schema、文档、SDK 同步）；设置和市场里的平台与 PowerShell 提示；插件快捷键、系统事件 | Mac：clippy、`cargo test`、`pnpm test`、类型检查、设置回归页、`pnpm build`、`pnpm build:exe`；Windows：交叉 clippy 通过 |
