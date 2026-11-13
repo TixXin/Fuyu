@@ -15,6 +15,7 @@ pub(crate) enum ShortcutAction {
     Translate,
     Long,
     Fullscreen,
+    Record,
     Pins,
 }
 
@@ -27,6 +28,7 @@ impl ShortcutAction {
             Self::Translate => Some(Mode::Translate),
             Self::Long => Some(Mode::Long),
             Self::Fullscreen => Some(Mode::Fullscreen),
+            Self::Record => Some(Mode::Record),
             Self::Pins => None,
         }
     }
@@ -47,7 +49,7 @@ pub(crate) struct ShortcutStatus {
 }
 
 pub(crate) fn default_shortcuts() -> Vec<ShortcutConfig> {
-    [(ShortcutAction::Region, "Ctrl+Shift+1"), (ShortcutAction::Copy, "Ctrl+Shift+2"), (ShortcutAction::Text, "Ctrl+Shift+3"), (ShortcutAction::Translate, "Ctrl+Shift+4"), (ShortcutAction::Long, "Ctrl+Shift+5"), (ShortcutAction::Fullscreen, "Ctrl+Shift+7")]
+    [(ShortcutAction::Region, "Ctrl+Shift+1"), (ShortcutAction::Copy, "Ctrl+Shift+2"), (ShortcutAction::Text, "Ctrl+Shift+3"), (ShortcutAction::Translate, "Ctrl+Shift+4"), (ShortcutAction::Long, "Ctrl+Shift+5"), (ShortcutAction::Record, "Ctrl+Shift+6"), (ShortcutAction::Fullscreen, "Ctrl+Shift+7")]
         .into_iter()
         .map(|(action, shortcut)| ShortcutConfig { action, shortcut: shortcut.to_string() })
         .collect()

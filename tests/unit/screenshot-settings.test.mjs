@@ -36,7 +36,7 @@ test("a cleared shortcut stays off, odd values are replaced, and the folder is t
 });
 
 test("the native side gets every action in order, and an empty folder means the default", () => {
-  assert.deepEqual(shortcutConfig(DEFAULT_SCREENSHOT_SETTINGS).map(({ action }) => action), ["region", "copy", "text", "translate", "long", "fullscreen", "pins"]);
+  assert.deepEqual(shortcutConfig(DEFAULT_SCREENSHOT_SETTINGS).map(({ action }) => action), ["region", "copy", "text", "translate", "long", "record", "fullscreen", "pins"]);
   assert.equal(saveFolderOf(DEFAULT_SCREENSHOT_SETTINGS), undefined);
   assert.equal(saveFolderOf({ ...DEFAULT_SCREENSHOT_SETTINGS, saveFolder: "D:\\Shots" }), "D:\\Shots");
 });

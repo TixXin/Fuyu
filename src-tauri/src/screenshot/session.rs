@@ -28,6 +28,7 @@ pub(crate) enum Mode {
     Translate,
     Long,
     Fullscreen,
+    Record,
 }
 
 #[derive(Clone, Debug, Serialize)]

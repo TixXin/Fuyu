@@ -1,0 +1,31 @@
+.recording-notice__dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  background: var(--color-danger, #c75065);
+  border-radius: 50%;
+}
+
+.recording-notice__dot--live {
+  animation: recording-notice-pulse 1.2s ease-in-out infinite;
+}
+
+.recording-notice__dot--still {
+  opacity: 0.55;
+}
+
+.recording-notice__text {
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes recording-notice-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .recording-notice__dot--live {
+    animation: none;
+  }
+}

@@ -5,6 +5,7 @@ export type ScreenshotText = {
   saveMac: string;
   pin: string;
   saveFolderName: string;
+  recordFolderName: string;
   saved: (path: string) => string;
   cancel: string;
   copyColorHint: string;
@@ -12,7 +13,7 @@ export type ScreenshotText = {
   ruler: (length: number, dx: number, dy: number) => string;
   colorCopied: (hex: string) => string;
   selectHint: string;
-  quickHints: Record<"copy" | "text" | "translate" | "long", string>;
+  quickHints: Record<"copy" | "text" | "translate" | "long" | "record", string>;
   longShot: string;
   long: {
     title: string;
@@ -54,6 +55,20 @@ export type ScreenshotText = {
     closeAll: string;
   };
   pinCopied: string;
+  recording: {
+    countdown: (seconds: number) => string;
+    running: (time: string) => string;
+    paused: (time: string) => string;
+    pause: string;
+    resume: string;
+    stop: string;
+    cancel: string;
+    saved: (time: string) => string;
+    reveal: string;
+    shelve: string;
+    shelved: string;
+    close: string;
+  };
   card: {
     copied: string;
     saved: string;
@@ -84,6 +99,7 @@ export const zhCN: ScreenshotText = {
   saveMac: "保存（⌘S）",
   pin: "贴到屏幕上（T）",
   saveFolderName: "浮屿截图",
+  recordFolderName: "浮屿录屏",
   saved: (path) => `已保存到 ${path}`,
   cancel: "取消（Esc）",
   copyColorHint: "按 C 复制颜色",
@@ -96,6 +112,7 @@ export const zhCN: ScreenshotText = {
     text: "单击选中窗口或控件，或拖动选择区域，选好就识别文字并复制 · 右键或 Esc 退出",
     translate: "单击选中窗口或控件，或拖动选择区域，选好就识别文字并翻译 · 右键或 Esc 退出",
     long: "选好要滚动的区域，浮屿往下滚并拼成长图，旁边的控制条可以暂停、完成或取消 · 右键或 Esc 退出",
+    record: "拖动选择要录的区域，或单击选中窗口，按 F 录整个屏幕；3 秒后开始，再按 Ctrl+Shift+6 停止 · 右键或 Esc 退出",
   },
   readText: "识别文字",
   textCopied: (line) => `已复制识别的文字：${line}`,
@@ -154,6 +171,20 @@ export const zhCN: ScreenshotText = {
     closeAll: "关闭所有贴图",
   },
   pinCopied: "已复制",
+  recording: {
+    countdown: (seconds) => `${seconds} 秒后开始录屏`,
+    running: (time) => `录屏中 ${time}`,
+    paused: (time) => `已暂停 ${time}`,
+    pause: "暂停",
+    resume: "继续",
+    stop: "停止并保存（Ctrl+Shift+6）",
+    cancel: "取消",
+    saved: (time) => `录屏已保存 · ${time}`,
+    reveal: "在文件夹中显示",
+    shelve: "放进文件中转",
+    shelved: "已放进文件中转",
+    close: "关闭",
+  },
   card: {
     copied: "截图已复制",
     saved: "截图已保存",
@@ -184,6 +215,7 @@ export const en: ScreenshotText = {
   saveMac: "Save (⌘S)",
   pin: "Pin to screen (T)",
   saveFolderName: "Fuyu Screenshots",
+  recordFolderName: "Fuyu Recordings",
   saved: (path) => `Saved to ${path}`,
   cancel: "Cancel (Esc)",
   copyColorHint: "Press C to copy the colour",
@@ -196,6 +228,7 @@ export const en: ScreenshotText = {
     text: "Click a window or control, or drag a region, and its text is read and copied · Right-click or Esc to exit",
     translate: "Click a window or control, or drag a region, and its text is read and translated · Right-click or Esc to exit",
     long: "Choose the area that scrolls; Fuyu scrolls and stitches one tall picture, with a control bar to pause, finish or cancel · Right-click or Esc to exit",
+    record: "Drag the area to record, click a window, or press F for the whole screen; recording starts after 3 seconds, Ctrl+Shift+6 again stops it · Right-click or Esc to exit",
   },
   readText: "Read text",
   textCopied: (line) => `Copied the text: ${line}`,
@@ -254,6 +287,20 @@ export const en: ScreenshotText = {
     closeAll: "Close all pins",
   },
   pinCopied: "Copied",
+  recording: {
+    countdown: (seconds) => `Recording in ${seconds}`,
+    running: (time) => `Recording ${time}`,
+    paused: (time) => `Paused ${time}`,
+    pause: "Pause",
+    resume: "Resume",
+    stop: "Stop and save (Ctrl+Shift+6)",
+    cancel: "Cancel",
+    saved: (time) => `Recording saved · ${time}`,
+    reveal: "Show in folder",
+    shelve: "Put on the file shelf",
+    shelved: "Put on the file shelf",
+    close: "Close",
+  },
   card: {
     copied: "Screenshot copied",
     saved: "Screenshot saved",

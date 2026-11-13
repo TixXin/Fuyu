@@ -48,10 +48,18 @@
 
 已知会撞的：Excel 的 `Ctrl+Shift+1`–`6` 是数字格式，个别输入法用 `Ctrl+Shift+数字` 切方案；遇到时在设置里换掉。
 
+## 录屏
+
+- `Ctrl+Shift+6`（小键盘的 6 也行）：屏幕定格后拖动选区域、单击选中窗口，或按 `F` 选整个屏幕；选好后 3 秒倒计时，开始录成 MP4。再按一次 `Ctrl+Shift+6` 停止。
+- 录的时候浮屿上显示时长、暂停和停止按钮，倒计时时可以取消。浮屿自己的窗口（岛、翻译、剪贴板、设置）不会被录进去，贴图会。
+- 默认带系统声音，不录麦克风；帧率 30。可调的设置在 C41.11.5。
+- 录好的视频在「视频」下的「浮屿录屏」文件夹（英文界面是 `Fuyu Recordings`），文件名 `Fuyu_<日期>_<时间>.mp4`；浮屿上出卡片，可以在文件夹中显示或放进文件中转。
+- 怎么做到不卡：画面全程留在显卡里，硬件 H.264 编码，见 [screen-recording.md](../research/screen-recording.md)。
+
 ## 数据
 
 截图只在本机。复制、保存、贴图的截图各存一份 PNG 在家目录的 `screenshots/`（截图历史），只留最近 100 张、设置的天数内的，启动时清理；冻结的画面只在内存里。不上传、不进日志。设置在 `localStorage` 的 `fuyu-screenshot-settings`（会进设置备份）。见 [data-storage.md](../architecture/data-storage.md) 和 [contracts.md](../architecture/contracts.md)。
 
 ## 还没有的
 
-录屏（`Ctrl+Shift+6`，C41.11）。
+录屏出 GIF（C41.11.4）、录屏的设置（帧率、画质、声音、默认格式，C41.11.5）。

@@ -132,6 +132,7 @@ pub(crate) enum Action {
     Text,
     Translate,
     Long,
+    Record,
 }
 
 impl Action {
@@ -143,6 +144,7 @@ impl Action {
             "text" => Some(Self::Text),
             "translate" => Some(Self::Translate),
             "long" => Some(Self::Long),
+            "record" => Some(Self::Record),
             _ => None,
         }
     }
@@ -177,6 +179,14 @@ pub async fn screenshot_finish(app: AppHandle, window: WebviewWindow, request: t
             let at = session::global_point(window.label(), left, top).ok_or_else(|| "No screenshot is open.".to_string())?;
             let (width, height) = pin::shown_size((picture.width, picture.height), session::scale(window.label()).unwrap_or(1.0));
             long::start(&app, window.label().to_string(), (at.0, at.1, width, height), deliver_long);
+            Ok(None)
+        }
+        Action::Record => {
+            let (x, y) = session::global_point(window.label(), left, top).ok_or_else(|| "No screenshot is open.".to_string())?;
+            let folder_name = header("x-folder-name").and_then(percent_decode).unwrap_or_default();
+            session::end(&app);
+            let request = crate::recording::Request { x, y, width: picture.width, height: picture.height, fps: None, system_audio: None, microphone: None, folder_name };
+            crate::recording::begin(&app, request);
             Ok(None)
         }
         Action::Copy => {

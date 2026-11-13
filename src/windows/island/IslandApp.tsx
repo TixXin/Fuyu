@@ -12,6 +12,8 @@ import { useScreenshotText } from "../../features/screenshot/useScreenshotText";
 import { useScreenshotCard } from "../../features/screenshot/useScreenshotCard";
 import { ScreenshotNotice, ScreenshotNoticeActions } from "../../features/screenshot/ScreenshotNotice";
 import { useScreenshotNotice } from "../../features/screenshot/useScreenshotNotice";
+import { RecordingNotice, RecordingNoticeActions } from "../../features/screenshot/RecordingNotice";
+import { useRecording } from "../../features/screenshot/useRecording";
 import { useIslandSettings } from "../../features/appearance/useIslandSettings";
 import { useClipboardHistory } from "../../features/clipboard/useClipboardHistory";
 import { IslandShell } from "./IslandShell";
@@ -112,6 +114,7 @@ export function IslandApp() {
   const screenshot = useIslandScreenshot(settings.screenshotEnabled, collapseIsland);
   const screenshotCard = useScreenshotCard(screenshot.settings.cardSeconds);
   const screenshotNotice = useScreenshotNotice(screenshotCard, agentSessions);
+  const recording = useRecording();
   const translationPeek = useQuickTranslation(settings.translationEnabled) ?? screenshotText;
   const firstHints = useIslandFirstHints({
     mode,
@@ -121,7 +124,7 @@ export function IslandApp() {
     agentsOn: settings.agentStatusEnabled,
     agentSessionCount: activeAgentSessionCount,
     showsMessage,
-    busy: screenshotCard.current !== null || translationPeek !== null || permissionPrompts.current !== null,
+    busy: recording.shown || screenshotCard.current !== null || translationPeek !== null || permissionPrompts.current !== null,
   });
   const notch = useIslandNotch();
   const barText = settings.showCollapsedText && !notch;
@@ -239,7 +242,7 @@ export function IslandApp() {
   });
 
   useNotchDropSync(notch !== null && mode === "collapsed" && !isTucked && hasNotchDrop({
-    preview: banner.barPreview, notice: screenshotNotice.taken ?? firstHints.current, translationPeek,
+    preview: banner.barPreview, notice: recording.shown || (screenshotNotice.taken ?? firstHints.current), translationPeek,
   }));
   useDevIslandActions({ openPage: openEnabledPage, collapse: collapseIsland, tuck: tuckIsland, reveal: revealIsland });
   const hoverTucked = useIslandHover({
@@ -328,7 +331,9 @@ export function IslandApp() {
         pageDigitModifiers={settings.pageDigitModifiers}
         hoverSwitchPage={settings.hoverSwitchPage}
         hoverSwitchDelayMs={settings.hoverSwitchDelayMs}
-        notice={screenshotNotice.taken
+        notice={recording.shown
+          ? { content: <RecordingNotice recording={recording} />, actions: <RecordingNoticeActions recording={recording} /> }
+          : screenshotNotice.taken
           ? { content: <ScreenshotNotice key={screenshotNotice.taken.path} notice={screenshotNotice} />, actions: <ScreenshotNoticeActions notice={screenshotNotice} /> }
           : firstHints.current
             ? { content: <FirstHintNotice key={firstHints.current} hints={firstHints} />, actions: <FirstHintActions hints={firstHints} onConnectTools={() => openSettingsWindow("agentConnect")} /> }
