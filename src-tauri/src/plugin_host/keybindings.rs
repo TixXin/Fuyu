@@ -6,23 +6,24 @@ use std::{
     time::Duration,
 };
 use tauri::Emitter;
+#[cfg(windows)]
 use windows::Win32::{
     Foundation::{HWND, LPARAM, LRESULT, WPARAM},
     UI::WindowsAndMessaging::{WM_APP, WM_HOTKEY},
 };
 
 use super::{host, lifecycle, lock};
-use crate::{
-    clipboard_history::parse_shortcut_binding,
-    island,
-    win32::{
-        self,
-        message_window::{self, WindowMessages},
-    },
+use crate::{clipboard_history::parse_shortcut_binding, island};
+#[cfg(windows)]
+use crate::win32::{
+    self,
+    message_window::{self, WindowMessages},
 };
 
 const KEYBINDING_EVENT: &str = "plugin-keybinding";
+#[cfg(windows)]
 const REFRESH_MESSAGE: u32 = WM_APP + 0x61;
+#[cfg(windows)]
 const FIRST_HOTKEY_ID: i32 = 0x5100;
 const STARTUP_DELAY: Duration = Duration::from_secs(2);
 
@@ -42,6 +43,8 @@ struct State {
     wanted: Vec<Binding>,
     registered: Vec<Binding>,
     conflicts: HashMap<String, Vec<String>>,
+    #[cfg(target_os = "macos")]
+    hotkeys: Vec<global_hotkey::hotkey::HotKey>,
 }
 
 fn state() -> &'static Mutex<State> {
@@ -53,6 +56,7 @@ pub(super) fn conflicts(plugin_id: &str) -> Vec<String> {
     lock(state()).conflicts.get(plugin_id).cloned().unwrap_or_default()
 }
 
+#[cfg(windows)]
 pub(super) fn start() {
     let _ = thread::Builder::new().name("plugin-hotkeys".into()).spawn(|| {
         thread::sleep(STARTUP_DELAY);
@@ -113,11 +117,61 @@ pub(super) fn refresh() {
         state.wanted = wanted;
         state.window
     };
+    #[cfg(windows)]
     if let Some(window) = window {
         let _ = message_window::post_message(HWND(window as *mut _), REFRESH_MESSAGE);
     }
+    #[cfg(target_os = "macos")]
+    if window.is_some() {
+        let _ = host.app.run_on_main_thread(apply_on_main_thread);
+    }
 }
 
+#[cfg(target_os = "macos")]
+pub(super) fn start() {
+    let _ = thread::Builder::new().name("plugin-hotkeys".into()).spawn(|| {
+        thread::sleep(STARTUP_DELAY);
+        lock(state()).window = Some(1);
+        if let Ok(host) = host() {
+            let _ = host.app.run_on_main_thread(apply_on_main_thread);
+        }
+    });
+}
+
+#[cfg(target_os = "macos")]
+fn apply_on_main_thread() {
+    use crate::{clipboard_history::{to_hotkey, ShortcutBinding}, macos::hotkeys};
+    let (old, wanted) = {
+        let mut state = lock(state());
+        state.registered.clear();
+        state.conflicts.clear();
+        (std::mem::take(&mut state.hotkeys), state.wanted.clone())
+    };
+    for hotkey in old {
+        hotkeys::unregister(hotkey);
+    }
+    for binding in wanted {
+        let shortcut = ShortcutBinding { label: binding.label.clone(), modifiers: binding.modifiers, key_code: binding.key_code };
+        let fired = binding.clone();
+        let registered = to_hotkey(&shortcut).filter(|hotkey| hotkeys::register(*hotkey, move || emit(&fired)).is_ok());
+        let mut state = lock(state());
+        match registered {
+            Some(hotkey) => {
+                state.hotkeys.push(hotkey);
+                state.registered.push(binding);
+            }
+            None => state.conflicts.entry(binding.plugin_id).or_default().push(binding.label),
+        }
+    }
+}
+
+fn emit(binding: &Binding) {
+    let Ok(host) = host() else { return };
+    let payload = json!({ "pluginId": binding.plugin_id, "command": binding.command, "when": binding.when });
+    let _ = host.app.emit_to(island::WINDOW_LABEL, KEYBINDING_EVENT, payload);
+}
+
+#[cfg(windows)]
 fn apply(window: HWND) {
     let mut state = lock(state());
     for index in 0..state.registered.len() {
@@ -135,6 +189,7 @@ fn apply(window: HWND) {
     }
 }
 
+#[cfg(windows)]
 fn pressed(id: usize) {
     let Some(binding) = id
         .checked_sub(FIRST_HOTKEY_ID as usize)
@@ -142,13 +197,13 @@ fn pressed(id: usize) {
     else {
         return;
     };
-    let Ok(host) = host() else { return };
-    let payload = json!({ "pluginId": binding.plugin_id, "command": binding.command, "when": binding.when });
-    let _ = host.app.emit_to(island::WINDOW_LABEL, KEYBINDING_EVENT, payload);
+    emit(&binding);
 }
 
+#[cfg(windows)]
 struct PluginHotkeyWindow;
 
+#[cfg(windows)]
 impl WindowMessages for PluginHotkeyWindow {
     fn handle(window: HWND, message: u32, wparam: WPARAM, _: LPARAM) -> Option<LRESULT> {
         match message {

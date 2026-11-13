@@ -89,7 +89,7 @@ export function PageShortcutSection({
             <button
               className={["shortcut-record-button", recording === field ? "shortcut-record-button--recording" : ""].filter(Boolean).join(" ")}
               type="button"
-              onClick={() => setRecording(field)}
+              onClick={(event) => { event.currentTarget.focus(); setRecording(field); }}
               onKeyDown={handleKeyDown}
               onBlur={() => setRecording((current) => (current === field ? null : current))}
             >

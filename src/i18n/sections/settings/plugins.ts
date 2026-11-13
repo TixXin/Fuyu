@@ -96,6 +96,10 @@ export type SettingsPluginsText = {
   runtimeNode: string;
   nodeMissing: string;
   getNode: string;
+  powershellMissing: string;
+  getPowershell: string;
+  notForMac: string;
+  notForWindows: string;
   detail: {
     open: string;
     back: string;
@@ -414,6 +418,10 @@ export const zhCN: SettingsPluginsText = {
   runtimeNode: "需要 Node.js",
   nodeMissing: "这台电脑上没有找到 Node.js，装好之后这个插件才能运行。",
   getNode: "下载 Node.js",
+  powershellMissing: "这个插件用 PowerShell 写成，这台 Mac 上没有找到 PowerShell 7（pwsh），装好之后才能运行。",
+  getPowershell: "安装 PowerShell",
+  notForMac: "这个插件只支持 Windows，在 Mac 上不能运行。",
+  notForWindows: "这个插件只支持 macOS，在 Windows 上不能运行。",
   detail: {
     open: "设置",
     back: "返回插件列表",
@@ -788,6 +796,10 @@ export const en: SettingsPluginsText = {
   runtimeNode: "Needs Node.js",
   nodeMissing: "Node.js was not found on this computer; this plugin runs once it is installed.",
   getNode: "Get Node.js",
+  powershellMissing: "This plugin is written in PowerShell, and PowerShell 7 (pwsh) was not found on this Mac; it runs once that is installed.",
+  getPowershell: "Install PowerShell",
+  notForMac: "This plugin is for Windows only and does not run on a Mac.",
+  notForWindows: "This plugin is for macOS only and does not run on Windows.",
   detail: {
     open: "Settings",
     back: "Back to plugins",

@@ -32,6 +32,7 @@ pub struct MarketPlugin {
 pub struct MarketSnapshot {
     index_url: String,
     node_available: bool,
+    powershell_available: bool,
     plugins: Vec<MarketPlugin>,
     trusted_publishers: Vec<String>,
     official_publisher: &'static str,
@@ -78,6 +79,7 @@ fn market_snapshot(data: market::MarketData) -> Result<MarketSnapshot, String> {
     Ok(MarketSnapshot {
         index_url: market::INDEX_URL.to_string(),
         node_available: runtime::find_node().is_some(),
+        powershell_available: runtime::powershell_available(),
         plugins,
         trusted_publishers: lock(&host.state).trusted_publishers.clone(),
         official_publisher: market::OFFICIAL_PUBLISHER,

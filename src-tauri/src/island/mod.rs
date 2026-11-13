@@ -6,6 +6,7 @@ pub(crate) mod focus;
 mod follow;
 mod edge;
 mod geometry;
+pub(crate) mod notch;
 mod side;
 #[cfg_attr(not(windows), path = "glass_unsupported.rs")]
 mod glass;
@@ -43,6 +44,7 @@ use state::{mutate_window_state, read_window_state, window_state, CornerShape, I
 
 pub(crate) use geometry::apply_stage_geometry;
 pub(crate) use follow::start_monitor_follow_loop;
+pub(crate) use notch::start_notch_watch;
 pub(crate) use passthrough::start_cursor_passthrough_loop;
 pub(crate) use state::{record_dragged_position, IslandPosition, IslandWindowState};
 
@@ -58,6 +60,8 @@ pub struct IslandLayout {
     margin_y: f64,
     #[serde(default)]
     under_menu_bar: bool,
+    #[serde(default)]
+    fit_notch: bool,
 }
 
 #[tauri::command]
@@ -68,6 +72,7 @@ pub fn set_island_layout(app: AppHandle, layout: IslandLayout) -> Result<(), Str
         state.expanded_scale = layout.expanded_scale.clamp(0.75, 1.4);
         state.margin_y = layout.margin_y.clamp(0.0, 160.0);
         state.under_menu_bar = layout.under_menu_bar;
+        state.fit_notch = layout.fit_notch;
         *state
     });
     apply_stage_geometry(&window, state, false)
@@ -327,6 +332,7 @@ macro_rules! tauri_commands {
             crate::island::reset_island_position,
             crate::island::get_island_top_attachment,
             crate::island::get_island_edge,
+            crate::island::notch::get_island_notch,
             crate::island::show_ready_island,
             crate::island::minimize_island,
             crate::island::focus::take_island_hover_focus,

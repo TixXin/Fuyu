@@ -95,10 +95,11 @@ test("the island corner shape is squircle unless round was chosen, older setting
   assert.equal(normalizeSettings({ islandMonitor: "cursor" }).islandMonitor, "cursor");
   assert.equal(normalizeSettings({ islandMonitor: "foreground" }).islandMonitor, "foreground");
   assert.equal(normalizeSettings({ islandMonitor: "all" }).islandMonitor, "primary");
-  assert.equal(DEFAULT_SETTINGS.menuBarPlacement, "over");
-  assert.equal(normalizeSettings({}).menuBarPlacement, "over");
+  assert.equal(DEFAULT_SETTINGS.menuBarPlacement, "notch");
+  assert.equal(normalizeSettings({}).menuBarPlacement, "notch");
+  assert.equal(normalizeSettings({ menuBarPlacement: "over" }).menuBarPlacement, "over");
   assert.equal(normalizeSettings({ menuBarPlacement: "below" }).menuBarPlacement, "below");
-  assert.equal(normalizeSettings({ menuBarPlacement: "middle" }).menuBarPlacement, "over");
+  assert.equal(normalizeSettings({ menuBarPlacement: "middle" }).menuBarPlacement, "notch");
   assert.equal(DEFAULT_SETTINGS.islandCornerShape, "squircle");
   assert.equal(normalizeSettings({}).islandCornerShape, "squircle");
   assert.equal(normalizeSettings({ islandCornerShape: "round" }).islandCornerShape, "round");

@@ -100,7 +100,11 @@ pub(super) fn sync_processes() -> Result<(), String> {
                 continue;
             }
             let saved_settings = grant.map(|grant| grant.settings).unwrap_or_default();
-            let launch = launch_command(&plugin.dir, command, args);
+            let launch = if super::manifest::runs_here(manifest) {
+                launch_command(&plugin.dir, command, args)
+            } else {
+                Err("This plugin does not support this system.".to_string())
+            };
             let (program, args) = match launch {
                 Ok(launch) => launch,
                 Err(error) => {

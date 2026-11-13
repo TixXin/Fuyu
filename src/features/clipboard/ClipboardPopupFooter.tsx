@@ -1,5 +1,6 @@
 import { CornerDownLeft, Pause } from "lucide-react";
 import { useTranslation } from "../../i18n";
+import { isMacOS } from "../../lib/platform";
 import type { ClipboardCaptureStatus } from "./api";
 import { PRIMARY_KEY } from "./shortcut";
 
@@ -49,7 +50,7 @@ export function ClipboardPopupFooter({ onSnippets, wide, queued, separator, onSe
   if (queued > 0) {
     return (
       <footer className="clipboard-popup__hint clipboard-popup__hint--sequence" role="status">
-        <span>{popup.sequenceCount(queued)} · <kbd><Enter /></kbd>{popup.sequenceStart}</span>
+        <span>{popup.sequenceCount(queued)} · <kbd><Enter /></kbd>{isMacOS ? popup.sequenceStartMac : popup.sequenceStart}</span>
         <span>
           <kbd>{PRIMARY_KEY} <Enter /></kbd>{text.merge}
           <button
