@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { RefreshCcw } from "lucide-react";
+import { RefreshCcw, Search, ShieldCheck, Store } from "lucide-react";
 import { SelectControl } from "../../components/controls/SelectControl";
 import { useLocale, useTranslation } from "../../i18n";
 import { MARKET_CATEGORIES, type MarketCategory, type MarketPlugin, type PluginsSnapshot } from "./api";
@@ -10,6 +10,7 @@ import { groupMarketPlugins } from "./marketGroups";
 import { MarketPluginItem } from "./MarketPluginItem";
 import { MarketInstallRequest } from "./market-link/MarketInstallRequest";
 import { usePluginMarket } from "./usePluginMarket";
+import "./PluginToolbar.css";
 import "./PluginMarketSection.css";
 
 const FAVORITES = "favorites";
@@ -45,6 +46,7 @@ export function PluginMarketSection({
     return filterMarketPlugins(plugins, { query, category: category === FAVORITES ? "" : category }, market.officialPublisher);
   }, [market, query, category, favorites]);
   const groups = useMemo(() => groupMarketPlugins(sortMarketPlugins(shown, hasLikes ? sort : "index", likes)), [shown, sort, likes, hasLikes]);
+  const totals = useMemo(() => groupMarketPlugins(market?.plugins ?? []), [market]);
   const hasPlugins = Boolean(market && market.plugins.length > 0);
   const status = loading
     ? text.refreshing
@@ -79,11 +81,19 @@ export function PluginMarketSection({
   return (
     <section className="settings-section settings-section--list plugins-panel">
       <div className="plugin-market__header">
-        <span className="plugin-market__status" aria-live="polite">
-          {status}
+        <span className="plugin-market__hero-icon" aria-hidden="true">
+          <Store size={18} strokeWidth={2} />
         </span>
+        <div className="plugin-market__headline">
+          <span className="plugin-market__status" aria-live="polite">
+            {status}
+          </span>
+          {market && hasPlugins ? (
+            <span className="plugin-market__summary-line">{text.summary(totals.installed.length + totals.updates.length, totals.updates.length, favorites.length)}</span>
+          ) : null}
+        </div>
         <button className="plugin-card__button plugin-market__refresh" type="button" aria-label={text.refresh} disabled={loading} onClick={() => void refresh()}>
-          <RefreshCcw className={loading ? "plugin-market__spin" : undefined} size={12} strokeWidth={2.4} />
+          <RefreshCcw className={loading ? "plugin-market__spin" : undefined} size={14} strokeWidth={2.2} />
         </button>
       </div>
       {requestedId ? (
@@ -111,20 +121,23 @@ export function PluginMarketSection({
       {market && !hasPlugins ? <p className="settings-section__hint">{text.empty}</p> : null}
       {showFilters ? (
         <div className="plugin-market__filters">
-          <input
-            className="plugin-setting__input"
-            type="search"
-            value={query}
-            placeholder={text.search}
-            aria-label={text.search}
-            onChange={(event) => setQuery(event.currentTarget.value)}
-          />
+          <label className="plugin-search">
+            <Search size={13} strokeWidth={2.4} aria-hidden="true" />
+            <input
+              type="search"
+              value={query}
+              placeholder={text.search}
+              aria-label={text.search}
+              onChange={(event) => setQuery(event.currentTarget.value)}
+              onKeyDown={(event) => event.key === "Escape" && query && (event.preventDefault(), setQuery(""))}
+            />
+          </label>
           {market === null || hasPlugins ? (
             <div className="plugin-market__categories" role="group">
               {(["", FAVORITES, ...categories] as const).map((name) => (
                 <button
                   key={name || "all"}
-                  className="plugin-card__button plugin-market__category"
+                  className="plugin-chip plugin-market__category"
                   type="button"
                   aria-pressed={category === name}
                   onClick={() => setCategory(name)}
@@ -160,7 +173,10 @@ export function PluginMarketSection({
         {renderGroup(text.groupInstallable(groups.installable.length), groups.installable)}
         {renderGroup(text.groupInstalled(groups.installed.length), groups.installed)}
       </div>
-      <p className="settings-section__hint">{text.hint}</p>
+      <p className="plugin-market__footnote">
+        <ShieldCheck size={13} strokeWidth={2.2} aria-hidden="true" />
+        <span>{text.hint}</span>
+      </p>
     </section>
   );
 }

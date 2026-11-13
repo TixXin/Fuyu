@@ -5,8 +5,8 @@ import { MARKET_CATEGORIES, marketPublisher, openPluginHomepage, type MarketCate
 import type { MarketLike } from "./marketLikes";
 import { MarketPluginAction } from "./MarketPluginAction";
 import { MarketPluginDetails } from "./MarketPluginDetails";
-import { pluginIconTone, pluginInitial } from "./marketGroups";
 import { NodeMissingHint } from "./NodeMissingHint";
+import { PluginIcon } from "./PluginIcon";
 import { isSensitivePermission } from "./promptedPermissions";
 
 const isCategory = (name: string): name is MarketCategory => (MARKET_CATEGORIES as readonly string[]).includes(name);
@@ -43,9 +43,7 @@ export function MarketPluginItem({
 
   return (
     <article className={`plugin-market__item${open ? " plugin-market__item--open" : ""}`}>
-      <span className={`plugin-market__icon plugin-market__icon--${pluginIconTone(plugin)}`} aria-hidden="true">
-        {pluginInitial(plugin.name[locale])}
-      </span>
+      <PluginIcon className="plugin-market__icon" id={plugin.id} name={plugin.name[locale]} categories={plugin.categories} />
       <button className="plugin-market__summary" type="button" aria-expanded={open} onClick={() => setOpen(!open)}>
         <span className="plugin-market__title">
           <strong>{plugin.name[locale]}</strong>

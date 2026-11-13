@@ -1,10 +1,12 @@
-import { useState, type MouseEvent } from "react";
+import { useState, type CSSProperties, type MouseEvent } from "react";
 import { ExternalLink, Lock, Settings2, Trash2 } from "lucide-react";
 import { ToggleControl } from "../../components/controls/ToggleControl";
 import { useLocale, useTranslation } from "../../i18n";
 import { openPluginHomepage, PLUGIN_PERMISSIONS, type PluginInfo, type PluginPermission } from "./api";
 import { isSensitivePermission } from "./promptedPermissions";
+import { pluginHealth } from "./installedFilter";
 import { NodeMissingHint } from "./NodeMissingHint";
+import { PluginIcon } from "./PluginIcon";
 import { PluginRunStats } from "./PluginRunStats";
 import "./PluginCard.css";
 
@@ -42,6 +44,7 @@ const OWN_CLICK = "button, a, input, label, summary, details";
 
 export function PluginCard({
   plugin,
+  index = 0,
   allowed,
   nodeAvailable,
   busy,
@@ -50,6 +53,7 @@ export function PluginCard({
   onUninstall,
 }: {
   plugin: PluginInfo;
+  index?: number;
   allowed: boolean;
   nodeAvailable: boolean;
   busy: boolean;
@@ -67,18 +71,24 @@ export function PluginCard({
   const description = plugin.description?.[locale];
   const invalid = Boolean(plugin.invalidReason);
   const canUninstall = !plugin.builtin && !plugin.dev;
+  const health = pluginHealth(plugin, allowed);
   const openFromCard = (event: MouseEvent<HTMLElement>) => {
     if (invalid || (event.target as Element).closest(OWN_CLICK)) return;
     onOpenDetail();
   };
 
   return (
-    <article className={invalid ? "plugin-card" : "plugin-card plugin-card--openable"} onClick={openFromCard}>
+    <article
+      className={`plugin-card plugin-card--${health}${invalid ? "" : " plugin-card--openable"}`}
+      style={{ "--plugin-card-index": Math.min(index, 8) } as CSSProperties}
+      onClick={openFromCard}
+    >
       <header className="plugin-card__header">
+        <PluginIcon id={plugin.id} name={name} health={health} />
         <div className="plugin-card__title">
           <div className="plugin-card__name">
             <strong>{name}</strong>
-            {showStatus ? (
+            {showStatus && plugin.status !== "running" ? (
               <span className={`plugin-card__status plugin-card__status--${plugin.status}`}>
                 {t.settings.plugins.status[plugin.status]}
               </span>

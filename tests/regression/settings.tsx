@@ -85,6 +85,14 @@ if (!automated) {
 
     await openPage("plugins");
     check(/^第三方（\d+）\|内置（\d+）$/.test(texts(".plugins-list__title")), "Installed plugins are grouped, third-party first, then built-in");
+    const cardNames = () => texts(".plugins-list__grid .plugin-card__title strong");
+    check(texts(".plugins-toolbar__filter .plugin-chip__count") === "3|2|0|1" && element<HTMLButtonElement>(".plugins-toolbar__filter[data-filter='updates']").disabled, "The installed list counts all, running, updates and plugins that need attention");
+    await click(".plugins-toolbar__filter[data-filter='attention']");
+    check(cardNames() === "broken.plugin" && document.querySelectorAll(".plugin-card--error").length === 1, "Needs attention shows just the broken plugin, marked as an error");
+    await click(".plugins-toolbar__filter[data-filter='attention']");
+    await type(element<HTMLInputElement>(".plugins-toolbar input"), "local api");
+    check(cardNames() === "本地接口" && texts(".plugins-list__title") === "内置（1）", "Search finds installed plugins by their name in either language");
+    await type(element<HTMLInputElement>(".plugins-toolbar input"), "");
     await act(async () => { document.querySelector<HTMLElement>(".plugins-list__grid .plugin-card--openable .plugin-card__title")?.click(); });
     check(onPluginPage(), "Clicking a plugin's card opens its page");
     await backToList();

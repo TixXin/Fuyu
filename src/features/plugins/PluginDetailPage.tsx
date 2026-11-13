@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, Eraser, Play } from "lucide-react";
+import { ArrowLeft, Eraser, ExternalLink, Play } from "lucide-react";
 import { SelectControl } from "../../components/controls/SelectControl";
 import { ToggleControl } from "../../components/controls/ToggleControl";
 import { useLocale, useTranslation } from "../../i18n";
@@ -7,7 +7,9 @@ import { CC_CONNECT_PLUGIN_ID, CcConnectSection } from "../cc-connect";
 import { CENTER_PATTERN_PET_KEY, CENTER_PATTERN_PLUGIN_ID, petChoices, usePetChoices } from "../center-pattern";
 import { PlanKeyFields } from "../claude-usage/PlanKeyFields";
 import { SSH_TUNNEL_PLUGIN_ID, SshTunnelHosts, useSshTunnelProxy } from "../ssh-tunnel";
-import { PLUGIN_MEMORY_LIMITS_MB, type PluginInfo } from "./api";
+import { openPluginHomepage, PLUGIN_MEMORY_LIMITS_MB, type PluginInfo } from "./api";
+import { pluginHealth } from "./installedFilter";
+import { PluginIcon } from "./PluginIcon";
 import type { PromptedPermission } from "./promptedPermissions";
 import { PluginCallLog } from "./PluginCallLog";
 import { PluginInfoList } from "./PluginInfoList";
@@ -50,13 +52,24 @@ export function PluginDetailPage({
   const tunnelProxy = useSshTunnelProxy(tunnelShowsProxy);
   const proxyText = t.settings.plugins.sshTunnel.proxy;
   const [confirmingClear, setConfirmingClear] = useState(false);
+  const name = plugin.name?.[locale] ?? plugin.id;
+  const description = plugin.description?.[locale];
+  const health = pluginHealth(plugin, true);
+  const meta = [
+    plugin.version && `v${plugin.version}`,
+    plugin.builtin && t.settings.plugins.builtin,
+    plugin.dev && t.settings.plugins.dev.badge,
+    plugin.author && t.settings.plugins.by(plugin.author),
+  ]
+    .filter(Boolean)
+    .join(" · ");
   const shown = plugin.settingsSchema.filter(
     (spec) => !(plugin.id === SSH_TUNNEL_PLUGIN_ID && spec.key === "customPort" && plugin.settings.localProxy !== "custom"),
   );
 
   return (
     <>
-      <section className="settings-section plugins-panel">
+      <section className={`plugin-detail__hero plugin-detail__hero--${health}`}>
         <div className="plugin-detail__header">
           <button className="plugin-card__button" type="button" onClick={onBack}>
             <ArrowLeft size={12} strokeWidth={2.4} />
@@ -68,10 +81,25 @@ export function PluginDetailPage({
             </span>
           ) : null}
         </div>
-        <div className="plugin-card__title">
-          <strong>{plugin.name?.[locale] ?? plugin.id}</strong>
-          {plugin.version ? <span>v{plugin.version}</span> : null}
+        <div className="plugin-detail__identity">
+          <PluginIcon id={plugin.id} name={name} size="lg" health={health} />
+          <div className="plugin-card__title plugin-detail__title">
+            <strong>{name}</strong>
+            <span>{meta}</span>
+          </div>
+          {plugin.homepage.startsWith("https://") ? (
+            <button
+              className="plugin-card__button plugin-card__button--icon"
+              type="button"
+              aria-label={t.settings.plugins.homepage}
+              title={t.settings.plugins.homepage}
+              onClick={() => void openPluginHomepage(plugin.homepage)}
+            >
+              <ExternalLink size={12} strokeWidth={2.4} />
+            </button>
+          ) : null}
         </div>
+        {description ? <p className="plugin-detail__description">{description}</p> : null}
         {plugin.error ? <p className="plugin-card__error">{plugin.error}</p> : null}
       </section>
 

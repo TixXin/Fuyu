@@ -1,12 +1,38 @@
 .plugin-card {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 8px;
   min-width: 0;
-  padding: 12px 14px;
+  padding: 14px;
+  overflow: hidden;
   background: var(--color-white-a08);
   border: 1px solid var(--color-white-a10);
   border-radius: var(--radius-md);
+  animation: plugin-card-in 220ms ease backwards;
+  animation-delay: calc(var(--plugin-card-index, 0) * 30ms);
+  transition: border-color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+}
+
+.plugin-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: var(--plugin-card-edge, transparent);
+}
+
+.plugin-card--error {
+  --plugin-card-edge: var(--error-text, #ffb4a8);
+}
+
+.plugin-card--busy {
+  --plugin-card-edge: var(--warning-text, #f2d27a);
+}
+
+.plugin-card--off .plugin-card__header .plugin-icon {
+  filter: saturate(0.3);
+  opacity: 0.7;
 }
 
 .plugin-card--openable {
@@ -15,6 +41,25 @@
 
 .plugin-card--openable:hover {
   border-color: var(--color-white-a16, rgba(var(--overlay-rgb, 255, 255, 255), 0.16));
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+  transform: translateY(-1px);
+}
+
+@keyframes plugin-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .plugin-card {
+    animation: none;
+  }
+
+  .plugin-card--openable:hover {
+    transform: none;
+  }
 }
 
 .plugin-card__header {
