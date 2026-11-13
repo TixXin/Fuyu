@@ -41,7 +41,7 @@ export function useLongShot(sessionId: number | undefined, folderName: string) {
 
   const active = sessionId !== undefined && owner !== null;
   const mine = active && owner === ownLabel();
-  const paused = progress !== null && progress.state !== "scrolling" && progress.state !== "fast";
+  const paused = progress === null || (progress.state !== "scrolling" && progress.state !== "fast");
 
   const end = useCallback((action: LongEnding) => {
     const save = action === "save" ? { folder: saveFolderOf(loadScreenshotSettings()), folderName } : undefined;

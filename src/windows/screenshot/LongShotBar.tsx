@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef, useState } from "react";
-import { Check, Download, GalleryVerticalEnd, Pause, Play, X } from "lucide-react";
+import { Check, Download, Pause, Play, SquareBottomDashedScissors, X } from "lucide-react";
 import { reportLongBar } from "../../features/screenshot/api";
 import { longBarPlace, type PixelRect, type Size } from "../../features/screenshot/selection";
 import { useTranslation } from "../../i18n";
@@ -27,9 +27,10 @@ export function LongShotBar({ area, view, long }: { area: PixelRect; view: Size;
     reportLongBar({ x: place.x, y: place.y, width: size.width, height: size.height }).catch(() => undefined);
   }, [place.x, place.y, size.width, size.height]);
 
-  const state = long.progress?.state ?? "scrolling";
+  const state = long.progress?.state ?? "ready";
   const height = long.progress?.height ?? 0;
   const filled = Math.min(1, height / LIMIT);
+  const toggle = state === "ready" ? t.start : long.paused ? t.resume : t.pause;
 
   return (
     <div
@@ -42,7 +43,7 @@ export function LongShotBar({ area, view, long }: { area: PixelRect; view: Size;
       onContextMenu={(event) => event.preventDefault()}
     >
       <div className="long-shot-bar__head">
-        <GalleryVerticalEnd size={15} aria-hidden="true" />
+        <SquareBottomDashedScissors size={15} aria-hidden="true" />
         <strong>{t.title}</strong>
         <span className="long-shot-bar__height">{t.height(height)}</span>
       </div>
@@ -55,7 +56,7 @@ export function LongShotBar({ area, view, long }: { area: PixelRect; view: Size;
       </div>
       <p className="long-shot-bar__state" role="status">{t.states[state]}</p>
       <div className="long-shot-bar__actions">
-        <button type="button" className="long-shot-bar__button" aria-label={long.paused ? t.resume : t.pause} title={long.paused ? t.resume : t.pause} onClick={long.togglePause}>
+        <button type="button" className="long-shot-bar__button" aria-label={toggle} title={toggle} onClick={long.togglePause}>
           {long.paused ? <Play size={16} aria-hidden="true" /> : <Pause size={16} aria-hidden="true" />}
         </button>
         <button type="button" className="long-shot-bar__button" aria-label={t.cancel} title={t.cancel} onClick={() => long.end("cancel")}>
