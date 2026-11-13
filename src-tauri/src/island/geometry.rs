@@ -6,8 +6,9 @@ use std::{
     thread,
     time::{Duration, Instant},
 };
-use tauri::{LogicalSize, Monitor, PhysicalPosition, Position, Size, WebviewWindow};
+use tauri::{LogicalSize, Monitor, PhysicalPosition, Size, WebviewWindow};
 
+use super::screen;
 use super::state::{CornerShape, IslandMode, IslandPosition, IslandWindowState, MonitorFollow};
 
 pub(super) const STAGE_WINDOW_WIDTH: f64 = 820.0;
@@ -75,9 +76,9 @@ pub(crate) fn apply_stage_geometry(
         .or_else(|| primary_monitor.or(current_monitor))
         .ok_or_else(|| "No monitor is available for island positioning.".to_string())?;
 
-    let scale = monitor.scale_factor();
-    let monitor_position = monitor.position();
-    let monitor_size = monitor.size();
+    let scale = screen::monitor_scale(&monitor);
+    let monitor_position = screen::monitor_origin(&monitor);
+    let monitor_size = screen::monitor_size(&monitor);
     let physical_width = (STAGE_WINDOW_WIDTH * scale).round() as i32;
     let physical_top_offset = (state.margin_y * scale).round() as i32;
     let tucked_top_offset =
@@ -87,7 +88,7 @@ pub(crate) fn apply_stage_geometry(
     let top_inset = if cfg!(target_os = "macos") && !state.under_menu_bar {
         0
     } else {
-        work_area_top_inset(monitor_position.y, monitor.work_area().position.y)
+        work_area_top_inset(monitor_position.y, screen::monitor_work_top(&monitor))
     };
     let centered_x = crate::dev_lane::stage_x(monitor_position.x, monitor_size.width as i32, physical_width);
     let normal_y = monitor_position.y + top_inset + physical_top_offset;
@@ -106,14 +107,12 @@ pub(crate) fn apply_stage_geometry(
     }
     let generation = POSITION_ANIMATION_GENERATION.fetch_add(1, Ordering::SeqCst) + 1;
     let target = PhysicalPosition::new(x, y);
-    let start = window.outer_position().map_err(|error| error.to_string())?;
+    let start = screen::window_position(window)?;
     if start == target {
         return Ok(());
     }
     if !animate_position {
-        return window
-            .set_position(Position::Physical(target))
-            .map_err(|error| error.to_string());
+        return screen::set_window_position(window, target);
     }
 
     *RUNNING_SLIDE.lock().unwrap_or_else(PoisonError::into_inner) = Some((generation, (x, y)));
@@ -128,7 +127,7 @@ pub(crate) fn apply_stage_geometry(
                 / POSITION_ANIMATION_DURATION.as_secs_f64())
             .min(1.0);
             let position = interpolate_stage_position(start, target, progress);
-            if let Err(error) = window.set_position(Position::Physical(position)) {
+            if let Err(error) = screen::set_window_position(&window, position) {
                 eprintln!("Failed to animate island position: {error}");
                 break;
             }
@@ -192,11 +191,11 @@ pub(super) fn monitor_for_island_position(
         .map_err(|error| error.to_string())?;
 
     Ok(monitors.into_iter().find(|monitor| {
-        let scale = monitor.scale_factor();
+        let scale = screen::monitor_scale(monitor);
         let island_center_x = position.x as f64 + STAGE_WINDOW_WIDTH * scale / 2.0;
         let island_center_y = position.y as f64 + COLLAPSED_ISLAND_HEIGHT * scale / 2.0;
-        let monitor_position = monitor.position();
-        let monitor_size = monitor.size();
+        let monitor_position = screen::monitor_origin(monitor);
+        let monitor_size = screen::monitor_size(monitor);
 
         island_center_x >= monitor_position.x as f64
             && island_center_x < (monitor_position.x + monitor_size.width as i32) as f64
@@ -208,7 +207,7 @@ pub(super) fn monitor_for_island_position(
 pub(super) fn monitor_at(window: &WebviewWindow, (x, y): (i32, i32)) -> Result<Option<Monitor>, String> {
     let monitors = window.available_monitors().map_err(|error| error.to_string())?;
     Ok(monitors.into_iter().find(|monitor| {
-        let (position, size) = (monitor.position(), monitor.size());
+        let (position, size) = (screen::monitor_origin(monitor), screen::monitor_size(monitor));
         contains((position.x, position.y, size.width as i32, size.height as i32), (x, y))
     }))
 }

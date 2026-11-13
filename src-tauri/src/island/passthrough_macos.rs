@@ -11,6 +11,7 @@ use super::{
     geometry::{cursor_on_island, island_rect, stage_point, IslandOnScreen},
     state::{read_window_state, IslandMode},
 };
+use super::screen;
 use crate::macos::input;
 
 const ISLAND_HOVER_CHANGED_EVENT: &str = "island-hover-changed";
@@ -43,21 +44,21 @@ pub fn set_island_cursor_tracking(enabled: bool) {
 }
 
 fn pointer(window: &WebviewWindow) -> Option<Pointer> {
-    let position = window.outer_position().ok()?;
-    let size = window.outer_size().ok()?;
-    let cursor = window.cursor_position().ok()?;
+    let position = screen::window_position(window).ok()?;
+    let size = screen::window_size(window).ok()?;
+    let (cursor_x, cursor_y) = screen::cursor_position()?;
     Some(Pointer {
         left: f64::from(position.x),
         top: f64::from(position.y),
         width: f64::from(size.width.max(1)),
-        cursor_x: cursor.x,
-        cursor_y: cursor.y,
+        cursor_x,
+        cursor_y,
     })
 }
 
 pub(crate) fn island_on_screen(window: &WebviewWindow) -> Option<IslandOnScreen> {
-    let position = window.outer_position().ok()?;
-    let size = window.outer_size().ok()?;
+    let position = screen::window_position(window).ok()?;
+    let size = screen::window_size(window).ok()?;
     Some(island_rect(
         f64::from(position.x),
         f64::from(position.y),

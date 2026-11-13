@@ -1,6 +1,7 @@
-use tauri::{Emitter, PhysicalPosition, Position, WebviewWindow};
+use tauri::{Emitter, PhysicalPosition, WebviewWindow};
 
 use super::geometry::{monitor_for_island_position, work_area_top_inset};
+use super::screen;
 use super::state::{mutate_window_state, read_window_state, IslandPosition, IslandWindowState};
 
 pub(crate) const TOP_ATTACHMENT_CHANGED_EVENT: &str = "island-top-attachment-changed";
@@ -22,17 +23,16 @@ pub(crate) fn snap_to_top(window: &WebviewWindow, position: IslandPosition) -> I
         set_attached(window, false);
         return position;
     };
-    let monitor_top = monitor.position().y;
-    let top = monitor_top + work_area_top_inset(monitor_top, monitor.work_area().position.y);
-    let snap_distance = (SNAP_DISTANCE * monitor.scale_factor()).round() as i32;
+    let monitor_top = screen::monitor_origin(&monitor).y;
+    let top = monitor_top + work_area_top_inset(monitor_top, screen::monitor_work_top(&monitor));
+    let snap_distance = (SNAP_DISTANCE * screen::monitor_scale(&monitor)).round() as i32;
     let snapped = IslandPosition {
         x: position.x,
         y: snapped_y(position.y, top, snap_distance),
     };
 
     if snapped != position {
-        let target = Position::Physical(PhysicalPosition::new(snapped.x, snapped.y));
-        if let Err(error) = window.set_position(target) {
+        if let Err(error) = screen::set_window_position(window, PhysicalPosition::new(snapped.x, snapped.y)) {
             eprintln!("Failed to snap island to the top edge: {error}");
             set_attached(window, position.y == top);
             return position;
