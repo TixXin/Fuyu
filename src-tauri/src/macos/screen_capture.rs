@@ -6,7 +6,7 @@ use objc2_core_foundation::{CGPoint, CGRect, CGSize};
 use objc2_core_graphics::{CGDataProvider, CGImage, CGPreflightScreenCaptureAccess, CGRequestScreenCaptureAccess};
 use objc2_foundation::{NSArray, NSError};
 use objc2_screen_capture_kit::{
-    SCCaptureResolutionType, SCContentFilter, SCRunningApplication, SCScreenshotManager, SCShareableContent, SCStreamConfiguration,
+    SCCaptureResolutionType, SCContentFilter, SCRunningApplication, SCScreenshotManager, SCShareableContent, SCStreamConfiguration, SCWindow,
 };
 
 const WAIT: Duration = Duration::from_secs(4);
@@ -25,22 +25,29 @@ pub(crate) fn ask_for_access() -> bool {
     CGRequestScreenCaptureAccess()
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) enum Leave {
+    Nothing,
+    OwnWindows,
+    Windows(Vec<u32>),
+}
+
+#[derive(Clone)]
 struct Request {
     rect: (f64, f64, f64, f64),
     scale: f64,
-    without_self: bool,
+    leave: Leave,
 }
 
-pub(crate) fn capture(rect: (f64, f64, f64, f64), scale: f64, without_self: bool) -> Option<Shot> {
+pub(crate) fn capture(rect: (f64, f64, f64, f64), scale: f64, leave: Leave) -> Option<Shot> {
     if rect.2 <= 0.0 || rect.3 <= 0.0 || !scale.is_finite() || scale <= 0.0 {
         return None;
     }
-    let request = Request { rect, scale, without_self };
+    let request = Request { rect, scale, leave };
     let (sender, receiver) = mpsc::channel::<Option<Shot>>();
     let handler = RcBlock::new(move |content: *mut SCShareableContent, _error: *mut NSError| {
         let content = unsafe { content.as_ref() };
-        let started = content.is_some_and(|content| shoot(content, request, sender.clone()));
+        let started = content.is_some_and(|content| shoot(content, request.clone(), sender.clone()));
         if !started {
             let _ = sender.send(None);
         }
@@ -61,18 +68,21 @@ fn shoot(content: &SCShareableContent, request: Request, sender: mpsc::Sender<Op
         return false;
     };
     let frame = unsafe { display.frame() };
-    let own = std::process::id();
-    let ours: Vec<_> = if request.without_self {
-        unsafe { content.applications() }.iter().filter(|app| u32::try_from(unsafe { app.processID() }).ok() == Some(own)).collect()
-    } else {
+    let ours: Vec<_> = if request.leave == Leave::Nothing {
         Vec::new()
+    } else {
+        unsafe { content.applications() }.iter().filter(|app| is_own(unsafe { app.processID() })).collect()
+    };
+    let kept: Vec<_> = match &request.leave {
+        Leave::Windows(left) => unsafe { content.windows() }.iter().filter(|window| keeps(window, left)).collect(),
+        Leave::Nothing | Leave::OwnWindows => Vec::new(),
     };
     let filter = unsafe {
         SCContentFilter::initWithDisplay_excludingApplications_exceptingWindows(
             SCContentFilter::alloc(),
             &display,
             &NSArray::<SCRunningApplication>::from_retained_slice(&ours),
-            &NSArray::new(),
+            &NSArray::<SCWindow>::from_retained_slice(&kept),
         )
     };
     let config = unsafe { SCStreamConfiguration::new() };
@@ -92,6 +102,15 @@ fn shoot(content: &SCShareableContent, request: Request, sender: mpsc::Sender<Op
     true
 }
 
+fn is_own(pid: i32) -> bool {
+    u32::try_from(pid).ok() == Some(std::process::id())
+}
+
+fn keeps(window: &SCWindow, left: &[u32]) -> bool {
+    let owner = unsafe { window.owningApplication() };
+    owner.is_some_and(|app| is_own(unsafe { app.processID() })) && !left.contains(&unsafe { window.windowID() })
+}
+
 fn to_rgba(image: &CGImage) -> Option<Shot> {
     let (width, height) = (CGImage::width(Some(image)), CGImage::height(Some(image)));
     let row = CGImage::bytes_per_row(Some(image));
@@ -104,10 +123,10 @@ fn to_rgba(image: &CGImage) -> Option<Shot> {
     if bytes.len() < row * height {
         return None;
     }
-    let mut rgba = Vec::with_capacity(width * height * 4);
-    for line in bytes.chunks_exact(row).take(height) {
-        for &[blue, green, red, _] in line[..width * 4].as_chunks::<4>().0 {
-            rgba.extend_from_slice(&[red, green, blue, 255]);
+    let mut rgba = vec![0u8; width * height * 4];
+    for (out, line) in rgba.chunks_exact_mut(width * 4).zip(bytes.chunks_exact(row)) {
+        for (pixel, &[blue, green, red, _]) in out.as_chunks_mut::<4>().0.iter_mut().zip(line[..width * 4].as_chunks::<4>().0) {
+            *pixel = [red, green, blue, 255];
         }
     }
     Some(Shot { width: u32::try_from(width).ok()?, height: u32::try_from(height).ok()?, rgba })

@@ -3,6 +3,8 @@ use tauri::AppHandle;
 
 use crate::macos::capture_targets;
 
+pub(super) const TARGETS_EVENT: &str = "screenshot-targets";
+
 #[derive(Clone, Copy, Debug)]
 pub(crate) struct Target {
     window: u32,

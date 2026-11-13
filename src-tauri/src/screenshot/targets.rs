@@ -7,7 +7,7 @@ use windows::Win32::Foundation::{HWND, RECT};
 use super::session;
 use crate::win32::capture_targets;
 
-const TARGETS_EVENT: &str = "screenshot-targets";
+pub(super) const TARGETS_EVENT: &str = "screenshot-targets";
 const WINDOWS_WITH_CONTROLS: usize = 8;
 const CONTROLS_PER_WINDOW: usize = 4000;
 const BUDGET_MS: u128 = 2500;
