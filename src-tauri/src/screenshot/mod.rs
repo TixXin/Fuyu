@@ -5,6 +5,7 @@ mod long;
 mod output;
 mod pin;
 mod session;
+mod shortcuts;
 mod stitch;
 mod targets;
 #[cfg(test)]
@@ -49,7 +50,7 @@ pub(crate) fn is_enabled() -> bool {
 }
 
 #[tauri::command]
-pub async fn screenshot_configure(app: AppHandle, enabled: bool, shortcuts: Option<Vec<hotkeys::ShortcutConfig>>, print_screen: Option<bool>, history_days: Option<u32>) {
+pub async fn screenshot_configure(app: AppHandle, enabled: bool, shortcuts: Option<Vec<shortcuts::ShortcutConfig>>, print_screen: Option<bool>, history_days: Option<u32>) {
     hotkeys::configure(enabled, shortcuts, print_screen);
     if let Some(days) = history_days {
         history::set_keep_days(days);
@@ -72,7 +73,7 @@ pub(crate) fn start_from_tray(app: &AppHandle) {
 }
 
 #[tauri::command]
-pub fn screenshot_shortcut_status() -> Vec<hotkeys::ShortcutStatus> {
+pub fn screenshot_shortcut_status() -> Vec<shortcuts::ShortcutStatus> {
     hotkeys::status()
 }
 
