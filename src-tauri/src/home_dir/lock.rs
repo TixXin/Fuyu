@@ -25,8 +25,24 @@ fn now_ms() -> u64 {
     SystemTime::now().duration_since(UNIX_EPOCH).map(|elapsed| elapsed.as_millis() as u64).unwrap_or(0)
 }
 
+#[cfg(not(target_os = "macos"))]
 pub(crate) fn this_computer() -> String {
     std::env::var("COMPUTERNAME").unwrap_or_default()
+}
+
+#[cfg(target_os = "macos")]
+pub(crate) fn this_computer() -> String {
+    static NAME: OnceLock<String> = OnceLock::new();
+    NAME.get_or_init(|| {
+        std::process::Command::new("scutil")
+            .args(["--get", "ComputerName"])
+            .output()
+            .ok()
+            .filter(|output| output.status.success())
+            .map(|output| String::from_utf8_lossy(&output.stdout).trim().to_string())
+            .unwrap_or_default()
+    })
+    .clone()
 }
 
 pub(crate) fn read(home: &Path) -> Option<Lock> {
