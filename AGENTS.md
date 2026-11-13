@@ -183,6 +183,7 @@
 - **调研**：用户让你联网搜索、搜 GitHub、对比竞品或参考软件并整理时，结果写成 `docs/research/<主题>.md`，不只在对话里回答；格式和规则见 [docs/research/README.md](docs/research/README.md)。
 - **任务**的规则、分组、字段和流程都在 [docs/tasks/README.md](docs/tasks/README.md)，开工前读它。查任务用命令，不逐个打开文件：`pnpm tasks next`（能认领的，按优先级）、`pnpm tasks show <编号>`（一项的全文和关系）、`pnpm tasks`（看板）。没结束的任务在 `docs/tasks/<分组>/`，已完成和不做的在 `docs/tasks/0-archive/<分组>/`，分组是编号的首字母。
 - **认领看本地和 `origin/main`，不等其他会话回消息**：`pnpm task:claim <编号> --as <会话名> --scope <要改的目录/,文件>`，会话名用 ListAgents 里自己的名字；认领记会话名和机器名，在本地提交、随下一批推上去。做完 `pnpm tasks done <编号> --commit "<功能提交的标题>"`，和功能改动放在同一个提交里；land 时会核对已完成任务记下的提交。
+- **新建任务也要有 issue**（2026-11-13 起，用户定）：自己发现、自己要记的任务，先 `gh issue create` 给本仓库提一个 issue，再 `pnpm tasks add <编号> --title .. --issue <N>`，之后按 issue 的流程做完回复、关闭。写法见 [docs/tasks/README.md](docs/tasks/README.md)「自己新建的任务」。
 - **GitHub issue**：先核实、先回复，再建带 `--issue` 的任务；做完回复（引用任务文档、列出提交）后合入就关。顺序和回复格式见 [docs/tasks/README.md](docs/tasks/README.md)「GitHub issue」。
 - **GitHub PR**（别人提的，由我们来合）：和 issue 一样，先检查、先回复看法和检查结果，再合入；要我们补的另建带 `--issue <PR 号>` 的任务；合完回复合并提交号，跟进任务做完再回复一次。顺序见 [docs/tasks/README.md](docs/tasks/README.md)「GitHub PR」。
 - **交接写在任务文件里，不靠消息**：停下来、换会话或做到一半时，`pnpm tasks note <编号> "<进度和下一步>"` 并随下一次提交带上。接手的会话先读任务文件的「交接」。
