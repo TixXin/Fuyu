@@ -96,7 +96,7 @@ function fakeGitHub() {
   };
 }
 
-test("land merges main in without rewriting anything, pushes local main to its own branch, opens one PR with auto-merge, and backs out of a conflict", () => withoutGitEnv(async () => {
+test("land merges main in without rewriting anything, pushes local main to its own branch, opens one PR with auto-merge, gets past an uncommitted file in the way, and backs out of a conflict", () => withoutGitEnv(async () => {
   const root = realpathSync(mkdtempSync(path.join(tmpdir(), "mq-land-")));
   const git = (args, cwd) => execFileSync("git", ["-c", "user.email=t@t", "-c", "user.name=t", ...args], { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim();
   const remote = path.join(root, "remote.git");
@@ -154,13 +154,27 @@ test("land merges main in without rewriting anything, pushes local main to its o
     assert.deepEqual(gh.calls.autoMerged, [7, 7, 7], "a missing body file stops before pushing");
 
     git(["pull", "-q", "--no-rebase", "origin", "main"], other);
+    commit(other, "a.txt", "main changed the file the other session is editing\n", "touches a");
+    git(["push", "-q", "origin", "main"], other);
+    commit(main, "f.txt", "f\n", "blocked batch");
+    const blockedAt = git(["rev-parse", "HEAD"], main);
+    assert.equal(await land({ github: gh, host: "Test-PC" }), 0, "an uncommitted file in the way of the merge no longer stops the push");
+    assert.deepEqual(subjects(branch).filter((subject) => ["blocked batch", "touches a"].includes(subject)), ["blocked batch", "touches a"], "the pushed branch has both sides");
+    assert.equal(git(["show", `${branch}:a.txt`], remote), "main changed the file the other session is editing", "with main's version of the file");
+    assert.equal(git(["rev-parse", "HEAD"], main), blockedAt, "local main did not move");
+    assert.equal(git(["status", "--porcelain", "--untracked-files=no"], main), "M a.txt", "and the work tree was not touched");
+    git(["checkout", "--", "a.txt"], main);
+    git(["merge", "-q", "--no-edit", "origin/main"], main);
+    writeFileSync(path.join(main, "a.txt"), "another session is still editing this\n");
+
+    git(["pull", "-q", "--no-rebase", "origin", "main"], other);
     commit(other, "b.txt", "theirs\n", "conflicting");
     git(["push", "-q", "origin", "main"], other);
     commit(main, "b.txt", "mine\n", "mine");
     assert.equal(await land({ github: gh, host: "Test-PC" }), 1);
     assert.equal(git(["status", "--porcelain", "--untracked-files=no"], main), "M a.txt", "the merge was aborted; only the other session's edit is left");
     assert.equal(git(["log", "-1", "--format=%s"], main), "mine");
-    assert.equal(gh.calls.autoMerged.length, 3, "nothing was pushed or merged after the conflict");
+    assert.equal(gh.calls.autoMerged.length, 4, "nothing was pushed or merged after the conflict");
   } finally {
     try {
       rmSync(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });

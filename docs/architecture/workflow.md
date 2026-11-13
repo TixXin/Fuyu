@@ -25,7 +25,7 @@
 
 ### `pnpm mq:land` 做了什么
 
-1. `git fetch origin main`；本地还没包含 `origin/main` 时 `git merge --no-edit origin/main`。**用 merge，不用 rebase**：rebase 要求工作区干净，别的会话正在改的文件会挡住它，而且会改写别的会话已经看到的提交。合并冲突（或挡到没提交的文件）时撤回这次合并、停下，自己 `git merge origin/main` 解决后再 land。合进来的提交改了 `pnpm-lock.yaml` 时先 `pnpm install`。
+1. `git fetch origin main`；本地还没包含 `origin/main` 时 `git merge --no-edit origin/main`。**用 merge，不用 rebase**：rebase 要求工作区干净，别的会话正在改的文件会挡住它，而且会改写别的会话已经看到的提交。合并被别的会话没提交的文件挡住、两边的提交本身不冲突时，land 改在仓库内部合并（`git merge-tree` 加 `git commit-tree`），把那个合并提交推上去；工作区、索引和本地 `main` 都不动，本地 `main` 等 PR 合入、那些文件提交后由 `mq:wait` / `mq:sync` 跟上（F34）。两边的提交真的冲突时撤回这次合并、停下，自己 `git merge origin/main` 解决后再 land。合进来的提交改了 `pnpm-lock.yaml` 时先 `pnpm install`。
 2. 把 `HEAD` 推到 `land/<GitHub 用户名>/<机器名>-<分支名>`（在 `main` 上就是 `…-main`），pre-push 钩子跑 `scripts/land-check.mjs --light`：Claude 署名行、已完成任务的提交记录、只改文档或版本号时的轻量检查。工作区里没提交的文件不会被推上去，land 会提一句有几个。
 3. 没有开着的 PR 就开一个，有就沿用（上一批还没合入时，新提交跟着进同一个 PR）；开启自动合并（`--merge`，提交号不变）。
 4. `--wait` 时在前台等合入，否则提示后台跑 `pnpm mq:wait`。
@@ -116,5 +116,5 @@ land 从 git 的 pre-push 钩子里跑检查，环境里带着 `GIT_DIR` 等变�
 ## 排障
 
 - PR 落后于 `main`：工作流 `.github/workflows/update-behind-prs.yml`（`scripts/mq/updateBehind.mjs`）按开启自动合并的先后，只更新排在最前、能合入的那个 PR；它出问题时 `pnpm mq:wait --update` 自己更新。它用仓库 secret `PR_UPDATER_TOKEN`，过期时 PR 会停在落后状态。
-- `mq:wait` 报告合入了，但本地 `main` 没跟上（工作区里没提交的文件挡住了合并）：等那些文件提交后 `pnpm mq:sync`。
-- `tests/scripts/mq.test.mjs` 在临时仓库里真的 land 一次（合并 main、不改写本地提交、不带走没提交的文件、只开一个 PR、冲突时撤回），用假的 `gh` 代替 GitHub。
+- `mq:wait` 报告合入了，但本地 `main` 没跟上（工作区里没提交的文件挡住了合并）：等那些文件提交后 `pnpm mq:sync`。land 说「改在仓库内部合并」之后也是这种情况。
+- `tests/scripts/mq.test.mjs` 在临时仓库里真的 land 一次（合并 main、不改写本地提交、不带走没提交的文件、只开一个 PR、没提交的文件挡住合并时照样推出去、冲突时撤回），用假的 `gh` 代替 GitHub。
