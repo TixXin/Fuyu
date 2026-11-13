@@ -4,6 +4,24 @@
   initial-value: 0px;
 }
 
+@property --island-shell-height {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --island-shell-top-corner {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --island-shell-bottom-corner {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
 .island {
   --glass-pointer-x: 50%;
   --glass-pointer-y: 18%;
@@ -24,10 +42,13 @@
   isolation: isolate;
   --island-shell-left: calc(max(0px, round(nearest, (100cqw - var(--island-shell-width)) / 2, var(--island-device-pixel, 1px))) + var(--island-pixel-nudge, 0.001px));
   width: calc(100cqw - 2 * var(--island-shell-left));
+  height: var(--island-shell-height);
+  border-radius: var(--island-shell-top-corner) var(--island-shell-top-corner) var(--island-shell-bottom-corner) var(--island-shell-bottom-corner);
   transition:
     --island-shell-width var(--island-motion-width, 550ms) var(--island-motion-width-ease, cubic-bezier(0.34, 1.36, 0.5, 1)),
-    height var(--island-motion-height, 500ms) var(--island-motion-height-ease, cubic-bezier(0.22, 1, 0.36, 1)),
-    border-radius var(--island-motion-radius, 450ms) var(--island-motion-radius-ease, cubic-bezier(0.22, 1, 0.36, 1)),
+    --island-shell-height var(--island-motion-height, 500ms) var(--island-motion-height-ease, cubic-bezier(0.22, 1, 0.36, 1)),
+    --island-shell-top-corner var(--island-motion-radius, 450ms) var(--island-motion-radius-ease, cubic-bezier(0.22, 1, 0.36, 1)),
+    --island-shell-bottom-corner var(--island-motion-radius, 450ms) var(--island-motion-radius-ease, cubic-bezier(0.22, 1, 0.36, 1)),
     background-color 360ms ease;
 }
 
@@ -162,8 +183,9 @@
 
 .island--collapsed {
   --island-shell-width: calc(var(--collapsed-island-width) * var(--island-scale, 1));
-  height: calc(38px * var(--island-scale, 1));
-  border-radius: 0 0 var(--island-shell-radius-collapsed) var(--island-shell-radius-collapsed);
+  --island-shell-height: calc(38px * var(--island-scale, 1));
+  --island-shell-top-corner: 0px;
+  --island-shell-bottom-corner: var(--island-shell-radius-collapsed);
   cursor: default;
   background: var(--island-fill, var(--island-background-color));
   box-shadow: none;
@@ -240,17 +262,18 @@
 
 .island--expanded {
   --island-shell-width: calc(var(--expanded-island-width, 560px) * var(--island-scale, 1));
-  height: calc(var(--expanded-island-height, 306px) * var(--island-scale, 1));
-  border-radius: 0 0 var(--island-shell-radius) var(--island-shell-radius);
+  --island-shell-height: calc(var(--expanded-island-height, 306px) * var(--island-scale, 1));
+  --island-shell-top-corner: 0px;
+  --island-shell-bottom-corner: var(--island-shell-radius);
   cursor: default;
 }
 
 .island--detached.island--collapsed {
-  border-radius: var(--island-shell-radius-collapsed);
+  --island-shell-top-corner: var(--island-shell-radius-collapsed);
 }
 
 .island--detached.island--expanded {
-  border-radius: var(--island-shell-radius);
+  --island-shell-top-corner: var(--island-shell-radius);
 }
 
 .island__collapsed,

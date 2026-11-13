@@ -33,12 +33,9 @@
   --island-top-fillet-tint-right: rgba(255, 156, 224, calc(0.08 * var(--glass-refraction-opacity)));
 }
 
-:root[data-island-top-edge="attached"] .island--detached.island--collapsed {
-  border-radius: 0 0 var(--island-shell-radius-collapsed) var(--island-shell-radius-collapsed);
-}
-
+:root[data-island-top-edge="attached"] .island--detached.island--collapsed,
 :root[data-island-top-edge="attached"] .island--detached.island--expanded {
-  border-radius: 0 0 var(--island-shell-radius) var(--island-shell-radius);
+  --island-shell-top-corner: 0px;
 }
 
 .island::before,
