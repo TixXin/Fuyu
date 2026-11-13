@@ -58,7 +58,7 @@ mockIPC((command) => {
     status: "disabled", unreadCount: 0, items: [], lastSyncedAt: null, error: null,
   }];
   if (command === "list_plugins") return {
-    allowThirdParty: false, nodeAvailable: false, pluginsDir: "", autoUpdate: false, trustedPublishers: [],
+    allowThirdParty: false, nodeAvailable: false, powershellAvailable: true, pluginsDir: "", autoUpdate: false, trustedPublishers: [],
     plugins: [{ id: "focusd.session-ring", builtin: true, enabled: pluginOn, status: "running", settings: pluginSettings }],
   };
 }, { shouldMockEvents: true });

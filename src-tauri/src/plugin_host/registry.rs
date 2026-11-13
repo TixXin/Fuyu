@@ -32,6 +32,7 @@ pub struct PluginInfo {
     optional_permissions: Vec<String>,
     commands: Vec<PluginCommand>,
     runtime: &'static str,
+    platforms: Vec<String>,
     has_process: bool,
     enabled: bool,
     needs_approval: bool,
@@ -66,6 +67,7 @@ pub struct PluginInfo {
 pub struct PluginsSnapshot {
     allow_third_party: bool,
     node_available: bool,
+    powershell_available: bool,
     plugins_dir: String,
     plugins: Vec<PluginInfo>,
     auto_update: bool,
@@ -185,6 +187,7 @@ pub(super) fn snapshot() -> Result<PluginsSnapshot, String> {
                 optional_permissions: Vec::new(),
                 commands: Vec::new(),
                 runtime: "none",
+                platforms: Vec::new(),
                 has_process: false,
                 enabled: grant.enabled || plugin.dev,
                 needs_approval: false,
@@ -232,6 +235,7 @@ pub(super) fn snapshot() -> Result<PluginsSnapshot, String> {
                     info.commands = manifest.contributes.commands.clone();
                     info.has_process = matches!(manifest.runtime, PluginRuntime::Process { .. } | PluginRuntime::Builtin);
                     info.runtime = runtime_requirement(&manifest.runtime);
+                    info.platforms = super::manifest::platforms_of(&manifest.platforms, info.runtime);
                     info.settings_schema = manifest.contributes.settings.clone();
                     info.settings = settings::resolve(&manifest.contributes.settings, &grant.settings);
                     info.activation = if manifest.activation.is_eager() { "startup" } else { "onDemand" };
@@ -248,6 +252,7 @@ pub(super) fn snapshot() -> Result<PluginsSnapshot, String> {
     Ok(PluginsSnapshot {
         allow_third_party: state.allow_third_party,
         node_available: runtime::find_node().is_some(),
+        powershell_available: runtime::powershell_available(),
         plugins_dir: host.plugins_dir.display().to_string(),
         plugins,
         auto_update: state.auto_update,

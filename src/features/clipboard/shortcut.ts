@@ -22,7 +22,12 @@ export function shortcutLabel(shortcut: string, mac = isMacOS) {
 export type ShortcutKeyboardEvent = Pick<
   KeyboardEvent,
   "altKey" | "ctrlKey" | "key" | "metaKey" | "shiftKey"
->;
+> & { code?: string };
+
+function keyFromCode(code: string | undefined) {
+  const match = code ? /^(?:Key([A-Z])|Digit([0-9]))$/.exec(code) : null;
+  return match ? match[1] ?? match[2] : null;
+}
 
 export const MODIFIER_KEY_NAMES = new Set([
   "Alt",
@@ -84,7 +89,7 @@ export function buildShortcutFromEvent(event: ShortcutKeyboardEvent) {
     return null;
   }
 
-  parts.push(normalizeShortcutKeyLabel(event.key));
+  parts.push(keyFromCode(event.code) ?? normalizeShortcutKeyLabel(event.key));
   return parts.join("+");
 }
 

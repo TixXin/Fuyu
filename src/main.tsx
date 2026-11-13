@@ -15,11 +15,13 @@ import { OnboardingWindow } from "./windows/onboarding/OnboardingWindow";
 import { I18nProvider } from "./i18n";
 import { loadSettingsFile } from "./features/settings-backup/loadSettingsFile";
 import { trackIslandTopEdge } from "./windows/island/topEdge";
+import { trackIslandNotch } from "./windows/island/notch";
 
 const windowKind = new URLSearchParams(window.location.search).get("window");
 
 if (windowKind === null) {
   trackIslandTopEdge();
+  trackIslandNotch();
 }
 
 window.addEventListener(

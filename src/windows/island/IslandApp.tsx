@@ -63,6 +63,7 @@ import { useIslandLyrics } from "./useIslandLyrics";
 import { useIslandFirstHints } from "./useIslandFirstHints";
 import { FirstHintActions, FirstHintNotice } from "../../features/first-hints/FirstHintNotice";
 import { useIslandSide } from "./useIslandSide";
+import { notchExpandedExtra, notchFittedWidth, notchLook, useIslandNotch } from "./notch";
 import "./IslandApp.css";
 
 const NO_TODOS: TodoItem[] = [];
@@ -126,7 +127,7 @@ export function IslandApp() {
   });
   const agentSession = settings.agentTitleMode === "changes" || (currentLyric && settings.lyricsIslandPriority === "lyrics") ? agentInterjection : namedAgent;
   const lyricLine = agentSession ? null : currentLyric;
-  const { collapsedTaskTitle, collapsedTodoCount, collapsedIslandWidth } =
+  const { collapsedTaskTitle, collapsedTodoCount, collapsedIslandWidth: textWidth } =
     useCollapsedTodo(
       settings.todoEnabled ? todos : NO_TODOS,
       settings.todoEnabled ? activeTodoId : null,
@@ -138,6 +139,8 @@ export function IslandApp() {
       lyricLine?.longest ?? null,
       firstHints.current ? t.island.firstHint[firstHints.current] : null,
     );
+  const notch = useIslandNotch();
+  const collapsedIslandWidth = notchFittedWidth(textWidth, notch, settings.collapsedScale);
   useIslandTucking({
     settings,
     navigation,
@@ -199,8 +202,8 @@ export function IslandApp() {
     messageArrivalsHeight: messagePanel.arrivals ? messagePanel.height : undefined,
     popup,
   });
-  const expandedIslandHeight = resizingHeight && !popup ? settings.maxPanelHeight : pageIslandHeight;
-  const look = useMemo(() => (mode === "collapsed" ? collapsedThemeColors(settings) : settings), [mode, settings]);
+  const expandedIslandHeight = (resizingHeight && !popup ? settings.maxPanelHeight : pageIslandHeight) + notchExpandedExtra(notch, settings.expandedScale, popup);
+  const look = useMemo(() => (mode !== "collapsed" ? settings : notch ? notchLook(settings) : collapsedThemeColors(settings)), [mode, notch, settings]);
   const accent = useAccentColor(settings);
   const devicePixelRatio = useDevicePixelRatio();
   const reducedMotion = useReducedMotion();

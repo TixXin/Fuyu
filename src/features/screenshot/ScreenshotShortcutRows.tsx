@@ -70,7 +70,7 @@ export function ScreenshotShortcutRows({ settings, onSettingsChange, takenBy }: 
             <button
               className={`shortcut-record-button${recording === action ? " shortcut-record-button--recording" : ""}`}
               type="button"
-              onClick={() => setRecording(action)}
+              onClick={(event) => { event.currentTarget.focus(); setRecording(action); }}
               onKeyDown={record}
               onBlur={() => setRecording((current) => (current === action ? null : current))}
             >

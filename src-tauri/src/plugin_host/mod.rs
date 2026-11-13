@@ -8,7 +8,6 @@ mod effort_labels;
 mod events;
 mod feeds;
 mod grants;
-#[cfg_attr(not(windows), path = "keybindings_unsupported.rs")]
 mod keybindings;
 mod lifecycle;
 mod manifest;
@@ -32,7 +31,6 @@ mod settings;
 mod signature;
 mod sound_contrib;
 mod storage;
-#[cfg_attr(not(windows), path = "system_events_unsupported.rs")]
 mod system_events;
 mod store;
 #[cfg(test)]

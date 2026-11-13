@@ -15,6 +15,8 @@ mod popup_place;
 mod preview;
 mod secrets;
 mod sequence;
+#[cfg(target_os = "macos")]
+mod sequence_watch_macos;
 mod service;
 pub(crate) mod shortcut;
 #[cfg(target_os = "macos")]

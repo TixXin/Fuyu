@@ -92,6 +92,21 @@
   - DynamicNotchKit（MrKai77）：Swift 包，MIT（据第三方索引），最新 1.1.0；star 数各站不一致，**未核实**。
   - 只参考思路（层级、collectionBehavior、几何算法），GPL 项目的代码不能搬进浮屿。
 
+### 4b. 刘海形态的开源实现细节（2026-11-13 补充，为 G1.11 读源码）
+
+读了 boring.notch、Atoll、NotchDrop、DynamicNotchKit、jackson-storm/DynamicNotch 的 main 分支源码（下载在本机 scratchpad，不进仓库）。
+
+- **刘海尺寸**：五家公式一致，刘海宽 = `frame.width` − `auxiliaryTopLeftArea.width` − `auxiliaryTopRightArea.width`；刘海高多数用 `safeAreaInsets.top`（jackson-storm 用左侧区域的高）。boring.notch、Atoll 再加 4pt 余量；NotchDrop 不加，闭合态画成刘海宽高各减 4，命中区外扩 4。
+- **没有刘海**：都画一块「假刘海」（宽 150–300、高等于菜单栏或 32），或改成离顶边约 6pt 的浮动胶囊（Atoll 的外接屏样式、DynamicNotchKit 的 `.floating`）。
+- **屏幕变化**：都监听 `NSApplication.didChangeScreenParametersNotification`（合盖、插拔外接屏、改排列都会触发），NotchDrop 销毁重建窗口，boring.notch 比较屏幕列表后重新定位。
+- **窗口**：固定大小的透明窗口贴顶居中（640×210、整屏宽×200 等），在里面画形状，不随内容改窗口大小；boring.notch / Atoll 用 NSPanel、`.mainMenu + 3`，和浮屿 G1.3 的取值一样。
+- **闭合态形状**：纯黑；上缘两侧是内凹的「肩」，下面两角收圆。boring.notch / Atoll / DynamicNotchKit 闭合时肩半径 6、底圆角 14，展开时 19 / 24（DynamicNotchKit 15 / 20）；形状总宽 = 刘海宽 + 2 × 肩半径。
+- **两翼**：boring.notch 播放音乐时每侧只伸出约 30pt（左边 20×20 封面，右边频谱），不放文字。
+- **悬停**：停留 0.3 秒展开、移出 0.1 秒收起，进入时一次触觉反馈；空闲时整块收成刘海大小，和真刘海融成一体。
+- **全屏**：boring.notch 默认「只在播放时显示」，另有总是隐藏 / 不隐藏。
+
+浮屿的取法见 [design/macos.md](../design/macos.md)「刘海」一节。
+
 ### 5. 点击穿透
 
 - Tauri 的 `set_ignore_cursor_events` 在 macOS 映射到 `NSWindow.ignoresMouseEvents`（整窗开关，推测基于 tao 实现，**未核实**源码）。没有「按像素 / 按区域」的穿透。
@@ -143,6 +158,8 @@
 | [tauri#11461](https://github.com/tauri-apps/tauri/issues/11461) | `setIgnoreCursorEvents` 不生效（Windows 10） | closed，not planned（2025-07） |
 
 ## 来源
+
+- 刘海实现（4b 节，2026-11-13 读源码）：[boring.notch](https://github.com/TheBoredTeam/boring.notch)（`sizing/matters.swift`）、[Atoll](https://github.com/Ebullioscopic/Atoll)、[NotchDrop](https://github.com/Lakr233/NotchDrop)（`Ext+NSScreen.swift`、`NotchWindowController.swift`）、[DynamicNotchKit](https://github.com/MrKai77/DynamicNotchKit)（`NSScreen+Extensions.swift`）、[jackson-storm/DynamicNotch](https://github.com/jackson-storm/DynamicNotch)
 
 - Tauri 配置参考（`macOSPrivateApi`、`visibleOnAllWorkspaces`、`acceptFirstMouse`、`windowEffects`、`devtools`、`dragDropEnabled`）：https://v2.tauri.app/reference/config/
 - tauri 2.12.1 发布日志（透明 / 全屏不再需要私有 API，2026-09-30）：https://v2.tauri.app/release/tauri/v2.12.1/

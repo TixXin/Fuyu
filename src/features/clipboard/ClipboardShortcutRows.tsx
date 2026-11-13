@@ -73,7 +73,7 @@ export function ClipboardShortcutRows({ clipboardSettings, onClipboardSettingsCh
               className={`shortcut-record-button${isRecording ? " shortcut-record-button--recording" : ""}`}
               type="button"
               disabled={!clipboardSettings.shortcutEnabled}
-              onClick={() => setIsRecording(true)}
+              onClick={(event) => { event.currentTarget.focus(); setIsRecording(true); }}
               onKeyDown={record}
               onBlur={() => setIsRecording(false)}
             >

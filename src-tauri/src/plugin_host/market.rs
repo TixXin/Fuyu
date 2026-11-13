@@ -56,6 +56,8 @@ pub struct MarketEntry {
     optional_permissions: Vec<String>,
     #[serde(default)]
     runtime: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    platforms: Vec<String>,
     download: PackageDownload,
     #[serde(default)]
     publisher: Option<String>,

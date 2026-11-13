@@ -106,8 +106,8 @@
 | `pets` | `FILE_FLAG_OPEN_REPARSE_POINT` | 换实现：`O_NOFOLLOW` | — |
 | `claude_usage` | 注册表里的系统代理 | 换实现：Mac 上只看插件设置和环境变量；凭据文件不在时读钥匙串（G1.7 已做） | G1.7 |
 | `agent_status`（focus、session_*、window_focus、wezterm、orca、host_icon） | 进程树、进程启动时间与环境变量、窗口枚举与前台、UIA 标签页、程序图标 | 换实现（G1.7 已做）：hook 脚本 `hooks/*.sh`；平台层 `macos/proc_info.rs`（`proc_pidinfo`、`proc_pidpath`、tty）、`process_tree.rs`（launchd 下的进程接到负责进程）、`terminal_tabs.rs`；窗口跳转激活前台应用；`approval_hotkeys_macos.rs`；进程环境变量仍为空 | G1.7 |
-| `plugin_host`（runtime、baseline） | 作业对象、挂起启动 | 平台层：Mac 上 `Job` 什么都不管，进程直接启动 | G1.8 |
-| `plugin_host`（keybindings、system_events、webviews、uri） | 热键、会话通知、WebView2 页面、注册 `fuyu://` | 暂不支持；`uri` 注册换实现（Mac 上不做，等 Info.plist） | G1.4、G1.8 |
+| `plugin_host`（runtime、baseline） | 作业对象、挂起启动 | 平台层：Mac 上 `Job` 管进程组（G1.8 已做：`killpg`，按组统计内存），不挂起启动 | G1.8 |
+| `plugin_host`（keybindings、system_events、webviews、uri） | 热键、会话通知、WebView2 页面、注册 `fuyu://` | 快捷键、系统事件换实现（G1.8 已做，在原文件里按平台分开）；网页视图暂不支持；`uri` 注册换实现（Mac 上不做，等 Info.plist） | G1.4、G1.8 |
 | `media_control` | SMTC、音频峰值、程序图标 | 暂不支持 | G1.9 |
 | `qq_notifications`、`wechat_reminders`、`messenger_activation` | 通知监听、窗口闪烁、UIA | 暂不支持 | G1.10 |
 | `cc_connect`、`ssh_tunnel` | 作业对象、注册表代理、程序查找 | 暂不支持（内置插件在 Mac 上开不起来） | G1.8 |
@@ -122,14 +122,18 @@ Mac 上跳过的测试（依赖 Windows 路径、程序或 API，标了 `#[cfg(w
 |---|---|---|---|---|
 | 2026-11-13 | — | — | 4 份调研、本计划、[platforms.md](platforms.md)、任务 G1 | 仅文档 |
 | 2026-11-13 | G1.1 | 3ccc9b6c | 用户拍板 M1–M14，写进决定表；界面形态（M4–M6）写进 [design/macos.md](../design/macos.md) | 仅文档 |
+| 2026-11-13 | G1.8 插件宿主 | （本次提交） | 进程组、`node` / `pwsh` 查找、`.exe` 插件拒绝启动；清单 `platforms` 字段（schema、文档、SDK 同步）；设置和市场里的平台与 PowerShell 提示；插件快捷键、系统事件 | Mac：clippy、`cargo test`、`pnpm test`、类型检查、设置回归页、`pnpm build`、`pnpm build:exe`；Windows：交叉 clippy 通过 |
 | 2026-11-13 | G1.7 AI 代理状态 | （本次提交） | `/bin/sh` 版 hook 脚本和 Claude Code / Codex 的 hook 命令；Mac 进程平台层；点会话跳到终端或编辑器（Terminal、iTerm2 按 tty 选标签页）；审批快捷键；编辑器扩展的安装；用量的钥匙串凭据 | Mac：clippy、`cargo test`（含真跑四个脚本再用 Rust 读结果的测试）、`pnpm test`、`pnpm build`、`pnpm build:exe`；本机实测进程链从 CLI 一路走到前台应用；Windows：交叉 clippy 通过 |
 | 2026-11-13 | G1.6 强调色、网络计费、授权状态 | （本次提交） | 「跟随系统」强调色读 `NSColor.controlAccentColor`；更新的「按流量计费」读 Network.framework 的 `nw_path_is_expensive` / `is_constrained`；设置 → 通用里新增「系统权限」，显示辅助功能、屏幕录制是否已允许，没允许的能一键打开系统设置 | Mac：clippy、`cargo test`、`pnpm test`、设置回归页、`pnpm build`、`pnpm build:exe`；本机实测强调色 `#007aff`、Wi-Fi 不计费；Windows：交叉 clippy 通过 |
 | 2026-11-13 | G1.6 截图与识字 | 48d26bb8、75bbc594、77efc7e6（搬迁），（本次提交） | 截图的剪贴板、快捷键类型、平台调用先搬到可替换的文件（Windows 零行为变化）；Mac 上截屏（ScreenCaptureKit）、选区窗口（NSPanel）、复制 / 保存 / 贴图 / 拖出 / 长截图 / 历史、窗口吸附、快捷键；识字（Vision）同时给截图和剪贴板图片用 | Mac：`cargo clippy --all-targets -D warnings`、`cargo test`（519 过）；Vision 识别 README 截图实测中英文都对、词框位置对；截屏在没授权的终端里返回失败、不崩；Windows：交叉 `clippy --target x86_64-pc-windows-gnu --all-targets` 通过 |
+| 2026-11-13 | G1.11 刘海形态 | （本次提交） | 读刘海几何（`macos/notch.rs`）；菜单栏选项新增「贴合刘海」并设为默认；折叠态纯黑、高度等于刘海、中间让开刘海分成左右两翼；贴边收起时缩进刘海、窗口不动；每 2 秒检查一次屏幕变化 | Mac：clippy、`cargo test`、`pnpm check`、`pnpm build`、回归页；没在真机上看效果（见待人工验收） |
 | 2026-11-13 | G1.2（Rust 部分） | （本次提交） | Windows 依赖只在 Windows 上编译；`macos/` 平台层与 `platform.rs`；Mac 上暂不支持的模块用 unsupported 空实现；CI 加 `rust-macos`；迁移表 | Mac：`cargo clippy --all-targets -D warnings`、`cargo test`（421 过）、`pnpm dev:lane` 起窗口；Windows：在 Mac 上交叉 `clippy --target x86_64-pc-windows-gnu --all-targets` 通过，测试看 CI |
 
 ## 待人工验收
 
 只有在真机上操作才能确认的项目，做到对应子任务时补充：
+
+- 刘海（G1.11）：有刘海的 MacBook 上，菜单栏选「贴合刘海」时折叠的岛是纯黑的，中间正好让开摄像头，左右两翼的图标和文字都没被挡；岛的高度和刘海一样、上缘两侧的弧度接得上；贴边收起后整块缩进刘海里看不见，鼠标移到刘海上能弹出来；展开后照常用主题颜色，页面标签栏、Agent 提醒卡片和消息卡片的第一行都在刘海下面；改成「压在菜单栏上」「放在菜单栏下面」或拖走、调上边距后回到原来的样子；接外接屏、合盖时外接屏上照常顶部正中，开盖后回到刘海（屏幕变化最多 2 秒内跟上）
 
 - 全屏应用、多桌面、Mission Control 下岛的表现（G1.3）
 - 音量提示：按键盘音量键、静音，收起的岛上出现音量提示；换输出设备（耳机、AirPods）后还能跟上（G1.6）
@@ -139,6 +143,7 @@ Mac 上跳过的测试（依赖 Windows 路径、程序或 API，标了 `#[cfg(w
 - 快捷翻译：⌃⇧F 在光标所在屏幕正中打开翻译窗口，再按一次关掉；在备忘录、Safari、Chrome、VS Code 里选中文字按 ⌃⌥T，翻译出选中的文字，剪贴板里原来的内容还在；没给辅助功能授权时系统弹一次提示；设置里改快捷键后旧的失效、新的生效；剪贴板的 ⌘⇧V 同时还能用（G1.6）
 - 截图：第一次按 ⌃⇧1 时系统弹「屏幕录制」提示，授权并重开浮屿后再按，所有显示器都盖上冻结的画面，菜单栏和岛也被盖住；在全屏应用里也能截；框选、标注、复制后在备忘录里 ⌘V 是图片、在 Finder 里 ⌘V 是 PNG 文件；保存进「图片」文件夹；贴图停在原位、Retina 屏上不模糊、滚轮缩放正常；⌃⇧3 识字、⌃⇧4 翻译；悬停时能吸附到整个窗口；长截图在 Safari 里自动往下滚并拼接（滚动方向要确认），按 Esc 能停；岛上的截图卡片能拖到 Finder（G1.6）
 - AI 代理（G1.7）：在设置里安装 hook 后，`~/.claude/settings.json` 和 `~/.codex/config.toml` 里是 `/bin/sh` 加 `~/.fuyu/fuyu-agent-*.sh` 的命令；在 Terminal、iTerm2、VS Code 里跑 Claude Code，岛上显示运行中、完成、等待确认；点会话能切到对应的应用，Terminal 和 iTerm2 切到对应标签页（第一次要允许「自动化」）；VS Code 里装了浮屿扩展时切到对应终端；在岛上审批和审批快捷键能用；开了「直接向 Anthropic 查询」时系统问一次是否允许读钥匙串，允许后用量环有数
+- 插件（G1.8）：装一个 Node 插件和一个 PowerShell 插件（装了 pwsh 时）都能跑起来；停用插件或退出浮屿后 `ps` 里没有残留的插件进程；没装 pwsh 时卡片上出现安装提示；`.exe` 插件标为只支持 Windows；插件的快捷键能触发；锁屏、解锁、合盖再打开后插件收到对应事件
 - 手机推送：离开电脑（空闲）或锁屏后，Agent 完成的推送能发出（G1.6）
 - 剪贴板：复制文字、图片、Finder 里的文件都进历史；密码管理器复制的不进；⌘⇧V 在鼠标旁弹出，选中后贴回原来的应用（第一次要允许辅助功能）；贴到终端时多行命令合成一行；有没有系统的剪贴板隐私提示（G1.6）
 - `fuyu://` 链接：装好的 `.app` 在浏览器里点 `fuyu://plugin/<id>/...` 能唤起岛并打开插件，岛没开时也能（G1.4）

@@ -35,6 +35,7 @@ export type ClipboardText = {
     pickSequence: string;
     sequenceCount: (count: number) => string;
     sequenceStart: string;
+    sequenceStartMac: string;
     cancel: string;
     noMatch: (query: string) => string;
     noMatchHint: string;
@@ -114,6 +115,7 @@ export const zhCN: ClipboardText = {
     pickSequence: "点击 顺序粘贴",
     sequenceCount: (count) => `已选 ${count} 条`,
     sequenceStart: "开始，之后每次 Ctrl+V 贴下一条",
+    sequenceStartMac: "开始，之后每次 ⌘V 贴下一条",
     cancel: "取消",
     noMatch: (query) => `没有匹配「${query}」的记录`,
     noMatchHint: "搜内容、备注、来源程序、拼音首字母，或用 #标签、/app:程序名、/today、/img、/link",
@@ -193,6 +195,7 @@ export const en: ClipboardText = {
     pickSequence: "click: paste in order",
     sequenceCount: (count) => `${count} picked`,
     sequenceStart: "start, then each Ctrl+V pastes the next",
+    sequenceStartMac: "start, then each ⌘V pastes the next",
     cancel: "Cancel",
     noMatch: (query) => `Nothing matches “${query}”`,
     noMatchHint: "Search text, notes, the program, or #tags, /app:name, /today, /img, /link",

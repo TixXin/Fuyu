@@ -98,7 +98,7 @@ export function PluginShortcutSection({ takenBy, onChanged, action, hideWhenEmpt
                   className={`shortcut-record-button${recording === row.key ? " shortcut-record-button--recording" : ""}`}
                   type="button"
                   aria-label={`${text.pluginRecord}: ${name(row)}`}
-                  onClick={() => setRecording(row.key)}
+                  onClick={(event) => { event.currentTarget.focus(); setRecording(row.key); }}
                   onKeyDown={(event) => record(row, event)}
                   onBlur={() => setRecording((current) => (current === row.key ? null : current))}
                 >

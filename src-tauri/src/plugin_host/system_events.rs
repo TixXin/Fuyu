@@ -2,11 +2,15 @@ use serde_json::json;
 use std::{thread, time::Duration};
 
 use super::events::publish_known;
+#[cfg(windows)]
 use crate::win32::session_notifications::{self, SessionChange};
 
 pub(super) const IDLE_AFTER: Duration = Duration::from_secs(5 * 60);
 const IDLE_CHECK_EVERY: Duration = Duration::from_secs(5);
+#[cfg(target_os = "macos")]
+const SLEPT_AFTER: Duration = Duration::from_secs(30);
 
+#[cfg(windows)]
 fn on_change(change: SessionChange) {
     let name = match change {
         SessionChange::Locked => "system.locked",
@@ -22,6 +26,46 @@ pub(super) fn idle_transition(idle_for: Duration, was_idle: bool) -> Option<bool
     (idle != was_idle).then_some(idle)
 }
 
+#[cfg(target_os = "macos")]
+pub(super) fn slept(gap: Duration) -> bool {
+    gap >= IDLE_CHECK_EVERY + SLEPT_AFTER
+}
+
+#[cfg(target_os = "macos")]
+pub(super) fn start() {
+    use crate::macos::session;
+    use std::time::SystemTime;
+    let poller = thread::Builder::new().name("system-events".into()).spawn(|| {
+        let (mut was_idle, mut was_locked, mut last) = (false, session::is_locked(), SystemTime::now());
+        loop {
+            thread::sleep(IDLE_CHECK_EVERY);
+            let now = SystemTime::now();
+            if now.duration_since(last).is_ok_and(slept) {
+                publish_known("system.suspended", json!({}));
+                publish_known("system.resumed", json!({}));
+            }
+            last = now;
+            let locked = session::is_locked();
+            if locked != was_locked {
+                publish_known(if locked { "system.locked" } else { "system.unlocked" }, json!({}));
+                was_locked = locked;
+            }
+            let Some(idle_seconds) = session::idle_seconds() else { continue };
+            let idle_for = Duration::from_secs(u64::from(idle_seconds));
+            match idle_transition(idle_for, was_idle) {
+                Some(true) => publish_known("system.idle", json!({ "idleSeconds": idle_for.as_secs() })),
+                Some(false) => publish_known("system.active", json!({})),
+                None => continue,
+            }
+            was_idle = !was_idle;
+        }
+    });
+    if let Err(error) = poller {
+        eprintln!("could not watch the session for plugins: {error}");
+    }
+}
+
+#[cfg(windows)]
 pub(super) fn start() {
     let watcher = thread::Builder::new().name("system-events".into()).spawn(|| {
         if let Err(error) = session_notifications::watch(on_change) {

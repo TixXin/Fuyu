@@ -48,7 +48,7 @@ export function ShortcutFinder({ owners, onOpenPage }: {
             className={`shortcut-record-button${recording ? " shortcut-record-button--recording" : ""}`}
             type="button"
             aria-label={text.finderTitle}
-            onClick={() => setRecording(true)}
+            onClick={(event) => { event.currentTarget.focus(); setRecording(true); }}
             onKeyDown={record}
             onBlur={() => setRecording(false)}
           >

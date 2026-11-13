@@ -3,7 +3,7 @@ use std::{
     mem::size_of,
 };
 
-use libc::{c_int, proc_bsdinfo, PROC_PIDPATHINFO_MAXSIZE, PROC_PIDTBSDINFO};
+use libc::{c_int, proc_bsdinfo, proc_taskinfo, PROC_PIDPATHINFO_MAXSIZE, PROC_PIDTASKINFO, PROC_PIDTBSDINFO};
 
 const MAX_PIDS: usize = 16_384;
 
@@ -44,4 +44,23 @@ pub(crate) fn tty_path(pid: u32) -> Option<String> {
     }
     let name = unsafe { CStr::from_ptr(name) }.to_str().ok()?;
     Some(format!("/dev/{name}"))
+}
+
+pub(crate) fn process_group(pid: u32) -> Option<u32> {
+    Some(bsd_info(pid)?.pbi_pgid)
+}
+
+pub(crate) fn name(pid: u32) -> Option<String> {
+    let info = bsd_info(pid)?;
+    let bytes: Vec<u8> = info.pbi_name.iter().take_while(|c| **c != 0).map(|c| *c as u8).collect();
+    let name = String::from_utf8_lossy(&bytes).into_owned();
+    (!name.is_empty()).then_some(name)
+}
+
+pub(crate) fn resident_bytes(pid: u32) -> Option<u64> {
+    let pid = c_int::try_from(pid).ok().filter(|pid| *pid > 0)?;
+    let mut info: proc_taskinfo = unsafe { std::mem::zeroed() };
+    let size = c_int::try_from(size_of::<proc_taskinfo>()).ok()?;
+    let written = unsafe { libc::proc_pidinfo(pid, PROC_PIDTASKINFO, 0, (&mut info as *mut proc_taskinfo).cast::<c_void>(), size) };
+    (written == size).then_some(info.pti_resident_size)
 }
