@@ -1,5 +1,6 @@
+use objc2_app_kit::{NSApplicationActivationOptions, NSRunningApplication};
 use tauri::WebviewWindow;
-use tauri_nspanel::{tauri_panel, CollectionBehavior, PanelLevel, StyleMask, WebviewWindowExt};
+use tauri_nspanel::{tauri_panel, CollectionBehavior, ManagerExt, PanelLevel, StyleMask, WebviewWindowExt};
 
 tauri_panel! {
     panel!(IslandPanel {
@@ -52,4 +53,19 @@ pub(crate) fn make_panel(window: &WebviewWindow) -> Result<(), String> {
     panel
         .add_style_mask(StyleMask::empty().nonactivating_panel().into())
         .map_err(|error| format!("Could not make the island a non-activating panel: {error:?}"))
+}
+
+pub(crate) fn make_island_key<R: tauri::Runtime>(app: &tauri::AppHandle<R>, label: &str) -> Result<(), String> {
+    let panel = app.get_webview_panel(label).map_err(|error| format!("The island panel is missing: {error:?}"))?;
+    panel.make_key_window();
+    Ok(())
+}
+
+pub(crate) fn hand_key_back<R: tauri::Runtime>(app: &tauri::AppHandle<R>, label: &str, pid: i32) {
+    if let Ok(panel) = app.get_webview_panel(label) {
+        panel.resign_key_window();
+    }
+    if let Some(running) = NSRunningApplication::runningApplicationWithProcessIdentifier(pid) {
+        running.activateWithOptions(NSApplicationActivationOptions::empty());
+    }
 }
