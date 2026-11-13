@@ -78,14 +78,14 @@ static HOST: OnceLock<TodosHost> = OnceLock::new();
 pub(crate) fn init(app: &AppHandle) -> Result<(), String> {
     let dir = crate::home_dir::fuyu_home(app.path())
         .map_err(|error| format!("Failed to resolve app data directory: {error}"))?;
-    let host = TodosHost {
+    HOST.get_or_init(|| TodosHost {
         app: app.clone(),
         dir,
         app_version: app.package_info().version.to_string(),
         source: Mutex::new(Source::Pending),
         decided: Condvar::new(),
-    };
-    HOST.set(host).map_err(|_| "The todo store was initialized twice.".to_string())
+    });
+    Ok(())
 }
 
 fn host() -> Result<&'static TodosHost, String> {
