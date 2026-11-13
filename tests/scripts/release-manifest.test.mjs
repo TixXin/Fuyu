@@ -52,3 +52,29 @@ test("public download URLs must use HTTPS", () => {
   assert.match(result.stderr, /valid HTTPS URL/);
   assert.equal(existsSync(manifest), false);
 });
+
+test("a signed macOS build adds the darwin entries and a missing signature stops the manifest", () => {
+  const { root, manifest } = fixture();
+  const mac = join(root, "mac");
+  mkdirSync(mac, { recursive: true });
+  writeFileSync(join(mac, "Fuyu_0.2.12_aarch64.app.tar.gz"), "fixture app");
+  const unsigned = spawnSync(process.execPath, [script, "--mac-dir", mac], { cwd: root, encoding: "utf8" });
+  assert.equal(unsigned.status, 1);
+  assert.match(unsigned.stderr, /Missing Fuyu_0\.2\.12_aarch64\.app\.tar\.gz or its \.sig/);
+  assert.equal(existsSync(manifest), false);
+
+  writeFileSync(join(mac, "Fuyu_0.2.12_aarch64.app.tar.gz.sig"), "fixture mac signature\n");
+  const result = spawnSync(process.execPath, [script, "--mac-dir", mac], { cwd: root, encoding: "utf8" });
+  assert.equal(result.status, 0, result.stderr);
+  const output = JSON.parse(readFileSync(manifest, "utf8"));
+  assert.equal(output.platforms["darwin-aarch64"].signature, "fixture mac signature");
+  assert.match(output.platforms["darwin-aarch64"].url, /v0\.2\.12\/Fuyu_0\.2\.12_aarch64\.app\.tar\.gz$/);
+  assert.deepEqual(output.platforms["darwin-aarch64-app"], output.platforms["darwin-aarch64"]);
+});
+
+test("without a macOS build the manifest keeps only the Windows entries", () => {
+  const { root, manifest } = fixture();
+  const result = spawnSync(process.execPath, [script], { cwd: root, encoding: "utf8" });
+  assert.equal(result.status, 0, result.stderr);
+  assert.deepEqual(Object.keys(JSON.parse(readFileSync(manifest, "utf8")).platforms).sort(), ["windows-x86_64", "windows-x86_64-msi", "windows-x86_64-nsis"]);
+});

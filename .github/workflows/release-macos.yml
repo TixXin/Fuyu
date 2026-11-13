@@ -1,0 +1,115 @@
+name: Release macOS build
+
+# Started by `pnpm release` (scripts/release/mac-build.mjs) before the draft is created: builds the
+# Apple Silicon app and dmg at the release commit, signs them with the self-signed Fuyu certificate
+# (or ad hoc when the secrets are missing), checks the app starts, and uploads them as an artifact.
+# The updater signature is added later on the release machine, so the updater key never leaves it.
+on:
+  workflow_dispatch:
+    inputs:
+      revision:
+        description: Commit to build
+        required: true
+      version:
+        description: Version in tauri.conf.json at that commit, e.g. 0.3.9
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 60
+    env:
+      VERSION: ${{ inputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.revision }}
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 26
+          cache: pnpm
+
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.99.1
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Check the version
+        run: |
+          found=$(node -p 'require("./src-tauri/tauri.conf.json").version')
+          [ "$found" = "$VERSION" ] || { echo "::error::tauri.conf.json is $found, not $VERSION"; exit 1; }
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Import the signing certificate
+        env:
+          CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
+          CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+          IDENTITY: ${{ secrets.MACOS_SIGNING_IDENTITY }}
+        run: |
+          if [ -z "$CERTIFICATE" ] || [ -z "$IDENTITY" ]; then
+            echo "::warning::No MACOS_CERTIFICATE secret: signing ad hoc, so users re-grant permissions after every update"
+            echo "APPLE_SIGNING_IDENTITY=-" >> "$GITHUB_ENV"
+            exit 0
+          fi
+          keychain="$RUNNER_TEMP/fuyu.keychain-db"
+          password=$(openssl rand -hex 16)
+          echo "$CERTIFICATE" | base64 --decode > "$RUNNER_TEMP/fuyu.p12"
+          openssl pkcs12 -in "$RUNNER_TEMP/fuyu.p12" -passin env:CERTIFICATE_PASSWORD -nokeys -out "$RUNNER_TEMP/fuyu.pem" -legacy 2>/dev/null \
+            || openssl pkcs12 -in "$RUNNER_TEMP/fuyu.p12" -passin env:CERTIFICATE_PASSWORD -nokeys -out "$RUNNER_TEMP/fuyu.pem"
+          security create-keychain -p "$password" "$keychain"
+          security set-keychain-settings -lut 3600 "$keychain"
+          security unlock-keychain -p "$password" "$keychain"
+          security import "$RUNNER_TEMP/fuyu.p12" -k "$keychain" -P "$CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$password" "$keychain" > /dev/null
+          security list-keychains -d user -s "$keychain" $(security list-keychains -d user | tr -d '"')
+          sudo security add-trusted-cert -d -r trustRoot -p codeSign -k /Library/Keychains/System.keychain "$RUNNER_TEMP/fuyu.pem"
+          rm -f "$RUNNER_TEMP/fuyu.p12"
+          security find-identity -v -p codesigning "$keychain"
+          echo "APPLE_SIGNING_IDENTITY=$IDENTITY" >> "$GITHUB_ENV"
+
+      - name: Build
+        run: pnpm tauri build --ci --bundles app,dmg --config src-tauri/tauri.bundle-macos.conf.json --config '{"bundle":{"createUpdaterArtifacts":false}}'
+
+      - name: Package
+        run: |
+          bundle=src-tauri/target/release/bundle
+          mkdir -p out
+          tar -czf "out/Fuyu_${VERSION}_aarch64.app.tar.gz" -C "$bundle/macos" Fuyu.app
+          dmg=$(ls "$bundle"/dmg/*.dmg | head -n 1)
+          cp "$dmg" "out/Fuyu_${VERSION}_aarch64.dmg"
+          ls -l out
+
+      - name: Check the signature and that it starts
+        run: |
+          app=src-tauri/target/release/bundle/macos/Fuyu.app
+          codesign --verify --deep --strict --verbose=2 "$app"
+          codesign -dv "$app" 2>&1 | grep -E "Authority|Signature|Identifier"
+          "$app/Contents/MacOS/fuyu" > "$RUNNER_TEMP/fuyu.log" 2>&1 &
+          pid=$!
+          sleep 15
+          if ! kill -0 "$pid" 2>/dev/null; then
+            cat "$RUNNER_TEMP/fuyu.log"
+            echo "::error::Fuyu quit within 15 seconds of starting"
+            exit 1
+          fi
+          kill "$pid"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fuyu-macos-${{ inputs.version }}
+          path: out/
+          if-no-files-found: error
+          retention-days: 7
