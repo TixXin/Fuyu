@@ -308,7 +308,6 @@ pub(super) fn point_in_notch(
     shape.contains(dx, dy, radius)
 }
 
-#[cfg_attr(not(windows), allow(dead_code))]
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub(crate) struct IslandOnScreen {
     pub left: f64,
@@ -318,7 +317,6 @@ pub(crate) struct IslandOnScreen {
     pub expanded: bool,
 }
 
-#[cfg_attr(not(windows), allow(dead_code))]
 pub(super) fn island_rect(window_left: f64, window_top: f64, window_width: f64, state: IslandWindowState) -> IslandOnScreen {
     let physical_scale = window_width / STAGE_WINDOW_WIDTH;
     let (base_width, base_height) = state

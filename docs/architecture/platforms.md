@@ -27,7 +27,7 @@ macOS 的计划和决定见 [macos-port-plan.md](macos-port-plan.md)，各功能
 |---|---|---|---|---|---|---|
 | 悬浮岛窗口（折叠、展开、贴边收起） | `island` | 已支持 | 开发中 | NSPanel（`tauri-nspanel`）+ Accessory；无需权限 | G1.3 | — |
 | 游戏模式（前台全屏时勿扰、贴边） | `system::fullscreen` | 已支持 | 开发中 | CoreGraphics 窗口列表：最前面的普通窗口盖住整块显示器；无需权限。Mac 上默认贴边开、勿扰关（M6） | G1.3 | — |
-| 新手引导 | `onboarding_window` | 已支持 | 未开始 | 全屏透明遮罩；「最小化全部窗口」改为隐藏其他应用 | G1.3 | — |
+| 新手引导 | `onboarding_window` | 已支持 | 开发中 | 透明遮罩铺满岛所在的整块屏幕（岛默认压在菜单栏上）；「最小化全部窗口」改为隐藏其他应用，关掉时全部显示回来；无需权限 | G1.3 | — |
 | 设置窗口 | `settings_window` | 已支持 | 未开始 | 普通窗口 | G1.4 | — |
 | 家目录与数据位置 | `home_dir` | 已支持 | 未开始 | 默认 `~/.fuyu`；应用数据目录在 `~/Library/Application Support/` 下，写进 contracts.md | G1.4 | — |
 | 从岛上打开 QQ / 微信 | `messenger_activation` | 已支持 | 未开始 | `NSWorkspace` 打开应用 | G1.10 | — |
