@@ -1,6 +1,6 @@
 <div align="center">
   <a name="readme-top"></a>
-  <a href="https://fuyu.ing/zh/logo/"><img src="docs/assets/readme/island-zh.svg" alt="挂在页面顶上的一座小岛，写着「浮屿 Fuyu」；它会不时展开，提示浮屿的 Logo 征集中，欢迎投稿" width="480" height="88"></a>
+  <a href="https://fuyu.ing/zh/"><img src="docs/assets/readme/island-zh.svg" alt="挂在页面顶上的一座小岛，写着「浮屿 Fuyu」，它会不时展开提示 Logo 征集；右下方手写着官网地址 fuyu.ing，一条小箭头指向小岛" width="480" height="100"></a>
 
   <h1>浮屿 Fuyu</h1>
 

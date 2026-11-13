@@ -1,6 +1,6 @@
 <div align="center">
   <a name="readme-top"></a>
-  <a href="https://fuyu.ing/logo/"><img src="docs/assets/readme/island-en.svg" alt="A small island hanging from the top of the page, labelled Fuyu 浮屿; now and then it opens to say that Fuyu is looking for a logo" width="480" height="88"></a>
+  <a href="https://fuyu.ing"><img src="docs/assets/readme/island-en.svg" alt="A small island hanging from the top of the page, labelled Fuyu 浮屿, that opens now and then to say a logo is wanted; the website address fuyu.ing is handwritten below it, with a small arrow pointing at the island" width="480" height="100"></a>
 
   <h1>Fuyu</h1>
 
