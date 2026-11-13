@@ -1,6 +1,6 @@
 # Third-party notices / 第三方声明
 
-FocuSD Island includes material derived from the following projects. Their licenses apply to that material.
+Fuyu (浮屿, formerly FocuSD Island) includes material derived from the following projects. Their licenses apply to that material.
 
 本项目包含源自以下项目的内容，这些内容适用各自的许可证。
 
@@ -51,3 +51,9 @@ The code in `gate.rs` was rewritten in Rust and changed (address cache, restorin
 - 用于：录屏出 GIF（`src-tauri/src/recording/gif.rs`），以 crates.io 上的 Rust 库 `gifski` 原样链接。
 - License: AGPL-3.0-or-later. Fuyu is GPL-3.0-or-later; GPLv3 section 13 allows the two to be combined, and the gifski part stays under the AGPL. Source: https://github.com/ImageOptim/gifski
 - 许可证：AGPL-3.0-or-later。浮屿是 GPL-3.0-or-later，按 GPLv3 第 13 条可以合在一起发布，gifski 那部分仍按 AGPL。源码：https://github.com/ImageOptim/gifski
+
+## Kaushan Script (Pablo Impallari)
+
+- Used in: the handwritten `https://fuyu.ing` in the README's island images (`docs/assets/readme/island-zh.svg`, `island-en.svg`). The glyph outlines are stored as a path in `scripts/readme/address-outline.json`; the font file is not in the repository and is not shipped with the app.
+- 用于：README 小岛图（`docs/assets/readme/island-zh.svg`、`island-en.svg`）里手写的 `https://fuyu.ing`。字形轮廓以路径的形式存在 `scripts/readme/address-outline.json`；字体文件不在仓库里，也不随应用发布。
+- License: SIL Open Font License 1.1 — https://openfontlicense.org
