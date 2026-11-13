@@ -4,6 +4,8 @@
 
 为什么这样做、对比过哪些工具，见 [docs/research/ai-promo-videos.md](../docs/research/ai-promo-videos.md)。
 
+做一条新视频的顺序、核对方法和踩过的坑整理成了 skill：[.claude/skills/fuyu-video/SKILL.md](../.claude/skills/fuyu-video/SKILL.md)（旁白、配乐、拼静帧的脚本在它的 `scripts/` 里）。
+
 ## 准备
 
 ```powershell
