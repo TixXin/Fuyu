@@ -1,7 +1,13 @@
+import type { IslandEdge } from "./api.ts";
+
 export type IslandPosition = {
   x: number;
   y: number;
+  edge?: IslandEdge;
+  along?: number;
 };
+
+const ISLAND_EDGES: readonly IslandEdge[] = ["top", "left", "right"];
 
 export const ISLAND_POSITION_STORAGE_KEY = "fuyu-position";
 
@@ -23,7 +29,14 @@ export function loadIslandPosition(): IslandPosition | null {
       return null;
     }
 
-    return { x: Math.round(position.x), y: Math.round(position.y) };
+    const loaded: IslandPosition = { x: Math.round(position.x), y: Math.round(position.y) };
+    if (position.edge && ISLAND_EDGES.includes(position.edge)) {
+      loaded.edge = position.edge;
+    }
+    if (typeof position.along === "number" && position.along >= 0 && position.along <= 1) {
+      loaded.along = position.along;
+    }
+    return loaded;
   } catch {
     return null;
   }

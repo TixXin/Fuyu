@@ -20,7 +20,7 @@
 | `fuyu-todos-migrated-v1`（`{ at }`：待办已迁移到 `todos.json`；只是标记，是否迁移以 `todos.json` 里的 `migration.sourceHash` 为准） | `features/todos/storage.ts` |
 | `fuyu-save-directory` | `features/todos/storage.ts` |
 | `fuyu-last-saved-signature` | `features/todos/storage.ts` |
-| `fuyu-position` | `windows/island/storage.ts` |
+| `fuyu-position`（`{ x, y }`；C54.1 起可选 `edge`：`"top" \| "left" \| "right"`，`along`：0–1 的沿边比例位置；旧数据没有这两项时按顶边规则读） | `windows/island/storage.ts` |
 | `fuyu-music-sources` | `features/media/storage.ts` |
 | `fuyu-settings-focus`（主窗口 → 设置窗口的跳转请求） | `windows/settings/storage.ts` |
 | `fuyu-settings-file-synced`（2026-11-12 起，D30.2：上次在 localStorage 和 `settings.json` 之间同步时设置的指纹，`settingsFile.ts` 的 `fingerprint`；不是设置，不进备份） | `features/settings-backup/storage.ts` |
@@ -66,7 +66,8 @@
 |---|---|---|
 | `island-position-changed` | `island/mod.rs` | 广播（通过主窗口对象调用 `emit`） |
 | `island-position-cleared`（无载荷：岛屿跟随鼠标或前台窗口换了显示器，拖动保存的位置作废，主窗口清掉 `fuyu-position`） | `island/follow.rs` | 主窗口 |
-| `island-top-attachment-changed`（载荷为 `bool`：岛屿是否贴住所在显示器顶边） | `island/top_edge.rs` | 广播（通过主窗口对象调用 `emit`） |
+| `island-top-attachment-changed`（载荷为 `bool`：岛屿是否贴住所在显示器顶边；C54.1 起由 `island-edge-changed` 派生，保留给旧插件和旧代码） | `island/edge.rs`（常量在 `island/top_edge.rs`） | 广播（通过主窗口对象调用 `emit`） |
+| `island-edge-changed`（载荷为 `"top" \| "left" \| "right" \| null`：岛屿吸在所在显示器的哪条边，`null` 是没吸住；命令 `get_island_edge` 读当前值；C54.1，2026-11-13） | `island/edge.rs` | 广播（通过主窗口对象调用 `emit`） |
 | `island-reveal-requested`（无载荷：托盘「显示」时岛屿正贴边隐藏，主窗口把它滑出来；issue #37，2026-11-11） | `island/mod.rs` | 广播（通过主窗口对象调用 `emit`） |
 | `island-hover-changed`（载荷为 `bool`：光标是否在岛屿形状内，供悬停展开使用） | `island/passthrough.rs` | 广播（通过主窗口对象调用 `emit`） |
 | `island-banner-hover-changed`（载荷为 `bool`：光标是否在新消息横幅上；只在横幅用 `set_island_banner_rect` 交出矩形期间有意义，供横幅悬停暂停计时） | `island/passthrough.rs`（常量在 `island/banner_hit.rs`） | 广播（通过主窗口对象调用 `emit`） |
