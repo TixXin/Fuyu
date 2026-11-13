@@ -8,6 +8,7 @@ export function SettingsRow({
   labelFor,
   indent = false,
   searchable = true,
+  className,
   children,
 }: {
   title: ReactNode;
@@ -16,10 +17,11 @@ export function SettingsRow({
   labelFor?: string;
   indent?: boolean | 2 | 3;
   searchable?: boolean;
+  className?: string;
   children?: ReactNode;
 }) {
   return (
-    <div className={rowClass(indent)} data-search={searchable ? undefined : "off"}>
+    <div className={className ? `${rowClass(indent)} ${className}` : rowClass(indent)} data-search={searchable ? undefined : "off"}>
       <div className="settings-row__main">
         <div className="settings-row__text">
           {labelFor ? (

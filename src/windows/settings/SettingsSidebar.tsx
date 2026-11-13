@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Bell, Blocks, Brush, Bot, CalendarDays, ChevronRight, Compass, Plus, ClipboardList, Crop, Inbox, Info, Keyboard, Languages, LayoutGrid, LayoutTemplate, ListTodo, MousePointerClick, MessageCircle, MessagesSquare, Music, Palette, Plug, Puzzle, Search, Server, Settings2, ShieldCheck, Store, SlidersHorizontal, Volume2, X, type LucideIcon } from "lucide-react";
 import { LOCALE_CODES, useLocale, useTranslation } from "../../i18n";
 import { useUnsupportedFeatures } from "../../lib/platform";
-import { entryOf, entryPages, isCategoryAvailable, SETTINGS_GROUPS, searchCategories, sidebarItemOf, type SettingsCategory, type SettingsGroup, type TabbedCategory } from "./categories";
+import { entryOf, entryPages, isCategoryAvailable, isEntry, SETTINGS_GROUPS, searchCategories, sidebarItemOf, type SettingsCategory, type SettingsGroup, type TabbedCategory } from "./categories";
 import searchIndex from "./searchIndex.json";
 import { isTitleHit, MAX_HITS_PER_PAGE, searchSettingsRows, type SettingsRowHit, type SettingsSearchEntry } from "./settingsSearch";
 import "./SettingsSidebar.css";
@@ -11,10 +11,13 @@ export const CATEGORY_ICONS: Record<SettingsCategory, LucideIcon> = {
   overview: Compass,
   general: SlidersHorizontal,
   behavior: MousePointerClick,
+  behaviorTuck: MousePointerClick,
+  behaviorAlerts: MousePointerClick,
   appearance: LayoutTemplate,
   theme: Palette,
   themeMarket: Brush,
   shortcuts: Keyboard,
+  shortcutsIsland: Keyboard,
   messages: MessageCircle,
   todos: ListTodo,
   calendar: CalendarDays,
@@ -69,7 +72,7 @@ export function SettingsSidebar({
     setFolded(next);
   };
   const groupOf = (item: SettingsCategory) => SETTINGS_GROUPS.find((group) => group.categories.includes(sidebarItemOf(item)))?.label;
-  const itemLabel = (item: SettingsCategory) => (item === "appearance" || item === "agents" ? text.entries[item] : text[item]);
+  const itemLabel = (item: SettingsCategory) => (isEntry(item) ? text.entries[item] : text[item]);
   const pageLabel = (page: SettingsCategory) => (entryOf(page) ? text.tabs[page as TabbedCategory] : text[page]);
   const describe = (item: SettingsCategory) => {
     const group = groupOf(item);

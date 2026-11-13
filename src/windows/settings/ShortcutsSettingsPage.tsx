@@ -8,6 +8,7 @@ import { useTranslationSettings } from "../../features/translation/useTranslatio
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton";
 import { SettingsRow } from "../../components/settings/SettingsRow";
+import { ShortcutKeys } from "../../components/controls/ShortcutKeys";
 import { useTranslation } from "../../i18n";
 import { isMacOS } from "../../lib/platform";
 import type { SettingsCategory } from "./categories";
@@ -23,17 +24,19 @@ function ReferenceSection({ title, rows, footer, action }: { title: string; rows
   return (
     <SettingsGroup title={title} footer={footer} action={action}>
       {rows.map(([label, keys]) => (
-        <SettingsRow key={label} title={label} control={<kbd className="shortcut-keycap">{keys}</kbd>} />
+        <SettingsRow key={label} title={label} control={<ShortcutKeys label={keys} />} />
       ))}
     </SettingsGroup>
   );
 }
 
 export function ShortcutsSettingsPage({
+  tab,
   settings,
   onSettingsChange,
   onOpenPage,
 }: {
+  tab: "shortcuts" | "shortcutsIsland";
   settings: IslandSettings;
   onSettingsChange: (settings: IslandSettings) => void;
   onOpenPage: (page: SettingsCategory) => void;
@@ -52,9 +55,38 @@ export function ShortcutsSettingsPage({
     id: `approval:${action}`, label: `${text.approvalTitle} · ${approvalLabel(action)}`, shortcut, home: "agentApprovals",
   }));
 
+  const finder = <ShortcutFinder owners={[...owners, ...approvalOwners]} onOpenPage={onOpenPage} />;
+
+  if (tab === "shortcutsIsland") {
+    return (
+      <>
+        {finder}
+      <PageShortcutSection settings={settings} onSettingsChange={onSettingsChange} takenBy={takenBy} />
+        <div className="shortcut-sheet">
+          <ReferenceSection
+            title={text.islandTitle}
+            rows={[[text.collapse, "Esc"], [text.moveIsland, isMacOS ? text.altDragMac : text.altDrag], [isMacOS ? text.resizePanelMac : text.resizePanel, isMacOS ? text.altDragEdgeMac : text.altDragEdge]]}
+          />
+          {settings.translationEnabled && (
+            <ReferenceSection
+              title={text.inputTitle}
+              rows={[[text.translate, "Enter"], [text.newLine, "Shift + Enter"], [text.pasteClipboard, "Tab"]]}
+            />
+          )}
+          <ReferenceSection
+            title={text.approvalTitle}
+            rows={APPROVAL_HOTKEYS.map(({ action, shortcut }) => [approvalLabel(action), shortcutLabel(shortcut)])}
+            footer={text.approvalHint}
+            action={pageLink("agentApprovals")}
+          />
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
-      <ShortcutFinder owners={[...owners, ...approvalOwners]} onOpenPage={onOpenPage} />
+      {finder}
       <TranslationShortcutGroup
         title={t.settings.categories.translation}
         action={pageLink("translation")}
@@ -82,23 +114,6 @@ export function ShortcutsSettingsPage({
         onTurnOn={() => onSettingsChange({ ...settings, screenshotEnabled: true })}
       />
       <PluginShortcutSection takenBy={takenBy} onChanged={refreshPlugins} action={pageLink("plugins")} />
-      <PageShortcutSection settings={settings} onSettingsChange={onSettingsChange} takenBy={takenBy} action={pageLink("behavior")} />
-      <ReferenceSection
-        title={text.islandTitle}
-        rows={[[text.collapse, "Esc"], [text.moveIsland, isMacOS ? text.altDragMac : text.altDrag], [isMacOS ? text.resizePanelMac : text.resizePanel, isMacOS ? text.altDragEdgeMac : text.altDragEdge]]}
-      />
-      {settings.translationEnabled && (
-        <ReferenceSection
-          title={text.inputTitle}
-          rows={[[text.translate, "Enter"], [text.newLine, "Shift + Enter"], [text.pasteClipboard, "Tab"]]}
-        />
-      )}
-      <ReferenceSection
-        title={text.approvalTitle}
-        rows={APPROVAL_HOTKEYS.map(({ action, shortcut }) => [approvalLabel(action), shortcutLabel(shortcut)])}
-        footer={text.approvalHint}
-        action={pageLink("agentApprovals")}
-      />
     </>
   );
 }

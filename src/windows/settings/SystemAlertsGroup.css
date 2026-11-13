@@ -1,0 +1,15 @@
+.system-alert-title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-lg);
+}
+
+.system-alert-title__icon {
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 14%, transparent);
+  border-radius: var(--radius-md);
+}

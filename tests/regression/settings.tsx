@@ -206,7 +206,15 @@ if (!automated) {
     await act(async () => { [...document.querySelectorAll<HTMLButtonElement>(".settings-group__header .settings-link-button")].find((link) => link.textContent === "全部快捷键 ›")?.click(); });
     check(element(".settings-page__title").textContent === "快捷键", "A feature page's shortcut group links back to all shortcuts");
     await openPage("behavior");
-    check(texts(".settings-group__title").includes("页面切换"), "Page switching keys are recorded on the Behavior page too");
+    check(texts(".settings-tabs__tab") === "展开与收起|贴边隐藏|系统提示" && !texts(".settings-group__title").includes("页面切换") && texts(".settings-cards__label") === "点击|鼠标悬停", "Behavior has three tabs; opening is chosen from two picture cards, and page keys are no longer repeated here");
+    await act(async () => { [...document.querySelectorAll<HTMLButtonElement>(".settings-link-button")].find((link) => link.textContent === "去设置")?.click(); });
+    check(element(".settings-tabs__tab--active").dataset.tab === "shortcutsIsland" && texts(".settings-group__title").includes("页面切换") && document.querySelectorAll(".shortcut-sheet .settings-group").length >= 2
+      && texts(".shortcut-record-button .shortcut-keys__cap").startsWith("Alt|1–9"), "Its link opens Shortcuts > On the island: page keys on top as key caps, fixed keys in a two-column sheet");
+    await openPage("behaviorAlerts");
+    check(texts(".settings-group__title") === "在小岛上提示" && texts(".settings-row__title") === "音量与亮度|耳机与充电|摄像头和麦克风使用提示", "Volume, headphones and camera alerts are one group on the System alerts tab");
+    await openPage("general");
+    check(texts(".settings-group__title") === "启动与语言|位置|数据" && document.querySelector(".position-diagram__screen--active .position-diagram__island") && !texts(".settings-row__title").includes("最小化按钮")
+      && document.querySelectorAll(".settings-footnote__toggle").length === 3, "General is three groups: the position group draws the screens, data folder and backup are one group, long notes fold");
 
     const storedSettings = () => JSON.parse(localStorage.getItem("fuyu-settings") ?? "{}") as { opacity?: number; carryOverIncompleteTodos?: boolean };
     check(!document.querySelector(".appearance-reset"), "Reset appearance is not offered outside the theme page");
@@ -272,7 +280,7 @@ if (!automated) {
     check(waveSwitch()?.checked === true && !savedItems()?.items.find((item) => item.id === "music")?.hidden, "Turning it on shows it again");
     localStorage.removeItem("fuyu-collapsed-items");
 
-    await openPage("behavior");
+    await openPage("behaviorTuck");
     const holdRow = (title: string) => [...document.querySelectorAll<HTMLElement>(".settings-row")].find((row) => row.querySelector(".settings-row__title")?.textContent === title)?.querySelector<HTMLInputElement>("input");
     check(!holdRow("有正在进行的待办时不收起"), "Idle tuck holds are hidden while idle tuck is off");
     await act(async () => { holdRow("闲置时贴边隐藏")!.click(); });

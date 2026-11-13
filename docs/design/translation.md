@@ -1,6 +1,6 @@
 # 翻译界面
 
-全局方向见 [DESIGN.md](../../DESIGN.md)。
+全局方向见 [README.md](README.md)。
 
 ## 翻译界面
 

@@ -1,8 +1,7 @@
 import type { LocaleCode } from "../../i18n";
 import { BehaviorSettingsSection } from "../../features/appearance/BehaviorSettingsSection";
 import { PositionSettingsSection } from "../../features/appearance/PositionSettingsSection";
-import { SettingsBackupSection } from "../../features/settings-backup/SettingsBackupSection";
-import { DataHomeSection } from "../../features/settings-backup/DataHomeSection";
+import { DataSettingsSection } from "../../features/settings-backup/DataSettingsSection";
 import { SystemPermissionsSection } from "../../features/system-permissions/SystemPermissionsSection";
 import { loadSaveDirectory, saveSaveDirectory } from "../../features/todos/storage";
 import { sameDirectory } from "../../features/todos/saveDirectory";
@@ -33,10 +32,8 @@ export function GeneralSettingsPage({
       <BehaviorSettingsSection
         launchAtStartup={launchAtStartup}
         locale={locale}
-        settings={settings}
         onLaunchAtStartupChange={updateLaunchAtStartup}
         onLocaleChange={onLocaleChange}
-        onSettingsChange={onSettingsChange}
       />
       <PositionSettingsSection
         settings={settings}
@@ -44,8 +41,7 @@ export function GeneralSettingsPage({
         onResetPosition={requestIslandPositionReset}
       />
       <SystemPermissionsSection />
-      <DataHomeSection onMoved={moveTodoFolder} />
-      <SettingsBackupSection />
+      <DataSettingsSection onMoved={moveTodoFolder} />
     </>
   );
 }

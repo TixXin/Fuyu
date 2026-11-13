@@ -1,35 +1,45 @@
 import { ExpandSettingsSection } from "../../features/appearance/ExpandSettingsSection";
 import { GameModeSettingsSection } from "../../features/appearance/GameModeSettingsSection";
-import { PageShortcutSection } from "../../features/appearance/PageShortcutSection";
-import { useClipboardSettings } from "../../features/clipboard/useClipboardSettings";
-import { DeviceUseSettingsSection } from "../../features/device-use/DeviceUseSettingsSection";
-import { LevelPopupSettingsSection } from "../../features/system-levels/LevelPopupSettingsSection";
-import { DeviceAlertSettingsSection } from "../../features/device-events/DeviceAlertSettingsSection";
+import { TuckSettingsSection } from "../../features/appearance/TuckSettingsSection";
 import type { IslandSettings } from "../../features/appearance/types";
-import { useTranslationSettings } from "../../features/translation/useTranslationSettings";
-import { AllShortcutsLink } from "./ShortcutsSettingsPage";
-import { useShortcutOwners } from "./useShortcutOwners";
+import { SettingsGroup } from "../../components/settings/SettingsGroup";
+import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton";
+import { SettingsRow } from "../../components/settings/SettingsRow";
+import { useTranslation } from "../../i18n";
+import { SystemAlertsGroup } from "./SystemAlertsGroup";
 
 export function BehaviorSettingsPage({
+  tab,
   settings,
   onSettingsChange,
-  onOpenShortcuts,
+  onOpenPageKeys,
 }: {
+  tab: "behavior" | "behaviorTuck" | "behaviorAlerts";
   settings: IslandSettings;
   onSettingsChange: (settings: IslandSettings) => void;
-  onOpenShortcuts: () => void;
+  onOpenPageKeys: () => void;
 }) {
-  const [clipboardSettings] = useClipboardSettings();
-  const [translationSettings] = useTranslationSettings();
-  const { takenBy } = useShortcutOwners({ settings, clipboard: clipboardSettings, translation: translationSettings });
+  const text = useTranslation().settings.expand;
+  if (tab === "behaviorAlerts") return <SystemAlertsGroup settings={settings} onSettingsChange={onSettingsChange} />;
+  if (tab === "behaviorTuck") {
+    return (
+      <>
+        <TuckSettingsSection settings={settings} onSettingsChange={onSettingsChange} />
+        <GameModeSettingsSection settings={settings} onSettingsChange={onSettingsChange} />
+      </>
+    );
+  }
   return (
     <>
       <ExpandSettingsSection settings={settings} onSettingsChange={onSettingsChange} />
-      <PageShortcutSection settings={settings} onSettingsChange={onSettingsChange} takenBy={takenBy} action={<AllShortcutsLink onOpen={onOpenShortcuts} />} />
-      <GameModeSettingsSection settings={settings} onSettingsChange={onSettingsChange} />
-      <LevelPopupSettingsSection settings={settings} onSettingsChange={onSettingsChange} />
-      <DeviceAlertSettingsSection settings={settings} onSettingsChange={onSettingsChange} />
-      <DeviceUseSettingsSection settings={settings} onSettingsChange={onSettingsChange} />
+      <SettingsGroup>
+        <SettingsRow
+          searchable={false}
+          title={text.pageKeys}
+          description={text.pageKeysHint}
+          control={<SettingsLinkButton onClick={onOpenPageKeys}>{text.pageKeysOpen}</SettingsLinkButton>}
+        />
+      </SettingsGroup>
     </>
   );
 }

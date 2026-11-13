@@ -5,10 +5,13 @@ export const SETTINGS_CATEGORIES = [
   "overview",
   "general",
   "behavior",
+  "behaviorTuck",
+  "behaviorAlerts",
   "appearance",
   "theme",
   "themeMarket",
   "shortcuts",
+  "shortcutsIsland",
   "todos",
   "calendar",
   "music",
@@ -44,14 +47,16 @@ export const SETTINGS_GROUPS: readonly { label: SettingsGroup | null; categories
 
 export const DEFAULT_SETTINGS_CATEGORY: SettingsCategory = "overview";
 
-export type SettingsEntry = "appearance" | "agents";
+export type SettingsEntry = "behavior" | "appearance" | "shortcuts" | "agents";
 
 export const SETTINGS_TABS: Readonly<Record<SettingsEntry, readonly TabbedCategory[]>> = {
+  behavior: ["behavior", "behaviorTuck", "behaviorAlerts"],
   appearance: ["theme", "appearance", "themeMarket"],
+  shortcuts: ["shortcuts", "shortcutsIsland"],
   agents: ["agents", "agentSessions", "agentAlerts", "sounds", "agentApprovals", "agentConnect", "agentRemote"],
 };
 
-export type TabbedCategory = "theme" | "appearance" | "themeMarket" | "agents" | "agentSessions" | "agentAlerts" | "sounds" | "agentApprovals" | "agentConnect" | "agentRemote";
+export type TabbedCategory = "behavior" | "behaviorTuck" | "behaviorAlerts" | "shortcuts" | "shortcutsIsland" | "theme" | "appearance" | "themeMarket" | "agents" | "agentSessions" | "agentAlerts" | "sounds" | "agentApprovals" | "agentConnect" | "agentRemote";
 
 export function entryOf(category: SettingsCategory): SettingsEntry | null {
   return (Object.keys(SETTINGS_TABS) as SettingsEntry[]).find((entry) => (SETTINGS_TABS[entry] as readonly SettingsCategory[]).includes(category)) ?? null;
@@ -61,8 +66,12 @@ export function sidebarItemOf(category: SettingsCategory): SettingsCategory {
   return entryOf(category) ?? category;
 }
 
+export function isEntry(item: SettingsCategory): item is SettingsEntry {
+  return item in SETTINGS_TABS;
+}
+
 export function entryPages(item: SettingsCategory): readonly SettingsCategory[] {
-  return item === "appearance" || item === "agents" ? SETTINGS_TABS[item] : [item];
+  return isEntry(item) ? SETTINGS_TABS[item] : [item];
 }
 
 export const SETTINGS_FEATURES = ["todos", "calendar", "music", "translation", "clipboard", "shelf", "screenshot", "agents"] as const;

@@ -28,6 +28,15 @@ export type SettingsExpandText = {
   motionBouncy: string;
   motionNone: string;
   motionPlay: string;
+  motionCurve: string;
+  clickHint: string;
+  hoverHint: string;
+  instant: string;
+  pageKeys: string;
+  pageKeysHint: string;
+  pageKeysOpen: string;
+  tuckIntro: string;
+  alertsTitle: string;
 };
 
 export const zhCN: SettingsExpandText = {
@@ -60,6 +69,15 @@ export const zhCN: SettingsExpandText = {
   motionBouncy: "Q 弹",
   motionNone: "无动画",
   motionPlay: "播放一次",
+  motionCurve: "动画曲线",
+  clickHint: "点一下小岛才展开",
+  hoverHint: "鼠标移上去就展开，移开收起",
+  instant: "立即",
+  pageKeys: "页面切换快捷键",
+  pageKeysHint: "数字键切页、上一页和下一页，在「快捷键 › 岛上」里改。",
+  pageKeysOpen: "去设置",
+  tuckIntro: "贴边隐藏时，岛屿贴到屏幕顶部，只露出一条边；鼠标移上去或有新消息时再露出。",
+  alertsTitle: "在小岛上提示",
 };
 
 export const en: SettingsExpandText = {
@@ -92,4 +110,13 @@ export const en: SettingsExpandText = {
   motionBouncy: "Bouncy",
   motionNone: "None",
   motionPlay: "Play it",
+  motionCurve: "Animation curve",
+  clickHint: "Opens only when you click the island",
+  hoverHint: "Opens under the pointer, closes when it leaves",
+  instant: "At once",
+  pageKeys: "Page switching keys",
+  pageKeysHint: "Number keys, next page and previous page are set under Shortcuts › On the island.",
+  pageKeysOpen: "Open",
+  tuckIntro: "A tucked island sits against the top of the screen with only an edge showing; it slides out under the pointer or for a new message.",
+  alertsTitle: "Shown on the island",
 };

@@ -1,5 +1,5 @@
 import { useState, type KeyboardEvent } from "react";
-import { Keyboard } from "lucide-react";
+import { ShortcutKeys } from "../../components/controls/ShortcutKeys";
 import { buildShortcutFromEvent, shortcutLabel } from "../../features/clipboard/shortcut";
 import { useShortcutCapture } from "../../features/clipboard/useShortcutCapture";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
@@ -58,8 +58,7 @@ export function ShortcutFinder({ owners, onOpenPage }: {
             onKeyDown={record}
             onBlur={() => setRecording(false)}
           >
-            <Keyboard size={14} strokeWidth={2.3} />
-            <span>{recording ? text.finderPress : pressed ? shortcutLabel(pressed) : text.finderIdle}</span>
+            <ShortcutKeys prompt={recording ? text.finderPress : pressed ? null : text.finderIdle} label={shortcutLabel(pressed ?? "")} />
           </button>
         }
       />

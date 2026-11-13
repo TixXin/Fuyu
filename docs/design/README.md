@@ -28,11 +28,11 @@
 
 按界面区域分文件放在 `docs/design/`，改哪块就只改那一份（多个会话并行时不在同一个文件上冲突）：
 
-- [翻译界面](docs/design/translation.md)
-- [灵动岛：顶边贴合与视觉规范](docs/design/island.md)
-- [收起条：插件槽位与中心图案](docs/design/collapsed-bar.md)
-- [设置窗口与插件市场页](docs/design/settings.md)
-- [AI Agent：会话标题与 Agent 页](docs/design/agent.md)
-- [待办](docs/design/todos.md)
-- [文件中转](docs/design/file-shelf.md)
-- [macOS 上的岛：位置与全屏](docs/design/macos.md)
+- [翻译界面](translation.md)
+- [灵动岛：顶边贴合与视觉规范](island.md)
+- [收起条：插件槽位与中心图案](collapsed-bar.md)
+- [设置窗口与插件市场页](settings.md)
+- [AI Agent：会话标题与 Agent 页](agent.md)
+- [待办](todos.md)
+- [文件中转](file-shelf.md)
+- [macOS 上的岛：位置与全屏](macos.md)

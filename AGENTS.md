@@ -50,7 +50,6 @@
 ├── video/               # 宣传视频：真的前端加假后端在浏览器里跑，按时间表逐帧渲染成 MP4；自带 package.json，不在 workspace 里（用法见 video/README.md）；成片不进仓库
 ├── .githooks/           # pre-push：合并队列的推送保护与检查；commit-msg：拒绝 Claude 署名行（只管本仓库自己的提交，合入的外部 PR 可以带；core.hooksPath 指向这里）
 ├── docs/                # 按文档性质分目录，索引和各目录放什么见 docs/README.md：features/ 功能说明，architecture/ 架构与契约（agent/、plugins/ 内部设计，history/ 做完的计划），design/ 界面约定，plugins/ 插件开发，investigations/ 自己应用的排查与验收，research/ 外部调研，reviews/ PR 评审，releases/ 发布说明，assets/ 演示视频与图片，tasks/ 任务（README.md 是规则，按编号首字母分文件夹，0-archive/ 放已结束的）
-├── DESIGN.md            # 已确认的界面设计约定：全局方向；各区域的约定在 docs/design/
 └── README*.md           # 中英文项目说明
 ```
 
@@ -68,7 +67,7 @@
 | 前端静态检查 | `pnpm lint`（ESLint，配置见 `eslint.config.js`） |
 | 文件行数检查 | `pnpm check:size` |
 | 深色专用颜色检查 | `pnpm check:colors`（CSS 里写死的颜色要写成 `var(--变量, 原值)`；存量记在 `scripts/color-literal-allowlist.json`，只减不增，规则见 `src/AGENTS.md`） |
-| 回归页类型检查 | `pnpm check:tests-types`（`tsconfig.tests.json`，检查 `tests/regression/*.tsx`） |
+| 回归页类型检查 | `pnpm check:tests-types`（`tests/tsconfig.json`，检查 `tests/regression/*.tsx`） |
 | 浏览器回归页 | `pnpm test:regression [页面名中的词]`（自带 Vite，用无头 Chrome / Edge 跑 `tests/regression/` 下全部回归页并汇总结果，约 20 秒；每页检查通过后再把页面切成浅色岛，文字对比度低于 3:1 就算失败；Mac 上找 /Applications 里的 Chrome、Edge 或 Chromium，都没有时设 `CHROME_PATH`） |
 | 岛屿实验台 | `pnpm lab`（打开 http://127.0.0.1:5199/，点按钮让正在跑的 `pnpm tauri dev` 的岛弹消息、展开收起、模拟刘海、发起 Agent 审批；不用开本地接口，见 `docs/features/island-lab.md`） |
 | 设置搜索索引 | `pnpm settings:index`（新增、删除或改名设置项后运行，重写 `src/windows/settings/searchIndex.json`；漏跑时 `settings-search` 回归页会失败） |
@@ -179,7 +178,7 @@
 
 - 源码保持项目当前编码风格；中文文档使用 UTF-8。
 - README 包含中英文说明，更新时不要破坏现有的双语结构。
-- 界面方向的决定记录在 `DESIGN.md`（全局方向）和 `docs/design/<区域>.md`（各区域，改哪块只改那一份）；新文档按 [docs/README.md](docs/README.md) 的表放进对应目录（功能说明放 `docs/features/`）；架构变化更新 `docs/architecture/overview.md`，数据存放位置写进 `data-storage.md`，对外契约（localStorage key、事件、命令、文件格式）写进 `contracts.md`。某个功能在 Windows 或 macOS 上的支持情况变了（含新增功能），在同一个提交里改 [docs/architecture/platforms.md](docs/architecture/platforms.md) 的对应行；macOS 适配的进度和决定记在 [macos-port-plan.md](docs/architecture/macos-port-plan.md)。
+- 界面方向的决定记录在 `docs/design/README.md`（全局方向）和 `docs/design/<区域>.md`（各区域，改哪块只改那一份）；新文档按 [docs/README.md](docs/README.md) 的表放进对应目录（功能说明放 `docs/features/`）；架构变化更新 `docs/architecture/overview.md`，数据存放位置写进 `data-storage.md`，对外契约（localStorage key、事件、命令、文件格式）写进 `contracts.md`。某个功能在 Windows 或 macOS 上的支持情况变了（含新增功能），在同一个提交里改 [docs/architecture/platforms.md](docs/architecture/platforms.md) 的对应行；macOS 适配的进度和决定记在 [macos-port-plan.md](docs/architecture/macos-port-plan.md)。
 - **调研**：用户让你联网搜索、搜 GitHub、对比竞品或参考软件并整理时，结果写成 `docs/research/<主题>.md`，不只在对话里回答；格式和规则见 [docs/research/README.md](docs/research/README.md)。
 - **任务**的规则、分组、字段和流程都在 [docs/tasks/README.md](docs/tasks/README.md)，开工前读它。查任务用命令，不逐个打开文件：`pnpm tasks next`（能认领的，按优先级）、`pnpm tasks show <编号>`（一项的全文和关系）、`pnpm tasks`（看板）。没结束的任务在 `docs/tasks/<分组>/`，已完成和不做的在 `docs/tasks/0-archive/<分组>/`，分组是编号的首字母。
 - **认领看本地和 `origin/main`，不等其他会话回消息**：`pnpm task:claim <编号> --as <会话名> --scope <要改的目录/,文件>`，会话名用 ListAgents 里自己的名字；认领记会话名和机器名，在本地提交、随下一批推上去。任务带 issue 的，认领后、动手前先在 issue 下回复（谁接手、核实结果、打算怎么改；2026-11-14 起，用户定），自己提的 issue 也一样。做完 `pnpm tasks done <编号> --commit "<功能提交的标题>"`，和功能改动放在同一个提交里；land 时会核对已完成任务记下的提交。

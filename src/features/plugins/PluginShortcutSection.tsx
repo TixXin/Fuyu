@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
-import { Keyboard, X } from "lucide-react";
+import { X } from "lucide-react";
+import { ShortcutKeys } from "../../components/controls/ShortcutKeys";
 import { ShortcutResetButton } from "../../components/controls/ShortcutResetButton";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsRow } from "../../components/settings/SettingsRow";
@@ -110,8 +111,7 @@ export function PluginShortcutSection({ takenBy, onChanged, action, hideWhenEmpt
                   onKeyDown={(event) => record(row, event)}
                   onBlur={() => setRecording((current) => (current === row.key ? null : current))}
                 >
-                  <Keyboard size={14} strokeWidth={2.3} />
-                  <span>{recording === row.key ? text.pluginPressKeys : row.shortcut ? shortcutLabel(row.shortcut) : text.pluginRecord}</span>
+                  <ShortcutKeys prompt={recording === row.key ? text.pluginPressKeys : row.shortcut ? null : text.pluginRecord} label={shortcutLabel(row.shortcut ?? "")} />
                 </button>
               </div>
             </div>

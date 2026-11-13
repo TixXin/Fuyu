@@ -1,5 +1,5 @@
 import { useEffect, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
-import { Keyboard } from "lucide-react";
+import { ShortcutKeys } from "../../components/controls/ShortcutKeys";
 import { useTranslation } from "../../i18n";
 import { ShortcutResetButton } from "../../components/controls/ShortcutResetButton";
 import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
@@ -83,8 +83,7 @@ export function ClipboardShortcutRows({ clipboardSettings, onClipboardSettingsCh
               onKeyDown={record}
               onBlur={() => setIsRecording(false)}
             >
-              <Keyboard size={14} strokeWidth={2.3} />
-              <span>{isRecording ? t.settings.clipboard.pressKeys : shortcutLabel(shortcut)}</span>
+              <ShortcutKeys prompt={isRecording ? t.settings.clipboard.pressKeys : null} label={shortcutLabel(shortcut)} />
             </button>
           </div>
         </div>
