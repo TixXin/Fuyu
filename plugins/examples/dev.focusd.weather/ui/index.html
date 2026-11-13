@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Weather</title>
+    <link rel="stylesheet" href="weather.css" />
+  </head>
+  <body>
+    <main class="weather" id="weather" hidden>
+      <header class="head">
+        <div class="head__place">
+          <strong id="place"></strong>
+          <span id="region"></span>
+        </div>
+        <span class="head__updated" id="updated"></span>
+        <button class="head__refresh" id="refresh" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /></svg>
+        </button>
+      </header>
+      <p class="problem" id="problem" hidden></p>
+      <div class="panes">
+        <div class="pane">
+          <section class="now">
+            <span class="now__icon" id="now-icon"></span>
+            <div class="now__main">
+              <strong class="now__temp" id="now-temp"></strong>
+              <span class="now__condition" id="now-condition"></span>
+              <span class="now__range" id="now-range"></span>
+            </div>
+            <dl class="now__facts" id="now-facts"></dl>
+          </section>
+          <section class="block">
+            <h2 id="hourly-title"></h2>
+            <ol class="hours" id="hours"></ol>
+          </section>
+        </div>
+        <section class="block block--days">
+          <h2 id="daily-title"></h2>
+          <ol class="days" id="days"></ol>
+        </section>
+      </div>
+    </main>
+    <section class="message" id="message" hidden>
+      <span class="message__icon" id="message-icon"></span>
+      <strong id="message-title"></strong>
+      <p id="message-body"></p>
+    </section>
+    <script src="icons.js"></script>
+    <script src="weather.js"></script>
+  </body>
+</html>

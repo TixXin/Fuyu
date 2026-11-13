@@ -1,0 +1,81 @@
+{
+  "id": "dev.focusd.weather",
+  "name": { "zh-CN": "天气", "en": "Weather" },
+  "description": {
+    "zh-CN": "岛上的「天气」页显示所选城市的当前天气、今天逐小时和未来 7 天；可选在收起条上显示天气和温度，以及一小时内要下雨时在岛上提醒。在插件设置里填城市名，不读系统定位；不填城市时不联网。数据来自 Open-Meteo，不需要账号。用 Windows 自带的 PowerShell 运行。",
+    "en": "A Weather page on the island with the current weather, today's hours and the next 7 days for the city you pick; optionally the weather and temperature on the collapsed bar, and a heads-up when rain is due within the hour. Type the city in the plugin settings; your location is never read, and nothing goes online until a city is set. Data from Open-Meteo, no account needed. Runs on the PowerShell built into Windows."
+  },
+  "version": "1.0.0",
+  "apiVersion": 2,
+  "author": "TixXin",
+  "homepage": "https://github.com/TixXin/fuyu/tree/main/plugins/examples/dev.focusd.weather",
+  "runtime": { "type": "process", "command": "main.ps1" },
+  "activationEvents": ["onStartupFinished", "onSchedule:30"],
+  "permissions": ["island:notify"],
+  "contributes": {
+    "commands": [
+      { "id": "refresh", "title": { "zh-CN": "立即刷新", "en": "Refresh now" } }
+    ],
+    "views": [
+      {
+        "id": "weather",
+        "title": { "zh-CN": "天气", "en": "Weather" },
+        "icon": "sun",
+        "template": "webview",
+        "entry": "ui/index.html",
+        "frame": "none"
+      }
+    ],
+    "statusItems": [{ "id": "now", "priority": 0 }],
+    "settings": [
+      {
+        "key": "city",
+        "type": "string",
+        "title": { "zh-CN": "城市", "en": "City" },
+        "description": {
+          "zh-CN": "填城市名，例如「杭州」或「Springfield, Illinois」；同名城市可以在逗号后加省、州或国家区分。留空时插件不联网。",
+          "en": "A city name such as \"London\" or \"Springfield, Illinois\"; add the state, province or country after a comma to tell same-named places apart. Leave it empty and the plugin stays offline."
+        },
+        "default": ""
+      },
+      {
+        "key": "units",
+        "type": "select",
+        "title": { "zh-CN": "温度单位", "en": "Temperature unit" },
+        "options": [
+          { "value": "celsius", "title": { "zh-CN": "摄氏度 °C", "en": "Celsius °C" } },
+          { "value": "fahrenheit", "title": { "zh-CN": "华氏度 °F", "en": "Fahrenheit °F" } }
+        ],
+        "default": "celsius"
+      },
+      {
+        "key": "showOnBar",
+        "type": "boolean",
+        "title": { "zh-CN": "收起条显示天气和温度", "en": "Show the weather on the collapsed bar" },
+        "description": {
+          "zh-CN": "打开后插件一直运行，按刷新间隔更新。",
+          "en": "Keeps the plugin running and updates it at the refresh interval."
+        },
+        "default": false
+      },
+      {
+        "key": "rainAlert",
+        "type": "boolean",
+        "title": { "zh-CN": "一小时内要下雨时提醒", "en": "Tell me when rain is due within the hour" },
+        "description": {
+          "zh-CN": "每 30 分钟查一次，同一场雨只提醒一次。",
+          "en": "Checked every 30 minutes; one heads-up per shower."
+        },
+        "default": false
+      },
+      {
+        "key": "refreshMinutes",
+        "type": "number",
+        "title": { "zh-CN": "刷新间隔（分钟）", "en": "Refresh every (minutes)" },
+        "min": 30,
+        "max": 180,
+        "default": 30
+      }
+    ]
+  }
+}

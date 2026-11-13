@@ -190,6 +190,39 @@
         "sha256": "078818fe175a47be1d77456487f281ec879816ca6c0cb7c7f44ea159bdad33a3",
         "size": 8381
       }
+    },
+    {
+      "id": "dev.focusd.weather",
+      "name": {
+        "zh-CN": "天气",
+        "en": "Weather"
+      },
+      "description": {
+        "zh-CN": "岛上的「天气」页显示所选城市的当前天气、今天逐小时和未来 7 天；可选在收起条上显示天气和温度，以及一小时内要下雨时在岛上提醒。在插件设置里填城市名，不读系统定位；不填城市时不联网。数据来自 Open-Meteo，不需要账号。用 Windows 自带的 PowerShell 运行。",
+        "en": "A Weather page on the island with the current weather, today's hours and the next 7 days for the city you pick; optionally the weather and temperature on the collapsed bar, and a heads-up when rain is due within the hour. Type the city in the plugin settings; your location is never read, and nothing goes online until a city is set. Data from Open-Meteo, no account needed. Runs on the PowerShell built into Windows."
+      },
+      "version": "1.0.0",
+      "apiVersion": 2,
+      "author": "TixXin",
+      "homepage": "https://github.com/TixXin/fuyu/tree/main/plugins/examples/dev.focusd.weather",
+      "permissions": [
+        "island:notify"
+      ],
+      "runtime": "powershell",
+      "webview": true,
+      "publisher": "TixXin",
+      "repo": "TixXin/fuyu",
+      "categories": [
+        "information",
+        "utilities"
+      ],
+      "readme": "# 天气\n\n岛上多一个「天气」页：所选城市的当前天气、今天逐小时和未来 7 天。收起条上也可以显示天气和温度，一小时内要下雨时在岛上提醒。\n\n## 怎么用\n\n- 安装并启用后，到 **设置 → 插件扩展 → 天气 → 设置**，在「城市」里填城市名，例如「杭州」「London」。同名城市在逗号后加省、州或国家区分，例如「Springfield, Illinois」。插件设置页的「位置」一栏写着实际找到的地方和经纬度，不对就换个写法。\n- 岛上的「天气」页：现在的天气、体感、湿度和风速，未来 24 小时（降水概率 20% 以上时标出），未来 7 天的最低、最高温度。面板宽时 7 天排在右边，窄时排在下面，放不下就上下滚动。右上角的按钮立即刷新。\n- 勾选「收起条显示天气和温度」后，收起条上多一列，例如「多云 18°」，悬停看体感温度，点击打开天气页。可以在 **外观 → 收起条上的项目** 里调位置。默认不勾。\n- 勾选「一小时内要下雨时提醒」后，接下来一小时内预报有雨时岛上提示一次，大约几点开始下。同一场雨只提醒一次，3 小时内不重复。默认不勾。\n- 温度单位可以选摄氏度或华氏度。\n\n## 联网和隐私\n\n- 不读系统定位。城市留空时插件不联网。\n- 数据来自 [Open-Meteo](https://open-meteo.com/)（免费，不需要账号和密钥，数据按 CC BY 4.0 授权）。插件发给它的只有城市名（查经纬度用，结果会记住，换城市或换界面语言时才再查一次）和经纬度。\n- 每 30 分钟最多刷新一次（「刷新间隔」可以调到 180 分钟；开了下雨提醒时固定 30 分钟），点刷新按钮时立即刷新。联网失败时继续显示上次的结果，并写出更新时间和原因。\n\n## 开销\n\n- 两个都不勾：只在打开天气页时联网，页面关掉一分钟后插件自己停下。\n- 勾了收起条显示：一直运行（插件卡片上会写原因），按刷新间隔发一个很小的请求。\n- 只勾了下雨提醒：每 30 分钟启动一次查预报，查完一分钟后停下。\n- 运行时是一个 Windows 自带的 PowerShell 进程，运行时约 60 MB 内存，大部分是 PowerShell 本身。",
+      "changelog": "# 更新记录\n\n## 1.0.0\n\n- 第一个版本：岛上的「天气」页（现在、未来 24 小时、未来 7 天），收起条显示天气和温度（可选），一小时内要下雨时提醒（可选）。数据来自 Open-Meteo，城市在插件设置里填，不读系统定位。",
+      "download": {
+        "url": "https://raw.githubusercontent.com/TixXin/fly-island/main/plugins/packages/dev.focusd.weather-1.0.0.zip",
+        "sha256": "33cd0fe1da4c65b2df81e65bf96512f4b1f5e7d933e655ae34756ff407ecd3ad",
+        "size": 17175
+      }
     }
   ]
 }
