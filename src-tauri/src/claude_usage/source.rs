@@ -59,6 +59,23 @@ fn credentials_path() -> Option<PathBuf> {
     Some(dir.join(".credentials.json"))
 }
 
+#[cfg(target_os = "macos")]
+const KEYCHAIN_SERVICE: &str = "Claude Code-credentials";
+
+#[cfg(target_os = "macos")]
+async fn keychain_credentials() -> Option<String> {
+    let user = std::env::var("USER").ok().filter(|user| !user.is_empty())?;
+    tauri::async_runtime::spawn_blocking(move || keyring::Entry::new(KEYCHAIN_SERVICE, &user).ok()?.get_password().ok())
+        .await
+        .ok()
+        .flatten()
+}
+
+#[cfg(not(target_os = "macos"))]
+async fn keychain_credentials() -> Option<String> {
+    None
+}
+
 pub(super) fn parse_access_token(text: &str, now_ms: u64) -> Result<String, FetchError> {
     let missing = || {
         FetchError::new(
@@ -178,17 +195,20 @@ pub(super) async fn fetch_api(proxy: Option<&str>, now_ms: u64) -> Result<Limits
             "The user profile folder is unknown.",
         )
     })?;
-    let text = std::fs::read_to_string(&path).map_err(|error| {
-        FetchError::new(
-            UsageErrorKind::NoCredentials,
-            format!("Could not read {}: {error}", path.display()),
-        )
-    })?;
+    let text = match std::fs::read_to_string(&path) {
+        Ok(text) => text,
+        Err(error) => keychain_credentials().await.ok_or_else(|| {
+            FetchError::new(
+                UsageErrorKind::NoCredentials,
+                format!("Could not read {}: {error}", path.display()),
+            )
+        })?,
+    };
     let token = parse_access_token(&text, now_ms)?;
     let proxy = proxy.ok_or_else(|| {
         FetchError::new(
             UsageErrorKind::NoProxy,
-            "No proxy: set one in the plugin, HTTPS_PROXY or the Windows proxy settings.",
+            "No proxy: set one in the plugin, HTTPS_PROXY or the system proxy settings.",
         )
     })?;
     let proxy = proxy_url(proxy)?;

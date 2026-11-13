@@ -21,10 +21,10 @@ pub fn get_windows_accent_color() -> Option<String> {
     win32::registry::read_u32(HKEY_CURRENT_USER, DWM_KEY, "AccentColor").map(accent_hex)
 }
 
-#[cfg(not(windows))]
+#[cfg(target_os = "macos")]
 #[tauri::command]
 pub fn get_windows_accent_color() -> Option<String> {
-    None
+    crate::macos::appearance::accent_color()
 }
 
 #[cfg(test)]

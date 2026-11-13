@@ -1,8 +1,9 @@
 pub(crate) mod accent_color;
 mod command_flags;
 pub(crate) mod fullscreen;
-#[cfg_attr(not(windows), path = "network_cost_unsupported.rs")]
+#[cfg_attr(target_os = "macos", path = "network_cost_macos.rs")]
 pub(crate) mod network_cost;
+pub(crate) mod permissions;
 pub(crate) mod settings_backup;
 #[cfg_attr(target_os = "macos", path = "startup_macos.rs")]
 pub(crate) mod startup;
@@ -19,6 +20,16 @@ pub(crate) use command_flags::{CommandExt, CREATE_NO_WINDOW};
 #[cfg(windows)]
 pub(crate) fn downloads_dir() -> Option<PathBuf> {
     crate::win32::known_folder::downloads()
+}
+
+#[cfg(windows)]
+pub(crate) fn pictures_dir() -> Option<PathBuf> {
+    crate::win32::known_folder::pictures()
+}
+
+#[cfg(not(windows))]
+pub(crate) fn pictures_dir() -> Option<PathBuf> {
+    windows_home_dir().ok().map(|home| home.join("Pictures"))
 }
 
 #[cfg(not(windows))]
@@ -69,6 +80,8 @@ macro_rules! tauri_commands {
             crate::system::update_channel::updater_install,
             crate::system::update_channel::updater_download,
             crate::system::network_cost::updater_metered,
+            crate::system::permissions::get_system_permissions,
+            crate::system::permissions::open_system_permission,
             crate::system::update_runtime::updater_state,
             crate::system::update_notifications::updater_notify,
             crate::system::update_notifications::updater_diagnostics,

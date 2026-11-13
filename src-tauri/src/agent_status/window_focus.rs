@@ -11,6 +11,8 @@ use super::title::only_tab_titled;
 use crate::win32;
 
 const EDITORS: &[&str] = &[
+    "visual studio code",
+    "visual studio code - insiders",
     "code",
     "code - insiders",
     "cursor",
@@ -20,6 +22,10 @@ const EDITORS: &[&str] = &[
     "vscodium",
 ];
 const TERMINALS: &[&str] = &[
+    "terminal",
+    "iterm",
+    "ghostty",
+    "wezterm",
     "windowsterminal",
     "wezterm-gui",
     "alacritty",
@@ -123,6 +129,15 @@ fn path_names_folder(window_title: &str, folder: &str) -> bool {
         || segment_names_folder(window_title, folder)
 }
 
+#[cfg(target_os = "macos")]
+pub(super) fn app_name(image_path: &str) -> String {
+    match crate::macos::apps::outer_app_name(image_path) {
+        Some(bundle) => bundle.to_lowercase(),
+        None => Path::new(image_path).file_stem().map(|stem| stem.to_string_lossy().to_lowercase()).unwrap_or_default(),
+    }
+}
+
+#[cfg(not(target_os = "macos"))]
 pub(super) fn app_name(image_path: &str) -> String {
     Path::new(image_path)
         .file_stem()
@@ -130,7 +145,7 @@ pub(super) fn app_name(image_path: &str) -> String {
         .unwrap_or_default()
 }
 
-pub(super) const NOT_SESSION_HOSTS: &[&str] = &["explorer", "sihost", "svchost", "services", "winlogon"];
+pub(super) const NOT_SESSION_HOSTS: &[&str] = &["explorer", "sihost", "svchost", "services", "winlogon", "launchd", "finder", "dock", "loginwindow"];
 
 pub(super) fn window_of_process_chain(
     candidates: &[WindowCandidate],
@@ -149,12 +164,12 @@ pub(super) fn window_of_process_chain(
     })
 }
 
-#[cfg(not(windows))]
-pub(super) fn open_app_exe(_app: &str) -> Option<String> {
-    None
+#[cfg(target_os = "macos")]
+pub(super) fn open_app_exe(app: &str) -> Option<String> {
+    crate::macos::apps::regular_apps().into_iter().map(|(_, path)| path).find(|path| app_name(path) == app)
 }
 
-#[cfg(not(windows))]
+#[cfg(target_os = "macos")]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct FocusedWindow {
     pub(super) process_id: u32,
@@ -162,16 +177,37 @@ pub(super) struct FocusedWindow {
     pub(super) in_front: bool,
 }
 
-#[cfg(not(windows))]
+#[cfg(target_os = "macos")]
 pub(super) fn focus_session_window(
-    _hints: &SessionHints,
-    _chain: &[u32],
-    _prefer_app: Option<&str>,
+    hints: &SessionHints,
+    chain: &[u32],
+    prefer_app: Option<&str>,
 ) -> Option<FocusedWindow> {
-    None
+    use crate::macos::apps;
+    let apps_running = apps::regular_apps();
+    let owner = chain
+        .iter()
+        .find_map(|pid| apps_running.iter().find(|(owner, path)| owner == pid && !NOT_SESSION_HOSTS.contains(&app_name(path).as_str())))
+        .or_else(|| prefer_app.and_then(|wanted| apps_running.iter().find(|(_, path)| app_name(path) == wanted)))
+        .or_else(|| {
+            let candidates: Vec<WindowCandidate> = apps_running.iter().map(|(_, path)| WindowCandidate { title: String::new(), app: app_name(path) }).collect();
+            best_window(&candidates, hints).and_then(|index| apps_running.get(index))
+        })?;
+    let (process_id, path) = owner.clone();
+    let in_front = i32::try_from(process_id).is_ok_and(apps::activate);
+    Some(FocusedWindow { process_id, app: app_name(&path), in_front })
 }
 
-#[cfg(not(windows))]
+#[cfg(target_os = "macos")]
+pub(super) fn select_mac_terminal_tab(focused: &FocusedWindow, chain: &[u32]) -> Option<bool> {
+    if !matches!(focused.app.as_str(), "terminal" | "iterm") {
+        return None;
+    }
+    let tty = chain.iter().find_map(|pid| crate::macos::proc_info::tty_path(*pid))?;
+    Some(crate::macos::terminal_tabs::select(&focused.app, &tty))
+}
+
+#[cfg(target_os = "macos")]
 pub(super) fn select_terminal_tab(_focused: &FocusedWindow, _title: &str) -> bool {
     false
 }

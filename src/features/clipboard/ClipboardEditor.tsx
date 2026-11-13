@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "../../i18n";
 import type { ClipboardHistoryItem } from "./api";
+import { isPrimaryKey, PRIMARY_KEY } from "./shortcut";
 
 export function ClipboardEditor({ item, overlay, onPasteOnce, onSaveAsNew, onCancel }: {
   item: ClipboardHistoryItem;
@@ -23,10 +24,10 @@ export function ClipboardEditor({ item, overlay, onPasteOnce, onSaveAsNew, onCan
         if (event.key === "Escape") {
           event.preventDefault();
           onCancel();
-        } else if (event.key === "Enter" && event.ctrlKey) {
+        } else if (event.key === "Enter" && isPrimaryKey(event)) {
           event.preventDefault();
           if (value) onPasteOnce(value);
-        } else if (event.key.toLowerCase() === "s" && event.ctrlKey) {
+        } else if (event.key.toLowerCase() === "s" && isPrimaryKey(event)) {
           event.preventDefault();
           if (value.trim()) onSaveAsNew(value);
         }
@@ -42,8 +43,8 @@ export function ClipboardEditor({ item, overlay, onPasteOnce, onSaveAsNew, onCan
         onFocus={(event) => event.currentTarget.setSelectionRange(event.currentTarget.value.length, event.currentTarget.value.length)}
       />
       <div className="clipboard-editor__buttons">
-        <button type="button" className="clipboard-editor__primary" disabled={!value} onClick={() => onPasteOnce(value)}>{text.pasteOnce}<kbd>Ctrl ↵</kbd></button>
-        <button type="button" disabled={!value.trim()} onClick={() => onSaveAsNew(value)}>{text.saveAsNew}<kbd>Ctrl S</kbd></button>
+        <button type="button" className="clipboard-editor__primary" disabled={!value} onClick={() => onPasteOnce(value)}>{text.pasteOnce}<kbd>{PRIMARY_KEY} ↵</kbd></button>
+        <button type="button" disabled={!value.trim()} onClick={() => onSaveAsNew(value)}>{text.saveAsNew}<kbd>{PRIMARY_KEY} S</kbd></button>
         <button type="button" onClick={onCancel}>{text.cancel}<kbd>Esc</kbd></button>
       </div>
     </div>

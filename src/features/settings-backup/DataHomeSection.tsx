@@ -5,6 +5,7 @@ import { SettingsInput } from "../../components/settings/SettingsInput";
 import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton";
 import { SettingsRow } from "../../components/settings/SettingsRow";
 import { useErrorText, useTranslation } from "../../i18n";
+import { isMacOS } from "../../lib/platform";
 import { getDataHome, restartIsland, revealFolder, setDataHome, type DataHome } from "./api";
 import "./SettingsBackupSection.css";
 
@@ -68,7 +69,7 @@ export function DataHomeSection({ onMoved }: { onMoved: (from: string, to: strin
       action={
         <SettingsLinkButton onClick={() => void revealFolder(home.home)}>
           <FolderOpen size={13} strokeWidth={2.2} aria-hidden="true" />
-          {text.reveal}
+          {isMacOS ? text.revealMac : text.reveal}
         </SettingsLinkButton>
       }
       footer={footer}

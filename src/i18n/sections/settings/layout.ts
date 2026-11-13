@@ -17,12 +17,16 @@ export type SettingsLayoutText = {
   panelWidth: string;
   collapsedWidthExtra: string;
   collapsedWidthHint: string;
+  collapsedWidthHintMac: string;
   panelSizeHint: string;
+  panelSizeHintMac: string;
   launchAtStartup: string;
+  launchAtStartupMac: string;
   showTitle: string;
   displayTitle: string;
   minimizeAction: string;
   minimizeToTray: string;
+  minimizeToMenuBar: string;
   minimizeToTop: string;
   autoTuck: string;
   autoTuckSeconds: string;
@@ -30,6 +34,7 @@ export type SettingsLayoutText = {
   autoTuckRetractDelay: string;
   autoTuckHint: string;
   minimizeHint: string;
+  minimizeHintMac: string;
   seconds: (value: number) => string;
   minutes: (value: number) => string;
   resetToDefault: string;
@@ -54,12 +59,16 @@ export const zhCN: SettingsLayoutText = {
   panelWidth: "面板宽度",
   collapsedWidthExtra: "折叠岛屿宽度",
   collapsedWidthHint: "在随内容变化的宽度上加宽或收窄。也可以按住 Alt 拖动折叠岛屿的左右边缘来调。",
+  collapsedWidthHintMac: "在随内容变化的宽度上加宽或收窄。也可以按住 Option 拖动折叠岛屿的左右边缘来调。",
   panelSizeHint: "所有页面都用这个宽度和高度，内容多了在页面里滚动。也可以按住 Alt 拖动展开面板的左右边缘或底边来调。",
+  panelSizeHintMac: "所有页面都用这个宽度和高度，内容多了在页面里滚动。也可以按住 Option 拖动展开面板的左右边缘或底边来调。",
   launchAtStartup: "开机自启动",
+  launchAtStartupMac: "登录时打开",
   showTitle: "显示岛屿名称",
   displayTitle: "显示内容",
   minimizeAction: "最小化按钮",
   minimizeToTray: "托盘",
+  minimizeToMenuBar: "菜单栏",
   minimizeToTop: "贴边隐藏",
   autoTuck: "闲置时贴边隐藏",
   autoTuckSeconds: "闲置多久后隐藏",
@@ -67,6 +76,7 @@ export const zhCN: SettingsLayoutText = {
   autoTuckRetractDelay: "再次隐藏前等待",
   autoTuckHint: "一段时间没有操作后，岛屿贴到屏幕顶部，只露出一条边。",
   minimizeHint: "点岛上的最小化按钮时，隐藏到托盘还是贴到屏幕顶部。",
+  minimizeHintMac: "点岛上的最小化按钮时，隐藏到菜单栏还是贴到屏幕顶部。",
   seconds: (value) => `${value} 秒`,
   minutes: (value) => `${value} 分钟`,
   resetToDefault: "恢复默认值",
@@ -91,12 +101,16 @@ export const en: SettingsLayoutText = {
   panelWidth: "Panel width",
   collapsedWidthExtra: "Collapsed island width",
   collapsedWidthHint: "Widens or narrows the width that follows the content. Or hold Alt and drag the collapsed island's sides.",
+  collapsedWidthHintMac: "Widens or narrows the width that follows the content. Or hold Option and drag the collapsed island's sides.",
   panelSizeHint: "Every page has this width and height and scrolls inside when it holds more. Or hold Alt and drag the open panel's side or bottom edge.",
+  panelSizeHintMac: "Every page has this width and height and scrolls inside when it holds more. Or hold Option and drag the open panel's side or bottom edge.",
   launchAtStartup: "Launch at startup",
+  launchAtStartupMac: "Open at login",
   showTitle: "Show island name",
   displayTitle: "Display",
   minimizeAction: "Minimize button",
   minimizeToTray: "Tray",
+  minimizeToMenuBar: "Menu bar",
   minimizeToTop: "Tuck to edge",
   autoTuck: "Tuck to the edge when idle",
   autoTuckSeconds: "Idle time",
@@ -104,6 +118,7 @@ export const en: SettingsLayoutText = {
   autoTuckRetractDelay: "Wait before tucking again",
   autoTuckHint: "After a while without use, the island slides up to the top of the screen and shows only an edge.",
   minimizeHint: "Whether the island's minimize button hides it in the tray or tucks it to the top edge.",
+  minimizeHintMac: "Whether the island's minimize button hides it in the menu bar or tucks it to the top edge.",
   seconds: (value) => `${value} s`,
   minutes: (value) => `${value} min`,
   resetToDefault: "Reset to default",

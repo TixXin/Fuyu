@@ -18,6 +18,8 @@ export type AlertedSession = {
 
 const DEFAULT_ROW_HEIGHT = 78;
 
+const neverHold = () => false;
+
 type AgentAlertOptions = {
   sessions: AgentSessionSummary[];
   kinds: AgentAlertKinds;
@@ -30,17 +32,18 @@ type AgentAlertOptions = {
   remindAfterMs?: number;
   onRemind?: (sessions: AgentSessionSummary[]) => void;
   looked?: (session: AgentSessionSummary) => boolean;
+  holdsOpen?: (heldSince: number) => boolean;
 };
 
-export function useAgentAlerts({ sessions, kinds, durationMs, canAlert, isOpenOnAgents, isCollapsed, onOpen, onClose, remindAfterMs = 0, onRemind, looked }: AgentAlertOptions) {
+export function useAgentAlerts({ sessions, kinds, durationMs, canAlert, isOpenOnAgents, isCollapsed, onOpen, onClose, remindAfterMs = 0, onRemind, looked, holdsOpen = neverHold }: AgentAlertOptions) {
   const [alerted, setAlerted] = useState<Pick<AlertedSession, "key" | "kind" | "session"> | null>(null);
   const [rowHeight, setRowHeight] = useState(DEFAULT_ROW_HEIGHT);
   const phasesRef = useRef<SessionPhases | null>(null);
   const openedByAlertRef = useRef(false);
   const closeTimerRef = useRef<number | undefined>(undefined);
-  const latest = useRef({ durationMs, canAlert, isOpenOnAgents, isCollapsed, onOpen, onClose, onRemind, looked });
+  const latest = useRef({ durationMs, canAlert, isOpenOnAgents, isCollapsed, onOpen, onClose, onRemind, looked, holdsOpen });
   useLayoutEffect(() => {
-    latest.current = { durationMs, canAlert, isOpenOnAgents, isCollapsed, onOpen, onClose, onRemind, looked };
+    latest.current = { durationMs, canAlert, isOpenOnAgents, isCollapsed, onOpen, onClose, onRemind, looked, holdsOpen };
   });
 
   useEffect(() => {
@@ -72,10 +75,10 @@ export function useAgentAlerts({ sessions, kinds, durationMs, canAlert, isOpenOn
   }, [isCollapsed, leftAgentPage]);
 
   const popUpRef = useRef((alerts: AgentAlert[], onShown?: (shown: AgentAlert[]) => void) => {
-    const close = () => {
+    const close = (heldSince: number) => {
       if (!openedByAlertRef.current) return;
-      if (document.hasFocus()) {
-        closeTimerRef.current = window.setTimeout(close, HOVER_RETRY_MS);
+      if (latest.current.holdsOpen(heldSince)) {
+        closeTimerRef.current = window.setTimeout(() => close(heldSince), HOVER_RETRY_MS);
         return;
       }
       openedByAlertRef.current = false;
@@ -98,7 +101,7 @@ export function useAgentAlerts({ sessions, kinds, durationMs, canAlert, isOpenOn
         openedByAlertRef.current = true;
         current.onOpen();
         window.clearTimeout(closeTimerRef.current);
-        closeTimerRef.current = window.setTimeout(close, current.durationMs);
+        closeTimerRef.current = window.setTimeout(() => close(Date.now()), current.durationMs);
       });
   });
 

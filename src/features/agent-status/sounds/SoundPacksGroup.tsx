@@ -4,6 +4,7 @@ import { SettingsGroup } from "../../../components/settings/SettingsGroup";
 import { SettingsLinkButton } from "../../../components/settings/SettingsLinkButton";
 import { SettingsRow } from "../../../components/settings/SettingsRow";
 import { useErrorText, useLocale, useTranslation } from "../../../i18n";
+import { isMacOS } from "../../../lib/platform";
 import { importSoundPack, openSoundPackFolder, removeSoundPack, soundPackName, type SoundPack, type SoundPackImport } from "./api";
 import { AGENT_SOUND_EVENTS } from "./events";
 import { planSoundPack } from "./packManifest";
@@ -90,7 +91,7 @@ export function SoundPacksGroup({
             <span className="sound-packs__actions">
               <SettingsLinkButton onClick={() => openFolder(pack)}>
                 <FolderOpen size={13} strokeWidth={2.2} aria-hidden="true" />
-                {text.openFolder}
+                {isMacOS ? text.openFolderMac : text.openFolder}
               </SettingsLinkButton>
               {!pack.fromPlugin && <SettingsLinkButton tone="danger" onClick={() => remove(pack)}>{text.removePack}</SettingsLinkButton>}
             </span>

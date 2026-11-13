@@ -60,11 +60,11 @@ fn targets_are_clipped_to_each_monitor_and_moved_into_its_pixels() {
     use super::targets::{localize, target};
     let targets = [target(0, false, (-100, 50, 300, 450)), target(0, true, (10, 60, 90, 80)), target(1, false, (2000, 0, 2100, 100))];
     let json = |target| serde_json::to_value(target).expect("serializes");
-    let right = localize(&targets, (0, 0), (2560, 1440));
+    let right = localize(&targets, (0, 0), (2560, 1440), 1.0);
     assert_eq!(right.len(), 3);
     assert_eq!(json(right[0]), serde_json::json!({ "window": 0, "element": false, "x": 0, "y": 50, "width": 300, "height": 400 }));
     assert_eq!(json(right[1])["element"], true);
-    let left = localize(&targets, (-1920, 0), (1920, 1080));
+    let left = localize(&targets, (-1920, 0), (1920, 1080), 1.0);
     assert_eq!(left.len(), 1);
     assert_eq!(json(left[0]), serde_json::json!({ "window": 0, "element": false, "x": 1820, "y": 50, "width": 100, "height": 400 }));
 }
@@ -129,6 +129,7 @@ fn saved_files_get_a_time_in_their_name_and_never_overwrite() {
     assert_eq!(sanitized_name(" ?? "), "Fuyu");
 }
 
+#[cfg(windows)]
 #[test]
 fn a_chosen_save_folder_must_be_a_full_path_without_parent_steps() {
     use super::output::chosen_folder;
@@ -136,6 +137,24 @@ fn a_chosen_save_folder_must_be_a_full_path_without_parent_steps() {
     assert!(chosen_folder(r"\\nas\shots").is_ok());
     assert!(chosen_folder("Screenshots").is_err());
     assert!(chosen_folder(r"D:\Screenshots\..\Windows").is_err());
+}
+
+#[cfg(target_os = "macos")]
+#[test]
+fn a_chosen_save_folder_on_the_mac_must_be_a_full_path_without_parent_steps() {
+    use super::output::chosen_folder;
+    assert!(chosen_folder("/Users/me/Pictures/Fuyu").is_ok());
+    assert!(chosen_folder("Pictures").is_err());
+    assert!(chosen_folder("/Users/me/../Shared").is_err());
+}
+
+#[test]
+fn a_retina_selection_lands_at_its_point_on_the_screen() {
+    use super::session::offset;
+    assert_eq!(offset((1710, 0), (200, 101), 2.0), (1810, 51));
+    assert_eq!(offset((-1920, 0), (200, 101), 1.0), (-1720, 101));
+    assert_eq!(super::pin::shown_size((3000, 1001), 2.0), (1500, 501));
+    assert_eq!(super::pin::shown_size((3000, 1001), 1.0), (3000, 1001));
 }
 
 #[test]
@@ -184,7 +203,7 @@ fn kept_days_take_only_the_offered_choices() {
 
 #[test]
 fn words_read_from_a_selection_come_back_in_screen_pixels() {
-    use crate::win32::ocr::OcrWord;
+    use crate::platform::ocr::OcrWord;
     let word = |text: &str, x: f32| OcrWord { text: text.to_string(), x, y: 2.0, width: 10.0, height: 8.0 };
     let moved = super::offset_words(vec![vec![word("a", 1.0), word("b", 20.0)]], 100, 50);
     assert_eq!(moved, vec![vec![OcrWord { y: 52.0, ..word("a", 101.0) }, OcrWord { y: 52.0, ..word("b", 120.0) }]]);

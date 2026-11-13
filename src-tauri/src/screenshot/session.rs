@@ -7,10 +7,10 @@ use std::{
 };
 
 use serde::Serialize;
-use tauri::{AppHandle, Emitter, Manager, Monitor, PhysicalPosition, PhysicalSize, WebviewUrl, WebviewWindow, WebviewWindowBuilder};
+use tauri::{AppHandle, Emitter, Manager, Monitor, WebviewUrl, WebviewWindow, WebviewWindowBuilder};
 
 use super::targets::{self, LocalTarget, Target};
-use crate::win32;
+use crate::island::screen;
 
 pub(crate) const WINDOW_PREFIX: &str = "screenshot-";
 const SESSION_EVENT: &str = "screenshot-session";
@@ -50,6 +50,7 @@ struct Frame {
     origin: (i32, i32),
     width: u32,
     height: u32,
+    scale: f64,
     rgba: Vec<u8>,
 }
 
@@ -87,19 +88,19 @@ fn label(index: usize) -> String {
 }
 
 fn open(app: &AppHandle, mode: Mode) -> Result<(), String> {
+    super::capture::ensure_access()?;
     let monitors = app.available_monitors().map_err(|error| error.to_string())?;
-    let pointer = win32::window::cursor_position().map(|point| (point.x, point.y));
+    let pointer = screen::cursor_position().map(|(x, y)| (x.round() as i32, y.round() as i32));
     let mut frames = Vec::new();
     let mut pointer_label = None;
     for (index, monitor) in monitors.iter().enumerate() {
-        let (position, size) = (monitor.position(), monitor.size());
-        let Some(rgba) = win32::screen_capture::capture(position.x, position.y, size.width, size.height) else {
+        let Some(grab) = super::capture::monitor(monitor) else {
             continue;
         };
         if pointer.is_some_and(|point| contains(monitor, point)) {
             pointer_label = Some(label(index));
         }
-        frames.push(Frame { label: label(index), origin: (position.x, position.y), width: size.width, height: size.height, rgba });
+        frames.push(Frame { label: label(index), origin: grab.origin, width: grab.width, height: grab.height, scale: grab.scale, rgba: grab.rgba });
     }
     let (window_targets, window_handles) = targets::windows_on_screen();
     let Some(first) = frames.first() else {
@@ -126,7 +127,7 @@ fn overlay_session(id: u64, mode: Mode, frame: &Frame, pointer_label: &str) -> O
 }
 
 fn contains(monitor: &Monitor, (x, y): (i32, i32)) -> bool {
-    let (position, size) = (monitor.position(), monitor.size());
+    let (position, size) = (screen::monitor_origin(monitor), screen::monitor_size(monitor));
     let (right, bottom) = (position.x + size.width as i32, position.y + size.height as i32);
     (position.x..right).contains(&x) && (position.y..bottom).contains(&y)
 }
@@ -134,8 +135,8 @@ fn contains(monitor: &Monitor, (x, y): (i32, i32)) -> bool {
 fn place_windows(app: &AppHandle, monitors: &[Monitor]) -> Result<(), String> {
     for (index, monitor) in monitors.iter().enumerate() {
         let window = overlay_window(app, &label(index))?;
-        window.set_position(PhysicalPosition::new(monitor.position().x, monitor.position().y)).map_err(|error| error.to_string())?;
-        window.set_size(PhysicalSize::new(monitor.size().width, monitor.size().height)).map_err(|error| error.to_string())?;
+        screen::set_window_position(&window, screen::monitor_origin(monitor))?;
+        screen::set_window_size(&window, screen::monitor_size(monitor))?;
     }
     for (name, window) in app.webview_windows() {
         let index = name.strip_prefix(WINDOW_PREFIX).and_then(|index| index.parse::<usize>().ok());
@@ -169,9 +170,7 @@ fn overlay_window(app: &AppHandle, label: &str) -> Result<WebviewWindow, String>
         .visible(false)
         .build()
         .map_err(|error| error.to_string())?;
-    if let Err(error) = window.hwnd().map_err(|error| error.to_string()).and_then(|hwnd| win32::dwm::disable_transitions(hwnd).map_err(|error| error.to_string())) {
-        eprintln!("screenshot overlay keeps its show/hide animation: {error}");
-    }
+    super::capture::prepare_overlay(app, &window);
     Ok(window)
 }
 
@@ -202,10 +201,11 @@ pub(crate) fn targets_for(label: &str) -> Vec<LocalTarget> {
         .frames
         .iter()
         .find(|frame| frame.label == label)
-        .map(|frame| targets::localize(&session.targets, frame.origin, (frame.width, frame.height)))
+        .map(|frame| targets::localize(&session.targets, frame.origin, (frame.width, frame.height), frame.scale))
         .unwrap_or_default()
 }
 
+#[cfg_attr(not(windows), allow(dead_code))]
 pub(super) fn add_targets(id: u64, more: Vec<Target>) -> Option<Vec<String>> {
     let mut guard = session();
     let session = guard.as_mut().filter(|session| session.id == id)?;
@@ -230,6 +230,21 @@ pub(crate) fn overlay_ready(window: &WebviewWindow, id: u64) {
 
 pub(crate) fn origin(label: &str) -> Option<(i32, i32)> {
     session().as_ref()?.frames.iter().find(|frame| frame.label == label).map(|frame| frame.origin)
+}
+
+pub(crate) fn scale(label: &str) -> Option<f64> {
+    session().as_ref()?.frames.iter().find(|frame| frame.label == label).map(|frame| frame.scale)
+}
+
+pub(crate) fn global_point(label: &str, left: u32, top: u32) -> Option<(i32, i32)> {
+    let guard = session();
+    let frame = guard.as_ref()?.frames.iter().find(|frame| frame.label == label)?;
+    Some(offset(frame.origin, (left, top), frame.scale))
+}
+
+pub(crate) fn offset(origin: (i32, i32), (left, top): (u32, u32), scale: f64) -> (i32, i32) {
+    let units = |pixels: u32| if scale == 1.0 { pixels } else { (f64::from(pixels) / scale).round() as u32 };
+    (origin.0.saturating_add_unsigned(units(left)), origin.1.saturating_add_unsigned(units(top)))
 }
 
 pub(crate) fn selection(label: &str, rect: PixelRect) -> Option<(u32, u32, Vec<u8>)> {

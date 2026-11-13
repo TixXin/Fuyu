@@ -29,6 +29,18 @@ const FILES: &[(&str, &[u8])] = &[
 const CONTENT_TYPES: &str = r#"<?xml version="1.0" encoding="utf-8"?>
 <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension=".json" ContentType="application/json"/><Default Extension=".js" ContentType="application/javascript"/><Default Extension=".md" ContentType="text/markdown"/><Default Extension=".txt" ContentType="text/plain"/><Default Extension=".png" ContentType="image/png"/><Default Extension=".vsixmanifest" ContentType="text/xml"/></Types>"#;
 
+#[cfg(target_os = "macos")]
+const EDITORS: &[(&str, &str, &str, &str)] = &[
+    ("visual studio code", "VS Code", "code", "Visual Studio Code"),
+    ("visual studio code - insiders", "VS Code Insiders", "code-insiders", "Visual Studio Code - Insiders"),
+    ("cursor", "Cursor", "cursor", "Cursor"),
+    ("windsurf", "Windsurf", "windsurf", "Windsurf"),
+    ("vscodium", "VSCodium", "codium", "VSCodium"),
+    ("trae", "Trae", "trae", "Trae"),
+    ("kiro", "Kiro", "kiro", "Kiro"),
+];
+
+#[cfg(not(target_os = "macos"))]
 const EDITORS: &[(&str, &str, &str, &str)] = &[
     ("code", "VS Code", "code.cmd", "Microsoft VS Code"),
     ("code - insiders", "VS Code Insiders", "code-insiders.cmd", "Microsoft VS Code Insiders"),
@@ -104,6 +116,7 @@ pub(super) fn build_vsix() -> Result<Vec<u8>, String> {
     zip.finish().map(Cursor::into_inner).map_err(|error| error.to_string())
 }
 
+#[cfg(not(target_os = "macos"))]
 pub(super) fn find_cli(app: &str, exe: Option<&Path>, path_dirs: &[PathBuf], install_roots: &[PathBuf]) -> Option<PathBuf> {
     let &(_, _, script, folder) = EDITORS.iter().find(|(name, ..)| *name == app)?;
     let bins = |root: &Path| [root.join("bin"), root.join("resources").join("app").join("bin")];
@@ -115,6 +128,7 @@ pub(super) fn find_cli(app: &str, exe: Option<&Path>, path_dirs: &[PathBuf], ins
     named.or_else(|| candidates.iter().find_map(|dir| only_script(dir)))
 }
 
+#[cfg(not(target_os = "macos"))]
 fn only_script(dir: &Path) -> Option<PathBuf> {
     let scripts = fs::read_dir(dir)
         .ok()?
@@ -128,16 +142,35 @@ fn only_script(dir: &Path) -> Option<PathBuf> {
     }
 }
 
+#[cfg(target_os = "macos")]
+pub(super) fn find_mac_cli(app: &str, exe: Option<&Path>, path_dirs: &[PathBuf], applications: &[PathBuf]) -> Option<PathBuf> {
+    let &(_, _, script, bundle) = EDITORS.iter().find(|(name, ..)| *name == app)?;
+    let running = exe.and_then(|exe| exe.ancestors().find(|dir| dir.extension().is_some_and(|ext| ext == "app"))).map(Path::to_path_buf);
+    let installed = applications.iter().map(|dir| dir.join(format!("{bundle}.app")));
+    let in_bundles = running.into_iter().chain(installed).map(|app| app.join("Contents").join("Resources").join("app").join("bin").join(script));
+    in_bundles.chain(path_dirs.iter().map(|dir| dir.join(script))).find(|path| path.is_file())
+}
+
+#[cfg(target_os = "macos")]
+fn cli_of(app: &str) -> Option<PathBuf> {
+    let exe = window_focus::open_app_exe(app).map(PathBuf::from);
+    let mut applications = vec![PathBuf::from("/Applications")];
+    applications.extend(windows_home_dir().ok().map(|home| home.join("Applications")));
+    find_mac_cli(app, exe.as_deref(), &path_dirs(), &applications)
+}
+
 fn path_dirs() -> Vec<PathBuf> {
     env::var_os("PATH").map(|path| env::split_paths(&path).collect()).unwrap_or_default()
 }
 
+#[cfg(not(target_os = "macos"))]
 fn install_roots() -> Vec<PathBuf> {
     let local = env::var_os("LOCALAPPDATA").map(|dir| PathBuf::from(dir).join("Programs"));
     let program_files = ["ProgramFiles", "ProgramFiles(x86)"].into_iter().filter_map(env::var_os).map(PathBuf::from);
     local.into_iter().chain(program_files).collect()
 }
 
+#[cfg(not(target_os = "macos"))]
 fn cli_of(app: &str) -> Option<PathBuf> {
     let exe = window_focus::open_app_exe(app).map(PathBuf::from);
     find_cli(app, exe.as_deref(), &path_dirs(), &install_roots())

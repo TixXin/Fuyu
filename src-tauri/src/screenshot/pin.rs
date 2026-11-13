@@ -11,8 +11,8 @@ use std::{
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager, PhysicalPosition, PhysicalSize, WebviewUrl, WebviewWindow, WebviewWindowBuilder};
 
-use super::{output::Picture, session};
-use crate::win32;
+use super::{capture, output::Picture, session};
+use crate::island::screen;
 
 pub(crate) const WINDOW_PREFIX: &str = "pin-";
 const ASSIGNED_EVENT: &str = "screenshot-pin-assigned";
@@ -26,6 +26,7 @@ const SWAP_DELAY: Duration = Duration::from_millis(50);
 struct Pin {
     picture: Arc<Picture>,
     margin: u32,
+    density: f64,
     session: Option<u64>,
 }
 
@@ -64,9 +65,7 @@ fn build(app: &AppHandle) -> Result<WebviewWindow, String> {
         .visible(false)
         .build()
         .map_err(|error| error.to_string())?;
-    if let Ok(hwnd) = window.hwnd() {
-        let _ = win32::dwm::disable_transitions(hwnd);
-    }
+    capture::prepare_pin(&window);
     Ok(window)
 }
 
@@ -134,17 +133,19 @@ fn place(app: &AppHandle, picture: Picture, at: (i32, i32), scale: f64, session:
     }
     let window = take_window(app)?;
     let label = window.label().to_string();
-    let margin = (MARGIN * scale).round().max(0.0) as u32;
+    let units = capture::units_per_css(scale);
+    let margin = (MARGIN * units).round().max(0.0) as u32;
+    let density = scale / units;
     let info = PinInfo { width: picture.width, height: picture.height };
-    let (width, height) = (picture.width + margin * 2, picture.height + margin * 2);
-    pins().insert(label.clone(), Pin { picture: Arc::new(picture), margin, session });
-    let placed = window
-        .set_position(PhysicalPosition::new(at.0 - margin as i32, at.1 - margin as i32))
-        .and_then(|()| window.set_size(PhysicalSize::new(width, height)));
+    let shown = shown_size((picture.width, picture.height), density);
+    let (width, height) = (shown.0 + margin * 2, shown.1 + margin * 2);
+    pins().insert(label.clone(), Pin { picture: Arc::new(picture), margin, density, session });
+    let placed = screen::set_window_position(&window, PhysicalPosition::new(at.0 - margin as i32, at.1 - margin as i32))
+        .and_then(|()| screen::set_window_size(&window, PhysicalSize::new(width, height)));
     if let Err(error) = placed {
         pins().remove(&label);
         let _ = window.destroy();
-        return Err(error.to_string());
+        return Err(error);
     }
     let _ = app.emit_to(label.as_str(), ASSIGNED_EVENT, info);
     prepare(app);
@@ -182,18 +183,26 @@ pub(crate) fn forget(label: &str) {
     }
 }
 
+pub(super) fn shown_size((width, height): (u32, u32), density: f64) -> (u32, u32) {
+    if density == 1.0 {
+        return (width, height);
+    }
+    let units = |pixels: u32| ((f64::from(pixels) / density).round() as u32).max(1);
+    (units(width), units(height))
+}
+
 pub(super) fn zoom(window: &WebviewWindow, scale: f64, anchor: (f64, f64)) -> Result<(), String> {
     let (picture, margin) = pins()
         .get(window.label())
-        .map(|pin| ((pin.picture.width, pin.picture.height), pin.margin))
+        .map(|pin| (shown_size((pin.picture.width, pin.picture.height), pin.density), pin.margin))
         .ok_or_else(|| "This pin is closed.".to_string())?;
-    let position = window.outer_position().map_err(|error| error.to_string())?;
-    let size = window.outer_size().map_err(|error| error.to_string())?;
+    let position = screen::window_position(window)?;
+    let size = screen::window_size(window)?;
     let inner = (position.x + margin as i32, position.y + margin as i32);
     let shown = (size.width.saturating_sub(margin * 2), size.height.saturating_sub(margin * 2));
     let (x, y, width, height) = zoomed(inner, shown, picture, scale, anchor);
-    window.set_position(PhysicalPosition::new(x - margin as i32, y - margin as i32)).map_err(|error| error.to_string())?;
-    window.set_size(PhysicalSize::new(width + margin * 2, height + margin * 2)).map_err(|error| error.to_string())
+    screen::set_window_position(window, PhysicalPosition::new(x - margin as i32, y - margin as i32))?;
+    screen::set_window_size(window, PhysicalSize::new(width + margin * 2, height + margin * 2))
 }
 
 pub(super) fn zoomed(position: (i32, i32), size: (u32, u32), picture: (u32, u32), scale: f64, anchor: (f64, f64)) -> (i32, i32, u32, u32) {

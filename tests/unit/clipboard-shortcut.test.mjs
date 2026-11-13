@@ -3,6 +3,7 @@ import test from "node:test";
 import {
   DEFAULT_CLIPBOARD_SHORTCUT,
   buildShortcutFromEvent,
+  isPrimaryKey,
   matchesClipboardShortcut,
   normalizeClipboardShortcut,
   normalizeShortcutKeyLabel,
@@ -72,4 +73,12 @@ test("clipboard settings clamp the item limit and normalize the shortcut", () =>
   assert.equal(normalizeClipboardSettings({ ...base, shortcut: "alt+shift+c" }).shortcut, "Alt+Shift+C");
   assert.equal(normalizeClipboardSettings({ ...base, shortcutEnabled: undefined }).shortcutEnabled, true);
   assert.equal(normalizeClipboardSettings({ ...base, shortcutEnabled: false }).shortcutEnabled, false);
+});
+
+test("the clipboard window takes Command as well as Control on macOS only", () => {
+  assert.equal(isPrimaryKey(key("i", { ctrlKey: true }), false), true);
+  assert.equal(isPrimaryKey(key("i", { metaKey: true }), false), false);
+  assert.equal(isPrimaryKey(key("i", { metaKey: true }), true), true);
+  assert.equal(isPrimaryKey(key("i", { ctrlKey: true }), true), true);
+  assert.equal(isPrimaryKey(key("i"), true), false);
 });

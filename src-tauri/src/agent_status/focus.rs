@@ -176,6 +176,10 @@ pub(super) fn focus_session(
         let selected = wezterm::activate_tab_titled(exe.as_deref().map(Path::new), title);
         log.note(if selected { "wezterm-tab=selected" } else { "wezterm-tab=none" });
     }
+    #[cfg(target_os = "macos")]
+    if let Some(selected) = window_focus::select_mac_terminal_tab(&focused, &chain) {
+        log.note(if selected { "mac-tab=selected" } else { "mac-tab=none" });
+    }
     if let Some(title) = title.filter(|_| focused.app == WINDOWS_TERMINAL_APP) {
         let selected = window_focus::select_terminal_tab(&focused, title);
         log.note(if selected { "wt-tab=selected" } else { "wt-tab=none" });
@@ -202,9 +206,9 @@ fn foreground_process_id() -> u32 {
     crate::win32::process::window_process_id(crate::win32::window::foreground_window())
 }
 
-#[cfg(not(windows))]
+#[cfg(target_os = "macos")]
 fn foreground_process_id() -> u32 {
-    0
+    crate::macos::apps::frontmost_pid().and_then(|pid| u32::try_from(pid).ok()).unwrap_or(0)
 }
 
 #[derive(Debug, serde::Deserialize)]

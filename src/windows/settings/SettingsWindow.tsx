@@ -6,7 +6,8 @@ import { ThemeSettingsPage } from "./ThemeSettingsPage";
 import { ThemeMarketPage } from "../../features/theme-market/ThemeMarketPage";
 import { buildTheme } from "../../features/appearance/theme";
 import { DEFAULT_SETTINGS_CATEGORY, isCategoryAvailable, type SettingsCategory } from "./categories";
-import { useUnsupportedFeatures } from "../../lib/platform";
+import { isMacOS, useUnsupportedFeatures } from "../../lib/platform";
+import { useMacWindowKeys } from "./useMacWindowKeys";
 import { GeneralSettingsPage } from "./GeneralSettingsPage";
 import { AgentSettingsPage } from "./AgentSettingsPage";
 import { AgentAlertsSettingsPage } from "./AgentAlertsSettingsPage";
@@ -146,17 +147,18 @@ export function SettingsWindow() {
   };
   const showMarket = useCallback(() => setCategory("market"), []);
   const marketRequest = useMarketInstallRequest(showMarket);
+  useMacWindowKeys();
 
   const light = activeTone(settings.themeMode, systemDark) === "light";
   useEffect(() => {
     const window = getCurrentWindow();
     const failed = (error: unknown) => console.error("Failed to set the settings window's tone", error);
-    void window.setBackgroundColor(light ? SETTINGS_LIGHT_FILL : SETTINGS_DARK_FILL).catch(failed);
+    if (!isMacOS) void window.setBackgroundColor(light ? SETTINGS_LIGHT_FILL : SETTINGS_DARK_FILL).catch(failed);
     void window.setTheme(light ? "light" : "dark").catch(failed);
   }, [light]);
 
   return (
-    <main className={`settings-stage stage--font-${settings.fontFamily}${light ? " island-light settings-stage--light" : ""}`}>
+    <main className={`settings-stage stage--font-${settings.fontFamily}${isMacOS ? " settings-stage--mac" : ""}${light ? " island-light settings-stage--light" : ""}`}>
       <LayoutEditor
         category={category}
         onCategoryChange={changeCategory}

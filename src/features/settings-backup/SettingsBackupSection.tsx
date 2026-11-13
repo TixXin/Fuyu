@@ -4,6 +4,7 @@ import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton";
 import { SettingsRow } from "../../components/settings/SettingsRow";
 import { useErrorText, useTranslation } from "../../i18n";
+import { isMacOS } from "../../lib/platform";
 import { restartIsland, revealBackup, saveSettingsBackup } from "./api";
 import { backupFileName, parseBackup } from "./backup.ts";
 import { collectBackup, restoreBackup } from "./storage.ts";
@@ -50,7 +51,7 @@ export function SettingsBackupSection() {
           <span>{text.saved(status.path)}</span>
           <button className="settings-backup__link" type="button" onClick={() => void revealBackup(status.path)}>
             <FolderOpen size={12} strokeWidth={2.2} aria-hidden="true" />
-            {text.reveal}
+            {isMacOS ? text.revealMac : text.reveal}
           </button>
         </p>
       )}

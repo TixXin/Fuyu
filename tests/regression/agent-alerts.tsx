@@ -12,7 +12,6 @@ const SUMMARY = "修好了，已合入 main。完成提醒现在显示最后的�
 let inFront: string[] = [];
 mockIPC((command) => (command === "agent_sessions_in_front" ? inFront : null));
 let hovering = false;
-Object.defineProperty(document, "hasFocus", { value: () => hovering });
 
 const session = (sessionId: string, phase: AgentSessionSummary["phase"]): AgentSessionSummary => ({
   provider: "claudeCode", sessionId, cwd: null, title: sessionId, model: null, effort: null,
@@ -54,6 +53,7 @@ function Harness() {
     onClose: () => { closes += 1; changeIsland((current) => ({ ...current, mode: "collapsed" })); },
     remindAfterMs,
     onRemind: (sessions) => { reminded = [...reminded, ...sessions.map((one) => one.sessionId)]; },
+    holdsOpen: () => hovering,
   });
   return null;
 }
