@@ -8,7 +8,9 @@
 
 .clipboard-entry-icon__app {
   position: absolute;
-  inset: 0;
-  width: 16px;
-  height: 16px;
+  right: -5px;
+  bottom: -5px;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
 }

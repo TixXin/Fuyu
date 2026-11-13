@@ -80,6 +80,21 @@ pub(super) fn hide(app: &AppHandle) -> Result<(), String> {
     popup_window(app)?.hide().map_err(|error| error.to_string())
 }
 
+pub(super) fn refocus(app: &AppHandle) -> Result<(), String> {
+    if !popup_window(app)?.is_visible().unwrap_or(false) {
+        return Ok(());
+    }
+    let handle = app.clone();
+    app.run_on_main_thread(move || {
+        if !crate::macos::island_panel::make_panel_key(&handle, WINDOW_LABEL) {
+            if let Ok(window) = popup_window(&handle) {
+                let _ = window.set_focus();
+            }
+        }
+    })
+    .map_err(|error| error.to_string())
+}
+
 fn take_target() -> Option<i32> {
     TARGET_APP.lock().unwrap_or_else(PoisonError::into_inner).take()
 }

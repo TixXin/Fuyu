@@ -178,8 +178,8 @@ export function getClipboardImagePreview(id: string) {
   return invoke<string | null>("get_clipboard_image_preview", { id });
 }
 
-export function hideClipboardPopup() {
-  return invoke<void>("hide_clipboard_popup");
+export function hideClipboardPopup(blurred = false) {
+  return invoke<void>("hide_clipboard_popup", { blurred });
 }
 
 export function listenClipboardPopupOpened(handler: () => void) {

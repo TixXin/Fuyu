@@ -66,6 +66,10 @@ pub async fn screenshot_configure(app: AppHandle, enabled: bool, shortcuts: Opti
     }
 }
 
+pub(crate) fn is_capturing() -> bool {
+    session::id().is_some()
+}
+
 pub(crate) fn start_from_tray(app: &AppHandle) {
     if !hotkeys::is_enabled() {
         return;

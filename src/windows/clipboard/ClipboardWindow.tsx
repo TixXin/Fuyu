@@ -24,7 +24,9 @@ export function ClipboardWindow() {
     const stops: (() => void)[] = [];
     const keep = (stop: () => void) => (cancelled ? stop() : stops.push(stop));
     void listenClipboardPopupOpened(() => setOpenCount((count) => count + 1)).then(keep);
-    void listenClipboardPopupBlur(close).then(keep);
+    void listenClipboardPopupBlur(() => {
+      void hideClipboardPopup(true).catch((error: unknown) => console.error("Failed to hide the clipboard window", error));
+    }).then(keep);
     return () => {
       cancelled = true;
       stops.forEach((stop) => stop());

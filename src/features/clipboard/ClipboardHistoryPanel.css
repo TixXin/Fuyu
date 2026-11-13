@@ -1,7 +1,13 @@
-.clipboard-page .island-list-row__lead .clipboard-entry-icon,
-.clipboard-page .island-list-row__lead .clipboard-entry-icon__app {
+.clipboard-page .island-list-row__lead .clipboard-entry-icon {
   width: 18px;
   height: 18px;
+}
+
+.clipboard-page .island-list-row__lead .clipboard-entry-icon__app {
+  right: -4px;
+  bottom: -4px;
+  width: 11px;
+  height: 11px;
 }
 
 .clipboard-page .clipboard-swatch {
