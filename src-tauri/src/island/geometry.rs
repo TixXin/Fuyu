@@ -84,10 +84,11 @@ pub(crate) fn apply_stage_geometry(
         -((COLLAPSED_ISLAND_HEIGHT * state.collapsed_scale - TUCKED_VISIBLE_EDGE_HEIGHT).max(0.0)
             * scale)
             .round() as i32;
-    #[cfg(target_os = "macos")]
-    let top_inset = 0;
-    #[cfg(not(target_os = "macos"))]
-    let top_inset = work_area_top_inset(monitor_position.y, monitor.work_area().position.y);
+    let top_inset = if cfg!(target_os = "macos") && !state.under_menu_bar {
+        0
+    } else {
+        work_area_top_inset(monitor_position.y, monitor.work_area().position.y)
+    };
     let centered_x = crate::dev_lane::stage_x(monitor_position.x, monitor_size.width as i32, physical_width);
     let normal_y = monitor_position.y + top_inset + physical_top_offset;
     let tucked_y = monitor_position.y + top_inset + tucked_top_offset;

@@ -61,7 +61,7 @@ export function listenIslandResize(handler: (delta: IslandResizeDelta) => void):
 
 export const ISLAND_POSITION_CHANGED_EVENT = "island-position-changed";
 
-export type IslandLayout = { collapsedScale: number; expandedScale: number; marginY: number };
+export type IslandLayout = { collapsedScale: number; expandedScale: number; marginY: number; underMenuBar: boolean };
 
 export type IslandInteraction = {
   mode: IslandMode;

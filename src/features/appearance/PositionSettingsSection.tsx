@@ -5,8 +5,9 @@ import { SettingsSelect } from "../../components/settings/SettingsSelect";
 import { SettingsSliderRow } from "../../components/settings/SettingsSliderRow";
 import { useFlash } from "../../components/settings/useFlash";
 import { useTranslation } from "../../i18n";
+import { isMacOS } from "../../lib/platform";
 import { DEFAULT_SETTINGS } from "./settings";
-import type { IslandMonitor, IslandSettings } from "./types";
+import type { IslandMonitor, IslandSettings, MenuBarPlacement } from "./types";
 
 export function PositionSettingsSection({
   settings,
@@ -20,6 +21,7 @@ export function PositionSettingsSection({
   const t = useTranslation();
   const [done, flash] = useFlash<true>();
   const monitorOptions = (["primary", "cursor", "foreground"] as const).map((value) => ({ value, label: t.settings.position.monitorOptions[value] }));
+  const menuBarOptions = (["over", "below"] as const).map((value) => ({ value, label: t.settings.position.menuBarOptions[value] }));
 
   return (
     <SettingsGroup title={t.settings.position.title} footer={`${t.settings.position.monitorHint} ${t.settings.position.moveHint}`}>
@@ -34,6 +36,20 @@ export function PositionSettingsSection({
           />
         }
       />
+      {isMacOS && (
+        <SettingsRow
+          title={t.settings.position.menuBar}
+          searchable={false}
+          control={
+            <SettingsSelect<MenuBarPlacement>
+              value={settings.menuBarPlacement}
+              options={menuBarOptions}
+              ariaLabel={t.settings.position.menuBar}
+              onChange={(menuBarPlacement) => onSettingsChange({ ...settings, menuBarPlacement })}
+            />
+          }
+        />
+      )}
       <SettingsSliderRow
         title={t.settings.layout.marginY}
         value={settings.marginY}

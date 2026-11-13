@@ -52,6 +52,8 @@ pub struct IslandLayout {
     collapsed_scale: f64,
     expanded_scale: f64,
     margin_y: f64,
+    #[serde(default)]
+    under_menu_bar: bool,
 }
 
 #[tauri::command]
@@ -61,6 +63,7 @@ pub fn set_island_layout(app: AppHandle, layout: IslandLayout) -> Result<(), Str
         state.collapsed_scale = layout.collapsed_scale.clamp(0.75, 1.4);
         state.expanded_scale = layout.expanded_scale.clamp(0.75, 1.4);
         state.margin_y = layout.margin_y.clamp(0.0, 160.0);
+        state.under_menu_bar = layout.under_menu_bar;
         *state
     });
     apply_stage_geometry(&window, state, false)

@@ -21,6 +21,7 @@ export function useNativeLayout(settings: IslandSettings) {
         collapsedScale: nextSettings.collapsedScale,
         expandedScale: nextSettings.expandedScale,
         marginY: nextSettings.marginY,
+        underMenuBar: nextSettings.menuBarPlacement === "below",
       });
     } catch (error) {
       console.error("Failed to sync island layout", error);
@@ -71,7 +72,7 @@ export function useNativeLayout(settings: IslandSettings) {
   useEffect(() => {
     scheduleNativeLayout(settings);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [settings.marginY, scheduleNativeLayout]);
+  }, [settings.marginY, settings.menuBarPlacement, scheduleNativeLayout]);
 
   useEffect(() => {
     const syncState = layoutSync.current;

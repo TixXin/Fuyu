@@ -45,6 +45,7 @@ export function normalizeLayoutSettings(settings: LegacyIslandSettings | null | 
     collapsedScale: clamp(Number(collapsedScale), 0.75, 1.4),
     expandedScale: clamp(Number(expandedScale), 0.75, 1.4),
     islandMonitor: settings?.islandMonitor === "cursor" || settings?.islandMonitor === "foreground" ? settings.islandMonitor : "primary",
+    menuBarPlacement: settings?.menuBarPlacement === "below" ? "below" : "over",
     marginY: clamp(
       Number(hasPreviousDefaultMargin ? DEFAULT_SETTINGS.marginY : marginY),
       0,
