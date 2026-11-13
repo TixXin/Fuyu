@@ -11,6 +11,7 @@ pub(crate) const BATTERY_WAIT_POLLS: u32 = 3;
 pub(crate) enum AudioKind {
     Headphones,
     Headset,
+    #[cfg_attr(not(windows), allow(dead_code))]
     Speaker,
 }
 
@@ -24,6 +25,7 @@ pub(crate) struct Output {
 }
 
 impl Output {
+    #[cfg_attr(not(windows), allow(dead_code))]
     pub(crate) fn classify(id: String, name: String, form_factor: u32, enumerator: &str, device: Option<String>) -> Option<Self> {
         let bluetooth = enumerator.starts_with("BTH");
         let kind = match form_factor {

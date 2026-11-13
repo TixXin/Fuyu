@@ -18,7 +18,7 @@ export function DeviceUseIndicator({ deviceUse }: { deviceUse: DeviceUse }) {
             key={device}
             className={`device-use__button device-use__button--${device}`}
             type="button"
-            aria-label={t.island.deviceInUse[device](deviceUse[device].join(t.island.deviceAppSeparator))}
+            aria-label={t.island.deviceInUse[device](deviceUse[device].filter(Boolean).join(t.island.deviceAppSeparator))}
             onClick={(event) => {
               event.stopPropagation();
               void openDevicePrivacySettings(device).catch((error: unknown) =>

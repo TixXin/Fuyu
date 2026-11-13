@@ -48,8 +48,8 @@ macOS 的计划和决定见 [macos-port-plan.md](macos-port-plan.md)，各功能
 | 截图 | `screenshot` | 开发中 | 未开始 | ScreenCaptureKit；屏幕录制权限，系统每月重新确认 | G1.6 | — |
 | 音量 | `system_levels` | 已支持 | 已支持 | CoreAudio：默认输出设备的 `VolumeScalar`（主声道读不到时取左右声道平均）和 `Mute`，每 100ms 读一次、每 2 秒重新取默认设备（`macos/audio.rs`）；不要权限。亮度提示在 Mac 上没有（要私有 API，归 G1.9） | G1.6 | macOS 27.2，2026-11-13（读数与 `osascript` 的音量一致） |
 | 亮度 | `system_levels` | 已支持 | 未开始 | 私有 API（DisplayServices / DDC），可关、可降级 | G1.9 | — |
-| 摄像头 / 麦克风提示 | `device_use` | 已支持 | 未开始 | 设备级占用；麦克风按进程要 macOS 14 | G1.6 | — |
-| 设备插拔、电源 | `device_events` | 已支持 | 未开始 | IOKit、CoreAudio 通知 | G1.6 | — |
+| 摄像头 / 麦克风提示 | `device_use` | 已支持 | 开发中 | 麦克风按进程：CoreAudio 的进程列表里 `IsRunningInput` 的进程，辅助进程（Chrome Helper、WebKit）经 `responsibility_get_pid_responsible_for_pid`（私有，M7）换成所属应用，名字取最外层 `.app`；读不到进程列表时退回设备级 `DeviceIsRunningSomewhere`（`macos/audio_devices.rs`、`apps.rs`）。摄像头只有设备级：CoreMediaIO 的 `DeviceIsRunningSomewhere`，不知道是哪个应用，返回空名字，提示文字改成「摄像头正在使用」（`macos/camera.rs`）。点图标打开系统设置的隐私页。不要权限 | G1.6 | — |
+| 设备插拔、电源 | `device_events` | 已支持 | 开发中 | 和 Windows 同一套轮询与提醒逻辑（`device_events/tracker.rs`），只换读数（`readers_macos.rs`）：输出设备每秒用 CoreAudio 列一次，蓝牙（含 BLE）算耳机、同时有输入的 USB 设备算耳麦，内置扬声器和其他输出不提醒（`macos/audio_devices.rs`）；蓝牙电量读 `system_profiler SPBluetoothDataType -json` 里已连接设备的电量（AirPods 取左右耳较低的一只），按蓝牙地址和 CoreAudio 的 UID 对上（`macos/bluetooth.rs`）；电源每 2 秒读 IOKit 的 `IOPSCopyPowerSourcesInfo`，只看内置电池，台式 Mac 不提醒（`macos/power.rs`）；不要权限。没有：3.5mm 耳机孔的插拔；只有输出的 USB 设备不提醒（CoreAudio 没有 Windows 那样的设备形态，分不清耳机、音箱和解码器） | G1.6 | — |
 | 媒体控制 | `media_control` | 已支持 | 未开始 | 私有 MediaRemote（mediaremote-adapter 思路）+ AppleScript 兜底 | G1.9 | — |
 | 同步歌词 | `lyrics` | 已支持 | 未开始 | 依赖媒体控制拿到的曲目信息 | G1.9 | — |
 | QQ 通知 | `qq_notifications` | 已支持 | 未开始 | 读不到系统通知；最多读 Dock 角标未读数（辅助功能），待验证 | G1.10 | — |
