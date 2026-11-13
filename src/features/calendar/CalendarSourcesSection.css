@@ -77,3 +77,18 @@
   cursor: default;
   opacity: 0.45;
 }
+
+.calendar-form__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.calendar-source__empty {
+  color: var(--color-text-muted);
+}
+
+.calendar-form__actions {
+  align-self: flex-end;
+  flex-direction: row-reverse;
+}

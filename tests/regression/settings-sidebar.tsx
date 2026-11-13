@@ -101,7 +101,7 @@ try {
   await mount("music", off);
   check(listed().includes("music") && element(".settings-sidebar__item--active").dataset.category === "music", "The open page stays listed even when its feature is off");
   await type("岛上显示");
-  check(listed().join() === "agents", "Search still finds the pages of features that are off");
+  check(listed().join() === "music,agents", "Search still finds the pages of features that are off");
   await mount("sounds");
   check(element(".settings-sidebar__item--active").dataset.category === "agents", "A tab marks the sidebar item it belongs to");
   await type("音效");

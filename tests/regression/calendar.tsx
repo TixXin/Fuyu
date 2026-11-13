@@ -158,11 +158,17 @@ try {
   const settings = createRoot(document.getElementById("settings")!);
   await act(async () => { settings.render(<I18nProvider><CalendarSourcesSection /></I18nProvider>); await wait(); });
   check(document.querySelector(".settings-row__title")?.textContent === "飞书" && document.body.textContent?.includes("u_abc · caldav.feishu.cn"), "列出已添加的日历，只显示账号和网站");
+  check(!document.querySelector(".calendar-form"), "已经有日历时，添加表单先收着");
+  const openForm = async () => {
+    if (!document.querySelector(".calendar-form")) await act(async () => { [...document.querySelectorAll<HTMLButtonElement>(".settings-link-button")].find((link) => link.textContent === "添加日历")!.click(); await wait(); });
+  };
+  await openForm();
   const addButton = () => document.querySelector<HTMLButtonElement>(".calendar-form__add")!;
   const inputs = () => [...document.querySelectorAll<HTMLInputElement>(".calendar-form__field input")];
   const labels = () => [...document.querySelectorAll(".calendar-form__field span")].map((label) => label.textContent).join("|");
   const steps = () => document.querySelector(".calendar-form__steps")?.textContent ?? "";
   const pick = async (label: string) => {
+    await openForm();
     await act(async () => { document.querySelector<HTMLButtonElement>(".calendar-form .select-control__trigger, .settings-row .select-control__trigger")!.click(); await wait(); });
     const option = [...document.querySelectorAll<HTMLElement>(".select-control__option")].find((item) => item.textContent?.startsWith(label))!;
     await act(async () => { option.click(); await wait(); });
@@ -181,7 +187,7 @@ try {
   check(document.querySelector(".calendar-form__error")?.textContent === "日历账号或密码不对。" && inputs()[0].value === "wrong", "读不到时说明原因，填的内容保留");
   await act(async () => { setInput(inputs()[0], "webcal://calendar.google.com/x.ics"); await wait(); });
   await act(async () => { addButton().click(); await wait(); await wait(); });
-  check(!document.querySelector(".calendar-form__error") && document.body.textContent?.includes("订阅 · calendar.google.com") && inputs()[0].value === "", "添加成功后出现在列表里，表单清空");
+  check(!document.querySelector(".calendar-form__error") && document.body.textContent?.includes("订阅 · calendar.google.com") && !document.querySelector(".calendar-form"), "添加成功后出现在列表里，表单收起");
   await pick("其他");
   await act(async () => { setInput(inputs()[0], "https://dav.example.com"); await wait(); });
   check(labels() === "地址或链接|账号|密码|名称（可不填）", "其他：粘贴服务器地址时要账号和密码");

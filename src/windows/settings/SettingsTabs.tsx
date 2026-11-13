@@ -1,5 +1,5 @@
 import { useTranslation } from "../../i18n";
-import { useUnsupportedFeatures } from "../../lib/platform";
+import { isMacOS, useUnsupportedFeatures } from "../../lib/platform";
 import { entryOf, isCategoryAvailable, SETTINGS_TABS, type SettingsCategory, type TabbedCategory } from "./categories";
 import "./SettingsTabs.css";
 
@@ -8,7 +8,7 @@ export function SettingsTabs({ category, onCategoryChange }: { category: Setting
   const unsupported = useUnsupportedFeatures();
   const entry = entryOf(category);
   if (!entry) return null;
-  const tabs = SETTINGS_TABS[entry].filter((tab) => isCategoryAvailable(tab, unsupported));
+  const tabs = SETTINGS_TABS[entry].filter((tab) => isCategoryAvailable(tab, unsupported, isMacOS));
   const move = (from: TabbedCategory, step: number) => {
     const next = tabs[(tabs.indexOf(from) + step + tabs.length) % tabs.length];
     onCategoryChange(next);

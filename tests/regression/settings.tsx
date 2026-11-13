@@ -323,7 +323,7 @@ if (!automated) {
     await act(async () => { rowButton(0, "确认断开")!.click(); });
     check(mailCalls.some((call) => call.command === "disconnect_qq_mail" && call.args.email === "demo@qq.com") && rows().length === 1,
       "Confirming disconnects and removes the mailbox");
-    await type(formEmail(), "new@example.edu.cn");
+    await act(async () => { [...document.querySelectorAll<HTMLButtonElement>(".settings-link-button")].find((link) => link.textContent === "添加邮箱")!.click(); }); await type(formEmail(), "new@example.edu.cn");
     await type(element<HTMLInputElement>(".mail-settings__form input[type='password']"), "code");
     await type(element<HTMLInputElement>(".mail-settings__form input[type='text']"), "imap.example.edu.cn");
     await act(async () => { element<HTMLButtonElement>(".mail-settings__form button[type='submit']").click(); });

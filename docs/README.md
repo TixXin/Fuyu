@@ -16,6 +16,6 @@
 | [reviews/](reviews/) | PR 评审记录 | |
 | [releases/](releases/) | 每个版本的发布说明 `vX.Y.Z.md`（release 脚本按这个名字读）；还没发的草稿用 `draft-` 开头 | |
 | [tasks/](tasks/) | 任务，规则见 [tasks/README.md](tasks/README.md) | |
-| [assets/](assets/) | 演示视频和图片；`readme/` 是仓库首页 README 用的动图和截图，怎么重出见 [video/README.md](../video/README.md#readme-里的动图和截图)；同一目录里的 `island-*.svg`（页首会展开的小岛、页尾收回去的小岛）和 `download-*.svg`（下载按钮）是手写的 SVG，直接改文件 | |
+| [assets/](assets/) | 演示视频和图片；`readme/` 是仓库首页 README 用的动图和截图，怎么重出见 [video/README.md](../video/README.md#readme-里的动图和截图)；同一目录里的 `island-*.svg`（页首会展开的小岛、页尾收回去的小岛）和 `download-*.svg`（下载按钮）是手写的 SVG，直接改文件；小岛旁的 `https://fuyu.ing` 是 Kaushan Script（SIL OFL 1.1）转成的路径，字体文件不在仓库里 | |
 
 新文档先按上表找目录；哪个都不合适时，先问用户，再在这张表里加一行。

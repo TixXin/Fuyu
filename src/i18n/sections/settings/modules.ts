@@ -1,6 +1,8 @@
 export type SettingsModulesText = {
   title: string;
   hint: string;
+  offNote: string;
+  on: string;
   todo: string;
   music: string;
   agents: string;
@@ -15,6 +17,8 @@ export type SettingsModulesText = {
 export const zhCN: SettingsModulesText = {
   title: "功能开关",
   hint: "关闭后，岛上不再显示这个功能的入口，后台也停止运行；已有数据会保留。",
+  offNote: "已关闭。岛上不显示这个功能的入口，后台也停止运行；已有数据会保留。打开后可以在这里设置。",
+  on: "已开启",
   todo: "启用待办",
   music: "启用音乐控制",
   agents: "启用 AI Agent 状态灯",
@@ -29,6 +33,8 @@ export const zhCN: SettingsModulesText = {
 export const en: SettingsModulesText = {
   title: "Module",
   hint: "When off, the island hides this module and stops its background work. Your data is kept.",
+  offNote: "Off. The island hides this feature and stops its background work; your data is kept. Turn it on to see its settings here.",
+  on: "On",
   todo: "Enable todos",
   music: "Enable music controls",
   agents: "Enable the AI Agent status light",

@@ -13,15 +13,17 @@ import { useScreenshotSettings } from "../../features/screenshot/useScreenshotSe
 import { useTranslationSettings } from "../../features/translation/useTranslationSettings";
 import { useTranslation } from "../../i18n";
 import { isMacOS } from "../../lib/platform";
-import { ModuleSwitchSection } from "./ModuleSwitchSection";
+import { FeatureHeader } from "./FeatureHeader";
 import { AllShortcutsLink } from "./ShortcutsSettingsPage";
 import { useShortcutOwners } from "./useShortcutOwners";
 
 export function ScreenshotSettingsPage({
+  tab,
   settings,
   onSettingsChange,
   onOpenShortcuts,
 }: {
+  tab: "screenshot" | "screenshotRecord";
   settings: IslandSettings;
   onSettingsChange: (settings: IslandSettings) => void;
   onOpenShortcuts: () => void;
@@ -39,83 +41,82 @@ export function ScreenshotSettingsPage({
     if (folder !== screenshot.saveFolder) setScreenshot({ ...screenshot, saveFolder: folder });
   };
 
+  const header = (
+    <FeatureHeader
+      feature="screenshot"
+      checked={settings.screenshotEnabled}
+      onChange={(screenshotEnabled) => onSettingsChange({ ...settings, screenshotEnabled })}
+    />
+  );
+  if (!settings.screenshotEnabled) return header;
+  if (tab === "screenshotRecord" && !isMacOS) return <RecordSettingsGroup screenshot={screenshot} onChange={setScreenshot} />;
+
   return (
     <>
-      <ModuleSwitchSection
-        label={t.settings.modules.screenshot}
-        checked={settings.screenshotEnabled}
-        onChange={(screenshotEnabled) => onSettingsChange({ ...settings, screenshotEnabled })}
-      />
-      {settings.screenshotEnabled && (
-        <SettingsGroup title={text.shortcutsTitle} footer={isMacOS ? text.shortcutsHintMac : text.shortcutsHint} action={<AllShortcutsLink onOpen={onOpenShortcuts} />}>
-          <ScreenshotShortcutRows
-            settings={screenshot}
-            onSettingsChange={setScreenshot}
-            takenBy={(shortcut, action) => takenBy(shortcut, `screenshot:${action}`)}
-          />
-          {!isMacOS && (
-            <SettingsToggleRow
-              title={text.printScreen}
-              description={text.printScreenHint}
-              checked={screenshot.printScreen}
-              onChange={(printScreen) => setScreenshot({ ...screenshot, printScreen })}
-            />
-          )}
-        </SettingsGroup>
-      )}
-      {settings.screenshotEnabled && (
-        <SettingsGroup title={text.whileCapturingTitle}>
+      {header}
+      <SettingsGroup title={text.shortcutsTitle} footer={isMacOS ? text.shortcutsHintMac : text.shortcutsHint} action={<AllShortcutsLink onOpen={onOpenShortcuts} />}>
+        <ScreenshotShortcutRows
+          settings={screenshot}
+          onSettingsChange={setScreenshot}
+          takenBy={(shortcut, action) => takenBy(shortcut, `screenshot:${action}`)}
+        />
+        {!isMacOS && (
           <SettingsToggleRow
-            title={text.guides}
-            description={text.guidesHint}
-            checked={settings.screenshotGuides}
-            onChange={(screenshotGuides) => onSettingsChange({ ...settings, screenshotGuides })}
+            title={text.printScreen}
+            description={text.printScreenHint}
+            checked={screenshot.printScreen}
+            onChange={(printScreen) => setScreenshot({ ...screenshot, printScreen })}
           />
-        </SettingsGroup>
-      )}
-      {settings.screenshotEnabled && (
-        <SettingsGroup title={text.afterTitle}>
-          <SettingsRow
-            title={text.saveFolder}
-            description={isMacOS ? text.saveFolderHintMac : text.saveFolderHint}
-            control={
-              <SettingsInput
-                value={folderDraft}
-                placeholder={text.saveFolderPlaceholder}
-                aria-label={text.saveFolder}
-                onChange={(event) => setFolderDraft(event.target.value)}
-                onBlur={saveFolder}
-                onKeyDown={(event) => { if (event.key === "Enter") saveFolder(); }}
-              />
-            }
-          />
-          <SettingsRow
-            title={text.cardSeconds}
-            description={text.cardSecondsHint}
-            control={
-              <SettingsSelect
-                value={String(screenshot.cardSeconds)}
-                options={CARD_SECONDS.map((seconds) => ({ value: String(seconds), label: text.cardSecondsOption(seconds) }))}
-                ariaLabel={text.cardSeconds}
-                onChange={(seconds) => setScreenshot({ ...screenshot, cardSeconds: Number(seconds) as CardSeconds })}
-              />
-            }
-          />
-          <SettingsRow
-            title={text.historyDays}
-            description={text.historyDaysHint}
-            control={
-              <SettingsSelect
-                value={String(screenshot.historyDays)}
-                options={HISTORY_DAYS.map((days) => ({ value: String(days), label: text.historyDaysOption(days) }))}
-                ariaLabel={text.historyDays}
-                onChange={(days) => setScreenshot({ ...screenshot, historyDays: Number(days) as HistoryDays })}
-              />
-            }
-          />
-        </SettingsGroup>
-      )}
-      {settings.screenshotEnabled && !isMacOS && <RecordSettingsGroup screenshot={screenshot} onChange={setScreenshot} />}
+        )}
+      </SettingsGroup>
+      <SettingsGroup title={text.whileCapturingTitle}>
+        <SettingsToggleRow
+          title={text.guides}
+          description={text.guidesHint}
+          checked={settings.screenshotGuides}
+          onChange={(screenshotGuides) => onSettingsChange({ ...settings, screenshotGuides })}
+        />
+      </SettingsGroup>
+      <SettingsGroup title={text.afterTitle}>
+        <SettingsRow
+          title={text.saveFolder}
+          description={isMacOS ? text.saveFolderHintMac : text.saveFolderHint}
+          control={
+            <SettingsInput
+              value={folderDraft}
+              placeholder={text.saveFolderPlaceholder}
+              aria-label={text.saveFolder}
+              onChange={(event) => setFolderDraft(event.target.value)}
+              onBlur={saveFolder}
+              onKeyDown={(event) => { if (event.key === "Enter") saveFolder(); }}
+            />
+          }
+        />
+        <SettingsRow
+          title={text.cardSeconds}
+          description={text.cardSecondsHint}
+          control={
+            <SettingsSelect
+              value={String(screenshot.cardSeconds)}
+              options={CARD_SECONDS.map((seconds) => ({ value: String(seconds), label: text.cardSecondsOption(seconds) }))}
+              ariaLabel={text.cardSeconds}
+              onChange={(seconds) => setScreenshot({ ...screenshot, cardSeconds: Number(seconds) as CardSeconds })}
+            />
+          }
+        />
+        <SettingsRow
+          title={text.historyDays}
+          description={text.historyDaysHint}
+          control={
+            <SettingsSelect
+              value={String(screenshot.historyDays)}
+              options={HISTORY_DAYS.map((days) => ({ value: String(days), label: text.historyDaysOption(days) }))}
+              ariaLabel={text.historyDays}
+              onChange={(days) => setScreenshot({ ...screenshot, historyDays: Number(days) as HistoryDays })}
+            />
+          }
+        />
+      </SettingsGroup>
     </>
   );
 }

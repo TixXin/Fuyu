@@ -6,7 +6,7 @@ import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
 import { MAX_SHELF_ITEMS, MIN_SHELF_ITEMS, SHELF_CLEANUP_DAYS } from "../../features/appearance/settings";
 import type { IslandSettings, ShelfDoubleClick } from "../../features/appearance/types";
 import { useTranslation } from "../../i18n";
-import { ModuleSwitchSection } from "./ModuleSwitchSection";
+import { FeatureHeader } from "./FeatureHeader";
 
 export function ShelfSettingsPage({
   settings,
@@ -29,8 +29,8 @@ export function ShelfSettingsPage({
 
   return (
     <>
-      <ModuleSwitchSection
-        label={t.settings.modules.shelf}
+      <FeatureHeader
+        feature="shelf"
         checked={settings.shelfEnabled}
         onChange={(shelfEnabled) => update({ shelfEnabled })}
       />

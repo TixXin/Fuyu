@@ -3,12 +3,14 @@ import { useClipboardSettings } from "../../features/clipboard/useClipboardSetti
 import { TranslationSettingsSection } from "../../features/translation/TranslationSettingsSection";
 import { useTranslationSettings } from "../../features/translation/useTranslationSettings";
 import { useTranslation } from "../../i18n";
-import { ModuleSwitchSection } from "./ModuleSwitchSection";
+import { FeatureHeader } from "./FeatureHeader";
 import { TranslationShortcutGroup } from "./ShortcutGroups";
 import { AllShortcutsLink } from "./ShortcutsSettingsPage";
 import { useShortcutOwners } from "./useShortcutOwners";
-import { SettingsChoice } from "../../components/settings/SettingsChoice";
-import { SettingsGroup } from "../../components/settings/SettingsGroup";
+import { AppWindow } from "lucide-react";
+import { SettingsChoiceCards } from "../../components/settings/SettingsChoiceCards";
+import { SettingsFootnote } from "../../components/settings/SettingsFootnote";
+import { IslandGlyph } from "../../features/appearance/IslandGlyph";
 import { SettingsRow } from "../../components/settings/SettingsRow";
 
 export function TranslationSettingsPage({
@@ -24,34 +26,33 @@ export function TranslationSettingsPage({
   const [translationSettings, setTranslationSettings] = useTranslationSettings();
   const [clipboardSettings] = useClipboardSettings();
   const { takenBy } = useShortcutOwners({ settings, clipboard: clipboardSettings, translation: translationSettings });
-  const targets = [
-    { value: "window", label: t.settings.translation.targetWindow },
-    { value: "island", label: t.settings.translation.targetIsland },
-  ] as const;
-
   return (
     <>
-      <ModuleSwitchSection
-        label={t.settings.modules.translation}
+      <FeatureHeader
+        feature="translation"
         checked={settings.translationEnabled}
         onChange={(translationEnabled) => onSettingsChange({ ...settings, translationEnabled })}
       />
       {settings.translationEnabled && (
-        <SettingsGroup title={t.settings.translation.targetTitle} footer={t.settings.translation.targetHint}>
-          <SettingsRow
-            title={t.settings.translation.target}
-            control={
-              <SettingsChoice<TranslationTarget>
+        <TranslationSettingsSection
+          settings={translationSettings}
+          setSettings={setTranslationSettings}
+          useFooter={<SettingsFootnote text={t.settings.translation.targetHint} />}
+          lead={
+            <SettingsRow title={t.settings.translation.target}>
+              <SettingsChoiceCards<TranslationTarget>
                 value={settings.translationTarget}
-                options={targets}
                 ariaLabel={t.settings.translation.target}
+                options={[
+                  { value: "window", label: t.settings.translation.targetWindow, art: <AppWindow size={30} strokeWidth={1.4} /> },
+                  { value: "island", label: t.settings.translation.targetIsland, art: <IslandGlyph state="expanded" /> },
+                ]}
                 onChange={(translationTarget) => onSettingsChange({ ...settings, translationTarget })}
               />
-            }
-          />
-        </SettingsGroup>
+            </SettingsRow>
+          }
+        />
       )}
-      {settings.translationEnabled && <TranslationSettingsSection settings={translationSettings} setSettings={setTranslationSettings} />}
       <TranslationShortcutGroup
         title={t.settings.shortcuts.featureTitle}
         action={<AllShortcutsLink onOpen={onOpenShortcuts} />}

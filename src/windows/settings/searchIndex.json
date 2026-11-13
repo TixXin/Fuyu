@@ -799,12 +799,12 @@
       "zh-CN": {
         "group": "",
         "title": "启用待办",
-        "description": "关闭后，岛上不再显示这个功能的入口，后台也停止运行；已有数据会保留。"
+        "description": "岛上记今天要做的事，做完打勾"
       },
       "en": {
         "group": "",
         "title": "Enable todos",
-        "description": "When off, the island hides this module and stops its background work. Your data is kept."
+        "description": "Keep today's to-dos on the island and tick them off"
       }
     },
     {
@@ -878,12 +878,12 @@
       "zh-CN": {
         "group": "",
         "title": "启用日历",
-        "description": "关闭后，岛上不再显示这个功能的入口，后台也停止运行；已有数据会保留。"
+        "description": "看日程，会议开始前在岛上提醒"
       },
       "en": {
         "group": "",
         "title": "Enable the calendar",
-        "description": "When off, the island hides this module and stops its background work. Your data is kept."
+        "description": "See your events and get a nudge before meetings"
       }
     },
     {
@@ -915,11 +915,11 @@
     {
       "page": "calendar",
       "zh-CN": {
-        "group": "添加日历",
+        "group": "已添加的日历",
         "title": "用的是"
       },
       "en": {
-        "group": "Add a calendar",
+        "group": "Your calendars",
         "title": "Service"
       }
     },
@@ -928,12 +928,12 @@
       "zh-CN": {
         "group": "",
         "title": "启用音乐控制",
-        "description": "关闭后，岛上不再显示这个功能的入口，后台也停止运行；已有数据会保留。"
+        "description": "显示正在播放的歌和歌词，切歌暂停"
       },
       "en": {
         "group": "",
         "title": "Enable music controls",
-        "description": "When off, the island hides this module and stops its background work. Your data is kept."
+        "description": "See what is playing with lyrics, skip and pause"
       }
     },
     {
@@ -947,58 +947,6 @@
         "group": "Island",
         "title": "Show the music wave on the collapsed island",
         "description": "The moving bars on the collapsed island, which open the music page. The same switch as Music under Appearance → Collapsed bar, where it can also be moved."
-      }
-    },
-    {
-      "page": "music",
-      "zh-CN": {
-        "group": "歌词",
-        "title": "本地歌词文件夹",
-        "description": "放 .lrc 文件，文件名写成「歌手 - 歌名」「歌名 - 歌手」或「歌名」。只找这一层，不找子文件夹。"
-      },
-      "en": {
-        "group": "Lyrics",
-        "title": "Lyrics folder",
-        "description": "Holds .lrc files named \"Artist - Title\", \"Title - Artist\" or \"Title\". Subfolders are not searched."
-      }
-    },
-    {
-      "page": "music",
-      "zh-CN": {
-        "group": "歌词",
-        "title": "在线查找歌词",
-        "description": "本地找不到时查 LRCLIB（lrclib.net，免费开源的歌词库），会把歌名、歌手、专辑和时长发过去。每首歌只查一次，结果存在本机。中文歌收录较少。"
-      },
-      "en": {
-        "group": "Lyrics",
-        "title": "Find lyrics online",
-        "description": "When the folder has none, asks LRCLIB (lrclib.net, a free and open lyrics library), sending the title, artist, album and length. Each song is asked about once and the answer is kept on this computer."
-      }
-    },
-    {
-      "page": "music",
-      "zh-CN": {
-        "group": "歌词",
-        "title": "也查酷狗和网易云",
-        "description": "中文歌收录多，有翻译。这两个是非官方接口，可能随时失效；会把歌名、歌手和时长发给它们。装了网易云的 InfLink 插件时按歌曲直接查，更准。"
-      },
-      "en": {
-        "group": "Lyrics",
-        "title": "Also ask Kugou and NetEase",
-        "description": "Many more Chinese songs, with translations. These are unofficial interfaces that may stop working at any time; the title, artist and length are sent to them. With NetEase's InfLink plugin the song is looked up by its id, which is more exact."
-      }
-    },
-    {
-      "page": "music",
-      "zh-CN": {
-        "group": "歌词",
-        "title": "网易云精确同步（InfLink-rs）",
-        "description": "网易云插件，让网易云把播放进度和歌曲 ID 告诉系统：音乐页有进度条，歌词按歌曲直接查、不会对不上。从 GitHub 下载，放进 BetterNCM 的插件文件夹。"
-      },
-      "en": {
-        "group": "Lyrics",
-        "title": "Exact NetEase sync (InfLink-rs)",
-        "description": "A NetEase Cloud Music plugin that tells Windows the playback position and song id: the music page gets a progress bar, and lyrics are looked up by song and stay in step. Downloaded from GitHub into BetterNCM's plugins folder."
       }
     },
     {
@@ -1036,7 +984,59 @@
       }
     },
     {
-      "page": "music",
+      "page": "musicLyrics",
+      "zh-CN": {
+        "group": "歌词",
+        "title": "本地歌词文件夹",
+        "description": "放 .lrc 文件，文件名写成「歌手 - 歌名」「歌名 - 歌手」或「歌名」。只找这一层，不找子文件夹。"
+      },
+      "en": {
+        "group": "Lyrics",
+        "title": "Lyrics folder",
+        "description": "Holds .lrc files named \"Artist - Title\", \"Title - Artist\" or \"Title\". Subfolders are not searched."
+      }
+    },
+    {
+      "page": "musicLyrics",
+      "zh-CN": {
+        "group": "歌词",
+        "title": "在线查找歌词",
+        "description": "本地找不到时查 LRCLIB（lrclib.net，免费开源的歌词库），会把歌名、歌手、专辑和时长发过去。每首歌只查一次，结果存在本机。中文歌收录较少。"
+      },
+      "en": {
+        "group": "Lyrics",
+        "title": "Find lyrics online",
+        "description": "When the folder has none, asks LRCLIB (lrclib.net, a free and open lyrics library), sending the title, artist, album and length. Each song is asked about once and the answer is kept on this computer."
+      }
+    },
+    {
+      "page": "musicLyrics",
+      "zh-CN": {
+        "group": "歌词",
+        "title": "也查酷狗和网易云",
+        "description": "中文歌收录多，有翻译。这两个是非官方接口，可能随时失效；会把歌名、歌手和时长发给它们。装了网易云的 InfLink 插件时按歌曲直接查，更准。"
+      },
+      "en": {
+        "group": "Lyrics",
+        "title": "Also ask Kugou and NetEase",
+        "description": "Many more Chinese songs, with translations. These are unofficial interfaces that may stop working at any time; the title, artist and length are sent to them. With NetEase's InfLink plugin the song is looked up by its id, which is more exact."
+      }
+    },
+    {
+      "page": "musicLyrics",
+      "zh-CN": {
+        "group": "歌词",
+        "title": "网易云精确同步（InfLink-rs）",
+        "description": "网易云插件，让网易云把播放进度和歌曲 ID 告诉系统：音乐页有进度条，歌词按歌曲直接查、不会对不上。从 GitHub 下载，放进 BetterNCM 的插件文件夹。"
+      },
+      "en": {
+        "group": "Lyrics",
+        "title": "Exact NetEase sync (InfLink-rs)",
+        "description": "A NetEase Cloud Music plugin that tells Windows the playback position and song id: the music page gets a progress bar, and lyrics are looked up by song and stay in step. Downloaded from GitHub into BetterNCM's plugins folder."
+      }
+    },
+    {
+      "page": "musicLyrics",
       "zh-CN": {
         "group": "歌词",
         "title": "歌词提前或推后",
@@ -1049,7 +1049,7 @@
       }
     },
     {
-      "page": "music",
+      "page": "musicLyricsStyle",
       "zh-CN": {
         "group": "岛上的歌词样式",
         "title": "逐字高亮",
@@ -1062,7 +1062,7 @@
       }
     },
     {
-      "page": "music",
+      "page": "musicLyricsStyle",
       "zh-CN": {
         "group": "岛上的歌词样式",
         "title": "没有逐字时间的歌",
@@ -1083,7 +1083,7 @@
       }
     },
     {
-      "page": "music",
+      "page": "musicLyricsStyle",
       "zh-CN": {
         "group": "岛上的歌词样式",
         "title": "变亮方式",
@@ -1102,7 +1102,7 @@
       }
     },
     {
-      "page": "music",
+      "page": "musicLyricsStyle",
       "zh-CN": {
         "group": "岛上的歌词样式",
         "title": "高亮颜色",
@@ -1123,7 +1123,7 @@
       }
     },
     {
-      "page": "music",
+      "page": "musicLyricsStyle",
       "zh-CN": {
         "group": "岛上的歌词样式",
         "title": "没唱到的字",
@@ -1136,7 +1136,7 @@
       }
     },
     {
-      "page": "music",
+      "page": "musicLyricsStyle",
       "zh-CN": {
         "group": "岛上的歌词样式",
         "title": "发光",
@@ -1149,7 +1149,7 @@
       }
     },
     {
-      "page": "music",
+      "page": "musicLyricsStyle",
       "zh-CN": {
         "group": "岛上的歌词样式",
         "title": "长句跟着滚动",
@@ -1166,31 +1166,49 @@
       "zh-CN": {
         "group": "",
         "title": "启用快捷翻译",
-        "description": "关闭后，岛上不再显示这个功能的入口，后台也停止运行；已有数据会保留。"
+        "description": "选中文字按快捷键，马上翻译"
       },
       "en": {
         "group": "",
         "title": "Enable quick translation",
-        "description": "When off, the island hides this module and stops its background work. Your data is kept."
+        "description": "Select text, press a shortcut, read the translation"
       }
     },
     {
       "page": "translation",
       "zh-CN": {
-        "group": "打开位置",
-        "title": "翻译打开在",
-        "options": [
-          "独立窗口",
-          "岛内页面"
-        ]
+        "group": "使用",
+        "title": "翻译打开在"
       },
       "en": {
-        "group": "Where it opens",
-        "title": "Open translation in",
-        "options": [
-          "Its own window",
-          "An island page"
-        ]
+        "group": "Using it",
+        "title": "Open translation in"
+      }
+    },
+    {
+      "page": "translation",
+      "zh-CN": {
+        "group": "使用",
+        "title": "打开时填入剪贴板",
+        "description": "原文为空时，用最新一条文字剪贴板填上。已有内容不会被覆盖。"
+      },
+      "en": {
+        "group": "Using it",
+        "title": "Fill from the clipboard on open",
+        "description": "When the source is empty, fill it from the latest clipboard text. Existing text is left as it is."
+      }
+    },
+    {
+      "page": "translation",
+      "zh-CN": {
+        "group": "使用",
+        "title": "停稳后自动翻译",
+        "description": "原文停止输入约半秒后自动翻译。未配置密钥时不发送。"
+      },
+      "en": {
+        "group": "Using it",
+        "title": "Translate after you pause",
+        "description": "Translate about half a second after the source stops changing. Nothing is sent without an API key."
       }
     },
     {
@@ -1227,42 +1245,16 @@
       }
     },
     {
-      "page": "translation",
-      "zh-CN": {
-        "group": "翻译方式",
-        "title": "打开时填入剪贴板",
-        "description": "原文为空时，用最新一条文字剪贴板填上。已有内容不会被覆盖。"
-      },
-      "en": {
-        "group": "How to translate",
-        "title": "Fill from the clipboard on open",
-        "description": "When the source is empty, fill it from the latest clipboard text. Existing text is left as it is."
-      }
-    },
-    {
-      "page": "translation",
-      "zh-CN": {
-        "group": "翻译方式",
-        "title": "停稳后自动翻译",
-        "description": "原文停止输入约半秒后自动翻译。未配置密钥时不发送。"
-      },
-      "en": {
-        "group": "How to translate",
-        "title": "Translate after you pause",
-        "description": "Translate about half a second after the source stops changing. Nothing is sent without an API key."
-      }
-    },
-    {
       "page": "clipboard",
       "zh-CN": {
         "group": "",
         "title": "启用剪贴板历史",
-        "description": "关闭后，岛上不再显示这个功能的入口，后台也停止运行；已有数据会保留。"
+        "description": "记住复制过的文字和图片，随时再贴"
       },
       "en": {
         "group": "",
         "title": "Enable clipboard history",
-        "description": "When off, the island hides this module and stops its background work. Your data is kept."
+        "description": "Keep what you copied, text and images, to paste again"
       }
     },
     {
@@ -1416,7 +1408,7 @@
       }
     },
     {
-      "page": "clipboard",
+      "page": "clipboardHistory",
       "zh-CN": {
         "group": "剪贴板历史",
         "title": "记录图片"
@@ -1427,7 +1419,7 @@
       }
     },
     {
-      "page": "clipboard",
+      "page": "clipboardHistory",
       "zh-CN": {
         "group": "剪贴板历史",
         "title": "识别图片里的文字",
@@ -1440,7 +1432,7 @@
       }
     },
     {
-      "page": "clipboard",
+      "page": "clipboardHistory",
       "zh-CN": {
         "group": "剪贴板历史",
         "title": "记录复制的文件",
@@ -1453,7 +1445,7 @@
       }
     },
     {
-      "page": "clipboard",
+      "page": "clipboardHistory",
       "zh-CN": {
         "group": "剪贴板历史",
         "title": "保留格式",
@@ -1466,7 +1458,7 @@
       }
     },
     {
-      "page": "clipboard",
+      "page": "clipboardHistory",
       "zh-CN": {
         "group": "剪贴板历史",
         "title": "不记录密码",
@@ -1479,7 +1471,7 @@
       }
     },
     {
-      "page": "clipboard",
+      "page": "clipboardHistory",
       "zh-CN": {
         "group": "剪贴板历史",
         "title": "密钥和令牌",
@@ -1502,7 +1494,7 @@
       }
     },
     {
-      "page": "clipboard",
+      "page": "clipboardHistory",
       "zh-CN": {
         "group": "剪贴板历史",
         "title": "不记录这些程序复制的内容",
@@ -1515,7 +1507,7 @@
       }
     },
     {
-      "page": "clipboard",
+      "page": "clipboardHistory",
       "zh-CN": {
         "group": "剪贴板历史",
         "title": "允许本地接口读取历史",
@@ -1528,7 +1520,7 @@
       }
     },
     {
-      "page": "clipboard",
+      "page": "clipboardHistory",
       "zh-CN": {
         "group": "剪贴板历史",
         "title": "最大历史条数"
@@ -1539,7 +1531,7 @@
       }
     },
     {
-      "page": "clipboard",
+      "page": "clipboardHistory",
       "zh-CN": {
         "group": "剪贴板历史",
         "title": "自动清理",
@@ -1552,7 +1544,7 @@
       }
     },
     {
-      "page": "clipboard",
+      "page": "clipboardData",
       "zh-CN": {
         "group": "导入导出",
         "title": "导出剪贴板历史",
@@ -1565,7 +1557,7 @@
       }
     },
     {
-      "page": "clipboard",
+      "page": "clipboardData",
       "zh-CN": {
         "group": "导入导出",
         "title": "从文件导入",
@@ -1582,12 +1574,12 @@
       "zh-CN": {
         "group": "",
         "title": "启用文件中转",
-        "description": "关闭后，岛上不再显示这个功能的入口，后台也停止运行；已有数据会保留。"
+        "description": "把文件拖到岛上先放着，用时再拖走"
       },
       "en": {
         "group": "",
         "title": "Enable the file shelf",
-        "description": "When off, the island hides this module and stops its background work. Your data is kept."
+        "description": "Drop files on the island and drag them out later"
       }
     },
     {
@@ -1672,12 +1664,12 @@
       "zh-CN": {
         "group": "",
         "title": "启用截图",
-        "description": "关闭后，岛上不再显示这个功能的入口，后台也停止运行；已有数据会保留。"
+        "description": "框选截图，标注、贴到屏幕上或识别文字"
       },
       "en": {
         "group": "",
         "title": "Enable screenshots",
-        "description": "When off, the island hides this module and stops its background work. Your data is kept."
+        "description": "Capture a region, mark it up, pin it or read its text"
       }
     },
     {
@@ -1746,7 +1738,7 @@
       }
     },
     {
-      "page": "screenshot",
+      "page": "screenshotRecord",
       "zh-CN": {
         "group": "录屏",
         "title": "默认格式",
@@ -1759,7 +1751,7 @@
       }
     },
     {
-      "page": "screenshot",
+      "page": "screenshotRecord",
       "zh-CN": {
         "group": "录屏",
         "title": "帧率",
@@ -1772,7 +1764,7 @@
       }
     },
     {
-      "page": "screenshot",
+      "page": "screenshotRecord",
       "zh-CN": {
         "group": "录屏",
         "title": "画质",
@@ -1785,7 +1777,7 @@
       }
     },
     {
-      "page": "screenshot",
+      "page": "screenshotRecord",
       "zh-CN": {
         "group": "录屏",
         "title": "录系统声音",
@@ -1798,7 +1790,7 @@
       }
     },
     {
-      "page": "screenshot",
+      "page": "screenshotRecord",
       "zh-CN": {
         "group": "录屏",
         "title": "录麦克风",
@@ -1814,21 +1806,11 @@
       "page": "messages",
       "zh-CN": {
         "group": "新消息提示",
-        "title": "提示方式",
-        "options": [
-          "一行预览",
-          "横幅",
-          "展开面板"
-        ]
+        "title": "提示方式"
       },
       "en": {
         "group": "New messages",
-        "title": "Show as",
-        "options": [
-          "One line",
-          "Banner",
-          "Open panel"
-        ]
+        "title": "Show as"
       }
     },
     {
@@ -1846,22 +1828,26 @@
       "page": "messages",
       "zh-CN": {
         "group": "QQ 通知",
-        "title": "接收 QQ 消息"
+        "title": "接收 QQ 消息",
+        "description": "已连接"
       },
       "en": {
         "group": "QQ notifications",
-        "title": "Receive QQ messages"
+        "title": "Receive QQ messages",
+        "description": "Connected"
       }
     },
     {
       "page": "messages",
       "zh-CN": {
         "group": "微信提醒",
-        "title": "接收微信提醒"
+        "title": "接收微信提醒",
+        "description": "已连接"
       },
       "en": {
         "group": "WeChat reminders",
-        "title": "Receive WeChat reminders"
+        "title": "Receive WeChat reminders",
+        "description": "Connected"
       }
     },
     {
@@ -1882,12 +1868,12 @@
       "zh-CN": {
         "group": "邮箱",
         "title": "启用邮箱",
-        "description": "关闭后，岛上不再显示这个功能的入口，后台也停止运行；已有数据会保留。"
+        "description": "2 个邮箱"
       },
       "en": {
         "group": "Mail",
         "title": "Enable mail",
-        "description": "When off, the island hides this module and stops its background work. Your data is kept."
+        "description": "2 mailboxes"
       }
     },
     {

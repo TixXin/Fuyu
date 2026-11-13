@@ -7,3 +7,7 @@
 .messages-settings__connect {
   padding: 8px 16px 12px;
 }
+
+.messages-settings__muted {
+  color: var(--color-text-muted);
+}
