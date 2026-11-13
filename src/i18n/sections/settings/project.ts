@@ -5,6 +5,21 @@ export type SettingsProjectText = {
   description: string;
   versionTitle: string;
   linksTitle: string;
+  helpTitle: string;
+  systemTitle: string;
+  hero: {
+    stable: string;
+    beta: string;
+    idle: string;
+    checking: string;
+    latest: string;
+    available: (version: string) => string;
+    downloading: string;
+    ready: (version: string) => string;
+    installing: string;
+    done: string;
+    error: string;
+  };
   guide: string;
   guideHint: string;
   guideAction: string;
@@ -105,6 +120,21 @@ export const zhCN: SettingsProjectText = {
   description: "在屏幕顶部集中待办、剪贴板、音乐、快捷翻译、AI 状态和消息提醒。",
   versionTitle: "版本",
   linksTitle: "链接",
+  helpTitle: "帮助",
+  systemTitle: "重置与退出",
+  hero: {
+    stable: "稳定版",
+    beta: "测试版",
+    idle: "还没检查更新",
+    checking: "正在检查更新…",
+    latest: "已是最新",
+    available: (version) => `有新版本 v${version}`,
+    downloading: "正在下载更新",
+    ready: (version) => `v${version} 已下载`,
+    installing: "正在安装",
+    done: "更新完成，重启后生效",
+    error: "检查更新失败",
+  },
   guide: "新手引导",
   guideHint: "第一次启动时打开的那个窗口：语言、外观、功能开关和几个常用选项。",
   guideAction: "打开",
@@ -206,6 +236,21 @@ export const en: SettingsProjectText = {
   description: "Todos, clipboard, music, quick translation, AI status, and message alerts, gathered at the top of the screen.",
   versionTitle: "Version",
   linksTitle: "Links",
+  helpTitle: "Help",
+  systemTitle: "Reset and quit",
+  hero: {
+    stable: "Stable",
+    beta: "Beta",
+    idle: "Not checked yet",
+    checking: "Checking for updates…",
+    latest: "Up to date",
+    available: (version) => `v${version} available`,
+    downloading: "Downloading update",
+    ready: (version) => `v${version} downloaded`,
+    installing: "Installing",
+    done: "Updated, restart to finish",
+    error: "Update check failed",
+  },
   guide: "Welcome guide",
   guideHint: "The window shown on first start: language, appearance, modules and a few common choices.",
   guideAction: "Open",
