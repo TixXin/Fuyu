@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { existsSync, mkdirSync, readdirSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { createServer } from "node:net";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -87,7 +87,12 @@ async function addSound(ffmpeg, silent, file, cues, durationMs, voiceDir, bgm) {
   await runWithRetry(ffmpeg, ["-y", "-loglevel", "error", ...inputs, "-filter_complex", `${chains.join(";")};${mix}`, "-map", "0:v", "-map", "[a]", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-t", seconds.toFixed(3), "-movflags", "+faststart", file], 90_000, 4);
   rmSync(silent);
 }
-const START_TIME = Date.UTC(2026, 10, 18, 2, 24, 0) / 1000;
+function startTime(video) {
+  const file = path.join(root, "src", "videos", video, "render.json");
+  const clock = existsSync(file) ? JSON.parse(readFileSync(file, "utf8")).clock : null;
+  const [hour, minute, second] = (clock ?? "10:24:00").split(":").map(Number);
+  return Date.UTC(2026, 10, 18, hour - 8, minute, second) / 1000;
+}
 const TICK_BASE = 100_000_000;
 
 function options(argv) {
@@ -127,7 +132,7 @@ async function startVite() {
   throw new Error("vite did not start");
 }
 
-async function openStage(browser, url, size) {
+async function openStage(browser, url, size, virtualStart) {
   const session = await browser.target().createCDPSession();
   const { targetId } = await session.send("Target.createTarget", { url: "about:blank", ...size, enableBeginFrameControl: true });
   const target = await browser.waitForTarget((candidate) => candidate._targetId === targetId);
@@ -137,7 +142,7 @@ async function openStage(browser, url, size) {
   page.on("console", (message) => { if (message.type() === "error") problems.push(message.text().slice(0, 400)); });
   page.on("pageerror", (error) => problems.push(String(error).slice(0, 400)));
   await cdp.send("Emulation.setDeviceMetricsOverride", { ...size, deviceScaleFactor: 0, mobile: false });
-  await cdp.send("Emulation.setVirtualTimePolicy", { policy: "pause", initialVirtualTime: START_TIME });
+  await cdp.send("Emulation.setVirtualTimePolicy", { policy: "pause", initialVirtualTime: virtualStart });
   const advance = (ms) => new Promise((resolve) => {
     cdp.once("Emulation.virtualTimeBudgetExpired", resolve);
     void cdp.send("Emulation.setVirtualTimePolicy", { policy: "pauseIfNetworkFetchesPending", budget: ms });
@@ -208,7 +213,7 @@ async function main() {
     args: ["--enable-begin-frame-control", "--run-all-compositor-stages-before-draw", "--disable-threaded-animation", "--disable-threaded-scrolling", "--disable-checker-imaging", "--deterministic-mode", `--force-device-scale-factor=${opts.scale}`, `--window-size=${size.width},${size.height}`, "--hide-scrollbars", "--font-render-hinting=none", "--autoplay-policy=no-user-gesture-required"],
   });
   try {
-    const stage = await openStage(browser, `${vite.url}/index.html?capture=1&v=${opts.v}&lang=${opts.lang}&format=${opts.format}`, size);
+    const stage = await openStage(browser, `${vite.url}/index.html?capture=1&v=${opts.v}&lang=${opts.lang}&format=${opts.format}`, size, startTime(opts.v));
     await waitReady(stage);
     const durationMs = await stage.page.evaluate(() => globalThis.__video.durationMs);
     const interval = 1000 / opts.fps;

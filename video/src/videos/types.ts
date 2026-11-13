@@ -12,7 +12,8 @@ export type VideoModule = {
   durationMs: number | ((lang: Lang) => number);
   windows: (lang: Lang, format: Format) => ClutterWindow[];
   backdrop?: (lang: Lang, format: Format) => ReactNode;
-  look?: "promo" | "recording";
+  scenery?: (lang: Lang, format: Format) => ReactNode;
+  look?: "promo" | "recording" | "editorial";
   initial?: Partial<StageState>;
   bgm?: string;
   endCard: (lang: Lang) => EndCardCopy;

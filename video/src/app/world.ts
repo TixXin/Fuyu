@@ -1,5 +1,6 @@
 import type { AgentSessionSummary, AgentStatusSnapshot, AgentUsage } from "../../../src/features/agent-status/api";
 import type { AgentApprovalRequest } from "../../../src/features/agent-status/approvals/api";
+import type { CalendarEvent } from "../../../src/features/calendar/api";
 import type { ClipboardHistoryItem } from "../../../src/features/clipboard/api";
 import type { MediaState } from "../../../src/features/media/api";
 import type { Lyrics } from "../../../src/features/media/lyrics/api";
@@ -23,6 +24,7 @@ export type World = {
   wechat: ReminderSnapshot;
   mail: MailSnapshot;
   mailBodies: Record<string, MailContent>;
+  calendar: CalendarEvent[];
   translations: Record<string, string>;
   settings: Record<string, unknown>;
   calls: { command: string; args: Record<string, unknown> }[];
@@ -61,6 +63,7 @@ export function createWorld(): World {
       status: "connected", unreadCount: 0, items: [], lastSyncedAt: null, error: null,
     },
     mailBodies: {},
+    calendar: [],
     translations: {},
     settings: {},
     calls: [],

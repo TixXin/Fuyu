@@ -54,7 +54,7 @@ export function sessions(copy: Copy, now: number): AgentSessionSummary[] {
   ];
 }
 
-function clips(copy: Copy, now: number): ClipboardHistoryItem[] {
+export function clips(copy: Copy, now: number): ClipboardHistoryItem[] {
   const base = { hash: "", createdAt: now, favorite: false } as const;
   const source = (index: number) => ({ path: "", name: copy.clipSources[index] });
   return [
