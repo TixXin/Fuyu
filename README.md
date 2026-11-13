@@ -120,7 +120,7 @@
 
 1. **下载安装**：从 [Releases](https://github.com/TixXin/fuyu/releases/latest) 下载安装包并安装。
    - **Windows**：下载 `_x64-setup.exe`。安装包没有代码签名，SmartScreen 提示时点「更多信息 → 仍要运行」。
-   - **macOS**：下载 `_aarch64.dmg`，把 Fuyu 拖进「应用程序」。第一次打开要在「系统设置 → 隐私与安全性」里点「仍要打开」，步骤见[在 Mac 上安装浮屿](docs/features/macos-install.md)。
+   - **macOS**：在 [Releases 列表](https://github.com/TixXin/fuyu/releases)里找最新一个带 `_aarch64.dmg` 的版本下载（最新正式版里没有时，在它上面的测试版里），把 Fuyu 拖进「应用程序」。第一次打开要在「系统设置 → 隐私与安全性」里点「仍要打开」，步骤见[在 Mac 上安装浮屿](docs/features/macos-install.md)。
 2. **展开小岛**：鼠标移到屏幕顶部的岛上即可展开，点齿轮或托盘图标（Mac 上是菜单栏图标）打开设置。Mac 上新手引导会带你打开要用到的系统权限。
 3. **配置一次**：邮箱、翻译和 AI Agent 需要先在设置里配置一次，具体见各自的说明：[邮箱](docs/features/mail.md)、[AI Agent](docs/features/agent-status-hooks.md)、[QQ 通知](docs/features/qq-notifications.md)、[微信提醒](docs/features/wechat-reminders.md)。
 

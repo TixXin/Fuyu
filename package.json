@@ -32,6 +32,7 @@
     "lint": "eslint src",
     "check": "tsc && pnpm run check:tests-types && pnpm run check:packages-types && pnpm run lint && pnpm run check:size && pnpm run check:colors && pnpm run check:tasks && pnpm run test",
     "check:packages-types": "tsc -p packages/tsconfig.json",
+    "readme:assets": "node scripts/readme/assets.mjs",
     "mq:land": "node scripts/mq/mq.mjs land",
     "mq:wait": "node scripts/mq/mq.mjs wait",
     "mq:sync": "node scripts/mq/mq.mjs sync",

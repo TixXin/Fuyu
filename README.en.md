@@ -120,7 +120,7 @@ How it was measured, with the numbers: [idle-usage.md](docs/investigations/idle-
 
 1. **Download and install**: get the installer from [Releases](https://github.com/TixXin/fuyu/releases/latest).
    - **Windows**: get the `_x64-setup.exe`. The installers are not code-signed; if SmartScreen warns, choose "More info → Run anyway".
-   - **macOS**: get the `_aarch64.dmg` and drag Fuyu into Applications. The first time, open System Settings > Privacy & Security and click "Open Anyway"; see [macos-install.md](docs/features/macos-install.md) (in Chinese).
+   - **macOS**: in the [release list](https://github.com/TixXin/fuyu/releases), get the `_aarch64.dmg` from the newest release that has one (a pre-release above the latest stable one, if the stable one has none) and drag Fuyu into Applications. The first time, open System Settings > Privacy & Security and click "Open Anyway"; see [macos-install.md](docs/features/macos-install.md) (in Chinese).
 2. **Open the island**: move the pointer onto the island at the top of the screen to expand it; the gear button or the tray icon (the menu bar icon on a Mac) opens Settings. On a Mac the welcome guide walks you through the system permissions Fuyu needs.
 3. **Set up once**: mail, translation and AI agents need a one-time setup in Settings. See [mail](docs/features/mail.md), [AI agents](docs/features/agent-status-hooks.md), [QQ](docs/features/qq-notifications.md) and [WeChat](docs/features/wechat-reminders.md) (in Chinese).
 
