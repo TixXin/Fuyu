@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 import { channelProblems, parseTask, RELEASED_MARKER, releasedComment, shippedIssues } from "../../scripts/release/after-release.mjs";
 import { commandLine, quoteArg } from "../../scripts/release/command-line.mjs";
-import { baseTag, DRAFT_MARKER, draftNotes, userFacingCommits } from "../../scripts/release/notes-draft.mjs";
+import { baseTag, commitPlatform, DRAFT_MARKER, draftNotes, userFacingCommits } from "../../scripts/release/notes-draft.mjs";
 import { bumpProblem, readVersion, VERSION_FILES, writeVersion } from "../../scripts/release/versions.mjs";
 
 test("the four version files of this repository agree and can be read", () => {
@@ -79,4 +79,17 @@ test("commands go through the Windows shell as one quoted line", () => {
   assert.equal(quoteArg(".[].body"), '".[].body"');
   assert.equal(quoteArg("C:\\a folder\\notes.md"), '"C:\\a folder\\notes.md"');
   assert.throws(() => quoteArg('say "hi"'));
+});
+
+test("release notes drafts cover both systems and tag commits that change only one", () => {
+  assert.equal(commitPlatform("feat(macos): screenshots on macOS"), "Mac");
+  assert.equal(commitPlatform("fix(windows): taskbar button"), "Windows");
+  assert.equal(commitPlatform("feat(clipboard): previews"), null);
+  const notes = draftNotes("0.3.9-beta.1", "v0.3.8", [
+    { hash: "a1", subject: "feat(macos): QQ unread counts" },
+    { hash: "b2", subject: "feat(clipboard): previews" },
+  ]);
+  assert.ok(notes.includes("- a1 [Mac] feat(macos): QQ unread counts") && notes.includes("- b2 feat(clipboard): previews"));
+  assert.ok(notes.includes("Fuyu_0.3.9-beta.1_x64-setup.exe") && notes.includes("Fuyu_0.3.9-beta.1_aarch64.dmg"));
+  assert.ok(notes.includes("Mac 把新的 Fuyu 拖进「应用程序」") && notes.includes("仍要打开") && notes.includes("Open Anyway"));
 });
