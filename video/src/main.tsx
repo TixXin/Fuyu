@@ -5,11 +5,12 @@ import { createDirector } from "./stage/director";
 import { island } from "./stage/island";
 import { Stage } from "./stage/Stage";
 import { soundCues, startSoundClock } from "./stage/sound";
-import { stage } from "./stage/stageState";
+import { FORMAT, stage } from "./stage/stageState";
 import type { Lang, VideoModule } from "./videos/types";
 
 const VIDEOS: Record<string, () => Promise<{ default: VideoModule }>> = {
   "001-one-island": () => import("./videos/001-one-island"),
+  "002-agents": () => import("./videos/002-agents"),
 };
 
 const params = new URLSearchParams(location.search);
@@ -48,7 +49,7 @@ Object.assign(window, { __video: control });
 
 createRoot(document.getElementById("root") as HTMLElement).render(
   <StrictMode>
-    <Stage lang={lang} windows={video.windows(lang)} endCard={video.endCard(lang)} />
+    <Stage lang={lang} windows={video.windows(lang, FORMAT)} endCard={video.endCard(lang)} />
   </StrictMode>,
 );
 

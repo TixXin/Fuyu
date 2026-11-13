@@ -24,11 +24,23 @@ winget install Gyan.FFmpeg
 | 浏览器里实时预览 | `pnpm dev`，打开 `http://localhost:1430/?v=001-one-island&lang=zh` |
 | 渲染成片 | `pnpm render --v 001-one-island --lang zh` |
 | 英文版 | `pnpm render --lang en` |
+| 9:16 竖版 | `pnpm render --v 002-agents --format vertical`（1080×1920，文件名带 `-vertical`） |
 | 只出几张静帧 | `pnpm still 9.4,14.5,20`（秒，逗号分隔） |
 | 只渲染一段 | `pnpm render --from 18 --to 24`（没有声音） |
 | 类型检查 | `pnpm check` |
 
 成片和静帧在 `video/out/<视频 id>/`，不进仓库。默认 1920×1080、60 帧；`--scale 3` 出 3840×2160，`--fps 30` 出 30 帧。
+
+## 已有的视频
+
+| id | 内容 | 时长 |
+|---|---|---|
+| `001-one-island` | 总览《一座岛》：待办、音乐、消息、剪贴板、翻译、AI Agent 各几秒 | 48 秒 |
+| `002-agents` | 功能短片：AI Agent。岛上看会话、弹出审批、看用量、点一下回到终端 | 24 秒 |
+
+## 横版和竖版
+
+同一份时间表出两种画幅。竖版（`?format=vertical`）上面是一行标题（`stage.set({ title })`），中间是一块圆角的「屏幕」，岛屿面板宽度设成 560；下面留空给平台自己的文字。时间表里镜头倍数用 `ZOOM.panel`、`ZOOM.popup`、`ZOOM.bar`，不写死数字，两种画幅各有一套；开头的窗口位置在 `windows.ts` 里按画幅各写一份。
 
 ## 目录
 
@@ -42,7 +54,8 @@ video/
 │   ├── stage/            舞台零件，所有视频共用
 │   └── videos/
 │       ├── types.ts
-│       └── 001-one-island/   一条视频：copy.ts 文案，seed.ts 开场数据，windows.ts 开头的窗口，script.ts 时间表
+│       ├── 001-one-island/   一条视频：copy.ts 文案，seed.ts 开场数据，windows.ts 开头的窗口，script.ts 时间表
+│       └── 002-agents/
 ├── render/render.mjs     渲染器
 ├── out/                  成片和静帧（不进仓库）
 └── .browser/             chrome-headless-shell（不进仓库）
@@ -55,6 +68,8 @@ video/
 3. `seed.ts` 准备开场时岛上的数据。不要用真实的歌、真实的人名和聊天内容。
 4. `script.ts` 写时间表：`at(毫秒, 动作)`。动作用 `island.click(选择器)` 点真的按钮，用 `island.world()` 改假后端的数据，用 `island.emit(事件, 数据)` 模拟原生事件，用 `showCaption`、`moveCamera` 控制字幕和镜头。
 5. `pnpm still <几个时间点>` 看静帧，没问题再 `pnpm render`。
+
+要改岛屿的设置（例如让收起的岛一直显示会话标题），在 `seed.ts` 里写 `world.settings = { ... }`，只写要改的几项。启动时会和默认设置合并后整份存进去：只存几项的话，岛屿会把它当成旧版本留下的设置，其余项按旧版本的默认值走，岛上审批也会关掉。
 
 岛屿调了一个假后端没有的命令时会得到 `null`，多数情况没事；页面报错会在渲染结束时打印出来，按报错在 `src/app/backend.ts` 里补一条应答。
 

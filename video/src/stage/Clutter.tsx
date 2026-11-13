@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import type { StageState } from "./stageState";
+import { STAGE_WIDTH, type StageState } from "./stageState";
 
 export type ClutterWindow = {
   id: string;
@@ -12,6 +12,7 @@ export type ClutterWindow = {
   height: number;
   tilt: number;
   lines: string[];
+  frontOnly?: boolean;
 };
 
 function Body({ window: item }: { window: ClutterWindow }) {
@@ -52,11 +53,11 @@ export function Clutter({ windows, phase }: { windows: ClutterWindow[]; phase: S
       {windows.map((item, index) => (
         <section
           key={item.id}
-          className={`clutter__window clutter__window--${item.kind}`}
+          className={`clutter__window clutter__window--${item.kind}${item.frontOnly ? " clutter__window--front-only" : ""}`}
           style={{
             left: item.x, top: item.y, width: item.width, height: item.height,
             "--tilt": `${item.tilt}deg`, "--order": index,
-            "--to-x": `${640 - (item.x + item.width / 2)}px`, "--to-y": `${18 - (item.y + item.height / 2)}px`,
+            "--to-x": `${STAGE_WIDTH / 2 - (item.x + item.width / 2)}px`, "--to-y": `${18 - (item.y + item.height / 2)}px`,
           } as CSSProperties}
         >
           <header>
