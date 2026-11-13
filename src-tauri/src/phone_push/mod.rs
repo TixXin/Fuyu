@@ -105,10 +105,10 @@ pub fn get_user_idle_seconds() -> Option<u32> {
     session_notifications::idle_millis().map(|millis| millis / 1000)
 }
 
-#[cfg(not(windows))]
+#[cfg(target_os = "macos")]
 #[tauri::command]
 pub fn get_user_idle_seconds() -> Option<u32> {
-    None
+    crate::macos::session::idle_seconds()
 }
 
 #[cfg(windows)]
@@ -117,10 +117,10 @@ pub fn is_session_locked() -> bool {
     session_notifications::is_locked()
 }
 
-#[cfg(not(windows))]
+#[cfg(target_os = "macos")]
 #[tauri::command]
 pub fn is_session_locked() -> bool {
-    false
+    crate::macos::session::is_locked()
 }
 
 macro_rules! tauri_commands {

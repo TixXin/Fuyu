@@ -54,7 +54,7 @@ macOS 的计划和决定见 [macos-port-plan.md](macos-port-plan.md)，各功能
 | 同步歌词 | `lyrics` | 已支持 | 未开始 | 依赖媒体控制拿到的曲目信息 | G1.9 | — |
 | QQ 通知 | `qq_notifications` | 已支持 | 未开始 | 读不到系统通知；最多读 Dock 角标未读数（辅助功能），待验证 | G1.10 | — |
 | 微信提醒 | `wechat_reminders` | 已支持 | 未开始 | 同上；会话列表的 AX 读取待验证 | G1.10 | — |
-| 手机推送 | `phone_push` | 已支持 | 未开始 | 锁屏、空闲判断换 macOS 实现 | G1.6 | — |
+| 手机推送 | `phone_push` | 已支持 | 已支持 | 空闲时间用 `CGEventSourceSecondsSinceLastEventType`（任意输入），锁屏读 `CGSessionCopyCurrentDictionary` 的 `CGSSessionScreenIsLocked`（`macos/session.rs`）；不要权限。Bark 和凭据是通用代码 | G1.6 | macOS 27.2，2026-11-13（单元测试） |
 | AI 代理状态与 hook | `agent_status`、`agent_approval` | 已支持 | 未开始 | `~/.claude` 等路径、sh 脚本、绝对路径 | G1.7 | — |
 | 点会话跳到终端 / 编辑器 | `agent_status` | 已支持 | 未开始 | AppleScript（自动化权限）、VS Code URL、AX | G1.7 | — |
 | Claude 用量 | `claude_usage` | 已支持 | 未开始 | 读取路径换成 Mac 的位置 | G1.7 | — |
