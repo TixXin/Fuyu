@@ -224,6 +224,17 @@ Google Antigravity (the IDE and the `agy` CLI) is listed on the Agent page with 
 - **Clicking a session** brings up the Antigravity window.
 - Not done: "waiting on you" (Antigravity's hooks have no approval or notification event), usage, approving from the island, SSH.
 
+## DeepSeek Harness
+
+DeepSeek Harness (DSH) sessions are listed on the Agent page with DeepSeek's icon (task B24, issue #155). The approach follows flyl1u/fly-island's DSH integration; DSH was not installed on the machine it was written on, so it has not been run against real data. Details and sources are in [agent-harnesses.md](../research/agent-harnesses.md).
+
+- **No hooks**: the island only reads. It looks in `~/.dsh` (the official app and anywhere-labs), `~/.dsh-beta` (anywhere-labs Beta) and `%APPDATA%\dsh-desktop\harness` (DataElement's DSH Desktop).
+- **Sessions**: one per `session-<UUID>` from DSH's projection checkpoint `storages/session_projcache/sessions/<id>.json`, which is plain JSON; the zstd-compressed conversation log is never opened, only checked to exist, so deleted sessions are skipped. Only checkpoint versions 3–7 and session formats 3–4 are read, each row checked by its `ver`; anything else is skipped. The same id in two stores shows once, from the newer checkpoint.
+- **State**: an open question in `userQuestions` is "waiting on you"; an open turn in `turnBoundary` is running (stale after the usual 10 minutes); otherwise done. Tool approvals are not in the checkpoint, so a session waiting for approval shows as running. Checkpoints are written in batches, so the state can lag the app by a little.
+- **Title, model, last prompt and reply** come from the `title`, `modelSelection`, `turnOutline` rows; the context size from `contextPressure`.
+- **Clicking a session** brings up the running DSH desktop window (`DeepSeek Harness.exe`, `DSH Desktop.exe`, `DSH NEXT.exe` and so on). There is no link to open a specific conversation.
+- Not done: wallet balance, approving from the island, SSH, custom data folders (`DSH_HOME`, anywhere-labs' folder picker), telling which desktop app a session belongs to.
+
 ## Other Agents
 
 Tools other than Codex and Claude Code can report their status too, with no Fuyu release needed: either from a plugin with the `agent-status:write` permission (`agentStatus.report`), or over the local API (`PUT /v1/agent-status/{source}`). These reports are kept in memory only and appear in the snapshot's `others` list. They light the island and name their session in the same way as the built-in agents, using a robot icon instead of a brand icon. See [local-api.md](local-api.md#ai-agent-状态) and [plugins/README.md](../plugins/README.md).

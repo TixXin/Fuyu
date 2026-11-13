@@ -58,6 +58,7 @@ macOS 的计划和决定见 [macos-port-plan.md](macos-port-plan.md)，各功能
 | AI 代理状态与 hook | `agent_status`、`agent_approval` | 已支持 | 未开始 | `~/.claude` 等路径、sh 脚本、绝对路径 | G1.7 | — |
 | WorkBuddy 会话（国内版，B23.2） | `agent_status` | 部分支持 | 未开始 | Windows：会话列表、标题和三态已用 5.3.8、5.9.3 的真实会话核对；「等你」的钩子没实测。Mac：读 `~/.workbuddy` 同样的文件，钩子脚本要换成 sh | G1.7 | — |
 | Antigravity 会话（B23.3） | `agent_status` | 部分支持 | 未开始 | Windows：按官方文档的钩子写，没实测；只有运行中和完成，没有「等你」。Mac：钩子配置同在 `~/.gemini/config/hooks.json`，脚本要换成 sh | G1.7 | — |
+| DeepSeek Harness 会话（B24） | `agent_status` | 部分支持 | 未开始 | Windows：只读 `~/.dsh`、`~/.dsh-beta`、`%APPDATA%\dsh-desktop\harness` 的会话检查点，本机没装 DSH，没实测。Mac：同样读 `~/.dsh`，点会话要换成 Mac 的找窗口办法 | G1.7 | — |
 | 点会话跳到终端 / 编辑器 | `agent_status` | 已支持 | 未开始 | AppleScript（自动化权限）、VS Code URL、AX | G1.7 | — |
 | Claude 用量 | `claude_usage` | 已支持 | 未开始 | 读取路径换成 Mac 的位置 | G1.7 | — |
 | 插件 | `plugin_host` | 已支持 | 未开始 | 进程组代替 Job Object；PowerShell 插件需用户装 pwsh | G1.8 | — |

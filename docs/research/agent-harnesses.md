@@ -14,7 +14,7 @@
 
 - **这一轮内置 WorkBuddy 国内版（B23.2）和 Antigravity（B23.3）**，做到会话列表、标题、亮灯和品牌图标。WorkBuddy 能做到三态；Antigravity 只有运行中 / 完成两态。
 - WorkBuddy 国际版（`~/.workbuddy-ai`）是另一个产品，钩子写进去没人实测成功过，会话格式也没找到，这一轮不做。
-- DeepSeek Harness 是开发者预览版，会话要解压、钩子缺等待事件，这一轮只记录，等它稳定或有人在用时再定是内置还是写插件。
+- DeepSeek Harness 是开发者预览版，会话要解压、钩子缺等待事件，这一轮只记录，等它稳定或有人在用时再定是内置还是写插件。2026-11-13 追加（B24）：参考 flyl1u/fly-island 的接法内置了，不解压会话、不用钩子，读 DSH 自己写的投影检查点（`storages/session_projcache/sessions/<id>.json`，普通 JSON），能做到三态（等你来自 `userQuestions` 里打开的提问），见 [agent-status-hooks.md](../features/agent-status-hooks.md#deepseek-harness)。
 - SSH、用量环、从岛上应答审批这一轮都不做，做法记在下面，以后照着做。
 
 ## 详细
