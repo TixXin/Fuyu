@@ -80,6 +80,7 @@ struct PluginHost {
     plugins_dir: PathBuf,
     data_dir: PathBuf,
     state_path: PathBuf,
+    broken_state_backup: Option<PathBuf>,
     state: Mutex<PluginsState>,
     installed: Mutex<Vec<InstalledPlugin>>,
     supervisors: Mutex<HashMap<String, Supervisor>>,
@@ -103,7 +104,9 @@ pub fn init(app: &AppHandle) -> Result<(), String> {
         .map_err(|error| format!("Could not create {}: {error}", plugins_dir.display()))?;
     let state_path = app_dir.join(STATE_FILE_NAME);
     let installed = scan(&plugins_dir, &app_version(app));
-    let mut state = load_state(&state_path);
+    let loaded = load_state(&state_path);
+    let broken_state_backup = loaded.backup;
+    let mut state = loaded.state;
     if migrate_local_api(&mut state, &installed, local_api::legacy_switches()) {
         save_state(&state_path, &state)?;
     }
@@ -114,6 +117,7 @@ pub fn init(app: &AppHandle) -> Result<(), String> {
         data_dir: app_dir.join(PLUGIN_DATA_DIR_NAME),
         state: Mutex::new(state),
         state_path,
+        broken_state_backup,
         supervisors: Mutex::new(HashMap::new()),
         builtins_running: Mutex::new(HashSet::new()),
         runtimes: Arc::new(Mutex::new(HashMap::new())),

@@ -91,13 +91,14 @@ mockIPC((command, payload) => {
       ],
     };
     case "list_plugins": {
-      const base = { dev: false, platforms: [], notificationsMuted: false, keybindingConflicts: [], keybindings: {}, optionalPermissions: [], calls: [], sensitive: {}, activation: "startup", activationEvents: [], startupMs: null, resources: null, keepAlive: null, revoked: null, updateAvailable: null, autoUpdated: null, preRelease: false, preReleaseAvailable: null, memoryLimitMb: 512, signingKeyChanged: false, authorKey: null };
+      const base = { dev: false, platforms: [], notificationsMuted: false, keybindingConflicts: [], keybindings: {}, optionalPermissions: [], calls: [], sensitive: {}, activation: "startup", activationEvents: [], startupMs: null, resources: null, keepAlive: null, revoked: null, updateAvailable: null, autoUpdated: null, updateFailed: null, preRelease: false, preReleaseAvailable: null, memoryLimitMb: 512, signingKeyChanged: false, authorKey: null };
       return {
       allowThirdParty: true,
       nodeAvailable: false,
       powershellAvailable: true,
       autoUpdate: false,
       trustedPublishers: ["someone"],
+      brokenStateBackup: "C:\\Users\\demo\\.fuyu\\plugins.broken-20261114-101500.json",
       pluginsDir: "C:\\Users\\demo\\AppData\\Roaming\\com.tixxin.fuyu\\plugins",
       plugins: [
         { ...base, id: "focusd.local-api", builtin: true, invalidReason: null, name: { "zh-CN": "本地接口", en: "Local API" }, description: { "zh-CN": "让脚本通过 HTTP 读写待办。", en: "Lets scripts read and change todos over HTTP." }, version: "1.0.0", author: "FocuSD", homepage: "", permissions: ["todos:read", "todos:write"], commands: [{ id: "reset-token", title: { "zh-CN": "重新生成令牌", en: "Regenerate token" } }], runtime: "builtin", hasProcess: true, enabled: true, needsApproval: false, status: "running", error: null, log: [], settingsSchema: [{ key: "allowWrite", type: "boolean", title: { "zh-CN": "允许修改", en: "Allow changes" }, default: false }], settings: { allowWrite: false }, info: [{ label: { "zh-CN": "地址", en: "Address" }, value: "http://127.0.0.1:39271/v1", copy: true, secret: false }, { label: { "zh-CN": "访问令牌", en: "Access token" }, value: "0".repeat(64), copy: true, secret: true }] },

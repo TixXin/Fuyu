@@ -43,17 +43,44 @@ pub(super) struct PluginGrant {
     pub author_keys: Vec<String>,
 }
 
-pub(super) fn load_state(path: &Path) -> PluginsState {
-    fs::read_to_string(path)
-        .ok()
-        .and_then(|text| serde_json::from_str(&text).ok())
-        .unwrap_or_default()
+pub(super) struct LoadedState {
+    pub(super) state: PluginsState,
+    pub(super) backup: Option<std::path::PathBuf>,
+}
+
+pub(super) fn broken_backup_path(path: &Path, now: chrono::DateTime<chrono::Local>) -> std::path::PathBuf {
+    let stem = path.file_stem().and_then(|stem| stem.to_str()).unwrap_or("plugins");
+    let base = format!("{stem}.broken-{}", now.format("%Y%m%d-%H%M%S"));
+    let mut candidate = path.with_file_name(format!("{base}.json"));
+    let mut next = 2;
+    while candidate.exists() {
+        candidate = path.with_file_name(format!("{base}-{next}.json"));
+        next += 1;
+    }
+    candidate
+}
+
+pub(super) fn load_state(path: &Path) -> LoadedState {
+    let bytes = match fs::read(path) {
+        Ok(bytes) => bytes,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return LoadedState { state: PluginsState::default(), backup: None },
+        Err(error) => {
+            eprintln!("could not read {}: {error}", path.display());
+            return LoadedState { state: PluginsState::default(), backup: None };
+        }
+    };
+    match serde_json::from_slice(&bytes) {
+        Ok(state) => LoadedState { state, backup: None },
+        Err(error) => {
+            let backup = broken_backup_path(path, chrono::Local::now());
+            eprintln!("{} could not be read ({error}); keeping it as {}", path.display(), backup.display());
+            let kept = fs::write(&backup, &bytes).inspect_err(|error| eprintln!("could not back up {}: {error}", path.display()));
+            LoadedState { state: PluginsState::default(), backup: kept.ok().map(|()| backup) }
+        }
+    }
 }
 
 pub(super) fn save_state(path: &Path, state: &PluginsState) -> Result<(), String> {
     let text = serde_json::to_string_pretty(state).map_err(|error| error.to_string())?;
-    let fail = |error: std::io::Error| format!("Could not write {}: {error}", path.display());
-    let temp = path.with_extension("json.tmp");
-    fs::write(&temp, text).map_err(fail)?;
-    fs::rename(&temp, path).map_err(fail)
+    crate::fs_write::replace_file(path, text.as_bytes()).map_err(|error| format!("Could not write {}: {error}", path.display()))
 }
