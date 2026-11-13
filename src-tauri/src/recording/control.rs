@@ -33,8 +33,10 @@ pub struct Request {
     pub(crate) width: u32,
     pub(crate) height: u32,
     pub(crate) fps: Option<u32>,
+    pub(crate) quality: Option<String>,
     pub(crate) system_audio: Option<bool>,
     pub(crate) microphone: Option<bool>,
+    pub(crate) gif: Option<bool>,
     pub(crate) folder_name: String,
 }
 
@@ -98,16 +100,20 @@ pub(crate) fn start_now(app: &AppHandle, request: Request) -> Result<String, Use
     let videos = win32::known_folder::videos().ok_or_else(|| failed("The Videos folder is unavailable."))?;
     let folder = videos.join(crate::screenshot::sanitized_name(&request.folder_name));
     std::fs::create_dir_all(&folder).map_err(|error| failed(format!("Failed to create {}: {error}", folder.display())))?;
-    let path = format::file_name_in(&folder, chrono::Local::now());
+    let gif = request.gif.unwrap_or(false);
+    let path = format::file_name_in(&folder, chrono::Local::now(), if gif { "gif" } else { "mp4" });
+    let video = if gif { std::env::temp_dir().join(format!("fuyu-recording-{}.mp4", std::process::id())) } else { path.clone() };
     let options = Options {
         x: request.x,
         y: request.y,
         width: request.width,
         height: request.height,
         fps: format::fps(request.fps),
-        system_audio: request.system_audio.unwrap_or(true),
-        microphone: request.microphone.unwrap_or(false),
-        path: path.clone(),
+        high_quality: request.quality.as_deref() == Some("high"),
+        system_audio: !gif && request.system_audio.unwrap_or(true),
+        microphone: !gif && request.microphone.unwrap_or(false),
+        path: video,
+        gif: gif.then(|| path.clone()),
     };
     hide_own_windows(app);
     match Recording::start(options) {

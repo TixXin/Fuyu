@@ -18,6 +18,7 @@ use crate::win32::{
 use super::{
     audio::Audio,
     format,
+    gif::GifOutput,
     pacing::{Pacer, Step, TICKS_PER_SECOND},
 };
 
@@ -30,9 +31,11 @@ pub(crate) struct Options {
     pub(crate) width: u32,
     pub(crate) height: u32,
     pub(crate) fps: u32,
+    pub(crate) high_quality: bool,
     pub(crate) system_audio: bool,
     pub(crate) microphone: bool,
     pub(crate) path: PathBuf,
+    pub(crate) gif: Option<PathBuf>,
 }
 
 #[derive(Clone, Debug, serde::Serialize)]
@@ -94,6 +97,7 @@ struct Pipeline {
     writer: VideoWriter,
     capture: MonitorCapture,
     audio: Audio,
+    gif: Option<GifOutput>,
     summary: Summary,
     dropped: Arc<AtomicU64>,
 }
@@ -107,13 +111,14 @@ fn open(options: &Options, frames: SyncSender<Message>) -> Result<Pipeline, Stri
     let area = area.with_size(format::even(area.width), format::even(area.height));
     let input = (area.width, area.height);
     let output = format::fit(area.width, area.height);
-    let video = VideoFormat { input, output, fps: options.fps, bitrate: format::bitrate(output.0, output.1, options.fps) };
+    let video = VideoFormat { input, output, fps: options.fps, bitrate: format::bitrate(output.0, output.1, options.fps, options.high_quality) };
     let audio = Audio::start(options.system_audio, options.microphone);
     let with_audio = audio.is_on();
     let (writer, hardware) = match VideoWriter::create(&gpu, &options.path, &video, true, with_audio) {
         Ok(writer) => (writer, true),
         Err(_) => (VideoWriter::create(&gpu, &options.path, &video, false, with_audio).map_err(|error| format!("Could not start the video encoder: {error}"))?, false),
     };
+    let gif = options.gif.clone().map(|path| GifOutput::start(&gpu, path)).transpose()?;
     let dropped = Arc::new(AtomicU64::new(0));
     let counter = Arc::clone(&dropped);
     let interval = TICKS_PER_SECOND / i64::from(options.fps);
@@ -124,7 +129,7 @@ fn open(options: &Options, frames: SyncSender<Message>) -> Result<Pipeline, Stri
     })
     .map_err(|error| format!("Could not capture the screen: {error}"))?;
     let summary = Summary {
-        path: options.path.display().to_string(),
+        path: options.gif.as_ref().unwrap_or(&options.path).display().to_string(),
         width: output.0,
         height: output.1,
         seconds: 0.0,
@@ -135,15 +140,18 @@ fn open(options: &Options, frames: SyncSender<Message>) -> Result<Pipeline, Stri
         system_audio: audio.system,
         microphone: audio.microphone,
     };
-    Ok(Pipeline { writer, capture, audio, summary, dropped })
+    Ok(Pipeline { writer, capture, audio, gif, summary, dropped })
 }
 
 fn run(options: Options, frames: SyncSender<Message>, messages: Receiver<Message>, ready: mpsc::Sender<Result<(), String>>) -> Result<Summary, String> {
     let _apartment = WinRtApartment::multithreaded().map_err(|error| error.to_string())?;
-    let Pipeline { writer, capture, mut audio, mut summary, dropped } = match open(&options, frames) {
+    let Pipeline { writer, capture, mut audio, mut gif, mut summary, dropped } = match open(&options, frames) {
         Ok(pipeline) => pipeline,
         Err(error) => {
             let _ = std::fs::remove_file(&options.path);
+            if let Some(path) = &options.gif {
+                let _ = std::fs::remove_file(path);
+            }
             let _ = ready.send(Err(error.clone()));
             return Err(error);
         }
@@ -161,11 +169,17 @@ fn run(options: Options, frames: SyncSender<Message>, messages: Receiver<Message
                 if let Err(error) = writer.write(&frame, stamp, interval) {
                     break Err(format!("Could not encode the video: {error}"));
                 }
+                if let Some(gif) = &mut gif {
+                    gif.offer(&frame, stamp);
+                }
                 summary.frames += 1;
             }
             Step::Repeat(frame, stamp) => {
                 if let Err(error) = writer.write(&frame, stamp, interval) {
                     break Err(format!("Could not encode the video: {error}"));
+                }
+                if let Some(gif) = &mut gif {
+                    gif.offer(&frame, stamp);
                 }
                 summary.repeats += 1;
             }
@@ -192,6 +206,9 @@ fn run(options: Options, frames: SyncSender<Message>, messages: Receiver<Message
     let result = result.and_then(|()| match pacer.finish() {
         Some((frame, stamp)) => {
             summary.frames += 1;
+            if let Some(gif) = &mut gif {
+                gif.offer(&frame, stamp);
+            }
             writer.write(&frame, stamp, interval).map_err(|error| format!("Could not encode the video: {error}"))
         }
         None => Ok(()),
@@ -199,8 +216,20 @@ fn run(options: Options, frames: SyncSender<Message>, messages: Receiver<Message
     let result = result.and_then(|()| audio.finish(&pacer, &writer).map_err(|error| format!("Could not encode the sound: {error}")));
     drop(audio);
     let finished = writer.finish().map_err(|error| format!("Could not finish the video file: {error}"));
-    result.and(finished)?;
+    let result = result.and(finished);
+    if let Some(gif) = gif {
+        summary.dropped += gif.dropped;
+        let encoded = gif.finish();
+        let _ = std::fs::remove_file(&options.path);
+        let gif_path = options.gif.as_ref().unwrap_or(&options.path);
+        if let Err(error) = result.and(encoded) {
+            let _ = std::fs::remove_file(gif_path);
+            return Err(error);
+        }
+    } else {
+        result?;
+    }
     summary.seconds = pacer.duration() as f64 / TICKS_PER_SECOND as f64;
-    summary.dropped = dropped.load(Ordering::Relaxed);
+    summary.dropped += dropped.load(Ordering::Relaxed);
     Ok(summary)
 }

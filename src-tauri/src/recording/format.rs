@@ -22,9 +22,9 @@ pub(crate) fn fps(wanted: Option<u32>) -> u32 {
     wanted.unwrap_or(DEFAULT_FPS).clamp(1, MAX_FPS)
 }
 
-pub(crate) fn bitrate(width: u32, height: u32, fps: u32) -> u32 {
+pub(crate) fn bitrate(width: u32, height: u32, fps: u32, high: bool) -> u32 {
     let weight = 30 + fps.saturating_sub(30) / 2;
-    let bits = u64::from(width) * u64::from(height) * u64::from(weight) / 10;
+    let bits = u64::from(width) * u64::from(height) * u64::from(weight) / 10 * if high { 2 } else { 1 };
     bits.clamp(2_000_000, 80_000_000) as u32
 }
 
@@ -32,12 +32,12 @@ pub(crate) fn capture_buffers(fps: u32) -> u32 {
     (fps * 2).div_ceil(30).clamp(2, 4)
 }
 
-pub(crate) fn file_name_in(folder: &Path, now: chrono::DateTime<chrono::Local>) -> PathBuf {
+pub(crate) fn file_name_in(folder: &Path, now: chrono::DateTime<chrono::Local>, extension: &str) -> PathBuf {
     let stem = format!("Fuyu_{}", now.format("%Y-%m-%d_%H-%M-%S"));
-    let mut path = folder.join(format!("{stem}.mp4"));
+    let mut path = folder.join(format!("{stem}.{extension}"));
     let mut next = 2;
     while path.exists() {
-        path = folder.join(format!("{stem}_{next}.mp4"));
+        path = folder.join(format!("{stem}_{next}.{extension}"));
         next += 1;
     }
     path

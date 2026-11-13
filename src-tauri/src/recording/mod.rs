@@ -1,6 +1,7 @@
 mod audio;
 mod control;
 mod format;
+mod gif;
 mod mixer;
 mod pacing;
 mod session;
