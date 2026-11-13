@@ -19,7 +19,6 @@ use super::{
     ClipboardHistorySnapshot, ClipboardHistoryState, HISTORY_CHANGED_EVENT,
     SHORT_DUPLICATE_WINDOW_MS,
 };
-use crate::win32;
 
 const DAY_MS: i64 = 24 * 60 * 60 * 1000;
 
@@ -292,7 +291,7 @@ impl ClipboardHistoryService {
         if !settings.enabled {
             return;
         }
-        if settings.skip_sensitive && win32::clipboard::is_marked_private() {
+        if settings.skip_sensitive && super::system::is_marked_private() {
             return;
         }
 
@@ -551,12 +550,11 @@ fn read_image_text(path: &str) -> Option<String> {
         image
     };
     let rgba = image.to_rgba8();
-    win32::ocr::recognize(rgba.width(), rgba.height(), rgba.as_raw())
+    super::system::recognize_text(rgba.width(), rgba.height(), rgba.as_raw())
 }
 
 fn source_app() -> Option<ClipboardSource> {
-    let window = win32::clipboard::owner_window().unwrap_or_else(win32::window::foreground_window);
-    let path = win32::process::image_path(win32::process::window_process_id(window))?;
+    let path = super::system::source_app_path()?;
     let name = Path::new(&path).file_stem()?.to_string_lossy().into_owned();
     Some(ClipboardSource { path, name })
 }
@@ -590,9 +588,11 @@ pub(super) fn is_excluded(excluded: &[String], path: &str) -> bool {
 #[cfg(test)]
 #[test]
 fn excluded_apps_match_by_executable_name() {
-    let excluded = vec!["keepass.exe".to_string()];
-    assert!(is_excluded(&excluded, r"C:\Program Files\KeePass\KeePass.exe"));
-    assert!(!is_excluded(&excluded, r"C:\Windows\notepad.exe"));
+    let path = |parts: &[&str]| parts.iter().collect::<std::path::PathBuf>().to_string_lossy().into_owned();
+    let excluded = vec!["keepass.exe".to_string(), "1password.app".to_string()];
+    assert!(is_excluded(&excluded, &path(&["Program Files", "KeePass", "KeePass.exe"])));
+    assert!(!is_excluded(&excluded, &path(&["Windows", "notepad.exe"])));
+    assert!(is_excluded(&excluded, "/Applications/1Password.app"));
 }
 
 #[cfg(test)]
@@ -610,9 +610,10 @@ fn only_images_no_entry_refers_to_are_swept() {
     for name in ["kept.png", "kept-thumb.png", "orphan.png", "notes.txt"] {
         fs::write(dir.join(name), b"x").expect("file");
     }
+    let old = |name: &str| std::path::Path::new("old").join(name).to_string_lossy().into_owned();
     let item: ClipboardHistoryItem = serde_json::from_value(serde_json::json!({
         "id": "a", "kind": "image", "hash": "a", "createdAt": 0, "copiedAt": 0, "preview": "p", "text": null,
-        "image": { "width": 1, "height": 1, "byteSize": 1, "originalPath": r"C:\old\Kept.png", "thumbnailPath": r"C:\old\kept-thumb.png" }
+        "image": { "width": 1, "height": 1, "byteSize": 1, "originalPath": old("Kept.png"), "thumbnailPath": old("kept-thumb.png") }
     }))
     .expect("item");
     remove_unreferenced_images(&dir, &[item]);

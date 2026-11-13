@@ -4,7 +4,8 @@ import { useTranslation } from "../../i18n";
 import { ShortcutResetButton } from "../../components/controls/ShortcutResetButton";
 import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
 import { getClipboardShortcutError, listenClipboardShortcutStatus, type ClipboardHistorySettings } from "./api";
-import { buildShortcutFromEvent, DEFAULT_CLIPBOARD_SHORTCUT, normalizeClipboardShortcut } from "./shortcut";
+import { isMacOS } from "../../lib/platform";
+import { buildShortcutFromEvent, DEFAULT_CLIPBOARD_SHORTCUT, normalizeClipboardShortcut, shortcutLabel } from "./shortcut";
 import "./ClipboardSettingsSection.css";
 
 export function ClipboardShortcutRows({ clipboardSettings, onClipboardSettingsChange, takenBy }: {
@@ -42,7 +43,7 @@ export function ClipboardShortcutRows({ clipboardSettings, onClipboardSettingsCh
 
   const apply = (next: string) => {
     const owner = takenBy(next);
-    setConflict(owner ? t.settings.shortcuts.taken(next, owner) : "");
+    setConflict(owner ? t.settings.shortcuts.taken(shortcutLabel(next), owner) : "");
     if (!owner) onClipboardSettingsChange({ ...clipboardSettings, shortcut: next });
   };
 
@@ -59,11 +60,11 @@ export function ClipboardShortcutRows({ clipboardSettings, onClipboardSettingsCh
         <div className={`shortcut-control${clipboardSettings.shortcutEnabled ? "" : " shortcut-control--disabled"}`}>
           <div className="shortcut-control__meta">
             <span>{t.settings.clipboard.shortcut}</span>
-            <strong>{shortcut}</strong>
+            <strong>{shortcutLabel(shortcut)}</strong>
           </div>
           <div className="shortcut-control__actions">
             <ShortcutResetButton
-              label={t.settings.shortcuts.reset(DEFAULT_CLIPBOARD_SHORTCUT)}
+              label={t.settings.shortcuts.reset(shortcutLabel(DEFAULT_CLIPBOARD_SHORTCUT))}
               isDefault={shortcut === DEFAULT_CLIPBOARD_SHORTCUT}
               disabled={!clipboardSettings.shortcutEnabled}
               onReset={() => apply(DEFAULT_CLIPBOARD_SHORTCUT)}
@@ -77,18 +78,20 @@ export function ClipboardShortcutRows({ clipboardSettings, onClipboardSettingsCh
               onBlur={() => setIsRecording(false)}
             >
               <Keyboard size={14} strokeWidth={2.3} />
-              <span>{isRecording ? t.settings.clipboard.pressKeys : shortcut}</span>
+              <span>{isRecording ? t.settings.clipboard.pressKeys : shortcutLabel(shortcut)}</span>
             </button>
           </div>
         </div>
         {error && <p className="shortcut-control__error" role="alert">{error}</p>}
       </div>
-      <SettingsToggleRow
-        title={t.settings.clipboard.winV}
-        description={t.settings.clipboard.winVHint}
-        checked={clipboardSettings.winV}
-        onChange={(winV) => onClipboardSettingsChange({ ...clipboardSettings, winV })}
-      />
+      {!isMacOS && (
+        <SettingsToggleRow
+          title={t.settings.clipboard.winV}
+          description={t.settings.clipboard.winVHint}
+          checked={clipboardSettings.winV}
+          onChange={(winV) => onClipboardSettingsChange({ ...clipboardSettings, winV })}
+        />
+      )}
     </>
   );
 }

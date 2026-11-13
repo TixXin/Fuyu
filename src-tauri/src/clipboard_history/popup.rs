@@ -1,5 +1,4 @@
 use std::{
-    path::Path,
     sync::Mutex,
     thread,
     time::Duration,
@@ -7,58 +6,16 @@ use std::{
 use tauri::{AppHandle, Emitter, Manager, PhysicalPosition, PhysicalSize, Position, Size, WebviewWindow};
 use windows::Win32::Foundation::HWND;
 
-use super::{command_text, service, ClipboardHistoryItemKind, ClipboardHistorySettings, CopyAs, PopupLayout, PopupPosition};
+use super::popup_place::{is_terminal_process, place_by_pointer, popup_size, OPENED_EVENT, POINTER_GAP};
+pub(crate) use super::popup_place::WINDOW_LABEL;
+pub(super) use super::popup_place::PasteOptions;
+use super::{command_text, service, ClipboardHistoryItemKind, ClipboardHistorySettings, CopyAs, PopupPosition};
 use crate::win32;
 
-pub(crate) const WINDOW_LABEL: &str = "clipboard";
-const OPENED_EVENT: &str = "clipboard-popup-opened";
-const POINTER_GAP: i32 = 12;
-pub(super) fn popup_size(layout: PopupLayout) -> (f64, f64) {
-    match layout {
-        PopupLayout::Standard => (380.0, 500.0),
-        PopupLayout::Wide => (640.0, 500.0),
-    }
-}
 
 const FOCUS_SETTLE: Duration = Duration::from_millis(70);
 
 static TARGET_WINDOW: Mutex<Option<isize>> = Mutex::new(None);
-
-const TERMINAL_PROCESSES: &[&str] = &[
-    "windowsterminal.exe",
-    "openconsole.exe",
-    "conhost.exe",
-    "wezterm-gui.exe",
-    "alacritty.exe",
-    "mintty.exe",
-    "tabby.exe",
-    "hyper.exe",
-    "warp.exe",
-    "kitty.exe",
-    "ghostty.exe",
-];
-
-pub(super) fn is_terminal_process(path: &str) -> bool {
-    let name = Path::new(path)
-        .file_name()
-        .and_then(|name| name.to_str())
-        .unwrap_or_default()
-        .to_ascii_lowercase();
-    TERMINAL_PROCESSES.contains(&name.as_str())
-}
-
-pub(super) fn place_by_pointer(pointer: (i32, i32), size: (i32, i32), area: (i32, i32, i32, i32), gap: i32) -> (i32, i32) {
-    let (left, top, right, bottom) = area;
-    let mut x = pointer.0 + gap;
-    let mut y = pointer.1 + gap;
-    if x + size.0 > right {
-        x = pointer.0 - gap - size.0;
-    }
-    if y + size.1 > bottom {
-        y = pointer.1 - gap - size.1;
-    }
-    (x.clamp(left, (right - size.0).max(left)), y.clamp(top, (bottom - size.1).max(top)))
-}
 
 fn popup_window(app: &AppHandle) -> Result<WebviewWindow, String> {
     app.get_webview_window(WINDOW_LABEL)
@@ -125,13 +82,6 @@ fn take_target() -> Option<HWND> {
         .map(|value| HWND(value as *mut core::ffi::c_void))
 }
 
-#[derive(Debug, Clone, Copy, Default)]
-pub(super) struct PasteOptions {
-    pub(super) plain: bool,
-    pub(super) enter: bool,
-    pub(super) copy_as: Option<CopyAs>,
-}
-
 pub(super) fn paste(app: &AppHandle, id: &str, options: PasteOptions) -> Result<(), String> {
     let service = service()?;
     let snapshot = service.snapshot()?;
@@ -187,25 +137,4 @@ fn paste_into(target: Option<HWND>, auto_paste: bool, enter: bool) {
             }
         }
     });
-}
-
-#[cfg(test)]
-mod tests {
-    use super::{is_terminal_process, place_by_pointer};
-
-    #[test]
-    fn terminals_are_told_by_their_executable() {
-        assert!(is_terminal_process(r"C:\Program Files\WindowsApps\Microsoft.WindowsTerminal\WindowsTerminal.exe"));
-        assert!(is_terminal_process("wezterm-gui.exe"));
-        assert!(!is_terminal_process(r"C:\Windows\explorer.exe"));
-        assert!(!is_terminal_process(""));
-    }
-
-    #[test]
-    fn the_popup_stays_on_the_work_area() {
-        let area = (0, 0, 1920, 1040);
-        assert_eq!(place_by_pointer((100, 100), (380, 480), area, 12), (112, 112));
-        assert_eq!(place_by_pointer((1900, 1000), (380, 480), area, 12), (1508, 508));
-        assert_eq!(place_by_pointer((10, 10), (2000, 480), area, 12), (0, 22));
-    }
 }

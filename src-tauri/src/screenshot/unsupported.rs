@@ -90,3 +90,7 @@ macro_rules! tauri_commands {
     };
 }
 pub(crate) use tauri_commands;
+
+pub(crate) fn is_screenshot_file(_path: &std::path::Path) -> bool {
+    false
+}

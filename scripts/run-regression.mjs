@@ -43,6 +43,7 @@ export const PAGES = [
 ];
 
 const PAGE_TIMEOUT_MS = 120_000;
+const USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36";
 const BROWSERS = [
   "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
   "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
@@ -177,7 +178,7 @@ export async function withRegressionBrowser(root, firstPage, use) {
     await waitForHttp(`${base}${firstPage.split("?")[0]}`, 30_000);
     if (vite.exitCode !== null) throw new Error(`Vite exited (port ${vitePort} taken?); not testing whatever answers there.`);
     const language = process.env.REGRESSION_LANG ?? "zh-CN";
-    browser = spawn(findBrowser(), ["--headless=new", "--disable-gpu", "--no-first-run", "--no-default-browser-check", `--remote-debugging-port=${debugPort}`, `--user-data-dir=${profile}`, `--lang=${language}`, `--accept-lang=${language}`, "--window-size=1280,900", "about:blank"], { stdio: ["ignore", "ignore", "pipe"] });
+    browser = spawn(findBrowser(), ["--headless=new", "--disable-gpu", "--no-first-run", "--no-default-browser-check", `--remote-debugging-port=${debugPort}`, `--user-data-dir=${profile}`, `--lang=${language}`, `--accept-lang=${language}`, `--user-agent=${USER_AGENT}`,"--window-size=1280,900", "about:blank"], { stdio: ["ignore", "ignore", "pipe"] });
     let browserLog = "";
     browser.stderr.on("data", (chunk) => { browserLog = (browserLog + chunk).slice(-4000); });
     const session = await connect(debugPort, browser, () => browserLog);

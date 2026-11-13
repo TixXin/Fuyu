@@ -4,6 +4,7 @@ import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsRow } from "../../components/settings/SettingsRow";
 import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
 import { useTranslation } from "../../i18n";
+import { isMacOS } from "../../lib/platform";
 import type { ClipboardHistorySettings, ClipboardOpenIn, ClipboardPopupLayout, ClipboardPopupPosition } from "./api";
 import { ClipboardRecordSettings } from "./ClipboardRecordSettings";
 
@@ -75,7 +76,7 @@ export function ClipboardSettingsSection({ clipboardSettings, onClipboardSetting
           <SettingsToggleRow
             indent
             title={text.autoPaste}
-            description={text.autoPasteHint}
+            description={isMacOS ? text.autoPasteHintMac : text.autoPasteHint}
             checked={clipboardSettings.autoPaste}
             onChange={(autoPaste) => change({ autoPaste })}
           />

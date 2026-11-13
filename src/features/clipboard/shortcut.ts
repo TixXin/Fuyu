@@ -1,4 +1,17 @@
-export const DEFAULT_CLIPBOARD_SHORTCUT = "Ctrl+Shift+W";
+import { isMacOS } from "../../lib/platform.ts";
+
+export const DEFAULT_CLIPBOARD_SHORTCUT = isMacOS ? "Shift+Win+V" : "Ctrl+Shift+W";
+
+const MAC_SYMBOLS: Readonly<Record<string, string>> = { Ctrl: "⌃", Alt: "⌥", Shift: "⇧", Win: "⌘" };
+const MAC_ORDER = ["Ctrl", "Alt", "Shift", "Win"];
+
+export function shortcutLabel(shortcut: string, mac = isMacOS) {
+  if (!mac) return shortcut;
+  const parts = shortcut.split("+").filter(Boolean);
+  const key = parts.filter((part) => !(part in MAC_SYMBOLS)).join("+");
+  const modifiers = MAC_ORDER.filter((name) => parts.includes(name)).map((name) => MAC_SYMBOLS[name]);
+  return modifiers.join("") + key;
+}
 
 export type ShortcutKeyboardEvent = Pick<
   KeyboardEvent,

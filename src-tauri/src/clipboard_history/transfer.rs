@@ -65,7 +65,7 @@ impl ClipboardHistoryService {
             .collect();
         let file = ExportFile { app: APP.into(), version: VERSION, exported_at: current_unix_millis(), items, snippets };
         let content = serde_json::to_string(&file).map_err(|error| format!("Failed to write the export: {error}"))?;
-        let dir = crate::win32::known_folder::downloads().ok_or("找不到下载文件夹。")?;
+        let dir = crate::system::downloads_dir().ok_or("找不到下载文件夹。")?;
         let stamp = chrono::Local::now().format("%Y-%m-%d-%H%M").to_string();
         let path = free_path(&dir, &stamp);
         fs::write(&path, content).map_err(|error| format!("Could not write {}: {error}", path.display()))?;
