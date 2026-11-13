@@ -129,7 +129,7 @@ fn detached_island_rounds_top_corners() {
         let mut detached = state(mode, 1.0, DEFAULT_EXPANDED_ISLAND_HEIGHT);
         assert_eq!(detached.top_corner_radius(), 0.0);
         detached.top_attached = false;
-        assert!(detached.top_corner_radius() > 0.0);
+        assert_eq!(detached.top_corner_radius(), detached.bottom_corner_radius());
         let (width, height) =
             mode.base_size(COLLAPSED_ISLAND_WIDTH, EXPANDED_ISLAND_WIDTH, DEFAULT_EXPANDED_ISLAND_HEIGHT);
         let contains = |x, y| {
@@ -219,15 +219,15 @@ fn corner_radius_setting_scales_every_hit_test_radius() {
     collapsed.top_attached = false;
     assert_eq!(expanded.bottom_corner_radius(), EXPANDED_RADIUS);
     assert_eq!(collapsed.bottom_corner_radius(), COLLAPSED_RADIUS);
-    assert_eq!(expanded.top_corner_radius(), 22.0);
-    assert_eq!(collapsed.top_corner_radius(), 14.0);
+    assert_eq!(expanded.top_corner_radius(), EXPANDED_RADIUS);
+    assert_eq!(collapsed.top_corner_radius(), COLLAPSED_RADIUS);
 
     expanded.corner_radius = 20.0;
     collapsed.corner_radius = 20.0;
     assert_eq!(expanded.bottom_corner_radius(), 20.0);
     assert!((collapsed.bottom_corner_radius() - 22.0 * 20.0 / 30.0).abs() < 1e-9);
-    assert!((expanded.top_corner_radius() - 22.0 * 20.0 / 30.0).abs() < 1e-9);
-    assert!((collapsed.top_corner_radius() - 14.0 * 20.0 / 30.0).abs() < 1e-9);
+    assert_eq!(expanded.top_corner_radius(), 20.0);
+    assert!((collapsed.top_corner_radius() - 22.0 * 20.0 / 30.0).abs() < 1e-9);
 }
 
 #[test]

@@ -17,11 +17,11 @@
 }
 
 .island--detached.island--collapsed .island-resize-hints {
-  --resize-hint-top: var(--island-shell-radius-collapsed-top);
+  --resize-hint-top: var(--island-shell-radius-collapsed);
 }
 
 .island--detached.island--expanded .island-resize-hints {
-  --resize-hint-top: var(--island-shell-radius-expanded-top);
+  --resize-hint-top: var(--island-shell-radius);
 }
 
 html.island-move-armed .island-resize-hints {
