@@ -23,7 +23,7 @@ description: >
 2. 进去后确认 `git status --short` 干净、分支是 `lane/N`。不要手动 `git worktree add`，不要在主工作区改文件。
 3. 认领任务：`pnpm task:claim <编号> --as <名字> --scope ...`（会顺带登记 lane；它开一个只改文档的认领 PR，等合入约 1 分钟）。
 
-新机器第一次用：在主工作区 `git config core.hooksPath .githooks`，再 `pnpm lane:install-hooks`（往用户级 settings 加 SessionStart / SessionEnd 钩子；`--check` 只检查）。
+新机器第一次用：在主工作区 `pnpm install`（顺带把 `core.hooksPath` 设成 `.githooks`），再 `pnpm lane:install-hooks`（往用户级 settings 加 SessionStart / SessionEnd 钩子；`--check` 只检查）。
 
 ## 合入
 

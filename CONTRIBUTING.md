@@ -14,10 +14,16 @@
 - CI 的 `check` 必须通过；
 - PR 必须基于最新的 `main`。落后时不用自己处理：开着自动合并的 PR 会由工作流按先后顺序一个个更新。
 
+### 本机准备
+
+- `pnpm install` 会把 `core.hooksPath` 设成 `.githooks`：`pre-push` 拦住直接推 `main`，并检查提交里有没有 AI 署名行和任务文件；`commit-msg` 拒绝 Claude 署名行。已经设成别的路径时只提示不改。
+- 仓库的 `.claude/settings.json` 关掉了 Claude Code 默认加的提交署名和 PR 尾注，不用自己配。
+- lane（每个代理会话一个 worktree，经 `pnpm mq:land` 合入）是可选的。要用的话，在主工作区跑一次 `pnpm lane:install-hooks`，它往用户级 `~/.claude/settings.json` 加会话开始时的提醒和会话结束时的释放；不用 lane 时别跑它，否则每次在仓库里开会话都会被提醒先开 lane。注意仓库自带的 `WorktreeCreate` 钩子对所有人生效：在本仓库里用 `claude -w` 或 EnterWorktree 开的 worktree 都会是 `../fuyu-lanes/` 下的 lane。
+
 ### 有本仓库 Write 权限的协作者
 
 1. 从最新的 `main` 开分支，提交。分支名随意，例如 `feat/<主题>`、`fix/<主题>`。
-2. 推到本仓库，开 PR，然后点 **Enable auto-merge**，合并方式选 **Create a merge commit**。
+2. 推到本仓库（直接 clone `TixXin/fuyu`，不要 fork；从 fork 提的 PR，自动更新分支的工作流推不进去），开 PR，然后点 **Enable auto-merge**，合并方式选 **Create a merge commit**。
 3. CI 通过后 GitHub 自动合入，分支自动删除。CI 失败时在同一个分支上修好再推，PR 自动更新。
 
 用 lane 工作的代理会话不用手动做这些：在 lane 里 `pnpm mq:land` 会推分支、开 PR、开启自动合并，`pnpm mq:wait` 等它合入（见 [lanes.md](docs/architecture/lanes.md)）。
@@ -40,8 +46,10 @@ Thanks for helping with Fuyu. How the code is laid out and the rules it follows 
 
 **Pull requests are the only way into `main`**, for everyone including the owner: no direct pushes, CI's `check` must pass, and the PR must be built on the latest `main`. You do not have to keep it current yourself: a workflow brings PRs on auto-merge up to date one at a time, in the order auto-merge was turned on.
 
-- **Collaborators with Write access:** branch from the latest `main`, push to this repository, open a PR and click **Enable auto-merge** (merge commit). GitHub merges it when CI passes and deletes the branch. If CI fails, push a fix to the same branch.
+- **Collaborators with Write access:** clone `TixXin/fuyu` itself rather than a fork (the workflow that keeps auto-merge PRs current cannot push to a fork's branch), branch from the latest `main`, push to this repository, open a PR and click **Enable auto-merge** (merge commit). GitHub merges it when CI passes and deletes the branch. If CI fails, push a fix to the same branch.
 - **Agent sessions in a lane:** `pnpm mq:land` pushes the branch, opens the PR and turns on auto-merge; `pnpm mq:wait` follows it until it is merged (see [lanes.md](docs/architecture/lanes.md)).
 - **Everyone else:** fork, work on a branch of your fork and open a PR against `TixXin/fuyu`'s `main`. A maintainer will reply and turn on auto-merge once it is ready.
+
+**Setting up:** `pnpm install` points `core.hooksPath` at `.githooks` (pre-push blocks direct pushes to `main` and checks for AI attribution lines and task files; commit-msg rejects Claude attribution lines), unless it is already set to another path. The repository's `.claude/settings.json` turns off Claude Code's commit and PR attribution. Lanes are optional: to use them, run `pnpm lane:install-hooks` once in the main checkout, which adds the session start reminder and session end release to your user-level `~/.claude/settings.json`; skip it if you do not use lanes. The repository's `WorktreeCreate` hook applies to everyone, so `claude -w` or EnterWorktree in this repository always opens a lane under `../fuyu-lanes/`.
 
 Before opening a PR, run `pnpm check` and `pnpm build` for frontend changes (plus `pnpm test:regression` for UI components) and `cargo test --manifest-path src-tauri/Cargo.toml` for Rust. Keep one change per PR, give user-facing text in both Chinese and English, leave comments out of the code (put the reasons in the commit message or `docs/`), and do not add AI attribution lines to commits or PR descriptions.

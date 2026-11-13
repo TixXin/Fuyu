@@ -16,7 +16,7 @@
 
 `.claude/` 里只有 `settings.json`（上面两个 Worktree 钩子）和 `skills/`（`lanes`、`fuyu-release`）进仓库，其余（`settings.local.json`、`worktrees/`）各机器自己的。仓库里的钩子命令写成 `sh -c 'PATH="$PATH:/opt/homebrew/bin:/usr/local/bin" exec node "$CLAUDE_PROJECT_DIR/scripts/lanes/worktree-hooks.mjs" …'`：不写死路径，换文件夹、换机器都能用；mac 上的钩子不读 shell 配置，要补上 Homebrew 的 PATH 才找得到 `node`；Windows 上 Claude Code 用 Git Bash 跑钩子，同一条命令也能用（2026-11-13 实测）。会话从 lane 启动时 `$CLAUDE_PROJECT_DIR` 是 lane，脚本用 `git rev-parse --git-common-dir` 找回主工作区。
 
-SessionStart / SessionEnd 必须放用户级：magpie 这类会话不从仓库启动，读不到仓库的 `.claude/settings.json`，也没有指向仓库的 `$CLAUDE_PROJECT_DIR`，只能写主工作区的绝对路径。新机器或主工作区挪了位置后，在主工作区跑 `pnpm lane:install-hooks`：它往 SessionStart / SessionEnd 追加这两个钩子，不动别的工具的钩子；已经有的（哪怕指向旧路径）就地改成当前路径、去掉重复；改之前把原文件备份成 `settings.json.bak-lane-hooks-<时间>`；mac 上自动加上面的 PATH 包装；可以重复运行。`--check` 只列出要改什么，不写，要改时退出码 1。另外每台机器在主工作区 `git config core.hooksPath .githooks` 一次。
+SessionStart / SessionEnd 必须放用户级：magpie 这类会话不从仓库启动，读不到仓库的 `.claude/settings.json`，也没有指向仓库的 `$CLAUDE_PROJECT_DIR`，只能写主工作区的绝对路径。新机器或主工作区挪了位置后，在主工作区跑 `pnpm lane:install-hooks`：它往 SessionStart / SessionEnd 追加这两个钩子，不动别的工具的钩子；已经有的（哪怕指向旧路径）就地改成当前路径、去掉重复；改之前把原文件备份成 `settings.json.bak-lane-hooks-<时间>`；mac 上自动加上面的 PATH 包装；可以重复运行。`--check` 只列出要改什么，不写，要改时退出码 1。`core.hooksPath` 不用手动设：`pnpm install` 的 `prepare`（`scripts/install-git-hooks.mjs`）在它还没设时设成 `.githooks`，已经设成别的值时只提示不改。
 
 ## 开 lane、进入 lane
 
