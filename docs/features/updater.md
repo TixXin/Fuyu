@@ -159,6 +159,17 @@ pnpm tauri signer generate -w $env:USERPROFILE\.tauri\fly-island.key
 
 版本号和发布说明的提交照常 `pnpm mq:land` 到 `main`（D25：只改了四处版本号和 Markdown 时，land 只核对版本号一致并跑任务检查，不跑 `pnpm check`），合入后在主工作区运行 `pnpm release`。发布前先 `pnpm mq:sync` 跟上 `origin/main`，并确认本地 `main` 上没有还没合入的提交（`pnpm mq:pending`）：发出去的要和 `main` 一致。
 
+### Mac 版（G1.13）
+
+`pnpm release` 默认同时出 Mac 版（决定 M11、M12）：
+
+- 检查完版本号后，触发 `.github/workflows/release-macos.yml`，在 GitHub 的 macOS runner 上按当前提交编 Apple 芯片的 `.app` 和 dmg（发布提交必须已经在 GitHub 上）；本机 Windows 构建同时进行。
+- runner 用仓库 Secrets 里的自签名证书签名（`MACOS_CERTIFICATE`、`MACOS_CERTIFICATE_PASSWORD`、`MACOS_SIGNING_IDENTITY`），并确认应用能启动；没有这三项时退回 ad hoc 签名并给出警告（那样用户每次更新后要重新授权）。证书用 `node scripts/macos/self-signed-cert.mjs` 在 `~/.tauri/fuyu/macos/` 生成一次，`--upload` 写进 Secrets。**不要重新生成**：换证书后所有 Mac 用户要重新授权一次。证书和密码文件要备份。
+- 本机等 runner 跑完，下载 `Fuyu_<版本>_aarch64.app.tar.gz` 和 dmg，用本机的 updater 私钥签出 `.sig`（私钥不上传到 GitHub），`latest.json` 加 `darwin-aarch64` 和 `darwin-aarch64-app` 两个键，和 Windows 的产物一起上传、核对 SHA-256，`SHA256SUMS.txt` 包含 dmg。
+- Mac 构建失败时什么都不发布；要先只发 Windows 版，加 `--no-mac`（那样 Mac 用户检查更新会看不到 darwin 条目，之后要补发）。`--no-upload` 时不出 Mac 版。
+- 打包时框架靠 `src-tauri/tauri.bundle-macos.conf.json` 加进去，工作流和 `pnpm build:exe` 都带了这个配置。
+- 没有苹果开发者账号的公证，用户第一次打开要手动放行，步骤见 [macos-install.md](macos-install.md)。有了账号（G1.12）后在工作流里加上 Developer ID 证书和公证即可，其余不变。
+
 CI 也可以复用同样的步骤：在仓库 Secrets 里存 `TAURI_UPDATER_PUBKEY`、`TAURI_SIGNING_PRIVATE_KEY`、`TAURI_SIGNING_PRIVATE_KEY_PASSWORD`，按上面的顺序跑 `prepare-release-config` → `tauri build --config` → `make-latest-json` → `gh release`。
 
 ## 撤回有问题的版本

@@ -128,7 +128,7 @@
 2. 鼠标移到屏幕顶部的岛上即可展开，点齿轮或托盘图标打开设置。
 3. 邮箱、翻译和 AI Agent 需要先在设置里配置一次，具体见各自的说明：[邮箱](docs/features/mail.md)、[AI Agent](docs/features/agent-status-hooks.md)、[QQ 通知](docs/features/qq-notifications.md)、[微信提醒](docs/features/wechat-reminders.md)。
 
-目前支持 Windows 10 / 11。macOS 版正在适配，各功能的进度见 [platforms.md](docs/architecture/platforms.md)。
+目前支持 Windows 10 / 11。macOS 版（macOS 15 以上、Apple 芯片）正在适配，各功能的进度见 [platforms.md](docs/architecture/platforms.md)，安装方法和第一次打开怎么放行见 [在 Mac 上安装浮屿](docs/features/macos-install.md)。
 
 ## 插件
 

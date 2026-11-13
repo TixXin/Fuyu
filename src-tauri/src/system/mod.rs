@@ -82,6 +82,7 @@ macro_rules! tauri_commands {
             crate::system::network_cost::updater_metered,
             crate::system::permissions::get_system_permissions,
             crate::system::permissions::open_system_permission,
+            crate::system::permissions::request_system_permission,
             crate::system::update_runtime::updater_state,
             crate::system::update_notifications::updater_notify,
             crate::system::update_notifications::updater_diagnostics,

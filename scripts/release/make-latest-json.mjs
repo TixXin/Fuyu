@@ -11,6 +11,8 @@ const RELEASE_DIR = releaseFlag >= 0 ? args[releaseFlag + 1] : "src-tauri/target
 const BUNDLE_DIR = join(RELEASE_DIR, "bundle", "nsis");
 const MSI_DIR = join(RELEASE_DIR, "bundle", "msi");
 const notesFlag = args.indexOf("--notes-file");
+const macFlag = args.indexOf("--mac-dir");
+const MAC_DIR = macFlag >= 0 ? args[macFlag + 1] : "";
 const baseFlag = args.indexOf("--base-url");
 const baseUrl = baseFlag >= 0 ? args[baseFlag + 1]?.replace(/\/$/, "") : `https://github.com/${REPO}/releases/download/v${readVersion()}`;
 if (!baseUrl || !URL.canParse(baseUrl) || new URL(baseUrl).protocol !== "https:") {
@@ -56,6 +58,20 @@ const nsisTarget = {
   url: `${baseUrl}/${installer}`,
 };
 
+function macTarget() {
+  if (!MAC_DIR) return null;
+  const name = `Fuyu_${version}_aarch64.app.tar.gz`;
+  const archive = join(MAC_DIR, name);
+  const signature = `${archive}.sig`;
+  if (!existsSync(archive) || !existsSync(signature)) {
+    console.error(`Missing ${name} or its .sig in ${MAC_DIR}. Download the macOS build and sign it before writing the manifest.`);
+    process.exit(1);
+  }
+  return { signature: readFileSync(signature, "utf8").trim(), url: `${baseUrl}/${name}` };
+}
+
+const mac = macTarget();
+
 const manifest = {
   version,
   notes,
@@ -67,6 +83,7 @@ const manifest = {
       signature: readFileSync(msiSignaturePath, "utf8").trim(),
       url: `${baseUrl}/${msi}`,
     },
+    ...(mac ? { "darwin-aarch64": mac, "darwin-aarch64-app": mac } : {}),
   },
 };
 

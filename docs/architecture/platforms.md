@@ -36,11 +36,11 @@ macOS 的计划和决定见 [macos-port-plan.md](macos-port-plan.md)，各功能
 | 开机自启 | `system` | 已支持 | 开发中 | `SMAppService.mainApp`（`macos/login_item.rs`）；只有打包后的 `.app` 能注册，调试版读到的总是关；系统要求批准时打开「登录项」设置，开关退回 | G1.4 | — |
 | 凭据存储 | `mail`、`rename_migration` | 已支持 | 已支持 | Keychain：`keyring` 的 v1 在 Mac 上自动用 apple-native 后端，代码不用改；条目名和 Windows 相同；不弹授权框 | G1.4 | macOS 27.2，2026-11-13 |
 | 跟随系统的强调色 | `system::accent_color` | 已支持 | 开发中 | `NSColor.controlAccentColor` 转成 sRGB（`macos/appearance.rs`）；设置里这一项在 Mac 上叫「跟随系统」。打开设置窗口时读一次，系统里改了不会立刻跟上 | G1.6 | — |
-| 系统权限状态 | `system::permissions` | 不需要 | 开发中 | 设置 → 通用 →「系统权限」：辅助功能（`AXIsProcessTrusted`）、屏幕录制（`CGPreflightScreenCaptureAccess`）是否已允许，没允许时一键打开系统设置的对应隐私页；切回设置窗口时重新检查。自动化权限随 G1.7 加 | G1.6 | — |
+| 系统权限状态 | `system::permissions` | 不需要 | 开发中 | 设置 → 通用 →「系统权限」和新手引导的「给浮屿开几个权限」共用 `PermissionRows`：辅助功能（`AXIsProcessTrusted`）、屏幕录制（`CGPreflightScreenCaptureAccess`）是否已允许，每 1.5 秒和切回窗口时重新检查；「去允许」调 `request_system_permission`，先让系统弹提示（`AXIsProcessTrustedWithOptions`、`CGRequestScreenCaptureAccess`，浮屿因此出现在系统设置的列表里），没允许就打开对应隐私页；屏幕录制点过后显示「重开浮屿」。QQ / 微信、截图在没授权时各自提示。自动化权限由系统在第一次用到时问 | G1.6 | — |
 | 全局快捷键 | `win32/hotkey` | 已支持 | 部分支持 | `global-hotkey`（Carbon `RegisterEventHotKey`，在主线程注册），不要权限、不接管系统组合键。剪贴板（默认 ⌘⇧V）、翻译、截图在用；审批、插件快捷键也在用。F21–F24 在 Mac 上不能用作全局快捷键 | G1.6 | — |
 | `fuyu://` 链接 | `win32/url_protocol` | 已支持 | 开发中 | `src-tauri/Info.plist` 声明 `fuyu` / `focusd`，打包时合并进 `.app`，只在打包后的 `.app` 可用；链接经 Apple Event 到 `RunEvent::Opened`，启动 5 秒内按冷启动处理；单实例由系统和 single-instance 插件保证 | G1.4 | — |
 | 单实例 | `tauri-plugin-single-instance` | 已支持 | 已支持 | 同一个 `.app` 系统只开一个；插件在 Mac 上用本地 socket，第二个进程把参数交给第一个后退出；lane 预览标识不同，和用户的岛互不影响 | G1.4 | macOS 27.2，2026-11-13（lane 预览与主工作区并存） |
-| 自动更新 | `system` | 已支持 | 未开始 | 同一个 updater，`latest.json` 加 darwin 键；需签名公证。「按流量计费时不自动下载」已能在 Mac 上判断：Network.framework 的 `nw_path_is_expensive`（个人热点等）或 `is_constrained`（低数据模式）（`macos/network.rs`，G1.6） | G1.13 | — |
+| 自动更新 | `system` | 已支持 | 开发中 | Mac 包由 `release-macos.yml` 在 GitHub 的 macOS runner 上编，用仓库 Secrets 里的自签名证书签名（授权跨版本保留），`pnpm release` 在本机用 updater 私钥签 `.app.tar.gz`、`latest.json` 加 `darwin-aarch64`（见 [updater.md](../features/updater.md)「Mac 版」）；没有公证，用户第一次打开要「仍要打开」（[macos-install.md](../features/macos-install.md)）。还没真正发过一次。原说明：同一个 updater，`latest.json` 加 darwin 键；需签名公证。「按流量计费时不自动下载」已能在 Mac 上判断：Network.framework 的 `nw_path_is_expensive`（个人热点等）或 `is_constrained`（低数据模式）（`macos/network.rs`，G1.6） | G1.13 | — |
 | 待办、笔记与归档 | `todos` | 已支持 | 未开始 | 通用代码 | G1.2 | — |
 | 日历与会议提醒 | `calendar` | 已支持 | 未开始 | 通用代码 | G1.2 | — |
 | 多邮箱 | `mail` | 已支持 | 未开始 | 通用代码 + Keychain | G1.4 | — |
