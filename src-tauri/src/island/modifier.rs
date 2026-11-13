@@ -78,7 +78,10 @@ fn edges_under_cursor(hwnd: HWND) -> Option<(i8, bool, f64)> {
     let state = read_window_state();
     let window_width = (window_rect.right - window_rect.left).max(1) as f64;
     let per_px = window_width / STAGE_WINDOW_WIDTH * state.active_scale();
-    let (width, height) = state.mode.base_size(state.collapsed_width, state.expanded_width, state.expanded_height);
+    if state.side().is_some() {
+        return Some((0, false, per_px));
+    }
+    let (width, height) = state.base_size();
     let left = (window_width - width * per_px) / 2.0;
     let x = ((cursor.x - window_rect.left) as f64 - left) / per_px;
     let y = (cursor.y - window_rect.top) as f64 / per_px;

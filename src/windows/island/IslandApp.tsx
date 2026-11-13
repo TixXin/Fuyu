@@ -62,6 +62,7 @@ import { useOnboardingDemo, withDemoMedia } from "./useOnboardingDemo";
 import { useIslandLyrics } from "./useIslandLyrics";
 import { useIslandFirstHints } from "./useIslandFirstHints";
 import { FirstHintActions, FirstHintNotice } from "../../features/first-hints/FirstHintNotice";
+import { useIslandSide } from "./useIslandSide";
 import "./IslandApp.css";
 
 const NO_TODOS: TodoItem[] = [];
@@ -73,6 +74,7 @@ export function IslandApp() {
   const navigation = useIslandNavigation();
   const { mode, isTucked, page, setPage, collapseIsland, tuckIsland, revealIsland, minimizeToEdge, openIslandPage, toggleClipboardHistory } = navigation;
   const pluginPages = usePluginPages(page);
+  const side = useIslandSide();
   const [storedSettings, setSettings] = useIslandSettings();
   const settings = useResolvedTheme(storedSettings);
   const game = useGameMode(settings, { mode, isTucked, collapseIsland, tuckIsland, revealIsland });
@@ -142,7 +144,7 @@ export function IslandApp() {
     hasMessagePreview: showsMessage,
     hasPermissionPrompt: permissionPrompts.current !== null || screenshotCard.current !== null,
     hasTranslationPeek: Boolean(translationPeek),
-    holdTuck: holdsTuck(settings, {
+    holdTuck: side !== null || holdsTuck(settings, {
       todoInProgress: activeTodoId !== null && todos.some((todo) => todo.id === activeTodoId && !todo.completed),
       agentWaiting: agentSessions.some((session) => session.phase === "waiting"),
       musicPlaying: media.mediaState.playbackStatus === "playing",
@@ -280,6 +282,7 @@ export function IslandApp() {
         nativeGlassState={nativeGlassState}
         isTucked={isTucked}
         isDetached={isPositionDetached || settings.marginY > 0}
+        side={side}
         showTitle={settings.showTitle}
         showCollapsedText={settings.showCollapsedText}
         collapsedTaskTitle={collapsedTaskTitle}

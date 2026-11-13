@@ -20,6 +20,12 @@ pub(crate) fn monitor_work_top(monitor: &Monitor) -> i32 {
 }
 
 #[cfg(not(target_os = "macos"))]
+pub(crate) fn monitor_work_rect(monitor: &Monitor) -> (i32, i32, i32, i32) {
+    let area = monitor.work_area();
+    (area.position.x, area.position.y, area.size.width as i32, area.size.height as i32)
+}
+
+#[cfg(not(target_os = "macos"))]
 pub(crate) fn monitor_scale(monitor: &Monitor) -> f64 {
     monitor.scale_factor()
 }
@@ -69,6 +75,14 @@ pub(crate) fn monitor_size(monitor: &Monitor) -> PhysicalSize<u32> {
 #[cfg(target_os = "macos")]
 pub(crate) fn monitor_work_top(monitor: &Monitor) -> i32 {
     in_points(monitor.work_area().position, monitor.scale_factor()).y
+}
+
+#[cfg(target_os = "macos")]
+pub(crate) fn monitor_work_rect(monitor: &Monitor) -> (i32, i32, i32, i32) {
+    let area = monitor.work_area();
+    let position = in_points(area.position, monitor.scale_factor());
+    let size = size_in_points(area.size, monitor.scale_factor());
+    (position.x, position.y, size.width as i32, size.height as i32)
 }
 
 #[cfg(target_os = "macos")]
