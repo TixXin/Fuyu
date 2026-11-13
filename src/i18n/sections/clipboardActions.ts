@@ -64,6 +64,7 @@ export type ClipboardActionsText = {
   saveAsNew: string;
   cancel: string;
   closePreview: string;
+  releaseToClose: string;
   kinds: Record<"link" | "color" | "json", string>;
   linkCleaned: string;
   linkOffline: string;
@@ -155,6 +156,7 @@ export const zhCN: ClipboardActionsText = {
   saveAsNew: "另存为新记录",
   cancel: "取消",
   closePreview: "关闭",
+  releaseToClose: "松开关闭",
   kinds: { link: "网址", color: "颜色", json: "JSON" },
   linkCleaned: "去掉追踪参数后",
   linkOffline: "标题和图标要联网读，在 设置 → 剪贴板 里打开",
@@ -254,6 +256,7 @@ export const en: ClipboardActionsText = {
   saveAsNew: "Save as a new entry",
   cancel: "Cancel",
   closePreview: "Close",
+  releaseToClose: "Release to close",
   kinds: { link: "Link", color: "Colour", json: "JSON" },
   linkCleaned: "Without tracking",
   linkOffline: "Titles and icons need the network; turn them on in Settings → Clipboard",

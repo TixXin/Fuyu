@@ -40,3 +40,9 @@ test("Fuyu's own pictures read as screenshots", () => {
   assert.equal(sourceName({ id: "i", kind: "image", hash: "", createdAt: 0, copiedAt: 0, preview: "", source: own }, "浮屿", "截图"), "截图");
   assert.equal(sourceName({ id: "t", kind: "text", hash: "", createdAt: 0, copiedAt: 0, preview: "", source: own }, "浮屿", "截图"), "浮屿");
 });
+
+test("holding space past the threshold makes the preview close on release", async () => {
+  const { PEEK_HOLD_MS, releaseEndsPeek } = await import("../../src/features/clipboard/popupKeys.ts");
+  assert.equal(releaseEndsPeek(PEEK_HOLD_MS - 1), false);
+  assert.equal(releaseEndsPeek(PEEK_HOLD_MS), true);
+});
