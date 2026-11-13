@@ -147,3 +147,11 @@ test("pages the system lacks are switched off and the island skips them", async 
   assert.equal(resolveIslandPage("music", mac), "todo");
   assert.equal(withoutUnsupported(all, new Set()), all);
 });
+
+test("a first-run hint widens the island past the usual cap, up to 460px", async () => {
+  const { getNoticeIslandWidth, MAX_COLLAPSED_ISLAND_WIDTH } = await import("../../src/windows/island/layout.ts");
+  const long = getNoticeIslandWidth("Agent 会话显示在这里，点岛看全部", 200);
+  assert.ok(long > MAX_COLLAPSED_ISLAND_WIDTH && long <= 460);
+  assert.equal(getNoticeIslandWidth("短", 0), 280);
+  assert.equal(getNoticeIslandWidth("x".repeat(200), 0, 12), 472);
+});

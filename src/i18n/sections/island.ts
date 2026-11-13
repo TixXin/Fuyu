@@ -33,6 +33,13 @@ export type IslandText = {
     battery: (percent: number) => string;
   };
   layoutEditor: string;
+  firstHint: {
+    agent: string;
+    message: string;
+    tuck: string;
+    connectTools: string;
+    gotIt: string;
+  };
 };
 
 export const zhCN: IslandText = {
@@ -73,6 +80,13 @@ export const zhCN: IslandText = {
     battery: (percent) => `电量 ${percent}%`,
   },
   layoutEditor: "布局编辑",
+  firstHint: {
+    agent: "Agent 会话显示在这里，点岛看全部",
+    message: "新消息来了，点一下岛就能看",
+    tuck: "岛藏在顶边，鼠标碰一下就回来",
+    connectTools: "连接更多工具",
+    gotIt: "知道了",
+  },
 };
 
 export const en: IslandText = {
@@ -113,4 +127,11 @@ export const en: IslandText = {
     battery: (percent) => `Battery ${percent}%`,
   },
   layoutEditor: "Layout editor",
+  firstHint: {
+    agent: "Agent sessions show here; open to see all",
+    message: "When a message comes in, click the island",
+    tuck: "Hiding at the top edge; touch it to bring it back",
+    connectTools: "Connect more tools",
+    gotIt: "Got it",
+  },
 };

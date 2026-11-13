@@ -3,11 +3,12 @@ import type { IslandSettings } from "../../features/appearance/types";
 import type { TodoItem } from "../../features/todos/types";
 import { useTranslation } from "../../i18n";
 import { useTodoRotation } from "./useIslandAutomation";
-import { alignCollapsedIslandWidth, getCollapsedIslandWidth } from "./layout";
+import { alignCollapsedIslandWidth, getCollapsedIslandWidth, getNoticeIslandWidth } from "./layout";
 import type { CollapsedSlots } from "./types";
 
 const AGENT_ICON_TEXT = "MM";
 const TODO_CENTER_GAP = 6;
+const NOTICE_EXTRA_WIDTH = 180;
 
 export function useCollapsedTodo(
   todos: TodoItem[],
@@ -18,6 +19,7 @@ export function useCollapsedTodo(
   slots: CollapsedSlots = {},
   isPeeking = false,
   lyricWidthText: string | null = null,
+  noticeText: string | null = null,
 ) {
   const t = useTranslation();
   const pendingTodoIds = useMemo(
@@ -43,6 +45,14 @@ export function useCollapsedTodo(
     : null;
   const { center, centerWidth = 0, sideWidth = 0, agentIconWidth = 0 } = slots;
   const collapsedIslandWidth = useMemo(() => {
+    if (noticeText !== null) {
+      return alignCollapsedIslandWidth(
+        getNoticeIslandWidth(noticeText, sideWidth + NOTICE_EXTRA_WIDTH, settings.collapsedWidthExtra),
+        window.innerWidth,
+        window.devicePixelRatio,
+        settings.collapsedWidthExtra,
+      );
+    }
     const text = settings.showCollapsedText
       ? (agentTitle !== null ? AGENT_ICON_TEXT + agentTitle : null) ??
         (lyricWidthText !== null ? AGENT_ICON_TEXT + lyricWidthText : null) ??
@@ -61,7 +71,7 @@ export function useCollapsedTodo(
       window.devicePixelRatio,
       settings.collapsedWidthExtra,
     );
-  }, [agentIconWidth, agentTitle, lyricWidthText, center, centerWidth, collapsedTaskTitle, collapsedTodoCount, isPeeking, settings.collapsedWidthExtra, settings.showCollapsedText, settings.showTitle, sideWidth, t]);
+  }, [agentIconWidth, agentTitle, lyricWidthText, noticeText, center, centerWidth, collapsedTaskTitle, collapsedTodoCount, isPeeking, settings.collapsedWidthExtra, settings.showCollapsedText, settings.showTitle, sideWidth, t]);
 
   return { collapsedTaskTitle, collapsedTodoCount, collapsedIslandWidth };
 }
