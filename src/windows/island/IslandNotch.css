@@ -1,3 +1,7 @@
+:root {
+  --island-notch-drop-height: 38px;
+}
+
 :root[data-island-notch="on"] .island--collapsed {
   --island-top-fillet-size: 6;
   --island-shell-height: var(--island-notch-height);
@@ -17,9 +21,35 @@
 }
 
 :root[data-island-notch="on"] .island--collapsed .island__collapsed {
+  flex-direction: column;
+  align-items: stretch;
   height: calc(var(--island-notch-height) / var(--island-collapsed-scale, 1));
   gap: 0;
   padding: 0 12px;
+}
+
+:root[data-island-notch="on"] .island--collapsed:has(.island__notch-drop) {
+  --island-shell-height: calc(var(--island-notch-height) + var(--island-notch-drop-height) * var(--island-scale, 1));
+}
+
+:root[data-island-notch="on"] .island--collapsed .island__collapsed:has(.island__notch-drop) {
+  height: calc(var(--island-notch-height) / var(--island-collapsed-scale, 1) + var(--island-notch-drop-height));
+}
+
+.island__notch-row {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  height: calc(var(--island-notch-height) / var(--island-collapsed-scale, 1));
+}
+
+.island__notch-drop {
+  display: flex;
+  flex: 0 0 var(--island-notch-drop-height);
+  align-items: center;
+  gap: var(--space-md);
+  min-width: 0;
+  padding: 0 6px 4px;
 }
 
 :root[data-island-notch="on"] .island__expanded {

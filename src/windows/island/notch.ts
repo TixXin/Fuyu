@@ -1,8 +1,8 @@
 import { isTauri } from "@tauri-apps/api/core";
-import { useSyncExternalStore } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import type { IslandSettings } from "../../features/appearance/types";
 import { themeColors } from "../../features/appearance/themeMode";
-import { getIslandNotch, listenIslandNotch, type IslandNotch } from "./api.ts";
+import { getIslandNotch, listenIslandNotch, setIslandNotchDrop, type IslandNotch } from "./api.ts";
 import { MIN_COLLAPSED_ISLAND_WIDTH } from "./layout.ts";
 import "./IslandNotch.css";
 
@@ -68,4 +68,24 @@ export function notchExpandedExtra(notch: IslandNotch | null, expandedScale: num
 
 export function notchLook(settings: IslandSettings): IslandSettings {
   return { ...settings, ...themeColors(settings, "dark"), islandBackgroundColor: "#000000", opacity: 100 };
+}
+
+export type NotchDropSources = {
+  preview: unknown;
+  notice: unknown;
+  deviceAlert: unknown;
+  quotaAlert: unknown;
+  levelPopup: unknown;
+  translationPeek: unknown;
+};
+
+export function hasNotchDrop(sources: NotchDropSources) {
+  return Object.values(sources).some(Boolean);
+}
+
+export function useNotchDropSync(drop: boolean) {
+  useEffect(() => {
+    if (!isTauri()) return;
+    void setIslandNotchDrop(drop).catch((error) => console.error("Failed to sync the notch row", error));
+  }, [drop]);
 }

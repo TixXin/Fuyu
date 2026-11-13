@@ -64,7 +64,7 @@ import { useIslandFirstHints } from "./useIslandFirstHints";
 import { FirstHintActions, FirstHintNotice } from "../../features/first-hints/FirstHintNotice";
 import { useIslandSide } from "./useIslandSide";
 import { useDevIslandActions } from "./useDevIslandActions";
-import { notchExpandedExtra, notchFittedWidth, notchLook, useIslandNotch } from "./notch";
+import { hasNotchDrop, notchExpandedExtra, notchFittedWidth, notchLook, useIslandNotch, useNotchDropSync } from "./notch";
 import "./IslandApp.css";
 
 const NO_TODOS: TodoItem[] = [];
@@ -122,9 +122,11 @@ export function IslandApp() {
     showsMessage,
     busy: screenshotCard.current !== null || translationPeek !== null || permissionPrompts.current !== null,
   });
+  const notch = useIslandNotch();
+  const barText = settings.showCollapsedText && !notch;
   const { lyrics, lyricLine: currentLyric } = useIslandLyrics(settings, media.mediaState, {
     page,
-    barShown: mode === "collapsed" && !isTucked && settings.showCollapsedText,
+    barShown: mode === "collapsed" && !isTucked && barText,
   });
   const agentSession = settings.agentTitleMode === "changes" || (currentLyric && settings.lyricsIslandPriority === "lyrics") ? agentInterjection : namedAgent;
   const lyricLine = agentSession ? null : currentLyric;
@@ -132,15 +134,14 @@ export function IslandApp() {
     useCollapsedTodo(
       settings.todoEnabled ? todos : NO_TODOS,
       settings.todoEnabled ? activeTodoId : null,
-      settings.todoEnabled ? settings : { ...settings, showIdleTodoCount: false },
-      mode !== "collapsed" || isTucked || !settings.showCollapsedText || banner.hasLinePreview,
+      { ...settings, showCollapsedText: barText, ...(settings.todoEnabled ? {} : { showIdleTodoCount: false }) },
+      mode !== "collapsed" || isTucked || !barText || banner.hasLinePreview,
       agentSession?.title ?? null,
       collapsedSlots,
       banner.hasLinePreview || translationPeek !== null,
       lyricLine?.longest ?? null,
       firstHints.current ? t.island.firstHint[firstHints.current] : null,
     );
-  const notch = useIslandNotch();
   const collapsedIslandWidth = notchFittedWidth(textWidth, notch, settings.collapsedScale);
   useIslandTucking({
     settings,
@@ -235,6 +236,10 @@ export function IslandApp() {
     onCollapse: collapseIsland,
   });
 
+  useNotchDropSync(notch !== null && mode === "collapsed" && !isTucked && hasNotchDrop({
+    preview: banner.barPreview, notice: screenshotNotice.taken ?? firstHints.current, deviceAlert: notices.deviceAlert,
+    quotaAlert, levelPopup: notices.levelPopup, translationPeek,
+  }));
   useDevIslandActions({ openPage: openEnabledPage, collapse: collapseIsland, tuck: tuckIsland, reveal: revealIsland });
   const hoverTucked = useIslandHover({
     settings,
@@ -289,7 +294,7 @@ export function IslandApp() {
         isDetached={isPositionDetached || settings.marginY > 0}
         side={side}
         showTitle={settings.showTitle}
-        showCollapsedText={settings.showCollapsedText}
+        showCollapsedText={barText}
         collapsedTaskTitle={collapsedTaskTitle}
         collapsedTodoCount={collapsedTodoCount}
         agentSession={agentSession}

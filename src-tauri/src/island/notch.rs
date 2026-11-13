@@ -9,6 +9,7 @@ static DEV_NOTCH: Mutex<Option<Notch>> = Mutex::new(None);
 pub(crate) const ISLAND_NOTCH_CHANGED_EVENT: &str = "island-notch-changed";
 pub(super) const MIN_NOTCH_WING: f64 = 56.0;
 pub(super) const TUCKED_NOTCH_INSET: f64 = 2.0;
+pub(super) const NOTCH_DROP_HEIGHT: f64 = 38.0;
 
 #[derive(Debug, Clone, Copy, PartialEq, Serialize)]
 pub(crate) struct Notch {
@@ -24,13 +25,22 @@ pub(super) fn wants_notch(state: IslandWindowState) -> bool {
         && state.side().is_none()
 }
 
-pub(super) fn collapsed_size(collapsed_width: f64, scale: f64, notch: Notch, tucked: bool) -> (f64, f64) {
+pub(super) fn collapsed_size(collapsed_width: f64, scale: f64, notch: Notch, tucked: bool, drop: bool) -> (f64, f64) {
     let scale = scale.max(0.01);
     let height = notch.height / scale;
     if tucked {
         return (((notch.width - 2.0 * TUCKED_NOTCH_INSET) / scale).max(1.0), height);
     }
+    let height = if drop { height + NOTCH_DROP_HEIGHT } else { height };
     (collapsed_width.max(notch.width / scale + 2.0 * MIN_NOTCH_WING), height)
+}
+
+#[tauri::command]
+pub fn set_island_notch_drop(drop: bool) {
+    mutate_window_state(|state| {
+        state.notch_drop = drop;
+        *state
+    });
 }
 
 #[cfg(target_os = "macos")]
@@ -107,22 +117,27 @@ mod tests {
 
     #[test]
     fn collapsed_island_is_at_least_notch_plus_two_wings() {
-        let (width, height) = collapsed_size(220.0, 1.0, NOTCH, false);
+        let (width, height) = collapsed_size(220.0, 1.0, NOTCH, false, false);
         assert_eq!(width, 200.0 + 2.0 * MIN_NOTCH_WING);
         assert_eq!(height, 32.0);
-        assert_eq!(collapsed_size(500.0, 1.0, NOTCH, false).0, 500.0);
+        assert_eq!(collapsed_size(500.0, 1.0, NOTCH, false, false).0, 500.0);
     }
 
     #[test]
     fn sizes_are_in_unscaled_layer_units() {
-        let (width, height) = collapsed_size(220.0, 0.8, NOTCH, false);
+        let (width, height) = collapsed_size(220.0, 0.8, NOTCH, false, false);
         assert!((width - (250.0 + 2.0 * MIN_NOTCH_WING)).abs() < 1e-9);
         assert!((height - 40.0).abs() < 1e-9);
     }
 
     #[test]
+    fn a_message_drops_one_row_below_the_notch() {
+        assert_eq!(collapsed_size(220.0, 1.0, NOTCH, false, true).1, 32.0 + NOTCH_DROP_HEIGHT);
+    }
+
+    #[test]
     fn tucked_island_hides_just_inside_the_notch() {
-        let (width, height) = collapsed_size(340.0, 1.0, NOTCH, true);
+        let (width, height) = collapsed_size(340.0, 1.0, NOTCH, true, true);
         assert_eq!(width, 200.0 - 2.0 * TUCKED_NOTCH_INSET);
         assert_eq!(height, 32.0);
     }

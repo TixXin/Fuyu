@@ -33,7 +33,7 @@ import { usePluginStatusItems } from "../../features/plugin-views/usePluginStatu
 import { useTranslation } from "../../i18n";
 import type { CollapsedSlots, IslandPage } from "./types";
 import { useWindowDragGesture } from "./useWindowDragGesture";
-import { useIslandNotch } from "./notch";
+import { hasNotchDrop, useIslandNotch } from "./notch";
 import "./IslandCollapsedBar.css";
 
 type IslandCollapsedBarProps = {
@@ -171,7 +171,7 @@ export function IslandCollapsedBar({
   const zone = (name: CollapsedZone) => zoneIds(placements, name, offered).flatMap((id) => byId.get(id) ?? []);
 
   const left = renderZone(zone("left"));
-  const rest = (
+  const message = (
     <>
         <button
           className={`island__open-button${showCenter ? " island__open-button--center" : ""}`}
@@ -281,6 +281,10 @@ export function IslandCollapsedBar({
         {preview?.source === "plugin" && pluginNotifications.notification && (
           <PluginNotificationActions actions={pluginNotifications.notification.actions} onAction={pluginNotifications.runAction} />
         )}
+    </>
+  );
+  const right = (
+    <>
         {renderZone(zone("right"))}
         {agentSessionCount === null && (
           <button
@@ -296,6 +300,7 @@ export function IslandCollapsedBar({
         )}
     </>
   );
+  const dropped = notch !== null && hasNotchDrop({ preview, notice, deviceAlert, quotaAlert, levelPopup, translationPeek });
 
   return (
     <div
@@ -311,14 +316,18 @@ export function IslandCollapsedBar({
     >
       {notch ? (
         <>
-          <div className="island__notch-wing island__notch-wing--left" {...{ [OPENS_BAR]: "" }}>{left}</div>
-          <span className="island__notch-gap" aria-hidden="true" {...{ [OPENS_BAR]: "" }} />
-          <div className="island__notch-wing island__notch-wing--right" {...{ [OPENS_BAR]: "" }}>{rest}</div>
+          <div className="island__notch-row">
+            <div className="island__notch-wing island__notch-wing--left" {...{ [OPENS_BAR]: "" }}>{left}</div>
+            <span className="island__notch-gap" aria-hidden="true" {...{ [OPENS_BAR]: "" }} />
+            <div className="island__notch-wing island__notch-wing--right" {...{ [OPENS_BAR]: "" }}>{dropped ? right : <>{message}{right}</>}</div>
+          </div>
+          {dropped && <div className="island__notch-drop">{message}</div>}
         </>
       ) : (
         <>
           {left}
-          {rest}
+          {message}
+          {right}
         </>
       )}
     </div>

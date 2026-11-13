@@ -335,6 +335,7 @@ macro_rules! tauri_commands {
             crate::island::get_island_top_attachment,
             crate::island::get_island_edge,
             crate::island::notch::get_island_notch,
+            crate::island::notch::set_island_notch_drop,
             crate::island::show_ready_island,
             crate::island::minimize_island,
             crate::island::focus::take_island_hover_focus,

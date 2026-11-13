@@ -28,11 +28,11 @@ mockIPC((command) => {
   if (command === "get_qq_mail_state") return [];
 }, { shouldMockEvents: true });
 
-type State = { notch: IslandNotch | null; tucked: boolean };
+type State = { notch: IslandNotch | null; tucked: boolean; peek: string | null };
 let change: (next: Partial<State>) => void;
 
 function Fixture() {
-  const [state, setState] = useState<State>({ notch: NOTCH, tucked: false });
+  const [state, setState] = useState<State>({ notch: NOTCH, tucked: false, peek: null });
   change = (next) => setState((current) => ({ ...current, ...next }));
   const qq = useQQNotifications(true);
   const wechat = useWeChatReminders(true);
@@ -41,14 +41,14 @@ function Fixture() {
   return <div className="stage" style={{ "--collapsed-island-width": `${width}px`, "--island-scale": 1, "--island-collapsed-scale": 1 } as CSSProperties}>
     <IslandShell deviceUse={{ camera: [], microphone: [] }} qqNotifications={qq} wechatReminders={wechat} qqMail={qqMail} pluginNotifications={NO_PLUGIN_NOTIFICATIONS} preview={null}
       mode="collapsed" page="todo" isTucked={state.tucked} isDetached={false} showTitle={false}
-      showCollapsedText={true} collapsedTaskTitle="写周报和整理会议记录" collapsedTodoCount={null} agentSession={null} activeAgentSessionCount={0}
+      showCollapsedText={!state.notch} collapsedTaskTitle="写周报和整理会议记录" collapsedTodoCount={null} agentSession={null} activeAgentSessionCount={0}
       lyricLine={null} appearanceMode="classic" nativeGlassState="disabled" agentVisualState="idle" agentStatusLabel="AI Agent 空闲或已完成"
       mediaState={UNAVAILABLE_MEDIA}
       features={{ todo: true, music: false, clipboard: true, shelf: true, qq: false, wechat: false, qqMail: false, agents: false, translation: false }}
       shelfCount={null}
       onOpenPage={() => {}} onOpenMessages={() => {}}
       onPageChange={() => {}} onWindowDragStart={() => {}} onCollapse={() => {}}
-      onResetPosition={() => {}} minimizesToTray onMinimize={() => {}} onOpenSettings={() => {}} onOpenTranslator={() => {}} translationPeek={null} onOpenTranslationPeek={() => {}} onTuck={() => {}} onReveal={() => {}} pageDigitModifiers="Alt" hoverSwitchPage={false} hoverSwitchDelayMs={0}>
+      onResetPosition={() => {}} minimizesToTray onMinimize={() => {}} onOpenSettings={() => {}} onOpenTranslator={() => {}} translationPeek={state.peek} onOpenTranslationPeek={() => {}} onTuck={() => {}} onReveal={() => {}} pageDigitModifiers="Alt" hoverSwitchPage={false} hoverSwitchDelayMs={0}>
       <span>待办清单</span>
     </IslandShell>
   </div>;
@@ -83,8 +83,7 @@ async function runChecks() {
     check(Math.abs(hole.width - NOTCH.width) < 1, "空位和刘海一样宽");
     check(Math.abs(shell.height - NOTCH.height) < 1, "岛的高度等于刘海高");
     check(getComputedStyle(island()).backgroundColor === "rgb(0, 0, 0)", "收起的岛是纯黑的");
-    const text = bar().querySelector(".island__active-task")!;
-    check(box(text).left >= hole.right - 0.5, "待办文字在刘海右边，不被刘海挡住");
+    check(!bar().querySelector(".island__active-task, .island__notch-drop"), "平时贴合刘海的岛只放图标，不放待办文字");
     check(bar().querySelector(".island__notch-wing--left .island__pulse"), "状态灯在刘海左边");
     check(bar().scrollWidth <= bar().clientWidth + 1, "两翼的内容不撑出收起条");
     check(notchFittedWidth(280, NOTCH, 1) === NOTCH.width + 112 && notchFittedWidth(300, NOTCH, 1) === NOTCH.width + 152 && notchFittedWidth(520, NOTCH, 1) === NOTCH.width + 200,
@@ -93,6 +92,16 @@ async function runChecks() {
     check(parseFloat(getComputedStyle(expanded).paddingTop) === NOTCH.height + 8, "展开和弹出的内容从刘海下面开始，不被刘海挡住");
     check(notchExpandedExtra(NOTCH, 1, false) === NOTCH.height + 8 - 18 && notchExpandedExtra(NOTCH, 1, true) === NOTCH.height && notchExpandedExtra(null, 1, true) === 0,
       "展开的岛按让出的高度加高，内容区不变小");
+
+    await set({ peek: "notch 刘海" });
+    await settleTransitions();
+    const drop = bar().querySelector<HTMLElement>(".island__notch-drop");
+    check(drop && drop.textContent?.includes("notch 刘海"), "有提示时往下多长出一行，提示放在这一行里");
+    check(box(drop!).top >= box(island()).top + NOTCH.height - 0.5 && Math.abs(box(island()).height - (NOTCH.height + 38)) < 1, "这一行在刘海下面，岛加高一行");
+    check(box(drop!).bottom <= box(island()).bottom + 0.5, "提示不出岛");
+    await set({ peek: null });
+    await settleTransitions();
+    check(!bar().querySelector(".island__notch-drop") && Math.abs(box(island()).height - NOTCH.height) < 1, "提示结束后岛缩回刘海高");
 
     await set({ tucked: true });
     await settleTransitions();

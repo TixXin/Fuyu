@@ -103,6 +103,7 @@ pub(crate) struct IslandWindowState {
     pub(super) followed_monitor: Option<(i32, i32)>,
     pub(super) fit_notch: bool,
     pub(super) notch: Option<super::notch::Notch>,
+    pub(super) notch_drop: bool,
 }
 
 impl IslandWindowState {
@@ -130,7 +131,7 @@ impl IslandWindowState {
             return (SIDE_HANDLE_WIDTH, SIDE_HANDLE_HEIGHT);
         }
         if let (IslandMode::Collapsed, Some(notch)) = (self.mode, self.notch) {
-            return super::notch::collapsed_size(self.collapsed_width, self.collapsed_scale, notch, self.is_tucked);
+            return super::notch::collapsed_size(self.collapsed_width, self.collapsed_scale, notch, self.is_tucked, self.notch_drop);
         }
         self.mode.base_size(self.collapsed_width, self.expanded_width, self.expanded_height)
     }
@@ -198,6 +199,7 @@ impl Default for IslandWindowState {
             followed_monitor: None,
             fit_notch: false,
             notch: None,
+            notch_drop: false,
         }
     }
 }
