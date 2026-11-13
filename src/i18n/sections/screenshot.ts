@@ -40,6 +40,16 @@ export type ScreenshotText = {
     agentNotFound: string;
     close: string;
   };
+  history: {
+    title: string;
+    empty: string;
+    emptyHint: string;
+    copyHint: string;
+    copyLabel: (when: string) => string;
+    copied: string;
+    pin: string;
+    remove: string;
+  };
 };
 
 export const zhCN: ScreenshotText = {
@@ -97,6 +107,16 @@ export const zhCN: ScreenshotText = {
     agentNotFound: "找不到这个会话的窗口",
     close: "关闭",
   },
+  history: {
+    title: "截图历史",
+    empty: "还没有截图",
+    emptyHint: "复制、保存或贴到屏幕上的截图会留在这里。",
+    copyHint: "点一下复制，拖出去当文件用",
+    copyLabel: (when) => `复制 ${when} 的截图`,
+    copied: "已复制",
+    pin: "贴到屏幕上",
+    remove: "删除",
+  },
 };
 
 export const en: ScreenshotText = {
@@ -153,5 +173,15 @@ export const en: ScreenshotText = {
     noAgent: "No agent session is running",
     agentNotFound: "Could not find this session's window",
     close: "Close",
+  },
+  history: {
+    title: "Screenshot history",
+    empty: "No screenshots yet",
+    emptyHint: "Screenshots you copy, save or pin to the screen stay here.",
+    copyHint: "Click to copy, drag out as a file",
+    copyLabel: (when) => `Copy the screenshot from ${when}`,
+    copied: "Copied",
+    pin: "Pin to screen",
+    remove: "Delete",
   },
 };

@@ -19,8 +19,7 @@ use crate::win32;
 const OPEN_ATTEMPTS: usize = 10;
 const PASTE_DELAY: Duration = Duration::from_millis(220);
 const FOLDER: &str = "screenshots";
-const KEEP_FILES: usize = 50;
-const KEEP_FOR: Duration = Duration::from_secs(7 * 24 * 60 * 60);
+const KEEP_FILES: usize = 100;
 
 pub(super) struct Picture {
     pub(super) width: u32,
@@ -89,7 +88,7 @@ fn write_png(folder: &Path, png: &[u8]) -> Result<PathBuf, String> {
 
 static SCREENSHOTS_DIR: OnceLock<PathBuf> = OnceLock::new();
 
-fn screenshots_dir(app: &AppHandle) -> Option<PathBuf> {
+pub(super) fn screenshots_dir(app: &AppHandle) -> Option<PathBuf> {
     if let Some(dir) = SCREENSHOTS_DIR.get() {
         return Some(dir.clone());
     }
@@ -101,7 +100,7 @@ pub(crate) fn is_screenshot_file(path: &Path) -> bool {
     SCREENSHOTS_DIR.get().is_some_and(|dir| path.parent() == Some(dir.as_path()))
 }
 
-fn keep_png(app: &AppHandle, png: &[u8]) -> Result<PathBuf, String> {
+pub(super) fn keep_png(app: &AppHandle, png: &[u8]) -> Result<PathBuf, String> {
     let dir = screenshots_dir(app).ok_or_else(|| "The app data folder is unavailable.".to_string())?;
     let path = write_png(&dir, png)?;
     thread::spawn(move || prune(&dir));
@@ -109,26 +108,18 @@ fn keep_png(app: &AppHandle, png: &[u8]) -> Result<PathBuf, String> {
 }
 
 pub(super) fn prune(dir: &Path) {
-    let Ok(entries) = fs::read_dir(dir) else {
-        return;
-    };
-    let mut files: Vec<(SystemTime, PathBuf)> = entries
-        .flatten()
-        .filter(|entry| entry.path().extension().is_some_and(|extension| extension.eq_ignore_ascii_case("png")))
-        .filter_map(|entry| Some((entry.metadata().ok()?.modified().ok()?, entry.path())))
-        .collect();
-    let now = SystemTime::now();
-    for path in stale(&mut files, now) {
+    let mut files = super::history::png_files(dir);
+    for path in stale(&mut files, SystemTime::now(), super::history::keep_for()) {
         let _ = fs::remove_file(path);
     }
 }
 
-pub(super) fn stale(files: &mut [(SystemTime, PathBuf)], now: SystemTime) -> Vec<PathBuf> {
+pub(super) fn stale(files: &mut [(SystemTime, PathBuf)], now: SystemTime, keep_for: Duration) -> Vec<PathBuf> {
     files.sort_by_key(|(modified, _)| std::cmp::Reverse(*modified));
     files
         .iter()
         .enumerate()
-        .filter(|(index, (modified, _))| *index >= KEEP_FILES || now.duration_since(*modified).is_ok_and(|age| age > KEEP_FOR))
+        .filter(|(index, (modified, _))| *index >= KEEP_FILES || now.duration_since(*modified).is_ok_and(|age| age > keep_for))
         .map(|(_, (_, path))| path.clone())
         .collect()
 }
@@ -142,18 +133,29 @@ pub(super) fn prune_at_start(app: &AppHandle) {
 pub(super) fn copy(app: &AppHandle, picture: &Picture) -> Result<Option<PathBuf>, String> {
     let png = encode_png(picture)?;
     let file = keep_png(app, &png).map_err(|error| eprintln!("screenshot copied without its file: {error}")).ok();
+    put_on_clipboard(picture, &png, file.as_deref())?;
+    Ok(file)
+}
+
+pub(super) fn copy_file(path: &Path) -> Result<(), String> {
+    let picture = super::history::read_picture(path)?;
+    let png = fs::read(path).map_err(|error| format!("Failed to read {}: {error}", path.display()))?;
+    put_on_clipboard(&picture, &png, Some(path))
+}
+
+fn put_on_clipboard(picture: &Picture, png: &[u8], file: Option<&Path>) -> Result<(), String> {
     let dib = dib(picture);
     let _open = clipboard_win::Clipboard::new_attempts(OPEN_ATTEMPTS).map_err(|error| format!("Failed to open the clipboard: {error}"))?;
     let failed = |error: clipboard_win::ErrorCode| format!("Failed to copy the screenshot: {error}");
     raw::empty().map_err(failed)?;
     raw::set_without_clear(formats::CF_DIB, &dib).map_err(failed)?;
     if let Some(format) = raw::register_format("PNG") {
-        raw::set_without_clear(format.get(), &png).map_err(failed)?;
+        raw::set_without_clear(format.get(), png).map_err(failed)?;
     }
-    if let Some(path) = &file {
+    if let Some(path) = file {
         raw::set_file_list_with(&[path.to_string_lossy()], NoClear).map_err(failed)?;
     }
-    Ok(file)
+    Ok(())
 }
 
 pub(super) fn thumbnail(picture: &Picture) -> Option<String> {

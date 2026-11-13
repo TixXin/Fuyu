@@ -18,6 +18,7 @@ export type IslandText = {
   music: string;
   clipboardHistory: string;
   shelf: string;
+  screenshots: string;
   calendar: string;
   shelfCount: (count: number) => string;
   deviceInUse: Record<"camera" | "microphone", (apps: string) => string>;
@@ -54,6 +55,7 @@ export const zhCN: IslandText = {
   music: "Music",
   clipboardHistory: "剪贴板历史",
   shelf: "文件中转",
+  screenshots: "截图历史",
   calendar: "日历",
   shelfCount: (count) => `文件中转里有 ${count} 个文件`,
   deviceInUse: {
@@ -93,6 +95,7 @@ export const en: IslandText = {
   music: "Music",
   clipboardHistory: "Clipboard history",
   shelf: "File shelf",
+  screenshots: "Screenshot history",
   calendar: "Calendar",
   shelfCount: (count) => (count === 1 ? "1 file on the shelf" : `${count} files on the shelf`),
   deviceInUse: {

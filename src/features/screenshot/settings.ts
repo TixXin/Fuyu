@@ -4,11 +4,15 @@ export type ShortcutAction = (typeof SHORTCUT_ACTIONS)[number];
 export const CARD_SECONDS = [0, 3, 5, 8, 15, 30] as const;
 export type CardSeconds = (typeof CARD_SECONDS)[number];
 
+export const HISTORY_DAYS = [1, 7, 30, 90] as const;
+export type HistoryDays = (typeof HISTORY_DAYS)[number];
+
 export type ScreenshotSettings = {
   shortcuts: Record<ShortcutAction, string>;
   printScreen: boolean;
   saveFolder: string;
   cardSeconds: CardSeconds;
+  historyDays: HistoryDays;
   version: 2;
 };
 
@@ -26,6 +30,7 @@ export const DEFAULT_SCREENSHOT_SETTINGS: ScreenshotSettings = {
   printScreen: false,
   saveFolder: "",
   cardSeconds: 3,
+  historyDays: 7,
   version: 2,
 };
 
@@ -46,6 +51,7 @@ export function normalizeScreenshotSettings(value: unknown): ScreenshotSettings 
     printScreen: saved.printScreen === true,
     saveFolder: folder.length <= MAX_FOLDER_CHARS ? folder : "",
     cardSeconds: saved.version === 2 && (CARD_SECONDS as readonly unknown[]).includes(saved.cardSeconds) ? (saved.cardSeconds as CardSeconds) : DEFAULT_SCREENSHOT_SETTINGS.cardSeconds,
+    historyDays: (HISTORY_DAYS as readonly unknown[]).includes(saved.historyDays) ? (saved.historyDays as HistoryDays) : DEFAULT_SCREENSHOT_SETTINGS.historyDays,
     version: 2,
   };
 }

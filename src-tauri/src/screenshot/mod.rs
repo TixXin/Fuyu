@@ -1,3 +1,4 @@
+mod history;
 mod hotkeys;
 mod output;
 mod pin;
@@ -13,6 +14,7 @@ pub(crate) use pin::{forget as forget_pin, WINDOW_PREFIX as PIN_PREFIX};
 pub(crate) use session::WINDOW_PREFIX;
 const TEXT_EVENT: &str = "screenshot-text";
 const TAKEN_EVENT: &str = "screenshot-taken";
+const HISTORY_EVENT: &str = "screenshot-history-changed";
 
 #[derive(Clone, Debug, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -44,8 +46,12 @@ pub(crate) fn is_enabled() -> bool {
 }
 
 #[tauri::command]
-pub async fn screenshot_configure(app: AppHandle, enabled: bool, shortcuts: Option<Vec<hotkeys::ShortcutConfig>>, print_screen: Option<bool>) {
+pub async fn screenshot_configure(app: AppHandle, enabled: bool, shortcuts: Option<Vec<hotkeys::ShortcutConfig>>, print_screen: Option<bool>, history_days: Option<u32>) {
     hotkeys::configure(enabled, shortcuts, print_screen);
+    if let Some(days) = history_days {
+        history::set_keep_days(days);
+        output::prune_at_start(&app);
+    }
     if enabled {
         session::prepare(&app);
     }
@@ -156,6 +162,7 @@ pub async fn screenshot_finish(app: AppHandle, window: WebviewWindow, request: t
             let name = header("x-folder-name").and_then(percent_decode).unwrap_or_default();
             let path = output::save(&picture, folder.as_deref(), &name)?;
             session::end(&app);
+            remember(&app, &picture);
             announce(&app, &picture, &path, true);
             Ok(Some(path.display().to_string()))
         }
@@ -163,6 +170,7 @@ pub async fn screenshot_finish(app: AppHandle, window: WebviewWindow, request: t
             let origin = session::origin(window.label()).ok_or_else(|| "No screenshot is open.".to_string())?;
             let at = (origin.0.saturating_add_unsigned(left), origin.1.saturating_add_unsigned(top));
             let scale = window.scale_factor().unwrap_or(1.0);
+            remember(&app, &picture);
             pin::open(&app, picture, at, scale, session::id());
             Ok(None)
         }
@@ -180,6 +188,66 @@ pub async fn screenshot_finish(app: AppHandle, window: WebviewWindow, request: t
             Ok(None)
         }
     }
+}
+
+fn remember(app: &AppHandle, picture: &Picture) {
+    let app = app.clone();
+    let copy = Picture { width: picture.width, height: picture.height, rgba: picture.rgba.clone() };
+    std::thread::spawn(move || {
+        match output::encode_png(&copy).and_then(|png| output::keep_png(&app, &png)) {
+            Ok(_) => {
+                let _ = app.emit(HISTORY_EVENT, ());
+            }
+            Err(error) => eprintln!("screenshot not kept in the history: {error}"),
+        }
+    });
+}
+
+fn history_dir(app: &AppHandle) -> Result<std::path::PathBuf, String> {
+    output::screenshots_dir(app).ok_or_else(|| "The app data folder is unavailable.".to_string())
+}
+
+#[tauri::command]
+pub async fn screenshot_history(app: AppHandle) -> Result<Vec<history::HistoryItem>, String> {
+    let dir = history_dir(&app)?;
+    tauri::async_runtime::spawn_blocking(move || history::list(&dir))
+        .await
+        .map_err(|error| format!("Failed to list the screenshots: {error}"))
+}
+
+#[tauri::command]
+pub async fn screenshot_history_copy(app: AppHandle, path: String) -> Result<(), String> {
+    let path = history::history_file(&history_dir(&app)?, &path)?;
+    tauri::async_runtime::spawn_blocking(move || output::copy_file(&path))
+        .await
+        .map_err(|error| format!("Failed to copy the screenshot: {error}"))?
+}
+
+#[tauri::command]
+pub async fn screenshot_history_pin(app: AppHandle, path: String) -> Result<(), String> {
+    let path = history::history_file(&history_dir(&app)?, &path)?;
+    let picture = tauri::async_runtime::spawn_blocking(move || history::read_picture(&path))
+        .await
+        .map_err(|error| format!("Failed to read the screenshot: {error}"))??;
+    let pointer = crate::win32::window::cursor_position().map(|point| (point.x, point.y));
+    let monitor = match pointer {
+        Some((x, y)) => app.monitor_from_point(f64::from(x), f64::from(y)).ok().flatten(),
+        None => None,
+    }
+    .or_else(|| app.primary_monitor().ok().flatten())
+    .ok_or_else(|| "No monitor was found.".to_string())?;
+    let (position, size) = (monitor.position(), monitor.size());
+    let at = history::pin_origin(pointer, (position.x, position.y, size.width, size.height), (picture.width, picture.height));
+    pin::open(&app, picture, at, monitor.scale_factor(), None);
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn screenshot_history_delete(app: AppHandle, path: String) -> Result<(), String> {
+    let path = history::history_file(&history_dir(&app)?, &path)?;
+    std::fs::remove_file(&path).map_err(|error| format!("Failed to delete {}: {error}", path.display()))?;
+    let _ = app.emit(HISTORY_EVENT, ());
+    Ok(())
 }
 
 async fn read_text(picture: Picture) -> String {
@@ -310,6 +378,10 @@ macro_rules! tauri_commands {
             crate::screenshot::screenshot_configure,
             crate::screenshot::screenshot_shortcut_status,
             crate::screenshot::screenshot_start,
+            crate::screenshot::screenshot_history,
+            crate::screenshot::screenshot_history_copy,
+            crate::screenshot::screenshot_history_pin,
+            crate::screenshot::screenshot_history_delete,
             crate::screenshot::screenshot_session,
             crate::screenshot::screenshot_frame,
             crate::screenshot::screenshot_targets,

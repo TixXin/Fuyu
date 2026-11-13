@@ -29,6 +29,8 @@ test("a cleared shortcut stays off, odd values are replaced, and the folder is t
   assert.equal(settings.printScreen, true);
   assert.equal(settings.saveFolder, "D:\\Shots");
   assert.equal(settings.cardSeconds, 3);
+  assert.equal(settings.historyDays, 7);
+  assert.equal(normalizeScreenshotSettings({ historyDays: 30 }).historyDays, 30);
   assert.equal(normalizeScreenshotSettings({ cardSeconds: 0, version: 2 }).cardSeconds, 0);
   assert.equal(normalizeScreenshotSettings({ cardSeconds: 8 }).cardSeconds, 3, "the 8 s default saved before version 2 moves to 3 s");
 });

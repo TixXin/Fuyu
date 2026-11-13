@@ -28,7 +28,7 @@ export const SCREENSHOT_SHORTCUT_STATUS_EVENT = "screenshot-shortcut-status";
 export type ShortcutStatus = { action: ShortcutAction; problem: "invalid" | "duplicate" | "taken" };
 
 export function configureScreenshot(enabled: boolean, settings: ScreenshotSettings) {
-  return invoke<void>("screenshot_configure", { enabled, shortcuts: shortcutConfig(settings), printScreen: settings.printScreen });
+  return invoke<void>("screenshot_configure", { enabled, shortcuts: shortcutConfig(settings), printScreen: settings.printScreen, historyDays: settings.historyDays });
 }
 
 export function getScreenshotShortcutStatus() {
@@ -181,6 +181,31 @@ export type ScreenshotTaken = {
 
 export function listenScreenshotTaken(handler: EventCallback<ScreenshotTaken>) {
   return listen<ScreenshotTaken>(SCREENSHOT_TAKEN_EVENT, handler);
+}
+
+export const SCREENSHOT_HISTORY_EVENT = "screenshot-history-changed";
+
+export type HistoryItem = { path: string; takenAt: number; thumbnail: string | null };
+
+export function getScreenshotHistory() {
+  return invoke<HistoryItem[]>("screenshot_history");
+}
+
+export function copyHistoryScreenshot(path: string) {
+  return invoke<void>("screenshot_history_copy", { path });
+}
+
+export function pinHistoryScreenshot(path: string) {
+  return invoke<void>("screenshot_history_pin", { path });
+}
+
+export function deleteHistoryScreenshot(path: string) {
+  return invoke<void>("screenshot_history_delete", { path });
+}
+
+export function listenScreenshotHistory(handler: () => void) {
+  return Promise.all([listen(SCREENSHOT_HISTORY_EVENT, handler), listen(SCREENSHOT_TAKEN_EVENT, handler)])
+    .then((stops) => () => stops.forEach((stop) => stop()));
 }
 
 export function dragScreenshot(path: string) {

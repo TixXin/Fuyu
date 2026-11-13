@@ -1,0 +1,88 @@
+.screenshot-history__title {
+  flex: 1;
+  min-width: 0;
+  padding-left: 4px;
+  color: var(--text-1);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.screenshot-history__grid {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+  align-content: start;
+  gap: 10px;
+  margin: 8px 0 0;
+  padding: 0 2px 4px;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.screenshot-history__item {
+  position: relative;
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.screenshot-history__shot {
+  aspect-ratio: 16 / 9;
+  width: 100%;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  overflow: hidden;
+  color: var(--text-3);
+  background: rgba(var(--list-ink), 0.06);
+  border: 0;
+  border-radius: var(--radius-md);
+  box-shadow: inset 0 0 0 1px rgba(var(--list-ink), 0.1);
+  cursor: pointer;
+  transition: box-shadow 140ms ease;
+}
+
+.screenshot-history__shot img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.screenshot-history__shot:hover,
+.screenshot-history__shot:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--list-accent);
+}
+
+.screenshot-history__time {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-3);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.screenshot-history__actions {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  background: var(--popover-fill, rgba(20, 22, 26, 0.92));
+  border-radius: var(--radius-md);
+  opacity: 0;
+  transition: opacity 140ms ease;
+}
+
+.screenshot-history__item:hover .screenshot-history__actions,
+.screenshot-history__item:focus-within .screenshot-history__actions {
+  opacity: 1;
+}
+
+.screenshot-history__actions .island-list-icon-button {
+  width: 24px;
+  height: 24px;
+  color: var(--text-2);
+}

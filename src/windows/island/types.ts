@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 
 export type IslandMode = "collapsed" | "expanded";
 
-export type BuiltinPage = "todo" | "calendar" | "music" | "clipboard" | "shelf" | "qq" | "agents" | "translation";
+export type BuiltinPage = "todo" | "calendar" | "music" | "clipboard" | "shelf" | "screenshots" | "qq" | "agents" | "translation";
 
 export type PluginPageId = `plugin:${string}`;
 

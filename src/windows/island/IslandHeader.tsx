@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Bell, Bot, CalendarDays, ClipboardList, Inbox, Languages, ListTodo, Minus, Music, RotateCcw, Scissors, Settings, type LucideIcon } from "lucide-react";
+import { Bell, Bot, CalendarDays, ClipboardList, Inbox, Languages, ListTodo, Minus, Music, RotateCcw, Scissors, Images, Settings, type LucideIcon } from "lucide-react";
 import type { AgentVisualState } from "../../features/agent-status/status";
 import type { MessageSource } from "../../features/messages/messagePreview";
 import { useUpdateReminder } from "../../features/updater/useBackgroundUpdateCheck";
@@ -9,7 +9,7 @@ import type { IslandPage } from "./types";
 import { usePageHoverSwitch } from "./usePageHoverSwitch";
 import "./IslandHeader.css";
 
-type BuiltinPageButton = "todo" | "music" | "calendar" | "clipboard" | "shelf";
+type BuiltinPageButton = "todo" | "music" | "calendar" | "clipboard" | "shelf" | "screenshots";
 
 const PAGE_BUTTONS: { page: BuiltinPageButton; Icon: LucideIcon }[] = [
   { page: "todo", Icon: ListTodo },
@@ -17,6 +17,7 @@ const PAGE_BUTTONS: { page: BuiltinPageButton; Icon: LucideIcon }[] = [
   { page: "calendar", Icon: CalendarDays },
   { page: "clipboard", Icon: ClipboardList },
   { page: "shelf", Icon: Inbox },
+  { page: "screenshots", Icon: Images },
 ];
 
 type IslandHeaderProps = {
@@ -83,6 +84,7 @@ export function IslandHeader({
     calendar: t.island.calendar,
     clipboard: t.island.clipboardHistory,
     shelf: t.island.shelf,
+    screenshots: t.island.screenshots,
   })[target];
   const agentStatusIconClassName = [
     "island__agent-status-icon",
