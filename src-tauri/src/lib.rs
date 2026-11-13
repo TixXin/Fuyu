@@ -37,7 +37,6 @@ mod settings_window;
 #[cfg_attr(not(windows), path = "ssh_tunnel/unsupported.rs")]
 mod ssh_tunnel;
 mod system;
-#[cfg_attr(not(windows), path = "system_levels/unsupported.rs")]
 mod system_levels;
 mod todos;
 #[cfg_attr(not(windows), path = "translation/unsupported.rs")]

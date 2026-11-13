@@ -1,3 +1,4 @@
+#[cfg_attr(target_os = "macos", path = "readers_macos.rs")]
 mod readers;
 
 use std::{

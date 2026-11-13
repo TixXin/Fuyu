@@ -1,4 +1,5 @@
 pub(crate) mod apps;
+pub(crate) mod audio;
 pub(crate) mod desktop;
 pub(crate) mod fullscreen;
 pub(crate) mod icon;
