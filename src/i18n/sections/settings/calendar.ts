@@ -15,6 +15,7 @@ export type SettingsCalendarText = {
   holidaysAdded: string;
   holidaysName: string;
   add: string;
+  cancelAdd: string;
   service: string;
   services: Record<Service, string>;
   steps: Record<Service, string[]>;
@@ -44,6 +45,7 @@ export const zhCN: SettingsCalendarText = {
   holidaysAdded: "已订阅节假日",
   holidaysName: "中国节假日",
   add: "添加日历",
+  cancelAdd: "取消",
   service: "用的是",
   services: { feishu: "飞书", dingtalk: "钉钉", wecom: "企业微信", icloud: "iCloud", google: "Google 日历", outlook: "Outlook", other: "其他" },
   steps: {
@@ -81,6 +83,7 @@ export const en: SettingsCalendarText = {
   holidaysAdded: "Holidays subscribed",
   holidaysName: "China holidays",
   add: "Add a calendar",
+  cancelAdd: "Cancel",
   service: "Service",
   services: { feishu: "Feishu / Lark", dingtalk: "DingTalk", wecom: "WeCom", icloud: "iCloud", google: "Google Calendar", outlook: "Outlook", other: "Other" },
   steps: {

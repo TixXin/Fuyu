@@ -6,7 +6,6 @@ import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
 import { useTranslation } from "../../i18n";
 import { isMacOS } from "../../lib/platform";
 import type { ClipboardHistorySettings, ClipboardOpenIn, ClipboardPopupLayout, ClipboardPopupPosition } from "./api";
-import { ClipboardRecordSettings } from "./ClipboardRecordSettings";
 
 export function ClipboardSettingsSection({ clipboardSettings, onClipboardSettingsChange, shortcuts, children }: {
   clipboardSettings: ClipboardHistorySettings;
@@ -120,7 +119,6 @@ export function ClipboardSettingsSection({ clipboardSettings, onClipboardSetting
         {children}
       </SettingsGroup>
       {shortcuts}
-      <ClipboardRecordSettings clipboardSettings={clipboardSettings} onChange={change} />
     </>
   );
 }

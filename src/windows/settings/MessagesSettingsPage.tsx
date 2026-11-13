@@ -1,5 +1,8 @@
 import { useState } from "react";
-import { SettingsChoice } from "../../components/settings/SettingsChoice";
+import { Mail, MessageCircle, MessageSquare, Plus } from "lucide-react";
+import { SettingsChoiceCards } from "../../components/settings/SettingsChoiceCards";
+import { SettingsFootnote } from "../../components/settings/SettingsFootnote";
+import { SettingsIconTitle } from "../../components/settings/SettingsIconTitle";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton";
 import { SettingsRow } from "../../components/settings/SettingsRow";
@@ -15,7 +18,9 @@ import { loadMailAccounts } from "../../features/messages/mail/storage";
 import { useMailAccounts } from "../../features/messages/mail/useMailAccounts";
 import type { QQNotificationsController } from "../../features/messages/qq-notifications/QQNotifications";
 import type { WeChatRemindersController } from "../../features/messages/wechat/WeChatReminders";
+import { IslandGlyph } from "../../features/appearance/IslandGlyph";
 import { useTranslation } from "../../i18n";
+import { FeatureHeader } from "./FeatureHeader";
 import "./MessagesSettingsPage.css";
 
 export function MessagesSettingsPage({
@@ -33,21 +38,24 @@ export function MessagesSettingsPage({
 }) {
   const t = useTranslation();
   const labels = t.settings.messageSources;
+  const sourcesOn = [!unsupported.has("qq") && qqNotifications.snapshot.enabled, !unsupported.has("wechat") && wechatReminders.snapshot.enabled, settings.mailEnabled].filter(Boolean).length;
 
   return (
     <>
-      <SettingsGroup title={labels.noticeTitle} footer={labels.noticeHint}>
-        <SettingsRow
-          title={labels.noticeLabel}
-          control={
-            <SettingsChoice<MessageNotice>
-              value={settings.messageNotice}
-              ariaLabel={labels.noticeLabel}
-              options={[{ value: "line", label: labels.noticeLine }, { value: "banner", label: labels.noticeBanner }, { value: "panel", label: labels.noticePanel }]}
-              onChange={(messageNotice) => onSettingsChange({ ...settings, messageNotice })}
-            />
-          }
-        />
+      <FeatureHeader feature="messages" aside={labels.sourcesOn(sourcesOn)} />
+      <SettingsGroup title={labels.noticeTitle} footer={<SettingsFootnote text={labels.noticeHint} />}>
+        <SettingsRow title={labels.noticeLabel}>
+          <SettingsChoiceCards<MessageNotice>
+            value={settings.messageNotice}
+            ariaLabel={labels.noticeLabel}
+            options={[
+              { value: "line", label: labels.noticeLine, hint: labels.noticeLineHint, art: <IslandGlyph state="collapsed" /> },
+              { value: "banner", label: labels.noticeBanner, hint: labels.noticeBannerHint, art: <IslandGlyph state="banner" /> },
+              { value: "panel", label: labels.noticePanel, hint: labels.noticePanelHint, art: <IslandGlyph state="expanded" /> },
+            ]}
+            onChange={(messageNotice) => onSettingsChange({ ...settings, messageNotice })}
+          />
+        </SettingsRow>
         {settings.messageNotice === "panel" && (
           <SettingsRow
             title={labels.panelSeconds}
@@ -66,7 +74,8 @@ export function MessagesSettingsPage({
       {!unsupported.has("qq") && <QQGroup controller={qqNotifications} title={labels.qqTitle} hint={isMacOS ? labels.qqHintMac : labels.qqHint} />}
       {!unsupported.has("wechat") && <SettingsGroup title={labels.wechatTitle} footer={<Problem error={wechatReminders.actionError || wechatReminders.snapshot.error || (wechatReminders.snapshot.status === "permissionRequired" ? t.wechat.status.permissionRequired : null)} hint={isMacOS ? labels.wechatHintMac : labels.wechatHint} />}>
         <SettingsToggleRow
-          title={t.wechat.receive}
+          title={<SettingsIconTitle icon={<MessageSquare size={15} strokeWidth={1.9} />} tone="var(--mint-text, #98d4bb)">{t.wechat.receive}</SettingsIconTitle>}
+          description={wechatReminders.snapshot.enabled ? t.wechat.status[wechatReminders.snapshot.status] : undefined}
           checked={wechatReminders.snapshot.enabled}
           onChange={(enabled) => void wechatReminders.setEnabled(enabled)}
         />
@@ -95,7 +104,7 @@ export function MessagesSettingsPage({
 }
 
 function Problem({ error, hint }: { error: string | null | undefined; hint: string }) {
-  return error ? <span className="messages-settings__error" role="alert">{error}</span> : <>{hint}</>;
+  return error ? <span className="messages-settings__error" role="alert">{error}</span> : <SettingsFootnote text={hint} />;
 }
 
 function QQGroup({ controller, title, hint }: { controller: QQNotificationsController; title: string; hint: string }) {
@@ -106,7 +115,11 @@ function QQGroup({ controller, title, hint }: { controller: QQNotificationsContr
 
   return (
     <SettingsGroup title={title} footer={<Problem error={error} hint={hint} />}>
-      <SettingsToggleRow title={t.qq.receive} checked={snapshot.enabled} onChange={(enabled) => void setEnabled(enabled)} />
+      <SettingsToggleRow
+        title={<SettingsIconTitle icon={<MessageCircle size={15} strokeWidth={1.9} />} tone="var(--info-text, #9fd0ff)">{t.qq.receive}</SettingsIconTitle>}
+        description={snapshot.enabled ? t.qq.status[snapshot.status] : undefined}
+        checked={snapshot.enabled}
+        onChange={(enabled) => void setEnabled(enabled)} />
       {needsAccess && (
         <SettingsRow
           title={t.qq.allowLabel}
@@ -128,6 +141,8 @@ function MailGroups({ settings, onSettingsChange }: { settings: IslandSettings; 
   const t = useTranslation();
   const { mailboxes, busy, actionError, connect, setEnabled, disconnect, openHelp } = useMailAccounts({ restore: false });
   const [reauthorizing, setReauthorizing] = useState<string | null>(null);
+  const [adding, setAdding] = useState(false);
+  const labels = t.settings.messageSources;
   const hosts = Object.fromEntries(loadMailAccounts().map((account) => [account.email, account.host]));
   const full = mailboxes.length >= MAX_MAIL_ACCOUNTS;
   const target = (reauthorizing ? mailboxes.find((mailbox) => mailbox.email === reauthorizing) : undefined)?.email ?? null;
@@ -136,8 +151,8 @@ function MailGroups({ settings, onSettingsChange }: { settings: IslandSettings; 
     <>
       <SettingsGroup title={t.settings.categories.mail} footer={settings.mailEnabled ? <Problem error={actionError} hint={isMacOS ? t.mail.accountsHintMac : t.mail.accountsHint} /> : undefined}>
         <SettingsToggleRow
-          title={t.settings.modules.mail}
-          description={t.settings.modules.hint}
+          title={<SettingsIconTitle icon={<Mail size={15} strokeWidth={1.9} />} tone="var(--warning-text, #f2d27a)">{t.settings.modules.mail}</SettingsIconTitle>}
+          description={settings.mailEnabled ? labels.mailCount(mailboxes.length) : t.settings.modules.hint}
           checked={settings.mailEnabled}
           onChange={(mailEnabled) => onSettingsChange({ ...settings, mailEnabled })}
         />
@@ -156,26 +171,29 @@ function MailGroups({ settings, onSettingsChange }: { settings: IslandSettings; 
             />
           </div>
         )}
+        {settings.mailEnabled && (target || adding) && !(full && !target) && (
+          <SettingsRow searchable={false} title={target ? t.mail.reauthorizeTitle(target) : t.mail.addTitle}>
+            <MailConnectForm
+              reauthorizing={target}
+              busy={busy}
+              onConnect={async (email, code, host) => {
+                const connected = await connect(email, code, host);
+                if (connected) { setReauthorizing(null); setAdding(false); }
+                return connected;
+              }}
+              onHelp={() => void openHelp()}
+              onCancel={() => { setReauthorizing(null); setAdding(false); }}
+            />
+          </SettingsRow>
+        )}
+        {settings.mailEnabled && !target && !adding && (
+          <SettingsRow
+            searchable={false}
+            title={full ? <span className="messages-settings__muted">{t.mail.limitReached(MAX_MAIL_ACCOUNTS)}</span> : ""}
+            control={full ? null : <SettingsLinkButton onClick={() => setAdding(true)}><Plus size={13} strokeWidth={2.2} aria-hidden="true" />{t.mail.addTitle}</SettingsLinkButton>}
+          />
+        )}
       </SettingsGroup>
-      {settings.mailEnabled && (
-        <SettingsGroup title={target ? t.mail.reauthorizeTitle(target) : t.mail.addTitle} footer={full && !target ? t.mail.limitReached(MAX_MAIL_ACCOUNTS) : undefined}>
-          {full && !target ? null : (
-            <div className="messages-settings__connect">
-              <MailConnectForm
-                reauthorizing={target}
-                busy={busy}
-                onConnect={async (email, code, host) => {
-                  const connected = await connect(email, code, host);
-                  if (connected) setReauthorizing(null);
-                  return connected;
-                }}
-                onHelp={() => void openHelp()}
-                onCancel={target ? () => setReauthorizing(null) : undefined}
-              />
-            </div>
-          )}
-        </SettingsGroup>
-      )}
     </>
   );
 }

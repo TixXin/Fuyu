@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Bell, Blocks, Brush, Bot, CalendarDays, ChevronRight, Compass, Plus, ClipboardList, Crop, Inbox, Info, Keyboard, Languages, LayoutGrid, LayoutTemplate, ListTodo, MousePointerClick, MessageCircle, MessagesSquare, Music, Palette, Plug, Puzzle, Search, Server, Settings2, ShieldCheck, Store, SlidersHorizontal, Volume2, X, type LucideIcon } from "lucide-react";
 import { LOCALE_CODES, useLocale, useTranslation } from "../../i18n";
-import { useUnsupportedFeatures } from "../../lib/platform";
+import { isMacOS, useUnsupportedFeatures } from "../../lib/platform";
 import { entryOf, entryPages, isCategoryAvailable, isEntry, SETTINGS_GROUPS, searchCategories, sidebarItemOf, type SettingsCategory, type SettingsGroup, type TabbedCategory } from "./categories";
 import searchIndex from "./searchIndex.json";
 import { isTitleHit, MAX_HITS_PER_PAGE, searchSettingsRows, type SettingsRowHit, type SettingsSearchEntry } from "./settingsSearch";
@@ -22,10 +22,16 @@ export const CATEGORY_ICONS: Record<SettingsCategory, LucideIcon> = {
   todos: ListTodo,
   calendar: CalendarDays,
   music: Music,
+  musicLyrics: Music,
+  musicLyricsStyle: Music,
   clipboard: ClipboardList,
+  clipboardHistory: ClipboardList,
+  clipboardSnippets: ClipboardList,
+  clipboardData: ClipboardList,
   translation: Languages,
   shelf: Inbox,
   screenshot: Crop,
+  screenshotRecord: Crop,
   agents: Bot,
   agentSessions: MessagesSquare,
   agentRemote: Server,
@@ -86,7 +92,7 @@ export function SettingsSidebar({
   const searching = query.trim() !== "";
   const matches = searchCategories(query, describe);
   const hits = onRowOpen && searching ? searchSettingsRows(query, SEARCH_ENTRIES, locale, LOCALE_CODES, describe) : [];
-  const available = (page: SettingsCategory) => isCategoryAvailable(page, unsupported);
+  const available = (page: SettingsCategory) => isCategoryAvailable(page, unsupported, isMacOS);
   const pagesOf = (item: SettingsCategory) => entryPages(item).filter(available);
   const found = (page: SettingsCategory) => matches.includes(page) || hits.some((hit) => hit.page === page);
   const shown = (item: SettingsCategory) =>

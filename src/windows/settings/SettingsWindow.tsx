@@ -63,7 +63,7 @@ export function SettingsWindow() {
   const saveDirectory = useSaveDirectorySetting();
   const [chosenCategory, setCategory] = useState<SettingsCategory>(DEFAULT_SETTINGS_CATEGORY);
   const unsupported = useUnsupportedFeatures();
-  const category = isCategoryAvailable(chosenCategory, unsupported) ? chosenCategory : DEFAULT_SETTINGS_CATEGORY;
+  const category = isCategoryAvailable(chosenCategory, unsupported, isMacOS) ? chosenCategory : DEFAULT_SETTINGS_CATEGORY;
   const highlightSaveDirectory = saveDirectory.highlight;
   const features = useFeatureSwitches(settings, setSettings);
 
@@ -215,10 +215,10 @@ export function SettingsWindow() {
           <MessagesSettingsPage settings={settings} qqNotifications={qqNotifications} wechatReminders={wechatReminders} unsupported={unsupported} onSettingsChange={setSettings} />
         )}
         {category === "translation" && <TranslationSettingsPage settings={settings} onSettingsChange={setSettings} onOpenShortcuts={openShortcuts} />}
-        {category === "clipboard" && <ClipboardSettingsPage settings={settings} onOpenShortcuts={openShortcuts} />}
-        {category === "music" && <MusicSettingsPage settings={settings} onSettingsChange={setSettings} />}
+        {(category === "clipboard" || category === "clipboardHistory" || category === "clipboardSnippets" || category === "clipboardData") && <ClipboardSettingsPage tab={category} settings={settings} onOpenShortcuts={openShortcuts} />}
+        {(category === "music" || category === "musicLyrics" || category === "musicLyricsStyle") && <MusicSettingsPage tab={category} settings={settings} onSettingsChange={setSettings} />}
         {category === "shelf" && <ShelfSettingsPage settings={settings} onSettingsChange={setSettings} />}
-        {category === "screenshot" && <ScreenshotSettingsPage settings={settings} onSettingsChange={setSettings} onOpenShortcuts={openShortcuts} />}
+        {(category === "screenshot" || category === "screenshotRecord") && <ScreenshotSettingsPage tab={category} settings={settings} onSettingsChange={setSettings} onOpenShortcuts={openShortcuts} />}
         {category === "calendar" && <CalendarSettingsPage settings={settings} onSettingsChange={setSettings} />}
         {category === "agents" && <AgentSettingsPage settings={settings} onSettingsChange={setSettings} onOpenConnect={() => setCategory("agentConnect")} />}
         {category === "agentRemote" && <AgentRemoteHostsSettings />}

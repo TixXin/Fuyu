@@ -3,8 +3,7 @@ import { TodoSettingsSection } from "../../features/appearance/TodoSettingsSecti
 import type { IslandSettings } from "../../features/appearance/types";
 import { SavePathSettingsSection } from "../../features/todos/SavePathSettingsSection";
 import type { useSaveDirectorySetting } from "../../features/todos/useSaveDirectorySetting";
-import { useTranslation } from "../../i18n";
-import { ModuleSwitchSection } from "./ModuleSwitchSection";
+import { FeatureHeader } from "./FeatureHeader";
 
 export function TodosSettingsPage({
   settings,
@@ -15,15 +14,14 @@ export function TodosSettingsPage({
   saveDirectory: ReturnType<typeof useSaveDirectorySetting>;
   onSettingsChange: (settings: IslandSettings) => void;
 }) {
-  const t = useTranslation();
-
   return (
     <>
-      <ModuleSwitchSection
-        label={t.settings.modules.todo}
+      <FeatureHeader
+        feature="todos"
         checked={settings.todoEnabled}
         onChange={(todoEnabled) => onSettingsChange({ ...settings, todoEnabled })}
       />
+      {settings.todoEnabled && <>
       <TodoSettingsSection settings={settings} onSettingsChange={onSettingsChange} />
       <TodoProjectsSection projects={settings.todoProjects} />
       <SavePathSettingsSection
@@ -33,6 +31,7 @@ export function TodosSettingsPage({
         onSaveDirectoryDraftChange={saveDirectory.onSaveDirectoryDraftChange}
         onSaveDirectory={saveDirectory.onSaveDirectory}
       />
+      </>}
     </>
   );
 }

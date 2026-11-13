@@ -1,0 +1,16 @@
+.settings-icon-title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-lg);
+}
+
+.settings-icon-title__icon {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  color: var(--settings-icon-tone, var(--color-accent));
+  background: color-mix(in srgb, var(--settings-icon-tone, var(--color-accent)) 14%, transparent);
+  border-radius: var(--radius-md);
+}
