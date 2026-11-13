@@ -5,6 +5,7 @@ pub(crate) mod focus;
 mod follow;
 mod edge;
 mod geometry;
+mod side;
 #[cfg_attr(not(windows), path = "glass_unsupported.rs")]
 mod glass;
 #[cfg_attr(not(windows), path = "modifier_unsupported.rs")]
@@ -214,7 +215,9 @@ fn drag_island(window: WebviewWindow, current_state: IslandWindowState) -> Resul
         state.is_dragging = true;
         *state
     });
-    top_edge::set_attached(&window, false);
+    if current_state.side().is_none() {
+        top_edge::set_attached(&window, false);
+    }
 
     if let Err(error) = window.start_dragging() {
         mutate_window_state(|state| {
@@ -232,10 +235,7 @@ fn drag_island(window: WebviewWindow, current_state: IslandWindowState) -> Resul
         thread::sleep(Duration::from_millis(8));
 
         let final_position = screen::window_position(&window).ok().map(|position| {
-            top_edge::snap_to_top(
-                &window,
-                IslandPosition::at(position.x, position.y),
-            )
+            side::snap_after_drag(&window, IslandPosition::at(position.x, position.y), read_window_state())
         });
         let did_finish_drag = {
             let mut state = window_state().lock().unwrap_or_else(PoisonError::into_inner);

@@ -1,0 +1,70 @@
+.island--side {
+  --island-side-radius: var(--island-shell-radius);
+  width: var(--island-shell-width);
+}
+
+.island--side.island--collapsed {
+  --island-shell-width: calc(12px * var(--island-scale, 1));
+  --island-shell-height: calc(72px * var(--island-scale, 1));
+  --island-side-radius: calc(6px * var(--island-scale, 1));
+  cursor: pointer;
+}
+
+.island.island--side-left {
+  margin-inline-end: auto;
+  border-radius: 0 var(--island-side-radius) var(--island-side-radius) 0;
+}
+
+.island.island--side-right {
+  margin-inline-start: auto;
+  border-radius: var(--island-side-radius) 0 0 var(--island-side-radius);
+}
+
+.island--side .island__collapsed {
+  display: none;
+}
+
+.island--side-left .island__expanded {
+  left: 0;
+}
+
+.island--side-right .island__expanded {
+  left: auto;
+  right: 0;
+}
+
+.island__side-handle {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  outline: none;
+  transition: opacity var(--island-motion-layer, 120ms) ease var(--island-motion-collapsed-delay, 140ms);
+}
+
+.island--expanded .island__side-handle {
+  pointer-events: none;
+  opacity: 0;
+  transition-delay: 0s;
+}
+
+.island__side-handle:focus-visible {
+  box-shadow: inset 0 0 0 1px var(--color-accent);
+}
+
+.island__side-handle-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.island__side-handle-badge {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--color-accent);
+}
