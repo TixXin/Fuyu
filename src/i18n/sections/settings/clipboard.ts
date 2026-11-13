@@ -16,6 +16,7 @@ export type SettingsClipboardText = {
   popupLayoutOptions: Record<"standard" | "wide", string>;
   autoPaste: string;
   autoPasteHint: string;
+  autoPasteHintMac: string;
   terminalImagePath: string;
   terminalImagePathHint: string;
   skipSensitive: string;
@@ -105,6 +106,7 @@ export const zhCN: SettingsClipboardText = {
   popupLayoutOptions: { standard: "标准", wide: "宽版" },
   autoPaste: "选中后自动粘贴",
   autoPasteHint: "关掉时只复制，回到原来的窗口自己按 Ctrl+V。",
+  autoPasteHintMac: "自动粘贴要在「系统设置 → 隐私与安全性 → 辅助功能」里允许浮屿，第一次用时系统会提示；没允许或关掉时只复制，回到原来的窗口自己按 ⌘V。",
   terminalImagePath: "粘贴图片到终端时贴文件路径",
   terminalImagePathHint: "Windows Terminal 等终端里粘贴图片时改贴它的文件路径，Claude Code 会把路径当成图片附上（直接粘贴位图常常贴不上）。",
   skipSensitive: "不记录密码",
@@ -194,6 +196,7 @@ export const en: SettingsClipboardText = {
   popupLayoutOptions: { standard: "Standard", wide: "Wide" },
   autoPaste: "Paste what you pick",
   autoPasteHint: "Off: it is only copied, and you press Ctrl+V back in your window.",
+  autoPasteHintMac: "Pasting needs Fuyu allowed in System Settings > Privacy & Security > Accessibility; macOS asks the first time. Until then, or when off, it is only copied and you press ⌘V back in your window.",
   terminalImagePath: "Paste images into terminals as their path",
   terminalImagePathHint: "In Windows Terminal and other terminals an image is pasted as its file path, which Claude Code attaches as an image (pasting the bitmap often fails there).",
   skipSensitive: "Do not record passwords",

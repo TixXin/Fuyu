@@ -4,7 +4,6 @@ mod calendar;
 #[cfg_attr(not(windows), path = "cc_connect/unsupported.rs")]
 mod cc_connect;
 mod claude_usage;
-#[cfg_attr(not(windows), path = "clipboard_history/unsupported.rs")]
 mod clipboard_history;
 mod dev_lane;
 #[cfg_attr(not(windows), path = "device_events/unsupported.rs")]
