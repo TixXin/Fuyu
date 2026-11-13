@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { isCategoryAvailable, searchCategories } from "../../src/windows/settings/categories.ts";
+import { shortcutLabel } from "../../src/features/clipboard/shortcut.ts";
 import { isTitleHit, normalizeSearchText, searchSettingsRows, searchWords } from "../../src/windows/settings/settingsSearch.ts";
 import { mergeStates, pairLocales } from "../../scripts/settings-search-index.mjs";
 
@@ -66,4 +67,10 @@ test("a page whose feature the system lacks is not offered", () => {
   assert.equal(isCategoryAvailable("messages", mac), true);
   assert.equal(isCategoryAvailable("general", mac), true);
   assert.equal(isCategoryAvailable("clipboard", new Set()), true);
+});
+
+test("on a Mac a shortcut reads with the modifier symbols in Apple's order", () => {
+  assert.equal(shortcutLabel("Shift+Win+V", true), "⇧⌘V");
+  assert.equal(shortcutLabel("Ctrl+Alt+Shift+Win+F5", true), "⌃⌥⇧⌘F5");
+  assert.equal(shortcutLabel("Ctrl+Shift+W", false), "Ctrl+Shift+W");
 });

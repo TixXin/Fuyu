@@ -588,9 +588,11 @@ pub(super) fn is_excluded(excluded: &[String], path: &str) -> bool {
 #[cfg(test)]
 #[test]
 fn excluded_apps_match_by_executable_name() {
-    let excluded = vec!["keepass.exe".to_string()];
-    assert!(is_excluded(&excluded, r"C:\Program Files\KeePass\KeePass.exe"));
-    assert!(!is_excluded(&excluded, r"C:\Windows\notepad.exe"));
+    let path = |parts: &[&str]| parts.iter().collect::<std::path::PathBuf>().to_string_lossy().into_owned();
+    let excluded = vec!["keepass.exe".to_string(), "1password.app".to_string()];
+    assert!(is_excluded(&excluded, &path(&["Program Files", "KeePass", "KeePass.exe"])));
+    assert!(!is_excluded(&excluded, &path(&["Windows", "notepad.exe"])));
+    assert!(is_excluded(&excluded, "/Applications/1Password.app"));
 }
 
 #[cfg(test)]
@@ -608,9 +610,10 @@ fn only_images_no_entry_refers_to_are_swept() {
     for name in ["kept.png", "kept-thumb.png", "orphan.png", "notes.txt"] {
         fs::write(dir.join(name), b"x").expect("file");
     }
+    let old = |name: &str| std::path::Path::new("old").join(name).to_string_lossy().into_owned();
     let item: ClipboardHistoryItem = serde_json::from_value(serde_json::json!({
         "id": "a", "kind": "image", "hash": "a", "createdAt": 0, "copiedAt": 0, "preview": "p", "text": null,
-        "image": { "width": 1, "height": 1, "byteSize": 1, "originalPath": r"C:\old\Kept.png", "thumbnailPath": r"C:\old\kept-thumb.png" }
+        "image": { "width": 1, "height": 1, "byteSize": 1, "originalPath": old("Kept.png"), "thumbnailPath": old("kept-thumb.png") }
     }))
     .expect("item");
     remove_unreferenced_images(&dir, &[item]);

@@ -24,6 +24,15 @@ const TERMINAL_PROCESSES: &[&str] = &[
     "warp.exe",
     "kitty.exe",
     "ghostty.exe",
+    "terminal.app",
+    "iterm.app",
+    "warp.app",
+    "ghostty.app",
+    "kitty.app",
+    "alacritty.app",
+    "wezterm.app",
+    "tabby.app",
+    "hyper.app",
 ];
 
 pub(super) fn is_terminal_process(path: &str) -> bool {
@@ -61,8 +70,13 @@ mod tests {
 
     #[test]
     fn terminals_are_told_by_their_executable() {
+        #[cfg(windows)]
         assert!(is_terminal_process(r"C:\Program Files\WindowsApps\Microsoft.WindowsTerminal\WindowsTerminal.exe"));
+        assert!(is_terminal_process("/System/Applications/Utilities/Terminal.app"));
+        assert!(is_terminal_process("/Applications/iTerm.app"));
+        assert!(!is_terminal_process("/Applications/Safari.app"));
         assert!(is_terminal_process("wezterm-gui.exe"));
+        #[cfg(windows)]
         assert!(!is_terminal_process(r"C:\Windows\explorer.exe"));
         assert!(!is_terminal_process(""));
     }

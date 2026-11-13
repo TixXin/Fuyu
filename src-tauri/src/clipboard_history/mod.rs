@@ -2,11 +2,14 @@ pub(crate) mod actions;
 mod capture_pause;
 mod clipboard_io;
 mod command_text;
+#[cfg_attr(target_os = "macos", path = "hotkey_macos.rs")]
 mod hotkey;
 mod link_guard;
 mod link_preview;
+#[cfg_attr(target_os = "macos", path = "listener_macos.rs")]
 mod listener;
 mod plugin_view;
+#[cfg_attr(target_os = "macos", path = "popup_macos.rs")]
 mod popup;
 mod popup_place;
 mod preview;
@@ -16,6 +19,7 @@ mod service;
 pub(crate) mod shortcut;
 mod snippets;
 mod store;
+#[cfg_attr(target_os = "macos", path = "system_macos.rs")]
 mod system;
 mod transfer;
 
@@ -40,7 +44,10 @@ const HISTORY_CHANGED_EVENT: &str = "clipboard-history-changed";
 
 const DEFAULT_MAX_ITEMS: usize = 30;
 
+#[cfg(not(target_os = "macos"))]
 const DEFAULT_SHORTCUT: &str = "Ctrl+Shift+W";
+#[cfg(target_os = "macos")]
+const DEFAULT_SHORTCUT: &str = "Shift+Win+V";
 
 const LEGACY_DEFAULT_SHORTCUT: &str = "Ctrl+X";
 
