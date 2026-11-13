@@ -9,11 +9,11 @@
   <p>A desktop island for Windows and macOS: tasks, clipboard, messages, translation, music and AI status on one small island at the top of your screen.</p>
 
   <p>
-    <a href="https://github.com/TixXin/fuyu/releases/latest"><img src="docs/assets/readme/download-windows.svg" alt="Download for Windows (x64)" width="180" height="44"></a>
-    &nbsp;&nbsp;
-    <a href="https://github.com/TixXin/fuyu/releases"><img src="docs/assets/readme/download-macos.svg" alt="Download for macOS (Apple silicon)" width="180" height="44"></a>
+    <a href="https://github.com/TixXin/fuyu/releases/latest"><img src="docs/assets/readme/download-windows.svg" alt="Download for Windows (x64)" width="156" height="38"></a>
     &nbsp;
-    <a href="docs/features/macos-install.md"><img src="docs/assets/readme/mac-guide-en.svg" alt="Mac install guide (in Chinese): the first launch needs one manual approval" width="114" height="44"></a>
+    <a href="https://github.com/TixXin/fuyu/releases"><img src="docs/assets/readme/download-macos.svg" alt="Download for macOS (Apple silicon)" width="156" height="38"></a>
+    &nbsp;
+    <a href="docs/features/macos-install.md"><img src="docs/assets/readme/mac-guide-en.svg" alt="Mac install guide (in Chinese): the first launch needs one manual approval" width="98" height="38"></a>
   </p>
 
   <p>
