@@ -1,5 +1,6 @@
 pub(crate) mod banner_hit;
-#[cfg_attr(not(windows), path = "focus_unsupported.rs")]
+#[cfg_attr(target_os = "macos", path = "focus_macos.rs")]
+#[cfg_attr(not(any(windows, target_os = "macos")), path = "focus_unsupported.rs")]
 pub(crate) mod focus;
 #[cfg_attr(not(windows), path = "follow_unsupported.rs")]
 mod follow;

@@ -1,4 +1,5 @@
 import { LOCALE_CODES, TRANSLATIONS, isLocaleCode, useTranslation, type LocaleCode } from "../../i18n";
+import { isMacOS } from "../../lib/platform";
 import { SettingsChoice } from "../../components/settings/SettingsChoice";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsRow } from "../../components/settings/SettingsRow";
@@ -25,14 +26,14 @@ export function BehaviorSettingsSection({
 }) {
   const t = useTranslation();
   const minimizeActions: { value: MinimizeAction; label: string }[] = [
-    { value: "tray", label: t.settings.layout.minimizeToTray },
+    { value: "tray", label: isMacOS ? t.settings.layout.minimizeToMenuBar : t.settings.layout.minimizeToTray },
     { value: "tuck", label: t.settings.layout.minimizeToTop },
   ];
 
   return (
     <SettingsGroup title={t.settings.behavior.title}>
       <SettingsToggleRow
-        title={t.settings.layout.launchAtStartup}
+        title={isMacOS ? t.settings.layout.launchAtStartupMac : t.settings.layout.launchAtStartup}
         checked={launchAtStartup}
         onChange={onLaunchAtStartupChange}
       />
@@ -51,7 +52,7 @@ export function BehaviorSettingsSection({
       />
       <SettingsRow
         title={t.settings.layout.minimizeAction}
-        description={t.settings.layout.minimizeHint}
+        description={isMacOS ? t.settings.layout.minimizeHintMac : t.settings.layout.minimizeHint}
         control={
           <SettingsChoice
             value={settings.minimizeAction}

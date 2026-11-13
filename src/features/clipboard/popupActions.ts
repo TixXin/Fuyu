@@ -1,6 +1,7 @@
 import type { ClipboardActionsText } from "../../i18n/sections/clipboardActions";
 import type { ClipboardCaptureStatus, ClipboardCopyAs, ClipboardHistoryItem } from "./api";
 import { colorFormats, contentKind } from "./contentKind.ts";
+import { PRIMARY_KEY } from "./shortcut.ts";
 
 export type PopupAction = {
   id: string;
@@ -35,11 +36,11 @@ export function popupActions(item: ClipboardHistoryItem | undefined, capture: Cl
     const isText = item.kind === "text";
     add({ id: "paste", group: "paste", label: text.paste, keys: "↵", icon: "paste", run: () => handlers.paste(item.id) });
     if (isText) add({ id: "plain", group: "paste", label: text.pastePlain, keys: "⇧ ↵", icon: "plain", run: () => handlers.paste(item.id, { plain: true }) });
-    add({ id: "enter", group: "paste", label: text.pasteEnter, keys: "Ctrl ↵", note: text.pasteEnterHint, icon: "enter", run: () => handlers.paste(item.id, { enter: true }) });
+    add({ id: "enter", group: "paste", label: text.pasteEnter, keys: `${PRIMARY_KEY} ↵`, note: text.pasteEnterHint, icon: "enter", run: () => handlers.paste(item.id, { enter: true }) });
     if (isText) {
-      add({ id: "edit", group: "paste", label: text.edit, keys: "Ctrl E", icon: "edit", run: handlers.edit });
-      add({ id: "transform", group: "paste", label: text.transform, keys: "Ctrl T", icon: "wand", next: "transforms" });
-      if (!item.masked) add({ id: "ai", group: "paste", label: text.ai, keys: "Ctrl I", icon: "ai", next: "ai" });
+      add({ id: "edit", group: "paste", label: text.edit, keys: `${PRIMARY_KEY} E`, icon: "edit", run: handlers.edit });
+      add({ id: "transform", group: "paste", label: text.transform, keys: `${PRIMARY_KEY} T`, icon: "wand", next: "transforms" });
+      if (!item.masked) add({ id: "ai", group: "paste", label: text.ai, keys: `${PRIMARY_KEY} I`, icon: "ai", next: "ai" });
       const kind = contentKind(item);
       if (kind?.kind === "color") {
         const formats = colorFormats(kind.color);
@@ -56,8 +57,8 @@ export function popupActions(item: ClipboardHistoryItem | undefined, capture: Cl
       add({ id: "qr", group: "paste", label: text.pasteQr, icon: "qr", run: () => handlers.pasteQr(item.id) });
     }
     if (item.kind === "files") add({ id: "path", group: "paste", label: text.pastePath, icon: "plain", run: () => handlers.paste(item.id, { copyAs: "path" }) });
-    add({ id: "favorite", group: "entry", label: item.favorite ? text.unfavorite : text.favorite, keys: "Ctrl S", icon: "star", run: () => handlers.toggleFavorite(item.id) });
-    add({ id: "note", group: "entry", label: text.note, keys: "Ctrl M", icon: "tag", next: "note" });
+    add({ id: "favorite", group: "entry", label: item.favorite ? text.unfavorite : text.favorite, keys: `${PRIMARY_KEY} S`, icon: "star", run: () => handlers.toggleFavorite(item.id) });
+    add({ id: "note", group: "entry", label: text.note, keys: `${PRIMARY_KEY} M`, icon: "tag", next: "note" });
     if (isText && !item.masked) add({ id: "snippet", group: "entry", label: text.saveSnippet, icon: "snippet", run: () => handlers.saveSnippet(item) });
     add({ id: "delete", group: "entry", label: text.delete, keys: "Del", icon: "trash", run: () => handlers.remove(item) });
   }

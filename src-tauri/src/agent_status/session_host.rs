@@ -45,6 +45,16 @@ const KNOWN_HOSTS: &[(&str, &str, &str)] = &[
     ("webstorm64", "WebStorm", "editor"),
     ("rustrover64", "RustRover", "editor"),
     ("codex", "Codex", "app"),
+    ("terminal", "Terminal", "terminal"),
+    ("iterm", "iTerm2", "terminal"),
+    ("ghostty", "Ghostty", "terminal"),
+    ("wezterm", "WezTerm", "terminal"),
+    ("visual studio code", "VS Code", "editor"),
+    ("visual studio code - insiders", "VS Code Insiders", "editor"),
+    ("intellij idea", "IntelliJ IDEA", "editor"),
+    ("pycharm", "PyCharm", "editor"),
+    ("webstorm", "WebStorm", "editor"),
+    ("rustrover", "RustRover", "editor"),
 ];
 
 pub(super) fn host_for_exe(exe: &str) -> SessionHost {
@@ -164,7 +174,7 @@ fn window_owners() -> HashMap<u32, String> {
         .collect()
 }
 
-#[cfg(not(windows))]
+#[cfg(target_os = "macos")]
 fn window_owners() -> HashMap<u32, String> {
-    HashMap::new()
+    crate::macos::apps::regular_apps().into_iter().collect()
 }

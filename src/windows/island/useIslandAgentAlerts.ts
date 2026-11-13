@@ -11,6 +11,7 @@ import { playAgentSound } from "../../features/agent-status/sounds/player";
 import { useAgentSoundSettings } from "../../features/agent-status/sounds/useAgentSoundSettings";
 import type { IslandSettings } from "../../features/appearance/types";
 import type { IslandMode, IslandPage } from "./types";
+import { useHoverHold } from "./useHoverHold";
 import { useOutsideClick } from "./useOutsideClick";
 
 type IslandAgentAlertsOptions = {
@@ -65,6 +66,7 @@ export function useIslandAgentAlerts({ sessions, unseen, settings, enabled, mode
 
   useAgentSounds(sessions, enabled, unseen);
   useAgentPush(sessions, settings.agentStatusEnabled, unseen);
+  const holdsOpen = useHoverHold();
   const [soundSettings] = useAgentSoundSettings();
   const remind = (reminded: AgentSessionSummary[]) => {
     const event = reminderSound(reminded[reminded.length - 1]);
@@ -84,6 +86,7 @@ export function useIslandAgentAlerts({ sessions, unseen, settings, enabled, mode
     remindAfterMs: settings.agentRemindSeconds * 1000,
     onRemind: remind,
     looked: (session) => !unseen.has(sessionKey(session)),
+    holdsOpen,
   });
   useOutsideClick(alertedSession !== null && !waiting && isOpenOnAgents, collapseIsland);
   const agentCardHeight = approvals.current ? approvals.cardHeight : alertedSession?.rowHeight;

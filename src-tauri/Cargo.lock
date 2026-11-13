@@ -1637,6 +1637,7 @@ dependencies = [
  "imap-proto",
  "keyring",
  "lettre",
+ "libc",
  "mailparse",
  "native-tls",
  "objc2",

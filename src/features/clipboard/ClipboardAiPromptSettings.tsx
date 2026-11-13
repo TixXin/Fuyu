@@ -4,6 +4,7 @@ import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsInput } from "../../components/settings/SettingsInput";
 import { SettingsRow } from "../../components/settings/SettingsRow";
 import { useTranslation } from "../../i18n";
+import { isMacOS } from "../../lib/platform";
 import type { ClipboardAiPrompt, ClipboardHistorySettings } from "./api";
 import "./ClipboardSnippetSettings.css";
 
@@ -30,7 +31,7 @@ export function ClipboardAiPromptSettings({ clipboardSettings, onChange }: {
 
   return (
     <SettingsGroup title={text.title}>
-      <SettingsRow title={text.hintTitle} description={text.hint} searchable={false} />
+      <SettingsRow title={isMacOS ? text.hintTitleMac : text.hintTitle} description={text.hint} searchable={false} />
       {prompts.map((prompt) => (
         <SettingsRow
           key={prompt.id}

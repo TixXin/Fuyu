@@ -9,6 +9,7 @@ import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton";
 import { SettingsRow } from "../../components/settings/SettingsRow";
 import { useTranslation } from "../../i18n";
+import { isMacOS } from "../../lib/platform";
 import type { SettingsCategory } from "./categories";
 import { ShortcutFinder } from "./ShortcutFinder";
 import { useScreenshotSettings } from "../../features/screenshot/useScreenshotSettings";
@@ -83,7 +84,7 @@ export function ShortcutsSettingsPage({
       <PageShortcutSection settings={settings} onSettingsChange={onSettingsChange} takenBy={takenBy} action={pageLink("behavior")} />
       <ReferenceSection
         title={text.islandTitle}
-        rows={[[text.collapse, "Esc"], [text.moveIsland, text.altDrag], [text.resizePanel, text.altDragEdge]]}
+        rows={[[text.collapse, "Esc"], [text.moveIsland, isMacOS ? text.altDragMac : text.altDrag], [isMacOS ? text.resizePanelMac : text.resizePanel, isMacOS ? text.altDragEdgeMac : text.altDragEdge]]}
       />
       {settings.translationEnabled && (
         <ReferenceSection

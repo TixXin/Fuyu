@@ -1,11 +1,13 @@
 import { useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "../../i18n";
+import { isMacOS } from "../../lib/platform";
 import type { SettingsCategory } from "./categories";
 import { SettingsSidebar } from "./SettingsSidebar";
 import { useFoundRow, type FoundRow } from "./useFoundRow";
 import { WindowControls } from "./WindowControls";
 import "./LayoutEditor.css";
 import "./SettingsSidebarNarrow.css";
+import "./SettingsMac.css";
 
 export function LayoutEditor({
   category,
@@ -24,7 +26,7 @@ export function LayoutEditor({
   useFoundRow(found, category, panel);
   return (
     <div className="settings-layout" data-tauri-drag-region>
-      <WindowControls style="windows" />
+      {!isMacOS && <WindowControls style="windows" />}
       <div className="settings-sidebar-card" data-tauri-drag-region>
         <SettingsSidebar
           category={category}

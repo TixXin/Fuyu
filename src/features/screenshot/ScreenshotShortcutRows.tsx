@@ -2,7 +2,8 @@ import { useState, type KeyboardEvent } from "react";
 import { Keyboard, X } from "lucide-react";
 import { ShortcutResetButton } from "../../components/controls/ShortcutResetButton";
 import { useTranslation } from "../../i18n";
-import { buildShortcutFromEvent } from "../clipboard/shortcut";
+import { isMacOS } from "../../lib/platform";
+import { buildShortcutFromEvent, shortcutLabel } from "../clipboard/shortcut";
 import { DEFAULT_SHORTCUTS, SHORTCUT_ACTIONS, type ScreenshotSettings, type ShortcutAction } from "./settings";
 import { useShortcutStatus } from "./useShortcutStatus";
 import "../clipboard/ClipboardSettingsSection.css";
@@ -22,7 +23,7 @@ export function ScreenshotShortcutRows({ settings, onSettingsChange, takenBy }: 
   const apply = (action: ShortcutAction, shortcut: string) => {
     const owner = shortcut ? takenBy(shortcut, action) : null;
     if (owner) {
-      setConflict({ action, message: t.settings.shortcuts.taken(shortcut, owner) });
+      setConflict({ action, message: t.settings.shortcuts.taken(shortcutLabel(shortcut), owner) });
       return;
     }
     setConflict(null);
@@ -44,7 +45,8 @@ export function ScreenshotShortcutRows({ settings, onSettingsChange, takenBy }: 
   const problemOf = (action: ShortcutAction) => {
     if (conflict?.action === action) return conflict.message;
     const found = status.find((entry) => entry.action === action);
-    return found ? text.shortcutProblem[found.problem] : "";
+    if (!found) return "";
+    return isMacOS && found.problem === "invalid" ? text.shortcutInvalidMac : text.shortcutProblem[found.problem];
   };
 
   return SHORTCUT_ACTIONS.map((action) => {
@@ -56,10 +58,10 @@ export function ScreenshotShortcutRows({ settings, onSettingsChange, takenBy }: 
         <div className="shortcut-control">
           <div className="shortcut-control__meta">
             <span>{text.actions[action]}</span>
-            <strong>{value || text.shortcutOff}</strong>
+            <strong>{value ? shortcutLabel(value) : text.shortcutOff}</strong>
           </div>
           <div className="shortcut-control__actions">
-            {fallback && <ShortcutResetButton label={t.settings.shortcuts.reset(fallback)} isDefault={value === fallback} onReset={() => apply(action, fallback)} />}
+            {fallback && <ShortcutResetButton label={t.settings.shortcuts.reset(shortcutLabel(fallback))} isDefault={value === fallback} onReset={() => apply(action, fallback)} />}
             {value && (
               <button className="shortcut-reset-button" type="button" aria-label={text.turnOffShortcut(text.actions[action])} onClick={() => apply(action, "")}>
                 <X size={14} strokeWidth={2.3} aria-hidden="true" />
@@ -73,11 +75,11 @@ export function ScreenshotShortcutRows({ settings, onSettingsChange, takenBy }: 
               onBlur={() => setRecording((current) => (current === action ? null : current))}
             >
               <Keyboard size={14} strokeWidth={2.3} aria-hidden="true" />
-              <span>{recording === action ? t.translator.pressShortcut : value || text.setShortcut}</span>
+              <span>{recording === action ? t.translator.pressShortcut : value ? shortcutLabel(value) : text.setShortcut}</span>
             </button>
           </div>
         </div>
-        <p className="screenshot-shortcut-hint">{text.actionHints[action]}</p>
+        <p className="screenshot-shortcut-hint">{isMacOS && action === "region" ? text.regionHintMac : isMacOS && action === "text" ? text.textHintMac : text.actionHints[action]}</p>
         {problem && <p className="shortcut-control__error" role="alert">{problem}</p>}
       </div>
     );

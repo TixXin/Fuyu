@@ -9,6 +9,7 @@ import { ProjectLinksSection } from "../../features/updater/ProjectSettingsSecti
 import { UpdateDiagnosticsRow } from "../../features/updater/UpdateDiagnosticsRow";
 import { UpdateSettingsSection } from "../../features/updater/UpdateSettingsSection";
 import { useTranslation } from "../../i18n";
+import { isMacOS } from "../../lib/platform";
 import { openOnboardingWindow } from "../onboarding/api";
 import { quitIsland } from "./api";
 
@@ -63,7 +64,7 @@ export function AboutSettingsPage({ onSettingsChange }: { onSettingsChange: (set
         />
         <SettingsRow
           title={text.quit}
-          description={text.quitHint}
+          description={isMacOS ? text.quitHintMac : text.quitHint}
           control={
             <SettingsLinkButton tone="danger" onClick={() => void quitIsland().catch((error) => console.error("Failed to quit the island", error))}>
               {text.quitAction}
