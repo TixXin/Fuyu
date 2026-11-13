@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { FolderOpen, RefreshCcw } from "lucide-react";
+import { SettingsFootnote } from "../../components/settings/SettingsFootnote";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsRow } from "../../components/settings/SettingsRow";
 import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
@@ -8,9 +9,9 @@ import type { PluginInfo } from "./api";
 import { InstalledPluginsToolbar } from "./InstalledPluginsToolbar";
 import { filterInstalledPlugins, installedCounts, type InstalledFilter } from "./installedFilter";
 import { PluginCard } from "./PluginCard";
+import { PluginDock } from "./PluginDock";
 import { PluginDetailPage } from "./PluginDetailPage";
 import { PluginNotice } from "./PluginNotice";
-import { PluginUpdatesSection } from "./PluginUpdatesSection";
 import { usePlugins } from "./usePlugins";
 import "./PluginsSettingsSection.css";
 
@@ -20,7 +21,6 @@ export function PluginsSettingsSection({ initialOpenId = null }: { initialOpenId
     snapshot,
     error,
     busy,
-    pending,
     notice,
     setAllowed,
     setEnabled,
@@ -34,9 +34,6 @@ export function PluginsSettingsSection({ initialOpenId = null }: { initialOpenId
     openFolder,
     runCommand,
     uninstall,
-    setAutoUpdate,
-    untrustPublisher,
-    checkUpdates,
   } = usePlugins();
   const [openId, setOpenId] = useState<string | null>(initialOpenId);
   const [query, setQuery] = useState("");
@@ -46,27 +43,6 @@ export function PluginsSettingsSection({ initialOpenId = null }: { initialOpenId
   const counts = useMemo(() => installedCounts(plugins, allowed), [plugins, allowed]);
   const shown = useMemo(() => filterInstalledPlugins(plugins, filter, query, allowed), [plugins, filter, query, allowed]);
   const openPlugin = snapshot?.plugins.find((plugin) => plugin.id === openId);
-
-  if (openPlugin) {
-    return (
-      <>
-        <PluginDetailPage
-          plugin={openPlugin}
-          busy={busy}
-          notice={notice}
-          onBack={() => setOpenId(null)}
-          onSettingChange={(key, value) => setSetting(openPlugin.id, key, value)}
-          onRunCommand={(command) => runCommand(openPlugin.id, command)}
-          onNotificationsMutedChange={(muted) => setNotificationsMuted(openPlugin.id, muted)}
-          onPreReleaseChange={(enabled) => setPreRelease(openPlugin.id, enabled)}
-          onMemoryLimitChange={(megabytes) => setMemoryLimit(openPlugin.id, megabytes)}
-          onClearData={() => clearData(openPlugin.id)}
-          onRevokeSensitive={(permission) => revokeSensitive(openPlugin.id, permission)}
-        />
-        {error ? <p className="plugin-card__error">{error}</p> : null}
-      </>
-    );
-  }
 
   const renderGroup = (title: string, group: PluginInfo[]) =>
     snapshot && group.length > 0 ? (
@@ -95,7 +71,8 @@ export function PluginsSettingsSection({ initialOpenId = null }: { initialOpenId
 
   return (
     <>
-      <SettingsGroup footer={t.settings.plugins.warning}>
+      {plugins.length > 0 ? <PluginDock plugins={plugins} allowed={allowed} filter={filter} counts={counts} onFilterChange={setFilter} onOpen={setOpenId} /> : null}
+      <SettingsGroup footer={<SettingsFootnote text={t.settings.plugins.warning} />}>
         <SettingsToggleRow title={t.settings.plugins.allowThirdParty} checked={allowed} onChange={(next) => !busy && setAllowed(next)} />
         <SettingsRow
           title={t.settings.plugins.folder}
@@ -132,20 +109,28 @@ export function PluginsSettingsSection({ initialOpenId = null }: { initialOpenId
       {error ? <p className="plugin-card__error">{error}</p> : null}
       {snapshot && plugins.length === 0 ? <p className="settings-section__hint">{t.settings.plugins.empty}</p> : null}
       {plugins.length > 0 ? (
-        <InstalledPluginsToolbar query={query} filter={filter} counts={counts} onQueryChange={setQuery} onFilterChange={setFilter} />
+        <InstalledPluginsToolbar query={query} onQueryChange={setQuery} />
       ) : null}
       {plugins.length > 0 && shown.length === 0 ? <p className="settings-section__hint plugins-list__empty">{t.settings.plugins.overview.noMatches}</p> : null}
       {renderGroup(t.settings.plugins.groupThirdParty(thirdParty.length), thirdParty)}
       {renderGroup(t.settings.plugins.groupBuiltin(builtin.length), builtin)}
-      {snapshot ? (
-        <PluginUpdatesSection
-          snapshot={snapshot}
+      {openPlugin && snapshot ? (
+        <PluginDetailPage
+          plugin={openPlugin}
           busy={busy}
-          pending={pending}
           notice={notice}
-          onAutoUpdateChange={setAutoUpdate}
-          onCheck={checkUpdates}
-          onUntrust={untrustPublisher}
+          allowed={allowed}
+          nodeAvailable={snapshot.nodeAvailable}
+          powershellAvailable={snapshot.powershellAvailable}
+          onBack={() => setOpenId(null)}
+          onEnabledChange={(enabled) => setEnabled(openPlugin.id, enabled)}
+          onSettingChange={(key, value) => setSetting(openPlugin.id, key, value)}
+          onRunCommand={(command) => runCommand(openPlugin.id, command)}
+          onNotificationsMutedChange={(muted) => setNotificationsMuted(openPlugin.id, muted)}
+          onPreReleaseChange={(enabled) => setPreRelease(openPlugin.id, enabled)}
+          onMemoryLimitChange={(megabytes) => setMemoryLimit(openPlugin.id, megabytes)}
+          onClearData={() => clearData(openPlugin.id)}
+          onRevokeSensitive={(permission) => revokeSensitive(openPlugin.id, permission)}
         />
       ) : null}
     </>

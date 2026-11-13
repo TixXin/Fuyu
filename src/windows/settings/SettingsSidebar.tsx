@@ -40,6 +40,9 @@ export const CATEGORY_ICONS: Record<SettingsCategory, LucideIcon> = {
   agentApprovals: ShieldCheck,
   agentConnect: Plug,
   plugins: Puzzle,
+  pluginsPages: Puzzle,
+  pluginsUpdates: Puzzle,
+  pluginsDev: Puzzle,
   market: Store,
   about: Info,
 };

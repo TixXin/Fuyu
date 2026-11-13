@@ -97,26 +97,21 @@
   opacity: 0.7;
 }
 
-.plugin-detail__hero {
-  display: grid;
-  gap: 12px;
-  padding: 12px 14px 16px;
-  background:
-    radial-gradient(120% 160% at 0% 0%, color-mix(in srgb, var(--color-accent) 12%, transparent), transparent 55%),
-    var(--color-white-a06);
-  border: 1px solid var(--color-white-a10);
-  border-radius: var(--radius-lg);
-}
-
-.plugin-detail__hero--error {
-  border-color: color-mix(in srgb, var(--error-text, #ffb4a8) 45%, transparent);
-}
-
 .plugin-detail__identity {
   display: flex;
   align-items: center;
   gap: 14px;
   min-width: 0;
+}
+
+.plugin-dialog__body > .plugin-card__notes:empty {
+  display: none;
+}
+
+.plugin-dialog__body > .settings-section {
+  background: var(--color-white-a04);
+  border: 1px solid var(--color-white-a06);
+  border-radius: var(--radius-xl);
 }
 
 .plugin-detail__title {

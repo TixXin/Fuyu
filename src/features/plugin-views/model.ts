@@ -158,6 +158,15 @@ export function filterListGroups(groups: ListGroup[], query: string): ListGroup[
     .filter((group) => group.items.length > 0);
 }
 
+export function openableItems(groups: ListGroup[]): ListItem[] {
+  return groups.flatMap((group) => group.items.filter((item) => item.url !== null || item.action !== null));
+}
+
+export function moveSelection(index: number, count: number, step: number): number {
+  if (count <= 0) return 0;
+  return Math.min(count - 1, Math.max(0, index + step));
+}
+
 export function listRowCount(groups: ListGroup[]): number {
   return groups.reduce((rows, group) => rows + group.items.length + (group.title ? 1 : 0), 0);
 }

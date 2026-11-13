@@ -1,4 +1,4 @@
-import { useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Sparkles } from "lucide-react";
 import { useTranslation } from "../../i18n";
 import { useOpenInBrowser } from "./useOpenInBrowser";
@@ -6,6 +6,8 @@ import { getUpdateState, subscribeToUpdate, type UpdateState } from "./updaterCo
 import "./AboutHero.css";
 
 type Tone = "ok" | "new" | "busy" | "error" | "muted";
+
+const GREETING_MS = 2_600;
 
 function heroStatus(state: UpdateState, text: ReturnType<typeof useTranslation>["settings"]["project"]["hero"]): [string, Tone] | null {
   switch (state.stage) {
@@ -28,9 +30,25 @@ export function AboutHero() {
   const state = useSyncExternalStore(subscribeToUpdate, getUpdateState);
   const { failed, onClick } = useOpenInBrowser();
   const status = heroStatus(state, text.hero);
+  const [greeting, setGreeting] = useState<number | null>(null);
+  const taps = useRef(0);
+  const timer = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(timer.current), []);
+
+  const greet = () => {
+    window.clearTimeout(timer.current);
+    setGreeting(taps.current % text.hero.greetings.length);
+    taps.current += 1;
+    timer.current = window.setTimeout(() => setGreeting(null), GREETING_MS);
+  };
+  const line = greeting !== null ? text.hero.greetings[greeting] : status?.[0] ?? "";
 
   return (
-    <section className="about-hero" aria-label={text.appName}>
+    <section className={greeting !== null ? "about-hero about-hero--greeting" : "about-hero"} aria-label={text.appName}>
+      <div className="about-hero__scene" aria-hidden="true">
+        <i /><i /><i /><i /><i /><i />
+        <span className="about-hero__sea"><b /><b /><b /></span>
+      </div>
       <a
         className="about-identity__slot about-hero__logo"
         href={text.logoCallUrl}
@@ -61,17 +79,19 @@ export function AboutHero() {
         {failed ? <p className="project-link-error" role="alert">{text.openFailed}</p> : null}
       </div>
       <div className="about-hero__side">
-        <span className="about-hero__island" aria-hidden="true">
+        <button
+          className={`about-hero__island about-hero__island--${greeting !== null ? "ok" : status?.[1] ?? "ok"}`}
+          type="button"
+          aria-label={text.hero.greet}
+          title={text.hero.greet}
+          onClick={greet}
+        >
           <i />
+          {line ? <span className="about-hero__island-text" role="status" key={line}>{line}</span> : null}
           <b />
           <b />
           <b />
-        </span>
-        {status ? (
-          <span className={`about-hero__status about-hero__status--${status[1]}`} role="status">
-            {status[0]}
-          </span>
-        ) : null}
+        </button>
       </div>
     </section>
   );

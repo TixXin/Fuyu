@@ -265,6 +265,11 @@ button.plugin-list__main:hover .plugin-list__title {
   background: rgba(var(--list-ink), 0.08);
 }
 
+.plugin-view--list .plugin-list__item--selected,
+.plugin-view--list .plugin-list__item--selected:hover {
+  background: rgba(var(--list-ink), 0.14);
+}
+
 .plugin-view--list .plugin-list__main {
   gap: 10px;
 }

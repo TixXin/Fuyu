@@ -19,6 +19,8 @@ export type SettingsProjectText = {
     installing: string;
     done: string;
     error: string;
+    greet: string;
+    greetings: readonly string[];
   };
   guide: string;
   guideHint: string;
@@ -47,6 +49,7 @@ export type SettingsProjectText = {
   latestRelease: string;
   latestReleaseHint: string;
   openFailed: string;
+  colophon: (version: string) => string;
   diagnostics: {
     title: string; hint: string; preview: string; copy: string; copied: string;
     copyFailed: string; loadFailed: string; close: string;
@@ -138,6 +141,8 @@ export const zhCN: SettingsProjectText = {
     installing: "正在安装",
     done: "更新完成，重启后生效",
     error: "检查更新失败",
+    greet: "和小岛打个招呼",
+    greetings: ["谢谢你在用浮屿", "今天也辛苦了", "有新点子，去社区告诉我们", "再点，我可要飘走了"],
   },
   guide: "新手引导",
   guideHint: "第一次启动时打开的那个窗口：语言、外观、功能开关和几个常用选项。",
@@ -166,6 +171,7 @@ export const zhCN: SettingsProjectText = {
   latestRelease: "查看最新版本",
   latestReleaseHint: "看看小岛又长了什么新本领",
   openFailed: "暂时没能打开浏览器，请再试一次。",
+  colophon: (version) => `浮屿${version ? ` v${version}` : ""} · 以 GPL-3.0 开源 · 用 Tauri 和 React 构建`,
   diagnostics: {
     title: "诊断信息", hint: "预览并复制应用版本、系统和更新状态，便于反馈问题。",
     preview: "预览", copy: "复制诊断信息", copied: "已复制", copyFailed: "复制失败，请重试。",
@@ -258,6 +264,8 @@ export const en: SettingsProjectText = {
     installing: "Installing",
     done: "Updated, restart to finish",
     error: "Update check failed",
+    greet: "Say hello to the island",
+    greetings: ["Thanks for sailing with Fuyu", "You did well today", "Got an idea? Tell us in the community", "One more tap and I drift away"],
   },
   guide: "Welcome guide",
   guideHint: "The window shown on first start: language, appearance, modules and a few common choices.",
@@ -286,6 +294,7 @@ export const en: SettingsProjectText = {
   latestRelease: "View latest release",
   latestReleaseHint: "See what washed ashore in the latest update",
   openFailed: "Couldn't open your browser. Please try again.",
+  colophon: (version) => `Fuyu${version ? ` v${version}` : ""} · open source under GPL-3.0 · built with Tauri and React`,
   diagnostics: {
     title: "Diagnostics", hint: "Preview and copy the app version, system and update status for a bug report.",
     preview: "Preview", copy: "Copy diagnostics", copied: "Copied", copyFailed: "Couldn't copy. Please try again.",

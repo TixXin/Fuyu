@@ -49,7 +49,7 @@ const type = async (input: HTMLInputElement, value: string) => {
   await act(async () => { setter.call(input, value); input.dispatchEvent(new Event("input", { bubbles: true })); });
 };
 const texts = (selector: string) => [...document.querySelectorAll(selector)].map((found) => found.textContent ?? "").join("|");
-const backButton = () => [...document.querySelectorAll<HTMLButtonElement>("button")].find((button) => button.textContent === "返回插件列表");
+const backButton = () => document.querySelector<HTMLButtonElement>(".plugin-dialog__close");
 const onPluginPage = () => Boolean(backButton());
 const backToList = () => act(async () => { backButton()?.click(); });
 const openPage = async (category: SettingsCategory) => {

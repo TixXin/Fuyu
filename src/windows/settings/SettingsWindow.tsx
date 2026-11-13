@@ -227,7 +227,7 @@ export function SettingsWindow() {
         {category === "sounds" && <SoundSettingsSection />}
         {category === "agentApprovals" && <AgentApprovalSettings />}
         {category === "agentConnect" && <AgentConnectSettingsPage />}
-        {category === "plugins" && <PluginsSettingsPage settings={settings} managedPluginId={managedPluginId} onOpenShortcuts={openShortcuts} />}
+        {(category === "plugins" || category === "pluginsPages" || category === "pluginsUpdates" || category === "pluginsDev") && <PluginsSettingsPage tab={category} settings={settings} managedPluginId={managedPluginId} onOpenShortcuts={openShortcuts} />}
         {category === "market" && (
           <PluginMarketSection onManage={managePlugin} requestedId={marketRequest.requestedId} onDismissRequest={marketRequest.dismiss} />
         )}

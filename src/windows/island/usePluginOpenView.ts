@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { listenPluginOpenView } from "../../features/plugin-views/api";
 import { pluginPageId } from "../../features/plugin-views/model";
+import { noteOpenRequest } from "../../features/plugin-views/openRequests";
 import type { PluginPageId } from "./types";
 
 export function usePluginOpenView(pageIds: readonly PluginPageId[], onOpen: (page: PluginPageId) => void) {
@@ -12,7 +13,9 @@ export function usePluginOpenView(pageIds: readonly PluginPageId[], onOpen: (pag
     let unlisten: (() => void) | null = null;
     void listenPluginOpenView(({ pluginId, viewId }) => {
       const page = pluginPageId(pluginId, viewId);
-      if (latest.current.pageIds.includes(page)) latest.current.onOpen(page);
+      if (!latest.current.pageIds.includes(page)) return;
+      noteOpenRequest(pluginId, viewId, Date.now());
+      latest.current.onOpen(page);
     })
       .then((next) => {
         if (didCancel) next();

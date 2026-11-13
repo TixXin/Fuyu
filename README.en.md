@@ -9,9 +9,11 @@
   <p>A desktop island for Windows and macOS: tasks, clipboard, messages, translation, music and AI status on one small island at the top of your screen.</p>
 
   <p>
-    <a href="https://github.com/TixXin/fuyu/releases/latest"><img src="docs/assets/readme/download-windows.svg" alt="Download for Windows (x64)" width="180" height="44"></a>
-    &nbsp;&nbsp;
-    <a href="https://github.com/TixXin/fuyu/releases"><img src="docs/assets/readme/download-macos.svg" alt="Download for macOS (Apple silicon)" width="180" height="44"></a>
+    <a href="https://github.com/TixXin/fuyu/releases/latest"><img src="docs/assets/readme/download-windows.svg" alt="Download for Windows (x64)" width="156" height="38"></a>
+    &nbsp;
+    <a href="https://github.com/TixXin/fuyu/releases"><img src="docs/assets/readme/download-macos.svg" alt="Download for macOS (Apple silicon)" width="156" height="38"></a>
+    &nbsp;
+    <a href="docs/features/macos-install.md"><img src="docs/assets/readme/mac-guide-en.svg" alt="Mac install guide (in Chinese): the first launch needs one manual approval" width="98" height="38"></a>
   </p>
 
   <p>
@@ -120,7 +122,7 @@ How it was measured, with the numbers: [idle-usage.md](docs/investigations/idle-
 
 1. **Download and install**: get the installer from [Releases](https://github.com/TixXin/fuyu/releases/latest).
    - **Windows**: get the `_x64-setup.exe`. The installers are not code-signed; if SmartScreen warns, choose "More info → Run anyway".
-   - **macOS**: get the `_aarch64.dmg` and drag Fuyu into Applications. The first time, open System Settings > Privacy & Security and click "Open Anyway"; see [macos-install.md](docs/features/macos-install.md) (in Chinese).
+   - **macOS**: in the [release list](https://github.com/TixXin/fuyu/releases), get the `_aarch64.dmg` from the newest release that has one (a pre-release above the latest stable one, if the stable one has none) and drag Fuyu into Applications. The first time, open System Settings > Privacy & Security and click "Open Anyway"; see [macos-install.md](docs/features/macos-install.md) (in Chinese).
 2. **Open the island**: move the pointer onto the island at the top of the screen to expand it; the gear button or the tray icon (the menu bar icon on a Mac) opens Settings. On a Mac the welcome guide walks you through the system permissions Fuyu needs.
 3. **Set up once**: mail, translation and AI agents need a one-time setup in Settings. See [mail](docs/features/mail.md), [AI agents](docs/features/agent-status-hooks.md), [QQ](docs/features/qq-notifications.md) and [WeChat](docs/features/wechat-reminders.md) (in Chinese).
 
@@ -190,7 +192,7 @@ Every star keeps Fuyu moving.
 
 ## License
 
-[GPL-3.0](LICENSE). Plugin authors choose their own license. Third-party dependencies and bundled assets keep their own licenses; see the [font notices](src/assets/fonts/README.md) for bundled fonts.
+[GPL-3.0](LICENSE). Plugin authors choose their own license. Third-party dependencies and bundled assets keep their own licenses; see the [third-party notices](docs/THIRD_PARTY_NOTICES.md) for where they come from, and the [font notices](src/assets/fonts/README.md) for bundled fonts.
 
 > [!NOTE]
 > This project is maintained together by [TixXin](https://github.com/TixXin) and [ShengLin1001](https://github.com/ShengLin1001); it was renamed from fly-island to Fuyu in November 2026. The original author, [flyl1u](https://github.com/flyl1u/fly-island), prefers a lean, minimal island. To give the island more to do, and to let more people put their own DIY features on it, this project went its own way as a jointly maintained one and grew a plugin market. Pull requests are welcome (see [Contributing](CONTRIBUTING.md)), and so are your own components in the [plugin market](https://github.com/TixXin/fuyu-plugins), or plugins you install locally (see the [plugin docs](docs/plugins/README.md)).

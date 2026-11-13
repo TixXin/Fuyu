@@ -1,9 +1,10 @@
 .plugin-market__header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 14px;
+  gap: 14px;
+  padding: 16px;
   background:
+    radial-gradient(70% 160% at 100% 0%, color-mix(in srgb, var(--plugin-market-glow, #9b7bff) 16%, transparent), transparent 60%),
     radial-gradient(120% 140% at 0% 0%, color-mix(in srgb, var(--color-accent) 16%, transparent), transparent 60%),
     var(--color-white-a06);
   border: 1px solid color-mix(in srgb, var(--color-accent) 22%, var(--color-white-a10));
@@ -14,11 +15,11 @@
   display: grid;
   flex: none;
   place-items: center;
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   color: var(--color-accent);
   background: color-mix(in srgb, var(--color-accent) 14%, transparent);
-  border-radius: 10px;
+  border-radius: 12px;
 }
 
 .plugin-market__headline {
@@ -30,7 +31,7 @@
 
 .plugin-market__headline .plugin-market__status {
   color: var(--color-text-strong);
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 700;
 }
 
@@ -92,20 +93,20 @@
 
 .plugin-market__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
   align-items: start;
-  gap: 10px;
+  gap: 12px;
 }
 
 .plugin-market__item {
   display: grid;
-  grid-template-columns: 34px minmax(0, 1fr);
+  grid-template-columns: 40px minmax(0, 1fr);
   align-items: start;
-  gap: 6px 12px;
-  padding: 14px 14px 10px;
-  background: var(--color-white-a08);
-  border: 1px solid var(--color-white-a10);
-  border-radius: var(--radius-md);
+  gap: 8px 12px;
+  padding: 16px 16px 12px;
+  background: var(--color-white-a04);
+  border: 1px solid var(--color-white-a08);
+  border-radius: var(--radius-xl);
   transition: border-color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
 }
 
