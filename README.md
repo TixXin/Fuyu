@@ -10,6 +10,7 @@
 
   <p>
     <a href="https://github.com/TixXin/fuyu/releases/latest"><img src="docs/assets/readme/download-windows.svg" alt="下载 Windows 版（x64）" width="180" height="44"></a>
+    &nbsp;&nbsp;
     <a href="https://github.com/TixXin/fuyu/releases"><img src="docs/assets/readme/download-macos.svg" alt="下载 macOS 版（Apple 芯片）" width="180" height="44"></a>
   </p>
 
