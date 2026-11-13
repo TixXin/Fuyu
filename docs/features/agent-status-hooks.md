@@ -31,7 +31,7 @@ It then updates:
 %USERPROFILE%\.claude\settings.json
 ```
 
-When WorkBuddy is installed (`%USERPROFILE%\.workbuddy` exists), it also updates `%USERPROFILE%\.workbuddy\settings.json`; see [WorkBuddy](#workbuddy).
+When WorkBuddy is installed (`%USERPROFILE%\.workbuddy` exists), it also updates `%USERPROFILE%\.workbuddy\settings.json`; see [WorkBuddy](#workbuddy). When Antigravity is installed, it also writes `%USERPROFILE%\.gemini\config\hooks.json`; see [Antigravity](#antigravity).
 
 The operation is repeatable. Running **安装/修复** again rewrites Fuyu's managed hooks to the current app-data script path and removes older Fuyu hook entries that referenced development paths such as `D:\FocuSD\scripts`. Fuyu hooks under events it no longer writes are removed too, and an event left with no hooks is dropped.
 
@@ -214,6 +214,15 @@ WorkBuddy (Tencent's desktop agent, the Chinese edition that keeps its data in `
 - Not done: usage, approving from the island, SSH (WorkBuddy has no server edition).
 
 Only the session format was checked against real files (WorkBuddy 5.3.8, 2026-11-13). The hook path and the `PermissionRequest` event come from a community test, not from WorkBuddy's documentation (which names `~/.codebuddy/settings.json`), and need a check on a machine with WorkBuddy.
+
+## Antigravity
+
+Google Antigravity (the IDE and the `agy` CLI) is listed on the Agent page with its own icon (task B23.3, issue #155). It was written from Antigravity's hook documentation and has not been run against a real Antigravity; what is known, with sources, is in [agent-harnesses.md](../research/agent-harnesses.md).
+
+- **Hooks**: **安装/修复** writes a `fuyu` group to `~/.gemini/config/hooks.json` (`enabled`, `SessionStart` and `PreInvocation` run `fuyu-agent-running.cmd antigravity running`, `Stop` runs `... antigravity stop`), but only when `~/.gemini/antigravity`, `antigravity-ide` or `antigravity-cli` exists. Other groups in the file are kept. The script saves each hook's input in `agent-antigravity\<running|stop>-*.json`.
+- **Sessions**: one per `conversationId`, from the newest saved input: folder from `workspacePaths`, title from `lastUserInput` (otherwise the folder), model from `modelName`. `running` shows as running (stale after the usual 10 minutes), `stop` as done. The transcript format is unknown, so the island does not read it; older inputs of a conversation and inputs over a day old are deleted.
+- **Clicking a session** brings up the Antigravity window.
+- Not done: "waiting on you" (Antigravity's hooks have no approval or notification event), usage, approving from the island, SSH.
 
 ## Other Agents
 
