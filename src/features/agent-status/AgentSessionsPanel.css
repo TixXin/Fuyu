@@ -139,7 +139,8 @@
   cursor: pointer;
   transition:
     color 140ms ease,
-    background 140ms ease;
+    background 140ms ease,
+    opacity 140ms ease;
 }
 
 .agent-sessions__list > li:hover .agent-session__archive {
@@ -151,6 +152,39 @@
   color: var(--text-1);
   background: rgba(var(--agent-ink), 0.12);
   outline: none;
+}
+
+.agent-sessions__list--archivable > li:has(.agent-session__age) .agent-session {
+  padding-right: 52px;
+}
+
+.agent-session__age {
+  position: absolute;
+  top: 8px;
+  right: 6px;
+  width: 44px;
+  height: 20px;
+  overflow: hidden;
+  color: var(--text-3);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  line-height: 20px;
+  text-align: right;
+  white-space: nowrap;
+  pointer-events: none;
+  transition: opacity 140ms ease;
+}
+
+.agent-sessions__list > li:has(.agent-session__age) .agent-session__archive {
+  opacity: 0;
+}
+
+.agent-sessions__list > li:is(:hover, :focus-within) .agent-session__age {
+  opacity: 0;
+}
+
+.agent-sessions__list > li:is(:hover, :focus-within) .agent-session__archive {
+  opacity: 1;
 }
 
 .agent-sessions__list > li:has(.agent-session__archive:hover) .agent-session {

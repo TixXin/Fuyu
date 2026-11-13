@@ -132,6 +132,17 @@ async function runChecks() {
       && Math.abs(fixture.getBoundingClientRect().right + 20 - archiveIcon.right - 20) < 1,
       "归档按钮一直显示在提供方图标右边，图标离岛屿边缘 20px，和顶部按钮对齐");
     check(removeButtons[0].getAttribute("aria-label") === "归档「设置界面完善思路」", "归档按钮的读屏文字说明归档哪个会话");
+    const agedItem = rows()[2].parentElement!;
+    const age = agedItem.querySelector<HTMLElement>(".agent-session__age");
+    const agedArchive = agedItem.querySelector<HTMLButtonElement>(".agent-session__archive")!;
+    check(age?.textContent === "1 小时" && !meta(rows()[2])?.includes("1 小时") && !rows()[0].parentElement!.querySelector(".agent-session__age")
+      && getComputedStyle(agedArchive).opacity === "0" && getComputedStyle(age).opacity === "1"
+      && Math.abs(age.getBoundingClientRect().right - agedArchive.querySelector("svg")!.getBoundingClientRect().right) < 1,
+      "平时归档按钮的位置显示多久前更新，右边和归档图标对齐；运行中没有时间的行照常显示归档按钮");
+    agedArchive.focus();
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 200)); });
+    check(getComputedStyle(agedArchive).opacity === "1" && getComputedStyle(age!).opacity === "0", "鼠标移上或用键盘选到这一行时，时间换成归档按钮");
+    agedArchive.blur();
     const focusesBefore = focusCalls.length;
     removeButtons[2].click();
     check(removedIds.length === 0, "点归档后，行先播完移出动画才离开列表");

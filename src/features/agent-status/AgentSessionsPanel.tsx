@@ -205,6 +205,8 @@ export function AgentSessionsPanel({
           const showPhase = session.compacting || yourTurn || (session.phase !== "running" && session.phase !== "completed");
           const elapsed = showElapsed && session.turnStartedAt !== null;
           const showAge = session.phase !== "running" || !elapsed;
+          const age = minutes === 0 ? t.agent.sessions.justNow : t.agent.sessions.minutesAgo(minutes);
+          const ageInSlot = Boolean(archive) && showAge;
           const status = [
             showPhase && phaseLabel,
             elapsed && <SessionElapsed key="elapsed" session={session} />,
@@ -215,7 +217,7 @@ export function AgentSessionsPanel({
               </span>
             ),
             session.backgroundTasks ? t.agent.sessions.backgroundTasks(session.backgroundTasks) : null,
-            showAge && (minutes === 0 ? t.agent.sessions.justNow : t.agent.sessions.minutesAgo(minutes)),
+            showAge && !ageInSlot && age,
           ]
             .filter(Boolean)
             .flatMap((part, index) => (index === 0 ? [part] : [" · ", part]));
@@ -257,6 +259,7 @@ export function AgentSessionsPanel({
                   )}
                 </span>
               </button>
+              {ageInSlot && <span className="agent-session__age">{age}</span>}
               {archive}
             </li>
           );
