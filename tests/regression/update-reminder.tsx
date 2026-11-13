@@ -113,7 +113,7 @@ async function runChecks() {
     check(heroIsland.textContent === "有新版本 v0.3.4" && !document.querySelector("#settings .about-hero__status") && document.querySelector("#settings .about-hero__sea"),
       "关于页横幅是海面上的小岛，岛上直接写更新状态，不再另有状态胶囊");
     await update(() => heroIsland.click());
-    check(heroIsland.textContent === "谢谢你在用浮屿" && document.querySelector("#settings .about-hero--greeting"), "点小岛，它会打个招呼");
+    check(heroIsland.textContent === "谢谢你，赛博养岛人" && document.querySelector("#settings .about-hero--greeting"), "点小岛，它会打个招呼");
     check(document.querySelector("#settings .about-colophon")?.textContent === "浮屿 v0.3.3 · 以 GPL-3.0 开源 · 用 Tauri 和 React 构建" && document.querySelector("#settings .about-danger .settings-row"),
       "关于页最下面是落款，重置与退出是单独的危险区");
     const version = getUpdateState().nextVersion;
@@ -125,7 +125,7 @@ async function runChecks() {
     const stage = document.querySelector<HTMLElement>("#settings .overview-stage")!;
     const clipboardCard = document.querySelector<HTMLElement>("#settings .settings-overview__feature[data-feature='clipboard']")!;
     await update(() => { clipboardCard.dispatchEvent(new MouseEvent("mouseover", { bubbles: true })); });
-    check(stage.dataset.feature === "clipboard" && stage.querySelector(".overview-stage__demo")?.textContent === "已复制 · 会议纪要的第二段",
+    check(stage.dataset.feature === "clipboard" && stage.querySelector(".overview-stage__demo")?.textContent === "已复制 · 投喂给 AI 的提示词",
       "概览：鼠标移到功能卡片上，舞台上的小岛演示这个功能");
     await update(() => { clipboardCard.dispatchEvent(new MouseEvent("mouseout", { bubbles: true })); });
     check(stage.dataset.feature !== undefined && document.querySelectorAll("#settings .settings-overview__tile").length === 3
