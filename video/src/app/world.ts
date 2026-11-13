@@ -23,6 +23,7 @@ export type World = {
   wechat: ReminderSnapshot;
   mail: MailSnapshot;
   translations: Record<string, string>;
+  settings: Record<string, unknown>;
   calls: { command: string; args: Record<string, unknown> }[];
 };
 
@@ -59,6 +60,7 @@ export function createWorld(): World {
       status: "connected", unreadCount: 0, items: [], lastSyncedAt: null, error: null,
     },
     translations: {},
+    settings: {},
     calls: [],
   };
 }

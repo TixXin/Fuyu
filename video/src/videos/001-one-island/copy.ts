@@ -1,6 +1,7 @@
 import type { Lang } from "../types";
 
 const zh = {
+  title: "一座岛，收下桌面的零碎",
   hook: "看一眼消息，要切几次窗口？",
   reveal: ["浮屿", "把它们都收到一座岛上"],
   todo: ["待办", "今天要做的，抬头就在"],
@@ -40,6 +41,7 @@ const zh = {
 };
 
 const en: typeof zh = {
+  title: "One island for your desktop",
   hook: "How many windows for one quick glance?",
   reveal: ["Fuyu", "puts them all on one island"],
   todo: ["Todos", "Today's list, right where you look"],

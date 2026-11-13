@@ -4,7 +4,7 @@ import { Clutter, type ClutterWindow } from "./Clutter";
 import { Cursor } from "./Cursor";
 import { EndCard, type EndCardCopy } from "./EndCard";
 import { Wallpaper } from "./Wallpaper";
-import { ISLAND_FRAME_WIDTH, STAGE_HEIGHT, STAGE_WIDTH, stage } from "./stageState";
+import { FORMAT, ISLAND_FRAME_WIDTH, SCREEN_HEIGHT, SCREEN_TOP, STAGE_HEIGHT, STAGE_WIDTH, stage } from "./stageState";
 import { useStore } from "./store";
 import "./stage.css";
 
@@ -37,22 +37,26 @@ export function Stage({ lang, windows, endCard }: StageProps) {
 
   return (
     <div className="viewport" style={{ width: STAGE_WIDTH * fit, height: STAGE_HEIGHT * fit }}>
-      <div className="stage-root" style={{ width: STAGE_WIDTH, height: STAGE_HEIGHT, transform: `scale(${fit})` }}>
-        <div className="camera" style={cameraStyle}>
-          <Wallpaper />
-          <div className="dim" style={{ opacity: state.dim }} />
-          <Clutter windows={windows} phase={state.clutter} />
-          <iframe
-            id="island-frame"
-            className={`island-frame${state.islandVisible ? " island-frame--in" : ""}`}
-            title="island"
-            src={`/app.html?lang=${lang}`}
-            width={ISLAND_FRAME_WIDTH}
-            height={STAGE_HEIGHT}
-          />
-          <Cursor cursor={state.cursor} />
+      <div className={`stage-root stage-root--${FORMAT}`} style={{ width: STAGE_WIDTH, height: STAGE_HEIGHT, transform: `scale(${fit})` }}>
+        {state.title && <h1 key={state.title} className="stage-title">{state.title}</h1>}
+        <div className="screen" style={{ top: SCREEN_TOP, height: SCREEN_HEIGHT }}>
+          <div className="camera" style={cameraStyle}>
+            <Wallpaper />
+            <div className="dim" style={{ opacity: state.dim }} />
+            <Clutter windows={windows} phase={state.clutter} />
+            <iframe
+              id="island-frame"
+              className={`island-frame${state.islandVisible ? " island-frame--in" : ""}`}
+              style={{ left: (STAGE_WIDTH - ISLAND_FRAME_WIDTH) / 2 }}
+              title="island"
+              src={`/app.html?lang=${lang}&format=${FORMAT}`}
+              width={ISLAND_FRAME_WIDTH}
+              height={SCREEN_HEIGHT}
+            />
+            <Cursor cursor={state.cursor} />
+          </div>
+          <Caption caption={state.caption} />
         </div>
-        <Caption caption={state.caption} />
         <EndCard copy={endCard} visible={state.endCard} />
       </div>
     </div>

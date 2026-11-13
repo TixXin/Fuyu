@@ -52,7 +52,7 @@ const START_TIME = Date.UTC(2026, 10, 18, 2, 24, 0) / 1000;
 const TICK_BASE = 100_000_000;
 
 function options(argv) {
-  const result = { v: "001-one-island", lang: "zh", fps: 60, scale: 1.5, still: null, from: 0, to: null, out: null, ffmpeg: "ffmpeg" };
+  const result = { v: "001-one-island", lang: "zh", format: "wide", fps: 60, scale: 1.5, still: null, from: 0, to: null, out: null, ffmpeg: "ffmpeg" };
   for (let index = 0; index < argv.length; index++) {
     const key = argv[index].replace(/^--/, "");
     if (!(key in result)) throw new Error(`unknown option ${argv[index]}`);
@@ -88,16 +88,16 @@ async function startVite() {
   throw new Error("vite did not start");
 }
 
-async function openStage(browser, url) {
+async function openStage(browser, url, size) {
   const session = await browser.target().createCDPSession();
-  const { targetId } = await session.send("Target.createTarget", { url: "about:blank", width: 1280, height: 720, enableBeginFrameControl: true });
+  const { targetId } = await session.send("Target.createTarget", { url: "about:blank", ...size, enableBeginFrameControl: true });
   const target = await browser.waitForTarget((candidate) => candidate._targetId === targetId);
   const page = await target.page();
   const cdp = await page.createCDPSession();
   const problems = [];
   page.on("console", (message) => { if (message.type() === "error") problems.push(message.text().slice(0, 400)); });
   page.on("pageerror", (error) => problems.push(String(error).slice(0, 400)));
-  await cdp.send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 720, deviceScaleFactor: 0, mobile: false });
+  await cdp.send("Emulation.setDeviceMetricsOverride", { ...size, deviceScaleFactor: 0, mobile: false });
   await cdp.send("Emulation.setVirtualTimePolicy", { policy: "pause", initialVirtualTime: START_TIME });
   const advance = (ms) => new Promise((resolve) => {
     cdp.once("Emulation.virtualTimeBudgetExpired", resolve);
@@ -159,15 +159,17 @@ async function main() {
   const opts = options(process.argv.slice(2));
   const shell = findShell();
   if (!shell) throw new Error("chrome-headless-shell is missing; run `pnpm browser` in video/");
+  const size = opts.format === "vertical" ? { width: 720, height: 1280 } : { width: 1280, height: 720 };
+  const tag = opts.format === "vertical" ? `${opts.lang}-vertical` : opts.lang;
   const outDir = path.join(root, "out", opts.v);
   mkdirSync(outDir, { recursive: true });
   const vite = await startVite();
   const browser = await puppeteer.launch({
     executablePath: shell, headless: "shell",
-    args: ["--enable-begin-frame-control", "--run-all-compositor-stages-before-draw", "--disable-threaded-animation", "--disable-threaded-scrolling", "--disable-checker-imaging", "--deterministic-mode", `--force-device-scale-factor=${opts.scale}`, "--window-size=1280,720", "--hide-scrollbars", "--font-render-hinting=none", "--autoplay-policy=no-user-gesture-required"],
+    args: ["--enable-begin-frame-control", "--run-all-compositor-stages-before-draw", "--disable-threaded-animation", "--disable-threaded-scrolling", "--disable-checker-imaging", "--deterministic-mode", `--force-device-scale-factor=${opts.scale}`, `--window-size=${size.width},${size.height}`, "--hide-scrollbars", "--font-render-hinting=none", "--autoplay-policy=no-user-gesture-required"],
   });
   try {
-    const stage = await openStage(browser, `${vite.url}/index.html?capture=1&v=${opts.v}&lang=${opts.lang}`);
+    const stage = await openStage(browser, `${vite.url}/index.html?capture=1&v=${opts.v}&lang=${opts.lang}&format=${opts.format}`, size);
     await waitReady(stage);
     const durationMs = await stage.page.evaluate(() => globalThis.__video.durationMs);
     const interval = 1000 / opts.fps;
@@ -176,7 +178,7 @@ async function main() {
     const total = Math.round(lastMs / interval);
     const first = stills ? 0 : Math.round((opts.from * 1000) / interval);
     const stillFrames = new Map((stills ?? []).map((seconds) => [Math.max(1, Math.round((seconds * 1000) / interval)), seconds]));
-    const file = opts.out ?? path.join(outDir, `${opts.v}-${opts.lang}.mp4`);
+    const file = opts.out ?? path.join(outDir, `${opts.v}-${tag}.mp4`);
     const silent = file.replace(/\.mp4$/, ".silent.mp4");
     const video = stills ? null : encoder(silent, opts.fps, opts.ffmpeg);
     await stage.page.evaluate(() => globalThis.__video.play());
@@ -187,7 +189,7 @@ async function main() {
       if (wanted) await settle(stage.page);
       const shot = await stage.frame(interval, wanted);
       if (shot && stills) {
-        const name = path.join(outDir, `still-${opts.lang}-${stillFrames.get(index).toFixed(2).padStart(6, "0")}.png`);
+        const name = path.join(outDir, `still-${tag}-${stillFrames.get(index).toFixed(2).padStart(6, "0")}.png`);
         writeFileSync(name, shot);
         console.log(name);
       } else if (shot) {
