@@ -1,5 +1,7 @@
 mod bridge;
 mod config;
+#[cfg(debug_assertions)]
+mod dev_island;
 mod routes;
 mod server;
 #[cfg(test)]

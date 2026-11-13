@@ -1,12 +1,13 @@
 import { useEffect, useRef } from "react";
 import { answerLocalApiRequest, listenLocalApiRequests } from "./api";
 import { dispatchLocalApiRequest, type LocalApiHandlers } from "./dispatch";
+import { devIslandHandlers } from "./devIsland";
 
 export function useLocalApiBridge(handlers: LocalApiHandlers) {
-  const handlersRef = useRef(handlers);
+  const handlersRef = useRef(import.meta.env.DEV ? { ...devIslandHandlers, ...handlers } : handlers);
 
   useEffect(() => {
-    handlersRef.current = handlers;
+    handlersRef.current = import.meta.env.DEV ? { ...devIslandHandlers, ...handlers } : handlers;
   }, [handlers]);
 
   useEffect(() => {

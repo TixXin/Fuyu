@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>岛屿实验台</title>
+    <link rel="stylesheet" href="/lab.css" />
+  </head>
+  <body>
+    <header class="top">
+      <h1>岛屿实验台</h1>
+      <p id="status" class="status" role="status">检查连接…</p>
+      <button id="refresh" type="button">重新检查</button>
+    </header>
+    <main class="layout">
+      <div id="groups" class="groups"></div>
+      <aside class="side">
+        <h2>记录</h2>
+        <ul id="log" class="log"></ul>
+      </aside>
+    </main>
+    <script type="module" src="/lab.mjs"></script>
+  </body>
+</html>

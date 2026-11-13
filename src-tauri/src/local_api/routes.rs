@@ -69,6 +69,11 @@ pub(super) fn route(method: &str, url: &str, body: &[u8]) -> Result<ApiCall, Api
         writes,
     };
 
+    #[cfg(debug_assertions)]
+    if let Some(call) = super::dev_island::route(method, segments.as_slice(), body) {
+        return call;
+    }
+
     match (method, segments.as_slice()) {
         ("GET", ["v1", "health"]) => Ok(call("health", Value::Null, false)),
         ("GET", ["v1", "todos"]) => Ok(call("todos.list", Value::Null, false)),
@@ -121,7 +126,7 @@ fn query_number(url: &str, name: &str) -> u64 {
         .unwrap_or(0)
 }
 
-fn body_object(body: &[u8]) -> Result<Value, ApiError> {
+pub(super) fn body_object(body: &[u8]) -> Result<Value, ApiError> {
     body_map(body).map(Value::Object)
 }
 
