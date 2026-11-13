@@ -1751,6 +1751,71 @@
       }
     },
     {
+      "page": "screenshot",
+      "zh-CN": {
+        "group": "录屏",
+        "title": "默认格式",
+        "description": "录屏时选区之前按 G 可以临时换成另一种。视频放在「视频 › 浮屿录屏」。"
+      },
+      "en": {
+        "group": "Screen recording",
+        "title": "Default format",
+        "description": "Press G before choosing the area to switch for one recording. Videos go to Videos › Fuyu Recordings."
+      }
+    },
+    {
+      "page": "screenshot",
+      "zh-CN": {
+        "group": "录屏",
+        "title": "帧率",
+        "description": "60 帧更流畅，文件大一些。GIF 固定 15 帧。"
+      },
+      "en": {
+        "group": "Screen recording",
+        "title": "Frame rate",
+        "description": "60 is smoother and makes bigger files. GIFs are always 15."
+      }
+    },
+    {
+      "page": "screenshot",
+      "zh-CN": {
+        "group": "录屏",
+        "title": "画质",
+        "description": "高画质的码率是标准的两倍，文字和细线更清楚，文件也大一倍。"
+      },
+      "en": {
+        "group": "Screen recording",
+        "title": "Quality",
+        "description": "High uses twice the bitrate of standard: sharper text and thin lines, files twice as big."
+      }
+    },
+    {
+      "page": "screenshot",
+      "zh-CN": {
+        "group": "录屏",
+        "title": "录系统声音",
+        "description": "电脑里正在播放的声音。GIF 没有声音。"
+      },
+      "en": {
+        "group": "Screen recording",
+        "title": "Record system sound",
+        "description": "What the computer is playing. GIFs have no sound."
+      }
+    },
+    {
+      "page": "screenshot",
+      "zh-CN": {
+        "group": "录屏",
+        "title": "录麦克风",
+        "description": "用系统默认的麦克风。打开时 Windows 会在任务栏显示麦克风正在使用。"
+      },
+      "en": {
+        "group": "Screen recording",
+        "title": "Record the microphone",
+        "description": "Uses the default microphone. Windows shows that the microphone is in use while it is on."
+      }
+    },
+    {
       "page": "messages",
       "zh-CN": {
         "group": "新消息提示",

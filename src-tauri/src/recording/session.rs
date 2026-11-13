@@ -31,6 +31,7 @@ pub(crate) struct Options {
     pub(crate) width: u32,
     pub(crate) height: u32,
     pub(crate) fps: u32,
+    pub(crate) high_quality: bool,
     pub(crate) system_audio: bool,
     pub(crate) microphone: bool,
     pub(crate) path: PathBuf,
@@ -110,7 +111,7 @@ fn open(options: &Options, frames: SyncSender<Message>) -> Result<Pipeline, Stri
     let area = area.with_size(format::even(area.width), format::even(area.height));
     let input = (area.width, area.height);
     let output = format::fit(area.width, area.height);
-    let video = VideoFormat { input, output, fps: options.fps, bitrate: format::bitrate(output.0, output.1, options.fps) };
+    let video = VideoFormat { input, output, fps: options.fps, bitrate: format::bitrate(output.0, output.1, options.fps, options.high_quality) };
     let audio = Audio::start(options.system_audio, options.microphone);
     let with_audio = audio.is_on();
     let (writer, hardware) = match VideoWriter::create(&gpu, &options.path, &video, true, with_audio) {

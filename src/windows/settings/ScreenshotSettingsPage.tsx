@@ -8,6 +8,7 @@ import type { IslandSettings } from "../../features/appearance/types";
 import { useClipboardSettings } from "../../features/clipboard/useClipboardSettings";
 import { ScreenshotShortcutRows } from "../../features/screenshot/ScreenshotShortcutRows";
 import { CARD_SECONDS, HISTORY_DAYS, type CardSeconds, type HistoryDays } from "../../features/screenshot/settings";
+import { RecordSettingsGroup } from "./RecordSettingsGroup";
 import { useScreenshotSettings } from "../../features/screenshot/useScreenshotSettings";
 import { useTranslationSettings } from "../../features/translation/useTranslationSettings";
 import { useTranslation } from "../../i18n";
@@ -114,6 +115,7 @@ export function ScreenshotSettingsPage({
           />
         </SettingsGroup>
       )}
+      {settings.screenshotEnabled && !isMacOS && <RecordSettingsGroup screenshot={screenshot} onChange={setScreenshot} />}
     </>
   );
 }

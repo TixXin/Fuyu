@@ -9,6 +9,7 @@ pub(crate) struct Request {
     pub(crate) width: u32,
     pub(crate) height: u32,
     pub(crate) fps: Option<u32>,
+    pub(crate) quality: Option<String>,
     pub(crate) system_audio: Option<bool>,
     pub(crate) microphone: Option<bool>,
     pub(crate) gif: Option<bool>,

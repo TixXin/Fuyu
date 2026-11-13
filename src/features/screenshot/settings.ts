@@ -7,12 +7,28 @@ export type CardSeconds = (typeof CARD_SECONDS)[number];
 export const HISTORY_DAYS = [1, 7, 30, 90] as const;
 export type HistoryDays = (typeof HISTORY_DAYS)[number];
 
+export const RECORD_FPS = [30, 60] as const;
+export type RecordFps = (typeof RECORD_FPS)[number];
+export const RECORD_QUALITIES = ["standard", "high"] as const;
+export type RecordQuality = (typeof RECORD_QUALITIES)[number];
+export const RECORD_FORMATS = ["mp4", "gif"] as const;
+export type RecordFormat = (typeof RECORD_FORMATS)[number];
+
+export type RecordSettings = {
+  fps: RecordFps;
+  quality: RecordQuality;
+  systemAudio: boolean;
+  microphone: boolean;
+  format: RecordFormat;
+};
+
 export type ScreenshotSettings = {
   shortcuts: Record<ShortcutAction, string>;
   printScreen: boolean;
   saveFolder: string;
   cardSeconds: CardSeconds;
   historyDays: HistoryDays;
+  record: RecordSettings;
   version: 2;
 };
 
@@ -33,10 +49,27 @@ export const DEFAULT_SCREENSHOT_SETTINGS: ScreenshotSettings = {
   saveFolder: "",
   cardSeconds: 3,
   historyDays: 7,
+  record: { fps: 30, quality: "standard", systemAudio: true, microphone: false, format: "mp4" },
   version: 2,
 };
 
 const MAX_FOLDER_CHARS = 1024;
+
+function oneOf<T>(choices: readonly T[], value: unknown, fallback: T): T {
+  return (choices as readonly unknown[]).includes(value) ? (value as T) : fallback;
+}
+
+function recordOf(value: unknown): RecordSettings {
+  const saved = value && typeof value === "object" ? (value as Record<string, unknown>) : {};
+  const fallback = DEFAULT_SCREENSHOT_SETTINGS.record;
+  return {
+    fps: oneOf(RECORD_FPS, saved.fps, fallback.fps),
+    quality: oneOf(RECORD_QUALITIES, saved.quality, fallback.quality),
+    systemAudio: typeof saved.systemAudio === "boolean" ? saved.systemAudio : fallback.systemAudio,
+    microphone: saved.microphone === true,
+    format: oneOf(RECORD_FORMATS, saved.format, fallback.format),
+  };
+}
 
 function shortcutOf(value: unknown, fallback: string) {
   if (typeof value !== "string") return fallback;
@@ -54,6 +87,7 @@ export function normalizeScreenshotSettings(value: unknown): ScreenshotSettings 
     saveFolder: folder.length <= MAX_FOLDER_CHARS ? folder : "",
     cardSeconds: saved.version === 2 && (CARD_SECONDS as readonly unknown[]).includes(saved.cardSeconds) ? (saved.cardSeconds as CardSeconds) : DEFAULT_SCREENSHOT_SETTINGS.cardSeconds,
     historyDays: (HISTORY_DAYS as readonly unknown[]).includes(saved.historyDays) ? (saved.historyDays as HistoryDays) : DEFAULT_SCREENSHOT_SETTINGS.historyDays,
+    record: recordOf(saved.record),
     version: 2,
   };
 }

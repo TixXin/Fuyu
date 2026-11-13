@@ -87,9 +87,10 @@ fn sizes_are_even_and_fit_hardware_encoders() {
 fn rate_buffers_and_bitrate_follow_the_frame_rate() {
     assert_eq!((fps(None), fps(Some(0)), fps(Some(240))), (30, 1, 60));
     assert_eq!((capture_buffers(15), capture_buffers(30), capture_buffers(60)), (2, 2, 4));
-    assert_eq!(bitrate(1920, 1080, 30), 6_220_800);
-    assert_eq!(bitrate(1920, 1080, 60), 9_331_200);
-    assert_eq!(bitrate(100, 100, 30), 2_000_000);
+    assert_eq!(bitrate(1920, 1080, 30, false), 6_220_800);
+    assert_eq!(bitrate(1920, 1080, 30, true), 12_441_600);
+    assert_eq!(bitrate(1920, 1080, 60, false), 9_331_200);
+    assert_eq!(bitrate(100, 100, 30, false), 2_000_000);
 }
 
 #[test]
@@ -109,7 +110,7 @@ fn file_names_do_not_overwrite_earlier_recordings() {
 #[ignore = "records the real screen for three seconds"]
 fn records_the_primary_screen_to_an_mp4() {
     let path = std::env::temp_dir().join(format!("fuyu-recording-{}.mp4", std::process::id()));
-    let options = super::session::Options { x: 101, y: 51, width: 1601, height: 901, fps: 60, system_audio: true, microphone: true, path: path.clone(), gif: None };
+    let options = super::session::Options { x: 101, y: 51, width: 1601, height: 901, fps: 60, high_quality: false, system_audio: true, microphone: true, path: path.clone(), gif: None };
     let recording = super::session::Recording::start(options).unwrap();
     std::thread::sleep(std::time::Duration::from_secs(3));
     let summary = recording.stop().unwrap();
@@ -239,7 +240,7 @@ fn records_the_primary_screen_to_a_gif() {
     let folder = std::env::temp_dir();
     let video = folder.join(format!("fuyu-recording-gif-{}.mp4", std::process::id()));
     let gif = folder.join(format!("fuyu-recording-{}.gif", std::process::id()));
-    let options = super::session::Options { x: 0, y: 0, width: 1920, height: 1080, fps: 30, system_audio: false, microphone: false, path: video.clone(), gif: Some(gif.clone()) };
+    let options = super::session::Options { x: 0, y: 0, width: 1920, height: 1080, fps: 30, high_quality: false, system_audio: false, microphone: false, path: video.clone(), gif: Some(gif.clone()) };
     let recording = super::session::Recording::start(options).unwrap();
     std::thread::sleep(std::time::Duration::from_secs(3));
     let summary = recording.stop().unwrap();

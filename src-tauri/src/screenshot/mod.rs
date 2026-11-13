@@ -185,7 +185,19 @@ pub async fn screenshot_finish(app: AppHandle, window: WebviewWindow, request: t
             let (x, y) = session::global_point(window.label(), left, top).ok_or_else(|| "No screenshot is open.".to_string())?;
             let folder_name = header("x-folder-name").and_then(percent_decode).unwrap_or_default();
             session::end(&app);
-            let request = crate::recording::Request { x, y, width: picture.width, height: picture.height, fps: None, system_audio: None, microphone: None, gif: Some(header("x-format") == Some("gif")), folder_name };
+            let flag = |name: &str| header(name).map(|value| value == "true");
+            let request = crate::recording::Request {
+                x,
+                y,
+                width: picture.width,
+                height: picture.height,
+                fps: number("x-fps"),
+                quality: header("x-quality").map(str::to_string),
+                system_audio: flag("x-system-audio"),
+                microphone: flag("x-microphone"),
+                gif: Some(header("x-format") == Some("gif")),
+                folder_name,
+            };
             crate::recording::begin(&app, request);
             Ok(None)
         }

@@ -94,7 +94,7 @@ export function ScreenshotOverlay() {
     const image = area ? composeArea(picture, area, chosen, items) : null;
     const patch = area && image ? { at: area, image } : null;
     const save = action === "save" ? { folder: saveFolderOf(loadScreenshotSettings()), folderName: t.saveFolderName }
-      : action === "record" ? { folderName: t.recordFolderName, format: gif ? "gif" as const : undefined } : undefined;
+      : action === "record" ? { folderName: t.recordFolderName, record: { ...loadScreenshotSettings().record, format: gif ? "gif" as const : "mp4" as const } } : undefined;
     if (action === "pin") setLeaving(true);
     finishScreenshot(chosen, patch, action, save).catch((error: unknown) => {
       setLeaving(false);
@@ -158,7 +158,7 @@ export function ScreenshotOverlay() {
   useEffect(() => {
     setNotice(null);
     setLeaving(false);
-    setGif(false);
+    setGif(loadScreenshotSettings().record.format === "gif");
   }, [sessionId]);
 
   const at = (event: PointerEvent) => toPixels({ x: event.clientX, y: event.clientY }, scale);
