@@ -17,7 +17,7 @@
 | 刘海 | `PUT /v1/dev/island/notch` 让 Rust 端把刘海当成指定的宽高（`DELETE` 取消，回到屏幕真实的刘海）；岛的窗口、点击判定、收起都按这个尺寸走，外接屏和 Windows 上也能试 | 窗口和界面是真的，刘海是假的 |
 | 岛 | `POST /v1/dev/island/action`：展开到某页、收起、贴边收起、弹出，和点岛、按快捷键调用的是同一组函数 | 是 |
 | 消息、系统 | `POST /v1/dev/island/emit` 把事件原样发给岛，载荷和真后端发的一样 | 跳过了抓消息、读音量的原生代码，只测岛的界面 |
-| Agent 状态 | `PUT /v1/agent-status/lab`，和本地接口的同一套逻辑，来源记作 `island-lab/lab` | 是 |
+| Agent 状态 | `PUT /v1/agent-status/lab`，和本地接口的同一套逻辑，来源记作 `island-lab/lab`；带机器名「实验台」，所以在 Agent 页上单独列一组，开着很多真会话时也看得见 | 是 |
 | 审批、提问 | 像 Claude Code / Codex 的 hook 一样往岛的审批端口发请求，等你在岛上点允许 / 拒绝 / 选项，页面记录里显示岛的回答 | 是，从头到尾 |
 
 ## 实现

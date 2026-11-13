@@ -54,7 +54,7 @@ export const levelChange = (kind, level, muted = false) => ({
 export const deviceAlert = (payload) => ({ event: "device-alert", payload });
 
 export function agentStatus(phase, title = "给岛加上刘海形态") {
-  return { phase, name: "实验台", title, agent: "claudeCode" };
+  return { phase, name: "实验台", title, agent: "claudeCode", host: "实验台", cwd: "/Users/you/projects/demo" };
 }
 
 export function permissionRequest(now, agent = "claude") {
