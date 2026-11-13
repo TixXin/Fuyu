@@ -38,6 +38,10 @@
   min-height: 34px;
 }
 
+.island__header-start {
+  display: contents;
+}
+
 .island__title {
   display: inline-flex;
   align-items: center;

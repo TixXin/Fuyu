@@ -64,7 +64,7 @@ import { useIslandFirstHints } from "./useIslandFirstHints";
 import { FirstHintActions, FirstHintNotice } from "../../features/first-hints/FirstHintNotice";
 import { useIslandSide } from "./useIslandSide";
 import { useDevIslandActions } from "./useDevIslandActions";
-import { hasNotchDrop, notchExpandedExtra, notchFittedWidth, notchLook, useIslandNotch, useNotchDropSync } from "./notch";
+import { hasNotchDrop, notchExpandedExtra, notchFittedWidth, notchLook, notchPanelWidth, useIslandNotch, useNotchDropSync } from "./notch";
 import "./IslandApp.css";
 
 const NO_TODOS: TodoItem[] = [];
@@ -190,12 +190,13 @@ export function IslandApp() {
     durationMs: settings.messagePanelSeconds * 1000,
     notices, mode, page, openIslandPage, collapseIsland, onOpenMessages: openMessages,
   });
-  const { popup, expandedIslandWidth } = useIslandPopup(
+  const { popup, expandedIslandWidth: popupWidth } = useIslandPopup(
     mode,
     messagePanel.arrivals !== null || alertPopup,
     null,
     panelIslandWidth(settings.panelWidth, settings.expandedScale),
   );
+  const expandedIslandWidth = notchPanelWidth(popupWidth, notch, settings.expandedScale, popup);
   const { resizingHeight, resizing } = useIslandResize(settings, setSettings, popup);
   const pageIslandHeight = getExpandedIslandHeight({
     page,

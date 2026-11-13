@@ -91,6 +91,7 @@ export function IslandHeader({
 
   return (
     <header className="island__header">
+      <div className="island__header-start">
       <div className="island__title">
         {features.agents ? (
           <button
@@ -139,6 +140,7 @@ export function IslandHeader({
           );
         })}
         {pluginPageButtons}
+      </div>
       </div>
 
       <button

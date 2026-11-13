@@ -4,7 +4,7 @@ import { mockIPC } from "@tauri-apps/api/mocks";
 import "../../src/styles/tokens.css";
 import "../../src/windows/island/IslandApp";
 import { IslandShell } from "../../src/windows/island/IslandShell";
-import { applyIslandNotch, notchExpandedExtra, notchFittedWidth } from "../../src/windows/island/notch";
+import { applyIslandNotch, notchExpandedExtra, notchFittedWidth, notchPanelWidth } from "../../src/windows/island/notch";
 import type { IslandNotch } from "../../src/windows/island/api";
 import type { PluginNotificationsController } from "../../src/features/plugins/usePluginNotifications";
 import { useQQNotifications } from "../../src/features/messages/qq-notifications/QQNotifications";
@@ -28,23 +28,23 @@ mockIPC((command) => {
   if (command === "get_qq_mail_state") return [];
 }, { shouldMockEvents: true });
 
-type State = { notch: IslandNotch | null; tucked: boolean; peek: string | null };
+type State = { notch: IslandNotch | null; tucked: boolean; peek: string | null; expanded: boolean };
 let change: (next: Partial<State>) => void;
 
 function Fixture() {
-  const [state, setState] = useState<State>({ notch: NOTCH, tucked: false, peek: null });
+  const [state, setState] = useState<State>({ notch: NOTCH, tucked: false, peek: null, expanded: false });
   change = (next) => setState((current) => ({ ...current, ...next }));
   const qq = useQQNotifications(true);
   const wechat = useWeChatReminders(true);
   const qqMail = useMail(true);
   const width = notchFittedWidth(300, state.notch, 1);
-  return <div className="stage" style={{ "--collapsed-island-width": `${width}px`, "--island-scale": 1, "--island-collapsed-scale": 1 } as CSSProperties}>
+  return <div className="stage" style={{ "--collapsed-island-width": `${width}px`, "--island-scale": 1, "--island-collapsed-scale": 1, "--island-expanded-scale": 1, "--expanded-island-width": `${notchPanelWidth(560, state.notch, 1, false)}px`, "--expanded-island-height": "306px" } as CSSProperties}>
     <IslandShell deviceUse={{ camera: [], microphone: [] }} qqNotifications={qq} wechatReminders={wechat} qqMail={qqMail} pluginNotifications={NO_PLUGIN_NOTIFICATIONS} preview={null}
-      mode="collapsed" page="todo" isTucked={state.tucked} isDetached={false} showTitle={false}
+      mode={state.expanded ? "expanded" : "collapsed"} page="todo" isTucked={state.tucked} isDetached={false} showTitle={false}
       showCollapsedText={!state.notch} collapsedTaskTitle="写周报和整理会议记录" collapsedTodoCount={null} agentSession={null} activeAgentSessionCount={0}
       lyricLine={null} appearanceMode="classic" nativeGlassState="disabled" agentVisualState="idle" agentStatusLabel="AI Agent 空闲或已完成"
       mediaState={UNAVAILABLE_MEDIA}
-      features={{ todo: true, music: false, clipboard: true, shelf: true, qq: false, wechat: false, qqMail: false, agents: false, translation: false }}
+      features={{ todo: true, music: true, clipboard: true, shelf: true, qq: true, wechat: true, qqMail: true, agents: true, translation: true, calendar: true, screenshots: true } as never}
       shelfCount={null}
       onOpenPage={() => {}} onOpenMessages={() => {}}
       onPageChange={() => {}} onWindowDragStart={() => {}} onCollapse={() => {}}
@@ -88,10 +88,19 @@ async function runChecks() {
     check(bar().scrollWidth <= bar().clientWidth + 1, "两翼的内容不撑出收起条");
     check(notchFittedWidth(280, NOTCH, 1) === NOTCH.width + 112 && notchFittedWidth(300, NOTCH, 1) === NOTCH.width + 152 && notchFittedWidth(520, NOTCH, 1) === NOTCH.width + 200,
       "两翼没有文字时每侧 56，按内容加宽，最多 100，岛不会比原来宽太多");
-    const expanded = document.querySelector<HTMLElement>(".island__expanded")!;
-    check(parseFloat(getComputedStyle(expanded).paddingTop) === NOTCH.height + 8, "展开和弹出的内容从刘海下面开始，不被刘海挡住");
-    check(notchExpandedExtra(NOTCH, 1, false) === NOTCH.height + 8 - 18 && notchExpandedExtra(NOTCH, 1, true) === NOTCH.height && notchExpandedExtra(null, 1, true) === 0,
-      "展开的岛按让出的高度加高，内容区不变小");
+    check(notchExpandedExtra(NOTCH, 1, true) === NOTCH.height && notchExpandedExtra(NOTCH, 1, false) === 0 && notchExpandedExtra(null, 1, true) === 0,
+      "弹出卡片按刘海加高；展开页的标签栏放进刘海两边，不用加高");
+    await set({ expanded: true });
+    await settleTransitions();
+    const header = document.querySelector<HTMLElement>(".island__header")!;
+    const start = box(document.querySelector(".island__header-start")!);
+    const actions = box(document.querySelector(".window-actions")!);
+    const notchLeft = box(island()).left + (box(island()).width - NOTCH.width) / 2;
+    check(Math.abs(box(header).top - box(island()).top) < 1 && Math.abs(box(header).height - NOTCH.height) < 1, "展开页的标签栏和刘海在同一条上，一样高");
+    check(start.right <= notchLeft + 0.5 && actions.left >= notchLeft + NOTCH.width - 0.5, "页面图标在刘海左边，按钮在刘海右边，都不压到刘海");
+    check(header.scrollWidth <= header.clientWidth + 1 && start.left >= box(island()).left && actions.right <= box(island()).right, "所有页面都开着时也放得下");
+    await set({ expanded: false });
+    await settleTransitions();
 
     await set({ peek: "notch 刘海" });
     await settleTransitions();

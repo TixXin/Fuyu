@@ -57,13 +57,22 @@ export function notchFittedWidth(width: number, notch: IslandNotch | null, colla
 }
 
 export const NOTCH_CONTENT_GAP = 8;
-const EXPANDED_TOP_PADDING = 18;
 const POPUP_TOP_PADDING = 8;
+const HEADER_BAND = 18 + 34;
+const NOTCH_HEADER_SIDE = 210;
+const NOTCH_HEADER_MARGIN = 16;
+const EXPANDED_SIDE_PADDING = 40;
 
 export function notchExpandedExtra(notch: IslandNotch | null, expandedScale: number, popup: boolean) {
   if (!notch) return 0;
-  const inset = notch.height / Math.max(expandedScale, 0.01) + NOTCH_CONTENT_GAP;
-  return Math.max(0, Math.ceil(inset - (popup ? POPUP_TOP_PADDING : EXPANDED_TOP_PADDING)));
+  const band = notch.height / Math.max(expandedScale, 0.01);
+  return Math.max(0, Math.ceil(popup ? band + NOTCH_CONTENT_GAP - POPUP_TOP_PADDING : band - HEADER_BAND));
+}
+
+export function notchPanelWidth(width: number, notch: IslandNotch | null, expandedScale: number, popup: boolean) {
+  if (!notch || popup) return width;
+  const gap = notch.width / Math.max(expandedScale, 0.01) + NOTCH_HEADER_MARGIN;
+  return Math.max(width, Math.ceil(gap + 2 * NOTCH_HEADER_SIDE + EXPANDED_SIDE_PADDING));
 }
 
 export function notchLook(settings: IslandSettings): IslandSettings {
