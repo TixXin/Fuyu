@@ -93,10 +93,12 @@ export function notchExpandedExtra(notch: IslandNotch | null, expandedScale: num
   return Math.max(0, Math.ceil(popup ? band + NOTCH_CONTENT_GAP - POPUP_TOP_PADDING : band - HEADER_BAND));
 }
 
+const NOTCH_POPUP_SIDE = 96;
+
 export function notchPanelWidth(width: number, notch: IslandNotch | null, expandedScale: number, popup: boolean) {
-  if (!notch || popup) return width;
+  if (!notch) return width;
   const gap = notch.width / Math.max(expandedScale, 0.01) + NOTCH_HEADER_MARGIN;
-  return Math.max(width, Math.ceil(gap + 2 * NOTCH_HEADER_SIDE + EXPANDED_SIDE_PADDING));
+  return Math.max(width, Math.ceil(gap + 2 * (popup ? NOTCH_POPUP_SIDE : NOTCH_HEADER_SIDE) + EXPANDED_SIDE_PADDING));
 }
 
 export function notchLook(settings: IslandSettings): IslandSettings {

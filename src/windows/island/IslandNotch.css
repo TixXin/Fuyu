@@ -107,7 +107,7 @@
   height: 26px;
 }
 
-:root[data-island-notch="on"] .stage:not(.island-light) .island--expanded:not(.island--popup) {
+:root[data-island-notch="on"] .stage:not(.island-light) .island--expanded {
   background:
     linear-gradient(
       var(--color-black, #000) calc(var(--island-notch-height) - 2px),
@@ -185,4 +185,42 @@
 .notch-message__from {
   display: inline-flex;
   align-items: center;
+}
+
+.island__notch-band {
+  position: absolute;
+  top: 0;
+  left: 20px;
+  right: 20px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) calc(var(--island-notch-width) / var(--island-expanded-scale, 1) + 16px) minmax(0, 1fr);
+  align-items: center;
+  height: calc(var(--island-notch-height) / var(--island-expanded-scale, 1));
+}
+
+.island__notch-band-start {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  color: var(--text-1);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.island__notch-band-icon {
+  flex: none;
+  color: var(--color-accent);
+}
+
+.island__notch-band-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.island__notch-band-close.icon-button {
+  justify-self: end;
+  width: 26px;
+  height: 26px;
 }

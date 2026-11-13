@@ -31,19 +31,19 @@ mockIPC((command) => {
   if (command === "get_qq_mail_state") return [];
 }, { shouldMockEvents: true });
 
-type State = { notch: IslandNotch | null; tucked: boolean; peek: string | null; expanded: boolean; level: LevelChange | null; device: DeviceAlert | null; preview: MessagePreview | null };
+type State = { notch: IslandNotch | null; tucked: boolean; peek: string | null; expanded: boolean; level: LevelChange | null; device: DeviceAlert | null; preview: MessagePreview | null; popup: boolean };
 let change: (next: Partial<State>) => void;
 
 function Fixture() {
-  const [state, setState] = useState<State>({ notch: NOTCH, tucked: false, peek: null, expanded: false, level: null, device: null, preview: null });
+  const [state, setState] = useState<State>({ notch: NOTCH, tucked: false, peek: null, expanded: false, level: null, device: null, preview: null, popup: false });
   change = (next) => setState((current) => ({ ...current, ...next }));
   const qq = useQQNotifications(true);
   const wechat = useWeChatReminders(true);
   const qqMail = useMail(true);
   const width = notchFittedWidth(300, state.notch, 1, Boolean(state.level || state.device));
-  return <div className="stage" style={{ "--collapsed-island-width": `${width}px`, "--island-scale": 1, "--island-collapsed-scale": 1, "--island-expanded-scale": 1, "--expanded-island-width": `${notchPanelWidth(560, state.notch, 1, false)}px`, "--expanded-island-height": "306px" } as CSSProperties}>
+  return <div className="stage" style={{ "--collapsed-island-width": `${width}px`, "--island-scale": 1, "--island-collapsed-scale": 1, "--island-expanded-scale": 1, "--expanded-island-width": `${state.popup ? notchPanelWidth(400, state.notch, 1, true) : notchPanelWidth(560, state.notch, 1, false)}px`, "--expanded-island-height": "306px" } as CSSProperties}>
     <IslandShell deviceUse={{ camera: [], microphone: [] }} qqNotifications={qq} wechatReminders={wechat} qqMail={qqMail} pluginNotifications={NO_PLUGIN_NOTIFICATIONS} preview={state.preview}
-      mode={state.expanded ? "expanded" : "collapsed"} page="todo" isTucked={state.tucked} isDetached={false} showTitle={false}
+      mode={state.expanded ? "expanded" : "collapsed"} page={state.popup ? "agents" : "todo"} popup={state.popup} isTucked={state.tucked} isDetached={false} showTitle={false}
       showCollapsedText={!state.notch} collapsedTaskTitle="写周报和整理会议记录" collapsedTodoCount={null} agentSession={null} activeAgentSessionCount={0}
       lyricLine={null} appearanceMode="classic" nativeGlassState="disabled" agentVisualState="idle" agentStatusLabel="AI Agent 空闲或已完成"
       mediaState={UNAVAILABLE_MEDIA}
@@ -102,7 +102,17 @@ async function runChecks() {
     check(Math.abs(box(header).top - box(island()).top) < 1 && Math.abs(box(header).height - NOTCH.height) < 1, "展开页的标签栏和刘海在同一条上，一样高");
     check(start.right <= notchLeft + 0.5 && actions.left >= notchLeft + NOTCH.width - 0.5, "页面图标在刘海左边，按钮在刘海右边，都不压到刘海");
     check(header.scrollWidth <= header.clientWidth + 1 && start.left >= box(island()).left && actions.right <= box(island()).right, "所有页面都开着时也放得下");
-    await set({ expanded: false });
+    await set({ popup: true });
+    await settleTransitions();
+    const band = document.querySelector<HTMLElement>(".island__notch-band");
+    const label = document.querySelector<HTMLElement>(".island__notch-band-label");
+    const close = document.querySelector<HTMLElement>(".island__notch-band-close");
+    const popupNotchLeft = box(island()).left + (box(island()).width - NOTCH.width) / 2;
+    check(band && Math.abs(box(band).top - box(island()).top) < 1 && Math.abs(box(band).height - NOTCH.height) < 1, "弹出卡片：刘海两边有一条标题带，和刘海一样高");
+    check(label?.textContent === "AI Agent" && label.scrollWidth <= label.clientWidth + 1 && box(label).right <= popupNotchLeft + 0.5, "刘海左边写着是哪类弹出，放得下、不压刘海");
+    check(close && box(close).left >= popupNotchLeft + NOTCH.width - 0.5 && box(close).right <= box(island()).right, "刘海右边是关闭按钮");
+    check(!document.querySelector(".island--popup .island__header") || getComputedStyle(document.querySelector(".island--popup .island__header")!).display === "none", "弹出时不显示页面标签栏");
+    await set({ popup: false, expanded: false });
     await settleTransitions();
 
     await set({ peek: "notch 刘海" });
