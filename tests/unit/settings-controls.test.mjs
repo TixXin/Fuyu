@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { shortcutKeyCaps } from "../../src/utils/shortcutKeys.ts";
 import { splitLead } from "../../src/utils/splitLead.ts";
+import { dayPeriod } from "../../src/utils/dayPeriod.ts";
 
 test("shortcut labels split into one cap per key", () => {
   assert.deepEqual(shortcutKeyCaps("Ctrl+Shift+F"), ["Ctrl", "Shift", "F"]);
@@ -18,4 +19,8 @@ test("a footnote keeps its first sentence and folds the rest", () => {
   assert.deepEqual(splitLead("Hold Ctrl and drag. It snaps near the top."), ["Hold Ctrl and drag.", "It snaps near the top."]);
   assert.deepEqual(splitLead("fuyu.ing has it all"), ["fuyu.ing has it all", ""]);
   assert.deepEqual(splitLead("只有一句。"), ["只有一句。", ""]);
+});
+
+test("the overview greets by the time of day", () => {
+  assert.deepEqual([4, 5, 10, 11, 12, 13, 17, 18, 22, 23, 0].map(dayPeriod), ["night", "morning", "morning", "noon", "noon", "afternoon", "afternoon", "evening", "evening", "night", "night"]);
 });

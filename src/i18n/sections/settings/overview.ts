@@ -1,5 +1,9 @@
 export type SettingsOverviewText = {
-  intro: string;
+  greeting: Record<"morning" | "noon" | "afternoon" | "evening" | "night", string>;
+  summary: (count: number) => string;
+  summaryNone: string;
+  demo: Record<"todos" | "calendar" | "music" | "translation" | "clipboard" | "shelf" | "screenshot" | "agents" | "messages", string>;
+  featuresOn: (on: number, all: number) => string;
   basicsTitle: string;
   tone: string;
   toneHint: string;
@@ -17,12 +21,25 @@ export type SettingsOverviewText = {
   shortcutsHint: string;
   guide: string;
   guideHint: string;
-  go: string;
   moreFeatures: string;
 };
 
 export const zhCN: SettingsOverviewText = {
-  intro: "浮屿是停在屏幕顶部的小岛：鼠标移上去或点一下就展开。先在这里定好常用的几项，再打开你想用的功能；没打开的功能不会出现在左边的菜单里。",
+  greeting: { morning: "早上好", noon: "中午好", afternoon: "下午好", evening: "晚上好", night: "夜深了" },
+  summary: (count) => `岛上开着 ${count} 个功能。把鼠标移到下面的卡片上，看它在岛上的样子。`,
+  summaryNone: "岛上还没有打开的功能。在下面挑几个打开，鼠标移上去能先看它在岛上的样子。",
+  demo: {
+    todos: "写周报 · 还剩 3 件",
+    calendar: "周会 · 8 分钟后开始",
+    music: "♪ 风从山谷那边吹过来",
+    translation: "Hello → 你好",
+    clipboard: "已复制 · 会议纪要的第二段",
+    shelf: "3 个文件先放在这儿",
+    screenshot: "截图已复制 · 点一下标注",
+    agents: "Claude Code 在等你确认",
+    messages: "小王：我到楼下了",
+  },
+  featuresOn: (on, all) => `已开 ${on} / ${all}`,
   basicsTitle: "常用",
   tone: "深色或浅色",
   toneHint: "跟随系统时，系统切换深浅色，岛也跟着换。",
@@ -50,12 +67,25 @@ export const zhCN: SettingsOverviewText = {
   shortcutsHint: "翻页、翻译、剪贴板、截图的按键都在这里。",
   guide: "再看一遍新手引导",
   guideHint: "在真的岛上一步步演示怎么用。",
-  go: "前往",
   moreFeatures: "开启更多功能",
 };
 
 export const en: SettingsOverviewText = {
-  intro: "Fuyu is a small island at the top of your screen: point at it or click it to open it. Pick the common settings here, then turn on the features you want. Features that are off stay out of the menu on the left.",
+  greeting: { morning: "Good morning", noon: "Good day", afternoon: "Good afternoon", evening: "Good evening", night: "Up late" },
+  summary: (count) => `${count} ${count === 1 ? "feature is" : "features are"} on. Point at a card below to see it on the island.`,
+  summaryNone: "No features are on yet. Pick a few below; point at one to see it on the island first.",
+  demo: {
+    todos: "Weekly report · 3 left",
+    calendar: "Stand-up · in 8 min",
+    music: "♪ The wind comes over the valley",
+    translation: "你好 → Hello",
+    clipboard: "Copied · second paragraph of the notes",
+    shelf: "3 files resting here",
+    screenshot: "Screenshot copied · click to mark up",
+    agents: "Claude Code is waiting for you",
+    messages: "Sam: I'm downstairs",
+  },
+  featuresOn: (on, all) => `${on} of ${all} on`,
   basicsTitle: "Common",
   tone: "Dark or light",
   toneHint: "With System, the island switches when your system does.",
@@ -83,6 +113,5 @@ export const en: SettingsOverviewText = {
   shortcutsHint: "Keys for pages, translation, the clipboard and screenshots.",
   guide: "Watch the guide again",
   guideHint: "A step-by-step demo on the real island.",
-  go: "Open",
   moreFeatures: "Turn on more features",
 };
