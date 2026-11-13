@@ -13,7 +13,7 @@ const zh = {
   tuck: ["", "用完，它自己收回去"],
   end: {
     name: "浮屿", latin: "Fuyu", tagline: "Windows 上的桌面灵动岛",
-    facts: ["开源", "免费", "插件市场"], url: "fuyu.ing",
+    facts: ["开源", "免费", "插件市场"], url: "官网:https://fuyu.ing",
   },
   windows: {
     chat: ["聊天", "小林：下午三点评审，改到 302", "产品群：新版设计稿发了", "阿远：晚上打球吗"],
@@ -53,7 +53,7 @@ const en: typeof zh = {
   tuck: ["", "Done? It tucks itself away"],
   end: {
     name: "浮屿", latin: "Fuyu", tagline: "A dynamic island for the Windows desktop",
-    facts: ["Open source", "Free", "Plugin market"], url: "fuyu.ing",
+    facts: ["Open source", "Free", "Plugin market"], url: "Website: https://fuyu.ing",
   },
   windows: {
     chat: ["Chat", "Lin: review moved to room 302 at 3", "Product: new mockups are up", "Yuan: basketball tonight?"],

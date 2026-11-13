@@ -97,3 +97,13 @@ export function magnifierPosition(pointer: Point, size: Size, view: Size, gap: n
   if (y + size.height > view.height) y = pointer.y - gap - size.height;
   return { x: Math.max(0, x), y: Math.max(0, y) };
 }
+
+export function longBarPlace(area: PixelRect, view: Size, box: Size, gap = 12, edge = 8): Point {
+  const right = area.x + area.width + gap;
+  const left = area.x - gap - box.width;
+  const x = right + box.width <= view.width - edge ? right
+    : left >= edge ? left
+    : Math.max(edge, Math.min(area.x + area.width - box.width - gap, view.width - box.width - edge));
+  const y = Math.max(edge, Math.min(area.y, view.height - box.height - edge));
+  return { x, y };
+}

@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
-import { ArrowDownToLine, Check, Circle, Download, EyeOff, Grid3x3, Hash, Highlighter, MoveUpRight, Pencil, Pin, Redo2, ScanText, Square, Type, Undo2, X, type LucideIcon } from "lucide-react";
+import { Check, Circle, Download, EyeOff, GalleryVerticalEnd, Grid3x3, Hash, Highlighter, MoveUpRight, Pencil, Pin, Redo2, ScanText, Square, Type, Undo2, X, type LucideIcon } from "lucide-react";
 import type { ScreenshotAction } from "../../features/screenshot/api";
 import { ANNOTATION_COLORS, ANNOTATION_TOOLS, STROKE_LEVELS, type AnnotationTool } from "../../features/screenshot/annotations";
 import type { PixelRect, Size } from "../../features/screenshot/selection";
@@ -102,7 +102,7 @@ export function ScreenshotToolbar({
         </ToolButton>
         <span className="screenshot-overlay__separator" />
         <ToolButton label={t.longShot} onClick={() => onFinish("long")}>
-          <ArrowDownToLine size={18} />
+          <GalleryVerticalEnd size={18} />
         </ToolButton>
         <ToolButton label={t.redact} onClick={onRedact}>
           <EyeOff size={18} />
