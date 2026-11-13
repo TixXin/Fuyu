@@ -16,7 +16,7 @@
 
 ### 本机准备
 
-- `pnpm install` 会把 `core.hooksPath` 设成 `.githooks`：`pre-push` 拦住直接推 `main`，并检查提交里有没有 AI 署名行和任务文件；`commit-msg` 拒绝 Claude 署名行。已经设成别的路径时只提示不改。
+- `pnpm install` 会把 `core.hooksPath` 设成 `.githooks`：`pre-push` 拦住直接推 `main`，并检查提交里有没有 AI 署名行和任务文件；`pre-commit` 要求在 `main` 上提交时写清文件（`git commit -- <文件>`，自己的分支不受影响）；`commit-msg` 拒绝 Claude 署名行。已经设成别的路径时只提示不改。
 - 仓库的 `.claude/settings.json` 关掉了 Claude Code 默认加的提交署名和 PR 尾注，不用自己配。
 - 仓库管理员的代理会话都在主工作区的本地 `main` 上并行工作、攒批开 PR（见 [workflow.md](docs/architecture/workflow.md)）；协作者照常在自己的分支上开发。
 
@@ -50,6 +50,6 @@ Thanks for helping with Fuyu. How the code is laid out and the rules it follows 
 - **The maintainer's agent sessions:** they commit on local `main` and, once a batch is ready, `pnpm mq:land` pushes it to a branch, opens the PR and turns on auto-merge; `pnpm mq:wait` follows it until it is merged (see [workflow.md](docs/architecture/workflow.md)).
 - **Everyone else:** fork, work on a branch of your fork and open a PR against `TixXin/fuyu`'s `main`. A maintainer will reply and turn on auto-merge once it is ready.
 
-**Setting up:** `pnpm install` points `core.hooksPath` at `.githooks` (pre-push blocks direct pushes to `main` and checks for AI attribution lines and task files; commit-msg rejects Claude attribution lines), unless it is already set to another path. The repository's `.claude/settings.json` turns off Claude Code's commit and PR attribution. The maintainer's agent sessions work side by side on local `main` in the main checkout and land in batches (see [workflow.md](docs/architecture/workflow.md)); collaborators keep working on their own branches.
+**Setting up:** `pnpm install` points `core.hooksPath` at `.githooks` (pre-push blocks direct pushes to `main` and checks for AI attribution lines and task files; pre-commit asks for the files to be named when committing on `main`, `git commit -- <files>`, and leaves your own branches alone; commit-msg rejects Claude attribution lines), unless it is already set to another path. The repository's `.claude/settings.json` turns off Claude Code's commit and PR attribution. The maintainer's agent sessions work side by side on local `main` in the main checkout and land in batches (see [workflow.md](docs/architecture/workflow.md)); collaborators keep working on their own branches.
 
 Before opening a PR, run `pnpm check` and `pnpm build` for frontend changes (plus `pnpm test:regression` for UI components) and `cargo test --manifest-path src-tauri/Cargo.toml` for Rust. Keep one change per PR, give user-facing text in both Chinese and English, leave comments out of the code (put the reasons in the commit message or `docs/`), and do not add AI attribution lines to commits or PR descriptions.

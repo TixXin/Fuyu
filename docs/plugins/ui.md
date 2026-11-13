@@ -81,6 +81,8 @@
 
 `search` 为 `{ placeholder?, mode? }` 时显示搜索框。`mode` 默认 `local`，岛屿按标题、第二行和附注过滤；`remote` 时岛屿把输入（停顿 250 毫秒后）以 `view.search` 发给插件，插件发回新的列表。
 
+有搜索框的列表可以只用键盘：焦点在搜索框里时，上下键在能打开的条目（有 `url` 或 `action` 的）之间移动，回车打开选中的那一项，不动就是第一项；Esc 清空输入。插件用 `island.openView` 打开页面时，焦点自动进搜索框，所以「按快捷键、打字、回车」不用碰鼠标；用户自己切到这一页时不抢焦点。这些由岛屿处理，插件不用写代码。
+
 ### detail 模板
 
 `{ title?, markdown?, meta?: [{ label, value }], actions?, loading?, error? }`

@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { FolderOpen, RefreshCcw } from "lucide-react";
+import { SettingsFootnote } from "../../components/settings/SettingsFootnote";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsRow } from "../../components/settings/SettingsRow";
 import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
@@ -8,9 +9,9 @@ import type { PluginInfo } from "./api";
 import { InstalledPluginsToolbar } from "./InstalledPluginsToolbar";
 import { filterInstalledPlugins, installedCounts, type InstalledFilter } from "./installedFilter";
 import { PluginCard } from "./PluginCard";
+import { PluginDock } from "./PluginDock";
 import { PluginDetailPage } from "./PluginDetailPage";
 import { PluginNotice } from "./PluginNotice";
-import { PluginUpdatesSection } from "./PluginUpdatesSection";
 import { usePlugins } from "./usePlugins";
 import "./PluginsSettingsSection.css";
 
@@ -20,7 +21,6 @@ export function PluginsSettingsSection({ initialOpenId = null }: { initialOpenId
     snapshot,
     error,
     busy,
-    pending,
     notice,
     setAllowed,
     setEnabled,
@@ -34,9 +34,6 @@ export function PluginsSettingsSection({ initialOpenId = null }: { initialOpenId
     openFolder,
     runCommand,
     uninstall,
-    setAutoUpdate,
-    untrustPublisher,
-    checkUpdates,
   } = usePlugins();
   const [openId, setOpenId] = useState<string | null>(initialOpenId);
   const [query, setQuery] = useState("");
@@ -95,7 +92,8 @@ export function PluginsSettingsSection({ initialOpenId = null }: { initialOpenId
 
   return (
     <>
-      <SettingsGroup footer={t.settings.plugins.warning}>
+      {plugins.length > 0 ? <PluginDock plugins={plugins} allowed={allowed} filter={filter} counts={counts} onFilterChange={setFilter} onOpen={setOpenId} /> : null}
+      <SettingsGroup footer={<SettingsFootnote text={t.settings.plugins.warning} />}>
         <SettingsToggleRow title={t.settings.plugins.allowThirdParty} checked={allowed} onChange={(next) => !busy && setAllowed(next)} />
         <SettingsRow
           title={t.settings.plugins.folder}
@@ -132,22 +130,11 @@ export function PluginsSettingsSection({ initialOpenId = null }: { initialOpenId
       {error ? <p className="plugin-card__error">{error}</p> : null}
       {snapshot && plugins.length === 0 ? <p className="settings-section__hint">{t.settings.plugins.empty}</p> : null}
       {plugins.length > 0 ? (
-        <InstalledPluginsToolbar query={query} filter={filter} counts={counts} onQueryChange={setQuery} onFilterChange={setFilter} />
+        <InstalledPluginsToolbar query={query} onQueryChange={setQuery} />
       ) : null}
       {plugins.length > 0 && shown.length === 0 ? <p className="settings-section__hint plugins-list__empty">{t.settings.plugins.overview.noMatches}</p> : null}
       {renderGroup(t.settings.plugins.groupThirdParty(thirdParty.length), thirdParty)}
       {renderGroup(t.settings.plugins.groupBuiltin(builtin.length), builtin)}
-      {snapshot ? (
-        <PluginUpdatesSection
-          snapshot={snapshot}
-          busy={busy}
-          pending={pending}
-          notice={notice}
-          onAutoUpdateChange={setAutoUpdate}
-          onCheck={checkUpdates}
-          onUntrust={untrustPublisher}
-        />
-      ) : null}
     </>
   );
 }

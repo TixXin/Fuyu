@@ -6,6 +6,7 @@ npm 包 `fuyu-plugin` 和 `create-fuyu-plugin` 的版本单独标在括号里。
 
 ## 下一版
 
+- **列表页面的键盘操作**：有搜索框的 `list` 页面里，上下键选条目，回车打开，Esc 清空输入；插件用 `island.openView` 打开页面时焦点自动进搜索框。岛屿处理，插件和 SDK 不用改。见 [岛上界面 · list 模板](ui.md#list-模板)。
 - **收起条上的饼图**：`status.update` 多了 `pie`（最多 4 块 `{ value, tone? }`，按占比画成小饼），能力 `statusPie`。SDK：Node `StatusOptions.pie`、PowerShell `Update-FuyuStatus -Pie`，模拟宿主会校验。见 [岛上界面 · 饼图](ui.md#饼图)。
 
 ## 0.3.6
