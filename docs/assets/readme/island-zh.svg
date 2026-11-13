@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="480" height="100" viewBox="0 0 480 100" role="img" aria-label="浮屿 Fuyu：屏幕顶上的一座小岛，旁边手写着官网 fuyu.ing">
+<svg xmlns="http://www.w3.org/2000/svg" width="540" height="100" viewBox="0 0 540 100" role="img" aria-label="浮屿 Fuyu：屏幕顶上的一座小岛，旁边手写着官网 https://fuyu.ing">
   <defs>
-    <linearGradient id="edge" x2="480" gradientUnits="userSpaceOnUse">
+    <linearGradient id="edge" x2="540" gradientUnits="userSpaceOnUse">
       <stop offset="0" stop-color="#8b949e" stop-opacity="0"/>
       <stop offset=".14" stop-color="#8b949e" stop-opacity=".55"/>
       <stop offset=".86" stop-color="#8b949e" stop-opacity=".55"/>
@@ -71,7 +71,7 @@
       0%, 100% { transform: scaleY(.3); }
       50% { transform: scaleY(1); }
     }
-    .note path { fill: none; stroke: #4795c9; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; animation: write linear backwards; }
+    .note path { fill: none; stroke: #4795c9; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; animation: write linear backwards; }
     @keyframes write {
       0% { stroke-dashoffset: 1; stroke-opacity: 0; }
       1% { stroke-dashoffset: 1; stroke-opacity: 1; }
@@ -80,9 +80,9 @@
       .capl, .capr, .mid, .idle, .call, .glow, .halo, .bar, .note path { animation: none; }
     }
   </style>
-  <rect width="480" height="1" fill="url(#edge)"/>
-  <ellipse class="glow" cx="240" cy="44" rx="184" ry="42" fill="url(#glow)"/>
-  <g transform="translate(240 0)">
+  <rect width="540" height="1" fill="url(#edge)"/>
+  <ellipse class="glow" cx="270" cy="44" rx="184" ry="42" fill="url(#glow)"/>
+  <g transform="translate(270 0)">
     <g class="capl">
       <path fill="#030303" d="M-119.5 0v1a9.5 9.5 0 0 1 9.5 9.5V32a20 20 0 0 0 20 20h1V0z"/>
       <path fill="none" stroke="#4e5358" d="M-119.5 .5a10 10 0 0 1 10 10V32a19.5 19.5 0 0 0 19.5 19.5h1"/>
@@ -118,23 +118,19 @@
       <text x="-37" y="31.4" font-size="15" font-weight="600" fill="#f8f6f0" textLength="132" lengthAdjust="spacing">给浮屿画一个 Logo</text>
     </g>
   </g>
-  <g class="note" transform="translate(344 85) rotate(-5) scale(1.3)">
-    <path pathLength="1" style="animation-duration:0.26s;animation-delay:1.00s" transform="translate(0 0)" d="M9 -19C7 -23 2 -22 2 -16V1"/>
-    <path pathLength="1" style="animation-duration:0.16s;animation-delay:1.29s" transform="translate(0 0)" d="M-2 -11H8"/>
-    <path pathLength="1" style="animation-duration:0.26s;animation-delay:1.52s" transform="translate(13 0)" d="M0 -12V-5C0 1 7 1 8 -5V-12"/>
-    <path pathLength="1" style="animation-duration:0.26s;animation-delay:1.81s" transform="translate(13 0)" d="M8 -12V-2C8 0 9 1 11 -1"/>
-    <path pathLength="1" style="animation-duration:0.26s;animation-delay:2.14s" transform="translate(27 0)" d="M0 -12V-6C0 0 7 0 8 -6V-12"/>
-    <path pathLength="1" style="animation-duration:0.26s;animation-delay:2.43s" transform="translate(27 0)" d="M8 -12V4C8 10 2 11 0 7"/>
-    <path pathLength="1" style="animation-duration:0.26s;animation-delay:2.76s" transform="translate(40 0)" d="M0 -12V-5C0 1 7 1 8 -5V-12"/>
-    <path pathLength="1" style="animation-duration:0.26s;animation-delay:3.05s" transform="translate(40 0)" d="M8 -12V-2C8 0 9 1 11 -1"/>
-    <path pathLength="1" style="animation-duration:0.09s;animation-delay:3.38s" transform="translate(55 0)" d="M0 -1.4V-.4"/>
-    <path pathLength="1" style="animation-duration:0.26s;animation-delay:3.54s" transform="translate(61 0)" d="M0 -12V-2C0 0 1 1 3 -1"/>
-    <path pathLength="1" style="animation-duration:0.16s;animation-delay:3.83s" transform="translate(61 0)" d="M0 -18V-17"/>
-    <path pathLength="1" style="animation-duration:0.16s;animation-delay:4.06s" transform="translate(68 0)" d="M0 -12V0"/>
-    <path pathLength="1" style="animation-duration:0.26s;animation-delay:4.25s" transform="translate(68 0)" d="M0 -7C2 -12 8 -13 8 -7V-2C8 0 9 1 11 -1"/>
-    <path pathLength="1" style="animation-duration:0.26s;animation-delay:4.58s" transform="translate(83 0)" d="M8 -9C7 -13 0 -13 0 -6C0 0 7 0 8 -6"/>
-    <path pathLength="1" style="animation-duration:0.26s;animation-delay:4.87s" transform="translate(83 0)" d="M8 -12V4C8 10 2 11 0 7"/>
-    <path pathLength="1" style="animation-duration:0.3s;animation-delay:5.45s" d="M-6 -7C-14 -7 -19 -12 -18 -21"/>
-    <path pathLength="1" style="animation-duration:0.16s;animation-delay:5.79s" d="M-18 -21l-3.6 4.6M-18 -21l4.8 2.8"/>
+  <g class="note" transform="translate(369.8 86) rotate(-4) skewX(-12) scale(1.1)">
+    <path pathLength="1" style="animation-duration:0.42s;animation-delay:0.60s" d="M0 0c3 -4 5 -14 4 -21l-2 21c1 -6 4 -10 6 -10c2 0 1 6 1 8c0 2 2 2 3 2c2 -3 3 -10 3 -17c-1 8 -1 17 2 17c1 0 2 0 3 0c2 -3 3 -10 3 -17c-1 8 -1 17 2 17c1 0 2 0 3 0c2 -2 3 -6 3 -10l-2 19l1.6 -15c2 -5 7 -5 7 1c0 4 -4 6 -7 4c3 2 6 1 8.4 1c2 -2 4 -6 5 -10c-1 3 3 5 2 8c-1 2 -4 2 -6 1c2 2 5 1 7 1"/>
+    <path pathLength="1" style="animation-duration:0.05s;animation-delay:1.04s" d="M12.5 -11h6"/>
+    <path pathLength="1" style="animation-duration:0.05s;animation-delay:1.11s" d="M20.5 -11h6"/>
+    <path pathLength="1" style="animation-duration:0.04s;animation-delay:1.18s" d="M50 -8.5v.8"/>
+    <path pathLength="1" style="animation-duration:0.04s;animation-delay:1.24s" d="M49.6 -1v.8"/>
+    <path pathLength="1" style="animation-duration:0.07s;animation-delay:1.30s" d="M53 3l6 -20"/>
+    <path pathLength="1" style="animation-duration:0.07s;animation-delay:1.39s" d="M59 3l6 -20"/>
+    <path pathLength="1" style="animation-duration:0.36s;animation-delay:1.48s" d="M67 0c3 -4 6 -14 5 -20c-1 -3 -3 0 -3 4l0 24c0 3 2 -4 3 -8c1 0 2 0 3 0c2 -2 3 -6 3 -10c-1 5 -1 10 2 10c2 0 4 -5 5 -10c-1 5 -1 10 1 10c2 -2 3 -6 3 -10c-1 5 -1 10 2 10c2 0 4 -5 5 -10l-1 15c0 5 -5 5 -6 1c2 -3 6 -5 8 -6c2 -2 3 -6 3 -10c-1 5 -1 10 2 10c2 0 4 -5 5 -10c-1 5 -1 10 1 10"/>
+    <path pathLength="1" style="animation-duration:0.04s;animation-delay:1.86s" d="M110.5 -1v.8"/>
+    <path pathLength="1" style="animation-duration:0.26s;animation-delay:1.92s" d="M113.0 0c2 -2 3 -6 3 -10c-1 5 -1 10 3 10c2 -2 3 -6 3 -10l-1 10c1 -6 4 -10 6 -10c2 0 1 6 1 8c0 2 2 2 3 2c2 -2 5 -8 8 -9c-4 -3 -8 1 -7 5c1 4 6 3 8 -5l-1 15c0 5 -5 5 -6 1c2 -3 6 -5 9 -7"/>
+    <path pathLength="1" style="animation-duration:0.05s;animation-delay:2.20s" d="M116.6 -14.5v.8"/>
+    <path pathLength="1" style="animation-duration:0.16s;animation-delay:2.35s" d="M-5 -6C-12 -6 -17 -11 -16 -19"/>
+    <path pathLength="1" style="animation-duration:0.1s;animation-delay:2.53s" d="M-16 -19l-3.4 4.4M-16 -19l4.6 2.6"/>
   </g>
 </svg>
