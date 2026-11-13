@@ -5,7 +5,7 @@ import { MARKET_CATEGORIES, marketPublisher, openPluginHomepage, type MarketCate
 import type { MarketLike } from "./marketLikes";
 import { MarketPluginAction } from "./MarketPluginAction";
 import { MarketPluginDetails } from "./MarketPluginDetails";
-import { NodeMissingHint } from "./NodeMissingHint";
+import { RuntimeHints } from "./RuntimeHints";
 import { PluginIcon } from "./PluginIcon";
 import { isSensitivePermission } from "./promptedPermissions";
 
@@ -115,7 +115,7 @@ export function MarketPluginItem({
         {plugin.signingKeyChanged && plugin.installedVersion !== null && !plugin.revoked ? (
           <p className="plugin-card__hint plugin-card__hint--warn">{plugin.signedBy ? text.keyChanged(plugin.signedBy) : text.signatureDropped}</p>
         ) : null}
-        {plugin.runtime === "node" && !market.nodeAvailable ? <NodeMissingHint /> : null}
+        <RuntimeHints runtime={plugin.runtime} platforms={plugin.platforms} nodeAvailable={market.nodeAvailable} powershellAvailable={market.powershellAvailable} />
         {open ? <MarketPluginDetails plugin={plugin} /> : null}
       </div>
     </article>

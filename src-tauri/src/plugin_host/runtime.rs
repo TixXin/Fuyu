@@ -358,6 +358,7 @@ fn supervise(context: &Arc<Context>) {
     set_status(context, last, None);
 }
 
+#[cfg(windows)]
 pub(super) fn find_node() -> Option<PathBuf> {
     let on_path = std::env::var_os("PATH")
         .into_iter()
@@ -370,6 +371,21 @@ pub(super) fn find_node() -> Option<PathBuf> {
     on_path.chain(installed).find(|candidate| candidate.is_file())
 }
 
+#[cfg(not(windows))]
+pub(super) fn find_node() -> Option<PathBuf> {
+    super::manifest::find_unix_program("node")
+}
+
+#[cfg(windows)]
+pub(super) fn powershell_available() -> bool {
+    true
+}
+
+#[cfg(not(windows))]
+pub(super) fn powershell_available() -> bool {
+    super::manifest::find_unix_program("pwsh").is_some()
+}
+
 fn spawn(spec: &LaunchSpec) -> Result<Child, String> {
     std::fs::create_dir_all(&spec.data_dir)
         .map_err(|error| format!("Could not create {}: {error}", spec.data_dir.display()))?;
@@ -377,7 +393,10 @@ fn spawn(spec: &LaunchSpec) -> Result<Child, String> {
         Some(node) if spec.program == "node" => node.into_os_string(),
         _ => spec.program.clone(),
     };
-    Command::new(&program)
+    let mut command = Command::new(&program);
+    #[cfg(unix)]
+    std::os::unix::process::CommandExt::process_group(&mut command, 0);
+    command
         .args(&spec.args)
         .current_dir(&spec.dir)
         .env("FUYU_PLUGIN_ID", &spec.plugin_id)

@@ -95,8 +95,10 @@ pub(crate) fn apply_stage_geometry(
     };
     let centered_x = crate::dev_lane::stage_x(monitor_position.x, monitor_size.width as i32, physical_width);
     let normal_y = monitor_position.y + top_inset + physical_top_offset;
-    let tucked_y = monitor_position.y + top_inset + tucked_top_offset;
+    let notch = super::notch::settle(window, &monitor, state);
+    let tucked_y = if notch.is_some() { normal_y } else { monitor_position.y + top_inset + tucked_top_offset };
     let mut positioned_state = state;
+    positioned_state.notch = notch;
     if !has_custom_monitor {
         positioned_state.custom_position = None;
     }

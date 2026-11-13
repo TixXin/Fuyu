@@ -38,6 +38,13 @@
       "maxItems": 10,
       "items": { "type": "string", "pattern": "^[a-z][A-Za-z0-9.]{0,63}$" }
     },
+    "platforms": {
+      "description": "Systems the plugin runs on. Without this field: an .exe runtime is Windows only, everything else runs on both. On macOS a .ps1 plugin needs PowerShell 7 (pwsh).",
+      "type": "array",
+      "maxItems": 2,
+      "uniqueItems": true,
+      "items": { "enum": ["windows", "macos"] }
+    },
     "author": { "type": "string" },
     "homepage": { "type": "string", "description": "Only https:// links are shown." },
     "runtime": {
