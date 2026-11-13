@@ -10,7 +10,8 @@ import { openSettingsWindow } from "../settings/api";
 import { useQuickTranslation } from "../../features/translation/useQuickTranslation";
 import { useScreenshotText } from "../../features/screenshot/useScreenshotText";
 import { useScreenshotCard } from "../../features/screenshot/useScreenshotCard";
-import { ScreenshotCard } from "../../features/screenshot/ScreenshotCard";
+import { ScreenshotNotice, ScreenshotNoticeActions } from "../../features/screenshot/ScreenshotNotice";
+import { useScreenshotNotice } from "../../features/screenshot/useScreenshotNotice";
 import { useIslandSettings } from "../../features/appearance/useIslandSettings";
 import { useClipboardHistory } from "../../features/clipboard/useClipboardHistory";
 import { IslandShell } from "./IslandShell";
@@ -103,6 +104,7 @@ export function IslandApp() {
   const screenshotText = useScreenshotText();
   const screenshot = useIslandScreenshot(settings.screenshotEnabled, collapseIsland);
   const screenshotCard = useScreenshotCard(screenshot.settings.cardSeconds);
+  const screenshotNotice = useScreenshotNotice(screenshotCard, agentSessions);
   const translationPeek = useQuickTranslation(settings.translationEnabled) ?? screenshotText;
   const { lyrics, lyricLine: currentLyric } = useIslandLyrics(settings, media.mediaState, {
     page,
@@ -299,8 +301,8 @@ export function IslandApp() {
         pageDigitModifiers={settings.pageDigitModifiers}
         hoverSwitchPage={settings.hoverSwitchPage}
         hoverSwitchDelayMs={settings.hoverSwitchDelayMs}
-        overlay={permissionPrompts.current ? <PluginPermissionPrompt prompts={permissionPrompts} />
-          : <ScreenshotCard key={screenshotCard.current?.path} card={screenshotCard} sessions={agentSessions} />}
+        notice={screenshotNotice.taken ? { content: <ScreenshotNotice key={screenshotNotice.taken.path} notice={screenshotNotice} />, actions: <ScreenshotNoticeActions notice={screenshotNotice} /> } : null}
+        overlay={permissionPrompts.current ? <PluginPermissionPrompt prompts={permissionPrompts} /> : null}
         pluginViews={pluginPages.views}
         onOpenPluginPage={openEnabledPage}
         collapsedSlots={collapsedSlots}

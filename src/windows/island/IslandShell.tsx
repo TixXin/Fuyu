@@ -68,6 +68,7 @@ type IslandShellProps = {
   onOpenTranslator: (() => void) | null;
   onScreenshot?: (() => void) | null;
   translationPeek: string | null;
+  notice?: { content: ReactNode; actions: ReactNode } | null;
   onOpenTranslationPeek: () => void;
   onOpenSettings: (section?: "updates") => void;
   onTuck: () => void;
@@ -126,6 +127,7 @@ export function IslandShell({
   onOpenTranslator,
   onScreenshot,
   translationPeek,
+  notice,
   onOpenTranslationPeek,
   onOpenSettings,
   onTuck,
@@ -232,6 +234,7 @@ export function IslandShell({
           onOpenPage={onOpenPage}
           onOpenMessages={onOpenMessages}
           translationPeek={translationPeek}
+          notice={notice}
           onOpenTranslationPeek={onOpenTranslationPeek}
           onWindowDragStart={onWindowDragStart}
           onTuck={onTuck}
