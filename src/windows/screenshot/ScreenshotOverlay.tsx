@@ -52,7 +52,7 @@ function colorAt(canvas: HTMLCanvasElement | null, pixel: Point): string {
 export function ScreenshotOverlay() {
   const t = useTranslation().screenshot;
   const errorText = useErrorText();
-  const { session, ready, canvasRef } = useScreenshotFrame();
+  const { session, ready, drawn, canvasRef } = useScreenshotFrame();
   const view = useViewSize();
   const bounds = session && ready ? { width: session.width, height: session.height } : null;
   const scale = bounds ? pixelScale(bounds, view) : 1;
@@ -67,7 +67,7 @@ export function ScreenshotOverlay() {
   const long = useLongShot(sessionId, t.saveFolderName);
 
   const pixel = pointer && bounds ? pixelAt(pointer, bounds) : null;
-  const color = pixel ? colorAt(canvasRef.current, pixel) : null;
+  const color = pixel && drawn ? colorAt(canvasRef.current, pixel) : null;
   const chosen = selection && isSelection(selection) ? selection : null;
   const choosing = chosen === null;
   const layers = choosing && pixel && bounds ? layersAt(targets, pixel, bounds) : [];
@@ -85,7 +85,7 @@ export function ScreenshotOverlay() {
   const { items } = annotations;
   const finish = useCallback((action: ScreenshotAction) => {
     const picture = canvasRef.current;
-    if (!chosen || !picture) return;
+    if (!chosen || !picture || (items.length > 0 && !drawn)) return;
     const area = annotationArea(items, chosen);
     const image = area ? composeArea(picture, area, chosen, items) : null;
     const patch = area && image ? { at: area, image } : null;
@@ -95,7 +95,7 @@ export function ScreenshotOverlay() {
       setLeaving(false);
       setNotice(errorText(error));
     });
-  }, [chosen, items, canvasRef, errorText, t]);
+  }, [chosen, items, drawn, canvasRef, errorText, t]);
   const copy = useCallback(() => finish("copy"), [finish]);
   const { addMany } = annotations;
   const redact = useCallback(() => {
@@ -282,7 +282,7 @@ export function ScreenshotOverlay() {
           <div className="screenshot-overlay__guide screenshot-overlay__guide--v" style={{ left: area.x + area.width - 1 }} />
         </>
       )}
-      {ready && pixel && cssPointer && color && dragging !== "move" && !annotations.tool && !leaving && !long.active && (
+      {drawn && pixel && cssPointer && color && dragging !== "move" && !annotations.tool && !leaving && !long.active && (
         <Magnifier picture={canvasRef.current} pixel={pixel} pointer={cssPointer} view={view} color={color} lines={lines} />
       )}
     </div>
