@@ -159,4 +159,5 @@ Mac 上跳过的测试（依赖 Windows 路径、程序或 API，标了 `#[cfg(w
 ## 备注
 
 - **岛的坐标（G1.3）**：Mac 上 tao 的「物理坐标」不是一套全局坐标——显示器位置按该显示器的缩放换算，窗口位置按窗口当前所在屏幕的缩放换算，光标按主屏的缩放换算，缩放不同的两块屏上三者对不上（tauri#7890、tao#816）。所以岛的定位、拖动、贴顶、点穿和新手引导都经 `island/screen.rs` 取坐标：Windows 上原样转发 Tauri 的物理像素；Mac 上各自除以自己的缩放，统一成全局的逻辑点（缩放记为 1），设位置时用 `Position::Logical`，光标直接读 `NSEvent::mouseLocation`。拖动后保存的自定义位置在 Mac 上也是逻辑点。
+- QQ / 微信（G1.10）：只有 Dock 角标的未读数可靠，见 [macos-messengers.md](../investigations/macos-messengers.md)。
 - 调研里标「未核实」的说法（例如 SMAppService 的最低版本、剪贴板隐私提示在 macOS 27 上的状态、mediaremote-adapter 在 27 上是否可用）在对应子任务开工时先实测，结论记在这里或 `docs/investigations/`。
