@@ -93,20 +93,20 @@
 
 .plugin-market__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
   align-items: start;
-  gap: 10px;
+  gap: 12px;
 }
 
 .plugin-market__item {
   display: grid;
-  grid-template-columns: 34px minmax(0, 1fr);
+  grid-template-columns: 40px minmax(0, 1fr);
   align-items: start;
-  gap: 6px 12px;
-  padding: 14px 14px 10px;
-  background: var(--color-white-a08);
-  border: 1px solid var(--color-white-a10);
-  border-radius: var(--radius-md);
+  gap: 8px 12px;
+  padding: 16px 16px 12px;
+  background: var(--color-white-a04);
+  border: 1px solid var(--color-white-a08);
+  border-radius: var(--radius-xl);
   transition: border-color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
 }
 

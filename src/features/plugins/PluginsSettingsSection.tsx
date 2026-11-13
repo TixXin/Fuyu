@@ -44,27 +44,6 @@ export function PluginsSettingsSection({ initialOpenId = null }: { initialOpenId
   const shown = useMemo(() => filterInstalledPlugins(plugins, filter, query, allowed), [plugins, filter, query, allowed]);
   const openPlugin = snapshot?.plugins.find((plugin) => plugin.id === openId);
 
-  if (openPlugin) {
-    return (
-      <>
-        <PluginDetailPage
-          plugin={openPlugin}
-          busy={busy}
-          notice={notice}
-          onBack={() => setOpenId(null)}
-          onSettingChange={(key, value) => setSetting(openPlugin.id, key, value)}
-          onRunCommand={(command) => runCommand(openPlugin.id, command)}
-          onNotificationsMutedChange={(muted) => setNotificationsMuted(openPlugin.id, muted)}
-          onPreReleaseChange={(enabled) => setPreRelease(openPlugin.id, enabled)}
-          onMemoryLimitChange={(megabytes) => setMemoryLimit(openPlugin.id, megabytes)}
-          onClearData={() => clearData(openPlugin.id)}
-          onRevokeSensitive={(permission) => revokeSensitive(openPlugin.id, permission)}
-        />
-        {error ? <p className="plugin-card__error">{error}</p> : null}
-      </>
-    );
-  }
-
   const renderGroup = (title: string, group: PluginInfo[]) =>
     snapshot && group.length > 0 ? (
       <section className="plugins-list" aria-label={title}>
@@ -135,6 +114,25 @@ export function PluginsSettingsSection({ initialOpenId = null }: { initialOpenId
       {plugins.length > 0 && shown.length === 0 ? <p className="settings-section__hint plugins-list__empty">{t.settings.plugins.overview.noMatches}</p> : null}
       {renderGroup(t.settings.plugins.groupThirdParty(thirdParty.length), thirdParty)}
       {renderGroup(t.settings.plugins.groupBuiltin(builtin.length), builtin)}
+      {openPlugin && snapshot ? (
+        <PluginDetailPage
+          plugin={openPlugin}
+          busy={busy}
+          notice={notice}
+          allowed={allowed}
+          nodeAvailable={snapshot.nodeAvailable}
+          powershellAvailable={snapshot.powershellAvailable}
+          onBack={() => setOpenId(null)}
+          onEnabledChange={(enabled) => setEnabled(openPlugin.id, enabled)}
+          onSettingChange={(key, value) => setSetting(openPlugin.id, key, value)}
+          onRunCommand={(command) => runCommand(openPlugin.id, command)}
+          onNotificationsMutedChange={(muted) => setNotificationsMuted(openPlugin.id, muted)}
+          onPreReleaseChange={(enabled) => setPreRelease(openPlugin.id, enabled)}
+          onMemoryLimitChange={(megabytes) => setMemoryLimit(openPlugin.id, megabytes)}
+          onClearData={() => clearData(openPlugin.id)}
+          onRevokeSensitive={(permission) => revokeSensitive(openPlugin.id, permission)}
+        />
+      ) : null}
     </>
   );
 }
