@@ -12,7 +12,14 @@ pub(crate) enum HotkeyError {
     Register(String),
 }
 
-static HANDLERS: Mutex<Vec<(u32, Handler)>> = Mutex::new(Vec::new());
+static HANDLERS: Mutex<Vec<(HotKey, Handler)>> = Mutex::new(Vec::new());
+type Interceptor = fn(&HotKey) -> bool;
+
+static INTERCEPTOR: Mutex<Option<Interceptor>> = Mutex::new(None);
+
+pub(crate) fn set_interceptor(interceptor: Interceptor) {
+    *INTERCEPTOR.lock().unwrap_or_else(PoisonError::into_inner) = Some(interceptor);
+}
 
 thread_local! {
     static MANAGER: RefCell<Option<GlobalHotKeyManager>> = const { RefCell::new(None) };
@@ -22,15 +29,20 @@ fn dispatch(event: GlobalHotKeyEvent) {
     if event.state() != HotKeyState::Pressed {
         return;
     }
-    let handler = HANDLERS
+    let found = HANDLERS
         .lock()
         .unwrap_or_else(PoisonError::into_inner)
         .iter()
-        .find(|(id, _)| *id == event.id())
-        .map(|(_, handler)| Arc::clone(handler));
-    if let Some(handler) = handler {
-        handler();
+        .find(|(hotkey, _)| hotkey.id() == event.id())
+        .map(|(hotkey, handler)| (*hotkey, Arc::clone(handler)));
+    let Some((hotkey, handler)) = found else {
+        return;
+    };
+    let interceptor = *INTERCEPTOR.lock().unwrap_or_else(PoisonError::into_inner);
+    if interceptor.is_some_and(|intercept| intercept(&hotkey)) {
+        return;
     }
+    handler();
 }
 
 fn with_manager(action: impl FnOnce(&GlobalHotKeyManager) -> Result<(), HotkeyError>) -> Result<(), HotkeyError> {
@@ -50,11 +62,11 @@ fn with_manager(action: impl FnOnce(&GlobalHotKeyManager) -> Result<(), HotkeyEr
 
 pub(crate) fn register(hotkey: HotKey, handler: impl Fn() + Send + Sync + 'static) -> Result<(), HotkeyError> {
     with_manager(|manager| manager.register(hotkey).map_err(|error| HotkeyError::Register(error.to_string())))?;
-    HANDLERS.lock().unwrap_or_else(PoisonError::into_inner).push((hotkey.id(), Arc::new(handler)));
+    HANDLERS.lock().unwrap_or_else(PoisonError::into_inner).push((hotkey, Arc::new(handler)));
     Ok(())
 }
 
 pub(crate) fn unregister(hotkey: HotKey) {
     let _ = with_manager(|manager| manager.unregister(hotkey).map_err(|error| HotkeyError::Register(error.to_string())));
-    HANDLERS.lock().unwrap_or_else(PoisonError::into_inner).retain(|(id, _)| *id != hotkey.id());
+    HANDLERS.lock().unwrap_or_else(PoisonError::into_inner).retain(|(known, _)| known.id() != hotkey.id());
 }

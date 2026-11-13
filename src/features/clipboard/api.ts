@@ -50,6 +50,13 @@ export type ClipboardHistoryImage = {
   thumbnailDataUrl?: string;
 };
 
+export type ClipboardFileImage = {
+  width: number;
+  height: number;
+  byteSize: number;
+  thumbnailDataUrl: string;
+};
+
 export type ClipboardHistoryItem = {
   id: string;
   kind: "text" | "image" | "files";
@@ -63,6 +70,7 @@ export type ClipboardHistoryItem = {
   image?: ClipboardHistoryImage;
   html?: string;
   files?: string[];
+  fileImage?: ClipboardFileImage;
   source?: ClipboardSource;
   tags?: string[];
   ocrText?: string;
@@ -178,8 +186,12 @@ export function getClipboardImagePreview(id: string) {
   return invoke<string | null>("get_clipboard_image_preview", { id });
 }
 
-export function hideClipboardPopup() {
-  return invoke<void>("hide_clipboard_popup");
+export function startClipboardDrag(id: string) {
+  return invoke<void>("start_clipboard_drag", { id });
+}
+
+export function hideClipboardPopup(blurred = false) {
+  return invoke<void>("hide_clipboard_popup", { blurred });
 }
 
 export function listenClipboardPopupOpened(handler: () => void) {
@@ -222,4 +234,14 @@ export function listenClipboardHistoryShortcut(handler: () => void) {
 
 export function listenClipboardShortcutStatus(handler: (error: string | null) => void) {
   return listen<string | null>(CLIPBOARD_SHORTCUT_STATUS_EVENT, (event) => handler(event.payload));
+}
+
+export const SHORTCUT_CAPTURED_EVENT = "shortcut-captured";
+
+export function setShortcutCapture(enabled: boolean) {
+  return invoke<void>("set_shortcut_capture", { enabled });
+}
+
+export function listenShortcutCaptured(handler: (shortcut: string) => void) {
+  return listen<string>(SHORTCUT_CAPTURED_EVENT, ({ payload }) => handler(payload));
 }

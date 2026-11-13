@@ -1,5 +1,9 @@
 mod bridge;
 mod config;
+#[cfg(debug_assertions)]
+mod dev_island;
+#[cfg(debug_assertions)]
+mod lab;
 mod routes;
 mod server;
 #[cfg(test)]
@@ -41,6 +45,12 @@ pub fn init(app: &AppHandle) -> Result<(), String> {
     let (config, changed) = load_config(&path)?;
     if changed || config::has_mirror() {
         save_config(&path, &config)?;
+    }
+    #[cfg(debug_assertions)]
+    if let Some(home) = path.parent() {
+        if let Err(error) = lab::start(app.clone(), home) {
+            eprintln!("{error}");
+        }
     }
     let _ = SERVICE.set(LocalApiService {
         app: app.clone(),

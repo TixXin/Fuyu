@@ -22,6 +22,7 @@ export function useNativeLayout(settings: IslandSettings) {
         expandedScale: nextSettings.expandedScale,
         marginY: nextSettings.marginY,
         underMenuBar: nextSettings.menuBarPlacement === "below",
+        fitNotch: nextSettings.menuBarPlacement === "notch",
       });
     } catch (error) {
       console.error("Failed to sync island layout", error);

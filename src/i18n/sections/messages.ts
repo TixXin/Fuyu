@@ -7,6 +7,7 @@ export type MessagesText = {
   qqNotifications: string;
   wechatReminders: string;
   newReminder: string;
+  unreadCount: (count: number) => string;
   newMessage: string;
   newMail: string;
   wechatPreview: string;
@@ -45,6 +46,7 @@ export const zhCN: MessagesText = {
   qqNotifications: "QQ 通知",
   wechatReminders: "微信提醒",
   newReminder: "有新提醒",
+  unreadCount: (count) => `${count} 条未读`,
   newMessage: "收到一条新消息",
   newMail: "收到一封新邮件",
   wechatPreview: "你收到了一条消息",
@@ -83,6 +85,7 @@ export const en: MessagesText = {
   qqNotifications: "QQ notifications",
   wechatReminders: "WeChat reminders",
   newReminder: "New reminder",
+  unreadCount: (count) => `${count} unread`,
   newMessage: "New message",
   newMail: "New email",
   wechatPreview: "You received a message",

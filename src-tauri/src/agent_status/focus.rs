@@ -8,6 +8,7 @@ use super::session_process::{ancestor_chain, session_process_chain};
 use super::session_records::{self, SessionRecord};
 use super::wezterm::{self, WEZTERM_APP};
 use super::window_focus::{self, app_name, SessionHints};
+use super::{antigravity, dsh, workbuddy};
 use crate::system::windows_home_dir;
 use crate::platform;
 
@@ -140,7 +141,13 @@ pub(super) fn focus_session(
     let handle = orca_handle(&lookup, &chain, seen.as_ref(), &mut log);
 
     let remembered_app = seen.as_ref().and_then(|seen| seen.host_exe.as_deref()).map(app_name);
-    let prefer_app = if handle.is_some() { Some(orca::ORCA_APP.to_string()) } else { remembered_app };
+    let prefer_app = if handle.is_some() { Some(orca::ORCA_APP.to_string()) } else { remembered_app }
+        .or_else(|| match provider {
+            workbuddy::PROVIDER => Some(workbuddy::APP.to_string()),
+            antigravity::PROVIDER => Some(antigravity::APP.to_string()),
+            dsh::PROVIDER => dsh::running_app(),
+            _ => None,
+        });
     if let Some(app) = &prefer_app {
         log.note(format!("prefer={app}"));
     }
@@ -169,6 +176,10 @@ pub(super) fn focus_session(
         let selected = wezterm::activate_tab_titled(exe.as_deref().map(Path::new), title);
         log.note(if selected { "wezterm-tab=selected" } else { "wezterm-tab=none" });
     }
+    #[cfg(target_os = "macos")]
+    if let Some(selected) = window_focus::select_mac_terminal_tab(&focused, &chain) {
+        log.note(if selected { "mac-tab=selected" } else { "mac-tab=none" });
+    }
     if let Some(title) = title.filter(|_| focused.app == WINDOWS_TERMINAL_APP) {
         let selected = window_focus::select_terminal_tab(&focused, title);
         log.note(if selected { "wt-tab=selected" } else { "wt-tab=none" });
@@ -195,9 +206,9 @@ fn foreground_process_id() -> u32 {
     crate::win32::process::window_process_id(crate::win32::window::foreground_window())
 }
 
-#[cfg(not(windows))]
+#[cfg(target_os = "macos")]
 fn foreground_process_id() -> u32 {
-    0
+    crate::macos::apps::frontmost_pid().and_then(|pid| u32::try_from(pid).ok()).unwrap_or(0)
 }
 
 #[derive(Debug, serde::Deserialize)]

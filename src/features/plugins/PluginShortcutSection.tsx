@@ -4,7 +4,8 @@ import { ShortcutResetButton } from "../../components/controls/ShortcutResetButt
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsRow } from "../../components/settings/SettingsRow";
 import { useErrorText, useLocale, useTranslation } from "../../i18n";
-import { buildShortcutFromEvent } from "../clipboard/shortcut";
+import { buildShortcutFromEvent, shortcutLabel } from "../clipboard/shortcut";
+import { useShortcutCapture } from "../clipboard/useShortcutCapture";
 import { listPlugins, setPluginKeybinding, type PluginsSnapshot } from "./api";
 import { pluginShortcutRows, type PluginShortcutRow } from "./pluginShortcuts";
 import "../clipboard/ClipboardSettingsSection.css";
@@ -36,16 +37,11 @@ export function PluginShortcutSection({ takenBy, onChanged, action, hideWhenEmpt
     return () => window.removeEventListener("focus", refresh);
   }, [refresh]);
 
-  if (!snapshot) return null;
-  const rows = pluginShortcutRows(snapshot.plugins);
-  if (hideWhenEmpty && rows.length === 0) return null;
-  const name = (row: PluginShortcutRow) => `${row.title[locale]} · ${row.pluginName[locale]}`;
-
   const save = (row: PluginShortcutRow, keybinding: string | null) => {
     if (keybinding) {
       const owner = takenBy(keybinding, row.key);
       if (owner) {
-        setErrors((current) => ({ ...current, [row.key]: text.taken(keybinding, owner) }));
+        setErrors((current) => ({ ...current, [row.key]: text.taken(shortcutLabel(keybinding), owner) }));
         return;
       }
     }
@@ -58,6 +54,18 @@ export function PluginShortcutSection({ takenBy, onChanged, action, hideWhenEmpt
       })
       .catch((error: unknown) => setErrors((current) => ({ ...current, [row.key]: errorText(error) })));
   };
+
+  useShortcutCapture(recording !== null, (shortcut) => {
+    const row = pluginShortcutRows(snapshot?.plugins ?? []).find((candidate) => candidate.key === recording);
+    if (!row) return;
+    setRecording(null);
+    save(row, shortcut);
+  });
+
+  if (!snapshot) return null;
+  const rows = pluginShortcutRows(snapshot.plugins);
+  if (hideWhenEmpty && rows.length === 0) return null;
+  const name = (row: PluginShortcutRow) => `${row.title[locale]} · ${row.pluginName[locale]}`;
 
   const record = (row: PluginShortcutRow, event: ReactKeyboardEvent<HTMLButtonElement>) => {
     if (recording !== row.key) return;
@@ -81,11 +89,11 @@ export function PluginShortcutSection({ takenBy, onChanged, action, hideWhenEmpt
             <div className="shortcut-control">
               <div className="shortcut-control__meta">
                 <span>{name(row)}</span>
-                <strong>{row.shortcut ?? (row.changed && row.defaultShortcut ? text.pluginOff : text.pluginNotSet)}</strong>
+                <strong>{row.shortcut ? shortcutLabel(row.shortcut) : (row.changed && row.defaultShortcut ? text.pluginOff : text.pluginNotSet)}</strong>
               </div>
               <div className="shortcut-control__actions">
                 <ShortcutResetButton
-                  label={row.defaultShortcut ? text.reset(row.defaultShortcut) : text.pluginClear}
+                  label={row.defaultShortcut ? text.reset(shortcutLabel(row.defaultShortcut)) : text.pluginClear}
                   isDefault={!row.changed}
                   onReset={() => save(row, null)}
                 />
@@ -98,12 +106,12 @@ export function PluginShortcutSection({ takenBy, onChanged, action, hideWhenEmpt
                   className={`shortcut-record-button${recording === row.key ? " shortcut-record-button--recording" : ""}`}
                   type="button"
                   aria-label={`${text.pluginRecord}: ${name(row)}`}
-                  onClick={() => setRecording(row.key)}
+                  onClick={(event) => { event.currentTarget.focus(); setRecording(row.key); }}
                   onKeyDown={(event) => record(row, event)}
                   onBlur={() => setRecording((current) => (current === row.key ? null : current))}
                 >
                   <Keyboard size={14} strokeWidth={2.3} />
-                  <span>{recording === row.key ? text.pluginPressKeys : row.shortcut ?? text.pluginRecord}</span>
+                  <span>{recording === row.key ? text.pluginPressKeys : row.shortcut ? shortcutLabel(row.shortcut) : text.pluginRecord}</span>
                 </button>
               </div>
             </div>

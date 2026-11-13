@@ -13,8 +13,13 @@ type ContentTransition = {
   previousAnimated: boolean;
 };
 
-function MessageContent({ preview }: { preview: MessagePreview }) {
+function MessageContent({ preview, bodyOnly }: { preview: MessagePreview; bodyOnly: boolean }) {
   const t = useTranslation();
+  if (bodyOnly) {
+    const ownBody = preview.source === "qq" || (preview.source === "wechat" && preview.chat) || (preview.source === "plugin" && preview.body.trim());
+    const body = ownBody ? preview.body.trim() || t.messages.newMessage : messagePreviewText(preview, t.messages);
+    return <span className="island-message-preview__body">{body}</span>;
+  }
   return <>
     <MessageSourceIcon source={preview.source} size={16} account={preview.account} iconUrl={preview.iconUrl} />
     {preview.source === "qq" || (preview.source === "plugin" && preview.body.trim()) ? (
@@ -32,10 +37,12 @@ function MessageContent({ preview }: { preview: MessagePreview }) {
 export function CollapsedMessageContent({
   preview,
   enabled,
+  bodyOnly = false,
   children,
 }: {
   preview: MessagePreview | null;
   enabled: boolean;
+  bodyOnly?: boolean;
   children: ReactNode;
 }) {
   const t = useTranslation();
@@ -69,7 +76,7 @@ export function CollapsedMessageContent({
   }, [moving, version]);
 
   const label = current ? t.messages.qqPreview(t.messages.sourceLabels[current.source], messagePreviewText(current, t.messages)) : undefined;
-  const row = (message: MessagePreview | null) => message ? <MessageContent preview={message} /> : children;
+  const row = (message: MessagePreview | null) => message ? <MessageContent preview={message} bodyOnly={bodyOnly} /> : children;
 
   return (
     <span className="island__summary" role="status" aria-live="polite" aria-atomic="true" aria-label={label}

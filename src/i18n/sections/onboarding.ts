@@ -8,6 +8,7 @@ export type OnboardingText = {
   escHint: string;
   islandName: string;
   noIsland: string;
+  noIslandMac: string;
   hello: {
     title: string;
     lead: string;
@@ -40,6 +41,7 @@ export type OnboardingText = {
     expandHover: string;
     expandClick: string;
     drop: string;
+    dropMac: string;
     dropHint: string;
     shortcut: (keys: string) => string;
     shortcutHint: string;
@@ -50,11 +52,13 @@ export type OnboardingText = {
     lead: string;
     launchAtStartup: string;
     launchAtStartupHint: string;
+    launchAtStartupHintMac: string;
     later: string;
     connectAgents: string;
     addMail: string;
     openSettings: string;
     findLater: string;
+    findLaterMac: string;
     finish: string;
   };
   greeting: Record<"hello" | "ready", { title: string; body: string }>;
@@ -77,6 +81,7 @@ export const zhCN: OnboardingText = {
   escHint: "按 Esc 随时退出",
   islandName: "浮屿",
   noIsland: "岛现在藏起来了。点托盘图标让它出来，引导会跟着它。",
+  noIslandMac: "岛现在藏起来了。点菜单栏里的浮屿图标让它出来，引导会跟着它。",
   hello: {
     title: "你好，这就是浮屿",
     lead: "亮着的就是它：平时安静地停在屏幕顶部，有事才变大。花一分钟认识一下。",
@@ -127,6 +132,7 @@ export const zhCN: OnboardingText = {
     expandHover: "悬停",
     expandClick: "点击",
     drop: "从桌面或资源管理器拖一个文件到岛上",
+    dropMac: "从桌面或访达拖一个文件到岛上",
     dropHint: "文件只记路径，不会被移动。",
     shortcut: (keys) => `按一下 ${keys}，剪贴板会弹出来`,
     shortcutHint: "在任何程序里都能这样打开。",
@@ -137,11 +143,13 @@ export const zhCN: OnboardingText = {
     lead: "演示的内容会在引导结束时消失，岛会留在原地。",
     launchAtStartup: "开机时启动",
     launchAtStartupHint: "登录 Windows 后岛自动出现",
+    launchAtStartupHintMac: "登录 Mac 后岛自动出现",
     later: "下面这些要多一步设置。点一下会结束引导并打开设置，以后再弄也行：",
     connectAgents: "连接 AI 编程工具",
     addMail: "添加邮箱",
     openSettings: "打开设置",
     findLater: "以后想改什么：右键托盘里的浮屿图标，选「设置」。",
+    findLaterMac: "以后想改什么：点菜单栏里的浮屿图标，选「设置」。",
     finish: "开始使用",
   },
   greeting: {
@@ -167,6 +175,7 @@ export const en: OnboardingText = {
   escHint: "Press Esc to leave at any time",
   islandName: "Fuyu",
   noIsland: "The island is hidden. Click the tray icon to bring it back, and the guide will follow it.",
+  noIslandMac: "The island is hidden. Click the Fuyu icon in the menu bar to bring it back, and the guide will follow it.",
   hello: {
     title: "Hi, this is Fuyu",
     lead: "That's it, lit up: it rests quietly at the top of the screen and grows when something needs you. Take a minute to meet it.",
@@ -217,6 +226,7 @@ export const en: OnboardingText = {
     expandHover: "Hover",
     expandClick: "Click",
     drop: "Drag a file from the desktop or Explorer onto the island",
+    dropMac: "Drag a file from the desktop or Finder onto the island",
     dropHint: "Only its path is kept; the file stays where it is.",
     shortcut: (keys) => `Press ${keys} and the clipboard pops up`,
     shortcutHint: "It works in any app.",
@@ -227,11 +237,13 @@ export const en: OnboardingText = {
     lead: "The demo content goes away when the guide ends; the island stays where it is.",
     launchAtStartup: "Start with Windows",
     launchAtStartupHint: "The island appears after you sign in",
+    launchAtStartupHintMac: "The island appears after you log in to your Mac",
     later: "These take one more step. Clicking one ends the guide and opens Settings; later is fine too:",
     connectAgents: "Connect AI coding tools",
     addMail: "Add a mail account",
     openSettings: "Open Settings",
     findLater: "To change anything later, right-click the Fuyu icon in the tray and pick Settings.",
+    findLaterMac: "To change anything later, click the Fuyu icon in the menu bar and pick Settings.",
     finish: "Get started",
   },
   greeting: {

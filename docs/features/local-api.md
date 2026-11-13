@@ -67,6 +67,16 @@
 | DELETE | `/v1/dev/plugins/{id}` | — | 移除，返回 `{ removed }` |
 | GET | `/v1/dev/plugins/{id}/log?after=<序号>` | — | 序号大于 `after` 的日志行 `{ lines: [{ seq, text }], next, status, error }`；下次用 `next` 作为 `after`。在设置里点"重新加载"后序号会从头开始（`next` 变小） |
 
+## 开发版专用：岛屿实验台
+
+只在开发版（`pnpm tauri dev`）里有，正式版里是 404；不需要「允许修改」。给 `pnpm lab` 的实验台网页用，见 [island-lab.md](island-lab.md)。
+
+| 方法 | 路径 | 请求体 | 说明 |
+|---|---|---|---|
+| POST | `/v1/dev/island/emit` | `{ "event": "device-alert", "payload": {...} }` | 把这个事件发给岛，载荷和真后端发的一样 |
+| POST | `/v1/dev/island/action` | `{ "action": "open", "page": "agents" }` | `open`（要 `page`）、`collapse`、`tuck`、`reveal` |
+| PUT / DELETE | `/v1/dev/island/notch` | `{ "width": 208, "height": 37.5 }` | 把刘海当成这个尺寸（逻辑点）；`DELETE` 取消 |
+
 ## AI Agent 状态
 
 除了内置的 Codex 和 Claude Code，任何工具都可以通过这个接口点亮状态灯，并在折叠的岛上显示会话标题（没有品牌图标时显示机器人图标）：

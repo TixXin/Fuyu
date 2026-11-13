@@ -1,8 +1,8 @@
 use tauri::{Monitor, PhysicalPosition, PhysicalSize, WebviewWindow};
 #[cfg(not(target_os = "macos"))]
-use tauri::Position;
+use tauri::{Position, Size};
 #[cfg(target_os = "macos")]
-use tauri::{LogicalPosition, Position};
+use tauri::{LogicalPosition, LogicalSize, Position, Size};
 
 #[cfg(not(target_os = "macos"))]
 pub(crate) fn monitor_origin(monitor: &Monitor) -> PhysicalPosition<i32> {
@@ -43,6 +43,16 @@ pub(crate) fn window_scale(window: &WebviewWindow) -> Result<f64, String> {
 #[cfg(not(target_os = "macos"))]
 pub(crate) fn set_window_position(window: &WebviewWindow, position: PhysicalPosition<i32>) -> Result<(), String> {
     window.set_position(Position::Physical(position)).map_err(|error| error.to_string())
+}
+
+#[cfg(not(target_os = "macos"))]
+pub(crate) fn window_size(window: &WebviewWindow) -> Result<PhysicalSize<u32>, String> {
+    window.outer_size().map_err(|error| error.to_string())
+}
+
+#[cfg(not(target_os = "macos"))]
+pub(crate) fn set_window_size(window: &WebviewWindow, size: PhysicalSize<u32>) -> Result<(), String> {
+    window.set_size(Size::Physical(size)).map_err(|error| error.to_string())
 }
 
 #[cfg(windows)]
@@ -111,6 +121,12 @@ pub(crate) fn window_scale(_window: &WebviewWindow) -> Result<f64, String> {
 pub(crate) fn set_window_position(window: &WebviewWindow, position: PhysicalPosition<i32>) -> Result<(), String> {
     let logical = LogicalPosition::new(f64::from(position.x), f64::from(position.y));
     window.set_position(Position::Logical(logical)).map_err(|error| error.to_string())
+}
+
+#[cfg(target_os = "macos")]
+pub(crate) fn set_window_size(window: &WebviewWindow, size: PhysicalSize<u32>) -> Result<(), String> {
+    let logical = LogicalSize::new(f64::from(size.width), f64::from(size.height));
+    window.set_size(Size::Logical(logical)).map_err(|error| error.to_string())
 }
 
 #[cfg(target_os = "macos")]

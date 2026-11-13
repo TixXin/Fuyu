@@ -1,6 +1,7 @@
 use std::ptr::NonNull;
 
-use objc2_core_foundation::{CFRetained, CFString, CFType};
+use objc2_core_foundation::{CFArray, CFRetained, CFString, CFType};
+use objc2_foundation::NSURL;
 
 const MESSAGING_TIMEOUT_SECONDS: f32 = 0.5;
 
@@ -8,6 +9,7 @@ const MESSAGING_TIMEOUT_SECONDS: f32 = 0.5;
 extern "C" {
     fn AXIsProcessTrusted() -> u8;
     fn AXUIElementCreateSystemWide() -> *mut CFType;
+    fn AXUIElementCreateApplication(pid: i32) -> *mut CFType;
     fn AXUIElementSetMessagingTimeout(element: *const CFType, timeout: f32) -> i32;
     fn AXUIElementCopyAttributeValue(element: *const CFType, attribute: *const CFString, value: *mut *mut CFType) -> i32;
 }
@@ -24,6 +26,37 @@ fn attribute(element: &CFType, name: &str) -> Option<CFRetained<CFType>> {
         return None;
     }
     NonNull::new(value).map(|value| unsafe { CFRetained::from_raw(value) })
+}
+
+pub(crate) struct Element(CFRetained<CFType>);
+
+impl Element {
+    pub(crate) fn application(pid: i32) -> Option<Self> {
+        let element = unsafe { CFRetained::from_raw(NonNull::new(AXUIElementCreateApplication(pid))?) };
+        unsafe { AXUIElementSetMessagingTimeout(&*element, MESSAGING_TIMEOUT_SECONDS) };
+        Some(Self(element))
+    }
+
+    pub(crate) fn children(&self) -> Vec<Element> {
+        let Some(value) = attribute(&self.0, "AXChildren") else {
+            return Vec::new();
+        };
+        let Some(array) = value.downcast_ref::<CFArray>() else {
+            return Vec::new();
+        };
+        let array: &CFArray<CFType> = unsafe { array.cast_unchecked() };
+        array.iter().map(Element).collect()
+    }
+
+    pub(crate) fn text(&self, name: &str) -> Option<String> {
+        Some(attribute(&self.0, name)?.downcast_ref::<CFString>()?.to_string())
+    }
+
+    pub(crate) fn url_path(&self, name: &str) -> Option<String> {
+        let value = attribute(&self.0, name)?;
+        let url: &NSURL = unsafe { &*(CFRetained::as_ptr(&value).as_ptr() as *const NSURL) };
+        Some(url.path()?.to_string())
+    }
 }
 
 pub(crate) fn selected_text() -> Option<String> {

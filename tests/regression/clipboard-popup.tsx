@@ -111,10 +111,10 @@ const ctrlClick = (frame: string, index: number) => act(async () => {
 
 async function runChecks() {
   try {
-    check(chips("dark") === "全部|收藏|图片|文件|链接|颜色|片段|#设置", "筛选胶囊：全部、收藏、图片、文件、链接、颜色、片段，再加常用标签");
+    check(chips("dark") === "全部|收藏|图片|文件|网址|颜色|常用语|#设置", "筛选胶囊：全部、收藏、图片、文件、网址、颜色、常用语，再加常用标签");
     check(rows("dark").length === ITEMS.length && rows("dark")[0].classList.contains("clipboard-popup__item--selected"), "每条一行，打开时第 1 条选中");
     check($("dark", ".clipboard-popup__item--selected .clipboard-popup__enter")?.textContent === "粘贴", "选中的那行写着「↵ 粘贴」");
-    check(rows("dark")[0].querySelector(".clipboard-popup__note")?.textContent?.startsWith("VS Code · 刚刚"), "第二行写来源程序和时间");
+    check(rows("dark")[0].querySelector(".clipboard-popup__note")?.textContent?.startsWith("VS Code") && !rows("dark")[0].querySelector(".clipboard-popup__time") && rows("dark")[1].querySelector(".clipboard-popup__time")?.textContent === "2 分钟前", "第二行写来源程序，时间放在右边；选中的行右边换成「↵ 粘贴」");
     check(rows("dark")[2].querySelector(".clipboard-popup__preview")?.textContent === "图片 770×148" && rows("dark")[2].querySelector("img"), "图片写成「图片 宽×高」，行首是缩略图");
     check(rows("dark")[3].querySelector(".clipboard-popup__tag")?.textContent === "#设置", "标签在第二行开头");
     check(rows("dark")[1].querySelector(".clipboard-popup__star--on"), "收藏过的行尾有星");
@@ -143,12 +143,25 @@ async function runChecks() {
     check($("dark", ".clipboard-popup__empty strong")?.textContent === "没有匹配「发票」的记录", "没搜到时写出搜的词");
     await type("dark", "");
 
-    await act(async () => { $$("dark", ".clipboard-popup__chip").find((chip) => chip.textContent === "片段")!.click(); });
+    await act(async () => { $$("dark", ".clipboard-popup__chip").find((chip) => chip.textContent === "常用语")!.click(); });
     check($("dark", ".clipboard-popup__section") && rows("dark").length === 2 && rows("dark")[0].querySelector(".clipboard-popup__note")?.textContent?.includes("⏎"), "片段页：每个片段一行，第二行是内容");
     await key("dark", { key: "Enter" });
     check(calls.includes("snippet:s1"), "片段页 Enter 粘贴片段");
 
     check(getComputedStyle($("light", ".clipboard-popup")!).backgroundColor === "rgb(246, 246, 248)", "浅色：浅底");
+
+    const list = $("light", ".clipboard-popup__list")!;
+    const listBox = list.getBoundingClientRect();
+    const ninth = rows("light")[8].getBoundingClientRect();
+    const tenth = rows("light")[9].getBoundingClientRect();
+    check(Math.abs(list.clientHeight - 412) <= 1 && ninth.bottom <= listBox.bottom && tenth.top >= listBox.bottom - 8, `列表正好放下 9 行，第 9 行不被切掉（列表高 ${list.clientHeight}）`);
+    await act(async () => { rows("light")[9].dispatchEvent(new PointerEvent("pointermove", { bubbles: true })); });
+    check(rows("light")[9].classList.contains("clipboard-popup__item--selected") && list.scrollTop === 0, "鼠标移到露在外面的第 10 行只选中它，列表不滚动");
+    const callsBefore = calls.length;
+    await key("light", { key: "3", metaKey: true, ctrlKey: true });
+    check(rows("light")[2].classList.contains("clipboard-popup__item--selected") && $("light", ".clipboard-look") && !calls.slice(callsBefore).some((call) => call.startsWith("paste")),"⌘ 加数字键只选中那一行并预览，不粘贴");
+    await key("light", { key: " " });
+    check($$("wide", ".clipboard-popup__section")[0]?.textContent === "今天", "宽版：列表按今天、昨天、更早分段");
 
     check($("wide", ".clipboard-popup__pane-body")?.textContent === ITEMS[0].text, "宽版：右边是选中这条的完整内容");
     await key("wide", { key: "ArrowDown" });

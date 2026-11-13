@@ -71,9 +71,27 @@ pub fn toggle_translation_window(app: AppHandle) -> Result<(), String> {
         HAS_POSITIONED_WINDOW.store(true, Ordering::Relaxed);
     }
     window.show().map_err(|error| error.to_string())?;
-    window.set_focus().map_err(|error| error.to_string())?;
+    focus_translation_window(&app, &window)?;
     let _ = app.emit(TRANSLATION_WINDOW_OPENED_EVENT, ());
     Ok(())
+}
+
+#[cfg(target_os = "macos")]
+fn focus_translation_window(app: &AppHandle, _: &tauri::WebviewWindow) -> Result<(), String> {
+    let handle = app.clone();
+    app.run_on_main_thread(move || {
+        if !crate::macos::island_panel::make_panel_key(&handle, WINDOW_LABEL) {
+            if let Some(window) = handle.get_webview_window(WINDOW_LABEL) {
+                let _ = window.set_focus();
+            }
+        }
+    })
+    .map_err(|error| error.to_string())
+}
+
+#[cfg(not(target_os = "macos"))]
+fn focus_translation_window(_: &AppHandle, window: &tauri::WebviewWindow) -> Result<(), String> {
+    window.set_focus().map_err(|error| error.to_string())
 }
 
 #[tauri::command]
@@ -82,7 +100,7 @@ pub fn present_translation_window(app: AppHandle) -> Result<(), String> {
         .get_webview_window(WINDOW_LABEL)
         .ok_or_else(|| "Translation window was not found.".to_string())?;
     if window.is_visible().map_err(|error| error.to_string())? {
-        window.set_focus().map_err(|error| error.to_string())?;
+        focus_translation_window(&app, &window)?;
         let _ = app.emit(TRANSLATION_WINDOW_OPENED_EVENT, ());
         return Ok(());
     }

@@ -24,6 +24,7 @@ pub(super) enum ClipboardCapture {
         hash: String,
         paths: Vec<String>,
         preview: String,
+        pixels: Option<(usize, usize, Vec<u8>)>,
     },
     Image {
         hash: String,
@@ -69,7 +70,12 @@ pub(super) fn read_clipboard_capture(kinds: CaptureKinds) -> Result<Option<Clipb
             let paths: Vec<String> = paths.iter().map(|path: &PathBuf| path.display().to_string()).collect();
             if !paths.is_empty() && !screenshot {
                 let hash = hash_bytes([b"files:".as_slice(), paths.join("\n").as_bytes()].concat().as_slice());
-                return Ok(Some(ClipboardCapture::Files { hash, preview: files_preview(&paths), paths }));
+                let unreadable_image = matches!(paths.as_slice(), [path] if super::file_image::is_image_file(path) && std::fs::File::open(path).is_err());
+                let pixels = unreadable_image
+                    .then(|| clipboard.get_image().ok())
+                    .flatten()
+                    .map(|image| (image.width, image.height, image.bytes.into_owned()));
+                return Ok(Some(ClipboardCapture::Files { hash, preview: files_preview(&paths), paths, pixels }));
             }
         }
     }

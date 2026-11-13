@@ -34,6 +34,7 @@ Condensed from the guide's "清单" and "岛上页面" sections; the JSON schema
 | `apiVersion` | Required. Write `2` (views, events, storage, notifications need it; version 1 ignores them). |
 | `minAppVersion` | Lowest Fuyu version; older islands show "can't load". Set it when using newer features (`webview`, `frame: "none"` need 0.3.4). |
 | `runtime` | `{ "type": "process", "command": "<relative path>", "args": [] }` or `{ "type": "none" }` (manifest only, e.g. a sound pack). Command by extension: `.ps1` (Windows PowerShell 5.1), `.exe`, `.js`/`.mjs`/`.cjs` (needs Node.js). No `.cmd`/`.bat`. |
+| `platforms` | Optional `["windows", "macos"]`. Default: `.exe` is Windows only, the rest run on both. On macOS `.ps1` runs with PowerShell 7 (`pwsh`); Windows PowerShell 5.1 features are not there. |
 | `permissions` | Granted when the user enables the plugin. A new version asking for more pauses the plugin until the user agrees. |
 | `optionalPermissions` | Not granted up front; call `permissions.request` before use. Same values as `permissions`. |
 | `activationEvents` | Omit = runs as long as the island. Otherwise any of `onStartup`, `onStartupFinished`, `onCommand:<id>`, `onView:<id>`, `onEvent:<event>`, `onSchedule:<5-1440 minutes>`, `onUri`. Commands and views add their own `onCommand`/`onView`, so `[]` = "only when used". Idle 60 s → `shutdown`. |

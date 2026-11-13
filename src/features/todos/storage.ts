@@ -32,6 +32,7 @@ export function readLocalTodoKeys(): LocalTodoKeys {
     "focusd-island-daily-note": readString(DAILY_NOTE_STORAGE_KEY),
     "focusd-island-active-todo": readString(ACTIVE_TODO_STORAGE_KEY),
     "focusd-island-current-date": readString(TODO_DATE_STORAGE_KEY),
+    "fuyu-todos-migrated-v1": readString(TODOS_MIGRATED_STORAGE_KEY),
   };
 }
 

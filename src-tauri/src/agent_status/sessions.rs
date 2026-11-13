@@ -80,7 +80,7 @@ pub(super) struct SessionTail {
 }
 
 impl SessionTail {
-    fn settle(mut self) -> Self {
+    pub(super) fn settle(mut self) -> Self {
         if !matches!(self.state, TurnState::Working | TurnState::AwaitingUser) {
             self.current_tool = None;
             self.subagents = 0;

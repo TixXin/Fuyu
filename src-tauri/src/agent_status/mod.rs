@@ -1,4 +1,4 @@
-#[cfg_attr(not(windows), path = "approval_hotkeys_unsupported.rs")]
+#[cfg_attr(target_os = "macos", path = "approval_hotkeys_macos.rs")]
 pub(crate) mod approval_hotkeys;
 mod background_tasks;
 mod claude_hooks;
@@ -41,6 +41,9 @@ mod usage;
 mod push_detail;
 mod wezterm;
 mod window_focus;
+mod workbuddy;
+mod antigravity;
+mod dsh;
 
 use serde::Serialize;
 use serde_json::{json, Value};
@@ -68,9 +71,18 @@ use snapshot::{
 
 pub(super) const AGENT_STATUS_FILE_NAME: &str = "agent-status.json";
 
+#[cfg(windows)]
 pub(super) const AGENT_RUNNING_SCRIPT_FILE_NAME: &str = "fuyu-agent-running.cmd";
+#[cfg(windows)]
 pub(super) const AGENT_STATUS_SCRIPT_FILE_NAME: &str = "fuyu-agent-status.ps1";
+#[cfg(windows)]
 pub(super) const AGENT_SESSION_SCRIPT_FILE_NAME: &str = "fuyu-agent-session.ps1";
+#[cfg(not(windows))]
+pub(super) const AGENT_RUNNING_SCRIPT_FILE_NAME: &str = "fuyu-agent-running.sh";
+#[cfg(not(windows))]
+pub(super) const AGENT_STATUS_SCRIPT_FILE_NAME: &str = "fuyu-agent-status.sh";
+#[cfg(not(windows))]
+pub(super) const AGENT_SESSION_SCRIPT_FILE_NAME: &str = "fuyu-agent-session.sh";
 
 pub(super) const AGENT_HOOK_SIGNATURE: &str = "fuyu-agent-";
 const LEGACY_AGENT_HOOK_SIGNATURE: &str = "focusd-agent-";
@@ -81,15 +93,30 @@ pub(super) fn is_island_hook_text(text: &str) -> bool {
     text.contains(AGENT_HOOK_SIGNATURE) || text.contains(LEGACY_AGENT_HOOK_SIGNATURE)
 }
 pub(super) const AGENT_RUNNING_NOTIFICATION_ARG: &str = "notification";
+#[cfg(windows)]
 pub(super) const AGENT_RUNNING_SCRIPT: &str =
     include_str!("hooks/fuyu-agent-running.cmd");
+#[cfg(windows)]
 pub(super) const AGENT_STATUS_SCRIPT: &str =
     include_str!("hooks/fuyu-agent-status.ps1");
+#[cfg(windows)]
 pub(super) const AGENT_SESSION_SCRIPT: &str =
     include_str!("hooks/fuyu-agent-session.ps1");
+#[cfg(windows)]
 pub(super) const AGENT_APPROVAL_SCRIPT_FILE_NAME: &str = "fuyu-agent-approval.ps1";
+#[cfg(windows)]
 pub(super) const AGENT_APPROVAL_SCRIPT: &str =
     include_str!("hooks/fuyu-agent-approval.ps1");
+#[cfg(not(windows))]
+pub(super) const AGENT_RUNNING_SCRIPT: &str = include_str!("hooks/fuyu-agent-running.sh");
+#[cfg(not(windows))]
+pub(super) const AGENT_STATUS_SCRIPT: &str = include_str!("hooks/fuyu-agent-status.sh");
+#[cfg(not(windows))]
+pub(super) const AGENT_SESSION_SCRIPT: &str = include_str!("hooks/fuyu-agent-session.sh");
+#[cfg(not(windows))]
+pub(super) const AGENT_APPROVAL_SCRIPT_FILE_NAME: &str = "fuyu-agent-approval.sh";
+#[cfg(not(windows))]
+pub(super) const AGENT_APPROVAL_SCRIPT: &str = include_str!("hooks/fuyu-agent-approval.sh");
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -257,6 +284,8 @@ fn install_agent_status_hooks_now(app: &AppHandle) -> Result<AgentHooksInstallRe
         &status_script_path,
         approval_hook().as_ref(),
     )?;
+    workbuddy::install_hooks(&home_dir, &running_script_path)?;
+    antigravity::install_hooks(&home_dir, &running_script_path)?;
 
     Ok(AgentHooksInstallResult {
         scripts_dir: app_dir.to_string_lossy().to_string(),
@@ -309,6 +338,12 @@ pub(crate) fn reinstall_hooks_after_rename(app: &AppHandle) -> Result<bool, Stri
             &status_script_path,
             approval_hook().as_ref(),
         )?;
+    }
+    if workbuddy::has_hooks(&home_dir) {
+        workbuddy::install_hooks(&home_dir, &running_script_path)?;
+    }
+    if antigravity::has_hooks(&home_dir) {
+        antigravity::install_hooks(&home_dir, &running_script_path)?;
     }
     for remote in remote_setup::install_hooks(&app_dir) {
         if let Some(error) = remote.error {
@@ -570,6 +605,7 @@ fn read_agent_hooks_state(app_dir: &Path) -> Result<AgentHooksState, String> {
     })
 }
 
+#[cfg(windows)]
 pub(super) fn install_agent_hook_scripts(app_dir: &Path) -> Result<(), String> {
     remove_legacy_hook_inputs(app_dir);
     write_text_file(
@@ -588,6 +624,23 @@ pub(super) fn install_agent_hook_scripts(app_dir: &Path) -> Result<(), String> {
         &app_dir.join(AGENT_APPROVAL_SCRIPT_FILE_NAME),
         &normalize_windows_line_endings(AGENT_APPROVAL_SCRIPT),
     )
+}
+
+#[cfg(not(windows))]
+pub(super) fn install_agent_hook_scripts(app_dir: &Path) -> Result<(), String> {
+    use std::os::unix::fs::PermissionsExt;
+    remove_legacy_hook_inputs(app_dir);
+    for (name, text) in [
+        (AGENT_RUNNING_SCRIPT_FILE_NAME, AGENT_RUNNING_SCRIPT),
+        (AGENT_STATUS_SCRIPT_FILE_NAME, AGENT_STATUS_SCRIPT),
+        (AGENT_SESSION_SCRIPT_FILE_NAME, AGENT_SESSION_SCRIPT),
+        (AGENT_APPROVAL_SCRIPT_FILE_NAME, AGENT_APPROVAL_SCRIPT),
+    ] {
+        let path = app_dir.join(name);
+        write_text_file(&path, &text.replace("\r\n", "\n"))?;
+        fs::set_permissions(&path, fs::Permissions::from_mode(0o755)).map_err(|error| format!("Failed to make {} runnable: {error}", path.display()))?;
+    }
+    Ok(())
 }
 
 fn approval_hook() -> Option<claude_hooks::ApprovalHook> {

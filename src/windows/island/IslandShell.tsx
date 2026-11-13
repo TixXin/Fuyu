@@ -17,6 +17,8 @@ import type { PluginNotificationsController } from "../../features/plugins/usePl
 import { useTranslation } from "../../i18n";
 import { isPluginPage, type IslandFeatures } from "./features";
 import { IslandCollapsedBar } from "./IslandCollapsedBar";
+import { useIslandNotch } from "./notch";
+import { NotchPopupBand } from "./NotchPopupBand";
 import { IslandHeader } from "./IslandHeader";
 import { IconButtonTooltip } from "../../components/IconButtonTooltip";
 import type { PluginViewEntry } from "../../features/plugin-views/api";
@@ -150,6 +152,7 @@ export function IslandShell({
   children,
 }: IslandShellProps) {
   const t = useTranslation();
+  const notch = useIslandNotch();
   const isExpanded = mode === "expanded";
   const isLiquidGlass = appearanceMode === "liquidGlass";
   const { handleGlassPointerMove, resetGlassPointer } = useGlassPointer(isLiquidGlass);
@@ -261,6 +264,7 @@ export function IslandShell({
           aria-hidden={!isExpanded}
           inert={!isExpanded}
         >
+          {popup && notch && <NotchPopupBand page={page} agentVisualState={agentVisualState} onCollapse={onCollapse} />}
           <IslandHeader
             page={page}
             features={features}

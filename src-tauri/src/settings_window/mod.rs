@@ -1,4 +1,6 @@
 mod bounds;
+#[cfg(target_os = "macos")]
+mod mac_chrome;
 mod sizing;
 
 use sizing::Size;
@@ -26,6 +28,8 @@ pub fn open(app: &AppHandle) -> Result<(), String> {
         .ok_or_else(|| "Settings window config was not found.".to_string())?
         .clone();
     let mut config = config;
+    #[cfg(target_os = "macos")]
+    mac_chrome::apply(&mut config);
     let min = Size {
         width: config.min_width.unwrap_or(0.0),
         height: config.min_height.unwrap_or(0.0),

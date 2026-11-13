@@ -50,8 +50,10 @@ fn intersect(a: RECT, b: RECT) -> Option<RECT> {
     (rect.right > rect.left && rect.bottom > rect.top).then_some(rect)
 }
 
-pub(crate) fn localize(targets: &[Target], origin: (i32, i32), size: (u32, u32)) -> Vec<LocalTarget> {
-    let monitor = RECT { left: origin.0, top: origin.1, right: origin.0 + size.0 as i32, bottom: origin.1 + size.1 as i32 };
+pub(crate) fn localize(targets: &[Target], origin: (i32, i32), size: (u32, u32), scale: f64) -> Vec<LocalTarget> {
+    let span = |pixels: u32| if scale == 1.0 { pixels as i32 } else { (f64::from(pixels) / scale).round() as i32 };
+    let pixels = |units: i32| if scale == 1.0 { units } else { (f64::from(units) * scale).round() as i32 };
+    let monitor = RECT { left: origin.0, top: origin.1, right: origin.0 + span(size.0), bottom: origin.1 + span(size.1) };
     targets
         .iter()
         .filter_map(|target| {
@@ -59,10 +61,10 @@ pub(crate) fn localize(targets: &[Target], origin: (i32, i32), size: (u32, u32))
             Some(LocalTarget {
                 window: target.window,
                 element: target.element,
-                x: rect.left - origin.0,
-                y: rect.top - origin.1,
-                width: (rect.right - rect.left) as u32,
-                height: (rect.bottom - rect.top) as u32,
+                x: pixels(rect.left - origin.0),
+                y: pixels(rect.top - origin.1),
+                width: pixels(rect.right - rect.left) as u32,
+                height: pixels(rect.bottom - rect.top) as u32,
             })
         })
         .collect()

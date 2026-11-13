@@ -1,27 +1,8 @@
-import { useEffect, useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { Link2 } from "lucide-react";
 import { useTranslation } from "../../i18n";
-import { getClipboardLinkPreview, type ClipboardLinkPreview } from "./api";
 import { colorFormats, linkLabel, stripTracking, type ContentKind } from "./contentKind";
-
-const linkPreviews = new Map<string, Promise<ClipboardLinkPreview | null>>();
-
-function useLinkPreview(url: string | null, enabled: boolean) {
-  const [preview, setPreview] = useState<ClipboardLinkPreview | null>(null);
-  useEffect(() => {
-    setPreview(null);
-    if (!url || !enabled) return;
-    let request = linkPreviews.get(url);
-    if (!request) {
-      request = getClipboardLinkPreview(url).catch(() => null);
-      linkPreviews.set(url, request);
-    }
-    let cancelled = false;
-    void request.then((next) => { if (!cancelled) setPreview(next); });
-    return () => { cancelled = true; };
-  }, [url, enabled]);
-  return preview;
-}
+import { useLinkPreview } from "./useLinkPreview";
 
 function highlightJson(value: unknown): ReactNode[] {
   const source = JSON.stringify(value, null, 2) ?? "";

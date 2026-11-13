@@ -1,5 +1,5 @@
 import type { Translations } from "../../i18n";
-import type { AgentHooksState, AgentProvider, AgentStatusSnapshot, AgentTaskPhase, AgentTaskStatus } from "./api";
+import type { AgentHooksState, AgentProvider, AgentStatusSnapshot, AgentTaskPhase, AgentTaskStatus, SessionProvider } from "./api";
 import type { SessionFilter } from "./sessionList";
 
 export type AgentVisualState = "idle" | "running" | "attention";
@@ -17,9 +17,12 @@ export const DEFAULT_AGENT_STATUS: AgentStatusSnapshot = {
   others: [],
 };
 export const AGENT_PROVIDERS: AgentProvider[] = ["codex", "claudeCode"];
-export const AGENT_PROVIDER_LABELS: Record<AgentProvider, string> = {
+export const AGENT_PROVIDER_LABELS: Record<SessionProvider, string> = {
   codex: "Codex",
   claudeCode: "Claude Code",
+  workbuddy: "WorkBuddy",
+  antigravity: "Antigravity",
+  dsh: "DeepSeek Harness",
 };
 export type AgentStatusEntry = {
   key: string;

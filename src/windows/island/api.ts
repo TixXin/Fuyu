@@ -17,6 +17,22 @@ export function listenIslandTopAttachment(
   return listen<boolean>(TOP_ATTACHMENT_CHANGED_EVENT, ({ payload }) => handler(payload));
 }
 
+export type IslandNotch = { width: number; height: number };
+
+export const ISLAND_NOTCH_CHANGED_EVENT = "island-notch-changed";
+
+export function getIslandNotch(): Promise<IslandNotch | null> {
+  return invoke<IslandNotch | null>("get_island_notch");
+}
+
+export function setIslandNotchDrop(drop: boolean) {
+  return invoke<void>("set_island_notch_drop", { drop });
+}
+
+export function listenIslandNotch(handler: (notch: IslandNotch | null) => void): Promise<UnlistenFn> {
+  return listen<IslandNotch | null>(ISLAND_NOTCH_CHANGED_EVENT, ({ payload }) => handler(payload));
+}
+
 export type IslandEdge = "top" | "left" | "right";
 
 export const ISLAND_EDGE_CHANGED_EVENT = "island-edge-changed";
@@ -75,7 +91,7 @@ export function listenIslandResize(handler: (delta: IslandResizeDelta) => void):
 
 export const ISLAND_POSITION_CHANGED_EVENT = "island-position-changed";
 
-export type IslandLayout = { collapsedScale: number; expandedScale: number; marginY: number; underMenuBar: boolean };
+export type IslandLayout = { collapsedScale: number; expandedScale: number; marginY: number; underMenuBar: boolean; fitNotch: boolean };
 
 export type IslandInteraction = {
   mode: IslandMode;

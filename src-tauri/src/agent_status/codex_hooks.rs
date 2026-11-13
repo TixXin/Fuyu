@@ -210,6 +210,7 @@ pub(super) fn is_codex_nested_hook_header_for(header: &str, hook_path: &str) -> 
     header == format!("[[{hook_path}.hooks]]")
 }
 
+#[cfg(windows)]
 pub(super) fn agent_running_command(script_path: &Path, provider: &str) -> String {
     format!(
         "cmd.exe /d /s /c \"\"{}\" {}\"",
@@ -218,6 +219,7 @@ pub(super) fn agent_running_command(script_path: &Path, provider: &str) -> Strin
     )
 }
 
+#[cfg(windows)]
 pub(super) fn agent_running_command_with(script_path: &Path, provider: &str, arg: &str) -> String {
     format!(
         "cmd.exe /d /s /c \"\"{}\" {} {}\"",
@@ -227,6 +229,7 @@ pub(super) fn agent_running_command_with(script_path: &Path, provider: &str, arg
     )
 }
 
+#[cfg(windows)]
 pub(super) fn agent_status_command(script_path: &Path, provider: &str, phase: &str) -> String {
     format!(
         "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"{}\" {} {}",
@@ -234,6 +237,26 @@ pub(super) fn agent_status_command(script_path: &Path, provider: &str, phase: &s
         provider,
         phase
     )
+}
+
+#[cfg(not(windows))]
+fn shell_quoted(path: &Path) -> String {
+    format!("'{}'", path.to_string_lossy().replace('\'', "'\\''"))
+}
+
+#[cfg(not(windows))]
+pub(super) fn agent_running_command(script_path: &Path, provider: &str) -> String {
+    format!("/bin/sh {} {provider}", shell_quoted(script_path))
+}
+
+#[cfg(not(windows))]
+pub(super) fn agent_running_command_with(script_path: &Path, provider: &str, arg: &str) -> String {
+    format!("/bin/sh {} {provider} {arg}", shell_quoted(script_path))
+}
+
+#[cfg(not(windows))]
+pub(super) fn agent_status_command(script_path: &Path, provider: &str, phase: &str) -> String {
+    format!("/bin/sh {} {provider} {phase}", shell_quoted(script_path))
 }
 
 pub(super) fn toml_basic_string(value: &str) -> String {
@@ -244,6 +267,7 @@ pub(super) fn toml_basic_string(value: &str) -> String {
 mod tests {
     use super::*;
 
+    #[cfg(windows)]
     #[test]
     fn prompt_submit_hook_only_marks_running() {
         let block = build_codex_hook_block(
@@ -270,4 +294,15 @@ mod tests {
             r#"cmd.exe /d /s /c ""C:\s.cmd" codex""#
         );
     }
+
+    #[cfg(not(windows))]
+    #[test]
+    fn mac_commands_quote_the_script_for_the_shell() {
+        let block = build_codex_hook_block(Path::new("/Users/a b/.fuyu/fuyu-agent-running.sh"), Path::new("/Users/a b/.fuyu/fuyu-agent-status.sh"), false);
+        assert!(block.contains(r#"command = "/bin/sh '/Users/a b/.fuyu/fuyu-agent-running.sh' codex""#));
+        assert!(block.contains(r#"command = "/bin/sh '/Users/a b/.fuyu/fuyu-agent-session.sh' codex start""#));
+        assert!(block.contains(r#"command = "/bin/sh '/Users/a b/.fuyu/fuyu-agent-approval.sh' codex permission""#));
+        assert_eq!(agent_running_command(Path::new("/tmp/it's.sh"), "codex"), r#"/bin/sh '/tmp/it'\''s.sh' codex"#);
+    }
+
 }

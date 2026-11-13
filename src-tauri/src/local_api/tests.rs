@@ -120,3 +120,24 @@ fn development_routes_reach_the_plugin_host() {
     assert_eq!(route("GET", "/v1/dev/plugins", b"").map_err(|error| error.status), Err(405));
     assert_eq!(route("PUT", "/v1/dev/plugins/me.x/reload", b"").map_err(|error| error.status), Err(405));
 }
+
+#[test]
+fn dev_island_routes_need_no_write_permission() {
+    let emit = route("POST", "/v1/dev/island/emit", br#"{"event":"device-alert","payload":{}}"#).expect("emit");
+    assert_eq!((emit.method, emit.writes), ("devIsland.emit", false));
+    assert_eq!(route("POST", "/v1/dev/island/action", br#"{"action":"collapse"}"#).expect("action").method, "devIsland.action");
+    assert_eq!(route("PUT", "/v1/dev/island/notch", br#"{"width":208,"height":37.5}"#).expect("notch").params["width"], 208);
+    assert_eq!(route("DELETE", "/v1/dev/island/notch", b"").expect("clear").params, serde_json::Value::Null);
+    assert_eq!(route("GET", "/v1/dev/island/emit", b"").map_err(|error| error.status), Err(405));
+    assert_eq!(route("POST", "/v1/dev/island/emit", b"[]").map_err(|error| error.status), Err(400));
+}
+
+#[test]
+fn island_lab_serves_only_dev_island_and_agent_status() {
+    use super::lab::lab_call;
+    assert_eq!(lab_call("POST", "/v1/dev/island/emit", b"{}").expect("emit").method, "devIsland.emit");
+    assert_eq!(lab_call("PUT", "/v1/agent-status/lab", br#"{"phase":"running"}"#).expect("status").method, "agentStatus.report");
+    assert_eq!(lab_call("GET", "/v1/health", b"").expect("health").method, "health");
+    assert_eq!(lab_call("GET", "/v1/todos", b"").map_err(|error| error.status), Err(404));
+    assert_eq!(lab_call("POST", "/v1/dev/plugins", br#"{"path":"/tmp"}"#).map_err(|error| error.status), Err(404));
+}

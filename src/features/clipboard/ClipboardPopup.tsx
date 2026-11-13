@@ -1,16 +1,18 @@
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { Search } from "lucide-react";
 import { useTranslation } from "../../i18n";
-import type { ClipboardAiPrompt, ClipboardCaptureStatus, ClipboardCopyAs, ClipboardHistoryItem, ClipboardSnippet } from "./api";
+import { startClipboardDrag, type ClipboardAiPrompt, type ClipboardCaptureStatus, type ClipboardCopyAs, type ClipboardHistoryItem, type ClipboardSnippet } from "./api";
 import { ClipboardActionPanel, type PanelPage } from "./ClipboardActionPanel";
 import { ClipboardEditor } from "./ClipboardEditor";
 import { ClipboardPauseBar, ClipboardPopupFooter, pausedNow, type MergeSeparator } from "./ClipboardPopupFooter";
 import { ClipboardPopupPreview } from "./ClipboardPopupPreview";
 import { ClipboardPopupRow } from "./ClipboardPopupRow";
+import { dayGroupStarts } from "./dayGroup";
 import { mergedText, popupActions } from "./popupActions";
 import { filterPopupItems, nextPopupFilter, popupFilters, popupTags, type PopupFilter } from "./popupFilters";
 import { popupIndexAfterKey, toggleQueued } from "./popupKeys";
 import { loadPinyin, parsePopupQuery } from "./popupQuery";
+import { isPrimaryKey } from "./shortcut";
 import { usePopupHandlers } from "./usePopupHandlers";
 import "./ClipboardPopup.css";
 import "./ClipboardPopupPanels.css";
@@ -46,6 +48,7 @@ export function ClipboardPopup({ items, snippets, openCount, wide, capture, link
   const [pinyinReady, setPinyinReady] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const listRef = useRef<HTMLUListElement | null>(null);
+  const pointerPickRef = useRef(false);
   const { handlers, notice, deletion, saveNote, saveAsNew, pasteText } = usePopupHandlers({ onPaste, onToggleFavorite, onEdit: () => setMode("edit") });
   const { flush } = deletion;
 
@@ -83,13 +86,23 @@ export function ClipboardPopup({ items, snippets, openCount, wide, capture, link
     : snippets;
   const count = onSnippets ? shownSnippets.length : shownItems.length;
   const current = Math.min(selected, Math.max(0, count - 1));
+  const groupStarts = useMemo(() => (wide && !onSnippets ? dayGroupStarts(shownItems.map((entry) => entry.copiedAt), now) : []), [wide, onSnippets, shownItems, now]);
   const item = onSnippets ? undefined : shownItems[current];
   const isText = item?.kind === "text";
   const actions = useMemo(() => popupActions(item, capture, handlers, text.actions), [item, capture, handlers, text.actions]);
 
   useEffect(() => {
+    if (pointerPickRef.current) {
+      pointerPickRef.current = false;
+      return;
+    }
     listRef.current?.querySelector<HTMLElement>(`[data-index="${current}"]`)?.scrollIntoView({ block: "nearest" });
   }, [current, filter]);
+
+  const selectByPointer = (index: number) => {
+    pointerPickRef.current = true;
+    setSelected(index);
+  };
 
   const focusSearch = () => window.setTimeout(() => inputRef.current?.focus(), 0);
   const backToList = () => {
@@ -121,7 +134,7 @@ export function ClipboardPopup({ items, snippets, openCount, wide, capture, link
 
   const onKeyDown = (event: KeyboardEvent) => {
     const key = event.key;
-    const ctrl = event.ctrlKey && !event.altKey;
+    const ctrl = isPrimaryKey(event) && !event.altKey;
     if (mode === "look") {
       if (key === "Escape" || key === " ") {
         event.preventDefault();
@@ -139,6 +152,12 @@ export function ClipboardPopup({ items, snippets, openCount, wide, capture, link
     } else if (key === "Tab") {
       handled();
       chooseFilter(nextPopupFilter(filters, filter, event.shiftKey));
+    } else if (ctrl && /^[1-9]$/.test(key)) {
+      handled();
+      const index = Number(key) - 1;
+      if (index >= count) return;
+      setSelected(index);
+      if (!wide && !onSnippets) setMode("look");
     } else if (ctrl && key.toLowerCase() === "k") {
       handled();
       openPanel("actions");
@@ -252,21 +271,22 @@ export function ClipboardPopup({ items, snippets, openCount, wide, capture, link
                   selected={index === current}
                   queued={0}
                   snippet={snippet}
-                  onHover={() => setSelected(index)}
+                  onHover={() => selectByPointer(index)}
                   onPick={() => onPasteSnippet(snippet.id)}
                 />
               ))
               : shownItems.map((entry, index) => (
+                <Fragment key={entry.id}>
+                {wide && groupStarts[index] && <li className="clipboard-popup__section" role="presentation">{text.dayGroups[groupStarts[index]]}</li>}
                 <ClipboardPopupRow
-                  key={entry.id}
                   index={index}
                   now={now}
                   selected={index === current}
                   queued={queue.indexOf(entry.id) + 1}
                   entry={entry}
-                  onHover={() => mode === "list" && setSelected(index)}
+                  onHover={() => mode === "list" && selectByPointer(index)}
                   onPick={(event) => {
-                    if (event.ctrlKey) setQueue(toggleQueued(queue, entry.id));
+                    if (isPrimaryKey(event)) setQueue(toggleQueued(queue, entry.id));
                     else onPaste(entry.id, event.shiftKey);
                   }}
                   onToggleFavorite={() => onToggleFavorite(entry.id)}
@@ -274,7 +294,10 @@ export function ClipboardPopup({ items, snippets, openCount, wide, capture, link
                     setSelected(index);
                     openPanel("actions");
                   }}
+                  linkPreview={linkPreview}
+                  onDrag={() => void startClipboardDrag(entry.id).catch((error: unknown) => console.error("Failed to drag a clipboard entry", error))}
                 />
+                </Fragment>
               ))}
           </ul>
         )}

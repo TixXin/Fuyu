@@ -8,6 +8,7 @@ import type { ClipboardAiPrompt, ClipboardHistoryItem } from "./api";
 import { ClipboardAiList } from "./ClipboardAiList";
 import { ClipboardTransformList } from "./ClipboardTransformList";
 import { filterActions, type ActionIcon, type PopupAction } from "./popupActions";
+import { isPrimaryKey } from "./shortcut";
 
 const ICONS: Record<ActionIcon, LucideIcon> = {
   paste: ClipboardPaste, plain: Type, enter: CornerDownLeft, edit: Pencil, wand: WandSparkles, file: FileText, image: ImageIcon,
@@ -57,7 +58,7 @@ export function ClipboardActionPanel({ item, actions, page, aiPrompts, copy = fa
 
   const onKeyDown = (event: KeyboardEvent) => {
     event.stopPropagation();
-    if (event.key === "Escape" || (event.key === "k" && event.ctrlKey)) {
+    if (event.key === "Escape" || (event.key.toLowerCase() === "k" && isPrimaryKey(event))) {
       event.preventDefault();
       back();
       return;

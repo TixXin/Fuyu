@@ -48,9 +48,9 @@ test("the collapsed width setting moves the whole range, and alignment stays ins
 });
 
 test("the todo list scrolls after as many rows as fit under the max panel height", () => {
-  assert.equal(getTodoScrollStartRows(490), 6);
-  assert.equal(getTodoScrollStartRows(351), 2);
-  assert.equal(getTodoScrollStartRows(352), 3);
+  assert.equal(getTodoScrollStartRows(490), 7);
+  assert.equal(getTodoScrollStartRows(339), 2);
+  assert.equal(getTodoScrollStartRows(340), 3);
 });
 
 test("the collapsed width is nudged so the centred island starts on a whole device pixel", () => {
@@ -125,6 +125,19 @@ test("Alt+number follows the header from left to right and skips modules that ar
   assert.equal(pageCycleDirection({ ...down, key: "Tab", code: "Tab", altKey: false, ctrlKey: true }, "Ctrl+Tab", "Ctrl+Shift+Tab"), 1);
   assert.equal(pageCycleDirection({ ...down, key: "Tab", code: "Tab", altKey: false, ctrlKey: true, shiftKey: true }, "Ctrl+Tab", "Ctrl+Shift+Tab"), -1);
   assert.equal(pageCycleDirection({ ...down, key: "Tab", code: "Tab" }, "Ctrl+Tab", "Ctrl+Shift+Tab"), null);
+});
+
+test("page shortcuts go through every page in the header's order, plugin pages before the bell", async () => {
+  const { pageShortcutOrder, cycleShortcutPage, HEADER_DOT_PAGES } = await import("../../src/windows/island/features.ts");
+  const every = { agents: true, todo: true, calendar: true, music: true, clipboard: true, shelf: true, screenshots: true, qq: true, wechat: false, qqMail: false, translation: true, pluginPages: ["plugin:a", "plugin:b"] };
+  assert.deepEqual(pageShortcutOrder(every), ["agents", ...HEADER_DOT_PAGES, "plugin:a", "plugin:b", "qq", "translation"]);
+  assert.deepEqual([...HEADER_DOT_PAGES], ["todo", "music", "calendar", "clipboard", "shelf", "screenshots"]);
+  assert.equal(cycleShortcutPage(every, "music", 1), "calendar");
+  assert.equal(cycleShortcutPage(every, "screenshots", 1), "plugin:a");
+  assert.equal(cycleShortcutPage(every, "plugin:b", 1), "qq");
+  assert.equal(cycleShortcutPage(every, "agents", -1), "translation");
+  const mac = { ...every, music: false, clipboard: false, qq: false, translation: false, pluginPages: [] };
+  assert.deepEqual(pageShortcutOrder(mac), ["agents", "todo", "calendar", "shelf", "screenshots"]);
 });
 
 test("the translation page comes last in the page shortcuts, and only when it is an island page", async () => {

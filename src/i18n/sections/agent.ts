@@ -108,7 +108,7 @@ export const zhCN: AgentText = {
     focus: (title) => `切换到「${title}」所在的窗口`,
     notFound: "没找到对应的窗口",
     notFoundEnded: "没找到对应的窗口，会话可能已经关掉了",
-    justNow: "刚刚",
+    justNow: "<1m",
     yourPrompt: (prompt) => `你：${prompt}`,
     minutesAgo: (minutes) => (minutes < 60 ? `${minutes} 分` : `${Math.floor(minutes / 60)} 小时`),
     activeCount: (count) => `${count} 个 Agent 会话正在运行，点击查看`,

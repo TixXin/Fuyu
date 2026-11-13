@@ -21,8 +21,6 @@ import type { MediaState } from "../../src/features/media/api";
 
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
 const automated = new URLSearchParams(location.search).has("test");
-let hovering = false;
-Object.defineProperty(document, "hasFocus", { value: () => hovering });
 async function update(action: () => void | Promise<void>) {
   if (automated) await act(action);
   else await action();
@@ -198,10 +196,10 @@ async function runChecks() {
     check(commands.some((entry) => entry.command === "run_plugin_notification_action" && entry.args.id === "dev.test.build" && entry.args.action === "rerun"), "点插件按钮运行动作");
     check(rows().length === 3 && senders()[0] === "微信", "运行后那一行移走");
 
-    hovering = true;
+    await emit("island-hover-changed", true);
     await wait(DURATION_MS + 300);
     check(state.mode === "expanded", "鼠标停在岛上时不收起");
-    hovering = false;
+    await emit("island-hover-changed", false);
     await waitFor(() => state.mode === "collapsed", "到时自己收起", 2500);
     check(state.mode === "collapsed", "离开后到时自己收起");
     await wait(30);

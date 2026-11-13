@@ -6,6 +6,7 @@ export type SettingsDataHomeText = {
   fromEnv: string;
   change: string;
   reveal: string;
+  revealMac: string;
   useDefault: string;
   confirm: (path: string) => string;
   moved: (path: string) => string;
@@ -20,6 +21,7 @@ export const zhCN: SettingsDataHomeText = {
   fromEnv: "由环境变量 FUYU_HOME 指定，在这里改不了。",
   change: "更换",
   reveal: "打开文件夹",
+  revealMac: "在访达中打开",
   useDefault: "改回默认",
   confirm: (path) => `把浮屿的数据换到 ${path}？会先复制现有数据（那里已经有浮屿数据时直接用它的），然后重启岛屿。`,
   moved: (path) => `已换到 ${path}，重启岛屿后生效。`,
@@ -34,6 +36,7 @@ export const en: SettingsDataHomeText = {
   fromEnv: "Set by the FUYU_HOME environment variable; it cannot be changed here.",
   change: "Change",
   reveal: "Open folder",
+  revealMac: "Open in Finder",
   useDefault: "Use the default",
   confirm: (path) => `Move Fuyu's data to ${path}? The current data is copied there first (or the Fuyu data already there is used), then the island restarts.`,
   moved: (path) => `Moved to ${path}. Restart the island to use it.`,

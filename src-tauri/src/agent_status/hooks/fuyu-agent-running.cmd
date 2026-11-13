@@ -8,6 +8,10 @@ if /I "%PROVIDER%"=="codex" (
 ) else if /I "%PROVIDER%"=="claudeCode" (
   set "MARKER=agent-claudeCode-running.flag"
   set "HOLD=agent-claudeCode-running-hold.flag"
+) else if /I "%PROVIDER%"=="workbuddy" (
+  if /I not "%~2"=="notification" exit /b 2
+) else if /I "%PROVIDER%"=="antigravity" (
+  if /I not "%~2"=="running" if /I not "%~2"=="stop" exit /b 2
 ) else (
   exit /b 2
 )
@@ -18,6 +22,13 @@ if defined FOCUSD_AGENT_STATUS_DIR set "STATUS_DIR=%FOCUSD_AGENT_STATUS_DIR%"
 
 if not exist "%STATUS_DIR%" mkdir "%STATUS_DIR%" >nul 2>nul
 
+set "SAVED_DIR=%STATUS_DIR%\agent-notifications"
+set "SAVED_NAME=%PROVIDER%"
+if /I "%PROVIDER%"=="antigravity" (
+  set "SAVED_DIR=%STATUS_DIR%\agent-antigravity"
+  set "SAVED_NAME=%~2"
+  goto notification
+)
 if /I "%~2"=="notification" goto notification
 if /I "%~2"=="session" goto session
 
@@ -27,7 +38,6 @@ del "%STATUS_DIR%\%HOLD%" >nul 2>nul
 exit /b 0
 
 :notification
-set "SAVED_DIR=%STATUS_DIR%\agent-notifications"
 if not exist "%SAVED_DIR%" mkdir "%SAVED_DIR%" >nul 2>nul
 set "STAMP=%DATE%%TIME%"
 set "STAMP=%STAMP:/=%"
@@ -35,7 +45,7 @@ set "STAMP=%STAMP::=%"
 set "STAMP=%STAMP:.=%"
 set "STAMP=%STAMP:,=%"
 set "STAMP=%STAMP: =%"
-set "SAVED=%SAVED_DIR%\%PROVIDER%-%STAMP%-%RANDOM%"
+set "SAVED=%SAVED_DIR%\%SAVED_NAME%-%STAMP%-%RANDOM%"
 findstr "^" > "%SAVED%.tmp" 2>nul
 move /y "%SAVED%.tmp" "%SAVED%.json" >nul 2>nul
 exit /b 0

@@ -7,7 +7,7 @@ import { SettingsSelect } from "../../components/settings/SettingsSelect";
 import { MESSAGE_PANEL_SECONDS } from "../../features/appearance/settings";
 import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
 import type { IslandSettings, MessageNotice } from "../../features/appearance/types";
-import type { PlatformFeature } from "../../lib/platform";
+import { isMacOS, type PlatformFeature } from "../../lib/platform";
 import { MailAccountList } from "../../features/messages/mail/MailAccountList";
 import { MailConnectForm } from "../../features/messages/mail/MailConnectForm";
 import { MAX_MAIL_ACCOUNTS } from "../../features/messages/mail/mailAccounts";
@@ -63,14 +63,14 @@ export function MessagesSettingsPage({
           />
         )}
       </SettingsGroup>
-      {!unsupported.has("qq") && <QQGroup controller={qqNotifications} title={labels.qqTitle} hint={labels.qqHint} />}
-      {!unsupported.has("wechat") && <SettingsGroup title={labels.wechatTitle} footer={<Problem error={wechatReminders.actionError || wechatReminders.snapshot.error} hint={labels.wechatHint} />}>
+      {!unsupported.has("qq") && <QQGroup controller={qqNotifications} title={labels.qqTitle} hint={isMacOS ? labels.qqHintMac : labels.qqHint} />}
+      {!unsupported.has("wechat") && <SettingsGroup title={labels.wechatTitle} footer={<Problem error={wechatReminders.actionError || wechatReminders.snapshot.error || (wechatReminders.snapshot.status === "permissionRequired" ? t.wechat.status.permissionRequired : null)} hint={isMacOS ? labels.wechatHintMac : labels.wechatHint} />}>
         <SettingsToggleRow
           title={t.wechat.receive}
           checked={wechatReminders.snapshot.enabled}
           onChange={(enabled) => void wechatReminders.setEnabled(enabled)}
         />
-        {wechatReminders.snapshot.enabled && (
+        {wechatReminders.snapshot.enabled && !isMacOS && (
           <SettingsToggleRow
             title={t.wechat.exposeUi}
             description={<>{t.wechat.exposeUiDescription}{wechatReminders.snapshot.exposeStatus && <><br />{wechatReminders.snapshot.exposeStatus}</>}</>}
@@ -79,7 +79,7 @@ export function MessagesSettingsPage({
             onChange={(enabled) => void wechatReminders.setExposeUi(enabled)}
           />
         )}
-        {wechatReminders.snapshot.enabled && wechatReminders.snapshot.exposeUi && (
+        {wechatReminders.snapshot.enabled && wechatReminders.snapshot.exposeUi && !isMacOS && (
           <SettingsToggleRow
             title={t.wechat.hideTaskbarButton}
             description={t.wechat.hideTaskbarButtonDescription}
@@ -102,7 +102,7 @@ function QQGroup({ controller, title, hint }: { controller: QQNotificationsContr
   const t = useTranslation();
   const { snapshot, busy, actionError, setEnabled, requestAccess, openSettings } = controller;
   const needsAccess = snapshot.enabled && (snapshot.status === "permissionRequired" || snapshot.status === "permissionDenied");
-  const error = actionError || snapshot.error || (needsAccess ? t.qq.status[snapshot.status] : null);
+  const error = actionError || snapshot.error || (needsAccess ? (isMacOS ? t.qq.permissionRequiredMac : t.qq.status[snapshot.status]) : null);
 
   return (
     <SettingsGroup title={title} footer={<Problem error={error} hint={hint} />}>
@@ -115,7 +115,7 @@ function QQGroup({ controller, title, hint }: { controller: QQNotificationsContr
             snapshot.status === "permissionRequired" ? (
               <SettingsLinkButton disabled={busy} onClick={() => void requestAccess()}>{t.qq.grant}</SettingsLinkButton>
             ) : (
-              <SettingsLinkButton disabled={busy} onClick={() => void openSettings()}>{t.qq.settings}</SettingsLinkButton>
+              <SettingsLinkButton disabled={busy} onClick={() => void openSettings()}>{isMacOS ? t.qq.settingsMac : t.qq.settings}</SettingsLinkButton>
             )
           }
         />
@@ -134,7 +134,7 @@ function MailGroups({ settings, onSettingsChange }: { settings: IslandSettings; 
 
   return (
     <>
-      <SettingsGroup title={t.settings.categories.mail} footer={settings.mailEnabled ? <Problem error={actionError} hint={t.mail.accountsHint} /> : undefined}>
+      <SettingsGroup title={t.settings.categories.mail} footer={settings.mailEnabled ? <Problem error={actionError} hint={isMacOS ? t.mail.accountsHintMac : t.mail.accountsHint} /> : undefined}>
         <SettingsToggleRow
           title={t.settings.modules.mail}
           description={t.settings.modules.hint}

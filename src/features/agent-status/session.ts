@@ -1,11 +1,11 @@
-import type { AgentProvider, AgentSessionSummary, AgentTaskStatus, ExternalAgentStatus } from "./api";
+import type { AgentSessionSummary, AgentTaskStatus, ExternalAgentStatus, SessionProvider } from "./api";
 import { sessionProject } from "./sessionList.ts";
 import { AGENT_PROVIDER_LABELS } from "./status.ts";
 
 export const COMPLETED_TITLE_HOLD_MS = 3000;
 
 export type AgentSession = {
-  provider: AgentProvider | null;
+  provider: SessionProvider | null;
   label: string;
   title: string;
 };

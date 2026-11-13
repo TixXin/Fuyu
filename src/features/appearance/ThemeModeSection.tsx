@@ -7,6 +7,7 @@ import { useTranslation } from "../../i18n";
 import { AccentSettingsRow } from "./AccentSettingsRow";
 import { THEME_COLORS, THEME_MODES, withThemeColors, type ThemeTone } from "./themeMode";
 import type { IslandSettings, ThemeMode } from "./types";
+import { isMacOS } from "../../lib/platform";
 
 export function ThemeModeSection({ settings, editing, onEditingChange, onSettingsChange }: {
   settings: IslandSettings;
@@ -19,7 +20,7 @@ export function ThemeModeSection({ settings, editing, onEditingChange, onSetting
     <SettingsGroup title={text.modeTitle}>
       <SettingsRow
         title={text.mode}
-        description={text.modeHint}
+        description={isMacOS ? text.modeHintMac : text.modeHint}
         control={
           <SettingsChoice<ThemeMode>
             value={settings.themeMode}

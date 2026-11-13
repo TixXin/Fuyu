@@ -2,7 +2,7 @@ use base64::Engine;
 use std::{
     sync::{Mutex, OnceLock},
     thread,
-    time::{Duration, SystemTime, UNIX_EPOCH},
+    time::Duration,
 };
 use windows::{
     core::Interface,
@@ -21,6 +21,7 @@ use windows::{
 
 use super::audio::{read_master_volume, read_system_audio_peak, AUDIO_ACTIVE_THRESHOLD};
 use super::service::*;
+pub(super) use super::state::{current_unix_millis, MediaSessionInfo};
 use crate::win32;
 
 pub(super) const MAX_THUMBNAIL_BYTES: u64 = 4_000_000;
@@ -377,35 +378,6 @@ pub(super) fn read_media_state_without_session() -> Result<MediaState, String> {
     })
 }
 
-impl MediaState {
-    pub(super) fn empty() -> Self {
-        MediaState {
-            available: false,
-            audio_active: false,
-            audio_peak: 0.0,
-            playback_status: "unavailable",
-            title: None,
-            artist: None,
-            album: None,
-            thumbnail: None,
-            track_id: None,
-            position_ms: 0,
-            duration_ms: 0,
-            can_seek: false,
-            can_next: false,
-            can_previous: false,
-            shuffle_active: None,
-            can_shuffle: false,
-            repeat_mode: "unknown",
-            can_repeat: false,
-            volume: -1.0,
-            source_app: None,
-            active_session_id: None,
-            sessions: Vec::new(),
-            updated_at: current_unix_millis(),
-        }
-    }
-}
 
 pub(super) fn read_timeline(
     session: &MediaSession,
@@ -625,12 +597,6 @@ pub(super) fn media_error(context: &str, error: windows::core::Error) -> String 
     format!("{context}: {error}")
 }
 
-pub(super) fn current_unix_millis() -> i64 {
-    SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map(|duration| duration.as_millis() as i64)
-        .unwrap_or_default()
-}
 
 #[cfg(test)]
 mod tests {

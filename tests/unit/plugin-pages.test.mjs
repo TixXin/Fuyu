@@ -22,18 +22,20 @@ test("without plugin pages the page order is what it was", () => {
   assert.equal(pageForAltDigit(withEmpty, 7), null);
 });
 
-test("plugin pages come after the built-in pages, in the order given", () => {
+test("plugin pages come after the header's page icons and before the bell, in the order given", () => {
   const features = { ...all, pluginPages: [timer, board] };
-  assert.equal(pageForAltDigit(features, 7), timer);
-  assert.equal(pageForAltDigit(features, 8), board);
-  assert.equal(pageShortcutLabel(features, board, "Alt"), "Alt+8");
-  assert.equal(cycleShortcutPage(features, "qq", 1), timer);
-  assert.equal(cycleShortcutPage(features, board, 1), "agents");
-  assert.equal(cycleShortcutPage(features, "agents", -1), board);
-  const many = { ...features, pluginPages: [timer, board, "plugin:c/1", "plugin:d/1"] };
-  assert.equal(pageShortcutLabel(many, "plugin:c/1", "Alt"), "Alt+9");
-  assert.equal(pageShortcutLabel(many, "plugin:d/1", "Alt"), null);
-  assert.equal(pageForAltDigit({ ...features, agents: false, music: false }, 5), timer);
+  assert.equal(pageForAltDigit(features, 6), timer);
+  assert.equal(pageForAltDigit(features, 7), board);
+  assert.equal(pageForAltDigit(features, 8), "qq");
+  assert.equal(pageShortcutLabel(features, board, "Alt"), "Alt+7");
+  assert.equal(cycleShortcutPage(features, "shelf", 1), timer);
+  assert.equal(cycleShortcutPage(features, board, 1), "qq");
+  assert.equal(cycleShortcutPage(features, "qq", 1), "agents");
+  assert.equal(cycleShortcutPage(features, "agents", -1), "qq");
+  const many = { ...features, pluginPages: [timer, board, "plugin:c/1", "plugin:d/1", "plugin:e/1"] };
+  assert.equal(pageShortcutLabel(many, "plugin:d/1", "Alt"), "Alt+9");
+  assert.equal(pageShortcutLabel(many, "plugin:e/1", "Alt"), null);
+  assert.equal(pageForAltDigit({ ...features, agents: false, music: false }, 4), timer);
 });
 
 test("a plugin page is on while its plugin lists it; otherwise the island falls back", () => {

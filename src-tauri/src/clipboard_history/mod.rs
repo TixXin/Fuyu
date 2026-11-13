@@ -2,10 +2,12 @@ pub(crate) mod actions;
 mod capture_pause;
 mod clipboard_io;
 mod command_text;
+pub(crate) mod drag;
 #[cfg_attr(target_os = "macos", path = "hotkey_macos.rs")]
 mod hotkey;
 mod link_guard;
 mod link_preview;
+mod file_image;
 #[cfg_attr(target_os = "macos", path = "listener_macos.rs")]
 mod listener;
 mod plugin_view;
@@ -15,10 +17,12 @@ mod popup_place;
 mod preview;
 mod secrets;
 mod sequence;
+#[cfg(target_os = "macos")]
+mod sequence_watch_macos;
 mod service;
 pub(crate) mod shortcut;
 #[cfg(target_os = "macos")]
-mod shortcut_macos;
+pub(crate) mod shortcut_macos;
 mod snippets;
 mod store;
 #[cfg_attr(target_os = "macos", path = "system_macos.rs")]
@@ -320,6 +324,8 @@ pub struct ClipboardHistoryItem {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     files: Option<Vec<String>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    file_image: Option<ClipboardFileImage>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     source: Option<ClipboardSource>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     tags: Vec<String>,
@@ -377,6 +383,15 @@ pub struct ClipboardHistoryImage {
     original_path: String,
     thumbnail_path: String,
     thumbnail_data_url: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct ClipboardFileImage {
+    width: u32,
+    height: u32,
+    byte_size: u64,
+    thumbnail_data_url: String,
 }
 
 struct ClipboardHistoryState {
@@ -483,8 +498,31 @@ pub async fn get_clipboard_image_preview(id: String) -> Result<Option<String>, S
 }
 
 #[tauri::command]
-pub async fn hide_clipboard_popup(app: AppHandle) -> Result<(), String> {
+pub async fn hide_clipboard_popup(app: AppHandle, blurred: Option<bool>) -> Result<(), String> {
+    if blurred == Some(true) && crate::screenshot::is_capturing() {
+        return Ok(());
+    }
     popup::hide(&app)
+}
+
+pub(crate) fn refocus_popup(app: &AppHandle) {
+    if let Some(window) = app.get_webview_window(popup::WINDOW_LABEL) {
+        let hidden = service().and_then(|service| service.snapshot()).map(|snapshot| snapshot.settings.hide_from_capture).unwrap_or(true);
+        let _ = window.set_content_protected(hidden);
+    }
+    if let Err(error) = popup::refocus(app) {
+        eprintln!("failed to give the clipboard window its focus back: {error}");
+    }
+}
+
+pub(crate) fn show_popup_in_screenshot(app: &AppHandle) -> bool {
+    let Some(window) = app.get_webview_window(popup::WINDOW_LABEL) else {
+        return false;
+    };
+    if !window.is_visible().unwrap_or(false) {
+        return false;
+    }
+    window.set_content_protected(false).is_ok()
 }
 
 #[tauri::command]
@@ -547,6 +585,7 @@ pub fn init(app: &AppHandle) -> Result<(), String> {
     };
 
     let _ = CLIPBOARD_HISTORY.set(service);
+    service::fill_file_images(None);
     start_workers();
     notify_clipboard_changed();
     Ok(())
@@ -577,6 +616,7 @@ macro_rules! tauri_commands {
             crate::clipboard_history::copy_clipboard_history_item_as,
             crate::clipboard_history::paste_clipboard_history_item,
             crate::clipboard_history::hide_clipboard_popup,
+            crate::clipboard_history::drag::start_clipboard_drag,
             crate::clipboard_history::paste_clipboard_sequence,
             crate::clipboard_history::export_clipboard_history,
             crate::clipboard_history::import_clipboard_history,

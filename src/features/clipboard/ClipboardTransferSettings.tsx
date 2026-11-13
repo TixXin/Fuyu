@@ -4,6 +4,7 @@ import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton";
 import { SettingsRow } from "../../components/settings/SettingsRow";
 import { useErrorText, useTranslation } from "../../i18n";
+import { isMacOS } from "../../lib/platform";
 import { exportClipboardHistory, importClipboardHistory, revealExportedFile } from "./api";
 
 type Status = { kind: "exported"; path: string } | { kind: "imported"; items: number; snippets: number } | { kind: "error"; message: string } | null;
@@ -70,7 +71,7 @@ export function ClipboardTransferSettings() {
           title={status.kind === "error" ? text.failed : status.kind === "exported" ? text.exported : text.imported(status.items, status.snippets)}
           description={status.kind === "error" ? status.message : status.kind === "exported" ? status.path : undefined}
           control={status.kind === "exported" && (
-            <SettingsLinkButton onClick={() => void revealExportedFile(status.path)}>{text.show}</SettingsLinkButton>
+            <SettingsLinkButton onClick={() => void revealExportedFile(status.path)}>{isMacOS ? text.showMac : text.show}</SettingsLinkButton>
           )}
         />
       )}

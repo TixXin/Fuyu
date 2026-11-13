@@ -23,7 +23,7 @@ export async function checkSecondRound(check: Check, calls: string[]) {
 
   await act(async () => { $$("dark", ".clipboard-popup__chip").find((chip) => chip.textContent === "全部")!.click(); });
   check(rows("dark")[6].querySelector(".clipboard-popup__swatch") && rows("dark")[6].querySelector(".clipboard-popup__badge")?.textContent === "颜色", "颜色：行首是色块，后面标「颜色」");
-  check(rows("dark")[7].querySelector(".clipboard-popup__preview")?.textContent === "github.com › TixXin/fuyu › pull/26" && rows("dark")[7].querySelector(".clipboard-popup__badge")?.textContent === "链接", "链接：写成「域名 › 路径」，标「链接」");
+  check(rows("dark")[7].querySelector(".clipboard-popup__preview")?.textContent === "github.com › TixXin/fuyu › pull/26" && rows("dark")[7].querySelector(".clipboard-popup__badge")?.textContent === "网址", "网址：写成「域名 › 路径」，标「网址」");
 
   await act(async () => { await loadPinyin(); });
   await type("dark", "hy");

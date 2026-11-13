@@ -4,21 +4,21 @@ import type { AgentVisualState } from "../../features/agent-status/status";
 import type { MessageSource } from "../../features/messages/messagePreview";
 import { useUpdateReminder } from "../../features/updater/useBackgroundUpdateCheck";
 import { useTranslation } from "../../i18n";
-import { isPageEnabled, pageShortcutLabel, type IslandFeatures } from "./features";
+import { HEADER_DOT_PAGES, isPageEnabled, pageShortcutLabel, type HeaderDotPage, type IslandFeatures } from "./features";
 import type { IslandPage } from "./types";
 import { usePageHoverSwitch } from "./usePageHoverSwitch";
 import "./IslandHeader.css";
+import { isMacOS } from "../../lib/platform";
+import { shortcutLabel } from "../../features/clipboard/shortcut";
 
-type BuiltinPageButton = "todo" | "music" | "calendar" | "clipboard" | "shelf" | "screenshots";
-
-const PAGE_BUTTONS: { page: BuiltinPageButton; Icon: LucideIcon }[] = [
-  { page: "todo", Icon: ListTodo },
-  { page: "music", Icon: Music },
-  { page: "calendar", Icon: CalendarDays },
-  { page: "clipboard", Icon: ClipboardList },
-  { page: "shelf", Icon: Inbox },
-  { page: "screenshots", Icon: Images },
-];
+const PAGE_ICONS: Record<HeaderDotPage, LucideIcon> = {
+  todo: ListTodo,
+  music: Music,
+  calendar: CalendarDays,
+  clipboard: ClipboardList,
+  shelf: Inbox,
+  screenshots: Images,
+};
 
 type IslandHeaderProps = {
   page: IslandPage;
@@ -76,9 +76,9 @@ export function IslandHeader({
   const messageBadgeLabel = t.messages.badge(qqNotificationCount, wechatPending);
   const withShortcut = (label: string, target: IslandPage) => {
     const shortcut = pageShortcutLabel(features, target, pageDigitModifiers);
-    return shortcut ? `${label} (${shortcut})` : label;
+    return shortcut ? `${label} (${shortcutLabel(shortcut)})` : label;
   };
-  const pageLabel = (target: BuiltinPageButton) => ({
+  const pageLabel = (target: HeaderDotPage) => ({
     todo: t.island.todoList,
     music: t.island.music,
     calendar: t.island.calendar,
@@ -93,6 +93,7 @@ export function IslandHeader({
 
   return (
     <header className="island__header">
+      <div className="island__header-start">
       <div className="island__title">
         {features.agents ? (
           <button
@@ -121,23 +122,27 @@ export function IslandHeader({
       </div>
 
       <div className="editor-dots" aria-label={t.island.editor}>
-        {PAGE_BUTTONS.filter(({ page: target }) => features[target]).map(({ page: target, Icon }) => (
-          <button
-            key={target}
-            className={`dot-button dot-button--${target}${page === target ? " dot-button--active" : ""}`}
-            type="button"
-            aria-label={withShortcut(pageLabel(target), target)}
-            aria-pressed={page === target}
-            {...hoverSwitch(target)}
-            onClick={(event) => {
-              event.stopPropagation();
-              onPageChange(target);
-            }}
-          >
-            <Icon size={15} strokeWidth={1.8} absoluteStrokeWidth aria-hidden="true" />
-          </button>
-        ))}
+        {HEADER_DOT_PAGES.filter((target) => features[target]).map((target) => {
+          const Icon = PAGE_ICONS[target];
+          return (
+            <button
+              key={target}
+              className={`dot-button dot-button--${target}${page === target ? " dot-button--active" : ""}`}
+              type="button"
+              aria-label={withShortcut(pageLabel(target), target)}
+              aria-pressed={page === target}
+              {...hoverSwitch(target)}
+              onClick={(event) => {
+                event.stopPropagation();
+                onPageChange(target);
+              }}
+            >
+              <Icon size={15} strokeWidth={1.8} absoluteStrokeWidth aria-hidden="true" />
+            </button>
+          );
+        })}
         {pluginPageButtons}
+      </div>
       </div>
 
       <button
@@ -210,7 +215,7 @@ export function IslandHeader({
         <button
           className="icon-button"
           type="button"
-          aria-label={minimizesToTray ? t.island.minimizeToTray : t.island.tuckToTop}
+          aria-label={minimizesToTray ? (isMacOS ? t.island.minimizeToMenuBar : t.island.minimizeToTray) : t.island.tuckToTop}
           onClick={(event) => {
             event.stopPropagation();
             onMinimize();

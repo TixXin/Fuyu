@@ -36,11 +36,22 @@ function sniff(item: ClipboardHistoryItem): ContentKind | null {
   return null;
 }
 
+const BARE_HOST = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+([a-z]{2,24})(?::\d{2,5})?(?:[/?#]\S*)?$/i;
+const FILE_ENDINGS = new Set(["md", "rs", "py", "sh", "js", "ts", "tsx", "jsx", "json", "toml", "yml", "yaml", "txt", "log", "png", "jpg", "jpeg", "gif", "webp", "zip", "pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "exe", "dmg", "app", "lock", "html", "css", "mjs", "cs", "go", "rb", "pl", "ps1", "bat", "cmd", "dll", "so", "msi", "pkg", "heic", "mov", "mp4", "mp3", "wav"]);
+
 export function parseLink(text: string): URL | null {
-  if (!/^https?:\/\/\S+$/i.test(text)) return null;
+  if (/^https?:\/\/\S+$/i.test(text)) {
+    try {
+      const url = new URL(text);
+      return url.hostname.includes(".") || url.hostname === "localhost" ? url : null;
+    } catch {
+      return null;
+    }
+  }
+  const bare = BARE_HOST.exec(text);
+  if (!bare || FILE_ENDINGS.has(bare[1].toLowerCase()) || /^\d+(\.\d+)+$/.test(text)) return null;
   try {
-    const url = new URL(text);
-    return url.hostname.includes(".") || url.hostname === "localhost" ? url : null;
+    return new URL(`https://${text}`);
   } catch {
     return null;
   }

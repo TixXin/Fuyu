@@ -11,6 +11,7 @@ import {
 } from "../appearance/settings";
 import type { AgentArchiveMotion, AgentCardEffects, AgentHostDisplay, AgentSessionView, IslandSettings } from "../appearance/types";
 import { useTranslation } from "../../i18n";
+import { isMacOS } from "../../lib/platform";
 
 export function AgentSessionListSettings({
   settings,
@@ -84,7 +85,7 @@ export function AgentSessionListSettings({
         />
         <SettingsRow
           title={text.hostDisplay}
-          description={text.hostDisplayHint}
+          description={isMacOS ? text.hostDisplayHintMac : text.hostDisplayHint}
           control={
             <SettingsSelect<AgentHostDisplay>
               value={settings.agentHostDisplay}

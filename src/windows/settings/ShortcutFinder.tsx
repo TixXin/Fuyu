@@ -1,6 +1,7 @@
 import { useState, type KeyboardEvent } from "react";
 import { Keyboard } from "lucide-react";
-import { buildShortcutFromEvent } from "../../features/clipboard/shortcut";
+import { buildShortcutFromEvent, shortcutLabel } from "../../features/clipboard/shortcut";
+import { useShortcutCapture } from "../../features/clipboard/useShortcutCapture";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton";
 import { SettingsRow } from "../../components/settings/SettingsRow";
@@ -18,6 +19,11 @@ export function ShortcutFinder({ owners, onOpenPage }: {
   const [pressed, setPressed] = useState<string | null>(null);
   const owner = pressed ? findShortcutOwnerRow(pressed, owners, "") : undefined;
 
+  useShortcutCapture(recording, (shortcut) => {
+    setRecording(false);
+    setPressed(shortcut);
+  });
+
   const record = (event: KeyboardEvent<HTMLButtonElement>) => {
     if (!recording) return;
     event.preventDefault();
@@ -31,11 +37,11 @@ export function ShortcutFinder({ owners, onOpenPage }: {
 
   const result = !pressed ? null : owner ? (
     <span className="shortcut-finder__result" role="status">
-      {text.finderUsed(pressed, owner.label, owner.home ? t.settings.categories[owner.home] : text.featureTitle)}
+      {text.finderUsed(shortcutLabel(pressed), owner.label, owner.home ? t.settings.categories[owner.home] : text.featureTitle)}
       {owner.home ? <SettingsLinkButton onClick={() => owner.home && onOpenPage(owner.home)}>{text.finderOpen}</SettingsLinkButton> : null}
     </span>
   ) : (
-    <span className="shortcut-finder__result shortcut-finder__result--free" role="status">{text.finderFree(pressed)}</span>
+    <span className="shortcut-finder__result shortcut-finder__result--free" role="status">{text.finderFree(shortcutLabel(pressed))}</span>
   );
 
   return (
@@ -48,12 +54,12 @@ export function ShortcutFinder({ owners, onOpenPage }: {
             className={`shortcut-record-button${recording ? " shortcut-record-button--recording" : ""}`}
             type="button"
             aria-label={text.finderTitle}
-            onClick={() => setRecording(true)}
+            onClick={(event) => { event.currentTarget.focus(); setRecording(true); }}
             onKeyDown={record}
             onBlur={() => setRecording(false)}
           >
             <Keyboard size={14} strokeWidth={2.3} />
-            <span>{recording ? text.finderPress : pressed ?? text.finderIdle}</span>
+            <span>{recording ? text.finderPress : pressed ? shortcutLabel(pressed) : text.finderIdle}</span>
           </button>
         }
       />

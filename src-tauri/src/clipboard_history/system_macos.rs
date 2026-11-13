@@ -8,8 +8,8 @@ pub(super) fn source_app_path() -> Option<String> {
     apps::frontmost_path()
 }
 
-pub(super) fn recognize_text(_width: u32, _height: u32, _rgba: &[u8]) -> Option<String> {
-    None
+pub(super) fn recognize_text(width: u32, height: u32, rgba: &[u8]) -> Option<String> {
+    crate::macos::ocr::recognize(width, height, rgba)
 }
 
 pub(super) fn to_simplified(text: &str) -> Option<String> {

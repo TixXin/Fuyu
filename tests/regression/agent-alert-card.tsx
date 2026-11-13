@@ -12,7 +12,6 @@ import type { IslandPage } from "../../src/windows/island/types";
 
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
 localStorage.setItem(AGENT_APPROVAL_STORAGE_KEY, JSON.stringify({ onIsland: true, whenInFront: false }));
-Object.defineProperty(document, "hasFocus", { value: () => false });
 const decisions: string[] = [];
 let watchingOutside = false;
 mockIPC(

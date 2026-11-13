@@ -13,6 +13,7 @@ use crate::platform;
 static ICONS: Mutex<Option<HashMap<String, Option<String>>>> = Mutex::new(None);
 const MAX_CACHED: usize = 64;
 
+#[cfg(not(target_os = "macos"))]
 pub(super) fn is_icon_source(path: &str) -> bool {
     let path = Path::new(path);
     path.is_absolute()
@@ -20,6 +21,16 @@ pub(super) fn is_icon_source(path: &str) -> bool {
             .extension()
             .is_some_and(|extension| extension.eq_ignore_ascii_case("exe"))
         && path.is_file()
+}
+
+#[cfg(target_os = "macos")]
+pub(super) fn is_icon_source(path: &str) -> bool {
+    let path = Path::new(path);
+    path.is_absolute()
+        && path
+            .extension()
+            .is_some_and(|extension| extension.eq_ignore_ascii_case("app"))
+        && path.is_dir()
 }
 
 pub(crate) fn icon_data_url(path: &str) -> Option<String> {

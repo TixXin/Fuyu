@@ -18,7 +18,7 @@ export const DEFAULT_SETTINGS: IslandSettings = {
   expandedScale: 1,
   marginY: 0,
   islandMonitor: "primary",
-  menuBarPlacement: "over",
+  menuBarPlacement: "notch",
   topFilletRadius: 8,
   islandCornerRadius: DEFAULT_ISLAND_CORNER_RADIUS,
   islandCornerShape: "squircle",

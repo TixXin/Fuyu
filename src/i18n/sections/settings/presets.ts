@@ -13,6 +13,7 @@ export type SettingsPresetsText = {
   hint: string;
   exported: (path: string) => string;
   reveal: string;
+  revealMac: string;
   imported: (name: string) => string;
   problems: { notJson: string; notTheme: string; newerVersion: string };
 };
@@ -32,6 +33,7 @@ export const zhCN: SettingsPresetsText = {
   hint: "样式预设可以导出成主题文件发给别人，或在另一台电脑上导入。主题只含外观页的设置（颜色、字体、尺寸、圆角、玻璃效果等），导入后出现在列表最上面，点「启用」才会应用。",
   exported: (path) => `已导出到 ${path}`,
   reveal: "在文件夹中显示",
+  revealMac: "在访达中显示",
   imported: (name) => `已导入「${name}」，点「启用」应用它。`,
   problems: {
     notJson: "这个文件不是有效的 JSON，无法导入。",
@@ -55,6 +57,7 @@ export const en: SettingsPresetsText = {
   hint: "Export a style preset as a theme file to share it or import it on another computer. A theme holds only the Appearance settings (colours, font, sizes, corners, glass and so on); an imported one appears at the top of the list and applies when you click Apply.",
   exported: (path) => `Exported to ${path}`,
   reveal: "Show in folder",
+  revealMac: "Show in Finder",
   imported: (name) => `Imported "${name}". Click Apply to use it.`,
   problems: {
     notJson: "This file is not valid JSON and cannot be imported.",

@@ -4,6 +4,7 @@ import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton";
 import { SettingsRow } from "../../components/settings/SettingsRow";
 import { useErrorText, useTranslation } from "../../i18n";
+import { isMacOS } from "../../lib/platform";
 import { revealThemeFile } from "./api";
 import type { ThemeProblem } from "./theme.ts";
 import type { IslandPreset } from "./types";
@@ -120,7 +121,7 @@ export function PresetSettingsSection({
           <span>{text.exported(status.path)}</span>
           <button className="preset-status-link" type="button" onClick={() => void revealThemeFile(status.path)}>
             <FolderOpen size={12} strokeWidth={2.2} aria-hidden="true" />
-            {text.reveal}
+            {isMacOS ? text.revealMac : text.reveal}
           </button>
         </p>
       )}

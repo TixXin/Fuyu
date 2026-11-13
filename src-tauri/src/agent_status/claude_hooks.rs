@@ -143,11 +143,29 @@ pub(super) fn claude_code_installed_entries(
     entries
 }
 
+#[cfg(windows)]
+const CURL: (&str, &str) = ("curl.exe", "NUL");
+#[cfg(not(windows))]
+const CURL: (&str, &str) = ("/usr/bin/curl", "/dev/null");
+#[cfg(windows)]
+const SCRIPT_RUNNERS: (&str, &[&str], &str, &[&str]) = ("cmd.exe", &["/d", "/c"], "powershell.exe", &["-NoProfile", "-ExecutionPolicy", "Bypass", "-File"]);
+#[cfg(not(windows))]
+const SCRIPT_RUNNERS: (&str, &[&str], &str, &[&str]) = ("/bin/sh", &[], "/bin/sh", &[]);
+
+fn script_args(prefix: &[&str], script_path: &Path, rest: &[&str]) -> Vec<String> {
+    prefix
+        .iter()
+        .map(|arg| arg.to_string())
+        .chain(std::iter::once(script_path.to_string_lossy().to_string()))
+        .chain(rest.iter().map(|arg| arg.to_string()))
+        .collect()
+}
+
 fn claude_code_activity_hook_entry(url: &str, token: &str) -> Value {
     let args = [
         "-s",
         "-o",
-        "NUL",
+        CURL.1,
         "--connect-timeout",
         "1",
         "-m",
@@ -162,7 +180,7 @@ fn claude_code_activity_hook_entry(url: &str, token: &str) -> Value {
         "@-",
         url,
     ];
-    let mut entry = claude_code_hook_entry("curl.exe", args.iter().map(|arg| arg.to_string()).collect(), 10);
+    let mut entry = claude_code_hook_entry(CURL.0, args.iter().map(|arg| arg.to_string()).collect(), 10);
     if let Some(hook) = entry["hooks"][0].as_object_mut() {
         hook.insert("async".to_string(), Value::Bool(true));
     }
@@ -264,45 +282,18 @@ pub(super) fn claude_code_match_all_hook_entry(mut entry: Value) -> Value {
 }
 
 pub(super) fn claude_code_running_hook_entry(script_path: &Path) -> Value {
-    let args = vec![
-        "/d".to_string(),
-        "/c".to_string(),
-        script_path.to_string_lossy().to_string(),
-        "claudeCode".to_string(),
-    ];
-    claude_code_hook_entry("cmd.exe", args, 1)
+    let (runner, prefix, _, _) = SCRIPT_RUNNERS;
+    claude_code_hook_entry(runner, script_args(prefix, script_path, &["claudeCode"]), 1)
 }
 
 pub(super) fn claude_code_status_hook_entry(script_path: &Path, phase: &str) -> Value {
-    claude_code_hook_entry(
-        "powershell.exe",
-        vec![
-            "-NoProfile".to_string(),
-            "-ExecutionPolicy".to_string(),
-            "Bypass".to_string(),
-            "-File".to_string(),
-            script_path.to_string_lossy().to_string(),
-            "claudeCode".to_string(),
-            phase.to_string(),
-        ],
-        5,
-    )
+    let (_, _, runner, prefix) = SCRIPT_RUNNERS;
+    claude_code_hook_entry(runner, script_args(prefix, script_path, &["claudeCode", phase]), 5)
 }
 
 pub(super) fn claude_code_session_hook_entry(script_path: &Path, event: &str) -> Value {
-    claude_code_hook_entry(
-        "powershell.exe",
-        vec![
-            "-NoProfile".to_string(),
-            "-ExecutionPolicy".to_string(),
-            "Bypass".to_string(),
-            "-File".to_string(),
-            script_path.to_string_lossy().to_string(),
-            "claudeCode".to_string(),
-            event.to_string(),
-        ],
-        15,
-    )
+    let (_, _, runner, prefix) = SCRIPT_RUNNERS;
+    claude_code_hook_entry(runner, script_args(prefix, script_path, &["claudeCode", event]), 15)
 }
 
 pub(super) fn claude_code_hook_entry(command: &str, args: Vec<String>, timeout: i64) -> Value {
@@ -322,6 +313,7 @@ pub(super) fn claude_code_hook_entry(command: &str, args: Vec<String>, timeout: 
 mod tests {
     use super::*;
 
+    #[cfg(windows)]
     #[test]
     fn running_hook_passes_script_path_as_unquoted_argument() {
         let path = Path::new(r"C:\Users\a b\focusd-agent-running.cmd");
@@ -340,6 +332,7 @@ mod tests {
         assert!(args.iter().all(|arg| !arg.as_str().unwrap().contains('"')));
     }
 
+    #[cfg(windows)]
     #[test]
     fn only_waiting_notifications_save_their_input() {
         let running = Path::new(r"C:\focusd-agent-running.cmd");
@@ -373,6 +366,7 @@ mod tests {
         assert!(hooks["PermissionRequest"][0].get("matcher").is_none());
     }
 
+    #[cfg(windows)]
     #[test]
     fn approval_hook_sits_beside_the_status_hook_and_repair_replaces_it() {
         let running = Path::new(r"C:\focusd-agent-running.cmd");
@@ -425,4 +419,24 @@ mod tests {
         assert_eq!(hooks["Stop"].as_array().unwrap().len(), 1);
         assert!(hooks.get("PostToolUse").is_none() && hooks.get("PermissionDenied").is_none(), "emptied events are dropped");
     }
+
+    #[cfg(not(windows))]
+    #[test]
+    fn mac_hooks_run_the_shell_scripts_with_absolute_paths() {
+        let running = Path::new("/Users/a b/.fuyu/fuyu-agent-running.sh");
+        let status = Path::new("/Users/a b/.fuyu/fuyu-agent-status.sh");
+        let mut hooks = Map::new();
+        install_claude_code_hook_events(&mut hooks, claude_code_hook_entries(running, status));
+        let hook = |event: &str| hooks[event][0]["hooks"][0].clone();
+        assert_eq!(hook("UserPromptSubmit")["command"], json!("/bin/sh"));
+        assert_eq!(hook("UserPromptSubmit")["args"], json!(["/Users/a b/.fuyu/fuyu-agent-running.sh", "claudeCode"]));
+        assert_eq!(hook("Notification")["args"], json!(["/Users/a b/.fuyu/fuyu-agent-running.sh", "claudeCode", "notification"]));
+        assert_eq!(hook("Stop")["args"], json!(["/Users/a b/.fuyu/fuyu-agent-status.sh", "claudeCode", "completed"]));
+        assert_eq!(hook("SessionStart")["args"], json!(["/Users/a b/.fuyu/fuyu-agent-session.sh", "claudeCode", "start"]));
+        let activity = claude_code_activity_hook_entry("http://127.0.0.1:1/claude/activity", "t");
+        assert_eq!(activity["hooks"][0]["command"], json!("/usr/bin/curl"));
+        assert!(activity["hooks"][0]["args"].as_array().unwrap().contains(&json!("/dev/null")));
+        assert!(value_contains_focusd_hook_signature(&hook("Stop")));
+    }
+
 }

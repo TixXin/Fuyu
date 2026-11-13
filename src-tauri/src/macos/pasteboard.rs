@@ -1,6 +1,6 @@
-use objc2::runtime::ProtocolObject;
+use objc2::{rc::Retained, runtime::ProtocolObject};
 use objc2_app_kit::{NSPasteboard, NSPasteboardWriting};
-use objc2_foundation::{NSArray, NSString, NSURL};
+use objc2_foundation::{NSArray, NSData, NSString, NSURL};
 
 const PRIVATE_TYPES: [&str; 3] = [
     "org.nspasteboard.ConcealedType",
@@ -36,6 +36,39 @@ pub(crate) fn write_files(paths: &[String]) -> bool {
     let board = NSPasteboard::generalPasteboard();
     board.clearContents();
     board.writeObjects(&NSArray::from_retained_slice(&writers))
+}
+
+const PNG_TYPE: &str = "public.png";
+const FILE_URL_TYPE: &str = "public.file-url";
+const TEXT_TYPE: &str = "public.utf8-plain-text";
+
+fn file_url(path: &str) -> Option<Retained<NSString>> {
+    NSURL::fileURLWithPath(&NSString::from_str(path)).absoluteString()
+}
+
+pub(crate) fn write_image(png: &[u8], file: Option<&str>) -> bool {
+    let board = NSPasteboard::generalPasteboard();
+    board.clearContents();
+    let mut written = board.setData_forType(Some(&NSData::with_bytes(png)), &NSString::from_str(PNG_TYPE));
+    if let Some(url) = file.and_then(file_url) {
+        written &= board.setString_forType(&url, &NSString::from_str(FILE_URL_TYPE));
+    }
+    written
+}
+
+pub(crate) fn write_file_with_text(path: &str, text: &str) -> bool {
+    let board = NSPasteboard::generalPasteboard();
+    board.clearContents();
+    let Some(url) = file_url(path) else {
+        return false;
+    };
+    board.setString_forType(&url, &NSString::from_str(FILE_URL_TYPE)) && board.setString_forType(&NSString::from_str(text), &NSString::from_str(TEXT_TYPE))
+}
+
+pub(crate) fn write_text(text: &str) -> bool {
+    let board = NSPasteboard::generalPasteboard();
+    board.clearContents();
+    board.setString_forType(&NSString::from_str(text), &NSString::from_str(TEXT_TYPE))
 }
 
 pub(crate) fn transform(text: &str, transform: &str) -> Option<String> {

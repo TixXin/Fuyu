@@ -1,0 +1,16 @@
+{
+  "build": {
+    "beforeDevCommand": "node scripts/stop-running-island.mjs && node scripts/macos/mediaremote-adapter.mjs && pnpm dev",
+    "beforeBuildCommand": "node scripts/macos/mediaremote-adapter.mjs && pnpm build"
+  },
+  "bundle": {
+    "macOS": {
+      "minimumSystemVersion": "15.0",
+      "entitlements": "Entitlements.plist"
+    },
+    "resources": {
+      "macos/en.lproj/InfoPlist.strings": "en.lproj/InfoPlist.strings",
+      "macos/zh-Hans.lproj/InfoPlist.strings": "zh-Hans.lproj/InfoPlist.strings"
+    }
+  }
+}

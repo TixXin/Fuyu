@@ -210,6 +210,24 @@ mod migration_tests {
     }
 
     #[test]
+    fn storage_left_behind_by_a_failed_start_never_replaces_the_file() {
+        let dir = temp_dir("migrate-stale-fallback");
+        migrate(&dir, &keys("[v1]"), data("one"), "0.3.0").expect("migrate");
+        let mut stale = keys("[stale]");
+        stale.migrated = Some("{\"at\":1}".into());
+        for _ in 0..2 {
+            let (file, notice) = migrate(&dir, &stale, data("stale"), "0.3.0").expect("keep");
+            assert_eq!((file.data.todos[0].title.as_str(), file.revision, notice), ("one", 0, None));
+        }
+        assert_eq!(backups(&dir, "todos.before-reimport-"), 0);
+        assert_eq!(backups(&dir, "todos-migration-backup"), 2);
+        let marker_only = LocalTodoKeys { migrated: Some("{}".into()), ..Default::default() };
+        assert_eq!(migrate(&dir, &marker_only, data("x"), "0.3.0").expect("empty").0.data.todos[0].title, "one");
+        assert_eq!(backups(&dir, "todos-migration-backup"), 2);
+        let _ = fs::remove_dir_all(dir);
+    }
+
+    #[test]
     fn changes_from_an_older_version_are_reimported_after_a_backup() {
         let dir = temp_dir("migrate-reimport");
         migrate(&dir, &keys("[v1]"), data("one"), "0.3.0").expect("migrate");

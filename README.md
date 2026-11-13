@@ -156,6 +156,12 @@ pnpm tauri build    # 打包安装程序
 
 技术栈：Tauri 2、React 19 + TypeScript、Rust。发布与应用内更新见 [docs/features/updater.md](docs/features/updater.md)。
 
+## 用户交流群
+
+用着有问题、有想法，或者只是想聊聊，欢迎扫码进微信群：
+
+<img src="docs/assets/readme/wechat-group.png" alt="浮屿用户交流群的微信二维码" width="240">
+
 ## 参与贡献
 
 浮屿是大家一起做的，欢迎你来添一块：
@@ -166,6 +172,17 @@ pnpm tauri build    # 打包安装程序
 - **画一个 Logo**：浮屿还没有正式的 Logo，[征集页](https://fuyu.ing/zh/logo/)一直开着。
 
 <a href="https://github.com/TixXin/fuyu/graphs/contributors"><img src="https://contrib.rocks/image?repo=TixXin/fuyu" alt="浮屿的贡献者"></a>
+
+## Star 趋势
+
+每一颗 Star 都是浮屿往前走的动力。
+
+<a href="https://star-history.com/#TixXin/fuyu&amp;Date">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=TixXin/fuyu&amp;type=Date&amp;theme=dark">
+    <img alt="浮屿的 Star 数随时间的变化" src="https://api.star-history.com/svg?repos=TixXin/fuyu&amp;type=Date" width="600">
+  </picture>
+</a>
 
 ## 开源协议
 

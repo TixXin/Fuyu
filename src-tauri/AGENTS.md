@@ -23,7 +23,7 @@ src-tauri/src/
 ├── rename_migration/        # 改名迁移（D17）：首次启动时把 com.focusd.island 的数据目录、凭据、开机自启、hook 迁移到 com.tixxin.fuyu，并静默卸载旧安装
 ├── clipboard_history/
 ├── file_shelf/              # 文件中转：路径列表（file-shelf.json）与命令；拖出调用 win32/ole.rs
-├── screenshot/              # 截图（C41）：快捷键线程（hotkeys.rs，主键盘 RegisterHotKey、小键盘交给 win32/win_key_hook.rs），每个显示器先截图再给它一个常驻隐藏的选区窗口 screenshot-<n>（session.rs，截屏在 win32/screen_capture.rs），复制到剪贴板（output.rs）
+├── screenshot/              # 截图（C41）：快捷键线程（hotkeys.rs，主键盘 RegisterHotKey、小键盘交给 win32/win_key_hook.rs），每个显示器先截图再给它一个常驻隐藏的选区窗口 screenshot-<n>（session.rs，截屏在 win32/screen_capture.rs），复制到剪贴板（output.rs、clipboard.rs）；系统调用经 capture.rs，Mac 上换成 `*_macos.rs`（ScreenCaptureKit、NSPanel、global-hotkey）
 ├── recording/               # 录屏（C41.11）：录制线程（session.rs：WGC 帧经有界队列交给编码线程，满了丢帧计数）、帧节奏（pacing.rs，静止 3 个间隔才补重复帧，暂停扣时长）、尺寸码率和文件名（format.rs）；采集在 win32/graphics_capture.rs，编码写 MP4 在 win32/video_writer.rs
 ├── pets/                    # Codex Pets（petdex）：只读列出 ~/.codex/pets 与 <app data>/pets，校验后以 data URL 返回图集
 ├── local_api/               # 本地接口：127.0.0.1 HTTP（tiny_http）、鉴权与路由、转给 main 窗口的桥、local-api.json；由内置插件开关
@@ -41,6 +41,7 @@ src-tauri/src/
 ├── settings_window/         # 设置窗口：按需创建与显示（mod.rs）
 ├── onboarding_window/       # 新手引导：按需创建的透明遮罩，铺满岛所在屏幕的工作区（mod.rs）；跟着真岛发位置、只在卡片上接住鼠标（overlay.rs）
 ├── settings_file.rs         # 数据目录里的 settings.json（D30.2）：BACKUP_KEYS 设置的文件镜像，格式同设置备份；命令 read_settings_file / write_settings_file
+├── shortcut_capture.rs      # 设置窗口录快捷键期间（命令 set_shortcut_capture）：浮屿自己的全局快捷键被按下不执行，改发 shortcut-captured 给录制按钮；Mac 在 macos/hotkeys.rs 的分发里拦，Windows 在各模块的 WM_HOTKEY 里拦
 ├── home_dir.rs              # 家目录（#50，D30）：浮屿的数据目录只从这里取 fuyu_home(app.path())，不要直接调 app_data_dir()；FUYU_HOME → home.json 指针 → ~/.fuyu；home_dir/migration.rs 为升级时复制旧数据、重装钩子、复制待办 Markdown，见 docs/features/data-home.md
 ├── fs_write.rs              # 整份替换应用数据目录里的文件：先写旁边的 .tmp 再改名；别的程序暂时占着（拒绝访问、共享冲突）时稍等重试
 ├── dev_lane.rs              # lane 时期的预览（设了 FOCUSD_DEV_LANE 的调试版）：独立应用标识、默认位置，不改用户的链接、自启和 hook；启动脚本已删（F32），等 G1.6 收尾后删掉

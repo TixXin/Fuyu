@@ -5,10 +5,11 @@ import { useLocale, useTranslation } from "../../i18n";
 import { openPluginHomepage, PLUGIN_PERMISSIONS, type PluginInfo, type PluginPermission } from "./api";
 import { isSensitivePermission } from "./promptedPermissions";
 import { pluginHealth } from "./installedFilter";
-import { NodeMissingHint } from "./NodeMissingHint";
+import { RuntimeHints } from "./RuntimeHints";
 import { PluginIcon } from "./PluginIcon";
 import { PluginRunStats } from "./PluginRunStats";
 import "./PluginCard.css";
+import { isMacOS } from "../../lib/platform";
 
 const isPermission = (name: string): name is PluginPermission =>
   (PLUGIN_PERMISSIONS as readonly string[]).includes(name);
@@ -21,7 +22,7 @@ function PermissionSummary({ permissions, optional }: { permissions: string[]; o
   const hasSensitive = permissions.some(isSensitivePermission);
   const item = (permission: string, isOptional: boolean) => (
     <li key={permission} className={isSensitivePermission(permission) ? "plugin-card__permission--sensitive" : undefined}>
-      {isPermission(permission) ? t.settings.plugins.permission[permission] : permission}
+      {isPermission(permission) ? (isMacOS && permission === "secrets" ? t.settings.plugins.secretsPermissionMac : t.settings.plugins.permission[permission]) : permission}
       {isOptional ? ` (${t.settings.plugins.optionalPermission})` : ""}
     </li>
   );
@@ -47,6 +48,7 @@ export function PluginCard({
   index = 0,
   allowed,
   nodeAvailable,
+  powershellAvailable,
   busy,
   onEnabledChange,
   onOpenDetail,
@@ -56,6 +58,7 @@ export function PluginCard({
   index?: number;
   allowed: boolean;
   nodeAvailable: boolean;
+  powershellAvailable: boolean;
   busy: boolean;
   onEnabledChange: (enabled: boolean) => void;
   onOpenDetail: () => void;
@@ -140,7 +143,7 @@ export function PluginCard({
             {plugin.needsApproval ? <p className="plugin-card__hint plugin-card__hint--warn">{t.settings.plugins.needsApproval}</p> : null}
             {isOn && !canRun ? <p className="plugin-card__hint plugin-card__hint--warn">{t.settings.plugins.notAllowed}</p> : null}
             {!plugin.hasProcess ? <p className="plugin-card__hint">{t.settings.plugins.describedOnly}</p> : null}
-            {plugin.runtime === "node" && !nodeAvailable ? <NodeMissingHint /> : null}
+            <RuntimeHints runtime={plugin.runtime} platforms={plugin.platforms} nodeAvailable={nodeAvailable} powershellAvailable={powershellAvailable} />
             {showStatus && plugin.error ? <p className="plugin-card__error">{plugin.error}</p> : null}
             {showStatus ? <PluginRunStats plugin={plugin} /> : null}
             {plugin.keybindingConflicts.length > 0 ? (

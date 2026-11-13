@@ -9,6 +9,8 @@ import { useTranslation } from "../../i18n";
 import { ActHeading } from "./ActHeading";
 import type { OnboardingModule } from "./personas";
 import "./PlayAct.css";
+import { isMacOS } from "../../lib/platform";
+import { shortcutLabel } from "../../features/clipboard/shortcut";
 
 const SHELF_POLL_MS = 800;
 
@@ -84,7 +86,7 @@ export function PlayAct({ settings, modules, clipboard, islandOpen, onSettingsCh
           <li key={task} className={done.has(task) ? "play-act__task play-act__task--done" : "play-act__task"}>
             <Star className="play-act__star" size={18} aria-hidden="true" />
             <span className="play-act__task-text">
-              {task === "expand" ? (hover ? text.hover : text.click) : task === "drop" ? text.drop : text.shortcut(clipboard.shortcut)}
+              {task === "expand" ? (hover ? text.hover : text.click) : task === "drop" ? (isMacOS ? text.dropMac : text.drop) : text.shortcut(shortcutLabel(clipboard.shortcut))}
               {task === "drop" && <small>{text.dropHint}</small>}
               {task === "shortcut" && <small>{text.shortcutHint}</small>}
             </span>
@@ -96,7 +98,7 @@ export function PlayAct({ settings, modules, clipboard, islandOpen, onSettingsCh
                 onChange={(expandTrigger) => onSettingsChange({ ...settings, expandTrigger })}
               />
             )}
-            {task === "shortcut" && (
+            {task === "shortcut" && !isMacOS && (
               <label className="play-act__winv">
                 {text.winV}
                 <SettingsSwitch id="onboarding-winv" checked={clipboard.winV} onChange={(winV) => onClipboardChange({ ...clipboard, winV })} />

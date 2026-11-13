@@ -105,7 +105,10 @@ fn pressed(id: usize) {
 struct ApprovalHotkeyWindow;
 
 impl WindowMessages for ApprovalHotkeyWindow {
-    fn handle(window: HWND, message: u32, wparam: WPARAM, _: LPARAM) -> Option<LRESULT> {
+    fn handle(window: HWND, message: u32, wparam: WPARAM, lparam: LPARAM) -> Option<LRESULT> {
+        if message == WM_HOTKEY && crate::shortcut_capture::capture_hotkey_message(lparam.0) {
+            return Some(LRESULT(0));
+        }
         match message {
             WM_HOTKEY => pressed(wparam.0),
             REFRESH_MESSAGE => apply(window),

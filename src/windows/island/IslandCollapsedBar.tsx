@@ -33,6 +33,9 @@ import { usePluginStatusItems } from "../../features/plugin-views/usePluginStatu
 import { useTranslation } from "../../i18n";
 import type { CollapsedSlots, IslandPage } from "./types";
 import { useWindowDragGesture } from "./useWindowDragGesture";
+import { hasNotchDrop, useIslandNotch } from "./notch";
+import { hasNotchAlert, NotchAlertLeading, NotchAlertTrailing } from "./NotchAlert";
+import { NotchMessageLeading, NotchMessageTrailing } from "./NotchMessage";
 import "./IslandCollapsedBar.css";
 
 type IslandCollapsedBarProps = {
@@ -131,6 +134,7 @@ export function IslandCollapsedBar({
   slots = NO_SLOTS,
 }: IslandCollapsedBarProps) {
   const t = useTranslation();
+  const notch = useIslandNotch();
   const updateVersion = useUpdateReminder();
   const audible = useAudible(mediaState.audioActive);
   const { didDragRef, prepareWindowDrag, handleWindowDragMove, cancelWindowDrag } =
@@ -168,6 +172,141 @@ export function IslandCollapsedBar({
   const byId = new Map(items.map((item) => [item.id, item]));
   const zone = (name: CollapsedZone) => zoneIds(placements, name, offered).flatMap((id) => byId.get(id) ?? []);
 
+  const left = renderZone(zone("left"));
+  const message = (
+    <>
+        <button
+          className={`island__open-button${showCenter ? " island__open-button--center" : ""}`}
+          type="button"
+          aria-label={preview
+            ? t.messages.openPreview(messagePreviewText(preview, t.messages), t.messages.sourceLabels[preview.source])
+            : translationPeek ? t.translator.peekLabel(translationPeek) : t.messages.expand(collapsedLabel)}
+          data-tooltip=""
+          aria-expanded={preview || translationPeek ? undefined : isExpanded}
+          aria-controls={preview || translationPeek ? undefined : "island-panel"}
+          onPointerDown={prepareWindowDrag}
+          onPointerMove={handleWindowDragMove}
+          onPointerUp={cancelWindowDrag}
+          onPointerCancel={cancelWindowDrag}
+          onClick={(event) => {
+            if (event.detail === 0 || !didDragRef.current) {
+              if (preview) {
+                const source = preview.source;
+                if (source === "plugin") {
+                  pluginNotifications.dismiss();
+                  return;
+                }
+                if (source === "qqMail" && qqMail.preview) {
+                  onOpenMessages("qqMail");
+                  void qqMail.readMail(qqMail.preview, qqMail.previewAccount);
+                  return;
+                }
+                const open = source === "qq" ? qqNotifications.openQQ() : wechatReminders.openWeChat(preview.chat);
+                void open.then((opened) => {
+                  if (opened === false) onOpenMessages(source);
+                });
+              } else if (translationPeek) {
+                onOpenTranslationPeek();
+              } else {
+                onOpenPage(openTarget);
+              }
+            }
+          }}
+        >
+          <CollapsedMessageContent preview={preview} enabled={!isExpanded && !isTucked} bodyOnly={notch !== null}>
+            {notice ? notice.content : deviceAlert ? (
+              <DeviceAlertPopup alert={deviceAlert} />
+            ) : quotaAlert ? (
+              <QuotaAlertPopup alert={quotaAlert} />
+            ) : levelPopup ? (
+              <LevelPopup change={levelPopup} />
+            ) : translationPeek ? (
+              <span className="island__active-task" key={translationPeek}>{translationPeek}</span>
+            ) : showMeeting && meeting ? (
+              <MeetingLine meeting={meeting.upcoming} showTitle={meeting.showTitle} />
+            ) : <>
+            {showCollapsedText && showTitle && (
+              <span className="island__brand">{t.island.appName}</span>
+            )}
+            {showCollapsedText && agentSession && (
+              <span className="island__agent-session" key={`${agentSession.label}:${agentSession.title}`}>
+                {showTitle && <span className="island__agent-session-separator">·</span>}
+                {slots.agentIcon ?? (agentSession.provider ? (
+                  <AgentProviderIcon provider={agentSession.provider} size={16} />
+                ) : (
+                  <Bot className="island__agent-session-bot" size={16} strokeWidth={1.5} absoluteStrokeWidth aria-hidden="true" />
+                ))}
+                <span className="island__agent-session-title">{agentSession.title}</span>
+              </span>
+            )}
+            {showCollapsedText && lyric && (
+              <span className="island__agent-session island__lyric" key={`lyric:${lyric.index}`}>
+                {showTitle && <span className="island__agent-session-separator">·</span>}
+                <Music2 className="island__agent-session-bot" size={16} strokeWidth={1.5} absoluteStrokeWidth aria-hidden="true" />
+                <span className="island__agent-session-title" aria-label={lyric.karaoke ? lyric.text ?? undefined : undefined}>
+                  {lyric.karaoke ? (
+                    <KaraokeText key={lyric.karaoke.clock} words={lyric.karaoke.words} positionMs={lyric.karaoke.positionMs} playing look={lyric.karaoke.look} />
+                  ) : lyric.text}
+                </span>
+              </span>
+            )}
+            {showCollapsedText && !agentSession && !lyric && collapsedTaskTitle && (
+              <span className="island__active-task" key={collapsedTaskTitle}>
+                {showTitle ? "· " : ""}
+                {collapsedTaskTitle}
+              </span>
+            )}
+            {showCollapsedText && !agentSession && !lyric && !collapsedTaskTitle && collapsedTodoCount !== null && (
+              <span className="island__todo-count">
+                {showTitle ? "· " : ""}
+                {slots.center && <span className="island__todo-center">{slots.center}</span>}
+                {t.island.pendingTodos(collapsedTodoCount)}
+              </span>
+            )}
+            </>}
+          </CollapsedMessageContent>
+          {showCenter && <span className="island__center-slot">{slots.center}</span>}
+        </button>
+        {notice && !preview && notice.actions}
+        {showMeeting && !preview && !notice && !deviceAlert && !quotaAlert && !levelPopup && !translationPeek && meeting?.upcoming.event.meetingLink && (
+          <button
+            className="island-meeting-join"
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              void openMeetingLink(meeting.upcoming.event.meetingLink!).catch((error: unknown) => console.error("Failed to open the meeting link", error));
+            }}
+          >
+            {t.calendar.join}
+          </button>
+        )}
+        {preview?.source === "plugin" && pluginNotifications.notification && (
+          <PluginNotificationActions actions={pluginNotifications.notification.actions} onAction={pluginNotifications.runAction} />
+        )}
+    </>
+  );
+  const right = (
+    <>
+        {renderZone(zone("right"))}
+        {agentSessionCount === null && (
+          <button
+            className="island__quiet-button"
+            type="button"
+            aria-label={t.island.collapseIsland}
+            data-tooltip=""
+            onClick={(event) => {
+              event.stopPropagation();
+              onTuck();
+            }}
+          />
+        )}
+    </>
+  );
+  const alert = { deviceAlert, quotaAlert, levelPopup };
+  const alerted = notch !== null && hasNotchAlert(alert);
+  const dropped = notch !== null && hasNotchDrop({ preview, notice, translationPeek });
+  const messaged = notch !== null && !alerted && !notice && preview !== null;
+
   return (
     <div
       className="island__collapsed"
@@ -180,127 +319,21 @@ export function IslandCollapsedBar({
         }
       }}
     >
-      {renderZone(zone("left"))}
-      <button
-        className={`island__open-button${showCenter ? " island__open-button--center" : ""}`}
-        type="button"
-        aria-label={preview
-          ? t.messages.openPreview(messagePreviewText(preview, t.messages), t.messages.sourceLabels[preview.source])
-          : translationPeek ? t.translator.peekLabel(translationPeek) : t.messages.expand(collapsedLabel)}
-        data-tooltip=""
-        aria-expanded={preview || translationPeek ? undefined : isExpanded}
-        aria-controls={preview || translationPeek ? undefined : "island-panel"}
-        onPointerDown={prepareWindowDrag}
-        onPointerMove={handleWindowDragMove}
-        onPointerUp={cancelWindowDrag}
-        onPointerCancel={cancelWindowDrag}
-        onClick={(event) => {
-          if (event.detail === 0 || !didDragRef.current) {
-            if (preview) {
-              const source = preview.source;
-              if (source === "plugin") {
-                pluginNotifications.dismiss();
-                return;
-              }
-              if (source === "qqMail" && qqMail.preview) {
-                onOpenMessages("qqMail");
-                void qqMail.readMail(qqMail.preview, qqMail.previewAccount);
-                return;
-              }
-              const open = source === "qq" ? qqNotifications.openQQ() : wechatReminders.openWeChat(preview.chat);
-              void open.then((opened) => {
-                if (opened === false) onOpenMessages(source);
-              });
-            } else if (translationPeek) {
-              onOpenTranslationPeek();
-            } else {
-              onOpenPage(openTarget);
-            }
-          }
-        }}
-      >
-        <CollapsedMessageContent preview={preview} enabled={!isExpanded && !isTucked}>
-          {notice ? notice.content : deviceAlert ? (
-            <DeviceAlertPopup alert={deviceAlert} />
-          ) : quotaAlert ? (
-            <QuotaAlertPopup alert={quotaAlert} />
-          ) : levelPopup ? (
-            <LevelPopup change={levelPopup} />
-          ) : translationPeek ? (
-            <span className="island__active-task" key={translationPeek}>{translationPeek}</span>
-          ) : showMeeting && meeting ? (
-            <MeetingLine meeting={meeting.upcoming} showTitle={meeting.showTitle} />
-          ) : <>
-          {showCollapsedText && showTitle && (
-            <span className="island__brand">{t.island.appName}</span>
-          )}
-          {showCollapsedText && agentSession && (
-            <span className="island__agent-session" key={`${agentSession.label}:${agentSession.title}`}>
-              {showTitle && <span className="island__agent-session-separator">·</span>}
-              {slots.agentIcon ?? (agentSession.provider ? (
-                <AgentProviderIcon provider={agentSession.provider} size={16} />
-              ) : (
-                <Bot className="island__agent-session-bot" size={16} strokeWidth={1.5} absoluteStrokeWidth aria-hidden="true" />
-              ))}
-              <span className="island__agent-session-title">{agentSession.title}</span>
-            </span>
-          )}
-          {showCollapsedText && lyric && (
-            <span className="island__agent-session island__lyric" key={`lyric:${lyric.index}`}>
-              {showTitle && <span className="island__agent-session-separator">·</span>}
-              <Music2 className="island__agent-session-bot" size={16} strokeWidth={1.5} absoluteStrokeWidth aria-hidden="true" />
-              <span className="island__agent-session-title" aria-label={lyric.karaoke ? lyric.text ?? undefined : undefined}>
-                {lyric.karaoke ? (
-                  <KaraokeText key={lyric.karaoke.clock} words={lyric.karaoke.words} positionMs={lyric.karaoke.positionMs} playing look={lyric.karaoke.look} />
-                ) : lyric.text}
-              </span>
-            </span>
-          )}
-          {showCollapsedText && !agentSession && !lyric && collapsedTaskTitle && (
-            <span className="island__active-task" key={collapsedTaskTitle}>
-              {showTitle ? "· " : ""}
-              {collapsedTaskTitle}
-            </span>
-          )}
-          {showCollapsedText && !agentSession && !lyric && !collapsedTaskTitle && collapsedTodoCount !== null && (
-            <span className="island__todo-count">
-              {showTitle ? "· " : ""}
-              {slots.center && <span className="island__todo-center">{slots.center}</span>}
-              {t.island.pendingTodos(collapsedTodoCount)}
-            </span>
-          )}
-          </>}
-        </CollapsedMessageContent>
-        {showCenter && <span className="island__center-slot">{slots.center}</span>}
-      </button>
-      {notice && !preview && notice.actions}
-      {showMeeting && !preview && !notice && !deviceAlert && !quotaAlert && !levelPopup && !translationPeek && meeting?.upcoming.event.meetingLink && (
-        <button
-          className="island-meeting-join"
-          type="button"
-          onClick={(event) => {
-            event.stopPropagation();
-            void openMeetingLink(meeting.upcoming.event.meetingLink!).catch((error: unknown) => console.error("Failed to open the meeting link", error));
-          }}
-        >
-          {t.calendar.join}
-        </button>
-      )}
-      {preview?.source === "plugin" && pluginNotifications.notification && (
-        <PluginNotificationActions actions={pluginNotifications.notification.actions} onAction={pluginNotifications.runAction} />
-      )}
-      {renderZone(zone("right"))}
-      {agentSessionCount === null && (
-        <button
-          className="island__quiet-button"
-          type="button"
-          aria-label={t.island.collapseIsland}
-          data-tooltip=""
-          onClick={(event) => {
-            event.stopPropagation();
-            onTuck();
-          }}
-        />
+      {notch ? (
+        <>
+          <div className="island__notch-row">
+            <div className="island__notch-wing island__notch-wing--left" {...{ [OPENS_BAR]: "" }}>{alerted ? <NotchAlertLeading {...alert} /> : messaged ? <NotchMessageLeading preview={preview} /> : left}</div>
+            <span className="island__notch-gap" aria-hidden="true" {...{ [OPENS_BAR]: "" }} />
+            <div className="island__notch-wing island__notch-wing--right" {...{ [OPENS_BAR]: "" }}>{alerted ? <NotchAlertTrailing {...alert} /> : messaged ? <NotchMessageTrailing preview={preview} /> : dropped ? right : <>{message}{right}</>}</div>
+          </div>
+          {dropped && <div className="island__notch-drop">{message}</div>}
+        </>
+      ) : (
+        <>
+          {left}
+          {message}
+          {right}
+        </>
       )}
     </div>
   );

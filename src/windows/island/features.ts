@@ -36,14 +36,15 @@ export function isPluginPage(page: IslandPage): page is PluginPageId {
 
 const BUILTIN_PAGE_ORDER: BuiltinPage[] = ["todo", "calendar", "music", "clipboard", "shelf", "screenshots", "qq", "agents", "translation"];
 const SOURCE_ORDER: MessageSource[] = ["qq", "wechat", "qqMail"];
-const BUILTIN_SHORTCUT_ORDER: BuiltinPage[] = ["agents", "todo", "calendar", "music", "clipboard", "shelf", "qq", "translation", "screenshots"];
+export const HEADER_DOT_PAGES = ["todo", "music", "calendar", "clipboard", "shelf", "screenshots"] as const satisfies readonly BuiltinPage[];
+export type HeaderDotPage = (typeof HEADER_DOT_PAGES)[number];
 
 function pageOrder(features: IslandFeatures): IslandPage[] {
   return [...BUILTIN_PAGE_ORDER, ...(features.pluginPages ?? [])];
 }
 
 function shortcutOrder(features: IslandFeatures): IslandPage[] {
-  return [...BUILTIN_SHORTCUT_ORDER, ...(features.pluginPages ?? [])];
+  return ["agents", ...HEADER_DOT_PAGES, ...(features.pluginPages ?? []), "qq", "translation"];
 }
 
 export function isPageEnabled(page: IslandPage, features: IslandFeatures): boolean {

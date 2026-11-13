@@ -20,7 +20,7 @@ export function panelIslandWidth(panelWidth: number, scale: number) {
 }
 export const POPUP_HEADER_SAVING = 58;
 export const AGENT_POPUP_LIST_SAVING = 4;
-export const TODO_ROW_HEIGHT = 46;
+export const TODO_ROW_HEIGHT = 34;
 export const TODO_GROW_START_ROWS = 2;
 export function getCollapsedIslandWidth(text: string, extraWidth = 0, widthExtra = 0) {
   const visualUnits = getCollapsedTextUnits(text);

@@ -56,7 +56,7 @@ export const zhCN: SettingsCategoriesText = {
   expand: (group) => `展开「${group}」`,
   collapse: (group) => `折叠「${group}」`,
   keywords: {
-    general: "开机 自启 语言 最小化 托盘 位置 显示器 屏幕 备份 恢复",
+    general: "开机 自启 登录 语言 最小化 托盘 菜单栏 位置 显示器 屏幕 备份 恢复",
     behavior: "展开 悬停 收起 贴边 隐藏 全屏 游戏 勿扰 音量 亮度 耳机 蓝牙 电量 电源 摄像头 麦克风",
     appearance: "尺寸 大小 缩放 面板高度 显示内容 收起条 项目 排序 预览",
     theme: "颜色 背景 透明 不透明度 液态玻璃 字体 像素 圆角 预设 样式 导入 导出 亮点",
@@ -124,7 +124,7 @@ export const en: SettingsCategoriesText = {
   expand: (group) => `Expand ${group}`,
   collapse: (group) => `Collapse ${group}`,
   keywords: {
-    general: "startup launch language minimise minimize tray position display monitor backup restore",
+    general: "startup launch login language minimise minimize tray menu bar position display monitor backup restore",
     behavior: "expand hover collapse tuck hide fullscreen game quiet volume brightness headphones bluetooth battery charger camera microphone",
     appearance: "size scale panel height display collapsed bar items order preview",
     theme: "colour color background opacity transparency glass font pixel corner preset style import export pulse",

@@ -9,7 +9,7 @@ pub struct PlatformSupport {
 #[cfg(target_os = "macos")]
 const SUPPORT: PlatformSupport = PlatformSupport {
     os: "macos",
-    unsupported: &["screenshot", "music", "qq", "wechat", "agentConnect", "agentRemote"],
+    unsupported: &["agentConnect", "agentRemote"],
 };
 
 #[cfg(not(target_os = "macos"))]
@@ -38,7 +38,7 @@ mod tests {
         let support = get_platform_support();
         if cfg!(target_os = "macos") {
             assert_eq!(support.os, "macos");
-            assert!(support.unsupported.contains(&"screenshot"));
+            assert!(!support.unsupported.contains(&"screenshot"));
         } else {
             assert_eq!(support.os, "windows");
             assert!(support.unsupported.is_empty());

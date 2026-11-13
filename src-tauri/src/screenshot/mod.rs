@@ -1,10 +1,17 @@
+#[cfg_attr(target_os = "macos", path = "capture_macos.rs")]
+mod capture;
+#[cfg_attr(target_os = "macos", path = "clipboard_macos.rs")]
+mod clipboard;
 mod history;
+#[cfg_attr(target_os = "macos", path = "hotkeys_macos.rs")]
 mod hotkeys;
 mod long;
 mod output;
 mod pin;
 mod session;
+mod shortcuts;
 mod stitch;
+#[cfg_attr(target_os = "macos", path = "targets_macos.rs")]
 mod targets;
 #[cfg(test)]
 mod tests;
@@ -48,7 +55,7 @@ pub(crate) fn is_enabled() -> bool {
 }
 
 #[tauri::command]
-pub async fn screenshot_configure(app: AppHandle, enabled: bool, shortcuts: Option<Vec<hotkeys::ShortcutConfig>>, print_screen: Option<bool>, history_days: Option<u32>) {
+pub async fn screenshot_configure(app: AppHandle, enabled: bool, shortcuts: Option<Vec<shortcuts::ShortcutConfig>>, print_screen: Option<bool>, history_days: Option<u32>) {
     hotkeys::configure(enabled, shortcuts, print_screen);
     if let Some(days) = history_days {
         history::set_keep_days(days);
@@ -57,6 +64,10 @@ pub async fn screenshot_configure(app: AppHandle, enabled: bool, shortcuts: Opti
     if enabled {
         session::prepare(&app);
     }
+}
+
+pub(crate) fn is_capturing() -> bool {
+    session::id().is_some()
 }
 
 pub(crate) fn start_from_tray(app: &AppHandle) {
@@ -71,7 +82,7 @@ pub(crate) fn start_from_tray(app: &AppHandle) {
 }
 
 #[tauri::command]
-pub fn screenshot_shortcut_status() -> Vec<hotkeys::ShortcutStatus> {
+pub fn screenshot_shortcut_status() -> Vec<shortcuts::ShortcutStatus> {
     hotkeys::status()
 }
 
@@ -155,9 +166,9 @@ pub async fn screenshot_finish(app: AppHandle, window: WebviewWindow, request: t
     }
     match action {
         Action::Long => {
-            let origin = session::origin(window.label()).ok_or_else(|| "No screenshot is open.".to_string())?;
-            let at = (origin.0.saturating_add_unsigned(left), origin.1.saturating_add_unsigned(top));
-            long::start(&app, window.label().to_string(), (at.0, at.1, picture.width, picture.height), deliver_long);
+            let at = session::global_point(window.label(), left, top).ok_or_else(|| "No screenshot is open.".to_string())?;
+            let (width, height) = pin::shown_size((picture.width, picture.height), session::scale(window.label()).unwrap_or(1.0));
+            long::start(&app, window.label().to_string(), (at.0, at.1, width, height), deliver_long);
             Ok(None)
         }
         Action::Copy => {
@@ -177,8 +188,7 @@ pub async fn screenshot_finish(app: AppHandle, window: WebviewWindow, request: t
             Ok(Some(path.display().to_string()))
         }
         Action::Pin => {
-            let origin = session::origin(window.label()).ok_or_else(|| "No screenshot is open.".to_string())?;
-            let at = (origin.0.saturating_add_unsigned(left), origin.1.saturating_add_unsigned(top));
+            let at = session::global_point(window.label(), left, top).ok_or_else(|| "No screenshot is open.".to_string())?;
             let scale = window.scale_factor().unwrap_or(1.0);
             remember(&app, &picture);
             pin::open(&app, picture, at, scale, session::id());
@@ -191,7 +201,7 @@ pub async fn screenshot_finish(app: AppHandle, window: WebviewWindow, request: t
                 crate::translation::translate_text_from_elsewhere(&app, text);
             } else {
                 if !text.is_empty() {
-                    output::copy_text(&text)?;
+                    clipboard::copy_text(&text)?;
                 }
                 let _ = app.emit(TEXT_EVENT, text);
             }
@@ -282,16 +292,18 @@ pub async fn screenshot_history_pin(app: AppHandle, path: String) -> Result<(), 
     let picture = tauri::async_runtime::spawn_blocking(move || history::read_picture(&path))
         .await
         .map_err(|error| format!("Failed to read the screenshot: {error}"))??;
-    let pointer = crate::win32::window::cursor_position().map(|point| (point.x, point.y));
+    let pointer = crate::island::screen::cursor_position().map(|(x, y)| (x.round() as i32, y.round() as i32));
     let monitor = match pointer {
         Some((x, y)) => app.monitor_from_point(f64::from(x), f64::from(y)).ok().flatten(),
         None => None,
     }
     .or_else(|| app.primary_monitor().ok().flatten())
     .ok_or_else(|| "No monitor was found.".to_string())?;
-    let (position, size) = (monitor.position(), monitor.size());
-    let at = history::pin_origin(pointer, (position.x, position.y, size.width, size.height), (picture.width, picture.height));
-    pin::open(&app, picture, at, monitor.scale_factor(), None);
+    let (position, size) = (crate::island::screen::monitor_origin(&monitor), crate::island::screen::monitor_size(&monitor));
+    let scale = monitor.scale_factor();
+    let shown = pin::shown_size((picture.width, picture.height), scale / capture::units_per_css(scale));
+    let at = history::pin_origin(pointer, (position.x, position.y, size.width, size.height), shown);
+    pin::open(&app, picture, at, scale, None);
     Ok(())
 }
 
@@ -303,18 +315,18 @@ pub async fn screenshot_history_delete(app: AppHandle, path: String) -> Result<(
     Ok(())
 }
 
-pub(crate) fn offset_words(lines: Vec<Vec<crate::win32::ocr::OcrWord>>, left: u32, top: u32) -> Vec<Vec<crate::win32::ocr::OcrWord>> {
+pub(crate) fn offset_words(lines: Vec<Vec<crate::platform::ocr::OcrWord>>, left: u32, top: u32) -> Vec<Vec<crate::platform::ocr::OcrWord>> {
     let (dx, dy) = (left as f32, top as f32);
     lines
         .into_iter()
-        .map(|words| words.into_iter().map(|word| crate::win32::ocr::OcrWord { x: word.x + dx, y: word.y + dy, ..word }).collect())
+        .map(|words| words.into_iter().map(|word| crate::platform::ocr::OcrWord { x: word.x + dx, y: word.y + dy, ..word }).collect())
         .collect()
 }
 
 #[tauri::command]
-pub async fn screenshot_find_words(window: WebviewWindow, x: u32, y: u32, width: u32, height: u32) -> Result<Vec<Vec<crate::win32::ocr::OcrWord>>, String> {
+pub async fn screenshot_find_words(window: WebviewWindow, x: u32, y: u32, width: u32, height: u32) -> Result<Vec<Vec<crate::platform::ocr::OcrWord>>, String> {
     let (cut_width, cut_height, rgba) = session::selection(window.label(), PixelRect { x, y, width, height }).ok_or_else(|| "Nothing is selected.".to_string())?;
-    let lines = tauri::async_runtime::spawn_blocking(move || crate::win32::ocr::recognize_words(cut_width, cut_height, &rgba))
+    let lines = tauri::async_runtime::spawn_blocking(move || crate::platform::ocr::recognize_words(cut_width, cut_height, &rgba))
         .await
         .map_err(|error| format!("Failed to read the text: {error}"))?
         .unwrap_or_default();
@@ -322,7 +334,7 @@ pub async fn screenshot_find_words(window: WebviewWindow, x: u32, y: u32, width:
 }
 
 async fn read_text(picture: Picture) -> String {
-    tauri::async_runtime::spawn_blocking(move || crate::win32::ocr::recognize(picture.width, picture.height, &picture.rgba))
+    tauri::async_runtime::spawn_blocking(move || crate::platform::ocr::recognize(picture.width, picture.height, &picture.rgba))
         .await
         .ok()
         .flatten()
@@ -428,8 +440,7 @@ pub async fn screenshot_drag(window: WebviewWindow, path: String) -> Result<(), 
     let target = window.clone();
     window
         .run_on_main_thread(move || {
-            let result = target.hwnd().map_err(|error| error.to_string()).and_then(|hwnd| crate::win32::ole::drag_files(hwnd, &[path]));
-            let _ = sender.send(result.map(|_| ()));
+            let _ = sender.send(capture::drag_file(&target, path));
         })
         .map_err(|error| format!("Failed to start the drag: {error}"))?;
     tauri::async_runtime::spawn_blocking(move || receiver.recv())
@@ -441,7 +452,7 @@ pub async fn screenshot_drag(window: WebviewWindow, path: String) -> Result<(), 
 #[tauri::command]
 pub async fn screenshot_paste_to_front(path: String) -> Result<(), String> {
     let path = card_file(&path)?;
-    tauri::async_runtime::spawn_blocking(move || output::paste_path(&path))
+    tauri::async_runtime::spawn_blocking(move || clipboard::paste_path(&path))
         .await
         .map_err(|error| format!("Failed to paste the screenshot: {error}"))?
 }

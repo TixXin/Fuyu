@@ -29,7 +29,7 @@ export function countActiveSessions(sessions: AgentSessionSummary[]) {
 export type SessionFilter = { claudeCode: boolean; codex: boolean };
 
 export function filterSessions(sessions: AgentSessionSummary[], filter: SessionFilter) {
-  const shown = sessions.filter((session) => (session.provider === "codex" ? filter.codex : filter.claudeCode));
+  const shown = sessions.filter((session) => filter[session.provider as keyof SessionFilter] !== false);
   return shown.length === sessions.length ? sessions : shown;
 }
 
@@ -64,6 +64,12 @@ export function sessionProject(cwd: string | null) {
 
 export function minutesAgo(updatedAt: number, now: number) {
   return Math.max(0, Math.floor((now - updatedAt) / 60_000));
+}
+
+const charWidth = (char: string) => (/[\u2e80-\u9fff\uff00-\uffef]/.test(char) ? 12 : char === " " ? 3.5 : /[mwMW]/.test(char) ? 10 : 7);
+
+export function ageSlotWidth(labels: readonly string[]) {
+  return Math.ceil(Math.max(0, ...labels.map((label) => [...label].reduce((sum, char) => sum + charWidth(char), 0))));
 }
 
 export function modelLabel(model: string | null, effort: string | null) {

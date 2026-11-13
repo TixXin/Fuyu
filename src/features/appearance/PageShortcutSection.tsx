@@ -3,7 +3,8 @@ import { Keyboard } from "lucide-react";
 import { ShortcutResetButton } from "../../components/controls/ShortcutResetButton";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { useTranslation } from "../../i18n";
-import { buildShortcutFromEvent } from "../clipboard/shortcut.ts";
+import { buildShortcutFromEvent, shortcutLabel } from "../clipboard/shortcut.ts";
+import { useShortcutCapture } from "../clipboard/useShortcutCapture";
 import "../clipboard/ClipboardSettingsSection.css";
 import {
   digitModifiersFromEvent,
@@ -15,6 +16,7 @@ import {
   DEFAULT_PAGE_PREVIOUS_SHORTCUT,
 } from "./pageShortcuts.ts";
 import type { IslandSettings } from "./types";
+import { isMacOS } from "../../lib/platform";
 
 type Recording = "digit" | "next" | "previous";
 
@@ -39,11 +41,23 @@ export function PageShortcutSection({
   const apply = (field: Recording, value: string) => {
     const tried = field === "digit" ? Array.from({ length: 9 }, (_, index) => `${value}+${index + 1}`) : [value];
     const taken = tried.map((shortcut) => [shortcut, takenBy(shortcut, field)] as const).find(([, owner]) => owner);
-    setConflict(taken?.[1] ? t.settings.shortcuts.taken(taken[0], taken[1]) : "");
+    setConflict(taken?.[1] ? t.settings.shortcuts.taken(shortcutLabel(taken[0]), taken[1]) : "");
     if (taken) return;
     if (field === "digit") onSettingsChange({ ...settings, pageDigitModifiers: value });
     else onSettingsChange({ ...settings, ...(field === "next" ? { pageNextShortcut: value } : { pagePreviousShortcut: value }) });
   };
+
+  useShortcutCapture(recording !== null, (shortcut) => {
+    if (!recording) return;
+    const parts = shortcut.split("+");
+    const key = parts.pop() ?? "";
+    const value = recording === "digit"
+      ? (/^[1-9]$/.test(key) && !parts.includes("Win") && parts.join("+")) || null
+      : recordedPageCycleShortcut(shortcut);
+    if (!value) return;
+    setRecording(null);
+    apply(recording, value);
+  });
 
   const handleKeyDown = (event: ReactKeyboardEvent<HTMLButtonElement>) => {
     if (!recording) return;
@@ -72,29 +86,29 @@ export function PageShortcutSection({
     <SettingsGroup
       title={t.settings.pageShortcuts.title}
       action={action}
-      footer={conflict ? <span className="shortcut-control__error" role="alert">{conflict}</span> : t.settings.pageShortcuts.hint}
+      footer={conflict ? <span className="shortcut-control__error" role="alert">{conflict}</span> : isMacOS ? t.settings.pageShortcuts.hintMac : t.settings.pageShortcuts.hint}
     >
       {rows.map(([field, label, display, value, fallback]) => (
         <div className="shortcut-control" key={field}>
           <div className="shortcut-control__meta">
             <span>{label}</span>
-            <strong>{display}</strong>
+            <strong>{shortcutLabel(display)}</strong>
           </div>
           <div className="shortcut-control__actions">
             <ShortcutResetButton
-              label={t.settings.shortcuts.reset(field === "digit" ? `${fallback}+1–9` : fallback)}
+              label={t.settings.shortcuts.reset(shortcutLabel(field === "digit" ? `${fallback}+1–9` : fallback))}
               isDefault={value === fallback}
               onReset={() => apply(field, fallback)}
             />
             <button
               className={["shortcut-record-button", recording === field ? "shortcut-record-button--recording" : ""].filter(Boolean).join(" ")}
               type="button"
-              onClick={() => setRecording(field)}
+              onClick={(event) => { event.currentTarget.focus(); setRecording(field); }}
               onKeyDown={handleKeyDown}
               onBlur={() => setRecording((current) => (current === field ? null : current))}
             >
               <Keyboard size={14} strokeWidth={2.3} />
-              <span>{recording === field ? (field === "digit" ? t.settings.pageShortcuts.pressDigit : t.settings.pageShortcuts.pressKeys) : display}</span>
+              <span>{recording === field ? (field === "digit" ? t.settings.pageShortcuts.pressDigit : t.settings.pageShortcuts.pressKeys) : shortcutLabel(display)}</span>
             </button>
           </div>
         </div>

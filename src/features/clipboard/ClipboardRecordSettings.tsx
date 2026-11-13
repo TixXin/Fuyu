@@ -7,6 +7,7 @@ import { SettingsRow } from "../../components/settings/SettingsRow";
 import { SettingsSelect } from "../../components/settings/SettingsSelect";
 import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
 import { useTranslation } from "../../i18n";
+import { isMacOS } from "../../lib/platform";
 import type { ClipboardHistorySettings, ClipboardSecretHandling } from "./api";
 import { CLIPBOARD_RETENTION_DAYS, parseExcludedApps } from "./settings";
 
@@ -24,11 +25,11 @@ export function ClipboardRecordSettings({ clipboardSettings, onChange }: {
     <SettingsGroup title={text.title}>
       <SettingsToggleRow title={text.captureImages} checked={clipboardSettings.captureImages} onChange={(captureImages) => onChange({ captureImages })} />
       {clipboardSettings.captureImages && (
-        <SettingsToggleRow indent title={text.ocr} description={text.ocrHint} checked={clipboardSettings.ocr} onChange={(ocr) => onChange({ ocr })} />
+        <SettingsToggleRow indent title={text.ocr} description={isMacOS ? text.ocrHintMac : text.ocrHint} checked={clipboardSettings.ocr} onChange={(ocr) => onChange({ ocr })} />
       )}
-      <SettingsToggleRow title={text.captureFiles} description={text.captureFilesHint} checked={clipboardSettings.captureFiles} onChange={(captureFiles) => onChange({ captureFiles })} />
-      <SettingsToggleRow title={text.captureHtml} description={text.captureHtmlHint} checked={clipboardSettings.captureHtml} onChange={(captureHtml) => onChange({ captureHtml })} />
-      <SettingsToggleRow title={text.skipSensitive} description={text.skipSensitiveHint} checked={clipboardSettings.skipSensitive} onChange={(skipSensitive) => onChange({ skipSensitive })} />
+      <SettingsToggleRow title={text.captureFiles} description={isMacOS ? text.captureFilesHintMac : text.captureFilesHint} checked={clipboardSettings.captureFiles} onChange={(captureFiles) => onChange({ captureFiles })} />
+      <SettingsToggleRow title={text.captureHtml} description={isMacOS ? text.captureHtmlHintMac : text.captureHtmlHint} checked={clipboardSettings.captureHtml} onChange={(captureHtml) => onChange({ captureHtml })} />
+      <SettingsToggleRow title={text.skipSensitive} description={isMacOS ? text.skipSensitiveHintMac : text.skipSensitiveHint} checked={clipboardSettings.skipSensitive} onChange={(skipSensitive) => onChange({ skipSensitive })} />
       <SettingsRow
         title={text.secrets}
         description={text.secretsHint}
@@ -45,11 +46,11 @@ export function ClipboardRecordSettings({ clipboardSettings, onChange }: {
           />
         }
       />
-      <SettingsRow title={text.excludedApps} description={text.excludedAppsHint} labelFor="clipboard-excluded-apps">
+      <SettingsRow title={text.excludedApps} description={isMacOS ? text.excludedAppsHintMac : text.excludedAppsHint} labelFor="clipboard-excluded-apps">
         <SettingsInput
           id="clipboard-excluded-apps"
           value={apps}
-          placeholder="keepass.exe, 1password.exe"
+          placeholder={isMacOS ? "1Password.app, Bitwarden.app" : "keepass.exe, 1password.exe"}
           onChange={(event) => setApps(event.currentTarget.value)}
           onBlur={() => onChange({ excludedApps: parseExcludedApps(apps) })}
           onKeyDown={(event) => {
