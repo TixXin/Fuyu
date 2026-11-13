@@ -7,6 +7,7 @@ import { DetailTemplate } from "../../src/features/plugin-views/templates/Detail
 import { FormTemplate } from "../../src/features/plugin-views/templates/FormTemplate";
 import { ListTemplate } from "../../src/features/plugin-views/templates/ListTemplate";
 import { StatusTemplate } from "../../src/features/plugin-views/templates/StatusTemplate";
+import { noteOpenRequest } from "../../src/features/plugin-views/openRequests";
 import "../../src/features/plugin-views/PluginViewPage.css";
 
 const sent: string[] = [];
@@ -39,6 +40,15 @@ const models = {
       { title: "Links", items: [{ id: "c", title: "Bad link", url: "javascript:alert(1)" }] },
     ],
   },
+  listKeys: {
+    search: { placeholder: "Search apps" },
+    items: [
+      { id: "note", title: "Not a row to open" },
+      { id: "calc", title: "Calculator", action: "launch" },
+      { id: "term", title: "Terminal", action: "launch" },
+      { id: "zed", title: "Zed", action: "launch" },
+    ],
+  },
   listEmpty: { items: [], empty: "Nothing to do" },
   detail: { title: long, markdown: hostile, meta: [{ label: "State", value: "open" }, { label: long, value: long }], actions: [{ id: "close", title: "Close issue", icon: "circle-check" }] },
   detailEmpty: {},
@@ -57,6 +67,7 @@ const models = {
 type Case = { name: string; template: "list" | "detail" | "form" | "status"; model: unknown };
 const cases: Case[] = [
   { name: "list", template: "list", model: models.list },
+  { name: "list-keys", template: "list", model: models.listKeys },
   { name: "list-empty", template: "list", model: models.listEmpty },
   { name: "detail", template: "detail", model: models.detail },
   { name: "detail-empty", template: "detail", model: models.detailEmpty },
@@ -66,8 +77,8 @@ const cases: Case[] = [
   { name: "status-empty", template: "status", model: models.statusEmpty },
 ];
 
-function Template({ template, model }: { template: Case["template"]; model: unknown }) {
-  const props = { pluginId: "dev.test.views", viewId: "page", model };
+function Template({ name, template, model }: { name: string; template: Case["template"]; model: unknown }) {
+  const props = { pluginId: "dev.test.views", viewId: name, model };
   if (template === "list") return <ListTemplate {...props} />;
   if (template === "detail") return <DetailTemplate {...props} />;
   if (template === "form") return <FormTemplate {...props} />;
@@ -84,7 +95,7 @@ function Page() {
             <div style={{ width }}>
               <section className={`plugin-view plugin-view--${item.template}`}>
                 <header className="plugin-view__title"><strong>{item.name}</strong><span>regression</span></header>
-                <div className="plugin-view__body"><Template template={item.template} model={item.model} /></div>
+                <div className="plugin-view__body"><Template name={`${item.name}-${width}`} template={item.template} model={item.model} /></div>
               </section>
             </div>
           </div>
@@ -102,7 +113,47 @@ createRoot(document.getElementById("root") as HTMLElement).render(
   </StrictMode>,
 );
 
-function check() {
+const tick = () => new Promise((resolve) => window.setTimeout(resolve, 60));
+
+async function checkKeys(expect: (name: string, ok: boolean) => void) {
+  const scope = '[data-case="list-keys-520"]';
+  const input = document.querySelector<HTMLInputElement>(`${scope} input`)!;
+  const selected = () => document.querySelector(`${scope} .plugin-list__item--selected .plugin-list__title`)?.textContent ?? null;
+  const press = async (key: string) => {
+    input.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true }));
+    await tick();
+  };
+  const type = async (text: string) => {
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(input, text);
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    await tick();
+  };
+  expect("no row is picked before the search box has focus", selected() === null && document.activeElement !== input);
+  noteOpenRequest("dev.test.views", "list-keys-520", Date.now());
+  await tick();
+  expect("the search box takes focus when the plugin opens its page", document.activeElement === input);
+  input.dispatchEvent(new FocusEvent("focusin", { bubbles: true }));
+  await tick();
+  expect("the first row that opens something is picked", selected() === "Calculator");
+  await press("ArrowDown");
+  await press("ArrowDown");
+  await press("ArrowDown");
+  expect("down stops at the last row", selected() === "Zed");
+  await press("ArrowUp");
+  expect("up moves back", selected() === "Terminal");
+  const before = sent.length;
+  await press("Enter");
+  expect("enter runs the picked row", sent.length === before + 1 && sent[before].startsWith("run_plugin_view_action") && sent[before].includes('"itemId":"term"'));
+  await type("ze");
+  expect("typing filters and picks the first match", selected() === "Zed");
+  await press("Escape");
+  expect("escape clears the search", input.value === "" && selected() === "Calculator");
+  input.dispatchEvent(new FocusEvent("focusout", { bubbles: true }));
+  await tick();
+  expect("no row stays picked after the search box loses focus", selected() === null);
+}
+
+async function check() {
   const results: string[] = [];
   const expect = (name: string, ok: boolean) => results.push(`${ok ? "PASS" : "FAIL"} ${name}`);
   const pwned = (window as unknown as { __pluginViewPwned?: number }).__pluginViewPwned;
@@ -130,8 +181,9 @@ function check() {
   expect("list rows have no box until hovered", getComputedStyle(row).backgroundColor === "rgba(0, 0, 0, 0)");
   const detailPage = document.querySelector<HTMLElement>('[data-case="detail-520"] .plugin-view')!;
   expect("other templates keep their card", getComputedStyle(detailPage).backgroundImage !== "none");
+  await checkKeys(expect);
   const output = document.getElementById("results");
   if (output) output.textContent = `${results.filter((line) => line.startsWith("FAIL")).length === 0 ? "ALL PASS" : "SOME FAILED"}\n${results.join("\n")}`;
 }
 
-if (new URLSearchParams(location.search).has("test")) window.setTimeout(check, 500);
+if (new URLSearchParams(location.search).has("test")) window.setTimeout(() => void check(), 500);
