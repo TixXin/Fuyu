@@ -9,7 +9,7 @@ use std::{
 use tauri::{LogicalSize, Monitor, PhysicalPosition, Size, WebviewWindow};
 
 use super::screen;
-use super::state::{CornerShape, IslandMode, IslandPosition, IslandWindowState, MonitorFollow};
+use super::state::{CornerShape, Edge, IslandMode, IslandPosition, IslandWindowState, MonitorFollow};
 
 pub(super) const STAGE_WINDOW_WIDTH: f64 = 820.0;
 pub(super) const STAGE_WINDOW_HEIGHT: f64 = 460.0;
@@ -24,6 +24,9 @@ pub(super) const COLLAPSED_ISLAND_HEIGHT: f64 = 38.0;
 #[cfg_attr(not(windows), allow(dead_code))]
 pub(super) const COLLAPSED_RADIUS: f64 = 22.0;
 pub(super) const EXPANDED_ISLAND_WIDTH: f64 = 560.0;
+pub(super) const SIDE_HANDLE_WIDTH: f64 = 12.0;
+pub(super) const SIDE_HANDLE_HEIGHT: f64 = 72.0;
+pub(super) const SIDE_HANDLE_RADIUS: f64 = 6.0;
 
 pub(super) fn max_expanded_width(scale: f64) -> f64 {
     ((STAGE_WINDOW_WIDTH - 4.0) / scale).floor().max(EXPANDED_ISLAND_WIDTH)
@@ -97,9 +100,24 @@ pub(crate) fn apply_stage_geometry(
     if !has_custom_monitor {
         positioned_state.custom_position = None;
     }
-    positioned_state.custom_position = shown_custom_position(positioned_state, normal_y);
-    let (x, y) = resolve_stage_position(positioned_state, centered_x, normal_y, tucked_y);
-    super::top_edge::sync_from_stage(window, positioned_state, monitor_position.y + top_inset);
+    let side = positioned_state.custom_position.and_then(super::side::stored_side);
+    let (x, y) = match side {
+        Some((edge, along)) if !state.is_dragging => {
+            let mut sided = positioned_state;
+            sided.attached_edge = Some(edge);
+            let (handle, island) = super::side::heights(sided, scale);
+            super::edge::set_attached(window, Some(edge));
+            let work = screen::monitor_work_rect(&monitor);
+            super::side::stage_position(edge, along, work, physical_width, handle, island)
+        }
+        _ => {
+            positioned_state.custom_position = shown_custom_position(positioned_state, normal_y);
+            if !state.is_dragging {
+                super::top_edge::sync_from_stage(window, positioned_state, monitor_position.y + top_inset);
+            }
+            resolve_stage_position(positioned_state, centered_x, normal_y, tucked_y)
+        }
+    };
 
     let running = *RUNNING_SLIDE.lock().unwrap_or_else(PoisonError::into_inner);
     if continues_slide(running, POSITION_ANIMATION_GENERATION.load(Ordering::SeqCst), (x, y), animate_position) {
@@ -318,17 +336,23 @@ pub(crate) struct IslandOnScreen {
 
 pub(super) fn island_rect(window_left: f64, window_top: f64, window_width: f64, state: IslandWindowState) -> IslandOnScreen {
     let physical_scale = window_width / STAGE_WINDOW_WIDTH;
-    let (base_width, base_height) = state
-        .mode
-        .base_size(state.collapsed_width, state.expanded_width, state.expanded_height);
+    let (base_width, base_height) = state.base_size();
     let width = base_width * state.active_scale() * physical_scale;
     let height = base_height * state.active_scale() * physical_scale;
     IslandOnScreen {
-        left: window_left + (window_width - width) / 2.0,
+        left: window_left + island_left_in_stage(state.side(), window_width, width),
         top: window_top,
         width,
         height,
         expanded: matches!(state.mode, IslandMode::Expanded),
+    }
+}
+
+pub(super) fn island_left_in_stage(side: Option<Edge>, window_width: f64, island_width: f64) -> f64 {
+    match side {
+        Some(Edge::Left) => 0.0,
+        Some(Edge::Right) => window_width - island_width,
+        _ => (window_width - island_width) / 2.0,
     }
 }
 
@@ -350,15 +374,21 @@ pub(super) fn cursor_on_island(
     let local_x = cursor_x - window_left;
     let local_y = cursor_y - window_top;
 
-    let (base_width, base_height) = state
-        .mode
-        .base_size(state.collapsed_width, state.expanded_width, state.expanded_height);
+    let (base_width, base_height) = state.base_size();
     let island_width = base_width * state.active_scale() * physical_scale;
     let island_height = base_height * state.active_scale() * physical_scale;
-    let island_left = (window_width - island_width) / 2.0;
+    let island_left = island_left_in_stage(state.side(), window_width, island_width);
     let island_top = 0.0;
     let radius = state.bottom_corner_radius() * state.active_scale() * physical_scale;
     let top_radius = state.top_corner_radius() * state.active_scale() * physical_scale;
+
+    if let Some(side) = state.side() {
+        let depth = match side {
+            Edge::Right => island_left + island_width - local_x,
+            _ => local_x - island_left,
+        };
+        return point_in_notch(local_y, depth, 0.0, 0.0, island_height, island_width, radius, 0.0, state.corner_shape);
+    }
 
     point_in_notch(
         local_x,

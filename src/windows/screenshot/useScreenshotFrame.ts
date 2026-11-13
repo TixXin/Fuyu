@@ -42,6 +42,11 @@ export function useScreenshotFrame() {
   const height = session?.height ?? 0;
   useEffect(() => {
     if (id === null) return;
+    screenshotOverlayReady(id).catch((error: unknown) => console.error("Failed to show the screenshot", getErrorMessage(error)));
+  }, [id]);
+
+  useEffect(() => {
+    if (id === null) return;
     let cancelled = false;
     getScreenshotFrame()
       .then((buffer) => {
@@ -51,7 +56,6 @@ export function useScreenshotFrame() {
         canvas.height = height;
         pictureContext(canvas)?.putImageData(new ImageData(new Uint8ClampedArray(buffer), width, height), 0, 0);
         setDrawn(id);
-        return screenshotOverlayReady(id);
       })
       .catch((error: unknown) => console.error("Failed to show the screenshot", getErrorMessage(error)));
     return () => {
@@ -59,5 +63,5 @@ export function useScreenshotFrame() {
     };
   }, [id, width, height]);
 
-  return { session, ready: id !== null && drawn === id, canvasRef };
+  return { session, ready: id !== null, drawn: id !== null && drawn === id, canvasRef };
 }

@@ -27,6 +27,8 @@ import { usePageFadeIn } from "./usePageFadeIn";
 import "./IslandShell.css";
 import "./IslandGlassLight.css";
 import { IslandResizeHints } from "./IslandResizeHints";
+import { IslandSideHandle } from "./IslandSideHandle";
+import type { IslandSide } from "./useIslandSide";
 
 type IslandShellProps = {
   qqMail: MailController;
@@ -43,6 +45,7 @@ type IslandShellProps = {
   nativeGlassState: NativeGlassState;
   isTucked: boolean;
   isDetached: boolean;
+  side?: IslandSide | null;
   showTitle: boolean;
   showCollapsedText: boolean;
   collapsedTaskTitle: string | null;
@@ -102,6 +105,7 @@ export function IslandShell({
   nativeGlassState,
   isTucked,
   isDetached,
+  side = null,
   showTitle,
   showCollapsedText,
   collapsedTaskTitle,
@@ -161,6 +165,7 @@ export function IslandShell({
     isPreparing && !isExpanded ? "island--preparing" : "",
     isDetached ? "island--detached" : "island--docked",
     isTucked ? "island--tucked" : "",
+    side ? `island--side island--side-${side}` : "",
     popup ? "island--popup" : "",
     isLiquidGlass ? `island--glass-${nativeGlassState}` : "",
     showTitle ? "" : "island--title-hidden",
@@ -202,6 +207,15 @@ export function IslandShell({
             <span className="island__glass-refraction" />
             <span className="island__glass-highlight" />
           </div>
+        )}
+        {side && (
+          <IslandSideHandle
+            label={collapsedLabel}
+            agentVisualState={agentVisualState}
+            unreadCount={qqNotificationCount + Number(wechatPending)}
+            onOpen={() => onOpenPage(agentSession ? "agents" : page)}
+            onWindowDragStart={onWindowDragStart}
+          />
         )}
         <IslandCollapsedBar
           qqMail={qqMail}

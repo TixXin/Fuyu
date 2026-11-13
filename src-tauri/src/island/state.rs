@@ -5,7 +5,7 @@ use tauri::PhysicalPosition;
 use super::geometry::{
     COLLAPSED_ISLAND_HEIGHT, COLLAPSED_ISLAND_WIDTH, COLLAPSED_RADIUS, DEFAULT_COLLAPSED_SCALE,
     DEFAULT_EXPANDED_ISLAND_HEIGHT, DEFAULT_EXPANDED_SCALE, DEFAULT_MARGIN_Y,
-    EXPANDED_ISLAND_WIDTH, EXPANDED_RADIUS,
+    EXPANDED_ISLAND_WIDTH, EXPANDED_RADIUS, SIDE_HANDLE_HEIGHT, SIDE_HANDLE_RADIUS, SIDE_HANDLE_WIDTH,
 };
 
 pub(super) static WINDOW_STATE: OnceLock<Mutex<IslandWindowState>> = OnceLock::new();
@@ -109,7 +109,25 @@ impl IslandWindowState {
     }
 
     pub(super) fn bottom_corner_radius(self) -> f64 {
+        if self.is_side_handle() {
+            return SIDE_HANDLE_RADIUS;
+        }
         self.mode.corner_radius() * self.corner_radius_factor()
+    }
+
+    pub(super) fn side(self) -> Option<Edge> {
+        self.attached_edge.filter(|edge| *edge != Edge::Top)
+    }
+
+    fn is_side_handle(self) -> bool {
+        self.side().is_some() && matches!(self.mode, IslandMode::Collapsed)
+    }
+
+    pub(super) fn base_size(self) -> (f64, f64) {
+        if self.is_side_handle() {
+            return (SIDE_HANDLE_WIDTH, SIDE_HANDLE_HEIGHT);
+        }
+        self.mode.base_size(self.collapsed_width, self.expanded_width, self.expanded_height)
     }
 
     pub(super) fn top_corner_radius(self) -> f64 {
