@@ -6,7 +6,7 @@ use std::{
 use global_hotkey::hotkey::HotKey;
 use tauri::AppHandle;
 
-use crate::clipboard_history::{parse_shortcut_binding, to_hotkey, ShortcutBinding};
+use crate::clipboard_history::{mac_label, parse_shortcut_binding, to_hotkey, ShortcutBinding};
 use crate::macos::hotkeys;
 use crate::user_error::UserError;
 
@@ -44,7 +44,8 @@ fn open_window() {
 }
 
 fn taken(binding: &ShortcutBinding) -> UserError {
-    UserError::new("shortcut.taken", format!("The shortcut {} is taken or cannot be registered.", binding.label)).arg("shortcut", binding.label.as_str())
+    let label = mac_label(&binding.label);
+    UserError::new("shortcut.taken", format!("The shortcut {label} is taken or cannot be registered.")).arg("shortcut", label.as_str())
 }
 
 fn register(slot: Slot, binding: &ShortcutBinding) -> Result<HotKey, UserError> {

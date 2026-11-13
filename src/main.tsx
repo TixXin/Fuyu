@@ -1,4 +1,7 @@
 import "./lib/copyRenamedKeys";
+import { markMounted } from "./devReload";
+import { blockBrowserDefaults } from "./lib/browserDefaults";
+import { isMacOS } from "./lib/platform";
 import React, { type ReactNode } from "react";
 import ReactDOM from "react-dom/client";
 import "./styles/tokens.css";
@@ -8,6 +11,8 @@ import { I18nProvider } from "./i18n";
 import { loadSettingsFile } from "./features/settings-backup/loadSettingsFile";
 import { trackIslandTopEdge } from "./windows/island/topEdge";
 import { trackIslandNotch } from "./windows/island/notch";
+
+blockBrowserDefaults({ mac: isMacOS, dev: import.meta.env.DEV });
 
 const windowKind = new URLSearchParams(window.location.search).get("window");
 
@@ -74,8 +79,11 @@ async function loadWindow(): Promise<ReactNode> {
   }
 }
 
-void Promise.all([loadWindow(), loadSettingsFile()]).then(([content]) => ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
-  <React.StrictMode>
-    <I18nProvider>{content}</I18nProvider>
-  </React.StrictMode>,
-)).catch((error: unknown) => console.error("Failed to start the window", error));
+void Promise.all([loadWindow(), loadSettingsFile()]).then(([content]) => {
+  ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
+    <React.StrictMode>
+      <I18nProvider>{content}</I18nProvider>
+    </React.StrictMode>,
+  );
+  markMounted();
+}).catch((error: unknown) => console.error("Failed to start the window", error));

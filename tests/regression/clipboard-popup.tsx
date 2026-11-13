@@ -161,6 +161,20 @@ async function runChecks() {
     await key("light", { key: "3", metaKey: true, ctrlKey: true });
     check(rows("light")[2].classList.contains("clipboard-popup__item--selected") && $("light", ".clipboard-look") && !calls.slice(callsBefore).some((call) => call.startsWith("paste")),"⌘ 加数字键只选中那一行并预览，不粘贴");
     await key("light", { key: " " });
+    const keyUp = (frame: string, init: KeyboardEventInit) => act(async () => {
+      $(frame, "input")!.dispatchEvent(new KeyboardEvent("keyup", { bubbles: true, cancelable: true, ...init }));
+    });
+    await key("light", { key: " " });
+    await key("light", { key: " ", repeat: true });
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 420)); });
+    check($("light", ".clipboard-look") && $("light", ".clipboard-look__close")?.textContent?.includes("松开关闭"), "按住空格：预览一直开着，提示「松开关闭」，按键重复不会把它关掉");
+    await keyUp("light", { key: " " });
+    check(!$("light", ".clipboard-look"), "松开空格预览就关上");
+    await key("light", { key: " " });
+    await keyUp("light", { key: " " });
+    check($("light", ".clipboard-look") && $("light", ".clipboard-look__close")?.textContent?.includes("关闭"), "轻按空格：预览留着");
+    await key("light", { key: " " });
+    check(!$("light", ".clipboard-look"), "再按一次空格关上");
     check($$("wide", ".clipboard-popup__section")[0]?.textContent === "今天", "宽版：列表按今天、昨天、更早分段");
 
     check($("wide", ".clipboard-popup__pane-body")?.textContent === ITEMS[0].text, "宽版：右边是选中这条的完整内容");

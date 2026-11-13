@@ -28,7 +28,7 @@ tauri_panel! {
 const LEVELS_ABOVE_MENU_BAR: i64 = 3;
 const OVERLAY_ABOVE_ISLAND: i64 = 1;
 
-pub(crate) fn make_overlay_panel(window: &WebviewWindow) -> Result<(), String> {
+pub(crate) fn make_overlay_panel(window: &WebviewWindow) -> Result<u32, String> {
     let panel = window.to_panel::<OverlayPanel>().map_err(|error| error.to_string())?;
     panel.set_level(PanelLevel::MainMenu.value() + LEVELS_ABOVE_MENU_BAR + OVERLAY_ABOVE_ISLAND);
     panel.set_collection_behavior(
@@ -42,7 +42,8 @@ pub(crate) fn make_overlay_panel(window: &WebviewWindow) -> Result<(), String> {
     panel.set_has_shadow(false);
     panel
         .add_style_mask(StyleMask::empty().nonactivating_panel().into())
-        .map_err(|error| format!("Could not make the screenshot overlay a non-activating panel: {error:?}"))
+        .map_err(|error| format!("Could not make the screenshot overlay a non-activating panel: {error:?}"))?;
+    u32::try_from(panel.as_panel().windowNumber()).map_err(|_| "The screenshot overlay has no window number yet.".to_string())
 }
 
 const POPUP_ABOVE_ISLAND: i64 = 1;

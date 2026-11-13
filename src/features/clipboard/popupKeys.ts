@@ -21,3 +21,9 @@ export function popupIndexAfterKey(key: string, current: number, count: number, 
       return null;
   }
 }
+
+export const PEEK_HOLD_MS = 350;
+
+export function releaseEndsPeek(heldMs: number): boolean {
+  return heldMs >= PEEK_HOLD_MS;
+}

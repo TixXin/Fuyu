@@ -4,6 +4,7 @@ import { useTranslation } from "../../i18n";
 import { convertChineseText, type ClipboardHistoryItem } from "./api";
 import { htmlToMarkdown } from "./htmlToMarkdown";
 import { TRANSFORMS, type Transform, type TransformInput } from "./textTransforms";
+import { isMacOS } from "../../lib/platform";
 
 export async function transformText(transform: Transform, input: TransformInput): Promise<string | null> {
   if (transform.block?.(input)) return null;
@@ -93,7 +94,7 @@ export function ClipboardTransformList({ item, query, copy = false, onPaste }: {
       {row && !row.block && (
         <div className="clipboard-panel__result" role="status">
           <span>{text.result}</span>
-          <pre>{native ? text.resultNative : result ?? ""}</pre>
+          <pre>{native ? (isMacOS ? text.resultNativeMac : text.resultNative) : result ?? ""}</pre>
         </div>
       )}
     </>

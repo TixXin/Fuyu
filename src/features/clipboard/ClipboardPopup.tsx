@@ -14,6 +14,7 @@ import { popupIndexAfterKey, toggleQueued } from "./popupKeys";
 import { loadPinyin, parsePopupQuery } from "./popupQuery";
 import { isPrimaryKey } from "./shortcut";
 import { usePopupHandlers } from "./usePopupHandlers";
+import { useSpacePeek } from "./useSpacePeek";
 import "./ClipboardPopup.css";
 import "./ClipboardPopupPanels.css";
 
@@ -130,12 +131,22 @@ export function ClipboardPopup({ items, snippets, openCount, wide, capture, link
     const merged = mergedText(picked, separator);
     if (merged) pasteText(merged);
   };
+  const peek = useSpacePeek(() => setMode((current) => (current === "look" ? "list" : current)));
+  const { cancel: cancelPeek } = peek;
+  useEffect(() => {
+    if (mode !== "look") cancelPeek();
+  }, [mode, cancelPeek]);
+
   const toggleRecord = () => (pausedNow(capture, now) ? handlers.resume() : handlers.pause(null));
 
   const onKeyDown = (event: KeyboardEvent) => {
     const key = event.key;
     const ctrl = isPrimaryKey(event) && !event.altKey;
     if (mode === "look") {
+      if (key === " " && event.repeat) {
+        event.preventDefault();
+        return;
+      }
       if (key === "Escape" || key === " ") {
         event.preventDefault();
         setMode("list");
@@ -190,7 +201,9 @@ export function ClipboardPopup({ items, snippets, openCount, wide, capture, link
       } else pick(current, event.shiftKey, ctrl);
     } else if (key === " " && query === "" && !wide && item && mode === "list") {
       handled();
+      if (event.repeat) return;
       setMode("look");
+      peek.start();
     } else if (key === "Delete" && query === "" && item) {
       handled();
       deletion.remove(item);
@@ -216,7 +229,7 @@ export function ClipboardPopup({ items, snippets, openCount, wide, capture, link
   const editing = mode === "edit" && item && isText;
 
   return (
-    <section className={`clipboard-popup${wide ? " clipboard-popup--wide" : ""}`} aria-label={text.title} onKeyDown={onKeyDown}>
+    <section className={`clipboard-popup${wide ? " clipboard-popup--wide" : ""}`} aria-label={text.title} onKeyDown={onKeyDown} onKeyUp={peek.keyUp}>
       <div className="clipboard-popup__top">
         <label className="clipboard-popup__search">
           <Search size={15} strokeWidth={2} aria-hidden="true" />
@@ -311,7 +324,7 @@ export function ClipboardPopup({ items, snippets, openCount, wide, capture, link
         )}
         {mode === "look" && item && (
           <div className="clipboard-look" role="dialog" aria-label={text.preview.label}>
-            <span className="clipboard-look__close"><kbd>{text.actions.spaceKey}</kbd>{text.actions.closePreview}</span>
+            <span className="clipboard-look__close"><kbd>{text.actions.spaceKey}</kbd>{peek.holding ? text.actions.releaseToClose : text.actions.closePreview}</span>
             <ClipboardPopupPreview entry={item} linkPreview={linkPreview} onPasteText={pasteText} />
           </div>
         )}

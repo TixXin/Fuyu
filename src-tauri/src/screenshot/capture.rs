@@ -16,6 +16,11 @@ pub(super) fn ensure_access() -> Result<(), String> {
     Ok(())
 }
 
+pub(super) fn planned(monitor: &Monitor) -> Grab {
+    let (position, size) = (monitor.position(), monitor.size());
+    Grab { origin: (position.x, position.y), width: size.width, height: size.height, scale: 1.0, rgba: Vec::new() }
+}
+
 pub(super) fn monitor(monitor: &Monitor) -> Option<Grab> {
     let (position, size) = (monitor.position(), monitor.size());
     let rgba = win32::screen_capture::capture(position.x, position.y, size.width, size.height)?;
@@ -31,20 +36,18 @@ pub(super) fn units_per_css(scale: f64) -> f64 {
 }
 
 pub(super) fn prepare_overlay(_app: &AppHandle, window: &WebviewWindow) {
-    if let Err(error) = window.hwnd().map_err(|error| error.to_string()).and_then(|hwnd| win32::dwm::disable_transitions(hwnd).map_err(|error| error.to_string())) {
+    let Ok(hwnd) = window.hwnd() else { return };
+    if let Err(error) = win32::dwm::disable_transitions(hwnd) {
         eprintln!("screenshot overlay keeps its show/hide animation: {error}");
+    }
+    if !win32::window::exclude_from_capture(hwnd, true) {
+        eprintln!("the screenshot overlay could not be left out of screen captures");
     }
 }
 
 pub(super) fn prepare_pin(window: &WebviewWindow) {
     if let Ok(hwnd) = window.hwnd() {
         let _ = win32::dwm::disable_transitions(hwnd);
-    }
-}
-
-pub(super) fn exclude_from_capture(window: &WebviewWindow, on: bool) {
-    if let Ok(hwnd) = window.hwnd() {
-        win32::window::exclude_from_capture(hwnd, on);
     }
 }
 

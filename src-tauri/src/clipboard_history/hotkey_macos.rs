@@ -4,7 +4,7 @@ use tauri::Emitter;
 
 use crate::macos::hotkeys::{self, HotkeyError};
 
-use super::{default_shortcut_binding, parse_shortcut_binding, service, to_hotkey};
+use super::{default_shortcut_binding, mac_label, parse_shortcut_binding, service, to_hotkey};
 
 pub(super) const HOTKEY_EVENT: &str = "clipboard-history-shortcut";
 const HOTKEY_STATUS_EVENT: &str = "clipboard-history-shortcut-status";
@@ -53,7 +53,7 @@ fn refresh() {
         return;
     };
     let Some(hotkey) = to_hotkey(&binding) else {
-        report_hotkey_error(Some(format!("快捷键 {} 在 macOS 上不能用作全局快捷键", binding.label)));
+        report_hotkey_error(Some(format!("快捷键 {} 在 macOS 上不能用作全局快捷键", mac_label(&binding.label))));
         return;
     };
     match hotkeys::register(hotkey, on_shortcut) {
@@ -62,7 +62,7 @@ fn refresh() {
             report_hotkey_error(None);
         }
         Err(HotkeyError::Manager(error)) => report_hotkey_error(Some(format!("无法注册全局快捷键：{error}"))),
-        Err(HotkeyError::Register(error)) => report_hotkey_error(Some(format!("快捷键 {} 已被占用或无法注册：{error}", binding.label))),
+        Err(HotkeyError::Register(error)) => report_hotkey_error(Some(format!("快捷键 {} 已被占用或无法注册：{error}", mac_label(&binding.label)))),
     }
 }
 
