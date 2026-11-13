@@ -8,26 +8,28 @@ import { fileURLToPath } from "node:url";
 import { laneNumber } from "../../scripts/build-dirs.mjs";
 import { claudeProjectKey, planRename, rewriteKeys } from "../../scripts/rename-local-folders.mjs";
 
+const drive = (letter, ...parts) => (process.platform === "win32" ? path.join(`${letter}:`, ...parts) : path.join("/", letter, ...parts));
 const script = fileURLToPath(new URL("../../scripts/rename-local-folders.mjs", import.meta.url));
 
 test("Claude Code keeps a project's memory and history under its path with every other character a dash", () => {
-  assert.equal(claudeProjectKey(path.join("E:", "Projects", "fly-island")), "E--Projects-fly-island");
-  assert.equal(claudeProjectKey(path.join("E:", "Projects", "fuyu-lanes", "3")), "E--Projects-fuyu-lanes-3");
+  const lead = process.platform === "win32" ? "E-" : "-E";
+  assert.equal(claudeProjectKey(drive("E", "Projects", "fly-island")), `${lead}-Projects-fly-island`);
+  assert.equal(claudeProjectKey(drive("E", "Projects", "fuyu-lanes", "3")), `${lead}-Projects-fuyu-lanes-3`);
 });
 
 test("lane records move to the new folders and keep everything else", () => {
-  const main = path.join("E:", "Projects", "fly-island");
-  const lanes = path.join("E:", "Projects", "fly-island-lanes");
-  const records = { [path.join(lanes, "4").toLowerCase()]: { pid: 1 }, [path.join("E:", "other").toLowerCase()]: { pid: 2 } };
-  const moved = rewriteKeys(rewriteKeys(records, lanes, path.join("E:", "Projects", "fuyu-lanes")), main, path.join("E:", "Projects", "fuyu"));
-  assert.deepEqual(Object.keys(moved).sort(), [path.join("E:", "Projects", "fuyu-lanes", "4").toLowerCase(), path.join("E:", "other").toLowerCase()].sort());
+  const main = drive("E", "Projects", "fly-island");
+  const lanes = drive("E", "Projects", "fly-island-lanes");
+  const records = { [path.join(lanes, "4").toLowerCase()]: { pid: 1 }, [drive("E", "other").toLowerCase()]: { pid: 2 } };
+  const moved = rewriteKeys(rewriteKeys(records, lanes, drive("E", "Projects", "fuyu-lanes")), main, drive("E", "Projects", "fuyu"));
+  assert.deepEqual(Object.keys(moved).sort(), [drive("E", "Projects", "fuyu-lanes", "4").toLowerCase(), drive("E", "other").toLowerCase()].sort());
 });
 
 test("lanes are found under any <repo>-lanes folder", () => {
-  assert.equal(laneNumber(path.join("E:", "Projects", "fuyu-lanes", "7")), 7);
-  assert.equal(laneNumber(path.join("E:", "Projects", "fly-island-lanes", "7")), 7);
-  assert.equal(laneNumber(path.join("E:", "Projects", "-lanes", "7")), null);
-  assert.equal(laneNumber(path.join("E:", "Projects", "fuyu", "7")), null);
+  assert.equal(laneNumber(drive("E", "Projects", "fuyu-lanes", "7")), 7);
+  assert.equal(laneNumber(drive("E", "Projects", "fly-island-lanes", "7")), 7);
+  assert.equal(laneNumber(drive("E", "Projects", "-lanes", "7")), null);
+  assert.equal(laneNumber(drive("E", "Projects", "fuyu", "7")), null);
 });
 
 test("the rename moves the checkout and its lanes, and git, hooks and lane records follow", () => {

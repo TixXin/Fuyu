@@ -1,12 +1,12 @@
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { createZip, listFiles, packFolder, readPackedFile, sha256 } from "../../packages/fuyu-plugin/src/pack.mjs";
+import { createZip, listFiles, packFolder, readPackedFile, readZip, sameZipContents, sha256 } from "../../packages/fuyu-plugin/src/pack.mjs";
 import { loadSigningKey, publicKeyOf, writePackageSignature } from "../../packages/fuyu-plugin/src/sign.mjs";
 import { signingDir } from "../signing-dir.mjs";
 import { loadPrivateKey, signIndex } from "./plugin-signing.mjs";
 
-export { createZip, listFiles, readPackedFile, sha256 };
+export { createZip, listFiles, readPackedFile, readZip, sameZipContents, sha256 };
 
 export const MARKET_BASE_URL = "https://raw.githubusercontent.com/TixXin/fly-island/main/plugins";
 export const INDEX_VERSION = 1;
@@ -120,12 +120,14 @@ export function buildIndex(root, privateKey = loadPrivateKey()) {
     for (const name of readdirSync(sourceDir).sort()) {
       const dir = path.join(sourceDir, name);
       if (!statSync(dir).isDirectory()) continue;
-      const { manifest, fileName, zip } = packPlugin(dir);
+      const { manifest, fileName, zip: packed } = packPlugin(dir);
       const target = path.join(packagesDir, fileName);
-      if (existsSync(target) && !readFileSync(target).equals(zip)) {
+      const existing = existsSync(target) ? readFileSync(target) : null;
+      if (existing && !sameZipContents(existing, packed)) {
         throw new Error(`${fileName} already exists with different contents; raise "version" in ${source}/${name}/${MANIFEST}.`);
       }
-      writeFileSync(target, zip);
+      const zip = existing ?? packed;
+      if (!existing) writeFileSync(target, zip);
       entries.push(indexEntry(manifest, fileName, zip, { ...marketDetails(root, manifest.id), ...marketTexts(dir) }));
     }
   }

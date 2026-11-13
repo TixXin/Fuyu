@@ -46,7 +46,7 @@ const english = (text) => (typeof text === "string" ? text : text?.en ?? "");
 const group = (model, start) => model.groups.find((g) => english(g.title).startsWith(start));
 const account = (model) => model.groups[0].items[0];
 
-test("each repository gets its own group, and one that fails does not take the others down", async () => {
+test("each repository gets its own group, and one that fails does not take the others down", { skip: process.platform !== "win32" && "the plugin runs on Windows PowerShell" }, async () => {
   const github = await fakeGitHub();
   const host = startMockHost(PLUGIN, { settings: { repo: "a/one, a/missing, not a repo" }, timeoutMs: 30000 });
   try {
@@ -64,7 +64,7 @@ test("each repository gets its own group, and one that fails does not take the o
   }
 });
 
-test("signing in asks for secrets, keeps the token there and uses it; signing out deletes it", async () => {
+test("signing in asks for secrets, keeps the token there and uses it; signing out deletes it", { skip: process.platform !== "win32" && "the plugin runs on Windows PowerShell" }, async () => {
   const github = await fakeGitHub();
   const host = startMockHost(PLUGIN, { settings: { repo: "a/one", login: true, clientId: "Iv1.test" }, timeoutMs: 40000 });
   try {
@@ -92,7 +92,7 @@ test("signing in asks for secrets, keeps the token there and uses it; signing ou
   }
 });
 
-test("without a Client ID setting the sign-in uses the plugin's own GitHub App", async () => {
+test("without a Client ID setting the sign-in uses the plugin's own GitHub App", { skip: process.platform !== "win32" && "the plugin runs on Windows PowerShell" }, async () => {
   const github = await fakeGitHub();
   const host = startMockHost(PLUGIN, { settings: { repo: "a/one", login: true }, timeoutMs: 30000 });
   try {
