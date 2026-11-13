@@ -355,6 +355,11 @@ if (!automated) {
     check(localStorage.getItem("fuyu-agent-session-filters") === "[]" && !filterGroup().querySelector(".session-filter__value"), "Removing the rule clears it");
 
     await openPage("about");
+    const hero = element(".about-hero");
+    check(hero.querySelector(".about-hero__name")?.textContent === "浮屿" && hero.getBoundingClientRect().height >= hero.scrollHeight - 1,
+      "About opens with the app's hero card, not clipped");
+    check(document.querySelectorAll(".about-links .project-link").length === 4
+      && texts(".settings-group__title").includes("帮助|重置与退出"), "Links are four tiles; help, then reset and quit, come last");
     const aboutLink = (label: string) =>
       [...document.querySelectorAll<HTMLButtonElement>(".settings-link-button")].find((button) => button.textContent === label);
     await act(async () => { aboutLink("重置")!.click(); });
