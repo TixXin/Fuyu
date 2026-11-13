@@ -10,6 +10,7 @@ import { readVersion, VERSION_FILES } from "./versions.mjs";
 import { msiNames, msiVersion } from "./msi-version.mjs";
 import { loadSigningEnvironment } from "./release-signing.mjs";
 import { smokeTest } from "./smoke-test.mjs";
+import { finishMacBuild, macFiles, startMacBuild } from "./mac-build.mjs";
 import { EXE_NAME, installExe, takeLock } from "../build-exe.mjs";
 import { mainCheckout, PUBLISH_DIR, targetDir } from "../build-dirs.mjs";
 
@@ -23,6 +24,7 @@ const EXE = join(RELEASE_DIR, EXE_NAME);
 const MSI_OVERLAY = join(RELEASE_DIR, "msi-version.conf.json");
 const BETA_CHANNEL_DIR = join(RELEASE_DIR, "beta-channel");
 const CHECK_DIR = join(RELEASE_DIR, "channel-check");
+const MAC_DIR = join(RELEASE_DIR, "macos");
 const PUBLISH_LOCK = join(PUBLISH_TARGET, ".release.lock");
 const REPO = "TixXin/fuyu";
 
@@ -32,6 +34,7 @@ const baseUrl = baseFlag >= 0 ? args[baseFlag + 1] : "";
 const upload = !args.includes("--no-upload");
 const issueComments = !args.includes("--no-issue-comments");
 const smoke = !args.includes("--no-smoke-test");
+const withMac = upload && !args.includes("--no-mac");
 
 if (baseFlag >= 0 && (!baseUrl || !URL.canParse(baseUrl) || new URL(baseUrl).protocol !== "https:")) {
   fail("--base-url requires a valid HTTPS URL.");
@@ -101,6 +104,16 @@ if (upload) {
   if (existing.status === 0) fail(`Release ${tag} already exists. Bump the version instead of replacing published update packages.`);
 }
 
+let macBuild = null;
+if (withMac) {
+  const revision = run("git", ["rev-parse", "HEAD"], { capture: true }).stdout.trim();
+  const remote = run("git", ["branch", "-r", "--contains", revision], { capture: true, allowFailure: true }).stdout;
+  if (!remote.includes("origin/")) fail(`${revision} is not on GitHub yet, so the macOS build cannot check it out. Land it first, or pass --no-mac.`);
+  macBuild = startMacBuild(run, { repo: REPO, revision, version });
+  if (macBuild.problem) fail(`${macBuild.problem}\nPass --no-mac to release Windows only.`);
+  console.log("macOS build started on GitHub Actions; the Windows build runs meanwhile.");
+}
+
 takeLock(PUBLISH_LOCK);
 process.on("exit", () => rmSync(PUBLISH_LOCK, { force: true }));
 run("node", ["scripts/release/prepare-release-config.mjs"]);
@@ -119,7 +132,15 @@ if (wixVersion) {
 }
 run("pnpm", ["tauri", "build", "--ci", ...configs, "--bundles", "nsis,msi"], { env: { CARGO_TARGET_DIR: PUBLISH_TARGET } });
 
+if (macBuild) {
+  rmSync(MAC_DIR, { recursive: true, force: true });
+  const problem = finishMacBuild(run, { repo: REPO, version, since: macBuild.since, dir: MAC_DIR });
+  if (problem) fail(`${problem}\nNothing was published. Fix it, or pass --no-mac to release Windows only.`);
+  console.log("✓ The macOS build is downloaded and signed for the updater.");
+}
+
 const latestArgs = ["scripts/release/make-latest-json.mjs", "--notes-file", notesFile, "--release-dir", RELEASE_DIR];
+if (macBuild) latestArgs.push("--mac-dir", MAC_DIR);
 if (baseUrl) latestArgs.push("--base-url", baseUrl);
 run("node", latestArgs);
 
@@ -128,8 +149,10 @@ if (!installer) fail(`Missing installer in ${BUNDLE_DIR}.`);
 const msi = readdirSync(MSI_DIR).find((name) => msiNames(version).some((suffix) => name.endsWith(suffix)));
 if (!msi) fail(`Missing MSI installer in ${MSI_DIR}.`);
 const installers = [`${BUNDLE_DIR}/${installer}`, `${MSI_DIR}/${msi}`];
+const mac = macBuild ? macFiles(MAC_DIR, version) : null;
+const downloads = mac ? [...installers, mac.dmg] : installers;
 const checksumPath = `${BUNDLE_DIR}/SHA256SUMS.txt`;
-writeFileSync(checksumPath, installers.map((path) =>
+writeFileSync(checksumPath, downloads.map((path) =>
   `${createHash("sha256").update(readFileSync(path)).digest("hex")}  ${basename(path)}`,
 ).join("\n") + "\n");
 
@@ -138,7 +161,11 @@ if (!upload) {
   process.exit(0);
 }
 
-const assets = [...installers, ...installers.map((path) => `${path}.sig`), `${BUNDLE_DIR}/latest.json`, checksumPath];
+const assets = [
+  ...installers, ...installers.map((path) => `${path}.sig`),
+  ...(mac ? [mac.dmg, mac.archive, mac.signature] : []),
+  `${BUNDLE_DIR}/latest.json`, checksumPath,
+];
 const revision = run("git", ["rev-parse", "HEAD"], { capture: true }).stdout.trim();
 const prerelease = isPrerelease(version);
 run("gh", [

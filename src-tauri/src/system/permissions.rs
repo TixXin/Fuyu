@@ -29,6 +29,26 @@ pub fn open_system_permission(kind: String) -> Result<(), String> {
     tauri_plugin_opener::open_url(page, None::<&str>).map_err(|error| error.to_string())
 }
 
+#[cfg(target_os = "macos")]
+#[tauri::command]
+pub fn request_system_permission(kind: String) -> Result<bool, String> {
+    let granted = match kind.as_str() {
+        "accessibility" => crate::macos::accessibility::ask_for_trust(),
+        "screenRecording" => crate::macos::screen_capture::ask_for_access(),
+        _ => return Err(format!("Unknown permission {kind}.")),
+    };
+    if !granted {
+        open_system_permission(kind)?;
+    }
+    Ok(granted)
+}
+
+#[cfg(not(target_os = "macos"))]
+#[tauri::command]
+pub fn request_system_permission(kind: String) -> Result<bool, String> {
+    Err(format!("There is no {kind} permission to ask for on this system."))
+}
+
 #[cfg(not(target_os = "macos"))]
 #[tauri::command]
 pub fn get_system_permissions() -> Vec<SystemPermission> {

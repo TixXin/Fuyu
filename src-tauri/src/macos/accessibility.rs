@@ -1,6 +1,6 @@
 use std::ptr::NonNull;
 
-use objc2_core_foundation::{CFArray, CFRetained, CFString, CFType};
+use objc2_core_foundation::{CFArray, CFBoolean, CFDictionary, CFRetained, CFString, CFType};
 use objc2_foundation::NSURL;
 
 const MESSAGING_TIMEOUT_SECONDS: f32 = 0.5;
@@ -8,6 +8,7 @@ const MESSAGING_TIMEOUT_SECONDS: f32 = 0.5;
 #[link(name = "ApplicationServices", kind = "framework")]
 extern "C" {
     fn AXIsProcessTrusted() -> u8;
+    fn AXIsProcessTrustedWithOptions(options: *const CFDictionary) -> u8;
     fn AXUIElementCreateSystemWide() -> *mut CFType;
     fn AXUIElementCreateApplication(pid: i32) -> *mut CFType;
     fn AXUIElementSetMessagingTimeout(element: *const CFType, timeout: f32) -> i32;
@@ -26,6 +27,13 @@ fn attribute(element: &CFType, name: &str) -> Option<CFRetained<CFType>> {
         return None;
     }
     NonNull::new(value).map(|value| unsafe { CFRetained::from_raw(value) })
+}
+
+pub(crate) fn ask_for_trust() -> bool {
+    let key = CFString::from_static_str("AXTrustedCheckOptionPrompt");
+    let options = CFDictionary::<CFString, CFBoolean>::from_slices(&[&*key], &[CFBoolean::new(true)]);
+    let options: &CFDictionary = options.as_opaque();
+    unsafe { AXIsProcessTrustedWithOptions(options) != 0 }
 }
 
 pub(crate) struct Element(CFRetained<CFType>);

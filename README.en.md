@@ -128,7 +128,7 @@ How it was measured, with the numbers: [idle-usage.md](docs/investigations/idle-
 2. Move the pointer onto the island at the top of the screen to expand it; the gear button or the tray icon opens Settings.
 3. Mail, translation and AI agents need a one-time setup in Settings. See [mail](docs/features/mail.md), [AI agents](docs/features/agent-status-hooks.md), [QQ](docs/features/qq-notifications.md) and [WeChat](docs/features/wechat-reminders.md) (in Chinese).
 
-Fuyu runs on Windows 10 and 11 today. A macOS port is in progress; [platforms.md](docs/architecture/platforms.md) tracks it feature by feature (in Chinese).
+Fuyu runs on Windows 10 and 11 today. A macOS port (macOS 15 or later, Apple silicon) is in progress; [platforms.md](docs/architecture/platforms.md) tracks it feature by feature, and [macos-install.md](docs/features/macos-install.md) explains installing it and allowing it on first launch (both in Chinese).
 
 ## Plugins
 
