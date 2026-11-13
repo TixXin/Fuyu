@@ -8,6 +8,7 @@ mod link_preview;
 mod listener;
 mod plugin_view;
 mod popup;
+mod popup_place;
 mod preview;
 mod secrets;
 mod sequence;
