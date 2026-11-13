@@ -27,7 +27,7 @@ function refreshDependencies(main, before, after) {
   if (!lockfileChanged(changed)) return;
   const removed = removedDependencies(dependencyNames(main, before), dependencyNames(main, after));
   if (removed.length) {
-    console.error(`[sync] package.json dropped ${removed.join(", ")}; not installing in the main checkout. Run pnpm install there by hand once no lane needs them.`);
+    console.error(`[sync] package.json dropped ${removed.join(", ")}; not installing in the main checkout. Run pnpm install there by hand.`);
     return;
   }
   console.log("[sync] the lockfile changed; running pnpm install in the main checkout");
@@ -60,10 +60,14 @@ export function sync(cwd = process.cwd()) {
     pause(400);
     result = forward();
   }
+  if (!result.ok && /Not possible to fast-forward|diverging|non-fast-forward/i.test(result.out)) {
+    console.log(`[sync] local ${INTEGRATION_BRANCH} has commits that are not on origin yet; merging origin/${INTEGRATION_BRANCH} into it`);
+    result = tryGit(["merge", "--no-edit", `origin/${INTEGRATION_BRANCH}`], main);
+    if (!result.ok) tryGit(["merge", "--abort"], main);
+  }
   if (!result.ok) {
-    if (/would be overwritten by merge/i.test(result.out)) console.error(`[sync] the main checkout has local changes in the way; left untouched.\n${result.out.trim()}`);
-    else if (/Not possible to fast-forward|diverging|non-fast-forward/i.test(result.out)) console.error(`[sync] ${INTEGRATION_BRANCH} in the main checkout has diverged from origin; left untouched.`);
-    else console.error(`[sync] could not fast-forward ${INTEGRATION_BRANCH}; left untouched.\n${result.out.trim()}`);
+    if (/would be overwritten by merge/i.test(result.out)) console.error(`[sync] uncommitted changes in the main checkout are in the way; left untouched.\n${result.out.trim()}`);
+    else console.error(`[sync] could not bring ${INTEGRATION_BRANCH} up to origin; left untouched. Run git merge origin/${INTEGRATION_BRANCH} by hand.\n${result.out.trim()}`);
     return 0;
   }
   const after = tryGit(["rev-parse", "--short", "HEAD"], main).out.trim();
@@ -71,7 +75,7 @@ export function sync(cwd = process.cwd()) {
     console.log(`[sync] ${INTEGRATION_BRANCH} already at ${after}.`);
     return 0;
   }
-  console.log(`✓ fast-forwarded ${INTEGRATION_BRANCH} ${before} → ${after} — the dev server will pick it up.`);
+  console.log(`✓ ${INTEGRATION_BRANCH} ${before} → ${after}, up to origin — the dev server will pick it up.`);
   refreshDependencies(main, before, after);
   return 0;
 }

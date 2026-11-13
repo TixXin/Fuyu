@@ -41,7 +41,7 @@ function age(dir, daysAgo) {
   utimesSync(dir, time, time);
 }
 
-test("a target folder loses old caches, old builds of the app and removed lanes, and keeps the rest", () => {
+test("a target folder loses old caches, old builds of the app and leftover lane previews, and keeps the rest", () => {
   const target = mkdtempSync(path.join(tmpdir(), "prune-target-"));
   const at = (...parts) => path.join(target, ...parts);
   try {
@@ -58,11 +58,11 @@ test("a target folder loses old caches, old builds of the app and removed lanes,
     touch(at("debug", "deps", ".tmpAbC.temp-archive"), 5);
     touch(at("agents", "debug", "deps", "fuyu_lib-0005.rlib"), 1);
     touch(at("lane-7", "debug", "fuyu.exe"), 8);
-    touch(at("lane-2", "debug", "fuyu.exe"), 8);
+    touch(at("lane-build", "debug", "fuyu.exe"), 8);
     touch(at("agents-d16", "debug", "deps", "x.rlib"), 6);
     age(at("agents-d16"), 6);
 
-    const options = { now: NOW, laneExists: (n) => n === 2 };
+    const options = { now: NOW };
     const planned = plan(target, options).items.map((item) => path.relative(target, item.path)).sort();
     assert.deepEqual(planned, [
       path.join("debug", "deps", ".tmpAbC.temp-archive"),
@@ -71,20 +71,22 @@ test("a target folder loses old caches, old builds of the app and removed lanes,
       path.join("debug", "incremental", "fuyu_lib-aaa"),
       path.join("debug", "incremental", "fuyu_lib-bbb"),
       "lane-7",
+      "lane-build",
     ]);
     assert.ok(planned.every((item) => !item.includes("focusd")), "a crate's only build is its newest, so it stays");
 
     const dry = prune(target, { ...options, dryRun: true });
-    assert.equal(dry.bytes, 6, "one byte in each of the six planned files");
+    assert.equal(dry.bytes, 7, "one byte in each of the seven planned files");
     assert.ok(existsSync(at("lane-7")), "a dry run deletes nothing");
 
     const result = prune(target, options);
-    assert.deepEqual(result.counts, { incremental: 2, own: 2, temp: 1, lane: 1 });
+    assert.deepEqual(result.counts, { incremental: 2, own: 2, temp: 1, lane: 2 });
     assert.equal(existsSync(at("lane-7")), false);
+    assert.equal(existsSync(at("lane-build")), false);
     assert.equal(existsSync(at("debug", "incremental", "fuyu_lib-aaa")), false);
     for (const kept of [
       at("debug", "incremental", "fuyu_lib-ccc"), at("debug", "deps", "serde-0010.rlib"),
-      at("lane-2", "debug", "fuyu.exe"), at("agents", "debug", "deps", "fuyu_lib-0005.rlib"), at("agents-d16"),
+      at("agents", "debug", "deps", "fuyu_lib-0005.rlib"), at("agents-d16"),
     ]) assert.ok(existsSync(kept), kept);
     assert.deepEqual(result.unknown, [{ name: "agents-d16", days: 6 }]);
     assert.match(summary(result), /^freed 0\.0 GB: .*not managed here: agents-d16 \(unused 6 d\)$/);

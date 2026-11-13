@@ -5,7 +5,7 @@ import path from "node:path";
 import test from "node:test";
 import { boardLines, claimable, jsonRows, nextLines, relationLines } from "../../scripts/tasks/taskBoard.mjs";
 import {
-  addHandoff, addLine, claimState, claimed, filesInScope, formatTask, parseTask, scopeOverlap, sectionItems, unclaimed,
+  addHandoff, addLine, claimState, claimText, claimed, filesInScope, formatTask, parseTask, scopeOverlap, sectionItems, unclaimed,
 } from "../../scripts/tasks/taskFile.mjs";
 import { doneProblems } from "../../scripts/tasks/taskLanding.mjs";
 import { checkEntries, commitRef, parseGroups } from "../../scripts/tasks/taskRules.mjs";
@@ -49,29 +49,32 @@ test("body lines go into their section, which is created in template order", () 
   assert.deepEqual(sectionItems(body, "交接"), ["下一步：写测试", "第二条"]);
 });
 
-test("claiming: free, mine in my lane, theirs elsewhere; giving back clears the claim", () => {
+test("claiming: free, mine for the same session on the same machine, theirs otherwise; giving back clears the claim", () => {
   const free = parseTask(TEXT);
-  assert.equal(claimState(free, 7), "free");
-  const mine = claimed(free, { owner: "s", lane: 7, at: "2026-11-07 02:00" });
+  assert.equal(claimState(free, { owner: "s", host: "pc" }), "free");
+  const mine = claimed(free, { owner: "s", host: "pc", at: "2026-11-07 02:00" });
   assert.equal(mine.fields.status, "进行中");
-  assert.equal(claimState(mine, 7), "mine");
-  assert.equal(claimState(mine, 3), "theirs");
+  assert.equal(claimState(mine, { owner: "s", host: "pc" }), "mine");
+  assert.equal(claimState(mine, { host: "pc" }), "mine", "without a session name, the machine is enough");
+  assert.equal(claimState(mine, { owner: "s", host: "mac" }), "theirs", "the same session name on another machine is someone else (#153)");
+  assert.equal(claimState(mine, { owner: "t", host: "pc" }), "theirs");
+  const legacy = { fields: { ...mine.fields, host: undefined, lane: "5" } };
+  assert.equal(claimState(legacy, { owner: "s", host: "pc" }), "theirs", "an old lane claim is never taken for mine");
+  assert.equal(claimText(legacy.fields), "s · lane 5");
+  assert.equal(claimText(mine.fields), "s · pc");
+  assert.equal(claimed(legacy, { owner: "s", host: "pc", at: "x" }).fields.lane, undefined, "a new claim drops the lane");
   assert.deepEqual(mine.fields.scope, ["scripts/", "docs/tasks/"], "no --scope keeps the declared one");
   assert.deepEqual(unclaimed(mine, "待做").fields, { ...free.fields, status: "待做" });
 });
 
-test("stale claims: lane gone, its session exited, or a quiet day", () => {
-  const claim = claimed(parseTask(TEXT), { owner: "s", lane: 7, at: "2026-11-07 02:00" });
+test("stale claims: a day with no handoff or commit on the task file", () => {
+  const claim = claimed(parseTask(TEXT), { owner: "s", host: "pc", at: "2026-11-07 02:00" });
   const now = Date.parse("2026-11-07T03:00");
-  assert.match(staleReason(claim, { laneExists: false, now }), /不存在/);
-  assert.match(staleReason(claim, { laneExists: true, ownerPidAlive: false, now }), /退出/);
-  assert.equal(staleReason(claim, { laneExists: true, ownerPidAlive: true, now }), null);
-  assert.match(staleReason(claim, { laneExists: true, laneOwnerName: "someone-else", ownerPidAlive: true, now }), /已登记给 someone-else/);
-  assert.equal(staleReason(claim, { laneExists: true, laneOwnerName: claim.fields.owner, ownerPidAlive: true, now }), null);
+  assert.equal(staleReason(claim, { now }), null);
   const later = Date.parse("2026-11-08T03:00");
-  assert.match(staleReason(claim, { laneExists: true, ownerPidAlive: null, now: later }), /24 小时/);
-  assert.equal(staleReason(claim, { laneExists: true, ownerPidAlive: null, lastLaneCommitMs: later - 1000, now: later }), null);
-  assert.equal(staleReason(parseTask(TEXT), { laneExists: false, now }), null, "free tasks are never stale");
+  assert.match(staleReason(claim, { now: later }), /24 小时/);
+  assert.equal(staleReason(claim, { lastActivityMs: later - 1000, now: later }), null, "a handoff note keeps it alive");
+  assert.equal(staleReason(parseTask(TEXT), { now: later }), null, "free tasks are never stale");
 });
 
 test("scopes overlap by file or folder; changed files fall in a scope", () => {
@@ -135,11 +138,11 @@ test("check reads the group folders of both trees and the README of a repo", () 
   assert.deepEqual(checkTasks(root), ["docs/tasks/F3.md: belongs in the F/ folder of docs/tasks"]);
 });
 
-const stale = (t) => (t.fields.owner === "gone" ? "lane 3 已不存在" : null);
+const stale = (t) => (t.fields.owner === "gone" ? "认领后超过 24 小时没有动静" : null);
 
 test("the board lists the user's tasks first, then groups in order, with children under their parent", () => {
   const tasks = [
-    task("F1", { status: "进行中", owner: "s", lane: "2" }),
+    task("F1", { status: "进行中", owner: "s", host: "pc" }),
     task("F3", { status: "进行中" }),
     task("F3.1", { parent: "F3", depends: ["F1"] }),
     done("F3.2", { parent: "F3" }),
@@ -169,12 +172,12 @@ test("next offers what an agent can claim, and stale claims to take over", () =>
     task("F3", { depends: ["F2"] }),
     task("F4"),
     task("F4.1", { parent: "F4" }),
-    task("F5", { status: "进行中", owner: "gone", lane: "3" }),
+    task("F5", { status: "进行中", owner: "gone", host: "mac" }),
   ];
   assert.deepEqual(claimable(tasks, GROUPS).map((t) => t.fields.id), ["A3", "F2", "F4.1"]);
   const text = nextLines(tasks, { groups: GROUPS, stale }).join("\n");
   assert.match(text, /task:claim A3/);
-  assert.match(text, /F5 +gone：lane 3 已不存在/);
+  assert.match(text, /F5 +gone：认领后超过 24 小时没有动静/);
 });
 
 test("show lists the parent, children, dependencies, dependents and linked files", () => {

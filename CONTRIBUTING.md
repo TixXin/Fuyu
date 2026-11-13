@@ -18,7 +18,7 @@
 
 - `pnpm install` 会把 `core.hooksPath` 设成 `.githooks`：`pre-push` 拦住直接推 `main`，并检查提交里有没有 AI 署名行和任务文件；`commit-msg` 拒绝 Claude 署名行。已经设成别的路径时只提示不改。
 - 仓库的 `.claude/settings.json` 关掉了 Claude Code 默认加的提交署名和 PR 尾注，不用自己配。
-- lane（每个代理会话一个 worktree，经 `pnpm mq:land` 合入）是可选的。要用的话，在主工作区跑一次 `pnpm lane:install-hooks`，它往用户级 `~/.claude/settings.json` 加会话开始时的提醒和会话结束时的释放；不用 lane 时别跑它，否则每次在仓库里开会话都会被提醒先开 lane。注意仓库自带的 `WorktreeCreate` 钩子对所有人生效：在本仓库里用 `claude -w` 或 EnterWorktree 开的 worktree 都会是 `../fuyu-lanes/` 下的 lane。
+- 仓库管理员的代理会话都在主工作区的本地 `main` 上并行工作、攒批开 PR（见 [workflow.md](docs/architecture/workflow.md)）；协作者照常在自己的分支上开发。
 
 ### 有本仓库 Write 权限的协作者
 
@@ -26,7 +26,7 @@
 2. 推到本仓库（直接 clone `TixXin/fuyu`，不要 fork；从 fork 提的 PR，自动更新分支的工作流推不进去），开 PR，然后点 **Enable auto-merge**，合并方式选 **Create a merge commit**。
 3. CI 通过后 GitHub 自动合入，分支自动删除。CI 失败时在同一个分支上修好再推，PR 自动更新。
 
-用 lane 工作的代理会话不用手动做这些：在 lane 里 `pnpm mq:land` 会推分支、开 PR、开启自动合并，`pnpm mq:wait` 等它合入（见 [lanes.md](docs/architecture/lanes.md)）。
+仓库管理员的代理会话不用手动做这些：在本地 `main` 上攒一批提交后 `pnpm mq:land` 会推分支、开 PR、开启自动合并，`pnpm mq:wait` 等它合入（见 [workflow.md](docs/architecture/workflow.md)）。
 
 ### 外部贡献者
 
@@ -47,9 +47,9 @@ Thanks for helping with Fuyu. How the code is laid out and the rules it follows 
 **Pull requests are the only way into `main`**, for everyone including the owner: no direct pushes, CI's `check` must pass, and the PR must be built on the latest `main`. You do not have to keep it current yourself: a workflow brings PRs on auto-merge up to date one at a time, in the order auto-merge was turned on.
 
 - **Collaborators with Write access:** clone `TixXin/fuyu` itself rather than a fork (the workflow that keeps auto-merge PRs current cannot push to a fork's branch), branch from the latest `main`, push to this repository, open a PR and click **Enable auto-merge** (merge commit). GitHub merges it when CI passes and deletes the branch. If CI fails, push a fix to the same branch.
-- **Agent sessions in a lane:** `pnpm mq:land` pushes the branch, opens the PR and turns on auto-merge; `pnpm mq:wait` follows it until it is merged (see [lanes.md](docs/architecture/lanes.md)).
+- **The maintainer's agent sessions:** they commit on local `main` and, once a batch is ready, `pnpm mq:land` pushes it to a branch, opens the PR and turns on auto-merge; `pnpm mq:wait` follows it until it is merged (see [workflow.md](docs/architecture/workflow.md)).
 - **Everyone else:** fork, work on a branch of your fork and open a PR against `TixXin/fuyu`'s `main`. A maintainer will reply and turn on auto-merge once it is ready.
 
-**Setting up:** `pnpm install` points `core.hooksPath` at `.githooks` (pre-push blocks direct pushes to `main` and checks for AI attribution lines and task files; commit-msg rejects Claude attribution lines), unless it is already set to another path. The repository's `.claude/settings.json` turns off Claude Code's commit and PR attribution. Lanes are optional: to use them, run `pnpm lane:install-hooks` once in the main checkout, which adds the session start reminder and session end release to your user-level `~/.claude/settings.json`; skip it if you do not use lanes. The repository's `WorktreeCreate` hook applies to everyone, so `claude -w` or EnterWorktree in this repository always opens a lane under `../fuyu-lanes/`.
+**Setting up:** `pnpm install` points `core.hooksPath` at `.githooks` (pre-push blocks direct pushes to `main` and checks for AI attribution lines and task files; commit-msg rejects Claude attribution lines), unless it is already set to another path. The repository's `.claude/settings.json` turns off Claude Code's commit and PR attribution. The maintainer's agent sessions work side by side on local `main` in the main checkout and land in batches (see [workflow.md](docs/architecture/workflow.md)); collaborators keep working on their own branches.
 
 Before opening a PR, run `pnpm check` and `pnpm build` for frontend changes (plus `pnpm test:regression` for UI components) and `cargo test --manifest-path src-tauri/Cargo.toml` for Rust. Keep one change per PR, give user-facing text in both Chinese and English, leave comments out of the code (put the reasons in the commit message or `docs/`), and do not add AI attribution lines to commits or PR descriptions.

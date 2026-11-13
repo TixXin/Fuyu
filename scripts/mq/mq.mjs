@@ -1,15 +1,28 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { checkPush } from "./checkPush.mjs";
-import { land } from "./land.mjs";
-import { mainCheckoutOf } from "./settings.mjs";
+import { land, pendingCommits } from "./land.mjs";
+import { INTEGRATION_BRANCH, tryGit } from "./settings.mjs";
 import { sync } from "./sync.mjs";
 import { waitCommand } from "./wait.mjs";
 
-async function reconcile() {
-  const { strandedLines } = await import("../lanes/session-hint.mjs");
-  const lines = strandedLines(mainCheckoutOf());
-  console.log(lines.length ? lines.join("\n") : "[reconcile] 没有被遗弃的 lane：有工作的 lane 都有会话在用。");
+const BATCH_COMMITS = 5;
+const BATCH_HOURS = 6;
+
+export function batchAdvice(commits, now = Date.now()) {
+  if (!commits.length) return { due: false, reason: "没有没推的提交" };
+  const hours = (now - Math.min(...commits.map((commit) => commit.at))) / 3_600_000;
+  if (commits.length >= BATCH_COMMITS) return { due: true, reason: `攒了 ${commits.length} 个提交` };
+  if (hours >= BATCH_HOURS) return { due: true, reason: `最早的提交已经 ${Math.floor(hours)} 小时没推` };
+  return { due: false, reason: `${commits.length} 个提交没推，最早的 ${Math.max(0, Math.round(hours * 60))} 分钟前` };
+}
+
+function pending() {
+  tryGit(["fetch", "origin", INTEGRATION_BRANCH, "--quiet"]);
+  const commits = pendingCommits();
+  for (const { subject } of commits) console.log(`  ${subject}`);
+  const { due, reason } = batchAdvice(commits);
+  console.log(due ? `[pending] ${reason}，该提 PR 了：pnpm mq:land --body <文件>` : `[pending] ${reason}；一个功能做完、要给另一台机器用或发版前再提 PR`);
   return 0;
 }
 
@@ -22,7 +35,7 @@ const COMMANDS = {
   land: (args) => land({ wait: args.includes("--wait"), bodyFile: option(args, "--body"), title: option(args, "--title") }),
   wait: (args) => waitCommand(args),
   sync: () => sync(),
-  reconcile,
+  pending,
   "check-push": () => checkPush(),
 };
 

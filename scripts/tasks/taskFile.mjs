@@ -2,7 +2,7 @@ export const STATUSES = ["待做", "进行中", "待用户确认", "已完成", 
 export const OPEN_STATUSES = ["待做", "进行中", "待用户确认"];
 export const CLOSED_STATUSES = ["已完成", "不做"];
 
-export const FIELDS = ["id", "title", "status", "owner", "lane", "claimed", "scope", "depends", "parent", "needs", "issue", "done"];
+export const FIELDS = ["id", "title", "status", "owner", "host", "lane", "claimed", "scope", "depends", "parent", "needs", "issue", "done"];
 const LIST_FIELDS = ["scope", "depends"];
 const ALWAYS_WRITTEN = ["id", "title", "status"];
 
@@ -97,21 +97,27 @@ export function addHandoff(body, line) {
   return addLine(body, "交接", line);
 }
 
-export function claimed(task, { owner, lane, at, scope }) {
+export function claimed(task, { owner, host, at, scope }) {
+  const { lane: _lane, ...rest } = task.fields;
   return {
     ...task,
-    fields: { ...task.fields, status: "进行中", owner, lane: String(lane ?? ""), claimed: at, scope: scope ?? task.fields.scope },
+    fields: { ...rest, status: "进行中", owner, host, claimed: at, scope: scope ?? task.fields.scope },
   };
 }
 
 export function unclaimed(task, status) {
-  const { owner: _owner, lane: _lane, claimed: _claimed, ...fields } = task.fields;
+  const { owner: _owner, host: _host, lane: _lane, claimed: _claimed, ...fields } = task.fields;
   return { ...task, fields: { ...fields, status } };
 }
 
-export function claimState({ fields }, lane) {
+export function claimState({ fields }, { owner = "", host = "" } = {}) {
   if (fields.status !== "进行中" || !fields.owner) return "free";
-  return fields.lane && String(lane) === fields.lane ? "mine" : "theirs";
+  if (!fields.host || fields.host !== host) return "theirs";
+  return !owner || owner === fields.owner ? "mine" : "theirs";
+}
+
+export function claimText({ owner, host, lane }) {
+  return host ? `${owner} · ${host}` : lane ? `${owner} · lane ${lane}` : owner;
 }
 
 export function compareIds(a, b) {

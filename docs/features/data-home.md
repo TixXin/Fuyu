@@ -12,7 +12,7 @@ WebView2 自己的数据（`%LOCALAPPDATA%\com.tixxin.fuyu\EBWebView`，localSto
 2. 指针文件 `%APPDATA%\com.tixxin.fuyu\home.json` 里的 `{ "home": "<文件夹>" }`（D30.4 在设置里改家目录时写它；指针文件本身不放进家目录）；
 3. `%USERPROFILE%\.fuyu`。
 
-`pnpm dev:lane` 的预览岛屿不参与，始终用它自己的 `%APPDATA%\com.tixxin.fuyu.lane-<N>`，碰不到用户的数据。
+设了 `FOCUSD_DEV_LANE` 的调试版（lane 时期的预览岛屿，启动脚本 2026-11-13 已删，见 F32）不参与，始终用它自己的 `%APPDATA%\com.tixxin.fuyu.lane-<N>`，碰不到用户的数据。
 
 Rust 里取目录一律用 `home_dir::fuyu_home(app.path())`，不直接用 `app_data_dir()`。
 

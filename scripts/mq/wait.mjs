@@ -1,7 +1,6 @@
 import { hostname } from "node:os";
-import path from "node:path";
 import { failedChecks, github as realGitHub, landBranchName } from "./github.mjs";
-import { INTEGRATION_BRANCH, git, tryGit } from "./settings.mjs";
+import { INTEGRATION_BRANCH, tryGit } from "./settings.mjs";
 import { sync } from "./sync.mjs";
 
 const POLL_MS = 20_000;
@@ -9,19 +8,9 @@ const TIMEOUT_MS = 90 * 60_000;
 
 const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-async function reportStranded() {
-  try {
-    const { strandedLines } = await import("../lanes/session-hint.mjs");
-    for (const line of strandedLines(path.dirname(path.resolve(git(["rev-parse", "--git-common-dir"]))))) console.log(line);
-  } catch {
-    return;
-  }
-}
-
 async function afterMerge() {
   tryGit(["fetch", "origin", INTEGRATION_BRANCH, "--quiet"]);
   sync();
-  await reportStranded();
 }
 
 export async function waitFor(number, options = {}) {
@@ -43,11 +32,11 @@ export async function waitFor(number, options = {}) {
     if (failed.length) {
       console.error(`[wait] PR #${number} 的检查没通过，自动合并会一直等着：`);
       for (const { name, url } of failed) console.error(`  ${name}  ${url}`);
-      console.error("在同一个 lane 修好、提交，再 pnpm mq:land，PR 会自动更新。");
+      console.error("修好、提交，再 pnpm mq:land，PR 会自动更新。");
       return 1;
     }
     if (pr.mergeStateStatus === "DIRTY") {
-      console.error(`[wait] PR #${number} 和 ${INTEGRATION_BRANCH} 冲突了。在 lane 里重新 pnpm mq:land（会先 rebase），按提示解决冲突。`);
+      console.error(`[wait] PR #${number} 和 ${INTEGRATION_BRANCH} 冲突了。重新 pnpm mq:land（会先把 origin/${INTEGRATION_BRANCH} 合进来），按提示解决冲突。`);
       return 1;
     }
     if (pr.mergeStateStatus === "BEHIND" && updateBehind) {

@@ -1,9 +1,9 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, statSync, writeFileSync } from "node:fs";
+import { hostname } from "node:os";
 import path from "node:path";
 import { CLOSED_STATUSES, formatTask, groupOf, parseTask } from "./taskFile.mjs";
 import { checkEntries, parseGroups } from "./taskRules.mjs";
-import { readOwners as readLaneOwners } from "../lanes/laneRegistry.mjs";
 
 export const TASKS_DIR = "docs/tasks";
 export const ARCHIVE_DIR = "docs/tasks/0-archive";
@@ -105,42 +105,33 @@ export function todayText(date = new Date()) {
   return nowText(date).slice(0, 10);
 }
 
-function laneDir(main, lane) {
-  return path.join(path.dirname(main), `${path.basename(main)}-lanes`, String(lane));
+export function staleReason({ fields }, { lastActivityMs = null, now = Date.now() } = {}) {
+  if (fields.status !== "进行中" || !fields.owner) return null;
+  const claimedAt = Date.parse(fields.claimed?.replace(" ", "T") ?? "");
+  const quietSince = Math.max(Number.isNaN(claimedAt) ? 0 : claimedAt, lastActivityMs ?? 0);
+  return quietSince && now - quietSince > STALE_MS ? "认领后超过 24 小时没有动静（任务文件没有新的交接或提交）" : null;
 }
 
-function alive(pid) {
+function lastActivityMs(root, id) {
+  const file = taskPath(id, false);
+  const times = ["origin/main", "HEAD"].map((ref) => Number(tryGit(["log", "-1", "--format=%ct", ref, "--", file], root) ?? 0) * 1000);
+  return Math.max(...times) || null;
+}
+
+export function staleOf(root, task) {
+  return task.fields.status === "进行中" ? staleReason(task, { lastActivityMs: lastActivityMs(root, task.fields.id) }) : null;
+}
+
+export function taskOnMain(root, id) {
+  const text = tryGit(["show", `origin/main:${taskPath(id, false)}`], root);
+  if (text === null) return null;
   try {
-    process.kill(pid, 0);
-    return true;
-  } catch (error) {
-    return error.code === "EPERM";
+    return parseTask(text);
+  } catch {
+    return null;
   }
 }
 
-export function staleReason({ fields }, { laneExists, laneOwnerName, ownerPidAlive, lastLaneCommitMs, now = Date.now() }) {
-  if (fields.status !== "进行中" || !fields.lane) return null;
-  if (!laneExists) return `lane ${fields.lane} 已不存在`;
-  if (laneOwnerName && fields.owner && laneOwnerName !== fields.owner) return `lane ${fields.lane} 已登记给 ${laneOwnerName}`;
-  if (ownerPidAlive === false) return `建 lane ${fields.lane} 的会话已退出`;
-  const claimedAt = Date.parse(fields.claimed?.replace(" ", "T") ?? "");
-  const quietSince = Math.max(Number.isNaN(claimedAt) ? 0 : claimedAt, lastLaneCommitMs ?? 0);
-  if (quietSince && now - quietSince > STALE_MS) return `lane ${fields.lane} 超过 24 小时没有提交`;
-  return null;
-}
-
-function laneFacts(main, lane) {
-  const dir = laneDir(main, lane);
-  const owner = readLaneOwners(main)[path.resolve(dir).toLowerCase()];
-  const last = existsSync(dir) ? tryGit(["-C", dir, "log", "-1", "--format=%ct"]) : null;
-  return {
-    laneExists: existsSync(dir),
-    laneOwnerName: owner?.name ?? null,
-    ownerPidAlive: owner?.pid ? alive(owner.pid) : null,
-    lastLaneCommitMs: last ? Number(last) * 1000 : null,
-  };
-}
-
-export function staleOf(main, task) {
-  return task.fields.lane ? staleReason(task, laneFacts(main, task.fields.lane)) : null;
+export function machineName(name = hostname()) {
+  return name.split(".")[0].toLowerCase().replace(/[^a-z0-9.-]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 24) || "host";
 }

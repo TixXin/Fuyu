@@ -2,8 +2,7 @@ import { execFileSync, spawnSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { laneNumber, mainCheckout, targetDir } from "./build-dirs.mjs";
-import { touchOwner } from "./lanes/laneRegistry.mjs";
+import { mainCheckout, targetDir } from "./build-dirs.mjs";
 import { backgroundBuildEnv, lowerPriority } from "./build-load.mjs";
 import { pruneMainTarget } from "./prune-build-cache.mjs";
 import { readVersion, VERSION_FILES, writeVersion } from "./release/versions.mjs";
@@ -140,22 +139,8 @@ function ownEmail() {
   }
 }
 
-function checkIn() {
-  try {
-    const lane = laneNumber(process.cwd());
-    return lane && !touchOwner(mainCheckout(), lane) ? lane : null;
-  } catch {
-    return null;
-  }
-}
-
 function main(args = []) {
   lowerPriority("land-check");
-  const unrecorded = checkIn();
-  if (unrecorded) {
-    console.error(`[land-check] lane ${unrecorded} 没有归属记录（手动建的 lane）。先运行 pnpm lane:take ${unrecorded} --as <会话名>，以后用 EnterWorktree 或 pnpm lane:open 开 lane`);
-    return 1;
-  }
   const attributed = attributedCommits(landingCommits(), ownEmail());
   if (attributed.length) {
     console.error(`[land-check] remove the Claude attribution lines from: ${attributed.join("; ")}`);

@@ -1,8 +1,7 @@
 import { existsSync, lstatSync, readdirSync, rmSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { LANE_BUILD_DIR, mainCheckout, PUBLISH_DIR, targetDir } from "./build-dirs.mjs";
-import { lanePath } from "./lanes/laneRegistry.mjs";
+import { mainCheckout, PUBLISH_DIR, targetDir } from "./build-dirs.mjs";
 
 export const MAX_AGE_DAYS = 3;
 export const KEEP = 3;
@@ -11,8 +10,8 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 const OWN_UNIT = /^(fuyu|fuyu_lib|focusd_island|focusd_island_lib)-([0-9a-z]+)(?:\.|$)/;
 const INCREMENTAL_UNIT = /^(.+)-([0-9a-z]+)$/;
 const TEMP_ARCHIVE = /^\.tmp.*\.temp-archive$/;
-const LANE_DIR = /^lane-(\d+)$/;
-const KNOWN_DIRS = new Set(["debug", "release", "agents", LANE_BUILD_DIR, PUBLISH_DIR]);
+const LANE_DIR = /^lane-(\d+|build)$/;
+const KNOWN_DIRS = new Set(["debug", "release", "agents", PUBLISH_DIR]);
 
 export function staleUnits(units, cutoff, keep = KEEP) {
   const byCrate = new Map();
@@ -94,16 +93,15 @@ function profileItems(profile, cutoff) {
   return items;
 }
 
-export function plan(target, { now = Date.now(), maxAgeDays = MAX_AGE_DAYS, laneExists = () => true } = {}) {
+export function plan(target, { now = Date.now(), maxAgeDays = MAX_AGE_DAYS } = {}) {
   const cutoff = now - maxAgeDays * DAY_MS;
   const items = profileDirs(target).flatMap((profile) => profileItems(profile, cutoff));
   const unknown = [];
   for (const name of list(target)) {
     const dir = path.join(target, name);
     if (!lstatSync(dir).isDirectory()) continue;
-    const lane = LANE_DIR.exec(name);
-    if (lane) {
-      if (!laneExists(Number(lane[1]))) items.push({ path: dir, kind: "lane" });
+    if (LANE_DIR.test(name)) {
+      items.push({ path: dir, kind: "lane" });
     } else if (!KNOWN_DIRS.has(name)) {
       unknown.push({ name, days: Math.floor((now - mtime(dir)) / DAY_MS) });
     }
@@ -116,7 +114,7 @@ const KIND_NAMES = {
   incremental: "incremental caches",
   own: "old builds of this app",
   temp: "leftover temp archives",
-  lane: "previews of removed lanes",
+  lane: "leftover lane previews",
 };
 
 export function prune(target, options = {}) {
@@ -152,7 +150,7 @@ export function summary({ bytes, counts, failed, unknown }, dryRun = false) {
 export function pruneMainTarget(options = {}) {
   try {
     const main = mainCheckout();
-    const result = prune(targetDir(main), { laneExists: (n) => existsSync(lanePath(main, n)), ...options });
+    const result = prune(targetDir(main), options);
     console.log(`[prune] ${summary(result, options.dryRun)}`);
   } catch (error) {
     console.warn(`[prune] skipped: ${error.message}`);

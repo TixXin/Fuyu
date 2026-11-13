@@ -5,12 +5,12 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { parseRefUpdates, pushBlock } from "../../scripts/mq/checkPush.mjs";
-import { land, landRefusal } from "../../scripts/mq/land.mjs";
+import { land, landRefusal, uncommittedNote } from "../../scripts/mq/land.mjs";
+import { batchAdvice } from "../../scripts/mq/mq.mjs";
 import { failedChecks, landBranchName, prText } from "../../scripts/mq/github.mjs";
 import { queueOrder, updateBehind } from "../../scripts/mq/updateBehind.mjs";
 import { waitFor } from "../../scripts/mq/wait.mjs";
 import { lockfileChanged, removedDependencies } from "../../scripts/mq/sync.mjs";
-import { createWorktree, removeWorktree } from "../../scripts/lanes/worktree-hooks.mjs";
 
 function withoutGitEnv(work) {
   const saved = Object.keys(process.env).filter((name) => name.startsWith("GIT_")).map((name) => [name, process.env[name]]);
@@ -34,11 +34,21 @@ test("nobody pushes main directly, other branches go through, and an emergency l
   assert.equal(pushBlock(parseRefUpdates("refs/heads/pr-9 a refs/heads/pr-9 b"), {}), null);
 });
 
-test("land runs only from a lane branch with everything committed", () => {
-  assert.match(landRefusal("main", []), /lane 的分支/);
-  assert.match(landRefusal("HEAD", []), /lane 的分支/);
-  assert.match(landRefusal("lane/2", [" M a.ts", "?? scratch.txt"]), /没提交的改动[\s\S]*a\.ts/);
-  assert.equal(landRefusal("lane/2", ["?? scratch.txt", ""]), null, "untracked files do not block a rebase");
+test("land runs from local main or any branch, and leaves uncommitted files to whoever is editing them", () => {
+  assert.equal(landRefusal("main"), null);
+  assert.equal(landRefusal("feat/x"), null);
+  assert.match(landRefusal("HEAD"), /detached HEAD/);
+  assert.match(uncommittedNote([" M a.ts", "?? scratch.txt", ""]), /1 个没提交的改动/);
+  assert.equal(uncommittedNote(["?? scratch.txt", ""]), null);
+});
+
+test("a batch is due after five commits or six hours, not after each small change", () => {
+  const now = Date.parse("2026-11-13T12:00:00Z");
+  const at = (hours) => now - hours * 3_600_000;
+  assert.equal(batchAdvice([], now).due, false);
+  assert.equal(batchAdvice([{ subject: "fix: typo", at: at(1) }], now).due, false);
+  assert.match(batchAdvice([1, 2, 3, 4, 5].map(() => ({ subject: "x", at: at(1) })), now).reason, /攒了 5 个提交/);
+  assert.match(batchAdvice([{ subject: "x", at: at(7) }], now).reason, /7 小时没推/);
 });
 
 test("dependencies are reinstalled only for a lockfile change, and never over a removed package", () => {
@@ -86,17 +96,16 @@ function fakeGitHub() {
   };
 }
 
-test("land rebases onto main, pushes its own branch, opens one PR with auto-merge, and backs out of a conflict", () => withoutGitEnv(async () => {
+test("land merges main in without rewriting anything, pushes local main to its own branch, opens one PR with auto-merge, and backs out of a conflict", () => withoutGitEnv(async () => {
   const root = realpathSync(mkdtempSync(path.join(tmpdir(), "mq-land-")));
   const git = (args, cwd) => execFileSync("git", ["-c", "user.email=t@t", "-c", "user.name=t", ...args], { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim();
   const remote = path.join(root, "remote.git");
   const main = path.join(root, "app");
-  const lane = path.join(root, "app-lanes", "1");
   const other = path.join(root, "other");
-  const remoteLog = (ref) => git(["log", "--format=%s", ref], remote);
+  const subjects = (ref, cwd = remote) => git(["log", "--no-merges", "--format=%s", ref], cwd).split("\n").sort();
   const commit = (cwd, file, text, message) => {
     writeFileSync(path.join(cwd, file), text);
-    git(["add", "."], cwd);
+    git(["add", file], cwd);
     git(["commit", "-q", "-m", message], cwd);
   };
   try {
@@ -108,32 +117,33 @@ test("land rebases onto main, pushes its own branch, opens one PR with auto-merg
     commit(main, "a.txt", "a\n", "one");
     git(["push", "-q", "origin", "main"], main);
     git(["clone", "-q", remote, other], root);
-    git(["worktree", "add", "-q", lane, "-b", "lane/1"], main);
-    writeFileSync(path.join(lane, "b.txt"), "b\n");
-    git(["add", "."], lane);
-    git(["commit", "-q", "-m", "lane work", "-m", "because"], lane);
+    writeFileSync(path.join(main, "b.txt"), "b\n");
+    git(["add", "b.txt"], main);
+    git(["commit", "-q", "-m", "local work", "-m", "because"], main);
     commit(other, "c.txt", "c\n", "someone else landed");
     git(["push", "-q", "origin", "main"], other);
+    writeFileSync(path.join(main, "a.txt"), "another session is still editing this\n");
+    const before = git(["rev-parse", "HEAD"], main);
 
-    process.chdir(lane);
+    process.chdir(main);
     const gh = fakeGitHub();
-    const branch = "land/tester/test-pc-lane-1";
+    const branch = "land/tester/test-pc-main";
     assert.equal(await land({ github: gh, host: "Test-PC" }), 0);
-    assert.equal(remoteLog(branch), "lane work\nsomeone else landed\none", "rebased onto main and pushed to its own branch");
-    assert.equal(remoteLog("main"), "someone else landed\none", "main itself is left to the PR");
-    assert.deepEqual(gh.calls.created.map(({ head, base, title }) => [head, base, title]), [[branch, "main", "lane work"]]);
-    assert.match(gh.calls.created[0].body, /- `lane work`/);
+    assert.deepEqual(subjects(branch), ["local work", "one", "someone else landed"], "main was merged in and local main pushed to its own branch");
+    assert.equal(git(["merge-base", "--is-ancestor", before, "HEAD"], main), "", "the local commits were not rewritten");
+    assert.deepEqual(subjects("main"), ["one", "someone else landed"], "main itself is left to the PR");
+    assert.equal(git(["status", "--porcelain", "--untracked-files=no"], main), "M a.txt", "the other session's edit stays where it was");
+    assert.equal(git(["show", `${branch}:a.txt`], remote), "a", "and is not pushed");
+    assert.deepEqual(gh.calls.created.map(({ head, base, title }) => [head, base, title]), [[branch, "main", "local work"]]);
+    assert.match(gh.calls.created[0].body, /- `local work`/);
     assert.match(gh.calls.created[0].body, /`b\.txt`/, "the skeleton lists what changed");
-    assert.match(gh.calls.created[0].body, /<details><summary>提交说明（英文）<\/summary>\n\n### lane work\n\nbecause/);
+    assert.doesNotMatch(gh.calls.created[0].body, /Merge/, "merge commits are left out of the list");
     assert.deepEqual(gh.calls.autoMerged, [7]);
 
-    commit(other, "d.txt", "d\n", "more on main");
-    git(["push", "-q", "origin", "main"], other);
-    commit(lane, "e.txt", "e\n", "follow-up");
+    commit(main, "e.txt", "e\n", "follow-up");
     assert.equal(await land({ github: gh, host: "Test-PC" }), 0);
-    assert.equal(remoteLog(branch), "follow-up\nlane work\nmore on main\nsomeone else landed\none", "the rebased branch replaced the old one");
+    assert.ok(subjects(branch).includes("follow-up"), "the open PR's branch moved on");
     assert.equal(gh.calls.created.length, 1, "the open PR is reused");
-    assert.deepEqual(gh.calls.autoMerged, [7, 7]);
     assert.deepEqual(gh.calls.edited, [], "a re-land without --body keeps the PR text");
     const bodyFile = path.join(root, "body.md");
     writeFileSync(bodyFile, "## 改了什么\n\n- 中文说明\n");
@@ -143,13 +153,13 @@ test("land rebases onto main, pushes its own branch, opens one PR with auto-merg
     assert.equal(await land({ github: gh, host: "Test-PC", bodyFile: path.join(root, "missing.md") }), 1);
     assert.deepEqual(gh.calls.autoMerged, [7, 7, 7], "a missing body file stops before pushing");
 
-    git(["pull", "-q", "--rebase", "origin", "main"], other);
+    git(["pull", "-q", "--no-rebase", "origin", "main"], other);
     commit(other, "b.txt", "theirs\n", "conflicting");
     git(["push", "-q", "origin", "main"], other);
-    commit(lane, "b.txt", "mine\n", "mine");
+    commit(main, "b.txt", "mine\n", "mine");
     assert.equal(await land({ github: gh, host: "Test-PC" }), 1);
-    assert.equal(git(["status", "--porcelain"], lane), "", "the rebase was aborted and the tree left clean");
-    assert.equal(git(["log", "-1", "--format=%s"], lane), "mine");
+    assert.equal(git(["status", "--porcelain", "--untracked-files=no"], main), "M a.txt", "the merge was aborted; only the other session's edit is left");
+    assert.equal(git(["log", "-1", "--format=%s"], main), "mine");
     assert.equal(gh.calls.autoMerged.length, 3, "nothing was pushed or merged after the conflict");
   } finally {
     try {
@@ -196,26 +206,4 @@ test("only the first PR in line is brought up to date; drafts, conflicts and fai
   const current = run(0);
   assert.deepEqual(current.updated, [], "nothing is updated while the first in line is current");
   assert.match(current.said, /#4 已经基于最新的 main/);
-});
-
-test("the worktree hooks hand out lanes and keep a lane with work from being removed", () => {
-  const main = path.join("E:", "Projects", "fly-island");
-  const asked = [];
-  const sessionsDir = mkdtempSync(path.join(tmpdir(), "mq-sessions-"));
-  writeFileSync(path.join(sessionsDir, `${process.pid}.json`), JSON.stringify({ pid: process.pid, sessionId: "s1", name: "fly-island-c5" }));
-  try {
-    const created = createWorktree({ cwd: main, session_id: "s1" }, { main, env: {}, sessionsDir, open: (options) => { asked.push(options); return { wt: "E:\\lane\\3" }; } });
-    assert.deepEqual(created, { code: 0, stdout: "E:\\lane\\3" });
-    assert.deepEqual([asked[0].pid, asked[0].session, asked[0].name, asked[0].install], [process.pid, "s1", "fly-island-c5", true], "the session's name and pid come from ~/.claude/sessions");
-  } finally {
-    rmSync(sessionsDir, { recursive: true, force: true });
-  }
-
-  const lanePath = path.join("E:", "Projects", "fly-island-lanes", "3");
-  const clean = removeWorktree({ worktree_path: lanePath }, { main, finish: () => ({ released: true, problems: [] }) });
-  assert.equal(clean.code, 0, "released and kept on disk for the next session");
-  const dirty = removeWorktree({ worktree_path: lanePath }, { main, finish: () => ({ released: false, problems: ["1 个未提交的文件"], files: [" M a.ts"] }) });
-  assert.equal(dirty.code, 1, "a non-zero exit makes Claude Code keep the worktree");
-  assert.match(dirty.stderr, /1 个未提交的文件[\s\S]*a\.ts/);
-  assert.equal(removeWorktree({ worktree_path: path.join("E:", "elsewhere") }, { main }).code, 0);
 });

@@ -2,15 +2,15 @@
 name: fuyu-release
 description: >
   This skill should be used whenever the user asks to publish a new version of the
-  island app in the Fuyu repo (the main checkout and its lanes) —
+  island app in the Fuyu repo —
   including 发版, 发布, 发 beta, 发测试版, 发正式版, 出个版本, release, ship a version.
   Covers picking the version number, writing the release notes, landing the bump and
-  running `pnpm release`. Not for plugins (发插件 is the lanes skill) or npm packages.
+  running `pnpm release`. Not for plugins or npm packages.
 ---
 
 # 浮屿发版
 
-步骤和命令以仓库为准，这里只排顺序、列判断。开始前在 lane 里读：
+步骤和命令以仓库为准，这里只排顺序、列判断。开始前读：
 
 - `docs/features/updater.md` 的「发布一个可自动更新的版本」和「撤回有问题的版本」；
 - `docs/releases/README.md`：版本号怎么定、发布说明怎么写。
@@ -21,12 +21,12 @@ description: >
 
 ## 顺序
 
-1. **在自己的 lane 里**（EnterWorktree 或 `pnpm lane:open --as <会话名>` 开的，有归属记录；不要手动 `git worktree add`），工作区干净，快进到 `origin/main`。
+1. **在主工作区**，先 `pnpm mq:pending`：本地 `main` 上还有没合入的提交时，先把它们 `pnpm mq:land --wait` 合进去（问用户这批要不要进这一版），再 `pnpm mq:sync` 跟上 `origin/main`。发出去的必须和 `main` 一致。
 2. **定版本号**：看 `gh release list --repo TixXin/Fuyu --limit 5` 和 `package.json`，按 `docs/releases/README.md`。
 3. `pnpm release:version <版本号>`：改四处版本号，写草稿 `docs/releases/v<版本号>.md`。
 4. **写说明**：读提交正文（不只标题），按 `docs/releases/README.md` 改写成中英文，删掉草稿标记。
 5. 提交 `chore(release): <版本号>`，写一份中文 PR 正文（`## 改了什么` 写版本号和这版的要点，`## 关联` 写发布说明文件），`pnpm mq:land --body <文件> --wait`（开 PR、开自动合并，等 CI 通过、GitHub 合入）。只改版本号和 Markdown 时 CI 走快速路径，很快。没合入就不要往下走。
-6. 在**同一个 lane**、合入的那个提交上（`--merge` 合入，提交号不变），后台运行 `pnpm release`，日志写到 scratchpad。它会：在主工作区的 `target/publish` 增量构建（约 3 分钟），上传草稿并核对 SHA-256，触发 `release-smoke.yml` 在干净 runner 上装一遍、启动一遍（约 1 分钟），通过才公开；然后换本机 exe 和快捷方式、刷新 beta 通道、读回两个通道、在 issue 下留言。
+6. 合入后（`--merge` 合入，提交号不变）`pnpm mq:sync`，确认 `git log -1` 就是 `origin/main` 上的合并提交、`pnpm mq:pending` 没有没推的提交，再后台运行 `pnpm release`，日志写到 scratchpad。它会：在主工作区的 `target/publish` 增量构建（约 3 分钟），上传草稿并核对 SHA-256，触发 `release-smoke.yml` 在干净 runner 上装一遍、启动一遍（约 1 分钟），通过才公开；然后换本机 exe 和快捷方式、刷新 beta 通道、读回两个通道、在 issue 下留言。
 7. **看日志，不只看退出码**（管道到 `tail` 时退出码总是 0）。要看到 `✓ Published` 和 `✓ Channels read back`。
 
 ## 出问题

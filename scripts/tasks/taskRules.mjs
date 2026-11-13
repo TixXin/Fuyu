@@ -34,7 +34,7 @@ export function taskProblems(task, { fileId, archived, folder, tasks, groups, ch
   }
   const isParent = (children.get(fields.id) ?? []).length > 0;
   if (fields.status === "进行中" && !fields.owner && !isParent) problems.push("in progress without an owner");
-  if ((fields.status === "待做" || closed) && (fields.lane || fields.claimed)) problems.push(`status ${fields.status} keeps a lane or claim time`);
+  if ((fields.status === "待做" || closed) && (fields.host || fields.lane || fields.claimed)) problems.push(`status ${fields.status} keeps a host, lane or claim time`);
   if (fields.status === "待做" && fields.owner) problems.push("待做 with an owner; claim it or drop the owner");
   if (fields.lane && !/^[0-9]+$/.test(fields.lane)) problems.push(`lane "${fields.lane}" is not a number`);
   for (const other of [...fields.depends, ...(fields.parent ? [fields.parent] : [])]) {

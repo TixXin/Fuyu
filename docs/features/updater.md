@@ -107,7 +107,7 @@ pnpm tauri signer generate -w $env:USERPROFILE\.tauri\fly-island.key
 
 ## 发布一个可自动更新的版本
 
-1. 改版本号并起草发布说明，在 lane 里运行：
+1. 改版本号并起草发布说明，在主工作区运行：
 
    ```powershell
    pnpm release:version 0.3.4          # 测试版写 0.3.4-beta.1
@@ -157,7 +157,7 @@ pnpm tauri signer generate -w $env:USERPROFILE\.tauri\fly-island.key
    gh release download beta-channel --repo TixXin/fuyu --pattern latest.json --dir $env:TEMP\beta --clobber
    ```
 
-版本号和发布说明的提交照常在 lane 里 land 到 `main`（D25：只改了四处版本号和 Markdown 时，land 只核对版本号一致并跑任务检查，不跑 `pnpm check`；lane 要有归属记录，用 EnterWorktree 或 `pnpm lane:open` 开），再在同一个 lane（停在 land 后的提交、工作区干净）里运行 `pnpm release`，不要在主工作区里发布。
+版本号和发布说明的提交照常 `pnpm mq:land` 到 `main`（D25：只改了四处版本号和 Markdown 时，land 只核对版本号一致并跑任务检查，不跑 `pnpm check`），合入后在主工作区运行 `pnpm release`。发布前先 `pnpm mq:sync` 跟上 `origin/main`，并确认本地 `main` 上没有还没合入的提交（`pnpm mq:pending`）：发出去的要和 `main` 一致。
 
 CI 也可以复用同样的步骤：在仓库 Secrets 里存 `TAURI_UPDATER_PUBKEY`、`TAURI_SIGNING_PRIVATE_KEY`、`TAURI_SIGNING_PRIVATE_KEY_PASSWORD`，按上面的顺序跑 `prepare-release-config` → `tauri build --config` → `make-latest-json` → `gh release`。
 
