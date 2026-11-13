@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { islandRanBefore } from "../../features/appearance/installState";
 import type { PluginNotificationsController } from "../../features/plugins/usePluginNotifications";
 import { useTranslation } from "../../i18n";
-import { openOnboardingWindow } from "../onboarding/api";
+import { openFirstRunOnboardingWindow } from "../onboarding/api";
 import { ONBOARDING_WELCOME_STORAGE_KEY, parseWelcome } from "../onboarding/storage";
 
 const OPEN_DELAY_MS = 1_200;
@@ -22,7 +22,7 @@ export function useFirstRunGuide(notifications: PluginNotificationsController) {
     if (!firstRun || opened) return;
     const timer = window.setTimeout(() => {
       opened = true;
-      openOnboardingWindow();
+      openFirstRunOnboardingWindow();
     }, OPEN_DELAY_MS);
     return () => window.clearTimeout(timer);
   }, [firstRun]);

@@ -7,10 +7,18 @@ export type IslandSpot = { x: number; y: number; width: number; height: number; 
 
 export type CardRect = { x: number; y: number; width: number; height: number };
 
-export function openOnboardingWindow() {
-  void invoke("open_onboarding_window").catch((error) => {
+function open(clearDesktop: boolean) {
+  void invoke("open_onboarding_window", { clearDesktop }).catch((error) => {
     console.error("Failed to open the onboarding window", error);
   });
+}
+
+export function openOnboardingWindow() {
+  open(false);
+}
+
+export function openFirstRunOnboardingWindow() {
+  open(true);
 }
 
 export function showOnboardingWindow() {

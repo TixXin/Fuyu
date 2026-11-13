@@ -7,17 +7,20 @@
 | 幕 | 卡片上 | 真岛上 | 改的设置 |
 |---|---|---|---|
 | 1 你好 | 「你好，这就是浮屿」，界面语言 | 亮圈套住岛，岛弹出消息面板：「你好啊，我在这儿 👋」 | `fuyu-locale` |
-| 2 捏岛 | 深色 / 浅色 / 跟随系统、强调色、圆角 | 岛当场变样子 | `themeMode`、`accentMode`、`accentColor`、`islandCornerRadius` |
-| 3 装岛 | 「你平时主要用电脑做什么」（写代码 / 办公 / 学习 / 娱乐，可多选）和 8 张功能贴纸 | 岛上对应的入口当场出现或消失 | `todoEnabled` 等 7 个开关；剪贴板历史写 `clipboard-history.json` 的 `enabled`。身份和功能的对应在 `windows/onboarding/personas.ts` |
-| 4 练习 | 三个小任务，每完成一个亮一颗星；卡片挪到屏幕底部，给展开的岛让位置 | 用户自己让岛展开（顺带选悬停还是点击）、拖一个真文件到岛上（文件中转开着时才有）、按一次剪贴板快捷键（剪贴板开着时才有，顺带问要不要 Win+V） | `expandTrigger`、剪贴板 `winV` |
-| 5 完成 | 开机启动；去设置连接 AI 编程工具、添加邮箱 | 点「开始使用」，遮罩消失，岛弹出「浮屿已就绪」 | 注册表的开机自启 |
+| 2 捏岛 | 深色 / 浅色 / 跟随系统、强调色。只放这两项：圆角形状、圆角大小和展开动画留在设置里，这一幕多了就又成了设置表单 | 岛当场变样子 | `themeMode`、`accentMode`、`accentColor` |
+| 3 装岛 | 「你平时主要用电脑做什么」（写代码 / 办公 / 学习 / 娱乐，可多选）和 8 张功能贴纸。新装的岛除了截图都开着，所以选身份是「只留下这一组」：每张身份卡列出它留下的全部功能，选了以后卡片写出卸下了哪些 | 岛上对应的入口当场出现或消失 | `todoEnabled` 等 7 个开关；剪贴板历史写 `clipboard-history.json` 的 `enabled`。身份和功能的对应在 `windows/onboarding/personas.ts` |
+| 4 练习 | 三个小任务，每完成一个亮一颗星；卡片挪到屏幕底部，给展开的岛让位置。导语只提已经装上的演示内容（音乐、Agent） | 用户自己让岛展开（顺带选悬停还是点击）、拖一个真文件到岛上（文件中转开着时才有）、按一次剪贴板快捷键（剪贴板开着时才有，顺带问要不要 Win+V） | `expandTrigger`、剪贴板 `winV` |
+| 5 完成 | 开机启动；去设置连接 AI 编程工具、添加邮箱（点了就结束引导并打开设置）；一句话说明以后从托盘图标进设置 | 点「开始使用」，遮罩消失，岛弹出「浮屿已就绪」 | 注册表的开机自启 |
 
 - **演示模式**：引导开着的时候，岛上放一首演示歌曲「海边的风」，还有一个正在干活的演示 Claude Code 会话，这样刚装好的岛也能展示音乐和 Agent。真的有歌在放时用真的。引导关掉时演示马上消失；引导意外退出的话，最多 7 秒后也会消失。
 - 每一项改了就保存，和设置窗口用同一套存储，真岛通过 storage 事件马上跟着变。随时「跳过」、点 ×、按 Esc 都能退出，已经选的保留。
+- **身份能撤回**：第一次选身份时记下当时开着的功能；把选中的身份全部取消，功能回到回答之前的样子。选了哪些身份在各幕之间来回时保留。从「关于」重开引导的老用户点错了也能这样恢复。
+- **练习的判定**：进入第 4 幕时岛已经展开的不算，要看到它收起后再展开才亮星。拖文件看的是文件中转里最新一条的加入时间，不看条数，所以重复拖同一个文件、或者中转已经满了也算。拖进去的文件会留在文件中转里。
+- **第 5 幕的设置链接先结束引导**：遮罩始终置顶并压暗整屏，设置窗口开在它下面会像被禁用，所以点链接时先打开设置，再和「开始使用」一样结束引导。
 - 遮罩只在卡片上接住鼠标，别的地方鼠标直接穿过去，所以能碰到真岛、能从桌面拖文件。
 - 岛藏在托盘里时整屏压暗，卡片上提示点托盘图标让岛出来；岛一出来亮圈就跟过去。
 - 系统开了「减少动画」时，亮圈的脉冲、卡片和星星的动画都关掉。
-- **先露出桌面**：打开引导前，任务栏先「最小化所有窗口」（Win+M 那个命令，不用 Win+D：它会来回切换，也可能把置顶的岛一起藏掉），等约 0.35 秒动画结束再盖上遮罩；引导关闭时「撤销最小化全部」，窗口回到原处。见 `src-tauri/src/win32/desktop.rs`。
+- **先露出桌面**（只在新装第一次启动时；从「关于」重开不动别的窗口）：打开引导前，任务栏先「最小化所有窗口」（Win+M 那个命令，不用 Win+D：它会来回切换，也可能把置顶的岛一起藏掉），等约 0.35 秒动画结束再盖上遮罩；引导关闭时「撤销最小化全部」，窗口回到原处；这时设置窗口开着的话（从第 5 幕的链接打开的），约 0.35 秒后再把它提到最前，免得被恢复的窗口盖住。见 `src-tauri/src/win32/desktop.rs`。
 - 只摆出设置里已有的选项，不新增设置；不要账号密码，不弹系统权限对话框。
 
 ## 什么时候打开
@@ -29,7 +32,7 @@
 
 ## 代码
 
-- 前端：`src/windows/onboarding/`。`OnboardingWindow.tsx` 串起五幕，每幕一个 `*Act.tsx`；`Spotlight` 是压暗和亮圈；`placement.ts` 算卡片放哪（纯函数，`tests/unit/onboarding-placement.test.mjs`）；`useIslandSpot` 收真岛的位置，`useCardRect` 把卡片的矩形交给 Rust，`useDemoHeartbeat` 让演示模式续命；`personas.ts` 是身份和功能的对应（`tests/unit/onboarding-personas.test.mjs`）；`storage.ts` 是给真岛的两个跨窗口请求。文案在 `src/i18n/sections/onboarding.ts`。
+- 前端：`src/windows/onboarding/`。`OnboardingWindow.tsx` 串起五幕，每幕一个 `*Act.tsx`；`Spotlight` 是压暗和亮圈；`placement.ts` 算卡片放哪（纯函数，`tests/unit/onboarding-placement.test.mjs`）；`useIslandSpot` 收真岛的位置，`useCardRect` 把卡片的矩形交给 Rust，`useDemoHeartbeat` 让演示模式续命；`personas.ts` 是身份和功能的对应，以及回答的记忆和撤回（`togglePersona`、`takenOff`；`tests/unit/onboarding-personas.test.mjs`）；`storage.ts` 是给真岛的两个跨窗口请求。文案在 `src/i18n/sections/onboarding.ts`。
 - 真岛那边：`windows/island/useFirstRunGuide.ts`（打开引导、在消息面板里打招呼，借用插件通知的显示方式）、`windows/island/useOnboardingDemo.ts`（演示歌曲和会话）。
 - Rust：`src-tauri/src/onboarding_window/`。`mod.rs` 按需创建遮罩，铺满岛所在屏幕的**工作区**（不是整个屏幕，免得被当成全屏程序触发游戏模式）；`overlay.rs` 每 30ms 算一次岛在遮罩上的位置（`island/passthrough.rs` 的 `island_on_screen`），变了就发 `onboarding-island`，并按鼠标在不在卡片上切换遮罩的鼠标穿透。剪贴板弹出时 `clipboard_history/popup.rs` 把 `clipboard-popup-opened` 也发给引导。
 - 回归页：`tests/regression/onboarding.html`（`?act=1-5`、`?locale=en`、`?light=1`、`?open=1` 用来看界面，`?test=1` 跑检查）。回归页里没有真岛，亮圈里只是背景。

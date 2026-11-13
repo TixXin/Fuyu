@@ -8,7 +8,7 @@ pub const WINDOW_LABEL: &str = "onboarding";
 const SHOW_FALLBACK_DELAY: Duration = Duration::from_secs(2);
 const DESKTOP_CLEAR_DELAY: Duration = Duration::from_millis(350);
 
-pub fn open(app: &AppHandle) -> Result<(), String> {
+pub fn open(app: &AppHandle, clear: bool) -> Result<(), String> {
     if let Some(window) = app.get_webview_window(WINDOW_LABEL) {
         return reveal(&window);
     }
@@ -21,7 +21,7 @@ pub fn open(app: &AppHandle) -> Result<(), String> {
         .find(|window| window.label == WINDOW_LABEL)
         .ok_or_else(|| "Onboarding window config was not found.".to_string())?
         .clone();
-    let cleared = clear_desktop(app);
+    let cleared = clear && clear_desktop(app);
     if cleared {
         thread::sleep(DESKTOP_CLEAR_DELAY);
     }
@@ -41,6 +41,7 @@ pub fn open(app: &AppHandle) -> Result<(), String> {
         window.on_window_event(move |event| {
             if matches!(event, WindowEvent::Destroyed) {
                 restore_desktop(&app);
+                keep_settings_in_front(&app);
             }
         });
     }
@@ -53,6 +54,19 @@ pub fn open(app: &AppHandle) -> Result<(), String> {
         }
     });
     Ok(())
+}
+
+fn keep_settings_in_front(app: &AppHandle) {
+    let app = app.clone();
+    thread::spawn(move || {
+        thread::sleep(DESKTOP_CLEAR_DELAY);
+        let settings = app
+            .get_webview_window(crate::settings_window::WINDOW_LABEL)
+            .filter(|settings| settings.is_visible().unwrap_or(false));
+        if let Some(settings) = settings {
+            let _ = settings.set_focus();
+        }
+    });
 }
 
 #[cfg(windows)]
@@ -92,8 +106,8 @@ fn reveal(window: &WebviewWindow) -> Result<(), String> {
 }
 
 #[tauri::command]
-pub async fn open_onboarding_window(app: AppHandle) -> Result<(), String> {
-    open(&app)
+pub async fn open_onboarding_window(app: AppHandle, clear_desktop: Option<bool>) -> Result<(), String> {
+    open(&app, clear_desktop.unwrap_or(false))
 }
 
 #[tauri::command]

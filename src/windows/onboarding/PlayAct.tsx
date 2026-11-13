@@ -4,7 +4,7 @@ import { SettingsChoice } from "../../components/settings/SettingsChoice";
 import { SettingsSwitch } from "../../components/settings/SettingsSwitch";
 import type { ExpandTrigger, IslandSettings } from "../../features/appearance/types";
 import { listenClipboardPopupOpened, type ClipboardHistorySettings } from "../../features/clipboard/api";
-import { getFileShelf } from "../../features/file-shelf/api";
+import { getFileShelf, type FileShelfItem } from "../../features/file-shelf/api";
 import { useTranslation } from "../../i18n";
 import { ActHeading } from "./ActHeading";
 import type { OnboardingModule } from "./personas";
@@ -14,7 +14,11 @@ const SHELF_POLL_MS = 800;
 
 type Task = "expand" | "drop" | "shortcut";
 
-function useShelfGrew(watch: boolean, onGrow: () => void) {
+function newest(items: FileShelfItem[]) {
+  return items.reduce((latest, item) => Math.max(latest, item.addedAt), 0);
+}
+
+function useShelfGotFile(watch: boolean, onFile: () => void) {
   useEffect(() => {
     if (!watch) return;
     let start: number | null = null;
@@ -23,8 +27,8 @@ function useShelfGrew(watch: boolean, onGrow: () => void) {
       void getFileShelf()
         .then(({ items }) => {
           if (stopped) return;
-          if (start === null) start = items.length;
-          else if (items.length > start) onGrow();
+          if (start === null) start = newest(items);
+          else if (newest(items) > start) onFile();
         })
         .catch(() => undefined);
     read();
@@ -33,7 +37,7 @@ function useShelfGrew(watch: boolean, onGrow: () => void) {
       stopped = true;
       window.clearInterval(timer);
     };
-  }, [watch, onGrow]);
+  }, [watch, onFile]);
 }
 
 export function PlayAct({ settings, modules, clipboard, islandOpen, onSettingsChange, onClipboardChange }: {
@@ -49,14 +53,16 @@ export function PlayAct({ settings, modules, clipboard, islandOpen, onSettingsCh
   const [done, setDone] = useState<ReadonlySet<Task>>(() => new Set());
   const [finish] = useState(() => (task: Task) => setDone((current) => (current.has(task) ? current : new Set(current).add(task))));
   const [finishDrop] = useState(() => () => finish("drop"));
+  const [sawClosed, setSawClosed] = useState(!islandOpen);
   const hover = settings.expandTrigger === "hover";
   const tasks: Task[] = ["expand"];
   if (modules.has("shelf")) tasks.push("drop");
   if (modules.has("clipboard") && clipboard.shortcutEnabled) tasks.push("shortcut");
   const doneCount = tasks.filter((task) => done.has(task)).length;
 
-  if (islandOpen && !done.has("expand")) finish("expand");
-  useShelfGrew(tasks.includes("drop") && !done.has("drop"), finishDrop);
+  if (!islandOpen && !sawClosed) setSawClosed(true);
+  if (islandOpen && sawClosed && !done.has("expand")) finish("expand");
+  useShelfGotFile(tasks.includes("drop") && !done.has("drop"), finishDrop);
 
   useEffect(() => {
     let cancelled = false;
@@ -72,7 +78,7 @@ export function PlayAct({ settings, modules, clipboard, islandOpen, onSettingsCh
 
   return (
     <>
-      <ActHeading title={text.title} lead={doneCount === tasks.length ? text.allDone : text.lead} />
+      <ActHeading title={text.title} lead={doneCount === tasks.length ? text.allDone : text.lead(modules.has("music"), modules.has("agents"))} />
       <ol className="play-act__tasks" aria-label={text.stars(doneCount, tasks.length)}>
         {tasks.map((task) => (
           <li key={task} className={done.has(task) ? "play-act__task play-act__task--done" : "play-act__task"}>
