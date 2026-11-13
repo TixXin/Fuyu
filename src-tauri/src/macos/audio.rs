@@ -9,7 +9,7 @@ use objc2_core_audio::{
 const LEFT: u32 = 1;
 const RIGHT: u32 = 2;
 
-fn read<T: Copy + Default>(object: AudioObjectID, selector: u32, scope: u32, element: u32) -> Option<T> {
+pub(super) fn read<T: Copy + Default>(object: AudioObjectID, selector: u32, scope: u32, element: u32) -> Option<T> {
     let mut address = AudioObjectPropertyAddress { mSelector: selector, mScope: scope, mElement: element };
     let mut value = T::default();
     let mut size = u32::try_from(std::mem::size_of::<T>()).ok()?;

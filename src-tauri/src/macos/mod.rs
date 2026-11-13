@@ -1,5 +1,8 @@
 pub(crate) mod apps;
 pub(crate) mod audio;
+pub(crate) mod audio_devices;
+pub(crate) mod bluetooth;
+pub(crate) mod camera;
 pub(crate) mod desktop;
 pub(crate) mod fullscreen;
 pub(crate) mod icon;
@@ -8,6 +11,7 @@ pub(crate) mod island_panel;
 pub(crate) mod job;
 pub(crate) mod login_item;
 pub(crate) mod pasteboard;
+pub(crate) mod power;
 pub(crate) mod process;
 pub(crate) mod process_name;
 pub(crate) mod process_env;

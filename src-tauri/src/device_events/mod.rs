@@ -1,3 +1,5 @@
+#[cfg_attr(target_os = "macos", path = "readers_macos.rs")]
+mod readers;
 mod tracker;
 
 use std::{
@@ -10,8 +12,8 @@ use std::{
 use tauri::{AppHandle, Emitter};
 
 use crate::island::WINDOW_LABEL;
-use crate::win32::{audio_outputs, com::ComApartment, devnode, power};
-use tracker::{DeviceAlert, Output, OutputTracker, PowerTracker};
+use readers::{power_source, read_batteries, read_outputs, start_thread};
+use tracker::{DeviceAlert, OutputTracker, PowerTracker};
 
 pub(crate) const DEVICE_ALERT_EVENT: &str = "device-alert";
 
@@ -22,25 +24,8 @@ const IDLE_POLL: Duration = Duration::from_millis(500);
 
 static ENABLED: AtomicBool = AtomicBool::new(false);
 
-fn read_outputs() -> Vec<Output> {
-    let Ok(outputs) = audio_outputs::active_outputs() else {
-        return Vec::new();
-    };
-    outputs
-        .into_iter()
-        .filter_map(|info| {
-            let device = devnode::container_id(&format!(r"SWD\MMDEVAPI\{}", info.id)).map(|guid| format!("{guid:?}"));
-            Output::classify(info.id, info.name, info.form_factor, &info.enumerator, device)
-        })
-        .collect()
-}
-
-fn read_batteries() -> HashMap<String, u8> {
-    devnode::bluetooth_batteries().into_iter().map(|(guid, level)| (format!("{guid:?}"), level)).collect()
-}
-
 fn watch(app: &AppHandle) {
-    let Ok(_com) = ComApartment::multithreaded() else {
+    let Some(_thread) = start_thread() else {
         return;
     };
     let emit = |alert: DeviceAlert| {
@@ -71,8 +56,8 @@ fn watch(app: &AppHandle) {
             }
             if power_read.is_none_or(|at| at.elapsed() >= POWER_POLL) {
                 power_read = Some(Instant::now());
-                let source = power::power_source();
-                if let Some(alert) = power_tracker.update(source.map(|s| s.plugged_in), source.and_then(|s| s.battery)) {
+                let (plugged_in, battery) = power_source();
+                if let Some(alert) = power_tracker.update(plugged_in, battery) {
                     emit(alert);
                 }
             }
