@@ -109,11 +109,28 @@ async function runChecks() {
     await update(() => setReminderMode("notification"));
     const saved = JSON.parse(localStorage.getItem(UPDATE_PREFERENCES_KEY) ?? "{}") as { checkIntervalHours?: number; reminderMode?: string };
     check(saved.checkIntervalHours === 24 && saved.reminderMode === "notification", "检查频率和提醒方式写进偏好");
+    const heroIsland = document.querySelector<HTMLButtonElement>("#settings .about-hero__island")!;
+    check(heroIsland.textContent === "有新版本 v0.3.4" && !document.querySelector("#settings .about-hero__status") && document.querySelector("#settings .about-hero__sea"),
+      "关于页横幅是海面上的小岛，岛上直接写更新状态，不再另有状态胶囊");
+    await update(() => heroIsland.click());
+    check(heroIsland.textContent === "谢谢你在用浮屿" && document.querySelector("#settings .about-hero--greeting"), "点小岛，它会打个招呼");
+    check(document.querySelector("#settings .about-colophon")?.textContent === "浮屿 v0.3.3 · 以 GPL-3.0 开源 · 用 Tauri 和 React 构建" && document.querySelector("#settings .about-danger .settings-row"),
+      "关于页最下面是落款，重置与退出是单独的危险区");
     const version = getUpdateState().nextVersion;
     await update(() => skipVersion(version));
     check(!document.querySelector("#collapsed .island-update-badge"), "跳过这个版本后收起条不再提醒");
     await update(() => skipVersion(null));
     check(document.querySelector("#collapsed .island-update-badge"), "取消跳过后提醒回来");
+    await update(() => document.querySelector<HTMLButtonElement>("#settings .settings-sidebar__item[data-category='overview']")!.click());
+    const stage = document.querySelector<HTMLElement>("#settings .overview-stage")!;
+    const clipboardCard = document.querySelector<HTMLElement>("#settings .settings-overview__feature[data-feature='clipboard']")!;
+    await update(() => { clipboardCard.dispatchEvent(new MouseEvent("mouseover", { bubbles: true })); });
+    check(stage.dataset.feature === "clipboard" && stage.querySelector(".overview-stage__demo")?.textContent === "已复制 · 会议纪要的第二段",
+      "概览：鼠标移到功能卡片上，舞台上的小岛演示这个功能");
+    await update(() => { clipboardCard.dispatchEvent(new MouseEvent("mouseout", { bubbles: true })); });
+    check(stage.dataset.feature !== undefined && document.querySelectorAll("#settings .settings-overview__tile").length === 3
+      && document.querySelectorAll("#settings .settings-overview__next-tile").length === 4 && /^已开 \d+ \/ \d+$/.test(document.querySelector("#settings .settings-overview__count")?.textContent ?? ""),
+      "概览：移开后舞台接着轮播开着的功能；常用是三块磁贴，接下来是四块，功能标题旁写开了几个");
     results.textContent = `${messages.join("\n")}\n\n全部 ${messages.length} 项检查通过。`;
     results.dataset.result = "passed";
   } catch (error) {

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton";
 import { SettingsRow } from "../../components/settings/SettingsRow";
@@ -7,6 +7,7 @@ import type { IslandSettings } from "../../features/appearance/types";
 import { AboutHero } from "../../features/updater/AboutHero";
 import { ProjectLinksSection } from "../../features/updater/ProjectSettingsSection";
 import { UpdateDiagnosticsRow } from "../../features/updater/UpdateDiagnosticsRow";
+import { getUpdateState, subscribeToUpdate } from "../../features/updater/updaterController";
 import { UpdateSettingsSection } from "../../features/updater/UpdateSettingsSection";
 import { useTranslation } from "../../i18n";
 import { isMacOS } from "../../lib/platform";
@@ -19,6 +20,7 @@ export function AboutSettingsPage({ onSettingsChange }: { onSettingsChange: (set
   const t = useTranslation();
   const text = t.settings.project;
   const [confirming, setConfirming] = useState(false);
+  const version = useSyncExternalStore(subscribeToUpdate, () => getUpdateState().version);
 
   useEffect(() => {
     if (!confirming) return;
@@ -39,39 +41,42 @@ export function AboutSettingsPage({ onSettingsChange }: { onSettingsChange: (set
         />
         <UpdateDiagnosticsRow />
       </SettingsGroup>
-      <SettingsGroup title={text.systemTitle}>
-        <SettingsRow
-          title={text.resetAll}
-          description={text.resetAllHint}
-          control={
-            confirming ? (
-              <>
-                <SettingsLinkButton onClick={() => setConfirming(false)}>{text.resetAllCancel}</SettingsLinkButton>
-                <SettingsLinkButton
-                  tone="danger"
-                  onClick={() => {
-                    setConfirming(false);
-                    onSettingsChange(DEFAULT_SETTINGS);
-                  }}
-                >
-                  {text.resetAllConfirm}
-                </SettingsLinkButton>
-              </>
-            ) : (
-              <SettingsLinkButton tone="danger" onClick={() => setConfirming(true)}>{text.resetAllAction}</SettingsLinkButton>
-            )
-          }
-        />
-        <SettingsRow
-          title={text.quit}
-          description={isMacOS ? text.quitHintMac : text.quitHint}
-          control={
-            <SettingsLinkButton tone="danger" onClick={() => void quitIsland().catch((error) => console.error("Failed to quit the island", error))}>
-              {text.quitAction}
-            </SettingsLinkButton>
-          }
-        />
-      </SettingsGroup>
+      <div className="about-danger">
+        <SettingsGroup title={text.systemTitle}>
+          <SettingsRow
+            title={text.resetAll}
+            description={text.resetAllHint}
+            control={
+              confirming ? (
+                <>
+                  <SettingsLinkButton onClick={() => setConfirming(false)}>{text.resetAllCancel}</SettingsLinkButton>
+                  <SettingsLinkButton
+                    tone="danger"
+                    onClick={() => {
+                      setConfirming(false);
+                      onSettingsChange(DEFAULT_SETTINGS);
+                    }}
+                  >
+                    {text.resetAllConfirm}
+                  </SettingsLinkButton>
+                </>
+              ) : (
+                <SettingsLinkButton tone="danger" onClick={() => setConfirming(true)}>{text.resetAllAction}</SettingsLinkButton>
+              )
+            }
+          />
+          <SettingsRow
+            title={text.quit}
+            description={isMacOS ? text.quitHintMac : text.quitHint}
+            control={
+              <SettingsLinkButton tone="danger" onClick={() => void quitIsland().catch((error) => console.error("Failed to quit the island", error))}>
+                {text.quitAction}
+              </SettingsLinkButton>
+            }
+          />
+        </SettingsGroup>
+      </div>
+      <p className="about-colophon">{text.colophon(version)}</p>
     </>
   );
 }
