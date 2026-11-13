@@ -2,7 +2,15 @@ import { isTauri } from "@tauri-apps/api/core";
 import { useEffect, useSyncExternalStore } from "react";
 import type { IslandSettings } from "../../features/appearance/types";
 import { themeColors } from "../../features/appearance/themeMode";
-import { getIslandNotch, listenIslandNotch, setIslandNotchDrop, type IslandNotch } from "./api.ts";
+import {
+  getForegroundFullscreen,
+  getIslandNotch,
+  listenForegroundFullscreen,
+  listenIslandNotch,
+  setIslandNotchDrop,
+  type ForegroundFullscreen,
+  type IslandNotch,
+} from "./api.ts";
 import { MIN_COLLAPSED_ISLAND_WIDTH } from "./layout.ts";
 import "./IslandNotch.css";
 
@@ -36,6 +44,19 @@ export function trackIslandNotch() {
     .catch((error) => {
       console.error("Failed to track the notch", error);
     });
+
+  void listenForegroundFullscreen(applyFullscreen)
+    .then(() => getForegroundFullscreen())
+    .then(applyFullscreen)
+    .catch((error) => {
+      console.error("Failed to track full-screen apps for the notch", error);
+    });
+}
+
+function applyFullscreen(state: ForegroundFullscreen) {
+  const root = document.documentElement;
+  if (state.active && state.onIslandMonitor) root.dataset.islandFullscreen = "on";
+  else delete root.dataset.islandFullscreen;
 }
 
 function subscribe(listener: () => void) {
