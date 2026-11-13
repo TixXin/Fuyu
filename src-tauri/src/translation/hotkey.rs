@@ -152,7 +152,10 @@ fn apply_binding_change(
 struct TranslationHotkeyWindow;
 
 impl WindowMessages for TranslationHotkeyWindow {
-    fn handle(hwnd: HWND, message: u32, wparam: WPARAM, _: LPARAM) -> Option<LRESULT> {
+    fn handle(hwnd: HWND, message: u32, wparam: WPARAM, lparam: LPARAM) -> Option<LRESULT> {
+        if message == WM_HOTKEY && crate::shortcut_capture::capture_hotkey_message(lparam.0) {
+            return Some(LRESULT(0));
+        }
         if message == WM_HOTKEY && wparam.0 == HOTKEY_ID as usize {
             if let Some(app) = APP.get() {
                 open_translator(app);

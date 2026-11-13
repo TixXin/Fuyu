@@ -74,6 +74,14 @@ pub(super) fn hide(app: &AppHandle) -> Result<(), String> {
     popup_window(app)?.hide().map_err(|error| error.to_string())
 }
 
+pub(super) fn refocus(app: &AppHandle) -> Result<(), String> {
+    let window = popup_window(app)?;
+    if !window.is_visible().unwrap_or(false) {
+        return Ok(());
+    }
+    window.set_focus().map_err(|error| error.to_string())
+}
+
 fn take_target() -> Option<HWND> {
     TARGET_WINDOW
         .lock()

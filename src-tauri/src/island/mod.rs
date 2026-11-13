@@ -44,6 +44,8 @@ use state::{mutate_window_state, read_window_state, window_state, CornerShape, I
 
 pub(crate) use geometry::apply_stage_geometry;
 pub(crate) use follow::start_monitor_follow_loop;
+#[cfg(debug_assertions)]
+pub(crate) use notch::set_dev_notch;
 pub(crate) use notch::start_notch_watch;
 pub(crate) use passthrough::start_cursor_passthrough_loop;
 pub(crate) use state::{record_dragged_position, IslandPosition, IslandWindowState};

@@ -117,6 +117,8 @@ fn answer(app: &AppHandle, request: &mut Request, port: u16) -> Result<Value, Ap
         "agentStatus.clear" => agent_status::clear_external_status(LOCAL_API_OWNER, &call.params).map_err(to_api_error),
         "clipboard.list" => crate::clipboard_history::local_api_history(&call.params).map_err(to_api_error),
         "dev.load" | "dev.reload" | "dev.unload" | "dev.log" => plugin_host::answer_dev_api(call.method, &call.params).map_err(to_api_error),
+        #[cfg(debug_assertions)]
+        super::dev_island::NOTCH => super::dev_island::set_notch(app, &call.params),
         _ => bridge::dispatch(app, call),
     }
 }

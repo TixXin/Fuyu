@@ -41,6 +41,17 @@ fn key_code(code: u32) -> Option<Code> {
     })
 }
 
+pub(crate) fn virtual_key(code: Code) -> Option<u32> {
+    (0..=0x87).find(|candidate| key_code(*candidate) == Some(code))
+}
+
+pub(crate) fn binding_modifiers(modifiers: Modifiers) -> u32 {
+    [(Modifiers::CONTROL, MOD_CONTROL), (Modifiers::ALT, MOD_ALT), (Modifiers::SHIFT, MOD_SHIFT), (Modifiers::META, MOD_WIN)]
+        .into_iter()
+        .filter(|(modifier, _)| modifiers.contains(*modifier))
+        .fold(0, |flags, (_, flag)| flags | flag)
+}
+
 pub(crate) fn to_hotkey(binding: &ShortcutBinding) -> Option<HotKey> {
     let mut modifiers = Modifiers::empty();
     for (flag, modifier) in [(MOD_CONTROL, Modifiers::CONTROL), (MOD_ALT, Modifiers::ALT), (MOD_SHIFT, Modifiers::SHIFT), (MOD_WIN, Modifiers::META)] {

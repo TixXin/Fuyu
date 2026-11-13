@@ -156,6 +156,40 @@
 4. Mac 版首发范围：建议先做「待办 / 日历 / 剪贴板 / 文件中转 / Agent / 翻译 / 媒体」，QQ / 微信提醒先做技术验证再决定是否承诺。
 5. 最低系统版本与芯片：建议 macOS 14+、同时支持 Intel 与 Apple 芯片（通用二进制），是否认可。
 
+## 补充（2026-11-13）：开源刘海岛的媒体控制与亮度是怎么做的
+
+> 问题：用户问「其他开源 Mac 灵动岛是怎么做（媒体控制）的」。起因：G1.9 在本机试 `media-remote` crate 的 Perl 适配器时，被开发环境的权限检查拦下。范围：GitHub 上 boring.notch、Atoll、MewNotch、DynamicNotch、NotchDrop 的源码（REST API 读文件、代码搜索 `MediaRemote` / `DisplayServices` / `tell application`），mediaremote-adapter 的 README。相关任务：G1.9。
+
+### 结论
+
+1. **四个活跃的开源刘海岛全都用 mediaremote-adapter，没有别的路。** boring.notch（11,350 star）、Atoll（5,256）、MewNotch（556）、DynamicNotch（654）的仓库里都带着 `mediaremote-adapter.pl` 和 `MediaRemoteAdapter.framework`；NotchDrop 没有媒体功能。数字为 2026-11-13 查询。[S1][S2][S3][S4]
+2. **适配器是随应用一起打包、签名的，不是运行时从别处解压。** boring.notch 把框架放在 `.app` 的 `Contents/Frameworks`（`Bundle.main.privateFrameworksPath`），脚本放在 `Resources`，运行 `/usr/bin/perl <脚本> <框架路径> stream` 读一行一个 JSON 的正在播放流 [S5]；adapter 的 README 也要求框架「随应用打包、但不要链接」[S6]。`media-remote` crate 的做法是把一个预编译的 tar.gz 编进二进制、运行时解压到临时目录（见本地 `~/.cargo/registry/src/*/media-remote-0.5.2/src/high_level/now_playing_perl.rs`），这不随浮屿一起签名公证，不建议照搬。
+3. **只有「读」需要借道 perl，「控制」不需要。** boring.notch 在自己进程里 `dlopen` 私有的 `MediaRemote.framework`，直接调 `MRMediaRemoteSendCommand`（播放、暂停、上下首）、`MRMediaRemoteSetElapsedTime`（拖进度）、`MRMediaRemoteSetShuffleMode` / `SetRepeatMode` [S5]；DynamicNotch 先直接发命令，失败时再经 perl 的 `send` 命令兜底 [S7]。
+4. **都有探测与兜底。** boring.notch 启动时跑 adapter 的 `test` 命令（10 秒超时）判断这台系统上能不能用，不能用时退回只支持 Apple Music、Spotify 的 AppleScript 控制器（`tell application "Spotify"`，再用 `DistributedNotificationCenter` 听曲目变化）[S5][S8]。
+5. **adapter 在 macOS 27 上实测可用。** README 徽章写着在 macOS 27.0（26A5425a）上测过，最后一次测试 2026-09-04；作者在开头呼吁 Apple 别封、给第三方开个正式的权利 [S6]。仍是借道，随时可能失效。
+6. **亮度同样全靠私有接口，不要权限。** 内建屏：boring.notch、Atoll 都 `dlopen` `DisplayServices.framework`，用 `DisplayServicesGetBrightness` / `DisplayServicesSetBrightness`，再退回公开但已废弃的 `IODisplayGet/SetFloatParameter` [S9][S10]；键盘背光用 `CoreBrightness` 里的 `KeyboardBrightnessClient` [S9]。外接屏的 DDC 它们都没做（boring.notch 在 issue 里让用户配合 BetterDisplay / Lunar，见上文「坑」一节），MonitorControl 才做。
+7. **没有人用 AppleScript 做主路径**：它只认识少数几个播放器、拿不到封面、要「自动化」授权。
+
+### 对浮屿的建议
+
+- 按上面这套做，和同类一致：`MediaRemoteAdapter.framework`（BSD-3-Clause）和脚本随 `Fuyu.app` 打包进 `Contents/Frameworks`、`Contents/Resources`，跟 `.app` 一起签名公证；Rust 端起一个常驻的 `/usr/bin/perl … stream --no-diff`（或带封面的 `stream`）读 JSON 行，转成现有的媒体状态；播放控制在岛自己进程里 `dlopen` MediaRemote 发命令，失败时用 perl 的 `send`；启动时跑一次 `test`，失败就整块隐藏并在设置里说明，Apple Music / Spotify 用 AppleScript 兜底（按 M7 可关、可降级）。
+- 不用 `media-remote` crate 的运行时解压方案；可以参考它的 JSON 解析和进程管理。
+- 亮度：内建屏走 DisplayServices（`dlopen`，失败退回 IODisplay），外接屏先不做。
+- 开发环境：用 perl 加载 adapter 的这一步在 Claude Code 的自动模式里被权限检查拦下（判为越权访问）。要在本机验证，需要用户放行这一类命令，或自己在终端跑 adapter 的 `test` / `get` 看能否读到正在播放。
+
+### 来源
+
+- [S1] boring.notch：<https://github.com/TheBoredTeam/boring.notch>（`mediaremote-adapter/`、`boringNotch/MediaControllers/NowPlayingController.swift`）
+- [S2] Atoll：<https://github.com/Ebullioscopic/Atoll>（`mediaremote-adapter/`、`Frameworks/MediaRemoteAdapter.framework`）
+- [S3] MewNotch：<https://github.com/monuk7735/mew-notch>（`MewNotch/Resources/Libs/mediaremote-adapter.pl`）
+- [S4] DynamicNotch：<https://github.com/jackson-storm/DynamicNotch>（`DynamicNotch/Resources/MediaRemoteAdapter/`）
+- [S5] boring.notch `NowPlayingController.swift`：<https://github.com/TheBoredTeam/boring.notch/blob/main/boringNotch/MediaControllers/NowPlayingController.swift>
+- [S6] mediaremote-adapter README（BSD-3-Clause，308 star，`pushed_at` 2026-11-11）：<https://github.com/ungive/mediaremote-adapter>
+- [S7] DynamicNotch `MediaRemoteCommandDispatcher.swift`：<https://github.com/jackson-storm/DynamicNotch/blob/main/DynamicNotch/Features/NowPlaying/Services/MediaRemoteCommandDispatcher.swift>
+- [S8] boring.notch `MediaChecker.swift`、`SpotifyController.swift`：<https://github.com/TheBoredTeam/boring.notch/tree/main/boringNotch>
+- [S9] boring.notch `BoringNotchXPCHelper.swift`：<https://github.com/TheBoredTeam/boring.notch/blob/main/BoringNotchXPCHelper/BoringNotchXPCHelper.swift>
+- [S10] Atoll `DisplayServicesDynamic.swift`：<https://github.com/Ebullioscopic/Atoll/blob/main/DynamicIsland/helpers/DisplayServicesDynamic.swift>
+
 ## 来源
 
 查询日期均为 2026-11-13，除非另注。

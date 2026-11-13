@@ -4,6 +4,7 @@ import { ShortcutResetButton } from "../../components/controls/ShortcutResetButt
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { useTranslation } from "../../i18n";
 import { buildShortcutFromEvent, shortcutLabel } from "../clipboard/shortcut.ts";
+import { useShortcutCapture } from "../clipboard/useShortcutCapture";
 import "../clipboard/ClipboardSettingsSection.css";
 import {
   digitModifiersFromEvent,
@@ -44,6 +45,18 @@ export function PageShortcutSection({
     if (field === "digit") onSettingsChange({ ...settings, pageDigitModifiers: value });
     else onSettingsChange({ ...settings, ...(field === "next" ? { pageNextShortcut: value } : { pagePreviousShortcut: value }) });
   };
+
+  useShortcutCapture(recording !== null, (shortcut) => {
+    if (!recording) return;
+    const parts = shortcut.split("+");
+    const key = parts.pop() ?? "";
+    const value = recording === "digit"
+      ? (/^[1-9]$/.test(key) && !parts.includes("Win") && parts.join("+")) || null
+      : recordedPageCycleShortcut(shortcut);
+    if (!value) return;
+    setRecording(null);
+    apply(recording, value);
+  });
 
   const handleKeyDown = (event: ReactKeyboardEvent<HTMLButtonElement>) => {
     if (!recording) return;

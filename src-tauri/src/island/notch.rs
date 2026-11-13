@@ -1,10 +1,13 @@
 use serde::Serialize;
+use std::sync::{Mutex, PoisonError};
 use tauri::{Emitter, Monitor, WebviewWindow};
 
 use super::state::{mutate_window_state, read_window_state, IslandWindowState};
 
+static DEV_NOTCH: Mutex<Option<Notch>> = Mutex::new(None);
+
 pub(crate) const ISLAND_NOTCH_CHANGED_EVENT: &str = "island-notch-changed";
-pub(super) const MIN_NOTCH_WING: f64 = 72.0;
+pub(super) const MIN_NOTCH_WING: f64 = 56.0;
 pub(super) const TUCKED_NOTCH_INSET: f64 = 2.0;
 
 #[derive(Debug, Clone, Copy, PartialEq, Serialize)]
@@ -44,8 +47,19 @@ fn notch_for(_window: &WebviewWindow, _monitor: &Monitor) -> Option<Notch> {
     None
 }
 
+fn dev_notch() -> Option<Notch> {
+    *DEV_NOTCH.lock().unwrap_or_else(PoisonError::into_inner)
+}
+
+#[cfg(debug_assertions)]
+pub(crate) fn set_dev_notch(app: &tauri::AppHandle, size: Option<(f64, f64)>) -> Result<(), String> {
+    *DEV_NOTCH.lock().unwrap_or_else(PoisonError::into_inner) = size.map(|(width, height)| Notch { width, height });
+    let window = super::main_window(app)?;
+    super::apply_stage_geometry(&window, read_window_state(), false)
+}
+
 pub(super) fn settle(window: &WebviewWindow, monitor: &Monitor, state: IslandWindowState) -> Option<Notch> {
-    let notch = if wants_notch(state) { notch_for(window, monitor) } else { None };
+    let notch = if wants_notch(state) { dev_notch().or_else(|| notch_for(window, monitor)) } else { None };
     let previous = read_window_state().notch;
     if previous != notch {
         mutate_window_state(|state| {

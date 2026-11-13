@@ -43,7 +43,7 @@ export function WeChatReminderPanel({ controller, navigation }: { controller: We
         <div className="qq-panel__list" role="list" aria-label={t.wechat.list}>
           {snapshot.items.map((item) => {
             const title = item.message?.contact ?? t.messages.newReminder;
-            const body = item.message ? item.message.preview : item.reason && t.wechat.plainReason[item.reason];
+            const body = item.message ? item.message.preview : item.unread ? t.messages.unreadCount(item.unread) : item.reason && t.wechat.plainReason[item.reason];
             return (
               <article className="qq-panel__item" key={item.at} role="listitem" data-message-id={item.at}>
                 <button type="button" disabled={busy} onClick={() => void openWeChat(item.message?.chat)} aria-label={t.wechat.openItem(title)}>

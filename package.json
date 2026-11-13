@@ -26,6 +26,7 @@
     "tasks:plugin": "node scripts/tasks/install-island-plugin.mjs",
     "verify": "node scripts/land-check.mjs",
     "test:regression": "node scripts/run-regression.mjs",
+    "lab": "node scripts/island-lab/server.mjs",
     "settings:index": "node scripts/settings-search-index.mjs",
     "check:tests-types": "tsc -p tsconfig.tests.json",
     "lint": "eslint src",

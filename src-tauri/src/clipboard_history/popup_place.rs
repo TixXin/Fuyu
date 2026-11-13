@@ -7,8 +7,8 @@ pub(super) const OPENED_EVENT: &str = "clipboard-popup-opened";
 pub(super) const POINTER_GAP: i32 = 12;
 pub(super) fn popup_size(layout: PopupLayout) -> (f64, f64) {
     match layout {
-        PopupLayout::Standard => (380.0, 500.0),
-        PopupLayout::Wide => (640.0, 500.0),
+        PopupLayout::Standard => (380.0, 527.0),
+        PopupLayout::Wide => (640.0, 527.0),
     }
 }
 

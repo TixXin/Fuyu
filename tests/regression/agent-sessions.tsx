@@ -87,7 +87,7 @@ async function runChecks() {
     const dot = (row: HTMLElement) => getComputedStyle(row.querySelector(".agent-session__dot")!).backgroundColor;
     check(meta(second) === "等待确认 · 14 分" && dot(second) === "rgb(255, 69, 58)", "卡住等你的会话显示红色状态灯和状态文字");
     check(dot(first) === "rgb(52, 199, 89)" && dot(third) === "rgb(142, 142, 147)", "在跑的会话绿色，做完的灰色");
-    check(meta(first)?.startsWith("已运行 3 分 2") && !meta(first)?.includes("刚刚") && meta(third)?.endsWith("1 小时"), "运行中的会话显示已运行多久，结束的显示多久前更新");
+    check(meta(first)?.startsWith("已运行 3 分 2") && !meta(first)?.includes("<1m") && meta(third)?.endsWith("1 小时"), "运行中的会话显示已运行多久，结束的显示多久前更新");
     check(first.classList.contains("agent-session--full") && second.classList.contains("agent-session--full") && third.classList.contains("agent-session--compact"), "进行中的会话展开，已完成的折叠成一行");
     check(rows().every((row) => row.firstElementChild?.classList.contains("agent-session__dot") && row.querySelector(".agent-session__heading .agent-provider-icon") && row.querySelectorAll(".agent-session__dot").length === 1), "每行都以状态灯开头，图标都在标题行右侧");
     const title = second.querySelector<HTMLElement>(".agent-session__title")!;
@@ -132,6 +132,21 @@ async function runChecks() {
       && Math.abs(fixture.getBoundingClientRect().right + 20 - archiveIcon.right - 20) < 1,
       "归档按钮一直显示在提供方图标右边，图标离岛屿边缘 20px，和顶部按钮对齐");
     check(removeButtons[0].getAttribute("aria-label") === "归档「设置界面完善思路」", "归档按钮的读屏文字说明归档哪个会话");
+    const agedItem = rows()[2].parentElement!;
+    const age = agedItem.querySelector<HTMLElement>(".agent-session__age");
+    const agedArchive = agedItem.querySelector<HTMLButtonElement>(".agent-session__archive")!;
+    check(age?.textContent === "1 小时" && !meta(rows()[2])?.includes("1 小时") && !rows()[0].parentElement!.querySelector(".agent-session__age")
+      && getComputedStyle(agedArchive).opacity === "0" && getComputedStyle(age).opacity === "1"
+      && Math.abs(age.getBoundingClientRect().right - agedArchive.querySelector("svg")!.getBoundingClientRect().right) < 1,
+      "平时归档按钮的位置显示多久前更新，右边和归档图标对齐；运行中没有时间的行照常显示归档按钮");
+    const agedIcon = rows()[2].querySelector(".agent-session__heading > :last-child")!.getBoundingClientRect();
+    const firstIcon = rows()[0].querySelector(".agent-session__heading > :last-child")!.getBoundingClientRect();
+    const slotGap = age!.getBoundingClientRect().left - agedIcon.right;
+    check(slotGap >= 0 && slotGap <= 12 && Math.abs(agedIcon.right - firstIcon.right) < 0.5, "时间那一列按最长的时间定宽，和左边的 Agent 图标不空出一大截，各行图标仍在同一列");
+    agedArchive.focus();
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 200)); });
+    check(getComputedStyle(agedArchive).opacity === "1" && getComputedStyle(age!).opacity === "0", "鼠标移上或用键盘选到这一行时，时间换成归档按钮");
+    agedArchive.blur();
     const focusesBefore = focusCalls.length;
     removeButtons[2].click();
     check(removedIds.length === 0, "点归档后，行先播完移出动画才离开列表");
@@ -186,7 +201,7 @@ async function runChecks() {
     check(third.querySelector(".agent-session__host--unknown"), "只显示图标时，不知道来源也留出图标位");
     await render("icon", { showElapsed: false });
     const iconRight = (row: HTMLElement) => row.querySelector(".agent-provider-icon")!.getBoundingClientRect().right;
-    check(meta(first) === "2 个子 Agent · 刚刚" && meta(third) === "1 小时" && Math.abs(iconRight(first) - iconRight(third)) < 0.5 && Math.abs(iconRight(first) - iconRight(second)) < 0.5, "时间长短不同、有无来源时，右侧图标仍在同一列");
+    check(meta(first) === "2 个子 Agent · <1m" && meta(third) === "1 小时" && Math.abs(iconRight(first) - iconRight(third)) < 0.5 && Math.abs(iconRight(first) - iconRight(second)) < 0.5, "时间长短不同、有无来源时，右侧图标仍在同一列");
     const dotGap = first.querySelector(".agent-session__dot")!.getBoundingClientRect().left - (fixture.getBoundingClientRect().left - 20);
     const iconGap = fixture.getBoundingClientRect().right + 20 - iconRight(first);
     check(Math.abs(dotGap - 20) < 1 && Math.abs(iconGap - 20) < 1, "圆点和右侧图标都距岛屿边缘 20px，和顶部栏对齐");

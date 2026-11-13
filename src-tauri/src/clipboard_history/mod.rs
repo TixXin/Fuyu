@@ -20,7 +20,7 @@ mod sequence_watch_macos;
 mod service;
 pub(crate) mod shortcut;
 #[cfg(target_os = "macos")]
-mod shortcut_macos;
+pub(crate) mod shortcut_macos;
 mod snippets;
 mod store;
 #[cfg_attr(target_os = "macos", path = "system_macos.rs")]
@@ -485,8 +485,17 @@ pub async fn get_clipboard_image_preview(id: String) -> Result<Option<String>, S
 }
 
 #[tauri::command]
-pub async fn hide_clipboard_popup(app: AppHandle) -> Result<(), String> {
+pub async fn hide_clipboard_popup(app: AppHandle, blurred: Option<bool>) -> Result<(), String> {
+    if blurred == Some(true) && crate::screenshot::is_capturing() {
+        return Ok(());
+    }
     popup::hide(&app)
+}
+
+pub(crate) fn refocus_popup(app: &AppHandle) {
+    if let Err(error) = popup::refocus(app) {
+        eprintln!("failed to give the clipboard window its focus back: {error}");
+    }
 }
 
 #[tauri::command]

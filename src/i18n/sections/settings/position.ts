@@ -9,7 +9,7 @@ export type SettingsPositionText = {
   monitorOptions: Record<"primary" | "cursor" | "foreground", string>;
   monitorHint: string;
   menuBar: string;
-  menuBarOptions: Record<"notch" | "over" | "below", string>;
+  menuBarOptions: Record<"notch" | "below", string>;
 };
 
 export const zhCN: SettingsPositionText = {
@@ -23,7 +23,7 @@ export const zhCN: SettingsPositionText = {
   monitorOptions: { primary: "主显示器", cursor: "鼠标所在的显示器", foreground: "前台窗口所在的显示器" },
   monitorHint: "跟随鼠标或前台窗口时，岛屿收起状态下会移到那块屏幕的顶部中间；展开时等收起后再移。换屏后拖动过的位置会清掉。",
   menuBar: "菜单栏",
-  menuBarOptions: { notch: "贴合刘海", over: "压在菜单栏上", below: "放在菜单栏下面" },
+  menuBarOptions: { notch: "压在菜单栏上（有刘海时贴合刘海）", below: "放在菜单栏下面" },
 };
 
 export const en: SettingsPositionText = {
@@ -37,5 +37,5 @@ export const en: SettingsPositionText = {
   monitorOptions: { primary: "Primary display", cursor: "Display with the pointer", foreground: "Display with the active window" },
   monitorHint: "When following the pointer or the active window, a collapsed island moves to the top middle of that display; an open one waits until it collapses. A dragged position is cleared when it moves.",
   menuBar: "Menu bar",
-  menuBarOptions: { notch: "Fit the notch", over: "Over the menu bar", below: "Below the menu bar" },
+  menuBarOptions: { notch: "Over the menu bar (fits the notch)", below: "Below the menu bar" },
 };

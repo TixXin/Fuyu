@@ -5,6 +5,7 @@ import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsRow } from "../../components/settings/SettingsRow";
 import { useErrorText, useLocale, useTranslation } from "../../i18n";
 import { buildShortcutFromEvent, shortcutLabel } from "../clipboard/shortcut";
+import { useShortcutCapture } from "../clipboard/useShortcutCapture";
 import { listPlugins, setPluginKeybinding, type PluginsSnapshot } from "./api";
 import { pluginShortcutRows, type PluginShortcutRow } from "./pluginShortcuts";
 import "../clipboard/ClipboardSettingsSection.css";
@@ -36,11 +37,6 @@ export function PluginShortcutSection({ takenBy, onChanged, action, hideWhenEmpt
     return () => window.removeEventListener("focus", refresh);
   }, [refresh]);
 
-  if (!snapshot) return null;
-  const rows = pluginShortcutRows(snapshot.plugins);
-  if (hideWhenEmpty && rows.length === 0) return null;
-  const name = (row: PluginShortcutRow) => `${row.title[locale]} · ${row.pluginName[locale]}`;
-
   const save = (row: PluginShortcutRow, keybinding: string | null) => {
     if (keybinding) {
       const owner = takenBy(keybinding, row.key);
@@ -58,6 +54,18 @@ export function PluginShortcutSection({ takenBy, onChanged, action, hideWhenEmpt
       })
       .catch((error: unknown) => setErrors((current) => ({ ...current, [row.key]: errorText(error) })));
   };
+
+  useShortcutCapture(recording !== null, (shortcut) => {
+    const row = pluginShortcutRows(snapshot?.plugins ?? []).find((candidate) => candidate.key === recording);
+    if (!row) return;
+    setRecording(null);
+    save(row, shortcut);
+  });
+
+  if (!snapshot) return null;
+  const rows = pluginShortcutRows(snapshot.plugins);
+  if (hideWhenEmpty && rows.length === 0) return null;
+  const name = (row: PluginShortcutRow) => `${row.title[locale]} · ${row.pluginName[locale]}`;
 
   const record = (row: PluginShortcutRow, event: ReactKeyboardEvent<HTMLButtonElement>) => {
     if (recording !== row.key) return;

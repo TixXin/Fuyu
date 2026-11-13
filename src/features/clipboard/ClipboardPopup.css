@@ -68,6 +68,8 @@
 }
 
 .clipboard-popup__chips {
+  flex: none;
+  height: 23px;
   display: flex;
   align-items: center;
   gap: 2px;
@@ -209,10 +211,16 @@
   object-fit: cover;
 }
 
-.clipboard-popup__lead .clipboard-entry-icon,
-.clipboard-popup__lead .clipboard-entry-icon__app {
+.clipboard-popup__lead .clipboard-entry-icon {
   width: 18px;
   height: 18px;
+}
+
+.clipboard-popup__lead .clipboard-entry-icon__app {
+  right: -4px;
+  bottom: -4px;
+  width: 11px;
+  height: 11px;
 }
 
 .clipboard-popup__text {
@@ -414,6 +422,8 @@
 
 .clipboard-popup__hint {
   flex: none;
+  box-sizing: border-box;
+  height: 32px;
   display: flex;
   align-items: center;
   gap: 12px;

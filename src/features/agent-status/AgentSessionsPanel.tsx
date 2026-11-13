@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { Archive } from "lucide-react";
 import { ArchivedNotice } from "./ArchivedNotice";
 import { EditorExtensionHint } from "./EditorExtensionHint";
@@ -11,7 +11,7 @@ import { AgentProviderIcon } from "./AgentProviderIcon";
 import { AgentUsageBar } from "./AgentUsageBar";
 import type { AgentUsages } from "./usage";
 import { focusAgentWindow, type AgentSessionSummary } from "./api";
-import { arrangeSessions, isActivePhase, minutesAgo, modelLabel, sessionProject } from "./sessionList";
+import { ageSlotWidth, arrangeSessions, isActivePhase, minutesAgo, modelLabel, sessionProject } from "./sessionList";
 import { shownEffort } from "./effortLabels";
 import { useEffortLabels } from "./useEffortLabels";
 import { SessionBody } from "./SessionBody";
@@ -141,11 +141,20 @@ export function AgentSessionsPanel({
     );
   }
 
+  const ageOf = (session: AgentSessionSummary) => {
+    const minutes = minutesAgo(session.updatedAt, now);
+    return minutes === 0 ? t.agent.sessions.justNow : t.agent.sessions.minutesAgo(minutes);
+  };
+  const showsAge = (session: AgentSessionSummary) => session.phase !== "running" || !(showElapsed && session.turnStartedAt !== null);
+  const archivable = Boolean(removal) && !reveal;
+  const ageWidth = archivable && view === "list" ? ageSlotWidth(sessions.filter(showsAge).map(ageOf)) : 0;
+
   return (
     <section className="agent-sessions" aria-label={t.agent.sessions.title}>
       {showUsage && <AgentUsageBar usages={usages} />}
       <ul
         ref={list.ref}
+        style={ageWidth ? ({ "--agent-age-width": `${ageWidth}px` } as CSSProperties) : undefined}
         className={`agent-sessions__list${view === "list" ? "" : ` agent-sessions__list--${view}`}${removal && !reveal ? " agent-sessions__list--archivable" : ""}`}
         data-fade-top={list.fade.top || undefined}
         data-fade-bottom={list.fade.bottom || undefined}
@@ -195,7 +204,6 @@ export function AgentSessionsPanel({
               </li>
             );
           }
-          const minutes = minutesAgo(session.updatedAt, now);
           const active = isActivePhase(session.phase);
           const cardReply = reveal && !active ? session.lastMessage : null;
           const full = Boolean(cardReply) || (active && Boolean(session.lastMessage || (showActivity && (session.lastPrompt || session.currentTool))));
@@ -204,7 +212,9 @@ export function AgentSessionsPanel({
           const phaseLabel = session.compacting ? t.agent.sessions.compacting : yourTurn ? t.agent.sessions.yourTurn : getAgentPhaseLabel(session.phase, t);
           const showPhase = session.compacting || yourTurn || (session.phase !== "running" && session.phase !== "completed");
           const elapsed = showElapsed && session.turnStartedAt !== null;
-          const showAge = session.phase !== "running" || !elapsed;
+          const showAge = showsAge(session);
+          const age = ageOf(session);
+          const ageInSlot = Boolean(archive) && showAge;
           const status = [
             showPhase && phaseLabel,
             elapsed && <SessionElapsed key="elapsed" session={session} />,
@@ -215,7 +225,7 @@ export function AgentSessionsPanel({
               </span>
             ),
             session.backgroundTasks ? t.agent.sessions.backgroundTasks(session.backgroundTasks) : null,
-            showAge && (minutes === 0 ? t.agent.sessions.justNow : t.agent.sessions.minutesAgo(minutes)),
+            showAge && !ageInSlot && age,
           ]
             .filter(Boolean)
             .flatMap((part, index) => (index === 0 ? [part] : [" · ", part]));
@@ -257,6 +267,7 @@ export function AgentSessionsPanel({
                   )}
                 </span>
               </button>
+              {ageInSlot && <span className="agent-session__age">{age}</span>}
               {archive}
             </li>
           );

@@ -9,8 +9,10 @@ export type SettingsMessageSourcesText = {
   panelSecondsValue: (seconds: number) => string;
   qqTitle: string;
   qqHint: string;
+  qqHintMac: string;
   wechatTitle: string;
   wechatHint: string;
+  wechatHintMac: string;
 };
 
 export const zhCN: SettingsMessageSourcesText = {
@@ -25,6 +27,8 @@ export const zhCN: SettingsMessageSourcesText = {
   qqTitle: "QQ 通知",
   qqHint: "通过 Windows 通知读取 QQ 消息的标题和预览，只保留在本次运行的内存中。需要 QQ 已登录并开启系统通知。",
   wechatTitle: "微信提醒",
+  qqHintMac: "看程序坞里 QQ 图标上的未读数，数字变多时提醒；读不到是谁、说了什么。需要 QQ 开着，并在「系统设置 → 隐私与安全性 → 辅助功能」里允许浮屿。",
+  wechatHintMac: "看程序坞里微信图标上的未读数，数字变多时提醒；读不到是谁、说了什么。需要微信开着，并在「系统设置 → 隐私与安全性 → 辅助功能」里允许浮屿。",
   wechatHint: "监听电脑版微信在任务栏的闪烁提醒，需要微信保持登录。不打开下面的开关时，只知道有新提醒，不知道是谁、说了什么。",
 };
 
@@ -40,5 +44,7 @@ export const en: SettingsMessageSourcesText = {
   qqTitle: "QQ notifications",
   qqHint: "Reads the title and preview of QQ messages from Windows notifications and keeps them in memory for this run only. QQ must be signed in with system notifications on.",
   wechatTitle: "WeChat reminders",
+  qqHintMac: "Watches the unread count on QQ's Dock icon and tells you when it goes up; who wrote and what cannot be read. QQ must be running and Fuyu allowed under System Settings > Privacy & Security > Accessibility.",
+  wechatHintMac: "Watches the unread count on WeChat's Dock icon and tells you when it goes up; who wrote and what cannot be read. WeChat must be running and Fuyu allowed under System Settings > Privacy & Security > Accessibility.",
   wechatHint: "Watches WeChat desktop flashing in the taskbar; WeChat must stay signed in. Without the switch below it only knows that something came, not who or what.",
 };

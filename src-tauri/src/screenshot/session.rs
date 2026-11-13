@@ -280,11 +280,14 @@ pub(crate) fn end_if(app: &AppHandle, id: u64) {
 }
 
 pub(crate) fn end(app: &AppHandle) {
-    session().take();
+    let ended = session().take().is_some();
     for (name, window) in app.webview_windows() {
         if name.starts_with(WINDOW_PREFIX) {
             let _ = window.hide();
             let _ = app.emit_to(name.as_str(), ENDED_EVENT, ());
         }
+    }
+    if ended {
+        crate::clipboard_history::refocus_popup(app);
     }
 }

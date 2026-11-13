@@ -3,9 +3,11 @@ import { useSyncExternalStore } from "react";
 import type { IslandSettings } from "../../features/appearance/types";
 import { themeColors } from "../../features/appearance/themeMode";
 import { getIslandNotch, listenIslandNotch, type IslandNotch } from "./api.ts";
+import { MIN_COLLAPSED_ISLAND_WIDTH } from "./layout.ts";
 import "./IslandNotch.css";
 
-export const NOTCH_WING = 72;
+export const NOTCH_WING = 56;
+export const MAX_NOTCH_WING = 100;
 
 let current: IslandNotch | null = null;
 const listeners = new Set<() => void>();
@@ -47,13 +49,11 @@ export function useIslandNotch(): IslandNotch | null {
   return useSyncExternalStore(subscribe, () => current, () => null);
 }
 
-export const MAX_FITTED_WIDTH = 520;
-
 export function notchFittedWidth(width: number, notch: IslandNotch | null, collapsedScale: number) {
   if (!notch) return width;
   const gap = Math.ceil(notch.width / Math.max(collapsedScale, 0.01));
-  const least = gap + 2 * NOTCH_WING;
-  return Math.min(Math.max(width + gap, least), Math.max(MAX_FITTED_WIDTH, least));
+  const wing = Math.min(MAX_NOTCH_WING, Math.max(NOTCH_WING, NOTCH_WING + width - MIN_COLLAPSED_ISLAND_WIDTH));
+  return gap + 2 * wing;
 }
 
 export const NOTCH_CONTENT_GAP = 8;

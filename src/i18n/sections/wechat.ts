@@ -13,6 +13,7 @@ export type WechatText = {
     baseline: string;
     unchanged: string;
     muted: string;
+    unread: string;
   };
   exposeUi: string;
   exposeUiDescription: string;
@@ -23,6 +24,7 @@ export type WechatText = {
     waiting: string;
     listening: string;
     error: string;
+    permissionRequired: string;
   };
 };
 
@@ -41,6 +43,7 @@ export const zhCN: WechatText = {
     baseline: "刚开始读会话列表，这一条还没法比较",
     unchanged: "会话列表里没看出是哪个聊天",
     muted: "只有免打扰的聊天有新消息",
+    unread: "微信有未读消息",
   },
   exposeUi: "显示联系人和消息摘要",
   exposeUiDescription: "把正在运行的微信里控制辅助功能的一个字节从 0 改成 1，微信就像开着读屏软件一样公开界面，提醒卡片能显示联系人和摘要，点卡片进入那个聊天。只改内存，微信重启后自动再改，关掉时改回。这是微信没有公开支持的做法，会多占一些 CPU 和内存，腾讯可能视为异常行为。微信关在托盘里时读不到，最小化可以。",
@@ -51,6 +54,7 @@ export const zhCN: WechatText = {
     waiting: "连接中",
     listening: "已连接",
     error: "连接失败，正在重试",
+    permissionRequired: "需要在系统设置里允许浮屿使用辅助功能",
   },
 };
 
@@ -69,6 +73,7 @@ export const en: WechatText = {
     baseline: "The chat list was read for the first time, so there was nothing to compare with",
     unchanged: "The chat list did not show which chat it was",
     muted: "Only muted chats got new messages",
+    unread: "WeChat has unread messages",
   },
   exposeUi: "Show the contact and message",
   exposeUiDescription: "Sets one accessibility byte inside the running WeChat from 0 to 1, so WeChat exposes its interface as it would to a screen reader: reminder cards then show the contact and message and open that chat. Memory only; done again after WeChat restarts and undone when turned off. WeChat does not support this, it costs WeChat some CPU and memory, and Tencent may treat it as unusual behaviour. Nothing can be read while WeChat is closed to the tray; minimized works.",
@@ -79,5 +84,6 @@ export const en: WechatText = {
     waiting: "Connecting",
     listening: "Connected",
     error: "Connection failed, retrying",
+    permissionRequired: "Allow Fuyu under Accessibility in System Settings",
   },
 };

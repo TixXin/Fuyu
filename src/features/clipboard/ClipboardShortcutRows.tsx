@@ -6,6 +6,7 @@ import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
 import { getClipboardShortcutError, listenClipboardShortcutStatus, type ClipboardHistorySettings } from "./api";
 import { isMacOS } from "../../lib/platform";
 import { buildShortcutFromEvent, DEFAULT_CLIPBOARD_SHORTCUT, normalizeClipboardShortcut, shortcutLabel } from "./shortcut";
+import { useShortcutCapture } from "./useShortcutCapture";
 import "./ClipboardSettingsSection.css";
 
 export function ClipboardShortcutRows({ clipboardSettings, onClipboardSettingsChange, takenBy }: {
@@ -29,6 +30,11 @@ export function ClipboardShortcutRows({ clipboardSettings, onClipboardSettingsCh
       .then((nextUnlisten) => { if (didCancel) nextUnlisten(); else unlisten = nextUnlisten; });
     return () => { didCancel = true; unlisten?.(); };
   }, []);
+
+  useShortcutCapture(isRecording, (shortcut) => {
+    setIsRecording(false);
+    apply(shortcut);
+  });
 
   const record = (event: ReactKeyboardEvent<HTMLButtonElement>) => {
     if (!isRecording) return;

@@ -11,7 +11,7 @@ import { usePlayingLyrics, type PlayingLyrics } from "./lyrics/usePlayingLyrics"
 import "./MusicPlayerPanel.css";
 
 const NO_LYRICS = { lyricsFolder: "", lyricsOnline: false, lyricsOffsetMs: 0 };
-const isNetEase = (sourceApp: string | null) => /cloudmusic/i.test(sourceApp ?? "");
+const isNetEase = (sourceApp: string | null) => /cloudmusic|163music/i.test(sourceApp ?? "");
 
 export function MusicPlayerPanel({
   mediaState,

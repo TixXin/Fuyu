@@ -15,7 +15,6 @@ mod home_dir;
 mod island;
 mod local_api;
 mod lyrics;
-#[cfg_attr(not(windows), path = "media_control/unsupported.rs")]
 mod media_control;
 #[cfg(windows)]
 mod messenger_activation;
@@ -25,13 +24,14 @@ mod pets;
 mod phone_push;
 mod plugin_host;
 mod mail;
-#[cfg_attr(not(windows), path = "qq_notifications/unsupported.rs")]
+#[cfg_attr(target_os = "macos", path = "qq_notifications/macos.rs")]
 mod qq_notifications;
 #[cfg_attr(not(windows), path = "rename_migration/unsupported.rs")]
 mod rename_migration;
 mod screenshot;
 mod settings_file;
 mod settings_window;
+mod shortcut_capture;
 #[cfg_attr(not(windows), path = "ssh_tunnel/unsupported.rs")]
 mod ssh_tunnel;
 mod system;
@@ -42,7 +42,7 @@ mod tray;
 #[cfg(target_os = "macos")]
 mod tray_mark;
 mod user_error;
-#[cfg_attr(not(windows), path = "wechat_reminders/unsupported.rs")]
+#[cfg_attr(target_os = "macos", path = "wechat_reminders/macos.rs")]
 mod wechat_reminders;
 #[cfg(target_os = "macos")]
 mod macos;
@@ -170,6 +170,14 @@ pub fn run() {
             if let Err(error) = notification_diagnostics::start(app.handle()) {
                 eprintln!("failed to initialize notification diagnostics: {error}");
             }
+            #[cfg(target_os = "macos")]
+            for label in [clipboard_history::POPUP_WINDOW_LABEL, translation::WINDOW_LABEL] {
+                if let Some(window) = app.get_webview_window(label) {
+                    if let Err(error) = macos::island_panel::make_popup_panel(&window) {
+                        eprintln!("failed to make the {label} window a panel: {error}");
+                    }
+                }
+            }
             if let Ok(window) = island::main_window(app.handle()) {
                 #[cfg(target_os = "macos")]
                 if let Err(error) = macos::island_panel::make_panel(&window) {
@@ -219,6 +227,7 @@ pub fn run() {
             screenshot;
             settings_window;
             settings_file;
+            shortcut_capture;
             home_dir;
             onboarding_window;
             ssh_tunnel;

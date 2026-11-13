@@ -1,9 +1,19 @@
+#[cfg(target_os = "macos")]
+mod adapter_macos;
+#[cfg(target_os = "macos")]
+mod applescript_macos;
+#[cfg(windows)]
 mod audio;
+#[cfg_attr(target_os = "macos", path = "events_macos.rs")]
 mod events;
 mod plugin_view;
+#[cfg_attr(target_os = "macos", path = "service_macos.rs")]
 mod service;
+#[cfg(windows)]
 mod session;
+#[cfg_attr(target_os = "macos", path = "source_icon_macos.rs")]
 mod source_icon;
+mod state;
 
 pub(crate) use plugin_view::{now_playing_key, plugin_cover, plugin_media_command, plugin_now_playing};
 pub(crate) use events::start as start_session_events;

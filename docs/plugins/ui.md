@@ -28,7 +28,7 @@
 | `icon` | lucide 图标名，只能用 [`manifest.schema.json`](../../plugins/schema/manifest.schema.json) 里列出的 47 个（如 `list`、`timer`、`git-pull-request`、`kanban`、`music`、`gauge`），不写时为 `puzzle` |
 | `template` | `list`、`detail`、`form`、`status` 或 `webview`，见下文 |
 
-用户怎么打开：插件页面排在岛屿自己的页面后面，用页眉里的小图标打开，也参与 Alt+数字 和左右切换。用户可以在 **设置 → 插件扩展 → 岛上页面** 里隐藏某个页面或调整顺序。
+用户怎么打开：页眉里插件页面的小图标排在岛屿自己的页面图标后面、右侧按钮（消息、翻译）前面，点它打开；Alt+数字 和左右切换都按页眉从左到右的顺序，所以插件页面排在消息和翻译之前。用户可以在 **设置 → 插件扩展 → 岛上页面** 里隐藏某个页面或调整顺序。
 
 ### 发数据
 

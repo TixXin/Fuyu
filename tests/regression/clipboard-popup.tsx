@@ -150,6 +150,14 @@ async function runChecks() {
 
     check(getComputedStyle($("light", ".clipboard-popup")!).backgroundColor === "rgb(246, 246, 248)", "浅色：浅底");
 
+    const list = $("light", ".clipboard-popup__list")!;
+    const listBox = list.getBoundingClientRect();
+    const ninth = rows("light")[8].getBoundingClientRect();
+    const tenth = rows("light")[9].getBoundingClientRect();
+    check(Math.abs(list.clientHeight - 412) <= 1 && ninth.bottom <= listBox.bottom && tenth.top >= listBox.bottom - 8, `列表正好放下 9 行，第 9 行不被切掉（列表高 ${list.clientHeight}）`);
+    await act(async () => { rows("light")[9].dispatchEvent(new PointerEvent("pointermove", { bubbles: true })); });
+    check(rows("light")[9].classList.contains("clipboard-popup__item--selected") && list.scrollTop === 0, "鼠标移到露在外面的第 10 行只选中它，列表不滚动");
+
     check($("wide", ".clipboard-popup__pane-body")?.textContent === ITEMS[0].text, "宽版：右边是选中这条的完整内容");
     await key("wide", { key: "ArrowDown" });
     await key("wide", { key: "ArrowDown" });

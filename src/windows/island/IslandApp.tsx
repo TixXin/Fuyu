@@ -63,6 +63,7 @@ import { useIslandLyrics } from "./useIslandLyrics";
 import { useIslandFirstHints } from "./useIslandFirstHints";
 import { FirstHintActions, FirstHintNotice } from "../../features/first-hints/FirstHintNotice";
 import { useIslandSide } from "./useIslandSide";
+import { useDevIslandActions } from "./useDevIslandActions";
 import { notchExpandedExtra, notchFittedWidth, notchLook, useIslandNotch } from "./notch";
 import "./IslandApp.css";
 
@@ -234,6 +235,7 @@ export function IslandApp() {
     onCollapse: collapseIsland,
   });
 
+  useDevIslandActions({ openPage: openEnabledPage, collapse: collapseIsland, tuck: tuckIsland, reveal: revealIsland });
   const hoverTucked = useIslandHover({
     settings,
     navigation,
