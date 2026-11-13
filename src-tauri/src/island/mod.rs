@@ -12,6 +12,7 @@ pub(crate) mod modifier;
 pub(crate) mod outside_click;
 #[cfg_attr(target_os = "macos", path = "passthrough_macos.rs")]
 pub(crate) mod passthrough;
+pub(crate) mod screen;
 mod state;
 pub(crate) mod top_edge;
 
@@ -204,7 +205,7 @@ fn drag_island(window: WebviewWindow, current_state: IslandWindowState) -> Resul
         return Ok(());
     }
 
-    let position = window.outer_position().map_err(|error| error.to_string())?;
+    let position = screen::window_position(&window)?;
     POSITION_ANIMATION_GENERATION.fetch_add(1, Ordering::SeqCst);
     mutate_window_state(|state| {
         state.custom_position = Some(IslandPosition {
@@ -232,7 +233,7 @@ fn drag_island(window: WebviewWindow, current_state: IslandWindowState) -> Resul
         }
         thread::sleep(Duration::from_millis(8));
 
-        let final_position = window.outer_position().ok().map(|position| {
+        let final_position = screen::window_position(&window).ok().map(|position| {
             top_edge::snap_to_top(
                 &window,
                 IslandPosition {
