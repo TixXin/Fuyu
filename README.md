@@ -7,7 +7,7 @@
 
   <p><b>一座岛，收下桌面的零碎</b></p>
 
-  <p>Windows 上的桌面灵动岛：待办、剪贴板、消息、翻译、音乐和 AI 状态，都在屏幕顶部的一座小岛上。</p>
+  <p>Windows 和 macOS 上的桌面灵动岛：待办、剪贴板、消息、翻译、音乐和 AI 状态，都在屏幕顶部的一座小岛上。</p>
 
   <p><a href="README.en.md">English</a> · 中文</p>
 
@@ -25,7 +25,7 @@
 
   <p>
     <a href="https://github.com/TixXin/fuyu/releases/latest"><img alt="Version" src="https://img.shields.io/github/v/release/TixXin/fuyu?label=version"></a>
-    <img alt="Platform" src="https://img.shields.io/badge/platform-Windows%2010%20%2F%2011-0078D4">
+    <img alt="Platform" src="https://img.shields.io/badge/platform-Windows%2010%20%2F%2011%20%7C%20macOS%2015%2B-0078D4">
     <img alt="Tauri" src="https://img.shields.io/badge/Tauri-2-24C8DB">
     <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-GPL--3.0-3DA639"></a>
     <a href="https://github.com/TixXin/fuyu/stargazers"><img alt="Stars" src="https://img.shields.io/github/stars/TixXin/fuyu?style=flat&label=stars"></a>
@@ -124,11 +124,13 @@
 
 ## 上手
 
-1. 从 [Releases](https://github.com/TixXin/fuyu/releases/latest) 下载安装包并安装（安装包没有代码签名，SmartScreen 提示时点「更多信息 → 仍要运行」）。
-2. 鼠标移到屏幕顶部的岛上即可展开，点齿轮或托盘图标打开设置。
+1. 从 [Releases](https://github.com/TixXin/fuyu/releases/latest) 下载安装包并安装：
+   - **Windows**：下载 `_x64-setup.exe`。安装包没有代码签名，SmartScreen 提示时点「更多信息 → 仍要运行」。
+   - **macOS**：下载 `_aarch64.dmg`，把 Fuyu 拖进「应用程序」。第一次打开要在「系统设置 → 隐私与安全性」里点「仍要打开」，步骤见[在 Mac 上安装浮屿](docs/features/macos-install.md)。
+2. 鼠标移到屏幕顶部的岛上即可展开，点齿轮或托盘图标（Mac 上是菜单栏图标）打开设置。Mac 上新手引导会带你打开要用到的系统权限。
 3. 邮箱、翻译和 AI Agent 需要先在设置里配置一次，具体见各自的说明：[邮箱](docs/features/mail.md)、[AI Agent](docs/features/agent-status-hooks.md)、[QQ 通知](docs/features/qq-notifications.md)、[微信提醒](docs/features/wechat-reminders.md)。
 
-目前支持 Windows 10 / 11。macOS 版（macOS 15 以上、Apple 芯片）正在适配，各功能的进度见 [platforms.md](docs/architecture/platforms.md)，安装方法和第一次打开怎么放行见 [在 Mac 上安装浮屿](docs/features/macos-install.md)。
+支持 Windows 10 / 11 和 macOS 15 以上（Apple 芯片）。Mac 版有几处和 Windows 不同：QQ、微信只显示未读数，读不到消息内容；媒体控制和亮度用到了系统私有接口。每个功能在两个平台上的情况见 [platforms.md](docs/architecture/platforms.md)。
 
 ## 插件
 
@@ -144,7 +146,7 @@ npm create fuyu-plugin@latest
 
 ## 从源码构建
 
-需要 Windows 10/11、Node.js、pnpm、Rust、Visual Studio C++ Build Tools 和 WebView2 Runtime。
+Windows 上需要 Windows 10/11、Node.js、pnpm、Rust、Visual Studio C++ Build Tools 和 WebView2 Runtime；macOS 上需要 macOS 15 以上、Xcode 命令行工具（`xcode-select --install`）、Node.js、pnpm 和 Rust。
 
 ```powershell
 git clone https://github.com/TixXin/fuyu.git

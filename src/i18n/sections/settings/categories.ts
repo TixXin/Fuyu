@@ -8,17 +8,20 @@ export type SettingsCategoriesText = {
   expand: (group: string) => string;
   collapse: (group: string) => string;
   keywords: Record<
-    | "general" | "behavior" | "appearance" | "theme" | "themeMarket" | "shortcuts" | "todos" | "calendar" | "music" | "translation" | "clipboard"
+    | "overview" | "general" | "behavior" | "appearance" | "theme" | "themeMarket" | "shortcuts" | "todos" | "calendar" | "music" | "translation" | "clipboard"
     | "shelf" | "screenshot" | "messages" | "agents" | "agentSessions" | "agentRemote" | "agentAlerts" | "sounds" | "agentApprovals" | "agentConnect"
     | "plugins" | "market" | "about",
     string
   >;
+  entries: { appearance: string; agents: string };
+  tabs: Record<"theme" | "appearance" | "themeMarket" | "agents" | "agentSessions" | "agentAlerts" | "sounds" | "agentApprovals" | "agentConnect" | "agentRemote", string>;
   groups: {
     basics: string;
     features: string;
     agents: string;
     extensions: string;
   };
+  overview: string;
   general: string;
   behavior: string;
   appearance: string;
@@ -56,6 +59,7 @@ export const zhCN: SettingsCategoriesText = {
   expand: (group) => `展开「${group}」`,
   collapse: (group) => `折叠「${group}」`,
   keywords: {
+    overview: "概览 开始 新手 入门 常用 功能 开启 关闭 启用",
     general: "开机 自启 登录 语言 最小化 托盘 菜单栏 位置 显示器 屏幕 备份 恢复",
     behavior: "展开 悬停 收起 贴边 隐藏 全屏 游戏 勿扰 音量 亮度 耳机 蓝牙 电量 电源 摄像头 麦克风",
     appearance: "尺寸 大小 缩放 面板高度 显示内容 收起条 项目 排序 预览",
@@ -81,12 +85,26 @@ export const zhCN: SettingsCategoriesText = {
     market: "扩展 插件 下载 安装 搜索",
     about: "版本 更新 检查更新 测试版 通道 重置 退出 反馈 Star",
   },
+  entries: { appearance: "外观", agents: "AI Agent" },
+  tabs: {
+    theme: "样式",
+    appearance: "尺寸与内容",
+    themeMarket: "主题市场",
+    agents: "岛上显示",
+    agentSessions: "会话列表",
+    agentAlerts: "提醒",
+    sounds: "声音",
+    agentApprovals: "审批",
+    agentConnect: "连接",
+    agentRemote: "SSH 远程",
+  },
   groups: {
     basics: "基础",
     features: "功能",
     agents: "AI Agent",
     extensions: "扩展",
   },
+  overview: "概览",
   general: "通用",
   behavior: "行为",
   appearance: "外观",
@@ -124,6 +142,7 @@ export const en: SettingsCategoriesText = {
   expand: (group) => `Expand ${group}`,
   collapse: (group) => `Collapse ${group}`,
   keywords: {
+    overview: "overview start beginner getting started common features turn on off enable",
     general: "startup launch login language minimise minimize tray menu bar position display monitor backup restore",
     behavior: "expand hover collapse tuck hide fullscreen game quiet volume brightness headphones bluetooth battery charger camera microphone",
     appearance: "size scale panel height display collapsed bar items order preview",
@@ -149,12 +168,26 @@ export const en: SettingsCategoriesText = {
     market: "extensions plugins download install browse",
     about: "version updates check beta channel reset quit feedback star",
   },
+  entries: { appearance: "Appearance", agents: "AI Agent" },
+  tabs: {
+    theme: "Style",
+    appearance: "Size and content",
+    themeMarket: "Theme market",
+    agents: "On the island",
+    agentSessions: "Session list",
+    agentAlerts: "Alerts",
+    sounds: "Sounds",
+    agentApprovals: "Approvals",
+    agentConnect: "Connection",
+    agentRemote: "SSH remote",
+  },
   groups: {
     basics: "Basics",
     features: "Features",
     agents: "AI Agent",
     extensions: "Extensions",
   },
+  overview: "Overview",
   general: "General",
   behavior: "Behavior",
   appearance: "Appearance",

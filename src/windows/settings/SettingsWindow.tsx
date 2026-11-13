@@ -9,6 +9,8 @@ import { DEFAULT_SETTINGS_CATEGORY, isCategoryAvailable, type SettingsCategory }
 import { isMacOS, useUnsupportedFeatures } from "../../lib/platform";
 import { useMacWindowKeys } from "./useMacWindowKeys";
 import { GeneralSettingsPage } from "./GeneralSettingsPage";
+import { OverviewSettingsPage } from "./OverviewSettingsPage";
+import { useFeatureSwitches } from "./useFeatureSwitches";
 import { AgentSettingsPage } from "./AgentSettingsPage";
 import { AgentAlertsSettingsPage } from "./AgentAlertsSettingsPage";
 import { AgentSessionsSettingsPage } from "./AgentSessionsSettingsPage";
@@ -63,6 +65,7 @@ export function SettingsWindow() {
   const unsupported = useUnsupportedFeatures();
   const category = isCategoryAvailable(chosenCategory, unsupported) ? chosenCategory : DEFAULT_SETTINGS_CATEGORY;
   const highlightSaveDirectory = saveDirectory.highlight;
+  const features = useFeatureSwitches(settings, setSettings);
 
   const focusSavePath = useCallback(() => {
     setCategory("todos");
@@ -161,6 +164,7 @@ export function SettingsWindow() {
     <main className={`settings-stage stage--font-${settings.fontFamily}${isMacOS ? " settings-stage--mac" : ""}${light ? " island-light settings-stage--light" : ""}`}>
       <LayoutEditor
         category={category}
+        hidden={features.hiddenPages}
         onCategoryChange={changeCategory}
         titleAction={
           category === "theme" ? <ResetAppearanceButton onReset={resetAppearance} />
@@ -168,6 +172,17 @@ export function SettingsWindow() {
           : null
         }
       >
+        {category === "overview" && (
+          <OverviewSettingsPage
+            settings={settings}
+            locale={locale}
+            features={features.switches}
+            unsupported={unsupported}
+            onLocaleChange={setLocale}
+            onSettingsChange={setSettings}
+            onOpenPage={changeCategory}
+          />
+        )}
         {category === "general" && (
           <GeneralSettingsPage
             locale={locale}

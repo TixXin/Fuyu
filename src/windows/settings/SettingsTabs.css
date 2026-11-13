@@ -1,0 +1,70 @@
+.settings-tabs {
+  flex: none;
+  max-width: 908px;
+  display: flex;
+  gap: 2px;
+  overflow-x: auto;
+  margin-bottom: 10px;
+  padding: 2px 24px 0;
+  border-bottom: 1px solid var(--color-white-a06);
+  scrollbar-width: none;
+}
+
+.settings-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.settings-tabs__tab {
+  position: relative;
+  flex: none;
+  padding: 8px 10px 10px;
+  color: var(--color-text-subtle);
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  font: inherit;
+  font-size: 13px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.settings-tabs__tab:hover {
+  color: var(--color-text);
+  background: var(--color-white-a04);
+}
+
+.settings-tabs__tab--active,
+.settings-tabs__tab--active:hover {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.settings-tabs__tab--active::after {
+  content: "";
+  position: absolute;
+  right: 10px;
+  bottom: -1px;
+  left: 10px;
+  height: 2px;
+  background: var(--color-accent);
+  border-radius: var(--radius-pill);
+}
+
+.settings-tabs__tab:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: -2px;
+}
+
+.settings-stage--mac .settings-tabs {
+  padding-left: 28px;
+}
+
+.settings-stage--light .settings-tabs {
+  border-bottom-color: var(--settings-card-line, rgba(0, 0, 0, 0.08));
+}
+
+@media (max-width: 759px) {
+  .settings-stage--mac .settings-tabs {
+    padding-left: 44px;
+  }
+}

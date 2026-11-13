@@ -1,6 +1,7 @@
 import type { SettingsFileShelfText } from "./fileShelf";
 import type { SettingsScreenshotText } from "./screenshot";
 import type { SettingsModulesText } from "./modules";
+import type { SettingsOverviewText } from "./overview";
 import type { SettingsMessageSourcesText } from "./messageSources";
 import type { SettingsCollapsedItemsText } from "./collapsedItems";
 import type { SettingsThemeMarketText } from "./themeMarket";
@@ -38,6 +39,7 @@ import type { SettingsSoundsText } from "./sounds";
 import * as fileShelf from "./fileShelf.ts";
 import * as screenshot from "./screenshot.ts";
 import * as modules from "./modules.ts";
+import * as overview from "./overview.ts";
 import * as messageSources from "./messageSources.ts";
 import * as collapsedItems from "./collapsedItems.ts";
 import * as themeMarket from "./themeMarket.ts";
@@ -81,6 +83,7 @@ export type SettingsText = {
   themeMarket: SettingsThemeMarketText;
 
   modules: SettingsModulesText;
+  overview: SettingsOverviewText;
   title: string;
   resetAppearance: SettingsResetAppearanceText;
   windowControls: SettingsWindowControlsText;
@@ -141,6 +144,7 @@ export const zhCN: SettingsText = {
   themeMarket: themeMarket.zhCN,
 
   modules: modules.zhCN,
+  overview: overview.zhCN,
   title: "设置",
   resetAppearance: resetAppearance.zhCN,
   windowControls: windowControls.zhCN,
@@ -201,6 +205,7 @@ export const en: SettingsText = {
   themeMarket: themeMarket.en,
 
   modules: modules.en,
+  overview: overview.en,
   title: "Settings",
   resetAppearance: resetAppearance.en,
   windowControls: windowControls.en,

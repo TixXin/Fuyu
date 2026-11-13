@@ -5,7 +5,7 @@ import "../../src/styles/fonts.css";
 import "../../src/styles/base.css";
 import { SettingsWindow } from "../../src/windows/settings/SettingsWindow";
 import { DEFAULT_SETTINGS } from "../../src/features/appearance/settings";
-import { settingsCategoryFor } from "../../src/windows/settings/categories";
+import { entryOf, settingsCategoryFor, sidebarItemOf, type SettingsCategory } from "../../src/windows/settings/categories";
 import { I18nProvider, LOCALE_STORAGE_KEY } from "../../src/i18n";
 import { commands, keybindingCalls, mailCalls, marketInstalls, openedUrls, REPLY_MARKER, replyMarkerCalls, revokedPermissions } from "./settingsMocks";
 
@@ -52,20 +52,24 @@ const texts = (selector: string) => [...document.querySelectorAll(selector)].map
 const backButton = () => [...document.querySelectorAll<HTMLButtonElement>("button")].find((button) => button.textContent === "返回插件列表");
 const onPluginPage = () => Boolean(backButton());
 const backToList = () => act(async () => { backButton()?.click(); });
-const openPage = (category: string) => click(`.settings-sidebar__item[data-category='${category}']`);
+const openPage = async (category: SettingsCategory) => {
+  await click(`.settings-sidebar__item[data-category='${sidebarItemOf(category)}']`);
+  if (entryOf(category)) await click(`.settings-tabs__tab[data-tab='${category}']`);
+};
 const categories = () =>
-  [...document.querySelectorAll<HTMLElement>(".settings-sidebar__item")].map(item => item.dataset.category!);
+  [...document.querySelectorAll<HTMLElement>(".settings-sidebar__item[data-category]")].map(item => item.dataset.category!);
 
 if (!automated) {
   mount();
   const page = settingsCategoryFor(query.get("page") ?? "");
   const openRequestedPage = () => {
-    const item = document.querySelector<HTMLButtonElement>(`.settings-sidebar__item[data-category='${page}']`);
+    const item = document.querySelector<HTMLButtonElement>(`.settings-sidebar__item[data-category='${sidebarItemOf(page!)}']`);
     if (!item) {
       setTimeout(openRequestedPage, 20);
       return;
     }
     item.click();
+    if (entryOf(page!)) setTimeout(() => document.querySelector<HTMLButtonElement>(`.settings-tabs__tab[data-tab='${page}']`)?.click(), 20);
   };
   if (page) openRequestedPage();
 } else {
@@ -73,11 +77,13 @@ if (!automated) {
     await act(async () => { mount(); });
     check(categories().length > 0, "The sidebar lists the settings pages");
 
-    for (const category of categories()) {
-      await openPage(category);
-      const item = element(`.settings-sidebar__item[data-category='${category}']`);
+    const pages = [...categories(), "theme", "themeMarket", "agentSessions", "agentAlerts", "sounds", "agentApprovals", "agentConnect", "agentRemote"];
+    for (const category of pages) {
+      await openPage(category as SettingsCategory);
+      const item = element(`.settings-sidebar__item[data-category='${sidebarItemOf(category as SettingsCategory)}']`);
       const panel = element(".editor-panel");
-      check(item.getAttribute("aria-current") === "page", `${category}: the sidebar marks the open page`);
+      check(item.getAttribute("aria-current") === "page" && (!entryOf(category as SettingsCategory) || element(".settings-tabs__tab--active").dataset.tab === category),
+        `${category}: the sidebar marks the open page, and its tab is selected`);
       check(element(".settings-page__title").textContent === item.textContent, `${category}: the page title matches the sidebar`);
       check(panel.querySelector(".settings-group, .settings-section"), `${category}: the page has content`);
       check(panel.scrollWidth <= panel.clientWidth, `${category}: nothing overflows horizontally`);
@@ -319,9 +325,10 @@ if (!automated) {
     check(saved.accounts?.some((account) => account.email === "new@example.edu.cn" && account.host === "imap.example.edu.cn"),
       "The typed server is saved with the mailbox");
 
-    const agentGroup = [...document.querySelectorAll<HTMLElement>(".settings-sidebar__group")].find((group) => group.getAttribute("aria-label") === "AI Agent");
-    check([...(agentGroup?.querySelectorAll(".settings-sidebar__item") ?? [])].map((item) => item.textContent).join("|") === "岛上显示|会话列表|提醒|声音|审批|连接|SSH 远程", "AI Agent is its own sidebar group with on the island, session list, alerts, sounds, approvals, connection and SSH remote");
     await openPage("agentConnect");
+    check(texts(".settings-tabs__tab") === "岛上显示|会话列表|提醒|声音|审批|连接|SSH 远程" && texts(".settings-page__title") === "AI Agent"
+      && element(".settings-sidebar__item--active").dataset.category === "agents",
+      "AI Agent is one sidebar item whose page has tabs for on the island, session list, alerts, sounds, approvals, connection and SSH remote");
     await act(async () => { await new Promise(resolve => setTimeout(resolve, 50)); });
     check(agentPolls() > pollsAway, "The connection page reads the agents' state");
     const connectGroups = [...document.querySelectorAll<HTMLElement>(".settings-group")];
@@ -341,7 +348,7 @@ if (!automated) {
     const hooksLink = [...document.querySelectorAll<HTMLButtonElement>(".editor-panel .settings-link-button")].find((button) => button.textContent === "安装/修复");
     check(hooksLink, "Without hooks, the on-the-island page says so with a way to install them");
     await act(async () => { hooksLink!.click(); });
-    check(element(".settings-sidebar__item[data-category='agentConnect']").getAttribute("aria-current") === "page", "The hooks notice on the on-the-island page opens the connection page");
+    check(element(".settings-tabs__tab--active").dataset.tab === "agentConnect", "The hooks notice on the on-the-island page opens the connection page");
     await openPage("agentSessions");
     const filterGroup = () => [...document.querySelectorAll<HTMLElement>(".settings-group")].find((group) => group.textContent?.includes("隐藏会话"))!;
     localStorage.removeItem("fuyu-agent-session-filters");
