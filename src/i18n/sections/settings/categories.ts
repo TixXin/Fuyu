@@ -8,13 +8,13 @@ export type SettingsCategoriesText = {
   expand: (group: string) => string;
   collapse: (group: string) => string;
   keywords: Record<
-    | "overview" | "general" | "behavior" | "appearance" | "theme" | "themeMarket" | "shortcuts" | "todos" | "calendar" | "music" | "translation" | "clipboard"
+    | "overview" | "general" | "behavior" | "behaviorTuck" | "behaviorAlerts" | "shortcutsIsland" | "appearance" | "theme" | "themeMarket" | "shortcuts" | "todos" | "calendar" | "music" | "translation" | "clipboard"
     | "shelf" | "screenshot" | "messages" | "agents" | "agentSessions" | "agentRemote" | "agentAlerts" | "sounds" | "agentApprovals" | "agentConnect"
     | "plugins" | "market" | "about",
     string
   >;
-  entries: { appearance: string; agents: string };
-  tabs: Record<"theme" | "appearance" | "themeMarket" | "agents" | "agentSessions" | "agentAlerts" | "sounds" | "agentApprovals" | "agentConnect" | "agentRemote", string>;
+  entries: { behavior: string; appearance: string; shortcuts: string; agents: string };
+  tabs: Record<"behavior" | "behaviorTuck" | "behaviorAlerts" | "shortcuts" | "shortcutsIsland" | "theme" | "appearance" | "themeMarket" | "agents" | "agentSessions" | "agentAlerts" | "sounds" | "agentApprovals" | "agentConnect" | "agentRemote", string>;
   groups: {
     basics: string;
     features: string;
@@ -24,6 +24,9 @@ export type SettingsCategoriesText = {
   overview: string;
   general: string;
   behavior: string;
+  behaviorTuck: string;
+  behaviorAlerts: string;
+  shortcutsIsland: string;
   appearance: string;
   theme: string;
   themeMarket: string;
@@ -60,12 +63,15 @@ export const zhCN: SettingsCategoriesText = {
   collapse: (group) => `折叠「${group}」`,
   keywords: {
     overview: "概览 开始 新手 入门 常用 功能 开启 关闭 启用",
-    general: "开机 自启 登录 语言 最小化 托盘 菜单栏 位置 显示器 屏幕 备份 恢复",
-    behavior: "展开 悬停 收起 贴边 隐藏 全屏 游戏 勿扰 音量 亮度 耳机 蓝牙 电量 电源 摄像头 麦克风",
+    general: "开机 自启 登录 语言 位置 显示器 屏幕 数据 文件夹 备份 恢复",
+    behavior: "展开 悬停 收起 动画 切换页面",
+    behaviorTuck: "贴边 隐藏 露出 最小化 托盘 菜单栏 全屏 游戏 勿扰",
+    behaviorAlerts: "系统提示 音量 亮度 耳机 蓝牙 电量 电源 充电 摄像头 麦克风 隐私",
+    shortcutsIsland: "岛上 按键 翻页 页面切换 审批 Esc 拖动",
     appearance: "尺寸 大小 缩放 面板高度 显示内容 收起条 项目 排序 预览",
     theme: "颜色 背景 透明 不透明度 液态玻璃 字体 像素 圆角 预设 样式 导入 导出 亮点",
     themeMarket: "主题 皮肤 配色 下载 应用 分享",
-    shortcuts: "按键 组合键 热键 翻页",
+    shortcuts: "按键 组合键 热键 全局",
     todos: "任务 笔记 归档 保存路径 导出 Markdown",
     calendar: "日程 会议 CalDAV ICS 订阅 节假日",
     music: "歌词 媒体 播放 波形 酷狗 网易云",
@@ -85,8 +91,13 @@ export const zhCN: SettingsCategoriesText = {
     market: "扩展 插件 下载 安装 搜索",
     about: "版本 更新 检查更新 测试版 通道 重置 退出 反馈 Star",
   },
-  entries: { appearance: "外观", agents: "AI Agent" },
+  entries: { behavior: "行为", appearance: "外观", shortcuts: "快捷键", agents: "AI Agent" },
   tabs: {
+    behavior: "展开与收起",
+    behaviorTuck: "贴边隐藏",
+    behaviorAlerts: "系统提示",
+    shortcuts: "全局",
+    shortcutsIsland: "岛上",
     theme: "样式",
     appearance: "尺寸与内容",
     themeMarket: "主题市场",
@@ -107,6 +118,9 @@ export const zhCN: SettingsCategoriesText = {
   overview: "概览",
   general: "通用",
   behavior: "行为",
+  behaviorTuck: "贴边隐藏",
+  behaviorAlerts: "系统提示",
+  shortcutsIsland: "岛上按键",
   appearance: "外观",
   theme: "主题",
   themeMarket: "主题市场",
@@ -143,12 +157,15 @@ export const en: SettingsCategoriesText = {
   collapse: (group) => `Collapse ${group}`,
   keywords: {
     overview: "overview start beginner getting started common features turn on off enable",
-    general: "startup launch login language minimise minimize tray menu bar position display monitor backup restore",
-    behavior: "expand hover collapse tuck hide fullscreen game quiet volume brightness headphones bluetooth battery charger camera microphone",
+    general: "startup launch login language position display monitor data folder backup restore",
+    behavior: "expand hover collapse animation motion switch page",
+    behaviorTuck: "tuck hide reveal minimise minimize tray menu bar fullscreen game quiet",
+    behaviorAlerts: "system alerts volume brightness headphones bluetooth battery charger power camera microphone privacy",
+    shortcutsIsland: "island keys page switch approval esc drag",
     appearance: "size scale panel height display collapsed bar items order preview",
     theme: "colour color background opacity transparency glass font pixel corner preset style import export pulse",
     themeMarket: "themes skins colours colors download apply share",
-    shortcuts: "keys hotkey keyboard page",
+    shortcuts: "keys hotkey keyboard global",
     todos: "tasks notes archive save folder export markdown",
     calendar: "events meeting caldav ics subscription holidays",
     music: "lyrics media playback waveform kugou netease",
@@ -168,8 +185,13 @@ export const en: SettingsCategoriesText = {
     market: "extensions plugins download install browse",
     about: "version updates check beta channel reset quit feedback star",
   },
-  entries: { appearance: "Appearance", agents: "AI Agent" },
+  entries: { behavior: "Behavior", appearance: "Appearance", shortcuts: "Shortcuts", agents: "AI Agent" },
   tabs: {
+    behavior: "Expand and collapse",
+    behaviorTuck: "Tucking",
+    behaviorAlerts: "System alerts",
+    shortcuts: "Global",
+    shortcutsIsland: "On the island",
     theme: "Style",
     appearance: "Size and content",
     themeMarket: "Theme market",
@@ -190,6 +212,9 @@ export const en: SettingsCategoriesText = {
   overview: "Overview",
   general: "General",
   behavior: "Behavior",
+  behaviorTuck: "Tucking",
+  behaviorAlerts: "System alerts",
+  shortcutsIsland: "Island keys",
   appearance: "Appearance",
   theme: "Theme",
   themeMarket: "Theme market",

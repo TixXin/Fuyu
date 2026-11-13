@@ -1,5 +1,5 @@
 import { useEffect, useState, type Dispatch, type KeyboardEvent, type SetStateAction } from "react";
-import { Keyboard } from "lucide-react";
+import { ShortcutKeys } from "../../components/controls/ShortcutKeys";
 import { ShortcutResetButton } from "../../components/controls/ShortcutResetButton";
 import { useErrorText, useTranslation } from "../../i18n";
 import { buildShortcutFromEvent, shortcutLabel } from "../clipboard/shortcut";
@@ -87,8 +87,7 @@ export function TranslationShortcutRows({ settings, onSettingsChange, takenBy }:
             onKeyDown={record}
             onBlur={() => setRecording((current) => (current === target ? null : current))}
           >
-            <Keyboard size={14} strokeWidth={2.3} />
-            <span>{recording === target ? t.translator.pressShortcut : shortcutLabel(value)}</span>
+            <ShortcutKeys prompt={recording === target ? t.translator.pressShortcut : null} label={shortcutLabel(value)} />
           </button>
         </div>
       </div>

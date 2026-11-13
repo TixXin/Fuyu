@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { SettingsChoice } from "../../components/settings/SettingsChoice";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsRow } from "../../components/settings/SettingsRow";
@@ -10,9 +11,11 @@ const percent = (value: number) => `${Math.round(value)}%`;
 
 export function StyleSettingsSection({
   settings,
+  children,
   onSettingsChange,
 }: {
   settings: IslandSettings;
+  children?: ReactNode;
   onSettingsChange: (settings: IslandSettings) => void;
 }) {
   const t = useTranslation();
@@ -75,6 +78,7 @@ export function StyleSettingsSection({
         resetLabel={t.settings.layout.resetToDefault}
         onChange={(opacity) => onSettingsChange({ ...settings, opacity })}
       />
+      {children}
     </SettingsGroup>
   );
 }

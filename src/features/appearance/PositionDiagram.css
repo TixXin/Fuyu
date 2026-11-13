@@ -1,0 +1,122 @@
+.position-diagram {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 10px;
+  padding: 18px 16px;
+  background:
+    radial-gradient(120% 140% at 0% 0%, color-mix(in srgb, var(--color-accent) 12%, transparent), transparent 62%),
+    var(--color-white-a04);
+  border-radius: var(--radius-lg);
+}
+
+.position-diagram__screen {
+  position: relative;
+  width: 84px;
+  height: 56px;
+  display: flex;
+  justify-content: center;
+  overflow: hidden;
+  background: var(--color-white-a06);
+  border: 1.5px solid var(--color-white-a16);
+  border-radius: 6px;
+  transition: border-color 160ms ease;
+}
+
+.position-diagram__screen--main {
+  width: 112px;
+  height: 72px;
+}
+
+.position-diagram__screen--active {
+  border-color: color-mix(in srgb, var(--color-accent) 70%, transparent);
+}
+
+.position-diagram__menu-bar {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 7px;
+  background: var(--color-white-a10);
+}
+
+.position-diagram__island {
+  position: relative;
+  width: 34px;
+  height: 8px;
+  margin-top: var(--position-offset, 0);
+  background: var(--position-island, #0b0b0d);
+  border-radius: 0 0 4px 4px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  transition: margin-top 120ms ease;
+}
+
+.position-diagram__island::after {
+  content: "";
+  position: absolute;
+  top: 2.5px;
+  left: 5px;
+  width: 3px;
+  height: 3px;
+  background: var(--position-dot, #35e985);
+  border-radius: var(--radius-circle);
+}
+
+.position-diagram__mark {
+  position: absolute;
+  right: 12px;
+  bottom: 9px;
+  color: var(--color-text-muted);
+}
+
+.island-light .position-diagram {
+  --position-island: #ffffff;
+  --position-dot: #1f8a5b;
+}
+
+.island-light .position-diagram__island {
+  box-shadow: 0 0 0 1px rgba(24, 24, 30, 0.12), 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.position-layout {
+  display: grid;
+  grid-template-columns: 250px minmax(0, 1fr);
+  align-items: center;
+}
+
+.position-layout > .position-diagram {
+  margin: 12px 0 12px 12px;
+  align-self: stretch;
+  align-items: center;
+}
+
+.position-layout__rows > * {
+  position: relative;
+}
+
+.position-layout__rows > * + *::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 16px;
+  left: 16px;
+  border-top: 1px solid var(--color-white-a06);
+}
+
+@media (max-width: 759px) {
+  .position-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .position-layout > .position-diagram {
+    margin: 12px 12px 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .position-diagram__island,
+  .position-diagram__screen {
+    transition: none;
+  }
+}

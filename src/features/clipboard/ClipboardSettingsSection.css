@@ -31,36 +31,38 @@
 }
 
 .shortcut-record-button {
-  min-width: 112px;
-  height: 32px;
+  min-height: 32px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 7px;
-  padding: 0 10px;
-  color: rgba(var(--overlay-rgb, 248, 246, 240), 0.82);
-  background: var(--color-white-a08);
-  border: 0;
-  border-radius: var(--radius-pill);
+  padding: 3px 5px;
+  color: var(--color-text-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
   outline: none;
   cursor: pointer;
+  font: inherit;
   font-size: 12px;
-  font-weight: 900;
-  transition:
-    background 140ms ease,
-    box-shadow 140ms ease,
-    transform 140ms ease;
+  font-weight: 500;
+  transition: background 140ms ease, border-color 140ms ease;
+}
+
+.shortcut-record-button:has(.shortcut-keys--prompt) {
+  padding: 3px 12px;
+  background: var(--color-white-a08);
+  border-radius: var(--radius-pill);
 }
 
 .shortcut-record-button span {
   white-space: nowrap;
 }
 
-.shortcut-record-button:hover,
+.shortcut-record-button:hover:not(:disabled),
 .shortcut-record-button:focus-visible {
   color: var(--color-text);
-  background: rgba(var(--overlay-rgb, 255, 255, 255), 0.15);
-  box-shadow: none;
+  background: var(--color-white-a10);
+  border-color: var(--color-white-a12);
 }
 
 .shortcut-record-button:focus-visible {
@@ -69,14 +71,14 @@
 }
 
 .shortcut-record-button:disabled {
-  color: rgba(var(--overlay-rgb, 248, 246, 240), 0.42);
-  background: rgba(var(--overlay-rgb, 255, 255, 255), 0.05);
+  opacity: 0.45;
   cursor: default;
 }
 
-.shortcut-record-button--recording {
+.shortcut-record-button.shortcut-record-button--recording {
   color: var(--color-white);
   background: var(--color-danger);
+  border-color: transparent;
   box-shadow: 0 0 0 4px rgba(199, 80, 101, 0.16);
   animation: saveButtonPop 760ms ease both;
 }
@@ -102,7 +104,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .shortcut-record-button--recording {
+  .shortcut-record-button.shortcut-record-button--recording {
     animation: none;
   }
 }

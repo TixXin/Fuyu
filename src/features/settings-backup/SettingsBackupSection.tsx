@@ -1,6 +1,5 @@
-import { useRef, useState, type ChangeEvent } from "react";
+import { useRef, type ChangeEvent, type ReactNode } from "react";
 import { Download, FolderOpen, RotateCw, Upload } from "lucide-react";
-import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton";
 import { SettingsRow } from "../../components/settings/SettingsRow";
 import { useErrorText, useTranslation } from "../../i18n";
@@ -11,41 +10,18 @@ import { collectBackup, restoreBackup } from "./storage.ts";
 import "./SettingsBackupSection.css";
 
 type Status =
-  | { kind: "idle" }
   | { kind: "saved"; path: string }
   | { kind: "restored"; count: number }
   | { kind: "error"; message: string };
 
-export function SettingsBackupSection() {
+export function SettingsBackupSection({ onNote }: { onNote: (note: ReactNode) => void }) {
   const t = useTranslation();
   const errorText = useErrorText();
   const text = t.settings.backup;
   const fileInput = useRef<HTMLInputElement>(null);
-  const [status, setStatus] = useState<Status>({ kind: "idle" });
 
-  const save = () => {
-    const now = new Date();
-    void saveSettingsBackup(backupFileName(now), JSON.stringify(collectBackup(now), null, 2))
-      .then((path) => setStatus({ kind: "saved", path }))
-      .catch((error: unknown) => setStatus({ kind: "error", message: errorText(error) }));
-  };
-
-  const restore = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.currentTarget.files?.[0];
-    event.currentTarget.value = "";
-    if (!file) return;
-    const parsed = parseBackup(await file.text());
-    if ("problem" in parsed) {
-      setStatus({ kind: "error", message: text.problems[parsed.problem] });
-      return;
-    }
-    if (!window.confirm(text.confirmRestore)) return;
-    setStatus({ kind: "restored", count: restoreBackup(parsed.keys) });
-  };
-
-  const footer = (
+  const note = (status: Status) => (
     <>
-      <p>{isMacOS ? text.hintMac : text.hint}</p>
       {status.kind === "saved" && (
         <p className="settings-backup__status" role="status">
           <span>{text.saved(status.path)}</span>
@@ -69,9 +45,30 @@ export function SettingsBackupSection() {
       )}
     </>
   );
+  const setStatus = (status: Status) => onNote(note(status));
+
+  const save = () => {
+    const now = new Date();
+    void saveSettingsBackup(backupFileName(now), JSON.stringify(collectBackup(now), null, 2))
+      .then((path) => setStatus({ kind: "saved", path }))
+      .catch((error: unknown) => setStatus({ kind: "error", message: errorText(error) }));
+  };
+
+  const restore = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.currentTarget.files?.[0];
+    event.currentTarget.value = "";
+    if (!file) return;
+    const parsed = parseBackup(await file.text());
+    if ("problem" in parsed) {
+      setStatus({ kind: "error", message: text.problems[parsed.problem] });
+      return;
+    }
+    if (!window.confirm(text.confirmRestore)) return;
+    setStatus({ kind: "restored", count: restoreBackup(parsed.keys) });
+  };
 
   return (
-    <SettingsGroup title={text.title} footer={footer}>
+    <>
       <SettingsRow
         title={text.save}
         control={
@@ -100,6 +97,6 @@ export function SettingsBackupSection() {
           </>
         }
       />
-    </SettingsGroup>
+    </>
   );
 }

@@ -1,6 +1,6 @@
 # AI Agent：会话标题与 Agent 页
 
-全局方向见 [DESIGN.md](../../DESIGN.md)。
+全局方向见 [README.md](README.md)。
 
 ## AI Agent 会话标题
 

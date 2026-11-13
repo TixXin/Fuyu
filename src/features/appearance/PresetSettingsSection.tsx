@@ -1,5 +1,6 @@
-import { useCallback, useRef, useState, type ChangeEvent } from "react";
+import { useCallback, useRef, useState, type ChangeEvent, type CSSProperties } from "react";
 import { Download, FolderOpen, Trash2, Upload } from "lucide-react";
+import { SettingsFootnote } from "../../components/settings/SettingsFootnote";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton";
 import { SettingsRow } from "../../components/settings/SettingsRow";
@@ -115,7 +116,7 @@ export function PresetSettingsSection({
 
   const footer = (
     <>
-      <p>{text.hint}</p>
+      <SettingsFootnote text={text.hint} />
       {status.kind === "exported" && (
         <p className="preset-status" role="status">
           <span>{text.exported(status.path)}</span>
@@ -139,11 +140,22 @@ export function PresetSettingsSection({
       {presets.length === 0 ? (
         <SettingsRow searchable={false} title={<span className="preset-empty">{text.empty}</span>} />
       ) : (
-        presets.map((preset) => (
-          <SettingsRow searchable={false}
-            key={preset.id}
-            title={name(preset)}
-            control={
+        <div className="preset-grid">
+          {presets.map((preset) => (
+            <div className="preset-card" key={preset.id}>
+              <span
+                className="preset-card__thumb"
+                aria-hidden="true"
+                style={{
+                  "--preset-fill": preset.settings.islandBackgroundColor,
+                  "--preset-dot": preset.settings.pulseColor,
+                  "--preset-text": preset.settings.taskTextColor,
+                  "--preset-radius": `${Math.min(preset.settings.islandCornerRadius, 22) / 2}px`,
+                } as CSSProperties}
+              >
+                <span className="preset-card__island"><i /><b /></span>
+              </span>
+              <span className="preset-card__name">{name(preset)}</span>
               <span className="preset-actions">
                 <SettingsLinkButton onClick={() => onApplyPreset(preset.id)}>{text.apply}</SettingsLinkButton>
                 <button
@@ -166,9 +178,9 @@ export function PresetSettingsSection({
                   </button>
                 )}
               </span>
-            }
-          />
-        ))
+            </div>
+          ))}
+        </div>
       )}
     </SettingsGroup>
   );

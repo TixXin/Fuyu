@@ -5,6 +5,8 @@ export type SettingsLayoutText = {
   showIdleTodoCount: string;
   title: string;
   sizeTitle: string;
+  collapsedSizeTitle: string;
+  expandedSizeTitle: string;
   cornersTitle: string;
   opacity: string;
   marginY: string;
@@ -47,6 +49,8 @@ export const zhCN: SettingsLayoutText = {
   showIdleTodoCount: "空闲时显示剩余待办数",
   title: "尺寸与位置",
   sizeTitle: "尺寸",
+  collapsedSizeTitle: "折叠岛屿",
+  expandedSizeTitle: "展开面板",
   cornersTitle: "圆角",
   opacity: "不透明度",
   marginY: "顶部距离",
@@ -89,6 +93,8 @@ export const en: SettingsLayoutText = {
   showIdleTodoCount: "Show todo count when idle",
   title: "Size & position",
   sizeTitle: "Size",
+  collapsedSizeTitle: "Collapsed island",
+  expandedSizeTitle: "Open panel",
   cornersTitle: "Corners",
   opacity: "Opacity",
   marginY: "Top margin",

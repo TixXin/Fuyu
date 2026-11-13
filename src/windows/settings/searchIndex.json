@@ -4,44 +4,23 @@
     {
       "page": "general",
       "zh-CN": {
-        "group": "系统",
+        "group": "启动与语言",
         "title": "开机自启动"
       },
       "en": {
-        "group": "System",
+        "group": "Startup and language",
         "title": "Launch at startup"
       }
     },
     {
       "page": "general",
       "zh-CN": {
-        "group": "系统",
+        "group": "启动与语言",
         "title": "界面语言"
       },
       "en": {
-        "group": "System",
+        "group": "Startup and language",
         "title": "Interface language"
-      }
-    },
-    {
-      "page": "general",
-      "zh-CN": {
-        "group": "系统",
-        "title": "最小化按钮",
-        "description": "点岛上的最小化按钮时，隐藏到托盘还是贴到屏幕顶部。",
-        "options": [
-          "托盘",
-          "贴边隐藏"
-        ]
-      },
-      "en": {
-        "group": "System",
-        "title": "Minimize button",
-        "description": "Whether the island's minimize button hides it in the tray or tucks it to the top edge.",
-        "options": [
-          "Tray",
-          "Tuck to edge"
-        ]
       }
     },
     {
@@ -80,33 +59,33 @@
     {
       "page": "general",
       "zh-CN": {
-        "group": "数据文件夹",
-        "title": "家目录"
+        "group": "数据",
+        "title": "数据文件夹"
       },
       "en": {
-        "group": "Data folder",
-        "title": "Home folder"
+        "group": "Data",
+        "title": "Data folder"
       }
     },
     {
       "page": "general",
       "zh-CN": {
-        "group": "备份与恢复",
+        "group": "数据",
         "title": "导出设置"
       },
       "en": {
-        "group": "Backup and restore",
+        "group": "Data",
         "title": "Export settings"
       }
     },
     {
       "page": "general",
       "zh-CN": {
-        "group": "备份与恢复",
+        "group": "数据",
         "title": "从文件恢复"
       },
       "en": {
-        "group": "Backup and restore",
+        "group": "Data",
         "title": "Restore from file"
       }
     },
@@ -114,19 +93,11 @@
       "page": "behavior",
       "zh-CN": {
         "group": "展开",
-        "title": "展开方式",
-        "options": [
-          "点击",
-          "鼠标悬停"
-        ]
+        "title": "展开方式"
       },
       "en": {
         "group": "Opening",
-        "title": "Open the island by",
-        "options": [
-          "Click",
-          "Hover"
-        ]
+        "title": "Open the island by"
       }
     },
     {
@@ -178,18 +149,18 @@
     {
       "page": "behavior",
       "zh-CN": {
-        "group": "展开",
-        "title": "开合动画",
+        "group": "开合动画",
+        "title": "动画曲线",
         "description": "弹性同官网；Q 弹冲出去再轻轻回一下，高度也会弹；平滑和快速收起更快、不回弹"
       },
       "en": {
-        "group": "Opening",
-        "title": "Open and close",
+        "group": "Open and close",
+        "title": "Animation curve",
         "description": "Spring moves as the website's island; Bouncy springs out and back, its height bounces too; Smooth and Fast close quicker, without a bounce"
       }
     },
     {
-      "page": "behavior",
+      "page": "behaviorTuck",
       "zh-CN": {
         "group": "贴边隐藏",
         "title": "闲置时贴边隐藏",
@@ -202,7 +173,7 @@
       }
     },
     {
-      "page": "behavior",
+      "page": "behaviorTuck",
       "zh-CN": {
         "group": "贴边隐藏",
         "title": "闲置多久后隐藏"
@@ -213,7 +184,7 @@
       }
     },
     {
-      "page": "behavior",
+      "page": "behaviorTuck",
       "zh-CN": {
         "group": "贴边隐藏",
         "title": "有正在进行的待办时不收起",
@@ -226,7 +197,7 @@
       }
     },
     {
-      "page": "behavior",
+      "page": "behaviorTuck",
       "zh-CN": {
         "group": "贴边隐藏",
         "title": "Agent 在等你时不收起",
@@ -239,7 +210,7 @@
       }
     },
     {
-      "page": "behavior",
+      "page": "behaviorTuck",
       "zh-CN": {
         "group": "贴边隐藏",
         "title": "音乐播放中不收起",
@@ -252,7 +223,7 @@
       }
     },
     {
-      "page": "behavior",
+      "page": "behaviorTuck",
       "zh-CN": {
         "group": "贴边隐藏",
         "title": "鼠标移开后再次隐藏"
@@ -263,7 +234,7 @@
       }
     },
     {
-      "page": "behavior",
+      "page": "behaviorTuck",
       "zh-CN": {
         "group": "贴边隐藏",
         "title": "再次隐藏前等待"
@@ -274,7 +245,28 @@
       }
     },
     {
-      "page": "behavior",
+      "page": "behaviorTuck",
+      "zh-CN": {
+        "group": "贴边隐藏",
+        "title": "最小化按钮",
+        "description": "点岛上的最小化按钮时，隐藏到托盘还是贴到屏幕顶部。",
+        "options": [
+          "托盘",
+          "贴边隐藏"
+        ]
+      },
+      "en": {
+        "group": "Tuck to edge",
+        "title": "Minimize button",
+        "description": "Whether the island's minimize button hides it in the tray or tucks it to the top edge.",
+        "options": [
+          "Tray",
+          "Tuck to edge"
+        ]
+      }
+    },
+    {
+      "page": "behaviorTuck",
       "zh-CN": {
         "group": "露出",
         "title": "鼠标移到隐藏的岛上",
@@ -293,7 +285,7 @@
       }
     },
     {
-      "page": "behavior",
+      "page": "behaviorTuck",
       "zh-CN": {
         "group": "露出",
         "title": "有新消息时露出"
@@ -304,66 +296,66 @@
       }
     },
     {
-      "page": "behavior",
+      "page": "behaviorTuck",
       "zh-CN": {
-        "group": "游戏模式",
+        "group": "全屏和游戏",
         "title": "游戏勿扰",
         "description": "不悬停展开，不抢键盘焦点，不弹消息预览，已展开的面板会收起。消息照常接收。"
       },
       "en": {
-        "group": "Game mode",
+        "group": "Full screen and games",
         "title": "Do not disturb in games",
         "description": "No opening on hover, no taking the keyboard focus, no message pop-ups, and an open panel closes. Messages still arrive."
       }
     },
     {
-      "page": "behavior",
+      "page": "behaviorTuck",
       "zh-CN": {
-        "group": "游戏模式",
+        "group": "全屏和游戏",
         "title": "游戏时贴边隐藏",
         "description": "全屏程序占住岛所在的屏幕时贴到顶部，退出后自动露出。"
       },
       "en": {
-        "group": "Game mode",
+        "group": "Full screen and games",
         "title": "Tuck away during games",
         "description": "Tucks to the top edge while a full-screen app fills the island's screen, and slides back out afterwards."
       }
     },
     {
-      "page": "behavior",
+      "page": "behaviorAlerts",
       "zh-CN": {
-        "group": "音量与亮度",
-        "title": "调节时在小岛上显示",
+        "group": "在小岛上提示",
+        "title": "音量与亮度",
         "description": "用键盘、任务栏或其他程序调音量或屏幕亮度时，收起的小岛显示当前大小，1.5 秒后恢复。亮度只支持笔记本自带的屏幕。"
       },
       "en": {
-        "group": "Volume and brightness",
-        "title": "Show changes on the island",
+        "group": "Shown on the island",
+        "title": "Volume and brightness",
         "description": "When the volume or screen brightness changes, from the keyboard, the taskbar or another app, the collapsed island shows the new level for 1.5 seconds. Brightness works for a laptop's built-in screen only."
       }
     },
     {
-      "page": "behavior",
+      "page": "behaviorAlerts",
       "zh-CN": {
-        "group": "耳机与充电",
-        "title": "在小岛上提示",
+        "group": "在小岛上提示",
+        "title": "耳机与充电",
         "description": "耳机或蓝牙音频设备连接、断开时，收起的小岛显示 3 秒，蓝牙设备带电量；蓝牙设备电量降到 20% 和 10% 时各提醒一次；笔记本插上或拔掉电源时也会提示。蓝牙电量要设备自己报告给 Windows 才有。"
       },
       "en": {
-        "group": "Headphones and charging",
-        "title": "Show on the island",
+        "group": "Shown on the island",
+        "title": "Headphones and charging",
         "description": "When headphones or Bluetooth audio connect or disconnect, the collapsed island says so for 3 seconds, with the battery level of Bluetooth devices. A Bluetooth device warns once at 20% and again at 10%, and a laptop says when its charger is plugged in or pulled out. Bluetooth battery levels show only for devices that report them to Windows."
       }
     },
     {
-      "page": "behavior",
+      "page": "behaviorAlerts",
       "zh-CN": {
-        "group": "隐私提示",
+        "group": "在小岛上提示",
         "title": "摄像头和麦克风使用提示",
         "description": "有程序在用摄像头或麦克风时，在小岛上显示绿色摄像头或橙色麦克风图标，点击打开系统的隐私设置。"
       },
       "en": {
-        "group": "Privacy",
+        "group": "Shown on the island",
         "title": "Camera and microphone in use",
         "description": "While an app uses the camera or the microphone, the island shows a green camera or an orange microphone; click it to open Windows' privacy settings."
       }
@@ -373,43 +365,12 @@
       "zh-CN": {
         "group": "浅色和深色",
         "title": "配色",
-        "description": "深色、浅色各有一套颜色；跟随系统按 Windows 的深色 / 浅色模式在两套之间自动切换。",
-        "options": [
-          "深色",
-          "浅色",
-          "跟随系统"
-        ]
+        "description": "深色、浅色各有一套颜色；跟随系统按 Windows 的深色 / 浅色模式在两套之间自动切换。"
       },
       "en": {
         "group": "Light and dark",
         "title": "Colors",
-        "description": "Dark and light each have their own colors; System switches between them with Windows' dark or light mode.",
-        "options": [
-          "Dark",
-          "Light",
-          "System"
-        ]
-      }
-    },
-    {
-      "page": "theme",
-      "zh-CN": {
-        "group": "浅色和深色",
-        "title": "调整哪一套",
-        "description": "下面的颜色改的是这一套，预览也显示这一套。",
-        "options": [
-          "深色",
-          "浅色"
-        ]
-      },
-      "en": {
-        "group": "Light and dark",
-        "title": "Adjusting",
-        "description": "The colors below change this set, and the preview shows it.",
-        "options": [
-          "Dark",
-          "Light"
-        ]
+        "description": "Dark and light each have their own colors; System switches between them with Windows' dark or light mode."
       }
     },
     {
@@ -451,50 +412,22 @@
     {
       "page": "theme",
       "zh-CN": {
-        "group": "风格",
-        "title": "外观模式",
+        "group": "颜色",
+        "title": "调整哪一套",
+        "description": "下面的颜色改的是这一套，预览也显示这一套。",
         "options": [
-          "经典",
-          "液态玻璃"
+          "深色",
+          "浅色"
         ]
       },
       "en": {
-        "group": "Style",
-        "title": "Appearance",
+        "group": "Colors",
+        "title": "Adjusting",
+        "description": "The colors below change this set, and the preview shows it.",
         "options": [
-          "Classic",
-          "Liquid glass"
+          "Dark",
+          "Light"
         ]
-      }
-    },
-    {
-      "page": "theme",
-      "zh-CN": {
-        "group": "风格",
-        "title": "字体",
-        "options": [
-          "默认字体",
-          "像素字体"
-        ]
-      },
-      "en": {
-        "group": "Style",
-        "title": "Font",
-        "options": [
-          "System",
-          "Pixel"
-        ]
-      }
-    },
-    {
-      "page": "theme",
-      "zh-CN": {
-        "group": "风格",
-        "title": "不透明度"
-      },
-      "en": {
-        "group": "Style",
-        "title": "Opacity"
       }
     },
     {
@@ -544,7 +477,56 @@
     {
       "page": "theme",
       "zh-CN": {
-        "group": "圆角",
+        "group": "质感与形状",
+        "title": "外观模式",
+        "options": [
+          "经典",
+          "液态玻璃"
+        ]
+      },
+      "en": {
+        "group": "Look and shape",
+        "title": "Appearance",
+        "options": [
+          "Classic",
+          "Liquid glass"
+        ]
+      }
+    },
+    {
+      "page": "theme",
+      "zh-CN": {
+        "group": "质感与形状",
+        "title": "字体",
+        "options": [
+          "默认字体",
+          "像素字体"
+        ]
+      },
+      "en": {
+        "group": "Look and shape",
+        "title": "Font",
+        "options": [
+          "System",
+          "Pixel"
+        ]
+      }
+    },
+    {
+      "page": "theme",
+      "zh-CN": {
+        "group": "质感与形状",
+        "title": "不透明度"
+      },
+      "en": {
+        "group": "Look and shape",
+        "title": "Opacity"
+      }
+    },
+    {
+      "page": "theme",
+      "zh-CN": {
+        "group": "质感与形状",
         "title": "圆角样式",
         "options": [
           "方圆",
@@ -552,7 +534,7 @@
         ]
       },
       "en": {
-        "group": "Corners",
+        "group": "Look and shape",
         "title": "Corner style",
         "options": [
           "Squircle",
@@ -563,56 +545,45 @@
     {
       "page": "theme",
       "zh-CN": {
-        "group": "圆角",
+        "group": "质感与形状",
         "title": "岛屿圆角"
       },
       "en": {
-        "group": "Corners",
+        "group": "Look and shape",
         "title": "Island corner radius"
       }
     },
     {
       "page": "theme",
       "zh-CN": {
-        "group": "圆角",
+        "group": "质感与形状",
         "title": "贴顶圆角"
       },
       "en": {
-        "group": "Corners",
+        "group": "Look and shape",
         "title": "Top-edge corner radius"
       }
     },
     {
       "page": "appearance",
       "zh-CN": {
-        "group": "尺寸",
+        "group": "折叠岛屿",
         "title": "折叠岛屿大小"
       },
       "en": {
-        "group": "Size",
+        "group": "Collapsed island",
         "title": "Collapsed island scale"
       }
     },
     {
       "page": "appearance",
       "zh-CN": {
-        "group": "尺寸",
-        "title": "展开面板大小"
-      },
-      "en": {
-        "group": "Size",
-        "title": "Expanded panel scale"
-      }
-    },
-    {
-      "page": "appearance",
-      "zh-CN": {
-        "group": "尺寸",
+        "group": "折叠岛屿",
         "title": "折叠岛屿宽度",
         "description": "在随内容变化的宽度上加宽或收窄。也可以按住 Alt 拖动折叠岛屿的左右边缘来调。"
       },
       "en": {
-        "group": "Size",
+        "group": "Collapsed island",
         "title": "Collapsed island width",
         "description": "Widens or narrows the width that follows the content. Or hold Alt and drag the collapsed island's sides."
       }
@@ -620,12 +591,23 @@
     {
       "page": "appearance",
       "zh-CN": {
-        "group": "尺寸",
+        "group": "展开面板",
+        "title": "展开面板大小"
+      },
+      "en": {
+        "group": "Open panel",
+        "title": "Expanded panel scale"
+      }
+    },
+    {
+      "page": "appearance",
+      "zh-CN": {
+        "group": "展开面板",
         "title": "面板宽度",
         "description": "所有页面都用这个宽度和高度，内容多了在页面里滚动。也可以按住 Alt 拖动展开面板的左右边缘或底边来调。"
       },
       "en": {
-        "group": "Size",
+        "group": "Open panel",
         "title": "Panel width",
         "description": "Every page has this width and height and scrolls inside when it holds more. Or hold Alt and drag the open panel's side or bottom edge."
       }
@@ -633,11 +615,11 @@
     {
       "page": "appearance",
       "zh-CN": {
-        "group": "尺寸",
+        "group": "展开面板",
         "title": "面板高度"
       },
       "en": {
-        "group": "Size",
+        "group": "Open panel",
         "title": "Panel height"
       }
     },
@@ -701,7 +683,20 @@
       }
     },
     {
-      "page": "shortcuts",
+      "page": "shortcutsIsland",
+      "zh-CN": {
+        "group": "",
+        "title": "按键查询",
+        "description": "按下一组组合键，看看浮屿里是谁在用它。"
+      },
+      "en": {
+        "group": "",
+        "title": "Look up keys",
+        "description": "Press a key combination to see what in Fuyu uses it."
+      }
+    },
+    {
+      "page": "shortcutsIsland",
       "zh-CN": {
         "group": "岛上操作",
         "title": "收起展开的岛"
@@ -712,7 +707,7 @@
       }
     },
     {
-      "page": "shortcuts",
+      "page": "shortcutsIsland",
       "zh-CN": {
         "group": "岛上操作",
         "title": "移动岛屿"
@@ -723,7 +718,7 @@
       }
     },
     {
-      "page": "shortcuts",
+      "page": "shortcutsIsland",
       "zh-CN": {
         "group": "岛上操作",
         "title": "调整面板宽高（按住 Alt 时面板不收起）"
@@ -734,7 +729,7 @@
       }
     },
     {
-      "page": "shortcuts",
+      "page": "shortcutsIsland",
       "zh-CN": {
         "group": "翻译输入框",
         "title": "翻译"
@@ -745,7 +740,7 @@
       }
     },
     {
-      "page": "shortcuts",
+      "page": "shortcutsIsland",
       "zh-CN": {
         "group": "翻译输入框",
         "title": "换行"
@@ -756,7 +751,7 @@
       }
     },
     {
-      "page": "shortcuts",
+      "page": "shortcutsIsland",
       "zh-CN": {
         "group": "翻译输入框",
         "title": "填入剪贴板（独立窗口）"
@@ -767,7 +762,7 @@
       }
     },
     {
-      "page": "shortcuts",
+      "page": "shortcutsIsland",
       "zh-CN": {
         "group": "AI Agent 审批卡片",
         "title": "允许"
@@ -778,7 +773,7 @@
       }
     },
     {
-      "page": "shortcuts",
+      "page": "shortcutsIsland",
       "zh-CN": {
         "group": "AI Agent 审批卡片",
         "title": "拒绝"
@@ -789,7 +784,7 @@
       }
     },
     {
-      "page": "shortcuts",
+      "page": "shortcutsIsland",
       "zh-CN": {
         "group": "AI Agent 审批卡片",
         "title": "到终端"
