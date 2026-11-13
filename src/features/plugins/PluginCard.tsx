@@ -132,6 +132,7 @@ export function PluginCard({
               <p className="plugin-card__error">{t.settings.plugins.updates.revoked(plugin.revoked[locale])}</p>
             ) : null}
             {plugin.autoUpdated ? <p className="plugin-card__hint">{t.settings.plugins.updates.autoUpdated(plugin.autoUpdated)}</p> : null}
+            {plugin.updateFailed ? <p className="plugin-card__error">{t.settings.plugins.updates.autoUpdateFailed(plugin.updateFailed)}</p> : null}
             {plugin.updateAvailable && plugin.updateAvailable !== plugin.autoUpdated ? (
               <p className={plugin.signingKeyChanged ? "plugin-card__hint plugin-card__hint--warn" : "plugin-card__hint"}>
                 {plugin.signingKeyChanged ? t.settings.plugins.updates.keyChanged(plugin.updateAvailable) : t.settings.plugins.updates.available(plugin.updateAvailable)}

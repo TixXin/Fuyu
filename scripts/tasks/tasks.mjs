@@ -95,6 +95,7 @@ async function claim(root, options, added = []) {
     }
     save(root, claimed(task, { owner, host: self.host, at: nowText(), scope }));
     taking.push(id);
+    if (task.fields.issue) console.log(`${id} 对应 issue #${task.fields.issue}：动手前先在 issue 下回复认领、核实结果和打算怎么改（docs/tasks/README.md「GitHub issue」）`);
   }
   if (taking.length === 0) return 0;
   const verb = added.length ? "adds and takes" : "takes";

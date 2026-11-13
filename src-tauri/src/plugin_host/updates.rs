@@ -1,5 +1,6 @@
 use std::{
     collections::{BTreeMap, BTreeSet},
+    future::Future,
     sync::Mutex,
     thread,
     time::Duration,
@@ -26,6 +27,7 @@ struct Status {
     updated: BTreeMap<String, String>,
     pre_releases: BTreeMap<String, String>,
     key_changed: BTreeSet<String>,
+    failed: BTreeMap<String, String>,
 }
 
 static STATUS: Mutex<Status> = Mutex::new(Status {
@@ -33,6 +35,7 @@ static STATUS: Mutex<Status> = Mutex::new(Status {
     updated: BTreeMap::new(),
     pre_releases: BTreeMap::new(),
     key_changed: BTreeSet::new(),
+    failed: BTreeMap::new(),
 });
 
 pub(super) fn key_check(state: &PluginsState, entry: &MarketEntry) -> Option<KeyCheck> {
@@ -51,6 +54,31 @@ pub(super) fn wants_pre_release(state: &PluginsState, id: &str) -> bool {
 pub(super) fn status_for(id: &str) -> (Option<String>, Option<String>, Option<String>) {
     let status = lock(&STATUS);
     (status.available.get(id).cloned(), status.updated.get(id).cloned(), status.pre_releases.get(id).cloned())
+}
+
+pub(super) fn update_failure(id: &str) -> Option<String> {
+    lock(&STATUS).failed.get(id).cloned()
+}
+
+pub(super) async fn install_each<T, F, Fut>(entries: Vec<T>, mut install: F) -> Vec<(T, Result<(), String>)>
+where
+    T: Clone,
+    F: FnMut(T) -> Fut,
+    Fut: Future<Output = Result<(), String>>,
+{
+    let mut results = Vec::with_capacity(entries.len());
+    for entry in entries {
+        let result = install(entry.clone()).await;
+        results.push((entry, result));
+    }
+    results
+}
+
+async fn fetch_and_install(entry: MarketEntry) -> Result<(), String> {
+    let bytes = market::fetch_package(&entry).await?;
+    tauri::async_runtime::spawn_blocking(move || install_entry(&entry, &bytes, false))
+        .await
+        .map_err(|error| format!("The update task failed: {error}"))?
 }
 
 pub(super) fn trusts(state: &PluginsState, publisher: &str) -> bool {
@@ -130,13 +158,18 @@ async fn check() -> Result<(), String> {
     let automatic = tauri::async_runtime::spawn_blocking(move || absorb(&data))
         .await
         .map_err(|error| format!("The update task failed: {error}"))??;
-    for entry in automatic {
-        let bytes = market::fetch_package(&entry).await?;
-        let installed = entry.clone();
-        tauri::async_runtime::spawn_blocking(move || install_entry(&installed, &bytes, false))
-            .await
-            .map_err(|error| format!("The update task failed: {error}"))??;
-        lock(&STATUS).updated.insert(entry.id.clone(), entry.version.clone());
+    for (entry, result) in install_each(automatic, fetch_and_install).await {
+        let mut status = lock(&STATUS);
+        match result {
+            Ok(()) => {
+                status.failed.remove(&entry.id);
+                status.updated.insert(entry.id.clone(), entry.version.clone());
+            }
+            Err(error) => {
+                eprintln!("could not update the plugin {} to {}: {error}", entry.id, entry.version);
+                status.failed.insert(entry.id.clone(), error);
+            }
+        }
     }
     Ok(())
 }

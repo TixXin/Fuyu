@@ -239,12 +239,32 @@ fn a_missing_or_broken_state_file_allows_nothing() {
     let dir = std::env::temp_dir().join(format!("focusd-plugins-{}", std::process::id()));
     std::fs::create_dir_all(&dir).expect("temp dir");
     let path = dir.join("plugins.json");
-    assert_eq!(load_state(&path), PluginsState::default());
-    std::fs::write(&path, "[]").expect("write");
-    assert!(!load_state(&path).allow_third_party);
+    let missing = load_state(&path);
+    assert_eq!(missing.state, PluginsState::default());
+    assert!(missing.backup.is_none());
     std::fs::write(&path, r#"{"allowThirdParty":true,"plugins":{"a.b":{"enabled":true}}}"#).expect("write");
-    let state = load_state(&path);
-    assert!(state.allow_third_party && state.plugins["a.b"].enabled);
+    let loaded = load_state(&path);
+    assert!(loaded.state.allow_third_party && loaded.state.plugins["a.b"].enabled && loaded.backup.is_none());
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn a_broken_state_file_is_kept_aside_before_starting_over() {
+    let dir = std::env::temp_dir().join(format!("fuyu-plugins-broken-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).expect("temp dir");
+    let path = dir.join("plugins.json");
+    let broken = r#"{"allowThirdParty":true,"plugins":{"a.b":"#;
+    std::fs::write(&path, broken).expect("write");
+    let loaded = load_state(&path);
+    assert_eq!(loaded.state, PluginsState::default());
+    let backup = loaded.backup.expect("a backup");
+    assert_eq!(backup.parent(), Some(dir.as_path()));
+    let name = backup.file_name().and_then(|name| name.to_str()).expect("name");
+    assert!(name.starts_with("plugins.broken-") && name.ends_with(".json"), "{name}");
+    assert_eq!(std::fs::read_to_string(&backup).expect("backup"), broken);
+    assert_eq!(std::fs::read_to_string(&path).expect("original"), broken);
+    let second = load_state(&path).backup.expect("another backup");
+    assert_ne!(second, backup);
     let _ = std::fs::remove_dir_all(&dir);
 }
 
@@ -1160,7 +1180,7 @@ mod market_trust_tests {
         let mut state = PluginsState::default();
         state.trusted_publishers.push("someone".into());
         save_state(&path, &state).expect("save");
-        assert_eq!(load_state(&path).trusted_publishers, vec!["someone".to_string()]);
+        assert_eq!(load_state(&path).state.trusted_publishers, vec!["someone".to_string()]);
         assert!(!path.with_extension("json.tmp").exists(), "no temporary file is left");
         let _ = std::fs::remove_dir_all(&dir);
     }
@@ -1430,4 +1450,15 @@ mod keybinding_tests {
         assert_eq!(effective(None, Some("Alt+F9")), Some("Alt+F9"), "a command without one can get a shortcut");
         assert_eq!(effective(None, None), None);
     }
+}
+
+#[test]
+fn one_failed_automatic_update_does_not_stop_the_rest() {
+    let mut tried = Vec::new();
+    let results = tauri::async_runtime::block_on(super::updates::install_each(vec!["a.broken", "b.fine"], |id| {
+        tried.push(id);
+        async move { if id == "a.broken" { Err("404 Not Found".to_string()) } else { Ok(()) } }
+    }));
+    assert_eq!(tried, ["a.broken", "b.fine"]);
+    assert_eq!(results, vec![("a.broken", Err("404 Not Found".to_string())), ("b.fine", Ok(()))]);
 }

@@ -2,6 +2,7 @@ export type SettingsPluginsText = {
   allowThirdParty: string;
   warning: string;
   folder: string;
+  brokenState: (backup: string) => string;
   openFolder: string;
   reload: string;
   secretsPermissionMac: string;
@@ -198,6 +199,7 @@ export type SettingsPluginsText = {
     available: (version: string) => string;
     keyChanged: (version: string) => string;
     autoUpdated: (version: string) => string;
+    autoUpdateFailed: (reason: string) => string;
     revoked: (reason: string) => string;
     preReleaseTitle: string;
     preRelease: string;
@@ -293,6 +295,7 @@ export const zhCN: SettingsPluginsText = {
   allowThirdParty: "允许运行第三方插件",
   warning: "插件是在你电脑上运行的程序，和你本人有同样的权限：可以读写文件、联网，也能读到这台电脑上保存的密码和授权码（包括岛屿保存的邮箱授权码和翻译密钥）。下面列出的权限只限制它能通过岛屿读写哪些数据。只安装你信任的插件。",
   folder: "插件目录",
+  brokenState: (backup) => `插件设置文件读不出来，已按默认值重新开始：第三方插件的开关、授权、设置和信任的发布者都要重新设置。原文件备份在 ${backup}。`,
   openFolder: "打开",
   reload: "重新加载",
   secretsPermissionMac: "在钥匙串中保存密码和令牌",
@@ -539,6 +542,7 @@ export const zhCN: SettingsPluginsText = {
     available: (version: string) => `有新版本 v${version}，可在插件市场更新。`,
     keyChanged: (version: string) => `v${version} 的签名密钥和已安装的版本不同，不会自动更新；到插件市场确认后再更新。`,
     autoUpdated: (version: string) => `已自动更新到 v${version}。`,
+    autoUpdateFailed: (reason: string) => `自动更新没成功，下次检查会再试：${reason}`,
     revoked: (reason: string) => `这个版本已从插件市场下架，已停用：${reason}`,
     preReleaseTitle: "预发布版本",
     preRelease: "接收这个插件的预发布版本",
@@ -673,6 +677,7 @@ export const en: SettingsPluginsText = {
   allowThirdParty: "Allow third-party plugins",
   warning: "Plugins are programs that run on your computer with the same rights as you: they can read and write files, use the network, and read passwords and codes saved on this computer (including the mail codes and translation keys the island saves). The permissions below only limit which data they can use through the island. Only install plugins you trust.",
   folder: "Plugins folder",
+  brokenState: (backup) => `The plugin settings file could not be read, so plugins started over with the defaults: third-party plugins, permissions, settings and trusted publishers need setting up again. The original file is kept at ${backup}.`,
   openFolder: "Open",
   reload: "Reload",
   secretsPermissionMac: "Keep passwords and tokens in the keychain",
@@ -919,6 +924,7 @@ export const en: SettingsPluginsText = {
     available: (version: string) => `Version ${version} is available in the plugin market.`,
     keyChanged: (version: string) => `${version} is signed with a different key than the installed version, so it does not update by itself; confirm it in the plugin market.`,
     autoUpdated: (version: string) => `Updated to ${version} automatically.`,
+    autoUpdateFailed: (reason: string) => `The automatic update failed; the next check will try again: ${reason}`,
     revoked: (reason: string) => `This version was taken off the plugin market and is switched off: ${reason}`,
     preReleaseTitle: "Pre-releases",
     preRelease: "Get pre-releases of this plugin",
