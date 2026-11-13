@@ -11,11 +11,13 @@ import "./SettingsMac.css";
 
 export function LayoutEditor({
   category,
+  hidden,
   titleAction,
   children,
   onCategoryChange,
 }: {
   category: SettingsCategory;
+  hidden?: ReadonlySet<SettingsCategory>;
   titleAction?: ReactNode;
   children: ReactNode;
   onCategoryChange: (category: SettingsCategory) => void;
@@ -30,6 +32,7 @@ export function LayoutEditor({
       <div className="settings-sidebar-card" data-tauri-drag-region>
         <SettingsSidebar
           category={category}
+          hidden={hidden}
           onCategoryChange={onCategoryChange}
           onRowOpen={(page, title) => {
             onCategoryChange(page);

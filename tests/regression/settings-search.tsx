@@ -41,7 +41,7 @@ const check = (condition: unknown, message: string) => {
 };
 const wait = (ms: number) => act(() => new Promise<void>((resolve) => setTimeout(resolve, ms)));
 const text = (element: Element | null | undefined) => (element?.textContent ?? "").replace(/\s+/g, " ").trim();
-const categories = () => [...document.querySelectorAll<HTMLElement>(".settings-sidebar__item")].map((item) => item.dataset.category!);
+const categories = () => [...document.querySelectorAll<HTMLElement>(".settings-sidebar__item[data-category]")].map((item) => item.dataset.category!);
 const openPage = async (category: string) => {
   await act(async () => { document.querySelector<HTMLButtonElement>(`.settings-sidebar__item[data-category='${category}']`)!.click(); });
   await wait(60);

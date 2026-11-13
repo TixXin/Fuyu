@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Bell, Blocks, Brush, Bot, CalendarDays, ChevronRight, ClipboardList, Crop, Inbox, Info, Keyboard, Languages, LayoutGrid, LayoutTemplate, ListTodo, MousePointerClick, MessageCircle, MessagesSquare, Music, PanelTop, Palette, Plug, Puzzle, Search, Server, Settings2, ShieldCheck, Store, SlidersHorizontal, Volume2, X, type LucideIcon } from "lucide-react";
+import { Bell, Blocks, Brush, Bot, CalendarDays, ChevronRight, Compass, Plus, ClipboardList, Crop, Inbox, Info, Keyboard, Languages, LayoutGrid, LayoutTemplate, ListTodo, MousePointerClick, MessageCircle, MessagesSquare, Music, PanelTop, Palette, Plug, Puzzle, Search, Server, Settings2, ShieldCheck, Store, SlidersHorizontal, Volume2, X, type LucideIcon } from "lucide-react";
 import { LOCALE_CODES, useLocale, useTranslation } from "../../i18n";
 import { useUnsupportedFeatures } from "../../lib/platform";
 import { isCategoryAvailable, SETTINGS_GROUPS, searchCategories, type SettingsCategory, type SettingsGroup } from "./categories";
@@ -7,7 +7,8 @@ import searchIndex from "./searchIndex.json";
 import { isTitleHit, MAX_HITS_PER_PAGE, searchSettingsRows, type SettingsRowHit, type SettingsSearchEntry } from "./settingsSearch";
 import "./SettingsSidebar.css";
 
-const CATEGORY_ICONS: Record<SettingsCategory, LucideIcon> = {
+export const CATEGORY_ICONS: Record<SettingsCategory, LucideIcon> = {
+  overview: Compass,
   general: SlidersHorizontal,
   behavior: MousePointerClick,
   appearance: LayoutTemplate,
@@ -43,12 +44,16 @@ const GROUP_ICONS: Record<SettingsGroup, LucideIcon> = {
   extensions: Blocks,
 };
 
+const NO_PAGES: ReadonlySet<SettingsCategory> = new Set();
+
 export function SettingsSidebar({
   category,
+  hidden = NO_PAGES,
   onCategoryChange,
   onRowOpen,
 }: {
   category: SettingsCategory;
+  hidden?: ReadonlySet<SettingsCategory>;
   onCategoryChange: (category: SettingsCategory) => void;
   onRowOpen?: (page: SettingsCategory, title: string) => void;
 }) {
@@ -76,7 +81,9 @@ export function SettingsSidebar({
   const matches = searchCategories(query, describe);
   const hits = onRowOpen && searching ? searchSettingsRows(query, SEARCH_ENTRIES, locale, LOCALE_CODES, describe) : [];
   const shown = (item: SettingsCategory) =>
-    isCategoryAvailable(item, unsupported) && (matches.includes(item) || hits.some((hit) => hit.page === item));
+    isCategoryAvailable(item, unsupported) &&
+    (searching ? matches.includes(item) || hits.some((hit) => hit.page === item) : item === category || !hidden.has(item));
+  const anyHidden = !searching && [...hidden].some((item) => item !== category && isCategoryAvailable(item, unsupported));
   const openHit = (hit: SettingsRowHit) => onRowOpen?.(hit.page, hit.text.title);
   const openBest = () => {
     if (isTitleHit(hits[0], query)) openHit(hits[0]);
@@ -123,7 +130,18 @@ export function SettingsSidebar({
   };
 
   const groups = SETTINGS_GROUPS.filter((group) => group.label !== null);
-  const footer = SETTINGS_GROUPS.filter((group) => group.label === null).flatMap((group) => group.categories).filter(shown);
+  const loose = (atEnd: boolean) =>
+    SETTINGS_GROUPS.filter((group, index) => group.label === null && (index === 0) !== atEnd).flatMap((group) => group.categories).filter(shown);
+  const header = loose(false);
+  const footer = loose(true);
+  const moreFeatures = (
+    <li key="more">
+      <button className="settings-sidebar__item settings-sidebar__item--nested settings-sidebar__more" type="button" onClick={() => onCategoryChange("overview")}>
+        <Plus size={16} strokeWidth={2} aria-hidden="true" />
+        <span>{t.settings.overview.moreFeatures}</span>
+      </button>
+    </li>
+  );
 
   return (
     <nav className="settings-sidebar" aria-label={text.label}>
@@ -151,10 +169,11 @@ export function SettingsSidebar({
         )}
       </div>
       <div className="settings-sidebar__list" ref={listRef}>
+        {header.length > 0 && <ul className="settings-sidebar__top">{header.map((entry) => item(entry))}</ul>}
         {groups.map((group) => {
           const items = group.categories.filter(shown);
           const name = group.label;
-          if (items.length === 0 || name === null) return null;
+          if (name === null || (items.length === 0 && !(name === "features" && anyHidden))) return null;
           const label = text.groups[name];
           const GroupIcon = GROUP_ICONS[name];
           const open = searching || !folded.has(name);
@@ -175,7 +194,12 @@ export function SettingsSidebar({
                 <span>{label}</span>
                 <ChevronRight className="settings-sidebar__chevron" size={14} strokeWidth={2} aria-hidden="true" />
               </button>
-              {children.length > 0 && <ul className="settings-sidebar__children">{children.map((entry) => item(entry, true))}</ul>}
+              {(children.length > 0 || (open && name === "features" && anyHidden)) && (
+                <ul className="settings-sidebar__children">
+                  {children.map((entry) => item(entry, true))}
+                  {open && name === "features" && anyHidden && moreFeatures}
+                </ul>
+              )}
             </section>
           );
         })}

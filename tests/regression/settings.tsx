@@ -54,7 +54,7 @@ const onPluginPage = () => Boolean(backButton());
 const backToList = () => act(async () => { backButton()?.click(); });
 const openPage = (category: string) => click(`.settings-sidebar__item[data-category='${category}']`);
 const categories = () =>
-  [...document.querySelectorAll<HTMLElement>(".settings-sidebar__item")].map(item => item.dataset.category!);
+  [...document.querySelectorAll<HTMLElement>(".settings-sidebar__item[data-category]")].map(item => item.dataset.category!);
 
 if (!automated) {
   mount();
