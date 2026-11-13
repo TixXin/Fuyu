@@ -8,7 +8,7 @@ use tauri::{Emitter, WebviewWindow};
 
 use super::{
     banner_hit::{banner_rect, ISLAND_BANNER_HOVER_CHANGED_EVENT},
-    geometry::{cursor_on_island, stage_point},
+    geometry::{cursor_on_island, island_rect, stage_point, IslandOnScreen},
     state::{read_window_state, IslandMode},
 };
 use crate::macos::input;
@@ -53,6 +53,17 @@ fn pointer(window: &WebviewWindow) -> Option<Pointer> {
         cursor_x: cursor.x,
         cursor_y: cursor.y,
     })
+}
+
+pub(crate) fn island_on_screen(window: &WebviewWindow) -> Option<IslandOnScreen> {
+    let position = window.outer_position().ok()?;
+    let size = window.outer_size().ok()?;
+    Some(island_rect(
+        f64::from(position.x),
+        f64::from(position.y),
+        f64::from(size.width.max(1)),
+        read_window_state(),
+    ))
 }
 
 fn stage_cursor(pointer: Pointer) -> CursorPoint {

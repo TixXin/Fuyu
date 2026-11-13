@@ -6,7 +6,7 @@ use std::{
 };
 use tauri::{AppHandle, Emitter, Manager, WebviewWindow};
 
-use crate::{island::passthrough::island_on_screen, win32};
+use crate::island::passthrough::island_on_screen;
 
 const ISLAND_EVENT: &str = "onboarding-island";
 const TICK: Duration = Duration::from_millis(30);
@@ -51,7 +51,6 @@ pub fn set_onboarding_card_rects(rects: Vec<Rect>) {
 pub fn start(app: &AppHandle, overlay: WebviewWindow) {
     let island = app.get_webview_window(crate::island::WINDOW_LABEL);
     thread::spawn(move || {
-        let island_hwnd = island.as_ref().and_then(|island| island.hwnd().ok());
         let mut ignoring = None;
         let mut last: Option<Option<IslandRect>> = None;
         loop {
@@ -59,8 +58,11 @@ pub fn start(app: &AppHandle, overlay: WebviewWindow) {
             let Ok(scale) = overlay.scale_factor() else { break };
             let to_css = |x: f64, y: f64| ((x - f64::from(origin.x)) / scale, (y - f64::from(origin.y)) / scale);
 
-            let shown = island.as_ref().is_some_and(|island| island.is_visible().unwrap_or(false));
-            let rect = island_hwnd.filter(|_| shown).and_then(island_on_screen).map(|on_screen| {
+            let rect = island
+                .as_ref()
+                .filter(|island| island.is_visible().unwrap_or(false))
+                .and_then(island_on_screen)
+                .map(|on_screen| {
                 let (x, y) = to_css(on_screen.left, on_screen.top);
                 IslandRect {
                     x: round(x),
@@ -75,8 +77,8 @@ pub fn start(app: &AppHandle, overlay: WebviewWindow) {
                 let _ = overlay.emit_to(super::WINDOW_LABEL, ISLAND_EVENT, rect);
             }
 
-            let on_card = win32::window::cursor_position().is_some_and(|cursor| {
-                let (x, y) = to_css(f64::from(cursor.x), f64::from(cursor.y));
+            let on_card = cursor_position(&overlay).is_some_and(|(cursor_x, cursor_y)| {
+                let (x, y) = to_css(cursor_x, cursor_y);
                 CARDS.lock().unwrap_or_else(PoisonError::into_inner).iter().any(|card| card.contains(x, y))
             });
             let ignore = !on_card;
@@ -87,6 +89,16 @@ pub fn start(app: &AppHandle, overlay: WebviewWindow) {
         }
         set_onboarding_card_rects(Vec::new());
     });
+}
+
+#[cfg(windows)]
+fn cursor_position(_overlay: &WebviewWindow) -> Option<(f64, f64)> {
+    crate::win32::window::cursor_position().map(|cursor| (f64::from(cursor.x), f64::from(cursor.y)))
+}
+
+#[cfg(not(windows))]
+fn cursor_position(overlay: &WebviewWindow) -> Option<(f64, f64)> {
+    overlay.cursor_position().ok().map(|cursor| (cursor.x, cursor.y))
 }
 
 fn round(value: f64) -> f64 {

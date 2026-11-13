@@ -1601,6 +1601,7 @@ dependencies = [
  "lettre",
  "mailparse",
  "native-tls",
+ "objc2",
  "objc2-app-kit",
  "objc2-core-foundation",
  "objc2-core-graphics",

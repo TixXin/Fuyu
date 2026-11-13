@@ -91,7 +91,7 @@
 | 模块 | 用到的 Windows API | Mac 上的处理（第 0 步） | 正式实现的子任务 |
 |---|---|---|---|
 | `island`（focus、follow、glass、modifier、outside_click、passthrough） | 窗口、前台、按键与鼠标状态、窗口区域 | 这几个子模块暂不支持；`mod.rs` 的 Alt / 左键判断换实现（Mac 上为 false）；几何、状态、贴边照常编译 | G1.3 |
-| `onboarding_window` | 最小化全部窗口、光标位置、岛的窗口矩形 | 暂不支持 | G1.3 |
+| `onboarding_window` | 最小化全部窗口、光标位置、岛的窗口矩形 | 换实现（G1.3 已做）：隐藏其他应用、Tauri 的光标位置和窗口矩形 | G1.3 |
 | `system`：`startup`、`network_cost` | 注册表（reg.exe）、WinRT 网络计费 | 暂不支持（自启返回 false、设置时报 unsupported；不计费） | G1.4、G1.6 |
 | `system`：`accent_color`、`fullscreen`、`updater`、`update_notifications`、`settings_backup` | 注册表、前台全屏、系统代理、Toast、下载文件夹 | 换实现：强调色 None、全屏 false、只读环境变量代理、不弹系统通知、诊断报 `sw_vers` 版本、下载文件夹 `~/Downloads` | G1.4、G1.6 |
 | `system`：`CommandExt` / `CREATE_NO_WINDOW` | `CreationFlags` | 换实现：`system/command_flags.rs`，Mac 上 `creation_flags` 什么都不做 | — |
@@ -129,6 +129,7 @@ Mac 上跳过的测试（依赖 Windows 路径、程序或 API，标了 `#[cfg(w
 只有在真机上操作才能确认的项目，做到对应子任务时补充：
 
 - 全屏应用、多桌面、Mission Control 下岛的表现（G1.3）
+- 新手引导：遮罩是否盖到岛所在的位置、卡片能点、其他应用被隐藏，关掉引导后全部显示回来（G1.3）
 - 辅助功能、屏幕录制、自动化的授权弹窗和设置里的状态（G1.6、G1.7）
 - 签名、公证后的 dmg 在一台没装过浮屿的 Mac 上首次打开（G1.13）
 

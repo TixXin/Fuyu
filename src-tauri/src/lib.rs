@@ -22,7 +22,6 @@ mod media_control;
 #[cfg(windows)]
 mod messenger_activation;
 mod notification_diagnostics;
-#[cfg_attr(not(windows), path = "onboarding_window/unsupported.rs")]
 mod onboarding_window;
 mod pets;
 mod phone_push;

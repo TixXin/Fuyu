@@ -1,3 +1,4 @@
+pub(crate) mod desktop;
 pub(crate) mod fullscreen;
 pub(crate) mod icon;
 pub(crate) mod input;

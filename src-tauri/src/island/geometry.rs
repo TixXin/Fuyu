@@ -308,6 +308,31 @@ pub(super) fn point_in_notch(
     shape.contains(dx, dy, radius)
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub(crate) struct IslandOnScreen {
+    pub left: f64,
+    pub top: f64,
+    pub width: f64,
+    pub height: f64,
+    pub expanded: bool,
+}
+
+pub(super) fn island_rect(window_left: f64, window_top: f64, window_width: f64, state: IslandWindowState) -> IslandOnScreen {
+    let physical_scale = window_width / STAGE_WINDOW_WIDTH;
+    let (base_width, base_height) = state
+        .mode
+        .base_size(state.collapsed_width, state.expanded_width, state.expanded_height);
+    let width = base_width * state.active_scale() * physical_scale;
+    let height = base_height * state.active_scale() * physical_scale;
+    IslandOnScreen {
+        left: window_left + (window_width - width) / 2.0,
+        top: window_top,
+        width,
+        height,
+        expanded: matches!(state.mode, IslandMode::Expanded),
+    }
+}
+
 pub(super) fn stage_point(window_left: f64, window_top: f64, window_width: f64, cursor_x: f64, cursor_y: f64) -> (f64, f64) {
     let physical_scale = window_width / STAGE_WINDOW_WIDTH;
     let round = |value: f64| (value * 10.0).round() / 10.0;

@@ -1,7 +1,7 @@
 pub(crate) mod overlay;
 
 use std::{thread, time::Duration};
-use tauri::{AppHandle, Manager, PhysicalPosition, PhysicalSize, WebviewWindow, WebviewWindowBuilder, WindowEvent};
+use tauri::{AppHandle, Manager, Monitor, PhysicalPosition, PhysicalSize, WebviewWindow, WebviewWindowBuilder, WindowEvent};
 
 pub const WINDOW_LABEL: &str = "onboarding";
 
@@ -21,7 +21,7 @@ pub fn open(app: &AppHandle) -> Result<(), String> {
         .find(|window| window.label == WINDOW_LABEL)
         .ok_or_else(|| "Onboarding window config was not found.".to_string())?
         .clone();
-    let cleared = crate::win32::desktop::minimize_all_windows();
+    let cleared = clear_desktop(app);
     if cleared {
         thread::sleep(DESKTOP_CLEAR_DELAY);
     }
@@ -31,15 +31,16 @@ pub fn open(app: &AppHandle) -> Result<(), String> {
         .build()
         .map_err(|error| error.to_string())?;
     if let Some(screen) = crate::settings_window::island_screen(app) {
-        let area = screen.work_area();
-        let _ = window.set_position(PhysicalPosition::new(area.position.x, area.position.y));
-        let _ = window.set_size(PhysicalSize::new(area.size.width, area.size.height));
+        let (position, size) = overlay_area(&screen);
+        let _ = window.set_position(position);
+        let _ = window.set_size(size);
     }
     let _ = window.set_ignore_cursor_events(true);
     if cleared {
-        window.on_window_event(|event| {
+        let app = app.clone();
+        window.on_window_event(move |event| {
             if matches!(event, WindowEvent::Destroyed) {
-                crate::win32::desktop::undo_minimize_all_windows();
+                restore_desktop(&app);
             }
         });
     }
@@ -52,6 +53,37 @@ pub fn open(app: &AppHandle) -> Result<(), String> {
         }
     });
     Ok(())
+}
+
+#[cfg(windows)]
+fn clear_desktop(_app: &AppHandle) -> bool {
+    crate::win32::desktop::minimize_all_windows()
+}
+
+#[cfg(windows)]
+fn restore_desktop(_app: &AppHandle) {
+    crate::win32::desktop::undo_minimize_all_windows();
+}
+
+#[cfg(target_os = "macos")]
+fn clear_desktop(app: &AppHandle) -> bool {
+    app.run_on_main_thread(crate::macos::desktop::hide_other_applications).is_ok()
+}
+
+#[cfg(target_os = "macos")]
+fn restore_desktop(app: &AppHandle) {
+    let _ = app.run_on_main_thread(crate::macos::desktop::unhide_all_applications);
+}
+
+#[cfg(target_os = "macos")]
+fn overlay_area(screen: &Monitor) -> (PhysicalPosition<i32>, PhysicalSize<u32>) {
+    (*screen.position(), *screen.size())
+}
+
+#[cfg(not(target_os = "macos"))]
+fn overlay_area(screen: &Monitor) -> (PhysicalPosition<i32>, PhysicalSize<u32>) {
+    let area = screen.work_area();
+    (area.position, area.size)
 }
 
 fn reveal(window: &WebviewWindow) -> Result<(), String> {
