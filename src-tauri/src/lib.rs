@@ -44,6 +44,8 @@ mod todos;
 #[cfg_attr(not(windows), path = "translation/unsupported.rs")]
 mod translation;
 mod tray;
+#[cfg(target_os = "macos")]
+mod tray_mark;
 mod user_error;
 #[cfg_attr(not(windows), path = "wechat_reminders/unsupported.rs")]
 mod wechat_reminders;
