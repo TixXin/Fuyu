@@ -2,7 +2,7 @@ import type { AgentApprovalRequest } from "../../../../src/features/agent-status
 import type { Director } from "../../stage/director";
 import { island } from "../../stage/island";
 import { sound } from "../../stage/sound";
-import { hideCaption, moveCamera, showCaption, stage } from "../../stage/stageState";
+import { ZOOM, hideCaption, moveCamera, showCaption, stage } from "../../stage/stageState";
 import type { Lang } from "../types";
 import { copyFor, type Copy } from "./copy";
 import { playingMedia, sessions } from "./seed";
@@ -69,7 +69,7 @@ export function script(director: Director, lang: Lang) {
   const { at } = director;
   const caption = (pair: string[]) => showCaption(pair[0], pair[1]);
 
-  at(200, () => stage.set({ clutter: "in" }));
+  at(200, () => stage.set({ clutter: "in", title: copy.title }));
   at(900, () => showCaption("", copy.hook));
   at(4300, hideCaption);
   at(4500, () => {
@@ -81,7 +81,7 @@ export function script(director: Director, lang: Lang) {
     stage.set({ islandVisible: true });
   });
   at(5700, () => caption(copy.reveal));
-  at(7300, () => moveCamera(1.25, 1000));
+  at(7300, () => moveCamera(ZOOM.panel, 1000));
   at(7700, hideCaption);
 
   at(8100, () => caption(copy.todo));
@@ -95,10 +95,10 @@ export function script(director: Director, lang: Lang) {
   at(13000, () => caption(copy.music));
   at(16300, () => island.click(".island__collapse-target", 0, 480));
   at(16500, () => island.hideCursor());
-  at(16900, () => moveCamera(2.3, 900));
+  at(16900, () => moveCamera(ZOOM.bar, 900));
 
   at(19000, hideCaption);
-  at(19100, () => moveCamera(1.9, 700));
+  at(19100, () => moveCamera(ZOOM.popup, 700));
   at(19200, () => qqArrives(copy));
   at(19500, () => caption(copy.messages));
   at(20300, () => wechatArrives(copy));
@@ -106,7 +106,7 @@ export function script(director: Director, lang: Lang) {
   at(23300, () => island.emit("island-outside-click", null));
   at(23400, hideCaption);
 
-  at(23600, () => moveCamera(1.25, 800));
+  at(23600, () => moveCamera(ZOOM.panel, 800));
   at(24100, () => island.click(".island__open-button", 0, 520));
   at(24900, () => island.click(".dot-button--clipboard", 0, 420));
   at(25300, () => caption(copy.clipboard));
@@ -136,6 +136,6 @@ export function script(director: Director, lang: Lang) {
   at(42900, hideCaption);
   at(43200, () => {
     sound("complete");
-    stage.set({ dim: 0.72, endCard: true });
+    stage.set({ dim: 0.72, endCard: true, title: "" });
   });
 }
