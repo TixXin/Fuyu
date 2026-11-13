@@ -15,6 +15,7 @@ use crate::macos::input;
 
 const ISLAND_HOVER_CHANGED_EVENT: &str = "island-hover-changed";
 const ISLAND_HOLD_CHANGED_EVENT: &str = "island-hold-changed";
+const ISLAND_MOVE_ARMED_CHANGED_EVENT: &str = "island-move-armed-changed";
 const ISLAND_CURSOR_MOVED_EVENT: &str = "island-cursor-moved";
 const CURSOR_EVENT_EVERY_TICKS: u32 = 3;
 const TICK: Duration = Duration::from_millis(12);
@@ -77,6 +78,7 @@ pub(crate) fn start_cursor_passthrough_loop(window: WebviewWindow) {
         let mut was_inside = false;
         let mut was_on_banner = false;
         let mut was_held = false;
+        let mut was_move_armed = false;
         let mut tick: u32 = 0;
         let mut last_cursor: Option<CursorPoint> = None;
 
@@ -100,7 +102,14 @@ pub(crate) fn start_cursor_passthrough_loop(window: WebviewWindow) {
                 let _ = window.emit(ISLAND_BANNER_HOVER_CHANGED_EVENT, is_on_banner);
             }
 
-            let held = input::is_option_key_down() && matches!(read_window_state().mode, IslandMode::Expanded);
+            let option = input::is_option_key_down();
+            let state = read_window_state();
+            let move_armed = is_inside && option && !state.is_tucked;
+            if move_armed != was_move_armed {
+                was_move_armed = move_armed;
+                let _ = window.emit(ISLAND_MOVE_ARMED_CHANGED_EVENT, if move_armed { "move" } else { "none" });
+            }
+            let held = option && matches!(state.mode, IslandMode::Expanded);
             if held != was_held {
                 was_held = held;
                 let _ = window.emit(ISLAND_HOLD_CHANGED_EVENT, held);

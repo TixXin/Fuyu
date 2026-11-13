@@ -24,7 +24,7 @@ export function PositionSettingsSection({
   const menuBarOptions = (["over", "below"] as const).map((value) => ({ value, label: t.settings.position.menuBarOptions[value] }));
 
   return (
-    <SettingsGroup title={t.settings.position.title} footer={`${t.settings.position.monitorHint} ${t.settings.position.moveHint}`}>
+    <SettingsGroup title={t.settings.position.title} footer={`${t.settings.position.monitorHint} ${isMacOS ? t.settings.position.moveHintMac : t.settings.position.moveHint}`}>
       <SettingsRow
         title={t.settings.position.monitor}
         control={
