@@ -4,7 +4,9 @@ import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton
 import { SettingsRow } from "../../components/settings/SettingsRow";
 import { DEFAULT_SETTINGS } from "../../features/appearance/settings";
 import type { IslandSettings } from "../../features/appearance/types";
-import { ProjectIdentitySection, ProjectLinksSection } from "../../features/updater/ProjectSettingsSection";
+import { AboutHero } from "../../features/updater/AboutHero";
+import { ProjectLinksSection } from "../../features/updater/ProjectSettingsSection";
+import { UpdateDiagnosticsRow } from "../../features/updater/UpdateDiagnosticsRow";
 import { UpdateSettingsSection } from "../../features/updater/UpdateSettingsSection";
 import { useTranslation } from "../../i18n";
 import { openOnboardingWindow } from "../onboarding/api";
@@ -25,15 +27,18 @@ export function AboutSettingsPage({ onSettingsChange }: { onSettingsChange: (set
 
   return (
     <>
-      <ProjectIdentitySection />
+      <AboutHero />
       <UpdateSettingsSection />
       <ProjectLinksSection />
-      <SettingsGroup>
+      <SettingsGroup title={text.helpTitle}>
         <SettingsRow
           title={text.guide}
           description={text.guideHint}
           control={<SettingsLinkButton onClick={openOnboardingWindow}>{text.guideAction}</SettingsLinkButton>}
         />
+        <UpdateDiagnosticsRow />
+      </SettingsGroup>
+      <SettingsGroup title={text.systemTitle}>
         <SettingsRow
           title={text.resetAll}
           description={text.resetAllHint}

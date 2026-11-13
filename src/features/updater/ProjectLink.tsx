@@ -14,7 +14,7 @@ export function ProjectLink({
   title: string;
   hint: string;
   icon: ReactNode;
-  tone?: "star" | "release";
+  tone?: "star" | "release" | "website" | "community";
 }) {
   const t = useTranslation();
   const { failed, onClick } = useOpenInBrowser();
