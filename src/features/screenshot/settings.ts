@@ -1,4 +1,4 @@
-export const SHORTCUT_ACTIONS = ["region", "copy", "text", "translate", "long", "fullscreen", "pins"] as const;
+export const SHORTCUT_ACTIONS = ["region", "copy", "text", "translate", "long", "record", "fullscreen", "pins"] as const;
 export type ShortcutAction = (typeof SHORTCUT_ACTIONS)[number];
 
 export const CARD_SECONDS = [0, 3, 5, 8, 15, 30] as const;
@@ -22,6 +22,7 @@ export const DEFAULT_SHORTCUTS: Record<ShortcutAction, string> = {
   text: "Ctrl+Shift+3",
   translate: "Ctrl+Shift+4",
   long: "Ctrl+Shift+5",
+  record: "Ctrl+Shift+6",
   fullscreen: "Ctrl+Shift+7",
   pins: "",
 };

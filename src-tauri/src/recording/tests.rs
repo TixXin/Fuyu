@@ -188,3 +188,25 @@ mod mixing {
         assert_eq!(out[2 * 240], 0.0);
     }
 }
+
+mod timer {
+    use super::super::state::{Phase, State};
+
+    #[test]
+    fn the_timer_counts_only_while_not_paused() {
+        let running = State::recording(1_000);
+        let paused = running.paused(true, 4_000);
+        assert!(paused.paused);
+        assert_eq!(paused.elapsed_ms, 3_000);
+        let again = paused.paused(false, 60_000);
+        assert_eq!((again.paused, again.elapsed_ms, again.since_ms), (false, 3_000, 60_000));
+        assert_eq!(again.paused(false, 70_000), again);
+    }
+
+    #[test]
+    fn a_countdown_has_no_time_and_cannot_pause() {
+        let counting = State::counting(3);
+        assert_eq!((counting.phase, counting.countdown), (Phase::Countdown, 3));
+        assert_eq!(counting.paused(true, 10), counting);
+    }
+}

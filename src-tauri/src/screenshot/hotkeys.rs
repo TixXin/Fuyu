@@ -131,6 +131,10 @@ fn run_action(action: ShortcutAction) {
     if !ENABLED.load(Ordering::SeqCst) {
         return;
     }
+    if action == ShortcutAction::Record && crate::recording::is_busy() {
+        crate::recording::stop_in_background(app);
+        return;
+    }
     match action.mode() {
         Some(mode) => session::start(app, mode),
         None => super::pin::toggle_all(app),
@@ -184,6 +188,7 @@ mod tests {
             (ShortcutAction::Text, Some(3)),
             (ShortcutAction::Translate, Some(4)),
             (ShortcutAction::Long, Some(5)),
+            (ShortcutAction::Record, Some(6)),
             (ShortcutAction::Fullscreen, Some(7)),
         ]);
         assert_eq!(ShortcutAction::Pins.mode(), None);

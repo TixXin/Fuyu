@@ -1,4 +1,4 @@
-type ShortcutAction = "region" | "copy" | "text" | "translate" | "long" | "fullscreen" | "pins";
+type ShortcutAction = "region" | "copy" | "text" | "translate" | "long" | "record" | "fullscreen" | "pins";
 
 export type SettingsScreenshotText = {
   whileCapturingTitle: string;
@@ -42,6 +42,7 @@ export const zhCN: SettingsScreenshotText = {
     text: "截图并识别文字",
     translate: "截图并翻译",
     long: "长截图",
+    record: "录屏",
     fullscreen: "截取整个屏幕",
     pins: "隐藏或显示所有贴图",
   },
@@ -51,6 +52,7 @@ export const zhCN: SettingsScreenshotText = {
     text: "选好区域就用 Windows 自带的文字识别读出文字并复制，浮屿上显示识别结果，点它在翻译里打开。",
     translate: "选好区域就识别文字，交给快捷翻译，浮屿上显示译文。需要打开翻译功能。",
     long: "选好要滚动的区域（网页、聊天记录、文档），浮屿在区域中间往下滚，逐屏拼成一张长图并复制；滚到底、高度到 2 万像素或按 Esc 时结束。固定在顶部和底部的栏只留一份。",
+    record: "选好区域、窗口或整个屏幕（按 F），3 秒后开始录成 MP4，带系统声音；浮屿上显示时长，可以暂停，再按一次快捷键停止。录好的视频在「视频」下的「浮屿录屏」文件夹，浮屿自己不会被录进去。",
     fullscreen: "选中鼠标所在的显示器，按 Enter 复制。",
     pins: "在任何地方都能用。不设的话，在贴图或浮屿上按 T 也能隐藏或显示。",
   },
@@ -93,6 +95,7 @@ export const en: SettingsScreenshotText = {
     text: "Screenshot and read text",
     translate: "Screenshot and translate",
     long: "Long screenshot",
+    record: "Screen recording",
     fullscreen: "Whole screen",
     pins: "Hide or show all pins",
   },
@@ -102,6 +105,7 @@ export const en: SettingsScreenshotText = {
     text: "Once a region is chosen, Windows' own text recognition reads it and the text is copied; the island shows it, and a click opens it in the translator.",
     translate: "Once a region is chosen its text is read and handed to quick translation; the island shows the translation. Needs translation turned on.",
     long: "Choose the area that scrolls (a web page, a chat, a document); Fuyu scrolls it from the middle and stitches one tall picture, then copies it. It stops at the end, at 20,000 px or on Esc. Bars fixed to the top and bottom appear once.",
+    record: "Choose an area, a window or the whole screen (press F); recording to MP4 with system sound starts after 3 seconds. The island shows the time and can pause; press the shortcut again to stop. Videos go to the Fuyu Recordings folder under Videos, and Fuyu itself is left out of them.",
     fullscreen: "Selects the monitor under the pointer; Enter copies it.",
     pins: "Works anywhere. Without it, T on a pin or the island hides or shows them too.",
   },
