@@ -35,8 +35,9 @@ macOS 的计划和决定见 [macos-port-plan.md](macos-port-plan.md)，各功能
 | 托盘 / 菜单栏图标 | `tray.rs` | 已支持 | 已支持 | Tauri tray + 模板图：`tray_mark.rs` 按 `mark.svg` 的胶囊在代码里画单色图（圆点和短横挖空），系统按菜单栏深浅自动着色 | G1.4 | macOS 27.2，2026-11-13 |
 | 开机自启 | `system` | 已支持 | 开发中 | `SMAppService.mainApp`（`macos/login_item.rs`）；只有打包后的 `.app` 能注册，调试版读到的总是关；系统要求批准时打开「登录项」设置，开关退回 | G1.4 | — |
 | 凭据存储 | `mail`、`rename_migration` | 已支持 | 已支持 | Keychain：`keyring` 的 v1 在 Mac 上自动用 apple-native 后端，代码不用改；条目名和 Windows 相同；不弹授权框 | G1.4 | macOS 27.2，2026-11-13 |
-| 全局快捷键 | `win32/hotkey` | 已支持 | 未开始 | Carbon 热键；不接管系统组合键 | G1.4 | — |
-| `fuyu://` 链接 | `win32/url_protocol` | 已支持 | 未开始 | Info.plist 声明，只在安装后的 `.app` 可用 | G1.4 | — |
+| 全局快捷键 | `win32/hotkey` | 已支持 | 未开始 | Carbon 热键；不接管系统组合键。用它的功能（剪贴板、翻译、截图、审批和插件快捷键）在 Mac 上都还没做，随第一个用的功能（剪贴板 ⌘⇧V）一起做 | G1.6 | — |
+| `fuyu://` 链接 | `win32/url_protocol` | 已支持 | 开发中 | `src-tauri/Info.plist` 声明 `fuyu` / `focusd`，打包时合并进 `.app`，只在打包后的 `.app` 可用；链接经 Apple Event 到 `RunEvent::Opened`，启动 5 秒内按冷启动处理；单实例由系统和 single-instance 插件保证 | G1.4 | — |
+| 单实例 | `tauri-plugin-single-instance` | 已支持 | 已支持 | 同一个 `.app` 系统只开一个；插件在 Mac 上用本地 socket，第二个进程把参数交给第一个后退出；lane 预览标识不同，和用户的岛互不影响 | G1.4 | macOS 27.2，2026-11-13（lane 预览与主工作区并存） |
 | 自动更新 | `system` | 已支持 | 未开始 | 同一个 updater，`latest.json` 加 darwin 键；需签名公证 | G1.13 | — |
 | 待办、笔记与归档 | `todos` | 已支持 | 未开始 | 通用代码 | G1.2 | — |
 | 日历与会议提醒 | `calendar` | 已支持 | 未开始 | 通用代码 | G1.2 | — |

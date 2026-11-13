@@ -234,12 +234,15 @@ pub fn run() {
         ))
         .build(context)
         .map(|app| {
-            app.run(|_, event| {
-                if let tauri::RunEvent::Exit = event {
+            app.run(|_app, event| match event {
+                tauri::RunEvent::Exit => {
                     agent_approval::shutdown();
                     home_dir::before_exit();
                     wechat_reminders::shutdown();
                 }
+                #[cfg(target_os = "macos")]
+                tauri::RunEvent::Opened { urls } => plugin_host::open_opened_links(_app, &urls),
+                _ => {}
             })
         });
     if let Err(error) = result {

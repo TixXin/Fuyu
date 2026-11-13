@@ -47,9 +47,33 @@ pub(crate) fn find_link(args: &[String]) -> Option<&str> {
     })
 }
 
-#[cfg(not(windows))]
+#[cfg(target_os = "macos")]
+static REGISTERED_AT: std::sync::OnceLock<std::time::Instant> = std::sync::OnceLock::new();
+#[cfg(target_os = "macos")]
+const COLD_START_WINDOW: Duration = Duration::from_secs(5);
+
+#[cfg(target_os = "macos")]
+pub(super) fn register_scheme() -> Result<(), String> {
+    REGISTERED_AT.get_or_init(std::time::Instant::now);
+    Ok(())
+}
+
+#[cfg(not(any(windows, target_os = "macos")))]
 pub(super) fn register_scheme() -> Result<(), String> {
     Ok(())
+}
+
+#[cfg(target_os = "macos")]
+pub(crate) fn open_opened(app: &AppHandle, urls: &[tauri::Url]) {
+    let links: Vec<&str> = urls.iter().map(tauri::Url::as_str).filter(|link| find_link(&[link.to_string()]).is_some()).collect();
+    if links.is_empty() {
+        return;
+    }
+    let cold_start = REGISTERED_AT.get().is_some_and(|at| at.elapsed() < COLD_START_WINDOW);
+    let _ = crate::island::show_island(app);
+    for link in links {
+        open(app, link, cold_start);
+    }
 }
 
 #[cfg(windows)]
