@@ -1,12 +1,62 @@
+use serde::Serialize;
 use windows::{
     Graphics::Imaging::{BitmapAlphaMode, BitmapPixelFormat, SoftwareBitmap},
-    Media::Ocr::OcrEngine,
+    Media::Ocr::{OcrEngine, OcrResult},
     Storage::Streams::DataWriter,
 };
 
 use super::com::WinRtApartment;
 
+#[derive(Clone, Debug, PartialEq, Serialize)]
+pub(crate) struct OcrWord {
+    pub(crate) text: String,
+    pub(crate) x: f32,
+    pub(crate) y: f32,
+    pub(crate) width: f32,
+    pub(crate) height: f32,
+}
+
 pub(crate) fn recognize(width: u32, height: u32, rgba: &[u8]) -> Option<String> {
+    with_result(width, height, rgba, |result| {
+        let lines: Vec<String> = result
+            .Lines()
+            .ok()?
+            .into_iter()
+            .filter_map(|line| line.Text().ok())
+            .map(|text| join_cjk(&text.to_string_lossy()))
+            .filter(|line| !line.trim().is_empty())
+            .collect();
+        (!lines.is_empty()).then(|| lines.join("\n"))
+    })
+}
+
+pub(crate) fn recognize_words(width: u32, height: u32, rgba: &[u8]) -> Option<Vec<Vec<OcrWord>>> {
+    with_result(width, height, rgba, |result| {
+        let lines = result
+            .Lines()
+            .ok()?
+            .into_iter()
+            .map(|line| {
+                line.Words()
+                    .map(|words| {
+                        words
+                            .into_iter()
+                            .filter_map(|word| {
+                                let text = word.Text().ok()?.to_string_lossy();
+                                let rect = word.BoundingRect().ok()?;
+                                Some(OcrWord { text, x: rect.X, y: rect.Y, width: rect.Width, height: rect.Height })
+                            })
+                            .collect::<Vec<_>>()
+                    })
+                    .unwrap_or_default()
+            })
+            .filter(|words| !words.is_empty())
+            .collect();
+        Some(lines)
+    })
+}
+
+fn with_result<T>(width: u32, height: u32, rgba: &[u8], read: impl FnOnce(&OcrResult) -> Option<T>) -> Option<T> {
     let _apartment = WinRtApartment::multithreaded().ok()?;
     let max = OcrEngine::MaxImageDimension().ok()?;
     if width == 0 || height == 0 || width > max || height > max || rgba.len() != (width * height * 4) as usize {
@@ -29,15 +79,7 @@ pub(crate) fn recognize(width: u32, height: u32, rgba: &[u8]) -> Option<String> 
     .ok()?;
     let engine = OcrEngine::TryCreateFromUserProfileLanguages().ok()?;
     let result = engine.RecognizeAsync(&bitmap).ok()?.join().ok()?;
-    let lines: Vec<String> = result
-        .Lines()
-        .ok()?
-        .into_iter()
-        .filter_map(|line| line.Text().ok())
-        .map(|text| join_cjk(&text.to_string_lossy()))
-        .filter(|line| !line.trim().is_empty())
-        .collect();
-    (!lines.is_empty()).then(|| lines.join("\n"))
+    read(&result)
 }
 
 fn is_cjk(c: char) -> bool {

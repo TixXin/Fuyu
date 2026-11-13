@@ -15,7 +15,7 @@ const BADGE = [11, 14, 18];
 
 export type AnnotationStyle = { color: string; level: StrokeLevel };
 
-export type ShapeAnnotation = { kind: "rect" | "ellipse" | "arrow" | "mosaic"; color: string; width: number; from: Point; to: Point };
+export type ShapeAnnotation = { kind: "rect" | "ellipse" | "arrow" | "mosaic"; color: string; width: number; from: Point; to: Point; auto?: boolean };
 export type StrokeAnnotation = { kind: "pen" | "highlighter"; color: string; width: number; points: Point[] };
 export type TextAnnotation = { kind: "text"; color: string; size: number; at: Point; text: string };
 export type NumberAnnotation = { kind: "number"; color: string; size: number; at: Point; value: number };
@@ -112,6 +112,24 @@ export const EMPTY_HISTORY: AnnotationHistory = { items: [], undone: [] };
 
 export function addAnnotation(history: AnnotationHistory, annotation: Annotation): AnnotationHistory {
   return { items: [...history.items, annotation], undone: [] };
+}
+
+export function addAnnotations(history: AnnotationHistory, annotations: readonly Annotation[]): AnnotationHistory {
+  return annotations.length === 0 ? history : { items: [...history.items, ...annotations], undone: [] };
+}
+
+export function removeAnnotation(history: AnnotationHistory, annotation: Annotation): AnnotationHistory {
+  return history.items.includes(annotation) ? { items: history.items.filter((item) => item !== annotation), undone: [] } : history;
+}
+
+export function autoMosaicAt(items: readonly Annotation[], point: Point): Annotation | null {
+  for (let index = items.length - 1; index >= 0; index -= 1) {
+    const item = items[index];
+    if (item.kind !== "mosaic" || !item.auto) continue;
+    const rect = normalizedRect(item.from, item.to);
+    if (point.x >= rect.x && point.x <= rect.x + rect.width && point.y >= rect.y && point.y <= rect.y + rect.height) return item;
+  }
+  return null;
 }
 
 export function undoAnnotation(history: AnnotationHistory): AnnotationHistory {

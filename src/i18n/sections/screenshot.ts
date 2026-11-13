@@ -13,6 +13,10 @@ export type ScreenshotText = {
   readText: string;
   textCopied: (line: string) => string;
   noText: string;
+  redact: string;
+  redacting: string;
+  redacted: (count: number) => string;
+  nothingToRedact: string;
   tools: Record<"rect" | "ellipse" | "arrow" | "pen" | "highlighter" | "text" | "mosaic" | "number", string>;
   undo: string;
   redo: string;
@@ -71,6 +75,10 @@ export const zhCN: ScreenshotText = {
   readText: "识别文字",
   textCopied: (line) => `已复制识别的文字：${line}`,
   noText: "截图里没有识别到文字",
+  redact: "自动打码（邮箱、手机号、IP、密钥）",
+  redacting: "正在找要打码的内容…",
+  redacted: (count) => `打了 ${count} 处码；点一处可以取消`,
+  nothingToRedact: "没找到邮箱、手机号、IP 或密钥",
   tools: {
     rect: "矩形",
     ellipse: "椭圆",
@@ -138,6 +146,10 @@ export const en: ScreenshotText = {
   readText: "Read text",
   textCopied: (line) => `Copied the text: ${line}`,
   noText: "No text found in the screenshot",
+  redact: "Auto-redact emails, phone numbers, IPs and keys",
+  redacting: "Looking for things to redact…",
+  redacted: (count) => (count === 1 ? "Redacted 1 spot; click it to undo" : `Redacted ${count} spots; click one to undo it`),
+  nothingToRedact: "No emails, phone numbers, IPs or keys found",
   tools: {
     rect: "Rectangle",
     ellipse: "Ellipse",

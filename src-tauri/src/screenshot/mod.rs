@@ -250,6 +250,24 @@ pub async fn screenshot_history_delete(app: AppHandle, path: String) -> Result<(
     Ok(())
 }
 
+pub(crate) fn offset_words(lines: Vec<Vec<crate::win32::ocr::OcrWord>>, left: u32, top: u32) -> Vec<Vec<crate::win32::ocr::OcrWord>> {
+    let (dx, dy) = (left as f32, top as f32);
+    lines
+        .into_iter()
+        .map(|words| words.into_iter().map(|word| crate::win32::ocr::OcrWord { x: word.x + dx, y: word.y + dy, ..word }).collect())
+        .collect()
+}
+
+#[tauri::command]
+pub async fn screenshot_find_words(window: WebviewWindow, x: u32, y: u32, width: u32, height: u32) -> Result<Vec<Vec<crate::win32::ocr::OcrWord>>, String> {
+    let (cut_width, cut_height, rgba) = session::selection(window.label(), PixelRect { x, y, width, height }).ok_or_else(|| "Nothing is selected.".to_string())?;
+    let lines = tauri::async_runtime::spawn_blocking(move || crate::win32::ocr::recognize_words(cut_width, cut_height, &rgba))
+        .await
+        .map_err(|error| format!("Failed to read the text: {error}"))?
+        .unwrap_or_default();
+    Ok(offset_words(lines, x, y))
+}
+
 async fn read_text(picture: Picture) -> String {
     tauri::async_runtime::spawn_blocking(move || crate::win32::ocr::recognize(picture.width, picture.height, &picture.rgba))
         .await
@@ -378,6 +396,7 @@ macro_rules! tauri_commands {
             crate::screenshot::screenshot_configure,
             crate::screenshot::screenshot_shortcut_status,
             crate::screenshot::screenshot_start,
+            crate::screenshot::screenshot_find_words,
             crate::screenshot::screenshot_history,
             crate::screenshot::screenshot_history_copy,
             crate::screenshot::screenshot_history_pin,

@@ -1,6 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { emit, listen, type EventCallback } from "@tauri-apps/api/event";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+import type { OcrWord } from "./redact";
 import type { PixelRect } from "./selection";
 import { shortcutConfig, type ScreenshotSettings, type ShortcutAction } from "./settings";
 import type { Target } from "./targets";
@@ -101,6 +102,10 @@ export function finishScreenshot(selection: PixelRect, patch: ScreenshotPatch | 
 
 export function cancelScreenshot() {
   return invoke<void>("screenshot_cancel");
+}
+
+export function findScreenshotWords(rect: PixelRect) {
+  return invoke<OcrWord[][]>("screenshot_find_words", { x: rect.x, y: rect.y, width: rect.width, height: rect.height });
 }
 
 export function listenScreenshotSession(handler: EventCallback<ScreenshotSession>) {

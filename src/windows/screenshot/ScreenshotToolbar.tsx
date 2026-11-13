@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
-import { Check, Circle, Download, Grid3x3, Hash, Highlighter, MoveUpRight, Pencil, Pin, Redo2, ScanText, Square, Type, Undo2, X, type LucideIcon } from "lucide-react";
+import { Check, Circle, Download, EyeOff, Grid3x3, Hash, Highlighter, MoveUpRight, Pencil, Pin, Redo2, ScanText, Square, Type, Undo2, X, type LucideIcon } from "lucide-react";
 import type { ScreenshotAction } from "../../features/screenshot/api";
 import { ANNOTATION_COLORS, ANNOTATION_TOOLS, STROKE_LEVELS, type AnnotationTool } from "../../features/screenshot/annotations";
 import type { PixelRect, Size } from "../../features/screenshot/selection";
@@ -45,6 +45,7 @@ export function ScreenshotToolbar({
   notice,
   onCancel,
   onFinish,
+  onRedact,
 }: {
   area: PixelRect;
   view: Size;
@@ -52,6 +53,7 @@ export function ScreenshotToolbar({
   notice: string | null;
   onCancel: () => void;
   onFinish: (action: ScreenshotAction) => void;
+  onRedact: () => void;
 }) {
   const t = useTranslation().screenshot;
   const box = useRef<HTMLDivElement>(null);
@@ -99,6 +101,9 @@ export function ScreenshotToolbar({
           <Redo2 size={18} />
         </ToolButton>
         <span className="screenshot-overlay__separator" />
+        <ToolButton label={t.redact} onClick={onRedact}>
+          <EyeOff size={18} />
+        </ToolButton>
         <ToolButton label={t.readText} onClick={() => onFinish("text")}>
           <ScanText size={18} />
         </ToolButton>
