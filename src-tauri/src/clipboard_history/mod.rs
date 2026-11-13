@@ -15,6 +15,7 @@ mod service;
 pub(crate) mod shortcut;
 mod snippets;
 mod store;
+mod system;
 mod transfer;
 
 use serde::{Deserialize, Serialize};

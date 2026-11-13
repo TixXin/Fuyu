@@ -81,8 +81,8 @@ fn changed() -> Result<ClipboardHistorySnapshot, String> {
 #[tauri::command]
 pub fn convert_chinese_text(text: String, to: String) -> Result<String, String> {
     let converted = match to.as_str() {
-        "simplified" => crate::win32::chinese::to_simplified(&text),
-        "traditional" => crate::win32::chinese::to_traditional(&text),
+        "simplified" => super::system::to_simplified(&text),
+        "traditional" => super::system::to_traditional(&text),
         _ => return Err(format!("Unknown script \"{to}\".")),
     };
     converted.ok_or_else(|| "Windows could not convert the text.".to_string())

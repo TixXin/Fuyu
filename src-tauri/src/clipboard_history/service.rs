@@ -19,7 +19,6 @@ use super::{
     ClipboardHistorySnapshot, ClipboardHistoryState, HISTORY_CHANGED_EVENT,
     SHORT_DUPLICATE_WINDOW_MS,
 };
-use crate::win32;
 
 const DAY_MS: i64 = 24 * 60 * 60 * 1000;
 
@@ -292,7 +291,7 @@ impl ClipboardHistoryService {
         if !settings.enabled {
             return;
         }
-        if settings.skip_sensitive && win32::clipboard::is_marked_private() {
+        if settings.skip_sensitive && super::system::is_marked_private() {
             return;
         }
 
@@ -551,12 +550,11 @@ fn read_image_text(path: &str) -> Option<String> {
         image
     };
     let rgba = image.to_rgba8();
-    win32::ocr::recognize(rgba.width(), rgba.height(), rgba.as_raw())
+    super::system::recognize_text(rgba.width(), rgba.height(), rgba.as_raw())
 }
 
 fn source_app() -> Option<ClipboardSource> {
-    let window = win32::clipboard::owner_window().unwrap_or_else(win32::window::foreground_window);
-    let path = win32::process::image_path(win32::process::window_process_id(window))?;
+    let path = super::system::source_app_path()?;
     let name = Path::new(&path).file_stem()?.to_string_lossy().into_owned();
     Some(ClipboardSource { path, name })
 }
