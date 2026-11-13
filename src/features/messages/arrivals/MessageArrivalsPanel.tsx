@@ -45,7 +45,7 @@ export function MessageArrivalsPanel({
         <div className="message-arrivals__top">
           <h2 className="message-arrivals__title">{t.arrivals.title}</h2>
           <span className="message-arrivals__tools">
-            <button className="message-arrivals__clear" type="button" aria-label={t.arrivals.clearAll} title={t.arrivals.clearAllHint} onClick={onClearAll}>
+            <button className="message-arrivals__clear" type="button" aria-label={t.arrivals.clearAll} data-tooltip={t.arrivals.clearAllHint} onClick={onClearAll}>
               <CheckCheck size={14} strokeWidth={1.5} absoluteStrokeWidth aria-hidden="true" />
             </button>
             <button className="message-arrivals__all" type="button" onClick={onShowAll}>

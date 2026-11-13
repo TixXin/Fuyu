@@ -18,6 +18,7 @@ import { useTranslation } from "../../i18n";
 import { isPluginPage, type IslandFeatures } from "./features";
 import { IslandCollapsedBar } from "./IslandCollapsedBar";
 import { IslandHeader } from "./IslandHeader";
+import { IconButtonTooltip } from "../../components/IconButtonTooltip";
 import type { PluginViewEntry } from "../../features/plugin-views/api";
 import type { CollapsedSlots, IslandMode, IslandPage, NativeGlassState } from "./types";
 import { useGlassPointer } from "./useGlassPointer";
@@ -275,6 +276,7 @@ export function IslandShell({
         {overlay}
       </div>
       <IslandResizeHints isExpanded={isExpanded} popup={popup} sizeLabel={resizeLabel} />
+      <IconButtonTooltip />
     </section>
   );
 }

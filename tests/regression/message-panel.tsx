@@ -223,6 +223,18 @@ async function runChecks() {
     check(rows().length === 0 && document.querySelector(".message-panel-full"), "点「全部消息」回到完整消息页");
     await waitFor(() => Math.round(islandBox().width) === 560, "岛回到完整宽度", 1500);
     check(headerShown() && !document.querySelector(".island--popup"), "完整消息页显示顶部栏，岛宽 560");
+    const iconButton = [...document.querySelectorAll<HTMLButtonElement>(".island button[aria-label]")].find((button) => !button.textContent?.trim())!;
+    const tooltip = () => document.querySelector<HTMLElement>('[role="tooltip"]');
+    await act(async () => { iconButton.dispatchEvent(new PointerEvent("pointerover", { bubbles: true, clientX: 0 })); });
+    check(!tooltip(), "悬停名称不会马上出现");
+    await waitFor(() => tooltip()?.textContent === iconButton.getAttribute("aria-label"), "停一会儿后只有图标的按钮显示名称");
+    check(tooltip()!.getBoundingClientRect().top >= iconButton.getBoundingClientRect().bottom, "名称显示在按钮下方");
+    await act(async () => { iconButton.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true })); });
+    check(!tooltip(), "按下按钮时名称收起");
+    const textButton = [...document.querySelectorAll<HTMLButtonElement>(".island button[aria-label]")].find((button) => (button.textContent?.trim().length ?? 0) > 3)!;
+    await act(async () => { textButton.dispatchEvent(new PointerEvent("pointerover", { bubbles: true })); });
+    await wait(500);
+    check(!tooltip(), `带文字的按钮（${textButton.textContent}）不显示悬停名称`);
     await wait(DURATION_MS + 200);
     check(state.mode === "expanded", "按过之后不再自动收起");
     await notify("qq", "小张");
@@ -235,7 +247,7 @@ async function runChecks() {
     await notify("plugin", "构建完成");
     await waitFor(() => rows().length === 4, "四个来源都在面板里");
     const clear = document.querySelector<HTMLButtonElement>(".message-arrivals__clear")!;
-    check(clear.getAttribute("aria-label") === "清除提醒" && clear.title.includes("不会标为已读"), "标题行有「清除提醒」，说明不会标为已读");
+    check(clear.getAttribute("aria-label") === "清除提醒" && clear.dataset.tooltip?.includes("不会标为已读"), "标题行有「清除提醒」，说明不会标为已读");
     const before = commands.length;
     await act(async () => {
       clear.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
