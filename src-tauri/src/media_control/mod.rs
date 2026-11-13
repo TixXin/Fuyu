@@ -4,6 +4,7 @@ mod plugin_view;
 mod service;
 mod session;
 mod source_icon;
+mod state;
 
 pub(crate) use plugin_view::{now_playing_key, plugin_cover, plugin_media_command, plugin_now_playing};
 pub(crate) use events::start as start_session_events;
