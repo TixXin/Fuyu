@@ -34,6 +34,19 @@
 - Rust：`src-tauri/src/onboarding_window/`。`mod.rs` 按需创建遮罩，铺满岛所在屏幕的**工作区**（不是整个屏幕，免得被当成全屏程序触发游戏模式）；`overlay.rs` 每 30ms 算一次岛在遮罩上的位置（`island/passthrough.rs` 的 `island_on_screen`），变了就发 `onboarding-island`，并按鼠标在不在卡片上切换遮罩的鼠标穿透。剪贴板弹出时 `clipboard_history/popup.rs` 把 `clipboard-popup-opened` 也发给引导。
 - 回归页：`tests/regression/onboarding.html`（`?act=1-5`、`?locale=en`、`?light=1`、`?open=1` 用来看界面，`?test=1` 跑检查）。回归页里没有真岛，亮圈里只是背景。
 
-## 以后
+## 引导之后：岛上的「第一次」提示
 
-岛上的「第一次」提示（第一次有 Agent 会话、第一次收到横幅、第一次贴边……时轻轻提一句）还没做，见任务 C50。
+引导只练三件事，其余的等用户第一次遇到时，在收起条上轻轻提一句（C50）：
+
+| 什么时候 | 提示 | 按钮 |
+|---|---|---|
+| 第一次有 Agent 会话（AI 代理状态开着） | Agent 会话显示在这里，点岛看全部 | 插头：打开 设置 → AI Agent → 连接；对勾：知道了 |
+| 第一次有新消息提醒（收起条预览、横幅或消息面板） | 新消息来了，点一下岛就能看（等这条消息的提醒结束后才出） | 对勾 |
+| 第一次贴边收起 | 岛藏在顶边，鼠标碰一下就回来（等岛下次出来时才出） | 对勾 |
+
+- 一天最多一条，按本地日期算；当天已经出过的，其余的留到第二天岛还开着、又遇到时再出。
+- 提示出现时收起条按文字加宽（不受平时 340px 的上限，最宽 460px，`layout.ts` 的 `getNoticeIslandWidth`），整句不截断。
+- 显示 8 秒，鼠标停在上面时不收；点对勾或插头以后这条不再出现，没点的最多出 3 次。
+- 和截图卡片共用收起条的提示位置，截图卡片优先；展开、贴边、有消息预览、快捷翻译或插件授权时不出，游戏免打扰和新手引导演示期间也不记。
+- 记录在 `fuyu-first-hints`（见 [contracts.md](../architecture/contracts.md)）。代码在 `src/features/first-hints/`（`hints.ts` 是纯函数，`tests/unit/first-hints.test.mjs`），接线在 `windows/island/useIslandFirstHints.ts`。
+- 方案里还有一条「用鼠标打开同一页三次后提示 Alt+数字」，没做。

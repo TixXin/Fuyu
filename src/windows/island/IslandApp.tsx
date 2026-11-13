@@ -60,6 +60,8 @@ import { useFirstRunGuide } from "./useFirstRunGuide";
 import { useSettingsFileSync } from "../../features/settings-backup/useSettingsFileSync";
 import { useOnboardingDemo, withDemoMedia } from "./useOnboardingDemo";
 import { useIslandLyrics } from "./useIslandLyrics";
+import { useIslandFirstHints } from "./useIslandFirstHints";
+import { FirstHintActions, FirstHintNotice } from "../../features/first-hints/FirstHintNotice";
 import "./IslandApp.css";
 
 const NO_TODOS: TodoItem[] = [];
@@ -106,6 +108,16 @@ export function IslandApp() {
   const screenshotCard = useScreenshotCard(screenshot.settings.cardSeconds);
   const screenshotNotice = useScreenshotNotice(screenshotCard, agentSessions);
   const translationPeek = useQuickTranslation(settings.translationEnabled) ?? screenshotText;
+  const firstHints = useIslandFirstHints({
+    mode,
+    isTucked,
+    quiet: game.quiet,
+    demoActive: demo.active,
+    agentsOn: settings.agentStatusEnabled,
+    agentSessionCount: activeAgentSessionCount,
+    showsMessage,
+    busy: screenshotCard.current !== null || translationPeek !== null || permissionPrompts.current !== null,
+  });
   const { lyrics, lyricLine: currentLyric } = useIslandLyrics(settings, media.mediaState, {
     page,
     barShown: mode === "collapsed" && !isTucked && settings.showCollapsedText,
@@ -122,6 +134,7 @@ export function IslandApp() {
       collapsedSlots,
       banner.hasLinePreview || translationPeek !== null,
       lyricLine?.longest ?? null,
+      firstHints.current ? t.island.firstHint[firstHints.current] : null,
     );
   useIslandTucking({
     settings,
@@ -301,7 +314,11 @@ export function IslandApp() {
         pageDigitModifiers={settings.pageDigitModifiers}
         hoverSwitchPage={settings.hoverSwitchPage}
         hoverSwitchDelayMs={settings.hoverSwitchDelayMs}
-        notice={screenshotNotice.taken ? { content: <ScreenshotNotice key={screenshotNotice.taken.path} notice={screenshotNotice} />, actions: <ScreenshotNoticeActions notice={screenshotNotice} /> } : null}
+        notice={screenshotNotice.taken
+          ? { content: <ScreenshotNotice key={screenshotNotice.taken.path} notice={screenshotNotice} />, actions: <ScreenshotNoticeActions notice={screenshotNotice} /> }
+          : firstHints.current
+            ? { content: <FirstHintNotice key={firstHints.current} hints={firstHints} />, actions: <FirstHintActions hints={firstHints} onConnectTools={() => openSettingsWindow("agentConnect")} /> }
+            : null}
         overlay={permissionPrompts.current ? <PluginPermissionPrompt prompts={permissionPrompts} /> : null}
         pluginViews={pluginPages.views}
         onOpenPluginPage={openEnabledPage}

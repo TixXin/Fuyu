@@ -43,6 +43,14 @@ export function getCollapsedIslandWidth(text: string, extraWidth = 0, widthExtra
   ) + Math.round(widthExtra);
 }
 
+const MAX_NOTICE_ISLAND_WIDTH = 460;
+const NOTICE_UNIT_WIDTH = 13.5;
+
+export function getNoticeIslandWidth(text: string, chromeWidth: number, widthExtra = 0) {
+  const width = Math.round(getCollapsedTextUnits(text) * NOTICE_UNIT_WIDTH + Math.max(0, chromeWidth));
+  return Math.min(MAX_NOTICE_ISLAND_WIDTH, Math.max(MIN_COLLAPSED_ISLAND_WIDTH, width)) + Math.round(widthExtra);
+}
+
 const MAX_ALIGNMENT_NUDGE = 4;
 
 export function alignCollapsedIslandWidth(

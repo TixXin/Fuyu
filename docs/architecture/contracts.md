@@ -31,6 +31,7 @@
 | `fuyu-panel-preview`（设置窗口 → 主窗口：拖动尺寸滑块时让岛展开或收起预览，`{ mode, requestedAt }`，超过 2 秒的请求忽略） | `windows/settings/storage.ts` |
 | `fuyu-onboarding-welcome`（新手引导 → 主窗口：让岛在消息面板里打招呼，`{ kind: "hello" \| "ready", requestedAt }`，超过 5 秒的请求忽略；2026-11-12 起，没有 `kind` 的旧请求当作 `ready`） | `windows/onboarding/storage.ts` |
 | `fuyu-onboarding-demo`（新手引导 → 主窗口：引导开着时岛放演示歌曲和演示 Agent 会话，`{ until }`（Unix 毫秒），引导每 3 秒续一次，关掉时删除，过了 `until` 也停；2026-11-12 起，C51） | `windows/onboarding/storage.ts` |
+| `fuyu-first-hints`（岛上的「第一次」提示，只有主窗口读写：`{ dismissed: ("agent" \| "message" \| "tuck")[], shown: { [id]: 次数 }, lastShownAt }`（Unix 毫秒）；点了「知道了」或「连接更多工具」进 `dismissed`，显示满 3 次也不再出现，`lastShownAt` 在同一天时不再出新的；2026-11-13 起，C50） | `features/first-hints/storage.ts` |
 | `fuyu-qq-mail-settings` | `features/messages/mail/storage.ts`（`{ accounts: [{ email, host, enabled }] }`，兼容读取旧的单账户 `{ email, enabled }`，解析在 `mailAccounts.ts`） |
 | `fuyu-qq-mail-remote-images` | `features/messages/mail/storage.ts` |
 | `fuyu-qq-notifications-enabled` | `features/messages/qq-notifications/storage.ts` |
