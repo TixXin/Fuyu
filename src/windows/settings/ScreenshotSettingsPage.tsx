@@ -7,7 +7,7 @@ import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
 import type { IslandSettings } from "../../features/appearance/types";
 import { useClipboardSettings } from "../../features/clipboard/useClipboardSettings";
 import { ScreenshotShortcutRows } from "../../features/screenshot/ScreenshotShortcutRows";
-import { CARD_SECONDS, type CardSeconds } from "../../features/screenshot/settings";
+import { CARD_SECONDS, HISTORY_DAYS, type CardSeconds, type HistoryDays } from "../../features/screenshot/settings";
 import { useScreenshotSettings } from "../../features/screenshot/useScreenshotSettings";
 import { useTranslationSettings } from "../../features/translation/useTranslationSettings";
 import { useTranslation } from "../../i18n";
@@ -94,6 +94,18 @@ export function ScreenshotSettingsPage({
                 options={CARD_SECONDS.map((seconds) => ({ value: String(seconds), label: text.cardSecondsOption(seconds) }))}
                 ariaLabel={text.cardSeconds}
                 onChange={(seconds) => setScreenshot({ ...screenshot, cardSeconds: Number(seconds) as CardSeconds })}
+              />
+            }
+          />
+          <SettingsRow
+            title={text.historyDays}
+            description={text.historyDaysHint}
+            control={
+              <SettingsSelect
+                value={String(screenshot.historyDays)}
+                options={HISTORY_DAYS.map((days) => ({ value: String(days), label: text.historyDaysOption(days) }))}
+                ariaLabel={text.historyDays}
+                onChange={(days) => setScreenshot({ ...screenshot, historyDays: Number(days) as HistoryDays })}
               />
             }
           />

@@ -96,16 +96,19 @@ fn a_zoomed_pin_keeps_the_point_under_the_pointer() {
 }
 
 #[test]
-fn only_the_newest_fifty_screenshots_of_the_last_week_are_kept() {
+fn only_the_newest_hundred_screenshots_within_the_kept_days_stay() {
     use super::output::stale;
     use std::{path::PathBuf, time::{Duration, SystemTime}};
     let now = SystemTime::now();
     let day = Duration::from_secs(24 * 60 * 60);
-    let mut files: Vec<(SystemTime, PathBuf)> = (0..52u64).map(|minute| (now - Duration::from_secs(minute * 60), PathBuf::from(format!("{minute}.png")))).collect();
+    let mut files: Vec<(SystemTime, PathBuf)> = (0..102u64).map(|minute| (now - Duration::from_secs(minute * 60), PathBuf::from(format!("{minute}.png")))).collect();
     files.push((now - 8 * day, PathBuf::from("old.png")));
-    let mut gone = stale(&mut files, now);
+    let mut gone = stale(&mut files, now, 7 * day);
     gone.sort();
-    assert_eq!(gone, [PathBuf::from("50.png"), PathBuf::from("51.png"), PathBuf::from("old.png")]);
+    assert_eq!(gone, [PathBuf::from("100.png"), PathBuf::from("101.png"), PathBuf::from("old.png")]);
+    let mut week_old = vec![(now - 8 * day, PathBuf::from("old.png"))];
+    assert!(stale(&mut week_old, now, 30 * day).is_empty(), "kept for 30 days, an 8-day-old one stays");
+    assert_eq!(stale(&mut week_old, now, day).len(), 1);
 }
 
 #[test]
@@ -133,4 +136,48 @@ fn a_chosen_save_folder_must_be_a_full_path_without_parent_steps() {
     assert!(chosen_folder(r"\\nas\shots").is_ok());
     assert!(chosen_folder("Screenshots").is_err());
     assert!(chosen_folder(r"D:\Screenshots\..\Windows").is_err());
+}
+
+#[test]
+fn the_history_lists_newest_first_with_thumbnails_and_only_hands_out_its_own_files() {
+    use super::history::{history_file, list};
+    use super::output::{encode_png, Picture};
+    let dir = std::env::temp_dir().join(format!("fuyu-screenshot-history-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).expect("temp folder");
+    let png = encode_png(&Picture { width: 4, height: 2, rgba: vec![255; 4 * 2 * 4] }).expect("png");
+    std::fs::write(dir.join("a.png"), &png).expect("write a");
+    std::thread::sleep(std::time::Duration::from_millis(30));
+    std::fs::write(dir.join("b.png"), &png).expect("write b");
+    std::fs::write(dir.join("note.txt"), b"x").expect("write txt");
+    let items = list(&dir);
+    assert_eq!(items.iter().map(|item| item.path.rsplit(['\\', '/']).next().unwrap_or_default()).collect::<Vec<_>>(), ["b.png", "a.png"]);
+    assert!(items.iter().all(|item| item.thumbnail.as_deref().is_some_and(|data| data.starts_with("data:image/png;base64,"))));
+    assert!(items[0].taken_at >= items[1].taken_at);
+    assert!(history_file(&dir, &items[0].path).is_ok());
+    assert!(history_file(&dir, &dir.join("note.txt").display().to_string()).is_err());
+    assert!(history_file(&dir, &dir.join("missing.png").display().to_string()).is_err());
+    assert!(history_file(&dir, &std::env::temp_dir().join("b.png").display().to_string()).is_err());
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn a_pin_from_the_history_opens_round_the_pointer_and_stays_on_its_monitor() {
+    use super::history::pin_origin;
+    let monitor = (-1920, 0, 1920, 1080);
+    assert_eq!(pin_origin(Some((-960, 540)), monitor, (200, 100)), (-1060, 490));
+    assert_eq!(pin_origin(Some((-1910, 10)), monitor, (200, 100)), (-1920, 0));
+    assert_eq!(pin_origin(Some((-5, 1075)), monitor, (200, 100)), (-200, 980));
+    assert_eq!(pin_origin(None, monitor, (200, 100)), (-1060, 490));
+    assert_eq!(pin_origin(Some((-960, 540)), monitor, (4000, 3000)), (-1920, 0));
+}
+
+#[test]
+fn kept_days_take_only_the_offered_choices() {
+    use super::history::{keep_for, set_keep_days};
+    let day = std::time::Duration::from_secs(24 * 60 * 60);
+    set_keep_days(30);
+    assert_eq!(keep_for(), 30 * day);
+    set_keep_days(5);
+    assert_eq!(keep_for(), 7 * day);
 }

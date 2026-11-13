@@ -1738,6 +1738,19 @@
       }
     },
     {
+      "page": "screenshot",
+      "zh-CN": {
+        "group": "截完之后",
+        "title": "截图历史保留",
+        "description": "复制、保存、贴图过的截图留在浮屿的「截图」页，可以再复制、贴到屏幕上或拖出去；最多 100 张，超过天数的自动删掉。"
+      },
+      "en": {
+        "group": "After capturing",
+        "title": "Keep screenshot history for",
+        "description": "Screenshots you copied, saved or pinned stay on the island's Screenshots page to copy, pin or drag out again; up to 100, older ones are deleted."
+      }
+    },
+    {
       "page": "messages",
       "zh-CN": {
         "group": "新消息提示",

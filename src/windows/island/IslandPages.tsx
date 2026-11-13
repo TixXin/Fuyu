@@ -22,6 +22,7 @@ import { MusicPlayerPanel } from "../../features/media/MusicPlayerPanel";
 import type { useMediaState } from "../../features/media/useMediaState";
 import type { PlayingLyrics } from "../../features/media/lyrics/usePlayingLyrics";
 import { FileShelfPanel } from "../../features/file-shelf/FileShelfPanel";
+import { ScreenshotHistoryPanel } from "../../features/screenshot/ScreenshotHistoryPanel";
 import { CalendarPanel } from "../../features/calendar/CalendarPanel";
 import type { CalendarState } from "../../features/calendar/useCalendar";
 import type { useFileShelf } from "../../features/file-shelf/useFileShelf";
@@ -144,6 +145,7 @@ export function IslandPages({
         <CalendarPanel snapshot={calendar.snapshot} now={calendar.now} onRefresh={calendar.refresh} onOpenSettings={() => openSettingsWindow("calendar")}
           todos={addTodoOn && { scheduled: notebookProps.scheduledTodos, onAdd: addTodoOn }} />
       )}
+      {page === "screenshots" && <ScreenshotHistoryPanel />}
       {page === "shelf" && <FileShelfPanel shelf={fileShelf} isDropTarget={isShelfDropping} revealOnDoubleClick={settings.shelfDoubleClick === "reveal"} />}
       {page === "todo" && (
         <TodoIslandPage

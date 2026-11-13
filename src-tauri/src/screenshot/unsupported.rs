@@ -30,6 +30,10 @@ crate::user_error::unsupported_commands!(
     screenshot_drag,
     screenshot_paste_to_front,
     screenshot_start,
+    screenshot_history,
+    screenshot_history_copy,
+    screenshot_history_pin,
+    screenshot_history_delete,
 );
 
 pub(crate) fn is_enabled() -> bool {
@@ -52,6 +56,10 @@ macro_rules! tauri_commands {
             crate::screenshot::screenshot_configure,
             crate::screenshot::screenshot_shortcut_status,
             crate::screenshot::screenshot_start,
+            crate::screenshot::screenshot_history,
+            crate::screenshot::screenshot_history_copy,
+            crate::screenshot::screenshot_history_pin,
+            crate::screenshot::screenshot_history_delete,
             crate::screenshot::screenshot_session,
             crate::screenshot::screenshot_frame,
             crate::screenshot::screenshot_targets,

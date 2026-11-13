@@ -21,6 +21,9 @@ export type SettingsScreenshotText = {
   cardSeconds: string;
   cardSecondsHint: string;
   cardSecondsOption: (seconds: number) => string;
+  historyDays: string;
+  historyDaysHint: string;
+  historyDaysOption: (days: number) => string;
 };
 
 export const zhCN: SettingsScreenshotText = {
@@ -62,6 +65,9 @@ export const zhCN: SettingsScreenshotText = {
   cardSeconds: "岛上的截图卡片",
   cardSecondsHint: "复制或保存后，浮屿顶部显示缩略图：可以拖到别的应用、放进文件中转、发给 Agent。鼠标停在上面时不会收起。",
   cardSecondsOption: (seconds) => (seconds === 0 ? "不显示" : `显示 ${seconds} 秒`),
+  historyDays: "截图历史保留",
+  historyDaysHint: "复制、保存、贴图过的截图留在浮屿的「截图」页，可以再复制、贴到屏幕上或拖出去；最多 100 张，超过天数的自动删掉。",
+  historyDaysOption: (days) => `${days} 天`,
 };
 
 export const en: SettingsScreenshotText = {
@@ -103,4 +109,7 @@ export const en: SettingsScreenshotText = {
   cardSeconds: "Screenshot card on the island",
   cardSecondsHint: "After a copy or save, the island shows a thumbnail you can drag into another app, put on the file shelf or send to an agent. It stays while the pointer is on it.",
   cardSecondsOption: (seconds) => (seconds === 0 ? "Don't show" : `Show for ${seconds} s`),
+  historyDays: "Keep screenshot history for",
+  historyDaysHint: "Screenshots you copied, saved or pinned stay on the island's Screenshots page to copy, pin or drag out again; up to 100, older ones are deleted.",
+  historyDaysOption: (days) => (days === 1 ? "1 day" : `${days} days`),
 };
