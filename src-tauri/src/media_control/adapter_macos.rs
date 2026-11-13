@@ -46,12 +46,10 @@ static SNAPSHOT: Mutex<Option<Snapshot>> = Mutex::new(None);
 static BROKEN: AtomicBool = AtomicBool::new(false);
 
 pub(super) fn locate(app: &AppHandle) -> Option<Paths> {
-    let bundled = app.path().resource_dir().ok().and_then(|resources| {
-        let framework = resources.parent()?.join("Frameworks").join(FRAMEWORK);
-        Some(Paths { script: resources.join(SCRIPT), framework })
-    });
-    let built = Path::new(env!("CARGO_MANIFEST_DIR")).join("target").join("mediaremote-adapter");
-    let dev = cfg!(debug_assertions).then(|| Paths { script: built.join(SCRIPT), framework: built.join(FRAMEWORK) });
+    let in_framework = |framework: PathBuf| Paths { script: framework.join("Resources").join(SCRIPT), framework };
+    let bundled = app.path().resource_dir().ok().and_then(|resources| Some(in_framework(resources.parent()?.join("Frameworks").join(FRAMEWORK))));
+    let built = Path::new(env!("CARGO_MANIFEST_DIR")).join("target").join("mediaremote-adapter").join(FRAMEWORK);
+    let dev = cfg!(debug_assertions).then(|| in_framework(built));
     bundled.into_iter().chain(dev).find(|paths| paths.script.is_file() && paths.framework.is_dir())
 }
 

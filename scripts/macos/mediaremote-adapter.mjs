@@ -67,7 +67,8 @@ function stamp() {
 
 export function isBuilt(dir = outputDir) {
   const stampFile = path.join(dir, "VERSION");
-  return existsSync(stampFile) && readFileSync(stampFile, "utf8").trim() === stamp() && existsSync(path.join(dir, `${NAME}.framework`, NAME));
+  const framework = path.join(dir, `${NAME}.framework`);
+  return existsSync(stampFile) && readFileSync(stampFile, "utf8").trim() === stamp() && existsSync(path.join(framework, NAME)) && existsSync(path.join(framework, "Resources", "mediaremote-adapter.pl"));
 }
 
 async function fetchSource(work) {
@@ -118,8 +119,10 @@ export async function buildAdapter({ force = false } = {}) {
   mkdirSync(work, { recursive: true });
   const source = await fetchSource(work);
   buildFramework(source, outputDir);
-  cpSync(path.join(source, "bin", "mediaremote-adapter.pl"), path.join(outputDir, "mediaremote-adapter.pl"));
-  cpSync(path.join(source, "LICENSE"), path.join(outputDir, "LICENSE"));
+  const resources = path.join(outputDir, `${NAME}.framework`, "Versions", "A", "Resources");
+  cpSync(path.join(source, "bin", "mediaremote-adapter.pl"), path.join(resources, "mediaremote-adapter.pl"));
+  cpSync(path.join(source, "LICENSE"), path.join(resources, "LICENSE"));
+  run("codesign", ["--force", "--sign", "-", path.join(outputDir, `${NAME}.framework`)]);
   writeFileSync(path.join(outputDir, "VERSION"), `${stamp()}\n`);
   rmSync(work, { recursive: true, force: true });
   return outputDir;

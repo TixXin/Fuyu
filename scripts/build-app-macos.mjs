@@ -26,9 +26,11 @@ export function installApp(source, applications = path.join(homedir(), "Applicat
   return app;
 }
 
+export const BUNDLE_CONFIG = "src-tauri/tauri.bundle-macos.conf.json";
+
 export function buildApp(releaseDir) {
   const bundle = path.join(releaseDir, "bundle", "macos", APP_NAME);
-  const status = spawnSync("pnpm tauri build --bundles app", {
+  const status = spawnSync(`node scripts/macos/mediaremote-adapter.mjs && pnpm tauri build --bundles app --config ${BUNDLE_CONFIG}`, {
     shell: true,
     stdio: "inherit",
     env: { ...process.env, CARGO_TARGET_DIR: targetDir(mainCheckout()), ...backgroundBuildEnv() },
