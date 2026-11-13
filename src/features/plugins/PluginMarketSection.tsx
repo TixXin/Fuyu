@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { RefreshCcw, Search, ShieldCheck, Store } from "lucide-react";
+import { RefreshCcw, Search, ShieldCheck, Sparkles, Store } from "lucide-react";
 import { SelectControl } from "../../components/controls/SelectControl";
 import { useLocale, useTranslation } from "../../i18n";
 import { MARKET_CATEGORIES, type MarketCategory, type MarketPlugin, type PluginsSnapshot } from "./api";
@@ -8,13 +8,17 @@ import { useMarketFavorites } from "./marketFavorites";
 import { sortMarketPlugins, useMarketLikes, type MarketSort } from "./marketLikes";
 import { groupMarketPlugins } from "./marketGroups";
 import { MarketPluginItem } from "./MarketPluginItem";
+import { PluginIcon } from "./PluginIcon";
 import { MarketInstallRequest } from "./market-link/MarketInstallRequest";
 import { usePluginMarket } from "./usePluginMarket";
 import "./PluginToolbar.css";
 import "./PluginMarketSection.css";
+import "./PluginMarketShowcase.css";
 import { isMacOS } from "../../lib/platform";
 
 const FAVORITES = "favorites";
+const SPOTLIGHT_MIN = 3;
+const SHELF_SIZE = 7;
 
 const time = (at: number) => new Date(at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false });
 
@@ -70,13 +74,18 @@ export function PluginMarketSection({
         onManage={onManage}
       />
     ) : null;
-  const renderGroup = (title: string, plugins: MarketPlugin[]) =>
+  const renderGroup = (title: string, plugins: MarketPlugin[], kind = "plain") =>
     plugins.length > 0 ? (
-      <div className="plugin-market__group" role="group" aria-label={title}>
+      <div className={`plugin-market__group plugin-market__group--${kind}`} role="group" aria-label={title}>
         <h3 className="plugin-market__group-title">{title}</h3>
         <div className="plugin-market__grid">{plugins.map(renderItem)}</div>
       </div>
     ) : null;
+  const spotlight = !query && category === "" && hasLikes && groups.installable.length >= SPOTLIGHT_MIN
+    ? [...groups.installable].sort((a, b) => (likes[b.id]?.count ?? 0) - (likes[a.id]?.count ?? 0))[0]
+    : null;
+  const installable = spotlight ? groups.installable.filter((plugin) => plugin.id !== spotlight.id) : groups.installable;
+  const shelf = market?.plugins.slice(0, SHELF_SIZE) ?? [];
   const showFilters = hasPlugins || (market === null && !loadError);
 
   return (
@@ -93,6 +102,11 @@ export function PluginMarketSection({
             <span className="plugin-market__summary-line">{text.summary(totals.installed.length + totals.updates.length, totals.updates.length, favorites.length)}</span>
           ) : null}
         </div>
+        {shelf.length > 1 ? (
+          <span className="plugin-market__shelf" aria-hidden="true">
+            {shelf.map((plugin) => <PluginIcon key={plugin.id} id={plugin.id} name={plugin.name[locale]} categories={plugin.categories} />)}
+          </span>
+        ) : null}
         <button className="plugin-card__button plugin-market__refresh" type="button" aria-label={text.refresh} disabled={loading} onClick={() => void refresh()}>
           <RefreshCcw className={loading ? "plugin-market__spin" : undefined} size={14} strokeWidth={2.2} />
         </button>
@@ -144,6 +158,7 @@ export function PluginMarketSection({
                   onClick={() => setCategory(name)}
                 >
                   <span>{name === "" ? text.allCategories : name === FAVORITES ? text.favorites(favorites.length) : text.category[name]}</span>
+                  {name !== FAVORITES && market ? <span className="plugin-chip__count">{name === "" ? market.plugins.length : market.plugins.filter((plugin) => plugin.categories.includes(name)).length}</span> : null}
                 </button>
               ))}
             </div>
@@ -170,8 +185,17 @@ export function PluginMarketSection({
           </>
         ) : null}
         {hasPlugins && shown.length === 0 ? <p className="settings-section__hint">{category === FAVORITES && !query ? text.noFavorites : text.noMatches}</p> : null}
-        {renderGroup(text.groupUpdates(groups.updates.length), groups.updates)}
-        {renderGroup(text.groupInstallable(groups.installable.length), groups.installable)}
+        {renderGroup(text.groupUpdates(groups.updates.length), groups.updates, "updates")}
+        {spotlight ? (
+          <div className="plugin-market__spotlight" role="group" aria-label={text.spotlight}>
+            <span className="plugin-market__spotlight-label">
+              <Sparkles size={13} strokeWidth={2.2} aria-hidden="true" />
+              {text.spotlight}
+            </span>
+            {renderItem(spotlight)}
+          </div>
+        ) : null}
+        {renderGroup(text.groupInstallable(groups.installable.length), installable)}
         {renderGroup(text.groupInstalled(groups.installed.length), groups.installed)}
       </div>
       <p className="plugin-market__footnote">

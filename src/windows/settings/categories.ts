@@ -34,6 +34,9 @@ export const SETTINGS_CATEGORIES = [
   "agentConnect",
   "agentRemote",
   "plugins",
+  "pluginsPages",
+  "pluginsUpdates",
+  "pluginsDev",
   "market",
   "about",
 ] as const;
@@ -53,7 +56,7 @@ export const SETTINGS_GROUPS: readonly { label: SettingsGroup | null; categories
 
 export const DEFAULT_SETTINGS_CATEGORY: SettingsCategory = "overview";
 
-export type SettingsEntry = "behavior" | "appearance" | "shortcuts" | "music" | "clipboard" | "screenshot" | "agents";
+export type SettingsEntry = "behavior" | "appearance" | "shortcuts" | "music" | "clipboard" | "screenshot" | "plugins" | "agents";
 
 export const SETTINGS_TABS: Readonly<Record<SettingsEntry, readonly TabbedCategory[]>> = {
   behavior: ["behavior", "behaviorTuck", "behaviorAlerts"],
@@ -62,10 +65,11 @@ export const SETTINGS_TABS: Readonly<Record<SettingsEntry, readonly TabbedCatego
   music: ["music", "musicLyrics", "musicLyricsStyle"],
   clipboard: ["clipboard", "clipboardHistory", "clipboardSnippets", "clipboardData"],
   screenshot: ["screenshot", "screenshotRecord"],
+  plugins: ["plugins", "pluginsPages", "pluginsUpdates", "pluginsDev"],
   agents: ["agents", "agentSessions", "agentAlerts", "sounds", "agentApprovals", "agentConnect", "agentRemote"],
 };
 
-export type TabbedCategory = "music" | "musicLyrics" | "musicLyricsStyle" | "clipboard" | "clipboardHistory" | "clipboardSnippets" | "clipboardData" | "screenshot" | "screenshotRecord" | "behavior" | "behaviorTuck" | "behaviorAlerts" | "shortcuts" | "shortcutsIsland" | "theme" | "appearance" | "themeMarket" | "agents" | "agentSessions" | "agentAlerts" | "sounds" | "agentApprovals" | "agentConnect" | "agentRemote";
+export type TabbedCategory = "plugins" | "pluginsPages" | "pluginsUpdates" | "pluginsDev" | "music" | "musicLyrics" | "musicLyricsStyle" | "clipboard" | "clipboardHistory" | "clipboardSnippets" | "clipboardData" | "screenshot" | "screenshotRecord" | "behavior" | "behaviorTuck" | "behaviorAlerts" | "shortcuts" | "shortcutsIsland" | "theme" | "appearance" | "themeMarket" | "agents" | "agentSessions" | "agentAlerts" | "sounds" | "agentApprovals" | "agentConnect" | "agentRemote";
 
 export function entryOf(category: SettingsCategory): SettingsEntry | null {
   return (Object.keys(SETTINGS_TABS) as SettingsEntry[]).find((entry) => (SETTINGS_TABS[entry] as readonly SettingsCategory[]).includes(category)) ?? null;

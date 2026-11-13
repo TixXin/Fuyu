@@ -8,13 +8,13 @@ export type SettingsCategoriesText = {
   expand: (group: string) => string;
   collapse: (group: string) => string;
   keywords: Record<
-    | "overview" | "general" | "musicLyrics" | "musicLyricsStyle" | "clipboardHistory" | "clipboardSnippets" | "clipboardData" | "screenshotRecord" | "behavior" | "behaviorTuck" | "behaviorAlerts" | "shortcutsIsland" | "appearance" | "theme" | "themeMarket" | "shortcuts" | "todos" | "calendar" | "music" | "translation" | "clipboard"
+    | "overview" | "general" | "pluginsPages" | "pluginsUpdates" | "pluginsDev" | "musicLyrics" | "musicLyricsStyle" | "clipboardHistory" | "clipboardSnippets" | "clipboardData" | "screenshotRecord" | "behavior" | "behaviorTuck" | "behaviorAlerts" | "shortcutsIsland" | "appearance" | "theme" | "themeMarket" | "shortcuts" | "todos" | "calendar" | "music" | "translation" | "clipboard"
     | "shelf" | "screenshot" | "messages" | "agents" | "agentSessions" | "agentRemote" | "agentAlerts" | "sounds" | "agentApprovals" | "agentConnect"
     | "plugins" | "market" | "about",
     string
   >;
-  entries: { behavior: string; appearance: string; shortcuts: string; music: string; clipboard: string; screenshot: string; agents: string };
-  tabs: Record<"music" | "clipboard" | "screenshot" | "musicLyrics" | "musicLyricsStyle" | "clipboardHistory" | "clipboardSnippets" | "clipboardData" | "screenshotRecord" | "behavior" | "behaviorTuck" | "behaviorAlerts" | "shortcuts" | "shortcutsIsland" | "theme" | "appearance" | "themeMarket" | "agents" | "agentSessions" | "agentAlerts" | "sounds" | "agentApprovals" | "agentConnect" | "agentRemote", string>;
+  entries: { behavior: string; appearance: string; shortcuts: string; music: string; clipboard: string; screenshot: string; plugins: string; agents: string };
+  tabs: Record<"plugins" | "pluginsPages" | "pluginsUpdates" | "pluginsDev" | "music" | "clipboard" | "screenshot" | "musicLyrics" | "musicLyricsStyle" | "clipboardHistory" | "clipboardSnippets" | "clipboardData" | "screenshotRecord" | "behavior" | "behaviorTuck" | "behaviorAlerts" | "shortcuts" | "shortcutsIsland" | "theme" | "appearance" | "themeMarket" | "agents" | "agentSessions" | "agentAlerts" | "sounds" | "agentApprovals" | "agentConnect" | "agentRemote", string>;
   groups: {
     basics: string;
     features: string;
@@ -27,6 +27,9 @@ export type SettingsCategoriesText = {
   behaviorTuck: string;
   behaviorAlerts: string;
   shortcutsIsland: string;
+  pluginsPages: string;
+  pluginsUpdates: string;
+  pluginsDev: string;
   musicLyrics: string;
   musicLyricsStyle: string;
   clipboardHistory: string;
@@ -79,6 +82,9 @@ export const zhCN: SettingsCategoriesText = {
     clipboardSnippets: "常用语 短语 提示词 AI",
     clipboardData: "导入 导出 备份 迁移",
     screenshotRecord: "录屏 录制 GIF MP4 帧率 画质 声音 麦克风",
+    pluginsPages: "岛上页面 顺序 隐藏 插件快捷键 命令",
+    pluginsUpdates: "自动更新 检查更新 受信任 发布者 信任",
+    pluginsDev: "开发者 开发模式 从文件夹加载 调试 JSON-RPC",
     shortcutsIsland: "岛上 按键 翻页 页面切换 审批 Esc 拖动",
     appearance: "尺寸 大小 缩放 面板高度 显示内容 收起条 项目 排序 预览",
     theme: "颜色 背景 透明 不透明度 液态玻璃 字体 像素 圆角 预设 样式 导入 导出 亮点",
@@ -103,8 +109,12 @@ export const zhCN: SettingsCategoriesText = {
     market: "扩展 插件 下载 安装 搜索",
     about: "版本 更新 检查更新 测试版 通道 重置 退出 反馈 Star",
   },
-  entries: { behavior: "行为", appearance: "外观", shortcuts: "快捷键", music: "音乐", clipboard: "剪贴板", screenshot: "截图", agents: "AI Agent" },
+  entries: { behavior: "行为", appearance: "外观", shortcuts: "快捷键", music: "音乐", clipboard: "剪贴板", screenshot: "截图", plugins: "插件", agents: "AI Agent" },
   tabs: {
+    plugins: "已安装",
+    pluginsPages: "页面与快捷键",
+    pluginsUpdates: "更新与信任",
+    pluginsDev: "开发者",
     music: "岛上显示",
     musicLyrics: "歌词来源",
     musicLyricsStyle: "歌词样式",
@@ -142,6 +152,9 @@ export const zhCN: SettingsCategoriesText = {
   behaviorTuck: "贴边隐藏",
   behaviorAlerts: "系统提示",
   shortcutsIsland: "岛上按键",
+  pluginsPages: "插件页面与快捷键",
+  pluginsUpdates: "插件更新与信任",
+  pluginsDev: "插件开发者",
   musicLyrics: "歌词来源",
   musicLyricsStyle: "歌词样式",
   clipboardHistory: "剪贴板记录",
@@ -194,6 +207,9 @@ export const en: SettingsCategoriesText = {
     clipboardSnippets: "snippets phrases prompts ai",
     clipboardData: "import export backup move",
     screenshotRecord: "screen recording record gif mp4 frame rate quality sound microphone",
+    pluginsPages: "island pages order hide plugin shortcuts commands",
+    pluginsUpdates: "automatic updates check trusted publishers trust",
+    pluginsDev: "developer dev mode load from folder debug json-rpc",
     shortcutsIsland: "island keys page switch approval esc drag",
     appearance: "size scale panel height display collapsed bar items order preview",
     theme: "colour color background opacity transparency glass font pixel corner preset style import export pulse",
@@ -218,8 +234,12 @@ export const en: SettingsCategoriesText = {
     market: "extensions plugins download install browse",
     about: "version updates check beta channel reset quit feedback star",
   },
-  entries: { behavior: "Behavior", appearance: "Appearance", shortcuts: "Shortcuts", music: "Music", clipboard: "Clipboard", screenshot: "Screenshots", agents: "AI Agent" },
+  entries: { behavior: "Behavior", appearance: "Appearance", shortcuts: "Shortcuts", music: "Music", clipboard: "Clipboard", screenshot: "Screenshots", plugins: "Plugins", agents: "AI Agent" },
   tabs: {
+    plugins: "Installed",
+    pluginsPages: "Pages and shortcuts",
+    pluginsUpdates: "Updates and trust",
+    pluginsDev: "Developer",
     music: "On the island",
     musicLyrics: "Lyrics sources",
     musicLyricsStyle: "Lyrics style",
@@ -257,6 +277,9 @@ export const en: SettingsCategoriesText = {
   behaviorTuck: "Tucking",
   behaviorAlerts: "System alerts",
   shortcutsIsland: "Island keys",
+  pluginsPages: "Plugin pages and shortcuts",
+  pluginsUpdates: "Plugin updates and trust",
+  pluginsDev: "Plugin developer",
   musicLyrics: "Lyrics sources",
   musicLyricsStyle: "Lyrics style",
   clipboardHistory: "Clipboard records",

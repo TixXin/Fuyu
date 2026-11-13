@@ -25,6 +25,10 @@ export type SettingsPluginsText = {
     filter: Record<"all" | "running" | "updates" | "attention", string>;
     filterLabel: string;
     noMatches: string;
+    dockTitle: (count: number) => string;
+    dockRunning: (running: number) => string;
+    dockAttention: (running: number, attention: number) => string;
+    dockOpen: (name: string) => string;
   };
   enable: string;
   by: (author: string) => string;
@@ -143,6 +147,7 @@ export type SettingsPluginsText = {
     summary: (installed: number, updates: number, favorites: number) => string;
     noMatches: string;
     allCategories: string;
+    spotlight: string;
     category: Record<"productivity" | "todos" | "developer" | "media" | "messages" | "information" | "utilities" | "sounds", string>;
     official: string;
     publisher: (name: string) => string;
@@ -318,6 +323,10 @@ export const zhCN: SettingsPluginsText = {
     filter: { all: "全部", running: "运行中", updates: "可更新", attention: "需处理" },
     filterLabel: "按状态筛选",
     noMatches: "没有符合条件的插件。",
+    dockTitle: (count) => `装了 ${count} 个插件`,
+    dockRunning: (running) => (running > 0 ? `${running} 个正在运行，一切正常` : "现在没有插件在运行"),
+    dockAttention: (running, attention) => `${running} 个正在运行，${attention} 个需要你看一下`,
+    dockOpen: (name) => `打开 ${name} 的设置`,
   },
   enable: "启用",
   by: (author: string) => `作者：${author}`,
@@ -477,6 +486,7 @@ export const zhCN: SettingsPluginsText = {
       [`已装 ${installed} 个`, updates > 0 ? `${updates} 个可更新` : "", favorites > 0 ? `收藏 ${favorites} 个` : ""].filter(Boolean).join(" · "),
     noMatches: "没有符合条件的插件。",
     allCategories: "全部",
+    spotlight: "大家都在装",
     category: {
       productivity: "效率",
       todos: "待办",
@@ -700,6 +710,10 @@ export const en: SettingsPluginsText = {
     filter: { all: "All", running: "Running", updates: "Updates", attention: "Needs attention" },
     filterLabel: "Filter by state",
     noMatches: "No plugins match.",
+    dockTitle: (count) => (count === 1 ? "1 plugin installed" : `${count} plugins installed`),
+    dockRunning: (running) => (running > 0 ? `${running} running, all is well` : "No plugin is running right now"),
+    dockAttention: (running, attention) => `${running} running, ${attention} need a look`,
+    dockOpen: (name) => `Open ${name}'s settings`,
   },
   enable: "Enabled",
   by: (author: string) => `by ${author}`,
@@ -859,6 +873,7 @@ export const en: SettingsPluginsText = {
       [`${installed} installed`, updates > 0 ? `${updates} to update` : "", favorites > 0 ? `${favorites} starred` : ""].filter(Boolean).join(" · "),
     noMatches: "No plugins match.",
     allCategories: "All",
+    spotlight: "Most liked",
     category: {
       productivity: "Productivity",
       todos: "Todos",
