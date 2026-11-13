@@ -1,3 +1,4 @@
+pub(crate) mod fullscreen;
 pub(crate) mod icon;
 pub(crate) mod input;
 pub(crate) mod island_panel;
