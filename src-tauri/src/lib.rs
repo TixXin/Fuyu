@@ -38,7 +38,6 @@ mod ssh_tunnel;
 mod system;
 mod system_levels;
 mod todos;
-#[cfg_attr(not(windows), path = "translation/unsupported.rs")]
 mod translation;
 mod tray;
 #[cfg(target_os = "macos")]

@@ -4,6 +4,8 @@ mod store;
 #[cfg(test)]
 mod tests;
 mod thumbnail;
+#[cfg(target_os = "macos")]
+mod transfer_macos;
 
 use serde::{Deserialize, Serialize};
 use std::{
@@ -112,7 +114,6 @@ impl FileShelfService {
             .ok_or_else(|| "This item is no longer on the shelf.".to_string())
     }
 
-    #[cfg(windows)]
     fn existing_paths(&self, ids: &[String]) -> Result<Vec<String>, String> {
         let candidates: Vec<String> = self
             .items()
@@ -259,11 +260,10 @@ pub async fn clear_file_shelf() -> Result<FileShelfSnapshot, String> {
     service()?.update(|_| Vec::new())
 }
 
-#[cfg(not(windows))]
+#[cfg(target_os = "macos")]
 #[tauri::command]
 pub async fn copy_file_shelf_items(ids: Vec<String>) -> Result<(), String> {
-    let _ = ids;
-    Err(crate::user_error::unsupported().to_string())
+    transfer_macos::copy(&service()?.existing_paths(&ids)?)
 }
 
 #[cfg(windows)]
@@ -290,15 +290,21 @@ pub async fn reveal_file_shelf_item(id: String) -> Result<(), String> {
         .map_err(|error| format!("Failed to show {path} in its folder: {error}"))
 }
 
-#[cfg(not(windows))]
+#[cfg(target_os = "macos")]
 #[tauri::command]
 pub async fn start_file_shelf_drag(
     window: WebviewWindow,
     ids: Vec<String>,
     remove_after: bool,
 ) -> Result<FileShelfSnapshot, String> {
-    let _ = (window, ids, remove_after);
-    Err(crate::user_error::unsupported().to_string())
+    let paths = service()?.existing_paths(&ids)?;
+    let dropped = transfer_macos::drag(window, paths).await?;
+    service()?.update(|mut items| {
+        if remove_after && dropped {
+            items.retain(|item| !ids.contains(&item.id));
+        }
+        items
+    })
 }
 
 #[cfg(windows)]

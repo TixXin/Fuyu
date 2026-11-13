@@ -1,3 +1,4 @@
+pub(crate) mod accessibility;
 pub(crate) mod apps;
 pub(crate) mod audio;
 pub(crate) mod audio_devices;
@@ -5,6 +6,7 @@ pub(crate) mod bluetooth;
 pub(crate) mod camera;
 pub(crate) mod desktop;
 pub(crate) mod fullscreen;
+pub(crate) mod hotkeys;
 pub(crate) mod icon;
 pub(crate) mod input;
 pub(crate) mod island_panel;

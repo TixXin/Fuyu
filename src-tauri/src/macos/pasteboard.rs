@@ -1,5 +1,6 @@
-use objc2_app_kit::NSPasteboard;
-use objc2_foundation::NSString;
+use objc2::runtime::ProtocolObject;
+use objc2_app_kit::{NSPasteboard, NSPasteboardWriting};
+use objc2_foundation::{NSArray, NSString, NSURL};
 
 const PRIVATE_TYPES: [&str; 3] = [
     "org.nspasteboard.ConcealedType",
@@ -20,6 +21,21 @@ pub(crate) fn types() -> Vec<String> {
 
 pub(crate) fn is_private_type(kind: &str) -> bool {
     PRIVATE_TYPES.contains(&kind)
+}
+
+pub(crate) fn empty() -> Result<(), String> {
+    NSPasteboard::generalPasteboard().clearContents();
+    Ok(())
+}
+
+pub(crate) fn write_files(paths: &[String]) -> bool {
+    let writers: Vec<_> = paths
+        .iter()
+        .map(|path| ProtocolObject::<dyn NSPasteboardWriting>::from_retained(NSURL::fileURLWithPath(&NSString::from_str(path))))
+        .collect();
+    let board = NSPasteboard::generalPasteboard();
+    board.clearContents();
+    board.writeObjects(&NSArray::from_retained_slice(&writers))
 }
 
 pub(crate) fn transform(text: &str, transform: &str) -> Option<String> {

@@ -11,6 +11,7 @@ import { useWindowLight } from "../../features/appearance/useWindowLight";
 import { openSettingsWindow } from "../settings/api";
 import { useAutoTranslate } from "../../features/translation/useAutoTranslate";
 import { useTranslationRequest } from "../../features/translation/useTranslationRequest";
+import { shortcutLabel } from "../../features/clipboard/shortcut";
 import "./TranslationWindow.css";
 
 export function TranslationWindow() {
@@ -173,7 +174,7 @@ export function TranslationWindow() {
         <header className="translation-window__header" onPointerDown={startWindowDrag}>
           <span className="translation-window__mark" aria-hidden="true"><Languages size={18} /></span>
           <div className="translation-window__heading"><h1>{t.translator.title}</h1></div>
-          <kbd className="translation-window__shortcut">{settings.shortcut}</kbd>
+          <kbd className="translation-window__shortcut">{shortcutLabel(settings.shortcut)}</kbd>
           <div className="translation-window__actions">
             <button type="button" aria-label={t.translator.settings} onClick={openSettings}><Settings2 size={18} /></button>
             <button type="button" aria-label={t.translator.closeLabel} onClick={close}><X size={18} /></button>
