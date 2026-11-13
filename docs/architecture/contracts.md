@@ -68,6 +68,7 @@
 | `island-position-changed` | `island/mod.rs` | 广播（通过主窗口对象调用 `emit`） |
 | `island-position-cleared`（无载荷：岛屿跟随鼠标或前台窗口换了显示器，拖动保存的位置作废，主窗口清掉 `fuyu-position`） | `island/follow.rs` | 主窗口 |
 | `island-top-attachment-changed`（载荷为 `bool`：岛屿是否贴住所在显示器顶边；C54.1 起由 `island-edge-changed` 派生，保留给旧插件和旧代码） | `island/edge.rs`（常量在 `island/top_edge.rs`） | 广播（通过主窗口对象调用 `emit`） |
+| `island-notch-changed`（载荷为 `{ width, height } \| null`，单位是逻辑点：岛在贴合刘海时是刘海的宽高，不贴合时是 `null`；命令 `get_island_notch` 读当前值；只在 macOS 上会非空；G1.11，2026-11-13） | `island/notch.rs` | 广播（通过主窗口对象调用 `emit`） |
 | `island-edge-changed`（载荷为 `"top" \| "left" \| "right" \| null`：岛屿吸在所在显示器的哪条边，`null` 是没吸住；命令 `get_island_edge` 读当前值；C54.1，2026-11-13） | `island/edge.rs` | 广播（通过主窗口对象调用 `emit`） |
 | `island-reveal-requested`（无载荷：托盘「显示」时岛屿正贴边隐藏，主窗口把它滑出来；issue #37，2026-11-11） | `island/mod.rs` | 广播（通过主窗口对象调用 `emit`） |
 | `island-hover-changed`（载荷为 `bool`：光标是否在岛屿形状内，供悬停展开使用） | `island/passthrough.rs` | 广播（通过主窗口对象调用 `emit`） |
@@ -109,6 +110,7 @@
 - 平台能力（G1.2，2026-11-13 起）：Tauri 命令 `get_platform_support`（无参数，返回 `{ os: "windows" | "macos", unsupported: string[] }`；取值见 `src/lib/api.ts` 的 `PlatformFeature`：clipboard、screenshot、translation、music、qq、wechat、agentConnect、agentRemote；Windows 上为空）。前端据此隐藏设置页和岛的页面，不再调用这些功能的命令。
 - 剪贴板快捷键在 macOS 上（G1.6，2026-11-13 起）：格式不变，⌘ 仍记作 `Win`（顺序 Ctrl、Alt、Shift、Win），默认值是 `Shift+Win+V`（界面显示 ⇧⌘V），Windows 仍是 `Ctrl+Shift+W`；`winV` 在 Mac 上不起作用。
 - 菜单栏位置（G1.3，2026-11-13 起，只对 macOS 有效）：`fuyu-settings` 新增 `menuBarPlacement`（`over` 压在菜单栏上 / `below` 放在菜单栏下面；缺省和未知值按 `over`）；Tauri 命令 `set_island_layout` 的 `layout` 新增可选的 `underMenuBar`（布尔，缺省 `false`），Windows 上不起作用。
+- 贴合刘海（G1.11，2026-11-13 起，只对 macOS 有效）：`menuBarPlacement` 新增取值 `notch`（压在菜单栏上，所在屏有刘海时贴合刘海），缺省和未知值改按 `notch`，已存的 `over` / `below` 不变；`set_island_layout` 的 `layout` 新增可选的 `fitNotch`（布尔，缺省 `false`）。
 - 开合动画（C49，2026-11-12 起）：`fuyu-settings` 新增 `islandMotion`（`spring` / `smooth` / `fast` / `bouncy` / `none`；缺省和未知值按 `spring`，即之前的动画）。不属于主题，主题文件不带它。
 - 强调色（C33.5，2026-11-10 起）：`fuyu-settings` 和主题文件新增 `accentMode`（`default` / `windows` / `pick`）、`accentColor`；Tauri 命令 `get_windows_accent_color`（读 `HKCU\Software\Microsoft\Windows\DWM` 的 `AccentColor`，返回 `#rrggbb` 或 null；macOS 上读 `NSColor.controlAccentColor`，G1.6，命令名和 `accentMode` 的值 `windows` 不变）。
 - 深色、浅色两套颜色（C33.2–C33.3，2026-11-10 起）：`fuyu-settings` 和主题文件新增 `collapsedDark`、`darkBackgroundColor` / `darkTextColor` / `darkPulseColor`、`lightBackgroundColor` / `lightTextColor` / `lightPulseColor`；`themeMode` 只剩 `dark` / `light` / `system`。旧设置和旧主题文件（没有这六个字段）把 `islandBackgroundColor`、`taskTextColor`、`pulseColor` 按亮度放进其中一套（`themeSetsFromSingleColors`）；这三个字段保留，是正在用那套的副本。

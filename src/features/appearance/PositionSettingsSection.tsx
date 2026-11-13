@@ -21,7 +21,7 @@ export function PositionSettingsSection({
   const t = useTranslation();
   const [done, flash] = useFlash<true>();
   const monitorOptions = (["primary", "cursor", "foreground"] as const).map((value) => ({ value, label: t.settings.position.monitorOptions[value] }));
-  const menuBarOptions = (["over", "below"] as const).map((value) => ({ value, label: t.settings.position.menuBarOptions[value] }));
+  const menuBarOptions = (["notch", "over", "below"] as const).map((value) => ({ value, label: t.settings.position.menuBarOptions[value] }));
 
   return (
     <SettingsGroup title={t.settings.position.title} footer={`${t.settings.position.monitorHint} ${isMacOS ? t.settings.position.moveHintMac : t.settings.position.moveHint}`}>
