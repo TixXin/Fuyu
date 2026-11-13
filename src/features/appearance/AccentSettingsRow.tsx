@@ -2,6 +2,7 @@ import { SettingsChoice } from "../../components/settings/SettingsChoice";
 import { SettingsColor } from "../../components/settings/SettingsColor";
 import { SettingsRow } from "../../components/settings/SettingsRow";
 import { useTranslation } from "../../i18n";
+import { isMacOS } from "../../lib/platform";
 import type { AccentMode, IslandSettings } from "./types";
 
 export function AccentSettingsRow({ settings, onSettingsChange }: {
@@ -13,12 +14,12 @@ export function AccentSettingsRow({ settings, onSettingsChange }: {
     <>
       <SettingsRow
         title={text.accent}
-        description={text.accentHint}
+        description={isMacOS ? text.accentHintMac : text.accentHint}
         control={
           <SettingsChoice<AccentMode>
             value={settings.accentMode}
             ariaLabel={text.accent}
-            options={(["default", "windows", "pick"] as const).map((mode) => ({ value: mode, label: text.accentModes[mode] }))}
+            options={(["default", "windows", "pick"] as const).map((mode) => ({ value: mode, label: isMacOS && mode === "windows" ? text.accentSystem : text.accentModes[mode] }))}
             onChange={(accentMode) => onSettingsChange({ ...settings, accentMode })}
           />
         }

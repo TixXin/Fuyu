@@ -40,11 +40,11 @@ fn displays() -> Vec<Area> {
     ids.iter().take(count as usize).map(|&id| Area::from_rect(CGDisplayBounds(id))).collect()
 }
 
-fn number(info: &CFDictionary<CFString, CFType>, key: &CFString) -> Option<i64> {
+pub(super) fn number(info: &CFDictionary<CFString, CFType>, key: &CFString) -> Option<i64> {
     info.get(key)?.downcast_ref::<CFNumber>()?.as_i64()
 }
 
-fn bounds(info: &CFDictionary<CFString, CFType>, key: &CFString) -> Option<Area> {
+pub(super) fn bounds(info: &CFDictionary<CFString, CFType>, key: &CFString) -> Option<Area> {
     let value = info.get(key)?;
     let dictionary = value.downcast_ref::<CFDictionary>()?;
     let mut rect = CGRect::default();

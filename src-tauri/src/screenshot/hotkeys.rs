@@ -4,101 +4,24 @@ use std::sync::{
 };
 use std::thread;
 
-use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter};
 use windows::Win32::{
     Foundation::{HWND, LPARAM, LRESULT, WPARAM},
     UI::WindowsAndMessaging::{WM_APP, WM_HOTKEY},
 };
 
-use super::session::{self, Mode};
-use crate::clipboard_history::shortcut::parse_shortcut_binding;
+use super::session;
+use super::shortcuts::{default_shortcuts, plan, Binding, ShortcutAction, ShortcutConfig, ShortcutStatus, MAX_BINDINGS, STATUS_EVENT};
 use crate::win32::{
     self,
     message_window::{self, WindowMessages},
 };
 
 const HOTKEY_BASE: i32 = 0x5300;
-const MAX_BINDINGS: usize = 16;
 const REFRESH_MESSAGE: u32 = WM_APP + 0x61;
 const NUMPAD_MESSAGE: u32 = WM_APP + 0x62;
 const PRINT_MESSAGE: u32 = WM_APP + 0x63;
 const MOD_CONTROL_SHIFT: u32 = 0x0002 | 0x0004;
-pub(super) const STATUS_EVENT: &str = "screenshot-shortcut-status";
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) enum ShortcutAction {
-    Region,
-    Copy,
-    Text,
-    Translate,
-    Long,
-    Fullscreen,
-    Pins,
-}
-
-impl ShortcutAction {
-    fn mode(self) -> Option<Mode> {
-        match self {
-            Self::Region => Some(Mode::Region),
-            Self::Copy => Some(Mode::Copy),
-            Self::Text => Some(Mode::Text),
-            Self::Translate => Some(Mode::Translate),
-            Self::Long => Some(Mode::Long),
-            Self::Fullscreen => Some(Mode::Fullscreen),
-            Self::Pins => None,
-        }
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct ShortcutConfig {
-    pub(crate) action: ShortcutAction,
-    pub(crate) shortcut: String,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct ShortcutStatus {
-    pub(crate) action: ShortcutAction,
-    pub(crate) problem: &'static str,
-}
-
-pub(crate) fn default_shortcuts() -> Vec<ShortcutConfig> {
-    [(ShortcutAction::Region, "Ctrl+Shift+1"), (ShortcutAction::Copy, "Ctrl+Shift+2"), (ShortcutAction::Text, "Ctrl+Shift+3"), (ShortcutAction::Translate, "Ctrl+Shift+4"), (ShortcutAction::Long, "Ctrl+Shift+5"), (ShortcutAction::Fullscreen, "Ctrl+Shift+7")]
-        .into_iter()
-        .map(|(action, shortcut)| ShortcutConfig { action, shortcut: shortcut.to_string() })
-        .collect()
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) struct Binding {
-    pub(crate) action: ShortcutAction,
-    pub(crate) modifiers: u32,
-    pub(crate) key_code: u32,
-}
-
-pub(crate) fn plan(config: &[ShortcutConfig]) -> (Vec<Binding>, Vec<ShortcutStatus>) {
-    let mut bindings: Vec<Binding> = Vec::new();
-    let mut problems = Vec::new();
-    for entry in config.iter().take(MAX_BINDINGS) {
-        if entry.shortcut.trim().is_empty() {
-            continue;
-        }
-        let Some(binding) = parse_shortcut_binding(&entry.shortcut) else {
-            problems.push(ShortcutStatus { action: entry.action, problem: "invalid" });
-            continue;
-        };
-        if bindings.iter().any(|known| known.modifiers == binding.modifiers && known.key_code == binding.key_code) {
-            problems.push(ShortcutStatus { action: entry.action, problem: "duplicate" });
-            continue;
-        }
-        bindings.push(Binding { action: entry.action, modifiers: binding.modifiers, key_code: binding.key_code });
-    }
-    (bindings, problems)
-}
 
 pub(crate) fn numpad_digit(binding: &Binding) -> Option<u32> {
     let digit = binding.key_code.checked_sub(u32::from(b'0')).filter(|digit| *digit <= 9)?;
@@ -240,6 +163,7 @@ impl WindowMessages for ShortcutWindow {
 
 #[cfg(test)]
 mod tests {
+    use super::super::session::Mode;
     use super::*;
 
     fn entry(action: ShortcutAction, shortcut: &str) -> ShortcutConfig {
