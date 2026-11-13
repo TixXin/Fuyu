@@ -1,6 +1,6 @@
 # 灵动岛：顶边贴合与视觉规范
 
-全局方向见 [DESIGN.md](../../DESIGN.md)。
+全局方向见 [README.md](README.md)。
 
 ## 顶边贴合
 

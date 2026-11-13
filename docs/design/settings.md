@@ -1,6 +1,6 @@
 # 设置窗口与插件市场页
 
-全局方向见 [DESIGN.md](../../DESIGN.md)。
+全局方向见 [README.md](README.md)。
 
 ## 设置窗口
 
