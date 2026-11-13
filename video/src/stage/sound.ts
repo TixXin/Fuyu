@@ -1,4 +1,4 @@
-export type SoundName = "click" | "whoosh" | "start" | "approval" | "ack" | "complete";
+export type SoundName = "click" | "whoosh" | "start" | "approval" | "ack" | "complete" | `voice:${string}`;
 
 export type SoundCue = { at: number; name: SoundName };
 

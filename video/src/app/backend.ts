@@ -72,6 +72,9 @@ function handlers(world: World): Record<string, (args: Args) => unknown> {
     request_qq_notification_access: () => "allowed",
     set_wechat_reminders_enabled: () => world.wechat,
     get_qq_mail_state: () => [world.mail],
+    read_qq_mail: (args) => world.mailBodies[String(args.messageId)] ?? { id: args.messageId, content: "", contentType: "text/plain", attachments: [] },
+    mark_qq_mail_read: () => world.mail,
+    refresh_qq_mail: () => world.mail,
     has_translation_secret: () => true,
     read_translation_clipboard: () => null,
     translate_text: (args) => new Promise((resolve) => {

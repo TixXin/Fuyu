@@ -11,12 +11,14 @@ import type { Lang, VideoModule } from "./videos/types";
 const VIDEOS: Record<string, () => Promise<{ default: VideoModule }>> = {
   "001-one-island": () => import("./videos/001-one-island"),
   "002-agents": () => import("./videos/002-agents"),
+  "003-messages": () => import("./videos/003-messages"),
 };
 
 const params = new URLSearchParams(location.search);
 const lang: Lang = params.get("lang") === "en" ? "en" : "zh";
 const id = params.get("v") ?? "001-one-island";
 const video = (await VIDEOS[id]()).default;
+if (video.initial) stage.set(video.initial);
 const director = createDirector();
 video.script(director, lang);
 
@@ -35,13 +37,14 @@ const ready = new Promise<void>((resolve) => {
 
 const control = {
   id: video.id,
-  durationMs: video.durationMs,
+  durationMs: typeof video.durationMs === "function" ? video.durationMs(lang) : video.durationMs,
   ready,
   play: () => {
     startSoundClock();
     director.play();
   },
   sounds: soundCues,
+  bgm: video.bgm ?? null,
   stage,
   island,
 };
@@ -49,7 +52,7 @@ Object.assign(window, { __video: control });
 
 createRoot(document.getElementById("root") as HTMLElement).render(
   <StrictMode>
-    <Stage lang={lang} windows={video.windows(lang, FORMAT)} endCard={video.endCard(lang)} />
+    <Stage lang={lang} windows={video.windows(lang, FORMAT)} endCard={video.endCard(lang)} backdrop={video.backdrop?.(lang, FORMAT)} look={video.look ?? "promo"} />
   </StrictMode>,
 );
 
