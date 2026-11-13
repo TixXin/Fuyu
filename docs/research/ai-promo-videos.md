@@ -146,6 +146,28 @@
 
 确认后建任务，从「0. 试做」开始。
 
+## 第二轮：怎样让宣传片有设计感（2026-11-13）
+
+> 问题：前三条做完后，用户要一条更全面、更新颖、有设计感的宣传片，让先再学一轮视频制作。范围：WebSearch 搜「product launch video motion design principles」「short video hook first 3 seconds」「Linear Raycast launch video breakdown」「B 站 软件宣传片 动效 节奏」，打开了 moonb、Flowjam、dev.to、Contra 和一篇 Substack。相关任务：D35。
+
+先说这一轮资料的成色：搜到的几乎都是卖视频服务的公司写的博客和个人作品说明，数字多是自报的，没有找到可核对的平台数据，也没有找到专门讲 B 站软件宣传片的可靠文章。下面只取几家说法一致、而且和前三条的经验对得上的部分。
+
+### 取到的做法
+
+- **产品要在开头几秒就出现**，不放 Logo 片头和口号。Flowjam 看自己收集的发布视频后的说法是前 10 秒内出现产品（[Flowjam](https://www.flowjam.com/blog/motion-graphics-launch-video-launch-without-live-action-2026)，自报数据）；讲短视频开头的文章说要在 1–3 秒内给出钩子，不要「大家好」和片头动画（[dev.to](https://dev.to/bulkdl/hook-engineering-the-science-of-the-first-3-seconds-in-short-form-video-2026-2jp9)，数字未注明来源）。
+- **开头要在静音下也成立**：钩子不能只靠旁白，画面上要有字（同上，「静音播放占多数」的具体比例未核实）。
+- **真实界面为主，动效是点缀**：Flowjam 的说法是动效「装饰」产品画面而不是替代它。Raycast 的预告片用的是真实界面的局部，打了戏剧化的光（[moonb](https://www.moonb.io/blog/product-launch-video)）。这和我们「界面必须是真的」的做法一致。
+- **克制**：字动是为了强调意思，不是每个词都加效果；一套字体、一个强调色、干净的转场、结尾一个明确的去处。动效过多会显得廉价。（多篇厂商博客的共同说法，属于从业者意见。）
+- **节奏跟产品的性格走**：给 Raycast 做动效的设计师说动效要「即时」、有手感，和软件本身的速度一致，并且每个操作配一个声音（[Contra](https://contra.com/p/llNMeeMX-kinetic-product-motion-for-raycast-making-a-ui-feel-alive)）。
+- **统一的色调和颗粒感**：一篇分析 Linear 移动端发布的文章提到，统一的暗色调加颗粒让画面有「暗房」的气氛，也更容易和界面合在一起（[Substack](https://retroswork.substack.com/p/1-study-linear-mobile-launch)，讲的是照片和网页，不是视频）。
+- **时长**：Flowjam 说它排名靠前的 15 条里有 12 条在 30–90 秒之间（自报）。
+
+### 用到第四条《浮屿的一天》上
+
+- 概念：用「一天」串起所有功能。天色从清晨到夜晚渐变，一个大号的时间数字和一条时间轴告诉观众现在几点；岛屿从第一帧就在屏幕顶上，每个时刻展示一个功能。这样「全面」有了顺序，不是功能清单。
+- 设计：海报式排版（左下大数字、右下一句话）、每个时刻一组天色、一个太阳沿弧线走、全片一层颗粒；字只用两种（数字用 Bahnschrift，中文用雅黑），动效只有数字换位、天色渐变和岛屿自己的动效。
+- 开头第一帧就有岛和标题，旁白第一句是痛点；每句旁白同时是画面上的字，静音也能看。
+- 界面仍然是真的前端，没有重画任何界面。实现见 [video/README.md](/video/README.md)。
 ## 来源
 
 - Remotion：[仓库](https://github.com/remotion-dev/remotion)、[skills](https://github.com/remotion-dev/skills)、[价格](https://www.remotion.dev/docs/license/pricing.md)、[提示词库](https://www.remotion.dev/prompts/launch-video-on-x)
@@ -159,3 +181,4 @@
 - 配音：[CosyVoice](https://github.com/FunAudioLLM/CosyVoice)、[IndexTTS](https://github.com/index-tts/index-tts)
 - AI 标识：[新华网 2025-09-02](https://www.news.cn/digital/20250902/d08b592223954340af8c02ac3d7161e1/c.html)
 - X 视频规格（第三方）：[postfa.st](https://postfa.st/sizes/x/video)
+- 第二轮（2026-11-13）：[moonb：12 条发布视频](https://www.moonb.io/blog/product-launch-video)、[Flowjam：不用实拍的发布视频](https://www.flowjam.com/blog/motion-graphics-launch-video-launch-without-live-action-2026)、[dev.to：前 3 秒的钩子](https://dev.to/bulkdl/hook-engineering-the-science-of-the-first-3-seconds-in-short-form-video-2026-2jp9)、[Contra：Raycast 的动效](https://contra.com/p/llNMeeMX-kinetic-product-motion-for-raycast-making-a-ui-feel-alive)、[Substack：Linear 移动端发布](https://retroswork.substack.com/p/1-study-linear-mobile-launch)

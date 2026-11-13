@@ -1,0 +1,265 @@
+.day {
+  --ink: #101a3a;
+  --ink-soft: rgba(16, 26, 58, 0.62);
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  color: var(--ink);
+  transition: color 1400ms ease;
+}
+
+.day--light {
+  --ink: #ffffff;
+  --ink-soft: rgba(255, 255, 255, 0.7);
+}
+
+.day__sky {
+  position: absolute;
+  inset: 0;
+  transition: opacity 1600ms ease;
+}
+
+.day__sun {
+  position: absolute;
+  width: var(--sun-size);
+  height: var(--sun-size);
+  margin: calc(var(--sun-size) / -2) 0 0 calc(var(--sun-size) / -2);
+  border-radius: 50%;
+  background: var(--sun);
+  box-shadow: 0 0 90px 40px color-mix(in srgb, var(--sun) 55%, transparent), 0 0 260px 120px color-mix(in srgb, var(--sun) 28%, transparent);
+  transition: left 1800ms cubic-bezier(0.6, 0, 0.2, 1), top 1800ms cubic-bezier(0.6, 0, 0.2, 1), background 1600ms ease, box-shadow 1600ms ease;
+}
+
+.day__grain {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.16;
+  mix-blend-mode: soft-light;
+  pointer-events: none;
+}
+
+.day__headline {
+  position: absolute;
+  inset: 250px 0 auto 0;
+  text-align: center;
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 500ms ease, transform 700ms cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+.day--title .day__headline {
+  opacity: 1;
+  transform: none;
+  transition-delay: 250ms;
+}
+
+.day__headline h2 {
+  margin: 0;
+  font-family: "Microsoft YaHei UI", "Microsoft YaHei", sans-serif;
+  font-size: 104px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-indent: 0.1em;
+}
+
+.day__headline p {
+  margin: 18px 0 0;
+  font-size: 30px;
+  font-weight: 600;
+  letter-spacing: 0.3em;
+  text-indent: 0.3em;
+  color: var(--ink-soft);
+}
+
+.day__clock {
+  position: absolute;
+  left: 56px;
+  bottom: 62px;
+  display: grid;
+  gap: 2px;
+  transition: opacity 400ms ease;
+}
+
+.day--title .day__clock,
+.day--title .day__rail {
+  opacity: 0;
+}
+
+.day__label {
+  padding-left: 8px;
+  font-family: "Microsoft YaHei UI", "Microsoft YaHei", sans-serif;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  animation: day-rise 600ms cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+.day__time {
+  display: flex;
+  font-family: Bahnschrift, "Segoe UI Variable Display", "Segoe UI", sans-serif;
+  font-size: 178px;
+  font-weight: 300;
+  font-stretch: 78%;
+  font-variation-settings: "wght" 300, "wdth" 78;
+  line-height: 0.92;
+  letter-spacing: -0.01em;
+}
+
+.day__time b {
+  display: block;
+  font-weight: inherit;
+  animation: day-digit 700ms cubic-bezier(0.2, 0.9, 0.3, 1) both;
+  animation-delay: calc(var(--order) * 55ms);
+}
+
+.day__time .is-colon {
+  transform-origin: center;
+  margin: 0 2px;
+  opacity: 0.55;
+}
+
+@keyframes day-digit {
+  from {
+    opacity: 0;
+    transform: translateY(46%);
+  }
+}
+
+@keyframes day-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .day__time b,
+  .day__label {
+    animation: none;
+  }
+}
+
+.day__rail {
+  position: absolute;
+  left: 64px;
+  right: 64px;
+  bottom: 40px;
+  height: 1px;
+  background: var(--ink-soft);
+  transition: opacity 400ms ease, background 1400ms ease;
+}
+
+.day__rail i {
+  position: absolute;
+  top: -4px;
+  width: 1px;
+  height: 9px;
+  background: var(--ink-soft);
+}
+
+.day__rail .is-major {
+  top: -7px;
+  height: 15px;
+  background: var(--ink);
+}
+
+.day__rail em {
+  position: absolute;
+  top: 18px;
+  left: 0;
+  transform: translateX(-50%);
+  font-family: Bahnschrift, "Segoe UI", sans-serif;
+  font-size: 13px;
+  font-style: normal;
+  letter-spacing: 0.08em;
+  color: var(--ink-soft);
+}
+
+.day__marker {
+  position: absolute;
+  top: -8px;
+  width: 44px;
+  height: 16px;
+  margin-left: -22px;
+  border-radius: 0 0 8px 8px;
+  background: #030303;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.18);
+  transition: left 1800ms cubic-bezier(0.6, 0, 0.2, 1);
+}
+
+.stage-root--ink-light {
+  --caption-ink: #ffffff;
+}
+
+.stage-root--editorial .caption-layer {
+  inset: auto 60px 92px auto;
+  width: 520px;
+  height: auto;
+  display: block;
+  place-items: normal;
+  background: none;
+}
+
+.stage-root--editorial .caption {
+  display: block;
+  margin: 0;
+  text-align: right;
+}
+
+.stage-root--editorial .caption__text {
+  font-family: "Microsoft YaHei UI", "Microsoft YaHei", "Segoe UI", sans-serif;
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1.45;
+  letter-spacing: 0.04em;
+  text-shadow: none;
+  color: var(--caption-ink, #101a3a);
+  transition: color 1400ms ease;
+}
+
+.stage-root--vertical .day__headline {
+  inset: 300px 0 auto 0;
+}
+
+.stage-root--vertical .day__headline h2 {
+  font-size: 84px;
+}
+
+.stage-root--vertical .day__headline p {
+  font-size: 24px;
+}
+
+.stage-root--vertical .day__clock {
+  left: 40px;
+  bottom: 236px;
+}
+
+.stage-root--vertical .day__time {
+  font-size: 128px;
+}
+
+.stage-root--vertical .day__label {
+  font-size: 22px;
+}
+
+.stage-root--vertical .day__rail {
+  left: 44px;
+  right: 44px;
+  bottom: 44px;
+}
+
+.stage-root--vertical.stage-root--editorial .caption-layer {
+  inset: auto 40px 96px 44px;
+  width: auto;
+}
+
+.stage-root--vertical.stage-root--editorial .caption {
+  max-width: none;
+  text-align: left;
+}
+
+.stage-root--vertical.stage-root--editorial .caption__text {
+  font-size: 30px;
+}

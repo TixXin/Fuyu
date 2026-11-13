@@ -16,6 +16,7 @@ export type StageState = {
   camera: Camera;
   title: string;
   scene: string;
+  ink: "dark" | "light";
   caption: { id: number; kicker: string; text: string } | null;
   cursor: { x: number; y: number; ms: number; visible: boolean; pressed: boolean };
   islandVisible: boolean;
@@ -28,6 +29,7 @@ export const stage = createStore<StageState>({
   camera: { scale: 1, x: STAGE_WIDTH / 2, y: 0, ms: 0 },
   title: "",
   scene: "",
+  ink: "light",
   caption: null,
   cursor: { x: STAGE_WIDTH * 0.7, y: SCREEN_HEIGHT * 0.72, ms: 0, visible: false, pressed: false },
   islandVisible: false,

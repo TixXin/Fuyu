@@ -1,0 +1,24 @@
+{
+  "zh": {
+    "l1": "一天里，要盯的东西太多了。让一座小岛，替你盯着。",
+    "l2": "早上八点半，今天的待办，抬头就在。",
+    "l3": "十点有会。日程和月历都在岛上，到点一键加入。",
+    "l4": "中午，QQ、微信、邮件的新消息，岛上直接看。",
+    "l5": "下午，Claude Code 等你确认，点一下就批准。",
+    "l6": "复制过的东西，都留在剪贴板里。",
+    "l7": "看不懂的句子，顺手就翻译。",
+    "l8": "到了晚上，歌词跟着音乐，一句一句地走。",
+    "l9": "浮屿，Windows 上的桌面灵动岛。开源，免费。"
+  },
+  "en": {
+    "l1": "There's too much to keep an eye on in a day. Let one small island watch it for you.",
+    "l2": "Half past eight. Today's to-dos are right where you look.",
+    "l3": "A meeting at ten. Your schedule and calendar live on the island, and you join with one click.",
+    "l4": "At noon, new messages from QQ, WeChat and mail show up right on the island.",
+    "l5": "In the afternoon, Claude Code waits for your OK. One click approves it.",
+    "l6": "Everything you copied stays in the clipboard.",
+    "l7": "And a sentence you can't read gets translated on the spot.",
+    "l8": "At night, the lyrics follow the music, line by line.",
+    "l9": "Fuyu. A dynamic island for the Windows desktop. Free and open source."
+  }
+}
