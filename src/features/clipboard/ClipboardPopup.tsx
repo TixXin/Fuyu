@@ -11,6 +11,7 @@ import { mergedText, popupActions } from "./popupActions";
 import { filterPopupItems, nextPopupFilter, popupFilters, popupTags, type PopupFilter } from "./popupFilters";
 import { popupIndexAfterKey, toggleQueued } from "./popupKeys";
 import { loadPinyin, parsePopupQuery } from "./popupQuery";
+import { isPrimaryKey } from "./shortcut";
 import { usePopupHandlers } from "./usePopupHandlers";
 import "./ClipboardPopup.css";
 import "./ClipboardPopupPanels.css";
@@ -121,7 +122,7 @@ export function ClipboardPopup({ items, snippets, openCount, wide, capture, link
 
   const onKeyDown = (event: KeyboardEvent) => {
     const key = event.key;
-    const ctrl = event.ctrlKey && !event.altKey;
+    const ctrl = isPrimaryKey(event) && !event.altKey;
     if (mode === "look") {
       if (key === "Escape" || key === " ") {
         event.preventDefault();
@@ -266,7 +267,7 @@ export function ClipboardPopup({ items, snippets, openCount, wide, capture, link
                   entry={entry}
                   onHover={() => mode === "list" && setSelected(index)}
                   onPick={(event) => {
-                    if (event.ctrlKey) setQueue(toggleQueued(queue, entry.id));
+                    if (isPrimaryKey(event)) setQueue(toggleQueued(queue, entry.id));
                     else onPaste(entry.id, event.shiftKey);
                   }}
                   onToggleFavorite={() => onToggleFavorite(entry.id)}

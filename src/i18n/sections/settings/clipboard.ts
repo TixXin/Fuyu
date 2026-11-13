@@ -166,7 +166,7 @@ export const zhCN: SettingsClipboardText = {
   aiPrompts: {
     title: "AI 提示词",
     hintTitle: "剪贴板窗口里 Ctrl+I 的改写",
-    hintTitleMac: "剪贴板窗口里 ⌃I 的改写",
+    hintTitleMac: "剪贴板窗口里 ⌘I 的改写",
     hint: "除了总结、润色、改错字、中英互译，再加自己的，比如「改成正式的邮件语气」「提取里面的待办」。用快捷翻译设置的服务、Key 和模型。",
     add: "添加提示词",
     adding: "新提示词",
@@ -264,7 +264,7 @@ export const en: SettingsClipboardText = {
   aiPrompts: {
     title: "AI prompts",
     hintTitle: "Ctrl+I rewrites in the clipboard window",
-    hintTitleMac: "⌃I rewrites in the clipboard window",
+    hintTitleMac: "⌘I rewrites in the clipboard window",
     hint: "Besides summarize, polish, fix grammar and translate, add your own, such as \"make it a formal email\" or \"list the to-dos in it\". Uses the quick translation's service, key and model.",
     add: "Add a prompt",
     adding: "New prompt",

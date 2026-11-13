@@ -1,6 +1,7 @@
 import { CornerDownLeft, Pause } from "lucide-react";
 import { useTranslation } from "../../i18n";
 import type { ClipboardCaptureStatus } from "./api";
+import { PRIMARY_KEY } from "./shortcut";
 
 export type MergeSeparator = "newline" | "space" | "comma";
 const SEPARATORS: readonly MergeSeparator[] = ["newline", "space", "comma"];
@@ -50,7 +51,7 @@ export function ClipboardPopupFooter({ onSnippets, wide, queued, separator, onSe
       <footer className="clipboard-popup__hint clipboard-popup__hint--sequence" role="status">
         <span>{popup.sequenceCount(queued)} · <kbd><Enter /></kbd>{popup.sequenceStart}</span>
         <span>
-          <kbd>Ctrl <Enter /></kbd>{text.merge}
+          <kbd>{PRIMARY_KEY} <Enter /></kbd>{text.merge}
           <button
             type="button"
             tabIndex={-1}
@@ -69,7 +70,7 @@ export function ClipboardPopupFooter({ onSnippets, wide, queued, separator, onSe
       <footer className="clipboard-popup__hint clipboard-popup__hint--toast" role="status">
         <span className="clipboard-popup__toast-text">{text.deleted(deleted)}</span>
         <button type="button" tabIndex={-1} className="clipboard-popup__hint-end clipboard-popup__undo" onClick={onUndo}>
-          <kbd>Ctrl Z</kbd>{text.undo}
+          <kbd>{PRIMARY_KEY} Z</kbd>{text.undo}
         </button>
       </footer>
     );
@@ -83,9 +84,9 @@ export function ClipboardPopupFooter({ onSnippets, wide, queued, separator, onSe
         <>
           <span><kbd><Enter /></kbd>{popup.paste}</span>
           {!onSnippets && wide && <span><kbd>⇧<Enter /></kbd>{popup.plain}</span>}
-          <span><kbd>Ctrl K</kbd>{text.more}</span>
+          <span><kbd>{PRIMARY_KEY} K</kbd>{text.more}</span>
           {!onSnippets && !wide && <span><kbd>{text.spaceKey}</kbd>{text.preview}</span>}
-          {!onSnippets && wide && <span><kbd>Ctrl</kbd>{popup.pickSequence}</span>}
+          {!onSnippets && wide && <span><kbd>{PRIMARY_KEY}</kbd>{popup.pickSequence}</span>}
         </>
       )}
       <button
