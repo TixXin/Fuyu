@@ -82,3 +82,10 @@ test("the clipboard window takes Command as well as Control on macOS only", () =
   assert.equal(isPrimaryKey(key("i", { ctrlKey: true }), true), true);
   assert.equal(isPrimaryKey(key("i"), true), false);
 });
+
+test("recorded shortcuts use the physical key, not the character Option or Shift typed", () => {
+  assert.equal(buildShortcutFromEvent({ ...key("†", { ctrlKey: true, altKey: true }), code: "KeyT" }), "Ctrl+Alt+T");
+  assert.equal(buildShortcutFromEvent({ ...key("!", { ctrlKey: true, shiftKey: true }), code: "Digit1" }), "Ctrl+Shift+1");
+  assert.equal(buildShortcutFromEvent({ ...key("Dead", { altKey: true }), code: "KeyE" }), "Alt+E");
+  assert.equal(buildShortcutFromEvent({ ...key("F5", { ctrlKey: true }), code: "F5" }), "Ctrl+F5");
+});

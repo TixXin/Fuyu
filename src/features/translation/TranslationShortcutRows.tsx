@@ -76,7 +76,7 @@ export function TranslationShortcutRows({ settings, onSettingsChange, takenBy }:
           <button
             className={`shortcut-record-button${recording === target ? " shortcut-record-button--recording" : ""}`}
             type="button"
-            onClick={() => setRecording(target)}
+            onClick={(event) => { event.currentTarget.focus(); setRecording(target); }}
             onKeyDown={record}
             onBlur={() => setRecording((current) => (current === target ? null : current))}
           >
