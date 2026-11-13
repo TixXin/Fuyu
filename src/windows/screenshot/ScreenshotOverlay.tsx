@@ -26,9 +26,11 @@ import { useErrorText, useTranslation } from "../../i18n";
 import { AnnotationLayer } from "./AnnotationLayer";
 import { AnnotationTextInput } from "./AnnotationTextInput";
 import { LongShotBar } from "./LongShotBar";
+import { MeasureLayer } from "./MeasureLayer";
 import { ScreenshotToolbar } from "./ScreenshotToolbar";
 import { useLongShot } from "./useLongShot";
 import { useAnnotations } from "./useAnnotations";
+import { useMeasure } from "./useMeasure";
 import { pictureContext, useScreenshotFrame } from "./useScreenshotFrame";
 import { capturePointer, GRAB, useSelection } from "./useSelection";
 import { useTargets } from "./useTargets";
@@ -68,6 +70,7 @@ export function ScreenshotOverlay() {
 
   const pixel = pointer && bounds ? pixelAt(pointer, bounds) : null;
   const color = pixel && drawn ? colorAt(canvasRef.current, pixel) : null;
+  const measure = useMeasure(canvasRef, drawn, pixel, ready && !leaving && !long.active && !annotations.editing && !dragging && !annotations.drafting);
   const chosen = selection && isSelection(selection) ? selection : null;
   const choosing = chosen === null;
   const layers = choosing && pixel && bounds ? layersAt(targets, pixel, bounds) : [];
@@ -158,6 +161,11 @@ export function ScreenshotOverlay() {
 
   const handlePointerDown = (event: PointerEvent<HTMLElement>) => {
     if (leaving) return;
+    if (measure.active && event.button === 0 && bounds) {
+      capturePointer(event);
+      measure.begin(pixelAt(at(event), bounds));
+      return;
+    }
     if (!annotations.tool && chosen && event.button === 0) {
       const spot = autoMosaicAt(annotations.items, at(event));
       if (spot) {
@@ -185,6 +193,10 @@ export function ScreenshotOverlay() {
   };
 
   const handlePointerUp = () => {
+    if (measure.dragging) {
+      measure.end();
+      return;
+    }
     if (!annotations.finish()) onPointerUp();
   };
 
@@ -204,11 +216,11 @@ export function ScreenshotOverlay() {
   const outline = !selection && !dragging && target ? toCss(target, scale) : null;
   const grabbed = selection && pointer && !dragging ? hitTest(selection, pointer, GRAB * scale) : null;
   const drawingCursor = annotations.tool === "text" ? "text" : "crosshair";
-  const cursor = annotations.tool && grabbed === "inside" ? drawingCursor
+  const cursor = measure.active ? "crosshair" : annotations.tool && grabbed === "inside" ? drawingCursor
     : dragging === "move" || grabbed === "inside" ? "move" : grabbed ? handleCursor(grabbed) : "crosshair";
   const cssPointer = pointer ? { x: pointer.x / scale, y: pointer.y / scale } : null;
   const shown = selection ?? target;
-  const lines = [pixel ? `${pixel.x}, ${pixel.y}` : "", shown ? `${shown.width} × ${shown.height}` : "", t.copyColorHint].filter(Boolean);
+  const lines = [pixel ? `${pixel.x}, ${pixel.y}` : "", shown ? `${shown.width} × ${shown.height}` : "", t.copyColorHint, t.measureHint].filter(Boolean);
 
   return (
     <div
@@ -219,7 +231,7 @@ export function ScreenshotOverlay() {
       onPointerUp={handlePointerUp}
       onPointerLeave={onPointerLeave}
       onWheel={onWheel}
-      onDoubleClick={() => !annotations.tool && grabbed === "inside" && copy()}
+      onDoubleClick={() => !annotations.tool && !measure.active && grabbed === "inside" && copy()}
       onContextMenu={onContextMenu}
     >
       <canvas ref={canvasRef} className="screenshot-overlay__picture" />
@@ -282,6 +294,7 @@ export function ScreenshotOverlay() {
           <div className="screenshot-overlay__guide screenshot-overlay__guide--v" style={{ left: area.x + area.width - 1 }} />
         </>
       )}
+      {measure.active && pixel && <MeasureLayer edges={measure.edges} from={measure.from} to={pixel} scale={scale} />}
       {drawn && pixel && cssPointer && color && dragging !== "move" && !annotations.tool && !leaving && !long.active && (
         <Magnifier picture={canvasRef.current} pixel={pixel} pointer={cssPointer} view={view} color={color} lines={lines} />
       )}

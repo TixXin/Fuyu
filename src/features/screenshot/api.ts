@@ -247,3 +247,33 @@ export function dragScreenshot(path: string) {
 export function pasteScreenshotToFront(path: string) {
   return invoke<void>("screenshot_paste_to_front", { path });
 }
+
+
+export type RecordingArea = { x: number; y: number; width: number; height: number };
+
+export type RecordingSummary = {
+  path: string;
+  width: number;
+  height: number;
+  seconds: number;
+  frames: number;
+  repeats: number;
+  dropped: number;
+  hardware: boolean;
+  systemAudio: boolean;
+  microphone: boolean;
+};
+
+export type RecordingOptions = { fps?: number; systemAudio?: boolean; microphone?: boolean };
+
+export function startRecording(area: RecordingArea, folderName: string, options: RecordingOptions = {}) {
+  return invoke<string>("screen_recording_start", { area, folderName, ...options });
+}
+
+export function pauseRecording(paused: boolean) {
+  return invoke<void>("screen_recording_pause", { paused });
+}
+
+export function stopRecording() {
+  return invoke<RecordingSummary>("screen_recording_stop");
+}

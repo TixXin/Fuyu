@@ -4,7 +4,7 @@ import "./Magnifier.css";
 
 const SPAN = 15;
 const ZOOM_SIZE = 120;
-const BOX: Size = { width: 132, height: 196 };
+const BOX: Size = { width: 132, height: 214 };
 const GAP = 20;
 
 export function Magnifier({
