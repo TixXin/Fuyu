@@ -338,6 +338,8 @@ test("game mode keeps quiet by default and tucks only when asked", () => {
   assert.equal(normalizeSettings({ gameDoNotDisturb: false }).gameDoNotDisturb, false);
   assert.equal(normalizeSettings({ gameAutoTuck: true }).gameAutoTuck, true);
   assert.equal(normalizeSettings({ gameAutoTuck: "yes" }).gameAutoTuck, false);
+  assert.equal(normalizeSettings({ gameDoNotDisturb: "no" }).gameDoNotDisturb, true);
+  assert.equal(normalizeSettings({ gameAutoTuck: "yes" }).gameAutoTuck, false);
 });
 
 test("translation opens in its window unless the island page was chosen", () => {

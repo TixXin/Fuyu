@@ -5,6 +5,7 @@ import {
   DEFAULT_AUTO_TUCK_RETRACT_DELAY_MS, DEFAULT_HOVER_COLLAPSE_DELAY_MS,
   DEFAULT_HOVER_EXPAND_DELAY_MS, DEFAULT_HOVER_SWITCH_DELAY_MS, DEFAULT_ISLAND_CORNER_RADIUS, DEFAULT_MAX_PANEL_HEIGHT, DEFAULT_PANEL_WIDTH, DEFAULT_SHELF_ITEMS, DEFAULT_TASK_TEXT_COLOR,
 } from "./settingsLimits.ts";
+import { isMacOS } from "../../lib/platform.ts";
 import type { IslandSettings } from "./types";
 
 export const DEFAULT_SETTINGS: IslandSettings = {
@@ -113,8 +114,8 @@ export const DEFAULT_SETTINGS: IslandSettings = {
   ...DEFAULT_LYRICS_SETTINGS,
   ...DEFAULT_CALENDAR_SETTINGS,
   mailEnabled: true,
-  gameDoNotDisturb: true,
-  gameAutoTuck: false,
+  gameDoNotDisturb: !isMacOS,
+  gameAutoTuck: isMacOS,
 };
 export const LEGACY_FALLBACKS = {
   collapsedDark: false,
