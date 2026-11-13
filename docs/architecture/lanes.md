@@ -132,7 +132,7 @@ land 从 git 的 pre-push 钩子里跑检查，环境里带着 `GIT_DIR` 等变�
 | 目录 | 谁用 |
 |---|---|
 | `debug` | 用户的 `pnpm tauri dev`。代理不要用，否则互相等锁、互相触发重编译 |
-| `release` | `pnpm build:exe`，桌面快捷方式指向这里 |
+| `release` | `pnpm build:exe`（桌面快捷方式不指向这里，见 AGENTS.md「本机更新与桌面快捷方式」） |
 | `agents` | 代理的 `cargo test` / clippy（`land-check.mjs` 已经设好；在 lane 里手动跑时设 `CARGO_TARGET_DIR=<主工作区>/src-tauri/target/agents`） |
 | `lane-<N>` | lane N 预览的 exe |
 | `lane-build` | 所有 lane 预览共用的编译目录（cargo 的 build-dir），依赖只在第一个预览时编一次 |
