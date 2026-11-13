@@ -29,7 +29,7 @@ export const zhCN: SettingsAppearanceText = {
   classic: "经典",
   liquidGlass: "液态玻璃",
   glassStrength: "玻璃强度",
-  styleTitle: "风格",
+  styleTitle: "质感与形状",
   preview: {
     label: "按当前设置画出的岛屿",
     collapsed: "折叠",
@@ -51,7 +51,7 @@ export const en: SettingsAppearanceText = {
   classic: "Classic",
   liquidGlass: "Liquid glass",
   glassStrength: "Glass strength",
-  styleTitle: "Style",
+  styleTitle: "Look and shape",
   preview: {
     label: "The island with the current settings",
     collapsed: "Collapsed",

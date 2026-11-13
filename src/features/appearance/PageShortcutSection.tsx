@@ -1,5 +1,5 @@
 import { useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
-import { Keyboard } from "lucide-react";
+import { ShortcutKeys } from "../../components/controls/ShortcutKeys";
 import { ShortcutResetButton } from "../../components/controls/ShortcutResetButton";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { useTranslation } from "../../i18n";
@@ -107,8 +107,7 @@ export function PageShortcutSection({
               onKeyDown={handleKeyDown}
               onBlur={() => setRecording((current) => (current === field ? null : current))}
             >
-              <Keyboard size={14} strokeWidth={2.3} />
-              <span>{recording === field ? (field === "digit" ? t.settings.pageShortcuts.pressDigit : t.settings.pageShortcuts.pressKeys) : shortcutLabel(display)}</span>
+              <ShortcutKeys prompt={recording === field ? (field === "digit" ? t.settings.pageShortcuts.pressDigit : t.settings.pageShortcuts.pressKeys) : null} label={shortcutLabel(display)} />
             </button>
           </div>
         </div>

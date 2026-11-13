@@ -32,7 +32,7 @@ export function IslandMotionRow({ value, onChange }: { value: IslandMotion; onCh
 
   return (
     <SettingsRow
-      title={text.motion}
+      title={text.motionCurve}
       description={text.motionHint}
       control={
         <SettingsSelect<IslandMotion>

@@ -34,6 +34,7 @@ export function SettingsSliderRow({
 
   return (
     <SettingsRow
+      className="settings-row--slider"
       title={title}
       description={description}
       indent={indent}
@@ -50,21 +51,21 @@ export function SettingsSliderRow({
               <RotateCcw size={13} strokeWidth={2.2} aria-hidden="true" />
             </button>
           ) : null}
+          <input
+            id={id}
+            className="settings-slider"
+            type="range"
+            min={min}
+            max={max}
+            step={step}
+            value={value}
+            style={{ "--settings-slider-fill": `${fill}%` } as CSSProperties}
+            onChange={(event) => onChange(Number(event.currentTarget.value))}
+          />
           <output className="settings-slider__value" htmlFor={id}>{format(value)}</output>
         </>
       }
-    >
-      <input
-        id={id}
-        className="settings-slider"
-        type="range"
-        min={min}
-        max={max}
-        step={step}
-        value={value}
-        style={{ "--settings-slider-fill": `${fill}%` } as CSSProperties}
-        onChange={(event) => onChange(Number(event.currentTarget.value))}
-      />
-    </SettingsRow>
+    />
+
   );
 }

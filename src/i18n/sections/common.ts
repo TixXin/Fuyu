@@ -8,6 +8,8 @@ export type CommonText = {
   noMessages: string;
   ago: { justNow: string; minutes: (count: number) => string; hours: (count: number) => string; yesterday: (time: string) => string; date: (month: number, day: number) => string };
   more: string;
+  learnMore: string;
+  showLess: string;
 };
 
 export const zhCN: CommonText = {
@@ -20,6 +22,8 @@ export const zhCN: CommonText = {
   noMessages: "暂无消息",
   ago: { justNow: "刚刚", minutes: (count) => `${count} 分钟前`, hours: (count) => `${count} 小时前`, yesterday: (time) => `昨天 ${time}`, date: (month, day) => `${month}月${day}日` },
   more: "更多操作",
+  learnMore: "了解更多",
+  showLess: "收起",
 };
 
 export const en: CommonText = {
@@ -32,4 +36,6 @@ export const en: CommonText = {
   noMessages: "No messages",
   ago: { justNow: "just now", minutes: (count) => `${count} min ago`, hours: (count) => `${count} h ago`, yesterday: (time) => `yesterday ${time}`, date: (month, day) => `${["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][month - 1]} ${day}` },
   more: "More actions",
+  learnMore: "Learn more",
+  showLess: "Show less",
 };

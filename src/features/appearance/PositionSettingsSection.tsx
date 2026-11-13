@@ -1,3 +1,4 @@
+import { SettingsFootnote } from "../../components/settings/SettingsFootnote";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton";
 import { SettingsRow } from "../../components/settings/SettingsRow";
@@ -6,6 +7,7 @@ import { SettingsSliderRow } from "../../components/settings/SettingsSliderRow";
 import { useFlash } from "../../components/settings/useFlash";
 import { useTranslation } from "../../i18n";
 import { isMacOS } from "../../lib/platform";
+import { PositionDiagram } from "./PositionDiagram";
 import { DEFAULT_SETTINGS } from "./settings";
 import type { IslandMonitor, IslandSettings, MenuBarPlacement } from "./types";
 
@@ -24,7 +26,10 @@ export function PositionSettingsSection({
   const menuBarOptions = (["notch", "below"] as const).map((value) => ({ value, label: t.settings.position.menuBarOptions[value] }));
 
   return (
-    <SettingsGroup title={t.settings.position.title} footer={`${t.settings.position.monitorHint} ${isMacOS ? t.settings.position.moveHintMac : t.settings.position.moveHint}`}>
+    <SettingsGroup title={t.settings.position.title} footer={<SettingsFootnote text={`${isMacOS ? t.settings.position.moveHintMac : t.settings.position.moveHint} ${t.settings.position.monitorHint}`} />}>
+      <div className="position-layout">
+        <PositionDiagram monitor={settings.islandMonitor} marginY={settings.marginY} menuBar={isMacOS ? settings.menuBarPlacement : null} />
+        <div className="position-layout__rows">
       <SettingsRow
         title={t.settings.position.monitor}
         control={
@@ -69,6 +74,8 @@ export function PositionSettingsSection({
           </SettingsLinkButton>
         }
       />
+        </div>
+      </div>
     </SettingsGroup>
   );
 }

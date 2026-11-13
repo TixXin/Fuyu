@@ -191,7 +191,9 @@ export function SettingsWindow() {
             onSettingsChange={setSettings}
           />
         )}
-        {category === "behavior" && <BehaviorSettingsPage settings={settings} onSettingsChange={setSettings} onOpenShortcuts={openShortcuts} />}
+        {(category === "behavior" || category === "behaviorTuck" || category === "behaviorAlerts") && (
+          <BehaviorSettingsPage tab={category} settings={settings} onSettingsChange={setSettings} onOpenPageKeys={() => setCategory("shortcutsIsland")} />
+        )}
         {category === "appearance" && <AppearanceSettingsPage settings={settings} onSettingsChange={setSettings} />}
         {category === "theme" && <ThemeSettingsPage settings={settings} presets={presets} onSettingsChange={setSettings} />}
         {category === "themeMarket" && (
@@ -201,7 +203,7 @@ export function SettingsWindow() {
             onSave={(theme, look) => void presets.onImportPreset(JSON.stringify(buildTheme(theme.name[locale], look, new Date())))}
           />
         )}
-        {category === "shortcuts" && <ShortcutsSettingsPage settings={settings} onSettingsChange={setSettings} onOpenPage={changeCategory} />}
+        {(category === "shortcuts" || category === "shortcutsIsland") && <ShortcutsSettingsPage tab={category} settings={settings} onSettingsChange={setSettings} onOpenPage={changeCategory} />}
         {category === "todos" && (
           <TodosSettingsPage
             settings={settings}

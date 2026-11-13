@@ -1,6 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { FolderOpen, RotateCw } from "lucide-react";
-import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsInput } from "../../components/settings/SettingsInput";
 import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton";
 import { SettingsRow } from "../../components/settings/SettingsRow";
@@ -10,15 +9,14 @@ import { getDataHome, restartIsland, revealFolder, setDataHome, type DataHome } 
 import { expandHome, shortenHome, userHomeOf } from "./homePath";
 import "./SettingsBackupSection.css";
 
-type Status = { kind: "idle" } | { kind: "moved"; path: string } | { kind: "error"; message: string };
+type Status = { kind: "moved"; path: string } | { kind: "error"; message: string };
 
-export function DataHomeSection({ onMoved }: { onMoved: (from: string, to: string) => void }) {
+export function DataHomeSection({ onMoved, onNote }: { onMoved: (from: string, to: string) => void; onNote: (note: ReactNode) => void }) {
   const t = useTranslation();
   const errorText = useErrorText();
   const text = t.settings.dataHome;
   const [home, setHome] = useState<DataHome | null>(null);
   const [draft, setDraft] = useState("");
-  const [status, setStatus] = useState<Status>({ kind: "idle" });
 
   useEffect(() => {
     let cancelled = false;
@@ -50,55 +48,46 @@ export function DataHomeSection({ onMoved }: { onMoved: (from: string, to: strin
       .catch((error: unknown) => setStatus({ kind: "error", message: errorText(error) }));
   };
 
-  const footer = (
-    <>
-      <p>{home.source === "env" ? text.fromEnv : text.hint}</p>
-      {status.kind === "moved" && (
-        <p className="settings-backup__status" role="status">
-          <span>{text.moved(status.path)}</span>
-          <button className="settings-backup__link" type="button" onClick={() => void restartIsland()}>
-            <RotateCw size={12} strokeWidth={2.2} aria-hidden="true" />
-            {text.restart}
-          </button>
-        </p>
-      )}
-      {status.kind === "error" && <p className="settings-backup__status settings-backup__status--error" role="alert">{status.message}</p>}
-    </>
+  const setStatus = (status: Status) => onNote(
+    status.kind === "moved" ? (
+      <p className="settings-backup__status" role="status">
+        <span>{text.moved(status.path)}</span>
+        <button className="settings-backup__link" type="button" onClick={() => void restartIsland()}>
+          <RotateCw size={12} strokeWidth={2.2} aria-hidden="true" />
+          {text.restart}
+        </button>
+      </p>
+    ) : status.kind === "error" ? <p className="settings-backup__status settings-backup__status--error" role="alert">{status.message}</p> : null,
   );
 
   return (
-    <SettingsGroup
+    <SettingsRow
       title={text.title}
-      action={
-        <SettingsLinkButton onClick={() => void revealFolder(home.home)}>
-          <FolderOpen size={13} strokeWidth={2.2} aria-hidden="true" />
-          {isMacOS ? text.revealMac : text.reveal}
-        </SettingsLinkButton>
-      }
-      footer={footer}
-    >
-      <SettingsRow
-        title={text.folder}
-        control={
-          locked ? null : (
+      control={
+        <>
+          <SettingsLinkButton onClick={() => void revealFolder(home.home)}>
+            <FolderOpen size={13} strokeWidth={2.2} aria-hidden="true" />
+            {isMacOS ? text.revealMac : text.reveal}
+          </SettingsLinkButton>
+          {locked ? null : (
             <>
               {home.home !== home.defaultHome && <SettingsLinkButton onClick={() => move(null)}>{text.useDefault}</SettingsLinkButton>}
               <SettingsLinkButton onClick={() => move(draft)}>{text.change}</SettingsLinkButton>
             </>
-          )
-        }
-      >
-        <SettingsInput
-          monospace
-          value={draft}
-          readOnly={locked}
-          aria-label={text.folderLabel}
-          onChange={(event) => setDraft(event.currentTarget.value)}
-          onKeyDown={(event) => {
-            if (event.key === "Enter" && !locked) move(draft);
-          }}
-        />
-      </SettingsRow>
-    </SettingsGroup>
+          )}
+        </>
+      }
+    >
+      <SettingsInput
+        monospace
+        value={draft}
+        readOnly={locked}
+        aria-label={text.folderLabel}
+        onChange={(event) => setDraft(event.currentTarget.value)}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" && !locked) move(draft);
+        }}
+      />
+    </SettingsRow>
   );
 }

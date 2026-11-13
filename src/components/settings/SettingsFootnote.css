@@ -1,0 +1,24 @@
+.settings-footnote {
+  margin: 0;
+}
+
+.settings-footnote__toggle {
+  margin-left: 6px;
+  padding: 0 2px;
+  color: var(--color-accent);
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-sm);
+  font: inherit;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.settings-footnote__toggle:hover {
+  text-decoration: underline;
+}
+
+.settings-footnote__toggle:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 1px;
+}

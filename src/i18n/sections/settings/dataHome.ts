@@ -1,5 +1,6 @@
 export type SettingsDataHomeText = {
   title: string;
+  groupTitle: string;
   folder: string;
   folderLabel: string;
   hint: string;
@@ -15,6 +16,7 @@ export type SettingsDataHomeText = {
 
 export const zhCN: SettingsDataHomeText = {
   title: "数据文件夹",
+  groupTitle: "数据",
   folder: "家目录",
   folderLabel: "浮屿数据文件夹的路径",
   hint: "待办、设置、剪贴板历史、插件和每日待办 Markdown 都放在这里。换到一个空文件夹时会把现有数据复制过去；换到已经有浮屿数据的文件夹（比如网盘里同步来的）就直接用它的。旧文件夹不会删除。重启岛屿后生效。同一个文件夹不要在两台电脑上同时用。",
@@ -30,6 +32,7 @@ export const zhCN: SettingsDataHomeText = {
 
 export const en: SettingsDataHomeText = {
   title: "Data folder",
+  groupTitle: "Data",
   folder: "Home folder",
   folderLabel: "Path of Fuyu's data folder",
   hint: "Todos, settings, clipboard history, plugins and the daily todo Markdown live here. Moving to an empty folder copies the current data there; a folder that already has Fuyu data (synced from a cloud drive, say) is used as it is. The old folder is not deleted. Takes effect after a restart. Do not use one folder on two computers at once.",

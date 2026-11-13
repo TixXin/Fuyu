@@ -32,7 +32,8 @@ export function SizeSettingsSection(props: LayoutSectionProps) {
   const change = changeWith(props);
 
   return (
-      <SettingsGroup title={text.sizeTitle}>
+      <>
+      <SettingsGroup title={text.collapsedSizeTitle}>
         <SettingsSliderRow
           title={text.collapsedScale}
           value={settings.collapsedScale}
@@ -45,17 +46,6 @@ export function SizeSettingsSection(props: LayoutSectionProps) {
           onChange={(collapsedScale) => change({ ...settings, collapsedScale }, false)}
         />
         <SettingsSliderRow
-          title={text.expandedScale}
-          value={settings.expandedScale}
-          min={0.75}
-          max={1.4}
-          step={0.01}
-          format={scale}
-          defaultValue={DEFAULT_SETTINGS.expandedScale}
-          resetLabel={text.resetToDefault}
-          onChange={(expandedScale) => change({ ...settings, expandedScale }, true)}
-        />
-        <SettingsSliderRow
           title={text.collapsedWidthExtra}
           description={isMacOS ? text.collapsedWidthHintMac : text.collapsedWidthHint}
           value={settings.collapsedWidthExtra}
@@ -66,6 +56,19 @@ export function SizeSettingsSection(props: LayoutSectionProps) {
           defaultValue={DEFAULT_SETTINGS.collapsedWidthExtra}
           resetLabel={text.resetToDefault}
           onChange={(collapsedWidthExtra) => change({ ...settings, collapsedWidthExtra }, false)}
+        />
+      </SettingsGroup>
+      <SettingsGroup title={text.expandedSizeTitle}>
+        <SettingsSliderRow
+          title={text.expandedScale}
+          value={settings.expandedScale}
+          min={0.75}
+          max={1.4}
+          step={0.01}
+          format={scale}
+          defaultValue={DEFAULT_SETTINGS.expandedScale}
+          resetLabel={text.resetToDefault}
+          onChange={(expandedScale) => change({ ...settings, expandedScale }, true)}
         />
         <SettingsSliderRow
           title={text.panelWidth}
@@ -91,10 +94,11 @@ export function SizeSettingsSection(props: LayoutSectionProps) {
           onChange={(maxPanelHeight) => change({ ...settings, maxPanelHeight }, true)}
         />
       </SettingsGroup>
+      </>
   );
 }
 
-export function CornerSettingsSection(props: LayoutSectionProps) {
+export function CornerSettingsRows(props: LayoutSectionProps) {
   const { settings } = props;
   const text = useTranslation().settings.layout;
   const change = changeWith(props);
@@ -104,7 +108,7 @@ export function CornerSettingsSection(props: LayoutSectionProps) {
   ] as const;
 
   return (
-      <SettingsGroup title={text.cornersTitle}>
+      <>
         <SettingsRow
           title={text.islandCornerShape}
           control={
@@ -138,6 +142,6 @@ export function CornerSettingsSection(props: LayoutSectionProps) {
           resetLabel={text.resetToDefault}
           onChange={(topFilletRadius) => change({ ...settings, topFilletRadius })}
         />
-      </SettingsGroup>
+      </>
   );
 }
