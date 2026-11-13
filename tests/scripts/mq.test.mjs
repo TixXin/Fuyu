@@ -4,6 +4,7 @@ import { mkdtempSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { commitBlock } from "../../scripts/mq/checkCommit.mjs";
 import { parseRefUpdates, pushBlock } from "../../scripts/mq/checkPush.mjs";
 import { land, landRefusal, uncommittedNote } from "../../scripts/mq/land.mjs";
 import { batchAdvice } from "../../scripts/mq/mq.mjs";
@@ -32,6 +33,16 @@ test("nobody pushes main directly, other branches go through, and an emergency l
   assert.equal(pushBlock(parseRefUpdates("refs/heads/lane/3 a refs/heads/land/t/pc-lane-3 b"), {}), null);
   assert.equal(pushBlock(updates, { CLAUDE_CODE_MERGE_QUEUE_EMERGENCY_PUSH: "1" }), null);
   assert.equal(pushBlock(parseRefUpdates("refs/heads/pr-9 a refs/heads/pr-9 b"), {}), null);
+});
+
+test("a commit on main names its files, so it cannot sweep up what another session staged", () => {
+  const plain = { indexFile: ".git/index", branch: "main", inSequence: false, env: {} };
+  assert.match(commitBlock(plain), /git commit -m "…" -- <文件…>/);
+  assert.match(commitBlock({ ...plain, indexFile: "/repo/.git/index.lock" }), /-- <文件…>/, "commit -a takes every tracked change too");
+  assert.equal(commitBlock({ ...plain, indexFile: "/repo/.git/next-index-65194.lock" }), null, "a commit with paths goes through");
+  assert.equal(commitBlock({ ...plain, branch: "feat/x" }), null, "a collaborator's own branch is left alone");
+  assert.equal(commitBlock({ ...plain, inSequence: true }), null, "finishing a merge commits the whole index");
+  assert.equal(commitBlock({ ...plain, env: { FUYU_COMMIT_WHOLE_INDEX: "1" } }), null);
 });
 
 test("land runs from local main or any branch, and leaves uncommitted files to whoever is editing them", () => {

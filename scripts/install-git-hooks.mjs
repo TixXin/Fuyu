@@ -33,7 +33,7 @@ export function installGitHooks(cwd) {
   const action = hooksPathAction(current);
   if (action === "set") {
     git(["config", "--local", "core.hooksPath", HOOKS_PATH], cwd);
-    console.log(`[git-hooks] core.hooksPath → ${HOOKS_PATH}（pre-push、commit-msg 已启用）`);
+    console.log(`[git-hooks] core.hooksPath → ${HOOKS_PATH}（pre-push、pre-commit、commit-msg 已启用）`);
   } else if (action === "foreign") {
     console.warn(`[git-hooks] core.hooksPath 已经是 ${current}，没有改；要用本仓库的钩子运行 git config core.hooksPath ${HOOKS_PATH}`);
   }

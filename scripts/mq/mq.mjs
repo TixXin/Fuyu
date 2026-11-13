@@ -1,5 +1,6 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { checkCommit } from "./checkCommit.mjs";
 import { checkPush } from "./checkPush.mjs";
 import { land, pendingCommits } from "./land.mjs";
 import { INTEGRATION_BRANCH, tryGit } from "./settings.mjs";
@@ -37,6 +38,7 @@ const COMMANDS = {
   sync: () => sync(),
   pending,
   "check-push": () => checkPush(),
+  "check-commit": () => checkCommit(),
 };
 
 export async function main(argv) {
