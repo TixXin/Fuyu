@@ -75,7 +75,7 @@
 
 ### 第三版
 
-- [ ] **录屏**（[C41.11](/docs/tasks/C/C41.11.md)，`Ctrl+Shift+6`）：选区或整屏录制，开始前倒计时，岛上显示录制时长和停止按钮。用 Windows Graphics Capture 取帧、Media Foundation 的硬件编码器出 MP4（[windows-capture](https://github.com/NiiightmareXD/windows-capture) 两样都有，MIT，可以直接用或参考）。要不要 GIF、要不要录系统声音和麦克风，开工前再和用户定。录屏是另一类功能，量比截图大，单独排期。
+- [ ] **录屏**（[C41.11](/docs/tasks/C/C41.11.md)，`Ctrl+Shift+6`）：选区或整屏录制，开始前倒计时，岛上显示录制时长和停止按钮。用 Windows Graphics Capture 取帧、Media Foundation 的硬件编码器出 MP4（[windows-capture](https://github.com/NiiightmareXD/windows-capture) 两样都有，MIT，可以直接用或参考）。2026-11-13 用户定：要能出 GIF，要录系统声音和麦克风。实现方案见调研 [screen-recording.md](/docs/research/screen-recording.md)（不带 FFmpeg，全程 GPU + 硬件编码）。录屏是另一类功能，量比截图大，单独排期。
 
 ## 不做
 
