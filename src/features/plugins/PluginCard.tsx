@@ -9,6 +9,7 @@ import { RuntimeHints } from "./RuntimeHints";
 import { PluginIcon } from "./PluginIcon";
 import { PluginRunStats } from "./PluginRunStats";
 import "./PluginCard.css";
+import { isMacOS } from "../../lib/platform";
 
 const isPermission = (name: string): name is PluginPermission =>
   (PLUGIN_PERMISSIONS as readonly string[]).includes(name);
@@ -21,7 +22,7 @@ function PermissionSummary({ permissions, optional }: { permissions: string[]; o
   const hasSensitive = permissions.some(isSensitivePermission);
   const item = (permission: string, isOptional: boolean) => (
     <li key={permission} className={isSensitivePermission(permission) ? "plugin-card__permission--sensitive" : undefined}>
-      {isPermission(permission) ? t.settings.plugins.permission[permission] : permission}
+      {isPermission(permission) ? (isMacOS && permission === "secrets" ? t.settings.plugins.secretsPermissionMac : t.settings.plugins.permission[permission]) : permission}
       {isOptional ? ` (${t.settings.plugins.optionalPermission})` : ""}
     </li>
   );

@@ -8,6 +8,7 @@ export type QqText = {
   allowLabel: string;
   grant: string;
   settings: string;
+  settingsMac: string;
   retry: string;
   retryLabel: string;
   recent: string;
@@ -37,6 +38,7 @@ export const zhCN: QqText = {
   allowLabel: "允许 QQ 通知访问",
   grant: "授权",
   settings: "打开 Windows 通知设置",
+  settingsMac: "打开辅助功能设置",
   retry: "重试授权",
   retryLabel: "重试 QQ 通知授权",
   recent: "QQ 最近通知",
@@ -66,6 +68,7 @@ export const en: QqText = {
   allowLabel: "Allow access to QQ notifications",
   grant: "Allow",
   settings: "Open Windows notification settings",
+  settingsMac: "Open Accessibility settings",
   retry: "Retry authorization",
   retryLabel: "Retry QQ notification authorization",
   recent: "Recent QQ notifications",

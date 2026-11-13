@@ -139,7 +139,7 @@
 
 .clipboard-popup__section {
   margin: 4px 8px 2px;
-  color: rgba(var(--pop-ink), 0.42);
+  color: rgba(var(--pop-ink), 0.56);
   font-size: 11px;
   font-weight: 600;
 }
@@ -266,6 +266,13 @@
   align-items: center;
   gap: 4px;
   padding-right: 6px;
+}
+
+.clipboard-popup__time {
+  color: rgba(var(--pop-ink), 0.56);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .clipboard-popup__enter {

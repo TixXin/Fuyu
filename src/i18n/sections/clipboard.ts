@@ -40,6 +40,9 @@ export type ClipboardText = {
     noMatch: (query: string) => string;
     noMatchHint: string;
     snippetsLabel: string;
+    dayGroups: Record<"today" | "yesterday" | "earlier", string>;
+    screenshotSource: string;
+    dragOut: string;
     actions: actions.ClipboardActionsText;
     preview: {
       label: string;
@@ -55,6 +58,7 @@ export type ClipboardText = {
     };
   };
   copyAsFile: string;
+  copyAsFileMac: string;
   copyPath: string;
   copy: string;
   copied: string;
@@ -102,11 +106,11 @@ export const zhCN: ClipboardText = {
   popup: {
     title: "剪贴板",
     search: "搜索，拼音首字母也行；/ 筛选",
-    hint: "Enter 粘贴 · Shift+Enter 纯文本 · Ctrl+点击 多选顺序粘贴 · Tab 片段",
+    hint: "Enter 粘贴 · Shift+Enter 纯文本 · Ctrl+点击 多选顺序粘贴 · Tab 常用语",
     empty: "还没有剪贴记录",
     quickPaste: (index) => `按 ${index} 粘贴`,
-    tabs: { history: "历史", snippets: "片段" },
-    noSnippets: "还没有片段，在 设置 → 剪贴板 里添加",
+    tabs: { history: "历史", snippets: "常用语" },
+    noSnippets: "还没有常用语，在 设置 → 剪贴板 里添加",
     snippetHint: "Enter 粘贴 · Tab 切换 · Esc 关闭",
     sequenceHint: (count) => `已选 ${count} 条 · Enter 开始顺序粘贴 · Esc 取消`,
     filters: "筛选剪贴记录",
@@ -119,7 +123,10 @@ export const zhCN: ClipboardText = {
     cancel: "取消",
     noMatch: (query) => `没有匹配「${query}」的记录`,
     noMatchHint: "搜内容、备注、来源程序、拼音首字母，或用 #标签、/app:程序名、/today、/img、/link",
-    snippetsLabel: "常用片段 · 粘贴时填好日期和剪贴板",
+    snippetsLabel: "常用语 · 粘贴时填好日期和剪贴板",
+    dayGroups: { today: "今天", yesterday: "昨天", earlier: "更早" },
+    screenshotSource: "截图",
+    dragOut: "拖出去就是文件",
     actions: actions.zhCN,
     preview: {
       label: "选中这条的完整内容",
@@ -135,6 +142,7 @@ export const zhCN: ClipboardText = {
     },
   },
   copyAsFile: "复制为文件（聊天软件、资源管理器里粘贴成文件）",
+  copyAsFileMac: "复制为文件（聊天软件、访达里粘贴成文件）",
   copyPath: "复制图片路径（贴到 Claude Code 等终端里会当成图片）",
   copy: "复制",
   copied: "已复制",
@@ -200,6 +208,9 @@ export const en: ClipboardText = {
     noMatch: (query) => `Nothing matches “${query}”`,
     noMatchHint: "Search text, notes, the program, or #tags, /app:name, /today, /img, /link",
     snippetsLabel: "Snippets · dates and the clipboard filled in on paste",
+    dayGroups: { today: "Today", yesterday: "Yesterday", earlier: "Earlier" },
+    screenshotSource: "Screenshot",
+    dragOut: "Drag out as a file",
     actions: actions.en,
     preview: {
       label: "The picked entry in full",
@@ -215,6 +226,7 @@ export const en: ClipboardText = {
     },
   },
   copyAsFile: "Copy as a file (chat apps and Explorer paste the file)",
+  copyAsFileMac: "Copy as a file (chat apps and Finder paste the file)",
   copyPath: "Copy the image's path (Claude Code and other terminals take it as an image)",
   copy: "Copy",
   copied: "Copied",

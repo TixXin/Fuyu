@@ -2,6 +2,7 @@ import { useTranslation } from "../../i18n";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
 import type { IslandSettings } from "../appearance/types";
+import { isMacOS } from "../../lib/platform";
 
 export function LevelPopupSettingsSection({
   settings,
@@ -16,7 +17,7 @@ export function LevelPopupSettingsSection({
     <SettingsGroup title={text.title}>
       <SettingsToggleRow
         title={text.popup}
-        description={text.popupHint}
+        description={isMacOS ? text.popupHintMac : text.popupHint}
         checked={settings.levelPopup}
         onChange={(levelPopup) => onSettingsChange({ ...settings, levelPopup })}
       />

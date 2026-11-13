@@ -2,6 +2,7 @@ export type ScreenshotText = {
   toolbar: string;
   copy: string;
   save: string;
+  saveMac: string;
   pin: string;
   saveFolderName: string;
   saved: (path: string) => string;
@@ -22,6 +23,7 @@ export type ScreenshotText = {
     resume: string;
     cancel: string;
     save: string;
+    saveMac: string;
     done: string;
     keys: string;
   };
@@ -34,7 +36,9 @@ export type ScreenshotText = {
   nothingToRedact: string;
   tools: Record<"rect" | "ellipse" | "arrow" | "pen" | "highlighter" | "text" | "mosaic" | "number", string>;
   undo: string;
+  undoMac: string;
   redo: string;
+  redoMac: string;
   sizes: Record<0 | 1 | 2, string>;
   color: (hex: string) => string;
   textPlaceholder: string;
@@ -75,6 +79,7 @@ export const zhCN: ScreenshotText = {
   toolbar: "截图工具栏",
   copy: "复制（Enter）",
   save: "保存（Ctrl+S）",
+  saveMac: "保存（⌘S）",
   pin: "贴到屏幕上（T）",
   saveFolderName: "浮屿截图",
   saved: (path) => `已保存到 ${path}`,
@@ -110,6 +115,7 @@ export const zhCN: ScreenshotText = {
     resume: "继续自动滚动（空格）",
     cancel: "取消（Esc）",
     save: "保存（Ctrl+S）",
+    saveMac: "保存（⌘S）",
     done: "完成并复制（Enter）",
     keys: "空格 开始 / 暂停 · Enter 完成 · Esc 取消",
   },
@@ -128,7 +134,9 @@ export const zhCN: ScreenshotText = {
     number: "序号",
   },
   undo: "撤销（Ctrl+Z）",
+  undoMac: "撤销（⌘Z）",
   redo: "重做（Ctrl+Y）",
+  redoMac: "重做（⇧⌘Z）",
   sizes: { 0: "细", 1: "中", 2: "粗" },
   color: (hex) => `颜色 ${hex}`,
   textPlaceholder: "输入文字",
@@ -169,6 +177,7 @@ export const en: ScreenshotText = {
   toolbar: "Screenshot toolbar",
   copy: "Copy (Enter)",
   save: "Save (Ctrl+S)",
+  saveMac: "Save (⌘S)",
   pin: "Pin to screen (T)",
   saveFolderName: "Fuyu Screenshots",
   saved: (path) => `Saved to ${path}`,
@@ -204,6 +213,7 @@ export const en: ScreenshotText = {
     resume: "Resume auto-scroll (Space)",
     cancel: "Cancel (Esc)",
     save: "Save (Ctrl+S)",
+    saveMac: "Save (⌘S)",
     done: "Done, copy it (Enter)",
     keys: "Space start / pause · Enter done · Esc cancel",
   },
@@ -222,7 +232,9 @@ export const en: ScreenshotText = {
     number: "Number",
   },
   undo: "Undo (Ctrl+Z)",
+  undoMac: "Undo (⌘Z)",
   redo: "Redo (Ctrl+Y)",
+  redoMac: "Redo (⇧⌘Z)",
   sizes: { 0: "Thin", 1: "Medium", 2: "Thick" },
   color: (hex) => `Colour ${hex}`,
   textPlaceholder: "Type text",

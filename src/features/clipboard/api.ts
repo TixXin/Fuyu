@@ -50,6 +50,13 @@ export type ClipboardHistoryImage = {
   thumbnailDataUrl?: string;
 };
 
+export type ClipboardFileImage = {
+  width: number;
+  height: number;
+  byteSize: number;
+  thumbnailDataUrl: string;
+};
+
 export type ClipboardHistoryItem = {
   id: string;
   kind: "text" | "image" | "files";
@@ -63,6 +70,7 @@ export type ClipboardHistoryItem = {
   image?: ClipboardHistoryImage;
   html?: string;
   files?: string[];
+  fileImage?: ClipboardFileImage;
   source?: ClipboardSource;
   tags?: string[];
   ocrText?: string;
@@ -176,6 +184,10 @@ export function revealExportedFile(path: string) {
 
 export function getClipboardImagePreview(id: string) {
   return invoke<string | null>("get_clipboard_image_preview", { id });
+}
+
+export function startClipboardDrag(id: string) {
+  return invoke<void>("start_clipboard_drag", { id });
 }
 
 export function hideClipboardPopup(blurred = false) {

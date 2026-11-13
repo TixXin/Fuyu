@@ -3,6 +3,7 @@ import { KeyRound, Pause, Play, Unplug } from "lucide-react";
 import { useErrorText, useTranslation } from "../../../i18n";
 import type { MailSnapshot } from "./api";
 import "./MailSettings.css";
+import { isMacOS } from "../../../lib/platform";
 
 export function MailAccountList({ mailboxes, hosts, busy, onSetEnabled, onReauthorize, onDisconnect }: {
   mailboxes: MailSnapshot[];
@@ -57,7 +58,7 @@ export function MailAccountList({ mailboxes, hosts, busy, onSetEnabled, onReauth
                 </button>
               )}
             </span>
-            {confirming === email && <small className="mail-settings__confirm" role="alert">{t.mail.confirmDisconnectHint}</small>}
+            {confirming === email && <small className="mail-settings__confirm" role="alert">{isMacOS ? t.mail.confirmDisconnectHintMac : t.mail.confirmDisconnectHint}</small>}
           </li>
         );
       })}

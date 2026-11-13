@@ -6,6 +6,7 @@ import { pageShortcutLabel, type IslandFeatures } from "./features";
 import type { IslandPage } from "./types";
 import { usePageHoverSwitch } from "./usePageHoverSwitch";
 import "./PluginPageButtons.css";
+import { shortcutLabel } from "../../features/clipboard/shortcut";
 
 export function PluginPageButtons({
   views,
@@ -34,7 +35,7 @@ export function PluginPageButtons({
         const Icon = viewIcon(view.icon);
         const label = t.pluginViews.pageLabel(view.title[locale], view.pluginName[locale]);
         const shortcut = pageShortcutLabel(features, id, modifiers);
-        const title = shortcut ? `${label} (${shortcut})` : label;
+        const title = shortcut ? `${label} (${shortcutLabel(shortcut)})` : label;
         return (
           <button
             className={`plugin-page-button${page === id ? " plugin-page-button--active" : ""}`}

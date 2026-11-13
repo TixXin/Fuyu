@@ -16,6 +16,7 @@ import {
   DEFAULT_PAGE_PREVIOUS_SHORTCUT,
 } from "./pageShortcuts.ts";
 import type { IslandSettings } from "./types";
+import { isMacOS } from "../../lib/platform";
 
 type Recording = "digit" | "next" | "previous";
 
@@ -85,7 +86,7 @@ export function PageShortcutSection({
     <SettingsGroup
       title={t.settings.pageShortcuts.title}
       action={action}
-      footer={conflict ? <span className="shortcut-control__error" role="alert">{conflict}</span> : t.settings.pageShortcuts.hint}
+      footer={conflict ? <span className="shortcut-control__error" role="alert">{conflict}</span> : isMacOS ? t.settings.pageShortcuts.hintMac : t.settings.pageShortcuts.hint}
     >
       {rows.map(([field, label, display, value, fallback]) => (
         <div className="shortcut-control" key={field}>

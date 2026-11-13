@@ -8,6 +8,8 @@ import { HEADER_DOT_PAGES, isPageEnabled, pageShortcutLabel, type HeaderDotPage,
 import type { IslandPage } from "./types";
 import { usePageHoverSwitch } from "./usePageHoverSwitch";
 import "./IslandHeader.css";
+import { isMacOS } from "../../lib/platform";
+import { shortcutLabel } from "../../features/clipboard/shortcut";
 
 const PAGE_ICONS: Record<HeaderDotPage, LucideIcon> = {
   todo: ListTodo,
@@ -74,7 +76,7 @@ export function IslandHeader({
   const messageBadgeLabel = t.messages.badge(qqNotificationCount, wechatPending);
   const withShortcut = (label: string, target: IslandPage) => {
     const shortcut = pageShortcutLabel(features, target, pageDigitModifiers);
-    return shortcut ? `${label} (${shortcut})` : label;
+    return shortcut ? `${label} (${shortcutLabel(shortcut)})` : label;
   };
   const pageLabel = (target: HeaderDotPage) => ({
     todo: t.island.todoList,
@@ -91,6 +93,7 @@ export function IslandHeader({
 
   return (
     <header className="island__header">
+      <div className="island__header-start">
       <div className="island__title">
         {features.agents ? (
           <button
@@ -139,6 +142,7 @@ export function IslandHeader({
           );
         })}
         {pluginPageButtons}
+      </div>
       </div>
 
       <button
@@ -211,7 +215,7 @@ export function IslandHeader({
         <button
           className="icon-button"
           type="button"
-          aria-label={minimizesToTray ? t.island.minimizeToTray : t.island.tuckToTop}
+          aria-label={minimizesToTray ? (isMacOS ? t.island.minimizeToMenuBar : t.island.minimizeToTray) : t.island.tuckToTop}
           onClick={(event) => {
             event.stopPropagation();
             onMinimize();

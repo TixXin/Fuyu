@@ -4,6 +4,7 @@ import { useErrorText, useTranslation } from "../../i18n";
 import { hasPlanKey, setPlanKey, type PlanProvider } from "../agent-status/api";
 import { shownUsageProviders, type UsageProvider } from "./usageRing";
 import "./PlanKeyFields.css";
+import { isMacOS } from "../../lib/platform";
 
 type PlanUsageProvider = UsageProvider & { id: PlanProvider };
 
@@ -18,7 +19,7 @@ export function PlanKeyFields({ settings, disabled }: { settings: Record<string,
       <div className="settings-section__header">
         <span>{t.claudeUsage.keys.title}</span>
       </div>
-      <p className="settings-section__hint">{t.claudeUsage.keys.hint}</p>
+      <p className="settings-section__hint">{isMacOS ? t.claudeUsage.keys.hintMac : t.claudeUsage.keys.hint}</p>
       {providers.map((provider) => <PlanKeyField key={provider.id} provider={provider} disabled={disabled} />)}
     </section>
   );

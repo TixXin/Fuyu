@@ -5,6 +5,7 @@ import { longBarPlace, type PixelRect, type Size } from "../../features/screensh
 import { useTranslation } from "../../i18n";
 import type { LongShot } from "./useLongShot";
 import "./LongShotBar.css";
+import { isMacOS } from "../../lib/platform";
 
 const LIMIT = 20_000;
 
@@ -62,7 +63,7 @@ export function LongShotBar({ area, view, long }: { area: PixelRect; view: Size;
         <button type="button" className="long-shot-bar__button" aria-label={t.cancel} title={t.cancel} onClick={() => long.end("cancel")}>
           <X size={16} aria-hidden="true" />
         </button>
-        <button type="button" className="long-shot-bar__button" aria-label={t.save} title={t.save} onClick={() => long.end("save")}>
+        <button type="button" className="long-shot-bar__button" aria-label={isMacOS ? t.saveMac : t.save} title={isMacOS ? t.saveMac : t.save} onClick={() => long.end("save")}>
           <Download size={16} aria-hidden="true" />
         </button>
         <button type="button" className="long-shot-bar__button long-shot-bar__button--primary" aria-label={t.done} title={t.done} onClick={() => long.end("copy")}>

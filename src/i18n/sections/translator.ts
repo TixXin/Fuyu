@@ -5,6 +5,7 @@ export type TranslatorText = {
   settings: string;
   closeLabel: string;
   credentialHint: string;
+  credentialHintMac: string;
   provider: string;
   providers: {
     deepseek: string;
@@ -65,6 +66,7 @@ export type TranslatorText = {
   charCount: (count: number) => string;
   noSecretTitle: (provider: string) => string;
   noSecretBody: string;
+  noSecretBodyMac: string;
   openSettings: string;
   retry: string;
 };
@@ -76,6 +78,7 @@ export const zhCN: TranslatorText = {
   settings: "翻译设置",
   closeLabel: "关闭翻译窗口",
   credentialHint: "密钥只保存在本机 Windows 凭据管理器，每个服务分开保存",
+  credentialHintMac: "密钥只保存在本机的钥匙串里，每个服务分开保存",
   provider: "翻译服务",
   providers: {
     deepseek: "DeepSeek",
@@ -136,6 +139,7 @@ export const zhCN: TranslatorText = {
   charCount: (count) => `${count} 字`,
   noSecretTitle: (provider) => `还没有配置${provider}的密钥`,
   noSecretBody: "密钥保存在 Windows 凭据管理器里，只用来请求翻译。",
+  noSecretBodyMac: "密钥保存在钥匙串里，只用来请求翻译。",
   openSettings: "去设置",
   retry: "重试",
 };
@@ -147,6 +151,7 @@ export const en: TranslatorText = {
   settings: "Translation settings",
   closeLabel: "Close translation window",
   credentialHint: "Keys are stored only in Windows Credential Manager on this PC, one per service",
+  credentialHintMac: "Keys are stored only in this Mac's keychain, one per service",
   provider: "Service",
   providers: {
     deepseek: "DeepSeek",
@@ -207,6 +212,7 @@ export const en: TranslatorText = {
   charCount: (count) => `${count} chars`,
   noSecretTitle: (provider) => `No key for ${provider} yet`,
   noSecretBody: "The key is kept in Windows Credential Manager and only used for translation requests.",
+  noSecretBodyMac: "The key is kept in the keychain and only used for translation requests.",
   openSettings: "Open settings",
   retry: "Retry",
 };

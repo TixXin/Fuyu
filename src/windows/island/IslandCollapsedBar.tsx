@@ -34,6 +34,8 @@ import { useTranslation } from "../../i18n";
 import type { CollapsedSlots, IslandPage } from "./types";
 import { useWindowDragGesture } from "./useWindowDragGesture";
 import { hasNotchDrop, useIslandNotch } from "./notch";
+import { hasNotchAlert, NotchAlertLeading, NotchAlertTrailing } from "./NotchAlert";
+import { NotchMessageLeading, NotchMessageTrailing } from "./NotchMessage";
 import "./IslandCollapsedBar.css";
 
 type IslandCollapsedBarProps = {
@@ -211,7 +213,7 @@ export function IslandCollapsedBar({
             }
           }}
         >
-          <CollapsedMessageContent preview={preview} enabled={!isExpanded && !isTucked}>
+          <CollapsedMessageContent preview={preview} enabled={!isExpanded && !isTucked} bodyOnly={notch !== null}>
             {notice ? notice.content : deviceAlert ? (
               <DeviceAlertPopup alert={deviceAlert} />
             ) : quotaAlert ? (
@@ -300,7 +302,10 @@ export function IslandCollapsedBar({
         )}
     </>
   );
-  const dropped = notch !== null && hasNotchDrop({ preview, notice, deviceAlert, quotaAlert, levelPopup, translationPeek });
+  const alert = { deviceAlert, quotaAlert, levelPopup };
+  const alerted = notch !== null && hasNotchAlert(alert);
+  const dropped = notch !== null && hasNotchDrop({ preview, notice, translationPeek });
+  const messaged = notch !== null && !alerted && !notice && preview !== null;
 
   return (
     <div
@@ -317,9 +322,9 @@ export function IslandCollapsedBar({
       {notch ? (
         <>
           <div className="island__notch-row">
-            <div className="island__notch-wing island__notch-wing--left" {...{ [OPENS_BAR]: "" }}>{left}</div>
+            <div className="island__notch-wing island__notch-wing--left" {...{ [OPENS_BAR]: "" }}>{alerted ? <NotchAlertLeading {...alert} /> : messaged ? <NotchMessageLeading preview={preview} /> : left}</div>
             <span className="island__notch-gap" aria-hidden="true" {...{ [OPENS_BAR]: "" }} />
-            <div className="island__notch-wing island__notch-wing--right" {...{ [OPENS_BAR]: "" }}>{dropped ? right : <>{message}{right}</>}</div>
+            <div className="island__notch-wing island__notch-wing--right" {...{ [OPENS_BAR]: "" }}>{alerted ? <NotchAlertTrailing {...alert} /> : messaged ? <NotchMessageTrailing preview={preview} /> : dropped ? right : <>{message}{right}</>}</div>
           </div>
           {dropped && <div className="island__notch-drop">{message}</div>}
         </>

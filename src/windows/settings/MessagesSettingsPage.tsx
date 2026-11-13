@@ -115,7 +115,7 @@ function QQGroup({ controller, title, hint }: { controller: QQNotificationsContr
             snapshot.status === "permissionRequired" ? (
               <SettingsLinkButton disabled={busy} onClick={() => void requestAccess()}>{t.qq.grant}</SettingsLinkButton>
             ) : (
-              <SettingsLinkButton disabled={busy} onClick={() => void openSettings()}>{t.qq.settings}</SettingsLinkButton>
+              <SettingsLinkButton disabled={busy} onClick={() => void openSettings()}>{isMacOS ? t.qq.settingsMac : t.qq.settings}</SettingsLinkButton>
             )
           }
         />
@@ -134,7 +134,7 @@ function MailGroups({ settings, onSettingsChange }: { settings: IslandSettings; 
 
   return (
     <>
-      <SettingsGroup title={t.settings.categories.mail} footer={settings.mailEnabled ? <Problem error={actionError} hint={t.mail.accountsHint} /> : undefined}>
+      <SettingsGroup title={t.settings.categories.mail} footer={settings.mailEnabled ? <Problem error={actionError} hint={isMacOS ? t.mail.accountsHintMac : t.mail.accountsHint} /> : undefined}>
         <SettingsToggleRow
           title={t.settings.modules.mail}
           description={t.settings.modules.hint}

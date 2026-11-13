@@ -11,6 +11,7 @@ import { deleteTranslationSecret, hasTranslationSecret, saveTranslationSecret } 
 import { DEFAULT_PROVIDER_MODELS, TRANSLATION_PROVIDERS } from "./providers";
 import type { TranslationSettings } from "./storage";
 import "./TranslationSettingsSection.css";
+import { isMacOS } from "../../lib/platform";
 
 export function TranslationSettingsSection({ settings, setSettings }: {
   settings: TranslationSettings;
@@ -56,7 +57,7 @@ export function TranslationSettingsSection({ settings, setSettings }: {
     } catch (failure) { setServiceError(errorText(failure)); }
   };
 
-  const footer = serviceError ? <span className="translation-settings__error" role="alert">{serviceError}</span> : t.translator.credentialHint;
+  const footer = serviceError ? <span className="translation-settings__error" role="alert">{serviceError}</span> : isMacOS ? t.translator.credentialHintMac : t.translator.credentialHint;
 
   return (
     <>

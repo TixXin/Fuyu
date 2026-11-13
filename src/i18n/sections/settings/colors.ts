@@ -7,6 +7,7 @@ export type SettingsColorsText = {
   modeTitle: string;
   mode: string;
   modeHint: string;
+  modeHintMac: string;
   modes: Record<"dark" | "light" | "system", string>;
   editing: string;
   editingHint: string;
@@ -30,6 +31,7 @@ export const zhCN: SettingsColorsText = {
   modeTitle: "浅色和深色",
   mode: "配色",
   modeHint: "深色、浅色各有一套颜色；跟随系统按 Windows 的深色 / 浅色模式在两套之间自动切换。",
+  modeHintMac: "深色、浅色各有一套颜色；跟随系统按 macOS 的深色 / 浅色外观在两套之间自动切换。",
   modes: { dark: "深色", light: "浅色", system: "跟随系统" },
   editing: "调整哪一套",
   editingHint: "下面的颜色改的是这一套，预览也显示这一套。",
@@ -53,6 +55,7 @@ export const en: SettingsColorsText = {
   modeTitle: "Light and dark",
   mode: "Colors",
   modeHint: "Dark and light each have their own colors; System switches between them with Windows' dark or light mode.",
+  modeHintMac: "Dark and light each have their own colors; System switches between them with macOS's dark or light appearance.",
   modes: { dark: "Dark", light: "Light", system: "System" },
   editing: "Adjusting",
   editingHint: "The colors below change this set, and the preview shows it.",

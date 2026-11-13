@@ -29,6 +29,7 @@ export type SettingsAgentText = {
   cardEffectsHint: string;
   cardEffectsOptions: { off: string; sparkle: string; gradient: string };
   hostDisplayHint: string;
+  hostDisplayHintMac: string;
   sessionHours: string;
   sessionHoursOption: (hours: number) => string;
   sessionHoursHint: string;
@@ -147,6 +148,7 @@ export type SettingsAgentText = {
     whenInFront: string;
     whenInFrontHint: string;
     hint: string;
+    hintMac: string;
   };
   filters: {
     title: string;
@@ -212,6 +214,7 @@ export const zhCN: SettingsAgentText = {
   cardEffectsHint: "只在「卡片」和「紧凑」显示方式下生效。粒子流苏：边框按状态颜色发光，进行中和等你处理的会呼吸，左侧飘着一条粒子流苏。渐变带：从右端铺开一层状态颜色的渐变，进行中和等你处理的更亮。",
   cardEffectsOptions: { off: "关", sparkle: "粒子流苏", gradient: "渐变带" },
   hostDisplayHint: "会话在哪个程序里运行，比如 Orca、Windows Terminal、VS Code、Codex。正在运行的 Claude Code 会话会自动识别；岛屿启动前就结束的会话没有来源。",
+  hostDisplayHintMac: "会话在哪个程序里运行，比如 Orca、终端、iTerm、VS Code、Codex。正在运行的 Claude Code 会话会自动识别；岛屿启动前就结束的会话没有来源。",
   sessionHours: "列出多久内的会话",
   sessionHoursOption: (hours) => `最近 ${hours} 小时`,
   sessionHoursHint: "最后一次活动在这段时间内的会话才会列出。",
@@ -330,6 +333,7 @@ export const zhCN: SettingsAgentText = {
     whenInFront: "终端在前台时也在岛上弹出",
     whenInFrontHint: "关闭时，会话所在的终端或编辑器窗口在前台，就直接在终端里审批。",
     hint: "Claude Code 或 Codex 要运行命令、改文件时，岛上弹出卡片，可以允许、拒绝或交回终端（快捷键 Ctrl+Alt+Y / N / T）。卡片显示期间终端里不出审批框；2 分钟没处理、游戏模式勿扰时自动交回终端。需要先点下方的“安装/修复”。Codex 还要在它的 /hooks 里信任新钩子。auto 模式自己批准的操作不会弹出。",
+    hintMac: "Claude Code 或 Codex 要运行命令、改文件时，岛上弹出卡片，可以允许、拒绝或交回终端（快捷键 ⌃⌥Y / N / T）。卡片显示期间终端里不出审批框；2 分钟没处理、游戏模式勿扰时自动交回终端。需要先点下方的“安装/修复”。Codex 还要在它的 /hooks 里信任新钩子。auto 模式自己批准的操作不会弹出。",
   },
   filters: {
     title: "隐藏会话",
@@ -395,6 +399,7 @@ export const en: SettingsAgentText = {
   cardEffectsHint: "Only in the Cards and Compact layouts. Sparkle band: cards glow in their state's colour, breathing while working or waiting on you, with a drifting band of sparks on the left. Gradient: a wash in that colour from the right end, brighter while working or waiting on you.",
   cardEffectsOptions: { off: "Off", sparkle: "Sparkle band", gradient: "Gradient" },
   hostDisplayHint: "The program a session runs in, such as Orca, Windows Terminal, VS Code or Codex. Running Claude Code sessions are recognized automatically; sessions that ended before the island started have no source.",
+  hostDisplayHintMac: "The program a session runs in, such as Orca, Terminal, iTerm, VS Code or Codex. Running Claude Code sessions are recognized automatically; sessions that ended before the island started have no source.",
   sessionHours: "List sessions from the last",
   sessionHoursOption: (hours) => (hours === 1 ? "1 hour" : `${hours} hours`),
   sessionHoursHint: "Only sessions active within this time are listed.",
@@ -513,6 +518,7 @@ export const en: SettingsAgentText = {
     whenInFront: "Also while the terminal is in front",
     whenInFrontHint: "Off, a request from a session whose terminal or editor window is in front is approved in that terminal.",
     hint: "When Claude Code or Codex wants to run a command or change a file, a card on the island lets you allow, deny or hand it back to the terminal (Ctrl+Alt+Y / N / T). The terminal shows no prompt while the card is up; after 2 minutes, or while game mode keeps the island quiet, it goes back to the terminal. Click Install/repair below first, and trust the new hook in Codex's /hooks. Actions auto mode approves by itself don't show up.",
+    hintMac: "When Claude Code or Codex wants to run a command or change a file, a card on the island lets you allow, deny or hand it back to the terminal (⌃⌥Y / N / T). The terminal shows no prompt while the card is up; after 2 minutes, or while game mode keeps the island quiet, it goes back to the terminal. Click Install/repair below first, and trust the new hook in Codex's /hooks. Actions auto mode approves by itself don't show up.",
   },
   filters: {
     title: "Hide sessions",

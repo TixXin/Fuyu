@@ -8,6 +8,7 @@ import { useAutoTranslate } from "./useAutoTranslate";
 import { useTranslationRequest } from "./useTranslationRequest";
 import { useTranslationSettings } from "./useTranslationSettings";
 import "./TranslationPanel.css";
+import { isMacOS } from "../../lib/platform";
 
 export function TranslationPanel({ isOpen, onOpenSettings }: { isOpen: boolean; onOpenSettings: () => void }) {
   const t = useTranslation();
@@ -130,7 +131,7 @@ export function TranslationPanel({ isOpen, onOpenSettings }: { isOpen: boolean; 
           ) : !hasSecret && !output ? (
             <div className="translation-panel__state">
               <strong>{text.noSecretTitle(providerName)}</strong>
-              <span>{text.noSecretBody}</span>
+              <span>{isMacOS ? text.noSecretBodyMac : text.noSecretBody}</span>
               <div className="translation-panel__state-actions">
                 <button type="button" className="translation-panel__ghost" onClick={onOpenSettings}>{text.openSettings}</button>
               </div>

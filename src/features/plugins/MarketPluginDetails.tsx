@@ -3,6 +3,7 @@ import { Markdown } from "../../components/markdown/Markdown";
 import { useLocale, useTranslation } from "../../i18n";
 import { openPluginHomepage, PLUGIN_PERMISSIONS, type MarketPlugin, type PluginPermission } from "./api";
 import { repositoryUrl } from "./marketFilter";
+import { isMacOS } from "../../lib/platform";
 
 const isPermission = (name: string): name is PluginPermission => (PLUGIN_PERMISSIONS as readonly string[]).includes(name);
 const REPORT_URL = "https://github.com/TixXin/fuyu/issues/new";
@@ -15,7 +16,7 @@ export function MarketPluginDetails({ plugin }: { plugin: MarketPlugin }) {
   const report = `${repo ? `${repo}/issues/new` : REPORT_URL}?title=${encodeURIComponent(`[plugin] ${plugin.id} ${plugin.version}`)}`;
   const openLink = (href: string) => void openPluginHomepage(href);
   const names = (list: string[]) =>
-    list.map((name) => (isPermission(name) ? t.settings.plugins.permission[name] : name)).join(locale === "zh-CN" ? "、" : ", ");
+    list.map((name) => (isPermission(name) ? (isMacOS && name === "secrets" ? t.settings.plugins.secretsPermissionMac : t.settings.plugins.permission[name]) : name)).join(locale === "zh-CN" ? "、" : ", ");
 
   return (
     <div className="plugin-market__details">
