@@ -7,7 +7,7 @@
 
   <p><b>One island for your desktop</b></p>
 
-  <p>A desktop island for Windows: tasks, clipboard, messages, translation, music and AI status on one small island at the top of your screen.</p>
+  <p>A desktop island for Windows and macOS: tasks, clipboard, messages, translation, music and AI status on one small island at the top of your screen.</p>
 
   <p>English · <a href="README.md">中文</a></p>
 
@@ -25,7 +25,7 @@
 
   <p>
     <a href="https://github.com/TixXin/fuyu/releases/latest"><img alt="Version" src="https://img.shields.io/github/v/release/TixXin/fuyu?label=version"></a>
-    <img alt="Platform" src="https://img.shields.io/badge/platform-Windows%2010%20%2F%2011-0078D4">
+    <img alt="Platform" src="https://img.shields.io/badge/platform-Windows%2010%20%2F%2011%20%7C%20macOS%2015%2B-0078D4">
     <img alt="Tauri" src="https://img.shields.io/badge/Tauri-2-24C8DB">
     <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-GPL--3.0-3DA639"></a>
     <a href="https://github.com/TixXin/fuyu/stargazers"><img alt="Stars" src="https://img.shields.io/github/stars/TixXin/fuyu?style=flat&label=stars"></a>
@@ -124,11 +124,13 @@ How it was measured, with the numbers: [idle-usage.md](docs/investigations/idle-
 
 ## Getting started
 
-1. Download and install from [Releases](https://github.com/TixXin/fuyu/releases/latest). The installers are not code-signed; if SmartScreen warns, choose "More info → Run anyway".
-2. Move the pointer onto the island at the top of the screen to expand it; the gear button or the tray icon opens Settings.
+1. Download and install from [Releases](https://github.com/TixXin/fuyu/releases/latest):
+   - **Windows**: get the `_x64-setup.exe`. The installers are not code-signed; if SmartScreen warns, choose "More info → Run anyway".
+   - **macOS**: get the `_aarch64.dmg` and drag Fuyu into Applications. The first time, open System Settings > Privacy & Security and click "Open Anyway"; see [macos-install.md](docs/features/macos-install.md) (in Chinese).
+2. Move the pointer onto the island at the top of the screen to expand it; the gear button or the tray icon (the menu bar icon on a Mac) opens Settings. On a Mac the welcome guide walks you through the system permissions Fuyu needs.
 3. Mail, translation and AI agents need a one-time setup in Settings. See [mail](docs/features/mail.md), [AI agents](docs/features/agent-status-hooks.md), [QQ](docs/features/qq-notifications.md) and [WeChat](docs/features/wechat-reminders.md) (in Chinese).
 
-Fuyu runs on Windows 10 and 11 today. A macOS port (macOS 15 or later, Apple silicon) is in progress; [platforms.md](docs/architecture/platforms.md) tracks it feature by feature, and [macos-install.md](docs/features/macos-install.md) explains installing it and allowing it on first launch (both in Chinese).
+Fuyu runs on Windows 10 and 11 and on macOS 15 or later (Apple silicon). A few things differ on the Mac: QQ and WeChat show only unread counts, not message text, and media control and brightness use private system APIs. [platforms.md](docs/architecture/platforms.md) lists every feature on both systems (in Chinese).
 
 ## Plugins
 
@@ -144,7 +146,7 @@ npm create fuyu-plugin@latest
 
 ## Build from source
 
-You need Windows 10/11, Node.js, pnpm, Rust, Visual Studio C++ Build Tools and WebView2 Runtime.
+On Windows you need Windows 10/11, Node.js, pnpm, Rust, Visual Studio C++ Build Tools and WebView2 Runtime; on macOS, macOS 15 or later, the Xcode command line tools (`xcode-select --install`), Node.js, pnpm and Rust.
 
 ```powershell
 git clone https://github.com/TixXin/fuyu.git
