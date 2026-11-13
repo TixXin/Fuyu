@@ -273,10 +273,10 @@ function download({ label, name, nameWidth, tag, tagWidth }) {
 
 function guide({ label, text, textWidth }) {
   const width = textWidth + 18;
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="44" viewBox="0 0 ${width} 44" role="img" aria-label="${label}">
-  <text y="26.4" font-family="${FONT}" font-size="12.5" fill="${LINE}" textLength="${textWidth}" lengthAdjust="spacing">${text}</text>
-  <path d="M0 31.5H${textWidth}" stroke="${LINE}" stroke-opacity=".5" stroke-dasharray="2 2"/>
-  <path d="M${textWidth + 5} 22.5h9m-3.5-3.5 3.5 3.5-3.5 3.5" fill="none" stroke="${LINE}" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="22" viewBox="0 0 ${width} 22" role="img" aria-label="${label}">
+  <text y="14.4" font-family="${FONT}" font-size="12.5" fill="${LINE}" textLength="${textWidth}" lengthAdjust="spacing">${text}</text>
+  <path d="M0 19.5H${textWidth}" stroke="${LINE}" stroke-opacity=".5" stroke-dasharray="2 2"/>
+  <path d="M${textWidth + 5} 10.5h9m-3.5-3.5 3.5 3.5-3.5 3.5" fill="none" stroke="${LINE}" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>
 `;
 }

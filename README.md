@@ -12,8 +12,8 @@
     <a href="https://github.com/TixXin/fuyu/releases/latest"><img src="docs/assets/readme/download-windows.svg" alt="下载 Windows 版（x64）" width="156" height="38"></a>
     &nbsp;
     <a href="https://github.com/TixXin/fuyu/releases"><img src="docs/assets/readme/download-macos.svg" alt="下载 macOS 版（Apple 芯片）" width="156" height="38"></a>
-    &nbsp;
-    <a href="docs/features/macos-install.md"><img src="docs/assets/readme/mac-guide-zh.svg" alt="Mac 安装教程：第一次打开要手动放行，照着做约 3 分钟" width="81" height="38"></a>
+    <br>
+    <a href="docs/features/macos-install.md"><img src="docs/assets/readme/mac-guide-zh.svg" alt="Mac 安装教程：第一次打开要手动放行，照着做约 3 分钟" width="94" height="22"></a>
   </p>
 
   <p>
