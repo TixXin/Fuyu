@@ -11,13 +11,21 @@ import { pluginStatus } from "./status.mjs";
 const API = new URL("../index.mjs", import.meta.url).href;
 export const INCLUDE = import.meta.resolve("@cordisjs/include");
 export const HMR = import.meta.resolve("@cordisjs/hmr");
+const REREAD_AFTER_MS = [50, 400];
 
 async function watchConfig(ctx, id) {
   const include = [...ctx.loader.entries()].find((entry) => entry.id === id)?.subtree;
   if (!include?.filename) throw new Error("the plugin configuration did not load, so it cannot be watched");
   const watcher = ctx.fs.watch(pathToFileURL(include.filename));
-  watcher.on("change", () => include.refresh());
+  let pending = [];
+  const reread = () => {
+    pending.forEach(clearTimeout);
+    pending = REREAD_AFTER_MS.map((ms) => setTimeout(() => include.refresh(), ms));
+  };
+  ctx.effect(() => () => pending.forEach(clearTimeout), "plugin configuration rereads");
+  watcher.on("change", reread);
   await new Promise((resolve) => watcher.on("ready", resolve));
+  await include.refresh();
 }
 
 export async function startHost({ dir, config = "plugins.yml", apiNames = [], watch = false, onLog } = {}) {
