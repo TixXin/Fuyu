@@ -50,7 +50,9 @@ pub(super) fn terminal_handle_for(app_dir: &Path, session_id: &str) -> Option<St
         };
         let modified = entry.metadata().and_then(|metadata| metadata.modified()).unwrap_or(now);
         if now.duration_since(modified).is_ok_and(|age| age > RECORD_MAX_AGE) {
-            let _ = fs::remove_file(&path);
+            if super::may_change_hook_files() {
+                let _ = fs::remove_file(&path);
+            }
             continue;
         }
         let matches = fs::read_to_string(&path)

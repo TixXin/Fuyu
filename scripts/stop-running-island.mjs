@@ -8,9 +8,11 @@ const EXIT_TIMEOUT_MS = 5_000;
 const POLL_INTERVAL_MS = 100;
 const isMac = process.platform === "darwin";
 
-export function sideLane(env = process.env) {
-  const lane = Number(env.FOCUSD_DEV_LANE);
-  return /^\d+$/.test(env.FOCUSD_DEV_LANE ?? "") && lane >= 1 && lane <= 999 ? lane : null;
+export function devLane(env = process.env) {
+  if (env.FUYU_DEV_SHARED_IDENTITY === "1") return null;
+  const text = (env.FOCUSD_DEV_LANE ?? "").trim();
+  const lane = Number(text);
+  return /^\d+$/.test(text) && lane >= 1 && lane <= 999 ? lane : 1;
 }
 
 export function debugBuildPids(processes, debugDir, windows = process.platform === "win32") {
@@ -118,6 +120,6 @@ async function stopEveryIsland() {
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  if (sideLane() === null) await stopEveryIsland();
+  if (devLane() === null) await stopEveryIsland();
   else await stopSideBuild(path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".."));
 }
