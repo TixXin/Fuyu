@@ -7,6 +7,7 @@ import { signingDir } from "../signing-dir.mjs";
 
 export const IDENTITY = "Fuyu Self-Signed Code Signing";
 export const SECRETS = ["MACOS_CERTIFICATE", "MACOS_CERTIFICATE_PASSWORD", "MACOS_SIGNING_IDENTITY"];
+export const ENVIRONMENT = "release";
 const REPO = "TixXin/fuyu";
 const YEARS = 20;
 
@@ -58,8 +59,8 @@ export function uploadSecrets(files, repo = REPO) {
     MACOS_SIGNING_IDENTITY: IDENTITY,
   };
   for (const name of SECRETS) {
-    run("gh", ["secret", "set", name, "--repo", repo], { input: values[name] });
-    console.log(`[self-signed-cert] set ${name} on ${repo}`);
+    run("gh", ["secret", "set", name, "--repo", repo, "--env", ENVIRONMENT], { input: values[name] });
+    console.log(`[self-signed-cert] set ${name} in the ${ENVIRONMENT} environment of ${repo}`);
   }
 }
 
@@ -70,7 +71,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     const { files, created } = createCertificate(dir);
     console.log(`[self-signed-cert] ${created ? "created" : "kept"} ${files.p12} (${IDENTITY})`);
     if (process.argv.includes("--upload")) uploadSecrets(files);
-    else console.log("[self-signed-cert] run again with --upload to put it into the repository secrets used by release-macos.yml");
+    else console.log("[self-signed-cert] run again with --upload to put it into the secrets of the release environment used by release-macos.yml");
   } catch (error) {
     console.error(`[self-signed-cert] ${error.message}`);
     process.exit(1);

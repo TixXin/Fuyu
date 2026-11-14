@@ -133,9 +133,9 @@ pnpm tauri signer generate -w $env:USERPROFILE\.tauri\fly-island.key
 
    脚本会依次：
 
-   - 校验四处版本号一致、`docs/releases/vX.Y.Z.md` 存在且不是草稿、工作区没有未提交改动、`gh` 已登录；
-   - 生成 `src-tauri/tauri.release.conf.json`（公钥 + `createUpdaterArtifacts`，该文件已被 git 忽略）；
-   - `tauri build --config` 出带签名的 NSIS、MSI 安装包与各自 `.sig`。不管在哪个 lane 发布，都编译到主工作区的 `src-tauri/target/publish`（D24，`scripts/build-dirs.mjs`），每次都是增量编译，lane 里不再各留一份几 GB 的产物；两个 lane 同时发布时后来的等前一个（`target/publish/.release.lock`）。`pnpm prune:target` 也清理这个目录；
+   - 校验四处版本号一致、`docs/releases/vX.Y.Z.md` 存在且不是草稿、版本号和发布说明没有未提交改动、当前提交已在 GitHub 上、`gh` 已登录。工作区里别的文件有改动不要紧：安装包不在本机工作区里编（F35）；
+   - 触发 `.github/workflows/release-windows.yml` 和 `release-macos.yml`，在 GitHub 的 runner 上按当前提交编 Windows 的 NSIS、MSI 和 Mac 的 dmg（两边同时跑，构建时不碰任何 Secrets 里的 updater 私钥），本机等它们跑完，下载到主工作区的 `src-tauri/target/publish/release`，再用本机的 updater 私钥签出各自的 `.sig`。设计和密钥的取舍见 [release-ci.md](/docs/architecture/release-ci.md)；
+   - 加 `--local` 时照旧在本机编 Windows 版：生成 `src-tauri/tauri.release.conf.json`（公钥 + `createUpdaterArtifacts`，该文件已被 git 忽略），`tauri build --config` 出带签名的 NSIS、MSI 安装包与各自 `.sig`，这时要求整个工作区没有未提交改动。GitHub Actions 不可用时用它兜底。不管在哪个 lane 发布，都编译到主工作区的 `src-tauri/target/publish`（D24，`scripts/build-dirs.mjs`），每次都是增量编译，lane 里不再各留一份几 GB 的产物；两个 lane 同时发布时后来的等前一个（`target/publish/.release.lock`）。`pnpm prune:target` 也清理这个目录；
    - 生成 `latest.json`；
    - 生成两种安装包的 `SHA256SUMS.txt`；
    - 创建指向当前提交的 Release 草稿，上传安装包、`.sig`、`latest.json` 与校验文件；
@@ -157,20 +157,20 @@ pnpm tauri signer generate -w $env:USERPROFILE\.tauri\fly-island.key
    gh release download beta-channel --repo TixXin/fuyu --pattern latest.json --dir $env:TEMP\beta --clobber
    ```
 
-版本号和发布说明的提交照常 `pnpm mq:land` 到 `main`（D25：只改了四处版本号和 Markdown 时，land 只核对版本号一致并跑任务检查，不跑 `pnpm check`），合入后在主工作区运行 `pnpm release`。发布前先 `pnpm mq:sync` 跟上 `origin/main`，并确认本地 `main` 上没有还没合入的提交（`pnpm mq:pending`）：发出去的要和 `main` 一致。
+版本号和发布说明的提交照常 `pnpm mq:land` 到 `main`（D25：只改了四处版本号和 Markdown 时，land 只核对版本号一致并跑任务检查，不跑 `pnpm check`），合入后在主工作区运行 `pnpm release`；别的会话在工作区里有没提交的改动也不用等它们，也不用开临时 worktree。发布前先 `pnpm mq:sync` 跟上 `origin/main`，并确认本地 `main` 上没有还没合入的提交（`pnpm mq:pending`）：发出去的要和 `main` 一致。
 
 ### Mac 版（G1.13）
 
 `pnpm release` 默认同时出 Mac 版（决定 M11、M12）：
 
-- 检查完版本号后，触发 `.github/workflows/release-macos.yml`，在 GitHub 的 macOS runner 上按当前提交编 Apple 芯片的 `.app` 和 dmg（发布提交必须已经在 GitHub 上）；本机 Windows 构建同时进行。
-- runner 用仓库 Secrets 里的自签名证书签名（`MACOS_CERTIFICATE`、`MACOS_CERTIFICATE_PASSWORD`、`MACOS_SIGNING_IDENTITY`），并确认应用能启动；没有这三项时退回 ad hoc 签名并给出警告（那样用户每次更新后要重新授权）。证书用 `node scripts/macos/self-signed-cert.mjs` 在 `~/.tauri/fuyu/macos/` 生成一次，`--upload` 写进 Secrets。**不要重新生成**：换证书后所有 Mac 用户要重新授权一次。证书和密码文件要备份。
+- 检查完版本号后，触发 `.github/workflows/release-macos.yml`，在 GitHub 的 macOS runner 上按当前提交编 Apple 芯片的 `.app` 和 dmg（发布提交必须已经在 GitHub 上）；Windows 构建同时进行。
+- runner 用 Environment `release` 的 Secrets 里的自签名证书签名（`MACOS_CERTIFICATE`、`MACOS_CERTIFICATE_PASSWORD`、`MACOS_SIGNING_IDENTITY`），并确认应用能启动；没有这三项时退回 ad hoc 签名并给出警告（那样用户每次更新后要重新授权）。证书用 `node scripts/macos/self-signed-cert.mjs` 在 `~/.tauri/fuyu/macos/` 生成一次，`--upload` 写进 Environment `release` 的 Secrets（这个 Environment 只允许 `main` 上的 workflow 读，F35）。**不要重新生成**：换证书后所有 Mac 用户要重新授权一次。证书和密码文件要备份。
 - 本机等 runner 跑完，下载 `Fuyu_<版本>_aarch64.app.tar.gz` 和 dmg，用本机的 updater 私钥签出 `.sig`（私钥不上传到 GitHub），`latest.json` 加 `darwin-aarch64` 和 `darwin-aarch64-app` 两个键，和 Windows 的产物一起上传、核对 SHA-256，`SHA256SUMS.txt` 包含 dmg。
 - Mac 构建失败时什么都不发布；要先只发 Windows 版，加 `--no-mac`（那样 Mac 用户检查更新会看不到 darwin 条目，之后要补发）。`--no-upload` 时不出 Mac 版。
 - 打包时框架靠 `src-tauri/tauri.bundle-macos.conf.json` 加进去，工作流和 `pnpm build:exe` 都带了这个配置。
 - 没有苹果开发者账号的公证，用户第一次打开要手动放行，步骤见 [macos-install.md](macos-install.md)。有了账号（G1.12）后在工作流里加上 Developer ID 证书和公证即可，其余不变。
 
-CI 也可以复用同样的步骤：在仓库 Secrets 里存 `TAURI_UPDATER_PUBKEY`、`TAURI_SIGNING_PRIVATE_KEY`、`TAURI_SIGNING_PRIVATE_KEY_PASSWORD`，按上面的顺序跑 `prepare-release-config` → `tauri build --config` → `make-latest-json` → `gh release`。
+updater 私钥不放进 GitHub Secrets（F35，见 [release-ci.md](/docs/architecture/release-ci.md)）：它泄露就等于能给所有用户推更新。签名始终在持有私钥的维护者电脑上做；`tauri signer sign` 在 Mac 上也能跑，把私钥经密码管理器拷过去、用上面三个环境变量提供，Mac 上也能签（还没实际试过；本机配置里的 DPAPI 密码只在 Windows 上能解开）。
 
 ## 撤回有问题的版本
 

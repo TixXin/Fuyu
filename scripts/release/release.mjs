@@ -11,6 +11,7 @@ import { msiNames, msiVersion } from "./msi-version.mjs";
 import { loadSigningEnvironment } from "./release-signing.mjs";
 import { smokeTest } from "./smoke-test.mjs";
 import { finishMacBuild, macFiles, startMacBuild } from "./mac-build.mjs";
+import { finishWindowsBuild, startWindowsBuild } from "./windows-build.mjs";
 import { EXE_NAME, installExe, takeLock } from "../build-exe.mjs";
 import { mainCheckout, PUBLISH_DIR, targetDir } from "../build-dirs.mjs";
 
@@ -35,6 +36,7 @@ const upload = !args.includes("--no-upload");
 const issueComments = !args.includes("--no-issue-comments");
 const smoke = !args.includes("--no-smoke-test");
 const withMac = upload && !args.includes("--no-mac");
+const local = args.includes("--local");
 
 if (baseFlag >= 0 && (!baseUrl || !URL.canParse(baseUrl) || new URL(baseUrl).protocol !== "https:")) {
   fail("--base-url requires a valid HTTPS URL.");
@@ -96,8 +98,9 @@ if (process.env.TAURI_SIGNING_PRIVATE_KEY_PASSWORD === undefined) {
 }
 
 if (upload) {
-  const dirty = run("git", ["status", "--porcelain"], { capture: true }).stdout;
-  if (dirty.trim()) fail(`Working tree has uncommitted changes:\n${dirty}`);
+  const watched = local ? [] : ["--", ...Object.values(VERSION_FILES), notesFile];
+  const dirty = run("git", ["status", "--porcelain", ...watched], { capture: true }).stdout;
+  if (dirty.trim()) fail(`Working tree has uncommitted changes${local ? "" : " to the version or the notes"}:\n${dirty}`);
   const auth = run("gh", ["auth", "status"], { capture: true, allowFailure: true });
   if (auth.status !== 0) fail("gh is not authenticated. Run `gh auth login` first.");
   const existing = run("gh", ["release", "view", tag, "--repo", REPO], { capture: true, allowFailure: true });
@@ -105,32 +108,49 @@ if (upload) {
 }
 
 let macBuild = null;
-if (withMac) {
+let windowsBuild = null;
+if (withMac || !local) {
   const revision = run("git", ["rev-parse", "HEAD"], { capture: true }).stdout.trim();
   const remote = run("git", ["branch", "-r", "--contains", revision], { capture: true, allowFailure: true }).stdout;
-  if (!remote.includes("origin/")) fail(`${revision} is not on GitHub yet, so the macOS build cannot check it out. Land it first, or pass --no-mac.`);
-  macBuild = startMacBuild(run, { repo: REPO, revision, version });
-  if (macBuild.problem) fail(`${macBuild.problem}\nPass --no-mac to release Windows only.`);
-  console.log("macOS build started on GitHub Actions; the Windows build runs meanwhile.");
+  if (!remote.includes("origin/")) fail(`${revision} is not on GitHub yet, so GitHub Actions cannot build it. Land it first, or pass --local --no-mac.`);
+  if (withMac) {
+    macBuild = startMacBuild(run, { repo: REPO, revision, version });
+    if (macBuild.problem) fail(`${macBuild.problem}\nPass --no-mac to release Windows only.`);
+  }
+  if (!local) {
+    windowsBuild = startWindowsBuild(run, { repo: REPO, revision, version });
+    if (windowsBuild.problem) fail(`${windowsBuild.problem}\nPass --local to build Windows on this machine.`);
+  }
+  console.log(`Started on GitHub Actions: ${[windowsBuild && "Windows", macBuild && "macOS"].filter(Boolean).join(" and ")} build.`);
 }
 
 takeLock(PUBLISH_LOCK);
 process.on("exit", () => rmSync(PUBLISH_LOCK, { force: true }));
-run("node", ["scripts/release/prepare-release-config.mjs"]);
-const configs = ["--config", OVERLAY];
-let wixVersion;
-try {
-  wixVersion = msiVersion(version);
-} catch (error) {
-  fail(error.message);
+if (windowsBuild) {
+  const problem = finishWindowsBuild(run, { repo: REPO, version, since: windowsBuild.since, releaseDir: RELEASE_DIR });
+  if (problem) fail(`${problem}\nNothing was published. Fix it, or pass --local to build Windows on this machine.`);
+  console.log("✓ The Windows build is downloaded and signed for the updater.");
+} else {
+  buildLocally();
 }
-if (wixVersion) {
-  mkdirSync(dirname(MSI_OVERLAY), { recursive: true });
-  writeFileSync(MSI_OVERLAY, `${JSON.stringify({ bundle: { windows: { wix: { version: wixVersion } } } })}\n`);
-  configs.push("--config", MSI_OVERLAY);
-  console.log(`MSI version for ${version}: ${wixVersion}`);
+
+function buildLocally() {
+  run("node", ["scripts/release/prepare-release-config.mjs"]);
+  const configs = ["--config", OVERLAY];
+  let wixVersion;
+  try {
+    wixVersion = msiVersion(version);
+  } catch (error) {
+    fail(error.message);
+  }
+  if (wixVersion) {
+    mkdirSync(dirname(MSI_OVERLAY), { recursive: true });
+    writeFileSync(MSI_OVERLAY, `${JSON.stringify({ bundle: { windows: { wix: { version: wixVersion } } } })}\n`);
+    configs.push("--config", MSI_OVERLAY);
+    console.log(`MSI version for ${version}: ${wixVersion}`);
+  }
+  run("pnpm", ["tauri", "build", "--ci", ...configs, "--bundles", "nsis,msi"], { env: { CARGO_TARGET_DIR: PUBLISH_TARGET } });
 }
-run("pnpm", ["tauri", "build", "--ci", ...configs, "--bundles", "nsis,msi"], { env: { CARGO_TARGET_DIR: PUBLISH_TARGET } });
 
 if (macBuild) {
   rmSync(MAC_DIR, { recursive: true, force: true });
