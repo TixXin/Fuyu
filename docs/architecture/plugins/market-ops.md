@@ -41,6 +41,16 @@
 - 被撤销的版本不能启用，也不能从市场安装；插件卡片显示原因。手动放进插件目录的同 id 同版本也会被拦截，开发模式加载的插件除外。
 - 它和 `index.json` 一样要签名（`fuyu-plugins` 的 CI 合并后重新签名）。没有这个文件时视为没有撤销任何版本；有文件但签名不对时，整个市场刷新失败。
 
+## 与源码一致
+
+2026-11-14 起（E25，TixXin/fuyu-plugins#22），`fuyu-plugins` 的 `scripts/lib/source.mjs` 在第一次提交和每次更新时下载仓库在 Release 标签处的源码，用 `fuyu-plugin pack` 打包 `path` 文件夹，和 Release 附件逐个比较文件（不比 zip 字节：不同版本的 `pack` 打出的 zip 可能不同；新版 `pack` 加的 `focusd-plugin.json` 副本不算差别）。全程只解包、打包，不运行仓库里的代码，因为索引任务里有签名密钥。
+
+- 一致：条目加 `"sourceMatch": true`。
+- 不一致：PR 检查失败；已上架插件的新版本暂缓上架，开 `review-needed` issue，`approved` 放行。
+- 跳过：描述文件写了 `"buildStep": true` 的（构建产物不在仓库里），以及用固定 `package` 地址、没有标签的官方插件（由本仓库的 `plugins/index.json and plugins/packages match the plugin sources` 测试保证一致）。
+
+第一次运行（2026-11-14）：两个第三方插件 `io.github.shenglin1001.battery` 1.0.0、`io.github.shenglin1001.timesync` 0.1.0 都一致，但 zip 字节和新版 `pack` 打出的不同，所以按文件比较。已上架的版本不会补 `sourceMatch`，下一个版本起才有。
+
 ## 索引签名
 
 岛屿只接受签名有效的索引。索引里有每个插件包的 SHA-256，所以给索引签名，也就间接保护了插件包：即使有人能修改仓库或 CDN 上的文件，没有私钥也无法让岛屿安装被改过的插件。
