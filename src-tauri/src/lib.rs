@@ -196,6 +196,8 @@ pub fn run() {
                 if let Err(error) = macos::island_panel::make_panel(&window) {
                     eprintln!("failed to make the island a panel: {error}");
                 }
+                #[cfg(target_os = "macos")]
+                macos::island_panel::keep_in_top_space(window.clone());
                 let stage = window.clone();
                 let sized = app.handle().run_on_main_thread(move || {
                     if let Err(error) = island::apply_stage_geometry(&stage, island::IslandWindowState::default(), false) {
