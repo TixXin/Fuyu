@@ -16,7 +16,7 @@ export function tooltipTarget(target: EventTarget | null): { element: HTMLElemen
   return text ? { element, text } : null;
 }
 
-export function IconButtonTooltip({ scope = ".island" }: { scope?: string }) {
+export function IconButtonTooltip({ scope = ".island", delay = DELAY_MS }: { scope?: string; delay?: number }) {
   const [tip, setTip] = useState<Tip | null>(null);
   const [place, setPlace] = useState<{ left: number; top: number } | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -33,7 +33,7 @@ export function IconButtonTooltip({ scope = ".island" }: { scope?: string }) {
       if (found.element === pressedRef.current || found.element === currentRef.current) return;
       hide();
       currentRef.current = found.element;
-      timerRef.current = window.setTimeout(() => setTip({ ...found, pointerX: event.clientX }), DELAY_MS);
+      timerRef.current = window.setTimeout(() => setTip({ ...found, pointerX: event.clientX }), delay);
     };
     const onOut = (event: PointerEvent) => {
       const from = event.target instanceof Element ? event.target.closest("button, [role='button'], [role='switch']") : null;
@@ -71,7 +71,7 @@ export function IconButtonTooltip({ scope = ".island" }: { scope?: string }) {
       document.removeEventListener("keydown", onKey);
       window.removeEventListener("blur", hide);
     };
-  }, [scope]);
+  }, [scope, delay]);
 
   useLayoutEffect(() => {
     const card = cardRef.current;
