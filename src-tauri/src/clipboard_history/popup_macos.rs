@@ -95,8 +95,27 @@ pub(super) fn refocus(app: &AppHandle) -> Result<(), String> {
     .map_err(|error| error.to_string())
 }
 
+pub(super) fn outer_position(_app: &AppHandle) -> Option<(i32, i32)> {
+    None
+}
+
+pub(super) fn note_target(_app: &AppHandle) {
+    let own = i32::try_from(std::process::id()).ok();
+    if let Some(pid) = apps::frontmost_pid().filter(|pid| Some(*pid) != own) {
+        *TARGET_APP.lock().unwrap_or_else(PoisonError::into_inner) = Some(pid);
+    }
+}
+
 fn take_target() -> Option<i32> {
     TARGET_APP.lock().unwrap_or_else(PoisonError::into_inner).take()
+}
+
+fn target_for_paste(pinned: bool) -> Option<i32> {
+    if pinned {
+        *TARGET_APP.lock().unwrap_or_else(PoisonError::into_inner)
+    } else {
+        take_target()
+    }
 }
 
 pub(super) fn paste(app: &AppHandle, id: &str, options: PasteOptions) -> Result<(), String> {
@@ -105,7 +124,7 @@ pub(super) fn paste(app: &AppHandle, id: &str, options: PasteOptions) -> Result<
     let settings = &snapshot.settings;
     let item = snapshot.items.iter().find(|item| item.id == id);
     let is_image = item.is_some_and(|item| matches!(item.kind, ClipboardHistoryItemKind::Image | ClipboardHistoryItemKind::Files));
-    let target = take_target();
+    let target = target_for_paste(settings.popup_pinned);
     let into_terminal = target.and_then(apps::path).is_some_and(|path| is_terminal_process(&path));
     let split_command = item
         .filter(|_| options.copy_as.is_none() && into_terminal && settings.auto_paste && settings.flatten_terminal_commands)
@@ -123,17 +142,21 @@ pub(super) fn paste(app: &AppHandle, id: &str, options: PasteOptions) -> Result<
         };
         service.copy_item_as(id, copy_as)?;
     }
-    hide(app)?;
+    if !settings.popup_pinned {
+        hide(app)?;
+    }
     paste_into(target, settings.auto_paste, options.enter);
     Ok(())
 }
 
 pub(super) fn paste_text(app: &AppHandle, text: &str, enter: bool) -> Result<(), String> {
-    let auto_paste = service()?.snapshot()?.settings.auto_paste;
+    let settings = service()?.snapshot()?.settings;
     super::suspend_clipboard_capture(Duration::from_millis(800));
     super::clipboard_io::write_clipboard_text(text)?;
-    hide(app)?;
-    paste_into(take_target(), auto_paste, enter);
+    if !settings.popup_pinned {
+        hide(app)?;
+    }
+    paste_into(target_for_paste(settings.popup_pinned), settings.auto_paste, enter);
     Ok(())
 }
 

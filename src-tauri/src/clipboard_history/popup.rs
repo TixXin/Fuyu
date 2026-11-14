@@ -36,6 +36,11 @@ pub(super) fn toggle(app: &AppHandle, settings: &ClipboardHistorySettings) -> Re
         *target = (!foreground.is_invalid() && foreground.0 as isize != own).then_some(foreground.0 as isize);
     }
 
+    let pinned_at = settings
+        .popup_pinned
+        .then_some((settings.popup_pin_x, settings.popup_pin_y))
+        .and_then(|(x, y)| Some((x?, y?)))
+        .filter(|(x, y)| app.monitor_from_point(f64::from(*x) + 24.0, f64::from(*y) + 24.0).ok().flatten().is_some());
     let pointer = win32::window::cursor_position().map(|point| (point.x, point.y));
     let monitor = match pointer {
         Some((x, y)) => app.monitor_from_point(f64::from(x), f64::from(y)).ok().flatten(),
@@ -55,6 +60,7 @@ pub(super) fn toggle(app: &AppHandle, settings: &ClipboardHistorySettings) -> Re
         let size = ((width * scale).round() as i32, (height * scale).round() as i32);
         let _ = window.set_size(Size::Physical(PhysicalSize::new(size.0 as u32, size.1 as u32)));
         let (x, y) = match (position, pointer) {
+            _ if pinned_at.is_some() => pinned_at.unwrap_or_default(),
             (PopupPosition::Cursor, Some(pointer)) => place_by_pointer(pointer, size, area, (f64::from(POINTER_GAP) * scale) as i32),
             _ => (area.0 + (area.2 - area.0 - size.0) / 2, area.1 + (area.3 - area.1 - size.1) / 3),
         };
@@ -82,6 +88,38 @@ pub(super) fn refocus(app: &AppHandle) -> Result<(), String> {
     window.set_focus().map_err(|error| error.to_string())
 }
 
+pub(super) fn outer_position(app: &AppHandle) -> Option<(i32, i32)> {
+    let position = popup_window(app).ok()?.outer_position().ok()?;
+    Some((position.x, position.y))
+}
+
+pub(super) fn note_target(app: &AppHandle) {
+    let own = popup_window(app).ok().and_then(|window| window.hwnd().ok()).map(|hwnd| hwnd.0 as isize).unwrap_or_default();
+    let foreground = win32::window::foreground_window();
+    if foreground.is_invalid() || foreground.0 as isize == own {
+        return;
+    }
+    if let Ok(mut target) = TARGET_WINDOW.lock() {
+        *target = Some(foreground.0 as isize);
+    }
+}
+
+fn peek_target() -> Option<HWND> {
+    TARGET_WINDOW
+        .lock()
+        .ok()
+        .and_then(|target| *target)
+        .map(|value| HWND(value as *mut core::ffi::c_void))
+}
+
+fn target_for_paste(pinned: bool) -> Option<HWND> {
+    if pinned {
+        peek_target()
+    } else {
+        take_target()
+    }
+}
+
 fn take_target() -> Option<HWND> {
     TARGET_WINDOW
         .lock()
@@ -96,7 +134,7 @@ pub(super) fn paste(app: &AppHandle, id: &str, options: PasteOptions) -> Result<
     let settings = &snapshot.settings;
     let item = snapshot.items.iter().find(|item| item.id == id);
     let is_image = item.is_some_and(|item| matches!(item.kind, ClipboardHistoryItemKind::Image | ClipboardHistoryItemKind::Files));
-    let target = take_target();
+    let target = target_for_paste(settings.popup_pinned);
     let into_terminal = target.is_some_and(|window| {
         win32::process::image_path(win32::process::window_process_id(window)).is_some_and(|path| is_terminal_process(&path))
     });
@@ -116,17 +154,21 @@ pub(super) fn paste(app: &AppHandle, id: &str, options: PasteOptions) -> Result<
         };
         service.copy_item_as(id, copy_as)?;
     }
-    hide(app)?;
+    if !settings.popup_pinned {
+        hide(app)?;
+    }
     paste_into(target, settings.auto_paste, options.enter);
     Ok(())
 }
 
 pub(super) fn paste_text(app: &AppHandle, text: &str, enter: bool) -> Result<(), String> {
-    let auto_paste = service()?.snapshot()?.settings.auto_paste;
+    let settings = service()?.snapshot()?.settings;
     super::suspend_clipboard_capture(Duration::from_millis(800));
     super::clipboard_io::write_clipboard_text(text)?;
-    hide(app)?;
-    paste_into(take_target(), auto_paste, enter);
+    if !settings.popup_pinned {
+        hide(app)?;
+    }
+    paste_into(target_for_paste(settings.popup_pinned), settings.auto_paste, enter);
     Ok(())
 }
 

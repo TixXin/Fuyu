@@ -1,6 +1,6 @@
 [package]
 name = "fuyu"
-version = "0.3.8"
+version = "0.3.9-beta.1"
 description = "A compact floating island shell for Windows."
 authors = ["you"]
 edition = "2021"

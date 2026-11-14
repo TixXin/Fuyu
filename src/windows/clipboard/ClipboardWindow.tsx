@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { ClipboardPopup } from "../../features/clipboard/ClipboardPopup";
-import { hideClipboardPopup, listenClipboardPopupBlur, listenClipboardPopupOpened, pasteClipboardItem, pasteClipboardSequence, pasteClipboardSnippet } from "../../features/clipboard/api";
+import { hideClipboardPopup, listenClipboardPopupBlur, listenClipboardPopupMoved, listenClipboardPopupOpened, pasteClipboardItem, pasteClipboardSequence, pasteClipboardSnippet, setClipboardPopupPin } from "../../features/clipboard/api";
+import { ClipboardTitleBar } from "./ClipboardTitleBar";
 import { useClipboardHistory } from "../../features/clipboard/useClipboardHistory";
 import { useWindowLight } from "../../features/appearance/useWindowLight";
 import { useWindowAccent } from "../../features/appearance/useWindowAccent";
+import { IconButtonTooltip } from "../../components/IconButtonTooltip";
 import "./ClipboardWindow.css";
 
 const NO_SHORTCUT = () => {};
@@ -33,8 +35,34 @@ export function ClipboardWindow() {
     };
   }, [close]);
 
+  const pinned = clipboardHistory.settings.popupPinned === true;
+
+  const togglePin = useCallback(() => {
+    void setClipboardPopupPin(!pinned).catch(reportError("pin the clipboard window"));
+  }, [pinned]);
+
+  useEffect(() => {
+    if (!pinned) return;
+    let cancelled = false;
+    let timer: number | undefined;
+    let stop: (() => void) | undefined;
+    void listenClipboardPopupMoved(() => {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => {
+        void setClipboardPopupPin().catch(reportError("remember the clipboard window position"));
+      }, 400);
+    }).then((unlisten) => (cancelled ? unlisten() : (stop = unlisten)));
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+      stop?.();
+    };
+  }, [pinned]);
+
   return (
-    <div className={light ? "island-light" : undefined}>
+    <div className={`clipboard-window${light ? " island-light" : ""}`}>
+      <IconButtonTooltip scope="body" delay={300} />
+      <ClipboardTitleBar pinned={pinned} onTogglePin={togglePin} onClose={close} />
       <ClipboardPopup
         items={clipboardHistory.items}
         snippets={clipboardHistory.snippets ?? []}
