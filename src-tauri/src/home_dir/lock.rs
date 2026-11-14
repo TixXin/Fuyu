@@ -53,6 +53,14 @@ pub(crate) fn held_elsewhere(lock: Option<Lock>, computer: &str, now: u64) -> Op
     lock.filter(|lock| !lock.computer.eq_ignore_ascii_case(computer) && now.saturating_sub(lock.at) < STALE_MS)
 }
 
+fn held_here(lock: Option<Lock>, computer: &str, now: u64) -> Option<u32> {
+    lock.filter(|lock| lock.computer.eq_ignore_ascii_case(computer) && now.saturating_sub(lock.at) < STALE_MS).map(|lock| lock.pid)
+}
+
+pub(crate) fn holder_here(home: &Path) -> Option<u32> {
+    held_here(read(home), &this_computer(), now_ms())
+}
+
 fn write(path: &Path) {
     let lock = Lock { computer: this_computer(), pid: std::process::id(), at: now_ms() };
     if let Ok(text) = serde_json::to_string(&lock) {
@@ -97,7 +105,7 @@ pub(crate) fn conflict_message(home: &Path, lock: &Lock) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::{held_elsewhere, Lock, STALE_MS};
+    use super::{held_elsewhere, held_here, Lock, STALE_MS};
 
     fn lock(computer: &str, at: u64) -> Option<Lock> {
         Some(Lock { computer: computer.into(), pid: 1, at })
@@ -115,5 +123,14 @@ mod tests {
         assert!(held_elsewhere(lock("desktop", now), "DESKTOP", now).is_none());
         assert!(held_elsewhere(lock("LAPTOP", now - STALE_MS), "DESKTOP", now).is_none());
         assert!(held_elsewhere(None, "DESKTOP", now).is_none());
+    }
+
+    #[test]
+    fn the_installed_island_is_running_here_only_while_its_lock_is_fresh() {
+        let now = 10_000_000;
+        assert_eq!(held_here(lock("desktop", now - 1_000), "DESKTOP", now), Some(1));
+        assert_eq!(held_here(lock("DESKTOP", now - STALE_MS), "DESKTOP", now), None);
+        assert_eq!(held_here(lock("LAPTOP", now), "DESKTOP", now), None);
+        assert_eq!(held_here(None, "DESKTOP", now), None);
     }
 }
