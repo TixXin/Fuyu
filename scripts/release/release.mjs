@@ -5,7 +5,7 @@ import { basename, dirname, join } from "node:path";
 import { channelProblems, readTasks, RELEASED_MARKER, releasedComment, shippedIssues } from "./after-release.mjs";
 import { commandLine } from "./command-line.mjs";
 import { BETA_CHANNEL_TAG, isPrerelease, shouldUpdateBetaManifest } from "./channel.mjs";
-import { baseTag, DRAFT_MARKER } from "./notes-draft.mjs";
+import { baseTag, downloadLinks, DRAFT_MARKER } from "./notes-draft.mjs";
 import { readVersion, VERSION_FILES } from "./versions.mjs";
 import { msiNames, msiVersion } from "./msi-version.mjs";
 import { loadSigningEnvironment } from "./release-signing.mjs";
@@ -82,6 +82,11 @@ const notesFile = `docs/releases/${tag}.md`;
 if (!existsSync(notesFile)) fail(`Missing release notes: ${notesFile}`);
 if (readFileSync(notesFile, "utf8").includes(DRAFT_MARKER)) {
   fail(`${notesFile} is still the draft pnpm release:version wrote: rewrite it for users and delete the draft marker.`);
+}
+const links = downloadLinks(version);
+const notesText = readFileSync(notesFile, "utf8");
+if (!notesText.includes(links.zh) || !notesText.includes(links.en)) {
+  fail(`${notesFile} must open both halves with the download links pnpm release:version wrote:\n${links.zh}\n${links.en}`);
 }
 
 if (!process.env.TAURI_UPDATER_PUBKEY?.trim()) {
