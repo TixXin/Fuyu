@@ -1,7 +1,8 @@
 use windows::Win32::{
     Foundation::{HWND, RECT},
+    UI::Input::KeyboardAndMouse::{GetAsyncKeyState, VK_LBUTTON, VK_MBUTTON, VK_RBUTTON},
     UI::WindowsAndMessaging::{
-        GetTopWindow, GetWindow, GetWindowLongW, GetWindowRect, GetWindowThreadProcessId, IsIconic, IsWindowVisible, SetWindowPos, GWL_EXSTYLE,
+        GetTopWindow, GetWindow, GetWindowLongW, GetWindowRect, IsIconic, IsWindowVisible, SetForegroundWindow, SetWindowPos, GWL_EXSTYLE,
         GW_HWNDNEXT, GW_OWNER, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOSIZE, WS_EX_APPWINDOW, WS_EX_NOACTIVATE, WS_EX_TOOLWINDOW, WS_EX_TOPMOST,
     },
 };
@@ -14,8 +15,14 @@ fn owner(window: HWND) -> Option<HWND> {
     unsafe { GetWindow(window, GW_OWNER) }.ok().filter(|owner| !owner.is_invalid())
 }
 
-pub(super) fn is_desktop_thread(widget: HWND, thread: u32) -> bool {
-    owner(widget).is_some_and(|desktop| thread != 0 && unsafe { GetWindowThreadProcessId(desktop, None) } == thread)
+pub(super) fn mouse_button_down() -> bool {
+    [VK_LBUTTON, VK_RBUTTON, VK_MBUTTON].into_iter().any(|button| unsafe { GetAsyncKeyState(i32::from(button.0)) } < 0)
+}
+
+pub(super) fn pass_to_desktop(widget: HWND) {
+    if let Some(desktop) = owner(widget) {
+        let _ = unsafe { SetForegroundWindow(desktop) };
+    }
 }
 
 fn is_program(window: HWND) -> bool {

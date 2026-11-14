@@ -12,7 +12,6 @@
   "homepage": "https://github.com/TixXin/fuyu/tree/main/plugins/drafts/dev.focusd.window-demo",
   "platforms": ["windows"],
   "runtime": { "type": "process", "command": "main.mjs" },
-  "activationEvents": [],
   "experimentalApis": ["windows"],
   "permissions": ["windows"],
   "contributes": {
