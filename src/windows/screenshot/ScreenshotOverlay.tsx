@@ -2,13 +2,13 @@ import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent } 
 import { Magnifier } from "../../features/screenshot/Magnifier";
 import { annotationArea, autoMosaicAt, textSize } from "../../features/screenshot/annotations";
 import { cancelScreenshot, findScreenshotWords, finishScreenshot, quickAction, type ScreenshotAction } from "../../features/screenshot/api";
+import { colorAt } from "../../features/screenshot/picture";
 import { newMosaics, redactionRects } from "../../features/screenshot/redact";
 import { composeArea } from "../../features/screenshot/drawAnnotations";
 import {
   HANDLES,
   handleCursor,
   handlePosition,
-  hexColor,
   hitTest,
   isSelection,
   pixelAt,
@@ -31,7 +31,7 @@ import { ScreenshotToolbar } from "./ScreenshotToolbar";
 import { useLongShot } from "./useLongShot";
 import { useAnnotations } from "./useAnnotations";
 import { useMeasure } from "./useMeasure";
-import { pictureContext, useScreenshotFrame } from "./useScreenshotFrame";
+import { useScreenshotFrame } from "./useScreenshotFrame";
 import { capturePointer, GRAB, useSelection } from "./useSelection";
 import { useTargets } from "./useTargets";
 import "./ScreenshotOverlay.css";
@@ -46,15 +46,11 @@ function useViewSize(): Size {
   return view;
 }
 
-function colorAt(canvas: HTMLCanvasElement | null, pixel: Point): string {
-  const data = pictureContext(canvas)?.getImageData(pixel.x, pixel.y, 1, 1).data;
-  return data ? hexColor(data[0], data[1], data[2]) : "#000000";
-}
-
 export function ScreenshotOverlay() {
   const t = useTranslation().screenshot;
   const errorText = useErrorText();
-  const { session, ready, drawn, canvasRef } = useScreenshotFrame();
+  const { session, ready, picture, canvasRef } = useScreenshotFrame();
+  const drawn = picture !== null;
   const view = useViewSize();
   const bounds = session && ready ? { width: session.width, height: session.height } : null;
   const scale = bounds ? pixelScale(bounds, view) : 1;
@@ -70,8 +66,8 @@ export function ScreenshotOverlay() {
   const long = useLongShot(sessionId, t.saveFolderName);
 
   const pixel = pointer && bounds ? pixelAt(pointer, bounds) : null;
-  const color = pixel && drawn ? colorAt(canvasRef.current, pixel) : null;
-  const measure = useMeasure(canvasRef, drawn, pixel, ready && !leaving && !long.active && !annotations.editing && !dragging && !annotations.drafting);
+  const color = pixel && picture ? colorAt(picture, pixel) : null;
+  const measure = useMeasure(picture, pixel, ready && !leaving && !long.active && !annotations.editing && !dragging && !annotations.drafting);
   const chosen = selection && isSelection(selection) ? selection : null;
   const choosing = chosen === null;
   const layers = choosing && pixel && bounds ? layersAt(targets, pixel, bounds) : [];
