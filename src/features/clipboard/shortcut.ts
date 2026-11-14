@@ -11,6 +11,11 @@ export function isPrimaryKey(event: { ctrlKey: boolean; metaKey: boolean }, mac 
   return event.ctrlKey || (mac && event.metaKey);
 }
 
+export function openShortcutLabel(settings: { shortcut: string; shortcutEnabled: boolean; winV: boolean }, mac = isMacOS): string | null {
+  if (settings.winV && !mac) return "Win+V";
+  return settings.shortcutEnabled ? shortcutLabel(normalizeClipboardShortcut(settings.shortcut), mac) : null;
+}
+
 export function shortcutLabel(shortcut: string, mac = isMacOS) {
   if (!mac) return shortcut;
   const parts = shortcut.split("+").filter(Boolean);

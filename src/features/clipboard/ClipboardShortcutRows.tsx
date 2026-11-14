@@ -55,10 +55,22 @@ export function ClipboardShortcutRows({ clipboardSettings, onClipboardSettingsCh
 
   const error = clipboardSettings.shortcutEnabled ? conflict || registerError : "";
 
+  const winV = !isMacOS && clipboardSettings.winV;
+  const neither = !clipboardSettings.shortcutEnabled && !winV;
+
   return (
     <>
+      {!isMacOS && (
+        <SettingsToggleRow
+          title={t.settings.clipboard.winV}
+          description={t.settings.clipboard.winVHint}
+          checked={clipboardSettings.winV}
+          onChange={(winV) => onClipboardSettingsChange({ ...clipboardSettings, winV })}
+        />
+      )}
       <SettingsToggleRow
-        title={t.settings.clipboard.shortcutEnabled}
+        title={winV ? t.settings.clipboard.backupShortcut : t.settings.clipboard.shortcutEnabled}
+        description={winV ? t.settings.clipboard.backupShortcutHint : undefined}
         checked={clipboardSettings.shortcutEnabled}
         onChange={(shortcutEnabled) => onClipboardSettingsChange({ ...clipboardSettings, shortcutEnabled })}
       />
@@ -88,15 +100,8 @@ export function ClipboardShortcutRows({ clipboardSettings, onClipboardSettingsCh
           </div>
         </div>
         {error && <p className="shortcut-control__error" role="alert">{error}</p>}
+        {neither && <p className="shortcut-control__note" role="status">{t.settings.clipboard.noShortcut}</p>}
       </div>
-      {!isMacOS && (
-        <SettingsToggleRow
-          title={t.settings.clipboard.winV}
-          description={t.settings.clipboard.winVHint}
-          checked={clipboardSettings.winV}
-          onChange={(winV) => onClipboardSettingsChange({ ...clipboardSettings, winV })}
-        />
-      )}
     </>
   );
 }

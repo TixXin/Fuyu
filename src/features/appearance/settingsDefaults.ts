@@ -118,6 +118,7 @@ export const DEFAULT_SETTINGS: IslandSettings = {
   mailEnabled: true,
   gameDoNotDisturb: !isMacOS,
   gameAutoTuck: isMacOS,
+  hoverTakesKeyboard: false,
 };
 export const LEGACY_FALLBACKS = {
   collapsedDark: false,

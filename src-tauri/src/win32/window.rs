@@ -13,7 +13,7 @@ use windows::{
                 GetForegroundWindow, GetWindow, GetWindowLongPtrW, GetWindowPlacement,
                 GetWindowRect, GetWindowTextW, GetWindowThreadProcessId, IsIconic, IsWindowVisible, SendMessageTimeoutW,
                 SetForegroundWindow, SetWindowDisplayAffinity, ShowWindow, GWL_EXSTYLE, WDA_EXCLUDEFROMCAPTURE, WDA_NONE, GW_OWNER, SMTO_ABORTIFHUNG,
-                SMTO_BLOCK, SMTO_ERRORONEXIT, SW_RESTORE, WINDOWPLACEMENT, WM_NULL,
+                SMTO_BLOCK, SMTO_ERRORONEXIT, SW_HIDE, SW_RESTORE, SW_SHOWNOACTIVATE, WINDOWPLACEMENT, WM_NULL,
                 WS_EX_NOACTIVATE, WS_EX_TOOLWINDOW,
             },
         },
@@ -174,6 +174,14 @@ pub(crate) fn activate_from_background(window: HWND) -> bool {
         }
     }
     foreground_window() == window
+}
+
+pub(crate) fn show_without_activating(window: HWND) {
+    let _ = unsafe { ShowWindow(window, SW_SHOWNOACTIVATE) };
+}
+
+pub(crate) fn hide_window(window: HWND) {
+    let _ = unsafe { ShowWindow(window, SW_HIDE) };
 }
 
 pub(crate) fn share_monitor(a: HWND, b: HWND) -> bool {

@@ -5,6 +5,9 @@ export type SettingsClipboardText = {
   maxItems: string;
   shortcut: string;
   shortcutEnabled: string;
+  backupShortcut: string;
+  backupShortcutHint: string;
+  noShortcut: string;
   pressKeys: string;
   openTitle: string;
   openIn: string;
@@ -102,8 +105,11 @@ export const zhCN: SettingsClipboardText = {
   headerShortcut: (keys) => `按 ${keys} 打开`,
   captureImages: "记录图片",
   maxItems: "最大历史条数",
-  shortcut: "展开快捷键",
-  shortcutEnabled: "启用展开快捷键",
+  shortcut: "快捷键",
+  shortcutEnabled: "用快捷键打开",
+  backupShortcut: "备用快捷键",
+  backupShortcutHint: "Win+V 被远程桌面、游戏或以管理员身份运行的窗口拦住时，用它打开。",
+  noShortcut: "两个都关着时，只能从岛屿或托盘菜单打开剪贴板。",
   pressKeys: "按下组合键",
   openTitle: "打开方式",
   openIn: "快捷键打开",
@@ -201,8 +207,11 @@ export const en: SettingsClipboardText = {
   headerShortcut: (keys) => `Opens with ${keys}`,
   captureImages: "Record images",
   maxItems: "Max entries",
-  shortcut: "Expand shortcut",
-  shortcutEnabled: "Enable expand shortcut",
+  shortcut: "Shortcut",
+  shortcutEnabled: "Open with a shortcut",
+  backupShortcut: "Backup shortcut",
+  backupShortcutHint: "For when Win+V is caught by Remote Desktop, a game or a window running as administrator.",
+  noShortcut: "With both off, the clipboard only opens from the island or the tray menu.",
   pressKeys: "Press keys",
   openTitle: "Opening",
   openIn: "The shortcut opens",

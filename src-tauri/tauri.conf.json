@@ -59,6 +59,22 @@
         "shadow": false
       },
       {
+        "label": "clipboard-preview",
+        "title": "浮屿 - 剪贴板预览",
+        "url": "index.html?window=clipboard-preview",
+        "width": 420,
+        "height": 559,
+        "decorations": false,
+        "transparent": true,
+        "resizable": false,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "visible": false,
+        "focus": false,
+        "focusable": false,
+        "shadow": false
+      },
+      {
         "label": "settings",
         "create": false,
         "title": "Fuyu",

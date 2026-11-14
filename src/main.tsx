@@ -53,6 +53,10 @@ async function loadWindow(): Promise<ReactNode> {
       const { ClipboardWindow } = await import("./windows/clipboard/ClipboardWindow");
       return <ClipboardWindow />;
     }
+    case "clipboard-preview": {
+      const { ClipboardPreviewWindow } = await import("./windows/clipboard/ClipboardPreviewWindow");
+      return <ClipboardPreviewWindow />;
+    }
     case "screenshot": {
       const { ScreenshotOverlay } = await import("./windows/screenshot/ScreenshotOverlay");
       return <ScreenshotOverlay />;

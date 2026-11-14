@@ -44,7 +44,7 @@ src-tauri/src/
 ├── shortcut_capture.rs      # 设置窗口录快捷键期间（命令 set_shortcut_capture）：浮屿自己的全局快捷键被按下不执行，改发 shortcut-captured 给录制按钮；Mac 在 macos/hotkeys.rs 的分发里拦，Windows 在各模块的 WM_HOTKEY 里拦
 ├── home_dir.rs              # 家目录（#50，D30）：浮屿的数据目录只从这里取 fuyu_home(app.path())，不要直接调 app_data_dir()；FUYU_HOME → home.json 指针 → ~/.fuyu；home_dir/migration.rs 为升级时复制旧数据、重装钩子、复制待办 Markdown，见 docs/features/data-home.md
 ├── fs_write.rs              # 整份替换应用数据目录里的文件：先写旁边的 .tmp 再改名；别的程序暂时占着（拒绝访问、共享冲突）时稍等重试
-├── dev_lane.rs              # lane 时期的预览（设了 FOCUSD_DEV_LANE 的调试版）：独立应用标识、默认位置，不改用户的链接、自启和 hook；启动脚本已删（F32），等 G1.6 收尾后删掉
+├── dev_lane.rs              # 和正式版并排跑的开发版（设了 FOCUSD_DEV_LANE 的调试版，`pnpm dev:side` 启动，F38）：独立应用标识、默认位置，不改用户的链接、自启和 hook
 ├── messenger_activation.rs
 ├── notification_diagnostics.rs
 ├── user_error.rs            # 用户看到的错误：错误码、文案参数和外部原话（D15），前端按界面语言显示；凭据管理器的通用错误；

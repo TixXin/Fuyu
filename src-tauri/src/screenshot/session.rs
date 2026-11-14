@@ -250,6 +250,9 @@ fn overlay_window(app: &AppHandle, label: &str) -> Result<WebviewWindow, String>
         return Ok(window);
     }
     let _building = building();
+    if let Some(window) = app.get_webview_window(label) {
+        return Ok(window);
+    }
     let window = WebviewWindowBuilder::new(app, label, WebviewUrl::App("index.html?window=screenshot".into()))
         .title("Fuyu")
         .transparent(true)
