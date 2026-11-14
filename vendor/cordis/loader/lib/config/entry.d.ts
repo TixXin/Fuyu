@@ -1,0 +1,64 @@
+import { Component, Context, Fiber, Inject, ValidationError } from 'cordis';
+import { Dict } from 'cosmokit';
+import { Loader } from '../index.ts';
+import { EntryGroup } from './group.ts';
+import { EntryTree } from './tree.ts';
+import { ExprTrace } from './utils.ts';
+export interface EntryOptions {
+    id: string;
+    name: string;
+    config?: any;
+    group?: boolean | null;
+    disabled?: boolean | null;
+    inject?: Inject | null;
+    intercept?: Dict | null;
+}
+export declare class Entry {
+    loader: Loader;
+    static readonly key: unique symbol;
+    static isOuter(fiber: Fiber): boolean;
+    ctx: Context;
+    outerFiber?: Fiber;
+    innerFiber?: Fiber;
+    parent: EntryGroup;
+    options: EntryOptions;
+    subgroup?: EntryGroup;
+    subtree?: EntryTree;
+    inject: Dict;
+    _initTask?: Promise<void> | undefined;
+    _disposing: boolean;
+    _verdict?: boolean;
+    private _intercept;
+    constructor(loader: Loader);
+    static merge(target: Partial<EntryOptions>, options: Partial<EntryOptions>): Partial<EntryOptions>;
+    get context(): Context;
+    get id(): string;
+    private _evaluationContext;
+    private _resolveDisabled;
+    get disabled(): boolean;
+    private _parentDisabled;
+    private _blocked;
+    evaluate(expr: string): any;
+    private _hasOuter;
+    private _resolveInject;
+    private _applyIntercept;
+    private _patchContext;
+    private _reconcile;
+    refresh(): Promise<void>;
+    update(options: Partial<EntryOptions>, create?: boolean, force?: boolean): Promise<void>;
+    dispose(): Promise<void> | undefined;
+    private _dispose;
+    getLocation(path?: PropertyKey[]): import("./utils.ts").SourceLocation | undefined;
+    locateExpr(path: PropertyKey[], expr: string, offset: number): import("./utils.ts").SourceLocation | undefined;
+    getOuterStack: () => string[];
+    trace: (path: PropertyKey[]) => ExprTrace;
+    traceValidation(error: ValidationError): void;
+    private _reportImport;
+    init(disposeTask?: Promise<void>): Promise<void>;
+    _import(): Promise<{
+        component: any;
+    } | undefined>;
+    private _init;
+    private _registered;
+    _start(ctx: Context, component: Component): void;
+}

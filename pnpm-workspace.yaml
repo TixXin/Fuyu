@@ -1,6 +1,8 @@
 packages:
   - packages/fuyu-plugin
   - packages/create-fuyu-plugin
+  - packages/plugin-base
+  - vendor/cordis/*
 
 allowBuilds:
   esbuild: true
@@ -9,6 +11,12 @@ allowBuilds:
 # (Dependabot alerts). Each one only matches the vulnerable range, so it
 # stops doing anything once the packages that pull them in move on.
 overrides:
+  cordis: workspace:*
+  "@cordisjs/fs": workspace:*
+  "@cordisjs/fs-node": workspace:*
+  "@cordisjs/hmr": workspace:*
+  "@cordisjs/include": workspace:*
+  "@cordisjs/loader": workspace:*
   source-map-js@<1.2.2: ^1.2.2
   baseline-browser-mapping@>=2.0.0 <2.11.0: ^2.11.0
   browserslist@<4.28.7: ^4.28.7

@@ -1,0 +1,58 @@
+{
+  "name": "@cordisjs/hmr",
+  "description": "Hot module replacement for Cordis",
+  "version": "2.0.0-rc.0",
+  "sideEffects": false,
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "files": [
+    "lib"
+  ],
+  "author": "Shigma <shigma10826@gmail.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cordiverse/cordis.git",
+    "directory": "packages/hmr"
+  },
+  "bugs": {
+    "url": "https://github.com/cordiverse/cordis/issues"
+  },
+  "homepage": "https://cordis.io/",
+  "keywords": [
+    "cordis",
+    "component",
+    "hmr",
+    "hot",
+    "module",
+    "replacement",
+    "reload"
+  ],
+  "yakumo": {
+    "tsc": {
+      "ignore": [
+        "@cordisjs/include"
+      ]
+    }
+  },
+  "cordis": {
+    "description": {
+      "en": "Hot Module Replacement",
+      "zh": "\u6a21\u5757\u70ed\u66ff\u6362"
+    }
+  },
+  "peerDependencies": {
+    "@cordisjs/fs": "^2.0.0-rc.0",
+    "cordis": "^4.0.0-rc.13"
+  },
+  "peerDependenciesMeta": {
+    "@cordisjs/fs": {
+      "optional": true
+    }
+  },
+  "dependencies": {
+    "@babel/code-frame": "^7.29.0",
+    "schemastery": "^3.18.0"
+  }
+}
