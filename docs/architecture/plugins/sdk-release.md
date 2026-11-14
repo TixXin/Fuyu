@@ -30,5 +30,8 @@ npm 包 `fuyu-plugin`（SDK、命令行工具、模拟宿主）和 `create-fuyu-
 
 3. 工作流会先核对：标签里的版本号和两个包一致、生成的 SDK 文件是最新的（`scripts/plugins/check-sdk-release.mjs`），然后跑两个包的测试，再发布。npm 上已经有的版本会跳过，所以重推同一个标签不会出错。
 4. 发布后用 `npm view fuyu-plugin version` 确认；包页面会显示 provenance（来自哪个仓库的哪次运行）。
+5. 升级插件市场的依赖：在 [`TixXin/fuyu-plugins`](https://github.com/TixXin/fuyu-plugins) 把 `package.json` 里的 `fuyu-plugin` 改成刚发的版本，`npm install` 更新锁文件，提 PR 合入。市场 CI 用它检查提交的插件，不升级的话新加的校验在市场上不生效。
+
+单文件 SDK（`plugins/sdk/node/fuyu.mjs`、`plugins/sdk/powershell/fuyu.ps1`）由 `pnpm sdk:build` 写入包的版本号（`SDK_VERSION`、`$script:FuyuSdkVersion`），`validate` 拿它和自己的版本比，插件里复制的副本旧了就告警。所以改了版本号一定要重新跑 `pnpm sdk:build`。
 
 PowerShell 模块 `Fuyu.Plugin` 不在这个工作流里，仍按 [packages/powershell/Fuyu.Plugin](../../../packages/powershell/Fuyu.Plugin) 手动发布到 PowerShell Gallery。

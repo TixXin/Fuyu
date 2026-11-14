@@ -1,6 +1,6 @@
 {
   "name": "fuyu-plugin",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "SDK, CLI (validate, pack, dev, test) and mock host for Fuyu plugins",
   "keywords": ["fuyu", "plugin", "sdk"],
   "license": "MIT",
