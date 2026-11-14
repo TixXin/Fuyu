@@ -33,6 +33,17 @@ Environment `release` 只允许 `main`（2026-11-14 建）。证书文件在 Mac
 | 协作者（Write） | 能手动触发两个构建 workflow，拿到的是没签 updater 的安装包；发不了版，因为没有 updater 私钥 |
 | 仓库管理员 | 在持有 updater 私钥的电脑上跑 `pnpm release` |
 
+## 提速（F37，2026-11-14）
+
+0.3.8 的实际用时：版本号 PR 4 分钟，Windows CI 6.6 分钟，Mac CI 5.8 分钟（两边同时），下载、签名、上传约 1.2 分钟，冒烟测试 49 秒；写正式版说明另外约 15 分钟。
+
+- **预构建**：`pnpm release:prebuild`（`scripts/release/prebuild.mjs`）在 `pnpm mq:land` 把版本号提交推上 `land/…` 分支之后马上触发两边的构建，把版本号、提交、代码树和两次运行的编号记在 `src-tauri/target/publish/prebuild.json`。PR 合入后 `pnpm release` 比较合并提交的代码树：一样就下载这两次运行的产物（签名仍在本机），不一样（合入时 `main` 又进了别的提交）就照常重新构建；`--no-prebuild` 强制重新构建。构建和 PR 的 CI 重叠，一次发版约省 4–5 分钟。发布成功后删掉记录。
+- **正式版说明**：`pnpm release:version` 出正式版时读 `docs/releases/v<版本>-beta.*.md`，把各测试版的「更新内容」/ What's New 按新到旧拼进草稿，修复合成一组；提交列表只列最后一个测试版之后的提交（`scripts/release/beta-notes.mjs`）。
+- **issue 留言**：同时最多 6 个（`after-release.mjs` 的 `tellIssues`），0.3.8 那样 21 个 issue 从一个个发变成几批。
+- **等 CI 时 GitHub 报错**：`gh run watch` 中途退出时先用 `gh run view` 查真实状态，还在跑就接着等（PR #248）。
+
+**Windows 编译为什么还要 4 分钟**：0.3.8 那次 Rust 依赖全部从缓存恢复，`Compiling` 只有 `fuyu` 这一个 crate，编了 3 分 55 秒；打包 NSIS 和 MSI 约 35 秒。瓶颈是一个大 crate 在 4 核的免费 runner 上做 release 优化。没改编译选项：release 默认已经是 `codegen-units = 16`、不开 LTO，开 LTO 只会更慢；降优化等级会让用户拿到的程序变慢。真要再快只有两条路：换 GitHub 的大核 runner（按分钟收费），或者把 `src-tauri` 拆成几个 crate 让它们并行编译（大重构）。现在都不值得。
+
 ## 没做的
 
 - 插件签名搬到 `TixXin/fuyu-plugins` 的 CI（另一个仓库，单独的任务）。

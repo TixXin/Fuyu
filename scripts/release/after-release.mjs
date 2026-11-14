@@ -1,6 +1,38 @@
-import { readdirSync, readFileSync, statSync } from "node:fs";
+import { execFile } from "node:child_process";
+import { readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { isPrerelease } from "./channel.mjs";
+
+export function ghAsync(args) {
+  return new Promise((resolve) => {
+    execFile("gh", args, { windowsHide: true, maxBuffer: 16 * 1024 * 1024 }, (error, stdout, stderr) => {
+      resolve({ status: error ? (typeof error.code === "number" ? error.code : 1) : 0, stdout: stdout ?? "", stderr: stderr ?? "" });
+    });
+  });
+}
+
+async function tellOne({ issue, tasks, tag, url, repo, dir, gh }) {
+  const existing = await gh(["api", `repos/${repo}/issues/${issue}/comments`, "--paginate", "--jq", ".[].body"]);
+  if (existing.status !== 0) return `  #${issue}: could not read its comments, so it was not told.`;
+  if (existing.stdout.includes(RELEASED_MARKER(tag))) return null;
+  const body = join(dir, `${issue}.md`);
+  writeFileSync(body, releasedComment({ tag, url, tasks, repo }));
+  const posted = await gh(["issue", "comment", String(issue), "--repo", repo, "--body-file", body]);
+  return posted.status === 0 ? `✓ Told #${issue} that it shipped in ${tag}.` : `  #${issue}: the comment failed: ${posted.stderr.trim()}`;
+}
+
+export async function tellIssues(shipped, { tag, url, repo, dir, gh = ghAsync, limit = 6 }) {
+  const queue = [...shipped];
+  const lines = new Map();
+  const worker = async () => {
+    while (queue.length) {
+      const [issue, tasks] = queue.shift();
+      lines.set(issue, await tellOne({ issue, tasks, tag, url, repo, dir, gh }));
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(limit, queue.length) }, worker));
+  return [...shipped.keys()].map((issue) => lines.get(issue)).filter(Boolean);
+}
 
 export const RELEASED_MARKER = (tag) => `<!-- released: ${tag} -->`;
 

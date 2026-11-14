@@ -11,7 +11,7 @@
 
 ## 草稿给的材料
 
-`pnpm release:version` 写的草稿列出上一版以来的 feat / fix / perf 提交（测试版从上一个任意版本算，正式版从上一个正式版算，所以正式版会包含前面几个测试版）。只看标题不够：
+`pnpm release:version` 写的草稿列出上一版以来的 feat / fix / perf 提交（测试版从上一个任意版本算）。正式版的草稿已经把这一轮各测试版说明的「更新内容」和 What's New 拼好（新的测试版在前，修复合成一组，F37），提交列表只列最后一个测试版之后的提交：把重复的条目合并（同一功能后来又改过的，按最后的样子写），按重要程度重排，再补上新提交。只看标题不够：
 
 - 读正文：`git log <上一个 tag>..HEAD --no-merges --format="=== %h %s%n%b" -E --grep="^(feat|fix|perf)"`。
 - 草稿只收 feat / fix / perf。`test(...)`、`refactor(...)`、`build(...)` 里也可能带了用户能看到的修复，扫一眼 `git log <上一个 tag>..HEAD --oneline`。

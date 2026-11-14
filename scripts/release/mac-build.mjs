@@ -19,8 +19,8 @@ export function startMacBuild(run, { repo, revision, version }) {
   return startCiBuild(run, { workflow: MAC_WORKFLOW, repo, revision, version });
 }
 
-export function finishMacBuild(run, { repo, version, since, dir }) {
-  const problem = downloadCiBuild(run, { workflow: MAC_WORKFLOW, label: "macOS", repo, artifact: macArtifact(version), since, dir });
+export function finishMacBuild(run, { repo, version, since, runId, dir }) {
+  const problem = downloadCiBuild(run, { workflow: MAC_WORKFLOW, label: "macOS", repo, artifact: macArtifact(version), since, runId, dir });
   if (problem) return problem;
   const files = macFiles(dir, version);
   if (!existsSync(files.archive) || !existsSync(files.dmg)) return `the macOS build has no ${files.archive} or ${files.dmg}`;

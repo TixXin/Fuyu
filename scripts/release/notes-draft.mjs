@@ -8,7 +8,10 @@ const ZH_ORDINALS = ["一", "二", "三", "四", "五", "六", "七", "八", "�
 const MAC_GUIDE = "https://github.com/TixXin/fuyu/blob/main/docs/features/macos-install.md";
 const PLATFORM_SCOPES = { macos: "Mac", mac: "Mac", windows: "Windows", win32: "Windows" };
 const EN_ORDINALS = ["first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", "tenth"];
-const DOWNLOADS = "https://github.com/TixXin/fuyu/releases/download";
+const MERGED_HINT = `
+The changes below are the betas' notes, newest beta first: merge duplicates, keep what
+changed later, put the most important first. The commits listed came after the last beta.`;
+const DOWNLOADS ="https://github.com/TixXin/fuyu/releases/download";
 const MIRROR = "https://ghfast.top/";
 
 export function downloadLinks(version) {
@@ -47,7 +50,7 @@ function betaNumber(version) {
   return Number.isInteger(number) && number > 0 ? number : null;
 }
 
-export function draftNotes(version, base, commits) {
+export function draftNotes(version, base, commits, merged = null, since = base) {
   const core = version.replace(/-.*/, "");
   const beta = isPrerelease(version);
   const number = betaNumber(version);
@@ -68,8 +71,8 @@ export function draftNotes(version, base, commits) {
 <!-- Rewrite the commits below into lines for users in both languages, then delete this
 comment, the marker above and the commit list. pnpm release refuses to publish while the
 marker is here. Commits tagged [Mac] or [Windows] change only that system: start their
-lines with （Mac） / （Windows） (English: (Mac) / (Windows)), see docs/releases/README.md.
-Commits since ${base ?? "the first commit"}: -->
+lines with （Mac） / （Windows） (English: (Mac) / (Windows)), see docs/releases/README.md.${merged ? MERGED_HINT : ""}
+Commits since ${since ?? "the first commit"}: -->
 <!--
 ${changes}
 -->
@@ -82,7 +85,7 @@ ${zhAbout}
 
 ## 更新内容
 
--
+${merged?.zh || "-"}
 
 ---
 
@@ -94,7 +97,7 @@ ${enAbout}
 
 ## What's New
 
--
+${merged?.en || "-"}
 
 ## Downloads
 
