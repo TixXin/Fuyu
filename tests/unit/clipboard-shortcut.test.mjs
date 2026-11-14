@@ -7,6 +7,7 @@ import {
   matchesClipboardShortcut,
   normalizeClipboardShortcut,
   normalizeShortcutKeyLabel,
+  openShortcutLabel,
 } from "../../src/features/clipboard/shortcut.ts";
 import { DEFAULT_CLIPBOARD_HISTORY, normalizeClipboardSettings } from "../../src/features/clipboard/settings.ts";
 
@@ -88,4 +89,14 @@ test("recorded shortcuts use the physical key, not the character Option or Shift
   assert.equal(buildShortcutFromEvent({ ...key("!", { ctrlKey: true, shiftKey: true }), code: "Digit1" }), "Ctrl+Shift+1");
   assert.equal(buildShortcutFromEvent({ ...key("Dead", { altKey: true }), code: "KeyE" }), "Alt+E");
   assert.equal(buildShortcutFromEvent({ ...key("F5", { ctrlKey: true }), code: "F5" }), "Ctrl+F5");
+});
+
+test("the shortcut shown for opening the clipboard is Win+V when it is taken, otherwise the own shortcut", () => {
+  const settings = { shortcut: "Ctrl+Shift+W", shortcutEnabled: true, winV: false };
+  assert.equal(openShortcutLabel(settings, false), "Ctrl+Shift+W");
+  assert.equal(openShortcutLabel({ ...settings, winV: true }, false), "Win+V");
+  assert.equal(openShortcutLabel({ ...settings, winV: true, shortcutEnabled: false }, false), "Win+V");
+  assert.equal(openShortcutLabel({ ...settings, shortcutEnabled: false }, false), null);
+  assert.equal(openShortcutLabel({ shortcut: "Shift+Win+V", shortcutEnabled: true, winV: true }, true), "⇧⌘V");
+  assert.equal(openShortcutLabel({ shortcut: "Shift+Win+V", shortcutEnabled: false, winV: true }, true), null);
 });
