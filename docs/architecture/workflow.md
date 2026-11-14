@@ -123,7 +123,7 @@ land 从 git 的 pre-push 钩子里跑检查，环境里带着 `GIT_DIR` 等变�
 `pnpm tauri dev` 起的开发版和安装的正式版可以同时开着（F38、F39）。调试构建默认用独立身份 `com.tixxin.fuyu.lane-1`（`src-tauri/src/dev_lane.rs`），单实例锁、数据目录、WebView2 的数据目录和进程组、凭据都和正式版分开：
 
 - 启动前只停本仓库 `src-tauri/target/debug/` 里的 `fuyu.exe`（`scripts/stop-running-island.mjs` 按可执行文件路径判断），安装的正式版和别处的岛屿不动。
-- 岛放在屏幕左侧四分之一处，不和正式版叠在一起。
+- 岛默认放在中间；只有正式版在跑、并且开发版放中间会和正式版的岛撞上时，才让到屏幕左侧四分之一处（F39.6，`src-tauri/src/dev_lane/beside.rs`）。正式版在不在跑看它的单实例锁：Windows 查命名 mutex `com.tixxin.fuyu-sim`；Mac 的锁是 `/tmp/com_tixxin_fuyu_si.sock`，连上去会让正式版把岛弹出来，所以只看这个文件在不在，再加上正式数据目录的 `fuyu.lock` 是本机、心跳没过期。正式版的岛在哪：用 `fuyu.lock` 里的 pid 找它宽 820 的舞台窗口。正式版在跑但找不到窗口（例如收进了托盘）时照旧让开。开发版每 3 秒看一次，结果变了就滑到新位置。设 `FOCUSD_DEV_LANE_CENTER=1` 则始终放中间。
 - 想再开一个互不相干的开发版，设 `FOCUSD_DEV_LANE=<2–999>`。
 - 要用正式身份和正式数据跑调试版（调数据迁移、安装 Agent 钩子、开机自启这类只有正式身份才做的事），设 `FUYU_DEV_SHARED_IDENTITY=1` 再 `pnpm tauri dev`。这时和 F38 之前一样：启动前停掉所有岛屿，不能和正式版同时开。两个变量 `stop-running-island.mjs`、`pnpm lab` 和 Rust 读的是同一套规则。
 - `cargo test`、release 构建和通知验证（`FOCUSD_VERIFY_NOTIFICATIONS`）不受影响；`tauri build --debug` 出的调试版也是独立身份。

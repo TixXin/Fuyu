@@ -1,3 +1,4 @@
+mod beside;
 mod data_copy;
 mod seed;
 
@@ -49,8 +50,20 @@ fn centred_preview() -> bool {
     std::env::var(CENTER_ENV).is_ok_and(|value| value == "1")
 }
 
-pub(crate) fn stage_x(monitor_x: i32, monitor_width: i32, window_width: i32) -> i32 {
-    left_edge(lane().is_some() && !centred_preview(), monitor_x, monitor_width, window_width)
+pub(crate) fn stage_x(monitor: (i32, i32, i32), window: (i32, i32), scale: f64) -> i32 {
+    let (monitor_x, monitor_y, monitor_width) = monitor;
+    let (window_width, window_height) = window;
+    let centred = left_edge(false, monitor_x, monitor_width, window_width);
+    let aside = lane().is_some()
+        && !centred_preview()
+        && beside::decide(beside::Rect { left: centred, top: monitor_y, width: window_width, height: window_height }, scale);
+    left_edge(aside, monitor_x, monitor_width, window_width)
+}
+
+pub(crate) fn watch_installed_island(window: tauri::WebviewWindow) {
+    if lane().is_some() && !centred_preview() {
+        beside::start_watch(window);
+    }
 }
 
 fn left_edge(beside: bool, monitor_x: i32, monitor_width: i32, window_width: i32) -> i32 {
@@ -98,9 +111,9 @@ mod tests {
 
     #[test]
     fn the_island_is_centred_on_its_monitor_outside_a_preview() {
-        assert_eq!(stage_x(0, 2560, 760), 900);
-        assert_eq!(stage_x(-1920, 1920, 760), -1920 + 580);
-        assert_eq!(stage_x(0, 2561, 760), 900, "the same rounding as before");
+        assert_eq!(stage_x((0, 0, 2560), (760, 460), 1.0), 900);
+        assert_eq!(stage_x((-1920, 0, 1920), (760, 460), 1.0), -1920 + 580);
+        assert_eq!(stage_x((0, 0, 2561), (760, 460), 1.0), 900, "the same rounding as before");
     }
 
     #[test]

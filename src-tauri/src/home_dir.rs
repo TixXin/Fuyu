@@ -86,6 +86,10 @@ pub(crate) fn real_home() -> Option<PathBuf> {
     Some(resolve(env.as_deref(), pointer.as_deref(), profile().as_deref(), &app_data).0)
 }
 
+pub(crate) fn installed_island_pid() -> Option<u32> {
+    lock::holder_here(&real_home()?)
+}
+
 pub(crate) fn agent_home<R: Runtime>(paths: &PathResolver<R>) -> tauri::Result<PathBuf> {
     match real_home().filter(|_| crate::dev_lane::lane().is_some()) {
         Some(home) => Ok(home),

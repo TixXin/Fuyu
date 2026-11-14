@@ -32,6 +32,7 @@ pub(crate) mod registry;
 pub(crate) mod screen_capture;
 pub(crate) mod session_notifications;
 pub(crate) mod shell_hook;
+pub(crate) mod sibling_island;
 pub(crate) mod taskbar;
 pub(crate) mod uia_list;
 pub(crate) mod uia_tabs;
