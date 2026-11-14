@@ -44,6 +44,7 @@
   - [技术可行性](../../research/plugin-host-feasibility.md)
   - [MyGo 和 Tauri 的对比](../../research/mygo-vs-tauri.md)（结论：第 3 版继续用 Tauri）
   - [哪些桌面框架能做「万物皆插件」](../../research/desktop-frameworks.md)（结论：不换框架；建议第 0 阶段对照一下「宿主放独立的 Node / Bun 进程」）
+  - [有没有人已经做了这个基座](../../research/tauri-plugin-base-prior-art.md)（结论：没有完整的；内核那一块 `arcships/rutis` 做得很深，建议第 0 阶段评估它）
 
 ## 名词
 
