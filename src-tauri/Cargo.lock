@@ -1682,6 +1682,7 @@ dependencies = [
  "objc2-screen-capture-kit",
  "objc2-service-management",
  "objc2-vision",
+ "plugin-base",
  "pollster",
  "quick-xml",
  "reqwest",
@@ -3883,6 +3884,13 @@ dependencies = [
  "quick-xml",
  "serde",
  "time",
+]
+
+[[package]]
+name = "plugin-base"
+version = "0.0.0"
+dependencies = [
+ "serde_json",
 ]
 
 [[package]]

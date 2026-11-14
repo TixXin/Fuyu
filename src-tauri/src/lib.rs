@@ -25,6 +25,7 @@ mod onboarding_window;
 mod pets;
 mod phone_push;
 mod plugin_host;
+mod plugin_kernel;
 mod mail;
 #[cfg_attr(target_os = "macos", path = "qq_notifications/macos.rs")]
 mod qq_notifications;
@@ -167,6 +168,9 @@ pub fn run() {
             if let Err(error) = plugin_host::init(app.handle()) {
                 eprintln!("failed to initialize plugins: {error}");
             }
+            if let Err(error) = plugin_kernel::init(app.handle()) {
+                eprintln!("failed to start the plugin platform v3 host: {error}");
+            }
             let args: Vec<String> = std::env::args().collect();
             if let Some(link) = plugin_host::find_link(&args) {
                 plugin_host::open_link(app.handle(), link, true);
@@ -259,6 +263,7 @@ pub fn run() {
         .map(|app| {
             app.run(|_app, event| match event {
                 tauri::RunEvent::Exit => {
+                    plugin_kernel::shutdown();
                     agent_approval::shutdown();
                     home_dir::before_exit();
                     wechat_reminders::shutdown();

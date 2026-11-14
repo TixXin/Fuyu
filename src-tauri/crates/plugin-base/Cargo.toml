@@ -1,0 +1,10 @@
+[package]
+name = "plugin-base"
+version = "0.0.0"
+edition = "2021"
+license = "MIT"
+description = "Plugin platform v3 base: finds Node, runs the plugin host, talks JSON-RPC to it and restarts it"
+publish = false
+
+[dependencies]
+serde_json = "1"

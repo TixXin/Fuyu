@@ -41,6 +41,7 @@ rrule = "0.14"
 reqwest = { version = "0.13", default-features = false, features = ["json", "rustls"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+plugin-base = { path = "crates/plugin-base" }
 sha2 = "0.10"
 tauri = { version = "2", features = ["macos-private-api", "tray-icon"] }
 tauri-plugin-dialog = "2"
@@ -95,3 +96,7 @@ debug = false
 
 [target.'cfg(windows)'.dev-dependencies]
 windows = { version = "0.62", features = ["ApplicationModel", "UI_Notifications_Management", "Win32_System_WinRT", "Win32_UI_Accessibility"] }
+
+[workspace]
+members = [".", "crates/plugin-base"]
+default-members = [".", "crates/plugin-base"]
