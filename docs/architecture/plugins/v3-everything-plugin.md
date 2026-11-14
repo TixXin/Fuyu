@@ -160,6 +160,17 @@ Tauri 的 `emit` 把负载拼进一段脚本交给 WebView 执行，每个内容
 
 市场换新的索引格式（`fuyu-plugins` 仓库里另起一份 `index.v3.json`，签名链照旧）。旧索引冻结，只给还没升级的旧版岛屿读。
 
+### 插件放在哪
+
+| | 浮屿第 3 版 | DeepSeek Harness（对照） |
+|---|---|---|
+| 内置插件 | 浮屿仓库里，随程序发布 | 仓库里的 `@deepseek-ai/*` 包，随安装提供；可选的官方组合包按需从 npm 装，版本跟着 dsh |
+| 官方的可选插件 | 浮屿仓库的 `plugins/`，打包签名后由市场列出 | 同上 |
+| 第三方插件 | **作者自己的 GitHub 仓库**，发 Release 附件；向 `TixXin/fuyu-plugins` 提交一份描述，审核后上架 | **npm 包或 git 仓库**，用 pnpm 装进 profile |
+| 市场 | 一个官方市场 `TixXin/fuyu-plugins`：维护者审核、索引签名、作者签名、源码核对、撤销名单 | 没有默认市场：用户自己添加索引地址（默认一个都没有），索引只列包名和安装方式；没看到索引签名、作者签名或审核（[plugin-market](https://github.com/deepseek-ai/deepseek-harness/blob/main/packages/boot/plugin-market/README.zh.md)，2026-11-14） |
+
+沿用第 2 版的发布方式，不学 DeepSeek Harness 的去中心化：插件和浮屿同权，审核和签名比以前更重要。以后可以加「从 npm 包安装」作为第二个来源，同样要经过市场列出。
+
 ## 开发体验
 
 - `npm create fuyu-plugin@latest` 生成 TypeScript 项目：宿主部分、岛屿页面、设置分节各一个示例。
