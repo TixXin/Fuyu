@@ -12,6 +12,7 @@ import { openSettingsWindow } from "../settings/api";
 import { useAutoTranslate } from "../../features/translation/useAutoTranslate";
 import { useTranslationRequest } from "../../features/translation/useTranslationRequest";
 import { shortcutLabel } from "../../features/clipboard/shortcut";
+import { IconButtonTooltip } from "../../components/IconButtonTooltip";
 import "./TranslationWindow.css";
 
 export function TranslationWindow() {
@@ -170,6 +171,7 @@ export function TranslationWindow() {
 
   return (
     <main className={`translation-stage${light ? " island-light" : ""}`}>
+      <IconButtonTooltip scope="body" />
       <section className="translation-window" aria-label={t.translator.label}>
         <header className="translation-window__header" onPointerDown={startWindowDrag}>
           <span className="translation-window__mark" aria-hidden="true"><Languages size={18} /></span>

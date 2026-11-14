@@ -3,14 +3,20 @@ import { createPortal } from "react-dom";
 import { CARD_OFFSET, cardLeft } from "./hoverCardPlacement";
 import "./IslandHoverCard.css";
 
-const DELAY_MS = 400;
+const DELAY_MS = 1500;
+const TARGETS = "[title], [data-tooltip], button, [role='button'], [role='switch']";
 
 type Tip = { element: HTMLElement; text: string; pointerX: number | null };
 
 export function tooltipTarget(target: EventTarget | null): { element: HTMLElement; text: string } | null {
   if (!(target instanceof Element)) return null;
-  const element = target.closest<HTMLElement>("button, [role='button'], [role='switch']");
-  if (!element || element.closest(".island-hover-card__anchor") || element.hasAttribute("title")) return null;
+  const element = target.closest<HTMLElement>(TARGETS);
+  if (!element || element.closest(".island-hover-card__anchor")) return null;
+  const title = element.getAttribute("title");
+  if (title !== null) {
+    element.removeAttribute("title");
+    if (title.trim()) element.dataset.tooltip = title;
+  }
   const text = element.dataset.tooltip
     ?? (/^[\d+]*$/.test(element.textContent?.trim() ?? "") ? element.getAttribute("aria-label") : null);
   return text ? { element, text } : null;
@@ -36,7 +42,7 @@ export function IconButtonTooltip({ scope = ".island", delay = DELAY_MS }: { sco
       timerRef.current = window.setTimeout(() => setTip({ ...found, pointerX: event.clientX }), delay);
     };
     const onOut = (event: PointerEvent) => {
-      const from = event.target instanceof Element ? event.target.closest("button, [role='button'], [role='switch']") : null;
+      const from = event.target instanceof Element ? event.target.closest(TARGETS) : null;
       if (from && !(event.relatedTarget instanceof Node && from.contains(event.relatedTarget))) {
         if (pressedRef.current === from) pressedRef.current = null;
         hide();
@@ -102,6 +108,6 @@ export function IconButtonTooltip({ scope = ".island", delay = DELAY_MS }: { sco
     >
       <div className="island-hover-card__line"><span>{tip.text}</span></div>
     </div>,
-    tip.element.closest(".stage") ?? document.body,
+    tip.element.closest(".stage, .island-light") ?? document.body,
   );
 }
