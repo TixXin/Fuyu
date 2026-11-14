@@ -288,7 +288,13 @@ pub fn minimize_island(app: AppHandle) -> Result<(), String> {
 
 #[tauri::command]
 pub fn show_ready_island(app: AppHandle) -> Result<(), String> {
-    show_island(&app)
+    let window = main_window(&app)?;
+    apply_stage_geometry(&window, read_window_state(), false)?;
+    focus::show_island_at_startup(&window)?;
+    if read_window_state().is_tucked {
+        let _ = window.emit(ISLAND_REVEAL_REQUESTED_EVENT, ());
+    }
+    Ok(())
 }
 
 pub(crate) fn main_window(app: &AppHandle) -> Result<WebviewWindow, String> {

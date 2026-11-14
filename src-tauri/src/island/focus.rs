@@ -42,6 +42,12 @@ pub(crate) fn focus_island_for_shortcut(window: &WebviewWindow) {
     }
 }
 
+pub(crate) fn show_island_at_startup(window: &WebviewWindow) -> Result<(), String> {
+    let island = window.hwnd().map_err(|error| error.to_string())?;
+    win32::window::show_without_activating(island);
+    Ok(())
+}
+
 #[tauri::command]
 pub fn release_island_hover_focus(app: AppHandle) -> Result<bool, String> {
     if win32::input::is_left_button_down() {
