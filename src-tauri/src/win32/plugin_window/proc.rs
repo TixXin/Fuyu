@@ -12,7 +12,7 @@ use windows::{
                 RegisterClassW, SetForegroundWindow, SetWindowPos, CS_HREDRAW, CS_VREDRAW, HTBOTTOM, HTBOTTOMLEFT, HTBOTTOMRIGHT,
                 HTCAPTION, HTCLIENT, HTLEFT, HTRIGHT, HTTOP, HTTOPLEFT, HTTOPRIGHT, IDC_ARROW, MA_NOACTIVATE, MINMAXINFO, SC_MAXIMIZE,
                 SC_MINIMIZE, SWP_NOACTIVATE, SWP_NOZORDER, WA_CLICKACTIVE, WA_INACTIVE, WM_ACTIVATE, WM_APP, WM_CLOSE, WM_DISPLAYCHANGE,
-                WM_DPICHANGED, WM_EXITSIZEMOVE, WM_GETMINMAXINFO, WM_LBUTTONUP, WM_MOUSEACTIVATE, WM_MOVE, WM_NCHITTEST,
+                WM_DPICHANGED, WM_ENTERSIZEMOVE, WM_EXITSIZEMOVE, WM_GETMINMAXINFO, WM_LBUTTONUP, WM_MOUSEACTIVATE, WM_MOVE, WM_NCHITTEST,
                 WM_NCLBUTTONDBLCLK, WM_NCLBUTTONDOWN, WM_PAINT, WM_SETFOCUS, WM_SIZE, WM_SYSCOMMAND, WNDCLASSW,
             },
         },
@@ -29,6 +29,7 @@ struct State {
     events: Rc<dyn WindowEvents>,
     previous_active: Option<HWND>,
     previous_focus: Option<HWND>,
+    moving: bool,
 }
 
 thread_local! {
@@ -61,7 +62,7 @@ pub(super) fn register() -> Result<Vec<u16>, String> {
 }
 
 pub(super) fn attach(hwnd: HWND, look: Look, events: Rc<dyn WindowEvents>) {
-    STATES.with(|states| states.borrow_mut().insert(hwnd.0 as isize, State { look, events, previous_active: None, previous_focus: None }));
+    STATES.with(|states| states.borrow_mut().insert(hwnd.0 as isize, State { look, events, previous_active: None, previous_focus: None, moving: false }));
 }
 
 pub(super) fn detach(hwnd: HWND) {
@@ -104,7 +105,7 @@ pub(super) fn content_rect(hwnd: HWND, client: RECT) -> Bounds {
 }
 
 pub(super) fn give_back_focus(hwnd: HWND) {
-    let is_widget = with_state(hwnd, |state| state.look.caption.is_none()).unwrap_or(false);
+    let is_widget = with_state(hwnd, |state| state.look.caption.is_none() && !state.moving).unwrap_or(false);
     if is_widget {
         let _ = unsafe { PostMessageW(Some(hwnd), GIVE_BACK_FOCUS, WPARAM(0), LPARAM(0)) };
     }
@@ -181,7 +182,15 @@ fn handle(hwnd: HWND, message: u32, wparam: WPARAM, lparam: LPARAM) -> Option<LR
             events.moved();
             None
         }
+        WM_ENTERSIZEMOVE => {
+            with_state(hwnd, |state| state.moving = true);
+            None
+        }
         WM_EXITSIZEMOVE => {
+            with_state(hwnd, |state| state.moving = false);
+            if widget {
+                let _ = unsafe { PostMessageW(Some(hwnd), GIVE_BACK_FOCUS, WPARAM(0), LPARAM(0)) };
+            }
             let mut rect = RECT::default();
             let _ = unsafe { GetWindowRect(hwnd, &mut rect) };
             events.user_moved(Bounds::from_rect(rect));
@@ -230,7 +239,9 @@ fn handle(hwnd: HWND, message: u32, wparam: WPARAM, lparam: LPARAM) -> Option<LR
             let active = kind != WA_INACTIVE;
             if widget && active {
                 let previous = HWND(lparam.0 as *mut _);
-                with_state(hwnd, |state| state.previous_active = Some(previous));
+                if !previous.is_invalid() && previous != hwnd {
+                    with_state(hwnd, |state| state.previous_active = Some(previous));
+                }
                 let _ = unsafe { PostMessageW(Some(hwnd), GIVE_BACK_FOCUS, WPARAM(0), LPARAM(0)) };
             }
             events.activated(active, kind == WA_CLICKACTIVE);
@@ -238,12 +249,16 @@ fn handle(hwnd: HWND, message: u32, wparam: WPARAM, lparam: LPARAM) -> Option<LR
         }
         WM_SETFOCUS if widget => {
             let previous = HWND(wparam.0 as *mut _);
-            with_state(hwnd, |state| state.previous_focus = Some(previous));
+            if !previous.is_invalid() {
+                with_state(hwnd, |state| state.previous_focus = Some(previous));
+            }
             let _ = unsafe { PostMessageW(Some(hwnd), GIVE_BACK_FOCUS, WPARAM(0), LPARAM(0)) };
             Some(LRESULT(0))
         }
         GIVE_BACK_FOCUS => {
-            restore_focus(hwnd);
+            if !with_state(hwnd, |state| state.moving).unwrap_or(false) {
+                restore_focus(hwnd);
+            }
             Some(LRESULT(0))
         }
         _ => None,
