@@ -8,12 +8,16 @@ export function MarketPluginAction({
   plugin,
   trusted,
   installingId,
+  confirmingTrust,
+  onConfirmingTrustChange,
   onInstall,
   onManage,
 }: {
   plugin: MarketPlugin;
   trusted: boolean;
   installingId: string | null;
+  confirmingTrust: boolean;
+  onConfirmingTrustChange: (confirming: boolean) => void;
   onInstall: (id: string, trust: boolean, acceptKeyChange: boolean) => void;
   onManage?: (id: string) => void;
 }) {
@@ -60,13 +64,34 @@ export function MarketPluginAction({
       </>
     );
   }
+  if (!trusted && !keyChanged && confirmingTrust) {
+    return (
+      <>
+        <button
+          className="plugin-card__button plugin-market__update"
+          type="button"
+          disabled={installingId !== null}
+          onClick={() => {
+            onConfirmingTrustChange(false);
+            onInstall(plugin.id, true, false);
+          }}
+        >
+          <Download size={12} strokeWidth={2.4} />
+          <span>{text.confirmTrust}</span>
+        </button>
+        <button className="plugin-card__button plugin-card__button--quiet" type="button" onClick={() => onConfirmingTrustChange(false)}>
+          <span>{text.cancel}</span>
+        </button>
+      </>
+    );
+  }
   const label = installingId === plugin.id ? text.installing : keyChanged ? text.updateAnyway : !trusted ? text.trustAndInstall : isUpdate ? text.update(plugin.version) : text.install;
   return (
     <button
       className={`plugin-card__button${isUpdate && !keyChanged ? " plugin-market__update" : ""}`}
       type="button"
       disabled={installingId !== null}
-      onClick={() => (keyChanged ? setConfirmingKeyChange(true) : onInstall(plugin.id, !trusted, false))}
+      onClick={() => (keyChanged ? setConfirmingKeyChange(true) : trusted ? onInstall(plugin.id, false, false) : onConfirmingTrustChange(true))}
     >
       <Download size={12} strokeWidth={2.4} />
       <span>{label}</span>

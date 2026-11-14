@@ -102,10 +102,10 @@ if (!automated) {
     await act(async () => { document.querySelector<HTMLElement>(".plugins-list__grid .plugin-card--openable .plugin-card__title")?.click(); });
     check(onPluginPage(), "Clicking a plugin's card opens its page");
     await backToList();
-    const runLine = [...document.querySelectorAll<HTMLElement>(".plugin-card__hint")].find((hint) => hint.textContent?.startsWith("内存"));
-    check(runLine?.textContent === "内存 4.0 MB", "A plugin's card shows only the plugin's own memory, without the runtime");
+    const runLine = [...document.querySelectorAll<HTMLElement>(".plugin-card__facts")].find((hint) => hint.textContent?.startsWith("内存"));
+    check(runLine?.textContent?.split(" · ")[0] === "内存 4.0 MB", "A plugin's card shows only the plugin's own memory, without the runtime");
     check(runLine && !runLine.hasAttribute("title"), "The run line has no hover tooltip");
-    check([...document.querySelectorAll(".plugin-card__hint")].some((hint) => hint.textContent === "有预发布版本 v1.1.0-beta.1，可在插件设置里选择接收。"), "A plugin with a pre-release in the market says so on its card");
+    check(runLine?.textContent === "内存 4.0 MB · 按需启动 · 有预发布版 v1.1.0-beta.1" && texts(".plugins-list__grid .plugin-card__alert") === "需要 Node.js" && texts(".plugin-runtime-banner p") === "这台电脑上没有找到 Node.js，1 个插件装好它之后才能运行。", "A card's facts sit on one line, and a missing runtime is one banner above the list plus a short strip on the card");
     const syncCard = [...document.querySelectorAll<HTMLElement>(".plugin-card")].find((card) => card.textContent?.includes("待办同步示例"));
     await act(async () => { [...(syncCard?.querySelectorAll<HTMLButtonElement>(".plugin-card__button") ?? [])].find((button) => button.textContent === "设置")?.click(); });
     const sensitiveRows = [...document.querySelectorAll<HTMLElement>(".plugin-detail__sensitive li")];

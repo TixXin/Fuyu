@@ -1,4 +1,4 @@
-import { useState, type CSSProperties, type MouseEvent } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type MouseEvent } from "react";
 import { ExternalLink, Lock, Settings2, Trash2 } from "lucide-react";
 import { ToggleControl } from "../../components/controls/ToggleControl";
 import { useLocale, useTranslation } from "../../i18n";
@@ -6,7 +6,7 @@ import { openPluginHomepage, PLUGIN_PERMISSIONS, type PluginInfo, type PluginPer
 import { isSensitivePermission } from "./promptedPermissions";
 import { pluginHealth } from "./installedFilter";
 import { PluginIcon } from "./PluginIcon";
-import { PluginNotes } from "./PluginNotes";
+import { PluginCardNotes } from "./PluginCardNotes";
 import "./PluginCard.css";
 import { isMacOS } from "../../lib/platform";
 
@@ -15,6 +15,20 @@ const isPermission = (name: string): name is PluginPermission =>
 
 function PermissionSummary({ permissions, optional }: { permissions: string[]; optional: string[] }) {
   const t = useTranslation();
+  const [open, setOpen] = useState(false);
+  const root = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const close = (event: Event) => {
+      if (event instanceof KeyboardEvent ? event.key === "Escape" : !root.current?.contains(event.target as Node)) setOpen(false);
+    };
+    document.addEventListener("pointerdown", close);
+    document.addEventListener("keydown", close);
+    return () => {
+      document.removeEventListener("pointerdown", close);
+      document.removeEventListener("keydown", close);
+    };
+  }, [open]);
   if (permissions.length + optional.length === 0) {
     return <span className="plugin-card__permissions-none">{t.settings.plugins.noPermissions}</span>;
   }
@@ -27,20 +41,22 @@ function PermissionSummary({ permissions, optional }: { permissions: string[]; o
   );
 
   return (
-    <details className={`plugin-card__permissions${hasSensitive ? " plugin-card__permissions--sensitive" : ""}`}>
-      <summary>
+    <div ref={root} className={`plugin-card__permissions${hasSensitive ? " plugin-card__permissions--sensitive" : ""}${open ? " plugin-card__permissions--open" : ""}`}>
+      <button type="button" aria-expanded={open} onClick={() => setOpen(!open)}>
         <Lock size={11} strokeWidth={2.4} />
         <span>{t.settings.plugins.permissionCount(permissions.length + optional.length)}</span>
-      </summary>
-      <ul>
-        {permissions.map((permission) => item(permission, false))}
-        {optional.map((permission) => item(permission, true))}
-      </ul>
-    </details>
+      </button>
+      {open ? (
+        <ul>
+          {permissions.map((permission) => item(permission, false))}
+          {optional.map((permission) => item(permission, true))}
+        </ul>
+      ) : null}
+    </div>
   );
 }
 
-const OWN_CLICK = "button, a, input, label, summary, details";
+const OWN_CLICK = "button, a, input, label, .plugin-card__permissions";
 
 export function PluginCard({
   plugin,
@@ -126,7 +142,7 @@ export function PluginCard({
               {description}
             </p>
           ) : null}
-          <PluginNotes plugin={plugin} allowed={allowed} nodeAvailable={nodeAvailable} powershellAvailable={powershellAvailable} />
+          <PluginCardNotes plugin={plugin} allowed={allowed} nodeAvailable={nodeAvailable} powershellAvailable={powershellAvailable} />
         </>
       )}
 
