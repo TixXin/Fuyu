@@ -112,6 +112,7 @@ export type SettingsPluginsText = {
   getPowershell: string;
   notForMac: string;
   notForWindows: string;
+  webviewNotOnMac: string;
   needsNode: string;
   needsPowershell: string;
   nodeMissingCount: (count: number) => string;
@@ -183,6 +184,7 @@ export type SettingsPluginsText = {
     readme: string;
     changelog: string;
     customUi: string;
+    customUiNotOnMac: string;
     status: (count: number, time: string) => string;
     statusCount: (count: number) => string;
     refreshing: string;
@@ -465,6 +467,7 @@ export const zhCN: SettingsPluginsText = {
   getPowershell: "安装 PowerShell",
   notForMac: "这个插件只支持 Windows，在 Mac 上不能运行。",
   notForWindows: "这个插件只支持 macOS，在 Windows 上不能运行。",
+  webviewNotOnMac: "这个插件的页面用它自己的网页画，Mac 上暂不支持，打开是一行说明；收起条上的内容照常显示。",
   needsNode: "需要 Node.js",
   needsPowershell: "需要 PowerShell 7",
   nodeMissingCount: (count: number) => `这台电脑上没有找到 Node.js，${count} 个插件装好它之后才能运行。`,
@@ -553,6 +556,7 @@ export const zhCN: SettingsPluginsText = {
     readme: "插件说明",
     changelog: "版本历史",
     customUi: "自定义界面",
+    customUiNotOnMac: "自定义界面 · Mac 暂不支持",
     status: (count: number, time: string) => `共 ${count} 个插件 · 索引更新于 ${time}`,
     statusCount: (count: number) => `共 ${count} 个插件`,
     refreshing: "正在刷新插件列表…",
@@ -874,6 +878,7 @@ export const en: SettingsPluginsText = {
   getPowershell: "Install PowerShell",
   notForMac: "This plugin is for Windows only and does not run on a Mac.",
   notForWindows: "This plugin is for macOS only and does not run on Windows.",
+  webviewNotOnMac: "This plugin draws its page with its own web page, which is not supported on a Mac yet; the page shows a note instead. Its items on the collapsed bar still show.",
   needsNode: "Needs Node.js",
   needsPowershell: "Needs PowerShell 7",
   nodeMissingCount: (count: number) => `Node.js was not found on this computer; ${count === 1 ? "1 plugin runs" : `${count} plugins run`} once it is installed.`,
@@ -962,6 +967,7 @@ export const en: SettingsPluginsText = {
     readme: "About this plugin",
     changelog: "Version history",
     customUi: "Custom UI",
+    customUiNotOnMac: "Custom UI · not on Mac yet",
     status: (count: number, time: string) => `${count} ${count === 1 ? "plugin" : "plugins"} · index updated ${time}`,
     statusCount: (count: number) => `${count} ${count === 1 ? "plugin" : "plugins"}`,
     refreshing: "Refreshing the plugin list…",

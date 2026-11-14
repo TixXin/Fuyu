@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
-import { useLocale } from "../../../i18n";
+import { useLocale, useTranslation } from "../../../i18n";
+import { isMacOS } from "../../../lib/platform";
 import { hidePluginWebview, showPluginWebview, type PluginWebviewBounds } from "../api";
 import "./WebviewTemplate.css";
 
@@ -15,6 +16,7 @@ export function WebviewTemplate({ pluginId, viewId, active, frameless = false }:
   frameless?: boolean;
 }) {
   const box = useRef<HTMLDivElement>(null);
+  const t = useTranslation();
   const { locale } = useLocale();
   const localeRef = useRef(locale);
   useEffect(() => {
@@ -23,7 +25,7 @@ export function WebviewTemplate({ pluginId, viewId, active, frameless = false }:
 
   useEffect(() => {
     const element = box.current;
-    if (!active || !element) return;
+    if (!active || !element || isMacOS) return;
     let sent: PluginWebviewBounds | null = null;
     let frame = 0;
     let followUntil = 0;
@@ -55,5 +57,6 @@ export function WebviewTemplate({ pluginId, viewId, active, frameless = false }:
     };
   }, [active, frameless, pluginId, viewId]);
 
+  if (isMacOS) return <p className="plugin-webview plugin-webview--unsupported">{t.pluginViews.webviewNotOnMac}</p>;
   return <div ref={box} className="plugin-webview" />;
 }

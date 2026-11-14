@@ -45,6 +45,7 @@ export function PluginCardNotes({ plugin, allowed, nodeAvailable, powershellAvai
   add("warn", problem === "platform" && (isMacOS ? text.notForMac : text.notForWindows));
   add("warn", problem === "node" && text.needsNode);
   add("warn", problem === "powershell" && text.needsPowershell);
+  add("warn", isMacOS && problem === null && plugin.webview && text.webviewNotOnMac);
   add("warn", updateOffered && plugin.signingKeyChanged && text.updates.keyChanged(updateOffered));
   add("warn", plugin.keybindingConflicts.length > 0 && text.keybindingConflict(plugin.keybindingConflicts.join(", ")));
   add("info", updateOffered && !plugin.signingKeyChanged && text.updates.available(updateOffered));
