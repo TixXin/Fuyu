@@ -12,6 +12,20 @@ pub struct TodoItem {
     pub created_at: Number,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub project: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub started_at: Option<Number>,
+}
+
+pub(crate) fn latest_started(todos: &[TodoItem]) -> Option<String> {
+    todos
+        .iter()
+        .filter(|todo| !todo.completed)
+        .filter_map(|todo| todo.started_at.as_ref().and_then(Number::as_f64).map(|at| (at, todo)))
+        .fold(None, |best: Option<(f64, &TodoItem)>, (at, todo)| match best {
+            Some((best_at, _)) if best_at >= at => best,
+            _ => Some((at, todo)),
+        })
+        .map(|(_, todo)| todo.id.clone())
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

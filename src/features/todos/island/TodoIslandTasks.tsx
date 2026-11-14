@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ChevronDown, ChevronRight, Plus, Sun } from "lucide-react";
 import { useTranslation } from "../../../i18n";
 import { TodoDatePicker } from "../TodoDatePicker";
+import { isInProgress } from "../activeTodos";
 import type { TodoItem } from "../types";
 import { useTodoNotebookEditing } from "../useTodoNotebookEditing";
 import { groupByProject, projectsOf } from "../project";
@@ -74,7 +75,7 @@ export function TodoIslandTasks({
       todo={todo}
       showProject={!inGroup && filter === null}
       editable={editable}
-      isActive={editable && todo.id === activeTodoId && !todo.completed}
+      isActive={editable && (todo.id === activeTodoId || isInProgress(todo)) && !todo.completed}
       canReorder={canReorder}
       isDragging={editing.draggedTodoId === todo.id}
       isDragOver={editing.dragOverTodoId === todo.id}

@@ -8,6 +8,7 @@ export type TodoItem = {
   completed: boolean;
   createdAt: number;
   project?: string;
+  startedAt?: number;
 };
 
 export type ScheduledTodo = {

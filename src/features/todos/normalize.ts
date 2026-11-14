@@ -19,6 +19,7 @@ export function normalizeTodo(todo: Partial<TodoItem>): TodoItem {
     completed: Boolean(todo.completed),
     createdAt: typeof todo.createdAt === "number" ? todo.createdAt : Date.now(),
     ...withProject(todo.project),
+    ...(typeof todo.startedAt === "number" && Number.isFinite(todo.startedAt) && !todo.completed ? { startedAt: todo.startedAt } : {}),
   };
 }
 
