@@ -306,6 +306,10 @@
   background: rgba(var(--pop-ink), 0.08);
 }
 
+.clipboard-popup__delete:hover {
+  color: var(--error-text, #ff8a8a);
+}
+
 .clipboard-popup__star--on {
   color: var(--pop-accent-text);
 }

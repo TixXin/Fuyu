@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { X } from "lucide-react";
+import { IconButtonTooltip } from "../../components/IconButtonTooltip";
 import { activeTone } from "../../features/appearance/themeMode";
 import { useIslandSettings } from "../../features/appearance/useIslandSettings";
 import { useSystemDark } from "../../features/appearance/useResolvedTheme";
@@ -119,6 +120,7 @@ export function OnboardingWindow() {
 
   return (
     <main className={`onboarding stage--font-${settings.fontFamily}${light ? " island-light onboarding--light" : ""}`} data-act={act}>
+      <IconButtonTooltip scope=".onboarding" />
       <Spotlight spot={spot} />
       <div className="onboarding__card" ref={card} style={cardStyle} role="dialog" aria-label={text.windowTitle}>
         <header className="onboarding__bar">

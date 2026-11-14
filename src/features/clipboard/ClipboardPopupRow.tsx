@@ -1,4 +1,4 @@
-import { Braces, CornerDownLeft, ImageIcon, Link2, Star, TextQuote } from "lucide-react";
+import { Braces, CornerDownLeft, ImageIcon, Link2, Star, TextQuote, Trash2 } from "lucide-react";
 import { useRef, type MouseEvent, type PointerEvent } from "react";
 import { formatAgo } from "../../components/list/formatAgo";
 import { useTranslation } from "../../i18n";
@@ -11,7 +11,7 @@ import { useLinkPreview } from "./useLinkPreview";
 
 const DRAG_DISTANCE = 5;
 
-export function ClipboardPopupRow({ index, now, selected, queued, entry, snippet, linkPreview = false, onPick, onHover, onToggleFavorite, onMenu, onDrag }: {
+export function ClipboardPopupRow({ index, now, selected, queued, entry, snippet, linkPreview = false, onPick, onHover, onToggleFavorite, onDelete, onMenu, onDrag }: {
   index: number;
   now: number;
   selected: boolean;
@@ -22,6 +22,7 @@ export function ClipboardPopupRow({ index, now, selected, queued, entry, snippet
   onPick: (event: MouseEvent) => void;
   onHover: () => void;
   onToggleFavorite?: () => void;
+  onDelete?: () => void;
   onMenu?: () => void;
   onDrag?: () => void;
 }) {
@@ -120,6 +121,18 @@ export function ClipboardPopupRow({ index, now, selected, queued, entry, snippet
             onClick={onToggleFavorite}
           >
             <Star size={13} strokeWidth={2} fill={entry.favorite ? "currentColor" : "none"} />
+          </button>
+        )}
+        {entry && onDelete && selected && (
+          <button
+            className="clipboard-popup__star clipboard-popup__delete"
+            type="button"
+            tabIndex={-1}
+            aria-label={text.deleteItem}
+            title={text.deleteItem}
+            onClick={onDelete}
+          >
+            <Trash2 size={13} strokeWidth={2} />
           </button>
         )}
       </span>

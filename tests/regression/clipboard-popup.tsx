@@ -73,6 +73,7 @@ for (const frame of FRAMES) {
         snippets={SNIPPETS}
         openCount={0}
         wide={frame.wide}
+        ownsWindow={frame.id === "light"}
         aiPrompts={[{ id: "p1", title: "正式邮件", prompt: "改成正式的邮件语气" }]}
         capture={frame.id === "paused" ? { paused: true, pausedUntil: now + 14 * minute, ignoreNext: false } : undefined}
         onPaste={(id, plain, options) => calls.push(`paste:${id}${plain ? ":plain" : ""}${options?.enter ? ":enter" : ""}${options?.copyAs ? `:${options.copyAs}` : ""}`)}
@@ -189,6 +190,25 @@ async function runChecks() {
     check($$("wide", ".clipboard-popup__pane-files li").length === 3, "宽版：文件逐个列出");
 
     await checkSecondRound(check, calls);
+
+    const press = (target: EventTarget, init: KeyboardEventInit) => act(async () => {
+      target.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, cancelable: true, ...init }));
+    });
+    const selectedRow = () => rows("light").findIndex((row) => row.classList.contains("clipboard-popup__item--selected"));
+    const before = selectedRow();
+    (document.activeElement as HTMLElement | null)?.blur();
+    await press(document.body, { key: "ArrowDown" });
+    check(selectedRow() === before + 1 && document.activeElement === $("light", "input"), "焦点不在列表里（点了标题栏、钉住后点回来）时方向键照样能用，焦点回到搜索框");
+    await press($("light", "input")!, { key: "ArrowRight" });
+    check(selectedChip("light") === "收藏", "搜索框为空时 → 切到下一个分类");
+    await press($("light", "input")!, { key: "ArrowLeft" });
+    check(selectedChip("light") === "全部", "← 切回上一个分类");
+    await press($("light", "input")!, { key: "k", ctrlKey: true });
+    await press($("light", ".clipboard-panel input")!, { key: "ArrowLeft" });
+    check(!$("light", ".clipboard-panel"), "Ctrl+K 面板里搜索框为空时 ← 返回列表");
+    check($$("light", ".clipboard-popup__delete").length === 1 && $("light", ".clipboard-popup__item--selected .clipboard-popup__delete"), "选中的那行有删除按钮");
+    await act(async () => { $("light", ".clipboard-popup__delete")!.click(); });
+    check(rows("light").length === ITEMS.length - 1 && $("light", ".clipboard-popup__undo"), "点删除按钮：这条消失，底栏可以撤销");
 
     results.textContent = `${messages.join("\n")}\n\n全部 ${messages.length} 项检查通过。`;
     results.dataset.result = "passed";

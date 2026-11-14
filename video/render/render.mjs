@@ -184,7 +184,13 @@ async function waitReady(stage) {
 }
 
 const settle = async (page) => {
-  await page.evaluate(() => 0);
+  await page.evaluate(() => {
+    const docs = [document, ...[...document.querySelectorAll("iframe")].map((frame) => frame.contentDocument).filter(Boolean)];
+    for (const doc of docs) {
+      for (const animation of doc.getAnimations()) if (animation.playState === "running") animation.currentTime = animation.currentTime;
+      void doc.body?.offsetHeight;
+    }
+  });
   await page.evaluate(() => 0);
 };
 const debug = (text) => { if (process.env.RENDER_DEBUG) console.log(text); };

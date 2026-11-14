@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { Search } from "lucide-react";
 import { useTranslation } from "../../i18n";
 import { startClipboardDrag, type ClipboardAiPrompt, type ClipboardCaptureStatus, type ClipboardCopyAs, type ClipboardHistoryItem, type ClipboardSnippet } from "./api";
@@ -15,6 +15,7 @@ import { loadPinyin, parsePopupQuery } from "./popupQuery";
 import { isPrimaryKey } from "./shortcut";
 import { usePopupHandlers } from "./usePopupHandlers";
 import { useSpacePeek } from "./useSpacePeek";
+import { useStrayKeys, type PopupKeyEvent } from "./useStrayKeys";
 import "./ClipboardPopup.css";
 import "./ClipboardPopupPanels.css";
 
@@ -22,11 +23,12 @@ const CLOCK_MS = 30_000;
 
 type Mode = "list" | "panel" | "look" | "edit";
 
-export function ClipboardPopup({ items, snippets, openCount, wide, capture, linkPreview = false, aiPrompts, onPaste, onPasteSnippet, onPasteSequence, onClose, onToggleFavorite }: {
+export function ClipboardPopup({ items, snippets, openCount, wide, ownsWindow = false, capture, linkPreview = false, aiPrompts, onPaste, onPasteSnippet, onPasteSequence, onClose, onToggleFavorite }: {
   items: readonly ClipboardHistoryItem[];
   snippets: readonly ClipboardSnippet[];
   openCount: number;
   wide: boolean;
+  ownsWindow?: boolean;
   capture?: ClipboardCaptureStatus;
   linkPreview?: boolean;
   aiPrompts?: readonly ClipboardAiPrompt[];
@@ -49,6 +51,7 @@ export function ClipboardPopup({ items, snippets, openCount, wide, capture, link
   const [pinyinReady, setPinyinReady] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const listRef = useRef<HTMLUListElement | null>(null);
+  const rootRef = useRef<HTMLElement | null>(null);
   const pointerPickRef = useRef(false);
   const { handlers, notice, deletion, saveNote, saveAsNew, pasteText } = usePopupHandlers({ onPaste, onToggleFavorite, onEdit: () => setMode("edit") });
   const { flush } = deletion;
@@ -139,7 +142,7 @@ export function ClipboardPopup({ items, snippets, openCount, wide, capture, link
 
   const toggleRecord = () => (pausedNow(capture, now) ? handlers.resume() : handlers.pause(null));
 
-  const onKeyDown = (event: KeyboardEvent) => {
+  const onKeyDown = (event: PopupKeyEvent) => {
     const key = event.key;
     const ctrl = isPrimaryKey(event) && !event.altKey;
     if (mode === "look") {
@@ -204,6 +207,9 @@ export function ClipboardPopup({ items, snippets, openCount, wide, capture, link
       if (event.repeat) return;
       setMode("look");
       peek.start();
+    } else if ((key === "ArrowLeft" || key === "ArrowRight") && query === "" && !ctrl && !event.altKey) {
+      handled();
+      chooseFilter(nextPopupFilter(filters, filter, key === "ArrowLeft"));
     } else if (key === "Delete" && query === "" && item) {
       handled();
       deletion.remove(item);
@@ -215,6 +221,8 @@ export function ClipboardPopup({ items, snippets, openCount, wide, capture, link
       else setSelected(action.index);
     }
   };
+
+  useStrayKeys({ enabled: ownsWindow, root: rootRef, input: inputRef, active: mode === "list", onKeyDown, onKeyUp: peek.keyUp });
 
   const chipLabel = (chip: PopupFilter) =>
     chip.startsWith("#") ? chip
@@ -229,7 +237,7 @@ export function ClipboardPopup({ items, snippets, openCount, wide, capture, link
   const editing = mode === "edit" && item && isText;
 
   return (
-    <section className={`clipboard-popup${wide ? " clipboard-popup--wide" : ""}`} aria-label={text.title} onKeyDown={onKeyDown} onKeyUp={peek.keyUp}>
+    <section ref={rootRef} className={`clipboard-popup${wide ? " clipboard-popup--wide" : ""}`} aria-label={text.title} onKeyDown={onKeyDown} onKeyUp={peek.keyUp}>
       <div className="clipboard-popup__top">
         <label className="clipboard-popup__search">
           <Search size={15} strokeWidth={2} aria-hidden="true" />
@@ -303,6 +311,7 @@ export function ClipboardPopup({ items, snippets, openCount, wide, capture, link
                     else onPaste(entry.id, event.shiftKey);
                   }}
                   onToggleFavorite={() => onToggleFavorite(entry.id)}
+                  onDelete={() => deletion.remove(entry)}
                   onMenu={() => {
                     setSelected(index);
                     openPanel("actions");

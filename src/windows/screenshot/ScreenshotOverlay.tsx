@@ -25,6 +25,7 @@ import { loadScreenshotSettings } from "../../features/screenshot/storage";
 import { useErrorText, useTranslation } from "../../i18n";
 import { AnnotationLayer } from "./AnnotationLayer";
 import { AnnotationTextInput } from "./AnnotationTextInput";
+import { IconButtonTooltip } from "../../components/IconButtonTooltip";
 import { LongShotBar } from "./LongShotBar";
 import { MeasureLayer } from "./MeasureLayer";
 import { ScreenshotToolbar } from "./ScreenshotToolbar";
@@ -235,6 +236,7 @@ export function ScreenshotOverlay() {
       onDoubleClick={() => !annotations.tool && !measure.active && grabbed === "inside" && copy()}
       onContextMenu={onContextMenu}
     >
+      <IconButtonTooltip scope=".screenshot-overlay" delay={200} />
       <canvas ref={canvasRef} className="screenshot-overlay__picture" />
       {bounds && !long.active && <AnnotationLayer picture={canvasRef} bounds={bounds} items={annotations.items} draft={annotations.draft} selection={chosen} />}
       {long.active && !long.mine ? (

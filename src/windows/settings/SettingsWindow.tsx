@@ -46,6 +46,7 @@ import { useMarketInstallRequest } from "../../features/plugins/market-link/useM
 import { useLocale, useTranslation } from "../../i18n";
 import { activeTone } from "../../features/appearance/themeMode";
 import { useSystemDark } from "../../features/appearance/useResolvedTheme";
+import { IconButtonTooltip } from "../../components/IconButtonTooltip";
 import "./SettingsWindow.css";
 
 const SETTINGS_DARK_FILL = "#131417";
@@ -162,6 +163,7 @@ export function SettingsWindow() {
 
   return (
     <main className={`settings-stage stage--font-${settings.fontFamily}${isMacOS ? " settings-stage--mac" : ""}${light ? " island-light settings-stage--light" : ""}`}>
+      <IconButtonTooltip scope="body" />
       <LayoutEditor
         category={category}
         hidden={features.hiddenPages}

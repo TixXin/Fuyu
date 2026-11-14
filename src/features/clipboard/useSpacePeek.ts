@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { PEEK_HOLD_MS, releaseEndsPeek } from "./popupKeys";
+import type { PopupKeyEvent } from "./useStrayKeys";
 
 export function useSpacePeek(onRelease: () => void) {
   const downAt = useRef<number | null>(null);
@@ -18,7 +19,7 @@ export function useSpacePeek(onRelease: () => void) {
     timer.current = window.setTimeout(() => setHolding(true), PEEK_HOLD_MS);
   }, []);
 
-  const keyUp = (event: KeyboardEvent) => {
+  const keyUp = (event: Pick<PopupKeyEvent, "key">) => {
     if (event.key !== " " || downAt.current === null) return;
     const held = Date.now() - downAt.current;
     cancel();

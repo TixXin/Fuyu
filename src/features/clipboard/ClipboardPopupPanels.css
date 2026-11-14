@@ -181,6 +181,7 @@
   overflow-y: auto;
   list-style: none;
   scrollbar-width: thin;
+  scrollbar-color: rgba(var(--pop-ink), 0.2) transparent;
 }
 
 .clipboard-panel__group {
