@@ -7,7 +7,11 @@ mod server;
 mod tests;
 
 use std::{
-    sync::{Arc, OnceLock},
+    path::PathBuf,
+    sync::{
+        atomic::{AtomicU16, Ordering},
+        Arc, Mutex, OnceLock, PoisonError,
+    },
     time::Duration,
 };
 use tauri::{AppHandle, Emitter, Manager};
@@ -21,11 +25,16 @@ use server::{ApprovalEvent, Shared};
 const REQUESTED_EVENT: &str = "agent-approval-requested";
 const CLOSED_EVENT: &str = "agent-approval-closed";
 const WAIT_LIMIT: Duration = Duration::from_secs(120);
+const RESUME_TRIES: u32 = 25;
+const RESUME_PAUSE: Duration = Duration::from_millis(200);
 
 struct Service {
     shared: Arc<Shared>,
-    port: u16,
+    port: AtomicU16,
     token: String,
+    path: PathBuf,
+    own: Mutex<Option<server::Listener>>,
+    borrowed: Mutex<Option<server::Listener>>,
 }
 
 static SERVICE: OnceLock<Service> = OnceLock::new();
@@ -59,16 +68,85 @@ pub fn init(app: &AppHandle) -> Result<(), String> {
             ApprovalEvent::Closed { id, reason } => emitter.emit(CLOSED_EVENT, ClosedPayload { id, reason }),
         };
     });
-    let (shared, port) = server::listen(saved.port, saved.token.clone(), WAIT_LIMIT, notify)?;
-    if port != saved.port {
+    let shared = server::new_shared(WAIT_LIMIT, notify);
+    let stays_quiet = crate::dev_lane::lane().is_none() && crate::coexist::yielding();
+    let own = if stays_quiet { None } else { Some(server::serve(&shared, saved.port, true, &saved.token)?) };
+    if let Some(port) = own.as_ref().map(server::Listener::port).filter(|port| *port != saved.port) {
         saved.port = port;
         changed = true;
     }
     if changed {
         config::save_config(&path, &saved)?;
     }
-    let _ = SERVICE.set(Service { shared, port, token: saved.token });
+    let _ = SERVICE.set(Service {
+        shared,
+        port: AtomicU16::new(saved.port),
+        token: saved.token,
+        path,
+        own: Mutex::new(own),
+        borrowed: Mutex::new(None),
+    });
     Ok(())
+}
+
+#[cfg_attr(not(windows), allow(dead_code))]
+pub(crate) fn pause() {
+    let Some(service) = SERVICE.get() else { return };
+    let listener = service.own.lock().unwrap_or_else(PoisonError::into_inner).take();
+    if let Some(listener) = listener {
+        listener.stop();
+    }
+}
+
+#[cfg_attr(not(windows), allow(dead_code))]
+pub(crate) fn resume() {
+    let Some(service) = SERVICE.get() else { return };
+    let mut own = service.own.lock().unwrap_or_else(PoisonError::into_inner);
+    if own.is_some() {
+        return;
+    }
+    let port = service.port.load(Ordering::SeqCst);
+    let listener = (0..RESUME_TRIES)
+        .find_map(|attempt| {
+            if attempt > 0 {
+                std::thread::sleep(RESUME_PAUSE);
+            }
+            server::serve(&service.shared, port, false, &service.token).ok()
+        })
+        .or_else(|| server::serve(&service.shared, port, true, &service.token).ok());
+    let Some(listener) = listener else {
+        eprintln!("could not start the agent approval endpoint again");
+        return;
+    };
+    if listener.port() != port {
+        service.port.store(listener.port(), Ordering::SeqCst);
+        let moved = config::ApprovalConfig { port: listener.port(), token: service.token.clone() };
+        if let Err(error) = config::save_config(&service.path, &moved) {
+            eprintln!("{error}");
+        }
+    }
+    *own = Some(listener);
+}
+
+#[cfg_attr(not(windows), allow(dead_code))]
+pub(crate) fn serve_for_release(wanted: bool) {
+    let Some(service) = SERVICE.get() else { return };
+    let mut borrowed = service.borrowed.lock().unwrap_or_else(PoisonError::into_inner);
+    if !wanted {
+        if let Some(listener) = borrowed.take() {
+            listener.stop();
+        }
+        return;
+    }
+    if borrowed.is_some() {
+        return;
+    }
+    let Some(real) = crate::home_dir::real_home().and_then(|home| config::read_config(&home.join(config::CONFIG_FILE_NAME))) else {
+        return;
+    };
+    if let Ok(listener) = server::serve(&service.shared, real.port, false, &real.token) {
+        *borrowed = Some(listener);
+    }
 }
 
 pub fn shutdown() {
@@ -78,7 +156,7 @@ pub fn shutdown() {
 }
 
 pub(crate) fn endpoint() -> Option<ApprovalEndpoint> {
-    SERVICE.get().map(|service| ApprovalEndpoint { port: service.port, token: service.token.clone() })
+    SERVICE.get().map(|service| ApprovalEndpoint { port: service.port.load(Ordering::SeqCst), token: service.token.clone() })
 }
 
 pub(crate) fn remote_hook_token(host: &str) -> Option<String> {

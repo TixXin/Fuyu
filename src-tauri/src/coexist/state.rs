@@ -18,6 +18,10 @@ pub(super) fn yields(development: bool, priority: Priority, release_running: boo
     development && priority == Priority::ReleaseFirst && release_running
 }
 
+pub(super) fn takes_over(priority: Priority, release_yields: bool) -> bool {
+    priority == Priority::DevFirst && release_yields
+}
+
 pub(super) fn saved_priority(text: Option<&str>) -> Priority {
     text.and_then(|text| serde_json::from_str::<Saved>(text.trim_start_matches('\u{feff}')).ok()).map(|saved| saved.priority).unwrap_or_default()
 }
@@ -28,7 +32,15 @@ pub(super) fn priority_file(priority: Priority) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::{priority_file, saved_priority, yields, Priority};
+    use super::{priority_file, saved_priority, takes_over, yields, Priority};
+
+    #[test]
+    fn the_development_build_takes_over_only_once_the_release_has_let_go() {
+        assert!(takes_over(Priority::DevFirst, true));
+        assert!(!takes_over(Priority::DevFirst, false));
+        assert!(!takes_over(Priority::ReleaseFirst, true));
+        assert!(!takes_over(Priority::ReleaseFirst, false));
+    }
 
     #[test]
     fn only_a_development_build_that_puts_the_release_first_yields_and_only_while_one_runs() {

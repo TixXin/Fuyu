@@ -12,7 +12,7 @@ src-tauri/src/
 ├── tray_mark.rs             # 只在 macOS 上编译：菜单栏用的单色模板图，按 mark.svg 的胶囊在代码里画
 ├── island/                  # 主窗口：命令、窗口状态、几何计算、毛玻璃、鼠标穿透（banner_hit.rs：新消息横幅的可点区域）、贴边动画
 ├── todos/                   # 待办与每日笔记：todos.json 持久化、从旧版 localStorage 迁移、命令与插件/本地接口读写
-├── agent_approval/          # 在岛上审批（B6 第 2 期）：127.0.0.1 上的审批端点（标准库 TcpListener，挂起时能发现 Agent 断开）、按会话排队、等待上限、agent-approval.json
+├── agent_approval/          # 在岛上审批（B6 第 2 期）：127.0.0.1 上的审批端点（标准库 TcpListener，挂起时能发现 Agent 断开）、按会话排队、等待上限、agent-approval.json；监听可以停下再绑回（`pause` / `resume`），开发版可以在正式版的端口上用它的 token 多开一路（`serve_for_release`，F39.5）
 ├── agent_status/            # AI 代理状态：快照、运行标记、Codex / Claude Code hook 安装；hooks/ 为编入二进制的 hook 脚本；sound_packs.rs 为导入的音效包（应用数据目录的 sound-packs/）
 │                            #   reply_marker.rs：可选的回复状态标记（B9），增删 CLAUDE.md 里岛屿自己的那段说明、识别回复末行的标记
 ├── phone_push.rs            # 手机推送（Bark）：设备 Key 凭据存取、发送推送、锁屏与空闲时间查询命令
@@ -22,7 +22,7 @@ src-tauri/src/
 ├── system/                  # 开机自启（注册表）、更新代理与配置、待办 Markdown 导出；update_runtime.rs 为跨窗口更新状态与互斥，update_notifications.rs 为更新系统通知与白名单诊断
 ├── rename_migration/        # 改名迁移（D17）：首次启动时把 com.focusd.island 的数据目录、凭据、开机自启、hook 迁移到 com.tixxin.fuyu，并静默卸载旧安装
 ├── clipboard_history/
-├── coexist/                 # 开发版和正式版抢系统资源时谁让谁（F39.4）：state.rs 纯判断，mod.rs 轮询正式版在不在（探测单实例互斥量）、`yielding()`、命令 get_dev_priority / set_dev_priority、状态翻转时让五处快捷键重新注册；让出时提醒不弹横幅（`banner_visible`）；Mac 上是 unsupported.rs
+├── coexist/                 # 开发版和正式版抢系统资源时谁让谁（F39.4）：state.rs 纯判断，mod.rs 轮询对方在不在（开发版探测单实例互斥量，正式版探测开发版持有的 dev-first 互斥量，放手后持有 release-yielded；正式版只在本机有开发版数据目录时才起线程）、`yielding()`、命令 get_dev_priority / set_dev_priority、状态翻转时让五处快捷键重新注册、让审批服务停下或接管（F39.5）；让出时提醒不弹横幅（`banner_visible`）；Mac 上是 unsupported.rs
 ├── file_shelf/              # 文件中转：路径列表（file-shelf.json）与命令；拖出调用 win32/ole.rs
 ├── screenshot/              # 截图（C41）：快捷键线程（hotkeys.rs，主键盘 RegisterHotKey、小键盘交给 win32/win_key_hook.rs），每个显示器先截图再给它一个常驻隐藏的选区窗口 screenshot-<n>（session.rs，截屏在 win32/screen_capture.rs），复制到剪贴板（output.rs、clipboard.rs）；系统调用经 capture.rs，Mac 上换成 `*_macos.rs`（ScreenCaptureKit、NSPanel、global-hotkey）
 ├── recording/               # 录屏（C41.11）：命令、倒计时、暂停计时和浮屿窗口排除在录像外（control.rs，状态在 state.rs，发 recording-state / recording-finished 给岛），录制线程（session.rs：WGC 帧经有界队列交给编码线程，满了丢帧计数）、帧节奏（pacing.rs，静止 3 个间隔才补重复帧，暂停扣时长）、尺寸码率和文件名（format.rs）、声音（audio.rs 接采集、按视频时间轴放；mixer.rs 混成 48 kHz 立体声）、GIF（gif.rs：每 1/15 秒挑一帧读回内存交给 gifski 线程）；声音采集在 win32/audio_capture.rs，画面采集在 win32/graphics_capture.rs，编码写 MP4 在 win32/video_writer.rs
@@ -54,7 +54,7 @@ src-tauri/src/
 ├── platform.rs              # 两个平台都有的平台层模块（icon、job、process、process_env、process_times、process_tree）：Windows 上取 win32/，macOS 上取 macos/
 ├── macos/                   # macOS 平台层（G1，决定 M10），和 win32/ 一样是允许 unsafe 的地方；第 0 步只有和 win32/ 同名同签名的空实现
 └── win32/                   # Win32 / COM 的安全封装，和 macos/ 一起是 crate 中允许 unsafe 的地方：window（窗口查询、枚举、前台切换）、
-                             # message_window（隐藏消息窗口与安全的窗口过程）、named_mutex（探测命名互斥量在不在）、hotkey、win_key_hook、clipboard、shell_hook、input、
+                             # message_window（隐藏消息窗口与安全的窗口过程）、named_mutex（探测、持有命名互斥量）、hotkey、win_key_hook、clipboard、shell_hook、input、
                              # com（COM / WinRT 初始化守卫）、audio、ole（文件拖出）、process / process_times / process_env /
                              # process_memory / process_tree、registry、credentials、dwm、icon、ocr、chinese、screen_capture、
                              # capture_targets、taskbar、uia_list / uia_tabs、url_protocol、brightness、

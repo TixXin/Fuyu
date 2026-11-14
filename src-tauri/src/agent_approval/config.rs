@@ -42,6 +42,13 @@ pub(super) fn load_config(path: &Path) -> Result<(ApprovalConfig, bool), String>
     Ok((config, changed))
 }
 
+pub(super) fn read_config(path: &Path) -> Option<ApprovalConfig> {
+    fs::read_to_string(path)
+        .ok()
+        .and_then(|text| serde_json::from_str::<ApprovalConfig>(text.trim_start_matches('\u{feff}')).ok())
+        .filter(|config| config.port != 0 && is_valid_token(&config.token))
+}
+
 pub(super) fn save_config(path: &Path, config: &ApprovalConfig) -> Result<(), String> {
     if let Some(dir) = path.parent() {
         fs::create_dir_all(dir).map_err(|error| format!("Could not create {}: {error}", dir.display()))?;

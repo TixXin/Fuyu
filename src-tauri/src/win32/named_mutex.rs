@@ -1,8 +1,8 @@
 use windows::{
     core::HSTRING,
     Win32::{
-        Foundation::CloseHandle,
-        System::Threading::{OpenMutexW, SYNCHRONIZATION_SYNCHRONIZE},
+        Foundation::{CloseHandle, HANDLE},
+        System::Threading::{CreateMutexW, OpenMutexW, SYNCHRONIZATION_SYNCHRONIZE},
     },
 };
 
@@ -16,21 +16,35 @@ pub(crate) fn exists(name: &str) -> bool {
     }
 }
 
+pub(crate) struct Held(HANDLE);
+
+unsafe impl Send for Held {}
+unsafe impl Sync for Held {}
+
+impl Drop for Held {
+    fn drop(&mut self) {
+        let _ = unsafe { CloseHandle(self.0) };
+    }
+}
+
+pub(crate) fn hold(name: &str) -> Option<Held> {
+    unsafe { CreateMutexW(None, false, &HSTRING::from(name)) }.ok().map(Held)
+}
+
 #[cfg(test)]
 mod tests {
-    use super::exists;
-    use windows::{
-        core::HSTRING,
-        Win32::{Foundation::CloseHandle, System::Threading::CreateMutexW},
-    };
+    use super::{exists, hold};
 
     #[test]
     fn a_mutex_is_seen_only_while_some_process_holds_it() {
         let name = format!("fuyu-test-mutex-{}", std::process::id());
         assert!(!exists(&name));
-        let held = unsafe { CreateMutexW(None, false, &HSTRING::from(name.as_str())) }.expect("create the mutex");
+        let held = hold(&name).expect("create the mutex");
         assert!(exists(&name));
-        let _ = unsafe { CloseHandle(held) };
+        let second = hold(&name).expect("open it a second time");
+        drop(held);
+        assert!(exists(&name));
+        drop(second);
         assert!(!exists(&name));
     }
 }

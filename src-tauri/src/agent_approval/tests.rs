@@ -462,3 +462,53 @@ fn an_answer_in_the_terminal_takes_the_card_away_and_shows_the_next() {
     assert_eq!(second.join().unwrap(), (200, "{}".into()));
     assert!(server.shared.pending().is_empty());
 }
+
+#[test]
+fn a_stopped_listener_frees_its_port_and_a_strict_bind_does_not_move() {
+    let shared = super::server::new_shared(Duration::from_secs(5), Arc::new(|_| {}));
+    let first = super::server::serve(&shared, 0, false, TOKEN).unwrap();
+    let port = first.port();
+    assert!(super::server::serve(&shared, port, false, TOKEN).is_err());
+    let moved = super::server::serve(&shared, port, true, TOKEN).unwrap();
+    assert_ne!(moved.port(), port);
+    moved.stop();
+    first.stop();
+    let again = super::server::serve(&shared, port, false, TOKEN).unwrap();
+    assert_eq!(again.port(), port);
+    again.stop();
+}
+
+#[test]
+fn two_listeners_share_one_queue_and_each_checks_its_own_token() {
+    const OTHER: &str = "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210";
+    let shared = super::server::new_shared(Duration::from_secs(5), Arc::new(|_| {}));
+    let own = super::server::serve(&shared, 0, false, TOKEN).unwrap();
+    let borrowed = super::server::serve(&shared, 0, false, OTHER).unwrap();
+    let ask = |port: u16, token: &str| send(port, &raw_request(port, "/claude/permission-request", token, "", &hook_body("s1", "Bash")));
+    assert_eq!(ask(borrowed.port(), TOKEN).0, 401);
+    assert_eq!(ask(own.port(), OTHER).0, 401);
+    assert_eq!(ask(borrowed.port(), OTHER), (200, "{}".to_string()));
+    assert_eq!(ask(own.port(), TOKEN), (200, "{}".to_string()));
+    borrowed.stop();
+    own.stop();
+}
+
+#[test]
+fn a_request_that_is_waiting_outlives_its_listener() {
+    let shared = super::server::new_shared(Duration::from_secs(5), Arc::new(|_| {}));
+    shared.set_enabled(true);
+    let listener = super::server::serve(&shared, 0, false, TOKEN).unwrap();
+    let port = listener.port();
+    let request = raw_request(port, "/claude/permission-request", TOKEN, "", &hook_body("s1", "Bash"));
+    let waiting = thread::spawn(move || send(port, &request));
+    let started = std::time::Instant::now();
+    while shared.pending().is_empty() && started.elapsed() < Duration::from_secs(3) {
+        thread::sleep(Duration::from_millis(20));
+    }
+    let id = shared.pending()[0].id;
+    listener.stop();
+    shared.decide(id, Outcome { decision: Decision::Allow, message: None, answers: None }).unwrap();
+    let (status, body) = waiting.join().unwrap();
+    assert_eq!(status, 200);
+    assert!(body.contains("allow"), "{body}");
+}

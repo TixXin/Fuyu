@@ -22,7 +22,7 @@ export function showSettingsWindow() {
 
 export type DevPriority = "releaseFirst" | "devFirst";
 
-export type DevPriorityState = { priority: DevPriority; yielding: boolean; releaseRunning: boolean };
+export type DevPriorityState = { priority: DevPriority; yielding: boolean; releaseRunning: boolean; releaseYields?: boolean };
 
 const DEV_PRIORITY_CHANGED_EVENT = "dev-priority-changed";
 
