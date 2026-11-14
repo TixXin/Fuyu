@@ -5,9 +5,10 @@ import type { DevPriorityState } from "./api";
 import { useDevPriority } from "./useDevPriority";
 import "./DevBar.css";
 
-function statusOf(state: DevPriorityState): "alone" | "yielding" | "both" {
+function statusOf(state: DevPriorityState): "alone" | "yielding" | "releaseYields" | "both" {
   if (!state.releaseRunning) return "alone";
-  return state.yielding ? "yielding" : "both";
+  if (state.yielding) return "yielding";
+  return state.releaseYields ? "releaseYields" : "both";
 }
 
 export function DevBar() {

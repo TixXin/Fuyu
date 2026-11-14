@@ -15,7 +15,8 @@ Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true, isTauri: true });
 const startupWrites: boolean[] = [];
 const priorityWrites: string[] = [];
 let priority = "releaseFirst";
-const priorityState = () => ({ priority, yielding: priority === "releaseFirst", releaseRunning: true });
+let releaseYields = false;
+const priorityState = () => ({ priority, yielding: priority === "releaseFirst", releaseRunning: true, releaseYields: priority === "devFirst" && releaseYields });
 mockIPC((command, payload) => {
   switch (command) {
     case "get_platform_support":
@@ -88,7 +89,13 @@ try {
   options()[1].click();
   await settle();
   check(priorityWrites.join() === "devFirst" && options()[1].getAttribute("aria-pressed") === "true", "Choosing dev first is sent to the island and shown");
-  check(bar.querySelector(".dev-bar__status")?.textContent === text.status.both, "Then it warns that both builds are active");
+  check(bar.querySelector(".dev-bar__status")?.textContent === text.status.both, "With an installed app that does not step back it says so");
+  releaseYields = true;
+  options()[0].click();
+  await settle();
+  options()[1].click();
+  await settle();
+  check(bar.querySelector(".dev-bar__status")?.textContent === text.status.releaseYields, "Once the installed app has stepped back it says approvals come here");
 
   results.textContent = messages.join("\n");
   document.documentElement.dataset.testResult = "passed";
