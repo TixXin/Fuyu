@@ -63,6 +63,11 @@ export function ClipboardActionPanel({ item, actions, page, aiPrompts, copy = fa
       back();
       return;
     }
+    if (event.key === "ArrowLeft" && query === "" && page !== "note") {
+      event.preventDefault();
+      back();
+      return;
+    }
     if (page !== "actions") return;
     if (event.key === "ArrowDown" || event.key === "ArrowUp") {
       event.preventDefault();
