@@ -1,5 +1,5 @@
 use objc2_app_kit::{NSApplicationActivationOptions, NSRunningApplication};
-use tauri::WebviewWindow;
+use tauri::{Manager, WebviewWindow};
 use tauri_nspanel::{tauri_panel, CollectionBehavior, ManagerExt, PanelLevel, StyleMask, WebviewWindowExt};
 
 tauri_panel! {
@@ -26,6 +26,7 @@ tauri_panel! {
 }
 
 const LEVELS_ABOVE_MENU_BAR: i64 = 3;
+const TOP_SPACE_CHECK: std::time::Duration = std::time::Duration::from_secs(2);
 const OVERLAY_ABOVE_ISLAND: i64 = 1;
 
 pub(crate) fn make_overlay_panel(window: &WebviewWindow) -> Result<u32, String> {
@@ -86,6 +87,25 @@ pub(crate) fn make_panel(window: &WebviewWindow) -> Result<(), String> {
     panel
         .add_style_mask(StyleMask::empty().nonactivating_panel().into())
         .map_err(|error| format!("Could not make the island a non-activating panel: {error:?}"))
+}
+
+pub(crate) fn keep_in_top_space(window: WebviewWindow) {
+    let _ = std::thread::Builder::new().name("island-top-space".into()).spawn(move || loop {
+        let target = window.clone();
+        let _ = window.run_on_main_thread(move || pin_to_top_space(&target));
+        std::thread::sleep(TOP_SPACE_CHECK);
+    });
+}
+
+fn pin_to_top_space(window: &WebviewWindow) {
+    let Ok(panel) = window.app_handle().get_webview_panel(window.label()) else {
+        return;
+    };
+    if let Ok(number) = u32::try_from(panel.as_panel().windowNumber()) {
+        if number > 0 {
+            super::top_space::pin(number);
+        }
+    }
 }
 
 pub(crate) fn make_island_key<R: tauri::Runtime>(app: &tauri::AppHandle<R>, label: &str) -> Result<(), String> {

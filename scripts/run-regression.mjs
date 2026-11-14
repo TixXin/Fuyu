@@ -47,6 +47,7 @@ export const PAGES = [
   "recording-notice.html",
   "timer.html",
   "todo-island.html",
+  "todo-date-picker.html",
 ];
 
 const PAGE_TIMEOUT_MS = 120_000;
