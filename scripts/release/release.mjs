@@ -2,7 +2,7 @@ import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
-import { channelProblems, readTasks, RELEASED_MARKER, releasedComment, shippedIssues } from "./after-release.mjs";
+import { channelProblems, readTasks, shippedIssues, tellIssues } from "./after-release.mjs";
 import { commandLine } from "./command-line.mjs";
 import { BETA_CHANNEL_TAG, isPrerelease, shouldUpdateBetaManifest } from "./channel.mjs";
 import { baseTag, downloadLinks, DRAFT_MARKER } from "./notes-draft.mjs";
@@ -12,6 +12,7 @@ import { loadSigningEnvironment } from "./release-signing.mjs";
 import { smokeTest } from "./smoke-test.mjs";
 import { finishMacBuild, macFiles, startMacBuild } from "./mac-build.mjs";
 import { finishWindowsBuild, startWindowsBuild } from "./windows-build.mjs";
+import { forgetPrebuild, matchingPrebuild, readPrebuild } from "./prebuild.mjs";
 import { EXE_NAME, installExe, takeLock } from "../build-exe.mjs";
 import { mainCheckout, PUBLISH_DIR, targetDir } from "../build-dirs.mjs";
 
@@ -37,6 +38,7 @@ const issueComments = !args.includes("--no-issue-comments");
 const smoke = !args.includes("--no-smoke-test");
 const withMac = upload && !args.includes("--no-mac");
 const local = args.includes("--local");
+const usePrebuild = !args.includes("--no-prebuild");
 
 if (baseFlag >= 0 && (!baseUrl || !URL.canParse(baseUrl) || new URL(baseUrl).protocol !== "https:")) {
   fail("--base-url requires a valid HTTPS URL.");
@@ -118,22 +120,25 @@ if (withMac || !local) {
   const revision = run("git", ["rev-parse", "HEAD"], { capture: true }).stdout.trim();
   const remote = run("git", ["branch", "-r", "--contains", revision], { capture: true, allowFailure: true }).stdout;
   if (!remote.includes("origin/")) fail(`${revision} is not on GitHub yet, so GitHub Actions cannot build it. Land it first, or pass --local --no-mac.`);
+  const tree = run("git", ["rev-parse", "HEAD^{tree}"], { capture: true }).stdout.trim();
+  const prebuilt = usePrebuild ? matchingPrebuild(readPrebuild(), { version, tree }) : null;
+  if (prebuilt) console.log(`Using the prebuild started at ${prebuilt.revision.slice(0, 8)}, which has the same files (pass --no-prebuild to build again).`);
   if (withMac) {
-    macBuild = startMacBuild(run, { repo: REPO, revision, version });
+    macBuild = prebuilt?.mac ? { runId: prebuilt.mac } : startMacBuild(run, { repo: REPO, revision, version });
     if (macBuild.problem) fail(`${macBuild.problem}\nPass --no-mac to release Windows only.`);
   }
   if (!local) {
-    windowsBuild = startWindowsBuild(run, { repo: REPO, revision, version });
+    windowsBuild = prebuilt ? { runId: prebuilt.windows } : startWindowsBuild(run, { repo: REPO, revision, version });
     if (windowsBuild.problem) fail(`${windowsBuild.problem}\nPass --local to build Windows on this machine.`);
   }
-  console.log(`Started on GitHub Actions: ${[windowsBuild && "Windows", macBuild && "macOS"].filter(Boolean).join(" and ")} build.`);
+  if (!prebuilt) console.log(`Started on GitHub Actions: ${[windowsBuild && "Windows", macBuild && "macOS"].filter(Boolean).join(" and ")} build.`);
 }
 
 takeLock(PUBLISH_LOCK);
 process.on("exit", () => rmSync(PUBLISH_LOCK, { force: true }));
 if (windowsBuild) {
-  const problem = finishWindowsBuild(run, { repo: REPO, version, since: windowsBuild.since, releaseDir: RELEASE_DIR });
-  if (problem) fail(`${problem}\nNothing was published. Fix it, or pass --local to build Windows on this machine.`);
+  const problem = finishWindowsBuild(run, { repo: REPO, version, since: windowsBuild.since, runId: windowsBuild.runId, releaseDir: RELEASE_DIR });
+  if (problem) fail(`${problem}\nNothing was published. Fix it, or pass --local to build Windows on this machine${windowsBuild.runId ? ", or --no-prebuild to build again" : ""}.`);
   console.log("✓ The Windows build is downloaded and signed for the updater.");
 } else {
   buildLocally();
@@ -159,7 +164,7 @@ function buildLocally() {
 
 if (macBuild) {
   rmSync(MAC_DIR, { recursive: true, force: true });
-  const problem = finishMacBuild(run, { repo: REPO, version, since: macBuild.since, dir: MAC_DIR });
+  const problem = finishMacBuild(run, { repo: REPO, version, since: macBuild.since, runId: macBuild.runId, dir: MAC_DIR });
   if (problem) fail(`${problem}\nNothing was published. Fix it, or pass --no-mac to release Windows only.`);
   console.log("✓ The macOS build is downloaded and signed for the updater.");
 }
@@ -219,11 +224,12 @@ run("gh", [
 ]);
 console.log(`\n✓ Published ${tag}${prerelease ? " as a pre-release (beta channel only)" : ""}.`);
 
+forgetPrebuild();
 installLocally();
 
 updateBetaChannel(revision);
 verifyChannels();
-if (issueComments) tellShippedIssues(revision);
+if (issueComments) await tellShippedIssues(revision);
 
 function installLocally() {
   try {
@@ -279,7 +285,7 @@ function verifyChannels() {
   console.log(`✓ Channels read back: stable offers ${prerelease ? "the last final release" : tag}, beta offers ${tag}.`);
 }
 
-function tellShippedIssues(target) {
+async function tellShippedIssues(target) {
   run("git", ["fetch", "--quiet", "--tags", "origin"], { allowFailure: true });
   const tags = run("git", ["tag", "--list", "v*"], { capture: true }).stdout.split("\n").map((line) => line.trim()).filter(Boolean);
   const base = baseTag(version, tags);
@@ -292,17 +298,6 @@ function tellShippedIssues(target) {
   const url = `https://github.com/${REPO}/releases/tag/${tag}`;
   const dir = join(CHECK_DIR, "comments");
   mkdirSync(dir, { recursive: true });
-  for (const [issue, tasks] of shipped) {
-    const existing = run("gh", ["api", `repos/${REPO}/issues/${issue}/comments`, "--paginate", "--jq", ".[].body"], { capture: true, allowFailure: true });
-    if (existing.status !== 0) {
-      console.log(`  #${issue}: could not read its comments, so it was not told.`);
-      continue;
-    }
-    if (existing.stdout.includes(RELEASED_MARKER(tag))) continue;
-    const body = join(dir, `${issue}.md`);
-    writeFileSync(body, releasedComment({ tag, url, tasks, repo: REPO }));
-    const posted = run("gh", ["issue", "comment", String(issue), "--repo", REPO, "--body-file", body], { capture: true, allowFailure: true });
-    console.log(posted.status === 0 ? `✓ Told #${issue} that it shipped in ${tag}.` : `  #${issue}: the comment failed: ${posted.stderr.trim()}`);
-  }
+  for (const line of await tellIssues(shipped, { tag, url, repo: REPO, dir })) console.log(line);
   if (shipped.size === 0) console.log(`No GitHub issue has a task with a commit in ${tag}.`);
 }

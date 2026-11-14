@@ -28,13 +28,18 @@ export function startCiBuild(run, { workflow, repo, revision, version }) {
   return { since };
 }
 
-export function downloadCiBuild(run, { workflow, label, repo, artifact, since, dir }) {
-  let found = null;
-  for (let attempt = 0; attempt < 12 && !found; attempt += 1) {
-    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 5000);
+export function findCiRun(run, { workflow, repo, since }) {
+  for (let attempt = 0; attempt < 12; attempt += 1) {
+    sleep(5000);
     const listed = run("gh", ["run", "list", "--repo", repo, "--workflow", workflow, "--limit", "5", "--json", "databaseId,createdAt,event,url"], { capture: true, allowFailure: true });
-    if (listed.status === 0) found = dispatchedRun(JSON.parse(listed.stdout || "[]"), since);
+    const found = listed.status === 0 ? dispatchedRun(JSON.parse(listed.stdout || "[]"), since) : null;
+    if (found) return found;
   }
+  return null;
+}
+
+export function downloadCiBuild(run, { workflow, label, repo, artifact, since, runId, dir }) {
+  const found = runId ? { databaseId: runId, url: `https://github.com/${repo}/actions/runs/${runId}` } : findCiRun(run, { workflow, repo, since });
   if (!found) return `${workflow} was started but its run did not show up within a minute`;
   console.log(`${label} build running: ${found.url}`);
   if (!watchRun(run, { repo, id: found.databaseId, interval: 20 })) return `the ${label} build failed: ${found.url}`;

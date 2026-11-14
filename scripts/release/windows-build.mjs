@@ -36,10 +36,10 @@ export function startWindowsBuild(run, { repo, revision, version }) {
   return startCiBuild(run, { workflow: WINDOWS_WORKFLOW, repo, revision, version });
 }
 
-export function finishWindowsBuild(run, { repo, version, since, releaseDir }) {
+export function finishWindowsBuild(run, { repo, version, since, runId, releaseDir }) {
   for (const dir of [join(releaseDir, "bundle", "nsis"), join(releaseDir, "bundle", "msi")]) rmSync(dir, { recursive: true, force: true });
   rmSync(join(releaseDir, "fuyu.exe"), { force: true });
-  const problem = downloadCiBuild(run, { workflow: WINDOWS_WORKFLOW, label: "Windows", repo, artifact: windowsArtifact(version), since, dir: releaseDir });
+  const problem = downloadCiBuild(run, { workflow: WINDOWS_WORKFLOW, label: "Windows", repo, artifact: windowsArtifact(version), since, runId, dir: releaseDir });
   if (problem) return problem;
   const files = windowsFiles(releaseDir, version);
   for (const path of [files.installer, files.msi, files.exe]) {

@@ -1,6 +1,8 @@
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { betaTags, mergeBetaNotes } from "./beta-notes.mjs";
 import { baseTag, draftNotes } from "./notes-draft.mjs";
+import { isPrerelease } from "./channel.mjs";
 import { bumpProblem, VERSION_FILES, writeVersion } from "./versions.mjs";
 
 function git(args) {
@@ -36,7 +38,10 @@ if (existsSync(notes)) {
   console.log(`  ${notes} exists; left as it is.`);
 } else {
   const base = baseTag(version, tags);
-  const range = base ? `${base}..HEAD` : "HEAD";
+  const betas = isPrerelease(version) ? [] : betaTags(version, tags).filter((tag) => existsSync(`docs/releases/${tag}.md`));
+  const merged = mergeBetaNotes(betas.map((tag) => readFileSync(`docs/releases/${tag}.md`, "utf8")));
+  const since = merged ? betas[0] : base;
+  const range = since ? `${since}..HEAD` : "HEAD";
   const commits = git(["log", "--no-merges", "--format=%h%x09%s", range])
     .split("\n")
     .filter(Boolean)
@@ -44,7 +49,8 @@ if (existsSync(notes)) {
       const [hash, ...subject] = line.split("\t");
       return { hash, subject: subject.join("\t") };
     });
-  writeFileSync(notes, draftNotes(version, base, commits));
-  console.log(`✓ ${notes}: a draft with ${commits.length} commits since ${base ?? "the first commit"} to rewrite for users.`);
+  writeFileSync(notes, draftNotes(version, base, commits, merged, since));
+  if (merged) console.log(`✓ ${notes}: the notes of ${betas.join(", ")} merged in, and ${commits.length} commits since ${since}.`);
+  else console.log(`✓ ${notes}: a draft with ${commits.length} commits since ${since ?? "the first commit"} to rewrite for users.`);
 }
 console.log("\nNext: rewrite the notes, commit, land, then run `pnpm release` from the same lane.");
