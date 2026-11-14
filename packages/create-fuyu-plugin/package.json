@@ -1,6 +1,6 @@
 {
   "name": "create-fuyu-plugin",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Creates a Fuyu plugin: npm create fuyu-plugin@latest",
   "keywords": ["fuyu", "plugin", "create"],
   "license": "MIT",

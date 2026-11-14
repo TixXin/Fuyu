@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdirSync, mkdtempSync, readdirSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -8,7 +8,7 @@ import { isIgnored, parseIgnore } from "../src/ignore.mjs";
 import { validateSchema } from "../src/json-schema.mjs";
 import { createZip, packageFiles, packFolder } from "../src/pack.mjs";
 import { protocol } from "../src/schema.mjs";
-import { permissionsUsed, validatePlugin } from "../src/validate.mjs";
+import { cliVersion, isOlderVersion, permissionsUsed, validatePlugin } from "../src/validate.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
 const base = {
@@ -41,7 +41,7 @@ test("the example plugins validate without errors or warnings", () => {
   for (const id of readdirSync(examples)) {
     const result = validatePlugin(path.join(examples, id));
     assert.deepEqual(result.errors, [], id);
-    assert.deepEqual(result.warnings, [], id);
+    assert.deepEqual(result.warnings.filter((warning) => !warning.includes("older than")), [], id);
   }
 });
 
@@ -146,4 +146,35 @@ test("a plugin from before the rename keeps its focusd-plugin.json and .focusdig
     rmSync(path.join(dir, "fuyu-plugin.json"));
     assert.match(validatePlugin(dir).errors.join("\n"), /There is no fuyu-plugin\.json/);
   });
+});
+
+test("misspelled manifest fields get a warning that names the right one, and still validate", () => {
+  const manifest = { ...base, activationEvent: ["onView:x"], optionalPermission: ["clipboard:read"], contributes: { view: [] } };
+  withPlugin(manifest, { "main.mjs": "" }, (dir) => {
+    const result = validatePlugin(dir);
+    assert.deepEqual(result.errors, []);
+    const text = result.warnings.join("\n");
+    assert.match(text, /activationEvent is not a field the island knows.*did you mean activationEvents\?/);
+    assert.match(text, /optionalPermission is not a field.*did you mean optionalPermissions\?/);
+    assert.match(text, /contributes\.view is not a field.*did you mean contributes\.views\?/);
+  });
+  withPlugin({ ...base, $schema: "https://example.com/schema.json" }, { "main.mjs": "" }, (dir) => {
+    assert.deepEqual(validatePlugin(dir).warnings.filter((warning) => warning.includes("not a field")), []);
+  });
+});
+
+test("an SDK copied into the plugin warns when it is older than the CLI", () => {
+  const current = readFileSync(path.join(root, "packages/create-fuyu-plugin/sdk/fuyu.ps1"), "utf8");
+  const node = readFileSync(path.join(root, "packages/create-fuyu-plugin/sdk/fuyu.mjs"), "utf8");
+  const stale = (warnings) => warnings.filter((warning) => warning.includes("older than"));
+  withPlugin(base, { "main.mjs": "", "lib/fuyu.ps1": current, "fuyu.mjs": node }, (dir) => assert.deepEqual(stale(validatePlugin(dir).warnings), []));
+  withPlugin(base, { "main.mjs": "", "lib/focusd.ps1": "function Send-FocusdRequest {}\n" }, (dir) => {
+    assert.match(stale(validatePlugin(dir).warnings).join(), /lib\/focusd\.ps1 is an SDK from before fuyu-plugin 0\.7\.0.*powershell\/fuyu\.ps1/);
+  });
+  withPlugin(base, { "main.mjs": "", "fuyu.mjs": 'export const SDK_VERSION = "0.6.9";\n' }, (dir) => {
+    assert.match(stale(validatePlugin(dir).warnings).join(), new RegExp(`fuyu\\.mjs is the SDK from fuyu-plugin 0\\.6\\.9, older than ${cliVersion().replaceAll(".", "\\.")}`));
+  });
+  withPlugin(base, { "main.mjs": "", "fuyu.mjs": 'export const SDK_VERSION = "99.0.0";\n' }, (dir) => assert.deepEqual(stale(validatePlugin(dir).warnings), []));
+  assert.equal(isOlderVersion("0.6.10", "0.7.0"), true);
+  assert.equal(isOlderVersion("0.10.0", "0.7.0"), false);
 });
