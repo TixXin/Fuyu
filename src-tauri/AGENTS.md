@@ -90,6 +90,7 @@ src-tauri/src/
 - 命令名就是函数名，属于对外契约。纯重构中可以移动函数所在模块，但不能改函数名或参数名。
 - 事件名定义为模块内的 `const`，向特定窗口发事件时使用窗口 label 常量（例如 `settings_window::WINDOW_LABEL`），不写字面量。
 - 新增命令后，同步更新前端对应的 `api.ts`；用到插件权限时更新 `capabilities/default.json`。新窗口的 label 必须加入 capabilities 的 `windows` 列表。
+- **插件 API 的新能力先进实验通道**（2026-11-14 起，用户定，E30）：新方法、事件、贡献点或给已有方法加的行为，先放进 `plugin_host/dev.rs` 的 `EXPERIMENTAL_APIS`，只给开发模式的插件用；满足 [v2-platform.md](../docs/architecture/plugins/v2-platform.md) 3.1 节的转正条件后才进 `initialize.capabilities`。给已有方法加一个旧插件不会传的可选字段，不算新能力。
 
 ## 错误处理
 

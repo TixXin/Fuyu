@@ -131,6 +131,11 @@ VS Code 在 `package.json` 的 `contributes` 里静态声明能力，包括：`c
 - 新增方法、事件、贡献点都属于兼容改动，不升大版本。宿主在 `initialize` 里给出 `capabilities` 列表（例如 `["events", "island.notify", "views.list"]`），插件按能力判断，不按岛屿版本号判断。
 - `minAppVersion` 相当于 VS Code 的 `engines.vscode`，市场在客户端版本不够时显示“不兼容”（已实现）。
 - 新 API 先进入**实验通道**（P10），稳定后再转正。实验 API 不进入市场。
+  - 2026-11-14 用户重申这条（E30）。在那之前，0.3.0 之后加的 7 项能力（`openView`、`permissions`、`statusCells`、`notifyStyle`、`notifyControls`、`statusBatteries`、`statusPie`）都直接进了稳定面，按「只增不改」保留，不往回挪。
+  - **什么算新能力**：新的方法、事件、贡献点，或者给已有方法加了插件要靠能力判断才敢用的行为。给已有方法加一个旧版岛屿会忽略的可选字段，不算。
+  - **转正条件**：至少有一个插件（官方的也算）在开发模式下用它跑通过；跨过一个岛屿版本，名字和参数没再改。
+  - **转正怎么做**：从 `plugin_host/dev.rs` 的 `EXPERIMENTAL_APIS` 拿掉，加进 `initialize.capabilities`，清单不再需要写 `experimentalApis`（写了也照常加载），在 [插件更新日志](../../plugins/changelog.md) 写一条「转正」。
+  - 官方插件要用实验能力，就等它转正再上架；在那之前放在 `plugins/drafts/`。
 - 每个 API 都写进机器可读的协议描述（`plugins/schema/`，P5 建立），SDK 类型、文档和宿主测试都从它生成或对照，避免三处不一致。
 
 ### 3.2 权限
