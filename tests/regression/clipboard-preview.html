@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="zh-CN">
+  <meta charset="UTF-8" />
+  <title>剪贴板预览窗口检查</title>
+  <style>
+    html body { margin: 0; background: linear-gradient(150deg, #1b3a7a, #2c64d8 55%, #7aa8f5); font: 14px "Segoe UI", "Microsoft YaHei", sans-serif; color: #f1f0f6; }
+    main { display: flex; gap: 20px; padding: 20px; align-items: flex-start; }
+    .frame { width: 420px; height: 559px; }
+    .frame .clipboard-preview-window { height: 100%; }
+    .frame .clipboard-popup { height: 100%; box-sizing: border-box; }
+    #results { max-width: 1160px; margin: 0 auto 24px; padding: 0 24px; font-size: 13px; line-height: 1.8; white-space: pre-wrap; }
+  </style>
+  <main><div class="frame" id="frame"></div></main>
+  <pre id="results" role="status">准备检查…</pre>
+  <script type="module" src="./clipboard-preview.tsx"></script>
+</html>

@@ -1,6 +1,6 @@
 import { act, StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { mockIPC } from "@tauri-apps/api/mocks";
+import { mockConvertFileSrc, mockIPC } from "@tauri-apps/api/mocks";
 import "../../src/styles/tokens.css";
 import "../../src/styles/fonts.css";
 import { I18nProvider, LOCALE_STORAGE_KEY } from "../../src/i18n";
@@ -12,7 +12,6 @@ const automated = new URLSearchParams(location.search).has("test");
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: automated });
 localStorage.setItem(LOCALE_STORAGE_KEY, "zh-CN");
 const calls: string[] = [];
-const BIG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='120'%3E%3Crect width='600' height='120' fill='%23c75b7a'/%3E%3C/svg%3E";
 mockIPC((command, args) => {
   calls.push(`ipc:${command}:${JSON.stringify(args ?? {})}`);
   if (command === "read_clipboard_image_qr") return "https://qr.example";
@@ -25,12 +24,11 @@ mockIPC((command, args) => {
       resolve(`AI:${task}`);
     }, 20));
   }
-  if (command === "get_clipboard_image_preview") {
-    calls.push(`preview:${(args as { id: string }).id}`);
-    return BIG;
-  }
   return null;
 });
+
+mockConvertFileSrc("windows");
+const peeks: string[] = [];
 
 const now = Date.now();
 const minute = 60_000;
@@ -81,6 +79,7 @@ for (const frame of FRAMES) {
         onPasteSequence={(ids) => calls.push(`sequence:${ids.join()}`)}
         onClose={() => calls.push("close")}
         onToggleFavorite={(id) => calls.push(`star:${id}`)}
+        onPeek={frame.id === "paused" ? (peek) => peeks.push(peek ? `${peek.item.id}${peek.holding ? ":hold" : ""}${peek.prefetch.length ? `:${peek.prefetch.join("+")}` : ""}` : "close") : undefined}
       />
     </I18nProvider></StrictMode>,
   );
@@ -182,7 +181,7 @@ async function runChecks() {
     await key("wide", { key: "ArrowDown" });
     await key("wide", { key: "ArrowDown" });
     await act(async () => { await new Promise((resolve) => setTimeout(resolve, 30)); });
-    check(calls.includes("preview:i1") && $<HTMLImageElement>("wide", ".clipboard-popup__pane-image img")?.src === BIG && $("wide", ".clipboard-popup__pane-image p")?.textContent?.includes("已不在"), "宽版选中图片：读大图，下面是识别出的文字");
+    check($<HTMLImageElement>("wide", ".clipboard-picture__thumb")?.src.startsWith("data:image/svg") && $<HTMLImageElement>("wide", ".clipboard-picture__full")?.src === "http://fuyu-clip.localhost/i1" && $("wide", ".clipboard-popup__pane-image p")?.textContent?.includes("已不在"), "宽版选中图片：先显示缩略图，原图按记录 id 直接读，下面是识别出的文字");
     await key("wide", { key: "ArrowDown" });
     await key("wide", { key: "ArrowDown" });
     check($("wide", ".clipboard-popup__pane-body")?.textContent?.startsWith("ghp_8f3a••") && !$("wide", ".clipboard-popup__pane")?.textContent?.includes("SECRET"), "宽版：打码的密钥不露原文");
@@ -190,6 +189,13 @@ async function runChecks() {
     check($$("wide", ".clipboard-popup__pane-files li").length === 3, "宽版：文件逐个列出");
 
     await checkSecondRound(check, calls);
+
+    await key("paused", { key: " " });
+    check(peeks[peeks.length - 1] === "t1" && !$("paused", ".clipboard-look"), "窗口外预览：按空格把选中这条交给外面的预览窗口，列表上不再盖一层");
+    await key("paused", { key: "ArrowDown" });
+    check(peeks[peeks.length - 1] === "t2:i1", "预览开着时 ↓ 换条，旁边的图片先预取");
+    await key("paused", { key: " " });
+    check(peeks[peeks.length - 1] === "close" && peeks[peeks.length - 2] === "t2:i1", "再按空格关上外面的预览");
 
     const press = (target: EventTarget, init: KeyboardEventInit) => act(async () => {
       target.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, cancelable: true, ...init }));

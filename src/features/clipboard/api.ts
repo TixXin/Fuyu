@@ -1,5 +1,5 @@
-import { invoke } from "@tauri-apps/api/core";
-import { listen } from "@tauri-apps/api/event";
+import { convertFileSrc, invoke } from "@tauri-apps/api/core";
+import { emitTo, listen } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
 
@@ -185,10 +185,6 @@ export function revealExportedFile(path: string) {
   return revealItemInDir(path);
 }
 
-export function getClipboardImagePreview(id: string) {
-  return invoke<string | null>("get_clipboard_image_preview", { id });
-}
-
 export function startClipboardDrag(id: string) {
   return invoke<void>("start_clipboard_drag", { id });
 }
@@ -255,4 +251,49 @@ export function setShortcutCapture(enabled: boolean) {
 
 export function listenShortcutCaptured(handler: (shortcut: string) => void) {
   return listen<string>(SHORTCUT_CAPTURED_EVENT, ({ payload }) => handler(payload));
+}
+
+export const CLIPBOARD_PREVIEW_WINDOW = "clipboard-preview";
+const ITEM_EVENT = "clipboard-preview-item";
+const OPENED_EVENT = "clipboard-preview-opened";
+const CLOSING_EVENT = "clipboard-preview-closing";
+const IMAGE_SCHEME = "fuyu-clip";
+
+export type ClipboardPreviewSide = "left" | "right";
+
+export type ClipboardPreviewPayload = {
+  item: ClipboardHistoryItem;
+  holding: boolean;
+  linkPreview: boolean;
+  prefetch: string[];
+};
+
+export type ClipboardPeek = { item: ClipboardHistoryItem; holding: boolean; prefetch: string[] };
+
+export function clipboardImageUrl(id: string) {
+  return convertFileSrc(id, IMAGE_SCHEME);
+}
+
+export function showClipboardPreview() {
+  return invoke<ClipboardPreviewSide>("show_clipboard_preview");
+}
+
+export function hideClipboardPreview() {
+  return invoke<void>("hide_clipboard_preview");
+}
+
+export function sendClipboardPreview(payload: ClipboardPreviewPayload) {
+  return emitTo(CLIPBOARD_PREVIEW_WINDOW, ITEM_EVENT, payload);
+}
+
+export function listenClipboardPreviewItem(handler: (payload: ClipboardPreviewPayload) => void) {
+  return listen<ClipboardPreviewPayload>(ITEM_EVENT, ({ payload }) => handler(payload));
+}
+
+export function listenClipboardPreviewOpened(handler: (side: ClipboardPreviewSide) => void) {
+  return listen<ClipboardPreviewSide>(OPENED_EVENT, ({ payload }) => handler(payload));
+}
+
+export function listenClipboardPreviewClosing(handler: () => void) {
+  return listen(CLOSING_EVENT, () => handler());
 }

@@ -1,6 +1,5 @@
 import { Search, X } from "lucide-react";
 import { useTranslation } from "../../i18n";
-import { normalizeClipboardShortcut, shortcutLabel } from "./shortcut";
 
 export function ClipboardFilters({
   query,
@@ -34,7 +33,7 @@ export function ClipboardFilters({
           <X size={14} strokeWidth={2.4} />
         </button>
       ) : shortcut ? (
-        <kbd title={t.clipboard.expandShortcut}>{shortcutLabel(normalizeClipboardShortcut(shortcut))}</kbd>
+        <kbd title={t.clipboard.expandShortcut}>{shortcut}</kbd>
       ) : null}
     </label>
   );

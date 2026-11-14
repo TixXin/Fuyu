@@ -1,9 +1,13 @@
-use std::sync::{
-    atomic::{AtomicBool, AtomicIsize, AtomicU32, Ordering},
-    Mutex,
+use std::{
+    sync::{
+        atomic::{AtomicBool, AtomicIsize, AtomicU32, Ordering},
+        mpsc, Mutex,
+    },
+    thread,
 };
 use windows::Win32::{
-    Foundation::{HWND, LPARAM, LRESULT, WPARAM},
+    Foundation::{E_FAIL, HWND, LPARAM, LRESULT, WPARAM},
+    System::Threading::GetCurrentThreadId,
     UI::{
         Input::KeyboardAndMouse::{
             GetAsyncKeyState, GetKeyState, VIRTUAL_KEY, VK_CLEAR, VK_CONTROL, VK_DOWN, VK_END, VK_HOME,
@@ -11,8 +15,10 @@ use windows::Win32::{
             VK_RIGHT, VK_RWIN, VK_SHIFT, VK_UP,
         },
         WindowsAndMessaging::{
-            CallNextHookEx, PostMessageW, SetWindowsHookExW, UnhookWindowsHookEx, HC_ACTION, HHOOK,
-            KBDLLHOOKSTRUCT, LLKHF_EXTENDED, LLKHF_INJECTED, WH_KEYBOARD_LL, WM_KEYDOWN, WM_SYSKEYDOWN,
+            CallNextHookEx, DispatchMessageW, GetMessageW, PeekMessageW, PostMessageW, PostThreadMessageW,
+            SetWindowsHookExW, TranslateMessage, UnhookWindowsHookEx, HC_ACTION, HHOOK, KBDLLHOOKSTRUCT,
+            LLKHF_EXTENDED, LLKHF_INJECTED, MSG, PM_NOREMOVE, WH_KEYBOARD_LL, WM_APP, WM_KEYDOWN,
+            WM_SYSKEYDOWN, WM_USER,
         },
     },
 };
@@ -22,7 +28,11 @@ use super::input::{send_key_down, send_key_up};
 const MASK_KEY: VIRTUAL_KEY = VIRTUAL_KEY(0xE8);
 const KEY_V: u32 = b'V' as u32;
 
-static HOOK: Mutex<Option<isize>> = Mutex::new(None);
+const SYNC_MESSAGE: u32 = WM_APP + 0x70;
+
+static HOOK_WANTED: AtomicBool = AtomicBool::new(false);
+static HOOK_THREAD: AtomicU32 = AtomicU32::new(0);
+static HOOK_THREAD_START: Mutex<()> = Mutex::new(());
 static TARGET_WINDOW: AtomicIsize = AtomicIsize::new(0);
 static TARGET_MESSAGE: AtomicU32 = AtomicU32::new(0);
 static PASTE_WINDOW: AtomicIsize = AtomicIsize::new(0);
@@ -192,20 +202,55 @@ fn sync_hook() -> windows::core::Result<()> {
     let needed = [&TARGET_WINDOW, &PASTE_WINDOW, &NUMPAD_WINDOW, &PRINT_WINDOW]
         .iter()
         .any(|window| window.load(Ordering::SeqCst) != 0);
-    let mut hook = HOOK.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-    match (needed, hook.is_some()) {
-        (true, false) => {
-            let handle = unsafe { SetWindowsHookExW(WH_KEYBOARD_LL, Some(keyboard_proc), None, 0) }?;
-            *hook = Some(handle.0 as isize);
-        }
-        (false, true) => {
-            if let Some(handle) = hook.take() {
-                let _ = unsafe { UnhookWindowsHookEx(HHOOK(handle as *mut core::ffi::c_void)) };
-            }
-        }
-        _ => {}
+    HOOK_WANTED.store(needed, Ordering::SeqCst);
+    if !needed && HOOK_THREAD.load(Ordering::SeqCst) == 0 {
+        return Ok(());
     }
-    Ok(())
+    let thread = hook_thread()?;
+    unsafe { PostThreadMessageW(thread, SYNC_MESSAGE, WPARAM(0), LPARAM(0)) }
+}
+
+fn hook_thread() -> windows::core::Result<u32> {
+    let _starting = HOOK_THREAD_START.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    let running = HOOK_THREAD.load(Ordering::SeqCst);
+    if running != 0 {
+        return Ok(running);
+    }
+    let (sender, receiver) = mpsc::channel();
+    thread::Builder::new()
+        .name("fuyu-keyboard-hook".into())
+        .spawn(move || run_hook_thread(&sender))
+        .map_err(|_| windows::core::Error::from(E_FAIL))?;
+    let id = receiver.recv().map_err(|_| windows::core::Error::from(E_FAIL))?;
+    HOOK_THREAD.store(id, Ordering::SeqCst);
+    Ok(id)
+}
+
+fn run_hook_thread(started: &mpsc::Sender<u32>) {
+    let mut message = MSG::default();
+    let _ = unsafe { PeekMessageW(&mut message, None, WM_USER, WM_USER, PM_NOREMOVE) };
+    if started.send(unsafe { GetCurrentThreadId() }).is_err() {
+        return;
+    }
+    let mut hook: Option<HHOOK> = None;
+    while unsafe { GetMessageW(&mut message, None, 0, 0) }.as_bool() {
+        if message.hwnd.is_invalid() && message.message == SYNC_MESSAGE {
+            if let Some(handle) = hook.take() {
+                let _ = unsafe { UnhookWindowsHookEx(handle) };
+            }
+            if HOOK_WANTED.load(Ordering::SeqCst) {
+                match unsafe { SetWindowsHookExW(WH_KEYBOARD_LL, Some(keyboard_proc), None, 0) } {
+                    Ok(handle) => hook = Some(handle),
+                    Err(error) => eprintln!("failed to install the keyboard hook: {error}"),
+                }
+            }
+            continue;
+        }
+        unsafe {
+            let _ = TranslateMessage(&message);
+            DispatchMessageW(&message);
+        }
+    }
 }
 
 #[cfg(test)]

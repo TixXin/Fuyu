@@ -93,8 +93,14 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
+        .register_asynchronous_uri_scheme_protocol(clipboard_history::image_protocol::SCHEME, |_context, request, responder| {
+            tauri::async_runtime::spawn_blocking(move || responder.respond(clipboard_history::image_protocol::respond(&request)));
+        })
         .on_window_event(|window, event| {
-            if window.label() == translation::WINDOW_LABEL || window.label() == clipboard_history::POPUP_WINDOW_LABEL {
+            if window.label() == translation::WINDOW_LABEL
+                || window.label() == clipboard_history::POPUP_WINDOW_LABEL
+                || window.label() == clipboard_history::preview_window::WINDOW_LABEL
+            {
                 if let WindowEvent::CloseRequested { api, .. } = event {
                     api.prevent_close();
                     let _ = window.hide();
@@ -174,7 +180,7 @@ pub fn run() {
                 eprintln!("failed to initialize notification diagnostics: {error}");
             }
             #[cfg(target_os = "macos")]
-            for label in [clipboard_history::POPUP_WINDOW_LABEL, translation::WINDOW_LABEL] {
+            for label in [clipboard_history::POPUP_WINDOW_LABEL, clipboard_history::preview_window::WINDOW_LABEL, translation::WINDOW_LABEL] {
                 if let Some(window) = app.get_webview_window(label) {
                     if let Err(error) = macos::island_panel::make_popup_panel(&window) {
                         eprintln!("failed to make the {label} window a panel: {error}");
