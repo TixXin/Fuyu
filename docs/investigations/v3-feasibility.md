@@ -1,24 +1,37 @@
 # 插件平台第 3 版：第 0 阶段可行性实测
 
-2026-11-14，会话「插件平台第 3 版基线和可行性验证」，任务 [E36.0](/docs/tasks/E/E36.0.md)（#290）。方案见 [v3-everything-plugin.md](../architecture/plugins/v3-everything-plugin.md)。
+2026-11-14，会话「插件平台第 3 版基线和可行性验证」（macOS），任务 [E36.0](/docs/tasks/E/E36.0.md)（#290）。Windows 上的补测是 2026-11-15，会话「插件平台 v3 第 0 阶段 Windows 补测」（tixxin-computer），见各节的「Windows」和下面「和 macOS 不一样的地方」。方案见 [v3-everything-plugin.md](../architecture/plugins/v3-everything-plugin.md)。
 
 ## 结论
 
-**在 macOS 上，方案的架构成立。** 前 3 项（Node 当宿主、附带程序的打包签名、窗口到宿主的本机 WebSocket）都跑通了，没有需要改架构的地方。**Windows 上一项都没测**，公证没测，所以这份报告只能回答一半。
+**在 macOS 和 Windows 上，方案的架构都成立。** 前 3 项在两个系统上都跑通了，没有需要改架构的地方；Windows 上第 3、4 项（WebView2 上的本机 WebSocket 和 `import()`）直接通，后备的「经 Rust 中转」两边都用不上。公证没测。
 
 | # | 项目 | macOS | Windows | 结论 |
 |---|---|---|---|---|
-| 1 | Node 当宿主：内核、加载器、热重载 | 通过 | 未测 | 成立 |
-| 1 | Bun 当宿主 | 内核和加载器通过；热重载不能用；装在别处的插件拿不到同一份内核 | 未测 | 不满足「小改就能跑」 |
-| 2 | 附带程序的打包和签名 | 临时签名加加固运行时通过，要加一项授权；公证未测 | 未测 | 有条件成立 |
-| 3 | 窗口到宿主的本机 WebSocket | 通过（只测了 macOS 27.2） | 未测 | 成立 |
-| 3 | `invoke` 长轮询（后备） | 通过，64 个挂起的请求不影响别的调用 | 未测 | 成立，Mac 上暂时用不上 |
-| 4 | 自定义协议上的 `import()` 和 React 转接模块 | 通过 | 未测 | 成立 |
-| 5 | 宿主崩溃、卡死后的重启和窗口重连 | 通过：崩溃约 0.3 秒恢复，卡死约 2 秒 | 未测 | 成立 |
-| 6 | 所有窗口隐藏时宿主的定时器 | 通过：两轮各 8 分钟，100 ms 的定时器最晚 38 ms | 未测 | 成立 |
+| 1 | Node 当宿主：内核、加载器、热重载 | 通过 | 通过；热重载的文件监听刚启动时要约 100 ms 才稳定 | 成立 |
+| 1 | Bun 当宿主 | 内核和加载器通过；热重载不能用；装在别处的插件拿不到同一份内核 | 不测（决定 12 已定用 Node） | 不满足「小改就能跑」 |
+| 2 | 附带程序的打包和签名 | 临时签名加加固运行时通过，要加一项授权；公证未测 | 不测（决定 16 之后不带 Node） | 有条件成立 |
+| — | 决定 16：不带 Node，用电脑上的或下载的 | 通过 | 通过：本机 Node 26.12、下载的官方 Node 26.13.1、从资源管理器启动时从 `PATH` 找到，全部测试通过 | 成立 |
+| 3 | 窗口到宿主的本机 WebSocket | 通过（只测了 macOS 27.2） | 通过（WebView2 157，页面是 `http://tauri.localhost`） | 成立 |
+| 3 | `invoke` 长轮询（后备） | 通过，64 个挂起的请求不影响别的调用 | 通过，同样 | 成立，两边都暂时用不上 |
+| 4 | 自定义协议上的 `import()` 和 React 转接模块 | 通过 | 通过（`http://plugin.localhost`） | 成立 |
+| 5 | 宿主崩溃、卡死后的重启和窗口重连 | 通过：崩溃约 0.3 秒恢复，卡死约 2 秒 | 通过：崩溃 0.23–0.29 秒，卡死约 2 秒；应用被强行结束时宿主 45–79 ms 内退出 | 成立 |
+| 6 | 所有窗口隐藏时宿主的定时器 | 通过：两轮各 8 分钟，100 ms 的定时器最晚 38 ms | 通过：8 分钟加 3 分钟，最晚 15 ms；每 10 秒 93–94 次（计时精度约 15.6 ms） | 成立 |
 | 6 | 睡眠唤醒 | 未测 | 未测 | — |
-| 7 | 对照：隐藏 WebView 当宿主 | 内存比 Node 少约 8 MB；定时器默认完全不跑，关掉节流后每秒 1 次 | 未测 | 不改现在的决定 |
-| 8 | rutis 小样 | 跑通，嵌进了 Tauri | 未测 | 照着做的量不大 |
+| 7 | 对照：隐藏 WebView 当宿主 | 内存比 Node 少约 8 MB；定时器默认完全不跑，关掉节流后每秒 1 次 | 应用合计多约 22 MB（Node 宿主进程约 27 MB）；**定时器照常跑**，两种设置都是每 10 秒 100–101 次 | 不改现在的决定 |
+| 8 | rutis 小样 | 跑通，嵌进了 Tauri | 不测 | 照着做的量不大 |
+
+### 和 macOS 不一样的地方
+
+| 项目 | macOS | Windows | 影响 |
+|---|---|---|---|
+| 热重载的文件监听 | 写完配置马上改插件也能收到 | 宿主刚启动时 chokidar 还没扫完子目录，这期间改的文件收不到，等 100 ms 以上才稳定；两次写配置文件挨得太近（同一毫秒），第二次会丢，隔 50 ms 就没事 | 只影响开发模式。第 1 阶段的热重载测试要等监听就绪（chokidar 的 `ready`）再改文件 |
+| 新下载的 `node.exe` 第一次运行 | 新打的包第一次拉起宿主 25 秒（Gatekeeper 一类的检查） | 第一次 1.4 秒，之后约 0.33 秒（推断是 Defender 扫描，没确认） | Windows 上首次启动的代价小得多 |
+| 宿主的定时器 | 每 10 秒 99–100 次 | 每 10 秒 93–94 次，每次晚约 7 ms，最晚 15 ms | Windows 默认的计时精度约 15.6 ms，Node 不会自己调高。插件不能指望 100 ms 以下的定时精确 |
+| 隐藏的 WebView 里的定时器 | 默认不跑，关掉节流后每秒 1 次 | 照常跑，两种设置都是每秒 10 次；页面一直报告自己「可见」 | Windows 上隐藏 WebView 当宿主没有降速问题，但 Mac 上有，决定 4 的理由仍然成立 |
+| 导入失败时的报错 | 404 只有一句 `Importing a module script failed.`；没 CORS 头、MIME 不对会写明原因 | 三种失败都是 `Failed to fetch dynamically imported module: <地址>`，都看不出原因 | 加载器在 `import()` 之前自己先确认文件，两边都必须做 |
+| 应用被强行结束 | 宿主 1.5 秒内退出 | 宿主 45–79 ms 内退出 | 两边都靠「标准输入关了就退出」。宿主正好卡死时它读不到这件事，两边都没测，所以第 1 阶段仍要作业对象 / 进程组 |
+| 内存口径 | `phys_footprint` | 私有内存（`PrivateMemorySize64`），单独的 Node 宿主约 61 MB，放进应用的宿主约 27 MB | 两个口径不能直接比，各比各的 |
 
 要你定的三件事在最后一节：继续还是改方案、Node 还是 Bun、安装包变大能不能接受。
 
@@ -34,12 +47,15 @@
 | 外壳 | Tauri 2（Rust 1.99.1，和浮屿同一个工具链），React 19.2 |
 | 签名身份 | 没有：`security find-identity -v -p codesigning` 返回 0 个。全部用临时签名（ad-hoc） |
 | 临时项目 | `~/Desktop/projects/fuyu-v3-spike`，不在仓库里。`host/` 是单独跑宿主的脚本，`app/` 是最小的 Tauri 应用，`runs/`、`results/` 是每次运行的原始结果，`rutis-sample/` 是 rutis 的小样 |
+| Windows 机器 | tixxin-computer：Windows 11 Pro for Workstations（10.0.26300），20 个逻辑核，WebView2 157 |
+| Windows 上的运行时 | 本机装的 Node 26.12.0（`C:\Program Files\nodejs`）；官方 Node 26.13.1 的 `node-v26.13.1-win-x64.zip`，SHA-256 和官网 `SHASUMS256.txt` 一致，`node.exe` 95.5 MB，Authenticode 签名有效（OpenJS Foundation） |
+| Windows 上的临时项目 | Mac 上打的源码包解到 `E:\Projects\fuyu-v3-spike-src`，不在仓库里。为 Windows 改了两处：应用设成窗口程序（`windows_subsystem = "windows"`）；拉起宿主时加 `CREATE_NO_WINDOW`，不弹控制台。对 `@cordisjs/loader` 的 6 行改动重新打了一遍。原始结果在 `runs/` |
 
-内存一律用 `phys_footprint`（活动监视器「内存」一栏的那个数），由 `proc_pid_rusage` 读；一个应用的数是它自己加上系统记在它名下的进程（WebKit 的各个辅助进程、子进程）之和。文件大小按 1 MB = 1048576 字节。
+内存在 macOS 上用 `phys_footprint`（活动监视器「内存」一栏的那个数），由 `proc_pid_rusage` 读；一个应用的数是它自己加上系统记在它名下的进程（WebKit 的各个辅助进程、子进程）之和。Windows 上用私有内存（`PrivateMemorySize64`），一个应用的数是它和全部子孙进程（WebView2、`node.exe`、`conhost.exe`）之和，和 [idle-usage.md](idle-usage.md) 一样。两个口径不能直接比。文件大小按 1 MB = 1048576 字节。
 
 没测的范围先说清楚：
 
-- **Windows 全部没测**：WebView2 上的 WebSocket 和 `import()`、Windows 的打包、作业对象、Windows 上的内存和启动时间。那台机器能不能用还没确认。
+- **Windows 上没测的**：Bun、把 Node 打进安装包和 Windows 安装程序的增量（决定 12、16 之后不需要）、rutis、作业对象、睡眠唤醒、nvm / fnm / volta 装的 Node、只装在用户目录里的 Node。
 - **公证没测**：没有 Developer ID。
 - **只测了 macOS 27.2**。浮屿支持到 macOS 15.0，那上面的 WKWebView 更旧，第 3、4 项在旧系统上没验证。
 - **睡眠唤醒没测**：要合盖，会打断你正在用的电脑。
@@ -146,6 +162,44 @@ EvalError: Code generation from strings disallowed for this context
 - **Node：成立。** 内核、加载器、热重载原样可用，内存在验收线内。
 - **Bun：不建议。** 内存少 8–10 MB、可执行文件小 56 MB，但压缩后安装包只小 3 MB；热重载不能用，装在别处的插件拿不到同一份内核，默认还会自己联网装包。决定 12 的条件是「只要小改就能跑而且内存明显更低」，两条都不满足。
 
+### Windows（2026-11-15）
+
+同样的 `host/` 脚本，本机的 Node 26.12.0 和官方 Node 26.13.1 各跑一遍，结果相同。Bun 没测（决定 12 已定用 Node）。
+
+| 项目 | 结果 |
+|---|---|
+| 内核、服务、依赖顺序 | 通过 |
+| 加载器按 `cordis.yml` 加载插件 | 通过 |
+| 改配置文件就停用、启用、换配置、移除插件（`config-test.mjs`） | 通过 |
+| 热重载 | 通过，要 `--expose-internals`。改文件到新代码生效 53–56 ms；连续 200 次 0 失败，每次约 55 ms，受管的定时器一直是 1，`counter` 的状态保留；JS 堆每次涨约 12 KB，200 次后常驻内存多 14 MB |
+| 热重载里经配置停用、再启用、用接口停用 | 通过，写文件后 2–6 ms 撤掉副作用 |
+| 装在别处的插件 | 和 macOS 一样：不做处理时不加载也不报错；加 `module.registerHooks` 的解析钩子后拿到同一份内核，热重载也照常 |
+| 带 `--disallow-code-generation-from-strings` | 和 macOS 一样，加载器在 `index.js:24` 报 `EvalError`；把求值器改成用到时才建（同样 6 行）后，冒烟测试、200 次热重载、装在别处的插件都通过 |
+
+**一处 Windows 特有的现象：** 测试脚本原样跑时热重载超时。原因是脚本写完配置马上就改插件文件，这时 chokidar 还没把子目录扫完，那次改动没收到；之后的配置测试也连带超时。改文件前等 100 ms 以上就稳定通过（试了 0、100、200、500 ms：只有 0 失败）。另外连着写两次配置文件时第二次会丢，中间隔 50 ms 就收得到。这两处只影响开发模式的热重载，正式使用不走文件监听。
+
+单独跑宿主，启动 6 秒后读一次（私有内存；工作集在括号里）：
+
+| 状态 | Node 26.12 |
+|---|---|
+| 空进程 | 20.2 MB（62.4 MB） |
+| 内核、加载器、两个插件 | 61.1 MB（70.3 MB） |
+| 再加热重载 | 61.0 MB（71.5 MB） |
+| 再加 WebSocket 服务 | 64.5 MB（75.3 MB） |
+
+加载内核后私有内存多了约 41 MB，工作集只多 8 MB，多出来的大部分是 V8 申请了还没用到的内存。放进应用里打成单个文件的宿主只有约 27 MB（见第 7 项），所以这一组只用来和 macOS 的同一组比趋势，不当成宿主的内存。
+
+启动时间（15 次的中位数，`Process.WaitForExit` 计时）：
+
+| 量什么 | Node 26.12 | macOS（对照） |
+|---|---|---|
+| 进程启动到退出（什么都不做） | 41 ms（37–46） | 32 ms |
+| 进程启动到两个插件都跑起来 | 111 ms（108–122） | 84 ms |
+| 应用里：Rust 拉起宿主到 WebSocket 能连 | 74–111 ms | 51–82 ms |
+| 新下载的 `node.exe` 第一次运行 | 冒烟测试 1393 ms，之后 322–340 ms | 第一次 3170 ms |
+
+结论：**成立**，和 macOS 一样。
+
 ## 2. 附带程序的打包和签名
 
 ### 怎么测的
@@ -172,6 +226,10 @@ Node 作为 Tauri 的附带程序（`bundle.externalBin`），`signingIdentity` 
 - 要给浮屿的 `Entitlements.plist` 加 `com.apple.security.cs.allow-jit`（现在只有 `apple-events` 一项）。官方 Node 带的另外 5 项授权，这次测到的范围里用不上。
 - **公证未测**：没有 Developer ID。临时签名能证明的只有「加固运行时加这一项授权能跑」，苹果的公证服务接不接受要等 G1.12 的开发者账号。
 - **Windows 的打包未测。**
+
+### Windows
+
+不测：决定 16 之后安装包不带 Node，没有附带程序要打包。Windows 安装程序带上 Node 的增量也就没量（`node.exe` 本身 95.5 MB，zip 39.3 MB）。不带 Node 的打包见「报告之后定的」。
 
 ## 3. 窗口到宿主的本机 WebSocket
 
@@ -205,7 +263,27 @@ Node 作为 Tauri 的附带程序（`bundle.externalBin`），`signingIdentity` 
 ### 结论：成立
 
 - macOS 上直接用 WebSocket，方案里的后备（经 Rust 中转）在 macOS 27.2 上用不上。
-- 后备通道本身可行，留着给两种情况：macOS 15 上如果不通；Windows 上如果不通。这两处都没测。
+- 后备通道本身可行，留着给 macOS 15 上万一不通的情况（没测）。
+
+### Windows（2026-11-15，WebView2 157）
+
+同一个应用不带 Node 打包（`npx tauri build --config src-tauri/tauri.unbundled.conf.json`，release），CSP 不变。页面地址是 `http://tauri.localhost`，令牌在 Windows 上取不到 `/dev/urandom`，用了临时代码里的后备取法（测试用，不代表正式做法）。本机 Node 和官方 Node 各跑一遍：
+
+| 项目 | 本机 Node 26.12 | 官方 Node 26.13.1 |
+|---|---|---|
+| 页面是不是安全上下文 | 是 | 是 |
+| 从 `http://tauri.localhost` 连 `ws://127.0.0.1` | **通** | 通 |
+| 建立连接 | 8.1 ms | 5.3 ms |
+| 一问一答 300 次 | 中位数 0.1 ms，最慢 0.4 ms | 0.1 ms，最慢 0.5 ms |
+| 来回 1 MB 的文本 | 11.3 ms，内容完整 | 19.7 ms，内容完整 |
+| 来回 256 KB 的二进制 | 1.1 ms | 1.0 ms |
+| 宿主连发 20000 条 200 字节的消息 | 0.17 秒，每秒约 11.5 万条 | 0.15 秒，每秒约 13 万条 |
+| 令牌不对 | 被关掉（4401） | 被关掉（4401） |
+| 宿主看到的 `Origin` | `http://tauri.localhost` | 同 |
+
+`invoke` 长轮询：一个窗口里挂着 1–64 个没返回的长轮询时，别的 `invoke` 中位数 0.6–1.1 ms，最慢 2.2 ms；8 个窗口各自长轮询，Rust 在约 1.6 秒里推 200 个事件，每个窗口都收全，延迟中位数 2 ms，最慢 7 ms。
+
+结论：**成立。** Windows 上也直接用 WebSocket，经 Rust 中转的后备用不上，没有试。注意 `Origin` 是 `http://tauri.localhost`，和 macOS 的 `tauri://localhost` 不同，宿主核对来源时两个都要认。
 
 ## 4. 自定义协议上的 `import()` 和共用 React
 
@@ -236,7 +314,24 @@ Rust 注册 `plugin` 协议，从资源目录里读文件，回 `Access-Control-
 - **转接模块用相对路径引用**（`../__shared/react.js`），不用绝对地址。同一个协议在 macOS 上是 `plugin://localhost/…`，在 Windows 上是 `http://plugin.localhost/…`，写绝对地址的话同一个插件包没法两边通用。
 - 404 的报错没有信息量，窗口里的加载器要在 `import()` 之前自己先确认文件在不在，才能给出「哪个插件的哪个文件没找到」。
 
-没测的：开发者工具里 source map 是否生效、样式里引用的字体、Windows。
+没测的：开发者工具里 source map 是否生效、样式里引用的字体。
+
+### Windows（2026-11-15，WebView2 157）
+
+同一次运行，协议地址 `http://plugin.localhost`（页面里按 UA 选的前缀）：
+
+| 项目 | 结果 |
+|---|---|
+| `import('http://plugin.localhost/demo/island.js')` | 通。第一次 32 ms（本机 Node 那次）、2.5 ms（官方 Node 那次） |
+| 插件拿到的 React 是不是页面的那一份 | 是 |
+| 插件组件用 `useState`，渲染后点一下 | 正常（`clicks 0` 变成 `clicks 1`） |
+| 模块里的相对导入、`import.meta.url` | 正常，`import.meta.url` 是 `http://plugin.localhost/demo/island.js` |
+| 用 `<link>` 加载样式 | 生效 |
+| `fetch` 协议上的 JSON | 正常（200） |
+| 同一个地址再 `import` 一次 / 加 `?v=2` | 同一个模块 / 新的模块 |
+| 不回 CORS 头、MIME 回成 `text/html`、文件不存在 | 都加载失败，报错都是 `Failed to fetch dynamically imported module: <地址>`，看不出是哪一种 |
+
+结论：**成立。** 转接模块用相对路径的那条在 Windows 上验证了：同一个插件包在 `http://plugin.localhost/…` 下原样能用。Windows 上三种失败的报错完全一样，加载器先确认文件、再 `import()` 这一条更是必须的。
 
 ## 5. 宿主崩溃、卡死后的重启和窗口重连
 
@@ -260,7 +355,23 @@ Rust 每 250 ms 看一次宿主进程还在不在，并经标准输入发一次�
 
 ### 结论：成立
 
-没测的：重启那一刻正在进行的调用怎么收场、多个窗口同时重连、Windows 上的作业对象。
+没测的：重启那一刻正在进行的调用怎么收场、多个窗口同时重连。
+
+### Windows（2026-11-15）
+
+同样的做法；Windows 上「杀掉」是 `TerminateProcess`。
+
+| 情况 | Rust 发现 | 新宿主就绪 | 窗口重新连上并拿到状态 |
+|---|---|---|---|
+| 杀掉宿主，本机 Node，3 次 | 139–193 ms | 再过 79–92 ms | 250–294 ms |
+| 杀掉宿主，官方 Node，3 次 | 111–148 ms | 再过 78–87 ms | 229–250 ms |
+| 宿主死循环，两种 Node 各 1 次 | 1.88–1.89 秒 | 再过 76–84 ms | 1.99–2.00 秒 |
+| 应用自己被强行结束（`Stop-Process -Force`），3 次 | — | — | 宿主 45–79 ms 内退出，WebView2 进程也没留下 |
+
+- 每次重启后进程号、端口、令牌都是新的，宿主内存里的状态丢失，和 macOS 一样。
+- 应用被强行结束时宿主跟着退出，靠的是宿主发现标准输入关了就退出。临时代码**没用作业对象**。没测的一种情况：应用被结束时宿主正好卡死，这时它读不到标准输入关了，推断会留下来，所以第 1 阶段照方案用作业对象（`win32/job`）。
+
+结论：**成立。**
 
 ## 6. 窗口全隐藏时的定时器、睡眠唤醒
 
@@ -287,6 +398,19 @@ Rust 每 250 ms 看一次宿主进程还在不在，并经标准输入发一次�
 cd ~/Desktop/projects/fuyu-v3-spike && mkdir -p runs/sleep && SPIKE_OUT=$PWD/runs/sleep SPIKE_SCENARIO=timers SPIKE_DURATION=1200 app/src-tauri/target/release/bundle/macos/FuyuV3Spike.app/Contents/MacOS/fuyu-v3-spike
 ```
 
+### Windows（2026-11-15）
+
+同样的做法（主窗口不显示，另开一个从不显示的窗口），本机 Node 当宿主。第一轮（隐藏窗口默认设置）跑满 8 分钟；第二轮（`backgroundThrottling` 设成 `disabled`）用户定缩到 3 分钟，到点手动结束。期间电脑在正常使用，D47 的内存采样也在跑，没有睡眠。
+
+| | 第一轮（8 分钟，47 段） | 第二轮（3 分钟，20 段） |
+|---|---|---|
+| 每 10 秒跑的次数（应当是 100） | 93–94 | 93–94 |
+| 最晚的一次 | 15 ms | 15 ms |
+| 平均晚多少（每段里最大的） | 7.9 ms | 7.7 ms |
+
+- 次数每段都是 93–94，不是 macOS 的 99–100：每次稳定地晚约 7 ms，最晚 15 ms，和 Windows 默认约 15.6 ms 的计时精度对得上（Node 不会像浏览器那样调高计时精度）。这是计时粒度，不是降速：67 段里没有一段掉下来。
+- 结论：**成立；睡眠唤醒未测。** 插件不能指望 100 ms 以下的定时精确。
+
 ## 7. 对照：隐藏 WebView 当宿主
 
 和第 6 项同一次运行：那个从不显示的窗口里跑 Cordis 的内核（浏览器里能直接用，只是没有加载器）和同样的 100 ms 定时器。两轮的区别是这个窗口的 `backgroundThrottling`。
@@ -306,6 +430,30 @@ cd ~/Desktop/projects/fuyu-v3-spike && mkdir -p runs/sleep && SPIKE_OUT=$PWD/run
 - 隐藏 WebView 在内存（少约 8 MB）和安装包（不增加）上都更好，但它里面的定时器最多每秒 1 次，不设那个开关时干脆不跑。调研里引用的第三方测量（关掉挂起后约 1 Hz）在这台机器上复现了。
 - 加上 Cordis 的加载器和热重载只能在 Node 里跑、插件不能用 Node 的接口和 npm 包，决定 4（独立的 Node 进程）的理由都还在。
 - 它是安装包这个代价唯一能完全避开的路。如果最后觉得多 44 MB 不能接受，这是回头要重新评估的那个方案，代价是定时全部交给 Rust、加载器自己写、插件不能用 npm。
+
+### Windows（2026-11-15）
+
+定时器和第 6 项同一次运行：
+
+| | 默认 | 设成 `disabled` |
+|---|---|---|
+| 页面脚本能不能跑起来 | 能，内核和两个插件都起来了 | 能 |
+| 100 ms 的定时器 | **照常跑**：每 10 秒 100–101 次，最晚 8.8–11.2 ms | 一样：100–101 次，最晚 9–10.5 ms |
+| 页面自己报告的 `visibilityState` | `visible`（窗口从没显示过） | `visible` |
+
+内存另外量了一次：应用都是 `SPIKE_SCENARIO=idle`（主窗口显示、连上宿主），启动 15 秒后每 4 秒读一次、读 5 次取中位数，整棵进程树的私有内存，两遍：
+
+| 配置 | 整个应用 | 宿主那一个进程 |
+|---|---|---|
+| 不带宿主 | 184.7、184.9 MB | — |
+| Node 宿主 | 189.2、190.4 MB | 26.9、27.5 MB（另有一个 `conhost.exe`） |
+| 隐藏 WebView 当宿主（默认） | 210.0、206.7 MB | 多一个网页进程 |
+| 隐藏 WebView 当宿主（不节流） | 207.5、206.6 MB | 同上 |
+
+- WebView2 的合计每次读数在 ±10 MB 之间跳（同一遍里最小和最大差 20 MB），所以 Node 宿主「整个应用只多 5 MB」不可信，按宿主进程自己的约 27 MB 算。隐藏 WebView 多出约 22 MB。
+- 和 macOS 相反：Windows 上隐藏 WebView 比 Node 宿主还**多**占内存，定时器也不降速。
+
+结论：**不改现在的决定。** Windows 上隐藏 WebView 没有降速的问题，但 macOS 上有；加上加载器和热重载只能在 Node 里跑，决定 4 的理由都还在。
 
 ## 8. rutis 小样
 
@@ -364,17 +512,23 @@ cd ~/Desktop/projects/fuyu-v3-spike && mkdir -p runs/sleep && SPIKE_OUT=$PWD/run
 | 3 | 「插件代码怎么加载」：补上「插件的宿主部分怎么找到 `fuyu-plugin`」，用 `module.registerHooks` 的解析钩子 | 第 1 项 |
 | 4 | 「启动和性能」：岛屿不等宿主就绪；更新后第一次启动宿主会晚约 3 秒 | 第 1 项 |
 | 5 | 「宿主进程」：Mac 的授权文件加 `allow-jit`；公证等开发者账号 | 第 2 项 |
-| 6 | 「宿主和窗口怎么通信」：macOS 27 上 WebSocket 直接可用；后备通道留给 macOS 15 和 Windows，测过再决定要不要实现 | 第 3 项 |
+| 6 | 「宿主和窗口怎么通信」：macOS 27 和 Windows（WebView2 157）上 WebSocket 都直接可用；后备通道只剩 macOS 15 没测，测过再决定要不要实现。宿主核对 `Origin` 时要认 `tauri://localhost` 和 `http://tauri.localhost` 两种 | 第 3 项（2026-11-15 补 Windows） |
 | 7 | 「插件代码怎么加载」：转接模块用相对路径；加载器先确认文件存在再 `import()` | 第 4 项 |
 | 8 | 「从 rutis 借鉴的」：标记标在自由函数上，TypeScript 类型用 `ts-rs`；通道断开时等待中的调用立刻失败；卡死检测自己做 | 第 8 项 |
 | 9 | 「内存」「风险」：把这里的数字填进去。内存不是问题，安装包是 | 第 1 项 |
 | 10 | 状态视图和日志提到第 1 阶段的最前面做 | 第 1 项：两处失败都是静默的 |
+| 11 | 「开发体验」：热重载的文件监听就绪（chokidar 的 `ready`）之前改的文件收不到，Windows 上要约 100 ms；热重载的测试和「改了没生效」的提示都要等它就绪 | 第 1 项，Windows |
+| 12 | 「宿主进程」：作业对象照方案做，不能只靠「标准输入关了就退出」。宿主卡死时读不到标准输入，这种情况两边都没测 | 第 5 项，Windows |
+| 13 | 「资源监控」或插件文档：Windows 上 Node 的定时器粒度约 15.6 ms（100 ms 的定时器每次晚约 7 ms），插件不能指望 100 ms 以下的定时精确 | 第 6 项，Windows |
+| 14 | 「宿主进程」决定 16 的找 Node：Windows 上从资源管理器启动的应用拿到的是注册表里的 `PATH`，官方安装包装的 Node 在里面；只装在用户目录或版本管理器里的要另外去找 | 报告之后定的，Windows |
 
 ## 还没测的
 
 | 项目 | 为什么没测 | 谁能测 |
 |---|---|---|
-| Windows 上的全部 8 项 | 那台机器能不能用还没确认 | Windows 那台机器上的会话 |
+| Windows 上的 Bun、把 Node 打进安装包、rutis | 决定 12、16 之后不需要 | — |
+| Windows 上宿主卡死时应用被结束、作业对象 | 临时代码没有作业对象 | 第 1 阶段 |
+| Windows 上 nvm / fnm / volta 装的 Node、只装在用户目录的 Node | 这台机器上只有官方安装包装的 Node | 第 1 阶段做找 Node 的逻辑时 |
 | 公证 | 没有 Developer ID | 有开发者账号之后（G1.12） |
 | macOS 15 上的第 3、4 项 | 手头只有 macOS 27.2 | 要一台旧系统的 Mac 或虚拟机 |
 | 睡眠唤醒 | 要合盖，会打断正在用的电脑 | 你：第 6 节有一条命令 |
@@ -423,7 +577,23 @@ cd ~/Desktop/projects/fuyu-v3-spike && mkdir -p runs/sleep && SPIKE_OUT=$PWD/run
 
 临时项目跟着改了三处，让它不只在 Unix 上能编译：令牌读不到 `/dev/urandom` 时换一种取法；运行时先找应用旁边的，没有就用 `PATH` 里的；加了一份不带附带程序的打包配置。源码（不含依赖和构建产物）打成了 `fuyu-v3-spike-src.zip`，给 Windows 上补测用。
 
+### Windows（2026-11-15）
+
+同一个临时应用在 Windows 上不带 Node 打包（release，2 分 19 秒编完，`fuyu-v3-spike.exe` 8.8 MB，宿主的 JS 和插件在旁边）：
+
+| 用哪个 Node | 结果 |
+|---|---|
+| 本机官方安装包装的 Node 26.12.0（`C:\Program Files\nodejs`） | 全部自动测试通过 |
+| 下载的官方 Node 26.13.1，`node.exe` 原样（SHA-256 核对过，OpenJS Foundation 的签名） | 全部自动测试通过 |
+| 不指定路径，**从资源管理器启动**（`explorer.exe <exe>`，环境来自资源管理器而不是终端） | 从 `PATH` 找到了 `C:\Program Files\nodejs\node.exe`，全部通过 |
+
+- 从资源管理器启动时应用拿到的 `PATH` 有 33 项，和注册表里系统加用户的 `PATH` 一样多；做测试的终端里是 47 项。所以这次确实是图形界面的环境，不像 Mac 上 `open` 那样带上了终端的环境。从开始菜单启动走的是同一个资源管理器，没有单独测。
+- 官方安装包会把 Node 加进系统 `PATH`，所以在 Windows 上靠 `PATH` 能找到它；nvm-windows、fnm、volta 装的 Node 和只装在用户目录里的没测，第 1 阶段找 Node 时要另外去它们的位置找。
+- 新下载的 `node.exe` 第一次运行慢 4 倍（单独跑冒烟测试 1393 ms，之后约 330 ms），远没有 Mac 上的 25 秒；进应用之前已经单独跑过一次，所以应用里第一次拉起宿主是 110 ms。
+
 ## 过程里碰到的
 
 - 临时项目要放一份和浮屿相同的 `rust-toolchain.toml`（1.99.1）。用本机默认的 1.95 时，`tauri build` 编出来的过程宏动态库加载不了（`mis-aligned LINKEDIT string pool`），原因没有查清。
 - Bun 的测试在 `~/.bun/install/cache` 留下了它自己下载的一份 `cordis`（332 KB）。这是第 1 项里「默认会自己联网装包」的直接后果。
+- Windows 上临时应用的 Rust 部分只改了两处（窗口程序、`CREATE_NO_WINDOW`），其余原样能编译；`tauri build` 的打包目标 `app` 在 Windows 上没有对应的东西，产物就是 `target/release` 里的 exe，旁边放着资源文件。
+- Windows 上第二轮定时器测试按用户的要求从 8 分钟缩到 3 分钟。第一次跑这两轮时结果目录的路径被 shell 写坏了，没写出文件，作废重跑。
