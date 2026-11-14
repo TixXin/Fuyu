@@ -74,6 +74,14 @@ pub(super) fn start() {
     });
 }
 
+#[cfg(windows)]
+pub(super) fn coexist_refresh() {
+    let window = lock(state()).window;
+    if let Some(window) = window {
+        let _ = message_window::post_message(HWND(window as *mut _), REFRESH_MESSAGE);
+    }
+}
+
 pub(super) fn effective<'a>(manifest: Option<&'a str>, user: Option<&'a str>) -> Option<&'a str> {
     match user {
         Some("") => None,
@@ -179,7 +187,8 @@ fn apply(window: HWND) {
     }
     state.registered.clear();
     state.conflicts.clear();
-    for binding in state.wanted.clone() {
+    let wanted = if crate::coexist::yielding() { Vec::new() } else { state.wanted.clone() };
+    for binding in wanted {
         let id = FIRST_HOTKEY_ID + state.registered.len() as i32;
         if win32::hotkey::register(window, id, binding.modifiers, binding.key_code).is_ok() {
             state.registered.push(binding);

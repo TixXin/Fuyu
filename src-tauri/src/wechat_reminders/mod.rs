@@ -226,10 +226,12 @@ fn service() -> Result<&'static Arc<ReminderService>, String> {
 
 fn publish(service: &ReminderService, snapshot: ReminderSnapshot) {
     plugin_view::publish_received(&snapshot);
-    let visible = service
-        .app
-        .get_webview_window(crate::island::WINDOW_LABEL)
-        .is_some_and(|window| window.is_visible().unwrap_or(false));
+    let visible = crate::coexist::banner_visible(
+        service
+            .app
+            .get_webview_window(crate::island::WINDOW_LABEL)
+            .is_some_and(|window| window.is_visible().unwrap_or(false)),
+    );
     let payload = serde_json::json!({"snapshot": snapshot, "windowVisible": visible});
     let _ = service.app.emit_to(
         crate::settings_window::WINDOW_LABEL,
