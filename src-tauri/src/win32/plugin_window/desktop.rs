@@ -1,9 +1,10 @@
+use windows::core::PCWSTR;
 use windows::Win32::{
     Foundation::{HWND, RECT},
-    UI::Input::KeyboardAndMouse::{GetAsyncKeyState, VK_LBUTTON, VK_MBUTTON, VK_RBUTTON},
+    UI::Input::KeyboardAndMouse::{GetAsyncKeyState, SetActiveWindow, VK_LBUTTON, VK_MBUTTON, VK_RBUTTON},
     UI::WindowsAndMessaging::{
-        GetTopWindow, GetWindow, GetWindowLongW, GetWindowRect, IsIconic, IsWindowVisible, SetForegroundWindow, SetWindowPos, GWL_EXSTYLE,
-        GW_HWNDNEXT, GW_OWNER, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOSIZE, WS_EX_APPWINDOW, WS_EX_NOACTIVATE, WS_EX_TOOLWINDOW, WS_EX_TOPMOST,
+        CreateWindowExW, DestroyWindow, GetTopWindow, GetWindow, GetWindowLongW, GetWindowRect, IsIconic, IsWindowVisible, SetForegroundWindow, SetWindowPos, GWL_EXSTYLE,
+        GW_HWNDNEXT, GW_OWNER, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOSIZE, WS_EX_APPWINDOW, WS_EX_NOACTIVATE, WS_EX_TOOLWINDOW, WS_EX_TOPMOST, WS_POPUP,
     },
 };
 
@@ -13,6 +14,41 @@ const MAX_WINDOWS: usize = 4096;
 
 fn owner(window: HWND) -> Option<HWND> {
     unsafe { GetWindow(window, GW_OWNER) }.ok().filter(|owner| !owner.is_invalid())
+}
+
+pub(super) fn forget_widget(widget: HWND, give_back: impl FnOnce()) {
+    let Some(desktop) = owner(widget) else {
+        give_back();
+        return;
+    };
+    let helper = super::proc::register().and_then(|class| {
+        let instance = super::proc::instance()?;
+        unsafe {
+            CreateWindowExW(
+                WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE,
+                PCWSTR(class.as_ptr()),
+                PCWSTR::null(),
+                WS_POPUP,
+                -32000,
+                -32000,
+                1,
+                1,
+                Some(desktop),
+                None,
+                Some(instance),
+                None,
+            )
+        }
+        .map_err(|error| error.to_string())
+    });
+    if let Ok(helper) = helper {
+        let _ = unsafe { SetActiveWindow(helper) };
+    }
+    give_back();
+    if let Ok(helper) = helper {
+        let _ = unsafe { DestroyWindow(helper) };
+    }
+    lower_below_programs(widget);
 }
 
 pub(super) fn mouse_button_down() -> bool {
