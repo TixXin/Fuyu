@@ -360,6 +360,7 @@
   border-radius: 10px;
   user-select: text;
   scrollbar-width: thin;
+  scrollbar-color: rgba(var(--pop-ink), 0.2) transparent;
 }
 
 .clipboard-popup__pane-body--mono {
@@ -389,19 +390,42 @@
   gap: 8px;
 }
 
-.clipboard-popup__pane-image img {
-  width: 100%;
-  height: 100%;
+.clipboard-picture {
+  position: relative;
   min-height: 0;
-  object-fit: contain;
+  overflow: hidden;
   background: rgba(var(--pop-ink), 0.05);
   border-radius: 10px;
+}
+
+.clipboard-picture img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.clipboard-picture__thumb {
+  filter: blur(6px);
+  transform: scale(1.02);
+}
+
+.clipboard-picture__full {
+  opacity: 0;
+  transition: opacity 160ms ease-out;
+}
+
+.clipboard-picture--ready .clipboard-picture__full {
+  opacity: 1;
 }
 
 .clipboard-popup__pane-image p {
   max-height: 72px;
   margin: 0;
   overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(var(--pop-ink), 0.2) transparent;
   color: rgba(var(--pop-ink), 0.75);
   font-size: 11.5px;
   line-height: 1.5;

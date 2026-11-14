@@ -8,13 +8,14 @@ mod hotkey;
 mod link_guard;
 mod link_preview;
 mod file_image;
+pub(crate) mod image_protocol;
 #[cfg_attr(target_os = "macos", path = "listener_macos.rs")]
 mod listener;
 mod plugin_view;
 #[cfg_attr(target_os = "macos", path = "popup_macos.rs")]
 mod popup;
 mod popup_place;
-mod preview;
+pub(crate) mod preview_window;
 mod secrets;
 mod sequence;
 #[cfg(target_os = "macos")]
@@ -493,20 +494,6 @@ pub async fn import_clipboard_history(content: String) -> Result<transfer::Impor
 }
 
 #[tauri::command]
-pub async fn get_clipboard_image_preview(id: String) -> Result<Option<String>, String> {
-    let path = service()?
-        .snapshot()?
-        .items
-        .into_iter()
-        .find(|item| item.id == id)
-        .and_then(|item| item.image.map(|image| image.original_path));
-    let Some(path) = path else { return Ok(None) };
-    tauri::async_runtime::spawn_blocking(move || preview::image_data_url(std::path::Path::new(&path)).map(Some))
-        .await
-        .map_err(|error| format!("Failed to join the image preview task: {error}"))?
-}
-
-#[tauri::command]
 pub async fn hide_clipboard_popup(app: AppHandle, blurred: Option<bool>) -> Result<(), String> {
     if blurred == Some(true) && crate::screenshot::is_capturing() {
         return Ok(());
@@ -618,6 +605,7 @@ pub fn init(app: &AppHandle) -> Result<(), String> {
     service::fill_file_images(None);
     start_workers();
     notify_clipboard_changed();
+    preview_window::prepare(app);
     Ok(())
 }
 
@@ -659,7 +647,8 @@ macro_rules! tauri_commands {
             crate::clipboard_history::delete_clipboard_history_item,
             crate::clipboard_history::restore_clipboard_history_item,
             crate::clipboard_history::clear_clipboard_history,
-            crate::clipboard_history::get_clipboard_image_preview,
+            crate::clipboard_history::preview_window::show_clipboard_preview,
+            crate::clipboard_history::preview_window::hide_clipboard_preview,
             crate::clipboard_history::actions::paste_clipboard_text,
             crate::clipboard_history::actions::add_clipboard_history_text,
             crate::clipboard_history::actions::pause_clipboard_capture,

@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { Search } from "lucide-react";
 import { useTranslation } from "../../i18n";
-import { startClipboardDrag, type ClipboardAiPrompt, type ClipboardCaptureStatus, type ClipboardCopyAs, type ClipboardHistoryItem, type ClipboardSnippet } from "./api";
+import { startClipboardDrag, type ClipboardAiPrompt, type ClipboardCaptureStatus, type ClipboardCopyAs, type ClipboardHistoryItem, type ClipboardPeek, type ClipboardSnippet } from "./api";
 import { ClipboardActionPanel, type PanelPage } from "./ClipboardActionPanel";
 import { ClipboardEditor } from "./ClipboardEditor";
 import { ClipboardPauseBar, ClipboardPopupFooter, pausedNow, type MergeSeparator } from "./ClipboardPopupFooter";
@@ -23,7 +23,7 @@ const CLOCK_MS = 30_000;
 
 type Mode = "list" | "panel" | "look" | "edit";
 
-export function ClipboardPopup({ items, snippets, openCount, wide, ownsWindow = false, capture, linkPreview = false, aiPrompts, onPaste, onPasteSnippet, onPasteSequence, onClose, onToggleFavorite }: {
+export function ClipboardPopup({ items, snippets, openCount, wide, ownsWindow = false, capture, linkPreview = false, aiPrompts, onPaste, onPasteSnippet, onPasteSequence, onClose, onToggleFavorite, onPeek }: {
   items: readonly ClipboardHistoryItem[];
   snippets: readonly ClipboardSnippet[];
   openCount: number;
@@ -37,6 +37,7 @@ export function ClipboardPopup({ items, snippets, openCount, wide, ownsWindow = 
   onPasteSequence: (ids: string[]) => void;
   onClose: () => void;
   onToggleFavorite: (id: string) => void;
+  onPeek?: (peek: ClipboardPeek | null) => void;
 }) {
   const t = useTranslation();
   const text = t.clipboard.popup;
@@ -139,6 +140,18 @@ export function ClipboardPopup({ items, snippets, openCount, wide, ownsWindow = 
   useEffect(() => {
     if (mode !== "look") cancelPeek();
   }, [mode, cancelPeek]);
+
+  const peekItem = mode === "look" ? item : undefined;
+  const peekHolding = peek.holding;
+  useEffect(() => {
+    if (!onPeek) return;
+    if (!peekItem) {
+      onPeek(null);
+      return;
+    }
+    const prefetch = [shownItems[current - 1], shownItems[current + 1]].filter((entry) => entry?.kind === "image").map((entry) => entry.id);
+    onPeek({ item: peekItem, holding: peekHolding, prefetch });
+  }, [onPeek, peekItem, peekHolding, shownItems, current]);
 
   const toggleRecord = () => (pausedNow(capture, now) ? handlers.resume() : handlers.pause(null));
 
@@ -331,7 +344,7 @@ export function ClipboardPopup({ items, snippets, openCount, wide, ownsWindow = 
         {!wide && editing && (
           <ClipboardEditor key={item.id} item={item} overlay onPasteOnce={(value) => pasteText(value)} onSaveAsNew={(value) => { saveAsNew(value); backToList(); }} onCancel={backToList} />
         )}
-        {mode === "look" && item && (
+        {mode === "look" && item && !onPeek && (
           <div className="clipboard-look" role="dialog" aria-label={text.preview.label}>
             <span className="clipboard-look__close"><kbd>{text.actions.spaceKey}</kbd>{peek.holding ? text.actions.releaseToClose : text.actions.closePreview}</span>
             <ClipboardPopupPreview entry={item} linkPreview={linkPreview} onPasteText={pasteText} />

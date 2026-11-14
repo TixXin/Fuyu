@@ -1,6 +1,9 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ClipboardPopup } from "../../features/clipboard/ClipboardPopup";
-import { hideClipboardPopup, listenClipboardPopupBlur, listenClipboardPopupMoved, listenClipboardPopupOpened, pasteClipboardItem, pasteClipboardSequence, pasteClipboardSnippet, setClipboardPopupPin } from "../../features/clipboard/api";
+import {
+  hideClipboardPopup, hideClipboardPreview, listenClipboardPopupBlur, listenClipboardPopupMoved, listenClipboardPopupOpened, pasteClipboardItem, pasteClipboardSequence,
+  pasteClipboardSnippet, sendClipboardPreview, setClipboardPopupPin, showClipboardPreview, type ClipboardPeek,
+} from "../../features/clipboard/api";
 import { ClipboardTitleBar } from "./ClipboardTitleBar";
 import { useClipboardHistory } from "../../features/clipboard/useClipboardHistory";
 import { useWindowLight } from "../../features/appearance/useWindowLight";
@@ -36,6 +39,21 @@ export function ClipboardWindow() {
   }, [close]);
 
   const pinned = clipboardHistory.settings.popupPinned === true;
+  const linkPreview = clipboardHistory.settings.linkPreview === true;
+  const peekOpen = useRef(false);
+
+  const onPeek = useCallback((peek: ClipboardPeek | null) => {
+    if (!peek) {
+      if (!peekOpen.current) return;
+      peekOpen.current = false;
+      void hideClipboardPreview().catch(reportError("hide the clipboard preview"));
+      return;
+    }
+    const sent = sendClipboardPreview({ ...peek, linkPreview });
+    if (peekOpen.current) return;
+    peekOpen.current = true;
+    void sent.then(() => showClipboardPreview()).catch(reportError("show the clipboard preview"));
+  }, [linkPreview]);
 
   const togglePin = useCallback(() => {
     void setClipboardPopupPin(!pinned).catch(reportError("pin the clipboard window"));
@@ -75,7 +93,8 @@ export function ClipboardWindow() {
         onToggleFavorite={(id) => void toggleClipboardHistoryFavorite(id)}
         wide={clipboardHistory.settings.popupLayout === "wide"}
         capture={clipboardHistory.capture}
-        linkPreview={clipboardHistory.settings.linkPreview === true}
+        linkPreview={linkPreview}
+        onPeek={onPeek}
         aiPrompts={clipboardHistory.settings.aiPrompts}
       />
     </div>
