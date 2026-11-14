@@ -41,6 +41,7 @@ export function ClipboardWindow() {
   const pinned = clipboardHistory.settings.popupPinned === true;
   const linkPreview = clipboardHistory.settings.linkPreview === true;
   const peekOpen = useRef(false);
+  const [previewBroken, setPreviewBroken] = useState(false);
 
   const onPeek = useCallback((peek: ClipboardPeek | null) => {
     if (!peek) {
@@ -52,7 +53,11 @@ export function ClipboardWindow() {
     const sent = sendClipboardPreview({ ...peek, linkPreview });
     if (peekOpen.current) return;
     peekOpen.current = true;
-    void sent.then(() => showClipboardPreview()).catch(reportError("show the clipboard preview"));
+    void sent.then(() => showClipboardPreview()).catch((error: unknown) => {
+      console.error("Failed to show the clipboard preview", error);
+      peekOpen.current = false;
+      setPreviewBroken(true);
+    });
   }, [linkPreview]);
 
   const togglePin = useCallback(() => {
@@ -94,7 +99,7 @@ export function ClipboardWindow() {
         wide={clipboardHistory.settings.popupLayout === "wide"}
         capture={clipboardHistory.capture}
         linkPreview={linkPreview}
-        onPeek={onPeek}
+        onPeek={previewBroken ? undefined : onPeek}
         aiPrompts={clipboardHistory.settings.aiPrompts}
       />
     </div>

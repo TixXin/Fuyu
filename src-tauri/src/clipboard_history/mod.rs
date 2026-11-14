@@ -605,7 +605,6 @@ pub fn init(app: &AppHandle) -> Result<(), String> {
     service::fill_file_images(None);
     start_workers();
     notify_clipboard_changed();
-    preview_window::prepare(app);
     Ok(())
 }
 

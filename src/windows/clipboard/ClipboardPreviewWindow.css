@@ -18,28 +18,33 @@ body,
 
 .clipboard-preview {
   position: relative;
-  opacity: 0;
-  transform: translateX(var(--preview-from)) scale(0.97);
   transform-origin: var(--preview-origin);
-  transition:
-    opacity 170ms ease-out,
-    transform 240ms cubic-bezier(0.16, 1, 0.3, 1);
-  will-change: opacity, transform;
-}
-
-.clipboard-preview-window--away .clipboard-preview {
-  transition: none;
-}
-
-.clipboard-preview-window--in .clipboard-preview {
-  opacity: 1;
-  transform: none;
+  animation:
+    clipboard-preview-fade 170ms ease-out,
+    clipboard-preview-slide 240ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .clipboard-preview-window--out .clipboard-preview {
-  transition:
-    opacity 120ms ease-in,
-    transform 140ms ease-in;
+  animation: clipboard-preview-leave 140ms ease-in forwards;
+}
+
+@keyframes clipboard-preview-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes clipboard-preview-slide {
+  from {
+    transform: translateX(var(--preview-from)) scale(0.97);
+  }
+}
+
+@keyframes clipboard-preview-leave {
+  to {
+    opacity: 0;
+    transform: translateX(var(--preview-from)) scale(0.97);
+  }
 }
 
 .clipboard-preview__close {
@@ -73,10 +78,12 @@ body,
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .clipboard-preview,
+  .clipboard-preview {
+    animation: clipboard-preview-fade 100ms linear;
+  }
+
   .clipboard-preview-window--out .clipboard-preview {
-    transform: none;
-    transition: opacity 100ms linear;
+    animation: clipboard-preview-fade 100ms linear reverse forwards;
   }
 
   .clipboard-preview__content {

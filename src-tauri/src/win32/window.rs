@@ -12,8 +12,8 @@ use windows::{
                 FLASHWINFO, FLASHW_ALL, FLASHW_TIMERNOFG, GetClassNameW, GetCursorPos,
                 GetForegroundWindow, GetWindow, GetWindowLongPtrW, GetWindowPlacement,
                 GetWindowRect, GetWindowTextW, GetWindowThreadProcessId, IsIconic, IsWindowVisible, SendMessageTimeoutW,
-                SetForegroundWindow, SetWindowDisplayAffinity, SetWindowLongPtrW, ShowWindow, GWL_EXSTYLE, WDA_EXCLUDEFROMCAPTURE, WDA_NONE, GW_OWNER, SMTO_ABORTIFHUNG,
-                SMTO_BLOCK, SMTO_ERRORONEXIT, SW_RESTORE, SW_SHOWNOACTIVATE, WINDOWPLACEMENT, WM_NULL,
+                SetForegroundWindow, SetWindowDisplayAffinity, ShowWindow, GWL_EXSTYLE, WDA_EXCLUDEFROMCAPTURE, WDA_NONE, GW_OWNER, SMTO_ABORTIFHUNG,
+                SMTO_BLOCK, SMTO_ERRORONEXIT, SW_HIDE, SW_RESTORE, SW_SHOWNOACTIVATE, WINDOWPLACEMENT, WM_NULL,
                 WS_EX_NOACTIVATE, WS_EX_TOOLWINDOW,
             },
         },
@@ -180,11 +180,8 @@ pub(crate) fn show_without_activating(window: HWND) {
     let _ = unsafe { ShowWindow(window, SW_SHOWNOACTIVATE) };
 }
 
-pub(crate) fn make_no_activate(window: HWND) {
-    unsafe {
-        let style = GetWindowLongPtrW(window, GWL_EXSTYLE);
-        let _ = SetWindowLongPtrW(window, GWL_EXSTYLE, style | WS_EX_NOACTIVATE.0 as isize);
-    }
+pub(crate) fn hide_window(window: HWND) {
+    let _ = unsafe { ShowWindow(window, SW_HIDE) };
 }
 
 pub(crate) fn share_monitor(a: HWND, b: HWND) -> bool {

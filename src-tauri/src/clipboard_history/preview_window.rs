@@ -55,15 +55,6 @@ fn preview_window(app: &AppHandle) -> Result<WebviewWindow, String> {
         .ok_or_else(|| "The clipboard preview window is missing.".to_string())
 }
 
-pub(crate) fn prepare(app: &AppHandle) {
-    #[cfg(windows)]
-    if let Ok(hwnd) = preview_window(app).and_then(|window| window.hwnd().map_err(|error| error.to_string())) {
-        crate::win32::window::make_no_activate(hwnd);
-    }
-    #[cfg(not(windows))]
-    let _ = app;
-}
-
 fn show(app: &AppHandle) -> Result<Side, String> {
     GENERATION.fetch_add(1, Ordering::SeqCst);
     let popup = app
@@ -99,8 +90,8 @@ fn show(app: &AppHandle) -> Result<Side, String> {
     let _ = preview.set_content_protected(hidden);
     let _ = preview.set_size(Size::Physical(PhysicalSize::new(width.max(1) as u32, height.max(1) as u32)));
     let _ = preview.set_position(Position::Physical(PhysicalPosition::new(x, y)));
-    let _ = preview.emit_to(WINDOW_LABEL, OPENED_EVENT, side);
     show_without_focus(&preview)?;
+    let _ = preview.emit_to(WINDOW_LABEL, OPENED_EVENT, side);
     Ok(side)
 }
 
@@ -116,6 +107,18 @@ fn show_without_focus(window: &WebviewWindow) -> Result<(), String> {
     window.show().map_err(|error| error.to_string())
 }
 
+#[cfg(windows)]
+fn hide_now(window: &WebviewWindow) {
+    if let Ok(hwnd) = window.hwnd() {
+        crate::win32::window::hide_window(hwnd);
+    }
+}
+
+#[cfg(not(windows))]
+fn hide_now(window: &WebviewWindow) {
+    let _ = window.hide();
+}
+
 pub(crate) fn hide(app: &AppHandle, animate: bool) {
     let generation = GENERATION.fetch_add(1, Ordering::SeqCst) + 1;
     let Ok(window) = preview_window(app) else { return };
@@ -123,7 +126,7 @@ pub(crate) fn hide(app: &AppHandle, animate: bool) {
         return;
     }
     if !animate {
-        let _ = window.hide();
+        hide_now(&window);
         return;
     }
     let _ = window.emit_to(WINDOW_LABEL, CLOSING_EVENT, ());
@@ -132,7 +135,7 @@ pub(crate) fn hide(app: &AppHandle, animate: bool) {
         thread::sleep(EXIT);
         if GENERATION.load(Ordering::SeqCst) == generation {
             if let Ok(window) = preview_window(&app) {
-                let _ = window.hide();
+                hide_now(&window);
             }
         }
     });

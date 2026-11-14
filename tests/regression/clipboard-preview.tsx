@@ -51,13 +51,12 @@ const windowClass = () => $(".clipboard-preview-window")?.className ?? "";
 async function runChecks() {
   try {
     await frames();
-    check(windowClass().includes("--away") && getComputedStyle($(".clipboard-preview")!).opacity === "0", "没打开时面板是透明的，等着滑进来");
-
     await send(TEXT);
+    const before = $(".clipboard-preview");
     await open("right");
-    check(windowClass().includes("--right"), "放在剪贴板窗口右边：从左往右滑进来");
-    await frames();
-    check(windowClass().includes("--in") && $(".clipboard-popup__pane-body")?.textContent === TEXT.text, "显示出来后才开始进场动画，内容是这条的全文");
+    check(windowClass().includes("--right") && $(".clipboard-preview") !== before, "放在剪贴板窗口右边；每次打开换一个新面板，从头播放滑入");
+    check(getComputedStyle($(".clipboard-preview")!).animationName.includes("clipboard-preview-slide"), "进场是 CSS 动画，不等动画帧回调：动画没跑时面板也照样看得见");
+    check($(".clipboard-popup__pane-body")?.textContent === TEXT.text, "内容是这条的全文");
     check($(".clipboard-preview__close")?.textContent?.includes("关闭"), "右上角写「空格 关闭」");
 
     await send(IMAGE, { holding: true });
@@ -67,13 +66,10 @@ async function runChecks() {
     await act(async () => { full!.dispatchEvent(new Event("load")); });
     check($(".clipboard-picture--ready") && !$(".clipboard-picture__thumb"), "原图解码好后淡入，缩略图拿掉");
 
-    await open("left");
-    check(windowClass().includes("--left") && windowClass().includes("--away"), "右边放不下时放在左边，重新打开从头播放进场");
-    await frames();
-    check(windowClass().includes("--in"), "左边也会滑进来");
-
     await act(async () => { await emit("clipboard-preview-closing"); });
-    check(windowClass().includes("--out"), "关闭时先播放退场动画");
+    check(windowClass().includes("--out") && getComputedStyle($(".clipboard-preview")!).animationName === "clipboard-preview-leave", "关闭时先播放退场动画");
+    await open("left");
+    check(windowClass().includes("--left") && !windowClass().includes("--out") && $(".clipboard-picture__full"), "右边放不下时放在左边；关到一半又打开时退场取消，内容还在");
 
     results.textContent = `${messages.join("\n")}\n\n全部 ${messages.length} 项检查通过。`;
     results.dataset.result = "passed";

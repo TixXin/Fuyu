@@ -10,8 +10,6 @@ import { useWindowAccent } from "../../features/appearance/useWindowAccent";
 import "../../features/clipboard/ClipboardPopup.css";
 import "./ClipboardPreviewWindow.css";
 
-type Phase = "away" | "in" | "out";
-
 const prefetched = new Set<string>();
 
 function prefetch(ids: readonly string[]) {
@@ -31,11 +29,11 @@ export function ClipboardPreviewWindow() {
   useWindowAccent();
   const [payload, setPayload] = useState<ClipboardPreviewPayload | null>(null);
   const [side, setSide] = useState<ClipboardPreviewSide>("right");
-  const [phase, setPhase] = useState<Phase>("away");
+  const [opened, setOpened] = useState(0);
+  const [closing, setClosing] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
-    let frame = 0;
     const stops: (() => void)[] = [];
     const keep = (stop: () => void) => (cancelled ? stop() : stops.push(stop));
     void listenClipboardPreviewItem((next) => {
@@ -44,27 +42,20 @@ export function ClipboardPreviewWindow() {
     }).then(keep);
     void listenClipboardPreviewOpened((next) => {
       setSide(next);
-      setPhase("away");
-      cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(() => {
-        frame = requestAnimationFrame(() => setPhase("in"));
-      });
+      setClosing(false);
+      setOpened((count) => count + 1);
     }).then(keep);
-    void listenClipboardPreviewClosing(() => {
-      cancelAnimationFrame(frame);
-      setPhase("out");
-    }).then(keep);
+    void listenClipboardPreviewClosing(() => setClosing(true)).then(keep);
     return () => {
       cancelled = true;
-      cancelAnimationFrame(frame);
       stops.forEach((stop) => stop());
     };
   }, []);
 
   const item = payload?.item;
   return (
-    <div className={`clipboard-preview-window clipboard-preview-window--${side} clipboard-preview-window--${phase}${light ? " island-light" : ""}`}>
-      <section className="clipboard-popup clipboard-preview" aria-label={t.clipboard.popup.preview.label}>
+    <div className={`clipboard-preview-window clipboard-preview-window--${side}${closing ? " clipboard-preview-window--out" : ""}${light ? " island-light" : ""}`}>
+      <section key={opened} className="clipboard-popup clipboard-preview" aria-label={t.clipboard.popup.preview.label}>
         <span className="clipboard-preview__close">
           <kbd>{text.spaceKey}</kbd>
           {payload?.holding ? text.releaseToClose : text.closePreview}
