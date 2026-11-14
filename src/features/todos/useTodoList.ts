@@ -1,17 +1,20 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type SetStateAction } from "react";
 import { createTodoId, loadActiveTodoId, loadTodos, saveActiveTodoId, saveTodos } from "./storage";
+import { adoptActiveTodo, isInProgress, latestStartedId, toggleStarted, withoutStart } from "./activeTodos";
 import { splitProjectPrefix } from "./project";
 import type { TodoItem } from "./types";
 import { useTodoFileField } from "./useTodoFileField";
 
 export function useTodoList(onStartTodo: () => void) {
-  const [todos, setTodos] = useState<TodoItem[]>(loadTodos);
+  const [todos, setTodos] = useState<TodoItem[]>(() => adoptActiveTodo(loadTodos(), loadActiveTodoId(), Date.now()));
   const [draftTodo, setDraftTodo] = useState("");
-  const [activeTodoId, setActiveTodoId] = useState<string | null>(
-    loadActiveTodoId,
-  );
+  const activeTodoId = useMemo(() => latestStartedId(todos), [todos]);
+  const adoptOutsideActive = useCallback((value: SetStateAction<string | null>) => {
+    if (typeof value === "function") return;
+    setTodos((currentTodos) => adoptActiveTodo(currentTodos, value, Date.now()));
+  }, []);
   useTodoFileField("todos", setTodos);
-  useTodoFileField("activeTodoId", setActiveTodoId);
+  useTodoFileField("activeTodoId", adoptOutsideActive);
 
   const addTodo = useCallback((defaultProject?: string) => {
     const { title, project = typeof defaultProject === "string" ? defaultProject : undefined } = splitProjectPrefix(draftTodo);
@@ -36,10 +39,9 @@ export function useTodoList(onStartTodo: () => void) {
   const toggleTodo = useCallback((id: string) => {
     setTodos((currentTodos) =>
       currentTodos.map((todo) =>
-        todo.id === id ? { ...todo, completed: !todo.completed } : todo,
+        todo.id === id ? withoutStart({ ...todo, completed: !todo.completed }) : todo,
       ),
     );
-    setActiveTodoId((currentId) => (currentId === id ? null : currentId));
   }, []);
 
   const updateTodoTitle = useCallback((id: string, title: string) => {
@@ -64,20 +66,18 @@ export function useTodoList(onStartTodo: () => void) {
         return;
       }
 
-      if (activeTodoId === id) {
-        setActiveTodoId(null);
-        return;
-      }
-
-      setActiveTodoId(id);
-      onStartTodo();
+      setTodos((currentTodos) => toggleStarted(currentTodos, id, Date.now()));
+      if (!isInProgress(todo)) onStartTodo();
     },
-    [activeTodoId, onStartTodo, todos],
+    [onStartTodo, todos],
   );
+
+  const stopAllTodos = useCallback(() => {
+    setTodos((currentTodos) => (currentTodos.some(isInProgress) ? currentTodos.map(withoutStart) : currentTodos));
+  }, []);
 
   const deleteTodo = useCallback((id: string) => {
     setTodos((currentTodos) => currentTodos.filter((todo) => todo.id !== id));
-    setActiveTodoId((currentId) => (currentId === id ? null : currentId));
   }, []);
 
   const reorderTodo = useCallback((sourceId: string, targetId: string) => {
@@ -110,22 +110,13 @@ export function useTodoList(onStartTodo: () => void) {
     saveActiveTodoId(activeTodoId);
   }, [activeTodoId]);
 
-  useEffect(() => {
-    if (
-      activeTodoId &&
-      !todos.some((todo) => todo.id === activeTodoId && !todo.completed)
-    ) {
-      setActiveTodoId(null);
-    }
-  }, [activeTodoId, todos]);
-
   return {
     todos,
     setTodos,
     draftTodo,
     setDraftTodo,
     activeTodoId,
-    setActiveTodoId,
+    stopAllTodos,
     addTodo,
     toggleTodo,
     updateTodoTitle,

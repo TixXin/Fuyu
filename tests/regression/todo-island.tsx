@@ -48,6 +48,9 @@ const FRAMES: { id: string; caption: string; props: Props; light?: boolean; tall
     { ...todo("p1", "写引言"), project: "论文" }, todo("p2", "买菜"), { ...todo("p3", "做 PPT"), project: "组会" },
     { ...todo("p4", "跑对比"), project: "论文" }, { ...todo("p5", "交初稿", true), project: "论文" },
   ] }) },
+  { id: "multi", caption: "同时进行两件（C62）", props: props("today", { activeTodoId: "m2", todos: [
+    { ...todo("m1", "等回复"), startedAt: 1 }, { ...todo("m2", "写测试"), startedAt: 2 }, todo("m3", "买菜"),
+  ] }) },
   { id: "light", caption: "浅色岛屿底色", props: props("today", { saveState: "needs-path", draftDate: "2026-11-10" }), light: true, tall: true },
 ];
 
@@ -95,6 +98,10 @@ try {
   check(Math.abs(rows[1].getBoundingClientRect().height - rows[0].getBoundingClientRect().height - 19) < 1, "两行标题多 19px，和岛屿增高的行高一致");
   check(rows[0].classList.contains("todo-island-row--active") && $("today", ".todo-island-row__stop")?.textContent === "进行中结束", "进行中的待办有强调条和结束按钮");
   check(getComputedStyle(rows[2].querySelector(".todo-island-row__title")!).textDecorationLine === "line-through", "已完成的划掉");
+  const multi = $$("multi", ".todo-list [data-todo-id]");
+  check(multi.map((row) => row.classList.contains("todo-island-row--active")).join() === "true,true,false" && $$("multi", ".todo-island-row__stop").length === 2, "两件同时进行中，各有自己的结束按钮");
+  await click(multi[0].querySelector<HTMLElement>(".todo-island-row__stop"));
+  check(calls.includes("start:m1"), "点其中一件的结束只停那一件");
   check(getComputedStyle(rows[1].querySelector(".todo-island-row__action")!).opacity === "0", "其他操作平时隐藏");
   const heights = rows.map((row) => [Math.round(row.querySelector<HTMLElement>(".todo-island-row__title")!.offsetHeight / 19), row.offsetHeight]);
   check(heights.every(([lines, height]) => height === 13 + 19 * lines) && heights.some(([lines]) => lines > 1), `行高跟着标题实际换行：一行 32px，每多一行加 19px（${heights.map(([l, h]) => l + "行 " + h + "px").join("，")}）`);

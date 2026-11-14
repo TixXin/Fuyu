@@ -399,6 +399,24 @@ mod call_tests {
     }
 
     #[test]
+    fn several_todos_can_be_in_progress_and_the_newest_left_becomes_active() {
+        let mut started = data();
+        started.todos.push(serde_json::from_value(json!({ "id": "c", "title": "third", "completed": false, "createdAt": 3, "startedAt": 20 })).expect("c"));
+        started.todos[0].started_at = Some(30.into());
+        started.todos[1].started_at = Some(10.into());
+        let text = serde_json::to_string(&started).expect("json");
+        assert!(text.contains("\"startedAt\":30") && !text.contains("\"startedAt\":null"));
+        let run_on = |method: &str, params: Value| run(method, &params, &started, "new-id", 99).expect("call").next.expect("next");
+
+        let done = run_on("todos.update", json!({ "id": "a", "completed": true }));
+        assert_eq!((done.todos[0].started_at.clone(), done.active_todo_id.as_deref()), (None, Some("c")));
+        let removed = run_on("todos.remove", json!({ "id": "a" }));
+        assert_eq!(removed.active_todo_id.as_deref(), Some("c"));
+        let other = run_on("todos.update", json!({ "id": "b", "completed": true }));
+        assert_eq!((other.todos[1].started_at.clone(), other.active_todo_id.as_deref()), (None, Some("a")));
+    }
+
+    #[test]
     fn other_days_come_from_the_archives_and_the_scheduled_list() {
         let mut history = data();
         history.archives = serde_json::from_value(json!([

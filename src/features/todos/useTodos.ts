@@ -27,7 +27,7 @@ export function useTodos({
   onMissingSaveDirectory,
 }: TodosOptions) {
   const list = useTodoList(onStartTodo);
-  const { todos, setTodos, setDraftTodo, activeTodoId, setActiveTodoId } = list;
+  const { todos, setTodos, setDraftTodo, activeTodoId, stopAllTodos } = list;
   const [dailyNote, setDailyNote] = useState(loadDailyNote);
   useTodoFileField("dailyNote", setDailyNote);
   const [currentTodoDate, setCurrentTodoDate] =
@@ -129,13 +129,13 @@ export function useTodos({
   const startDay = useCallback(
     (nextDate: string, carriedTodos: TodoItem[]) => {
       setTodos(carriedTodos);
+      stopAllTodos();
       setDailyNote("");
-      setActiveTodoId(null);
       setCurrentTodoDate(nextDate);
       setTodoPageMode("today");
       setSelectedArchiveDate(null);
     },
-    [setActiveTodoId, setTodos],
+    [setTodos, stopAllTodos],
   );
 
   useTodoRollover({

@@ -1,7 +1,7 @@
 use serde_json::{json, Number, Value};
 
 use super::history;
-use super::model::{is_date, ScheduledTodo, TodoItem, TodosData};
+use super::model::{is_date, latest_started, ScheduledTodo, TodoItem, TodosData};
 
 const MAX_TITLE_LENGTH: usize = 500;
 
@@ -65,7 +65,7 @@ pub(crate) fn run(method: &str, params: &Value, data: &TodosData, id: &str, now:
                     changed(json!(todo), next)
                 }
                 _ => {
-                    let todo = TodoItem { id: id.to_string(), title, completed: false, created_at: Number::from(now), project: None };
+                    let todo = TodoItem { id: id.to_string(), title, completed: false, created_at: Number::from(now), project: None, started_at: None };
                     next.todos.insert(0, todo.clone());
                     changed(json!(todo), next)
                 }
@@ -81,13 +81,18 @@ pub(crate) fn run(method: &str, params: &Value, data: &TodosData, id: &str, now:
             }
             match input.get("completed") {
                 None => {}
-                Some(Value::Bool(completed)) => todo.completed = *completed,
+                Some(Value::Bool(completed)) => {
+                    todo.completed = *completed;
+                    if todo.completed {
+                        todo.started_at = None;
+                    }
+                }
                 Some(_) => return Err(bad("\"completed\" must be true or false.")),
             }
             let mut next = data.clone();
             next.todos[index] = todo.clone();
             if todo.completed && next.active_todo_id.as_deref() == Some(todo.id.as_str()) {
-                next.active_todo_id = None;
+                next.active_todo_id = latest_started(&next.todos);
             }
             changed(json!(todo), next)
         }
@@ -98,7 +103,7 @@ pub(crate) fn run(method: &str, params: &Value, data: &TodosData, id: &str, now:
             let mut next = data.clone();
             next.todos.retain(|todo| todo.id != target);
             if next.active_todo_id.as_deref() == Some(target) {
-                next.active_todo_id = None;
+                next.active_todo_id = latest_started(&next.todos);
             }
             changed(json!({ "id": target }), next)
         }
