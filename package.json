@@ -2,7 +2,7 @@
   "name": "fuyu",
   "private": true,
   "license": "GPL-3.0-or-later",
-  "version": "0.3.8",
+  "version": "0.3.9-beta.1",
   "type": "module",
   "scripts": {
     "prepare": "node scripts/install-git-hooks.mjs",
