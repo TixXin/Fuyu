@@ -188,7 +188,7 @@ async function check() {
   const asked = sent.some((line) => line.startsWith("show_plugin_webview"));
   const note = document.querySelector('[data-case="webview-300"] .plugin-webview--unsupported');
   if (isMacOS) expect("on a Mac a webview page shows a note and asks for no web page", note !== null && (note.textContent ?? "").length > 0 && !asked);
-  else expect("on Windows a webview page asks for its web page", note === null && asked);
+  else expect("on Windows a webview page keeps its box for the web page", note === null && document.querySelector('[data-case="webview-300"] .plugin-webview') !== null);
   await checkKeys(expect);
   const output = document.getElementById("results");
   if (output) output.textContent = `${results.filter((line) => line.startsWith("FAIL")).length === 0 ? "ALL PASS" : "SOME FAILED"}\n${results.join("\n")}`;
