@@ -46,8 +46,18 @@ export function resolveThemeColors(settings: IslandSettings, systemDark: boolean
   return { ...settings, ...themeColors(settings, tone) };
 }
 
-export function collapsedThemeColors(settings: IslandSettings): IslandSettings {
-  return settings.collapsedDark && isLightIsland(settings.islandBackgroundColor) ? { ...settings, ...themeColors(settings, "dark") } : settings;
+export const DARK_SURFACES = ["collapsed", "panel", "windows"] as const;
+
+export type DarkSurface = (typeof DARK_SURFACES)[number];
+
+export const DARK_SURFACE_KEYS = { collapsed: "collapsedDark", panel: "panelDark", windows: "windowsDark" } as const satisfies Record<DarkSurface, keyof IslandSettings>;
+
+export function surfaceThemeColors(settings: IslandSettings, surface: DarkSurface): IslandSettings {
+  return settings[DARK_SURFACE_KEYS[surface]] && isLightIsland(settings.islandBackgroundColor) ? { ...settings, ...themeColors(settings, "dark") } : settings;
+}
+
+export function surfaceTone(settings: Pick<IslandSettings, "themeMode" | "collapsedDark" | "panelDark" | "windowsDark">, systemDark: boolean, surface: DarkSurface): ThemeTone {
+  return settings[DARK_SURFACE_KEYS[surface]] ? "dark" : activeTone(settings.themeMode, systemDark);
 }
 
 export function themeSetsFromSingleColors(source: Partial<Record<string, unknown>>): Partial<IslandSettings> {

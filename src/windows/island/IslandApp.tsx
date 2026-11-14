@@ -51,7 +51,7 @@ import { useIslandPopup } from "./useIslandPopup";
 import { panelIslandWidth } from "./layout";
 import { useIslandResize } from "./useIslandResize";
 import { useResolvedTheme } from "../../features/appearance/useResolvedTheme";
-import { collapsedThemeColors } from "../../features/appearance/themeMode";
+import { surfaceThemeColors } from "../../features/appearance/themeMode";
 import { islandMotionVariables } from "../../features/appearance/islandMotion";
 import { useReducedMotion } from "../../features/center-pattern/useReducedMotion";
 import { useAccentColor } from "../../features/appearance/useAccentColor";
@@ -213,7 +213,7 @@ export function IslandApp() {
     popup,
   });
   const expandedIslandHeight = (resizingHeight && !popup ? settings.maxPanelHeight : pageIslandHeight) + notchExpandedExtra(notch, settings.expandedScale, popup);
-  const look = useMemo(() => (mode !== "collapsed" ? settings : notch ? notchLook(settings) : collapsedThemeColors(settings)), [mode, notch, settings]);
+  const look = useMemo(() => (mode !== "collapsed" ? surfaceThemeColors(settings, "panel") : notch ? notchLook(settings) : surfaceThemeColors(settings, "collapsed")), [mode, notch, settings]);
   const accent = useAccentColor(settings);
   const devicePixelRatio = useDevicePixelRatio();
   const reducedMotion = useReducedMotion();

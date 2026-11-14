@@ -12,8 +12,10 @@ export type SettingsColorsText = {
   editing: string;
   editingHint: string;
   resetSet: string;
-  collapsedDark: string;
-  collapsedDarkHint: string;
+  stayDark: string;
+  stayDarkHint: string;
+  stayDarkNow: string;
+  stayDarkSurfaces: Record<"collapsed" | "panel" | "windows", string>;
   accent: string;
   accentHint: string;
   accentHintMac: string;
@@ -42,8 +44,10 @@ export const zhCN: SettingsColorsText = {
   accentSystem: "跟随系统",
   accentModes: { default: "默认", windows: "跟随 Windows", pick: "自选" },
   accentColor: "强调色颜色",
-  collapsedDark: "收起时保持深色",
-  collapsedDarkHint: "岛是浅色时，收起的小岛仍然是黑色，和屏幕顶边、刘海融在一起；展开后才变浅色。",
+  stayDark: "保持深色",
+  stayDarkHint: "配色是浅色时，选中的部分仍然用深色那一套。独立窗口指翻译和剪贴板窗口，设置窗口跟随配色。",
+  stayDarkNow: "现在是深色，换成浅色后才看得出区别。",
+  stayDarkSurfaces: { collapsed: "岛屿", panel: "面板", windows: "独立窗口" },
 };
 
 export const en: SettingsColorsText = {
@@ -66,6 +70,8 @@ export const en: SettingsColorsText = {
   accentSystem: "System",
   accentModes: { default: "Default", windows: "Windows", pick: "Pick" },
   accentColor: "Accent color",
-  collapsedDark: "Stay dark when collapsed",
-  collapsedDarkHint: "With a light island, the collapsed island stays black so it blends into the screen's top edge and notch; it turns light when it opens.",
+  stayDark: "Keep dark",
+  stayDarkHint: "With light colors, the selected parts still use the dark set. Other windows are the translation and clipboard windows; the settings window follows the colors.",
+  stayDarkNow: "Colors are dark now; this shows once they turn light.",
+  stayDarkSurfaces: { collapsed: "Island", panel: "Panel", windows: "Other windows" },
 };

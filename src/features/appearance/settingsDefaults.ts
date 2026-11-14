@@ -53,6 +53,8 @@ export const DEFAULT_SETTINGS: IslandSettings = {
   pulseBrightness: 160,
   islandBackgroundColor: "#030303",
   collapsedDark: false,
+  panelDark: false,
+  windowsDark: false,
   accentMode: "default",
   accentColor: "#74d6ff",
   themeMode: "dark",
