@@ -8,6 +8,18 @@ const ZH_ORDINALS = ["一", "二", "三", "四", "五", "六", "七", "八", "�
 const MAC_GUIDE = "https://github.com/TixXin/fuyu/blob/main/docs/features/macos-install.md";
 const PLATFORM_SCOPES = { macos: "Mac", mac: "Mac", windows: "Windows", win32: "Windows" };
 const EN_ORDINALS = ["first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", "tenth"];
+const DOWNLOADS = "https://github.com/TixXin/fuyu/releases/download";
+const MIRROR = "https://ghfast.top/";
+
+export function downloadLinks(version) {
+  const base = `${DOWNLOADS}/v${version}`;
+  const windows = `${base}/Fuyu_${version}_x64-setup.exe`;
+  const mac = `${base}/Fuyu_${version}_aarch64.dmg`;
+  return {
+    zh: `**下载**：[Windows](${windows}) · [Mac（Apple 芯片）](${mac})　国内镜像：[Windows](${MIRROR}${windows}) · [Mac](${MIRROR}${mac})`,
+    en: `**Download**: [Windows](${windows}) · [Mac (Apple silicon)](${mac})`,
+  };
+}
 
 export function baseTag(version, tags) {
   const earlier = tags
@@ -49,6 +61,7 @@ export function draftNotes(version, base, commits) {
   const enAbout = beta
     ? `This is ${enWhich} of ${core}. It reaches only users who chose the Beta channel under Settings → About → Version, or who install it by hand from the Releases page; users on the stable channel are not offered it. Beta users still get every final release, and switching back to Stable never downgrades. ${enInstall}`
     : `The ${version} release${base ? `, with everything since ${base}` : ""}. ${enInstall} The Windows installers are not code-signed; if Windows SmartScreen says "Unknown publisher", choose "More info → Run anyway".`;
+  const links = downloadLinks(version);
   const listed = userFacingCommits(commits);
   const changes = listed.length > 0 ? listed.map(({ hash, subject }) => `- ${hash} ${commitPlatform(subject) ? `[${commitPlatform(subject)}] ` : ""}${subject}`).join("\n") : "- (no feat/fix/perf commits found)";
   return `${DRAFT_MARKER}
@@ -63,6 +76,8 @@ ${changes}
 
 ## 关于这个版本
 
+${links.zh}
+
 ${zhAbout}
 
 ## 更新内容
@@ -72,6 +87,8 @@ ${zhAbout}
 ---
 
 ## About this release
+
+${links.en}
 
 ${enAbout}
 

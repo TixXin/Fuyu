@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 import { channelProblems, parseTask, RELEASED_MARKER, releasedComment, shippedIssues } from "../../scripts/release/after-release.mjs";
 import { commandLine, quoteArg } from "../../scripts/release/command-line.mjs";
-import { baseTag, commitPlatform, DRAFT_MARKER, draftNotes, userFacingCommits } from "../../scripts/release/notes-draft.mjs";
+import { baseTag, commitPlatform, downloadLinks, DRAFT_MARKER, draftNotes, userFacingCommits } from "../../scripts/release/notes-draft.mjs";
 import { bumpProblem, readVersion, VERSION_FILES, writeVersion } from "../../scripts/release/versions.mjs";
 
 test("the four version files of this repository agree and can be read", () => {
@@ -52,6 +52,16 @@ test("the draft lists user-facing commits and carries the marker", () => {
   assert.ok(beta.includes("- a1 feat(mail): links open") && !beta.includes("task board"));
   const final = draftNotes("0.3.4", "v0.3.3", commits);
   assert.ok(final.includes("0.3.4 正式版，包含 v0.3.3 以来的全部改动") && final.includes("Fuyu_0.3.4_x64-setup.exe") && !final.includes("numeric"));
+});
+
+test("both halves of the notes open with links to the Windows and Mac installers", () => {
+  const links = downloadLinks("0.3.4-beta.2");
+  const base = "https://github.com/TixXin/fuyu/releases/download/v0.3.4-beta.2";
+  assert.ok(links.zh.includes(`(${base}/Fuyu_0.3.4-beta.2_x64-setup.exe)`) && links.zh.includes(`(${base}/Fuyu_0.3.4-beta.2_aarch64.dmg)`));
+  assert.ok(links.zh.includes(`(https://ghfast.top/${base}/Fuyu_0.3.4-beta.2_aarch64.dmg)`));
+  assert.ok(links.en.includes(`(${base}/Fuyu_0.3.4-beta.2_x64-setup.exe)`) && !links.en.includes("ghfast"));
+  const notes = draftNotes("0.3.4-beta.2", "v0.3.4-beta.1", []);
+  assert.ok(notes.includes(`## 关于这个版本\n\n${links.zh}\n\n`) && notes.includes(`## About this release\n\n${links.en}\n\n`));
 });
 
 test("after a release both channels must offer what they should", () => {
