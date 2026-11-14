@@ -1,0 +1,137 @@
+.timer-panel {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.timer-panel__form {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.timer-panel__input {
+  flex: 1;
+  min-width: 0;
+  height: 30px;
+  padding: 0 10px;
+  font: inherit;
+  font-size: 13px;
+  color: var(--text-1);
+  background: rgba(var(--list-ink), 0.06);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  outline: none;
+}
+
+.timer-panel__input:focus-visible {
+  border-color: var(--color-accent);
+}
+
+.timer-panel__input[aria-invalid="true"] {
+  border-color: var(--color-danger);
+}
+
+.timer-panel__button {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+  border: 0;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: background 140ms ease, color 140ms ease;
+}
+
+.timer-panel__button:hover,
+.timer-panel__button:focus-visible {
+  color: var(--text-1);
+  background: color-mix(in srgb, var(--color-accent) 22%, transparent);
+}
+
+.timer-panel__button--main {
+  width: 30px;
+  height: 30px;
+}
+
+.timer-panel__problem {
+  margin: 0;
+  font-size: 12px;
+  color: var(--color-danger);
+}
+
+.timer-panel__empty {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--text-3);
+  text-align: center;
+}
+
+.timer-panel__list {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.timer-panel__row {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  background: rgba(var(--list-ink), 0.05);
+  border-radius: var(--radius-md);
+}
+
+.timer-panel__row--done {
+  background: color-mix(in srgb, var(--color-accent) 14%, transparent);
+}
+
+.timer-panel__icon {
+  flex: none;
+  color: var(--text-3);
+}
+
+.timer-panel__row--done .timer-panel__icon {
+  color: var(--color-accent);
+}
+
+.timer-panel__label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 12px;
+  color: var(--text-2);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.timer-panel__time {
+  flex: none;
+  font-size: 15px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-1);
+}
+
+.timer-panel__row--paused .timer-panel__time {
+  color: var(--text-3);
+}
+
+.timer-panel__actions {
+  flex: none;
+  display: inline-flex;
+  gap: 4px;
+}

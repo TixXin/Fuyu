@@ -1,0 +1,25 @@
+.timer-chip {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  height: 18px;
+  padding: 0 5px;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(var(--island-ink-rgb, 241, 240, 246), 0.88);
+  background: rgba(var(--island-ink-rgb, 241, 240, 246), 0.1);
+  border: 0;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+}
+
+.timer-chip__time {
+  font-variant-numeric: tabular-nums;
+}
+
+.timer-chip--done {
+  color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 18%, transparent);
+}

@@ -26,6 +26,8 @@ import { sessionRingCounts } from "../../features/session-ring/ringCounts";
 import { isCollapsedItemHidden } from "../../features/appearance/collapsedItems";
 import { useCollapsedPlacements } from "../../features/appearance/useCollapsedPlacements";
 import { listenIslandHover } from "./api";
+import { TIMER_PLUGIN_ID, useTimers } from "../../features/timer/store";
+import { hasChip, TimerChip, TIMER_CHIP_WIDTH } from "../../features/timer/TimerChip";
 import type { CollapsedSlots } from "./types";
 
 const EMPTY: CollapsedSlots = {};
@@ -48,6 +50,8 @@ export function useCollapsedSlots({ paused, agents, sessions, unseen, agentsOn, 
   const center = useBuiltinPlugin(CENTER_PATTERN_PLUGIN_ID);
   const usage = useBuiltinPlugin(CLAUDE_USAGE_PLUGIN_ID);
   const sessionRing = useBuiltinPlugin(SESSION_RING_PLUGIN_ID);
+  const timerPlugin = useBuiltinPlugin(TIMER_PLUGIN_ID);
+  const timers = useTimers().timers;
   const showRemaining = usage.settings.show === "remaining";
   const ringStyle = SESSION_RING_STYLES.find((known) => known === sessionRing.settings.style) ?? ("ring" satisfies SessionRingStyle);
   const ringCount = sessionRing.settings.showCount !== false;
@@ -56,6 +60,7 @@ export function useCollapsedSlots({ paused, agents, sessions, unseen, agentsOn, 
     () => shownUsageProviders(usage.settings).filter((provider) => !isCollapsedItemHidden(placements, usageItemId(provider))),
     [usage.settings, placements],
   );
+  const timerShown = timerPlugin.enabled && hasChip(timers) && !isCollapsedItemHidden(placements, "timer");
   const lightShown = markLight && !isCollapsedItemHidden(placements, "status-light");
   const mood = usePetMood(agents, center.enabled || lightShown);
   const choice = useMemo(() => centerPatternChoice(center.settings), [center.settings]);
@@ -88,12 +93,16 @@ export function useCollapsedSlots({ paused, agents, sessions, unseen, agentsOn, 
       slots.gauges = providers.map((provider) => ({ id: usageItemId(provider), node: <UsageGaugeSlot key={provider.id} providers={[provider]} showRemaining={showRemaining} /> }));
       slots.sideWidth = providers.length * CLAUDE_USAGE_GAUGE_WIDTH;
     }
+    if (timerShown) {
+      slots.gauges = [...(slots.gauges ?? []), { id: "timer", node: <TimerChip key="timer" paused={still} /> }];
+      slots.sideWidth = (slots.sideWidth ?? 0) + TIMER_CHIP_WIDTH;
+    }
     if (lightShown) {
       slots.statusLight = <CenterPattern pattern="mark" mood={mood} paused={still} height={MARK_HEIGHT} />;
       slots.sideWidth = (slots.sideWidth ?? 0) + MARK_LIGHT_EXTRA_WIDTH;
     }
     return Object.keys(slots).length === 0 ? EMPTY : slots;
-  }, [center.enabled, usage.enabled, providers, showRemaining, sessionRing.enabled, ringStyle, ringCount, agentsOn, sessions, unseen, onOpenAgents, choice, size, sheet, mood, still, lightShown]);
+  }, [center.enabled, usage.enabled, providers, showRemaining, sessionRing.enabled, timerShown, ringStyle, ringCount, agentsOn, sessions, unseen, onOpenAgents, choice, size, sheet, mood, still, lightShown]);
 }
 
 function UsageGaugeSlot({ providers, showRemaining }: { providers: readonly UsageProvider[]; showRemaining: boolean }) {

@@ -1,3 +1,4 @@
+import { TimerPanel } from "../../features/timer/TimerPanel";
 import type { SessionRemoval } from "../../features/agent-status/useHiddenSessions";
 import type { ReactNode } from "react";
 import { PluginViewPage } from "../../features/plugin-views/PluginViewPage";
@@ -146,6 +147,7 @@ export function IslandPages({
           todos={addTodoOn && { scheduled: notebookProps.scheduledTodos, onAdd: addTodoOn }} />
       )}
       {page === "screenshots" && <ScreenshotHistoryPanel />}
+      {page === "timer" && <TimerPanel isOpen={mode === "expanded"} />}
       {page === "shelf" && <FileShelfPanel shelf={fileShelf} isDropTarget={isShelfDropping} revealOnDoubleClick={settings.shelfDoubleClick === "reveal"} />}
       {page === "todo" && (
         <TodoIslandPage
