@@ -1,0 +1,33 @@
+{
+  "name": "@fuyu/plugin-base",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Plugin platform v3 base: the kernel host, the plugin API and the protocol between host, Rust and windows",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.mts",
+      "default": "./src/index.mjs"
+    },
+    "./host": {
+      "types": "./src/host/index.d.mts",
+      "default": "./src/host/index.mjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "engines": {
+    "node": ">=22.15"
+  },
+  "dependencies": {
+    "@cordisjs/fs": "workspace:*",
+    "@cordisjs/fs-node": "workspace:*",
+    "@cordisjs/hmr": "workspace:*",
+    "@cordisjs/include": "workspace:*",
+    "@cordisjs/loader": "workspace:*",
+    "cordis": "workspace:*"
+  },
+  "scripts": {
+    "test": "node --test \"test/**/*.test.mjs\""
+  }
+}
