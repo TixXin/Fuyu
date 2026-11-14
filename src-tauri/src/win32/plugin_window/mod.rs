@@ -1,3 +1,4 @@
+mod desktop;
 mod paint;
 mod proc;
 mod screens;
@@ -309,4 +310,5 @@ mod tests {
         .join()
         .expect("window thread");
     }
+
 }
