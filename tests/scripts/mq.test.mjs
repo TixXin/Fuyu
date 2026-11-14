@@ -6,8 +6,9 @@ import path from "node:path";
 import test from "node:test";
 import { commitBlock } from "../../scripts/mq/checkCommit.mjs";
 import { parseRefUpdates, pushBlock } from "../../scripts/mq/checkPush.mjs";
-import { land, landRefusal, uncommittedNote } from "../../scripts/mq/land.mjs";
-import { batchAdvice } from "../../scripts/mq/mq.mjs";
+import { land, landRefusal, pendingCommits, uncommittedNote } from "../../scripts/mq/land.mjs";
+import { conflictedFiles } from "../../scripts/mq/mergeTree.mjs";
+import { batchAdvice, listOption } from "../../scripts/mq/mq.mjs";
 import { failedChecks, landBranchName, prText } from "../../scripts/mq/github.mjs";
 import { queueOrder, updateBehind } from "../../scripts/mq/updateBehind.mjs";
 import { waitFor } from "../../scripts/mq/wait.mjs";
@@ -23,6 +24,19 @@ function withoutGitEnv(work) {
       process.chdir(cwd);
       for (const [name, value] of saved) process.env[name] = value;
     });
+}
+
+async function captured(work) {
+  const original = { log: console.log, error: console.error };
+  const said = [];
+  console.log = (...args) => said.push(args.join(" "));
+  console.error = (...args) => said.push(args.join(" "));
+  try {
+    await work();
+  } finally {
+    Object.assign(console, original);
+  }
+  return said.join("\n");
 }
 
 test("nobody pushes main directly, other branches go through, and an emergency lets anything through", () => {
@@ -182,10 +196,83 @@ test("land merges main in without rewriting anything, pushes local main to its o
     commit(other, "b.txt", "theirs\n", "conflicting");
     git(["push", "-q", "origin", "main"], other);
     commit(main, "b.txt", "mine\n", "mine");
-    assert.equal(await land({ github: gh, host: "Test-PC" }), 1);
+    const said = await captured(async () => assert.equal(await land({ github: gh, host: "Test-PC" }), 1));
+    assert.match(said, /冲突的文件：b\.txt/, "the conflict names the file, so it is not read as waiting for another session");
     assert.equal(git(["status", "--porcelain", "--untracked-files=no"], main), "M a.txt", "the merge was aborted; only the other session's edit is left");
     assert.equal(git(["log", "-1", "--format=%s"], main), "mine");
     assert.equal(gh.calls.autoMerged.length, 4, "nothing was pushed or merged after the conflict");
+  } finally {
+    try {
+      rmSync(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
+    } catch {
+      console.warn(`could not remove ${root}`);
+    }
+  }
+}));
+
+test("land --only carries chosen commits onto main without the work tree, refuses one that needs a commit left behind, and does not list them again once merged", () => withoutGitEnv(async () => {
+  const root = realpathSync(mkdtempSync(path.join(tmpdir(), "mq-only-")));
+  const git = (args, cwd) => execFileSync("git", ["-c", "user.email=t@t", "-c", "user.name=t", ...args], { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim();
+  const remote = path.join(root, "remote.git");
+  const main = path.join(root, "app");
+  const other = path.join(root, "other");
+  const subjects = (ref, cwd = remote) => git(["log", "--no-merges", "--format=%s", ref], cwd).split("\n").sort();
+  const commit = (cwd, file, text, message, extra = []) => {
+    writeFileSync(path.join(cwd, file), text);
+    git(["add", file], cwd);
+    git(["commit", "-q", "-m", message, ...extra], cwd);
+    return git(["rev-parse", "HEAD"], cwd);
+  };
+  try {
+    git(["init", "-q", "--bare", "-b", "main", remote], root);
+    git(["clone", "-q", remote, main], root);
+    git(["config", "user.email", "t@t"], main);
+    git(["config", "user.name", "t"], main);
+    assert.ok(path.resolve(main, git(["rev-parse", "--git-dir"], main)).startsWith(root + path.sep), "git must run in the temp repo");
+    commit(main, "a.txt", "a\n", "one");
+    git(["push", "-q", "origin", "main"], main);
+    git(["clone", "-q", remote, other], root);
+    const feature = commit(main, "feat.txt", "v1\n", "feature");
+    const docs = commit(main, "docs.txt", "docs\n", "docs", ["-m", "why the docs changed", "--author=Ann <ann@example.invalid>"]);
+    const depends = commit(main, "feat.txt", "v2\n", "depends on feature");
+    commit(other, "c.txt", "c\n", "someone else landed");
+    git(["push", "-q", "origin", "main"], other);
+    writeFileSync(path.join(main, "a.txt"), "another session is still editing this\n");
+    const head = git(["rev-parse", "HEAD"], main);
+
+    process.chdir(main);
+    const gh = fakeGitHub();
+    const branch = `land/tester/test-pc-main-only-${docs.slice(0, 7)}`;
+    assert.equal(await land({ github: gh, host: "Test-PC", only: [docs.slice(0, 9)] }), 0);
+    assert.deepEqual(subjects(branch), ["docs", "one", "someone else landed"], "only the chosen commit sits on top of main");
+    assert.equal(git(["log", "-1", "--format=%an <%ae>|%b", branch], remote), "Ann <ann@example.invalid>|why the docs changed", "with its author and message");
+    assert.equal(git(["rev-parse", "HEAD"], main), head, "local main did not move");
+    assert.equal(git(["status", "--porcelain", "--untracked-files=no"], main), "M a.txt", "and the work tree was not touched");
+    assert.deepEqual(gh.calls.created.map(({ head: from, title }) => [from, title]), [[branch, "docs"]]);
+    assert.doesNotMatch(gh.calls.created[0].body, /feature/, "the PR text is about the chosen commit alone");
+
+    const refused = await captured(async () => assert.equal(await land({ github: gh, host: "Test-PC", only: [depends] }), 1));
+    assert.match(refused, /冲突的文件：feat\.txt/);
+    assert.match(refused, new RegExp(`${feature.slice(0, 7)}\\S* feature`), "the refusal names the commit that was left behind");
+    assert.match(await captured(async () => assert.equal(await land({ github: gh, host: "Test-PC", only: ["nope"] }), 1)), /找不到提交 nope/);
+    assert.match(await captured(async () => assert.equal(await land({ github: gh, host: "Test-PC", only: [] }), 1)), /--only 后面要写提交号/);
+    assert.equal(gh.calls.created.length, 1, "a refused pick opens nothing");
+
+    git(["fetch", "-q", "origin"], other);
+    git(["merge", "-q", "--no-ff", "--no-edit", `origin/${branch}`], other);
+    git(["push", "-q", "origin", "main"], other);
+    git(["fetch", "-q", "origin"], main);
+    assert.deepEqual(pendingCommits().map(({ subject }) => subject), ["feature", "depends on feature"], "a commit whose change is on main is no longer pending");
+    assert.match(await captured(async () => assert.equal(await land({ github: gh, host: "Test-PC", only: [docs] }), 1)), /已经在 main 上/);
+
+    assert.equal(await land({ github: gh, host: "Test-PC" }), 0, "the rest of the batch lands as usual");
+    const batch = gh.calls.created[1];
+    assert.equal(batch.head, "land/tester/test-pc-main");
+    assert.doesNotMatch(batch.body, /`docs`/, "and does not list the carried commit again");
+    assert.equal(git(["diff", "--name-only", "main", batch.head], remote), "feat.txt", "nor change its file again");
+    assert.deepEqual(listOption(["--only", "a1", "b2", "--body", "x.md"], "--only"), ["a1", "b2"]);
+    assert.equal(listOption(["--body", "x.md"], "--only"), null);
+    assert.deepEqual(conflictedFiles("abc123\nsrc/a.ts\nsrc/a.ts\ndocs/b.md\n\nAuto-merging src/a.ts\n"), ["src/a.ts", "docs/b.md"]);
   } finally {
     try {
       rmSync(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });

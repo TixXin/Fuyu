@@ -140,6 +140,7 @@ pub fn init(app: &AppHandle) -> Result<(), String> {
     keybindings::start();
     lifecycle::start();
     updates::start();
+    dev::start_in_debug_build();
     sync_processes()
 }
 

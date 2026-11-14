@@ -135,6 +135,41 @@ pub(super) fn set_enabled(enabled: bool) -> Result<(), String> {
     rescan()
 }
 
+const PLUGINS_ENV: &str = "FUYU_DEV_PLUGINS";
+
+pub(super) fn start_in_debug_build() {
+    if !cfg!(debug_assertions) {
+        return;
+    }
+    let listed = std::env::var(PLUGINS_ENV).unwrap_or_default();
+    let repo = Path::new(env!("CARGO_MANIFEST_DIR")).parent().map(Path::to_path_buf).unwrap_or_default();
+    let folders = listed_folders(&listed, &repo);
+    let _ = std::thread::Builder::new().name("plugin-dev-start".into()).spawn(move || {
+        if let Err(error) = set_enabled(true) {
+            eprintln!("could not turn on development mode: {error}");
+            return;
+        }
+        for folder in folders {
+            let path = folder.display().to_string();
+            if let Err((_, error)) = load(&path) {
+                eprintln!("{PLUGINS_ENV}: could not load {path}: {error}");
+            }
+        }
+    });
+}
+
+pub(super) fn listed_folders(listed: &str, repo: &Path) -> Vec<PathBuf> {
+    listed
+        .split(';')
+        .map(str::trim)
+        .filter(|part| !part.is_empty())
+        .map(|part| {
+            let path = PathBuf::from(part);
+            if path.is_absolute() { path } else { repo.join(path) }
+        })
+        .collect()
+}
+
 fn restore() {
     for path in dev_recent::read().to_restore() {
         if let Err((_, error)) = load(&path) {

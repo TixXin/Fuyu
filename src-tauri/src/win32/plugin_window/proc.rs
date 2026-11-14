@@ -10,16 +10,16 @@ use windows::{
             WindowsAndMessaging::{
                 DefWindowProcW, GetClientRect, GetWindowRect, GetWindowThreadProcessId, IsChild, IsWindow, LoadCursorW, PostMessageW,
                 RegisterClassW, SetForegroundWindow, SetWindowPos, CS_HREDRAW, CS_VREDRAW, HTBOTTOM, HTBOTTOMLEFT, HTBOTTOMRIGHT,
-                HTCAPTION, HTCLIENT, HTLEFT, HTRIGHT, HTTOP, HTTOPLEFT, HTTOPRIGHT, IDC_ARROW, MA_NOACTIVATE, MINMAXINFO, SC_MAXIMIZE,
+                HTCAPTION, HTCLIENT, HTLEFT, HTRIGHT, HTTOP, HTTOPLEFT, HTTOPRIGHT, IDC_ARROW, MA_NOACTIVATE, MINMAXINFO, SC_MAXIMIZE, WM_ACTIVATEAPP,
                 SC_MINIMIZE, SWP_NOACTIVATE, SWP_NOZORDER, WA_CLICKACTIVE, WA_INACTIVE, WM_ACTIVATE, WM_APP, WM_CLOSE, WM_DISPLAYCHANGE,
-                WM_DPICHANGED, WM_EXITSIZEMOVE, WM_GETMINMAXINFO, WM_LBUTTONUP, WM_MOUSEACTIVATE, WM_MOVE, WM_NCHITTEST,
+                WM_DPICHANGED, WM_ENTERSIZEMOVE, WM_EXITSIZEMOVE, WM_GETMINMAXINFO, WM_LBUTTONUP, WM_MOUSEACTIVATE, WM_MOVE, WM_NCHITTEST,
                 WM_NCLBUTTONDBLCLK, WM_NCLBUTTONDOWN, WM_PAINT, WM_SETFOCUS, WM_SIZE, WM_SYSCOMMAND, WNDCLASSW,
             },
         },
     },
 };
 
-use super::{paint, wide, Bounds, Look, WindowEvents};
+use super::{desktop, paint, wide, Bounds, Layer, Look, WindowEvents};
 
 const CLASS: &str = "FuyuPluginWindow";
 const GIVE_BACK_FOCUS: u32 = WM_APP + 0x51;
@@ -29,6 +29,8 @@ struct State {
     events: Rc<dyn WindowEvents>,
     previous_active: Option<HWND>,
     previous_focus: Option<HWND>,
+    moving: bool,
+    desktop_was_active: bool,
 }
 
 thread_local! {
@@ -54,14 +56,17 @@ pub(super) fn register() -> Result<Vec<u16>, String> {
         ..Default::default()
     };
     if unsafe { RegisterClassW(&class) } == 0 {
-        return Err(format!("Could not register the window class: {}", windows::core::Error::from_thread()));
+        let error = windows::core::Error::from_thread();
+        if error.code() != windows::Win32::Foundation::ERROR_CLASS_ALREADY_EXISTS.to_hresult() {
+            return Err(format!("Could not register the window class: {error}"));
+        }
     }
     CLASS_NAME.with(|stored| *stored.borrow_mut() = Some(name.clone()));
     Ok(name)
 }
 
 pub(super) fn attach(hwnd: HWND, look: Look, events: Rc<dyn WindowEvents>) {
-    STATES.with(|states| states.borrow_mut().insert(hwnd.0 as isize, State { look, events, previous_active: None, previous_focus: None }));
+    STATES.with(|states| states.borrow_mut().insert(hwnd.0 as isize, State { look, events, previous_active: None, previous_focus: None, moving: false, desktop_was_active: false }));
 }
 
 pub(super) fn detach(hwnd: HWND) {
@@ -104,7 +109,7 @@ pub(super) fn content_rect(hwnd: HWND, client: RECT) -> Bounds {
 }
 
 pub(super) fn give_back_focus(hwnd: HWND) {
-    let is_widget = with_state(hwnd, |state| state.look.caption.is_none()).unwrap_or(false);
+    let is_widget = with_state(hwnd, |state| state.look.caption.is_none() && !state.moving).unwrap_or(false);
     if is_widget {
         let _ = unsafe { PostMessageW(Some(hwnd), GIVE_BACK_FOCUS, WPARAM(0), LPARAM(0)) };
     }
@@ -165,6 +170,11 @@ fn handle(hwnd: HWND, message: u32, wparam: WPARAM, lparam: LPARAM) -> Option<LR
     let (look, events) = with_state(hwnd, |state| (state.look.clone(), state.events.clone()))?;
     let widget = look.caption.is_none();
     match message {
+        WM_ACTIVATEAPP if look.layer == Layer::Desktop && wparam.0 != 0 => {
+            let from_desktop = desktop::is_desktop_thread(hwnd, lparam.0 as u32);
+            with_state(hwnd, |state| state.desktop_was_active = from_desktop);
+            None
+        }
         WM_NCHITTEST => Some(LRESULT(hit_test(hwnd, &look, lparam) as isize)),
         WM_PAINT => {
             paint::paint(hwnd, &look, scale(hwnd));
@@ -181,7 +191,15 @@ fn handle(hwnd: HWND, message: u32, wparam: WPARAM, lparam: LPARAM) -> Option<LR
             events.moved();
             None
         }
+        WM_ENTERSIZEMOVE => {
+            with_state(hwnd, |state| state.moving = true);
+            None
+        }
         WM_EXITSIZEMOVE => {
+            with_state(hwnd, |state| state.moving = false);
+            if widget {
+                let _ = unsafe { PostMessageW(Some(hwnd), GIVE_BACK_FOCUS, WPARAM(0), LPARAM(0)) };
+            }
             let mut rect = RECT::default();
             let _ = unsafe { GetWindowRect(hwnd, &mut rect) };
             events.user_moved(Bounds::from_rect(rect));
@@ -228,9 +246,17 @@ fn handle(hwnd: HWND, message: u32, wparam: WPARAM, lparam: LPARAM) -> Option<LR
         WM_ACTIVATE => {
             let kind = (wparam.0 & 0xFFFF) as u32;
             let active = kind != WA_INACTIVE;
+            if look.layer == Layer::Desktop && active {
+                let desktop_was_active = with_state(hwnd, |state| std::mem::take(&mut state.desktop_was_active)).unwrap_or(false);
+                if !desktop_was_active {
+                    desktop::lower_below_programs(hwnd);
+                }
+            }
             if widget && active {
                 let previous = HWND(lparam.0 as *mut _);
-                with_state(hwnd, |state| state.previous_active = Some(previous));
+                if !previous.is_invalid() && previous != hwnd {
+                    with_state(hwnd, |state| state.previous_active = Some(previous));
+                }
                 let _ = unsafe { PostMessageW(Some(hwnd), GIVE_BACK_FOCUS, WPARAM(0), LPARAM(0)) };
             }
             events.activated(active, kind == WA_CLICKACTIVE);
@@ -238,12 +264,16 @@ fn handle(hwnd: HWND, message: u32, wparam: WPARAM, lparam: LPARAM) -> Option<LR
         }
         WM_SETFOCUS if widget => {
             let previous = HWND(wparam.0 as *mut _);
-            with_state(hwnd, |state| state.previous_focus = Some(previous));
+            if !previous.is_invalid() {
+                with_state(hwnd, |state| state.previous_focus = Some(previous));
+            }
             let _ = unsafe { PostMessageW(Some(hwnd), GIVE_BACK_FOCUS, WPARAM(0), LPARAM(0)) };
             Some(LRESULT(0))
         }
         GIVE_BACK_FOCUS => {
-            restore_focus(hwnd);
+            if !with_state(hwnd, |state| state.moving).unwrap_or(false) {
+                restore_focus(hwnd);
+            }
             Some(LRESULT(0))
         }
         _ => None,
