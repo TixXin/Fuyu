@@ -1,7 +1,7 @@
 use std::rc::Rc;
 use webview2_com::{
-    take_pwstr, AddScriptToExecuteOnDocumentCreatedCompletedHandler, CreateCoreWebView2ControllerCompletedHandler,
-    DownloadStartingEventHandler, Microsoft::Web::WebView2::Win32::*, NavigationStartingEventHandler,
+    take_pwstr, AcceleratorKeyPressedEventHandler, AddScriptToExecuteOnDocumentCreatedCompletedHandler,
+    CreateCoreWebView2ControllerCompletedHandler, DownloadStartingEventHandler, FocusChangedEventHandler, Microsoft::Web::WebView2::Win32::*, NavigationStartingEventHandler,
     NewWindowRequestedEventHandler, PermissionRequestedEventHandler, WebMessageReceivedEventHandler,
     WebResourceRequestedEventHandler,
 };
@@ -10,6 +10,7 @@ use windows::{
     Win32::{
         Foundation::{HWND, RECT},
         UI::{
+            Input::KeyboardAndMouse::VK_ESCAPE,
             Shell::SHCreateMemStream,
             WindowsAndMessaging::{GetAncestor, GetWindow, SetWindowPos, GA_ROOT, GW_CHILD, GW_HWNDNEXT, HWND_TOP, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOSIZE},
         },
@@ -28,6 +29,10 @@ pub(crate) trait PageHost {
     fn resource(&self, url: &str) -> Option<Resource>;
     fn may_navigate(&self, url: &str, frame: bool) -> bool;
     fn message(&self, source: &str, json: String);
+    fn escape(&self) -> bool {
+        false
+    }
+    fn focused(&self) {}
 }
 
 pub(crate) struct PageOptions {
@@ -113,7 +118,8 @@ fn set_up(
         harden(&webview, options.dev_tools).map_err(fail)?;
         guard_requests(&webview, env, host.clone()).map_err(fail)?;
         guard_navigation(&webview, host.clone()).map_err(fail)?;
-        listen_for_messages(&webview, host).map_err(fail)?;
+        listen_for_messages(&webview, host.clone()).map_err(fail)?;
+        listen_for_keys_and_focus(&controller, host).map_err(fail)?;
         webview
     };
     let page = Page { controller, webview, window };
@@ -257,7 +263,48 @@ unsafe fn listen_for_messages(webview: &ICoreWebView2, host: Rc<dyn PageHost>) -
     unsafe { webview.add_WebMessageReceived(&handler, &mut token) }
 }
 
+unsafe fn listen_for_keys_and_focus(controller: &ICoreWebView2Controller, host: Rc<dyn PageHost>) -> windows::core::Result<()> {
+    let key_host = host.clone();
+    let keys = AcceleratorKeyPressedEventHandler::create(Box::new(move |_, args| {
+        let Some(args) = args else { return Ok(()) };
+        unsafe {
+            let mut kind = COREWEBVIEW2_KEY_EVENT_KIND::default();
+            args.KeyEventKind(&mut kind)?;
+            let mut key = 0u32;
+            args.VirtualKey(&mut key)?;
+            let pressed = kind == COREWEBVIEW2_KEY_EVENT_KIND_KEY_DOWN || kind == COREWEBVIEW2_KEY_EVENT_KIND_SYSTEM_KEY_DOWN;
+            if pressed && key == u32::from(VK_ESCAPE.0) && key_host.escape() {
+                args.SetHandled(true)?;
+            }
+        }
+        Ok(())
+    }));
+    let focus = FocusChangedEventHandler::create(Box::new(move |_, _| {
+        host.focused();
+        Ok(())
+    }));
+    let mut token = 0i64;
+    unsafe {
+        controller.add_AcceleratorKeyPressed(&keys, &mut token)?;
+        controller.add_GotFocus(&focus, &mut token)
+    }
+}
+
 impl Page {
+    pub(crate) fn focus(&self) {
+        let _ = unsafe { self.controller.MoveFocus(COREWEBVIEW2_MOVE_FOCUS_REASON_PROGRAMMATIC) };
+    }
+
+    pub(crate) fn parent_moved(&self) {
+        let _ = unsafe { self.controller.NotifyParentWindowPositionChanged() };
+    }
+
+    pub(crate) fn set_background(&self, red: u8, green: u8, blue: u8, alpha: u8) {
+        if let Ok(controller2) = self.controller.cast::<ICoreWebView2Controller2>() {
+            let _ = unsafe { controller2.SetDefaultBackgroundColor(COREWEBVIEW2_COLOR { A: alpha, R: red, G: green, B: blue }) };
+        }
+    }
+
     pub(crate) fn place(&self, x: i32, y: i32, width: i32, height: i32) {
         let bounds = RECT { left: x, top: y, right: x + width.max(0), bottom: y + height.max(0) };
         unsafe {

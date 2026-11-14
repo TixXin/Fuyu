@@ -14,12 +14,14 @@ import {
   setPluginEnabled,
   setPluginPublisherTrusted,
   setPluginNotificationsMuted,
+  setPluginWindowRules,
   setPluginPreRelease,
   setPluginMemoryLimit,
   setPluginSetting,
   setPluginsAllowed,
   uninstallPlugin,
   type PluginsSnapshot,
+  type PluginWindowRules,
 } from "./api";
 import type { PromptedPermission } from "./promptedPermissions";
 
@@ -125,6 +127,10 @@ export function usePlugins() {
     ),
     setNotificationsMuted: useCallback(
       (id: string, muted: boolean) => void run(() => setPluginNotificationsMuted(id, muted)),
+      [run],
+    ),
+    setWindowRules: useCallback(
+      (id: string, rules: PluginWindowRules) => void run(() => setPluginWindowRules(id, rules)),
       [run],
     ),
     setSetting: useCallback(

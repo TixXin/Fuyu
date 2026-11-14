@@ -1,4 +1,4 @@
-pub(super) const PERMISSIONS: [&str; 14] = [
+pub(super) const PERMISSIONS: [&str; 15] = [
     "todos:read",
     "todos:write",
     "notes:read",
@@ -13,6 +13,7 @@ pub(super) const PERMISSIONS: [&str; 14] = [
     "media:control",
     "shelf:read",
     "shelf:write",
+    "windows",
 ];
 
 pub(super) const METHODS: [(&str, &str); 27] = [
@@ -44,6 +45,22 @@ pub(super) const METHODS: [(&str, &str); 27] = [
     ("shelf.add", "shelf:write"),
     ("shelf.remove", "shelf:write"),
 ];
+
+pub(super) const EXPERIMENTAL_METHODS: [(&str, &str, &str); 9] = [
+    ("window.create", "windows", "windows"),
+    ("window.update", "windows", "windows"),
+    ("window.show", "windows", "windows"),
+    ("window.hide", "windows", "windows"),
+    ("window.focus", "windows", "windows"),
+    ("window.close", "windows", "windows"),
+    ("window.list", "windows", "windows"),
+    ("window.postMessage", "windows", "windows"),
+    ("screens.list", "windows", "windows"),
+];
+
+pub(super) fn experimental_method(method: &str) -> Option<(&'static str, &'static str)> {
+    EXPERIMENTAL_METHODS.iter().find(|(name, _, _)| *name == method).map(|(_, permission, api)| (*permission, *api))
+}
 
 pub(super) const CAPABILITIES: [&str; 14] = [
     "events", "notifications", "storage", "secrets", "views", "status", "webview", "permissions", "openView", "statusCells", "notifyStyle",

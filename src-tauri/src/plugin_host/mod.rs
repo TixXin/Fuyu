@@ -4,6 +4,7 @@ mod baseline;
 mod builtin;
 mod commands;
 mod dev;
+mod dev_recent;
 mod effort_labels;
 mod events;
 mod feeds;
@@ -41,6 +42,8 @@ mod updates;
 mod uri;
 #[cfg_attr(not(windows), path = "webviews_unsupported.rs")]
 mod webviews;
+#[cfg_attr(not(windows), path = "windows/unsupported.rs")]
+mod windows;
 
 pub use commands::*;
 pub(crate) use uri::{find_link, open as open_link};
@@ -175,6 +178,7 @@ macro_rules! tauri_commands {
             crate::plugin_host::uninstall_plugin,
             crate::plugin_host::run_plugin_notification_action,
             crate::plugin_host::set_plugin_notifications_muted,
+            crate::plugin_host::set_plugin_window_rules,
             crate::plugin_host::clear_plugin_data,
             crate::plugin_host::list_plugin_menu,
             crate::plugin_host::run_plugin_menu_command,
@@ -194,6 +198,7 @@ macro_rules! tauri_commands {
             crate::plugin_host::load_dev_plugin,
             crate::plugin_host::reload_dev_plugin,
             crate::plugin_host::unload_dev_plugin,
+            crate::plugin_host::forget_dev_plugin,
             crate::plugin_host::get_plugin_rpc_trace,
             crate::plugin_host::send_plugin_dev_event,
             crate::plugin_host::set_plugin_auto_update,

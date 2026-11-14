@@ -9,6 +9,7 @@ export type IslandFeatures = {
   clipboard: boolean;
   shelf: boolean;
   screenshots?: boolean;
+  clipboardScreenshots?: boolean;
   timer?: boolean;
   qq: boolean;
   wechat: boolean;
@@ -29,6 +30,11 @@ export function withoutUnsupported(features: IslandFeatures, unsupported: Readon
     wechat: features.wechat && !unsupported.has("wechat"),
     translation: features.translation && !unsupported.has("translation"),
   };
+}
+
+export function foldScreenshotsIntoClipboard(features: IslandFeatures): IslandFeatures {
+  if (!features.clipboard || !features.screenshots) return { ...features, clipboardScreenshots: false };
+  return { ...features, screenshots: false, clipboardScreenshots: true };
 }
 
 export function isPluginPage(page: IslandPage): page is PluginPageId {
@@ -55,6 +61,7 @@ export function isPageEnabled(page: IslandPage, features: IslandFeatures): boole
 
 export function resolveIslandPage(page: IslandPage, features: IslandFeatures): IslandPage | null {
   if (isPageEnabled(page, features)) return page;
+  if (page === "screenshots" && features.clipboardScreenshots) return "clipboard";
   return pageOrder(features).find((candidate) => isPageEnabled(candidate, features)) ?? null;
 }
 

@@ -152,11 +152,34 @@ fn theme_css(ink: Option<&str>) -> String {
 }
 
 pub(super) fn init_script(state: &Value, locale: &str, ink: Option<&str>) -> String {
+    script_with(state, locale, ink, "")
+}
+
+pub(super) fn window_init_script(locale: &str, ink: Option<&str>) -> String {
+    script_with(&Value::Null, locale, ink, WINDOW_API)
+}
+
+fn script_with(state: &Value, locale: &str, ink: Option<&str>, extra: &str) -> String {
     let locale = if locale == "zh-CN" { "zh-CN" } else { "en" };
     INIT_SCRIPT
         .replace("__THEME__", &theme_css(ink))
         .replace("__STATE__", &state.to_string())
         .replace("__LOCALE__", locale)
+        .replace("__EXTRA__", extra)
+}
+
+const WINDOW_API: &str = r#"
+    close() { channel.postMessage({ type: "window", action: "close" }); },
+    startDrag() { channel.postMessage({ type: "window", action: "startDrag" }); },
+    resize(width, height) { channel.postMessage({ type: "window", action: "resize", width, height }); },"#;
+
+fn theme_memory() -> &'static Mutex<(String, Option<String>)> {
+    static THEME: std::sync::OnceLock<Mutex<(String, Option<String>)>> = std::sync::OnceLock::new();
+    THEME.get_or_init(|| Mutex::new(("zh-CN".to_string(), None)))
+}
+
+pub(super) fn remembered_theme() -> (String, Option<String>) {
+    lock(theme_memory()).clone()
 }
 
 const INIT_SCRIPT: &str = r#"(() => {
@@ -184,7 +207,7 @@ const INIT_SCRIPT: &str = r#"(() => {
     postMessage(message) { channel.postMessage({ type: "message", message }); },
     getState() { return state; },
     setState(next) { state = next; channel.postMessage({ type: "state", state: next }); return next; },
-    onMessage(listener) { listeners.add(listener); return () => listeners.delete(listener); },
+    onMessage(listener) { listeners.add(listener); return () => listeners.delete(listener); },__EXTRA__
   });
   for (const name of ["acquireFuyuApi", "acquireFocusdApi"]) {
     Object.defineProperty(window, name, {
@@ -249,28 +272,7 @@ struct PluginPage {
 
 impl PageHost for PluginPage {
     fn resource(&self, url: &str) -> Option<Resource> {
-        if !may_navigate(&self.origin, url, false) {
-            return None;
-        }
-        let file = resource_path(&self.root, &self.origin, url)
-            .filter(|file| fs::metadata(file).is_ok_and(|meta| meta.len() <= MAX_FILE_BYTES));
-        let body = file.as_ref().and_then(|file| fs::read(file).ok());
-        let (status, body, kind) = match (file, body) {
-            (Some(file), Some(body)) => (200, body, content_type(&file)),
-            _ => (404, Vec::new(), "text/plain; charset=utf-8"),
-        };
-        Some(Resource {
-            status,
-            headers: vec![
-                format!("Content-Type: {kind}"),
-                format!("Content-Security-Policy: {CSP}"),
-                "X-Content-Type-Options: nosniff".into(),
-                "Cache-Control: no-store".into(),
-                "Referrer-Policy: no-referrer".into(),
-                "X-DNS-Prefetch-Control: off".into(),
-            ],
-            body,
-        })
+        serve(&self.root, &self.origin, url)
     }
 
     fn may_navigate(&self, url: &str, frame: bool) -> bool {
@@ -278,22 +280,51 @@ impl PageHost for PluginPage {
     }
 
     fn message(&self, source: &str, json: String) {
-        if !may_navigate(&self.origin, source, false) {
-            return;
+        page_message(self, source, json);
+    }
+}
+
+pub(super) fn serve(root: &Path, origin: &str, url: &str) -> Option<Resource> {
+    if !may_navigate(origin, url, false) {
+        return None;
+    }
+    let file = resource_path(root, origin, url)
+        .filter(|file| fs::metadata(file).is_ok_and(|meta| meta.len() <= MAX_FILE_BYTES));
+    let body = file.as_ref().and_then(|file| fs::read(file).ok());
+    let (status, body, kind) = match (file, body) {
+        (Some(file), Some(body)) => (200, body, content_type(&file)),
+        _ => (404, Vec::new(), "text/plain; charset=utf-8"),
+    };
+    Some(Resource {
+        status,
+        headers: vec![
+            format!("Content-Type: {kind}"),
+            format!("Content-Security-Policy: {CSP}"),
+            "X-Content-Type-Options: nosniff".into(),
+            "Cache-Control: no-store".into(),
+            "Referrer-Policy: no-referrer".into(),
+            "X-DNS-Prefetch-Control: off".into(),
+        ],
+        body,
+    })
+}
+
+fn page_message(page: &PluginPage, source: &str, json: String) {
+    if !may_navigate(&page.origin, source, false) {
+        return;
+    }
+    let key = (page.plugin_id.clone(), page.view_id.clone());
+    match parse_page_message(&json) {
+        Ok(PageMessage::State(state)) => {
+            lock(states()).insert(key, state);
         }
-        let key = (self.plugin_id.clone(), self.view_id.clone());
-        match parse_page_message(&json) {
-            Ok(PageMessage::State(state)) => {
-                lock(states()).insert(key, state);
+        Ok(PageMessage::Message(message)) => {
+            let params = json!({ "viewId": page.view_id, "message": message });
+            if let Err(error) = lifecycle::deliver(&page.plugin_id, format!("onView:{}", page.view_id), "webview.message", params) {
+                eprintln!("plugin page message for {} not delivered: {error}", page.plugin_id);
             }
-            Ok(PageMessage::Message(message)) => {
-                let params = json!({ "viewId": self.view_id, "message": message });
-                if let Err(error) = lifecycle::deliver(&self.plugin_id, format!("onView:{}", self.view_id), "webview.message", params) {
-                    eprintln!("plugin page message for {} not delivered: {error}", self.plugin_id);
-                }
-            }
-            Err(error) => eprintln!("plugin page of {}: {error}", self.plugin_id),
         }
+        Err(error) => eprintln!("plugin page of {}: {error}", page.plugin_id),
     }
 }
 
@@ -337,6 +368,7 @@ fn to_rect(bounds: WebviewBounds, scale: f64) -> Result<Rect, String> {
 
 #[tauri::command]
 pub fn show_plugin_webview(app: AppHandle, id: String, view_id: String, bounds: WebviewBounds, locale: String, ink: Option<String>) -> Result<(), String> {
+    *lock(theme_memory()) = (locale.clone(), ink.clone());
     let spec = PageSpec { locale, ink, ..page_spec(&id, &view_id)? };
     let window = app.get_webview_window(island::WINDOW_LABEL).ok_or("The island window is not open.")?;
     let scale = window.scale_factor().map_err(|error| format!("Could not read the window scale: {error}"))?;

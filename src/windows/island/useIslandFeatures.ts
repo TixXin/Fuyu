@@ -3,7 +3,7 @@ import type { IslandSettings } from "../../features/appearance/types";
 import type { MessageView } from "../../features/messages/Messages";
 import type { MailController } from "../../features/messages/mail/MailPanel";
 import { useUnsupportedFeatures } from "../../lib/platform";
-import { resolveIslandPage, resolveMessageSource, withoutUnsupported, type IslandFeatures } from "./features";
+import { foldScreenshotsIntoClipboard, resolveIslandPage, resolveMessageSource, withoutUnsupported, type IslandFeatures } from "./features";
 import type { IslandPage, PluginPageId } from "./types";
 import { usePluginOpenView } from "./usePluginOpenView";
 import { useTimerPlugin } from "../../features/timer/useIslandTimer";
@@ -39,7 +39,7 @@ export function useIslandFeatures({
 }: IslandFeatureOptions) {
   const unsupported = useUnsupportedFeatures();
   const timer = useTimerPlugin();
-  const features = useMemo<IslandFeatures>(() => withoutUnsupported({
+  const features = useMemo<IslandFeatures>(() => foldScreenshotsIntoClipboard(withoutUnsupported({
     todo: settings.todoEnabled,
     calendar: settings.calendarEnabled,
     music: settings.musicEnabled,
@@ -53,7 +53,7 @@ export function useIslandFeatures({
     agents: settings.agentStatusEnabled,
     translation: settings.translationEnabled && settings.translationTarget === "island",
     pluginPages,
-  }, unsupported), [unsupported, timer, pluginPages, clipboardEnabled, qqEnabled, settings.agentStatusEnabled, settings.calendarEnabled, settings.mailEnabled, settings.musicEnabled, settings.screenshotEnabled, settings.shelfEnabled, settings.todoEnabled, settings.translationEnabled, settings.translationTarget, wechatEnabled]);
+  }, unsupported)), [unsupported, timer, pluginPages, clipboardEnabled, qqEnabled, settings.agentStatusEnabled, settings.calendarEnabled, settings.mailEnabled, settings.musicEnabled, settings.screenshotEnabled, settings.shelfEnabled, settings.todoEnabled, settings.translationEnabled, settings.translationTarget, wechatEnabled]);
 
   useEffect(() => {
     const next = resolveIslandPage(page, features);

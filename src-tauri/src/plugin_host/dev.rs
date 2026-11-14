@@ -8,7 +8,7 @@ use std::{
 };
 
 use super::{
-    app_version, builtin,
+    app_version, builtin, dev_recent,
     grants::stop_plugin,
     host, lock,
     manifest::{parse_manifest, read_manifest_text, PluginManifest, MANIFEST_FILE_NAME},
@@ -16,6 +16,9 @@ use super::{
     runtime::TraceEntry,
 };
 
+#[cfg(windows)]
+pub(super) const EXPERIMENTAL_APIS: &[&str] = &["windows"];
+#[cfg(not(windows))]
 pub(super) const EXPERIMENTAL_APIS: &[&str] = &[];
 
 struct DevState {
@@ -30,6 +33,8 @@ static DEV: Mutex<DevState> = Mutex::new(DevState { enabled: false, plugins: BTr
 pub struct DevSnapshot {
     enabled: bool,
     plugins: Vec<DevPlugin>,
+    recent: Vec<DevPlugin>,
+    restores: bool,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -93,10 +98,18 @@ fn internal(error: String) -> (u16, String) {
 }
 
 pub(super) fn snapshot() -> DevSnapshot {
+    let remembered = dev_recent::read();
     let state = lock(&DEV);
     DevSnapshot {
         enabled: state.enabled,
         plugins: state.plugins.iter().map(|(id, path)| DevPlugin { id: id.clone(), path: path.display().to_string() }).collect(),
+        recent: remembered
+            .plugins
+            .into_iter()
+            .filter(|plugin| !state.plugins.contains_key(&plugin.id))
+            .map(|plugin| DevPlugin { id: plugin.id, path: plugin.path })
+            .collect(),
+        restores: cfg!(debug_assertions),
     }
 }
 
@@ -110,6 +123,9 @@ pub(super) fn set_enabled(enabled: bool) -> Result<(), String> {
             std::mem::take(&mut state.plugins).into_keys().collect()
         }
     };
+    if enabled && cfg!(debug_assertions) {
+        restore();
+    }
     if unloaded.is_empty() {
         return Ok(());
     }
@@ -117,6 +133,20 @@ pub(super) fn set_enabled(enabled: bool) -> Result<(), String> {
         stop_plugin(id)?;
     }
     rescan()
+}
+
+fn restore() {
+    for path in dev_recent::read().to_restore() {
+        if let Err((_, error)) = load(&path) {
+            eprintln!("could not load the development plugin in {path} again: {error}");
+        }
+    }
+}
+
+pub(super) fn forget(path: &str) {
+    dev_recent::change(|remembered| {
+        remembered.forget(path);
+    });
 }
 
 pub(super) fn load(path: &str) -> DevResult<String> {
@@ -129,7 +159,9 @@ pub(super) fn load(path: &str) -> DevResult<String> {
         return Err((400, "This id belongs to a plugin built into Fuyu.".into()));
     }
     let id = manifest.id;
+    let shown = dir.display().to_string();
     lock(&DEV).plugins.insert(id.clone(), dir);
+    dev_recent::change(|remembered| remembered.loaded(&id, &shown));
     stop_plugin(&id).map_err(internal)?;
     lock(&host.runtimes).remove(&id);
     rescan().map_err(internal)?;
@@ -145,6 +177,7 @@ pub(super) fn reload(id: &str) -> DevResult<()> {
 pub(super) fn unload(id: &str) -> DevResult<bool> {
     require_enabled()?;
     let removed = lock(&DEV).plugins.remove(id).is_some();
+    dev_recent::change(|remembered| remembered.unloaded(id));
     if removed {
         stop_plugin(id).map_err(internal)?;
         rescan().map_err(internal)?;
@@ -239,6 +272,15 @@ pub async fn reload_dev_plugin(id: String) -> Result<DevSnapshot, String> {
 #[tauri::command]
 pub async fn unload_dev_plugin(id: String) -> Result<DevSnapshot, String> {
     blocking(move || plain(unload(&id))).await
+}
+
+#[tauri::command]
+pub async fn forget_dev_plugin(path: String) -> Result<DevSnapshot, String> {
+    blocking(move || {
+        forget(&path);
+        Ok(())
+    })
+    .await
 }
 
 #[tauri::command]

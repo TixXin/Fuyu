@@ -11,6 +11,7 @@ import type { useMail } from "../../features/messages/mail/MailPanel";
 import { TodoIslandPage } from "../../features/todos/island/TodoIslandPage";
 import type { useTodos } from "../../features/todos/useTodos";
 import { openSettingsWindow } from "../settings/api";
+import { useTranslation } from "../../i18n";
 import { TranslationPanel } from "../../features/translation/TranslationPanel";
 import { AgentSessionsPanel } from "../../features/agent-status/AgentSessionsPanel";
 import type { AgentSessionSummary } from "../../features/agent-status/api";
@@ -101,6 +102,7 @@ export function IslandPages({
     deleteClipboardHistoryItem,
     clearClipboardHistoryItems,
   } = clipboard;
+  const t = useTranslation();
   return (
     <>
       {page === "qq" && (
@@ -137,6 +139,7 @@ export function IslandPages({
           onUpdateNote={updateClipboardHistoryItemNote}
           onDeleteItem={(id) => void deleteClipboardHistoryItem(id)}
           onClear={() => void clearClipboardHistoryItems()}
+          extraView={features.clipboardScreenshots ? { label: t.screenshot.history.tab, content: <ScreenshotHistoryPanel embedded /> } : undefined}
         />
       )}
       {page === "agents" && <AgentSessionsPanel sessions={agentSessions} view={settings.agentSessionView} sort={settings.agentSessionSort} group={settings.agentSessionGroup} archiveMotion={settings.agentArchiveMotion} cardEffects={settings.agentCardEffects} hostDisplay={settings.agentHostDisplay} showElapsed={settings.agentShowElapsed} showModel={settings.agentShowModel} showActivity={settings.agentShowActivity} unseen={unseenAgentSessions} removal={agentRemoval} reveal={alertedSession} showUsage={settings.agentShowUsage} usages={agentUsages} approvals={agentApprovals} />}

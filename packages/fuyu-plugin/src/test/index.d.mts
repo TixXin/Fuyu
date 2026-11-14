@@ -60,6 +60,8 @@ export class MockHost {
   readonly openWebviews: Set<string>;
   /** Messages the plugin sent to open webview pages. */
   readonly webviewMessages: { viewId: string; message: unknown }[];
+  /** The plugin's windows (experimental "windows" API); `messages` are what it posted to each page. */
+  readonly windows: Map<string, Record<string, unknown> & { id: string; kind: "panel" | "widget"; visible: boolean; messages: unknown[] }>;
   readonly notifications: { title: string; body?: string; actions?: { id: string }[] }[];
   info: unknown[];
   keepAlive: string | null;
@@ -81,6 +83,10 @@ export class MockHost {
   changeSettings(values: Record<string, unknown>): void;
   /** Sends what the plugin's webview page would post (the webview.message notification). */
   webviewMessage(viewId: string, message: unknown): void;
+  /** Sends what a window's page would post (window.message); counts as the user using the plugin. */
+  windowMessage(id: string, message: unknown): void;
+  /** Sends a window notification such as window.bounds, window.closed or screens.changed. */
+  windowEvent(method: string, params: unknown): void;
   viewVisible(viewId: string, visible?: boolean): void;
   viewAction(viewId: string, actionId: string, extra?: { itemId?: string; checked?: boolean }): void;
   viewSubmit(viewId: string, values: Record<string, unknown>): void;

@@ -45,6 +45,7 @@
 | `media:control` |  |
 | `shelf:read` | 是 |
 | `shelf:write` | 是 |
+| `windows` |  |
 
 ## 宿主、设置与运行信息
 
@@ -392,6 +393,84 @@
 - 参数：无
 - 结果：Same as media.nowPlaying: none, then list, then track.
 
+## 其他
+
+### `window.create`
+
+- 权限：`windows`
+- 参数：
+  - `id`：1-64 letters, digits, '-', '_' or '.'; unique within the plugin
+  - `kind`：panel (takes the keyboard focus, has a title bar the island draws, default layer topmost) or widget (never takes the keyboard focus, no title bar, may be transparent, default layer desktop); cannot change later
+  - `entry`：relative path of an .html file in the plugin folder; the page is isolated like a webview page and gets acquireFuyuApi() with close(), startDrag() and resize(width, height) (CSS pixels of the page)
+  - `bounds?`：{ x, y, width, height } in physical screen pixels (screens.list gives each screen's scale), the whole window including the panel's title bar; default: centered on the screen. Kept 48 px to the work area at least and never larger than it
+  - `screen?`：an id from screens.list: the screen to center on when bounds is not given
+  - `layer?`：desktop (stays visible on Show desktop), normal or topmost
+  - `opacity?`：0.2-1
+  - `title?`：1-80 characters for the system's window list; the island adds ' · 浮屿'
+  - `resizable?`：whether the user can drag the edges
+  - `minSize?`：{ width, height } (at least 48)
+  - `maxSize?`：{ width, height }
+  - `clickThrough?`：the whole window lets clicks through to what is below
+  - `hideOnBlur?`：panels only: hide when the panel loses the focus
+  - `visible?`：default true; a panel can be shown only within 15 s of the user using the plugin (status 403)
+- 结果：The window as window.list shows it. Status 409 for an id in use, 429 above 8 windows per plugin or 24 for the island, 403 when the user hid the plugin's windows. Experimental: only for a development-mode plugin that lists "windows" in experimentalApis, Windows only (elsewhere status 501).
+
+### `window.update`
+
+- 权限：`windows`
+- 参数：
+  - `id`：the window
+  - `...`：any property of window.create except kind and entry; bounds or screen move it
+- 结果：The window as window.list shows it. At most 30 calls per window per second (status 429). Experimental: only for a development-mode plugin that lists "windows" in experimentalApis, Windows only (elsewhere status 501).
+
+### `window.show`
+
+- 权限：`windows`
+- 参数：
+  - `id`：the window
+- 结果：{ visible, focused }. A panel only within 15 s of the user using the plugin (its shortcut, a command, a message button or one of its windows), else status 403. Experimental: only for a development-mode plugin that lists "windows" in experimentalApis, Windows only (elsewhere status 501).
+
+### `window.hide`
+
+- 权限：`windows`
+- 参数：
+  - `id`：the window
+- 结果：{}; the page stays loaded. Experimental: only for a development-mode plugin that lists "windows" in experimentalApis, Windows only (elsewhere status 501).
+
+### `window.focus`
+
+- 权限：`windows`
+- 参数：
+  - `id`：a panel
+- 结果：{ visible, focused }: focused is false when Windows kept another program in front. Only within 15 s of the user using the plugin (status 403); widgets never take the focus (status 400). Experimental: only for a development-mode plugin that lists "windows" in experimentalApis, Windows only (elsewhere status 501).
+
+### `window.close`
+
+- 权限：`windows`
+- 参数：
+  - `id`：the window
+- 结果：{}; the page is destroyed. Experimental: only for a development-mode plugin that lists "windows" in experimentalApis, Windows only (elsewhere status 501).
+
+### `window.list`
+
+- 权限：`windows`
+- 参数：
+- 结果：{ windows: [{ id, kind, entry, visible, focused, bounds, screen, layer, opacity, clickThrough, resizable, hideOnBlur, title }] }: this plugin's windows. Experimental: only for a development-mode plugin that lists "windows" in experimentalApis, Windows only (elsewhere status 501).
+
+### `window.postMessage`
+
+- 权限：`windows`
+- 参数：
+  - `id`：the window
+  - `message`：any JSON value; max 256 KB
+- 结果：{ delivered }: false until the page has loaded. Experimental: only for a development-mode plugin that lists "windows" in experimentalApis, Windows only (elsewhere status 501).
+
+### `screens.list`
+
+- 权限：`windows`
+- 参数：
+- 结果：{ screens: [{ id, bounds, workArea, scale, primary }] } in physical pixels. Experimental: only for a development-mode plugin that lists "windows" in experimentalApis, Windows only (elsewhere status 501).
+
 ## 事件
 
 用 `events.subscribe` 订阅，岛屿用通知 `event { name, payload }` 推送。
@@ -460,6 +539,30 @@
 ### `webview.message`
 
 { viewId, message }: the plugin's webview page called acquireFuyuApi().postMessage(message) (max 256 KB)
+
+### `window.message`
+
+{ id, message }: the window's page called acquireFuyuApi().postMessage(message) (max 256 KB)
+
+### `window.bounds`
+
+{ id, bounds, screen }: the user moved or resized the window, its page called resize(), or the island moved it back onto a screen
+
+### `window.focused`
+
+{ id, focused }: a panel got or lost the keyboard focus
+
+### `window.hidden`
+
+{ id, reason }: the island hid a panel: escape (the user pressed Esc) or blur (hideOnBlur)
+
+### `window.closed`
+
+{ id, reason }: the window is gone: user (its close button or Alt+F4), page (its page called close()), hidden (the user hid the plugin's windows in Settings) or failed (the page could not be created). Not sent for window.close
+
+### `screens.changed`
+
+{ screens }: screens were added, removed or changed; sent to plugins that have windows, after the island moved them back onto a screen
 
 ### `shutdown`
 

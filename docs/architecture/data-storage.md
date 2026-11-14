@@ -18,7 +18,7 @@ macOS 上（G1.4，2026-11-13 起）：家目录同样是 `FUYU_HOME`、指针�
 | 文件中转列表（只存路径，不复制文件） | 应用数据目录（`file-shelf.json`） | `file_shelf` |
 | 折叠态中心图案用的宠物包（petdex 格式 `pet.json` + `spritesheet.webp/png`；只读，应用从不写入） | 应用数据目录 `pets/<id>/`（同名优先）和 `~/.codex/pets/<id>/` | `pets` |
 | 设置窗口上次关闭时的大小与位置（位置已不在任何屏幕上时忽略） | 应用数据目录（`settings-window.json`） | `settings_window/bounds.rs` |
-| 插件：已安装插件、启用与授权状态、插件私有数据 | 应用数据目录（`plugins/<id>/`、`plugins.json`、`plugins-data/<id>/`，见 [docs/plugins/README.md](../plugins/README.md)）；`plugins.json` 读不出来时原文件留作 `plugins.broken-<时间>.json`，不自动删 | `plugin_host` |
+| 插件：已安装插件、启用与授权状态、插件私有数据 | 应用数据目录（`plugins/<id>/`、`plugins.json`、`plugins-data/<id>/`，见 [docs/plugins/README.md](../plugins/README.md)）；`plugins.json` 读不出来时原文件留作 `plugins.broken-<时间>.json`，不自动删；开发模式加载过的插件文件夹记在 `dev-plugins.json` | `plugin_host` |
 | 审批端点端口与访问令牌（装进 Claude Code / Codex 的 PermissionRequest 钩子）；首选端口 47830，被占用时换端口并写回 | 应用数据目录（`agent-approval.json`） | `agent_approval` |
 | 本地接口端口与访问令牌（脚本也会读取）；开关与"允许修改"由内置插件 `focusd.local-api` 在 `plugins.json` 中保存，并同步写入此文件供脚本参考 | 应用数据目录（`local-api.json`，见 [docs/features/local-api.md](../features/local-api.md)） | `local_api`、`plugin_host/builtin.rs` |
 | 回复状态标记（B9，默认关）：Claude Code 规则文件里的一段说明，起止为 `<!-- fuyu: reply marker v4 -->` 与 `<!-- /fuyu: reply marker -->`（改名前是 `focusd-island: reply marker v1–v3`，v1 写在 `CLAUDE.md` 里），只增删这一段；会话列表读回复最后一行的 `↩` / `⋯` / `✓`，作为 `AgentSessionSummary.replyMarker`（`yourTurn` / `background` / `done`），并从显示的回复里去掉这一行 | `%CLAUDE_CONFIG_DIR%` 或 `~/.claude` 下的 `rules/fuyu-reply-marker.md`（改名前是 `rules/focusd-island-reply-marker.md`）；Tauri 命令 `get_reply_marker_state`、`set_reply_marker` | `agent_status/reply_marker.rs` |

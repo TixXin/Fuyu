@@ -1,0 +1,34 @@
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: transparent;
+  font-family: var(--fuyu-font);
+}
+
+#card {
+  box-sizing: border-box;
+  height: 100%;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: rgba(20, 22, 28, 0.72);
+  color: #f6f4ee;
+  cursor: grab;
+  user-select: none;
+}
+
+#time {
+  font-size: 34px;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+#note {
+  margin-top: 6px;
+  font-size: 13px;
+  opacity: 0.8;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}

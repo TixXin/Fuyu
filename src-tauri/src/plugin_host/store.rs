@@ -41,6 +41,25 @@ pub(super) struct PluginGrant {
     pub keybindings: BTreeMap<String, String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub author_keys: Vec<String>,
+    #[serde(default, skip_serializing_if = "WindowRules::is_default")]
+    pub window_rules: WindowRules,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WindowRules {
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub no_topmost: bool,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub no_click_through: bool,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub hidden: bool,
+}
+
+impl WindowRules {
+    fn is_default(&self) -> bool {
+        *self == Self::default()
+    }
 }
 
 pub(super) struct LoadedState {

@@ -27,6 +27,7 @@ export function PluginsSettingsSection({ initialOpenId = null }: { initialOpenId
     setEnabled,
     setSetting,
     setNotificationsMuted,
+    setWindowRules,
     setPreRelease,
     setMemoryLimit,
     revokeSensitive,
@@ -129,6 +130,7 @@ export function PluginsSettingsSection({ initialOpenId = null }: { initialOpenId
           onSettingChange={(key, value) => setSetting(openPlugin.id, key, value)}
           onRunCommand={(command) => runCommand(openPlugin.id, command)}
           onNotificationsMutedChange={(muted) => setNotificationsMuted(openPlugin.id, muted)}
+          onWindowRulesChange={(rules) => setWindowRules(openPlugin.id, rules)}
           onPreReleaseChange={(enabled) => setPreRelease(openPlugin.id, enabled)}
           onMemoryLimitChange={(megabytes) => setMemoryLimit(openPlugin.id, megabytes)}
           onClearData={() => clearData(openPlugin.id)}

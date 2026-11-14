@@ -91,7 +91,7 @@ mockIPC((command, payload) => {
       ],
     };
     case "list_plugins": {
-      const base = { dev: false, platforms: [], notificationsMuted: false, keybindingConflicts: [], keybindings: {}, optionalPermissions: [], calls: [], sensitive: {}, activation: "startup", activationEvents: [], startupMs: null, resources: null, keepAlive: null, revoked: null, updateAvailable: null, autoUpdated: null, updateFailed: null, preRelease: false, preReleaseAvailable: null, memoryLimitMb: 512, signingKeyChanged: false, authorKey: null };
+      const base = { dev: false, platforms: [], notificationsMuted: false, windowRules: {}, keybindingConflicts: [], keybindings: {}, optionalPermissions: [], calls: [], sensitive: {}, activation: "startup", activationEvents: [], startupMs: null, resources: null, keepAlive: null, revoked: null, updateAvailable: null, autoUpdated: null, updateFailed: null, preRelease: false, preReleaseAvailable: null, memoryLimitMb: 512, signingKeyChanged: false, authorKey: null };
       return {
       allowThirdParty: true,
       nodeAvailable: false,
@@ -110,7 +110,8 @@ mockIPC((command, payload) => {
     case "get_plugin_dev_state":
     case "set_plugin_dev_mode":
     case "load_dev_plugin":
-      return { enabled: true, plugins: [{ id: "me.very-long-plugin-id-to-check-wrapping", path: "D:\code\plugins\a-folder-with-a-rather-long-name\me.very-long-plugin-id-to-check-wrapping" }] };
+    case "forget_dev_plugin":
+      return { enabled: true, plugins: [{ id: "me.very-long-plugin-id-to-check-wrapping", path: "D:\code\plugins\a-folder-with-a-rather-long-name\me.very-long-plugin-id-to-check-wrapping" }], recent: [{ id: "dev.focusd.window-demo", path: "E:\Projects\fuyu\plugins\drafts\dev.focusd.window-demo" }], restores: true };
     case "get_plugin_rpc_trace": return [
       { at: Date.now() - 2000, outgoing: true, text: JSON.stringify({ jsonrpc: "2.0", method: "initialize", params: { apiVersion: 2, pluginId: "me.very-long-plugin-id-to-check-wrapping", settings: { repo: "a/b" } } }) },
       { at: Date.now() - 1000, outgoing: false, text: '{"jsonrpc":"2.0","id":1,"method":"view.update","params":{"viewId":"main","model":{"items":[]}}}' },

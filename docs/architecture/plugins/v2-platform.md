@@ -440,7 +440,7 @@ plugins/schema/                 # 协议的唯一来源，岛屿和上面的包�
 - **包的写法**：仓库没有 `@types/node`，又不新增依赖，所以 SDK、CLI、模拟宿主都是不需要构建的 ESM JavaScript 加手写的 `.d.mts` 类型；协议名称的类型（`protocol.d.mts`）和 API 参考由 `pnpm sdk:build` 从 `rpc.json` 生成，`pnpm test` 检查生成结果是否最新。清单校验用包内一个只支持 schema 所用关键字的小校验器，不依赖 ajv。
 - **示例插件的 `lib/focusd.ps1` 没改**：已发布版本的包内容不能变，新的单文件版本放在 `plugins/sdk/powershell/focusd.ps1`，脚手架复制它。
 - **其他语言的最小示例**（Python、Go、Rust、C#）没做，快速开始里只说明了协议和启动规则。
-- **开发模式**：只在内存里，岛屿重启后要重新打开；开发中的插件自动获得清单申请的全部权限（敏感权限仍询问），同 id 时取代插件目录里的插件。CLI 通过本地 API 工作，所以还需要打开本地 API 插件。除 `reload` 外另加了加载、移除和读日志三个接口。
+- **开发模式**：只在内存里，岛屿重启后要重新打开。加载过的文件夹记在应用数据目录的 `dev-plugins.json`（最多 10 个，带「上次是否还加载着」）：设置里列成「最近加载过的」一键再加载；调试版（`debug_assertions`）打开开发模式时自动重新加载上次没移除的，正式版不自动加载。开发中的插件自动获得清单申请的全部权限（敏感权限仍询问），同 id 时取代插件目录里的插件。CLI 通过本地 API 工作，所以还需要打开本地 API 插件。除 `reload` 外另加了加载、移除和读日志三个接口。
 - **实验 API**：通道已建好，但岛屿目前没有任何实验 API，`initialize.experimentalApis` 总是空列表。
 - **`publish`**：只打包并打印发布步骤；创建 Release 交给脚手架生成的 GitHub Actions 工作流。向索引仓库开 PR 等 P11 的索引仓库建好后再做。
 - **pnpm workspace** 只列出两个 npm 包（不含 PowerShell 模块），`check:size` 已扫描 `packages/`。

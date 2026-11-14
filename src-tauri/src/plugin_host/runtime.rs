@@ -326,6 +326,7 @@ fn supervise(context: &Arc<Context>) {
         }
         let exit = wait_for_exit(context);
         context.ready.store(false, Ordering::SeqCst);
+        super::windows::close_plugin(&context.app, &context.spec.plugin_id);
         lock(&context.stdin).take();
         lock(&context.job).take();
         update_entry(context, |info| info.resources = None);

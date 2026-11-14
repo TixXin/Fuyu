@@ -2,6 +2,7 @@ use serde::Serialize;
 use serde_json::{Map, Value};
 use std::{collections::BTreeMap, fs, path::PathBuf};
 
+use super::store::WindowRules;
 use super::{
     app_version, builtin, dev,
     grants::sync_processes,
@@ -44,6 +45,7 @@ pub struct PluginInfo {
     settings: Map<String, Value>,
     info: Vec<InfoItem>,
     notifications_muted: bool,
+    window_rules: WindowRules,
     keybinding_conflicts: Vec<String>,
     keybindings: BTreeMap<String, String>,
     sensitive: BTreeMap<String, SensitiveChoice>,
@@ -201,6 +203,7 @@ pub(super) fn snapshot() -> Result<PluginsSnapshot, String> {
                 settings: Map::new(),
                 info: runtime.info,
                 notifications_muted: grant.notifications_muted,
+                window_rules: grant.window_rules,
                 keybinding_conflicts: keybindings::conflicts(&plugin.folder),
                 keybindings: grant.keybindings.clone(),
                 sensitive: grant.sensitive.clone(),

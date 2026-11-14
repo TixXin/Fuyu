@@ -37,7 +37,7 @@ export type SettingsPluginsText = {
   noPermissions: string;
   optionalPermission: string;
   permissionCount: (count: number) => string;
-  permission: Record<"todos:read" | "todos:write" | "notes:read" | "notes:write" | "agent-status:read" | "agent-status:write" | "island:notify" | "secrets" | "clipboard:read" | "messages:read" | "media:read" | "media:control" | "shelf:read" | "shelf:write", string>;
+  permission: Record<"todos:read" | "todos:write" | "notes:read" | "notes:write" | "agent-status:read" | "agent-status:write" | "island:notify" | "secrets" | "clipboard:read" | "messages:read" | "media:read" | "media:control" | "shelf:read" | "shelf:write" | "windows", string>;
   needsApproval: string;
   keybindingConflict: (shortcuts: string) => string;
   sensitive: {
@@ -48,7 +48,7 @@ export type SettingsPluginsText = {
     action: Record<
       | "todos:read" | "todos:write" | "notes:read" | "notes:write" | "agent-status:read" | "agent-status:write"
       | "island:notify" | "secrets" | "clipboard:read" | "messages:read" | "media:read" | "media:control"
-      | "shelf:read" | "shelf:write" | "uri",
+      | "shelf:read" | "shelf:write" | "windows" | "uri",
       string
     >;
     title: string;
@@ -90,6 +90,10 @@ export type SettingsPluginsText = {
     reloaded: string;
     unload: string;
     noPlugins: string;
+    recent: string;
+    recentRestores: string;
+    loadAgain: string;
+    forget: string;
     trace: (id: string) => string;
     traceEmpty: string;
     event: string;
@@ -129,6 +133,11 @@ export type SettingsPluginsText = {
     hide: string;
     notifications: string;
     showNotifications: string;
+    windows: string;
+    windowsNoTopmost: string;
+    windowsNoClickThrough: string;
+    windowsHidden: string;
+    windowsHint: string;
     memoryLimit: string;
     memoryLimitOption: (megabytes: number) => string;
     memoryLimitHint: string;
@@ -361,6 +370,7 @@ export const zhCN: SettingsPluginsText = {
     "media:control": "播放、暂停、上一首、下一首",
     "shelf:read": "读取文件中转列表（只有路径，敏感）",
     "shelf:write": "往文件中转添加或移除条目，不会删除文件（敏感）",
+    windows: "在岛屿之外新建自己的窗口（实验，暂只支持 Windows）",
   },
   needsApproval: "新版本需要更多权限，已暂停。关掉再打开开关即可授权。",
   keybindingConflict: (shortcuts: string) => `快捷键已被其他程序占用：${shortcuts}`,
@@ -384,6 +394,7 @@ export const zhCN: SettingsPluginsText = {
       "media:read": "读取正在播放的内容",
       "shelf:read": "读取文件中转列表",
       "shelf:write": "修改文件中转列表",
+      windows: "新建自己的窗口",
       uri: "处理网页或其他程序打开的 fuyu:// 链接",
     },
     title: "需要询问的权限",
@@ -424,7 +435,7 @@ export const zhCN: SettingsPluginsText = {
     title: "开发者",
     badge: "开发中",
     mode: "开发模式",
-    modeHint: "可以加载任意文件夹里的插件来调试：不需要打开“允许第三方插件”，自动获得它申请的权限（敏感权限仍会询问），也可以使用实验 API。开发模式不保存，岛屿重启后要重新打开。命令行工具 fuyu-plugin dev 还需要打开“本地 API”插件。",
+    modeHint: "可以加载任意文件夹里的插件来调试：不需要打开“允许第三方插件”，自动获得它申请的权限（敏感权限仍会询问），也可以使用实验 API。开发模式不保存，岛屿重启后要重新打开；加载过的文件夹会记住。命令行工具 fuyu-plugin dev 还需要打开“本地 API”插件。",
     path: "插件文件夹",
     pathPlaceholder: "插件文件夹的完整路径，里面要有 fuyu-plugin.json",
     load: "加载",
@@ -432,6 +443,10 @@ export const zhCN: SettingsPluginsText = {
     reloaded: "已重新加载",
     unload: "移除",
     noPlugins: "还没有加载开发中的插件。",
+    recent: "最近加载过的",
+    recentRestores: "这是开发版：打开开发模式时，上次没有移除的插件会自动重新加载。",
+    loadAgain: "加载",
+    forget: "不再记住",
     trace: (id: string) => `${id} 的 JSON-RPC 收发记录（最近 200 行）`,
     traceEmpty: "还没有收发记录。插件运行后会显示在这里。",
     event: "事件",
@@ -478,6 +493,11 @@ export const zhCN: SettingsPluginsText = {
     hide: "隐藏",
     notifications: "通知",
     showNotifications: "在岛上显示这个插件的通知",
+    windows: "窗口",
+    windowsNoTopmost: "不允许置顶",
+    windowsNoClickThrough: "不允许点击穿透",
+    windowsHidden: "隐藏这个插件的全部窗口",
+    windowsHint: "插件在岛屿之外新建的窗口。这里的设置优先于插件自己的设置；隐藏后插件建不了新窗口，再打开才行。",
     memoryLimit: "内存上限",
     memoryLimitOption: (megabytes: number) => (megabytes >= 1024 ? `${megabytes / 1024} GB` : `${megabytes} MB`) + (megabytes === 512 ? "（默认）" : ""),
     memoryLimitHint: "插件自己（连同它启动的程序）占用的内存超过上限时，岛屿会结束它并显示原因。和插件卡片上的内存一样，不算 PowerShell、Node.js 本身固定的那部分占用。一般不需要改；插件说明里要求更多内存时再调高。",
@@ -759,6 +779,7 @@ export const en: SettingsPluginsText = {
     "media:control": "Play, pause, next and previous track",
     "shelf:read": "Read the file shelf (paths only; sensitive)",
     "shelf:write": "Add to or remove from the file shelf; never deletes files (sensitive)",
+    windows: "Open windows of its own outside the island (experimental, Windows only for now)",
   },
   needsApproval: "The new version asks for more permissions, so it is paused. Switch it off and on to allow them.",
   keybindingConflict: (shortcuts: string) => `Shortcut already in use by another app: ${shortcuts}`,
@@ -782,6 +803,7 @@ export const en: SettingsPluginsText = {
       "media:read": "see what is playing",
       "shelf:read": "read the file shelf",
       "shelf:write": "change the file shelf",
+      windows: "open windows of its own",
       uri: "handle a fuyu:// link opened by a web page or another app",
     },
     title: "Permissions the island asks about",
@@ -822,7 +844,7 @@ export const en: SettingsPluginsText = {
     title: "Developer",
     badge: "In development",
     mode: "Development mode",
-    modeHint: "Load a plugin from any folder to debug it: it needs no “Allow third-party plugins”, gets the permissions it asks for (sensitive ones are still confirmed) and may use experimental APIs. Development mode is not saved; turn it on again after the island restarts. The fuyu-plugin dev command also needs the Local API plugin on.",
+    modeHint: "Load a plugin from any folder to debug it: it needs no “Allow third-party plugins”, gets the permissions it asks for (sensitive ones are still confirmed) and may use experimental APIs. Development mode is not saved; turn it on again after the island restarts. Folders you loaded are remembered. The fuyu-plugin dev command also needs the Local API plugin on.",
     path: "Plugin folder",
     pathPlaceholder: "Full path of a folder with fuyu-plugin.json",
     load: "Load",
@@ -830,6 +852,10 @@ export const en: SettingsPluginsText = {
     reloaded: "Reloaded",
     unload: "Remove",
     noPlugins: "No plugins in development loaded yet.",
+    recent: "Loaded before",
+    recentRestores: "This is a development build: turning development mode on loads again the plugins you did not remove last time.",
+    loadAgain: "Load",
+    forget: "Forget",
     trace: (id: string) => `JSON-RPC messages of ${id} (last 200 lines)`,
     traceEmpty: "No messages yet. They show up here once the plugin runs.",
     event: "Event",
@@ -876,6 +902,11 @@ export const en: SettingsPluginsText = {
     hide: "Hide",
     notifications: "Notifications",
     showNotifications: "Show this plugin's notifications on the island",
+    windows: "Windows",
+    windowsNoTopmost: "Don't allow always on top",
+    windowsNoClickThrough: "Don't allow clicks to pass through",
+    windowsHidden: "Hide all of this plugin's windows",
+    windowsHint: "Windows the plugin opens outside the island. These settings win over the plugin's own; while hidden, the plugin cannot open new windows.",
     memoryLimit: "Memory limit",
     memoryLimitOption: (megabytes: number) => (megabytes >= 1024 ? `${megabytes / 1024} GB` : `${megabytes} MB`) + (megabytes === 512 ? " (default)" : ""),
     memoryLimitHint: "When the plugin, with the programs it starts, uses more memory than this, the island stops it and says why. Like the memory on the plugin card, the fixed share PowerShell or Node.js takes by itself is not counted. Leave it unless the plugin's description asks for more.",

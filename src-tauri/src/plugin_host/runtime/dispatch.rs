@@ -3,8 +3,8 @@ use serde_json::{json, Value};
 use super::{current_entry, lock, set_keep_alive, Context};
 use crate::plugin_host::{
     events::{event_permission, MAX_SUBSCRIBE},
-    dev, feeds, notify, optional, reveal, sensitive, storage, views, webviews,
-    permissions::{method_permission, CAPABILITIES},
+    dev, feeds, notify, optional, reveal, sensitive, storage, views, webviews, windows,
+    permissions::{experimental_method, method_permission, CAPABILITIES},
     rpc,
     settings::parse_info,
 };
@@ -74,6 +74,9 @@ pub(super) fn answer_request(context: &Context, id: &Value, method: &str, params
         }
         _ => {}
     }
+    if let Some((permission, api)) = experimental_method(method) {
+        return answer_experimental(context, id, method, permission, api, &params);
+    }
     let Some((name, permission)) = method_permission(method) else {
         return rpc::error_line(id, rpc::METHOD_NOT_FOUND, &format!("Unknown method \"{method}\"."), None);
     };
@@ -103,6 +106,19 @@ pub(super) fn answer_request(context: &Context, id: &Value, method: &str, params
         _ => local_api::call_island(&context.app, name, params),
     };
     answer(id, result)
+}
+
+fn answer_experimental(context: &Context, id: &Value, method: &str, permission: &str, api: &str, params: &Value) -> String {
+    let spec = &context.spec;
+    if !dev::granted_experimental(&spec.experimental_apis).iter().any(|name| name == api) {
+        let message = format!("\"{method}\" is experimental: list \"{api}\" in experimentalApis and load the plugin in development mode (Windows only for now).");
+        return rpc::error_line(id, rpc::METHOD_NOT_FOUND, &message, None);
+    }
+    if let Some(message) = missing_permission(context, permission) {
+        return rpc::error_line(id, rpc::PERMISSION_DENIED, &message, None);
+    }
+    let caller = windows::Caller { app: &context.app, plugin_id: &spec.plugin_id, display_name: &spec.display_name };
+    answer(id, windows::answer(caller, method, params))
 }
 
 fn missing_permission(context: &Context, permission: &str) -> Option<String> {
