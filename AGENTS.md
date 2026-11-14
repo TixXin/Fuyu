@@ -63,6 +63,7 @@
 | 安装依赖 | `pnpm install` |
 | 前端开发服务器 | `pnpm dev` |
 | 桌面开发模式 | `pnpm tauri dev`（用户自己跑；所有会话都在主工作区改代码，改动马上能看到） |
+| 开发版和正式版同时开 | `pnpm dev:side`（用户自己跑；开发版用独立身份 `com.tixxin.fuyu.lane-1`，数据是它自己的一套，启动时不停安装的正式版，见 workflow.md「开发版和正式版同时开」） |
 | 类型检查并构建前端 | `pnpm build` |
 | 前端单元测试 | `pnpm test`（即 `node --test "tests/**/*.test.mjs" "packages/*/test/**/*.test.mjs"`） |
 | 前端静态检查 | `pnpm lint`（ESLint，配置见 `eslint.config.js`） |

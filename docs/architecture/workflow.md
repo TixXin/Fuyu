@@ -116,6 +116,24 @@ land 从 git 的 pre-push 钩子里跑检查，环境里带着 `GIT_DIR` 等变�
 - Mac 上验证 Rust 改动：`cargo clippy --all-targets -- -D warnings` 和 `cargo test`，再交叉检查 Windows：`cargo clippy --all-targets --target x86_64-pc-windows-gnu -- -D warnings`。
 - Rust 版本固定在 `rust-toolchain.toml`，CI 的 `ci.yml` 写同一个版本，改时一起改。
 
+## 开发版和正式版同时开
+
+`pnpm tauri dev` 启动前会停掉所有正在运行的岛屿（按进程名），而且开发版和安装的正式版用同一个应用标识，单实例锁只让一个活着。要两个同时开着（例如正式版在跑长时间的测量，F38），用 `pnpm dev:side`：
+
+- 它带着 `FOCUSD_DEV_LANE=1` 启动 `tauri dev`（环境里已经设了 1–999 的数就用那个）。调试构建读到这个变量后把应用标识换成 `com.tixxin.fuyu.lane-<n>`（`src-tauri/src/dev_lane.rs`），单实例锁、数据目录、WebView2 的数据目录和进程组都和正式版分开。
+- 启动前只停本仓库 `src-tauri/target/debug/` 里的 `fuyu.exe`（`scripts/stop-running-island.mjs` 按可执行文件路径判断），别处的岛屿不动。
+- 用的还是 `target/debug` 这一份编译，不多占硬盘。
+- 岛放在屏幕左侧四分之一处，不和正式版叠在一起。
+
+要知道的限制：
+
+- **数据是另一套**：`%APPDATA%\com.tixxin.fuyu.lane-<n>`，没有用户的待办、设置和插件；lane 时期用过同一个编号的机器上，里面是那时留下的数据。
+- **看不到 Agent 会话**：Agent 的钩子写到用户的数据目录，这个开发版读自己的目录，并且拒绝安装钩子、改开机自启、搬数据目录，也不注册 `fuyu://` 链接。要调 Agent 功能用普通的 `pnpm tauri dev`。
+- **全局快捷键谁先启动归谁**：快捷键用 `RegisterHotKey` 注册，同一个组合键第二次注册会失败（由代码得出，2026-11-14 没有逐个实测）。Win+V、QQ 和微信的通知监听两个岛并排时的表现也没有实测。
+- **本地接口端口**：首选端口被占时会换一个随机端口（`local_api/server.rs`），不会起不来。
+
+2026-11-14 在 Windows 上实测：安装的正式版 0.3.8 开着时，用带前端的调试构建加 `FOCUSD_DEV_LANE=1` 启动第二个岛，两个进程都在，WebView2 的浏览器进程各一个，数据目录分别是 `com.tixxin.fuyu` 和 `com.tixxin.fuyu.lane-1`；正在跑的内存采样仍只统计正式版的进程树。Mac 上没有实测。
+
 ## 从 lane 迁过来（每台机器做一次）
 
 1. 等每个 lane 里没合入的提交都合入（或用户决定不要），`git worktree list` 里只剩主工作区。
