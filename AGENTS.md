@@ -6,6 +6,8 @@
 - 修改 `src-tauri/` 时还须遵守 [src-tauri/AGENTS.md](src-tauri/AGENTS.md)（Rust / Tauri 规则）。
 - 目标架构见 [docs/architecture/overview.md](docs/architecture/overview.md)，结构重构的分步记录、验证结果与待人工验收项见 [docs/architecture/history/refactor-plan.md](docs/architecture/history/refactor-plan.md)。
 
+- **插件平台第 3 版（万物皆插件）正在进行**（2026-11-14 起）。做它的会话开工先读 [docs/architecture/plugins/v3-progress.md](docs/architecture/plugins/v3-progress.md)（做到哪了），再读 [v3-workflow.md](docs/architecture/plugins/v3-workflow.md)（怎么协作：不开分支、子代理和两台机器的规则）和 [v3-everything-plugin.md](docs/architecture/plugins/v3-everything-plugin.md)（方案）。不做它的会话要知道一条：旧的插件系统（`src-tauri/src/plugin_host/`、`src/features/plugins/`、`src/features/plugin-views/`、`packages/fuyu-plugin`、`plugins/`）已冻结，只修 bug 和安全问题，不加新接口。
+
 子目录规则比本文件更具体，两者冲突时以子目录规则为准。
 
 ## 项目概览
