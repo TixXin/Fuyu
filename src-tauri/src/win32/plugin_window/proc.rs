@@ -115,6 +115,15 @@ pub(super) fn give_back_focus(hwnd: HWND) {
 }
 
 fn restore_focus(hwnd: HWND) {
+    let on_desktop = with_state(hwnd, |state| state.look.layer == Layer::Desktop).unwrap_or(false);
+    if on_desktop {
+        desktop::forget_widget(hwnd, || give_back(hwnd));
+    } else {
+        give_back(hwnd);
+    }
+}
+
+fn give_back(hwnd: HWND) {
     let Some((active, focus)) = with_state(hwnd, |state| (state.previous_active.take(), state.previous_focus.take())) else { return };
     let usable = |window: Option<HWND>| window.filter(|window| !window.is_invalid() && *window != hwnd && unsafe { IsWindow(Some(*window)) }.as_bool());
     unsafe {

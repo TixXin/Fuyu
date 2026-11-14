@@ -311,4 +311,35 @@ mod tests {
         .expect("window thread");
     }
 
+    #[test]
+    fn giving_the_focus_back_leaves_the_desktop_as_its_own_last_active_window() {
+        use windows::Win32::UI::{Input::KeyboardAndMouse::{GetActiveWindow, SetActiveWindow}, WindowsAndMessaging::GetLastActivePopup};
+        std::thread::spawn(|| {
+            let events = Rc::new(Recorder::default());
+            let far = Bounds { x: -30000, y: -30000, width: 60, height: 60 };
+            let mut normal = look(true);
+            normal.layer = Layer::Normal;
+            let desktop = PluginWindow::create(normal.clone(), far, events.clone()).expect("stands in for the desktop");
+            let other = PluginWindow::create(normal, far, events.clone()).expect("the window the user was in");
+            let mut widget_look = look(false);
+            widget_look.layer = Layer::Normal;
+            let widget = PluginWindow::create(widget_look, far, events.clone()).expect("widget");
+            unsafe {
+                SetWindowLongPtrW(widget.hwnd(), GWLP_HWNDPARENT, desktop.hwnd().0 as isize);
+                let _ = SetActiveWindow(other.hwnd());
+                let _ = SetActiveWindow(widget.hwnd());
+            }
+            assert_eq!(unsafe { GetLastActivePopup(desktop.hwnd()) }, widget.hwnd(), "a click leaves the widget as the desktop's last active window");
+            desktop::forget_widget(widget.hwnd(), || unsafe {
+                let _ = SetActiveWindow(other.hwnd());
+            });
+            assert_eq!(unsafe { GetLastActivePopup(desktop.hwnd()) }, desktop.hwnd(), "so Show desktop activates the desktop itself");
+            assert_eq!(unsafe { GetActiveWindow() }, other.hwnd(), "and the user is back where they were");
+            drop(widget);
+            drop(other);
+            drop(desktop);
+        })
+        .join()
+        .expect("window thread");
+    }
 }
