@@ -28,6 +28,9 @@ const HELPER_METHODS = [
   [/(Get|Set|Remove)-(Fuyu|Focusd)Secret\b/i, "secrets.get"],
 ];
 const V2_ONLY = ["activationEvents", "contributes.views", "contributes.statusItems", "contributes.menus"];
+const SDK_COPIES = /(^|\/)(fuyu|focusd)\.(mjs|ps1)$/;
+const SDK_VERSION_MARK = /(?:export const SDK_VERSION = "|\$script:FuyuSdkVersion = ')(\d+\.\d+\.\d+)/;
+const SDK_URL = "https://github.com/TixXin/fuyu/tree/main/plugins/sdk";
 
 const withoutBom = (text) => (text.charCodeAt(0) === 0xfeff ? text.slice(1) : text);
 const get = (object, dotted) => dotted.split(".").reduce((value, key) => (value && typeof value === "object" ? value[key] : undefined), object);
@@ -53,6 +56,60 @@ export function permissionsUsed(texts) {
     if (permission && texts.some((text) => pattern.test(text))) used.add(permission);
   }
   return used;
+}
+
+export function cliVersion() {
+  return JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")).version;
+}
+
+const versionParts = (version) => version.split(".").map(Number);
+
+export function isOlderVersion(version, than) {
+  const [a, b] = [versionParts(version), versionParts(than)];
+  for (let index = 0; index < 3; index += 1) {
+    if (a[index] !== b[index]) return a[index] < b[index];
+  }
+  return false;
+}
+
+function distance(a, b) {
+  const row = Array.from({ length: b.length + 1 }, (_, index) => index);
+  for (let i = 1; i <= a.length; i += 1) {
+    let diagonal = row[0];
+    row[0] = i;
+    for (let j = 1; j <= b.length; j += 1) {
+      const above = row[j];
+      row[j] = Math.min(row[j] + 1, row[j - 1] + 1, diagonal + (a[i - 1].toLowerCase() === b[j - 1].toLowerCase() ? 0 : 1));
+      diagonal = above;
+    }
+  }
+  return row[b.length];
+}
+
+function checkUnknownFields(manifest, warnings) {
+  const schema = protocol().manifestSchema;
+  const check = (object, known, prefix) => {
+    if (!object || typeof object !== "object" || Array.isArray(object)) return;
+    for (const key of Object.keys(object)) {
+      if (known.includes(key) || key === "$schema") continue;
+      const near = known.filter((name) => distance(key, name) <= 2).sort((a, b) => distance(key, a) - distance(key, b))[0];
+      warnings.push(`${prefix}${key} is not a field the island knows, so it is ignored${near ? `; did you mean ${prefix}${near}?` : "."}`);
+    }
+  };
+  check(manifest, Object.keys(schema.properties ?? {}), "");
+  check(manifest.contributes, Object.keys(schema.properties?.contributes?.properties ?? {}), "contributes.");
+}
+
+function checkSdkCopies(packed, warnings) {
+  const current = cliVersion();
+  for (const [name, full] of packed) {
+    if (!SDK_COPIES.test(name) || name.split("/").some((part) => SKIPPED_DIRS.has(part))) continue;
+    const found = readFileSync(full, "utf8").match(SDK_VERSION_MARK)?.[1];
+    if (found && !isOlderVersion(found, current)) continue;
+    const file = name.endsWith(".ps1") ? "powershell/fuyu.ps1" : "node/fuyu.mjs";
+    const which = found ? `the SDK from fuyu-plugin ${found}` : "an SDK from before fuyu-plugin 0.7.0";
+    warnings.push(`${name} is ${which}, older than ${current}; copy ${SDK_URL}/${file} over it so the plugin gets the SDK's fixes.`);
+  }
 }
 
 function checkContributions(manifest, errors, warnings) {
@@ -171,6 +228,7 @@ export function validatePlugin(dir, { allowExperimental = false } = {}) {
   if (manifest.homepage && !manifest.homepage.startsWith("https://")) warnings.push("homepage is only shown when it starts with https://.");
   if (!manifest.description) warnings.push("description is empty; the market and the plugin card show it.");
 
+  checkUnknownFields(manifest, warnings);
   const rules = loadIgnore(dir);
   checkRuntime(dir, manifest, rules, errors);
   checkWebviews(dir, manifest, errors);
@@ -180,6 +238,7 @@ export function validatePlugin(dir, { allowExperimental = false } = {}) {
   const packed = listFiles(dir).filter(([name]) => !isIgnored(rules, name));
   const size = packed.reduce((total, [, full]) => total + statSync(full).size, 0);
   if (size > MAX_PACKAGE_BYTES) errors.push(`The package would be ${(size / 1024 / 1024).toFixed(1)} MB; the market takes at most 20 MB.`);
+  checkSdkCopies(packed, warnings);
   if (packed.some(([name]) => name.split("/").includes("node_modules"))) {
     warnings.push("node_modules would be packed; add it to the ignore file (.fuyuignore) unless the plugin needs it at run time.");
   }

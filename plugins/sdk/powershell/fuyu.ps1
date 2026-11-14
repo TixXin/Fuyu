@@ -7,6 +7,8 @@
 # use Write-FuyuLog (or stderr) for logs. The function names before the rename,
 # *-Focusd*, still work.
 
+$script:FuyuSdkVersion = '0.7.0'
+
 $ErrorActionPreference = 'Stop'
 $fuyuUtf8 = New-Object System.Text.UTF8Encoding $false
 [Console]::InputEncoding = $fuyuUtf8

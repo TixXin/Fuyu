@@ -123,7 +123,7 @@ npx fuyu-plugin validate      # 检查清单和文件夹
 npx fuyu-plugin pack          # 写出 .package/<id>-<version>.zip
 ```
 
-`validate` 检查：清单符合 [`manifest.schema.json`](../../plugins/schema/manifest.schema.json)；入口文件存在、在插件文件夹内、没有被 `.fuyuignore` 排除；激活事件和菜单指向的命令、页面都存在；没有 `experimentalApis`；包不超过 20 MB。它还会扫描代码里用到的方法名和事件名，提示「申请了但似乎没用到」和「用到了但没申请」的权限。
+`validate` 检查：清单符合 [`manifest.schema.json`](../../plugins/schema/manifest.schema.json)；入口文件存在、在插件文件夹内、没有被 `.fuyuignore` 排除；激活事件和菜单指向的命令、页面都存在；没有 `experimentalApis`；包不超过 20 MB。它还会扫描代码里用到的方法名和事件名，提示「申请了但似乎没用到」和「用到了但没申请」的权限；清单顶层和 `contributes` 下不认识的字段（多半是拼错了，比如 `activationEvent`）会告警并给出最接近的字段名，岛屿会忽略这些字段；复制进插件的单文件 SDK（`fuyu.mjs`、`lib/fuyu.ps1`，以及改名前的 `focusd.*`）比当前命令行工具旧时也会告警，照提示把 [`plugins/sdk`](../../plugins/sdk) 里的现行版本复制过去。这些都只是告警，不影响退出码。
 
 `pack` 生成的 zip 和插件市场里的完全一样：文件按名称排序、时间戳固定、文本文件统一为 LF，同样的文件每次得到同样的哈希。
 
@@ -133,7 +133,7 @@ npx fuyu-plugin pack          # 写出 .package/<id>-<version>.zip
 
 不装 Node.js 也能试：
 
-1. 把示例 [`plugins/examples/dev.focusd.todo-digest`](../../plugins/examples/dev.focusd.todo-digest/) 复制到 `%APPDATA%\com.tixxin.fuyu\plugins\dev.focusd.todo-digest\`。插件目录也可以在 **设置 → 插件扩展 → 插件目录 → 打开** 里找到。文件夹名必须等于插件 id。
+1. 把示例 [`plugins/examples/dev.focusd.todo-digest`](../../plugins/examples/dev.focusd.todo-digest/) 复制到岛屿的插件目录，默认是 `~/.fuyu/plugins/dev.focusd.todo-digest/`；最稳妥的是在 **设置 → 插件扩展 → 插件目录 → 打开** 里找。文件夹名必须等于插件 id。
 2. 在 **设置 → 插件扩展** 打开 **允许运行第三方插件**，点 **重新加载**，再打开插件卡片上的 **启用**。
 3. 状态显示「运行中」后，点 **写入摘要**，每日笔记里会追加一段未完成待办的摘要。
 

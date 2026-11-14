@@ -401,3 +401,5 @@ export interface ScreenInfo {
 }
 
 export function createPlugin(options?: CreatePluginOptions): Plugin;
+
+export declare const SDK_VERSION: string;
