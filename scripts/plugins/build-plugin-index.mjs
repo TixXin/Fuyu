@@ -85,6 +85,7 @@ export function indexEntry(manifest, fileName, zip, details = {}) {
     ...(optionalPermissions(manifest).length > 0 ? { optionalPermissions: optionalPermissions(manifest) } : {}),
     runtime: runtimeRequirement(manifest.runtime),
     ...((manifest.contributes?.views ?? []).some((view) => view.template === "webview") ? { webview: true } : {}),
+    ...(manifest.platforms?.length > 0 ? { platforms: [...new Set(manifest.platforms)] } : {}),
     ...details,
     download: { url: `${MARKET_BASE_URL}/packages/${fileName}`, sha256: sha256(zip), size: zip.length },
   };

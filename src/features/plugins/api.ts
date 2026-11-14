@@ -85,6 +85,7 @@ export type PluginInfo = {
   commands: PluginCommand[];
   runtime: PluginRuntimeRequirement;
   platforms: string[];
+  webview: boolean;
   hasProcess: boolean;
   enabled: boolean;
   needsApproval: boolean;

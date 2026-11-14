@@ -88,8 +88,8 @@ export function MarketPluginItem({
             </span>
           ) : null}
           {plugin.webview ? (
-            <span className="plugin-market__tag plugin-market__tag--custom">
-              {text.customUi}
+            <span className={isMacOS ? "plugin-market__tag plugin-market__tag--unsupported" : "plugin-market__tag plugin-market__tag--custom"}>
+              {isMacOS ? text.customUiNotOnMac : text.customUi}
             </span>
           ) : null}
           {category ? <span className="plugin-market__tag">{text.category[category]}</span> : null}

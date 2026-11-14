@@ -60,7 +60,7 @@ const settingsSchema: PluginInfo["settingsSchema"] = [
 const plugin = (localProxy: string): PluginInfo => ({
   id: "focusd.ssh-proxy-tunnel", builtin: true, dev: false, invalidReason: null,
   name: { "zh-CN": "SSH 代理隧道", en: "SSH proxy tunnel" }, description: null, version: "1.0.0", author: "ShengLin1001", homepage: "",
-  permissions: [], optionalPermissions: [], calls: [], commands: [], runtime: "builtin", platforms: ["windows", "macos"], hasProcess: true, enabled: true, needsApproval: false,
+  permissions: [], optionalPermissions: [], calls: [], commands: [], runtime: "builtin", platforms: ["windows", "macos"], webview: false, hasProcess: true, enabled: true, needsApproval: false,
   status: "running", error: null, log: [], settingsSchema, settings: { localProxy, customPort: 7897 }, info: [], notificationsMuted: false, windowRules: {},
   keybindingConflicts: [], keybindings: {}, sensitive: {}, activation: "startup", activationEvents: [], startupMs: null, resources: null,
   keepAlive: null, revoked: null, updateAvailable: null, signingKeyChanged: false, authorKey: null, autoUpdated: null, updateFailed: null, preRelease: false,

@@ -34,6 +34,7 @@ pub struct PluginInfo {
     commands: Vec<PluginCommand>,
     runtime: &'static str,
     platforms: Vec<String>,
+    webview: bool,
     has_process: bool,
     enabled: bool,
     needs_approval: bool,
@@ -192,6 +193,7 @@ pub(super) fn snapshot() -> Result<PluginsSnapshot, String> {
                 commands: Vec::new(),
                 runtime: "none",
                 platforms: Vec::new(),
+                webview: false,
                 has_process: false,
                 enabled: grant.enabled || plugin.dev,
                 needs_approval: false,
@@ -243,6 +245,7 @@ pub(super) fn snapshot() -> Result<PluginsSnapshot, String> {
                     info.has_process = matches!(manifest.runtime, PluginRuntime::Process { .. } | PluginRuntime::Builtin);
                     info.runtime = runtime_requirement(&manifest.runtime);
                     info.platforms = super::manifest::platforms_of(&manifest.platforms, info.runtime);
+                    info.webview = manifest.contributes.views.iter().any(|view| view.template == super::view_specs::ViewTemplate::Webview);
                     info.settings_schema = manifest.contributes.settings.clone();
                     info.settings = settings::resolve(&manifest.contributes.settings, &grant.settings);
                     info.activation = if manifest.activation.is_eager() { "startup" } else { "onDemand" };

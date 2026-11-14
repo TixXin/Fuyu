@@ -5,7 +5,7 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { generateKeyPairSync } from "node:crypto";
-import { MARKET_BASE_URL, createZip, packPlugin, readPackedFile, readZip, runtimeRequirement, sameZipContents, sha256 } from "../../scripts/plugins/build-plugin-index.mjs";
+import { MARKET_BASE_URL, createZip, indexEntry, packPlugin, readPackedFile, readZip, runtimeRequirement, sameZipContents, sha256 } from "../../scripts/plugins/build-plugin-index.mjs";
 import { keyIdOf, rawPublicKey, signIndex, verifyIndex } from "../../scripts/plugins/plugin-signing.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
@@ -114,4 +114,11 @@ test("the index says what each plugin needs installed", () => {
   assert.equal(runtimeRequirement({ type: "process", command: "main.mjs" }), "node");
   assert.equal(runtimeRequirement({ type: "none" }), "none");
   assert.equal(runtimeRequirement(undefined), "none");
+});
+
+test("the index lists the platforms a manifest declares, and nothing when it declares none", () => {
+  const manifest = { id: "dev.example.clock", name: { "zh-CN": "钟", en: "Clock" }, version: "1.0.0", apiVersion: 2, runtime: { type: "process", command: "main.ps1" } };
+  const zip = Buffer.from("zip");
+  assert.equal(indexEntry(manifest, "clock.zip", zip).platforms, undefined);
+  assert.deepEqual(indexEntry({ ...manifest, platforms: ["windows", "windows"] }, "clock.zip", zip).platforms, ["windows"]);
 });
