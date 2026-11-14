@@ -16,6 +16,9 @@ use super::{
     runtime::TraceEntry,
 };
 
+#[cfg(windows)]
+pub(super) const EXPERIMENTAL_APIS: &[&str] = &["windows"];
+#[cfg(not(windows))]
 pub(super) const EXPERIMENTAL_APIS: &[&str] = &[];
 
 struct DevState {

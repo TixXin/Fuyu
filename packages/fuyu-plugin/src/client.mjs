@@ -78,6 +78,7 @@ export function createPlugin(options = {}) {
   lines.on("close", () => void (shuttingDown ?? Promise.resolve()).then(() => exit(0)));
 
   const forView = (method, viewId, handler) => on(method, (params) => (params?.viewId === viewId ? handler(params) : undefined));
+  const forWindow = (method, id, handler) => on(method, (params) => (params?.id === id ? handler(params) : undefined));
 
   return {
     call,
@@ -176,6 +177,25 @@ export function createPlugin(options = {}) {
       list: () => call("shelf.list"),
       add: (paths) => call("shelf.add", { paths }),
       remove: (ids) => call("shelf.remove", { ids }),
+    },
+    windows: {
+      create: (id, options) => call("window.create", { ...options, id }),
+      update: (id, changes) => call("window.update", { ...changes, id }),
+      show: (id) => call("window.show", { id }),
+      hide: (id) => call("window.hide", { id }),
+      focus: (id) => call("window.focus", { id }),
+      close: (id) => call("window.close", { id }),
+      list: async () => (await call("window.list"))?.windows ?? [],
+      postMessage: (id, message) => call("window.postMessage", { id, message }),
+      onMessage: (id, handler) => forWindow("window.message", id, (params) => handler(params.message)),
+      onBounds: (id, handler) => forWindow("window.bounds", id, handler),
+      onFocused: (id, handler) => forWindow("window.focused", id, (params) => handler(Boolean(params.focused))),
+      onHidden: (id, handler) => forWindow("window.hidden", id, (params) => handler(params.reason)),
+      onClosed: (id, handler) => forWindow("window.closed", id, (params) => handler(params.reason)),
+    },
+    screens: {
+      list: async () => (await call("screens.list"))?.screens ?? [],
+      onChanged: (handler) => on("screens.changed", (params) => handler(params?.screens ?? [])),
     },
   };
 }

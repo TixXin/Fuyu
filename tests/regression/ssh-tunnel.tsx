@@ -61,7 +61,7 @@ const plugin = (localProxy: string): PluginInfo => ({
   id: "focusd.ssh-proxy-tunnel", builtin: true, dev: false, invalidReason: null,
   name: { "zh-CN": "SSH 代理隧道", en: "SSH proxy tunnel" }, description: null, version: "1.0.0", author: "ShengLin1001", homepage: "",
   permissions: [], optionalPermissions: [], calls: [], commands: [], runtime: "builtin", platforms: ["windows", "macos"], hasProcess: true, enabled: true, needsApproval: false,
-  status: "running", error: null, log: [], settingsSchema, settings: { localProxy, customPort: 7897 }, info: [], notificationsMuted: false,
+  status: "running", error: null, log: [], settingsSchema, settings: { localProxy, customPort: 7897 }, info: [], notificationsMuted: false, windowRules: {},
   keybindingConflicts: [], keybindings: {}, sensitive: {}, activation: "startup", activationEvents: [], startupMs: null, resources: null,
   keepAlive: null, revoked: null, updateAvailable: null, signingKeyChanged: false, authorKey: null, autoUpdated: null, updateFailed: null, preRelease: false,
   preReleaseAvailable: null, memoryLimitMb: 512,
@@ -82,7 +82,7 @@ const render = async (localProxy: string) => {
     root.render(
       <StrictMode><I18nProvider>
         <PluginDetailPage plugin={plugin(localProxy)} busy={false} notice={null} allowed nodeAvailable powershellAvailable onBack={() => { closed += 1; }} onEnabledChange={noop} onSettingChange={noop} onRunCommand={noop}
-          onNotificationsMutedChange={noop} onPreReleaseChange={noop} onMemoryLimitChange={noop} onClearData={noop} onRevokeSensitive={noop} />
+          onNotificationsMutedChange={noop} onWindowRulesChange={noop} onPreReleaseChange={noop} onMemoryLimitChange={noop} onClearData={noop} onRevokeSensitive={noop} />
       </I18nProvider></StrictMode>,
     );
   });

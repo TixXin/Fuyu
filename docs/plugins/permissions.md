@@ -20,6 +20,9 @@
 | `media:control` | `media.playPause`、`media.next`、`media.previous`、`media.seek`、`media.setVolume`、`media.toggleShuffle`、`media.cycleRepeat` | |
 | `shelf:read`（敏感） | `shelf.list` | `shelf.changed` |
 | `shelf:write`（敏感） | `shelf.add`、`shelf.remove` | |
+| `windows`（实验） | `window.*`、`screens.list` | 通知 `window.*`、`screens.changed` |
+
+`windows` 是实验接口：清单里同时写 `"experimentalApis": ["windows"]`，插件只能在开发模式下加载，暂时只有 Windows 有。用户在设置 → 插件扩展 → 这个插件 → 窗口里可以不允许置顶、不允许点击穿透，或者隐藏它的全部窗口。设计和护栏见 [插件的独立窗口](../architecture/plugins/plugin-windows.md)。
 
 不需要权限的：`host.*`、`settings.*`、`ui.setInfo`、`events.subscribe` / `unsubscribe`、`storage.*`、`permissions.request`、`view.*`、`webview.postMessage`、`status.update`、`island.openView`，以及事件 `island.expanded`、`island.collapsed`、`app.locale.changed`、`system.*`。
 

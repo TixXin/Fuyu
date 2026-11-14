@@ -7,7 +7,7 @@ import { CC_CONNECT_PLUGIN_ID, CcConnectSection } from "../cc-connect";
 import { CENTER_PATTERN_PET_KEY, CENTER_PATTERN_PLUGIN_ID, petChoices, usePetChoices } from "../center-pattern";
 import { PlanKeyFields } from "../claude-usage/PlanKeyFields";
 import { SSH_TUNNEL_PLUGIN_ID, SshTunnelHosts, useSshTunnelProxy } from "../ssh-tunnel";
-import { openPluginHomepage, PLUGIN_MEMORY_LIMITS_MB, type PluginInfo } from "./api";
+import { openPluginHomepage, PLUGIN_MEMORY_LIMITS_MB, type PluginInfo, type PluginWindowRules } from "./api";
 import { pluginHealth } from "./installedFilter";
 import { PluginDialog } from "./PluginDialog";
 import { PluginIcon } from "./PluginIcon";
@@ -19,6 +19,7 @@ import { PluginNotice } from "./PluginNotice";
 import type { PluginNotice as Notice } from "./usePlugins";
 import { PluginSensitiveSection } from "./PluginSensitiveSection";
 import { PluginSettingField } from "./PluginSettingField";
+import { PluginWindowRulesSection } from "./PluginWindowRulesSection";
 import "./PluginDetailPage.css";
 
 export function PluginDetailPage({
@@ -33,6 +34,7 @@ export function PluginDetailPage({
   onSettingChange,
   onRunCommand,
   onNotificationsMutedChange,
+  onWindowRulesChange,
   onPreReleaseChange,
   onMemoryLimitChange,
   onClearData,
@@ -49,6 +51,7 @@ export function PluginDetailPage({
   onSettingChange: (key: string, value: unknown) => void;
   onRunCommand: (command: string) => void;
   onNotificationsMutedChange: (muted: boolean) => void;
+  onWindowRulesChange: (rules: PluginWindowRules) => void;
   onPreReleaseChange: (enabled: boolean) => void;
   onMemoryLimitChange: (megabytes: number) => void;
   onClearData: () => void;
@@ -188,6 +191,10 @@ export function PluginDetailPage({
             onChange={(show) => !busy && onNotificationsMutedChange(!show)}
           />
         </section>
+      ) : null}
+
+      {plugin.permissions.includes("windows") ? (
+        <PluginWindowRulesSection rules={plugin.windowRules ?? {}} busy={busy} onChange={onWindowRulesChange} />
       ) : null}
 
       {plugin.preRelease || plugin.preReleaseAvailable ? (

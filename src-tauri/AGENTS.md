@@ -27,7 +27,7 @@ src-tauri/src/
 ├── recording/               # 录屏（C41.11）：命令、倒计时、暂停计时和浮屿窗口排除在录像外（control.rs，状态在 state.rs，发 recording-state / recording-finished 给岛），录制线程（session.rs：WGC 帧经有界队列交给编码线程，满了丢帧计数）、帧节奏（pacing.rs，静止 3 个间隔才补重复帧，暂停扣时长）、尺寸码率和文件名（format.rs）、声音（audio.rs 接采集、按视频时间轴放；mixer.rs 混成 48 kHz 立体声）、GIF（gif.rs：每 1/15 秒挑一帧读回内存交给 gifski 线程）；声音采集在 win32/audio_capture.rs，画面采集在 win32/graphics_capture.rs，编码写 MP4 在 win32/video_writer.rs
 ├── pets/                    # Codex Pets（petdex）：只读列出 ~/.codex/pets 与 <app data>/pets，校验后以 data URL 返回图集
 ├── local_api/               # 本地接口：127.0.0.1 HTTP（tiny_http）、鉴权与路由、转给 main 窗口的桥、local-api.json；由内置插件开关
-├── plugin_host/             # 插件：清单校验、plugins.json、子进程监督与 stdio JSON-RPC、权限表、设置页、市场与签名、撤销名单（revocations.rs）、后台检查与自动更新（updates.rs）、自定义界面页面（webviews.rs）、内置插件（builtin.rs）、按需启动与资源（activation.rs、lifecycle.rs）、开发模式（dev.rs）、清单里的 Agent 强度名称（effort_labels.rs）
+├── plugin_host/             # 插件：清单校验、plugins.json、子进程监督与 stdio JSON-RPC、权限表、设置页、市场与签名、撤销名单（revocations.rs）、后台检查与自动更新（updates.rs）、自定义界面页面（webviews.rs）、插件自己的窗口（windows/，实验接口，E34）、内置插件（builtin.rs）、按需启动与资源（activation.rs、lifecycle.rs）、开发模式（dev.rs）、清单里的 Agent 强度名称（effort_labels.rs）
 ├── media_control/
 ├── calendar/                # 日历：CalDAV（caldav.rs）和 ICS 订阅链接，iCalendar 解析和重复日程展开（ics.rs，rrule），会议链接识别（meeting_link.rs），来源配置与凭据（sources.rs）
 ├── lyrics/                  # 音乐页歌词：本地 .lrc 文件夹（local.rs）、LRCLIB（lrclib.rs，用户开启才联网）、按歌名歌手时长匹配（matching.rs），在线结果缓存在 lyrics-cache/
@@ -58,6 +58,7 @@ src-tauri/src/
                              # process_memory / process_tree、registry、credentials、dwm、icon、ocr、chinese、screen_capture、
                              # capture_targets、taskbar、uia_list / uia_tabs、url_protocol、brightness、
                              # notification_state（前台是否有全屏程序）、webview_page（插件自定义界面的独立 WebView2 页面，P8）、
+                             # plugin_window（插件窗口：不经过 Tauri 的顶层窗口、标题条、层级、透明、小组件不拿焦点、屏幕列表，E34）、
                              # job（插件进程的作业对象与挂起启动）、known_folder（下载文件夹等已知文件夹）、
                              # session_notifications（锁屏、睡眠唤醒通知与键鼠空闲时间）、audio_outputs（在用的音频输出及类型）、
                              # devnode（设备节点属性：容器、蓝牙电量）、power（电源与电池）、graphics_capture（D3D11 设备与 WGC 显示器采集，帧留在 GPU）、

@@ -1,0 +1,24 @@
+{
+  "id": "dev.focusd.window-demo",
+  "name": { "zh-CN": "窗口示例", "en": "Window demo" },
+  "description": {
+    "zh-CN": "实验接口 windows 的示例：快捷键唤出一个写便签的浮层，桌面上放一个显示时间和最近一条便签的小组件。",
+    "en": "Shows the experimental windows API: a shortcut opens a panel for a quick note, and a widget on the desktop shows the time and the latest note."
+  },
+  "version": "0.1.0",
+  "apiVersion": 2,
+  "minAppVersion": "0.3.1",
+  "author": "TixXin",
+  "homepage": "https://github.com/TixXin/fuyu/tree/main/plugins/drafts/dev.focusd.window-demo",
+  "platforms": ["windows"],
+  "runtime": { "type": "process", "command": "main.mjs" },
+  "activationEvents": [],
+  "experimentalApis": ["windows"],
+  "permissions": ["windows"],
+  "contributes": {
+    "commands": [
+      { "id": "note", "title": { "zh-CN": "写一条便签", "en": "Write a note" }, "keybinding": "Ctrl+Alt+N" },
+      { "id": "widget", "title": { "zh-CN": "显示或关闭桌面小组件", "en": "Show or close the desktop widget" } }
+    ]
+  }
+}

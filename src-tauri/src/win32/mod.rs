@@ -21,6 +21,7 @@ pub(crate) mod message_window;
 pub(crate) mod notification_state;
 pub(crate) mod ocr;
 pub(crate) mod ole;
+pub(crate) mod plugin_window;
 pub(crate) mod power;
 pub(crate) mod process;
 pub(crate) mod process_env;

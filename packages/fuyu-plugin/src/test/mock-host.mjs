@@ -7,6 +7,9 @@ import readline from "node:readline";
 import { readManifest } from "../pack.mjs";
 import { protocol } from "../schema.mjs";
 import { PERMISSION_DENIED, RpcError, answer, emptyTodos } from "./methods.mjs";
+import { EXPERIMENTAL_APIS } from "./windows.mjs";
+
+const USER_ACTIONS = ["command", "notification.action", "uri", "view.action", "view.submit", "webview.message"];
 
 const DEFAULT_TIMEOUT_MS = 10_000;
 const STOP_GRACE_MS = 3_000;
@@ -76,6 +79,8 @@ export class MockHost extends EventEmitter {
     this.info = [];
     this.keepAlive = null;
     this.openedViews = [];
+    this.windows = new Map();
+    this.lastUserAction = null;
     this.storage = new Map(Object.entries(options.storage ?? {}));
     this.secrets = new Map(Object.entries(options.secrets ?? {}));
     this.subscriptions = new Set();
@@ -103,6 +108,8 @@ export class MockHost extends EventEmitter {
       params.activationEvent = this.activationEvent;
       params.optionalPermissions = [...this.optional];
     }
+    const experimental = (this.manifest.experimentalApis ?? []).filter((name) => EXPERIMENTAL_APIS.includes(name));
+    if ((this.manifest.experimentalApis ?? []).length > 0) params.experimentalApis = experimental;
     return params;
   }
 
@@ -176,7 +183,17 @@ export class MockHost extends EventEmitter {
   }
 
   send(method, params = {}) {
+    if (USER_ACTIONS.includes(method)) this.lastUserAction = Date.now();
     this.write({ method, params });
+  }
+
+  windowMessage(id, message) {
+    this.lastUserAction = Date.now();
+    this.send("window.message", { id, message });
+  }
+
+  windowEvent(method, params) {
+    this.send(method, params);
   }
 
   command(id, args) {

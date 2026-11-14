@@ -18,6 +18,7 @@ export const PLUGIN_PERMISSIONS = [
   "media:control",
   "shelf:read",
   "shelf:write",
+  "windows",
 ] as const;
 export type PluginPermission = (typeof PLUGIN_PERMISSIONS)[number];
 
@@ -94,6 +95,7 @@ export type PluginInfo = {
   settings: Record<string, unknown>;
   info: PluginInfoItem[];
   notificationsMuted: boolean;
+  windowRules: PluginWindowRules;
   keybindingConflicts: string[];
   keybindings: Record<string, string>;
   sensitive: Partial<Record<PromptedPermission, PluginSensitiveChoice>>;
@@ -325,6 +327,12 @@ export function setPluginKeybinding(id: string, command: string, keybinding: str
 
 export function setPluginPreRelease(id: string, enabled: boolean) {
   return invoke<PluginsSnapshot>("set_plugin_pre_release", { id, enabled });
+}
+
+export type PluginWindowRules = { noTopmost?: boolean; noClickThrough?: boolean; hidden?: boolean };
+
+export function setPluginWindowRules(id: string, rules: PluginWindowRules) {
+  return invoke<PluginsSnapshot>("set_plugin_window_rules", { id, rules });
 }
 
 export function setPluginNotificationsMuted(id: string, muted: boolean) {

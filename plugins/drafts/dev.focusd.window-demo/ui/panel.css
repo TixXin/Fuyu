@@ -1,0 +1,32 @@
+body {
+  margin: 0;
+  padding: 16px;
+  font-family: var(--fuyu-font);
+  color: var(--fuyu-text);
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+textarea {
+  resize: none;
+  padding: 8px;
+  border: 1px solid var(--fuyu-border);
+  border-radius: var(--fuyu-radius);
+  background: var(--fuyu-surface);
+  color: inherit;
+  font: inherit;
+}
+
+button {
+  align-self: flex-end;
+  padding: 6px 16px;
+  border: 0;
+  border-radius: var(--fuyu-radius);
+  background: var(--fuyu-accent);
+  color: #10202a;
+  font: inherit;
+}

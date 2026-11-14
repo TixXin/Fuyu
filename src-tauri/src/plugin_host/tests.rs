@@ -44,7 +44,7 @@ fn api_versions_1_and_2_are_both_accepted() {
 
 #[test]
 fn the_host_matches_the_protocol_description() {
-    use super::permissions::{CAPABILITIES, METHODS, PERMISSIONS};
+    use super::permissions::{CAPABILITIES, EXPERIMENTAL_METHODS, METHODS, PERMISSIONS};
     let rpc: Value = serde_json::from_str(include_str!("../../../plugins/schema/rpc.json")).expect("rpc.json");
     let names = |list: &Value| -> Vec<String> {
         list.as_array().expect("array").iter().map(|item| item["name"].as_str().expect("name").to_string()).collect()
@@ -75,9 +75,15 @@ fn the_host_matches_the_protocol_description() {
     let methods = rpc["methods"].as_array().expect("methods");
     let gated: Vec<(&str, &str)> = methods
         .iter()
+        .filter(|method| method["experimental"].is_null())
         .filter_map(|method| Some((method["name"].as_str()?, method["permission"].as_str()?)))
         .collect();
     assert_eq!(gated, METHODS);
+    let experimental: Vec<(&str, &str, &str)> = methods
+        .iter()
+        .filter_map(|method| Some((method["name"].as_str()?, method["permission"].as_str()?, method["experimental"].as_str()?)))
+        .collect();
+    assert_eq!(experimental, EXPERIMENTAL_METHODS);
     let open: Vec<&str> = methods.iter().filter(|method| method["permission"].is_null()).filter_map(|method| method["name"].as_str()).collect();
     assert_eq!(
         open,

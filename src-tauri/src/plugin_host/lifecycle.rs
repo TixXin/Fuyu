@@ -282,7 +282,7 @@ fn tick() {
                 }
             }
             let Some(activation) = state.runnable.get(id) else { continue };
-            if !activation.is_eager() && is_idle(&supervisor.idle_state(), activation, views::any_visible(id)) {
+            if !activation.is_eager() && is_idle(&supervisor.idle_state(), activation, views::any_visible(id) || super::windows::has_any(id)) {
                 idle.push(id.clone());
             }
         }

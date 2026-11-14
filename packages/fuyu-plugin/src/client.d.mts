@@ -317,6 +317,86 @@ export interface Plugin {
     add(paths: string[]): Promise<{ items: Record<string, unknown>[] }>;
     remove(ids: string[]): Promise<{ items: Record<string, unknown>[] }>;
   };
+  /**
+   * Windows of the plugin's own, outside the island. Experimental: list "windows" in
+   * `experimentalApis` and `permissions`, and load the plugin in development mode; Windows only.
+   */
+  windows: {
+    /** A panel can be created visible, shown or focused only within 15 s of the user using the plugin. */
+    create(id: string, options: WindowOptions & { kind: WindowKind; entry: string; visible?: boolean }): Promise<WindowInfo>;
+    update(id: string, changes: WindowOptions): Promise<WindowInfo>;
+    show(id: string): Promise<{ visible: boolean; focused: boolean }>;
+    hide(id: string): Promise<unknown>;
+    /** Panels only; `focused` is false when Windows kept another program in front. */
+    focus(id: string): Promise<{ visible: boolean; focused: boolean }>;
+    close(id: string): Promise<unknown>;
+    list(): Promise<WindowInfo[]>;
+    /** `delivered` is false until the page has loaded. */
+    postMessage(id: string, message: unknown): Promise<{ delivered: boolean }>;
+    /** Messages the window's page sends with `acquireFuyuApi().postMessage`. */
+    onMessage(id: string, handler: Handler<unknown>): Off;
+    /** The user moved or resized the window, its page called resize(), or the island moved it back onto a screen. */
+    onBounds(id: string, handler: Handler<{ id: string; bounds: WindowBounds; screen: string | null }>): Off;
+    onFocused(id: string, handler: Handler<boolean>): Off;
+    /** The island hid a panel: "escape" or "blur" (hideOnBlur). */
+    onHidden(id: string, handler: Handler<string>): Off;
+    /** "user", "page", "hidden" (the user hid the plugin's windows) or "failed". */
+    onClosed(id: string, handler: Handler<string>): Off;
+  };
+  screens: {
+    list(): Promise<ScreenInfo[]>;
+    onChanged(handler: Handler<ScreenInfo[]>): Off;
+  };
+}
+
+export type WindowKind = "panel" | "widget";
+
+/** Physical screen pixels; for a panel the whole window including the island's title bar. */
+export interface WindowBounds {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+export interface WindowOptions {
+  bounds?: WindowBounds;
+  /** An id from screens.list: where to center the window when `bounds` is not given. */
+  screen?: string;
+  layer?: "desktop" | "normal" | "topmost";
+  /** 0.2-1. */
+  opacity?: number;
+  title?: string;
+  resizable?: boolean;
+  minSize?: { width: number; height: number };
+  maxSize?: { width: number; height: number } | null;
+  clickThrough?: boolean;
+  /** Panels only. */
+  hideOnBlur?: boolean;
+}
+
+export interface WindowInfo {
+  id: string;
+  kind: WindowKind;
+  entry: string;
+  visible: boolean;
+  focused: boolean;
+  bounds: WindowBounds;
+  screen: string | null;
+  layer: "desktop" | "normal" | "topmost";
+  opacity: number;
+  clickThrough: boolean;
+  resizable: boolean;
+  hideOnBlur: boolean;
+  title: string | null;
+}
+
+export interface ScreenInfo {
+  id: string;
+  bounds: WindowBounds;
+  workArea: WindowBounds;
+  scale: number;
+  primary: boolean;
 }
 
 export function createPlugin(options?: CreatePluginOptions): Plugin;

@@ -314,6 +314,19 @@ pub fn set_plugin_notifications_muted(id: String, muted: bool) -> Result<Plugins
 }
 
 #[tauri::command]
+pub fn set_plugin_window_rules(app: tauri::AppHandle, id: String, rules: super::store::WindowRules) -> Result<PluginsSnapshot, String> {
+    update_state(|state, installed| {
+        if !installed.iter().any(|plugin| plugin.folder == id && !plugin.builtin) {
+            return Err("Plugin not found.".into());
+        }
+        state.plugins.entry(id.clone()).or_default().window_rules = rules;
+        Ok(())
+    })?;
+    super::windows::apply_rules(&app, &id);
+    snapshot()
+}
+
+#[tauri::command]
 pub fn set_plugin_memory_limit(id: String, megabytes: u32) -> Result<PluginsSnapshot, String> {
     if !super::lifecycle::MEMORY_LIMIT_CHOICES_MB.contains(&megabytes) {
         return Err(format!("A memory limit is one of {:?} MB.", super::lifecycle::MEMORY_LIMIT_CHOICES_MB));

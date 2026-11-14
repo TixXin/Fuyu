@@ -1,4 +1,5 @@
 import { eventPermissions, methodPermissions } from "../schema.mjs";
+import { windowMethod } from "./windows.mjs";
 
 export const METHOD_NOT_FOUND = -32601;
 export const PERMISSION_DENIED = -32001;
@@ -378,6 +379,10 @@ export function answer(host, method, params) {
   }
   const permission = methodPermissions().get(method);
   if (!permission) throw new RpcError(METHOD_NOT_FOUND, `Unknown method "${method}".`);
+  if (method.startsWith("window.") || method === "screens.list") {
+    host.checkPermission(permission);
+    return windowMethod(host, method, params);
+  }
   host.checkPermission(permission);
   if (method.startsWith("todos.")) return todosMethod(host, method, params);
   if (method === "island.notify") return notify(host, params);

@@ -24,6 +24,14 @@ pub(super) fn note_delivery(plugin_id: &str, method: &str) {
     }
 }
 
+pub(super) fn note_user_action(plugin_id: &str) {
+    lock(last_actions()).insert(plugin_id.to_string(), Instant::now());
+}
+
+pub(super) fn recently_used(plugin_id: &str) -> bool {
+    may_open(lock(last_actions()).get(plugin_id).copied(), Instant::now())
+}
+
 pub(super) fn may_open(last: Option<Instant>, now: Instant) -> bool {
     last.is_some_and(|last| now.saturating_duration_since(last) <= OPEN_WINDOW)
 }

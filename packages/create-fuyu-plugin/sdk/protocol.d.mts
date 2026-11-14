@@ -3,15 +3,15 @@
 /** Plugin API versions the island supports: 1 to 2. */
 export type ApiVersion = 1 | 2;
 export type Capability = "events" | "notifications" | "storage" | "secrets" | "views" | "status" | "webview" | "permissions" | "openView" | "statusCells" | "notifyStyle" | "notifyControls" | "statusBatteries" | "statusPie";
-export type Permission = "todos:read" | "todos:write" | "notes:read" | "notes:write" | "agent-status:read" | "agent-status:write" | "island:notify" | "secrets" | "clipboard:read" | "messages:read" | "media:read" | "media:control" | "shelf:read" | "shelf:write";
+export type Permission = "todos:read" | "todos:write" | "notes:read" | "notes:write" | "agent-status:read" | "agent-status:write" | "island:notify" | "secrets" | "clipboard:read" | "messages:read" | "media:read" | "media:control" | "shelf:read" | "shelf:write" | "windows";
 /** Confirmed by the user on the island the first time they are used. */
 export type SensitivePermission = "clipboard:read" | "messages:read" | "media:read" | "shelf:read" | "shelf:write";
 /** Requests a plugin sends to the island. */
-export type HostMethod = "host.info" | "settings.get" | "settings.set" | "ui.setInfo" | "events.subscribe" | "events.unsubscribe" | "view.update" | "webview.postMessage" | "view.patch" | "status.update" | "storage.get" | "storage.set" | "storage.delete" | "storage.keys" | "permissions.request" | "host.keepAlive" | "island.openView" | "todos.list" | "todos.days" | "todos.add" | "todos.update" | "todos.remove" | "note.get" | "note.set" | "agentStatus.report" | "agentStatus.clear" | "island.notify" | "secrets.get" | "secrets.set" | "secrets.delete" | "clipboard.history" | "messages.list" | "media.nowPlaying" | "media.cover" | "media.playPause" | "media.next" | "media.previous" | "media.seek" | "media.setVolume" | "media.toggleShuffle" | "media.cycleRepeat" | "shelf.list" | "shelf.add" | "shelf.remove";
+export type HostMethod = "host.info" | "settings.get" | "settings.set" | "ui.setInfo" | "events.subscribe" | "events.unsubscribe" | "view.update" | "webview.postMessage" | "view.patch" | "status.update" | "storage.get" | "storage.set" | "storage.delete" | "storage.keys" | "permissions.request" | "host.keepAlive" | "island.openView" | "todos.list" | "todos.days" | "todos.add" | "todos.update" | "todos.remove" | "note.get" | "note.set" | "agentStatus.report" | "agentStatus.clear" | "island.notify" | "secrets.get" | "secrets.set" | "secrets.delete" | "clipboard.history" | "messages.list" | "media.nowPlaying" | "media.cover" | "media.playPause" | "media.next" | "media.previous" | "media.seek" | "media.setVolume" | "media.toggleShuffle" | "media.cycleRepeat" | "shelf.list" | "shelf.add" | "shelf.remove" | "window.create" | "window.update" | "window.show" | "window.hide" | "window.focus" | "window.close" | "window.list" | "window.postMessage" | "screens.list";
 /** Events for events.subscribe. */
 export type PluginEventName = "todos.changed" | "note.changed" | "agentStatus.changed" | "island.expanded" | "island.collapsed" | "app.locale.changed" | "clipboard.changed" | "messages.received" | "media.changed" | "shelf.changed" | "system.locked" | "system.unlocked" | "system.suspended" | "system.resumed" | "system.idle" | "system.active";
 /** Notifications the island sends to the plugin. */
-export type IslandNotification = "initialize" | "command" | "settings.changed" | "event" | "notification.action" | "uri" | "view.visible" | "view.action" | "view.submit" | "view.search" | "webview.message" | "shutdown";
+export type IslandNotification = "initialize" | "command" | "settings.changed" | "event" | "notification.action" | "uri" | "view.visible" | "view.action" | "view.submit" | "view.search" | "webview.message" | "window.message" | "window.bounds" | "window.focused" | "window.hidden" | "window.closed" | "screens.changed" | "shutdown";
 
 /** The permission each host method needs (null: none). */
 export interface MethodPermissions {
@@ -59,4 +59,13 @@ export interface MethodPermissions {
   "shelf.list": "shelf:read";
   "shelf.add": "shelf:write";
   "shelf.remove": "shelf:write";
+  "window.create": "windows";
+  "window.update": "windows";
+  "window.show": "windows";
+  "window.hide": "windows";
+  "window.focus": "windows";
+  "window.close": "windows";
+  "window.list": "windows";
+  "window.postMessage": "windows";
+  "screens.list": "windows";
 }
