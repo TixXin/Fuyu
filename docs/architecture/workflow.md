@@ -15,7 +15,7 @@
 
 1. **所有会话都在主工作区、本地 `main` 上工作。** 用户的 `pnpm tauri dev` 也在这里，改动马上就能看到。不开 worktree，不切分支（切分支会冲掉别的会话正在改的文件）。
 2. **只提交自己的文件**：`git add <具体文件>` 或 `git commit -- <文件>`，不用 `git add -A` / `git add .`，别的会话还没提交的改动不要带上。`.githooks/pre-commit` 把关：在 `main` 上不带文件名的 `git commit`（含 `-a`）会被拒绝，合并、cherry-pick、rebase 过程中的提交除外；确实要提交整个暂存区时设 `FUYU_COMMIT_WHOLE_INDEX=1`。两个会话不要同时改同一个文件：认领任务时写 `--scope`，`pnpm tasks conflicts` 能查出和别人声明的范围重叠的文件。
-3. **攒着提 PR**，不是一个小改动一个 PR。下面任一条满足时 `pnpm mq:land --body <文件>`，不用问用户：
+3. **攒着提 PR**，不是一个小改动一个 PR。下面任一条满足时 `pnpm mq:land --yes --body <文件>`，不用问用户：
    - 一个任务做完（`pnpm tasks done <编号> --commit "<提交标题>"`，和功能改动在同一个提交里）；
    - 本地没推的提交有 5 个以上，或最早的一个超过 6 小时（`pnpm mq:pending` 会说）；
    - 另一台机器或协作者要用到这些改动、要发版、或者用户说「推一下」。
@@ -24,6 +24,8 @@
 4. land 之后在后台 `pnpm mq:wait`：CI 的 `check` 通过、GitHub 合入后，它把本地 `main` 跟上 `origin/main`。PR 合入才算完成，CI 没过、冲突都不算。
 
 ### `pnpm mq:land` 做了什么
+
+land 会推送、开 PR 并开启自动合并，所以要写 `--yes` 才执行（2026-11-14 起，用户定）：不带参数或带 `--help` / `-h` 只显示用法；带了别的参数却没写 `--yes`，或写了不认识的参数，报错并显示用法，什么都不推。`node scripts/mq/mq.mjs` 不带命令、任何命令带 `--help` 也只显示用法。
 
 1. `git fetch origin main`；本地还没包含 `origin/main` 时 `git merge --no-edit origin/main`。**用 merge，不用 rebase**：rebase 要求工作区干净，别的会话正在改的文件会挡住它，而且会改写别的会话已经看到的提交。合并被别的会话没提交的文件挡住、两边的提交本身不冲突时，land 改在仓库内部合并（`git merge-tree` 加 `git commit-tree`），把那个合并提交推上去；工作区、索引和本地 `main` 都不动，本地 `main` 等 PR 合入、那些文件提交后由 `mq:wait` / `mq:sync` 跟上（F34）。两边的提交真的冲突时撤回这次合并、停下，自己 `git merge origin/main` 解决后再 land。合进来的提交改了 `pnpm-lock.yaml` 时先 `pnpm install`。
 2. 把 `HEAD` 推到 `land/<GitHub 用户名>/<机器名>-<分支名>`（在 `main` 上就是 `…-main`），pre-push 钩子跑 `scripts/land-check.mjs --light`：Claude 署名行、已完成任务的提交记录、只改文档或版本号时的轻量检查。工作区里没提交的文件不会被推上去，land 会提一句有几个。
@@ -34,7 +36,7 @@
 
 不在 `main` 上、在自己分支上的协作者也可以用 `pnpm mq:land`，做法一样。
 
-### 只带几个提交：`pnpm mq:land --only <提交号…>`
+### 只带几个提交：`pnpm mq:land --yes --only <提交号…>`
 
 一批里别人的大改动还在等 CI（或者在另一个平台上没过），自己有独立的小改动想先合入时用（F36）。只适合不依赖别的未推提交的改动：文档、任务文件、独立的小修复。
 
