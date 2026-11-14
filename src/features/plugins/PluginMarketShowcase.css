@@ -27,13 +27,8 @@
 
 .plugin-market__group--updates {
   padding: 12px;
-  background: color-mix(in srgb, var(--color-accent) 7%, transparent);
-  border: 1px solid color-mix(in srgb, var(--color-accent) 26%, transparent);
+  border: 1px solid var(--color-white-a10);
   border-radius: var(--radius-xl);
-}
-
-.plugin-market__group--updates .plugin-market__group-title {
-  color: var(--color-accent);
 }
 
 .plugin-market__spotlight {
@@ -41,11 +36,8 @@
   display: grid;
   gap: 10px;
   padding: 14px;
-  background:
-    radial-gradient(60% 180% at 100% 0%, color-mix(in srgb, var(--warning-text, #f2d27a) 14%, transparent), transparent 62%),
-    radial-gradient(80% 160% at 0% 100%, color-mix(in srgb, var(--plugin-market-glow, #9b7bff) 14%, transparent), transparent 60%),
-    var(--color-white-a04);
-  border: 1px solid color-mix(in srgb, var(--warning-text, #f2d27a) 30%, transparent);
+  background: var(--color-white-a04);
+  border: 1px solid var(--color-white-a10);
   border-radius: var(--radius-xl);
 }
 
@@ -53,13 +45,13 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  color: var(--warning-text, #f2d27a);
+  color: var(--color-text-muted);
   font-size: 12px;
   font-weight: 700;
 }
 
 .plugin-market__spotlight .plugin-market__item {
-  grid-template-columns: 52px minmax(0, 1fr);
+  --plugin-market-icon: 52px;
   padding: 4px;
   background: transparent;
   border: 0;

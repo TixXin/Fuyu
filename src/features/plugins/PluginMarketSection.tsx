@@ -9,6 +9,7 @@ import { sortMarketPlugins, useMarketLikes, type MarketSort } from "./marketLike
 import { groupMarketPlugins } from "./marketGroups";
 import { MarketPluginItem } from "./MarketPluginItem";
 import { PluginIcon } from "./PluginIcon";
+import { RuntimeBanner } from "./RuntimeBanner";
 import { MarketInstallRequest } from "./market-link/MarketInstallRequest";
 import { usePluginMarket } from "./usePluginMarket";
 import "./PluginToolbar.css";
@@ -175,6 +176,7 @@ export function PluginMarketSection({
           ) : null}
         </div>
       ) : null}
+      {market ? <RuntimeBanner plugins={market.plugins} nodeAvailable={market.nodeAvailable} powershellAvailable={market.powershellAvailable} /> : null}
       <div className="plugin-market__list" aria-busy={loading}>
         {market === null && loading ? (
           <>

@@ -75,6 +75,8 @@ export type SettingsPluginsText = {
     memory: (megabytes: string) => string;
     highCpu: string;
     keepAlive: (reason: string) => string;
+    onDemandShort: string;
+    keepAliveShort: string;
   };
   dev: {
     title: string;
@@ -106,6 +108,12 @@ export type SettingsPluginsText = {
   getPowershell: string;
   notForMac: string;
   notForWindows: string;
+  needsNode: string;
+  needsPowershell: string;
+  nodeMissingCount: (count: number) => string;
+  powershellMissingCount: (count: number) => string;
+  describedOnlyShort: string;
+  moreNotes: (count: number) => string;
   detail: {
     open: string;
     back: string;
@@ -152,6 +160,7 @@ export type SettingsPluginsText = {
     official: string;
     publisher: (name: string) => string;
     trustAndInstall: string;
+    confirmTrust: string;
     trustHint: (publisher: string) => string;
     signed: string;
     keyChanged: (keyId: string) => string;
@@ -211,6 +220,8 @@ export type SettingsPluginsText = {
     preReleaseHint: string;
     preReleaseAvailable: (version: string) => string;
     preReleaseOffered: (version: string) => string;
+    autoUpdatedShort: (version: string) => string;
+    preReleaseShort: (version: string) => string;
   };
   ccConnect: {
     title: string;
@@ -406,6 +417,8 @@ export const zhCN: SettingsPluginsText = {
     memory: (megabytes: string) => `内存 ${megabytes} MB`,
     highCpu: "这个插件过去 1 分钟一直占用较多 CPU。",
     keepAlive: (reason: string) => `插件申请常驻：${reason}`,
+    onDemandShort: "按需启动",
+    keepAliveShort: "申请常驻",
   },
   dev: {
     title: "开发者",
@@ -437,6 +450,12 @@ export const zhCN: SettingsPluginsText = {
   getPowershell: "安装 PowerShell",
   notForMac: "这个插件只支持 Windows，在 Mac 上不能运行。",
   notForWindows: "这个插件只支持 macOS，在 Windows 上不能运行。",
+  needsNode: "需要 Node.js",
+  needsPowershell: "需要 PowerShell 7",
+  nodeMissingCount: (count: number) => `这台电脑上没有找到 Node.js，${count} 个插件装好它之后才能运行。`,
+  powershellMissingCount: (count: number) => `这台 Mac 上没有找到 PowerShell 7（pwsh），${count} 个用 PowerShell 写的插件装好它之后才能运行。`,
+  describedOnlyShort: "不运行程序",
+  moreNotes: (count: number) => `还有 ${count} 条`,
   detail: {
     open: "设置",
     back: "关闭",
@@ -500,6 +519,7 @@ export const zhCN: SettingsPluginsText = {
     official: "官方",
     publisher: (name: string) => `发布者 ${name}`,
     trustAndInstall: "信任并安装",
+    confirmTrust: "确认信任并安装",
     signed: "作者已签名",
     keyChanged: (keyId: string) => `这个版本的签名密钥变了（现在是 ${keyId}），和已安装的版本不同。可能是作者换了密钥，也可能是插件仓库被人盗用。确认是作者本人发布的再更新。`,
     signatureDropped: "这个版本没有作者签名，而已安装的版本有。可能是作者停用了签名，也可能是插件仓库被人盗用。确认是作者本人发布的再更新。",
@@ -559,6 +579,8 @@ export const zhCN: SettingsPluginsText = {
     preReleaseHint: "预发布版本是作者还在测试的新版本，可能不稳定。关掉后不会退回旧版本，等正式版比当前版本新时再更新。",
     preReleaseAvailable: (version: string) => `插件市场里有预发布版本 v${version}。`,
     preReleaseOffered: (version: string) => `有预发布版本 v${version}，可在插件设置里选择接收。`,
+    autoUpdatedShort: (version: string) => `已自动更新到 v${version}`,
+    preReleaseShort: (version: string) => `有预发布版 v${version}`,
   },
   ccConnect: {
     title: "找到的 cc-connect",
@@ -793,6 +815,8 @@ export const en: SettingsPluginsText = {
     memory: (megabytes: string) => `Memory ${megabytes} MB`,
     highCpu: "This plugin has used a lot of CPU for the last minute.",
     keepAlive: (reason: string) => `Keeps running: ${reason}`,
+    onDemandShort: "On demand",
+    keepAliveShort: "Keeps running",
   },
   dev: {
     title: "Developer",
@@ -824,6 +848,12 @@ export const en: SettingsPluginsText = {
   getPowershell: "Install PowerShell",
   notForMac: "This plugin is for Windows only and does not run on a Mac.",
   notForWindows: "This plugin is for macOS only and does not run on Windows.",
+  needsNode: "Needs Node.js",
+  needsPowershell: "Needs PowerShell 7",
+  nodeMissingCount: (count: number) => `Node.js was not found on this computer; ${count === 1 ? "1 plugin runs" : `${count} plugins run`} once it is installed.`,
+  powershellMissingCount: (count: number) => `PowerShell 7 (pwsh) was not found on this Mac; ${count === 1 ? "1 PowerShell plugin runs" : `${count} PowerShell plugins run`} once it is installed.`,
+  describedOnlyShort: "Nothing to run",
+  moreNotes: (count: number) => `${count} more`,
   detail: {
     open: "Settings",
     back: "Close",
@@ -887,6 +917,7 @@ export const en: SettingsPluginsText = {
     official: "Official",
     publisher: (name: string) => `Published by ${name}`,
     trustAndInstall: "Trust and install",
+    confirmTrust: "Confirm and install",
     signed: "Signed by author",
     keyChanged: (keyId: string) => `This version is signed with a different key (${keyId}) than the installed one. The author may have changed keys, or the plugin's repository may have been taken over. Update only if you are sure the author published it.`,
     signatureDropped: "This version has no author signature, but the installed one had. The author may have stopped signing, or the plugin's repository may have been taken over. Update only if you are sure the author published it.",
@@ -946,6 +977,8 @@ export const en: SettingsPluginsText = {
     preReleaseHint: "Pre-releases are new versions the author is still testing and may be unstable. Turning this off does not roll back; the plugin updates again once a release is newer than what is installed.",
     preReleaseAvailable: (version: string) => `Pre-release ${version} is in the plugin market. `,
     preReleaseOffered: (version: string) => `Pre-release ${version} is available; you can opt in from the plugin's settings.`,
+    autoUpdatedShort: (version: string) => `Updated to ${version}`,
+    preReleaseShort: (version: string) => `Pre-release ${version}`,
   },
   ccConnect: {
     title: "cc-connect found",
