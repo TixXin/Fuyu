@@ -7,6 +7,7 @@ use imap::{
 use imap_proto::types::StatusAttribute;
 use mailparse::MailHeaderMap;
 use std::{
+    fmt,
     io::{Read, Write},
     net::{Shutdown, TcpStream, ToSocketAddrs},
     sync::{mpsc, Arc, Mutex},
@@ -47,11 +48,17 @@ pub(super) struct MailFailure {
 }
 
 impl MailFailure {
-    pub(super) fn network() -> Self {
+    pub(super) fn sync(step: &str, cause: impl fmt::Display) -> Self {
         Self {
             authentication: false,
-            error: UserError::new("mail.sync", "Could not sync the mailbox; check the network or try again later."),
+            error: UserError::new("mail.sync", "Could not sync the mailbox; check the network or try again later.")
+                .detail(step_detail(step, cause)),
         }
+    }
+
+    fn redact(mut self, secret: &str) -> Self {
+        self.error = self.error.redact(secret);
+        self
     }
 
     pub(super) fn authentication() -> Self {
@@ -60,6 +67,17 @@ impl MailFailure {
             error: UserError::new("mail.imapRefused", "The mailbox refused the connection; check that IMAP is on and enter the authorization code again."),
         }
     }
+}
+
+const MAX_DETAIL: usize = 200;
+
+fn step_detail(step: &str, cause: impl fmt::Display) -> String {
+    let cause = cause.to_string().split_whitespace().collect::<Vec<_>>().join(" ");
+    format!("{step}: {cause}").chars().take(MAX_DETAIL).collect()
+}
+
+fn failed_at<E: fmt::Display>(step: &'static str) -> impl Fn(E) -> MailFailure {
+    move |cause| MailFailure::sync(step, cause)
 }
 
 #[derive(Debug)]
@@ -200,7 +218,7 @@ impl SyncConnection {
         let (mut session, socket) = open_connection(host, email, secret)?;
         self.idle_supported = session
             .capabilities()
-            .map_err(|_| MailFailure::network())?
+            .map_err(failed_at("CAPABILITY"))?
             .has_str("IDLE")
             && !self.idle_rejected;
         let inbox = fetch_inbox_cached(&mut session, self.cached.as_ref())?;
@@ -213,8 +231,12 @@ impl SyncConnection {
 
 pub(super) fn login_failure(error: imap::Error) -> MailFailure {
     match error {
-        imap::Error::No(_) | imap::Error::Bad(_) => MailFailure::authentication(),
-        _ => MailFailure::network(),
+        imap::Error::No(_) | imap::Error::Bad(_) => {
+            let mut failure = MailFailure::authentication();
+            failure.error = failure.error.detail(step_detail("LOGIN", error));
+            failure
+        }
+        _ => MailFailure::sync("LOGIN", error),
     }
 }
 
@@ -231,32 +253,44 @@ fn open_connection(
     email: &str,
     secret: &str,
 ) -> Result<(MailSession, TcpStream), MailFailure> {
+    connect(host, email, secret).map_err(|failure| failure.redact(secret))
+}
+
+fn connect(
+    host: &str,
+    email: &str,
+    secret: &str,
+) -> Result<(MailSession, TcpStream), MailFailure> {
     let (host, port) = super::credentials::server_address(host);
     let mut stream = None;
+    let mut refused = String::from("no address");
     let addresses = (host, port)
         .to_socket_addrs()
-        .map_err(|_| MailFailure::network())?;
+        .map_err(failed_at("DNS"))?;
     for address in addresses {
-        if let Ok(connected) = TcpStream::connect_timeout(&address, Duration::from_secs(10)) {
-            stream = Some(connected);
-            break;
+        match TcpStream::connect_timeout(&address, Duration::from_secs(10)) {
+            Ok(connected) => {
+                stream = Some(connected);
+                break;
+            }
+            Err(error) => refused = error.to_string(),
         }
     }
-    let stream = stream.ok_or_else(MailFailure::network)?;
+    let stream = stream.ok_or_else(|| MailFailure::sync("TCP", refused))?;
     stream
         .set_read_timeout(Some(IO_TIMEOUT))
-        .map_err(|_| MailFailure::network())?;
+        .map_err(failed_at("TCP"))?;
     stream
         .set_write_timeout(Some(IO_TIMEOUT))
-        .map_err(|_| MailFailure::network())?;
-    let interrupt = stream.try_clone().map_err(|_| MailFailure::network())?;
-    let tls = native_tls::TlsConnector::new().map_err(|_| MailFailure::network())?;
+        .map_err(failed_at("TCP"))?;
+    let interrupt = stream.try_clone().map_err(failed_at("TCP"))?;
+    let tls = native_tls::TlsConnector::new().map_err(failed_at("TLS"))?;
     let stream = tls
         .connect(host, stream)
-        .map_err(|_| MailFailure::network())?;
+        .map_err(failed_at("TLS"))?;
     let shared = Arc::new(Mutex::new(stream));
     let mut client = imap::Client::new(BoundedStream(SharedStream(shared.clone())));
-    client.read_greeting().map_err(|_| MailFailure::network())?;
+    client.read_greeting().map_err(failed_at("GREETING"))?;
     let mut session = client
         .login(email, secret)
         .map_err(|(error, _)| login_failure(error))?;
@@ -264,7 +298,7 @@ fn open_connection(
         .capabilities()
         .is_ok_and(|capabilities| capabilities.has_str("ID"))
     {
-        send_client_id(&shared).map_err(|_| MailFailure::network())?;
+        send_client_id(&shared).map_err(failed_at("ID"))?;
     }
     Ok((session, interrupt))
 }
@@ -322,16 +356,16 @@ pub(super) fn fetch_inbox_cached<T: Read + Write>(
 ) -> Result<Inbox, MailFailure> {
     let mailbox = session
         .examine("INBOX")
-        .map_err(|_| MailFailure::network())?;
+        .map_err(failed_at("EXAMINE"))?;
     let validity = mailbox
         .uid_validity
         .filter(|value| *value > 0)
-        .ok_or_else(MailFailure::network)?;
+        .ok_or_else(|| MailFailure::sync("EXAMINE", "no UIDVALIDITY"))?;
     session.take_all_unsolicited().for_each(drop);
     let mut unread_count = match session.status("INBOX", "(UNSEEN)") {
         Ok(status) => status.unseen.map(|count| count as usize),
         Err(imap::Error::MissingStatusResponse) => None,
-        Err(_) => return Err(MailFailure::network()),
+        Err(error) => return Err(MailFailure::sync("STATUS", error)),
     };
     let mut needs_refresh = false;
     drain_mail_updates(
@@ -348,7 +382,7 @@ pub(super) fn fetch_inbox_cached<T: Read + Write>(
             let mut missing = Vec::new();
             let messages = session
                 .fetch(format!("{first}:{}", mailbox.exists), FLAGS_QUERY)
-                .map_err(|_| MailFailure::network())?;
+                .map_err(failed_at("FETCH"))?;
             for message in messages
                 .iter()
                 .filter(|message| (first..=mailbox.exists).contains(&message.message))
@@ -376,7 +410,7 @@ pub(super) fn fetch_inbox_cached<T: Read + Write>(
                     .join(",");
                 let messages = session
                     .uid_fetch(sequence, HEADER_QUERY)
-                    .map_err(|_| MailFailure::network())?;
+                    .map_err(failed_at("UID FETCH"))?;
                 for message in messages.iter() {
                     if let Some(item) = header_message(message, validity) {
                         if missing.contains(&item.uid)
@@ -390,13 +424,13 @@ pub(super) fn fetch_inbox_cached<T: Read + Write>(
                     .iter()
                     .any(|uid| !items.iter().any(|item| item.uid == *uid))
                 {
-                    return Err(MailFailure::network());
+                    return Err(MailFailure::sync("UID FETCH", "requested messages missing"));
                 }
             }
         } else {
             let messages = session
                 .fetch(format!("{first}:{}", mailbox.exists), HEADER_QUERY)
-                .map_err(|_| MailFailure::network())?;
+                .map_err(failed_at("FETCH"))?;
             for message in messages
                 .iter()
                 .filter(|message| (first..=mailbox.exists).contains(&message.message))
@@ -412,7 +446,7 @@ pub(super) fn fetch_inbox_cached<T: Read + Write>(
     items.truncate(MAX_ITEMS as usize);
     let expected = mailbox.exists.min(MAX_ITEMS) as usize;
     if items.len() != expected {
-        return Err(MailFailure::network());
+        return Err(MailFailure::sync("FETCH", format!("{} of {expected} messages", items.len())));
     }
     let high_water = items.iter().map(|item| item.uid).max().unwrap_or(0);
     drain_mail_updates(
@@ -426,7 +460,7 @@ pub(super) fn fetch_inbox_cached<T: Read + Write>(
             validity,
             high_water,
         },
-        unread_count: unread_count.ok_or_else(MailFailure::network)?,
+        unread_count: unread_count.ok_or_else(|| MailFailure::sync("STATUS", "no UNSEEN"))?,
         items,
         needs_refresh,
     })

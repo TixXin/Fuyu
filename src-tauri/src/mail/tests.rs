@@ -205,7 +205,7 @@ fn disconnect_invalidates_inflight_success_and_failure() {
     state.invalidate();
     state.snapshot = MailSnapshot::default();
     assert!(state.accept(0, inbox(1, &[1])).is_none());
-    assert!(state.fail(0, &MailFailure::network()).is_none());
+    assert!(state.fail(0, &MailFailure::sync("TCP", "timed out")).is_none());
     assert_eq!(state.snapshot.status, MailStatus::Disconnected);
     assert!(state.snapshot.items.is_empty());
 }
@@ -214,7 +214,7 @@ fn disconnect_invalidates_inflight_success_and_failure() {
 fn network_errors_keep_data_and_authentication_errors_stop_retries() {
     let mut state = active_state();
     state.accept(0, inbox(1, &[1]));
-    state.fail(0, &MailFailure::network());
+    state.fail(0, &MailFailure::sync("TCP", "timed out"));
     assert_eq!(state.snapshot.unread_count, Some(1));
     assert_eq!(state.snapshot.items.len(), 1);
     assert!(state.next_check.is_some());
@@ -269,6 +269,26 @@ fn server_authentication_rejection_is_actionable_and_redacted() {
     assert!(failure.authentication);
     assert_eq!(failure.error.code(), "mail.imapRefused");
     assert!(!failure.error.to_string().contains("test-secret"));
+    assert!(failure.error.to_string().ends_with("LOGIN: No Response: invalid password"));
+}
+
+#[test]
+fn a_sync_failure_names_the_step_and_what_the_server_said() {
+    let (client, _) = client("* OK ready\r\na1 OK login\r\na2 NO EXAMINE Unsafe Login. Please contact kefu@188.com for help\r\n".into());
+    let mut session = client.login("user@126.com", "test-secret").unwrap();
+    let failure = fetch_inbox(&mut session).err().unwrap();
+    assert!(!failure.authentication);
+    assert_eq!(failure.error.code(), "mail.sync");
+    assert!(failure.error.to_string().ends_with("EXAMINE: No Response: EXAMINE Unsafe Login. Please contact kefu@188.com for help"));
+}
+
+#[test]
+fn a_sync_failure_detail_is_one_short_line() {
+    let failure = MailFailure::sync("FETCH", format!("first\r\nsecond {}", "x".repeat(500)));
+    let text = failure.error.to_string();
+    assert!(text.contains("FETCH: first second x"));
+    assert!(!text.contains('\n'));
+    assert!(text.chars().count() < 300);
 }
 
 #[test]
