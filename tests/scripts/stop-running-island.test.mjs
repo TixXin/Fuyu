@@ -1,16 +1,16 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { debugBuildPids, sideLane } from "../../scripts/stop-running-island.mjs";
+import { debugBuildPids, devLane } from "../../scripts/stop-running-island.mjs";
 
-test("a side lane is a whole number from 1 to 999, like the Rust side reads it", () => {
-  assert.equal(sideLane({}), null);
-  assert.equal(sideLane({ FOCUSD_DEV_LANE: "" }), null);
-  assert.equal(sideLane({ FOCUSD_DEV_LANE: "1" }), 1);
-  assert.equal(sideLane({ FOCUSD_DEV_LANE: "999" }), 999);
-  assert.equal(sideLane({ FOCUSD_DEV_LANE: "0" }), null);
-  assert.equal(sideLane({ FOCUSD_DEV_LANE: "1000" }), null);
-  assert.equal(sideLane({ FOCUSD_DEV_LANE: "one" }), null);
-  assert.equal(sideLane({ FOCUSD_DEV_LANE: "1.5" }), null);
+test("a development build is lane 1 unless it shares the installed app's identity, like the Rust side reads it", () => {
+  assert.equal(devLane({}), 1);
+  assert.equal(devLane({ FOCUSD_DEV_LANE: "" }), 1);
+  assert.equal(devLane({ FOCUSD_DEV_LANE: "7" }), 7);
+  assert.equal(devLane({ FOCUSD_DEV_LANE: " 999 " }), 999);
+  for (const odd of ["0", "1000", "one", "1.5"]) assert.equal(devLane({ FOCUSD_DEV_LANE: odd }), 1, odd);
+  assert.equal(devLane({ FUYU_DEV_SHARED_IDENTITY: "1" }), null);
+  assert.equal(devLane({ FUYU_DEV_SHARED_IDENTITY: "1", FOCUSD_DEV_LANE: "7" }), null);
+  assert.equal(devLane({ FUYU_DEV_SHARED_IDENTITY: "0" }), 1);
 });
 
 test("on Windows only the island built in this checkout's debug folder is stopped", () => {

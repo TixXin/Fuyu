@@ -12,7 +12,7 @@ WebView2 自己的数据（`%LOCALAPPDATA%\com.tixxin.fuyu\EBWebView`，localSto
 2. 指针文件 `%APPDATA%\com.tixxin.fuyu\home.json` 里的 `{ "home": "<文件夹>" }`（D30.4 在设置里改家目录时写它；指针文件本身不放进家目录）；
 3. `%USERPROFILE%\.fuyu`。
 
-设了 `FOCUSD_DEV_LANE` 的调试版（`pnpm dev:side` 启动的、和正式版并排跑的开发版，见 F38）不参与，始终用它自己的 `%APPDATA%\com.tixxin.fuyu.lane-<N>`，碰不到用户的数据。
+开发版（调试构建，默认身份 `com.tixxin.fuyu.lane-1`，见 workflow.md「开发版和正式版同时开」）不参与，始终用它自己的 `%APPDATA%\com.tixxin.fuyu.lane-<N>`，里面是第一次启动时从这里复制的一份；它只读地读这里的 Agent 钩子产物（`home_dir::agent_home`），不往这里写。设了 `FUYU_DEV_SHARED_IDENTITY=1` 的调试版和正式版一样按上面的顺序找。
 
 Rust 里取目录一律用 `home_dir::fuyu_home(app.path())`，不直接用 `app_data_dir()`。
 

@@ -50,7 +50,7 @@ pub(super) fn waiting_notifications(app_dir: &Path) -> WaitingNotifications {
         log.refresh_all(app_dir);
         log.sessions.iter().cloned().collect()
     };
-    let saved = saved_notifications(&app_dir.join(NOTIFICATIONS_DIR), current_unix_millis(), true);
+    let saved = saved_notifications(&app_dir.join(NOTIFICATIONS_DIR), current_unix_millis(), super::may_change_hook_files());
     for (session_id, notified_at) in saved.waiting {
         let known = waiting.entry(session_id).or_insert(notified_at);
         *known = (*known).max(notified_at);
@@ -163,7 +163,7 @@ pub(super) fn compacting_sessions(app_dir: &Path, now: i64) -> HashMap<String, i
             .cloned()
             .collect()
     };
-    let saved = saved_notifications(&app_dir.join(NOTIFICATIONS_DIR), now, true);
+    let saved = saved_notifications(&app_dir.join(NOTIFICATIONS_DIR), now, super::may_change_hook_files());
     compacting.retain(|session_id, _| !saved.sessions.contains(session_id));
     compacting.extend(saved.compacting);
     compacting

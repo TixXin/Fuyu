@@ -29,6 +29,11 @@ struct Saved {
 
 pub(super) fn sessions(app_dir: &Path, now: i64, window_ms: i64) -> Vec<AgentSessionSummary> {
     let mut newest: HashMap<String, Saved> = HashMap::new();
+    let discard = |path: &Path| {
+        if super::may_change_hook_files() {
+            let _ = fs::remove_file(path);
+        }
+    };
     for entry in fs::read_dir(app_dir.join(SAVED_DIR)).into_iter().flatten().flatten() {
         let path = entry.path();
         let name = entry.file_name().to_string_lossy().to_string();
@@ -41,7 +46,7 @@ pub(super) fn sessions(app_dir: &Path, now: i64, window_ms: i64) -> Vec<AgentSes
             continue;
         };
         if now - at > MAX_AGE_MS {
-            let _ = fs::remove_file(&path);
+            discard(&path);
             continue;
         }
         let Some(input) = fs::read_to_string(&path)
@@ -54,12 +59,10 @@ pub(super) fn sessions(app_dir: &Path, now: i64, window_ms: i64) -> Vec<AgentSes
             continue;
         };
         match newest.get(&id) {
-            Some(known) if known.at > at => {
-                let _ = fs::remove_file(&path);
-            }
+            Some(known) if known.at > at => discard(&path),
             _ => {
                 if let Some(older) = newest.insert(id, Saved { at, running, input, path }) {
-                    let _ = fs::remove_file(older.path);
+                    discard(&older.path);
                 }
             }
         }

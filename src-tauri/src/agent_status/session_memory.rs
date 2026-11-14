@@ -28,7 +28,7 @@ type Sessions = HashMap<String, SeenSession>;
 static STORE: Mutex<Option<Sessions>> = Mutex::new(None);
 
 fn load(app_dir: &Path) -> Sessions {
-    fs::read_to_string(app_dir.join(FILE_NAME))
+    fs::read_to_string(super::own_dir(app_dir).join(FILE_NAME))
         .ok()
         .and_then(|text| serde_json::from_str(&text).ok())
         .unwrap_or_default()
@@ -38,6 +38,7 @@ fn save(app_dir: &Path, sessions: &Sessions) {
     let Ok(text) = serde_json::to_string(sessions) else {
         return;
     };
+    let app_dir = super::own_dir(app_dir);
     let path = app_dir.join(FILE_NAME);
     let temporary = app_dir.join(format!("{FILE_NAME}.tmp"));
     if fs::write(&temporary, text).is_ok() {

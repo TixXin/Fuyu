@@ -4,6 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { islandHome } from "../../packages/fuyu-plugin/src/dev.mjs";
+import { devLane } from "../stop-running-island.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.ISLAND_LAB_PORT ?? 5199);
@@ -21,7 +22,9 @@ export function configDirs(env = process.env, home = os.homedir()) {
   const appData = env.APPDATA ?? (process.platform === "darwin"
     ? path.join(home, "Library", "Application Support")
     : path.join(home, "AppData", "Roaming"));
-  return [islandHome(env, home), path.join(appData, APP_ID)];
+  const lane = devLane(env);
+  const own = lane === null ? [] : [path.join(appData, `${APP_ID}.lane-${lane}`)];
+  return [...own, islandHome(env, home), path.join(appData, APP_ID)];
 }
 
 function readConfig(name) {
