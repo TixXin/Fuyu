@@ -1,6 +1,6 @@
 import { useEffect, useState, type CSSProperties } from "react";
 import { useReducedMotion } from "../../features/center-pattern/useReducedMotion";
-import { collapsedThemeColors, resolveThemeColors } from "../../features/appearance/themeMode";
+import { resolveThemeColors, surfaceThemeColors } from "../../features/appearance/themeMode";
 import type { IslandSettings } from "../../features/appearance/types";
 import { useSystemDark } from "../../features/appearance/useResolvedTheme";
 import { useTranslation } from "../../i18n";
@@ -29,7 +29,7 @@ export function OverviewStage({ settings, spot, playing }: { settings: IslandSet
 
   const shown = spot ?? (playing.length > 0 ? playing[turn % playing.length] : null);
   const Icon = shown ? CATEGORY_ICONS[shown === "messages" ? "messages" : FEATURE_PAGES[shown][0]] : null;
-  const colors = collapsedThemeColors(resolveThemeColors(settings, systemDark));
+  const colors = surfaceThemeColors(resolveThemeColors(settings, systemDark), "collapsed");
   const island = {
     "--stage-fill": colors.islandBackgroundColor,
     "--stage-text": colors.taskTextColor,

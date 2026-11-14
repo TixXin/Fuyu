@@ -23,6 +23,12 @@
     background 140ms ease;
 }
 
+.settings-choice--multi .settings-choice__option {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .settings-choice__option:hover:not(:disabled) {
   color: var(--color-text);
 }

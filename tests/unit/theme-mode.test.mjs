@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { collapsedThemeColors, resolveThemeColors, THEME_COLORS, themeColors, withThemeColors } from "../../src/features/appearance/themeMode.ts";
+import { resolveThemeColors, surfaceThemeColors, surfaceTone, THEME_COLORS, themeColors, withThemeColors } from "../../src/features/appearance/themeMode.ts";
 import { DEFAULT_SETTINGS, normalizeSettings } from "../../src/features/appearance/settings.ts";
 import { parseTheme } from "../../src/features/appearance/theme.ts";
 import { isLightIsland } from "../../src/utils/color.ts";
@@ -43,12 +43,26 @@ test("a theme file from before the two sets puts its colours into the set they l
 test("a light island can stay dark while collapsed, in the dark set's colours (C33.2)", () => {
   const tuned = withThemeColors({ ...DEFAULT_SETTINGS, collapsedDark: true }, "dark", { ...THEME_COLORS.dark, islandBackgroundColor: "#101820" });
   const light = resolveThemeColors({ ...tuned, themeMode: "light" }, false);
-  assert.equal(collapsedThemeColors(light).islandBackgroundColor, "#101820");
-  assert.equal(collapsedThemeColors({ ...light, collapsedDark: false }).islandBackgroundColor, THEME_COLORS.light.islandBackgroundColor);
+  assert.equal(surfaceThemeColors(light, "collapsed").islandBackgroundColor, "#101820");
+  assert.equal(surfaceThemeColors({ ...light, collapsedDark: false }, "collapsed").islandBackgroundColor, THEME_COLORS.light.islandBackgroundColor);
   const dark = resolveThemeColors({ ...tuned, themeMode: "dark" }, false);
-  assert.equal(collapsedThemeColors(dark), dark);
+  assert.equal(surfaceThemeColors(dark, "collapsed"), dark);
   assert.equal(DEFAULT_SETTINGS.collapsedDark, false);
   assert.equal(normalizeSettings({ opacity: 95 }).collapsedDark, false, "older settings keep a picked light colour when collapsed");
+});
+
+test("the panel and the other windows can each stay dark too, on their own", () => {
+  const tuned = withThemeColors(DEFAULT_SETTINGS, "dark", { ...THEME_COLORS.dark, islandBackgroundColor: "#101820" });
+  const light = resolveThemeColors({ ...tuned, themeMode: "light", panelDark: true }, false);
+  assert.equal(surfaceThemeColors(light, "panel").islandBackgroundColor, "#101820");
+  assert.equal(surfaceThemeColors(light, "collapsed"), light, "the collapsed island keeps the light set");
+  assert.equal(surfaceTone(light, false, "windows"), "light");
+  assert.equal(surfaceTone({ ...light, windowsDark: true }, false, "windows"), "dark");
+  assert.equal(surfaceTone({ ...light, themeMode: "system" }, true, "windows"), "dark");
+  assert.equal(DEFAULT_SETTINGS.panelDark, false);
+  assert.equal(DEFAULT_SETTINGS.windowsDark, false);
+  const older = normalizeSettings({ collapsedDark: true, panelDark: "yes" });
+  assert.deepEqual([older.collapsedDark, older.panelDark, older.windowsDark], [true, false, false], "settings saved before this keep only the collapsed island dark");
 });
 
 test("the accent ships as it was, and can follow Windows or be picked (C33.5)", async () => {

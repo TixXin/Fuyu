@@ -377,13 +377,23 @@
       "page": "theme",
       "zh-CN": {
         "group": "浅色和深色",
-        "title": "收起时保持深色",
-        "description": "岛是浅色时，收起的小岛仍然是黑色，和屏幕顶边、刘海融在一起；展开后才变浅色。"
+        "title": "保持深色",
+        "description": "配色是浅色时，选中的部分仍然用深色那一套。独立窗口指翻译和剪贴板窗口，设置窗口跟随配色。 现在是深色，换成浅色后才看得出区别。",
+        "options": [
+          "岛屿",
+          "面板",
+          "独立窗口"
+        ]
       },
       "en": {
         "group": "Light and dark",
-        "title": "Stay dark when collapsed",
-        "description": "With a light island, the collapsed island stays black so it blends into the screen's top edge and notch; it turns light when it opens."
+        "title": "Keep dark",
+        "description": "With light colors, the selected parts still use the dark set. Other windows are the translation and clipboard windows; the settings window follows the colors. Colors are dark now; this shows once they turn light.",
+        "options": [
+          "Island",
+          "Panel",
+          "Other windows"
+        ]
       }
     },
     {
