@@ -1,11 +1,12 @@
 import { SettingsChoiceCards } from "../../components/settings/SettingsChoiceCards";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsRow } from "../../components/settings/SettingsRow";
-import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
+import { SettingsMultiChoice } from "../../components/settings/SettingsMultiChoice";
 import { useTranslation } from "../../i18n";
 import { AccentSettingsRow } from "./AccentSettingsRow";
 import { IslandGlyph } from "./IslandGlyph";
-import { THEME_MODES, type ThemeTone } from "./themeMode";
+import { activeTone, DARK_SURFACE_KEYS, DARK_SURFACES, THEME_MODES, type ThemeTone } from "./themeMode";
+import { useSystemDark } from "./useResolvedTheme";
 import type { IslandSettings, ThemeMode } from "./types";
 import { isMacOS } from "../../lib/platform";
 
@@ -15,6 +16,7 @@ export function ThemeModeSection({ settings, onEditingChange, onSettingsChange }
   onSettingsChange: (settings: IslandSettings) => void;
 }) {
   const text = useTranslation().settings.colors;
+  const dark = activeTone(settings.themeMode, useSystemDark()) === "dark";
   return (
     <SettingsGroup title={text.modeTitle}>
       <SettingsRow title={text.mode} description={isMacOS ? text.modeHintMac : text.modeHint}>
@@ -28,11 +30,17 @@ export function ThemeModeSection({ settings, onEditingChange, onSettingsChange }
           }}
         />
       </SettingsRow>
-      <SettingsToggleRow
-        title={text.collapsedDark}
-        description={text.collapsedDarkHint}
-        checked={settings.collapsedDark}
-        onChange={(collapsedDark) => onSettingsChange({ ...settings, collapsedDark })}
+      <SettingsRow
+        title={text.stayDark}
+        description={dark ? `${text.stayDarkHint} ${text.stayDarkNow}` : text.stayDarkHint}
+        control={
+          <SettingsMultiChoice
+            values={DARK_SURFACES.filter((surface) => settings[DARK_SURFACE_KEYS[surface]])}
+            ariaLabel={text.stayDark}
+            options={DARK_SURFACES.map((surface) => ({ value: surface, label: text.stayDarkSurfaces[surface] }))}
+            onToggle={(surface, selected) => onSettingsChange({ ...settings, [DARK_SURFACE_KEYS[surface]]: selected })}
+          />
+        }
       />
       <AccentSettingsRow settings={settings} onSettingsChange={onSettingsChange} />
     </SettingsGroup>

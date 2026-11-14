@@ -52,6 +52,8 @@ export type IslandSettings = CalendarSettingValues & {
   lightTextColor: string;
   lightPulseColor: string;
   collapsedDark: boolean;
+  panelDark: boolean;
+  windowsDark: boolean;
   accentMode: AccentMode;
   accentColor: string;
   maxPanelHeight: number;

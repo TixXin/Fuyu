@@ -12,6 +12,8 @@ export { DEFAULT_SETTINGS } from "./settingsDefaults.ts";
 export const THEME_SETTING_KEYS = [
   "themeMode",
   "collapsedDark",
+  "panelDark",
+  "windowsDark",
   "accentMode",
   "accentColor",
   "darkBackgroundColor",
