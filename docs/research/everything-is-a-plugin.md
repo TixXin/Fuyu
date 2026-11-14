@@ -45,6 +45,7 @@ Web 端的 `ctx.slots` 是类型化的 React 组合系统：插槽由拥有那�
 ### 安装、市场和信任
 
 - 插件以 npm 组合包分发，`plugin-manager` 用 pnpm 安装、启停、更新；检查平台声明、`engines.dsh` 版本兼容，安装失败自动回滚 [6]。有插件市场服务 `ctx.pluginMarket` [8]。
+- 市场是去中心化的：`ctx.pluginMarket` 读用户自己添加的索引地址，默认一个都没有；索引只列包名、版本和安装方式（npm 或固定到提交的 git），详细介绍从 npm CDN 或 git 仓库读 [11]。插件本身发在 npm 或 git 上，官方可选组合包按需从 npm 装，版本跟着 dsh。文档里没看到索引签名、作者签名或审核（2026-11-14）。
 - 信任：工具操作要 `danger-full-access` 或单次审批；**已安装的宿主代码在宿主进程内运行，不受工作区沙箱限制**；依赖构建脚本要单独批准 [6]。安全说明里写明不可信插件可能损坏电脑、泄露数据 [7]。
 
 ### Cordis 本身
@@ -67,3 +68,4 @@ VS Code 也被叫作「万物皆插件」，但做法不同：插件在单独的
 8. 能力接缝图：https://github.com/deepseek-ai/deepseek-harness/blob/main/docs/capability-seams.zh.md
 9. npm 包 cordis：https://www.npmjs.com/package/cordis
 10. dsh 的 vendor 说明：https://github.com/deepseek-ai/deepseek-harness/blob/main/vendor/README.md
+11. 插件市场：https://github.com/deepseek-ai/deepseek-harness/blob/main/packages/boot/plugin-market/README.zh.md
