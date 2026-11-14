@@ -2,6 +2,7 @@ import * as actions from "./clipboardActions.ts";
 
 export type ClipboardText = {
   title: string;
+  window: { title: string; pin: string; unpin: string; close: string };
   favoriteCount: (count: number) => string;
   expandShortcut: string;
   clear: string;
@@ -86,6 +87,7 @@ export type ClipboardText = {
 
 export const zhCN: ClipboardText = {
   title: "剪贴板历史",
+  window: { title: "浮屿 - 剪贴板", pin: "固定窗口（失焦不隐藏，粘贴后不关闭）", unpin: "取消固定", close: "关闭" },
   favoriteCount: (count) => `${count} 条收藏`,
   expandShortcut: "展开快捷键",
   clear: "清空",
@@ -170,6 +172,7 @@ export const zhCN: ClipboardText = {
 
 export const en: ClipboardText = {
   title: "Clipboard history",
+  window: { title: "Fuyu - Clipboard", pin: "Pin the window (stays open on blur and after pasting)", unpin: "Unpin", close: "Close" },
   favoriteCount: (count) => (count === 1 ? "1 favorite" : `${count} favorites`),
   expandShortcut: "Expand shortcut",
   clear: "Clear",

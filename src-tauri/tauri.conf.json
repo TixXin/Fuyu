@@ -45,10 +45,10 @@
       },
       {
         "label": "clipboard",
-        "title": "浮屿 剪贴板",
+        "title": "浮屿 - 剪贴板",
         "url": "index.html?window=clipboard",
         "width": 380,
-        "height": 527,
+        "height": 559,
         "acceptFirstMouse": true,
         "decorations": false,
         "transparent": true,

@@ -5,10 +5,12 @@ use super::{CopyAs, PopupLayout};
 pub(crate) const WINDOW_LABEL: &str = "clipboard";
 pub(super) const OPENED_EVENT: &str = "clipboard-popup-opened";
 pub(super) const POINTER_GAP: i32 = 12;
+pub(super) const TITLE_BAR_HEIGHT: f64 = 32.0;
 pub(super) fn popup_size(layout: PopupLayout) -> (f64, f64) {
+    let height = 527.0 + TITLE_BAR_HEIGHT;
     match layout {
-        PopupLayout::Standard => (380.0, 527.0),
-        PopupLayout::Wide => (640.0, 527.0),
+        PopupLayout::Standard => (380.0, height),
+        PopupLayout::Wide => (640.0, height),
     }
 }
 

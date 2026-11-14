@@ -145,6 +145,12 @@ pub struct ClipboardHistorySettings {
     local_api_read: bool,
     #[serde(default)]
     ai_prompts: Vec<AiPrompt>,
+    #[serde(default)]
+    popup_pinned: bool,
+    #[serde(default)]
+    popup_pin_x: Option<i32>,
+    #[serde(default)]
+    popup_pin_y: Option<i32>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -255,6 +261,9 @@ impl Default for ClipboardHistorySettings {
             flatten_terminal_commands: false,
             local_api_read: false,
             ai_prompts: Vec::new(),
+            popup_pinned: false,
+            popup_pin_x: None,
+            popup_pin_y: None,
         }
     }
 }
@@ -502,7 +511,28 @@ pub async fn hide_clipboard_popup(app: AppHandle, blurred: Option<bool>) -> Resu
     if blurred == Some(true) && crate::screenshot::is_capturing() {
         return Ok(());
     }
+    if blurred == Some(true) && popup_pinned() {
+        popup::note_target(&app);
+        return Ok(());
+    }
     popup::hide(&app)
+}
+
+#[tauri::command]
+pub async fn set_clipboard_popup_pin(app: AppHandle, pinned: Option<bool>) -> Result<ClipboardHistorySnapshot, String> {
+    let service = service()?;
+    let mut settings = service.snapshot()?.settings;
+    if let Some(pinned) = pinned {
+        settings.popup_pinned = pinned;
+    }
+    let position = if settings.popup_pinned { popup::outer_position(&app) } else { None };
+    settings.popup_pin_x = position.map(|(x, _)| x).or(settings.popup_pin_x.filter(|_| settings.popup_pinned));
+    settings.popup_pin_y = position.map(|(_, y)| y).or(settings.popup_pin_y.filter(|_| settings.popup_pinned));
+    service.set_settings(settings)
+}
+
+pub(crate) fn popup_pinned() -> bool {
+    service().and_then(|service| service.snapshot()).map(|snapshot| snapshot.settings.popup_pinned).unwrap_or(false)
 }
 
 pub(crate) fn refocus_popup(app: &AppHandle) {
@@ -616,6 +646,7 @@ macro_rules! tauri_commands {
             crate::clipboard_history::copy_clipboard_history_item_as,
             crate::clipboard_history::paste_clipboard_history_item,
             crate::clipboard_history::hide_clipboard_popup,
+            crate::clipboard_history::set_clipboard_popup_pin,
             crate::clipboard_history::drag::start_clipboard_drag,
             crate::clipboard_history::paste_clipboard_sequence,
             crate::clipboard_history::export_clipboard_history,

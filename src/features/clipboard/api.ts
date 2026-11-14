@@ -27,6 +27,9 @@ export type ClipboardHistorySettings = {
   flattenTerminalCommands?: boolean;
   localApiRead?: boolean;
   aiPrompts?: ClipboardAiPrompt[];
+  popupPinned?: boolean;
+  popupPinX?: number | null;
+  popupPinY?: number | null;
 };
 
 export type ClipboardAiPrompt = { id: string; title: string; prompt: string };
@@ -192,6 +195,14 @@ export function startClipboardDrag(id: string) {
 
 export function hideClipboardPopup(blurred = false) {
   return invoke<void>("hide_clipboard_popup", { blurred });
+}
+
+export function setClipboardPopupPin(pinned: boolean | null = null) {
+  return invoke<ClipboardHistorySnapshot>("set_clipboard_popup_pin", { pinned });
+}
+
+export function listenClipboardPopupMoved(handler: () => void) {
+  return getCurrentWindow().onMoved(() => handler());
 }
 
 export function listenClipboardPopupOpened(handler: () => void) {
