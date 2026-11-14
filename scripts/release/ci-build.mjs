@@ -1,7 +1,7 @@
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync } from "node:fs";
 import { commandLine } from "./command-line.mjs";
-import { dispatchedRun } from "./smoke-test.mjs";
+import { dispatchedRun, sleep, watchRun } from "./smoke-test.mjs";
 
 export function signerArgs(env, file) {
   const key = env.TAURI_SIGNING_PRIVATE_KEY ?? "";
@@ -37,10 +37,13 @@ export function downloadCiBuild(run, { workflow, label, repo, artifact, since, d
   }
   if (!found) return `${workflow} was started but its run did not show up within a minute`;
   console.log(`${label} build running: ${found.url}`);
-  const watched = run("gh", ["run", "watch", String(found.databaseId), "--repo", repo, "--exit-status", "--interval", "20"], { allowFailure: true });
-  if (watched.status !== 0) return `the ${label} build failed: ${found.url}`;
+  if (!watchRun(run, { repo, id: found.databaseId, interval: 20 })) return `the ${label} build failed: ${found.url}`;
   mkdirSync(dir, { recursive: true });
-  const downloaded = run("gh", ["run", "download", String(found.databaseId), "--repo", repo, "--name", artifact, "--dir", dir], { capture: true, allowFailure: true });
-  if (downloaded.status !== 0) return `could not download the ${label} build: ${downloaded.stderr.trim()}`;
-  return null;
+  let downloaded = null;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    if (attempt > 0) sleep(10000);
+    downloaded = run("gh", ["run", "download", String(found.databaseId), "--repo", repo, "--name", artifact, "--dir", dir], { capture: true, allowFailure: true });
+    if (downloaded.status === 0) return null;
+  }
+  return `could not download the ${label} build: ${downloaded.stderr.trim()}`;
 }
