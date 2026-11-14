@@ -6,13 +6,13 @@ use super::main_window;
 use crate::win32;
 
 static PREVIOUS_FOREGROUND: AtomicIsize = AtomicIsize::new(0);
+static CLICK_PREVIOUS_FOREGROUND: AtomicIsize = AtomicIsize::new(0);
 
-#[tauri::command]
-pub fn take_island_hover_focus(app: AppHandle) -> Result<bool, String> {
+fn take_focus(app: &AppHandle, previous: &AtomicIsize) -> Result<bool, String> {
     if win32::input::is_left_button_down() {
         return Ok(false);
     }
-    let window = main_window(&app)?;
+    let window = main_window(app)?;
     let island = window.hwnd().map_err(|error| error.to_string())?;
     let foreground = win32::window::foreground_window();
     if foreground == island {
@@ -22,10 +22,20 @@ pub fn take_island_hover_focus(app: AppHandle) -> Result<bool, String> {
         return Ok(true);
     }
     if !foreground.is_invalid() {
-        PREVIOUS_FOREGROUND.store(foreground.0 as isize, Ordering::SeqCst);
+        previous.store(foreground.0 as isize, Ordering::SeqCst);
     }
     window.set_focus().map_err(|error| error.to_string())?;
     Ok(true)
+}
+
+#[tauri::command]
+pub fn take_island_hover_focus(app: AppHandle) -> Result<bool, String> {
+    take_focus(&app, &PREVIOUS_FOREGROUND)
+}
+
+#[tauri::command]
+pub fn take_island_click_focus(app: AppHandle) -> Result<bool, String> {
+    take_focus(&app, &CLICK_PREVIOUS_FOREGROUND)
 }
 
 pub(crate) fn focus_island_for_shortcut(window: &WebviewWindow) {
@@ -44,15 +54,32 @@ pub(crate) fn focus_island_for_shortcut(window: &WebviewWindow) {
 
 pub(crate) fn show_island_at_startup(window: &WebviewWindow) -> Result<(), String> {
     let island = window.hwnd().map_err(|error| error.to_string())?;
-    let previous = win32::window::foreground_window();
     win32::window::show_without_activating(island);
-    let _ = window.set_focusable(false);
-    let shown = window.show().map_err(|error| error.to_string());
-    let _ = window.set_focusable(true);
-    if previous != island && !previous.is_invalid() && win32::window::foreground_window() == island {
+    Ok(())
+}
+
+pub(crate) fn set_click_activation(window: &WebviewWindow, activates: bool) {
+    if let Ok(island) = window.hwnd() {
+        win32::window::set_no_activate(island, !activates);
+    }
+}
+
+pub(crate) fn island_mode_synced(window: &WebviewWindow, expanded: bool) {
+    set_click_activation(window, expanded);
+    if expanded {
+        return;
+    }
+    let previous = CLICK_PREVIOUS_FOREGROUND.swap(0, Ordering::SeqCst);
+    if previous == 0 {
+        return;
+    }
+    let Ok(island) = window.hwnd() else {
+        return;
+    };
+    let previous = HWND(previous as *mut _);
+    if win32::window::foreground_window() == island && win32::window::is_visible(previous) {
         win32::window::bring_to_foreground(previous);
     }
-    shown
 }
 
 #[tauri::command]
