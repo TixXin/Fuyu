@@ -163,6 +163,7 @@
 - Agent 页排列（2026-11-08 起）：设置项 `agentSessionSort`（`status` / `recent` / `firstSeen`，默认 `status`；旧数据没有这个字段时按 `status`，会改变升级前的顺序）、`agentSessionGroup`（`computer` / `project` / `none`，默认 `computer`）；`agentHostDisplay` 的默认值改为 `icon`（已保存的值不变）。
 - 新消息横幅（2026-11-09 起，C10 / issue #13）：设置项 `messageNotice`（`line` / `banner` / `panel`，默认 `line`，其他值按 `line` 读；`panel` 为 2026-11-09 C11 新增，旧版本读到按 `line`）、`messagePanelSeconds`（3/5/8/15/30，默认 8，C11 新增）；Tauri 命令 `set_island_banner_rect(rect)`（`rect` 为 `{ x, y, width, height }`，主窗口 CSS 像素，`null` 清掉；只在收起且没贴边时生效）；事件 `island-banner-hover-changed` 见上表。
 - 插件页焦点（2026-11-09 起，E8 / issue #12）：Tauri 命令 `island_is_foreground`（无参数，返回岛屿窗口是否为前台窗口）。岛屿失去键盘焦点时先问它，焦点只是进了插件网页（webview 模板）时不收起。
+- 岛屿焦点（2026-11-14 起）：设置项 `hoverTakesKeyboard`（布尔，默认 `false`，旧数据没有时按 `false`；打开后光标停在展开的岛上会拿键盘焦点）；Tauri 命令 `take_island_click_focus`（无参数，点击展开面板后调用，把岛设为前台窗口并记住原来的前台窗口，鼠标还按着时返回 `false` 让前端稍后重试；macOS 上不做事，返回 `true`）。
 - VS Code 扩展（2026-11-06 起）：扩展 ID `tixxin.fuyu`（D17 起；岛屿先找它，再找改名前的 `tixxin.focusd-island`，链接的 authority 用找到的那个；源码 `packages/vscode-extension/`），岛屿打开 `<编辑器 scheme>://tixxin.focusd-island/focus?pids=<进程号,…>&title=<会话标题>`；发布后再改格式时，岛屿和扩展都要兼容旧格式，见 [docs/features/agent-status-hooks.md](../features/agent-status-hooks.md)。
 - 待办只剩岛屿画法（C28，2026-11-10 起）：`fuyu-settings` 去掉 `todoStyle`（"paper" | "island"）和 `todoBackgroundColor`，旧数据里的这两个字段读取时忽略，不迁移；归档的「卡片 / 时间线」布局本来就没存，一并去掉。
 

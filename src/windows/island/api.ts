@@ -132,6 +132,10 @@ export function takeIslandHoverFocus() {
   return invoke<boolean>("take_island_hover_focus");
 }
 
+export function takeIslandClickFocus() {
+  return invoke<boolean>("take_island_click_focus");
+}
+
 export function releaseIslandHoverFocus() {
   return invoke<boolean>("release_island_hover_focus");
 }

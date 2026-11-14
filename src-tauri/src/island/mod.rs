@@ -161,6 +161,9 @@ pub fn set_island_interaction(
         animate_position.unwrap_or(true)
             && (previous_state.is_tucked != state.is_tucked || previous_state.out_at_top != state.out_at_top),
     )?;
+    if !state.is_dragging {
+        focus::island_mode_synced(&window, matches!(state.mode, IslandMode::Expanded));
+    }
     apply_glass_material(&window, state)
 }
 
@@ -227,12 +230,14 @@ fn drag_island(window: WebviewWindow, current_state: IslandWindowState) -> Resul
         top_edge::set_attached(&window, false);
     }
 
+    focus::set_click_activation(&window, true);
     if let Err(error) = window.start_dragging() {
         mutate_window_state(|state| {
             state.is_dragging = false;
             state.custom_position = current_state.custom_position;
             *state
         });
+        focus::set_click_activation(&window, matches!(current_state.mode, IslandMode::Expanded));
         return Err(error.to_string());
     }
 
@@ -258,6 +263,7 @@ fn drag_island(window: WebviewWindow, current_state: IslandWindowState) -> Resul
             }
         };
 
+        focus::set_click_activation(&window, matches!(read_window_state().mode, IslandMode::Expanded));
         if did_finish_drag {
             if let Some(position) = final_position {
                 let _ = window.emit(ISLAND_POSITION_CHANGED_EVENT, position);
@@ -345,6 +351,7 @@ macro_rules! tauri_commands {
             crate::island::show_ready_island,
             crate::island::minimize_island,
             crate::island::focus::take_island_hover_focus,
+            crate::island::focus::take_island_click_focus,
             crate::island::focus::release_island_hover_focus,
             crate::island::focus::island_is_foreground,
             crate::island::passthrough::set_island_cursor_tracking,
