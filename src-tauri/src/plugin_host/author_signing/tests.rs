@@ -55,8 +55,11 @@ fn only_the_remembered_key_updates_without_asking() {
     assert_eq!(check_key(&remembered, Some("k1")), KeyCheck::SameKey);
     assert_eq!(check_key(&remembered, Some("k2")), KeyCheck::Changed);
     assert_eq!(check_key(&remembered, None), KeyCheck::Changed);
-    assert!(KeyCheck::SameKey.may_install_by_itself() && KeyCheck::FirstKey.may_install_by_itself());
+    assert!(KeyCheck::SameKey.may_install_by_itself());
     assert!(!KeyCheck::Unsigned.may_install_by_itself() && !KeyCheck::Changed.may_install_by_itself());
+    assert!(!KeyCheck::FirstKey.may_install_by_itself(), "an installed plugin with no remembered key waits for a manual update");
+    let after_manual_update = vec!["k1".to_string()];
+    assert!(check_key(&after_manual_update, Some("k1")).may_install_by_itself());
 }
 
 #[test]

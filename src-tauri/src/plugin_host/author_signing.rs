@@ -90,7 +90,7 @@ pub(super) enum KeyCheck {
 
 impl KeyCheck {
     pub(super) fn may_install_by_itself(self) -> bool {
-        matches!(self, Self::FirstKey | Self::SameKey)
+        self == Self::SameKey
     }
 }
 
