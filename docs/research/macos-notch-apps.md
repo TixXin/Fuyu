@@ -190,6 +190,38 @@
 - [S9] boring.notch `BoringNotchXPCHelper.swift`：<https://github.com/TheBoredTeam/boring.notch/blob/main/BoringNotchXPCHelper/BoringNotchXPCHelper.swift>
 - [S10] Atoll `DisplayServicesDynamic.swift`：<https://github.com/Ebullioscopic/Atoll/blob/main/DynamicIsland/helpers/DisplayServicesDynamic.swift>
 
+## 补充（2026-11-14）：四指切换桌面时岛怎么不闪
+
+> 问题：用户问「其他 Mac 灵动岛开源项目是怎么做的，有做这种优化吗」。起因：有刘海的 MacBook 上四指左右滑动切换桌面时，浮屿的岛消失、再出现很突兀，想做成往刘海里收起、再往两边展开。范围：把 boring.notch、Atoll、MewNotch、NotchDrop、DynamicNotchKit 浅克隆到本机，搜 `collectionBehavior`、`activeSpaceDidChange`、`CGSSpace` / `SkyLight`；boring.notch 的相关 PR 和 issue。star 数见上文，许可证为 2026-11-14 经 GitHub API 查询。相关任务：G1.11。
+
+### 结论
+
+1. **没有一家做切桌面时的收起和展开动画。** 搜了 5 个项目，切桌面相关的代码都是为了让窗口“钉住不动”，没有任何一家在切换前后做形变动画 [T1]–[T5]。
+2. **三个 star 最多的项目用私有接口把岛放进专属的系统空间，从根上不让它跟着切桌面。** boring.notch、Atoll、MewNotch 用的是同一个 `CGSSpace` 小类：先用 `CGSSpaceCreate` 新建一个空间，用 `CGSSpaceSetAbsoluteLevel` 把它的层级设成最高（2147483647），再用 `CGSShowSpaces` 显示出来；然后用 `CGSAddWindowsToSpaces` 把刘海窗口加进去，关窗前用 `CGSRemoveWindowsFromSpaces` 移出来 [T1][T2][T3]。Atoll 的注释直接写明了目的：加入这个空间后，切换桌面时窗口保持不动 [T2]。
+3. **这招是 boring.notch 在 2024-10 引入的**（PR #171「Fix notch window management」）。原本要解决的是“岛始终在最上层”和“锁屏过渡时能看到岛被裁一半”（#82、#92）[T6]。后来 Atoll（从 boring.notch 分出来）和 MewNotch 都沿用了。
+4. **Atoll 还会在每次切完桌面后再补一次。** 它监听 `NSWorkspace.activeSpaceDidChangeNotification`，收到后重新同步空间成员、再设一遍 `collectionBehavior`、调用 `orderFrontRegardless()`，防止切换后窗口掉出这个空间 [T2]。
+5. **只设 `collectionBehavior` 的项目和浮屿现在一样。** NotchDrop（`[.fullScreenAuxiliary, .stationary, .canJoinAllSpaces]`，层级 `.statusBar + 8`）和 DynamicNotchKit（`[.canJoinAllSpaces, .stationary]`，层级 `.screenSaver`）只用公开接口 [T4][T5]。浮屿现在是 `can_join_all_spaces + stationary + full_screen_auxiliary + ignores_cycle`（`src-tauri/src/macos/island_panel.rs`）。从这几家的做法和 PR #171 的动机推测，只用公开接口时切桌面会闪一下，所以那几家才去用私有空间。这一点没有在 NotchDrop 上实测，算推测。
+6. **代价：Mission Control 里会挡住东西。** 层级最高的空间连 Mission Control 也压得住，boring.notch 还开着两个相关 issue：开 Mission Control 时岛挡住顶部的桌面缩略图条（#1059，2026 年报告，macOS 26.3），有人要求开关 Mission Control 时自动收起岛（#301）[T7][T8]。
+7. **许可证**：boring.notch、Atoll、MewNotch 是 GPL-3.0，NotchDrop、DynamicNotchKit 是 MIT [T1]–[T5]。浮屿不能拷贝前三家的代码，但这几个 `CGS*` 函数本身是系统的私有导出符号，可以在 Rust 里自己声明、自己写。
+
+### 对浮屿的建议
+
+- **先做“不闪”，再考虑动画。** 同类都是让岛切桌面时根本不消失，这比切完再补一段展开动画更自然：岛和刘海一直都在，画面里只有桌面在滑。做法是在 `src-tauri/src/macos/` 平台层里自己声明那几个 `CGS*` 函数，`make_panel` 之后把主岛窗口加进一个最高层级的专属空间，退出时移出并销毁；再像 Atoll 那样在 `activeSpaceDidChange` 后补一次。浮屿已经在用私有接口（MediaRemote、DisplayServices），也不上 App Store，多这一项不改变取舍，但每个 macOS 大版本都要回归。
+- **要处理 Mission Control。** 加了专属空间后，岛会盖在 Mission Control 顶部的桌面条上（boring.notch #1059）。可以在进 Mission Control 时把岛收进刘海（这时“往中间收、往两边展开”的动画就有用处了），但系统没有公开的“进入 Mission Control”通知，得先实测有没有可靠的信号。
+- **收起、展开动画留给我们自己能控制的时机**：全屏应用、锁屏、手动隐藏这些情况的显示和隐藏是浮屿自己决定的，可以换成往刘海里收、往两边展开。
+- **先实测再动手**：在本机录一下现在切桌面时岛到底是怎么消失的，然后用一个开发版试加专属空间，看切桌面、Mission Control、全屏、锁屏、外接屏下各是什么样。
+
+### 来源
+
+- [T1] boring.notch（GPL-3.0）：<https://github.com/TheBoredTeam/boring.notch>（`boringNotch/private/CGSSpace.swift`、`boringNotch/managers/NotchSpaceManager.swift`、`boringNotch/boringNotchApp.swift`）
+- [T2] Atoll（GPL-3.0）：<https://github.com/Ebullioscopic/Atoll>（`DynamicIsland/managers/NotchSpaceManager.swift`、`DynamicIsland/DynamicIslandApp.swift` 的 `syncNotchSpaceMembership`、`reassertDynamicIslandWindowSpacePresence`）
+- [T3] MewNotch（GPL-3.0）：<https://github.com/monuk7735/mew-notch>（`MewNotch/Utils/NotchSpaceManager.swift`、`MewNotch/Utils/NotchManager.swift`）
+- [T4] NotchDrop（MIT）：<https://github.com/Lakr233/NotchDrop>（`NotchDrop/NotchWindow.swift`）
+- [T5] DynamicNotchKit（MIT）：<https://github.com/MrKai77/DynamicNotchKit>（`Sources/DynamicNotchKit/Utility/DynamicNotchPanel.swift`）
+- [T6] boring.notch PR #171「Fix notch window management」，2024-10-30 合入：<https://github.com/TheBoredTeam/boring.notch/pull/171>；issue #82、#92
+- [T7] boring.notch issue #1059「Notch displayed over the space labels in Mission Control」：<https://github.com/TheBoredTeam/boring.notch/issues/1059>
+- [T8] boring.notch issue #301「Dismiss/show automatically when open/close mission control」：<https://github.com/TheBoredTeam/boring.notch/issues/301>
+
 ## 来源
 
 查询日期均为 2026-11-13，除非另注。
