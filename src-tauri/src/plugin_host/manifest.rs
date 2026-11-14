@@ -202,9 +202,7 @@ pub(super) fn runs_here(manifest: &PluginManifest) -> bool {
 
 #[cfg(not(windows))]
 pub(super) fn find_unix_program(name: &str) -> Option<std::path::PathBuf> {
-    let on_path = std::env::var_os("PATH").into_iter().flat_map(|path| std::env::split_paths(&path).collect::<Vec<_>>());
-    let usual = ["/opt/homebrew/bin", "/usr/local/bin", "/usr/bin"].into_iter().map(std::path::PathBuf::from);
-    on_path.chain(usual).map(|dir| dir.join(name)).find(|candidate| candidate.is_file())
+    super::program_dirs::find(name)
 }
 
 fn empty_text() -> LocalizedText {

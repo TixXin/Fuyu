@@ -21,11 +21,17 @@ enum Measurement {
 
 static MEASUREMENTS: Mutex<Option<HashMap<&'static str, Measurement>>> = Mutex::new(None);
 
+const POWERSHELL: &str = "powershell";
+const PWSH: &str = "pwsh";
+const NODE: &str = "node";
+
 fn runtime_for(image: &str) -> Option<&'static str> {
     if image.eq_ignore_ascii_case("powershell.exe") {
-        Some("powershell.exe")
-    } else if image.eq_ignore_ascii_case("node.exe") {
-        Some("node.exe")
+        Some(POWERSHELL)
+    } else if image.eq_ignore_ascii_case("node.exe") || image == "node" {
+        Some(NODE)
+    } else if image == "pwsh" {
+        Some(PWSH)
     } else {
         None
     }
@@ -55,35 +61,55 @@ pub(super) fn runtime_bytes(image: &str) -> Option<u64> {
     }
 }
 
-fn idle_command(runtime: &str) -> Command {
-    let mut command = if runtime == "node.exe" {
-        let mut command = Command::new("node");
-        command.args(["-e", "console.log('ready'); setTimeout(() => {}, 60000)"]);
-        command
-    } else {
-        let mut command = Command::new("powershell.exe");
-        command.args([
-            "-NoProfile",
-            "-NonInteractive",
-            "-ExecutionPolicy",
-            "Bypass",
-            "-Command",
-            "[Console]::Out.WriteLine('ready'); Start-Sleep -Seconds 60",
-        ]);
-        command
+fn idle_command(runtime: &str) -> Option<Command> {
+    let mut command = match runtime {
+        NODE => {
+            let mut command = Command::new(super::runtime::find_node()?);
+            command.args(["-e", "console.log('ready'); setTimeout(() => {}, 60000)"]);
+            command
+        }
+        PWSH => {
+            let mut command = Command::new(pwsh()?);
+            command.args(["-NoProfile", "-NonInteractive", "-Command", "[Console]::Out.WriteLine('ready'); Start-Sleep -Seconds 60"]);
+            command
+        }
+        _ => {
+            let mut command = Command::new("powershell.exe");
+            command.args([
+                "-NoProfile",
+                "-NonInteractive",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-Command",
+                "[Console]::Out.WriteLine('ready'); Start-Sleep -Seconds 60",
+            ]);
+            command
+        }
     };
+    #[cfg(unix)]
+    std::os::unix::process::CommandExt::process_group(&mut command, 0);
     command
         .stdin(Stdio::null())
         .stdout(Stdio::piped())
         .stderr(Stdio::null())
         .creation_flags(CREATE_NO_WINDOW);
-    command
+    Some(command)
+}
+
+#[cfg(not(windows))]
+fn pwsh() -> Option<std::path::PathBuf> {
+    super::manifest::find_unix_program(PWSH)
+}
+
+#[cfg(windows)]
+fn pwsh() -> Option<std::path::PathBuf> {
+    None
 }
 
 #[cfg_attr(not(windows), allow(clippy::drop_non_drop))]
 fn measure(runtime: &str) -> Option<u64> {
     let job = Job::new().ok()?;
-    let mut child = idle_command(runtime).spawn().ok()?;
+    let mut child = idle_command(runtime)?.spawn().ok()?;
     if job.assign(&child).is_err() {
         let _ = child.kill();
         return None;
@@ -109,14 +135,16 @@ fn measure(runtime: &str) -> Option<u64> {
 
 #[cfg(test)]
 mod tests {
-    #[cfg(windows)]
+    #[cfg(any(windows, target_os = "macos"))]
     use super::measure;
     use super::runtime_for;
 
     #[test]
     fn only_script_runtimes_have_a_baseline() {
-        assert_eq!(runtime_for("PowerShell.EXE"), Some("powershell.exe"));
-        assert_eq!(runtime_for("node.exe"), Some("node.exe"));
+        assert_eq!(runtime_for("PowerShell.EXE"), Some("powershell"));
+        assert_eq!(runtime_for("node.exe"), Some("node"));
+        assert_eq!(runtime_for("node"), Some("node"));
+        assert_eq!(runtime_for("pwsh"), Some("pwsh"));
         assert_eq!(runtime_for("my-plugin.exe"), None);
         assert_eq!(runtime_for(""), None);
     }
@@ -124,7 +152,17 @@ mod tests {
     #[cfg(windows)]
     #[test]
     fn an_idle_powershell_takes_tens_of_megabytes() {
-        let bytes = measure("powershell.exe").expect("measured");
+        let bytes = measure("powershell").expect("measured");
         assert!((10 * 1024 * 1024..400 * 1024 * 1024).contains(&bytes), "{bytes}");
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn an_idle_node_takes_some_megabytes_when_node_is_installed() {
+        if super::super::runtime::find_node().is_none() {
+            return;
+        }
+        let bytes = measure("node").expect("measured");
+        assert!((5 * 1024 * 1024..400 * 1024 * 1024).contains(&bytes), "{bytes}");
     }
 }

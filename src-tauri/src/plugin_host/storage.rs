@@ -11,6 +11,10 @@ use super::{host, lock};
 
 const STORAGE_FILE_NAME: &str = "storage.json";
 const SECRETS_INDEX_FILE_NAME: &str = "plugin-secrets.json";
+#[cfg(windows)]
+const SECRET_STORE: &str = "Windows Credential Manager";
+#[cfg(not(windows))]
+const SECRET_STORE: &str = "macOS Keychain";
 const SECRET_SERVICE_PREFIX: &str = "com.tixxin.fuyu.plugin.";
 pub(super) const MAX_VALUE_BYTES: usize = 64 * 1024;
 pub(super) const MAX_TOTAL_BYTES: usize = 1024 * 1024;
@@ -109,7 +113,7 @@ fn read_index(path: &Path) -> BTreeMap<String, Vec<String>> {
 
 fn entry(plugin_id: &str, key: &str) -> Result<Entry, (u16, String)> {
     Entry::new(&format!("{SECRET_SERVICE_PREFIX}{plugin_id}"), key)
-        .map_err(|_| (500, "Could not open the Windows Credential Manager.".to_string()))
+        .map_err(|_| (500, format!("Could not open the {SECRET_STORE}.")))
 }
 
 pub(super) fn answer_secret(plugin_id: &str, method: &str, params: &Value) -> Answer {
@@ -123,7 +127,7 @@ pub(super) fn answer_secret(plugin_id: &str, method: &str, params: &Value) -> An
         "secrets.get" => match credential.get_password() {
             Ok(value) => Ok(json!({ "value": value })),
             Err(KeyringError::NoEntry) => Ok(json!({ "value": null })),
-            Err(_) => Err((500, "Could not read the Windows Credential Manager.".into())),
+            Err(_) => Err((500, format!("Could not read the {SECRET_STORE}."))),
         },
         "secrets.set" => {
             let value = params.get("value").and_then(Value::as_str).ok_or_else(|| bad("Expected a string \"value\"."))?;
@@ -140,14 +144,14 @@ pub(super) fn answer_secret(plugin_id: &str, method: &str, params: &Value) -> An
             }
             credential
                 .set_password(value)
-                .map_err(|_| (500, "Could not write to the Windows Credential Manager.".to_string()))?;
+                .map_err(|_| (500, format!("Could not write to the {SECRET_STORE}.")))?;
             Ok(json!({}))
         }
         "secrets.delete" => {
             let deleted = match credential.delete_credential() {
                 Ok(()) => true,
                 Err(KeyringError::NoEntry) => false,
-                Err(_) => return Err((500, "Could not delete from the Windows Credential Manager.".into())),
+                Err(_) => return Err((500, format!("Could not delete from the {SECRET_STORE}."))),
             };
             if let Some(position) = names.iter().position(|name| *name == key) {
                 names.remove(position);
@@ -171,7 +175,7 @@ pub(super) fn clear_plugin_data(plugin_id: &str, data_dir: &Path) -> Result<(), 
         let credential = entry(plugin_id, &key).map_err(|(_, message)| message)?;
         match credential.delete_credential() {
             Ok(()) | Err(KeyringError::NoEntry) => {}
-            Err(_) => return Err("Could not delete a secret from the Windows Credential Manager.".into()),
+            Err(_) => return Err(format!("Could not delete a secret from the {SECRET_STORE}.")),
         }
     }
     write_json(&index_path, &json!(index)).map_err(|(_, message)| message)

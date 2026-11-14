@@ -40,18 +40,31 @@ impl Job {
 
     pub(crate) fn usage(&self) -> Option<JobUsage> {
         let group = u32::try_from(self.group.load(Ordering::SeqCst)).ok().filter(|group| *group > 0)?;
-        let processes: Vec<(String, u64)> = super::proc_info::all_pids()
+        let mut members: Vec<u32> = super::proc_info::all_pids()
             .into_iter()
             .filter(|pid| super::proc_info::process_group(*pid) == Some(group))
-            .filter_map(|pid| Some((super::proc_info::name(pid)?, super::proc_info::resident_bytes(pid)?)))
+            .collect();
+        members.sort_by_key(|pid| (*pid != group, *pid));
+        let processes: Vec<(String, u64, u64)> = members
+            .into_iter()
+            .filter_map(|pid| {
+                Some((
+                    super::proc_info::name(pid)?,
+                    super::proc_info::resident_bytes(pid)?,
+                    super::proc_info::cpu_time_100ns(pid).unwrap_or(0),
+                ))
+            })
             .collect();
         if processes.is_empty() {
             return None;
         }
         Some(JobUsage {
-            memory_bytes: processes.iter().map(|(_, bytes)| bytes).sum(),
-            cpu_ticks: 0,
-            processes: processes.into_iter().map(|(name, bytes)| JobProcess { name, private_bytes: bytes, working_set_bytes: bytes }).collect(),
+            memory_bytes: processes.iter().map(|(_, bytes, _)| bytes).sum(),
+            cpu_ticks: processes.iter().map(|(_, _, ticks)| ticks).sum(),
+            processes: processes
+                .into_iter()
+                .map(|(name, bytes, _)| JobProcess { name, private_bytes: bytes, working_set_bytes: bytes })
+                .collect(),
         })
     }
 }
@@ -88,5 +101,24 @@ mod tests {
         let _ = child.wait();
         thread::sleep(Duration::from_millis(100));
         assert!(!alive(grandchild), "the plugin's own children go too");
+    }
+
+    #[test]
+    fn the_group_leader_comes_first_and_busy_work_counts_as_cpu_time() {
+        let mut child = Command::new("/bin/sh").args(["-c", "sleep 30 & i=0; while [ $i -lt 200000 ]; do i=$((i+1)); done; wait"]).process_group(0).spawn().unwrap();
+        let job = Job::new().unwrap();
+        job.assign(&child).unwrap();
+        thread::sleep(Duration::from_millis(300));
+        let usage = job.usage().unwrap();
+        assert_ne!(usage.processes[0].name, "sleep");
+        assert!((100_000..20_000_000).contains(&usage.cpu_ticks), "{}", usage.cpu_ticks);
+        drop(job);
+        let _ = child.wait();
+    }
+
+    #[test]
+    fn mach_time_turns_into_hundreds_of_nanoseconds() {
+        assert_eq!(super::super::proc_info::mach_to_100ns(1_000, (1, 1)), 10);
+        assert_eq!(super::super::proc_info::mach_to_100ns(24_000_000, (125, 3)), 10_000_000);
     }
 }
