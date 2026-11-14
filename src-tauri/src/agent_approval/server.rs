@@ -31,7 +31,6 @@ pub(super) struct Shared {
     queue: Mutex<Queue>,
     changed: Condvar,
     enabled: AtomicBool,
-    token: String,
     wait_limit: Duration,
     notify: Notify,
 }
@@ -78,39 +77,74 @@ impl Shared {
     }
 }
 
-pub(super) fn listen(preferred_port: u16, token: String, wait_limit: Duration, notify: Notify) -> Result<(Arc<Shared>, u16), String> {
+pub(super) struct Listener {
+    stopping: Arc<AtomicBool>,
+    port: u16,
+    thread: thread::JoinHandle<()>,
+}
+
+impl Listener {
+    pub fn port(&self) -> u16 {
+        self.port
+    }
+
+    pub fn stop(self) {
+        self.stopping.store(true, Ordering::SeqCst);
+        let _ = TcpStream::connect(("127.0.0.1", self.port));
+        let _ = self.thread.join();
+    }
+}
+
+pub(super) fn new_shared(wait_limit: Duration, notify: Notify) -> Arc<Shared> {
+    Arc::new(Shared {
+        queue: Mutex::new(Queue::default()),
+        changed: Condvar::new(),
+        enabled: AtomicBool::new(false),
+        wait_limit,
+        notify,
+    })
+}
+
+pub(super) fn serve(shared: &Arc<Shared>, preferred_port: u16, fallback: bool, token: &str) -> Result<Listener, String> {
     let listener = TcpListener::bind(("127.0.0.1", preferred_port))
-        .or_else(|_| TcpListener::bind(("127.0.0.1", 0)))
+        .or_else(|error| if fallback { TcpListener::bind(("127.0.0.1", 0)) } else { Err(error) })
         .map_err(|error| format!("Could not start the approval endpoint: {error}"))?;
     let port = listener
         .local_addr()
         .map_err(|error| format!("The approval endpoint has no address: {error}"))?
         .port();
-    let shared = Arc::new(Shared {
-        queue: Mutex::new(Queue::default()),
-        changed: Condvar::new(),
-        enabled: AtomicBool::new(false),
-        token,
-        wait_limit,
-        notify,
-    });
-    let accepting = Arc::clone(&shared);
-    thread::Builder::new()
+    let accepting = Arc::clone(shared);
+    let token: Arc<str> = Arc::from(token);
+    let stopping = Arc::new(AtomicBool::new(false));
+    let stopped = Arc::clone(&stopping);
+    let thread = thread::Builder::new()
         .name("agent-approval".into())
         .spawn(move || {
-            for stream in listener.incoming().flatten() {
+            for stream in listener.incoming() {
+                if stopped.load(Ordering::SeqCst) {
+                    break;
+                }
+                let Ok(stream) = stream else { continue };
                 let shared = Arc::clone(&accepting);
+                let token = Arc::clone(&token);
                 let _ = thread::Builder::new()
                     .name("agent-approval-request".into())
-                    .spawn(move || handle(&shared, stream, port));
+                    .spawn(move || handle(&shared, stream, port, &token));
             }
         })
         .map_err(|error| format!("Could not start the approval endpoint thread: {error}"))?;
+    Ok(Listener { stopping, port, thread })
+}
+
+#[cfg(test)]
+pub(super) fn listen(preferred_port: u16, token: String, wait_limit: Duration, notify: Notify) -> Result<(Arc<Shared>, u16), String> {
+    let shared = new_shared(wait_limit, notify);
+    let port = serve(&shared, preferred_port, true, &token)?.port();
     Ok((shared, port))
 }
 
-fn handle(shared: &Shared, stream: TcpStream, port: u16) {
-    let (status, body) = match answer(shared, &stream, port) {
+fn handle(shared: &Shared, stream: TcpStream, port: u16, token: &str) {
+    let (status, body) = match answer(shared, &stream, port, token) {
         Ok(Some(body)) => (200, body),
         Ok(None) => return,
         Err(error) => (error.status, serde_json::json!({ "error": error.message }).to_string()),
@@ -119,7 +153,7 @@ fn handle(shared: &Shared, stream: TcpStream, port: u16) {
     let _ = write_response(&mut &stream, status, &body);
 }
 
-fn answer(shared: &Shared, stream: &TcpStream, port: u16) -> Result<Option<String>, HttpError> {
+fn answer(shared: &Shared, stream: &TcpStream, port: u16, token: &str) -> Result<Option<String>, HttpError> {
     let _ = stream.set_read_timeout(Some(READ_TIMEOUT));
     let request = read_request(&mut BufReader::new(stream))?;
     if request.method != "POST" {
@@ -129,7 +163,7 @@ fn answer(shared: &Shared, stream: &TcpStream, port: u16) -> Result<Option<Strin
     if route.is_none() && request.path != ACTIVITY_PATH {
         return Err(HttpError { status: 404, message: "Unknown path." });
     }
-    let remote_host = check_access(&request, &shared.token, port)?;
+    let remote_host = check_access(&request, token, port)?;
     let Some((agent, kind)) = route else {
         let activity = Activity::parse(&request.body).map_err(|message| HttpError { status: 400, message })?;
         if let Some(activity) = activity {

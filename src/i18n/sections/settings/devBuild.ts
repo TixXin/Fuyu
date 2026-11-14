@@ -8,6 +8,7 @@ export type SettingsDevBuildText = {
   status: {
     alone: string;
     yielding: string;
+    releaseYields: string;
     both: string;
   };
 };
@@ -22,7 +23,8 @@ export const zhCN: SettingsDevBuildText = {
   status: {
     alone: "正式版没在运行",
     yielding: "开发版已让出快捷键和提醒",
-    both: "两边都在用，可能互相抢",
+    releaseYields: "正式版已让出，审批也到这里",
+    both: "正式版没让（版本太旧），可能互相抢",
   },
 };
 
@@ -36,6 +38,7 @@ export const en: SettingsDevBuildText = {
   status: {
     alone: "The installed app isn't running",
     yielding: "This build gave up shortcuts and alerts",
-    both: "Both are active and may clash",
+    releaseYields: "The installed app stepped back; approvals come here",
+    both: "The installed app is too old to step back",
   },
 };
