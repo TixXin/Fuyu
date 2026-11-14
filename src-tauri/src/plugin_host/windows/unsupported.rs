@@ -1,6 +1,7 @@
 use serde_json::Value;
 use tauri::AppHandle;
 
+#[cfg_attr(not(windows), allow(dead_code))]
 pub(super) struct Caller<'a> {
     pub app: &'a AppHandle,
     pub plugin_id: &'a str,

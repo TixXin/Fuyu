@@ -24,10 +24,12 @@ pub(super) fn note_delivery(plugin_id: &str, method: &str) {
     }
 }
 
+#[cfg_attr(not(windows), allow(dead_code))]
 pub(super) fn note_user_action(plugin_id: &str) {
     lock(last_actions()).insert(plugin_id.to_string(), Instant::now());
 }
 
+#[cfg_attr(not(windows), allow(dead_code))]
 pub(super) fn recently_used(plugin_id: &str) -> bool {
     may_open(lock(last_actions()).get(plugin_id).copied(), Instant::now())
 }
