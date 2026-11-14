@@ -2,8 +2,10 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 
+const PROBE = `globalThis.probe ??= { provided: 0, applied: 0, live: 0, cleaned: 0, pings: 0 };\n`;
+
 export const PLUGINS = {
-  "counter.mjs": `import { Service } from "@fuyu/plugin-base";
+  "counter.mjs": `${PROBE}import { Service } from "@fuyu/plugin-base";
 export default class Counter extends Service {
   constructor(ctx) {
     super(ctx, "counter");
@@ -16,7 +18,7 @@ export default class Counter extends Service {
   }
 }
 `,
-  "user.mjs": `export const name = "user";
+  "user.mjs": `${PROBE}export const name = "user";
 export const inject = ["counter"];
 export function apply(ctx) {
   globalThis.probe.applied += 1;
@@ -35,7 +37,7 @@ export function apply(ctx) {
   });
 }
 `,
-  "broken.mjs": `export const name = "broken";
+  "broken.mjs": `${PROBE}export const name = "broken";
 export function apply(ctx) {
   ctx.effect(() => {
     globalThis.probe.live += 1;
