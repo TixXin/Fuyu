@@ -162,6 +162,30 @@ test("pages the system lacks are switched off and the island skips them", async 
   assert.equal(withoutUnsupported(all, new Set()), all);
 });
 
+test("with the clipboard on, screenshot history lives in the clipboard page instead of its own", async () => {
+  const { foldScreenshotsIntoClipboard, pageShortcutOrder, resolveIslandPage } = await import("../../src/windows/island/features.ts");
+  const all = { todo: true, calendar: true, music: true, clipboard: true, shelf: true, screenshots: true, qq: false, wechat: false, qqMail: false, agents: true, translation: false };
+  const folded = foldScreenshotsIntoClipboard(all);
+  assert.equal(folded.screenshots, false);
+  assert.equal(folded.clipboardScreenshots, true);
+  assert.equal(pageShortcutOrder(folded).includes("screenshots"), false);
+  assert.equal(resolveIslandPage("screenshots", folded), "clipboard");
+  const noClipboard = foldScreenshotsIntoClipboard({ ...all, clipboard: false });
+  assert.equal(noClipboard.screenshots, true);
+  assert.equal(noClipboard.clipboardScreenshots, false);
+  assert.equal(foldScreenshotsIntoClipboard({ ...all, screenshots: false }).clipboardScreenshots, false);
+});
+
+test("screenshot history groups shots by calendar day, newest first", async () => {
+  const { groupByDay, clockTime } = await import("../../src/features/screenshot/historyDays.ts");
+  const now = new Date(2026, 10, 14, 15, 0).getTime();
+  const at = (day, hour, minute = 0) => ({ takenAt: new Date(2026, 10, day, hour, minute).getTime() });
+  const days = groupByDay([at(14, 9), at(14, 8), at(13, 23), at(13, 0, 5), at(2, 12)], now);
+  assert.deepEqual(days.map((day) => [day.kind, day.day, day.items.length]), [["today", 14, 2], ["yesterday", 13, 2], ["date", 2, 1]]);
+  assert.equal(clockTime(at(13, 0, 5).takenAt), "00:05");
+  assert.deepEqual(groupByDay([], now), []);
+});
+
 test("a first-run hint widens the island past the usual cap, up to 460px", async () => {
   const { getNoticeIslandWidth, MAX_COLLAPSED_ISLAND_WIDTH } = await import("../../src/windows/island/layout.ts");
   const long = getNoticeIslandWidth("Agent 会话显示在这里，点岛看全部", 200);

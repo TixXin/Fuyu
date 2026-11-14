@@ -88,8 +88,14 @@ export type ScreenshotText = {
     copyHint: string;
     copyLabel: (when: string) => string;
     copied: string;
+    copy: string;
     pin: string;
     remove: string;
+    today: string;
+    yesterday: string;
+    date: (year: number | null, month: number, day: number) => string;
+    dayCount: (count: number) => string;
+    tab: string;
   };
 };
 
@@ -205,8 +211,14 @@ export const zhCN: ScreenshotText = {
     copyHint: "点一下复制，拖出去当文件用",
     copyLabel: (when) => `复制 ${when} 的截图`,
     copied: "已复制",
+    copy: "复制",
     pin: "贴到屏幕上",
     remove: "删除",
+    today: "今天",
+    yesterday: "昨天",
+    date: (year, month, day) => `${year ? `${year}年` : ""}${month}月${day}日`,
+    dayCount: (count) => `${count} 张`,
+    tab: "截图",
   },
 };
 
@@ -322,7 +334,13 @@ export const en: ScreenshotText = {
     copyHint: "Click to copy, drag out as a file",
     copyLabel: (when) => `Copy the screenshot from ${when}`,
     copied: "Copied",
+    copy: "Copy",
     pin: "Pin to screen",
     remove: "Delete",
+    today: "Today",
+    yesterday: "Yesterday",
+    date: (year, month, day) => new Date(year ?? 2000, month - 1, day).toLocaleDateString("en", year ? { year: "numeric", month: "short", day: "numeric" } : { month: "short", day: "numeric" }),
+    dayCount: (count) => (count === 1 ? "1 shot" : `${count} shots`),
+    tab: "Screenshots",
   },
 };

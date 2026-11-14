@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { ClipboardList } from "lucide-react";
 import { useTranslation } from "../../i18n";
 import type { ClipboardCopyAs, ClipboardHistorySnapshot } from "./api";
@@ -24,6 +24,7 @@ export function ClipboardHistoryPanel({
   onUpdateNote,
   onDeleteItem,
   onClear,
+  extraView,
 }: {
   snapshot: ClipboardHistorySnapshot;
   onCopyItem: (id: string, copyAs?: ClipboardCopyAs) => Promise<boolean> | boolean;
@@ -31,11 +32,14 @@ export function ClipboardHistoryPanel({
   onUpdateNote: (id: string, note: string) => Promise<boolean> | boolean;
   onDeleteItem: (id: string) => Promise<void> | void;
   onClear: () => Promise<void> | void;
+  extraView?: { label: string; content: ReactNode };
 }) {
   const t = useTranslation();
   const [now, setNow] = useState(() => Date.now());
   const [menuItemId, setMenuItemId] = useState<string | null>(null);
   const [tools, setTools] = useState<Tools | null>(null);
+  const [extraOpen, setExtraOpen] = useState(false);
+  const showExtra = extraOpen && extraView !== undefined;
   const { query, setQuery, clipboardView, setClipboardView, favoriteItems, filteredItems, itemElementsRef } = useClipboardHistoryList(snapshot.items);
   const { confirmDeleteId, isConfirmingClear, dismissConfirmations, handleDeleteItem, handleClear } = useClipboardConfirmations(snapshot.items, onDeleteItem, onClear);
   const {
@@ -59,6 +63,7 @@ export function ClipboardHistoryPanel({
   }, []);
 
   const showTag = (tag: string) => {
+    setExtraOpen(false);
     setClipboardView("all");
     setQuery(query.trim().toLowerCase() === `#${tag.toLowerCase()}` ? "" : `#${tag}`);
   };
@@ -80,16 +85,20 @@ export function ClipboardHistoryPanel({
         tags={tags}
         itemCount={snapshot.items.length}
         isConfirmingClear={isConfirmingClear}
+        extra={extraView && { label: extraView.label, pressed: showExtra, onSelect: () => setExtraOpen(true) }}
         onViewChange={(view) => {
+          setExtraOpen(false);
           setClipboardView(view);
           if (query.trim().startsWith("#")) setQuery("");
         }}
         onTag={showTag}
         onClear={handleClear}
       />
-      <ClipboardFilters query={query} shortcut={snapshot.settings.shortcutEnabled ? snapshot.settings.shortcut : null} onQueryChange={setQuery} />
+      {!showExtra && <ClipboardFilters query={query} shortcut={snapshot.settings.shortcutEnabled ? snapshot.settings.shortcut : null} onQueryChange={setQuery} />}
 
-      {empty ? (
+      {showExtra ? (
+        extraView.content
+      ) : empty ? (
         <div className="island-list-empty">
           <span className="island-list-empty__icon" aria-hidden="true"><ClipboardList size={22} strokeWidth={1.8} /></span>
           <strong>{t.clipboard.emptyAll}</strong>
