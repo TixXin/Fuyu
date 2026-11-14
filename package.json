@@ -2,7 +2,7 @@
   "name": "fuyu",
   "private": true,
   "license": "GPL-3.0-or-later",
-  "version": "0.3.8-beta.4",
+  "version": "0.3.8",
   "type": "module",
   "scripts": {
     "prepare": "node scripts/install-git-hooks.mjs",
@@ -13,6 +13,7 @@
     "preview": "vite preview",
     "release": "node scripts/release/release.mjs",
     "release:version": "node scripts/release/bump.mjs",
+    "release:prebuild": "node scripts/release/prebuild.mjs",
     "plugins:index": "node scripts/plugins/build-plugin-index.mjs",
     "plugins:keygen": "node scripts/plugins/plugin-signing.mjs keygen",
     "sdk:build": "node scripts/plugins/build-plugin-sdk.mjs",

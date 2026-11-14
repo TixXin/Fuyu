@@ -6,6 +6,35 @@ export function dispatchedRun(runs, since) {
     .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))[0] ?? null;
 }
 
+export function sleep(ms) {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+}
+
+export function runOutcome(view) {
+  if (!view || view.status !== "completed") return "running";
+  return view.conclusion === "success" ? "success" : "failed";
+}
+
+export function watchRun(run, { repo, id, interval, attempts = 6, pause = 15000 }) {
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    const watched = run("gh", ["run", "watch", String(id), "--repo", repo, "--exit-status", "--interval", String(interval)], { allowFailure: true });
+    if (watched.status === 0) return true;
+    let outcome = "running";
+    for (let check = 0; check < 3; check += 1) {
+      const viewed = run("gh", ["run", "view", String(id), "--repo", repo, "--json", "status,conclusion"], { capture: true, allowFailure: true });
+      if (viewed.status === 0) {
+        outcome = runOutcome(JSON.parse(viewed.stdout || "null"));
+        break;
+      }
+      sleep(pause);
+    }
+    if (outcome !== "running") return outcome === "success";
+    console.log(`  Lost track of run ${id} while it is still running (GitHub hiccup); watching it again.`);
+    sleep(pause);
+  }
+  return false;
+}
+
 export function smokeTest(run, tag, repo) {
   const since = Date.now();
   const started = run("gh", ["workflow", "run", SMOKE_WORKFLOW, "--repo", repo, "--ref", "main", "-f", `tag=${tag}`], { capture: true, allowFailure: true });
@@ -18,6 +47,5 @@ export function smokeTest(run, tag, repo) {
   }
   if (!found) return `${SMOKE_WORKFLOW} was started but its run did not show up within a minute`;
   console.log(`Smoke test running on a clean Windows runner: ${found.url}`);
-  const watched = run("gh", ["run", "watch", String(found.databaseId), "--repo", repo, "--exit-status", "--interval", "15"], { allowFailure: true });
-  return watched.status === 0 ? null : `the smoke test failed: ${found.url}`;
+  return watchRun(run, { repo, id: found.databaseId, interval: 15 }) ? null : `the smoke test failed: ${found.url}`;
 }

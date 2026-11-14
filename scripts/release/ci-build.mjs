@@ -1,7 +1,7 @@
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync } from "node:fs";
 import { commandLine } from "./command-line.mjs";
-import { dispatchedRun } from "./smoke-test.mjs";
+import { dispatchedRun, sleep, watchRun } from "./smoke-test.mjs";
 
 export function signerArgs(env, file) {
   const key = env.TAURI_SIGNING_PRIVATE_KEY ?? "";
@@ -28,19 +28,27 @@ export function startCiBuild(run, { workflow, repo, revision, version }) {
   return { since };
 }
 
-export function downloadCiBuild(run, { workflow, label, repo, artifact, since, dir }) {
-  let found = null;
-  for (let attempt = 0; attempt < 12 && !found; attempt += 1) {
-    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 5000);
+export function findCiRun(run, { workflow, repo, since }) {
+  for (let attempt = 0; attempt < 12; attempt += 1) {
+    sleep(5000);
     const listed = run("gh", ["run", "list", "--repo", repo, "--workflow", workflow, "--limit", "5", "--json", "databaseId,createdAt,event,url"], { capture: true, allowFailure: true });
-    if (listed.status === 0) found = dispatchedRun(JSON.parse(listed.stdout || "[]"), since);
+    const found = listed.status === 0 ? dispatchedRun(JSON.parse(listed.stdout || "[]"), since) : null;
+    if (found) return found;
   }
+  return null;
+}
+
+export function downloadCiBuild(run, { workflow, label, repo, artifact, since, runId, dir }) {
+  const found = runId ? { databaseId: runId, url: `https://github.com/${repo}/actions/runs/${runId}` } : findCiRun(run, { workflow, repo, since });
   if (!found) return `${workflow} was started but its run did not show up within a minute`;
   console.log(`${label} build running: ${found.url}`);
-  const watched = run("gh", ["run", "watch", String(found.databaseId), "--repo", repo, "--exit-status", "--interval", "20"], { allowFailure: true });
-  if (watched.status !== 0) return `the ${label} build failed: ${found.url}`;
+  if (!watchRun(run, { repo, id: found.databaseId, interval: 20 })) return `the ${label} build failed: ${found.url}`;
   mkdirSync(dir, { recursive: true });
-  const downloaded = run("gh", ["run", "download", String(found.databaseId), "--repo", repo, "--name", artifact, "--dir", dir], { capture: true, allowFailure: true });
-  if (downloaded.status !== 0) return `could not download the ${label} build: ${downloaded.stderr.trim()}`;
-  return null;
+  let downloaded = null;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    if (attempt > 0) sleep(10000);
+    downloaded = run("gh", ["run", "download", String(found.databaseId), "--repo", repo, "--name", artifact, "--dir", dir], { capture: true, allowFailure: true });
+    if (downloaded.status === 0) return null;
+  }
+  return `could not download the ${label} build: ${downloaded.stderr.trim()}`;
 }
