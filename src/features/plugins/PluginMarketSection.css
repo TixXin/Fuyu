@@ -300,6 +300,10 @@
   font-size: 11px;
 }
 
+.plugin-market__tags .plugin-market__tag--unsupported {
+  color: var(--color-warning);
+}
+
 .plugin-market__tags .plugin-market__tag--signed {
   display: inline-flex;
   gap: 3px;

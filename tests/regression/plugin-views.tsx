@@ -7,6 +7,8 @@ import { DetailTemplate } from "../../src/features/plugin-views/templates/Detail
 import { FormTemplate } from "../../src/features/plugin-views/templates/FormTemplate";
 import { ListTemplate } from "../../src/features/plugin-views/templates/ListTemplate";
 import { StatusTemplate } from "../../src/features/plugin-views/templates/StatusTemplate";
+import { WebviewTemplate } from "../../src/features/plugin-views/templates/WebviewTemplate";
+import { isMacOS } from "../../src/lib/platform";
 import { noteOpenRequest } from "../../src/features/plugin-views/openRequests";
 import "../../src/features/plugin-views/PluginViewPage.css";
 
@@ -64,7 +66,7 @@ const models = {
   statusEmpty: {},
 };
 
-type Case = { name: string; template: "list" | "detail" | "form" | "status"; model: unknown };
+type Case = { name: string; template: "list" | "detail" | "form" | "status" | "webview"; model: unknown };
 const cases: Case[] = [
   { name: "list", template: "list", model: models.list },
   { name: "list-keys", template: "list", model: models.listKeys },
@@ -75,6 +77,7 @@ const cases: Case[] = [
   { name: "form-empty", template: "form", model: models.formEmpty },
   { name: "status", template: "status", model: models.status },
   { name: "status-empty", template: "status", model: models.statusEmpty },
+  { name: "webview", template: "webview", model: null },
 ];
 
 function Template({ name, template, model }: { name: string; template: Case["template"]; model: unknown }) {
@@ -82,6 +85,7 @@ function Template({ name, template, model }: { name: string; template: Case["tem
   if (template === "list") return <ListTemplate {...props} />;
   if (template === "detail") return <DetailTemplate {...props} />;
   if (template === "form") return <FormTemplate {...props} />;
+  if (template === "webview") return <WebviewTemplate pluginId={props.pluginId} viewId={name} active />;
   return <StatusTemplate {...props} />;
 }
 
@@ -181,6 +185,10 @@ async function check() {
   expect("list rows have no box until hovered", getComputedStyle(row).backgroundColor === "rgba(0, 0, 0, 0)");
   const detailPage = document.querySelector<HTMLElement>('[data-case="detail-520"] .plugin-view')!;
   expect("other templates keep their card", getComputedStyle(detailPage).backgroundImage !== "none");
+  const asked = sent.some((line) => line.startsWith("show_plugin_webview"));
+  const note = document.querySelector('[data-case="webview-300"] .plugin-webview--unsupported');
+  if (isMacOS) expect("on a Mac a webview page shows a note and asks for no web page", note !== null && (note.textContent ?? "").length > 0 && !asked);
+  else expect("on Windows a webview page keeps its box for the web page", note === null && document.querySelector('[data-case="webview-300"] .plugin-webview') !== null);
   await checkKeys(expect);
   const output = document.getElementById("results");
   if (output) output.textContent = `${results.filter((line) => line.startsWith("FAIL")).length === 0 ? "ALL PASS" : "SOME FAILED"}\n${results.join("\n")}`;
