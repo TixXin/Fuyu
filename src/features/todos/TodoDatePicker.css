@@ -45,11 +45,199 @@
   outline-offset: 2px;
 }
 
-.todo-date-picker__input {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0;
-  pointer-events: none;
+.todo-island .todo-date-picker__button--open:not(.todo-date-picker__button--later) {
+  color: var(--text-1);
+  background: rgba(var(--todo-ink), 0.16);
+}
+
+.todo-date-calendar {
+  --cal-ink: var(--todo-cal-ink, 241, 240, 246);
+  --cal-fill: var(--todo-cal-fill, #000);
+  --cal-accent: var(--color-accent);
+  --cal-later: color-mix(in srgb, var(--todo-later-base, #a68bff) 75%, rgb(var(--cal-ink)));
+  --cal-lift: rgba(var(--cal-ink), 0.08);
+  position: fixed;
+  z-index: 1000;
+  width: 236px;
+  display: grid;
+  gap: 4px;
+  padding: 8px;
+  box-sizing: border-box;
+  color: rgba(var(--cal-ink), 0.94);
+  background: linear-gradient(var(--cal-lift), var(--cal-lift)) var(--cal-fill);
+  border-radius: 14px;
+  box-shadow:
+    0 12px 32px var(--popover-shadow, rgba(0, 0, 0, 0.42)),
+    inset 0 0 0 1px rgba(var(--cal-ink), 0.12);
+  font-family: var(--font-ui);
+  font-size: 12px;
+  animation: todoCalendarIn 120ms ease both;
+}
+
+.island-light .todo-date-calendar {
+  --cal-later: color-mix(in srgb, var(--todo-later-base, #a68bff) 55%, rgb(var(--cal-ink)));
+  --cal-lift: transparent;
+}
+
+.todo-date-calendar :where(button) {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  font: inherit;
+  cursor: pointer;
+}
+
+.todo-date-calendar :where(button):focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--cal-accent) 80%, transparent);
+  outline-offset: -2px;
+}
+
+.todo-date-calendar__head {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 26px;
+}
+
+.todo-date-calendar__head strong {
+  flex: 1;
+  min-width: 0;
+  padding-left: 4px;
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.todo-date-calendar__nav {
+  width: 26px;
+  height: 26px;
+  display: inline-grid;
+  place-items: center;
+  color: rgba(var(--cal-ink), 0.72);
+  border-radius: var(--radius-md);
+}
+
+.todo-date-calendar__nav:hover:not(:disabled) {
+  color: rgba(var(--cal-ink), 0.96);
+  background: rgba(var(--cal-ink), 0.08);
+}
+
+.todo-date-calendar__nav:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.todo-date-calendar__weekdays,
+.todo-date-calendar__grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1px;
+}
+
+.todo-date-calendar__weekdays {
+  height: 18px;
+  align-items: center;
+  color: rgba(var(--cal-ink), 0.5);
+  font-size: 11px;
+  text-align: center;
+}
+
+.todo-date-calendar__day {
+  position: relative;
+  height: 25px;
+  display: grid;
+  place-items: center;
+  color: rgba(var(--cal-ink), 0.92);
+  border-radius: var(--radius-md);
+  font-size: 12.5px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.todo-date-calendar__day:hover:not(:disabled) {
+  background: rgba(var(--cal-ink), 0.1);
+}
+
+.todo-date-calendar__day--outside {
+  color: rgba(var(--cal-ink), 0.55);
+  font-weight: 400;
+}
+
+.todo-date-calendar__day--past {
+  color: rgba(var(--cal-ink), 0.22);
+  font-weight: 400;
+  text-decoration: line-through;
+  text-decoration-color: rgba(var(--cal-ink), 0.18);
+}
+
+.todo-date-calendar .todo-date-calendar__day--past {
+  cursor: default;
+}
+
+.todo-date-calendar__day--today {
+  color: var(--cal-accent);
+  font-weight: 700;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--cal-accent) 55%, transparent);
+}
+
+.todo-date-calendar__day--selected,
+.todo-date-calendar__day--selected:hover:not(:disabled) {
+  color: var(--cal-fill);
+  background: var(--cal-later);
+  font-weight: 700;
+  box-shadow: none;
+}
+
+.todo-date-calendar__day--today.todo-date-calendar__day--selected,
+.todo-date-calendar__day--today.todo-date-calendar__day--selected:hover {
+  color: var(--color-on-accent);
+  background: var(--cal-accent);
+}
+
+.todo-date-calendar__quick {
+  display: flex;
+  gap: 4px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(var(--cal-ink), 0.1);
+}
+
+.todo-date-calendar__chip {
+  flex: 1;
+  min-width: 0;
+  height: 26px;
+  padding: 0 6px;
+  overflow: hidden;
+  color: rgba(var(--cal-ink), 0.78);
+  background: rgba(var(--cal-ink), 0.06);
+  border-radius: var(--radius-pill);
+  font-size: 12px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.todo-date-calendar__chip:hover {
+  color: rgba(var(--cal-ink), 0.96);
+  background: rgba(var(--cal-ink), 0.12);
+}
+
+.todo-date-calendar .todo-date-calendar__chip--on {
+  color: var(--cal-accent);
+  background: color-mix(in srgb, var(--cal-accent) 16%, transparent);
+}
+
+@keyframes todoCalendarIn {
+  from { opacity: 0; transform: translateY(-3px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .todo-date-calendar {
+    animation: none;
+  }
 }
