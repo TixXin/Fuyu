@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { BadgeCheck, KeyRound, Lock, Star, ThumbsUp } from "lucide-react";
+import { BadgeCheck, KeyRound, Lock, Star, ThumbsUp, TriangleAlert } from "lucide-react";
 import { useLocale, useTranslation } from "../../i18n";
 import { MARKET_CATEGORIES, marketPublisher, openPluginHomepage, type MarketCategory, type MarketPlugin, type MarketSnapshot } from "./api";
 import type { MarketLike } from "./marketLikes";
 import { MarketPluginAction } from "./MarketPluginAction";
 import { MarketPluginDetails } from "./MarketPluginDetails";
-import { RuntimeHints } from "./RuntimeHints";
+import { runtimeProblem } from "./runtimeProblem";
+import { isMacOS } from "../../lib/platform";
 import { PluginIcon } from "./PluginIcon";
 import { isSensitivePermission } from "./promptedPermissions";
 
@@ -34,6 +35,10 @@ export function MarketPluginItem({
   const text = t.settings.plugins.market;
   const { locale } = useLocale();
   const [open, setOpen] = useState(false);
+  const [confirmingTrust, setConfirmingTrust] = useState(false);
+  const problem = runtimeProblem(isMacOS ? "macos" : "windows", plugin.runtime, plugin.platforms, market.nodeAvailable, market.powershellAvailable);
+  const category = plugin.categories.filter(isCategory)[0];
+  const hasTags = Boolean(plugin.signedBy || plugin.webview || category);
   const publisher = marketPublisher(plugin, market);
   const official = publisher === market.officialPublisher;
   const trusted = official || market.trustedPublishers.includes(publisher);
@@ -43,8 +48,9 @@ export function MarketPluginItem({
 
   return (
     <article className={`plugin-market__item${open ? " plugin-market__item--open" : ""}`}>
-      <PluginIcon className="plugin-market__icon" id={plugin.id} name={plugin.name[locale]} categories={plugin.categories} />
       <button className="plugin-market__summary" type="button" aria-expanded={open} onClick={() => setOpen(!open)}>
+        <PluginIcon className="plugin-market__icon" id={plugin.id} name={plugin.name[locale]} categories={plugin.categories} />
+        <span className="plugin-market__heading">
         <span className="plugin-market__title">
           <strong>{plugin.name[locale]}</strong>
           {official ? (
@@ -61,12 +67,20 @@ export function MarketPluginItem({
           <span className="plugin-market__version">v{plugin.version}</span>
         </span>
         <span className="plugin-market__meta">
-          {official ? null : <span>{text.publisher(publisher)}</span>}
+          {official ? null : <span className="plugin-market__publisher">{text.publisher(publisher)}</span>}
           <span className={`plugin-market__permissions${sensitive ? " plugin-market__permissions--sensitive" : ""}`}>
             <Lock size={10} strokeWidth={2.4} aria-hidden="true" />
             {permissions.length > 0 ? t.settings.plugins.permissionCount(permissions.length) : text.noPermissions}
           </span>
-          {runtime ? <span>{runtime}</span> : null}
+          {runtime ? (
+            <span className={problem === "node" || problem === "powershell" ? "plugin-market__runtime plugin-market__runtime--missing" : "plugin-market__runtime"}>
+              {problem === "node" || problem === "powershell" ? <TriangleAlert size={10} strokeWidth={2.4} aria-hidden="true" /> : null}
+              {problem === "node" ? t.settings.plugins.needsNode : problem === "powershell" ? t.settings.plugins.needsPowershell : runtime}
+            </span>
+          ) : null}
+        </span>
+        {hasTags ? (
+        <span className="plugin-market__tags">
           {plugin.signedBy ? (
             <span className="plugin-market__tag plugin-market__tag--signed">
               <KeyRound size={10} strokeWidth={2.4} aria-hidden="true" />
@@ -78,11 +92,9 @@ export function MarketPluginItem({
               {text.customUi}
             </span>
           ) : null}
-          {plugin.categories.filter(isCategory).map((category) => (
-            <span key={category} className="plugin-market__tag">
-              {text.category[category]}
-            </span>
-          ))}
+          {category ? <span className="plugin-market__tag">{text.category[category]}</span> : null}
+        </span>
+        ) : null}
         </span>
         {plugin.description?.[locale] ? <span className={open ? "plugin-market__description" : "plugin-market__description plugin-market__clamp"}>{plugin.description[locale]}</span> : null}
       </button>
@@ -107,15 +119,23 @@ export function MarketPluginItem({
             <span>{like.count}</span>
           </button>
         ) : null}
-        <MarketPluginAction plugin={plugin} trusted={trusted} installingId={installingId} onInstall={onInstall} onManage={onManage} />
+        <MarketPluginAction
+          plugin={plugin}
+          trusted={trusted}
+          installingId={installingId}
+          confirmingTrust={confirmingTrust}
+          onConfirmingTrustChange={setConfirmingTrust}
+          onInstall={onInstall}
+          onManage={onManage}
+        />
       </div>
       <div className="plugin-market__notes">
         {plugin.revoked ? <p className="plugin-card__error">{plugin.revoked[locale]}</p> : null}
-        {!trusted && !plugin.revoked ? <p className="plugin-card__hint">{text.trustHint(publisher)}</p> : null}
+        {!trusted && !plugin.revoked && confirmingTrust ? <p className="plugin-card__hint plugin-card__hint--warn">{text.trustHint(publisher)}</p> : null}
         {plugin.signingKeyChanged && plugin.installedVersion !== null && !plugin.revoked ? (
           <p className="plugin-card__hint plugin-card__hint--warn">{plugin.signedBy ? text.keyChanged(plugin.signedBy) : text.signatureDropped}</p>
         ) : null}
-        <RuntimeHints runtime={plugin.runtime} platforms={plugin.platforms} nodeAvailable={market.nodeAvailable} powershellAvailable={market.powershellAvailable} />
+        {problem === "platform" ? <p className="plugin-card__hint plugin-card__hint--warn">{isMacOS ? t.settings.plugins.notForMac : t.settings.plugins.notForWindows}</p> : null}
         {open ? <MarketPluginDetails plugin={plugin} /> : null}
       </div>
     </article>

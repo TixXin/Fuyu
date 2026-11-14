@@ -24,14 +24,14 @@
   font-size: 22px;
 }
 
-.plugin-icon--productivity { --plugin-tone: rgba(116, 214, 255, 0.24); }
-.plugin-icon--todos { --plugin-tone: rgba(47, 160, 107, 0.4); }
-.plugin-icon--developer { --plugin-tone: rgba(160, 132, 255, 0.32); }
-.plugin-icon--media { --plugin-tone: rgba(255, 138, 101, 0.32); }
-.plugin-icon--messages { --plugin-tone: rgba(255, 209, 102, 0.28); }
-.plugin-icon--information { --plugin-tone: rgba(110, 168, 255, 0.3); }
-.plugin-icon--utilities { --plugin-tone: rgba(var(--overlay-rgb, 248, 246, 240), 0.16); }
-.plugin-icon--sounds { --plugin-tone: rgba(255, 159, 67, 0.26); }
+.plugin-icon--productivity { --plugin-tone: rgba(var(--overlay-rgb, 248, 246, 240), 0.12); }
+.plugin-icon--todos { --plugin-tone: rgba(var(--overlay-rgb, 248, 246, 240), 0.12); }
+.plugin-icon--developer { --plugin-tone: rgba(var(--overlay-rgb, 248, 246, 240), 0.12); }
+.plugin-icon--media { --plugin-tone: rgba(var(--overlay-rgb, 248, 246, 240), 0.12); }
+.plugin-icon--messages { --plugin-tone: rgba(var(--overlay-rgb, 248, 246, 240), 0.12); }
+.plugin-icon--information { --plugin-tone: rgba(var(--overlay-rgb, 248, 246, 240), 0.12); }
+.plugin-icon--utilities { --plugin-tone: rgba(var(--overlay-rgb, 248, 246, 240), 0.12); }
+.plugin-icon--sounds { --plugin-tone: rgba(var(--overlay-rgb, 248, 246, 240), 0.12); }
 
 .plugin-icon__dot {
   position: absolute;

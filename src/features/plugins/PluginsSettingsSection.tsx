@@ -12,6 +12,7 @@ import { PluginCard } from "./PluginCard";
 import { PluginDock } from "./PluginDock";
 import { PluginDetailPage } from "./PluginDetailPage";
 import { PluginNotice } from "./PluginNotice";
+import { RuntimeBanner } from "./RuntimeBanner";
 import { usePlugins } from "./usePlugins";
 import "./PluginsSettingsSection.css";
 
@@ -108,6 +109,7 @@ export function PluginsSettingsSection({ initialOpenId = null }: { initialOpenId
       <PluginNotice notice={notice} action={["reload", "folder"]} />
       {error ? <p className="plugin-card__error">{error}</p> : null}
       {snapshot && plugins.length === 0 ? <p className="settings-section__hint">{t.settings.plugins.empty}</p> : null}
+      {snapshot ? <RuntimeBanner plugins={plugins} nodeAvailable={snapshot.nodeAvailable} powershellAvailable={snapshot.powershellAvailable} /> : null}
       {plugins.length > 0 ? (
         <InstalledPluginsToolbar query={query} onQueryChange={setQuery} />
       ) : null}
