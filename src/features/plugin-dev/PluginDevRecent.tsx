@@ -19,7 +19,7 @@ export function PluginDevRecent({
   if (plugins.length === 0 && !restores) return null;
   return (
     <div className="plugin-dev__recent">
-      <strong>{text.recent}</strong>
+      {plugins.length ? <strong>{text.recent}</strong> : null}
       {restores ? <p className="settings-section__hint">{text.recentRestores}</p> : null}
       {plugins.length ? (
         <ul className="plugin-dev__plugins">
