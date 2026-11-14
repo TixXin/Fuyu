@@ -623,6 +623,11 @@ fn current_unix_millis() -> i64 {
         .unwrap_or_default()
 }
 
+#[cfg(windows)]
+pub(crate) fn coexist_refresh() {
+    hotkey::request_hotkey_refresh();
+}
+
 macro_rules! tauri_commands {
     ($next:ident [$($done:tt)*] $($rest:tt)*) => {
         $next!([$($done)*

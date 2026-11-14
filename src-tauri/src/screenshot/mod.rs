@@ -488,6 +488,11 @@ pub async fn screenshot_paste_to_front(path: String) -> Result<(), String> {
         .map_err(|error| format!("Failed to paste the screenshot: {error}"))?
 }
 
+#[cfg(windows)]
+pub(crate) fn coexist_refresh() {
+    hotkeys::coexist_refresh();
+}
+
 macro_rules! tauri_commands {
     ($next:ident [$($done:tt)*] $($rest:tt)*) => {
         $next!([$($done)*

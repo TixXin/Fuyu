@@ -47,6 +47,11 @@ pub fn init(app: &AppHandle) -> Result<(), String> {
         .map_err(|error| format!("Failed to resolve app data directory: {error}"))?
         .join(config::CONFIG_FILE_NAME);
     let (mut saved, mut changed) = config::load_config(&path)?;
+    let own_port = crate::dev_lane::port(saved.port, config::PREFERRED_PORT);
+    if own_port != saved.port {
+        saved.port = own_port;
+        changed = true;
+    }
     let emitter = app.clone();
     let notify: server::Notify = Arc::new(move |event| {
         let _ = match event {

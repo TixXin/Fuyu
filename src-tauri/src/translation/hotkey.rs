@@ -23,10 +23,13 @@ const HOTKEY_ID: i32 = 0x4654;
 const SELECTION_HOTKEY_ID: i32 = 0x4655;
 const CHANGE_HOTKEY_MESSAGE: u32 = WM_APP + 0x52;
 const CHANGE_SELECTION_HOTKEY_MESSAGE: u32 = WM_APP + 0x53;
+const COEXIST_MESSAGE: u32 = WM_APP + 0x54;
 
 static HOTKEY_WINDOW: Mutex<Option<isize>> = Mutex::new(None);
 static ACTIVE_BINDING: Mutex<Option<ShortcutBinding>> = Mutex::new(None);
 static SELECTION_BINDING: Mutex<Option<ShortcutBinding>> = Mutex::new(None);
+static WANTED_BINDING: Mutex<Option<ShortcutBinding>> = Mutex::new(None);
+static WANTED_SELECTION_BINDING: Mutex<Option<ShortcutBinding>> = Mutex::new(None);
 type PendingBinding = (Option<ShortcutBinding>, mpsc::Sender<Result<String, UserError>>);
 
 static PENDING_BINDING: Mutex<Option<PendingBinding>> = Mutex::new(None);
@@ -38,6 +41,38 @@ pub(super) fn start(_app: &AppHandle) {
             eprintln!("failed to initialize translation shortcut: {error}");
         }
     });
+}
+
+pub(super) fn coexist_refresh() {
+    let window = HOTKEY_WINDOW.lock().ok().and_then(|window| *window);
+    if let Some(window) = window {
+        let _ = message_window::post_message(HWND(window as *mut _), COEXIST_MESSAGE);
+    }
+}
+
+fn remember(slot: &Mutex<Option<ShortcutBinding>>, binding: Option<ShortcutBinding>) {
+    if let Ok(mut wanted) = slot.lock() {
+        *wanted = binding;
+    }
+}
+
+fn follow_coexist(hwnd: HWND, id: i32, active_slot: &Mutex<Option<ShortcutBinding>>, wanted_slot: &Mutex<Option<ShortcutBinding>>) {
+    let Ok(mut active) = active_slot.lock() else { return };
+    if crate::coexist::yielding() {
+        if active.take().is_some() {
+            let _ = win32::hotkey::unregister(hwnd, id);
+        }
+        return;
+    }
+    if active.is_some() {
+        return;
+    }
+    let wanted = wanted_slot.lock().ok().and_then(|wanted| wanted.clone());
+    if let Some(binding) = wanted {
+        if register_binding(hwnd, id, &binding).is_ok() {
+            *active = Some(binding);
+        }
+    }
 }
 
 pub(super) fn change_hotkey(binding: Option<ShortcutBinding>) -> Result<String, UserError> {
@@ -92,8 +127,8 @@ fn run_hotkey_loop() -> Result<(), String> {
         "FocuSD Translation Hotkey",
     )
     .map_err(|error| error.to_string())?;
-    register_default(hwnd, DEFAULT_SHORTCUT, HOTKEY_ID, &ACTIVE_BINDING)?;
-    register_default(hwnd, DEFAULT_SELECTION_SHORTCUT, SELECTION_HOTKEY_ID, &SELECTION_BINDING)?;
+    register_default(hwnd, DEFAULT_SHORTCUT, HOTKEY_ID, &ACTIVE_BINDING, &WANTED_BINDING)?;
+    register_default(hwnd, DEFAULT_SELECTION_SHORTCUT, SELECTION_HOTKEY_ID, &SELECTION_BINDING, &WANTED_SELECTION_BINDING)?;
     *HOTKEY_WINDOW.lock().map_err(|error| error.to_string())? = Some(hwnd.0 as isize);
     message_window::run_message_loop();
     let _ = win32::hotkey::unregister(hwnd, HOTKEY_ID);
@@ -106,9 +141,13 @@ fn register_default(
     shortcut: &str,
     id: i32,
     slot: &Mutex<Option<ShortcutBinding>>,
+    wanted_slot: &Mutex<Option<ShortcutBinding>>,
 ) -> Result<(), String> {
     if let Some(binding) = parse_shortcut_binding(shortcut).filter(|_| ENABLED.load(Ordering::SeqCst)) {
-        if register_binding(hwnd, id, &binding).is_ok() {
+        if crate::coexist::yielding() {
+            remember(wanted_slot, Some(binding));
+        } else if register_binding(hwnd, id, &binding).is_ok() {
+            remember(wanted_slot, Some(binding.clone()));
             *slot.lock().map_err(|error| error.to_string())? = Some(binding);
         }
     }
@@ -125,6 +164,7 @@ fn apply_binding_change(
     id: i32,
     pending_slot: &Mutex<Option<PendingBinding>>,
     active_slot: &Mutex<Option<ShortcutBinding>>,
+    wanted_slot: &Mutex<Option<ShortcutBinding>>,
 ) {
     let pending = pending_slot.lock().ok().and_then(|mut value| value.take());
     let Some((binding, sender)) = pending else {
@@ -135,9 +175,16 @@ fn apply_binding_change(
         let _ = win32::hotkey::unregister(hwnd, id);
     }
     let Some(binding) = binding else {
+        remember(wanted_slot, None);
         let _ = sender.send(Ok(String::new()));
         return;
     };
+    if crate::coexist::yielding() {
+        let label = binding.label.clone();
+        remember(wanted_slot, Some(binding));
+        let _ = sender.send(Ok(label));
+        return;
+    }
     let result = register_binding(hwnd, id, &binding).map(|()| binding.label.clone());
     if let Ok(mut active) = active_slot.lock() {
         *active = if result.is_ok() {
@@ -145,6 +192,7 @@ fn apply_binding_change(
         } else {
             previous.and_then(|old| register_binding(hwnd, id, &old).ok().map(|()| old))
         };
+        remember(wanted_slot, active.clone());
     }
     let _ = sender.send(result);
 }
@@ -167,11 +215,16 @@ impl WindowMessages for TranslationHotkeyWindow {
             return Some(LRESULT(0));
         }
         if message == CHANGE_HOTKEY_MESSAGE {
-            apply_binding_change(hwnd, HOTKEY_ID, &PENDING_BINDING, &ACTIVE_BINDING);
+            apply_binding_change(hwnd, HOTKEY_ID, &PENDING_BINDING, &ACTIVE_BINDING, &WANTED_BINDING);
             return Some(LRESULT(0));
         }
         if message == CHANGE_SELECTION_HOTKEY_MESSAGE {
-            apply_binding_change(hwnd, SELECTION_HOTKEY_ID, &PENDING_SELECTION_BINDING, &SELECTION_BINDING);
+            apply_binding_change(hwnd, SELECTION_HOTKEY_ID, &PENDING_SELECTION_BINDING, &SELECTION_BINDING, &WANTED_SELECTION_BINDING);
+            return Some(LRESULT(0));
+        }
+        if message == COEXIST_MESSAGE {
+            follow_coexist(hwnd, HOTKEY_ID, &ACTIVE_BINDING, &WANTED_BINDING);
+            follow_coexist(hwnd, SELECTION_HOTKEY_ID, &SELECTION_BINDING, &WANTED_SELECTION_BINDING);
             return Some(LRESULT(0));
         }
         None

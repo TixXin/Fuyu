@@ -53,6 +53,10 @@ pub(super) fn request_hotkey_refresh() {
 
 pub(super) fn refresh_registered_hotkey(hwnd: HWND) {
     unregister_current_hotkey(hwnd);
+    if crate::coexist::yielding() {
+        report_hotkey_error(None);
+        return;
+    }
 
     let snapshot = service().ok().and_then(|service| service.snapshot().ok());
 

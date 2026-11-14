@@ -160,6 +160,11 @@ fn app_version(app: &AppHandle) -> String {
     app.package_info().version.to_string()
 }
 
+#[cfg(windows)]
+pub(crate) fn coexist_refresh() {
+    keybindings::coexist_refresh();
+}
+
 macro_rules! tauri_commands {
     ($next:ident [$($done:tt)*] $($rest:tt)*) => {
         $next!([$($done)*

@@ -40,6 +40,17 @@ fn service_in(lane: Option<u32>, base: &str) -> String {
     }
 }
 
+pub(crate) fn port(saved: u16, preferred: u16) -> u16 {
+    port_in(lane(), saved, preferred)
+}
+
+fn port_in(lane: Option<u32>, saved: u16, preferred: u16) -> u16 {
+    match lane.and_then(|lane| u16::try_from(lane).ok()) {
+        Some(lane) if saved == preferred => preferred.saturating_add(lane),
+        _ => saved,
+    }
+}
+
 #[cfg(target_os = "macos")]
 pub(crate) fn separate_webview_storage(lane: u32) {
     crate::macos::process_name::set_process_name(&format!("fuyu-lane-{lane}"));
@@ -70,7 +81,16 @@ pub(crate) fn refuse_in_preview(action: &str) -> Result<(), String> {
 
 #[cfg(test)]
 mod tests {
-    use super::{chosen, identifier, left_edge, service_in, stage_x};
+    use super::{chosen, identifier, left_edge, port_in, service_in, stage_x};
+
+    #[test]
+    fn a_lane_keeps_off_the_installed_apps_ports() {
+        assert_eq!(port_in(None, 47830, 47830), 47830);
+        assert_eq!(port_in(Some(1), 47830, 47830), 47831);
+        assert_eq!(port_in(Some(7), 39271, 39271), 39278);
+        assert_eq!(port_in(Some(1), 51234, 47830), 51234);
+        assert_eq!(port_in(Some(1), 47831, 47830), 47831);
+    }
 
     #[test]
     fn a_development_build_is_lane_one_unless_told_otherwise() {

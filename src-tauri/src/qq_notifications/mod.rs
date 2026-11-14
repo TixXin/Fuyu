@@ -237,11 +237,14 @@ fn publish(
     snapshot: NotificationSnapshot,
     newest_id: Option<String>,
 ) {
+    let newest_id = newest_id.filter(|_| crate::coexist::banner_visible(true));
     plugin_view::publish_received(&snapshot, newest_id.as_deref());
-    let window_visible = service
-        .app
-        .get_webview_window(crate::island::WINDOW_LABEL)
-        .is_some_and(|window| window.is_visible().unwrap_or(false));
+    let window_visible = crate::coexist::banner_visible(
+        service
+            .app
+            .get_webview_window(crate::island::WINDOW_LABEL)
+            .is_some_and(|window| window.is_visible().unwrap_or(false)),
+    );
     let event = NotificationEvent {
         snapshot,
         newest_id,

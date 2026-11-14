@@ -5,6 +5,8 @@ mod calendar;
 mod cc_connect;
 mod claude_usage;
 mod clipboard_history;
+#[cfg_attr(not(windows), path = "coexist/unsupported.rs")]
+mod coexist;
 mod dev_lane;
 mod device_events;
 #[cfg_attr(target_os = "macos", path = "device_use/macos.rs")]
@@ -134,6 +136,7 @@ pub fn run() {
             #[cfg(target_os = "macos")]
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);
             tray::build_tray(app)?;
+            coexist::init(app.handle());
             if let Err(error) = clipboard_history::init(app.handle()) {
                 eprintln!("failed to initialize clipboard history: {error}");
             }
@@ -215,6 +218,7 @@ pub fn run() {
         })
         .invoke_handler(collect_commands!([]
             file_shelf;
+            coexist;
             local_api;
             plugin_host;
             mail;

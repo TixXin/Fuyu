@@ -77,6 +77,8 @@ export type ErrorCode =
   | "shortcut.invalid"
   | "shortcut.notReady"
   | "shortcut.busy"
+  | "coexist.devOnly"
+  | "coexist.save"
   | "shortcut.update"
   | "shortcut.timeout"
   | "shortcut.taken"
@@ -280,6 +282,8 @@ export const zhCN: ErrorsText = {
     "shortcut.invalid": "快捷键无效，请使用至少一个修饰键。",
     "shortcut.notReady": "快捷键服务尚未准备好。",
     "shortcut.busy": "快捷键正在更新。",
+    "coexist.devOnly": "只有开发版有这个切换。",
+    "coexist.save": "没能保存这个选择。",
     "shortcut.update": "无法更新快捷键。",
     "shortcut.timeout": "快捷键更新超时。",
     "shortcut.taken": ({ shortcut }) => `快捷键 ${shortcut} 已被占用或无法注册。`,
@@ -480,6 +484,8 @@ export const en: ErrorsText = {
     "shortcut.invalid": "That shortcut is not valid; use at least one modifier key.",
     "shortcut.notReady": "The shortcut service is not ready yet.",
     "shortcut.busy": "The shortcut is being changed already.",
+    "coexist.devOnly": "Only a development build has this switch.",
+    "coexist.save": "Could not save the choice.",
     "shortcut.update": "Could not change the shortcut.",
     "shortcut.timeout": "Changing the shortcut took too long.",
     "shortcut.taken": ({ shortcut }) => `The shortcut ${shortcut} is taken or cannot be registered.`,
