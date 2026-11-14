@@ -105,7 +105,8 @@ src-tauri/src/
 - 只在 Windows 上有的模块（或子模块）用 `#[cfg_attr(not(windows), path = "<名字>_unsupported.rs")]`（目录模块用 `<目录>/unsupported.rs`）换成 Mac 上的空实现：保留同样的命令名和参数、`tauri_commands!` 清单，以及其他模块用到的函数；命令用 `crate::user_error::unsupported_commands!` 生成，返回 `platform.unsupported`；开关类命令写成空函数。Windows 上的原文件不为 Mac 改动。
 - 两个平台都要用的系统能力放在 `win32/` 和 `macos/` 的同名模块里，签名一致，业务代码写 `crate::platform::<模块>`。
 - 只在 Windows 上用到、Mac 上因此成了「未使用」的纯函数，用 `#[cfg(any(windows, test))]` 或 `#[cfg_attr(not(windows), allow(dead_code))]`；依赖 Windows 路径、程序或 API 的测试加 `#[cfg(windows)]`。
-- 改动后两个平台都要过 clippy：Windows 上照常跑；在 Mac 上跑 `cargo clippy --all-targets -- -D warnings` 和 `cargo test`，CI 的 `rust-macos` job 也会跑。在 Mac 上交叉检查 Windows：`brew install mingw-w64`、`rustup target add x86_64-pc-windows-gnu` 后 `cargo clippy --target x86_64-pc-windows-gnu --all-targets -- -D warnings`（只检查，不能运行测试）。
+- 写的时候就避开这类「未使用」：只给 Windows 模块用的辅助函数放进那个 `cfg(windows)` 的模块里，不放在两个平台都编译的文件中；Mac 上的空实现（`unsupported.rs`）参数照旧，但不为它定义只有 Windows 才读字段的结构体，要共用的结构体定义在两边都用得到的地方，或在空实现里加上一条的属性。
+- 改动后两个平台都要过 clippy：Windows 上照常跑；在 Mac 上跑 `cargo clippy --all-targets -- -D warnings` 和 `cargo test`，CI 的 `rust-macos` job 也会跑。在 Windows 上没法交叉检查 Mac（2026-11-14 试过 `--target aarch64-apple-darwin`：`objc2-exception-helper`、`aws-lc-sys` 要面向 macOS 的 C 编译器和苹果的 SDK），Mac 上的编译错误只能由 CI 的 `rust-macos` 发现。在 Mac 上交叉检查 Windows：`brew install mingw-w64`、`rustup target add x86_64-pc-windows-gnu` 后 `cargo clippy --target x86_64-pc-windows-gnu --all-targets -- -D warnings`（只检查，不能运行测试）。
 
 ## unsafe 与 Windows API
 

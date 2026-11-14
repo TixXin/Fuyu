@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { FolderInput, RotateCcw, Send, X } from "lucide-react";
+import { FolderInput, FolderOpen, RotateCcw, Send, X } from "lucide-react";
 import { PluginDevRecent } from "./PluginDevRecent";
 import { SelectControl } from "../../components/controls/SelectControl";
 import { ToggleControl } from "../../components/controls/ToggleControl";
 import { useFlash } from "../../components/settings/useFlash";
 import { useTranslation } from "../../i18n";
-import { PLUGIN_EVENT_NAMES, type PluginTraceEntry } from "./api";
+import { pickPluginFolder, PLUGIN_EVENT_NAMES, type PluginTraceEntry } from "./api";
 import { usePluginDev } from "./usePluginDev";
 import "./PluginDevSection.css";
 
@@ -48,6 +48,11 @@ export function PluginDevSection() {
     if (path.trim() && (await dev.load(path.trim()))) setPath("");
   };
 
+  const pick = async () => {
+    const folder = await pickPluginFolder(text.pick).catch(() => null);
+    if (folder && (await dev.load(folder))) setPath("");
+  };
+
   const send = () => {
     if (!dev.selected) return;
     let value: unknown;
@@ -82,6 +87,10 @@ export function PluginDevSection() {
                   onChange={(event) => setPath(event.currentTarget.value)}
                   onKeyDown={(event) => event.key === "Enter" && void load()}
                 />
+                <button className="plugin-card__button" type="button" disabled={dev.busy} onClick={() => void pick()}>
+                  <FolderOpen size={12} strokeWidth={2.4} />
+                  <span>{text.pick}</span>
+                </button>
                 <button className="plugin-card__button" type="button" disabled={dev.busy || !path.trim()} onClick={() => void load()}>
                   <FolderInput size={12} strokeWidth={2.4} />
                   <span>{text.load}</span>

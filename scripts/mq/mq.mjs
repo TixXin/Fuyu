@@ -32,8 +32,16 @@ function option(args, name) {
   return at >= 0 ? args[at + 1] ?? "" : null;
 }
 
+export function listOption(args, name) {
+  const at = args.indexOf(name);
+  if (at < 0) return null;
+  const rest = args.slice(at + 1);
+  const end = rest.findIndex((arg) => arg.startsWith("--"));
+  return end < 0 ? rest : rest.slice(0, end);
+}
+
 const COMMANDS = {
-  land: (args) => land({ wait: args.includes("--wait"), bodyFile: option(args, "--body"), title: option(args, "--title") }),
+  land: (args) => land({ wait: args.includes("--wait"), bodyFile: option(args, "--body"), title: option(args, "--title"), only: listOption(args, "--only") }),
   wait: (args) => waitCommand(args),
   sync: () => sync(),
   pending,

@@ -34,6 +34,16 @@
 
 不在 `main` 上、在自己分支上的协作者也可以用 `pnpm mq:land`，做法一样。
 
+### 只带几个提交：`pnpm mq:land --only <提交号…>`
+
+一批里别人的大改动还在等 CI（或者在另一个平台上没过），自己有独立的小改动想先合入时用（F36）。只适合不依赖别的未推提交的改动：文档、任务文件、独立的小修复。
+
+1. 提交号写本地还没推的提交（`pnpm mq:pending` 列的那些），可以写几个，合并提交不能带。land 按它们在本地 `main` 上的先后，在仓库内部（`git merge-tree`）把每个提交叠到 `origin/main` 上，作者、时间和说明照旧。工作区和本地 `main` 都不动，本地的提交不改写。
+2. 推到单独的分支 `land/<GitHub 用户名>/<机器名>-<分支名>-only-<第一个提交的短号>`，开一个自己的 PR 并开启自动合并，不和整批的 PR 混在一起。等结果用 `pnpm mq:wait <PR 号>`（要写号，不写号等的是整批的 PR）。
+3. 叠不上就拒绝、不开 PR：列出冲突的文件，以及本地没带上、也改过这些文件的提交。把它们一起写进 `--only`，或者整批 land。只能发现文本上的依赖；代码上依赖没带上的提交（用了它新加的函数）要等 CI 才发现。
+4. 合入后，原提交还在本地 `main` 上（不改写历史），`mq:sync` 把 `origin/main` 合进来时两边内容相同，不冲突。之后 `pnpm mq:pending` 和整批 PR 的正文不再列它（按改动内容比对，`git rev-list --cherry-pick`），整批 PR 的 diff 里也没有它；git 历史里会有内容相同的两个提交对象。
+5. pre-push 的检查照常跑，但它看的是工作区和本地 `main` 的整批提交，不是被推上去的那几个；被带上的提交对不对由 PR 的 CI 把关。
+
 ### 验证
 
 - 想在本机先验一遍：`pnpm verify`（`pnpm check`，改到 `src-tauri/` 或 `plugins/` 时加 `cargo test`；同一棵代码树通过过就不重跑）。land 本身不跑这些，由 PR 上 CI 的 `check` 把关。
@@ -117,4 +127,6 @@ land 从 git 的 pre-push 钩子里跑检查，环境里带着 `GIT_DIR` 等变�
 
 - PR 落后于 `main`：工作流 `.github/workflows/update-behind-prs.yml`（`scripts/mq/updateBehind.mjs`）按开启自动合并的先后，只更新排在最前、能合入的那个 PR；它出问题时 `pnpm mq:wait --update` 自己更新。它用仓库 secret `PR_UPDATER_TOKEN`，过期时 PR 会停在落后状态。
 - `mq:wait` 报告合入了，但本地 `main` 没跟上（工作区里没提交的文件挡住了合并）：等那些文件提交后 `pnpm mq:sync`。land 说「改在仓库内部合并」之后也是这种情况。
-- `tests/scripts/mq.test.mjs` 在临时仓库里真的 land 一次（合并 main、不改写本地提交、不带走没提交的文件、只开一个 PR、没提交的文件挡住合并时照样推出去、冲突时撤回），用假的 `gh` 代替 GitHub。
+- land 说「合 origin/main 时冲突，已撤回」：这是两边的提交真的有内容冲突，land 会在下面列出冲突的文件。上面 git 打出的「Your local changes … would be overwritten by merge」只说明普通合并先被没提交的文件挡住，land 随后改在仓库内部合并也失败了才会走到这里，所以不用等别的会话提交。按提示 `git merge origin/main` 解决、提交，再 land。冲突的文件正好有别的会话没提交的改动时，才需要等它提交。
+- 一批里别人的提交让 PR 的 CI 没过（常见的是 Windows 上写的 Rust 在 `rust-macos` 上编译不过，本机查不出来）：先用 SendMessage 把失败的 job 和报错发给提交它的会话，并订阅它空闲。它空闲后那些文件仍没有改动、也没有回复时，被挡住的会话可以自己做最小的修复（只让检查通过，不改逻辑），单独提交、标题写清补的是哪个提交，再发消息告知对方；动手前先看那些文件有没有没提交的改动，有就不动。
+- `tests/scripts/mq.test.mjs` 在临时仓库里真的 land 一次（合并 main、不改写本地提交、不带走没提交的文件、只开一个 PR、没提交的文件挡住合并时照样推出去、冲突时撤回并列出文件；`--only` 只带选中的提交、缺依赖时拒绝、合入后不再列出），用假的 `gh` 代替 GitHub。

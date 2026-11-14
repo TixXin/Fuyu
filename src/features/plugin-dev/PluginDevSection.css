@@ -44,7 +44,7 @@
 }
 
 .plugin-dev__load {
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto auto;
 }
 
 .plugin-dev__plugins {
@@ -170,6 +170,7 @@
 }
 
 @media (max-width: 520px) {
+  .plugin-dev__load,
   .plugin-dev__event,
   .plugin-dev__plugins > li {
     grid-template-columns: minmax(0, 1fr);

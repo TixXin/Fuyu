@@ -90,6 +90,7 @@ pub fn run() {
                 plugin_host::open_link(app, link, false);
             }
         }))
+        .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .on_window_event(|window, event| {
