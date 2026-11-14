@@ -56,9 +56,28 @@
 岛屿只接受签名有效的索引。索引里有每个插件包的 SHA-256，所以给索引签名，也就间接保护了插件包：即使有人能修改仓库或 CDN 上的文件，没有私钥也无法让岛屿安装被改过的插件。
 
 - **算法**：Ed25519。签名对象是 LF 换行的 `index.json`（`revoked.json` 同理）。签名文件的格式为 `{ "keyId", "signature" }`，或者这种对象的数组（多把密钥各签一份，例如换密钥的过渡期）；数组中任一由可信公钥做出的有效签名即可通过。
-- **公钥**：放在 `plugins/signing-keys.json` 中，编译时嵌入岛屿；`fuyu-plugins` 的 `keys/trusted.json` 与它一致。要换密钥，先把新公钥加进这个文件并发布一个新版本的岛屿。
+- **公钥**：放在 `plugins/signing-keys.json` 中，编译时嵌入岛屿；`fuyu-plugins` 的 `keys/trusted.json` 与它一致。2026-11-14 起（E26）两边都只有 CI 密钥 `e862885af5bba3dc`。要换密钥，先把新公钥加进这个文件并发布一个新版本的岛屿。
 - **私钥**：有两把。`fuyu-plugins` 的市场索引由 CI 签名（密钥 `e862885af5bba3dc`，存在该仓库 `release` 环境的 secret 里，只有 `main` 分支能用）。本仓库给旧版岛屿的 `plugins/index.json` 用较早的密钥签名：由 `pnpm plugins:keygen` 生成，保存在 `~/.tauri/fuyu/plugin-index-signing.key`（新目录不存在时读改名前的 `~/.tauri/fly-island/`），用 Windows DPAPI 加密，只有生成它的 Windows 账户能解开；也可以用环境变量 `FUYU_PLUGIN_SIGNING_KEY`（PEM 文本）提供。
+- **旧密钥 `7ee2729370070df6` 不再受新版岛屿信任**（E26，用户 2026-11-14 定）。它只给本仓库的 `plugins/index.json` 签名，那份索引只有切换市场之前的旧版岛屿读，它们编译时自带这把公钥，不受影响。新版岛屿读 `fuyu-plugins`，那里只用 CI 密钥签名，所以从 `signing-keys.json` 去掉了它。它也当不了 CI 密钥的备用：私钥用 DPAPI 绑在一台 Windows 机器的一个账户上，而且 CI 密钥泄露时，有备用密钥也撤销不了泄露的那把。本仓库的测试用 `plugins/legacy-index-key.json` 校验旧索引。
 - **备份私钥**：私钥丢失后，已经安装的岛屿不会接受用新密钥签名的索引，只能随新版岛屿换密钥。DPAPI 加密的文件换了电脑或账户就解不开，所以备份时要另外导出一份明文 PEM，放在安全的地方。
+
+### 签名的 job
+
+`fuyu-plugins` 的 `update-index.yml` 分成两个 job（E26，TixXin/fuyu-plugins#23）：构建 job 没有密钥，下载、解压、校验第三方插件包后生成 `index.json`；签名 job 是唯一挂在 `release` 环境上的，只拿到这个 `index.json`，不运行 `npm ci`（`sign.mjs` 只用 Node 自带模块），签名后提交。所有工作流的 Actions 按提交号固定。`main` 只有分支保护「禁止强推和删除」，**没有**要求经 PR 合入的规则集（用户 2026-11-14 定，先不加）：仓库在个人账户下，GitHub 只允许组织仓库把 GitHub Actions 设成规则集的绕过者，而索引、点赞、主题三个工作流都直接推 `main`，加了规则集它们会被挡住。以后要加，做法是给这三个工作流一把有写权限的部署密钥（私钥放在只有 `main` 能用的环境 secret 里），规则集只让部署密钥和管理员（只能在 PR 上）绕过；或者把仓库移到组织下。
+
+签名防得住 CDN、镜像和传输途中的改动，防不住能往 `fuyu-plugins` 的 `main` 合入提交的人：每小时的构建没法等人批准（见 [v2-platform.md](v2-platform.md)「审查修复」）。现在有 `main` 写权限的人仍然能直接推；加上规则集后才会收窄成「能合入 PR」。
+
+### CI 密钥泄露或丢失时
+
+岛屿没有吊销公钥的办法：编译进去的公钥一直有效，直到用户升级。按这个顺序处理：
+
+1. **停用旧密钥**：在 `fuyu-plugins` 的 Settings → Environments → `release` 里删掉 secret `FOCUSD_PLUGIN_SIGNING_KEY`，并暂时停用 `Update index` 工作流，免得继续用它签名。
+2. **生成新密钥**：本地 `node -e` 生成一对 Ed25519 密钥（或 `pnpm plugins:keygen`），私钥 PEM 存进 `release` 环境的 secret，并离线备份一份。
+3. **发新版岛屿**：把新公钥加进 `plugins/signing-keys.json`，**去掉**泄露的那把，`fuyu-plugins` 的 `keys/trusted.json` 同样改；发一个岛屿版本，并在发布说明里说明原因。
+4. **恢复构建**：重新启用 `Update index`，用新密钥签名。
+5. **旧版岛屿**：在升级前，它们不认新签名，市场会显示「索引签名无效」，打不开，但已装的插件照常运行，也不会自动更新。泄露的密钥能签出旧版岛屿认可的恶意索引，所以要在 issue、README 和官网上提醒用户尽快升级；已经装好的插件还受作者签名保护（换了作者密钥的更新要用户确认两次，见 [author-signing.md](author-signing.md)）。
+
+只是丢失、没有泄露时，跳过第 1 步的停用，其余照做；旧版岛屿同样要升级才能继续看到市场更新。
 
 ## 岛屿怎么下载索引
 

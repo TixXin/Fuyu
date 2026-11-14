@@ -293,21 +293,22 @@ mod market_tests {
     const SIGNATURE: &str = include_str!("../../../plugins/index.json.sig");
 
     #[test]
-    fn the_repository_index_is_signed_by_a_trusted_key() {
-        use super::super::signature::{verify_index, TRUSTED_KEYS};
-        verify_index(INDEX, SIGNATURE, TRUSTED_KEYS).expect("signed");
+    fn the_repository_index_is_signed_by_the_legacy_key_the_island_no_longer_trusts() {
+        use super::super::signature::{verify_index, LEGACY_INDEX_KEYS, TRUSTED_KEYS};
+        verify_index(INDEX, SIGNATURE, LEGACY_INDEX_KEYS).expect("signed");
         let crlf = INDEX.replace("\r\n", "\n").replace('\n', "\r\n");
-        verify_index(&crlf, SIGNATURE, TRUSTED_KEYS).expect("CRLF");
+        verify_index(&crlf, SIGNATURE, LEGACY_INDEX_KEYS).expect("CRLF");
 
         let tampered = INDEX.replace("\"version\": \"1.2.1\"", "\"version\": \"1.2.2\"");
         assert_ne!(tampered, INDEX);
-        assert!(verify_index(&tampered, SIGNATURE, TRUSTED_KEYS).expect_err("tampered").contains("does not match"));
+        assert!(verify_index(&tampered, SIGNATURE, LEGACY_INDEX_KEYS).expect_err("tampered").contains("does not match"));
 
         let mut signature: serde_json::Value = serde_json::from_str(SIGNATURE).expect("json");
         signature["keyId"] = "0000000000000000".into();
-        assert!(verify_index(INDEX, &signature.to_string(), TRUSTED_KEYS).expect_err("unknown key").contains("does not trust"));
-        assert!(verify_index(INDEX, "", TRUSTED_KEYS).expect_err("missing").contains("missing"));
-        assert!(verify_index(INDEX, r#"{"keyId":"7ee2729370070df6","signature":"AAAA"}"#, TRUSTED_KEYS).is_err());
+        assert!(verify_index(INDEX, &signature.to_string(), LEGACY_INDEX_KEYS).expect_err("unknown key").contains("does not trust"));
+        assert!(verify_index(INDEX, "", LEGACY_INDEX_KEYS).expect_err("missing").contains("missing"));
+        assert!(verify_index(INDEX, r#"{"keyId":"7ee2729370070df6","signature":"AAAA"}"#, LEGACY_INDEX_KEYS).is_err());
+        assert!(verify_index(INDEX, SIGNATURE, TRUSTED_KEYS).expect_err("the island does not trust the legacy key").contains("does not trust"));
     }
 
     fn temp_dir(name: &str) -> std::path::PathBuf {
@@ -1115,7 +1116,7 @@ mod market_trust_tests {
 
     use super::super::market::{parse_index, OFFICIAL_PUBLISHER};
     use super::super::revocations::{find, merge, parse_revoked, RevokeAction};
-    use super::super::signature::{verify_file, verify_index, TRUSTED_KEYS};
+    use super::super::signature::{verify_file, verify_index, LEGACY_INDEX_KEYS};
     use super::super::store::{load_state, save_state, PluginsState};
     use super::super::updates::{downgrade, trusts};
 
@@ -1128,14 +1129,14 @@ mod market_trust_tests {
     fn a_list_of_signatures_needs_one_valid_one_by_a_trusted_key() {
         let one: serde_json::Value = serde_json::from_str(SIGNATURE).expect("json");
         let unknown = json!({ "keyId": "0000000000000000", "signature": "AAAA" });
-        verify_index(INDEX, &json!([unknown, one]).to_string(), TRUSTED_KEYS).expect("one valid signature is enough");
-        assert!(verify_index(INDEX, &json!([unknown]).to_string(), TRUSTED_KEYS).expect_err("none trusted").contains("does not trust"));
+        verify_index(INDEX, &json!([unknown, one]).to_string(), LEGACY_INDEX_KEYS).expect("one valid signature is enough");
+        assert!(verify_index(INDEX, &json!([unknown]).to_string(), LEGACY_INDEX_KEYS).expect_err("none trusted").contains("does not trust"));
         let mut broken = one.clone();
         broken["signature"] = json!("AAAA");
-        assert!(verify_index(INDEX, &json!([unknown, broken]).to_string(), TRUSTED_KEYS).expect_err("bad").contains("does not match"));
-        assert!(verify_index(INDEX, "[]", TRUSTED_KEYS).is_err());
-        verify_file(REVOKED, REVOKED_SIGNATURE, TRUSTED_KEYS, "revocation list").expect("the repository revoked.json is signed");
-        assert!(verify_file(REVOKED, SIGNATURE, TRUSTED_KEYS, "revocation list").is_err());
+        assert!(verify_index(INDEX, &json!([unknown, broken]).to_string(), LEGACY_INDEX_KEYS).expect_err("bad").contains("does not match"));
+        assert!(verify_index(INDEX, "[]", LEGACY_INDEX_KEYS).is_err());
+        verify_file(REVOKED, REVOKED_SIGNATURE, LEGACY_INDEX_KEYS, "revocation list").expect("the repository revoked.json is signed");
+        assert!(verify_file(REVOKED, SIGNATURE, LEGACY_INDEX_KEYS, "revocation list").is_err());
     }
 
     #[test]
