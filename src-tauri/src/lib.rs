@@ -207,6 +207,7 @@ pub fn run() {
                 }
                 island::start_monitor_follow_loop(window.clone());
                 island::start_notch_watch(window.clone());
+                dev_lane::watch_installed_island(window.clone());
                 island::start_cursor_passthrough_loop(window);
             }
             system::fullscreen::start(app.handle());

@@ -303,6 +303,10 @@ pub fn show_ready_island(app: AppHandle) -> Result<(), String> {
     Ok(())
 }
 
+pub(crate) fn refit(window: &WebviewWindow) -> Result<(), String> {
+    apply_stage_geometry(window, read_window_state(), true)
+}
+
 pub(crate) fn main_window(app: &AppHandle) -> Result<WebviewWindow, String> {
     app.get_webview_window(WINDOW_LABEL)
         .ok_or_else(|| "Main island window was not found.".to_string())

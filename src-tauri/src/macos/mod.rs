@@ -29,4 +29,5 @@ pub(crate) mod process_times;
 pub(crate) mod process_tree;
 pub(crate) mod screen_capture;
 pub(crate) mod session;
+pub(crate) mod sibling_island;
 pub(crate) mod terminal_tabs;
