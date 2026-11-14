@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { hoverFocusAction } from "../../src/windows/island/hoverFocus.ts";
+import { CLICK_EXPAND_WINDOW_MS, expandedByClick } from "../../src/windows/island/clickFocus.ts";
 import { gameModeEffects } from "../../src/windows/island/gameMode.ts";
 import { holdsOpen, MAX_HOVER_HOLD_MS } from "../../src/windows/island/hoverHold.ts";
 
@@ -26,6 +27,14 @@ test("a draft keeps the focus while the panel stays open", () => {
 test("game mode stops the island taking the focus but still lets it go", () => {
   assert.equal(hoverFocusAction(state({ blocked: true })), "none");
   assert.equal(hoverFocusAction(state({ blocked: true, hovering: false })), "release");
+});
+
+test("only an expansion right after a press on the island counts as a click", () => {
+  assert.equal(expandedByClick(null, 5_000), false);
+  assert.equal(expandedByClick(4_900, 5_000), true);
+  assert.equal(expandedByClick(5_000 - CLICK_EXPAND_WINDOW_MS, 5_000), true);
+  assert.equal(expandedByClick(5_000 - CLICK_EXPAND_WINDOW_MS - 1, 5_000), false);
+  assert.equal(expandedByClick(5_100, 5_000), false);
 });
 
 const here = { active: true, onIslandMonitor: true };

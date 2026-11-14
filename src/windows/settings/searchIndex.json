@@ -672,17 +672,6 @@
       "page": "shortcuts",
       "zh-CN": {
         "group": "剪贴板",
-        "title": "启用展开快捷键"
-      },
-      "en": {
-        "group": "Clipboard",
-        "title": "Enable expand shortcut"
-      }
-    },
-    {
-      "page": "shortcuts",
-      "zh-CN": {
-        "group": "剪贴板",
         "title": "用 Win+V 打开",
         "description": "按 Win+V 打开岛屿的剪贴板，代替系统自带的剪贴板历史；关掉后 Win+V 还给系统。"
       },
@@ -690,6 +679,17 @@
         "group": "Clipboard",
         "title": "Open with Win+V",
         "description": "Win+V opens the island's clipboard instead of Windows' own clipboard history; turned off, Win+V goes back to Windows."
+      }
+    },
+    {
+      "page": "shortcuts",
+      "zh-CN": {
+        "group": "剪贴板",
+        "title": "用快捷键打开"
+      },
+      "en": {
+        "group": "Clipboard",
+        "title": "Open with a shortcut"
       }
     },
     {
@@ -703,6 +703,19 @@
         "group": "",
         "title": "Look up keys",
         "description": "Press a key combination to see what in Fuyu uses it."
+      }
+    },
+    {
+      "page": "shortcutsIsland",
+      "zh-CN": {
+        "group": "页面切换",
+        "title": "悬停时接管键盘",
+        "description": "鼠标停在展开的岛上就能直接按翻页键。会从正在用的窗口拿走键盘焦点，移开后还回去"
+      },
+      "en": {
+        "group": "Page switching",
+        "title": "Take the keyboard on hover",
+        "description": "Page keys work as soon as the cursor rests on the expanded island. This takes keyboard focus from the window you are using and hands it back when the cursor leaves"
       }
     },
     {
@@ -1397,17 +1410,6 @@
       "page": "clipboard",
       "zh-CN": {
         "group": "快捷键",
-        "title": "启用展开快捷键"
-      },
-      "en": {
-        "group": "Shortcuts",
-        "title": "Enable expand shortcut"
-      }
-    },
-    {
-      "page": "clipboard",
-      "zh-CN": {
-        "group": "快捷键",
         "title": "用 Win+V 打开",
         "description": "按 Win+V 打开岛屿的剪贴板，代替系统自带的剪贴板历史；关掉后 Win+V 还给系统。"
       },
@@ -1415,6 +1417,17 @@
         "group": "Shortcuts",
         "title": "Open with Win+V",
         "description": "Win+V opens the island's clipboard instead of Windows' own clipboard history; turned off, Win+V goes back to Windows."
+      }
+    },
+    {
+      "page": "clipboard",
+      "zh-CN": {
+        "group": "快捷键",
+        "title": "用快捷键打开"
+      },
+      "en": {
+        "group": "Shortcuts",
+        "title": "Open with a shortcut"
       }
     },
     {

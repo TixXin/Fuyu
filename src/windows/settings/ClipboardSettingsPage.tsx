@@ -4,7 +4,7 @@ import { ClipboardRecordSettings } from "../../features/clipboard/ClipboardRecor
 import { ClipboardSettingsSection } from "../../features/clipboard/ClipboardSettingsSection";
 import { ClipboardSnippetSettings } from "../../features/clipboard/ClipboardSnippetSettings";
 import { ClipboardTransferSettings } from "../../features/clipboard/ClipboardTransferSettings";
-import { shortcutLabel } from "../../features/clipboard/shortcut";
+import { openShortcutLabel } from "../../features/clipboard/shortcut";
 import { useClipboardSettings } from "../../features/clipboard/useClipboardSettings";
 import { useTranslationSettings } from "../../features/translation/useTranslationSettings";
 import { useTranslation } from "../../i18n";
@@ -22,11 +22,12 @@ export function ClipboardSettingsPage({ tab, settings, onOpenShortcuts }: {
   const [clipboardSettings, updateClipboardSettings] = useClipboardSettings();
   const [translationSettings] = useTranslationSettings();
   const { takenBy } = useShortcutOwners({ settings, clipboard: clipboardSettings, translation: translationSettings });
+  const openKeys = openShortcutLabel(clipboardSettings);
   const header = (
     <FeatureHeader
       feature="clipboard"
       checked={clipboardSettings.enabled}
-      status={clipboardSettings.shortcutEnabled ? t.settings.clipboard.headerShortcut(shortcutLabel(clipboardSettings.shortcut)) : undefined}
+      status={openKeys ? t.settings.clipboard.headerShortcut(openKeys) : undefined}
       onChange={(enabled) => updateClipboardSettings({ ...clipboardSettings, enabled })}
     />
   );

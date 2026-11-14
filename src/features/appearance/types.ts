@@ -151,6 +151,7 @@ export type IslandSettings = CalendarSettingValues & {
   agentLightStyle: AgentLightStyle;
   gameDoNotDisturb: boolean;
   gameAutoTuck: boolean;
+  hoverTakesKeyboard: boolean;
 };
 
 export type IslandPreset = {

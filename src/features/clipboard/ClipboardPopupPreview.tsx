@@ -1,29 +1,9 @@
-import { useEffect, useState } from "react";
 import { useTranslation } from "../../i18n";
-import { getClipboardImagePreview, type ClipboardHistoryItem, type ClipboardSnippet } from "./api";
+import type { ClipboardHistoryItem, ClipboardSnippet } from "./api";
 import { ClipboardKindPane } from "./ClipboardKindPane";
+import { ClipboardPreviewImage } from "./ClipboardPreviewImage";
 import { contentKind } from "./contentKind";
 import { sourceName } from "./fileEntry";
-
-const previews = new Map<string, Promise<string | null>>();
-
-function useImagePreview(item: ClipboardHistoryItem | undefined) {
-  const id = item?.kind === "image" ? item.id : null;
-  const [url, setUrl] = useState<string | null>(null);
-  useEffect(() => {
-    setUrl(null);
-    if (!id) return;
-    let request = previews.get(id);
-    if (!request) {
-      request = getClipboardImagePreview(id).catch(() => null);
-      previews.set(id, request);
-    }
-    let cancelled = false;
-    void request.then((next) => { if (!cancelled) setUrl(next); });
-    return () => { cancelled = true; };
-  }, [id]);
-  return url;
-}
 
 export function ClipboardPopupPreview({ entry, snippet, linkPreview = false, onPasteText }: {
   entry?: ClipboardHistoryItem;
@@ -33,7 +13,6 @@ export function ClipboardPopupPreview({ entry, snippet, linkPreview = false, onP
 }) {
   const t = useTranslation();
   const text = t.clipboard.popup.preview;
-  const imageUrl = useImagePreview(entry);
   if (!entry && !snippet) return <aside className="clipboard-popup__pane" aria-label={text.label} />;
 
   if (snippet) {
@@ -61,7 +40,7 @@ export function ClipboardPopupPreview({ entry, snippet, linkPreview = false, onP
       <span className="clipboard-popup__pane-head">{head}</span>
       {image ? (
         <div className="clipboard-popup__pane-image">
-          {(imageUrl ?? image.thumbnailDataUrl) && <img src={imageUrl ?? image.thumbnailDataUrl} alt="" />}
+          <ClipboardPreviewImage id={item.id} thumbnail={image.thumbnailDataUrl} />
           {item.ocrText && <p><b>{text.ocr}</b>{item.ocrText}</p>}
         </div>
       ) : kind ? (

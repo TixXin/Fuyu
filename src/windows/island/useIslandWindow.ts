@@ -6,6 +6,7 @@ import { clearIslandPosition } from "./storage";
 import { useIslandPosition } from "./useIslandPosition";
 import { useNativeLayout } from "./useNativeLayout";
 import { useSettingsPositionReset } from "./useSettingsPositionReset";
+import { useClickFocus } from "./useClickFocus";
 import { useCollapseOnBlur } from "./useCollapseOnBlur";
 import type { IslandMode, NativeGlassState } from "./types";
 
@@ -154,6 +155,7 @@ export function useIslandWindow({
     syncNativeInteraction,
   ]);
 
+  useClickFocus(mode === "expanded");
   useCollapseOnBlur(mode === "expanded", onCollapse);
 
   return { isPositionDetached, nativeGlassState, minimizeIsland, startIslandDrag, resetIslandPosition };

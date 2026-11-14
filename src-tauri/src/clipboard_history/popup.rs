@@ -77,6 +77,7 @@ pub(super) fn toggle(app: &AppHandle, settings: &ClipboardHistorySettings) -> Re
 }
 
 pub(super) fn hide(app: &AppHandle) -> Result<(), String> {
+    super::preview_window::hide(app, false);
     popup_window(app)?.hide().map_err(|error| error.to_string())
 }
 

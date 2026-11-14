@@ -12,6 +12,7 @@ import { useClipboardNoteEditor } from "./useClipboardNoteEditor";
 import "../../components/list/IslandList.css";
 import "./ClipboardPopupPanels.css";
 import "./ClipboardHistoryPanel.css";
+import { openShortcutLabel } from "./shortcut";
 
 type Tools = { id: string; page: "transforms" | "ai" };
 
@@ -94,7 +95,7 @@ export function ClipboardHistoryPanel({
         onTag={showTag}
         onClear={handleClear}
       />
-      {!showExtra && <ClipboardFilters query={query} shortcut={snapshot.settings.shortcutEnabled ? snapshot.settings.shortcut : null} onQueryChange={setQuery} />}
+      {!showExtra && <ClipboardFilters query={query} shortcut={openShortcutLabel(snapshot.settings)} onQueryChange={setQuery} />}
 
       {showExtra ? (
         extraView.content
