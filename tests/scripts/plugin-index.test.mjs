@@ -24,11 +24,13 @@ test("index signatures verify, survive CRLF and catch changes", () => {
   assert.equal(verifyIndex(text, null, trusted), false);
 });
 
-test("the committed index is signed by a key in plugins/signing-keys.json", () => {
+test("the committed index is signed by the legacy index key, which the island no longer trusts", () => {
   const text = readFileSync(path.join(root, "plugins/index.json"), "utf8");
   const signature = JSON.parse(readFileSync(path.join(root, "plugins/index.json.sig"), "utf8"));
-  const { keys } = JSON.parse(readFileSync(path.join(root, "plugins/signing-keys.json"), "utf8"));
+  const { keys } = JSON.parse(readFileSync(path.join(root, "plugins/legacy-index-key.json"), "utf8"));
   assert.equal(verifyIndex(text, signature, keys), true, "run pnpm plugins:index to re-sign");
+  const trusted = JSON.parse(readFileSync(path.join(root, "plugins/signing-keys.json"), "utf8")).keys;
+  assert.equal(verifyIndex(text, signature, trusted), false);
 });
 
 test("zips are byte-for-byte reproducible", () => {

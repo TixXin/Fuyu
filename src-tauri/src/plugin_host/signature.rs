@@ -3,6 +3,8 @@ use ed25519_dalek::{Signature, VerifyingKey};
 use serde::Deserialize;
 
 pub(super) const TRUSTED_KEYS: &str = include_str!("../../../plugins/signing-keys.json");
+#[cfg(test)]
+pub(super) const LEGACY_INDEX_KEYS: &str = include_str!("../../../plugins/legacy-index-key.json");
 
 #[derive(Deserialize)]
 struct TrustedKeys {
