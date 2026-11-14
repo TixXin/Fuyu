@@ -15,9 +15,11 @@ test("the lab forwards only its own routes to the island", () => {
   assert.equal(forwardTarget("approval/other", "POST"), null);
 });
 
-test("the lab looks for the configs in the island home first, then app data", () => {
+test("the lab looks for the configs in the development build's folder first, then the island home and app data", () => {
   const dirs = configDirs({ FUYU_HOME: "/data/fuyu", APPDATA: "/appdata" }, "/home/me");
-  assert.deepEqual(dirs, ["/data/fuyu", path.join("/appdata", "com.tixxin.fuyu")]);
+  assert.deepEqual(dirs, [path.join("/appdata", "com.tixxin.fuyu.lane-1"), "/data/fuyu", path.join("/appdata", "com.tixxin.fuyu")]);
+  const shared = configDirs({ FUYU_HOME: "/data/fuyu", APPDATA: "/appdata", FUYU_DEV_SHARED_IDENTITY: "1" }, "/home/me");
+  assert.deepEqual(shared, ["/data/fuyu", path.join("/appdata", "com.tixxin.fuyu")]);
 });
 
 test("message payloads carry a fresh revision and show while the island is visible", () => {

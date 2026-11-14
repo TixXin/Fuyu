@@ -1,11 +1,21 @@
-#[cfg(windows)]
+use std::{
+    path::{Path, PathBuf},
+    time::{SystemTime, UNIX_EPOCH},
+};
+
+use serde::{Deserialize, Serialize};
+
+use super::data_copy;
+
 const STATE_FILE: &str = "dev-copy.json";
 
-#[cfg(windows)]
-#[derive(Debug, Default, serde::Serialize, serde::Deserialize, PartialEq)]
+#[derive(Debug, Default, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase", default)]
 struct State {
     credentials: bool,
+    data: bool,
+    from: Option<String>,
+    at: u64,
 }
 
 #[cfg(any(windows, test))]
@@ -19,25 +29,56 @@ pub(crate) fn lane_credential(target: &str, lane: u32) -> Option<String> {
     Some(format!("{}.{}.{rest}", &target[..at], super::identifier(lane)))
 }
 
+fn now_ms() -> u64 {
+    SystemTime::now().duration_since(UNIX_EPOCH).map(|elapsed| elapsed.as_millis() as u64).unwrap_or(0)
+}
+
+fn copy_data(lane: u32, dir: &Path, state: &mut State) {
+    let Some(real) = crate::home_dir::real_home().filter(|real| real != dir && crate::home_dir::has_island_data(real)) else {
+        return;
+    };
+    let webview = std::env::var_os("LOCALAPPDATA").map(|local| PathBuf::from(local).join(super::identifier(lane)));
+    let at = now_ms();
+    match data_copy::copy(&real, dir, webview.as_deref(), at) {
+        Ok(()) => {
+            eprintln!("copied the installed app's data from {} for the development build", real.display());
+            state.data = true;
+            state.from = Some(real.display().to_string());
+            state.at = at;
+        }
+        Err(error) => eprintln!("could not copy the installed app's data (trying again next time): {error}"),
+    }
+}
+
 #[cfg(windows)]
+fn copy_credentials(lane: u32, state: &mut State) {
+    match crate::win32::credentials::copy_generic_credentials(|target| lane_credential(target, lane)) {
+        Ok(count) => {
+            eprintln!("copied {count} credentials for the development build");
+            state.credentials = true;
+        }
+        Err(error) => eprintln!("could not copy the credentials for the development build: {error}"),
+    }
+}
+
+#[cfg(not(windows))]
+fn copy_credentials(_lane: u32, _state: &mut State) {}
+
 pub(crate) fn before_start(lane: u32) {
     let Some(dir) = crate::home_dir::app_data_dir(&super::identifier(lane)) else {
         return;
     };
     let path = dir.join(STATE_FILE);
     let mut state: State = std::fs::read_to_string(&path).ok().and_then(|text| serde_json::from_str(&text).ok()).unwrap_or_default();
-    if state.credentials {
-        return;
+    let done = (state.credentials, state.data);
+    if !state.data {
+        copy_data(lane, &dir, &mut state);
     }
-    match crate::win32::credentials::copy_generic_credentials(|target| lane_credential(target, lane)) {
-        Ok(count) => {
-            eprintln!("copied {count} credentials for the development build");
-            state.credentials = true;
-        }
-        Err(error) => {
-            eprintln!("could not copy the credentials for the development build: {error}");
-            return;
-        }
+    if !state.credentials {
+        copy_credentials(lane, &mut state);
+    }
+    if (state.credentials, state.data) == done {
+        return;
     }
     if let Ok(text) = serde_json::to_string_pretty(&state) {
         let _ = std::fs::create_dir_all(&dir);
@@ -45,12 +86,9 @@ pub(crate) fn before_start(lane: u32) {
     }
 }
 
-#[cfg(not(windows))]
-pub(crate) fn before_start(_lane: u32) {}
-
 #[cfg(test)]
 mod tests {
-    use super::lane_credential;
+    use super::{lane_credential, State};
 
     #[test]
     fn the_installed_apps_credentials_get_the_lane_after_the_identifier() {
@@ -77,5 +115,11 @@ mod tests {
         ] {
             assert_eq!(lane_credential(other, 1), None, "{other}");
         }
+    }
+
+    #[test]
+    fn a_marker_from_before_the_data_copy_still_counts_its_credentials() {
+        let old: State = serde_json::from_str(r#"{ "credentials": true }"#).unwrap();
+        assert!(old.credentials && !old.data && old.from.is_none());
     }
 }

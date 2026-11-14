@@ -1,15 +1,28 @@
+mod data_copy;
 mod seed;
+
+use std::sync::OnceLock;
 
 pub(crate) use seed::before_start;
 
 const ENV: &str = "FOCUSD_DEV_LANE";
+const SHARED_ENV: &str = "FUYU_DEV_SHARED_IDENTITY";
 const CENTER_ENV: &str = "FOCUSD_DEV_LANE_CENTER";
 
 pub(crate) fn lane() -> Option<u32> {
-    if !cfg!(debug_assertions) {
+    static LANE: OnceLock<Option<u32>> = OnceLock::new();
+    *LANE.get_or_init(|| {
+        let shared = std::env::var(SHARED_ENV).is_ok_and(|value| value == "1");
+        let verifying = crate::notification_diagnostics::verification_identifier().is_some();
+        chosen(cfg!(debug_assertions) && !cfg!(test), shared || verifying, std::env::var(ENV).ok().as_deref())
+    })
+}
+
+fn chosen(development: bool, real_identity: bool, lane: Option<&str>) -> Option<u32> {
+    if !development || real_identity {
         return None;
     }
-    std::env::var(ENV).ok()?.parse().ok().filter(|lane| (1..=999).contains(lane))
+    Some(lane.and_then(|lane| lane.trim().parse().ok()).filter(|lane| (1..=999).contains(lane)).unwrap_or(1))
 }
 
 pub(crate) fn identifier(lane: u32) -> String {
@@ -57,7 +70,20 @@ pub(crate) fn refuse_in_preview(action: &str) -> Result<(), String> {
 
 #[cfg(test)]
 mod tests {
-    use super::{identifier, left_edge, service_in, stage_x};
+    use super::{chosen, identifier, left_edge, service_in, stage_x};
+
+    #[test]
+    fn a_development_build_is_lane_one_unless_told_otherwise() {
+        assert_eq!(chosen(true, false, None), Some(1));
+        assert_eq!(chosen(true, false, Some("7")), Some(7));
+        assert_eq!(chosen(true, false, Some(" 999 ")), Some(999));
+        for odd in ["0", "1000", "one", "1.5", ""] {
+            assert_eq!(chosen(true, false, Some(odd)), Some(1), "{odd}");
+        }
+        assert_eq!(chosen(true, true, Some("7")), None);
+        assert_eq!(chosen(false, false, Some("7")), None);
+        assert_eq!(chosen(false, false, None), None);
+    }
 
     #[test]
     fn the_installed_app_keeps_its_credential_names_and_a_lane_gets_its_own() {

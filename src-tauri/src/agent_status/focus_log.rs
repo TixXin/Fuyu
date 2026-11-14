@@ -39,7 +39,7 @@ impl Attempt {
 
     pub(super) fn finish(self, app_dir: Option<&Path>, outcome: &str) {
         let Some(app_dir) = app_dir else { return };
-        let path = app_dir.join(FILE_NAME);
+        let path = super::own_dir(app_dir).join(FILE_NAME);
         if fs::metadata(&path).is_ok_and(|metadata| metadata.len() > MAX_BYTES) {
             if let Ok(text) = fs::read_to_string(&path) {
                 let half = text.len() / 2;

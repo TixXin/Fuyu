@@ -136,11 +136,24 @@ pub async fn get_agent_status(app: AppHandle) -> Result<AgentStatusSnapshot, Str
         .map_err(|error| format!("Failed to join the agent status task: {error}"))?
 }
 
+pub(super) fn may_change_hook_files() -> bool {
+    crate::dev_lane::lane().is_none()
+}
+
+pub(super) fn own_dir(app_dir: &Path) -> std::path::PathBuf {
+    match crate::home_dir::current().filter(|_| !may_change_hook_files()) {
+        Some(home) => home.to_path_buf(),
+        None => app_dir.to_path_buf(),
+    }
+}
+
 fn read_agent_status(app: AppHandle) -> Result<AgentStatusSnapshot, String> {
-    let app_dir = crate::home_dir::fuyu_home(app.path())
+    let app_dir = crate::home_dir::agent_home(app.path())
         .map_err(|error| format!("Failed to resolve app data directory: {error}"))?;
-    fs::create_dir_all(&app_dir)
-        .map_err(|error| format!("Failed to create app data directory: {error}"))?;
+    if may_change_hook_files() {
+        fs::create_dir_all(&app_dir)
+            .map_err(|error| format!("Failed to create app data directory: {error}"))?;
+    }
 
     let status_path = app_dir.join(AGENT_STATUS_FILE_NAME);
     let status_path_display = status_path.to_string_lossy().to_string();
@@ -165,6 +178,7 @@ pub fn clear_agent_status(app: AppHandle, provider: String) -> Result<AgentStatu
             Err("Unsupported agent provider.".to_string())
         };
     }
+    crate::dev_lane::refuse_in_preview("clear the agents' status")?;
     let app_dir = crate::home_dir::fuyu_home(app.path())
         .map_err(|error| format!("Failed to resolve app data directory: {error}"))?;
     fs::create_dir_all(&app_dir)
@@ -228,7 +242,9 @@ pub fn clear_agent_status(app: AppHandle, provider: String) -> Result<AgentStatu
 }
 
 pub fn init() {
-    std::thread::spawn(reply_marker::upgrade_installed);
+    if may_change_hook_files() {
+        std::thread::spawn(reply_marker::upgrade_installed);
+    }
 }
 
 pub(crate) fn report_external_status(owner: &str, default_name: &str, params: &Value) -> Result<Value, (u16, String)> {
@@ -311,6 +327,9 @@ fn remove_legacy_hook_scripts(app_dir: &Path) {
 }
 
 pub(crate) fn reinstall_hooks_after_rename(app: &AppHandle) -> Result<bool, String> {
+    if !may_change_hook_files() {
+        return Ok(false);
+    }
     let app_dir = crate::home_dir::fuyu_home(app.path())
         .map_err(|error| format!("Failed to resolve app data directory: {error}"))?;
     let state = read_agent_hooks_state(&app_dir)?;
@@ -364,11 +383,13 @@ pub async fn list_agent_sessions(
         .unwrap_or(session_scan::ACTIVE_WINDOW_MS);
     let app_dir = crate::home_dir::fuyu_home(app.path())
         .map_err(|error| format!("Failed to resolve app data directory: {error}"))?;
+    let agent_dir = crate::home_dir::agent_home(app.path())
+        .map_err(|error| format!("Failed to resolve app data directory: {error}"))?;
     tauri::async_runtime::spawn_blocking(move || {
-        let waiting = notifications::waiting_notifications(&app_dir);
+        let waiting = notifications::waiting_notifications(&agent_dir);
         windows_home_dir().map(|home_dir| {
-            let mut sessions = session_scan::list_sessions(&home_dir, Some(&app_dir), &waiting, window_ms);
-            session_host::attach_hosts(&home_dir, Some(&app_dir), &mut sessions);
+            let mut sessions = session_scan::list_sessions(&home_dir, Some(&agent_dir), &waiting, window_ms);
+            session_host::attach_hosts(&home_dir, Some(&agent_dir), &mut sessions);
             sessions.extend(remote_sessions::sessions(&app_dir, window_ms));
             let is_active = |phase: &str| matches!(phase, "running" | "waiting");
             sessions.sort_by_key(|session| (!is_active(session.phase), -session.updated_at));
@@ -467,7 +488,7 @@ pub async fn focus_agent_window(
     title: Option<String>,
     session_id: Option<String>,
 ) -> Result<bool, String> {
-    let app_dir = crate::home_dir::fuyu_home(app.path()).ok();
+    let app_dir = crate::home_dir::agent_home(app.path()).ok();
     let focused = tauri::async_runtime::spawn_blocking(move || {
         focus::focus_session(app_dir.as_deref(), &provider, cwd.as_deref(), title.as_deref(), session_id.as_deref())
     })
@@ -497,7 +518,7 @@ pub async fn install_editor_extension(app: String) -> Result<(), crate::user_err
 
 #[tauri::command]
 pub async fn agent_sessions_in_front(app: AppHandle, sessions: Vec<focus::SessionRef>) -> Result<Vec<String>, String> {
-    let app_dir = crate::home_dir::fuyu_home(app.path()).ok();
+    let app_dir = crate::home_dir::agent_home(app.path()).ok();
     tauri::async_runtime::spawn_blocking(move || focus::sessions_in_front(app_dir.as_deref(), &sessions))
         .await
         .map_err(|error| format!("Failed to join the window check: {error}"))
@@ -554,7 +575,7 @@ pub async fn get_agent_host_icon(path: String) -> Result<Option<String>, String>
 
 #[tauri::command]
 pub async fn get_agent_hooks_state(app: AppHandle) -> Result<AgentHooksState, String> {
-    let app_dir = crate::home_dir::fuyu_home(app.path())
+    let app_dir = crate::home_dir::agent_home(app.path())
         .map_err(|error| format!("Failed to resolve app data directory: {error}"))?;
     tauri::async_runtime::spawn_blocking(move || read_agent_hooks_state(&app_dir))
         .await

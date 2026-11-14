@@ -9,7 +9,7 @@ use std::{
 };
 use tauri::{path::PathResolver, Runtime};
 
-pub(crate) use migration::TODO_DIR;
+pub(crate) use migration::{has_island_data, TODO_DIR};
 
 pub(crate) const ENV: &str = "FUYU_HOME";
 pub(crate) const POINTER_FILE: &str = "home.json";
@@ -77,6 +77,20 @@ pub(crate) fn app_data_dir(identifier: &str) -> Option<PathBuf> {
 #[cfg(target_os = "macos")]
 pub(crate) fn app_data_dir(identifier: &str) -> Option<PathBuf> {
     profile().map(|profile| profile.join("Library").join("Application Support").join(identifier))
+}
+
+pub(crate) fn real_home() -> Option<PathBuf> {
+    let app_data = app_data_dir(crate::rename_migration::NEW_IDENTIFIER)?;
+    let env = std::env::var(ENV).ok();
+    let pointer = std::fs::read_to_string(app_data.join(POINTER_FILE)).ok();
+    Some(resolve(env.as_deref(), pointer.as_deref(), profile().as_deref(), &app_data).0)
+}
+
+pub(crate) fn agent_home<R: Runtime>(paths: &PathResolver<R>) -> tauri::Result<PathBuf> {
+    match real_home().filter(|_| crate::dev_lane::lane().is_some()) {
+        Some(home) => Ok(home),
+        None => fuyu_home(paths),
+    }
 }
 
 pub(crate) fn init(identifier: &str) {
