@@ -151,7 +151,7 @@
 | 变量 | 说明 |
 |---|---|
 | `FUYU_PLUGIN_ID` | 插件 id |
-| `FUYU_PLUGIN_DATA_DIR` | 插件私有的数据目录 `%APPDATA%\com.tixxin.fuyu\plugins-data\<id>\`，已经建好。数据存这里，不要写进插件文件夹，否则更新插件时会被覆盖 |
+| `FUYU_PLUGIN_DATA_DIR` | 插件私有的数据目录，默认是 `~/.fuyu/plugins-data/<id>/`，已经建好；用这个变量，不要自己拼路径。数据存这里，不要写进插件文件夹，否则更新插件时会被覆盖 |
 | `FUYU_PLUGIN_API_VERSION` | 清单里的 `apiVersion` |
 
 ## 错误码

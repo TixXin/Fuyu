@@ -159,7 +159,8 @@ To publish ${id} ${version}:
      does this when you push the tag (sign the zip yourself and upload the .sig).
   2. First release only: open a pull request at https://github.com/TixXin/fuyu-plugins
      that adds plugins/${id}.json (see its CONTRIBUTING.md). After that, new releases
-     reach the market within an hour.${signWith ? "" : `
+     reach the market when its index is next rebuilt: usually within a few hours,
+     sometimes over 10, and islands check the market every 6 hours.${signWith ? "" : `
   Only signed plugins update by themselves on users' islands: see "keygen" and --sign.`}
   Users can always install the zip by unpacking it into a folder named ${id}
   in the island's plugins folder (Settings > Plugins > Open plugins folder).`);

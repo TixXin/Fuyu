@@ -57,7 +57,7 @@ VS Code 的 `contributes` 是一张很长的清单：命令、菜单、视图容
 
 VS Code 有官方市场：注册发布者、打包成 VSIX、上传、签名校验、更新通道。扩展也可以脱离市场，把 VSIX 装到一台机器上。
 
-岛屿的市场是一个 GitHub 仓库：作者把插件包发到自己仓库的 Release，向 `fuyu-plugins` 提交一份描述；CI 校验后重建索引并用 Ed25519 签名，zip 用 SHA-256 核对，作者可以另外签名。没有索引私钥就改不了市场列表。自己试用不必走市场，把文件夹放进 `%APPDATA%\com.tixxin.fuyu\plugins\<id>\` 即可。步骤见 [发布](publish.md)。
+岛屿的市场是一个 GitHub 仓库：作者把插件包发到自己仓库的 Release，向 `fuyu-plugins` 提交一份描述；CI 校验后重建索引并用 Ed25519 签名，zip 用 SHA-256 核对，作者可以另外签名。没有索引私钥就改不了市场列表。自己试用不必走市场，把文件夹放进岛屿的插件目录（默认 `~/.fuyu/plugins/<id>/`，在设置 → 插件扩展里能打开）即可。步骤见 [发布](publish.md)。
 
 ## 取舍
 
