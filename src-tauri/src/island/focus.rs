@@ -44,8 +44,15 @@ pub(crate) fn focus_island_for_shortcut(window: &WebviewWindow) {
 
 pub(crate) fn show_island_at_startup(window: &WebviewWindow) -> Result<(), String> {
     let island = window.hwnd().map_err(|error| error.to_string())?;
+    let previous = win32::window::foreground_window();
     win32::window::show_without_activating(island);
-    Ok(())
+    let _ = window.set_focusable(false);
+    let shown = window.show().map_err(|error| error.to_string());
+    let _ = window.set_focusable(true);
+    if previous != island && !previous.is_invalid() && win32::window::foreground_window() == island {
+        win32::window::bring_to_foreground(previous);
+    }
+    shown
 }
 
 #[tauri::command]
