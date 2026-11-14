@@ -1,6 +1,6 @@
 # 内存占用与性能优化
 
-> 日期：2026-11-14。问题：浮屿这类常驻的 Tauri / WebView2 应用，内存占用和性能还能怎么降，别人是怎么做的。范围：Microsoft Learn（WebView2 性能、进程模型、内存 API、EcoQoS、工作集）、Tauri 官方文档与 docs.rs、GitHub issue（tauri-apps/tauri、tauri-apps/wry、MicrosoftEdge/WebView2Feedback、glzr-io/zebar）、同类 Tauri 应用的发布说明、Chromium 文档和几篇博客；关键词 WebView2 memory、MemoryUsageTargetLevel、TrySuspend、Tauri memory multiple windows、lightweight mode、EcoQoS、EmptyWorkingSet、backdrop-filter performance 等。相关任务：还没建，见「建议建的任务」。
+> 日期：2026-11-14。问题：浮屿这类常驻的 Tauri / WebView2 应用，内存占用和性能还能怎么降，别人是怎么做的。范围：Microsoft Learn（WebView2 性能、进程模型、内存 API、EcoQoS、工作集）、Tauri 官方文档与 docs.rs、GitHub issue（tauri-apps/tauri、tauri-apps/wry、MicrosoftEdge/WebView2Feedback、glzr-io/zebar）、同类 Tauri 应用的发布说明、Chromium 文档和几篇博客；关键词 WebView2 memory、MemoryUsageTargetLevel、TrySuspend、Tauri memory multiple windows、lightweight mode、EcoQoS、EmptyWorkingSet、backdrop-filter performance 等。相关任务：D47–D52，见「任务」。
 
 本机的实测基线在 [investigations/idle-usage.md](../investigations/idle-usage.md)（2026-11-06：收起闲置时 CPU 约 10% 单核，私有内存约 330 MB，其中 Rust 主进程 16 MB，其余都在 WebView2）和 [investigations/expansion-performance.md](../investigations/expansion-performance.md)（展开掉帧在 GPU 栅格化）。本文只写外部资料和由此得出的建议，没有重新测量。
 
@@ -96,16 +96,20 @@
 - 定时调 `EmptyWorkingSet` 或 `SetProcessWorkingSetSize(-1, -1)`：只是把页从工作集移到备用列表，任务管理器的数字变小，一碰又回来，还多了缺页中断；提交量不变（[EmptyWorkingSet](https://learn.microsoft.com/en-us/windows/win32/api/psapi/nf-psapi-emptyworkingset)、[The Wiert Corner 的整理](https://wiert.me/2021/07/07/setprocessworkingsetsize-you-hardly-if-ever-need-to-call-this-from-your-process/)）。WebView2 的 `MemoryUsageTargetLevel = Low` 是官方给的同类手段，用它。
 - 用固定版本的 WebView2 Runtime：微软建议用 Evergreen，很多内存泄漏和高 CPU 问题是在新版本里修的（性能最佳实践「Use the Evergreen Runtime」）。上面两个上游泄漏修好之后，用户也只有在 Evergreen 下才会自动拿到。
 
-## 建议建的任务
+## 任务
 
-还没有建任务和 issue，等确认后再建。建议拆成：
+2026-11-14 建，都是待做。D49、D50 等 D47 的测量结果。
 
-1. 内存和 GDI 的长时间测量：按进程类型拆分，8 小时以上，记录到 `docs/investigations/`。这一项决定后面几项要不要做。
-2. 隐藏窗口用 `MemoryUsageTargetLevel` / `TrySuspend`，前后对比内存和唤起延迟。
-3. 核对 `emit` 的频率，高频的去重或改成拉取。
-4. 翻译窗口和截图选区窗口的生命周期：按需创建、空闲销毁。
-5. 隐藏窗口里的定时器按可见性停掉。
-6. 媒体轮询改事件（idle-usage.md 里「还能做的」已经记了一半）。
+| 任务 | issue | 做什么 | 对应建议 |
+|---|---|---|---|
+| [D47](../tasks/D/D47.md) | [#255](https://github.com/TixXin/fuyu/issues/255) | 内存和 GDI 句柄的长时间测量，按进程类型拆分，8 小时以上 | 1 |
+| [D48](../tasks/D/D48.md) | [#256](https://github.com/TixXin/fuyu/issues/256) | 隐藏的窗口用 `MemoryUsageTargetLevel` / `TrySuspend` | 2、3 |
+| [D49](../tasks/D/D49.md) | [#257](https://github.com/TixXin/fuyu/issues/257) | 核对 `emit` 的频率，去重或改成拉取 | 4 |
+| [D50](../tasks/D/D50.md) | [#258](https://github.com/TixXin/fuyu/issues/258) | 翻译窗口和截图选区窗口按需创建、空闲销毁 | 5 |
+| [D51](../tasks/D/D51.md) | [#259](https://github.com/TixXin/fuyu/issues/259) | 看不见的界面里的定时器按可见性停掉 | 6 |
+| [D52](../tasks/D/D52.md) | [#260](https://github.com/TixXin/fuyu/issues/260) | 媒体状态和音量从轮询改成系统事件 | 7 |
+
+建议 8（定期刷新）、9（渲染）、10（构建配置）没有单独建任务：8 是 D49 的兜底，看 D47 和 D49 的结果再说；9 和展开掉帧是同一件事；10 对内存没有影响。任务结束后文件会移到 `docs/tasks/0-archive/D/`。
 
 ## 来源
 
