@@ -18,6 +18,7 @@ pub(crate) mod input;
 pub(crate) mod job;
 pub(crate) mod known_folder;
 pub(crate) mod message_window;
+pub(crate) mod named_mutex;
 pub(crate) mod notification_state;
 pub(crate) mod ocr;
 pub(crate) mod ole;

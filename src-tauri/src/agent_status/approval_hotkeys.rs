@@ -64,6 +64,13 @@ pub fn set_agent_approval_hotkeys(app: AppHandle, hotkeys: Vec<ApprovalHotkey>) 
     }
 }
 
+pub(crate) fn coexist_refresh() {
+    let window = state().window;
+    if let Some(window) = window {
+        let _ = message_window::post_message(HWND(window as *mut _), REFRESH_MESSAGE);
+    }
+}
+
 fn run_window() {
     let Ok(instance) = message_window::module_instance() else { return };
     if message_window::register_class::<ApprovalHotkeyWindow>(instance, CLASS_NAME).is_err() {
@@ -83,7 +90,8 @@ fn apply(window: HWND) {
         let _ = win32::hotkey::unregister(window, FIRST_HOTKEY_ID + index as i32);
     }
     state.registered.clear();
-    for hotkey in state.wanted.clone() {
+    let wanted = if crate::coexist::yielding() { Vec::new() } else { state.wanted.clone() };
+    for hotkey in wanted {
         let Some(binding) = parse_shortcut_binding(&hotkey.shortcut) else { continue };
         let id = FIRST_HOTKEY_ID + state.registered.len() as i32;
         if win32::hotkey::register(window, id, binding.modifiers, binding.key_code).is_ok() {

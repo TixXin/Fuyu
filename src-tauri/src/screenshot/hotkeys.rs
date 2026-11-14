@@ -63,6 +63,13 @@ pub(super) fn configure(enabled: bool, shortcuts: Option<Vec<ShortcutConfig>>, p
     }
 }
 
+pub(super) fn coexist_refresh() {
+    let window = WINDOW.load(Ordering::SeqCst);
+    if window != 0 {
+        let _ = message_window::post_message(HWND(window as *mut core::ffi::c_void), REFRESH_MESSAGE);
+    }
+}
+
 pub(super) fn status() -> Vec<ShortcutStatus> {
     STATUS.lock().unwrap_or_else(PoisonError::into_inner).clone()
 }
@@ -91,7 +98,7 @@ fn release(window: HWND) {
 fn refresh(window: HWND) {
     release(window);
     let mut problems = Vec::new();
-    if ENABLED.load(Ordering::SeqCst) {
+    if ENABLED.load(Ordering::SeqCst) && !crate::coexist::yielding() {
         let config = CONFIG.lock().unwrap_or_else(PoisonError::into_inner).clone().unwrap_or_else(default_shortcuts);
         let (bindings, invalid) = plan(&config);
         problems = invalid;
