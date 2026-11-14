@@ -318,6 +318,11 @@ pub(crate) fn open_translator(app: &AppHandle) {
     }
 }
 
+#[cfg(windows)]
+pub(crate) fn coexist_refresh() {
+    hotkey::coexist_refresh();
+}
+
 macro_rules! tauri_commands {
     ($next:ident [$($done:tt)*] $($rest:tt)*) => {
         $next!([$($done)*

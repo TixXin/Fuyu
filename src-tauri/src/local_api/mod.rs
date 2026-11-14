@@ -42,7 +42,12 @@ pub fn init(app: &AppHandle) -> Result<(), String> {
             config::set_mirror(app_data.join(CONFIG_FILE_NAME));
         }
     }
-    let (config, changed) = load_config(&path)?;
+    let (mut config, mut changed) = load_config(&path)?;
+    let own_port = crate::dev_lane::port(config.port, config::PREFERRED_PORT);
+    if own_port != config.port {
+        config.port = own_port;
+        changed = true;
+    }
     if changed || config::has_mirror() {
         save_config(&path, &config)?;
     }

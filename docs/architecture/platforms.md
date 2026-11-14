@@ -71,4 +71,4 @@ macOS 的计划和决定见 [macos-port-plan.md](macos-port-plan.md)，各功能
 | 宠物 | `pets` | 已支持 | 未开始 | 通用代码 | G1.2 | — |
 | 刘海形态 | `island/notch.rs`、`macos/notch.rs` | 不支持（没有刘海） | 开发中 | 读 `NSScreen` 的 `safeAreaInsets` 和 `auxiliaryTop*Area`；设置 → 位置 → 菜单栏「压在菜单栏上（有刘海时贴合刘海）」（默认）；无刘海屏照常顶部正中；无需权限 | G1.11 | — |
 
-不对应用户功能、不单列的模块：`lib.rs`、`main.rs`、`dev_lane.rs`、`fs_write.rs`、`settings_file.rs`、`user_error.rs`。它们在 G1.2 里随平台隔离一起处理。
+不对应用户功能、不单列的模块：`lib.rs`、`main.rs`、`dev_lane.rs`、`coexist/`（开发版专用，Mac 上是空实现）、`fs_write.rs`、`settings_file.rs`、`user_error.rs`。它们在 G1.2 里随平台隔离一起处理。
