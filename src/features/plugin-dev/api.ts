@@ -1,4 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
+import { open } from "@tauri-apps/plugin-dialog";
 
 export type PluginDevPlugin = { id: string; path: string };
 
@@ -34,6 +35,11 @@ export const loadDevPlugin = (path: string) => invoke<PluginDevState>("load_dev_
 export const reloadDevPlugin = (id: string) => invoke<PluginDevState>("reload_dev_plugin", { id });
 
 export const unloadDevPlugin = (id: string) => invoke<PluginDevState>("unload_dev_plugin", { id });
+
+export const pickPluginFolder = async (title: string) => {
+  const picked = await open({ directory: true, multiple: false, title });
+  return typeof picked === "string" ? picked : null;
+};
 
 export const forgetDevPlugin = (path: string) => invoke<PluginDevState>("forget_dev_plugin", { path });
 

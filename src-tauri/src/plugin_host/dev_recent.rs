@@ -105,4 +105,13 @@ mod tests {
         assert_eq!(remembered.to_restore(), ["C:/c"]);
         assert_eq!(remembered.plugins.len(), 2, "an unloaded plugin stays in the list to load again");
     }
+
+    #[test]
+    fn listed_folders_are_split_on_semicolons_and_relative_ones_start_at_the_repository() {
+        use std::path::Path;
+        let repo = Path::new(if cfg!(windows) { r"E:\repo" } else { "/repo" });
+        let absolute = if cfg!(windows) { r"D:\mine" } else { "/mine" };
+        let folders = crate::plugin_host::dev::listed_folders(&format!(" plugins/drafts/a ;;{absolute}; "), repo);
+        assert_eq!(folders, [repo.join("plugins/drafts/a"), Path::new(absolute).to_path_buf()]);
+    }
 }

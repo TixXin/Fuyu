@@ -29,7 +29,7 @@
 ## 技术栈
 
 - 前端：React 19、TypeScript（strict）、Vite 7，图标使用 lucide-react，HTML 清理使用 dompurify
-- 桌面壳：Tauri 2（opener、updater、single-instance 插件）
+- 桌面壳：Tauri 2（opener、updater、single-instance、dialog 插件；dialog 只用来选文件夹）
 - 原生能力：Rust 2021，`windows` crate（Win32 / WinRT）
 - 包管理器：pnpm；前端单元测试使用 Node 内置 `node:test`
 
