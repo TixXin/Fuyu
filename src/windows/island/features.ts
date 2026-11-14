@@ -9,6 +9,7 @@ export type IslandFeatures = {
   clipboard: boolean;
   shelf: boolean;
   screenshots?: boolean;
+  timer?: boolean;
   qq: boolean;
   wechat: boolean;
   qqMail: boolean;
@@ -34,9 +35,9 @@ export function isPluginPage(page: IslandPage): page is PluginPageId {
   return page.startsWith("plugin:");
 }
 
-const BUILTIN_PAGE_ORDER: BuiltinPage[] = ["todo", "calendar", "music", "clipboard", "shelf", "screenshots", "qq", "agents", "translation"];
+const BUILTIN_PAGE_ORDER: BuiltinPage[] = ["todo", "calendar", "music", "clipboard", "shelf", "screenshots", "timer", "qq", "agents", "translation"];
 const SOURCE_ORDER: MessageSource[] = ["qq", "wechat", "qqMail"];
-export const HEADER_DOT_PAGES = ["todo", "music", "calendar", "clipboard", "shelf", "screenshots"] as const satisfies readonly BuiltinPage[];
+export const HEADER_DOT_PAGES = ["todo", "music", "calendar", "clipboard", "shelf", "screenshots", "timer"] as const satisfies readonly BuiltinPage[];
 export type HeaderDotPage = (typeof HEADER_DOT_PAGES)[number];
 
 function pageOrder(features: IslandFeatures): IslandPage[] {

@@ -18,6 +18,7 @@ import * as todo from "../sections/todo.ts";
 import * as clipboard from "../sections/clipboard.ts";
 import * as fileShelf from "../sections/fileShelf.ts";
 import * as screenshot from "../sections/screenshot.ts";
+import * as timer from "../sections/timer.ts";
 import * as pluginViews from "../sections/pluginViews.ts";
 import * as settings from "../sections/settings/index.ts";
 import * as onboarding from "../sections/onboarding.ts";
@@ -54,6 +55,7 @@ const en: Translations = {
 
   fileShelf: fileShelf.en,
   screenshot: screenshot.en,
+  timer: timer.en,
 
   pluginViews: pluginViews.en,
   settings: settings.en,

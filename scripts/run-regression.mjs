@@ -43,6 +43,7 @@ export const PAGES = [
   "screenshot-measure.html",
   "screenshot-record.html",
   "recording-notice.html",
+  "timer.html",
   "todo-island.html",
 ];
 

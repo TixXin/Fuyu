@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Bell, Bot, CalendarDays, ClipboardList, Inbox, Languages, ListTodo, Minus, Music, RotateCcw, Scissors, Images, Settings, type LucideIcon } from "lucide-react";
+import { Bell, Bot, CalendarDays, ClipboardList, Inbox, Languages, ListTodo, Minus, Music, RotateCcw, Scissors, Images, Settings, Timer, type LucideIcon } from "lucide-react";
 import type { AgentVisualState } from "../../features/agent-status/status";
 import type { MessageSource } from "../../features/messages/messagePreview";
 import { useUpdateReminder } from "../../features/updater/useBackgroundUpdateCheck";
@@ -18,6 +18,7 @@ const PAGE_ICONS: Record<HeaderDotPage, LucideIcon> = {
   clipboard: ClipboardList,
   shelf: Inbox,
   screenshots: Images,
+  timer: Timer,
 };
 
 type IslandHeaderProps = {
@@ -85,6 +86,7 @@ export function IslandHeader({
     clipboard: t.island.clipboardHistory,
     shelf: t.island.shelf,
     screenshots: t.island.screenshots,
+    timer: t.island.timer,
   })[target];
   const agentStatusIconClassName = [
     "island__agent-status-icon",

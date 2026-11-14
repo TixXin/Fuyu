@@ -17,6 +17,7 @@ import type { TodoText } from "./sections/todo";
 import type { ClipboardText } from "./sections/clipboard";
 import type { FileShelfText } from "./sections/fileShelf";
 import type { ScreenshotText } from "./sections/screenshot";
+import type { TimerText } from "./sections/timer";
 import type { PluginViewsText } from "./sections/pluginViews";
 import type { SettingsText } from "./sections/settings/index";
 import type { OnboardingText } from "./sections/onboarding";
@@ -56,6 +57,7 @@ export type Translations = {
   fileShelf: FileShelfText;
 
   screenshot: ScreenshotText;
+  timer: TimerText;
 
   pluginViews: PluginViewsText;
   settings: SettingsText;
