@@ -133,7 +133,7 @@ npx fuyu-plugin pack          # 写出 .package/<id>-<version>.zip
 
 不装 Node.js 也能试：
 
-1. 把示例 [`plugins/examples/dev.focusd.todo-digest`](../../plugins/examples/dev.focusd.todo-digest/) 复制到 `%APPDATA%\com.tixxin.fuyu\plugins\dev.focusd.todo-digest\`。插件目录也可以在 **设置 → 插件扩展 → 插件目录 → 打开** 里找到。文件夹名必须等于插件 id。
+1. 把示例 [`plugins/examples/dev.focusd.todo-digest`](../../plugins/examples/dev.focusd.todo-digest/) 复制到岛屿的插件目录，默认是 `~/.fuyu/plugins/dev.focusd.todo-digest/`；最稳妥的是在 **设置 → 插件扩展 → 插件目录 → 打开** 里找。文件夹名必须等于插件 id。
 2. 在 **设置 → 插件扩展** 打开 **允许运行第三方插件**，点 **重新加载**，再打开插件卡片上的 **启用**。
 3. 状态显示「运行中」后，点 **写入摘要**，每日笔记里会追加一段未完成待办的摘要。
 
