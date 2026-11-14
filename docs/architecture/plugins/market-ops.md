@@ -63,9 +63,9 @@
 
 ### 签名的 job
 
-`fuyu-plugins` 的 `update-index.yml` 分成两个 job（E26，TixXin/fuyu-plugins#23）：构建 job 没有密钥，下载、解压、校验第三方插件包后生成 `index.json`；签名 job 是唯一挂在 `release` 环境上的，只拿到这个 `index.json`，不运行 `npm ci`（`sign.mjs` 只用 Node 自带模块），签名后提交。所有工作流的 Actions 按提交号固定。`main` 有规则集 `main protection`：必须经 PR 合入、`Check submission` 必须通过、禁止强推和删除；GitHub Actions（索引、点赞、主题的自动提交）可以绕过，管理员只能在 PR 上绕过。
+`fuyu-plugins` 的 `update-index.yml` 分成两个 job（E26，TixXin/fuyu-plugins#23）：构建 job 没有密钥，下载、解压、校验第三方插件包后生成 `index.json`；签名 job 是唯一挂在 `release` 环境上的，只拿到这个 `index.json`，不运行 `npm ci`（`sign.mjs` 只用 Node 自带模块），签名后提交。所有工作流的 Actions 按提交号固定。`main` 只有分支保护「禁止强推和删除」，**没有**要求经 PR 合入的规则集（用户 2026-11-14 定，先不加）：仓库在个人账户下，GitHub 只允许组织仓库把 GitHub Actions 设成规则集的绕过者，而索引、点赞、主题三个工作流都直接推 `main`，加了规则集它们会被挡住。以后要加，做法是给这三个工作流一把有写权限的部署密钥（私钥放在只有 `main` 能用的环境 secret 里），规则集只让部署密钥和管理员（只能在 PR 上）绕过；或者把仓库移到组织下。
 
-签名防得住 CDN、镜像和传输途中的改动，防不住能往 `fuyu-plugins` 的 `main` 合入提交的人：每小时的构建没法等人批准（见 [v2-platform.md](v2-platform.md)「审查修复」）。规则集把「能推」收窄成「能合入 PR」。
+签名防得住 CDN、镜像和传输途中的改动，防不住能往 `fuyu-plugins` 的 `main` 合入提交的人：每小时的构建没法等人批准（见 [v2-platform.md](v2-platform.md)「审查修复」）。现在有 `main` 写权限的人仍然能直接推；加上规则集后才会收窄成「能合入 PR」。
 
 ### CI 密钥泄露或丢失时
 
