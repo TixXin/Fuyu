@@ -40,7 +40,7 @@
 - `scripts/release/prepare-release-config.mjs`：构建发布包时写入公钥与签名开关
 - `scripts/release/make-latest-json.mjs`：根据构建产物生成 `latest.json`
 - `scripts/release/release.mjs`：一键构建 + 签名 + 生成清单 + 上传 Release
-- `scripts/release/release-signing.mjs`：优先使用显式环境变量，否则读取本机签名配置并通过 Windows DPAPI 解锁密码
+- `scripts/release/release-signing.mjs`：优先使用显式环境变量，否则读取本机签名配置，Windows 上通过 DPAPI、Mac 上从钥匙串解锁密码
 
 ## 网络、代理与镜像
 
@@ -102,6 +102,21 @@ pnpm tauri signer generate -w $env:USERPROFILE\.tauri\fly-island.key
 私钥本身带密码；`password.dpapi` 是通过 `ConvertFrom-SecureString` 生成的 Windows 当前用户加密密码。密钥目录应只授予维护者账号访问。文件均位于仓库外，不能提交到 Git。可用 `FUYU_SIGNING_CONFIG` 指定其他本机配置路径（改名前的 `FOCUSD_SIGNING_CONFIG` 也认）。把旧目录整个改名成 `fuyu` 时，同时改 `release.json` 里的三个路径；`password.dpapi` 只认 Windows 账户，不认路径，挪过去照样能解开。
 
 更换 Windows 用户或重装系统后，原 DPAPI 密码文件无法解密。恢复时使用受保护备份中的私钥及恢复密码重新创建 DPAPI 密码文件；同一条发布线继续使用原密钥，不重新生成。恢复密码与私钥都属于敏感文件。
+
+### Mac 本机自动读取
+
+Mac 上的 `~/.tauri/fuyu/release.json` 不写 `passwordFile`，改写 `keychainService`，密码放在登录钥匙串里，`pnpm release` 用 `security find-generic-password -s <服务名> -w` 读出：
+
+```json
+{
+  "schemaVersion": 1,
+  "privateKeyPath": "/Users/<user>/.tauri/fuyu/updater.key",
+  "publicKeyPath": "/Users/<user>/.tauri/fuyu/updater.key.pub",
+  "keychainService": "fuyu-updater-signing"
+}
+```
+
+从 Windows 那台拷私钥过来时，私钥和公钥文件放进 `~/.tauri/fuyu/`（私钥 `chmod 600`），密码用 `security add-generic-password -U -a fuyu-release -s fuyu-updater-signing -w` 存进钥匙串，不留明文文件。2026-11-14 在 Mac 上配好后，用这套配置走 `signUpdate` 签过一个测试文件，签名的 key id 和 `tauri.conf.json` 里的公钥一致。
 
 显式提供公钥或私钥时，脚本不会混入本机的另一套密钥，CI 仍需完整提供下面三项环境变量。
 
@@ -170,7 +185,7 @@ pnpm tauri signer generate -w $env:USERPROFILE\.tauri\fly-island.key
 - 打包时框架靠 `src-tauri/tauri.bundle-macos.conf.json` 加进去，工作流和 `pnpm build:exe` 都带了这个配置。
 - 没有苹果开发者账号的公证，用户第一次打开要手动放行，步骤见 [macos-install.md](macos-install.md)。有了账号（G1.12）后在工作流里加上 Developer ID 证书和公证即可，其余不变。
 
-updater 私钥不放进 GitHub Secrets（F35，见 [release-ci.md](/docs/architecture/release-ci.md)）：它泄露就等于能给所有用户推更新。签名始终在持有私钥的维护者电脑上做；`tauri signer sign` 在 Mac 上也能跑，把私钥经密码管理器拷过去、用上面三个环境变量提供，Mac 上也能签（还没实际试过；本机配置里的 DPAPI 密码只在 Windows 上能解开）。
+updater 私钥不放进 GitHub Secrets（F35，见 [release-ci.md](/docs/architecture/release-ci.md)）：它泄露就等于能给所有用户推更新。签名始终在持有私钥的维护者电脑上做；`tauri signer sign` 在 Mac 上也能跑，把私钥经密码管理器拷过去、用上面三个环境变量提供，Mac 上也能签（配置见上面「Mac 本机自动读取」；DPAPI 密码只在 Windows 上能解开，Mac 用钥匙串）。
 
 ## 撤回有问题的版本
 

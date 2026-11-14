@@ -82,3 +82,20 @@ test("Windows password decryption errors stop the release", () => {
 test("a missing local configuration leaves the normal environment-variable checks in charge", () => {
   assert.deepEqual(loadSigningEnvironment({}, { configPath: "not-present.json" }), {});
 });
+
+test("a Mac reads the signing password from the keychain item named in the configuration", () => {
+  const { config, configPath } = fixture();
+  delete config.passwordFile;
+  config.keychainService = "fixture-service";
+  writeFileSync(configPath, JSON.stringify(config));
+  const result = loadSigningEnvironment({}, {
+    configPath,
+    decryptPassword: () => { throw new Error("must not use DPAPI"); },
+    readKeychain: (service) => {
+      assert.equal(service, "fixture-service");
+      return "keychain fixture password";
+    },
+  });
+  assert.equal(result.TAURI_SIGNING_PRIVATE_KEY, config.privateKeyPath);
+  assert.equal(result.TAURI_SIGNING_PRIVATE_KEY_PASSWORD, "keychain fixture password");
+});

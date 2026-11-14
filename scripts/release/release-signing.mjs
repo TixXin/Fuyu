@@ -32,6 +32,17 @@ try {
   return password;
 }
 
+function readKeychainPassword(service) {
+  if (process.platform !== "darwin") {
+    throw new Error("keychainService only works on macOS. Use passwordFile on Windows or supply the TAURI signing variables.");
+  }
+  const result = spawnSync("security", ["find-generic-password", "-s", service, "-w"], { encoding: "utf8" });
+  if (result.error || result.status !== 0) {
+    throw new Error(`Cannot read the signing password from the keychain item "${service}".`);
+  }
+  return result.stdout.replace(/\r?\n$/, "");
+}
+
 export function loadSigningEnvironment(env = process.env, options = {}) {
   if (env.TAURI_UPDATER_PUBKEY?.trim() || env.TAURI_SIGNING_PRIVATE_KEY?.trim()) return { ...env };
 
@@ -39,18 +50,22 @@ export function loadSigningEnvironment(env = process.env, options = {}) {
   if (!existsSync(configPath)) return { ...env };
   const config = JSON.parse(readFileSync(configPath, "utf8").replace(/^\uFEFF/, ""));
   if (config.schemaVersion !== 1) throw new Error("Unsupported local signing configuration version.");
-  for (const field of ["privateKeyPath", "publicKeyPath", "passwordFile"]) {
+  const keychainService = typeof config.keychainService === "string" && config.keychainService.trim() ? config.keychainService.trim() : null;
+  const fields = keychainService ? ["privateKeyPath", "publicKeyPath"] : ["privateKeyPath", "publicKeyPath", "passwordFile"];
+  for (const field of fields) {
     if (typeof config[field] !== "string" || !isAbsolute(config[field]) || !existsSync(config[field])) {
       throw new Error(`Missing or invalid ${field} in the local signing configuration.`);
     }
   }
   const pubkey = readFileSync(config.publicKeyPath, "utf8").trim();
   if (!pubkey) throw new Error("The local updater public key is empty.");
-  const decrypt = options.decryptPassword ?? decryptWindowsPassword;
+  const unlock = () => keychainService
+    ? (options.readKeychain ?? readKeychainPassword)(keychainService)
+    : (options.decryptPassword ?? decryptWindowsPassword)(config.passwordFile);
   return {
     ...env,
     TAURI_UPDATER_PUBKEY: pubkey,
     TAURI_SIGNING_PRIVATE_KEY: config.privateKeyPath,
-    TAURI_SIGNING_PRIVATE_KEY_PASSWORD: env.TAURI_SIGNING_PRIVATE_KEY_PASSWORD ?? decrypt(config.passwordFile),
+    TAURI_SIGNING_PRIVATE_KEY_PASSWORD: env.TAURI_SIGNING_PRIVATE_KEY_PASSWORD ?? unlock(),
   };
 }
