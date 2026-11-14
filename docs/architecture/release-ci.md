@@ -21,7 +21,9 @@
 - **构建**：不需要任何秘密，放 CI 后发版不再依赖某一台电脑的工作区，别的会话没提交的文件也不再挡住发版（以前要开临时 worktree）。
 - **Mac 证书**：浮屿在 Mac 上按这张证书认应用，用它签的程序会继承用户给浮屿的辅助功能和屏幕录制授权，所以从仓库级 Secrets 挪进 Environment `release`，只允许 `main` 上的 workflow 读。`main` 只能经 PR 改（规则集），所以在别的分支改 workflow 读不到它。
 
-Environment `release` 已建好，只允许 `main`（2026-11-14）。证书文件在 Mac 那台电脑的 `~/.tauri/fuyu/macos/`，所以还差一步要在那台 Mac 上做：`node scripts/macos/self-signed-cert.mjs --upload`（现在写进 Environment），确认下一次发版 Mac 构建正常后，`gh secret delete` 删掉仓库级的三个 `MACOS_*`。删之前 workflow 两边都读得到，不会中断。
+Environment `release` 只允许 `main`（2026-11-14 建）。证书文件在 Mac 那台电脑的 `~/.tauri/fuyu/macos/`，在那里 `node scripts/macos/self-signed-cert.mjs --upload` 写进 Environment；仓库级的三个 `MACOS_*` 已删。删掉之后在 `main` 上手动跑了一次 `release-macos.yml`（run 43556838319）：证书导入成功，`.app` 满足 Designated Requirement，没有退回 ad hoc。
+
+同一天用 `pnpm release --no-upload` 走了一遍 Windows：CI 构建（run 43555842665，没有缓存约 11 分钟），下载到 `target/publish/release`，本机签出 EXE、MSI 的 `.sig`，`latest.json` 有三个 Windows 条目。第一次真正用这套流程发版时，再看测试版通道能不能从 CI 构建的包更新上来。
 
 ## 谁能做什么
 
