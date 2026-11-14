@@ -2,6 +2,7 @@ import { useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } fr
 import { ShortcutKeys } from "../../components/controls/ShortcutKeys";
 import { ShortcutResetButton } from "../../components/controls/ShortcutResetButton";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
+import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
 import { useTranslation } from "../../i18n";
 import { buildShortcutFromEvent, shortcutLabel } from "../clipboard/shortcut.ts";
 import { useShortcutCapture } from "../clipboard/useShortcutCapture";
@@ -112,6 +113,12 @@ export function PageShortcutSection({
           </div>
         </div>
       ))}
+      <SettingsToggleRow
+        title={t.settings.pageShortcuts.hoverKeyboard}
+        description={t.settings.pageShortcuts.hoverKeyboardHint}
+        checked={settings.hoverTakesKeyboard}
+        onChange={(hoverTakesKeyboard) => onSettingsChange({ ...settings, hoverTakesKeyboard })}
+      />
     </SettingsGroup>
   );
 }

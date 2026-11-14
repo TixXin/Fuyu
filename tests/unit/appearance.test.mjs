@@ -343,6 +343,12 @@ test("game mode keeps quiet by default and tucks only when asked", () => {
   assert.equal(normalizeSettings({ gameAutoTuck: "yes" }).gameAutoTuck, false);
 });
 
+test("hovering takes the keyboard only when asked", () => {
+  assert.equal(normalizeSettings({}).hoverTakesKeyboard, false);
+  assert.equal(normalizeSettings({ hoverTakesKeyboard: true }).hoverTakesKeyboard, true);
+  assert.equal(normalizeSettings({ hoverTakesKeyboard: "yes" }).hoverTakesKeyboard, false);
+});
+
 test("translation opens in its window unless the island page was chosen", () => {
   assert.equal(normalizeSettings({}).translationTarget, "window");
   assert.equal(normalizeSettings({ translationTarget: "island" }).translationTarget, "island");

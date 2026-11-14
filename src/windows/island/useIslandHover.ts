@@ -41,7 +41,7 @@ export function useIslandHover({ settings, navigation, quiet, hasMessagePreview,
     retractsAfterPeek,
     resumePeek,
   });
-  useHoverFocus(mode, quiet);
+  useHoverFocus(mode, quiet || !settings.hoverTakesKeyboard);
   usePanelPreview({ mode, onExpand: openCurrentPage, onCollapse: collapseIsland, onReveal: revealIsland });
   return hoverTucked;
 }

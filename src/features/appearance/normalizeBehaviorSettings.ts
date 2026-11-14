@@ -88,5 +88,6 @@ export function normalizeBehaviorSettings(settings: LegacyIslandSettings | null 
     mailEnabled: settings?.mailEnabled !== false,
     gameDoNotDisturb: typeof settings?.gameDoNotDisturb === "boolean" ? settings.gameDoNotDisturb : DEFAULT_SETTINGS.gameDoNotDisturb,
     gameAutoTuck: typeof settings?.gameAutoTuck === "boolean" ? settings.gameAutoTuck : DEFAULT_SETTINGS.gameAutoTuck,
+    hoverTakesKeyboard: settings?.hoverTakesKeyboard === true,
   } satisfies Partial<IslandSettings>;
 }
