@@ -7,16 +7,13 @@ import {
   screenshotOverlayReady,
   type ScreenshotSession,
 } from "../../features/screenshot/api";
+import type { Picture } from "../../features/screenshot/picture";
 import { getErrorMessage } from "../../utils/error";
-
-export function pictureContext(canvas: HTMLCanvasElement | null) {
-  return canvas?.getContext("2d", { willReadFrequently: true }) ?? null;
-}
 
 export function useScreenshotFrame() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [session, setSession] = useState<ScreenshotSession | null>(null);
-  const [drawn, setDrawn] = useState<number | null>(null);
+  const [picture, setPicture] = useState<Picture | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -25,7 +22,7 @@ export function useScreenshotFrame() {
     void listenScreenshotSession((event) => setSession(event.payload)).then(keep);
     void listenScreenshotEnded(() => {
       setSession(null);
-      setDrawn(null);
+      setPicture(null);
       if (canvasRef.current) canvasRef.current.width = 0;
     }).then(keep);
     getScreenshotSession()
@@ -54,8 +51,9 @@ export function useScreenshotFrame() {
         if (cancelled || !canvas) return;
         canvas.width = width;
         canvas.height = height;
-        pictureContext(canvas)?.putImageData(new ImageData(new Uint8ClampedArray(buffer), width, height), 0, 0);
-        setDrawn(id);
+        const data = new Uint8ClampedArray(buffer);
+        canvas.getContext("2d")?.putImageData(new ImageData(data, width, height), 0, 0);
+        setPicture({ id, width, height, data });
       })
       .catch((error: unknown) => console.error("Failed to show the screenshot", getErrorMessage(error)));
     return () => {
@@ -63,5 +61,5 @@ export function useScreenshotFrame() {
     };
   }, [id, width, height]);
 
-  return { session, ready: id !== null, drawn: id !== null && drawn === id, canvasRef };
+  return { session, ready: id !== null, picture: id !== null && picture?.id === id ? picture : null, canvasRef };
 }

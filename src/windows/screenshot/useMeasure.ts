@@ -1,19 +1,10 @@
-import { useCallback, useEffect, useMemo, useState, type RefObject } from "react";
-import { edgesAround, type Edges } from "../../features/screenshot/measure";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { edgesIn, type Picture } from "../../features/screenshot/picture";
 import type { Point } from "../../features/screenshot/selection";
-import { pictureContext } from "./useScreenshotFrame";
 
 const KEY = "m";
 
-function edgesIn(canvas: HTMLCanvasElement | null, pixel: Point): Edges | null {
-  const context = pictureContext(canvas);
-  if (!canvas || !context || canvas.width === 0 || canvas.height === 0) return null;
-  const row = context.getImageData(0, pixel.y, canvas.width, 1).data;
-  const column = context.getImageData(pixel.x, 0, 1, canvas.height).data;
-  return edgesAround(row, column, pixel);
-}
-
-export function useMeasure(picture: RefObject<HTMLCanvasElement | null>, drawn: boolean, pixel: Point | null, enabled: boolean) {
+export function useMeasure(picture: Picture | null, pixel: Point | null, enabled: boolean) {
   const [held, setHeld] = useState(false);
   const [from, setFrom] = useState<Point | null>(null);
   const [dragging, setDragging] = useState(false);
@@ -53,8 +44,8 @@ export function useMeasure(picture: RefObject<HTMLCanvasElement | null>, drawn: 
   const x = pixel?.x;
   const y = pixel?.y;
   const edges = useMemo(
-    () => (held && drawn && !from && x !== undefined && y !== undefined ? edgesIn(picture.current, { x, y }) : null),
-    [held, drawn, from, x, y, picture],
+    () => (held && picture && !from && x !== undefined && y !== undefined ? edgesIn(picture, { x, y }) : null),
+    [held, from, x, y, picture],
   );
 
   const begin = useCallback((point: Point) => {
