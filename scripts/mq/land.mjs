@@ -2,6 +2,8 @@ import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { hostname } from "node:os";
 import { github as realGitHub, landBranchName, prText } from "./github.mjs";
+import { mergeTree } from "./mergeTree.mjs";
+import { pickOnto } from "./pick.mjs";
 import { INTEGRATION_BRANCH, git, tryGit } from "./settings.mjs";
 import { lockfileChanged } from "./sync.mjs";
 import { waitFor } from "./wait.mjs";
@@ -24,19 +26,24 @@ function reinstallIfNeeded(before) {
   if (result.status !== 0) console.error("[land] pnpm install 失败，推送前的检查可能因为依赖不对而失败。");
 }
 
-export function pendingCommits(base = `origin/${INTEGRATION_BRANCH}`) {
-  const out = tryGit(["log", "--reverse", "--no-merges", "--format=%s%x1f%ct%x1f%b%x1e", `${base}..HEAD`]).out;
+function sameChangeOn(base, sha) {
+  const left = tryGit(["rev-list", "--no-merges", "--cherry-pick", "--right-only", `${base}...${sha}`]);
+  return left.ok && !left.out.split("\n").includes(sha);
+}
+
+export function pendingCommits(base = `origin/${INTEGRATION_BRANCH}`, head = "HEAD") {
+  const out = tryGit(["log", "--reverse", "--no-merges", "--format=%H%x1f%s%x1f%ct%x1f%b%x1e", `${base}..${head}`]).out;
   return out.split("\x1e").map((entry) => entry.trim()).filter(Boolean).map((entry) => {
-    const [subject, time = "0", body = ""] = entry.split("\x1f");
-    return { subject: subject.trim(), at: Number(time) * 1000, body };
-  });
+    const [sha, subject = "", time = "0", body = ""] = entry.split("\x1f");
+    return { sha, subject: subject.trim(), at: Number(time) * 1000, body };
+  }).filter(({ sha }) => !sameChangeOn(base, sha)).map(({ subject, at, body }) => ({ subject, at, body }));
 }
 
 function mergeOutsideWorkTree(upstream) {
-  const tree = tryGit(["merge-tree", "--write-tree", "HEAD", upstream]);
-  if (!tree.ok) return null;
-  const made = tryGit(["commit-tree", tree.out.split("\n")[0], "-p", "HEAD", "-p", upstream, "-m", `Merge remote-tracking branch '${upstream}'`]);
-  return made.ok ? made.out : null;
+  const { tree, conflicts } = mergeTree("HEAD", upstream);
+  if (!tree) return { commit: null, conflicts };
+  const made = tryGit(["commit-tree", tree, "-p", "HEAD", "-p", upstream, "-m", `Merge remote-tracking branch '${upstream}'`]);
+  return { commit: made.ok ? made.out : null, conflicts: [] };
 }
 
 export function mergeMain() {
@@ -51,13 +58,17 @@ export function mergeMain() {
     return "HEAD";
   }
   spawnSync("git", ["merge", "--abort"], { stdio: "ignore" });
-  const merged = mergeOutsideWorkTree(upstream);
+  const { commit: merged, conflicts } = mergeOutsideWorkTree(upstream);
   if (merged) {
     console.log(`\n[land] 工作区里没提交的文件挡住了合并，两边的提交本身不冲突：改在仓库内部合并（${merged.slice(0, 8)}），工作区和本地 ${INTEGRATION_BRANCH} 都没动。`);
     console.log(`  本地 ${INTEGRATION_BRANCH} 等 PR 合入、那些文件提交后由 pnpm mq:wait / pnpm mq:sync 跟上。`);
     return merged;
   }
   console.error(`\n[land] 合 ${upstream} 时冲突，已撤回这次合并。`);
+  if (conflicts.length) {
+    console.error(`  本地的提交和 ${upstream} 改了同一处，冲突的文件：${conflicts.join("、")}`);
+    console.error("  这是两边提交的内容冲突；上面如果有 would be overwritten by merge，只说明普通合并先被没提交的文件挡了一下，不用等别的会话提交。");
+  }
   console.error(`自己 git merge ${upstream} 解决冲突、提交后，再 pnpm mq:land。`);
   return null;
 }
@@ -77,12 +88,28 @@ function readBody(file) {
   return body.trim() ? { body } : { error: `--body 指定的文件是空的：${file}` };
 }
 
-function changedFiles() {
-  return tryGit(["diff", "--name-only", `origin/${INTEGRATION_BRANCH}...HEAD`]).out.split("\n").filter(Boolean);
+function changedFiles(head = "HEAD") {
+  return tryGit(["diff", "--name-only", `origin/${INTEGRATION_BRANCH}...${head}`]).out.split("\n").filter(Boolean);
+}
+
+function pickOnly(only) {
+  git(["fetch", "origin", INTEGRATION_BRANCH, "--quiet"]);
+  const { tip, picked = [], skipped = [], error } = pickOnto(`origin/${INTEGRATION_BRANCH}`, only);
+  if (error) {
+    console.error(`[land] ${error}`);
+    return null;
+  }
+  for (const line of skipped) console.log(`[land] ${line} 的内容已经在 origin/${INTEGRATION_BRANCH} 上，跳过。`);
+  if (!picked.length) {
+    console.error(`[land] 指定的提交都已经在 ${INTEGRATION_BRANCH} 上，没有要合入的。`);
+    return null;
+  }
+  console.log(`[land] 只带 ${picked.length} 个提交，在仓库内部叠到 origin/${INTEGRATION_BRANCH} 上（${tip.slice(0, 8)}），工作区和本地 ${INTEGRATION_BRANCH} 都没动。`);
+  return { rev: tip, suffix: `-only-${picked[0].slice(0, 7)}` };
 }
 
 export async function land(options = {}) {
-  const { github = realGitHub, host = hostname(), wait = false, waitOptions = {}, bodyFile = null, title = null } = options;
+  const { github = realGitHub, host = hostname(), wait = false, waitOptions = {}, bodyFile = null, title = null, only = null } = options;
   const branch = tryGit(["rev-parse", "--abbrev-ref", "HEAD"]).out.trim();
   const refusal = landRefusal(branch);
   if (refusal) {
@@ -96,19 +123,21 @@ export async function land(options = {}) {
   }
   const note = uncommittedNote(tryGit(["status", "--porcelain"]).out.split("\n"));
   if (note) console.log(`[land] ${note}`);
-  const rev = mergeMain();
+  const chosen = only ? pickOnly(only) : null;
+  if (only && !chosen) return 1;
+  const rev = chosen ? chosen.rev : mergeMain();
   if (!rev) return 1;
-  const commits = pendingCommits();
+  const commits = pendingCommits(undefined, rev);
   if (!commits.length) {
     console.error(`[land] ${branch} 上没有 origin/${INTEGRATION_BRANCH} 之外的提交，没有要合入的。`);
     return 1;
   }
-  const remoteBranch = landBranchName(github.login(), host, branch);
+  const remoteBranch = `${landBranchName(github.login(), host, branch)}${chosen?.suffix ?? ""}`;
   if (!pushBranch(remoteBranch, rev)) {
     console.error(`\n[land] 推送 ${remoteBranch} 失败，见上面的输出。修好后重新 pnpm mq:land。`);
     return 1;
   }
-  const text = prText(commits, branch, { title, body, files: changedFiles() });
+  const text = prText(commits, branch, { title, body, files: changedFiles(rev) });
   let pr = github.findPr(remoteBranch);
   if (pr) {
     if (body || title) github.editPr({ number: pr.number, ...text });
@@ -127,6 +156,6 @@ export async function land(options = {}) {
   }
   console.log(`✓ PR #${pr.number}（${commits.length} 个提交）已开启自动合并，CI 的 check 通过后 GitHub 自动合入 ${INTEGRATION_BRANCH}。`);
   if (wait) return waitFor(pr.number, { github, ...waitOptions });
-  console.log("  后台运行 pnpm mq:wait 等结果：合入后把本地 main 跟上；CI 失败或冲突时报告原因。");
+  console.log(`  后台运行 pnpm mq:wait${chosen ? ` ${pr.number}` : ""} 等结果：合入后把本地 main 跟上；CI 失败或冲突时报告原因。`);
   return 0;
 }

@@ -79,7 +79,7 @@
 | 完整打包 | `pnpm tauri build` |
 | 改版本号、起草发布说明 | `pnpm release:version <版本号>`（四处版本号一起改，不要手动改） |
 | 发布 | `pnpm release`（流程见 `docs/features/updater.md`） |
-| 合入 main | `pnpm mq:pending`（本地还没推的提交，到没到该提 PR 的时候）；`pnpm mq:land --body <中文 PR 正文文件>`（先把 `origin/main` merge 进来，推到 `land/…` 分支、开 PR 并开启自动合并，正文格式见 workflow.md「PR 的标题和正文」），再后台 `pnpm mq:wait` 等合入并把本地 `main` 跟上；手动跟上 `pnpm mq:sync`（都在 `scripts/mq/`） |
+| 合入 main | `pnpm mq:pending`（本地还没推的提交，到没到该提 PR 的时候）；`pnpm mq:land --body <中文 PR 正文文件>`（先把 `origin/main` merge 进来，推到 `land/…` 分支、开 PR 并开启自动合并，正文格式见 workflow.md「PR 的标题和正文」），再后台 `pnpm mq:wait` 等合入并把本地 `main` 跟上；只想先合入几个独立的提交用 `pnpm mq:land --only <提交号…>`（单独的 PR，不碰工作区，见 workflow.md）；手动跟上 `pnpm mq:sync`（都在 `scripts/mq/`） |
 
 如果运行环境禁止派生子进程（例如受限沙箱），`node --test` 需要加 `--test-isolation=none`。此时 `tests/scripts/release-manifest.test.mjs` 仍会因 `spawnSync` 被拦截而失败，这是环境限制，报告时应如实说明。如果 `vite build` 报错无法删除系统临时目录中的 esbuild 文件（Access is denied），可以把 `TEMP` / `TMP` 指向 `node_modules/.cache/` 下的目录后重试。
 
