@@ -412,7 +412,7 @@ fn spawn(spec: &LaunchSpec) -> Result<Child, String> {
         .spawn()
         .map_err(|error| {
             if error.kind() == ErrorKind::NotFound && spec.program == "node" {
-                "This plugin needs Node.js: install it so that `node` is on PATH.".to_string()
+                "This plugin needs Node.js: install it so that `node` is on PATH, then restart the plugin.".to_string()
             } else {
                 format!("Could not start {}: {error}", program.to_string_lossy())
             }

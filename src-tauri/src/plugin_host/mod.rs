@@ -21,6 +21,8 @@ mod views;
 mod notify;
 mod optional;
 mod permissions;
+#[cfg(not(windows))]
+mod program_dirs;
 mod registry;
 mod reveal;
 mod revocations;
