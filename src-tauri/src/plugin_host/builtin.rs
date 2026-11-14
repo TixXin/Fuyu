@@ -221,6 +221,34 @@ const SESSION_RING_MANIFEST: &str = r#"{
   }
 }"#;
 
+pub(crate) const TIMER_ID: &str = "focusd.timer";
+
+const TIMER_MANIFEST: &str = r#"{
+  "id": "focusd.timer",
+  "name": { "zh-CN": "计时器", "en": "Timer" },
+  "description": {
+    "zh-CN": "岛上的「计时器」页：输入 10、10m、1h30m、90s 开始倒计时，也能开秒表；可以同时有几个，分别暂停、继续、取消。收起条显示最近到点那个的剩余时间，到点在岛上提醒并响一声，可以再加 5 分钟。关掉岛屿再打开，倒计时按实际时间接着走。",
+    "en": "A Timer page on the island: type 10, 10m, 1h30m or 90s to start a countdown, or start a stopwatch; run several at once and pause, resume or cancel each. The collapsed bar shows the time left on the one ending soonest; when it ends the island tells you with a sound and offers five more minutes. Countdowns keep real time across restarts."
+  },
+  "version": "1.0.0",
+  "apiVersion": 2,
+  "author": "TixXin",
+  "runtime": { "type": "builtin" },
+  "contributes": {
+    "commands": [
+      { "id": "new", "title": { "zh-CN": "新建计时", "en": "New timer" }, "keybinding": "Ctrl+Alt+K" }
+    ],
+    "settings": [
+      {
+        "key": "sound",
+        "type": "boolean",
+        "title": { "zh-CN": "到点响一声", "en": "Play a sound when time is up" },
+        "default": true
+      }
+    ]
+  }
+}"#;
+
 pub(super) const SSH_TUNNEL_ID: &str = "focusd.ssh-proxy-tunnel";
 
 const SSH_TUNNEL_MANIFEST: &str = r#"{
@@ -310,6 +338,7 @@ pub(super) const BUILTINS: &[(&str, &str, bool)] = &[
     ("focusd.session-ring", SESSION_RING_MANIFEST, false),
     (SSH_TUNNEL_ID, SSH_TUNNEL_MANIFEST, true),
     (CC_CONNECT_ID, CC_CONNECT_MANIFEST, true),
+    (TIMER_ID, TIMER_MANIFEST, false),
 ];
 
 pub(super) fn manifests(app_version: &str) -> Vec<(&'static str, Result<PluginManifest, String>)> {

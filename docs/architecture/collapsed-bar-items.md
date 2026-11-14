@@ -12,6 +12,7 @@
 | | 插件状态（`PluginStatusSlot`，只显示优先级最高的一个） | 市场插件 `status.update` |
 | | 摄像头 / 麦克风、文件架数量、音乐波形 | 内置 |
 | | 用量环（`slots.gauges`，每家一个） | 内置插件 `focusd.claude-usage` |
+| | 计时器剩余时间（`slots.gauges` 的 `timer`） | 内置插件 `focusd.timer` |
 | 最右 | 会话数，开了会话环时换成会话环（`slots.agentCount`）；AI Agent 关闭时是收起按钮 | 内置 / `focusd.session-ring` |
 
 临时出现的内容（消息预览、音量亮度、设备提醒、用量提醒、会议加入按钮、插件通知按钮）占摘要的位置或紧跟其后。

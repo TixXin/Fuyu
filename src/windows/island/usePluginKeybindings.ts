@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { listenPluginKeybindings, runPluginCommand } from "../../features/plugins/api";
 import { evaluateWhen, type WhenContext } from "../../features/plugins/when";
+import { requestTimerPage, TIMER_PLUGIN_ID } from "../../features/timer/store";
 import type { IslandMode, IslandPage } from "./types";
 
 type KeybindingContext = {
@@ -22,6 +23,10 @@ export function usePluginKeybindings({ mode, page, hasActiveTodo }: KeybindingCo
     let unlisten: (() => void) | null = null;
     void listenPluginKeybindings(({ pluginId, command, when }) => {
       if (!evaluateWhen(when, context.current)) return;
+      if (pluginId === TIMER_PLUGIN_ID) {
+        requestTimerPage(true);
+        return;
+      }
       void runPluginCommand(pluginId, command).catch((error: unknown) => {
         console.error("Failed to run a plugin command from its shortcut", error);
       });

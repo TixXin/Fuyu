@@ -14,6 +14,8 @@ import { ScreenshotNotice, ScreenshotNoticeActions } from "../../features/screen
 import { useScreenshotNotice } from "../../features/screenshot/useScreenshotNotice";
 import { RecordingNotice, RecordingNoticeActions } from "../../features/screenshot/RecordingNotice";
 import { useRecording } from "../../features/screenshot/useRecording";
+import { TimerNotice, TimerNoticeActions } from "../../features/timer/TimerNotice";
+import { useIslandTimer } from "../../features/timer/useIslandTimer";
 import { useIslandSettings } from "../../features/appearance/useIslandSettings";
 import { useClipboardHistory } from "../../features/clipboard/useClipboardHistory";
 import { IslandShell } from "./IslandShell";
@@ -179,6 +181,7 @@ export function IslandApp() {
     openIslandPage,
     pluginPages: pluginPages.pageIds,
   });
+  const { ringing } = useIslandTimer(features.timer === true, openEnabledPage);
   const { alertedSession, approvals: agentApprovals, agentCardHeight, alertPopup } = useIslandAgentAlerts({
     sessions: agentSessions,
     unseen: unseenAgentSessions.keys,
@@ -242,7 +245,7 @@ export function IslandApp() {
   });
 
   useNotchDropSync(notch !== null && mode === "collapsed" && !isTucked && hasNotchDrop({
-    preview: banner.barPreview, notice: recording.shown || (screenshotNotice.taken ?? firstHints.current), translationPeek,
+    preview: banner.barPreview, notice: recording.shown || ringing.length > 0 || (screenshotNotice.taken ?? firstHints.current), translationPeek,
   }));
   useDevIslandActions({ openPage: openEnabledPage, collapse: collapseIsland, tuck: tuckIsland, reveal: revealIsland });
   const hoverTucked = useIslandHover({
@@ -333,6 +336,8 @@ export function IslandApp() {
         hoverSwitchDelayMs={settings.hoverSwitchDelayMs}
         notice={recording.shown
           ? { content: <RecordingNotice recording={recording} />, actions: <RecordingNoticeActions recording={recording} /> }
+          : ringing.length > 0
+          ? { content: <TimerNotice ringing={ringing} />, actions: <TimerNoticeActions /> }
           : screenshotNotice.taken
           ? { content: <ScreenshotNotice key={screenshotNotice.taken.path} notice={screenshotNotice} />, actions: <ScreenshotNoticeActions notice={screenshotNotice} /> }
           : firstHints.current
