@@ -4,6 +4,7 @@ mod baseline;
 mod builtin;
 mod commands;
 mod dev;
+mod dev_recent;
 mod effort_labels;
 mod events;
 mod feeds;
@@ -195,6 +196,7 @@ macro_rules! tauri_commands {
             crate::plugin_host::load_dev_plugin,
             crate::plugin_host::reload_dev_plugin,
             crate::plugin_host::unload_dev_plugin,
+            crate::plugin_host::forget_dev_plugin,
             crate::plugin_host::get_plugin_rpc_trace,
             crate::plugin_host::send_plugin_dev_event,
             crate::plugin_host::set_plugin_auto_update,

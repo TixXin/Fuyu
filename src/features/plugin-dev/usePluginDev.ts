@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useErrorText } from "../../i18n";
 import {
+  forgetDevPlugin,
   getPluginDevState,
   getPluginRpcTrace,
   loadDevPlugin,
@@ -79,6 +80,7 @@ export function usePluginDev(open: boolean) {
     setEnabled: useCallback((enabled: boolean) => void run(() => setPluginDevMode(enabled)), [run]),
     load: useCallback((path: string) => run(() => loadDevPlugin(path)), [run]),
     reload: useCallback((id: string) => run(() => reloadDevPlugin(id)), [run]),
+    forget: useCallback((path: string) => void run(() => forgetDevPlugin(path)), [run]),
     unload: useCallback((id: string) => void run(() => unloadDevPlugin(id)), [run]),
     sendEvent: useCallback((id: string, name: string, payload: unknown) => run(() => sendPluginDevEvent(id, name, payload)), [run]),
   };

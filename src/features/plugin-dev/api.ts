@@ -1,6 +1,8 @@
 import { invoke } from "@tauri-apps/api/core";
 
-export type PluginDevState = { enabled: boolean; plugins: { id: string; path: string }[] };
+export type PluginDevPlugin = { id: string; path: string };
+
+export type PluginDevState = { enabled: boolean; plugins: PluginDevPlugin[]; recent?: PluginDevPlugin[]; restores?: boolean };
 
 export type PluginTraceEntry = { at: number; outgoing: boolean; text: string };
 
@@ -32,6 +34,8 @@ export const loadDevPlugin = (path: string) => invoke<PluginDevState>("load_dev_
 export const reloadDevPlugin = (id: string) => invoke<PluginDevState>("reload_dev_plugin", { id });
 
 export const unloadDevPlugin = (id: string) => invoke<PluginDevState>("unload_dev_plugin", { id });
+
+export const forgetDevPlugin = (path: string) => invoke<PluginDevState>("forget_dev_plugin", { path });
 
 export const getPluginRpcTrace = (id: string) => invoke<PluginTraceEntry[]>("get_plugin_rpc_trace", { id });
 

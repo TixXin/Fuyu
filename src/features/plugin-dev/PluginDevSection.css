@@ -156,6 +156,19 @@
   resize: vertical;
 }
 
+.plugin-dev__recent {
+  display: grid;
+  gap: 6px;
+}
+
+.plugin-dev__recent > .settings-section__hint {
+  margin: 0;
+}
+
+.plugin-dev__pick--static {
+  cursor: default;
+}
+
 @media (max-width: 520px) {
   .plugin-dev__event,
   .plugin-dev__plugins > li {

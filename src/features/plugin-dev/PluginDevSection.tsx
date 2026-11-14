@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { FolderInput, RotateCcw, Send, X } from "lucide-react";
+import { PluginDevRecent } from "./PluginDevRecent";
 import { SelectControl } from "../../components/controls/SelectControl";
 import { ToggleControl } from "../../components/controls/ToggleControl";
 import { useFlash } from "../../components/settings/useFlash";
@@ -108,6 +109,13 @@ export function PluginDevSection() {
               ) : (
                 <p className="settings-section__hint">{text.noPlugins}</p>
               )}
+              <PluginDevRecent
+                plugins={dev.state?.recent ?? []}
+                restores={Boolean(dev.state?.restores)}
+                busy={dev.busy}
+                onLoad={(folder) => void dev.load(folder)}
+                onForget={dev.forget}
+              />
               {dev.selected ? (
                 <div className="plugin-dev__inspect">
                   <strong>{text.trace(dev.selected)}</strong>
