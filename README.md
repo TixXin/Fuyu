@@ -39,7 +39,7 @@
   <p>
     <a href="docs/assets/promo-001-one-island.mp4"><img src="docs/assets/readme/tour-zh.gif" alt="浮屿演示：桌面上散着的窗口收进屏幕顶部的岛，依次展开待办、音乐与歌词、新消息、剪贴板、翻译和 AI Agent 审批，最后自己收回去" width="800" height="450"></a>
     <br>
-    <sub>43 秒看一圈。画面里的岛就是真的前端，不是录屏（<a href="video/README.md">怎么做的</a>）· <a href="docs/assets/promo-001-one-island.mp4">看带声音的完整视频</a></sub>
+    <sub>43 秒看一圈。画面里的岛就是真的前端，不是录屏（<a href="video/README.md">怎么做的</a>）· <a href="docs/assets/promo-001-one-island.mp4">看带声音的完整视频</a> · <a href="docs/assets/promo-004-one-day.mp4">《浮屿的一天》（41 秒，带旁白）</a></sub>
   </p>
 </div>
 
