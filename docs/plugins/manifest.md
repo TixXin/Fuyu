@@ -195,4 +195,8 @@
 
 还在设计中的 API 先作为实验 API 提供，在清单里写 `"experimentalApis": ["<名称>"]` 申请（最多 10 个）。只有以开发模式加载的插件能用：装在插件目录里的这类插件岛屿拒绝加载，`validate` 和插件市场也拒收。`initialize.experimentalApis` 告诉插件岛屿实际提供了哪些。
 
-目前岛屿没有实验 API，这个通道是为以后准备的。
+岛屿加新能力时，都先作为实验 API 提供，用过一轮、名字和参数不再改了才转正，转正后在 [更新日志](changelog.md) 里写明。现在的实验 API：
+
+| 名称 | 说明 | 平台 |
+|---|---|---|
+| `windows` | 插件自己的窗口：`window.create` 等方法和 `screens.list`，见 [更新日志](changelog.md) | 只在 Windows 上 |
