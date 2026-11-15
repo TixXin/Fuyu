@@ -1,4 +1,6 @@
 import type { AgentUsageErrorKind } from "../../features/agent-status/api";
+import type { AgeText } from "../../components/list/formatAgo";
+import { en as commonEn, zhCN as commonZhCN } from "./common.ts";
 
 export type ResetParts = { days: number; hours: number; minutes: number };
 
@@ -9,7 +11,7 @@ export type ClaudeUsageText = {
   windowLeft: (label: string, percent: number, reset: string | null) => string;
   resetsIn: (parts: ResetParts) => string;
   resettingSoon: string;
-  updatedAgo: (minutes: number) => string;
+  ago: AgeText;
   fromHud: string;
   fromApi: string;
   fromMagpie: string;
@@ -17,6 +19,8 @@ export type ClaudeUsageText = {
   fromGlm: string;
   fromKimi: string;
   updated: (ago: string, source: string) => string;
+  staleUpdated: (ago: string, source: string) => string;
+  staleReason: Partial<Record<"hud" | "codex", string>>;
   ringLabel: (details: string) => string;
   noData: string;
   noUsage: Record<"codex" | "glm" | "kimi", string>;
@@ -45,14 +49,19 @@ export const zhCN: ClaudeUsageText = {
   resetsIn: ({ days, hours, minutes }) =>
     days > 0 ? `${days} 天 ${hours} 小时后重置` : hours > 0 ? `${hours} 小时 ${minutes} 分后重置` : `${minutes} 分后重置`,
   resettingSoon: "即将重置",
-  updatedAgo: (minutes) => (minutes < 1 ? "刚刚更新" : minutes < 60 ? `${minutes} 分钟前更新` : `${Math.floor(minutes / 60)} 小时前更新`),
+  ago: commonZhCN.ago,
   fromHud: "来自 claude-hud",
   fromApi: "来自 Anthropic",
   fromMagpie: "来自 magpie",
   fromCodex: "来自 Codex 会话记录",
   fromGlm: "来自智谱开放平台",
   fromKimi: "来自 Kimi",
-  updated: (ago, source) => `${ago} · ${source}`,
+  updated: (ago, source) => `${ago}更新 · ${source}`,
+  staleUpdated: (ago, source) => `可能已过时：${ago}更新 · ${source}`,
+  staleReason: {
+    hud: "claude-hud 只在终端里的 Claude Code 刷新状态栏时写这份快照，用一下 Claude Code 就会更新",
+    codex: "Codex 跑完一轮才会写入新的额度",
+  },
   ringLabel: (details) => `用量：${details}。点击刷新`,
   noData: "暂无 Claude 用量（需要本机的 magpie 网关、claude-hud 的用量快照，或在插件设置里打开「直接向 Anthropic 查询」）",
   noUsage: {
@@ -105,14 +114,19 @@ export const en: ClaudeUsageText = {
   resetsIn: ({ days, hours, minutes }) =>
     days > 0 ? `resets in ${days}d ${hours}h` : hours > 0 ? `resets in ${hours}h ${minutes}m` : `resets in ${minutes}m`,
   resettingSoon: "resetting soon",
-  updatedAgo: (minutes) => (minutes < 1 ? "updated just now" : minutes < 60 ? `updated ${minutes} min ago` : `updated ${Math.floor(minutes / 60)} h ago`),
+  ago: commonEn.ago,
   fromHud: "via claude-hud",
   fromApi: "from Anthropic",
   fromMagpie: "from magpie",
   fromCodex: "from Codex's session logs",
   fromGlm: "from Zhipu's open platform",
   fromKimi: "from Kimi",
-  updated: (ago, source) => `${ago} · ${source}`,
+  updated: (ago, source) => `updated ${ago} · ${source}`,
+  staleUpdated: (ago, source) => `May be stale: updated ${ago} · ${source}`,
+  staleReason: {
+    hud: "claude-hud writes this snapshot only when Claude Code redraws its status line in a terminal; use Claude Code once to refresh it",
+    codex: "Codex writes new limits only after it finishes a turn",
+  },
   ringLabel: (details) => `Usage: ${details}. Click to refresh`,
   noData: "No Claude usage yet (needs a local magpie gateway, claude-hud's usage snapshot, or \"Ask Anthropic directly\" in the plugin settings)",
   noUsage: {

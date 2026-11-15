@@ -35,3 +35,30 @@ test("one usage line per agent that reports numbers, and the card names the sour
   assert.deepEqual(usageSourceLines(usage({ source: "codex" }), 60_000, zhCN).map((line) => line.text), ["1 分钟前更新 · 来自 Codex 会话记录"]);
   assert.deepEqual(usageSourceLines(usage(), 0, zhCN).map((line) => line.text), ["刚刚更新 · 来自 claude-hud"]);
 });
+
+test("an old snapshot gets one stale line in days with the reason, not two times in different units", async () => {
+  const { usageSourceLines } = await import("../../src/features/agent-status/usage.ts");
+  const { zhCN, en } = await import("../../src/i18n/sections/claudeUsage.ts");
+  const usage = { updatedAt: 0, fiveHour: window("", 29), sevenDay: null, models: [], plan: null, source: "hud" };
+  const now = 2758 * 60_000;
+  assert.deepEqual(usageSourceLines(usage, now, zhCN), [
+    { text: "可能已过时：1 天前更新 · 来自 claude-hud" },
+    { text: zhCN.staleReason.hud, muted: true },
+  ]);
+  assert.equal(usageSourceLines(usage, now, en)[0].text, "May be stale: updated 1 day ago · via claude-hud");
+  assert.deepEqual(usageSourceLines({ ...usage, source: "api" }, 20 * 60_000, zhCN).map((line) => line.text), ["可能已过时：20 分钟前更新 · 来自 Anthropic"]);
+  assert.deepEqual(usageSourceLines(usage, 3 * 60 * 60_000 - 1, zhCN).map((line) => line.text)[0], "可能已过时：2 小时前更新 · 来自 claude-hud");
+});
+
+test("a window that reset after the snapshot was taken is dropped", async () => {
+  const { liveUsage } = await import("../../src/features/agent-status/usage.ts");
+  const hour = 60 * 60_000;
+  const usage = { updatedAt: 0, fiveHour: window("", 29, 2 * hour), sevenDay: window("", 46, 100 * hour), models: [window("Fable", 24, 3 * hour)], plan: null };
+  assert.deepEqual(liveUsage(usage, hour), usage);
+  const later = liveUsage(usage, 45 * hour);
+  assert.equal(later.fiveHour, null);
+  assert.equal(later.sevenDay?.used, 46);
+  assert.deepEqual(later.models, []);
+  assert.equal(liveUsage({ ...usage, updatedAt: null }, 45 * hour).fiveHour?.used, 29);
+  assert.equal(liveUsage({ ...usage, updatedAt: 3 * hour }, 45 * hour).fiveHour?.used, 29, "a snapshot taken after the reset time keeps its numbers");
+});

@@ -2,7 +2,7 @@ import { useTranslation } from "../../i18n";
 import type { AgentCardEffects, AgentHostDisplay } from "../appearance/types";
 import { AgentProviderIcon } from "./AgentProviderIcon";
 import type { AgentSessionSummary } from "./api";
-import { formatTokens, isActivePhase, minutesAgo, sessionProject } from "./sessionList";
+import { formatTokens, isActivePhase, sessionAge, sessionProject } from "./sessionList";
 import { SessionElapsed } from "./SessionElapsed";
 import { SessionHostLabel } from "./SessionHostLabel";
 import { sessionLight, type SessionLight } from "./sessionLight";
@@ -48,8 +48,7 @@ export function AgentSessionCard({
   const active = isActivePhase(session.phase);
   const light = sessionLight(session);
   const mode = active && session.permissionMode && session.permissionMode !== "default" ? text.permissionModes[session.permissionMode] : null;
-  const minutes = minutesAgo(session.updatedAt, now);
-  const age = minutes === 0 ? text.justNow : text.minutesAgo(minutes);
+  const age = sessionAge(session.updatedAt, now, { justNow: text.justNow, ...text.age });
   const time = showElapsed && session.turnStartedAt !== null && session.phase === "running" ? <SessionElapsed session={session} /> : age;
   const state = session.compacting ? text.compacting : light === "yourTurn" ? text.yourTurn : getAgentPhaseLabel(session.phase, t);
 

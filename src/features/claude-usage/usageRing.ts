@@ -1,13 +1,11 @@
 import type { AgentUsage, UsageWindow } from "../agent-status/api";
-import { untilReset, usageSourceLines } from "../agent-status/usage.ts";
+import { liveUsage, untilReset, USAGE_STALE_MS, usageSourceLines } from "../agent-status/usage.ts";
 import type { HoverCardLine } from "../../components/IslandHoverCard";
 import type { MiniRingTrack } from "../../components/MiniRing";
 import type { ClaudeUsageText } from "../../i18n/sections/claudeUsage";
 
 export const CLAUDE_USAGE_RING_SIZE = 24;
 export const CLAUDE_USAGE_GAUGE_WIDTH = CLAUDE_USAGE_RING_SIZE + 6;
-
-export const USAGE_STALE_MS = 15 * 60_000;
 
 export const USAGE_COLORS = {
   normal: "var(--usage-claude)",
@@ -52,7 +50,8 @@ function longWindow(usage: AgentUsage | null) {
   return usage?.sevenDay ?? usage?.models.find((window) => window.name === "month") ?? null;
 }
 
-export function usageRings(usage: AgentUsage | null, now: number, remaining = false, normal: string = USAGE_COLORS.normal): MiniRingTrack[] {
+export function usageRings(given: AgentUsage | null, now: number, remaining = false, normal: string = USAGE_COLORS.normal): MiniRingTrack[] {
+  const usage = given && liveUsage(given, now);
   const stale = isUsageStale(usage, now);
   return [usage?.fiveHour ?? null, longWindow(usage)].map((limit) =>
     limit
@@ -68,15 +67,16 @@ function resetText(limit: UsageWindow, now: number, text: ClaudeUsageText) {
 }
 
 export function usageCardLines(
-  usage: AgentUsage | null,
+  given: AgentUsage | null,
   now: number,
   text: ClaudeUsageText,
   remaining = false,
   provider?: UsageProvider,
 ): HoverCardLine[] {
-  const title: HoverCardLine[] = provider ? [{ text: [provider.name, usage?.plan].filter(Boolean).join(" · "), color: provider.color }] : [];
+  const title: HoverCardLine[] = provider ? [{ text: [provider.name, given?.plan].filter(Boolean).join(" · "), color: provider.color }] : [];
   const noData = provider && provider.id !== "claudeCode" ? text.noUsage[provider.id] : text.noData;
-  if (!usage) return [...title, { text: noData, muted: true }];
+  if (!given) return [...title, { text: noData, muted: true }];
+  const usage = liveUsage(given, now);
   const stale = isUsageStale(usage, now);
   const lines: HoverCardLine[] = [];
   const named = usage.models.map((window) => [text.windowNames[window.name] ?? window.name, window] as const);
@@ -89,6 +89,7 @@ export function usageCardLines(
   }
   const hasNumbers = lines.length > 0;
   if (!hasNumbers) lines.push({ text: noData, muted: true });
-  lines.push(...usageSourceLines(hasNumbers ? usage : { ...usage, updatedAt: null }, now, text));
+  const hadNumbers = Boolean(given.fiveHour || given.sevenDay || given.models.length > 0);
+  lines.push(...usageSourceLines(hadNumbers ? usage : { ...usage, updatedAt: null }, now, text));
   return [...title, ...lines];
 }

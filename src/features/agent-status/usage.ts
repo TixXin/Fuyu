@@ -1,6 +1,7 @@
 import type { AgentUsage, UsageWindow } from "./api";
 import type { HoverCardLine } from "../../components/IslandHoverCard";
 import type { ClaudeUsageText } from "../../i18n/sections/claudeUsage";
+import { formatAge } from "../../components/list/formatAgo.ts";
 
 export const USAGE_STALE_MS = 15 * 60_000;
 
@@ -25,14 +26,33 @@ export function isStale(usage: AgentUsage, now: number) {
   return usage.updatedAt !== null && now - usage.updatedAt > USAGE_STALE_MS;
 }
 
+export function liveUsage(usage: AgentUsage, now: number): AgentUsage {
+  const updatedAt = usage.updatedAt;
+  if (updatedAt === null) return usage;
+  const live = (window: UsageWindow | null) => (window && window.resetsAt !== null && updatedAt < window.resetsAt && window.resetsAt <= now ? null : window);
+  return {
+    ...usage,
+    fiveHour: live(usage.fiveHour),
+    sevenDay: live(usage.sevenDay),
+    models: usage.models.filter((window) => live(window) !== null),
+  };
+}
+
 export function usageSourceLines(usage: AgentUsage, now: number, text: ClaudeUsageText): HoverCardLine[] {
   const lines: HoverCardLine[] = [];
   const plan = usage.source === "glm" || usage.source === "kimi";
   if (usage.error) lines.push({ text: (plan ? text.planErrors : text.errors)[usage.error.kind] });
   if (usage.updatedAt !== null) {
-    const minutes = Math.max(0, Math.floor((now - usage.updatedAt) / 60_000));
-    const source = { api: text.fromApi, magpie: text.fromMagpie, codex: text.fromCodex, hud: text.fromHud, glm: text.fromGlm, kimi: text.fromKimi }[usage.source ?? "hud"];
-    lines.push({ text: text.updated(text.updatedAgo(minutes), source), muted: true });
+    const kind = usage.source ?? "hud";
+    const source = { api: text.fromApi, magpie: text.fromMagpie, codex: text.fromCodex, hud: text.fromHud, glm: text.fromGlm, kimi: text.fromKimi }[kind];
+    const ago = formatAge(Math.max(0, now - usage.updatedAt), text.ago);
+    if (isStale(usage, now)) {
+      lines.push({ text: text.staleUpdated(ago, source) });
+      const reason = kind === "hud" || kind === "codex" ? text.staleReason[kind] : undefined;
+      if (reason) lines.push({ text: reason, muted: true });
+    } else {
+      lines.push({ text: text.updated(ago, source), muted: true });
+    }
   }
   return lines;
 }
@@ -47,10 +67,6 @@ export function hasUsageNumbers(usage: AgentUsage | null): boolean {
 
 export function usageLineCount(usages: AgentUsages): number {
   return Number(hasUsageNumbers(usages.claude)) + Number(hasUsageNumbers(usages.codex));
-}
-
-export function minutesSinceUpdate(usage: AgentUsage, now: number) {
-  return usage.updatedAt === null ? 0 : Math.max(0, Math.floor((now - usage.updatedAt) / 60_000));
 }
 
 export type UsageWindowCell = { key: string; label: string; window: UsageWindow };
