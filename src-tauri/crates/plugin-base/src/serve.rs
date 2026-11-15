@@ -1,14 +1,16 @@
 use std::{
-    any::Any,
+    any::{Any, TypeId},
     cell::Cell,
     cmp::Reverse,
     collections::{BinaryHeap, HashMap},
     fmt,
+    future::Future,
     panic::{catch_unwind, AssertUnwindSafe},
     sync::{
         atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering},
         mpsc, Arc, Mutex, MutexGuard,
     },
+    pin::Pin,
     thread,
     time::{Duration, Instant},
 };
@@ -60,21 +62,27 @@ impl fmt::Display for ServeError {
 impl std::error::Error for ServeError {}
 
 pub type Handler = dyn Fn(Value, &Call) -> Result<Value, ServeError> + Send + Sync;
+pub type Answer = Result<Value, ServeError>;
+pub type LocalFuture<'a> = Pin<Box<dyn Future<Output = Answer> + 'a>>;
+type Runtime = dyn for<'a> Fn(LocalFuture<'a>) -> Answer + Send + Sync;
 
 struct Method {
     handler: Arc<Handler>,
     timeout: Duration,
+    origin: String,
 }
 
 pub struct Serve {
     methods: HashMap<String, Method>,
+    states: HashMap<TypeId, Box<dyn Any + Send + Sync>>,
+    runtime: Box<Runtime>,
     workers: usize,
     queue: usize,
 }
 
 impl Default for Serve {
     fn default() -> Self {
-        Self { methods: HashMap::new(), workers: DEFAULT_WORKERS, queue: DEFAULT_QUEUE }
+        Self { methods: HashMap::new(), states: HashMap::new(), runtime: Box::new(|future| pollster::block_on(future)), workers: DEFAULT_WORKERS, queue: DEFAULT_QUEUE }
     }
 }
 
@@ -84,11 +92,25 @@ impl Serve {
     }
 
     pub fn add(&mut self, name: &str, timeout: Duration, handler: impl Fn(Value, &Call) -> Result<Value, ServeError> + Send + Sync + 'static) -> Result<&mut Self, String> {
-        if self.methods.contains_key(name) {
-            return Err(format!("the Rust method {name} is registered twice"));
+        self.add_from(name, timeout, "Serve::add", handler)
+    }
+
+    pub(crate) fn add_from(&mut self, name: &str, timeout: Duration, origin: &str, handler: impl Fn(Value, &Call) -> Result<Value, ServeError> + Send + Sync + 'static) -> Result<&mut Self, String> {
+        if let Some(earlier) = self.methods.get(name) {
+            return Err(format!("the Rust method {name} is registered twice: {} and {origin}", earlier.origin));
         }
-        self.methods.insert(name.to_owned(), Method { handler: Arc::new(handler), timeout });
+        self.methods.insert(name.to_owned(), Method { handler: Arc::new(handler), timeout, origin: origin.to_owned() });
         Ok(self)
+    }
+
+    pub fn manage<T: Clone + Send + Sync + 'static>(&mut self, state: T) -> &mut Self {
+        self.states.insert(TypeId::of::<T>(), Box::new(state));
+        self
+    }
+
+    pub fn block_on_with(&mut self, runtime: impl for<'a> Fn(LocalFuture<'a>) -> Answer + Send + Sync + 'static) -> &mut Self {
+        self.runtime = Box::new(runtime);
+        self
     }
 
     pub fn workers(mut self, workers: usize) -> Self {
@@ -131,6 +153,7 @@ pub struct Call {
     method: String,
     slot: Arc<Slot>,
     rpc: Rpc,
+    serve: Arc<Serve>,
 }
 
 impl Call {
@@ -144,6 +167,16 @@ impl Call {
 
     pub fn progress(&self, data: Value) -> bool {
         !self.cancelled() && self.rpc.notify("progress", json!({ "id": self.id, "data": data })).is_ok()
+    }
+
+    pub fn state<T: Clone + Send + Sync + 'static>(&self) -> Result<T, ServeError> {
+        self.serve.states.get(&TypeId::of::<T>()).and_then(|state| state.downcast_ref::<T>()).cloned().ok_or_else(|| {
+            ServeError::new("failed", format!("Rust has no {} to give to {}; call Serve::manage with it first", std::any::type_name::<T>(), self.method))
+        })
+    }
+
+    pub fn block_on<'a>(&self, future: LocalFuture<'a>) -> Answer {
+        (self.serve.runtime)(future)
     }
 }
 
@@ -300,7 +333,8 @@ impl Session {
         let slot = Arc::new(Slot { done: AtomicBool::new(false) });
         lock(&self.live).insert(key(&id), slot.clone());
         let deadline = Deadline { at: Instant::now() + found.timeout, seq: self.seq.fetch_add(1, Ordering::SeqCst), id: id.clone(), method: method.to_owned(), timeout: found.timeout, slot: slot.clone() };
-        let job = Job { call: Call { id: id.clone(), method: method.to_owned(), slot: slot.clone(), rpc: self.rpc.clone() }, handler: found.handler.clone(), params };
+        let call = Call { id: id.clone(), method: method.to_owned(), slot: slot.clone(), rpc: self.rpc.clone(), serve: self.serve.clone() };
+        let job = Job { call, handler: found.handler.clone(), params };
         let queued = lock(&self.deadlines).as_ref().is_some_and(|deadlines| deadlines.send(deadline).is_ok()) && lock(&self.jobs).as_ref().is_some_and(|jobs| jobs.send(job).is_ok());
         if !queued {
             lock(&self.live).remove(&key(&id));

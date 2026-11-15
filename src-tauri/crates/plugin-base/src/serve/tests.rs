@@ -264,6 +264,6 @@ fn when_the_host_goes_away_running_handlers_are_cancelled_and_nothing_hangs() {
 fn registering_a_method_twice_is_an_error_naming_it() {
     let mut serve = Serve::new();
     serve.add("app.echo", Duration::from_secs(1), echo).unwrap();
-    assert_eq!(serve.add("app.echo", Duration::from_secs(1), echo).err(), Some("the Rust method app.echo is registered twice".into()));
+    assert_eq!(serve.add("app.echo", Duration::from_secs(1), echo).err(), Some("the Rust method app.echo is registered twice: Serve::add and Serve::add".into()));
     assert_eq!(serve.names(), ["app.echo"]);
 }

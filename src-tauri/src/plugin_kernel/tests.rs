@@ -85,7 +85,7 @@ fn the_real_host_starts_under_the_supervisor_reports_its_plugins_and_comes_back_
     let dir = std::env::temp_dir().join(format!("fuyu-plugin-kernel-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     std::fs::write(dir.join("hello.mjs"), "export const name = \"hello\";\nexport function apply(ctx) {\n  ctx.effect(() => {\n    const timer = setInterval(() => {}, 1000);\n    return () => clearInterval(timer);\n  });\n}\n").unwrap();
-    std::fs::write(dir.join("asks.mjs"), "import { writeFileSync } from \"node:fs\";\nexport const name = \"asks\";\nexport async function apply(ctx) {\n  const version = await ctx.rust.call(\"app.version\");\n  const echo = await ctx.rust.call(\"app.echo\", [1]);\n  const missing = await ctx.rust.call(\"app.nope\").catch((error) => error.code);\n  writeFileSync(new URL(\"./asked.json\", import.meta.url), JSON.stringify({ version, echo, missing }));\n}\n").unwrap();
+    std::fs::write(dir.join("asks.mjs"), "import { writeFileSync } from \"node:fs\";\nexport const name = \"asks\";\nexport async function apply(ctx) {\n  const version = await ctx.rust.call(\"app.version\");\n  const echo = await ctx.rust.call(\"app.echo\", { value: [1] });\n  const platform = await ctx.rust.call(\"app.platformSupport\");\n  const missing = await ctx.rust.call(\"app.nope\").catch((error) => error.code);\n  writeFileSync(new URL(\"./asked.json\", import.meta.url), JSON.stringify({ version, echo, missing, platform: platform.os }));\n}\n").unwrap();
     std::fs::write(dir.join("plugins.yml"), "- id: hello\n  name: ./hello.mjs\n- id: asks\n  name: ./asks.mjs\n").unwrap();
     let spec = HostSpec {
         program: node.path,
@@ -95,7 +95,7 @@ fn the_real_host_starts_under_the_supervisor_reports_its_plugins_and_comes_back_
     };
     let (tx, states) = mpsc::channel();
     let tx = Mutex::new(tx);
-    let serve = std::sync::Arc::new(super::methods::table("9.9.9".into()).unwrap());
+    let serve = std::sync::Arc::new(super::methods::registered().unwrap());
     let timing = Timing { ping_every: Duration::from_millis(200), ..Timing::default() };
     let supervisor = Supervisor::start_serving(move |_| spec.clone(), containment::shared(), timing, Some(serve), move |event| {
         if let Event::State(state) = event {
@@ -117,7 +117,7 @@ fn the_real_host_starts_under_the_supervisor_reports_its_plugins_and_comes_back_
         std::thread::sleep(Duration::from_millis(20));
     }
     let asked: Value = serde_json::from_str(&std::fs::read_to_string(dir.join("asked.json")).unwrap()).unwrap();
-    assert_eq!(asked, serde_json::json!({ "version": { "version": "9.9.9", "platform": std::env::consts::OS }, "echo": { "echo": [1] }, "missing": "no-method" }));
+    assert_eq!(asked, serde_json::json!({ "version": { "version": env!("CARGO_PKG_VERSION"), "platform": std::env::consts::OS }, "echo": { "echo": [1] }, "missing": "no-method", "platform": if cfg!(target_os = "macos") { "macos" } else { "windows" } }));
 
     let killed = Instant::now();
     #[cfg(unix)]
@@ -318,4 +318,32 @@ fn restarts_that_were_asked_for_and_heartbeats_missed_across_sleep_are_not_failu
     tracker.starting(5);
     tracker.went_down(5, "the plugin host exited (exit status: 1)");
     assert_eq!(tracker.starting(6).map(|safe| safe.cause), Some(Cause::Failures));
+}
+
+const GENERATED: &str = "../packages/plugin-services/src/generated";
+
+#[test]
+fn the_apps_own_rust_methods_are_registered_once() {
+    let serve = super::methods::registered().unwrap();
+    for name in ["app.echo", "app.platformSupport", "app.version"] {
+        assert!(serve.names().contains(&name), "{name} is missing from {:?}", serve.names());
+    }
+}
+
+#[test]
+fn the_generated_typescript_for_rust_methods_is_up_to_date() {
+    let (declarations, list) = plugin_base::ts::typescript(&plugin_base::ts::described());
+    let dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(GENERATED);
+    let files = [("rust.d.mts", declarations), ("rust.mjs", list)];
+    if std::env::var("FUYU_WRITE_RUST_TYPES").as_deref() == Ok("1") {
+        std::fs::create_dir_all(&dir).unwrap();
+        for (name, text) in &files {
+            std::fs::write(dir.join(name), text).unwrap();
+        }
+        return;
+    }
+    for (name, text) in &files {
+        let written = std::fs::read_to_string(dir.join(name)).unwrap_or_default().replace("\r\n", "\n");
+        assert!(&written == text, "packages/plugin-services/src/generated/{name} is out of date; run pnpm gen:rust-types\n--- expected ---\n{text}");
+    }
 }

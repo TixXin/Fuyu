@@ -1,4 +1,4 @@
-import { defineService, timersV1, translatorV1, type ServiceClient, type ServiceImpl, type ServiceProvider, type Timer } from "@fuyu/plugin-services";
+import { RUST_METHODS, defineService, timersV1, translatorV1, type PlatformSupport, type RustMethods, type ServiceClient, type ServiceImpl, type ServiceProvider, type Timer } from "@fuyu/plugin-services";
 
 declare const timers: ServiceClient<typeof timersV1>;
 const listed: Promise<{ timers: Timer[]; at: number }> = timers.list();
@@ -54,3 +54,14 @@ defineService<Streams, {}, { run: string }>("demo.streams/v1", { methods: { run:
 type Clash = { on(): null };
 // @ts-expect-error on is reserved for events
 defineService<Clash>("demo.clash/v1", { methods: { on: true } });
+
+type Same<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false;
+const supportShape: Same<PlatformSupport, { os: string; unsupported: Array<string>; devBuild: boolean }> = true;
+const supportResult: Same<RustMethods["app.platformSupport"]["result"], PlatformSupport> = true;
+const versionParams: RustMethods["app.version"]["params"] = null;
+// @ts-expect-error app.echo needs its value
+const echoParams: RustMethods["app.echo"]["params"] = {};
+const marked: readonly string[] = RUST_METHODS;
+// @ts-expect-error the list holds only the marked methods
+const unmarked: (typeof RUST_METHODS)[number] = "app.nope";
+void [supportShape, supportResult, versionParams, echoParams, marked, unmarked];

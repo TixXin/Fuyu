@@ -1,6 +1,7 @@
 use serde::Serialize;
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
+#[cfg_attr(test, derive(ts_rs::TS))]
 pub struct PlatformSupport {
     os: &'static str,
     unsupported: &'static [&'static str],
@@ -19,6 +20,7 @@ const SUPPORT: PlatformSupport = PlatformSupport {
 const SUPPORT: PlatformSupport = PlatformSupport { os: "windows", unsupported: &[], dev_build: false };
 
 #[tauri::command]
+#[plugin_base::host_service("app.platformSupport")]
 pub fn get_platform_support() -> PlatformSupport {
     PlatformSupport { dev_build: crate::dev_lane::lane().is_some(), ..SUPPORT }
 }

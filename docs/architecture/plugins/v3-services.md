@@ -130,9 +130,33 @@ export async function apply(ctx) {
 - 窗口这条路：宿主给调用它的**那一个连接**发 `{ type: "progress", id, data }`（`id` 是那次调用的 id），窗口的代理转给 `onProgress`。这是窗口协议里新的消息类型（只加，旧窗口不调这类方法就收不到）。它不进 `seq`、只发给一个连接，所以要改 `host/sockets.mjs` 给 `onCall` 多传一个「回给这个连接」的函数。**这一段随第一个用它的子任务（E36.3.8 翻译样板）实现**，这一轮的宿主分发对窗口来的 `progress` 先丢掉（`caller.progress` 照常可调）。
 - 经 Rust 的流式由 E36.3.3 定（计划里写的是「调用 id + 进度通知」），形状和这里一致：一个 id、多条片段、最后一个结果。
 
-### Rust 那条路（留位置）
+### Rust 那条路
 
 - **宿主调 Rust**：不是服务，是 E36.3.3 的 `ctx.rust.call(方法, 参数)`。内置插件把它包成服务（`translator/v1` 的实现里调 `ctx.rust.call("translator.translate", …)`），使用者看到的仍然是服务。
+- **Rust 一侧怎么提供方法**（E36.3.4）：在领域的自由函数上标 `#[plugin_base::host_service("translator.translate")]`，同步或 `async` 都行，可以和 `#[tauri::command]` 叠在同一个函数上（原函数原样保留，Tauri 那边照旧）。例子是 `src-tauri/src/platform_support.rs` 的 `get_platform_support`（`app.platformSupport`）和 `src-tauri/src/plugin_kernel/methods.rs`。
+
+  ```rust
+  #[derive(Serialize)]
+  #[cfg_attr(test, derive(ts_rs::TS))]
+  pub struct Translated { text: String, engine: Engine }
+
+  #[tauri::command]
+  #[plugin_base::host_service("translator.translate", timeout_ms = 60000, inject(app))]
+  pub async fn translate_text(app: AppHandle, text: String, engine: Option<Engine>) -> Result<Translated, UserError> { … }
+  ```
+
+  | 写法 | 宏做的事 |
+  |---|---|
+  | 普通参数 | 从调用的 JSON 对象里按 camelCase 名字取（`right_side` → `rightSide`），`Option` 的可以不传，多出的字段不管；类型不对回 `bad-params`，`message` 写明方法和字段，`data` 是 `{ method, field }`。参数必须是自己拥有的类型（`String` 而不是 `&str`） |
+  | `inject(app)` 列出的参数 | 不从 JSON 取，从 `Serve::manage` 放进去的状态里取一份克隆。浮屿放了 `AppHandle`；没放的类型回 `failed` 并写明缺哪个类型 |
+  | `call: &Call` 参数 | 这次调用本身：`call.progress(片段)` 推流式片段，`call.cancelled()` 看宿主是否已经不等了 |
+  | 返回 `T` | `T` 编码成 JSON 回答；不能编码回 `bad-result`。不写返回值回 `null` |
+  | 返回 `Result<T, E>` | `E` 要实现 `plugin_base::ServiceFailure`：`String`、`&str` 回 `failed`，`ServeError` 和自己实现了它的错误类型保留自己的码和 `data`（例如翻译的 `no-secret`）。`Result` 要写全两个类型参数，别名认不出来 |
+  | `async fn` | 在工作线程上用应用给的运行时跑完（`Serve::block_on_with`，浮屿给的是 Tauri 的 `block_on`，没给时用 `pollster`）。超时、取消、panic 和同步的一样 |
+  | `timeout_ms = …` | 这个方法的超时，默认 30 秒 |
+
+- **登记和重名**：每个标记生成一条 `inventory` 登记，`Serve::registered()` 读出全部；两个函数用了同一个方法名时它返回错误，写明两边的函数路径和文件行号，`plugin_kernel` 启动时就报出来，插件内核不启动。浮屿自己的方法表就是 `Serve::registered()` 加上 `AppHandle`（`plugin_kernel/methods.rs`）。
+- **生成的类型**：被标记函数的参数和返回值的类型在测试构建里派生 `ts_rs::TS`（`#[cfg_attr(test, derive(ts_rs::TS))]`，正式版不编译 `ts-rs`）。Rust 单元测试 `plugin_kernel::tests::the_generated_typescript_for_rust_methods_is_up_to_date` 把它们和方法表生成出来，和 `packages/plugin-services/src/generated/rust.d.mts`、`rust.mjs` 比对，不一致就失败；`pnpm gen:rust-types` 重写这两个文件。`rust.d.mts` 里是每个类型的声明和 `RustMethods`（`{ "<方法>": { params, result } }`），`rust.mjs` 是方法名清单 `RUST_METHODS`，都从 `@fuyu/plugin-services` 导出。`pnpm check` 里的 `check:rust-types` 不编译，只核对源码里标记的方法名和清单一致、生成的文本字段没有像密钥的名字（规则同 `check:secrets`，[v3-secrets.md](v3-secrets.md)）。
 - **Rust 调服务**（例如以后托盘菜单要调 `timers/v1`）：Rust 发给宿主的请求里留一个方法名 `service.call`，参数和窗口的一样（`{ service, method, params }`），错误码一样。要不要做、什么时候做由 E36.3.3 或托盘菜单的子任务定；同步等待不能成环（边界规则 5），所以宿主在处理 Rust 的 `service.call` 时，提供者不能再同步等 Rust 的回答。
 
 ## 错误
@@ -187,7 +211,7 @@ export async function apply(ctx) {
 | 测试 | `packages/plugin-services/test/define.test.mjs`（已在 `pnpm test` 的范围里）、`types.check.mts`（在 `pnpm check:packages-types` 里） | 这一轮 |
 | 宿主的服务表和窗口分发 | `packages/plugin-base/src/host/services.mjs`；`kernel.mjs` 装上访问器、`main.mjs` 的 `onCall`、快照和增量接上；测试 `packages/plugin-base/test/services.test.mjs` | 第二步，已做（Rust 来的 `service.call` 留给 E36.3.3，窗口来的 `progress` 留给 E36.3.8） |
 | 窗口的代理 | `packages/plugin-base/src/client/services.mjs` | E36.2.3 合入后 |
-| Rust 生成的类型 | `packages/plugin-services/src/generated/` | E36.3.4 |
+| Rust 生成的类型 | `packages/plugin-services/src/generated/`（`rust.d.mts`、`rust.mjs`），生成脚本 `scripts/plugins-v3/gen-rust-types.mjs`，宏在 `src-tauri/crates/plugin-base-macros` | E36.3.4，已做 |
 
 宿主一侧的 `services.mjs` **不 import `@fuyu/plugin-services`**：`plugin-base` 是要单独开源的基座，不能依赖浮屿的服务名单。它按形状认定义（`{ name, methods, events }`，和 `isServiceDefinition` 同一套检查）。
 
