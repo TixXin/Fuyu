@@ -20,7 +20,7 @@
     <a href="https://github.com/TixXin/fuyu/releases/latest"><img alt="Version" src="https://img.shields.io/github/v/release/TixXin/fuyu?label=version&style=flat-square&labelColor=1b1f24&color=3d444d"></a>
     <img alt="Platform" src="https://img.shields.io/badge/platform-Windows%2010%20%2F%2011%20%7C%20macOS%2015%2B-3d444d?style=flat-square&labelColor=1b1f24">
     <img alt="Tauri" src="https://img.shields.io/badge/Tauri-2-3d444d?style=flat-square&labelColor=1b1f24">
-    <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-GPL--3.0-3d444d?style=flat-square&labelColor=1b1f24"></a>
+    <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-AGPL--3.0-3d444d?style=flat-square&labelColor=1b1f24"></a>
     <a href="https://github.com/TixXin/fuyu/stargazers"><img alt="Stars" src="https://img.shields.io/github/stars/TixXin/fuyu?style=flat-square&label=stars&labelColor=1b1f24&color=3d444d"></a>
   </p>
 
@@ -208,7 +208,7 @@ Fuyu はみんなで作っています。あなたもぜひ参加してくださ
 
 ## ライセンス
 
-[GPL-3.0](LICENSE)。プラグインの作者はライセンスを自由に選べます。サードパーティの依存関係と同梱リソースはそれぞれのライセンスに従います。出典と表記は[サードパーティ表記](docs/THIRD_PARTY_NOTICES.md)、同梱フォントは[フォントについて](src/assets/fonts/README.md)をご覧ください。
+[AGPL-3.0](LICENSE)。プラグインの作者はライセンスを自由に選べます。サードパーティの依存関係と同梱リソースはそれぞれのライセンスに従います。出典と表記は[サードパーティ表記](docs/THIRD_PARTY_NOTICES.md)、同梱フォントは[フォントについて](src/assets/fonts/README.md)をご覧ください。
 
 > [!NOTE]
 > 本プロジェクトは [TixXin](https://github.com/TixXin) と [ShengLin1001](https://github.com/ShengLin1001) が共同でメンテナンスしており、2026 年 11 月に fly-island から Fuyu（浮屿）に改名しました。原作者の [flyl1u](https://github.com/flyl1u/fly-island) はシンプルなダイナミックアイランドの画面を志向しています。島の機能をさらに充実させ、より多くの人が自作の機能を島に載せられるように、本プロジェクトは別の系統として独立し、みんなで共同メンテナンスする形でプラグインマーケットを育ててきました。PR によるコードの貢献（[コントリビュート](CONTRIBUTING.md)を参照）、自作コンポーネントの[プラグインマーケット](https://github.com/TixXin/fuyu-plugins)への公開、自作プラグインのローカルへのインストール（[プラグインのドキュメント](docs/plugins/README.md)を参照）を歓迎します。
