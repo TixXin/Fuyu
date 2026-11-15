@@ -11,6 +11,7 @@ export const PAGES = [
   "agent-alerts.html",
   "agent-approvals.html",
   "agent-sessions.html?test=1",
+  "agent-sessions-interact.html",
   "agent-list-motion.html",
   "calendar.html",
   "center-pattern.html?test=1",

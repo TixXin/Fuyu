@@ -413,3 +413,80 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+.island-hover-card__anchor.agent-session__hover {
+  display: block;
+  width: 100%;
+}
+
+.agent-sessions__list--menu :is(.agent-session__agent, .agent-session__time) {
+  transition: opacity 140ms ease;
+}
+
+.agent-sessions__list--archivable.agent-sessions__list--menu > li:is(:hover, :focus-within, :has([aria-expanded="true"])) .agent-session__agent,
+.agent-sessions__list--menu:not(.agent-sessions__list--archivable) > li:is(:hover, :focus-within, :has([aria-expanded="true"])) .agent-session__time {
+  opacity: 0;
+}
+
+.agent-session__more {
+  position: absolute;
+  top: 8px;
+  right: 3px;
+  opacity: 0;
+  transition: opacity 140ms ease;
+}
+
+.agent-sessions__list--archivable .agent-session__more {
+  right: calc(max(24px, var(--agent-age-width, 0px)) + 5px);
+}
+
+.agent-sessions__list > li:is(:hover, :focus-within) .agent-session__more,
+.agent-session__more:has([aria-expanded="true"]) {
+  opacity: 1;
+}
+
+.agent-session__more .island-list-icon-button {
+  width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  color: var(--text-3);
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-sm, 6px);
+  cursor: pointer;
+  transition:
+    color 140ms ease,
+    background 140ms ease;
+}
+
+.agent-session__more .island-list-icon-button:is(:hover, :focus-visible, [aria-expanded="true"]) {
+  color: var(--text-1);
+  background: rgba(var(--agent-ink), 0.12);
+  outline: none;
+}
+
+.agent-sessions__list > li:has(.agent-session__more :is(:hover, [aria-expanded="true"])) .agent-session {
+  background: rgba(var(--agent-ink), 0.07);
+  box-shadow: inset 0 0 0 1px rgba(var(--agent-ink), 0.09);
+}
+
+.island-hover-card.agent-session-hover-card {
+  max-width: min(360px, calc(100vw - 16px));
+  white-space: normal;
+}
+
+.agent-session-hover-card .island-hover-card__line > span:last-child {
+  display: -webkit-box;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .agent-session__more,
+  .agent-sessions__list--menu :is(.agent-session__agent, .agent-session__time) {
+    transition: none;
+  }
+}

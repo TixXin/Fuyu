@@ -2,6 +2,7 @@ import type { ReactNode, Ref } from "react";
 import { useTranslation } from "../../i18n";
 import type { AgentHostDisplay } from "../appearance/types";
 import { AgentProviderIcon } from "./AgentProviderIcon";
+import { AgentSessionHoverCard } from "./AgentSessionHoverCard";
 import type { AgentSessionSummary } from "./api";
 import { isActivePhase } from "./sessionList";
 import { SessionBody } from "./SessionBody";
@@ -31,6 +32,8 @@ export function AgentSessionRow({
   showActivity,
   unseen,
   subagents,
+  menu,
+  hoverCard,
   onOpen,
 }: {
   session: AgentSessionSummary;
@@ -49,6 +52,8 @@ export function AgentSessionRow({
   showActivity: boolean;
   unseen?: UnseenSessions;
   subagents?: ReactNode;
+  menu?: ReactNode;
+  hoverCard?: { suppressed: boolean };
   onOpen: () => void;
 }) {
   const t = useTranslation();
@@ -79,48 +84,56 @@ export function AgentSessionRow({
   ]
     .filter(Boolean)
     .flatMap((part, index) => (index === 0 ? [part] : [" · ", part]));
+  const button = (
+    <button
+      className={`agent-session agent-session--${session.phase} agent-session--light-${light} agent-session--${full ? "full" : "compact"}${unseen?.keys.has(sessionKey(session)) ? " agent-session--unseen" : unseen && asksUser(session) ? " agent-session--looked" : ""}`}
+      type="button"
+      onClick={onOpen}
+    >
+      <span className="agent-session__dot" role="img" aria-label={lightText} title={lightText} />
+      <span className="agent-session__main">
+        <span className="agent-session__heading">
+          <span className="agent-session__title">
+            {project && project !== title ? <span className="agent-session__project">{project} · </span> : null}
+            {title}
+          </span>
+          {(pill.model || pill.effort || pillMode) && (
+            <span className="agent-session__pill" title={pillTitle}>
+              {pill.model && <span className="agent-session__pill-model">{pill.model}</span>}
+              {pill.effort && <span className="agent-session__pill-effort">{pill.effort}</span>}
+              {pillMode && <span className={`agent-session__pill-mode agent-session__pill-mode--${session.permissionMode}`}>{pillMode}</span>}
+            </span>
+          )}
+          {notFound ? (
+            <span className="agent-session__not-found" role="status">{notFound}</span>
+          ) : (
+            status.length > 0 && <span className="agent-session__meta">{status}</span>
+          )}
+          {session.host && (hostDisplay === "name" || hostDisplay === "both") && <SessionHostLabel host={session.host} display="name" />}
+          <span className="agent-session__agent">
+            <AgentProviderIcon provider={session.provider} size={14} />
+            {session.host && <SessionHostLabel host={session.host} display={hostDisplay} badge />}
+          </span>
+          {showAge && !ageInSlot && <span className="agent-session__time">{age}</span>}
+        </span>
+        {cardReply ? (
+          <span className="agent-session__message agent-session__message--card">{cardReply}</span>
+        ) : (
+          full && <SessionBody session={session} showActivity={showActivity} />
+        )}
+      </span>
+    </button>
+  );
   return (
     <li ref={rowRef} data-session-key={sessionKey(session)}>
-      <button
-        className={`agent-session agent-session--${session.phase} agent-session--light-${light} agent-session--${full ? "full" : "compact"}${unseen?.keys.has(sessionKey(session)) ? " agent-session--unseen" : unseen && asksUser(session) ? " agent-session--looked" : ""}`}
-        type="button"
-        onClick={onOpen}
-      >
-        <span className="agent-session__dot" role="img" aria-label={lightText} title={lightText} />
-        <span className="agent-session__main">
-          <span className="agent-session__heading">
-            <span className="agent-session__title">
-              {project && project !== title ? <span className="agent-session__project">{project} · </span> : null}
-              {title}
-            </span>
-            {(pill.model || pill.effort || pillMode) && (
-              <span className="agent-session__pill" title={pillTitle}>
-                {pill.model && <span className="agent-session__pill-model">{pill.model}</span>}
-                {pill.effort && <span className="agent-session__pill-effort">{pill.effort}</span>}
-                {pillMode && <span className={`agent-session__pill-mode agent-session__pill-mode--${session.permissionMode}`}>{pillMode}</span>}
-              </span>
-            )}
-            {notFound ? (
-              <span className="agent-session__not-found" role="status">{notFound}</span>
-            ) : (
-              status.length > 0 && <span className="agent-session__meta">{status}</span>
-            )}
-            {session.host && (hostDisplay === "name" || hostDisplay === "both") && <SessionHostLabel host={session.host} display="name" />}
-            <span className="agent-session__agent">
-              <AgentProviderIcon provider={session.provider} size={14} />
-              {session.host && <SessionHostLabel host={session.host} display={hostDisplay} badge />}
-            </span>
-            {showAge && !ageInSlot && <span className="agent-session__time">{age}</span>}
-          </span>
-          {cardReply ? (
-            <span className="agent-session__message agent-session__message--card">{cardReply}</span>
-          ) : (
-            full && <SessionBody session={session} showActivity={showActivity} />
-          )}
-        </span>
-      </button>
+      {hoverCard ? (
+        <AgentSessionHoverCard session={session} title={project && project !== title ? `${project} · ${title}` : title} suppressed={hoverCard.suppressed}>
+          {button}
+        </AgentSessionHoverCard>
+      ) : button}
       {subagents}
       {ageInSlot && <span className="agent-session__age">{age}</span>}
+      {menu}
       {archive}
     </li>
   );

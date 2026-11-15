@@ -59,6 +59,23 @@ export type AgentText = {
     lights: Record<"needs" | "yourTurn" | "working" | "stale" | "done" | "failed", string>;
     runsIn: (host: string) => string;
     toolCall: (tool: string) => string;
+    menu: {
+      label: (title: string) => string;
+      focus: string;
+      reveal: string;
+      copyPath: string;
+      copyId: string;
+      archive: string;
+      hideFolder: string;
+      copied: string;
+      revealFailed: string;
+    };
+    hover: {
+      prompt: (prompt: string) => string;
+      folder: (path: string) => string;
+      remoteFolder: (host: string, path: string) => string;
+      host: (host: string) => string;
+    };
   };
   usage: {
     label: string;
@@ -155,6 +172,23 @@ export const zhCN: AgentText = {
     compacting: "正在压缩上下文",
     lights: { needs: "等你确认", yourTurn: "等你回复", working: "运行中", stale: "10 分钟没有动静", done: "已完成", failed: "出错了" },
     runsIn: (host) => `在 ${host} 里运行`,
+    menu: {
+      label: (title) => `「${title}」的更多操作`,
+      focus: "跳到窗口",
+      reveal: "在文件夹中显示",
+      copyPath: "复制路径",
+      copyId: "复制会话 id",
+      archive: "归档",
+      hideFolder: "隐藏这个目录的会话",
+      copied: "已复制",
+      revealFailed: "打不开这个文件夹",
+    },
+    hover: {
+      prompt: (prompt) => `你：${prompt}`,
+      folder: (path) => `目录：${path}`,
+      remoteFolder: (host, path) => `目录：${host}:${path}`,
+      host: (host) => `在 ${host} 里运行`,
+    },
     toolCall: (tool) => `正在调用 ${tool}`,
   },
   usage: {
@@ -258,6 +292,23 @@ export const en: AgentText = {
     compacting: "Compacting context",
     lights: { needs: "Waiting for your approval", yourTurn: "Waiting for your reply", working: "Running", stale: "No activity for 10 minutes", done: "Done", failed: "Failed" },
     runsIn: (host) => `Running in ${host}`,
+    menu: {
+      label: (title) => `More actions for "${title}"`,
+      focus: "Go to window",
+      reveal: "Show in folder",
+      copyPath: "Copy path",
+      copyId: "Copy session id",
+      archive: "Archive",
+      hideFolder: "Hide sessions in this folder",
+      copied: "Copied",
+      revealFailed: "Couldn't open this folder",
+    },
+    hover: {
+      prompt: (prompt) => `You: ${prompt}`,
+      folder: (path) => `Folder: ${path}`,
+      remoteFolder: (host, path) => `Folder: ${host}:${path}`,
+      host: (host) => `Running in ${host}`,
+    },
     toolCall: (tool) => `Calling ${tool}`,
   },
   usage: {

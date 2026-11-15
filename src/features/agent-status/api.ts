@@ -1,5 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
+import { revealItemInDir } from "@tauri-apps/plugin-opener";
 import type { AgentEffortLabels } from "./effortLabels";
 
 import type { AgentProvider, RemoteProvider, SessionProvider } from "./agents.ts";
@@ -181,6 +182,10 @@ export function setAgentRemoteHosts(hosts: string[]) {
 
 export function focusAgentWindow(provider: SessionProvider, cwd: string | null, title: string | null, sessionId: string) {
   return invoke<boolean>("focus_agent_window", { provider, cwd, title, sessionId });
+}
+
+export function revealAgentSessionFolder(path: string) {
+  return revealItemInDir(path);
 }
 
 export type EditorExtensionState = {
