@@ -131,7 +131,7 @@ test("only the modules the host shares stay outside a built-in plugin; its subpa
   folders.push(dirname(out.outDir));
   assert.deepEqual(out.external, [...HOST_SHARED_MODULES].sort());
   const text = readFileSync(join(out.outDir, "pager", "host.mjs"), "utf8");
-  assert.doesNotMatch(text, /@fuyu\/plugin-base\//);
+  assert.doesNotMatch(text, /@fuyu\/plugin-base\/protocol/);
   const { ready, stderr } = await readyFrom(out.outDir);
   const pager = ready.plugins.find((plugin) => plugin.id === "pager");
   assert.equal(pager.state, "running", `${pager.error ?? ""}\n${stderr()}`);

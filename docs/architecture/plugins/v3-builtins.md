@@ -60,7 +60,7 @@ Rust 拉宿主时传 `--builtins`：开发版和 `build:exe` 是 `<仓库>/src/f
 ## 内置插件的宿主部分怎么写
 
 - 放在 `src/features/<功能>/host/`，入口是清单里的 `host`。可以写 `.mjs`（配 `.d.mts`）或 `.ts`；可以 import 同一个功能里的纯函数（计时器 import `../timers.ts`），不复制。不能 import 浏览器的东西和 `@tauri-apps/api`（宿主是 Node）。
-- 宿主共享的模块由宿主提供同一份内核，打包时留在外面：名单是 `@fuyu/plugin-base/protocol` 的 `HOST_SHARED_MODULES`，宿主的 `shareModules` 和打包脚本都读它，现在是 `@fuyu/plugin-base` 和 `fuyu-plugin`（E36.3.16），两个都指向宿主的内核；浮屿用 `--api` 还能再追加名字。只认这几个名字本身，它们的子路径（如 `@fuyu/plugin-base/protocol`）和别的依赖（`@fuyu/plugin-services` 等）都打进去。插件不直接 import `cordis`。
+- 宿主共享的模块由宿主提供同一份内核，打包时留在外面：名单是 `@fuyu/plugin-base/protocol` 的 `HOST_SHARED_MODULES`，宿主的 `shareModules` 和打包脚本都读它，现在是 `@fuyu/plugin-base`、`fuyu-plugin`（E36.3.16，两个都指向宿主的内核）和 `@fuyu/plugin-base/services`（E36.3.17，指向宿主的 `services.mjs`，`defineService` 在这里）；浮屿用 `--api` 还能再追加名字。只认这几个名字本身，它们的子路径（如 `@fuyu/plugin-base/protocol`）和别的依赖（`@fuyu/plugin-services` 等）都打进去。插件不直接 import `cordis`。
 - 数据写到 `ctx.dataDir`（见下），不要用 `ctx.baseUrl` 拼路径。
 - 不在运行时按 `import.meta.url` 找别的文件（打包后只剩一个文件，构建会检查并报错）。
 

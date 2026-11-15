@@ -1,3 +1,4 @@
+export { SERVICE_NAME } from "@fuyu/plugin-manifest/names";
 export declare const HOST_PROTOCOL: 2;
 export declare const WINDOW_PROTOCOL: 1;
 export declare const CLOSE: {
@@ -9,7 +10,6 @@ export declare const CLOSE: {
 };
 export declare const SERVICE_CALLS: readonly ["service.call", "service.on", "service.off"];
 export type ServiceCallName = (typeof SERVICE_CALLS)[number];
-export declare const SERVICE_NAME: RegExp;
 export declare const SERVICE_TIMEOUT_MS: 30000;
 export declare const WINDOW_ORIGINS: readonly string[];
 export declare const SLOT_THEME: readonly string[];
@@ -17,7 +17,7 @@ export declare const SHARED_MODULES: {
   readonly react: "__shared/react.js";
   readonly "react/jsx-runtime": "__shared/react-jsx-runtime.js";
 };
-export declare const HOST_SHARED_MODULES: readonly ["@fuyu/plugin-base", "fuyu-plugin"];
+export declare const HOST_SHARED_MODULES: readonly ["@fuyu/plugin-base", "fuyu-plugin", "@fuyu/plugin-base/services"];
 export interface SlotDefinition {
   readonly kind: "list" | "single";
   readonly max?: number;

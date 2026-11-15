@@ -1,3 +1,5 @@
+export const SERVICE_NAME = /^[a-z][a-z0-9-]*(\.[a-z][a-z0-9-]*)*\/v[1-9][0-9]{0,3}$/;
+
 const PART = /^[a-z0-9][a-z0-9._~-]*$/;
 const OWNER = /^[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?$/;
 const SHORTHAND = /^(?:(github|gitlab|bitbucket):)?([^/:@\s]+)\/([^/\s#]+?)(?:\.git)?(?:#.*)?$/;

@@ -13,6 +13,7 @@ export const DEFAULT_OUT = join(ROOT, "src-tauri", "target", "plugins-v3", "host
 const ENTRIES = [
   { out: "main", in: "./src/host/main.mjs" },
   { out: "index", in: "./src/index.mjs" },
+  { out: "services", in: "./src/services.mjs" },
   { out: "plugins-file", in: "./src/host/plugins-file.mjs" },
   { out: "client-only", in: "./src/host/client-only.mjs" },
   { out: "hmr", in: "@cordisjs/hmr" },
@@ -21,6 +22,7 @@ const ENTRIES = [
 const REWRITES = [
   [/import\.meta\.resolve\("@cordisjs\/hmr"\)/g, 'new URL("./hmr.mjs", import.meta.url).href'],
   [/new URL\("\.\.\/index\.mjs", import\.meta\.url\)/g, 'new URL("./index.mjs", import.meta.url)'],
+  [/new URL\("\.\.\/services\.mjs", import\.meta\.url\)/g, 'new URL("./services.mjs", import.meta.url)'],
 ];
 
 export const BANNER = "import { createRequire as __fuyuCreateRequire } from 'node:module'; const require = __fuyuCreateRequire(import.meta.url);";

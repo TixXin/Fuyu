@@ -1,3 +1,5 @@
+export declare const SERVICE_NAME: RegExp;
+
 export interface PluginName {
   scope: string | null;
   name: string;

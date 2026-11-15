@@ -199,7 +199,7 @@ Rust 每次拉起宿主（包括自动重启）都重新决定带不带 `--safe`
 
 ### 服务
 
-宿主里的插件用 `ctx.services.provide(定义, 实现)` 提供带版本的服务（`timers/v1`），别的插件用 `ctx.services.get(定义)` 调，窗口经这条 WebSocket 按名字调。名字、声明、错误码和替换的规则在 [v3-services.md](v3-services.md)，这里只列窗口协议里的部分。2026-11-15 起（E36.3.2），只加不改，`WINDOW_PROTOCOL` 仍是 1；三个方法名在 `@fuyu/plugin-base/protocol` 的 `SERVICE_CALLS`，名字的规则是 `SERVICE_NAME`，默认超时 `SERVICE_TIMEOUT_MS`（30 秒）。
+宿主里的插件用 `ctx.services.provide(定义, 实现)` 提供带版本的服务（`timers/v1`），别的插件用 `ctx.services.get(定义)` 调，窗口经这条 WebSocket 按名字调。名字、声明、错误码和替换的规则在 [v3-services.md](v3-services.md)，这里只列窗口协议里的部分。2026-11-15 起（E36.3.2），只加不改，`WINDOW_PROTOCOL` 仍是 1；三个方法名在 `@fuyu/plugin-base/protocol` 的 `SERVICE_CALLS`，名字的规则是 `SERVICE_NAME`（正则只有一份，在 `@fuyu/plugin-manifest/names`，`protocol` 转出），默认超时 `SERVICE_TIMEOUT_MS`（30 秒）。声明服务用 `@fuyu/plugin-base/services` 的 `defineService`（不引 Cordis，窗口代码也能用；E36.3.17）。
 
 | 调用 | `params` | 回答 |
 |---|---|---|
