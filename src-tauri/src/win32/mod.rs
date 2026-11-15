@@ -39,6 +39,7 @@ pub(crate) mod uia_list;
 pub(crate) mod uia_tabs;
 pub(crate) mod video_writer;
 pub(crate) mod url_protocol;
+pub(crate) mod webview_crash;
 pub(crate) mod webview_page;
 pub(crate) mod win_key_hook;
 pub(crate) mod window;
