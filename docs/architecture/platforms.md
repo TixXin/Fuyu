@@ -89,6 +89,6 @@ macOS 的计划和决定见 [macos-port-plan.md](macos-port-plan.md)，各功能
 | 插件平台第 3 版（开发中，默认关） | `plugin_kernel`、`crates/plugin-base`、`packages/plugin-base` | 开发中 | 开发中 | 宿主是 Node 子进程，放进自己的进程组，岛退出或崩溃时整组结束；Node 先找电脑上 22.15 以上的，没有就下载 26.13.1（核对 SHA-256）。设 `FUYU_PLUGINS_V3=1` 才启动（开发版、正式版一样），安装包带上宿主和内置插件。第 1 阶段两个系统的测量和真岛验收都过了（Windows 上宿主的 libuv 线程池设成 2）。第 2 阶段把岛和设置窗口的界面改成插槽，纯前端，两个系统一样，不设这个变量也生效；真岛验收还没看 | E36.1、E36.2 | macOS 27.2，2026-11-15（第 1 阶段测量和真岛验收） |
 | 本地 API、SSH 隧道、cc-connect | `local_api`、`ssh_tunnel`、`cc_connect` | 已支持 | 未开始 | 通用代码；系统代理读 SCDynamicStore | G1.2 | — |
 | 宠物 | `pets` | 已支持 | 未开始 | 通用代码 | G1.2 | — |
-| 刘海形态 | `island/notch.rs`、`macos/notch.rs` | 不支持（没有刘海） | 开发中 | 读 `NSScreen` 的 `safeAreaInsets` 和 `auxiliaryTop*Area`；设置 → 位置 → 菜单栏「压在菜单栏上（有刘海时贴合刘海）」（默认）；无刘海屏照常顶部正中；无需权限 | G1.11 | — |
+| 岛的形态（贴顶 / 悬空药丸 / 刘海） | `island/notch.rs`、`macos/notch.rs`、`windows/island/islandForm.ts` | 开发中（模拟刘海 240×32，待真机验收） | 开发中 | 外观 → 尺寸与位置 →「形态」三选一，默认贴顶（C65）。刘海：Mac 读 `NSScreen` 的 `safeAreaInsets` 和 `auxiliaryTop*Area` 贴合真刘海（G1.11）；Windows 和没有刘海的屏画模拟刘海，收起时上滑露 6px。Mac 有真刘海时选贴顶或药丸，岛自动让到菜单栏下面；药丸在 Mac 上从菜单栏下沿算 10px。吸在底边或侧边时形态不生效；无需权限 | G1.11、C65 | — |
 
 不对应用户功能、不单列的模块：`lib.rs`、`main.rs`、`dev_lane.rs`、`coexist/`（开发版专用，Mac 上是空实现）、`fs_write.rs`、`settings_file.rs`、`user_error.rs`。它们在 G1.2 里随平台隔离一起处理。
