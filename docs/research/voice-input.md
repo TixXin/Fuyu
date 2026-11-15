@@ -95,7 +95,15 @@ Whisper 在 AISHELL 上的中文 CER 没查到可靠数字（未核实）。各�
 | VoiceInk（Mac，GPL-3.0） | whisper.cpp，Parakeet 走 FluidAudio |
 | Buzz（MIT） | 离线 Whisper，跨平台 |
 
-## 要用户定的
+## 用户的决定（2026-11-15，五条都按推荐）
+
+1. 两个系统都用本机 SenseVoice-Small int8（sherpa-onnx），Mac 不优先用 `SpeechAnalyzer`。
+2. 模型第一次用时下载（GitHub Release 加国内镜像，校验 SHA-256），不打进安装包。
+3. 快捷键按一下开始、再按一下结束，岛上有停止按钮。
+4. 第一版不做在线服务。
+5. 第一版不做「直接粘贴到当前输入框」。
+
+## 当时要用户定的
 
 1. **识别引擎**：两个系统都用本机 SenseVoice（推荐）；还是 Mac 的 macOS 26 以上优先用系统的 `SpeechAnalyzer`？
 2. **模型下载**：第一次用时下载约 160 MB（推荐，安装包不变大）；还是打进安装包？下载源用 GitHub Release 加国内镜像？
