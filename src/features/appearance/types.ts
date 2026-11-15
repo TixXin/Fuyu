@@ -66,8 +66,7 @@ export type IslandSettings = CalendarSettingValues & {
   agentArchiveMotion: AgentArchiveMotion;
   agentCardEffects: AgentCardEffects;
   agentSessionHours: number;
-  agentShowClaudeCode: boolean;
-  agentShowCodex: boolean;
+  agentHiddenProviders: string[];
   agentHideFinished: boolean;
   agentHideClosed: boolean;
   agentShowElapsed: boolean;
@@ -163,6 +162,8 @@ export type IslandPreset = {
 };
 
 export type LegacyIslandSettings = Partial<IslandSettings> & {
+  agentShowClaudeCode?: boolean;
+  agentShowCodex?: boolean;
   margin?: number;
   sizeScale?: number;
   taskTitleColor?: string;

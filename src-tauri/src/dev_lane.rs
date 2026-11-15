@@ -87,7 +87,7 @@ fn left_edge(beside: bool, monitor_x: i32, monitor_width: i32, window_width: i32
 
 pub(crate) fn refuse_in_preview(action: &str) -> Result<(), String> {
     match lane() {
-        Some(lane) => Err(format!("This is the preview of lane {lane}; it does not {action}. Use your own island for that.")),
+        Some(_) => Err(format!("This is a development build; it does not {action}. The installed Fuyu does that.")),
         None => Ok(()),
     }
 }
