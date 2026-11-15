@@ -10,6 +10,7 @@ import { useTranslation } from "../../i18n";
 import { isMacOS } from "../../lib/platform";
 import type { ClipboardHistorySettings, ClipboardSecretHandling } from "./api";
 import { CLIPBOARD_MAX_ITEMS, CLIPBOARD_MIN_ITEMS, CLIPBOARD_RETENTION_DAYS, parseExcludedApps } from "./settings";
+import { CLIPBOARD_SECRET_EXPIRY_MINUTES, CLIPBOARD_TEXT_LIMITS_KB } from "./privacySettings";
 
 export function ClipboardRecordSettings({ clipboardSettings, onChange }: {
   clipboardSettings: ClipboardHistorySettings;
@@ -17,6 +18,7 @@ export function ClipboardRecordSettings({ clipboardSettings, onChange }: {
 }) {
   const t = useTranslation();
   const text = t.settings.clipboard;
+  const privacy = t.clipboardPrivacy;
   const savedApps = clipboardSettings.excludedApps.join(", ");
   const [apps, setApps] = useState(savedApps);
   useEffect(() => setApps(savedApps), [savedApps]);
@@ -30,6 +32,7 @@ export function ClipboardRecordSettings({ clipboardSettings, onChange }: {
       <SettingsToggleRow title={text.captureFiles} description={isMacOS ? text.captureFilesHintMac : text.captureFilesHint} checked={clipboardSettings.captureFiles} onChange={(captureFiles) => onChange({ captureFiles })} />
       <SettingsToggleRow title={text.captureHtml} description={isMacOS ? text.captureHtmlHintMac : text.captureHtmlHint} checked={clipboardSettings.captureHtml} onChange={(captureHtml) => onChange({ captureHtml })} />
       <SettingsToggleRow title={text.skipSensitive} description={isMacOS ? text.skipSensitiveHintMac : text.skipSensitiveHint} checked={clipboardSettings.skipSensitive} onChange={(skipSensitive) => onChange({ skipSensitive })} />
+      <SettingsToggleRow title={privacy.forgetCleared} description={privacy.forgetClearedHint} checked={clipboardSettings.forgetCleared} onChange={(forgetCleared) => onChange({ forgetCleared })} />
       <SettingsRow
         title={text.secrets}
         description={text.secretsHint}
@@ -46,6 +49,21 @@ export function ClipboardRecordSettings({ clipboardSettings, onChange }: {
           />
         }
       />
+      {clipboardSettings.secrets === "mask" && (
+        <SettingsRow
+          indent
+          title={privacy.secretExpiry}
+          description={privacy.secretExpiryHint}
+          control={
+            <SettingsSelect
+              value={String(clipboardSettings.secretExpiryMinutes)}
+              ariaLabel={privacy.secretExpiry}
+              options={CLIPBOARD_SECRET_EXPIRY_MINUTES.map((minutes) => ({ value: String(minutes), label: privacy.secretExpiryOption(minutes) }))}
+              onChange={(value) => onChange({ secretExpiryMinutes: Number(value) })}
+            />
+          }
+        />
+      )}
       <SettingsRow title={text.excludedApps} description={isMacOS ? text.excludedAppsHintMac : text.excludedAppsHint} labelFor="clipboard-excluded-apps">
         <SettingsInput
           id="clipboard-excluded-apps"
@@ -58,6 +76,18 @@ export function ClipboardRecordSettings({ clipboardSettings, onChange }: {
           }}
         />
       </SettingsRow>
+      <SettingsRow
+        title={privacy.maxText}
+        description={privacy.maxTextHint}
+        control={
+          <SettingsSelect
+            value={String(clipboardSettings.maxTextKb)}
+            ariaLabel={privacy.maxText}
+            options={CLIPBOARD_TEXT_LIMITS_KB.map((kb) => ({ value: String(kb), label: privacy.maxTextOption(kb) }))}
+            onChange={(value) => onChange({ maxTextKb: Number(value) })}
+          />
+        }
+      />
       <SettingsToggleRow title={text.localApiRead} description={text.localApiReadHint} checked={clipboardSettings.localApiRead === true} onChange={(localApiRead) => onChange({ localApiRead })} />
       <SettingsNumberRow title={text.maxItems} value={clipboardSettings.maxItems} min={CLIPBOARD_MIN_ITEMS} max={CLIPBOARD_MAX_ITEMS} onChange={(maxItems) => onChange({ maxItems })} />
       <SettingsRow

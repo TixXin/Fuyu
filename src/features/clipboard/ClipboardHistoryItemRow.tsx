@@ -68,6 +68,7 @@ export function ClipboardHistoryItemRow({
     fileImageLabel(item, formatBytes),
     item.kind === "files" && item.files?.[0] ? fileFolder(item.files[0]) : null,
     extraFiles > 0 ? text.moreFiles(extraFiles) : null,
+    item.truncated ? t.clipboardPrivacy.truncated : null,
     item.note,
   ].filter((part): part is string => Boolean(part));
 

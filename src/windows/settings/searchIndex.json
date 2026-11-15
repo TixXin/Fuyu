@@ -1680,6 +1680,19 @@
       "page": "clipboardHistory",
       "zh-CN": {
         "group": "剪贴板历史",
+        "title": "剪贴板被清空时删掉刚记下的那条",
+        "description": "密码管理器复制密码后过一会儿会清空剪贴板；刚记下 2 分钟内的那条（不含收藏）跟着从历史里删掉。"
+      },
+      "en": {
+        "group": "Clipboard history",
+        "title": "Forget the last entry when the clipboard is cleared",
+        "description": "Password managers clear the clipboard a while after copying a password; the entry recorded in the last 2 minutes (unless starred) is removed from history too."
+      }
+    },
+    {
+      "page": "clipboardHistory",
+      "zh-CN": {
+        "group": "剪贴板历史",
         "title": "密钥和令牌",
         "description": "看起来像 API Key、GitHub 令牌、私钥的内容：打码显示（粘贴时仍是原文）、不记录，或照常记录。",
         "options": [
@@ -1703,6 +1716,19 @@
       "page": "clipboardHistory",
       "zh-CN": {
         "group": "剪贴板历史",
+        "title": "打码的条目自动删除",
+        "description": "按最后一次复制的时间算，收藏的不删。"
+      },
+      "en": {
+        "group": "Clipboard history",
+        "title": "Delete masked entries",
+        "description": "Counted from the last copy; starred entries are kept."
+      }
+    },
+    {
+      "page": "clipboardHistory",
+      "zh-CN": {
+        "group": "剪贴板历史",
         "title": "不记录这些程序复制的内容",
         "description": "填程序名，逗号分隔，比如 keepass.exe。每条记录旁边会显示它来自哪个程序。"
       },
@@ -1710,6 +1736,19 @@
         "group": "Clipboard history",
         "title": "Do not record copies from these programs",
         "description": "Program names separated by commas, such as keepass.exe. Each entry shows the program it came from."
+      }
+    },
+    {
+      "page": "clipboardHistory",
+      "zh-CN": {
+        "group": "剪贴板历史",
+        "title": "单条文字大小上限",
+        "description": "超过的只记前面一段并标「已截断」，贴回去的不是完整原文；格式（HTML）超过上限时不记。"
+      },
+      "en": {
+        "group": "Clipboard history",
+        "title": "Size limit per text entry",
+        "description": "Longer text keeps only its beginning and is marked “Truncated”, so pasting it back is not the full original; formatting (HTML) over the limit is dropped."
       }
     },
     {

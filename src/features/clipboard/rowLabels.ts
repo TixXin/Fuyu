@@ -13,7 +13,7 @@ export function entryMetaLabel(entry: ClipboardHistoryItem, t: Translations): st
   const text = t.clipboard;
   const folder = entry.kind === "files" && entry.files?.[0] ? fileFolder(entry.files[0]) : null;
   const extraFiles = entry.kind === "files" && entry.files && entry.files.length > 1 ? entry.files.length - 1 : 0;
-  return [sourceName(entry, t.settings.project.appName, text.popup.screenshotSource), fileImageLabel(entry, formatBytes), folder, extraFiles > 0 ? text.moreFiles(extraFiles) : null, entry.note]
+  return [sourceName(entry, t.settings.project.appName, text.popup.screenshotSource), fileImageLabel(entry, formatBytes), folder, extraFiles > 0 ? text.moreFiles(extraFiles) : null, entry.truncated ? t.clipboardPrivacy.truncated : null, entry.note]
     .filter((part): part is string => Boolean(part))
     .join(" · ");
 }

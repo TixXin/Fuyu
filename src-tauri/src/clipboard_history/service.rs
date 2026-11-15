@@ -244,6 +244,10 @@ impl ClipboardHistoryService {
         if settings.skip_sensitive && super::system::is_marked_private() {
             return;
         }
+        if settings.privacy.forget_cleared() && super::system::is_empty() {
+            self.forget_if_cleared();
+            return;
+        }
 
         let source = source_app();
         if source.as_ref().is_some_and(|source| is_excluded(&settings.excluded_apps, &source.path)) {
@@ -301,6 +305,7 @@ impl ClipboardHistoryService {
             return Ok(());
         }
 
+        let text_limit = state.settings.privacy.max_text_bytes();
         let base = |hash: String, kind, preview| ClipboardHistoryItem {
             id: create_item_id(now, &hash),
             kind,
@@ -321,15 +326,20 @@ impl ClipboardHistoryService {
             masked: false,
             pin_key: None,
             pin_order: None,
+            truncated: false,
         };
         let item = match capture {
-            ClipboardCapture::Text { hash, text, preview, html } => ClipboardHistoryItem {
-                preview: if masked { mask(&text) } else { preview },
-                text: Some(text),
-                html,
-                masked,
-                ..base(hash, ClipboardHistoryItemKind::Text, String::new())
-            },
+            ClipboardCapture::Text { hash, text, preview, html } => {
+                let (text, html, truncated) = super::privacy::cap_text(text, html, text_limit);
+                ClipboardHistoryItem {
+                    preview: if masked { mask(&text) } else { preview },
+                    text: Some(text),
+                    html,
+                    masked,
+                    truncated,
+                    ..base(hash, ClipboardHistoryItemKind::Text, String::new())
+                }
+            }
             ClipboardCapture::Files { hash, paths, preview, pixels } => ClipboardHistoryItem {
                 file_image: pixels.and_then(|(width, height, rgba)| super::file_image::from_pixels(paths.first()?, width, height, rgba)),
                 files: Some(paths),

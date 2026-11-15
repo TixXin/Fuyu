@@ -32,6 +32,12 @@ export type ClipboardHistorySettings = {
   popupPinY?: number | null;
   copyCardSeconds?: number;
   pinFavorites?: boolean;
+} & ClipboardPrivacySettings;
+
+export type ClipboardPrivacySettings = {
+  forgetCleared: boolean;
+  secretExpiryMinutes: number;
+  maxTextKb: number;
 };
 
 export type ClipboardAiPrompt = { id: string; title: string; prompt: string };
@@ -82,6 +88,7 @@ export type ClipboardHistoryItem = {
   masked?: boolean;
   pinKey?: string;
   pinOrder?: number;
+  truncated?: boolean;
 };
 
 export type ClipboardHistorySnapshot = {
