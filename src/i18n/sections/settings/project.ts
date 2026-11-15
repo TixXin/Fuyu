@@ -171,7 +171,7 @@ export const zhCN: SettingsProjectText = {
   latestRelease: "查看最新版本",
   latestReleaseHint: "看看小岛又长了什么新本领",
   openFailed: "暂时没能打开浏览器，请再试一次。",
-  colophon: (version) => `浮屿${version ? ` v${version}` : ""} · 以 GPL-3.0 开源 · 用 Tauri 和 React 构建`,
+  colophon: (version) => `浮屿${version ? ` v${version}` : ""} · 以 AGPL-3.0 开源 · 用 Tauri 和 React 构建`,
   diagnostics: {
     title: "诊断信息", hint: "预览并复制应用版本、系统和更新状态，便于反馈问题。",
     preview: "预览", copy: "复制诊断信息", copied: "已复制", copyFailed: "复制失败，请重试。",
@@ -294,7 +294,7 @@ export const en: SettingsProjectText = {
   latestRelease: "View latest release",
   latestReleaseHint: "See what washed ashore in the latest update",
   openFailed: "Couldn't open your browser. Please try again.",
-  colophon: (version) => `Fuyu${version ? ` v${version}` : ""} · open source under GPL-3.0 · built with Tauri and React`,
+  colophon: (version) => `Fuyu${version ? ` v${version}` : ""} · open source under AGPL-3.0 · built with Tauri and React`,
   diagnostics: {
     title: "Diagnostics", hint: "Preview and copy the app version, system and update status for a bug report.",
     preview: "Preview", copy: "Copy diagnostics", copied: "Copied", copyFailed: "Couldn't copy. Please try again.",
