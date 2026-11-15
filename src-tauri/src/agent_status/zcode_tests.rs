@@ -89,6 +89,22 @@ fn lists_zcode_sessions_from_its_database() {
 }
 
 #[test]
+fn a_session_without_a_task_type_is_still_listed() {
+    let dir = temp_dir("null-type");
+    let db = dir.join("db.sqlite");
+    let conn = Connection::open(&db).unwrap();
+    conn.execute_batch(&SCHEMA.replace("task_type text not null default 'interactive'", "task_type text")).unwrap();
+    let now = now();
+    session(&conn, "s_main", "主会话", "generated", "interactive", now - 2_000);
+    conn.execute("UPDATE session SET task_type = NULL WHERE id = 's_main'", []).unwrap();
+    session(&conn, "s_child", "子任务", "generated", "workflow_child", now - 1_000);
+    let listed = sessions(&db, now, 60 * 60 * 1000);
+    assert_eq!(listed.iter().map(|s| s.session_id.as_str()).collect::<Vec<_>>(), ["s_main"]);
+    drop(conn);
+    fs::remove_dir_all(&dir).unwrap();
+}
+
+#[test]
 fn finds_the_database_by_env_or_default() {
     let home = Path::new("/home/dev");
     let none = |_: &str| None;

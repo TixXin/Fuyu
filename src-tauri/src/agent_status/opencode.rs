@@ -195,7 +195,7 @@ fn session_rows(conn: &Connection, table: &str, columns: &HashSet<String>, since
     let parent = if columns.contains("parent_id") { "parent_id IS NULL" } else { "1" };
     let archived = if columns.contains("time_archived") { "time_archived IS NULL" } else { "1" };
     let deleted = if columns.contains("time_deleted") { "time_deleted IS NULL" } else { "1" };
-    let child = if columns.contains("task_type") { "task_type NOT LIKE '%child'" } else { "1" };
+    let child = if columns.contains("task_type") { "coalesce(task_type, '') NOT LIKE '%child'" } else { "1" };
     let title = if columns.contains("title_source") { "CASE WHEN title_source = 'default' THEN NULL ELSE title END" } else { "title" };
     let sql = format!(
         "SELECT id, {title}, directory, {model}, time_updated, {busy}, {idle}, {outcome}, {agent} FROM {table} \
