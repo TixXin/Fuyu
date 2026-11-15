@@ -136,3 +136,19 @@ test("a window connected to the host hears about plugin changes as they happen",
   assert.ok(updates.some((list) => list.find((entry) => entry.id === "user")?.state === "disabled"), JSON.stringify(updates));
   connection.close();
 });
+
+test("a stray error in a plugin is logged under that plugin and the host keeps running", async () => {
+  const { next, send } = launch([{ id: "stray", name: "./stray.mjs" }], {
+    "stray.mjs": `export const name = "stray";
+export function apply() {
+  setTimeout(() => Promise.reject(new Error("stray rejection")), 10);
+}
+`,
+  });
+  await next((message) => message.method === "ready");
+  const log = await next((message) => message.method === "log" && /stray rejection/.test(message.params.text));
+  assert.equal(log.params.plugin, "stray");
+  assert.match(log.params.text, /^unhandled rejection in plugin stray/);
+  send({ id: 5, method: "ping" });
+  assert.ok((await next((message) => message.id === 5)).result.at > 0);
+});

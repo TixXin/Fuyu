@@ -143,3 +143,14 @@ fn stopping_asks_the_host_to_stop_and_calls_fail_afterwards() {
     assert!(started.elapsed() < Duration::from_secs(3));
     assert!(watched.supervisor.call("who", Value::Null, Duration::from_millis(200)).is_err());
 }
+
+#[test]
+fn a_host_that_dies_is_noticed_without_waiting_for_the_next_heartbeat() {
+    let watched = start("ok", Timing { ping_every: Duration::from_secs(5), ..fast() });
+    wait_for(&watched.states, |state| matches!(state, HostState::Ready { .. }), Duration::from_secs(20));
+    let killed = Instant::now();
+    let _ = watched.supervisor.call("die", Value::Null, Duration::from_millis(500));
+    wait_for(&watched.states, |state| matches!(state, HostState::Down { .. }), Duration::from_secs(4));
+    assert!(killed.elapsed() < Duration::from_secs(2), "noticed after {:?}, the heartbeat is every 5 s", killed.elapsed());
+    watched.supervisor.stop();
+}

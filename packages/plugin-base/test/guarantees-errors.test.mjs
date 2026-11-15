@@ -41,7 +41,7 @@ export function apply() {
 `,
 };
 
-test("a listener that throws does not stop other plugins' listeners for the same event", { todo: "Cordis emit() calls listeners in a plain loop: the first throw skips the rest and reaches the emitter" }, async () => {
+test("a listener that throws does not stop other plugins' listeners for the same event", async () => {
   globalThis.heard = [];
   const space = workspace({ ...FILES, "plugins.yml": config([{ id: "loud", name: "./loud.mjs" }, { id: "quiet", name: "./quiet.mjs" }]) });
   const host = await startHost({ dir: space.dir });
@@ -70,10 +70,10 @@ async function survives(plugin) {
   return later ?? { code: "alive" };
 }
 
-test("a stray promise rejection in a plugin does not take the host down", { todo: "main.mjs has no unhandledRejection handler, so Node exits and Rust restarts the host with every plugin" }, async () => {
+test("a stray promise rejection in a plugin does not take the host down", async () => {
   assert.deepEqual(await survives("rejects"), { code: "alive" });
 });
 
-test("an uncaught throw in a plugin's timer does not take the host down", { todo: "main.mjs has no uncaughtException handler, so Node exits and Rust restarts the host with every plugin" }, async () => {
+test("an uncaught throw in a plugin's timer does not take the host down", async () => {
   assert.deepEqual(await survives("throws"), { code: "alive" });
 });
