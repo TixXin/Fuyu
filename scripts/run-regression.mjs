@@ -28,6 +28,7 @@ export const PAGES = [
   "onboarding.html?test=1",
   "plugin-menus.html",
   "plugin-views.html?test=1",
+  "plugins-v3.html",
   "settings.html?test=1",
   "settings-sidebar.html",
   "settings-search.html",

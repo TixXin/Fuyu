@@ -1,11 +1,14 @@
 import { parseArgs } from "node:util";
 import { HOST_PROTOCOL, WINDOW_ORIGINS } from "../protocol.mjs";
 import { blame } from "./blame.mjs";
+import { SAFE_MODES } from "./gate.mjs";
 import { startHost } from "./kernel.mjs";
 import { connect } from "./rpc.mjs";
 import { openWindowSocket } from "./sockets.mjs";
 
 const FORWARDED_LOGS = new Set(["error", "warn"]);
+const USAGE_TICK_MS = 2000;
+const HOST_TICK_MS = 5000;
 
 const write = process.stdout.write.bind(process.stdout);
 process.stdout.write = process.stderr.write.bind(process.stderr);
@@ -15,10 +18,15 @@ const { values } = parseArgs({
     dir: { type: "string" },
     config: { type: "string", default: "plugins.yml" },
     watch: { type: "boolean", default: false },
+    dev: { type: "boolean", default: false },
+    safe: { type: "string" },
     api: { type: "string", multiple: true, default: [] },
     origin: { type: "string", multiple: true, default: [] },
   },
 });
+
+const safe = values.safe && Object.hasOwn(SAFE_MODES, values.safe) ? values.safe : null;
+if (values.safe && !safe) process.stderr.write(`unknown safe mode ${values.safe}; starting every plugin\n`);
 
 let host = null;
 let windows = null;
@@ -43,7 +51,8 @@ function stray(kind, error) {
   const entry = { at: Date.now(), type: "error", name: plugin ?? "host", plugin, text: `${kind} ${plugin ? `in plugin ${plugin}` : "outside any plugin"}: ${String(error?.stack ?? error)}` };
   host?.logs.push(entry);
   rpc.notify("log", entry);
-  if (!plugin) void stop(1);
+  if (!plugin) return void stop(1);
+  host.fault(plugin, error);
 }
 
 process.on("uncaughtException", (error) => stray("uncaught exception", error));
@@ -59,7 +68,9 @@ try {
   host = await startHost({
     dir: values.dir,
     config: values.config,
-    watch: values.watch,
+    watch: values.watch || values.dev,
+    dev: values.dev,
+    safe,
     apiNames: values.api,
     onLog: (entry) => {
       if (FORWARDED_LOGS.has(entry.type)) rpc.notify("log", entry);
@@ -68,14 +79,16 @@ try {
   await host.settle();
   windows = await openWindowSocket({
     origins: values.origin.length ? values.origin : WINDOW_ORIGINS,
-    snapshot: () => ({ plugins: host.status(), clients: host.clients() }),
+    snapshot: () => ({ plugins: host.status(), clients: host.clients(), host: host.info() }),
     onCall: (method, params, window) => {
       if (method === "status") return host.status();
+      if (method === "host") return host.info();
       if (method === "plugin.call") return host.ctx.clients.call(params?.plugin, params?.method, params?.params, window);
       throw Object.assign(new Error(`no method ${method}`), { code: "no-method" });
     },
   });
-  host.watchStatus((plugins) => windows.publish("plugins", plugins));
+  host.watchStatus((plugins) => windows.publish("plugins", plugins), USAGE_TICK_MS);
+  setInterval(() => windows.publish("host", host.info()), HOST_TICK_MS).unref();
   host.watchClients((clients) => windows.publish("clients", clients));
   host.ctx.clients.onMessage((message) => windows.publish("plugin", message));
   rpc.notify("ready", {
@@ -83,6 +96,7 @@ try {
     pid: process.pid,
     node: process.versions.node,
     plugins: host.status(),
+    safe,
     windows: { port: windows.port, token: windows.token },
   });
 } catch (error) {
