@@ -73,6 +73,7 @@ try {
     dev: values.dev,
     safe,
     apiNames: values.api,
+    rpc,
     onLog: (entry) => {
       if (FORWARDED_LOGS.has(entry.type)) rpc.notify("log", entry);
     },

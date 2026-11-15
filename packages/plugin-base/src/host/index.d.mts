@@ -115,6 +115,28 @@ export const SERVICE_TIMEOUT_MS: number;
 export const SERVICE_CALLS: ReadonlySet<"service.call" | "service.on" | "service.off">;
 export function serviceError(code: string, message: string, data?: unknown): ServiceError;
 
+export interface RustCallOptions {
+  timeoutMs?: number;
+  onProgress?: (data: any) => void;
+}
+
+export interface RustApi {
+  call<Result = unknown>(method: string, params?: unknown, options?: RustCallOptions): Promise<Result>;
+  on(event: string, listener: (data: any) => void): () => Promise<void>;
+}
+
+export interface HostRpc {
+  handle(method: string, handler: (params: any) => unknown): void;
+  call(method: string, params: unknown, options?: { timeoutMs?: number; onProgress?: (data: any) => void; signal?: unknown }): Promise<any>;
+}
+
+export const RUST_TIMEOUT_MS: number;
+export function rustError(code: string, message: string, data?: unknown): ServiceError;
+export class RustBridge {
+  install(ctx: Context): () => void;
+  attach(rpc: HostRpc): void;
+}
+
 export interface HostOptions {
   dir: string;
   config?: string;
@@ -124,6 +146,7 @@ export interface HostOptions {
   safe?: SafeMode | null;
   faultLimit?: Partial<FaultLimit>;
   onLog?: (entry: LogEntry) => void;
+  rpc?: HostRpc | null;
 }
 
 export interface Host {

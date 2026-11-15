@@ -8,6 +8,7 @@ import { Context } from "cordis";
 import { Clients } from "./clients.mjs";
 import { Services } from "./services.mjs";
 import { recordLogs } from "./logs.mjs";
+import { RustBridge } from "./rust.mjs";
 import { shareModules } from "./share.mjs";
 import { Gate } from "./gate.mjs";
 import { Timers } from "./timer.mjs";
@@ -40,7 +41,7 @@ function hostInfo(startedAt, safe, dev) {
   return { pid: process.pid, node: process.versions.node, startedAt, safe, dev, rssBytes: memory.rss, heapUsedBytes: memory.heapUsed, cpuMs: Math.round((cpu.user + cpu.system) / 1000) };
 }
 
-export async function startHost({ dir, config = "plugins.yml", apiNames = [], watch = false, dev = false, safe = null, faultLimit, onLog } = {}) {
+export async function startHost({ dir, config = "plugins.yml", apiNames = [], watch = false, dev = false, safe = null, faultLimit, onLog, rpc = null } = {}) {
   if (!dir) throw new Error("startHost needs the directory that holds the plugin configuration");
   const startedAt = Date.now();
   const gate = new Gate({ safe, limit: faultLimit, internal: INTERNAL });
@@ -57,6 +58,9 @@ export async function startHost({ dir, config = "plugins.yml", apiNames = [], wa
   await ctx.plugin(Clients, dir);
   const services = new Services();
   services.install(ctx);
+  const rust = new RustBridge();
+  rust.install(ctx);
+  if (rpc) rust.attach(rpc);
   await ctx.use(Loader);
   gate.install(ctx);
   if (dev) await ctx.loader.create({ name: HMR, config: { base: realpathSync(dir), watch: { enabled: true, debounce: 30 } } });

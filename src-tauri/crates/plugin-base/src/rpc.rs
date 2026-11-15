@@ -12,12 +12,17 @@ use std::{
 
 use serde_json::{json, Value};
 
+use crate::serve::{self, Serve, Session};
+
+pub const PROTOCOL: u64 = 2;
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum RpcError {
     PeerGone(String),
     Timeout { method: String, after: Duration },
     Remote { code: Value, message: String, data: Option<Value> },
     Io(String),
+    WouldWait { method: String },
 }
 
 impl fmt::Display for RpcError {
@@ -27,6 +32,7 @@ impl fmt::Display for RpcError {
             Self::Timeout { method, after } => write!(formatter, "the plugin host did not answer {method} in {} ms", after.as_millis()),
             Self::Remote { message, .. } => write!(formatter, "the plugin host answered with an error: {message}"),
             Self::Io(error) => write!(formatter, "could not write to the plugin host: {error}"),
+            Self::WouldWait { method } => write!(formatter, "a Rust handler answering the plugin host cannot wait for the plugin host ({method})"),
         }
     }
 }
@@ -36,7 +42,7 @@ impl std::error::Error for RpcError {}
 type Reply = mpsc::Sender<Result<Value, RpcError>>;
 
 struct Shared {
-    writer: Mutex<Option<Box<dyn Write + Send>>>,
+    outbox: Mutex<Option<mpsc::Sender<String>>>,
     waiting: Mutex<HashMap<u64, Reply>>,
     gone: Mutex<Option<String>>,
     next: AtomicU64,
@@ -51,6 +57,14 @@ pub struct Rpc {
     shared: Arc<Shared>,
 }
 
+fn write_lines(mut writer: impl Write, lines: mpsc::Receiver<String>) {
+    for line in lines {
+        if writeln!(writer, "{line}").and_then(|()| writer.flush()).is_err() {
+            return;
+        }
+    }
+}
+
 impl Rpc {
     pub fn start(reader: impl Read + Send + 'static, writer: impl Write + Send + 'static, on_notification: impl Fn(&str, Value) + Send + 'static) -> Self {
         Self::start_watched(reader, writer, on_notification, |_| {})
@@ -62,32 +76,50 @@ impl Rpc {
         on_notification: impl Fn(&str, Value) + Send + 'static,
         on_gone: impl FnOnce(&str) + Send + 'static,
     ) -> Self {
-        let shared = Arc::new(Shared {
-            writer: Mutex::new(Some(Box::new(writer))),
-            waiting: Mutex::new(HashMap::new()),
-            gone: Mutex::new(None),
-            next: AtomicU64::new(0),
-        });
-        let reading = shared.clone();
+        Self::start_serving(reader, writer, None, on_notification, on_gone)
+    }
+
+    pub fn start_serving(
+        reader: impl Read + Send + 'static,
+        writer: impl Write + Send + 'static,
+        serve: Option<Arc<Serve>>,
+        on_notification: impl Fn(&str, Value) + Send + 'static,
+        on_gone: impl FnOnce(&str) + Send + 'static,
+    ) -> Self {
+        let (outbox, lines) = mpsc::channel();
+        let shared = Arc::new(Shared { outbox: Mutex::new(Some(outbox)), waiting: Mutex::new(HashMap::new()), gone: Mutex::new(None), next: AtomicU64::new(0) });
+        let rpc = Self { shared: shared.clone() };
+        if let Err(error) = thread::Builder::new().name("plugin-host-rpc-writer".into()).spawn(move || write_lines(writer, lines)) {
+            close(&shared, format!("could not start the writer: {error}"));
+            return rpc;
+        }
+        let reading = rpc.clone();
         let spawned = thread::Builder::new().name("plugin-host-rpc".into()).spawn(move || {
-            let reason = read(reader, &reading, &on_notification);
-            close(&reading, reason.clone());
+            let session = serve.map(|serve| Session::start(serve, reading.clone()));
+            let reason = read(reader, &reading, session.as_ref(), &on_notification);
+            if let Some(session) = &session {
+                session.close();
+            }
+            close(&reading.shared, reason.clone());
             on_gone(&reason);
         });
         if let Err(error) = spawned {
             close(&shared, format!("could not start the reader: {error}"));
         }
-        Self { shared }
+        rpc
     }
 
     pub fn call(&self, method: &str, params: Value, timeout: Duration) -> Result<Value, RpcError> {
+        if serve::in_handler() {
+            return Err(RpcError::WouldWait { method: method.into() });
+        }
         if let Some(reason) = lock(&self.shared.gone).clone() {
             return Err(RpcError::PeerGone(reason));
         }
         let id = self.shared.next.fetch_add(1, Ordering::SeqCst) + 1;
         let (reply, answer) = mpsc::channel();
         lock(&self.shared.waiting).insert(id, reply);
-        if let Err(error) = self.send(&json!({ "jsonrpc": "2.0", "id": id, "method": method, "params": params })) {
+        if let Err(error) = self.send_raw(&json!({ "jsonrpc": "2.0", "id": id, "method": method, "params": params })) {
             lock(&self.shared.waiting).remove(&id);
             return Err(error);
         }
@@ -102,27 +134,36 @@ impl Rpc {
     }
 
     pub fn notify(&self, method: &str, params: Value) -> Result<(), RpcError> {
-        self.send(&json!({ "jsonrpc": "2.0", "method": method, "params": params }))
+        self.send_raw(&json!({ "jsonrpc": "2.0", "method": method, "params": params }))
+    }
+
+    pub fn emit(&self, name: &str, data: Value) -> Result<(), RpcError> {
+        self.notify("event", json!({ "name": name, "data": data }))
     }
 
     pub fn close_input(&self) {
-        lock(&self.shared.writer).take();
+        lock(&self.shared.outbox).take();
     }
 
     pub fn gone(&self) -> Option<String> {
         lock(&self.shared.gone).clone()
     }
 
-    fn send(&self, message: &Value) -> Result<(), RpcError> {
-        let mut writer = lock(&self.shared.writer);
-        let Some(writer) = writer.as_mut() else {
-            return Err(RpcError::PeerGone("the pipe to it is closed".into()));
+    pub(crate) fn send_raw(&self, message: &Value) -> Result<(), RpcError> {
+        let outbox = lock(&self.shared.outbox);
+        let Some(outbox) = outbox.as_ref() else {
+            return Err(RpcError::PeerGone(lock(&self.shared.gone).clone().unwrap_or_else(|| "the pipe to it is closed".into())));
         };
-        writeln!(writer, "{message}").and_then(|()| writer.flush()).map_err(|error| RpcError::Io(error.to_string()))
+        outbox.send(message.to_string()).map_err(|_| RpcError::Io("the pipe to it is closed".into()))
     }
 }
 
-fn read(reader: impl Read, shared: &Shared, on_notification: &dyn Fn(&str, Value)) -> String {
+fn request_id(message: &Value) -> Option<Value> {
+    message.get("id").filter(|id| id.is_u64() || id.is_i64() || id.is_string()).cloned()
+}
+
+fn read(reader: impl Read, rpc: &Rpc, session: Option<&Session>, on_notification: &dyn Fn(&str, Value)) -> String {
+    let shared = &rpc.shared;
     for line in BufReader::new(reader).lines() {
         let line = match line {
             Ok(line) => line,
@@ -130,7 +171,13 @@ fn read(reader: impl Read, shared: &Shared, on_notification: &dyn Fn(&str, Value
         };
         let Ok(mut message) = serde_json::from_str::<Value>(&line) else { continue };
         if let Some(method) = message.get("method").and_then(Value::as_str).map(str::to_owned) {
-            on_notification(&method, message.get_mut("params").map(Value::take).unwrap_or(Value::Null));
+            let params = message.get_mut("params").map(Value::take).unwrap_or(Value::Null);
+            match (request_id(&message), session) {
+                (Some(id), Some(session)) => session.request(id, &method, params),
+                (Some(id), None) => serve::answer(rpc, &id, Err(serve::ServeError::new("no-method", format!("Rust has no method {method}")))),
+                (None, Some(session)) if method == "cancel" => session.cancel(params.get("id").unwrap_or(&Value::Null)),
+                (None, _) => on_notification(&method, params),
+            }
             continue;
         }
         let Some(id) = message.get("id").and_then(Value::as_u64) else { continue };
@@ -150,6 +197,7 @@ fn read(reader: impl Read, shared: &Shared, on_notification: &dyn Fn(&str, Value
 
 fn close(shared: &Shared, reason: String) {
     lock(&shared.gone).get_or_insert(reason.clone());
+    lock(&shared.outbox).take();
     for (_, reply) in lock(&shared.waiting).drain() {
         let _ = reply.send(Err(RpcError::PeerGone(reason.clone())));
     }

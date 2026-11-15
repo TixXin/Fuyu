@@ -83,7 +83,7 @@ test("the bundled host runs outside the repository without eval, loads plugins t
     { id: "counter", name: "./counter.mjs" },
   ]);
   const ready = await next((message) => message.method === "ready");
-  assert.equal(ready.params.protocol, 1);
+  assert.equal(ready.params.protocol, 2);
   assert.ok(ready.params.windows.port > 0);
   assert.deepEqual(ready.params.plugins.map((entry) => [entry.id, entry.state]), [
     ["user", "running"],

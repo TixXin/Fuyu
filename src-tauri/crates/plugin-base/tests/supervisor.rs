@@ -4,8 +4,8 @@ use std::{
     time::{Duration, Instant},
 };
 
-use plugin_base::{find_node, supervisor::NoContainment, Event, HostSpec, HostState, NodeSearch, NodeVersion, Supervisor, Timing};
-use serde_json::Value;
+use plugin_base::{find_node, supervisor::NoContainment, Event, HostSpec, HostState, NodeSearch, NodeVersion, Serve, Supervisor, Timing};
+use serde_json::{json, Value};
 
 fn node() -> PathBuf {
     match find_node(&NodeSearch::from_env(), NodeVersion(18, 0, 0)) {
@@ -15,8 +15,12 @@ fn node() -> PathBuf {
 }
 
 fn spec(mode: &str) -> HostSpec {
+    spec_speaking(mode, 2)
+}
+
+fn spec_speaking(mode: &str, protocol: u32) -> HostSpec {
     let script = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/fake-host.mjs");
-    HostSpec { program: node(), args: vec![script.into()], env: vec![("FAKE_HOST_MODE".into(), mode.into())], current_dir: None }
+    HostSpec { program: node(), args: vec![script.into()], env: vec![("FAKE_HOST_MODE".into(), mode.into()), ("FAKE_HOST_PROTOCOL".into(), protocol.to_string().into())], current_dir: None }
 }
 
 fn fast() -> Timing {
@@ -38,11 +42,15 @@ struct Watched {
 }
 
 fn start(mode: &str, timing: Timing) -> Watched {
+    start_serving(spec(mode), timing, None)
+}
+
+fn start_serving(spec: HostSpec, timing: Timing, serve: Option<Serve>) -> Watched {
     let (tx, states) = mpsc::channel();
     let stderr = Arc::new(Mutex::new(Vec::new()));
     let lines = stderr.clone();
     let tx = Mutex::new(tx);
-    let supervisor = Supervisor::start(spec(mode), Arc::new(NoContainment), timing, move |event| match event {
+    let supervisor = Supervisor::start_serving(move |_| spec.clone(), Arc::new(NoContainment), timing, serve.map(Arc::new), move |event| match event {
         Event::State(state) => {
             let _ = tx.lock().unwrap().send(state);
         }
@@ -179,4 +187,65 @@ fn each_start_asks_for_its_own_spec_so_a_failing_host_can_come_back_differently(
     assert!(matches!(ready, HostState::Ready { generation: 3, .. }), "{ready:?}");
     assert_eq!(*asked.lock().unwrap(), [1, 2, 3]);
     supervisor.stop();
+}
+
+fn slow_table(finished: Arc<Mutex<Vec<&'static str>>>) -> Serve {
+    let mut serve = Serve::new();
+    serve.add("app.echo", Duration::from_secs(5), |params, _| Ok(json!({ "echo": params }))).unwrap();
+    serve
+        .add("test.slow", Duration::from_secs(10), move |_, call| {
+            std::thread::sleep(Duration::from_millis(300));
+            finished.lock().unwrap().push(if call.cancelled() { "cancelled" } else { "answered" });
+            Ok(json!("late"))
+        })
+        .unwrap();
+    serve
+}
+
+#[test]
+fn the_host_calls_rust_through_the_supervisor() {
+    let watched = start_serving(spec("ok"), fast(), Some(slow_table(Arc::default())));
+    wait_for(&watched.states, |state| matches!(state, HostState::Ready { .. }), Duration::from_secs(20));
+    let answer = watched.supervisor.call("ask", json!({ "method": "app.echo", "params": [1, 2] }), Duration::from_secs(5)).unwrap();
+    assert_eq!(answer, json!({ "result": { "echo": [1, 2] } }));
+    let answer = watched.supervisor.call("ask", json!({ "method": "nope" }), Duration::from_secs(5)).unwrap();
+    assert_eq!(answer["error"]["code"], "no-method");
+    watched.supervisor.stop();
+}
+
+#[test]
+fn a_host_killed_while_rust_works_for_it_comes_back_and_the_late_result_is_dropped() {
+    let finished = Arc::new(Mutex::new(Vec::new()));
+    let watched = start_serving(spec("ok"), fast(), Some(slow_table(finished.clone())));
+    let first = ready_pid(&wait_for(&watched.states, |state| matches!(state, HostState::Ready { .. }), Duration::from_secs(20)));
+    let _ = watched.supervisor.call("ask-then-die", json!({ "method": "test.slow" }), Duration::from_millis(500));
+    wait_for(&watched.states, |state| matches!(state, HostState::Down { .. }), Duration::from_secs(5));
+    let second = ready_pid(&wait_for(&watched.states, |state| matches!(state, HostState::Ready { .. }), Duration::from_secs(20)));
+    assert_ne!(first, second);
+    let answer = watched.supervisor.call("ask", json!({ "method": "app.echo", "params": "again" }), Duration::from_secs(5)).unwrap();
+    assert_eq!(answer, json!({ "result": { "echo": "again" } }));
+    let deadline = Instant::now() + Duration::from_secs(5);
+    while finished.lock().unwrap().is_empty() && Instant::now() < deadline {
+        std::thread::sleep(Duration::from_millis(20));
+    }
+    assert_eq!(*finished.lock().unwrap(), ["cancelled"]);
+    watched.supervisor.stop();
+}
+
+#[test]
+fn a_host_speaking_another_protocol_is_refused_with_both_versions() {
+    let watched = start_serving(spec_speaking("ok", 1), fast(), None);
+    let down = wait_for(&watched.states, |state| matches!(state, HostState::Down { .. }), Duration::from_secs(20));
+    assert!(matches!(&down, HostState::Down { reason, .. } if reason.contains("protocol 1") && reason.contains("protocol 2")), "{down:?}");
+    watched.supervisor.stop();
+}
+
+#[test]
+fn rust_events_reach_the_host_only_while_it_runs() {
+    let watched = start("ok", fast());
+    assert!(watched.supervisor.emit("changed", json!(1)).is_err() || matches!(watched.supervisor.state(), HostState::Ready { .. }));
+    wait_for(&watched.states, |state| matches!(state, HostState::Ready { .. }), Duration::from_secs(20));
+    assert!(watched.supervisor.emit("changed", json!({ "n": 1 })).is_ok());
+    watched.supervisor.stop();
+    assert!(watched.supervisor.emit("changed", json!({ "n": 2 })).is_err());
 }
