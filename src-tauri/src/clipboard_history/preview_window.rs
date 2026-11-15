@@ -102,7 +102,20 @@ fn show_without_focus(window: &WebviewWindow) -> Result<(), String> {
     Ok(())
 }
 
-#[cfg(not(windows))]
+#[cfg(target_os = "macos")]
+fn show_without_focus(window: &WebviewWindow) -> Result<(), String> {
+    let app = window.app_handle().clone();
+    let fallback = window.clone();
+    window
+        .run_on_main_thread(move || {
+            if !crate::macos::island_panel::show_panel_without_key(&app, WINDOW_LABEL) {
+                let _ = fallback.show();
+            }
+        })
+        .map_err(|error| error.to_string())
+}
+
+#[cfg(not(any(windows, target_os = "macos")))]
 fn show_without_focus(window: &WebviewWindow) -> Result<(), String> {
     window.show().map_err(|error| error.to_string())
 }

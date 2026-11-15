@@ -9,6 +9,9 @@ import { MusicPlayerPanel } from "../../src/features/media/MusicPlayerPanel";
 import { DEFAULT_SETTINGS } from "../../src/features/appearance/settingsDefaults";
 import type { LyricsIntro } from "../../src/features/media/lyrics/lyricsSettings";
 import { useIslandLyrics } from "../../src/windows/island/useIslandLyrics";
+import { MediaWaveform } from "../../src/features/media/MediaWaveform";
+import { coverAccentVariables, useCoverColor } from "../../src/features/media/useCoverColor";
+import { contrastRatio, rgbToHex } from "../../src/features/media/coverColor";
 
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
 const LRC = [
@@ -68,6 +71,45 @@ async function renderIsland(mediaState: MediaState, intro: LyricsIntro) {
     await new Promise((resolve) => setTimeout(resolve, 60));
   });
 }
+
+function paintedCover(fills: Array<[string, number]>) {
+  const canvas = document.createElement("canvas");
+  canvas.width = 60;
+  canvas.height = 60;
+  const context = canvas.getContext("2d")!;
+  let y = 0;
+  for (const [fill, rows] of fills) {
+    context.fillStyle = fill;
+    context.fillRect(0, y, 60, rows);
+    y += rows;
+  }
+  return canvas.toDataURL("image/png");
+}
+
+const COVERS = { dark: paintedCover([["#142850", 34], ["#050505", 20], ["#ffffff", 6]]), light: paintedCover([["#f6e7a0", 40], ["#ffffff", 20]]) };
+
+function CoverStage({ name, withPanel }: { name: keyof typeof COVERS; withPanel?: MediaState }) {
+  const color = useCoverColor(COVERS[name], true);
+  return (
+    <main className="stage cover-color" data-cover={name} data-color={color ?? ""} style={coverAccentVariables(color, "#000000", null)}>
+      {withPanel ? <MusicPlayerPanel mediaState={withPanel} isTrackChanging={false} commandError={null} onOpenSettings={() => {}} onPlayPause={() => {}} onNext={() => {}} onPrevious={() => {}} />
+        : <MediaWaveform playing={false} audioPeak={0} />}
+      <span className="cover-probe" style={{ color: "var(--cover-accent)" }}>{name === "dark" ? "深色封面" : "浅色封面"}</span>
+    </main>
+  );
+}
+
+async function renderCovers(withPanel?: MediaState) {
+  await act(async () => {
+    root.render(<StrictMode><I18nProvider><CoverStage name="dark" withPanel={withPanel} /><CoverStage name="light" /></I18nProvider></StrictMode>);
+  });
+  for (let tries = 0; tries < 50 && [...document.querySelectorAll<HTMLElement>("[data-cover]")].some((stage) => !stage.dataset.color); tries += 1) {
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 100)); });
+  }
+  await act(async () => { await new Promise((resolve) => setTimeout(resolve, 1_100)); });
+}
+
+const cssHex = (value: string) => rgbToHex(value.match(/[\d.]+/g)!.slice(0, 3).map(Number) as [number, number, number]);
 
 function check(condition: unknown, label: string) {
   if (!condition) throw new Error(label);
@@ -188,6 +230,23 @@ try {
   check(estimate()?.textContent?.startsWith("播放器不报告进度") && !estimate()!.querySelector(".music-player__estimate-link"), "不是网易云时不提 InfLink-rs");
   await render(track("晴天", 6000));
   check(picks().length === 0 && !estimate(), "播放器报告进度时歌词不能点，也没有估算提示");
+
+  await renderCovers(track("七里香", 6000));
+  const stage = (name: string) => document.querySelector<HTMLElement>(`[data-cover="${name}"]`)!;
+  const probe = (name: string) => cssHex(getComputedStyle(stage(name).querySelector(".cover-probe")!).color);
+  check(stage("dark").dataset.color && stage("light").dataset.color && stage("dark").dataset.color !== stage("light").dataset.color, "跟随封面颜色：深色、浅色封面各取出一个主色");
+  const darkHue = stage("dark").dataset.color!;
+  check(parseInt(darkHue.slice(5, 7), 16) > parseInt(darkHue.slice(1, 3), 16), "深色封面取到的是蓝色，不是黑白");
+  check(contrastRatio(probe("dark"), "#000000") >= 3 && contrastRatio(probe("light"), "#000000") >= 3, "取出的颜色在深色岛上对比度 ≥ 3:1");
+  check(getComputedStyle(stage("dark").querySelector(".music-player")!, "::before").content !== "none", "音乐页有封面颜色的光晕");
+  check(getComputedStyle(stage("dark")).transitionProperty.includes("--cover-accent-dark"), "换歌时颜色渐变");
+  stage("dark").classList.add("island-light");
+  stage("light").classList.add("island-light");
+  check(contrastRatio(probe("dark"), "#f2f2f5") >= 3 && contrastRatio(probe("light"), "#f2f2f5") >= 3, "切到浅色岛时换成浅色岛的那一份，对比度 ≥ 3:1");
+  stage("dark").classList.remove("island-light");
+  stage("light").classList.remove("island-light");
+  await renderCovers();
+  check(cssHex(getComputedStyle(stage("light").querySelector(".media-waveform")!).color) === probe("light"), "波形用封面颜色");
 
   results.textContent = `${messages.join("\n")}\n\n全部 ${messages.length} 项检查通过。`;
   results.dataset.result = "passed";

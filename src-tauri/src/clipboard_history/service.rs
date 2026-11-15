@@ -26,8 +26,6 @@ pub(super) fn is_expired(copied_at: i64, cutoff: i64) -> bool {
     copied_at < cutoff
 }
 
-const UNDO_WINDOW: Duration = Duration::from_secs(10);
-
 const TEXT_FILE_KEEP: Duration = Duration::from_secs(60 * 60);
 
 pub(super) fn remove_files_older_than(dir: &Path, age: Duration) {
@@ -199,54 +197,6 @@ impl ClipboardHistoryService {
 
         self.emit_changed();
         Ok(snapshot)
-    }
-
-    pub(super) fn delete_item(&self, id: &str) -> Result<ClipboardHistorySnapshot, String> {
-        let mut state = self.state.lock().map_err(|error| error.to_string())?;
-        if let Some(index) = state.items.iter().position(|item| item.id == id) {
-            let item = state.items.remove(index);
-            if let Some((earlier, _)) = state.recently_deleted.replace((item, index)) {
-                self.remove_item_files(&earlier);
-            }
-            self.persist_locked(&state)?;
-            let id = id.to_string();
-            std::thread::spawn(move || {
-                std::thread::sleep(UNDO_WINDOW);
-                if let Ok(service) = super::service() {
-                    service.forget_deleted(&id);
-                }
-            });
-        }
-        let snapshot = Self::snapshot_locked(&state);
-        drop(state);
-
-        self.emit_changed();
-        Ok(snapshot)
-    }
-
-    pub(super) fn restore_item(&self, id: &str) -> Result<ClipboardHistorySnapshot, String> {
-        let mut state = self.state.lock().map_err(|error| error.to_string())?;
-        if state.recently_deleted.as_ref().is_some_and(|(item, _)| item.id == id) {
-            if let Some((item, index)) = state.recently_deleted.take() {
-                let index = index.min(state.items.len());
-                state.items.insert(index, item);
-                self.persist_locked(&state)?;
-            }
-        }
-        let snapshot = Self::snapshot_locked(&state);
-        drop(state);
-
-        self.emit_changed();
-        Ok(snapshot)
-    }
-
-    fn forget_deleted(&self, id: &str) {
-        let Ok(mut state) = self.state.lock() else { return };
-        if state.recently_deleted.as_ref().is_some_and(|(item, _)| item.id == id) {
-            if let Some((item, _)) = state.recently_deleted.take() {
-                self.remove_item_files(&item);
-            }
-        }
     }
 
     pub(super) fn clear(&self) -> Result<ClipboardHistorySnapshot, String> {
@@ -538,7 +488,7 @@ impl ClipboardHistoryService {
             .map_err(|error| format!("Failed to write clipboard history: {error}"))
     }
 
-    fn remove_item_files(&self, item: &ClipboardHistoryItem) {
+    pub(super) fn remove_item_files(&self, item: &ClipboardHistoryItem) {
         if let Some(image) = &item.image {
             let _ = fs::remove_file(&image.original_path);
             let _ = fs::remove_file(&image.thumbnail_path);

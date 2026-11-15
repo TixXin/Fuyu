@@ -326,6 +326,9 @@ fn codex_session_tail_and_meta() {
         parse_codex_tail(&done).last_message.as_deref(),
         Some("完成")
     );
+    let marked = [tail.clone(), event(json!({"type": "task_complete", "last_agent_message": "后台在跑测试。\n⋯", "error": null}))].concat();
+    let parsed = parse_codex_tail(&marked);
+    assert_eq!((parsed.reply_marker, parsed.last_message.as_deref()), (Some("background"), Some("后台在跑测试。")));
     let failed = [
         tail,
         event(

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "../../i18n";
 import {
-  addClipboardHistoryText, deleteClipboardItem, restoreClipboardItem, ignoreNextClipboardCopy, pasteClipboardText, pauseClipboardCapture, readClipboardImageQr,
+  addClipboardHistoryText, deleteClipboardItems, restoreClipboardItems, ignoreNextClipboardCopy, pasteClipboardText, pauseClipboardCapture, readClipboardImageQr,
   resumeClipboardCapture, saveClipboardSnippet, setClipboardItemNote, type ClipboardCopyAs, type ClipboardHistoryItem,
 } from "./api";
 import type { PopupActionHandlers } from "./popupActions";
@@ -32,8 +32,8 @@ export function usePopupHandlers({ onPaste, onToggleFavorite, onEdit }: {
   }, [say, text.failed]);
 
   const deletion = usePendingDelete(
-    (id) => attempt("delete a clipboard entry", deleteClipboardItem(id)),
-    (id) => attempt("restore a clipboard entry", restoreClipboardItem(id)),
+    (ids) => attempt("delete clipboard entries", deleteClipboardItems(ids)),
+    (ids) => attempt("restore clipboard entries", restoreClipboardItems(ids)),
   );
   const editRef = useRef(onEdit);
   editRef.current = onEdit;

@@ -1,49 +1,14 @@
 use std::{
-    env, fs,
+    collections::HashMap,
+    fs,
     path::{Path, PathBuf},
 };
 
 use serde::Serialize;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(super) enum ReplyMarker {
-    YourTurn,
-    Background,
-    Done,
-}
+use super::{antigravity, claude_code, codex, dsh, opencode, workbuddy};
 
-impl ReplyMarker {
-    pub(super) fn name(self) -> &'static str {
-        match self {
-            Self::YourTurn => "yourTurn",
-            Self::Background => "background",
-            Self::Done => "done",
-        }
-    }
-
-    fn from_symbol(symbol: &str) -> Option<Self> {
-        match symbol.trim_end_matches('\u{FE0E}').trim_end_matches('\u{FE0F}') {
-            "↩" => Some(Self::YourTurn),
-            "⋯" => Some(Self::Background),
-            "✓" => Some(Self::Done),
-            _ => None,
-        }
-    }
-}
-
-pub(super) fn split_reply(text: &str) -> (Option<ReplyMarker>, &str) {
-    let trimmed = text.trim_end();
-    let (rest, last) = match trimmed.rfind('\n') {
-        Some(index) => (&trimmed[..index], &trimmed[index + 1..]),
-        None => ("", trimmed),
-    };
-    match ReplyMarker::from_symbol(last.trim()) {
-        Some(marker) => (Some(marker), rest.trim_end()),
-        None => (None, text),
-    }
-}
-
-const BLOCK_START: &str = "<!-- fuyu: reply marker v4 -->";
+const BLOCK_START: &str = "<!-- fuyu: reply marker v5 -->";
 pub(super) const BLOCK_START_PREFIX: &str = "<!-- fuyu: reply marker";
 const BLOCK_END: &str = "<!-- /fuyu: reply marker -->";
 pub(super) const LEGACY_BLOCK_START_PREFIX: &str = "<!-- focusd-island: reply marker";
@@ -60,10 +25,28 @@ End every reply with one extra line that holds only one of these characters, so 
 
 When more than one fits, `↩` wins over `⋯`, and `⋯` over `✓`. When unsure, use `↩`.
 
-Write the character alone on the last line, without backticks, and nothing after it. To stop, switch off \"Reply status marker\" in Fuyu's Settings → AI Agent, which deletes this file.";
+Write the character alone on the last line, without backticks, and nothing after it. To stop, switch off \"Reply status marker\" in Fuyu's Settings → AI Agent, which removes this section.";
+
+type PromptFiles = fn(&Path) -> Vec<PathBuf>;
+
+pub(super) const PROMPT_FILES: &[(&str, PromptFiles)] = &[
+    (codex::PROVIDER, codex::prompt_files),
+    (claude_code::PROVIDER, claude_code::prompt_files),
+    (workbuddy::PROVIDER, workbuddy::prompt_files),
+    (antigravity::PROVIDER, antigravity::prompt_files),
+    (dsh::PROVIDER, dsh::prompt_files),
+    (opencode::PROVIDER, opencode::prompt_files),
+];
+
+pub(super) const RULES_FILE: &str = "rules/fuyu-reply-marker.md";
+pub(super) const LEGACY_RULES_FILE: &str = "rules/focusd-island-reply-marker.md";
 
 pub(super) fn block() -> String {
     format!("{BLOCK_START}\n{BLOCK_BODY}\n{BLOCK_END}")
+}
+
+pub(super) fn rules_file() -> String {
+    format!("{}\n", block())
 }
 
 fn find_block(text: &str) -> Option<(usize, usize)> {
@@ -74,114 +57,223 @@ fn find_block(text: &str) -> Option<(usize, usize)> {
     })
 }
 
+pub(super) fn is_rules_file(text: &str) -> bool {
+    text.contains(BLOCK_START_PREFIX) || text.contains(LEGACY_BLOCK_START_PREFIX)
+}
+
+fn is_current(text: &str) -> bool {
+    find_block(text).is_some_and(|(start, end)| text[start..end].replace("\r\n", "\n") == block())
+}
+
+fn without_one_block(text: &str) -> Option<String> {
+    let (start, end) = find_block(text)?;
+    let before = text[..start].trim_end();
+    let after = text[end..].trim_start_matches(['\r', '\n']);
+    let newline = if text.contains("\r\n") { "\r\n" } else { "\n" };
+    Some(match (before.is_empty(), after.is_empty()) {
+        (true, _) => after.to_string(),
+        (false, true) => format!("{before}{newline}"),
+        (false, false) => format!("{before}{newline}{newline}{after}"),
+    })
+}
+
+pub(super) fn without_block(text: &str) -> String {
+    let mut text = text.to_string();
+    while let Some(next) = without_one_block(&text) {
+        text = next;
+    }
+    text
+}
+
+pub(super) fn with_block(text: &str) -> String {
+    let rest = without_block(text);
+    let rest = rest.trim_end();
+    let newline = if text.contains("\r\n") { "\r\n" } else { "\n" };
+    let block = block().replace('\n', newline);
+    if rest.is_empty() {
+        format!("{block}{newline}")
+    } else {
+        format!("{rest}{newline}{newline}{block}{newline}")
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PromptFile {
+    pub(super) agent: &'static str,
+    pub(super) path: String,
+    pub(super) target: Option<String>,
+    pub(super) installed: bool,
+    pub(super) outdated: bool,
+    pub(super) error: Option<String>,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ReplyMarkerState {
     pub(super) installed: bool,
     pub(super) outdated: bool,
-    pub(super) path: String,
+    pub(super) files: Vec<PromptFile>,
+    pub(super) old_rules: Vec<String>,
     pub(super) content: String,
     pub(super) remotes: Vec<super::remote_setup::RemoteResult>,
 }
 
-pub(super) fn state_of(rules: &str, claude_md: &str, path: &Path) -> ReplyMarkerState {
-    let found = find_block(rules);
-    let legacy = find_block(claude_md).is_some();
-    ReplyMarkerState {
-        installed: found.is_some() || legacy,
-        outdated: legacy || found.is_some_and(|(start, end)| rules[start..end].replace("\r\n", "\n") != block()),
-        path: path.display().to_string(),
-        content: block(),
-        remotes: Vec::new(),
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Change {
+    Read,
+    Enable,
+    Disable,
+    Upgrade,
+}
+
+enum Resolved {
+    File(PathBuf),
+    NotHere,
+    Broken(String),
+}
+
+fn shown(path: &Path) -> String {
+    let text = path.display().to_string();
+    text.strip_prefix(r"\\?\").map(str::to_string).unwrap_or(text)
+}
+
+fn resolve(path: &Path) -> Resolved {
+    if let Ok(target) = fs::canonicalize(path) {
+        return Resolved::File(target);
     }
-}
-
-pub(super) fn rules_file() -> String {
-    format!("{}\n", block())
-}
-
-pub(super) fn is_rules_file(text: &str) -> bool {
-    text.contains(BLOCK_START_PREFIX) || text.contains(LEGACY_BLOCK_START_PREFIX)
-}
-
-pub(super) fn without_block(text: &str) -> String {
-    let Some((start, end)) = find_block(text) else {
-        return text.to_string();
-    };
-    let before = text[..start].trim_end();
-    let after = text[end..].trim_start_matches(['\r', '\n']);
-    let newline = if text.contains("\r\n") { "\r\n" } else { "\n" };
-    match (before.is_empty(), after.is_empty()) {
-        (true, _) => after.to_string(),
-        (false, true) => format!("{before}{newline}"),
-        (false, false) => format!("{before}{newline}{newline}{after}"),
+    if let Ok(link) = fs::read_link(path) {
+        return Resolved::Broken(format!("{} is a link to {}, which does not exist", shown(path), shown(&link)));
     }
-}
-
-pub(super) const RULES_FILE: &str = "rules/fuyu-reply-marker.md";
-pub(super) const LEGACY_RULES_FILE: &str = "rules/focusd-island-reply-marker.md";
-
-fn installed_rules(dir: &Path) -> Result<String, String> {
-    let rules = read_text(&dir.join(RULES_FILE))?;
-    if !rules.is_empty() {
-        return Ok(rules);
+    match (path.parent().and_then(|dir| fs::canonicalize(dir).ok()), path.file_name()) {
+        (Some(dir), Some(name)) if dir.is_dir() => Resolved::File(dir.join(name)),
+        _ => Resolved::NotHere,
     }
-    let legacy = read_text(&dir.join(LEGACY_RULES_FILE))?;
-    Ok(if is_rules_file(&legacy) { legacy } else { rules })
-}
-
-fn remove_legacy_rules(dir: &Path) -> Result<(), String> {
-    let path = dir.join(LEGACY_RULES_FILE);
-    if is_rules_file(&read_text(&path)?) {
-        fs::remove_file(&path).map_err(|error| format!("Failed to delete {}: {error}", path.display()))?;
-    }
-    Ok(())
-}
-
-fn claude_dir() -> Result<PathBuf, String> {
-    env::var_os("CLAUDE_CONFIG_DIR")
-        .map(PathBuf::from)
-        .filter(|dir| dir.is_absolute())
-        .map(Ok)
-        .unwrap_or_else(|| crate::system::windows_home_dir().map(|home| home.join(".claude")))
 }
 
 fn read_text(path: &Path) -> Result<String, String> {
     match fs::read_to_string(path) {
         Ok(text) => Ok(text),
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(String::new()),
-        Err(error) => Err(format!("Failed to read {}: {error}", path.display())),
+        Err(error) => Err(format!("Failed to read {}: {error}", shown(path))),
+    }
+}
+
+fn changed(text: &str, change: Change) -> Option<String> {
+    let next = match change {
+        Change::Read => return None,
+        Change::Enable => with_block(text),
+        Change::Disable => without_block(text),
+        Change::Upgrade if find_block(text).is_some() => with_block(text),
+        Change::Upgrade => return None,
+    };
+    (next != text).then_some(next)
+}
+
+fn sync_file(target: &Path, change: Change) -> (bool, bool, Option<String>) {
+    let text = match read_text(target) {
+        Ok(text) => text,
+        Err(error) => return (false, false, Some(error)),
+    };
+    let (text, error) = match changed(&text, change) {
+        Some(next) => match super::write_text_file(target, &next) {
+            Ok(()) => (next, None),
+            Err(error) => (text, Some(error)),
+        },
+        None => (text, None),
+    };
+    let installed = find_block(&text).is_some();
+    (installed, installed && !is_current(&text), error)
+}
+
+fn sync(entries: &[(&'static str, PathBuf)], change: Change) -> Vec<PromptFile> {
+    let mut done: HashMap<PathBuf, (bool, bool, Option<String>)> = HashMap::new();
+    entries
+        .iter()
+        .filter_map(|(agent, path)| {
+            let (target, (installed, outdated, error)) = match resolve(path) {
+                Resolved::NotHere => return None,
+                Resolved::Broken(error) => (None, (false, false, Some(error))),
+                Resolved::File(target) => {
+                    let result = done.entry(target.clone()).or_insert_with(|| sync_file(&target, change)).clone();
+                    (Some(target), result)
+                }
+            };
+            let target = target.filter(|_| path.is_symlink()).map(|target| shown(&target));
+            Some(PromptFile { agent, path: shown(path), target, installed, outdated, error })
+        })
+        .collect()
+}
+
+fn entries(home_dir: &Path) -> Vec<(&'static str, PathBuf)> {
+    PROMPT_FILES
+        .iter()
+        .flat_map(|(agent, files)| files(home_dir).into_iter().map(move |path| (*agent, path)))
+        .collect()
+}
+
+fn old_rules(claude_dir: &Path) -> Vec<PathBuf> {
+    [RULES_FILE, LEGACY_RULES_FILE]
+        .into_iter()
+        .map(|name| claude_dir.join(name))
+        .filter(|path| read_text(path).is_ok_and(|text| is_rules_file(&text)))
+        .collect()
+}
+
+fn remove_old_rules(claude_dir: &Path) -> Result<(), String> {
+    for path in old_rules(claude_dir) {
+        fs::remove_file(&path).map_err(|error| format!("Failed to delete {}: {error}", shown(&path)))?;
+    }
+    Ok(())
+}
+
+fn state(home_dir: &Path, change: Change) -> Result<ReplyMarkerState, String> {
+    let claude_dir = claude_code::config_dir(home_dir);
+    let files = sync(&entries(home_dir), change);
+    if matches!(change, Change::Enable | Change::Disable) {
+        remove_old_rules(&claude_dir)?;
+    }
+    let old_rules: Vec<String> = old_rules(&claude_dir).iter().map(|path| shown(path)).collect();
+    let installed = !old_rules.is_empty() || files.iter().any(|file| file.installed);
+    let outdated = installed
+        && (!old_rules.is_empty() || files.iter().any(|file| file.outdated || (!file.installed && file.error.is_none())));
+    Ok(ReplyMarkerState { installed, outdated, files, old_rules, content: block(), remotes: Vec::new() })
+}
+
+fn home_dir() -> Result<PathBuf, String> {
+    crate::system::windows_home_dir()
+}
+
+pub(super) fn upgrade_installed() {
+    let Ok(home) = home_dir() else { return };
+    if let Ok(state) = state(&home, Change::Upgrade) {
+        for error in state.files.iter().filter_map(|file| file.error.as_deref()) {
+            eprintln!("failed to update the reply marker: {error}");
+        }
+    }
+}
+
+pub(super) fn repair() {
+    let Ok(home) = home_dir() else { return };
+    let Ok(current) = state(&home, Change::Read) else { return };
+    if !current.installed {
+        return;
+    }
+    match state(&home, Change::Enable) {
+        Ok(state) => {
+            for error in state.files.iter().filter_map(|file| file.error.as_deref()) {
+                eprintln!("failed to repair the reply marker: {error}");
+            }
+        }
+        Err(error) => eprintln!("failed to repair the reply marker: {error}"),
     }
 }
 
 #[tauri::command]
 pub async fn get_reply_marker_state() -> Result<ReplyMarkerState, String> {
-    tauri::async_runtime::spawn_blocking(|| {
-        let dir = claude_dir()?;
-        let path = dir.join(RULES_FILE);
-        Ok(state_of(&installed_rules(&dir)?, &read_text(&dir.join("CLAUDE.md"))?, &path))
-    })
-    .await
-    .map_err(|error| format!("Failed to join the CLAUDE.md task: {error}"))?
-}
-
-pub(super) fn needs_upgrade(rules: &str) -> bool {
-    find_block(rules).is_some_and(|(start, end)| rules[start..end].replace("\r\n", "\n") != block())
-}
-
-pub(super) fn upgrade_installed() {
-    let Ok(dir) = claude_dir() else { return };
-    let path = dir.join(RULES_FILE);
-    let Ok(rules) = installed_rules(&dir) else { return };
-    if needs_upgrade(&rules) {
-        if let Err(error) = super::write_text_file(&path, &rules_file()) {
-            eprintln!("failed to update the reply marker rules: {error}");
-            return;
-        }
-    }
-    if let Err(error) = remove_legacy_rules(&dir) {
-        eprintln!("failed to remove the old reply marker rules: {error}");
-    }
+    tauri::async_runtime::spawn_blocking(|| state(&home_dir()?, Change::Read))
+        .await
+        .map_err(|error| format!("Failed to join the reply marker task: {error}"))?
 }
 
 #[tauri::command]
@@ -189,74 +281,16 @@ pub async fn set_reply_marker(app: tauri::AppHandle, enabled: bool) -> Result<Re
     use tauri::Manager;
     let app_dir = crate::home_dir::fuyu_home(app.path()).ok();
     tauri::async_runtime::spawn_blocking(move || {
-        let dir = claude_dir()?;
-        let path = dir.join(RULES_FILE);
-        let rules = read_text(&path)?;
-        if enabled && rules != rules_file() {
-            super::write_text_file(&path, &rules_file())?;
-        }
-        if !enabled && is_rules_file(&rules) {
-            fs::remove_file(&path).map_err(|error| format!("Failed to delete {}: {error}", path.display()))?;
-        }
-        remove_legacy_rules(&dir)?;
-        let claude_md_path = dir.join("CLAUDE.md");
-        let claude_md = read_text(&claude_md_path)?;
-        let cleaned = without_block(&claude_md);
-        if cleaned != claude_md {
-            super::write_text_file(&claude_md_path, &cleaned)?;
-        }
-        let mut state = state_of(&read_text(&path)?, &cleaned, &path);
+        let mut state = state(&home_dir()?, if enabled { Change::Enable } else { Change::Disable })?;
         if let Some(app_dir) = app_dir {
             state.remotes = super::remote_setup::set_reply_marker(&app_dir, enabled);
         }
         Ok(state)
     })
     .await
-    .map_err(|error| format!("Failed to join the CLAUDE.md task: {error}"))?
+    .map_err(|error| format!("Failed to join the reply marker task: {error}"))?
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn the_last_line_alone_is_the_marker() {
-        assert_eq!(split_reply("Which one?\n\n↩"), (Some(ReplyMarker::YourTurn), "Which one?"));
-        assert_eq!(split_reply("Started the build.\r\n⋯\r\n"), (Some(ReplyMarker::Background), "Started the build."));
-        assert_eq!(split_reply("Done.\n  ✓\u{FE0E} "), (Some(ReplyMarker::Done), "Done."));
-        assert_eq!(split_reply("✓"), (Some(ReplyMarker::Done), ""));
-        assert_eq!(split_reply("Tests ✓"), (None, "Tests ✓"));
-        assert_eq!(split_reply("↩\nmore text"), (None, "↩\nmore text"));
-        assert_eq!(split_reply("`↩`"), (None, "`↩`"));
-    }
-
-    #[test]
-    fn the_rules_file_holds_the_block_and_an_old_block_comes_out_of_claude_md_cleanly() {
-        let path = Path::new("C:/Users/me/.claude/rules/fuyu-reply-marker.md");
-        let user = "# Global rules\r\n\r\n- reply in Chinese\r\n";
-        let state = state_of(&rules_file(), user, path);
-        assert!(state.installed && !state.outdated);
-        assert_eq!(state.content, block());
-        assert!(is_rules_file(&rules_file()) && !is_rules_file(user));
-        assert!(!state_of("", user, path).installed);
-
-        let legacy = format!("{user}\r\n<!-- focusd-island: reply marker v1 -->\r\nold words\r\n{LEGACY_BLOCK_END}\r\n\r\n## After\r\n");
-        let state = state_of("", &legacy, path);
-        assert!(state.installed && state.outdated);
-        assert_eq!(without_block(&legacy), format!("{user}\r\n## After\r\n"));
-        assert_eq!(without_block(user), user);
-        assert!(state_of("<!-- focusd-island: reply marker v1 -->\nx\n<!-- /focusd-island: reply marker -->\n", "", path).outdated);
-    }
-
-    #[test]
-    fn only_an_older_wording_in_the_rules_file_is_upgraded() {
-        assert!(!needs_upgrade(&rules_file()));
-        assert!(!needs_upgrade(&rules_file().replace('\n', "\r\n")));
-        assert!(!needs_upgrade(""));
-        assert!(!needs_upgrade("# my own rules\n"));
-        assert!(needs_upgrade("<!-- focusd-island: reply marker v2 -->\nold words\n<!-- /focusd-island: reply marker -->\n"));
-        let v3 = "<!-- focusd-island: reply marker v3 -->\nwords\n<!-- /focusd-island: reply marker -->\n";
-        assert!(is_rules_file(v3) && needs_upgrade(v3));
-        assert_eq!(without_block(v3), "");
-    }
-}
+#[path = "reply_marker_tests.rs"]
+mod tests;

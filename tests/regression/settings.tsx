@@ -344,8 +344,8 @@ if (!automated) {
     check(markerGroup && connectGroups[connectGroups.indexOf(markerGroup) - 1]?.textContent?.includes("安装/修复") && markerGroup.textContent!.includes("推荐打开"),
       "The reply status marker follows the hooks on the connection page and is marked as recommended");
     const markerSwitch = markerGroup?.querySelector<HTMLInputElement>("[role='switch']");
-    check(markerSwitch && !markerSwitch.checked && markerGroup!.textContent!.includes(REPLY_MARKER.path) && markerGroup!.querySelector("pre")?.textContent === REPLY_MARKER.content,
-      "The reply status marker is off by default and shows the rules file and the text it would write");
+    check(markerSwitch && !markerSwitch.checked && markerGroup!.textContent!.includes(REPLY_MARKER.path) && markerGroup!.querySelector("pre")?.textContent === REPLY_MARKER.content && markerGroup!.textContent!.includes(`软链，写在 ${REPLY_MARKER.target}`) && markerGroup!.querySelector(".agent-reply-marker__file--error")?.textContent?.includes(REPLY_MARKER.dangling),
+      "The reply status marker is off by default and shows each agent's prompt file (a link names its target, a dangling one its error) and the text it would write");
     await act(async () => { markerSwitch!.click(); });
     await act(async () => { await new Promise(resolve => setTimeout(resolve, 20)); });
     check(replyMarkerCalls.join() === "true" && markerSwitch!.checked, "Switching the reply status marker on writes it");

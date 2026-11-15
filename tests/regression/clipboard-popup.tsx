@@ -7,6 +7,7 @@ import { I18nProvider, LOCALE_STORAGE_KEY } from "../../src/i18n";
 import { ClipboardPopup } from "../../src/features/clipboard/ClipboardPopup";
 import type { ClipboardHistoryItem, ClipboardSnippet } from "../../src/features/clipboard/api";
 import { checkSecondRound } from "./clipboard-popup-actions";
+import { checkManager, renderManageFrames } from "./clipboard-popup-manage";
 
 const automated = new URLSearchParams(location.search).has("test");
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: automated });
@@ -86,6 +87,8 @@ for (const frame of FRAMES) {
   if (automated) await act(async () => render());
   else render();
 }
+
+await renderManageFrames(host, ITEMS, calls, automated);
 
 const messages: string[] = [];
 function check(condition: unknown, label: string) {
@@ -189,6 +192,7 @@ async function runChecks() {
     check($$("wide", ".clipboard-popup__pane-files li").length === 3, "宽版：文件逐个列出");
 
     await checkSecondRound(check, calls);
+    await checkManager(check, calls);
 
     await key("paused", { key: " " });
     check(peeks[peeks.length - 1] === "t1" && !$("paused", ".clipboard-look"), "窗口外预览：按空格把选中这条交给外面的预览窗口，列表上不再盖一层");
@@ -226,4 +230,4 @@ async function runChecks() {
 
 const results = document.getElementById("results")!;
 if (automated) void runChecks();
-else results.textContent = "演示：剪贴板窗口（标准、浅色、宽版）。加 ?test=1 运行检查。";
+else results.textContent = "演示：剪贴板窗口（标准、浅色、宽版、管理视图）。加 ?test=1 运行检查。";

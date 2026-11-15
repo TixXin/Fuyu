@@ -75,10 +75,20 @@ export type AgentTodoProgress = { done: number; total: number; current: string |
 
 export type ReplyMarker = "yourTurn" | "background" | "done";
 
+export type ReplyMarkerFile = {
+  agent: SessionProvider;
+  path: string;
+  target: string | null;
+  installed: boolean;
+  outdated: boolean;
+  error: string | null;
+};
+
 export type ReplyMarkerState = {
   installed: boolean;
   outdated: boolean;
-  path: string;
+  files: ReplyMarkerFile[];
+  oldRules: string[];
   content: string;
   remotes: RemoteResult[];
   dshBridge?: string | null;

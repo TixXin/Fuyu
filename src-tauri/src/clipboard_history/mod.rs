@@ -2,6 +2,8 @@ pub(crate) mod actions;
 mod capture_pause;
 mod clipboard_io;
 mod command_text;
+pub(crate) mod deletion;
+pub(crate) mod expand;
 pub(crate) mod drag;
 #[cfg_attr(target_os = "macos", path = "hotkey_macos.rs")]
 mod hotkey;
@@ -62,7 +64,7 @@ const LEGACY_DEFAULT_SHORTCUT: &str = "Ctrl+X";
 
 const MIN_MAX_ITEMS: usize = 5;
 
-const MAX_MAX_ITEMS: usize = 200;
+const MAX_MAX_ITEMS: usize = 500;
 
 const SHORT_DUPLICATE_WINDOW_MS: i64 = 2_000;
 
@@ -409,7 +411,7 @@ struct ClipboardHistoryState {
     items: Vec<ClipboardHistoryItem>,
     snippets: Vec<snippets::ClipboardSnippet>,
     last_capture_hash: Option<String>,
-    recently_deleted: Option<(ClipboardHistoryItem, usize)>,
+    recently_deleted: deletion::Removed,
 }
 
 struct ClipboardHistoryService {
@@ -557,12 +559,12 @@ pub fn set_clipboard_history_item_note(
 
 #[tauri::command]
 pub fn delete_clipboard_history_item(id: String) -> Result<ClipboardHistorySnapshot, String> {
-    service()?.delete_item(&id)
+    service()?.delete_items(&[id])
 }
 
 #[tauri::command]
 pub fn restore_clipboard_history_item(id: String) -> Result<ClipboardHistorySnapshot, String> {
-    service()?.restore_item(&id)
+    service()?.restore_items(&[id])
 }
 
 #[tauri::command]
@@ -597,7 +599,7 @@ pub fn init(app: &AppHandle) -> Result<(), String> {
             items: persisted.items,
             snippets: persisted.snippets,
             last_capture_hash: None,
-            recently_deleted: None,
+            recently_deleted: Vec::new(),
         }),
     };
 
@@ -650,6 +652,9 @@ macro_rules! tauri_commands {
             crate::clipboard_history::set_clipboard_history_item_note,
             crate::clipboard_history::delete_clipboard_history_item,
             crate::clipboard_history::restore_clipboard_history_item,
+            crate::clipboard_history::deletion::delete_clipboard_history_items,
+            crate::clipboard_history::deletion::restore_clipboard_history_items,
+            crate::clipboard_history::expand::set_clipboard_popup_expanded,
             crate::clipboard_history::clear_clipboard_history,
             crate::clipboard_history::preview_window::show_clipboard_preview,
             crate::clipboard_history::preview_window::hide_clipboard_preview,

@@ -11,7 +11,8 @@ use super::codex_hooks::{agent_running_command_with, agent_status_command};
 use super::harness::{Harness, HookEnv, Hooks, StatusLight};
 use super::hooks_state::HookInstallState;
 use super::markers::AGENT_RUNNING_STALE_AFTER_MS;
-use super::session_scan::pick_title;
+use super::reply_text::{reply_ending, ReplyEnding};
+use super::session_scan::{pick_title, read_tail};
 use super::sessions::{session_phase, AgentSessionSummary, TurnState};
 use super::snapshot::system_time_to_unix_millis;
 use super::title::{folder_title, prompt_title};
@@ -105,6 +106,7 @@ fn summary(session_id: String, saved: &Saved, now: i64) -> AgentSessionSummary {
     let prompt = input["lastUserInput"].as_str().and_then(prompt_title);
     let (title, title_source) = pick_title(None, None, prompt.clone(), cwd.as_deref().and_then(folder_title));
     let state = if saved.running { TurnState::Working } else { TurnState::Done };
+    let reply = transcript_reply(input);
     AgentSessionSummary {
         provider: PROVIDER,
         session_id,
@@ -114,9 +116,9 @@ fn summary(session_id: String, saved: &Saved, now: i64) -> AgentSessionSummary {
         model: text(&input["modelName"]),
         effort: None,
         phase: session_phase(state, now - saved.at, AGENT_RUNNING_STALE_AFTER_MS),
-        last_message: None,
-        reply_marker: None,
-        reply_asks: false,
+        last_message: reply.message,
+        reply_marker: reply.marker,
+        reply_asks: reply.asks,
         updated_at: saved.at,
         host: None,
         turn_started_at: None,
@@ -133,12 +135,41 @@ fn summary(session_id: String, saved: &Saved, now: i64) -> AgentSessionSummary {
     }
 }
 
+fn transcript_reply(input: &Value) -> ReplyEnding {
+    text(&input["transcriptPath"])
+        .and_then(|path| read_tail(Path::new(&path)))
+        .and_then(|tail| last_reply(&tail))
+        .map(|reply| reply_ending(&reply))
+        .unwrap_or_default()
+}
+
+fn last_reply(tail: &str) -> Option<String> {
+    for record in tail.lines().rev().filter_map(|line| serde_json::from_str::<Value>(line).ok()) {
+        match record["type"].as_str() {
+            Some("USER_INPUT") => return None,
+            Some("PLANNER_RESPONSE") if record["content"].as_str().is_some_and(|content| !content.trim().is_empty()) => {
+                return text(&record["content"]);
+            }
+            _ => {}
+        }
+    }
+    None
+}
+
 fn text(value: &Value) -> Option<String> {
     value.as_str().filter(|text| !text.is_empty()).map(str::to_string)
 }
 
 fn hooks_path(home_dir: &Path) -> PathBuf {
     home_dir.join(".gemini").join("config").join("hooks.json")
+}
+
+pub(super) fn prompt_files(home_dir: &Path) -> Vec<PathBuf> {
+    if lives_here(home_dir) {
+        vec![home_dir.join(".gemini").join("GEMINI.md")]
+    } else {
+        Vec::new()
+    }
 }
 
 fn lives_here(home_dir: &Path) -> bool {
@@ -246,6 +277,30 @@ mod tests {
         save(&app_dir, "stop-6.json", CLI_STOP, 1_000);
         let cli = sessions(&app_dir, now, 60 * 60 * 1000).into_iter().find(|s| s.session_id == "a2706318").unwrap();
         assert_eq!((cli.phase, cli.cwd.as_deref()), ("completed", Some(r"C:\work\demo")));
+        assert_eq!(cli.reply_marker, None);
+        fs::remove_dir_all(&app_dir).unwrap();
+    }
+
+    #[test]
+    fn the_last_reply_comes_from_the_transcript() {
+        let app_dir = temp_dir("transcript");
+        let now = system_time_to_unix_millis(SystemTime::now()).unwrap();
+        let transcript = app_dir.join("transcript_full.jsonl");
+        let line = |kind: &str, content: &str| json!({ "type": kind, "status": "DONE", "content": content }).to_string();
+        let lines = [
+            line("USER_INPUT", "<USER_REQUEST>\nfix it\n</USER_REQUEST>"),
+            line("PLANNER_RESPONSE", "Looking."),
+            line("GENERIC", ""),
+            line("PLANNER_RESPONSE", "Fixed the **login** page.\n\n✓"),
+            line("PLANNER_RESPONSE", ""),
+        ];
+        fs::write(&transcript, lines.join("\n")).unwrap();
+        let mut input: Value = serde_json::from_str(CLI_STOP).unwrap();
+        input["transcriptPath"] = json!(transcript.to_string_lossy());
+        save(&app_dir, "stop-1.json", &input.to_string(), 1_000);
+        let listed = sessions(&app_dir, now, 60 * 60 * 1000);
+        assert_eq!((listed[0].reply_marker, listed[0].last_message.as_deref()), (Some("done"), Some("Fixed the login page.")));
+        assert_eq!(last_reply(&[lines[0].clone(), lines[1].clone(), line("USER_INPUT", "again")].join("\n")), None);
         fs::remove_dir_all(&app_dir).unwrap();
     }
 

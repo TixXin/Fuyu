@@ -5,6 +5,7 @@ import { useErrorText, useTranslation } from "../../i18n";
 import { RemoteResultLines } from "./RemoteResultLines";
 import "./AgentReplyMarkerSettings.css";
 import { getReplyMarkerState, setReplyMarker, type ReplyMarkerState } from "./api";
+import { AGENT_PROVIDER_LABELS } from "./status";
 
 export function AgentReplyMarkerSettings() {
   const text = useTranslation().settings.agent.replyMarker;
@@ -42,7 +43,19 @@ export function AgentReplyMarkerSettings() {
       title={text.title}
       footer={
         <>
-          {text.hint(state?.path ?? "~/.claude/CLAUDE.md")}
+          {text.hint}
+          {state ? (
+            <ul className="agent-reply-marker__files">
+              {state.files.length === 0 ? <li>{text.noFiles}</li> : null}
+              {state.files.map((file) => (
+                <li key={`${file.agent}:${file.path}`} className={file.error ? "agent-reply-marker__file--error" : undefined}>
+                  {AGENT_PROVIDER_LABELS[file.agent] ?? file.agent}: {file.path}
+                  {file.target ? ` (${text.linked(file.target)})` : null}
+                  {file.error ? <><br />{file.error}</> : null}
+                </li>
+              ))}
+            </ul>
+          ) : null}
           {state?.installed && state.outdated ? <><br />{text.outdated}</> : null}
           <RemoteResultLines results={state?.remotes} />
           {error ? <><br />{error}</> : null}
