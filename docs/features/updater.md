@@ -87,7 +87,7 @@ node scripts/release/make-latest-json.mjs --base-url "https://ghfast.top/https:/
 
 ## 签名密钥
 
-更新包必须用私钥签名，App 用内置的公钥验证。**私钥不进仓库**，归仓库维护者所有。
+更新包必须用私钥签名，App 用内置的公钥验证。**私钥不进仓库**，只在持有它的人的电脑上：仓库管理员 TixXin 的 Windows 和 Mac，以及协作者 ShengLin1001（2026-11-15 起，用户定）。持有私钥的人都能发版，发版前互相说一声。
 
 `tauri.conf.json` 的 `plugins.updater.pubkey` 里直接写着本仓库（TixXin/fuyu）的更新公钥。公钥本身不是秘密，写进仓库后，本地 `pnpm tauri build`、`pnpm tauri dev` 出来的程序也能检查和安装本仓库发布的更新。这个字段在插件配置里是必填项（没有默认值），删掉整个键会让应用在启动阶段报 `missing field \`pubkey\`` 并直接退出；改成空串不会影响启动，面板会显示「这里不能应用内更新」并禁用更新入口。别人 fork 本仓库做自己的发布线时，应把它换成自己的公钥或清空。
 
@@ -206,7 +206,7 @@ Mac 上的 `~/.tauri/fuyu/release.json` 不写 `passwordFile`，改写 `keychain
 - 打包时框架靠 `src-tauri/tauri.bundle-macos.conf.json` 加进去，工作流和 `pnpm build:exe` 都带了这个配置。
 - 没有苹果开发者账号的公证，用户第一次打开要手动放行，步骤见 [macos-install.md](macos-install.md)。有了账号（G1.12）后在工作流里加上 Developer ID 证书和公证即可，其余不变。
 
-updater 私钥不放进 GitHub Secrets（F35，见 [release-ci.md](/docs/architecture/release-ci.md)）：它泄露就等于能给所有用户推更新。签名始终在持有私钥的维护者电脑上做；`tauri signer sign` 在 Mac 上也能跑，把私钥经密码管理器拷过去、用上面三个环境变量提供，Mac 上也能签（配置见上面「Mac 本机自动读取」；DPAPI 密码只在 Windows 上能解开，Mac 用钥匙串）。
+updater 私钥不放进 GitHub Secrets（F35，见 [release-ci.md](/docs/architecture/release-ci.md)）：它泄露就等于能给所有用户推更新。签名始终在持有私钥的人的电脑上做；`tauri signer sign` 在 Mac 上也能跑，把私钥经密码管理器拷过去、用上面三个环境变量提供，Mac 上也能签（配置见上面「Mac 本机自动读取」；DPAPI 密码只在 Windows 上能解开，Mac 用钥匙串）。
 
 ## 撤回有问题的版本
 
