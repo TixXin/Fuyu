@@ -6,6 +6,8 @@ import { useDevBuild } from "../../lib/platform";
 import { ProjectLink } from "./ProjectLink";
 import { websitePage } from "./projectLinks";
 import { UpdateNotes } from "./UpdateNotes";
+import { useRestartStalled } from "./useRestartStalled";
+import { restartIsland } from "../settings-backup/api";
 import { useDownloadSource } from "./useDownloadSource";
 import {
   checkForUpdate,
@@ -54,6 +56,8 @@ export function UpdatePanel() {
     void checkOnFirstVisit();
   }, []);
 
+  const restartStalled = useRestartStalled(stage);
+
   if (stage === "disabled") {
     return (
       <ProjectLink
@@ -80,6 +84,7 @@ export function UpdatePanel() {
   else if (stage === "downloading") { headline = percent === null ? text.downloadingUnknown : text.downloading(percent); sub = step; }
   else if (stage === "ready") { headline = hero.ready(nextVersion); sub = skipped ? text.skipped(nextVersion) : autoUpdate === "install" ? text.readyIdleHint : text.readyHint; }
   else if (stage === "installing") { headline = text.installing; sub = `${step} · ${text.readyHint}`; }
+  else if (stage === "done" && restartStalled) { headline = text.restartStalled; sub = text.restartStalledHint; }
   else if (stage === "done") { headline = text.done; sub = current; }
   else if (stage === "error") { headline = hero.error; sub = detail ? text.errorDetail(detail) : text.error; }
 
@@ -109,6 +114,10 @@ export function UpdatePanel() {
           ) : stage === "idle" || stage === "latest" || stage === "error" || stage === "checking" ? (
             <button className="update-status__button" type="button" disabled={stage === "checking"} onClick={() => void checkForUpdate()}>
               {stage === "error" ? text.retry : text.title}
+            </button>
+          ) : restartStalled ? (
+            <button className="update-status__button update-status__button--primary" type="button" onClick={() => void restartIsland().catch((error: unknown) => console.error(error))}>
+              {text.restartNow}
             </button>
           ) : null}
         </div>
