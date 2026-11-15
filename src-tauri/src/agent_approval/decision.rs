@@ -22,7 +22,7 @@ pub enum Kind {
 pub(super) const QUESTION_PATH: &str = "/claude/ask-user-question";
 pub(super) const ACTIVITY_PATH: &str = "/claude/activity";
 
-const AGENTS: [Agent; 5] = [Agent::ClaudeCode, Agent::Codex, Agent::Workbuddy, Agent::Antigravity, Agent::Dsh];
+const AGENTS: [Agent; 6] = [Agent::ClaudeCode, Agent::Codex, Agent::Workbuddy, Agent::Antigravity, Agent::Dsh, Agent::Opencode];
 
 pub(super) fn route(path: &str) -> Option<(Agent, Kind)> {
     if path == QUESTION_PATH {
@@ -89,8 +89,10 @@ impl HookInput {
     }
 
     pub(super) fn parse_for(agent: Agent, body: &[u8]) -> Result<Self, &'static str> {
-        if agent != Agent::Antigravity {
-            return Self::parse(body);
+        match agent {
+            Agent::Antigravity => {}
+            Agent::Opencode => return super::opencode::plugin_input(body),
+            _ => return Self::parse(body),
         }
         let input: Value = serde_json::from_slice(body).map_err(|_| "The body is not JSON.")?;
         let cwd = text_field(&input, "cwd").or_else(|| {
@@ -212,7 +214,7 @@ pub(super) fn permission_response(
             .to_string(),
             _ => "{}".to_string(),
         },
-        Agent::Opencode => "{}".to_string(),
+        Agent::Opencode => super::opencode::plugin_response(decision, message),
     }
 }
 
