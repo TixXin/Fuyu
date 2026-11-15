@@ -34,6 +34,7 @@ struct Pointer {
     left: f64,
     top: f64,
     width: f64,
+    height: f64,
     cursor_x: f64,
     cursor_y: f64,
 }
@@ -51,6 +52,7 @@ fn pointer(window: &WebviewWindow) -> Option<Pointer> {
         left: f64::from(position.x),
         top: f64::from(position.y),
         width: f64::from(size.width.max(1)),
+        height: f64::from(size.height.max(1)),
         cursor_x,
         cursor_y,
     })
@@ -63,6 +65,7 @@ pub(crate) fn island_on_screen(window: &WebviewWindow) -> Option<IslandOnScreen>
         f64::from(position.x),
         f64::from(position.y),
         f64::from(size.width.max(1)),
+        f64::from(size.height.max(1)),
         read_window_state(),
     ))
 }
@@ -97,7 +100,7 @@ pub(crate) fn start_cursor_passthrough_loop(window: WebviewWindow) {
         loop {
             let pointer = pointer(&window);
             let is_inside = pointer.is_none_or(|pointer| {
-                cursor_on_island(pointer.left, pointer.top, pointer.width, pointer.cursor_x, pointer.cursor_y, read_window_state())
+                cursor_on_island(pointer.left, pointer.top, pointer.width, pointer.height, pointer.cursor_x, pointer.cursor_y, read_window_state())
             });
             let is_on_banner = pointer.is_some_and(on_banner);
             let should_ignore = !is_inside && !is_on_banner;

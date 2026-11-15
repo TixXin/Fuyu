@@ -128,7 +128,8 @@ fn cursor_is_on_banner(hwnd: HWND) -> bool {
 pub(crate) fn island_on_screen(window: &WebviewWindow) -> Option<IslandOnScreen> {
     let window_rect = win32::window::window_rect(window.hwnd().ok()?)?;
     let window_width = (window_rect.right - window_rect.left).max(1) as f64;
-    Some(island_rect(window_rect.left as f64, window_rect.top as f64, window_width, read_window_state()))
+    let window_height = (window_rect.bottom - window_rect.top).max(1) as f64;
+    Some(island_rect(window_rect.left as f64, window_rect.top as f64, window_width, window_height, read_window_state()))
 }
 
 pub(super) fn cursor_is_inside_island(hwnd: HWND) -> bool {
@@ -143,6 +144,7 @@ pub(super) fn cursor_is_inside_island(hwnd: HWND) -> bool {
         window_rect.left as f64,
         window_rect.top as f64,
         (window_rect.right - window_rect.left).max(1) as f64,
+        (window_rect.bottom - window_rect.top).max(1) as f64,
         cursor.x as f64,
         cursor.y as f64,
         read_window_state(),
