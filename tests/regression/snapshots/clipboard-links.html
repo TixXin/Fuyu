@@ -1,0 +1,156 @@
+<body>
+  <div id="root">
+    <div style="display: flex; align-items: center; gap: 8px; width: 360px; height: 38px; padding: 0px 18px; background: var(--island-fill, #000); border-radius: 19px">
+      <span class="clipboard-copy-notice" data-kind="text" role="status">
+        <span class="clipboard-entry-icon clipboard-copy-notice__icon">
+          <svg aria-hidden="true" class="lucide lucide-clipboard-list" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.25" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg">
+            <rect height="4" rx="1" ry="1" width="8" x="8" y="2"></rect>
+            <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+            <path d="M12 11h4"></path>
+            <path d="M12 16h4"></path>
+            <path d="M8 11h.01"></path>
+            <path d="M8 16h.01"></path>
+          </svg>
+        </span>
+        <span class="clipboard-copy-notice__text">
+          已复制 · a.com
+        </span>
+      </span>
+      <span class="clipboard-copy-notice__actions">
+        <button aria-label="已加入书签" aria-pressed="true" class="clipboard-copy-notice__action" disabled="" title="已加入书签" type="button">
+          <svg aria-hidden="true" class="lucide lucide-bookmark-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg">
+            <path d="M17 3a2 2 0 0 1 2 2v15a1 1 0 0 1-1.496.868l-4.512-2.578a2 2 0 0 0-1.984 0l-4.512 2.578A1 1 0 0 1 5 20V5a2 2 0 0 1 2-2z"></path>
+            <path d="m9 10 2 2 4-4"></path>
+          </svg>
+        </button>
+        <button aria-label="关闭" class="clipboard-copy-notice__action" title="关闭" type="button">
+          <svg aria-hidden="true" class="lucide lucide-x" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg">
+            <path d="M18 6 6 18"></path>
+            <path d="m6 6 12 12"></path>
+          </svg>
+        </button>
+      </span>
+    </div>
+    <div class="island-list-page" style="width: 520px; margin-top: 16px; background: var(--island-fill, #000)">
+      <div aria-label="链接书签" class="island-list clipboard-links" role="list">
+        <article class="island-list-row clipboard-link-row" role="listitem">
+          <button aria-label="打开 b.com › docs" class="island-list-row__hit" title="https://b.com/docs" type="button"></button>
+          <button aria-label="拖动排序" class="clipboard-link-row__grip" title="拖动或按 ↑↓ 调整顺序" type="button">
+            <svg aria-hidden="true" class="lucide lucide-grip-vertical" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5714285714285716" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="9" cy="12" r="1"></circle>
+              <circle cx="9" cy="5" r="1"></circle>
+              <circle cx="9" cy="19" r="1"></circle>
+              <circle cx="15" cy="12" r="1"></circle>
+              <circle cx="15" cy="5" r="1"></circle>
+              <circle cx="15" cy="19" r="1"></circle>
+            </svg>
+          </button>
+          <span aria-hidden="true" class="island-list-row__lead">
+            <svg aria-hidden="true" class="lucide lucide-globe" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.25" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path>
+              <path d="M2 12h20"></path>
+            </svg>
+          </span>
+          <span class="island-list-row__text">
+            <span class="island-list-row__main">
+              b.com › docs
+            </span>
+            <span class="island-list-row__meta">
+              b.com › docs
+            </span>
+          </span>
+          <span class="island-list-row__actions">
+            <button aria-label="删除书签" class="island-list-icon-button" title="删除书签" type="button">
+              <svg aria-hidden="true" class="lucide lucide-trash2 lucide-trash-2" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5714285714285716" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg">
+                <path d="M10 11v6"></path>
+                <path d="M14 11v6"></path>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path>
+                <path d="M3 6h18"></path>
+                <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              </svg>
+            </button>
+          </span>
+        </article>
+        <article class="island-list-row clipboard-link-row" role="listitem">
+          <button aria-label="打开 Site A" class="island-list-row__hit" title="https://a.com/" type="button"></button>
+          <button aria-label="拖动排序" class="clipboard-link-row__grip" title="拖动或按 ↑↓ 调整顺序" type="button">
+            <svg aria-hidden="true" class="lucide lucide-grip-vertical" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5714285714285716" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="9" cy="12" r="1"></circle>
+              <circle cx="9" cy="5" r="1"></circle>
+              <circle cx="9" cy="19" r="1"></circle>
+              <circle cx="15" cy="12" r="1"></circle>
+              <circle cx="15" cy="5" r="1"></circle>
+              <circle cx="15" cy="19" r="1"></circle>
+            </svg>
+          </button>
+          <span aria-hidden="true" class="island-list-row__lead">
+            <svg aria-hidden="true" class="lucide lucide-globe" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.25" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path>
+              <path d="M2 12h20"></path>
+            </svg>
+          </span>
+          <span class="island-list-row__text">
+            <span class="island-list-row__main">
+              Site A
+            </span>
+            <span class="island-list-row__meta">
+              a.com
+            </span>
+          </span>
+          <span class="island-list-row__actions">
+            <button aria-label="删除书签" class="island-list-icon-button" title="删除书签" type="button">
+              <svg aria-hidden="true" class="lucide lucide-trash2 lucide-trash-2" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5714285714285716" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg">
+                <path d="M10 11v6"></path>
+                <path d="M14 11v6"></path>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path>
+                <path d="M3 6h18"></path>
+                <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              </svg>
+            </button>
+          </span>
+        </article>
+        <article class="island-list-row clipboard-link-row" role="listitem">
+          <button aria-label="打开 Site C" class="island-list-row__hit" title="https://c.com/" type="button"></button>
+          <button aria-label="拖动排序" class="clipboard-link-row__grip" title="拖动或按 ↑↓ 调整顺序" type="button">
+            <svg aria-hidden="true" class="lucide lucide-grip-vertical" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5714285714285716" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="9" cy="12" r="1"></circle>
+              <circle cx="9" cy="5" r="1"></circle>
+              <circle cx="9" cy="19" r="1"></circle>
+              <circle cx="15" cy="12" r="1"></circle>
+              <circle cx="15" cy="5" r="1"></circle>
+              <circle cx="15" cy="19" r="1"></circle>
+            </svg>
+          </button>
+          <span aria-hidden="true" class="island-list-row__lead">
+            <svg aria-hidden="true" class="lucide lucide-globe" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.25" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path>
+              <path d="M2 12h20"></path>
+            </svg>
+          </span>
+          <span class="island-list-row__text">
+            <span class="island-list-row__main">
+              Site C
+            </span>
+            <span class="island-list-row__meta">
+              c.com
+            </span>
+          </span>
+          <span class="island-list-row__actions">
+            <button aria-label="删除书签" class="island-list-icon-button" title="删除书签" type="button">
+              <svg aria-hidden="true" class="lucide lucide-trash2 lucide-trash-2" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5714285714285716" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg">
+                <path d="M10 11v6"></path>
+                <path d="M14 11v6"></path>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path>
+                <path d="M3 6h18"></path>
+                <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              </svg>
+            </button>
+          </span>
+        </article>
+      </div>
+    </div>
+  </div>
+</body>
