@@ -17,7 +17,10 @@ use super::{write_text_file, AGENT_APPROVAL_SCRIPT_FILE_NAME, AGENT_RUNNING_NOTI
 pub(super) const PROVIDER: &str = "workbuddy";
 pub(super) const DIR: &str = ".workbuddy";
 pub(super) const APP: &str = "workbuddy";
+#[cfg(not(target_os = "macos"))]
 const EXE: &str = "WorkBuddy.exe";
+#[cfg(target_os = "macos")]
+const BUNDLE_ID: &str = "com.workbuddy.workbuddy-ai";
 const INTERRUPTED: &str = "Interrupted by user";
 
 pub(super) const HARNESS: Harness = Harness {
@@ -123,8 +126,14 @@ fn output_text(content: &Value) -> Option<String> {
     (!parts.is_empty()).then(|| parts.join("\n"))
 }
 
+#[cfg(not(target_os = "macos"))]
 pub(super) fn app_running() -> bool {
     crate::platform::process::running_executable(&[EXE]).is_some()
+}
+
+#[cfg(target_os = "macos")]
+pub(super) fn app_running() -> bool {
+    crate::platform::process::app_bundle_running(BUNDLE_ID)
 }
 
 pub(super) fn prompt_files(home_dir: &Path) -> Vec<std::path::PathBuf> {
