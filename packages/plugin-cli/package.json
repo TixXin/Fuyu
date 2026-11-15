@@ -1,0 +1,31 @@
+{
+  "name": "@fuyu/plugin-cli",
+  "version": "2.0.0-dev.0",
+  "private": true,
+  "description": "Plugin platform v3: the fuyu-plugin command line (build, pack, check, review, keygen, sign)",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "fuyu-plugin": "bin/fuyu-plugin.mjs"
+  },
+  "exports": {
+    ".": {
+      "types": "./src/index.d.mts",
+      "default": "./src/index.mjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "engines": {
+    "node": ">=22.15"
+  },
+  "scripts": {
+    "test": "node --test \"test/**/*.test.mjs\""
+  },
+  "dependencies": {
+    "@fuyu/plugin-base": "workspace:*",
+    "@fuyu/plugin-manifest": "workspace:*",
+    "@fuyu/plugin-market": "workspace:*",
+    "@fuyu/plugin-review": "workspace:*",
+    "esbuild": "0.28.1"
+  }
+}

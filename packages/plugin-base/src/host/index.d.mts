@@ -1,4 +1,5 @@
 import type { Context } from "cordis";
+import type { ManifestIssue, ValidateManifestOptions } from "@fuyu/plugin-manifest";
 
 export interface LogEntry {
   at: number;
@@ -32,10 +33,14 @@ export interface PluginStatus {
   waitingFor?: string[];
   error?: string;
   reason?: string;
-  blocked?: { by: "errors"; errors: number; windowMs: number } | { by: "safe-mode"; mode: SafeMode };
+  blocked?: { by: "errors"; errors: number; windowMs: number } | { by: "safe-mode"; mode: SafeMode } | { by: "manifest"; errors: ManifestIssue[] };
   lastError?: { at: number; text: string };
   usage?: PluginUsage;
+  source?: PluginSource;
+  undeclared?: { provides?: string[]; client?: string[]; slots?: string[] };
 }
+
+export type PluginSource = "builtin" | "market" | "manual" | "dev" | "file";
 
 export interface HostInfo {
   pid: number;
@@ -115,15 +120,41 @@ export const SERVICE_TIMEOUT_MS: number;
 export const SERVICE_CALLS: ReadonlySet<"service.call" | "service.on" | "service.off">;
 export function serviceError(code: string, message: string, data?: unknown): ServiceError;
 
+export interface RustCallOptions {
+  timeoutMs?: number;
+  onProgress?: (data: any) => void;
+}
+
+export interface RustApi {
+  call<Result = unknown>(method: string, params?: unknown, options?: RustCallOptions): Promise<Result>;
+  on(event: string, listener: (data: any) => void): () => Promise<void>;
+}
+
+export interface HostRpc {
+  handle(method: string, handler: (params: any) => unknown): void;
+  call(method: string, params: unknown, options?: { timeoutMs?: number; onProgress?: (data: any) => void; signal?: unknown }): Promise<any>;
+}
+
+export const RUST_TIMEOUT_MS: number;
+export function rustError(code: string, message: string, data?: unknown): ServiceError;
+export class RustBridge {
+  install(ctx: Context): () => void;
+  attach(rpc: HostRpc): void;
+}
+
 export interface HostOptions {
   dir: string;
   config?: string;
+  builtins?: string | null;
+  dataDir?: string | null;
+  appVersion?: string | null;
   apiNames?: string[];
   watch?: boolean;
   dev?: boolean;
   safe?: SafeMode | null;
   faultLimit?: Partial<FaultLimit>;
   onLog?: (entry: LogEntry) => void;
+  rpc?: HostRpc | null;
 }
 
 export interface Host {
@@ -132,6 +163,7 @@ export interface Host {
   status(): PluginStatus[];
   watchStatus(onChange: (status: PluginStatus[]) => void, tickMs?: number): () => void;
   info(): HostInfo;
+  builtins(): { id: string; kind: Exclude<PluginKind, "third-party"> }[];
   fault(plugin: string, error: unknown): boolean;
   clients(window?: string): ClientEntry[];
   timers(): Record<string, number>;
@@ -169,3 +201,48 @@ export interface WindowSocketOptions {
 
 export function openWindowSocket(options: WindowSocketOptions): Promise<WindowSocket>;
 export function watchStatus(ctx: Context, logs: LogEntry[], onChange: (status: PluginStatus[]) => void, options?: { delayMs?: number; tickMs?: number }): () => void;
+
+export interface PluginWindowFile {
+  window: string;
+  file: string;
+}
+
+export interface DeclaredUse {
+  provides: string[];
+  client: string[];
+  slots: string[];
+}
+
+export interface BuiltinPlugin {
+  id: string;
+  kind: Exclude<PluginKind, "third-party">;
+  root: string;
+  host: string | null;
+  clients: PluginWindowFile[];
+  declared: DeclaredUse | null;
+}
+
+export interface PluginPackage {
+  package: string;
+  version: string;
+  host: string | null;
+  clients: PluginWindowFile[];
+  declared: DeclaredUse;
+}
+
+export interface BuiltinCatalog {
+  dir: string;
+  plugins: BuiltinPlugin[];
+}
+
+export const BUILTINS_FILE: "builtins.json";
+export const BUILTINS_FORMAT: 1;
+export const BUILTIN_PREFIX: "builtin";
+export function readBuiltins(dir: string): BuiltinCatalog;
+export const DATA_DIR: "data";
+export function dataDirOf(root: string, id: string): string;
+export const PACKAGES_DIR: "packages";
+export const DEV_PREFIX: "dev";
+export const INSTALLED_SOURCES: readonly ["market", "manual"];
+export const SOURCES: readonly ["market", "manual", "dev"];
+export function readManifest(root: string, options: ValidateManifestOptions): PluginPackage;

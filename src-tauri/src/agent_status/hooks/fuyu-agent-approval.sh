@@ -5,6 +5,8 @@ case "${1:-codex}" in
   qoder) route=qoder/permission-request ;;
   codebuddy) route=codebuddy/permission-request ;;
   qwen) route=qwen/permission-request ;;
+  trae) route=trae/pre-tool-use ;;
+  traeCn) route=traeCn/pre-tool-use ;;
   antigravity) route=antigravity/pre-tool-use ;;
   dsh) route=dsh/pre-tool-use ;;
   *) exit 0 ;;

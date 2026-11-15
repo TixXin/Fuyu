@@ -57,6 +57,7 @@ mod claude_compat;
 mod qoder;
 mod codebuddy;
 mod qwen;
+mod trae;
 
 use serde::Serialize;
 use serde_json::{json, Value};

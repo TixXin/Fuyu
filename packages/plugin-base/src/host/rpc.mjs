@@ -46,6 +46,10 @@ export function connect({ input, write, onClose }) {
       send({ id: null, error: { code: -32700, message: "the line is not JSON" } });
       return;
     }
+    if (message.method === "progress" && message.id === undefined && waiting.has(message.params?.id)) {
+      waiting.get(message.params.id).onProgress?.(message.params.data ?? null);
+      return;
+    }
     if (typeof message.method === "string") {
       void reply(message);
       return;
@@ -54,6 +58,7 @@ export function connect({ input, write, onClose }) {
     if (!pending) return;
     waiting.delete(message.id);
     clearTimeout(pending.timer);
+    pending.unlisten?.();
     if (message.error) pending.reject(new RpcError(message.error.code, message.error.message, message.error.data));
     else pending.resolve(message.result);
   };
@@ -63,6 +68,7 @@ export function connect({ input, write, onClose }) {
     closed = reason;
     for (const pending of waiting.values()) {
       clearTimeout(pending.timer);
+      pending.unlisten?.();
       pending.reject(new RpcError(PEER_GONE, `the other side is gone: ${reason}`));
     }
     waiting.clear();
@@ -80,15 +86,26 @@ export function connect({ input, write, onClose }) {
     notify(method, params) {
       send({ method, params });
     },
-    call(method, params, { timeoutMs = 10000 } = {}) {
+    call(method, params, { timeoutMs = 10000, onProgress, signal } = {}) {
       if (closed) return Promise.reject(new RpcError(PEER_GONE, `the other side is gone: ${closed}`));
+      if (signal?.aborted) return Promise.reject(signal.reason);
       const id = ++next;
       return new Promise((resolve, reject) => {
-        const timer = setTimeout(() => {
-          waiting.delete(id);
-          reject(new RpcError("timeout", `${method} got no answer in ${timeoutMs} ms`));
-        }, timeoutMs);
-        waiting.set(id, { resolve, reject, timer });
+        const give = (error) => {
+          if (!waiting.delete(id)) return;
+          clearTimeout(pending.timer);
+          pending.unlisten?.();
+          send({ method: "cancel", params: { id } });
+          reject(error);
+        };
+        const pending = { resolve, reject, onProgress: typeof onProgress === "function" ? onProgress : null };
+        pending.timer = setTimeout(() => give(new RpcError("timeout", `${method} got no answer in ${timeoutMs} ms`, { method, timeoutMs })), timeoutMs);
+        if (signal) {
+          const abort = () => give(signal.reason);
+          signal.addEventListener("abort", abort, { once: true });
+          pending.unlisten = () => signal.removeEventListener("abort", abort);
+        }
+        waiting.set(id, pending);
         send({ id, method, params });
       });
     },

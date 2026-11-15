@@ -72,6 +72,8 @@ src-tauri/src/
 `src-tauri/crates/` 放和 `src-tauri` 同在一个 Cargo 工作区（`src-tauri/Cargo.toml` 的 `[workspace]`，构建目录仍是 `src-tauri/target`）的独立 crate，`cargo test`、clippy 默认连它们一起跑：
 
 - `crates/plugin-base`：插件平台第 3 版基座的 Rust 部分（找 Node、和宿主之间的 JSON-RPC、看管宿主：就绪、心跳、退避重启、停止）。不能依赖 `src-tauri` 的任何模块，也不写 `unsafe`：作业对象和进程组由使用方经 `Containment` 提供（浮屿的在 `src/plugin_kernel/containment.rs`）。协议见 [v3-boundary.md](../docs/architecture/plugins/v3-boundary.md)。
+- `crates/plugin-base-macros`：过程宏 `#[host_service("<方法>")]`，经 `plugin_base::host_service` 使用，把领域函数登记成插件宿主能调的 Rust 方法；参数和返回值的类型要在测试构建里派生 `ts_rs::TS`，写法见 [v3-services.md](../docs/architecture/plugins/v3-services.md)「Rust 那条路」。
+- `crates/sherpa-runtime`：语音输入（C80）在运行时用 `libloading` 加载下载来的 sherpa-onnx 2.0.1 C API 动态库，只包了离线识别（SenseVoice）用到的几个函数和配置结构体（布局按 2.0.1 的 `c-api.h`，有测试核对大小和偏移）。这是 `win32/`、`macos/` 之外唯一允许 `unsafe` 的地方（2026-11-15 用户定），对外只暴露安全的 `Runtime` / `Recognizer`；升级 sherpa-onnx 版本时要同时改这里的结构体、`VERSION` 和 `voice_input/packs.rs` 的下载地址和 SHA-256。
 
 ## lib.rs 与模块组织
 
@@ -119,7 +121,7 @@ src-tauri/src/
 
 ## unsafe 与 Windows API
 
-- **`unsafe` 只能写在 `win32/` 和 `macos/` 中**，对外暴露安全函数，参数尽量用 Rust 类型（`&str`、`u32`），不让调用方传裸指针。生产代码中这两个目录以外没有 `unsafe`；窗口过程实现 `win32::message_window::WindowMessages`，枚举窗口用 `win32::window::for_each_top_level_window` 的闭包。
+- **`unsafe` 只能写在 `win32/` 和 `macos/` 中**（工作区里另有 `crates/sherpa-runtime` 一处例外，见上），对外暴露安全函数，参数尽量用 Rust 类型（`&str`、`u32`），不让调用方传裸指针。生产代码中这两个目录以外没有 `unsafe`；窗口过程实现 `win32::message_window::WindowMessages`，枚举窗口用 `win32::window::for_each_top_level_window` 的闭包。
 - `wechat_reminders/source.rs` 及它用到的 `win32/` 文件也被 `examples/wechat_reminder_probe.rs` 通过 `#[path]` 编译，这些文件只能依赖 `windows` crate，不能引用 crate 内其他模块。
 - `unsafe` 块不写 `// SAFETY:` 注释（代码不写注释，见根目录 AGENTS.md），前置条件靠 `win32/` 对外的安全函数签名保证，有特殊前提时写进提交说明。
 - 句柄、COM 对象等资源用 RAII 类型包装，在 `Drop` 中释放，不手动配对 close。

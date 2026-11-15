@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { after, test } from "node:test";
 import { startHost } from "@fuyu/plugin-base/host";
-import { config, sleep, until, workspace } from "./workspace.mjs";
+import { builtinFiles, config, sleep, until, workspace } from "./workspace.mjs";
 
 const cleanup = [];
 after(async () => {
@@ -51,13 +51,18 @@ export function apply(ctx) {
 `,
 };
 
-async function host(entries, options = {}) {
-  const space = workspace({ ...FILES, "plugins.yml": config(entries) });
-  const started = await startHost({ dir: space.dir, ...options });
+async function host(entries, { builtins, ...options } = {}) {
+  const space = workspace({ ...FILES, ...(builtins ? builtinFiles(builtins, FILES) : {}), "plugins.yml": config(entries) });
+  const started = await startHost({ dir: space.dir, ...(builtins ? { builtins: join(space.dir, "builtins") } : {}), ...options });
   cleanup.push(() => started.stop(), space.remove);
   await started.settle();
   return { host: started, space };
 }
+
+const SAFE_BUILTINS = [
+  { id: "store", kind: "builtin", file: "store.mjs" },
+  { id: "reader", kind: "essential", file: "reader.mjs" },
+];
 
 const byId = (status, id) => status.find((entry) => entry.id === id);
 
@@ -126,14 +131,7 @@ test("errors spread out beyond the window do not switch a plugin off", async () 
 });
 
 test("safe mode third-party keeps built-in plugins and holds back the rest, saying why", async () => {
-  const { host: running } = await host(
-    [
-      { id: "store", name: "./store.mjs", extra: "  kind: builtin\n" },
-      { id: "reader", name: "./reader.mjs", extra: "  kind: essential\n" },
-      { id: "busy", name: "./busy.mjs" },
-    ],
-    { safe: "third-party" },
-  );
+  const { host: running } = await host([{ id: "busy", name: "./busy.mjs" }], { safe: "third-party", builtins: SAFE_BUILTINS });
   const status = running.status();
   assert.equal(byId(status, "store").state, "running");
   assert.equal(byId(status, "reader").state, "running");
@@ -146,13 +144,7 @@ test("safe mode third-party keeps built-in plugins and holds back the rest, sayi
 });
 
 test("safe mode minimal keeps only essential plugins, and their users wait for what is held back", async () => {
-  const { host: running } = await host(
-    [
-      { id: "store", name: "./store.mjs", extra: "  kind: builtin\n" },
-      { id: "reader", name: "./reader.mjs", extra: "  kind: essential\n" },
-    ],
-    { safe: "minimal" },
-  );
+  const { host: running } = await host([], { safe: "minimal", builtins: SAFE_BUILTINS });
   const status = running.status();
   assert.equal(byId(status, "store").state, "safe-mode");
   assert.equal(byId(status, "reader").state, "waiting");

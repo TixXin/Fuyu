@@ -27,15 +27,53 @@ export function pluginId(ctx) {
   return ctx.fiber.name;
 }
 
+function within(dir, file) {
+  const path = relative(dir, file).split(sep).join("/");
+  return !path || path.startsWith("../") || path === ".." || /^[a-zA-Z]:/.test(path) ? null : path;
+}
+
 export class Clients extends Service {
-  constructor(ctx, root) {
+  constructor(ctx, options) {
     super(ctx, "clients");
+    const { root, mounts = [] } = typeof options === "string" ? { root: options } : options;
     this.root = realpathSync(root);
+    this.mounts = mounts.map(({ prefix, dir }) => ({ prefix, dir: real(dir) }));
     this.entries = new Map();
     this.listeners = new Set();
     this.handlers = new Map();
     this.messages = new Set();
     this.next = 0;
+    this.sources = () => [];
+    this.declaredKey = "[]";
+  }
+
+  useSources(sources) {
+    this.sources = sources;
+    return this.ctx.on("internal/status", () => this.recheck());
+  }
+
+  recheck() {
+    const key = JSON.stringify(this.declared().map(({ id, path, version }) => [id, path, version]));
+    if (key === this.declaredKey) return;
+    this.declaredKey = key;
+    this.changed();
+  }
+
+  declared() {
+    return this.sources()
+      .filter((source) => source.active)
+      .flatMap(({ id, clients }) =>
+        clients.flatMap(({ window, file }) => {
+          const path = this.locate(file);
+          let stat;
+          try {
+            stat = statSync(file);
+          } catch {
+            return [];
+          }
+          return path ? [{ id: `${id}#${window}`, plugin: id, window, path, version: `${stat.size}-${Math.round(stat.mtimeMs)}` }] : [];
+        }),
+      );
   }
 
   handle(method, handler) {
@@ -67,10 +105,8 @@ export class Clients extends Service {
   add(window, url) {
     if (!WINDOW.test(window)) throw new TypeError(`${window} is not a window name`);
     const file = real(fileURLToPath(url));
-    const path = relative(this.root, file).split(sep).join("/");
-    if (!path || path.startsWith("../") || path === ".." || /^[a-zA-Z]:/.test(path)) {
-      throw new Error(`the window code at ${file} must be inside the plugin folder ${this.root}`);
-    }
+    const path = this.locate(file);
+    if (!path) throw new Error(`the window code at ${file} must be inside the plugin folder ${this.root}`);
     const stat = statSync(file);
     const plugin = pluginId(this.ctx);
     const id = `${plugin}#${++this.next}`;
@@ -84,8 +120,22 @@ export class Clients extends Service {
     }, "ctx.clients.add()");
   }
 
+  locate(file) {
+    for (const { prefix, dir } of this.mounts) {
+      const path = within(dir, file);
+      if (path) return `${prefix}/${path}`;
+    }
+    const path = within(this.root, file);
+    if (path) return path;
+    for (const { prefix, dir } of this.sources()) {
+      const inner = prefix && within(dir, file);
+      if (inner) return `${prefix}/${inner}`;
+    }
+    return null;
+  }
+
   list(window) {
-    return [...this.entries.values()].filter((entry) => !window || entry.window === window);
+    return [...this.entries.values(), ...this.declared()].filter((entry) => !window || entry.window === window);
   }
 
   watch(listener) {

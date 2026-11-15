@@ -57,6 +57,7 @@ export type PluginSettingSpec = {
 export type PluginInfoItem = {
   label: LocalizedText;
   value: string;
+  hasValue?: boolean;
   copy: boolean;
   secret: boolean;
 };
@@ -227,6 +228,10 @@ export const POWERSHELL_DOWNLOAD_URL = {
 
 export function openPluginHomepage(url: string) {
   return url.startsWith("https://") ? openUrl(url) : Promise.resolve();
+}
+
+export function copyPluginInfo(id: string, index: number) {
+  return invoke<void>("copy_plugin_info", { id, index });
 }
 
 export function setPluginSetting(id: string, key: string, value: unknown) {

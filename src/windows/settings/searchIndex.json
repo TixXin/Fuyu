@@ -411,6 +411,19 @@
       }
     },
     {
+      "page": "behaviorAlerts",
+      "zh-CN": {
+        "group": "休息提醒",
+        "title": "休息提醒",
+        "description": "按间隔在岛上提醒起身、远眺。锁屏或离开 5 分钟以上时不计时，全屏时等退出再提醒"
+      },
+      "en": {
+        "group": "Break reminders",
+        "title": "Break reminders",
+        "description": "Reminds you on the island to get up or look away. Doesn't count while the screen is locked or you've been away 5+ minutes, and waits until you leave full screen"
+      }
+    },
+    {
       "page": "theme",
       "zh-CN": {
         "group": "浅色和深色",
@@ -2017,6 +2030,32 @@
       }
     },
     {
+      "page": "voiceInput",
+      "zh-CN": {
+        "group": "语音输入",
+        "title": "启用语音输入",
+        "description": "按快捷键说话，识别结果显示在岛上，改好后存成待办、追加到每日笔记或复制。"
+      },
+      "en": {
+        "group": "Voice input",
+        "title": "Turn on voice input",
+        "description": "Press the shortcut and speak; the text shows on the island, where you can fix it and save it as a todo, add it to the daily note or copy it."
+      }
+    },
+    {
+      "page": "voiceInput",
+      "zh-CN": {
+        "group": "语音模型",
+        "title": "SenseVoice-Small 模型和识别组件",
+        "description": "还没下载，用之前要在这里下载约 1 MB"
+      },
+      "en": {
+        "group": "Speech model",
+        "title": "SenseVoice-Small model and recognizer",
+        "description": "Not downloaded; download about 1 MB here before using it"
+      }
+    },
+    {
       "page": "messages",
       "zh-CN": {
         "group": "新消息提示",
@@ -2268,6 +2307,28 @@
       "en": {
         "group": "Agents shown",
         "title": "Qwen Code"
+      }
+    },
+    {
+      "page": "agents",
+      "zh-CN": {
+        "group": "显示哪些 Agent",
+        "title": "TRAE"
+      },
+      "en": {
+        "group": "Agents shown",
+        "title": "TRAE"
+      }
+    },
+    {
+      "page": "agents",
+      "zh-CN": {
+        "group": "显示哪些 Agent",
+        "title": "TRAE CN"
+      },
+      "en": {
+        "group": "Agents shown",
+        "title": "TRAE CN"
       }
     },
     {
@@ -2944,6 +3005,28 @@
       "en": {
         "group": "AI Agent status light",
         "title": "Qwen Code"
+      }
+    },
+    {
+      "page": "agentConnect",
+      "zh-CN": {
+        "group": "AI Agent 状态灯",
+        "title": "TRAE"
+      },
+      "en": {
+        "group": "AI Agent status light",
+        "title": "TRAE"
+      }
+    },
+    {
+      "page": "agentConnect",
+      "zh-CN": {
+        "group": "AI Agent 状态灯",
+        "title": "TRAE CN"
+      },
+      "en": {
+        "group": "AI Agent status light",
+        "title": "TRAE CN"
       }
     },
     {

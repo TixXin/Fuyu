@@ -6,6 +6,7 @@ import dshIcon from "../../assets/brands/dsh.png";
 import opencodeIcon from "../../assets/brands/opencode.png";
 import qoderIcon from "../../assets/brands/qoder.png";
 import qwenIcon from "../../assets/brands/qwen.png";
+import traeIcon from "../../assets/brands/trae.png";
 import workbuddyIcon from "../../assets/brands/workbuddy.svg";
 import type { SessionProvider } from "./api";
 import "./AgentProviderIcon.css";
@@ -20,6 +21,8 @@ const PROVIDER_ICONS: Record<SessionProvider, string> = {
   qoder: qoderIcon,
   codebuddy: codebuddyIcon,
   qwen: qwenIcon,
+  trae: traeIcon,
+  traeCn: traeIcon,
 };
 
 export function AgentProviderIcon({ provider, size = 16 }: { provider: SessionProvider; size?: number }) {

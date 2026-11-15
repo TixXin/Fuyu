@@ -14,7 +14,7 @@
 ## 现在怎么做
 
 1. **所有会话都在主工作区、本地 `main` 上工作。** 用户的 `pnpm tauri dev` 也在这里，改动马上就能看到。不开 worktree，不切分支（切分支会冲掉别的会话正在改的文件）。例外只有发版目录 `../Fuyu-release`：主仓库的一个 detached worktree，停在 `origin/main` 上，只用来改版本号和跑 `pnpm release`，这样本地 `main` 上没推的提交和别人没提交的文件都不挡发版、也不会混进去（2026-11-15 起，用户定）。
-2. **只提交自己的文件**：`git add <具体文件>` 或 `git commit -- <文件>`，不用 `git add -A` / `git add .`，别的会话还没提交的改动不要带上。`.githooks/pre-commit` 把关：在 `main` 上不带文件名的 `git commit`（含 `-a`）会被拒绝，合并、cherry-pick、rebase 过程中的提交除外；确实要提交整个暂存区时设 `FUYU_COMMIT_WHOLE_INDEX=1`。两个会话不要同时改同一个文件：认领任务时写 `--scope`，`pnpm tasks conflicts` 能查出和别人声明的范围重叠的文件。
+2. **只提交自己的文件**：`git add <具体文件>` 或 `git commit -- <文件>`，不用 `git add -A` / `git add .`，别的会话还没提交的改动不要带上。`.githooks/pre-commit` 把关：在 `main` 上不带文件名的 `git commit`（含 `-a`）会被拒绝，合并、cherry-pick、rebase 过程中的提交除外；确实要提交整个暂存区时设 `FUYU_COMMIT_WHOLE_INDEX=1`。同一个文件里还有别的会话的改动时用 `pnpm mq:commit-part` 只带自己的那几处（见下面「同一个文件里只提交自己的改动」），不手写 `GIT_INDEX_FILE`。两个会话不要同时改同一个文件：认领任务时写 `--scope`，`pnpm tasks conflicts` 能查出和别人声明的范围重叠的文件。
 3. **攒着提 PR**，不是一个小改动一个 PR。下面任一条满足时 `pnpm mq:land --yes --body <文件>`，不用问用户：
    - 一个任务做完（`pnpm tasks done <编号> --commit "<提交标题>"`，和功能改动在同一个提交里）；
    - 本地没推的提交有 5 个以上，或最早的一个超过 6 小时（`pnpm mq:pending` 会说）；
@@ -46,10 +46,36 @@ land 会推送、开 PR 并开启自动合并，所以要写 `--yes` 才执行�
 4. 合入后，原提交还在本地 `main` 上（不改写历史），`mq:sync` 把 `origin/main` 合进来时两边内容相同，不冲突。之后 `pnpm mq:pending` 和整批 PR 的正文不再列它（按改动内容比对，`git rev-list --cherry-pick`），整批 PR 的 diff 里也没有它；git 历史里会有内容相同的两个提交对象。
 5. pre-push 的检查照常跑，但它看的是工作区和本地 `main` 的整批提交，不是被推上去的那几个；被带上的提交对不对由 PR 的 CI 把关。
 
+### 同一个文件里只提交自己的改动：`pnpm mq:commit-part`
+
+`package.json`、`workflow.md` 这类热点文件里常常同时有两个会话的改动，`git commit -- <文件>` 会把别人的也带上（F44）。
+
+```
+pnpm mq:commit-part --list <文件…>
+pnpm mq:commit-part -m "<标题>" [-F <说明文件>]
+    --take <文件>:<编号,编号…>     只带这几处
+    --match <文件>:<正则>          只带新增或删除的行匹配正则的那几处
+    --as <文件>=<准备好的文件>      两个人的改动挨在一起、分不开时，直接给出要提交的内容
+    -- <整个文件…>                 这些文件整个带上；新增、删除直接写，改名把新旧两个路径都写上
+    [--dry-run]                    只显示会提交什么
+```
+
+1. 先 `--list` 看编号。「一处」是 `git diff -U0` 的一个最小块，两个人的改动隔开一行以上就能分开。编号按这一处增删的内容算，不按行号：列出之后别人在上面加了几行，编号不变；这一处本身变了或没了，命令拒绝并重新列出。
+2. 一次提交里可以混着带：几个整文件加几个文件的一部分，例如 `pnpm tasks done` 挪动的任务文件加热点文件里自己的一处。参数都写在 `--` 前面，`--` 后面的都当成文件（`--dry-run` 除外）。
+3. 一条总的保险：这次提交相对 `HEAD` 增删的每一行，都必须是工作区相对 `HEAD` 增删的行里已有的。`--as` 给的内容如果是照旧版本准备的，会删掉 `HEAD` 里有、工作区里也还在的行，这时拒绝；照 `git show HEAD:<文件>` 重新准备。
+4. 提交在仓库内部完成，工作区不动：私有的临时索引里搭树，`commit-tree` 生成提交，带旧值核对的 `update-ref` 推进分支。搭的过程中 `HEAD` 被别的会话推进了，就照新的 `HEAD` 重来，最多 3 次；自己那几处已经在别人的提交里了就照实说，不重复提交。
+5. 提交后对涉及的路径做 `git reset -q -- <路径>`，共用索引和新的 `HEAD` 一致：整文件是干净的，只带了一部分的文件里别人的改动照旧显示成没暂存的修改。索引被别的 git 进程锁着时重试几次，还不行就打印这条命令让你稍后自己跑，提交本身已经成功。
+6. `commit-tree` 不触发 git 钩子。提交说明先用 `git hook run commit-msg` 过一遍，带 Claude 署名行的照样被拒绝；`pre-commit` 只查「写没写文件名」，这个命令每次都点名了路径。
+
+**不手写 `GIT_INDEX_FILE`**。手写的做法有两个坑：临时索引是照 `read-tree` 那一刻的 `HEAD` 搭的，之后别的会话提交了，用它直接 `git commit` 会把那个提交的改动整个冲回去，没有任何提示；提交后共用索引还停在旧内容，`git status` 显示成一处已暂存的反向改动，`git merge` 也会被它挡住。`pre-commit` 看到自定义的 `GIT_INDEX_FILE` 会打印一句提醒，不拦。
+
+二进制文件、符号链接只能整个带。合并、cherry-pick、rebase 的过程中不能用。
+
 ### 验证
 
 - 想在本机先验一遍：`pnpm verify`（`pnpm check`，改到 `src-tauri/` 或 `plugins/` 时加 `cargo test`；同一棵代码树通过过就不重跑）。land 本身不跑这些，由 PR 上 CI 的 `check` 把关。
 - 多个会话共用一份代码：别的会话改到一半时，`pnpm check` 可能因为它的文件失败。先看失败是不是自己的文件；不是就等一会儿或问对方，不要去改别人的文件。
+- 回归页逐行比对 DOM 快照（`tests/regression/snapshots/`，2026-11-15 起，E36.2.2）：改界面的提交要把 `pnpm test:regression <页面名中的词> --update-snapshots` 更新后的快照一起带上，新加的回归页也要带上它的快照；漏了 CI 的 `regression` 会失败，挡住整批 land。更新前看一眼差异，只该有自己改的那几处。
 - 需要 release 可执行文件时另外跑 `pnpm build:exe`。
 
 `main` 只通过在 GitHub 上合入 PR 移动。`.githooks/pre-push` 拒绝直接推送 `main`；GitHub 的规则集也拒绝（管理员只能在 PR 上绕过），紧急时用 `gh pr merge --admin` 合 PR。`CLAUDE_CODE_MERGE_QUEUE_EMERGENCY_PUSH=1` 只放行本机钩子。
@@ -97,7 +123,7 @@ land 从 git 的 pre-push 钩子里跑检查，环境里带着 `GIT_DIR` 等变�
 
 - **热点文件改完就提交**：`AGENTS.md`、`package.json`、`pnpm-lock.yaml`、`docs/architecture/` 下的 `platforms.md` / `contracts.md` / `data-storage.md` / `overview.md` / `workflow.md`、`src-tauri/Cargo.toml` / `Cargo.lock` / `src/lib.rs` / `capabilities/`、`src/windows/settings/searchIndex.json`、`src/i18n/types.ts`、两份行数和颜色白名单。这些几乎每个功能都会碰，挂着不提交最容易挡住本地 `main` 跟上。改完、能独立成立就单独提交（文档、登记一行命令、注册一个模块都算），不等整个功能做完；列表在 `scripts/tasks/taskDirty.mjs` 的 `HOT_FILES`。
 - **停下就收拾**：做完的提交；做不完的 `pnpm tasks note` 留交接，写清哪些没提交的文件是自己的。不要让改动挂在工作区里没有主人。
-- **暂存区是共用的**：只用 `git commit -- <文件>` 提交自己的文件；`git add` 了别人的文件、或别人暂存的文件被自己带进提交时，马上撤回（`git reset -q -- <文件>` 只动索引，不动工作区）。
+- **暂存区是共用的**：只用 `git commit -- <文件>` 提交自己的文件，文件里混着别人的改动时用 `pnpm mq:commit-part`（它提交后会把共用索引对齐）；`git add` 了别人的文件、或别人暂存的文件被自己带进提交时，马上撤回（`git reset -q -- <文件>` 只动索引，不动工作区）。
 - **清点**：`pnpm tasks dirty` 把没提交的文件按进行中任务的 `--scope` 归组，单独列出热点文件、不在任何人认领范围里的、超过 3 小时没动的（`--quiet-hours <N>` 改）和已经暂存的；`--json` 给脚本用。总会话合入一批之后、或者本地 `main` 跟不上时跑一次，没有主人的去找对应的会话，找不到的问用户。
 
 ## 外部 PR
@@ -126,12 +152,37 @@ land 从 git 的 pre-push 钩子里跑检查，环境里带着 `GIT_DIR` 等变�
 - `pnpm build:exe` 会把正在运行的 exe 改名挪开再写新的，不用让用户关岛屿。
 - `pnpm prune:target` 删 3 天没用的增量缓存、本应用的旧产物，以及 lane 时期留下的 `lane-<N>`、`lane-build`；`verify` 跑完 `cargo test` 后会自动跑一次，`--dry-run` 只看能省多少。
 - **全机器排队**（2026-11-15 起，F40）：同一台机器上同时最多跑 `FUYU_HEAVY_SLOTS` 个重任务（默认逻辑 CPU ÷ 5，10 核的 Mac 是 2 个），其余的排队，每 30 秒打印正在跑的是谁、自己排第几。`pnpm build:exe`、`pnpm verify`、`pnpm test:regression` 自动排队；别的重命令写成 `pnpm heavy [--label <名字>] -- <命令…>`，例如 `pnpm heavy -- cargo test --manifest-path src-tauri/Cargo.toml`。队列在 `~/.cache/fuyu-heavy/`，进程退出（包括被杀）后它占的位置会自动清掉。起因是 20 多个会话同时编译，负载到了 200 多（issue #448）。
+- **同一个构建目录一条道**（2026-11-15 起）：cargo 给每个构建目录加锁，两个任务编同一个目录时后一个只能干等，还白占一个名额。所以 heavy 按构建目录分道：同一道同时只跑一个，排在它后面的同道任务不挡别的道。`build:exe` 是 `target:release`，`verify` 是 `target:agents`；`pnpm heavy -- cargo …` 按 `--target-dir`、`CARGO_TARGET_DIR` 和 `--release` 自动认道（例如 agents 目录的 `cargo test` 是 `target:agents`），别的命令要分道时写 `--lane <名字>`。
 - **钩子**：`scripts/heavy/gate.mjs` 登记在 `.claude/settings.json`，拦下三种命令：没经过排队的 `cargo build/test/check/clippy/run` 和 `tauri build`；把 `CARGO_TARGET_DIR` 设成 `agents`、`debug`、`release` 以外的目录；`cd` 进临时目录里的仓库副本再编译（副本没有 `rust-toolchain.toml`，也用不上缓存，每份都从零编译）。别的会话没提交的改动让检查报错时，在主工作区照样跑，交接里写明哪些失败不是自己造成的。确实要绕过时，用户可以在会话环境里设 `FUYU_HEAVY_GATE=off`。
 - **整批 land 一次只跑一个**：`pnpm mq:land` 在 `.git/fuyu-land.lock` 里记下自己。已经有一个整批 land 在跑时，后来的直接退出（退出码 0），提示它开始前的提交会一起带上去；`--only` 不受影响。
 - **会话数**：每个主 agent 同时最多跑 2 个要编译的子会话；全机器同时改代码的会话控制在 6 个左右，超过就让后面的排队（调研、写文档、只读代码的不算；fuyu-lead skill 里也写了）。编译名额只有 2 个，写代码的会话再多也只是在排队，没提交的文件反而越积越多（F41）。
 - `land-check`、`pnpm verify`、`pnpm build:exe` 以「低于正常」优先级运行，cargo 并行数默认是逻辑 CPU 的一半（`scripts/build-load.mjs`）。Mac 上还用 `taskpolicy -b` 把它们放进后台档（只用能效核、磁盘读写让路），并行数等于能效核个数，编译变慢但前台不卡。环境里已设 `CARGO_BUILD_JOBS` 时以它为准。会话手动跑 `cargo test` / `clippy` 不经过这里，Mac 上用 `taskpolicy -b cargo test …` 跑。
 - Mac 上验证 Rust 改动：`cargo clippy --all-targets -- -D warnings` 和 `cargo test`，再交叉检查 Windows：`cargo clippy --all-targets --target x86_64-pc-windows-gnu -- -D warnings`。
 - Rust 版本固定在 `rust-toolchain.toml`，CI 的 `ci.yml` 写同一个版本，改时一起改。
+
+## 门禁钩子
+
+`scripts/gate/gate.mjs` 是登记在 `.claude/settings.json` 的 PreToolUse 钩子（F42）。它照一张表（`scripts/gate/rules.mjs`），在会话第一次做某类操作前拦一次，提示先读规则文件或加载 skill，重做就放行。只对 Claude Code 生效，Codex、opencode 的会话靠根 `AGENTS.md`。
+
+| 行 | 什么时候拦 | 要求 |
+|---|---|---|
+| `fuyu-agent-harness` | 写各家 AI 代理的接入点文件，或在 `src-tauri/src/agent_status/` 下新建 `.rs` | 加载过这个 skill |
+| `src-rules` | 写 `src/` | 读过 `src/AGENTS.md` |
+| `src-tauri-rules` | 写 `src-tauri/`（不含 `target/`、`gen/`） | 读过 `src-tauri/AGENTS.md` |
+| `fuyu-release` | 跑 `pnpm release`、`release:version`、`release:prebuild`，或直接跑 `scripts/release/` 下的脚本 | 加载过这个 skill |
+| `fuyu-video` | 写 `video/` | 加载过这个 skill |
+| `fuyu-lead` | 一个会话第二次用 `start_session` 按用户要求派出会话 | 加载过这个 skill |
+| `fuyu-task` | `pnpm task:claim`、`pnpm tasks add … --claim` | 加载过这个 skill |
+| `fuyu-skill-writing` | 写 `.claude/skills/` | 加载过这个 skill |
+
+- **拦一次**：按（会话，子代理，规则）各记一个标记文件，在系统临时目录的 `fuyu-gate/<会话>/<main 或子代理 id>/<规则 id>`。第一次碰到某条规则时查一次会话记录：已经满足就记下、放行，没满足就记下、拦这一次。之后不再查，所以上下文压缩后不会重新拦。一次操作碰到几条规则时合成一条提示。
+- **「读过」**：会话记录里有 Read 工具读这份文件，或 Bash / PowerShell 里用 `cat`、`head`、`tail`、`sed -n`、`less`、`more`、`bat`、`nl`、`awk`、`Get-Content` 读它，或它作为规则文件被自动加载。不看读了多少行；`wc`、`ls`、`grep`、`git add` 不算，别的文件里提到它的路径也不算。
+- **子代理**单独算：它自己的记录在 `<主会话记录去掉 .jsonl>/subagents/agent-<id>.jsonl`，主会话读过不等于它读过。
+- **写入怎么认**：Edit、Write、MultiEdit、NotebookEdit 看文件路径。Bash / PowerShell 看写到哪里：重定向和 heredoc、`tee`、`sed -i`、`perl -i`、`mv`、`cp`、`rm`、`git mv`、`git rm`、`git apply` 后面跟的补丁、内联的 python / node（`python3 - <<'PY'`、`node -e`）里的写文件调用、PowerShell 的 `Set-Content`、`Out-File` 这一类。`cd` 和同一条命令里赋的变量会跟着算。跑现成的脚本文件去改、运行时拼出来的路径、`pnpm settings:index` 这类生成命令认不出来。只是在命令里提到某个文件（`--scope` 参数、`grep`、`git log -- <文件>`）不算写入。
+- **skill 还没签入的行不生效**：`.claude/skills/<名字>/SKILL.md` 不在就跳过。被门禁要求的 skill 不能设成只能由用户调用，否则被拦下的会话加载不了。
+- **加一行**：在 `scripts/gate/rules.mjs` 的 `RULES` 里加一项：`id`；`when` 写 `paths`（目录以 `/` 结尾，`except` 排除子目录）、`commands`（如 `"pnpm tasks add --claim"`，按实际执行的命令逐词比对，`--` 开头的是必须带的参数）加可选的 `scripts`（直接运行这个目录下的脚本）、或 `tool`（工具名，`input` 是要对上的参数，`from: 2` 表示从第二次起）三种之一；`require` 写 `{ skill }` 或 `{ read }`；`hint` 是提示的前半句，`{target}` 换成命中的文件或命令。再在 `tests/scripts/gate.test.mjs` 加一条。要拦新的工具时，`.claude/settings.json` 里这个钩子的 `matcher` 也要加上工具名。
+- **关掉**：会话环境里设 `FUYU_GATE=off`。门禁自己出错（读不到输入、写不了标记文件）时一律放行。删掉某个标记文件，那条规则对那个会话会重新查一次。
+- 所有会话的每次工具调用都经过它，改 `scripts/gate/` 先跑 `node --test tests/scripts/gate.test.mjs`，改完马上提交。
 
 ## 开发版和正式版同时开
 

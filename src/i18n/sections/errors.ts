@@ -215,7 +215,17 @@ export type ErrorCode =
   | "mail.tooManyNames"
   | "mail.tooManyRecipients"
   | "mail.unavailable"
-  | "mail.update";
+  | "mail.update"
+  | "voiceInput.noDataDir"
+  | "voiceInput.deleteFailed"
+  | "voiceInput.downloadBusy"
+  | "voiceInput.downloadCancelled"
+  | "voiceInput.downloadFailed"
+  | "voiceInput.unpackFailed"
+  | "voiceInput.modelBroken"
+  | "voiceInput.micFailed"
+  | "voiceInput.micDenied"
+  | "voiceInput.noModel";
 
 export type ErrorsText = {
   withDetail: (text: string, detail: string) => string;
@@ -437,6 +447,16 @@ export const zhCN: ErrorsText = {
     "mail.tooManyRecipients": ({ max }) => `一封邮件最多 ${max} 个收件人。`,
     "mail.unavailable": "邮件已移除或暂不可用，请刷新收件箱。",
     "mail.update": "无法更新邮箱连接。",
+    "voiceInput.noDataDir": "找不到岛屿的数据文件夹。",
+    "voiceInput.deleteFailed": "删不掉语音模型。",
+    "voiceInput.downloadBusy": "语音模型正在下载。",
+    "voiceInput.downloadCancelled": "已取消下载。",
+    "voiceInput.downloadFailed": "语音模型下载失败，GitHub 和国内镜像都没连上；检查网络后再试。",
+    "voiceInput.unpackFailed": "语音模型解压失败；删掉后重新下载。",
+    "voiceInput.modelBroken": "语音模型加载失败；删掉后重新下载。",
+    "voiceInput.micFailed": "用不了麦克风；检查有没有接麦克风，以及系统隐私设置里是否允许浮屿使用麦克风。",
+    "voiceInput.micDenied": "浮屿没有麦克风权限；在系统设置 → 隐私与安全性 → 麦克风里打开。",
+    "voiceInput.noModel": "先在设置 → 语音输入里下载语音模型。",
   },
 };
 
@@ -655,5 +675,15 @@ export const en: ErrorsText = {
     "mail.tooManyRecipients": ({ max }) => `At most ${max} recipients in one mail.`,
     "mail.unavailable": "The mail was removed or is not available; refresh the inbox.",
     "mail.update": "Could not update the mail connection.",
+    "voiceInput.noDataDir": "Could not find the island's data folder.",
+    "voiceInput.deleteFailed": "Could not delete the speech model.",
+    "voiceInput.downloadBusy": "The speech model is already downloading.",
+    "voiceInput.downloadCancelled": "The download was cancelled.",
+    "voiceInput.downloadFailed": "Could not download the speech model from GitHub or the mirrors; check the network and try again.",
+    "voiceInput.unpackFailed": "Could not unpack the speech model; delete it and download it again.",
+    "voiceInput.modelBroken": "The speech model could not be loaded; delete it and download it again.",
+    "voiceInput.micFailed": "Could not use the microphone; check that one is connected and that Fuyu may use it in the system privacy settings.",
+    "voiceInput.micDenied": "Fuyu may not use the microphone; allow it in System Settings → Privacy & Security → Microphone.",
+    "voiceInput.noModel": "Download the speech model in Settings → Voice input first.",
   },
 };

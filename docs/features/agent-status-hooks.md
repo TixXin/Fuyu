@@ -1,6 +1,6 @@
 # AI Agent Status Hooks
 
-Fuyu can mirror Codex, Claude Code, WorkBuddy, Antigravity and DeepSeek Harness task activity on the collapsed island status light (opencode has no status light; its sessions only count on the Agent page, see [opencode](#opencode)):
+Fuyu can mirror Codex, Claude Code, WorkBuddy, Antigravity, DeepSeek Harness, Qoder, CodeBuddy Code and Qwen Code task activity on the collapsed island status light (opencode has no status light; its sessions only count on the Agent page, see [opencode](#opencode)):
 
 - running task: blue
 - completed, idle, or no task: green
@@ -31,7 +31,7 @@ It then updates:
 %USERPROFILE%\.claude\settings.json
 ```
 
-When WorkBuddy is installed (`%USERPROFILE%\.workbuddy` exists), it also updates `%USERPROFILE%\.workbuddy\settings.json`; see [WorkBuddy](#workbuddy). When Antigravity is installed, it also writes `%USERPROFILE%\.gemini\config\hooks.json`; see [Antigravity](#antigravity). When DeepSeek Harness is installed, it writes `fuyu-dsh-hooks.json` next to the scripts and tells you what to add to DSH's profile; see [DeepSeek Harness](#deepseek-harness). When opencode is installed, it writes a plugin for opencode 1.x into opencode's config folder; see [opencode](#opencode).
+When WorkBuddy is installed (`%USERPROFILE%\.workbuddy` or `%USERPROFILE%\.workbuddy-ai` exists), it also updates `settings.json` in each of them; see [WorkBuddy](#workbuddy). When Qoder, CodeBuddy Code or Qwen Code is installed, it also updates their `settings.json`; see [Qoder, CodeBuddy Code and Qwen Code](#qoder-codebuddy-code-and-qwen-code). When Antigravity is installed, it also writes `%USERPROFILE%\.gemini\config\hooks.json`; see [Antigravity](#antigravity). When DeepSeek Harness is installed, it writes `fuyu-dsh-hooks.json` next to the scripts and tells you what to add to DSH's profile; see [DeepSeek Harness](#deepseek-harness). When opencode is installed, it writes a plugin for opencode 1.x into opencode's config folder; see [opencode](#opencode).
 
 The status light card in Settings has one row per agent with hooks, showing whether its hooks are current. An agent that is not on this computer (`absent`) gets no row and never counts as outdated. When the app moves to its new name (FocuSD Island → Fuyu), it reinstalls the hooks of every agent that had them, remote ones included.
 
@@ -107,7 +107,7 @@ Each session on the Agent page can show where it runs, as the program's own icon
 
 ## Session List Settings
 
-**Settings → AI Agent** also sets, in `fuyu-settings`: how far back the list goes (`agentSessionHours`: 1, 2 (default), 6 or 24 hours, passed to `list_agent_sessions` as `windowHours`); which agents are shown (**显示哪些 Agent**: one switch with its icon for each of Codex, Claude Code, WorkBuddy, Antigravity, DeepSeek Harness and opencode; stored as `agentHiddenProviders`, the ids of the hidden agents, so an agent added later shows by default; the older `agentShowClaudeCode` / `agentShowCodex` settings are carried over; hidden agents also leave the island's running count); only sessions in progress (`agentHideFinished`); and, per card, the running time (`agentShowElapsed`) and the model (`agentShowModel`).
+**Settings → AI Agent** also sets, in `fuyu-settings`: how far back the list goes (`agentSessionHours`: 1, 2 (default), 6 or 24 hours, passed to `list_agent_sessions` as `windowHours`); which agents are shown (**显示哪些 Agent**: one switch with its icon for each of Codex, Claude Code, WorkBuddy, Antigravity, DeepSeek Harness, opencode, Qoder, CodeBuddy and Qwen Code; stored as `agentHiddenProviders`, the ids of the hidden agents, so an agent added later shows by default; the older `agentShowClaudeCode` / `agentShowCodex` settings are carried over; hidden agents also leave the island's running count); only sessions in progress (`agentHideFinished`); and, per card, the running time (`agentShowElapsed`) and the model (`agentShowModel`).
 
 **Running time** counts from the newest typed prompt: Claude Code's last real `user` record, Codex's last `user_message` / `task_started` (`turnStartedAt` in each summary). A session in progress shows "已运行 3 分 20 秒", ticking every second in its own leaf component; a finished one shows "用时 …" up to its last write. When a long turn pushes the prompt out of the 256 KiB tail read, the start found earlier is kept; if it was never seen, no time is shown.
 
@@ -151,10 +151,13 @@ What gets installed is the extension as it is in `packages/vscode-extension/` (`
 |---|---|
 | Claude Code | `$CLAUDE_CONFIG_DIR/CLAUDE.md` (default `~/.claude`) |
 | Codex | `$CODEX_HOME/AGENTS.md` (default `~/.codex`) |
-| WorkBuddy | `$WORKBUDDY_CONFIG_DIR/CODEBUDDY.md` (default `~/.workbuddy`; from WorkBuddy's source, not tested) |
+| WorkBuddy | `CODEBUDDY.md` in `~/.workbuddy` and `~/.workbuddy-ai`, whichever exist (only `$WORKBUDDY_CONFIG_DIR` when set; from WorkBuddy's source, not tested) |
 | Antigravity | `~/.gemini/GEMINI.md` (from Antigravity's docs, not tested; Gemini CLI reads it too) |
 | DeepSeek Harness | `AGENTS.md` in each DSH folder the island reads |
 | opencode | `$XDG_CONFIG_HOME/opencode/AGENTS.md` (default `~/.config/opencode`) |
+| Qoder | `AGENTS.md` in `~/.qoder` and `~/.qoder-cn` |
+| CodeBuddy Code | `~/.codebuddy/CODEBUDDY.md` |
+| Qwen Code | `~/.qwen/QWEN.md` |
 
 The rest of each file is kept. A file that is a symlink is written through to its target; when several agents point at the same file it gets one section; a dangling link is reported as an error on the settings page and left alone. Switching the marker off removes the section. Switching it on or off, and **安装/修复**, delete the rules file earlier versions wrote (`~/.claude/rules/fuyu-reply-marker.md`). Each agent's reader looks for the character at the end of the last reply: Claude Code, Codex and WorkBuddy in their transcripts, Antigravity in the transcript its hooks point to, DSH in the `turnOutline` response, opencode in the database. Windows needs Developer Mode to create symlinks; following one has not been tested there.
 
@@ -230,15 +233,15 @@ Without the tunnel the requests fail at once and nothing else changes. A remote 
 
 ## WorkBuddy
 
-WorkBuddy (Tencent's desktop agent, the Chinese edition that keeps its data in `~/.workbuddy`) is listed on the Agent page with its own icon (task B23.2, issue #155). The international edition, WorkBuddy AI (`~/.workbuddy-ai`), is a different product and is not read. What is known about both, with sources, is in [agent-harnesses.md](../research/agent-harnesses.md).
+WorkBuddy (Tencent's desktop agent) is listed on the Agent page with its own icon (task B23.2, issue #155). Both editions are read and shown as one agent (B49): the Chinese edition keeps its data in `~/.workbuddy`, WorkBuddy AI in `~/.workbuddy-ai` (the app sets `WORKBUDDY_CONFIG_DIR` to it when it starts its CLI), and the session files have the same format. What is known about both, with sources, is in [agent-harnesses.md](../research/agent-harnesses.md).
 
-- **Sessions**: `~/.workbuddy/projects/<encoded folder>/<session id>.jsonl`, read like Claude Code's transcripts (first lines and last 256 KiB, same session window). The title is the newest `ai-title` record, otherwise the first `<user_query>` of the session, otherwise the folder; the model is `providerData.requestModelName`. A turn is running from a user message, a `function_call`, a `function_call_result` or a `reasoning` record, and done at an assistant message; an assistant message with `status: "incomplete"` fails the turn, unless its error is `Interrupted by user`.
-- **Quit sessions**: a session counts as quit when it is not in `~/.workbuddy/sessions/<pid>.json` (`pid`, `sessionId`, like `~/.claude/sessions`) and the app is not running: `WorkBuddy.exe` on Windows; on macOS the app with bundle id `com.workbuddy.workbuddy-ai`, found through LaunchServices, counts as running while a process runs an executable under its `Contents/MacOS/` (its main executable is a generic `Electron`, so the name says nothing; B37). After quitting, it takes a few seconds to half a minute to count as gone. 5.3.8 listed each session there; 5.9.3 lists only its host processes (`interactive-<pid>`, `prewarm-…`), so while the app runs its sessions stay listed.
-- **Hooks**: **安装/修复** adds Fuyu's hooks to `~/.workbuddy/settings.json` (Claude Code's format; each a single `command` string, since WorkBuddy's support for `args` is unknown): `UserPromptSubmit` and `PreToolUse` (`*`) mark the turn running, `Stop` marks it completed, and two `PermissionRequest` hooks save the input in `agent-notifications\workbuddy-*.json` (waiting on you) and run the approval script. The rest of the file is kept, and nothing is written unless `~/.workbuddy` already exists. WorkBuddy reads the file only at start, so quit it completely and reopen it after installing.
+- **Sessions**: `projects/<encoded folder>/<session id>.jsonl` in both folders, read like Claude Code's transcripts (first lines and last 256 KiB, same session window). The title is the newest `ai-title` record, otherwise the first `<user_query>` of the session, otherwise the folder; the model is `providerData.requestModelName`. A turn is running from a user message, a `function_call`, a `function_call_result` or a `reasoning` record, and done at an assistant message; an assistant message with `status: "incomplete"` fails the turn, unless its error is `Interrupted by user`.
+- **Quit sessions**: a session counts as quit when it is not in `sessions/<pid>.json` of either folder (`pid`, `sessionId`, like `~/.claude/sessions`) and no edition is running: `WorkBuddy.exe` or `WorkBuddyAI.exe` on Windows; on macOS the app with bundle id `com.workbuddy.workbuddy-ai`, found through LaunchServices, counts as running while a process runs an executable under its `Contents/MacOS/` (its main executable is a generic `Electron`, so the name says nothing; B37). After quitting, it takes a few seconds to half a minute to count as gone. 5.3.8 listed each session there; 5.9.3 lists only its host processes (`interactive-<pid>`, `prewarm-…`), so while the app runs its sessions stay listed. With both editions installed and only one running, the other's sessions are not marked quit either. The Chinese edition's Mac bundle id is not known, so on macOS only WorkBuddy AI is recognised.
+- **Hooks**: **安装/修复** adds Fuyu's hooks to `settings.json` in each folder that exists (Claude Code's format; each a single `command` string, since WorkBuddy's support for `args` is unknown): `UserPromptSubmit` and `PreToolUse` (`*`) mark the turn running, `Stop` marks it completed, and two `PermissionRequest` hooks save the input in `agent-notifications\workbuddy-*.json` (waiting on you) and run the approval script. The rest of the file is kept, and nothing is written to a folder that does not exist. The hook status is the worse of the two folders. WorkBuddy reads the file only at start, so quit it completely and reopen it after installing.
 - **Status light**: WorkBuddy has its own row in the status light card and lights the island running / completed like Claude Code.
 - **Waiting on you**: from the saved `PermissionRequest` input, as for Claude Code.
 - **Approving on the island**: with approvals on, the approval script posts to `/workbuddy/permission-request` and the island answers allow or deny in Claude Code's `hookSpecificOutput.decision` format. With approvals off, the prompt stays in WorkBuddy.
-- **Clicking a session** brings up the WorkBuddy window (`WorkBuddy.exe`).
+- **Clicking a session** brings up the window of the edition that runs (`WorkBuddy.exe` / `WorkBuddyAI.exe` on Windows, `WorkBuddy AI` on macOS).
 - Not done: usage (waits for plugin platform v3, #170), SSH (WorkBuddy has only a desktop app, no CLI or server edition).
 
 Only the session format was checked against real files (WorkBuddy 5.3.8 and 5.9.3, 2026-11-13). The hook path, the events, the `cmd.exe /d /s /c` command form and whether WorkBuddy accepts Claude Code's approval answer come from a community test and WorkBuddy's source, not its documentation (which names `~/.codebuddy/settings.json`); none of the hooks has been run with WorkBuddy yet (#179).
@@ -287,9 +290,23 @@ opencode sessions are listed on the Agent page with opencode's icon (task B30, i
 - **Clicking a session** brings up the OpenCode desktop window when it runs, otherwise looks for a terminal by folder and title. It cannot open a specific session.
 - Not done: waiting and approvals for `opencode --standalone` (2.x: its private server's password is only in the child process's `OPENCODE_PASSWORD` and its address only on the pipe to the TUI, and it writes no `service.json`; a 2.x server plugin would be the way, if ever), answering questions, usage (only OpenCode Go subscriptions have quota windows), SSH, cc-connect.
 
+## Qoder, CodeBuddy Code and Qwen Code
+
+These three CLIs copy Claude Code's hooks and session folders, so the island reads them through one shared layer (`claude_compat.rs`, B48); each has its own icon and switch on the Agent page. None has been run with the island yet (#179).
+
+| | Qoder (and Qoder CN) | CodeBuddy Code | Qwen Code |
+|---|---|---|---|
+| Folder | `~/.qoder` (`QODER_CONFIG_DIR`) and `~/.qoder-cn` (`QODERCN_CONFIG_DIR`), both handled | `~/.codebuddy` (`CODEBUDDY_CONFIG_DIR`) | `~/.qwen` (`QWEN_HOME`) |
+| Sessions | `projects/<project>/<id>.jsonl`, Claude Code's format; title from `<id>-session.json` next to it; `agent-*.jsonl` (subagents) skipped | `projects/<project>/<id>.jsonl`, each record wrapped in `{type, uuid, timestamp, payload}` | `projects/<project>/chats/<id>.jsonl`, Gemini-style `parts`; title from the `system` / `custom_title` record (manual or auto) |
+| Hooks | `settings.json`: `UserPromptSubmit`, `PreToolUse`, `Stop`, `StopFailure`, `PermissionRequest` | same | same (a timeout of 1000 or more counts as milliseconds; the island's 150 seconds is unaffected) |
+| Waiting on you | saved `PermissionRequest` input | saved `Notification` input with matcher `permission_prompt` (its auto mode also sends `PermissionRequest` for tools it allows itself) | saved `PermissionRequest` input |
+| Approving on the island | `/qoder/permission-request`, answered in `hookSpecificOutput.decision` | `/codebuddy/permission-request` | `/qwen/permission-request` |
+
+Each has its own row in the status light card (`agent-<id>-running.flag`). Clicking a session looks for a terminal by folder and title. Not done: usage, SSH (all three have Linux CLIs), cc-connect.
+
 ## Other Agents
 
-Tools other than the six agents above can report their status too, with no Fuyu release needed: either from a plugin with the `agent-status:write` permission (`agentStatus.report`), or over the local API (`PUT /v1/agent-status/{source}`). These reports are kept in memory only and appear in the snapshot's `others` list. They light the island and name their session in the same way as the built-in agents, using a robot icon instead of a brand icon. See [local-api.md](local-api.md#ai-agent-状态) and [plugins/README.md](../plugins/README.md).
+Tools other than the agents above can report their status too, with no Fuyu release needed: either from a plugin with the `agent-status:write` permission (`agentStatus.report`), or over the local API (`PUT /v1/agent-status/{source}`). These reports are kept in memory only and appear in the snapshot's `others` list. They light the island and name their session in the same way as the built-in agents, using a robot icon instead of a brand icon. See [local-api.md](local-api.md#ai-agent-状态) and [plugins/README.md](../plugins/README.md).
 
 ## Manual Smoke Test
 

@@ -1,0 +1,10 @@
+[package]
+name = "sherpa-runtime"
+version = "0.0.0"
+edition = "2021"
+license = "MIT"
+description = "Loads the sherpa-onnx 2.0.1 C API from a downloaded folder at run time and recognizes speech with SenseVoice"
+publish = false
+
+[dependencies]
+libloading = "0.8"

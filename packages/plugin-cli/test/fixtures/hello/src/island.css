@@ -1,0 +1,24 @@
+.fuyu-hello {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 4px 8px;
+  padding: 4px 8px;
+  border-radius: var(--fuyu-plugin-radius);
+  font: 12px ui-monospace, monospace;
+  color: var(--fuyu-plugin-text-secondary);
+  background: var(--fuyu-plugin-surface);
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.fuyu-hello__greeting {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fuyu-hello__count {
+  flex-shrink: 0;
+  color: var(--fuyu-plugin-text-muted);
+}

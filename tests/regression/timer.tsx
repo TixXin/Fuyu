@@ -1,5 +1,6 @@
 import { act, StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import { emit } from "@tauri-apps/api/event";
 import { mockIPC, mockWindows } from "@tauri-apps/api/mocks";
 import "../../src/styles/tokens.css";
 import { I18nProvider } from "../../src/i18n";
@@ -7,21 +8,34 @@ import { configureTimers, TIMERS_KEY, useTimers } from "../../src/features/timer
 import { TimerPanel } from "../../src/features/timer/TimerPanel";
 import { TimerChip } from "../../src/features/timer/TimerChip";
 import { TimerNotice, TimerNoticeActions } from "../../src/features/timer/TimerNotice";
+import { BreakRemindersGroup } from "../../src/features/timer/BreakRemindersGroup";
+import { ReminderNotice, ReminderNoticeActions } from "../../src/features/timer/ReminderNotice";
+import { pushIslandReminder } from "../../src/features/timer/reminders";
+import { BREAK_REMINDERS_KEY } from "../../src/features/timer/storage";
+import { useIslandReminder } from "../../src/features/timer/useIslandReminder";
 
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
-mockIPC(() => null, { shouldMockEvents: true });
+localStorage.removeItem(BREAK_REMINDERS_KEY);
+mockIPC((command) => (command === "get_foreground_fullscreen" ? { active: false, onIslandMonitor: false } : null), { shouldMockEvents: true });
 mockWindows("main");
 
 function Harness() {
   const ringing = useTimers().timers.filter((timer) => timer.alerted);
+  const reminder = useIslandReminder();
   return (
     <div style={{ width: 380, display: "grid", gap: 10, background: "var(--island-background-color, #000)", padding: 12 }}>
       <div className="bar" style={{ display: "flex", alignItems: "center", gap: 8, height: 38, padding: "0 18px" }}>
         {ringing.length > 0 && <><TimerNotice ringing={ringing} /><TimerNoticeActions /></>}
         <TimerChip paused={false} />
       </div>
+      <div className="reminder-bar" style={{ display: "flex", alignItems: "center", gap: 8, height: 38, padding: "0 18px" }}>
+        {reminder && <><ReminderNotice reminder={reminder} /><ReminderNoticeActions reminder={reminder} /></>}
+      </div>
       <div style={{ height: 260, display: "flex" }}>
         <TimerPanel isOpen />
+      </div>
+      <div className="settings-harness" style={{ width: 360 }}>
+        <BreakRemindersGroup />
       </div>
     </div>
   );
@@ -95,12 +109,48 @@ async function runChecks() {
     await click(button("再加 5 分钟", document.querySelector<HTMLElement>(".bar")!));
     check(!document.querySelector(".timer-notice") && rows().some((row) => row.textContent?.includes("05:00")), "Five more minutes takes the alert away and starts it again");
 
+    await checkBreakReminders();
+
     results.textContent = `${messages.join("\n")}\n\n全部 ${messages.length} 项检查通过。`;
     results.dataset.result = "passed";
   } catch (error) {
     results.textContent = `${messages.join("\n")}\nFAIL ${String(error)}`;
     results.dataset.result = "failed";
   }
+}
+
+async function checkBreakReminders() {
+  const group = document.querySelector<HTMLElement>(".settings-harness")!;
+  const reminderRows = () => [...group.querySelectorAll<HTMLElement>(".break-reminder-row")];
+  const toggle = group.querySelector<HTMLInputElement>("input[role=switch]")!;
+  check(!toggle.checked && reminderRows().length === 0, "Break reminders are off by default and list nothing");
+  await click(toggle);
+  const names = reminderRows().map((row) => row.querySelector<HTMLInputElement>(".break-reminder-row__name")!.placeholder);
+  const minutes = reminderRows().map((row) => row.querySelector<HTMLInputElement>(".break-reminder-row__number")!.value);
+  check(names.join() === "久坐,护眼" && minutes.join() === "60,20", `Turned on, they start with sitting every 60 and eyes every 20 minutes (${names} ${minutes})`);
+  await click([...group.querySelectorAll<HTMLButtonElement>("button")].find((entry) => entry.textContent?.includes("添加提醒")) ?? null);
+  check(reminderRows().length === 3, "Add reminder adds a third one");
+  await click(button("换个图标", reminderRows()[2]));
+  await click(button("删除这项提醒", reminderRows()[0]));
+  const stored = JSON.parse(localStorage.getItem(BREAK_REMINDERS_KEY) ?? "{}") as { enabled: boolean; items: { id: string; icon: string }[] };
+  check(stored.enabled && stored.items.map((item) => `${item.id}:${item.icon}`).join() === "eyes:eye,custom-3:stand", `Changes are saved in fuyu-break-reminders (${JSON.stringify(stored.items)})`);
+
+  const settled: string[] = [];
+  await act(async () => {
+    pushIslandReminder({ id: "eyes", source: "test", icon: "eye", title: "护眼", detail: "看看远处", onSnooze: () => settled.push("snooze"), onDismiss: () => settled.push("skip") });
+    pushIslandReminder({ id: "todo", source: "test", icon: "flag", title: "交周报", snoozable: false });
+  });
+  const reminderBar = document.querySelector<HTMLElement>(".reminder-bar")!;
+  check(text(".reminder-notice") === "护眼 · 看看远处 · 还有 1 条", `A due reminder shows on the island with the rest counted (${text(".reminder-notice")})`);
+  await act(async () => { await emit("foreground-fullscreen-changed", { active: true, onIslandMonitor: true }); });
+  check(!document.querySelector(".reminder-notice"), "In full screen the reminder waits");
+  await act(async () => { await emit("foreground-fullscreen-changed", { active: false, onIslandMonitor: false }); });
+  check(text(".reminder-notice").startsWith("护眼"), "…and shows again after leaving full screen");
+  await click(button("5 分钟后再提醒", reminderBar));
+  check(settled.join() === "snooze" && text(".reminder-notice") === "交周报", "Snooze hands the reminder back to its owner and shows the next one");
+  check(!button("5 分钟后再提醒", reminderBar) && button("跳过", reminderBar), "A reminder that can't be snoozed only offers skip");
+  await click(button("跳过", reminderBar));
+  check(!document.querySelector(".reminder-notice"), "Skip clears it");
 }
 
 void runChecks();

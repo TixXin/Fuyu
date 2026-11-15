@@ -199,3 +199,13 @@ fn a_wrong_password_on_the_query_is_not_retried() {
     assert_eq!(run(calendar_events(&mock, &url(calendar), from, to)).unwrap_err().code(), "calendar.login");
     assert_eq!(mock.sent().len(), 1);
 }
+
+#[test]
+fn a_failed_request_never_shows_the_address() {
+    let account = Account { url: "https://someone:pa55word@127.0.0.1:1/dav/private-s3cr3t/", username: "someone", password: "pa55word" };
+    let (from, to) = window();
+    let error = run(fetch(&account, from, to)).unwrap_err();
+    assert_eq!(error.code(), "calendar.unreachable");
+    let shown = serde_json::to_string(&error).unwrap() + &error.to_string();
+    assert!(!shown.contains("s3cr3t") && !shown.contains("pa55word") && !shown.contains("/dav/"), "{shown}");
+}

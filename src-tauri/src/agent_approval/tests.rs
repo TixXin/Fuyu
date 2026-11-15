@@ -524,6 +524,18 @@ fn new_agents_have_their_own_routes_and_answers() {
 
     let workbuddy: Value = serde_json::from_str(&permission_response(Agent::Workbuddy, Some(Decision::Allow), None, None)).unwrap();
     assert_eq!(workbuddy["hookSpecificOutput"]["decision"]["behavior"], "allow");
+    for (agent, id) in [(Agent::Trae, "trae"), (Agent::TraeCn, "traeCn")] {
+        assert_eq!(route(&format!("/{id}/pre-tool-use")), Some((agent, Kind::Permission)));
+        assert_eq!(serde_json::to_value(agent).unwrap(), json!(id));
+        assert!(agent.lacks_waiting_event());
+        let answer = |decision| serde_json::from_str::<Value>(&permission_response(agent, decision, Some(" 不行 "), None)).unwrap();
+        assert_eq!(answer(Some(Decision::Allow))["hookSpecificOutput"]["permissionDecision"], "allow");
+        let denied = answer(Some(Decision::Deny));
+        assert_eq!(denied["hookSpecificOutput"]["permissionDecision"], "deny");
+        assert_eq!(denied["hookSpecificOutput"]["permissionDecisionReason"], "不行");
+        assert_eq!(answer(Some(Decision::Terminal))["hookSpecificOutput"]["permissionDecision"], "ask");
+        assert_eq!(answer(None), json!({}));
+    }
     for (agent, id) in [(Agent::Qoder, "qoder"), (Agent::Codebuddy, "codebuddy"), (Agent::Qwen, "qwen")] {
         assert_eq!(route(&format!("/{id}/permission-request")), Some((agent, Kind::Permission)));
         assert_eq!(serde_json::to_value(agent).unwrap(), json!(id));

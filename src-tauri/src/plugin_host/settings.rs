@@ -1,4 +1,4 @@
-use serde::{Deserialize, Serialize};
+use serde::{ser::SerializeStruct, Deserialize, Serialize, Serializer};
 use serde_json::{Map, Value};
 
 use super::manifest::LocalizedText;
@@ -121,7 +121,7 @@ pub(super) fn resolve(specs: &[SettingSpec], stored: &Map<String, Value>) -> Map
         .collect()
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 pub struct InfoItem {
     label: LocalizedText,
     value: String,
@@ -134,6 +134,26 @@ pub struct InfoItem {
 impl InfoItem {
     pub(super) fn new(label: LocalizedText, value: String, copy: bool, secret: bool) -> Self {
         Self { label, value, copy, secret }
+    }
+
+    pub(super) fn copyable_value(&self) -> Option<&str> {
+        self.copy.then_some(self.value.as_str())
+    }
+
+    pub(super) fn is_secret(&self) -> bool {
+        self.secret
+    }
+}
+
+impl Serialize for InfoItem {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        let mut item = serializer.serialize_struct("InfoItem", 5)?;
+        item.serialize_field("label", &self.label)?;
+        item.serialize_field("value", if self.secret { "" } else { self.value.as_str() })?;
+        item.serialize_field("hasValue", &!self.value.is_empty())?;
+        item.serialize_field("copy", &self.copy)?;
+        item.serialize_field("secret", &self.secret)?;
+        item.end()
     }
 }
 

@@ -31,6 +31,7 @@ import { SETTINGS_FOCUS_STORAGE_KEY, takeFocusRequest } from "./storage";
 import { showSettingsWindow } from "./api";
 import { TodosSettingsPage } from "./TodosSettingsPage";
 import { TranslationSettingsPage } from "./TranslationSettingsPage";
+import { VoiceInputSettingsPage } from "./VoiceInputSettingsPage";
 import { DEFAULT_SETTINGS, isSameSettings, withLayoutFrom, withThemeFrom } from "../../features/appearance/settings";
 import { STORAGE_KEY, loadSettings, saveSettings } from "../../features/appearance/storage";
 import { useWindowAccent } from "../../features/appearance/useWindowAccent";
@@ -88,6 +89,7 @@ export function SettingsWindow() {
     if (section === "updates") setCategory("about");
     if (section === "agentConnect") setCategory("agentConnect");
     if (section === "general") setCategory("general");
+    if (section === "voiceInput") setCategory("voiceInput");
   }, [focusSavePath]);
 
   useEffect(() => {
@@ -229,6 +231,7 @@ export function SettingsWindow() {
         {(page === "music" || page === "musicLyrics" || page === "musicLyricsStyle") && <MusicSettingsPage tab={page} settings={settings} onSettingsChange={setSettings} />}
         {page === "shelf" && <ShelfSettingsPage settings={settings} onSettingsChange={setSettings} />}
         {(page === "screenshot" || page === "screenshotRecord") && <ScreenshotSettingsPage tab={page} settings={settings} onSettingsChange={setSettings} onOpenShortcuts={openShortcuts} />}
+        {page === "voiceInput" && <VoiceInputSettingsPage settings={settings} />}
         {page === "calendar" && <CalendarSettingsPage settings={settings} onSettingsChange={setSettings} />}
         {page === "agents" && <AgentSettingsPage settings={settings} onSettingsChange={setSettings} onOpenConnect={() => setCategory("agentConnect")} />}
         {page === "agentRemote" && <AgentRemoteHostsSettings />}

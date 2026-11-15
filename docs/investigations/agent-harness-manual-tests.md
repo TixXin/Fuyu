@@ -1,6 +1,6 @@
 # Agent 适配真机实测清单
 
-#179（协作者 ShengLin1001 提的）和 2026-11-15 这一轮 Agent 适配（B26、B27、B28、B30、B32、B33、B44，以及 B34–B37、B46）里只写了代码和单元测试、没在真机上跑过的项目，合成这一份，按要在哪台机器上测分组。任务是 B47。
+#179（协作者 ShengLin1001 提的）和 2026-11-15 这一轮 Agent 适配（B26、B27、B28、B30、B32、B33、B44，以及 B34–B37、B46、B48、B49）里只写了代码和单元测试、没在真机上跑过的项目，合成这一份，按要在哪台机器上测分组。任务是 B47。
 
 怎么用：
 - 测过一项就勾掉，后面写日期、版本和结果；测出问题另开 issue，链接写在那一项后面。
@@ -61,12 +61,28 @@
 
 ### WorkBuddy
 
-- [ ] macOS 上开着时会话正常，关掉后变「已退出」（B37）。按 bundle id 认应用已单独测过（2026-11-15，WorkBuddy AI 5.8.4：没开 false、开着 true、退出后约 30 秒变 false）；岛上整条链路没测，这台 Mac 的 WorkBuddy AI 会话在 `~/.workbuddy-ai/projects`，岛能列出来以后再测
+- [x] macOS 上开着时会话正常，关掉后变「已退出」（B37、B49）。2026-11-15，WorkBuddy AI 5.8.4：`~/.workbuddy-ai` 里的会话列出来，标题、模型对；没开时已退出，开着时正常，退出约 35 秒后又变已退出
+- [ ] WorkBuddy AI 发一轮对话：会话变运行中，回复完变完成（B49）
+- [ ] 「安装/修复」后 `~/.workbuddy-ai/settings.json` 里有岛的钩子；彻底退出再开 WorkBuddy AI，发一句话时状态灯卡片里 WorkBuddy 亮运行中（B49）
+- [ ] 打开回复标记：`~/.workbuddy-ai/CODEBUDDY.md` 末尾多一段（B49）
+- [ ] 点 WorkBuddy AI 的会话：切到 WorkBuddy AI 窗口（B49）
 
 ### opencode（本机没装，装上后测）
 
 - [ ] 同下面 Windows 一节的 1、3、4（B30）
 - [ ] 同下面 Windows 一节 opencode 1.x 插件的各项，Windows 专有的那项除外（B34）
+
+### Qoder、CodeBuddy Code、Qwen Code（B48，本机没装，装上后测）
+
+装法：`npm i -g @qoder-ai/qodercli`、`npm i -g @tencent-ai/codebuddy-code`、`npm i -g @qwen-code/qwen-code`。每家都测：
+
+- [ ] 「安装/修复」后状态灯卡片里出现这一家、状态是已安装；`~/.<家>/settings.json` 的 hooks 里有 UserPromptSubmit、PreToolUse、Stop、StopFailure、PermissionRequest（CodeBuddy 还有 Notification），原有设置和钩子没被动（B48）
+- [ ] Qoder：只装国际版时只写 `~/.qoder`；装了 CN 版（或手动建 `~/.qoder-cn`）后再点一次，两份都写（B48）
+- [ ] 开会话问一句：Agent 页列出来，标题对（Qoder 读 `-session.json` 的标题，Qwen 读自动标题，CodeBuddy 读 ai-title），目录、模型、最近提问和回复都有；进行中转圈，回复完变完成（B48）
+- [ ] 跑一条要授权的命令：岛上出「等你确认」，允许 / 拒绝后 CLI 照做；CodeBuddy 的 auto 模式下自动放行的工具不亮「等你」（B48）
+- [ ] 打开回复标记：三家的全局提示词文件（`AGENTS.md`、`CODEBUDDY.md`、`QWEN.md`）末尾多一段，新回复的末行是 ↩ / ⋯ / ✓（B48）
+- [ ] 点会话：切到跑这个 CLI 的终端窗口（B48）
+- [ ] 对一遍真机会话的字段名：Qwen 的 `tool_result` 记录、CodeBuddy 套壳记录的字段是从源码读的（只看字段名，不抄内容）（B48）
 
 ### Codex 和 Claude 桌面 App（B46）
 
@@ -88,6 +104,7 @@
 - [ ] 不开岛上审批时，等授权仍然亮红灯（B27）
 - [ ] `cmd.exe /d /s /c ""…fuyu-agent-running.cmd" workbuddy"` 这种写法 WorkBuddy 能跑（B27）
 - [ ] 会话卡片：用 TodoWrite 做多步任务时显示进度；看会话 JSONL 的 `providerData.rawUsage` 有没有 token 字段，有就记下来（B44）
+- [ ] WorkBuddy AI（`WorkBuddyAI.exe`、`%USERPROFILE%\.workbuddy-ai`）：会话列出来，开着、关掉时「已退出」对；「安装/修复」写进 `.workbuddy-ai\settings.json`；点会话切到它的窗口（B49）
 
 ### Antigravity
 
@@ -147,6 +164,10 @@
 
 - [ ] Claude 桌面 App 当前版本的 Code 页：`%APPDATA%\Claude\claude-code-sessions\<组织>\<账号>\local_<id>.json` 的 `cliSessionId` 在 `~/.claude/projects` 里有没有对应的 jsonl（#180 里 6–7 月的旧会话对不上；Mac 当前版本 84/84 对得上）。对得上就照 Mac 一节核对标题；对不上记下正文在哪。代码按 `%USERPROFILE%\AppData\Roaming\Claude` 找，`APPDATA` 改过位置的机器读不到（B46）
 - [ ] Codex（Store 版 `OpenAI.Codex`）：同 Mac 一节 Codex 的几项（B46）
+
+### Qoder、CodeBuddy Code、Qwen Code（B48）
+
+- [ ] 同 Mac 一节的「安装/修复」、开会话、授权三项，走 `.cmd` / `.ps1` 脚本（B48）
 
 ## Linux 服务器（SSH 远程，B26）
 

@@ -25,6 +25,9 @@ import { AgentApprovalCard } from "./approvals/AgentApprovalCard";
 import { AgentQuestionCard } from "./approvals/AgentQuestionCard";
 import type { AgentApprovals } from "./approvals/useAgentApprovals";
 import { AgentSessionRow } from "./AgentSessionRow";
+import { AgentSessionRowMenu } from "./AgentSessionRowMenu";
+import { AgentSessionHoverCard } from "./AgentSessionHoverCard";
+import { useSessionKeyboard } from "./useSessionKeyboard";
 import { AgentSubagents, listedSubagents } from "./AgentSubagents";
 import "./AgentSessionsPanel.css";
 
@@ -72,6 +75,8 @@ export function AgentSessionsPanel({
   const [now, setNow] = useState(() => Date.now());
   const effortLabels = useEffortLabels();
   const [notFoundId, setNotFoundId] = useState<string | null>(null);
+  const [rowNotice, setRowNotice] = useState<{ key: string; text: string } | null>(null);
+  const [menuKey, setMenuKey] = useState<string | null>(null);
   const [openSubagents, setOpenSubagents] = useState<ReadonlySet<string>>(() => new Set());
   const extensionHint = useEditorExtensionHint();
   const list = useScrollFade<HTMLUListElement>(sessions);
@@ -122,6 +127,12 @@ export function AgentSessionsPanel({
   }, []);
 
   useEffect(() => {
+    if (!rowNotice) return;
+    const timer = window.setTimeout(() => setRowNotice(null), NOT_FOUND_NOTICE_MS);
+    return () => window.clearTimeout(timer);
+  }, [rowNotice]);
+
+  useEffect(() => {
     if (!notFoundId) return;
     const timer = window.setTimeout(() => setNotFoundId(null), NOT_FOUND_NOTICE_MS);
     return () => window.clearTimeout(timer);
@@ -134,8 +145,18 @@ export function AgentSessionsPanel({
       return next;
     });
 
+  const keyboard = useSessionKeyboard(
+    removal && !reveal
+      ? (key) => {
+          const session = sessions.find((candidate) => sessionKey(candidate) === key);
+          if (session) motion.archive(session);
+        }
+      : null,
+  );
+
   const focus = (session: AgentSessionSummary) => {
     setNotFoundId(null);
+    setRowNotice(null);
     unseen?.markSeen(session);
     void focusAgentWindow(session.provider, session.cwd, session.title, session.remoteHost ? "" : session.sessionId)
       .then((found) => {
@@ -185,10 +206,12 @@ export function AgentSessionsPanel({
       <ul
         ref={list.ref}
         style={ageWidth ? ({ "--agent-age-width": `${ageWidth}px` } as CSSProperties) : undefined}
-        className={`agent-sessions__list${view === "list" ? "" : ` agent-sessions__list--${view}`}${removal && !reveal ? " agent-sessions__list--archivable" : ""}`}
+        className={`agent-sessions__list${view === "list" ? "" : ` agent-sessions__list--${view}`}${removal && !reveal ? " agent-sessions__list--archivable" : ""}${reveal ? "" : " agent-sessions__list--menu"}`}
         data-fade-top={list.fade.top || undefined}
         data-fade-bottom={list.fade.bottom || undefined}
         onScroll={list.onScroll}
+        onKeyDown={keyboard.onKeyDown}
+        onContextMenu={keyboard.onContextMenu}
       >
         {arranged.flatMap(({ key: groupKey, host, project, sessions: members, heading }) => [
           heading ? (
@@ -205,30 +228,49 @@ export function AgentSessionsPanel({
           const key = sessionKey(session);
           const notFound = notFoundId === session.sessionId
             ? session.remoteHost ? t.agent.sessions.remoteOnly(session.remoteHost) : isActivePhase(session.phase) ? t.agent.sessions.notFound : t.agent.sessions.notFoundEnded
-            : null;
+            : rowNotice?.key === key ? rowNotice.text : null;
+          const menu = !reveal && (
+            <AgentSessionRowMenu
+              session={session}
+              title={title}
+              onFocusWindow={() => focus(session)}
+              onArchive={removal ? () => motion.archive(session) : undefined}
+              onNotice={(text) => setRowNotice({ key, text })}
+              onOpenChange={(open) => setMenuKey((current) => (open ? key : current === key ? null : current))}
+            />
+          );
+          const hoverSuppressed = menuKey !== null;
           const archive = removal && !reveal && (
             <button className="agent-session__archive" type="button" aria-label={t.agent.sessions.remove(title)} title={t.agent.sessions.remove(title)} onClick={() => motion.archive(session)}>
               <Archive size={14} strokeWidth={2} aria-hidden="true" />
             </button>
           );
           if (view !== "list") {
+            const card = (
+              <AgentSessionCard
+                session={session}
+                now={now}
+                compact={view === "compact"}
+                hostDisplay={hostDisplay}
+                showElapsed={showElapsed}
+                showActivity={showActivity}
+                model={showModel ? model : null}
+                unseen={Boolean(unseen?.keys.has(key))}
+                looked={Boolean(unseen && !unseen.keys.has(key) && asksUser(session))}
+                notFound={notFound}
+                cardReply={reveal && !isActivePhase(session.phase) ? session.lastMessage : null}
+                effects={cardEffects}
+                onOpen={() => focus(session)}
+              />
+            );
             return (
               <li key={`${session.provider}:${session.sessionId}`} ref={reveal ? cardRef : undefined} data-session-key={key}>
-                <AgentSessionCard
-                  session={session}
-                  now={now}
-                  compact={view === "compact"}
-                  hostDisplay={hostDisplay}
-                  showElapsed={showElapsed}
-                  showActivity={showActivity}
-                  model={showModel ? model : null}
-                  unseen={Boolean(unseen?.keys.has(key))}
-                  looked={Boolean(unseen && !unseen.keys.has(key) && asksUser(session))}
-                  notFound={notFound}
-                  cardReply={reveal && !isActivePhase(session.phase) ? session.lastMessage : null}
-                  effects={cardEffects}
-                  onOpen={() => focus(session)}
-                />
+                {reveal ? card : (
+                  <AgentSessionHoverCard session={session} title={project && project !== title ? `${project} · ${title}` : title} suppressed={hoverSuppressed}>
+                    {card}
+                  </AgentSessionHoverCard>
+                )}
+                {menu}
                 {archive}
               </li>
             );
@@ -256,6 +298,8 @@ export function AgentSessionsPanel({
                   <AgentSubagents session={session} open={openSubagents.has(key)} onToggle={() => toggleSubagents(key)} />
                 ) : undefined
               }
+              menu={menu}
+              hoverCard={reveal ? undefined : { suppressed: hoverSuppressed }}
               onOpen={() => focus(session)}
             />
           );

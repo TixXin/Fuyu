@@ -41,6 +41,7 @@
     "@cordisjs/hmr": "workspace:*",
     "@cordisjs/include": "workspace:*",
     "@cordisjs/loader": "workspace:*",
+    "@fuyu/plugin-manifest": "workspace:*",
     "cordis": "workspace:*",
     "ws": "^8.23.0"
   },

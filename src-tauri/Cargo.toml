@@ -41,7 +41,10 @@ rrule = "0.14"
 reqwest = { version = "0.13", default-features = false, features = ["json", "rustls"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+bzip2 = "0.6"
+tar = "0.4"
 plugin-base = { path = "crates/plugin-base" }
+sherpa-runtime = { path = "crates/sherpa-runtime" }
 sha2 = "0.10"
 tauri = { version = "2", features = ["macos-private-api", "tray-icon"] }
 tauri-plugin-dialog = "2"
@@ -63,6 +66,7 @@ drag = "2.1"
 global-hotkey = "0.10"
 libc = "0.2"
 objc2 = "0.6"
+objc2-avf-audio = { version = "0.3", default-features = false, features = ["std", "block2", "AVAudioApplication", "AVAudioBuffer", "AVAudioEngine", "AVAudioFormat", "AVAudioIONode", "AVAudioNode", "AVAudioTime", "AVAudioTypes"] }
 objc2-app-kit = { version = "0.3", default-features = false, features = ["std", "NSApplication", "NSBitmapImageRep", "NSColor", "NSColorSpace", "NSEvent", "NSImage", "NSImageRep", "NSPasteboard", "NSResponder", "NSRunningApplication", "NSWorkspace"] }
 objc2-core-audio = { version = "0.3", default-features = false, features = ["std", "AudioHardware"] }
 objc2-core-foundation = { version = "0.3", default-features = false, features = ["std", "CFArray", "CFCGTypes", "CFData", "CFDictionary", "CFNumber", "CFString"] }
@@ -95,9 +99,12 @@ debug = "line-tables-only"
 [profile.dev.package."*"]
 debug = false
 
+[dev-dependencies]
+ts-rs = { version = "12", features = ["serde-json-impl", "no-serde-warnings"] }
+
 [target.'cfg(windows)'.dev-dependencies]
 windows = { version = "0.62", features = ["ApplicationModel", "UI_Notifications_Management", "Win32_System_WinRT", "Win32_UI_Accessibility"] }
 
 [workspace]
-members = [".", "crates/plugin-base"]
-default-members = [".", "crates/plugin-base"]
+members = [".", "crates/plugin-base", "crates/plugin-base-macros", "crates/sherpa-runtime"]
+default-members = [".", "crates/plugin-base", "crates/plugin-base-macros", "crates/sherpa-runtime"]

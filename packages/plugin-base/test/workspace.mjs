@@ -70,9 +70,16 @@ function write(dir, files) {
 }
 
 export function config(entries) {
+  if (entries.length === 0) return "[]\n";
   return entries
     .map(({ id, name, disabled, extra = "" }) => `- id: ${id}\n  name: ${name}\n${disabled ? "  disabled: true\n" : ""}${extra}`)
     .join("");
+}
+
+export function builtinFiles(plugins, sources) {
+  const files = { "builtins/builtins.json": JSON.stringify({ format: 1, plugins: plugins.map(({ id, kind, file }) => ({ id, kind, root: id, host: file })) }) };
+  for (const { id, file } of plugins) files[`builtins/${id}/${file}`] = sources[file];
+  return files;
 }
 
 export const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));

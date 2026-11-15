@@ -6,11 +6,11 @@
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "Write|Edit|MultiEdit|NotebookEdit|Bash|PowerShell",
+        "matcher": "Write|Edit|MultiEdit|NotebookEdit|Bash|PowerShell|mcp__ccd_session__start_session",
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR/scripts/agent-harness-gate.mjs\"",
+            "command": "node \"$CLAUDE_PROJECT_DIR/scripts/gate/gate.mjs\"",
             "timeout": 10
           }
         ]

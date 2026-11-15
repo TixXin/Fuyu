@@ -1,4 +1,4 @@
-export declare const HOST_PROTOCOL: 1;
+export declare const HOST_PROTOCOL: 2;
 export declare const WINDOW_PROTOCOL: 1;
 export declare const CLOSE: {
   readonly stopping: 4000;

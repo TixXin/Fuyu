@@ -1,0 +1,20 @@
+{
+  "name": "@someone/fuyu-hello",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Says hello on the island",
+  "license": "MIT",
+  "repository": "github:someone/fuyu-hello",
+  "engines": { "fuyu": ">=0.4.0" },
+  "fuyu": {
+    "manifest": 1,
+    "displayName": { "zh-CN": "你好", "en": "Hello" },
+    "description": { "zh-CN": "在岛上打个招呼", "en": "Says hello on the island" },
+    "icon": "assets/icon.svg",
+    "categories": ["developer"],
+    "host": "dist/host.js",
+    "client": { "island": "dist/island.js" },
+    "inject": { "required": ["clients"] },
+    "slots": ["island.dev/v1"]
+  }
+}

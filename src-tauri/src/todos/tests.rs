@@ -542,3 +542,20 @@ fn a_todos_project_survives_a_save_and_none_adds_no_key() {
     assert_eq!(text.matches("\"project\"").count(), 2, "{text}");
     assert!(!serde_json::to_string(&sample()).expect("encode").contains("project"));
 }
+
+#[test]
+fn a_todos_priority_and_color_survive_a_save() {
+    let mut value = serde_json::to_value(sample()).expect("encode");
+    value["todos"][0]["priority"] = json!("high");
+    value["todos"][0]["color"] = json!("blue");
+    value["scheduled"][0]["priority"] = json!("low");
+    let file: TodosFile = serde_json::from_value(value).expect("decode");
+    assert_eq!(file.data.todos[0].priority.as_deref(), Some("high"));
+    assert_eq!(file.data.todos[0].color.as_deref(), Some("blue"));
+    assert_eq!(file.data.scheduled[0].priority.as_deref(), Some("low"));
+    let text = serde_json::to_string(&file).expect("encode");
+    assert_eq!(text.matches("\"priority\"").count(), 2, "{text}");
+    assert_eq!(text.matches("\"color\"").count(), 1, "{text}");
+    let plain = serde_json::to_string(&sample()).expect("encode");
+    assert!(!plain.contains("priority") && !plain.contains("color"));
+}

@@ -4,7 +4,8 @@ import { once } from "node:events";
 import { createInterface } from "node:readline";
 import { fileURLToPath } from "node:url";
 import { after, test } from "node:test";
-import { config, sleep, workspace } from "./workspace.mjs";
+import { join } from "node:path";
+import { builtinFiles, config, sleep, workspace } from "./workspace.mjs";
 
 const MAIN = fileURLToPath(new URL("../src/host/main.mjs", import.meta.url));
 const cleanup = [];
@@ -14,7 +15,8 @@ after(async () => {
 
 function launch(files, entries, args = [], nodeArgs = ["--disallow-code-generation-from-strings"]) {
   const space = workspace({ ...files, "plugins.yml": config(entries) });
-  const child = spawn(process.execPath, [...nodeArgs, MAIN, "--dir", space.dir, ...args], { stdio: ["pipe", "pipe", "pipe"] });
+  const extra = typeof args === "function" ? args(space.dir) : args;
+  const child = spawn(process.execPath, [...nodeArgs, MAIN, "--dir", space.dir, ...extra], { stdio: ["pipe", "pipe", "pipe"] });
   const exited = once(child, "exit");
   cleanup.push(async () => {
     if (child.exitCode === null && child.signalCode === null) {
@@ -74,12 +76,12 @@ export function apply(ctx) {
 test("the host started with --safe holds back third-party plugins and says so in ready", async () => {
   const files = { "plain.mjs": `export const name = "plain";\nexport function apply() {}\n` };
   const { next } = launch(
-    files,
+    { ...files, ...builtinFiles([{ id: "inside", kind: "builtin", file: "plain.mjs" }], files) },
     [
-      { id: "inside", name: "./plain.mjs", extra: "  kind: builtin\n" },
       { id: "outside", name: "./plain.mjs" },
+      { id: "posing", name: "./plain.mjs", extra: "  kind: builtin\n" },
     ],
-    ["--safe", "third-party"],
+    (dir) => ["--safe", "third-party", "--builtins", join(dir, "builtins")],
   );
   const ready = (await next((message) => message.method === "ready")).params;
   assert.equal(ready.safe, "third-party");
@@ -88,6 +90,7 @@ test("the host started with --safe holds back third-party plugins and says so in
     [
       ["inside", "running"],
       ["outside", "safe-mode"],
+      ["posing", "safe-mode"],
     ],
   );
 });

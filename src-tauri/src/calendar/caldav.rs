@@ -97,7 +97,7 @@ fn client() -> Result<reqwest::Client, UserError> {
     if let Some(proxy) = get_updater_proxy() {
         builder = builder.proxy(reqwest::Proxy::all(&proxy).map_err(|error| UserError::new("net.proxy", format!("Invalid proxy {proxy}.")).arg("proxy", proxy.as_str()).detail(error))?);
     }
-    builder.build().map_err(|error| UserError::new("http.client", "Could not set up the connection.").detail(error))
+    builder.build().map_err(|error| super::http_error("http.client", "Could not set up the connection.", error))
 }
 
 pub(super) struct Account<'a> {
@@ -134,13 +134,13 @@ impl Transport for Http<'_> {
             .body(body.to_string())
             .send()
             .await
-            .map_err(|error| UserError::new("calendar.unreachable", "Could not reach the calendar.").detail(error))?;
+            .map_err(|error| super::http_error("calendar.unreachable", "Could not reach the calendar.", error))?;
         let status = response.status().as_u16();
         let location = response.headers().get(reqwest::header::LOCATION).and_then(|value| value.to_str().ok()).map(str::to_string);
         if !(200..300).contains(&status) {
             return Ok(Reply { status, location, body: String::new() });
         }
-        let bytes = response.bytes().await.map_err(|error| UserError::new("calendar.read", "Could not read the calendar.").detail(error))?;
+        let bytes = response.bytes().await.map_err(|error| super::http_error("calendar.read", "Could not read the calendar.", error))?;
         if bytes.len() > MAX_RESPONSE_BYTES {
             return Err(UserError::new("calendar.tooLarge", "The calendar is too large."));
         }
@@ -344,7 +344,7 @@ pub(super) async fn fetch(account: &Account<'_>, from: DateTime<Utc>, to: DateTi
     if base.scheme() != "https" {
         return Err(UserError::new("calendar.https", "The calendar address must start with https://."));
     }
-    events(&Http { client: client()?, account }, &base, from, to).await
+    events(&Http { client: client()?, account }, &base, from, to).await.map_err(|error| error.redact(base.as_str()).redact(account.url.trim()))
 }
 
 #[cfg(test)]

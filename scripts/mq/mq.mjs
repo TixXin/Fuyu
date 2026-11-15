@@ -2,6 +2,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { checkCommit } from "./checkCommit.mjs";
 import { checkPush } from "./checkPush.mjs";
+import { commitPart } from "./commitPart.mjs";
 import { land, pendingCommits } from "./land.mjs";
 import { INTEGRATION_BRANCH, tryGit } from "./settings.mjs";
 import { sync } from "./sync.mjs";
@@ -53,9 +54,16 @@ const HELP = [
   "      --wait              在前台等到合入",
   "  wait [PR 号] [--update]  等 PR 合入，把本地 main 跟上；--update 在它落后时更新分支",
   "  sync                    把 origin/main 合进本地 main",
+  "  commit-part --list <文件…>   列出文件相对 HEAD 的每一处改动和编号",
+  "  commit-part -m <标题> [-F <说明文件>] …   同一个文件里只提交自己的改动，不动工作区",
+  "      --take <文件>:<编号,…>       只带这几处",
+  "      --match <文件>:<正则>        只带增删的行匹配正则的那几处",
+  "      --as <文件>=<准备好的文件>   两个人的改动挨在一起时，直接给出要提交的内容",
+  "      -- <整个文件…>              这些文件整个带上，新增、删除、改名的两头都写",
+  "      --dry-run                   只显示会提交什么",
   "  check-push、check-commit  git 钩子用",
   "",
-  "任何命令带 --help 或 -h，以及不带参数的 land，都只显示这份说明。",
+  "任何命令带 --help 或 -h，以及不带参数的 land、commit-part，都只显示这份说明。",
 ].join("\n");
 
 export function landRequest(args) {
@@ -74,8 +82,15 @@ function landCommand(args) {
   return request.error ? 1 : 0;
 }
 
+function commitPartCommand(args) {
+  if (args.length) return commitPart(args);
+  console.log(HELP);
+  return 0;
+}
+
 const COMMANDS = {
   land: landCommand,
+  "commit-part": commitPartCommand,
   wait: (args) => waitCommand(args),
   sync: () => sync(),
   pending,

@@ -3,6 +3,7 @@ import type { ScheduledTodo, TodoArchive, TodoItem } from "./types";
 import { getLocalDateString } from "../../utils/date.ts";
 import { readProject } from "./project.ts";
 import { normalizeScheduledTodo, sortScheduledTodos } from "./schedule.ts";
+import { readTags } from "./tags.ts";
 
 export function createTodoId() {
   if ("crypto" in window && typeof window.crypto.randomUUID === "function") {
@@ -19,6 +20,7 @@ export function normalizeTodo(todo: Partial<TodoItem>): TodoItem {
     completed: Boolean(todo.completed),
     createdAt: typeof todo.createdAt === "number" ? todo.createdAt : Date.now(),
     ...withProject(todo.project),
+    ...readTags(todo),
     ...(typeof todo.startedAt === "number" && Number.isFinite(todo.startedAt) && !todo.completed ? { startedAt: todo.startedAt } : {}),
   };
 }

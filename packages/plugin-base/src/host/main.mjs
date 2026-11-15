@@ -18,6 +18,8 @@ const { values } = parseArgs({
   options: {
     dir: { type: "string" },
     config: { type: "string", default: "plugins.yml" },
+    builtins: { type: "string" },
+    "app-version": { type: "string" },
     watch: { type: "boolean", default: false },
     dev: { type: "boolean", default: false },
     safe: { type: "string" },
@@ -69,10 +71,13 @@ try {
   host = await startHost({
     dir: values.dir,
     config: values.config,
+    builtins: values.builtins ?? null,
+    appVersion: values["app-version"] ?? null,
     watch: values.watch || values.dev,
     dev: values.dev,
     safe,
     apiNames: values.api,
+    rpc,
     onLog: (entry) => {
       if (FORWARDED_LOGS.has(entry.type)) rpc.notify("log", entry);
     },
