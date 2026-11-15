@@ -92,13 +92,16 @@ Rust 怎么跑：
 `status` 的回答、`ready` 的 `plugins`、给窗口的快照和 `plugins` 事件里，每个插件都是同一个格式（协议 1 里加的字段都是可选的，旧的读法不受影响）：
 
 ```
-{ id, name, state, kind, waitingFor?, error?, reason?, lastError?, usage }
+{ id, name, state, kind, source, waitingFor?, error?, reason?, blocked?, undeclared?, lastError?, usage }
 ```
 
 | 字段 | 意思 |
 |---|---|
 | `state` | `running`、`waiting`（`waitingFor` 列出在等的服务）、`failed`（`error` 是原因）、`disabled`（`plugins.yml` 里关了）、`auto-disabled`（反复出错被宿主停了，`reason` 写明）、`safe-mode`（被安全模式拦下，`reason` 写明）、`loading`、`stopped`、`unloading` 之一 |
-| `kind` | `essential`、`builtin`、`third-party`，来自 `plugins.yml` 条目的 `kind` 字段，没写或写错都算 `third-party` |
+| `kind` | `essential`、`builtin`、`third-party`。只由内置插件清单给（2026-11-15 起，E36.3.6，见 [v3-builtins.md](v3-builtins.md)）：清单里的插件取清单写的值，其余插件一律是 `third-party`，`plugins.yml` 条目里写的 `kind` 不算数 |
+| `source` | 插件从哪来（2026-11-15 起，E36.3.9）：`builtin`（内置插件清单）、`market`、`manual`（已安装的包）、`dev`（开发文件夹）、`file`（直接写模块的条目），见 [v3-sources.md](v3-sources.md) |
+| `blocked` | 清单没通过、包没装这类原因拒绝加载时才有：`{ by, errors }`，`state` 是 `failed`（E36.3.9，见 [v3-sources.md](v3-sources.md)「拒绝加载」） |
+| `undeclared` | 插件实际做了、清单里没写的事，键名就是该补的清单字段（`provides`、`client`、`slots`）；都对得上时没有这个字段，只标记不拦（E36.3.9，见 [v3-sources.md](v3-sources.md)「声明和实际」） |
 | `lastError` | `{ at, text }`，这个插件最近一次出错（只在出过错时有） |
 | `usage` | `{ cpuMs, calls, applyMs, timers, listeners, services, clients, errors }`，见下 |
 
