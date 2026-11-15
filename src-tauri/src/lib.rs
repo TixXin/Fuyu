@@ -48,6 +48,7 @@ mod tray;
 mod tray_mark;
 mod tray_visibility;
 mod user_error;
+mod voice_input;
 #[cfg_attr(target_os = "macos", path = "wechat_reminders/macos.rs")]
 mod wechat_reminders;
 #[cfg(target_os = "macos")]
@@ -150,6 +151,7 @@ pub fn run() {
             }
             translation::init(app.handle());
             screenshot::init(app.handle());
+            voice_input::init(app.handle());
             if let Err(error) = file_shelf::init(app.handle()) {
                 eprintln!("failed to initialize the file shelf: {error}");
             }
@@ -260,6 +262,7 @@ pub fn run() {
             translation;
             screenshot;
             recording;
+            voice_input;
             settings_window;
             settings_file;
             shortcut_capture;

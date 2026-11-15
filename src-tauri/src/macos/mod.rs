@@ -16,6 +16,7 @@ pub(crate) mod input;
 pub(crate) mod island_panel;
 pub(crate) mod job;
 pub(crate) mod login_item;
+pub(crate) mod microphone;
 pub(crate) mod network;
 pub(crate) mod notch;
 pub(crate) mod ocr;
