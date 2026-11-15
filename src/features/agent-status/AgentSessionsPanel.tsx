@@ -12,7 +12,7 @@ import { AgentSessionCard } from "./AgentSessionCard";
 import { AgentUsageBar } from "./AgentUsageBar";
 import type { AgentUsages } from "./usage";
 import { focusAgentWindow, type AgentSessionSummary } from "./api";
-import { ageSlotWidth, arrangeSessions, isActivePhase, minutesAgo, modelLabel, sessionProject } from "./sessionList";
+import { ageSlotWidth, arrangeSessions, isActivePhase, modelLabel, sessionAge, sessionProject } from "./sessionList";
 import { shownEffort } from "./effortLabels";
 import { useEffortLabels } from "./useEffortLabels";
 import { AGENT_PROVIDER_LABELS } from "./status";
@@ -153,10 +153,7 @@ export function AgentSessionsPanel({
     );
   }
 
-  const ageOf = (session: AgentSessionSummary) => {
-    const minutes = minutesAgo(session.updatedAt, now);
-    return minutes === 0 ? t.agent.sessions.justNow : t.agent.sessions.minutesAgo(minutes);
-  };
+  const ageOf = (session: AgentSessionSummary) => sessionAge(session.updatedAt, now, { justNow: t.agent.sessions.justNow, ...t.agent.sessions.age });
   const showsAge = (session: AgentSessionSummary) => session.phase !== "running" || !(showElapsed && session.turnStartedAt !== null);
   const archivable = Boolean(removal) && !reveal;
   const ageWidth = archivable && view === "list" ? ageSlotWidth(sessions.filter(showsAge).map(ageOf)) : 0;

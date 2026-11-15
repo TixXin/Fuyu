@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { USAGE_COLORS, USAGE_PROVIDERS, USAGE_STALE_MS, isUsageStale, shownUsageProviders, usageCardLines, usageColor, usageRings } from "../../src/features/claude-usage/usageRing.ts";
+import { USAGE_STALE_MS } from "../../src/features/agent-status/usage.ts";
+import { USAGE_COLORS, USAGE_PROVIDERS, isUsageStale, shownUsageProviders, usageCardLines, usageColor, usageRings } from "../../src/features/claude-usage/usageRing.ts";
 import { en, zhCN } from "../../src/i18n/sections/claudeUsage.ts";
 
 const NOW = Date.parse("2026-11-06T08:00:00Z");
@@ -71,7 +72,7 @@ test("card handles missing reset times, past resets and missing snapshots", () =
   assert.equal(lines[0].color, USAGE_COLORS.danger);
   const past = usageCardLines(usage({ fiveHour: { name: "", used: 1, resetsAt: NOW - MINUTE }, sevenDay: null }), NOW, en);
   assert.equal(past[0].text, "5h 1% · resetting soon");
-  assert.deepEqual(texts(usageCardLines(usage({ updatedAt: NOW - 3 * 60 * MINUTE }), NOW, en)).slice(2), ["updated 3 h ago · via claude-hud"]);
+  assert.deepEqual(texts(usageCardLines(usage({ updatedAt: NOW - 3 * 60 * MINUTE }), NOW, en)).slice(2), ["May be stale: updated 3 h ago · via claude-hud", en.staleReason.hud]);
   assert.deepEqual(texts(usageCardLines(null, NOW, en)), [en.noData]);
   assert.deepEqual(texts(usageCardLines(usage({ fiveHour: null, sevenDay: null, updatedAt: null }), NOW, en)), [en.noData]);
 });

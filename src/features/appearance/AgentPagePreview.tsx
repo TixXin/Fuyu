@@ -43,7 +43,7 @@ export function AgentPagePreview() {
   const t = useTranslation();
   const { sessions } = t.settings.appearance.preview;
   const { usage, phase } = t.agent;
-  const { justNow, minutesAgo, yourTurn } = t.agent.sessions;
+  const { justNow, age, yourTurn } = t.agent.sessions;
   return (
     <div className="agent-page-preview" aria-hidden="true">
       <span className="agent-page-preview__header">
@@ -80,7 +80,7 @@ export function AgentPagePreview() {
           )}
         />
         <Row light="your-turn" {...sessions.yourTurn} status={`${yourTurn} · ${justNow}`} />
-        <Row light="done" {...sessions.done} status={minutesAgo(16)} />
+        <Row light="done" {...sessions.done} status={age.minutes(16)} />
       </span>
     </div>
   );

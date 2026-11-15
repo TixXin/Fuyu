@@ -4,7 +4,7 @@ import { useTranslation } from "../../i18n";
 import { AgentProviderIcon } from "./AgentProviderIcon";
 import type { AgentProvider, AgentUsage } from "./api";
 import { IslandHoverCard } from "../../components/IslandHoverCard";
-import { hasUsageNumbers, isStale, minutesSinceUpdate, tightestWindow, untilReset, usageColumns, usageLevel, usageSourceLines, usageWindows, type AgentUsages, type UsageColumns } from "./usage";
+import { hasUsageNumbers, isStale, liveUsage, tightestWindow, untilReset, usageColumns, usageLevel, usageSourceLines, usageWindows, type AgentUsages, type UsageColumns } from "./usage";
 import { useAgentUsages } from "./useAgentUsages";
 import "./AgentUsageBar.css";
 
@@ -12,8 +12,10 @@ export function AgentUsageBar({ usages: given }: { usages?: AgentUsages }) {
   const own = useAgentUsages(given === undefined);
   const usages = given ?? own;
   const lines: [AgentProvider, AgentUsage][] = [];
-  if (hasUsageNumbers(usages.claude)) lines.push(["claudeCode", usages.claude!]);
-  if (hasUsageNumbers(usages.codex)) lines.push(["codex", usages.codex!]);
+  const claude = usages.claude && liveUsage(usages.claude, usages.readAt);
+  const codex = usages.codex && liveUsage(usages.codex, usages.readAt);
+  if (claude && hasUsageNumbers(claude)) lines.push(["claudeCode", claude]);
+  if (codex && hasUsageNumbers(codex)) lines.push(["codex", codex]);
   if (lines.length === 0) return null;
   const columns = usageColumns(lines.map(([, usage]) => usage));
 
@@ -32,11 +34,11 @@ function UsageLine({ provider, usage, now, columns }: { provider: AgentProvider;
   const tightest = tightestWindow(usage);
   const reset = tightest ? untilReset(tightest.resetsAt, now) : null;
   const stale = isStale(usage, now);
-  const staleText = stale ? t.agent.usage.staleHint(minutesSinceUpdate(usage, now)) : null;
   const hoverLines = usageSourceLines(usage, now, t.claudeUsage);
+  const staleText = stale ? hoverLines.find((line) => !line.muted)?.text ?? null : null;
 
   return (
-    <IslandHoverCard lines={staleText ? [{ text: staleText }, ...hoverLines] : hoverLines} alignTo=":scope" anchorClassName="agent-usage__hover">
+    <IslandHoverCard lines={hoverLines} alignTo=":scope" anchorClassName="agent-usage__hover">
       <div className={`agent-usage${stale ? " agent-usage--stale" : ""}`} role="status" aria-label={provider === "codex" ? t.agent.usage.codexLabel : t.agent.usage.label}>
         <AgentProviderIcon provider={provider} size={14} />
         {windows.map(({ key, label, window }) => (

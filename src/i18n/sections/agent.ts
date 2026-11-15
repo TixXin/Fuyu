@@ -21,7 +21,7 @@ export type AgentText = {
     notFoundEnded: string;
     justNow: string;
     yourPrompt: (prompt: string) => string;
-    minutesAgo: (minutes: number) => string;
+    age: { minutes: (count: number) => string; hours: (count: number) => string; days: (count: number) => string };
     activeCount: (count: number) => string;
     duration: (parts: { hours: number; minutes: number; seconds: number }) => string;
     elapsedRunning: (duration: string) => string;
@@ -63,8 +63,6 @@ export type AgentText = {
     sevenDay: string;
     resetsIn: (parts: { days: number; hours: number; minutes: number }) => string;
     resetShort: (parts: { days: number; hours: number; minutes: number }) => string;
-    stale: string;
-    staleHint: (minutes: number) => string;
   };
   approval: {
     label: (tool: string) => string;
@@ -115,7 +113,7 @@ export const zhCN: AgentText = {
     notFoundEnded: "没找到对应的窗口，会话可能已经关掉了",
     justNow: "<1m",
     yourPrompt: (prompt) => `你：${prompt}`,
-    minutesAgo: (minutes) => (minutes < 60 ? `${minutes} 分` : `${Math.floor(minutes / 60)} 小时`),
+    age: { minutes: (count) => `${count} 分`, hours: (count) => `${count} 小时`, days: (count) => `${count} 天` },
     activeCount: (count) => `${count} 个 Agent 会话正在运行，点击查看`,
     duration: ({ hours, minutes, seconds }) =>
       hours > 0 ? `${hours} 小时 ${minutes} 分` : minutes > 0 ? `${minutes} 分 ${seconds} 秒` : `${seconds} 秒`,
@@ -159,8 +157,6 @@ export const zhCN: AgentText = {
     resetsIn: ({ days, hours, minutes }) =>
       days > 0 ? `${days} 天 ${hours} 小时后重置` : hours > 0 ? `${hours} 小时 ${minutes} 分后重置` : `${minutes} 分后重置`,
     resetShort: ({ days, hours, minutes }) => (days > 0 ? `${days}天${hours}小时` : hours > 0 ? `${hours}小时${minutes}分` : `${minutes}分钟`),
-    stale: "可能已过时",
-    staleHint: (minutes) => `可能已过时：${minutes} 分钟前更新`,
   },
   approval: {
     label: (tool) => `请求使用 ${tool}`,
@@ -216,7 +212,7 @@ export const en: AgentText = {
     notFoundEnded: "No matching window; the session may have been closed",
     justNow: "<1m",
     yourPrompt: (prompt) => `You: ${prompt}`,
-    minutesAgo: (minutes) => (minutes < 60 ? `${minutes}m` : `${Math.floor(minutes / 60)}h`),
+    age: { minutes: (count) => `${count}m`, hours: (count) => `${count}h`, days: (count) => `${count}d` },
     activeCount: (count) => (count === 1 ? "1 agent session running; click to view" : `${count} agent sessions running; click to view`),
     duration: ({ hours, minutes, seconds }) =>
       hours > 0 ? `${hours}h ${minutes}m` : minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`,
@@ -259,8 +255,6 @@ export const en: AgentText = {
     sevenDay: "7d",
     resetsIn: ({ days, hours, minutes }) => (days > 0 ? `resets in ${days}d${hours}h` : hours > 0 ? `resets in ${hours}h${minutes}m` : `resets in ${minutes}m`),
     resetShort: ({ days, hours, minutes }) => (days > 0 ? `${days}d ${hours}h` : hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`),
-    stale: "may be stale",
-    staleHint: (minutes) => `May be stale: updated ${minutes} min ago`,
   },
   approval: {
     label: (tool) => `Wants to use ${tool}`,

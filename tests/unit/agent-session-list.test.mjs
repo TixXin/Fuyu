@@ -4,7 +4,7 @@ import {
   ageSlotWidth,
   countActiveSessions,
   filterSessions,
-  minutesAgo,
+  sessionAge,
   modelLabel,
   sameAgentSessions,
   sessionProject,
@@ -58,9 +58,11 @@ test("labels for the session rows", () => {
   assert.equal(modelLabel("Opus 5.5", "medium"), "Opus 5.5 · Medium");
   assert.equal(modelLabel("gpt-6-astra", null), "gpt-6-astra");
   assert.equal(modelLabel(null, null), null);
-  assert.equal(minutesAgo(1_000_000, 1_000_000 + 59_000), 0);
-  assert.equal(minutesAgo(1_000_000, 1_000_000 + 125_000), 2);
-  assert.equal(minutesAgo(2_000_000, 1_000_000), 0);
+  const age = { justNow: "now", minutes: (n) => `${n}m`, hours: (n) => `${n}h`, days: (n) => `${n}d` };
+  assert.equal(sessionAge(1_000_000, 1_000_000 + 59_000, age), "now");
+  assert.equal(sessionAge(1_000_000, 1_000_000 + 125_000, age), "2m");
+  assert.equal(sessionAge(2_000_000, 1_000_000, age), "now");
+  assert.equal(sessionAge(0, 2758 * 60_000, age), "1d");
 });
 
 test("the Agent page follows the AI Agent switch", () => {

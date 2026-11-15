@@ -68,7 +68,7 @@ export async function checkUsage({ root, fixture, sessions, check, chromeHeight 
   });
   const staleLines = [...document.querySelectorAll<HTMLElement>(".agent-usage")];
   const clock = staleLines[0].querySelector(".agent-usage__stale");
-  check(clock?.querySelector("svg") && clock.getAttribute("aria-label") === "可能已过时：40 分钟前更新" && !staleLines[0].textContent?.includes("可能已过时")
+  check(clock?.querySelector("svg") && clock.getAttribute("aria-label") === "可能已过时：40 分钟前更新 · 来自 claude-hud" && !staleLines[0].textContent?.includes("可能已过时")
     && !staleLines[1].querySelector(".agent-usage__stale") && Math.abs(cellLeft(staleLines[0], 0) - cellLeft(staleLines[1], 0)) < 0.5,
     "过时的那一行行尾只放一个时钟图标，说明写在读屏文字和悬停卡片里，列照样对齐");
 }
