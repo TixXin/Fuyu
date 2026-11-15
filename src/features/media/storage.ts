@@ -1,7 +1,6 @@
-export type KnownMediaSource = {
-  id: string;
-  label: string;
-};
+import { parseMusicSourcePriority, type KnownMediaSource } from "./sourcePriority.ts";
+
+export type { KnownMediaSource };
 
 export const MUSIC_SOURCE_PRIORITY_STORAGE_KEY = "fuyu-music-sources";
 
@@ -15,28 +14,7 @@ export function loadMusicSourcePriority(): KnownMediaSource[] {
       return [];
     }
 
-    const parsed = JSON.parse(stored) as Partial<KnownMediaSource>[];
-
-    if (!Array.isArray(parsed)) {
-      return [];
-    }
-
-    const seen = new Set<string>();
-    return parsed
-      .filter(
-        (source): source is KnownMediaSource =>
-          typeof source?.id === "string" &&
-          source.id.length > 0 &&
-          typeof source.label === "string",
-      )
-      .filter((source) => {
-        if (seen.has(source.id)) {
-          return false;
-        }
-        seen.add(source.id);
-        return true;
-      })
-      .map((source) => ({ id: source.id, label: source.label }));
+    return parseMusicSourcePriority(JSON.parse(stored), Date.now());
   } catch {
     return [];
   }
