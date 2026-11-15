@@ -1,12 +1,12 @@
-import { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Search } from "lucide-react";
 import { useTranslation } from "../../i18n";
-import { startClipboardDrag, type ClipboardAiPrompt, type ClipboardCaptureStatus, type ClipboardCopyAs, type ClipboardHistoryItem, type ClipboardPeek, type ClipboardSnippet } from "./api";
+import { type ClipboardAiPrompt, type ClipboardCaptureStatus, type ClipboardCopyAs, type ClipboardHistoryItem, type ClipboardPeek, type ClipboardSnippet } from "./api";
 import { ClipboardActionPanel, type PanelPage } from "./ClipboardActionPanel";
 import { ClipboardEditor } from "./ClipboardEditor";
 import { ClipboardPauseBar, ClipboardPopupFooter, pausedNow, type MergeSeparator } from "./ClipboardPopupFooter";
 import { ClipboardPopupPreview } from "./ClipboardPopupPreview";
-import { ClipboardPopupRow } from "./ClipboardPopupRow";
+import { ClipboardPopupList } from "./ClipboardPopupList";
 import { dayGroupStarts } from "./dayGroup";
 import { deletedLabel, withoutPending } from "./pendingItems";
 import { mergedText, popupActions } from "./popupActions";
@@ -288,47 +288,31 @@ export function ClipboardPopup({ items, snippets, openCount, wide, ownsWindow = 
             )}
           </div>
         ) : (
-          <ul className="clipboard-popup__list" ref={listRef} role="listbox" aria-label={chipLabel(filter)}>
-            {onSnippets && <li className="clipboard-popup__section" role="presentation">{text.snippetsLabel}</li>}
-            {onSnippets
-              ? shownSnippets.map((snippet, index) => (
-                <ClipboardPopupRow
-                  key={snippet.id}
-                  index={index}
-                  now={now}
-                  selected={index === current}
-                  queued={0}
-                  snippet={snippet}
-                  onHover={() => selectByPointer(index)}
-                  onPick={() => onPasteSnippet(snippet.id)}
-                />
-              ))
-              : shownItems.map((entry, index) => (
-                <Fragment key={entry.id}>
-                {wide && groupStarts[index] && <li className="clipboard-popup__section" role="presentation">{text.dayGroups[groupStarts[index]]}</li>}
-                <ClipboardPopupRow
-                  index={index}
-                  now={now}
-                  selected={index === current}
-                  queued={queue.indexOf(entry.id) + 1}
-                  entry={entry}
-                  onHover={() => mode === "list" && selectByPointer(index)}
-                  onPick={(event) => {
-                    if (isPrimaryKey(event)) setQueue(toggleQueued(queue, entry.id));
-                    else onPaste(entry.id, event.shiftKey);
-                  }}
-                  onToggleFavorite={() => onToggleFavorite(entry.id)}
-                  onDelete={() => deletion.remove(entry)}
-                  onMenu={() => {
-                    setSelected(index);
-                    openPanel("actions");
-                  }}
-                  linkPreview={linkPreview}
-                  onDrag={() => void startClipboardDrag(entry.id).catch((error: unknown) => console.error("Failed to drag a clipboard entry", error))}
-                />
-                </Fragment>
-              ))}
-          </ul>
+          <ClipboardPopupList
+            listRef={listRef}
+            label={chipLabel(filter)}
+            snippetsLabel={onSnippets ? text.snippetsLabel : null}
+            snippets={onSnippets ? shownSnippets : null}
+            items={shownItems}
+            current={current}
+            now={now}
+            queue={queue}
+            dayGroups={wide ? groupStarts.map((start) => (start ? text.dayGroups[start] : null)) : []}
+            linkPreview={linkPreview}
+            onHover={(index) => mode === "list" && selectByPointer(index)}
+            onHoverSnippet={selectByPointer}
+            onPasteSnippet={onPasteSnippet}
+            onPick={(entry, event) => {
+              if (isPrimaryKey(event)) setQueue(toggleQueued(queue, entry.id));
+              else onPaste(entry.id, event.shiftKey);
+            }}
+            onToggleFavorite={onToggleFavorite}
+            onDelete={deletion.remove}
+            onMenu={(index) => {
+              setSelected(index);
+              openPanel("actions");
+            }}
+          />
         )}
         {wide && (editing ? (
           <ClipboardEditor key={item.id} item={item} overlay={false} onPasteOnce={(value) => pasteText(value)} onSaveAsNew={(value) => { saveAsNew(value); backToList(); }} onCancel={backToList} />
