@@ -1418,6 +1418,19 @@
       "page": "clipboard",
       "zh-CN": {
         "group": "打开方式",
+        "title": "收藏的条目置顶",
+        "description": "剪贴板窗口的「全部」里，收藏的条目排在最上面，可拖动排序；数字键 1–9 跳过它们。动作面板里「设固定键」后按 Alt + 字母直接粘贴。"
+      },
+      "en": {
+        "group": "Opening",
+        "title": "Pin favorites to the top",
+        "description": "In the clipboard window's \"All\", favorites come first and can be dragged into order; the 1–9 keys skip them. Set a pin key from the action panel to paste with Alt + a letter."
+      }
+    },
+    {
+      "page": "clipboard",
+      "zh-CN": {
+        "group": "打开方式",
         "title": "选中后自动粘贴",
         "description": "关掉时只复制，回到原来的窗口自己按 Ctrl+V。"
       },

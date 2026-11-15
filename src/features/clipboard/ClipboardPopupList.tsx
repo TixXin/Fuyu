@@ -1,8 +1,12 @@
 import { Fragment, type MouseEvent, type RefObject } from "react";
 import { startClipboardDrag, type ClipboardHistoryItem, type ClipboardSnippet } from "./api";
+import { useTranslation } from "../../i18n";
 import { ClipboardPopupRow } from "./ClipboardPopupRow";
+import { digitSlot } from "./pins";
+import type { PinGrip } from "./usePopupPins";
+import "./ClipboardPins.css";
 
-export function ClipboardPopupList({ listRef, label, snippetsLabel, snippets, items, current, now, queue, dayGroups, linkPreview, onHover, onHoverSnippet, onPasteSnippet, onPick, onToggleFavorite, onDelete, onMenu }: {
+export function ClipboardPopupList({ listRef, label, snippetsLabel, snippets, items, current, now, queue, dayGroups, pins, linkPreview, onHover, onHoverSnippet, onPasteSnippet, onPick, onToggleFavorite, onDelete, onMenu }: {
   listRef: RefObject<HTMLUListElement | null>;
   label: string;
   snippetsLabel: string | null;
@@ -12,6 +16,7 @@ export function ClipboardPopupList({ listRef, label, snippetsLabel, snippets, it
   now: number;
   queue: readonly string[];
   dayGroups: readonly (string | null)[];
+  pins: { pinned: number; dragging: number | null; grip: (index: number) => PinGrip | undefined };
   linkPreview: boolean;
   onHover: (index: number) => void;
   onHoverSnippet: (index: number) => void;
@@ -21,6 +26,9 @@ export function ClipboardPopupList({ listRef, label, snippetsLabel, snippets, it
   onDelete: (entry: ClipboardHistoryItem) => void;
   onMenu: (index: number) => void;
 }) {
+  const pinnedLabel = useTranslation().clipboardList.pinned;
+  const pinned = pins.pinned;
+  const heading = (index: number) => (pinned > 0 && index === 0 ? pinnedLabel : index >= pinned ? dayGroups[index - pinned] : null);
   return (
     <ul className="clipboard-popup__list" ref={listRef} role="listbox" aria-label={label}>
       {snippetsLabel && <li className="clipboard-popup__section" role="presentation">{snippetsLabel}</li>}
@@ -39,13 +47,18 @@ export function ClipboardPopupList({ listRef, label, snippetsLabel, snippets, it
         ))
         : items.map((entry, index) => (
           <Fragment key={entry.id}>
-            {dayGroups[index] && <li className="clipboard-popup__section" role="presentation">{dayGroups[index]}</li>}
+            {pinned > 0 && index === pinned && <li className="clipboard-popup__divider" role="separator" />}
+            {heading(index) && <li className="clipboard-popup__section" role="presentation">{heading(index)}</li>}
             <ClipboardPopupRow
               index={index}
               now={now}
               selected={index === current}
               queued={queue.indexOf(entry.id) + 1}
               entry={entry}
+              slot={digitSlot(index, pinned)}
+              pinned={index < pinned}
+              grip={pins.grip(index)}
+              dragging={pins.dragging === index}
               onHover={() => onHover(index)}
               onPick={(event) => onPick(entry, event)}
               onToggleFavorite={() => onToggleFavorite(entry.id)}

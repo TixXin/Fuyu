@@ -16,6 +16,7 @@ mod file_image;
 pub(crate) mod image_protocol;
 #[cfg_attr(target_os = "macos", path = "listener_macos.rs")]
 mod listener;
+pub(crate) mod pins;
 mod plugin_view;
 #[cfg_attr(target_os = "macos", path = "popup_macos.rs")]
 mod popup;
@@ -159,6 +160,8 @@ pub struct ClipboardHistorySettings {
     popup_pin_y: Option<i32>,
     #[serde(default = "default_copy_card_seconds")]
     copy_card_seconds: u32,
+    #[serde(default = "default_true")]
+    pin_favorites: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -273,6 +276,7 @@ impl Default for ClipboardHistorySettings {
             popup_pin_x: None,
             popup_pin_y: None,
             copy_card_seconds: copy_notice::DEFAULT_CARD_SECONDS,
+            pin_favorites: true,
         }
     }
 }
@@ -356,6 +360,10 @@ pub struct ClipboardHistoryItem {
     ocr_text: Option<String>,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     masked: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pin_key: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pin_order: Option<u32>,
 }
 
 fn normalized_app_names(names: &[String]) -> Vec<String> {
@@ -671,6 +679,8 @@ macro_rules! tauri_commands {
             crate::clipboard_history::restore_clipboard_history_item,
             crate::clipboard_history::deletion::delete_clipboard_history_items,
             crate::clipboard_history::deletion::restore_clipboard_history_items,
+            crate::clipboard_history::pins::set_clipboard_pin_key,
+            crate::clipboard_history::pins::set_clipboard_pin_order,
             crate::clipboard_history::expand::set_clipboard_popup_expanded,
             crate::clipboard_history::clear_clipboard_history,
             crate::clipboard_history::preview_window::show_clipboard_preview,

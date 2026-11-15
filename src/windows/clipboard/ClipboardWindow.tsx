@@ -123,6 +123,7 @@ export function ClipboardWindow() {
         wide={clipboardHistory.settings.popupLayout === "wide"}
         capture={clipboardHistory.capture}
         linkPreview={linkPreview}
+        pinFavorites={clipboardHistory.settings.pinFavorites !== false}
         onPeek={previewBroken ? undefined : onPeek}
         aiPrompts={clipboardHistory.settings.aiPrompts}
       />

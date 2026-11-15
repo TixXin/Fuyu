@@ -1,17 +1,23 @@
-import { CornerDownLeft, Star, Trash2 } from "lucide-react";
+import { CornerDownLeft, GripVertical, Star, Trash2 } from "lucide-react";
 import { useRef, type MouseEvent, type PointerEvent } from "react";
 import { formatAgo } from "../../components/list/formatAgo";
 import { useTranslation } from "../../i18n";
 import type { ClipboardHistoryItem, ClipboardSnippet } from "./api";
 import { contentKind } from "./contentKind";
 import { ClipboardRowLead } from "./ClipboardRowLead";
+import { ALT_KEY } from "./pins";
+import type { PinGrip } from "./usePopupPins";
 import { entryMainLabel, entryMetaLabel } from "./rowLabels";
 import { useLinkPreview } from "./useLinkPreview";
 
 const DRAG_DISTANCE = 5;
 
-export function ClipboardPopupRow({ index, now, selected, queued, entry, snippet, linkPreview = false, onPick, onHover, onToggleFavorite, onDelete, onMenu, onDrag }: {
+export function ClipboardPopupRow({ index, slot = index, pinned = false, grip, dragging = false, now, selected, queued, entry, snippet, linkPreview = false, onPick, onHover, onToggleFavorite, onDelete, onMenu, onDrag }: {
   index: number;
+  slot?: number | null;
+  pinned?: boolean;
+  grip?: PinGrip;
+  dragging?: boolean;
   now: number;
   selected: boolean;
   queued: number;
@@ -32,15 +38,16 @@ export function ClipboardPopupRow({ index, now, selected, queued, entry, snippet
   const site = useLinkPreview(kind?.kind === "link" ? kind.url.href : null, linkPreview);
   const pressed = useRef<{ x: number; y: number } | null>(null);
   const draggable = Boolean(onDrag && (image || entry?.kind === "files"));
+  const pinKey = pinned ? entry?.pinKey : undefined;
   const ago = entry ? formatAgo(entry.copiedAt, now, t.common.ago) : null;
   const main = entry ? entryMainLabel(entry, kind, text) : snippet?.title ?? "";
   const meta = entry ? entryMetaLabel(entry, t) : snippet?.text.replace(/\s*\n\s*/g, " ⏎ ") ?? "";
-  const className = ["clipboard-popup__item", selected ? "clipboard-popup__item--selected" : "", queued ? "clipboard-popup__item--queued" : ""]
+  const className = ["clipboard-popup__item", selected ? "clipboard-popup__item--selected" : "", queued ? "clipboard-popup__item--queued" : "", dragging ? "clipboard-popup__item--dragging" : ""]
     .filter(Boolean)
     .join(" ");
 
   return (
-    <li data-index={index} role="option" aria-selected={selected} className={className} onPointerMove={() => !selected && onHover()}>
+    <li data-index={index} data-pinned={pinned || undefined} role="option" aria-selected={selected} className={className} onPointerMove={() => !selected && onHover()}>
       <button
         className="clipboard-popup__row"
         type="button"
@@ -66,8 +73,8 @@ export function ClipboardPopupRow({ index, now, selected, queued, entry, snippet
           onMenu();
         }}
       >
-        <span className="clipboard-popup__index" aria-label={!queued && index < 9 ? text.popup.quickPaste(index + 1) : undefined}>
-          {queued ? queued : index < 9 ? index + 1 : ""}
+        <span className={`clipboard-popup__index${pinKey ? " clipboard-popup__index--key" : ""}`} title={pinKey && !queued ? `${ALT_KEY}${pinKey}` : undefined} aria-label={queued ? undefined : pinKey ? t.clipboardList.pinKeyPaste(`${ALT_KEY}${pinKey}`) : slot !== null && slot < 9 ? text.popup.quickPaste(slot + 1) : undefined}>
+          {queued ? queued : pinKey ? pinKey : slot !== null && slot < 9 ? slot + 1 : ""}
         </span>
         <ClipboardRowLead entry={entry} kind={kind} siteIcon={site?.icon} />
         <span className="clipboard-popup__text">
@@ -85,6 +92,11 @@ export function ClipboardPopupRow({ index, now, selected, queued, entry, snippet
           <span className="clipboard-popup__enter" aria-hidden="true">
             <kbd><CornerDownLeft size={10} strokeWidth={2.4} /></kbd>
             {text.popup.paste}
+          </span>
+        )}
+        {grip && (selected || dragging) && (
+          <span className="clipboard-popup__star clipboard-popup__grip" role="presentation" title={t.clipboardList.dragPin} onPointerDown={grip.onPointerDown} onPointerMove={grip.onPointerMove} onPointerUp={grip.onPointerUp} onPointerCancel={grip.onPointerUp}>
+            <GripVertical size={13} strokeWidth={2} aria-hidden="true" />
           </span>
         )}
         {entry && onToggleFavorite && (selected || entry.favorite) && (

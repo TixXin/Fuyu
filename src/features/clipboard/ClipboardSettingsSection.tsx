@@ -7,6 +7,7 @@ import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
 import { useTranslation } from "../../i18n";
 import { isMacOS } from "../../lib/platform";
 import type { ClipboardHistorySettings, ClipboardOpenIn, ClipboardPopupLayout, ClipboardPopupPosition } from "./api";
+import { ALT_KEY } from "./pins";
 import { CLIPBOARD_CARD_SECONDS } from "./settings";
 
 export function ClipboardSettingsSection({ clipboardSettings, onClipboardSettingsChange, shortcuts, children }: {
@@ -17,6 +18,7 @@ export function ClipboardSettingsSection({ clipboardSettings, onClipboardSetting
 }) {
   const t = useTranslation();
   const text = t.settings.clipboard;
+  const listText = t.clipboardList;
   const change = (patch: Partial<ClipboardHistorySettings>) => onClipboardSettingsChange({ ...clipboardSettings, ...patch });
   const inWindow = clipboardSettings.openIn === "window";
 
@@ -71,6 +73,15 @@ export function ClipboardSettingsSection({ clipboardSettings, onClipboardSetting
                 onChange={(popupLayout) => change({ popupLayout })}
               />
             }
+          />
+        )}
+        {inWindow && (
+          <SettingsToggleRow
+            indent
+            title={listText.pinFavorites}
+            description={listText.pinFavoritesHint(ALT_KEY.replace("+", ""))}
+            checked={clipboardSettings.pinFavorites !== false}
+            onChange={(pinFavorites) => change({ pinFavorites })}
           />
         )}
         {inWindow && (

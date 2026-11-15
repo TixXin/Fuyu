@@ -319,6 +319,8 @@ impl ClipboardHistoryService {
             tags: Vec::new(),
             ocr_text: None,
             masked: false,
+            pin_key: None,
+            pin_order: None,
         };
         let item = match capture {
             ClipboardCapture::Text { hash, text, preview, html } => ClipboardHistoryItem {
