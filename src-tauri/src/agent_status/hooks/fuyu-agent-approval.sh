@@ -2,6 +2,9 @@
 case "${1:-codex}" in
   codex) route=codex/permission-request ;;
   workbuddy) route=workbuddy/permission-request ;;
+  qoder) route=qoder/permission-request ;;
+  codebuddy) route=codebuddy/permission-request ;;
+  qwen) route=qwen/permission-request ;;
   antigravity) route=antigravity/pre-tool-use ;;
   dsh) route=dsh/pre-tool-use ;;
   *) exit 0 ;;

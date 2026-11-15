@@ -524,6 +524,12 @@ fn new_agents_have_their_own_routes_and_answers() {
 
     let workbuddy: Value = serde_json::from_str(&permission_response(Agent::Workbuddy, Some(Decision::Allow), None, None)).unwrap();
     assert_eq!(workbuddy["hookSpecificOutput"]["decision"]["behavior"], "allow");
+    for (agent, id) in [(Agent::Qoder, "qoder"), (Agent::Codebuddy, "codebuddy"), (Agent::Qwen, "qwen")] {
+        assert_eq!(route(&format!("/{id}/permission-request")), Some((agent, Kind::Permission)));
+        assert_eq!(serde_json::to_value(agent).unwrap(), json!(id));
+        let answer: Value = serde_json::from_str(&permission_response(agent, Some(Decision::Deny), None, None)).unwrap();
+        assert_eq!(answer["hookSpecificOutput"]["decision"]["behavior"], "deny");
+    }
 
     let ag = |decision| serde_json::from_str::<Value>(&permission_response(Agent::Antigravity, decision, Some(" 不行 "), None)).unwrap();
     assert_eq!(ag(Some(Decision::Allow)), json!({ "decision": "allow" }));

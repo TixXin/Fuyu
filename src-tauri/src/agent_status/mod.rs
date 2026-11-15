@@ -53,6 +53,10 @@ mod antigravity_remote;
 mod dsh;
 mod dsh_hooks;
 mod opencode;
+mod claude_compat;
+mod qoder;
+mod codebuddy;
+mod qwen;
 
 use serde::Serialize;
 use serde_json::{json, Value};
