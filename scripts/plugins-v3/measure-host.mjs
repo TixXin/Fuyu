@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { execFileSync, spawn } from "node:child_process";
-import { appendFileSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createInterface } from "node:readline";
@@ -11,11 +11,12 @@ import { CSV_HEADER, MEMORY_KIND, csvRow, median, readMemory, toMB } from "./mea
 export const MAIN = fileURLToPath(new URL("../../packages/plugin-base/src/host/main.mjs", import.meta.url));
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-export function pluginsYml(count, disabled = new Set()) {
+export function pluginsYml(count, disabled = new Set(), busy = 0) {
   let text = "";
   for (let index = 0; index < count; index += 1) {
     text += `- id: empty-${index}\n  name: ./plugins/empty-${index}.mjs\n${disabled.has(index) ? "  disabled: true\n" : ""}`;
   }
+  for (let index = 0; index < busy; index += 1) text += `- id: busy-${index}\n  name: ./plugins/busy-${index}.mjs\n`;
   return text || "[]\n";
 }
 
@@ -23,11 +24,32 @@ export function emptyPlugin(index) {
   return `export const name = "empty-${index}";\nexport function apply() {}\n`;
 }
 
-export function makeWorkspace(count) {
+export function busyPlugin(index) {
+  return `import { writeFileSync } from "node:fs";
+export const name = "busy-${index}";
+export function apply(ctx) {
+  const recent = [];
+  let ticks = 0;
+  ctx.on("measure/busy", (value) => recent.push(value));
+  ctx.setInterval(() => {
+    ticks += 1;
+    const items = Array.from({ length: 2000 }, (_, at) => ({ at, label: "item " + at, tick: ticks }));
+    const copy = JSON.parse(JSON.stringify(items));
+    ctx.emit("measure/busy", copy.length);
+    if (recent.length > 60) recent.splice(0, recent.length - 60);
+    ctx.setTimeout(() => writeFileSync(new URL("../busy-${index}.ticks", import.meta.url), String(ticks)), 10);
+  }, 1000);
+}
+`;
+}
+
+export function makeWorkspace(count, busy = 0) {
   const dir = mkdtempSync(join(tmpdir(), "fuyu-measure-"));
   mkdirSync(join(dir, "plugins"));
   for (let index = 0; index < count; index += 1) writeFileSync(join(dir, "plugins", `empty-${index}.mjs`), emptyPlugin(index));
-  return { dir, writeConfig: (disabled) => writeFileSync(join(dir, "plugins.yml"), pluginsYml(count, disabled)), remove: () => rmSync(dir, { recursive: true, force: true }) };
+  for (let index = 0; index < busy; index += 1) writeFileSync(join(dir, "plugins", `busy-${index}.mjs`), busyPlugin(index));
+  const busyTicks = () => Array.from({ length: busy }, (_, index) => join(dir, `busy-${index}.ticks`)).map((file) => (existsSync(file) ? Number(readFileSync(file, "utf8")) : 0));
+  return { dir, busyTicks, writeConfig: (disabled) => writeFileSync(join(dir, "plugins.yml"), pluginsYml(count, disabled, busy)), remove: () => rmSync(dir, { recursive: true, force: true }) };
 }
 
 export function launch(dir, { node = process.execPath, watch = false } = {}) {
@@ -142,8 +164,8 @@ export async function measureRestart({ count, rounds, node, pollMs }) {
   return { plugins: count, pollMs, runs, totalMedianMs: Math.round(median(runs.map((run) => run.totalMs))) };
 }
 
-export async function soak({ count, minutes, everyS, out, churnS, node, log = () => {} }) {
-  const space = makeWorkspace(count);
+export async function soak({ count, busy = 0, minutes, everyS, out, churnS, node, log = () => {} }) {
+  const space = makeWorkspace(count, busy);
   space.writeConfig();
   const begun = Date.now();
   const deadline = begun + minutes * 60000;
@@ -151,6 +173,7 @@ export async function soak({ count, minutes, everyS, out, churnS, node, log = ()
   let host = launch(space.dir, { node, watch: churnS > 0 });
   let churn = null;
   let toggled = false;
+  let busyTicks = [];
   writeFileSync(out, CSV_HEADER);
   try {
     await host.ready;
@@ -181,18 +204,19 @@ export async function soak({ count, minutes, everyS, out, churnS, node, log = ()
       log(csvRow(row).trim());
       await sleep(Math.max(0, at + everyS * 1000 - Date.now()));
     }
+    busyTicks = space.busyTicks();
   } finally {
     clearInterval(churn);
     await host.stop();
     space.remove();
   }
-  return { out, restarts };
+  return { out, restarts, busyTicks };
 }
 
 const USAGE = `node scripts/plugins-v3/measure-host.mjs <startup|restart|soak> [options]
   startup  --counts 0,10,50 --rounds 5 --settle 6 --samples 5
   restart  --plugins 10 --rounds 10 --poll 1000  (0 = notice the exit at once)
-  soak     --plugins 10 --minutes 480 --every 60 --churn 0 --out <file.csv>
+  soak     --plugins 10 --busy 0 --minutes 480 --every 60 --churn 0 --out <file.csv>
   every mode: --node <path to node>`;
 
 async function cli() {
@@ -204,6 +228,7 @@ async function cli() {
       settle: { type: "string", default: "6" },
       samples: { type: "string", default: "5" },
       plugins: { type: "string", default: "10" },
+      busy: { type: "string", default: "0" },
       poll: { type: "string", default: "1000" },
       minutes: { type: "string", default: "480" },
       every: { type: "string", default: "60" },
@@ -223,7 +248,7 @@ async function cli() {
     result = await measureRestart({ count: Number(values.plugins), rounds: Number(values.rounds ?? 10), pollMs: Number(values.poll), node });
   } else if (mode === "soak") {
     const out = values.out ?? `host-soak-${Date.now()}.csv`;
-    result = await soak({ count: Number(values.plugins), minutes: Number(values.minutes), everyS: Number(values.every), churnS: Number(values.churn), out, node, log: (line) => process.stderr.write(`${line}\n`) });
+    result = await soak({ count: Number(values.plugins), busy: Number(values.busy), minutes: Number(values.minutes), everyS: Number(values.every), churnS: Number(values.churn), out, node, log: (line) => process.stderr.write(`${line}\n`) });
   } else {
     process.stderr.write(`${USAGE}\n`);
     process.exit(2);
