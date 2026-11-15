@@ -6,7 +6,16 @@ use std::{
 use plugin_base::{find_node, Event, HostSpec, HostState, NodeSearch, Supervisor, Timing, MINIMUM_NODE};
 use serde_json::Value;
 
-use super::{containment, enabled, host_args, host_script, window_origins, HostMode};
+use super::{containment, enabled, host_args, host_env, host_script, window_origins, HostMode};
+
+#[test]
+fn on_windows_the_host_gets_a_smaller_threadpool_unless_the_user_already_chose_one() {
+    let env = host_env(true, None);
+    assert_eq!(env.len(), 1);
+    assert_eq!((env[0].0.to_str(), env[0].1.to_str()), (Some("UV_THREADPOOL_SIZE"), Some("2")));
+    assert!(host_env(true, Some("8")).is_empty(), "an explicit size from the environment is passed through unchanged");
+    assert!(host_env(false, None).is_empty(), "other systems do not commit thread stacks up front");
+}
 
 #[test]
 fn the_host_only_starts_in_a_development_build_with_the_switch_on() {
