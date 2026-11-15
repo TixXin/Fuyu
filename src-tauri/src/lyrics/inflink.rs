@@ -8,12 +8,14 @@ use std::{
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
-use crate::system::updater::get_updater_proxy;
+use crate::system::download_mirrors::{self, Failure, FailureKind};
+use crate::user_error::UserError;
 
 const PLUGIN_NAME: &str = "InfLink-rs";
 const FILE_NAME: &str = "InfLink-rs.plugin";
 const LATEST_RELEASE: &str = "https://api.github.com/repos/apoint123/InfLink-rs/releases/latest";
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(20);
+const DOWNLOAD_TIMEOUT: Duration = Duration::from_secs(120);
 const USER_AGENT: &str = concat!("Fuyu/", env!("CARGO_PKG_VERSION"), " (https://github.com/TixXin/fuyu)");
 const MAX_PACKAGE_BYTES: u64 = 32 * 1024 * 1024;
 
@@ -107,45 +109,46 @@ fn plugin_asset(release: &Release) -> Result<(&Asset, String), String> {
     Ok((asset, hash.to_ascii_lowercase()))
 }
 
-fn client() -> Result<reqwest::Client, String> {
-    let mut builder = reqwest::Client::builder().timeout(REQUEST_TIMEOUT).user_agent(USER_AGENT);
-    if let Some(proxy) = get_updater_proxy() {
-        let proxy = reqwest::Proxy::all(&proxy).map_err(|error| format!("Invalid proxy {proxy}: {error}"))?;
-        builder = builder.proxy(proxy);
-    }
-    builder.build().map_err(|error| format!("Could not create the HTTP client: {error}"))
+fn client(total: Duration) -> Result<reqwest::Client, String> {
+    download_mirrors::client(USER_AGENT, total)
 }
 
-async fn latest_release(client: &reqwest::Client) -> Result<Release, String> {
+fn release_error(failure: &Failure) -> UserError {
+    let code = if failure.kind == FailureKind::Timeout { "inflink.releaseTimeout" } else { "inflink.releaseUnreachable" };
+    UserError::new(code, "Could not get the latest InfLink-rs release from api.github.com.").detail(&failure.message)
+}
+
+async fn latest_release(client: &reqwest::Client) -> Result<Release, UserError> {
     let response = client
         .get(LATEST_RELEASE)
         .header(reqwest::header::ACCEPT, "application/vnd.github+json")
         .send()
         .await
-        .map_err(|error| format!("Could not reach GitHub: {error}"))?;
+        .map_err(|error| release_error(&Failure::from_reqwest(&error)))?;
     if !response.status().is_success() {
-        return Err(format!("GitHub answered {} for the latest InfLink-rs release", response.status()));
+        return Err(release_error(&Failure::new(FailureKind::Status, format!("api.github.com answered {}", response.status()))));
     }
-    response.json().await.map_err(|error| format!("GitHub's answer was not understood: {error}"))
+    response.json().await.map_err(|error| release_error(&Failure::from_reqwest(&error)))
 }
 
-async fn download(client: &reqwest::Client, asset: &Asset) -> Result<Vec<u8>, String> {
+async fn download_from(client: &reqwest::Client, url: &str, hash: &str) -> Result<Vec<u8>, Failure> {
+    let package = download_mirrors::fetch(client, url, MAX_PACKAGE_BYTES)
+        .await?
+        .ok_or_else(|| Failure::new(FailureKind::Status, "answered 404 Not Found"))?;
+    if sha256_hex(&package) != hash {
+        return Err(Failure::new(FailureKind::Invalid, "the file does not match GitHub's sha256"));
+    }
+    Ok(package)
+}
+
+async fn download(client: &reqwest::Client, asset: &Asset, hash: &str) -> Result<Vec<u8>, UserError> {
     if asset.size > MAX_PACKAGE_BYTES {
-        return Err(format!("The InfLink-rs package is unexpectedly large ({} bytes)", asset.size));
+        return Err(format!("The InfLink-rs package is unexpectedly large ({} bytes)", asset.size).into());
     }
-    let response = client
-        .get(&asset.browser_download_url)
-        .send()
+    download_mirrors::first_success(&asset.browser_download_url, |source| async move { download_from(client, &source.url, hash).await })
         .await
-        .map_err(|error| format!("Could not download InfLink-rs: {error}"))?;
-    if !response.status().is_success() {
-        return Err(format!("Downloading InfLink-rs failed: {}", response.status()));
-    }
-    let bytes = response.bytes().await.map_err(|error| format!("Could not download InfLink-rs: {error}"))?;
-    if bytes.len() as u64 > MAX_PACKAGE_BYTES {
-        return Err("The InfLink-rs package is unexpectedly large".into());
-    }
-    Ok(bytes.to_vec())
+        .map(|(package, _)| package)
+        .map_err(|failed| failed.to_user_error(PLUGIN_NAME))
 }
 
 fn sha256_hex(bytes: &[u8]) -> String {
@@ -176,7 +179,7 @@ async fn local_state_off_thread() -> Result<(Option<PathBuf>, Option<(PathBuf, S
 pub(super) async fn state(check_latest: bool) -> Result<InflinkState, String> {
     let (data_dir, installed) = local_state_off_thread().await?;
     let latest = if check_latest && data_dir.is_some() {
-        match client() {
+        match client(REQUEST_TIMEOUT) {
             Ok(client) => latest_release(&client).await.ok().map(|release| version_of_tag(&release.tag_name)),
             Err(_) => None,
         }
@@ -190,19 +193,15 @@ pub(super) async fn state(check_latest: bool) -> Result<InflinkState, String> {
     })
 }
 
-pub(super) async fn install() -> Result<InflinkState, String> {
+pub(super) async fn install() -> Result<InflinkState, UserError> {
     let (data_dir, installed) = local_state_off_thread().await?;
-    let data_dir = data_dir.ok_or("BetterNCM was not found. Install BetterNCM first, open NetEase Cloud Music once, then try again.")?;
-    let client = client()?;
-    let release = latest_release(&client).await?;
+    let data_dir = data_dir.ok_or_else(|| UserError::new("inflink.noBetterNcm", "BetterNCM was not found. Install BetterNCM first, open NetEase Cloud Music once, then try again."))?;
+    let release = latest_release(&client(REQUEST_TIMEOUT)?).await?;
     let (asset, hash) = plugin_asset(&release)?;
-    let package = download(&client, asset).await?;
-    if sha256_hex(&package) != hash {
-        return Err("The downloaded InfLink-rs package does not match GitHub's checksum, so it was not installed".into());
-    }
+    let package = download(&client(DOWNLOAD_TIMEOUT)?, asset, &hash).await?;
     let (name, version) = read_manifest(&package)?;
     if name != PLUGIN_NAME {
-        return Err(format!("The downloaded package is \"{name}\", not InfLink-rs"));
+        return Err(format!("The downloaded package is \"{name}\", not InfLink-rs").into());
     }
     let plugins = data_dir.join("plugins");
     let target = installed.map(|(path, _)| path).unwrap_or_else(|| plugins.join(FILE_NAME));
@@ -211,7 +210,8 @@ pub(super) async fn install() -> Result<InflinkState, String> {
         write_package(&target, &package)
     })
     .await
-    .map_err(|error| format!("Failed to write InfLink-rs: {error}"))??;
+    .map_err(|error| format!("Failed to write InfLink-rs: {error}"))?
+    .map_err(|error| UserError::new("inflink.write", "Could not put InfLink-rs into BetterNCM's plugins folder.").detail(error))?;
     Ok(InflinkState {
         better_ncm: Some(data_dir.display().to_string()),
         installed: Some(version.clone()),

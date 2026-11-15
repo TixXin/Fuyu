@@ -1,5 +1,6 @@
 use std::time::{Duration, Instant};
 
+use super::download_mirrors::{self, Exhausted, Failure, FailureKind, CONNECT_TIMEOUT, READ_TIMEOUT};
 use super::update_runtime::{change, Stage};
 use crate::user_error::UserError;
 
@@ -73,7 +74,8 @@ async fn check(app: &AppHandle, channel: &str, proxy: Option<String>) -> Result<
         .updater_builder()
         .endpoints(endpoints)
         .map_err(|error| error.to_string())?
-        .timeout(CHECK_TIMEOUT);
+        .timeout(CHECK_TIMEOUT)
+        .configure_client(|client| client.connect_timeout(CONNECT_TIMEOUT).read_timeout(READ_TIMEOUT));
     if let Some(proxy) = proxy {
         builder = builder.proxy(Url::parse(&proxy).map_err(|error| error.to_string())?);
     }
@@ -125,7 +127,40 @@ pub async fn updater_check(
     }
 }
 
-async fn download(app: &AppHandle, update: &Update, on_event: Option<&Channel<DownloadEvent>>) -> Result<Vec<u8>, String> {
+fn classify(error: &tauri_plugin_updater::Error) -> Failure {
+    use tauri_plugin_updater::Error;
+    match error {
+        Error::Reqwest(error) => Failure::from_reqwest(error),
+        Error::Network(message) => Failure::new(FailureKind::Status, message.clone()),
+        Error::Minisign(_) | Error::Base64(_) | Error::SignatureUtf8(_) => Failure::new(FailureKind::Invalid, error.to_string()),
+        other => Failure::new(FailureKind::Unreachable, other.to_string()),
+    }
+}
+
+async fn download(app: &AppHandle, update: &mut Update, on_event: Option<&Channel<DownloadEvent>>) -> Result<Vec<u8>, String> {
+    let original = update.download_url.clone();
+    let mut attempts = Vec::new();
+    for source in download_mirrors::sources(original.as_str()) {
+        let Ok(url) = Url::parse(&source.url) else { continue };
+        update.download_url = url;
+        let _ = change(app, |runtime| {
+            runtime.snapshot.download_source = Some(source.name.to_string());
+            runtime.snapshot.downloaded = 0;
+            runtime.snapshot.total = 0;
+            Ok(())
+        });
+        let result = download_from(app, update, on_event).await;
+        update.download_url = original.clone();
+        match result {
+            Ok(bytes) => return Ok(bytes),
+            Err(error) => attempts.push((source.name, classify(&error))),
+        }
+    }
+    let what = format!("Fuyu {}", update.version);
+    Err(Exhausted { attempts }.to_user_error(&what).to_string())
+}
+
+async fn download_from(app: &AppHandle, update: &Update, on_event: Option<&Channel<DownloadEvent>>) -> Result<Vec<u8>, tauri_plugin_updater::Error> {
     let mut started = false;
     let mut pending: usize = 0;
     let mut reported = Instant::now();
@@ -156,7 +191,7 @@ async fn download(app: &AppHandle, update: &Update, on_event: Option<&Channel<Do
             });
             if let Some(channel) = on_event { let _ = channel.send(DownloadEvent::Finished); }
         },
-    ).await.map_err(|error| error.to_string())
+    ).await
 }
 
 fn join_error(app: &AppHandle, error: impl std::fmt::Display) -> UserError {
@@ -171,7 +206,8 @@ pub async fn updater_download(app: AppHandle, expected_version: String, expected
     update.timeout = Some(DOWNLOAD_TIMEOUT);
     let task_app = app.clone();
     let result = tauri::async_runtime::spawn(async move {
-        match download(&task_app, &update, None).await {
+        let mut update = update;
+        match download(&task_app, &mut update, None).await {
             Ok(bytes) => change(&task_app, |runtime| { runtime.finish_download(update, bytes); Ok(()) }),
             Err(error) => {
                 change(&task_app, |runtime| { runtime.download_failed(update, &error); Ok(()) })?;
@@ -201,7 +237,7 @@ pub async fn updater_install(
                     let _ = on_event.send(DownloadEvent::Finished);
                     bytes
                 }
-                None => download(&task_app, &update, Some(&on_event)).await?,
+                None => download(&task_app, &mut update, Some(&on_event)).await?,
             };
             let _ = change(&task_app, |runtime| { runtime.snapshot.stage = Stage::Installing; Ok(()) });
             update.install(bytes).map_err(|error| error.to_string())

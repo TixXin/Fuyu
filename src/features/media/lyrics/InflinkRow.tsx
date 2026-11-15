@@ -6,6 +6,7 @@ import { useErrorText, useTranslation } from "../../../i18n";
 import { getInflinkState, installInflink, openLyricsLink, type InflinkState } from "./api";
 
 const INFLINK_URL = "https://github.com/apoint123/InfLink-rs";
+const RELEASES_URL = "https://github.com/apoint123/InfLink-rs/releases/latest";
 const BETTERNCM_URL = "https://github.com/std-microblock/BetterNCM-Installer/releases/latest";
 
 export function InflinkRow() {
@@ -49,9 +50,12 @@ export function InflinkRow() {
     else if (state.installed) description = text.installed(state.installed);
     if (!state.installed || outdated) {
       control = (
-        <SettingsLinkButton disabled={busy} onClick={() => void install()}>
-          {busy ? text.installing : state.installed ? text.update : text.install}
-        </SettingsLinkButton>
+        <>
+          {error && !busy && <SettingsLinkButton onClick={() => open(RELEASES_URL)}>{text.releasePage}</SettingsLinkButton>}
+          <SettingsLinkButton disabled={busy} onClick={() => void install()}>
+            {busy ? text.installing : state.installed ? text.update : text.install}
+          </SettingsLinkButton>
+        </>
       );
     } else {
       control = <SettingsLinkButton onClick={() => open(INFLINK_URL)}>{text.about}</SettingsLinkButton>;
@@ -61,7 +65,7 @@ export function InflinkRow() {
   return (
     <SettingsRow
       title={text.title}
-      description={error ? `${description} ${text.failed(error)}` : description}
+      description={error ? `${description} ${text.failed(error)}${state?.betterNcm ? ` ${text.manual(`${state.betterNcm}\\plugins`)}` : ""}` : description}
       control={control}
     />
   );

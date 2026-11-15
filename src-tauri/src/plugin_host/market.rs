@@ -14,7 +14,7 @@ use super::lock;
 use super::manifest::{compare_versions, parse_manifest, read_manifest_text, supports_api_version, version_at_least, LocalizedText, MANIFEST_FILE_NAME};
 use super::revocations::{parse_revoked, Revocation};
 use super::signature::{verify_file, verify_index, TRUSTED_KEYS};
-use crate::system::updater::get_updater_proxy;
+use crate::system::download_mirrors::{self, Failure, FailureKind};
 
 const MARKET_REPO: &str = "TixXin/fuyu-plugins";
 const MARKET_BRANCH: &str = "main";
@@ -228,45 +228,14 @@ pub(super) fn incompatibility(entry: &MarketEntry, app_version: &str) -> Option<
 }
 
 pub(super) fn client() -> Result<reqwest::Client, String> {
-    let mut builder = reqwest::Client::builder()
-        .timeout(REQUEST_TIMEOUT)
-        .user_agent(concat!("Fuyu/", env!("CARGO_PKG_VERSION")));
-    if let Some(proxy) = get_updater_proxy() {
-        let proxy = reqwest::Proxy::all(&proxy).map_err(|error| format!("Invalid proxy {proxy}: {error}"))?;
-        builder = builder.proxy(proxy);
-    }
-    builder.build().map_err(|error| format!("Could not create the HTTP client: {error}"))
-}
-
-async fn download(client: &reqwest::Client, url: &str, limit: u64) -> Result<Vec<u8>, String> {
-    download_unless_missing(client, url, limit)
-        .await?
-        .ok_or_else(|| format!("{url} answered 404 Not Found."))
+    download_mirrors::client(concat!("Fuyu/", env!("CARGO_PKG_VERSION")), REQUEST_TIMEOUT)
 }
 
 pub(super) async fn download_unless_missing(client: &reqwest::Client, url: &str, limit: u64) -> Result<Option<Vec<u8>>, String> {
-    let response = client
-        .get(url)
-        .send()
+    download_mirrors::first_success(url, |source| async move { download_mirrors::fetch(client, &source.url, limit).await })
         .await
-        .map_err(|error| format!("Could not reach {url}: {error}"))?;
-    if response.status() == reqwest::StatusCode::NOT_FOUND {
-        return Ok(None);
-    }
-    if !response.status().is_success() {
-        return Err(format!("{url} answered {}.", response.status()));
-    }
-    if response.content_length().is_some_and(|length| length > limit) {
-        return Err(format!("{url} is larger than {limit} bytes."));
-    }
-    let bytes = response
-        .bytes()
-        .await
-        .map_err(|error| format!("Could not download {url}: {error}"))?;
-    if bytes.len() as u64 > limit {
-        return Err(format!("{url} is larger than {limit} bytes."));
-    }
-    Ok(Some(bytes.to_vec()))
+        .map(|(bytes, _)| bytes)
+        .map_err(|failed| format!("Could not download {url}: {}", failed.summary()))
 }
 
 async fn market_commit(client: &reqwest::Client) -> Option<String> {
@@ -330,9 +299,19 @@ pub(super) async fn fetch_market() -> Result<MarketData, String> {
 }
 
 pub(super) async fn fetch_package(entry: &MarketEntry) -> Result<Vec<u8>, String> {
-    let bytes = download(&client()?, &entry.download.url, entry.download.size).await?;
-    verify_package(&bytes, &entry.download)?;
-    Ok(bytes)
+    let client = client()?;
+    let client = &client;
+    let url = &entry.download.url;
+    download_mirrors::first_success(url, |source| async move {
+        let bytes = download_mirrors::fetch(client, &source.url, entry.download.size)
+            .await?
+            .ok_or_else(|| Failure::new(FailureKind::Status, "answered 404 Not Found"))?;
+        verify_package(&bytes, &entry.download).map_err(|error| Failure::new(FailureKind::Invalid, error))?;
+        Ok(bytes)
+    })
+    .await
+    .map(|(bytes, _)| bytes)
+    .map_err(|failed| format!("Could not download {url}: {}", failed.summary()))
 }
 
 pub(super) fn verify_package(bytes: &[u8], download: &PackageDownload) -> Result<(), String> {
