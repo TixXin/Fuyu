@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import {
   AGENT_ICON_PET_HEIGHT,
   CENTER_PATTERN_PLUGIN_ID,
@@ -17,18 +17,17 @@ import {
   usePetSheet,
   type AgentActivity,
 } from "../../features/center-pattern";
-import { ClaudeUsageGauge } from "../../features/claude-usage/ClaudeUsageGauge";
-import { CLAUDE_USAGE_GAUGE_WIDTH, shownUsageProviders, usageItemId, type UsageProvider } from "../../features/claude-usage/usageRing";
+import { CLAUDE_USAGE_GAUGE_WIDTH, shownUsageProviders, usageItemId } from "../../features/claude-usage/usageRing";
 import { useBuiltinPlugin } from "../../features/plugins/useBuiltinPlugin";
 import type { AgentSessionSummary } from "../../features/agent-status/api";
 import { SESSION_RING_STYLES, SessionRing, type SessionRingStyle } from "../../features/session-ring/SessionRing";
 import { sessionRingCounts } from "../../features/session-ring/ringCounts";
 import { isCollapsedItemHidden } from "../../features/appearance/collapsedItems";
 import { useCollapsedPlacements } from "../../features/appearance/useCollapsedPlacements";
-import { listenIslandHover } from "./api";
 import { TIMER_PLUGIN_ID, useTimers } from "../../features/timer/store";
 import { hasChip, TimerChip, TIMER_CHIP_WIDTH } from "../../features/timer/TimerChip";
 import type { CollapsedSlots } from "./types";
+import { UsageGaugeSlot } from "./slots/collapsed";
 
 const EMPTY: CollapsedSlots = {};
 const CLAUDE_USAGE_PLUGIN_ID = "focusd.claude-usage";
@@ -103,23 +102,4 @@ export function useCollapsedSlots({ paused, agents, sessions, unseen, agentsOn, 
     }
     return Object.keys(slots).length === 0 ? EMPTY : slots;
   }, [center.enabled, usage.enabled, providers, showRemaining, sessionRing.enabled, timerShown, ringStyle, ringCount, agentsOn, sessions, unseen, onOpenAgents, choice, size, sheet, mood, still, lightShown]);
-}
-
-function UsageGaugeSlot({ providers, showRemaining }: { providers: readonly UsageProvider[]; showRemaining: boolean }) {
-  const [hovered, setHovered] = useState(true);
-  useEffect(() => {
-    let cancelled = false;
-    let unlisten: (() => void) | undefined;
-    listenIslandHover(setHovered)
-      .then((stop) => {
-        if (cancelled) stop();
-        else unlisten = stop;
-      })
-      .catch((error: unknown) => console.error("Failed to listen for island hover", error));
-    return () => {
-      cancelled = true;
-      unlisten?.();
-    };
-  }, []);
-  return providers.map((provider) => <ClaudeUsageGauge key={provider.id} provider={provider} islandHovered={hovered} showRemaining={showRemaining} />);
 }
