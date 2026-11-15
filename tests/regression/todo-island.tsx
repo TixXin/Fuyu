@@ -63,6 +63,8 @@ const FRAMES: { id: string; caption: string; props: Props; light?: boolean; tall
   { id: "light", caption: "浅色岛屿底色", props: props("today", { saveState: "needs-path", draftDate: "2026-11-10" }), light: true, tall: true },
 ];
 
+let scrolledTo = 0;
+document.addEventListener("scroll", () => { scrolledTo = window.scrollY; }, true);
 const pages = document.getElementById("pages")!;
 const results = document.getElementById("results")!;
 const messages: string[] = [];
@@ -90,6 +92,14 @@ for (const frame of FRAMES) {
 const $ = (frame: string, selector: string) => document.querySelector<HTMLElement>(`#frame-${frame} ${selector}`);
 const $$ = (frame: string, selector: string) => [...document.querySelectorAll<HTMLElement>(`#frame-${frame} ${selector}`)];
 const click = (element: HTMLElement | null) => act(async () => { element!.click(); });
+const wait = (ms: number) => act(async () => { await new Promise((resolve) => setTimeout(resolve, ms)); });
+const settle = async (done: () => boolean, ms = 2000) => { for (let spent = 0; !done() && spent < ms; spent += 50) await wait(50); };
+const menuOpen = () => document.querySelectorAll(".row-menu").length === 1;
+const openMenu = async (button: HTMLElement | null) => {
+  await settle(() => scrolledTo === window.scrollY);
+  await click(button);
+  await settle(menuOpen);
+};
 
 try {
   const tabs = $$("today", ".todo-island__tab");
@@ -127,10 +137,10 @@ try {
     && $("light", ".todo-date-picker__button--later"), "选了以后的日子：提示写日期，日期按钮变紫");
   check(!$("today", ".todo-island__save") && $("today", ".todo-island__progress")?.textContent === "今天完成 1/3", "平时右上角是今天的进度，不放保存按钮");
   const menuItem = (label: string) => [...document.querySelectorAll<HTMLElement>(".row-menu__item")].find((item) => item.textContent?.includes(label)) ?? null;
-  await click($("today", 'button[aria-haspopup="menu"]'));
+  await openMenu($("today", 'button[aria-haspopup="menu"]'));
   await click(menuItem("保存今天的清单"));
   check(calls.includes("save"), "「⋯」里保存今天");
-  await click($("today", 'button[aria-haspopup="menu"]'));
+  await openMenu($("today", 'button[aria-haspopup="menu"]'));
   await click(menuItem("清除已完成（1 件）"));
   check(calls.includes("delete:c") && !calls.includes("delete:a"), "「⋯」里清除已完成，只删做完的");
   check($("light", ".todo-island__save--needs-path")?.getAttribute("aria-label")?.includes("保存位置"), "保存有话要说时（没设位置、失败、保存中、刚保存好）按钮出现在「⋯」旁边");
@@ -177,17 +187,17 @@ try {
   check(getComputedStyle(tagRows[3].querySelector(".todo-tag-button")!).opacity === "0" && getComputedStyle(tagRows[0].querySelector(".todo-tag-button")!).opacity === "1", "没设标签的按钮平时隐藏，设了的一直显示");
   check(getComputedStyle(tagRows[0].querySelector(".todo-tag-dot")!).backgroundColor !== getComputedStyle(tagRows[2].querySelector(".todo-tag-dot")!).backgroundColor, "不同颜色的点颜色不同");
   check(tagRows.every((row) => row.offsetHeight === 32), "加了标签按钮，一行仍是 32px");
-  await click(tagRows[3].querySelector<HTMLElement>(".todo-tag-button"));
+  await openMenu(tagRows[3].querySelector<HTMLElement>(".todo-tag-button"));
   check([...document.querySelectorAll(".row-menu__item")].map((item) => item.textContent).join("|") === "高优先级|中优先级|低优先级|红色|橙色|黄色|绿色|蓝色|紫色", "菜单列出三档优先级和六种颜色");
   await click(menuItem("高优先级"));
   check(calls.includes('tag:t4:{"priority":"high"}'), "选优先级只改优先级");
-  await click(tagRows[0].querySelector<HTMLElement>(".todo-tag-button"));
+  await openMenu(tagRows[0].querySelector<HTMLElement>(".todo-tag-button"));
   check(menuItem("红色")?.hasAttribute("disabled") && menuItem("不设颜色") && menuItem("不设优先级"), "已选的那项不能再点，设了的可以清掉");
   await click(menuItem("不设颜色"));
   check(calls.includes("tag:t1:{}"), "清掉颜色");
   const scheduled = $$("tags-light", ".scheduled-list__item");
   check(scheduled.map(marks).join("|") === "green,high|yellow,low" && scheduled.every((item) => getComputedStyle(item.querySelector(".todo-tag-button")!).opacity === "1"), "已安排的待办也显示颜色和优先级");
-  await click(scheduled[1].querySelector<HTMLElement>(".todo-tag-button"));
+  await openMenu(scheduled[1].querySelector<HTMLElement>(".todo-tag-button"));
   await click(menuItem("紫色"));
   check(calls.includes('tagScheduled:s2:{"color":"purple"}'), "已安排的待办也能改标签");
 
