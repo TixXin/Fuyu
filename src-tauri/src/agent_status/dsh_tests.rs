@@ -60,6 +60,65 @@ fn open_questions_wait_closed_turns_finish_and_unknown_versions_are_skipped() {
     assert_eq!(state(&value), None);
 }
 
+#[test]
+fn reads_the_third_model_selection_version_with_the_provider() {
+    let mut value = fixture();
+    value["record"]["rows"]["modelSelection"] = json!({"ver": 3, "val": {
+        "lastUsed": {"provider": "deepseek-official", "model": "deepseek-flash", "reasoningEffort": "high"}, "pending": null
+    }});
+    let (summary, _) = parse_checkpoint(&value, ID, 1100).unwrap();
+    assert_eq!((summary.model.as_deref(), summary.effort.as_deref()), (Some("deepseek-flash"), Some("high")));
+    value["record"]["rows"]["modelSelection"]["ver"] = json!(9);
+    let (summary, _) = parse_checkpoint(&value, ID, 1100).unwrap();
+    assert_eq!((summary.model, summary.effort), (None, None));
+}
+
+fn mode(rows: Value) -> Option<&'static str> {
+    let mut value = fixture();
+    for (key, row) in rows.as_object().unwrap() {
+        value["record"]["rows"][key] = row.clone();
+    }
+    parse_checkpoint(&value, ID, 1100).unwrap().0.permission_mode
+}
+
+#[test]
+fn maps_permission_presets_to_the_shared_modes() {
+    let permissions = |preset: Value, sandbox: &str, approval: &str| {
+        json!({"permissions": {"ver": 2, "val": {"preset": preset, "sandbox": sandbox, "approval": approval, "seeded": false}}})
+    };
+    assert_eq!(mode(json!({})), None);
+    assert_eq!(mode(permissions(json!("workspace-write"), "workspace-write", "ask")), Some("default"));
+    assert_eq!(mode(permissions(Value::Null, "workspace-write", "never")), Some("auto"));
+    assert_eq!(mode(permissions(json!("auto"), "danger-full-access", "never")), Some("auto"));
+    assert_eq!(mode(permissions(json!("danger-full-access"), "danger-full-access", "never")), Some("bypass"));
+    assert_eq!(mode(json!({"permissions": {"ver": 2, "val": null}, "sandboxMode": {"ver": 1, "val": "danger-full-access"},
+        "approvalState": {"ver": 1, "val": {"policy": "never"}}})), Some("bypass"));
+    let mut planning = permissions(json!("workspace-write"), "workspace-write", "ask");
+    planning["plan"] = json!({"ver": 4, "val": {"active": true}});
+    assert_eq!(mode(planning), Some("plan"));
+}
+
+#[test]
+fn shows_the_running_tool_and_unfinished_todos() {
+    let mut value = fixture();
+    value["record"]["rows"]["contextTimeline"] = json!({"ver": 28, "val": {"callNames": {
+        "call_1": {"name": "grep", "start": 10}, "call_2": {"name": "bash", "start": 20}
+    }}});
+    value["record"]["rows"]["todos"] = json!({"ver": 2, "val": [
+        {"content": "Read the code", "status": "completed"},
+        {"content": "Fix the parser", "status": "in_progress"},
+        {"content": "Test it", "status": "pending"}
+    ]});
+    let (summary, _) = parse_checkpoint(&value, ID, 1100).unwrap();
+    assert_eq!(summary.current_tool.map(|tool| (tool.name, tool.detail)), Some(("bash".into(), None)));
+    let todos = summary.todos.unwrap();
+    assert_eq!((todos.done, todos.total, todos.current.as_deref()), (1, 3, Some("Fix the parser")));
+    value["record"]["rows"]["turnBoundary"]["val"]["openTurnStartSeq"] = Value::Null;
+    value["record"]["rows"]["todos"]["val"] = json!([{"content": "Read the code", "status": "completed"}]);
+    let (summary, _) = parse_checkpoint(&value, ID, 1100).unwrap();
+    assert_eq!((summary.current_tool, summary.todos), (None, None));
+}
+
 fn temp_home(name: &str) -> PathBuf {
     let home = std::env::temp_dir().join(format!("fuyu-dsh-{name}-{}", std::process::id()));
     let _ = fs::remove_dir_all(&home);

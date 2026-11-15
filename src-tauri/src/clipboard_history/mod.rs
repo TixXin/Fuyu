@@ -2,6 +2,7 @@ pub(crate) mod actions;
 mod capture_pause;
 mod clipboard_io;
 mod command_text;
+mod copy_notice;
 pub(crate) mod deletion;
 pub(crate) mod expand;
 pub(crate) mod drag;
@@ -154,6 +155,8 @@ pub struct ClipboardHistorySettings {
     popup_pin_x: Option<i32>,
     #[serde(default)]
     popup_pin_y: Option<i32>,
+    #[serde(default = "default_copy_card_seconds")]
+    copy_card_seconds: u32,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -267,6 +270,7 @@ impl Default for ClipboardHistorySettings {
             popup_pinned: false,
             popup_pin_x: None,
             popup_pin_y: None,
+            copy_card_seconds: copy_notice::DEFAULT_CARD_SECONDS,
         }
     }
 }
@@ -275,6 +279,7 @@ impl ClipboardHistorySettings {
     fn normalized(mut self) -> Self {
         self.max_items = self.max_items.clamp(MIN_MAX_ITEMS, MAX_MAX_ITEMS);
         self.retention_days = self.retention_days.min(MAX_RETENTION_DAYS);
+        self.copy_card_seconds = copy_notice::normalized_seconds(self.copy_card_seconds);
         self.excluded_apps = normalized_app_names(&self.excluded_apps);
         self.ai_prompts = normalized_ai_prompts(&self.ai_prompts);
         self.shortcut = parse_shortcut_binding(&self.shortcut)
@@ -294,6 +299,10 @@ pub(crate) enum CopyAs {
     Plain,
     Text,
     TextFile,
+}
+
+fn default_copy_card_seconds() -> u32 {
+    copy_notice::DEFAULT_CARD_SECONDS
 }
 
 fn default_true() -> bool {
@@ -440,12 +449,16 @@ pub fn set_clipboard_history_settings(
 
 #[tauri::command]
 pub fn copy_clipboard_history_item(id: String) -> Result<ClipboardHistorySnapshot, String> {
-    service()?.copy_item(&id)
+    let snapshot = service()?.copy_item(&id)?;
+    copy_notice::notify_copied(&id, false);
+    Ok(snapshot)
 }
 
 #[tauri::command]
 pub fn copy_clipboard_history_item_as(id: String, copy_as: CopyAs) -> Result<ClipboardHistorySnapshot, String> {
-    service()?.copy_item_as(&id, copy_as)
+    let snapshot = service()?.copy_item_as(&id, copy_as)?;
+    copy_notice::notify_copied(&id, false);
+    Ok(snapshot)
 }
 
 #[tauri::command]
@@ -457,7 +470,9 @@ pub async fn paste_clipboard_history_item(
     copy_as: Option<CopyAs>,
 ) -> Result<(), String> {
     let options = popup::PasteOptions { plain: plain.unwrap_or(false), enter: enter.unwrap_or(false), copy_as };
-    popup::paste(&app, &id, options)
+    popup::paste(&app, &id, options)?;
+    copy_notice::notify_copied(&id, true);
+    Ok(())
 }
 
 #[tauri::command]

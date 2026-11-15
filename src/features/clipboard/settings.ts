@@ -28,12 +28,15 @@ export const DEFAULT_CLIPBOARD_HISTORY: ClipboardHistorySnapshot = {
     localApiRead: false,
     aiPrompts: [],
     popupPinned: false,
+    copyCardSeconds: 3,
   },
   items: [],
 };
 
 export const CLIPBOARD_MIN_ITEMS = 5;
 export const CLIPBOARD_MAX_ITEMS = 500;
+
+export const CLIPBOARD_CARD_SECONDS = [0, 3, 5, 8, 15, 30] as const;
 
 export const CLIPBOARD_RETENTION_DAYS = [0, 1, 7, 30, 90] as const;
 
@@ -71,6 +74,7 @@ export function normalizeClipboardSettings(
     flattenTerminalCommands: settings.flattenTerminalCommands === true,
     localApiRead: settings.localApiRead === true,
     popupPinned: settings.popupPinned === true,
+    copyCardSeconds: (CLIPBOARD_CARD_SECONDS as readonly unknown[]).includes(settings.copyCardSeconds) ? settings.copyCardSeconds : 3,
     aiPrompts: Array.isArray(settings.aiPrompts) ? settings.aiPrompts.filter((prompt) => prompt && typeof prompt.title === "string" && typeof prompt.prompt === "string") : [],
   };
 }

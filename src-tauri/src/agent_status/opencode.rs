@@ -16,6 +16,8 @@ use super::session_scan::pick_title;
 use super::reply_text::reply_ending;
 use super::sessions::{session_phase, AgentSessionSummary, TurnState};
 use super::title::{display_title, folder_title, prompt_title};
+use super::todo_list::{todo_items, unfinished, TodoProgress};
+use super::tool_call::{opencode_tool_call, ToolCall};
 use super::window_focus::app_name;
 use crate::platform;
 
@@ -37,6 +39,8 @@ pub(super) const HARNESS: Harness = Harness {
 const DESKTOP_EXES: [&str; 2] = ["OpenCode.exe", "OpenCode"];
 const UNTITLED: [&str; 2] = ["New session - ", "Child session - "];
 const RECENT_MESSAGES: i64 = 40;
+const ACTIVE_TOOL: [&str; 3] = ["pending", "streaming", "running"];
+const TODO_TOOL: &str = "todowrite";
 
 use crate::agent_approval::OpencodeService as Service;
 
@@ -179,6 +183,7 @@ struct SessionRow {
     busy: Option<i64>,
     idle: Option<i64>,
     outcome: Option<String>,
+    agent: Option<String>,
 }
 
 fn session_rows(conn: &Connection, table: &str, columns: &HashSet<String>, since: i64) -> rusqlite::Result<Vec<SessionRow>> {
@@ -187,11 +192,12 @@ fn session_rows(conn: &Connection, table: &str, columns: &HashSet<String>, since
     let parent = if columns.contains("parent_id") { "parent_id IS NULL" } else { "1" };
     let archived = if columns.contains("time_archived") { "time_archived IS NULL" } else { "1" };
     let sql = format!(
-        "SELECT id, title, directory, {model}, time_updated, {busy}, {idle}, {outcome} FROM {table} \
+        "SELECT id, title, directory, {model}, time_updated, {busy}, {idle}, {outcome}, {agent} FROM {table} \
          WHERE {parent} AND {archived} \
          AND max(time_updated, coalesce({busy}, 0), coalesce({idle}, 0)) >= ?1",
         model = column(columns, "model"),
         outcome = column(columns, "idle_outcome"),
+        agent = column(columns, "agent"),
     );
     let mut statement = conn.prepare(&sql)?;
     let rows = statement.query_map([since], |row| {
@@ -204,6 +210,7 @@ fn session_rows(conn: &Connection, table: &str, columns: &HashSet<String>, since
             busy: row.get(5)?,
             idle: row.get(6)?,
             outcome: row.get(7)?,
+            agent: row.get(8)?,
         })
     })?;
     rows.collect()
@@ -224,18 +231,22 @@ fn read_v2(conn: &Connection, columns: &HashSet<String>, since: i64) -> rusqlite
             (None, None) => messages.state,
         };
         let updated = [Some(row.updated), row.busy, row.idle, messages.at].into_iter().flatten().max().unwrap_or(row.updated);
-        out.push(Stored { summary: summary(&row, &messages, updated), state, from_service: true });
+        out.push(Stored { summary: summary(&row, &messages, updated, state), state, from_service: true });
     }
     Ok(out)
 }
 
 fn read_v1(conn: &Connection, columns: &HashSet<String>, since: i64) -> rusqlite::Result<Vec<Stored>> {
     let has_parts = columns_exist(conn, "part")?;
+    let has_todos = columns_exist(conn, "todo")?;
     let mut out = Vec::new();
     for row in session_rows(conn, "session", columns, since)? {
-        let messages = v1_messages(conn, &row.id, has_parts)?;
+        let mut messages = v1_messages(conn, &row.id, has_parts)?;
+        if has_todos {
+            messages.todos = v1_todos(conn, &row.id)?;
+        }
         let updated = [Some(row.updated), messages.at].into_iter().flatten().max().unwrap_or(row.updated);
-        out.push(Stored { summary: summary(&row, &messages, updated), state: messages.state, from_service: false });
+        out.push(Stored { summary: summary(&row, &messages, updated, messages.state), state: messages.state, from_service: false });
     }
     Ok(out)
 }
@@ -253,6 +264,54 @@ struct Turn {
     model: Option<String>,
     state: TurnState,
     at: Option<i64>,
+    agent: Option<String>,
+    tokens: Option<u64>,
+    tool: Option<ToolCall>,
+    todos: Option<TodoProgress>,
+    seen_assistant: bool,
+    seen_todos: bool,
+}
+
+impl Turn {
+    fn take_assistant(&mut self, data: &Value, tools: &[Value]) {
+        if self.agent.is_none() {
+            self.agent = text(&data["agent"]).or_else(|| text(&data["mode"]));
+        }
+        if self.tokens.is_none() {
+            self.tokens = token_total(&data["tokens"]);
+        }
+        if !self.seen_assistant {
+            self.seen_assistant = true;
+            self.tool = tools
+                .iter()
+                .rev()
+                .find(|tool| tool["state"]["status"].as_str().is_some_and(|status| ACTIVE_TOOL.contains(&status)))
+                .and_then(opencode_tool_call);
+        }
+        if !self.seen_todos {
+            if let Some(call) = tools.iter().rev().find(|tool| tool_name(tool) == Some(TODO_TOOL) && tool["state"]["input"]["todos"].is_array()) {
+                self.seen_todos = true;
+                self.todos = unfinished(todo_items(&call["state"]["input"]["todos"]));
+            }
+        }
+    }
+}
+
+fn tool_name(tool: &Value) -> Option<&str> {
+    tool["name"].as_str().or_else(|| tool["tool"].as_str())
+}
+
+fn token_total(tokens: &Value) -> Option<u64> {
+    let total: u64 = [&tokens["input"], &tokens["output"], &tokens["reasoning"], &tokens["cache"]["read"], &tokens["cache"]["write"]]
+        .iter()
+        .filter_map(|value| value.as_f64())
+        .map(|value| value.max(0.0) as u64)
+        .sum();
+    (total > 0).then_some(total)
+}
+
+fn tools_in(content: &Value) -> Vec<Value> {
+    content.as_array().into_iter().flatten().filter(|part| part["type"] == "tool").cloned().collect()
 }
 
 fn v2_messages(conn: &Connection, session: &str, has_parts: bool) -> rusqlite::Result<Turn> {
@@ -295,6 +354,11 @@ fn v2_messages(conn: &Connection, session: &str, has_parts: bool) -> rusqlite::R
                 if turn.reply.is_none() {
                     turn.reply = content_text(&data["content"]).or(if has_parts { v2_part_text(conn, &id)? } else { None });
                 }
+                let mut tools = tools_in(&data["content"]);
+                if tools.is_empty() && has_parts {
+                    tools = v2_part_tools(conn, &id)?;
+                }
+                turn.take_assistant(&data, &tools);
             }
             _ => {}
         }
@@ -312,6 +376,20 @@ fn v2_part_text(conn: &Connection, message: &str) -> rusqlite::Result<Option<Str
     Ok(joined(texts.iter().map(|data| json(data)).filter_map(|part| part["text"].as_str().map(str::to_string))))
 }
 
+fn v2_part_tools(conn: &Connection, message: &str) -> rusqlite::Result<Vec<Value>> {
+    let mut statement = conn.prepare("SELECT data FROM session_part WHERE message_id = ?1 AND type = 'tool' ORDER BY ordinal")?;
+    let tools = statement.query_map([message], |row| row.get::<_, String>(0))?.collect::<rusqlite::Result<Vec<_>>>()?;
+    Ok(tools.iter().map(|data| json(data)).collect())
+}
+
+fn v1_todos(conn: &Connection, session: &str) -> rusqlite::Result<Option<TodoProgress>> {
+    let mut statement = conn.prepare("SELECT content, status FROM todo WHERE session_id = ?1 ORDER BY position")?;
+    let todos = statement
+        .query_map([session], |row| Ok(serde_json::json!({ "content": row.get::<_, String>(0)?, "status": row.get::<_, String>(1)? })))?
+        .collect::<rusqlite::Result<Vec<_>>>()?;
+    Ok(unfinished(todo_items(&Value::Array(todos))))
+}
+
 fn v1_messages(conn: &Connection, session: &str, has_parts: bool) -> rusqlite::Result<Turn> {
     let mut statement = conn.prepare(
         "SELECT id, data, time_created FROM message WHERE session_id = ?1 ORDER BY time_created DESC, id DESC LIMIT ?2",
@@ -326,10 +404,10 @@ fn v1_messages(conn: &Connection, session: &str, has_parts: bool) -> rusqlite::R
     for (id, data, created) in recent {
         let data = json(&data);
         turn.at = turn.at.max(Some(created)).max(data["time"]["completed"].as_i64());
-        let parts = || if has_parts { v1_part_text(conn, &id) } else { Ok(None) };
+        let parts = if has_parts { v1_parts(conn, &id)? } else { Vec::new() };
         match data["role"].as_str() {
             Some("user") if turn.last_prompt.is_none() => {
-                turn.last_prompt = parts()?.as_deref().and_then(prompt_title);
+                turn.last_prompt = v1_text(&parts).as_deref().and_then(prompt_title);
                 turn.prompt_at = data["time"]["created"].as_i64().or(Some(created));
                 state.get_or_insert(TurnState::Working);
             }
@@ -341,8 +419,10 @@ fn v1_messages(conn: &Connection, session: &str, has_parts: bool) -> rusqlite::R
                     turn.model = text(&data["modelID"]);
                 }
                 if turn.reply.is_none() {
-                    turn.reply = parts()?;
+                    turn.reply = v1_text(&parts);
                 }
+                let tools: Vec<Value> = parts.into_iter().filter(|part| part["type"] == "tool").collect();
+                turn.take_assistant(&data, &tools);
             }
             _ => {}
         }
@@ -354,16 +434,19 @@ fn v1_messages(conn: &Connection, session: &str, has_parts: bool) -> rusqlite::R
     Ok(turn)
 }
 
-fn v1_part_text(conn: &Connection, message: &str) -> rusqlite::Result<Option<String>> {
+fn v1_parts(conn: &Connection, message: &str) -> rusqlite::Result<Vec<Value>> {
     let mut statement = conn.prepare("SELECT data FROM part WHERE message_id = ?1 ORDER BY id")?;
-    let texts = statement.query_map([message], |row| row.get::<_, String>(0))?.collect::<rusqlite::Result<Vec<_>>>()?;
-    Ok(joined(
-        texts
+    let parts = statement.query_map([message], |row| row.get::<_, String>(0))?.collect::<rusqlite::Result<Vec<_>>>()?;
+    Ok(parts.iter().map(|data| json(data)).collect())
+}
+
+fn v1_text(parts: &[Value]) -> Option<String> {
+    joined(
+        parts
             .iter()
-            .map(|data| json(data))
             .filter(|part| part["type"] == "text" && part["synthetic"] != Value::Bool(true))
             .filter_map(|part| part["text"].as_str().map(str::to_string)),
-    ))
+    )
 }
 
 fn assistant_state(data: &Value) -> TurnState {
@@ -391,7 +474,8 @@ fn joined(texts: impl Iterator<Item = String>) -> Option<String> {
     (!text.trim().is_empty()).then_some(text)
 }
 
-fn summary(row: &SessionRow, turn: &Turn, updated: i64) -> AgentSessionSummary {
+fn summary(row: &SessionRow, turn: &Turn, updated: i64, state: TurnState) -> AgentSessionSummary {
+    let agent = row.agent.as_deref().or(turn.agent.as_deref());
     let named = row.title.as_deref().filter(|title| !UNTITLED.iter().any(|prefix| title.starts_with(prefix)));
     let cwd = row.directory.clone().filter(|dir| !dir.is_empty());
     let (title, title_source) = pick_title(
@@ -418,15 +502,15 @@ fn summary(row: &SessionRow, turn: &Turn, updated: i64) -> AgentSessionSummary {
         host: None,
         turn_started_at: turn.prompt_at,
         last_prompt: turn.last_prompt.clone(),
-        current_tool: None,
-        permission_mode: None,
+        current_tool: turn.tool.clone().filter(|_| state == TurnState::Working),
+        permission_mode: (agent == Some("plan")).then_some("plan"),
         subagents: 0,
         background_tasks: 0,
         compacting: false,
-        todos: None,
+        todos: turn.todos.clone(),
         closed: false,
         remote_host: None,
-        context_tokens: None,
+        context_tokens: turn.tokens,
     }
 }
 

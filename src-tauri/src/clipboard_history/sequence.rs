@@ -27,14 +27,13 @@ pub(super) fn start(app: &AppHandle, ids: Vec<String>) -> Result<(), String> {
     let Some(first) = ids.pop_front() else {
         return Ok(());
     };
-    let auto_paste = service()?.snapshot()?.settings.auto_paste;
-    popup::paste(app, &first, popup::PasteOptions::default())?;
+    let sent_keys = popup::paste(app, &first, popup::PasteOptions::default())?;
     if ids.is_empty() {
         return Ok(());
     }
     *QUEUE.lock().unwrap_or_else(PoisonError::into_inner) = Some(ids);
     request_hotkey_refresh();
-    if auto_paste {
+    if sent_keys {
         thread::spawn(|| {
             thread::sleep(FIRST_PASTE_SETTLE);
             advance();

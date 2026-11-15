@@ -223,3 +223,68 @@ fn a_missing_database_reads_as_empty() {
     assert!(read_database(&missing, 0).is_err());
     assert!(cached_rows(&missing, 0).is_empty());
 }
+
+#[test]
+fn v2_shows_the_running_tool_todos_tokens_and_plan_agent() {
+    let (path, conn) = database("v2-fields", V2_SCHEMA);
+    v2_session(&conn, "ses_f", Some("Fields"), Some(NOW - 10_000), Some(NOW - 40_000), Some("succeeded"));
+    conn.execute("UPDATE session_v2 SET agent = 'plan'", []).unwrap();
+    v2_message(&conn, "ses_f", "msg_1", 1, "user", json!({"text": "plan the fix"}));
+    let todo = |status: &str| json!({"type": "tool", "id": "t1", "name": "todowrite", "state": {"status": status, "input": {"todos": [
+        {"content": "Read the code", "status": "completed"}, {"content": "Write the plan", "status": "in_progress"}
+    ]}}});
+    v2_message(&conn, "ses_f", "msg_2", 2, "assistant", json!({"agent": "plan", "content": [todo("completed")],
+        "tokens": {"input": 1200, "output": 300, "reasoning": 0, "cache": {"read": 8000, "write": 500}}, "time": {"created": NOW - 49_000, "completed": NOW - 48_000}}));
+    v2_message(&conn, "ses_f", "msg_3", 3, "assistant", json!({"agent": "plan", "content": [], "time": {"created": NOW - 47_000}}));
+    conn.execute(
+        "INSERT INTO session_part VALUES ('msg_3', 'ses_f', 0, 'tool', 'c1', ?1, ?1, ?2)",
+        params![NOW - 47_000, json!({"type": "tool", "id": "c1", "name": "bash", "state": {"status": "running", "input": {"command": "cargo test"}, "metadata": {}}}).to_string()],
+    )
+    .unwrap();
+    let row = rows_of(&path, "ses_f");
+    assert_eq!(row.state, TurnState::Working);
+    let tool = row.summary.current_tool.clone().unwrap();
+    assert_eq!((tool.name.as_str(), tool.detail.as_deref()), ("bash", Some("cargo test")));
+    let todos = row.summary.todos.clone().unwrap();
+    assert_eq!((todos.done, todos.total, todos.current.as_deref()), (1, 2, Some("Write the plan")));
+    assert_eq!(row.summary.context_tokens, Some(10_000));
+    assert_eq!(row.summary.permission_mode, Some("plan"));
+    conn.execute("UPDATE session_v2 SET agent = 'build', time_idle = ?1", [NOW - 5_000]).unwrap();
+    let done = rows_of(&path, "ses_f");
+    assert_eq!((done.summary.current_tool, done.summary.permission_mode), (None, None));
+}
+
+#[test]
+fn v1_reads_tool_parts_tokens_mode_and_the_todo_table() {
+    let schema = format!("{V1_SCHEMA}CREATE TABLE todo (session_id text NOT NULL, content text NOT NULL, status text NOT NULL, priority text NOT NULL, position integer NOT NULL, time_created integer NOT NULL, time_updated integer NOT NULL);");
+    let (path, conn) = database("v1-fields", &schema);
+    conn.execute(
+        "INSERT INTO session (id, project_id, slug, directory, title, version, time_created, time_updated) VALUES ('ses_1', 'prj', 's', '/w', 'One', '1.19.5', ?1, ?1)",
+        [NOW - 30_000],
+    )
+    .unwrap();
+    conn.execute("INSERT INTO message VALUES ('msg_a', 'ses_1', ?1, ?1, ?2)", params![NOW - 25_000, json!({"role": "user", "time": {"created": NOW - 25_000}}).to_string()]).unwrap();
+    conn.execute(
+        "INSERT INTO message VALUES ('msg_b', 'ses_1', ?1, ?1, ?2)",
+        params![NOW - 24_000, json!({"role": "assistant", "mode": "plan", "agent": "plan", "modelID": "gpt-6", "time": {"created": NOW - 24_000},
+            "tokens": {"input": 100, "output": 20, "reasoning": 5, "cache": {"read": 400, "write": 0}}}).to_string()],
+    )
+    .unwrap();
+    let part = |id: &str, message: &str, data: Value| {
+        conn.execute("INSERT INTO part VALUES (?1, ?2, 'ses_1', ?3, ?3, ?4)", params![id, message, NOW, data.to_string()]).unwrap();
+    };
+    part("prt_1", "msg_a", json!({"type": "text", "text": "look around"}));
+    part("prt_2", "msg_b", json!({"type": "tool", "callID": "c1", "tool": "read", "state": {"status": "completed", "input": {"filePath": "/w/a.rs"}}}));
+    part("prt_3", "msg_b", json!({"type": "tool", "callID": "c2", "tool": "read", "state": {"status": "running", "input": {"filePath": "/w/src/main.rs"}}}));
+    for (position, (content, status)) in [("Scan", "completed"), ("Report", "pending")].into_iter().enumerate() {
+        conn.execute("INSERT INTO todo VALUES ('ses_1', ?1, ?2, 'medium', ?3, ?4, ?4)", params![content, status, position as i64, NOW]).unwrap();
+    }
+    let row = rows_of(&path, "ses_1");
+    assert_eq!(row.state, TurnState::Working);
+    let tool = row.summary.current_tool.clone().unwrap();
+    assert_eq!((tool.name.as_str(), tool.detail.as_deref()), ("read", Some("main.rs")));
+    let todos = row.summary.todos.clone().unwrap();
+    assert_eq!((todos.done, todos.total, todos.current), (1, 2, None));
+    assert_eq!(row.summary.context_tokens, Some(525));
+    assert_eq!(row.summary.permission_mode, Some("plan"));
+}
