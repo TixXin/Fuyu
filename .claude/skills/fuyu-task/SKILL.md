@@ -46,7 +46,7 @@ description: >
    - 任务文件是挪进 `0-archive/` 的，新旧两个路径都要带：`git add docs/tasks/0-archive/<分组>/<编号>.md`，然后 `git commit -m "<标题>" -- <功能文件…> docs/tasks/<分组>/<编号>.md docs/tasks/0-archive/<分组>/<编号>.md`。
    - 这个提交还要带热点文件里自己的一处时：`pnpm mq:commit-part -m "<标题>" --take <文件>:<编号> -- docs/tasks/<分组>/<编号>.md docs/tasks/0-archive/<分组>/<编号>.md`，不用先 `git add`。
    - 功能已经分几次提交过的（接线、热点文件都要求改完马上提交）：`tasks done` 跟最后一个提交，`--commit "<标题 1>" --commit "<标题 2>"` 把每个都记上。
-   - 功能提交之后才能做的（贴真实输出、补验证）：新开一个小提交，标题写清补的是哪个提交。`HEAD` 不是自己那个提交时不 amend，那会改到别的会话的提交。
+   - 功能提交之后才能做的（贴真实输出、补验证）：新开一个小提交，标题写清补的是哪个提交。`HEAD` 不是自己那个提交时不 amend，那会改到别的会话的提交；是自己的也先 `git branch -r --contains <提交>`，有输出（`origin/main` 或 `origin/land/…`）就是推过了，也新开提交：组长和全局总控随时会把本地 `main` 整批 land 走，不会先告诉你。`pnpm mq:pending` 查不出来，land 的 PR 没合入前它照样列着。
    - 多行的记录（真实输出、回放数字）在 `tasks done` 之后直接改归档任务文件的 `## 备注`，再 `pnpm check:tasks`；`tasks note` 只写得了一行交接。
 8. **land**（被主 agent 派来的跳过，见最后一节）：PR 正文照 workflow.md「PR 的标题和正文」写进文件，`pnpm mq:land --yes --body <文件>`，然后后台 `pnpm mq:wait`。
    - PR 合入才算数；CI 没过、冲突都要回来处理（workflow.md「排障」）。
