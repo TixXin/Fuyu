@@ -13,6 +13,7 @@
           </span>
         </button>
       </div>
+      <div class="reminder-bar" style="display: flex; align-items: center; gap: 8px; height: 38px; padding: 0px 18px"></div>
       <div style="height: 260px; display: flex">
         <section aria-label="倒计时" class="island-list-page timer-panel">
           <form class="timer-panel__form">
@@ -87,6 +88,133 @@
               </span>
             </li>
           </ul>
+        </section>
+      </div>
+      <div class="settings-harness" style="width: 360px">
+        <section class="settings-group">
+          <div class="settings-group__header">
+            <h2 class="settings-group__title">
+              休息提醒
+            </h2>
+          </div>
+          <div class="settings-group__card">
+            <div class="settings-row">
+              <div class="settings-row__main">
+                <div class="settings-row__text">
+                  <label class="settings-row__title" for="_id1_">
+                    <span class="settings-icon-title">
+                      <span aria-hidden="true" class="settings-icon-title__icon">
+                        <svg aria-hidden="true" class="lucide lucide-coffee" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M10 2v2"></path>
+                          <path d="M14 2v2"></path>
+                          <path d="M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1"></path>
+                          <path d="M6 2v2"></path>
+                        </svg>
+                      </span>
+                      休息提醒
+                    </span>
+                  </label>
+                  <span class="settings-row__description">
+                    按间隔在岛上提醒起身、远眺。锁屏或离开 5 分钟以上时不计时，全屏时等退出再提醒
+                  </span>
+                </div>
+                <div class="settings-row__control">
+                  <span class="settings-switch">
+                    <input id="_id1_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="settings-row settings-row--indent break-reminder-row" data-search="off">
+              <button aria-label="换个图标" class="break-reminder-row__icon" title="换个图标" type="button">
+                <svg aria-hidden="true" class="lucide lucide-eye" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+              </button>
+              <input aria-label="提醒名称" class="settings-input break-reminder-row__name" maxlength="40" placeholder="护眼" spellcheck="false" value="">
+              <span class="break-reminder-row__minutes">
+                <input aria-label="间隔" class="settings-input settings-input--number break-reminder-row__number" inputmode="numeric" max="480" min="1" spellcheck="false" type="number" value="20">
+                <span class="settings-number__unit">
+                  分钟
+                </span>
+              </span>
+              <span class="break-reminder-row__end">
+                <span title="启用这项提醒">
+                  <span class="settings-switch">
+                    <input checked="" id="_id2_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                  <label class="break-reminder-row__hidden" for="_id2_">
+                    启用这项提醒
+                  </label>
+                </span>
+                <button aria-label="删除这项提醒" class="break-reminder-row__remove" title="删除这项提醒" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-trash2 lucide-trash-2" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M10 11v6"></path>
+                    <path d="M14 11v6"></path>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path>
+                    <path d="M3 6h18"></path>
+                    <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  </svg>
+                </button>
+              </span>
+            </div>
+            <div class="settings-row settings-row--indent break-reminder-row" data-search="off">
+              <button aria-label="换个图标" class="break-reminder-row__icon" title="换个图标" type="button">
+                <svg aria-hidden="true" class="lucide lucide-person-standing" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="12" cy="5" r="1"></circle>
+                  <path d="m9 20 3-6 3 6"></path>
+                  <path d="m6 8 6 2 6-2"></path>
+                  <path d="M12 10v4"></path>
+                </svg>
+              </button>
+              <input aria-label="提醒名称" class="settings-input break-reminder-row__name" maxlength="40" placeholder="起来走走" spellcheck="false" value="">
+              <span class="break-reminder-row__minutes">
+                <input aria-label="间隔" class="settings-input settings-input--number break-reminder-row__number" inputmode="numeric" max="480" min="1" spellcheck="false" type="number" value="30">
+                <span class="settings-number__unit">
+                  分钟
+                </span>
+              </span>
+              <span class="break-reminder-row__end">
+                <span title="启用这项提醒">
+                  <span class="settings-switch">
+                    <input checked="" id="_id3_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                  <label class="break-reminder-row__hidden" for="_id3_">
+                    启用这项提醒
+                  </label>
+                </span>
+                <button aria-label="删除这项提醒" class="break-reminder-row__remove" title="删除这项提醒" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-trash2 lucide-trash-2" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M10 11v6"></path>
+                    <path d="M14 11v6"></path>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path>
+                    <path d="M3 6h18"></path>
+                    <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  </svg>
+                </button>
+              </span>
+            </div>
+            <div class="settings-row settings-row--indent" data-search="off">
+              <div class="settings-row__main">
+                <div class="settings-row__text">
+                  <span class="settings-row__title"></span>
+                </div>
+                <div class="settings-row__control">
+                  <button class="settings-link-button" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-plus" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M5 12h14"></path>
+                      <path d="M12 5v14"></path>
+                    </svg>
+                    添加提醒
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         </section>
       </div>
     </div>
