@@ -20,39 +20,31 @@ export function CalendarSettingsPage({
 
   return (
     <>
-      <FeatureHeader
-        feature="calendar"
-        checked={settings.calendarEnabled}
-        onChange={(calendarEnabled) => onSettingsChange({ ...settings, calendarEnabled })}
-      />
-      {settings.calendarEnabled && (
-        <>
-          <SettingsGroup title={text.island}>
-            <SettingsRow
-              title={text.remind}
-              description={text.remindHint}
-              control={
-                <SettingsSelect
-                  value={String(settings.calendarRemindMinutes)}
-                  ariaLabel={text.remind}
-                  options={CALENDAR_REMIND_MINUTES.map((minutes) => ({ value: String(minutes), label: text.remindOption(minutes) }))}
-                  onChange={(value) => onSettingsChange({ ...settings, calendarRemindMinutes: Number(value) as CalendarRemindMinutes })}
-                />
-              }
+      <FeatureHeader feature="calendar" />
+      <SettingsGroup title={text.island}>
+        <SettingsRow
+          title={text.remind}
+          description={text.remindHint}
+          control={
+            <SettingsSelect
+              value={String(settings.calendarRemindMinutes)}
+              ariaLabel={text.remind}
+              options={CALENDAR_REMIND_MINUTES.map((minutes) => ({ value: String(minutes), label: text.remindOption(minutes) }))}
+              onChange={(value) => onSettingsChange({ ...settings, calendarRemindMinutes: Number(value) as CalendarRemindMinutes })}
             />
-            {settings.calendarRemindMinutes > 0 && (
-              <SettingsToggleRow
-                indent
-                title={text.showTitle}
-                description={text.showTitleHint}
-                checked={settings.calendarShowTitle}
-                onChange={(calendarShowTitle) => onSettingsChange({ ...settings, calendarShowTitle })}
-              />
-            )}
-          </SettingsGroup>
-          <CalendarSourcesSection />
-        </>
-      )}
+          }
+        />
+        {settings.calendarRemindMinutes > 0 && (
+          <SettingsToggleRow
+            indent
+            title={text.showTitle}
+            description={text.showTitleHint}
+            checked={settings.calendarShowTitle}
+            onChange={(calendarShowTitle) => onSettingsChange({ ...settings, calendarShowTitle })}
+          />
+        )}
+      </SettingsGroup>
+      <CalendarSourcesSection />
     </>
   );
 }

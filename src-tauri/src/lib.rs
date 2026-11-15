@@ -49,6 +49,8 @@ mod tray_mark;
 mod tray_visibility;
 mod user_error;
 mod voice_input;
+#[cfg_attr(not(windows), path = "webview_recovery_unsupported.rs")]
+mod webview_recovery;
 #[cfg_attr(target_os = "macos", path = "wechat_reminders/macos.rs")]
 mod wechat_reminders;
 #[cfg(target_os = "macos")]
@@ -107,6 +109,7 @@ pub fn run() {
         .register_asynchronous_uri_scheme_protocol(plugin_kernel::protocol::SCHEME, |_context, request, responder| {
             tauri::async_runtime::spawn_blocking(move || responder.respond(plugin_kernel::respond(&request)));
         })
+        .on_page_load(|webview, _| webview_recovery::attach(webview))
         .on_window_event(|window, event| {
             if window.label() == translation::WINDOW_LABEL
                 || window.label() == clipboard_history::POPUP_WINDOW_LABEL
