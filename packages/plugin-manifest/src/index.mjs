@@ -4,4 +4,4 @@ export * from "./package.mjs";
 export * from "./schema.mjs";
 export * from "./semver.mjs";
 export * from "./signature.mjs";
-export { createZip, readZip } from "./zip.mjs";
+export { createZip, readZip, zipEntryNames } from "./zip.mjs";
