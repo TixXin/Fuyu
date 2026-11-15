@@ -3,6 +3,7 @@ import type { AgentSessionSummary } from "./api";
 import { sessionKey } from "./unseen";
 import type { SessionRemoval } from "./useHiddenSessions";
 import type { AgentArchiveMotion } from "../appearance/types";
+import { MOTION_ARCHIVING } from "./useListMotion";
 import "./ArchiveDissolve.css";
 
 const LEAVE_MS = 260;
@@ -74,6 +75,7 @@ export function useArchiveMotion(list: HTMLElement | null, removal: SessionRemov
           cleanup?.();
           element.style.removeProperty("overflow");
           element.style.removeProperty("pointer-events");
+          window.setTimeout(() => delete element.dataset.motion, LEAVE_MS);
         });
       });
   };
@@ -86,6 +88,7 @@ export function useArchiveMotion(list: HTMLElement | null, removal: SessionRemov
       return;
     }
     const height = element.offsetHeight;
+    element.dataset.motion = MOTION_ARCHIVING;
     element.style.overflow = "hidden";
     element.style.pointerEvents = "none";
     if (style === "dissolve") {
@@ -112,5 +115,5 @@ export function useArchiveMotion(list: HTMLElement | null, removal: SessionRemov
     removal.undo();
   };
 
-  return { archive, undo };
+  return { archive, undo, returning };
 }
