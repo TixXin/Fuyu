@@ -25,7 +25,7 @@ export function emptyPlugin(index) {
 }
 
 export function busyPlugin(index) {
-  return `import { writeFileSync } from "node:fs";
+  return `import { renameSync, writeFileSync } from "node:fs";
 export const name = "busy-${index}";
 export function apply(ctx) {
   const recent = [];
@@ -37,7 +37,16 @@ export function apply(ctx) {
     const copy = JSON.parse(JSON.stringify(items));
     ctx.emit("measure/busy", copy.length);
     if (recent.length > 60) recent.splice(0, recent.length - 60);
-    ctx.setTimeout(() => writeFileSync(new URL("../busy-${index}.ticks", import.meta.url), String(ticks)), 10);
+    ctx.setTimeout(() => {
+      const file = new URL("../busy-${index}.ticks", import.meta.url);
+      const next = new URL("../busy-${index}.ticks.next", import.meta.url);
+      writeFileSync(next, String(ticks));
+      try {
+        renameSync(next, file);
+      } catch {
+        writeFileSync(file, String(ticks));
+      }
+    }, 10);
   }, 1000);
 }
 `;
@@ -164,6 +173,16 @@ export async function measureRestart({ count, rounds, node, pollMs }) {
   return { plugins: count, pollMs, runs, totalMedianMs: Math.round(median(runs.map((run) => run.totalMs))) };
 }
 
+export async function untilRunning(host, total, { timeoutMs = 15000, everyMs = 50 } = {}) {
+  const giveUp = Date.now() + timeoutMs;
+  for (;;) {
+    const status = await host.call("status");
+    if (status.filter((plugin) => plugin.state === "running").length >= total) return status;
+    if (Date.now() > giveUp) throw new Error(`plugins not running after ${timeoutMs} ms: ${JSON.stringify(status.map(({ id, state }) => ({ id, state })))}`);
+    await sleep(everyMs);
+  }
+}
+
 export async function soak({ count, busy = 0, minutes, everyS, out, churnS, node, log = () => {} }) {
   const space = makeWorkspace(count, busy);
   space.writeConfig();
@@ -177,6 +196,7 @@ export async function soak({ count, busy = 0, minutes, everyS, out, churnS, node
   writeFileSync(out, CSV_HEADER);
   try {
     await host.ready;
+    await untilRunning(host, count + busy);
     begun = Date.now();
     deadline = begun + minutes * 60000;
     if (churnS > 0 && count > 0) {
