@@ -67,6 +67,17 @@ fn host_args(dir: PathBuf, origins: &[String], mode: &HostMode) -> Vec<std::ffi:
     args
 }
 
+const THREADPOOL: &str = "UV_THREADPOOL_SIZE";
+const WINDOWS_THREADPOOL_SIZE: &str = "2";
+
+fn host_env(windows: bool, inherited: Option<&str>) -> Vec<(std::ffi::OsString, std::ffi::OsString)> {
+    if windows && inherited.is_none() {
+        vec![(THREADPOOL.into(), WINDOWS_THREADPOOL_SIZE.into())]
+    } else {
+        Vec::new()
+    }
+}
+
 fn plugins_dir(app: &AppHandle) -> Result<PathBuf, String> {
     let dir = crate::home_dir::fuyu_home(tauri::Manager::path(app)).map_err(|error| error.to_string())?.join("plugins-v3");
     std::fs::create_dir_all(&dir).map_err(|error| format!("could not create {}: {error}", dir.display()))?;
@@ -125,7 +136,7 @@ fn start(home: PathBuf, dir: PathBuf, origins: Vec<String>, mode: HostMode) -> R
     if let Some(safe) = &mode.safe {
         eprintln!("[plugins-v3] safe mode: {safe}");
     }
-    let spec = HostSpec { program: node.path, args: host_args(dir, &origins, &mode), env: Vec::new(), current_dir: None };
+    let spec = HostSpec { program: node.path, args: host_args(dir, &origins, &mode), env: host_env(cfg!(windows), std::env::var(THREADPOOL).ok().as_deref()), current_dir: None };
     let supervisor = Supervisor::start(spec, containment::shared(), Timing::default(), report)?;
     let mut slot = SUPERVISOR.get_or_init(Mutex::default).lock().map_err(|_| "the plugin host lock is poisoned".to_string())?;
     if STOPPING.load(std::sync::atomic::Ordering::SeqCst) {
@@ -181,11 +192,15 @@ fn connection_from(enabled: bool, state: Option<&HostState>) -> HostConnection {
     }
 }
 
-#[tauri::command]
-pub(crate) fn get_plugin_host_connection() -> HostConnection {
-    let Some(slot) = SUPERVISOR.get() else { return HostConnection::default() };
+fn connection_now(switched_on: bool, slot: Option<&Mutex<Option<Supervisor>>>) -> HostConnection {
+    let Some(slot) = slot else { return connection_from(switched_on, None) };
     let state = slot.lock().ok().and_then(|supervisor| supervisor.as_ref().map(Supervisor::state));
     connection_from(true, state.as_ref())
+}
+
+#[tauri::command]
+pub(crate) fn get_plugin_host_connection() -> HostConnection {
+    connection_now(enabled(cfg!(debug_assertions), std::env::var(SWITCH).ok().as_deref()), SUPERVISOR.get())
 }
 
 pub(crate) fn respond(request: &tauri::http::Request<Vec<u8>>) -> tauri::http::Response<Vec<u8>> {
