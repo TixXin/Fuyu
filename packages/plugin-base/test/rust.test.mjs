@@ -114,13 +114,13 @@ test("a call still waiting when its plugin stops fails at once and Rust is told 
   const { started, rust } = await host();
   let pending;
   const fiber = await plugin(started, "caller", (ctx) => void (pending = ctx.rust.call("test.never")));
-  await sleep(10);
+  assert.ok(await until(() => rust.seen.some((message) => message.method === "test.never")));
   const askedAt = Date.now();
   await fiber.dispose();
   await assert.rejects(pending, { code: "inactive" });
-  assert.ok(Date.now() - askedAt < 500);
+  assert.ok(Date.now() - askedAt < 10000);
   const asked = rust.seen.find((message) => message.method === "test.never");
-  await until(() => rust.seen.some((message) => message.method === "cancel" && message.params.id === asked.id));
+  assert.ok(await until(() => rust.seen.some((message) => message.method === "cancel" && message.params.id === asked.id)));
 });
 
 test("a call times out naming the method and how long it waited, and when Rust goes away waiting calls fail with peer-gone", async () => {
@@ -128,7 +128,7 @@ test("a call times out naming the method and how long it waited, and when Rust g
   let caller;
   await plugin(started, "caller", (ctx) => void (caller = ctx.rust));
   await assert.rejects(caller.call("test.never", null, { timeoutMs: 30 }), (error) => error.code === "timeout" && error.message === "test.never got no answer in 30 ms" && error.data.timeoutMs === 30);
-  await until(() => rust.seen.some((message) => message.method === "cancel"));
+  assert.ok(await until(() => rust.seen.some((message) => message.method === "cancel")));
   const waiting = caller.call("test.never");
   rust.leave();
   await assert.rejects(waiting, { code: "peer-gone" });

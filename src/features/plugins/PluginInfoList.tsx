@@ -1,16 +1,16 @@
 import { useState } from "react";
-import { Check, Copy, Eye, EyeOff } from "lucide-react";
+import { Check, Copy } from "lucide-react";
 import { useLocale, useTranslation } from "../../i18n";
-import type { PluginInfoItem } from "./api";
+import { copyPluginInfo, type PluginInfoItem } from "./api";
 
-export function PluginInfoList({ items }: { items: PluginInfoItem[] }) {
+export function PluginInfoList({ items, pluginId }: { items: PluginInfoItem[]; pluginId?: string }) {
   const t = useTranslation();
   const { locale } = useLocale();
-  const [revealed, setRevealed] = useState<number | null>(null);
   const [copied, setCopied] = useState<number | null>(null);
 
-  const copy = (index: number, value: string) => {
-    void navigator.clipboard.writeText(value).then(() => {
+  const copy = (index: number, item: PluginInfoItem) => {
+    const write = item.secret && pluginId ? copyPluginInfo(pluginId, index) : navigator.clipboard.writeText(item.value);
+    void write.then(() => {
       setCopied(index);
       window.setTimeout(() => setCopied((current) => (current === index ? null : current)), 1500);
     });
@@ -18,27 +18,18 @@ export function PluginInfoList({ items }: { items: PluginInfoItem[] }) {
 
   return (
     <div className="plugin-info">
-      {items.map((item, index) => {
-        const hidden = item.secret && revealed !== index;
-        return (
-          <div className="plugin-info__row" key={`${item.label.en}-${index}`}>
-            <span>{item.label[locale]}</span>
-            <code>{hidden ? "•".repeat(12) : item.value}</code>
-            {item.secret ? (
-              <button className="plugin-card__button" type="button" onClick={() => setRevealed(hidden ? index : null)}>
-                {hidden ? <Eye size={12} strokeWidth={2.4} /> : <EyeOff size={12} strokeWidth={2.4} />}
-                <span>{hidden ? t.settings.plugins.detail.show : t.settings.plugins.detail.hide}</span>
-              </button>
-            ) : null}
-            {item.copy ? (
-              <button className="plugin-card__button" type="button" onClick={() => copy(index, item.value)}>
-                {copied === index ? <Check size={12} strokeWidth={2.6} /> : <Copy size={12} strokeWidth={2.4} />}
-                <span>{copied === index ? t.settings.plugins.detail.copied : t.settings.plugins.detail.copy}</span>
-              </button>
-            ) : null}
-          </div>
-        );
-      })}
+      {items.map((item, index) => (
+        <div className="plugin-info__row" key={`${item.label.en}-${index}`}>
+          <span>{item.label[locale]}</span>
+          <code>{item.secret ? (item.hasValue ? "•".repeat(12) : "") : item.value}</code>
+          {item.copy && (!item.secret || (item.hasValue && pluginId)) ? (
+            <button className="plugin-card__button" type="button" onClick={() => copy(index, item)}>
+              {copied === index ? <Check size={12} strokeWidth={2.6} /> : <Copy size={12} strokeWidth={2.4} />}
+              <span>{copied === index ? t.settings.plugins.detail.copied : t.settings.plugins.detail.copy}</span>
+            </button>
+          ) : null}
+        </div>
+      ))}
     </div>
   );
 }

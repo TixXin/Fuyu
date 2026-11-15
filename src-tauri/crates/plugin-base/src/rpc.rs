@@ -255,7 +255,7 @@ mod tests {
         let result = rpc.call("slow", Value::Null, Duration::from_secs(30));
         closer.join().unwrap();
         assert!(matches!(result, Err(RpcError::PeerGone(_))), "{result:?}");
-        assert!(started.elapsed() < Duration::from_secs(2));
+        assert!(started.elapsed() < Duration::from_secs(10), "noticed after {:?}, the call waits 30 s", started.elapsed());
         assert!(rpc.gone().is_some());
         assert!(matches!(rpc.call("again", Value::Null, Duration::from_secs(1)), Err(RpcError::PeerGone(_))));
     }

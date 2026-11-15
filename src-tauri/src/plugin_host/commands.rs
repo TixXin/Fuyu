@@ -7,7 +7,7 @@ use super::{
     author_signing::KeyCheck,
     builtin,
     grants::{stop_all, stop_plugin, sync_processes, update_state},
-    host, lifecycle, lock,
+    host, info_copy, lifecycle, lock,
     manifest::LocalizedText,
     market, menus, notify, revocations, sensitive, updates,
     registry::{installed_version, rescan, scan, snapshot, PluginsSnapshot},
@@ -241,6 +241,16 @@ pub(super) fn store_settings(id: &str, values: &Map<String, Value>) -> Result<Ma
         Ok(())
     })?;
     Ok(resolved)
+}
+
+#[tauri::command]
+pub fn copy_plugin_info(id: String, index: usize) -> Result<(), String> {
+    let host = host()?;
+    let item = lock(&host.runtimes)
+        .get(&id)
+        .and_then(|runtime| runtime.info.get(index).cloned())
+        .ok_or_else(|| "The plugin has no such info item.".to_string())?;
+    info_copy::copy(&item)
 }
 
 #[tauri::command]

@@ -7,11 +7,13 @@ if (mode === "exit-at-once") process.exit(3);
 
 let hanging = false;
 let asked = 0;
+let dying = null;
 const asking = new Map();
 createInterface({ input: process.stdin })
   .on("line", (line) => {
     const message = JSON.parse(line);
     if (hanging) return;
+    if (message.method === "progress" && message.params?.id === dying) process.exit(6);
     if (message.method === undefined && asking.has(message.id)) {
       const original = asking.get(message.id);
       asking.delete(message.id);
@@ -23,8 +25,8 @@ createInterface({ input: process.stdin })
       send({ id, method: message.params.method, params: message.params.params ?? null });
     }
     if (message.method === "ask-then-die") {
-      send({ id: `h-${++asked}`, method: message.params.method, params: message.params.params ?? null });
-      setTimeout(() => process.exit(6), 20);
+      dying = `h-${++asked}`;
+      send({ id: dying, method: message.params.method, params: message.params.params ?? null });
     }
     if (message.method === "ping") send({ id: message.id, result: { at: Date.now() } });
     if (message.method === "who") send({ id: message.id, result: { pid: process.pid } });

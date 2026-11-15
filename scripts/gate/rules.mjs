@@ -28,7 +28,6 @@ export const RULES = [
         "src-tauri/src/cc_connect/config_file.rs",
       ],
       created: /^src-tauri\/src\/agent_status\/[^/]+\.rs$/,
-      shell: "mention",
     },
     require: { skill: "fuyu-agent-harness" },
     hint: "改 {target} 动的是各家 AI 代理的接入点",

@@ -11,6 +11,8 @@ use serde_json::{json, Value};
 use super::{Serve, ServeError};
 use crate::rpc::{Rpc, RpcError};
 
+const PATIENT: Duration = Duration::from_secs(30);
+
 struct Host {
     to_rust: Option<std::io::PipeWriter>,
     from_rust: mpsc::Receiver<Value>,
@@ -43,7 +45,7 @@ impl Host {
     }
 
     fn next(&self) -> Value {
-        self.from_rust.recv_timeout(Duration::from_secs(10)).expect("Rust answered")
+        self.from_rust.recv_timeout(PATIENT).expect("Rust answered")
     }
 
     fn quiet_for(&self, wait: Duration) -> Option<Value> {
@@ -57,15 +59,15 @@ fn echo(params: Value, _call: &super::Call) -> Result<Value, ServeError> {
 
 fn table() -> Serve {
     let mut serve = Serve::new();
-    serve.add("app.echo", Duration::from_secs(5), echo).unwrap();
+    serve.add("app.echo", PATIENT, echo).unwrap();
     serve
-        .add("test.sleepy", Duration::from_secs(5), |params, _| {
+        .add("test.sleepy", PATIENT, |params, _| {
             thread::sleep(Duration::from_millis(params["ms"].as_u64().unwrap_or(10)));
             Ok(params)
         })
         .unwrap();
-    serve.add("test.panic", Duration::from_secs(5), |_, _| panic!("boom")).unwrap();
-    serve.add("test.fail", Duration::from_secs(5), |_, _| Err(ServeError::new("no-secret", "no key").with_data(json!({ "engine": "x" })))).unwrap();
+    serve.add("test.panic", PATIENT, |_, _| panic!("boom")).unwrap();
+    serve.add("test.fail", PATIENT, |_, _| Err(ServeError::new("no-secret", "no key").with_data(json!({ "engine": "x" })))).unwrap();
     serve
         .add("test.slow", Duration::from_millis(50), |_, call| {
             let started = Instant::now();
@@ -76,7 +78,7 @@ fn table() -> Serve {
         })
         .unwrap();
     serve
-        .add("test.stream", Duration::from_secs(5), |params, call| {
+        .add("test.stream", PATIENT, |params, call| {
             for piece in 0..params["pieces"].as_u64().unwrap_or(0) {
                 call.progress(json!({ "piece": piece }));
             }
@@ -84,6 +86,39 @@ fn table() -> Serve {
         })
         .unwrap();
     serve
+}
+
+struct Watch {
+    started: mpsc::Receiver<()>,
+    finished: mpsc::Receiver<bool>,
+}
+
+impl Watch {
+    fn started(&self) {
+        self.started.recv_timeout(PATIENT).expect("the handler started");
+    }
+
+    fn saw_cancel(&self) -> bool {
+        self.finished.recv_timeout(PATIENT).expect("the handler finished")
+    }
+}
+
+fn until_cancelled(serve: &mut Serve) -> Watch {
+    let (started, started_rx) = mpsc::channel();
+    let (finished, finished_rx) = mpsc::channel();
+    let (started, finished) = (Mutex::new(started), Mutex::new(finished));
+    serve
+        .add("test.until-cancelled", PATIENT, move |_, call| {
+            let _ = started.lock().unwrap().send(());
+            let since = Instant::now();
+            while !call.cancelled() && since.elapsed() < Duration::from_secs(20) {
+                thread::sleep(Duration::from_millis(5));
+            }
+            let _ = finished.lock().unwrap().send(call.cancelled());
+            Ok(json!("late"))
+        })
+        .unwrap();
+    Watch { started: started_rx, finished: finished_rx }
 }
 
 #[test]
@@ -153,28 +188,36 @@ fn progress_goes_out_with_the_call_id_before_the_answer() {
 
 #[test]
 fn calls_beyond_the_workers_and_the_queue_are_turned_away() {
+    let (open, gate) = mpsc::channel::<()>();
+    let gate = Mutex::new(gate);
     let mut serve = table().workers(1).queue(1);
-    serve.add("test.wait", Duration::from_secs(5), |_, _| {
-        thread::sleep(Duration::from_millis(300));
-        Ok(Value::Null)
-    })
-    .unwrap();
+    serve
+        .add("test.gated", PATIENT, move |_, _| {
+            let _ = gate.lock().unwrap().recv_timeout(PATIENT);
+            Ok(Value::Null)
+        })
+        .unwrap();
     let mut host = Host::start(serve);
     for id in 1..=3 {
-        host.call(id, "test.wait", Value::Null);
+        host.call(id, "test.gated", Value::Null);
     }
     let answer = host.next();
     assert_eq!((answer["id"].clone(), answer["error"]["code"].clone()), (json!(3), json!("busy")), "{answer}");
+    open.send(()).unwrap();
     assert_eq!(host.next()["id"], 1);
+    open.send(()).unwrap();
     assert_eq!(host.next()["id"], 2);
 }
 
 #[test]
 fn the_host_can_cancel_a_call_and_gets_no_answer_for_it() {
-    let mut host = Host::start(table().workers(1));
-    host.call(9, "test.slow", Value::Null);
-    thread::sleep(Duration::from_millis(10));
+    let mut serve = table().workers(1);
+    let watch = until_cancelled(&mut serve);
+    let mut host = Host::start(serve);
+    host.call(9, "test.until-cancelled", Value::Null);
+    watch.started();
     host.send(json!({ "jsonrpc": "2.0", "method": "cancel", "params": { "id": 9 } }));
+    assert!(watch.saw_cancel(), "the handler saw the cancel");
     host.call(10, "app.echo", json!("after"));
     assert_eq!(host.next()["id"], 10);
     assert_eq!(host.quiet_for(Duration::from_millis(150)), None);
@@ -186,7 +229,7 @@ fn a_handler_cannot_wait_for_the_host_it_is_answering() {
     let saw = seen.clone();
     let mut serve = Serve::new();
     serve
-        .add("test.cycle", Duration::from_secs(5), move |_, call| {
+        .add("test.cycle", PATIENT, move |_, call| {
             *saw.lock().unwrap() = Some(call.rpc.call("ping", Value::Null, Duration::from_secs(5)));
             Ok(Value::Null)
         })
@@ -199,37 +242,20 @@ fn a_handler_cannot_wait_for_the_host_it_is_answering() {
 
 #[test]
 fn when_the_host_goes_away_running_handlers_are_cancelled_and_nothing_hangs() {
-    let (running, started_handlers) = mpsc::channel();
-    let (finished, cancelled) = mpsc::channel();
-    let running = Mutex::new(running);
-    let finished = Mutex::new(finished);
     let mut serve = table();
-    serve
-        .add("test.until-cancelled", Duration::from_secs(30), move |_, call| {
-            let _ = running.lock().unwrap().send(());
-            let started = Instant::now();
-            while !call.cancelled() && started.elapsed() < Duration::from_secs(10) {
-                thread::sleep(Duration::from_millis(5));
-            }
-            let _ = finished.lock().unwrap().send(call.cancelled());
-            Ok(json!("late"))
-        })
-        .unwrap();
+    let watch = until_cancelled(&mut serve);
     let mut host = Host::start(serve);
     host.call(1, "test.until-cancelled", Value::Null);
     host.call(2, "test.until-cancelled", Value::Null);
-    for _ in 0..2 {
-        started_handlers.recv_timeout(Duration::from_secs(10)).expect("both handlers started");
-    }
+    watch.started();
+    watch.started();
     let started = Instant::now();
     host.to_rust.take();
     while host.rpc.gone().is_none() {
-        assert!(started.elapsed() < Duration::from_secs(5), "the reader noticed");
+        assert!(started.elapsed() < PATIENT, "the reader noticed");
         thread::sleep(Duration::from_millis(5));
     }
-    for _ in 0..2 {
-        assert_eq!(cancelled.recv_timeout(Duration::from_secs(5)), Ok(true));
-    }
+    assert_eq!([watch.saw_cancel(), watch.saw_cancel()], [true, true], "both handlers saw the host go");
     assert!(matches!(host.rpc.notify("event", Value::Null), Err(RpcError::PeerGone(_))));
     assert_eq!(host.quiet_for(Duration::from_millis(300)), None);
 }

@@ -145,7 +145,7 @@ export function PluginDetailPage({
               <p className="settings-section__hint">{proxyText.looking}</p>
             )
           ) : plugin.info.length > 0 ? (
-            <PluginInfoList items={plugin.info} />
+            <PluginInfoList items={plugin.info} pluginId={plugin.id} />
           ) : (
             <p className="settings-section__hint">{t.settings.plugins.detail.infoWhenRunning}</p>
           )}
