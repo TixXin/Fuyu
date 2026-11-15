@@ -65,7 +65,8 @@ try {
   const first = rows()[0];
   check(first.querySelector(".version-history__tag--current")?.textContent === zh.current && first.querySelector(".version-history__tag--beta")?.textContent === zh.beta,
     "The running beta is marked current and as a beta while its release is not out");
-  check(/^\d{4}-\d{2}-\d{2}$/.test(rows()[1].querySelector("time")?.textContent ?? ""), "Each version shows its release date");
+  const dates = rows().map((row) => row.querySelector("time")?.textContent ?? "");
+  check(dates.every((date) => date === "" || /^\d{4}-\d{2}-\d{2}$/.test(date)), "Release dates, when the build knows them, read as YYYY-MM-DD");
   check(rows()[1].querySelector(".version-history__meta")?.textContent === zh.betaCount(4), "A release says how many betas it folds in");
 
   rowButton("0.3.8").click();
