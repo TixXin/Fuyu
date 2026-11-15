@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { ClipboardManager } from "../../features/clipboard/ClipboardManager";
 import { ClipboardPopup } from "../../features/clipboard/ClipboardPopup";
 import {
   hideClipboardPopup, hideClipboardPreview, listenClipboardPopupBlur, listenClipboardPopupMoved, listenClipboardPopupOpened, pasteClipboardItem, pasteClipboardSequence,
-  pasteClipboardSnippet, sendClipboardPreview, setClipboardPopupPin, showClipboardPreview, type ClipboardPeek,
+  pasteClipboardSnippet, sendClipboardPreview, setClipboardPopupExpanded, setClipboardPopupPin, showClipboardPreview, type ClipboardPeek,
 } from "../../features/clipboard/api";
 import { ClipboardTitleBar } from "./ClipboardTitleBar";
 import { useClipboardHistory } from "../../features/clipboard/useClipboardHistory";
@@ -17,6 +18,9 @@ const reportError = (action: string) => (error: unknown) => console.error(`Faile
 export function ClipboardWindow() {
   const { clipboardHistory, toggleClipboardHistoryFavorite } = useClipboardHistory(NO_SHORTCUT);
   const [openCount, setOpenCount] = useState(0);
+  const [expanded, setExpanded] = useState(false);
+  const expandedRef = useRef(false);
+  expandedRef.current = expanded;
   const light = useWindowLight();
   useWindowAccent();
 
@@ -28,8 +32,12 @@ export function ClipboardWindow() {
     let cancelled = false;
     const stops: (() => void)[] = [];
     const keep = (stop: () => void) => (cancelled ? stop() : stops.push(stop));
-    void listenClipboardPopupOpened(() => setOpenCount((count) => count + 1)).then(keep);
+    void listenClipboardPopupOpened(() => {
+      setOpenCount((count) => count + 1);
+      setExpanded(false);
+    }).then(keep);
     void listenClipboardPopupBlur(() => {
+      if (expandedRef.current) return;
       void hideClipboardPopup(true).catch((error: unknown) => console.error("Failed to hide the clipboard window", error));
     }).then(keep);
     return () => {
@@ -60,6 +68,14 @@ export function ClipboardWindow() {
     });
   }, [linkPreview]);
 
+  const toggleExpanded = useCallback(() => {
+    const next = !expandedRef.current;
+    if (next) peekOpen.current = false;
+    void setClipboardPopupExpanded(next)
+      .catch(reportError("resize the clipboard window"))
+      .finally(() => setExpanded(next));
+  }, []);
+
   const togglePin = useCallback(() => {
     void setClipboardPopupPin(!pinned).catch(reportError("pin the clipboard window"));
   }, [pinned]);
@@ -85,7 +101,15 @@ export function ClipboardWindow() {
   return (
     <div className={`clipboard-window${light ? " island-light" : ""}`}>
       <IconButtonTooltip scope="body" delay={300} />
-      <ClipboardTitleBar pinned={pinned} onTogglePin={togglePin} onClose={close} />
+      <ClipboardTitleBar pinned={pinned} expanded={expanded} onTogglePin={togglePin} onToggleExpanded={toggleExpanded} onClose={close} />
+      {expanded ? (
+        <ClipboardManager
+          items={clipboardHistory.items}
+          linkPreview={linkPreview}
+          onToggleFavorite={(id) => void toggleClipboardHistoryFavorite(id)}
+          onCollapse={toggleExpanded}
+        />
+      ) : (
       <ClipboardPopup
         items={clipboardHistory.items}
         snippets={clipboardHistory.snippets ?? []}
@@ -102,6 +126,7 @@ export function ClipboardWindow() {
         onPeek={previewBroken ? undefined : onPeek}
         aiPrompts={clipboardHistory.settings.aiPrompts}
       />
+      )}
     </div>
   );
 }

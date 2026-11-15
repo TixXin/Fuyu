@@ -9,7 +9,7 @@ import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
 import { useTranslation } from "../../i18n";
 import { isMacOS } from "../../lib/platform";
 import type { ClipboardHistorySettings, ClipboardSecretHandling } from "./api";
-import { CLIPBOARD_RETENTION_DAYS, parseExcludedApps } from "./settings";
+import { CLIPBOARD_MAX_ITEMS, CLIPBOARD_MIN_ITEMS, CLIPBOARD_RETENTION_DAYS, parseExcludedApps } from "./settings";
 
 export function ClipboardRecordSettings({ clipboardSettings, onChange }: {
   clipboardSettings: ClipboardHistorySettings;
@@ -59,7 +59,7 @@ export function ClipboardRecordSettings({ clipboardSettings, onChange }: {
         />
       </SettingsRow>
       <SettingsToggleRow title={text.localApiRead} description={text.localApiReadHint} checked={clipboardSettings.localApiRead === true} onChange={(localApiRead) => onChange({ localApiRead })} />
-      <SettingsNumberRow title={text.maxItems} value={clipboardSettings.maxItems} min={5} max={200} onChange={(maxItems) => onChange({ maxItems })} />
+      <SettingsNumberRow title={text.maxItems} value={clipboardSettings.maxItems} min={CLIPBOARD_MIN_ITEMS} max={CLIPBOARD_MAX_ITEMS} onChange={(maxItems) => onChange({ maxItems })} />
       <SettingsRow
         title={text.retention}
         description={text.retentionHint}

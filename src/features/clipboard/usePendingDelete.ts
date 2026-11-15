@@ -3,9 +3,11 @@ import type { ClipboardHistoryItem } from "./api";
 
 const UNDO_MS = 6_000;
 
-export function usePendingDelete(commit: (id: string) => void, restore: (id: string) => void) {
-  const [pending, setPending] = useState<ClipboardHistoryItem | null>(null);
-  const pendingRef = useRef<ClipboardHistoryItem | null>(null);
+type Pending = readonly ClipboardHistoryItem[];
+
+export function usePendingDelete(commit: (ids: string[]) => void, restore: (ids: string[]) => void) {
+  const [pending, setPending] = useState<Pending | null>(null);
+  const pendingRef = useRef<Pending | null>(null);
   const timer = useRef<number | undefined>(undefined);
   const actions = useRef({ commit, restore });
   actions.current = { commit, restore };
@@ -16,20 +18,23 @@ export function usePendingDelete(commit: (id: string) => void, restore: (id: str
     setPending(null);
   }, []);
 
-  const remove = useCallback((item: ClipboardHistoryItem) => {
+  const removeMany = useCallback((items: Pending) => {
+    if (items.length === 0) return;
     flush();
-    pendingRef.current = item;
-    setPending(item);
-    actions.current.commit(item.id);
+    pendingRef.current = items;
+    setPending(items);
+    actions.current.commit(items.map((item) => item.id));
     timer.current = window.setTimeout(flush, UNDO_MS);
   }, [flush]);
 
+  const remove = useCallback((item: ClipboardHistoryItem) => removeMany([item]), [removeMany]);
+
   const undo = useCallback(() => {
-    const item = pendingRef.current;
+    const items = pendingRef.current;
     flush();
-    if (item) actions.current.restore(item.id);
+    if (items) actions.current.restore(items.map((item) => item.id));
   }, [flush]);
 
   useEffect(() => flush, [flush]);
-  return { pending, remove, undo, flush };
+  return { pending, remove, removeMany, undo, flush };
 }
