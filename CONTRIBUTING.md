@@ -39,7 +39,7 @@
 - 只改 Markdown 时 CI 只检查任务文件，半分钟左右。
 - 一个 PR 做一件事。用户可见的文案要有中英文。代码里不写注释，原因写进提交说明或 `docs/`。
 - 提交说明和 PR 描述里不加 AI 署名行（`Co-Authored-By: Claude ...` 之类）。
-- 改 README 时先改中文 `README.md` 和英文 `README.en.md`；繁體中文、日本語、한국어、Español 几份可以滞后，每份开头写着它对应的中文版日期。欢迎母语用户校对或补上新语言。
+- 改 README 时先改中文 `README.md` 和英文 `docs/readme/README.en.md`；`docs/readme/` 里其他语言的几份可以滞后，每份开头写着它对应的中文版日期。欢迎母语用户校对或补上新语言。
 
 ## English
 
@@ -55,4 +55,4 @@ Thanks for helping with Fuyu. How the code is laid out and the rules it follows 
 
 Before opening a PR, run `pnpm check` and `pnpm build` for frontend changes (plus `pnpm test:regression` for UI components) and `cargo test --manifest-path src-tauri/Cargo.toml` for Rust. Keep one change per PR, give user-facing text in both Chinese and English, leave comments out of the code (put the reasons in the commit message or `docs/`), and do not add AI attribution lines to commits or PR descriptions.
 
-When you change the README, update the Chinese `README.md` and the English `README.en.md` first; the Traditional Chinese, Japanese, Korean and Spanish versions may lag behind, and each one says at the top which date of the Chinese README it follows. Native speakers are welcome to proofread them or add another language.
+When you change the README, update the Chinese `README.md` and the English `docs/readme/README.en.md` first; the other translations in `docs/readme/` may lag behind, and each one says at the top which date of the Chinese README it follows. Native speakers are welcome to proofread them or add another language.

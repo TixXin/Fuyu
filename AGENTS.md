@@ -54,7 +54,7 @@
 ├── video/               # 宣传视频：真的前端加假后端在浏览器里跑，按时间表逐帧渲染成 MP4；自带 package.json，不在 workspace 里（用法见 video/README.md）；成片不进仓库
 ├── .githooks/           # pre-push：合并队列的推送保护与检查；pre-commit：在 main 上提交必须写文件名（`git commit -- <文件>`），免得带走别的会话暂存的改动；commit-msg：拒绝 Claude 署名行（只管本仓库自己的提交，合入的外部 PR 可以带；core.hooksPath 指向这里）
 ├── docs/                # 按文档性质分目录，索引和各目录放什么见 docs/README.md：features/ 功能说明，architecture/ 架构与契约（agent/、plugins/ 内部设计，history/ 做完的计划），design/ 界面约定，plugins/ 插件开发，investigations/ 自己应用的排查与验收，research/ 外部调研，reviews/ PR 评审，releases/ 发布说明，assets/ 演示视频与图片，tasks/ 任务（README.md 是规则，按编号首字母分文件夹，0-archive/ 放已结束的）
-└── README*.md           # 中英文项目说明
+└── README.md            # 项目说明（简体中文）；英文和其他语言的版本在 docs/readme/
 ```
 
 注意：被 `include_str!` 编译进 Rust 二进制的脚本放在使用它们的模块旁边（`src-tauri/src/agent_status/hooks/`、`src-tauri/src/qq_notifications/`），修改它们按 Rust 改动验证。
@@ -183,7 +183,7 @@
 ## 文档
 
 - 源码保持项目当前编码风格；中文文档使用 UTF-8。
-- README 包含中英文说明，更新时不要破坏现有的双语结构。
+- 根目录只放简体中文的 `README.md`；英文和其他语言的版本在 `docs/readme/README.<语言>.md`，每份顶部有列出全部语言的切换行。改 README 先改中文和英文，其他语言可以滞后；翻译版里的相对链接按 `docs/readme/` 的位置写（图片 `../assets/readme/…`，根目录文件 `../../…`）。
 - 界面方向的决定记录在 `docs/design/README.md`（全局方向）和 `docs/design/<区域>.md`（各区域，改哪块只改那一份）；新文档按 [docs/README.md](docs/README.md) 的表放进对应目录（功能说明放 `docs/features/`）；架构变化更新 `docs/architecture/overview.md`，数据存放位置写进 `data-storage.md`，对外契约（localStorage key、事件、命令、文件格式）写进 `contracts.md`。某个功能在 Windows 或 macOS 上的支持情况变了（含新增功能），在同一个提交里改 [docs/architecture/platforms.md](docs/architecture/platforms.md) 的对应行；macOS 适配的进度和决定记在 [macos-port-plan.md](docs/architecture/macos-port-plan.md)。
 - **调研**：用户让你联网搜索、搜 GitHub、对比竞品或参考软件并整理时，结果写成 `docs/research/<主题>.md`，不只在对话里回答；格式和规则见 [docs/research/README.md](docs/research/README.md)。
 - **任务**的规则、分组、字段和流程都在 [docs/tasks/README.md](docs/tasks/README.md)，开工前读它。查任务用命令，不逐个打开文件：`pnpm tasks next`（能认领的，按优先级）、`pnpm tasks show <编号>`（一项的全文和关系）、`pnpm tasks`（看板）。没结束的任务在 `docs/tasks/<分组>/`，已完成和不做的在 `docs/tasks/0-archive/<分组>/`，分组是编号的首字母。
