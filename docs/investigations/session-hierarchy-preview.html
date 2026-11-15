@@ -94,7 +94,7 @@ li { margin: 4px 0; }
   </section>
   <section class="col">
     <h2>建议：总控都置顶<span class="tag good">每个总控一行，能折叠</span></h2>
-    <p class="sub">每个领域一个 [总控]，都在「置顶」里，只聊天不开发，不建分区。小事总控直接派 (任务)，只有两层；大事才开 &lt;组长&gt;，它下面的第三层仍然收不起来，做完就归档。</p>
+    <p class="sub">每个领域一个 [总控]，都在「置顶」里，只聊天不开发，不建分区。小事总控直接派 (任务)，只有两层；大事才开 [任务]，它下面的第三层仍然收不起来，做完就归档。</p>
     <div class="sidebar" id="next"></div>
   </section>
 </main>
@@ -105,7 +105,7 @@ li { margin: 4px 0; }
     <table>
       <tr><th>角色</th><th>标题格式</th><th>例子</th></tr>
       <tr><td>总控</td><td><code>[总控] &lt;领域&gt;</code></td><td>[总控] 全局、[总控] 插件平台</td></tr>
-      <tr><td>组长</td><td><code>&lt;组长&gt; &lt;主题&gt;</code></td><td>&lt;组长&gt; 插槽化</td></tr>
+      <tr><td>组长</td><td><code>[任务] &lt;主题&gt;</code></td><td>[任务] 插槽化</td></tr>
       <tr><td>任务会话</td><td><code>(&lt;任务编号&gt;) &lt;一句话&gt;</code>，没建任务写 <code>(#issue号)</code></td><td>(C72) 待办颜色和优先级</td></tr>
       <tr><td>其他</td><td><code>「预览」「调研」「排查」「长期任务」</code>加主题</td><td>「预览」岛的三种形态</td></tr>
     </table>
@@ -170,7 +170,7 @@ const next = [
     { t: "[总控] 插件平台", s: "idle", c: [
       { t: "(E36.3.18) 翻译入口不收 baseUrl", s: "run" },
       { t: "(E36.3.19) 正式版不认开发来源", s: "idle" },
-      { t: "<组长> 插槽化", s: "run", c: [
+      { t: "[任务] 插槽化", s: "run", c: [
         { t: "(E36.2.6) 头部按钮走插槽", s: "run" },
         { t: "(E36.2.7) 刘海提醒插槽", s: "idle" }
       ] }
