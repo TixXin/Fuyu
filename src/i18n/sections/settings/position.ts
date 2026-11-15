@@ -5,6 +5,8 @@ export type SettingsPositionText = {
   resetRow: string;
   reset: string;
   resetDone: string;
+  edge: string;
+  edgeOptions: Record<"top" | "bottom" | "left" | "right", string>;
   monitor: string;
   monitorOptions: Record<"primary" | "cursor" | "foreground", string>;
   monitorHint: string;
@@ -14,28 +16,32 @@ export type SettingsPositionText = {
 
 export const zhCN: SettingsPositionText = {
   title: "位置",
-  moveHint: "按住 Ctrl 键，用鼠标左键拖动灵动岛的任意位置即可移动它，展开时也可以；收起时直接拖动也行。拖到屏幕顶部附近会自动贴齐。",
-  moveHintMac: "按住 Option 键，用鼠标拖动灵动岛的任意位置即可移动它，展开时也可以；收起时直接拖动也行。拖到屏幕顶部附近会自动贴齐。",
+  moveHint: "按住 Ctrl 键，用鼠标左键拖动灵动岛的任意位置即可移动它，展开时也可以；收起时直接拖动也行。拖到屏幕顶部或底部附近会自动贴齐。",
+  moveHintMac: "按住 Option 键，用鼠标拖动灵动岛的任意位置即可移动它，展开时也可以；收起时直接拖动也行。拖到屏幕顶部或底部附近会自动贴齐。",
   resetRow: "回到默认位置",
   reset: "复位",
   resetDone: "已复位",
+  edge: "吸附到",
+  edgeOptions: { top: "顶边", bottom: "底边", left: "左侧", right: "右侧" },
   monitor: "显示在",
   monitorOptions: { primary: "主显示器", cursor: "鼠标所在的显示器", foreground: "前台窗口所在的显示器" },
-  monitorHint: "跟随鼠标或前台窗口时，岛屿收起状态下会移到那块屏幕的顶部中间；展开时等收起后再移。换屏后拖动过的位置会清掉。",
+  monitorHint: "跟随鼠标或前台窗口时，岛屿收起状态下会移到那块屏幕的顶部中间（贴在底边时是底部中间）；展开时等收起后再移。换屏后拖动过的位置会清掉。",
   menuBar: "菜单栏",
   menuBarOptions: { notch: "压在菜单栏上（有刘海时贴合刘海）", below: "放在菜单栏下面" },
 };
 
 export const en: SettingsPositionText = {
   title: "Position",
-  moveHint: "Hold Ctrl and drag any part of the island with the left mouse button to move it, even while it is open. When collapsed, a plain drag works too. Drop it near the top of the screen to snap flush.",
-  moveHintMac: "Hold Option and drag any part of the island to move it, even while it is open. When collapsed, a plain drag works too. Drop it near the top of the screen to snap flush.",
+  moveHint: "Hold Ctrl and drag any part of the island with the left mouse button to move it, even while it is open. When collapsed, a plain drag works too. Drop it near the top or bottom of the screen to snap flush.",
+  moveHintMac: "Hold Option and drag any part of the island to move it, even while it is open. When collapsed, a plain drag works too. Drop it near the top or bottom of the screen to snap flush.",
   resetRow: "Back to the default position",
   reset: "Reset",
   resetDone: "Done",
+  edge: "Dock to",
+  edgeOptions: { top: "Top edge", bottom: "Bottom edge", left: "Left side", right: "Right side" },
   monitor: "Show on",
   monitorOptions: { primary: "Primary display", cursor: "Display with the pointer", foreground: "Display with the active window" },
-  monitorHint: "When following the pointer or the active window, a collapsed island moves to the top middle of that display; an open one waits until it collapses. A dragged position is cleared when it moves.",
+  monitorHint: "When following the pointer or the active window, a collapsed island moves to the top middle of that display (the bottom middle when docked to the bottom); an open one waits until it collapses. A dragged position is cleared when it moves.",
   menuBar: "Menu bar",
   menuBarOptions: { notch: "Over the menu bar (fits the notch)", below: "Below the menu bar" },
 };

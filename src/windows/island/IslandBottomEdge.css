@@ -1,0 +1,58 @@
+:root[data-island-edge="bottom"] .stage {
+  align-items: flex-end;
+}
+
+:root[data-island-edge="bottom"] .island--detached.island--collapsed,
+:root[data-island-edge="bottom"] .island--detached.island--expanded {
+  --island-shell-bottom-corner: 0px;
+}
+
+:root[data-island-edge="bottom"] .island__collapsed,
+:root[data-island-edge="bottom"] .island__expanded {
+  top: auto;
+  bottom: 0;
+}
+
+:root[data-island-edge="bottom"] .island::before,
+:root[data-island-edge="bottom"] .island::after {
+  opacity: min(1, var(--island-top-fillet-size, 8));
+  transform: scaleY(-1);
+}
+
+:root[data-island-edge="bottom"] .island::after {
+  top: auto;
+  bottom: 0;
+}
+
+:root[data-island-edge="bottom"] .island__glass-refraction {
+  --refraction-band: calc(100% - var(--island-top-fillet) + 1px);
+  clip-path: polygon(
+    0 0,
+    100% 0,
+    100% var(--refraction-band),
+    calc(100% - 5px) var(--refraction-band),
+    calc(100% - 5px) calc(100% - 4px),
+    5px calc(100% - 4px),
+    5px var(--refraction-band),
+    0 var(--refraction-band)
+  );
+}
+
+:root[data-island-edge="bottom"] .message-banner {
+  top: auto;
+  bottom: calc(38px * var(--island-scale, 1) + 8px);
+  animation-name: message-banner-up;
+}
+
+@keyframes message-banner-up {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 8px) scale(0.97);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root[data-island-edge="bottom"] .message-banner {
+    animation: none;
+  }
+}

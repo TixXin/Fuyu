@@ -1,6 +1,7 @@
 import { isTauri } from "@tauri-apps/api/core";
 import { getIslandEdge, listenIslandEdge, type IslandEdge } from "./api.ts";
 import "./IslandTopEdge.css";
+import "./IslandBottomEdge.css";
 
 function applyEdge(edge: IslandEdge | null) {
   document.documentElement.dataset.islandTopEdge = edge === "top" ? "attached" : "detached";

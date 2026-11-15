@@ -40,6 +40,17 @@
       "page": "general",
       "zh-CN": {
         "group": "位置",
+        "title": "吸附到"
+      },
+      "en": {
+        "group": "Position",
+        "title": "Dock to"
+      }
+    },
+    {
+      "page": "general",
+      "zh-CN": {
+        "group": "位置",
         "title": "显示在"
       },
       "en": {
