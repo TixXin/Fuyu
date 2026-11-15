@@ -17,11 +17,13 @@ const style: CSSProperties = {
   font: "12px ui-monospace, monospace",
   color: "var(--fuyu-plugin-text-secondary)",
   background: "var(--fuyu-plugin-surface)",
+  minWidth: 0,
+  whiteSpace: "nowrap",
 };
 const Hello = () => (
   <div className="demo" style={style}>
-    <span>hello island, from the plugin host (pid 4242)</span>
-    <span style={{ color: "var(--fuyu-plugin-text-muted)" }}>#12</span>
+    <span className="greeting" style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis" }}>hello island, from the plugin host (pid 4242)</span>
+    <span className="count" style={{ flexShrink: 0, color: "var(--fuyu-plugin-text-muted)" }}>#12</span>
   </div>
 );
 
@@ -67,6 +69,13 @@ try {
   check(missing.length === 0, `Every public theme variable is defined on the slot (${SLOT_THEME.length}); missing: ${missing.join(", ") || "none"}`);
   const dark = contrast(demo, { r: 0, g: 0, b: 0 });
   check(dark >= 4.5, `On the dark island the demo row reads at ${dark.toFixed(1)}:1`);
+
+  island.style.width = "300px";
+  const lineHeight = parseFloat(getComputedStyle(demo).lineHeight) || 16;
+  check(demo.querySelector<HTMLElement>(".greeting")!.offsetHeight <= lineHeight * 1.5, "On a narrow island the greeting stays on one line and is cut with an ellipsis");
+  const count = demo.querySelector<HTMLElement>(".count")!.getBoundingClientRect();
+  check(count.right <= demo.getBoundingClientRect().right + 0.5 && count.width > 0, "and the counter stays whole inside the row");
+  island.style.width = "";
 
   document.documentElement.classList.add("island-light");
   island.style.background = "#f2f2f5";
