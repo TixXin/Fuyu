@@ -128,7 +128,7 @@ Windows 的测法：同上面 Windows 的构建和身份；`Process.Start` 拉�
 | 阶段 | 要看什么 | 系统 | 看过 | 结果 |
 |---|---|---|---|---|
 | 1 | 展开岛屿后最上面有演示插件的问候和每秒加一的计数；关掉插件后消失；改 `hello/host.mjs` 后热重载 | Windows | | |
-| 1 | 同上 | macOS | | |
+| 1 | 同上 | macOS | 2026-11-15（部分） | 展开岛屿后插件列表最上面显示「hello island, from the plugin host (pid …)」和每秒加一的计数，深色岛上可读；关掉插件和热重载还没看 |
 | 1 | 设置窗口「插件（第 3 版）」页：状态、CPU、资源数；`FUYU_PLUGINS_V3_SAFE=third-party` 时插件被拦下 | Windows | | |
 | 1 | 同上 | macOS | | |
 
