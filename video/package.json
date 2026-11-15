@@ -11,7 +11,7 @@
     "still": "node render/render.mjs --still"
   },
   "devDependencies": {
-    "@puppeteer/browsers": "^2.10.0",
-    "puppeteer-core": "^24.0.0"
+    "@puppeteer/browsers": "^3.2.7",
+    "puppeteer-core": "^25.17.0"
   }
 }
