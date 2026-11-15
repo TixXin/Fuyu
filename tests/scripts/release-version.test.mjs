@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
-import { channelProblems, parseTask, RELEASED_MARKER, releasedComment, shippedIssues } from "../../scripts/release/after-release.mjs";
+import { channelProblems, finishedIssues, parseTask, RELEASED_MARKER, releasedComment, shippedIssues } from "../../scripts/release/after-release.mjs";
 import { commandLine, quoteArg } from "../../scripts/release/command-line.mjs";
 import { baseTag, commitPlatform, downloadLinks, DRAFT_MARKER, draftNotes, userFacingCommits } from "../../scripts/release/notes-draft.mjs";
 import { bumpProblem, readVersion, VERSION_FILES, writeVersion } from "../../scripts/release/versions.mjs";
@@ -73,7 +73,7 @@ test("after a release both channels must offer what they should", () => {
 
 test("issues whose task has a commit in the release are told, once per release", () => {
   const task = parseTask("---\nid: D13\ntitle: x\nstatus: 已完成\nissue: 18\n---\n\n## 说明\n\ny\n\n## 提交\n\n- `fix(mail): links in a mail open again when clicked`\n- 88b47ae\n\n## 备注\n\n- `not a commit`\n");
-  assert.deepEqual(task, { id: "D13", issue: 18, commits: ["fix(mail): links in a mail open again when clicked", "88b47ae"] });
+  assert.deepEqual(task, { id: "D13", status: "已完成", issue: 18, commits: ["fix(mail): links in a mail open again when clicked", "88b47ae"] });
   const other = { id: "C12", issue: 17, commits: ["feat(island): something else"] };
   const none = { id: "F1", issue: null, commits: ["fix(mail): links in a mail open again when clicked"] };
   const bySubject = shippedIssues([task, other, none], [{ hash: "ffff", subject: "fix(mail): links in a mail open again when clicked" }]);
@@ -82,6 +82,12 @@ test("issues whose task has a commit in the release are told, once per release",
   assert.deepEqual([...byHash.keys()], [18]);
   const comment = releasedComment({ tag: "v0.3.4-beta.1", url: "https://example.com/r", tasks: [{ id: "D13", path: "docs/tasks/0-archive/D/D13.md" }], repo: "TixXin/fuyu" });
   assert.ok(comment.includes("测试版") && comment.includes("docs/tasks/0-archive/D/D13.md") && comment.trimEnd().endsWith(RELEASED_MARKER("v0.3.4-beta.1")));
+});
+
+test("an issue is finished only when all its tasks are done or dropped and one is done", () => {
+  const t = (id, issue, status) => ({ id, issue, status, commits: [] });
+  const finished = finishedIssues([t("A1", 1, "已完成"), t("A2", 1, "不做"), t("B1", 2, "已完成"), t("B2", 2, "进行中"), t("C1", 3, "不做"), t("D1", null, "已完成")]);
+  assert.deepEqual([...finished], [1]);
 });
 
 test("commands go through the Windows shell as one quoted line", () => {

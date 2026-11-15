@@ -11,27 +11,43 @@ export function ghAsync(args) {
   });
 }
 
-async function tellOne({ issue, tasks, tag, url, repo, dir, gh }) {
+async function postComment({ issue, tasks, tag, url, repo, dir, gh }) {
   const existing = await gh(["api", `repos/${repo}/issues/${issue}/comments`, "--paginate", "--jq", ".[].body"]);
-  if (existing.status !== 0) return `  #${issue}: could not read its comments, so it was not told.`;
-  if (existing.stdout.includes(RELEASED_MARKER(tag))) return null;
+  if (existing.status !== 0) return { told: false, line: `  #${issue}: could not read its comments, so it was not told.` };
+  if (existing.stdout.includes(RELEASED_MARKER(tag))) return { told: true, line: null };
   const body = join(dir, `${issue}.md`);
   writeFileSync(body, releasedComment({ tag, url, tasks, repo }));
   const posted = await gh(["issue", "comment", String(issue), "--repo", repo, "--body-file", body]);
-  return posted.status === 0 ? `✓ Told #${issue} that it shipped in ${tag}.` : `  #${issue}: the comment failed: ${posted.stderr.trim()}`;
+  return posted.status === 0
+    ? { told: true, line: `✓ Told #${issue} that it shipped in ${tag}.` }
+    : { told: false, line: `  #${issue}: the comment failed: ${posted.stderr.trim()}` };
 }
 
-export async function tellIssues(shipped, { tag, url, repo, dir, gh = ghAsync, limit = 6 }) {
+async function closeIfOpen({ issue, repo, gh }) {
+  const state = await gh(["issue", "view", String(issue), "--repo", repo, "--json", "state", "--jq", ".state"]);
+  if (state.status !== 0) return `  #${issue}: could not read its state, so it was left open.`;
+  if (state.stdout.trim() !== "OPEN") return null;
+  const closed = await gh(["issue", "close", String(issue), "--repo", repo]);
+  return closed.status === 0 ? `✓ Closed #${issue}: all its tasks are done.` : `  #${issue}: closing failed: ${closed.stderr.trim()}`;
+}
+
+async function tellOne({ issue, finished, ...rest }) {
+  const { told, line } = await postComment({ issue, ...rest });
+  const closing = told && finished.has(issue) ? await closeIfOpen({ issue, repo: rest.repo, gh: rest.gh }) : null;
+  return [line, closing].filter(Boolean);
+}
+
+export async function tellIssues(shipped, { tag, url, repo, dir, gh = ghAsync, limit = 6, finished = new Set() }) {
   const queue = [...shipped];
   const lines = new Map();
   const worker = async () => {
     while (queue.length) {
       const [issue, tasks] = queue.shift();
-      lines.set(issue, await tellOne({ issue, tasks, tag, url, repo, dir, gh }));
+      lines.set(issue, await tellOne({ issue, tasks, tag, url, repo, dir, gh, finished }));
     }
   };
   await Promise.all(Array.from({ length: Math.min(limit, queue.length) }, worker));
-  return [...shipped.keys()].map((issue) => lines.get(issue)).filter(Boolean);
+  return [...shipped.keys()].flatMap((issue) => lines.get(issue));
 }
 
 export const RELEASED_MARKER = (tag) => `<!-- released: ${tag} -->`;
@@ -57,7 +73,7 @@ export function parseTask(text) {
     .filter(Boolean)
     .map((match) => match[1] ?? match[2]);
   const issue = Number(field("issue"));
-  return { id: field("id"), issue: Number.isInteger(issue) && issue > 0 ? issue : null, commits };
+  return { id: field("id"), status: field("status"), issue: Number.isInteger(issue) && issue > 0 ? issue : null, commits };
 }
 
 export function shippedIssues(tasks, commits) {
@@ -70,6 +86,21 @@ export function shippedIssues(tasks, commits) {
     if (hit) shipped.set(task.issue, [...(shipped.get(task.issue) ?? []), task]);
   }
   return shipped;
+}
+
+const CLOSED_STATUSES = new Set(["已完成", "不做"]);
+
+export function finishedIssues(tasks) {
+  const byIssue = new Map();
+  for (const task of tasks) {
+    if (!task.issue) continue;
+    byIssue.set(task.issue, [...(byIssue.get(task.issue) ?? []), task]);
+  }
+  const finished = new Set();
+  for (const [issue, linked] of byIssue) {
+    if (linked.every((task) => CLOSED_STATUSES.has(task.status)) && linked.some((task) => task.status === "已完成")) finished.add(issue);
+  }
+  return finished;
 }
 
 export function readTasks(root = "docs/tasks") {
