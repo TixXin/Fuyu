@@ -1,6 +1,6 @@
 import { Context } from "cordis";
 import { HostBridge } from "./bridge.mjs";
-import { Slots } from "./slots.mjs";
+import { Slots } from "./slot-service.mjs";
 
 export function createLoader({ registry, base, bridge, importModule = (url) => import(/* @vite-ignore */ url), checkFile = defaultCheck, onStatus }) {
   const root = new Context();
