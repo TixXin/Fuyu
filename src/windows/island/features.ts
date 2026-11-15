@@ -1,24 +1,12 @@
 import type { MessageSource } from "../../features/messages/messagePreview";
 import type { PlatformFeature } from "../../lib/platform.ts";
 import { BUILTIN_PAGES, pageSlot, type HeaderDotPage } from "./slots/pageSlot.ts";
-import type { IslandPage, PluginPageId } from "./types";
+import type { BuiltinPage, IslandPage, PluginPageId } from "./types";
 
 export type { HeaderDotPage };
 
-export type IslandFeatures = {
-  todo: boolean;
-  calendar?: boolean;
-  music: boolean;
-  clipboard: boolean;
-  shelf: boolean;
-  screenshots?: boolean;
+export type IslandFeatures = Record<BuiltinPage | MessageSource, boolean> & {
   clipboardScreenshots?: boolean;
-  timer?: boolean;
-  qq: boolean;
-  wechat: boolean;
-  qqMail: boolean;
-  agents: boolean;
-  translation: boolean;
   pluginPages?: readonly PluginPageId[];
 };
 

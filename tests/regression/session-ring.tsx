@@ -82,7 +82,7 @@ function Island({ agents, count, list, report }: { agents: boolean; count: numbe
       showCollapsedText={true} collapsedTaskTitle="剩余3个待办" collapsedTodoCount={null} agentSession={null} activeAgentSessionCount={count}
       appearanceMode="classic" nativeGlassState="disabled" agentVisualState="idle" agentStatusLabel="AI Agent 空闲或已完成"
       mediaState={UNAVAILABLE_MEDIA}
-      features={{ todo: true, music: false, clipboard: true, shelf: true, qq: false, wechat: false, qqMail: false, agents, translation: false }}
+      features={{ todo: true, music: false, clipboard: true, shelf: true, qq: false, wechat: false, qqMail: false, agents, translation: false, calendar: false, screenshots: false, timer: false }}
       shelfCount={null} collapsedSlots={slots}
       onOpenPage={(page) => { openedPage = page; }} onOpenMessages={() => {}}
       onPageChange={() => {}} onWindowDragStart={() => {}} onCollapse={() => {}}
