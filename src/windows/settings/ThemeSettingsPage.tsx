@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { BuiltinThemesSection } from "../../features/appearance/BuiltinThemesSection";
 import { ColorSettingsSection } from "../../features/appearance/ColorSettingsSection";
 import { IslandPreview } from "../../features/appearance/IslandPreview";
 import { CornerSettingsRows } from "../../features/appearance/LayoutSettingsSection";
@@ -28,6 +29,13 @@ export function ThemeSettingsPage({
     <>
       <IslandPreview settings={shown} />
       <ThemeModeSection settings={settings} onEditingChange={setEditing} onSettingsChange={onSettingsChange} />
+      <BuiltinThemesSection
+        settings={settings}
+        onApply={(next) => {
+          setEditing(null);
+          onSettingsChange(next);
+        }}
+      />
       <ColorSettingsSection
         settings={shown}
         editing={tone}
@@ -37,6 +45,7 @@ export function ThemeSettingsPage({
           islandBackgroundColor: next.islandBackgroundColor,
           taskTextColor: next.taskTextColor,
           pulseColor: next.pulseColor,
+          inkColor: next.inkColor,
         }))}
       />
       <StyleSettingsSection settings={settings} onSettingsChange={onSettingsChange}>

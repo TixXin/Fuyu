@@ -12,7 +12,7 @@ const transpile = (path) => ts.transpileModule(readFileSync(new URL(path, import
 const source = transpile("../../src/features/updater/updaterController.ts");
 const apiSource = transpile("../../src/features/updater/api.ts");
 
-export function runtime({ check = async () => null, install = async () => {}, notify = async () => true, download = async () => {}, metered = false, preferences = {} } = {}) {
+export function runtime({ check = async () => null, install = async () => {}, notify = async () => true, download = async () => {}, backup = async () => {}, metered = false, preferences = {} } = {}) {
   const subscribers = new Set();
   const windows = new Set();
   let prefs = storage.normalizeUpdatePreferences(preferences);
@@ -85,6 +85,10 @@ export function runtime({ check = async () => null, install = async () => {}, no
         saveUpdatePreferences: (patch) => { prefs = { ...prefs, ...patch }; sync(); return prefs; },
       },
       "./checkSchedule": { nextUpdateCheckAt },
+      "../settings-backup/api": { backupBeforeUpdate: async (toVersion) => {
+        calls.push({ command: "update_backup_create", args: { toVersion } });
+        return backup(toVersion);
+      } },
       "../../i18n/nativeError.ts": { isNativeError },
     };
     const api = {};

@@ -1,10 +1,11 @@
 use serde_json::{json, Value};
 
-use super::antigravity;
+use super::antigravity::{self, APPROVED_TOOLS};
+use super::claude_hooks::APPROVAL_HOOK_TIMEOUT_SECONDS;
 use super::harness::{RemoteFiles, ScanRoots};
 use super::remote_fetch::run_ssh;
 use super::remote_hosts::SshTarget;
-use super::remote_setup::edit;
+use super::remote_setup::{edit, RemoteApproval};
 use super::sessions::AgentSessionSummary;
 
 const HOOKS_PATH: &str = ".gemini/config/hooks.json";
@@ -36,17 +37,29 @@ fn save_command(state: &str) -> String {
     )
 }
 
-fn hook_group() -> Value {
+fn approval_command(approval: &RemoteApproval) -> String {
+    let wait = format!("-f -m {}", APPROVAL_HOOK_TIMEOUT_SECONDS - 5);
+    approval.curl(&approval.antigravity_path, "approval", &wait, "exit 0")
+}
+
+fn hook_group(approval: Option<&RemoteApproval>) -> Value {
     let save = |state: &str| json!([{ "type": "command", "command": save_command(state), "timeout": 5 }]);
-    json!({
+    let mut group = json!({
         "enabled": true,
         "SessionStart": save("running"),
         "PreInvocation": save("running"),
         "Stop": save("stop"),
-    })
+    });
+    if let Some(approval) = approval {
+        group["PreToolUse"] = json!([{
+            "matcher": APPROVED_TOOLS,
+            "hooks": [{ "type": "command", "command": approval_command(approval), "timeout": APPROVAL_HOOK_TIMEOUT_SECONDS }],
+        }]);
+    }
+    group
 }
 
-pub(super) fn with_remote_hooks(text: &str) -> Result<String, String> {
+pub(super) fn with_remote_hooks(text: &str, approval: Option<&RemoteApproval>) -> Result<String, String> {
     let mut config = match text.trim() {
         "" => json!({}),
         text => serde_json::from_str::<Value>(text).map_err(|error| format!("Failed to parse ~/{HOOKS_PATH}: {error}"))?,
@@ -54,7 +67,7 @@ pub(super) fn with_remote_hooks(text: &str) -> Result<String, String> {
     config
         .as_object_mut()
         .ok_or_else(|| format!("~/{HOOKS_PATH} must contain a JSON object"))?
-        .insert(HOOK_NAME.to_string(), hook_group());
+        .insert(HOOK_NAME.to_string(), hook_group(approval));
     serde_json::to_string_pretty(&config).map_err(|error| error.to_string())
 }
 
@@ -63,11 +76,11 @@ fn lives_there(target: &SshTarget) -> Result<bool, String> {
     Ok(String::from_utf8_lossy(&said).trim() == "yes")
 }
 
-pub(super) fn install(target: &SshTarget) -> Result<(), String> {
+pub(super) fn install(target: &SshTarget, approval: Option<&RemoteApproval>) -> Result<(), String> {
     if !lives_there(target)? {
         return Ok(());
     }
-    edit(target, HOOKS_PATH, &with_remote_hooks)
+    edit(target, HOOKS_PATH, &|text| with_remote_hooks(text, approval))
 }
 
 #[cfg(test)]

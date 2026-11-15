@@ -5,6 +5,7 @@ import { useTranslation } from "../../i18n";
 import { isMacOS } from "../../lib/platform";
 import { DataHomeSection } from "./DataHomeSection";
 import { SettingsBackupSection } from "./SettingsBackupSection";
+import { UpdateBackupsSection } from "./UpdateBackupsSection";
 
 export function DataSettingsSection({ onMoved }: { onMoved: (from: string, to: string) => void }) {
   const text = useTranslation().settings;
@@ -12,19 +13,22 @@ export function DataSettingsSection({ onMoved }: { onMoved: (from: string, to: s
   const [backupNote, setBackupNote] = useState<ReactNode>(null);
 
   return (
-    <SettingsGroup
-      title={text.dataHome.groupTitle}
-      footer={
-        <>
-          <SettingsFootnote text={text.dataHome.hint} />
-          {homeNote}
-          <SettingsFootnote text={isMacOS ? text.backup.hintMac : text.backup.hint} />
-          {backupNote}
-        </>
-      }
-    >
-      <DataHomeSection onMoved={onMoved} onNote={setHomeNote} />
-      <SettingsBackupSection onNote={setBackupNote} />
-    </SettingsGroup>
+    <>
+      <SettingsGroup
+        title={text.dataHome.groupTitle}
+        footer={
+          <>
+            <SettingsFootnote text={text.dataHome.hint} />
+            {homeNote}
+            <SettingsFootnote text={isMacOS ? text.backup.hintMac : text.backup.hint} />
+            {backupNote}
+          </>
+        }
+      >
+        <DataHomeSection onMoved={onMoved} onNote={setHomeNote} />
+        <SettingsBackupSection onNote={setBackupNote} />
+      </SettingsGroup>
+      <UpdateBackupsSection />
+    </>
   );
 }

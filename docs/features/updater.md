@@ -7,7 +7,7 @@
 - 打开「更新」页时也会检查一次；版本卡片下方显示上次成功检查的时间，以及下次检查、重试、离线、暂停（下载安装中）等状态。
 - **更新提醒方式**：「仅岛上标记」（默认）或「岛上标记与系统通知」。系统通知是额外的提醒，岛上标记照常显示；同一通道的同一版本只通知一次（记在 `lastNotifiedKey`，切换通道后同一版本会再通知一次）。点通知打开关于页。没有正式安装的程序 Windows 可能不显示通知，这时关于页会说明，岛上标记不受影响。
 - **自动更新**（D18）：「只提醒」「自动下载，手动安装」（默认）「自动下载，空闲时安装」。自动下载时主窗口在发现新版本后立刻下载（`updater_download`，下载时校验签名），按流量计费、漫游或超出流量上限的网络不下载，跳过的版本不下载，下载失败的版本这次运行里不再重试、仍可手动安装。下载好的安装包只在内存里，重启岛屿后要重新下载。下载好后关于页显示「已下载」和「立即安装」，点了直接安装，不再等进度条。
-- **空闲时安装**：每 30 秒看一次，同时满足才安装：锁屏或 10 分钟没有键鼠操作；岛屿没有展开；没有 Agent 会话在运行或等你（安装会让岛屿重启，审批端口和提醒会中断）；前台没有全屏程序（`windows/island/useIslandAutoUpdate.ts`）。安装器装完会重新打开岛屿。
+- **空闲时安装**：每 30 秒看一次，同时满足才安装：锁屏或 10 分钟没有键鼠操作；岛屿没有展开；没有 Agent 会话在运行或等你（安装会让岛屿重启，审批端口和提醒会中断）；前台没有全屏程序（`windows/island/useIslandAutoUpdate.ts`）。Windows 上安装器装完会重新打开岛屿；Mac 上 updater 只替换 .app，`updater_install` 装好后稍等 1.5 秒自己重启（G1.25）。关于页停在「正在重启」超过 15 秒（重启没发生）时改成「更新已装好，但小岛没有自动重启」，给「立即重启」按钮（`useRestartStalled.ts`，调 `restart_island`）。
 - **诊断信息**：关于页的链接区先预览、再复制一段白名单文本（应用版本、系统版本与架构、更新通道、自动检查与频率、上次成功检查、更新状态），用于反馈问题；不含路径、账号等信息。
 - 以上偏好存在 `fuyu-update-preferences`。
 实现基于 Tauri 2 的 `tauri-plugin-updater`，所有更新包都用 minisign 签名，App 内置公钥校验，签名不符的包不会被安装。
@@ -21,6 +21,16 @@
 - 每次 `pnpm release`（正式版和 beta 版都算）发布后会刷新 `beta-channel` 上的清单，除非它已经指向更新的版本。所以测试版用户也会收到正式版；从测试版切回稳定版不会降级，要等稳定版追上当前版本才收到更新。
 
 版本号带 `-`（如 `0.3.1-beta.1`）就算 beta：`release.mjs` 会把它发成 Pre-release、不设为 latest，判断与比较在 `scripts/release/channel.mjs`。
+
+## 更新日志（D54，2026-11-15 起）
+
+关于页「版本」组下面有一组「更新日志」，列出不比当前版本新的各个版本，点开一行看那一版的更新说明，跟随界面语言（只显示「更新内容」/ What's New，开头的「关于这个版本」和下载部分不显示）。比当前版本新的由上面的「版本」组检查和显示。
+
+- **说明从哪来**：构建时把仓库里的 `docs/releases/v*.md` 打包进前端（`features/updater/bundledReleases.ts`，`import.meta.glob` 原文导入，每份说明一个小文件，点开时才读），不联网，离线也能看；`docs/releases/README.md` 和草稿不算版本。所以发版时写好的说明随这一版一起装进去，以后改 GitHub Release 的正文不会反映到已安装的版本里。
+- **日期**：构建时由 Vite 插件 `scripts/vite/release-dates.mjs` 写进虚拟模块 `virtual:fuyu-release-dates`：有 `vX.Y.Z` 标签的用标签日期，没有的（比如正在构建、还没打标签的这一版）用说明文件加进仓库的日期；浅克隆或没有 git 时不显示日期，所以发版用的 `release-windows.yml`、`release-macos.yml` 的 checkout 带 `fetch-depth: 0`（拉全部历史和标签）；本机构建在主工作区里编，本来就有完整历史。
+- **测试版**：同一版本号的测试版收在正式版那一行里（「含 N 个测试版」），点开后上面一排按钮切换正式版和各测试版的说明；正式版还没发的测试版单独一行，标「测试版」。当前运行的版本标「当前」。先显示最近 5 个版本，「显示更早的 N 个版本」展开全部。
+- 排序和分组在 `features/updater/releaseHistory.ts`（单测 `tests/unit/release-history.test.mjs`），界面在 `VersionHistory.tsx`，回归页 `tests/regression/version-history.html`。
+- 注意：根目录如果有 `tsc -b` 留下的 `vite.config.js`，Vite 会用它而不是 `vite.config.ts`，插件不生效，打开关于页会报 `virtual:fuyu-release-dates` 找不到；删掉它（已在 `.gitignore` 里）。
 
 ## 检查与安装流程
 
@@ -41,6 +51,15 @@
 - `scripts/release/make-latest-json.mjs`：根据构建产物生成 `latest.json`
 - `scripts/release/release.mjs`：一键构建 + 签名 + 生成清单 + 上传 Release
 - `scripts/release/release-signing.mjs`：优先使用显式环境变量，否则读取本机签名配置，Windows 上通过 DPAPI、Mac 上从钥匙串解锁密码
+
+## 升级前的备份（D58，2026-11-15 起）
+
+`installUpdate`（设置里点「安装」和岛上空闲时自动安装都走它）在调 `updater_install` 之前先调 `update_backup_create`：前端交上 `localStorage` 里全部 `fuyu-*` key（去掉几个一次性的跨窗口请求，见 `features/settings-backup/localSnapshot.ts`），原生侧连同家目录里的设置和数据文件拷到 `<家目录>/backups/pre-update-<当前版本>-<时间>/`，每个文件写完回读核对 sha256，全部对上才把临时目录改成正式名字，再删掉最旧的，只留 3 份。拷哪些文件见 [data-storage.md](../architecture/data-storage.md)「升级前的备份」一行；凭据管理器 / 钥匙串从不读取。
+
+- 备份失败就不装，`commandError` 是 `updateBackup.failed`（带原因）。设置 → 关于的更新面板下面出现「不备份，仍然安装」；自动安装对这个版本不再重试，等用户手动处理。
+- 设置 → 通用 → 「升级前的备份」列出每一份（从哪个版本升到哪个、时间、大小、文件数），点「恢复…」确认后：`update_backup_restore` 再核对一遍 sha256，在 `backups/restore-pending.json` 记下要恢复哪一份，把 `localStorage` 快照交回前端；前端写回快照（快照里没有的 `fuyu-*` key 删掉，一次性请求 key 不动），然后 `restart_island`。新进程在 `setup` 一开始、各服务启动前把文件放回家目录（`system::update_backup::apply_pending_restore`），删掉标记。备份里没有的文件不删。
+- 恢复只换数据，不换程序：想回到旧版本的程序，另外装旧版的安装包。
+- 「升级后数据读不出」的提示：有备份、并且 `fuyu-settings` 解析不出对象，或者家目录里有比最新备份还新的 `plugins.broken-*.json` 时，「升级前的备份」那一组顶上提示可以恢复。别的数据文件（待办、剪贴板）读不出时各自怎么处理不变，这里还不提示。
 
 ## 网络、代理与镜像
 

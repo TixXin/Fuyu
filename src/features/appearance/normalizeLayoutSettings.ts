@@ -9,6 +9,7 @@ import {
 import { hasThemeSets, THEME_COLOR_KEYS, THEME_COLORS, THEME_MODES, themeSetsFromSingleColors } from "./themeMode.ts";
 import { oneOf } from "./settingsLimits.ts";
 import { ISLAND_MOTIONS } from "./islandMotion.ts";
+import { normalizeGlassSettings } from "./glassSettings.ts";
 import type { IslandSettings, LegacyIslandSettings } from "./types";
 
 export function normalizeLayoutSettings(settings: LegacyIslandSettings | null | undefined) {
@@ -46,6 +47,8 @@ export function normalizeLayoutSettings(settings: LegacyIslandSettings | null | 
     expandedScale: clamp(Number(expandedScale), 0.75, 1.4),
     islandMonitor: settings?.islandMonitor === "cursor" || settings?.islandMonitor === "foreground" ? settings.islandMonitor : "primary",
     menuBarPlacement: settings?.menuBarPlacement === "below" ? "below" : "notch",
+    islandForm: oneOf(["top", "pill", "notch"] as const, settings?.islandForm, "top"),
+    ...normalizeGlassSettings(settings),
     marginY: clamp(
       Number(hasPreviousDefaultMargin ? DEFAULT_SETTINGS.marginY : marginY),
       0,
@@ -82,6 +85,7 @@ export function normalizeLayoutSettings(settings: LegacyIslandSettings | null | 
       settings?.islandBackgroundColor,
       LEGACY_FALLBACKS.islandBackgroundColor,
     ),
+    inkColor: getColorSetting(settings?.inkColor, ""),
     ...normalizeThemeSets(settings),
     collapsedDark: typeof settings?.collapsedDark === "boolean" ? settings.collapsedDark : LEGACY_FALLBACKS.collapsedDark,
     panelDark: typeof settings?.panelDark === "boolean" ? settings.panelDark : DEFAULT_SETTINGS.panelDark,
@@ -109,6 +113,6 @@ function normalizeThemeSets(settings: LegacyIslandSettings | null | undefined) {
         getColorSetting(merged[key], THEME_COLORS[tone][name]),
       ]),
     ),
-  ) as Pick<IslandSettings, "darkBackgroundColor" | "darkTextColor" | "darkPulseColor" | "lightBackgroundColor" | "lightTextColor" | "lightPulseColor">;
+  ) as Pick<IslandSettings, "darkBackgroundColor" | "darkTextColor" | "darkPulseColor" | "lightBackgroundColor" | "lightTextColor" | "lightPulseColor" | "darkInkColor" | "lightInkColor">;
   return { themeMode: oneOf(THEME_MODES, merged.themeMode, DEFAULT_SETTINGS.themeMode), ...sets };
 }

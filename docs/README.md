@@ -15,6 +15,7 @@
 | [research/](research/) | 对**外部**的调研：联网搜索、GitHub 项目、竞品和参考软件，规则见 [research/README.md](research/README.md) | 我们自己应用的实测 |
 | [reviews/](reviews/) | PR 评审记录 | |
 | [releases/](releases/) | 每个版本的发布说明 `vX.Y.Z.md`（release 脚本按这个名字读）；还没发的草稿用 `draft-` 开头 | |
+| [readme/](readme/) | 仓库首页 README 的英文和其他语言版本 `README.<语言>.md`（根目录只放简体中文）；以中文版为准翻译，开头注明对应的中文版日期 | 截图和 SVG（在 `assets/readme/`） |
 | [tasks/](tasks/) | 任务，规则见 [tasks/README.md](tasks/README.md) | |
 | [assets/](assets/) | 演示视频和图片；`readme/` 是仓库首页 README 用的动图和截图，怎么重出见 [video/README.md](../video/README.md#readme-里的动图和截图)；同一目录里的 `island-*.svg`（页首会展开的小岛、页尾收回去的小岛）、`download-*.svg`（下载按钮）和 `mac-guide-*.svg`（按钮下面的「Mac 安装教程」小字）由 `pnpm readme:assets`（`scripts/readme/assets.mjs`）生成，改文案、尺寸或动画改脚本再重新生成，不直接改 SVG；小岛旁的 `https://fuyu.ing` 是 Kaushan Script（SIL OFL 1.1，声明在 `THIRD_PARTY_NOTICES.md`）转成的路径，存在 `scripts/readme/address-outline.json`，字体文件不在仓库里 | |
 

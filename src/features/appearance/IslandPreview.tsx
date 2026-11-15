@@ -1,10 +1,9 @@
 import type { CSSProperties } from "react";
 import claudeCodeIcon from "../../assets/brands/claude-code.png";
 import { useTranslation } from "../../i18n";
-import { inkOn } from "../../utils/color";
 import { AgentPagePreview } from "./AgentPagePreview";
 import { hexToRgba } from "./settings";
-import { surfaceThemeColors } from "./themeMode";
+import { islandInkRgb, surfaceThemeColors } from "./themeMode";
 import type { IslandSettings } from "./types";
 import "./IslandPreview.css";
 
@@ -62,6 +61,6 @@ function surfaceStyle(settings: IslandSettings) {
     "--preview-pulse": settings.pulseColor,
     "--preview-pulse-glow": hexToRgba(settings.pulseColor, 0.72),
     "--preview-text": settings.taskTextColor,
-    "--preview-ink": inkOn(settings.islandBackgroundColor),
+    "--preview-ink": islandInkRgb(settings),
   } as CSSProperties;
 }

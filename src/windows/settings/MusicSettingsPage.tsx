@@ -1,6 +1,7 @@
 import type { IslandSettings } from "../../features/appearance/types";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsRow } from "../../components/settings/SettingsRow";
+import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
 import { MusicSourceSettingsSection } from "../../features/media/MusicSourceSettingsSection";
 import { MusicBarSettingsSection } from "../../features/media/MusicBarSettingsSection";
 import { LyricsSettingsSection } from "../../features/media/lyrics/LyricsSettingsSection";
@@ -17,7 +18,8 @@ export function MusicSettingsPage({
   settings: IslandSettings;
   onSettingsChange: (settings: IslandSettings) => void;
 }) {
-  const text = useTranslation().settings.lyrics;
+  const t = useTranslation().settings;
+  const text = t.lyrics;
   if (tab === "musicLyrics") return <LyricsSettingsSection part="sources" settings={settings} onSettingsChange={onSettingsChange} />;
   if (tab === "musicLyricsStyle") {
     return settings.lyricsOnIsland ? (
@@ -34,6 +36,14 @@ export function MusicSettingsPage({
       <MusicBarSettingsSection />
       <LyricsSettingsSection part="island" settings={settings} onSettingsChange={onSettingsChange} />
       <MusicSourceSettingsSection />
+      <SettingsGroup title={t.expand.tuckTitle}>
+        <SettingsToggleRow
+          title={t.expand.holdMusic}
+          description={t.expand.holdMusicElsewhere}
+          checked={settings.autoTuckHoldMusic}
+          onChange={(autoTuckHoldMusic) => onSettingsChange({ ...settings, autoTuckHoldMusic })}
+        />
+      </SettingsGroup>
     </>
   );
 }

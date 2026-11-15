@@ -28,6 +28,7 @@ import { useIslandPreparing } from "./useIslandPreparing";
 import { usePageFadeIn } from "./usePageFadeIn";
 import { DevWatermark } from "../../components/DevWatermark";
 import "./IslandShell.css";
+import "./IslandGlass.css";
 import "./IslandGlassLight.css";
 import { IslandResizeHints } from "./IslandResizeHints";
 import { IslandSideHandle } from "./IslandSideHandle";

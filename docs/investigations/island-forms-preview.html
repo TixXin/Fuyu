@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>岛的形态预览：贴顶 / 悬空药丸 / 刘海（C65）</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 24px 32px 60px; background: #111214; color: #e8e8ea; font: 14px/1.6 "Segoe UI Variable Text", "Segoe UI", -apple-system, "PingFang SC", "Microsoft YaHei UI", sans-serif; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  h2 { font-size: 16px; margin: 30px 0 6px; }
+  p.note { color: #9a9aa0; margin: 0 0 12px; max-width: 1200px; }
+  code { background: #232428; padding: 1px 6px; border-radius: 4px; }
+  table { border-collapse: collapse; max-width: 1200px; margin: 6px 0 12px; }
+  th, td { border: 1px solid #2c2d32; padding: 6px 10px; text-align: left; vertical-align: top; color: #c8c8cc; }
+  th { background: #1b1c1f; color: #e8e8ea; font-weight: 600; white-space: nowrap; }
+  td b { color: #9fe3ff; font-weight: 600; }
+  .controls { display: flex; flex-direction: column; gap: 8px; background: #1b1c1f; padding: 12px 16px; border-radius: 10px; margin: 10px 0; max-width: 1200px; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px 26px; align-items: center; }
+  .group { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .group > span { color: #9a9aa0; margin-right: 2px; }
+  .group.off { opacity: .35; pointer-events: none; }
+  button.seg { background: #2a2b30; color: #ddd; border: 1px solid #3a3b40; border-radius: 6px; padding: 2px 10px; font: inherit; cursor: pointer; }
+  button.seg.on { background: #3b4d74; border-color: #5a7ab8; color: #fff; }
+  button.seg.rec::after { content: " ★"; color: #ffd166; font-size: 11px; }
+  button.act { background: #24304a; color: #cfe2ff; border: 1px solid #3a4f7a; border-radius: 6px; padding: 2px 12px; font: inherit; cursor: pointer; }
+  .sep { width: 1px; align-self: stretch; background: #2c2d32; }
+  .wrap { overflow-x: auto; max-width: 100%; }
+  .status { margin: 8px 0 0; color: #9a9aa0; font-size: 13px; font-variant-numeric: tabular-nums; }
+
+  .desk { position: relative; width: 1200px; height: 600px; border-radius: 12px; overflow: hidden; user-select: none; isolation: isolate; }
+  .desk.dark { background:
+      radial-gradient(260px 180px at 46% 4%, #ff7ab855, transparent 70%),
+      radial-gradient(300px 200px at 58% 8%, #4fd1ff55, transparent 70%),
+      radial-gradient(120% 140% at 20% 0%, #3b4d74 0%, #1d2233 45%, #0c0d12 100%); }
+  .desk.light { background:
+      radial-gradient(260px 180px at 44% 6%, #ffb3d099, transparent 70%),
+      radial-gradient(300px 200px at 58% 6%, #9fdcff99, transparent 70%),
+      radial-gradient(120% 140% at 20% 0%, #f4f1ea 0%, #dfe6f0 55%, #c9d3e2 100%); }
+  .win { position: absolute; left: 150px; top: 130px; width: 640px; height: 420px; border-radius: 10px; background: #1e1f24ee; box-shadow: 0 20px 60px #0007; }
+  .desk.light .win { background: #ffffffee; box-shadow: 0 20px 60px #0002; }
+  .win::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 34px; border-bottom: 1px solid #ffffff10; }
+  .desk.light .win::before { border-bottom-color: #0000000d; }
+  .win i { position: absolute; left: 24px; height: 9px; border-radius: 5px; background: #ffffff18; }
+  .desk.light .win i { background: #0000000f; }
+  .mb { position: absolute; left: 0; right: 0; top: 0; height: 32px; display: none; align-items: center; justify-content: space-between; padding: 0 16px; font-size: 13px; background: #1b1d2699; color: #e8e8eacc; backdrop-filter: blur(20px); z-index: 1; }
+  .desk.light .mb { background: #ffffff8c; color: #1c1c1ecc; }
+  .desk.mac .mb { display: flex; }
+  .mb .l, .mb .r { display: flex; gap: 18px; }
+  .cam { position: absolute; top: 0; left: 50%; width: 185px; height: 32px; margin-left: -92.5px; background: #000; border-radius: 0 0 10px 10px; z-index: 30; display: none; }
+  .cam::after { content: ""; position: absolute; left: 50%; top: 11px; width: 9px; height: 9px; margin-left: -4.5px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #1d2a44, #05070b 70%); }
+  .desk.mac .cam { display: block; }
+  .desk.mac .cam.peek { outline: 1px dashed #ff9f0a99; outline-offset: 1px; }
+
+  .isl { --fill: #030303; --ink: 248, 246, 240; --accent: #74d6ff;
+    --spring: cubic-bezier(0.34, 1.36, 0.5, 1); --ease: cubic-bezier(0.22, 1, 0.36, 1);
+    position: absolute; z-index: 10; background: var(--fill); color: rgba(var(--ink), .96); corner-shape: squircle; cursor: pointer;
+    transition: left 550ms var(--spring), width 550ms var(--spring), top 500ms var(--ease), height 500ms var(--ease),
+      border-radius 450ms var(--ease), background-color 300ms, box-shadow 350ms; }
+  .isl.no-anim, .isl.no-anim .fil, .isl.no-anim .layer { transition: none !important; }
+  .isl.glass { backdrop-filter: blur(18px) saturate(1.6); }
+  .isl.glass::after { content: ""; position: absolute; inset: 0; border-radius: inherit; corner-shape: squircle; pointer-events: none;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .22), inset 0 1px 0 rgba(255, 255, 255, .25); }
+  .fil { position: absolute; top: 0; width: var(--f); height: var(--f); pointer-events: none; opacity: 0; transition: opacity 300ms; }
+  .isl.attached .fil { opacity: 1; }
+  .fil.l { left: calc(-1 * var(--f)); background: radial-gradient(circle var(--f) at 0 100%, transparent calc(var(--f) - .6px), var(--fill) var(--f)); }
+  .fil.r { right: calc(-1 * var(--f)); background: radial-gradient(circle var(--f) at 100% 100%, transparent calc(var(--f) - .6px), var(--fill) var(--f)); }
+
+  .layer { position: absolute; inset: 0; overflow: hidden; border-radius: inherit; corner-shape: squircle; opacity: 0; pointer-events: none; transition: opacity 120ms ease; }
+  .layer.on { opacity: 1; transition: opacity 250ms ease 140ms; }
+  .ic { width: 16px; height: 16px; flex: none; stroke: currentColor; fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: #35e985; box-shadow: 0 0 0 3px #35e98533; flex: none; }
+  .badge { min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px; background: #ff453a; color: #fff; font: 600 10.5px/16px "Segoe UI", sans-serif; text-align: center; flex: none; }
+  .bars { display: flex; gap: 2px; align-items: flex-end; height: 12px; flex: none; }
+  .bars i { width: 2.5px; border-radius: 1px; background: var(--accent); animation: eq 1s ease-in-out infinite; }
+  .bars i:nth-child(1) { height: 50%; } .bars i:nth-child(2) { height: 100%; animation-delay: -.3s; } .bars i:nth-child(3) { height: 70%; animation-delay: -.6s; } .bars i:nth-child(4) { height: 40%; animation-delay: -.15s; }
+  @keyframes eq { 50% { transform: scaleY(.45); } }
+  .bars i { transform-origin: bottom; }
+
+  .bar { display: flex; align-items: center; gap: 10px; padding: 0 16px; height: 38px; }
+  .bar .txt { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px; color: rgba(var(--ink), .96); }
+  .bar .txt small { color: rgba(var(--ink), .54); font-size: 12px; margin-left: 6px; }
+
+  .notch { display: flex; align-items: center; height: var(--nh); padding: 0 12px; color: rgba(var(--ink), .82); }
+  .notch .wing { flex: 1; display: flex; align-items: center; gap: 9px; min-width: 0; }
+  .notch .wing.r { justify-content: flex-end; }
+  .notch .gap { flex: none; width: var(--gapw); align-self: stretch; }
+  .notch.center { justify-content: center; gap: 12px; }
+
+  .panel { display: flex; flex-direction: column; }
+  .tabs { display: flex; align-items: center; height: 44px; padding: 0 14px; gap: 6px; flex: none; color: rgba(var(--ink), .68); }
+  .tabs.black { background: linear-gradient(#000 0 70%, transparent); color: rgba(248, 246, 240, .72); }
+  .tabs .grp { display: flex; gap: 6px; align-items: center; }
+  .tabs .sp { flex: 1; }
+  .tabs .split { flex: none; width: var(--splitw); align-self: stretch; }
+  .tabs .t { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 8px; }
+  .tabs .t.cur { color: var(--accent); background: color-mix(in srgb, var(--accent) 16%, transparent); }
+  .tabs .t.btn { border-radius: 50%; background: rgba(var(--ink), .08); }
+  .list { padding: 6px 20px 20px; display: flex; flex-direction: column; gap: 8px; }
+  .list h3 { margin: 4px 0 2px; font-size: 15px; font-weight: 600; }
+  .item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; corner-shape: squircle; background: rgba(var(--ink), .06); font-size: 13px; }
+  .item .ck { width: 14px; height: 14px; border-radius: 4px; border: 1.5px solid rgba(var(--ink), .42); flex: none; }
+  .item .m { margin-left: auto; color: rgba(var(--ink), .54); font-size: 12px; }
+
+  .grid { display: grid; grid-template-columns: repeat(3, 384px); gap: 14px; }
+  .mini { width: 384px; }
+  .mini .cap { font-size: 13px; color: #c8c8cc; margin-bottom: 4px; }
+  .mini .cap b { color: #fff; }
+  .mini .clip { width: 384px; height: 173px; overflow: hidden; border-radius: 8px; }
+  .mini .desk { transform: scale(.32); transform-origin: 0 0; height: 540px; border-radius: 0; }
+  .mini .isl { cursor: default; }
+  .tag { display: inline-block; font-size: 11px; padding: 0 6px; border-radius: 4px; background: #2a3a2a; color: #a8f0b0; margin-left: 4px; }
+</style>
+</head>
+<body>
+<h1>岛的形态：贴顶 / 悬空药丸 / 刘海</h1>
+<p class="note">C65（issue #316）第 1 波：只给你挑样子，不改代码。画面按 1:1 逻辑像素画屏幕上半截（1200 宽）：折叠 300×38、展开 560×490（默认面板宽高）、岛屿圆角默认 16（折叠底角约 12）、贴边圆角默认 8、贴边收起露出 10px，都取自现在的代码和 <code>docs/design/island.md</code>。圆角用 <code>corner-shape: squircle</code>，请用 Edge / Chrome 139+ 打开（和 Windows 上的岛同一个内核）。<b>点岛</b>展开 / 收起；点上面的「形态」看切换过渡。带 ★ 的是推荐值。</p>
+<p class="note">已和其他主 agent 约好的前提：形态只在顶边生效，吸到底边、侧边时忽略；「悬空药丸」就是现在拖离顶边后四角圆的造型，不另做一套；Mac 的「刘海」就是 G1.11 的真刘海贴合，Windows 画一个假刘海。</p>
+
+<div class="controls" id="controls">
+  <div class="row">
+    <div class="group" data-k="form"><span>形态</span><button class="seg" data-v="top">贴顶</button><button class="seg" data-v="pill">悬空药丸</button><button class="seg" data-v="notch">刘海</button></div>
+    <div class="group" data-k="state"><span>状态</span><button class="seg" data-v="collapsed">折叠</button><button class="seg" data-v="expanded">展开</button><button class="seg" data-v="tucked">贴边收起</button></div>
+    <button class="act" id="cycle">自动轮播形态</button>
+  </div>
+  <div class="row">
+    <div class="group" data-k="wall"><span>壁纸</span><button class="seg" data-v="dark">深色</button><button class="seg" data-v="light">浅色</button></div>
+    <div class="group" data-k="theme"><span>岛</span><button class="seg" data-v="solid">深色纯色</button><button class="seg" data-v="light">浅色岛</button><button class="seg" data-v="glass">液态玻璃</button></div>
+    <div class="group" data-k="plat"><span>平台</span><button class="seg" data-v="win">Windows</button><button class="seg" data-v="mac">Mac（有刘海）</button></div>
+    <div class="group" data-k="menu" id="g-menu"><span>菜单栏</span><button class="seg" data-v="over">压在菜单栏上</button><button class="seg" data-v="under">放在菜单栏下面</button></div>
+    <div class="group" data-k="autoUnder" id="g-auto"><span>贴顶 / 药丸遇到真刘海</span><button class="seg rec" data-v="1">自动让到菜单栏下</button><button class="seg" data-v="0">照菜单栏设置（会被挡）</button></div>
+  </div>
+  <div class="row" id="r-pill">
+    <div class="group" data-k="gap"><span>药丸离顶</span><button class="seg" data-v="6">6px</button><button class="seg rec" data-v="10">10px</button><button class="seg" data-v="14">14px</button></div>
+    <div class="group" data-k="shadow"><span>药丸阴影</span><button class="seg rec" data-v="1">有</button><button class="seg" data-v="0">无</button></div>
+    <div class="group" data-k="pillTuck"><span>药丸贴边收起</span><button class="seg rec" data-v="edge">缩进顶边，露 10px</button><button class="seg" data-v="short">原地缩成短条</button></div>
+  </div>
+  <div class="row" id="r-notch">
+    <div class="group" data-k="nw" id="g-nw"><span>刘海宽</span><button class="seg" data-v="200">200</button><button class="seg rec" data-v="240">240</button><button class="seg" data-v="280">280</button></div>
+    <div class="group" data-k="nh" id="g-nh"><span>刘海高</span><button class="seg" data-v="28">28</button><button class="seg rec" data-v="32">32</button><button class="seg" data-v="36">36</button></div>
+    <div class="group" data-k="nf" id="g-nf"><span>上角弧度</span><button class="seg" data-v="0">0</button><button class="seg rec" data-v="6">6</button><button class="seg" data-v="10">10</button></div>
+    <div class="group" data-k="nContent"><span>刘海里放什么</span><button class="seg rec" data-v="wings">左右两翼</button><button class="seg" data-v="center">图标居中一排</button><button class="seg" data-v="none">什么都不放</button></div>
+    <div class="group" data-k="nTuck" id="g-ntuck"><span>刘海贴边收起</span><button class="seg rec" data-v="strip">同宽，露 6px</button><button class="seg" data-v="half">缩成半宽细条</button><button class="seg" data-v="hide">完全藏起</button></div>
+    <div class="group" data-k="nBlack"><span>刘海颜色</span><button class="seg rec" data-v="1">折叠、收起强制纯黑</button><button class="seg" data-v="0">跟随岛的主题</button></div>
+  </div>
+</div>
+
+<div class="wrap"><div id="main"></div></div>
+<div class="status" id="status"></div>
+
+<h2>三种形态 × 三种状态一览</h2>
+<p class="note">缩小到 32%，跟着上面的壁纸、岛主题、平台和各档位一起变。</p>
+<div class="wrap"><div class="grid" id="grid"></div></div>
+
+<h2>要你定的点</h2>
+<table>
+  <tr><th>#</th><th>要定的</th><th>选项</th><th>推荐</th><th>理由</th></tr>
+  <tr><td>1</td><td>药丸离顶距离</td><td>6 / 10 / 14px</td><td><b>10px</b></td><td>6 看起来像没贴好的贴顶；14 在 1080p 上离得太远，和下面的窗口标题栏挤在一起。10 一眼能看出是"浮着"的。Mac 上从菜单栏下沿往下算。</td></tr>
+  <tr><td>2</td><td>药丸阴影</td><td>有 / 无</td><td><b>有</b>（<code>0 8px 24px</code>，深色壁纸 35%、浅色 18%）</td><td>深色壁纸上几乎看不出，浅色壁纸上没有阴影浅色岛会糊进背景。展开态已经有阴影，折叠态跟着有更统一。</td></tr>
+  <tr><td>3</td><td>药丸贴边收起</td><td>缩进顶边露 10px / 原地缩成短条</td><td><b>缩进顶边露 10px</b></td><td>和贴顶共用一套：鼠标碰顶边滑出、来消息滑出都不用改。原地短条要另做一块点击区，还会挡住下面窗口。</td></tr>
+  <tr><td>4</td><td>Windows 假刘海的宽 × 高</td><td>宽 200 / 240 / 280，高 28 / 32 / 36</td><td><b>240 × 32</b></td><td>比贴顶的 300×38 明显窄、矮一圈，又放得下左右各 2–3 个图标；32 和 MacBook 的刘海一样高。随「折叠岛屿大小」缩放。</td></tr>
+  <tr><td>5</td><td>刘海上角弧度</td><td>0 / 6 / 10</td><td><b>6，固定</b>，下角 14</td><td>和 Mac 真刘海（G1.11）一致。0 像一块贴上去的黑板；10 在 32 高的刘海上太软。「贴边圆角」滑块只管贴顶，不管刘海。</td></tr>
+  <tr><td>6</td><td>刘海里放什么</td><td>左右两翼 / 图标居中一排 / 什么都不放</td><td><b>左右两翼</b></td><td>和 Mac 真刘海同一套布局（左：Agent 灯、待办；右：音乐、未读），一份代码。中间空的一段就是"刘海"的样子；全空则看不到 Agent 状态和未读。</td></tr>
+  <tr><td>7</td><td>刘海贴边收起（Windows）</td><td>同宽露 6px / 缩成半宽细条 / 完全藏起</td><td><b>同宽，露 6px</b></td><td>和贴顶的收起同一个做法（窗口往上滑），只是露出的高度从 10 改成 6；完全藏起后用户找不到岛在哪。Mac 照 G1.11：缩进真刘海里。</td></tr>
+  <tr><td>8</td><td>刘海的颜色</td><td>强制纯黑 / 跟随岛主题</td><td><b>折叠、收起强制纯黑；展开跟主题</b></td><td>浅色、玻璃的"刘海"不像刘海（切到浅色岛对比一下）。展开后照 Mac 的规则：深色岛顶部一条纯黑往下过渡，浅色岛不变黑。</td></tr>
+  <tr><td>9</td><td>Mac 有真刘海时选贴顶 / 药丸</td><td>自动让到菜单栏下 / 照菜单栏设置</td><td><b>自动让到菜单栏下</b></td><td>压在菜单栏上时摄像头正好挡住岛的中间（切到「照菜单栏设置」看）。没有刘海的屏上照「菜单栏」设置。</td></tr>
+  <tr><td>10</td><td>形态切换的过渡</td><td>跟随「开合动画」 / 单独一套</td><td><b>跟随「开合动画」</b></td><td>就是这页的动画：宽 550ms 回弹、高 500ms、圆角 450ms；切换时保持当前状态（展开着就展开着变形）。选「无动画」时直接跳。</td></tr>
+  <tr><td>11</td><td>设置放哪</td><td>外观 → 尺寸与位置 /  位置</td><td><b>外观 → 尺寸与位置，最上面「形态」三选一</b>，默认贴顶，随样式预设保存</td><td>它是外观，和「圆角样式」并列；预设本来就保存圆角、圆角样式。吸到底边 / 侧边时这一项变灰，提示"只在顶边生效"。</td></tr>
+</table>
+
+<h2>其他说明</h2>
+<ul class="note">
+  <li>Windows 上的刘海展开后标签栏照常排，不让出中间一段（没有摄像头）；Mac 上照 G1.11 把标签栏分到刘海两边，切到「Mac」能看到。</li>
+  <li>Mac 刘海形态的尺寸跟真刘海走（这里按 14 寸 MacBook Pro 约 185×32 画，两翼各 64），上面「刘海宽 / 高」只管 Windows。</li>
+  <li>收到消息、短提示时刘海怎么往下长一行，沿用 G1.11 已做的规则，这页不重复画。</li>
+</ul>
+
+<script>
+const W = 1200, MB = 32, CAM_W = 185, CAM_H = 32;
+const P = { form: 'top', state: 'collapsed', wall: 'dark', theme: 'solid', plat: 'win', menu: 'over', autoUnder: '1',
+  gap: '10', shadow: '1', pillTuck: 'edge', nw: '240', nh: '32', nf: '6', nContent: 'wings', nTuck: 'strip', nBlack: '1' };
+const FORMS = { top: '贴顶', pill: '悬空药丸', notch: '刘海' };
+const STATES = { collapsed: '折叠', expanded: '展开', tucked: '贴边收起' };
+
+const I = {
+  bot: '<path d="M12 8V4H8"/><rect x="4" y="8" width="16" height="12" rx="2"/><path d="M2 14h2M20 14h2M15 13v2M9 13v2"/>',
+  todo: '<rect x="3" y="5" width="6" height="6" rx="1"/><path d="m3 17 2 2 4-4M13 6h8M13 12h8M13 18h8"/>',
+  music: '<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',
+  cal: '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',
+  clip: '<rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2M12 11h4M12 16h4M8 11h.01M8 16h.01"/>',
+  inbox: '<path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>',
+  bell: '<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',
+  gear: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-2.82 1.18V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 7 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 3.09 14H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6V4.5a2 2 0 1 1 4 0v.09A1.65 1.65 0 0 0 15 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.2.6.78 1 1.42 1H21a2 2 0 1 1 0 4h-.09c-.64 0-1.22.4-1.51 1z"/>',
+};
+const ic = (n) => `<svg class="ic" viewBox="0 0 24 24">${I[n]}</svg>`;
+const BARS = '<span class="bars"><i></i><i></i><i></i><i></i></span>';
+
+const THEMES = {
+  solid: { fill: '#030303', ink: '248, 246, 240', accent: '#74d6ff' },
+  light: { fill: '#f2f2f5', ink: '28, 28, 30', accent: '#0a7fd1' },
+  glass: { fill: 'rgba(22, 24, 32, .42)', ink: '248, 246, 240', accent: '#74d6ff' },
+};
+
+function geom(p, form, state) {
+  const mac = p.plat === 'mac';
+  const notchFit = mac && form === 'notch';
+  const y0 = !mac ? 0 : (p.menu === 'under' || (p.autoUnder === '1' && !notchFit)) ? MB : 0;
+  const theme = THEMES[p.theme];
+  const g = { form, state, top: y0, w: 300, h: 38, rT: 0, rB: 12, fillet: 0, fill: theme.fill, ink: theme.ink, accent: theme.accent,
+    glass: p.theme === 'glass', shadow: 'none', layer: 'bar', split: 0, blackTabs: false, attached: true };
+  const dark = p.wall === 'dark';
+  const exShadow = dark ? '0 14px 40px #0006' : '0 14px 40px #0002';
+  if (form === 'top') {
+    g.fillet = 8;
+    if (state === 'expanded') Object.assign(g, { w: 560, h: 490, rB: 16, layer: 'panel', shadow: exShadow });
+    if (state === 'tucked') Object.assign(g, { top: y0 - 28, layer: 'none' });
+    if (p.theme === 'light' && state !== 'expanded') g.shadow = '0 6px 20px #0000001f';
+  } else if (form === 'pill') {
+    g.attached = false;
+    const gap = +p.gap;
+    const sh = p.shadow === '1' ? (dark ? '0 8px 24px rgba(0,0,0,.35)' : '0 8px 24px rgba(0,0,0,.18)') : 'none';
+    Object.assign(g, { top: y0 + gap, rT: 12, rB: 12, shadow: sh });
+    if (state === 'expanded') Object.assign(g, { w: 560, h: 490, rT: 16, rB: 16, layer: 'panel', shadow: exShadow });
+    if (state === 'tucked') {
+      if (p.pillTuck === 'edge') Object.assign(g, { top: y0 - 28, layer: 'none' });
+      else Object.assign(g, { w: 72, h: 6, rT: 3, rB: 3, top: y0 + gap, layer: 'none' });
+    }
+  } else {
+    const black = p.nBlack === '1';
+    const nfill = black ? '#000' : theme.fill;
+    const nink = black ? '248, 246, 240' : theme.ink;
+    if (notchFit) {
+      const wing = 64;
+      Object.assign(g, { w: CAM_W + 2 * wing, h: CAM_H, rB: 14, fillet: 6, fill: nfill, ink: nink, glass: !black && g.glass, layer: 'notch', nh: CAM_H, gapw: CAM_W - 24 });
+      if (state === 'expanded') Object.assign(g, { w: Math.max(560, CAM_W + 420), h: 490, rB: 16, fill: theme.fill, ink: theme.ink, glass: p.theme === 'glass', layer: 'panel', split: CAM_W, blackTabs: p.theme !== 'light', shadow: exShadow });
+      if (state === 'tucked') Object.assign(g, { w: CAM_W - 4, rB: 10, layer: 'none' });
+    } else {
+      const nw = +p.nw, nh = +p.nh;
+      Object.assign(g, { w: nw, h: nh, rB: nh <= 28 ? 12 : 14, fillet: +p.nf, fill: nfill, ink: nink, glass: !black && g.glass, layer: 'notch', nh, gapw: Math.round(nw * 0.3) });
+      if (state === 'expanded') Object.assign(g, { w: 560, h: 490, rB: 16, fill: theme.fill, ink: theme.ink, glass: p.theme === 'glass', layer: 'panel', blackTabs: p.theme !== 'light', shadow: exShadow });
+      if (state === 'tucked') {
+        if (p.nTuck === 'strip') Object.assign(g, { top: -(nh - 6), layer: 'none' });
+        if (p.nTuck === 'half') Object.assign(g, { w: Math.round(nw / 2), h: 5, rB: 3, layer: 'none' });
+        if (p.nTuck === 'hide') Object.assign(g, { top: -nh, layer: 'none' });
+      }
+    }
+    if (p.theme === 'light' && !black && state !== 'expanded') g.shadow = '0 6px 20px #0000001f';
+  }
+  return g;
+}
+
+function notchHtml(p) {
+  const l = `<span class="dot"></span>${ic('todo')}`;
+  const r = `${BARS}<span class="badge">3</span>`;
+  if (p.nContent === 'wings') return `<div class="wing">${l}</div><div class="gap"></div><div class="wing r">${r}</div>`;
+  if (p.nContent === 'center') return `<span class="dot"></span>${BARS}<span class="badge">3</span>`;
+  return '';
+}
+
+function panelHtml(g) {
+  const left = `<div class="grp"><span class="t">${ic('bot')}</span><span class="t cur">${ic('todo')}</span><span class="t">${ic('music')}</span><span class="t">${ic('cal')}</span><span class="t">${ic('clip')}</span><span class="t">${ic('inbox')}</span></div>`;
+  const right = `<div class="grp"><span class="t btn">${ic('bell')}</span><span class="t btn">${ic('gear')}</span></div>`;
+  const mid = g.split ? `<span class="sp"></span><span class="split" style="--splitw:${g.split}px"></span><span class="sp"></span>` : '<span class="sp"></span>';
+  const rows = [['写周报', '今天'], ['回复设计稿评论', '14:00'], ['C65 形态预览', '进行中'], ['买猫粮', ''], ['整理会议纪要', '周五']]
+    .map(([t, m]) => `<div class="item"><span class="ck"></span>${t}<span class="m">${m}</span></div>`).join('');
+  return `<div class="tabs${g.blackTabs ? ' black' : ''}">${left}${mid}${right}</div><div class="list"><h3>待办</h3>${rows}</div>`;
+}
+
+function makeStage(host, mini) {
+  host.innerHTML = `<div class="desk"><div class="mb"><div class="l"><b></b><span>访达</span><span>文件</span><span>编辑</span><span>显示</span></div><div class="r"><span>100%</span><span>周日 10:24</span></div></div>
+    <div class="win"><i style="top:60px;width:300px"></i><i style="top:84px;width:460px"></i><i style="top:108px;width:380px"></i><i style="top:132px;width:420px"></i></div>
+    <div class="isl"><div class="fil l"></div><div class="fil r"></div>
+      <div class="layer bar-l"><div class="bar"><span class="dot"></span><span class="txt">写周报<small>25:00</small></span>${BARS}<span class="badge">3</span></div></div>
+      <div class="layer notch-l"><div class="notch"></div></div>
+      <div class="layer panel-l"><div class="panel"></div></div></div>
+    <div class="cam"></div></div>`;
+  const desk = host.querySelector('.desk'), isl = desk.querySelector('.isl'), cam = desk.querySelector('.cam');
+  if (mini) isl.classList.add('no-anim');
+  return (p, form, state) => {
+    const g = geom(p, form, state);
+    desk.className = `desk ${p.wall}${p.plat === 'mac' ? ' mac' : ''}`;
+    isl.className = `isl${mini ? ' no-anim' : ''}${g.glass ? ' glass' : ''}${g.attached && g.fillet ? ' attached' : ''}`;
+    Object.assign(isl.style, { left: `${(W - g.w) / 2}px`, top: `${g.top}px`, width: `${g.w}px`, height: `${g.h}px`,
+      borderRadius: `${g.rT}px ${g.rT}px ${g.rB}px ${g.rB}px`, boxShadow: g.shadow });
+    isl.style.setProperty('--fill', g.fill);
+    isl.style.setProperty('--ink', g.ink);
+    isl.style.setProperty('--accent', g.accent);
+    isl.style.setProperty('--f', `${g.fillet}px`);
+    const notch = isl.querySelector('.notch');
+    notch.className = `notch${p.nContent === 'center' ? ' center' : ''}`;
+    notch.style.setProperty('--nh', `${g.nh || 32}px`);
+    notch.style.setProperty('--gapw', `${g.gapw || 60}px`);
+    notch.innerHTML = notchHtml(p);
+    isl.querySelector('.panel').innerHTML = panelHtml(g);
+    for (const n of ['bar', 'notch', 'panel']) isl.querySelector(`.${n}-l`).classList.toggle('on', g.layer === n);
+    const covered = p.plat === 'mac' && g.top < CAM_H && form !== 'notch' && state !== 'tucked';
+    cam.classList.toggle('peek', covered);
+    return g;
+  };
+}
+
+const mainHost = document.getElementById('main');
+const renderMain = makeStage(mainHost, false);
+mainHost.querySelector('.isl').addEventListener('click', () => {
+  P.state = P.state === 'expanded' ? 'collapsed' : 'expanded';
+  update();
+});
+
+const grid = document.getElementById('grid');
+const minis = [];
+for (const s of Object.keys(STATES)) for (const f of Object.keys(FORMS)) {
+  const cell = document.createElement('div');
+  cell.className = 'mini';
+  cell.innerHTML = `<div class="cap"><b>${FORMS[f]}</b> · ${STATES[s]}</div><div class="clip"></div>`;
+  grid.appendChild(cell);
+  minis.push({ render: makeStage(cell.querySelector('.clip'), true), f, s });
+}
+
+function update() {
+  for (const grp of document.querySelectorAll('.group[data-k]')) {
+    const k = grp.dataset.k;
+    for (const b of grp.querySelectorAll('button')) b.classList.toggle('on', b.dataset.v === P[k]);
+  }
+  const mac = P.plat === 'mac';
+  for (const id of ['g-menu', 'g-auto']) document.getElementById(id).classList.toggle('off', !mac);
+  for (const id of ['g-nw', 'g-nh', 'g-nf', 'g-ntuck']) document.getElementById(id).classList.toggle('off', mac);
+  const g = renderMain(P, P.form, P.state);
+  for (const m of minis) m.render(P, m.f, m.s);
+  const vis = Math.max(0, g.top + g.h);
+  const extra = P.plat === 'mac' && P.form !== 'notch' && g.top < CAM_H && P.state !== 'tucked' ? ' · 橙色虚线：岛的中间被摄像头挡住' : '';
+  document.getElementById('status').textContent =
+    `${FORMS[P.form]} · ${STATES[P.state]}：${g.w}×${g.h}，上沿 y=${g.top}，屏幕上可见到 y=${vis}，顶角 ${g.rT} / 底角 ${g.rB}${g.fillet && g.attached ? `，上角反向圆弧 ${g.fillet}` : ''}${extra}`;
+}
+
+document.getElementById('controls').addEventListener('click', (e) => {
+  const b = e.target.closest('button.seg');
+  if (!b) return;
+  P[b.closest('.group').dataset.k] = b.dataset.v;
+  update();
+});
+
+let timer = 0;
+document.getElementById('cycle').addEventListener('click', (e) => {
+  if (timer) { clearInterval(timer); timer = 0; e.target.textContent = '自动轮播形态'; return; }
+  e.target.textContent = '停止轮播';
+  const order = ['top', 'pill', 'notch'];
+  timer = setInterval(() => { P.form = order[(order.indexOf(P.form) + 1) % 3]; update(); }, 1600);
+});
+
+update();
+</script>
+</body>
+</html>

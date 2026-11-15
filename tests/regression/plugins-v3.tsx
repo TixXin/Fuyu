@@ -15,7 +15,11 @@ window.addEventListener("beforeunload", () => {
 });
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true, isTauri: true });
 
+const MB = 1024 * 1024;
+let memoryReply: { pid: number; bytes: number; measure: "private-working-set" | "phys-footprint" } | null = { pid: 4242, bytes: 25.2 * MB, measure: "private-working-set" };
+
 mockIPC((command) => {
+  if (command === "get_plugin_host_memory") return memoryReply;
   if (command === "get_plugin_host_connection") return { enabled: true, port: 1, token: "t", generation: 1 };
   if (command === "get_platform_support") return { os: "windows", unsupported: [], devBuild: true };
   return null;
@@ -83,7 +87,11 @@ try {
     given.onSnapshot({ plugins: PLUGINS, host: HOST });
   });
   check(page.querySelector("[data-connection='open']")?.textContent === text.connection.open, "Once connected it says so");
-  check(page.textContent?.includes(text.hostDetail(4242, "26.12.0")) && page.textContent?.includes("42.0 MB"), "The host row shows its process, Node version and memory");
+  await settle();
+  const memoryValue = () => page.querySelector<HTMLElement>(".plugins-v3__value[data-measure]");
+  check(page.textContent?.includes(text.hostDetail(4242, "26.12.0")), "The host row shows its process and Node version");
+  check(memoryValue()?.textContent === "25.2 MB" && memoryValue()?.dataset.measure === "private-working-set" && !page.textContent?.includes("42.0 MB"), "Memory is the private working set Fuyu reads from the host process, not the host's own resident size");
+  check(page.textContent?.includes(text.memoryTitles["private-working-set"]) && page.textContent?.includes(text.memoryNotes["private-working-set"]), "and the label says which measure it is");
   check(page.textContent?.includes(text.safeModes["third-party"]) && page.textContent?.includes(text.devMode), "Safe mode and dev mode are shown when the host runs in them");
 
   check(stateText("counter") === text.states.running && card("counter")!.textContent!.includes("12.5 ms"), "A running plugin shows its state and CPU");
@@ -101,8 +109,14 @@ try {
 
   await send((given) => given.onEvent("plugins", PLUGINS.map((plugin) => (plugin.id === "counter" ? { ...plugin, usage: usage({ cpuMs: 20, timers: 1 }) } : plugin))));
   check(card("counter")!.textContent!.includes("20.0 ms"), "A plugins event updates the numbers in place");
-  await send((given) => given.onEvent("host", { ...HOST, rssBytes: 50 * 1024 * 1024 }));
-  check(page.textContent?.includes("50.0 MB"), "A host event updates the host's memory");
+  memoryReply = null;
+  await send((given) => given.onEvent("host", { ...HOST, pid: 4343, rssBytes: 50 * MB }));
+  await settle();
+  check(memoryValue()?.textContent === "50.0 MB" && memoryValue()?.dataset.measure === "rss" && page.textContent?.includes(text.memoryTitles.rss), "When Fuyu cannot read a host's memory the page falls back to the host's own number and labels it as the working set");
+  memoryReply = { pid: 4242, bytes: 30 * MB, measure: "phys-footprint" };
+  await send((given) => given.onEvent("host", HOST));
+  await settle();
+  check(memoryValue()?.textContent === "30.0 MB" && page.textContent?.includes(text.memoryTitles["phys-footprint"]), "On macOS the label names phys_footprint");
 
   await send((given) => given.onState("reconnecting"));
   check(page.querySelector("[data-connection='reconnecting']")?.textContent === text.connection.reconnecting, "When the host restarts the page says it is reconnecting");

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { connectHost, type ConnectionState } from "@fuyu/plugin-base/client";
-import { getPluginHostConnection } from "../../features/plugin-kernel/api";
+import { getPluginHostConnection, getPluginHostMemory, type HostMemory } from "../../features/plugin-kernel/api";
 
 export type PluginKindV3 = "essential" | "builtin" | "third-party";
 
@@ -56,6 +56,7 @@ export interface PluginHostView {
   connection: ConnectionState;
   plugins: PluginStatusV3[] | null;
   host: HostInfoV3 | null;
+  memory: HostMemory | null;
 }
 
 async function target() {
@@ -89,7 +90,9 @@ export function usePluginsV3Enabled(): boolean {
   return on;
 }
 
-const START: PluginHostView = { connection: "connecting", plugins: null, host: null };
+const START: PluginHostView = { connection: "connecting", plugins: null, host: null, memory: null };
+
+const MEMORY_EVERY_MS = 5000;
 
 export function usePluginHostStatus(connect: PluginHostConnector = connectSettingsToHost): PluginHostView {
   const [view, setView] = useState<PluginHostView>(START);
@@ -104,5 +107,22 @@ export function usePluginHostStatus(connect: PluginHostConnector = connectSettin
     });
     return () => connection.close();
   }, [connect]);
+  const pid = view.connection === "open" ? view.host?.pid ?? null : null;
+  useEffect(() => {
+    if (pid === null) return;
+    let live = true;
+    const read = () =>
+      void getPluginHostMemory()
+        .then((memory) => {
+          if (live) setView((current) => ({ ...current, memory: memory?.pid === pid ? memory : null }));
+        })
+        .catch(() => undefined);
+    read();
+    const timer = window.setInterval(read, MEMORY_EVERY_MS);
+    return () => {
+      live = false;
+      window.clearInterval(timer);
+    };
+  }, [pid]);
   return view;
 }

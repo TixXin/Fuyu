@@ -6,7 +6,7 @@ use std::{
 use plugin_base::{find_node, Event, HostSpec, HostState, NodeSearch, Supervisor, Timing, MINIMUM_NODE};
 use serde_json::Value;
 
-use super::{containment, enabled, host_args, host_env, host_script, window_origins, HostMode};
+use super::{containment, enabled, host_args, host_env, host_script, memory_of, window_origins, HostMode, MEMORY_MEASURE};
 
 #[test]
 fn on_windows_the_host_gets_a_smaller_threadpool_unless_the_user_already_chose_one() {
@@ -189,4 +189,14 @@ mod protocol_and_command {
         let empty = Mutex::new(None);
         assert!(connection_now(true, Some(&empty)).enabled);
     }
+}
+
+#[test]
+fn the_plugin_page_gets_the_hosts_private_memory_only_while_it_runs() {
+    assert_eq!(memory_of(None, |_| Some(1)), None);
+    assert_eq!(memory_of(Some(7), |_| None), None);
+    let memory = memory_of(Some(7), |pid| Some(u64::from(pid) * 1024)).map(|memory| serde_json::to_value(memory).unwrap_or_default());
+    assert_eq!(memory, Some(serde_json::json!({ "pid": 7, "bytes": 7168, "measure": MEMORY_MEASURE })));
+    assert_eq!(MEMORY_MEASURE, if cfg!(windows) { "private-working-set" } else { "phys-footprint" });
+    assert!(crate::platform::private_memory::private_bytes(std::process::id()).is_some());
 }

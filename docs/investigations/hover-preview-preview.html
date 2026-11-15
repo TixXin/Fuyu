@@ -1,0 +1,404 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>悬停预览层预览</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 24px 32px 48px; background: #111214; color: #e8e8ea; font: 14px/1.6 "Segoe UI Variable Text", "Segoe UI", -apple-system, "PingFang SC", "Microsoft YaHei UI", sans-serif; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  h2 { font-size: 16px; margin: 28px 0 6px; }
+  p.note { color: #9a9aa0; margin: 0 0 12px; max-width: 1180px; }
+  ul.points { color: #c8c8cc; max-width: 1180px; padding-left: 20px; }
+  ul.points li { margin: 4px 0; }
+  code { background: #232428; padding: 1px 6px; border-radius: 4px; }
+  table { border-collapse: collapse; max-width: 1180px; margin: 6px 0 12px; }
+  th, td { border: 1px solid #2c2d32; padding: 6px 10px; text-align: left; vertical-align: top; color: #c8c8cc; }
+  th { background: #1b1c1f; color: #e8e8ea; font-weight: 600; }
+  .controls { display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: center; background: #1b1c1f; padding: 12px 16px; border-radius: 10px; margin: 10px 0; max-width: 1180px; }
+  .group { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .group > span { color: #9a9aa0; margin-right: 2px; }
+  button.seg { background: #2a2b30; color: #ddd; border: 1px solid #3a3b40; border-radius: 6px; padding: 2px 10px; font: inherit; cursor: pointer; }
+  button.seg.on { background: #3b4d74; border-color: #5a7ab8; color: #fff; }
+  button.act { background: #24304a; color: #cfe2ff; border: 1px solid #3a4f7a; border-radius: 6px; padding: 2px 10px; font: inherit; cursor: pointer; }
+  label.cb { color: #c8c8cc; display: inline-flex; gap: 4px; align-items: center; cursor: pointer; }
+  input[type=range] { width: 110px; }
+  .wrap { overflow-x: auto; max-width: 100%; }
+
+  .desk { position: relative; width: 1180px; height: 640px; border-radius: 12px; overflow: hidden; user-select: none; }
+  .desk.dark { background: radial-gradient(120% 140% at 20% 0%, #3b4d74 0%, #1d2233 45%, #0c0d12 100%); }
+  .desk.light { background: radial-gradient(120% 140% at 20% 0%, #f4f1ea 0%, #dfe6f0 55%, #c9d3e2 100%); }
+  .win { position: absolute; left: 160px; top: 150px; width: 520px; height: 330px; border-radius: 10px; background: #1e1f24ee; box-shadow: 0 20px 60px #0007; }
+  .desk.light .win { background: #ffffffee; box-shadow: 0 20px 60px #0002; }
+  .win i { position: absolute; left: 24px; height: 9px; border-radius: 5px; background: #ffffff18; }
+  .desk.light .win i { background: #0000000f; }
+  .taskbar { position: absolute; left: 0; right: 0; bottom: 0; height: 48px; background: #1c1d22e6; border-top: 1px solid #ffffff12; display: flex; align-items: center; justify-content: center; gap: 10px; }
+  .desk.light .taskbar { background: #eef0f4e6; border-top-color: #0000000d; }
+  .taskbar b { width: 30px; height: 30px; border-radius: 6px; background: #ffffff16; }
+  .desk.light .taskbar b { background: #0000000f; }
+  .status { position: absolute; left: 16px; right: 16px; font-size: 13px; color: #c8c8cc; background: #000a; padding: 6px 12px; border-radius: 8px; pointer-events: none; bottom: 58px; }
+  .desk.edge-bottom .status { bottom: auto; top: 12px; }
+  .desk.light .status { background: #fffc; color: #333; }
+
+  .isl { --fill: #030303; --ink: 248, 246, 240; --accent: #74d6ff; --warn: #ffd166; --run: #3d8bff; --idle: #35e985; --r: 22px;
+    --spring: cubic-bezier(0.34, 1.36, 0.5, 1); --ease: cubic-bezier(0.22, 1, 0.36, 1);
+    position: absolute; left: 50%; top: 0; z-index: 10; transform: translateX(-50%); background: var(--fill); color: rgba(var(--ink), .96);
+    corner-shape: squircle; overflow: hidden; display: flex; flex-direction: column;
+    width: 320px; height: 38px; border-radius: 0 0 var(--r) var(--r);
+    transition: width 520ms var(--spring), height 460ms var(--ease), border-radius 400ms var(--ease), top 360ms var(--ease), bottom 360ms var(--ease); }
+  .desk.light .isl { --fill: #f2f2f5; --ink: 28, 28, 30; --accent: #0a7fd1; --warn: #b7791f; box-shadow: 0 6px 22px #0000001f; }
+  .desk.edge-bottom .isl { top: auto; bottom: 48px; flex-direction: column-reverse; border-radius: var(--r) var(--r) 0 0; }
+  .isl[data-state=tucked] { height: 10px; width: 300px; }
+  .desk.edge-bottom .isl[data-state=tucked] { bottom: 48px; }
+  .isl[data-state=preview] { width: 400px; height: 86px; --r: 24px; }
+  .isl[data-state=expanded] { width: 560px; height: 306px; --r: 30px; box-shadow: 0 14px 40px #0005; }
+  .desk.light .isl[data-state=expanded] { box-shadow: 0 14px 40px #0002; }
+
+  .bar { flex: 0 0 38px; height: 38px; display: flex; align-items: center; gap: 10px; padding: 0 14px; font-size: 12.5px; cursor: pointer; transition: opacity 200ms; }
+  .isl[data-state=tucked] .bar, .isl[data-state=expanded] .bar { opacity: 0; pointer-events: none; height: 0; flex-basis: 0; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--idle); box-shadow: 0 0 8px var(--idle); flex: none; }
+  .dot.warn { background: var(--warn); box-shadow: 0 0 8px var(--warn); }
+  .sum { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: rgba(var(--ink), .82); transition: opacity 160ms; }
+  .isl[data-state=preview] .sum.fadeable { opacity: 0; }
+  .vol { display: none; flex: 1; align-items: center; gap: 8px; }
+  .vol i { flex: 1; height: 4px; border-radius: 2px; background: rgba(var(--ink), .16); position: relative; }
+  .vol i::after { content: ""; position: absolute; inset: 0 40% 0 0; border-radius: 2px; background: rgba(var(--ink), .9); }
+  .isl.hint .vol { display: flex; } .isl.hint .sum { display: none; }
+  .mini { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; color: rgba(var(--ink), .7); flex: none; }
+  .count { font: 600 12px/1 Consolas, monospace; color: var(--run); flex: none; }
+
+  .cards { flex: 0 0 48px; height: 48px; padding: 0 12px 8px; display: flex; align-items: center; gap: 10px; opacity: 0; transition: opacity 180ms 80ms; position: relative; }
+  .desk.edge-bottom .cards { padding: 8px 12px 0; }
+  .isl[data-state=preview] .cards { opacity: 1; }
+  .isl:not([data-state=preview]) .cards { pointer-events: none; height: 0; flex-basis: 0; padding: 0; }
+  .card { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; height: 40px; padding: 0 6px; border-radius: 12px; cursor: pointer; corner-shape: squircle; }
+  .card:hover { background: rgba(var(--ink), .07); }
+  .card .ic { width: 32px; height: 32px; border-radius: 8px; flex: none; display: grid; place-items: center; background: rgba(var(--ink), .08); font-size: 15px; }
+  .card .ic.cover { background: linear-gradient(135deg, #e0a96d, #7b4fa1); }
+  .card .tx { min-width: 0; flex: 1; }
+  .card .t1 { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .card .t2 { font-size: 11.5px; color: rgba(var(--ink), .55); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .card .btn { flex: none; height: 26px; min-width: 26px; padding: 0 9px; border-radius: 13px; border: 0; background: rgba(var(--ink), .12); color: inherit; font: 12px/26px inherit; cursor: pointer; }
+  .card .btn:hover { background: rgba(var(--ink), .2); }
+  .card .btn.round { padding: 0; background: rgba(var(--ink), .92); color: var(--fill); }
+  .pips { display: flex; flex-direction: column; gap: 4px; flex: none; }
+  .pips i { width: 5px; height: 5px; border-radius: 50%; background: rgba(var(--ink), .22); cursor: pointer; }
+  .pips i.on { background: rgba(var(--ink), .85); }
+  .dwell { position: absolute; left: 24px; right: 24px; bottom: 2px; height: 2px; border-radius: 1px; background: var(--accent); transform-origin: left; transform: scaleX(0); opacity: .8; }
+  .desk.edge-bottom .dwell { bottom: auto; top: 2px; }
+  .dwell.run { transition: transform var(--dw) linear; transform: scaleX(1); }
+
+  .panel { flex: 1; min-height: 0; display: flex; flex-direction: column; opacity: 0; transition: opacity 200ms 120ms; }
+  .isl:not([data-state=expanded]) .panel { pointer-events: none; height: 0; flex: 0 0 0; overflow: hidden; }
+  .isl[data-state=expanded] .panel { opacity: 1; }
+  .top { flex: 0 0 46px; display: flex; align-items: center; gap: 4px; padding: 0 14px; position: relative; }
+  .top.wheelzone { background: linear-gradient(rgba(var(--ink), .045), rgba(var(--ink), .045)); }
+  .pg { width: 30px; height: 30px; border-radius: 9px; border: 0; background: none; color: rgba(var(--ink), .55); display: grid; place-items: center; cursor: pointer; }
+  .pg svg { width: 17px; height: 17px; }
+  .pg.on { color: var(--accent); background: color-mix(in srgb, var(--accent) 16%, transparent); }
+  .top .gap { flex: 1; align-self: stretch; cursor: pointer; }
+  .top .rb { width: 26px; height: 26px; border-radius: 50%; background: rgba(var(--ink), .1); }
+  .body { flex: 1; min-height: 0; overflow-y: auto; padding: 4px 20px 18px; scrollbar-width: thin; }
+  .body h3 { margin: 2px 0 8px; font-size: 13px; color: rgba(var(--ink), .6); font-weight: 600; }
+  .row { display: flex; gap: 10px; align-items: center; padding: 6px 8px; border-radius: 10px; font-size: 13px; }
+  .row:hover { background: rgba(var(--ink), .06); }
+  .row small { margin-left: auto; color: rgba(var(--ink), .45); font-size: 11px; }
+  .chk { width: 14px; height: 14px; border-radius: 4px; border: 1.5px solid rgba(var(--ink), .4); flex: none; }
+  .music { display: flex; gap: 16px; align-items: center; }
+  .music .cv { width: 56px; height: 56px; border-radius: 10px; background: linear-gradient(135deg, #e0a96d, #7b4fa1); }
+  .lyric { font-size: 20px; font-weight: 600; margin: 18px 0 4px; text-align: center; }
+  .lyric + p { text-align: center; color: rgba(var(--ink), .45); margin: 0; font-size: 13px; }
+  .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; font-size: 12px; text-align: center; }
+  .grid span { padding: 4px 0; border-radius: 6px; color: rgba(var(--ink), .75); }
+  .grid span.today { background: var(--accent); color: var(--fill); font-weight: 600; }
+</style>
+</head>
+<body>
+<h1>C76 悬停预览层 / 滚轮切页：交互预览</h1>
+<p class="note">真的去「悬停」桌面顶部的岛：停满延迟先出预览层，点击、向下滚一格或继续停留进入展开面板。展开后在顶部图标栏滚轮切页；内容区照常滚动。下面的选项就是方案里要你定的点，默认选中的是推荐值。浏览器里用网页事件模拟，原生端按岛的形状判断进出，手感会更准。</p>
+
+<div class="controls">
+  <div class="group" data-k="trigger"><span>展开方式</span>
+    <button class="seg" data-v="click">点击（现默认）</button>
+    <button class="seg" data-v="hover">悬停</button>
+    <button class="seg on" data-v="preview">悬停预览（新）</button>
+  </div>
+  <div class="group"><span>悬停延迟</span><input id="delay" type="range" min="0" max="1000" step="50" value="300" /><b id="delayV">300ms</b></div>
+  <div class="group" data-k="dwell"><span>预览里继续停留</span>
+    <button class="seg on" data-v="0">不自动展开</button>
+    <button class="seg" data-v="1000">1 秒</button>
+    <button class="seg" data-v="1500">1.5 秒</button>
+    <button class="seg" data-v="2500">2.5 秒</button>
+  </div>
+  <div class="group" data-k="rotate"><span>预览内容</span>
+    <button class="seg on" data-v="rotate">轮换（紧急的钉住）</button>
+    <button class="seg" data-v="fixed">固定最要紧的一张</button>
+  </div>
+</div>
+<div class="controls">
+  <div class="group" data-k="wheel"><span>滚轮切页</span>
+    <button class="seg" data-v="off">关（默认）</button>
+    <button class="seg on" data-v="bar">只在顶部图标栏</button>
+    <button class="seg" data-v="nonscroll">图标栏 + 不能滚的页面</button>
+    <button class="seg" data-v="shift">任意处按住 Shift</button>
+  </div>
+  <div class="group" data-k="edge"><span>吸附</span>
+    <button class="seg on" data-v="top">顶边</button>
+    <button class="seg" data-v="bottom">底边</button>
+  </div>
+  <div class="group" data-k="theme"><span>岛</span>
+    <button class="seg on" data-v="dark">深色</button>
+    <button class="seg" data-v="light">浅色</button>
+  </div>
+</div>
+<div class="controls">
+  <div class="group"><span>场景</span>
+    <label class="cb"><input type="checkbox" data-c="agent" />Agent 等你确认</label>
+    <label class="cb"><input type="checkbox" data-c="meeting" />会议 12 分钟后</label>
+    <label class="cb"><input type="checkbox" data-c="music" checked />正在放歌</label>
+    <label class="cb"><input type="checkbox" data-c="unread" checked />有未读</label>
+    <label class="cb"><input type="checkbox" data-c="next" checked />下一个日程</label>
+    <label class="cb"><input type="checkbox" data-c="todo" checked />待办</label>
+  </div>
+  <div class="group"><span>事件</span>
+    <button class="act" id="msg">来一条 QQ 消息（一行预览 5 秒）</button>
+    <button class="act" id="vol">调音量（1.5 秒）</button>
+    <button class="act" id="tuck">贴边收起</button>
+  </div>
+</div>
+
+<div class="wrap">
+<div class="desk dark" id="desk">
+  <div class="win"><i style="top:56px;width:60%"></i><i style="top:80px;width:72%"></i><i style="top:104px;width:48%"></i><i style="top:150px;width:66%"></i><i style="top:174px;width:40%"></i></div>
+  <div class="isl" id="isl" data-state="collapsed">
+    <div class="bar" id="bar">
+      <span class="dot" id="dot"></span>
+      <span class="sum fadeable" id="sum"></span>
+      <span class="vol"><span>🔊</span><i></i><span style="font:12px Consolas">60</span></span>
+      <span class="mini">♪</span>
+      <span class="count">2</span>
+    </div>
+    <div class="cards" id="cards"></div>
+    <div class="panel">
+      <div class="top" id="top"></div>
+      <div class="body" id="body"></div>
+    </div>
+  </div>
+  <div class="taskbar"><b></b><b></b><b></b><b></b><b></b><b></b></div>
+  <div class="status" id="status">把鼠标移到顶部的岛上。</div>
+</div>
+</div>
+
+<h2>要点（详细见任务 C76 备注里的「交互方案」）</h2>
+<ul class="points">
+  <li><b>和现有两种模式的关系</b>：「展开方式」从两项变三项：点击（默认）/ 悬停 / 悬停预览。悬停预览 = 点击模式 + 悬停时先出预览；它和「悬停直接展开」互斥，不叠加。</li>
+  <li><b>预览层</b>：收起条那一行原样留在上面（状态灯、环、会话数、音量提示照常），摘要文字淡出；下面长出一行 48px 的卡片区。岛从 38×（约 320）长到 86×400，圆角跟着变大一点。</li>
+  <li><b>出现 / 消失</b>：光标停满「悬停延迟」（复用现有设置，默认 300ms）出来，移开 200ms 缩回；按下鼠标、按住 Alt、消息一行预览或横幅显示中都不出；缩回后要移开再回来才会再出。</li>
+  <li><b>进入展开</b>：点空白或卡片（卡片直接打开对应页面）、在预览上向下滚一格；向上滚一格缩回收起条。继续停留自动展开默认关。</li>
+  <li><b>滚轮切页</b>：独立开关，默认关。只在顶部图标栏一行滚算切页，内容区永远交给页面自己滚；累计满一格切一页，切完 450ms 内的滚动全吞掉（触控板惯性），到头不循环。</li>
+</ul>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const desk = $("#desk"), isl = $("#isl"), statusEl = $("#status");
+const opt = { trigger: "preview", dwell: 0, rotate: "rotate", wheel: "bar", edge: "top", theme: "dark", delay: 300 };
+const scene = { agent: false, meeting: false, music: true, unread: true, next: true, todo: true };
+let state = "collapsed", page = 2, hovering = false, armed = true, entered = false, msgUntil = 0, cardIndex = 0, pinned = null;
+let enterT, leaveT, dwellT, rotT, wheelAcc = 0, wheelLockUntil = 0, wheelQuietT;
+const say = (t) => { statusEl.textContent = t; };
+
+const ICONS = {
+  bot: '<path d="M12 8V4H8"/><rect x="4" y="8" width="16" height="12" rx="2"/><path d="M2 14h2M20 14h2M15 13v2M9 13v2"/>',
+  todo: '<rect x="3" y="5" width="6" height="6" rx="1"/><path d="m3 17 2 2 4-4M13 6h8M13 12h8M13 18h8"/>',
+  music: '<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',
+  cal: '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/>',
+  clip: '<rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2M12 11h4M12 16h4M8 11h.01M8 16h.01"/>',
+  inbox: '<path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>',
+};
+const PAGES = [
+  { k: "bot", name: "Agent", body: () => "<h3>会话</h3>" + ["Claude Code · fuyu · 改 passthrough.rs", "Codex · blog · 写周报", "Claude Code · video · 渲染", "GLM · scripts · 等你回复"].map((t, i) => `<div class="row"><span class="dot ${i === 3 || (i === 0 && scene.agent) ? "warn" : ""}"></span>${t}<small>${i + 2} 分钟前</small></div>`).join("") },
+  { k: "todo", name: "待办", body: () => "<h3>今天 · 内容比面板高，可以滚</h3>" + Array.from({ length: 16 }, (_, i) => `<div class="row"><span class="chk"></span>待办事项 ${i + 1}${i === 0 ? "：写 C76 方案" : ""}<small>${i < 3 ? "今天" : "本周"}</small></div>`).join("") },
+  { k: "music", name: "音乐", body: () => `<div class="music"><div class="cv"></div><div><div style="font-size:16px;font-weight:600">晴天</div><div style="color:rgba(var(--ink),.5);font-size:12px">周杰伦 · QQ 音乐</div></div></div><div class="lyric">${LYRICS[lyricI]}</div><p>内容不能滚</p>` },
+  { k: "cal", name: "日历", body: () => '<h3>2026 年 11 月 · 内容不能滚</h3><div class="grid">' + "一二三四五六日".split("").map((d) => `<span style="opacity:.5">${d}</span>`).join("") + Array.from({ length: 35 }, (_, i) => { const d = i - 5; return `<span class="${d === 15 ? "today" : ""}">${d > 0 && d <= 30 ? d : ""}</span>`; }).join("") + "</div>" },
+  { k: "clip", name: "剪贴板", body: () => "<h3>剪贴板历史 · 可以滚</h3>" + Array.from({ length: 22 }, (_, i) => `<div class="row">${["https://github.com/TixXin/fuyu/issues/331", "pnpm tasks show C76", "悬停预览层", "截图 2026-11-15 15.42.png"][i % 4]}<small>${i + 1} 分钟前</small></div>`).join("") },
+  { k: "inbox", name: "文件中转", body: () => "<h3>文件中转</h3>" + ["设计稿.fig", "录屏.mp4", "报告.pdf"].map((t) => `<div class="row">${t}<small>今天</small></div>`).join("") },
+];
+const LYRICS = ["刮风这天 我试过握着你手", "但偏偏 雨渐渐 大到我看你不见", "还要多久 我才能在你身边", "等到放晴的那天 也许我会比较好一点"];
+let lyricI = 0;
+
+const CARDS = {
+  agent: { pri: 0, urgent: true, page: 0, ic: "⚠️", t1: "Claude Code 等你确认", t2: "fuyu · 运行 cargo test", btn: "去处理" },
+  meeting: { pri: 1, urgent: true, page: 3, ic: "📅", t1: "14:30 设计评审", t2: "还有 12 分钟 · 腾讯会议", btn: "加入" },
+  music: { pri: 2, page: 2, cover: true, t1: () => LYRICS[lyricI], t2: "晴天 · 周杰伦 · QQ 音乐", btn: "❚❚", round: true },
+  unread: { pri: 3, page: 5, ic: "💬", t1: "QQ 3 · 微信 1 · 邮件 2", t2: "张三：今晚的会改到八点了" },
+  next: { pri: 4, page: 3, ic: "🗓️", t1: "明天 09:30 站会", t2: "下一个日程" },
+  todo: { pri: 5, page: 1, ic: "✅", t1: "进行中：写 C76 方案", t2: "剩余 5 个待办" },
+  time: { pri: 9, page: 3, ic: "🕒", t1: "15:42 星期日", t2: "十月廿五 · 兜底卡片" },
+};
+function activeCards() {
+  const list = Object.keys(scene).filter((k) => scene[k]).concat("time").map((k) => ({ k, ...CARDS[k] })).sort((a, b) => a.pri - b.pri);
+  return list.length > 1 ? list.filter((c) => c.k !== "time") : list;
+}
+function renderCards() {
+  const list = activeCards();
+  const urgent = list.find((c) => c.urgent);
+  if (opt.rotate === "fixed" || urgent) cardIndex = 0;
+  cardIndex %= list.length;
+  const c = list[cardIndex];
+  const t1 = typeof c.t1 === "function" ? c.t1() : c.t1;
+  const pips = list.length > 1 ? `<div class="pips">${list.map((x, i) => `<i data-i="${i}" class="${i === cardIndex ? "on" : ""}"></i>`).join("")}</div>` : "";
+  $("#cards").innerHTML = `<div class="card" data-page="${c.page}"><div class="ic ${c.cover ? "cover" : ""}">${c.ic || ""}</div><div class="tx"><div class="t1">${t1}</div><div class="t2">${c.t2}</div></div>${c.btn ? `<button class="btn ${c.round ? "round" : ""}" data-act="${c.k}">${c.btn}</button>` : ""}</div>${pips}<div class="dwell" id="dwellBar"></div>`;
+}
+function renderBar() {
+  const now = Date.now();
+  $("#dot").className = "dot" + (scene.agent ? " warn" : "");
+  const sum = $("#sum");
+  if (msgUntil > now) { sum.textContent = "💬 张三：今晚的会改到八点了"; sum.classList.remove("fadeable"); }
+  else { sum.textContent = scene.music ? "♪ " + LYRICS[lyricI] : "剩余 5 个待办"; sum.classList.add("fadeable"); }
+}
+function renderPanel() {
+  $("#top").className = "top" + (opt.wheel !== "off" ? " wheelzone" : "");
+  $("#top").innerHTML = PAGES.map((p, i) => `<button class="pg ${i === page ? "on" : ""}" data-p="${i}" title="${p.name}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS[p.k]}</svg></button>`).join("") + '<span class="gap" data-collapse="1"></span><span class="rb"></span><span class="rb"></span>';
+  $("#body").innerHTML = PAGES[page].body();
+  $("#body").scrollTop = 0;
+}
+function setState(next, why) {
+  if (next === state) return;
+  state = next;
+  isl.dataset.state = next;
+  clearTimeout(dwellT);
+  if (next === "preview") { cardIndex = 0; renderCards(); startDwell(); }
+  if (next === "expanded") { renderPanel(); entered = hovering; }
+  if (next === "collapsed" && hovering) armed = false;
+  if (why) say(why);
+}
+function startDwell() {
+  if (!opt.dwell) return;
+  const bar = $("#dwellBar");
+  bar.style.setProperty("--dw", opt.dwell + "ms");
+  requestAnimationFrame(() => requestAnimationFrame(() => bar.classList.add("run")));
+  dwellT = setTimeout(() => expand(page, `预览里又停了 ${opt.dwell / 1000} 秒 → 展开（细线是倒计时）`), opt.dwell);
+}
+function expand(p, why) { page = p; clearTimeout(enterT); clearTimeout(leaveT); setState("expanded", why); }
+function collapse(why) { clearTimeout(leaveT); setState("collapsed", why); }
+
+function blockedReason() {
+  if (msgUntil > Date.now()) return "消息一行预览显示中，不出预览（和现在暂停悬停展开一样）；结束后要移开再回来";
+  if (!armed) return "刚收起或刚按过鼠标，要移开再回来才会再出";
+  return null;
+}
+function onEnter() {
+  hovering = true;
+  clearTimeout(leaveT);
+  if (state === "expanded") { entered = true; return; }
+  if (state === "tucked") { enterT = setTimeout(() => { setState("collapsed", "碰到贴边的岛 → 先露出收起条；继续停留按下面的规则走"); onEnter(); }, 300); return; }
+  if (state !== "collapsed" || opt.trigger === "click") { if (opt.trigger === "click" && state === "collapsed") say("点击模式：悬停什么都不做，点一下展开"); return; }
+  const r = blockedReason();
+  if (r) { say(r); return; }
+  enterT = setTimeout(() => {
+    if (msgUntil > Date.now()) return;
+    armed = false;
+    if (opt.trigger === "hover") expand(page, `悬停模式：停满 ${opt.delay}ms 直接展开`);
+    else setState("preview", `停满 ${opt.delay}ms → 预览层。点空白展开当前页，点卡片打开对应页面，向下滚一格展开，向上滚一格缩回`);
+  }, opt.delay);
+}
+function onLeave() {
+  hovering = false; armed = true;
+  clearTimeout(enterT); clearTimeout(dwellT);
+  if (state === "preview") leaveT = setTimeout(() => collapse("移开 200ms → 缩回收起条"), 200);
+  else if (state === "expanded" && opt.trigger === "hover" && entered) leaveT = setTimeout(() => collapse("悬停模式：移开 400ms 后收起"), 400);
+  else if (state === "collapsed" && opt.edgeTucked) leaveT = setTimeout(() => setState("tucked", "移开 → 回到贴边收起"), 600);
+}
+isl.addEventListener("pointerenter", onEnter);
+isl.addEventListener("pointerleave", onLeave);
+isl.addEventListener("pointerdown", () => { clearTimeout(enterT); if (state === "collapsed") armed = false; });
+isl.addEventListener("click", (e) => {
+  e.stopPropagation();
+  const act = e.target.closest("[data-act]");
+  if (act) { e.stopPropagation(); say(act.dataset.act === "music" ? "卡片上的按钮只做自己的事（播放 / 暂停），不展开" : `「${act.textContent}」只做自己的事，不展开`); return; }
+  const pip = e.target.closest(".pips i");
+  if (pip) { cardIndex = +pip.dataset.i; renderCards(); restartRotate(); say("点圆点手动切卡片"); return; }
+  if (state === "collapsed" || state === "tucked") { expand(page, "点击收起条 → 展开"); return; }
+  if (state === "preview") { const card = e.target.closest(".card"); expand(card ? +card.dataset.page : page, card ? `点卡片 → 直接打开「${PAGES[+card.dataset.page].name}」页` : "点预览空白处 → 展开当前页"); return; }
+  const pg = e.target.closest(".pg");
+  if (pg) { page = +pg.dataset.p; renderPanel(); say(`点图标切到「${PAGES[page].name}」`); return; }
+  if (e.target.closest("[data-collapse]")) collapse("点顶部栏空白 → 收起");
+});
+desk.addEventListener("click", (e) => { if (!isl.contains(e.target) && state === "expanded") collapse("点岛外 → 收起（失焦收起）"); });
+
+function wheelInPanel(e) {
+  const inTop = !!e.target.closest(".top");
+  const body = $("#body");
+  const canScroll = body.scrollHeight > body.clientHeight + 1;
+  let zone = false, why = "";
+  if (opt.wheel === "off") { say("滚轮切页关着：内容区照常滚动"); return; }
+  if (opt.wheel === "bar") zone = inTop;
+  if (opt.wheel === "nonscroll") zone = inTop || !canScroll;
+  if (opt.wheel === "shift") zone = e.shiftKey;
+  if (!zone) { say(inTop ? "" : canScroll ? "内容区：交给页面自己滚，不切页" : opt.wheel === "bar" ? "内容区（这页不能滚）：推荐方案下也不切页，免得在可滚页面滚到底时误切" : "没按 Shift：不切页"); return; }
+  e.preventDefault();
+  const d = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
+  const now = performance.now();
+  if (now < wheelLockUntil) { wheelLockUntil = now + 150; say("切页后的锁定期：吞掉这段滚动（触控板惯性）"); return; }
+  wheelAcc += e.deltaMode === 1 ? d * 40 : d;
+  clearTimeout(wheelQuietT); wheelQuietT = setTimeout(() => (wheelAcc = 0), 200);
+  if (Math.abs(wheelAcc) < 50) { say(`累计 ${Math.round(wheelAcc)} / 50`); return; }
+  const next = page + Math.sign(wheelAcc);
+  wheelAcc = 0;
+  if (next < 0 || next >= PAGES.length) { say("已经是" + (next < 0 ? "第一页" : "最后一页") + "，不循环"); wheelLockUntil = now + 450; return; }
+  page = next; renderPanel(); wheelLockUntil = now + 450;
+  say(`滚轮 → 「${PAGES[page].name}」，之后 450ms 内的滚动不算`);
+}
+isl.addEventListener("wheel", (e) => {
+  if (state === "expanded") return wheelInPanel(e);
+  if (state === "preview") {
+    e.preventDefault();
+    if (performance.now() < wheelLockUntil) return;
+    wheelLockUntil = performance.now() + 300;
+    if (e.deltaY > 0) expand(page, "预览上向下滚一格 → 展开");
+    else { collapse("预览上向上滚一格 → 缩回收起条（移开再回来才会再出）"); armed = false; }
+  }
+}, { passive: false });
+
+function restartRotate() {
+  clearInterval(rotT);
+  rotT = setInterval(() => {
+    lyricI = (lyricI + 1) % LYRICS.length;
+    renderBar();
+    if (state === "preview") {
+      const list = activeCards();
+      if (opt.rotate === "rotate" && !list.some((c) => c.urgent)) cardIndex = (cardIndex + 1) % list.length;
+      renderCards();
+      $("#dwellBar").classList.toggle("run", false);
+    }
+    if (state === "expanded" && page === 2) $(".lyric") && ($(".lyric").textContent = LYRICS[lyricI]);
+  }, 4000);
+}
+
+document.querySelectorAll(".group[data-k]").forEach((g) => g.addEventListener("click", (e) => {
+  const b = e.target.closest("button.seg"); if (!b) return;
+  g.querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b));
+  const k = g.dataset.k, v = b.dataset.v;
+  opt[k] = k === "dwell" ? +v : v;
+  if (k === "theme") desk.className = `desk ${v} edge-${opt.edge}`;
+  if (k === "edge") desk.className = `desk ${opt.theme} edge-${v}`;
+  if (k === "trigger" || k === "edge") { opt.edgeTucked = false; armed = true; collapse(""); }
+  if (k === "wheel" && state === "expanded") renderPanel();
+  say((k === "trigger" && { click: "点击：悬停不做任何事（现在的默认）", hover: "悬停：停满延迟直接展开，移开收起（现在的悬停展开）", preview: "悬停预览：停满延迟先出预览层" }[v]) || "已切换");
+}));
+$("#delay").addEventListener("input", (e) => { opt.delay = +e.target.value; $("#delayV").textContent = opt.delay + "ms"; });
+document.querySelectorAll("[data-c]").forEach((c) => c.addEventListener("change", () => { scene[c.dataset.c] = c.checked; renderBar(); if (state === "preview") renderCards(); }));
+$("#msg").addEventListener("click", () => {
+  msgUntil = Date.now() + 5000; clearTimeout(enterT);
+  if (state === "preview") collapse("预览中来消息 → 缩回，收起条显示一行预览");
+  renderBar(); say("一行预览显示 5 秒，期间悬停不出预览");
+  setTimeout(() => { renderBar(); if (hovering) armed = false; }, 5050);
+});
+$("#vol").addEventListener("click", () => { isl.classList.add("hint"); say("音量提示占收起条那一行；预览层开着时照常显示在上面一行，卡片不动"); setTimeout(() => isl.classList.remove("hint"), 1500); });
+$("#tuck").addEventListener("click", () => { opt.edgeTucked = true; setState("tucked", "贴边收起：碰到细条先露出收起条，再停留才出预览"); });
+
+renderBar(); renderCards(); renderPanel(); restartRotate();
+</script>
+</body>
+</html>

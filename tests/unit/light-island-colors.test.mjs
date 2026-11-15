@@ -16,7 +16,7 @@ const ALLOWED = [
   /features\/todos\/TodoDatePicker\.css$/,
   /features\/agent-status\/approvals\//,
   /features\/calendar\/(CalendarMonth|CalendarPanel|MeetingLine)\.css$/,
-  /windows\/island\/(IslandShell|IslandTopEdge|IslandApp)\.css$/,
+  /windows\/island\/(IslandShell|IslandTopEdge|IslandApp|IslandGlass)\.css$/,
   /windows\/island\/IslandGlassLight\.css$/,
 ];
 const WHITE = /rgba\(\s*255\s*,\s*255\s*,\s*255\s*,|color:\s*#fff(fff)?\s*;/g;

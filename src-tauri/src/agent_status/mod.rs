@@ -2,9 +2,11 @@
 pub(crate) mod approval_hotkeys;
 mod background_tasks;
 mod claude_code;
+mod claude_desktop;
 mod claude_hooks;
 mod codex;
 mod codex_hooks;
+mod codex_threads;
 mod editor_extension;
 mod editor_terminal;
 mod external;

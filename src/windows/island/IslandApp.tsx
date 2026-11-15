@@ -10,13 +10,9 @@ import { openSettingsWindow } from "../settings/api";
 import { useQuickTranslation } from "../../features/translation/useQuickTranslation";
 import { useScreenshotText } from "../../features/screenshot/useScreenshotText";
 import { useScreenshotCard } from "../../features/screenshot/useScreenshotCard";
-import { ScreenshotNotice, ScreenshotNoticeActions } from "../../features/screenshot/ScreenshotNotice";
 import { useScreenshotNotice } from "../../features/screenshot/useScreenshotNotice";
-import { ClipboardCopyNotice, ClipboardCopyNoticeActions } from "../../features/clipboard/ClipboardCopyNotice";
 import { useClipboardCopyCard } from "../../features/clipboard/useClipboardCopyCard";
-import { RecordingNotice, RecordingNoticeActions } from "../../features/screenshot/RecordingNotice";
 import { useRecording } from "../../features/screenshot/useRecording";
-import { TimerNotice, TimerNoticeActions } from "../../features/timer/TimerNotice";
 import { useIslandTimer } from "../../features/timer/useIslandTimer";
 import { useIslandSettings } from "../../features/appearance/useIslandSettings";
 import { useClipboardHistory } from "../../features/clipboard/useClipboardHistory";
@@ -40,7 +36,7 @@ import { useAgentIndicator } from "./useAgentIndicator";
 import { useIslandNavigation } from "./useIslandNavigation";
 import { useIslandTodos } from "./useIslandTodos";
 import { useIslandTucking } from "./useIslandTucking";
-import { holdsTuck } from "./tuckHold";
+import { useTuckHold } from "./useTuckHold";
 import { useIslandShelf } from "./useIslandShelf";
 import { useIslandScreenshot } from "./useIslandScreenshot";
 import { useIslandHover } from "./useIslandHover";
@@ -68,7 +64,7 @@ import { useOnboardingDemo, withDemoMedia } from "./useOnboardingDemo";
 import { useIslandLyrics } from "./useIslandLyrics";
 import { coverAccentVariables, useCoverColor } from "../../features/media/useCoverColor";
 import { useIslandFirstHints } from "./useIslandFirstHints";
-import { FirstHintActions, FirstHintNotice } from "../../features/first-hints/FirstHintNotice";
+import { pickIslandNotice } from "./islandNotice";
 import { useIslandSide } from "./useIslandSide";
 import { useDevIslandActions } from "./useDevIslandActions";
 import { hasNotchAlert } from "./NotchAlert";
@@ -160,11 +156,7 @@ export function IslandApp() {
     hasMessagePreview: showsMessage,
     hasPermissionPrompt: permissionPrompts.current !== null || screenshotCard.current !== null,
     hasTranslationPeek: Boolean(translationPeek),
-    holdTuck: holdsTuck(settings, {
-      todoInProgress: activeTodoId !== null && todos.some((todo) => todo.id === activeTodoId && !todo.completed),
-      agentWaiting: agentSessions.some((session) => session.phase === "waiting"),
-      musicPlaying: media.mediaState.playbackStatus === "playing",
-    }),
+    holdTuck: useTuckHold(settings, { todos, activeTodoId, agentSessions, playing: media.mediaState.playbackStatus === "playing", messagesOpen: mode === "expanded" && page === "qq", notices }),
   });
 
 
@@ -252,8 +244,9 @@ export function IslandApp() {
     onCollapse: collapseIsland,
   });
 
+  const islandNotice = pickIslandNotice({ recording, ringing, screenshotNotice, copyCard, firstHints });
   useNotchDropSync(notch !== null && mode === "collapsed" && !isTucked && hasNotchDrop({
-    preview: banner.barPreview, notice: recording.shown || ringing.length > 0 || (screenshotNotice.taken ?? copyCard.current ?? firstHints.current), translationPeek,
+    preview: banner.barPreview, notice: islandNotice !== null, translationPeek,
   }));
   useDevIslandActions({ openPage: openEnabledPage, collapse: collapseIsland, tuck: tuckIsland, reveal: revealIsland });
   const hoverTucked = useIslandHover({
@@ -342,17 +335,7 @@ export function IslandApp() {
         pageDigitModifiers={settings.pageDigitModifiers}
         hoverSwitchPage={settings.hoverSwitchPage}
         hoverSwitchDelayMs={settings.hoverSwitchDelayMs}
-        notice={recording.shown
-          ? { content: <RecordingNotice recording={recording} />, actions: <RecordingNoticeActions recording={recording} /> }
-          : ringing.length > 0
-          ? { content: <TimerNotice ringing={ringing} />, actions: <TimerNoticeActions /> }
-          : screenshotNotice.taken
-          ? { content: <ScreenshotNotice key={screenshotNotice.taken.path} notice={screenshotNotice} />, actions: <ScreenshotNoticeActions notice={screenshotNotice} /> }
-          : copyCard.current
-          ? { content: <ClipboardCopyNotice key={copyCard.current.key} card={copyCard} />, actions: <ClipboardCopyNoticeActions card={copyCard} /> }
-          : firstHints.current
-            ? { content: <FirstHintNotice key={firstHints.current} hints={firstHints} />, actions: <FirstHintActions hints={firstHints} onConnectTools={() => openSettingsWindow("agentConnect")} /> }
-            : null}
+        notice={islandNotice}
         overlay={permissionPrompts.current ? <PluginPermissionPrompt prompts={permissionPrompts} /> : null}
         pluginViews={pluginPages.views}
         onOpenPluginPage={openEnabledPage}

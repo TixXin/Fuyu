@@ -1,5 +1,5 @@
 import { THEME_SETTING_KEYS, normalizeSettings, withThemeFrom } from "./settings.ts";
-import { hasThemeSets, themeColors, themeSetsFromSingleColors } from "./themeMode.ts";
+import { AUTO_INK, hasThemeSets, themeColors, themeSetsFromSingleColors } from "./themeMode.ts";
 import type { IslandSettings } from "./types";
 
 export const MAX_THEME_NAME_LENGTH = 60;
@@ -54,7 +54,7 @@ export function parseTheme(
     THEME_SETTING_KEYS.filter((key) => key in source).map((key) => [key, source[key]]),
   );
   const sets = hasThemeSets(picked) ? {} : themeSetsFromSingleColors({ ...current, themeMode: "custom", ...picked });
-  const settings = withThemeFrom(current, normalizeSettings({ ...current, ...picked, ...sets }));
+  const settings = withThemeFrom(current, normalizeSettings({ ...current, ...AUTO_INK, ...picked, ...sets }));
   const name = typeof file.name === "string" ? file.name.trim().slice(0, MAX_THEME_NAME_LENGTH) : "";
   return { name, settings };
 }
