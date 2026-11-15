@@ -20,7 +20,7 @@
     <a href="https://github.com/TixXin/fuyu/releases/latest"><img alt="Version" src="https://img.shields.io/github/v/release/TixXin/fuyu?label=version&style=flat-square&labelColor=1b1f24&color=3d444d"></a>
     <img alt="Platform" src="https://img.shields.io/badge/platform-Windows%2010%20%2F%2011%20%7C%20macOS%2015%2B-3d444d?style=flat-square&labelColor=1b1f24">
     <img alt="Tauri" src="https://img.shields.io/badge/Tauri-2-3d444d?style=flat-square&labelColor=1b1f24">
-    <a href="../../LICENSE"><img alt="License" src="https://img.shields.io/badge/license-GPL--3.0-3d444d?style=flat-square&labelColor=1b1f24"></a>
+    <a href="../../LICENSE"><img alt="License" src="https://img.shields.io/badge/license-AGPL--3.0-3d444d?style=flat-square&labelColor=1b1f24"></a>
     <a href="https://github.com/TixXin/fuyu/stargazers"><img alt="Stars" src="https://img.shields.io/github/stars/TixXin/fuyu?style=flat-square&label=stars&labelColor=1b1f24&color=3d444d"></a>
   </p>
 
@@ -216,7 +216,7 @@ Cada estrela ajuda o Fuyu a seguir em frente.
 
 ## Licença
 
-[GPL-3.0](../../LICENSE). Quem cria plugins pode escolher a própria licença. As dependências de terceiros e os recursos incluídos mantêm suas próprias licenças: a origem e os avisos estão nos [avisos de terceiros](../THIRD_PARTY_NOTICES.md), e as fontes incluídas, nas [notas sobre fontes](../../src/assets/fonts/README.md).
+[AGPL-3.0](../../LICENSE). Quem cria plugins pode escolher a própria licença. As dependências de terceiros e os recursos incluídos mantêm suas próprias licenças: a origem e os avisos estão nos [avisos de terceiros](../THIRD_PARTY_NOTICES.md), e as fontes incluídas, nas [notas sobre fontes](../../src/assets/fonts/README.md).
 
 > [!NOTE]
 > Este projeto é mantido em conjunto por [TixXin](https://github.com/TixXin) e [ShengLin1001](https://github.com/ShengLin1001); em novembro de 2026 mudou de nome, de fly-island para Fuyu. O autor original, [flyl1u](https://github.com/flyl1u/fly-island), prefere uma ilha dinâmica simples e minimalista. Para dar mais funções à ilha e permitir que mais pessoas coloquem nela suas próprias funções feitas à mão, este projeto seguiu seu próprio caminho, mantido por todos, e desenvolveu uma loja de plugins. Pull requests são bem-vindos (veja [como contribuir](../../CONTRIBUTING.md)), assim como enviar seus componentes para a [loja de plugins](https://github.com/TixXin/fuyu-plugins) ou instalar seus próprios plugins localmente (veja a [documentação de plugins](../plugins/README.md)).

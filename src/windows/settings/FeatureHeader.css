@@ -52,15 +52,6 @@
   color: var(--color-text-muted);
 }
 
-.feature-header__label {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
-
 .feature-header__status {
   width: fit-content;
   margin-top: 3px;
@@ -79,10 +70,22 @@
   white-space: nowrap;
 }
 
-.feature-header__off-note {
-  margin: 0;
+.feature-off {
+  display: grid;
+  gap: var(--space-md);
+}
+
+.feature-off__note {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-xs) var(--space-md);
   padding: 0 var(--space-xs);
-  color: var(--color-text-subtle);
-  font-size: 12px;
+}
+
+.feature-off__note p {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 12.5px;
   line-height: 1.5;
 }

@@ -53,7 +53,7 @@ export function useCollapsedSlots({ paused, agents, sessions, unseen, agentsOn, 
   const timerPlugin = useBuiltinPlugin(TIMER_PLUGIN_ID);
   const timers = useTimers().timers;
   const showRemaining = usage.settings.show === "remaining";
-  const ringStyle = SESSION_RING_STYLES.find((known) => known === sessionRing.settings.style) ?? ("ring" satisfies SessionRingStyle);
+  const ringStyle = SESSION_RING_STYLES.find((known) => known === sessionRing.settings.style) ?? ("grid" satisfies SessionRingStyle);
   const ringCount = sessionRing.settings.showCount !== false;
   const { placements } = useCollapsedPlacements();
   const providers = useMemo(

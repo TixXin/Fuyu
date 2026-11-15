@@ -20,7 +20,7 @@
     <a href="https://github.com/TixXin/fuyu/releases/latest"><img alt="Version" src="https://img.shields.io/github/v/release/TixXin/fuyu?label=version&style=flat-square&labelColor=1b1f24&color=3d444d"></a>
     <img alt="Platform" src="https://img.shields.io/badge/platform-Windows%2010%20%2F%2011%20%7C%20macOS%2015%2B-3d444d?style=flat-square&labelColor=1b1f24">
     <img alt="Tauri" src="https://img.shields.io/badge/Tauri-2-3d444d?style=flat-square&labelColor=1b1f24">
-    <a href="../../LICENSE"><img alt="License" src="https://img.shields.io/badge/license-GPL--3.0-3d444d?style=flat-square&labelColor=1b1f24"></a>
+    <a href="../../LICENSE"><img alt="License" src="https://img.shields.io/badge/license-AGPL--3.0-3d444d?style=flat-square&labelColor=1b1f24"></a>
     <a href="https://github.com/TixXin/fuyu/stargazers"><img alt="Stars" src="https://img.shields.io/github/stars/TixXin/fuyu?style=flat-square&label=stars&labelColor=1b1f24&color=3d444d"></a>
   </p>
 
@@ -216,7 +216,7 @@ Jeder Stern hilft Fuyu, weiterzukommen.
 
 ## Lizenz
 
-[GPL-3.0](../../LICENSE). Wer Plugins schreibt, kann eine eigene Lizenz wählen. Abhängigkeiten von Drittanbietern und mitgelieferte Ressourcen behalten ihre eigenen Lizenzen: Herkunft und Hinweise stehen in den [Hinweisen zu Drittanbietern](../THIRD_PARTY_NOTICES.md), die mitgelieferten Schriften in den [Hinweisen zu Schriften](../../src/assets/fonts/README.md).
+[AGPL-3.0](../../LICENSE). Wer Plugins schreibt, kann eine eigene Lizenz wählen. Abhängigkeiten von Drittanbietern und mitgelieferte Ressourcen behalten ihre eigenen Lizenzen: Herkunft und Hinweise stehen in den [Hinweisen zu Drittanbietern](../THIRD_PARTY_NOTICES.md), die mitgelieferten Schriften in den [Hinweisen zu Schriften](../../src/assets/fonts/README.md).
 
 > [!NOTE]
 > Dieses Projekt wird gemeinsam von [TixXin](https://github.com/TixXin) und [ShengLin1001](https://github.com/ShengLin1001) gepflegt; im November 2026 wurde es von fly-island in Fuyu umbenannt. Der ursprüngliche Autor, [flyl1u](https://github.com/flyl1u/fly-island), bevorzugt eine schlichte, minimalistische Dynamic Island. Damit die Insel mehr kann und mehr Menschen ihre eigenen, selbst gebauten Funktionen hineinbringen können, ist dieses Projekt einen eigenen, gemeinsam gepflegten Weg gegangen und hat einen Plugin-Marktplatz entwickelt. Pull Requests sind willkommen (siehe [Mitmachen](../../CONTRIBUTING.md)), ebenso wie deine Komponenten im [Plugin-Marktplatz](https://github.com/TixXin/fuyu-plugins) oder eigene Plugins, die du lokal installierst (siehe [Plugin-Dokumentation](../plugins/README.md)).
