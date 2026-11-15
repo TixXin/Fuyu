@@ -1,8 +1,8 @@
 import { Component, Suspense, createElement, useCallback, useSyncExternalStore } from "react";
 
-export function useSlotItems(registry, name) {
+export function useSlotItems(registry, name, group) {
   const subscribe = useCallback((notify) => registry.subscribe((changed) => changed === name && notify()), [registry, name]);
-  const read = useCallback(() => registry.items(name), [registry, name]);
+  const read = useCallback(() => registry.items(name, group), [registry, name, group]);
   return useSyncExternalStore(subscribe, read, read);
 }
 
@@ -17,7 +17,8 @@ class ItemBoundary extends Component {
   }
 
   componentDidCatch(error) {
-    this.props.onError?.(this.props.item, error);
+    const { slot, item, onError } = this.props;
+    onError?.({ slot, id: item.id, owner: item.owner, external: item.external, error });
   }
 
   render() {
@@ -26,15 +27,12 @@ class ItemBoundary extends Component {
   }
 }
 
-export function SlotItems({ registry, name, props, fallback, onError }) {
-  const items = useSlotItems(registry, name);
-  return items.map((item) =>
-    createElement(
-      ItemBoundary,
-      { key: `${item.owner}:${item.id}:${item.seq}`, item, fallback, onError },
-      createElement(Suspense, { fallback: null }, createElement(item.component, props)),
-    ),
-  );
+export function SlotItems({ registry, name, group, props, select, wrap, fallback, onError }) {
+  const items = useSlotItems(registry, name, group);
+  return (select ? select(items) : items).map((item) => {
+    const node = createElement(Suspense, { fallback: null }, createElement(item.component, props));
+    return createElement(ItemBoundary, { key: `${item.owner}:${item.id}:${item.seq}`, slot: name, item, fallback, onError }, wrap ? wrap(item, node) : node);
+  });
 }
 
 export function installShared(modules) {

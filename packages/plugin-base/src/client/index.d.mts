@@ -40,7 +40,7 @@ export declare class HostCallError extends Error {
 
 export function connectHost<Snapshot = unknown>(options: ConnectOptions<Snapshot>): HostConnection;
 
-export { createSlots, SlotError, type SlotItem, type SlotItemInput, type SlotRegistry, type SlotRule } from "./slots.mjs";
+export { BUILTIN, createSlots, SlotError, slotWindow, type SlotAddOptions, type SlotErrorCode, type SlotItem, type SlotItemInput, type SlotRegistry, type SlotRule } from "./slots.mjs";
 import type { SlotItemInput, SlotRegistry } from "./slots.mjs";
 
 export declare class Slots {
