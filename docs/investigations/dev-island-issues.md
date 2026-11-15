@@ -33,6 +33,8 @@
 
 ## 2. dev 启动后第一次展开面板白屏闪一下
 
+用户补充（2026-11-15）：液态玻璃没开；Windows 上，浅色深色都会；白的是**整块面板**；正式版似乎也有。所以这不是 dev 专有的问题，和原生液态玻璃也无关。「整块面板白」比「只有新长出来的边缘白」更像下面第 2 条：面板第一次绘制没赶上。
+
 还没有定论，有三个怀疑方向：
 
 1. **舞台窗口在展开时变高。** `island/geometry.rs` 的 `apply_stage_geometry` 算出的舞台高度是 `max(460, 展开高度 × 展开缩放 + 上下留白)`。展开面板比 460 高时（开发版的数据是从正式数据复制过来的，展开尺寸和缩放调大过就会这样），`resize_stage` 会立刻 `set_size` 把窗口拉高。新露出来的那块 WebView 要等下一帧才有内容，这一帧可能画成白色。
@@ -55,7 +57,7 @@
 ## 4. 排查中发现的其他问题（「等」）
 
 - **崩溃页不会自己恢复**（见第 1 节），正式版也一样。
-- **旧的开发版数据目录还留着：** `%LOCALAPPDATA%` 和 `%APPDATA%` 下有 `com.tixxin.fuyu.lane-5/6/7/20/36/37`、`com.tixxin.fuyu.v3spike`、`com.tixxin.fuyu.lane-1.before-copy-1794684861186`，每个都带一份 `EBWebView`。lane 已经在 F32 去掉了，`pnpm prune:target` 只清 `src-tauri/target`，不清这些目录。不算正在用的 `lane-1`，这些目录在 `%LOCALAPPDATA%` 下一共约 570 MB（`before-copy` 134 MB，`lane-7` 108 MB，`lane-6` 100 MB，`lane-37` 76 MB，`v3spike` 54 MB，`lane-20` 44 MB，`lane-5` 41 MB，`lane-36` 12 MB），`%APPDATA%` 下约 11 MB。
+- **旧的开发版数据目录还留着：** `%LOCALAPPDATA%` 和 `%APPDATA%` 下有 `com.tixxin.fuyu.lane-5/6/7/20/36/37`、`com.tixxin.fuyu.v3spike`、`com.tixxin.fuyu.lane-1.before-copy-1794684861186`，每个都带一份 `EBWebView`。lane 已经在 F32 去掉了，`pnpm prune:target` 只清 `src-tauri/target`，不清这些目录。不算正在用的 `lane-1`，这些目录在 `%LOCALAPPDATA%` 下一共约 570 MB（`before-copy` 134 MB，`lane-7` 108 MB，`lane-6` 100 MB，`lane-37` 76 MB，`v3spike` 54 MB，`lane-20` 44 MB，`lane-5` 41 MB，`lane-36` 12 MB），`%APPDATA%` 下约 11 MB。用户 2026-11-15 定：直接删掉，不另开任务；由用户自己删（会话里的删除命令被自动模式拦下）。
 - **托盘「显示」显示出空白岛**（见第 3 节）。
 
 ## 要用户提供的信息
