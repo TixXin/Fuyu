@@ -16,6 +16,8 @@ export const AGENTS = {
   kimiCode: { label: "Kimi Code", statusLight: true, remote: false },
   mimo: { label: "MiMo Code", statusLight: false, remote: false },
   grok: { label: "Grok CLI", statusLight: true, remote: false },
+  copilot: { label: "GitHub Copilot CLI", statusLight: true, remote: false },
+  droid: { label: "Droid", statusLight: true, remote: false },
 } as const satisfies Record<string, AgentInfo>;
 
 export type SessionProvider = keyof typeof AGENTS;

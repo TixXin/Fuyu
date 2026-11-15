@@ -1,6 +1,6 @@
 # Agent 适配真机实测清单
 
-#179（协作者 ShengLin1001 提的）和 2026-11-15 这一轮 Agent 适配（B26、B27、B28、B30、B32、B33、B44，以及 B29、B34–B37、B46、B48、B49、B52–B54、B56、B57）里只写了代码和单元测试、没在真机上跑过的项目，合成这一份，按要在哪台机器上测分组。任务是 B47。
+#179（协作者 ShengLin1001 提的）和 2026-11-15 这一轮 Agent 适配（B26、B27、B28、B30、B32、B33、B44，以及 B29、B34–B37、B46、B48、B49、B52–B58）里只写了代码和单元测试、没在真机上跑过的项目，合成这一份，按要在哪台机器上测分组。任务是 B47。
 
 怎么用：
 - 测过一项就勾掉，后面写日期、版本和结果；测出问题另开 issue，链接写在那一项后面。
@@ -135,6 +135,19 @@
 - [ ] 让它派子代理：子代理的会话不单独列出（B57）
 - [ ] 点会话切到终端（B57）
 
+### GitHub Copilot CLI（B55，本机没装，装上后测）
+
+- [ ] 装 `@github/copilot`，跑一轮带工具调用的对话：Agent 页出现会话，标题是 `workspace.yaml` 的 summary（确认真有这个键），运行中显示正在跑的工具，结束后显示最后一句回复（B55）
+- [ ] 子代理的消息不顶掉主会话的工具和回复；`/exit` 后会话显示已结束（B55）
+- [ ] 状态灯、等你、岛上允许 / 拒绝（拒绝时 Copilot 收到理由）；同一会话不再同时出现成 Claude Code（B55）
+- [ ] `PermissionRequest` 钩子的输入里有没有 `tool_name` / `tool_input`（文档没写；没有时审批卡片缺工具名）（B55）
+
+### Droid（B58，本机没装，装上后测）
+
+- [ ] 装 droid 跑一轮：会话出现在 Agent 页，目录对（项目路径带 `-` 的以 `session_start.cwd` 为准），模型和推理强度显示（B58）
+- [ ] 注入的系统提问（`visibility: hidden`）不当成标题或最近提问（B58）
+- [ ] 装完重开会话，状态灯和「等你」（permission_prompt）正常；`hooks.json` 或 `settings.json` 里用户原有的钩子还在（B58）
+
 ### Codex 和 Claude 桌面 App（B46）
 
 - [ ] 开一个 Codex 会话（CLI 或 Codex Desktop）：Agent 页列出来，标题是 Codex 起的名字（`threads.name` / `session_index.jsonl`），模型、档位对（B46）
@@ -239,6 +252,11 @@
 ### Grok CLI（B57）
 
 - [ ] Git Bash 下钩子脚本能跑；再过一遍 Mac 一节的「安装/修复」、交互式一轮、等你（B57）
+
+### Copilot CLI、Droid（B55、B58）
+
+- [ ] Copilot：钩子走 `powershell` 字段（`& '…fuyu-agent-running.cmd' copilot`），确认输入能传到 `.cmd` 和 `.ps1` 脚本（等你、审批都靠它）；再过一遍 Mac 一节的跑一轮和审批（B55）
+- [ ] Droid：同 Mac 一节的跑一轮和等你（B58）
 
 ## Linux 服务器（SSH 远程，B26）
 

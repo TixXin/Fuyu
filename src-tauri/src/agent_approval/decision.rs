@@ -19,6 +19,7 @@ pub enum Agent {
     TraeCn,
     Zcode,
     Mimo,
+    Copilot,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
@@ -31,7 +32,7 @@ pub enum Kind {
 pub(super) const QUESTION_PATH: &str = "/claude/ask-user-question";
 pub(super) const ACTIVITY_PATH: &str = "/claude/activity";
 
-const AGENTS: [Agent; 13] = [
+const AGENTS: [Agent; 14] = [
     Agent::ClaudeCode,
     Agent::Codex,
     Agent::Workbuddy,
@@ -45,6 +46,7 @@ const AGENTS: [Agent; 13] = [
     Agent::TraeCn,
     Agent::Zcode,
     Agent::Mimo,
+    Agent::Copilot,
 ];
 
 pub(super) fn route(path: &str) -> Option<(Agent, Kind)> {
@@ -73,6 +75,7 @@ impl Agent {
             Self::Qwen => "/qwen/permission-request",
             Self::Trae => "/trae/pre-tool-use",
             Self::TraeCn => "/traeCn/pre-tool-use",
+            Self::Copilot => "/copilot/permission-request",
         }
     }
 
@@ -91,6 +94,7 @@ impl Agent {
             Self::Qwen => "qwen",
             Self::Trae => "trae",
             Self::TraeCn => "traeCn",
+            Self::Copilot => "copilot",
         }
     }
 
@@ -270,6 +274,7 @@ pub(super) fn permission_response(
             _ => "{}".to_string(),
         },
         Agent::Trae | Agent::TraeCn => pre_tool_use_response(decision, reason()),
+        Agent::Copilot => behavior_response(decision, reason()),
         Agent::Opencode | Agent::Mimo => super::opencode::plugin_response(decision, message),
     }
 }

@@ -534,6 +534,14 @@ fn new_agents_have_their_own_routes_and_answers() {
     assert_eq!(mimo["reply"], "once");
     let zcode: Value = serde_json::from_str(&permission_response(Agent::Zcode, Some(Decision::Deny), Some("不行"), None)).unwrap();
     assert_eq!(zcode["hookSpecificOutput"]["decision"]["behavior"], "deny");
+    assert_eq!(route("/copilot/permission-request"), Some((Agent::Copilot, Kind::Permission)));
+    assert_eq!(serde_json::to_value(Agent::Copilot).unwrap(), json!("copilot"));
+    let copilot = |decision| serde_json::from_str::<Value>(&permission_response(Agent::Copilot, decision, Some("不行"), None)).unwrap();
+    assert_eq!(copilot(Some(Decision::Allow)), json!({"behavior": "allow"}));
+    assert_eq!(copilot(Some(Decision::Deny)), json!({"behavior": "deny", "message": "不行", "interrupt": false}));
+    assert_eq!(copilot(None), json!({}));
+    let camel = HookInput::parse_for(Agent::Copilot, br#"{"sessionId":"c1","toolName":"bash","toolArgs":{"command":"ls"}}"#).unwrap();
+    assert_eq!((camel.session_id.as_str(), camel.tool_name.as_str(), &camel.tool_input), ("c1", "bash", &json!({"command": "ls"})));
     for (agent, id) in [(Agent::Trae, "trae"), (Agent::TraeCn, "traeCn")] {
         assert_eq!(route(&format!("/{id}/pre-tool-use")), Some((agent, Kind::Permission)));
         assert_eq!(serde_json::to_value(agent).unwrap(), json!(id));

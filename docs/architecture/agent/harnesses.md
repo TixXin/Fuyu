@@ -1,6 +1,6 @@
 # 各家 AI 代理的接入现状
 
-岛接了十五家 AI 代理（harness）：Claude Code、Codex、WorkBuddy（国内版和 WorkBuddy AI）、Antigravity、DeepSeek Harness（DSH）、opencode，钩子照抄 Claude Code 的三家 Qoder、CodeBuddy Code、Qwen Code（B48），TRAE、TRAE CN（B29），ZCode（B53）、Kimi Code（B52）、MiMo Code（B54）和 Grok CLI（B57）。后九家各有一节在文末。这张表记每家有哪些形态、数据在哪，以及每项功能做到哪一步。改了哪家的哪一项，就在同一个提交里改这里。接入新的一家或给已有功能扩一家，按 `.claude/skills/fuyu-agent-harness/SKILL.md` 的清单走。
+岛接了十七家 AI 代理（harness）：Claude Code、Codex、WorkBuddy（国内版和 WorkBuddy AI）、Antigravity、DeepSeek Harness（DSH）、opencode，钩子照抄 Claude Code 的三家 Qoder、CodeBuddy Code、Qwen Code（B48），TRAE、TRAE CN（B29），ZCode（B53）、Kimi Code（B52）、MiMo Code（B54）、Grok CLI（B57）、GitHub Copilot CLI（B55）和 Droid（B58）。后十一家各有一节在文末。这张表记每家有哪些形态、数据在哪，以及每项功能做到哪一步。改了哪家的哪一项，就在同一个提交里改这里。接入新的一家或给已有功能扩一家，按 `.claude/skills/fuyu-agent-harness/SKILL.md` 的清单走。
 
 核对日期：2026-11-15（按 `main` 上的代码）。各家的调研和来源见 [agent-harnesses.md](../../research/agent-harnesses.md)，用户可见的行为见 [agent-status-hooks.md](../../features/agent-status-hooks.md)。标「未实测」的项都列在实测清单 #179 里。
 
@@ -62,7 +62,7 @@ Claude Code 和 Codex 是最早接的，很多地方曾把「代理」写死成�
 
 Qoder（含 Qoder CN）、CodeBuddy Code、Qwen Code 的钩子格式和会话目录都照抄 Claude Code，所以走一个声明层 `claude_compat.rs`：每家的模块（`qoder.rs`、`codebuddy.rs`、`qwen.rs`）只填一份 `Compat`（id、名字、配置目录和环境变量、会话子目录、记录格式、全局提示词文件、等授权用哪个事件），钩子安装和状态、会话列表、标题、等你、审批都由声明层做。再接一家这样的 CLI：写一份声明，再在 `HARNESSES`、三份钩子脚本、审批的 `Agent` 枚举和前端 `AGENTS` 里各加一项。三家都还没在真机上跑过（#179）。
 
-B56 起声明多了三项，给钩子格式相近、外壳不同的几家用（Grok CLI 已用上，Copilot CLI、Droid 在做）：
+B56 起声明多了三项，给钩子格式相近、外壳不同的几家用（Grok CLI、Copilot CLI、Droid 用上了）：
 
 - `hooks_file`：钩子写进家目录下的哪个文件。上面三家是 `settings.json`；钩子目录是合并语义的（Grok 的 `~/.grok/hooks/`）就写岛自己的一个文件。
 - `reply`：岛上审批的回包。`PermissionRequest`（`hookSpecificOutput.decision.behavior`，上面三家）、`PreToolUse(工具)`（审批钩子挂 `PreToolUse`、只匹配这些工具，回 `permissionDecision`）、`Behavior`（Copilot 的 `{behavior, message, interrupt}`）、`None`（不装审批钩子，只做等你）。
@@ -179,3 +179,32 @@ xAI 的 Grok CLI，id `grok`。代码在 `grok.rs`，钩子走兼容层（`hooks
 | 回复标记 | `~/.grok/rules/fuyu-island.md`（Grok 总会读 `rules/*.md`） |
 | 点会话跳过去 | ◐ 通用的终端窗口匹配 |
 | 判断会话已退出、用量环、SSH 远程、cc-connect | ✗ / ✗（只有 `/usage` 页，没有本地文件或公开接口）/ ✗（有 Linux CLI）/ — |
+
+## GitHub Copilot CLI（B55）
+
+GitHub 的 Copilot CLI，id `copilot`。代码在 `copilot.rs`（会话）和 `copilot_hooks.rs`（钩子安装器）；审批回包走兼容层的 `Behavior`。本机没装，没在真机上跑过（#179）。
+
+| 层 | Copilot CLI |
+|---|---|
+| 配置 | `~/.copilot`（`COPILOT_HOME` 优先）；钩子整份写 `~/.copilot/hooks/fuyu-island.json`（`version: 1`，每项 `bash` / `powershell` / `timeoutSec`），别的钩子文件不动；外壳和 Claude Code 差得多，安装器是自己的 |
+| 会话 | `~/.copilot/session-state/<id>/events.jsonl` 和 `workspace.yaml`；标题是 `workspace.yaml` 的 `summary`（第三方读法，官方没写） |
+| 状态灯 | ✓ `agent-copilot-running.flag` |
+| 等你 | 只靠钩子（落盘文件里没有等待事件） |
+| 岛上审批 | ✓ `/copilot/permission-request`，回 `{behavior, message, interrupt}`；`sessionId`、`toolName`、`toolArgs` 登记成别名，也用来在 Claude Code 路由上认出 Copilot 的请求 |
+| 点会话跳过去 | ◐ 通用的终端窗口匹配 |
+| 用量环、SSH 远程、cc-connect | ✗ / ✗ / — |
+
+## Droid（B58）
+
+Factory 的 Droid CLI，id `droid`。代码在 `droid.rs`（会话）和 `droid_hooks.rs`（钩子）。本机没装，没在真机上跑过（#179）。
+
+| 层 | Droid |
+|---|---|
+| 配置 | `~/.factory`（`FACTORY_HOME` 优先）；有 `~/.factory/hooks.json` 时写进它（事件在顶层），没有时写 `~/.factory/settings.json` 的 `hooks` 键（Droid 有 `hooks.json` 时不读 `settings.json` 的钩子）；用户自己的钩子保留；装完要重开 Droid 会话 |
+| 钩子 | Claude Code 的分组格式；Droid 没有 PermissionRequest 和 StopFailure |
+| 会话 | `~/.factory/sessions/<项目>/<uuid>.jsonl` 和旁边的 `<uuid>.settings.json`（模型、推理强度）；目录以 `session_start.cwd` 为准；`visibility: hidden` 的注入提问不当标题 |
+| 状态灯 | ✓ `agent-droid-running.flag` |
+| 等你 | Notification 的 `permission_prompt` |
+| 岛上审批 | ✗ 没有 PermissionRequest 事件 |
+| 点会话跳过去 | ◐ 通用的终端窗口匹配 |
+| 用量环、SSH 远程、cc-connect | ✗ / ✗ / — |
