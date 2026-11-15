@@ -1,4 +1,4 @@
-import { hostname } from "node:os";
+import { thisMachine } from "../machine-name.mjs";
 import { failedChecks, github as realGitHub, landBranchName } from "./github.mjs";
 import { INTEGRATION_BRANCH, tryGit } from "./settings.mjs";
 import { sync } from "./sync.mjs";
@@ -53,11 +53,17 @@ export async function waitFor(number, options = {}) {
   return 1;
 }
 
-export async function waitCommand(args = [], { github = realGitHub, host = hostname() } = {}) {
+export function latestLandPr(github, { host, aliases = [] }, branch) {
+  const login = github.login();
+  const found = [host, ...aliases].map((name) => github.findPr(landBranchName(login, name, branch), "all")).filter(Boolean);
+  return found.sort((a, b) => b.number - a.number)[0] ?? null;
+}
+
+export async function waitCommand(args = [], { github = realGitHub, machine = thisMachine() } = {}) {
   let number = Number(args.find((arg) => /^\d+$/.test(arg)));
   if (!number) {
     const branch = tryGit(["rev-parse", "--abbrev-ref", "HEAD"]).out.trim();
-    const pr = github.findPr(landBranchName(github.login(), host, branch), "all");
+    const pr = latestLandPr(github, machine, branch);
     if (!pr) {
       console.error(`[wait] ${branch} 没有对应的 PR。先 pnpm mq:land --yes，或者 pnpm mq:wait <PR 号>。`);
       return 1;

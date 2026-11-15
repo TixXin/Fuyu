@@ -7,10 +7,11 @@ import {
   CLOSED_STATUSES, OPEN_STATUSES, addLine, claimState, claimText, claimed, filesInScope, formatTask, isTaskId,
   scopeOverlap, splitList, unclaimed,
 } from "./taskFile.mjs";
+import { thisMachine } from "../machine-name.mjs";
 import { dirtyLines, dirtyReport, readDirty } from "./taskDirty.mjs";
 import { hostReminders, landingProblems } from "./taskLanding.mjs";
 import {
-  checkTasks, findTask, git, load, machineName, nowText, readAll, readGroups, save, staleOf, taskOnMain, taskPath, todayText, tryGit,
+  checkTasks, findTask, git, load, nowText, readAll, readGroups, save, staleOf, taskOnMain, taskPath, todayText, tryGit,
 } from "./taskRepo.mjs";
 
 export { checkTasks } from "./taskRepo.mjs";
@@ -51,7 +52,7 @@ function sessionName(options) {
 }
 
 function me(options) {
-  return { owner: sessionName(options), host: machineName() };
+  return { owner: sessionName(options), ...thisMachine() };
 }
 
 function claimOf(root, task) {
@@ -65,7 +66,7 @@ async function claim(root, options, added = []) {
   if (!added.length) fetchMain();
   const owner = sessionName(options);
   if (!owner) throw new Error("认领要写会话名：--as <会话名>（ListAgents 里自己的名字）");
-  const self = { owner, host: machineName() };
+  const self = me(options);
   const scope = options.scope ? splitList(options.scope) : undefined;
   const all = readAll(root);
   const { byId, children } = index(all);
@@ -192,7 +193,7 @@ function show(root, id) {
 }
 
 function landing(root) {
-  for (const line of hostReminders(root, machineName())) console.warn(`[tasks] ${line}`);
+  for (const line of hostReminders(root, thisMachine())) console.warn(`[tasks] ${line}`);
   const problems = landingProblems(root);
   for (const problem of problems) console.error(`[tasks] ${problem}`);
   return problems.length ? 1 : 0;
