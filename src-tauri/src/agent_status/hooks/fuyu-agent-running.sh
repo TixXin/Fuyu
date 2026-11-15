@@ -1,7 +1,7 @@
 #!/bin/sh
 provider=$1
 case "$provider" in
-  codex|claudeCode|workbuddy|dsh) ;;
+  codex|claudeCode|workbuddy|dsh|qoder|codebuddy|qwen) ;;
   antigravity) case "$2" in start|running|stop) ;; *) exit 2 ;; esac ;;
   *) exit 2 ;;
 esac

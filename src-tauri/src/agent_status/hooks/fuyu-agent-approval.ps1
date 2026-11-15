@@ -2,6 +2,9 @@ $ErrorActionPreference = 'Stop'
 $routes = @{
     codex = 'codex/permission-request'
     workbuddy = 'workbuddy/permission-request'
+    qoder = 'qoder/permission-request'
+    codebuddy = 'codebuddy/permission-request'
+    qwen = 'qwen/permission-request'
     antigravity = 'antigravity/pre-tool-use'
     dsh = 'dsh/pre-tool-use'
 }

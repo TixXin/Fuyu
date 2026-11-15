@@ -33,9 +33,9 @@ description: >
    - 需要用户定的问题。
 
    计划在会话里讲给用户听，同时存一份文件，派出去的子会话也能读到。然后用 `wrap_up` 问「按这个计划开始派会话吗？」，停下来等用户回答。
-3. **用户同意后**：新任务先 `gh issue create`，再 `pnpm tasks add … --issue`，调好依赖，按阶段派子会话（每个都用 `use_worktree: false`）。必须串行的，等前一阶段完成后再派下一阶段。**同时最多 2 个要编译（cargo、tauri build、回归页）的子会话**，其余的排在后面一波；只读代码、写文档、做调研的不算。整批 `pnpm mq:land` 由主 agent 发起，子会话不各自 land（workflow.md「Rust 构建」里的排队规则，issue #448）。
-4. **每个子会话的简报都要带上这些约束**：在主工作区、本地 `main` 上工作；不 stash / reset / checkout 别人的文件；只提交自己的文件（`git commit -- <文件>`）；`pnpm task:claim <编号> --as <会话名> --scope ..`，带 issue 的任务认领后先在 issue 下回复；Rust 构建用共用的 `src-tauri/target/agents`，不另开编译目录、不在临时目录的仓库副本里编译，`cargo` / `tauri build` 写成 `pnpm heavy -- <命令>` 排队（`build:exe`、`verify`、`test:regression` 自带排队），不跑 `pnpm tauri dev`；长命令放后台；做完 `pnpm tasks done`，按 workflow.md 攒批 `pnpm mq:land`；PR 合入后在 issue 下回复改了什么、列出提交，再 `gh issue close`（只留「接手」那一条就停下是常见的漏项）。本机测不了的（Windows 专有的部分、真机），列进实测清单。
-5. **收口**：子会话的汇报不算数，主 agent 要看它的 diff 和提交；更新现状文档；用 `pnpm issue` 核对相关 issue 都已回复并关闭，漏的补上；最后向用户汇报每个任务的结果、提交、PR，以及还剩什么。
+3. **用户同意后**：新任务先 `gh issue create`，再 `pnpm tasks add … --issue`，调好依赖，按阶段派子会话（每个都用 `use_worktree: false`）。必须串行的，等前一阶段完成后再派下一阶段。**同时最多 2 个要编译（cargo、tauri build、回归页）的子会话**，其余的排在后面一波；全机器同时改代码的会话控制在 6 个左右（先看 ListAgents 里有多少在干活），只读代码、写文档、做调研的不算。整批 `pnpm mq:land` 由主 agent 发起，子会话不各自 land（workflow.md「Rust 构建」里的排队规则，issue #448）。
+4. **每个子会话的简报都要带上这些约束**：在主工作区、本地 `main` 上工作；不 stash / reset / checkout 别人的文件；只提交自己的文件（`git commit -- <文件>`）；`pnpm task:claim <编号> --as <会话名> --scope ..`，带 issue 的任务认领后先在 issue 下回复；Rust 构建用共用的 `src-tauri/target/agents`，不另开编译目录、不在临时目录的仓库副本里编译，`cargo` / `tauri build` 写成 `pnpm heavy -- <命令>` 排队（`build:exe`、`verify`、`test:regression` 自带排队），不跑 `pnpm tauri dev`；长命令放后台；热点文件（workflow.md「没提交的文件」）改完就单独提交，停下时 `pnpm tasks note` 写清哪些没提交的文件是自己的；做完 `pnpm tasks done`，按 workflow.md 攒批 `pnpm mq:land`；PR 合入后在 issue 下回复改了什么、列出提交，再 `gh issue close`（只留「接手」那一条就停下是常见的漏项）。本机测不了的（Windows 专有的部分、真机），列进实测清单。
+5. **收口**：子会话的汇报不算数，主 agent 要看它的 diff 和提交，再 `pnpm tasks dirty` 看它有没有留下没提交的文件；更新现状文档；用 `pnpm issue` 核对相关 issue 都已回复并关闭，漏的补上；最后向用户汇报每个任务的结果、提交、PR，以及还剩什么。
 
 ## 3. 用户怎么快速用
 

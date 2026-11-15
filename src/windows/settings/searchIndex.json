@@ -2238,6 +2238,39 @@
       }
     },
     {
+      "page": "agents",
+      "zh-CN": {
+        "group": "显示哪些 Agent",
+        "title": "Qoder"
+      },
+      "en": {
+        "group": "Agents shown",
+        "title": "Qoder"
+      }
+    },
+    {
+      "page": "agents",
+      "zh-CN": {
+        "group": "显示哪些 Agent",
+        "title": "CodeBuddy"
+      },
+      "en": {
+        "group": "Agents shown",
+        "title": "CodeBuddy"
+      }
+    },
+    {
+      "page": "agents",
+      "zh-CN": {
+        "group": "显示哪些 Agent",
+        "title": "Qwen Code"
+      },
+      "en": {
+        "group": "Agents shown",
+        "title": "Qwen Code"
+      }
+    },
+    {
       "page": "agentSessions",
       "zh-CN": {
         "group": "会话列表",
@@ -2878,6 +2911,39 @@
       "en": {
         "group": "AI Agent status light",
         "title": "DeepSeek Harness"
+      }
+    },
+    {
+      "page": "agentConnect",
+      "zh-CN": {
+        "group": "AI Agent 状态灯",
+        "title": "Qoder"
+      },
+      "en": {
+        "group": "AI Agent status light",
+        "title": "Qoder"
+      }
+    },
+    {
+      "page": "agentConnect",
+      "zh-CN": {
+        "group": "AI Agent 状态灯",
+        "title": "CodeBuddy"
+      },
+      "en": {
+        "group": "AI Agent status light",
+        "title": "CodeBuddy"
+      }
+    },
+    {
+      "page": "agentConnect",
+      "zh-CN": {
+        "group": "AI Agent 状态灯",
+        "title": "Qwen Code"
+      },
+      "en": {
+        "group": "AI Agent status light",
+        "title": "Qwen Code"
       }
     },
     {

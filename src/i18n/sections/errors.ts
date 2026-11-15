@@ -1,3 +1,5 @@
+import { isMacOS } from "../../lib/platform.ts";
+
 export type ErrorArgs = Record<string, string | number>;
 type Wording = string | ((args: ErrorArgs) => string);
 
@@ -10,6 +12,7 @@ export type ErrorCode =
   | "credential.read"
   | "credential.save"
   | "credential.delete"
+  | "credential.staleApp"
   | "file.read"
   | "file.write"
   | "file.create"
@@ -226,10 +229,11 @@ export const zhCN: ErrorsText = {
     "updater.busy": "正在检查、下载或安装更新，请稍后再试。",
     "updater.targetChanged": "可用的更新版本已变化，请确认新版本后再安装。",
     "platform.unsupported": "这个平台暂不支持该功能。",
-    "credential.open": "无法访问 Windows 凭据管理器。",
-    "credential.read": "无法从 Windows 凭据管理器读取。",
-    "credential.save": "无法保存到 Windows 凭据管理器。",
-    "credential.delete": "无法从 Windows 凭据管理器删除。",
+    "credential.open": isMacOS ? "无法访问钥匙串。" : "无法访问 Windows 凭据管理器。",
+    "credential.read": isMacOS ? "无法从钥匙串读取。" : "无法从 Windows 凭据管理器读取。",
+    "credential.save": isMacOS ? "无法保存到钥匙串。" : "无法保存到 Windows 凭据管理器。",
+    "credential.delete": isMacOS ? "无法从钥匙串删除。" : "无法从 Windows 凭据管理器删除。",
+    "credential.staleApp": "浮屿已经更新，请退出后重新打开。",
     "file.read": ({ path }) => `读不了 ${path}。`,
     "file.write": ({ path }) => `无法写入 ${path}。`,
     "file.create": ({ path }) => `无法创建 ${path}。`,
@@ -443,10 +447,11 @@ export const en: ErrorsText = {
     "updater.busy": "An update is being checked, downloaded or installed; try again in a moment.",
     "updater.targetChanged": "The available update changed; look at the new version before installing.",
     "platform.unsupported": "Not available on this platform yet.",
-    "credential.open": "Could not open Windows Credential Manager.",
-    "credential.read": "Could not read from Windows Credential Manager.",
-    "credential.save": "Could not save to Windows Credential Manager.",
-    "credential.delete": "Could not delete from Windows Credential Manager.",
+    "credential.open": isMacOS ? "Could not open the keychain." : "Could not open Windows Credential Manager.",
+    "credential.read": isMacOS ? "Could not read from the keychain." : "Could not read from Windows Credential Manager.",
+    "credential.save": isMacOS ? "Could not save to the keychain." : "Could not save to Windows Credential Manager.",
+    "credential.delete": isMacOS ? "Could not delete from the keychain." : "Could not delete from Windows Credential Manager.",
+    "credential.staleApp": "Fuyu has been updated; quit it and open it again.",
     "file.read": ({ path }) => `Could not read ${path}.`,
     "file.write": ({ path }) => `Could not write ${path}.`,
     "file.create": ({ path }) => `Could not create ${path}.`,

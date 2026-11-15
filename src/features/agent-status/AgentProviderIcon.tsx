@@ -1,8 +1,11 @@
 import antigravityIcon from "../../assets/brands/antigravity.png";
 import claudeCodeIcon from "../../assets/brands/claude-code.png";
+import codebuddyIcon from "../../assets/brands/codebuddy.svg";
 import codexIcon from "../../assets/brands/codex.webp";
 import dshIcon from "../../assets/brands/dsh.png";
 import opencodeIcon from "../../assets/brands/opencode.png";
+import qoderIcon from "../../assets/brands/qoder.png";
+import qwenIcon from "../../assets/brands/qwen.png";
 import workbuddyIcon from "../../assets/brands/workbuddy.svg";
 import type { SessionProvider } from "./api";
 import "./AgentProviderIcon.css";
@@ -14,6 +17,9 @@ const PROVIDER_ICONS: Record<SessionProvider, string> = {
   antigravity: antigravityIcon,
   dsh: dshIcon,
   opencode: opencodeIcon,
+  qoder: qoderIcon,
+  codebuddy: codebuddyIcon,
+  qwen: qwenIcon,
 };
 
 export function AgentProviderIcon({ provider, size = 16 }: { provider: SessionProvider; size?: number }) {

@@ -1,6 +1,6 @@
 param(
   [Parameter(Mandatory = $true, Position = 0)]
-  [ValidateSet("codex", "claudeCode", "workbuddy", "antigravity", "dsh")]
+  [ValidateSet("codex", "claudeCode", "workbuddy", "antigravity", "dsh", "qoder", "codebuddy", "qwen")]
   [string]$Provider,
 
   [Parameter(Mandatory = $true, Position = 1)]
@@ -76,7 +76,7 @@ function Get-DefaultStatusPath {
   return Join-Path $PSScriptRoot "agent-status.json"
 }
 
-$Providers = @("codex", "claudeCode", "workbuddy", "antigravity", "dsh")
+$Providers = @("codex", "claudeCode", "workbuddy", "antigravity", "dsh", "qoder", "codebuddy", "qwen")
 
 function Get-AgentMarkerNames {
   param(

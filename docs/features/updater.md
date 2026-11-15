@@ -193,7 +193,7 @@ Mac 上的 `~/.tauri/fuyu/release.json` 不写 `passwordFile`，改写 `keychain
    gh release download beta-channel --repo TixXin/fuyu --pattern latest.json --dir $env:TEMP\beta --clobber
    ```
 
-版本号和发布说明的提交照常 `pnpm mq:land --yes` 到 `main`（D25：只改了四处版本号和 Markdown 时，land 只核对版本号一致并跑任务检查，不跑 `pnpm check`），合入后在主工作区运行 `pnpm release`；别的会话在工作区里有没提交的改动也不用等它们，也不用开临时 worktree。land 推上去之后马上 `pnpm release:prebuild`，两边的 CI 构建和 PR 的检查同时跑；合入后 `pnpm release` 看到合并提交的代码树和预构建一样就直接用（F37，见 [release-ci.md](/docs/architecture/release-ci.md)「提速」）。发布前先 `pnpm mq:sync` 跟上 `origin/main`，并确认本地 `main` 上没有还没合入的提交（`pnpm mq:pending`）：发出去的要和 `main` 一致。
+版本号和发布说明在发版目录 `../Fuyu-release`（主仓库的 detached worktree，停在 `origin/main` 上）里改和提交，推到 `land/TixXin/release-<版本号>`、开 PR 并开启自动合并（D25：只改了四处版本号和 Markdown 时，CI 只核对版本号一致并跑任务检查）。这样本地 `main` 上没合入的提交和别的会话没提交的文件都不会混进这一版；要带上它们，先在主工作区 `pnpm mq:land --yes --wait`。推上去之后马上 `pnpm release:prebuild`，两边的 CI 构建和 PR 的检查同时跑；合入后在发版目录 checkout 合并提交、运行 `pnpm release`，它看到代码树和预构建一样就直接用（F37，见 [release-ci.md](/docs/architecture/release-ci.md)「提速」），装到本机的程序仍放在主工作区。具体步骤见 `.claude/skills/fuyu-release/SKILL.md`。
 
 ### Mac 版（G1.13）
 

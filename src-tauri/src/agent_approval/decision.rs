@@ -10,6 +10,9 @@ pub enum Agent {
     Antigravity,
     Dsh,
     Opencode,
+    Qoder,
+    Codebuddy,
+    Qwen,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
@@ -22,7 +25,17 @@ pub enum Kind {
 pub(super) const QUESTION_PATH: &str = "/claude/ask-user-question";
 pub(super) const ACTIVITY_PATH: &str = "/claude/activity";
 
-const AGENTS: [Agent; 6] = [Agent::ClaudeCode, Agent::Codex, Agent::Workbuddy, Agent::Antigravity, Agent::Dsh, Agent::Opencode];
+const AGENTS: [Agent; 9] = [
+    Agent::ClaudeCode,
+    Agent::Codex,
+    Agent::Workbuddy,
+    Agent::Antigravity,
+    Agent::Dsh,
+    Agent::Opencode,
+    Agent::Qoder,
+    Agent::Codebuddy,
+    Agent::Qwen,
+];
 
 pub(super) fn route(path: &str) -> Option<(Agent, Kind)> {
     if path == QUESTION_PATH {
@@ -43,6 +56,9 @@ impl Agent {
             Self::Antigravity => "/antigravity/pre-tool-use",
             Self::Dsh => "/dsh/pre-tool-use",
             Self::Opencode => "/opencode/permission",
+            Self::Qoder => "/qoder/permission-request",
+            Self::Codebuddy => "/codebuddy/permission-request",
+            Self::Qwen => "/qwen/permission-request",
         }
     }
 
@@ -54,6 +70,9 @@ impl Agent {
             Self::Antigravity => "antigravity",
             Self::Dsh => "dsh",
             Self::Opencode => "opencode",
+            Self::Qoder => "qoder",
+            Self::Codebuddy => "codebuddy",
+            Self::Qwen => "qwen",
         }
     }
 
@@ -196,7 +215,9 @@ pub(super) fn permission_response(
 ) -> String {
     let reason = || message.map(str::trim).filter(|text| !text.is_empty()).unwrap_or(DEFAULT_DENY_MESSAGE);
     match agent {
-        Agent::ClaudeCode | Agent::Codex | Agent::Workbuddy => hook_response(decision, message, suggestions),
+        Agent::ClaudeCode | Agent::Codex | Agent::Workbuddy | Agent::Qoder | Agent::Codebuddy | Agent::Qwen => {
+            hook_response(decision, message, suggestions)
+        }
         Agent::Antigravity => match decision {
             None | Some(Decision::Answer) => "{}".to_string(),
             Some(Decision::Allow | Decision::AllowAlways) => json!({ "decision": "allow" }).to_string(),

@@ -71,6 +71,7 @@
 | 前端静态检查 | `pnpm lint`（ESLint，配置见 `eslint.config.js`） |
 | 文件行数检查 | `pnpm check:size` |
 | 深色专用颜色检查 | `pnpm check:colors`（CSS 里写死的颜色要写成 `var(--变量, 原值)`；存量记在 `scripts/color-literal-allowlist.json`，只减不增，规则见 `src/AGENTS.md`） |
+| 密钥字段检查 | `pnpm check:secrets`（Rust 里带 `Serialize`、字段名像密钥、类型是字符串的字段要登记在 `scripts/secret-fields-allowlist.json` 并写理由，规则见 `src-tauri/AGENTS.md`） |
 | 回归页类型检查 | `pnpm check:tests-types`（`tests/tsconfig.json`，检查 `tests/regression/*.tsx`） |
 | 浏览器回归页 | `pnpm test:regression [页面名中的词]`（自带 Vite，用无头 Chrome / Edge 跑 `tests/regression/` 下全部回归页并汇总结果，约 20 秒；每页检查通过后再把页面切成浅色岛，文字对比度低于 3:1 就算失败；Mac 上找 /Applications 里的 Chrome、Edge 或 Chromium，都没有时设 `CHROME_PATH`） |
 | 岛屿实验台 | `pnpm lab`（打开 http://127.0.0.1:5199/，点按钮让正在跑的 `pnpm tauri dev` 的岛弹消息、展开收起、模拟刘海、发起 Agent 审批；不用开本地接口，见 `docs/features/island-lab.md`） |
@@ -166,12 +167,13 @@
   - **其他协作者（Write 权限，目前是 ShengLin1001）和外部贡献者**：在自己的分支上开发。协作者把分支直接推到本仓库（`TixXin/fuyu`）再提 PR；外部贡献者从本仓库 fork 后提 PR。本仓库 2026-11-10 起已脱离 `flyl1u/fly-island` 的 fork 网络，从上游 fork 出来的仓库不能再向本仓库提 PR。不要从上游同步或合并提交；CI 通过、分支跟上最新 `main` 后再合入。协作者可以自己合，也可以等仓库管理员按下面「外部 PR」的做法合。合入用 merge 或 squash，不改写别人已经推送的分支。
   - 开发期间不要求一直跟着 `origin/main`：开工前、land 前各同步一次（`pnpm mq:sync`）。合入那一刻都基于最新的 `main`，这一点由 land 的 merge 和规则集保证。
 - **所有会话都在主工作区、本地 `main` 上工作，攒成一批再经 PR 合入**（2026-11-13 起去掉了 lane，F32）。做法、取舍和排障见 [docs/architecture/workflow.md](docs/architecture/workflow.md)。必须遵守的是这几条：
-  - **不开 worktree、不切分支**：用户的 `pnpm tauri dev` 和别的会话都在这份代码上，切分支会冲掉别人正在改的文件。不要 `git stash`、`git reset`、`git checkout -- <文件>` 动别人的改动。
+  - **不开 worktree、不切分支**：用户的 `pnpm tauri dev` 和别的会话都在这份代码上，切分支会冲掉别人正在改的文件。不要 `git stash`、`git reset`、`git checkout -- <文件>` 动别人的改动。唯一的例外是发版目录 `../Fuyu-release`：一个 detached worktree，只用来发版，不在里面开发（见 `fuyu-release` skill）。
   - **只提交自己的文件**：`git add <具体文件>` 或 `git commit -- <文件>`，不用 `git add -A` / `git add .`。两个会话不同时改一个文件：认领时写 `--scope`，开工前可以 `pnpm tasks conflicts`。
   - **攒着提 PR，不是一个小改动一个 PR**。下面任一条满足时 `pnpm mq:land --yes --body <文件>`，不用问用户：一个任务做完；本地没推的提交有 5 个以上或最早的超过 6 小时（`pnpm mq:pending` 会说）；另一台机器或协作者要用、要发版、或用户说「推一下」。顺手的小修复、文案、文档先攒着。PR 标题用英文，正文用中文写在文件里，一批几样东西时按功能分节（格式见 workflow.md「PR 的标题和正文」）。land 之后在后台 `pnpm mq:wait`，PR 合入才算完成，冲突或检查没过都不算。别人提的 PR 不走 land，按 workflow.md「外部 PR」合入。
   - `main` 只经 land 或在 GitHub 上合入 PR 移动，不手动推送。
   - 代理的 Rust 构建用共用的 `src-tauri/target/agents`，不要用用户 dev 的 `debug`，也不另开 `agents-<名字>` 目录、不在临时目录的仓库副本里编译；代理不跑 `pnpm tauri dev`，用户自己跑。
   - **重任务排队**（2026-11-15 起，F40）：`cargo build/test/check/clippy`、`tauri build` 写成 `pnpm heavy -- <命令>`，全机器同时最多跑两个，其余的排队；`build:exe`、`verify`、`test:regression` 自带排队。PreToolUse 钩子（`scripts/heavy/gate.mjs`）会拦下没排队的。整批 `mq:land` 同一时间只跑一个，后来的会被告知提交会一起带上。主 agent 同时最多跑 2 个要编译的子会话。细则见 workflow.md「Rust 构建」。
+  - **没提交的文件**（2026-11-15 起，F41）：大家都会改的热点文件（`platforms.md`、`contracts.md`、`data-storage.md`、`Cargo.toml`、`lib.rs`、`searchIndex.json` 等，列表见 workflow.md「没提交的文件」）改完就单独提交，不挂到整个功能做完，否则本地 `main` 跟不上 `origin/main`。停下时 `pnpm tasks note` 写清哪些没提交的文件是自己的。`pnpm tasks dirty` 清点没提交的文件归谁。全机器同时改代码的会话控制在 6 个左右。
 - 修改前先查看 `git status --short`，不要覆盖用户或别的会话已有的改动。
 - 不要使用 `git reset --hard`、`git checkout --` 等破坏性命令，除非用户明确要求。
 - 工作区里与当前任务无关的修改（多半是别的会话正在改的），保留它们，只提交本次任务相关的文件。
@@ -195,3 +197,7 @@
 - **GitHub PR**（别人提的，由我们来合）：和 issue 一样，先检查、先回复看法和检查结果，再合入；要我们补的另建带 `--issue <PR 号>` 的任务；合完回复合并提交号，跟进任务做完再回复一次。顺序见 [docs/tasks/README.md](docs/tasks/README.md)「GitHub PR」。
 - **交接写在任务文件里，不靠消息**：停下来、换会话或做到一半时，`pnpm tasks note <编号> "<进度和下一步>"` 并随下一次提交带上。接手的会话先读任务文件的「交接」。
 - **会话之间的消息**（ListAgents / SendMessage）只用于告知和协商接口，不用来确认归属。对方正在跑的工具结束前读不到消息，所以构建、`cargo test` 这类长命令放到后台运行，让消息能及时读到；需要等某个会话时用 SendMessage 的 `notify_when_idle` 订阅它空闲，不要反复发消息询问。
+
+## Skill 编写规范
+
+自生成的 skill 只保留关键步骤、触发条件、核心命令和陷阱。不记录详细工作进度、一次性修复记录或面面俱到的细节。skill 是可复用的流程模板，不是工作日志。
