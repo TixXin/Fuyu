@@ -211,3 +211,4 @@
   - 现状：`fuyu-plugin build` 把 `HOST_EXTERNALS` 展开成 `name` 和 `name/*`，`@fuyu/plugin-base` 的子路径全留在外面，可宿主只共享不带子路径的那个，运行时找不到模块。内置插件也有同一个问题，由 E36.3.16 修。
   - 改法：E36.3.16（c1c36a31）在 protocol 导出 `HOST_SHARED_MODULES`（`@fuyu/plugin-base`、`fuyu-plugin`），由宿主默认共享。命令行已跟上（780e7530）：按名字精确匹配，名单外的包括子路径都打进包里；v3-cli.md 和 `docs/plugins/v3/cli.md` 一起改了。
 - `defineService` 和服务名规则已由 E36.3.17 挪走（0f4161dc、2051b1b3）：`defineService`、`isServiceDefinition` 等在 `@fuyu/plugin-base/services`，它进了 `HOST_SHARED_MODULES`，命令行按名字精确匹配，自动留在包外；`@fuyu/plugin-services` 转出同一个函数。服务名正则 `SERVICE_NAME` 只留一份，在 `@fuyu/plugin-manifest/names`。单开子路径是因为主入口用到 `node:crypto` 和 zlib，而 protocol 会进窗口。脚手架没用 `defineService`。
+- `TixXin/fuyu-plugins` 还没打开私密漏洞报告（Settings → Code security → Private vulnerability reporting），market-rules 的「还没定的」里记着。这是仓库设置，要用户自己点，收口时随汇报提给经理。
