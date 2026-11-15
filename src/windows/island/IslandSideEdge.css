@@ -4,10 +4,80 @@
 }
 
 .island--side.island--collapsed {
+  --island-shell-width: calc(44px * var(--island-scale, 1));
+  --island-shell-height: calc(var(--island-side-column-height, 48px) * var(--island-scale, 1));
+  --island-side-radius: min(var(--island-shell-radius-collapsed), calc(22px * var(--island-scale, 1)));
+  cursor: pointer;
+}
+
+.island--side.island--collapsed.island--tucked {
   --island-shell-width: calc(12px * var(--island-scale, 1));
   --island-shell-height: calc(72px * var(--island-scale, 1));
   --island-side-radius: calc(6px * var(--island-scale, 1));
-  cursor: pointer;
+}
+
+.island.island--side::before,
+.island.island--side::after {
+  top: calc(-1 * var(--island-top-fillet));
+  bottom: auto;
+  width: var(--island-top-fillet);
+  height: var(--island-top-fillet);
+  opacity: min(1, var(--island-top-fillet-size, 8));
+  -webkit-mask: none;
+  mask: none;
+}
+
+.island.island--side::after {
+  top: 100%;
+}
+
+.island.island--side-left::before,
+.island.island--side-left::after {
+  left: 0;
+  right: auto;
+}
+
+.island.island--side-right::before,
+.island.island--side-right::after {
+  left: auto;
+  right: 0;
+}
+
+.island.island--side-left::before {
+  background: radial-gradient(circle var(--island-top-fillet) at 100% 0, transparent calc(var(--island-top-fillet) - 0.6px), var(--island-fill, var(--island-background-color)) var(--island-top-fillet));
+}
+
+.island.island--side-left::after {
+  background: radial-gradient(circle var(--island-top-fillet) at 100% 100%, transparent calc(var(--island-top-fillet) - 0.6px), var(--island-fill, var(--island-background-color)) var(--island-top-fillet));
+}
+
+.island.island--side-right::before {
+  background: radial-gradient(circle var(--island-top-fillet) at 0 0, transparent calc(var(--island-top-fillet) - 0.6px), var(--island-fill, var(--island-background-color)) var(--island-top-fillet));
+}
+
+.island.island--side-right::after {
+  background: radial-gradient(circle var(--island-top-fillet) at 0 100%, transparent calc(var(--island-top-fillet) - 0.6px), var(--island-fill, var(--island-background-color)) var(--island-top-fillet));
+}
+
+:root[data-island-edge="left"] .message-banner {
+  top: 0;
+  left: calc(44px * var(--island-scale, 1) + 8px);
+  transform: none;
+  animation-name: message-banner-side;
+}
+
+:root[data-island-edge="right"] .message-banner {
+  top: 0;
+  left: auto;
+  right: calc(44px * var(--island-scale, 1) + 8px);
+  transform: none;
+  animation-name: message-banner-side;
+}
+
+@keyframes message-banner-side {
+  from {
+    opacity: 0;
+  }
 }
 
 .island.island--side-left {
@@ -46,7 +116,8 @@
   transition: opacity var(--island-motion-layer, 120ms) ease var(--island-motion-collapsed-delay, 140ms);
 }
 
-.island--expanded .island__side-handle {
+.island--expanded .island__side-handle,
+.island--side:not(.island--tucked) .island__side-handle {
   pointer-events: none;
   opacity: 0;
   transition-delay: 0s;

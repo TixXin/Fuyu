@@ -157,7 +157,7 @@ export function IslandApp() {
     hasMessagePreview: showsMessage,
     hasPermissionPrompt: permissionPrompts.current !== null || screenshotCard.current !== null,
     hasTranslationPeek: Boolean(translationPeek),
-    holdTuck: side !== null || holdsTuck(settings, {
+    holdTuck: holdsTuck(settings, {
       todoInProgress: activeTodoId !== null && todos.some((todo) => todo.id === activeTodoId && !todo.completed),
       agentWaiting: agentSessions.some((session) => session.phase === "waiting"),
       musicPlaying: media.mediaState.playbackStatus === "playing",
@@ -304,7 +304,7 @@ export function IslandApp() {
         nativeGlassState={nativeGlassState}
         isTucked={isTucked}
         isDetached={isPositionDetached || settings.marginY > 0}
-        side={side}
+        side={side} sideCover={settings.sideMusicCover}
         showTitle={settings.showTitle}
         showCollapsedText={barText}
         collapsedTaskTitle={collapsedTaskTitle}
