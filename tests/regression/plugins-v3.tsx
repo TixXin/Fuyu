@@ -20,8 +20,18 @@ let memoryReply: { pid: number; bytes: number; measure: "private-working-set" | 
 
 let safeReply: { mode: "third-party" | "minimal"; cause: "variable" | "shift" | "failures"; failures: number } | null = { mode: "third-party", cause: "failures", failures: 2 };
 let leaveCalls = 0;
+const catalog = (await import("../../src/features/builtins.json")).default as { plugins: { id: string; kind: "builtin" | "essential" }[] };
+let builtins = catalog.plugins.map(({ id, kind }) => ({ id, kind, enabled: id !== "clipboard", background: [] as { name: string; registered: boolean; running: boolean }[] }));
+const switchCalls: { id: string; enabled: boolean }[] = [];
 
-mockIPC((command) => {
+mockIPC((command, payload) => {
+  if (command === "get_builtin_plugins") return builtins;
+  if (command === "set_builtin_plugin_enabled") {
+    const { id, enabled } = payload as { id: string; enabled: boolean };
+    switchCalls.push({ id, enabled });
+    builtins = builtins.map((plugin) => (plugin.id === id ? { ...plugin, enabled } : plugin));
+    return builtins;
+  }
   if (command === "get_plugin_host_memory") return memoryReply;
   if (command === "exit_plugin_safe_mode") return (leaveCalls += 1, true);
   if (command === "get_plugin_host_connection") return { enabled: true, port: 1, token: "t", generation: 1, safeMode: safeReply };
@@ -32,6 +42,7 @@ mockIPC((command) => {
 const { SettingsSidebar } = await import("../../src/windows/settings/SettingsSidebar");
 await import("../../src/windows/settings/slots/categories");
 const { PluginsV3SettingsPage } = await import("../../src/windows/settings/PluginsV3SettingsPage");
+const { windowSlots } = await import("../../src/features/plugin-kernel/slots");
 
 const text = TRANSLATIONS[locale].settings.pluginsV3;
 const usage = (more: Partial<NonNullable<PluginStatusV3["usage"]>> = {}) => ({ cpuMs: 0, calls: 0, applyMs: 0.4, timers: 0, listeners: 0, services: 0, clients: 0, errors: 0, ...more });
@@ -84,6 +95,19 @@ try {
   await settle();
 
   check(document.querySelector(".settings-sidebar__item[data-category='pluginsV3']"), "With the v3 switch on, the sidebar lists the Plugins (v3) page");
+  const builtinRow = (id: string) => page.querySelector<HTMLElement>(`.plugins-v3__builtin[data-builtin='${id}']`);
+  const builtinSwitch = (id: string) => builtinRow(id)?.querySelector<HTMLInputElement>("input");
+  check(page.querySelectorAll(".plugins-v3__builtin").length === 22 && catalog.plugins.every(({ id }) => builtinRow(id)?.textContent?.includes(text.builtinNames[id as keyof typeof text.builtinNames])), "The page lists all 22 built-in plugins by name, before the host has answered");
+  check(builtinRow("clipboard")?.dataset.enabled === "false" && builtinSwitch("clipboard")?.checked === false && builtinSwitch("timer")?.checked === true, "Each switch shows what plugins.yml says");
+  check(builtinSwitch("updater")?.disabled && builtinRow("updater")!.textContent!.includes(text.essentialNote), "The updater is essential: its switch cannot be turned off");
+  check(windowSlots("settings").disabledOwners().join() === "clipboard" && windowSlots("island").disabledOwners().join() === "clipboard", "Both windows hide the slot items of a switched-off plugin");
+  await act(async () => builtinSwitch("timer")!.click());
+  await settle();
+  check(switchCalls[switchCalls.length - 1]?.id === "timer" && switchCalls[switchCalls.length - 1]?.enabled === false && builtinSwitch("timer")?.checked === false, "Switching a plugin off asks Rust and shows the new state");
+  check(windowSlots("island").disabledOwners().sort().join() === "clipboard,timer", "and its slot items drop out");
+  await act(async () => builtinSwitch("timer")!.click());
+  await settle();
+  check(builtinSwitch("timer")?.checked === true && windowSlots("island").disabledOwners().join() === "clipboard", "Switching it back on brings them back");
   check(page.querySelector("[data-connection='connecting']")?.textContent === text.connection.connecting, "Before the host answers the page says it is connecting");
   check(page.textContent?.includes(text.waitingHost), "and that plugins show up once it is connected");
 

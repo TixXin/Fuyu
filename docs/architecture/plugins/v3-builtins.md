@@ -24,6 +24,7 @@
 | `kind` | `builtin`（默认）或 `essential`。安全模式按它拦（[边界](v3-boundary.md)「安全模式」） |
 | `root` | 插件的根目录，相对清单所在目录。界面文件的地址、开发版的热重载都按它算 |
 | `host` | 宿主入口，相对 `root` |
+| `background` | 可选（2026-11-15 起，E36.3.23）：这个插件在 Rust 里登记的后台的名字。`[]` 是没有后台；不写是还没迁完，开关表不检查。宿主不读它 |
 
 - 路径只能是用 `/` 分隔、不带 `..` 的相对路径；解析成真实路径后 `root` 必须在清单目录里、`host` 必须在 `root` 里，文件要存在。不满足、`format` 不对、id 重复时宿主起不来（`fatal`）：清单随程序发布，坏了就是程序的 bug，不该悄悄少几个功能。
 - 实现：`packages/plugin-base/src/host/builtins.mjs` 的 `readBuiltins`，测试 `packages/plugin-base/test/builtins.test.mjs`。
@@ -56,6 +57,15 @@ Rust 拉宿主时传 `--builtins`：开发版和 `build:exe` 是 `<仓库>/src/f
 - 运行时经加载器改条目（以后设置窗口的开关）时，include 照旧把差异写回文件：内置插件写回的只有 `id` 加改过的键，正好是上面这种开关条目。
 - **没带 `--builtins` 时清单是空的**，所有插件都是 `third-party`：`plugins.yml` 写 `kind: builtin` 或 `essential` 从来不算数。[边界](v3-boundary.md)「插件状态」里「`kind` 来自 `plugins.yml` 条目」那一句要改成「来自内置插件清单」，那一页由第 3 阶段主 agent 收尾时改。
 - 宿主的 `host.builtins()` 返回清单里的 `{ id, kind }`，给插件页列「全部内置插件」用（界面等插槽）。
+
+## 开关表（Rust 管开关，E36.3.23）
+
+内置插件的开关就是功能的开关（[计划](v3-phase3-plan.md)「关键设计」第 1、3 条），由 Rust 的 `plugin_kernel/builtins.rs` 管，和宿主开没开无关：
+
+- 清单在编译时读进 Rust（`include_str!`），启动时读 `plugins.yml` 里内置插件的 `disabled`；之后只经命令 `set_builtin_plugin_enabled` 写，写的格式就是上表「关掉内置的计时器」那样（`builtins_file.rs`，只改那一条，别的条目和注释不动）。宿主在跑时监视这个文件，Rust 写完它自己重读，不另发通知。
+- 有后台的模块在自己的 `init` 里调 `plugin_kernel::builtins::register(<插件 id>, <名字>, Arc<dyn Background>)`，`Background` 有 `start` / `stop` / `running`；名字要写进清单这个插件的 `background`。开关表在启动时和开关变化时调它们（锁外调，`start` 里可以再读开关）。`builtins::init` 在 `lib.rs` 的 setup 最前面，早于各模块的 `init`；之前登记的先记着，`init` 读完文件再起。
+- 窗口用 `get_builtin_plugins` 读、听 `builtin-plugins-changed`（`features/plugin-kernel/builtinSwitches.ts`、`useBuiltinPlugins.ts`）；岛和设置窗口的插槽注册表按它调 `setDisabledOwners`，关掉的插件拥有的项不出现。设置 → 插件（第 3 版）列出全部内置插件、能开关；这一页在开发版里总会出现，正式版要设 `FUYU_PLUGINS_V3=1`。
+- 通用测试：Rust 的 `builtins_tests.rs` 按清单逐个关、逐个开，核对登记的后台都停了、又起来了；`tests/unit/builtin-switches.test.mjs` 用 Rust 写的格式让宿主逐个关掉计时器和翻译再打开。
 
 ## 内置插件的宿主部分怎么写
 

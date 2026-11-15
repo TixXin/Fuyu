@@ -329,8 +329,465 @@
     <div id="page">
       <div class="plugins-v3">
         <p class="settings-footnote">
-          开发中：只在开发版设了 FUYU_PLUGINS_V3=1 时出现。
+          开发中：开发版里总会出现，正式版要设了 FUYU_PLUGINS_V3=1 才出现。
         </p>
+        <section class="settings-group">
+          <div class="settings-group__header">
+            <h2 class="settings-group__title">
+              内置插件
+            </h2>
+          </div>
+          <div class="settings-group__card">
+            <div class="plugins-v3__builtin" data-builtin="todos" data-enabled="true">
+              <div class="settings-row" data-search="off">
+                <div class="settings-row__main">
+                  <div class="settings-row__text">
+                    <label class="settings-row__title" for="_id1_">
+                      待办
+                    </label>
+                    <span class="settings-row__description">
+                      todos
+                    </span>
+                  </div>
+                  <div class="settings-row__control">
+                    <span class="settings-switch">
+                      <input checked="" id="_id1_" role="switch" type="checkbox">
+                      <span aria-hidden="true" class="settings-switch__track"></span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="plugins-v3__builtin" data-builtin="calendar" data-enabled="true">
+              <div class="settings-row" data-search="off">
+                <div class="settings-row__main">
+                  <div class="settings-row__text">
+                    <label class="settings-row__title" for="_id2_">
+                      日历
+                    </label>
+                    <span class="settings-row__description">
+                      calendar
+                    </span>
+                  </div>
+                  <div class="settings-row__control">
+                    <span class="settings-switch">
+                      <input checked="" id="_id2_" role="switch" type="checkbox">
+                      <span aria-hidden="true" class="settings-switch__track"></span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="plugins-v3__builtin" data-builtin="music" data-enabled="true">
+              <div class="settings-row" data-search="off">
+                <div class="settings-row__main">
+                  <div class="settings-row__text">
+                    <label class="settings-row__title" for="_id3_">
+                      音乐和歌词
+                    </label>
+                    <span class="settings-row__description">
+                      music
+                    </span>
+                  </div>
+                  <div class="settings-row__control">
+                    <span class="settings-switch">
+                      <input checked="" id="_id3_" role="switch" type="checkbox">
+                      <span aria-hidden="true" class="settings-switch__track"></span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="plugins-v3__builtin" data-builtin="clipboard" data-enabled="false">
+              <div class="settings-row" data-search="off">
+                <div class="settings-row__main">
+                  <div class="settings-row__text">
+                    <label class="settings-row__title" for="_id4_">
+                      剪贴板
+                    </label>
+                    <span class="settings-row__description">
+                      clipboard
+                    </span>
+                  </div>
+                  <div class="settings-row__control">
+                    <span class="settings-switch">
+                      <input id="_id4_" role="switch" type="checkbox">
+                      <span aria-hidden="true" class="settings-switch__track"></span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="plugins-v3__builtin" data-builtin="screenshot" data-enabled="true">
+              <div class="settings-row" data-search="off">
+                <div class="settings-row__main">
+                  <div class="settings-row__text">
+                    <label class="settings-row__title" for="_id5_">
+                      截图和录屏
+                    </label>
+                    <span class="settings-row__description">
+                      screenshot
+                    </span>
+                  </div>
+                  <div class="settings-row__control">
+                    <span class="settings-switch">
+                      <input checked="" id="_id5_" role="switch" type="checkbox">
+                      <span aria-hidden="true" class="settings-switch__track"></span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="plugins-v3__builtin" data-builtin="file-shelf" data-enabled="true">
+              <div class="settings-row" data-search="off">
+                <div class="settings-row__main">
+                  <div class="settings-row__text">
+                    <label class="settings-row__title" for="_id6_">
+                      文件中转
+                    </label>
+                    <span class="settings-row__description">
+                      file-shelf
+                    </span>
+                  </div>
+                  <div class="settings-row__control">
+                    <span class="settings-switch">
+                      <input checked="" id="_id6_" role="switch" type="checkbox">
+                      <span aria-hidden="true" class="settings-switch__track"></span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="plugins-v3__builtin" data-builtin="translation" data-enabled="true">
+              <div class="settings-row" data-search="off">
+                <div class="settings-row__main">
+                  <div class="settings-row__text">
+                    <label class="settings-row__title" for="_id7_">
+                      快捷翻译
+                    </label>
+                    <span class="settings-row__description">
+                      translation
+                    </span>
+                  </div>
+                  <div class="settings-row__control">
+                    <span class="settings-switch">
+                      <input checked="" id="_id7_" role="switch" type="checkbox">
+                      <span aria-hidden="true" class="settings-switch__track"></span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="plugins-v3__builtin" data-builtin="voice-input" data-enabled="true">
+              <div class="settings-row" data-search="off">
+                <div class="settings-row__main">
+                  <div class="settings-row__text">
+                    <label class="settings-row__title" for="_id8_">
+                      语音输入
+                    </label>
+                    <span class="settings-row__description">
+                      voice-input
+                    </span>
+                  </div>
+                  <div class="settings-row__control">
+                    <span class="settings-switch">
+                      <input checked="" id="_id8_" role="switch" type="checkbox">
+                      <span aria-hidden="true" class="settings-switch__track"></span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="plugins-v3__builtin" data-builtin="timer" data-enabled="true">
+              <div class="settings-row" data-search="off">
+                <div class="settings-row__main">
+                  <div class="settings-row__text">
+                    <label class="settings-row__title" for="_id9_">
+                      计时器
+                    </label>
+                    <span class="settings-row__description">
+                      timer
+                    </span>
+                  </div>
+                  <div class="settings-row__control">
+                    <span class="settings-switch">
+                      <input checked="" id="_id9_" role="switch" type="checkbox">
+                      <span aria-hidden="true" class="settings-switch__track"></span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="plugins-v3__builtin" data-builtin="agents" data-enabled="true">
+              <div class="settings-row" data-search="off">
+                <div class="settings-row__main">
+                  <div class="settings-row__text">
+                    <label class="settings-row__title" for="_id10_">
+                      AI 代理
+                    </label>
+                    <span class="settings-row__description">
+                      agents
+                    </span>
+                  </div>
+                  <div class="settings-row__control">
+                    <span class="settings-switch">
+                      <input checked="" id="_id10_" role="switch" type="checkbox">
+                      <span aria-hidden="true" class="settings-switch__track"></span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="plugins-v3__builtin" data-builtin="session-ring" data-enabled="true">
+              <div class="settings-row" data-search="off">
+                <div class="settings-row__main">
+                  <div class="settings-row__text">
+                    <label class="settings-row__title" for="_id11_">
+                      会话环
+                    </label>
+                    <span class="settings-row__description">
+                      session-ring
+                    </span>
+                  </div>
+                  <div class="settings-row__control">
+                    <span class="settings-switch">
+                      <input checked="" id="_id11_" role="switch" type="checkbox">
+                      <span aria-hidden="true" class="settings-switch__track"></span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="plugins-v3__builtin" data-builtin="claude-usage" data-enabled="true">
+              <div class="settings-row" data-search="off">
+                <div class="settings-row__main">
+                  <div class="settings-row__text">
+                    <label class="settings-row__title" for="_id12_">
+                      Claude 用量
+                    </label>
+                    <span class="settings-row__description">
+                      claude-usage
+                    </span>
+                  </div>
+                  <div class="settings-row__control">
+                    <span class="settings-switch">
+                      <input checked="" id="_id12_" role="switch" type="checkbox">
+                      <span aria-hidden="true" class="settings-switch__track"></span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="plugins-v3__builtin" data-builtin="cc-connect" data-enabled="true">
+              <div class="settings-row" data-search="off">
+                <div class="settings-row__main">
+                  <div class="settings-row__text">
+                    <label class="settings-row__title" for="_id13_">
+                      cc-connect 手机连接
+                    </label>
+                    <span class="settings-row__description">
+                      cc-connect
+                    </span>
+                  </div>
+                  <div class="settings-row__control">
+                    <span class="settings-switch">
+                      <input checked="" id="_id13_" role="switch" type="checkbox">
+                      <span aria-hidden="true" class="settings-switch__track"></span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="plugins-v3__builtin" data-builtin="ssh-tunnel" data-enabled="true">
+              <div class="settings-row" data-search="off">
+                <div class="settings-row__main">
+                  <div class="settings-row__text">
+                    <label class="settings-row__title" for="_id14_">
+                      SSH 代理隧道
+                    </label>
+                    <span class="settings-row__description">
+                      ssh-tunnel
+                    </span>
+                  </div>
+                  <div class="settings-row__control">
+                    <span class="settings-switch">
+                      <input checked="" id="_id14_" role="switch" type="checkbox">
+                      <span aria-hidden="true" class="settings-switch__track"></span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="plugins-v3__builtin" data-builtin="local-api" data-enabled="true">
+              <div class="settings-row" data-search="off">
+                <div class="settings-row__main">
+                  <div class="settings-row__text">
+                    <label class="settings-row__title" for="_id15_">
+                      本机接口
+                    </label>
+                    <span class="settings-row__description">
+                      local-api
+                    </span>
+                  </div>
+                  <div class="settings-row__control">
+                    <span class="settings-switch">
+                      <input checked="" id="_id15_" role="switch" type="checkbox">
+                      <span aria-hidden="true" class="settings-switch__track"></span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="plugins-v3__builtin" data-builtin="center-pattern" data-enabled="true">
+              <div class="settings-row" data-search="off">
+                <div class="settings-row__main">
+                  <div class="settings-row__text">
+                    <label class="settings-row__title" for="_id16_">
+                      中心图案
+                    </label>
+                    <span class="settings-row__description">
+                      center-pattern
+                    </span>
+                  </div>
+                  <div class="settings-row__control">
+                    <span class="settings-switch">
+                      <input checked="" id="_id16_" role="switch" type="checkbox">
+                      <span aria-hidden="true" class="settings-switch__track"></span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="plugins-v3__builtin" data-builtin="messages" data-enabled="true">
+              <div class="settings-row" data-search="off">
+                <div class="settings-row__main">
+                  <div class="settings-row__text">
+                    <label class="settings-row__title" for="_id17_">
+                      消息
+                    </label>
+                    <span class="settings-row__description">
+                      messages
+                    </span>
+                  </div>
+                  <div class="settings-row__control">
+                    <span class="settings-switch">
+                      <input checked="" id="_id17_" role="switch" type="checkbox">
+                      <span aria-hidden="true" class="settings-switch__track"></span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="plugins-v3__builtin" data-builtin="device-events" data-enabled="true">
+              <div class="settings-row" data-search="off">
+                <div class="settings-row__main">
+                  <div class="settings-row__text">
+                    <label class="settings-row__title" for="_id18_">
+                      设备提示
+                    </label>
+                    <span class="settings-row__description">
+                      device-events
+                    </span>
+                  </div>
+                  <div class="settings-row__control">
+                    <span class="settings-switch">
+                      <input checked="" id="_id18_" role="switch" type="checkbox">
+                      <span aria-hidden="true" class="settings-switch__track"></span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="plugins-v3__builtin" data-builtin="system-levels" data-enabled="true">
+              <div class="settings-row" data-search="off">
+                <div class="settings-row__main">
+                  <div class="settings-row__text">
+                    <label class="settings-row__title" for="_id19_">
+                      音量和亮度提示
+                    </label>
+                    <span class="settings-row__description">
+                      system-levels
+                    </span>
+                  </div>
+                  <div class="settings-row__control">
+                    <span class="settings-switch">
+                      <input checked="" id="_id19_" role="switch" type="checkbox">
+                      <span aria-hidden="true" class="settings-switch__track"></span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="plugins-v3__builtin" data-builtin="device-use" data-enabled="true">
+              <div class="settings-row" data-search="off">
+                <div class="settings-row__main">
+                  <div class="settings-row__text">
+                    <label class="settings-row__title" for="_id20_">
+                      摄像头和麦克风提示
+                    </label>
+                    <span class="settings-row__description">
+                      device-use
+                    </span>
+                  </div>
+                  <div class="settings-row__control">
+                    <span class="settings-switch">
+                      <input checked="" id="_id20_" role="switch" type="checkbox">
+                      <span aria-hidden="true" class="settings-switch__track"></span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="plugins-v3__builtin" data-builtin="theme-market" data-enabled="true">
+              <div class="settings-row" data-search="off">
+                <div class="settings-row__main">
+                  <div class="settings-row__text">
+                    <label class="settings-row__title" for="_id21_">
+                      主题市场
+                    </label>
+                    <span class="settings-row__description">
+                      theme-market
+                    </span>
+                  </div>
+                  <div class="settings-row__control">
+                    <span class="settings-switch">
+                      <input checked="" id="_id21_" role="switch" type="checkbox">
+                      <span aria-hidden="true" class="settings-switch__track"></span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="plugins-v3__builtin" data-builtin="updater" data-enabled="true">
+              <div class="settings-row" data-search="off">
+                <div class="settings-row__main">
+                  <div class="settings-row__text">
+                    <label class="settings-row__title" for="_id22_">
+                      自动更新
+                    </label>
+                    <span class="settings-row__description">
+                      updater · 浮屿必需，不能关
+                    </span>
+                  </div>
+                  <div class="settings-row__control">
+                    <span class="settings-switch">
+                      <input checked="" disabled="" id="_id22_" role="switch" type="checkbox">
+                      <span aria-hidden="true" class="settings-switch__track"></span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="settings-group__footer">
+            <p class="settings-footnote">
+              开关存在数据目录的 plugins-v3/plugins.yml，宿主没开也生效。
+              <button aria-expanded="false" class="settings-footnote__toggle" type="button">
+                了解更多
+              </button>
+            </p>
+          </div>
+        </section>
         <section class="settings-group">
           <div class="settings-group__header">
             <h2 class="settings-group__title">

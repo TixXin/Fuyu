@@ -258,3 +258,35 @@ test("an item that fails is reported with its slot and owner, and only that item
   assert.deepEqual(failures, [{ slot: "island.page/v1", id: "bad", owner: "hello", external: true, error: boom }]);
   assert.equal(elements[0].key, `${BUILTIN}:ok:${slots.items("island.page/v1")[0].seq}`);
 });
+
+test("items of a switched-off owner drop out of every view and come back when it is switched on", () => {
+  const slots = createSlots({ "island.page/v1": {}, "settings.section/v1": { groupBy: "category" } });
+  slots.add("island.page/v1", { id: "timer", order: 1, component: View }, "timer", { external: false });
+  slots.add("island.page/v1", { id: "todo", order: 2, component: View }, "todos", { external: false });
+  slots.add("settings.section/v1", { id: "sound", category: "timer", component: View }, "timer", { external: false });
+  const seen = [];
+  slots.subscribe((name) => seen.push(name));
+  slots.setDisabledOwners(["timer"]);
+  assert.deepEqual(ids(slots.items("island.page/v1")), ["todo"]);
+  assert.deepEqual(slots.items("settings.section/v1", "timer"), []);
+  assert.deepEqual(slots.disabledOwners(), ["timer"]);
+  assert.deepEqual(seen.sort(), ["island.page/v1", "settings.section/v1"]);
+  slots.setDisabledOwners(new Set(["timer"]));
+  assert.equal(seen.length, 2, "the same set again changes nothing");
+  slots.add("island.page/v1", { id: "late", component: View }, "timer", { external: false });
+  assert.deepEqual(ids(slots.items("island.page/v1")), ["todo"], "items added while the owner is off stay hidden");
+  slots.setDisabledOwners([]);
+  assert.deepEqual(ids(slots.items("island.page/v1")), ["late", "timer", "todo"]);
+  assert.equal(slots.items("settings.section/v1", "timer").length, 1);
+});
+
+test("switching off the owner of a replacement shows the item it replaced", () => {
+  const slots = createSlots({ "island.page/v1": {} });
+  slots.add("island.page/v1", { id: "music", component: View });
+  slots.add("island.page/v1", { id: "music", component: View, label: "theirs" }, "player");
+  slots.setDisabledOwners(["player"]);
+  const [item] = slots.items("island.page/v1");
+  assert.equal(item.owner, BUILTIN);
+  assert.equal(item.label, undefined);
+  assert.deepEqual(item.replaces, []);
+});
