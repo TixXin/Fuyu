@@ -60,8 +60,6 @@ mod qwen;
 mod trae;
 mod zcode;
 mod kimi_code;
-mod copilot;
-mod droid;
 mod kimi_hooks;
 mod mimo;
 
