@@ -8,6 +8,7 @@
 
 - 第 0 阶段做完：两个系统上前 3 项都成立，报告见 [v3-feasibility.md](../../investigations/v3-feasibility.md)；宿主用 Node，安装包不带 Node（决定 16）。报告「对方案的影响」已并入方案。
 - 第 1 阶段由会话「插件平台第 3 版基线和可行性验证」（tixxindemacbook-air）认领 E36.1（#291），步骤写在任务文件的「验收」里。
+- 自己试：`node scripts/plugins-v3/install-demo.mjs` 把演示插件装进开发版的插件目录，再用 `FUYU_PLUGINS_V3=1 pnpm tauri dev` 启动，展开岛屿后最上面有一行插件的问候和每秒加一的计数（宿主部分推过来的）。终端里 `[plugins-v3]` 开头的是宿主的状态。
 - 包和目录的名字定在 [流程](v3-workflow.md)「代码放哪」：Cordis 在 `vendor/cordis/`，基座的 TS 包是 `packages/plugin-base`，Rust 部分是 `src-tauri/crates/plugin-base`（和 `src-tauri` 同一个 Cargo 工作区）。
 - 做到第 4 步：开发版里设 `FUYU_PLUGINS_V3=1` 时，岛屿找到电脑上的 Node，拉起宿主，按 `plugins-v3/plugins.yml` 加载插件，宿主崩溃或卡死后自动重启。窗口还连不上宿主（第 5 步），对用户没有变化。
 
