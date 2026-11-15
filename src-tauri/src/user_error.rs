@@ -93,21 +93,89 @@ pub(crate) use unsupported_commands;
 
 pub(crate) mod credential {
     use super::UserError;
+    use std::fmt::{Debug, Display};
 
-    pub(crate) fn open(error: impl std::fmt::Display) -> UserError {
-        UserError::new("credential.open", "Could not open Windows Credential Manager.").detail(error)
+    const STORE: &str = if cfg!(target_os = "macos") { "the keychain" } else { "Windows Credential Manager" };
+    const STALE_APP_STATUSES: [i32; 2] = [100_002, -67_068];
+
+    pub(crate) fn open(error: impl Debug + Display) -> UserError {
+        failed("credential.open", format!("Could not open {STORE}."), error, cfg!(target_os = "macos"))
     }
 
-    pub(crate) fn read(error: impl std::fmt::Display) -> UserError {
-        UserError::new("credential.read", "Could not read from Windows Credential Manager.").detail(error)
+    pub(crate) fn read(error: impl Debug + Display) -> UserError {
+        failed("credential.read", format!("Could not read from {STORE}."), error, cfg!(target_os = "macos"))
     }
 
-    pub(crate) fn save(error: impl std::fmt::Display) -> UserError {
-        UserError::new("credential.save", "Could not save to Windows Credential Manager.").detail(error)
+    pub(crate) fn save(error: impl Debug + Display) -> UserError {
+        failed("credential.save", format!("Could not save to {STORE}."), error, cfg!(target_os = "macos"))
     }
 
-    pub(crate) fn delete(error: impl std::fmt::Display) -> UserError {
-        UserError::new("credential.delete", "Could not delete from Windows Credential Manager.").detail(error)
+    pub(crate) fn delete(error: impl Debug + Display) -> UserError {
+        failed("credential.delete", format!("Could not delete from {STORE}."), error, cfg!(target_os = "macos"))
+    }
+
+    fn failed(code: &'static str, message: String, error: impl Debug + Display, keychain: bool) -> UserError {
+        let status = keychain.then(|| os_status(&format!("{error:?}"))).flatten();
+        match status {
+            Some(status) if STALE_APP_STATUSES.contains(&status) => {
+                UserError::new("credential.staleApp", "Fuyu has been updated; quit it and open it again.").detail(error)
+            }
+            _ => UserError::new(code, message).detail(error),
+        }
+    }
+
+    fn os_status(debug: &str) -> Option<i32> {
+        let rest = &debug[debug.find("code: ")? + "code: ".len()..];
+        let end = rest.find(|c: char| c != '-' && !c.is_ascii_digit()).unwrap_or(rest.len());
+        rest[..end].parse().ok()
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::{failed, os_status};
+        use std::fmt;
+
+        struct KeychainError(i32);
+
+        impl fmt::Debug for KeychainError {
+            fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+                formatter.debug_struct("Error").field("code", &self.0).field("message", &"UNIX[No such file or directory]").finish()
+            }
+        }
+
+        impl fmt::Display for KeychainError {
+            fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+                formatter.write_str("UNIX[No such file or directory]")
+            }
+        }
+
+        impl std::error::Error for KeychainError {}
+
+        fn platform_failure(status: i32) -> keyring::Error {
+            keyring::Error::PlatformFailure(Box::new(KeychainError(status)))
+        }
+
+        #[test]
+        fn the_status_comes_out_of_the_keyring_error() {
+            assert_eq!(os_status(&format!("{:?}", platform_failure(100_002))), Some(100_002));
+            assert_eq!(os_status(&format!("{:?}", platform_failure(-67_068))), Some(-67_068));
+            assert_eq!(os_status("NoEntry"), None);
+        }
+
+        #[test]
+        fn a_replaced_app_bundle_asks_for_a_restart_on_the_mac() {
+            for status in [100_002, -67_068] {
+                let error = failed("credential.save", "Could not save.".into(), platform_failure(status), true);
+                assert_eq!(error.code(), "credential.staleApp");
+            }
+        }
+
+        #[test]
+        fn other_failures_keep_their_own_code() {
+            assert_eq!(failed("credential.save", "x".into(), platform_failure(-25_293), true).code(), "credential.save");
+            assert_eq!(failed("credential.read", "x".into(), platform_failure(100_002), false).code(), "credential.read");
+            assert_eq!(failed("credential.open", "x".into(), keyring::Error::NoEntry, true).code(), "credential.open");
+        }
     }
 }
 
