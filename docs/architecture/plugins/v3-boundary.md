@@ -144,11 +144,46 @@ Rust 每次拉起宿主（包括自动重启）都重新决定带不带 `--safe`
 
 ### 插件的界面文件
 
-插件的宿主部分用 `ctx.clients.add(<窗口名>, <文件的 URL>)` 登记它在某个窗口里的界面代码（插件停用时自动撤掉）。宿主把文件换成插件目录下的相对路径，路径解析成真实路径后不在插件目录里的拒绝（插件启动失败），版本是文件的大小加修改时间。窗口按 `fuyu-plugin://localhost/<路径>?v=<版本>` 加载：先用 `HEAD` 确认文件在、类型是 JavaScript，再 `import()`；版本变了就换地址重新加载，旧的先撤掉。插件的界面代码默认导出一个插件（函数，或带 `apply` 的对象），用 `ctx.slots.add(<插槽名>, { id, order, component })` 往插槽里放组件，插件停用时这些也自动撤掉。插件的两部分之间：宿主部分用 `ctx.clients.handle(<方法>, fn)` 登记给自己窗口调的方法、`ctx.clients.publish(<主题>, data)` 推消息；窗口部分用 `ctx.host.call(<方法>, params)` 调、`ctx.host.on(<主题>, fn)` 收。窗口部分只能调到、收到它自己那个插件的（按 `plugins.yml` 里的 id 对应），这些登记都跟着插件撤掉。示例在 `packages/plugin-base/examples/hello/`。插件代码里对 `react`、`react/jsx-runtime` 的引用要改写成 `../__shared/react.js` 这样的相对路径（第 0 阶段两个系统都验证过），由程序自带的转接模块提供同一份 React。
+插件的宿主部分用 `ctx.clients.add(<窗口名>, <文件的 URL>)` 登记它在某个窗口里的界面代码（插件停用时自动撤掉）。宿主把文件换成插件目录下的相对路径，路径解析成真实路径后不在插件目录里的拒绝（插件启动失败），版本是文件的大小加修改时间。窗口按 `fuyu-plugin://localhost/<路径>?v=<版本>` 加载：先用 `HEAD` 确认文件在、类型是 JavaScript，再 `import()`；版本变了就换地址重新加载，旧的先撤掉。插件的界面代码默认导出一个插件（函数，或带 `apply` 的对象），用 `ctx.slots.add(<插槽名>, { id, order, component, ...元数据 })` 往插槽里放组件（插槽和规则见下面「插槽」），插件停用时这些也自动撤掉。插件的两部分之间：宿主部分用 `ctx.clients.handle(<方法>, fn)` 登记给自己窗口调的方法、`ctx.clients.publish(<主题>, data)` 推消息；窗口部分用 `ctx.host.call(<方法>, params)` 调、`ctx.host.on(<主题>, fn)` 收。窗口部分只能调到、收到它自己那个插件的（按 `plugins.yml` 里的 id 对应），这些登记都跟着插件撤掉。示例在 `packages/plugin-base/examples/hello/`。插件代码里对 `react`、`react/jsx-runtime` 的引用要改写成 `../__shared/react.js` 这样的相对路径（第 0 阶段两个系统都验证过），由程序自带的转接模块提供同一份 React。
+
+### 插槽
+
+（2026-11-15 起，E36.2.3）岛和设置窗口里能放界面的位置。内置功能和第三方插件走同一套规则。
+
+- **名单和规则**是纯数据，在 `@fuyu/plugin-base/protocol` 的 `SLOTS`（第 5 阶段 `fuyu-plugin build` / `check` 离线检查用）。注册表在 `@fuyu/plugin-base/client/slots`（`createSlots`），不 import Cordis，窗口首屏不用加载内核。
+- **每个窗口一个注册表**，模块加载时同步建好（`src/features/plugin-kernel/slots.ts` 的 `windowSlots("island")`、`windowSlots("settings")`）。内置功能靠被替换组件文件里的副作用 import 同步注册，首帧就有；宿主启用并连上之后，加载器只往这个已有的注册表里加第三方项。宿主没启用时代码路径不变，只多一次同步建表。
+- **岛这边的类型**：`defineSlot<Props, Meta>(<插槽名>)` 给一个插槽绑上组件 props 和元数据的类型，元数据的类型在 `slots.ts`（`IslandPageMeta` 等）；渲染用 `SlotView`，要项的列表用 `useSlotEntries`。
+
+| 插槽 | 位置 | 种类 | 每插件上限 | 最多显示 | 元数据 |
+|---|---|---|---|---|---|
+| `island.page/v1` | 展开页 | list | 2 | 不限，页头圆点另有上限 | `icon`、`shortcutOrder`（Alt+数字的顺序）、`headerDot`（在页头出圆点）、`enabled(features)`、`fallback(features)`（这页关掉时回退到哪页） |
+| `island.header/v1` | 页头右侧的按钮 | list | 1 | 不限 | `enabled(features)` |
+| `island.collapsed/v1` | 收起条 | list | 2 | 不限，用户的「收起条布局」照旧覆盖 | `group`（`gauges`）、`width`、`hideable` |
+| `island.collapsed-center/v1` | 收起条的中心图案 | single | 1 | 1 | `width` |
+| `island.alert/v1` | 刘海提醒 | list | 1 | 窗口只显示排在最前、`active(sources)` 为真的一项 | `active(sources)`、`trailing`（右半边的组件） |
+| `island.dev/v1` | 第 1 阶段的开发插槽 | list | 1 | 3 | 无 |
+| `settings.category/v1` | 设置窗口的分类 | list | 2 | 不限 | `group`（侧栏分组）、`icon`、`tabs`（子页）、`available(...)`（平台是否支持）、`feature`（所属功能开关）、`aliases`（合并进来的旧分类名） |
+| `settings.section/v1` | 设置页里的分节 | list，按 `category` 分组 | 每个分类 4 | 不限 | `category` |
+
+| 规则 | 做法 |
+|---|---|
+| 名字 | `<窗口>.<位置>/v<N>`：第一段是窗口名，一个窗口只认自己的插槽；不带版本的定义报 `bad-name`。名字只加不改，规则做不兼容的修改时出 `/v2` |
+| 没声明的不生效 | 往没有的插槽（包括别的窗口的）注册报 `no-slot`：插件启动失败，窗口照常 |
+| 顺序 | `order` 从小到大，相同的按注册先后 |
+| 数量 | `list` 显示前 `max` 个（没写就是不限）；`single` 只显示排在最后的一个 |
+| 分组 | `groupBy` 的插槽（`settings.section/v1` 按 `category`）每项必须带这个字段，否则报 `bad-item`；每组分别排序、计数，窗口按组取 |
+| 每插件上限 | 只管第三方项：同一个插件在一个插槽里（分组的插槽是在一组里）最多 `perPlugin` 项，超了报 `too-many`。内置项不计 |
+| 替换 | 注册一个已有的 `id` 会盖住原来那项，`replaces` 按从下到上列出被盖住的拥有者；撤掉哪一项都只撤它自己，露出下面那项。没写 `order` 时沿用被替换项的位置。同一个拥有者再注册同一个 `id` 是换掉自己那项 |
+| 拥有者 | `owner` 默认 `builtin`；经宿主加载的插件按 `plugins.yml` 的 id，而且一律算第三方（`external`），项里自己写的 `owner`、`external`、`seq`、`replaces` 都不算数。第 3 阶段内置功能变成插件后改传插件的 id，关掉插件就撤掉它的界面 |
+| 元数据 | 项里除了 `id`、`order`、`component`，其余字段原样带给窗口，窗口据此排版（名单见上表） |
+| 渲染 | 内置项平铺，不加包裹层（`>` 选择器、`:first-child`、`gap` 都不受影响）；第三方项包 `.plugin-slot` 拿主题变量（见下一节）；每项一个错误边界加一个 `Suspense` |
+| 出错隔离 | 一项渲染出错只撤这一项，其他照常（内置项以前会让整个岛白屏）；`console.error` 和 `onError` 带插槽名、`id`、`owner`、是不是第三方 |
+
+**组件拿到的 props 在第 2 阶段是实验接口**：窗口把现有组件要的那包 props 整体传进去，只给内置项用，第三方插件在第 5 阶段之前不承诺；`island.dev/v1` 不传 props。
 
 ### 插槽的主题变量
 
-插件的组件放进插槽后，颜色、字体、圆角用插槽给的 CSS 变量，不写死颜色，也不用岛内部的变量名（`--text-1` 这些以后会改）。每个插槽外面包一层 `<div class="plugin-slot" data-slot="<插槽名>">`（`display: contents`，不占布局），在这一层按当前的岛主题（深色、浅色）给出下面这些变量。名单在 `@fuyu/plugin-base/protocol` 的 `SLOT_THEME`，岛这边的取值在 `src/features/plugin-kernel/PluginSlot.css`，单元测试 `tests/unit/plugin-slot-theme.test.mjs` 核对两边一致、示例插件只用这些。
+插件的组件放进插槽后，颜色、字体、圆角用插槽给的 CSS 变量，不写死颜色，也不用岛内部的变量名（`--text-1` 这些以后会改）。第三方的每一项外面包一层 `<div class="plugin-slot" data-slot="<插槽名>">`（`display: contents`，不占布局；内置项不包，2026-11-15 起，E36.2.3），在这一层按当前的岛主题（深色、浅色）给出下面这些变量。名单在 `@fuyu/plugin-base/protocol` 的 `SLOT_THEME`，岛这边的取值在 `src/features/plugin-kernel/PluginSlot.css`，单元测试 `tests/unit/plugin-slot-theme.test.mjs` 核对两边一致、示例插件只用这些。
 
 | 变量 | 用途 | 现在对应岛的 |
 |---|---|---|

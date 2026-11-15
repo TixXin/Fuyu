@@ -13,3 +13,20 @@ export declare const SHARED_MODULES: {
   readonly react: "__shared/react.js";
   readonly "react/jsx-runtime": "__shared/react-jsx-runtime.js";
 };
+export interface SlotDefinition {
+  readonly kind: "list" | "single";
+  readonly max?: number;
+  readonly perPlugin: number;
+  readonly groupBy?: string;
+  readonly meta: readonly string[];
+}
+export type SlotName =
+  | "island.page/v1"
+  | "island.header/v1"
+  | "island.collapsed/v1"
+  | "island.collapsed-center/v1"
+  | "island.alert/v1"
+  | "island.dev/v1"
+  | "settings.category/v1"
+  | "settings.section/v1";
+export declare const SLOTS: { readonly [Name in SlotName]: SlotDefinition };

@@ -134,6 +134,8 @@ Windows 的测法：同上面 Windows 的构建和身份；`Process.Start` 拉�
 | 2 | E36.2.11：设好 `FUYU_PLUGINS_V3=1`，按住 Shift 启动开发版，直到岛屿出现再松开：插件页宿主一栏写「安全模式 · 只停第三方插件」和「启动时按住了 Shift」，第三方插件标「被安全模式拦下」；点「退出安全模式」后宿主重启、插件回到运行中；不按 Shift 再启动一次是正常模式 | Windows | | |
 | 2 | 同上 | macOS | | |
 | 2 | E36.2.11：在 `plugins-v3/` 里放一个启动就 `process.exit(1)` 的插件（或让宿主起不来），宿主重启两次后第三次带 `--safe third-party`，插件页写「宿主连续 2 次没能跑满 60 秒」；`safe-mode.json` 里 `failures` 是 2；安全模式下跑满 60 秒后变回 0 | macOS | | |
+| 2 | E36.2.3：不设 `FUYU_PLUGINS_V3` 时岛和以前一样；设好 `FUYU_PLUGINS_V3=1` 后展开岛屿，演示插件那一行照常出现在最上面，深色、浅色岛都看得清，`plugins.yml` 写成 `[]` 后撤掉、改回去又出现 | Windows | | |
+| 2 | 同上 | macOS | | |
 
 ## 等你定的事
 
