@@ -20,7 +20,7 @@ node packages/plugin-review/src/cli.mjs <旧版本源码目录 | -> <新版本�
 | 敏感调用 | `child_process`、`vm`、`eval` / `new Function` / 字符串的 `setTimeout`、`process.binding`、非字面量的 `import()` / `require()`、主目录和系统环境变量里的路径、绝对路径、带 `..` 的路径、浮屿或别的插件的数据目录、运行时拼出来的网址 | 同一文件里比旧版多了就黄 |
 | 混淆迹象 | `_0x…` 变量名、`fromCharCode` 拼字符串、密集的 `\x` / `\u` 转义 | 红 |
 | | 超长行、大块 base64 / 十六进制、高熵长字符串 | 比旧版多了就黄 |
-| 文件 | `.node`、可执行程序（按扩展名和文件头） | 红 |
+| 文件 | `.node`、可执行程序和编译过的代码：按扩展名（和 `@fuyu/plugin-manifest` 拒收的一样，含 `.wasm`、`.jar`、`.class`）和文件头（MZ、ELF、Mach-O、WebAssembly、Java class，含 `META-INF/MANIFEST.MF` 或 `.class` 条目的 zip 算 jar） | 红 |
 | | 新的或改过的脚本、未知二进制文件，符号链接 | 黄 |
 | 清单 | `fuyu.experimental` 不为空 | 红 |
 | | `provides` / `replaces` / `network` 变化 | 黄 |

@@ -53,7 +53,7 @@ function fileChecks(previous, next, add) {
       const old = before?.files.get(file.path);
       const changed = !old || old.hash !== file.hash;
       if (file.kind === "native") add("red", "files", "带 Node 原生扩展（.node）", { file: path });
-      else if (file.kind === "executable") add("red", "files", "带可执行程序", { file: path, detail: `${file.size} B` });
+      else if (file.kind === "executable") add("red", "files", "带可执行程序或编译过的代码", { file: path, detail: `${file.label}，${file.size} B` });
       else if (file.kind === "script" && changed) add("yellow", "files", old ? "脚本文件有改动" : "新的脚本文件", { file: path });
       else if (file.kind === "binary" && changed) add("yellow", "files", old ? "二进制文件有改动" : "新的二进制文件", { file: path, detail: `${file.size} B` });
     }
@@ -194,7 +194,7 @@ export function compareVersions(previous, next) {
       manifest: { provides: facts.provides, replaces: facts.replaces, experimental: facts.experimental },
       files: lines.files,
       lines: { added: lines.added, removed: lines.removed, threshold: LINE_THRESHOLD },
-      binaries: [...next.tree.files.values()].filter((f) => f.kind !== "text").map((f) => ({ file: f.path, kind: f.kind, size: f.size })),
+      binaries: [...next.tree.files.values()].filter((f) => f.kind !== "text").map((f) => ({ file: f.path, kind: f.kind, ...(f.label ? { label: f.label } : {}), size: f.size })),
       built: Boolean(next.built),
     },
   };

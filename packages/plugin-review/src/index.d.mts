@@ -48,7 +48,7 @@ export interface Report {
     manifest: { provides: string[]; replaces: string[]; experimental: string[] };
     files: { added: string[]; removed: string[]; changed: string[] };
     lines: { added: number; removed: number; threshold: number };
-    binaries: { file: string; kind: string; size: number }[];
+    binaries: { file: string; kind: string; label?: string; size: number }[];
     built: boolean;
   };
 }
@@ -85,6 +85,7 @@ export declare function review(options: ReviewOptions): Report;
 export declare function compareVersions(previous: unknown, next: unknown): Report;
 export declare function scanVersion(dir: string, builtDir?: string | null): unknown;
 export declare function scanCode(text: string): CodeScan;
+export declare function executableKind(data: Uint8Array): "PE" | "ELF" | "Mach-O" | "Java class" | "WebAssembly" | "Java archive" | null;
 export declare function renderMarkdown(report: Report): string;
 export declare function parsePackageLock(text: string): Map<string, LockEntry>;
 export declare function parsePnpmLock(text: string): Map<string, LockEntry>;
