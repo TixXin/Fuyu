@@ -43,14 +43,14 @@
 
 | 方法 | 参数 | 说明 |
 |---|---|---|
-| `event` | `{ name, data }` | Rust 推给宿主的事件（`Supervisor::emit`）。插件用 `ctx.rust.on(名字, 监听器)` 收，挂在插件自己的 ctx 上，停用时自动撤掉；宿主没在跑时 `emit` 返回 `peer-gone` |
+| `event` | `{ name, data }` | Rust 推给宿主的事件（`Supervisor::emit`）。插件用 `ctx.rust.on(名字, 监听器)` 收；监听器记在宿主的 Rust 桥（`rust.mjs` 的 `RustBridge`）自己的表里，只交给经 `ctx.rust.on` 登记的监听器，不发到公共事件总线，`ctx.on("rust:…")` 收不到。登记是插件 ctx 上的一个 `ctx.effect`，插件停用时自动撤掉；监听器的耗时、出错和个数照常算进这个插件的 `cpuMs`、`errors`、`listeners`。宿主没在跑时 `emit` 返回 `peer-gone` |
 | `progress` | `{ id, data }` | 宿主发出的第 `id` 个调用的流式片段（见下面「流式」） |
 
 ### 宿主发给 Rust 的请求
 
 宿主里的插件用 `ctx.rust.call(方法, 参数, { timeoutMs?, onProgress? })`（`Context` 上的 `rust`，类型 `RustApi`）。方法名是点分的小驼峰（`app.version`），参数是一个 JSON 值，没有就是 `null`。
 
-**只有内置插件能用 `ctx.rust`**（2026-11-15 起，E36.3.18）：`call` 和 `on` 先沿插件的上下文找到它在宿主里的加载项，看宿主加载它时记下的来源（`sources.mjs` 的 `SOURCE`，插件自己报的不算），是 `builtin` 才放行。市场、手动安装、开发文件夹的插件，`plugins.yml` 里直接写文件的插件，以及不属于任何加载项的代码，一律回 `forbidden`（`data` 是 `{ plugin, source }`），它们经内置插件提供的服务用 Rust 的能力。同一个进程里没有真正的隔离，这是减损，不是沙箱（见 [v3-secrets.md](v3-secrets.md)）。
+**只有内置插件能用 `ctx.rust`**（2026-11-15 起，E36.3.18）：`call` 和 `on` 先沿插件的上下文找到它在宿主里的加载项，看宿主加载它时记下的来源（`sources.mjs` 的 `SOURCE`，插件自己报的不算），是 `builtin` 才放行。市场、手动安装、开发文件夹的插件，`plugins.yml` 里直接写文件的插件，以及不属于任何加载项的代码，一律回 `forbidden`（`data` 是 `{ plugin, source }`），它们经内置插件提供的服务用 Rust 的能力。Rust 的事件也只交给 `ctx.rust.on` 的监听器（见上表 `event`），第三方插件用 `ctx.on("rust:…")` 听不到：以后 Rust 推的系统事件（媒体、通知、热键）要经服务、按权限给第三方。同一个进程里没有真正的隔离，这是减损，不是沙箱（见 [v3-secrets.md](v3-secrets.md)）。
 
 Rust 的方法是标了 `#[plugin_base::host_service("<方法>")]` 的领域函数，`Serve::registered()` 读出全部（宏的写法见 [v3-services.md](v3-services.md)「Rust 那条路」，E36.3.4）。现在有：
 
@@ -115,7 +115,7 @@ Rust 怎么跑：
 | `cpuMs`、`calls` | 经内核登记的回调（`ctx.on` 的监听器、`ctx.setTimeout` / `ctx.setInterval` 的回调、`apply`）每次执行的同步部分计时，累加；嵌套时（一个插件的监听器里发事件、触发另一个插件的监听器）只算各自的那段 | **近似**：用的是墙上时间，不是线程 CPU 时间；`await` 之后的部分、插件自己建的定时器（`setTimeout` 而不是 `ctx.setTimeout`）、`ctx.effect` 里的代码都不算；死循环量不出来（宿主会被 Rust 的心跳判定卡死重启） |
 | `applyMs` | 最近一次 `apply` 的耗时；异步的 `apply` 算到它返回的 Promise 落定。还没跑过是 `null` | 准 |
 | `timers` | 还活着的受管定时器数 | 准 |
-| `listeners` | 它登记的事件监听器数（不含内核的 `internal/` 事件） | 准 |
+| `listeners` | 它登记的事件监听器数，含 `ctx.rust.on` 的（不含内核的 `internal/` 事件） | 准 |
 | `services` | 它提供的服务数 | 准，只数条目本身的 fiber，插件里再用 `ctx.plugin` 建的子插件提供的服务不算 |
 | `clients` | 它登记的界面文件数 | 准 |
 | `errors` | 这次宿主运行以来记到它名下的错误数：监听器、受管定时器、`apply` 里抛出的，以及按调用栈归到它的未捕获异常和没人接的 Promise 拒绝 | 归不到插件的不算 |

@@ -5,7 +5,6 @@ export const RUST_TIMEOUT_MS = 120_000;
 const FORBIDDEN = "forbidden";
 const RUST_SOURCE = "builtin";
 const NAME = /^[a-z][A-Za-z0-9-]*(\.[a-z][A-Za-z0-9-]*)*$/;
-const eventKey = (name) => `rust:${name}`;
 
 export function rustError(code, message, data) {
   return new RpcError(code, message, data);
@@ -40,14 +39,14 @@ function checkCaller(ctx, what) {
 }
 
 export class RustBridge {
-  constructor() {
+  constructor(usage = null) {
     this.rpc = null;
-    this.root = null;
+    this.usage = usage;
+    this.listeners = new Map();
   }
 
   install(ctx) {
     const bridge = this;
-    this.root = ctx;
     return ctx.reflect.accessor("rust", {
       get() {
         const caller = this;
@@ -64,9 +63,27 @@ export class RustBridge {
     rpc.handle("event", (params) => this.deliver(params));
   }
 
+  counts() {
+    const result = {};
+    for (const hooks of this.listeners.values()) {
+      for (const hook of hooks) result[hook.owner] = (result[hook.owner] ?? 0) + 1;
+    }
+    return result;
+  }
+
   deliver(params) {
-    if (!this.root || typeof params?.name !== "string" || !NAME.test(params.name)) return;
-    this.root.emit(eventKey(params.name), params.data ?? null);
+    if (typeof params?.name !== "string" || !NAME.test(params.name)) return;
+    const hooks = this.listeners.get(params.name);
+    if (!hooks) return;
+    const data = params.data ?? null;
+    for (const hook of [...hooks]) {
+      if (hook.removed) continue;
+      try {
+        hook.run(data);
+      } catch (error) {
+        hook.ctx.logger.error(error);
+      }
+    }
   }
 
   call(ctx, method, params, options = {}) {
@@ -87,6 +104,17 @@ export class RustBridge {
     checkCaller(ctx, `ctx.rust.on(${String(event)})`);
     checkName("event", event);
     if (typeof listener !== "function") throw rustError("bad-params", `ctx.rust.on(${event}) needs a listener`);
-    return ctx.on(eventKey(event), listener);
+    const owner = entryOf(ctx).options.id;
+    const run = this.usage ? this.usage.wrap(owner, listener) : listener;
+    return ctx.effect(() => {
+      const hook = { ctx, owner, run, removed: false };
+      const hooks = this.listeners.get(event) ?? new Set();
+      this.listeners.set(event, hooks.add(hook));
+      return () => {
+        hook.removed = true;
+        hooks.delete(hook);
+        if (!hooks.size && this.listeners.get(event) === hooks) this.listeners.delete(event);
+      };
+    }, `ctx.rust.on(${event})`);
   }
 }
