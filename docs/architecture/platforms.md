@@ -21,7 +21,7 @@ macOS 的计划和决定见 [macos-port-plan.md](macos-port-plan.md)，各功能
 
 ## 支持情况
 
-更新：2026-11-15（岛的拖动与贴顶、显示在哪块屏、屏幕变化重摆三行和底边、侧边的跟随说明按 G1.23、G1.24 改；AI 代理的几行按 B26–B33 改：WorkBuddy、Antigravity、DSH 的钩子和审批，DSH 的数据目录，SSH 远程，opencode；B34–B37、B46：opencode 1.x 插件、远程回复标记、远程 Antigravity 审批、WorkBuddy 在 Mac 上判断退出、Codex 的 sqlite 和 Claude 桌面 App 的会话）；2026-11-13（G1.2：Rust 端在 Mac 上能编译、clippy 与测试通过，`pnpm dev:lane` 能起窗口；功能都还没做，表里的 macOS 状态不变）。
+更新：2026-11-15（岛的拖动与贴顶、显示在哪块屏、屏幕变化重摆三行和底边、侧边的跟随说明按 G1.23、G1.24 改；AI 代理的几行按 B26–B33 改：WorkBuddy、Antigravity、DSH 的钩子和审批，DSH 的数据目录，SSH 远程，opencode；B34–B37、B46：opencode 1.x 插件、远程回复标记、远程 Antigravity 审批、WorkBuddy 在 Mac 上判断退出、Codex 的 sqlite 和 Claude 桌面 App 的会话；插件平台第 3 版一行补上第 1 阶段的真岛验收和第 2 阶段的插槽（E36.2））；2026-11-13（G1.2：Rust 端在 Mac 上能编译、clippy 与测试通过，`pnpm dev:lane` 能起窗口；功能都还没做，表里的 macOS 状态不变）。
 
 | 功能 | 模块 | Windows | macOS | macOS 的做法与权限 | 子任务 | 最后验证（macOS） |
 |---|---|---|---|---|---|---|
@@ -86,7 +86,7 @@ macOS 的计划和决定见 [macos-port-plan.md](macos-port-plan.md)，各功能
 | Claude 用量 | `claude_usage` | 已支持 | 开发中 | 本地日志的读取是通用代码。可选的「直接向 Anthropic 查询」在没有 `~/.claude/.credentials.json` 时读钥匙串里 Claude Code 存的 `Claude Code-credentials`（账户是当前用户名），第一次读时系统会问是否允许 | G1.7 | — |
 | 插件 | `plugin_host` | 已支持 | 部分支持 | 插件进程放进自己的进程组，停用、重启或岛退出时整组结束（`macos/job.rs`，`killpg`），内存和 CPU 按进程组统计（CPU 读 `PROC_PIDTASKINFO`，用 `mach_timebase_info` 换算），显示的内存减去 `node` / `pwsh` 空闲时的大小；岛崩溃时插件读 stdin 收到结束会自己退出。`node`、`pwsh` 依次在 PATH、`/opt/homebrew/bin`、`/usr/local/bin`、登录 shell 的 PATH（只取一次，3 秒超时）、nvm / fnm / volta / mise / asdf / nodenv 的默认目录里找（从 Finder 打开的应用拿不到终端的 PATH，G1.17）；`.ps1` 插件用 PowerShell 7，没装时设置和市场里给出安装链接；`.exe` 插件不能运行。清单新增可选的 `platforms`，不支持当前系统的插件在设置和市场里标出、不启动。插件快捷键（共用 `macos/hotkeys.rs`）和系统事件（锁屏、空闲、睡眠唤醒，轮询判断）可用。没有：插件的自定义网页视图（Windows 用独立的 WebView2 页面，Mac 上暂不支持，G1.15）：页面显示一行说明，市场标签和插件卡片上同样提示（G1.16）。市场索引带上清单的 `platforms`，已上架的版本在 fuyu-plugins 的提交文件里补（系统监控标为只支持 Windows）、cc-connect 和 SSH 隧道这两个内置插件 | G1.8、G1.16、G1.17 | — |
 | 插件的独立窗口（实验） | `plugin_host/windows`、`win32/plugin_window` | 已支持 | 不支持 | 实验接口 `windows`，只在开发模式下：插件用 `window.*` 建不经过 Tauri 的原生顶层窗口，里面是隔离的 WebView2 页面。Mac 上 `window.*` 返回 501，`initialize.experimentalApis` 里没有 `windows`；独立窗口在 Mac 上要换成 `NSPanel` 加 WKWebView，和 G1.15 一起看 | E34 | — |
-| 插件平台第 3 版（开发中，默认关） | `plugin_kernel`、`crates/plugin-base`、`packages/plugin-base` | 开发中 | 开发中 | 宿主是 Node 子进程，放进自己的进程组，岛退出或崩溃时整组结束；Node 先找电脑上 22.15 以上的，没有就下载 26.13.1（核对 SHA-256）。设 `FUYU_PLUGINS_V3=1` 才启动（开发版、正式版一样），安装包带上宿主和内置插件。第 1 阶段两个系统的测量都过了验收线（Windows 上宿主的 libuv 线程池设成 2），真岛验收还没做 | E36.1 | macOS 27.2，2026-11-15（测量，未做真岛验收） |
+| 插件平台第 3 版（开发中，默认关） | `plugin_kernel`、`crates/plugin-base`、`packages/plugin-base` | 开发中 | 开发中 | 宿主是 Node 子进程，放进自己的进程组，岛退出或崩溃时整组结束；Node 先找电脑上 22.15 以上的，没有就下载 26.13.1（核对 SHA-256）。设 `FUYU_PLUGINS_V3=1` 才启动（开发版、正式版一样），安装包带上宿主和内置插件。第 1 阶段两个系统的测量和真岛验收都过了（Windows 上宿主的 libuv 线程池设成 2）。第 2 阶段把岛和设置窗口的界面改成插槽，纯前端，两个系统一样，不设这个变量也生效；真岛验收还没看 | E36.1、E36.2 | macOS 27.2，2026-11-15（第 1 阶段测量和真岛验收） |
 | 本地 API、SSH 隧道、cc-connect | `local_api`、`ssh_tunnel`、`cc_connect` | 已支持 | 未开始 | 通用代码；系统代理读 SCDynamicStore | G1.2 | — |
 | 宠物 | `pets` | 已支持 | 未开始 | 通用代码 | G1.2 | — |
 | 刘海形态 | `island/notch.rs`、`macos/notch.rs` | 不支持（没有刘海） | 开发中 | 读 `NSScreen` 的 `safeAreaInsets` 和 `auxiliaryTop*Area`；设置 → 位置 → 菜单栏「压在菜单栏上（有刘海时贴合刘海）」（默认）；无刘海屏照常顶部正中；无需权限 | G1.11 | — |
