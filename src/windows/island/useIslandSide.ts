@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { isTauri } from "@tauri-apps/api/core";
 import { getIslandEdge, listenIslandEdge, type IslandEdge } from "./api.ts";
 
-export type IslandSide = Exclude<IslandEdge, "top">;
+export type IslandSide = Extract<IslandEdge, "left" | "right">;
 
 function sideOf(edge: IslandEdge | null): IslandSide | null {
   return edge === "left" || edge === "right" ? edge : null;

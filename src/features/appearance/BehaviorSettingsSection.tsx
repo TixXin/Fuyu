@@ -9,13 +9,17 @@ const LOCALE_OPTIONS = LOCALE_CODES.map((code) => ({ value: code, label: TRANSLA
 
 export function BehaviorSettingsSection({
   launchAtStartup,
+  trayIconVisible,
   locale,
   onLaunchAtStartupChange,
+  onTrayIconVisibleChange,
   onLocaleChange,
 }: {
   launchAtStartup: boolean;
+  trayIconVisible: boolean;
   locale: LocaleCode;
   onLaunchAtStartupChange: (enabled: boolean) => void;
+  onTrayIconVisibleChange: (visible: boolean) => void;
   onLocaleChange: (locale: LocaleCode) => void;
 }) {
   const t = useTranslation();
@@ -28,6 +32,12 @@ export function BehaviorSettingsSection({
         checked={launchAtStartup}
         disabled={devBuild}
         onChange={onLaunchAtStartupChange}
+      />
+      <SettingsToggleRow
+        title={isMacOS ? t.settings.layout.trayIconMac : t.settings.layout.trayIcon}
+        description={trayIconVisible ? undefined : isMacOS ? t.settings.layout.trayIconHiddenHintMac : t.settings.layout.trayIconHiddenHint}
+        checked={trayIconVisible}
+        onChange={onTrayIconVisibleChange}
       />
       <SettingsRow
         title={t.settings.language.label}

@@ -1,4 +1,5 @@
 pub(crate) mod banner_hit;
+pub(crate) mod bottom_edge;
 #[cfg_attr(target_os = "macos", path = "focus_macos.rs")]
 #[cfg_attr(not(any(windows, target_os = "macos")), path = "focus_unsupported.rs")]
 pub(crate) mod focus;
@@ -226,7 +227,7 @@ fn drag_island(window: WebviewWindow, current_state: IslandWindowState) -> Resul
         state.is_dragging = true;
         *state
     });
-    if current_state.side().is_none() {
+    if current_state.attached_edge == Some(state::Edge::Top) {
         top_edge::set_attached(&window, false);
     }
 
@@ -350,6 +351,7 @@ macro_rules! tauri_commands {
             crate::island::reset_island_position,
             crate::island::get_island_top_attachment,
             crate::island::get_island_edge,
+            crate::island::bottom_edge::set_island_edge,
             crate::island::notch::get_island_notch,
             crate::island::notch::set_island_notch_drop,
             crate::island::show_ready_island,

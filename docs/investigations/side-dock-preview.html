@@ -1,0 +1,547 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>侧边竖向岛预览</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 24px 32px 48px; background: #111214; color: #e8e8ea; font: 14px/1.6 "Segoe UI Variable Text", "Segoe UI", -apple-system, "PingFang SC", "Microsoft YaHei UI", sans-serif; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  h2 { font-size: 16px; margin: 28px 0 6px; }
+  p.note { color: #9a9aa0; margin: 0 0 12px; max-width: 1180px; }
+  ul.points { color: #c8c8cc; max-width: 1180px; padding-left: 20px; }
+  ul.points li { margin: 4px 0; }
+  kbd { background: #2a2b30; border: 1px solid #44454b; border-bottom-width: 2px; border-radius: 4px; padding: 0 6px; font: 12px/1.6 Consolas, monospace; }
+  code { background: #232428; padding: 1px 6px; border-radius: 4px; }
+  table { border-collapse: collapse; max-width: 1180px; margin: 6px 0 12px; }
+  th, td { border: 1px solid #2c2d32; padding: 6px 10px; text-align: left; vertical-align: top; color: #c8c8cc; }
+  th { background: #1b1c1f; color: #e8e8ea; font-weight: 600; }
+  .controls { display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: center; background: #1b1c1f; padding: 12px 16px; border-radius: 10px; margin: 10px 0; max-width: 1180px; }
+  .group { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .group > span { color: #9a9aa0; margin-right: 2px; }
+  button.seg { background: #2a2b30; color: #ddd; border: 1px solid #3a3b40; border-radius: 6px; padding: 2px 10px; font: inherit; cursor: pointer; }
+  button.seg.on { background: #3b4d74; border-color: #5a7ab8; color: #fff; }
+  button.act { background: #24304a; color: #cfe2ff; border: 1px solid #3a4f7a; border-radius: 6px; padding: 2px 10px; font: inherit; cursor: pointer; }
+  input[type=range] { width: 120px; }
+  .wrap { overflow-x: auto; max-width: 100%; }
+
+  .desk { --W: 1180px; position: relative; width: 1180px; height: 700px; border-radius: 12px; overflow: hidden; user-select: none; }
+  .desk.dark { background: radial-gradient(120% 140% at 20% 0%, #3b4d74 0%, #1d2233 45%, #0c0d12 100%); }
+  .desk.light { background: radial-gradient(120% 140% at 20% 0%, #f4f1ea 0%, #dfe6f0 55%, #c9d3e2 100%); }
+  .win { position: absolute; left: 300px; top: 90px; width: 580px; height: 400px; border-radius: 10px; background: #1e1f24ee; box-shadow: 0 20px 60px #0007; }
+  .desk.light .win { background: #ffffffee; box-shadow: 0 20px 60px #0002; }
+  .win::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 34px; border-bottom: 1px solid #ffffff10; }
+  .win i { position: absolute; left: 24px; height: 9px; border-radius: 5px; background: #ffffff18; }
+  .desk.light .win i { background: #0000000f; }
+  .taskbar { position: absolute; left: 0; right: 0; bottom: 0; height: 48px; background: #1c1d22e6; border-top: 1px solid #ffffff12; display: flex; align-items: center; justify-content: center; gap: 10px; }
+  .desk.light .taskbar { background: #eef0f4e6; border-top-color: #0000000d; }
+  .taskbar b { width: 30px; height: 30px; border-radius: 6px; background: #ffffff16; }
+  .desk.light .taskbar b { background: #0000000f; }
+  .status { position: absolute; left: 16px; bottom: 58px; right: 16px; font-size: 13px; color: #c8c8cc; background: #000a; padding: 6px 12px; border-radius: 8px; pointer-events: none; }
+  .desk.light .status { background: #fffc; color: #333; }
+  .edgezone { position: absolute; top: 0; bottom: 48px; width: 6px; z-index: 5; }
+  .edgezone.l { left: 0; } .edgezone.r { right: 0; }
+
+  .isl { --fill: #030303; --ink: 248, 246, 240; --accent: #74d6ff; --warn: #ffd166; --run: #3d8bff; --idle: #35e985;
+    --spring: cubic-bezier(0.34, 1.36, 0.5, 1); --ease: cubic-bezier(0.22, 1, 0.36, 1);
+    position: absolute; z-index: 10; background: var(--fill); color: rgba(var(--ink), .96); corner-shape: var(--shape);
+    transition: left 550ms var(--spring), width 550ms var(--spring), top 500ms var(--ease), height 500ms var(--ease), border-radius 450ms var(--ease), box-shadow 300ms;
+    touch-action: none; }
+  .desk.light .isl { --fill: #f2f2f5; --ink: 28, 28, 30; --accent: #0a7fd1; --warn: #b7791f; }
+  .isl.no-anim { transition: none; }
+  .desk.light .isl[data-mode=vertical], .desk.light .isl[data-mode=tucked], .desk.light .isl[data-mode=top] { box-shadow: 0 6px 22px #0000001f; }
+  .isl[data-mode=expanded], .isl[data-mode=free] { box-shadow: inset 0 0 0 1px rgba(var(--ink), .08), 0 14px 40px #0005; }
+  .desk.light .isl[data-mode=expanded], .desk.light .isl[data-mode=free] { box-shadow: inset 0 0 0 1px rgba(var(--ink), .1), 0 14px 40px #0002; }
+  .fil { position: absolute; width: var(--f); height: var(--f); pointer-events: none; opacity: 0; transition: opacity 300ms; }
+  .isl[data-docked] .fil { opacity: 1; }
+  .isl[data-docked=left] .fil.a { left: 0; top: calc(-1 * var(--f)); background: radial-gradient(circle var(--f) at 100% 0, transparent calc(var(--f) - .6px), var(--fill) var(--f)); }
+  .isl[data-docked=left] .fil.b { left: 0; bottom: calc(-1 * var(--f)); background: radial-gradient(circle var(--f) at 100% 100%, transparent calc(var(--f) - .6px), var(--fill) var(--f)); }
+  .isl[data-docked=right] .fil.a { right: 0; top: calc(-1 * var(--f)); background: radial-gradient(circle var(--f) at 0 0, transparent calc(var(--f) - .6px), var(--fill) var(--f)); }
+  .isl[data-docked=right] .fil.b { right: 0; bottom: calc(-1 * var(--f)); background: radial-gradient(circle var(--f) at 0 100%, transparent calc(var(--f) - .6px), var(--fill) var(--f)); }
+  .isl[data-docked=top] .fil.a { top: 0; left: calc(-1 * var(--f)); background: radial-gradient(circle var(--f) at 0 100%, transparent calc(var(--f) - .6px), var(--fill) var(--f)); }
+  .isl[data-docked=top] .fil.b { top: 0; right: calc(-1 * var(--f)); background: radial-gradient(circle var(--f) at 100% 100%, transparent calc(var(--f) - .6px), var(--fill) var(--f)); }
+
+  .layer { position: absolute; inset: 0; overflow: hidden; border-radius: inherit; corner-shape: var(--shape); opacity: 0; pointer-events: none; transition: opacity 120ms ease; }
+  .layer.on { opacity: 1; pointer-events: auto; transition: opacity 250ms ease 140ms; }
+  .vcol { display: flex; flex-direction: column; align-items: center; gap: calc(6px * var(--s)); padding: calc(10px * var(--s)) 0; }
+  .cell { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; width: 100%; min-height: calc(24px * var(--s)); position: relative; color: rgba(var(--ink), .68); cursor: pointer; }
+  .cell:hover { color: rgba(var(--ink), .96); }
+  .cell svg { width: calc(16px * var(--s)); height: calc(16px * var(--s)); }
+  .cell .num { font-size: calc(10.5px * var(--s)); line-height: 1.1; font-variant-numeric: tabular-nums; font-weight: 600; color: rgba(var(--ink), .96); }
+  .cell .dot { position: absolute; top: 1px; left: calc(50% + 5px * var(--s)); width: 6px; height: 6px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 2px var(--fill); }
+  .cell.hot { color: rgba(var(--ink), .96); }
+  .cell.hot::before { content: ""; position: absolute; inset: -2px 5px; border-radius: 10px; background: rgba(var(--ink), .1); }
+  .ring { display: grid; place-items: center; width: calc(20px * var(--s)); height: calc(20px * var(--s)); border-radius: 50%; border: 2px solid var(--c); color: rgba(var(--ink), .96); font: 600 calc(10px * var(--s))/1 "Segoe UI", sans-serif; }
+  .ring.big { width: calc(24px * var(--s)); height: calc(24px * var(--s)); }
+  .ring i { width: 6px; height: 6px; border-radius: 50%; background: var(--c); }
+  .ring.attn { animation: pulse 1.2s ease-in-out infinite; }
+  @keyframes pulse { 50% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--c) 30%, transparent); } }
+  .bars { display: flex; gap: 2px; align-items: flex-end; height: calc(14px * var(--s)); }
+  .bars b { width: 2.5px; border-radius: 2px; background: rgba(var(--ink), .9); animation: eq 900ms ease-in-out infinite; }
+  .bars b:nth-child(2) { animation-delay: -300ms; } .bars b:nth-child(3) { animation-delay: -600ms; } .bars b:nth-child(4) { animation-delay: -150ms; }
+  @keyframes eq { 0%, 100% { height: 30%; } 50% { height: 100%; } }
+  .cover { width: calc(40px * var(--s)); height: calc(40px * var(--s)); border-radius: calc(12px * var(--s)); corner-shape: var(--shape); background: linear-gradient(135deg, #f7b267, #f25f5c 50%, #5b5f97); position: relative; display: grid; place-items: end center; padding-bottom: 5px; flex: none; }
+  .cover .bars b { background: #fff; }
+  .more { font-size: calc(10px * var(--s)); color: rgba(var(--ink), .54); }
+  .usage { --p: 62; width: calc(18px * var(--s)); height: calc(18px * var(--s)); border-radius: 50%; background: conic-gradient(var(--accent) calc(var(--p) * 1%), rgba(var(--ink), .14) 0); -webkit-mask: radial-gradient(circle, transparent 52%, #000 54%); mask: radial-gradient(circle, transparent 52%, #000 54%); }
+
+  .tuck { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; }
+  .tuck .d { width: 6px; height: 6px; border-radius: 50%; background: var(--c); }
+  .tuck .u { width: 4px; height: 4px; border-radius: 50%; background: var(--accent); }
+  .tuck.strip .d { width: 2px; height: 60%; border-radius: 2px; }
+  .tuck.strip .u { display: none; }
+
+  .panel { position: absolute; top: 0; width: 560px; height: 420px; padding: 14px 20px; }
+  .isl[data-docked=right] .panel { right: 0; } .isl[data-docked=left] .panel { left: 0; }
+  .ptop { display: flex; align-items: center; gap: 4px; margin-bottom: 14px; }
+  .ptop span { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 9px; color: rgba(var(--ink), .54); }
+  .ptop span svg { width: 16px; height: 16px; }
+  .ptop span.cur { color: var(--accent); background: color-mix(in srgb, var(--accent) 16%, transparent); }
+  .ptop span.agent { color: var(--run); }
+  .ptop .sp { flex: 1; width: auto; }
+  .ptop span.r { border-radius: 50%; background: rgba(var(--ink), .08); color: rgba(var(--ink), .68); }
+  .ptitle { font-size: 15px; font-weight: 600; margin: 0 2px 10px; }
+  .prow { display: flex; align-items: center; gap: 10px; padding: 10px 4px; border-bottom: 1px solid rgba(var(--ink), .06); font-size: 13px; color: rgba(var(--ink), .96); }
+  .prow i { width: 15px; height: 15px; border-radius: 50%; border: 1.5px solid rgba(var(--ink), .42); flex: none; }
+  .prow em { margin-left: auto; font-style: normal; font-size: 12px; color: rgba(var(--ink), .54); }
+
+  .cap { display: flex; align-items: center; gap: 10px; padding: 0 16px; font-size: 13px; }
+  .cap .ring { flex: none; }
+  .cap .t { flex: 1; text-align: center; color: rgba(var(--ink), .68); white-space: nowrap; }
+
+  .bub { position: absolute; z-index: 9; overflow: hidden; background: var(--fill); color: rgba(var(--ink), .96); corner-shape: var(--shape);
+    --fill: #030303; --ink: 248, 246, 240; --accent: #74d6ff; --warn: #ffd166; --run: #3d8bff;
+    transition: width 550ms cubic-bezier(0.34, 1.36, 0.5, 1), opacity 200ms; box-shadow: 0 10px 30px #0005; }
+  .desk.light .bub { --fill: #f2f2f5; --ink: 28, 28, 30; --accent: #0a7fd1; --warn: #b7791f; box-shadow: 0 10px 30px #0002, inset 0 0 0 1px #0000000d; }
+  .bub.joined { box-shadow: none; overflow: visible; }
+  .bub .fil { opacity: 1; }
+  .bub .in { position: absolute; top: 0; height: 100%; display: flex; align-items: center; gap: 10px; padding: 0 14px; font-size: 13px; white-space: nowrap; opacity: 0; transition: opacity 250ms ease 120ms; }
+  .bub.on .in { opacity: 1; }
+  .bub[data-side=left] .in { left: 0; } .bub[data-side=right] .in { right: 0; }
+  .bub.joined .in { overflow: hidden; border-radius: inherit; }
+  .bub .in svg { width: 16px; height: 16px; flex: none; }
+  .bub .av { width: 22px; height: 22px; border-radius: 50%; background: linear-gradient(135deg, #12b7f5, #1d6fe0); flex: none; }
+  .bub .who { font-weight: 600; }
+  .bub .txt { color: rgba(var(--ink), .68); max-width: 170px; overflow: hidden; text-overflow: ellipsis; }
+  .bub .meter { width: 120px; height: 4px; border-radius: 2px; background: rgba(var(--ink), .14); position: relative; }
+  .bub .meter b { position: absolute; inset: 0 auto 0 0; width: 62%; border-radius: 2px; background: rgba(var(--ink), .9); }
+  .bub .pct { font-variant-numeric: tabular-nums; color: rgba(var(--ink), .68); }
+  .bub .ok { color: #34c759; } .bub .warn { color: var(--warn); }
+  .bub .ap { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; white-space: normal; }
+  .bub .ap .h { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+  .bub .ap code { background: rgba(var(--ink), .08); color: rgba(var(--ink), .82); font: 12px Consolas, monospace; padding: 2px 6px; border-radius: 6px; }
+  .bub .ap .btns { display: flex; gap: 6px; }
+  .bub .ap button { border: 0; border-radius: 999px; padding: 3px 12px; font: 600 12px inherit; cursor: pointer; background: rgba(var(--ink), .1); color: rgba(var(--ink), .96); }
+  .bub .ap button.y { background: var(--accent); color: #000; }
+  .desk.light .bub .ap button.y { color: #fff; }
+
+  .hint { position: absolute; z-index: 20; background: var(--hl, #74d6ff); border-radius: 2px; box-shadow: 0 0 8px var(--hl, #74d6ff); opacity: 0; transition: opacity 120ms; pointer-events: none; }
+  .desk.light .hint { --hl: #0a7fd1; }
+  .hint.on { opacity: 1; }
+  .ghost { position: absolute; z-index: 8; border: 1.5px dashed var(--hl, #74d6ff); border-radius: 18px; opacity: 0; pointer-events: none; transition: opacity 120ms; }
+  .desk.light .ghost { --hl: #0a7fd1; }
+  .ghost.on { opacity: .7; }
+  @media (prefers-reduced-motion: reduce) { .isl, .bub { transition: opacity 200ms; } }
+</style>
+</head>
+<body>
+<h1>侧边竖向岛预览（C54.1 第 3 步）</h1>
+<p class="note">岛吸在屏幕左右边时立起来，变成一条竖着排图标的窄岛；文字类内容从旁边往屏幕里弹出横向气泡；闲置后缩回把手；点开横版面板从侧边滑出。左右两个岛一起演示，下面的按钮同时作用于两个。配色、圆角、反向圆弧、动画曲线取自岛的真实参数（深色岛 <code>#030303</code>，浅色岛 <code>#f2f2f5</code>，主题色 <code>#74d6ff</code> / <code>#0a7fd1</code>，贴边圆角 8px，宽度 550ms 回弹，高度 500ms ease-out，内容只淡入淡出）。用 Chrome / Edge 139+ 打开才看得到方圆角。</p>
+
+<div class="controls">
+  <div class="group"><span>造型</span><button class="seg" data-k="shape" data-v="A">A 纯图标 36</button><button class="seg" data-k="shape" data-v="B">B 图标加数字 44</button><button class="seg" data-k="shape" data-v="C">C 带封面 56</button></div>
+  <div class="group"><span>岛</span><button class="seg" data-k="theme" data-v="dark">深色岛</button><button class="seg" data-k="theme" data-v="light">浅色岛</button></div>
+  <div class="group"><span>圆角</span><button class="seg" data-k="corner" data-v="squircle">方圆</button><button class="seg" data-k="corner" data-v="round">圆角</button></div>
+  <div class="group"><span>内容</span><button class="seg" data-k="content" data-v="few">只有 Agent</button><button class="seg" data-k="content" data-v="common">常见</button><button class="seg" data-k="content" data-v="all">全开（放不下）</button></div>
+  <div class="group"><span>放不下时</span><button class="seg" data-k="overflow" data-v="hide">不显示</button><button class="seg" data-k="overflow" data-v="count">底部 +N</button></div>
+</div>
+<div class="controls">
+  <div class="group"><span>状态</span><button class="act" data-do="vertical">竖向岛</button><button class="act" data-do="tuck">闲置收起</button><button class="act" data-do="expand">展开</button><button class="act" data-do="reset">复位</button></div>
+  <div class="group"><span>弹出</span><button class="act" data-pop="msg">消息预览</button><button class="act" data-pop="vol">音量</button><button class="act" data-pop="bri">亮度</button><button class="act" data-pop="dev">耳机连接</button><button class="act" data-pop="approve">Agent 审批</button></div>
+</div>
+<div class="controls">
+  <div class="group"><span>气泡</span><button class="seg" data-k="bubble" data-v="gap">离岛 8px</button><button class="seg" data-k="bubble" data-v="joined">连着岛长出来</button></div>
+  <div class="group"><span>收起成</span><button class="seg" data-k="tuckStyle" data-v="handle">把手 12×72</button><button class="seg" data-k="tuckStyle" data-v="strip">细条 5×56</button></div>
+  <div class="group"><span>面板对齐</span><button class="seg" data-k="align" data-v="center">对齐岛中线</button><button class="seg" data-k="align" data-v="top">对齐岛顶</button></div>
+  <div class="group"><span>展开方式</span><button class="seg" data-k="trigger" data-v="click">点击</button><button class="seg" data-k="trigger" data-v="hover">悬停 300ms</button></div>
+  <div class="group"><span>沿边位置</span><input type="range" id="along" min="0" max="100" value="30" /></div>
+  <div class="group"><span>折叠岛大小</span><input type="range" id="scale" min="80" max="140" value="100" /></div>
+  <div class="group"><label><input type="checkbox" id="alt" /> 模拟按住 <kbd>Alt</kbd></label></div>
+</div>
+
+<div class="wrap">
+<div class="desk dark" id="desk">
+  <div class="win"><i style="top:60px;width:300px"></i><i style="top:84px;width:420px"></i><i style="top:108px;width:360px"></i><i style="top:150px;width:240px"></i><i style="top:174px;width:400px"></i></div>
+  <div class="edgezone l" data-side="left"></div><div class="edgezone r" data-side="right"></div>
+  <div class="hint" id="hint"></div><div class="ghost" id="ghost"></div>
+  <div class="status" id="status">点竖向岛上的图标或岛本身展开；按住 Alt（或勾上「模拟按住 Alt」）拖动：沿边上下移，往屏幕里拖超过 16px 变回横向岛。</div>
+  <div class="taskbar"><b></b><b></b><b></b><b></b><b></b></div>
+</div>
+</div>
+
+<h2>三种造型</h2>
+<table>
+  <tr><th></th><th>A 纯图标（36px）</th><th>B 图标加数字（44px）</th><th>C 带封面（56px）</th></tr>
+  <tr><td>竖着放什么</td><td>Agent 环、各图标；未读只是一个点，没有数字</td><td>Agent 环里写会话数，未读、待办、计时器图标下面一行小数字</td><td>同 B，音乐换成 40px 封面（播放时封面上有跳动的条）</td></tr>
+  <tr><td>好处</td><td>最窄，挡住的屏幕最少，和把手过渡最自然</td><td>不展开就知道「几条」，宽度还算克制</td><td>最好认、最像「岛」，听歌时一眼看到在放什么</td></tr>
+  <tr><td>代价</td><td>看不到数量，要点开或等气泡</td><td>计时器 24:59 已经到 44px 的上限，更长的数字要缩写</td><td>宽 56 遮挡明显；不放歌时封面位空出来，岛变窄还是留白要再定</td></tr>
+  <tr><td>放 9 项的高度</td><td>约 290px</td><td>约 360px</td><td>约 400px</td></tr>
+</table>
+<p class="note">推荐 <b>B</b>：侧边本来就是「不想被打扰」的位置，能不点开就看到数量最有用；36px 和 44px 的遮挡差别不大。音乐封面对听歌多的人有用，可以作为 B 的选项（「音乐显示封面」），不单独做一种造型。</p>
+
+<h2>交互约定（预览里能试的）</h2>
+<ul class="points">
+  <li><b>竖向岛</b>是侧边的收起态：贴边一侧直边，两个贴边角做反向圆弧（同「贴边圆角」），朝内一侧圆角；高度随内容，上限约 300px（随「折叠岛屿大小」缩放）。顺序 Agent → 未读消息 → 邮件 → 音乐 → 待办 → 计时器 → 用量 → 摄像头 / 麦克风 → 文件中转，放不下的从后往前不显示（切到「全开」看）。文字一律不竖排。</li>
+  <li><b>气泡</b>：消息预览、音量 / 亮度、设备提示、Agent 审批从对应图标那一行往屏幕里弹，横向、和岛同色；显示期间对应图标亮起一层浅底。审批气泡不自动消失，点允许 / 拒绝才收；其余按顶边的时长（消息 4 秒、设备 3 秒、音量 1.5 秒）。歌词不弹。</li>
+  <li><b>闲置收起</b>：竖向岛缩成把手（现在的 12×72）或更窄的细条；鼠标碰到那条边（左右最外 6px）、或来新消息时滑回竖向岛。收起时音量和设备提示直接丢掉，消息预览按「收起到边缘时，收到新消息自动露出」处理。</li>
+  <li><b>展开</b>：外壳从竖向岛长成 560×420 的横版面板，只动外壳，面板内容淡入（F14）。面板竖直方向对齐竖向岛，碰到屏幕上沿或任务栏就往里收（把「沿边位置」拉到最下试）。点面板外面收起回竖向岛。</li>
+  <li><b>Alt 拖动</b>：沿边上下移，记住 0–1 的位置；往屏幕里拖超过 16px，竖向岛变回横向胶囊跟着鼠标走。拖着胶囊靠近左、右、上边 16px 内时，那条边上出现主题色提示线和落点虚框，松手吸上去。</li>
+</ul>
+
+<h2>要你拍板的</h2>
+<ul class="points">
+  <li>造型：A / B / C（推荐 B，C 的封面做成 B 的一个开关）。</li>
+  <li>气泡：离岛 8px 的独立小卡，还是连着岛长出来（推荐连着，更像岛在伸手；独立卡片在浅色桌面上更清楚）。</li>
+  <li>闲置收起成什么：保留现在的 12×72 把手（有 Agent 色点和未读点），还是 5px 细条（推荐把手，细条在 4K 屏上太难碰）。</li>
+  <li>面板竖直对齐：对齐竖向岛的中线还是顶（推荐中线，岛在屏幕中间时面板上下都留空间）。</li>
+  <li>放不下时：直接不显示，还是最底下一个「+N」（推荐 +N，点它展开）。</li>
+</ul>
+
+<script>
+const S = { shape: "B", theme: "dark", corner: "squircle", content: "common", overflow: "count", bubble: "joined", tuckStyle: "handle", align: "center", trigger: "click" };
+const desk = document.getElementById("desk");
+const W = 1180, H = 700, TASK = 48, WORK = H - TASK, EDGE = 16;
+const P = (d) => `<path d="${d}"/>`;
+const ICON = {
+  msg: P("M7.9 20A9 9 0 1 0 4 16.1L2 22Z"),
+  mail: '<rect x="2" y="4" width="20" height="16" rx="2"/>' + P("m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"),
+  todo: '<rect x="3" y="5" width="6" height="6" rx="1"/>' + P("m3 17 2 2 4-4") + P("M13 6h8M13 12h8M13 18h8"),
+  timer: P("M10 2h4M12 14l3-3") + '<circle cx="12" cy="14" r="8"/>',
+  mic: P("M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z") + P("M19 10v2a7 7 0 0 1-14 0v-2M12 19v3"),
+  inbox: P("M22 12h-6l-2 3h-4l-2-3H2") + P("M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"),
+  vol: P("M11 4.7a.7.7 0 0 0-1.2-.5L6.4 7.6A1.4 1.4 0 0 1 5.4 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.4a1.4 1.4 0 0 1 1 .4l3.4 3.4a.7.7 0 0 0 1.2-.5z") + P("M16 9a5 5 0 0 1 0 6M19.4 18.4a9 9 0 0 0 0-12.8"),
+  sun: '<circle cx="12" cy="12" r="4"/>' + P("M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M6.3 17.7l-1.4 1.4M19.1 4.9l-1.4 1.4"),
+  head: P("M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3"),
+  bot: P("M12 8V4H8") + '<rect x="4" y="8" width="16" height="12" rx="2"/>' + P("M2 14h2M20 14h2M15 13v2M9 13v2"),
+  music: P("M9 18V5l12-2v13") + '<circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',
+  cal: '<rect x="3" y="4" width="18" height="18" rx="2"/>' + P("M16 2v4M8 2v4M3 10h18"),
+  clip: '<rect x="8" y="2" width="8" height="4" rx="1"/>' + P("M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2M12 11h4M12 16h4M8 11h.01M8 16h.01"),
+  gear: '<circle cx="12" cy="12" r="3"/>' + P("M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"),
+  shield: P("M20 13c0 5-3.5 7.5-7.7 9a1 1 0 0 1-.6 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.2-2.7a1.2 1.2 0 0 1 1.6 0C14.5 3.8 17 5 19 5a1 1 0 0 1 1 1z") + P("M12 8v4M12 16h.01"),
+};
+const svg = (n) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${ICON[n]}</svg>`;
+const bars = '<span class="bars"><b></b><b></b><b></b><b></b></span>';
+const SHAPES = { A: { w: 36, r: 18 }, B: { w: 44, r: 20 }, C: { w: 56, r: 22 } };
+const MAXH = 300;
+const CONTENT = {
+  few: ["agent"],
+  common: ["agent", "msg", "music", "todo"],
+  all: ["agent", "msg", "mail", "music", "todo", "timer", "usage", "device", "shelf"],
+};
+const LABEL = { agent: "Agent", msg: "未读消息", mail: "邮件", music: "音乐", todo: "待办", timer: "计时器", usage: "用量", device: "麦克风", shelf: "文件中转" };
+let scale = 1;
+let agentState = "running";
+
+function itemHtml(id, shape) {
+  const num = shape !== "A";
+  const c = agentState === "attention" ? "var(--warn)" : agentState === "running" ? "var(--run)" : "var(--idle)";
+  switch (id) {
+    case "agent": return { h: 24, html: `<div class="cell" data-item="agent"><span class="ring ${shape === "C" ? "big" : ""} ${agentState === "attention" ? "attn" : ""}" style="--c:${c}">${num ? "2" : "<i></i>"}</span></div>` };
+    case "msg": return num ? { h: 32, html: `<div class="cell" data-item="msg">${svg("msg")}<span class="num">3</span></div>` } : { h: 24, html: `<div class="cell" data-item="msg">${svg("msg")}<span class="dot"></span></div>` };
+    case "mail": return num ? { h: 32, html: `<div class="cell" data-item="mail">${svg("mail")}<span class="num">1</span></div>` } : { h: 24, html: `<div class="cell" data-item="mail">${svg("mail")}<span class="dot"></span></div>` };
+    case "music": return shape === "C" ? { h: 40, html: `<div class="cell" data-item="music"><span class="cover">${bars}</span></div>` } : { h: 24, html: `<div class="cell" data-item="music">${bars}</div>` };
+    case "todo": return num ? { h: 32, html: `<div class="cell" data-item="todo">${svg("todo")}<span class="num">5</span></div>` } : { h: 24, html: `<div class="cell" data-item="todo">${svg("todo")}</div>` };
+    case "timer": return num ? { h: 32, html: `<div class="cell" data-item="timer">${svg("timer")}<span class="num">24:59</span></div>` } : { h: 24, html: `<div class="cell" data-item="timer">${svg("timer")}</div>` };
+    case "usage": return num ? { h: 32, html: `<div class="cell" data-item="usage"><span class="usage"></span><span class="num">62</span></div>` } : { h: 24, html: `<div class="cell" data-item="usage"><span class="usage"></span></div>` };
+    case "device": return { h: 24, html: `<div class="cell" data-item="device" style="color:#34c759">${svg("mic")}</div>` };
+    case "shelf": return num ? { h: 32, html: `<div class="cell" data-item="shelf">${svg("inbox")}<span class="num">2</span></div>` } : { h: 24, html: `<div class="cell" data-item="shelf">${svg("inbox")}</div>` };
+  }
+}
+
+function layoutVertical() {
+  const ids = CONTENT[S.content];
+  const pad = 10, gap = 6;
+  let h = pad * 2, out = [], hidden = [];
+  for (const id of ids) {
+    const it = itemHtml(id, S.shape);
+    const add = (out.length ? gap : 0) + it.h;
+    const reserve = S.overflow === "count" && id !== ids[ids.length - 1] ? gap + 16 : 0;
+    if (hidden.length || (h + add + reserve) * scale > MAXH * scale && out.length) { hidden.push(id); continue; }
+    h += add; out.push(it.html);
+  }
+  if (hidden.length && S.overflow === "count") { out.push(`<div class="cell more" data-item="more">+${hidden.length}</div>`); h += gap + 16; }
+  return { h: Math.max(h, S.content === "few" ? 44 : 72) * scale, html: out.join(""), hidden };
+}
+
+class Island {
+  constructor(side) {
+    this.home = side; this.side = side; this.mode = "vertical"; this.along = 0.3; this.free = null;
+    this.el = document.createElement("div"); this.el.className = "isl";
+    this.el.innerHTML = '<div class="fil a"></div><div class="fil b"></div><div class="layer vert"></div><div class="layer tuck"></div><div class="layer pan"></div><div class="layer cap"></div>';
+    desk.appendChild(this.el);
+    this.bub = document.createElement("div"); this.bub.className = "bub"; this.bub.innerHTML = '<div class="fil a"></div><div class="fil b"></div><div class="in"></div>'; desk.appendChild(this.bub);
+    this.L = { vert: this.el.querySelector(".vert"), tuck: this.el.querySelector(".tuck"), pan: this.el.querySelector(".pan"), cap: this.el.querySelector(".cap") };
+    this.wire();
+  }
+  vsize() { const v = layoutVertical(); return { w: SHAPES[S.shape].w * scale, h: v.h, v }; }
+  rect() {
+    const f = 8 * scale;
+    if (this.mode === "free") return { x: this.free.x, y: this.free.y, w: 300, h: 38 };
+    if (this.mode === "top") return { x: this.free.x, y: 0, w: 300, h: 38 };
+    const vs = this.vsize();
+    const cy = f + this.along * (WORK - 2 * f - vs.h) + vs.h / 2;
+    if (this.mode === "tucked") {
+      const t = S.tuckStyle === "handle" ? { w: 12 * scale, h: 72 * scale } : { w: 5 * scale, h: 56 * scale };
+      return { x: this.side === "left" ? 0 : W - t.w, y: cy - t.h / 2, ...t };
+    }
+    if (this.mode === "expanded") {
+      const pw = 560, ph = 420;
+      let y = S.align === "center" ? cy - ph / 2 : cy - vs.h / 2;
+      y = Math.max(f, Math.min(WORK - ph - f, y));
+      return { x: this.side === "left" ? 0 : W - pw, y, w: pw, h: ph };
+    }
+    return { x: this.side === "left" ? 0 : W - vs.w, y: cy - vs.h / 2, w: vs.w, h: vs.h, v: vs.v };
+  }
+  render() {
+    const r = this.rect(), s = this.el.style;
+    s.left = r.x + "px"; s.top = r.y + "px"; s.width = r.w + "px"; s.height = r.h + "px";
+    s.setProperty("--f", 8 * scale + "px"); s.setProperty("--s", scale);
+    this.el.dataset.mode = this.mode;
+    const docked = this.mode === "free" ? null : this.mode === "top" ? "top" : this.side;
+    if (docked) this.el.dataset.docked = docked; else delete this.el.dataset.docked;
+    const rad = this.mode === "expanded" ? 30 : this.mode === "tucked" ? 6 * scale : SHAPES[S.shape].r * scale;
+    if (this.mode === "free") s.borderRadius = "19px";
+    else if (this.mode === "top") s.borderRadius = "0 0 22px 22px";
+    else s.borderRadius = this.side === "left" ? `0 ${rad}px ${rad}px 0` : `${rad}px 0 0 ${rad}px`;
+    for (const [k, el] of Object.entries(this.L)) el.classList.toggle("on", (k === "vert" && this.mode === "vertical") || (k === "tuck" && this.mode === "tucked") || (k === "pan" && this.mode === "expanded") || (k === "cap" && (this.mode === "free" || this.mode === "top")));
+    if (r.v) { this.L.vert.innerHTML = `<div class="vcol">${r.v.html}</div>`; this.hidden = r.v.hidden; }
+    const c = agentState === "attention" ? "var(--warn)" : agentState === "running" ? "var(--run)" : "var(--idle)";
+    this.L.tuck.className = `layer tuck ${S.tuckStyle === "strip" ? "strip" : ""} ${this.mode === "tucked" ? "on" : ""}`;
+    this.L.tuck.innerHTML = `<span class="d" style="background:${c}"></span><span class="u"></span>`;
+    this.L.cap.innerHTML = `<span class="ring" style="--c:${c}"><i></i></span><span class="t">浮屿 · 3 条未读</span>${bars}`;
+    if (!this.L.pan.innerHTML) this.L.pan.innerHTML = panelHtml();
+    if (this.pop) this.placeBubble();
+  }
+  wire() {
+    let hoverT = 0, drag = null;
+    this.el.addEventListener("pointerenter", () => {
+      if (this.mode === "tucked") { this.reveal("碰到把手滑回竖向岛"); return; }
+      if (S.trigger === "hover" && this.mode === "vertical" && !altOn()) hoverT = setTimeout(() => this.expand(), 300);
+    });
+    this.el.addEventListener("pointerleave", () => { clearTimeout(hoverT); if (S.trigger === "hover" && this.mode === "expanded") hoverT = setTimeout(() => this.collapse(), 400); this.armIdle(); });
+    this.el.addEventListener("pointerdown", (e) => {
+      clearTimeout(hoverT); clearTimeout(this.idleT);
+      if (!altOn() && this.mode !== "free") { drag = null; return; }
+      drag = { sx: e.clientX, sy: e.clientY, ox: e.offsetX, moved: false, startAlong: this.along };
+      this.el.setPointerCapture(e.pointerId);
+    });
+    this.el.addEventListener("pointermove", (e) => {
+      if (!drag) return;
+      const dx = e.clientX - drag.sx, dy = e.clientY - drag.sy;
+      if (Math.abs(dx) + Math.abs(dy) > 3) drag.moved = true;
+      const b = desk.getBoundingClientRect(), px = e.clientX - b.left, py = e.clientY - b.top;
+      this.el.classList.add("no-anim");
+      if (this.mode === "vertical" || this.mode === "tucked") {
+        const inward = this.side === "left" ? dx : -dx;
+        if (inward > EDGE) { this.mode = "free"; this.free = { x: clamp(px - 150, 0, W - 300), y: clamp(py - 19, 0, WORK - 38) }; status("拖离侧边超过 16px：变回横向胶囊，跟着鼠标走。"); }
+        else { const vs = this.vsize(); this.along = clamp(drag.startAlong + dy / (WORK - 16 - vs.h), 0, 1); syncAlong(this.along); status(`沿${this.side === "left" ? "左" : "右"}边移动，位置 ${this.along.toFixed(2)}（换屏、改分辨率后按这个比例放）`); }
+      } else if (this.mode === "free" || this.mode === "top") {
+        this.mode = "free"; this.free = { x: clamp(px - 150, 0, W - 300), y: clamp(py - 19, 0, WORK - 38) };
+        showTarget(this, px, py);
+      }
+      this.render();
+    });
+    this.el.addEventListener("pointerup", (e) => {
+      const d = drag; drag = null; this.el.classList.remove("no-anim");
+      if (d && d.moved) {
+        if (this.mode === "free") {
+          const b = desk.getBoundingClientRect(), t = targetEdge(this, e.clientX - b.left, e.clientY - b.top);
+          hideTarget();
+          if (t) { this.dock(t.edge, t.along); }
+        }
+        this.render(); return;
+      }
+      if (e.target.closest(".bub")) return;
+      if (this.mode === "vertical") { const it = e.target.closest("[data-item]"); this.expand(it ? it.dataset.item : null); }
+      else if (this.mode === "tucked") this.reveal("点把手滑回竖向岛");
+    });
+  }
+  dock(edge, along) {
+    if (edge === "top") { this.mode = "top"; this.free.y = 0; status("吸到顶边：横向胶囊，上方两角反向圆弧（现有顶边造型）。"); return; }
+    this.side = edge; this.mode = "vertical"; this.along = along; syncAlong(along);
+    status(`吸到${edge === "left" ? "左" : "右"}边：立成竖向岛，位置 ${along.toFixed(2)}。`);
+  }
+  expand(item) { if (this.mode !== "vertical") return; this.closeBubble(); this.mode = "expanded"; this.render(); status(`横版面板从${this.side === "left" ? "左" : "右"}边滑出${item ? `，直接打开「${LABEL[item] || "全部"}」` : ""}；外壳动，内容只淡入。点桌面空白处收起。`); }
+  collapse() { if (this.mode !== "expanded") return; this.mode = "vertical"; this.render(); this.armIdle(); }
+  tuck() { if (this.mode !== "vertical") return; this.closeBubble(); this.mode = "tucked"; this.render(); }
+  reveal(why) { if (this.mode !== "tucked") return; this.mode = "vertical"; this.render(); status(why + "；鼠标离开 3 秒后再收回（演示用 3 秒）。"); this.armIdle(); }
+  armIdle() { clearTimeout(this.idleT); if (this.mode === "vertical" && autoIdle) this.idleT = setTimeout(() => { if (!this.pop || this.pop.kind !== "approve") this.tuck(); }, 3000); }
+  popup(kind) {
+    if (this.mode === "free" || this.mode === "top" || this.mode === "expanded") return false;
+    if (this.mode === "tucked") {
+      if (kind === "vol" || kind === "bri" || kind === "dev") return "dropped";
+      this.mode = "vertical"; this.render();
+    }
+    this.closeBubble(true);
+    if (kind === "approve") { agentState = "attention"; renderAll(); }
+    const map = { msg: "msg", vol: null, bri: null, dev: "device", approve: "agent" };
+    this.pop = { kind, item: map[kind] };
+    const b = this.bub;
+    b.querySelector(".in").innerHTML = bubbleHtml(kind);
+    b.classList.remove("on"); b.style.transition = "none"; b.style.width = "0px"; b.style.opacity = "1";
+    this.placeBubble();
+    requestAnimationFrame(() => requestAnimationFrame(() => { b.style.transition = ""; b.classList.add("on"); b.style.width = b.dataset.w + "px"; }));
+    clearTimeout(this.popT);
+    const dur = { msg: 4000, vol: 1500, bri: 1500, dev: 3000 }[kind];
+    if (dur) this.popT = setTimeout(() => this.closeBubble(), dur);
+    return true;
+  }
+  placeBubble() {
+    const b = this.bub, r = this.rect(), k = this.pop.kind, joined = S.bubble === "joined";
+    const bw = { msg: 300, vol: 220, bri: 220, dev: 260, approve: 300 }[k], bh = k === "approve" ? 96 : 38;
+    const cell = this.pop.item ? this.L.vert.querySelector(`[data-item="${this.pop.item}"]`) : null;
+    this.L.vert.querySelectorAll(".hot").forEach((n) => n.classList.remove("hot"));
+    let cy = r.y + r.h / 2;
+    if (cell) { cell.classList.add("hot"); cy = r.y + cell.offsetTop + cell.offsetHeight / 2; }
+    const f = 8 * scale, gap = joined ? 0 : 8, ir = SHAPES[S.shape].r * scale;
+    let y = clamp(cy - bh / 2, f, WORK - bh - f);
+    if (joined) { const lo = r.y + ir, hi = r.y + r.h - ir - bh; if (hi >= lo) y = clamp(y, lo, hi); }
+    const inTop = joined && y >= r.y + ir - 0.5, inBot = joined && y + bh <= r.y + r.h - ir + 0.5;
+    b.dataset.side = this.side; b.dataset.w = bw; b.classList.toggle("joined", joined);
+    b.style.top = y + "px"; b.style.height = bh + "px"; b.style.setProperty("--f", Math.min(f, 8) + "px");
+    const rad = k === "approve" ? 22 : 19;
+    const t0 = inTop ? 0 : rad, b0 = inBot ? 0 : rad;
+    if (this.side === "left") { b.style.left = r.x + r.w + gap + "px"; b.style.right = ""; b.style.borderRadius = joined ? `${t0}px ${rad}px ${rad}px ${b0}px` : rad + "px"; }
+    else { b.style.left = ""; b.style.right = W - r.x + gap + "px"; b.style.borderRadius = joined ? `${rad}px ${t0}px ${b0}px ${rad}px` : rad + "px"; }
+    b.querySelector(".in").style.width = bw + "px";
+    b.querySelectorAll(".fil").forEach((n) => (n.style.display = joined ? "" : "none"));
+    const fa = b.querySelector(".fil.a"), fb = b.querySelector(".fil.b");
+    const corner = this.side === "left" ? ["100% 0", "100% 100%"] : ["0 0", "0 100%"];
+    const pos = this.side === "left" ? "left:0" : "right:0";
+    fa.style.cssText = `${pos};top:calc(-1 * var(--f));background:radial-gradient(circle var(--f) at ${corner[0]}, transparent calc(var(--f) - .6px), var(--fill) var(--f));${joined ? "" : "display:none"}`;
+    fb.style.cssText = `${pos};bottom:calc(-1 * var(--f));background:radial-gradient(circle var(--f) at ${corner[1]}, transparent calc(var(--f) - .6px), var(--fill) var(--f));${joined ? "" : "display:none"}`;
+    if (!inTop) fa.style.display = "none";
+    if (!inBot) fb.style.display = "none";
+  }
+  closeBubble(instant) {
+    if (!this.pop) return;
+    const kind = this.pop.kind; this.pop = null; clearTimeout(this.popT);
+    this.L.vert.querySelectorAll(".hot").forEach((n) => n.classList.remove("hot"));
+    const b = this.bub;
+    if (instant) { b.style.transition = "none"; b.style.width = "0px"; b.classList.remove("on"); }
+    else { b.classList.remove("on"); b.style.width = "0px"; }
+    if (kind === "approve") { agentState = "running"; renderAll(); }
+    this.armIdle();
+  }
+}
+
+function bubbleHtml(k) {
+  if (k === "msg") return `<span class="av"></span><span class="who">张三</span><span class="txt">下午三点的会改到四点了，记得带上周报</span>`;
+  if (k === "vol") return `${svg("vol")}<span class="meter"><b></b></span><span class="pct">62</span>`;
+  if (k === "bri") return `${svg("sun")}<span class="meter"><b style="width:80%"></b></span><span class="pct">80</span>`;
+  if (k === "dev") return `<span class="ok">${svg("head")}</span><span>AirPods Pro 已连接</span><span class="pct">80%</span>`;
+  return `<div class="ap"><span class="h"><span class="warn">${svg("shield")}</span>Claude Code 想运行命令</span><code>pnpm test:regression island</code><span class="btns"><button class="y" data-ans>允许</button><button data-ans>拒绝</button></span></div>`;
+}
+function panelHtml() {
+  const rows = ["写侧边吸附的设计改稿", "C54.3 底边吸附回归页", "回复 issue #291", "周五前发 0.9 beta", "整理剪贴板调研"].map((t, i) => `<div class="prow"><i></i>${t}<em>${["今天", "今天", "明天", "周五", ""][i]}</em></div>`).join("");
+  return `<div class="panel"><div class="ptop"><span class="agent">${svg("bot")}</span><span class="cur">${svg("todo")}</span><span>${svg("music")}</span><span>${svg("cal")}</span><span>${svg("clip")}</span><span>${svg("inbox")}</span><span class="sp"></span><span class="r">${svg("msg")}</span><span class="r">${svg("gear")}</span></div><div class="ptitle">待办</div>${rows}</div>`;
+}
+
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const statusEl = document.getElementById("status");
+const status = (t) => (statusEl.textContent = t);
+const altCb = document.getElementById("alt");
+let altKey = false, autoIdle = true;
+const altOn = () => altKey || altCb.checked;
+addEventListener("keydown", (e) => { if (e.key === "Alt") { altKey = true; e.preventDefault(); } });
+addEventListener("keyup", (e) => { if (e.key === "Alt") altKey = false; });
+addEventListener("blur", () => (altKey = false));
+
+const hint = document.getElementById("hint"), ghost = document.getElementById("ghost");
+function targetEdge(isl, px, py) {
+  const r = isl.rect();
+  const vs = isl.vsize();
+  const alongFor = (y) => clamp((y - vs.h / 2 - 8) / (WORK - 16 - vs.h), 0, 1);
+  if (r.x < EDGE) return { edge: "left", along: alongFor(py) };
+  if (r.x + r.w > W - EDGE) return { edge: "right", along: alongFor(py) };
+  if (r.y < EDGE) return { edge: "top" };
+  return null;
+}
+function showTarget(isl, px, py) {
+  const t = targetEdge(isl, px, py);
+  if (!t) { hideTarget(); status("自由拖动中：靠近左、右、上边 16px 以内会出现提示线。"); return; }
+  const r = isl.rect(), vs = isl.vsize();
+  if (t.edge === "top") {
+    Object.assign(hint.style, { left: r.x + "px", top: "1px", width: r.w + "px", height: "3px" });
+    Object.assign(ghost.style, { left: r.x + "px", top: "0px", width: r.w + "px", height: "38px", borderRadius: "0 0 22px 22px" });
+  } else {
+    const y = 8 + t.along * (WORK - 16 - vs.h), x = t.edge === "left" ? 1 : W - 4;
+    Object.assign(hint.style, { left: x + "px", top: y - 12 + "px", width: "3px", height: vs.h + 24 + "px" });
+    Object.assign(ghost.style, { left: (t.edge === "left" ? 0 : W - vs.w) + "px", top: y + "px", width: vs.w + "px", height: vs.h + "px", borderRadius: t.edge === "left" ? "0 18px 18px 0" : "18px 0 0 18px" });
+  }
+  hint.classList.add("on"); ghost.classList.add("on");
+  status(`松手吸到${{ left: "左边，立成竖向岛", right: "右边，立成竖向岛", top: "顶边" }[t.edge]}。`);
+}
+function hideTarget() { hint.classList.remove("on"); ghost.classList.remove("on"); }
+
+const islands = [new Island("left"), new Island("right")];
+islands[1].along = 0.3;
+const renderAll = () => islands.forEach((i) => i.render());
+const alongEl = document.getElementById("along");
+function syncAlong(a) { alongEl.value = Math.round(a * 100); }
+alongEl.addEventListener("input", () => { islands.forEach((i) => { i.along = alongEl.value / 100; }); renderAll(); });
+document.getElementById("scale").addEventListener("input", (e) => { scale = e.target.value / 100; renderAll(); status(`折叠岛屿大小 ${e.target.value}%：竖向岛宽 ${Math.round(SHAPES[S.shape].w * scale)}px，把手、圆弧一起缩放。`); });
+
+desk.addEventListener("pointerdown", (e) => {
+  if (e.target.closest(".isl, .bub")) return;
+  islands.forEach((i) => i.collapse());
+});
+desk.addEventListener("click", (e) => {
+  const ans = e.target.closest("[data-ans]");
+  if (ans) { islands.forEach((i) => i.pop && i.pop.kind === "approve" && i.closeBubble()); status(`点了「${ans.textContent}」，审批气泡收回，Agent 环回到运行色。`); return; }
+  const bub = e.target.closest(".bub");
+  if (bub) { const isl = islands.find((i) => i.bub === bub); const item = isl.pop && isl.pop.item; isl.closeBubble(true); isl.expand(item === "msg" ? "msg" : null); }
+});
+desk.querySelectorAll(".edgezone").forEach((z) => z.addEventListener("pointerenter", () => islands.forEach((i) => i.side === z.dataset.side && i.reveal("鼠标碰到屏幕" + (z.dataset.side === "left" ? "左" : "右") + "边"))));
+
+document.querySelectorAll("button.seg").forEach((b) => b.addEventListener("click", () => {
+  S[b.dataset.k] = b.dataset.v; syncSeg();
+  if (b.dataset.k === "content" || b.dataset.k === "overflow" || b.dataset.k === "shape") {
+    const h = islands[0].vsize().v.hidden;
+    status(h.length ? `放不下：${h.map((x) => LABEL[x]).join("、")} 不显示${S.overflow === "count" ? "，最底下显示 +" + h.length + "，点它展开" : ""}。` : `造型 ${S.shape}：宽 ${SHAPES[S.shape].w}px，全部放得下。`);
+  }
+  renderAll();
+}));
+function syncSeg() {
+  document.querySelectorAll("button.seg").forEach((b) => b.classList.toggle("on", S[b.dataset.k] === b.dataset.v));
+  desk.className = "desk " + S.theme;
+  document.body.style.setProperty("--shape", S.corner);
+  desk.style.setProperty("--shape", S.corner);
+}
+document.querySelectorAll("[data-do]").forEach((b) => b.addEventListener("click", () => {
+  const d = b.dataset.do;
+  islands.forEach((i) => {
+    if (d === "reset") { i.closeBubble(true); i.side = i.home; i.mode = "vertical"; i.free = null; i.along = 0.3; syncAlong(0.3); i.render(); return; }
+    if (i.mode === "free" || i.mode === "top") return;
+    if (d === "vertical") { i.closeBubble(true); i.mode = "vertical"; i.render(); }
+    if (d === "tuck") { if (i.mode === "expanded") { i.mode = "vertical"; } i.closeBubble(true); i.mode = "tucked"; i.render(); }
+    if (d === "expand") { if (i.mode === "tucked") i.mode = "vertical"; i.expand(); }
+  });
+  autoIdle = d !== "vertical" && d !== "expand";
+  if (d === "tuck") status("闲置收起：竖向岛缩回把手。鼠标碰到屏幕边或把手、来新消息时滑回。");
+  if (d === "vertical") status("竖向岛（演示里点了这个按钮就不自动收起；碰过一次把手后恢复 3 秒闲置收起）。");
+  if (d === "reset") { autoIdle = false; status("复位：左右两个竖向岛。"); }
+}));
+document.querySelectorAll("[data-pop]").forEach((b) => b.addEventListener("click", () => {
+  const res = islands.map((i) => i.popup(b.dataset.pop));
+  if (res.includes("dropped")) status("岛收起着：音量、亮度、设备提示直接丢掉不补显示（和顶边贴边收起一致）。");
+  else if (b.dataset.pop === "msg") status("消息预览从「未读」那一行往屏幕里弹出；点气泡打开消息页。收起着时先滑回再弹。");
+  else if (b.dataset.pop === "approve") status("Agent 审批：环变黄、气泡不自动消失，点允许 / 拒绝收回。");
+  else status("临时提示从对应那一行弹出，到时自动收回。");
+}));
+
+syncSeg(); autoIdle = false; renderAll();
+</script>
+</body>
+</html>

@@ -7,26 +7,22 @@ import { useArchiveMotion } from "./useArchiveMotion";
 import { useTranslation } from "../../i18n";
 import type { AgentArchiveMotion, AgentCardEffects, AgentHostDisplay, AgentSessionGroup, AgentSessionSort, AgentSessionView } from "../appearance/types";
 import { AgentSessionCard } from "./AgentSessionCard";
-import { AgentProviderIcon } from "./AgentProviderIcon";
 import { AgentUsageBar } from "./AgentUsageBar";
 import type { AgentUsages } from "./usage";
 import { focusAgentWindow, type AgentSessionSummary } from "./api";
 import { ageSlotWidth, arrangeSessions, isActivePhase, minutesAgo, modelLabel, sessionProject } from "./sessionList";
 import { shownEffort } from "./effortLabels";
 import { useEffortLabels } from "./useEffortLabels";
-import { SessionBody } from "./SessionBody";
-import { SessionElapsed } from "./SessionElapsed";
-import { SessionHostLabel } from "./SessionHostLabel";
-import { AGENT_PROVIDER_LABELS, getAgentPhaseLabel } from "./status";
+import { AGENT_PROVIDER_LABELS } from "./status";
 import { useScrollFade } from "./useScrollFade";
 import { asksUser, sessionKey } from "./unseen";
-import { sessionLight } from "./sessionLight";
 import type { UnseenSessions } from "./useUnseenSessions";
 import type { SessionRemoval } from "./useHiddenSessions";
 import type { AlertedSession } from "./useAgentAlerts";
 import { AgentApprovalCard } from "./approvals/AgentApprovalCard";
 import { AgentQuestionCard } from "./approvals/AgentQuestionCard";
 import type { AgentApprovals } from "./approvals/useAgentApprovals";
+import { AgentSessionRow } from "./AgentSessionRow";
 import "./AgentSessionsPanel.css";
 
 const NOT_FOUND_NOTICE_MS = 3000;
@@ -172,7 +168,6 @@ export function AgentSessionsPanel({
           const project = sessionProject(session.cwd);
           const title = session.title ?? project ?? AGENT_PROVIDER_LABELS[session.provider];
           const model = modelLabel(session.model, shownEffort(session.provider, session.effort, effortLabels));
-          const mode = session.permissionMode && session.permissionMode !== "default" ? t.agent.sessions.permissionModes[session.permissionMode] : null;
           const key = sessionKey(session);
           const notFound = notFoundId === session.sessionId
             ? session.remoteHost ? t.agent.sessions.remoteOnly(session.remoteHost) : isActivePhase(session.phase) ? t.agent.sessions.notFound : t.agent.sessions.notFoundEnded
@@ -204,72 +199,26 @@ export function AgentSessionsPanel({
               </li>
             );
           }
-          const active = isActivePhase(session.phase);
-          const cardReply = reveal && !active ? session.lastMessage : null;
-          const full = Boolean(cardReply) || (active && Boolean(session.lastMessage || (showActivity && (session.lastPrompt || session.currentTool))));
-          const light = sessionLight(session);
-          const yourTurn = light === "yourTurn";
-          const phaseLabel = session.compacting ? t.agent.sessions.compacting : yourTurn ? t.agent.sessions.yourTurn : getAgentPhaseLabel(session.phase, t);
-          const showPhase = session.compacting || yourTurn || (session.phase !== "running" && session.phase !== "completed");
-          const elapsed = showElapsed && session.turnStartedAt !== null;
-          const showAge = showsAge(session);
-          const age = ageOf(session);
-          const ageInSlot = Boolean(archive) && showAge;
-          const status = [
-            showPhase && phaseLabel,
-            elapsed && <SessionElapsed key="elapsed" session={session} />,
-            active && session.subagents ? t.agent.sessions.subagents(session.subagents) : null,
-            session.todos && (
-              <span key="todos" className="agent-session__todos" title={session.todos.current ? t.agent.sessions.todosCurrent(session.todos.current) : undefined}>
-                {t.agent.sessions.todos(session.todos.done, session.todos.total)}
-              </span>
-            ),
-            session.backgroundTasks ? t.agent.sessions.backgroundTasks(session.backgroundTasks) : null,
-            showAge && !ageInSlot && age,
-          ]
-            .filter(Boolean)
-            .flatMap((part, index) => (index === 0 ? [part] : [" · ", part]));
           return (
-            <li key={`${session.provider}:${session.sessionId}`} ref={reveal ? cardRef : undefined} data-session-key={sessionKey(session)}>
-              <button
-                className={`agent-session agent-session--${session.phase} agent-session--light-${light} agent-session--${full ? "full" : "compact"}${unseen?.keys.has(sessionKey(session)) ? " agent-session--unseen" : unseen && asksUser(session) ? " agent-session--looked" : ""}`}
-                type="button"
-                onClick={() => focus(session)}
-              >
-                <span className="agent-session__dot" aria-hidden="true" />
-                <span className="agent-session__main">
-                  <span className="agent-session__heading">
-                    <span className="agent-session__title">
-                      {project && project !== title ? <span className="agent-session__project">{project} · </span> : null}
-                      {title}
-                    </span>
-                    {active && showModel && model && <span className="agent-session__model">{model}</span>}
-                    {active && mode && (
-                      <span className={`agent-session__mode agent-session__mode--${session.permissionMode}`}>
-                        {mode}
-                      </span>
-                    )}
-                    {notFound ? (
-                      <span className="agent-session__not-found" role="status">{notFound}</span>
-                    ) : (
-                      <span className="agent-session__meta">{status}</span>
-                    )}
-                    {session.host && hostDisplay !== "off" && <SessionHostLabel host={session.host} display={hostDisplay} />}
-                    {!session.host && hostDisplay === "icon" && (
-                      <span className="agent-session__host agent-session__host--unknown" aria-hidden="true" />
-                    )}
-                    <AgentProviderIcon provider={session.provider} size={14} />
-                  </span>
-                  {cardReply ? (
-                    <span className="agent-session__message agent-session__message--card">{cardReply}</span>
-                  ) : (
-                    full && <SessionBody session={session} showActivity={showActivity} />
-                  )}
-                </span>
-              </button>
-              {ageInSlot && <span className="agent-session__age">{age}</span>}
-              {archive}
-            </li>
+            <AgentSessionRow
+              key={`${session.provider}:${session.sessionId}`}
+              session={session}
+              title={title}
+              project={project}
+              model={model}
+              notFound={notFound}
+              archive={archive}
+              age={ageOf(session)}
+              showAge={showsAge(session)}
+              reveal={Boolean(reveal)}
+              rowRef={reveal ? cardRef : undefined}
+              hostDisplay={hostDisplay}
+              showElapsed={showElapsed}
+              showModel={showModel}
+              showActivity={showActivity}
+              unseen={unseen}
+              onOpen={() => focus(session)}
+            />
           );
           }),
         ])}

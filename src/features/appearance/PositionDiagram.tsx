@@ -6,9 +6,11 @@ import "./PositionDiagram.css";
 const MAX_MARGIN = 160;
 const MAX_OFFSET = 26;
 
-export function PositionDiagram({ monitor, marginY, menuBar }: { monitor: IslandMonitor; marginY: number; menuBar: MenuBarPlacement | null }) {
+type PositionDiagramProps = { monitor: IslandMonitor; bottom: boolean; marginY: number; menuBar: MenuBarPlacement | null };
+
+export function PositionDiagram({ monitor, bottom, marginY, menuBar }: PositionDiagramProps) {
   const onSecond = monitor !== "primary";
-  const offset = Math.round((Math.min(Math.max(marginY, 0), MAX_MARGIN) / MAX_MARGIN) * MAX_OFFSET) + (menuBar === "below" ? 7 : 0);
+  const offset = bottom ? 0 : Math.round((Math.min(Math.max(marginY, 0), MAX_MARGIN) / MAX_MARGIN) * MAX_OFFSET) + (menuBar === "below" ? 7 : 0);
   const island = <span className="position-diagram__island" style={{ "--position-offset": `${offset}px` } as CSSProperties} />;
   const screen = (active: boolean, main: boolean) => (
     <span className={`position-diagram__screen${main ? " position-diagram__screen--main" : ""}${active ? " position-diagram__screen--active" : ""}`}>
@@ -19,7 +21,7 @@ export function PositionDiagram({ monitor, marginY, menuBar }: { monitor: Island
     </span>
   );
   return (
-    <span className="position-diagram" aria-hidden="true">
+    <span className={`position-diagram${bottom ? " position-diagram--bottom" : ""}`} aria-hidden="true">
       {screen(!onSecond, true)}
       {screen(onSecond, false)}
     </span>

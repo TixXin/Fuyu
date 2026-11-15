@@ -33,7 +33,7 @@ export function listenIslandNotch(handler: (notch: IslandNotch | null) => void):
   return listen<IslandNotch | null>(ISLAND_NOTCH_CHANGED_EVENT, ({ payload }) => handler(payload));
 }
 
-export type IslandEdge = "top" | "left" | "right";
+export type IslandEdge = "top" | "left" | "right" | "bottom";
 
 export const ISLAND_EDGE_CHANGED_EVENT = "island-edge-changed";
 

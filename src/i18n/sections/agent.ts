@@ -103,7 +103,7 @@ export const zhCN: AgentText = {
   sessions: {
     title: "Agent 会话",
     open: "查看 Agent 会话",
-    empty: "最近 2 小时没有 Agent 会话",
+    empty: "最近没有 Agent 会话",
     emptyHint: "在 Claude Code 或 Codex 里开始对话后会显示在这里",
     focus: (title) => `切换到「${title}」所在的窗口`,
     notFound: "没找到对应的窗口",
@@ -199,7 +199,7 @@ export const en: AgentText = {
   sessions: {
     title: "Agent sessions",
     open: "Show agent sessions",
-    empty: "No agent sessions in the last 2 hours",
+    empty: "No recent agent sessions",
     emptyHint: "Conversations in Claude Code or Codex show up here",
     focus: (title) => `Switch to the window running "${title}"`,
     notFound: "No matching window found",

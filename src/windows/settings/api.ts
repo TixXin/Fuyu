@@ -49,3 +49,11 @@ export function saveLaunchAtStartup(enabled: boolean) {
 export function quitIsland() {
   return invoke<void>("quit_island");
 }
+
+export function readTrayIconVisible() {
+  return invoke<boolean>("get_tray_icon_visible");
+}
+
+export function saveTrayIconVisible(visible: boolean) {
+  return invoke<void>("set_tray_icon_visible", { visible });
+}

@@ -123,3 +123,33 @@ html[data-island-drag="bottomRight"] .island-resize-hint--bottom-right {
   opacity: 1;
   border-width: 2.5px;
 }
+
+:root[data-island-edge="bottom"] .island-resize-hints {
+  --resize-hint-bottom: 0px;
+}
+
+:root[data-island-edge="bottom"] .island-resize-hint {
+  --resize-hint-corner: calc(var(--resize-hint-top) + 10px);
+}
+
+:root[data-island-edge="bottom"] .island-resize-hint--bottom {
+  mask-position: center top;
+}
+
+:root[data-island-edge="bottom"] .island-resize-hint--bottom-left {
+  mask-position: left top;
+}
+
+:root[data-island-edge="bottom"] .island-resize-hint--bottom-right {
+  mask-position: right top;
+}
+
+:root[data-island-edge="bottom"] .island--expanded .island-resize-size {
+  top: 14px;
+  bottom: auto;
+}
+
+:root[data-island-edge="bottom"] .island--collapsed .island-resize-size {
+  top: auto;
+  bottom: calc(100% + 6px);
+}

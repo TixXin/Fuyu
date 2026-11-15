@@ -24,6 +24,10 @@ export type SettingsLayoutText = {
   panelSizeHintMac: string;
   launchAtStartup: string;
   launchAtStartupMac: string;
+  trayIcon: string;
+  trayIconMac: string;
+  trayIconHiddenHint: string;
+  trayIconHiddenHintMac: string;
   showTitle: string;
   displayTitle: string;
   minimizeAction: string;
@@ -68,6 +72,10 @@ export const zhCN: SettingsLayoutText = {
   panelSizeHintMac: "所有页面都用这个宽度和高度，内容多了在页面里滚动。也可以按住 Option 拖动展开面板的左右边缘或底边来调。",
   launchAtStartup: "开机自启动",
   launchAtStartupMac: "登录时打开",
+  trayIcon: "在托盘显示图标",
+  trayIconMac: "在菜单栏显示图标",
+  trayIconHiddenHint: "图标隐藏后，从开始菜单或桌面快捷方式再次打开浮屿，会弹出这一页。",
+  trayIconHiddenHintMac: "图标隐藏后，从「应用程序」文件夹、启动台或 Spotlight 再次打开浮屿，会弹出这一页。",
   showTitle: "显示岛屿名称",
   displayTitle: "显示内容",
   minimizeAction: "最小化按钮",
@@ -112,6 +120,10 @@ export const en: SettingsLayoutText = {
   panelSizeHintMac: "Every page has this width and height and scrolls inside when it holds more. Or hold Option and drag the open panel's side or bottom edge.",
   launchAtStartup: "Launch at startup",
   launchAtStartupMac: "Open at login",
+  trayIcon: "Show icon in the system tray",
+  trayIconMac: "Show icon in the menu bar",
+  trayIconHiddenHint: "While the icon is hidden, opening Fuyu again from the Start menu or a desktop shortcut brings up this page.",
+  trayIconHiddenHintMac: "While the icon is hidden, opening Fuyu again from Applications, Launchpad or Spotlight brings up this page.",
   showTitle: "Show island name",
   displayTitle: "Display",
   minimizeAction: "Minimize button",

@@ -1,0 +1,329 @@
+.agent-session {
+  width: 100%;
+  display: flex;
+  gap: 10px;
+  padding: 8px 6px;
+  color: inherit;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition:
+    background 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.agent-session--full {
+  align-items: flex-start;
+}
+
+.agent-session--compact {
+  height: 36px;
+  align-items: center;
+  padding-block: 0;
+}
+
+.agent-session:hover {
+  background: rgba(var(--agent-ink), 0.07);
+  box-shadow: inset 0 0 0 1px rgba(var(--agent-ink), 0.09);
+  transition-delay: 80ms;
+}
+
+.agent-sessions__list > li {
+  position: relative;
+}
+
+.agent-sessions__list--archivable .agent-session {
+  padding-right: calc(max(20px, var(--agent-age-width, 0px)) + 8px);
+}
+
+.agent-session__archive {
+  position: absolute;
+  top: 8px;
+  right: 3px;
+  width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  color: rgba(var(--agent-ink), 0.26);
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-sm, 6px);
+  cursor: pointer;
+  transition:
+    color 140ms ease,
+    background 140ms ease,
+    opacity 140ms ease;
+}
+
+.agent-sessions__list > li:hover .agent-session__archive {
+  color: var(--text-3);
+}
+
+.agent-session__archive:hover,
+.agent-session__archive:focus-visible {
+  color: var(--text-1);
+  background: rgba(var(--agent-ink), 0.12);
+  outline: none;
+}
+
+.agent-session__age {
+  position: absolute;
+  top: 8px;
+  right: 6px;
+  width: var(--agent-age-width, 44px);
+  height: 20px;
+  overflow: hidden;
+  color: var(--text-3);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  line-height: 20px;
+  text-align: right;
+  white-space: nowrap;
+  pointer-events: none;
+  transition: opacity 140ms ease;
+}
+
+.agent-sessions__list > li:has(.agent-session__age) .agent-session__archive {
+  opacity: 0;
+}
+
+.agent-sessions__list > li:is(:hover, :focus-within) .agent-session__age {
+  opacity: 0;
+}
+
+.agent-sessions__list > li:is(:hover, :focus-within) .agent-session__archive {
+  opacity: 1;
+}
+
+.agent-sessions__list > li:has(.agent-session__archive:hover) .agent-session {
+  background: rgba(var(--agent-ink), 0.07);
+  box-shadow: inset 0 0 0 1px rgba(var(--agent-ink), 0.09);
+}
+
+.agent-session:focus-visible {
+  outline: 2px solid var(--color-focus-ring-soft);
+  outline-offset: -2px;
+}
+
+.agent-session__main {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.agent-session__heading {
+  min-width: 0;
+  height: 20px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.agent-session__title {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  color: var(--text-1);
+  font-size: 14px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.agent-session--completed .agent-session__title,
+.agent-session--failed .agent-session__title {
+  color: var(--text-2);
+}
+
+.agent-session__project {
+  color: inherit;
+}
+
+.agent-session__model {
+  flex: none;
+  max-width: 40%;
+  overflow: hidden;
+  padding: 2px 7px;
+  color: var(--text-2);
+  background: rgba(var(--agent-ink), 0.1);
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 400;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.agent-session__mode {
+  flex: none;
+  padding: 2px 7px;
+  color: var(--text-2);
+  background: rgba(var(--agent-ink), 0.1);
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.agent-session__mode--bypass {
+  color: var(--warning-text, rgb(255, 159, 67));
+  background: rgba(255, 159, 67, 0.16);
+}
+
+.agent-session__meta,
+.agent-session__not-found {
+  flex: none;
+  color: var(--text-3);
+  font-size: 12px;
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.agent-session__dot {
+  width: 7px;
+  height: 7px;
+  flex: none;
+  border-radius: var(--radius-pill);
+  background: var(--color-light-done);
+}
+
+.agent-session--full > .agent-session__dot {
+  margin-top: 6.5px;
+}
+
+.agent-session--light-working .agent-session__dot {
+  background: var(--color-light-working);
+  box-shadow: 0 0 8px rgba(52, 199, 89, 0.72);
+}
+
+.agent-session--light-stale .agent-session__dot {
+  background: rgba(52, 199, 89, 0.45);
+}
+
+.agent-session--light-needs .agent-session__dot,
+.agent-session--light-failed .agent-session__dot {
+  background: var(--color-light-needs);
+  box-shadow: 0 0 8px rgba(255, 69, 58, 0.72);
+}
+
+.agent-session--light-yourTurn .agent-session__dot {
+  background: var(--color-light-your-turn);
+  box-shadow: 0 0 8px rgba(255, 214, 10, 0.6);
+}
+
+.agent-session--light-needs .agent-session__meta,
+.agent-session--light-failed .agent-session__meta {
+  color: var(--color-light-needs);
+}
+
+.agent-session--light-yourTurn .agent-session__meta {
+  color: var(--color-light-your-turn);
+}
+
+.agent-session--light-stale .agent-session__meta {
+  color: var(--color-warning);
+}
+
+.agent-session--looked .agent-session__dot {
+  background: var(--color-light-done);
+  box-shadow: none;
+}
+
+.agent-session--looked .agent-session__meta {
+  color: var(--text-3);
+}
+
+.agent-session--unseen .agent-session__title {
+  color: var(--text-1);
+}
+
+.agent-session--unseen.agent-session--light-done .agent-session__dot {
+  background: rgba(var(--agent-ink), 0.85);
+  box-shadow: 0 0 6px rgba(var(--agent-ink), 0.6);
+}
+
+.agent-session__message {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--text-1);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 19px;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.agent-session__message--one-line {
+  -webkit-line-clamp: 1;
+}
+
+.agent-session__message--card {
+  -webkit-line-clamp: 3;
+}
+
+.agent-session__prompt {
+  margin-bottom: -4px;
+  overflow: hidden;
+  color: var(--text-3);
+  font-size: 13px;
+  line-height: 19px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.agent-session__tool {
+  display: flex;
+  min-width: 0;
+  gap: 6px;
+  font-size: 13px;
+  line-height: 19px;
+  white-space: nowrap;
+}
+
+.agent-session__tool-name {
+  flex: none;
+  color: var(--color-agent-running);
+  font-family: "Cascadia Mono", Consolas, monospace;
+  font-weight: 400;
+}
+
+.agent-session__tool-detail {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-3);
+  font-family: "Cascadia Mono", Consolas, monospace;
+  text-overflow: ellipsis;
+}
+
+.agent-session__host {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-3);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.agent-session__host-icon {
+  flex: 0 0 auto;
+  width: 13px;
+  height: 13px;
+  object-fit: contain;
+}
+
+.agent-session__host--unknown {
+  width: 13px;
+  height: 13px;
+}
+
+.agent-session__not-found {
+  color: var(--color-warning);
+}
