@@ -292,10 +292,12 @@ impl ClipboardHistoryService {
         if let Some(index) = state.items.iter().position(|item| item.hash == hash) {
             let mut item = state.items.remove(index);
             item.copied_at = now;
+            let id = item.id.clone();
             state.items.insert(0, item);
             self.persist_locked(&state)?;
             drop(state);
             self.emit_changed();
+            super::copy_notice::notify_captured(&id);
             return Ok(());
         }
 
@@ -344,12 +346,14 @@ impl ClipboardHistoryService {
         let ocr_job = (state.settings.ocr)
             .then(|| item.image.as_ref().map(|image| (item.id.clone(), image.original_path.clone())))
             .flatten();
+        let id = item.id.clone();
         state.items.insert(0, item);
         self.enforce_limit_locked(&mut state);
         self.persist_locked(&state)?;
         drop(state);
 
         self.emit_changed();
+        super::copy_notice::notify_captured(&id);
         if file_image_job.is_some() {
             fill_file_images(file_image_job);
         }

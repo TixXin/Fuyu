@@ -9,7 +9,7 @@ export function ClipboardPanelHeader({
   tags,
   itemCount,
   isConfirmingClear,
-  extra,
+  extras = [],
   onViewChange,
   onTag,
   onClear,
@@ -19,7 +19,7 @@ export function ClipboardPanelHeader({
   tags: string[];
   itemCount: number;
   isConfirmingClear: boolean;
-  extra?: { label: string; pressed: boolean; onSelect: () => void };
+  extras?: { key: string; label: string; pressed: boolean; onSelect: () => void }[];
   onViewChange: (view: ClipboardView) => void;
   onTag: (tag: string) => void;
   onClear: () => void;
@@ -28,28 +28,29 @@ export function ClipboardPanelHeader({
   const text = t.clipboard;
   const views: [ClipboardView, string][] = [["all", text.all], ["favorites", text.favorites], ["images", text.images], ["files", text.files]];
   const tagQuery = query.trim().toLowerCase();
+  const inExtra = extras.some((extra) => extra.pressed);
 
   return (
     <header className="island-list-bar">
       <div className="island-list-chips" role="group" aria-label={text.segments}>
         {views.map(([key, label]) => (
-          <button key={key} className="island-list-chip" type="button" aria-pressed={!extra?.pressed && view === key && !tagQuery.startsWith("#")} onClick={() => onViewChange(key)}>
+          <button key={key} className="island-list-chip" type="button" aria-pressed={!inExtra && view === key && !tagQuery.startsWith("#")} onClick={() => onViewChange(key)}>
             {label}
           </button>
         ))}
-        {extra && (
-          <button className="island-list-chip" type="button" aria-pressed={extra.pressed} onClick={extra.onSelect}>
+        {extras.map((extra) => (
+          <button key={extra.key} className="island-list-chip" type="button" aria-pressed={extra.pressed} onClick={extra.onSelect}>
             {extra.label}
           </button>
-        )}
-        {!extra?.pressed && tags.map((tag) => (
+        ))}
+        {!inExtra && tags.map((tag) => (
           <button key={tag} className="island-list-chip island-list-chip--tag" type="button" aria-label={text.filterByTag(tag)} aria-pressed={tagQuery === `#${tag.toLowerCase()}`} onClick={() => onTag(tag)}>
             #{tag}
           </button>
         ))}
       </div>
-      {!extra?.pressed && <span className="island-list-count">{itemCount}</span>}
-      {!extra?.pressed && <RowMenu
+      {!inExtra && <span className="island-list-count">{itemCount}</span>}
+      {!inExtra && <RowMenu
         label={t.common.more}
         items={[
           {

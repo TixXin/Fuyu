@@ -74,6 +74,9 @@ export type ErrorCode =
   | "ccConnect.lost"
   | "clipboard.read"
   | "clipboard.open"
+  | "clipboard.notLink"
+  | "clipboard.noLinks"
+  | "clipboard.linkMissing"
   | "shortcut.invalid"
   | "shortcut.notReady"
   | "shortcut.busy"
@@ -279,6 +282,9 @@ export const zhCN: ErrorsText = {
     "ccConnect.lost": "和 cc-connect 失去了联系。",
     "clipboard.read": "无法读取剪贴板。",
     "clipboard.open": "无法打开剪贴板。",
+    "clipboard.notLink": "这不是网址。",
+    "clipboard.noLinks": "这个文件里没有找到网址。",
+    "clipboard.linkMissing": "找不到这个书签。",
     "shortcut.invalid": "快捷键无效，请使用至少一个修饰键。",
     "shortcut.notReady": "快捷键服务尚未准备好。",
     "shortcut.busy": "快捷键正在更新。",
@@ -481,6 +487,9 @@ export const en: ErrorsText = {
     "ccConnect.lost": "Lost track of cc-connect.",
     "clipboard.read": "Could not read the clipboard.",
     "clipboard.open": "Could not open the clipboard.",
+    "clipboard.notLink": "This is not a web address.",
+    "clipboard.noLinks": "No web addresses were found in this file.",
+    "clipboard.linkMissing": "This bookmark was not found.",
     "shortcut.invalid": "That shortcut is not valid; use at least one modifier key.",
     "shortcut.notReady": "The shortcut service is not ready yet.",
     "shortcut.busy": "The shortcut is being changed already.",

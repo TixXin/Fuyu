@@ -1,4 +1,4 @@
-import { X } from "lucide-react";
+import { BookmarkCheck, BookmarkPlus, X } from "lucide-react";
 import { useTranslation } from "../../i18n";
 import { ClipboardEntryIcon } from "./ClipboardEntryIcon";
 import { copyNoticeLabel, copyNoticeThumbnail } from "./copyNotice.ts";
@@ -6,18 +6,22 @@ import type { ClipboardCopyCardState } from "./useClipboardCopyCard";
 import "./ClipboardCopyNotice.css";
 
 export function ClipboardCopyNotice({ card }: { card: ClipboardCopyCardState }) {
-  const t = useTranslation().clipboard.notice;
+  const t = useTranslation().clipboard;
   if (!card.current) return null;
-  const { item } = card.current;
+  const { item, offered } = card.current;
   const label = copyNoticeLabel(item);
   const thumbnail = copyNoticeThumbnail(item);
-  const text = label.kind === "image"
-    ? t.copiedImage
+  const text = card.bookmarkFailed
+    ? t.links.failed
+    : label.kind === "image"
+    ? t.notice.copiedImage
     : label.kind === "files"
-    ? t.copiedFiles(label.name, label.more)
+    ? t.notice.copiedFiles(label.name, label.more)
     : label.kind === "masked"
-    ? t.masked
-    : t.copied(label.summary);
+    ? t.notice.masked
+    : offered
+    ? t.links.linkCopied(label.summary)
+    : t.notice.copied(label.summary);
   return (
     <span className="clipboard-copy-notice" role="status" data-kind={item.kind} onPointerEnter={card.hold} onPointerLeave={card.release}>
       {thumbnail
@@ -29,20 +33,21 @@ export function ClipboardCopyNotice({ card }: { card: ClipboardCopyCardState }) 
 }
 
 export function ClipboardCopyNoticeActions({ card }: { card: ClipboardCopyCardState }) {
-  const t = useTranslation().clipboard.notice;
+  const t = useTranslation().clipboard;
   if (!card.current) return null;
+  const stop = (run: () => void) => (event: { stopPropagation: () => void }) => {
+    event.stopPropagation();
+    run();
+  };
+  const bookmarkLabel = card.bookmarked ? t.links.bookmarked : t.links.bookmark;
   return (
     <span className="clipboard-copy-notice__actions" onPointerEnter={card.hold} onPointerLeave={card.release}>
-      <button
-        className="clipboard-copy-notice__action"
-        type="button"
-        aria-label={t.close}
-        title={t.close}
-        onClick={(event) => {
-          event.stopPropagation();
-          card.dismiss();
-        }}
-      >
+      {card.current.link && (
+        <button className="clipboard-copy-notice__action" type="button" aria-label={bookmarkLabel} title={bookmarkLabel} aria-pressed={card.bookmarked} disabled={card.bookmarked} onClick={stop(card.bookmark)}>
+          {card.bookmarked ? <BookmarkCheck size={13} strokeWidth={2} aria-hidden="true" /> : <BookmarkPlus size={13} strokeWidth={2} aria-hidden="true" />}
+        </button>
+      )}
+      <button className="clipboard-copy-notice__action" type="button" aria-label={t.notice.close} title={t.notice.close} onClick={stop(card.dismiss)}>
         <X size={13} strokeWidth={2} aria-hidden="true" />
       </button>
     </span>
