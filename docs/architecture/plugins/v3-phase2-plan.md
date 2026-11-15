@@ -82,6 +82,8 @@
 |---|---|---|---|
 | E36.2.3 | **插槽核心**：`createSlots` 拆成不 import Cordis 的纯模块并补规则（名字必须带 `/vN`、按 `category` 分组的列表、`replaces` 列表、builtin 拥有者、元数据透传）；每个窗口同步建的注册表 `windowSlots()`；全部插槽定义；内置用的渲染组件（不加包裹层、每项错误边界）和类型化的 `defineSlot<Props, Meta>`；`runtime.ts` 改成往已有注册表里加；契约登记 | `packages/plugin-base/src/client/`、`packages/plugin-base/package.json`、`packages/plugin-base/src/protocol.mjs`、`protocol.d.mts`（只加插槽名单和规则常量 `SLOTS`，纯数据，给第 5 阶段的 `fuyu-plugin build` / `check` 离线检查用；组件和元数据的类型仍在 `src/features/plugin-kernel/`）、`packages/plugin-base/src/index.d.mts`（只改 `ctx.slots`，第 3 阶段地基之后在这里加 `ctx.services` / `ctx.rust`）、`packages/plugin-base/test/slots.test.mjs`、`src/features/plugin-kernel/`、`docs/architecture/plugins/v3-boundary.md`、`docs/architecture/contracts.md`、`tests/unit/plugin-slot-theme.test.mjs` | 包里的测试覆盖每条规则；岛的首屏 JS 不含 Cordis（构建产物里查得到）、体积和冷启动前后对比记进任务；`plugin-slot` 回归页照过；第 1 阶段演示插件照常出现 |
 
+- E36.2.3 开工先 `pnpm mq:sync` 拿最新的 main：第 3 阶段地基的 E36.3.3 会把 `protocol.mjs` / `.d.mts` 的 `HOST_PROTOCOL` 改成 2，那一行别改回去；E36.2.3 只在同文件里加 `SLOTS`（2026-11-15 经理转告）。
+
 ### 阶段 C：按界面并行（E36.2.3 合入后再派；同时最多 2 个会话，F40 起重命令一律 `pnpm heavy` 排队，整批 land 同一时间只跑一个）
 
 | 编号 | 内容 | scope | 依赖 | 做完的标志 |
