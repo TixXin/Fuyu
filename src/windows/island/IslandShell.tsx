@@ -2,7 +2,7 @@ import type { CollapsedMeeting } from "../../features/calendar/upcoming";
 import type { DeviceUse } from "../../features/device-use/api";
 import type { LevelChange } from "../../features/system-levels/api";
 import type { DeviceAlert } from "../../features/device-events/api";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import type { AgentSession } from "../../features/agent-status/session";
 import type { CurrentLyric } from "../../features/media/lyrics/useCurrentLyric";
 import type { QuotaAlert } from "../../features/agent-status/quotaAlerts";
@@ -31,6 +31,10 @@ import "./IslandShell.css";
 import "./IslandGlassLight.css";
 import { IslandResizeHints } from "./IslandResizeHints";
 import { IslandSideHandle } from "./IslandSideHandle";
+import { IslandSideColumn, useSideColumnRows } from "./IslandSideColumn";
+import { IslandSideBubble, sideBubbleShown } from "./IslandSideBubble";
+import { IslandDragHint } from "./IslandDragHint";
+import { sideBubbleTop } from "./sideColumn";
 import type { IslandSide } from "./useIslandSide";
 
 type IslandShellProps = {
@@ -49,6 +53,7 @@ type IslandShellProps = {
   isTucked: boolean;
   isDetached: boolean;
   side?: IslandSide | null;
+  sideCover?: boolean;
   showTitle: boolean;
   showCollapsedText: boolean;
   collapsedTaskTitle: string | null;
@@ -109,6 +114,7 @@ export function IslandShell({
   isTucked,
   isDetached,
   side = null,
+  sideCover = false,
   showTitle,
   showCollapsedText,
   collapsedTaskTitle,
@@ -161,6 +167,23 @@ export function IslandShell({
   const contentRef = usePageFadeIn<HTMLDivElement>(page, mode);
   const qqNotificationCount = qqNotifications.snapshot.items.length;
   const wechatPending = wechatReminders.snapshot.pending;
+  const unreadCount = qqNotificationCount + Number(wechatPending);
+  const sideLayout = useSideColumnRows({
+    agentVisualState,
+    agentSessionCount: features.agents ? activeAgentSessionCount : null,
+    unreadCount,
+    hasMail: qqMail.preview !== null,
+    todoCount: collapsedTodoCount,
+    shelfCount,
+    showMusic: features.music === true,
+    showCover: sideCover,
+    mediaState,
+    deviceUse,
+    gauges: collapsedSlots?.gauges ?? [],
+  }, onOpenPage, onOpenMessages);
+  const sideHot = preview ? (preview.source === "qqMail" ? "mail" : "unread") : null;
+  const sideHotIndex = sideLayout.shown.findIndex((row) => row.id === sideHot);
+  const sideBubble = side && !isExpanded && !isTucked && sideBubbleShown({ preview, deviceAlert, quotaAlert, levelPopup });
   const className = [
     "island",
     `island--${mode}`,
@@ -191,6 +214,7 @@ export function IslandShell({
   return (
     <section
       className={className}
+      style={side ? ({ "--island-side-column-height": `${sideLayout.height}px` } as CSSProperties) : undefined}
       aria-label={collapsedLabel}
       onClick={(event) => {
         if (!isExpanded && event.target === event.currentTarget) {
@@ -216,8 +240,17 @@ export function IslandShell({
           <IslandSideHandle
             label={collapsedLabel}
             agentVisualState={agentVisualState}
-            unreadCount={qqNotificationCount + Number(wechatPending)}
+            unreadCount={unreadCount}
             onOpen={() => onOpenPage(agentSession ? "agents" : page)}
+            onWindowDragStart={onWindowDragStart}
+          />
+        )}
+        {side && (
+          <IslandSideColumn
+            label={collapsedLabel}
+            hot={sideBubble ? sideHot : null}
+            layout={sideLayout}
+            onOpen={() => onOpenPage(page)}
             onWindowDragStart={onWindowDragStart}
           />
         )}
@@ -295,6 +328,17 @@ export function IslandShell({
         </div>
         {overlay}
       </div>
+      {sideBubble && (
+        <IslandSideBubble
+          top={sideBubbleTop(sideLayout.height, sideHotIndex >= 0 ? sideLayout.offsets[sideHotIndex] + sideLayout.shown[sideHotIndex].height / 2 : null, 22)}
+          preview={preview}
+          deviceAlert={deviceAlert}
+          quotaAlert={quotaAlert}
+          levelPopup={levelPopup}
+          onOpenPreview={() => (preview && preview.source !== "plugin" ? onOpenMessages(preview.source) : onOpenPage(page))}
+        />
+      )}
+      <IslandDragHint />
       <IslandResizeHints isExpanded={isExpanded} popup={popup} sizeLabel={resizeLabel} />
       <IconButtonTooltip />
     </section>

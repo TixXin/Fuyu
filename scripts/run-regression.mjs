@@ -20,6 +20,7 @@ export const PAGES = [
   "dev-build.html",
   "notch-island.html?test=1",
   "bottom-island.html?test=1",
+  "side-island.html?test=1",
   "message-banner.html?test=1",
   "message-panel.html?test=1",
   "i18n.html?test=1",

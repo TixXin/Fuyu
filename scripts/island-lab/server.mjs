@@ -48,6 +48,9 @@ export function forwardTarget(route, method) {
   if (parts[0] === "island" && parts[1] === "notch" && parts.length === 2 && ["PUT", "DELETE"].includes(method)) {
     return { kind: "local", path: "/v1/dev/island/notch" };
   }
+  if (parts[0] === "island" && parts[1] === "edge" && parts.length === 2 && method === "PUT") {
+    return { kind: "local", path: "/v1/dev/island/edge" };
+  }
   if (parts[0] === "agent-status" && parts.length === 2 && /^[a-z0-9-]{1,32}$/.test(parts[1]) && ["PUT", "DELETE"].includes(method)) {
     return { kind: "local", path: `/v1/agent-status/${parts[1]}` };
   }

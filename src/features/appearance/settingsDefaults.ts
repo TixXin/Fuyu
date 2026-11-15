@@ -109,6 +109,7 @@ export const DEFAULT_SETTINGS: IslandSettings = {
   shelfMaxItems: DEFAULT_SHELF_ITEMS,
   shelfDoubleClick: "open",
   shelfShowCount: true,
+  sideMusicCover: false,
   deviceUseIndicator: true,
   levelPopup: true,
   deviceAlerts: true,

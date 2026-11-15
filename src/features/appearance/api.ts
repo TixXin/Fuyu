@@ -26,6 +26,6 @@ export function listenIslandDockEdge(handler: (edge: IslandDockEdge | null) => v
   return listen<IslandDockEdge | null>(ISLAND_EDGE_CHANGED_EVENT, ({ payload }) => handler(payload));
 }
 
-export function dockIslandToBottom() {
-  return invoke<void>("set_island_edge", { edge: "bottom" });
+export function dockIslandTo(edge: Exclude<IslandDockEdge, "top">) {
+  return invoke<void>("set_island_edge", { edge });
 }

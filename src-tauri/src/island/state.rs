@@ -5,7 +5,8 @@ use tauri::PhysicalPosition;
 use super::geometry::{
     COLLAPSED_ISLAND_HEIGHT, COLLAPSED_ISLAND_WIDTH, COLLAPSED_RADIUS, DEFAULT_COLLAPSED_SCALE,
     DEFAULT_EXPANDED_ISLAND_HEIGHT, DEFAULT_EXPANDED_SCALE, DEFAULT_MARGIN_Y,
-    EXPANDED_ISLAND_WIDTH, EXPANDED_RADIUS, SIDE_HANDLE_HEIGHT, SIDE_HANDLE_RADIUS, SIDE_HANDLE_WIDTH,
+    EXPANDED_ISLAND_WIDTH, EXPANDED_RADIUS, SIDE_COLUMN_MIN_HEIGHT, SIDE_COLUMN_WIDTH, SIDE_HANDLE_HEIGHT, SIDE_HANDLE_RADIUS,
+    SIDE_HANDLE_WIDTH,
 };
 
 pub(super) static WINDOW_STATE: OnceLock<Mutex<IslandWindowState>> = OnceLock::new();
@@ -104,6 +105,7 @@ pub(crate) struct IslandWindowState {
     pub(super) fit_notch: bool,
     pub(super) notch: Option<super::notch::Notch>,
     pub(super) notch_drop: bool,
+    pub(super) side_column_height: f64,
 }
 
 impl IslandWindowState {
@@ -115,6 +117,9 @@ impl IslandWindowState {
         if self.is_side_handle() {
             return SIDE_HANDLE_RADIUS;
         }
+        if self.is_side_column() {
+            return (self.mode.corner_radius() * self.corner_radius_factor()).min(SIDE_COLUMN_WIDTH / 2.0);
+        }
         self.mode.corner_radius() * self.corner_radius_factor()
     }
 
@@ -122,13 +127,20 @@ impl IslandWindowState {
         self.attached_edge.filter(|edge| matches!(edge, Edge::Left | Edge::Right))
     }
 
-    fn is_side_handle(self) -> bool {
+    fn is_side_column(self) -> bool {
         self.side().is_some() && matches!(self.mode, IslandMode::Collapsed)
+    }
+
+    pub(super) fn is_side_handle(self) -> bool {
+        self.is_side_column() && self.is_tucked
     }
 
     pub(super) fn base_size(self) -> (f64, f64) {
         if self.is_side_handle() {
             return (SIDE_HANDLE_WIDTH, SIDE_HANDLE_HEIGHT);
+        }
+        if self.is_side_column() {
+            return (SIDE_COLUMN_WIDTH, self.side_column_height);
         }
         if let (IslandMode::Collapsed, Some(notch)) = (self.mode, self.notch) {
             return super::notch::collapsed_size(self.collapsed_width, self.collapsed_scale, notch, self.is_tucked, self.notch_drop);
@@ -201,6 +213,7 @@ impl Default for IslandWindowState {
             fit_notch: false,
             notch: None,
             notch_drop: false,
+            side_column_height: SIDE_COLUMN_MIN_HEIGHT,
         }
     }
 }
