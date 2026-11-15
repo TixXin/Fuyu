@@ -8,7 +8,7 @@
 |---|---|---|
 | Windows 构建（EXE、MSI、`fuyu.exe`） | `release-windows.yml`，windows runner | 无。公钥本来就写在 `tauri.conf.json` 里 |
 | Mac 构建（`.app`、dmg） | `release-macos.yml`，macOS runner | Mac 自签名证书（Environment `release`） |
-| updater 签名（`.sig`） | 跑 `pnpm release` 的维护者电脑 | updater 私钥，**不上 GitHub** |
+| updater 签名（`.sig`） | 跑 `pnpm release` 的、持有私钥的电脑 | updater 私钥，**不上 GitHub** |
 | 上传草稿、冒烟测试、公开、刷新通道 | 本机脚本 + `release-smoke.yml` | `gh` 的登录 |
 
 `pnpm release` 先确认当前提交已在 GitHub 上，同时触发两个构建，等它们跑完，把产物下载到 `src-tauri/target/publish/release`（Windows 的布局和本机构建一样：`bundle/nsis`、`bundle/msi`、`fuyu.exe`），本地签名后照旧生成 `latest.json`、上传、冒烟测试、公开。`--local` 保留在本机编 Windows 版的旧做法，GitHub Actions 不可用时兜底。
@@ -17,7 +17,7 @@
 
 ## 为什么这样分
 
-- **updater 私钥**：拿到它就能给所有已装用户推一个"更新"，用户不用点任何东西。GitHub Secrets 对有 Write 权限的人、对 workflow 里用到的第三方 action 都不是绝对隔离的，所以它只留在维护者的电脑上。签名只是对几个文件跑 `tauri signer sign`，不需要构建环境。
+- **updater 私钥**：拿到它就能给所有已装用户推一个"更新"，用户不用点任何东西。GitHub Secrets 对有 Write 权限的人、对 workflow 里用到的第三方 action 都不是绝对隔离的，所以它只留在持有它的人的电脑上（仓库管理员和协作者 ShengLin1001，见 updater.md「签名密钥」）。签名只是对几个文件跑 `tauri signer sign`，不需要构建环境。
 - **构建**：不需要任何秘密，放 CI 后发版不再依赖某一台电脑的工作区，别的会话没提交的文件也不再挡住发版（以前要开临时 worktree）。
 - **Mac 证书**：浮屿在 Mac 上按这张证书认应用，用它签的程序会继承用户给浮屿的辅助功能和屏幕录制授权，所以从仓库级 Secrets 挪进 Environment `release`，只允许 `main` 上的 workflow 读。`main` 只能经 PR 改（规则集），所以在别的分支改 workflow 读不到它。
 

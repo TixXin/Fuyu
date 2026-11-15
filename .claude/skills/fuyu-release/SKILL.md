@@ -15,7 +15,9 @@ description: >
 - `docs/features/updater.md` 的「发布一个可自动更新的版本」和「撤回有问题的版本」；
 - `docs/releases/README.md`：版本号怎么定、发布说明怎么写。
 
-只在配了 updater 签名私钥的机器上发版：Windows 那台（密码文件）和用户的 Mac（钥匙串）。别的机器上被要求发版时告诉用户换机器。
+只在配了 updater 签名私钥的机器上发版：`~/.tauri/fuyu/release.json`（Windows 是 `%USERPROFILE%\.tauri\fuyu\release.json`）存在，私钥能用。持有私钥的是仓库管理员 TixXin 的两台机器和协作者 ShengLin1001，哪台都能发；没配的机器上被要求发版时告诉用户换机器，不要另生成密钥，换密钥后已装的客户端都会拒绝更新。
+
+协作者发版前要先告诉 TixXin，免得两人各改一次版本号、各写一份说明；他平时在自己的分支上开发，版本号提交可以走分支 PR，合入后在和 `origin/main` 一致的 `main` 上跑 `pnpm release`。
 
 用户说"发版"就是授权发布，不用再问；版本类型不明时默认测试版，正式版要用户明说。
 
