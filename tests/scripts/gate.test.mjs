@@ -4,7 +4,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import test from "node:test";
-import { earlierCalls, hasRead, readTargets } from "../../scripts/gate/evidence.mjs";
+import { hasRead, readTargets } from "../../scripts/gate/evidence.mjs";
 import { activeRules, gate as runGate, markerDir, run, touches, transcriptFile } from "../../scripts/gate/gate.mjs";
 import { RULES } from "../../scripts/gate/rules.mjs";
 import { writeTargets } from "../../scripts/gate/shellWrites.mjs";
@@ -247,20 +247,20 @@ test("command rows match the command that is run, not text that mentions it", ()
   assert.equal(task("pnpm tasks add F50 --title x --issue 5; pnpm tasks show F42; pnpm tasks note F42 \"pnpm task:claim 之后\""), null);
 });
 
-test("the lead row waits for the second session a session starts on request", () => {
+test("the lead row stops the first session a session starts on request, once", () => {
   const space = workspace(["fuyu-lead"]);
   try {
-    const start = (id, initiation = "user_asked") => space.input({ tool_name: "mcp__ccd_session__start_session", tool_input: { initiation, title: "x" }, tool_use_id: id });
-    const earlier = (ids) => ids.map((id) => JSON.stringify({ type: "assistant", message: { content: [{ type: "tool_use", id, name: "mcp__ccd_session__start_session", input: { initiation: "user_asked" } }] } })).join("\n");
-    assert.equal(touches(rule("fuyu-lead"), start("a", "own_initiative"), space.root), null);
-    writeFileSync(space.transcript, earlier(["a"]));
-    assert.equal(earlierCalls(earlier(["a", "b"]), "mcp__ccd_session__start_session", { initiation: "user_asked" }, "b"), 1);
-    assert.equal(run(start("a"), { root: space.root, temp: space.temp, env: {} }), null);
-    writeFileSync(space.transcript, earlier(["a", "b"]));
-    assert.match(run(start("b"), { root: space.root, temp: space.temp, env: {} }), /fuyu-lead/);
-    assert.equal(run(start("b"), { root: space.root, temp: space.temp, env: {} }), null);
-    writeFileSync(space.transcript, `${earlier(["a", "b"])}\n{"name":"Skill","input":{"skill":"fuyu-lead"}}`);
-    assert.equal(run(space.input(start("b"), { session_id: "s2" }), { root: space.root, temp: space.temp, env: {} }), null);
+    const start = (initiation = "user_asked") => space.input({ tool_name: "mcp__ccd_session__start_session", tool_input: { initiation, title: "x" }, tool_use_id: "a" });
+    const options = { root: space.root, temp: space.temp, env: {} };
+    assert.equal(touches(rule("fuyu-lead"), start("own_initiative"), space.root), null);
+    assert.equal(touches(rule("fuyu-lead"), start("offer"), space.root), null);
+    assert.equal(run(start("own_initiative"), options), null);
+    const blocked = run(start(), options);
+    assert.match(blocked, /fuyu-lead/);
+    assert.match(blocked, /组长/);
+    assert.equal(run(start(), options), null);
+    writeFileSync(space.transcript, '{"name":"Skill","input":{"skill":"fuyu-lead"}}');
+    assert.equal(run(space.input(start(), { session_id: "s2" }), options), null);
   } finally {
     space.done();
   }

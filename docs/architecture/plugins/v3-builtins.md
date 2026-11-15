@@ -59,7 +59,7 @@ Rust 拉宿主时传 `--builtins`：开发版和 `build:exe` 是 `<仓库>/src/f
 
 ## 内置插件的宿主部分怎么写
 
-- 放在 `src/features/<功能>/host/`，入口是清单里的 `host`。可以写 `.mjs`（配 `.d.mts`）或 `.ts`；可以 import 同一个功能里的纯函数（计时器 import `../timers.ts`），不复制。不能 import 浏览器的东西和 `@tauri-apps/api`（宿主是 Node）。
+- 放在 `src/features/<功能>/host/`，入口是清单里的 `host`。可以写 `.mjs`（配 `.d.mts`）或 `.ts`；可以 import 同一个功能里的纯函数（计时器 import `../timers.ts`），不复制。不能 import 浏览器的东西和 `@tauri-apps/api`（宿主是 Node）。`pnpm lint` 检查 `src/features/*/host/` 和 `packages/plugin-base/src/host/`（`eslint.config.js` 末尾那段）：禁止 `@tauri-apps/*`、`react`、`react-dom`、`lucide-react`、`dompurify`、`@fuyu/plugin-base/client`，以及 `api` / `api.ts`、`.tsx`、`.css`、`lib/`、`components/`、`windows/`、`client/` 下的模块（动态 `import()` 也拦），禁止用 `window`、`document`、`localStorage`、`sessionStorage`；测试在 `tests/scripts/host-lint.test.mjs`。用的是禁止名单而不是放行名单：放行名单要列每个领域的纯函数文件，每加一个内置插件都要改。lint 只看宿主文件自己的 import，它 import 的纯函数文件再往下 import 了什么查不到，那一层靠打包和加载时的报错。
 - 宿主共享的模块由宿主提供同一份内核，打包时留在外面：名单是 `@fuyu/plugin-base/protocol` 的 `HOST_SHARED_MODULES`，宿主的 `shareModules` 和打包脚本都读它，现在是 `@fuyu/plugin-base`、`fuyu-plugin`（E36.3.16，两个都指向宿主的内核）和 `@fuyu/plugin-base/services`（E36.3.17，指向宿主的 `services.mjs`，`defineService` 在这里）；浮屿用 `--api` 还能再追加名字。只认这几个名字本身，它们的子路径（如 `@fuyu/plugin-base/protocol`）和别的依赖（`@fuyu/plugin-services` 等）都打进去。插件不直接 import `cordis`。
 - 数据写到 `ctx.dataDir`（见下），不要用 `ctx.baseUrl` 拼路径。
 - 不在运行时按 `import.meta.url` 找别的文件（打包后只剩一个文件，构建会检查并报错）。
@@ -114,4 +114,4 @@ node scripts/plugins-v3/build-builtins.mjs --minify --out <目录> --source <清
 | `contracts.md` 第 3 版那一条 | 内置插件清单的位置和格式、`plugins.yml` 里内置插件只记 `disabled` / `config`、插件来源、`data/<id>/` | 已改（0f3c751c） |
 | `data-storage.md` | `plugins-v3/data/<插件 id>/`、`plugins-v3/packages/` | 已改（9cd2b6f7） |
 | `src/AGENTS.md` | `features/<功能>/host/` 的规则（上面「宿主部分怎么写」）；`src/features/builtins.json` | 已改（2c8d1937） |
-| lint | `host/` 里不能 import 浏览器的东西和 `@tauri-apps/api`（计划第 3 条） | 没做，另开任务 |
+| lint | `host/` 里不能 import 浏览器的东西和 `@tauri-apps/api`（计划第 3 条） | 已做（E36.3.21） |

@@ -184,7 +184,7 @@ land 从 git 的 pre-push 钩子里跑检查，环境里带着 `GIT_DIR` 等变�
 | `src-tauri-rules` | 写 `src-tauri/`（不含 `target/`、`gen/`） | 读过 `src-tauri/AGENTS.md` |
 | `fuyu-release` | 跑 `pnpm release`、`release:version`、`release:prebuild`，或直接跑 `scripts/release/` 下的脚本 | 加载过这个 skill |
 | `fuyu-video` | 写 `video/` | 加载过这个 skill |
-| `fuyu-lead` | 一个会话第二次用 `start_session` 按用户要求派出会话 | 加载过这个 skill |
+| `fuyu-lead` | 一个会话第一次用 `start_session` 按用户要求派出会话 | 加载过这个 skill |
 | `fuyu-task` | `pnpm task:claim`、`pnpm tasks add … --claim` | 加载过这个 skill |
 | `fuyu-skill-writing` | 写 `.claude/skills/` | 加载过这个 skill |
 
@@ -193,7 +193,7 @@ land 从 git 的 pre-push 钩子里跑检查，环境里带着 `GIT_DIR` 等变�
 - **子代理**单独算：它自己的记录在 `<主会话记录去掉 .jsonl>/subagents/agent-<id>.jsonl`，主会话读过不等于它读过。
 - **写入怎么认**：Edit、Write、MultiEdit、NotebookEdit 看文件路径。Bash / PowerShell 看写到哪里：重定向和 heredoc、`tee`、`sed -i`、`perl -i`、`mv`、`cp`、`rm`、`git mv`、`git rm`、`git apply` 后面跟的补丁、内联的 python / node（`python3 - <<'PY'`、`node -e`）里的写文件调用、PowerShell 的 `Set-Content`、`Out-File` 这一类。`cd` 和同一条命令里赋的变量会跟着算。跑现成的脚本文件去改、运行时拼出来的路径、`pnpm settings:index` 这类生成命令认不出来。只是在命令里提到某个文件（`--scope` 参数、`grep`、`git log -- <文件>`）不算写入。
 - **skill 还没签入的行不生效**：`.claude/skills/<名字>/SKILL.md` 不在就跳过。被门禁要求的 skill 不能设成只能由用户调用，否则被拦下的会话加载不了。
-- **加一行**：在 `scripts/gate/rules.mjs` 的 `RULES` 里加一项：`id`；`when` 写 `paths`（目录以 `/` 结尾，`except` 排除子目录）、`commands`（如 `"pnpm tasks add --claim"`，按实际执行的命令逐词比对，`--` 开头的是必须带的参数）加可选的 `scripts`（直接运行这个目录下的脚本）、或 `tool`（工具名，`input` 是要对上的参数，`from: 2` 表示从第二次起）三种之一；`require` 写 `{ skill }` 或 `{ read }`；`hint` 是提示的前半句，`{target}` 换成命中的文件或命令。再在 `tests/scripts/gate.test.mjs` 加一条。要拦新的工具时，`.claude/settings.json` 里这个钩子的 `matcher` 也要加上工具名。
+- **加一行**：在 `scripts/gate/rules.mjs` 的 `RULES` 里加一项：`id`；`when` 写 `paths`（目录以 `/` 结尾，`except` 排除子目录）、`commands`（如 `"pnpm tasks add --claim"`，按实际执行的命令逐词比对，`--` 开头的是必须带的参数）加可选的 `scripts`（直接运行这个目录下的脚本）、或 `tool`（工具名，`input` 是要对上的参数）三种之一；`require` 写 `{ skill }` 或 `{ read }`；`hint` 是提示的前半句，`{target}` 换成命中的文件或命令。再在 `tests/scripts/gate.test.mjs` 加一条。要拦新的工具时，`.claude/settings.json` 里这个钩子的 `matcher` 也要加上工具名。
 - **关掉**：会话环境里设 `FUYU_GATE=off`。门禁自己出错（读不到输入、写不了标记文件）时一律放行。删掉某个标记文件，那条规则对那个会话会重新查一次。
 - 所有会话的每次工具调用都经过它，改 `scripts/gate/` 先跑 `node --test tests/scripts/gate.test.mjs`，改完马上提交。
 

@@ -58,14 +58,3 @@ export function hasRead(text, file, { root, home } = {}) {
   }
   return false;
 }
-
-export function earlierCalls(text, tool, fields = {}, exceptId = null) {
-  let count = 0;
-  for (const entry of entries(text, [tool])) {
-    for (const call of toolCalls(entry)) {
-      if (call.name !== tool || call.id === exceptId) continue;
-      if (Object.entries(fields).every(([key, value]) => call.input?.[key] === value)) count += 1;
-    }
-  }
-  return count;
-}

@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { earlierCalls, hasRead, skillLoaded } from "./evidence.mjs";
+import { hasRead, skillLoaded } from "./evidence.mjs";
 import { RULES } from "./rules.mjs";
 import { locate, shellCommands } from "./shell.mjs";
 import { writeTargets } from "./shellWrites.mjs";
@@ -105,8 +105,7 @@ export function gate(input, { root, exists = existsSync, rules = RULES, readTran
   const text = () => (transcript ??= String(readTranscript() ?? ""));
   const blocked = [];
   for (const hit of hits) {
-    const { when, require } = hit.rule;
-    if (when.from && earlierCalls(text(), when.tool, when.input, input.tool_use_id) < when.from - 1) continue;
+    const { require } = hit.rule;
     if (require.skill ? skillLoaded(text(), require.skill) : hasRead(text(), require.read, { root, home })) settle(hit.rule.id);
     else {
       mark(hit.rule.id);
