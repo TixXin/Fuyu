@@ -71,6 +71,7 @@ import { useDevIslandActions } from "./useDevIslandActions";
 import { hasNotchAlert } from "./NotchAlert";
 import { hasNotchDrop, notchExpandedExtra, notchFittedWidth, notchLook, notchPanelWidth, useIslandNotch, useNotchDropSync } from "./notch";
 import "./IslandApp.css";
+import { PluginSlot } from "../../features/plugin-kernel/PluginSlot";
 
 const NO_TODOS: TodoItem[] = [];
 
@@ -352,6 +353,7 @@ export function IslandApp() {
         )}
         pluginPageButtons={<PluginPageButtons views={pluginPages.views} page={page} features={features} modifiers={settings.pageDigitModifiers} hoverSwitchPage={settings.hoverSwitchPage} hoverSwitchDelayMs={settings.hoverSwitchDelayMs} onOpen={setPage} />}
       >
+        <PluginSlot window="island" name="island.dev/v1" />
         <IslandPages
           page={page}
           mode={mode}

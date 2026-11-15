@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as jsxRuntime from "react/jsx-runtime";
-import { connectHost, createLoader, createSlots, type ClientEntry, type ClientLoader, type HostConnection as Connection, type SlotRegistry, type SlotRule } from "@fuyu/plugin-base/client";
+import { connectHost, createBridge, createLoader, createSlots, type ClientEntry, type PluginMessage, type ClientLoader, type HostConnection as Connection, type SlotRegistry, type SlotRule } from "@fuyu/plugin-base/client";
 import { installShared } from "@fuyu/plugin-base/client/react";
 import { isMacOS } from "../../lib/platform";
 import { getPluginHostConnection } from "./api";
@@ -28,12 +28,14 @@ async function start(window: string): Promise<PluginRuntime | null> {
   if (!first.enabled) return null;
   installShared({ react: React, jsxRuntime });
   const registry = createSlots(PLUGIN_SLOTS);
-  const loader = createLoader({ registry, base: PLUGIN_BASE });
+  let connection: Connection | null = null;
+  const bridge = createBridge((method, params) => connection?.call(method, params) ?? Promise.reject(new Error("the plugin host is not connected")));
+  const loader = createLoader({ registry, base: PLUGIN_BASE, bridge });
   let clients: ClientEntry[] = [];
   const sync = () => {
     void loader.sync(clients.filter((entry) => entry.window === window));
   };
-  const connection = connectHost<{ clients?: ClientEntry[] }>({
+  connection = connectHost<{ clients?: ClientEntry[] }>({
     resolve: target,
     window,
     onSnapshot: (snapshot) => {
@@ -41,6 +43,7 @@ async function start(window: string): Promise<PluginRuntime | null> {
       sync();
     },
     onEvent: (name, data) => {
+      if (name === "plugin") bridge.deliver(data as PluginMessage);
       if (name !== "clients") return;
       clients = data as ClientEntry[];
       sync();

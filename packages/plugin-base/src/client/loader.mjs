@@ -1,9 +1,11 @@
 import { Context } from "cordis";
+import { HostBridge } from "./bridge.mjs";
 import { Slots } from "./slots.mjs";
 
-export function createLoader({ registry, base, importModule = (url) => import(/* @vite-ignore */ url), checkFile = defaultCheck, onStatus }) {
+export function createLoader({ registry, base, bridge, importModule = (url) => import(/* @vite-ignore */ url), checkFile = defaultCheck, onStatus }) {
   const root = new Context();
-  const ready = root.plugin(Slots, registry);
+  const ready = Promise.all([root.plugin(Slots, registry), bridge ? root.plugin(HostBridge, bridge) : null]);
+  const inject = bridge ? ["slots", "host"] : ["slots"];
   const loaded = new Map();
   const status = new Map();
 
@@ -23,7 +25,7 @@ export function createLoader({ registry, base, importModule = (url) => import(/*
       if (typeof apply !== "function") throw new Error(`${entry.path} does not export a plugin (a function, or an object with apply)`);
       if (loaded.get(entry.id)?.entry !== entry) return;
       await ready;
-      const fiber = root.plugin({ name: entry.plugin, inject: ["slots"], apply: (ctx) => apply(ctx) });
+      const fiber = root.plugin({ name: entry.plugin, inject, apply: (ctx) => apply(ctx) });
       loaded.set(entry.id, { entry, fiber });
       await fiber;
       report(entry.id, { plugin: entry.plugin, state: "running" });

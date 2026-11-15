@@ -69,13 +69,15 @@ try {
   windows = await openWindowSocket({
     origins: values.origin.length ? values.origin : WINDOW_ORIGINS,
     snapshot: () => ({ plugins: host.status(), clients: host.clients() }),
-    onCall: (method) => {
+    onCall: (method, params, window) => {
       if (method === "status") return host.status();
+      if (method === "plugin.call") return host.ctx.clients.call(params?.plugin, params?.method, params?.params, window);
       throw Object.assign(new Error(`no method ${method}`), { code: "no-method" });
     },
   });
   host.watchStatus((plugins) => windows.publish("plugins", plugins));
   host.watchClients((clients) => windows.publish("clients", clients));
+  host.ctx.clients.onMessage((message) => windows.publish("plugin", message));
   rpc.notify("ready", {
     protocol: HOST_PROTOCOL,
     pid: process.pid,
