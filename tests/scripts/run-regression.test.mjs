@@ -36,3 +36,33 @@ test("each run gets free ports of its own", async () => {
   const [a, b] = await Promise.all([freePort(), freePort()]);
   assert.ok(Number.isInteger(a) && a > 0 && Number.isInteger(b) && b > 0);
 });
+
+test("profiles left by a killed run are removed after a day, fresh ones and other folders stay", async () => {
+  const { mkdtempSync, mkdirSync, rmSync, utimesSync, writeFileSync } = await import("node:fs");
+  const { tmpdir } = await import("node:os");
+  const { removeStaleProfiles } = await import("../../scripts/run-regression.mjs");
+  const dir = mkdtempSync(path.join(tmpdir(), "fuyu-profiles-"));
+  try {
+    const now = Date.now();
+    const old = new Date(now - 25 * 60 * 60 * 1000);
+    for (const name of ["fly-regression-old", "fly-regression-new", "other-old"]) {
+      mkdirSync(path.join(dir, name));
+      writeFileSync(path.join(dir, name, "Local State"), "{}");
+    }
+    utimesSync(path.join(dir, "fly-regression-old"), old, old);
+    utimesSync(path.join(dir, "other-old"), old, old);
+    assert.deepEqual(removeStaleProfiles(dir, now), ["fly-regression-old"]);
+    assert.equal(existsSync(path.join(dir, "fly-regression-old")), false);
+    assert.equal(existsSync(path.join(dir, "fly-regression-new")), true);
+    assert.equal(existsSync(path.join(dir, "other-old")), true);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("DevTools pipe messages are split at NUL and a partial one waits for the rest", async () => {
+  const { splitFrames } = await import("../../scripts/regression/cdp.mjs");
+  assert.deepEqual(splitFrames('{"id":1}\0{"id":2}\0{"id'), { frames: ['{"id":1}', '{"id":2}'], rest: '{"id' });
+  assert.deepEqual(splitFrames('{"id'), { frames: [], rest: '{"id' });
+  assert.deepEqual(splitFrames('{"id":3}\0'), { frames: ['{"id":3}'], rest: "" });
+});

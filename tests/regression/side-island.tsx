@@ -156,6 +156,7 @@ async function runChecks() {
     check(near(hint.left, 118.5) && hint.height > 100, "拖到侧边 16px 内时屏幕边上出现提示线");
     await act(async () => { await emit("island-drag-edge-hint", null); });
     check(!document.querySelector(".island-drag-hint"), "离开或松手时提示线消失");
+    await settleTransitions();
 
     results.textContent = `${messages.join("\n")}\n\n全部 ${messages.length} 项检查通过。`;
     results.dataset.result = "passed";

@@ -50,7 +50,7 @@ export const CAPTURE = `(async () => {
     .replace(/\\b1[6-9]\\d{8}(?:\\d{3})?\\b/g, "<ts>")
     .replace(/blob:[^\\s"')]+/g, "blob:<url>");
   const unstableStyle = /^(transition|animation|will-change)(-|$)|^--wave-/;
-  const LIVE_TEXT = [".timer-panel__time", ".agent-session__elapsed"];
+  const LIVE_TEXT = [".timer-panel__time", ".timer-chip__time", ".agent-session__elapsed"];
   const anchored = (el) => ["dialog", "menu", "tooltip", "listbox"].includes(el.getAttribute("role"));
   const anchoredStyle = (value) => value.split("; ").map((d) => /^(left|top|right|bottom):\\s*-?[\\d.]+px$/.test(d) ? d.replace(/-?[\\d.]+px$/, "#px") : d).join("; ");
   const cleanStyle = (value) => value.split(";").map((d) => d.trim()).filter((d) => d && !unstableStyle.test(d.split(":")[0].trim())).join("; ");
@@ -159,9 +159,31 @@ export function compareSnapshot(root, page, variant, actual, update, darkActual 
     if (sharesDark) return { status: "same", label };
     const darkFile = snapshotFile(root, page, "dark");
     if (!existsSync(darkFile)) return { status: "missing", label };
-    return { status: "changed", label, diff: lineDiff(readFileSync(darkFile, "utf8").replace(/\r\n/g, "\n"), actual) };
+    const dark = readFileSync(darkFile, "utf8").replace(/\r\n/g, "\n");
+    if (dark === actual) return { status: "same", label };
+    return { status: "changed", label, diff: lineDiff(dark, actual) };
   }
   if (previous === null) return { status: "missing", label };
   if (previous === actual) return { status: "same", label };
   return { status: "changed", label, diff: lineDiff(previous, actual) };
+}
+
+export const RECAPTURE_MS = 1000;
+export const UPDATE_RECHECK_MS = 1500;
+export const UNSETTLED_PAGES = ["list-pages.html", "music-lyrics.html", "plugin-info.html", "settings-search.html"];
+
+export async function settledSnapshot({ root, page, variant, update, darkActual, capture, sleep }) {
+  const first = await capture();
+  const before = compareSnapshot(root, page, variant, first, false, darkActual);
+  if (before.status === "same") return { ...(update ? compareSnapshot(root, page, variant, first, true, darkActual) : before), actual: first };
+  await sleep(update ? UPDATE_RECHECK_MS : RECAPTURE_MS);
+  const second = await capture();
+  if (!update) {
+    const after = compareSnapshot(root, page, variant, second, false, darkActual);
+    return { ...after, late: after.status === "same", actual: second };
+  }
+  if (second !== first && !UNSETTLED_PAGES.includes(page.split("?")[0])) {
+    return { status: "unsettled", label: before.label, diff: lineDiff(first, second), actual: second };
+  }
+  return { ...compareSnapshot(root, page, variant, first, true, darkActual), actual: first };
 }
