@@ -58,9 +58,9 @@ export const RULES = [
   },
   {
     id: "fuyu-lead",
-    when: { tool: "mcp__ccd_session__start_session", input: { initiation: "user_asked" }, from: 2 },
+    when: { tool: "mcp__ccd_session__start_session", input: { initiation: "user_asked" } },
     require: { skill: "fuyu-lead" },
-    hint: "这个会话已经派出过一个会话，再派就是在统筹了",
+    hint: "派会话前先看统筹规则：任务会话只由 [任务] 组长派，总控不直接派",
   },
   {
     id: "fuyu-task",
