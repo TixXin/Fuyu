@@ -796,9 +796,15 @@ var EventsService = class {
     throw new AggregateError(errors.map((error) => error.reason), `one or more listeners of event ${label} failed`);
   }
   emit(...args) {
-    const [thisArg, hooks] = this._resolve("emit", args);
+    const [thisArg, hooks, name] = this._resolve("emit", args);
     for (const hook of hooks) {
-      if (!hook.removed) Reflect.apply(hook.callback, thisArg, args);
+      if (hook.removed) continue;
+      try {
+        Reflect.apply(hook.callback, thisArg, args);
+      } catch (error) {
+        if (typeof name === "string" && name.startsWith("internal/")) throw error;
+        (hook.ctx ?? this.ctx).logger.error(error);
+      }
     }
   }
   async serial(...args) {

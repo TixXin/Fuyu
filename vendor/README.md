@@ -24,6 +24,7 @@
 | 文件 | 改了什么 | 为什么 |
 |---|---|---|
 | `cordis/loader/lib/index.js` | 求值配置表达式用的 `new Function` 从模块顶层改成第一次用到时才建（6 行） | 宿主带 `--disallow-code-generation-from-strings` 启动时，原来的写法让整个加载器 `import` 就失败。改了之后配置里不能写表达式（浮屿不用），其余照常。第 0 阶段两个系统都实测过（[报告](../docs/investigations/v3-feasibility.md)第 1 项） |
+| `cordis/core/lib/index.js` | `emit` 逐个调用监听器时各自 `try/catch`：一个监听器抛错，记到它所属插件的日志里，同一事件后面的监听器照常执行，错误不抛给发事件的一方。`internal/` 开头的内核事件照旧抛出 | 通知类事件不该因为一个插件出错就让别的插件收不到（第 1 阶段的保证清单，`packages/plugin-base/test/guarantees-errors.test.mjs`）。`parallel`、`serial`、`bail`、`waterfall` 没改：它们的调用方要拿结果，出错该让调用方知道 |
 | `cordis/core/package.json`、`cordis/core/bin.js` | 删掉 `bin` 和它指向的 `bin.js` | 那是 Cordis 自己的命令行入口，浮屿不用，留着会让 pnpm 装一个 `cordis` 命令 |
 
 ### 升级
