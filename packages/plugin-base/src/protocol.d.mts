@@ -7,6 +7,10 @@ export declare const CLOSE: {
   readonly noHello: 4408;
   readonly badProtocol: 4426;
 };
+export declare const SERVICE_CALLS: readonly ["service.call", "service.on", "service.off"];
+export type ServiceCallName = (typeof SERVICE_CALLS)[number];
+export declare const SERVICE_NAME: RegExp;
+export declare const SERVICE_TIMEOUT_MS: 30000;
 export declare const WINDOW_ORIGINS: readonly string[];
 export declare const SLOT_THEME: readonly string[];
 export declare const SHARED_MODULES: {

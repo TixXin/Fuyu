@@ -1,6 +1,8 @@
 import type { SlotName } from "./protocol.mjs";
+import type { ServicesApi } from "./services.mjs";
 
 export { Context, Service } from "cordis";
+export type * from "./services.mjs";
 
 declare module "cordis" {
   interface Context {
@@ -12,6 +14,12 @@ declare module "cordis" {
       handle(method: string, handler: (params: any, caller: { window: string }) => unknown): () => Promise<void>;
       publish(topic: string, data?: unknown): void;
     };
+    /**
+     * Versioned services between plugins in the host (`timers/v1`). `provide` registers one until this plugin
+     * stops; `get` returns a client whose methods find the current provider on every call. Users that need a
+     * service list its name in `inject`, so they start only once it is there. See docs/architecture/plugins/v3-services.md.
+     */
+    services: ServicesApi;
     host: {
       call<T = unknown>(method: string, params?: unknown): Promise<T>;
       on(topic: string, listener: (data: any) => void): () => Promise<void>;

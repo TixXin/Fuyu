@@ -15,6 +15,9 @@
   "engines": {
     "node": ">=22.15"
   },
+  "dependencies": {
+    "@fuyu/plugin-base": "workspace:*"
+  },
   "scripts": {
     "test": "node --test \"test/**/*.test.mjs\""
   }

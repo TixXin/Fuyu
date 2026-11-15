@@ -141,7 +141,11 @@ importers:
 
   packages/plugin-review: {}
 
-  packages/plugin-services: {}
+  packages/plugin-services:
+    dependencies:
+      '@fuyu/plugin-base':
+        specifier: workspace:*
+        version: link:../plugin-base
 
   vendor/cordis/core:
     dependencies:

@@ -1,5 +1,7 @@
 import type { Context } from "cordis";
 import type { ManifestIssue, ValidateManifestOptions } from "@fuyu/plugin-manifest";
+import type { ServiceCallName } from "../protocol.mjs";
+import type { ServiceEntry } from "../services.mjs";
 
 export interface LogEntry {
   at: number;
@@ -66,41 +68,11 @@ export interface ClientEntry {
   version: string;
 }
 
-export interface ServiceEntry {
-  name: string;
-  plugin: string;
-  methods: string[];
-  events: string[];
-}
-
-export interface ServiceDefinitionShape {
-  readonly name: string;
-  readonly methods: { readonly [method: string]: { readonly timeoutMs?: number; readonly progress?: true } };
-  readonly events: { readonly [event: string]: object };
-}
+export type { ServiceEntry, ServicesApi } from "../services.mjs";
 
 export interface ServiceError extends Error {
   code: string;
   data?: unknown;
-}
-
-export interface ServiceCaller {
-  readonly plugin?: string;
-  readonly window?: string;
-  progress(chunk: unknown): void;
-}
-
-export interface ServiceHandle {
-  emit(event: string, data?: unknown): boolean;
-  dispose(): Promise<void>;
-}
-
-export interface ServicesApi {
-  provide(definition: ServiceDefinitionShape, impl: Record<string, (params: any, caller: ServiceCaller) => unknown>): ServiceHandle;
-  get(definition: ServiceDefinitionShape): Record<string, (params?: any, options?: { timeoutMs?: number; onProgress?: (chunk: any) => void }) => Promise<any>> & {
-    on(event: string, listener: (data: any) => void): () => Promise<void>;
-  };
-  list(): ServiceEntry[];
 }
 
 export interface ServiceWindows {
@@ -112,12 +84,9 @@ export interface ServiceHub {
   list(): ServiceEntry[];
   watch(onChange: (services: ServiceEntry[]) => void): () => void;
   attachWindows(windows: ServiceWindows): () => void;
-  windowCall(method: "service.call" | "service.on" | "service.off", params: unknown, window: string): unknown;
+  windowCall(method: ServiceCallName, params: unknown, window: string): unknown;
 }
 
-export const SERVICE_NAME: RegExp;
-export const SERVICE_TIMEOUT_MS: number;
-export const SERVICE_CALLS: ReadonlySet<"service.call" | "service.on" | "service.off">;
 export function serviceError(code: string, message: string, data?: unknown): ServiceError;
 
 export interface RustCallOptions {

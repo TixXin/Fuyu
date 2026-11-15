@@ -9,6 +9,12 @@ export const CLOSE = {
   badProtocol: 4426,
 };
 
+export const SERVICE_CALLS = ["service.call", "service.on", "service.off"];
+
+export const SERVICE_NAME = /^[a-z][a-z0-9-]*(\.[a-z][a-z0-9-]*)*\/v[1-9][0-9]{0,3}$/;
+
+export const SERVICE_TIMEOUT_MS = 30_000;
+
 export const WINDOW_ORIGINS = ["tauri://localhost", "http://tauri.localhost", "https://tauri.localhost"];
 
 export const SLOT_THEME = [

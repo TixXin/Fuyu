@@ -129,11 +129,11 @@ Rust 每次拉起宿主（包括自动重启）都重新决定带不带 `--safe`
 | 方向 | 消息 | 说明 |
 |---|---|---|
 | 窗口 → 宿主 | `{ type: "hello", token, protocol, window }` | 第一条。`window` 是窗口的 label |
-| 宿主 → 窗口 | `{ type: "welcome", protocol, seq, snapshot }` | 回答 `hello`。`snapshot` 是当前的全部状态（现在是 `{ plugins, clients, host }`，`host` 是 `{ pid, node, startedAt, safe, dev, rssBytes, heapUsedBytes, cpuMs }`，宿主进程自己的内存和累计 CPU），`seq` 是最后一个事件的序号 |
-| 宿主 → 窗口 | `{ type: "event", seq, name, data }` | 增量。`seq` 每个事件加 1，所有窗口共用一个序列。现在有 `plugins`（插件状态变了，带完整的列表）、`clients`（插件登记的界面文件变了，带完整的列表：`{ id, plugin, window, path, version }`）和 `plugin`（插件的宿主部分推给它窗口部分的消息：`{ plugin, topic, data }`） |
+| 宿主 → 窗口 | `{ type: "welcome", protocol, seq, snapshot }` | 回答 `hello`。`snapshot` 是当前的全部状态（现在是 `{ plugins, clients, services, host }`，`services` 是当前在提供的服务 `{ name, plugin, methods, events }[]`，`host` 是 `{ pid, node, startedAt, safe, dev, rssBytes, heapUsedBytes, cpuMs }`，宿主进程自己的内存和累计 CPU），`seq` 是最后一个事件的序号 |
+| 宿主 → 窗口 | `{ type: "event", seq, name, data }` | 增量。`seq` 每个事件加 1，所有窗口共用一个序列。现在有 `plugins`（插件状态变了，带完整的列表）、`clients`（插件登记的界面文件变了，带完整的列表：`{ id, plugin, window, path, version }`）、`plugin`（插件的宿主部分推给它窗口部分的消息：`{ plugin, topic, data }`）、`services`（在提供的服务变了，带完整的列表）和 `service`（服务的事件：`{ service, event, data }`，见下面「服务」） |
 | 窗口 → 宿主 | `{ type: "snapshot" }` | 窗口发现序号跳了（中间丢了事件），要一份新的快照，不带着缺口往下走 |
 | 宿主 → 窗口 | `{ type: "snapshot", seq, snapshot }` | 回答上一条 |
-| 窗口 → 宿主 | `{ type: "call", id, method, params }` | 调用。现在有 `status`，和 `plugin.call`（`params` 是 `{ plugin, method, params }`，转给那个插件用 `ctx.clients.handle` 登记的方法，回答它的返回值；没登记的回 `no-method`） |
+| 窗口 → 宿主 | `{ type: "call", id, method, params }` | 调用。现在有 `status`，和 `plugin.call`（`params` 是 `{ plugin, method, params }`，转给那个插件用 `ctx.clients.handle` 登记的方法，回答它的返回值；没登记的回 `no-method`），以及服务的 `service.call`、`service.on`、`service.off`（见下面「服务」） |
 | 宿主 → 窗口 | `{ type: "result", id, result }` 或 `{ type: "result", id, error: { code, message, data? } }` | 回答调用 |
 
 ### 断开和重连
@@ -145,6 +145,21 @@ Rust 每次拉起宿主（包括自动重启）都重新决定带不带 `--safe`
 ### 插件的界面文件
 
 插件的宿主部分用 `ctx.clients.add(<窗口名>, <文件的 URL>)` 登记它在某个窗口里的界面代码（插件停用时自动撤掉）。宿主把文件换成插件目录下的相对路径，路径解析成真实路径后不在插件目录里的拒绝（插件启动失败），版本是文件的大小加修改时间。窗口按 `fuyu-plugin://localhost/<路径>?v=<版本>` 加载：先用 `HEAD` 确认文件在、类型是 JavaScript，再 `import()`；版本变了就换地址重新加载，旧的先撤掉。插件的界面代码默认导出一个插件（函数，或带 `apply` 的对象），用 `ctx.slots.add(<插槽名>, { id, order, component, ...元数据 })` 往插槽里放组件（插槽和规则见下面「插槽」），插件停用时这些也自动撤掉。插件的两部分之间：宿主部分用 `ctx.clients.handle(<方法>, fn)` 登记给自己窗口调的方法、`ctx.clients.publish(<主题>, data)` 推消息；窗口部分用 `ctx.host.call(<方法>, params)` 调、`ctx.host.on(<主题>, fn)` 收。窗口部分只能调到、收到它自己那个插件的（按 `plugins.yml` 里的 id 对应），这些登记都跟着插件撤掉。示例在 `packages/plugin-base/examples/hello/`。插件代码里对 `react`、`react/jsx-runtime` 的引用要改写成 `../__shared/react.js` 这样的相对路径（第 0 阶段两个系统都验证过），由程序自带的转接模块提供同一份 React。
+
+### 服务
+
+宿主里的插件用 `ctx.services.provide(定义, 实现)` 提供带版本的服务（`timers/v1`），别的插件用 `ctx.services.get(定义)` 调，窗口经这条 WebSocket 按名字调。名字、声明、错误码和替换的规则在 [v3-services.md](v3-services.md)，这里只列窗口协议里的部分。2026-11-15 起（E36.3.2），只加不改，`WINDOW_PROTOCOL` 仍是 1；三个方法名在 `@fuyu/plugin-base/protocol` 的 `SERVICE_CALLS`，名字的规则是 `SERVICE_NAME`，默认超时 `SERVICE_TIMEOUT_MS`（30 秒）。
+
+| 调用 | `params` | 回答 |
+|---|---|---|
+| `service.call` | `{ service, method, params }` | 方法的返回值（`undefined` 回成 `null`）。只认当前提供者的定义里声明过的方法，别的回 `no-method`；没有提供者回 `not-ready`；超时回 `timeout`（按方法声明的，默认 30 秒）；调用中提供者停了回 `peer-gone`；返回值不是 JSON 回 `bad-result`；提供者抛的错误带字符串 `code` 时原样传出，否则是 `failed` |
+| `service.on` | `{ service, event }` | `true`。这个窗口要这个事件；当前提供者没声明这个事件回 `no-event`，还没有提供者时照样记下 |
+| `service.off` | `{ service, event }` | `true` |
+
+- **事件照旧广播**：所有窗口共用一个 `seq`，按窗口挑着发会让序号出缺口，所以 `service` 事件和别的事件一样发给每个窗口。`service.on` 决定的是「有没有人要」：一个事件没有任何**已连接**的窗口要，宿主就不往 WebSocket 发。宿主按窗口的 label 记，不跟着连接走：窗口重连后要把它的订阅重新发一遍。
+- **任何窗口都能调任何服务**：同权模型下没有按窗口的权限。
+- **窗口一侧**：`@fuyu/plugin-base/client` 的 `createServiceProxy(call)`。`get(定义)` 返回和宿主里一样形状的客户端（方法都返回 Promise，`on(事件, 监听器)` 返回撤销函数，同一个事件只发一次 `service.on`，最后一个监听器撤掉时发 `service.off`）；窗口把 `service` 事件交给 `deliver`，把快照和增量里的 `services` 交给 `update`，每次拿到新快照后调 `resubscribe`。客户端的超时是方法声明的超时加 1 秒，让宿主的 `timeout` 先到。
+- **流式还没到窗口**：声明了 `progress` 的方法，窗口带 `onProgress` 调会直接以 `unsupported` 失败。只发给调用它的那一个连接的 `{ type: "progress", id, data }` 消息随 E36.3.8 加（v3-services.md「流式」）。
 
 ### 插槽
 

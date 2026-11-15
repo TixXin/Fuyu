@@ -1,10 +1,9 @@
 import { parseArgs } from "node:util";
-import { HOST_PROTOCOL, WINDOW_ORIGINS } from "../protocol.mjs";
+import { HOST_PROTOCOL, SERVICE_CALLS, WINDOW_ORIGINS } from "../protocol.mjs";
 import { blame } from "./blame.mjs";
 import { SAFE_MODES } from "./gate.mjs";
 import { startHost } from "./kernel.mjs";
 import { connect } from "./rpc.mjs";
-import { SERVICE_CALLS } from "./services.mjs";
 import { openWindowSocket } from "./sockets.mjs";
 
 const FORWARDED_LOGS = new Set(["error", "warn"]);
@@ -90,7 +89,7 @@ try {
       if (method === "status") return host.status();
       if (method === "host") return host.info();
       if (method === "plugin.call") return host.ctx.clients.call(params?.plugin, params?.method, params?.params, window);
-      if (SERVICE_CALLS.has(method)) return host.serviceHub.windowCall(method, params, window);
+      if (SERVICE_CALLS.includes(method)) return host.serviceHub.windowCall(method, params, window);
       throw Object.assign(new Error(`no method ${method}`), { code: "no-method" });
     },
   });
