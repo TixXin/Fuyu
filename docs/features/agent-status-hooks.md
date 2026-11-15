@@ -1,6 +1,6 @@
 # AI Agent Status Hooks
 
-Fuyu can mirror Codex, Claude Code, WorkBuddy, Antigravity, DeepSeek Harness, Qoder, CodeBuddy Code and Qwen Code task activity on the collapsed island status light (opencode has no status light; its sessions only count on the Agent page, see [opencode](#opencode)):
+Fuyu can mirror Codex, Claude Code, WorkBuddy, Antigravity, DeepSeek Harness, Qoder, CodeBuddy Code, Qwen Code, TRAE and TRAE CN task activity on the collapsed island status light (opencode has no status light; its sessions only count on the Agent page, see [opencode](#opencode)):
 
 - running task: blue
 - completed, idle, or no task: green
@@ -31,7 +31,7 @@ It then updates:
 %USERPROFILE%\.claude\settings.json
 ```
 
-When WorkBuddy is installed (`%USERPROFILE%\.workbuddy` or `%USERPROFILE%\.workbuddy-ai` exists), it also updates `settings.json` in each of them; see [WorkBuddy](#workbuddy). When Qoder, CodeBuddy Code or Qwen Code is installed, it also updates their `settings.json`; see [Qoder, CodeBuddy Code and Qwen Code](#qoder-codebuddy-code-and-qwen-code). When Antigravity is installed, it also writes `%USERPROFILE%\.gemini\config\hooks.json`; see [Antigravity](#antigravity). When DeepSeek Harness is installed, it writes `fuyu-dsh-hooks.json` next to the scripts and tells you what to add to DSH's profile; see [DeepSeek Harness](#deepseek-harness). When opencode is installed, it writes a plugin for opencode 1.x into opencode's config folder; see [opencode](#opencode).
+When WorkBuddy is installed (`%USERPROFILE%\.workbuddy` or `%USERPROFILE%\.workbuddy-ai` exists), it also updates `settings.json` in each of them; see [WorkBuddy](#workbuddy). When Qoder, CodeBuddy Code or Qwen Code is installed, it also updates their `settings.json`; see [Qoder, CodeBuddy Code and Qwen Code](#qoder-codebuddy-code-and-qwen-code). When TRAE or TRAE CN is installed, it writes `~/.trae/hooks.json` or `~/.trae-cn/hooks.json`; see [TRAE and TRAE CN](#trae-and-trae-cn). When Antigravity is installed, it also writes `%USERPROFILE%\.gemini\config\hooks.json`; see [Antigravity](#antigravity). When DeepSeek Harness is installed, it writes `fuyu-dsh-hooks.json` next to the scripts and tells you what to add to DSH's profile; see [DeepSeek Harness](#deepseek-harness). When opencode is installed, it writes a plugin for opencode 1.x into opencode's config folder; see [opencode](#opencode).
 
 The status light card in Settings has one row per agent with hooks, showing whether its hooks are current. An agent that is not on this computer (`absent`) gets no row and never counts as outdated. When the app moves to its new name (FocuSD Island → Fuyu), it reinstalls the hooks of every agent that had them, remote ones included.
 
@@ -107,7 +107,7 @@ Each session on the Agent page can show where it runs, as the program's own icon
 
 ## Session List Settings
 
-**Settings → AI Agent** also sets, in `fuyu-settings`: how far back the list goes (`agentSessionHours`: 1, 2 (default), 6 or 24 hours, passed to `list_agent_sessions` as `windowHours`); which agents are shown (**显示哪些 Agent**: one switch with its icon for each of Codex, Claude Code, WorkBuddy, Antigravity, DeepSeek Harness, opencode, Qoder, CodeBuddy and Qwen Code; stored as `agentHiddenProviders`, the ids of the hidden agents, so an agent added later shows by default; the older `agentShowClaudeCode` / `agentShowCodex` settings are carried over; hidden agents also leave the island's running count); only sessions in progress (`agentHideFinished`); and, per card, the running time (`agentShowElapsed`) and the model (`agentShowModel`).
+**Settings → AI Agent** also sets, in `fuyu-settings`: how far back the list goes (`agentSessionHours`: 1, 2 (default), 6 or 24 hours, passed to `list_agent_sessions` as `windowHours`); which agents are shown (**显示哪些 Agent**: one switch with its icon for each of Codex, Claude Code, WorkBuddy, Antigravity, DeepSeek Harness, opencode, Qoder, CodeBuddy, Qwen Code, TRAE and TRAE CN; stored as `agentHiddenProviders`, the ids of the hidden agents, so an agent added later shows by default; the older `agentShowClaudeCode` / `agentShowCodex` settings are carried over; hidden agents also leave the island's running count); only sessions in progress (`agentHideFinished`); and, per card, the running time (`agentShowElapsed`) and the model (`agentShowModel`).
 
 **Running time** counts from the newest typed prompt: Claude Code's last real `user` record, Codex's last `user_message` / `task_started` (`turnStartedAt` in each summary). A session in progress shows "已运行 3 分 20 秒", ticking every second in its own leaf component; a finished one shows "用时 …" up to its last write. When a long turn pushes the prompt out of the 256 KiB tail read, the start found earlier is kept; if it was never seen, no time is shown.
 
@@ -303,6 +303,18 @@ These three CLIs copy Claude Code's hooks and session folders, so the island rea
 | Approving on the island | `/qoder/permission-request`, answered in `hookSpecificOutput.decision` | `/codebuddy/permission-request` | `/qwen/permission-request` |
 
 Each has its own row in the status light card (`agent-<id>-running.flag`). Clicking a session looks for a terminal by folder and title. Not done: usage, SSH (all three have Linux CLIs), cc-connect.
+
+## TRAE and TRAE CN
+
+TRAE IDE's international and Chinese editions are two agents with the same icon: `trae` (`~/.trae`) and `traeCn` (`~/.trae-cn`), each with its own hooks, status light row and switch (task B29, issue #312). TRAE's session database is encrypted, so sessions are pieced together from what the hooks save, as for Antigravity: a session shows up only after the hooks are installed. Neither has been run with the island yet (#179).
+
+- **Hooks**: **安装/修复** writes `hooks.json` (Claude Code's grouped format; a top-level `"version": 1` is added when missing) when the folder exists: `UserPromptSubmit`, `PreToolUse` and `PostToolUse` save the input in `agent-trae/` (or `agent-traeCn/`) and mark the turn running, `Stop` saves it and marks it completed, `Notification` saves it in `agent-notifications`. Saved inputs keep the first and last prompt, the latest reply and the newest record of each session, and are deleted after 24 hours.
+- **Sessions**: title from the first prompt; latest prompt, current tool (`tool_name`, the command or file) and the reply after the last prompt. No model, permission mode, to-dos or context tokens, and no quit detection (TRAE sends no session end).
+- **Waiting on you**: `Notification` with `permission_prompt`, `ask_user_question`, `document_review` or `browser_interaction`, and while an island approval is pending.
+- **Approving on the island**: only `RunCommand`, posted to `/trae/pre-tool-use` or `/traeCn/pre-tool-use` and answered with `hookSpecificOutput.permissionDecision` (`allow`, `deny` with a reason, or `ask` to leave it to TRAE). When TRAE's tool is set to confirm manually, it still asks in TRAE after the island allows.
+- **Clicking a session** brings up the TRAE or TRAE CN window.
+- **Two things to check in TRAE's settings**: if Hooks run "in the sandbox", the scripts may be unable to write to the island's data folder, so switch to running them locally (the default is not known yet); and if "import Claude Code hooks" is on, the hooks the island installed for Claude Code also run in TRAE and its sessions show up as Claude Code, so turn that switch off.
+- Not done: reply marker (the path of TRAE's personal rules file is not documented), usage, SSH, cc-connect.
 
 ## Other Agents
 

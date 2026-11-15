@@ -1,6 +1,6 @@
 # 各家 AI 代理的接入现状
 
-岛接了九家 AI 代理（harness）：Claude Code、Codex、WorkBuddy（国内版和 WorkBuddy AI）、Antigravity、DeepSeek Harness（DSH）、opencode，以及钩子照抄 Claude Code 的三家 Qoder、CodeBuddy Code、Qwen Code（B48，见文末一节）。这张表记每家有哪些形态、数据在哪，以及每项功能做到哪一步。改了哪家的哪一项，就在同一个提交里改这里。接入新的一家或给已有功能扩一家，按 `.claude/skills/fuyu-agent-harness/SKILL.md` 的清单走。
+岛接了十一家 AI 代理（harness）：Claude Code、Codex、WorkBuddy（国内版和 WorkBuddy AI）、Antigravity、DeepSeek Harness（DSH）、opencode，钩子照抄 Claude Code 的三家 Qoder、CodeBuddy Code、Qwen Code（B48），以及 TRAE、TRAE CN（B29）。后五家各有一节在文末。这张表记每家有哪些形态、数据在哪，以及每项功能做到哪一步。改了哪家的哪一项，就在同一个提交里改这里。接入新的一家或给已有功能扩一家，按 `.claude/skills/fuyu-agent-harness/SKILL.md` 的清单走。
 
 核对日期：2026-11-15（按 `main` 上的代码）。各家的调研和来源见 [agent-harnesses.md](../../research/agent-harnesses.md)，用户可见的行为见 [agent-status-hooks.md](../../features/agent-status-hooks.md)。标「未实测」的项都列在实测清单 #179 里。
 
@@ -77,3 +77,22 @@ Qoder（含 Qoder CN）、CodeBuddy Code、Qwen Code 的钩子格式和会话目
 | 用量环 | ✗ 没有公开的额度接口 | ✗ | ✗ |
 | SSH 远程会话 | ✗ 三家都有 Linux CLI，能做，还没做 | ✗ | ✗ |
 | cc-connect | — | — | — |
+
+## TRAE 和 TRAE CN（B29）
+
+TRAE IDE 的国际版和 CN 版按用户的决定分成两家：`trae`（显示「TRAE」，`~/.trae`）和 `traeCn`（显示「TRAE CN」，`~/.trae-cn`），钩子、存下的输入、状态灯和设置开关各一套，图标共用。代码在 `trae.rs`。豆包桌面版没有能接的地方，不接（调研见 [agent-harnesses.md](../../research/agent-harnesses.md) 豆包一节）。
+
+没走 Claude Code 兼容层：TRAE 的会话库是 SQLCipher 加密的，没有能读的会话文件，会话只能从钩子输入拼（和 Antigravity 一样）。`hooks.json` 里 `hooks` 下是 Claude Code 的分组格式，所以安装和检查复用 `install_claude_code_hook_events`、`hook_entries_state`。两家都还没在真机上跑过（#179）。
+
+| 层 | TRAE / TRAE CN |
+|---|---|
+| 配置 | `~/.trae/hooks.json` / `~/.trae-cn/hooks.json`；目录在才装；顶层没有 `version` 时补 `1`，用户写的版本号不动 |
+| 钩子 | UserPromptSubmit、PreToolUse、PostToolUse 存输入并亮灯，Stop 存输入并记完成，Notification 存进 `agent-notifications`；SessionStart 不装（CN 主会话不触发） |
+| 会话 | 从 `agent-trae/`、`agent-traeCn/` 里存下的钩子输入按 `session_id` 拼：标题是第一句提问，最近提问、当前工具（`tool_name`、`tool_input.command` / 文件名）、最近回复（Stop 的 `last_assistant_message`）；每个会话只留第一次和最后一次提问、最近回复和最新一条，24 小时以上的删掉。装钩子之前的会话看不到。没有模型、权限模式、待办、上下文 token |
+| 状态灯 | ✓ `agent-trae-running.flag` / `agent-traeCn-running.flag` |
+| 等你 | Notification 的 `permission_prompt`、`ask_user_question`、`document_review`、`browser_interaction`；岛上审批挂起时也算 |
+| 岛上审批 | ◐ 只拦 `RunCommand`，`/trae/pre-tool-use`、`/traeCn/pre-tool-use`，回 `hookSpecificOutput.permissionDecision`（`allow` / `deny` 带理由 / `ask` 交回 TRAE）。TRAE 的工具在「手动确认」模式时，岛上点允许后还要在 TRAE 里点一下 |
+| 回复标记 | ✗ 个人规则文件的路径官方没写，没核实前不动用户的文件；用户自己让 TRAE 写标记的话能认出来 |
+| 点会话跳过去 | ◐ 到 TRAE / TRAE CN 窗口，到不了具体会话 |
+| 判断会话已退出 | ✗ 没有 SessionEnd，靠 24 小时清理和运行中超时变完成 |
+| 用量环、SSH 远程、cc-connect | ✗ / — / — |
