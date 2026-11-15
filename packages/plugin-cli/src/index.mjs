@@ -9,5 +9,5 @@ export { DEFAULT_FILES, selectFiles } from "./files.mjs";
 export { KEY_ENV, LEGACY_KEY_ENV, defaultKeyFile, generateSigningKey, loadSigningKey } from "./keys.mjs";
 export { DEFAULT_PACK_DIR, pack } from "./pack.mjs";
 export { reviewSources } from "./review.mjs";
-export { APP_MODULES, DEFAULT_SHARED_MODULES, HOST_EXTERNALS, sharedPath } from "./shared.mjs";
+export { APP_MODULES, DEFAULT_SHARED_MODULES, HOST_EXTERNALS, INSTALLED_PACKAGE_DEPTH, sharedPath } from "./shared.mjs";
 export { commitFields, githubUrl, signCommitAt, signPackageFile } from "./sign.mjs";

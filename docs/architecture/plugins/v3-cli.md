@@ -55,8 +55,8 @@ node packages/plugin-cli/bin/fuyu-plugin.mjs <命令> [插件文件夹] [选项]
 
 - **共享模块**：名单从 `@fuyu/plugin-base/protocol` 的 `SHARED_MODULES` 读（现在是 `react`、`react/jsx-runtime`，对应协议根下的 `__shared/react.js`、`__shared/react-jsx-runtime.js`），可以用参数换掉。名单里的模块改写成浮屿的转接模块，依赖里的引用也一样改写，保证一个窗口只有一份 React。
   - **默认写根路径**：`import … from "/__shared/react.js"`。它在 Mac 的 `fuyu-plugin://localhost/…` 和 Windows 的 `http://fuyu-plugin.localhost/…` 上都按 URL 规则落到协议根，和插件装在哪一层、内置插件的地址前面有没有前缀都无关。
-  - 为什么不用相对路径：插件文件的地址是 `fuyu-plugin://localhost/plugins/@作用域/名字/dist/island.js`，前面还有 `plugins/`，内置插件来自安装包、E36.3.6 还可能给它们加前缀，层数要等 E36.3.6、E36.3.9 定了才知道；层数算少了会落到 `…/plugins/__shared/react.js` 这类错的地址。
-  - **相对路径留作参数**：给了 `packageDepth`（包根在协议根下面几层）时，按「产物在包里的深度 + `packageDepth`」个 `../` 写，例如 `packageDepth: 3` 时 `dist/island.js` 写成 `../../../../__shared/react.js`。
+  - 为什么默认不用相对路径：包根在协议根下面几层随来源不同（E36.3.9 定的布局，见 [v3-sources.md](v3-sources.md)）：市场和手动安装的包在 `packages/@作用域/名字/`，3 层，没有作用域时 2 层；内置插件在 `builtin/<id>/`，开发文件夹在数据目录外面时在 `dev/<id>/`。根路径和这些都无关。
+  - **相对路径留作参数**：`packageDepth: true` 按已安装包的 3 层写（导出的常量 `INSTALLED_PACKAGE_DEPTH`），也可以直接写层数。写法是「产物在包里的深度 + 层数」个 `../`，`dist/island.js` 写成 `../../../../__shared/react.js`。按 URL 规则，多出来的 `..` 停在协议根上，所以 3 层对 `packages/名字/` 这种 2 层的包也对；层数算少了才会落到 `…/packages/__shared/react.js` 这类错的地址。
   - 根路径在两个系统上的真机验证由第 3 阶段地基在 E36.3.9 里做，测出问题再把默认值切回相对路径。
 - **浮屿提供、但还没有转接模块的**（`react-dom`、`fuyu-plugin`、`@fuyu/plugin-base` 和不在名单里的 `react/*`）报错，不让插件自己打一份进去。
 - **样式**：`import "./x.css"` 的样式由 esbuild 合并（含 `@import`），整段打进 JS。入口外面包一层：插件启用时用 `ctx.effect` 插一个 `<style data-fuyu-plugin="<插件名>">`，停用时撤掉。内核以后有了受管的样式方法就改用它。
@@ -85,7 +85,7 @@ JSON 对象，只认下面这些键，别的报错。市场构建时由市场给
 | 键 | 默认 | 说明 |
 |---|---|---|
 | `shared` | `@fuyu/plugin-base/protocol` 的 `SHARED_MODULES` | 共享模块名单：模块名对应协议根下的路径 |
-| `packageDepth` | 不写 | 不写时共享模块写根路径 `/__shared/…`；写了（非负整数，包根在协议根下面几层）改写相对路径 |
+| `packageDepth` | 不写 | 不写或 `false` 时共享模块写根路径 `/__shared/…`；`true` 按已安装包的 3 层写相对路径；非负整数按给的层数（包根在协议根下面几层）写相对路径 |
 | `hostExternal` | `["fuyu-plugin", "@fuyu/plugin-base"]` | 宿主部分留作外部的包（含子路径） |
 | `appModules` | `["react", "react-dom", "fuyu-plugin", "@fuyu/plugin-base"]` | 界面部分不许自己打进去的包 |
 | `nodeTarget`、`browserTarget` | `node22`、`es2022` | esbuild 的目标 |

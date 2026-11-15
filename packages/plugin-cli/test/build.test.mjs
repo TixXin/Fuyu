@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { test } from "node:test";
 import { readPackage, validateManifest } from "@fuyu/plugin-manifest";
 import { SHARED_MODULES } from "@fuyu/plugin-base/protocol";
-import { BuildError, DEFAULT_SHARED_MODULES, VERSION, build, pack, sharedPath } from "../src/index.mjs";
+import { BuildError, DEFAULT_SHARED_MODULES, INSTALLED_PACKAGE_DEPTH, VERSION, build, pack, sharedPath } from "../src/index.mjs";
 import { copyFixture, editJson, tempDir, writeFiles } from "./helpers.mjs";
 
 const read = (dir, path) => readFileSync(join(dir, path), "utf8");
@@ -87,13 +87,20 @@ test("the shared module list comes from @fuyu/plugin-base/protocol, and the list
     writeFiles(root, { "src/island.tsx": `import { host } from "fuyu-plugin";\n${read(root, "src/island.tsx")}\nexport const h = host;\n` });
   });
   const shared = { react: "__shared/react.js", "react/jsx-runtime": "__shared/react-jsx-runtime.js", "fuyu-plugin": "__shared/fuyu-plugin.js" };
-  const { outDir } = await build(dir, { shared, packageDepth: 2 });
+  const { outDir } = await build(dir, { shared, packageDepth: true });
   const island = read(outDir, "dist/island.js");
-  assert.match(island, /import \{ host \} from "\.\.\/\.\.\/\.\.\/__shared\/fuyu-plugin\.js";/);
-  assert.match(island, /from "\.\.\/\.\.\/\.\.\/__shared\/react\.js";/);
+  assert.equal(INSTALLED_PACKAGE_DEPTH, 3);
+  assert.match(island, /import \{ host \} from "\.\.\/\.\.\/\.\.\/\.\.\/__shared\/fuyu-plugin\.js";/);
+  const imports = [...island.matchAll(/from "([^"]*__shared[^"]*)";/g)].map((match) => match[1]);
+  const installed = ["fuyu-plugin://localhost/packages/@a/b/dist/island.js", "fuyu-plugin://localhost/packages/b/dist/island.js", "http://fuyu-plugin.localhost/packages/@a/b/dist/island.js"];
+  for (const base of installed) {
+    assert.deepEqual(imports.map((path) => new URL(path, base).pathname).sort(), ["/__shared/fuyu-plugin.js", "/__shared/react-jsx-runtime.js", "/__shared/react.js"], base);
+  }
   assert.equal(sharedPath("dist/pages/settings.js", "__shared/react.js", 0), "../../__shared/react.js");
   assert.equal(sharedPath("dist/pages/settings.js", "__shared/react.js"), "/__shared/react.js");
-  await assert.rejects(build(dir, { packageDepth: -1 }), /packageDepth must be a whole number/);
+  assert.match(read((await build(dir, { shared, packageDepth: false })).outDir, "dist/island.js"), /from "\/__shared\/react\.js";/);
+  await assert.rejects(build(dir, { packageDepth: -1 }), /packageDepth must be true or a whole number/);
+  await assert.rejects(build(dir, { packageDepth: "3" }), /packageDepth must be true or a whole number/);
 });
 
 test("window code cannot bundle its own copy of a module the app provides", async () => {

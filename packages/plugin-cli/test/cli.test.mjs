@@ -26,12 +26,12 @@ test("help, version and bad arguments", async () => {
 
 test("build and pack from the plugin folder, with build settings from a file", async () => {
   const dir = copyFixture();
-  writeFileSync(join(dir, "market.json"), '{ "packageDepth": 1 }\n');
+  writeFileSync(join(dir, "market.json"), '{ "packageDepth": true }\n');
   const built = capture(dir);
   assert.equal(await run(["build", "--config", "market.json"], built.io), 0);
   assert.match(built.stdout(), /built @someone\/fuyu-hello 1\.0\.0 into build[/\\]package/);
   assert.match(built.stdout(), /nodeApis: os/);
-  assert.match(readFileSync(join(dir, "build", "package", "dist", "island.js"), "utf8"), /from "\.\.\/\.\.\/__shared\/react\.js"/);
+  assert.match(readFileSync(join(dir, "build", "package", "dist", "island.js"), "utf8"), /from "\.\.\/\.\.\/\.\.\/\.\.\/__shared\/react\.js"/);
   const packed = capture(dir);
   assert.equal(await run(["pack", "--out", "out/hello.fuyu"], packed.io), 0);
   assert.ok(existsSync(join(dir, "out", "hello.fuyu")));

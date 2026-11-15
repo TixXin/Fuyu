@@ -21,7 +21,7 @@ export interface BuildSettings {
   shared?: Readonly<Record<string, string>>;
   hostExternal?: readonly string[];
   appModules?: readonly string[];
-  packageDepth?: number | null;
+  packageDepth?: number | boolean | null;
   nodeTarget?: string;
   browserTarget?: string;
 }
@@ -99,6 +99,7 @@ export declare const DEFAULT_FILES: readonly string[];
 export declare const DEFAULT_SHARED_MODULES: Readonly<Record<string, string>>;
 export declare const HOST_EXTERNALS: readonly string[];
 export declare const APP_MODULES: readonly string[];
+export declare const INSTALLED_PACKAGE_DEPTH: 3;
 export declare const KEY_ENV: "FUYU_PLUGIN_SIGNING_KEY";
 export declare const LEGACY_KEY_ENV: "FLY_ISLAND_PLUGIN_SIGNING_KEY";
 
