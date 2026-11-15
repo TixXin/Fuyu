@@ -6,7 +6,7 @@ use std::{
 use plugin_base::{find_node, Event, HostSpec, HostState, NodeSearch, Supervisor, Timing, MINIMUM_NODE};
 use serde_json::Value;
 
-use super::{containment, enabled, host_args, host_script, window_origins};
+use super::{containment, enabled, host_args, host_script, window_origins, HostMode};
 
 #[test]
 fn the_host_only_starts_in_a_development_build_with_the_switch_on() {
@@ -25,11 +25,33 @@ fn the_development_host_script_is_the_one_in_the_repository() {
 fn windows_from_the_release_build_and_the_dev_server_may_connect() {
     assert_eq!(window_origins(None), ["tauri://localhost", "http://tauri.localhost", "https://tauri.localhost"]);
     assert_eq!(window_origins(Some("http://localhost:1420/")).last().map(String::as_str), Some("http://localhost:1420"));
-    let args = host_args("/data".into(), &window_origins(Some("http://localhost:1420")));
+    let args = host_args("/data".into(), &window_origins(Some("http://localhost:1420")), &HostMode::default());
     let text: Vec<String> = args.iter().map(|arg| arg.to_string_lossy().into_owned()).collect();
     assert_eq!(text.iter().filter(|arg| *arg == "--origin").count(), 4);
     assert!(text.windows(2).any(|pair| pair == ["--origin", "http://localhost:1420"]));
     assert_eq!(text[0], "--disallow-code-generation-from-strings");
+}
+
+fn args_for(mode: &HostMode) -> Vec<String> {
+    host_args("/data".into(), &[], mode).iter().map(|arg| arg.to_string_lossy().into_owned()).collect()
+}
+
+#[test]
+fn a_development_host_hot_reloads_and_a_release_host_never_does() {
+    let release = args_for(&HostMode::from(false, None));
+    assert!(!release.iter().any(|arg| arg == "--dev" || arg == "--expose-internals"), "{release:?}");
+    let development = args_for(&HostMode::from(true, None));
+    assert_eq!(&development[..2], ["--disallow-code-generation-from-strings", "--expose-internals"], "Node flags come before the script");
+    assert!(development.iter().position(|arg| arg == "--dev") > development.iter().position(|arg| arg.ends_with("main.mjs")), "--dev is the host's own flag, after the script");
+}
+
+#[test]
+fn safe_mode_is_passed_on_only_when_it_names_a_known_mode() {
+    assert!(args_for(&HostMode::from(true, Some("third-party"))).windows(2).any(|pair| pair == ["--safe", "third-party"]));
+    assert!(args_for(&HostMode::from(true, Some(" minimal "))).windows(2).any(|pair| pair == ["--safe", "minimal"]));
+    for odd in ["", "everything", "1"] {
+        assert!(!args_for(&HostMode::from(true, Some(odd))).iter().any(|arg| arg == "--safe"), "{odd}");
+    }
 }
 
 fn wait_for(states: &mpsc::Receiver<HostState>, ready: bool) -> HostState {
