@@ -28,6 +28,10 @@ export type AgentText = {
     elapsedDone: (duration: string) => string;
     permissionModes: Record<"auto" | "bypass" | "acceptEdits" | "plan", string>;
     subagents: (count: number) => string;
+    subagentsShow: (count: number) => string;
+    subagentsHide: (count: number) => string;
+    subagentThinking: string;
+    subagentBackground: string;
     todos: (done: number, total: number) => string;
     todosCurrent: (step: string) => string;
     backgroundTasks: (count: number) => string;
@@ -121,6 +125,10 @@ export const zhCN: AgentText = {
     elapsedDone: (duration) => `用时 ${duration}`,
     permissionModes: { auto: "自动", bypass: "跳过确认", acceptEdits: "自动改文件", plan: "计划" },
     subagents: (count) => `${count} 个子 Agent`,
+    subagentsShow: (count) => `展开 ${count} 个子 Agent`,
+    subagentsHide: (count) => `收起 ${count} 个子 Agent`,
+    subagentThinking: "思考中",
+    subagentBackground: "后台",
     todos: (done, total) => `${done}/${total} 步`,
     todosCurrent: (step) => `正在：${step}`,
     backgroundTasks: (count) => `${count} 个后台任务`,
@@ -220,6 +228,10 @@ export const en: AgentText = {
     elapsedDone: (duration) => `took ${duration}`,
     permissionModes: { auto: "Auto", bypass: "Bypass", acceptEdits: "Accept edits", plan: "Plan" },
     subagents: (count) => (count === 1 ? "1 subagent" : `${count} subagents`),
+    subagentsShow: (count) => (count === 1 ? "Show 1 subagent" : `Show ${count} subagents`),
+    subagentsHide: (count) => (count === 1 ? "Hide 1 subagent" : `Hide ${count} subagents`),
+    subagentThinking: "Thinking",
+    subagentBackground: "Background",
     todos: (done, total) => `${done}/${total} steps`,
     todosCurrent: (step) => `Now: ${step}`,
     backgroundTasks: (count) => (count === 1 ? "1 background task" : `${count} background tasks`),
