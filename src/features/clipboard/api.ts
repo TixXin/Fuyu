@@ -227,6 +227,18 @@ export function restoreClipboardItem(id: string) {
   return invoke<ClipboardHistorySnapshot>("restore_clipboard_history_item", { id });
 }
 
+export function deleteClipboardItems(ids: readonly string[]) {
+  return invoke<ClipboardHistorySnapshot>("delete_clipboard_history_items", { ids });
+}
+
+export function restoreClipboardItems(ids: readonly string[]) {
+  return invoke<ClipboardHistorySnapshot>("restore_clipboard_history_items", { ids });
+}
+
+export function setClipboardPopupExpanded(expanded: boolean) {
+  return invoke<void>("set_clipboard_popup_expanded", { expanded });
+}
+
 export function clearClipboardHistory() {
   return invoke<ClipboardHistorySnapshot>("clear_clipboard_history");
 }

@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::{collections::BTreeMap, path::Path};
 
 use serde::Serialize;
 use serde_json::Value;
@@ -10,16 +10,23 @@ use super::{is_island_hook_text, normalize_windows_line_endings};
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(super) enum HookInstallState {
+    Absent,
     NotInstalled,
     Outdated,
     Current,
 }
 
+impl HookInstallState {
+    pub(super) fn is_installed(self) -> bool {
+        matches!(self, Self::Outdated | Self::Current)
+    }
+}
+
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AgentHooksState {
-    pub(super) codex: HookInstallState,
-    pub(super) claude_code: HookInstallState,
+    #[serde(flatten)]
+    pub(super) agents: BTreeMap<&'static str, HookInstallState>,
     pub(super) scripts_outdated: bool,
 }
 
@@ -33,18 +40,21 @@ pub(super) fn claude_code_hooks_state(
     else {
         return HookInstallState::NotInstalled;
     };
-    let hooks = &config["hooks"];
+    hook_entries_state(
+        &config["hooks"],
+        &claude_code_installed_entries(running_script_path, status_script_path, approval),
+    )
+}
+
+pub(super) fn hook_entries_state(hooks: &Value, expected: &[(&str, Value)]) -> HookInstallState {
     if !is_island_hook_text(&hooks.to_string()) {
         return HookInstallState::NotInstalled;
     }
-
-    let all_current = claude_code_installed_entries(running_script_path, status_script_path, approval)
-        .iter()
-        .all(|(event_name, expected)| {
-            hooks[*event_name]
-                .as_array()
-                .is_some_and(|entries| entries.contains(expected))
-        });
+    let all_current = expected.iter().all(|(event_name, entry)| {
+        hooks[*event_name]
+            .as_array()
+            .is_some_and(|entries| entries.contains(entry))
+    });
     if all_current {
         HookInstallState::Current
     } else {

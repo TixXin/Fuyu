@@ -1,5 +1,6 @@
 use std::{
     collections::HashMap,
+    ffi::{OsStr, OsString},
     fs,
     path::{Path, PathBuf},
     sync::{Mutex, PoisonError},
@@ -8,11 +9,13 @@ use std::{
 
 use serde_json::Value;
 
+use super::harness::{Harness, Hooks, RemoteFiles, ScanRoots, StatusLight};
 use super::markers::AGENT_RUNNING_STALE_AFTER_MS;
 use super::session_scan::pick_title;
-use super::sessions::{session_phase, AgentSessionSummary, TurnState, LAST_MESSAGE_MAX_CHARS};
+use super::reply_text::reply_ending;
+use super::sessions::{session_phase, AgentSessionSummary, TurnState};
 use super::snapshot::system_time_to_unix_millis;
-use super::title::{display_title, folder_title, prompt_title, shorten};
+use super::title::{display_title, folder_title, prompt_title};
 use super::window_focus::app_name;
 use crate::platform;
 
@@ -33,17 +36,118 @@ type Parsed = Option<(AgentSessionSummary, TurnState)>;
 type Stamp = (u64, Option<SystemTime>);
 static CHECKPOINTS: Mutex<Option<HashMap<PathBuf, (Stamp, Parsed)>>> = Mutex::new(None);
 
-fn roots(home_dir: &Path) -> [PathBuf; 3] {
-    [
-        home_dir.join(".dsh"),
-        home_dir.join(".dsh-beta"),
-        home_dir.join("AppData").join("Roaming").join("dsh-desktop").join("harness"),
-    ]
+const HOME_VARIABLES: [&str; 2] = ["DSH_HOME", "DSH_DESKTOP_NEXT_HOME"];
+const CHOSEN_HOMES: [(&str, &str, &str); 5] = [
+    ("DSH NEXT/home", "desktop-next-location.json", "home"),
+    ("DSH NEXT/home", "desktop-next-last-home.json", "home"),
+    ("DSH Desktop Beta/home", "desktop-next-location.json", "home"),
+    ("DSH Desktop Beta/home", "desktop-next-last-home.json", "home"),
+    ("DSH Desktop/data-directory", "state.json", "activeHome"),
+];
+const MAX_POINTER_BYTES: u64 = 64 * 1024;
+const MIRRORED_HOMES: [&str; 3] = [".dsh", ".dsh-beta", ".dsh-home"];
+
+pub(super) const HARNESS: Harness = Harness {
+    id: PROVIDER,
+    hooks: Some(Hooks { install: super::dsh_hooks::install_hooks, check: super::dsh_hooks::hooks_state }),
+    status_light: Some(StatusLight {
+        running_marker: "agent-dsh-running.flag",
+        running_hold: "agent-dsh-running-hold.flag",
+        saved_inputs: &[],
+    }),
+    sessions: Some(read_sessions),
+    remote: Some(RemoteFiles {
+        find: &[
+            "dshc() { find \"$1/storages/session_projcache/sessions\" -maxdepth 1 -type f -name '*.json' -mmin -\"$W\" 2>/dev/null | while IFS= read -r f; do i=${f##*/}; i=${i%.json}; for l in \"$1\"/sessions/*/\"$i\"/session.v[34].jsonl.zstd; do [ -f \"$l\" ] && { printf '%s\\t%s\\n' \"$f\" \"$2/storages/session_projcache/sessions/${f##*/}\"; break; }; done; done; }",
+            "dshc .dsh .dsh",
+            "dshc .dsh-beta .dsh-beta",
+            "case \"$DSH_HOME\" in /*) [ \"$DSH_HOME\" = \"$HOME/.dsh\" ] || [ \"$DSH_HOME\" = \"$HOME/.dsh-beta\" ] || dshc \"$DSH_HOME\" .dsh-home ;; esac",
+        ],
+        session_dirs: &[],
+        files: &[],
+        checkpoint_dirs: &[
+            ".dsh/storages/session_projcache/sessions/",
+            ".dsh-beta/storages/session_projcache/sessions/",
+            ".dsh-home/storages/session_projcache/sessions/",
+        ],
+    }),
+};
+
+fn read_sessions(roots: &ScanRoots, now: i64, window_ms: i64) -> Vec<AgentSessionSummary> {
+    if roots.local_app_dir.is_some() {
+        return sessions(roots.home_dir, now, window_ms);
+    }
+    let mirrored = MIRRORED_HOMES.iter().map(|home| roots.home_dir.join(home)).collect();
+    sessions_in(mirrored, now, window_ms, false)
+}
+
+fn app_data(home_dir: &Path) -> PathBuf {
+    if cfg!(windows) {
+        home_dir.join("AppData").join("Roaming")
+    } else if cfg!(target_os = "macos") {
+        home_dir.join("Library").join("Application Support")
+    } else {
+        home_dir.join(".config")
+    }
+}
+
+fn expand_home(value: &OsStr, home_dir: &Path) -> Option<PathBuf> {
+    let text = value.to_string_lossy();
+    let text = text.trim();
+    let path = if text == "~" {
+        home_dir.to_path_buf()
+    } else if let Some(rest) = text.strip_prefix("~/").or_else(|| text.strip_prefix("~\\")) {
+        home_dir.join(rest)
+    } else {
+        PathBuf::from(text)
+    };
+    (!text.is_empty() && path.is_absolute()).then_some(path)
+}
+
+fn chosen_home(app_data: &Path, (dir, file, key): (&str, &str, &str)) -> Option<PathBuf> {
+    let path = dir.split('/').fold(app_data.to_path_buf(), |path, part| path.join(part)).join(file);
+    let bytes = fs::read(&path).ok().filter(|bytes| bytes.len() as u64 <= MAX_POINTER_BYTES)?;
+    let value = serde_json::from_slice::<Value>(&bytes).ok()?;
+    let home = PathBuf::from(value[key].as_str()?);
+    home.is_absolute().then_some(home)
+}
+
+fn roots(home_dir: &Path, var: impl Fn(&str) -> Option<OsString>) -> Vec<PathBuf> {
+    let app_data = app_data(home_dir);
+    let mut roots: Vec<PathBuf> = Vec::new();
+    let candidates = HOME_VARIABLES
+        .iter()
+        .filter_map(|name| var(name).and_then(|value| expand_home(&value, home_dir)))
+        .chain([
+            home_dir.join(".dsh"),
+            home_dir.join(".dsh-beta"),
+            home_dir.join("AppData").join("Roaming").join("dsh-desktop").join("harness"),
+            app_data.join("dshed").join("dsh"),
+        ])
+        .chain(CHOSEN_HOMES.into_iter().filter_map(|pointer| chosen_home(&app_data, pointer)));
+    for root in candidates {
+        if !roots.contains(&root) {
+            roots.push(root);
+        }
+    }
+    roots
+}
+
+pub(super) fn prompt_files(home_dir: &Path) -> Vec<PathBuf> {
+    homes(home_dir).into_iter().map(|home| home.join("AGENTS.md")).collect()
+}
+
+pub(super) fn homes(home_dir: &Path) -> Vec<PathBuf> {
+    roots(home_dir, |name| std::env::var_os(name))
 }
 
 pub(super) fn sessions(home_dir: &Path, now: i64, window_ms: i64) -> Vec<AgentSessionSummary> {
+    sessions_in(homes(home_dir), now, window_ms, true)
+}
+
+fn sessions_in(roots: Vec<PathBuf>, now: i64, window_ms: i64, check_logs: bool) -> Vec<AgentSessionSummary> {
     let mut newest: HashMap<String, (AgentSessionSummary, TurnState)> = HashMap::new();
-    for root in roots(home_dir) {
+    for root in roots {
         let dir = root.join("storages").join("session_projcache").join("sessions");
         for entry in fs::read_dir(dir).into_iter().flatten().flatten() {
             let path = entry.path();
@@ -58,7 +162,7 @@ pub(super) fn sessions(home_dir: &Path, now: i64, window_ms: i64) -> Vec<AgentSe
             else {
                 continue;
             };
-            if now - at > window_ms || newest.get(id).is_some_and(|(known, _)| known.updated_at >= at) || !has_log(&root, id) {
+            if now - at > window_ms || newest.get(id).is_some_and(|(known, _)| known.updated_at >= at) || (check_logs && !has_log(&root, id)) {
                 continue;
             }
             if let Some(parsed) = checkpoint(&path, id, at) {
@@ -146,6 +250,7 @@ fn parse_checkpoint(value: &Value, id: &str, at: i64) -> Parsed {
     let agent_title = row(rows, "title", &[1]).and_then(Value::as_str).and_then(display_title);
     let (title, title_source) = pick_title(None, agent_title, first_prompt, cwd.as_deref().and_then(folder_title));
     let model = row(rows, "modelSelection", &[2]).map(|selection| &selection["lastUsed"]);
+    let reply = turn.and_then(|turn| turn["response"].as_str()).map(reply_ending).unwrap_or_default();
     let summary = AgentSessionSummary {
         provider: PROVIDER,
         session_id: id.to_string(),
@@ -155,9 +260,9 @@ fn parse_checkpoint(value: &Value, id: &str, at: i64) -> Parsed {
         model: model.and_then(|model| text(&model["model"])),
         effort: model.and_then(|model| text(&model["reasoningEffort"])),
         phase: "completed",
-        last_message: turn.and_then(|turn| turn["response"].as_str()).and_then(|reply| shorten(reply, LAST_MESSAGE_MAX_CHARS)),
-        reply_marker: None,
-        reply_asks: false,
+        last_message: reply.message,
+        reply_marker: reply.marker,
+        reply_asks: reply.asks,
         updated_at: at,
         host: None,
         turn_started_at: metadata["lastPromptAt"].as_i64(),
@@ -176,91 +281,5 @@ fn parse_checkpoint(value: &Value, id: &str, at: i64) -> Parsed {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use serde_json::json;
-
-    const ID: &str = "session-7f3c2a10-5b8e-4d21-9c6f-0a1b2c3d4e5f";
-
-    fn fixture() -> Value {
-        json!({"version": 7, "record": {
-            "identity": {"formatVersion": 4, "cwd": "D:\\work\\demo"},
-            "rows": {
-                "title": {"ver": 1, "val": "Fix the login page"},
-                "sessionListMetadata": {"ver": 1, "val": {"blank": false, "lastPromptAt": 1000}},
-                "turnBoundary": {"ver": 2, "val": {"openTurnStartSeq": 5}},
-                "turnOutline": {"ver": 2, "val": {"turns": [{"prompt": "why does it fail", "response": "Looking at it."}]}},
-                "modelSelection": {"ver": 2, "val": {"lastUsed": {"model": "deepseek-v4", "reasoningEffort": "high"}}},
-                "userQuestions": {"ver": 2, "val": {"questions": {"active": []}}},
-                "contextPressure": {"ver": 5, "val": {"surfaceTokens": 4200}}
-            }
-        }})
-    }
-
-    fn state(value: &Value) -> Option<TurnState> {
-        parse_checkpoint(value, ID, 1100).map(|(_, state)| state)
-    }
-
-    #[test]
-    fn reads_a_known_checkpoint() {
-        let (summary, state) = parse_checkpoint(&fixture(), ID, 1100).unwrap();
-        assert_eq!(state, TurnState::Working);
-        assert_eq!(summary.provider, PROVIDER);
-        assert_eq!(summary.title.as_deref(), Some("Fix the login page"));
-        assert_eq!(summary.cwd.as_deref(), Some(r"D:\work\demo"));
-        assert_eq!(summary.model.as_deref(), Some("deepseek-v4"));
-        assert_eq!(summary.effort.as_deref(), Some("high"));
-        assert_eq!(summary.last_prompt.as_deref(), Some("why does it fail"));
-        assert_eq!(summary.last_message.as_deref(), Some("Looking at it."));
-        assert_eq!(summary.turn_started_at, Some(1000));
-        assert_eq!(summary.context_tokens, Some(4200));
-    }
-
-    #[test]
-    fn open_questions_wait_closed_turns_finish_and_unknown_versions_are_skipped() {
-        let mut value = fixture();
-        value["record"]["rows"]["userQuestions"]["val"]["questions"]["active"] = json!([{"state": "open"}]);
-        assert_eq!(state(&value), Some(TurnState::AwaitingUser));
-        value["record"]["rows"]["userQuestions"]["val"]["questions"]["active"][0]["state"] = json!("continued");
-        assert_eq!(state(&value), Some(TurnState::Working));
-        value["record"]["rows"]["turnBoundary"]["val"]["openTurnStartSeq"] = Value::Null;
-        assert_eq!(state(&value), Some(TurnState::Done));
-        value["record"]["rows"]["sessionListMetadata"]["val"]["blank"] = json!(true);
-        assert_eq!(state(&value), None);
-        let mut value = fixture();
-        value["version"] = json!(99);
-        assert_eq!(state(&value), None);
-        let mut value = fixture();
-        value["record"]["rows"]["turnBoundary"]["ver"] = json!(3);
-        assert_eq!(state(&value), None);
-    }
-
-    #[test]
-    fn lists_logged_sessions_once_from_the_newest_store() {
-        let home = std::env::temp_dir().join(format!("fuyu-dsh-{}", std::process::id()));
-        let _ = fs::remove_dir_all(&home);
-        let write = |root: &Path, id: &str, title: &str, log: bool| {
-            let dir = root.join("storages/session_projcache/sessions");
-            fs::create_dir_all(&dir).unwrap();
-            let mut value = fixture();
-            value["record"]["rows"]["title"]["val"] = json!(title);
-            fs::write(dir.join(format!("{id}.json")), value.to_string()).unwrap();
-            if log {
-                let session = root.join("sessions/--D-work-demo--").join(id);
-                fs::create_dir_all(&session).unwrap();
-                fs::write(session.join(LOGS[1]), b"").unwrap();
-            }
-        };
-        let [shared, _, isolated] = roots(&home);
-        write(&shared, ID, "old", true);
-        std::thread::sleep(std::time::Duration::from_millis(20));
-        write(&isolated, ID, "new", true);
-        write(&shared, "session-deleted", "gone", false);
-        let now = system_time_to_unix_millis(SystemTime::now()).unwrap();
-        let listed = sessions(&home, now, 60_000);
-        assert_eq!(listed.len(), 1);
-        assert_eq!(listed[0].title.as_deref(), Some("new"));
-        assert_eq!(listed[0].phase, "running");
-        fs::remove_dir_all(&home).unwrap();
-    }
-}
+#[path = "dsh_tests.rs"]
+mod tests;

@@ -3,17 +3,19 @@ import { useTranslation } from "../../../i18n";
 import type { MediaState } from "../api";
 import { lineIndexAt, playbackPosition, type LyricLine } from "./lrc";
 import { KaraokeText } from "./KaraokeText";
-import type { KaraokeLook } from "./lyricsSettings";
+import type { KaraokeLook, LyricsIntro } from "./lyricsSettings";
+import { introLine } from "./songLine";
 import "./LyricsView.css";
 
 const TICK_MS = 200;
 
 const PAGE_LOOK: KaraokeLook = { fill: "smooth", lit: "var(--text-1)", dim: "var(--text-3)", glow: false, follow: false };
 
-export function LyricsView({ lines, mediaState, offsetMs, onPickLine }: {
+export function LyricsView({ lines, mediaState, offsetMs, intro = "todo", onPickLine }: {
   lines: LyricLine[];
   mediaState: MediaState;
   offsetMs: number;
+  intro?: LyricsIntro;
   onPickLine?: (positionMs: number) => void;
 }) {
   const t = useTranslation();
@@ -31,7 +33,8 @@ export function LyricsView({ lines, mediaState, offsetMs, onPickLine }: {
   const index = lineIndexAt(lines, position);
   const words = index >= 0 ? lines[index].words : undefined;
   const text = (at: number) => (at >= 0 && at < lines.length ? lines[at].text : "");
-  const current = (index >= 0 && text(index)) || "♪";
+  const opening = index < 0 && intro === "song" ? introLine({ ...mediaState, playbackStatus: "playing" }, intro, "")?.text : null;
+  const current = (index >= 0 && text(index)) || opening || "♪";
   const row = (at: number, className: string, content: ReactNode, key?: number) => {
     const line = at >= 0 && at < lines.length ? lines[at] : null;
     if (!onPickLine || !line?.text) {

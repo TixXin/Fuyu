@@ -8,7 +8,7 @@ use super::session_process::{ancestor_chain, session_process_chain};
 use super::session_records::{self, SessionRecord};
 use super::wezterm::{self, WEZTERM_APP};
 use super::window_focus::{self, app_name, SessionHints};
-use super::{antigravity, dsh, workbuddy};
+use super::{antigravity, dsh, opencode, workbuddy};
 use crate::system::windows_home_dir;
 use crate::platform;
 
@@ -146,6 +146,7 @@ pub(super) fn focus_session(
             workbuddy::PROVIDER => Some(workbuddy::APP.to_string()),
             antigravity::PROVIDER => Some(antigravity::APP.to_string()),
             dsh::PROVIDER => dsh::running_app(),
+            opencode::PROVIDER => opencode::running_app(),
             _ => None,
         });
     if let Some(app) = &prefer_app {

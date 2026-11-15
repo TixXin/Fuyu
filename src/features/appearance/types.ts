@@ -1,5 +1,5 @@
 import type { CalendarSettingValues } from "../calendar/calendarSettings";
-import type { LyricsIslandPriority, LyricsKaraokeColor, LyricsKaraokeFallback, LyricsKaraokeFill } from "../media/lyrics/lyricsSettings";
+import type { LyricsIntro, LyricsIslandPriority, LyricsKaraokeColor, LyricsKaraokeFallback, LyricsKaraokeFill } from "../media/lyrics/lyricsSettings";
 import type { TodoProject } from "../todos/types";
 
 export type TranslationTarget = "window" | "island";
@@ -66,8 +66,7 @@ export type IslandSettings = CalendarSettingValues & {
   agentArchiveMotion: AgentArchiveMotion;
   agentCardEffects: AgentCardEffects;
   agentSessionHours: number;
-  agentShowClaudeCode: boolean;
-  agentShowCodex: boolean;
+  agentHiddenProviders: string[];
   agentHideFinished: boolean;
   agentHideClosed: boolean;
   agentShowElapsed: boolean;
@@ -137,6 +136,7 @@ export type IslandSettings = CalendarSettingValues & {
   lyricsOffsetMs: number;
   lyricsOnIsland: boolean;
   lyricsIslandPriority: LyricsIslandPriority;
+  lyricsIntro: LyricsIntro;
   lyricsKaraoke: boolean;
   lyricsKaraokeFallback: LyricsKaraokeFallback;
   lyricsKaraokeFill: LyricsKaraokeFill;
@@ -145,6 +145,7 @@ export type IslandSettings = CalendarSettingValues & {
   lyricsKaraokeDim: number;
   lyricsKaraokeGlow: boolean;
   lyricsKaraokeFollow: boolean;
+  lyricsCoverColor: boolean;
   mailEnabled: boolean;
   agentTitleEnabled: boolean;
   agentTitleMode: AgentTitleMode;
@@ -163,6 +164,8 @@ export type IslandPreset = {
 };
 
 export type LegacyIslandSettings = Partial<IslandSettings> & {
+  agentShowClaudeCode?: boolean;
+  agentShowCodex?: boolean;
   margin?: number;
   sizeScale?: number;
   taskTitleColor?: string;

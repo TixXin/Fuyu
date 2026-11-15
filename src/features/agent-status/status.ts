@@ -1,6 +1,9 @@
 import type { Translations } from "../../i18n";
 import type { AgentHooksState, AgentProvider, AgentStatusSnapshot, AgentTaskPhase, AgentTaskStatus, SessionProvider } from "./api";
+import { AGENTS, AGENT_PROVIDERS, SESSION_PROVIDERS } from "./agents.ts";
 import type { SessionFilter } from "./sessionList";
+
+export { AGENT_PROVIDERS } from "./agents.ts";
 
 export type AgentVisualState = "idle" | "running" | "attention";
 export type AgentHooksInstallState = "idle" | "installing" | "installed" | "error";
@@ -10,20 +13,14 @@ export const DEFAULT_AGENT_TASK_STATUS: AgentTaskStatus = {
   updatedAt: 0,
 };
 export const DEFAULT_AGENT_STATUS: AgentStatusSnapshot = {
-  codex: DEFAULT_AGENT_TASK_STATUS,
-  claudeCode: DEFAULT_AGENT_TASK_STATUS,
+  ...(Object.fromEntries(AGENT_PROVIDERS.map((provider) => [provider, DEFAULT_AGENT_TASK_STATUS])) as Record<AgentProvider, AgentTaskStatus>),
   updatedAt: 0,
   statusPath: "",
   others: [],
 };
-export const AGENT_PROVIDERS: AgentProvider[] = ["codex", "claudeCode"];
-export const AGENT_PROVIDER_LABELS: Record<SessionProvider, string> = {
-  codex: "Codex",
-  claudeCode: "Claude Code",
-  workbuddy: "WorkBuddy",
-  antigravity: "Antigravity",
-  dsh: "DeepSeek Harness",
-};
+export const AGENT_PROVIDER_LABELS = Object.fromEntries(
+  SESSION_PROVIDERS.map((provider) => [provider, AGENTS[provider].label]),
+) as Record<SessionProvider, string>;
 export type AgentStatusEntry = {
   key: string;
   label: string;
@@ -37,14 +34,14 @@ export function listAgentStatuses(snapshot: AgentStatusSnapshot): AgentStatusEnt
       key: provider,
       label: AGENT_PROVIDER_LABELS[provider],
       provider,
-      status: snapshot[provider],
+      status: snapshot[provider] ?? DEFAULT_AGENT_TASK_STATUS,
     })),
     ...(snapshot.others ?? []).map((other) => ({ key: other.id, label: other.name, provider: null, status: other })),
   ];
 }
 
 export function withoutHiddenProviders(snapshot: AgentStatusSnapshot, shown: SessionFilter): AgentStatusSnapshot {
-  const hidden = AGENT_PROVIDERS.filter((provider) => !shown[provider]);
+  const hidden = SESSION_PROVIDERS.filter((provider) => shown[provider] === false && provider in snapshot);
   if (hidden.length === 0) return snapshot;
   return { ...snapshot, ...Object.fromEntries(hidden.map((provider) => [provider, DEFAULT_AGENT_TASK_STATUS])) };
 }
@@ -71,10 +68,11 @@ export type AgentHooksNotice = "update" | "install";
 
 export function getAgentHooksNotice(state: AgentHooksState | null): AgentHooksNotice | null {
   if (!state) return null;
-  if (state.scriptsOutdated || AGENT_PROVIDERS.some((provider) => state[provider] === "outdated")) {
+  const present = AGENT_PROVIDERS.filter((provider) => state[provider] !== undefined && state[provider] !== "absent");
+  if (state.scriptsOutdated || present.some((provider) => state[provider] === "outdated")) {
     return "update";
   }
-  return AGENT_PROVIDERS.every((provider) => state[provider] === "notInstalled") ? "install" : null;
+  return present.length > 0 && present.every((provider) => state[provider] === "notInstalled") ? "install" : null;
 }
 
 export function getAgentStatusLabel(snapshot: AgentStatusSnapshot, t: Translations, activeSessions = 0) {

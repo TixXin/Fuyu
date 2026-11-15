@@ -20,7 +20,7 @@
     "src/features/file-shelf/FileShelfPanel.css": 6,
     "src/features/media/lyrics/LyricsSettingsSection.css": 1,
     "src/features/media/MusicSourceList.css": 5,
-    "src/features/media/MusicWaveButton.css": 8,
+    "src/features/media/MusicWaveButton.css": 5,
     "src/features/messages/mail/MailPanel.css": 4,
     "src/features/messages/mail/MailSettings.css": 2,
     "src/features/messages/qq-notifications/QQNotifications.css": 4,

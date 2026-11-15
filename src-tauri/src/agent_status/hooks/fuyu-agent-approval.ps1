@@ -1,4 +1,13 @@
 $ErrorActionPreference = 'Stop'
+$routes = @{
+    codex = 'codex/permission-request'
+    workbuddy = 'workbuddy/permission-request'
+    antigravity = 'antigravity/pre-tool-use'
+    dsh = 'dsh/pre-tool-use'
+}
+$agent = if ($args.Count -gt 0) { [string]$args[0] } else { 'codex' }
+$route = $routes[$agent]
+if (-not $route) { exit 0 }
 try {
     $utf8 = New-Object System.Text.UTF8Encoding($false)
     $body = (New-Object System.IO.StreamReader([Console]::OpenStandardInput(), $utf8)).ReadToEnd()
@@ -11,7 +20,7 @@ try {
     if (-not $connected) { exit 0 }
 
     [System.Net.ServicePointManager]::Expect100Continue = $false
-    $request = [System.Net.HttpWebRequest]::Create("http://127.0.0.1:$port/codex/permission-request")
+    $request = [System.Net.HttpWebRequest]::Create("http://127.0.0.1:$port/$route")
     $request.Method = 'POST'
     $request.Proxy = $null
     $request.ContentType = 'application/json'

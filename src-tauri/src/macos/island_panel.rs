@@ -1,6 +1,6 @@
 use objc2_app_kit::{NSApplicationActivationOptions, NSRunningApplication};
 use tauri::{Manager, WebviewWindow};
-use tauri_nspanel::{tauri_panel, CollectionBehavior, ManagerExt, PanelLevel, StyleMask, WebviewWindowExt};
+use tauri_nspanel::{tauri_panel, CollectionBehavior, ManagerExt, PanelHandle, PanelLevel, StyleMask, WebviewWindowExt};
 
 tauri_panel! {
     panel!(IslandPanel {
@@ -13,6 +13,13 @@ tauri_panel! {
     panel!(PopupPanel {
         config: {
             can_become_key_window: true,
+            is_floating_panel: true
+        }
+    })
+
+    panel!(PreviewPanel {
+        config: {
+            can_become_key_window: false,
             is_floating_panel: true
         }
     })
@@ -50,7 +57,14 @@ pub(crate) fn make_overlay_panel(window: &WebviewWindow) -> Result<u32, String> 
 const POPUP_ABOVE_ISLAND: i64 = 1;
 
 pub(crate) fn make_popup_panel(window: &WebviewWindow) -> Result<(), String> {
-    let panel = window.to_panel::<PopupPanel>().map_err(|error| error.to_string())?;
+    float_above_island(window, window.to_panel::<PopupPanel>().map_err(|error| error.to_string())?)
+}
+
+pub(crate) fn make_preview_panel(window: &WebviewWindow) -> Result<(), String> {
+    float_above_island(window, window.to_panel::<PreviewPanel>().map_err(|error| error.to_string())?)
+}
+
+fn float_above_island(window: &WebviewWindow, panel: PanelHandle<tauri::Wry>) -> Result<(), String> {
     panel.set_level(PanelLevel::MainMenu.value() + LEVELS_ABOVE_MENU_BAR + POPUP_ABOVE_ISLAND);
     panel.set_collection_behavior(
         CollectionBehavior::new()
@@ -62,6 +76,14 @@ pub(crate) fn make_popup_panel(window: &WebviewWindow) -> Result<(), String> {
     panel
         .add_style_mask(StyleMask::empty().nonactivating_panel().into())
         .map_err(|error| format!("Could not make {} a non-activating panel: {error:?}", window.label()))
+}
+
+pub(crate) fn show_panel_without_key<R: tauri::Runtime>(app: &tauri::AppHandle<R>, label: &str) -> bool {
+    let Ok(panel) = app.get_webview_panel(label) else {
+        return false;
+    };
+    panel.show();
+    true
 }
 
 pub(crate) fn make_panel_key<R: tauri::Runtime>(app: &tauri::AppHandle<R>, label: &str) -> bool {

@@ -16,8 +16,24 @@ const mailbox = (email: string, extra: Partial<MailSnapshot> = {}): MailSnapshot
 });
 let mailboxes: MailSnapshot[] = [mailbox("demo@qq.com"), mailbox("louis@163.com", { status: "authRequired", enabled: false, unreadCount: null })];
 let replyMarkerOn = false;
-export const REPLY_MARKER = { path: "C:\\Users\\demo\\.claude\\rules\\fuyu-reply-marker.md", content: "<!-- fuyu: reply marker v4 -->\n## Reply status marker" };
-const replyMarker = () => ({ installed: replyMarkerOn, outdated: false, ...REPLY_MARKER, remotes: [] });
+export const REPLY_MARKER = {
+  path: "C:\\Users\\demo\\.claude\\CLAUDE.md",
+  target: "D:\\dotfiles\\AGENTS.md",
+  dangling: "C:\\Users\\demo\\.gemini\\GEMINI.md is a link to E:\\gone\\GEMINI.md, which does not exist",
+  content: "<!-- fuyu: reply marker v5 -->\n## Reply status marker",
+};
+const replyMarker = () => ({
+  installed: replyMarkerOn,
+  outdated: false,
+  files: [
+    { agent: "claudeCode", path: REPLY_MARKER.path, target: REPLY_MARKER.target, installed: replyMarkerOn, outdated: false, error: null },
+    { agent: "codex", path: "C:\\Users\\demo\\.codex\\AGENTS.md", target: REPLY_MARKER.target, installed: replyMarkerOn, outdated: false, error: null },
+    { agent: "antigravity", path: "C:\\Users\\demo\\.gemini\\GEMINI.md", target: null, installed: false, outdated: false, error: REPLY_MARKER.dangling },
+  ],
+  oldRules: [],
+  content: REPLY_MARKER.content,
+  remotes: [],
+});
 export const replyMarkerCalls: boolean[] = [];
 export const openedUrls: string[] = [];
 mockIPC((command, payload) => {

@@ -1,11 +1,14 @@
 #[cfg_attr(target_os = "macos", path = "approval_hotkeys_macos.rs")]
 pub(crate) mod approval_hotkeys;
 mod background_tasks;
+mod claude_code;
 mod claude_hooks;
+mod codex;
 mod codex_hooks;
 mod editor_extension;
 mod editor_terminal;
 mod external;
+mod harness;
 mod hooks_state;
 pub(crate) mod host_icon;
 mod codex_usage;
@@ -43,7 +46,10 @@ mod wezterm;
 mod window_focus;
 mod workbuddy;
 mod antigravity;
+mod antigravity_remote;
 mod dsh;
+mod dsh_hooks;
+mod opencode;
 
 use serde::Serialize;
 use serde_json::{json, Value};
@@ -52,17 +58,9 @@ use tauri::{AppHandle, Emitter, Manager};
 
 use crate::system::windows_home_dir;
 
-use claude_hooks::install_claude_code_status_hooks;
-use codex_hooks::install_codex_status_hooks;
-use hooks_state::{
-    claude_code_hooks_state, codex_hooks_state, script_outdated, AgentHooksState, HookInstallState,
-};
-use markers::{
-    apply_agent_running_markers, remove_agent_marker_files, remove_legacy_hook_inputs,
-    CLAUDE_CODE_RUNNING_HOLD_FILE_NAME, CLAUDE_CODE_RUNNING_MARKER_FILE_NAME,
-    CLAUDE_CODE_SAVED_INPUT_FILE_NAMES, CODEX_RUNNING_HOLD_FILE_NAME,
-    CODEX_RUNNING_MARKER_FILE_NAME, CODEX_SAVED_INPUT_FILE_NAMES,
-};
+use harness::HookEnv;
+use hooks_state::{script_outdated, AgentHooksState};
+use markers::{apply_agent_running_markers, remove_agent_marker_files, remove_legacy_hook_inputs};
 use snapshot::{
     agent_status_snapshot_from_persisted, current_unix_millis, default_agent_phase,
     default_agent_status_snapshot, default_persisted_agent_status, AgentStatusSnapshot,
@@ -123,10 +121,9 @@ pub(super) const AGENT_APPROVAL_SCRIPT: &str = include_str!("hooks/fuyu-agent-ap
 pub struct AgentHooksInstallResult {
     pub(super) scripts_dir: String,
     pub(super) status_path: String,
-    pub(super) codex_config_path: String,
-    pub(super) claude_config_path: String,
     pub(super) installed_at: i64,
     pub(super) remotes: Vec<remote_setup::RemoteResult>,
+    pub(super) dsh_bridge: Option<String>,
 }
 
 #[tauri::command]
@@ -171,13 +168,13 @@ fn read_agent_status(app: AppHandle) -> Result<AgentStatusSnapshot, String> {
 
 #[tauri::command]
 pub fn clear_agent_status(app: AppHandle, provider: String) -> Result<AgentStatusSnapshot, String> {
-    if provider != "codex" && provider != "claudeCode" {
+    let Some((id, light)) = harness::with_status_light().find(|(id, _)| *id == provider) else {
         return if external::clear_by_id(&provider) {
             read_agent_status(app)
         } else {
             Err("Unsupported agent provider.".to_string())
         };
-    }
+    };
     crate::dev_lane::refuse_in_preview("clear the agents' status")?;
     let app_dir = crate::home_dir::fuyu_home(app.path())
         .map_err(|error| format!("Failed to resolve app data directory: {error}"))?;
@@ -199,29 +196,8 @@ pub fn clear_agent_status(app: AppHandle, provider: String) -> Result<AgentStatu
         updated_at: now,
     };
 
-    match provider.as_str() {
-        "codex" => {
-            persisted.codex = cleared_status;
-            remove_agent_marker_files(
-                &app_dir,
-                CODEX_RUNNING_MARKER_FILE_NAME,
-                CODEX_RUNNING_HOLD_FILE_NAME,
-                CODEX_SAVED_INPUT_FILE_NAMES,
-            );
-        }
-        "claudeCode" => {
-            persisted.claude_code = cleared_status;
-            remove_agent_marker_files(
-                &app_dir,
-                CLAUDE_CODE_RUNNING_MARKER_FILE_NAME,
-                CLAUDE_CODE_RUNNING_HOLD_FILE_NAME,
-                CLAUDE_CODE_SAVED_INPUT_FILE_NAMES,
-            );
-        }
-        _ => {
-            return Err("Unsupported agent provider.".to_string());
-        }
-    }
+    persisted.agents.insert(id, cleared_status);
+    remove_agent_marker_files(&app_dir, light.running_marker, light.running_hold, light.saved_inputs);
 
     let prefix = format!("{provider}-");
     for entry in fs::read_dir(app_dir.join(notifications::NOTIFICATIONS_DIR)).into_iter().flatten().flatten() {
@@ -285,23 +261,16 @@ fn install_agent_status_hooks_now(app: &AppHandle) -> Result<AgentHooksInstallRe
     let running_script_path = app_dir.join(AGENT_RUNNING_SCRIPT_FILE_NAME);
     let status_script_path = app_dir.join(AGENT_STATUS_SCRIPT_FILE_NAME);
     let home_dir = windows_home_dir()?;
-    let codex_config_path = home_dir.join(".codex").join("config.toml");
-    let claude_config_path = home_dir.join(".claude").join("settings.json");
-
-    install_codex_status_hooks(
-        &codex_config_path,
-        &running_script_path,
-        &status_script_path,
-        codex_version::codex_runs_async_hooks(&home_dir) == Some(true),
-    )?;
-    install_claude_code_status_hooks(
-        &claude_config_path,
-        &running_script_path,
-        &status_script_path,
-        approval_hook().as_ref(),
-    )?;
-    workbuddy::install_hooks(&home_dir, &running_script_path)?;
-    antigravity::install_hooks(&home_dir, &running_script_path)?;
+    let env = HookEnv {
+        home_dir: &home_dir,
+        running_script: &running_script_path,
+        status_script: &status_script_path,
+    };
+    for (_, hooks) in harness::with_hooks() {
+        (hooks.install)(&env)?;
+    }
+    let dsh_bridge = dsh_hooks::bridge_lines(&env);
+    reply_marker::repair();
 
     Ok(AgentHooksInstallResult {
         scripts_dir: app_dir.to_string_lossy().to_string(),
@@ -309,14 +278,13 @@ fn install_agent_status_hooks_now(app: &AppHandle) -> Result<AgentHooksInstallRe
             .join(AGENT_STATUS_FILE_NAME)
             .to_string_lossy()
             .to_string(),
-        codex_config_path: codex_config_path.to_string_lossy().to_string(),
-        claude_config_path: claude_config_path.to_string_lossy().to_string(),
         installed_at: current_unix_millis(),
         remotes: {
             let remotes = remote_setup::install_hooks(&app_dir);
             remove_legacy_hook_scripts(&app_dir);
             remotes
         },
+        dsh_bridge,
     })
 }
 
@@ -333,36 +301,23 @@ pub(crate) fn reinstall_hooks_after_rename(app: &AppHandle) -> Result<bool, Stri
     let app_dir = crate::home_dir::fuyu_home(app.path())
         .map_err(|error| format!("Failed to resolve app data directory: {error}"))?;
     let state = read_agent_hooks_state(&app_dir)?;
-    let codex = state.codex != HookInstallState::NotInstalled;
-    let claude_code = state.claude_code != HookInstallState::NotInstalled;
-    if !codex && !claude_code {
+    let installed = |id: &str| state.agents.get(id).is_some_and(|hooks| hooks.is_installed());
+    if !state.agents.keys().any(|id| installed(id)) {
         return Ok(false);
     }
     install_agent_hook_scripts(&app_dir)?;
     let running_script_path = app_dir.join(AGENT_RUNNING_SCRIPT_FILE_NAME);
     let status_script_path = app_dir.join(AGENT_STATUS_SCRIPT_FILE_NAME);
     let home_dir = windows_home_dir()?;
-    if codex {
-        install_codex_status_hooks(
-            &home_dir.join(".codex").join("config.toml"),
-            &running_script_path,
-            &status_script_path,
-            codex_version::codex_runs_async_hooks(&home_dir) == Some(true),
-        )?;
-    }
-    if claude_code {
-        install_claude_code_status_hooks(
-            &home_dir.join(".claude").join("settings.json"),
-            &running_script_path,
-            &status_script_path,
-            approval_hook().as_ref(),
-        )?;
-    }
-    if workbuddy::has_hooks(&home_dir) {
-        workbuddy::install_hooks(&home_dir, &running_script_path)?;
-    }
-    if antigravity::has_hooks(&home_dir) {
-        antigravity::install_hooks(&home_dir, &running_script_path)?;
+    let env = HookEnv {
+        home_dir: &home_dir,
+        running_script: &running_script_path,
+        status_script: &status_script_path,
+    };
+    for (id, hooks) in harness::with_hooks() {
+        if installed(id) {
+            (hooks.install)(&env)?;
+        }
     }
     for remote in remote_setup::install_hooks(&app_dir) {
         if let Some(error) = remote.error {
@@ -587,20 +542,14 @@ fn read_agent_hooks_state(app_dir: &Path) -> Result<AgentHooksState, String> {
     let read = |path: &Path| fs::read_to_string(path).ok();
     let running_script_path = app_dir.join(AGENT_RUNNING_SCRIPT_FILE_NAME);
     let status_script_path = app_dir.join(AGENT_STATUS_SCRIPT_FILE_NAME);
-    let codex = codex_hooks_state(
-        read(&home_dir.join(".codex").join("config.toml")).as_deref(),
-        &running_script_path,
-        &status_script_path,
-        codex_version::codex_runs_async_hooks(&home_dir),
-    );
-    let claude_code = claude_code_hooks_state(
-        read(&home_dir.join(".claude").join("settings.json")).as_deref(),
-        &running_script_path,
-        &status_script_path,
-        approval_hook().as_ref(),
-    );
-    let hooks_installed =
-        codex != HookInstallState::NotInstalled || claude_code != HookInstallState::NotInstalled;
+    let env = HookEnv {
+        home_dir: &home_dir,
+        running_script: &running_script_path,
+        status_script: &status_script_path,
+    };
+    let agents: std::collections::BTreeMap<_, _> =
+        harness::with_hooks().map(|(id, hooks)| (id, (hooks.check)(&env))).collect();
+    let hooks_installed = agents.values().any(|state| state.is_installed());
     let scripts_outdated = script_outdated(
         read(&app_dir.join(AGENT_RUNNING_SCRIPT_FILE_NAME)).as_deref(),
         AGENT_RUNNING_SCRIPT,
@@ -620,8 +569,7 @@ fn read_agent_hooks_state(app_dir: &Path) -> Result<AgentHooksState, String> {
     );
 
     Ok(AgentHooksState {
-        codex,
-        claude_code,
+        agents,
         scripts_outdated,
     })
 }
@@ -662,16 +610,6 @@ pub(super) fn install_agent_hook_scripts(app_dir: &Path) -> Result<(), String> {
         fs::set_permissions(&path, fs::Permissions::from_mode(0o755)).map_err(|error| format!("Failed to make {} runnable: {error}", path.display()))?;
     }
     Ok(())
-}
-
-fn approval_hook() -> Option<claude_hooks::ApprovalHook> {
-    use crate::agent_approval::{activity_hook_url, endpoint, hook_url, question_hook_url, Agent};
-    Some(claude_hooks::ApprovalHook {
-        url: hook_url(Agent::ClaudeCode)?,
-        question_url: question_hook_url(),
-        activity_url: activity_hook_url(),
-        token: endpoint()?.token,
-    })
 }
 
 pub(super) fn write_text_file(path: &Path, content: &str) -> Result<(), String> {

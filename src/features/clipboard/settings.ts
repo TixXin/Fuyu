@@ -32,6 +32,9 @@ export const DEFAULT_CLIPBOARD_HISTORY: ClipboardHistorySnapshot = {
   items: [],
 };
 
+export const CLIPBOARD_MIN_ITEMS = 5;
+export const CLIPBOARD_MAX_ITEMS = 500;
+
 export const CLIPBOARD_RETENTION_DAYS = [0, 1, 7, 30, 90] as const;
 
 export function parseExcludedApps(text: string): string[] {
@@ -47,7 +50,7 @@ export function normalizeClipboardSettings(
 ): ClipboardHistorySettings {
   return {
     ...settings,
-    maxItems: clamp(Math.round(settings.maxItems), 5, 200),
+    maxItems: clamp(Math.round(settings.maxItems), CLIPBOARD_MIN_ITEMS, CLIPBOARD_MAX_ITEMS),
     shortcut: normalizeClipboardShortcut(settings.shortcut),
     shortcutEnabled: settings.shortcutEnabled !== false,
     openIn: settings.openIn === "island" ? "island" : "window",

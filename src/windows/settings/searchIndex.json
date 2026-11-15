@@ -1007,6 +1007,29 @@
       }
     },
     {
+      "page": "music",
+      "zh-CN": {
+        "group": "歌词",
+        "title": "前奏时显示",
+        "description": "第一句歌词开始之前，收起的岛和音乐页显示什么。第一句开始时切到歌词。",
+        "options": [
+          "待办",
+          "歌名",
+          "音符"
+        ]
+      },
+      "en": {
+        "group": "Lyrics",
+        "title": "Before the first line",
+        "description": "What the collapsed island and the music page show before the first line starts. The lyrics take over when it does.",
+        "options": [
+          "Todo",
+          "Title",
+          "Note"
+        ]
+      }
+    },
+    {
       "page": "musicLyrics",
       "zh-CN": {
         "group": "歌词",
@@ -1082,6 +1105,19 @@
         "group": "Lyrics on the island",
         "title": "Light up as sung",
         "description": "The line being sung lights up from left to right. Kugou lyrics and local .lrc files with word times follow each word."
+      }
+    },
+    {
+      "page": "musicLyricsStyle",
+      "zh-CN": {
+        "group": "岛上的歌词样式",
+        "title": "跟随封面颜色",
+        "description": "从当前歌曲的封面取主色，给收起岛的波形、卡拉 OK 高亮和音乐页的光晕上色，换歌时渐变。颜色会调到在深色、浅色岛上都看得清；没有封面时用强调色。"
+      },
+      "en": {
+        "group": "Lyrics on the island",
+        "title": "Match album art",
+        "description": "Takes the main colour of the current cover for the collapsed island's waveform, the karaoke highlight and the glow on the music page, fading between songs. It is adjusted to stay readable on dark and light islands; without a cover the accent colour is used."
       }
     },
     {
@@ -1971,22 +2007,66 @@
       "page": "agents",
       "zh-CN": {
         "group": "显示哪些 Agent",
-        "title": "显示 Claude Code 会话"
+        "title": "Codex"
       },
       "en": {
         "group": "Agents shown",
-        "title": "Show Claude Code sessions"
+        "title": "Codex"
       }
     },
     {
       "page": "agents",
       "zh-CN": {
         "group": "显示哪些 Agent",
-        "title": "显示 Codex 会话"
+        "title": "Claude Code"
       },
       "en": {
         "group": "Agents shown",
-        "title": "Show Codex sessions"
+        "title": "Claude Code"
+      }
+    },
+    {
+      "page": "agents",
+      "zh-CN": {
+        "group": "显示哪些 Agent",
+        "title": "WorkBuddy"
+      },
+      "en": {
+        "group": "Agents shown",
+        "title": "WorkBuddy"
+      }
+    },
+    {
+      "page": "agents",
+      "zh-CN": {
+        "group": "显示哪些 Agent",
+        "title": "Antigravity"
+      },
+      "en": {
+        "group": "Agents shown",
+        "title": "Antigravity"
+      }
+    },
+    {
+      "page": "agents",
+      "zh-CN": {
+        "group": "显示哪些 Agent",
+        "title": "DeepSeek Harness"
+      },
+      "en": {
+        "group": "Agents shown",
+        "title": "DeepSeek Harness"
+      }
+    },
+    {
+      "page": "agents",
+      "zh-CN": {
+        "group": "显示哪些 Agent",
+        "title": "opencode"
+      },
+      "en": {
+        "group": "Agents shown",
+        "title": "opencode"
       }
     },
     {
@@ -2597,6 +2677,39 @@
       "en": {
         "group": "AI Agent status light",
         "title": "Claude Code"
+      }
+    },
+    {
+      "page": "agentConnect",
+      "zh-CN": {
+        "group": "AI Agent 状态灯",
+        "title": "WorkBuddy"
+      },
+      "en": {
+        "group": "AI Agent status light",
+        "title": "WorkBuddy"
+      }
+    },
+    {
+      "page": "agentConnect",
+      "zh-CN": {
+        "group": "AI Agent 状态灯",
+        "title": "Antigravity"
+      },
+      "en": {
+        "group": "AI Agent status light",
+        "title": "Antigravity"
+      }
+    },
+    {
+      "page": "agentConnect",
+      "zh-CN": {
+        "group": "AI Agent 状态灯",
+        "title": "DeepSeek Harness"
+      },
+      "en": {
+        "group": "AI Agent status light",
+        "title": "DeepSeek Harness"
       }
     },
     {

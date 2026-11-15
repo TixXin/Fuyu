@@ -37,8 +37,8 @@ export function useAgentStatusSettings() {
         current.statusPath === snapshot.statusPath &&
         AGENT_PROVIDERS.every(
           (provider) =>
-            current[provider].phase === snapshot[provider].phase &&
-            current[provider].taskId === snapshot[provider].taskId,
+            current[provider]?.phase === snapshot[provider]?.phase &&
+            current[provider]?.taskId === snapshot[provider]?.taskId,
         )
           ? current
           : snapshot,

@@ -1,5 +1,6 @@
 use serde_json::Value;
 
+use super::amll;
 use super::found::{browser_client, from_lines, lrc_lines, FoundLyrics};
 use super::matching::same_track;
 
@@ -66,9 +67,17 @@ pub(super) async fn fetch(title: &str, artist: &str, duration_ms: i64, player_id
             id
         }
     };
+    let word_timed = tauri::async_runtime::spawn(amll::fetch(id));
     let query = [("id", id.to_string()), ("lv", "-1".into()), ("kv", "-1".into()), ("tv", "-1".into())];
-    let answer = get_json(&client, LYRIC, &query).await?;
-    Ok(lyrics_of(&answer, title))
+    let answer = get_json(&client, LYRIC, &query).await;
+    prefer_word_timed(word_timed.await.ok().flatten(), answer, title)
+}
+
+fn prefer_word_timed(word_timed: Option<FoundLyrics>, answer: Result<Value, String>, title: &str) -> Result<Option<FoundLyrics>, String> {
+    match word_timed {
+        Some(found) => Ok(Some(found)),
+        None => Ok(lyrics_of(&answer?, title)),
+    }
 }
 
 #[cfg(test)]
@@ -101,5 +110,15 @@ mod tests {
         assert_eq!(found.lrc, "[00:17.51]Oh I believe\n[00:22.00]in yesterday\n");
         assert_eq!(found.translation.as_deref(), Some("[00:17.51]哦 我相信\n"));
         assert_eq!(lyrics_of(&json!({ "lrc": { "lyric": "[00:00.00] 作词 : x\n" } }), "A"), None);
+    }
+
+    #[test]
+    fn the_word_timed_database_wins_and_netease_is_the_fallback() {
+        let amll = FoundLyrics { lrc: "[00:01.00]<00:01.00>Oh<00:02.00>\n".into(), translation: None };
+        let line = json!({ "lrc": { "lyric": "[00:17.518]Oh I believe\n" } });
+        assert_eq!(prefer_word_timed(Some(amll.clone()), Err("offline".into()), "A"), Ok(Some(amll.clone())));
+        assert_eq!(prefer_word_timed(Some(amll.clone()), Ok(line.clone()), "A"), Ok(Some(amll)));
+        assert_eq!(prefer_word_timed(None, Ok(line), "A").unwrap().unwrap().lrc, "[00:17.51]Oh I believe\n");
+        assert_eq!(prefer_word_timed(None, Err("offline".into()), "A"), Err("offline".into()));
     }
 }

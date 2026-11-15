@@ -1,6 +1,6 @@
 param(
   [Parameter(Mandatory = $true, Position = 0)]
-  [ValidateSet("codex", "claudeCode")]
+  [ValidateSet("codex", "claudeCode", "workbuddy", "antigravity", "dsh")]
   [string]$Provider,
 
   [Parameter(Mandatory = $true, Position = 1)]
@@ -76,21 +76,16 @@ function Get-DefaultStatusPath {
   return Join-Path $PSScriptRoot "agent-status.json"
 }
 
+$Providers = @("codex", "claudeCode", "workbuddy", "antigravity", "dsh")
+
 function Get-AgentMarkerNames {
   param(
     [string]$Provider
   )
 
-  if ($Provider -eq "codex") {
-    return @{
-      Running = "agent-codex-running.flag"
-      Hold = "agent-codex-running-hold.flag"
-    }
-  }
-
   return @{
-    Running = "agent-claudeCode-running.flag"
-    Hold = "agent-claudeCode-running-hold.flag"
+    Running = "agent-$Provider-running.flag"
+    Hold = "agent-$Provider-running-hold.flag"
   }
 }
 
@@ -145,28 +140,28 @@ try {
   }
 
   $now = [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()
-  $state = [ordered]@{
-    codex = New-AgentTaskStatus
-    claudeCode = New-AgentTaskStatus
-    updatedAt = $now
+  $state = [ordered]@{}
+  foreach ($name in $Providers) {
+    $state[$name] = New-AgentTaskStatus
   }
 
   if (Test-Path -LiteralPath $StatusPath) {
     try {
       $existing = Get-Content -LiteralPath $StatusPath -Raw | ConvertFrom-Json
-      $state.codex = Copy-AgentTaskStatus -Source $existing.codex
-      $state.claudeCode = Copy-AgentTaskStatus -Source $existing.claudeCode
+      foreach ($name in $Providers) {
+        $state[$name] = Copy-AgentTaskStatus -Source $existing.$name
+      }
     } catch {
-      $state.codex = New-AgentTaskStatus
-      $state.claudeCode = New-AgentTaskStatus
+      foreach ($name in $Providers) {
+        $state[$name] = New-AgentTaskStatus
+      }
     }
   }
 
-  $nextTask = New-AgentTaskStatus -Phase $Phase -TaskId $TaskId -UpdatedAt $now
-  if ($Provider -eq "codex") {
-    $state.codex = $nextTask
-  } else {
-    $state.claudeCode = $nextTask
+  foreach ($name in $Providers) {
+    if ($name -eq $Provider) {
+      $state[$name] = New-AgentTaskStatus -Phase $Phase -TaskId $TaskId -UpdatedAt $now
+    }
   }
   $state.updatedAt = $now
 

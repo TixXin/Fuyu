@@ -309,6 +309,24 @@ pub(super) fn claude_code_hook_entry(command: &str, args: Vec<String>, timeout: 
     })
 }
 
+pub(super) fn command_hook_entry(command: String, timeout: i64) -> Value {
+    json!({ "hooks": [{ "type": "command", "command": command, "timeout": timeout }] })
+}
+
+pub(super) fn turn_hook_entries(
+    running_script_path: &Path,
+    status_script_path: &Path,
+    provider: &str,
+) -> Vec<(&'static str, Value)> {
+    use super::codex_hooks::{agent_running_command, agent_status_command};
+    let running = || command_hook_entry(agent_running_command(running_script_path, provider), 5);
+    vec![
+        ("UserPromptSubmit", running()),
+        ("PreToolUse", claude_code_match_all_hook_entry(running())),
+        ("Stop", command_hook_entry(agent_status_command(status_script_path, provider, "completed"), 10)),
+    ]
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -2,19 +2,19 @@
 setlocal
 
 set "PROVIDER=%~1"
-if /I "%PROVIDER%"=="codex" (
-  set "MARKER=agent-codex-running.flag"
-  set "HOLD=agent-codex-running-hold.flag"
-) else if /I "%PROVIDER%"=="claudeCode" (
-  set "MARKER=agent-claudeCode-running.flag"
-  set "HOLD=agent-claudeCode-running-hold.flag"
-) else if /I "%PROVIDER%"=="workbuddy" (
-  if /I not "%~2"=="notification" exit /b 2
-) else if /I "%PROVIDER%"=="antigravity" (
-  if /I not "%~2"=="running" if /I not "%~2"=="stop" exit /b 2
-) else (
-  exit /b 2
+if /I "%PROVIDER%"=="codex" goto known
+if /I "%PROVIDER%"=="claudeCode" goto known
+if /I "%PROVIDER%"=="workbuddy" goto known
+if /I "%PROVIDER%"=="dsh" goto known
+if /I "%PROVIDER%"=="antigravity" (
+  if /I not "%~2"=="start" if /I not "%~2"=="running" if /I not "%~2"=="stop" exit /b 2
+  goto known
 )
+exit /b 2
+
+:known
+set "MARKER=agent-%PROVIDER%-running.flag"
+set "HOLD=agent-%PROVIDER%-running-hold.flag"
 
 set "STATUS_DIR=%~dp0"
 set "STATUS_DIR=%STATUS_DIR:~0,-1%"
@@ -27,6 +27,11 @@ set "SAVED_NAME=%PROVIDER%"
 if /I "%PROVIDER%"=="antigravity" (
   set "SAVED_DIR=%STATUS_DIR%\agent-antigravity"
   set "SAVED_NAME=%~2"
+  if /I "%~2"=="start" set "SAVED_NAME=running"
+  if /I "%~2"=="running" (
+    break > "%STATUS_DIR%\%MARKER%"
+    del "%STATUS_DIR%\%HOLD%" >nul 2>nul
+  )
   goto notification
 )
 if /I "%~2"=="notification" goto notification

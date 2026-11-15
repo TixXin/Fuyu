@@ -26,6 +26,7 @@ export type MusicText = {
   closeSettings: string;
   reorderSource: string;
   removeSource: string;
+  removeLiveSourceNote: string;
   noSources: string;
 };
 
@@ -66,6 +67,7 @@ export const zhCN: MusicText = {
   closeSettings: "返回播放器",
   reorderSource: "调整来源顺序",
   removeSource: "移除来源",
+  removeLiveSourceNote: "该播放器仍在运行，已重新排到末尾；退出播放器后才会真正消失。",
   noSources: "尚未检测到音频来源。",
 };
 
@@ -106,5 +108,6 @@ export const en: MusicText = {
   closeSettings: "Back to player",
   reorderSource: "Reorder source",
   removeSource: "Remove source",
+  removeLiveSourceNote: "That player is still running, so it was added back at the end. It disappears once it quits.",
   noSources: "No audio sources detected yet.",
 };

@@ -5,10 +5,9 @@ use serde_json::Value;
 
 use super::session_host::SessionHost;
 use super::session_mode::{claude_permission_mode, claude_subagent_calls, claude_tool_results, codex_permission_mode};
-use super::reply_marker::split_reply;
 use super::background_tasks::{ended_tasks, started_tasks};
-use super::reply_text::{asks_user, plain_reply};
-use super::title::{display_title, prompt_title, shorten, user_prompt_in_record};
+use super::reply_text::reply_ending;
+use super::title::{display_title, prompt_title, user_prompt_in_record};
 use super::todo_list::{claude_todo_list, codex_plan, unfinished, TodoProgress};
 use super::tool_call::{claude_tool_call, codex_tool_call, ToolCall};
 
@@ -80,6 +79,13 @@ pub(super) struct SessionTail {
 }
 
 impl SessionTail {
+    pub(super) fn take_reply(&mut self, text: &str) {
+        let ending = reply_ending(text);
+        self.reply_marker = ending.marker;
+        self.reply_asks = ending.asks;
+        self.last_message = ending.message;
+    }
+
     pub(super) fn settle(mut self) -> Self {
         if !matches!(self.state, TurnState::Working | TurnState::AwaitingUser) {
             self.current_tool = None;
@@ -183,11 +189,7 @@ pub(super) fn parse_claude_tail(tail: &str) -> SessionTail {
             }
             if result.last_message.is_none() {
                 if let Some(text) = text_blocks(&message["content"]) {
-                    let (marker, reply) = split_reply(&text);
-                    let plain = plain_reply(reply);
-                    result.reply_marker = marker.map(|marker| marker.name());
-                    result.reply_asks = asks_user(&plain);
-                    result.last_message = shorten(&plain, LAST_MESSAGE_MAX_CHARS);
+                    result.take_reply(&text);
                 }
             }
             if result.current_tool.is_none() && result.last_prompt.is_none() {
@@ -315,9 +317,9 @@ pub(super) fn parse_codex_tail(tail: &str) -> SessionTail {
                 "task_complete" => payload["last_agent_message"].as_str(),
                 _ => None,
             };
-            let plain = text.map(plain_reply);
-            result.reply_asks = plain.as_deref().is_some_and(asks_user);
-            result.last_message = plain.and_then(|plain| shorten(&plain, LAST_MESSAGE_MAX_CHARS));
+            if let Some(text) = text {
+                result.take_reply(text);
+            }
         }
         if result.turn_started_at.is_none() && matches!(payload_kind, "user_message" | "task_started") {
             result.turn_started_at = record["timestamp"].as_str().and_then(parse_timestamp_ms);

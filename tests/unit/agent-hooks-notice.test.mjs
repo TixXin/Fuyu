@@ -19,3 +19,14 @@ test("hooks or scripts from an older version ask for an update", () => {
 test("nothing installed asks for an install", () => {
   assert.equal(getAgentHooksNotice(state("notInstalled", "notInstalled")), "install");
 });
+
+test("agents that are not on this machine do not count", () => {
+  const more = (rest) => ({ ...state("current", "current"), ...rest });
+  assert.equal(getAgentHooksNotice(more({ workbuddy: "absent", antigravity: "absent", dsh: "absent" })), null);
+  assert.equal(getAgentHooksNotice(more({ dsh: "notInstalled" })), null);
+  assert.equal(getAgentHooksNotice(more({ antigravity: "outdated" })), "update");
+  assert.equal(
+    getAgentHooksNotice({ ...state("notInstalled", "notInstalled"), workbuddy: "notInstalled", antigravity: "absent", dsh: "absent" }),
+    "install",
+  );
+});

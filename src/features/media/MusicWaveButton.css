@@ -7,7 +7,7 @@
   gap: 3px;
   flex: 0 0 28px;
   padding: 0;
-  color: #aef5d0;
+  color: var(--cover-accent, #aef5d0);
   background: transparent;
   border: 0;
   border-radius: 0;
@@ -34,7 +34,7 @@
 }
 
 .island--appearance-liquidGlass .music-wave-button {
-  color: rgba(225, 251, 255, 0.9);
+  color: var(--cover-accent, rgba(225, 251, 255, 0.9));
   filter: drop-shadow(0 0 9px rgba(116, 214, 255, 0.22));
 }
 
@@ -61,7 +61,7 @@
 }
 
 .music-wave-button:hover {
-  color: #c7ffdf;
+  color: var(--cover-accent, #c7ffdf);
 }
 
 .music-wave-button:focus-visible {

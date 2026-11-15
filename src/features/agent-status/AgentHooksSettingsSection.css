@@ -24,10 +24,23 @@
   font-size: 11px;
 }
 
+.agent-hooks-snippet {
+  display: block;
+  margin-top: 4px;
+  white-space: pre-wrap;
+}
+
 .agent-hooks-message--attention {
   color: var(--color-warning);
 }
 
 .agent-hooks-message--error {
   color: var(--color-danger);
+}
+
+.agent-settings-provider {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
 }

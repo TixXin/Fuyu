@@ -8,7 +8,9 @@ import { ClipboardPauseBar, ClipboardPopupFooter, pausedNow, type MergeSeparator
 import { ClipboardPopupPreview } from "./ClipboardPopupPreview";
 import { ClipboardPopupRow } from "./ClipboardPopupRow";
 import { dayGroupStarts } from "./dayGroup";
+import { deletedLabel, withoutPending } from "./pendingItems";
 import { mergedText, popupActions } from "./popupActions";
+import { popupFilterLabel } from "./popupFilterLabel";
 import { filterPopupItems, nextPopupFilter, popupFilters, popupTags, type PopupFilter } from "./popupFilters";
 import { popupIndexAfterKey, toggleQueued } from "./popupKeys";
 import { loadPinyin, parsePopupQuery } from "./popupQuery";
@@ -74,8 +76,8 @@ export function ClipboardPopup({ items, snippets, openCount, wide, ownsWindow = 
     return () => window.clearInterval(timer);
   }, []);
 
-  const pendingId = deletion.pending?.id;
-  const visible = useMemo(() => (pendingId ? items.filter((item) => item.id !== pendingId) : items), [items, pendingId]);
+  const pending = deletion.pending;
+  const visible = useMemo(() => withoutPending(items, pending), [items, pending]);
   const tags = useMemo(() => popupTags(visible), [visible]);
   const filters = popupFilters(tags);
   const onSnippets = filter === "snippets";
@@ -237,15 +239,7 @@ export function ClipboardPopup({ items, snippets, openCount, wide, ownsWindow = 
 
   useStrayKeys({ enabled: ownsWindow, root: rootRef, input: inputRef, active: mode === "list", onKeyDown, onKeyUp: peek.keyUp });
 
-  const chipLabel = (chip: PopupFilter) =>
-    chip.startsWith("#") ? chip
-      : chip === "all" ? t.clipboard.all
-      : chip === "favorites" ? t.clipboard.favorites
-      : chip === "images" ? t.clipboard.images
-      : chip === "files" ? t.clipboard.files
-      : chip === "links" ? text.actions.kinds.link
-      : chip === "colors" ? text.actions.kinds.color
-      : text.tabs.snippets;
+  const chipLabel = (chip: PopupFilter) => popupFilterLabel(chip, t.clipboard);
   const empty = needle ? null : onSnippets ? text.noSnippets : text.empty;
   const editing = mode === "edit" && item && isText;
 
@@ -370,7 +364,7 @@ export function ClipboardPopup({ items, snippets, openCount, wide, ownsWindow = 
         queued={onSnippets ? 0 : queue.length}
         separator={separator}
         onSeparator={setSeparator}
-        deleted={deletion.pending ? (deletion.pending.kind === "image" ? t.clipboard.imageLabel(deletion.pending.image?.width ?? 0, deletion.pending.image?.height ?? 0) : [...deletion.pending.preview].slice(0, 16).join("")) : null}
+        deleted={deletion.pending ? deletedLabel(deletion.pending, t.clipboard) : null}
         onUndo={deletion.undo}
         notice={notice}
         capture={capture}

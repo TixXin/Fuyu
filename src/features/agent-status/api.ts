@@ -2,8 +2,9 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import type { AgentEffortLabels } from "./effortLabels";
 
-export type AgentProvider = "codex" | "claudeCode";
-export type SessionProvider = AgentProvider | "workbuddy" | "antigravity" | "dsh";
+import type { AgentProvider, RemoteProvider, SessionProvider } from "./agents.ts";
+
+export type { AgentProvider, RemoteProvider, SessionProvider } from "./agents.ts";
 export type AgentTaskPhase = "idle" | "running" | "waiting" | "completed" | "failed" | "stale";
 
 export type AgentTaskStatus = {
@@ -17,7 +18,7 @@ export type ExternalAgentStatus = AgentTaskStatus & {
   id: string;
   name: string;
   host?: string;
-  agent?: AgentProvider;
+  agent?: RemoteProvider;
   cwd?: string;
 };
 
@@ -30,17 +31,16 @@ export type AgentStatusSnapshot = Record<AgentProvider, AgentTaskStatus> & {
 export type AgentHooksInstallResult = {
   scriptsDir: string;
   statusPath: string;
-  codexConfigPath: string;
-  claudeConfigPath: string;
   installedAt: number;
   remotes: RemoteResult[];
+  dshBridge?: string | null;
 };
 
 export type RemoteResult = { host: string; error: string | null };
 
-export type HookInstallState = "notInstalled" | "outdated" | "current";
+export type HookInstallState = "absent" | "notInstalled" | "outdated" | "current";
 
-export type AgentHooksState = Record<AgentProvider, HookInstallState> & {
+export type AgentHooksState = Partial<Record<AgentProvider, HookInstallState>> & {
   scriptsOutdated: boolean;
 };
 
@@ -75,12 +75,23 @@ export type AgentTodoProgress = { done: number; total: number; current: string |
 
 export type ReplyMarker = "yourTurn" | "background" | "done";
 
+export type ReplyMarkerFile = {
+  agent: SessionProvider;
+  path: string;
+  target: string | null;
+  installed: boolean;
+  outdated: boolean;
+  error: string | null;
+};
+
 export type ReplyMarkerState = {
   installed: boolean;
   outdated: boolean;
-  path: string;
+  files: ReplyMarkerFile[];
+  oldRules: string[];
   content: string;
   remotes: RemoteResult[];
+  dshBridge?: string | null;
 };
 
 export function getReplyMarkerState() {

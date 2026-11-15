@@ -1,6 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
-import type { AgentProvider } from "../api";
+import type { SessionProvider } from "../api";
 
 export const AGENT_APPROVAL_REQUESTED_EVENT = "agent-approval-requested";
 export const AGENT_APPROVAL_CLOSED_EVENT = "agent-approval-closed";
@@ -8,7 +8,7 @@ export const AGENT_APPROVAL_CLOSED_EVENT = "agent-approval-closed";
 export type AgentApprovalRequest = {
   id: number;
   kind: "permission" | "question";
-  agent: AgentProvider;
+  agent: SessionProvider;
   sessionId: string;
   cwd: string | null;
   toolName: string;

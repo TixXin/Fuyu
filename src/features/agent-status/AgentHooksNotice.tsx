@@ -4,11 +4,13 @@ import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton";
 import { SettingsRow } from "../../components/settings/SettingsRow";
 import { useTranslation } from "../../i18n";
+import { useDevBuild } from "../../lib/platform";
 import { getAgentHooksState } from "./api";
 import { getAgentHooksNotice, type AgentHooksNotice as Notice } from "./status";
 
 export function AgentHooksNotice({ onOpenConnect }: { onOpenConnect: () => void }) {
   const text = useTranslation().settings.agent;
+  const devBuild = useDevBuild();
   const [notice, setNotice] = useState<Notice | null>(null);
 
   useEffect(() => {
@@ -23,7 +25,7 @@ export function AgentHooksNotice({ onOpenConnect }: { onOpenConnect: () => void 
     };
   }, []);
 
-  if (!notice) return null;
+  if (!notice || devBuild) return null;
   return (
     <SettingsGroup>
       <SettingsRow searchable={false}

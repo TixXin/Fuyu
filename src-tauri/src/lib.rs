@@ -193,7 +193,12 @@ pub fn run() {
             #[cfg(target_os = "macos")]
             for label in [clipboard_history::POPUP_WINDOW_LABEL, clipboard_history::preview_window::WINDOW_LABEL, translation::WINDOW_LABEL] {
                 if let Some(window) = app.get_webview_window(label) {
-                    if let Err(error) = macos::island_panel::make_popup_panel(&window) {
+                    let made = if label == clipboard_history::preview_window::WINDOW_LABEL {
+                        macos::island_panel::make_preview_panel(&window)
+                    } else {
+                        macos::island_panel::make_popup_panel(&window)
+                    };
+                    if let Err(error) = made {
                         eprintln!("failed to make the {label} window a panel: {error}");
                     }
                 }

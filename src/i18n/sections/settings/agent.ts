@@ -61,8 +61,6 @@ export type SettingsAgentText = {
   remoteSave: string;
   remoteCancel: string;
   agentsSection: string;
-  showClaudeCode: string;
-  showCodex: string;
   showAgentsHint: string;
   hideFinished: string;
   hideFinishedHint: string;
@@ -164,7 +162,9 @@ export type SettingsAgentText = {
   replyMarker: {
     title: string;
     toggle: string;
-    hint: (path: string) => string;
+    hint: string;
+    linked: (target: string) => string;
+    noFiles: string;
     outdated: string;
     preview: string;
   };
@@ -180,6 +180,8 @@ export type SettingsAgentText = {
   };
   hooksOutdated: string;
   hooksMissing: string;
+  hooksDevBuild: string;
+  dshBridge: string;
   remoteResult: (host: string, error: string | null) => string;
 };
 
@@ -246,8 +248,6 @@ export const zhCN: SettingsAgentText = {
   remoteSave: "添加",
   remoteCancel: "取消",
   agentsSection: "显示哪些 Agent",
-  showClaudeCode: "显示 Claude Code 会话",
-  showCodex: "显示 Codex 会话",
   showAgentsHint: "关掉的 Agent 不出现在 Agent 页，也不算进岛上的运行数量。",
   hideFinished: "只显示进行中的会话",
   hideFinishedHint: "隐藏已完成和失败的会话，只留正在运行、等待确认和可能中断的。",
@@ -349,8 +349,10 @@ export const zhCN: SettingsAgentText = {
   replyMarker: {
     title: "回复状态标记",
     toggle: "让 Claude 在回复末尾标出在等什么（推荐打开）",
-    hint: (path) => `打开后，会新建 Claude Code 的用户级规则文件 ${path}（每个会话都会读它，不改你的 CLAUDE.md），让 Claude Code 每次回复的最后一行写一个符号：↩ 等你回复、⋯ 在等它自己启动的后台任务、✓ 做完了。岛屿据此区分“等你回复”和“做完了”：Agent 页、会话环，以及提醒和音效（等你回复按“等你确认或回答”弹出、用提问音效；等后台任务时不弹不响）。这一行会出现在终端的回复里。SSH 远程页里打开的电脑也会写同一个文件。只对之后开始的会话生效；关掉时删除这个文件。`,
-    outdated: "说明是旧版本，或者还在旧位置 CLAUDE.md 里；关掉再打开即可更新并移到规则文件。",
+    hint: "打开后，会在各家 AI 代理的全局提示词文件末尾追加一段说明（Claude Code 的 CLAUDE.md，Codex、opencode 和 DeepSeek Harness 的 AGENTS.md，Antigravity 的 GEMINI.md，WorkBuddy 的 CODEBUDDY.md；只动这一段，文件其他内容不动），让它每次回复的最后一行写一个符号：↩ 等你回复、⋯ 在等它自己启动的后台任务、✓ 做完了。岛屿据此区分“等你回复”和“做完了”：Agent 页、会话环，以及提醒和音效（等你回复按“等你确认或回答”弹出、用提问音效；等后台任务时不弹不响）。这一行会出现在回复里。文件是软链时写在它指向的文件里，几家指向同一份文件时只写一段。SSH 远程页里打开的电脑也会写上。只对之后开始的会话生效；关掉时删掉这一段。本机写到的文件：",
+    linked: (target) => `软链，写在 ${target}`,
+    noFiles: "本机没有找到这几家 AI 代理。",
+    outdated: "说明是旧版本，或者还在旧的规则文件 rules/fuyu-reply-marker.md 里，或者有一家还没写上；关掉再打开，或点上面的“安装/修复”即可更新。",
     preview: "查看将写入的内容",
   },
   editorExtension: {
@@ -363,8 +365,10 @@ export const zhCN: SettingsAgentText = {
     noCli: "找不到命令行，先打开这个编辑器",
     done: (editor) => `已装进 ${editor}。已经打开的 ${editor} 窗口要重新加载（命令面板 → Reload Window）后才生效。`,
   },
-  hooksOutdated: "已安装的钩子是旧版本，“等待确认”状态等新功能不会生效。请点“安装/修复”，然后重启 Codex 和 Claude Code。",
-  hooksMissing: "还没有安装钩子。点“安装/修复”后重启 Codex 和 Claude Code，状态灯和会话标题才会工作。",
+  hooksOutdated: "已安装的钩子是旧版本，“等待确认”状态等新功能不会生效。请点“安装/修复”，然后重启正在用的 AI Agent。",
+  hooksMissing: "还没有安装钩子。点“安装/修复”后重启正在用的 AI Agent，状态灯和会话标题才会工作。",
+  dshBridge: "DeepSeek Harness 还没挂上钩子桥。把下面几行加到 DSH 配置目录 profiles 下的 cordis.patch.yml 末尾，重启 DSH 后再点一次“安装/修复”：",
+  hooksDevBuild: "开发版只读正式版的 Agent 状态，钩子由正式版安装。要安装或修复钩子，在正式版的设置里点“安装/修复”。",
   remoteResult: (host, error) => (error ? `SSH 远程 ${host}：失败，${error}` : `SSH 远程 ${host}：已完成`),
 };
 
@@ -431,8 +435,6 @@ export const en: SettingsAgentText = {
   remoteSave: "Add",
   remoteCancel: "Cancel",
   agentsSection: "Agents shown",
-  showClaudeCode: "Show Claude Code sessions",
-  showCodex: "Show Codex sessions",
   showAgentsHint: "Agents switched off are left out of the Agent page and the island's running count.",
   hideFinished: "Only sessions in progress",
   hideFinishedHint: "Hide finished and failed sessions; keep running, waiting and possibly stalled ones.",
@@ -534,8 +536,10 @@ export const en: SettingsAgentText = {
   replyMarker: {
     title: "Reply status marker",
     toggle: "Have Claude mark what it waits for at the end of each reply (recommended)",
-    hint: (path) => `When on, the island creates a Claude Code user rule, ${path}, which every session reads (your CLAUDE.md stays untouched), asking Claude Code to end every reply with one symbol on its own line: ↩ your turn, ⋯ waiting on a background task it started, ✓ done. The island uses it to tell "your turn" from "done": on the Agent page, the session ring, and in alerts and sounds (your turn pops up as waiting for you, with the question sound; waiting on a background task neither pops up nor sounds). The line shows in the terminal's replies. Computers switched on under SSH remote get the same file. It applies to sessions started from then on; switching off deletes the file.`,
-    outdated: "The instruction is an older version, or still in CLAUDE.md where older versions put it; switch off and on again to update it and move it to the rules file.",
+    hint: "When on, the island appends a section to the end of each AI agent's global prompt file (CLAUDE.md for Claude Code, AGENTS.md for Codex, opencode and DeepSeek Harness, GEMINI.md for Antigravity, CODEBUDDY.md for WorkBuddy; only that section changes, the rest of the file stays as it is), asking the agent to end every reply with one symbol on its own line: ↩ your turn, ⋯ waiting on a background task it started, ✓ done. The island uses it to tell \"your turn\" from \"done\": on the Agent page, the session ring, and in alerts and sounds (your turn pops up as waiting for you, with the question sound; waiting on a background task neither pops up nor sounds). The line shows in the replies. When a file is a link, the section goes into the file it points to, and agents sharing one file get one section. Computers switched on under SSH remote get it too. It applies to sessions started from then on; switching off removes the section. Files on this computer:",
+    linked: (target) => `a link; written in ${target}`,
+    noFiles: "None of these AI agents was found on this computer.",
+    outdated: "The instruction is an older version, still in the old rules file rules/fuyu-reply-marker.md, or missing for one of the agents; switch off and on again, or click Install/repair above, to update it.",
     preview: "See what will be written",
   },
   editorExtension: {
@@ -548,7 +552,9 @@ export const en: SettingsAgentText = {
     noCli: "Command line not found; open this editor first",
     done: (editor) => `Installed in ${editor}. ${editor} windows already open need a reload (Command Palette → Reload Window) first.`,
   },
-  hooksOutdated: "The installed hooks are from an older version, so newer features such as the waiting-for-you state won't work. Click Install/repair, then restart Codex and Claude Code.",
-  hooksMissing: "No hooks installed yet. Click Install/repair, then restart Codex and Claude Code, for the status light and session titles to work.",
+  hooksOutdated: "The installed hooks are from an older version, so newer features such as the waiting-for-you state won't work. Click Install/repair, then restart the AI agents you use.",
+  hooksMissing: "No hooks installed yet. Click Install/repair, then restart the AI agents you use, for the status light and session titles to work.",
+  dshBridge: "DeepSeek Harness has no hook bridge yet. Add these lines to the end of cordis.patch.yml under profiles in the DSH home, restart DSH, then click Install/repair again:",
+  hooksDevBuild: "The development build only reads the installed Fuyu's agent status; the installed Fuyu sets up the hooks. To install or repair them, use Install/repair in its settings.",
   remoteResult: (host, error) => (error ? `SSH remote ${host}: failed, ${error}` : `SSH remote ${host}: done`),
 };

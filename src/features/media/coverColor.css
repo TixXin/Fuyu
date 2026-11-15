@@ -1,0 +1,29 @@
+@property --cover-accent-dark {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #74d6ff;
+}
+
+@property --cover-accent-light {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #0a7fd1;
+}
+
+.cover-color {
+  --cover-accent: var(--cover-accent-dark);
+  transition:
+    --cover-accent-dark 900ms ease,
+    --cover-accent-light 900ms ease;
+}
+
+.island-light.cover-color,
+.island-light .cover-color {
+  --cover-accent: var(--cover-accent-light);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cover-color {
+    transition: none;
+  }
+}

@@ -54,6 +54,7 @@ tiny_http = "0.12"
 window-vibrancy = "0.6"
 zip = { version = "9.3.0", default-features = false, features = ["deflate"] }
 rqrr = { version = "0.11", default-features = false }
+rusqlite = { version = "0.42", features = ["bundled"] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 block2 = "0.6"

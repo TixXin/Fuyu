@@ -2,6 +2,7 @@ use serde::Serialize;
 use serde_json::Value;
 use std::sync::{Mutex, PoisonError};
 
+use super::harness;
 use super::markers::AGENT_RUNNING_STALE_AFTER_MS;
 use super::snapshot::current_unix_millis;
 
@@ -57,8 +58,8 @@ pub(super) fn parse_report(params: &Value) -> Result<AgentReport, String> {
         return Err("\"phase\" must be idle, running, waiting, completed or failed.".into());
     }
     let agent = optional_text(params, "agent", 16)?;
-    if agent.as_deref().is_some_and(|agent| !matches!(agent, "claudeCode" | "codex")) {
-        return Err("\"agent\" must be claudeCode or codex.".into());
+    if agent.as_deref().is_some_and(|agent| !harness::reports_remotely(agent)) {
+        return Err(format!("\"agent\" must be {}.", harness::remote_ids().join(" or ")));
     }
     Ok(AgentReport {
         source: source.to_string(),

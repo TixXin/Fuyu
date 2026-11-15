@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getMediaState, sendMediaCommand, type MediaCommand, type MediaPlaybackStatus, type MediaSessionChange, type MediaState } from "./api";
 import { AUDIO_ACTIVE_THRESHOLD, DEFAULT_MEDIA_STATE, isSameMediaState } from "./mediaState";
 import { playbackPosition } from "./lyrics/lrc";
-import { alignClock, clockPosition, hasTimeline, keepIslandTimeline, NO_CLOCK, settleClockAt, startClockAt, type TrackClock } from "./trackClock";
+import { alignClock, clockPosition, hasTimeline, holdIntentTimeline, keepIslandTimeline, NO_CLOCK, settleClockAt, startClockAt, type TrackClock } from "./trackClock";
 import { useAudioLevel } from "./useAudioLevel";
 import { useMediaSessionChanges } from "./useMediaSessionChanges";
 import { useMusicSourcePriority } from "./useMusicSourcePriority";
@@ -22,6 +22,7 @@ export function useMediaState(enabled = true) {
   const mediaPlaybackIntent = useRef<{
     status: MediaPlaybackStatus;
     expiresAt: number;
+    holdPosition: boolean;
   } | null>(null);
   const { musicSourcePriority, reorderMusicSource, removeMusicSource } =
     useMusicSourcePriority(mediaState.sessions);
@@ -41,10 +42,11 @@ export function useMediaState(enabled = true) {
 
       const now = Date.now();
       const intent = mediaPlaybackIntent.current;
-      const playbackStatus =
-        intent && now < intent.expiresAt
-          ? intent.status
-          : nextMediaState.playbackStatus;
+      const intentActive = intent !== null && now < intent.expiresAt;
+      const holdPosition = intentActive && intent.holdPosition;
+      const playbackStatus = intentActive
+        ? intent.status
+        : nextMediaState.playbackStatus;
 
       if (intent && now >= intent.expiresAt) {
         mediaPlaybackIntent.current = null;
@@ -74,7 +76,7 @@ export function useMediaState(enabled = true) {
         const audioPeak = audioActive ? nextPeak : 0;
 
         const merged: MediaState = {
-          ...nextMediaState,
+          ...(holdPosition ? holdIntentTimeline(nextMediaState, currentState) : nextMediaState),
           ...timeline,
           audioActive,
           audioPeak,
@@ -119,6 +121,7 @@ export function useMediaState(enabled = true) {
         mediaPlaybackIntent.current = {
           status: intendedStatus,
           expiresAt: Date.now() + (isPlayPause ? 1200 : 1800),
+          holdPosition: isPlayPause,
         };
 
         if (isPlayPause) {
@@ -152,9 +155,11 @@ export function useMediaState(enabled = true) {
         }
 
         setMediaState((currentState) => {
+          const timed = keepIslandTimeline(nextMediaState, currentState);
+          const settled = isPlayPause ? holdIntentTimeline(timed, currentState) : timed;
           if (intendedStatus === "paused") {
             return {
-              ...keepIslandTimeline(nextMediaState, currentState),
+              ...settled,
               audioActive: false,
               audioPeak: 0,
               playbackStatus: intendedStatus,
@@ -162,7 +167,7 @@ export function useMediaState(enabled = true) {
           }
 
           return {
-            ...keepIslandTimeline(nextMediaState, currentState),
+            ...settled,
             audioActive:
               nextMediaState.audioActive || currentState.audioActive,
             audioPeak: Math.max(

@@ -264,3 +264,17 @@
     transition: none;
   }
 }
+
+.cover-color .music-player {
+  isolation: isolate;
+}
+
+.cover-color .music-player::before {
+  position: absolute;
+  inset: -36px -28px auto;
+  z-index: -1;
+  height: 200px;
+  content: "";
+  pointer-events: none;
+  background: radial-gradient(ellipse 70% 100% at 18% 0%, color-mix(in srgb, var(--cover-accent) 26%, transparent), transparent 72%);
+}
