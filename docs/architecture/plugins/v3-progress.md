@@ -85,7 +85,7 @@ macOS 的测法（之后每次都这样量）：
 
 Windows 的测法（之后每次都这样量）：
 
-- 构建：同 macOS（`pnpm tauri build --debug --no-bundle`，加 `CARGO_PROFILE_DEV_OPT_LEVEL=3`、`CARGO_PROFILE_DEV_DEBUG=0`、`CARGO_TARGET_DIR=src-tauri/target/agents`）。注意这个目录相对 `src-tauri` 解析，产物在 `src-tauri/src-tauri/target/agents/debug/fuyu.exe`。量的是 `1cad1a01`。
+- 构建：同 macOS（`pnpm tauri build --debug --no-bundle`，加 `CARGO_PROFILE_DEV_OPT_LEVEL=3`、`CARGO_PROFILE_DEV_DEBUG=0`、`CARGO_TARGET_DIR` 写绝对路径 `$PWD/src-tauri/target/agents`）。写成相对路径 `src-tauri/target/agents` 时 cargo 按 `src-tauri` 解析，产物会落进没被忽略的 `src-tauri/src-tauri/`（2026-11-15 第一次量时就是这样，量完删了）。量的是 `1cad1a01`。
 - 身份：`FOCUSD_DEV_LANE=36`，独立的数据目录，数据是正式数据的一份副本（第一次启动复制，41 秒）。副本里 QQ、微信、邮件、推送是关的，但**启用了几个第 2 版插件**：PowerShell 写的插件合计约 162 MB 私有内存，一个 Node 写的插件约 21 MB。开发版默认「正式版优先」，没有影响同时开着的正式版。
 - 统计：岛屿进程和它的全部子孙进程的私有内存（`PrivateMemorySize64`）之和。启动 20 秒后每 5 秒读一次，读 60 秒，取中位数，量两次。两次的合计是 671、669 MB（工作集 1230、1232 MB），其中 Rust 主进程 35–36 MB、WebView2 合计 453–454 MB、PowerShell 插件 162 MB（另有 `conhost` 3.5 MB）、Node 插件 21 MB。基线按不带插件算：Rust 主进程加 WebView2 约 **489 MB**。以后每次量都按同样的减法，或者先在副本里关掉插件再量（改了要在这里写明）。
 - 测量时本机有 D47 的内存采样（盯着正式版）和做测量的 Claude Code 会话在跑，正式版也开着。比 11-06 的 330 MB 多出的约 160 MB 没有拆开查，那次用的是默认设置、没有插件、0.3.x 早期的代码。
