@@ -71,6 +71,7 @@ pub(super) fn leave(window: &WebviewWindow, position: IslandPosition, state: Isl
     IslandPosition::at(position.x, y)
 }
 
+#[cfg(debug_assertions)]
 pub(crate) fn dock_to(app: &AppHandle, edge: &str) -> Result<(), String> {
     match edge {
         "top" => super::reset_island_position(app.clone()),
