@@ -1,6 +1,6 @@
 # AI Agent Status Hooks
 
-Fuyu can mirror Codex, Claude Code, WorkBuddy, Antigravity, DeepSeek Harness, Qoder, CodeBuddy Code, Qwen Code, TRAE, TRAE CN, ZCode, Kimi Code and Grok CLI task activity on the collapsed island status light (opencode has no status light; its sessions only count on the Agent page, see [opencode](#opencode)):
+Fuyu can mirror Codex, Claude Code, WorkBuddy, Antigravity, DeepSeek Harness, Qoder, CodeBuddy Code, Qwen Code, TRAE, TRAE CN, ZCode, Kimi Code, Grok CLI, Copilot CLI and Droid task activity on the collapsed island status light (opencode has no status light; its sessions only count on the Agent page, see [opencode](#opencode)):
 
 - running task: blue
 - completed, idle, or no task: green
@@ -107,7 +107,7 @@ Each session on the Agent page can show where it runs, as the program's own icon
 
 ## Session List Settings
 
-**Settings → AI Agent** also sets, in `fuyu-settings`: how far back the list goes (`agentSessionHours`: 1, 2 (default), 6 or 24 hours, passed to `list_agent_sessions` as `windowHours`); which agents are shown (**显示哪些 Agent**: one switch with its icon for each of Codex, Claude Code, WorkBuddy, Antigravity, DeepSeek Harness, opencode, Qoder, CodeBuddy, Qwen Code, TRAE, TRAE CN, ZCode, Kimi Code, MiMo Code and Grok CLI; stored as `agentHiddenProviders`, the ids of the hidden agents, so an agent added later shows by default; the older `agentShowClaudeCode` / `agentShowCodex` settings are carried over; hidden agents also leave the island's running count); only sessions in progress (`agentHideFinished`); and, per card, the running time (`agentShowElapsed`) and the model (`agentShowModel`).
+**Settings → AI Agent** also sets, in `fuyu-settings`: how far back the list goes (`agentSessionHours`: 1, 2 (default), 6 or 24 hours, passed to `list_agent_sessions` as `windowHours`); which agents are shown (**显示哪些 Agent**: one switch with its icon for each of Codex, Claude Code, WorkBuddy, Antigravity, DeepSeek Harness, opencode, Qoder, CodeBuddy, Qwen Code, TRAE, TRAE CN, ZCode, Kimi Code, MiMo Code, Grok CLI, Copilot CLI and Droid; stored as `agentHiddenProviders`, the ids of the hidden agents, so an agent added later shows by default; the older `agentShowClaudeCode` / `agentShowCodex` settings are carried over; hidden agents also leave the island's running count); only sessions in progress (`agentHideFinished`); and, per card, the running time (`agentShowElapsed`) and the model (`agentShowModel`).
 
 **Running time** counts from the newest typed prompt: Claude Code's last real `user` record, Codex's last `user_message` / `task_started` (`turnStartedAt` in each summary). A session in progress shows "已运行 3 分 20 秒", ticking every second in its own leaf component; a finished one shows "用时 …" up to its last write. When a long turn pushes the prompt out of the 256 KiB tail read, the start found earlier is kept; if it was never seen, no time is shown.
 
@@ -316,7 +316,7 @@ These three CLIs copy Claude Code's hooks and session folders, so the island rea
 
 Each has its own row in the status light card (`agent-<id>-running.flag`). Clicking a session looks for a terminal by folder and title. Not done: usage, SSH (all three have Linux CLIs), cc-connect.
 
-**Agents that also run Claude Code's hooks** (Grok CLI, and Copilot CLI once it is in, B56): each gets its own hooks, so the island also sees their events on the Claude Code routes. A request there whose `transcript_path` lies in that agent's folder, or that carries one of its own field names, is answered `{}` and not shown twice. Claude Code's status light still lights up when such an agent runs Claude Code's hooks, since the script writes the marker without reading the input; to avoid that, turn off Claude hooks in that agent (Grok: `[compat.claude] hooks = false` in `~/.grok/config.toml`).
+**Agents that also run Claude Code's hooks** (Grok CLI and Copilot CLI, B56): each gets its own hooks, so the island also sees their events on the Claude Code routes. A request there whose `transcript_path` lies in that agent's folder, or that carries one of its own field names, is answered `{}` and not shown twice. Claude Code's status light still lights up when such an agent runs Claude Code's hooks, since the script writes the marker without reading the input; to avoid that, turn off Claude hooks in that agent (Grok: `[compat.claude] hooks = false` in `~/.grok/config.toml`).
 
 ## Grok CLI
 
@@ -326,6 +326,25 @@ xAI's Grok CLI is listed with its own icon (task B57, issue #544). Checked with 
 - **Hooks**: **安装/修复** writes `~/.grok/hooks/fuyu-island.json`, a file of its own (Grok merges the whole folder): `UserPromptSubmit` and `PreToolUse` mark the turn running, `Stop` and `StopCancelled` completed, `StopFailure` failed, and `Notification` with `permission_prompt` saves the input (waiting on you).
 - **No approving on the island**: Grok's docs say a hook's `allow` only means "not blocked", never approval on the user's behalf.
 - Not done: usage (Grok has no local file or public endpoint for it), SSH, cc-connect.
+
+## GitHub Copilot CLI
+
+Listed with its own icon (task B55, issue #542). Not yet run with the island (#179).
+
+- **Sessions**: `~/.copilot/session-state/<id>/events.jsonl` and `workspace.yaml` (or under `COPILOT_HOME`); the title is `summary` in `workspace.yaml`.
+- **Hooks**: **安装/修复** writes `~/.copilot/hooks/fuyu-island.json`, a file of its own (`version: 1`, `bash` and `powershell` commands, `timeoutSec`). Waiting on you comes only from the hooks, since the session files record no waiting event.
+- **Approving on the island**: `/copilot/permission-request`, answered with `{behavior, message, interrupt}`.
+- Copilot also runs Claude Code's hooks; see the note above on agents that do.
+- Not done: usage, SSH.
+
+## Droid
+
+Factory's Droid is listed with its own icon (task B58, issue #546). Not yet run with the island (#179).
+
+- **Sessions**: `~/.factory/sessions/<project>/<uuid>.jsonl` with `<uuid>.settings.json` for the model and reasoning effort (or under `FACTORY_HOME`).
+- **Hooks**: written into `~/.factory/hooks.json` when it exists (events at the top level), otherwise into `hooks` in `~/.factory/settings.json`, since Droid ignores the latter when the former exists. The user's own hooks stay. Reopen the Droid session after installing.
+- **No approving on the island**: Droid has no `PermissionRequest` event; waiting on you comes from `Notification` with `permission_prompt`.
+- Not done: usage, SSH.
 
 ## TRAE and TRAE CN
 
