@@ -25,13 +25,22 @@ function swapIn(staged, outDir) {
   }
 }
 
+function copyManifest(from, to) {
+  const pkg = JSON.parse(readFileSync(join(from, "package.json"), "utf8"));
+  if (pkg.fuyu?.host) pkg.fuyu.host = pkg.fuyu.host.replace(SOURCE_EXTENSION, ".mjs");
+  mkdirSync(to, { recursive: true });
+  writeFileSync(join(to, "package.json"), `${JSON.stringify(pkg, null, 2)}\n`);
+}
+
 export async function buildBuiltins({ source = DEFAULT_SOURCE, outDir = DEFAULT_OUT, minify = false } = {}) {
   const catalog = readBuiltins(source);
   const staged = `${outDir}.${process.pid}.tmp`;
   rmSync(staged, { recursive: true, force: true });
   mkdirSync(staged, { recursive: true });
   try {
-    const entries = catalog.plugins.map((plugin) => {
+    const windowed = catalog.plugins.filter((plugin) => plugin.clients.length > 0).map((plugin) => plugin.id);
+    if (windowed.length) throw new Error(`built-in plugins with window code (fuyu.client) cannot be built yet: ${windowed.join(", ")}`);
+    const entries = catalog.plugins.filter((plugin) => plugin.host).map((plugin) => {
       const file = fileURLToPath(plugin.host);
       return { in: file, out: relative(catalog.dir, file).replace(SOURCE_EXTENSION, "").split(sep).join("/") };
     });
@@ -54,8 +63,9 @@ export async function buildBuiltins({ source = DEFAULT_SOURCE, outDir = DEFAULT_
     const files = entries.map((entry) => `${entry.out}.mjs`);
     checkRuntimeFiles(staged, files, "a built-in plugin's host part must be a single file; load what it needs with import instead");
     const list = JSON.parse(readFileSync(join(catalog.dir, BUILTINS_FILE), "utf8"));
-    list.plugins = list.plugins.map((plugin) => ({ ...plugin, host: plugin.host.replace(SOURCE_EXTENSION, ".mjs") }));
+    list.plugins = list.plugins.map((plugin) => (plugin.host === undefined ? plugin : { ...plugin, host: plugin.host.replace(SOURCE_EXTENSION, ".mjs") }));
     writeFileSync(join(staged, BUILTINS_FILE), `${JSON.stringify(list, null, 2)}\n`);
+    for (const plugin of list.plugins.filter((item) => item.host === undefined)) copyManifest(join(catalog.dir, ...plugin.root.split("/")), join(staged, ...plugin.root.split("/")));
     mkdirSync(dirname(outDir), { recursive: true });
     swapIn(staged, outDir);
     const bytes = files.reduce((sum, name) => sum + statSync(join(outDir, name)).size, 0);

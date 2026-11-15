@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { cpSync, rmSync } from "node:fs";
+import { cpSync, readdirSync, rmSync, utimesSync } from "node:fs";
 import { join } from "node:path";
 import { test } from "node:test";
 import { review } from "@fuyu/plugin-review";
@@ -32,6 +32,7 @@ test("review of git commits checks out the plugin folder at each commit", () => 
   for (const version of ["1.0.0", ...VERSIONS]) {
     rmSync(plugin, { recursive: true, force: true });
     cpSync(fixture(version), plugin, { recursive: true });
+    for (const file of readdirSync(plugin, { recursive: true })) utimesSync(join(plugin, file), 1e9, 1e9);
     commits[version] = git.commit(version);
   }
   for (const version of VERSIONS) {

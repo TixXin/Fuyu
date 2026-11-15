@@ -1,6 +1,7 @@
 import { readFileSync, realpathSync } from "node:fs";
 import { join, relative, sep } from "node:path";
 import { pathToFileURL } from "node:url";
+import { CLIENT_ONLY, SOURCE, readManifest } from "./sources.mjs";
 
 export const BUILTINS_FILE = "builtins.json";
 export const BUILTINS_FORMAT = 1;
@@ -47,18 +48,33 @@ export function readBuiltins(dir) {
     seen.add(plugin.id);
     const kind = plugin.kind ?? "builtin";
     if (!BUILTIN_KINDS.includes(kind)) throw new Error(`${at}: kind must be ${BUILTIN_KINDS.join(" or ")}`);
-    if (!safeRelative(plugin.root) || !safeRelative(plugin.host)) throw new Error(`${at}: root and host must be relative paths with "/" and no ".."`);
+    if (!safeRelative(plugin.root) || (plugin.host !== undefined && !safeRelative(plugin.host))) throw new Error(`${at}: root and host must be relative paths with "/" and no ".."`);
     const root = real(join(base, ...plugin.root.split("/")), "the folder");
     if (!inside(base, root)) throw new Error(`${at}: the folder ${root} is outside ${base}`);
+    if (plugin.host === undefined) return { id: plugin.id, kind, root, ...fromPackage(root, at) };
     const host = real(join(root, ...plugin.host.split("/")), "the host file");
     if (!inside(root, host)) throw new Error(`${at}: the host file ${host} is outside ${root}`);
-    return { id: plugin.id, kind, root, host: pathToFileURL(host).href };
+    return { id: plugin.id, kind, root, host: pathToFileURL(host).href, clients: [], declared: null };
   });
   return { dir: base, plugins };
 }
 
-export function builtinEntries(catalog) {
-  return (catalog?.plugins ?? []).map(({ id, host, kind }) => ({ id, name: host, kind }));
+function fromPackage(root, at) {
+  try {
+    const manifest = readManifest(root, { official: true });
+    return { host: manifest.host && pathToFileURL(manifest.host).href, clients: manifest.clients, declared: manifest.declared };
+  } catch (error) {
+    throw new Error(`${at}: there is no host in the list, and ${error.message}`);
+  }
+}
+
+export function builtinEntries(plugins = []) {
+  return plugins.map(({ id, host, kind, root, clients = [], declared = null }) => ({
+    id,
+    name: host ?? CLIENT_ONLY,
+    kind,
+    [SOURCE]: { source: "builtin", root, clients, declared },
+  }));
 }
 
 export function builtinMounts(catalog) {

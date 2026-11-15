@@ -40,7 +40,7 @@ export function editJson(file, change) {
 
 export function gitRepo(dir) {
   const run = (...args) => {
-    const result = spawnSync("git", ["-c", "user.email=test@example.com", "-c", "user.name=test", "-c", "core.autocrlf=false", ...args], { cwd: dir, encoding: "utf8" });
+    const result = spawnSync("git", ["-c", "user.email=test@example.com", "-c", "user.name=test", "-c", "core.autocrlf=false", "-c", "core.checkStat=minimal", "-c", "core.trustctime=false", ...args], { cwd: dir, encoding: "utf8" });
     if (result.status !== 0) throw new Error(result.stderr);
     return result.stdout.trim();
   };
@@ -48,6 +48,7 @@ export function gitRepo(dir) {
   return {
     run,
     commit(message) {
+      run("rm", "-r", "-q", "--cached", "--ignore-unmatch", ".");
       run("add", "-A");
       run("commit", "-q", "-m", message);
       return run("rev-parse", "HEAD");
