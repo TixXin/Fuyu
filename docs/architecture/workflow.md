@@ -233,6 +233,15 @@ Agent 状态从正式数据目录只读地读（F39.3）：钩子脚本把状态
 3. `pnpm prune:target` 删掉 `src-tauri/target` 里的 `lane-<N>`、`lane-build`。
 4. 用户级 `~/.claude/settings.json` 里删掉指向 `scripts/lanes/session-hint.mjs`、`session-end.mjs` 的 SessionStart / SessionEnd 钩子（脚本已经删了，留着会每次报错）；`.git/claude-code-merge-queue/` 里的 `lane-*.json` 可以删。
 
+## 改写已推送的提交
+
+已经合入 `main` 的提交不改写。唯一的例外是用户明确要求去掉已推送提交里的 Claude 署名行，做之前要用户同意：
+
+1. 先通知其他会话。
+2. 用 `git filter-branch --msg-filter` 按字节过滤（例如 Python 读 `sys.stdin.buffer`，否则 Windows 会把所有提交说明的换行改成 CRLF）。
+3. 改写后核对每个提交的 tree 不变，用 `git update-ref` 切换。
+4. `main` 用 `--force-with-lease=main:<原提交>` 强推一次，要设 `CLAUDE_CODE_MERGE_QUEUE_EMERGENCY_PUSH=1`。规则集不允许强推，所以先把 `main protection` 里管理员的绕过方式临时改回 `always`，推完立刻改回 `pull_request`。
+
 ## 排障
 
 - PR 落后于 `main`：工作流 `.github/workflows/update-behind-prs.yml`（`scripts/mq/updateBehind.mjs`）按开启自动合并的先后，只更新排在最前、能合入的那个 PR；它出问题时 `pnpm mq:wait --update` 自己更新。它用仓库 secret `PR_UPDATER_TOKEN`，过期时 PR 会停在落后状态。
