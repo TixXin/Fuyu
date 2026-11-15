@@ -1,7 +1,5 @@
+import { SERVICE_NAME, SERVICE_TIMEOUT_MS } from "../protocol.mjs";
 import { pluginId } from "./clients.mjs";
-
-export const SERVICE_NAME = /^[a-z][a-z0-9-]*(\.[a-z][a-z0-9-]*)*\/v[1-9][0-9]{0,3}$/;
-export const SERVICE_TIMEOUT_MS = 30_000;
 const MEMBER = /^[a-z][A-Za-z0-9]{0,63}$/;
 
 export function serviceError(code, message, data) {
@@ -214,4 +212,3 @@ export class Services {
   }
 }
 
-export const SERVICE_CALLS = new Set(["service.call", "service.on", "service.off"]);

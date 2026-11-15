@@ -5,7 +5,8 @@ import { createInterface } from "node:readline";
 import { fileURLToPath } from "node:url";
 import { after, test } from "node:test";
 import { startHost } from "@fuyu/plugin-base/host";
-import { defineService } from "@fuyu/plugin-services";
+import { SERVICE_NAME, SERVICE_TIMEOUT_MS } from "@fuyu/plugin-base/protocol";
+import { DEFAULT_TIMEOUT_MS, SERVICE_NAME as DEFINED_NAME, defineService } from "@fuyu/plugin-services";
 import { config, sleep, until, workspace } from "./workspace.mjs";
 
 const cleanup = [];
@@ -49,6 +50,11 @@ function serviceHooks(ctx) {
     .filter(([name]) => name.startsWith("service:"))
     .reduce((total, [, hooks]) => total + hooks.length, 0);
 }
+
+test("the service package checks names and timeouts the way the host does", () => {
+  assert.equal(DEFINED_NAME.source, SERVICE_NAME.source);
+  assert.equal(DEFAULT_TIMEOUT_MS, SERVICE_TIMEOUT_MS);
+});
 
 test("a plugin provides a declared service and another calls it and hears its events", async () => {
   const started = await host();
@@ -212,7 +218,7 @@ test("providing, subscribing and unloading 1000 times leaves no providers, liste
 
 test("a window sees the services in its snapshot, calls them and hears their events over the socket", async () => {
   const { default: WebSocket } = await import("ws");
-  const { connectHost } = await import("@fuyu/plugin-base/client");
+  const { connectHost, createServiceProxy } = await import("@fuyu/plugin-base/client");
   const space = workspace({
     "echoer.mjs": `export const name = "echoer";
 export function apply(ctx) {
@@ -253,5 +259,13 @@ export function apply(ctx) {
   assert.ok(await until(() => events.length >= 2));
   assert.equal(events[0].service, "demo.echo/v1");
   assert.equal(events[0].event, "said");
+  const proxy = createServiceProxy(connection.call);
+  const echo = proxy.get(defineService("demo.echo/v1", { methods: { echo: true }, events: { said: true } }));
+  assert.deepEqual(await echo.echo({ text: "via proxy" }), { text: "via proxy", window: "settings" });
+  const heard = [];
+  const off = echo.on("said", (data) => heard.push(data.at));
+  events.forEach((message) => proxy.deliver(message));
+  assert.ok(heard.length >= 2);
+  await off();
   connection.close();
 });

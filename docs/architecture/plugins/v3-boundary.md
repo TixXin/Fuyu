@@ -16,17 +16,20 @@
 | 8 | **宿主的标准输出只给协议用**：插件和内核打印的东西一律到标准错误 | 一行不是 JSON 的输出就会让对方读错 |
 | 9 | **协议有版本号**：宿主在 `ready` 里报 `protocol`，不兼容的改动升版本，两边都认识的才继续 | 宿主和 Rust 以后会分开更新（决定 16 之后 Node 是用户电脑上的） |
 
-## Rust 和宿主之间（协议 1）
+## Rust 和宿主之间（协议 2）
 
-标准输入输出上的 JSON-RPC 2.0，一行一条消息（UTF-8，`\n` 结尾）。Rust 写宿主的标准输入、读它的标准输出；宿主的标准错误由 Rust 逐行转发到日志。实现：Rust 一侧在 `src-tauri/crates/plugin-base`（`rpc.rs`、`supervisor.rs`），宿主一侧在 `packages/plugin-base/src/host`（`rpc.mjs`、`main.mjs`）。
+标准输入输出上的 JSON-RPC 2.0，一行一条消息（UTF-8，`\n` 结尾）。Rust 写宿主的标准输入、读它的标准输出；宿主的标准错误由 Rust 逐行转发到日志。实现：Rust 一侧在 `src-tauri/crates/plugin-base`（`rpc.rs`、`serve.rs`、`registry.rs`、`supervisor.rs`），宿主一侧在 `packages/plugin-base/src/host`（`rpc.mjs`、`rust.mjs`、`main.mjs`）。
+
+协议 2（2026-11-15 起，E36.3.3）在协议 1 上加了：宿主调 Rust 的方法、Rust 推事件给宿主、流式片段和取消。Rust 只认 2：`ready` 里的 `protocol` 不是 2 或没写，这次启动算失败，原因写明双方的版本（「the plugin host speaks protocol X, but Fuyu only speaks protocol 2」），照常按退避重启。
 
 ### 宿主发给 Rust 的通知
 
 | 方法 | 参数 | 什么时候 |
 |---|---|---|
-| `ready` | `{ protocol, pid, node, plugins, safe, windows: { port, token } }`，`plugins` 是每个插件的状态，`safe` 是安全模式（`null`、`third-party` 或 `minimal`），`windows` 是给窗口连的本机 WebSocket（见下一节） | 内核和配置里的插件都加载完（成功或失败都算） |
+| `ready` | `{ protocol, pid, node, plugins, safe, windows: { port, token } }`，`protocol` 是 `2`，`plugins` 是每个插件的状态，`safe` 是安全模式（`null`、`third-party` 或 `minimal`），`windows` 是给窗口连的本机 WebSocket（见下一节） | 内核和配置里的插件都加载完（成功或失败都算） |
 | `log` | `{ at, type, name, text }`，只有 `error` 和 `warn` | 内核记了错误或警告，例如插件启动失败 |
 | `fatal` | `{ message }` | 内核本身起不来；发完宿主以退出码 1 退出 |
+| `cancel` | `{ id }` | 宿主不再等它发出的第 `id` 个调用（插件停用、宿主这边超时）。还没开始的不跑；正在跑的处理函数用 `call.cancelled()` 能看到，结果丢掉、不回答 |
 
 ### Rust 发给宿主的请求
 
@@ -35,6 +38,54 @@
 | `ping` | 任意 | `{ at, echo }`。Rust 每秒发一次，2 秒没回答就当宿主卡死 |
 | `status` | 无 | 每个插件的状态，格式见下面「插件状态」 |
 | `stop` | 无 | `true`，然后停掉所有插件（每个清理都执行）再退出 |
+
+### Rust 发给宿主的通知
+
+| 方法 | 参数 | 说明 |
+|---|---|---|
+| `event` | `{ name, data }` | Rust 推给宿主的事件（`Supervisor::emit`）。插件用 `ctx.rust.on(名字, 监听器)` 收，挂在插件自己的 ctx 上，停用时自动撤掉；宿主没在跑时 `emit` 返回 `peer-gone` |
+| `progress` | `{ id, data }` | 宿主发出的第 `id` 个调用的流式片段（见下面「流式」） |
+
+### 宿主发给 Rust 的请求
+
+宿主里的插件用 `ctx.rust.call(方法, 参数, { timeoutMs?, onProgress? })`（`Context` 上的 `rust`，类型 `RustApi`）。方法名是点分的小驼峰（`app.version`），参数是一个 JSON 值，没有就是 `null`。
+
+Rust 的方法是标了 `#[plugin_base::host_service("<方法>")]` 的领域函数，`Serve::registered()` 读出全部（宏的写法见 [v3-services.md](v3-services.md)「Rust 那条路」，E36.3.4）。现在有：
+
+| 方法 | 参数 | 回答 |
+|---|---|---|
+| `app.version` | 无 | `{ version, platform }` |
+| `app.echo` | `{ value }` | `{ echo: value }` |
+| `app.platformSupport` | 无 | `{ os, unsupported, devBuild }`，和 Tauri 命令 `get_platform_support` 同一个函数 |
+
+上表只列宿主自带的 `app.*`，全部方法以 `@fuyu/plugin-services` 的 `RUST_METHODS` 为准；方法和它们参数、回答的 TypeScript 类型由 Rust 生成在同一个包的 `RustMethods`。
+
+Rust 怎么跑：
+- 每个请求交给登记的处理函数，在工作线程里跑（默认 4 个线程，排队的最多 256 个，加上正在跑的一共 260 个，再多立刻回 `busy`）。宿主的读线程不跑处理函数，所以心跳不受影响。
+- 每个方法有自己的超时（默认 30 秒），从 Rust 收到请求算起，排队的时间也算。超时回 `timeout`，`data` 是 `{ method, timeoutMs }`；之后处理函数的结果丢掉。
+- 处理函数 panic 只让这一个调用失败，回 `panic`，`message` 写明方法名和 panic 的内容；工作线程照常接下一个。
+- 宿主退出或卡死被换掉时：这一代宿主的调用全部标成取消，排队的不再跑，正在跑的结果丢掉；工作线程跑完手上的就退出，不卡 supervisor。
+- 写宿主的标准输入在单独的写线程里排队，宿主卡死、管道写满时只卡这个线程，不拿着锁卡住心跳。
+- 边界规则 5：处理函数里不能同步等宿主，在工作线程里调 `Rpc::call` 直接返回 `WouldWait` 错误。
+
+错误一律是 `{ code, message, data? }`，`code` 是字符串，和 [v3-services.md](v3-services.md)「错误」一致（内置插件把 Rust 的方法包成服务时原样传出）：
+
+| `code` | 什么时候 |
+|---|---|
+| `no-method` | Rust 没有登记这个方法 |
+| `bad-params` | 参数不对：不是 JSON 对象，或某个字段的类型不对（`data` 是 `{ method, field }`） |
+| `bad-result` | 处理函数的返回值编不成 JSON |
+| `timeout` | Rust 一侧超时（见上）；宿主一侧也有超时（默认 120 秒，`timeoutMs` 只能改短），`message` 是「<方法> got no answer in <毫秒> ms」 |
+| `busy` | 正在跑和排队的已经满了（见上） |
+| `panic` | 处理函数 panic |
+| `failed` | 处理函数要的状态 Rust 没给（例如没有 `AppHandle`），或工作线程起不来 |
+| `peer-gone` | 宿主一侧：Rust 那头的管道断了，或宿主不是 Rust 拉起的（没有通道） |
+| `inactive` | 宿主一侧：发起调用的插件停用了，调用立刻失败，同时给 Rust 发 `cancel` |
+| 处理函数自己的码 | 如翻译的 `no-secret`，原样传出 |
+
+### 流式
+
+会分几次给结果的方法，处理函数调 `call.progress(片段)`，Rust 发通知 `progress { id, data }`，最后照常回答。宿主把片段交给 `onProgress`。调用已经取消或回答后不再发 `progress`。形状和 [v3-services.md](v3-services.md)「流式」一致：一个 id、多条片段、最后一个结果。
 
 ### 插件状态
 
@@ -129,11 +180,11 @@ Rust 每次拉起宿主（包括自动重启）都重新决定带不带 `--safe`
 | 方向 | 消息 | 说明 |
 |---|---|---|
 | 窗口 → 宿主 | `{ type: "hello", token, protocol, window }` | 第一条。`window` 是窗口的 label |
-| 宿主 → 窗口 | `{ type: "welcome", protocol, seq, snapshot }` | 回答 `hello`。`snapshot` 是当前的全部状态（现在是 `{ plugins, clients, host }`，`host` 是 `{ pid, node, startedAt, safe, dev, rssBytes, heapUsedBytes, cpuMs }`，宿主进程自己的内存和累计 CPU），`seq` 是最后一个事件的序号 |
-| 宿主 → 窗口 | `{ type: "event", seq, name, data }` | 增量。`seq` 每个事件加 1，所有窗口共用一个序列。现在有 `plugins`（插件状态变了，带完整的列表）、`clients`（插件登记的界面文件变了，带完整的列表：`{ id, plugin, window, path, version }`）和 `plugin`（插件的宿主部分推给它窗口部分的消息：`{ plugin, topic, data }`） |
+| 宿主 → 窗口 | `{ type: "welcome", protocol, seq, snapshot }` | 回答 `hello`。`snapshot` 是当前的全部状态（现在是 `{ plugins, clients, services, host }`，`services` 是当前在提供的服务 `{ name, plugin, methods, events }[]`，`host` 是 `{ pid, node, startedAt, safe, dev, rssBytes, heapUsedBytes, cpuMs }`，宿主进程自己的内存和累计 CPU），`seq` 是最后一个事件的序号 |
+| 宿主 → 窗口 | `{ type: "event", seq, name, data }` | 增量。`seq` 每个事件加 1，所有窗口共用一个序列。现在有 `plugins`（插件状态变了，带完整的列表）、`clients`（插件登记的界面文件变了，带完整的列表：`{ id, plugin, window, path, version }`）、`plugin`（插件的宿主部分推给它窗口部分的消息：`{ plugin, topic, data }`）、`services`（在提供的服务变了，带完整的列表）和 `service`（服务的事件：`{ service, event, data }`，见下面「服务」） |
 | 窗口 → 宿主 | `{ type: "snapshot" }` | 窗口发现序号跳了（中间丢了事件），要一份新的快照，不带着缺口往下走 |
 | 宿主 → 窗口 | `{ type: "snapshot", seq, snapshot }` | 回答上一条 |
-| 窗口 → 宿主 | `{ type: "call", id, method, params }` | 调用。现在有 `status`，和 `plugin.call`（`params` 是 `{ plugin, method, params }`，转给那个插件用 `ctx.clients.handle` 登记的方法，回答它的返回值；没登记的回 `no-method`） |
+| 窗口 → 宿主 | `{ type: "call", id, method, params }` | 调用。现在有 `status`，和 `plugin.call`（`params` 是 `{ plugin, method, params }`，转给那个插件用 `ctx.clients.handle` 登记的方法，回答它的返回值；没登记的回 `no-method`），以及服务的 `service.call`、`service.on`、`service.off`（见下面「服务」） |
 | 宿主 → 窗口 | `{ type: "result", id, result }` 或 `{ type: "result", id, error: { code, message, data? } }` | 回答调用 |
 
 ### 断开和重连
@@ -145,6 +196,21 @@ Rust 每次拉起宿主（包括自动重启）都重新决定带不带 `--safe`
 ### 插件的界面文件
 
 插件的宿主部分用 `ctx.clients.add(<窗口名>, <文件的 URL>)` 登记它在某个窗口里的界面代码（插件停用时自动撤掉）。宿主把文件换成插件目录下的相对路径，路径解析成真实路径后不在插件目录里的拒绝（插件启动失败），版本是文件的大小加修改时间。窗口按 `fuyu-plugin://localhost/<路径>?v=<版本>` 加载：先用 `HEAD` 确认文件在、类型是 JavaScript，再 `import()`；版本变了就换地址重新加载，旧的先撤掉。插件的界面代码默认导出一个插件（函数，或带 `apply` 的对象），用 `ctx.slots.add(<插槽名>, { id, order, component, ...元数据 })` 往插槽里放组件（插槽和规则见下面「插槽」），插件停用时这些也自动撤掉。插件的两部分之间：宿主部分用 `ctx.clients.handle(<方法>, fn)` 登记给自己窗口调的方法、`ctx.clients.publish(<主题>, data)` 推消息；窗口部分用 `ctx.host.call(<方法>, params)` 调、`ctx.host.on(<主题>, fn)` 收。窗口部分只能调到、收到它自己那个插件的（按 `plugins.yml` 里的 id 对应），这些登记都跟着插件撤掉。示例在 `packages/plugin-base/examples/hello/`。插件代码里对 `react`、`react/jsx-runtime` 的引用要改写成 `../__shared/react.js` 这样的相对路径（第 0 阶段两个系统都验证过），由程序自带的转接模块提供同一份 React。
+
+### 服务
+
+宿主里的插件用 `ctx.services.provide(定义, 实现)` 提供带版本的服务（`timers/v1`），别的插件用 `ctx.services.get(定义)` 调，窗口经这条 WebSocket 按名字调。名字、声明、错误码和替换的规则在 [v3-services.md](v3-services.md)，这里只列窗口协议里的部分。2026-11-15 起（E36.3.2），只加不改，`WINDOW_PROTOCOL` 仍是 1；三个方法名在 `@fuyu/plugin-base/protocol` 的 `SERVICE_CALLS`，名字的规则是 `SERVICE_NAME`，默认超时 `SERVICE_TIMEOUT_MS`（30 秒）。
+
+| 调用 | `params` | 回答 |
+|---|---|---|
+| `service.call` | `{ service, method, params }` | 方法的返回值（`undefined` 回成 `null`）。只认当前提供者的定义里声明过的方法，别的回 `no-method`；没有提供者回 `not-ready`；超时回 `timeout`（按方法声明的，默认 30 秒）；调用中提供者停了回 `peer-gone`；返回值不是 JSON 回 `bad-result`；提供者抛的错误带字符串 `code` 时原样传出，否则是 `failed` |
+| `service.on` | `{ service, event }` | `true`。这个窗口要这个事件；当前提供者没声明这个事件回 `no-event`，还没有提供者时照样记下 |
+| `service.off` | `{ service, event }` | `true` |
+
+- **事件照旧广播**：所有窗口共用一个 `seq`，按窗口挑着发会让序号出缺口，所以 `service` 事件和别的事件一样发给每个窗口。`service.on` 决定的是「有没有人要」：一个事件没有任何**已连接**的窗口要，宿主就不往 WebSocket 发。宿主按窗口的 label 记，不跟着连接走：窗口重连后要把它的订阅重新发一遍。
+- **任何窗口都能调任何服务**：同权模型下没有按窗口的权限。
+- **窗口一侧**：`@fuyu/plugin-base/client` 的 `createServiceProxy(call)`。`get(定义)` 返回和宿主里一样形状的客户端（方法都返回 Promise，`on(事件, 监听器)` 返回撤销函数，同一个事件只发一次 `service.on`，最后一个监听器撤掉时发 `service.off`）；窗口把 `service` 事件交给 `deliver`，把快照和增量里的 `services` 交给 `update`，每次拿到新快照后调 `resubscribe`。客户端的超时是方法声明的超时加 1 秒，让宿主的 `timeout` 先到。
+- **流式还没到窗口**：声明了 `progress` 的方法，窗口带 `onProgress` 调会直接以 `unsupported` 失败。只发给调用它的那一个连接的 `{ type: "progress", id, data }` 消息随 E36.3.8 加（v3-services.md「流式」）。
 
 ### 插槽
 

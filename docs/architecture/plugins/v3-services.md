@@ -53,7 +53,7 @@ export const timersV1 = defineService("timers/v1", {
 - 类型包是中立的：提供者和使用者都只依赖 `@fuyu/plugin-services`，不互相 import（方案「核心概念」的「服务」一行）。内置服务的声明都放这里；第三方插件的服务声明放在提供者自己发的类型包里，写法一样。
 - E36.3.4 从 Rust 生成的类型放 `packages/plugin-services/src/generated/`，服务的声明可以直接引用那里的类型（例如翻译引擎的名单）。
 
-`@fuyu/plugin-services` 还导出这些类型，给提供者、使用者和窗口的代理用：
+这些类型定义在 `@fuyu/plugin-base`（`src/services.d.mts`，不含浮屿的业务，基座、窗口的代理和 `ctx.services` 都用它），`@fuyu/plugin-services` 原样转出，给提供者、使用者和窗口的代理用：
 
 | 类型 | 是什么 |
 |---|---|
@@ -102,7 +102,7 @@ export async function apply(ctx) {
 
 `ctx.services` 和 `ctx.setTimeout` 一样是内核挂在根上下文的访问器（`ctx.reflect.accessor`），插件**不用 `inject: ["services"]`** 就能用；它按读它的那个 ctx 绑定调用方，所以注册和订阅都落在调用方插件名下。除了 `provide`、`get` 还有 `list()`（当前在提供的服务，和快照的 `services` 同一格式）。宿主自己（`main.mjs`）用 `startHost` 返回的 `host.serviceHub` 做窗口分发，`host.services()`、`host.watchServices()` 给快照和增量。
 
-`ctx.services` 的类型（`Context` 上的增补）放在 `packages/plugin-base/src/index.d.mts`，要等 E36.2.3 合入后加，见「还没做的、要改公共文件的」；在那之前类型在 `@fuyu/plugin-base/host` 的 `ServicesApi`。
+`ctx.services` 的类型是 `Context` 上的增补（`packages/plugin-base/src/index.d.mts`，`ServicesApi`）：`provide(定义, 实现)` 按定义检查实现的类型，`get(定义)` 返回带类型的 `ServiceClient`。
 
 ## 窗口怎么调
 
@@ -119,7 +119,7 @@ export async function apply(ctx) {
 - **只认声明过的方法**：`service.call` 查的是当前提供者注册时给的定义里的 `methods`，没有就回 `no-method`，不去碰实现对象上的其他属性（例如 `constructor`、内部的 `_state`）。
 - **事件仍然广播**：窗口协议里所有窗口共用一个 `seq`，按窗口挑着发会让序号出缺口、窗口以为丢了事件去要快照。所以服务事件和别的事件一样发给所有窗口，由窗口里的代理分给本地的监听器。`service.on` 的作用是**有人要才发**：一个事件没有任何已连接的窗口要，宿主就不往 WebSocket 发（进程内的订阅者照常收到）。宿主按窗口的 label 记，发的时候顺手去掉已经不在连接里的 label，不需要连接断开的回调；窗口重连后由代理把它的订阅重新发一遍。
 - 窗口的身份只有 label，**任何窗口都能调任何服务**：同权模型下没有按窗口的权限，这和方案一致。真正要收紧的是 Rust 命令的 capability，不在这里。
-- 窗口一侧的代理（`packages/plugin-base/src/client/services.mjs`，`ServiceClient` 的同一套类型）排在 E36.2.3 合入之后由地基写，不在这一轮。
+- 窗口一侧的代理是 `@fuyu/plugin-base/client` 的 `createServiceProxy(call)`（`ServiceClient` 的同一套类型），用法见 v3-boundary.md「服务」。
 
 ### 流式
 
@@ -206,20 +206,19 @@ export async function apply(ctx) {
 
 | 东西 | 位置 | 状态 |
 |---|---|---|
-| `defineService`、类型工具、`SERVICE_NAME` | `packages/plugin-services/src/define.mjs` / `.d.mts` | 这一轮 |
+| `defineService` 和声明时的类型检查（`MethodTable` 等） | `packages/plugin-services/src/define.mjs` / `.d.mts` | 已做 |
+| 用服务的类型（`ServiceClient`、`ServiceImpl`、`ServiceProvider`、`Json` 等）、`ctx.services` 的类型 | `packages/plugin-base/src/services.d.mts`、`src/index.d.mts` | 已做 |
+| `SERVICE_CALLS`、`SERVICE_NAME`、`SERVICE_TIMEOUT_MS` | `packages/plugin-base/src/protocol.mjs` / `.d.mts`，宿主、窗口的代理和 `@fuyu/plugin-services` 都引这一份 | 已做 |
 | 内置服务的声明 | `packages/plugin-services/src/services/<名字>.mjs` / `.d.mts` | 这一轮：`timers`、`translator` |
 | 测试 | `packages/plugin-services/test/define.test.mjs`（已在 `pnpm test` 的范围里）、`types.check.mts`（在 `pnpm check:packages-types` 里） | 这一轮 |
 | 宿主的服务表和窗口分发 | `packages/plugin-base/src/host/services.mjs`；`kernel.mjs` 装上访问器、`main.mjs` 的 `onCall`、快照和增量接上；测试 `packages/plugin-base/test/services.test.mjs` | 第二步，已做（Rust 来的 `service.call` 留给 E36.3.3，窗口来的 `progress` 留给 E36.3.8） |
-| 窗口的代理 | `packages/plugin-base/src/client/services.mjs` | E36.2.3 合入后 |
+| 窗口的代理 | `packages/plugin-base/src/client/services.mjs`，测试 `test/service-proxy.test.mjs` 和 `services.test.mjs` 里经真 WebSocket 的那条 | 已做 |
 | Rust 生成的类型 | `packages/plugin-services/src/generated/`（`rust.d.mts`、`rust.mjs`），生成脚本 `scripts/plugins-v3/gen-rust-types.mjs`，宏在 `src-tauri/crates/plugin-base-macros` | E36.3.4，已做 |
 
-宿主一侧的 `services.mjs` **不 import `@fuyu/plugin-services`**：`plugin-base` 是要单独开源的基座，不能依赖浮屿的服务名单。它按形状认定义（`{ name, methods, events }`，和 `isServiceDefinition` 同一套检查）。
+`plugin-base` 的源码**不 import `@fuyu/plugin-services`**（依赖是反过来的，`plugin-services` 依赖 `plugin-base`）：`plugin-base` 是要单独开源的基座，不能依赖浮屿的服务名单。它按形状认定义（`{ name, methods, events }`，和 `isServiceDefinition` 同一套检查）。
 
-## 还没做的、要改公共文件的
+## 还没做的
 
-这些都排在 E36.2.3 合入之后（经理 2026-11-15 定），到时一次改、单独先合入：
-
-1. `packages/plugin-base/src/protocol.mjs` / `.d.mts`：加 `SERVICE_CALLS = ["service.call", "service.on", "service.off"]` 和错误码常量；`SERVICE_NAME` 是否挪到这里，看下面第 4 条。现在 `SERVICE_CALLS`、`SERVICE_NAME`、`SERVICE_TIMEOUT_MS` 暂放在 `host/services.mjs`（经 `@fuyu/plugin-base/host` 导出），`SERVICE_NAME` 和 `@fuyu/plugin-services` 里的是同一个正则的两份，挪进 `protocol.mjs` 后两边都引那一份。
-2. `packages/plugin-base/src/index.d.mts`：`Context` 上加 `services: { provide, get }`，类型引 `ServiceDefinition` 等。
-3. `v3-boundary.md`：「宿主和窗口之间」的消息表加上面三个调用、`service` 事件、快照的 `services` 和 `progress` 消息（`progress` 随 E36.3.8）；规则表不变。`contracts.md` 第 3 版那一条加一句：服务名带版本、只加不改，名单在 `@fuyu/plugin-services`。
-4. **`defineService` 放哪**（要主 agent 定）：现在在 `@fuyu/plugin-services`。它本身不含浮屿的业务，按「基座做成开源项目」应该属于 `@fuyu/plugin-base`（新的子路径 `./services`），`plugin-services` 只放浮屿的服务名单并转出它。挪过去要改 `plugin-base/package.json` 的 `exports`（公共文件），文件可以原样搬（`define.mjs` / `.d.mts` 不依赖别的东西）。
+- 窗口来的流式 `progress`（`{ type: "progress", id, data }`，改 `host/sockets.mjs`）：随 E36.3.8。
+- Rust 调服务（Rust 发 `service.call`）：随 E36.3.3 之后要用它的子任务（托盘菜单）。
+- **`defineService` 放哪**（要主 agent 定）：现在在 `@fuyu/plugin-services`。它不含浮屿的业务，按「基座做成开源项目」也可以挪进 `@fuyu/plugin-base`（新的子路径 `./services`），`plugin-services` 只放浮屿的服务名单。用服务的类型已经在 `plugin-base` 了，剩下的只有 `defineService` 本身和声明时的类型检查。

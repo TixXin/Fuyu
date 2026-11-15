@@ -1,5 +1,5 @@
 import { Context, Service } from "@fuyu/plugin-base";
-import { PACKAGES_DIR, SERVICE_CALLS, dataDirOf, readBuiltins, readManifest, serviceError, startHost, type BuiltinCatalog, type Host, type PluginPackage, type PluginStatus, type ServiceEntry, type ServicesApi } from "@fuyu/plugin-base/host";
+import { PACKAGES_DIR, dataDirOf, readBuiltins, readManifest, serviceError, startHost, type BuiltinCatalog, type Host, type PluginPackage, type PluginStatus, type ServiceEntry, type ServicesApi } from "@fuyu/plugin-base/host";
 
 class Counter extends Service {
   value = 0;
@@ -20,7 +20,7 @@ void host.serviceHub.windowCall("service.call", { service: "timers/v1", method: 
 // @ts-expect-error only the three service calls go to the hub
 void host.serviceHub.windowCall("plugin.call", {}, "main");
 const failed: string = serviceError("not-ready", "no provider").code;
-const known: boolean = SERVICE_CALLS.has("service.on");
+const known: boolean = SERVICE_CALLS.includes("service.on");
 declare const services: ServicesApi;
 const echo = { name: "demo.echo/v1", methods: { echo: {} }, events: { said: {} } } as const;
 const handle = services.provide(echo, { echo: (params, caller) => ({ params, window: caller.window ?? null }) });
@@ -35,8 +35,9 @@ void known;
 void delivered;
 void reply;
 
-import { connectHost, type HostConnection } from "@fuyu/plugin-base/client";
-import { CLOSE, WINDOW_ORIGINS } from "@fuyu/plugin-base/protocol";
+import { connectHost, createServiceProxy, type HostConnection } from "@fuyu/plugin-base/client";
+import { CLOSE, SERVICE_CALLS, SERVICE_TIMEOUT_MS, WINDOW_ORIGINS, type ServiceCallName } from "@fuyu/plugin-base/protocol";
+import type { ServiceDefinitionLike } from "@fuyu/plugin-base";
 
 const connection: HostConnection = connectHost<{ plugins: PluginStatus[] }>({
   resolve: async () => ({ port: 1, token: "t" }),
@@ -65,3 +66,26 @@ void sources;
 void undeclared;
 void manifestErrors;
 void windows;
+
+type EchoMethods = { echo(params: { text: string }): { text: string }; count(): { n: number } };
+type EchoEvents = { said: { at: number } };
+declare const typedEcho: ServiceDefinitionLike<EchoMethods, EchoEvents, {}>;
+declare const pluginCtx: Context;
+const typedHandle = pluginCtx.services.provide(typedEcho, { echo: ({ text }) => ({ text }), count: () => ({ n: 1 }) });
+typedHandle.emit("said", { at: 1 });
+// @ts-expect-error the payload of said is { at }
+typedHandle.emit("said", { when: 1 });
+// @ts-expect-error a provider must implement every declared method
+pluginCtx.services.provide(typedEcho, { echo: ({ text }) => ({ text }) });
+const typedReply: Promise<{ text: string }> = pluginCtx.services.get(typedEcho).echo({ text: "hi" });
+const counted: Promise<{ n: number }> = pluginCtx.services.get(typedEcho).count();
+// @ts-expect-error echo needs its text
+void pluginCtx.services.get(typedEcho).echo({});
+const version: Promise<{ version: string }> = pluginCtx.rust.call<{ version: string }>("app.version", null, { timeoutMs: 1000 });
+void pluginCtx.rust.on("media", (data) => data);
+const proxy = createServiceProxy((method, params, options) => connection.call(method, params, options));
+const windowReply: Promise<{ text: string }> = proxy.get(typedEcho).echo({ text: "hi" });
+void proxy.get(typedEcho).on("said", (data) => data.at.toFixed());
+const callName: ServiceCallName = SERVICE_CALLS[0];
+const defaultTimeout: 30000 = SERVICE_TIMEOUT_MS;
+void [typedReply, counted, version, windowReply, callName, defaultTimeout];

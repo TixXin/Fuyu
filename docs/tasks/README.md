@@ -77,6 +77,8 @@
 
 认领看本地和 `origin/main`，不等其他会话回消息。
 
+从看任务到关 issue 的先后顺序和每一步的坑排在 `.claude/skills/fuyu-task/SKILL.md` 里：Claude Code 会话认领前加载 `fuyu-task` skill，别的 agent 直接读那个文件。规则本体是这一节和下面几节。
+
 1. **挑**：`pnpm tasks next`，再 `pnpm tasks show <编号>` 读全文。
 2. **认领**：`pnpm task:claim <编号> --as <会话名> --scope <要改的目录/,文件>`。会话名用 ListAgents 里自己的名字，必须写。它先 `git fetch origin main`，本地或 `origin/main` 上已经有人认领就拒绝；否则写上会话名和机器名，在本地提交（只含任务文件），随下一批 PR 推上去（见 [workflow.md](/docs/architecture/workflow.md)）。会话名和机器名都对上才算「你的」，另一台机器上同名的会话不算（#153）。`--no-commit` 只改文件不提交。任务带 `issue` 时，**认领后、动手前先在 issue 下回复**：谁接手、核实的结果、打算怎么改，附任务文档链接（用户 2026-11-14 定，命令会提醒）。
 3. **新任务先提 issue**（见下文「自己新建的任务」），拿到编号后再建。马上要做：`pnpm tasks add <编号> --title .. --issue <N> --claim --as <会话名> --scope ..`，新建和认领在一个提交里。只是记下来以后做：`pnpm tasks add <编号> --title .. --issue <N>`，和别的改动一起提交。
@@ -87,6 +89,14 @@
 8. **失效的认领**：`pnpm tasks` / `pnpm tasks stale` 标出认领后 24 小时任务文件没有新的交接或提交的认领（做得久的任务停下时 `tasks note` 留交接，也就续上了）。接手前给原会话发一条消息说明，不必等回复，`pnpm task:claim <编号> --takeover`。
 
 land 时会自动检查（`scripts/land-check.mjs` 调 `pnpm tasks landing`）：这次标成已完成的任务，`## 提交` 里的标题要在这次 land 或 main 上一字不差，提交号要存在，否则 land 失败；本机认领、还是「进行中」的任务会提醒先 `done` 或留交接。
+
+## 实测清单
+
+做任务的这台机器上测不了的（另一个平台、真机、要用户的账号），不算已验证，要留下一份别人能照着测的清单。
+
+1. **记**：发现时就 `pnpm tasks note <编号> "实测清单（为什么本机测不了）：1) 在哪台机器、做什么、应该看到什么 2) …"`，在 `pnpm tasks done` 之前，这样随完成的提交进任务文件。一行写不下的（要贴输出、按机器分组）在 `done` 之后直接改归档任务文件的 `## 备注`，再 `pnpm check:tasks`。
+2. **发**：照样写进 PR 正文的「注意」和 issue 的完成回复。被主 agent 派来的会话写进给主 agent 的汇报。
+3. **谁来测**：要用户或另一台机器来测的，另建任务（先提 issue；只有用户本人能做的加 `--needs user`）。只留在已归档的任务里，合入后没人会再看。
 
 ## GitHub issue
 

@@ -89,3 +89,4 @@ export function createLoader(options: {
   checkFile?: (url: string) => Promise<void>;
   onStatus?: (status: Map<string, ClientStatus>) => void;
 }): ClientLoader;
+export { createServiceProxy, type ServiceCall, type ServiceEventMessage, type ServiceProxy } from "./services.mjs";
