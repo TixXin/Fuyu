@@ -2310,6 +2310,28 @@
       }
     },
     {
+      "page": "agents",
+      "zh-CN": {
+        "group": "显示哪些 Agent",
+        "title": "TRAE"
+      },
+      "en": {
+        "group": "Agents shown",
+        "title": "TRAE"
+      }
+    },
+    {
+      "page": "agents",
+      "zh-CN": {
+        "group": "显示哪些 Agent",
+        "title": "TRAE CN"
+      },
+      "en": {
+        "group": "Agents shown",
+        "title": "TRAE CN"
+      }
+    },
+    {
       "page": "agentSessions",
       "zh-CN": {
         "group": "会话列表",
@@ -2983,6 +3005,28 @@
       "en": {
         "group": "AI Agent status light",
         "title": "Qwen Code"
+      }
+    },
+    {
+      "page": "agentConnect",
+      "zh-CN": {
+        "group": "AI Agent 状态灯",
+        "title": "TRAE"
+      },
+      "en": {
+        "group": "AI Agent status light",
+        "title": "TRAE"
+      }
+    },
+    {
+      "page": "agentConnect",
+      "zh-CN": {
+        "group": "AI Agent 状态灯",
+        "title": "TRAE CN"
+      },
+      "en": {
+        "group": "AI Agent status light",
+        "title": "TRAE CN"
       }
     },
     {

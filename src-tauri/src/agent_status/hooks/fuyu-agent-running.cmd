@@ -13,7 +13,13 @@ if /I "%PROVIDER%"=="antigravity" (
   if /I not "%~2"=="start" if /I not "%~2"=="running" if /I not "%~2"=="stop" exit /b 2
   goto known
 )
+if /I "%PROVIDER%"=="trae" goto trae
+if /I "%PROVIDER%"=="traeCn" goto trae
 exit /b 2
+
+:trae
+if /I not "%~2"=="running" if /I not "%~2"=="stop" if /I not "%~2"=="notification" exit /b 2
+goto known
 
 :known
 set "MARKER=agent-%PROVIDER%-running.flag"
@@ -38,6 +44,18 @@ if /I "%PROVIDER%"=="antigravity" (
   goto notification
 )
 if /I "%~2"=="notification" goto notification
+set "IS_TRAE="
+if /I "%PROVIDER%"=="trae" set "IS_TRAE=1"
+if /I "%PROVIDER%"=="traeCn" set "IS_TRAE=1"
+if defined IS_TRAE (
+  set "SAVED_DIR=%STATUS_DIR%\agent-%PROVIDER%"
+  set "SAVED_NAME=%~2"
+  if /I "%~2"=="running" (
+    break > "%STATUS_DIR%\%MARKER%"
+    del "%STATUS_DIR%\%HOLD%" >nul 2>nul
+  )
+  goto notification
+)
 if /I "%~2"=="session" goto session
 
 break > "%STATUS_DIR%\%MARKER%"

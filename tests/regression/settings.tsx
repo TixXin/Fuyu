@@ -357,9 +357,9 @@ if (!automated) {
     check(hooksLink, "Without hooks, the on-the-island page says so with a way to install them");
     await act(async () => { hooksLink!.click(); });
     check(element(".settings-tabs__tab--active").dataset.tab === "agentConnect", "The hooks notice on the on-the-island page opens the connection page");
+    localStorage.removeItem("fuyu-agent-session-filters");
     await openPage("agentSessions");
     const filterGroup = () => [...document.querySelectorAll<HTMLElement>(".settings-group")].find((group) => group.textContent?.includes("隐藏会话"))!;
-    localStorage.removeItem("fuyu-agent-session-filters");
     const filterInput = filterGroup().querySelector<HTMLInputElement>(".session-filter__form input")!;
     await type(filterInput, "E:\\Projects\\scratch");
     await act(async () => { filterGroup().querySelector<HTMLFormElement>(".session-filter__form")!.requestSubmit(); });
