@@ -26,6 +26,10 @@ fn host_script() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../packages/plugin-base/src/host/main.mjs")
 }
 
+fn builtins_dir() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../src/features")
+}
+
 fn window_origins(dev_url: Option<&str>) -> Vec<String> {
     let mut origins: Vec<String> = RELEASE_ORIGINS.iter().map(|origin| (*origin).to_owned()).collect();
     if let Some(url) = dev_url.and_then(|url| url.split_once("://").map(|(scheme, rest)| format!("{scheme}://{}", rest.split('/').next().unwrap_or(rest)))) {
@@ -47,7 +51,16 @@ fn host_args(dir: PathBuf, origins: &[String], mode: &HostMode) -> Vec<std::ffi:
     if mode.development {
         args.push("--expose-internals".into());
     }
-    args.extend([host_script().into(), "--dir".into(), dir.into(), "--watch".into()]);
+    args.extend([
+        host_script().into(),
+        "--dir".into(),
+        dir.into(),
+        "--builtins".into(),
+        builtins_dir().into(),
+        "--app-version".into(),
+        env!("CARGO_PKG_VERSION").into(),
+        "--watch".into(),
+    ]);
     if mode.development {
         args.push("--dev".into());
     }
