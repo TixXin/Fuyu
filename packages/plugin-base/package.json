@@ -30,6 +30,10 @@
       "types": "./src/protocol.d.mts",
       "default": "./src/protocol.mjs"
     },
+    "./services": {
+      "types": "./src/services.d.mts",
+      "default": "./src/services.mjs"
+    },
     "./package.json": "./package.json"
   },
   "engines": {
