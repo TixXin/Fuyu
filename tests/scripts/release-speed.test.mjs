@@ -80,3 +80,19 @@ test("issues are told a few at a time, in order, and once per release", async ()
   assert.match(lines[0], /#1 that it shipped/);
   assert.match(lines[3], /#5: the comment failed: boom/);
 });
+
+test("a finished issue that is still open is closed after it is told", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "fuyu-close-"));
+  const calls = [];
+  const gh = async (args) => {
+    calls.push(args.slice(0, 3).join(" "));
+    if (args[0] === "api") return { status: 0, stdout: "", stderr: "" };
+    if (args[1] === "view") return { status: 0, stdout: args[2] === "2" ? "CLOSED\n" : "OPEN\n", stderr: "" };
+    return { status: 0, stdout: "", stderr: "" };
+  };
+  const shipped = new Map([1, 2, 3].map((issue) => [issue, [{ id: `T${issue}`, path: `docs/tasks/T${issue}.md` }]]));
+  const lines = await tellIssues(shipped, { tag: "v1.0.0", url: "u", repo: "o/r", dir, gh, finished: new Set([1, 2]) });
+  assert.ok(calls.includes("issue close 1"));
+  assert.ok(!calls.includes("issue close 2") && !calls.includes("issue view 3"));
+  assert.deepEqual(lines.filter((line) => line.includes("Closed")), ["✓ Closed #1: all its tasks are done."]);
+});

@@ -25,8 +25,20 @@
   </p>
 
   <p>
-    <a href="README.md"><b>中文</b></a>
+    <a href="README.md">简体中文</a>
     ·
+    <a href="README.zh-TW.md">繁體中文</a>
+    ·
+    <b>English</b>
+    ·
+    <a href="README.ja.md">日本語</a>
+    ·
+    <a href="README.ko.md">한국어</a>
+    ·
+    <a href="README.es.md">Español</a>
+  </p>
+
+  <p>
     <a href="https://fuyu.ing">Website</a>
     ·
     <a href="https://fuyu.ing/plugins/">Plugin market</a>
@@ -56,12 +68,14 @@ Fuyu (浮屿, "floating islet") is a lightweight, borderless, always-on-top floa
 ## What is on the island
 
 <p align="center">
-  <img src="docs/assets/readme/todo-en.webp" alt="The expanded island showing today's tasks, with the finished ones struck through below" width="398" height="224">
-  <img src="docs/assets/readme/music-en.webp" alt="The music page on the island: cover art, synced lyrics, a progress bar and playback controls" width="398" height="224">
-  <img src="docs/assets/readme/messages-en.webp" alt="New messages dropping down from the island: a mail, a WeChat message and a QQ message" width="398" height="224">
-  <img src="docs/assets/readme/clipboard-en.webp" alt="Clipboard history on the island: a command, a link, a line of text and an image, each with the app it came from" width="398" height="224">
-  <img src="docs/assets/readme/translate-en.webp" alt="The translation page on the island: the source text on the left, the translation on the right" width="398" height="224">
-  <img src="docs/assets/readme/agents-en.webp" alt="An approval request from Claude Code on the island: the command it wants to run, with Deny and Allow buttons" width="398" height="224">
+  <a href="https://fuyu.ing/#day"><img src="docs/assets/readme/todo-en.webp" alt="The expanded island showing today's tasks, with the finished ones struck through below" width="398" height="224"></a>
+  <a href="https://fuyu.ing/#day"><img src="docs/assets/readme/music-en.webp" alt="The music page on the island: cover art, synced lyrics, a progress bar and playback controls" width="398" height="224"></a>
+  <a href="https://fuyu.ing/#day"><img src="docs/assets/readme/messages-en.webp" alt="New messages dropping down from the island: a mail, a WeChat message and a QQ message" width="398" height="224"></a>
+  <a href="https://fuyu.ing/#day"><img src="docs/assets/readme/clipboard-en.webp" alt="Clipboard history on the island: a command, a link, a line of text and an image, each with the app it came from" width="398" height="224"></a>
+  <a href="https://fuyu.ing/#day"><img src="docs/assets/readme/translate-en.webp" alt="The translation page on the island: the source text on the left, the translation on the right" width="398" height="224"></a>
+  <a href="https://fuyu.ing/#agent"><img src="docs/assets/readme/agents-en.webp" alt="An approval request from Claude Code on the island: the command it wants to run, with Deny and Allow buttons" width="398" height="224"></a>
+  <br>
+  <sub>Click any picture to try the island yourself on the website</sub>
 </p>
 
 <table>

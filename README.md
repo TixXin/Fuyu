@@ -25,8 +25,20 @@
   </p>
 
   <p>
-    <a href="README.en.md"><b>English</b></a>
+    <b>简体中文</b>
     ·
+    <a href="README.zh-TW.md">繁體中文</a>
+    ·
+    <a href="README.en.md">English</a>
+    ·
+    <a href="README.ja.md">日本語</a>
+    ·
+    <a href="README.ko.md">한국어</a>
+    ·
+    <a href="README.es.md">Español</a>
+  </p>
+
+  <p>
     <a href="https://fuyu.ing/zh/">官网</a>
     ·
     <a href="https://fuyu.ing/zh/plugins/">插件市场</a>
@@ -56,12 +68,14 @@
 ## 岛上有什么
 
 <p align="center">
-  <img src="docs/assets/readme/todo-zh.webp" alt="展开的岛上是今天的待办，已完成的划掉收在下面" width="398" height="224">
-  <img src="docs/assets/readme/music-zh.webp" alt="岛上的音乐页：封面、同步歌词、进度条和播放控制" width="398" height="224">
-  <img src="docs/assets/readme/messages-zh.webp" alt="岛下弹出的新消息：一封邮件、一条微信和一条 QQ" width="398" height="224">
-  <img src="docs/assets/readme/clipboard-zh.webp" alt="岛上的剪贴板历史：命令、链接、一段文字和一张图片，各自标着来源" width="398" height="224">
-  <img src="docs/assets/readme/translate-zh.webp" alt="岛上的翻译页：左边原文，右边译文" width="398" height="224">
-  <img src="docs/assets/readme/agents-zh.webp" alt="岛上弹出 Claude Code 的审批请求：要运行的命令，以及拒绝和允许两个按钮" width="398" height="224">
+  <a href="https://fuyu.ing/zh/#day"><img src="docs/assets/readme/todo-zh.webp" alt="展开的岛上是今天的待办，已完成的划掉收在下面" width="398" height="224"></a>
+  <a href="https://fuyu.ing/zh/#day"><img src="docs/assets/readme/music-zh.webp" alt="岛上的音乐页：封面、同步歌词、进度条和播放控制" width="398" height="224"></a>
+  <a href="https://fuyu.ing/zh/#day"><img src="docs/assets/readme/messages-zh.webp" alt="岛下弹出的新消息：一封邮件、一条微信和一条 QQ" width="398" height="224"></a>
+  <a href="https://fuyu.ing/zh/#day"><img src="docs/assets/readme/clipboard-zh.webp" alt="岛上的剪贴板历史：命令、链接、一段文字和一张图片，各自标着来源" width="398" height="224"></a>
+  <a href="https://fuyu.ing/zh/#day"><img src="docs/assets/readme/translate-zh.webp" alt="岛上的翻译页：左边原文，右边译文" width="398" height="224"></a>
+  <a href="https://fuyu.ing/zh/#agent"><img src="docs/assets/readme/agents-zh.webp" alt="岛上弹出 Claude Code 的审批请求：要运行的命令，以及拒绝和允许两个按钮" width="398" height="224"></a>
+  <br>
+  <sub>点任意一张图，到官网亲手点一点这座岛</sub>
 </p>
 
 <table>

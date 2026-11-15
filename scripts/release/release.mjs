@@ -2,7 +2,7 @@ import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
-import { channelProblems, readTasks, shippedIssues, tellIssues } from "./after-release.mjs";
+import { channelProblems, finishedIssues, readTasks, shippedIssues, tellIssues } from "./after-release.mjs";
 import { commandLine } from "./command-line.mjs";
 import { BETA_CHANNEL_TAG, isPrerelease, shouldUpdateBetaManifest } from "./channel.mjs";
 import { baseTag, downloadLinks, DRAFT_MARKER } from "./notes-draft.mjs";
@@ -294,10 +294,11 @@ async function tellShippedIssues(target) {
     const [hash, ...subject] = line.split("\t");
     return { hash, subject: subject.join("\t") };
   });
-  const shipped = shippedIssues(readTasks(), commits);
+  const tasks = readTasks();
+  const shipped = shippedIssues(tasks, commits);
   const url = `https://github.com/${REPO}/releases/tag/${tag}`;
   const dir = join(CHECK_DIR, "comments");
   mkdirSync(dir, { recursive: true });
-  for (const line of await tellIssues(shipped, { tag, url, repo: REPO, dir })) console.log(line);
+  for (const line of await tellIssues(shipped, { tag, url, repo: REPO, dir, finished: finishedIssues(tasks) })) console.log(line);
   if (shipped.size === 0) console.log(`No GitHub issue has a task with a commit in ${tag}.`);
 }
