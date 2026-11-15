@@ -89,3 +89,60 @@ fn the_real_host_starts_under_the_supervisor_reports_its_plugins_and_comes_back_
     assert_eq!(supervisor.state(), HostState::Stopped);
     let _ = std::fs::remove_dir_all(dir);
 }
+
+mod protocol_and_command {
+    use plugin_base::HostState;
+    use serde_json::json;
+    use tauri::http::{Method, Request, StatusCode};
+
+    use super::super::{connection_from, protocol};
+
+    fn get(root: Option<&std::path::Path>, path: &str, method: Method) -> tauri::http::Response<Vec<u8>> {
+        let request = Request::builder().method(method).uri(format!("fuyu-plugin://localhost{path}")).body(Vec::new()).unwrap();
+        protocol::respond(root, &request)
+    }
+
+    #[test]
+    fn plugin_files_are_served_with_their_type_and_cors_and_nothing_outside_the_folder() {
+        let dir = std::env::temp_dir().join(format!("fuyu-plugin-protocol-{}", std::process::id()));
+        std::fs::create_dir_all(dir.join("hello")).unwrap();
+        std::fs::write(dir.join("hello/island.js"), "export default () => {};").unwrap();
+        std::fs::write(dir.join("hello/style.css"), "a{}").unwrap();
+        std::fs::write(dir.with_extension("secret"), "secret").unwrap();
+        let ok = get(Some(&dir), "/hello/island.js", Method::GET);
+        assert_eq!(ok.status(), StatusCode::OK);
+        assert_eq!(ok.headers()["content-type"], "text/javascript; charset=utf-8");
+        assert_eq!(ok.headers()["access-control-allow-origin"], "*");
+        assert_eq!(ok.body(), b"export default () => {};");
+        assert_eq!(get(Some(&dir), "/hello/style.css", Method::GET).headers()["content-type"], "text/css; charset=utf-8");
+        let head = get(Some(&dir), "/hello/island.js", Method::HEAD);
+        assert_eq!((head.status(), head.body().len()), (StatusCode::OK, 0));
+        for path in ["/hello/missing.js", "/../secret", "/hello/..%2F..%2Fsecret", "/hello\\island.js", "/"] {
+            let response = get(Some(&dir), path, Method::GET);
+            assert_eq!(response.status(), StatusCode::NOT_FOUND, "{path}");
+            assert_eq!(response.headers()["content-type"], "text/plain; charset=utf-8");
+        }
+        assert_eq!(get(None, "/hello/island.js", Method::GET).status(), StatusCode::NOT_FOUND, "nothing is served while the host is off");
+        assert_eq!(get(Some(&dir), "/hello/island.js", Method::POST).status(), StatusCode::METHOD_NOT_ALLOWED);
+        let _ = std::fs::remove_dir_all(&dir);
+        let _ = std::fs::remove_file(dir.with_extension("secret"));
+    }
+
+    #[test]
+    fn the_shared_react_modules_come_from_the_app_itself() {
+        let dir = std::env::temp_dir();
+        let react = get(Some(&dir), "/__shared/react.js", Method::GET);
+        assert_eq!(react.status(), StatusCode::OK);
+        assert!(String::from_utf8_lossy(react.body()).contains("__FUYU_SHARED__.react"));
+        assert_eq!(get(Some(&dir), "/__shared/react-jsx-runtime.js", Method::GET).status(), StatusCode::OK);
+    }
+
+    #[test]
+    fn a_window_learns_the_port_and_token_only_once_the_host_is_ready() {
+        assert!(!connection_from(None).enabled);
+        let starting = connection_from(Some(&HostState::Starting { generation: 1 }));
+        assert!(starting.enabled && starting.port.is_none() && starting.token.is_none());
+        let ready = connection_from(Some(&HostState::Ready { generation: 3, pid: 9, ready: json!({ "windows": { "port": 51234, "token": "abc" } }) }));
+        assert_eq!((ready.port, ready.token.as_deref(), ready.generation), (Some(51234), Some("abc"), Some(3)));
+    }
+}
