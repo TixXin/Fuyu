@@ -24,7 +24,9 @@ pub(super) struct DesktopSession {
     pub(super) effort: Option<String>,
 }
 
-static CACHE: Mutex<Option<HashMap<PathBuf, (SystemTime, Option<DesktopSession>)>>> = Mutex::new(None);
+type DesktopCache = HashMap<PathBuf, (SystemTime, Option<DesktopSession>)>;
+
+static CACHE: Mutex<Option<DesktopCache>> = Mutex::new(None);
 
 pub(super) fn app_dir(home_dir: &Path) -> PathBuf {
     let base = if cfg!(target_os = "macos") {

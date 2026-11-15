@@ -22,6 +22,8 @@ mockIPC((command) => {
 }, { shouldMockEvents: true });
 
 const { VersionHistory } = await import("../../src/features/updater/VersionHistory");
+const { BUNDLED_RELEASES } = await import("../../src/features/updater/bundledReleases");
+const RELEASES = BUNDLED_RELEASES.map((release, index) => ({ ...release, date: `2026-10-${String(1 + (index % 28)).padStart(2, "0")}` }));
 const { checkOnFirstVisit } = await import("../../src/features/updater/updaterController");
 
 const messages: string[] = [];
@@ -51,8 +53,8 @@ const waitForNotes = async (version: string) => {
 try {
   await act(async () => { await checkOnFirstVisit(); });
   await act(async () => {
-    createRoot(host).render(<StrictMode><I18nProvider><LocaleSwitch /><VersionHistory /></I18nProvider></StrictMode>);
-    createRoot(document.getElementById("narrow")!).render(<StrictMode><I18nProvider><VersionHistory /></I18nProvider></StrictMode>);
+    createRoot(host).render(<StrictMode><I18nProvider><LocaleSwitch /><VersionHistory releases={RELEASES} /></I18nProvider></StrictMode>);
+    createRoot(document.getElementById("narrow")!).render(<StrictMode><I18nProvider><VersionHistory releases={RELEASES} /></I18nProvider></StrictMode>);
   });
   await settle();
   const zh = TRANSLATIONS["zh-CN"].settings.versionHistory;
@@ -65,8 +67,7 @@ try {
   const first = rows()[0];
   check(first.querySelector(".version-history__tag--current")?.textContent === zh.current && first.querySelector(".version-history__tag--beta")?.textContent === zh.beta,
     "The running beta is marked current and as a beta while its release is not out");
-  const dates = rows().map((row) => row.querySelector("time")?.textContent ?? "");
-  check(dates.every((date) => date === "" || /^\d{4}-\d{2}-\d{2}$/.test(date)), "Release dates, when the build knows them, read as YYYY-MM-DD");
+  check(rows().every((row) => /^2026-10-\d{2}$/.test(row.querySelector("time")?.textContent ?? "")), "Each version shows its release date");
   check(rows()[1].querySelector(".version-history__meta")?.textContent === zh.betaCount(4), "A release says how many betas it folds in");
 
   rowButton("0.3.8").click();

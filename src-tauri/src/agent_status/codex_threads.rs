@@ -39,7 +39,9 @@ struct ThreadsCache {
 }
 
 static THREADS: Mutex<Option<ThreadsCache>> = Mutex::new(None);
-static HISTORY: Mutex<Option<HashMap<(String, i64), (AgentSessionSummary, TurnState)>>> = Mutex::new(None);
+type HistoryCache = HashMap<(String, i64), (AgentSessionSummary, TurnState)>;
+
+static HISTORY: Mutex<Option<HistoryCache>> = Mutex::new(None);
 
 pub(super) fn recent_threads(codex_home: &Path, since: i64) -> Option<Vec<Thread>> {
     let db = codex_home.join(STATE_DB);
