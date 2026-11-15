@@ -18,8 +18,6 @@ export function MusicSettingsPage({
   onSettingsChange: (settings: IslandSettings) => void;
 }) {
   const text = useTranslation().settings.lyrics;
-  const header = <FeatureHeader feature="music" checked={settings.musicEnabled} onChange={(musicEnabled) => onSettingsChange({ ...settings, musicEnabled })} />;
-  if (!settings.musicEnabled) return header;
   if (tab === "musicLyrics") return <LyricsSettingsSection part="sources" settings={settings} onSettingsChange={onSettingsChange} />;
   if (tab === "musicLyricsStyle") {
     return settings.lyricsOnIsland ? (
@@ -32,7 +30,7 @@ export function MusicSettingsPage({
   }
   return (
     <>
-      {header}
+      <FeatureHeader feature="music" />
       <MusicBarSettingsSection />
       <LyricsSettingsSection part="island" settings={settings} onSettingsChange={onSettingsChange} />
       <MusicSourceSettingsSection />
