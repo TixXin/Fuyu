@@ -40,39 +40,8 @@ export declare class HostCallError extends Error {
 
 export function connectHost<Snapshot = unknown>(options: ConnectOptions<Snapshot>): HostConnection;
 
-export interface SlotRule {
-  kind?: "single" | "list";
-  max?: number;
-  perPlugin?: number;
-}
-
-export interface SlotItemInput {
-  id: string;
-  order?: number;
-  component: unknown;
-  [key: string]: unknown;
-}
-
-export interface SlotItem extends SlotItemInput {
-  order: number;
-  owner: string;
-  seq: number;
-  replaces?: string;
-}
-
-export interface SlotRegistry {
-  define(name: string, rule?: SlotRule): void;
-  add(name: string, item: SlotItemInput, owner: string): () => void;
-  items(name: string): SlotItem[];
-  names(): string[];
-  subscribe(listener: (name: string) => void): () => void;
-}
-
-export declare class SlotError extends Error {
-  code: "no-slot" | "bad-item" | "too-many";
-}
-
-export function createSlots(definitions?: Record<string, SlotRule>): SlotRegistry;
+export { createSlots, SlotError, type SlotItem, type SlotItemInput, type SlotRegistry, type SlotRule } from "./slots.mjs";
+import type { SlotItemInput, SlotRegistry } from "./slots.mjs";
 
 export declare class Slots {
   add(name: string, item: SlotItemInput): () => Promise<void>;

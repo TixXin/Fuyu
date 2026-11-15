@@ -18,6 +18,10 @@
       "types": "./src/client/index.d.mts",
       "default": "./src/client/index.mjs"
     },
+    "./client/slots": {
+      "types": "./src/client/slots.d.mts",
+      "default": "./src/client/slots.mjs"
+    },
     "./client/react": {
       "types": "./src/client/react.d.mts",
       "default": "./src/client/react.mjs"

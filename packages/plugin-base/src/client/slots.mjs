@@ -1,5 +1,3 @@
-import { Service } from "cordis";
-
 const DEFAULT_RULES = { kind: "list", max: Infinity, perPlugin: 4 };
 
 export class SlotError extends Error {
@@ -63,16 +61,4 @@ export function createSlots(definitions = {}) {
       return () => listeners.delete(listener);
     },
   };
-}
-
-export class Slots extends Service {
-  constructor(ctx, registry) {
-    super(ctx, "slots");
-    this.registry = registry;
-  }
-
-  add(name, item) {
-    const owner = this.ctx.fiber.name;
-    return this.ctx.effect(() => this.registry.add(name, item, owner), `ctx.slots.add(${name})`);
-  }
 }
