@@ -10,6 +10,21 @@
   scrollbar-width: none;
 }
 
+.settings-tabs[data-fade-start],
+.settings-tabs[data-fade-end] {
+  --tabs-fade-start: 0px;
+  --tabs-fade-end: 0px;
+  mask-image: linear-gradient(to right, transparent, #000 var(--tabs-fade-start), #000 calc(100% - var(--tabs-fade-end)), transparent);
+}
+
+.settings-tabs[data-fade-start] {
+  --tabs-fade-start: 40px;
+}
+
+.settings-tabs[data-fade-end] {
+  --tabs-fade-end: 40px;
+}
+
 .settings-tabs::-webkit-scrollbar {
   display: none;
 }
