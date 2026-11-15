@@ -4,6 +4,7 @@ import type { DeviceAlert } from "../../../features/device-events/api";
 import { deviceAlertLook } from "../../../features/device-events/deviceAlertLook";
 import type { LevelChange } from "../../../features/system-levels/api";
 import { LevelPopup } from "../../../features/system-levels/LevelPopup";
+import { defineSlot, type IslandAlertMeta } from "../../../features/plugin-kernel/slots";
 import { useTranslation } from "../../../i18n";
 
 export type NotchAlertSources = {
@@ -12,11 +13,13 @@ export type NotchAlertSources = {
   levelPopup: LevelChange | null;
 };
 
+export const alertSlot = defineSlot<NotchAlertSources, IslandAlertMeta<NotchAlertSources>>("island.alert/v1");
+
 function levelMuted(change: LevelChange) {
   return change.kind === "volume" && (change.muted || Math.round(change.level * 100) === 0);
 }
 
-export function DeviceAlertLeading({ deviceAlert }: NotchAlertSources) {
+function DeviceAlertLeading({ deviceAlert }: NotchAlertSources) {
   const t = useTranslation();
   if (!deviceAlert) return null;
   const { Icon, tone } = deviceAlertLook(deviceAlert, t.island.deviceAlert);
@@ -27,7 +30,7 @@ export function DeviceAlertLeading({ deviceAlert }: NotchAlertSources) {
   );
 }
 
-export function DeviceAlertTrailing({ deviceAlert }: NotchAlertSources) {
+function DeviceAlertTrailing({ deviceAlert }: NotchAlertSources) {
   const t = useTranslation();
   if (!deviceAlert) return null;
   const { tone, battery, label } = deviceAlertLook(deviceAlert, t.island.deviceAlert);
@@ -40,7 +43,7 @@ export function DeviceAlertTrailing({ deviceAlert }: NotchAlertSources) {
   );
 }
 
-export function QuotaAlertLeading({ quotaAlert }: NotchAlertSources) {
+function QuotaAlertLeading({ quotaAlert }: NotchAlertSources) {
   if (!quotaAlert) return null;
   const Icon = quotaAlert.kind === "low" ? Gauge : RotateCcw;
   return (
@@ -50,7 +53,7 @@ export function QuotaAlertLeading({ quotaAlert }: NotchAlertSources) {
   );
 }
 
-export function QuotaAlertTrailing({ quotaAlert }: NotchAlertSources) {
+function QuotaAlertTrailing({ quotaAlert }: NotchAlertSources) {
   const t = useTranslation();
   if (!quotaAlert) return null;
   const text = t.agent.quota;
@@ -65,7 +68,7 @@ export function QuotaAlertTrailing({ quotaAlert }: NotchAlertSources) {
   );
 }
 
-export function LevelAlertLeading({ levelPopup }: NotchAlertSources) {
+function LevelAlertLeading({ levelPopup }: NotchAlertSources) {
   if (!levelPopup) return null;
   const percent = Math.round(levelPopup.level * 100);
   const Icon = levelPopup.kind === "brightness" ? Sun : levelMuted(levelPopup) ? VolumeX : percent < 50 ? Volume1 : Volume2;
@@ -76,6 +79,10 @@ export function LevelAlertLeading({ levelPopup }: NotchAlertSources) {
   );
 }
 
-export function LevelAlertTrailing({ levelPopup }: NotchAlertSources) {
+function LevelAlertTrailing({ levelPopup }: NotchAlertSources) {
   return levelPopup ? <span className="notch-alert__value notch-alert__level"><LevelPopup change={levelPopup} /></span> : null;
 }
+
+alertSlot.add({ id: "device", order: 10, active: ({ deviceAlert }) => Boolean(deviceAlert), component: DeviceAlertLeading, trailing: DeviceAlertTrailing });
+alertSlot.add({ id: "quota", order: 20, active: ({ quotaAlert }) => Boolean(quotaAlert), component: QuotaAlertLeading, trailing: QuotaAlertTrailing });
+alertSlot.add({ id: "level", order: 30, active: ({ levelPopup }) => Boolean(levelPopup), component: LevelAlertLeading, trailing: LevelAlertTrailing });
