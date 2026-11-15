@@ -45,7 +45,10 @@ export function fileImageLabel(item: ClipboardHistoryItem, formatBytes: (bytes: 
   return image.byteSize > 0 ? `${image.width}×${image.height} · ${formatBytes(image.byteSize)}` : `${image.width}×${image.height}`;
 }
 
-export function sourceName(item: ClipboardHistoryItem, appName: string, screenshot = appName): string | undefined {
+export const OTHER_DEVICE_SOURCE = "fuyu:other-device";
+
+export function sourceName(item: ClipboardHistoryItem, appName: string, screenshot = appName, otherDevice?: string): string | undefined {
+  if (item.source?.path === OTHER_DEVICE_SOURCE) return otherDevice ?? item.source.name;
   const name = item.source?.name;
   if (!name || !OWN_SOURCE.test(name)) return name;
   return item.kind === "image" ? screenshot : appName;

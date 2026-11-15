@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::{thread, time::Duration};
 
-use super::{current_unix_millis, ClipboardHistoryItem, ClipboardHistoryService};
+use super::{current_unix_millis, ClipboardHistoryItem, ClipboardHistoryService, ClipboardSource};
 
 pub(super) const FORGET_WINDOW_MS: i64 = 2 * 60 * 1000;
 const CLEARED_CONFIRM_DELAY: Duration = Duration::from_millis(500);
@@ -10,6 +10,7 @@ const MINUTE_MS: i64 = 60 * 1000;
 pub(super) const SECRET_EXPIRY_CHOICES: [u32; 5] = [0, 10, 60, 24 * 60, 7 * 24 * 60];
 pub(super) const TEXT_LIMIT_CHOICES: [u32; 4] = [0, 256, 1024, 4096];
 const DEFAULT_TEXT_LIMIT_KB: u32 = 1024;
+pub(super) const OTHER_DEVICE_PATH: &str = "fuyu:other-device";
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
@@ -17,6 +18,7 @@ pub struct PrivacySettings {
     forget_cleared: bool,
     secret_expiry_minutes: u32,
     max_text_kb: u32,
+    record_remote: bool,
 }
 
 impl Default for PrivacySettings {
@@ -25,6 +27,7 @@ impl Default for PrivacySettings {
             forget_cleared: true,
             secret_expiry_minutes: 0,
             max_text_kb: DEFAULT_TEXT_LIMIT_KB,
+            record_remote: true,
         }
     }
 }
@@ -44,6 +47,10 @@ impl PrivacySettings {
         self.forget_cleared
     }
 
+    pub(super) fn record_remote(&self) -> bool {
+        self.record_remote
+    }
+
     pub(super) fn max_text_bytes(&self) -> usize {
         self.max_text_kb as usize * 1024
     }
@@ -55,6 +62,13 @@ fn nearest(choices: &[u32], value: u32) -> u32 {
         .copied()
         .min_by_key(|choice| choice.abs_diff(value))
         .unwrap_or(value)
+}
+
+pub(super) fn other_device_source() -> ClipboardSource {
+    ClipboardSource {
+        path: OTHER_DEVICE_PATH.to_string(),
+        name: "Other device".to_string(),
+    }
 }
 
 pub(super) fn should_forget(item: &ClipboardHistoryItem, last_capture_hash: Option<&str>, now: i64) -> bool {

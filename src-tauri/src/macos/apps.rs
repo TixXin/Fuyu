@@ -1,4 +1,5 @@
 use objc2_app_kit::{NSApplicationActivationOptions, NSApplicationActivationPolicy, NSRunningApplication, NSWorkspace};
+use objc2_foundation::NSString;
 
 extern "C" {
     fn responsibility_get_pid_responsible_for_pid(pid: i32) -> i32;
@@ -15,6 +16,15 @@ pub(crate) fn frontmost_pid() -> Option<i32> {
 
 pub(crate) fn frontmost_path() -> Option<String> {
     NSWorkspace::sharedWorkspace().frontmostApplication().as_deref().and_then(path_of)
+}
+
+pub(crate) fn path_for_bundle_id(id: &str) -> Option<String> {
+    let id = NSString::from_str(id);
+    let running = NSRunningApplication::runningApplicationsWithBundleIdentifier(&id);
+    if let Some(path) = running.iter().find_map(|app| path_of(&app)) {
+        return Some(path);
+    }
+    Some(NSWorkspace::sharedWorkspace().URLForApplicationWithBundleIdentifier(&id)?.path()?.to_string())
 }
 
 pub(crate) fn path(pid: i32) -> Option<String> {
@@ -61,7 +71,7 @@ pub(crate) fn display_name(pid: i32) -> Option<String> {
 
 #[cfg(test)]
 mod tests {
-    use super::outer_app_name;
+    use super::{outer_app_name, path_for_bundle_id};
 
     #[test]
     fn helpers_are_named_after_the_outermost_app() {
@@ -69,5 +79,11 @@ mod tests {
         assert_eq!(outer_app_name(helper).as_deref(), Some("Google Chrome"));
         assert_eq!(outer_app_name("/System/Applications/FaceTime.app").as_deref(), Some("FaceTime"));
         assert_eq!(outer_app_name("/usr/libexec/coreaudiod"), None);
+    }
+
+    #[test]
+    fn bundle_ids_resolve_to_their_app() {
+        assert_eq!(path_for_bundle_id("com.apple.finder").as_deref(), Some("/System/Library/CoreServices/Finder.app"));
+        assert_eq!(path_for_bundle_id("com.example.not-installed-anywhere"), None);
     }
 }

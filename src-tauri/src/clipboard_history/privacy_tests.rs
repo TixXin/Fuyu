@@ -54,6 +54,7 @@ fn long_text_is_cut_on_a_character_boundary_and_loses_its_html() {
 fn settings_default_to_forgetting_cleared_entries_and_a_one_megabyte_cap() {
     let settings: PrivacySettings = serde_json::from_str("{}").unwrap();
     assert!(settings.forget_cleared());
+    assert!(settings.record_remote());
     assert_eq!(settings.max_text_bytes(), 1024 * 1024);
     let odd: PrivacySettings = serde_json::from_str(r#"{"secretExpiryMinutes":45,"maxTextKb":3000}"#).unwrap();
     let odd = odd.normalized();
