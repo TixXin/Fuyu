@@ -13,8 +13,9 @@ import { openSettingsWindow } from "../settings/api";
 
 export type IslandNotice = { content: ReactNode; actions: ReactNode };
 
-export function pickIslandNotice({ recording, ringing, screenshotNotice, copyCard, firstHints }: {
+export function pickIslandNotice({ recording, voice, ringing, screenshotNotice, copyCard, firstHints }: {
   recording: RecordingNoticeState;
+  voice: IslandNotice | null;
   ringing: readonly Timer[];
   screenshotNotice: ScreenshotNoticeState;
   copyCard: ClipboardCopyCardState;
@@ -22,6 +23,8 @@ export function pickIslandNotice({ recording, ringing, screenshotNotice, copyCar
 }): IslandNotice | null {
   return recording.shown
     ? { content: <RecordingNotice recording={recording} />, actions: <RecordingNoticeActions recording={recording} /> }
+    : voice
+    ? voice
     : ringing.length > 0
     ? { content: <TimerNotice ringing={ringing} />, actions: <TimerNoticeActions /> }
     : screenshotNotice.taken

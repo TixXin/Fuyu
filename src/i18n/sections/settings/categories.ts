@@ -9,7 +9,7 @@ export type SettingsCategoriesText = {
   collapse: (group: string) => string;
   keywords: Record<
     | "overview" | "general" | "pluginsPages" | "pluginsUpdates" | "pluginsDev" | "musicLyrics" | "musicLyricsStyle" | "clipboardHistory" | "clipboardSnippets" | "clipboardData" | "screenshotRecord" | "behavior" | "behaviorTuck" | "behaviorAlerts" | "shortcutsIsland" | "appearance" | "theme" | "themeMarket" | "shortcuts" | "todos" | "calendar" | "music" | "translation" | "clipboard"
-    | "shelf" | "screenshot" | "messages" | "agents" | "agentSessions" | "agentRemote" | "agentAlerts" | "sounds" | "agentApprovals" | "agentConnect"
+    | "shelf" | "screenshot" | "messages" | "agents" | "agentSessions" | "agentRemote" | "agentAlerts" | "sounds" | "agentApprovals" | "agentConnect" | "voiceInput"
     | "plugins" | "pluginsV3" | "market" | "about",
     string
   >;
@@ -48,6 +48,7 @@ export type SettingsCategoriesText = {
   translation: string;
   shelf: string;
   screenshot: string;
+  voiceInput: string;
   calendar: string;
   agents: string;
   agentSessions: string;
@@ -98,6 +99,7 @@ export const zhCN: SettingsCategoriesText = {
     clipboard: "复制 粘贴 历史 图片",
     shelf: "文件 拖放 拖拽 清理",
     screenshot: "截屏 截图 快捷键 选区 放大镜 取色 全屏",
+    voiceInput: "语音 说话 听写 麦克风 转文字 识别 模型",
     messages: "QQ 微信 邮箱 邮件 通知 IMAP 授权码",
     agents: "Claude Code Codex 会话标题 状态灯 收起条",
     agentSessions: "会话 卡片 用量 隐藏会话 筛选",
@@ -175,6 +177,7 @@ export const zhCN: SettingsCategoriesText = {
   translation: "翻译",
   shelf: "文件中转",
   screenshot: "截图",
+  voiceInput: "语音输入",
   calendar: "日历",
   agents: "岛上显示",
   agentSessions: "会话列表",
@@ -225,6 +228,7 @@ export const en: SettingsCategoriesText = {
     clipboard: "copy paste history images",
     shelf: "files drag drop cleanup",
     screenshot: "screen capture snip region magnifier colour picker fullscreen",
+    voiceInput: "voice speech dictation microphone speech to text model",
     messages: "qq wechat mail email notifications imap",
     agents: "claude code codex session title status light collapsed bar",
     agentSessions: "sessions cards usage hide filter",
@@ -302,6 +306,7 @@ export const en: SettingsCategoriesText = {
   translation: "Translation",
   shelf: "File shelf",
   screenshot: "Screenshot",
+  voiceInput: "Voice input",
   calendar: "Calendar",
   agents: "On the island",
   agentSessions: "Session list",

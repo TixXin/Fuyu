@@ -25,6 +25,7 @@ export const SETTINGS_CATEGORIES = [
   "shelf",
   "screenshot",
   "screenshotRecord",
+  "voiceInput",
   "messages",
   "agents",
   "agentSessions",
@@ -49,7 +50,7 @@ export type SettingsGroup = "basics" | "features" | "agents" | "extensions";
 export const SETTINGS_GROUPS: readonly { label: SettingsGroup | null; categories: readonly SettingsCategory[] }[] = [
   { label: null, categories: ["overview"] },
   { label: "basics", categories: ["general", "behavior", "appearance", "shortcuts"] },
-  { label: "features", categories: ["todos", "calendar", "music", "translation", "clipboard", "shelf", "screenshot", "messages"] },
+  { label: "features", categories: ["todos", "calendar", "music", "translation", "clipboard", "shelf", "screenshot", "voiceInput", "messages"] },
   { label: null, categories: ["agents"] },
   { label: "extensions", categories: ["plugins", "pluginsV3", "market"] },
   { label: null, categories: ["about"] },
