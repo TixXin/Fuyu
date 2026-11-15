@@ -20,6 +20,7 @@ export function useIslandAgents(settings: IslandSettings, demoSessions: AgentSes
   const agentInterjection = useAgentInterjection(
     sessions.agentSessions,
     titlesOn && (!whileRunning || (settings.musicEnabled && settings.lyricsOnIsland && settings.lyricsIslandPriority === "lyrics")),
+    settings.agentRemindSeconds * 1000,
   );
   const agentActivity = useMemo(
     () => [...sessions.agentSessions, ...(others ?? [])],

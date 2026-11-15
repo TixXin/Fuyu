@@ -12,6 +12,7 @@ import { useIslandLyrics } from "../../src/windows/island/useIslandLyrics";
 import { MediaWaveform } from "../../src/features/media/MediaWaveform";
 import { coverAccentVariables, useCoverColor } from "../../src/features/media/useCoverColor";
 import { contrastRatio, rgbToHex } from "../../src/features/media/coverColor";
+import { runLyricsHandoffChecks } from "./lyrics-handoff-checks";
 
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
 const LRC = [
@@ -62,7 +63,7 @@ async function render(mediaState: MediaState, lyricsSettings: typeof ONLINE | un
 function IslandLine({ mediaState, intro }: { mediaState: MediaState; intro: LyricsIntro }) {
   const settings = { ...DEFAULT_SETTINGS, musicEnabled: true, lyricsOnIsland: true, lyricsOnline: true, lyricsIntro: intro };
   const { lyricLine } = useIslandLyrics(settings, mediaState, { page: "music", barShown: true });
-  return <span className="island-line" data-index={lyricLine?.index ?? ""}>{lyricLine?.text ?? "待办"}</span>;
+  return <span className="island-line" data-index={lyricLine?.index ?? ""} data-lyrics={lyricLine ? "on" : ""}>{lyricLine?.text ?? "待办"}</span>;
 }
 
 async function renderIsland(mediaState: MediaState, intro: LyricsIntro) {
@@ -159,6 +160,12 @@ try {
   check(islandLine().textContent === "故事的小黄花" && islandLine().dataset.index === "0", "到第一句时收起的岛切到歌词（换了 key，走淡入动画）");
   await renderIsland(track("晴天", 300), "song");
   check(islandLine().textContent === "待办", "暂停时前奏不显示歌名");
+  await renderIsland(track("晴天", 13_500, true), "note");
+  check(islandLine().textContent === "♪", "间奏的空白行按「前奏时显示」显示音符，不退回 Agent 标题");
+  await renderIsland(track("晴天", 13_500, true), "todo");
+  check(islandLine().textContent === "待办" && islandLine().dataset.lyrics === "on", "间奏选「待办」时显示待办，但仍算在放歌词，Agent 只插话不占住");
+  await renderIsland({ ...track("晴天", 28_500, true), positionEstimate: "timed" }, "song");
+  check(islandLine().textContent === "晴天 - 周杰伦", "最后一句过后按「前奏时显示」显示歌名");
 
   await render(track("晴天", 6000), { ...ONLINE, lyricsOffsetMs: 2000 });
   check(lines()[1] === "故事的小黄花", "推后 2 秒时仍显示上一句");
@@ -247,6 +254,8 @@ try {
   stage("light").classList.remove("island-light");
   await renderCovers();
   check(cssHex(getComputedStyle(stage("light").querySelector(".media-waveform")!).color) === probe("light"), "波形用封面颜色");
+
+  await runLyricsHandoffChecks(root, track("Believe", 1000, true), check);
 
   results.textContent = `${messages.join("\n")}\n\n全部 ${messages.length} 项检查通过。`;
   results.dataset.result = "passed";

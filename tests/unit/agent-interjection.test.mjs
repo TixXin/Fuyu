@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { phasesOf } from "../../src/features/agent-status/alerts.ts";
-import { interjectingSession, waitingSession } from "../../src/features/agent-status/interjection.ts";
+import { phasesOf, trackWaiting } from "../../src/features/agent-status/alerts.ts";
+import { interjectingSession, remindingSession } from "../../src/features/agent-status/interjection.ts";
 
 const session = (sessionId, phase, updatedAt = 0, extra = {}) => ({
   provider: "claudeCode", sessionId, cwd: null, title: sessionId, model: null, effort: null,
@@ -29,13 +29,24 @@ test("several changes at once show the latest", () => {
   assert.equal(interjectingSession(before, [session("a", "completed", 7), session("b", "failed", 3)])?.sessionId, "a");
 });
 
-test("a session stopped on an approval or question keeps the bar, the latest when several are", () => {
-  assert.equal(waitingSession([session("a", "running"), session("b", "completed")]), null);
-  assert.equal(waitingSession([session("a", "waiting", 3), session("b", "waiting", 8), session("c", "running", 9)])?.sessionId, "b");
+test("a session stopped on an approval or question interjects once, not until answered", () => {
+  const before = phasesOf([session("a", "running")]);
+  assert.equal(interjectingSession(before, [session("a", "waiting", 5)])?.sessionId, "a");
+  const after = phasesOf([session("a", "waiting", 5)], before);
+  assert.equal(interjectingSession(after, [session("a", "waiting", 6)]), null);
+});
+
+test("a session still waiting at the reminder time interjects once more, the latest when several are", () => {
+  const state = { since: new Map(), reminded: new Set() };
+  const waiting = [session("a", "waiting", 3), session("b", "waiting", 8), session("c", "running", 9)];
+  trackWaiting(state, waiting, 0);
+  assert.equal(remindingSession(state, waiting, 30_000, 60_000), null);
+  assert.equal(remindingSession(state, waiting, 60_000, 60_000)?.sessionId, "b");
+  assert.equal(remindingSession(state, waiting, 90_000, 60_000), null);
+  assert.equal(remindingSession({ since: new Map(), reminded: new Set() }, waiting, 90_000, 0), null);
 });
 
 test("a finished turn whose reply asks something shows for a moment, not until answered", () => {
   const asked = session("a", "completed", 5, { replyMarker: "yourTurn" });
-  assert.equal(waitingSession([asked]), null);
   assert.equal(interjectingSession(phasesOf([session("a", "running")]), [asked])?.sessionId, "a");
 });

@@ -194,7 +194,7 @@ export function IslandShell({
       aria-label={collapsedLabel}
       onClick={(event) => {
         if (!isExpanded && event.target === event.currentTarget) {
-          onOpenPage(agentSession ? "agents" : lyricLine ? "music" : page);
+          onOpenPage(agentSession ? "agents" : lyricLine?.text ? "music" : page);
         }
       }}
       onPointerMove={handleGlassPointerMove}
