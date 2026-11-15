@@ -14,6 +14,8 @@ use super::{
     http::{check_access, read_request, write_response, HttpError},
     queue::{ApprovalRequest, CloseReason, Outcome, Queue},
 };
+use crate::agent_status::claimed_elsewhere;
+use crate::system::windows_home_dir;
 
 const READ_TIMEOUT: Duration = Duration::from_secs(10);
 const POLL_INTERVAL: Duration = Duration::from_millis(250);
@@ -194,6 +196,10 @@ fn answer(shared: &Shared, stream: &TcpStream, port: u16, token: &str) -> Result
         return Err(HttpError { status: 404, message: "Unknown path." });
     }
     let remote_host = check_access(&request, token, port)?;
+    let claude_route = route.is_none_or(|(agent, _)| agent == Agent::ClaudeCode);
+    if claude_route && claimed_elsewhere(&request.body, windows_home_dir().ok().as_deref()).is_some() {
+        return Ok(Some("{}".to_string()));
+    }
     let Some((agent, kind)) = route else {
         let activity = Activity::parse(&request.body).map_err(|message| HttpError { status: 400, message })?;
         if let Some(activity) = activity {

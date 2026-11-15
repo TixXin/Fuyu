@@ -1,6 +1,6 @@
 # AI Agent Status Hooks
 
-Fuyu can mirror Codex, Claude Code, WorkBuddy, Antigravity, DeepSeek Harness, Qoder, CodeBuddy Code, Qwen Code, TRAE, TRAE CN, ZCode and Kimi Code task activity on the collapsed island status light (opencode has no status light; its sessions only count on the Agent page, see [opencode](#opencode)):
+Fuyu can mirror Codex, Claude Code, WorkBuddy, Antigravity, DeepSeek Harness, Qoder, CodeBuddy Code, Qwen Code, TRAE, TRAE CN, ZCode, Kimi Code and Grok CLI task activity on the collapsed island status light (opencode has no status light; its sessions only count on the Agent page, see [opencode](#opencode)):
 
 - running task: blue
 - completed, idle, or no task: green
@@ -107,7 +107,7 @@ Each session on the Agent page can show where it runs, as the program's own icon
 
 ## Session List Settings
 
-**Settings → AI Agent** also sets, in `fuyu-settings`: how far back the list goes (`agentSessionHours`: 1, 2 (default), 6 or 24 hours, passed to `list_agent_sessions` as `windowHours`); which agents are shown (**显示哪些 Agent**: one switch with its icon for each of Codex, Claude Code, WorkBuddy, Antigravity, DeepSeek Harness, opencode, Qoder, CodeBuddy, Qwen Code, TRAE, TRAE CN, ZCode, Kimi Code and MiMo Code; stored as `agentHiddenProviders`, the ids of the hidden agents, so an agent added later shows by default; the older `agentShowClaudeCode` / `agentShowCodex` settings are carried over; hidden agents also leave the island's running count); only sessions in progress (`agentHideFinished`); and, per card, the running time (`agentShowElapsed`) and the model (`agentShowModel`).
+**Settings → AI Agent** also sets, in `fuyu-settings`: how far back the list goes (`agentSessionHours`: 1, 2 (default), 6 or 24 hours, passed to `list_agent_sessions` as `windowHours`); which agents are shown (**显示哪些 Agent**: one switch with its icon for each of Codex, Claude Code, WorkBuddy, Antigravity, DeepSeek Harness, opencode, Qoder, CodeBuddy, Qwen Code, TRAE, TRAE CN, ZCode, Kimi Code, MiMo Code and Grok CLI; stored as `agentHiddenProviders`, the ids of the hidden agents, so an agent added later shows by default; the older `agentShowClaudeCode` / `agentShowCodex` settings are carried over; hidden agents also leave the island's running count); only sessions in progress (`agentHideFinished`); and, per card, the running time (`agentShowElapsed`) and the model (`agentShowModel`).
 
 **Running time** counts from the newest typed prompt: Claude Code's last real `user` record, Codex's last `user_message` / `task_started` (`turnStartedAt` in each summary). A session in progress shows "已运行 3 分 20 秒", ticking every second in its own leaf component; a finished one shows "用时 …" up to its last write. When a long turn pushes the prompt out of the 256 KiB tail read, the start found earlier is kept; if it was never seen, no time is shown.
 
@@ -161,6 +161,7 @@ What gets installed is the extension as it is in `packages/vscode-extension/` (`
 | ZCode | `~/.zcode/AGENTS.md` |
 | Kimi Code | `$KIMI_CODE_HOME/AGENTS.md` (default `~/.kimi-code`) |
 | MiMo Code | `~/.config/mimocode/AGENTS.md` (or `$MIMOCODE_HOME/config`) |
+| Grok CLI | `~/.grok/rules/fuyu-island.md` (a file of its own; Grok reads every `rules/*.md`) |
 
 The rest of each file is kept. A file that is a symlink is written through to its target; when several agents point at the same file it gets one section; a dangling link is reported as an error on the settings page and left alone. Switching the marker off removes the section. Switching it on or off, and **安装/修复**, delete the rules file earlier versions wrote (`~/.claude/rules/fuyu-reply-marker.md`). Each agent's reader looks for the character at the end of the last reply: Claude Code, Codex and WorkBuddy in their transcripts, Antigravity in the transcript its hooks point to, DSH in the `turnOutline` response, opencode in the database. Windows needs Developer Mode to create symlinks; following one has not been tested there.
 
@@ -314,6 +315,17 @@ These three CLIs copy Claude Code's hooks and session folders, so the island rea
 | Approving on the island | `/qoder/permission-request`, answered in `hookSpecificOutput.decision` | `/codebuddy/permission-request` | `/qwen/permission-request` |
 
 Each has its own row in the status light card (`agent-<id>-running.flag`). Clicking a session looks for a terminal by folder and title. Not done: usage, SSH (all three have Linux CLIs), cc-connect.
+
+**Agents that also run Claude Code's hooks** (Grok CLI, and Copilot CLI once it is in, B56): each gets its own hooks, so the island also sees their events on the Claude Code routes. A request there whose `transcript_path` lies in that agent's folder, or that carries one of its own field names, is answered `{}` and not shown twice. Claude Code's status light still lights up when such an agent runs Claude Code's hooks, since the script writes the marker without reading the input; to avoid that, turn off Claude hooks in that agent (Grok: `[compat.claude] hooks = false` in `~/.grok/config.toml`).
+
+## Grok CLI
+
+xAI's Grok CLI is listed with its own icon (task B57, issue #544). Checked with Grok 1.0.77 on macOS in headless mode (hook input and session reading); the interactive TUI, waiting and the reply marker are not yet checked (#179).
+
+- **Sessions**: `~/.grok/sessions/<encoded folder>/<session id>/` (or under `GROK_HOME`): `summary.json` for the title, model and reasoning effort, `events.jsonl` for whether a turn runs, ended or waits on a permission prompt (an internal format that may change), `chat_history.jsonl` for the latest prompt, reply and tool call. Non-primary sessions are skipped.
+- **Hooks**: **安装/修复** writes `~/.grok/hooks/fuyu-island.json`, a file of its own (Grok merges the whole folder): `UserPromptSubmit` and `PreToolUse` mark the turn running, `Stop` and `StopCancelled` completed, `StopFailure` failed, and `Notification` with `permission_prompt` saves the input (waiting on you).
+- **No approving on the island**: Grok's docs say a hook's `allow` only means "not blocked", never approval on the user's behalf.
+- Not done: usage (Grok has no local file or public endpoint for it), SSH, cc-connect.
 
 ## TRAE and TRAE CN
 

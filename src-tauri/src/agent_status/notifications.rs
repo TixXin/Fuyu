@@ -119,7 +119,7 @@ pub(super) fn saved_notifications_in(dirs: &[&Path], now: i64, prune: bool) -> S
             drop(&path);
             continue;
         }
-        let Some((session_id, event)) = fs::read_to_string(&path).ok().and_then(|input| event_of(&input)) else {
+        let Some((session_id, event)) = fs::read_to_string(&path).ok().and_then(|input| event_of(&from_source(&path, input))) else {
             continue;
         };
         match newest.get(&session_id) {
@@ -145,6 +145,18 @@ pub(super) fn saved_notifications_in(dirs: &[&Path], now: i64, prune: bool) -> S
         }
     }
     saved
+}
+
+fn from_source(path: &Path, input: String) -> String {
+    let source = path.file_name().and_then(|name| name.to_str()).and_then(|name| name.split('-').next());
+    let Some(source) = source.filter(|source| super::compat_reply(source).is_some()) else {
+        return input;
+    };
+    let Ok(mut value) = serde_json::from_str::<Value>(input.trim_start_matches('\u{feff}').trim()) else {
+        return input;
+    };
+    super::compat_input(source, &mut value);
+    value.to_string()
 }
 
 const COMPACTION_LIMIT_MS: i64 = 10 * 60 * 1000;

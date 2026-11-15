@@ -39,6 +39,16 @@ pub(super) enum Waiting {
     PermissionPrompt,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum Reply {
+    PermissionRequest,
+    #[cfg_attr(not(test), expect(dead_code))]
+    PreToolUse(&'static str),
+    #[expect(dead_code)]
+    Behavior,
+    None,
+}
+
 pub(super) struct Home {
     pub(super) dir: &'static str,
     pub(super) env: &'static str,
@@ -52,6 +62,49 @@ pub(super) struct Compat {
     pub(super) records: Records,
     pub(super) prompt_file: &'static str,
     pub(super) waiting: Waiting,
+    pub(super) hooks_file: &'static str,
+    pub(super) reply: Reply,
+    pub(super) aliases: &'static [(&'static str, &'static str)],
+}
+
+const SPECS: [&Compat; 4] = [&super::qoder::SPEC, &super::codebuddy::SPEC, &super::qwen::SPEC, &super::grok::SPEC];
+
+fn spec(provider: &str) -> Option<&'static Compat> {
+    SPECS.into_iter().find(|spec| spec.provider == provider)
+}
+
+pub(crate) fn compat_reply(provider: &str) -> Option<Reply> {
+    spec(provider).map(|spec| spec.reply)
+}
+
+pub(crate) fn compat_input(provider: &str, input: &mut Value) {
+    if let Some(spec) = spec(provider) {
+        alias_input(spec, input);
+    }
+}
+
+fn alias_input(spec: &Compat, input: &mut Value) {
+    let Some(fields) = input.as_object_mut() else {
+        return;
+    };
+    for (from, to) in spec.aliases {
+        if fields.get(*to).is_none_or(Value::is_null) {
+            if let Some(value) = fields.get(*from).cloned() {
+                fields.insert((*to).to_string(), value);
+            }
+        }
+    }
+}
+
+pub(crate) fn claimed_elsewhere(body: &[u8], home_dir: Option<&Path>) -> Option<&'static str> {
+    let input: Value = serde_json::from_slice(body).ok()?;
+    SPECS.into_iter().find(|spec| claims(spec, &input, home_dir)).map(|spec| spec.provider)
+}
+
+fn claims(spec: &Compat, input: &Value, home_dir: Option<&Path>) -> bool {
+    let transcript = input["transcript_path"].as_str().filter(|path| !path.is_empty()).map(Path::new);
+    spec.aliases.iter().any(|(from, _)| input.get(*from).is_some())
+        || transcript.zip(home_dir).is_some_and(|(path, home)| home_dirs(spec, home).iter().any(|dir| path.starts_with(dir)))
 }
 
 pub(super) fn home_dirs(spec: &Compat, home_dir: &Path) -> Vec<PathBuf> {
@@ -90,23 +143,32 @@ pub(super) fn hook_entries(spec: &Compat, env: &HookEnv) -> Vec<(&'static str, V
             ("Notification", entry)
         }
     });
-    entries.push((
-        "PermissionRequest",
-        command_hook_entry(agent_status_command(&approval_script, spec.provider, "permission"), APPROVAL_HOOK_TIMEOUT_SECONDS),
-    ));
+    let approval = || command_hook_entry(agent_status_command(&approval_script, spec.provider, "permission"), APPROVAL_HOOK_TIMEOUT_SECONDS);
+    match spec.reply {
+        Reply::PermissionRequest | Reply::Behavior => entries.push(("PermissionRequest", approval())),
+        Reply::PreToolUse(tools) => {
+            let mut entry = approval();
+            entry["matcher"] = json!(tools);
+            entries.push(("PreToolUse", entry));
+        }
+        Reply::None => {}
+    }
     entries
 }
 
 pub(super) fn hooks_state(spec: &Compat, env: &HookEnv) -> HookInstallState {
+    hooks_state_with(spec, env, &hook_entries(spec, env))
+}
+
+pub(super) fn hooks_state_with(spec: &Compat, env: &HookEnv, entries: &[(&'static str, Value)]) -> HookInstallState {
     let homes = present_homes(spec, env.home_dir);
     if homes.is_empty() {
         return HookInstallState::Absent;
     }
-    let entries = hook_entries(spec, env);
     let states: Vec<_> = homes
         .iter()
-        .map(|home| match read_settings(home) {
-            Some(config) => hook_entries_state(&config["hooks"], &entries),
+        .map(|home| match read_settings(&home.join(spec.hooks_file)) {
+            Some(config) => hook_entries_state(&config["hooks"], entries),
             None => HookInstallState::NotInstalled,
         })
         .collect();
@@ -120,28 +182,33 @@ fn worst(states: &[HookInstallState]) -> HookInstallState {
         .unwrap_or(HookInstallState::Current)
 }
 
-fn read_settings(home: &Path) -> Option<Value> {
-    serde_json::from_str(&fs::read_to_string(home.join("settings.json")).ok()?).ok()
+fn read_settings(path: &Path) -> Option<Value> {
+    serde_json::from_str(&fs::read_to_string(path).ok()?).ok()
 }
 
 pub(super) fn install_hooks(spec: &Compat, env: &HookEnv) -> Result<(), String> {
+    install_hooks_with(spec, env, &hook_entries(spec, env))
+}
+
+pub(super) fn install_hooks_with(spec: &Compat, env: &HookEnv, entries: &[(&'static str, Value)]) -> Result<(), String> {
     for home in present_homes(spec, env.home_dir) {
-        install_into(spec, &home, hook_entries(spec, env))?;
+        install_into(spec, &home, entries.to_vec())?;
     }
     Ok(())
 }
 
 fn install_into(spec: &Compat, home: &Path, entries: Vec<(&'static str, Value)>) -> Result<(), String> {
-    let path = home.join("settings.json");
+    let path = home.join(spec.hooks_file);
     let label = spec.label;
+    let file = spec.hooks_file;
     let mut config = match fs::read_to_string(&path) {
         Ok(content) if !content.trim().is_empty() => serde_json::from_str::<Value>(&content)
-            .map_err(|error| format!("Failed to parse {label} settings.json: {error}"))?,
+            .map_err(|error| format!("Failed to parse {label} {file}: {error}"))?,
         _ => json!({}),
     };
     let root = config
         .as_object_mut()
-        .ok_or_else(|| format!("{label} settings.json must contain a JSON object."))?;
+        .ok_or_else(|| format!("{label} {file} must contain a JSON object."))?;
     let hooks = root.entry("hooks").or_insert_with(|| json!({}));
     if !hooks.is_object() {
         *hooks = json!({});
@@ -151,7 +218,7 @@ fn install_into(spec: &Compat, home: &Path, entries: Vec<(&'static str, Value)>)
         .ok_or_else(|| format!("Failed to prepare {label} hooks object."))?;
     install_claude_code_hook_events(hooks, entries);
     let content = serde_json::to_string_pretty(&config)
-        .map_err(|error| format!("Failed to serialize {label} settings.json: {error}"))?;
+        .map_err(|error| format!("Failed to serialize {label} {file}: {error}"))?;
     write_text_file(&path, &content)
 }
 

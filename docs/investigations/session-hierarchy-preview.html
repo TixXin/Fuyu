@@ -53,6 +53,10 @@ main { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)
 .children.hidden { display: none; }
 .lvl3 { color: var(--muted); }
 .lvl3 .title::after { content: "  收不起来"; color: var(--bad); font-size: 11px; }
+.sec { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 12px; font-weight: 600; padding: 10px 8px 4px; cursor: pointer; user-select: none; }
+.sec .chev { width: 16px; text-align: center; transition: transform .15s; }
+.sec.closed .chev { transform: rotate(-90deg); }
+.sec-body.hidden { display: none; }
 .legend { max-width: 1240px; margin: 0 auto; padding: 0 32px 48px; display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 24px; }
 .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; }
 .card h3 { margin: 0 0 10px; font-size: 14px; }
@@ -70,7 +74,7 @@ li { margin: 4px 0; }
 <body>
 <header>
   <h1>会话层级预览</h1>
-  <p>左边是现在的样子（三层），右边是建议的样子（主会话都在顶层，只留两层）。点每行前面的箭头可以折叠和展开。会话名都是示例。</p>
+  <p>左边是现在的样子，右边是定下来的做法：每个长期领域一个总控，都置顶，不建分区；小事总控直接派任务会话，大事才开组长。点「置顶」「会话」标题和每行前面的箭头可以折叠和展开。会话名都是示例。</p>
   <div class="toolbar">
     <button data-act="collapse">全部折叠</button>
     <button data-act="expand">全部展开</button>
@@ -89,8 +93,8 @@ li { margin: 4px 0; }
     <div class="sidebar" id="now"></div>
   </section>
   <section class="col">
-    <h2>建议：两层<span class="tag good">每个主会话都能折叠</span></h2>
-    <p class="sub">5～10 个「◆」主会话都在顶层，由你自己开、长期存在；主会话直接派任务会话，任务会话做完就归档。</p>
+    <h2>建议：总控都置顶<span class="tag good">每个总控一行，能折叠</span></h2>
+    <p class="sub">每个领域一个 [总控]，都在「置顶」里，只聊天不开发，不建分区。小事总控直接派 (任务)，只有两层；大事才开 &lt;组长&gt;，它下面的第三层仍然收不起来，做完就归档。</p>
     <div class="sidebar" id="next"></div>
   </section>
 </main>
@@ -100,19 +104,20 @@ li { margin: 4px 0; }
     <h3>命名</h3>
     <table>
       <tr><th>角色</th><th>标题格式</th><th>例子</th></tr>
-      <tr><td>主会话</td><td>「◆ &lt;领域&gt;」</td><td>◆ 总控、◆ 插件平台</td></tr>
-      <tr><td>任务会话</td><td>「&lt;任务编号&gt; &lt;一句话&gt;」</td><td>C72 待办颜色和优先级</td></tr>
-      <tr><td>等你挑方案</td><td>「预览：…」「调研：…」</td><td>预览：岛的三种形态</td></tr>
-      <tr><td>排查</td><td>「排查：&lt;现象&gt;」</td><td>排查：Mac 更新后卡在重启</td></tr>
+      <tr><td>总控</td><td><code>[总控] &lt;领域&gt;</code></td><td>[总控] 全局、[总控] 插件平台</td></tr>
+      <tr><td>组长</td><td><code>&lt;组长&gt; &lt;主题&gt;</code></td><td>&lt;组长&gt; 插槽化</td></tr>
+      <tr><td>任务会话</td><td><code>(&lt;任务编号&gt;) &lt;一句话&gt;</code>，没建任务写 <code>(#issue号)</code></td><td>(C72) 待办颜色和优先级</td></tr>
+      <tr><td>其他</td><td><code>「预览」「调研」「排查」「长期任务」</code>加主题</td><td>「预览」岛的三种形态</td></tr>
     </table>
   </div>
   <div class="card">
     <h3>规则</h3>
     <ul>
-      <li>主会话只聊天、规划、派会话、检查、合入，不写代码。</li>
-      <li>主会话不再开「任务主 agent」，自己直接派任务会话，所以只有两层。</li>
-      <li>总控有新需求时发消息转给对应的主会话，不自己开会话。</li>
-      <li>任务会话收口时归档；主会话聊得太长就新开一个同名的，旧的归档。</li>
+      <li>每个长期领域一个总控，由你自己开并置顶，只聊天、规划、派会话、检查，不写代码。置顶的会话不会被自动归档。</li>
+      <li>[总控] 全局 负责分 issue、整批合入、拦发版和跨领域协调。</li>
+      <li>一两个任务会话能做完的，总控直接派；要派三个以上会话的大事才开组长。</li>
+      <li>任务会话和组长做完就归档；总控聊得太长就新开一个同名的并置顶，旧的取消置顶再归档。</li>
+      <li>前缀里不加空格，不加「 - 」：侧边栏窄，标题会被截掉。</li>
       <li>只读的调研优先用后台子代理做，不进侧边栏。</li>
     </ul>
   </div>
@@ -158,38 +163,62 @@ const now = [
 ];
 
 const next = [
-  { t: "◆ 总控", s: "run", c: [] , note: "只转需求、合入、拦发版" },
-  { t: "◆ 插件平台", s: "run", c: [
-    { t: "E36.3.18 翻译入口和 ctx.rust 的权限", s: "run" },
-    { t: "E36.3.19 正式版不认开发来源", s: "idle" },
-    { t: "E36.2.6 头部按钮走插槽", s: "run" },
-    { t: "E36.2.7 刘海提醒插槽", s: "idle" }
+  { sec: "置顶", items: [
+    { t: "[总控] 全局", s: "run", note: "分 issue、合入、拦发版", c: [
+      { t: "「长期任务」发版", s: "idle" }
+    ] },
+    { t: "[总控] 插件平台", s: "idle", c: [
+      { t: "(E36.3.18) 翻译入口不收 baseUrl", s: "run" },
+      { t: "(E36.3.19) 正式版不认开发来源", s: "idle" },
+      { t: "<组长> 插槽化", s: "run", c: [
+        { t: "(E36.2.6) 头部按钮走插槽", s: "run" },
+        { t: "(E36.2.7) 刘海提醒插槽", s: "idle" }
+      ] }
+    ] },
+    { t: "[总控] Agent 页", s: "idle", c: [
+      { t: "(B52) 接入 Kimi Code CLI", s: "run" },
+      { t: "(B53) 接入智谱 ZCode", s: "run" },
+      { t: "「调研」豆包可接的形态", s: "wait" }
+    ] },
+    { t: "[总控] 岛与外观", s: "idle", c: [
+      { t: "「预览」液态玻璃重做", s: "wait" },
+      { t: "「预览」悬停预览层", s: "wait" },
+      { t: "「预览」岛的三种形态", s: "wait" }
+    ] },
+    { t: "[总控] 消息与小功能", s: "idle", c: [
+      { t: "(C72) 待办颜色和优先级", s: "wait" },
+      { t: "(C78) 休息提醒", s: "idle" }
+    ] },
+    { t: "[总控] Mac 适配", s: "idle", c: [
+      { t: "「排查」Mac 更新后卡在重启", s: "idle" }
+    ] },
+    { t: "[总控] 流程与文档", s: "idle", c: [
+      { t: "(#222) README 多语言版本", s: "idle" },
+      { t: "「长期任务」同步调研（WebDAV 等）", s: "wait" }
+    ] }
   ] },
-  { t: "◆ Agent 页", s: "run", c: [
-    { t: "B52 接入 Kimi Code CLI", s: "run" },
-    { t: "B53 接入智谱 ZCode", s: "run" },
-    { t: "调研：豆包可接的形态", s: "wait" }
-  ] },
-  { t: "◆ 消息与小功能", s: "idle", c: [
-    { t: "C72 待办颜色和优先级", s: "wait" },
-    { t: "C80 本机语音输入", s: "idle" },
-    { t: "C78 休息提醒", s: "idle" }
-  ] },
-  { t: "◆ 岛外观", s: "idle", c: [
-    { t: "预览：液态玻璃重做", s: "wait" },
-    { t: "预览：悬停预览层", s: "wait" },
-    { t: "预览：岛的三种形态", s: "wait" }
-  ] },
-  { t: "◆ Mac 适配", s: "idle", c: [
-    { t: "排查：Mac 更新后卡在重启", s: "idle" }
-  ] },
-  { t: "◆ 同步", s: "idle", c: [
-    { t: "调研：跨设备同步（WebDAV 等）", s: "wait" }
-  ] },
-  { t: "◆ 发版与流程", s: "idle", c: [
-    { t: "README 多语言版本", s: "idle" }
+  { sec: "会话", items: [
+    { t: "你直接开、不归哪个总控的会话", s: "idle" }
   ] }
 ];
+
+function renderSections(list) {
+  const box = document.createElement("div");
+  for (const group of list) {
+    const head = document.createElement("div");
+    head.className = "sec";
+    head.innerHTML = '<span class="chev">▾</span>';
+    head.append(group.sec);
+    const body = render(group.items, 0, false);
+    body.classList.add("sec-body");
+    head.addEventListener("click", () => {
+      head.classList.toggle("closed");
+      body.classList.toggle("hidden");
+    });
+    box.append(head, body);
+  }
+  return box;
+}
 
 function render(list, depth, flatTop) {
   const box = document.createElement("div");
@@ -234,13 +263,17 @@ function render(list, depth, flatTop) {
 }
 
 document.getElementById("now").append(render(now, 0, false));
-document.getElementById("next").append(render(next, 0, true));
+document.getElementById("next").append(renderSections(next));
 
 document.querySelectorAll("[data-act]").forEach((button) => button.addEventListener("click", () => {
   const close = button.dataset.act === "collapse";
   document.querySelectorAll(".row.top .chev:not(.none)").forEach((chev) => {
     chev.classList.toggle("closed", close);
     chev.parentElement.nextElementSibling.classList.toggle("hidden", close);
+  });
+  document.querySelectorAll(".sec").forEach((head) => {
+    head.classList.toggle("closed", close);
+    head.nextElementSibling.classList.toggle("hidden", close);
   });
 }));
 </script>

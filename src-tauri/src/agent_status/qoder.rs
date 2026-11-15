@@ -1,6 +1,6 @@
 use std::path::{Path, PathBuf};
 
-use super::claude_compat::{self, Compat, Home, Records, Waiting};
+use super::claude_compat::{self, Compat, Home, Records, Reply, Waiting};
 use super::harness::{Harness, HookEnv, Hooks, ScanRoots, StatusLight};
 use super::hooks_state::HookInstallState;
 use super::sessions::AgentSessionSummary;
@@ -15,6 +15,9 @@ pub(super) const SPEC: Compat = Compat {
     records: Records::Claude,
     prompt_file: "AGENTS.md",
     waiting: Waiting::PermissionRequest,
+    hooks_file: "settings.json",
+    reply: Reply::PermissionRequest,
+    aliases: &[],
 };
 
 pub(super) const HARNESS: Harness = Harness {

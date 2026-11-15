@@ -1,6 +1,6 @@
 # Agent 适配真机实测清单
 
-#179（协作者 ShengLin1001 提的）和 2026-11-15 这一轮 Agent 适配（B26、B27、B28、B30、B32、B33、B44，以及 B29、B34–B37、B46、B48、B49、B52–B54）里只写了代码和单元测试、没在真机上跑过的项目，合成这一份，按要在哪台机器上测分组。任务是 B47。
+#179（协作者 ShengLin1001 提的）和 2026-11-15 这一轮 Agent 适配（B26、B27、B28、B30、B32、B33、B44，以及 B29、B34–B37、B46、B48、B49、B52–B54、B56、B57）里只写了代码和单元测试、没在真机上跑过的项目，合成这一份，按要在哪台机器上测分组。任务是 B47。
 
 怎么用：
 - 测过一项就勾掉，后面写日期、版本和结果；测出问题另开 issue，链接写在那一项后面。
@@ -124,6 +124,17 @@
 - [ ] 打开回复标记：`~/.config/mimocode/AGENTS.md` 末尾多一段（B54）
 - [ ] 对一遍会话库的字段名：助手消息的模型字段、主代理的 `message.agent_id` 是不是 `main`（只看字段名，不抄内容）（B54）
 
+### Grok CLI（B57，本机装了 1.0.77）
+
+- [x] headless 跑一轮：钩子输入同时带驼峰和下划线字段、`transcript_path` 在 `~/.grok/sessions/` 下；读真实会话给出完成、标题、模型、推理强度、提问和回复（B57，2026-11-15）
+- [ ] 「安装/修复」后 `~/.grok/hooks/fuyu-island.json` 的内容对，状态灯卡片里有 Grok CLI（B57）
+- [ ] 交互式 TUI 里一轮：岛上亮灯 → 完成；Ctrl+C 打断后变完成（B57）
+- [ ] Grok 弹授权时岛上显示「等你」，批准后回到进行中（B57）
+- [ ] 打开回复标记：写进 `~/.grok/rules/fuyu-island.md`，回复末尾出现标记（B57）
+- [ ] 同时装着 Claude Code 钩子时，岛上不出现「Claude Code」的审批或提问卡片；Claude Code 状态灯跟着亮属已知限制（B56）
+- [ ] 让它派子代理：子代理的会话不单独列出（B57）
+- [ ] 点会话切到终端（B57）
+
 ### Codex 和 Claude 桌面 App（B46）
 
 - [ ] 开一个 Codex 会话（CLI 或 Codex Desktop）：Agent 页列出来，标题是 Codex 起的名字（`threads.name` / `session_index.jsonl`），模型、档位对（B46）
@@ -224,6 +235,10 @@
 ### MiMo Code（B54）
 
 - [ ] 数据和配置目录是不是也在 `%USERPROFILE%\.local\share\mimocode`、`%USERPROFILE%\.config\mimocode`；再过一遍 Mac 一节的「安装/修复」、问一句、授权三项（B54）
+
+### Grok CLI（B57）
+
+- [ ] Git Bash 下钩子脚本能跑；再过一遍 Mac 一节的「安装/修复」、交互式一轮、等你（B57）
 
 ## Linux 服务器（SSH 远程，B26）
 
