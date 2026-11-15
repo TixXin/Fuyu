@@ -23,6 +23,8 @@
     "check:size": "node scripts/check-file-size.mjs",
     "check:colors": "node scripts/check-colors.mjs",
     "check:secrets": "node scripts/check-secret-fields.mjs",
+    "check:rust-types": "node scripts/plugins-v3/gen-rust-types.mjs --check",
+    "gen:rust-types": "node scripts/plugins-v3/gen-rust-types.mjs",
     "check:tasks": "node scripts/tasks/tasks.mjs check",
     "tasks": "node scripts/tasks/tasks.mjs",
     "issue": "node scripts/issues/issues.mjs",
