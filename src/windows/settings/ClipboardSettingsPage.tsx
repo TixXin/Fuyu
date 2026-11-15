@@ -27,13 +27,10 @@ export function ClipboardSettingsPage({ tab, settings, onOpenShortcuts }: {
   const header = (
     <FeatureHeader
       feature="clipboard"
-      checked={clipboardSettings.enabled}
       status={openKeys ? t.settings.clipboard.headerShortcut(openKeys) : undefined}
-      onChange={(enabled) => updateClipboardSettings({ ...clipboardSettings, enabled })}
     />
   );
 
-  if (!clipboardSettings.enabled) return header;
   if (tab === "clipboardHistory") {
     return <ClipboardRecordSettings clipboardSettings={clipboardSettings} onChange={(patch) => updateClipboardSettings({ ...clipboardSettings, ...patch })} />;
   }

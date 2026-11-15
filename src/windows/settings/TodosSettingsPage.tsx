@@ -16,12 +16,7 @@ export function TodosSettingsPage({
 }) {
   return (
     <>
-      <FeatureHeader
-        feature="todos"
-        checked={settings.todoEnabled}
-        onChange={(todoEnabled) => onSettingsChange({ ...settings, todoEnabled })}
-      />
-      {settings.todoEnabled && <>
+      <FeatureHeader feature="todos" />
       <TodoSettingsSection settings={settings} onSettingsChange={onSettingsChange} />
       <TodoProjectsSection projects={settings.todoProjects} />
       <SavePathSettingsSection
@@ -31,7 +26,6 @@ export function TodosSettingsPage({
         onSaveDirectoryDraftChange={saveDirectory.onSaveDirectoryDraftChange}
         onSaveDirectory={saveDirectory.onSaveDirectory}
       />
-      </>}
     </>
   );
 }

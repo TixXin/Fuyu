@@ -134,10 +134,14 @@ async function runChecks() {
     check(openedPage === "agents", "点击会话环打开 Agent 页");
 
     pluginSettings = {};
-    [bar] = await mount("没选样式：默认分段环，中心写总数", true);
+    [bar] = await mount("没选样式：默认像素格", true);
+    check(bar.querySelectorAll("button.session-ring .session-grid__cell").length === 9 && !bar.querySelector(".mini-ring__label"),
+      "没选样式时是像素格");
+    pluginSettings = { style: "ring" };
+    [bar] = await mount("样式选分段环：中心写总数", true);
     ring = bar.querySelector<HTMLButtonElement>("button.session-ring");
     check(ring!.querySelector(".mini-ring__label")?.textContent === "6" && ring!.querySelectorAll(".mini-ring__arc").length === 4,
-      "没选样式时是分段环：中心写总数，四种状态各一段");
+      "分段环：中心写总数，四种状态各一段");
     check(getComputedStyle(ring!.querySelector(".mini-ring__label")!).fontSize === "12px", "分段环中心数字 12px");
     pluginSettings = { style: "bar" };
     [bar] = await mount("样式选状态条：总数加分段条", true);

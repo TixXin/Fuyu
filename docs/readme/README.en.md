@@ -20,7 +20,7 @@
     <a href="https://github.com/TixXin/fuyu/releases/latest"><img alt="Version" src="https://img.shields.io/github/v/release/TixXin/fuyu?label=version&style=flat-square&labelColor=1b1f24&color=3d444d"></a>
     <img alt="Platform" src="https://img.shields.io/badge/platform-Windows%2010%20%2F%2011%20%7C%20macOS%2015%2B-3d444d?style=flat-square&labelColor=1b1f24">
     <img alt="Tauri" src="https://img.shields.io/badge/Tauri-2-3d444d?style=flat-square&labelColor=1b1f24">
-    <a href="../../LICENSE"><img alt="License" src="https://img.shields.io/badge/license-GPL--3.0-3d444d?style=flat-square&labelColor=1b1f24"></a>
+    <a href="../../LICENSE"><img alt="License" src="https://img.shields.io/badge/license-AGPL--3.0-3d444d?style=flat-square&labelColor=1b1f24"></a>
     <a href="https://github.com/TixXin/fuyu/stargazers"><img alt="Stars" src="https://img.shields.io/github/stars/TixXin/fuyu?style=flat-square&label=stars&labelColor=1b1f24&color=3d444d"></a>
   </p>
 
@@ -214,7 +214,7 @@ Every star keeps Fuyu moving.
 
 ## License
 
-[GPL-3.0](../../LICENSE). Plugin authors choose their own license. Third-party dependencies and bundled assets keep their own licenses; see the [third-party notices](../THIRD_PARTY_NOTICES.md) for where they come from, and the [font notices](../../src/assets/fonts/README.md) for bundled fonts.
+[AGPL-3.0](../../LICENSE). Plugin authors choose their own license. Third-party dependencies and bundled assets keep their own licenses; see the [third-party notices](../THIRD_PARTY_NOTICES.md) for where they come from, and the [font notices](../../src/assets/fonts/README.md) for bundled fonts.
 
 > [!NOTE]
 > This project is maintained together by [TixXin](https://github.com/TixXin) and [ShengLin1001](https://github.com/ShengLin1001); it was renamed from fly-island to Fuyu in November 2026. The original author, [flyl1u](https://github.com/flyl1u/fly-island), prefers a lean, minimal island. To give the island more to do, and to let more people put their own DIY features on it, this project went its own way as a jointly maintained one and grew a plugin market. Pull requests are welcome (see [Contributing](../../CONTRIBUTING.md)), and so are your own components in the [plugin market](https://github.com/TixXin/fuyu-plugins), or plugins you install locally (see the [plugin docs](../plugins/README.md)).

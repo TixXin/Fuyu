@@ -904,19 +904,6 @@
     {
       "page": "todos",
       "zh-CN": {
-        "group": "",
-        "title": "启用待办",
-        "description": "岛上记今天要做的事，做完打勾"
-      },
-      "en": {
-        "group": "",
-        "title": "Enable todos",
-        "description": "Keep today's to-dos on the island and tick them off"
-      }
-    },
-    {
-      "page": "todos",
-      "zh-CN": {
         "group": "任务",
         "title": "空闲时显示剩余待办数"
       },
@@ -983,19 +970,6 @@
     {
       "page": "calendar",
       "zh-CN": {
-        "group": "",
-        "title": "启用日历",
-        "description": "看日程，会议开始前在岛上提醒"
-      },
-      "en": {
-        "group": "",
-        "title": "Enable the calendar",
-        "description": "See your events and get a nudge before meetings"
-      }
-    },
-    {
-      "page": "calendar",
-      "zh-CN": {
         "group": "小岛显示",
         "title": "会前倒计时",
         "description": "会议开始前这么久，收起的小岛显示「标题 · 10 分钟后」，有会议链接时旁边有「加入」按钮。开始后再留 5 分钟。今天的待办以时间开头（例如「15:00 周会」「9:30-10:00 站会」）也会这样倒计时，不用添加日历。"
@@ -1028,19 +1002,6 @@
       "en": {
         "group": "Your calendars",
         "title": "Service"
-      }
-    },
-    {
-      "page": "music",
-      "zh-CN": {
-        "group": "",
-        "title": "启用音乐控制",
-        "description": "显示正在播放的歌和歌词，切歌暂停"
-      },
-      "en": {
-        "group": "",
-        "title": "Enable music controls",
-        "description": "See what is playing with lyrics, skip and pause"
       }
     },
     {
@@ -1320,19 +1281,6 @@
     {
       "page": "translation",
       "zh-CN": {
-        "group": "",
-        "title": "启用快捷翻译",
-        "description": "选中文字按快捷键，马上翻译"
-      },
-      "en": {
-        "group": "",
-        "title": "Enable quick translation",
-        "description": "Select text, press a shortcut, read the translation"
-      }
-    },
-    {
-      "page": "translation",
-      "zh-CN": {
         "group": "使用",
         "title": "翻译打开在"
       },
@@ -1398,19 +1346,6 @@
       "en": {
         "group": "Translation service",
         "title": "API key"
-      }
-    },
-    {
-      "page": "clipboard",
-      "zh-CN": {
-        "group": "",
-        "title": "启用剪贴板历史",
-        "description": "记住复制过的文字和图片，随时再贴"
-      },
-      "en": {
-        "group": "",
-        "title": "Enable clipboard history",
-        "description": "Keep what you copied, text and images, to paste again"
       }
     },
     {
@@ -1877,19 +1812,6 @@
     {
       "page": "shelf",
       "zh-CN": {
-        "group": "",
-        "title": "启用文件中转",
-        "description": "把文件拖到岛上先放着，用时再拖走"
-      },
-      "en": {
-        "group": "",
-        "title": "Enable the file shelf",
-        "description": "Drop files on the island and drag them out later"
-      }
-    },
-    {
-      "page": "shelf",
-      "zh-CN": {
         "group": "文件中转",
         "title": "拖入文件时自动展开"
       },
@@ -1962,19 +1884,6 @@
       "en": {
         "group": "Cleanup",
         "title": "Maximum entries"
-      }
-    },
-    {
-      "page": "screenshot",
-      "zh-CN": {
-        "group": "",
-        "title": "启用截图",
-        "description": "框选截图，标注、贴到屏幕上或识别文字"
-      },
-      "en": {
-        "group": "",
-        "title": "Enable screenshots",
-        "description": "Capture a region, mark it up, pin it or read its text"
       }
     },
     {
@@ -2205,19 +2114,6 @@
         "group": "Mail",
         "title": "Enable mail",
         "description": "2 mailboxes"
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "",
-        "title": "启用 AI Agent 状态灯",
-        "description": "关闭后，岛上不再显示这个功能的入口，后台也停止运行；已有数据会保留。"
-      },
-      "en": {
-        "group": "",
-        "title": "Enable the AI Agent status light",
-        "description": "When off, the island hides this module and stops its background work. Your data is kept."
       }
     },
     {
