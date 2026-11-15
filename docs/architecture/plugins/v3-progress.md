@@ -71,7 +71,7 @@
 | 系统 | 机器 | 基线 | 第 1 阶段后 | 第 3 阶段后 | 第 5 阶段后 |
 |---|---|---|---|---|---|
 | Windows | tixxin-computer | 约 489 MB（2026-11-15，两次 669、671 MB 减去两个第 2 版插件，见下面的测法；2026-11-06 [idle-usage.md](../../investigations/idle-usage.md) 的旧数是约 330 MB，那次没有插件、默认设置） | | | |
-| macOS | tixxindeair | 约 490 MB（2026-11-14，两次测量在 480–516 MB 之间） | 约 494 MB，开着第 3 版比关着多一个宿主进程 25 MB（2026-11-15，`4170b870`，关、开交替各 3 次；关着 476.5 MB、开着 493.7 MB；见 [v3-kernel-measurements.md](../../investigations/v3-kernel-measurements.md)）。1 小时长跑在跑 | | |
+| macOS | tixxindeair | 约 490 MB（2026-11-14，两次测量在 480–516 MB 之间） | 约 494 MB，开着第 3 版比关着多一个宿主进程 25 MB（2026-11-15，`4170b870`，关、开交替各 3 次；关着 476.5 MB、开着 493.7 MB；见 [v3-kernel-measurements.md](../../investigations/v3-kernel-measurements.md)）。1 小时长跑（宿主带 11 个插件，其中一个每秒干活）：26.5–37 MB 锯齿起伏、到顶会回收，没有持续增长，没有重启 | | |
 
 验收线：没装第三方插件时，比基线多不超过 40 MB；连跑 1 小时不持续增长（原来是 8 小时，用户 2026-11-15 改成 1 小时）。
 
