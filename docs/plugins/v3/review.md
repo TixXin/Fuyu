@@ -1,6 +1,6 @@
 # 审核看什么
 
-> 第 3 版，实验。分档的条件和审核分析器 [`packages/plugin-review`](../../../packages/plugin-review/README.md) 的实现一致，分析器改了这一页跟着改。市场 CI 还在做（[#484](https://github.com/TixXin/fuyu/issues/484)），下面写着「市场 CI 查」的几项要等它做完才生效。
+> 第 3 版，实验。分档的条件和审核分析器 [`packages/plugin-review`](../../../packages/plugin-review/README.md) 的实现一致，分析器改了这一页跟着改。市场 CI 在 `TixXin/fuyu-plugins` 的草稿 PR [#25](https://github.com/TixXin/fuyu-plugins/pull/25) 上，市场还没开放上架，提交流程见[发布](publish.md)。
 
 ## 每个版本都审
 
@@ -43,11 +43,17 @@
 | 实验接口 | 清单的 `fuyu.experimental` 不为空 |
 | 清单 | 读不到 `package.json`，或者它不是 JSON 对象 |
 
-市场 CI 查的（在做）：
+### 不分档、直接让检查失败的
 
-- 清单校验不过：名字的作用域和仓库所有者对不上、用了 `@fuyu/*`、缺 `engines.fuyu`、`license` 是 `UNLICENSED` 等，规则见[清单和安装包](package.md)。
-- 构建失败，或者打出的包不符合[包的限制](package.md#包里不能有的)。
-- 作者签名不对，或者签名的密钥不是登记过的那把。换密钥按重新上架走，见[市场规则](market-rules.md#换密钥换人换仓库)。
+市场 CI 在分档之外还查这些，不过就不上架：
+
+- 作者签名验不过，或者签名的密钥不在提交文件的 `authorKeys` 里；提交文件里改了已经上架的那一行，或者没有权限的改动（见[发布](publish.md#提交文件)）。
+- `package.json` 的 `name`、`version`、`repository` 和提交文件里那一行对不上。
+- 依赖不符合市场构建的要求：只收 `package-lock.json`，依赖都来自 npm 官方源并带 `sha512` 校验（见[发布](publish.md#上架之前)）。审核分析器也读得懂 `pnpm-lock.yaml`，但市场构建不收它。
+- 构建失败：清单校验不过（名字的作用域和仓库所有者对不上、用了 `@fuyu/*`、缺 `engines.fuyu`、`license` 是 `UNLICENSED`、用了实验接口等，规则见[清单和安装包](package.md)），或者打出的包不符合[包的限制](package.md#包里不能有的)。
+- 源码里扫出遗留的密钥（令牌、API 密钥、私钥）。
+
+新加的作者密钥没有旧密钥签的换密钥证明时不会让检查失败，但报告里会标出来，维护者按重新上架看待（见[市场规则](market-rules.md#换密钥换人换仓库)）。
 
 ### 分析器的局限
 
