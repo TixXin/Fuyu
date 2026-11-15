@@ -31,7 +31,7 @@ macOS 上（G1.4，2026-11-13 起）：家目录同样是 `FUYU_HOME`、指针�
 | 邮箱授权码、翻译 API 密钥、日历订阅链接和 CalDAV 密码、Bark 推送设备 Key、GLM / Kimi 的 API Key、插件秘密 | Windows 凭据管理器；macOS 上是登录钥匙串（Keychain），服务名和用户名相同（`com.tixxin.fuyu.qq-mail`、`com.tixxin.fuyu.calendar`、`com.tixxin.fuyu.translation`、`com.tixxin.fuyu.bark`、`com.tixxin.fuyu.plan-usage`（用户名 `glm` / `kimi`）、`com.tixxin.fuyu.plugin.<id>`；翻译密钥按服务分条目，用户名为服务 id，DeepSeek 沿用 `deepseek`） | `mail`、`calendar`、`translation`、`phone_push`、`agent_status/plan_usage.rs`、`plugin_host` |
 | 待办 Markdown 导出 | 用户选择的目录（经过校验） | `system` |
 | 开机自启 | `HKCU\...\Run` 下的值 `Fuyu`（改名前是 `FocuSD Island`） | `system` |
-| 剪贴板历史、常用短语与设置 | 应用数据目录（`clipboard-history.json`、图片 `clipboard-images/`、临时文本文件 `clipboard-text/`；暂停记录状态仅在内存中。每次变化整份重写；缩略图以 base64 存在 JSON 里，按 2026-11-15 本机数据每条约 10 KB，500 条（上限，C69）约 5.4 MB，debug 构建里写一次约 80 ms） | `clipboard_history` |
+| 剪贴板历史、常用短语与设置 | 应用数据目录（`clipboard-history.json`、链接书签和书签设置 `clipboard-links.json`（C79）、图片 `clipboard-images/`、临时文本文件 `clipboard-text/`；暂停记录状态仅在内存中。每次变化整份重写；缩略图以 base64 存在 JSON 里，按 2026-11-15 本机数据每条约 10 KB，500 条（上限，C69）约 5.4 MB，debug 构建里写一次约 80 ms） | `clipboard_history` |
 | 通知、微信提醒、邮件正文 | 仅保存在内存中 | `qq_notifications`、`wechat_reminders`、`mail` |
 
 总览见 [overview.md](overview.md)。
