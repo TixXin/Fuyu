@@ -77,6 +77,35 @@
 
 正式版不会因为代码改动而重启，也没有半写的文件，所以第一条只在 dev 下出现。第二条（显示出空白岛）正式版只有在前端启动失败时才会碰到。
 
+### 页面已挂载、岛却被藏起来（2026-11-15，D71）
+
+原因是 `1e1f1c4d`（2026-11-14，启动时显示岛不抢焦点）。它把 `show_ready_island` 里的 `window.show()` 换成了直接调 Win32 `ShowWindow(SW_SHOWNOACTIVATE)`，绕过了 tao。tao 自己记着一份窗口标志，它不知道窗口已经显示，记的还是「不可见」。之后有三处会出问题（tao 0.37.2，`platform_impl/windows/window_state.rs` 的 `apply_diff` 和 `window.rs` 的 `set_focus`）：
+
+- **岛被藏起来。** 只要 tao 改一次窗口标志，`apply_diff` 发现新标志里没有 `VISIBLE`，就 `ShowWindow(SW_HIDE)`。光标穿透循环（`island/passthrough.rs`）在光标进出岛的范围时调 `set_ignore_cursor_events`，这正是一次标志改动。所以岛启动后能显示出来，但光标第一次碰到岛（或者刚启动时光标就停在岛的位置）就会消失。D69 诊断副本里 `is_visible` 一直是 `false`、D71 第一次复现时先 `true` 后 `false`，都是这样。刷新页面会再走一遍原生显示，所以「刷新后正常」，直到光标再碰到岛。点托盘走 `show_island` → `window.show()`，tao 的标志从这时起是对的，之后就不会再藏起来，和用户描述的「点托盘才出来」一致。
+- **托盘「隐藏」和「最小化到托盘」失灵。** `hide_island` 调 `window.hide()`，tao 认为本来就隐藏着，标志没变化，什么都不做。
+- **聚焦失灵。** tao 的 `set_focus()` 先看自己记的 `VISIBLE`，没有就直接返回，所以快捷键呼出（`focus_island_for_shortcut`）等地方的聚焦都不起作用。
+
+改法（D71）：
+
+- `island/focus.rs` 的 `show_island_at_startup` 改回用 tao 的 `window.show()`，tao 的状态始终是对的。为了保留 `1e1f1c4d` 的目的（不抢正在打字的窗口的焦点），显示前记下前台窗口；显示后岛成了前台，就用 `bring_to_foreground` 把前台还给它。
+- `show_ready_island` 失败时在 stderr 记一行 `could not show the island at startup: …`。
+- `useIslandWindow.ts`：`show_ready_island` 失败后按 0.3、1、3 秒重试，都失败就把「已显示」的标记清掉，下一次原生同步之后再试；原生同步超过 1.5 秒没返回，就不再等它，先显示岛。
+
+没做 Rust 侧「窗口创建后多少秒还没显示就显示出来」的兜底：这次的岛是先显示、后被藏起来的，定时兜底拦不住；页面没挂载时显示出来的也只是一块透明的空窗口。
+
+复测（release exe 的诊断副本，通知验收的独立标识加 32 位运行号，临时 `FUYU_HOME` 和 WebView2 目录，开远程调试；每次跑完核对 `~/.claude/settings.json`、`~/.claude/CLAUDE.md`、`~/.codex/config.toml`、`~/.gemini/config/hooks.json`、`~/.fuyu/settings.json` 的哈希都没变）。页面挂载后轮询 `is_visible`，6–12 秒后再经页面调两次 `toggle_maximize`，让 tao 改一次窗口标志：
+
+| exe | 次数 | 结束时可见 | 改标志后可见 |
+|---|---:|---|---|
+| 改前（06:21 构建） | 3（新数据目录） | 2 次 `false`（先 `true` 后被藏），1 次 `true` | 2 次都 `false` |
+| 改后（08:54 构建） | 4 次新数据目录 + 同一数据目录 2 次 | 6 次都 `true` | 6 次都 `true` |
+
+改前那 1 次没被藏，是那几秒里光标没有进出岛的范围；改标志的那一步每次都能把岛藏起来。
+
+没测的：启动时焦点是不是还给了原来的窗口、托盘隐藏、快捷键聚焦，这些要真鼠标和真键盘，见任务 D71 的「验收」。
+
+D71 第一次复现时脚本把空运行号传了进去，诊断副本没拿到独立标识，用了正式标识和临时 `FUYU_HOME`，把本机 Claude Code、Codex、Antigravity 的钩子路径改到了临时目录；已改回 `C:\Users\tixxin\.fuyu`。之后的脚本先校验运行号是 32 位十六进制、启动后确认没有从正式数据目录复制数据，否则立即结束进程。
+
 ## 4. 排查中发现的其他问题（「等」）
 
 - **崩溃页不会自己恢复**（见第 1 节），正式版也一样。
