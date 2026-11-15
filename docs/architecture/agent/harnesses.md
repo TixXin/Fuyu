@@ -1,6 +1,6 @@
 # 各家 AI 代理的接入现状
 
-岛接了十四家 AI 代理（harness）：Claude Code、Codex、WorkBuddy（国内版和 WorkBuddy AI）、Antigravity、DeepSeek Harness（DSH）、opencode，钩子照抄 Claude Code 的三家 Qoder、CodeBuddy Code、Qwen Code（B48），TRAE、TRAE CN（B29），ZCode（B53）、Kimi Code（B52）和 MiMo Code（B54）。后八家各有一节在文末。这张表记每家有哪些形态、数据在哪，以及每项功能做到哪一步。改了哪家的哪一项，就在同一个提交里改这里。接入新的一家或给已有功能扩一家，按 `.claude/skills/fuyu-agent-harness/SKILL.md` 的清单走。
+岛接了十五家 AI 代理（harness）：Claude Code、Codex、WorkBuddy（国内版和 WorkBuddy AI）、Antigravity、DeepSeek Harness（DSH）、opencode，钩子照抄 Claude Code 的三家 Qoder、CodeBuddy Code、Qwen Code（B48），TRAE、TRAE CN（B29），ZCode（B53）、Kimi Code（B52）、MiMo Code（B54）和 Grok CLI（B57）。后九家各有一节在文末。这张表记每家有哪些形态、数据在哪，以及每项功能做到哪一步。改了哪家的哪一项，就在同一个提交里改这里。接入新的一家或给已有功能扩一家，按 `.claude/skills/fuyu-agent-harness/SKILL.md` 的清单走。
 
 核对日期：2026-11-15（按 `main` 上的代码）。各家的调研和来源见 [agent-harnesses.md](../../research/agent-harnesses.md)，用户可见的行为见 [agent-status-hooks.md](../../features/agent-status-hooks.md)。标「未实测」的项都列在实测清单 #179 里。
 
@@ -61,6 +61,14 @@ Claude Code 和 Codex 是最早接的，很多地方曾把「代理」写死成�
 ## Claude Code 兼容的三家（B48）
 
 Qoder（含 Qoder CN）、CodeBuddy Code、Qwen Code 的钩子格式和会话目录都照抄 Claude Code，所以走一个声明层 `claude_compat.rs`：每家的模块（`qoder.rs`、`codebuddy.rs`、`qwen.rs`）只填一份 `Compat`（id、名字、配置目录和环境变量、会话子目录、记录格式、全局提示词文件、等授权用哪个事件），钩子安装和状态、会话列表、标题、等你、审批都由声明层做。再接一家这样的 CLI：写一份声明，再在 `HARNESSES`、三份钩子脚本、审批的 `Agent` 枚举和前端 `AGENTS` 里各加一项。三家都还没在真机上跑过（#179）。
+
+B56 起声明多了三项，给钩子格式相近、外壳不同的几家用（Grok CLI 已用上，Copilot CLI、Droid 在做）：
+
+- `hooks_file`：钩子写进家目录下的哪个文件。上面三家是 `settings.json`；钩子目录是合并语义的（Grok 的 `~/.grok/hooks/`）就写岛自己的一个文件。
+- `reply`：岛上审批的回包。`PermissionRequest`（`hookSpecificOutput.decision.behavior`，上面三家）、`PreToolUse(工具)`（审批钩子挂 `PreToolUse`、只匹配这些工具，回 `permissionDecision`）、`Behavior`（Copilot 的 `{behavior, message, interrupt}`）、`None`（不装审批钩子，只做等你）。
+- `aliases`：钩子输入的字段别名（例如驼峰的 `sessionId` → `session_id`）。审批输入和 `agent-notifications/<来源>-*.json` 都先套别名再解析，已有的下划线字段不覆盖。
+
+**重复触发**：每家单独装自己的钩子，命令带自己的来源 id，Rust 按「来源 + `session_id`」收。Grok、Copilot 等还会顺带执行 `~/.claude/settings.json` 里岛给 Claude Code 装的钩子：落到 Claude Code 路由（`/claude/permission-request`、`/claude/ask-user-question`、`/claude/activity`）上的请求，`transcript_path` 在某家兼容代理的家目录下、或带着某家声明的别名字段（Claude Code 不发），就当成那家的，直接回 `{}` 交回，不在岛上再弹。已有的 Claude Code 脚本不改。去不了的：Claude Code 的运行标记和 `agent-status.json` 由脚本直接写、不看输入，这几家跑 Claude 的钩子时 Claude Code 的状态灯会跟着亮；要避免，让用户在那家代理里关掉读 Claude 钩子（Grok：`~/.grok/config.toml` 的 `[compat.claude] hooks = false`），岛不替用户改。「等你」按 `session_id` 对会话，落在那家自己的会话上，不用去重。
 
 | | Qoder / Qoder CN | CodeBuddy Code | Qwen Code |
 |---|---|---|---|
@@ -155,3 +163,19 @@ TRAE IDE 的国际版和 CN 版按用户的决定分成两家：`trae`（显示�
 | 回复标记 | `<配置>/AGENTS.md`（MiMo 也读 `~/.claude/CLAUDE.md`，标记一样，不冲突） |
 | 点会话跳过去 | ◐ 通用的终端窗口匹配 |
 | 判断会话已退出、用量环、SSH 远程、cc-connect | ✗ / ✗ / ✗（有 Linux CLI，能做）/ — |
+
+## Grok CLI（B57）
+
+xAI 的 Grok CLI，id `grok`。代码在 `grok.rs`，钩子走兼容层（`hooks_file` 是岛自己的文件，`reply: None`）。这台 Mac 上装了 1.0.77，headless 跑过一轮：钩子输入同时带驼峰和下划线字段、`transcript_path` 在 `~/.grok/sessions/` 下，会话读取对真实会话给出了完成、标题、模型、推理强度、提问和回复；交互式 TUI、等你、回复标记还没测（#179）。
+
+| 层 | Grok CLI |
+|---|---|
+| 配置 | `~/.grok`（`GROK_HOME` 优先）；钩子单独写 `~/.grok/hooks/fuyu-island.json`（Grok 合并整个目录，别人的文件不动） |
+| 钩子 | UserPromptSubmit、PreToolUse 亮灯，Stop、StopCancelled 记完成，StopFailure 记出错，Notification（matcher `permission_prompt`）存进 `agent-notifications` |
+| 会话 | `~/.grok/sessions/<编码的目录>/<会话 id>/`：`summary.json` 给 id、目录、标题（`title_is_manual` 为真算改名）、模型、推理强度；`events.jsonl` 判断三态和本轮开始时间（Grok 的内部格式，文档没写，可能随版本变）；`chat_history.jsonl` 给最近提问、回复和工具调用；`session_relationship` 不是 `primary` 的不列 |
+| 状态灯 | ✓ `agent-grok-running.flag` |
+| 等你 | Notification 的 `permission_prompt`，以及 `events.jsonl` 里的 `permission_requested` |
+| 岛上审批 | ✗ Grok 的钩子回 `allow` 只表示不拦，不会替用户批准，也没有阻塞式的 PermissionRequest |
+| 回复标记 | `~/.grok/rules/fuyu-island.md`（Grok 总会读 `rules/*.md`） |
+| 点会话跳过去 | ◐ 通用的终端窗口匹配 |
+| 判断会话已退出、用量环、SSH 远程、cc-connect | ✗ / ✗（只有 `/usage` 页，没有本地文件或公开接口）/ ✗（有 Linux CLI）/ — |
