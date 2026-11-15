@@ -173,6 +173,7 @@
   - `main` 只经 land 或在 GitHub 上合入 PR 移动，不手动推送。
   - 代理的 Rust 构建用共用的 `src-tauri/target/agents`，不要用用户 dev 的 `debug`，也不另开 `agents-<名字>` 目录、不在临时目录的仓库副本里编译；代理不跑 `pnpm tauri dev`，用户自己跑。
   - **重任务排队**（2026-11-15 起，F40）：`cargo build/test/check/clippy`、`tauri build` 写成 `pnpm heavy -- <命令>`，全机器同时最多跑两个，其余的排队；`build:exe`、`verify`、`test:regression` 自带排队。PreToolUse 钩子（`scripts/heavy/gate.mjs`）会拦下没排队的。整批 `mq:land` 同一时间只跑一个，后来的会被告知提交会一起带上。主 agent 同时最多跑 2 个要编译的子会话。细则见 workflow.md「Rust 构建」。
+  - **没提交的文件**（2026-11-15 起，F41）：大家都会改的热点文件（`platforms.md`、`contracts.md`、`data-storage.md`、`Cargo.toml`、`lib.rs`、`searchIndex.json` 等，列表见 workflow.md「没提交的文件」）改完就单独提交，不挂到整个功能做完，否则本地 `main` 跟不上 `origin/main`。停下时 `pnpm tasks note` 写清哪些没提交的文件是自己的。`pnpm tasks dirty` 清点没提交的文件归谁。全机器同时改代码的会话控制在 6 个左右。
 - 修改前先查看 `git status --short`，不要覆盖用户或别的会话已有的改动。
 - 不要使用 `git reset --hard`、`git checkout --` 等破坏性命令，除非用户明确要求。
 - 工作区里与当前任务无关的修改（多半是别的会话正在改的），保留它们，只提交本次任务相关的文件。
