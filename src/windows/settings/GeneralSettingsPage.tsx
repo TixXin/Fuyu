@@ -16,41 +16,62 @@ import { useLaunchAtStartup } from "./useLaunchAtStartup";
 import { useTrayIconVisible } from "./useTrayIconVisible";
 import { QuitIslandRow } from "./QuitIslandRow";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
+import { SlotView } from "../../features/plugin-kernel/SlotView";
+import { settingsSections } from "./slots/sectionSlot";
 
-export function GeneralSettingsPage({
-  locale,
-  settings,
-  onLocaleChange,
-  onSettingsChange,
-}: {
+type GeneralSectionProps = {
   locale: LocaleCode;
   settings: IslandSettings;
   onLocaleChange: (locale: LocaleCode) => void;
   onSettingsChange: (settings: IslandSettings) => void;
-}) {
+};
+
+function StartupSection({ locale, onLocaleChange }: GeneralSectionProps) {
   const [launchAtStartup, updateLaunchAtStartup] = useLaunchAtStartup();
   const [trayIconVisible, updateTrayIconVisible] = useTrayIconVisible();
 
   return (
-    <>
-      <BehaviorSettingsSection
-        launchAtStartup={launchAtStartup}
-        trayIconVisible={trayIconVisible}
-        locale={locale}
-        onLaunchAtStartupChange={updateLaunchAtStartup}
-        onTrayIconVisibleChange={updateTrayIconVisible}
-        onLocaleChange={onLocaleChange}
-      />
-      <PositionSettingsSection
-        settings={settings}
-        onSettingsChange={onSettingsChange}
-        onResetPosition={requestIslandPositionReset}
-      />
-      <SystemPermissionsSection />
-      <DataSettingsSection onMoved={moveTodoFolder} />
-      <SettingsGroup>
-        <QuitIslandRow />
-      </SettingsGroup>
-    </>
+    <BehaviorSettingsSection
+      launchAtStartup={launchAtStartup}
+      trayIconVisible={trayIconVisible}
+      locale={locale}
+      onLaunchAtStartupChange={updateLaunchAtStartup}
+      onTrayIconVisibleChange={updateTrayIconVisible}
+      onLocaleChange={onLocaleChange}
+    />
   );
+}
+
+function PositionSection({ settings, onSettingsChange }: GeneralSectionProps) {
+  return (
+    <PositionSettingsSection
+      settings={settings}
+      onSettingsChange={onSettingsChange}
+      onResetPosition={requestIslandPositionReset}
+    />
+  );
+}
+
+function DataSection() {
+  return <DataSettingsSection onMoved={moveTodoFolder} />;
+}
+
+function QuitSection() {
+  return (
+    <SettingsGroup>
+      <QuitIslandRow />
+    </SettingsGroup>
+  );
+}
+
+const sections = settingsSections<GeneralSectionProps, "general">();
+
+sections.add({ id: "general.startup", category: "general", order: 10, component: StartupSection });
+sections.add({ id: "general.position", category: "general", order: 20, component: PositionSection });
+sections.add({ id: "general.permissions", category: "general", order: 30, component: SystemPermissionsSection });
+sections.add({ id: "general.data", category: "general", order: 40, component: DataSection });
+sections.add({ id: "general.quit", category: "general", order: 50, component: QuitSection });
+
+export function GeneralSettingsPage(props: GeneralSectionProps) {
+  return <SlotView slot={sections} group="general" props={props} />;
 }

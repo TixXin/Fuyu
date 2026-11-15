@@ -10,7 +10,7 @@ export interface LogEntry {
   text: string;
 }
 
-export type PluginState = "disabled" | "loading" | "waiting" | "running" | "failed" | "stopped" | "unloading" | "auto-disabled" | "safe-mode";
+export type PluginState = "disabled" | "loading" | "waiting" | "running" | "failed" | "stopped" | "unloading" | "auto-disabled" | "safe-mode" | "bisect";
 
 export type PluginKind = "essential" | "builtin" | "third-party";
 
@@ -35,7 +35,7 @@ export interface PluginStatus {
   waitingFor?: string[];
   error?: string;
   reason?: string;
-  blocked?: { by: "errors"; errors: number; windowMs: number } | { by: "safe-mode"; mode: SafeMode } | { by: "manifest"; errors: ManifestIssue[] };
+  blocked?: { by: "errors"; errors: number; windowMs: number } | { by: "safe-mode"; mode: SafeMode } | { by: "manifest"; errors: ManifestIssue[] } | { by: "bisect" };
   lastError?: { at: number; text: string };
   usage?: PluginUsage;
   source?: PluginSource;
@@ -53,6 +53,11 @@ export interface HostInfo {
   rssBytes: number;
   heapUsedBytes: number;
   cpuMs: number;
+}
+
+export interface BisectAnswer {
+  off: string[];
+  unknown: string[];
 }
 
 export interface FaultLimit {
@@ -122,6 +127,7 @@ export interface HostOptions {
   watch?: boolean;
   dev?: boolean;
   safe?: SafeMode | null;
+  bisect?: string[];
   faultLimit?: Partial<FaultLimit>;
   onLog?: (entry: LogEntry) => void;
   rpc?: HostRpc | null;
@@ -135,6 +141,7 @@ export interface Host {
   info(): HostInfo;
   builtins(): { id: string; kind: Exclude<PluginKind, "third-party"> }[];
   fault(plugin: string, error: unknown): boolean;
+  bisect(off: string[]): BisectAnswer;
   clients(window?: string): ClientEntry[];
   timers(): Record<string, number>;
   rustListeners(): Record<string, number>;

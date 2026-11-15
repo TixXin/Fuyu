@@ -3,7 +3,7 @@ import { HOST_PROTOCOL, SERVICE_CALLS, WINDOW_ORIGINS } from "../protocol.mjs";
 import { blame } from "./blame.mjs";
 import { SAFE_MODES } from "./gate.mjs";
 import { startHost } from "./kernel.mjs";
-import { connect } from "./rpc.mjs";
+import { connect, RpcError } from "./rpc.mjs";
 import { openWindowSocket } from "./sockets.mjs";
 
 const FORWARDED_LOGS = new Set(["error", "warn"]);
@@ -22,6 +22,7 @@ const { values } = parseArgs({
     watch: { type: "boolean", default: false },
     dev: { type: "boolean", default: false },
     safe: { type: "string" },
+    bisect: { type: "string", multiple: true, default: [] },
     api: { type: "string", multiple: true, default: [] },
     origin: { type: "string", multiple: true, default: [] },
   },
@@ -61,6 +62,10 @@ process.on("uncaughtException", (error) => stray("uncaught exception", error));
 process.on("unhandledRejection", (reason) => stray("unhandled rejection", reason));
 rpc.handle("ping", (params) => ({ at: Date.now(), echo: params ?? null }));
 rpc.handle("status", () => host?.status() ?? []);
+rpc.handle("bisect", (params) => {
+  if (!host) throw new RpcError("not-ready", "the plugin host has not loaded its plugins yet");
+  return host.bisect(params?.off);
+});
 rpc.handle("stop", () => {
   setImmediate(() => stop(0));
   return true;
@@ -75,6 +80,7 @@ try {
     watch: values.watch || values.dev,
     dev: values.dev,
     safe,
+    bisect: values.bisect.filter(Boolean),
     apiNames: values.api,
     rpc,
     onLog: (entry) => {

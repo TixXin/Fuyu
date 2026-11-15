@@ -13,14 +13,34 @@ import { VersionHistory } from "../../features/updater/VersionHistory";
 import { useTranslation } from "../../i18n";
 import { openOnboardingWindow } from "../onboarding/api";
 import { QuitIslandRow } from "./QuitIslandRow";
+import { SlotView } from "../../features/plugin-kernel/SlotView";
+import { settingsSections } from "./slots/sectionSlot";
 
 const CONFIRM_TIMEOUT_MS = 4_000;
 
-export function AboutSettingsPage({ onSettingsChange }: { onSettingsChange: (settings: IslandSettings) => void }) {
-  const t = useTranslation();
-  const text = t.settings.project;
+type AboutSectionProps = { onSettingsChange: (settings: IslandSettings) => void };
+
+function HistorySection() {
+  return <VersionHistory />;
+}
+
+function HelpSection() {
+  const text = useTranslation().settings.project;
+  return (
+    <SettingsGroup title={text.helpTitle}>
+      <SettingsRow
+        title={text.guide}
+        description={text.guideHint}
+        control={<SettingsLinkButton onClick={openOnboardingWindow}>{text.guideAction}</SettingsLinkButton>}
+      />
+      <UpdateDiagnosticsRow />
+    </SettingsGroup>
+  );
+}
+
+function SystemSection({ onSettingsChange }: AboutSectionProps) {
+  const text = useTranslation().settings.project;
   const [confirming, setConfirming] = useState(false);
-  const version = useSyncExternalStore(subscribeToUpdate, () => getUpdateState().version);
 
   useEffect(() => {
     if (!confirming) return;
@@ -29,46 +49,52 @@ export function AboutSettingsPage({ onSettingsChange }: { onSettingsChange: (set
   }, [confirming]);
 
   return (
+    <div className="about-danger">
+      <SettingsGroup title={text.systemTitle}>
+        <SettingsRow
+          title={text.resetAll}
+          description={text.resetAllHint}
+          control={
+            confirming ? (
+              <>
+                <SettingsLinkButton onClick={() => setConfirming(false)}>{text.resetAllCancel}</SettingsLinkButton>
+                <SettingsLinkButton
+                  tone="danger"
+                  onClick={() => {
+                    setConfirming(false);
+                    onSettingsChange(DEFAULT_SETTINGS);
+                  }}
+                >
+                  {text.resetAllConfirm}
+                </SettingsLinkButton>
+              </>
+            ) : (
+              <SettingsLinkButton tone="danger" onClick={() => setConfirming(true)}>{text.resetAllAction}</SettingsLinkButton>
+            )
+          }
+        />
+        <QuitIslandRow />
+      </SettingsGroup>
+    </div>
+  );
+}
+
+const sections = settingsSections<AboutSectionProps, "about">();
+
+sections.add({ id: "about.updates", category: "about", order: 10, component: UpdateSettingsSection });
+sections.add({ id: "about.history", category: "about", order: 20, component: HistorySection });
+sections.add({ id: "about.links", category: "about", order: 30, component: ProjectLinksSection });
+sections.add({ id: "about.help", category: "about", order: 40, component: HelpSection });
+sections.add({ id: "about.system", category: "about", order: 50, component: SystemSection });
+
+export function AboutSettingsPage(props: AboutSectionProps) {
+  const text = useTranslation().settings.project;
+  const version = useSyncExternalStore(subscribeToUpdate, () => getUpdateState().version);
+
+  return (
     <>
       <AboutHero />
-      <UpdateSettingsSection />
-      <VersionHistory />
-      <ProjectLinksSection />
-      <SettingsGroup title={text.helpTitle}>
-        <SettingsRow
-          title={text.guide}
-          description={text.guideHint}
-          control={<SettingsLinkButton onClick={openOnboardingWindow}>{text.guideAction}</SettingsLinkButton>}
-        />
-        <UpdateDiagnosticsRow />
-      </SettingsGroup>
-      <div className="about-danger">
-        <SettingsGroup title={text.systemTitle}>
-          <SettingsRow
-            title={text.resetAll}
-            description={text.resetAllHint}
-            control={
-              confirming ? (
-                <>
-                  <SettingsLinkButton onClick={() => setConfirming(false)}>{text.resetAllCancel}</SettingsLinkButton>
-                  <SettingsLinkButton
-                    tone="danger"
-                    onClick={() => {
-                      setConfirming(false);
-                      onSettingsChange(DEFAULT_SETTINGS);
-                    }}
-                  >
-                    {text.resetAllConfirm}
-                  </SettingsLinkButton>
-                </>
-              ) : (
-                <SettingsLinkButton tone="danger" onClick={() => setConfirming(true)}>{text.resetAllAction}</SettingsLinkButton>
-              )
-            }
-          />
-          <QuitIslandRow />
-        </SettingsGroup>
-      </div>
+      <SlotView slot={sections} group="about" props={props} />
       <p className="about-colophon">{text.colophon(version)}</p>
     </>
   );

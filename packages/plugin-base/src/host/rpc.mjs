@@ -32,7 +32,7 @@ export function connect({ input, write, onClose }) {
       if (message.id !== undefined) send({ id: message.id, result: result ?? null });
     } catch (error) {
       if (message.id === undefined) return;
-      const code = Number.isInteger(error?.code) ? error.code : -32000;
+      const code = Number.isInteger(error?.code) || (error instanceof RpcError && typeof error.code === "string") ? error.code : -32000;
       send({ id: message.id, error: { code, message: String(error?.message ?? error), ...(error?.data === undefined ? {} : { data: error.data }) } });
     }
   };

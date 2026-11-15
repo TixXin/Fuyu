@@ -22,20 +22,112 @@ import { IslandGlyph } from "../../features/appearance/IslandGlyph";
 import { useTranslation } from "../../i18n";
 import { FeatureHeader } from "./FeatureHeader";
 import "./MessagesSettingsPage.css";
+import { SlotView } from "../../features/plugin-kernel/SlotView";
+import { settingsSections } from "./slots/sectionSlot";
 
-export function MessagesSettingsPage({
-  settings,
-  qqNotifications,
-  wechatReminders,
-  unsupported,
-  onSettingsChange,
-}: {
+type MessagesSectionProps = {
   settings: IslandSettings;
   qqNotifications: QQNotificationsController;
   wechatReminders: WeChatRemindersController;
   unsupported: ReadonlySet<PlatformFeature>;
   onSettingsChange: (settings: IslandSettings) => void;
-}) {
+};
+
+function NoticeSection({ settings, onSettingsChange }: MessagesSectionProps) {
+  const t = useTranslation();
+  const labels = t.settings.messageSources;
+
+  return (
+    <SettingsGroup title={labels.noticeTitle} footer={<SettingsFootnote text={labels.noticeHint} />}>
+      <SettingsRow title={labels.noticeLabel}>
+        <SettingsChoiceCards<MessageNotice>
+          value={settings.messageNotice}
+          ariaLabel={labels.noticeLabel}
+          options={[
+            { value: "line", label: labels.noticeLine, hint: labels.noticeLineHint, art: <IslandGlyph state="collapsed" /> },
+            { value: "banner", label: labels.noticeBanner, hint: labels.noticeBannerHint, art: <IslandGlyph state="banner" /> },
+            { value: "panel", label: labels.noticePanel, hint: labels.noticePanelHint, art: <IslandGlyph state="expanded" /> },
+          ]}
+          onChange={(messageNotice) => onSettingsChange({ ...settings, messageNotice })}
+        />
+      </SettingsRow>
+      {settings.messageNotice === "panel" && (
+        <SettingsRow
+          title={labels.panelSeconds}
+          indent
+          control={
+            <SettingsSelect
+              value={String(settings.messagePanelSeconds)}
+              options={MESSAGE_PANEL_SECONDS.map((seconds) => ({ value: String(seconds), label: labels.panelSecondsValue(seconds) }))}
+              ariaLabel={labels.panelSeconds}
+              onChange={(value) => onSettingsChange({ ...settings, messagePanelSeconds: Number(value) })}
+            />
+          }
+        />
+      )}
+    </SettingsGroup>
+  );
+}
+
+function QQSection({ qqNotifications, unsupported }: MessagesSectionProps) {
+  const labels = useTranslation().settings.messageSources;
+  if (unsupported.has("qq")) return null;
+  return <QQGroup controller={qqNotifications} title={labels.qqTitle} hint={isMacOS ? labels.qqHintMac : labels.qqHint} />;
+}
+
+function WeChatSection({ wechatReminders, unsupported }: MessagesSectionProps) {
+  const t = useTranslation();
+  const labels = t.settings.messageSources;
+  if (unsupported.has("wechat")) return null;
+
+  return (
+    <SettingsGroup title={labels.wechatTitle} footer={<Problem error={wechatReminders.actionError || wechatReminders.snapshot.error || (wechatReminders.snapshot.status === "permissionRequired" ? t.wechat.status.permissionRequired : null)} hint={isMacOS ? labels.wechatHintMac : labels.wechatHint} />}>
+      <SettingsToggleRow
+        title={<SettingsIconTitle icon={<MessageSquare size={15} strokeWidth={1.9} />} tone="var(--mint-text, #98d4bb)">{t.wechat.receive}</SettingsIconTitle>}
+        description={wechatReminders.snapshot.enabled ? t.wechat.status[wechatReminders.snapshot.status] : undefined}
+        checked={wechatReminders.snapshot.enabled}
+        onChange={(enabled) => void wechatReminders.setEnabled(enabled)}
+      />
+      {wechatReminders.snapshot.enabled && (
+        <SettingsToggleRow
+          title={t.wechat.autoClear}
+          description={isMacOS ? t.wechat.autoClearDescriptionMac : t.wechat.autoClearDescription}
+          checked={wechatReminders.autoClear}
+          indent
+          onChange={wechatReminders.setAutoClear}
+        />
+      )}
+      {wechatReminders.snapshot.enabled && !isMacOS && (
+        <SettingsToggleRow
+          title={t.wechat.exposeUi}
+          description={<>{t.wechat.exposeUiDescription}{wechatReminders.snapshot.exposeStatus && <><br />{wechatReminders.snapshot.exposeStatus}</>}</>}
+          checked={wechatReminders.snapshot.exposeUi}
+          indent
+          onChange={(enabled) => void wechatReminders.setExposeUi(enabled)}
+        />
+      )}
+      {wechatReminders.snapshot.enabled && wechatReminders.snapshot.exposeUi && !isMacOS && (
+        <SettingsToggleRow
+          title={t.wechat.hideTaskbarButton}
+          description={t.wechat.hideTaskbarButtonDescription}
+          checked={wechatReminders.snapshot.hideTaskbarButton}
+          indent
+          onChange={(enabled) => void wechatReminders.setHideTaskbarButton(enabled)}
+        />
+      )}
+    </SettingsGroup>
+  );
+}
+
+const sections = settingsSections<MessagesSectionProps, "messages">();
+
+sections.add({ id: "messages.notice", category: "messages", order: 10, component: NoticeSection });
+sections.add({ id: "messages.qq", category: "messages", order: 20, component: QQSection });
+sections.add({ id: "messages.wechat", category: "messages", order: 30, component: WeChatSection });
+sections.add({ id: "messages.mail", category: "messages", order: 40, component: MailGroups });
+
+export function MessagesSettingsPage(props: MessagesSectionProps) {
+  const { settings, qqNotifications, wechatReminders, unsupported } = props;
   const t = useTranslation();
   const labels = t.settings.messageSources;
   const sourcesOn = [!unsupported.has("qq") && qqNotifications.snapshot.enabled, !unsupported.has("wechat") && wechatReminders.snapshot.enabled, settings.mailEnabled].filter(Boolean).length;
@@ -43,71 +135,7 @@ export function MessagesSettingsPage({
   return (
     <>
       <FeatureHeader feature="messages" aside={labels.sourcesOn(sourcesOn)} />
-      <SettingsGroup title={labels.noticeTitle} footer={<SettingsFootnote text={labels.noticeHint} />}>
-        <SettingsRow title={labels.noticeLabel}>
-          <SettingsChoiceCards<MessageNotice>
-            value={settings.messageNotice}
-            ariaLabel={labels.noticeLabel}
-            options={[
-              { value: "line", label: labels.noticeLine, hint: labels.noticeLineHint, art: <IslandGlyph state="collapsed" /> },
-              { value: "banner", label: labels.noticeBanner, hint: labels.noticeBannerHint, art: <IslandGlyph state="banner" /> },
-              { value: "panel", label: labels.noticePanel, hint: labels.noticePanelHint, art: <IslandGlyph state="expanded" /> },
-            ]}
-            onChange={(messageNotice) => onSettingsChange({ ...settings, messageNotice })}
-          />
-        </SettingsRow>
-        {settings.messageNotice === "panel" && (
-          <SettingsRow
-            title={labels.panelSeconds}
-            indent
-            control={
-              <SettingsSelect
-                value={String(settings.messagePanelSeconds)}
-                options={MESSAGE_PANEL_SECONDS.map((seconds) => ({ value: String(seconds), label: labels.panelSecondsValue(seconds) }))}
-                ariaLabel={labels.panelSeconds}
-                onChange={(value) => onSettingsChange({ ...settings, messagePanelSeconds: Number(value) })}
-              />
-            }
-          />
-        )}
-      </SettingsGroup>
-      {!unsupported.has("qq") && <QQGroup controller={qqNotifications} title={labels.qqTitle} hint={isMacOS ? labels.qqHintMac : labels.qqHint} />}
-      {!unsupported.has("wechat") && <SettingsGroup title={labels.wechatTitle} footer={<Problem error={wechatReminders.actionError || wechatReminders.snapshot.error || (wechatReminders.snapshot.status === "permissionRequired" ? t.wechat.status.permissionRequired : null)} hint={isMacOS ? labels.wechatHintMac : labels.wechatHint} />}>
-        <SettingsToggleRow
-          title={<SettingsIconTitle icon={<MessageSquare size={15} strokeWidth={1.9} />} tone="var(--mint-text, #98d4bb)">{t.wechat.receive}</SettingsIconTitle>}
-          description={wechatReminders.snapshot.enabled ? t.wechat.status[wechatReminders.snapshot.status] : undefined}
-          checked={wechatReminders.snapshot.enabled}
-          onChange={(enabled) => void wechatReminders.setEnabled(enabled)}
-        />
-        {wechatReminders.snapshot.enabled && (
-          <SettingsToggleRow
-            title={t.wechat.autoClear}
-            description={isMacOS ? t.wechat.autoClearDescriptionMac : t.wechat.autoClearDescription}
-            checked={wechatReminders.autoClear}
-            indent
-            onChange={wechatReminders.setAutoClear}
-          />
-        )}
-        {wechatReminders.snapshot.enabled && !isMacOS && (
-          <SettingsToggleRow
-            title={t.wechat.exposeUi}
-            description={<>{t.wechat.exposeUiDescription}{wechatReminders.snapshot.exposeStatus && <><br />{wechatReminders.snapshot.exposeStatus}</>}</>}
-            checked={wechatReminders.snapshot.exposeUi}
-            indent
-            onChange={(enabled) => void wechatReminders.setExposeUi(enabled)}
-          />
-        )}
-        {wechatReminders.snapshot.enabled && wechatReminders.snapshot.exposeUi && !isMacOS && (
-          <SettingsToggleRow
-            title={t.wechat.hideTaskbarButton}
-            description={t.wechat.hideTaskbarButtonDescription}
-            checked={wechatReminders.snapshot.hideTaskbarButton}
-            indent
-            onChange={(enabled) => void wechatReminders.setHideTaskbarButton(enabled)}
-          />
-        )}
-      </SettingsGroup>}
-      <MailGroups settings={settings} onSettingsChange={onSettingsChange} />
+      <SlotView slot={sections} group="messages" props={props} />
     </>
   );
 }

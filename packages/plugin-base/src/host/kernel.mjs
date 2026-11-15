@@ -59,11 +59,11 @@ function hostInfo(startedAt, safe, dev) {
   return { pid: process.pid, node: process.versions.node, startedAt, safe, dev, rssBytes: memory.rss, heapUsedBytes: memory.heapUsed, cpuMs: Math.round((cpu.user + cpu.system) / 1000) };
 }
 
-export async function startHost({ dir, config = "plugins.yml", builtins = null, dataDir = null, appVersion = null, apiNames = [], watch = false, dev = false, safe = null, faultLimit, onLog, rpc = null } = {}) {
+export async function startHost({ dir, config = "plugins.yml", builtins = null, dataDir = null, appVersion = null, apiNames = [], watch = false, dev = false, safe = null, bisect = [], faultLimit, onLog, rpc = null } = {}) {
   if (!dir) throw new Error("startHost needs the directory that holds the plugin configuration");
   const startedAt = Date.now();
   const catalog = builtins ? readBuiltins(builtins) : null;
-  const gate = new Gate({ safe, limit: faultLimit, internal: INTERNAL });
+  const gate = new Gate({ safe, limit: faultLimit, internal: INTERNAL, bisect });
   shareModules(Object.fromEntries([...HOST_SHARED_MODULES, ...apiNames].map((name) => [name, Object.hasOwn(SHARED_FILES, name) ? SHARED_FILES[name] : API])));
   const ctx = new Context();
   const logs = recordLogs(ctx, onLog);
@@ -107,6 +107,7 @@ export async function startHost({ dir, config = "plugins.yml", builtins = null, 
     info: () => hostInfo(startedAt, safe, dev),
     builtins: () => catalog?.plugins.map(({ id, kind }) => ({ id, kind })) ?? [],
     fault: (plugin, error) => gate.fault(plugin, error),
+    bisect: (off) => gate.bisect(off),
     clients: (window) => ctx.clients.list(window),
     timers: () => timers.counts(),
     rustListeners: () => rust.counts(),

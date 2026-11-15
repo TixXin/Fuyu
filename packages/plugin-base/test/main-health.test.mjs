@@ -39,13 +39,14 @@ function launch(files, entries, args = [], nodeArgs = ["--disallow-code-generati
     throw new Error(`no matching message in ${ms} ms; stderr: ${stderr}`);
   };
   let id = 100;
-  const call = async (method) => {
+  const ask = async (method, params) => {
     id += 1;
     const mine = id;
-    child.stdin.write(`${JSON.stringify({ jsonrpc: "2.0", id: mine, method })}\n`);
-    return (await next((message) => message.id === mine)).result;
+    child.stdin.write(`${JSON.stringify({ jsonrpc: "2.0", id: mine, method, params })}\n`);
+    return next((message) => message.id === mine);
   };
-  return { space, next, call, stderr: () => stderr };
+  const call = async (method, params) => (await ask(method, params)).result;
+  return { space, next, call, ask, stderr: () => stderr };
 }
 
 test("a plugin whose stray rejections keep coming is switched off and says why", async () => {
@@ -93,6 +94,30 @@ test("the host started with --safe holds back third-party plugins and says so in
       ["posing", "safe-mode"],
     ],
   );
+});
+
+test("the host started with --bisect holds those plugins back, and Rust's bisect request replaces the list or says why not", async () => {
+  const files = { "plain.mjs": `export const name = "plain";\nexport function apply() {}\n` };
+  const { next, call, ask } = launch(
+    { ...files, ...builtinFiles([{ id: "inside", kind: "builtin", file: "plain.mjs" }], files) },
+    [
+      { id: "one", name: "./plain.mjs" },
+      { id: "two", name: "./plain.mjs" },
+    ],
+    (dir) => ["--bisect", "one", "--bisect=inside", "--builtins", join(dir, "builtins")],
+  );
+  const ready = (await next((message) => message.method === "ready")).params;
+  const states = (plugins) => Object.fromEntries(plugins.map((entry) => [entry.id, entry.state]));
+  assert.deepEqual(states(ready.plugins), { inside: "running", one: "bisect", two: "running" });
+  assert.deepEqual(await call("bisect", { off: ["two"] }), { off: ["two"], unknown: [] });
+  const deadline = Date.now() + 5000;
+  while (states(await call("status")).one !== "running" && Date.now() < deadline) await sleep(20);
+  assert.deepEqual(states(await call("status")), { inside: "running", one: "running", two: "bisect" });
+  const refused = (await ask("bisect", { off: ["inside"] })).error;
+  assert.equal(refused.code, "not-third-party");
+  assert.deepEqual(refused.data.refused, [{ id: "inside", kind: "builtin" }]);
+  assert.equal((await ask("bisect", {})).error.code, "bad-params");
+  assert.equal(states(await call("status")).two, "bisect");
 });
 
 test("an unknown --safe value starts every plugin instead of failing the host", async () => {
