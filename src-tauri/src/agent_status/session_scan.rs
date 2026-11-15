@@ -7,6 +7,8 @@ use std::{
     time::SystemTime,
 };
 
+use super::claude_desktop;
+use super::codex_threads::{self, Thread};
 use super::markers::AGENT_RUNNING_STALE_AFTER_MS;
 use super::notifications::{compacting_sessions, is_waiting, SavedNotifications, WaitingNotifications};
 use super::session_host::codex_host;
@@ -60,16 +62,29 @@ fn scan(
     let mut cache = SESSION_CACHE.lock().unwrap_or_else(PoisonError::into_inner);
     let mut sessions = Vec::new();
 
-    let codex_index = read_tail(&home_dir.join(".codex").join("session_index.jsonl"));
+    let codex_home = home_dir.join(".codex");
+    let codex_index = read_tail(&codex_home.join("session_index.jsonl"));
+    let threads = codex_threads::recent_threads(&codex_home, now - window_ms).unwrap_or_default();
+    let desktop = claude_desktop::sessions(home_dir, now - window_ms);
     let mut live_claude = registry;
     let mut live_workbuddy = None;
     let mut workbuddy_running = None;
-    for (provider, path, modified) in recent_session_files(home_dir, now, window_ms) {
+    for (provider, path, modified) in recent_session_files(home_dir, now, window_ms, &threads) {
         if let Some((mut summary, state)) =
             cache.summary(provider, &path, modified, codex_index.as_deref())
         {
+            match provider {
+                "codex" => {
+                    let thread = threads.iter().find(|thread| thread.id == summary.session_id);
+                    merge_thread(&mut summary, thread);
+                }
+                "claudeCode" => {
+                    let session = desktop.get(&summary.session_id);
+                    claude_desktop::merge(&mut summary, session);
+                }
+                _ => {}
+            }
             let asked_user = is_waiting(waiting, &summary.session_id, summary.updated_at);
-            let mid_turn = matches!(state, TurnState::Working | TurnState::AwaitingUser);
             summary.closed = has_ended(app_dir, &summary.session_id).unwrap_or_else(|| match summary.provider {
                 "claudeCode" => left_registry(&home_dir.join(".claude"), &summary, now, &mut live_claude),
                 workbuddy::PROVIDER => {
@@ -78,23 +93,27 @@ fn scan(
                 }
                 _ => false,
             });
-            let ended = mid_turn && summary.closed;
-            summary.compacting = compacting.contains_key(&summary.session_id) && !ended;
-            summary.phase = if ended {
-                "completed"
-            } else if summary.compacting {
-                "running"
-            } else if state == TurnState::Working && asked_user {
-                "waiting"
-            } else {
-                session_phase(
-                    state,
-                    now - summary.updated_at,
-                    AGENT_RUNNING_STALE_AFTER_MS,
-                )
-            };
+            settle(&mut summary, state, asked_user, compacting, now);
             sessions.push(summary);
         }
+    }
+    for thread in &threads {
+        if sessions.iter().any(|session| session.session_id == thread.id) {
+            continue;
+        }
+        let (mut summary, state) = codex_threads::sqlite_only_summary(&codex_home, thread);
+        let (title, title_source) = pick_title(
+            None,
+            codex_index.as_deref().and_then(|index| codex_thread_name(index, &thread.id)).or_else(|| thread.name.clone()),
+            thread.first_prompt.clone(),
+            thread.cwd.as_deref().and_then(folder_title),
+        );
+        summary.title = title;
+        summary.title_source = title_source;
+        summary.closed = has_ended(app_dir, &summary.session_id).unwrap_or(false);
+        let asked_user = is_waiting(waiting, &summary.session_id, summary.updated_at);
+        settle(&mut summary, state, asked_user, compacting, now);
+        sessions.push(summary);
     }
     cache.forget_missing(home_dir, &sessions);
     let roots = ScanRoots { home_dir, local_app_dir: app_dir };
@@ -104,6 +123,45 @@ fn scan(
     sessions.sort_by_key(|session| (!is_active(session.phase), -session.updated_at));
     sessions.truncate(MAX_SESSIONS);
     sessions
+}
+
+fn settle(
+    summary: &mut AgentSessionSummary,
+    state: TurnState,
+    asked_user: bool,
+    compacting: &HashMap<String, i64>,
+    now: i64,
+) {
+    let ended = matches!(state, TurnState::Working | TurnState::AwaitingUser) && summary.closed;
+    summary.compacting = compacting.contains_key(&summary.session_id) && !ended;
+    summary.phase = if ended {
+        "completed"
+    } else if summary.compacting {
+        "running"
+    } else if state == TurnState::Working && asked_user {
+        "waiting"
+    } else {
+        session_phase(state, now - summary.updated_at, AGENT_RUNNING_STALE_AFTER_MS)
+    };
+}
+
+fn merge_thread(summary: &mut AgentSessionSummary, thread: Option<&Thread>) {
+    let Some(thread) = thread else {
+        return;
+    };
+    let named = matches!(summary.title_source, Some(TITLE_FROM_RENAME | TITLE_FROM_AGENT));
+    if !named {
+        if let Some(name) = thread.name.clone() {
+            summary.title = Some(name);
+            summary.title_source = Some(TITLE_FROM_AGENT);
+        }
+    }
+    summary.cwd = summary.cwd.take().or_else(|| thread.cwd.clone());
+    summary.model = summary.model.take().or_else(|| thread.model.clone());
+    summary.effort = summary.effort.take().or_else(|| thread.effort.clone());
+    if summary.host.is_none() {
+        summary.host = thread.originator.as_deref().map(codex_host);
+    }
 }
 
 fn has_ended(app_dir: Option<&Path>, session_id: &str) -> Option<bool> {
@@ -130,9 +188,13 @@ fn left_registry(
 
 type SessionFile = (&'static str, PathBuf, i64);
 
-fn recent_session_files(home_dir: &Path, now: i64, window_ms: i64) -> Vec<SessionFile> {
+fn recent_session_files(home_dir: &Path, now: i64, window_ms: i64, threads: &[Thread]) -> Vec<SessionFile> {
     let mut files = Vec::new();
+    let mut seen = HashSet::new();
     let mut push_recent = |provider: &'static str, path: PathBuf| {
+        if !seen.insert(path.clone()) {
+            return;
+        }
         let modified = fs::metadata(&path)
             .ok()
             .filter(|metadata| metadata.is_file())
@@ -160,6 +222,10 @@ fn recent_session_files(home_dir: &Path, now: i64, window_ms: i64) -> Vec<Sessio
                 push_recent(workbuddy::PROVIDER, path);
             }
         }
+    }
+
+    for path in threads.iter().filter_map(|thread| thread.rollout.clone()) {
+        push_recent("codex", path);
     }
 
     let mut days = Vec::new();
