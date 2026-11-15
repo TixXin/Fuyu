@@ -134,7 +134,7 @@ Windows 的测法：同上面 Windows 的构建和身份；`Process.Start` 拉�
 | 提出 | 事项 | 影响 |
 |---|---|---|
 | 2026-11-14 | Mac 上现在用什么签名身份 | 决定什么时候能测公证。第 0 阶段没测 |
-| 2026-11-15 | Windows 上宿主多约 64 MB，超过 40 MB 的验收线（macOS 是 25 MB）：先查原因、看打成单个文件或调 V8 参数能不能降，还是放宽 Windows 的验收线 | 第 1 阶段能不能算过。详见 [v3-kernel-measurements.md](../../investigations/v3-kernel-measurements.md)「Windows」 |
+| 2026-11-15 | Windows 上宿主的私有内存多约 64 MB，超过 40 MB 的验收线（macOS 是 25 MB）。查清了：约 32 MB 是 libuv 线程池 4 个线程的栈，只提交、没用到；按任务管理器显示的私有工作集算，宿主是 23.6 MB。要定的是：Windows 的验收改用私有工作集（基线按同样口径重量），还是 Rust 拉起宿主时把 `UV_THREADPOOL_SIZE` 设成 1 或 2（约 39 / 47 MB，插件的异步文件操作并发变少），或者两样都做 | 第 1 阶段在 Windows 上能不能算过。详见 [v3-kernel-measurements.md](../../investigations/v3-kernel-measurements.md)「宿主为什么是 64 MB」 |
 
 方案里留到实现时再定的细则（审核的快速通过规则、冷静期天数、手动安装默认开关、基座的名字和许可证）不在这里重复，到对应的阶段再提出来。
 
