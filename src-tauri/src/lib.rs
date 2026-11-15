@@ -1,7 +1,6 @@
 mod agent_approval;
 mod agent_status;
 mod calendar;
-#[cfg_attr(not(windows), path = "cc_connect/unsupported.rs")]
 mod cc_connect;
 mod claude_usage;
 mod clipboard_history;

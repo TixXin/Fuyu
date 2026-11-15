@@ -12,10 +12,24 @@ export type CcConnectChat = { key: string; platform: string; userName: string | 
 
 export type CcConnectProject = { name: string; agent: string | null; chats: CcConnectChat[] };
 
-export const CC_CONNECT_SETUP_AGENTS = ["claudecode", "codex"] as const;
+export const CC_CONNECT_SETUP_AGENTS = ["claudecode", "codex", "copilot", "opencode", "qoder", "kimi", "antigravity"] as const;
 export type CcConnectSetupAgent = (typeof CC_CONNECT_SETUP_AGENTS)[number];
 
-export const CC_CONNECT_AGENT_LABELS: Record<string, string> = { claudecode: "Claude Code", codex: "Codex" };
+export const CC_CONNECT_AGENT_LABELS: Record<string, string> = {
+  claudecode: "Claude Code",
+  codex: "Codex",
+  copilot: "GitHub Copilot CLI",
+  opencode: "opencode",
+  qoder: "Qoder CLI",
+  kimi: "Kimi Code",
+  antigravity: "Antigravity",
+};
+
+export type CcConnectFoundAgent = { agent: CcConnectSetupAgent; label: string; path: string };
+
+export type CcConnectRemoteInstall = { exe: string; installed: boolean; version: string | null };
+
+export type CcConnectRemoteNewProject = Omit<CcConnectNewProject, "platform"> & { platform: Exclude<CcConnectSetupPlatform, "feishu"> };
 
 export type CcConnectRemoteStatus = {
   exe: string | null;
@@ -96,6 +110,22 @@ export function getCcConnectFeishuSetup() {
 
 export function cancelCcConnectFeishuSetup() {
   return invoke<void>("cancel_cc_connect_feishu_setup");
+}
+
+export function detectCcConnectAgents(host: string | null) {
+  return invoke<CcConnectFoundAgent[]>("detect_cc_connect_agents", { host });
+}
+
+export function installCcConnectRemote(host: string, path: string) {
+  return invoke<CcConnectRemoteInstall>("install_cc_connect_remote", { host, path: path.trim() || null });
+}
+
+export function addCcConnectRemoteProject(host: string, project: CcConnectRemoteNewProject) {
+  return invoke<void>("add_cc_connect_remote_project", { host, ...project });
+}
+
+export function restartCcConnectRemote(host: string, path: string) {
+  return invoke<void>("restart_cc_connect_remote", { host, path: path.trim() || null });
 }
 
 export function freeProjectName(taken: string[], base = "phone") {

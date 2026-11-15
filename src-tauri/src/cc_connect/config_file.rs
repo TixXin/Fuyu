@@ -1,13 +1,14 @@
+use super::agents;
 use crate::user_error::UserError;
+use std::collections::BTreeMap;
+#[cfg(any(windows, test))]
 use std::{
-    collections::BTreeMap,
     fs,
     path::{Path, PathBuf},
 };
 
 pub(super) const FILE_NAME: &str = "config.toml";
 pub(super) const PLATFORMS: [&str; 3] = ["telegram", "discord", "feishu"];
-const AGENTS: [(&str, &str); 2] = [("claudecode", "default"), ("codex", "suggest")];
 
 pub(super) struct NewProject<'a> {
     pub(super) name: &'a str,
@@ -19,6 +20,7 @@ pub(super) struct NewProject<'a> {
     pub(super) proxy: Option<&'a str>,
 }
 
+#[cfg(any(windows, test))]
 pub(super) fn config_path(data_dir: &Path) -> PathBuf {
     data_dir.join(FILE_NAME)
 }
@@ -27,18 +29,27 @@ fn id_like(value: &str) -> bool {
     (1..=64).contains(&value.len()) && value.bytes().all(|byte| byte.is_ascii_alphanumeric() || byte == b'_' || byte == b'-')
 }
 
+#[cfg(any(windows, test))]
 pub(super) fn check(project: &NewProject, taken: &[String]) -> Result<(), UserError> {
+    let dir = Path::new(project.work_dir);
+    if !dir.is_absolute() || !dir.is_dir() {
+        return Err(work_dir_missing(project.work_dir));
+    }
+    check_fields(project, taken)
+}
+
+pub(super) fn work_dir_missing(work_dir: &str) -> UserError {
+    UserError::new("ccConnect.workDir", format!("The work folder does not exist: {work_dir}")).arg("path", work_dir)
+}
+
+pub(super) fn check_fields(project: &NewProject, taken: &[String]) -> Result<(), UserError> {
     if !id_like(project.name) {
         return Err(UserError::new("ccConnect.projectName", "A project name takes letters, digits, - and _, up to 64 characters."));
     }
     if taken.iter().any(|name| name == project.name) {
         return Err(UserError::new("ccConnect.projectTaken", format!("cc-connect already has a project called {}; pick another name.", project.name)).arg("name", project.name));
     }
-    let dir = Path::new(project.work_dir);
-    if !dir.is_absolute() || !dir.is_dir() {
-        return Err(UserError::new("ccConnect.workDir", format!("The work folder does not exist: {}", project.work_dir)).arg("path", project.work_dir));
-    }
-    if !AGENTS.iter().any(|(agent, _)| *agent == project.agent) {
+    if agents::find(project.agent).is_none() {
         return Err(UserError::new("ccConnect.agent", format!("Unsupported agent: {}", project.agent)).arg("agent", project.agent));
     }
     if !PLATFORMS.contains(&project.platform) {
@@ -76,14 +87,13 @@ pub(super) fn toml_string(value: &str) -> String {
 }
 
 pub(super) fn project_block(project: &NewProject, today: &str) -> String {
-    let mode = AGENTS.iter().find(|(agent, _)| *agent == project.agent).map_or("default", |(_, mode)| mode);
+    let mode = agents::find(project.agent).and_then(|agent| agent.mode).map(|mode| format!("mode = {}\n", toml_string(mode))).unwrap_or_default();
     let mut block = format!(
         "\n# Added by Fuyu on {today}.\n[[projects]]\nname = {}\n\n[projects.agent]\ntype = {}\n\n\
-         [projects.agent.options]\nwork_dir = {}\nmode = {}\n\n[[projects.platforms]]\ntype = {}\n\n[projects.platforms.options]\n",
+         [projects.agent.options]\nwork_dir = {}\n{mode}\n[[projects.platforms]]\ntype = {}\n\n[projects.platforms.options]\n",
         toml_string(project.name),
         toml_string(project.agent),
         toml_string(project.work_dir),
-        toml_string(mode),
         toml_string(project.platform),
     );
     if project.platform != "feishu" {
@@ -143,6 +153,7 @@ pub(super) fn project_agents(text: &str) -> BTreeMap<String, String> {
     agents
 }
 
+#[cfg(any(windows, test))]
 pub(super) fn add_project(path: &Path, project: &NewProject, today: &str, stamp: &str) -> Result<Option<String>, UserError> {
     let original = match fs::read_to_string(path) {
         Ok(text) => Some(text),
@@ -167,6 +178,7 @@ pub(super) fn add_project(path: &Path, project: &NewProject, today: &str, stamp:
     Ok(original)
 }
 
+#[cfg(any(windows, test))]
 pub(super) fn restore(path: &Path, original: Option<&str>) -> Result<(), UserError> {
     match original {
         Some(text) => write(path, text),
@@ -174,6 +186,7 @@ pub(super) fn restore(path: &Path, original: Option<&str>) -> Result<(), UserErr
     }
 }
 
+#[cfg(any(windows, test))]
 fn write(path: &Path, text: &str) -> Result<(), UserError> {
     let temp = path.with_file_name(format!("{FILE_NAME}.focusd.tmp"));
     fs::write(&temp, text).map_err(|error| UserError::new("file.write", format!("Could not write {}.", temp.display())).arg("path", temp.display().to_string()).detail(error))?;
@@ -182,7 +195,7 @@ fn write(path: &Path, text: &str) -> Result<(), UserError> {
 
 #[cfg(test)]
 mod tests {
-    use super::{add_project, check, project_agents, project_block, project_names, restore, toml_string, NewProject};
+    use super::{add_project, check, check_fields, project_agents, project_block, project_names, restore, toml_string, NewProject};
     use std::fs;
 
     fn telegram<'a>(name: &'a str, work_dir: &'a str, allow_from: &'a str) -> NewProject<'a> {
@@ -211,6 +224,9 @@ mod tests {
         assert!(check(&feishu, &[]).is_ok());
         assert!(check(&NewProject { agent: "codex", ..telegram("phone", home, "1") }, &[]).is_ok());
         assert_eq!(check(&NewProject { agent: "gemini", ..telegram("phone", home, "1") }, &[]).unwrap_err().code(), "ccConnect.agent");
+        assert!(check(&NewProject { agent: "qoder", ..telegram("phone", home, "1") }, &[]).is_ok());
+        assert!(check_fields(&telegram("phone", "/not/here/at/all", "1"), &[]).is_ok());
+        assert_eq!(check(&telegram("phone", "/not/here/at/all", "1"), &[]).unwrap_err().code(), "ccConnect.workDir");
     }
 
     #[test]
@@ -225,6 +241,8 @@ mod tests {
         assert!(project_block(&feishu, "2026-11-09").ends_with("[projects.platforms.options]\n"));
         let codex = project_block(&NewProject { agent: "codex", ..telegram("phone", r"C:\work", "123") }, "2026-11-09");
         assert!(codex.contains("[projects.agent]\ntype = \"codex\"") && codex.contains("mode = \"suggest\""));
+        let kimi = project_block(&NewProject { agent: "kimi", ..telegram("phone", "/w", "123") }, "2026-11-15");
+        assert!(kimi.contains("work_dir = \"/w\"\n\n[[projects.platforms]]") && !kimi.contains("mode ="));
     }
 
     #[test]

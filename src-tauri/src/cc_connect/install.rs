@@ -1,14 +1,18 @@
 use crate::user_error::UserError;
+use std::time::Duration;
+#[cfg(any(windows, test))]
 use std::{
     fs::{self, File},
     io::{self, Cursor, Read},
-    path::{Path, PathBuf},
-    time::Duration,
+    path::Path,
 };
+#[cfg(windows)]
+use std::path::PathBuf;
 
 use serde::Deserialize;
 use sha2::{Digest, Sha256};
 
+#[cfg(windows)]
 use super::locate::{EXE_NAME, FOLDER};
 use crate::system::updater::reqwest_proxy;
 
@@ -16,12 +20,13 @@ const LATEST: &str = "https://api.github.com/repos/chenhg5/cc-connect/releases/l
 const DOWNLOADS: &str = "https://github.com/chenhg5/cc-connect/releases/download/";
 const MAX_TEXT: u64 = 1 << 20;
 const MAX_ZIP: u64 = 100 << 20;
+#[cfg(any(windows, test))]
 const MAX_EXE: u64 = 300 << 20;
 const TIMEOUT: Duration = Duration::from_secs(600);
 
 #[derive(Deserialize)]
-struct Release {
-    tag_name: String,
+pub(super) struct Release {
+    pub(super) tag_name: String,
     assets: Vec<Asset>,
 }
 
@@ -31,20 +36,23 @@ struct Asset {
     browser_download_url: String,
 }
 
-pub(super) async fn install(app_dir: PathBuf) -> Result<PathBuf, UserError> {
-    let client = client()?;
+pub(super) struct Package {
+    pub(super) sha256: String,
+    pub(super) bytes: Vec<u8>,
+}
+
+pub(super) async fn latest(client: &reqwest::Client) -> Result<Release, UserError> {
     let release: Release =
-        serde_json::from_slice(&get(&client, LATEST, MAX_TEXT).await?).map_err(|error| UserError::new("net.unreadable", "Could not read GitHub's answer.").arg("service", "GitHub").detail(error))?;
+        serde_json::from_slice(&get(client, LATEST, MAX_TEXT).await?).map_err(|error| UserError::new("net.unreadable", "Could not read GitHub's answer.").arg("service", "GitHub").detail(error))?;
     let tag = release.tag_name.as_str();
     if tag.is_empty() || !tag.bytes().all(|byte| byte.is_ascii_alphanumeric() || b".-_".contains(&byte)) {
         return Err(UserError::new("ccConnect.tag", format!("cc-connect's version tag is not valid: {tag}")).arg("tag", tag));
     }
-    let dir = app_dir.join(FOLDER).join(tag);
-    let exe = dir.join(EXE_NAME);
-    if exe.is_file() {
-        return Ok(exe);
-    }
-    let zip_name = asset_name(tag, std::env::consts::ARCH)?;
+    Ok(release)
+}
+
+pub(super) async fn download(client: &reqwest::Client, release: &Release, name: &str) -> Result<Package, UserError> {
+    let tag = release.tag_name.as_str();
     let url_of = |name: &str| {
         release
             .assets
@@ -53,19 +61,33 @@ pub(super) async fn install(app_dir: PathBuf) -> Result<PathBuf, UserError> {
             .map(|asset| asset.browser_download_url.as_str())
             .ok_or_else(|| UserError::new("ccConnect.asset", format!("cc-connect {tag} has no {name}.")).arg("tag", tag).arg("name", name))
     };
-    let sums = get(&client, url_of("checksums.txt")?, MAX_TEXT).await?;
-    let expected = checksum_for(&String::from_utf8_lossy(&sums), &zip_name).ok_or_else(|| UserError::new("ccConnect.checksumMissing", format!("checksums.txt does not list {zip_name}.")).arg("name", zip_name.as_str()))?;
-    let zip = get(&client, url_of(&zip_name)?, MAX_ZIP).await?;
-    let actual: String = Sha256::digest(&zip).iter().map(|byte| format!("{byte:02x}")).collect();
+    let sums = get(client, url_of("checksums.txt")?, MAX_TEXT).await?;
+    let expected = checksum_for(&String::from_utf8_lossy(&sums), name).ok_or_else(|| UserError::new("ccConnect.checksumMissing", format!("checksums.txt does not list {name}.")).arg("name", name))?;
+    let bytes = get(client, url_of(name)?, MAX_ZIP).await?;
+    let actual: String = Sha256::digest(&bytes).iter().map(|byte| format!("{byte:02x}")).collect();
     if actual != expected {
         return Err(UserError::new("ccConnect.checksum", "The downloaded cc-connect does not match the release's checksum; it was thrown away."));
     }
-    tauri::async_runtime::spawn_blocking(move || unpack(&zip, &dir, &exe).map(|()| exe))
+    Ok(Package { sha256: actual, bytes })
+}
+
+#[cfg(windows)]
+pub(super) async fn install(app_dir: PathBuf) -> Result<PathBuf, UserError> {
+    let client = client()?;
+    let release = latest(&client).await?;
+    let dir = app_dir.join(FOLDER).join(&release.tag_name);
+    let exe = dir.join(EXE_NAME);
+    if exe.is_file() {
+        return Ok(exe);
+    }
+    let zip_name = asset_name(&release.tag_name, std::env::consts::ARCH)?;
+    let package = download(&client, &release, &zip_name).await?;
+    tauri::async_runtime::spawn_blocking(move || unpack(&package.bytes, &dir, &exe).map(|()| exe))
         .await
         .map_err(|error| UserError::new("internal", "Something went wrong inside the island.").detail(error))?
 }
 
-fn client() -> Result<reqwest::Client, UserError> {
+pub(super) fn client() -> Result<reqwest::Client, UserError> {
     let mut builder = reqwest::Client::builder()
         .timeout(TIMEOUT)
         .user_agent(concat!("Fuyu/", env!("CARGO_PKG_VERSION")));
@@ -90,6 +112,7 @@ async fn get(client: &reqwest::Client, url: &str, limit: u64) -> Result<Vec<u8>,
     Ok(bytes.to_vec())
 }
 
+#[cfg(any(windows, test))]
 fn asset_name(tag: &str, arch: &str) -> Result<String, UserError> {
     let arch = match arch {
         "x86_64" => "amd64",
@@ -107,6 +130,7 @@ fn checksum_for(sums: &str, name: &str) -> Option<String> {
     })
 }
 
+#[cfg(any(windows, test))]
 fn unpack(zip: &[u8], dir: &Path, exe: &Path) -> Result<(), UserError> {
     let mut archive = zip::ZipArchive::new(Cursor::new(zip)).map_err(|error| UserError::new("ccConnect.zip", "Could not read the cc-connect zip.").detail(error))?;
     let index = (0..archive.len())
@@ -121,7 +145,7 @@ fn unpack(zip: &[u8], dir: &Path, exe: &Path) -> Result<(), UserError> {
         return Err(UserError::new("ccConnect.zipLarge", "The cc-connect program is unusually large; gave up."));
     }
     fs::create_dir_all(dir).map_err(|error| UserError::new("file.create", format!("Could not create {}.", dir.display())).arg("path", dir.display().to_string()).detail(error))?;
-    let part = dir.join(format!("{EXE_NAME}.part"));
+    let part = exe.with_file_name(format!("{}.part", exe.file_name().map(|name| name.to_string_lossy()).unwrap_or_default()));
     let mut out = File::create(&part).map_err(|error| UserError::new("file.write", format!("Could not write {}.", part.display())).arg("path", part.display().to_string()).detail(error))?;
     io::copy(&mut file.take(MAX_EXE), &mut out).map_err(|error| UserError::new("ccConnect.unpack", "Could not unpack cc-connect.").detail(error))?;
     drop(out);
@@ -130,12 +154,14 @@ fn unpack(zip: &[u8], dir: &Path, exe: &Path) -> Result<(), UserError> {
 
 #[cfg(test)]
 mod tests {
-    use super::{asset_name, checksum_for, install, unpack};
+    use super::{asset_name, checksum_for, unpack};
     use std::{fs, io::Write};
 
     #[test]
+    #[cfg(windows)]
     #[ignore = "downloads cc-connect from GitHub"]
     fn downloads_the_latest_release_and_it_runs() {
+        use super::install;
         let dir = std::env::temp_dir().join(format!("focusd-cc-connect-install-{}", std::process::id()));
         let exe = tauri::async_runtime::block_on(install(dir.clone())).unwrap();
         let version = std::process::Command::new(&exe).arg("--version").output().unwrap();
