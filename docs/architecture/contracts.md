@@ -110,6 +110,7 @@
 | `voice-input-state`（语音输入，C80：`{ phase: "idle" }`、`{ phase: "recording", startedAtMs, limitSeconds }`、`{ phase: "transcribing" }`、`{ phase: "result", text }`（`text` 为空表示没听清）、`{ phase: "failed", error }`（`error` 是原生错误 `{ code, message, args?, detail? }`）） | `voice_input/session.rs` | 广播 |
 | `voice-input-shortcut-status`（载荷 `"invalid"` / `"taken"` / `null`：语音输入快捷键每次重新注册后的结果） | `voice_input/hotkey.rs`、`hotkey_macos.rs` | 广播 |
 | `voice-input-model-progress`（载荷 `{ stage: "download" \| "unpack" \| "done", downloaded, total, source }`：识别组件和模型下载的总进度，`source` 是正在用的下载源名，结束时发一次 `done`） | `voice_input/download.rs` | 广播 |
+| `wallpaper-changed`（无载荷：系统设置或显示器变了，桌面壁纸可能换了，前端用命令 `get_wallpapers` 重新读；命令返回 `{ fit: "fill" \| "fit" \| "stretch" \| "center" \| "tile" \| "span", color: "#rrggbb", monitors: [{ x, y, width, height, image }] }` 或 `null`，矩形是物理像素，`image` 是长边不超过 960 的 JPEG data URL，纯色背景时是 `null`；第一次调用命令后才开始发；Mac 上命令总是 `null`；C97，2026-11-15） | `wallpaper/mod.rs` | 广播 |
 
 ## 其他
 

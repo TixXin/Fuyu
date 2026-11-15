@@ -38,6 +38,7 @@ pub(crate) mod shell_hook;
 pub(crate) mod sibling_island;
 pub(crate) mod taskbar;
 pub(crate) mod uia_list;
+pub(crate) mod wallpaper;
 pub(crate) mod uia_tabs;
 pub(crate) mod video_writer;
 pub(crate) mod url_protocol;
