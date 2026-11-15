@@ -1,0 +1,451 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>液态玻璃预览（C87）</title>
+<!--
+  Standalone preview for C87 / issue #286, no build step. Open in Edge or Chrome (the island's WebView2 engine):
+  the edge refraction (2B / 2C) uses an SVG filter inside backdrop-filter, which only Chromium supports.
+  Sizes follow the app defaults: collapsed 340 x 38 (bottom radius 22), expanded 560 x 306 (bottom radius 30),
+  accent #74d6ff dark / #0a7fd1 light. Research: docs/research/liquid-glass.md.
+-->
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 24px 32px 56px; background: #111214; color: #e8e8ea; font: 14px/1.6 "Segoe UI", "PingFang SC", "Microsoft YaHei UI", sans-serif; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  h2 { font-size: 16px; margin: 28px 0 6px; }
+  p.note { color: #9a9aa0; margin: 0 0 12px; max-width: 1040px; }
+  ul.points { color: #c8c8cc; max-width: 1040px; padding-left: 20px; }
+  ul.points li { margin: 4px 0; }
+  code { background: #232428; padding: 1px 6px; border-radius: 4px; }
+  .controls { display: flex; flex-wrap: wrap; gap: 10px 26px; align-items: center; background: #1b1c1f; padding: 12px 16px; border-radius: 10px; margin: 12px 0 0; max-width: 1060px; }
+  .group { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .group > span { color: #9a9aa0; margin-right: 2px; }
+  button.seg { background: #2a2b30; color: #ddd; border: 1px solid #3a3b40; border-radius: 6px; padding: 2px 10px; font: inherit; cursor: pointer; }
+  button.seg.on { background: #3b4d74; border-color: #5a7ab8; color: #fff; }
+  button.swatch { width: 22px; height: 22px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; padding: 0; }
+  button.swatch.on { border-color: #fff; }
+  button.cover { width: 30px; height: 30px; border-radius: 6px; border: 2px solid transparent; cursor: pointer; padding: 0; }
+  button.cover.on { border-color: #fff; }
+  input[type=range] { width: 120px; }
+
+  .cost { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; background: #17181b; border: 1px solid #2a2b30; padding: 10px 16px; border-radius: 10px; margin: 10px 0; max-width: 1060px; font-size: 13px; }
+  .cost b { color: #fff; }
+  .cost .k { color: #9a9aa0; }
+  .lvl { display: inline-block; padding: 0 8px; border-radius: 10px; font-size: 12px; margin-right: 6px; }
+  .lvl0 { background: #1f3b2b; color: #8ee6b0; } .lvl1 { background: #24402e; color: #a8eec0; }
+  .lvl2 { background: #3a3a1e; color: #eee08e; } .lvl3 { background: #47301e; color: #f2b98a; } .lvl4 { background: #4a1f22; color: #f29a9a; }
+
+  .stage { position: relative; width: 1060px; max-width: 100%; height: 400px; border-radius: 12px; overflow: hidden; user-select: none; }
+  .wall { position: absolute; inset: 0; transition: background .3s; }
+  .wall.dark { background:
+      radial-gradient(40% 60% at 18% 30%, #7a3cff 0%, transparent 70%),
+      radial-gradient(35% 55% at 62% 18%, #ff7a3c 0%, transparent 70%),
+      radial-gradient(45% 70% at 88% 70%, #1fb6a6 0%, transparent 70%),
+      linear-gradient(160deg, #141626, #0b0c12); }
+  .wall.light { background:
+      radial-gradient(40% 60% at 18% 30%, #c9b6ff 0%, transparent 70%),
+      radial-gradient(35% 55% at 62% 18%, #ffd2b0 0%, transparent 70%),
+      radial-gradient(45% 70% at 88% 70%, #a9eee4 0%, transparent 70%),
+      linear-gradient(160deg, #eef0f6, #dfe4ee); }
+  .win { position: absolute; border-radius: 10px; overflow: hidden; box-shadow: 0 10px 40px #0008; }
+  .wall.light .win { box-shadow: 0 10px 40px #0002; }
+  .win.code { left: 40px; top: 0; width: 470px; height: 260px; background: #1e1f24; }
+  .wall.light .win.code { background: #fbfbfd; }
+  .win.code .bar { height: 26px; background: #2a2b31; }
+  .wall.light .win.code .bar { background: #eceef2; }
+  .win.code .ln { height: 7px; margin: 9px 14px; border-radius: 4px; }
+  .win.pics { left: 580px; top: 0; width: 420px; height: 230px; background: #24252b; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 34px 12px 12px; }
+  .wall.light .win.pics { background: #ffffff; }
+  .win.pics i { border-radius: 6px; }
+  .moving .win.code { animation: drift 9s ease-in-out infinite alternate; }
+  @keyframes drift { to { transform: translateX(80px); } }
+
+  .island { position: absolute; top: 0; color: var(--ink); --ink: #f2f2f5; --ink2: rgba(242,242,245,.66);
+    border-radius: 0 0 var(--r) var(--r); corner-shape: squircle; overflow: hidden; isolation: isolate;
+    width: var(--w); height: var(--h); transition: width var(--dur) var(--ease), height var(--dur) var(--ease), border-radius var(--dur) var(--ease), left var(--dur) var(--ease);
+    --dur: 440ms; --ease: cubic-bezier(0.16, 1, 0.3, 1); }
+  .island[data-mode=collapsed] { --w: 340px; --h: 38px; --r: 22px; }
+  .island[data-mode=expanded] { --w: 560px; --h: 306px; --r: 30px; }
+  .light-island .island { --ink: #1c1c1e; --ink2: rgba(28,28,30,.62); }
+  .layer { position: absolute; inset: 0; border-radius: inherit; corner-shape: squircle; pointer-events: none; }
+  .base { background: var(--base); }
+  .flow { overflow: hidden; opacity: var(--flow-op); }
+  .flow i { position: absolute; width: 90%; aspect-ratio: 1; border-radius: 50%; will-change: transform; }
+  .flow i:nth-child(1) { left: -25%; top: -60%; background: radial-gradient(closest-side, var(--c1), transparent); animation: b1 19s ease-in-out infinite alternate; }
+  .flow i:nth-child(2) { left: 35%; top: -40%; background: radial-gradient(closest-side, var(--c2), transparent); animation: b2 23s ease-in-out infinite alternate; }
+  .flow i:nth-child(3) { left: 5%; top: 10%; background: radial-gradient(closest-side, var(--c3), transparent); animation: b3 27s ease-in-out infinite alternate; }
+  .flow i:nth-child(4) { left: 55%; top: 20%; background: radial-gradient(closest-side, var(--c1), transparent); opacity: .7; animation: b4 31s ease-in-out infinite alternate; }
+  @keyframes b1 { to { transform: translate(40%, 30%) scale(1.25); } }
+  @keyframes b2 { to { transform: translate(-45%, 25%) scale(.85); } }
+  @keyframes b3 { to { transform: translate(35%, -30%) scale(1.15); } }
+  @keyframes b4 { to { transform: translate(-30%, -20%) scale(1.3); } }
+  .static .flow i { animation: none; }
+  @property --ang { syntax: "<angle>"; inherits: true; initial-value: 0deg; }
+  .rim { padding: 1.5px; background: conic-gradient(from var(--ang), var(--r1), var(--r2), #fff8, var(--r3), var(--r1));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude;
+    opacity: var(--rim-op); animation: spin 9s linear infinite; }
+  @keyframes spin { to { --ang: 360deg; } }
+  .sheen { background: linear-gradient(115deg, transparent 30%, var(--sheen) 45%, transparent 60%); background-size: 260% 100%; mix-blend-mode: overlay; animation: sheen 11s ease-in-out infinite alternate; }
+  @keyframes sheen { from { background-position: 100% 0; } to { background-position: 0 0; } }
+  canvas.gl { position: absolute; inset: 0; width: 100%; height: 100%; opacity: var(--flow-op); }
+  .edge { box-shadow: inset 0 1px 0 var(--edge-top), inset 0 -1px 0 var(--edge-bot), inset 1px 0 0 var(--edge-side), inset -1px 0 0 var(--edge-side); }
+  .spec { background: radial-gradient(42% 120% at var(--px, 50%) var(--py, 0%), var(--spec), transparent 70%); mix-blend-mode: screen; opacity: 0; transition: opacity .25s; }
+  .light-island .spec { mix-blend-mode: soft-light; }
+  .speclight .spec { opacity: 1; }
+  .speclight .rim2 { opacity: 1; }
+  .rim2 { padding: 1px; opacity: 0; background: conic-gradient(from calc(var(--la, 0deg) - 60deg), transparent, #fffc 60deg, transparent 120deg, transparent 180deg, #fff6 240deg, transparent 300deg);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; }
+  .light-island .rim2 { background: conic-gradient(from calc(var(--la, 0deg) - 60deg), transparent, #fff 60deg, transparent 120deg, transparent 180deg, #0003 240deg, transparent 300deg); }
+
+  .content { position: absolute; inset: 0; z-index: 5; }
+  .c-col { display: flex; align-items: center; gap: 10px; height: 38px; padding: 0 20px; font-size: 13px; transition: opacity 200ms; }
+  .c-col .t { font-weight: 600; font-variant-numeric: tabular-nums; }
+  .c-col .m { flex: 1; text-align: center; color: var(--ink2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .c-col .d { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+  .c-exp { position: absolute; inset: 0; padding: 18px 24px; transition: opacity 200ms; }
+  .island[data-mode=collapsed] .c-exp, .island[data-mode=expanded] .c-col { opacity: 0; pointer-events: none; }
+  .tabs { display: flex; gap: 16px; font-size: 13px; color: var(--ink2); margin-bottom: 14px; }
+  .tabs b { color: var(--ink); }
+  .song { display: flex; gap: 14px; align-items: center; margin-bottom: 14px; }
+  .song .art { width: 56px; height: 56px; border-radius: 10px; background: var(--art); flex: none; }
+  .song .n { font-size: 17px; font-weight: 600; }
+  .song .a { color: var(--ink2); font-size: 13px; }
+  .lyric { font-size: 15px; line-height: 1.9; }
+  .lyric .dim { color: var(--ink2); font-size: 13px; }
+  .bar { height: 3px; border-radius: 2px; background: color-mix(in srgb, var(--ink) 20%, transparent); margin-top: 14px; }
+  .bar i { display: block; width: 38%; height: 100%; border-radius: inherit; background: var(--ink); }
+  .stage-label { position: absolute; bottom: 10px; font-size: 12px; color: #fffb; background: #0008; padding: 2px 10px; border-radius: 8px; z-index: 9; }
+  .meter { position: absolute; right: 12px; bottom: 10px; font: 12px/1.4 Consolas, monospace; color: #fff; background: #000a; padding: 3px 10px; border-radius: 8px; z-index: 9; }
+  #islB { transition: opacity .25s, width var(--dur) var(--ease), height var(--dur) var(--ease); }
+  .morphing #islB { opacity: .12; }
+  .paused .flow i, .paused .rim, .paused .sheen, .paused .win.code { animation-play-state: paused; }
+  .contrast { margin-top: 6px; font-size: 13px; color: #c8c8cc; }
+  .contrast b.ok { color: #8ee6b0; } .contrast b.bad { color: #f29a9a; }
+  table.rec { border-collapse: collapse; margin: 8px 0; font-size: 13px; max-width: 1060px; }
+  table.rec td, table.rec th { border: 1px solid #2f3036; padding: 6px 10px; text-align: left; vertical-align: top; }
+  table.rec th { background: #1b1c1f; }
+</style>
+</head>
+<body>
+<h1>液态玻璃预览（C87 / #286）</h1>
+<p class="note">两个方向、每个几档，深浅两种岛，左边是折叠岛、右边是展开岛，点「播放展开收起」看左边那个岛的形变。方向 2 在一张假桌面上演示「透出 + 模糊 + 折射」——<b>这是拿得到桌面时（原生材质）的样子</b>；切到「拿不到桌面」才是应用里透明窗口实际会看到的样子。调研见 <code>docs/research/liquid-glass.md</code>。请用 Edge / Chrome 打开（2B、2C 的折射只有 Chromium 支持）。</p>
+
+<div class="controls">
+  <div class="group"><span>方向</span><button class="seg" data-dir="1">1 流动彩色</button><button class="seg" data-dir="2">2 iOS 式玻璃</button></div>
+  <div class="group" id="tiers"><span>档位</span></div>
+  <div class="group"><span>岛</span><button class="seg" data-isl="dark">深色岛</button><button class="seg" data-isl="light">浅色岛</button></div>
+  <div class="group"><span>桌面</span><button class="seg" data-wall="dark">深色壁纸</button><button class="seg" data-wall="light">浅色壁纸</button><button class="seg" id="moveBtn">后面的窗口在动</button></div>
+</div>
+<div class="controls">
+  <div class="group" id="colorGroup"><span>颜色</span></div>
+  <div class="group" id="coverGroup"><span>跟封面</span></div>
+  <div class="group" id="backdropGroup"><span>背后</span><button class="seg" data-bd="real">拿得到桌面（原生材质）</button><button class="seg" data-bd="none">拿不到桌面（应用里实际）</button></div>
+  <div class="group"><span>玻璃强度</span><input type="range" id="intensity" min="25" max="100" value="72" /><span id="intensityVal">72</span></div>
+</div>
+<div class="controls">
+  <div class="group"><button class="seg" id="morphBtn">播放展开收起</button></div>
+  <div class="group"><span>状态</span><button class="seg" data-st="run">正常</button><button class="seg" data-st="pause">贴边收起 / 游戏免打扰（暂停）</button><button class="seg" data-st="reduce">减少动态效果</button></div>
+</div>
+
+<div class="cost" id="cost"></div>
+
+<div class="stage" id="stage">
+  <div class="wall dark" id="wall">
+    <div class="win code"><div class="bar"></div><div id="lines"></div></div>
+    <div class="win pics" id="pics"></div>
+  </div>
+  <div class="island" id="islA" data-mode="collapsed" style="left: 40px"></div>
+  <div class="island" id="islB" data-mode="expanded" style="left: 460px"></div>
+  <span class="stage-label" style="left: 12px">左：折叠岛 340×38（可播放形变）　右：展开岛 560×306</span>
+  <span class="meter" id="meter">-- fps</span>
+</div>
+<div class="contrast" id="contrast"></div>
+
+<h2>每一档在应用里是什么</h2>
+<table class="rec">
+  <tr><th>档</th><th>做法</th><th>估计 GPU 开销（岛这么大）</th><th>应用里能做到吗</th></tr>
+  <tr><td>1A 静态</td><td>几层固定渐变 + 主题色光斑，和现在的思路一样，只是颜色更饱满</td><td><span class="lvl lvl0">无</span>只在展开收起时重绘</td><td>能，Win / Mac 一样</td></tr>
+  <tr><td>1B 慢流动</td><td>4 团径向渐变色块，只用 <code>transform</code> 慢慢漂（19–31 秒一个来回）</td><td><span class="lvl lvl1">很低</span>合成器移动图层，不重绘</td><td>能，推荐作默认</td></tr>
+  <tr><td>1C 极光 + 油膜边</td><td>1B + 沿边转动的虹彩细边（<code>@property</code> 角度 + <code>conic-gradient</code>）+ 一道缓慢扫过的光泽</td><td><span class="lvl lvl2">低</span>每帧重绘 1.5px 的边和光泽层</td><td>能</td></tr>
+  <tr><td>1D 着色器</td><td>WebGL 噪声流体（domain warp），限 30 fps</td><td><span class="lvl lvl3">中</span>每个岛一个 GPU 上下文，GPU 不再空闲</td><td>能，但不建议作默认；掉上下文时退回 1B</td></tr>
+  <tr><td>2A 磨砂透出</td><td>半透明底 + <code>backdrop-filter: blur saturate</code></td><td><span class="lvl lvl2">低</span>网页里是这一块的模糊；原生材质时由系统付</td><td><b>Windows 不能</b>（材质铺满整个舞台窗口，见调研 §2）；Mac 要自己加 effect view</td></tr>
+  <tr><td>2B + 边缘折射</td><td>2A + SVG <code>feDisplacementMap</code> 位移图（按岛的形状算）+ 红绿蓝三通道错开的色散</td><td><span class="lvl lvl3">中–高</span>背后一变或尺寸一变整块重算</td><td>不能：只能折射岛自己的内容；Mac 的 WKWebView 不支持</td></tr>
+  <tr><td>2C + 高光与液体形变</td><td>2B + 跟鼠标的镜面高光和边缘亮线 + 展开收起时弹簧回弹</td><td><span class="lvl lvl3">中–高</span>形变时每帧重算位移图</td><td>高光和形变<b>能</b>（不依赖背后）；透出和折射不能</td></tr>
+</table>
+
+<h2>推荐</h2>
+<ul class="points">
+  <li><b>做方向 1，默认 1B「慢流动」</b>，颜色跟主题色，可选跟封面；1C 作为更花的一档。1A 留给「减少动态效果」和游戏免打扰时的静止画面。</li>
+  <li>从方向 2 只拿<b>不依赖背后</b>的部分叠上去：跟鼠标的镜面高光、边缘亮线、展开收起的弹簧回弹（2C 里打开看）。</li>
+  <li>「真透出桌面」不在本任务做：Windows 原生材质铺满整个透明舞台，当初就是因此关掉的；Mac 可以单独开个实验任务试 NSVisualEffectView / macOS 26 的系统液态玻璃。</li>
+  <li>贴边收起、游戏免打扰、窗口隐藏、减少动态效果时一律暂停（停在当前帧，不跳），点上面的「状态」看效果。</li>
+</ul>
+
+<h2>要你定的</h2>
+<ul class="points">
+  <li>只做方向 1，还是把「高光 + 液体形变」也做成一个子风格？</li>
+  <li>默认 1B 还是 1C？</li>
+  <li>颜色默认跟主题色还是跟封面（只在放歌时生效）？</li>
+  <li>折叠岛一直流动，还是只在展开 / 放歌 / Agent 运行时流动？</li>
+  <li>浅色岛用「白底淡彩」（这页的样子）可以吗？</li>
+  <li>「真透出桌面」的 Windows / Mac 实验要不要建任务？</li>
+</ul>
+
+<svg width="0" height="0" style="position:absolute"><defs id="defs"></defs></svg>
+
+<script>
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const state = { dir: "1", tier: "1B", isl: "dark", wall: "dark", bd: "real", st: "run", color: "#74d6ff", cover: null, intensity: 72, moving: false };
+const TIERS = {
+  "1": [["1A", "1A 静态"], ["1B", "1B 慢流动"], ["1C", "1C 极光 + 油膜边"], ["1D", "1D 着色器"]],
+  "2": [["2A", "2A 磨砂透出"], ["2B", "2B + 边缘折射"], ["2C", "2C + 高光与液体形变"]],
+};
+const COST = {
+  "1A": [0, "无", "静态渐变，只在展开收起时重绘一次。"],
+  "1B": [1, "很低", "4 个色块只动 transform，合成器完成，不重绘；暂停后完全为 0。"],
+  "1C": [2, "低", "1B + 边框和光泽层每帧重绘（面积很小）。"],
+  "1D": [3, "中", "WebGL 着色器，30 fps，每个岛一个 GPU 上下文；GPU 一直有活，笔记本核显看得出。"],
+  "2A": [2, "低", "backdrop-filter 模糊。网页里能演示，是因为假桌面和岛在同一个网页里；应用里背后是别的窗口，要靠原生材质。"],
+  "2B": [3, "中–高", "位移图 + 三通道色散，背后的内容一变（打开「后面的窗口在动」）就整块重算。"],
+  "2C": [3, "中–高", "2B + 鼠标高光 + 弹簧形变；形变途中每帧重算。鼠标移到岛上看高光。"],
+};
+const ACCENTS = ["#74d6ff", "#a78bfa", "#f59e0b", "#34d399", "#f472b6"];
+const COVERS = [
+  { art: "linear-gradient(135deg,#ff6a3d,#ffb347 50%,#7b2ff7)", pal: ["#ff6a3d", "#ffb347", "#7b2ff7"] },
+  { art: "linear-gradient(135deg,#0f9b8e,#64e3c8 50%,#1d4ed8)", pal: ["#0f9b8e", "#64e3c8", "#1d4ed8"] },
+  { art: "linear-gradient(135deg,#e11d48,#fda4af 50%,#312e81)", pal: ["#e11d48", "#fda4af", "#4338ca"] },
+];
+
+function hexToRgb(h) { const n = parseInt(h.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; }
+function rgbToHex([r, g, b]) { return "#" + [r, g, b].map(v => Math.round(Math.max(0, Math.min(255, v))).toString(16).padStart(2, "0")).join(""); }
+function rgbToHsl([r, g, b]) { r /= 255; g /= 255; b /= 255; const mx = Math.max(r, g, b), mn = Math.min(r, g, b); let h = 0, s = 0; const l = (mx + mn) / 2;
+  if (mx !== mn) { const d = mx - mn; s = l > .5 ? d / (2 - mx - mn) : d / (mx + mn); h = mx === r ? (g - b) / d + (g < b ? 6 : 0) : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; h *= 60; } return [h, s, l]; }
+function hslToHex(h, s, l) { h = ((h % 360) + 360) % 360; const c = (1 - Math.abs(2 * l - 1)) * s, x = c * (1 - Math.abs((h / 60) % 2 - 1)), m = l - c / 2;
+  const [r, g, b] = h < 60 ? [c, x, 0] : h < 120 ? [x, c, 0] : h < 180 ? [0, c, x] : h < 240 ? [0, x, c] : h < 300 ? [x, 0, c] : [c, 0, x]; return rgbToHex([(r + m) * 255, (g + m) * 255, (b + m) * 255]); }
+function palette() {
+  if (state.cover !== null) return COVERS[state.cover].pal;
+  const [h, s, l] = rgbToHsl(hexToRgb(state.color));
+  return [state.color, hslToHex(h + 48, Math.min(1, s * 1.05), l), hslToHex(h - 62, s * .95, Math.min(.7, l))];
+}
+function flowPalette(pal, light) {
+  return pal.map(c => { const [h, s0, l0] = rgbToHsl(hexToRgb(c)); const s = Math.min(1, s0 * 1.1); let l = l0, out = hslToHex(h, s, l);
+    if (light) { while (lum(out) < .62 && l < .97) { l += .01; out = hslToHex(h, s, l); } }
+    else { while (lum(out) > .1 && l > .05) { l -= .01; out = hslToHex(h, s, l); } }
+    return out; });
+}
+function lum(hex) { return hexToRgb(hex).map(v => { v /= 255; return v <= .03928 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; }).reduce((a, v, i) => a + v * [.2126, .7152, .0722][i], 0); }
+function contrast(a, b) { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + .05) / (y + .05); }
+function mix(a, b, t) { const A = hexToRgb(a), B = hexToRgb(b); return rgbToHex(A.map((v, i) => v + (B[i] - v) * t)); }
+
+function islandHTML() {
+  return `<div class="layer base"></div><div class="layer flow"><i></i><i></i><i></i><i></i></div><canvas class="gl"></canvas>
+  <div class="layer sheen"></div><div class="layer rim"></div><div class="layer edge"></div><div class="layer spec"></div><div class="layer rim2"></div>
+  <div class="content"><div class="c-col"><span class="t">14:32</span><span class="m">晴天 · 周杰伦</span><span class="d"></span></div>
+  <div class="c-exp"><div class="tabs"><b>音乐</b><span>待办</span><span>日历</span><span>剪贴板</span></div>
+  <div class="song"><div class="art"></div><div><div class="n">晴天</div><div class="a">周杰伦 · 网易云音乐</div></div></div>
+  <div class="lyric"><div class="dim">故事的小黄花</div><div>从出生那年就飘着</div><div class="dim">童年的荡秋千</div></div>
+  <div class="bar"><i></i></div></div></div>`;
+}
+
+function buildStatics() {
+  const lines = $("#lines"); const cols = ["#7aa2f7", "#9ece6a", "#e0af68", "#bb9af7", "#7dcfff", "#f7768e"];
+  for (let i = 0; i < 18; i++) { const d = document.createElement("div"); d.className = "ln"; d.style.width = (30 + (i * 37) % 60) + "%"; d.style.marginLeft = (14 + (i % 4) * 18) + "px"; d.style.background = cols[i % cols.length]; d.style.opacity = .75; lines.appendChild(d); }
+  const pics = $("#pics"); const g = ["#f97316,#facc15", "#06b6d4,#3b82f6", "#a855f7,#ec4899", "#22c55e,#14b8a6", "#ef4444,#f59e0b", "#6366f1,#0ea5e9", "#84cc16,#10b981", "#f43f5e,#8b5cf6"];
+  g.forEach(c => { const i = document.createElement("i"); i.style.background = `linear-gradient(135deg,${c})`; pics.appendChild(i); });
+  ["islA", "islB"].forEach(id => { $("#" + id).innerHTML = islandHTML(); });
+  ACCENTS.forEach(c => { const b = document.createElement("button"); b.className = "swatch"; b.style.background = c; b.dataset.color = c; $("#colorGroup").appendChild(b); });
+  COVERS.forEach((c, i) => { const b = document.createElement("button"); b.className = "cover"; b.style.background = c.art; b.dataset.cover = i; $("#coverGroup").appendChild(b); });
+}
+
+function signedEdge(x, y, W, H, R) {
+  let best = { d: y, nx: 0, ny: -1 };
+  const cand = (d, nx, ny) => { if (d < best.d) best = { d, nx, ny }; };
+  if (y > H - R && (x < R || x > W - R)) {
+    const cx = x < R ? R : W - R, cy = H - R, vx = x - cx, vy = y - cy, len = Math.hypot(vx, vy) || 1;
+    cand(R - len, vx / len, vy / len);
+  } else { cand(x, -1, 0); cand(W - x, 1, 0); cand(H - y, 0, 1); }
+  return best;
+}
+const mapCache = new Map();
+function displacementMap(W, H, R) {
+  const key = `${W}x${H}x${R}`; if (mapCache.has(key)) return mapCache.get(key);
+  const c = document.createElement("canvas"); c.width = W; c.height = H; const ctx = c.getContext("2d"); const img = ctx.createImageData(W, H);
+  const bezel = Math.min(18, H * .45);
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const { d, nx, ny } = signedEdge(x + .5, y + .5, W, H, R); let dx = 0, dy = 0;
+    if (d < bezel && d > -1) { const t = 1 - Math.max(0, d) / bezel; const m = 1 - Math.sqrt(1 - t * t); dx = -nx * m; dy = -ny * m; }
+    const o = (y * W + x) * 4; img.data[o] = 128 + dx * 127; img.data[o + 1] = 128 + dy * 127; img.data[o + 2] = 128; img.data[o + 3] = 255;
+  }
+  ctx.putImageData(img, 0, 0); const url = c.toDataURL(); mapCache.set(key, url); return url;
+}
+function ensureFilter(id, W, H, R, scale) {
+  const fid = "lg-" + id; let f = document.getElementById(fid);
+  const href = displacementMap(W, H, R);
+  const chan = (n, s, m) => `<feDisplacementMap in="SourceGraphic" in2="map" scale="${s}" xChannelSelector="R" yChannelSelector="G" result="d${n}"/><feColorMatrix in="d${n}" type="matrix" values="${m}" result="c${n}"/>`;
+  const html = `<filter id="${fid}" x="0" y="0" width="${W}" height="${H}" filterUnits="userSpaceOnUse" primitiveUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+    <feImage href="${href}" x="0" y="0" width="${W}" height="${H}" preserveAspectRatio="none" result="map"/>
+    ${chan("r", scale, "1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0")}${chan("g", scale * .9, "0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 1 0")}${chan("b", scale * .8, "0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 1 0")}
+    <feBlend in="cr" in2="cg" mode="screen" result="rg"/><feBlend in="rg" in2="cb" mode="screen"/></filter>`;
+  if (!f) { $("#defs").insertAdjacentHTML("beforeend", html); } else { f.outerHTML = html; }
+  return fid;
+}
+
+const GL = new Map();
+const VS = "attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}";
+const FS = `precision mediump float;uniform vec2 res;uniform float t;uniform vec3 c1,c2,c3;uniform float op;
+float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+float n(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x),f.y);}
+float fbm(vec2 p){float v=0.,a=.5;for(int i=0;i<4;i++){v+=a*n(p);p*=2.;a*=.5;}return v;}
+void main(){vec2 uv=gl_FragCoord.xy/res.y*1.6;float s=t*.06;vec2 q=vec2(fbm(uv+s),fbm(uv+vec2(5.2,1.3)-s));vec2 r=vec2(fbm(uv+2.*q+vec2(1.7,9.2)+s*.7),fbm(uv+2.*q+vec2(8.3,2.8)-s*.5));
+float f=fbm(uv+2.*r);vec3 col=mix(c1,c2,clamp(f*1.6,0.,1.));col=mix(col,c3,clamp(length(q)*.8,0.,1.));float a=clamp(f*f*2.2+.15,0.,1.)*op;gl_FragColor=vec4(col*a,a);}`;
+function glFor(isl) {
+  if (GL.has(isl)) return GL.get(isl);
+  const cv = $("canvas.gl", isl); const gl = cv.getContext("webgl", { premultipliedAlpha: true, alpha: true }); if (!gl) return null;
+  const sh = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); return s; };
+  const pr = gl.createProgram(); gl.attachShader(pr, sh(gl.VERTEX_SHADER, VS)); gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, FS)); gl.linkProgram(pr); gl.useProgram(pr);
+  const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+  const loc = gl.getAttribLocation(pr, "p"); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+  const u = n => gl.getUniformLocation(pr, n); const o = { cv, gl, u: { res: u("res"), t: u("t"), c1: u("c1"), c2: u("c2"), c3: u("c3"), op: u("op") } }; GL.set(isl, o); return o;
+}
+let glT = 0, lastGl = 0, glDirty = true;
+function drawGL(now) {
+  if (state.tier !== "1D") return;
+  const running = state.st === "run";
+  if (!running && !glDirty) return; glDirty = false;
+  if (running && now - lastGl < 33) return; if (running) { glT += (now - lastGl) / 1000; } lastGl = now;
+  const pal = flowPalette(palette(), state.isl === "light").map(c => hexToRgb(c).map(v => v / 255)); const op = state.isl === "light" ? .8 : .9;
+  $$(".island").forEach(isl => { const g = glFor(isl); if (!g) return; const { cv, gl, u } = g; const w = isl.clientWidth, h = isl.clientHeight;
+    if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; } gl.viewport(0, 0, w, h);
+    gl.uniform2f(u.res, w, h); gl.uniform1f(u.t, glT); gl.uniform3fv(u.c1, pal[0]); gl.uniform3fv(u.c2, pal[1]); gl.uniform3fv(u.c3, pal[2]); gl.uniform1f(u.op, op);
+    gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT); gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4); });
+}
+
+function springEasing() {
+  const pts = []; const z = .52, w = 2 * Math.PI * 1.15;
+  for (let i = 0; i <= 40; i++) { const t = i / 40, wd = w * Math.sqrt(1 - z * z); const v = 1 - Math.exp(-z * w * t) * (Math.cos(wd * t) + (z * w / wd) * Math.sin(wd * t)); pts.push(v.toFixed(4)); }
+  return `linear(${pts.join(",")})`;
+}
+const SPRING = springEasing();
+
+function apply() {
+  const t = state.tier, dir = state.dir, light = state.isl === "light", k = state.intensity / 100, pal = palette();
+  $$("[data-dir]").forEach(b => b.classList.toggle("on", b.dataset.dir === dir));
+  $("#tiers").innerHTML = "<span>档位</span>" + TIERS[dir].map(([id, n]) => `<button class="seg${id === t ? " on" : ""}" data-tier="${id}">${n}</button>`).join("");
+  $$("[data-isl]").forEach(b => b.classList.toggle("on", b.dataset.isl === state.isl));
+  $$("[data-wall]").forEach(b => b.classList.toggle("on", b.dataset.wall === state.wall));
+  $$("[data-bd]").forEach(b => b.classList.toggle("on", b.dataset.bd === state.bd));
+  $$("[data-st]").forEach(b => b.classList.toggle("on", b.dataset.st === state.st));
+  $$(".swatch").forEach(b => b.classList.toggle("on", state.cover === null && b.dataset.color === state.color));
+  $$(".cover").forEach(b => b.classList.toggle("on", String(state.cover) === b.dataset.cover));
+  $("#moveBtn").classList.toggle("on", state.moving);
+  $("#colorGroup").style.display = $("#coverGroup").style.display = dir === "1" ? "" : "none";
+  $("#backdropGroup").style.display = dir === "2" ? "" : "none";
+  $("#intensityVal").textContent = state.intensity;
+  $("#wall").className = "wall " + state.wall;
+  const stage = $("#stage");
+  stage.classList.toggle("light-island", light); stage.classList.toggle("moving", state.moving);
+  stage.classList.toggle("paused", state.st !== "run");
+  stage.classList.toggle("static", t === "1A");
+  stage.classList.toggle("speclight", t === "2C" && state.st !== "reduce");
+  const [c] = COST[t]; const accent = state.cover !== null ? pal[0] : (light ? mix(state.color, "#0a3d62", .35) : state.color);
+  const s = stage.style;
+  const fp = flowPalette(pal, light);
+  s.setProperty("--c1", fp[0]); s.setProperty("--c2", fp[1]); s.setProperty("--c3", fp[2]); s.setProperty("--accent", accent);
+  s.setProperty("--r1", pal[0]); s.setProperty("--r2", pal[1]); s.setProperty("--r3", pal[2]);
+  s.setProperty("--art", state.cover !== null ? COVERS[state.cover].art : `linear-gradient(135deg, ${pal[0]}, ${pal[2]})`);
+  let base, flowOp = 0, rimOp = 0, sheen = "transparent";
+  if (dir === "1") {
+    base = light ? `rgba(248,248,251,${(.86 + k * .12).toFixed(2)})` : `rgba(12,12,16,${(.84 + k * .14).toFixed(2)})`;
+    flowOp = t === "1D" ? 1 : (light ? .45 + k * .35 : .35 + k * .35);
+    if (t === "1C") { rimOp = light ? .7 : .85; sheen = light ? "rgba(255,255,255,.55)" : "rgba(255,255,255,.18)"; }
+  } else {
+    const a = state.bd === "real" ? (light ? .28 + k * .3 : .2 + k * .35) : (light ? .45 + k * .35 : .45 + k * .4);
+    base = light ? `rgba(250,250,253,${a.toFixed(2)})` : `rgba(14,14,20,${a.toFixed(2)})`;
+  }
+  s.setProperty("--base", base); s.setProperty("--flow-op", flowOp); s.setProperty("--rim-op", rimOp); s.setProperty("--sheen", sheen);
+  s.setProperty("--edge-top", light ? "rgba(255,255,255,.9)" : `rgba(255,255,255,${(.12 + k * .2).toFixed(2)})`);
+  s.setProperty("--edge-bot", light ? "rgba(0,0,0,.08)" : "rgba(0,0,0,.25)");
+  s.setProperty("--edge-side", light ? "rgba(0,0,0,.06)" : `rgba(255,255,255,${(.05 + k * .08).toFixed(2)})`);
+  s.setProperty("--spec", light ? "rgba(255,255,255,.95)" : "rgba(255,255,255,.28)");
+  $$(".island").forEach(isl => {
+    $(".flow", isl).style.display = dir === "1" && t !== "1D" ? "" : "none";
+    $("canvas.gl", isl).style.display = t === "1D" ? "" : "none";
+    $(".rim", isl).style.display = t === "1C" ? "" : "none";
+    $(".sheen", isl).style.display = t === "1C" ? "" : "none";
+    isl.style.setProperty("--ease", t === "2C" && state.st !== "reduce" ? SPRING : "cubic-bezier(0.16, 1, 0.3, 1)");
+    isl.style.setProperty("--dur", state.st === "reduce" ? "0ms" : t === "2C" ? "620ms" : "440ms");
+    setBackdrop(isl);
+  });
+  const lvl = COST[t]; const real = dir === "2" ? (state.bd === "real" ? "　<b>现在看到的是原生材质能拿到时的样子</b>，应用里 Windows 做不到。" : "　现在看到的是应用里透明窗口实际的样子：背后的桌面清楚地透过一层着色，没有模糊、没有折射。") : "";
+  $("#cost").innerHTML = `<span class="k">估计 GPU 开销</span><span><span class="lvl lvl${lvl[0]}">${lvl[1]}</span>${lvl[2]}${real}</span>
+    <span class="k">右下角数字</span><span>页面的帧率，只能看卡不卡，不是 GPU 占用；应用里要在 Windows 上用任务管理器的 GPU 列实测。</span>`;
+  updateContrast(base, fp, flowOp, light);
+  glDirty = true;
+}
+
+function setBackdrop(isl) {
+  const t = state.tier, mode = isl.dataset.mode, W = mode === "collapsed" ? 340 : 560, H = mode === "collapsed" ? 38 : 306, R = mode === "collapsed" ? 22 : 30;
+  let bf = "none";
+  if (state.dir === "2" && state.bd === "real") {
+    const blur = mode === "collapsed" ? 8 : 14, sat = state.isl === "light" ? 1.5 : 1.7;
+    bf = `blur(${blur}px) saturate(${sat})`;
+    if ((t === "2B" || t === "2C") && !isl.dataset.morphing) bf = `url(#${ensureFilter(isl.id + mode, W, H, R, mode === "collapsed" ? 22 : 46)}) ${bf}`;
+  }
+  isl.style.backdropFilter = bf;
+}
+
+function updateContrast(base, pal, flowOp, light) {
+  const el = $("#contrast");
+  if (state.dir !== "1") { el.innerHTML = "方向 2 的文字对比度随背后的内容变化：浅色岛放在深色壁纸上、或深色岛放在浅色壁纸上时，把「玻璃强度」拉低看看文字还清不清楚——实现时底色不透明度要有下限。"; return; }
+  const bg = light ? "#f8f8fb" : "#0c0c10"; const ink = light ? "#1c1c1e" : "#f2f2f5"; const ink2 = light ? "#5a5a5e" : "#a4a4a8";
+  const peak = state.tier === "1A" ? flowOp * .5 : flowOp;
+  let worst = 99, worst2 = 99;
+  pal.forEach(c => { const b = mix(bg, c, peak); worst = Math.min(worst, contrast(ink, b)); worst2 = Math.min(worst2, contrast(ink2, b)); });
+  const f = v => `<b class="${v >= 3 ? "ok" : "bad"}">${v.toFixed(1)}:1</b>`;
+  el.innerHTML = `估算的最差文字对比度（色块最浓处）：主文字 ${f(worst)}，次要文字 ${f(worst2)}。回归页要求 ≥ 3:1。`;
+}
+
+let morphing = false;
+function morph() {
+  const isl = $("#islA"); if (morphing) return; morphing = true; $("#stage").classList.add("morphing");
+  const go = mode => new Promise(res => { isl.dataset.morphing = "1"; setBackdrop(isl); isl.dataset.mode = mode;     const d = parseFloat(getComputedStyle(isl).getPropertyValue("--dur")) || 0; setTimeout(() => { delete isl.dataset.morphing; setBackdrop(isl); res(); }, d + 30); });
+  go("expanded").then(() => new Promise(r => setTimeout(r, 900))).then(() => go("collapsed")).then(() => { morphing = false; $("#stage").classList.remove("morphing"); });
+}
+
+function onPointer(e) {
+  $$(".island").forEach(isl => { const r = isl.getBoundingClientRect(); const x = e.clientX - r.left, y = e.clientY - r.top;
+    isl.style.setProperty("--px", (x / r.width * 100) + "%"); isl.style.setProperty("--py", (y / r.height * 100) + "%");
+    const a = Math.atan2(y - r.height / 2, x - r.width / 2) * 180 / Math.PI + 90; isl.style.setProperty("--la", a + "deg"); });
+}
+
+let frames = [], lastF = performance.now();
+function loop(now) {
+  frames.push(now - lastF); lastF = now; if (frames.length > 60) frames.shift();
+  if (frames.length === 60 && Math.round(now) % 10 < 2) { const avg = frames.reduce((a, b) => a + b, 0) / frames.length; $("#meter").textContent = `${(1000 / avg).toFixed(0)} fps · ${avg.toFixed(1)} ms`; }
+  drawGL(now); requestAnimationFrame(loop);
+}
+
+document.addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return; const d = b.dataset;
+  if (d.dir) { state.dir = d.dir; state.tier = d.dir === "1" ? "1B" : "2C"; }
+  if (d.tier) state.tier = d.tier;
+  if (d.isl) state.isl = d.isl;
+  if (d.wall) state.wall = d.wall;
+  if (d.bd) state.bd = d.bd;
+  if (d.st) state.st = d.st;
+  if (d.color) { state.color = d.color; state.cover = null; }
+  if (d.cover !== undefined) state.cover = Number(d.cover);
+  if (b.id === "moveBtn") state.moving = !state.moving;
+  if (b.id === "morphBtn") { morph(); return; }
+  apply();
+});
+$("#intensity").addEventListener("input", e => { state.intensity = Number(e.target.value); apply(); });
+$("#stage").addEventListener("pointermove", onPointer);
+if (matchMedia("(prefers-reduced-motion: reduce)").matches) state.st = "reduce";
+buildStatics(); apply(); requestAnimationFrame(loop);
+</script>
+</body>
+</html>
