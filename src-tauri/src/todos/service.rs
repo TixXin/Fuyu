@@ -12,9 +12,10 @@ use super::{
     calls::{self, todos_reason, CallError},
     migration::{self, LocalTodoKeys, TodosSnapshot, FILE_NAME},
     model::{ScheduledTodo, TodoArchive, TodoItem, TodosData, TodosFile},
+    stamps,
     store::{self, LoadError},
 };
-use crate::{island, plugin_host};
+use crate::{island, plugin_host, sync::clock};
 
 const CHANGED_EVENT: &str = "todos-changed";
 
@@ -116,9 +117,14 @@ pub(crate) fn migrate(keys: LocalTodoKeys, normalized: TodosData) -> Result<Todo
     if let Source::File(loaded) = &*source {
         return Ok(snapshot(&loaded.file, None));
     }
+    let device = clock::with(|clock, _| clock.device().to_string());
+    let mut normalized = normalized;
+    stamps::fill_missing(&mut normalized, &device);
     let result = migrate_with_retry(host, &keys, normalized);
     let answer = match result {
-        Ok((file, notice)) => {
+        Ok((mut file, notice)) => {
+            stamps::upgrade(&mut file, &device);
+            clock::observe(stamps::all(&file.data));
             let answer = Ok(snapshot(&file, notice));
             *source = Source::File(Box::new(Loaded { file, outside: OutsideChanges::default() }));
             answer
@@ -220,6 +226,10 @@ pub(crate) fn patched(data: &TodosData, change: &TodosChange) -> TodosData {
     next
 }
 
+fn stamped(old: &TodosData, next: TodosData) -> TodosData {
+    clock::with(|clock, wall| stamps::restamp(old, next, clock, wall))
+}
+
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AppliedTodosChange {
@@ -235,7 +245,7 @@ pub(crate) fn apply(change: &TodosChange) -> Result<AppliedTodosChange, String> 
         return Err("The todos are not kept in todos.json right now.".into());
     };
     let (change, conflicts) = without_conflicts(change, &loaded.outside);
-    let data = patched(&loaded.file.data, &change);
+    let data = stamped(&loaded.file.data, patched(&loaded.file.data, &change));
     if data != loaded.file.data {
         let next = TodosFile { revision: loaded.file.revision + 1, data, ..loaded.file.clone() };
         store::save(&host.dir.join(FILE_NAME), &next)?;
@@ -259,7 +269,7 @@ pub(crate) fn call(method: &str, params: &Value) -> Option<Result<Value, CallErr
 fn call_loaded(host: &TodosHost, loaded: &mut Loaded, method: &str, params: &Value) -> Result<Value, CallError> {
     let id = if method == "todos.add" { calls::new_todo_id().map_err(|error| (500, error))? } else { String::new() };
     let outcome = calls::run(method, params, &loaded.file.data, &id, now_ms())?;
-    let Some(data) = outcome.next.filter(|data| *data != loaded.file.data) else {
+    let Some(data) = outcome.next.map(|next| stamped(&loaded.file.data, next)).filter(|data| *data != loaded.file.data) else {
         return Ok(outcome.result);
     };
     let next = TodosFile { revision: loaded.file.revision + 1, data, ..loaded.file.clone() };

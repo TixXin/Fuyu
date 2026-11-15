@@ -25,6 +25,14 @@ export type TodosData = {
   archives: TodoArchive[];
   dailyNote: string;
   activeTodoId: string | null;
+  dailyNoteUpdatedAt?: string;
+  tombstones?: TodoTombstone[];
+};
+
+export type TodoTombstone = {
+  id: string;
+  deletedAt: string;
+  deviceId: string;
 };
 
 export type LocalTodoKeys = {

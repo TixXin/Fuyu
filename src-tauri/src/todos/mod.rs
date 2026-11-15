@@ -3,6 +3,7 @@ mod history;
 mod migration;
 mod model;
 mod service;
+mod stamps;
 mod store;
 #[cfg(test)]
 mod tests;

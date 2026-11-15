@@ -559,3 +559,187 @@ fn a_todos_priority_and_color_survive_a_save() {
     let plain = serde_json::to_string(&sample()).expect("encode");
     assert!(!plain.contains("priority") && !plain.contains("color"));
 }
+
+mod stamp_tests {
+    use serde_json::json;
+    use std::fs;
+
+    use super::super::model::{TodosData, TodosFile, FILE_VERSION};
+    use super::super::stamps::{fill_missing, restamp, upgrade};
+    use super::super::store::{load, save};
+    use super::temp_dir;
+    use crate::sync::{Clock, Hlc};
+
+    const WALL: u64 = 1_800_000_000_000;
+
+    fn v1_text() -> String {
+        json!({
+            "version": 1, "revision": 4, "date": "2026-11-05",
+            "todos": [
+                { "id": "a", "title": "first", "completed": false, "createdAt": 1_762_300_000_000u64 },
+                { "id": "b", "title": "second", "completed": false, "createdAt": 1_762_300_000_500u64 }
+            ],
+            "scheduled": [{ "id": "s", "title": "later", "date": "2026-11-20", "createdAt": 5 }],
+            "archives": [{ "date": "2026-11-04", "todos": [{ "id": "old", "title": "done", "completed": true, "createdAt": 3 }], "dailyNote": "n", "savedAt": 1.5, "savedToDisk": false }],
+            "dailyNote": "today", "activeTodoId": "a"
+        })
+        .to_string()
+    }
+
+    fn stamp(ms: u64, device: &str) -> Hlc {
+        Hlc::from_millis(ms, device)
+    }
+
+    fn upgraded() -> TodosData {
+        let mut file: TodosFile = serde_json::from_str(&v1_text()).expect("v1");
+        upgrade(&mut file, "dev1");
+        assert_eq!(file.version, FILE_VERSION);
+        file.data
+    }
+
+    fn bare(mut data: TodosData) -> TodosData {
+        for todo in &mut data.todos {
+            todo.updated_at = None;
+            todo.device_id = None;
+        }
+        for todo in &mut data.scheduled {
+            todo.updated_at = None;
+            todo.device_id = None;
+        }
+        for archive in &mut data.archives {
+            archive.updated_at = None;
+            archive.todos.iter_mut().for_each(|todo| (todo.updated_at, todo.device_id) = (None, None));
+        }
+        data.tombstones.clear();
+        data
+    }
+
+    #[test]
+    fn version_one_files_get_stamps_from_when_each_entry_was_made() {
+        let data = upgraded();
+        assert_eq!(data.todos[0].updated_at, Some(stamp(1_762_300_000_000, "dev1")));
+        assert_eq!(data.todos[0].device_id.as_deref(), Some("dev1"));
+        assert_eq!(data.scheduled[0].updated_at, Some(stamp(5, "dev1")));
+        assert_eq!(data.archives[0].updated_at, Some(stamp(1, "dev1")));
+        assert_eq!(data.archives[0].todos[0].updated_at, Some(stamp(3, "dev1")));
+        assert_eq!(data.daily_note_updated_at, None);
+        let text = serde_json::to_string(&data).expect("encode");
+        assert!(text.contains("\"updatedAt\":\"001762300000000-000000-dev1\""), "{text}");
+        assert!(!text.contains("tombstones"));
+    }
+
+    #[test]
+    fn a_version_one_file_changed_once_keeps_every_other_stamp() {
+        let dir = temp_dir("stamps-v1");
+        let path = dir.join("todos.json");
+        fs::write(&path, v1_text()).expect("write v1");
+        let mut file = load(&path).expect("load").expect("present");
+        upgrade(&mut file, "dev1");
+        let before = file.data.clone();
+        let mut clock = Clock::new("dev1");
+        let mut change = bare(before.clone());
+        change.todos[1].title = "second, edited".into();
+        let after = restamp(&before, change, &mut clock, WALL);
+        assert_eq!(after.todos[0], before.todos[0]);
+        assert_eq!(after.scheduled, before.scheduled);
+        assert_eq!(after.archives, before.archives);
+        assert_eq!(after.daily_note_updated_at, None);
+        assert_eq!(after.todos[1].updated_at, Some(stamp(WALL, "dev1")));
+        file.data = after.clone();
+        save(&path, &file).expect("save");
+        let read_back = load(&path).expect("load").expect("present");
+        assert_eq!(read_back.version, 2);
+        assert_eq!(read_back.data, after);
+    }
+
+    #[test]
+    fn nothing_changes_when_only_the_window_state_moves_or_the_same_data_comes_back() {
+        let before = upgraded();
+        let mut clock = Clock::new("dev1");
+        assert_eq!(restamp(&before, bare(before.clone()), &mut clock, WALL), before);
+        assert_eq!(restamp(&before, before.clone(), &mut clock, WALL), before);
+        let mut moved = bare(before.clone());
+        moved.active_todo_id = Some("b".into());
+        let after = restamp(&before, moved, &mut clock, WALL);
+        assert_eq!(after.todos, before.todos);
+        assert_eq!(after.active_todo_id.as_deref(), Some("b"));
+        assert_eq!(clock.tick(WALL), stamp(WALL, "dev1"));
+    }
+
+    #[test]
+    fn stamps_sent_back_by_the_window_are_not_trusted() {
+        let before = upgraded();
+        let mut clock = Clock::new("dev1");
+        let mut forged = before.clone();
+        forged.todos[0].updated_at = Some(stamp(1, "other"));
+        assert_eq!(restamp(&before, forged, &mut clock, WALL), before);
+        let mut edited = before.clone();
+        edited.todos[0].completed = true;
+        edited.todos[0].updated_at = Some(stamp(9_999_999_999_999, "other"));
+        assert_eq!(restamp(&before, edited, &mut clock, WALL).todos[0].updated_at, Some(stamp(WALL, "dev1")));
+    }
+
+    #[test]
+    fn deleted_todos_leave_tombstones_that_lift_if_they_come_back() {
+        let before = upgraded();
+        let mut clock = Clock::new("dev1");
+        let mut change = bare(before.clone());
+        change.todos.remove(0);
+        let after = restamp(&before, change, &mut clock, WALL);
+        assert_eq!(after.tombstones.len(), 1);
+        assert_eq!(after.tombstones[0].id, "a");
+        assert_eq!(after.tombstones[0].device_id, "dev1");
+        let back = restamp(&after, bare(before.clone()), &mut clock, WALL);
+        assert!(back.tombstones.is_empty());
+        assert!(back.todos[0].updated_at > before.todos[0].updated_at);
+    }
+
+    #[test]
+    fn moving_a_todo_between_lists_or_into_an_archive_is_not_a_deletion() {
+        let before = upgraded();
+        let mut clock = Clock::new("dev1");
+        let mut change = bare(before.clone());
+        let todo = change.todos.remove(0);
+        change.archives[0].todos.push(todo);
+        let after = restamp(&before, change, &mut clock, WALL);
+        assert!(after.tombstones.is_empty());
+        assert_eq!(after.archives[0].todos[1].updated_at, Some(stamp(WALL, "dev1")));
+        assert!(after.archives[0].updated_at > before.archives[0].updated_at);
+        assert_eq!(after.archives[0].todos[0], before.archives[0].todos[0]);
+    }
+
+    #[test]
+    fn the_daily_note_gets_a_stamp_only_when_its_text_changes() {
+        let before = upgraded();
+        let mut clock = Clock::new("dev1");
+        let mut change = bare(before.clone());
+        change.daily_note = "today, more".into();
+        let after = restamp(&before, change, &mut clock, WALL);
+        assert_eq!(after.daily_note_updated_at, Some(stamp(WALL, "dev1")));
+        assert_eq!(after.todos, before.todos);
+        let same = restamp(&after, bare(after.clone()), &mut clock, WALL + 5);
+        assert_eq!(same.daily_note_updated_at, after.daily_note_updated_at);
+    }
+
+    #[test]
+    fn old_tombstones_are_dropped_on_the_next_real_change() {
+        let mut before = upgraded();
+        crate::sync::record::bury(&mut before.tombstones, "gone", stamp(WALL - crate::sync::record::TOMBSTONE_KEEP_MS - 1, "dev1"));
+        let mut clock = Clock::new("dev1");
+        assert_eq!(restamp(&before, bare(before.clone()), &mut clock, WALL).tombstones.len(), 1);
+        let mut change = bare(before.clone());
+        change.daily_note = "edit".into();
+        assert!(restamp(&before, change, &mut clock, WALL).tombstones.is_empty());
+    }
+
+    #[test]
+    fn bad_stamps_from_the_window_are_ignored_instead_of_refusing_the_save() {
+        let text = json!({ "id": "a", "title": "t", "completed": false, "createdAt": 1, "updatedAt": "nonsense", "deviceId": "x" });
+        let todo: super::super::model::TodoItem = serde_json::from_value(text).expect("decode");
+        assert_eq!(todo.updated_at, None);
+        let mut data = upgraded();
+        data.todos[0].updated_at = None;
+        fill_missing(&mut data, "dev2");
+        assert_eq!(data.todos[0].updated_at, Some(stamp(1_762_300_000_000, "dev2")));
+    }
+}

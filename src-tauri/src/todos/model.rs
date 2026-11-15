@@ -1,7 +1,9 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Number;
 
-pub(crate) const FILE_VERSION: u32 = 1;
+use crate::sync::{clock, Hlc, Tombstone};
+
+pub(crate) const FILE_VERSION: u32 = 2;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -18,6 +20,10 @@ pub struct TodoItem {
     pub priority: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub color: Option<String>,
+    #[serde(default, deserialize_with = "clock::lenient", skip_serializing_if = "Option::is_none")]
+    pub updated_at: Option<Hlc>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub device_id: Option<String>,
 }
 
 pub(crate) fn latest_started(todos: &[TodoItem]) -> Option<String> {
@@ -45,6 +51,10 @@ pub struct ScheduledTodo {
     pub priority: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub color: Option<String>,
+    #[serde(default, deserialize_with = "clock::lenient", skip_serializing_if = "Option::is_none")]
+    pub updated_at: Option<Hlc>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub device_id: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -57,6 +67,8 @@ pub struct TodoArchive {
     pub saved_to_disk: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub file_path: Option<String>,
+    #[serde(default, deserialize_with = "clock::lenient", skip_serializing_if = "Option::is_none")]
+    pub updated_at: Option<Hlc>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -68,6 +80,10 @@ pub struct TodosData {
     pub archives: Vec<TodoArchive>,
     pub daily_note: String,
     pub active_todo_id: Option<String>,
+    #[serde(default, deserialize_with = "clock::lenient", skip_serializing_if = "Option::is_none")]
+    pub daily_note_updated_at: Option<Hlc>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub tombstones: Vec<Tombstone>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

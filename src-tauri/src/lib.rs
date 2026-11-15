@@ -38,6 +38,7 @@ mod settings_window;
 mod shortcut_capture;
 #[cfg_attr(not(windows), path = "ssh_tunnel/unsupported.rs")]
 mod ssh_tunnel;
+mod sync;
 mod system;
 mod system_levels;
 mod todos;
@@ -162,6 +163,9 @@ pub fn run() {
             voice_input::init(app.handle());
             if let Err(error) = file_shelf::init(app.handle()) {
                 eprintln!("failed to initialize the file shelf: {error}");
+            }
+            if let Err(error) = sync::init(app.handle()) {
+                eprintln!("failed to initialize sync: {error}");
             }
             if let Err(error) = todos::init(app.handle()) {
                 eprintln!("failed to initialize the todo store: {error}");
