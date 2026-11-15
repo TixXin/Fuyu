@@ -46,7 +46,7 @@ export declare const BLOCKED_EXTENSIONS: readonly string[];
 
 export declare function resolvePackageOptions(options?: PackageOptions): ResolvedPackageOptions;
 export declare function checkPackagePath(path: unknown): { code: string; message: string } | null;
-export declare function executableKind(data: Uint8Array): "PE" | "Mach-O" | "ELF" | "WebAssembly" | "Java archive" | null;
+export declare function executableKind(data: Uint8Array): "PE" | "Mach-O" | "ELF" | "WebAssembly" | "Java class" | "Java archive" | null;
 export declare function normalizeText(path: string, data: Uint8Array): Uint8Array;
 export declare function sha256Hex(data: Uint8Array | string): string;
 export declare function packageDigest(entries: readonly PackageEntry[], options?: PackageOptions): string;

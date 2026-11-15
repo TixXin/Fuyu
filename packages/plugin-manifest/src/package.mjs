@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { lstatSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { isSafeRelativePath } from "./manifest.mjs";
-import { PackageError, createZip, readZip } from "./zip.mjs";
+import { PackageError, createZip, readZip, zipEntryNames } from "./zip.mjs";
 
 export { PackageError } from "./zip.mjs";
 
@@ -12,7 +12,7 @@ export const MAX_UNPACKED_BYTES = 100 * 1024 * 1024;
 export const MAX_FILES = 5000;
 export const MANIFEST_FILE = "package.json";
 export const TEXT_EXTENSIONS = [".js", ".mjs", ".cjs", ".json", ".css", ".html", ".htm", ".md", ".txt", ".svg", ".map", ".yml", ".yaml", ".xml", ".csv"];
-export const BLOCKED_EXTENSIONS = [".node", ".exe", ".dll", ".sys", ".scr", ".com", ".msi", ".so", ".dylib", ".bin", ".elf", ".app", ".appimage", ".deb", ".rpm", ".pkg", ".dmg", ".wasm", ".jar"];
+export const BLOCKED_EXTENSIONS = [".node", ".exe", ".dll", ".sys", ".scr", ".com", ".msi", ".so", ".dylib", ".bin", ".elf", ".app", ".appimage", ".deb", ".rpm", ".pkg", ".dmg", ".wasm", ".jar", ".class"];
 
 const extensionOf = (path) => {
   const base = path.slice(path.lastIndexOf("/") + 1).toLowerCase();
@@ -42,20 +42,18 @@ export function checkPackagePath(path) {
   return null;
 }
 
-function isPortableExecutable(data) {
-  if (data.length < 64 || data[0] !== 0x4d || data[1] !== 0x5a) return false;
-  const header = data.readUInt32LE(0x3c);
-  return header + 4 <= data.length && data.readUInt32BE(header) === 0x50450000;
-}
-
-const MACHO = new Set([0xfeedface, 0xfeedfacf, 0xcefaedfe, 0xcffaedfe, 0xcafebabe, 0xbebafeca, 0xcafebabf, 0xbfbafeca]);
+const MACHO = new Set([0xfeedface, 0xfeedfacf, 0xcefaedfe, 0xcffaedfe, 0xbebafeca, 0xcafebabf, 0xbfbafeca]);
+const isJarEntry = (name) => name === "META-INF/MANIFEST.MF" || name.toLowerCase().endsWith(".class");
 
 export function executableKind(data) {
-  if (data.length >= 4 && data.readUInt32BE(0) === 0x7f454c46) return "ELF";
-  if (data.length >= 4 && MACHO.has(data.readUInt32BE(0))) return "Mach-O";
-  if (isPortableExecutable(data)) return "PE";
-  if (data.length >= 4 && data.readUInt32BE(0) === 0x0061736d) return "WebAssembly";
-  if (data.length >= 4 && data.readUInt32BE(0) === 0x504b0304 && data.includes("META-INF/MANIFEST.MF")) return "Java archive";
+  if (data.length >= 2 && data[0] === 0x4d && data[1] === 0x5a) return "PE";
+  if (data.length < 4) return null;
+  const magic = data.readUInt32BE(0);
+  if (magic === 0x7f454c46) return "ELF";
+  if (magic === 0xcafebabe) return data.length >= 8 && data.readUInt32BE(4) >= 45 ? "Java class" : "Mach-O";
+  if (MACHO.has(magic)) return "Mach-O";
+  if (magic === 0x0061736d) return "WebAssembly";
+  if (magic === 0x504b0304 && zipEntryNames(data).some(isJarEntry)) return "Java archive";
   return null;
 }
 
