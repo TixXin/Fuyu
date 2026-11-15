@@ -167,8 +167,8 @@ export async function measureRestart({ count, rounds, node, pollMs }) {
 export async function soak({ count, busy = 0, minutes, everyS, out, churnS, node, log = () => {} }) {
   const space = makeWorkspace(count, busy);
   space.writeConfig();
-  const begun = Date.now();
-  const deadline = begun + minutes * 60000;
+  let begun = 0;
+  let deadline = 0;
   let restarts = 0;
   let host = launch(space.dir, { node, watch: churnS > 0 });
   let churn = null;
@@ -177,6 +177,8 @@ export async function soak({ count, busy = 0, minutes, everyS, out, churnS, node
   writeFileSync(out, CSV_HEADER);
   try {
     await host.ready;
+    begun = Date.now();
+    deadline = begun + minutes * 60000;
     if (churnS > 0 && count > 0) {
       churn = setInterval(() => {
         toggled = !toggled;
