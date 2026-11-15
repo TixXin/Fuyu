@@ -8,10 +8,10 @@
 src/
 ├── main.tsx                 # 唯一入口：按 ?window= 动态加载 windows/ 下对应的根组件，每个窗口只加载自己的代码（不要改回静态导入）
 ├── windows/                 # 每个 Tauri 窗口一个目录，只负责组合与窗口级行为
-│   ├── island/              # 主窗口：IslandApp（只做组装）、IslandShell、展开后的页面面板（IslandPages）、按职责的接线 hook（useIslandNotices / Todos / Tucking / Shelf / Hover、useAgentIndicator；新功能的接线加在这里，不加进 IslandApp）、窗口尺寸/拖拽/贴边 hook、自动化 hook
+│   ├── island/              # 主窗口：IslandApp（只做组装）、IslandShell、展开后的页面面板（IslandPages）、按职责的接线 hook（useIslandNotices / Todos / Tucking / Shelf / Hover、useAgentIndicator；新功能的接线加在这里，不加进 IslandApp）、窗口尺寸/拖拽/贴边 hook、自动化 hook；slots/ 是展开页、页头按钮、收起条、刘海提醒的插槽注册，新加一页或一个按钮在这里注册，不往列表里写死
 │   ├── clipboard/           # 剪贴板独立窗口（列表在 features/clipboard/ClipboardPopup.tsx，弹出、定位和粘贴在 src-tauri/src/clipboard_history/popup.rs）
 │   ├── screenshot/          # 截图的选区窗口（?window=screenshot，每个显示器一个）：冻结画面、选区拖动（useSelection.ts）、工具栏和放大镜
-│   ├── settings/            # 设置窗口
+│   ├── settings/            # 设置窗口；slots/ 是分类的插槽注册（categorySlot.ts 元数据、categories.tsx 页面）和分节的句柄（sectionSlot.ts），各设置页在自己的文件里注册分节
 │   ├── onboarding/          # 新手引导（?window=onboarding）：透明遮罩压暗屏幕、照亮真岛，旁边的卡片分五幕（语言、外观、功能、在真岛上练习、开机启动）；新装第一次启动时由 island/useFirstRunGuide.ts 打开，设置 → 关于里能再打开；引导开着时岛放演示内容（island/useOnboardingDemo.ts）
 │   └── translation/         # 快捷翻译窗口
 ├── features/                # 业务领域，每个领域自包含
@@ -28,7 +28,7 @@ src/
 │   ├── local-api/           # 本地接口的前端一侧：转发请求的分发与桥接 hook（待办部分在 todos/apiCommands.ts；开关与设置在内置插件页）
 │   ├── plugins/             # 设置 → 插件扩展页与插件市场页：已安装插件、启用与授权、从市场安装
 │   ├── plugin-dev/          # 设置 → 插件扩展 → 开发者：开发模式开关、从文件夹加载插件、JSON-RPC 收发记录、手动发送事件
-│   ├── plugin-kernel/       # 插件平台第 3 版的窗口一侧（E36.1，开发中）：向 Rust 要宿主的地址（api.ts）、连宿主并按宿主登记的界面文件加载插件、插槽注册表（runtime.ts，插槽的定义在 PLUGIN_SLOTS）、渲染一个插槽（PluginSlot.tsx）；设了 FUYU_PLUGINS_V3=1 才工作（开发版、正式版一样）
+│   ├── plugin-kernel/       # 插件平台第 3 版的窗口一侧（E36.1，开发中）：向 Rust 要宿主的地址（api.ts）、连宿主并按宿主登记的界面文件加载插件（runtime.ts，设了 FUYU_PLUGINS_V3=1 才工作）；插槽：每个窗口一份注册表和各插槽的类型化句柄（slots.ts，名单和规则在 @fuyu/plugin-base/protocol 的 SLOTS）、渲染（SlotView.tsx）、订阅（useSlotEntries.ts），内置功能不设那个环境变量也经它们注册和渲染
 │   ├── plugin-views/        # 插件在岛上的页面与折叠条状态：模板（list / detail / form / status）、插件数据的规范化、页面顺序与隐藏
 │   ├── messages/            # 消息导航与预览；mail/、qq-notifications/、wechat/ 子目录；banner/ 为岛下方的新消息横幅（分组与计时，接线在 windows/island/useIslandBanner.ts）；arrivals/ 为新消息自动展开的面板（只列这次到达的消息，接线在 windows/island/useIslandMessagePanel.ts）
 │   ├── agent-status/        # AI 代理状态；sounds/ 为 Agent 音效：内置音效播放、设置 → 声音页、导入音效包；push/ 为手机推送（Bark 或 cc-connect，排队到离开电脑再发）

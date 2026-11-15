@@ -106,6 +106,38 @@
 
 看每个子任务的 diff 和提交；更新 `v3-progress.md`（阶段表、测试规模、待人工验收、风险「改动面大」）、`overview.md`、`src/AGENTS.md` 的目录地图（新的 `slots/` 目录）、`platforms.md`（预期不变，核对一次）；核对 #292 和子 issue 都已回复并关闭；两台机器各看一次真岛。
 
+## 收口（2026-11-15）
+
+子任务 E36.2.1–E36.2.11 都已合入、issue 都已关闭。每块界面都是先纯搬迁、再改写，回归页 53 页、105 份 DOM 快照和改动前逐字一致，没用过 `--update-snapshots`。两台机器的真岛验收列在 [v3-progress.md](v3-progress.md)「待人工验收」，还没看。
+
+现在各块界面在哪注册：
+
+| 插槽 | 注册的文件 |
+|---|---|
+| `island.page/v1` | `src/windows/island/slots/pageSlot.ts`（元数据，Node 测试能直接加载）、`slots/pages.tsx`（组件） |
+| `island.header/v1` | `src/windows/island/slots/header.tsx` |
+| `island.collapsed/v1`、`island.collapsed-center/v1` | `src/windows/island/slots/collapsed.tsx` |
+| `island.alert/v1` | `src/windows/island/slots/alerts.tsx` |
+| `settings.category/v1` | `src/windows/settings/slots/categorySlot.ts`（元数据）、`slots/categories.tsx`（页面组件） |
+| `settings.section/v1` | 各设置页文件自己注册，句柄来自 `src/windows/settings/slots/sectionSlot.ts`；`id` 写成 `<子页>.<名字>`，`category` 是子页名 |
+
+和计划不一样的地方：
+
+- 两个收起条插槽加了可选元数据 `shown(context)`（只加字段，名字仍是 `/v1`），有内容才出现的项靠它在渲染前判断。
+- 设置分节没有集中在一个 `slots/sections.tsx`：800 多行放不下一个文件，而且注册文件和页面会互相 import，所以改成各页注册自己的。
+- 设置分类每个子页是自己的一项；`LayoutEditor` 的面板按分类加了 `key`，切子页本来就重新挂载，所以 ddf6b0cc 提交说明里「切子页保留组件」那段不对，以 0645e89b 为准。
+
+留给后面阶段的事：
+
+- 第 2 版插件的状态 id 是动态的，没进注册表，仍按 `PLUGIN_STATUS_ORDER` 插在「更新」和「设备占用」之间；第 2 版插件页也照旧走 `pluginPages`。第 6 阶段随第 2 版一起删。
+- 收起条：用量环和计时器仍由 `useCollapsedSlots` 生成，`island.collapsed/v1` 的组件按 `group` 拿两种 props；收起条加宽只算量表（`gauges`）的宽度。
+- 展开页按平台去掉的页（`withoutUnsupported`）还是写死的列表。
+- 第三方页面项带 `headerDot` 时，页头圆点的标签还没有来源（现在按内置页从文案里取）；第三方设置分类也没有标题元数据，侧栏和页头的名字仍来自 i18n。插件能加页面和分类之前（第 5 阶段）要补元数据。
+- 设置分节、页头按钮等组件拿到的是各自那一页的 props，形状各不相同；第 5 阶段对第三方开放前要定统一的 props。
+- `SETTINGS_FEATURES`、`FEATURE_PAGES`、`CATEGORY_ICONS` 仍是从内置项算出的常量（概览页、功能页头、回归页在用）。
+- 没改成插槽的设置页：概览、语音输入、第 2 版插件、第 3 版插件、主题市场、插件市场，以及 `SettingsWindow` 直接渲染的单组件页（`agentRemote`、`sounds`、`agentApprovals`）。
+- 回归页 `todo-island` 偶尔失败（每次是不同的检查项，和插槽无关），像是时序问题，另建了 D76（#554）。
+
 ## 第 1 阶段留下的小事
 
 | 事 | 建议 |
