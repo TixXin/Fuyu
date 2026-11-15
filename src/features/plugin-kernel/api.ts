@@ -5,6 +5,13 @@ export interface HostConnection {
   port: number | null;
   token: string | null;
   generation: number | null;
+  safeMode?: HostSafeMode | null;
+}
+
+export interface HostSafeMode {
+  mode: "third-party" | "minimal";
+  cause: "variable" | "shift" | "failures";
+  failures: number;
 }
 
 export function getPluginHostConnection(): Promise<HostConnection> {
@@ -21,4 +28,8 @@ export interface HostMemory {
 
 export function getPluginHostMemory(): Promise<HostMemory | null> {
   return invoke<HostMemory | null>("get_plugin_host_memory");
+}
+
+export function exitPluginSafeMode(): Promise<boolean> {
+  return invoke<boolean>("exit_plugin_safe_mode");
 }

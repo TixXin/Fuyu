@@ -3,6 +3,8 @@ import type { PluginV3State } from "../../i18n/sections/settings/pluginsV3";
 import { SettingsFootnote } from "../../components/settings/SettingsFootnote";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsRow } from "../../components/settings/SettingsRow";
+import { useState } from "react";
+import { exitPluginSafeMode } from "../../features/plugin-kernel/api";
 import { usePluginHostStatus, type PluginHostConnector, type PluginHostView, type PluginStatusV3 } from "./usePluginHostStatus";
 import "./PluginsV3SettingsPage.css";
 
@@ -78,6 +80,27 @@ function PluginCard({ plugin }: { plugin: PluginStatusV3 }) {
   );
 }
 
+function SafeModeRow({ view, mode }: { view: PluginHostView; mode: "third-party" | "minimal" }) {
+  const text = useTranslation().settings.pluginsV3;
+  const [leaving, setLeaving] = useState(false);
+  const safe = view.safeMode?.mode === mode ? view.safeMode : null;
+  const cause = safe === null ? undefined : safe.cause === "failures" ? text.safeCauses.failures(safe.failures) : text.safeCauses[safe.cause];
+  const canLeave = safe !== null && safe.cause !== "variable";
+  const leave = () => {
+    setLeaving(true);
+    void exitPluginSafeMode().catch(() => setLeaving(false));
+  };
+  return (
+    <SettingsRow
+      searchable={false}
+      className="plugins-v3__safe"
+      title={`${text.safeMode} · ${text.safeModes[mode]}`}
+      description={cause}
+      control={canLeave ? <button className="plugins-v3__leave" type="button" disabled={leaving} onClick={leave}>{text.leaveSafeMode}</button> : undefined}
+    />
+  );
+}
+
 export function PluginsV3View({ view, now = Date.now() }: { view: PluginHostView; now?: number }) {
   const text = useTranslation().settings.pluginsV3;
   const { host, plugins, connection, memory } = view;
@@ -102,7 +125,7 @@ export function PluginsV3View({ view, now = Date.now() }: { view: PluginHostView
             />
             <SettingsRow searchable={false} title={text.hostCpu} control={<span className="plugins-v3__value">{milliseconds(host.cpuMs)}</span>} />
             <SettingsRow searchable={false} title={text.uptime} control={<span className="plugins-v3__value">{duration(now - host.startedAt)}</span>} />
-            {host.safe ? <SettingsRow searchable={false} className="plugins-v3__safe" title={text.safeMode} control={<span className="plugins-v3__value">{text.safeModes[host.safe]}</span>} /> : null}
+            {host.safe ? <SafeModeRow key={host.pid} view={view} mode={host.safe} /> : null}
             {host.dev ? <SettingsRow searchable={false} title={text.devMode} /> : null}
           </>
         ) : null}

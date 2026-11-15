@@ -154,3 +154,29 @@ fn a_host_that_dies_is_noticed_without_waiting_for_the_next_heartbeat() {
     assert!(killed.elapsed() < Duration::from_secs(2), "noticed after {:?}, the heartbeat is every 5 s", killed.elapsed());
     watched.supervisor.stop();
 }
+
+#[test]
+fn each_start_asks_for_its_own_spec_so_a_failing_host_can_come_back_differently() {
+    let (tx, states) = mpsc::channel();
+    let tx = Mutex::new(tx);
+    let asked = Arc::new(Mutex::new(Vec::new()));
+    let seen = asked.clone();
+    let supervisor = Supervisor::start_with(
+        move |generation| {
+            seen.lock().unwrap().push(generation);
+            spec(if generation < 3 { "exit-at-once" } else { "ok" })
+        },
+        Arc::new(NoContainment),
+        fast(),
+        move |event| {
+            if let Event::State(state) = event {
+                let _ = tx.lock().unwrap().send(state);
+            }
+        },
+    )
+    .unwrap();
+    let ready = wait_for(&states, |state| matches!(state, HostState::Ready { .. }), Duration::from_secs(20));
+    assert!(matches!(ready, HostState::Ready { generation: 3, .. }), "{ready:?}");
+    assert_eq!(*asked.lock().unwrap(), [1, 2, 3]);
+    supervisor.stop();
+}

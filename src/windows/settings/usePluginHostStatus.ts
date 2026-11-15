@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { connectHost, type ConnectionState } from "@fuyu/plugin-base/client";
-import { getPluginHostConnection, getPluginHostMemory, type HostMemory } from "../../features/plugin-kernel/api";
+import { getPluginHostConnection, getPluginHostMemory, type HostMemory, type HostSafeMode } from "../../features/plugin-kernel/api";
 
 export type PluginKindV3 = "essential" | "builtin" | "third-party";
 
@@ -57,6 +57,7 @@ export interface PluginHostView {
   plugins: PluginStatusV3[] | null;
   host: HostInfoV3 | null;
   memory: HostMemory | null;
+  safeMode: HostSafeMode | null;
 }
 
 async function target() {
@@ -90,7 +91,7 @@ export function usePluginsV3Enabled(): boolean {
   return on;
 }
 
-const START: PluginHostView = { connection: "connecting", plugins: null, host: null, memory: null };
+const START: PluginHostView = { connection: "connecting", plugins: null, host: null, memory: null, safeMode: null };
 
 const MEMORY_EVERY_MS = 5000;
 
@@ -118,6 +119,11 @@ export function usePluginHostStatus(connect: PluginHostConnector = connectSettin
         })
         .catch(() => undefined);
     read();
+    void getPluginHostConnection()
+      .then((connection) => {
+        if (live) setView((current) => ({ ...current, safeMode: connection.safeMode ?? null }));
+      })
+      .catch(() => undefined);
     const timer = window.setInterval(read, MEMORY_EVERY_MS);
     return () => {
       live = false;
