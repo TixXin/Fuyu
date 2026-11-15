@@ -64,7 +64,7 @@ import { useOnboardingDemo, withDemoMedia } from "./useOnboardingDemo";
 import { useIslandLyrics } from "./useIslandLyrics";
 import { coverAccentVariables, useCoverColor } from "../../features/media/useCoverColor";
 import { useIslandFirstHints } from "./useIslandFirstHints";
-import { pickIslandNotice } from "./islandNotice";
+import { useIslandNotice } from "./islandNotice";
 import { useIslandVoiceInput } from "./useIslandVoiceInput";
 import { useIslandSide } from "./useIslandSide";
 import { useDevIslandActions } from "./useDevIslandActions";
@@ -246,7 +246,7 @@ export function IslandApp() {
   });
 
   const voice = useIslandVoiceInput(addTodoOn, notebookProps);
-  const islandNotice = pickIslandNotice({ recording, voice, ringing, screenshotNotice, copyCard, firstHints });
+  const islandNotice = useIslandNotice({ recording, voice, ringing, screenshotNotice, copyCard, firstHints });
   useNotchDropSync(notch !== null && mode === "collapsed" && !isTucked && hasNotchDrop({
     preview: banner.barPreview, notice: islandNotice !== null, translationPeek,
   }));
