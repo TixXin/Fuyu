@@ -92,7 +92,7 @@
   line-height: 1.2;
   text-overflow: ellipsis;
   white-space: nowrap;
-  animation: taskFlowIn 260ms ease-out backwards;
+  animation: taskFlowIn var(--line-enter-duration, 420ms) var(--summary-spring, cubic-bezier(.2, .85, .2, 1)) backwards;
 }
 
 .island__agent-session {
@@ -105,7 +105,15 @@
   font-size: 13px;
   font-weight: 600;
   line-height: 1.2;
-  animation: taskFlowIn 260ms ease-out backwards;
+  animation: taskFlowIn var(--line-enter-duration, 420ms) var(--summary-spring, cubic-bezier(.2, .85, .2, 1)) backwards;
+}
+
+.island__summary-row > .island-meeting {
+  animation: taskFlowIn var(--line-enter-duration, 420ms) var(--summary-spring, cubic-bezier(.2, .85, .2, 1)) backwards;
+}
+
+.island__summary-layer--incoming {
+  --line-enter-duration: 0ms;
 }
 
 .island__agent-session-separator {
@@ -124,7 +132,7 @@
 }
 
 @keyframes taskFlowIn {
-  from { opacity: 0; transform: translateY(6px); }
+  from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
@@ -209,6 +217,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .island-update-badge { animation: none; }
+  .island__summary-row > .island-meeting { animation: none; }
 }
 
 .island-shelf-count {

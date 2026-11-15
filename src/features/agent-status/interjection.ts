@@ -1,4 +1,4 @@
-import { detectAlerts, type AgentAlertKinds, type SessionPhases } from "./alerts.ts";
+import { detectAlerts, takeDueReminders, type AgentAlertKinds, type SessionPhases, type WaitingReminders } from "./alerts.ts";
 import type { AgentSessionSummary } from "./api";
 import { sessionName } from "./session.ts";
 
@@ -14,6 +14,7 @@ export function interjectingSession(previous: SessionPhases | null, sessions: Ag
   return latest(detectAlerts(previous, sessions, INTERJECTING).map((alert) => alert.session).filter(named));
 }
 
-export function waitingSession(sessions: AgentSessionSummary[]): AgentSessionSummary | null {
-  return latest(sessions.filter((session) => session.phase === "waiting" && named(session)));
+export function remindingSession(state: WaitingReminders, sessions: AgentSessionSummary[], now: number, delayMs: number): AgentSessionSummary | null {
+  if (delayMs <= 0) return null;
+  return latest(takeDueReminders(state, sessions, now, delayMs).filter(named));
 }

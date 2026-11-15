@@ -17,6 +17,7 @@ import { LevelPopup } from "../../features/system-levels/LevelPopup";
 import type { DeviceAlert } from "../../features/device-events/api";
 import { DeviceAlertPopup } from "../../features/device-events/DeviceAlertPopup";
 import { MeetingLine } from "../../features/calendar/MeetingLine";
+import { useMeetingBeat } from "../../features/calendar/useMeetingBeat";
 import { openMeetingLink } from "../../features/calendar/api";
 import type { CollapsedMeeting } from "../../features/calendar/upcoming";
 import { messagePreviewText, type MessagePreview, type MessageSource } from "../../features/messages/messagePreview";
@@ -144,8 +145,10 @@ export function IslandCollapsedBar({
     "island__pulse",
     `island__pulse--agent-${agentVisualState}`,
   ].join(" ");
-  const showMeeting = showCollapsedText && meeting !== null;
-  const openTarget: IslandPage = showMeeting ? "calendar" : agentSession ? "agents" : lyricLine ? "music" : page;
+  const meetingBeat = useMeetingBeat(showCollapsedText && lyricLine ? meeting?.upcoming ?? null : null);
+  const meetingDue = showCollapsedText && meeting !== null;
+  const showMeeting = meetingDue && (lyricLine === null || meetingBeat);
+  const openTarget: IslandPage = showMeeting ? "calendar" : agentSession ? "agents" : lyricLine?.text ? "music" : page;
   const lyric = !agentSession && lyricLine?.text ? lyricLine : null;
   const showCenter = Boolean(slots.center) && !preview && !translationPeek && !notice
     && !(showCollapsedText && (showTitle || agentSession !== null || lyric !== null || collapsedTaskTitle !== null || collapsedTodoCount !== null));
@@ -246,7 +249,7 @@ export function IslandCollapsedBar({
                 <Music2 className="island__agent-session-bot" size={16} strokeWidth={1.5} absoluteStrokeWidth aria-hidden="true" />
                 <span className="island__agent-session-title" aria-label={lyric.karaoke ? lyric.text ?? undefined : undefined}>
                   {lyric.karaoke ? (
-                    <KaraokeText key={lyric.karaoke.clock} words={lyric.karaoke.words} positionMs={lyric.karaoke.positionMs} playing look={lyric.karaoke.look} />
+                    <KaraokeText key={lyric.karaoke.clock} words={lyric.karaoke.words} positionMs={lyric.karaoke.positionMs} sampledAt={lyric.karaoke.sampledAt} playing look={lyric.karaoke.look} />
                   ) : lyric.text}
                 </span>
               </span>
@@ -269,7 +272,7 @@ export function IslandCollapsedBar({
           {showCenter && <span className="island__center-slot">{slots.center}</span>}
         </button>
         {notice && !preview && notice.actions}
-        {showMeeting && !preview && !notice && !deviceAlert && !quotaAlert && !levelPopup && !translationPeek && meeting?.upcoming.event.meetingLink && (
+        {meetingDue && !preview && !notice && !deviceAlert && !quotaAlert && !levelPopup && !translationPeek && meeting?.upcoming.event.meetingLink && (
           <button
             className="island-meeting-join"
             type="button"
@@ -307,6 +310,7 @@ export function IslandCollapsedBar({
   const alerted = notch !== null && hasNotchAlert(alert);
   const dropped = notch !== null && hasNotchDrop({ preview, notice, translationPeek });
   const messaged = notch !== null && !alerted && !notice && preview !== null;
+  const wings = alerted ? "alert" : messaged ? `message:${preview?.source}:${preview?.receivedAt}` : dropped ? "dropped" : "idle";
 
   return (
     <div
@@ -324,9 +328,9 @@ export function IslandCollapsedBar({
       {notch ? (
         <>
           <div className="island__notch-row">
-            <div className="island__notch-wing island__notch-wing--left" {...{ [OPENS_BAR]: "" }}>{alerted ? <NotchAlertLeading {...alert} /> : messaged ? <NotchMessageLeading preview={preview} /> : left}</div>
+            <div key={`left:${wings}`} className="island__notch-wing island__notch-wing--left" {...{ [OPENS_BAR]: "" }}>{alerted ? <NotchAlertLeading {...alert} /> : messaged ? <NotchMessageLeading preview={preview} /> : left}</div>
             <span className="island__notch-gap" aria-hidden="true" {...{ [OPENS_BAR]: "" }} />
-            <div className="island__notch-wing island__notch-wing--right" {...{ [OPENS_BAR]: "" }}>{alerted ? <NotchAlertTrailing {...alert} /> : messaged ? <NotchMessageTrailing preview={preview} /> : dropped ? right : <>{message}{right}</>}</div>
+            <div key={`right:${wings}`} className="island__notch-wing island__notch-wing--right" {...{ [OPENS_BAR]: "" }}>{alerted ? <NotchAlertTrailing {...alert} /> : messaged ? <NotchMessageTrailing preview={preview} /> : dropped ? right : <>{message}{right}</>}</div>
           </div>
           {dropped && <div className="island__notch-drop">{message}</div>}
         </>

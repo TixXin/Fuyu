@@ -209,7 +209,7 @@ async function runChecks() {
 
     const karaokeSettings = normalizeSettings({ lyricsKaraokeColor: "custom", lyricsKaraokeCustomColor: "#ff0000", lyricsKaraokeFollow: false });
     const words = karaokeWords({ timeMs: 0, text: "故事的小黄花" }, 4_000, true)!;
-    await set({ lyric: "故事的小黄花", karaoke: { words, positionMs: 1_000, clock: "a", look: karaokeLook(karaokeSettings) } });
+    await set({ lyric: "故事的小黄花", karaoke: { words, positionMs: 1_000, sampledAt: Date.now(), clock: "a", look: karaokeLook(karaokeSettings) } });
     const lit = [...bar().querySelectorAll<HTMLElement>(".island__lyric .karaoke__word")];
     check(lit.map((word) => word.textContent).join("") === "故事的小黄花" && bar().querySelector(".island__lyric .island__agent-session-title")?.getAttribute("aria-label") === "故事的小黄花",
       "逐字高亮：每个字一段，读屏仍读整句");
@@ -217,7 +217,7 @@ async function runChecks() {
     check(getComputedStyle(bar().querySelector<HTMLElement>(".island__lyric .karaoke")!).getPropertyValue("--karaoke-lit").trim() === "#ff0000", "高亮颜色按设置");
     const longLine = "一句特别特别长的歌词长到收起的岛放不下需要往左移动才能看到正在唱的字";
     const followLook = karaokeLook(normalizeSettings({}));
-    await set({ lyric: longLine, karaoke: { words: karaokeWords({ timeMs: 0, text: longLine }, 9_000, true)!, positionMs: 0, clock: "b", look: followLook } });
+    await set({ lyric: longLine, karaoke: { words: karaokeWords({ timeMs: 0, text: longLine }, 9_000, true)!, positionMs: 0, sampledAt: Date.now(), clock: "b", look: followLook } });
     await act(async () => { await new Promise(requestAnimationFrame); });
     check(bar().querySelector(".island__lyric .karaoke__track--moving"), "放不下的长句会跟着往左移");
     await set({ agentTitle: undefined, lyric: undefined, karaoke: undefined, task: null });

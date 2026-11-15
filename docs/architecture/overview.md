@@ -29,6 +29,8 @@
    macOS（适配中，G1）：平台层 macos/；暂不支持的模块编译成 unsupported 空实现
 ```
 
+插件平台第 3 版（E36，开发中，默认关）：只在开发版设了 `FUYU_PLUGINS_V3=1` 时启动。Rust 的 `plugin_kernel` 用基座 crate `src-tauri/crates/plugin-base` 找电脑上的 Node（没有就下载到数据目录的 `runtime/`），拉起没有界面的宿主进程（`packages/plugin-base` 的 host，跑 `vendor/cordis` 内核），标准输入输出上走 JSON-RPC、心跳、退避重启，用作业对象 / 进程组管住它。窗口经本机 WebSocket（令牌、来源核对、快照和序号）连宿主，插件的界面文件和 React 转接模块由自定义协议 `fuyu-plugin` 提供，前端一侧在 `src/features/plugin-kernel/`。协议和边界见 [v3-boundary.md](plugins/v3-boundary.md)，进度见 [v3-progress.md](plugins/v3-progress.md)。旧的 `plugin_host` 冻结，只修 bug。
+
 ### 平台层
 
 - 系统 API 的 `unsafe` 调用只放在平台层：`src-tauri/src/win32/`（Windows）和 `src-tauri/src/macos/`（macOS，决定 M10）。业务模块不直接调系统 API。
