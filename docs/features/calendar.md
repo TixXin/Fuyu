@@ -22,7 +22,7 @@
 各家在哪里生成账号和链接，设置页里有说明。几点：
 
 - **Windows 自带的日历读不到。** 读取系统日历（`AppointmentStore`）要求应用有包标识；原来的「邮件和日历」应用已被新版 Outlook 取代，新版 Outlook 不往系统日历里写数据。
-- **CalDAV 地址**可以是服务器（例如 `https://caldav.feishu.cn`），岛屿会自己找到账号下的所有日历（`current-user-principal` → `calendar-home-set` → 其中的日历，最多 20 个）；也可以直接填某个日历的地址。飞书的自动发现不完整，找不到时填日历本身的地址。
+- **CalDAV 地址**可以是服务器（例如 `https://caldav.feishu.cn`），岛屿会自己找到账号下的所有日历（`current-user-principal` → `calendar-home-set` → 其中的日历，最多 20 个）；也可以直接填某个日历的地址。填的地址回了错误（账号密码错的 401、403 除外，例如钉钉的 405）或问不出日历时，再按 RFC 6764 试同一主机的 `/.well-known/caldav`：钉钉的 `calendar.dingtalk.com` 根路径只允许 GET，CalDAV 在 `/dav/` 下，就靠这一步找到（[调研](../research/dingtalk-caldav.md)）。重定向由岛屿自己跟，保留原来的请求方法，只跟同一主机的 https，最多 5 次。飞书的自动发现不完整，找不到时填日历本身的地址。
 - **只认 https。** `webcal://` 会当作 `https://`；`http://` 的链接不接受，因为订阅链接本身就是读权限。
 - 添加时会先读一次，读不到就不保存，并说明原因（地址不对、账号或密码不对、链接失效）。
 - 苹果的服务器即使没被要求也会返回 gzip 压缩的内容，岛屿会先解压。
