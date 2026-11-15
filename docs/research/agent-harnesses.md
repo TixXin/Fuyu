@@ -1,6 +1,6 @@
 # 接入更多 AI 代理：Antigravity、WorkBuddy、DeepSeek Harness、opencode
 
-> 2026-11-15 追加豆包（issue #312，任务 B29），见下面「豆包」一节，结论在那一节开头。
+> 2026-11-15 追加豆包（issue #312，任务 B29），见下面「豆包」一节，结论在那一节开头。其他国内编程代理（Qoder、CodeBuddy Code、Qwen Code、ZCode、Kimi Code 等）见 [china-coding-agents.md](china-coding-agents.md)。
 
 > 2026-11-14 追加 opencode（issue #349，任务 B30），见下面「opencode」一节，结论在那一节开头。
 
@@ -122,7 +122,7 @@ opencode 现在有两条线同时在发：**2.x**（2.0 在 2026-10 初发布，
 | 点会话跳过去 | ◐ | 进程名 `opencode`（Windows `opencode.exe`），但 2.x 的会话由后台服务跑，服务进程不是用户看的窗口，要找连着它的 TUI 终端；桌面版是 Electron 应用「OpenCode」，注册了 `opencode://` 协议，但没找到打开指定会话的链接（只见到 `opencode://open`）；VS Code 扩展只有「打开终端」的命令 |
 | cc-connect | ✓ 按 README | cc-connect 的 README 列出支持 OpenCode，配置细节未核实 |
 
-做不到或这一轮不做的：1.x 的「等你」和审批（要写 1.x 插件）；`--standalone` TUI 的等你和审批；跳到具体会话；用自己 API key 时的用量环；不转发端口时的远程等你和审批。
+做不到或这一轮不做的：1.x 的「等你」和审批（要写 1.x 插件；2026-11-15 B34 已做，见下面「1.x 插件（B34 核实）」）；`--standalone` TUI 的等你和审批；跳到具体会话；用自己 API key 时的用量环；不转发端口时的远程等你和审批。
 
 ### 形态
 
@@ -166,6 +166,13 @@ opencode 现在有两条线同时在发：**2.x**（2.0 在 2026-10 初发布，
 - 插件放在 `~/.config/opencode/plugin(s)/` 或项目的 `.opencode/plugin(s)/`，或写进配置的 `plugins` 字段；改完配置自动重新加载，不用重启 [18][33]。
 
 **1.x**：插件是导出一个异步函数，返回钩子对象：`event`（所有总线事件）、`permission.ask`（`output.status` 可改成 `allow` / `deny`）、`tool.execute.before` 等 [34]。放在 `~/.config/opencode/plugin(s)/*.{ts,js}`。2.x 不加载 1.x 插件 [18]。
+
+**1.x 插件（B34 核实，2026-11-15，对照 v1.19.5 源码并在 Mac 上实测 1.19.5）**：
+
+- 插件类型里声明了 `permission.ask`，但 1.19.5 的权限模块不调用它，改 `output.status` 没有用。能用的是 `event` 钩子：`permission.asked` 的内容是 `{id, sessionID, permission, patterns, metadata, always, tool}`，`permission.replied` 是 `{sessionID, requestID, reply}`。更老的 1.x 发的是 `permission.updated`（`{id, sessionID, type, pattern, title, metadata}`）和 `{sessionID, permissionID, response}`。
+- 插件拿到的 `client` 连的是本进程的服务（TUI、`serve` 都一样，自带认证），回复用 `POST /session/:id/permissions/:permissionID`（`{response}`）或 `POST /permission/:requestID/reply`（`{reply, message}`，能带拒绝理由）。
+- 插件放 `~/.config/opencode/{plugin,plugins}/*.{ts,js}` 自动加载。1.19.5 认默认导出 `{id, server}`（文件插件必须有 `id`），也认旧式的具名函数导出。
+- `--standalone` 是 2.x 的：TUI 起子进程 `opencode serve --stdio --port 0`，随机密码只放在子进程的环境变量 `OPENCODE_PASSWORD`，地址只写到管道，外面拿不到。
 
 **HTTP 接口代替钩子（2.x）**：所有接口都要 Basic 认证（密码来自 `service.json`）[35]。
 
