@@ -9,6 +9,7 @@ use crate::system::updater::get_updater_proxy;
 
 const MAX_RESPONSE_BYTES: usize = 8 * 1024 * 1024;
 const MAX_CALENDARS: usize = 20;
+const MAX_REDIRECTS: usize = 5;
 
 #[derive(Debug, Default, PartialEq, Eq)]
 pub(super) struct DavResponse {
@@ -89,6 +90,7 @@ pub(super) fn parse_multistatus(xml: &str) -> Vec<DavResponse> {
 fn client() -> Result<reqwest::Client, UserError> {
     let mut builder = reqwest::Client::builder()
         .timeout(Duration::from_secs(15))
+        .redirect(reqwest::redirect::Policy::none())
         .user_agent(concat!("Fuyu/", env!("CARGO_PKG_VERSION")));
     if let Some(proxy) = get_updater_proxy() {
         builder = builder.proxy(reqwest::Proxy::all(&proxy).map_err(|error| UserError::new("net.proxy", format!("Invalid proxy {proxy}.")).arg("proxy", proxy.as_str()).detail(error))?);
@@ -102,27 +104,88 @@ pub(super) struct Account<'a> {
     pub(super) password: &'a str,
 }
 
-async fn dav(client: &reqwest::Client, account: &Account<'_>, method: &str, url: &Url, depth: &str, body: String) -> Result<String, UserError> {
-    let method = Method::from_bytes(method.as_bytes()).map_err(|error| UserError::new("internal", "Something went wrong inside the island.").detail(error))?;
-    let response = client
-        .request(method, url.clone())
-        .basic_auth(account.username, Some(account.password))
-        .header("Depth", depth)
-        .header("Content-Type", "application/xml; charset=utf-8")
-        .body(body)
-        .send()
-        .await
-        .map_err(|error| UserError::new("calendar.unreachable", "Could not reach the calendar.").detail(error))?;
-    match response.status().as_u16() {
-        401 | 403 => return Err(UserError::new("calendar.login", "The calendar account or password is wrong.")),
-        status if !(200..300).contains(&status) => return Err(UserError::new("calendar.status", format!("The calendar answered {status}.")).arg("status", status)),
-        _ => {}
+#[derive(Debug, Default, Clone)]
+pub(super) struct Reply {
+    pub(super) status: u16,
+    pub(super) location: Option<String>,
+    pub(super) body: String,
+}
+
+pub(super) trait Transport {
+    async fn send(&self, method: &str, url: &Url, depth: &str, body: &str) -> Result<Reply, UserError>;
+}
+
+struct Http<'a> {
+    client: reqwest::Client,
+    account: &'a Account<'a>,
+}
+
+impl Transport for Http<'_> {
+    async fn send(&self, method: &str, url: &Url, depth: &str, body: &str) -> Result<Reply, UserError> {
+        let method = Method::from_bytes(method.as_bytes()).map_err(|error| UserError::new("internal", "Something went wrong inside the island.").detail(error))?;
+        let response = self
+            .client
+            .request(method, url.clone())
+            .basic_auth(self.account.username, Some(self.account.password))
+            .header("Depth", depth)
+            .header("Content-Type", "application/xml; charset=utf-8")
+            .body(body.to_string())
+            .send()
+            .await
+            .map_err(|error| UserError::new("calendar.unreachable", "Could not reach the calendar.").detail(error))?;
+        let status = response.status().as_u16();
+        let location = response.headers().get(reqwest::header::LOCATION).and_then(|value| value.to_str().ok()).map(str::to_string);
+        if !(200..300).contains(&status) {
+            return Ok(Reply { status, location, body: String::new() });
+        }
+        let bytes = response.bytes().await.map_err(|error| UserError::new("calendar.read", "Could not read the calendar.").detail(error))?;
+        if bytes.len() > MAX_RESPONSE_BYTES {
+            return Err(UserError::new("calendar.tooLarge", "The calendar is too large."));
+        }
+        Ok(Reply { status, location, body: String::from_utf8_lossy(&super::ungzip(&bytes)?).to_string() })
     }
-    let bytes = response.bytes().await.map_err(|error| UserError::new("calendar.read", "Could not read the calendar.").detail(error))?;
-    if bytes.len() > MAX_RESPONSE_BYTES {
-        return Err(UserError::new("calendar.tooLarge", "The calendar is too large."));
+}
+
+struct Answer {
+    url: Url,
+    status: u16,
+    body: String,
+}
+
+fn redirect_target(from: &Url, reply: &Reply) -> Option<Url> {
+    if !matches!(reply.status, 301 | 302 | 303 | 307 | 308) {
+        return None;
     }
-    Ok(String::from_utf8_lossy(&super::ungzip(&bytes)?).to_string())
+    let next = from.join(reply.location.as_deref()?.trim()).ok()?;
+    let same_origin = next.scheme() == "https" && next.host_str() == from.host_str() && next.port_or_known_default() == from.port_or_known_default();
+    same_origin.then_some(next)
+}
+
+async fn follow<T: Transport>(transport: &T, method: &str, url: &Url, depth: &str, body: &str) -> Result<Answer, UserError> {
+    let mut url = url.clone();
+    let mut hops = 0;
+    loop {
+        let reply = transport.send(method, &url, depth, body).await?;
+        match redirect_target(&url, &reply).filter(|_| hops < MAX_REDIRECTS) {
+            Some(next) => {
+                url = next;
+                hops += 1;
+            }
+            None => return Ok(Answer { url, status: reply.status, body: reply.body }),
+        }
+    }
+}
+
+fn checked(answer: Answer) -> Result<Answer, UserError> {
+    match answer.status {
+        401 | 403 => Err(UserError::new("calendar.login", "The calendar account or password is wrong.")),
+        status if !(200..300).contains(&status) => Err(UserError::new("calendar.status", format!("The calendar answered {status}.")).arg("status", status)),
+        _ => Ok(answer),
+    }
+}
+
+async fn dav<T: Transport>(transport: &T, method: &str, url: &Url, depth: &str, body: &str) -> Result<Answer, UserError> {
+    checked(follow(transport, method, url, depth, body).await?)
 }
 
 fn utc_stamp(at: DateTime<Utc>) -> String {
@@ -143,28 +206,89 @@ pub(super) fn calendar_query(from: DateTime<Utc>, to: DateTime<Utc>) -> String {
     )
 }
 
-const PROPFIND_DISCOVERY: &str = r#"<?xml version="1.0" encoding="utf-8"?>
+pub(super) const PROPFIND_DISCOVERY: &str = r#"<?xml version="1.0" encoding="utf-8"?>
 <d:propfind xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:caldav">
   <d:prop><d:current-user-principal/><c:calendar-home-set/><d:resourcetype/></d:prop>
 </d:propfind>"#;
 
-async fn calendars(client: &reqwest::Client, account: &Account<'_>, base: &Url) -> Result<Vec<Url>, UserError> {
-    let answer = parse_multistatus(&dav(client, account, "PROPFIND", base, "0", PROPFIND_DISCOVERY.into()).await?);
-    if answer.iter().any(|response| response.is_calendar) {
-        return Ok(vec![base.clone()]);
+fn join(base: &Url, href: &str) -> Result<Url, UserError> {
+    base.join(href).map_err(|error| UserError::new("calendar.address", "The calendar address is not valid.").detail(error))
+}
+
+fn not_calendar() -> UserError {
+    UserError::new("calendar.notCalendar", "This address is not a calendar, and no calendars were found for the account.")
+}
+
+fn leads_somewhere(responses: &[DavResponse]) -> bool {
+    responses.iter().any(|response| response.is_calendar || response.home.is_some() || response.principal.is_some())
+}
+
+enum Probe {
+    Found(Url, Vec<DavResponse>),
+    Refused(UserError),
+    Missed(Option<UserError>),
+}
+
+async fn probe<T: Transport>(transport: &T, url: &Url) -> Result<Probe, UserError> {
+    let answer = follow(transport, "PROPFIND", url, "0", PROPFIND_DISCOVERY).await?;
+    let status = answer.status;
+    Ok(match checked(answer) {
+        Ok(answer) => {
+            let found = parse_multistatus(&answer.body);
+            if leads_somewhere(&found) {
+                Probe::Found(answer.url, found)
+            } else {
+                Probe::Missed(None)
+            }
+        }
+        Err(error) if matches!(status, 401 | 403) => Probe::Refused(error),
+        Err(error) => Probe::Missed(Some(error)),
+    })
+}
+
+async fn entry_point<T: Transport>(transport: &T, base: &Url) -> Result<(Url, Vec<DavResponse>), UserError> {
+    let typed_error = match probe(transport, base).await? {
+        Probe::Found(at, found) => return Ok((at, found)),
+        Probe::Refused(error) => return Err(error),
+        Probe::Missed(error) => error,
+    };
+    let well_known = join(base, "/.well-known/caldav")?;
+    if well_known != *base {
+        match probe(transport, &well_known).await? {
+            Probe::Found(at, found) => return Ok((at, found)),
+            Probe::Refused(error) => return Err(error),
+            Probe::Missed(_) => {}
+        }
     }
-    let join = |href: &str| base.join(href).map_err(|error| UserError::new("calendar.address", "The calendar address is not valid.").detail(error));
+    Err(typed_error.unwrap_or_else(not_calendar))
+}
+
+pub(super) async fn calendars<T: Transport>(transport: &T, base: &Url) -> Result<Vec<Url>, UserError> {
+    let (at, answer) = entry_point(transport, base).await?;
+    if answer.iter().any(|response| response.is_calendar) {
+        return Ok(vec![at]);
+    }
     let home = match answer.iter().find_map(|response| response.home.clone()) {
-        Some(home) => join(&home)?,
+        Some(home) => join(&at, &home)?,
         None => {
-            let principal = answer.iter().find_map(|response| response.principal.clone()).ok_or_else(|| UserError::new("calendar.notCalendar", "This address is not a calendar, and no calendars were found for the account."))?;
-            let principal = join(&principal)?;
-            let found = parse_multistatus(&dav(client, account, "PROPFIND", &principal, "0", PROPFIND_DISCOVERY.into()).await?);
-            join(&found.iter().find_map(|response| response.home.clone()).ok_or_else(|| UserError::new("calendar.noCalendars", "No calendars were found for the account."))?)?
+            let principal = answer.iter().find_map(|response| response.principal.clone()).ok_or_else(not_calendar)?;
+            let principal = dav(transport, "PROPFIND", &join(&at, &principal)?, "0", PROPFIND_DISCOVERY).await?;
+            let found = parse_multistatus(&principal.body);
+            join(&principal.url, &found.iter().find_map(|response| response.home.clone()).ok_or_else(|| UserError::new("calendar.noCalendars", "No calendars were found for the account."))?)?
         }
     };
-    let listed = parse_multistatus(&dav(client, account, "PROPFIND", &home, "1", PROPFIND_DISCOVERY.into()).await?);
-    listed.iter().filter(|response| response.is_calendar).take(MAX_CALENDARS).map(|response| join(&response.href)).collect()
+    let listed = dav(transport, "PROPFIND", &home, "1", PROPFIND_DISCOVERY).await?;
+    let found = parse_multistatus(&listed.body);
+    found.iter().filter(|response| response.is_calendar).take(MAX_CALENDARS).map(|response| join(&listed.url, &response.href)).collect()
+}
+
+pub(super) async fn events<T: Transport>(transport: &T, base: &Url, from: DateTime<Utc>, to: DateTime<Utc>) -> Result<Vec<String>, UserError> {
+    let mut texts = Vec::new();
+    for calendar in calendars(transport, base).await? {
+        let answer = dav(transport, "REPORT", &calendar, "1", &calendar_query(from, to)).await?;
+        texts.extend(parse_multistatus(&answer.body).into_iter().flat_map(|response| response.calendar_data));
+    }
+    Ok(texts)
 }
 
 pub(super) async fn fetch(account: &Account<'_>, from: DateTime<Utc>, to: DateTime<Utc>) -> Result<Vec<String>, UserError> {
@@ -172,14 +296,12 @@ pub(super) async fn fetch(account: &Account<'_>, from: DateTime<Utc>, to: DateTi
     if base.scheme() != "https" {
         return Err(UserError::new("calendar.https", "The calendar address must start with https://."));
     }
-    let client = client()?;
-    let mut texts = Vec::new();
-    for calendar in calendars(&client, account, &base).await? {
-        let answer = dav(&client, account, "REPORT", &calendar, "1", calendar_query(from, to)).await?;
-        texts.extend(parse_multistatus(&answer).into_iter().flat_map(|response| response.calendar_data));
-    }
-    Ok(texts)
+    events(&Http { client: client()?, account }, &base, from, to).await
 }
+
+#[cfg(test)]
+#[path = "caldav_tests.rs"]
+mod discovery_tests;
 
 #[cfg(test)]
 mod tests {
