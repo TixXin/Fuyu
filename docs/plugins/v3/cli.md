@@ -66,7 +66,7 @@ fuyu-plugin build [文件夹] [--out <文件夹>] [--config <文件>] [--officia
 
 用 esbuild 构建，宿主部分和界面部分分开打包：
 
-- **宿主部分**：按 Node、ES 模块、目标 `node22` 打包，npm 依赖全部打进这一个文件。`fuyu-plugin`、`@fuyu/plugin-base` 留在外面，由浮屿提供，保证全进程只有一份内核。宿主代码用到的 Node 内置模块被扫出来写进 `fuyu.nodeApis`（`fs/promises` 记成 `fs`，和审核分析器一样）。打进去的 CommonJS 依赖里有 `require()` 时，产物开头会用 `node:module` 造一个 `require`，`nodeApis` 里也就多一个 `module`。
+- **宿主部分**：按 Node、ES 模块、目标 `node22` 打包，npm 依赖全部打进这一个文件。`@fuyu/plugin-base`、`fuyu-plugin` 留在外面，由浮屿提供，保证全进程只有一份内核。只有这两个名字本身留在外面：浮屿不提供它们的子路径，`@fuyu/plugin-base/protocol` 这类子路径会打进包里。宿主代码用到的 Node 内置模块被扫出来写进 `fuyu.nodeApis`（`fs/promises` 记成 `fs`，和审核分析器一样）。打进去的 CommonJS 依赖里有 `require()` 时，产物开头会用 `node:module` 造一个 `require`，`nodeApis` 里也就多一个 `module`。
 - **界面部分**：按浏览器、ES 模块、目标 `es2022` 打包，`process.env.NODE_ENV` 是 `"production"`，JSX 用自动运行时。
   - **共享模块**：`react` 和 `react/jsx-runtime` 不打进去，所有插件共用浮屿提供的一份。构建时把对它们的引用（包括依赖里的引用）改写成浮屿的转接模块，默认写根路径 `/__shared/react.js`、`/__shared/react-jsx-runtime.js`。根路径在 Mac 和 Windows 上都落到插件协议的根，和插件装在哪一层无关。
   - 浮屿提供、但还没有转接模块的包（`react-dom`、`fuyu-plugin`、`@fuyu/plugin-base`，以及名单外的 `react/*`）用到就报错，不让插件自己打一份进去。它们有了转接模块后会进名单，到时不用改插件。
@@ -95,7 +95,7 @@ fuyu-plugin build [文件夹] [--out <文件夹>] [--config <文件>] [--officia
 |---|---|---|
 | `shared` | `react`、`react/jsx-runtime` 两项 | 共享模块名单：模块名对应插件协议根下的路径 |
 | `packageDepth` | 不写 | 不写或 `false`：共享模块写根路径 `/__shared/…`。`true`：按已安装包的 3 层（`packages/@作用域/名字/`）写相对路径。非负整数：按给的层数写相对路径 |
-| `hostExternal` | `["fuyu-plugin", "@fuyu/plugin-base"]` | 宿主部分留在外面的包（含子路径） |
+| `hostExternal` | `["@fuyu/plugin-base", "fuyu-plugin"]`（浮屿宿主共享的模块） | 宿主部分留在外面的模块，按名字精确匹配，子路径不算 |
 | `appModules` | `["react", "react-dom", "fuyu-plugin", "@fuyu/plugin-base"]` | 界面部分不许自己打进去的包 |
 | `nodeTarget`、`browserTarget` | `node22`、`es2022` | esbuild 的目标 |
 
