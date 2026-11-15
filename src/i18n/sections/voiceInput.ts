@@ -16,8 +16,6 @@ export type VoiceInputText = {
   openPrivacy: string;
   settings: {
     title: string;
-    enable: string;
-    enableHint: string;
     shortcut: string;
     shortcutHint: string;
     shortcutOff: string;
@@ -58,8 +56,6 @@ export const zhCN: VoiceInputText = {
   openPrivacy: "打开隐私设置",
   settings: {
     title: "语音输入",
-    enable: "启用语音输入",
-    enableHint: "按快捷键说话，识别结果显示在岛上，改好后存成待办、追加到每日笔记或复制。",
     shortcut: "开始 / 结束录音",
     shortcutHint: "按一下开始录音，再按一下结束并识别；岛上也有结束按钮。每次最长 2 分钟。",
     shortcutOff: "未设置",
@@ -100,8 +96,6 @@ export const en: VoiceInputText = {
   openPrivacy: "Open privacy settings",
   settings: {
     title: "Voice input",
-    enable: "Turn on voice input",
-    enableHint: "Press the shortcut and speak; the text shows on the island, where you can fix it and save it as a todo, add it to the daily note or copy it.",
     shortcut: "Start / stop recording",
     shortcutHint: "Press once to start, again to stop and transcribe; the island has a stop button too. Up to 2 minutes each time.",
     shortcutOff: "Not set",

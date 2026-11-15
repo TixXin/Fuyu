@@ -1,7 +1,6 @@
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton";
 import { SettingsRow } from "../../components/settings/SettingsRow";
-import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
 import { isNativeError } from "../../i18n/nativeError";
 import { useErrorText, useTranslation } from "../../i18n";
 import type { VoiceInputSettings } from "./settings";
@@ -49,11 +48,8 @@ export function VoiceInputSettingsSection({ settings, onSettingsChange, takenBy 
   const t = useTranslation().voiceInput.settings;
   return (
     <>
-      <SettingsGroup title={t.title} footer={settings.enabled ? `${t.shortcutHint} ${t.languages}` : t.languages}>
-        <SettingsToggleRow title={t.enable} description={t.enableHint} checked={settings.enabled} onChange={(enabled) => onSettingsChange({ ...settings, enabled })} />
-        {settings.enabled && (
-          <VoiceShortcutRow shortcut={settings.shortcut} takenBy={takenBy} onChange={(shortcut) => onSettingsChange({ ...settings, shortcut })} />
-        )}
+      <SettingsGroup title={t.title} footer={`${t.shortcutHint} ${t.languages}`}>
+        <VoiceShortcutRow shortcut={settings.shortcut} takenBy={takenBy} onChange={(shortcut) => onSettingsChange({ ...settings, shortcut })} />
       </SettingsGroup>
       <SettingsGroup title={t.modelTitle} footer={t.privacy}>
         <ModelRow />

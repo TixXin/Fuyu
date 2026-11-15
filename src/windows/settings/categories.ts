@@ -89,7 +89,7 @@ export function entryPages(item: SettingsCategory): readonly SettingsCategory[] 
   return isEntry(item) ? SETTINGS_TABS[item] : [item];
 }
 
-export const SETTINGS_FEATURES = ["todos", "calendar", "music", "translation", "clipboard", "shelf", "screenshot", "agents"] as const;
+export const SETTINGS_FEATURES = ["todos", "calendar", "music", "translation", "clipboard", "shelf", "screenshot", "voiceInput", "agents"] as const;
 
 export type SettingsFeature = (typeof SETTINGS_FEATURES)[number];
 
@@ -101,6 +101,7 @@ export const FEATURE_PAGES: Readonly<Record<SettingsFeature, readonly SettingsCa
   clipboard: ["clipboard", "clipboardHistory", "clipboardSnippets", "clipboardData"],
   shelf: ["shelf"],
   screenshot: ["screenshot", "screenshotRecord"],
+  voiceInput: ["voiceInput"],
   agents: ["agents", "agentSessions", "agentAlerts", "sounds", "agentApprovals", "agentConnect", "agentRemote"],
 };
 

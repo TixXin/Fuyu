@@ -4,6 +4,7 @@ import { useScreenshotSettings } from "../../features/screenshot/useScreenshotSe
 import { useTranslationSettings } from "../../features/translation/useTranslationSettings";
 import { VoiceInputSettingsSection } from "../../features/voice-input/VoiceInputSettingsSection";
 import { useVoiceInputSettings } from "../../features/voice-input/useVoiceInputSettings";
+import { FeatureHeader } from "./FeatureHeader";
 import { useShortcutOwners } from "./useShortcutOwners";
 
 export function VoiceInputSettingsPage({ settings }: { settings: IslandSettings }) {
@@ -12,5 +13,10 @@ export function VoiceInputSettingsPage({ settings }: { settings: IslandSettings 
   const [translation] = useTranslationSettings();
   const [screenshot] = useScreenshotSettings();
   const { takenBy } = useShortcutOwners({ settings, clipboard, translation, screenshot, voice });
-  return <VoiceInputSettingsSection settings={voice} onSettingsChange={setVoice} takenBy={(shortcut) => takenBy(shortcut, "voiceInput")} />;
+  return (
+    <>
+      <FeatureHeader feature="voiceInput" />
+      <VoiceInputSettingsSection settings={voice} onSettingsChange={setVoice} takenBy={(shortcut) => takenBy(shortcut, "voiceInput")} />
+    </>
+  );
 }
