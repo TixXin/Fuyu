@@ -139,10 +139,12 @@ mod protocol_and_command {
 
     #[test]
     fn a_window_learns_the_port_and_token_only_once_the_host_is_ready() {
-        assert!(!connection_from(None).enabled);
-        let starting = connection_from(Some(&HostState::Starting { generation: 1 }));
+        assert!(!connection_from(false, None).enabled);
+        let preparing = connection_from(true, None);
+        assert!(preparing.enabled && preparing.port.is_none(), "Node is still being found or downloaded");
+        let starting = connection_from(true, Some(&HostState::Starting { generation: 1 }));
         assert!(starting.enabled && starting.port.is_none() && starting.token.is_none());
-        let ready = connection_from(Some(&HostState::Ready { generation: 3, pid: 9, ready: json!({ "windows": { "port": 51234, "token": "abc" } }) }));
+        let ready = connection_from(true, Some(&HostState::Ready { generation: 3, pid: 9, ready: json!({ "windows": { "port": 51234, "token": "abc" } }) }));
         assert_eq!((ready.port, ready.token.as_deref(), ready.generation), (Some(51234), Some("abc"), Some(3)));
     }
 }
