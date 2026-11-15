@@ -93,14 +93,16 @@ export async function apply(ctx) {
 | `ctx.services.provide(定义, 实现)` | 校验定义；检查实现里每个声明的方法都是函数（缺了启动失败，错误写明缺哪个）；`ctx.provide(定义.name, …)`；登记到宿主的服务表 | 是：插件停用时撤掉登记、撤掉 Cordis 的 provide，这个提供者上**还没回答的调用全部以 `peer-gone` 失败** |
 | `provider.emit(事件, 数据)` | 发给进程内的订阅者，有窗口订阅时再发给窗口。没声明的事件抛 `no-event`；提供者已经停用时返回 `false`、什么也不做（不抛：停用后迟到的回调不该算成插件的错） | — |
 | `ctx.services.get(定义)` | 返回 `ServiceClient`。**按名字晚绑定**：每次调用时才去找当前的提供者，所以提供者换了以后拿着旧客户端的人调到的是新的 | — |
-| `client.<方法>(params, options)` | 找当前提供者（没有回 `not-ready`），按声明的超时调，提供者停用时回 `peer-gone` | 调用方停用时，它还在等的调用结果被丢掉 |
+| `client.<方法>(params, options)` | 找当前提供者（没有回 `not-ready`），按声明的超时调，提供者停用时回 `peer-gone` | 否：调用方停用不取消已经发出的调用，结果照常回来；用 `ctx.effect` 守住回来以后要做的事 |
 | `client.on(事件, 监听器)` | 订阅。监听器挂在**调用方**的 ctx 上（Cordis 的 `ctx.on`），所以计入调用方的 `usage.listeners`，抛错只记在调用方名下、不影响别的订阅者（保证清单第 20 条） | 是：调用方停用时自动撤掉。订阅按服务名，不按提供者，提供者换了照样收到新提供者发的事件 |
 
 - 进程内调用**不复制参数和结果**（同一个线程，复制是白花的时间），所以提供者不能改调用方传进来的对象、调用方也不能改拿到的结果。类型已经保证它们是 JSON，换到窗口那条路上行为一致。
 - 进程内调用和窗口来的调用走**同一套**超时和错误，代码从宿主挪到窗口（或反过来）时不用改错误处理。
 - 参数的校验是提供者的事：类型只管编译期，窗口和别的插件可能传任何东西进来（方案「边界」：命令要按调用方可能有问题来写）。
 
-`ctx.services` 的类型（`Context` 上的增补）放在 `packages/plugin-base/src/index.d.mts`，要等 E36.2.3 合入后加，见「还没做的、要改公共文件的」。
+`ctx.services` 和 `ctx.setTimeout` 一样是内核挂在根上下文的访问器（`ctx.reflect.accessor`），插件**不用 `inject: ["services"]`** 就能用；它按读它的那个 ctx 绑定调用方，所以注册和订阅都落在调用方插件名下。除了 `provide`、`get` 还有 `list()`（当前在提供的服务，和快照的 `services` 同一格式）。宿主自己（`main.mjs`）用 `startHost` 返回的 `host.serviceHub` 做窗口分发，`host.services()`、`host.watchServices()` 给快照和增量。
+
+`ctx.services` 的类型（`Context` 上的增补）放在 `packages/plugin-base/src/index.d.mts`，要等 E36.2.3 合入后加，见「还没做的、要改公共文件的」；在那之前类型在 `@fuyu/plugin-base/host` 的 `ServicesApi`。
 
 ## 窗口怎么调
 
@@ -181,7 +183,7 @@ export async function apply(ctx) {
 | `defineService`、类型工具、`SERVICE_NAME` | `packages/plugin-services/src/define.mjs` / `.d.mts` | 这一轮 |
 | 内置服务的声明 | `packages/plugin-services/src/services/<名字>.mjs` / `.d.mts` | 这一轮：`timers`、`translator` |
 | 测试 | `packages/plugin-services/test/define.test.mjs`（已在 `pnpm test` 的范围里）、`types.check.mts`（进 `pnpm check:packages-types` 要改 `packages/tsconfig.json`，见下面第 5 条） | 这一轮 |
-| 宿主的服务表和窗口分发 | `packages/plugin-base/src/host/services.mjs`，`main.mjs` 的 `onCall` 接上 | 第二步（主 agent 确认设计后） |
+| 宿主的服务表和窗口分发 | `packages/plugin-base/src/host/services.mjs`；`kernel.mjs` 装上访问器、`main.mjs` 的 `onCall`、快照和增量接上；测试 `packages/plugin-base/test/services.test.mjs` | 第二步，已做（Rust 来的 `service.call` 留给 E36.3.3，窗口来的 `progress` 留给 E36.3.8） |
 | 窗口的代理 | `packages/plugin-base/src/client/services.mjs` | E36.2.3 合入后 |
 | Rust 生成的类型 | `packages/plugin-services/src/generated/` | E36.3.4 |
 
@@ -191,7 +193,7 @@ export async function apply(ctx) {
 
 这些都排在 E36.2.3 合入之后（经理 2026-11-15 定），到时一次改、单独先合入：
 
-1. `packages/plugin-base/src/protocol.mjs` / `.d.mts`：加 `SERVICE_CALLS = ["service.call", "service.on", "service.off"]` 和错误码常量；`SERVICE_NAME` 是否挪到这里，看下面第 4 条。
+1. `packages/plugin-base/src/protocol.mjs` / `.d.mts`：加 `SERVICE_CALLS = ["service.call", "service.on", "service.off"]` 和错误码常量；`SERVICE_NAME` 是否挪到这里，看下面第 4 条。现在 `SERVICE_CALLS`、`SERVICE_NAME`、`SERVICE_TIMEOUT_MS` 暂放在 `host/services.mjs`（经 `@fuyu/plugin-base/host` 导出），`SERVICE_NAME` 和 `@fuyu/plugin-services` 里的是同一个正则的两份，挪进 `protocol.mjs` 后两边都引那一份。
 2. `packages/plugin-base/src/index.d.mts`：`Context` 上加 `services: { provide, get }`，类型引 `ServiceDefinition` 等。
 3. `v3-boundary.md`：「宿主和窗口之间」的消息表加上面三个调用、`service` 事件、快照的 `services` 和 `progress` 消息（`progress` 随 E36.3.8）；规则表不变。`contracts.md` 第 3 版那一条加一句：服务名带版本、只加不改，名单在 `@fuyu/plugin-services`。
 4. **`defineService` 放哪**（要主 agent 定）：现在在 `@fuyu/plugin-services`。它本身不含浮屿的业务，按「基座做成开源项目」应该属于 `@fuyu/plugin-base`（新的子路径 `./services`），`plugin-services` 只放浮屿的服务名单并转出它。挪过去要改 `plugin-base/package.json` 的 `exports`（公共文件），文件可以原样搬（`define.mjs` / `.d.mts` 不依赖别的东西）。

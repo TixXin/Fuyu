@@ -6,6 +6,7 @@ import NodeFs from "@cordisjs/fs-node";
 import Loader from "@cordisjs/loader";
 import { Context } from "cordis";
 import { Clients } from "./clients.mjs";
+import { Services } from "./services.mjs";
 import { recordLogs } from "./logs.mjs";
 import { shareModules } from "./share.mjs";
 import { Gate } from "./gate.mjs";
@@ -54,6 +55,8 @@ export async function startHost({ dir, config = "plugins.yml", apiNames = [], wa
   const timers = new Timers(usage);
   timers.install(ctx);
   await ctx.plugin(Clients, dir);
+  const services = new Services();
+  services.install(ctx);
   await ctx.use(Loader);
   gate.install(ctx);
   if (dev) await ctx.loader.create({ name: HMR, config: { base: realpathSync(dir), watch: { enabled: true, debounce: 30 } } });
@@ -71,6 +74,9 @@ export async function startHost({ dir, config = "plugins.yml", apiNames = [], wa
     clients: (window) => ctx.clients.list(window),
     timers: () => timers.counts(),
     watchClients: (onChange) => ctx.clients.watch(onChange),
+    serviceHub: services,
+    services: () => services.list(),
+    watchServices: (onChange) => services.watch(onChange),
     settle: () => Promise.all(ctx.loader.getTasks()),
     stop: () => ctx.fiber.dispose(),
   };
