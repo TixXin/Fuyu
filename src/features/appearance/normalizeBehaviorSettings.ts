@@ -80,6 +80,7 @@ export function normalizeBehaviorSettings(settings: LegacyIslandSettings | null 
       : DEFAULT_SETTINGS.shelfMaxItems,
     shelfDoubleClick: settings?.shelfDoubleClick === "reveal" ? "reveal" : "open",
     shelfShowCount: settings?.shelfShowCount === true,
+    sideMusicCover: settings?.sideMusicCover === true,
     deviceUseIndicator: settings?.deviceUseIndicator !== false,
     levelPopup: settings?.levelPopup !== false,
     deviceAlerts: settings?.deviceAlerts !== false,

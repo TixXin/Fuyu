@@ -604,11 +604,11 @@
       "page": "theme",
       "zh-CN": {
         "group": "质感与形状",
-        "title": "贴顶圆角"
+        "title": "贴边圆角"
       },
       "en": {
         "group": "Look and shape",
-        "title": "Top-edge corner radius"
+        "title": "Docked corner radius"
       }
     },
     {

@@ -44,6 +44,12 @@ const GROUPS = [
     ["不模拟刘海（用屏幕真实的）", () => call("DELETE", "island/notch")],
     ...NOTCHES.map(({ label, width, height }) => [label, () => call("PUT", "island/notch", { width, height })]),
   ]],
+  ["吸附边", [
+    ["顶边", () => call("PUT", "island/edge", { edge: "top" })],
+    ["底边", () => call("PUT", "island/edge", { edge: "bottom" })],
+    ["左侧竖向岛", () => call("PUT", "island/edge", { edge: "left" })],
+    ["右侧竖向岛", () => call("PUT", "island/edge", { edge: "right" })],
+  ]],
   ["岛", [
     ...PAGES.map(([page, label]) => [`展开：${label}`, () => action({ action: "open", page })]),
     ["收起", () => action({ action: "collapse" })],
@@ -81,7 +87,14 @@ const GROUPS = [
       await agent("running");
       await emit(wechatMessage(now()));
     }],
+    ["侧边 + 消息气泡 + 音量", async () => {
+      await call("PUT", "island/edge", { edge: "left" });
+      await agent("running");
+      await emit(qqMessage(now()));
+      setTimeout(() => void emit(levelChange("volume", 0.45)), 4500);
+    }],
     ["复原", async () => {
+      await call("PUT", "island/edge", { edge: "top" });
       await call("DELETE", "island/notch");
       await call("DELETE", "agent-status/lab");
       await action({ action: "collapse" });

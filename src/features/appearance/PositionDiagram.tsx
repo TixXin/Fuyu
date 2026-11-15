@@ -1,16 +1,17 @@
 import { AppWindow, MousePointer2 } from "lucide-react";
 import type { CSSProperties } from "react";
+import type { IslandDockEdge } from "./api";
 import type { IslandMonitor, MenuBarPlacement } from "./types";
 import "./PositionDiagram.css";
 
 const MAX_MARGIN = 160;
 const MAX_OFFSET = 26;
 
-type PositionDiagramProps = { monitor: IslandMonitor; bottom: boolean; marginY: number; menuBar: MenuBarPlacement | null };
+type PositionDiagramProps = { monitor: IslandMonitor; edge: IslandDockEdge; marginY: number; menuBar: MenuBarPlacement | null };
 
-export function PositionDiagram({ monitor, bottom, marginY, menuBar }: PositionDiagramProps) {
+export function PositionDiagram({ monitor, edge, marginY, menuBar }: PositionDiagramProps) {
   const onSecond = monitor !== "primary";
-  const offset = bottom ? 0 : Math.round((Math.min(Math.max(marginY, 0), MAX_MARGIN) / MAX_MARGIN) * MAX_OFFSET) + (menuBar === "below" ? 7 : 0);
+  const offset = edge !== "top" ? 0 : Math.round((Math.min(Math.max(marginY, 0), MAX_MARGIN) / MAX_MARGIN) * MAX_OFFSET) + (menuBar === "below" ? 7 : 0);
   const island = <span className="position-diagram__island" style={{ "--position-offset": `${offset}px` } as CSSProperties} />;
   const screen = (active: boolean, main: boolean) => (
     <span className={`position-diagram__screen${main ? " position-diagram__screen--main" : ""}${active ? " position-diagram__screen--active" : ""}`}>
@@ -21,7 +22,7 @@ export function PositionDiagram({ monitor, bottom, marginY, menuBar }: PositionD
     </span>
   );
   return (
-    <span className={`position-diagram${bottom ? " position-diagram--bottom" : ""}`} aria-hidden="true">
+    <span className={`position-diagram${edge === "top" ? "" : ` position-diagram--${edge}`}`} aria-hidden="true">
       {screen(!onSecond, true)}
       {screen(onSecond, false)}
     </span>
