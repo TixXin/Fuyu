@@ -210,7 +210,7 @@ if (!automated) {
     check(element(".settings-tabs__tab--active").dataset.tab === "shortcutsIsland" && texts(".settings-group__title").includes("页面切换") && document.querySelectorAll(".shortcut-sheet .settings-group").length >= 2
       && texts(".shortcut-record-button .shortcut-keys__cap").startsWith("Alt|1–9"), "Its link opens Shortcuts > On the island: page keys on top as key caps, fixed keys in a two-column sheet");
     await openPage("behaviorAlerts");
-    check(texts(".settings-group__title") === "在小岛上提示" && texts(".settings-row__title") === "音量与亮度|耳机与充电|摄像头和麦克风使用提示", "Volume, headphones and camera alerts are one group on the System alerts tab");
+    check(texts(".settings-group__title") === "在小岛上提示|休息提醒" && texts(".settings-row__title") === "音量与亮度|耳机与充电|摄像头和麦克风使用提示|休息提醒" && !document.querySelector(".break-reminder-row"), "Volume, headphones and camera alerts are one group on the System alerts tab, then break reminders, off with no items shown");
     await openPage("general");
     check(texts(".settings-group__title") === "启动与语言|位置|数据|升级前的备份" && document.querySelector(".position-diagram__screen--active .position-diagram__island") && !texts(".settings-row__title").includes("最小化按钮")
       && document.querySelectorAll(".settings-footnote__toggle").length === 4 && texts(".settings-row__title").includes("0.3.9 → 0.4.0") && !document.querySelector(".settings-backup__status--error"), "General is four groups: position draws the screens, data folder and backup are one group, then backups made before updates with their versions and no restore warning while data reads fine; long notes fold");
@@ -357,9 +357,9 @@ if (!automated) {
     check(hooksLink, "Without hooks, the on-the-island page says so with a way to install them");
     await act(async () => { hooksLink!.click(); });
     check(element(".settings-tabs__tab--active").dataset.tab === "agentConnect", "The hooks notice on the on-the-island page opens the connection page");
+    localStorage.removeItem("fuyu-agent-session-filters");
     await openPage("agentSessions");
     const filterGroup = () => [...document.querySelectorAll<HTMLElement>(".settings-group")].find((group) => group.textContent?.includes("隐藏会话"))!;
-    localStorage.removeItem("fuyu-agent-session-filters");
     const filterInput = filterGroup().querySelector<HTMLInputElement>(".session-filter__form input")!;
     await type(filterInput, "E:\\Projects\\scratch");
     await act(async () => { filterGroup().querySelector<HTMLFormElement>(".session-filter__form")!.requestSubmit(); });

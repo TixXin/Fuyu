@@ -11,7 +11,14 @@ use serde_json::Value;
 use super::markers::{CLAUDE_CODE_NOTIFICATION_FILE_NAME, CODEX_NOTIFICATION_FILE_NAME};
 use super::snapshot::{current_unix_millis, system_time_to_unix_millis};
 
-const WAITING_TYPES: [&str; 3] = ["permission_prompt", "elicitation_dialog", "agent_needs_input"];
+const WAITING_TYPES: [&str; 6] = [
+    "permission_prompt",
+    "elicitation_dialog",
+    "agent_needs_input",
+    "ask_user_question",
+    "document_review",
+    "browser_interaction",
+];
 const REMEMBERED_SESSIONS: usize = 16;
 const TRANSCRIPT_WRITE_SLACK_MS: i64 = 2000;
 

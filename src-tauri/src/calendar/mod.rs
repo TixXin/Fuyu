@@ -57,20 +57,29 @@ fn app_dir(app: &AppHandle) -> Result<std::path::PathBuf, UserError> {
     crate::home_dir::fuyu_home(app.path()).map_err(|error| UserError::new("internal", "Something went wrong inside the island.").detail(error))
 }
 
+pub(super) fn http_error(code: &'static str, message: &'static str, error: reqwest::Error) -> UserError {
+    UserError::new(code, message).detail(error.without_url())
+}
+
 async fn fetch_ics(link: &str) -> Result<String, UserError> {
     let url = sources::ics_url(link)?;
+    let shown = url.to_string();
+    download(url).await.map_err(|error| error.redact(&shown).redact(link.trim()))
+}
+
+async fn download(url: reqwest::Url) -> Result<String, UserError> {
     let client = reqwest::Client::builder()
         .timeout(Duration::from_secs(15))
         .user_agent(concat!("Fuyu/", env!("CARGO_PKG_VERSION")))
         .build()
-        .map_err(|error| UserError::new("http.client", "Could not set up the connection.").detail(error))?;
-    let response = client.get(url).send().await.map_err(|error| UserError::new("calendar.unreachable", "Could not reach the calendar.").detail(error))?;
+        .map_err(|error| http_error("http.client", "Could not set up the connection.", error))?;
+    let response = client.get(url).send().await.map_err(|error| http_error("calendar.unreachable", "Could not reach the calendar.", error))?;
     match response.status().as_u16() {
         401 | 403 | 404 => return Err(UserError::new("calendar.linkExpired", "The subscription link has expired, or does not allow access.")),
         status if !(200..300).contains(&status) => return Err(UserError::new("calendar.status", format!("The calendar answered {status}.")).arg("status", status)),
         _ => {}
     }
-    let bytes = response.bytes().await.map_err(|error| UserError::new("calendar.read", "Could not read the calendar.").detail(error))?;
+    let bytes = response.bytes().await.map_err(|error| http_error("calendar.read", "Could not read the calendar.", error))?;
     if bytes.len() > MAX_ICS_BYTES {
         return Err(UserError::new("calendar.tooLarge", "The calendar is too large."));
     }
@@ -240,6 +249,22 @@ mod tests {
         assert_eq!(ungzip(&packed.finish().unwrap()).unwrap(), b"BEGIN:VCALENDAR");
         assert_eq!(ungzip(b"BEGIN:VCALENDAR").unwrap(), b"BEGIN:VCALENDAR");
         assert!(ungzip(&[0x1f, 0x8b, 0, 0]).is_err());
+    }
+
+    #[test]
+    fn a_failed_subscription_never_shows_the_link() {
+        let link = "webcal://127.0.0.1:1/calendar/ical/private-s3cr3t-token/basic.ics";
+        let error = tauri::async_runtime::block_on(fetch_ics(link)).unwrap_err();
+        assert_eq!(error.code(), "calendar.unreachable");
+        let shown = serde_json::to_string(&error).unwrap() + &error.to_string();
+        assert!(!shown.contains("s3cr3t") && !shown.contains("/calendar/ical"), "{shown}");
+    }
+
+    #[test]
+    fn a_link_echoed_back_is_hidden() {
+        let link = "https://example.com/private-s3cr3t/basic.ics";
+        let error = UserError::new("calendar.read", "Could not read.").detail(format!("for url ({link})")).redact(link);
+        assert!(!serde_json::to_string(&error).unwrap().contains("s3cr3t"));
     }
 
     #[test]

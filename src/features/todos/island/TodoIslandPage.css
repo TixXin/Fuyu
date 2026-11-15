@@ -229,17 +229,17 @@
   font-weight: 500;
 }
 
-.todo-island .scheduled-list__item > button {
+.todo-island .scheduled-list__item > button:not(.todo-tag-button) {
   color: var(--text-3);
   opacity: 0;
 }
 
-.todo-island .scheduled-list__item:hover > button,
-.todo-island .scheduled-list__item > button:focus-visible {
+.todo-island .scheduled-list__item:hover > button:not(.todo-tag-button),
+.todo-island .scheduled-list__item > button:not(.todo-tag-button):focus-visible {
   opacity: 1;
 }
 
-.todo-island .scheduled-list__item > button:hover {
+.todo-island .scheduled-list__item > button:not(.todo-tag-button):hover {
   color: var(--color-light-needs);
   background: var(--todo-surface);
 }

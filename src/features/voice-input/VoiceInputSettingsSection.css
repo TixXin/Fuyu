@@ -1,0 +1,20 @@
+.voice-model-progress {
+  display: block;
+  width: 100%;
+  height: 4px;
+  margin-top: 8px;
+  border: 0;
+  border-radius: 999px;
+  overflow: hidden;
+  appearance: none;
+  background: rgba(var(--overlay-rgb, 255, 255, 255), 0.12);
+}
+
+.voice-model-progress::-webkit-progress-bar {
+  background: rgba(var(--overlay-rgb, 255, 255, 255), 0.12);
+}
+
+.voice-model-progress::-webkit-progress-value {
+  border-radius: 999px;
+  background: var(--color-accent);
+}

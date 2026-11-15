@@ -67,6 +67,15 @@ fn safe_mode_is_passed_on_only_when_it_names_a_known_mode() {
     }
 }
 
+#[test]
+fn the_host_gets_the_built_in_plugin_list_and_the_app_version() {
+    let args = args_for(&HostMode::default());
+    let builtins = args.windows(2).find(|pair| pair[0] == "--builtins").map(|pair| std::path::PathBuf::from(&pair[1])).expect("--builtins is passed");
+    assert!(builtins.join("builtins.json").is_file(), "{}", builtins.display());
+    assert!(args.windows(2).any(|pair| pair == ["--app-version", env!("CARGO_PKG_VERSION")]), "{args:?}");
+    assert!(args.iter().position(|arg| arg == "--app-version") > args.iter().position(|arg| arg.ends_with("main.mjs")), "--app-version is the host's own flag, after the script");
+}
+
 fn wait_for(states: &mpsc::Receiver<HostState>, ready: bool) -> HostState {
     let deadline = Instant::now() + Duration::from_secs(60);
     loop {
@@ -85,7 +94,8 @@ fn the_real_host_starts_under_the_supervisor_reports_its_plugins_and_comes_back_
     let dir = std::env::temp_dir().join(format!("fuyu-plugin-kernel-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     std::fs::write(dir.join("hello.mjs"), "export const name = \"hello\";\nexport function apply(ctx) {\n  ctx.effect(() => {\n    const timer = setInterval(() => {}, 1000);\n    return () => clearInterval(timer);\n  });\n}\n").unwrap();
-    std::fs::write(dir.join("plugins.yml"), "- id: hello\n  name: ./hello.mjs\n").unwrap();
+    std::fs::write(dir.join("asks.mjs"), "import { writeFileSync } from \"node:fs\";\nexport const name = \"asks\";\nexport async function apply(ctx) {\n  const version = await ctx.rust.call(\"app.version\");\n  const echo = await ctx.rust.call(\"app.echo\", { value: [1] });\n  const platform = await ctx.rust.call(\"app.platformSupport\");\n  const missing = await ctx.rust.call(\"app.nope\").catch((error) => error.code);\n  writeFileSync(new URL(\"./asked.json\", import.meta.url), JSON.stringify({ version, echo, missing, platform: platform.os }));\n}\n").unwrap();
+    std::fs::write(dir.join("plugins.yml"), "- id: hello\n  name: ./hello.mjs\n- id: asks\n  name: ./asks.mjs\n").unwrap();
     let spec = HostSpec {
         program: node.path,
         args: vec!["--disallow-code-generation-from-strings".into(), host_script().into(), "--dir".into(), dir.clone().into()],
@@ -94,7 +104,9 @@ fn the_real_host_starts_under_the_supervisor_reports_its_plugins_and_comes_back_
     };
     let (tx, states) = mpsc::channel();
     let tx = Mutex::new(tx);
-    let supervisor = Supervisor::start(spec, containment::shared(), Timing { ping_every: Duration::from_millis(200), ..Timing::default() }, move |event| {
+    let serve = std::sync::Arc::new(super::methods::registered().unwrap());
+    let timing = Timing { ping_every: Duration::from_millis(200), ..Timing::default() };
+    let supervisor = Supervisor::start_serving(move |_| spec.clone(), containment::shared(), timing, Some(serve), move |event| {
         if let Event::State(state) = event {
             let _ = tx.lock().map(|tx| tx.send(state));
         }
@@ -102,13 +114,19 @@ fn the_real_host_starts_under_the_supervisor_reports_its_plugins_and_comes_back_
     .unwrap();
 
     let HostState::Ready { pid, ready, .. } = wait_for(&states, true) else { unreachable!() };
-    assert_eq!(ready["protocol"], 1);
+    assert_eq!(ready["protocol"], 2);
     assert_eq!(ready["plugins"][0]["id"], "hello");
     assert_eq!(ready["plugins"][0]["state"], "running");
     assert!(ready["windows"]["port"].as_u64().is_some_and(|port| port > 0));
     assert_eq!(ready["windows"]["token"].as_str().map(str::len), Some(64));
     let status = supervisor.call("status", Value::Null, Duration::from_secs(5)).unwrap();
     assert_eq!(status[0]["state"], "running");
+    let deadline = Instant::now() + Duration::from_secs(10);
+    while !dir.join("asked.json").exists() && Instant::now() < deadline {
+        std::thread::sleep(Duration::from_millis(20));
+    }
+    let asked: Value = serde_json::from_str(&std::fs::read_to_string(dir.join("asked.json")).unwrap()).unwrap();
+    assert_eq!(asked, serde_json::json!({ "version": { "version": env!("CARGO_PKG_VERSION"), "platform": std::env::consts::OS }, "echo": { "echo": [1] }, "missing": "no-method", "platform": if cfg!(target_os = "macos") { "macos" } else { "windows" } }));
 
     let killed = Instant::now();
     #[cfg(unix)]
@@ -309,4 +327,32 @@ fn restarts_that_were_asked_for_and_heartbeats_missed_across_sleep_are_not_failu
     tracker.starting(5);
     tracker.went_down(5, "the plugin host exited (exit status: 1)");
     assert_eq!(tracker.starting(6).map(|safe| safe.cause), Some(Cause::Failures));
+}
+
+const GENERATED: &str = "../packages/plugin-services/src/generated";
+
+#[test]
+fn the_apps_own_rust_methods_are_registered_once() {
+    let serve = super::methods::registered().unwrap();
+    for name in ["app.echo", "app.platformSupport", "app.version"] {
+        assert!(serve.names().contains(&name), "{name} is missing from {:?}", serve.names());
+    }
+}
+
+#[test]
+fn the_generated_typescript_for_rust_methods_is_up_to_date() {
+    let (declarations, list) = plugin_base::ts::typescript(&plugin_base::ts::described());
+    let dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(GENERATED);
+    let files = [("rust.d.mts", declarations), ("rust.mjs", list)];
+    if std::env::var("FUYU_WRITE_RUST_TYPES").as_deref() == Ok("1") {
+        std::fs::create_dir_all(&dir).unwrap();
+        for (name, text) in &files {
+            std::fs::write(dir.join(name), text).unwrap();
+        }
+        return;
+    }
+    for (name, text) in &files {
+        let written = std::fs::read_to_string(dir.join(name)).unwrap_or_default().replace("\r\n", "\n");
+        assert!(&written == text, "packages/plugin-services/src/generated/{name} is out of date; run pnpm gen:rust-types\n--- expected ---\n{text}");
+    }
 }

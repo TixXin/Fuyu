@@ -1,6 +1,7 @@
 use tauri::ipc::Channel;
 
-use super::{complete, MAX_CHARACTERS};
+use super::request::{complete, Pieces};
+use super::MAX_CHARACTERS;
 use crate::user_error::UserError;
 
 const MAX_PROMPT_CHARACTERS: usize = 2_000;
@@ -15,6 +16,21 @@ pub async fn rewrite_text(
     model: Option<String>,
     on_chunk: Channel<String>,
 ) -> Result<String, UserError> {
+    let send = |piece: String| {
+        let _ = on_chunk.send(piece);
+    };
+    rewrite(text, task, prompt, provider, base_url, model, &send).await
+}
+
+pub(crate) async fn rewrite(
+    text: String,
+    task: String,
+    prompt: Option<String>,
+    provider: Option<String>,
+    base_url: Option<String>,
+    model: Option<String>,
+    on_piece: Pieces<'_>,
+) -> Result<String, UserError> {
     let text = text.trim();
     if text.is_empty() {
         return Err(UserError::new("translation.empty", "Enter the text to translate."));
@@ -24,7 +40,7 @@ pub async fn rewrite_text(
     }
     let instruction = rewrite_instruction(&task, prompt.as_deref(), text)
         .ok_or_else(|| UserError::new("translation.direction", "Unsupported translation direction."))?;
-    complete(&instruction, text, provider.as_deref(), base_url.as_deref(), model.as_deref(), Some(&on_chunk)).await
+    complete(&instruction, text, provider.as_deref(), base_url.as_deref(), model.as_deref(), Some(on_piece)).await
 }
 
 fn rewrite_instruction(task: &str, prompt: Option<&str>, text: &str) -> Option<String> {

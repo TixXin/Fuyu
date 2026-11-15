@@ -3,6 +3,7 @@ provider=$1
 case "$provider" in
   codex|claudeCode|workbuddy|dsh|qoder|codebuddy|qwen) ;;
   antigravity) case "$2" in start|running|stop) ;; *) exit 2 ;; esac ;;
+  trae|traeCn) case "$2" in running|stop|notification) ;; *) exit 2 ;; esac ;;
   *) exit 2 ;;
 esac
 marker="agent-$provider-running.flag"
@@ -18,6 +19,14 @@ if [ "$provider" = antigravity ]; then
   saved_dir="$dir/agent-antigravity"
   saved_name=$2
   [ "$2" = start ] && saved_name=running
+  mode=notification
+  if [ "$2" = running ]; then
+    : > "$dir/$marker"
+    rm -f "$dir/$hold"
+  fi
+elif { [ "$provider" = trae ] || [ "$provider" = traeCn ]; } && [ "$2" != notification ]; then
+  saved_dir="$dir/agent-$provider"
+  saved_name=$2
   mode=notification
   if [ "$2" = running ]; then
     : > "$dir/$marker"

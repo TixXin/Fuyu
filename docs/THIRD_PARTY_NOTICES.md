@@ -57,3 +57,9 @@ The code in `gate.rs` was rewritten in Rust and changed (address cache, restorin
 - Used in: the handwritten `https://fuyu.ing` in the README's island images (`docs/assets/readme/island-zh.svg`, `island-en.svg`). The glyph outlines are stored as a path in `scripts/readme/address-outline.json`; the font file is not in the repository and is not shipped with the app.
 - 用于：README 小岛图（`docs/assets/readme/island-zh.svg`、`island-en.svg`）里手写的 `https://fuyu.ing`。字形轮廓以路径的形式存在 `scripts/readme/address-outline.json`；字体文件不在仓库里，也不随应用发布。
 - License: SIL Open Font License 1.1 — https://openfontlicense.org
+
+## marked (MarkedJS)
+
+- Used in: the `doc-preview` skill for coding agents (`.claude/skills/doc-preview/vendor/marked.umd.js`, the UMD build of marked v16.4.2). The script inlines it into the HTML pages it generates so they can render Markdown offline. It is a development tool and is not shipped with the app.
+- 用于：给编程代理用的 `doc-preview` skill（`.claude/skills/doc-preview/vendor/marked.umd.js`，marked v16.4.2 的 UMD 构建产物）。脚本把它内嵌进生成的 HTML 页面，离线也能渲染 Markdown。它是开发工具，不随应用发布。
+- License: MIT. The original notice is kept next to the file / 原声明保留在文件旁边：`.claude/skills/doc-preview/vendor/marked-LICENSE.md`. Source: https://github.com/markedjs/marked

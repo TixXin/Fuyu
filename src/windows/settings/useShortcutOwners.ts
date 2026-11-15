@@ -13,14 +13,17 @@ import { pluginShortcutRows, type PluginShortcutRow } from "../../features/plugi
 import { SHORTCUT_ACTIONS, type ScreenshotSettings } from "../../features/screenshot/settings";
 import { loadScreenshotSettings } from "../../features/screenshot/storage";
 import type { TranslationSettings } from "../../features/translation/storage";
+import type { VoiceInputSettings } from "../../features/voice-input/settings";
+import { loadVoiceInputSettings } from "../../features/voice-input/storage";
 import { useLocale, useTranslation } from "../../i18n";
 import { findShortcutOwner, type ShortcutOwner } from "./shortcutConflicts";
 
-export function useShortcutOwners({ settings, clipboard, translation, screenshot }: {
+export function useShortcutOwners({ settings, clipboard, translation, screenshot, voice }: {
   settings: IslandSettings;
   clipboard: ClipboardHistorySettings;
   translation: TranslationSettings;
   screenshot?: ScreenshotSettings;
+  voice?: VoiceInputSettings;
 }) {
   const t = useTranslation();
   const { locale } = useLocale();
@@ -38,6 +41,7 @@ export function useShortcutOwners({ settings, clipboard, translation, screenshot
   }, [refreshPlugins]);
 
   const digitModifiers = normalizePageDigitModifiers(settings.pageDigitModifiers);
+  const voiceInput = voice ?? loadVoiceInputSettings();
   const owners: ShortcutOwner[] = [
     ...(settings.translationEnabled ? [
       { id: "window", label: t.settings.shortcuts.openTranslation, shortcut: translation.shortcut, home: "translation" as const },
@@ -51,6 +55,9 @@ export function useShortcutOwners({ settings, clipboard, translation, screenshot
         const shortcut = (screenshot ?? loadScreenshotSettings()).shortcuts[action];
         return shortcut ? [{ id: `screenshot:${action}`, label: t.settings.screenshot.actions[action], shortcut, home: "screenshot" as const }] : [];
       })
+      : []),
+    ...(voiceInput.enabled && voiceInput.shortcut
+      ? [{ id: "voiceInput", label: t.voiceInput.settings.shortcut, shortcut: voiceInput.shortcut, home: "voiceInput" as const }]
       : []),
     ...pluginRows.flatMap((row) => row.shortcut
       ? [{ id: row.key, label: `${row.title[locale]} · ${row.pluginName[locale]}`, shortcut: row.shortcut, home: "plugins" as const }]

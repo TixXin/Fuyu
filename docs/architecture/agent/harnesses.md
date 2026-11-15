@@ -1,6 +1,6 @@
 # 各家 AI 代理的接入现状
 
-岛接了六家 AI 代理（harness）：Claude Code、Codex、WorkBuddy（国内版）、Antigravity、DeepSeek Harness（DSH）、opencode。这张表记每家有哪些形态、数据在哪，以及每项功能做到哪一步。改了哪家的哪一项，就在同一个提交里改这里。接入新的一家或给已有功能扩一家，按 `.claude/skills/fuyu-agent-harness/SKILL.md` 的清单走。
+岛接了九家 AI 代理（harness）：Claude Code、Codex、WorkBuddy（国内版和 WorkBuddy AI）、Antigravity、DeepSeek Harness（DSH）、opencode，以及钩子照抄 Claude Code 的三家 Qoder、CodeBuddy Code、Qwen Code（B48，见文末一节）。这张表记每家有哪些形态、数据在哪，以及每项功能做到哪一步。改了哪家的哪一项，就在同一个提交里改这里。接入新的一家或给已有功能扩一家，按 `.claude/skills/fuyu-agent-harness/SKILL.md` 的清单走。
 
 核对日期：2026-11-15（按 `main` 上的代码）。各家的调研和来源见 [agent-harnesses.md](../../research/agent-harnesses.md)，用户可见的行为见 [agent-status-hooks.md](../../features/agent-status-hooks.md)。标「未实测」的项都列在实测清单 #179 里。
 
@@ -10,7 +10,7 @@
 |---|---|---|---|---|---|
 | Claude Code | 有 | 有（Code 页、Cowork） | VS Code | CLI、VS Code 扩展、SDK 共用 `~/.claude`（会话里的 `entrypoint` 区分）；App 的 Code 页正文也写在 `~/.claude/projects`（`entrypoint` 是 `claude-desktop`），App 另在 `<Claude 数据目录>/claude-code-sessions/<组织>/<账号>/local_<id>.json` 存标题、模型、档位（按 `cliSessionId` 对上）；Cowork 每个会话一个独立的 `.claude`，不读 `~/.claude/settings.json` | `~/.claude/projects`、`~/.claude/sessions`；Code 页的 `local_*.json`（只取标题、模型、档位，`claude_desktop.rs`）；Cowork 不读 |
 | Codex | 有 | 有 | VS Code | 共用 `~/.codex`（或 `CODEX_HOME`），形态看会话的 `originator`（`session_host.rs`）；2026-11-12 起历史迁进 sqlite，老会话的 rollout 文件已不在 | `~/.codex/state_5.sqlite` 的 `threads` 为主（只读，`codex_threads.rs`），列出的 rollout 照旧读；rollout 已不在的会话读 `thread_history_1.sqlite`；`session_index.jsonl` 的名字；库不在或表不对时退回只扫 `~/.codex/sessions` 最近两天 |
-| WorkBuddy | 无 | 有（国内版） | 无 | 只有桌面版；国际版 `~/.workbuddy-ai` 是另一个产品，不读 | `~/.workbuddy/projects`、`~/.workbuddy/sessions` |
+| WorkBuddy | 无 | 有（国内版、WorkBuddy AI） | 无 | 只有桌面版；国内版 `~/.workbuddy`、WorkBuddy AI `~/.workbuddy-ai`（应用启动 CLI 时把 `WORKBUDDY_CONFIG_DIR` 设成它）都读，格式相同，显示成同一家（B49） | `~/.workbuddy/projects`、`~/.workbuddy/sessions`、`~/.workbuddy-ai/projects`、`~/.workbuddy-ai/sessions` |
 | Antigravity | 有（`agy`） | 有 | 有（IDE） | 三种共用钩子配置 `~/.gemini/config/hooks.json`；数据目录分开（`antigravity`、`antigravity-ide`、`antigravity-cli`），岛只看它们在不在；只有 CLI 实测过（#179） | 钩子存下的输入 `agent-antigravity/`；远程是镜像里的 `.fuyu/agent-antigravity/` |
 | DSH | 无（Node 程序，能跑在服务器上） | 有（官方版、anywhere-labs 的 DSH Desktop / Beta / NEXT、dshed 等） | 无 | 几处存储按会话 id 合并，新的为准；分不出会话属于哪个桌面版 | 投影检查点，按顺序找这些目录：`DSH_HOME`、`DSH_DESKTOP_NEXT_HOME`（`~` 开头会展开，相对路径不读）；`~/.dsh`、`~/.dsh-beta`、`%APPDATA%\dsh-desktop\harness`；dshed 的 `<AppData>\dshed\dsh`；DSH NEXT、DSH Desktop Beta、DSH Desktop 在应用里选的目录（读它们 `<AppData>` 下的指针文件）。`<AppData>` 在 macOS 上是 `~/Library/Application Support` |
 | opencode | 有（`opencode`，2.x 起 TUI 是后台服务的客户端） | 有（Electron，OpenCode） | VS Code（开终端跑 TUI） | 2.x 几种形态共用一个后台服务（`~/.local/state/opencode/service.json`）和一个库；1.x 没有后台服务 | `~/.local/share/opencode/opencode.db`（`XDG_DATA_HOME`、`OPENCODE_DB` 优先），只读打开；2.x 读 `session_v2`/`session_message`/`session_part`，1.x 读 `session`/`message`/`part`，同一 id 以 2.x 为准 |
@@ -37,7 +37,7 @@
 | 会话卡片：待办 | ✓ | ✓ | ◐ `TodoWrite`，未实测（#179） | ✗ 没有待办工具 | ✓（#397） | ✓ 未实测（#179） |
 | 会话卡片：当前工具 | ✓ | ✓ | ✓ | ✓（#397） | ◐ 只有工具名，存档不带参数 | ✓ 未实测（#179） |
 | 会话卡片：上下文 token | ✓ | ✓ | ✗ 只见到积分，要 Windows 样本 | ✓（#397） | ✓ | ✓ 未实测（#179） |
-| 判断会话已退出 | ✓ | ✓ | ✓ Mac 按 bundle id `com.workbuddy.workbuddy-ai` 认应用在不在 | ✗ | ✗ | ◐ 只有 2.x：`service.json` 的 pid 不在了就记为已退出；1.x 只靠 10 分钟超时 |
+| 判断会话已退出 | ✓ | ✓ | ✓ Windows 认 `WorkBuddy.exe`、`WorkBuddyAI.exe`，Mac 按 bundle id `com.workbuddy.workbuddy-ai`；国内版 Mac 版的 bundle id 不知道，认不出 | ✗ | ✗ | ◐ 只有 2.x：`service.json` 的 pid 不在了就记为已退出；1.x 只靠 10 分钟超时 |
 | 点会话跳过去 | ✓ 终端 / 编辑器标签 | ✓ 终端 / 编辑器 / App | ◐ 只到 App 窗口 | ◐ 只到窗口 | ◐ 只到窗口 | ◐ 桌面版在跑就到 OpenCode 窗口，否则按目录 / 标题找终端；到不了具体会话 |
 | 回复标记 | ✓ 本机和远程都写 `CLAUDE.md`，远程未在服务器实测（#179） | ✓ 本机和远程，远程未实测（#179） | ✓ 未实测（#179） | ✓ 未实测（#179）；远程只有 CLI（远端有 `~/.gemini/antigravity-cli` 时），未实测（#179） | ✓ 本机和远程，远程未实测（#179） | ✓ 未实测（#179）；远程 ✗ |
 | 用量环 | ✓ | ✓ | ✗ 等插件平台第 3 版（#170） | ✗ 等插件平台第 3 版（#170） | ✗ 等插件平台第 3 版（#170） | ✗ 只有 OpenCode Go 订阅有额度窗口，等插件平台第 3 版（#170） |
@@ -57,3 +57,23 @@ Claude Code 和 Codex 是最早接的，很多地方曾把「代理」写死成�
 - **仍按家写的**：审批的 `Agent` 枚举（`agent_approval/decision.rs`，现在有六家；加一家要加一个枚举值、`path` 的一个分支、答复格式和 `AGENTS` 一项；opencode 2.x 的审批不走钩子，由 `agent_approval/opencode.rs` 轮询后台服务、经 `external.rs` 进队列；1.x 由插件 `hooks/fuyu-opencode-plugin.js` POST 到 `/opencode/permission`）、Claude Code 和 Codex 的 JSONL 会话扫描（`session_scan.rs`）、`hooks/` 里的钩子脚本（running、status、approval 认五家）、远程钩子（`remote_setup.rs`，只有 Claude Code 和 Antigravity）、cc-connect 的配置（`cc_connect/config_file.rs`）、推送接管命令（`push/pushText.ts`）、用量环。
 
 接一家新代理：写它自己的模块并声明 `HARNESS`，在 `HARNESSES` 里加一行，前端 `AGENTS` 加一行、`AgentProviderIcon.tsx` 加图标。之后给它补哪项能力，就在它的 `HARNESS` 里填哪个字段，不用改中心文件。
+
+## Claude Code 兼容的三家（B48）
+
+Qoder（含 Qoder CN）、CodeBuddy Code、Qwen Code 的钩子格式和会话目录都照抄 Claude Code，所以走一个声明层 `claude_compat.rs`：每家的模块（`qoder.rs`、`codebuddy.rs`、`qwen.rs`）只填一份 `Compat`（id、名字、配置目录和环境变量、会话子目录、记录格式、全局提示词文件、等授权用哪个事件），钩子安装和状态、会话列表、标题、等你、审批都由声明层做。再接一家这样的 CLI：写一份声明，再在 `HARNESSES`、三份钩子脚本、审批的 `Agent` 枚举和前端 `AGENTS` 里各加一项。三家都还没在真机上跑过（#179）。
+
+| | Qoder / Qoder CN | CodeBuddy Code | Qwen Code |
+|---|---|---|---|
+| id | `qoder` | `codebuddy` | `qwen` |
+| 配置目录 | `~/.qoder`（`QODER_CONFIG_DIR`）和 `~/.qoder-cn`（`QODERCN_CONFIG_DIR`），两份都装 | `~/.codebuddy`（`CODEBUDDY_CONFIG_DIR`） | `~/.qwen`（`QWEN_HOME`） |
+| 会话 | `<目录>/projects/<项目>/<id>.jsonl`，Claude Code 同格式；标题读旁边 `<id>-session.json` 的 `title`；`agent-*.jsonl` 是子代理，跳过 | `<目录>/projects/<项目>/<id>.jsonl`，每条记录套了一层 `{type, uuid, timestamp, payload}` | `<目录>/projects/<项目>/chats/<id>.jsonl`，记录是 Gemini 的 `parts`；标题是 `system`/`custom_title` 记录，`titleSource` 分 manual / auto |
+| 钩子 | `settings.json` 的 hooks，Claude Code 格式：UserPromptSubmit、PreToolUse、Stop、StopFailure、PermissionRequest | 同左 | 同左（timeout ≥ 1000 按毫秒算，岛填的 150 秒不受影响） |
+| 状态灯 | ✓ `agent-qoder-running.flag` | ✓ | ✓ |
+| 等你 | PermissionRequest 存通知 | Notification（matcher `permission_prompt`）存通知：它的 auto 模式对自动放行的工具也发 PermissionRequest，不能拿来判断等你 | PermissionRequest 存通知 |
+| 岛上审批 | ✓ `/qoder/permission-request`，回 `hookSpecificOutput.decision.behavior` | ✓ `/codebuddy/permission-request` | ✓ `/qwen/permission-request` |
+| 会话卡片 | 按 Claude Code 的记录解析（模型、权限模式、待办、当前工具、上下文 token） | 同左 | ◐ 模型、当前工具、上下文 token；没有推理强度、权限模式、待办 |
+| 回复标记 | `AGENTS.md`（两个目录各一份） | `CODEBUDDY.md` | `QWEN.md` |
+| 点会话跳过去 | ◐ 通用的终端窗口匹配（目录名、标题），没有专门的 App | 同左 | 同左 |
+| 用量环 | ✗ 没有公开的额度接口 | ✗ | ✗ |
+| SSH 远程会话 | ✗ 三家都有 Linux CLI，能做，还没做 | ✗ | ✗ |
+| cc-connect | — | — | — |

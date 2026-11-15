@@ -1,0 +1,6 @@
+{
+  "format": 1,
+  "plugins": [
+    { "id": "timer", "kind": "builtin", "root": "timer", "host": "host/index.mjs" }
+  ]
+}

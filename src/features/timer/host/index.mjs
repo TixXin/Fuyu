@@ -1,4 +1,5 @@
-import { fileURLToPath } from "node:url";
+import { join } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { timersV1 } from "@fuyu/plugin-services";
 import { nextDueIn } from "../timers.ts";
 import { DATA_FILE, readTimers, writeTimers } from "./dataFile.mjs";
@@ -8,7 +9,7 @@ export const name = "timer";
 export const RECHECK_MS = 60_000;
 
 export function apply(ctx) {
-  const file = new URL(DATA_FILE, ctx.baseUrl);
+  const file = pathToFileURL(join(ctx.dataDir, DATA_FILE));
   const logger = ctx.logger("timer");
   const loaded = readTimers(file);
   if (loaded.problem) logger.warn(`could not read ${fileURLToPath(file)}, starting with no timers: ${loaded.problem.message}`);

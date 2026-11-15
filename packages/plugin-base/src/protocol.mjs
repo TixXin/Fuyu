@@ -1,4 +1,4 @@
-export const HOST_PROTOCOL = 1;
+export const HOST_PROTOCOL = 2;
 export const WINDOW_PROTOCOL = 1;
 
 export const CLOSE = {

@@ -9,6 +9,7 @@ import {
 } from "./taskFile.mjs";
 import { thisMachine } from "../machine-name.mjs";
 import { dirtyLines, dirtyReport, readDirty } from "./taskDirty.mjs";
+import { closeReminder } from "./taskIssues.mjs";
 import { hostReminders, landingProblems } from "./taskLanding.mjs";
 import {
   checkTasks, findTask, git, load, nowText, readAll, readGroups, save, staleOf, taskOnMain, taskPath, todayText, tryGit,
@@ -147,6 +148,8 @@ function close(root, options, status) {
   const file = save(root, { fields: { ...fields, status }, body });
   const when = status === "已完成" ? "和功能改动放在同一个提交里" : "提交它（可以单独提交，也可以随别的改动）";
   console.log(`${id} 已标为「${status}」并移到 ${file}；${when}`);
+  const reminder = status === "已完成" ? closeReminder(fields) : null;
+  if (reminder) console.log(reminder);
   return 0;
 }
 

@@ -1,0 +1,80 @@
+.todo-tag-button {
+  flex: none;
+  min-width: 22px;
+  height: 22px;
+  margin: -2px 0;
+  display: inline-grid;
+  place-items: center;
+  padding: 0 4px;
+  color: var(--text-3);
+  background: transparent;
+  border: 0;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: opacity 140ms ease, background 140ms ease;
+}
+
+.todo-tag-button:hover {
+  background: rgba(var(--overlay-rgb, 255, 255, 255), 0.08);
+}
+
+.todo-tag-button:focus-visible {
+  outline: 2px solid var(--color-focus-ring-soft);
+  outline-offset: 1px;
+}
+
+.todo-island-row .todo-tag-button:not(.todo-tag-button--set),
+.scheduled-list__item .todo-tag-button:not(.todo-tag-button--set) {
+  opacity: 0;
+}
+
+.todo-island-row:hover .todo-tag-button,
+.todo-island-row:focus-within .todo-tag-button,
+.scheduled-list__item:hover .todo-tag-button,
+.scheduled-list__item:focus-within .todo-tag-button,
+.todo-tag-button[aria-expanded="true"] {
+  opacity: 1;
+}
+
+.todo-tag-marks {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.todo-tag-dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-circle);
+  background: currentColor;
+}
+
+.todo-tag-dot[data-color="red"] { background: var(--todo-tag-red, #ff6b6b); }
+.todo-tag-dot[data-color="orange"] { background: var(--todo-tag-orange, #ffa94d); }
+.todo-tag-dot[data-color="yellow"] { background: var(--todo-tag-yellow, #ffd43b); }
+.todo-tag-dot[data-color="green"] { background: var(--todo-tag-green, #51cf66); }
+.todo-tag-dot[data-color="blue"] { background: var(--todo-tag-blue, #4dabf7); }
+.todo-tag-dot[data-color="purple"] { background: var(--todo-tag-purple, #b197fc); }
+
+.todo-tag-flag--high {
+  color: var(--error-text, #ff8a8a);
+  fill: currentColor;
+}
+
+.todo-tag-flag--medium {
+  color: var(--warning-text, #f2d27a);
+}
+
+.todo-tag-flag--low {
+  color: var(--text-3);
+}
+
+.island-light {
+  --todo-tag-red: #e03131;
+  --todo-tag-orange: #e8590c;
+  --todo-tag-yellow: #e0a800;
+  --todo-tag-green: #2f9e44;
+  --todo-tag-blue: #1c7ed6;
+  --todo-tag-purple: #7048e8;
+}

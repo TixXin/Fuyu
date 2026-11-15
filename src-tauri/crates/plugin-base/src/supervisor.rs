@@ -10,7 +10,10 @@ use std::{
 
 use serde_json::{json, Value};
 
-use crate::rpc::{Rpc, RpcError};
+use crate::{
+    rpc::{Rpc, RpcError, PROTOCOL},
+    serve::Serve,
+};
 
 #[derive(Debug, Clone, Default)]
 pub struct HostSpec {
@@ -98,6 +101,7 @@ struct Inner {
     control: Mutex<Control>,
     wake: Condvar,
     on_event: OnEvent,
+    serve: Option<Arc<Serve>>,
 }
 
 fn lock<T>(mutex: &Mutex<T>) -> MutexGuard<'_, T> {
@@ -158,12 +162,23 @@ impl Supervisor {
         timing: Timing,
         on_event: impl Fn(Event) + Send + Sync + 'static,
     ) -> Result<Self, String> {
+        Self::start_serving(spec_for, containment, timing, None, on_event)
+    }
+
+    pub fn start_serving(
+        spec_for: impl FnMut(u32) -> HostSpec + Send + 'static,
+        containment: Arc<dyn Containment>,
+        timing: Timing,
+        serve: Option<Arc<Serve>>,
+        on_event: impl Fn(Event) + Send + Sync + 'static,
+    ) -> Result<Self, String> {
         let inner = Arc::new(Inner {
             state: Mutex::new(HostState::Starting { generation: 1 }),
             rpc: Mutex::new(None),
             control: Mutex::new(Control { stop: false, restart: false, poke: false }),
             wake: Condvar::new(),
             on_event: Arc::new(on_event),
+            serve,
         });
         let running = inner.clone();
         let worker = thread::Builder::new()
@@ -181,6 +196,14 @@ impl Supervisor {
         let rpc = lock(&self.inner.rpc).clone();
         match rpc {
             Some(rpc) => rpc.call(method, params, timeout),
+            None => Err(RpcError::PeerGone("the plugin host is not running".into())),
+        }
+    }
+
+    pub fn emit(&self, name: &str, data: Value) -> Result<(), RpcError> {
+        let rpc = lock(&self.inner.rpc).clone();
+        match rpc {
+            Some(rpc) => rpc.emit(name, data),
             None => Err(RpcError::PeerGone("the plugin host is not running".into())),
         }
     }
@@ -237,9 +260,10 @@ fn launch(inner: &Arc<Inner>, spec: &HostSpec, containment: &dyn Containment) ->
     let (ready_tx, ready) = mpsc::channel();
     let events = inner.on_event.clone();
     let watcher = Arc::downgrade(inner);
-    let rpc = Rpc::start_watched(
+    let rpc = Rpc::start_serving(
         stdout,
         stdin,
+        inner.serve.clone(),
         move |method, params| {
             if method == "ready" {
                 let _ = ready_tx.send(params);
@@ -285,11 +309,19 @@ fn exit_reason(child: &mut Child, within: Duration) -> Option<String> {
     }
 }
 
+fn check_protocol(ready: Value) -> Result<Value, String> {
+    match ready.get("protocol").and_then(Value::as_u64) {
+        Some(PROTOCOL) => Ok(ready),
+        Some(other) => Err(format!("the plugin host speaks protocol {other}, but Fuyu only speaks protocol {PROTOCOL}; the host and the app do not match")),
+        None => Err(format!("the plugin host did not say which protocol it speaks; Fuyu only speaks protocol {PROTOCOL}")),
+    }
+}
+
 fn wait_ready(inner: &Inner, running: &mut Running, timing: &Timing) -> Result<Value, String> {
     let deadline = Instant::now() + timing.ready_within;
     loop {
         match running.ready.recv_timeout(Duration::from_millis(50)) {
-            Ok(ready) => return Ok(ready),
+            Ok(ready) => return check_protocol(ready),
             Err(mpsc::RecvTimeoutError::Disconnected) => return Err("the plugin host closed its output before it was ready".into()),
             Err(mpsc::RecvTimeoutError::Timeout) => {}
         }

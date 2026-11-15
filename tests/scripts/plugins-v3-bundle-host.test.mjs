@@ -41,8 +41,8 @@ after(async () => {
   }
 });
 
-function launch(entries) {
-  const space = workspace({ ...PLUGINS, "plugins.yml": config(entries) });
+function launch(entries, files = {}) {
+  const space = workspace({ ...PLUGINS, "plugins.yml": typeof entries === "string" ? entries : config(entries), ...files });
   folders.push(space.dir);
   const child = spawn(process.execPath, ["--disallow-code-generation-from-strings", built.main, "--dir", space.dir], { stdio: ["pipe", "pipe", "pipe"] });
   children.push(child);
@@ -71,7 +71,7 @@ function launch(entries) {
 }
 
 test("the host bundles into one folder of ES modules with the createRequire banner", () => {
-  assert.deepEqual(built.files.filter((name) => !name.startsWith("chunk-")), ["hmr.mjs", "include.mjs", "index.mjs", "main.mjs"]);
+  assert.deepEqual(built.files.filter((name) => !name.startsWith("chunk-")), ["client-only.mjs", "hmr.mjs", "index.mjs", "main.mjs", "plugins-file.mjs"]);
   assert.ok(built.files.every((name) => name.endsWith(".mjs")));
   for (const name of built.files) assert.match(readFileSync(join(built.outDir, name), "utf8"), /^import \{ createRequire as __fuyuCreateRequire \}/);
   assert.ok(built.bytes > 100_000 && built.bytes < 3_000_000, `${built.bytes} bytes`);
@@ -83,7 +83,7 @@ test("the bundled host runs outside the repository without eval, loads plugins t
     { id: "counter", name: "./counter.mjs" },
   ]);
   const ready = await next((message) => message.method === "ready");
-  assert.equal(ready.params.protocol, 1);
+  assert.equal(ready.params.protocol, 2);
   assert.ok(ready.params.windows.port > 0);
   assert.deepEqual(ready.params.plugins.map((entry) => [entry.id, entry.state]), [
     ["user", "running"],
@@ -102,6 +102,39 @@ test("the bundled host reports a broken plugin instead of dying", async () => {
   assert.match(log.params.text, /broken on purpose/);
   const ready = await next((message) => message.method === "ready");
   assert.equal(ready.params.plugins[0].state, "failed");
+  send({ id: 1, method: "stop" });
+  assert.equal(await exited, 0);
+});
+
+function packageJson(name, app) {
+  return JSON.stringify({
+    name,
+    version: "1.0.0",
+    type: "module",
+    license: "MIT",
+    repository: `github:${name.slice(1).split("/")[0]}/plugin`,
+    engines: { fuyu: ">=0.5.0" },
+    fuyu: { manifest: 1, displayName: { "zh-CN": "示例", en: "Example" }, description: { "zh-CN": "示例", en: "Example" }, icon: "icon.png", categories: ["utilities"], ...app },
+  });
+}
+
+test("the bundled host carries the manifest check: it loads an installed package by its package.json and refuses one with experimental interfaces", async () => {
+  for (const name of built.files) assert.doesNotMatch(readFileSync(join(built.outDir, name), "utf8"), /["']@fuyu\/plugin-manifest["']/, name);
+  const plugin = 'export const name = "ok";\nexport function apply() {}\n';
+  const { next, send, exited } = launch('- id: "@ann/ok"\n  source: market\n- id: "@ann/lab"\n  source: market\n', {
+    "packages/@ann/ok/package.json": packageJson("@ann/ok", { host: "host.mjs", client: { island: "island.js" } }),
+    "packages/@ann/ok/host.mjs": plugin,
+    "packages/@ann/ok/island.js": "export default () => {};\n",
+    "packages/@ann/lab/package.json": packageJson("@ann/lab", { host: "host.mjs", experimental: ["island.peek"] }),
+    "packages/@ann/lab/host.mjs": plugin,
+  });
+  const ready = await next((message) => message.method === "ready");
+  const byId = Object.fromEntries(ready.params.plugins.map((entry) => [entry.id, entry]));
+  assert.equal(byId["@ann/ok"].state, "running", JSON.stringify(byId["@ann/ok"]));
+  assert.equal(byId["@ann/ok"].source, "market");
+  assert.equal(byId["@ann/lab"].state, "failed");
+  assert.equal(byId["@ann/lab"].blocked.by, "manifest");
+  assert.ok(byId["@ann/lab"].blocked.errors.some((issue) => issue.code === "experimental"));
   send({ id: 1, method: "stop" });
   assert.equal(await exited, 0);
 });

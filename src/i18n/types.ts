@@ -24,6 +24,7 @@ import type { PluginViewsText } from "./sections/pluginViews";
 import type { SettingsText } from "./sections/settings/index";
 import type { OnboardingText } from "./sections/onboarding";
 import type { ErrorsText } from "./sections/errors";
+import type { VoiceInputText } from "./sections/voiceInput";
 
 export type LocaleCode = "zh-CN" | "en";
 
@@ -67,4 +68,5 @@ export type Translations = {
   settings: SettingsText;
   onboarding: OnboardingText;
   errors: ErrorsText;
+  voiceInput: VoiceInputText;
 };

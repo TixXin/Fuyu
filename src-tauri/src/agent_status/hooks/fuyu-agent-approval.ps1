@@ -5,6 +5,8 @@ $routes = @{
     qoder = 'qoder/permission-request'
     codebuddy = 'codebuddy/permission-request'
     qwen = 'qwen/permission-request'
+    trae = 'trae/pre-tool-use'
+    traeCn = 'traeCn/pre-tool-use'
     antigravity = 'antigravity/pre-tool-use'
     dsh = 'dsh/pre-tool-use'
 }

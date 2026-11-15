@@ -1,7 +1,9 @@
 import type { PointerEvent as ReactPointerEvent } from "react";
 import { Check, GripVertical, Play, Square, Trash2 } from "lucide-react";
 import { useTranslation } from "../../../i18n";
+import type { TodoTags } from "../tags";
 import type { TodoItem } from "../types";
+import { TodoTagMarks, TodoTagMenu } from "./TodoTagMenu";
 
 const ICON = { size: 14, strokeWidth: 1.5, absoluteStrokeWidth: true, "aria-hidden": true } as const;
 
@@ -22,6 +24,7 @@ export function TodoIslandRow({
   onToggle,
   onStart,
   onDelete,
+  onTag,
   onDragStart,
   onDragMove,
   onDragEnd,
@@ -43,6 +46,7 @@ export function TodoIslandRow({
   onToggle: (id: string) => void;
   onStart: (id: string) => void;
   onDelete: (id: string) => void;
+  onTag: (id: string, tags: TodoTags) => void;
   onDragStart: (event: ReactPointerEvent<HTMLButtonElement>, todoId: string) => void;
   onDragMove: (event: ReactPointerEvent<HTMLButtonElement>) => void;
   onDragEnd: (event: ReactPointerEvent<HTMLButtonElement>) => void;
@@ -58,7 +62,7 @@ export function TodoIslandRow({
   ].filter(Boolean).join(" ");
 
   return (
-    <div className={className} role="listitem" data-todo-id={todo.id}>
+    <div className={className} role="listitem" data-todo-id={todo.id} data-priority={todo.priority}>
       {canReorder && (
         <button
           className="todo-island-row__grip"
@@ -106,6 +110,7 @@ export function TodoIslandRow({
           <span className="todo-island-row__title">{showProject && todo.project && <span className="todo-project-tag">{todo.project}</span>}{todo.title}</span>
         )}
       </span>
+      {editable && !isEditing ? <TodoTagMenu todo={todo} onTag={(tags) => onTag(todo.id, tags)} /> : !editable && <TodoTagMarks todo={todo} />}
       {editable && (
         <span className="todo-island-row__actions">
           {isActive ? (

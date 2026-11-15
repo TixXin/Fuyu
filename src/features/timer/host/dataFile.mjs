@@ -3,7 +3,7 @@ import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { normalizeTimers } from "../timers.ts";
 
-export const DATA_FILE = "data/timer/timers.json";
+export const DATA_FILE = "timers.json";
 export const DATA_FORMAT = 1;
 
 export function readTimers(file) {

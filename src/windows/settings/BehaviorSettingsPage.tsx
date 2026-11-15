@@ -1,6 +1,7 @@
 import { ExpandSettingsSection } from "../../features/appearance/ExpandSettingsSection";
 import { GameModeSettingsSection } from "../../features/appearance/GameModeSettingsSection";
 import { TuckSettingsSection } from "../../features/appearance/TuckSettingsSection";
+import { BreakRemindersGroup } from "../../features/timer/BreakRemindersGroup";
 import type { IslandSettings } from "../../features/appearance/types";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton";
@@ -20,7 +21,14 @@ export function BehaviorSettingsPage({
   onOpenPageKeys: () => void;
 }) {
   const text = useTranslation().settings.expand;
-  if (tab === "behaviorAlerts") return <SystemAlertsGroup settings={settings} onSettingsChange={onSettingsChange} />;
+  if (tab === "behaviorAlerts") {
+    return (
+      <>
+        <SystemAlertsGroup settings={settings} onSettingsChange={onSettingsChange} />
+        <BreakRemindersGroup />
+      </>
+    );
+  }
   if (tab === "behaviorTuck") {
     return (
       <>

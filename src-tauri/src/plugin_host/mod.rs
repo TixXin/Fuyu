@@ -9,6 +9,7 @@ mod effort_labels;
 mod events;
 mod feeds;
 mod grants;
+mod info_copy;
 mod keybindings;
 mod lifecycle;
 mod manifest;
@@ -175,6 +176,7 @@ macro_rules! tauri_commands {
             crate::plugin_host::reload_plugins,
             crate::plugin_host::open_plugins_folder,
             crate::plugin_host::run_plugin_command,
+            crate::plugin_host::copy_plugin_info,
             crate::plugin_host::set_plugin_setting,
             crate::plugin_host::get_plugin_market,
             crate::plugin_host::get_cached_plugin_market,

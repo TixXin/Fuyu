@@ -18,6 +18,17 @@ export function apply() {
 `,
 };
 
+const ASKS = {
+  "asks.mjs": `export const name = "asks";
+export async function apply(ctx) {
+  ctx.rust.on("tick", (data) => void ctx.rust.call("test.heard", data));
+  const pieces = [];
+  const answer = await ctx.rust.call("app.echo", { x: 1 }, { onProgress: (data) => pieces.push(data) });
+  await ctx.rust.call("test.report", { answer, pieces });
+}
+`,
+};
+
 function launch(entries, files = PLUGINS) {
   const space = workspace({ ...files, "plugins.yml": config(entries) });
   cleanup.push(space.remove);
@@ -55,7 +66,7 @@ test("the host says it is ready with its plugins, and answers ping and status", 
     { id: "counter", name: "./counter.mjs" },
   ]);
   const ready = await next((message) => message.method === "ready");
-  assert.equal(ready.params.protocol, 1);
+  assert.equal(ready.params.protocol, 2);
   assert.ok(ready.params.windows.port > 0);
   assert.match(ready.params.windows.token, /^[0-9a-f]{64}$/);
   assert.deepEqual(ready.params.plugins.map((entry) => entry.state), ["running", "running"]);
@@ -63,6 +74,20 @@ test("the host says it is ready with its plugins, and answers ping and status", 
   assert.ok((await next((message) => message.id === 1)).result.at > 0);
   send({ id: 2, method: "status" });
   assert.equal((await next((message) => message.id === 2)).result.length, 2);
+});
+
+test("a plugin calls Rust over stdin and stdout, sees progress, and hears Rust's events", async () => {
+  const { next, send } = launch([{ id: "asks", name: "./asks.mjs" }], ASKS);
+  const echo = await next((message) => message.method === "app.echo");
+  assert.deepEqual(echo.params, { x: 1 });
+  send({ method: "progress", params: { id: echo.id, data: "half" } });
+  send({ id: echo.id, result: { echo: { x: 1 } } });
+  const report = await next((message) => message.method === "test.report");
+  assert.deepEqual(report.params, { answer: { echo: { x: 1 } }, pieces: ["half"] });
+  send({ id: report.id, result: null });
+  await next((message) => message.method === "ready");
+  send({ method: "event", params: { name: "tick", data: 7 } });
+  assert.equal((await next((message) => message.method === "test.heard")).params, 7);
 });
 
 test("what plugins print goes to stderr, so the pipe to Rust stays clean", async () => {

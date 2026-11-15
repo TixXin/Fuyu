@@ -1,5 +1,5 @@
 import { Context, Service } from "@fuyu/plugin-base";
-import { SERVICE_CALLS, serviceError, startHost, type Host, type PluginStatus, type ServiceEntry, type ServicesApi } from "@fuyu/plugin-base/host";
+import { PACKAGES_DIR, SERVICE_CALLS, dataDirOf, readBuiltins, readManifest, serviceError, startHost, type BuiltinCatalog, type Host, type PluginPackage, type PluginStatus, type ServiceEntry, type ServicesApi } from "@fuyu/plugin-base/host";
 
 class Counter extends Service {
   value = 0;
@@ -47,3 +47,21 @@ const code: 4401 = CLOSE.badToken;
 void connection;
 void code;
 void WINDOW_ORIGINS;
+
+const withBuiltins: Host = await startHost({ dir: "/tmp", builtins: "/app/builtins", dataDir: "/tmp/data" });
+const builtinKinds: ("essential" | "builtin")[] = withBuiltins.builtins().map((entry) => entry.kind);
+const catalog: BuiltinCatalog = readBuiltins("/app/builtins");
+const folder: string = dataDirOf("/tmp/data", catalog.plugins[0]?.id ?? "timer");
+void builtinKinds;
+void folder;
+
+const sourced: Host = await startHost({ dir: "/tmp", appVersion: "0.6.0" });
+const sources: (string | undefined)[] = sourced.status().map((entry) => entry.source);
+const undeclared: string[] | undefined = sourced.status()[0]?.undeclared?.provides;
+const manifestErrors = sourced.status().flatMap((entry) => (entry.blocked?.by === "manifest" ? entry.blocked.errors.map((issue) => issue.code) : []));
+const installed: PluginPackage = readManifest(`/tmp/${PACKAGES_DIR}/@ann/weather`, { allowExperimental: false, appVersion: "0.6.0" });
+const windows: string[] = installed.clients.map((client) => client.window);
+void sources;
+void undeclared;
+void manifestErrors;
+void windows;

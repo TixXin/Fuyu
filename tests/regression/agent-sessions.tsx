@@ -141,10 +141,10 @@ async function runChecks() {
       && Math.abs(fixture.getBoundingClientRect().right + 20 - archiveIcon.right - 20) < 1,
       "归档按钮一直显示在提供方图标右边，图标离岛屿边缘 20px，和顶部按钮对齐");
     check(removeButtons[0].getAttribute("aria-label") === "归档「设置界面完善思路」", "归档按钮的读屏文字说明归档哪个会话");
-    const agedItem = rows()[2].parentElement!;
+    const agedItem = rows()[2].closest("li")!;
     const age = agedItem.querySelector<HTMLElement>(".agent-session__age");
     const agedArchive = agedItem.querySelector<HTMLButtonElement>(".agent-session__archive")!;
-    check(age?.textContent === "1 小时" && !meta(rows()[2])?.includes("1 小时") && !rows()[0].parentElement!.querySelector(".agent-session__age")
+    check(age?.textContent === "1 小时" && !meta(rows()[2])?.includes("1 小时") && !rows()[0].closest("li")!.querySelector(".agent-session__age")
       && getComputedStyle(agedArchive).opacity === "0" && getComputedStyle(age).opacity === "1"
       && Math.abs(age.getBoundingClientRect().right - agedArchive.querySelector("svg")!.getBoundingClientRect().right) < 1,
       "平时归档按钮的位置显示多久前更新，右边和归档图标对齐；运行中没有时间的行照常显示归档按钮");
@@ -334,7 +334,7 @@ async function runChecks() {
     let cards = await renderView("cards");
     check(cards.length === 3 && cards.every((card) => card.offsetHeight === 62) && fits(), "卡片视图每个会话一张 62px 的卡片，三张正好放下");
     check(cards[0].querySelector(".agent-card__tokens")?.textContent === "86.4k tokens" && !cards[2].querySelector(".agent-card__tokens"), "卡片右下写上下文大小，不知道时不写");
-    check(cards.every((card) => card.parentElement?.querySelector(".agent-session__archive")), "卡片视图照样能归档");
+    check(cards.every((card) => card.closest("li")?.querySelector(".agent-session__archive")), "卡片视图照样能归档");
     cards = await renderView("compact");
     check(cards.length === 3 && cards.every((card) => card.offsetHeight === 34 && !card.querySelector(".agent-card__status-line") && card.querySelector(".agent-card__bar")) && fits(),
       "紧凑视图每个会话一行 34px，只有色条、标题、状态和时间");

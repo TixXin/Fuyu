@@ -13,6 +13,7 @@ type IslandHoverCardProps = {
   alignTo?: string;
   portalTo?: string;
   anchorClassName?: string;
+  cardClassName?: string;
 };
 
 type Place = { top: number; center: number; root: Element };
@@ -25,6 +26,7 @@ export function IslandHoverCard({
   alignTo = ".island",
   portalTo = ".stage",
   anchorClassName,
+  cardClassName,
 }: IslandHoverCardProps) {
   const anchorRef = useRef<HTMLSpanElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -92,7 +94,7 @@ export function IslandHoverCard({
       {open && createPortal(
         <div
           ref={cardRef}
-          className="island-hover-card"
+          className={cardClassName ? `island-hover-card ${cardClassName}` : "island-hover-card"}
           role="tooltip"
           style={{ top: place.top, left: left ?? place.center, visibility: left === null ? "hidden" : undefined }}
         >

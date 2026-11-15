@@ -14,6 +14,8 @@ import { isMacOS } from "../../lib/platform";
 import type { SettingsCategory } from "./categories";
 import { ShortcutFinder } from "./ShortcutFinder";
 import { useScreenshotSettings } from "../../features/screenshot/useScreenshotSettings";
+import { VoiceInputShortcutGroup } from "../../features/voice-input/VoiceInputShortcutGroup";
+import { useVoiceInputSettings } from "../../features/voice-input/useVoiceInputSettings";
 import { ClipboardShortcutGroup, ScreenshotShortcutGroup, TranslationShortcutGroup } from "./ShortcutGroups";
 import type { ShortcutOwner } from "./shortcutConflicts";
 import { useShortcutOwners } from "./useShortcutOwners";
@@ -46,7 +48,8 @@ export function ShortcutsSettingsPage({
   const [clipboardSettings, updateClipboardSettings] = useClipboardSettings();
   const [translationSettings, setTranslationSettings] = useTranslationSettings();
   const [screenshotSettings, setScreenshotSettings] = useScreenshotSettings();
-  const { owners, takenBy, refreshPlugins } = useShortcutOwners({ settings, clipboard: clipboardSettings, translation: translationSettings, screenshot: screenshotSettings });
+  const [voiceSettings, setVoiceSettings] = useVoiceInputSettings();
+  const { owners, takenBy, refreshPlugins } = useShortcutOwners({ settings, clipboard: clipboardSettings, translation: translationSettings, screenshot: screenshotSettings, voice: voiceSettings });
   const pageLink = (page: SettingsCategory) => <SettingsLinkButton onClick={() => onOpenPage(page)}>{text.openFeaturePage}</SettingsLinkButton>;
 
   const approvalLabels: Partial<Record<AgentApprovalDecision, string>> = { allow: t.agent.approval.allow, deny: t.agent.approval.deny, terminal: t.agent.approval.terminal };
@@ -112,6 +115,12 @@ export function ShortcutsSettingsPage({
         onScreenshotChange={setScreenshotSettings}
         takenBy={takenBy}
         onTurnOn={() => onSettingsChange({ ...settings, screenshotEnabled: true })}
+      />
+      <VoiceInputShortcutGroup
+        action={pageLink("voiceInput")}
+        settings={voiceSettings}
+        onSettingsChange={setVoiceSettings}
+        takenBy={(shortcut) => takenBy(shortcut, "voiceInput")}
       />
       <PluginShortcutSection takenBy={takenBy} onChanged={refreshPlugins} action={pageLink("plugins")} />
     </>

@@ -131,8 +131,6 @@ export type SettingsPluginsText = {
     actions: string;
     copy: string;
     copied: string;
-    show: string;
-    hide: string;
     notifications: string;
     showNotifications: string;
     windows: string;
@@ -494,8 +492,6 @@ export const zhCN: SettingsPluginsText = {
     actions: "操作",
     copy: "复制",
     copied: "已复制",
-    show: "显示",
-    hide: "隐藏",
     notifications: "通知",
     showNotifications: "在岛上显示这个插件的通知",
     windows: "窗口",
@@ -906,8 +902,6 @@ export const en: SettingsPluginsText = {
     actions: "Actions",
     copy: "Copy",
     copied: "Copied",
-    show: "Show",
-    hide: "Hide",
     notifications: "Notifications",
     showNotifications: "Show this plugin's notifications on the island",
     windows: "Windows",

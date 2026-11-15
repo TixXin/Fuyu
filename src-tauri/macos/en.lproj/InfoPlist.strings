@@ -1,1 +1,2 @@
 "NSAppleEventsUsageDescription" = "Fuyu switches to the right Terminal or iTerm2 tab for an AI session, and controls Apple Music or Spotify when the system media service is unavailable.";
+"NSMicrophoneUsageDescription" = "Fuyu listens only while you use voice input, and turns speech into text on this Mac.";
