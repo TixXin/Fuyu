@@ -261,6 +261,21 @@ fn exited(child: &mut Child) -> Option<String> {
     }
 }
 
+const EXIT_GRACE: Duration = Duration::from_millis(500);
+
+fn exit_reason(child: &mut Child, within: Duration) -> Option<String> {
+    let deadline = Instant::now() + within;
+    loop {
+        if let Some(reason) = exited(child) {
+            return Some(reason);
+        }
+        if Instant::now() >= deadline {
+            return None;
+        }
+        thread::sleep(Duration::from_millis(10));
+    }
+}
+
 fn wait_ready(inner: &Inner, running: &mut Running, timing: &Timing) -> Result<Value, String> {
     let deadline = Instant::now() + timing.ready_within;
     loop {
@@ -295,7 +310,7 @@ fn watch(inner: &Inner, running: &mut Running, timing: &Timing) -> Option<String
         match running.rpc.call("ping", Value::Null, timing.ping_timeout) {
             Ok(_) => {}
             Err(RpcError::Timeout { .. }) => return Some(format!("the plugin host did not answer a heartbeat in {} ms", timing.ping_timeout.as_millis())),
-            Err(error) => return Some(exited(&mut running.child).unwrap_or_else(|| error.to_string())),
+            Err(error) => return Some(exit_reason(&mut running.child, EXIT_GRACE).unwrap_or_else(|| error.to_string())),
         }
     }
 }
