@@ -16,6 +16,8 @@ import { isMacOS } from "../../lib/platform";
 import { FeatureHeader } from "./FeatureHeader";
 import { AllShortcutsLink } from "./ShortcutsSettingsPage";
 import { useShortcutOwners } from "./useShortcutOwners";
+import { SlotView } from "../../features/plugin-kernel/SlotView";
+import { settingsSections } from "./slots/sectionSlot";
 
 type ScreenshotSectionProps = {
   settings: IslandSettings;
@@ -114,13 +116,22 @@ function RecordSection({ screenshot, onScreenshotChange }: ScreenshotSectionProp
   return <RecordSettingsGroup screenshot={screenshot} onChange={onScreenshotChange} />;
 }
 
+type ScreenshotTab = "screenshot" | "screenshotRecord";
+
+const sections = settingsSections<ScreenshotSectionProps, ScreenshotTab>();
+
+sections.add({ id: "screenshot.shortcuts", category: "screenshot", order: 10, component: ShortcutsSection });
+sections.add({ id: "screenshot.capturing", category: "screenshot", order: 20, component: CapturingSection });
+sections.add({ id: "screenshot.after", category: "screenshot", order: 30, component: AfterSection });
+sections.add({ id: "screenshotRecord.record", category: "screenshotRecord", order: 10, component: RecordSection });
+
 export function ScreenshotSettingsPage({
   tab,
   settings,
   onSettingsChange,
   onOpenShortcuts,
 }: {
-  tab: "screenshot" | "screenshotRecord";
+  tab: ScreenshotTab;
   settings: IslandSettings;
   onSettingsChange: (settings: IslandSettings) => void;
   onOpenShortcuts: () => void;
@@ -136,15 +147,12 @@ export function ScreenshotSettingsPage({
     if (folder !== screenshot.saveFolder) setScreenshot({ ...screenshot, saveFolder: folder });
   };
   const props = { settings, onSettingsChange, onOpenShortcuts, screenshot, onScreenshotChange: setScreenshot, takenBy, folderDraft, onFolderDraftChange: setFolderDraft, onSaveFolder: saveFolder };
-
-  if (tab === "screenshotRecord" && !isMacOS) return <RecordSection {...props} />;
+  const shown: ScreenshotTab = tab === "screenshotRecord" && !isMacOS ? "screenshotRecord" : "screenshot";
 
   return (
     <>
-      <FeatureHeader feature="screenshot" />
-      <ShortcutsSection {...props} />
-      <CapturingSection {...props} />
-      <AfterSection {...props} />
+      {shown === "screenshot" && <FeatureHeader feature="screenshot" />}
+      <SlotView slot={sections} group={shown} props={props} />
     </>
   );
 }

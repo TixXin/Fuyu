@@ -7,6 +7,8 @@ import { MAX_SHELF_ITEMS, MIN_SHELF_ITEMS, SHELF_CLEANUP_DAYS } from "../../feat
 import type { IslandSettings, ShelfDoubleClick } from "../../features/appearance/types";
 import { useTranslation } from "../../i18n";
 import { FeatureHeader } from "./FeatureHeader";
+import { SlotView } from "../../features/plugin-kernel/SlotView";
+import { settingsSections } from "./slots/sectionSlot";
 
 type ShelfSectionProps = {
   settings: IslandSettings;
@@ -85,12 +87,16 @@ function CleanupSection({ settings, onSettingsChange }: ShelfSectionProps) {
   );
 }
 
+const sections = settingsSections<ShelfSectionProps, "shelf">();
+
+sections.add({ id: "shelf.behavior", category: "shelf", order: 10, component: BehaviorSection });
+sections.add({ id: "shelf.cleanup", category: "shelf", order: 20, component: CleanupSection });
+
 export function ShelfSettingsPage(props: ShelfSectionProps) {
   return (
     <>
       <FeatureHeader feature="shelf" />
-      <BehaviorSection {...props} />
-      <CleanupSection {...props} />
+      <SlotView slot={sections} group="shelf" props={props} />
     </>
   );
 }

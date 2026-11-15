@@ -8,6 +8,8 @@ import { LyricsSettingsSection } from "../../features/media/lyrics/LyricsSetting
 import { LyricsKaraokeSettingsSection } from "../../features/media/lyrics/LyricsKaraokeSettingsSection";
 import { useTranslation } from "../../i18n";
 import { FeatureHeader } from "./FeatureHeader";
+import { SlotView } from "../../features/plugin-kernel/SlotView";
+import { settingsSections } from "./slots/sectionSlot";
 
 type MusicSectionProps = {
   settings: IslandSettings;
@@ -47,21 +49,22 @@ function KaraokeSection({ settings, onSettingsChange }: MusicSectionProps) {
   );
 }
 
-export function MusicSettingsPage({
-  tab,
-  ...props
-}: MusicSectionProps & {
-  tab: "music" | "musicLyrics" | "musicLyricsStyle";
-}) {
-  if (tab === "musicLyrics") return <LyricsSourcesSection {...props} />;
-  if (tab === "musicLyricsStyle") return <KaraokeSection {...props} />;
+type MusicTab = "music" | "musicLyrics" | "musicLyricsStyle";
+
+const sections = settingsSections<MusicSectionProps, MusicTab>();
+
+sections.add({ id: "music.bar", category: "music", order: 10, component: MusicBarSettingsSection });
+sections.add({ id: "music.lyrics", category: "music", order: 20, component: IslandLyricsSection });
+sections.add({ id: "music.sources", category: "music", order: 30, component: MusicSourceSettingsSection });
+sections.add({ id: "music.tuck", category: "music", order: 40, component: TuckSection });
+sections.add({ id: "musicLyrics.sources", category: "musicLyrics", order: 10, component: LyricsSourcesSection });
+sections.add({ id: "musicLyricsStyle.karaoke", category: "musicLyricsStyle", order: 10, component: KaraokeSection });
+
+export function MusicSettingsPage({ tab, ...props }: MusicSectionProps & { tab: MusicTab }) {
   return (
     <>
-      <FeatureHeader feature="music" />
-      <MusicBarSettingsSection />
-      <IslandLyricsSection {...props} />
-      <MusicSourceSettingsSection />
-      <TuckSection {...props} />
+      {tab === "music" && <FeatureHeader feature="music" />}
+      <SlotView slot={sections} group={tab} props={props} />
     </>
   );
 }

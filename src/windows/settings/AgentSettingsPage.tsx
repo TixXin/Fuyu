@@ -10,6 +10,8 @@ import "../../features/agent-status/AgentHooksSettingsSection.css";
 import type { AgentLightStyle, AgentTitleMode, IslandSettings } from "../../features/appearance/types";
 import { useTranslation } from "../../i18n";
 import { FeatureHeader } from "./FeatureHeader";
+import { SlotView } from "../../features/plugin-kernel/SlotView";
+import { settingsSections } from "./slots/sectionSlot";
 
 const SHOWN_PROVIDERS = Object.keys(AGENT_PROVIDER_LABELS) as SessionProvider[];
 
@@ -96,13 +98,17 @@ function ProvidersSection({ settings, onSettingsChange }: AgentSectionProps) {
   );
 }
 
+const sections = settingsSections<AgentSectionProps, "agents">();
+
+sections.add({ id: "agents.hooks-notice", category: "agents", order: 10, component: AgentHooksNotice });
+sections.add({ id: "agents.session-title", category: "agents", order: 20, component: SessionTitleSection });
+sections.add({ id: "agents.providers", category: "agents", order: 30, component: ProvidersSection });
+
 export function AgentSettingsPage(props: AgentSectionProps) {
   return (
     <>
       <FeatureHeader feature="agents" />
-      <AgentHooksNotice onOpenConnect={props.onOpenConnect} />
-      <SessionTitleSection {...props} />
-      <ProvidersSection {...props} />
+      <SlotView slot={sections} group="agents" props={props} />
     </>
   );
 }

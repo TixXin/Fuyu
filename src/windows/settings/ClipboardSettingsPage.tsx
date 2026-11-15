@@ -14,6 +14,8 @@ import { FeatureHeader } from "./FeatureHeader";
 import { ClipboardShortcutGroup } from "./ShortcutGroups";
 import { AllShortcutsLink } from "./ShortcutsSettingsPage";
 import { useShortcutOwners } from "./useShortcutOwners";
+import { SlotView } from "../../features/plugin-kernel/SlotView";
+import { settingsSections } from "./slots/sectionSlot";
 
 type ClipboardSectionProps = {
   onOpenShortcuts: () => void;
@@ -53,8 +55,19 @@ function AiPromptSection({ clipboardSettings, onClipboardSettingsChange }: Clipb
   return <ClipboardAiPromptSettings clipboardSettings={clipboardSettings} onChange={onClipboardSettingsChange} />;
 }
 
+type ClipboardTab = "clipboard" | "clipboardHistory" | "clipboardSnippets" | "clipboardData";
+
+const sections = settingsSections<ClipboardSectionProps, ClipboardTab>();
+
+sections.add({ id: "clipboard.general", category: "clipboard", order: 10, component: GeneralSection });
+sections.add({ id: "clipboard.links", category: "clipboard", order: 20, component: LinksSection });
+sections.add({ id: "clipboardHistory.record", category: "clipboardHistory", order: 10, component: RecordSection });
+sections.add({ id: "clipboardSnippets.snippets", category: "clipboardSnippets", order: 10, component: ClipboardSnippetSettings });
+sections.add({ id: "clipboardSnippets.ai-prompts", category: "clipboardSnippets", order: 20, component: AiPromptSection });
+sections.add({ id: "clipboardData.transfer", category: "clipboardData", order: 10, component: ClipboardTransferSettings });
+
 export function ClipboardSettingsPage({ tab, settings, onOpenShortcuts }: {
-  tab: "clipboard" | "clipboardHistory" | "clipboardSnippets" | "clipboardData";
+  tab: ClipboardTab;
   settings: IslandSettings;
   onOpenShortcuts: () => void;
 }) {
@@ -63,31 +76,17 @@ export function ClipboardSettingsPage({ tab, settings, onOpenShortcuts }: {
   const [translationSettings] = useTranslationSettings();
   const { takenBy } = useShortcutOwners({ settings, clipboard: clipboardSettings, translation: translationSettings });
   const openKeys = openShortcutLabel(clipboardSettings);
-  const header = (
-    <FeatureHeader
-      feature="clipboard"
-      status={openKeys ? t.settings.clipboard.headerShortcut(openKeys) : undefined}
-    />
-  );
   const props = { onOpenShortcuts, clipboardSettings, onClipboardSettingsChange: updateClipboardSettings, takenBy };
 
-  if (tab === "clipboardHistory") {
-    return <RecordSection {...props} />;
-  }
-  if (tab === "clipboardSnippets") {
-    return (
-      <>
-        <ClipboardSnippetSettings />
-        <AiPromptSection {...props} />
-      </>
-    );
-  }
-  if (tab === "clipboardData") return <ClipboardTransferSettings />;
   return (
     <>
-      {header}
-      <GeneralSection {...props} />
-      <LinksSection {...props} />
+      {tab === "clipboard" && (
+        <FeatureHeader
+          feature="clipboard"
+          status={openKeys ? t.settings.clipboard.headerShortcut(openKeys) : undefined}
+        />
+      )}
+      <SlotView slot={sections} group={tab} props={props} />
     </>
   );
 }

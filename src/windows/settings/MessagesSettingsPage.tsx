@@ -22,6 +22,8 @@ import { IslandGlyph } from "../../features/appearance/IslandGlyph";
 import { useTranslation } from "../../i18n";
 import { FeatureHeader } from "./FeatureHeader";
 import "./MessagesSettingsPage.css";
+import { SlotView } from "../../features/plugin-kernel/SlotView";
+import { settingsSections } from "./slots/sectionSlot";
 
 type MessagesSectionProps = {
   settings: IslandSettings;
@@ -117,8 +119,15 @@ function WeChatSection({ wechatReminders, unsupported }: MessagesSectionProps) {
   );
 }
 
+const sections = settingsSections<MessagesSectionProps, "messages">();
+
+sections.add({ id: "messages.notice", category: "messages", order: 10, component: NoticeSection });
+sections.add({ id: "messages.qq", category: "messages", order: 20, component: QQSection });
+sections.add({ id: "messages.wechat", category: "messages", order: 30, component: WeChatSection });
+sections.add({ id: "messages.mail", category: "messages", order: 40, component: MailGroups });
+
 export function MessagesSettingsPage(props: MessagesSectionProps) {
-  const { settings, qqNotifications, wechatReminders, unsupported, onSettingsChange } = props;
+  const { settings, qqNotifications, wechatReminders, unsupported } = props;
   const t = useTranslation();
   const labels = t.settings.messageSources;
   const sourcesOn = [!unsupported.has("qq") && qqNotifications.snapshot.enabled, !unsupported.has("wechat") && wechatReminders.snapshot.enabled, settings.mailEnabled].filter(Boolean).length;
@@ -126,10 +135,7 @@ export function MessagesSettingsPage(props: MessagesSectionProps) {
   return (
     <>
       <FeatureHeader feature="messages" aside={labels.sourcesOn(sourcesOn)} />
-      <NoticeSection {...props} />
-      <QQSection {...props} />
-      <WeChatSection {...props} />
-      <MailGroups settings={settings} onSettingsChange={onSettingsChange} />
+      <SlotView slot={sections} group="messages" props={props} />
     </>
   );
 }

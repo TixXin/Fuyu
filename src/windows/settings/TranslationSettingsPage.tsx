@@ -14,6 +14,8 @@ import { SettingsChoiceCards } from "../../components/settings/SettingsChoiceCar
 import { SettingsFootnote } from "../../components/settings/SettingsFootnote";
 import { IslandGlyph } from "../../features/appearance/IslandGlyph";
 import { SettingsRow } from "../../components/settings/SettingsRow";
+import { SlotView } from "../../features/plugin-kernel/SlotView";
+import { settingsSections } from "./slots/sectionSlot";
 
 type TranslationSectionProps = {
   settings: IslandSettings;
@@ -62,6 +64,11 @@ function ShortcutsSection({ settings, onOpenShortcuts, translation, onTranslatio
   );
 }
 
+const sections = settingsSections<TranslationSectionProps, "translation">();
+
+sections.add({ id: "translation.service", category: "translation", order: 10, component: ServiceSection });
+sections.add({ id: "translation.shortcuts", category: "translation", order: 20, component: ShortcutsSection });
+
 export function TranslationSettingsPage({
   settings,
   onSettingsChange,
@@ -78,8 +85,7 @@ export function TranslationSettingsPage({
   return (
     <>
       <FeatureHeader feature="translation" />
-      <ServiceSection {...props} />
-      <ShortcutsSection {...props} />
+      <SlotView slot={sections} group="translation" props={props} />
     </>
   );
 }

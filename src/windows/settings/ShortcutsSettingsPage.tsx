@@ -25,6 +25,8 @@ import type { ShortcutOwner } from "./shortcutConflicts";
 import { useShortcutOwners } from "./useShortcutOwners";
 import "./ShortcutsSettingsPage.css";
 import { shortcutLabel } from "../../features/clipboard/shortcut";
+import { SlotView } from "../../features/plugin-kernel/SlotView";
+import { settingsSections } from "./slots/sectionSlot";
 
 type ShortcutsSectionProps = {
   settings: IslandSettings;
@@ -151,13 +153,25 @@ function PluginsSection({ onOpenPage, takenBy, refreshPlugins }: ShortcutsSectio
   return <PluginShortcutSection takenBy={takenBy} onChanged={refreshPlugins} action={pageLink(t, onOpenPage, "plugins")} />;
 }
 
+type ShortcutsTab = "shortcuts" | "shortcutsIsland";
+
+const sections = settingsSections<ShortcutsSectionProps, ShortcutsTab>();
+
+sections.add({ id: "shortcuts.translation", category: "shortcuts", order: 10, component: TranslationSection });
+sections.add({ id: "shortcuts.clipboard", category: "shortcuts", order: 20, component: ClipboardSection });
+sections.add({ id: "shortcuts.screenshot", category: "shortcuts", order: 30, component: ScreenshotSection });
+sections.add({ id: "shortcuts.voice-input", category: "shortcuts", order: 40, component: VoiceInputSection });
+sections.add({ id: "shortcuts.plugins", category: "shortcuts", order: 50, component: PluginsSection });
+sections.add({ id: "shortcutsIsland.pages", category: "shortcutsIsland", order: 10, component: PageKeysSection });
+sections.add({ id: "shortcutsIsland.reference", category: "shortcutsIsland", order: 20, component: ReferenceSheetSection });
+
 export function ShortcutsSettingsPage({
   tab,
   settings,
   onSettingsChange,
   onOpenPage,
 }: {
-  tab: "shortcuts" | "shortcutsIsland";
+  tab: ShortcutsTab;
   settings: IslandSettings;
   onSettingsChange: (settings: IslandSettings) => void;
   onOpenPage: (page: SettingsCategory) => void;
@@ -174,7 +188,6 @@ export function ShortcutsSettingsPage({
     id: `approval:${action}`, label: `${text.approvalTitle} · ${approvalLabel(t, action)}`, shortcut, home: "agentApprovals",
   }));
 
-  const finder = <ShortcutFinder owners={[...owners, ...approvalOwners]} onOpenPage={onOpenPage} />;
   const props = {
     settings, onSettingsChange, onOpenPage, takenBy, refreshPlugins,
     clipboard: clipboardSettings, onClipboardChange: updateClipboardSettings,
@@ -183,24 +196,10 @@ export function ShortcutsSettingsPage({
     voice: voiceSettings, onVoiceChange: setVoiceSettings,
   };
 
-  if (tab === "shortcutsIsland") {
-    return (
-      <>
-        {finder}
-        <PageKeysSection {...props} />
-        <ReferenceSheetSection {...props} />
-      </>
-    );
-  }
-
   return (
     <>
-      {finder}
-      <TranslationSection {...props} />
-      <ClipboardSection {...props} />
-      <ScreenshotSection {...props} />
-      <VoiceInputSection {...props} />
-      <PluginsSection {...props} />
+      <ShortcutFinder owners={[...owners, ...approvalOwners]} onOpenPage={onOpenPage} />
+      <SlotView slot={sections} group={tab} props={props} />
     </>
   );
 }

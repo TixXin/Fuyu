@@ -11,6 +11,8 @@ import { useSystemDark } from "../../features/appearance/useResolvedTheme";
 import type { IslandSettings } from "../../features/appearance/types";
 import type { useSettingPresets } from "../../features/appearance/useSettingPresets";
 import { requestPanelPreview } from "./storage";
+import { SlotView } from "../../features/plugin-kernel/SlotView";
+import { settingsSections } from "./slots/sectionSlot";
 
 type ThemeSectionProps = {
   settings: IslandSettings;
@@ -66,6 +68,14 @@ function PresetsSection({ presets }: ThemeSectionProps) {
   return <PresetSettingsSection {...presets} />;
 }
 
+const sections = settingsSections<ThemeSectionProps, "theme">();
+
+sections.add({ id: "theme.mode", category: "theme", order: 10, component: ThemeModeSection });
+sections.add({ id: "theme.builtin", category: "theme", order: 20, component: BuiltinSection });
+sections.add({ id: "theme.colors", category: "theme", order: 30, component: ColorsSection });
+sections.add({ id: "theme.style", category: "theme", order: 40, component: StyleSection });
+sections.add({ id: "theme.presets", category: "theme", order: 50, component: PresetsSection });
+
 export function ThemeSettingsPage({
   settings,
   presets,
@@ -83,11 +93,7 @@ export function ThemeSettingsPage({
   return (
     <>
       <IslandPreview settings={shown} />
-      <ThemeModeSection settings={settings} onEditingChange={setEditing} onSettingsChange={onSettingsChange} />
-      <BuiltinSection {...props} />
-      <ColorsSection {...props} />
-      <StyleSection {...props} />
-      <PresetsSection {...props} />
+      <SlotView slot={sections} group="theme" props={props} />
     </>
   );
 }

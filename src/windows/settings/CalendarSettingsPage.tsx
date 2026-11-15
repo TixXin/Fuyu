@@ -7,6 +7,8 @@ import { CalendarSourcesSection } from "../../features/calendar/CalendarSourcesS
 import { CALENDAR_REMIND_MINUTES, type CalendarRemindMinutes } from "../../features/calendar/calendarSettings";
 import { useTranslation } from "../../i18n";
 import { FeatureHeader } from "./FeatureHeader";
+import { SlotView } from "../../features/plugin-kernel/SlotView";
+import { settingsSections } from "./slots/sectionSlot";
 
 type CalendarSectionProps = {
   settings: IslandSettings;
@@ -44,12 +46,16 @@ function IslandSection({ settings, onSettingsChange }: CalendarSectionProps) {
   );
 }
 
+const sections = settingsSections<CalendarSectionProps, "calendar">();
+
+sections.add({ id: "calendar.island", category: "calendar", order: 10, component: IslandSection });
+sections.add({ id: "calendar.sources", category: "calendar", order: 20, component: CalendarSourcesSection });
+
 export function CalendarSettingsPage(props: CalendarSectionProps) {
   return (
     <>
       <FeatureHeader feature="calendar" />
-      <IslandSection {...props} />
-      <CalendarSourcesSection />
+      <SlotView slot={sections} group="calendar" props={props} />
     </>
   );
 }

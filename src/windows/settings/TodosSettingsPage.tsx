@@ -4,6 +4,8 @@ import type { IslandSettings } from "../../features/appearance/types";
 import { SavePathSettingsSection } from "../../features/todos/SavePathSettingsSection";
 import type { useSaveDirectorySetting } from "../../features/todos/useSaveDirectorySetting";
 import { FeatureHeader } from "./FeatureHeader";
+import { SlotView } from "../../features/plugin-kernel/SlotView";
+import { settingsSections } from "./slots/sectionSlot";
 
 type TodosSectionProps = {
   settings: IslandSettings;
@@ -27,14 +29,17 @@ function SavePathSection({ saveDirectory }: TodosSectionProps) {
   );
 }
 
+const sections = settingsSections<TodosSectionProps, "todos">();
+
+sections.add({ id: "todos.general", category: "todos", order: 10, component: TodoSettingsSection });
+sections.add({ id: "todos.projects", category: "todos", order: 20, component: ProjectsSection });
+sections.add({ id: "todos.save-path", category: "todos", order: 30, component: SavePathSection });
+
 export function TodosSettingsPage(props: TodosSectionProps) {
-  const { settings, onSettingsChange } = props;
   return (
     <>
       <FeatureHeader feature="todos" />
-      <TodoSettingsSection settings={settings} onSettingsChange={onSettingsChange} />
-      <ProjectsSection {...props} />
-      <SavePathSection {...props} />
+      <SlotView slot={sections} group="todos" props={props} />
     </>
   );
 }

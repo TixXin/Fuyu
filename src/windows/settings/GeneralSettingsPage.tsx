@@ -16,6 +16,8 @@ import { useLaunchAtStartup } from "./useLaunchAtStartup";
 import { useTrayIconVisible } from "./useTrayIconVisible";
 import { QuitIslandRow } from "./QuitIslandRow";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
+import { SlotView } from "../../features/plugin-kernel/SlotView";
+import { settingsSections } from "./slots/sectionSlot";
 
 type GeneralSectionProps = {
   locale: LocaleCode;
@@ -62,14 +64,14 @@ function QuitSection() {
   );
 }
 
+const sections = settingsSections<GeneralSectionProps, "general">();
+
+sections.add({ id: "general.startup", category: "general", order: 10, component: StartupSection });
+sections.add({ id: "general.position", category: "general", order: 20, component: PositionSection });
+sections.add({ id: "general.permissions", category: "general", order: 30, component: SystemPermissionsSection });
+sections.add({ id: "general.data", category: "general", order: 40, component: DataSection });
+sections.add({ id: "general.quit", category: "general", order: 50, component: QuitSection });
+
 export function GeneralSettingsPage(props: GeneralSectionProps) {
-  return (
-    <>
-      <StartupSection {...props} />
-      <PositionSection {...props} />
-      <SystemPermissionsSection />
-      <DataSection />
-      <QuitSection />
-    </>
-  );
+  return <SlotView slot={sections} group="general" props={props} />;
 }
