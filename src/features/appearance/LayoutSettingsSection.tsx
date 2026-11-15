@@ -5,7 +5,8 @@ import { SettingsSliderRow } from "../../components/settings/SettingsSliderRow";
 import { useTranslation } from "../../i18n";
 import { isMacOS } from "../../lib/platform";
 import { DEFAULT_SETTINGS, MAX_COLLAPSED_WIDTH_EXTRA, MAX_ISLAND_CORNER_RADIUS, MAX_MAX_PANEL_HEIGHT, MAX_PANEL_WIDTH, MAX_TOP_FILLET_RADIUS, MIN_COLLAPSED_WIDTH_EXTRA, MIN_ISLAND_CORNER_RADIUS, MIN_MAX_PANEL_HEIGHT, MIN_PANEL_WIDTH, MIN_TOP_FILLET_RADIUS } from "./settings";
-import type { IslandCornerShape, IslandSettings } from "./types";
+import type { IslandCornerShape, IslandForm, IslandSettings } from "./types";
+import { useIslandDockEdge } from "./useIslandDockEdge";
 
 const scale = (value: number) => `${value.toFixed(2)}x`;
 const pixels = (value: number) => `${Math.round(value)} px`;
@@ -33,6 +34,7 @@ export function SizeSettingsSection(props: LayoutSectionProps) {
 
   return (
       <>
+      <IslandFormGroup {...props} />
       <SettingsGroup title={text.collapsedSizeTitle}>
         <SettingsSliderRow
           title={text.collapsedScale}
@@ -95,6 +97,31 @@ export function SizeSettingsSection(props: LayoutSectionProps) {
         />
       </SettingsGroup>
       </>
+  );
+}
+
+function IslandFormGroup({ settings, onSettingsChange }: LayoutSectionProps) {
+  const text = useTranslation().settings.layout;
+  const edge = useIslandDockEdge() ?? "top";
+  const offTop = edge !== "top";
+  const forms = (["top", "pill", "notch"] as const).map((value) => ({ value, label: text.formOptions[value] }));
+
+  return (
+    <SettingsGroup title={text.formTitle}>
+      <SettingsRow
+        title={text.form}
+        description={offTop ? text.formOffTopHint : isMacOS ? text.formHintMac : text.formHint}
+        control={
+          <SettingsChoice<IslandForm>
+            value={settings.islandForm}
+            options={forms}
+            ariaLabel={text.form}
+            disabled={offTop}
+            onChange={(islandForm) => onSettingsChange({ ...settings, islandForm })}
+          />
+        }
+      />
+    </SettingsGroup>
   );
 }
 

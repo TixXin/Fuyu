@@ -56,7 +56,7 @@ pub(crate) fn snap_to_top(window: &WebviewWindow, position: IslandPosition) -> I
         set_attached(window, false);
         return position;
     };
-    let top = top_edge(&monitor, read_window_state().under_menu_bar);
+    let top = top_edge(&monitor, super::notch::under_menu_bar(window, &monitor, read_window_state()));
     let scale = screen::monitor_scale(&monitor);
     let snapped = IslandPosition::at(position.x, snapped_y(position.y, top, SNAP_DISTANCE * scale));
 

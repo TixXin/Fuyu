@@ -24,6 +24,7 @@ export const PAGES = [
   "collapsed-slots.html?test=1",
   "dev-build.html",
   "notch-island.html?test=1",
+  "island-forms.html?test=1",
   "bottom-island.html?test=1",
   "side-island.html?test=1",
   "island-colors.html?test=1",

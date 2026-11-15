@@ -1,0 +1,13 @@
+:root[data-island-form="pill"] .island--detached .island__surface {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  transition: box-shadow 350ms ease;
+}
+
+:root[data-island-form="pill"] .island-light .island--detached .island__surface {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+}
+
+:root[data-island-form="pill"][data-island-top-edge="attached"] .island--detached .island__surface,
+:root[data-island-form="pill"] .island--detached.island--tucked .island__surface {
+  box-shadow: none;
+}

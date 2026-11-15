@@ -10,11 +10,49 @@ pub(crate) const ISLAND_NOTCH_CHANGED_EVENT: &str = "island-notch-changed";
 pub(super) const MIN_NOTCH_WING: f64 = 56.0;
 pub(super) const TUCKED_NOTCH_INSET: f64 = 2.0;
 pub(super) const NOTCH_DROP_HEIGHT: f64 = 38.0;
+const SIMULATED_NOTCH_WIDTH: f64 = 240.0;
+const SIMULATED_NOTCH_HEIGHT: f64 = 32.0;
+const SIMULATED_NOTCH_GAP_SHARE: f64 = 0.3;
+const SIMULATED_NOTCH_TUCKED_VISIBLE: f64 = 6.0;
+const NOTCH_BOTTOM_RADIUS: f64 = 14.0;
+const TUCKED_NOTCH_BOTTOM_RADIUS: f64 = 10.0;
 
 #[derive(Debug, Clone, Copy, PartialEq, Serialize)]
 pub(crate) struct Notch {
     pub(crate) width: f64,
     pub(crate) height: f64,
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub(crate) simulated: bool,
+}
+
+impl Notch {
+    pub(super) fn real(width: f64, height: f64) -> Self {
+        Self { width, height, simulated: false }
+    }
+
+    pub(super) fn simulated(collapsed_scale: f64) -> Self {
+        Self {
+            width: SIMULATED_NOTCH_WIDTH * SIMULATED_NOTCH_GAP_SHARE * collapsed_scale,
+            height: SIMULATED_NOTCH_HEIGHT * collapsed_scale,
+            simulated: true,
+        }
+    }
+
+    pub(super) fn slides_to_tuck(self) -> bool {
+        self.simulated
+    }
+
+    pub(super) fn tucked_depth(self) -> f64 {
+        (self.height - SIMULATED_NOTCH_TUCKED_VISIBLE).max(0.0)
+    }
+
+    pub(super) fn bottom_radius(self, tucked: bool) -> f64 {
+        if tucked && !self.simulated {
+            TUCKED_NOTCH_BOTTOM_RADIUS
+        } else {
+            NOTCH_BOTTOM_RADIUS
+        }
+    }
 }
 
 pub(super) fn wants_notch(state: IslandWindowState) -> bool {
@@ -28,10 +66,10 @@ pub(super) fn wants_notch(state: IslandWindowState) -> bool {
 pub(super) fn collapsed_size(collapsed_width: f64, scale: f64, notch: Notch, tucked: bool, drop: bool) -> (f64, f64) {
     let scale = scale.max(0.01);
     let height = notch.height / scale;
-    if tucked {
+    if tucked && !notch.simulated {
         return (((notch.width - 2.0 * TUCKED_NOTCH_INSET) / scale).max(1.0), height);
     }
-    let height = if drop { height + NOTCH_DROP_HEIGHT } else { height };
+    let height = if drop && !tucked { height + NOTCH_DROP_HEIGHT } else { height };
     (collapsed_width.max(notch.width / scale + 2.0 * MIN_NOTCH_WING), height)
 }
 
@@ -49,12 +87,16 @@ fn notch_for(window: &WebviewWindow, monitor: &Monitor) -> Option<Notch> {
     let size = super::screen::monitor_size(monitor);
     let notches = crate::macos::notch::read_notches(window);
     crate::macos::notch::notch_on(&notches, f64::from(origin.x), f64::from(origin.y), f64::from(size.width))
-        .map(|notch| Notch { width: notch.width, height: notch.height })
+        .map(|notch| Notch::real(notch.width, notch.height))
 }
 
 #[cfg(not(target_os = "macos"))]
 fn notch_for(_window: &WebviewWindow, _monitor: &Monitor) -> Option<Notch> {
     None
+}
+
+pub(super) fn under_menu_bar(window: &WebviewWindow, monitor: &Monitor, state: IslandWindowState) -> bool {
+    state.under_menu_bar || (!state.fit_notch && dev_notch().or_else(|| notch_for(window, monitor)).is_some())
 }
 
 fn dev_notch() -> Option<Notch> {
@@ -63,13 +105,17 @@ fn dev_notch() -> Option<Notch> {
 
 #[cfg(debug_assertions)]
 pub(crate) fn set_dev_notch(app: &tauri::AppHandle, size: Option<(f64, f64)>) -> Result<(), String> {
-    *DEV_NOTCH.lock().unwrap_or_else(PoisonError::into_inner) = size.map(|(width, height)| Notch { width, height });
+    *DEV_NOTCH.lock().unwrap_or_else(PoisonError::into_inner) = size.map(|(width, height)| Notch::real(width, height));
     let window = super::main_window(app)?;
     super::apply_stage_geometry(&window, read_window_state(), false)
 }
 
 pub(super) fn settle(window: &WebviewWindow, monitor: &Monitor, state: IslandWindowState) -> Option<Notch> {
-    let notch = if wants_notch(state) { dev_notch().or_else(|| notch_for(window, monitor)) } else { None };
+    let notch = if wants_notch(state) {
+        dev_notch().or_else(|| notch_for(window, monitor)).or(Some(Notch::simulated(state.collapsed_scale)))
+    } else {
+        None
+    };
     let previous = read_window_state().notch;
     if previous != notch {
         mutate_window_state(|state| {
@@ -98,7 +144,7 @@ pub(crate) fn start_notch_watch(_window: WebviewWindow) {}
 mod tests {
     use super::*;
 
-    const NOTCH: Notch = Notch { width: 200.0, height: 32.0 };
+    const NOTCH: Notch = Notch { width: 200.0, height: 32.0, simulated: false };
 
     #[test]
     fn collapsed_island_is_at_least_notch_plus_two_wings() {
@@ -135,5 +181,24 @@ mod tests {
         assert!(!wants_notch(IslandWindowState { under_menu_bar: true, ..base }));
         assert!(!wants_notch(IslandWindowState { margin_y: 8.0, ..base }));
         assert!(!wants_notch(IslandWindowState { custom_position: Some(super::super::IslandPosition::at(10, 0)), ..base }));
+    }
+
+    #[test]
+    fn simulated_notch_is_240_by_32_with_a_30_percent_gap_and_scales() {
+        let notch = Notch::simulated(1.0);
+        assert!((notch.width - 72.0).abs() < 1e-9);
+        assert_eq!(notch.height, 32.0);
+        assert!(notch.slides_to_tuck());
+        let scaled = Notch::simulated(1.25);
+        assert!((scaled.height - 40.0).abs() < 1e-9);
+        assert!((scaled.tucked_depth() - 34.0).abs() < 1e-9);
+        assert_eq!(scaled.bottom_radius(true), NOTCH_BOTTOM_RADIUS);
+    }
+
+    #[test]
+    fn tucked_simulated_notch_keeps_its_width_and_drops_no_row() {
+        let (width, height) = collapsed_size(240.0, 1.0, Notch::simulated(1.0), true, true);
+        assert_eq!(width, 240.0);
+        assert_eq!(height, 32.0);
     }
 }

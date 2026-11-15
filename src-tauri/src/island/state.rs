@@ -120,6 +120,9 @@ impl IslandWindowState {
         if self.is_side_column() {
             return (self.mode.corner_radius() * self.corner_radius_factor()).min(SIDE_COLUMN_WIDTH / 2.0);
         }
+        if let (IslandMode::Collapsed, Some(notch)) = (self.mode, self.notch) {
+            return notch.bottom_radius(self.is_tucked);
+        }
         self.mode.corner_radius() * self.corner_radius_factor()
     }
 

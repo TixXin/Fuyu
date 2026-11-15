@@ -45,7 +45,7 @@ fn current(window: &WebviewWindow, state: IslandWindowState) -> Option<DragEdgeH
     let own = full_rect(&monitor);
     let snap = SNAP_DISTANCE * screen::monitor_scale(&monitor);
     let collapsed = matches!(state.mode, IslandMode::Collapsed);
-    let top = top_edge(&monitor, state.under_menu_bar);
+    let top = top_edge(&monitor, super::notch::under_menu_bar(window, &monitor, state));
     let edge = hint_for(rect, work, top, snap, collapsed, |edge| is_outer(edge, own, &monitors))?;
     let per_px = width / STAGE_WINDOW_WIDTH;
     let window_origin = (f64::from(position.x), f64::from(position.y));

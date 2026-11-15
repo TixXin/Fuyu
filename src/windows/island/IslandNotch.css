@@ -2,7 +2,7 @@
   --island-notch-drop-height: 38px;
 }
 
-:root[data-island-notch="on"] .island--collapsed {
+:root[data-island-notch] .island--collapsed {
   --island-top-fillet-size: 6;
   --island-shell-height: var(--island-notch-height);
   --island-shell-bottom-corner: calc(14px * var(--island-scale, 1));
@@ -10,17 +10,17 @@
   box-shadow: none;
 }
 
-:root[data-island-notch="on"] .island--appearance-liquidGlass.island--collapsed,
-:root[data-island-notch="on"] .island--appearance-liquidGlass.island--collapsed:has(:focus-visible) {
+:root[data-island-notch] .island--appearance-liquidGlass.island--collapsed,
+:root[data-island-notch] .island--appearance-liquidGlass.island--collapsed:has(:focus-visible) {
   background: var(--color-black, #000);
   box-shadow: none;
 }
 
-:root[data-island-notch="on"] .island--collapsed .island__glass {
+:root[data-island-notch] .island--collapsed .island__glass {
   opacity: 0;
 }
 
-:root[data-island-notch="on"] .island--collapsed .island__collapsed {
+:root[data-island-notch] .island--collapsed .island__collapsed {
   flex-direction: column;
   align-items: stretch;
   height: calc(var(--island-notch-height) / var(--island-collapsed-scale, 1));
@@ -28,11 +28,11 @@
   padding: 0 12px;
 }
 
-:root[data-island-notch="on"] .island--collapsed:has(.island__notch-drop) {
+:root[data-island-notch] .island--collapsed:has(.island__notch-drop) {
   --island-shell-height: calc(var(--island-notch-height) + var(--island-notch-drop-height) * var(--island-scale, 1));
 }
 
-:root[data-island-notch="on"] .island--collapsed .island__collapsed:has(.island__notch-drop) {
+:root[data-island-notch] .island--collapsed .island__collapsed:has(.island__notch-drop) {
   height: calc(var(--island-notch-height) / var(--island-collapsed-scale, 1) + var(--island-notch-drop-height));
 }
 
@@ -96,7 +96,7 @@
   height: 26px;
 }
 
-:root[data-island-notch="on"] .stage:not(.island-light) .island--expanded {
+:root[data-island-notch] .stage:not(.island-light) .island--expanded {
   background:
     linear-gradient(
       var(--color-black, #000) calc(var(--island-notch-height) - 2px),
@@ -184,6 +184,10 @@
 .notch-message__from {
   display: inline-flex;
   align-items: center;
+}
+
+:root[data-island-notch="simulated"] .island__notch-band {
+  display: none;
 }
 
 .island__notch-band {

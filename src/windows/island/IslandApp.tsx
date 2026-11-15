@@ -70,6 +70,7 @@ import { useIslandVoiceInput } from "./useIslandVoiceInput";
 import { useIslandSide } from "./useIslandSide";
 import { useDevIslandActions } from "./useDevIslandActions";
 import { hasNotchAlert } from "./NotchAlert";
+import { islandMarginY } from "./islandForm";
 import { hasNotchDrop, notchExpandedExtra, notchFittedWidth, notchLook, notchPanelWidth, useIslandNotch, useNotchDropSync } from "./notch";
 import "./IslandApp.css";
 import { PluginSlot } from "../../features/plugin-kernel/PluginSlot";
@@ -306,7 +307,7 @@ export function IslandApp() {
         nativeGlassState={nativeGlassState}
         glass={glass}
         isTucked={isTucked}
-        isDetached={isPositionDetached || settings.marginY > 0}
+        isDetached={isPositionDetached || islandMarginY(settings) > 0}
         side={side} sideCover={settings.sideMusicCover}
         showTitle={settings.showTitle}
         showCollapsedText={barText}
