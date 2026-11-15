@@ -60,6 +60,7 @@ export interface ValidateManifestOptions {
   stage?: "source" | "built";
   appVersion?: string;
   allowExperimental?: boolean;
+  categories?: readonly string[];
 }
 
 export interface ManifestIssue {
@@ -77,6 +78,16 @@ export interface ValidateManifestResult {
 }
 
 export declare const DEFAULT_APP_KEY: "fuyu";
+export declare const DEFAULT_OFFICIAL_SCOPE: "fuyu";
 export declare const MANIFEST_VERSION: 1;
+export declare const REQUIRED_LOCALES: readonly string[];
+export declare const DEFAULT_CATEGORIES: readonly string[];
+export declare const PLATFORMS: readonly ["windows", "macos", "linux"];
+export declare const MAX_SCREENSHOTS: number;
+export declare const GENERATED_FIELDS: readonly ["nodeApis", "builtWith"];
+export declare const NPM_FIELDS: readonly string[];
+export declare const APP_FIELDS: readonly string[];
+
+export declare function isSafeRelativePath(path: unknown): boolean;
 
 export declare function validateManifest(pkg: unknown, options?: ValidateManifestOptions): ValidateManifestResult;
