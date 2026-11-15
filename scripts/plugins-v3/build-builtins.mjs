@@ -1,17 +1,26 @@
 #!/usr/bin/env node
 import { mkdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { isBuiltin } from "node:module";
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import { BUILTINS_FILE, readBuiltins } from "@fuyu/plugin-base/host";
+import { HOST_SHARED_MODULES } from "@fuyu/plugin-base/protocol";
 import { BANNER, checkRuntimeFiles, loadEsbuild } from "./bundle-host.mjs";
 
 const ROOT = fileURLToPath(new URL("../../", import.meta.url));
 export const DEFAULT_SOURCE = join(ROOT, "src", "features");
 export const DEFAULT_OUT = join(ROOT, "src-tauri", "target", "plugins-v3", "builtins");
-export const SHARED = ["@fuyu/plugin-base", "fuyu-plugin"];
 const RETRIES = 5;
 const SOURCE_EXTENSION = /\.[cm]?[jt]s$/;
+const SHARED_EXACTLY = new RegExp(`^(${HOST_SHARED_MODULES.map((name) => name.replace(/[.*+?^${}()|[\]\\/]/g, "\\$&")).join("|")})$`);
+
+const hostShared = {
+  name: "host-shared",
+  setup(build) {
+    build.onResolve({ filter: SHARED_EXACTLY }, (args) => ({ path: args.path, external: true }));
+  },
+};
 
 function swapIn(staged, outDir) {
   for (let attempt = 0; ; attempt += 1) {
@@ -54,7 +63,7 @@ export async function buildBuiltins({ source = DEFAULT_SOURCE, outDir = DEFAULT_
       target: "node22.15",
       outExtension: { ".js": ".mjs" },
       banner: { js: BANNER },
-      external: SHARED.flatMap((name) => [name, `${name}/*`]),
+      plugins: [hostShared],
       legalComments: "none",
       minify,
       metafile: true,
@@ -69,7 +78,8 @@ export async function buildBuiltins({ source = DEFAULT_SOURCE, outDir = DEFAULT_
     mkdirSync(dirname(outDir), { recursive: true });
     swapIn(staged, outDir);
     const bytes = files.reduce((sum, name) => sum + statSync(join(outDir, name)).size, 0);
-    return { outDir, plugins: catalog.plugins.map((plugin) => plugin.id), files, bytes, inputs: Object.keys(result.metafile.inputs).length };
+    const external = [...new Set(Object.values(result.metafile.outputs).flatMap((output) => output.imports.filter((item) => item.external && !isBuiltin(item.path)).map((item) => item.path)))].sort();
+    return { outDir, plugins: catalog.plugins.map((plugin) => plugin.id), files, bytes, inputs: Object.keys(result.metafile.inputs).length, external };
   } finally {
     rmSync(staged, { recursive: true, force: true });
   }

@@ -17,6 +17,7 @@ export declare const SHARED_MODULES: {
   readonly react: "__shared/react.js";
   readonly "react/jsx-runtime": "__shared/react-jsx-runtime.js";
 };
+export declare const HOST_SHARED_MODULES: readonly ["@fuyu/plugin-base", "fuyu-plugin"];
 export interface SlotDefinition {
   readonly kind: "list" | "single";
   readonly max?: number;

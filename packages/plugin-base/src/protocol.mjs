@@ -35,6 +35,8 @@ export const SHARED_MODULES = {
   "react/jsx-runtime": "__shared/react-jsx-runtime.js",
 };
 
+export const HOST_SHARED_MODULES = ["@fuyu/plugin-base", "fuyu-plugin"];
+
 export const SLOTS = {
   "island.page/v1": { kind: "list", perPlugin: 2, meta: ["icon", "shortcutOrder", "headerDot", "enabled", "fallback"] },
   "island.header/v1": { kind: "list", perPlugin: 1, meta: ["enabled"] },
