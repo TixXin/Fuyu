@@ -13,6 +13,8 @@ pub enum Agent {
     Qoder,
     Codebuddy,
     Qwen,
+    Trae,
+    TraeCn,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
@@ -25,7 +27,7 @@ pub enum Kind {
 pub(super) const QUESTION_PATH: &str = "/claude/ask-user-question";
 pub(super) const ACTIVITY_PATH: &str = "/claude/activity";
 
-const AGENTS: [Agent; 9] = [
+const AGENTS: [Agent; 11] = [
     Agent::ClaudeCode,
     Agent::Codex,
     Agent::Workbuddy,
@@ -35,6 +37,8 @@ const AGENTS: [Agent; 9] = [
     Agent::Qoder,
     Agent::Codebuddy,
     Agent::Qwen,
+    Agent::Trae,
+    Agent::TraeCn,
 ];
 
 pub(super) fn route(path: &str) -> Option<(Agent, Kind)> {
@@ -59,6 +63,8 @@ impl Agent {
             Self::Qoder => "/qoder/permission-request",
             Self::Codebuddy => "/codebuddy/permission-request",
             Self::Qwen => "/qwen/permission-request",
+            Self::Trae => "/trae/pre-tool-use",
+            Self::TraeCn => "/traeCn/pre-tool-use",
         }
     }
 
@@ -73,11 +79,13 @@ impl Agent {
             Self::Qoder => "qoder",
             Self::Codebuddy => "codebuddy",
             Self::Qwen => "qwen",
+            Self::Trae => "trae",
+            Self::TraeCn => "traeCn",
         }
     }
 
     pub(super) fn lacks_waiting_event(self) -> bool {
-        matches!(self, Self::Antigravity | Self::Dsh)
+        matches!(self, Self::Antigravity | Self::Dsh | Self::Trae | Self::TraeCn)
     }
 }
 
@@ -235,6 +243,19 @@ pub(super) fn permission_response(
             .to_string(),
             _ => "{}".to_string(),
         },
+        Agent::Trae | Agent::TraeCn => {
+            let (decision, reason) = match decision {
+                Some(Decision::Allow | Decision::AllowAlways) => ("allow", None),
+                Some(Decision::Deny) => ("deny", Some(reason())),
+                Some(Decision::Terminal) => ("ask", None),
+                None | Some(Decision::Answer) => return "{}".to_string(),
+            };
+            let mut output = json!({ "hookEventName": "PreToolUse", "permissionDecision": decision });
+            if let Some(reason) = reason {
+                output["permissionDecisionReason"] = json!(reason);
+            }
+            json!({ "hookSpecificOutput": output }).to_string()
+        }
         Agent::Opencode => super::opencode::plugin_response(decision, message),
     }
 }
