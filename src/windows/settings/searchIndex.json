@@ -411,6 +411,19 @@
       }
     },
     {
+      "page": "behaviorAlerts",
+      "zh-CN": {
+        "group": "休息提醒",
+        "title": "休息提醒",
+        "description": "按间隔在岛上提醒起身、远眺。锁屏或离开 5 分钟以上时不计时，全屏时等退出再提醒"
+      },
+      "en": {
+        "group": "Break reminders",
+        "title": "Break reminders",
+        "description": "Reminds you on the island to get up or look away. Doesn't count while the screen is locked or you've been away 5+ minutes, and waits until you leave full screen"
+      }
+    },
+    {
       "page": "theme",
       "zh-CN": {
         "group": "浅色和深色",
