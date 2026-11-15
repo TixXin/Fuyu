@@ -1,4 +1,5 @@
 import { execFileSync } from "node:child_process";
+import { machineSlug } from "../machine-name.mjs";
 import { skeletonBody, writtenBody } from "./prBody.mjs";
 
 function gh(args, input = null) {
@@ -31,8 +32,7 @@ function slug(text) {
 }
 
 export function landBranchName(login, host, branch) {
-  const machine = slug(host.split(".")[0]).slice(0, 24) || "host";
-  return `land/${login}/${machine}-${slug(branch)}`;
+  return `land/${login}/${machineSlug(host)}-${slug(branch)}`;
 }
 
 export function prText(commits, branch, { title = null, body = null, files = [] } = {}) {

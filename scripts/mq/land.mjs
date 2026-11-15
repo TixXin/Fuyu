@@ -1,6 +1,6 @@
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
-import { hostname } from "node:os";
+import { machineName } from "../machine-name.mjs";
 import { github as realGitHub, landBranchName, prText } from "./github.mjs";
 import { mergeTree } from "./mergeTree.mjs";
 import { pickOnto } from "./pick.mjs";
@@ -133,7 +133,7 @@ function finish({ code, pr }, { wait, github, waitOptions }) {
 
 async function landOnce(options) {
   const fail = { code: 1 };
-  const { github = realGitHub, host = hostname(), wait = false, bodyFile = null, title = null, only = null } = options;
+  const { github = realGitHub, host = machineName(), wait = false, bodyFile = null, title = null, only = null } = options;
   const branch = tryGit(["rev-parse", "--abbrev-ref", "HEAD"]).out.trim();
   const refusal = landRefusal(branch);
   if (refusal) {

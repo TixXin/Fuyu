@@ -86,6 +86,8 @@ land 从 git 的 pre-push 钩子里跑检查，环境里带着 `GIT_DIR` 等变�
 
 - `pnpm task:claim <编号> --as <会话名> --scope <目录/,文件>`：先 `git fetch origin main`，本地或 `origin/main` 上已经有人认领就拒绝；认领只在本地提交（只含任务文件），随下一批推上去。
 - 认领记 `owner`（会话名）和 `host`（机器名，和 land 分支名里的一样）。会话名和机器名都对上才算「你的」，所以两台机器上同名的会话不会把对方的任务当成自己的（#153）。旧任务文件里的 `lane` 字段照样能读，但不算任何人的。
+- 机器名只在 `scripts/machine-name.mjs` 里算，第一次用到时记进本地 git 配置 `fuyu.machine`，以后照用，不跟着网络或改电脑名变（F47：Mac 没设固定 HostName 时，`os.hostname()` 会随网络换名字）。第一次的取值：Mac 上是 `scutil --get LocalHostName`，其他系统是 `os.hostname()`，取第一段、转小写、最多 24 个字符。看当前的值用 `git config fuyu.machine`，要换名字就改它。
+- 这台机器用过的旧名字记成别名：`git config --local --add fuyu.machineAlias <旧名字>`，可以有多个。任务的 `host` 等于本机名或任一别名都算本机；`pnpm mq:wait` 不写 PR 号时，在本机名和别名的 land 分支里取最新的那个 PR。别名只在本机有用，不进仓库；换了机器名（包括重新 clone 后名字和以前不一样）就把旧名字加成别名。
 - 认领后 24 小时任务文件没有新的交接或提交，就算失效（`pnpm tasks stale`），别人可以先发消息再 `--takeover` 接手。做得久的任务停下时 `pnpm tasks note` 留交接，也就续上了。
 - `pnpm tasks done <编号> --commit "<提交标题>"`：本地 `main` 上有别的会话的提交，所以要明确写这次功能提交的标题（或已有的提交号）。
 

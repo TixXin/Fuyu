@@ -1,6 +1,5 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, statSync, writeFileSync } from "node:fs";
-import { hostname } from "node:os";
 import path from "node:path";
 import { CLOSED_STATUSES, formatTask, groupOf, parseTask } from "./taskFile.mjs";
 import { checkEntries, parseGroups } from "./taskRules.mjs";
@@ -130,8 +129,4 @@ export function taskOnMain(root, id) {
   } catch {
     return null;
   }
-}
-
-export function machineName(name = hostname()) {
-  return name.split(".")[0].toLowerCase().replace(/[^a-z0-9.-]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 24) || "host";
 }

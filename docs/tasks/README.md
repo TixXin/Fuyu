@@ -39,7 +39,7 @@
 | `id` | 和文件名一致 |
 | `title` | 一句话说清做什么；看板只显示这一行 |
 | `status` | 见下一节 |
-| `owner` / `host` / `claimed` | 认领的会话名、机器名和时间，由 `task:claim` 写。结束后只留 `owner` 作记录。旧任务里的 `lane`（lane 编号，2026-11-13 前）照样能读 |
+| `owner` / `host` / `claimed` | 认领的会话名、机器名和时间，由 `task:claim` 写。机器名固定在本地 git 配置 `fuyu.machine` 里，本机用过的旧名字记在 `fuyu.machineAlias`，都算本机（见 workflow.md「任务认领」）。结束后只留 `owner` 作记录。旧任务里的 `lane`（lane 编号，2026-11-13 前）照样能读 |
 | `scope` | 要改的目录（以 `/` 结尾）和文件，逗号分隔。认领时和别人的范围比对，`pnpm tasks conflicts` 也用它 |
 | `depends` | 要等哪些任务先结束，逗号分隔。没结束时看板标「等 X」，认领会被拒绝（`--force` 越过） |
 | `parent` | 父任务。有子任务的任务不能认领，认领子任务；看板显示「子任务 x/y」 |

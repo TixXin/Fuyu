@@ -58,6 +58,9 @@ test("claiming: free, mine for the same session on the same machine, theirs othe
   assert.equal(claimState(mine, { host: "pc" }), "mine", "without a session name, the machine is enough");
   assert.equal(claimState(mine, { owner: "s", host: "mac" }), "theirs", "the same session name on another machine is someone else (#153)");
   assert.equal(claimState(mine, { owner: "t", host: "pc" }), "theirs");
+  assert.equal(claimState(mine, { owner: "s", host: "pc-new", aliases: ["pc"] }), "mine", "a claim under a name this machine used before is still this machine's (F47)");
+  assert.equal(claimState(mine, { owner: "t", host: "pc-new", aliases: ["pc"] }), "theirs");
+  assert.equal(claimState(mine, { owner: "s", host: "pc-new", aliases: ["other"] }), "theirs");
   const legacy = { fields: { ...mine.fields, host: undefined, lane: "5" } };
   assert.equal(claimState(legacy, { owner: "s", host: "pc" }), "theirs", "an old lane claim is never taken for mine");
   assert.equal(claimText(legacy.fields), "s · lane 5");
