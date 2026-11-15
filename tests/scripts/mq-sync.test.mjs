@@ -41,10 +41,13 @@ async function inRepos(work) {
   };
   try {
     git(["init", "-q", "--bare", "-b", "main", remote], root);
+    const identify = (dir) => ["user.email=t@t", "user.name=t"].forEach((pair) => git(["config", ...pair.split("=")], dir));
     git(["clone", "-q", remote, main], root);
+    identify(main);
     commit(main, "f.txt", lines(10), "base");
     git(["push", "-q", "origin", "main"], main);
     git(["clone", "-q", remote, other], root);
+    identify(other);
     process.chdir(main);
     await work({ remote, main, other, commit });
   } finally {
