@@ -1,7 +1,8 @@
+import { isRemoteProvider } from "./agents.ts";
 import type { AgentSessionSummary, ExternalAgentStatus } from "./api";
 
 export function isRemoteSessionReport(report: ExternalAgentStatus) {
-  return Boolean(report.host) && (report.agent === "claudeCode" || report.agent === "codex");
+  return Boolean(report.host) && isRemoteProvider(report.agent);
 }
 
 export function remoteSessions(others: ExternalAgentStatus[] | undefined): AgentSessionSummary[] {

@@ -44,9 +44,7 @@ send() {
 }
 fetch() {
 {
-  find .claude/projects -mindepth 2 -maxdepth 2 -type f -name '*.jsonl' -mmin -"$W" 2>/dev/null
-  find .codex/sessions -mindepth 4 -maxdepth 4 -type f -name '*.jsonl' -mmin -"$W" 2>/dev/null
-  [ -f .codex/session_index.jsonl ] && echo .codex/session_index.jsonl
+__FIND_SESSIONS__
   find .fuyu/agent-notifications .focusd-island/agent-notifications -maxdepth 1 -type f -name '*.json' -mmin +1440 -delete 2>/dev/null
   find .fuyu/agent-notifications .focusd-island/agent-notifications -maxdepth 1 -type f -name '*.json' -mmin -"$W" 2>/dev/null
 } | while IFS= read -r f; do send "$f"; done
@@ -107,6 +105,7 @@ pub(super) enum Reply {
 
 fn session_script() -> String {
     SCRIPT
+        .replace("__FIND_SESSIONS__", &super::harness::remote_find_lines())
         .replace("__TAIL__", &TAIL_BYTES.to_string())
         .replace("__HEAD_MAX__", &HEAD_MAX_BYTES.to_string())
         .replace("__HEAD_LINES__", &HEAD_LINES.to_string())

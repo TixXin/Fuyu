@@ -43,12 +43,11 @@
 
 ## 为什么后来的三家缺得多
 
-Claude Code 和 Codex 是最早接的，很多地方把「代理」写死成这两家，后来的三家只接进了会话列表。写死的地方有：
+Claude Code 和 Codex 是最早接的，很多地方曾把「代理」写死成这两家，后来的三家只接进了会话列表。B31（#358）起，这些地方都改成按一份代理列表走，缺的功能不再是「写死漏了」，而是这一家在列表里还没声明那项能力：
 
-- 前端 `AGENT_PROVIDERS`（`src/features/agent-status/status.ts`）、`AgentProvider` 类型（`api.ts`），状态灯卡片和钩子提示都按它列；
-- Rust 的 `AgentHooksState`（`hooks_state.rs`）、快照 `agent-status.json`（`snapshot.rs`，只由 `fuyu-agent-status.*` 写）、`external.rs` 收的 `agent` 字段；
-- `reinstall_hooks_after_rename` 只看 Codex 和 Claude Code 的钩子在不在；
-- 远程：拉取脚本（`remote_fetch.rs`）、镜像白名单（`remote_sessions.rs` 的 `mirror_path`）、远程安装（`remote_setup.rs`）；`session_scan.rs` 只在读本机时才追加 Antigravity 和 DSH 的会话；
-- 审批的 `Agent` 枚举（`agent_approval/decision.rs`）、cc-connect 的配置（`cc_connect/config_file.rs`）、推送接管命令（`push/pushText.ts`）。
+- **Rust**：`src-tauri/src/agent_status/harness.rs` 的 `HARNESSES`。每家在自己的模块里声明一个 `HARNESS`（`codex.rs`、`claude_code.rs`、`workbuddy.rs`、`antigravity.rs`；DSH 的暂时写在 `harness.rs` 里），字段是这家有的能力：`hooks`（怎么装、怎么判断装没装）、`status_light`（状态灯的标记文件，快照 `agent-status.json` 里有这一家的键）、`sessions`（不走 JSONL 扫描的会话读取，本机和远程镜像两条路都会调，`ScanRoots::local_app_dir` 为空表示在读镜像）、`remote`（SSH 远程要拉的会话文件，同时决定 `mirror_path` 白名单和 `external.rs` 收的 `agent` 字段）。安装/修复、改名后的重装、钩子状态、快照、清除状态都遍历这份列表。
+- **前端**：`src/features/agent-status/agents.ts` 的 `AGENTS` 表写每家的名称和能力，`SessionProvider`、`AgentProvider`（有状态灯的）、`RemoteProvider` 从表里推出来；图标在 `AgentProviderIcon.tsx`。
+- **仍按家写的**：审批的 `Agent` 枚举（`agent_approval/decision.rs`，加一家要加一个枚举值、`path` 的一个分支和 `AGENTS` 一项）、Claude Code 和 Codex 的 JSONL 会话扫描（`session_scan.rs`）、`hooks/` 里的钩子脚本、cc-connect 的配置（`cc_connect/config_file.rs`）、推送接管命令（`push/pushText.ts`）。
 
-改这些地方时，优先改成按一份代理列表走，而不是再加一个分支。
+接一家新代理：写它自己的模块并声明 `HARNESS`，在 `HARNESSES` 里加一行，前端 `AGENTS` 加一行、`AgentProviderIcon.tsx` 加图标。之后给它补哪项能力，就在它的 `HARNESS` 里填哪个字段，不用改中心文件。
+

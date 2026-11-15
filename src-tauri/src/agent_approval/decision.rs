@@ -18,13 +18,16 @@ pub enum Kind {
 pub(super) const QUESTION_PATH: &str = "/claude/ask-user-question";
 pub(super) const ACTIVITY_PATH: &str = "/claude/activity";
 
+const AGENTS: [Agent; 2] = [Agent::ClaudeCode, Agent::Codex];
+
 pub(super) fn route(path: &str) -> Option<(Agent, Kind)> {
-    match path {
-        "/claude/permission-request" => Some((Agent::ClaudeCode, Kind::Permission)),
-        "/codex/permission-request" => Some((Agent::Codex, Kind::Permission)),
-        QUESTION_PATH => Some((Agent::ClaudeCode, Kind::Question)),
-        _ => None,
+    if path == QUESTION_PATH {
+        return Some((Agent::ClaudeCode, Kind::Question));
     }
+    AGENTS
+        .into_iter()
+        .find(|agent| agent.path() == path)
+        .map(|agent| (agent, Kind::Permission))
 }
 
 impl Agent {

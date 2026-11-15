@@ -1711,8 +1711,8 @@ fn mac_hook_scripts_write_what_the_island_reads() {
     run(super::AGENT_STATUS_SCRIPT_FILE_NAME, &["codex", "running", "t-1"], "");
     run(super::AGENT_STATUS_SCRIPT_FILE_NAME, &["claudeCode", "completed"], "");
     let status: super::PersistedAgentStatus = serde_json::from_str(&fs::read_to_string(dir.join("agent-status.json")).unwrap()).unwrap();
-    assert_eq!(serde_json::to_value(&status.codex).unwrap()["phase"], json!("running"));
-    assert_eq!(serde_json::to_value(&status.claude_code).unwrap()["phase"], json!("completed"));
+    assert_eq!(status.agents["codex"].phase, "running");
+    assert_eq!(status.agents["claudeCode"].phase, "completed");
     assert!(!dir.join("agent-claudeCode-running.flag").exists());
 
     let start = r#"{"session_id":"s-1","cwd":"/Users/a/中文 \"q\"","source":"startup"}"#;

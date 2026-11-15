@@ -251,13 +251,11 @@ fn apply(root: &Path, host: &str, replies: Vec<Reply>) -> (HashMap<String, Mirro
 fn mirror_path(root: &Path, remote: &str) -> Option<PathBuf> {
     let path = Path::new(remote);
     let plain = path.components().all(|component| matches!(component, Component::Normal(_)));
-    let allowed = remote == ".codex/session_index.jsonl"
+    let allowed = super::harness::is_mirrored_file(remote)
         || [REMOTE_NOTIFICATIONS_DIR, LEGACY_REMOTE_NOTIFICATIONS_DIR].iter().any(|dir| {
             remote.strip_prefix(dir).and_then(|name| name.strip_prefix('/'))
                 .is_some_and(|name| !name.contains('/') && name.ends_with(".json"))
-        })
-        || ((remote.starts_with(".claude/projects/") || remote.starts_with(".codex/sessions/"))
-            && remote.ends_with(".jsonl"));
+        });
     (plain && allowed).then(|| root.join(path))
 }
 

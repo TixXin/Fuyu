@@ -1,5 +1,5 @@
 import type { AgentSessionGroup, AgentSessionSort } from "../appearance/types";
-import type { AgentSessionSummary } from "./api";
+import type { AgentSessionSummary, SessionProvider } from "./api";
 import { sessionLight, type SessionLight } from "./sessionLight.ts";
 import { sessionKey } from "./unseen.ts";
 
@@ -26,10 +26,10 @@ export function countActiveSessions(sessions: AgentSessionSummary[]) {
   return sessions.filter((session) => isActivePhase(session.phase)).length;
 }
 
-export type SessionFilter = { claudeCode: boolean; codex: boolean };
+export type SessionFilter = Partial<Record<SessionProvider, boolean>>;
 
 export function filterSessions(sessions: AgentSessionSummary[], filter: SessionFilter) {
-  const shown = sessions.filter((session) => filter[session.provider as keyof SessionFilter] !== false);
+  const shown = sessions.filter((session) => filter[session.provider] !== false);
   return shown.length === sessions.length ? sessions : shown;
 }
 
