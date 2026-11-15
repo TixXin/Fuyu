@@ -2,12 +2,15 @@ export type PluginV3State = "running" | "waiting" | "failed" | "disabled" | "aut
 
 export type PluginV3Connection = "connecting" | "open" | "reconnecting" | "failed" | "closed";
 
+export type HostMemoryMeasureText = "private-working-set" | "phys-footprint" | "rss";
+
 export type SettingsPluginsV3Text = {
   preview: string;
   host: string;
   connection: Record<PluginV3Connection, string>;
   hostDetail: (pid: number, node: string) => string;
-  memory: string;
+  memoryTitles: Record<HostMemoryMeasureText, string>;
+  memoryNotes: Record<HostMemoryMeasureText, string>;
   hostCpu: string;
   uptime: string;
   safeMode: string;
@@ -44,7 +47,12 @@ export const zhCN: SettingsPluginsV3Text = {
     closed: "已断开",
   },
   hostDetail: (pid, node) => `进程 ${pid} · Node ${node}`,
-  memory: "内存",
+  memoryTitles: { "private-working-set": "内存（私有工作集）", "phys-footprint": "内存（phys_footprint）", rss: "内存（工作集）" },
+  memoryNotes: {
+    "private-working-set": "和任务管理器「内存」一栏同一个口径，不含和别的进程共享的页。",
+    "phys-footprint": "和活动监视器「内存」一栏同一个口径。",
+    rss: "宿主自己报的常驻内存，含共享页，比实际占用大。",
+  },
   hostCpu: "累计 CPU",
   uptime: "已运行",
   safeMode: "安全模式",
@@ -91,7 +99,12 @@ export const en: SettingsPluginsV3Text = {
     closed: "Disconnected",
   },
   hostDetail: (pid, node) => `Process ${pid} · Node ${node}`,
-  memory: "Memory",
+  memoryTitles: { "private-working-set": "Memory (private working set)", "phys-footprint": "Memory (phys_footprint)", rss: "Memory (working set)" },
+  memoryNotes: {
+    "private-working-set": "Same measure as Task Manager's Memory column; pages shared with other processes are left out.",
+    "phys-footprint": "Same measure as Activity Monitor's Memory column.",
+    rss: "Resident memory reported by the host itself. It includes shared pages, so it reads higher than what the host really uses.",
+  },
   hostCpu: "CPU so far",
   uptime: "Up for",
   safeMode: "Safe mode",

@@ -143,6 +143,7 @@ pub fn run() {
 
         })
         .setup(move |app| {
+            system::update_backup::apply_pending_restore();
             #[cfg(target_os = "macos")]
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);
             tray::build_tray(app)?;

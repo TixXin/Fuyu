@@ -5,6 +5,7 @@ import { github as realGitHub, landBranchName, prText } from "./github.mjs";
 import { mergeTree } from "./mergeTree.mjs";
 import { pickOnto } from "./pick.mjs";
 import { INTEGRATION_BRANCH, git, tryGit } from "./settings.mjs";
+import { landBusyNote, takeLandLock } from "./landLock.mjs";
 import { lockfileChanged } from "./sync.mjs";
 import { waitFor } from "./wait.mjs";
 
@@ -109,33 +110,56 @@ function pickOnly(only) {
 }
 
 export async function land(options = {}) {
-  const { github = realGitHub, host = hostname(), wait = false, waitOptions = {}, bodyFile = null, title = null, only = null } = options;
+  const { github = realGitHub, wait = false, waitOptions = {}, only = null, lock = takeLandLock } = options;
+  if (only) return finish(await landOnce(options), { wait, github, waitOptions });
+  const held = lock();
+  if (!held.ok) {
+    console.log(landBusyNote(held.holder));
+    return 0;
+  }
+  let result;
+  try {
+    result = await landOnce(options);
+  } finally {
+    held.release();
+  }
+  return finish(result, { wait, github, waitOptions });
+}
+
+function finish({ code, pr }, { wait, github, waitOptions }) {
+  if (code !== 0 || !wait || !pr) return code;
+  return waitFor(pr, { github, ...waitOptions });
+}
+
+async function landOnce(options) {
+  const fail = { code: 1 };
+  const { github = realGitHub, host = hostname(), wait = false, bodyFile = null, title = null, only = null } = options;
   const branch = tryGit(["rev-parse", "--abbrev-ref", "HEAD"]).out.trim();
   const refusal = landRefusal(branch);
   if (refusal) {
     console.error(`[land] ${refusal}`);
-    return 1;
+    return fail;
   }
   const { body, error } = readBody(bodyFile);
   if (error) {
     console.error(`[land] ${error}`);
-    return 1;
+    return fail;
   }
   const note = uncommittedNote(tryGit(["status", "--porcelain"]).out.split("\n"));
   if (note) console.log(`[land] ${note}`);
   const chosen = only ? pickOnly(only) : null;
-  if (only && !chosen) return 1;
+  if (only && !chosen) return fail;
   const rev = chosen ? chosen.rev : mergeMain();
-  if (!rev) return 1;
+  if (!rev) return fail;
   const commits = pendingCommits(undefined, rev);
   if (!commits.length) {
     console.error(`[land] ${branch} 上没有 origin/${INTEGRATION_BRANCH} 之外的提交，没有要合入的。`);
-    return 1;
+    return fail;
   }
   const remoteBranch = `${landBranchName(github.login(), host, branch)}${chosen?.suffix ?? ""}`;
   if (!pushBranch(remoteBranch, rev)) {
     console.error(`\n[land] 推送 ${remoteBranch} 失败，见上面的输出。修好后重新 pnpm mq:land --yes。`);
-    return 1;
+    return fail;
   }
   const text = prText(commits, branch, { title, body, files: changedFiles(rev) });
   let pr = github.findPr(remoteBranch);
@@ -152,10 +176,9 @@ export async function land(options = {}) {
   } catch (error) {
     console.error(`[land] 没能开启自动合并：${`${error.stderr ?? error.message}`.trim()}`);
     console.error("仓库 Settings → General 里要打开 Allow auto-merge；也可以在 PR 页面上手动开启。");
-    return 1;
+    return fail;
   }
   console.log(`✓ PR #${pr.number}（${commits.length} 个提交）已开启自动合并，CI 的 check 通过后 GitHub 自动合入 ${INTEGRATION_BRANCH}。`);
-  if (wait) return waitFor(pr.number, { github, ...waitOptions });
-  console.log(`  后台运行 pnpm mq:wait${chosen ? ` ${pr.number}` : ""} 等结果：合入后把本地 main 跟上；CI 失败或冲突时报告原因。`);
-  return 0;
+  if (!wait) console.log(`  后台运行 pnpm mq:wait${chosen ? ` ${pr.number}` : ""} 等结果：合入后把本地 main 跟上；CI 失败或冲突时报告原因。`);
+  return { code: 0, pr: pr.number };
 }

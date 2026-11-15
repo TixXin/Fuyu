@@ -1,5 +1,6 @@
 #[cfg_attr(target_os = "macos", path = "readers_macos.rs")]
 mod readers;
+mod peripherals;
 mod tracker;
 
 use std::{
@@ -12,7 +13,8 @@ use std::{
 use tauri::{AppHandle, Emitter};
 
 use crate::island::WINDOW_LABEL;
-use readers::{power_source, read_batteries, read_outputs, start_thread};
+use peripherals::PeripheralTracker;
+use readers::{power_source, read_batteries, read_outputs, read_peripherals, start_thread};
 use tracker::{DeviceAlert, OutputTracker, PowerTracker};
 
 pub(crate) const DEVICE_ALERT_EVENT: &str = "device-alert";
@@ -20,6 +22,7 @@ pub(crate) const DEVICE_ALERT_EVENT: &str = "device-alert";
 const OUTPUT_POLL: Duration = Duration::from_secs(1);
 const BATTERY_POLL: Duration = Duration::from_secs(60);
 const POWER_POLL: Duration = Duration::from_secs(2);
+const PERIPHERAL_POLL: Duration = Duration::from_secs(15);
 const IDLE_POLL: Duration = Duration::from_millis(500);
 
 static ENABLED: AtomicBool = AtomicBool::new(false);
@@ -33,16 +36,19 @@ fn watch(app: &AppHandle) {
     };
     let mut outputs = OutputTracker::default();
     let mut power_tracker = PowerTracker::default();
+    let mut peripheral_tracker = PeripheralTracker::default();
     loop {
         if !ENABLED.load(Ordering::Relaxed) {
             outputs.reset();
             power_tracker.reset();
+            peripheral_tracker.reset();
             thread::sleep(IDLE_POLL);
             continue;
         }
         let mut batteries = HashMap::new();
         let mut batteries_read: Option<Instant> = None;
         let mut power_read: Option<Instant> = None;
+        let mut peripherals_read: Option<Instant> = None;
         while ENABLED.load(Ordering::Relaxed) {
             let current = read_outputs();
             let has_bluetooth = current.iter().any(|output| output.bluetooth);
@@ -58,6 +64,12 @@ fn watch(app: &AppHandle) {
                 power_read = Some(Instant::now());
                 let (plugged_in, battery) = power_source();
                 if let Some(alert) = power_tracker.update(plugged_in, battery) {
+                    emit(alert);
+                }
+            }
+            if peripherals_read.is_none_or(|at| at.elapsed() >= PERIPHERAL_POLL) {
+                peripherals_read = Some(Instant::now());
+                for alert in peripheral_tracker.update(read_peripherals()) {
                     emit(alert);
                 }
             }

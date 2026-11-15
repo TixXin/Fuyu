@@ -249,9 +249,24 @@ pub async fn updater_install(
             }
             Ok(())
         })?;
+        if result.is_ok() {
+            restart_after_install(&task_app);
+        }
         result.map_err(UserError::from)
     }).await;
     result.unwrap_or_else(|error| Err(join_error(&app, error)))
+}
+
+fn restart_after_install(app: &AppHandle) {
+    const SETTLE: Duration = Duration::from_millis(1500);
+    let app = app.clone();
+    let spawned = std::thread::Builder::new().name("update-restart".into()).spawn(move || {
+        std::thread::sleep(SETTLE);
+        app.request_restart();
+    });
+    if let Err(error) = spawned {
+        eprintln!("[updater] could not schedule the restart: {error}");
+    }
 }
 
 #[cfg(test)]

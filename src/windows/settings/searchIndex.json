@@ -263,6 +263,19 @@
       "page": "behaviorTuck",
       "zh-CN": {
         "group": "贴边隐藏",
+        "title": "有未读消息时不收起",
+        "description": "微信、QQ 有没看的消息，或来了新邮件、还没在消息页看过时，一直留在屏幕上。没打开的消息来源不算。"
+      },
+      "en": {
+        "group": "Tuck to edge",
+        "title": "Stay out while messages are unread",
+        "description": "While WeChat or QQ has unread messages, or new mail you haven't looked at on the messages page, it stays on screen. Sources you turned off don't count."
+      }
+    },
+    {
+      "page": "behaviorTuck",
+      "zh-CN": {
+        "group": "贴边隐藏",
         "title": "鼠标移开后再次隐藏"
       },
       "en": {
@@ -376,12 +389,12 @@
       "zh-CN": {
         "group": "在小岛上提示",
         "title": "耳机与充电",
-        "description": "耳机或蓝牙音频设备连接、断开时，收起的小岛显示 3 秒，蓝牙设备带电量；蓝牙设备电量降到 20% 和 10% 时各提醒一次；笔记本插上或拔掉电源时也会提示。蓝牙电量要设备自己报告给 Windows 才有。"
+        "description": "耳机或蓝牙音频设备连接、断开时，收起的小岛显示 3 秒，蓝牙设备带电量；蓝牙鼠标、键盘连上时也显示电量；蓝牙设备电量降到 20% 和 10% 时各提醒一次；笔记本插上或拔掉电源时也会提示。蓝牙电量要设备自己报告给 Windows 才有，用 USB 接收器的鼠标键盘暂时读不到。"
       },
       "en": {
         "group": "Shown on the island",
         "title": "Headphones and charging",
-        "description": "When headphones or Bluetooth audio connect or disconnect, the collapsed island says so for 3 seconds, with the battery level of Bluetooth devices. A Bluetooth device warns once at 20% and again at 10%, and a laptop says when its charger is plugged in or pulled out. Bluetooth battery levels show only for devices that report them to Windows."
+        "description": "When headphones or Bluetooth audio connect or disconnect, the collapsed island says so for 3 seconds, with the battery level of Bluetooth devices; Bluetooth mice and keyboards show their battery level when they connect too. A Bluetooth device warns once at 20% and again at 10%, and a laptop says when its charger is plugged in or pulled out. Bluetooth battery levels show only for devices that report them to Windows; mice and keyboards on a USB receiver can't be read yet."
       }
     },
     {
@@ -459,6 +472,19 @@
     {
       "page": "theme",
       "zh-CN": {
+        "group": "内置配色",
+        "title": "一键换配色",
+        "description": "同时换掉深色、浅色两套颜色和透明度；配色是深色时切到浅色。磨砂是半透明的底色加一层浅色调和细描边，不会模糊桌面。之后还可以在下面接着调。"
+      },
+      "en": {
+        "group": "Built-in colors",
+        "title": "Color sets",
+        "description": "Replaces both the dark and light colors and the opacity; dark colors switch to light. Frosted means a see-through tinted fill with a thin outline; it does not blur the desktop. You can keep adjusting below."
+      }
+    },
+    {
+      "page": "theme",
+      "zh-CN": {
         "group": "颜色",
         "title": "调整哪一套",
         "description": "下面的颜色改的是这一套，预览也显示这一套。",
@@ -508,6 +534,27 @@
       "en": {
         "group": "Colors",
         "title": "Accent"
+      }
+    },
+    {
+      "page": "theme",
+      "zh-CN": {
+        "group": "颜色",
+        "title": "岛上文字",
+        "description": "自动按岛屿背景的深浅取黑字或白字。自选只改岛上的普通文字，强调色和状态颜色不变。",
+        "options": [
+          "自动",
+          "自选"
+        ]
+      },
+      "en": {
+        "group": "Colors",
+        "title": "Island text",
+        "description": "Auto picks dark or light text from the island background. A custom color only changes the island's plain text; the accent and status colors stay.",
+        "options": [
+          "Auto",
+          "Custom"
+        ]
       }
     },
     {
@@ -1025,6 +1072,19 @@
           "Title",
           "Note"
         ]
+      }
+    },
+    {
+      "page": "music",
+      "zh-CN": {
+        "group": "贴边隐藏",
+        "title": "音乐播放中不收起",
+        "description": "播放音乐时岛一直留在屏幕上。和「行为 → 贴边隐藏」里的是同一个开关，打开了自动收起才起作用。"
+      },
+      "en": {
+        "group": "Tuck to edge",
+        "title": "Stay out while music plays",
+        "description": "While music plays, the island stays on screen. It is the same switch as in Behavior → Tuck to edge, and works only when auto tuck is on."
       }
     },
     {

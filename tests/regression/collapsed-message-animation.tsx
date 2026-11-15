@@ -306,6 +306,8 @@ async function runChecks() {
       "插上电源时显示正在充电，没有电量就不显示百分比");
     await act(async () => changeDeviceAlert({ kind: "batteryLow", name: "AirPods", battery: 10 }));
     check(device()?.classList.contains("device-alert--warn") && device()?.getAttribute("aria-label") === "AirPods 电量低, 电量 10%", "蓝牙设备电量低时提醒");
+    await act(async () => changeDeviceAlert({ kind: "peripheralConnected", name: "Magic Mouse", device: "mouse", battery: 15 }));
+    check(device()?.classList.contains("device-alert--warn") && device()?.getAttribute("aria-label") === "Magic Mouse 已连接, 电量 15%", "鼠标连上时带电量，电量低时用提醒色");
     await act(async () => changeDeviceAlert(null));
     check(!device(), "设备提示结束后恢复原来的文字");
     const review = { uid: "r", title: "设计评审", startMs: Date.now() + 8 * 60_000, endMs: Date.now() + 68 * 60_000, allDay: false, location: null, meetingLink: "https://vc.feishu.cn/j/1", calendar: "工作" };

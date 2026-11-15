@@ -71,6 +71,9 @@ export type SettingsProjectText = {
     downloadingUnknown: string;
     installing: string;
     done: string;
+    restartStalled: string;
+    restartStalledHint: string;
+    restartNow: string;
     error: string;
     errorDetail: (reason: string) => string;
     notesTitle: (version: string) => string;
@@ -195,6 +198,9 @@ export const zhCN: SettingsProjectText = {
     downloadingUnknown: "正在下载…",
     installing: "正在安装…",
     done: "更新完成，小岛正在重启…",
+    restartStalled: "更新已装好，但小岛没有自动重启",
+    restartStalledHint: "请手动重启小岛，重启后用上新版本",
+    restartNow: "立即重启",
     error: "请稍后再试，或到官网手动下载。",
     errorDetail: (reason) => `原因：${reason}`,
     notesTitle: (version) => `v${version} 更新内容`,
@@ -319,6 +325,9 @@ export const en: SettingsProjectText = {
     downloadingUnknown: "Downloading…",
     installing: "Installing…",
     done: "Update installed, restarting…",
+    restartStalled: "Update installed, but the island didn't restart",
+    restartStalledHint: "Restart the island to start using the new version",
+    restartNow: "Restart now",
     error: "Try again later, or download it from the website.",
     errorDetail: (reason) => `Reason: ${reason}`,
     notesTitle: (version) => `What's new in v${version}`,

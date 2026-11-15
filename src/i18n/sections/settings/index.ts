@@ -38,6 +38,7 @@ import type { SettingsPresetsText } from "./presets";
 import type { SettingsSaveText } from "./save";
 import type { SettingsPluginsText } from "./plugins";
 import type { SettingsSoundsText } from "./sounds";
+import type { SettingsVersionHistoryText } from "./versionHistory";
 import * as fileShelf from "./fileShelf.ts";
 import * as screenshot from "./screenshot.ts";
 import * as modules from "./modules.ts";
@@ -78,6 +79,7 @@ import * as presets from "./presets.ts";
 import * as save from "./save.ts";
 import * as plugins from "./plugins.ts";
 import * as sounds from "./sounds.ts";
+import * as versionHistory from "./versionHistory.ts";
 
 export type SettingsText = {
   fileShelf: SettingsFileShelfText;
@@ -140,6 +142,7 @@ export type SettingsText = {
   save: SettingsSaveText;
   plugins: SettingsPluginsText;
   sounds: SettingsSoundsText;
+  versionHistory: SettingsVersionHistoryText;
 };
 
 export const zhCN: SettingsText = {
@@ -203,6 +206,7 @@ export const zhCN: SettingsText = {
   save: save.zhCN,
   plugins: plugins.zhCN,
   sounds: sounds.zhCN,
+  versionHistory: versionHistory.zhCN,
 };
 
 export const en: SettingsText = {
@@ -266,4 +270,5 @@ export const en: SettingsText = {
   save: save.en,
   plugins: plugins.en,
   sounds: sounds.en,
+  versionHistory: versionHistory.en,
 };

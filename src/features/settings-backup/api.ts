@@ -1,5 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
+import { takeSnapshot } from "./localSnapshot.ts";
 
 export function saveSettingsBackup(fileName: string, content: string) {
   return invoke<string>("save_settings_backup", { fileName, content });
@@ -35,4 +36,33 @@ export function revealFolder(path: string) {
 
 export function revealBackup(path: string) {
   return revealItemInDir(path);
+}
+
+export type UpdateBackup = {
+  id: string;
+  fromVersion: string;
+  toVersion: string;
+  createdAt: number;
+  size: number;
+  files: number;
+  skipped: string[];
+};
+
+export type UpdateBackupList = {
+  backups: UpdateBackup[];
+  brokenFiles: string[];
+  pendingRestore: string | null;
+};
+
+export function backupBeforeUpdate(toVersion: string) {
+  const localStorage = JSON.stringify(takeSnapshot(window.localStorage));
+  return invoke<UpdateBackup>("update_backup_create", { toVersion, localStorage });
+}
+
+export function listUpdateBackups() {
+  return invoke<UpdateBackupList>("update_backup_list");
+}
+
+export function prepareUpdateBackupRestore(id: string) {
+  return invoke<Record<string, string>>("update_backup_restore", { id });
 }

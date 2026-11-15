@@ -2,6 +2,7 @@ import { HEX_COLOR_PATTERN } from "../../utils/color.ts";
 import { normalizeAgentSettings } from "./normalizeAgentSettings.ts";
 import { normalizeBehaviorSettings } from "./normalizeBehaviorSettings.ts";
 import { normalizeLayoutSettings } from "./normalizeLayoutSettings.ts";
+import { GLASS_SETTING_KEYS } from "./glassSettings.ts";
 import { DEFAULT_SETTINGS } from "./settingsDefaults.ts";
 import { MAX_CUSTOM_SETTING_PRESETS } from "./settingsLimits.ts";
 import type { IslandPreset, IslandSettings, LegacyIslandSettings } from "./types";
@@ -22,9 +23,13 @@ export const THEME_SETTING_KEYS = [
   "lightBackgroundColor",
   "lightTextColor",
   "lightPulseColor",
+  "darkInkColor",
+  "lightInkColor",
+  "inkColor",
   "appearanceMode",
   "fontFamily",
   "glassIntensity",
+  ...GLASS_SETTING_KEYS,
   "opacity",
   "topFilletRadius",
   "islandCornerRadius",
@@ -36,6 +41,7 @@ export const THEME_SETTING_KEYS = [
 ] as const satisfies readonly (keyof IslandSettings)[];
 
 export const LAYOUT_SETTING_KEYS = [
+  "islandForm",
   "collapsedScale",
   "expandedScale",
   "maxPanelHeight",

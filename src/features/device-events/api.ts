@@ -2,10 +2,12 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 
 export type AudioDeviceKind = "headphones" | "headset" | "speaker";
+export type PeripheralKind = "mouse" | "keyboard" | "trackpad";
 
 export type DeviceAlert =
   | { kind: "audioConnected"; name: string; device: AudioDeviceKind; battery: number | null }
   | { kind: "audioDisconnected"; name: string; device: AudioDeviceKind }
+  | { kind: "peripheralConnected"; name: string; device: PeripheralKind; battery: number }
   | { kind: "batteryLow"; name: string; battery: number }
   | { kind: "powerConnected"; battery: number | null }
   | { kind: "powerDisconnected"; battery: number | null };

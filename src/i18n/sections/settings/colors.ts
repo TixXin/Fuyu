@@ -22,6 +22,17 @@ export type SettingsColorsText = {
   accentSystem: string;
   accentModes: Record<"default" | "windows" | "pick", string>;
   accentColor: string;
+  ink: string;
+  inkHint: string;
+  inkModes: Record<"auto" | "custom", string>;
+  inkColor: string;
+  inkReset: string;
+  inkLowContrast: (ratio: string) => string;
+  builtinTitle: string;
+  builtin: string;
+  builtinHint: string;
+  builtinNames: Record<"greyWhite" | "frostedClear" | "frostedWarm", string>;
+  builtinHints: Record<"greyWhite" | "frostedClear" | "frostedWarm", string>;
 };
 
 export const zhCN: SettingsColorsText = {
@@ -44,6 +55,17 @@ export const zhCN: SettingsColorsText = {
   accentSystem: "跟随系统",
   accentModes: { default: "默认", windows: "跟随 Windows", pick: "自选" },
   accentColor: "强调色颜色",
+  ink: "岛上文字",
+  inkHint: "自动按岛屿背景的深浅取黑字或白字。自选只改岛上的普通文字，强调色和状态颜色不变。",
+  inkModes: { auto: "自动", custom: "自选" },
+  inkColor: "文字颜色",
+  inkReset: "恢复默认",
+  inkLowContrast: (ratio) => `和岛屿背景的对比度只有 ${ratio}:1，小字可能看不清。`,
+  builtinTitle: "内置配色",
+  builtin: "一键换配色",
+  builtinHint: "同时换掉深色、浅色两套颜色和透明度；配色是深色时切到浅色。磨砂是半透明的底色加一层浅色调和细描边，不会模糊桌面。之后还可以在下面接着调。",
+  builtinNames: { greyWhite: "灰白", frostedClear: "透白磨砂", frostedWarm: "暖白磨砂" },
+  builtinHints: { greyWhite: "不透明的浅灰", frostedClear: "86% 的冷白", frostedWarm: "90% 的米白，暖色文字" },
   stayDark: "保持深色",
   stayDarkHint: "配色是浅色时，选中的部分仍然用深色那一套。独立窗口指翻译和剪贴板窗口，设置窗口跟随配色。",
   stayDarkNow: "现在是深色，换成浅色后才看得出区别。",
@@ -70,6 +92,17 @@ export const en: SettingsColorsText = {
   accentSystem: "System",
   accentModes: { default: "Default", windows: "Windows", pick: "Pick" },
   accentColor: "Accent color",
+  ink: "Island text",
+  inkHint: "Auto picks dark or light text from the island background. A custom color only changes the island's plain text; the accent and status colors stay.",
+  inkModes: { auto: "Auto", custom: "Custom" },
+  inkColor: "Text color",
+  inkReset: "Reset",
+  inkLowContrast: (ratio) => `Only ${ratio}:1 against the island background; small text may be hard to read.`,
+  builtinTitle: "Built-in colors",
+  builtin: "Color sets",
+  builtinHint: "Replaces both the dark and light colors and the opacity; dark colors switch to light. Frosted means a see-through tinted fill with a thin outline; it does not blur the desktop. You can keep adjusting below.",
+  builtinNames: { greyWhite: "Grey white", frostedClear: "Frosted clear", frostedWarm: "Frosted warm" },
+  builtinHints: { greyWhite: "Solid light grey", frostedClear: "Cool white at 86%", frostedWarm: "Cream at 90%, warm text" },
   stayDark: "Keep dark",
   stayDarkHint: "With light colors, the selected parts still use the dark set. Other windows are the translation and clipboard windows; the settings window follows the colors.",
   stayDarkNow: "Colors are dark now; this shows once they turn light.",

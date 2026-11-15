@@ -1,23 +1,25 @@
-import { getColorSetting, inkOn, isLightIsland } from "../../utils/color.ts";
+import { getColorSetting, HEX_COLOR_PATTERN, inkOn, isLightIsland } from "../../utils/color.ts";
 import type { IslandSettings, ThemeMode } from "./types";
 
 export const THEME_MODES = ["dark", "light", "system"] as const satisfies readonly ThemeMode[];
 
 export type ThemeTone = "dark" | "light";
 
-export type ThemeColors = Pick<IslandSettings, "islandBackgroundColor" | "taskTextColor" | "pulseColor">;
+export type ThemeColors = Pick<IslandSettings, "islandBackgroundColor" | "taskTextColor" | "pulseColor" | "inkColor">;
 
 export const THEME_COLORS: Record<ThemeTone, ThemeColors> = {
-  dark: { islandBackgroundColor: "#000000", taskTextColor: "#ffffff", pulseColor: "#3ae489" },
-  light: { islandBackgroundColor: "#f2f2f5", taskTextColor: "#1c1c1f", pulseColor: "#1f9d55" },
+  dark: { islandBackgroundColor: "#000000", taskTextColor: "#ffffff", pulseColor: "#3ae489", inkColor: "" },
+  light: { islandBackgroundColor: "#f2f2f5", taskTextColor: "#1c1c1f", pulseColor: "#1f9d55", inkColor: "" },
 };
 
 export const THEME_COLOR_KEYS = {
-  dark: { islandBackgroundColor: "darkBackgroundColor", taskTextColor: "darkTextColor", pulseColor: "darkPulseColor" },
-  light: { islandBackgroundColor: "lightBackgroundColor", taskTextColor: "lightTextColor", pulseColor: "lightPulseColor" },
+  dark: { islandBackgroundColor: "darkBackgroundColor", taskTextColor: "darkTextColor", pulseColor: "darkPulseColor", inkColor: "darkInkColor" },
+  light: { islandBackgroundColor: "lightBackgroundColor", taskTextColor: "lightTextColor", pulseColor: "lightPulseColor", inkColor: "lightInkColor" },
 } as const satisfies Record<ThemeTone, Record<keyof ThemeColors, keyof IslandSettings>>;
 
-const COLOR_NAMES = ["islandBackgroundColor", "taskTextColor", "pulseColor"] as const;
+export const AUTO_INK = { darkInkColor: "", lightInkColor: "", inkColor: "" } as const satisfies Partial<IslandSettings>;
+
+const COLOR_NAMES = ["islandBackgroundColor", "taskTextColor", "pulseColor", "inkColor"] as const;
 
 export function activeTone(mode: ThemeMode, systemDark: boolean): ThemeTone {
   return mode === "system" ? (systemDark ? "dark" : "light") : mode;
@@ -29,17 +31,12 @@ export function themeColors(settings: IslandSettings, tone: ThemeTone): ThemeCol
     islandBackgroundColor: settings[keys.islandBackgroundColor],
     taskTextColor: settings[keys.taskTextColor],
     pulseColor: settings[keys.pulseColor],
+    inkColor: settings[keys.inkColor],
   };
 }
 
 export function withThemeColors(settings: IslandSettings, tone: ThemeTone, colors: ThemeColors): IslandSettings {
-  const keys = THEME_COLOR_KEYS[tone];
-  return {
-    ...settings,
-    [keys.islandBackgroundColor]: colors.islandBackgroundColor,
-    [keys.taskTextColor]: colors.taskTextColor,
-    [keys.pulseColor]: colors.pulseColor,
-  };
+  return { ...settings, ...flatten(tone, colors) };
 }
 
 export function resolveThemeColors(settings: IslandSettings, systemDark: boolean, tone = activeTone(settings.themeMode, systemDark)): IslandSettings {
@@ -65,6 +62,7 @@ export function themeSetsFromSingleColors(source: Partial<Record<string, unknown
     islandBackgroundColor: getColorSetting(source.islandBackgroundColor, THEME_COLORS.dark.islandBackgroundColor),
     taskTextColor: getColorSetting(source.taskTextColor, THEME_COLORS.dark.taskTextColor),
     pulseColor: getColorSetting(source.pulseColor, THEME_COLORS.dark.pulseColor),
+    inkColor: getColorSetting(source.inkColor, ""),
   };
   const mode = source.themeMode;
   if (mode === "dark" || mode === "light" || mode === "system") {
@@ -82,6 +80,35 @@ export function hasThemeSets(source: Partial<Record<string, unknown>>) {
 function flatten(tone: ThemeTone, colors: ThemeColors): Partial<IslandSettings> {
   const keys = THEME_COLOR_KEYS[tone];
   return Object.fromEntries(COLOR_NAMES.map((name) => [keys[name], colors[name]]));
+}
+
+function rgbTriplet(hex: string) {
+  return [1, 3, 5].map((start) => Number.parseInt(hex.slice(start, start + 2), 16)).join(", ");
+}
+
+export function autoInkHex(background: string) {
+  return `#${inkOn(background).split(", ").map((part) => Number(part).toString(16).padStart(2, "0")).join("")}`;
+}
+
+export function islandInkRgb(colors: Pick<ThemeColors, "islandBackgroundColor" | "inkColor">) {
+  return HEX_COLOR_PATTERN.test(colors.inkColor) ? rgbTriplet(colors.inkColor) : inkOn(colors.islandBackgroundColor);
+}
+
+const INK_ALPHAS = {
+  dark: { "--text-1": 0.96, "--text-2": 0.68, "--text-3": 0.54, "--text-placeholder": 0.42, "--color-text-strong": 0.88, "--color-text-muted": 0.72, "--color-text-subtle": 0.52 },
+  light: { "--text-1": 0.94, "--text-2": 0.7, "--text-3": 0.56, "--text-placeholder": 0.44, "--color-text-strong": 0.88, "--color-text-muted": 0.72, "--color-text-subtle": 0.56 },
+};
+
+export function inkVariables(colors: Pick<ThemeColors, "islandBackgroundColor" | "inkColor">): Record<string, string> {
+  const rgb = islandInkRgb(colors);
+  if (!HEX_COLOR_PATTERN.test(colors.inkColor)) return { "--island-ink-rgb": rgb };
+  const alphas = INK_ALPHAS[isLightIsland(colors.islandBackgroundColor) ? "light" : "dark"];
+  return {
+    "--island-ink-rgb": rgb,
+    "--color-text": `rgb(${rgb})`,
+    "--color-page-text": `rgb(${rgb})`,
+    ...Object.fromEntries(Object.entries(alphas).map(([name, alpha]) => [name, `rgba(${rgb}, ${alpha})`])),
+  };
 }
 
 export function accentVariables(accent: string | null): Record<string, string> {

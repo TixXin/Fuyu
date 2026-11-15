@@ -212,10 +212,10 @@ if (!automated) {
     await openPage("behaviorAlerts");
     check(texts(".settings-group__title") === "在小岛上提示" && texts(".settings-row__title") === "音量与亮度|耳机与充电|摄像头和麦克风使用提示", "Volume, headphones and camera alerts are one group on the System alerts tab");
     await openPage("general");
-    check(texts(".settings-group__title") === "启动与语言|位置|数据" && document.querySelector(".position-diagram__screen--active .position-diagram__island") && !texts(".settings-row__title").includes("最小化按钮")
-      && document.querySelectorAll(".settings-footnote__toggle").length === 3, "General is three groups: the position group draws the screens, data folder and backup are one group, long notes fold");
+    check(texts(".settings-group__title") === "启动与语言|位置|数据|升级前的备份" && document.querySelector(".position-diagram__screen--active .position-diagram__island") && !texts(".settings-row__title").includes("最小化按钮")
+      && document.querySelectorAll(".settings-footnote__toggle").length === 4 && texts(".settings-row__title").includes("0.3.9 → 0.4.0") && !document.querySelector(".settings-backup__status--error"), "General is four groups: position draws the screens, data folder and backup are one group, then backups made before updates with their versions and no restore warning while data reads fine; long notes fold");
 
-    const storedSettings = () => JSON.parse(localStorage.getItem("fuyu-settings") ?? "{}") as { opacity?: number; carryOverIncompleteTodos?: boolean };
+    const storedSettings = () => JSON.parse(localStorage.getItem("fuyu-settings") ?? "{}") as { opacity?: number; carryOverIncompleteTodos?: boolean; autoTuckHoldMusic?: boolean; autoTuckHoldMessages?: boolean };
     check(!document.querySelector(".appearance-reset"), "Reset appearance is not offered outside the theme page");
     await openPage("appearance");
     check(document.querySelector(".collapsed-items") && !document.querySelector(".preset-name-input"),
@@ -275,16 +275,14 @@ if (!automated) {
     check(waveSwitch()?.checked === true && savedItems() === null, "The music wave shows on the collapsed bar by default");
     await act(async () => { waveSwitch()!.click(); });
     check(waveSwitch()?.checked === false && savedItems()?.items.find((item) => item.id === "music")?.hidden === true, "Turning the music wave off hides the bar's music item");
-    await act(async () => { waveSwitch()!.click(); });
-    check(waveSwitch()?.checked === true && !savedItems()?.items.find((item) => item.id === "music")?.hidden, "Turning it on shows it again");
-    localStorage.removeItem("fuyu-collapsed-items");
+    await act(async () => { waveSwitch()!.click(); }); check(waveSwitch()?.checked === true && !savedItems()?.items.find((item) => item.id === "music")?.hidden, "Turning it on shows it again"); localStorage.removeItem("fuyu-collapsed-items");
 
     await openPage("behaviorTuck");
     const holdRow = (title: string) => [...document.querySelectorAll<HTMLElement>(".settings-row")].find((row) => row.querySelector(".settings-row__title")?.textContent === title)?.querySelector<HTMLInputElement>("input");
     check(!holdRow("有正在进行的待办时不收起"), "Idle tuck holds are hidden while idle tuck is off");
     await act(async () => { holdRow("闲置时贴边隐藏")!.click(); });
-    check(holdRow("有正在进行的待办时不收起")?.checked === true && holdRow("Agent 在等你时不收起")?.checked === true && holdRow("音乐播放中不收起")?.checked === false,
-      "Idle tuck holds: todo and agent on, music off by default");
+    check(holdRow("有正在进行的待办时不收起")?.checked === true && holdRow("Agent 在等你时不收起")?.checked === true && holdRow("音乐播放中不收起")?.checked === false && holdRow("有未读消息时不收起")?.checked === true,
+      "Idle tuck holds: todo, agent and unread messages on, music off by default");
     const tuckedHover = [...document.querySelectorAll<HTMLElement>(".settings-row")].find((row) => row.querySelector(".settings-row__title")?.textContent === "鼠标移到隐藏的岛上");
     const tuckedHoverButton = (label: string) => [...(tuckedHover?.querySelectorAll<HTMLButtonElement>("button") ?? [])].find((button) => button.textContent === label);
     check(tuckedHoverButton("只露出岛屿")?.getAttribute("aria-pressed") === "true", "Hovering a tucked island only slides it out by default");
@@ -293,6 +291,8 @@ if (!automated) {
       && tuckedHoverButton("展开面板")?.getAttribute("aria-pressed") === "true",
       "Choosing to open the panel from a tucked island is saved");
     check(tuckedHover && tuckedHover.scrollWidth <= tuckedHover.clientWidth, "The tucked-hover choice fits its row");
+    await act(async () => { holdRow("有未读消息时不收起")!.click(); holdRow("音乐播放中不收起")!.click(); }); await openPage("music");
+    check(holdRow("音乐播放中不收起")?.checked === true && storedSettings().autoTuckHoldMusic === true && storedSettings().autoTuckHoldMessages === false, "The music page shows the same stay-out-while-playing switch as Behavior");
 
     const agentPolls = () => commands.filter(command => command === "get_agent_status").length;
     const pollsAway = agentPolls();

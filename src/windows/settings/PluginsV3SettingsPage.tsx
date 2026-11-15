@@ -80,7 +80,8 @@ function PluginCard({ plugin }: { plugin: PluginStatusV3 }) {
 
 export function PluginsV3View({ view, now = Date.now() }: { view: PluginHostView; now?: number }) {
   const text = useTranslation().settings.pluginsV3;
-  const { host, plugins, connection } = view;
+  const { host, plugins, connection, memory } = view;
+  const measured = memory && host && memory.pid === host.pid ? memory : null;
   const open = connection === "open";
   return (
     <div className="plugins-v3">
@@ -93,7 +94,12 @@ export function PluginsV3View({ view, now = Date.now() }: { view: PluginHostView
         />
         {open && host ? (
           <>
-            <SettingsRow searchable={false} title={text.memory} control={<span className="plugins-v3__value">{megabytes(host.rssBytes)}</span>} />
+            <SettingsRow
+              searchable={false}
+              title={measured ? text.memoryTitles[measured.measure] : text.memoryTitles.rss}
+              description={measured ? text.memoryNotes[measured.measure] : text.memoryNotes.rss}
+              control={<span className="plugins-v3__value" data-measure={measured?.measure ?? "rss"}>{megabytes(measured ? measured.bytes : host.rssBytes)}</span>}
+            />
             <SettingsRow searchable={false} title={text.hostCpu} control={<span className="plugins-v3__value">{milliseconds(host.cpuMs)}</span>} />
             <SettingsRow searchable={false} title={text.uptime} control={<span className="plugins-v3__value">{duration(now - host.startedAt)}</span>} />
             {host.safe ? <SettingsRow searchable={false} className="plugins-v3__safe" title={text.safeMode} control={<span className="plugins-v3__value">{text.safeModes[host.safe]}</span>} /> : null}

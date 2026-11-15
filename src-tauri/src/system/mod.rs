@@ -9,6 +9,7 @@ pub(crate) mod settings_backup;
 #[cfg_attr(target_os = "macos", path = "startup_macos.rs")]
 pub(crate) mod startup;
 pub(crate) mod todo_export;
+pub(crate) mod update_backup;
 pub(crate) mod update_channel;
 pub(crate) mod update_runtime;
 pub(crate) mod update_notifications;
@@ -89,6 +90,9 @@ macro_rules! tauri_commands {
             crate::system::update_notifications::updater_diagnostics,
             crate::system::settings_backup::save_settings_backup,
             crate::system::settings_backup::restart_island,
+            crate::system::update_backup::update_backup_create,
+            crate::system::update_backup::update_backup_list,
+            crate::system::update_backup::update_backup_restore,
         ] $($rest)*)
     };
 }

@@ -14,6 +14,10 @@ export type ErrorCode =
   | "file.write"
   | "file.create"
   | "file.backup"
+  | "updateBackup.failed"
+  | "updateBackup.badSnapshot"
+  | "updateBackup.corrupt"
+  | "updateBackup.notFound"
   | "file.undo"
   | "http.client"
   | "net.proxy"
@@ -230,6 +234,10 @@ export const zhCN: ErrorsText = {
     "file.write": ({ path }) => `无法写入 ${path}。`,
     "file.create": ({ path }) => `无法创建 ${path}。`,
     "file.backup": ({ path }) => `无法备份 ${path}。`,
+    "updateBackup.failed": "安装前没能备份数据，这次没有安装。",
+    "updateBackup.badSnapshot": "页面交来的设置数据不完整，没能备份，这次没有安装。",
+    "updateBackup.corrupt": ({ path }) => `这份备份已损坏（${path} 对不上），不能恢复。`,
+    "updateBackup.notFound": "这份备份已经不在了。",
     "file.undo": ({ path }) => `无法撤回 ${path}。`,
     "http.client": "无法建立网络连接。",
     "net.proxy": ({ proxy }) => `代理地址 ${proxy} 无效。`,
@@ -443,6 +451,10 @@ export const en: ErrorsText = {
     "file.write": ({ path }) => `Could not write ${path}.`,
     "file.create": ({ path }) => `Could not create ${path}.`,
     "file.backup": ({ path }) => `Could not back up ${path}.`,
+    "updateBackup.failed": "Could not back up your data before installing, so the update was not installed.",
+    "updateBackup.badSnapshot": "The settings from the page were incomplete, so nothing was backed up and the update was not installed.",
+    "updateBackup.corrupt": ({ path }) => `This backup is damaged (${path} doesn't match) and can't be restored.`,
+    "updateBackup.notFound": "This backup no longer exists.",
     "file.undo": ({ path }) => `Could not undo ${path}.`,
     "http.client": "Could not set up the connection.",
     "net.proxy": ({ proxy }) => `Invalid proxy ${proxy}.`,

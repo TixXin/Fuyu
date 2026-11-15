@@ -5,7 +5,10 @@ use crate::macos::{
     bluetooth, power,
 };
 
-use super::tracker::{AudioKind, Output};
+use super::{
+    peripherals::{kind_from_minor_type, Peripheral},
+    tracker::{AudioKind, Output},
+};
 
 pub(super) fn start_thread() -> Option<()> {
     Some(())
@@ -29,6 +32,15 @@ pub(super) fn read_batteries() -> HashMap<String, u8> {
     bluetooth::connected_batteries()
 }
 
+fn peripheral(device: bluetooth::ConnectedDevice) -> Option<Peripheral> {
+    let kind = kind_from_minor_type(&device.minor_type)?;
+    Some(Peripheral { device: device.key, name: device.name, kind, battery: device.battery })
+}
+
+pub(super) fn read_peripherals() -> Vec<Peripheral> {
+    bluetooth::connected_devices().into_iter().filter_map(peripheral).collect()
+}
+
 pub(super) fn power_source() -> (Option<bool>, Option<u8>) {
     let source = power::power_source();
     (source.map(|s| s.plugged_in), source.and_then(|s| s.battery))
@@ -36,7 +48,8 @@ pub(super) fn power_source() -> (Option<bool>, Option<u8>) {
 
 #[cfg(test)]
 mod tests {
-    use super::{classify, AudioKind, AudioOutput, Transport};
+    use super::{bluetooth::ConnectedDevice, classify, peripheral, AudioKind, AudioOutput, Transport};
+    use crate::device_events::peripherals::PeripheralKind;
 
     fn output(uid: &str, transport: Transport, has_input: bool) -> AudioOutput {
         AudioOutput { uid: uid.into(), name: "Device".into(), transport, has_input }
@@ -53,6 +66,16 @@ mod tests {
     }
 
     #[test]
+    fn mice_keyboards_and_trackpads_are_peripherals_but_headphones_are_not() {
+        let device = |minor_type: &str| ConnectedDevice { key: "9A02CB733405".into(), name: "Magic".into(), minor_type: minor_type.into(), battery: Some(50) };
+        assert_eq!(peripheral(device("Mouse")).map(|p| p.kind), Some(PeripheralKind::Mouse));
+        assert_eq!(peripheral(device("Keyboard")).map(|p| p.kind), Some(PeripheralKind::Keyboard));
+        assert_eq!(peripheral(device("Trackpad")).map(|p| p.kind), Some(PeripheralKind::Trackpad));
+        assert!(peripheral(device("Headphones")).is_none());
+        assert!(peripheral(device("")).is_none());
+    }
+
+    #[test]
     #[ignore = "reads the real devices of the computer it runs on"]
     fn probe_this_computer() {
         for output in crate::macos::audio_devices::outputs() {
@@ -60,6 +83,7 @@ mod tests {
         }
         println!("announced: {:?}", super::read_outputs());
         println!("batteries: {:?}", super::read_batteries());
+        println!("peripherals: {:?}", super::read_peripherals());
         println!("power: {:?}", super::power_source());
     }
 }

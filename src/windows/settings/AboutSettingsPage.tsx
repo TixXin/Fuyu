@@ -9,6 +9,7 @@ import { ProjectLinksSection } from "../../features/updater/ProjectSettingsSecti
 import { UpdateDiagnosticsRow } from "../../features/updater/UpdateDiagnosticsRow";
 import { getUpdateState, subscribeToUpdate } from "../../features/updater/updaterController";
 import { UpdateSettingsSection } from "../../features/updater/UpdateSettingsSection";
+import { VersionHistory } from "../../features/updater/VersionHistory";
 import { useTranslation } from "../../i18n";
 import { openOnboardingWindow } from "../onboarding/api";
 import { QuitIslandRow } from "./QuitIslandRow";
@@ -31,6 +32,7 @@ export function AboutSettingsPage({ onSettingsChange }: { onSettingsChange: (set
     <>
       <AboutHero />
       <UpdateSettingsSection />
+      <VersionHistory />
       <ProjectLinksSection />
       <SettingsGroup title={text.helpTitle}>
         <SettingsRow

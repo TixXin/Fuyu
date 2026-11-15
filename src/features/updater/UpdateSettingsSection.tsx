@@ -1,11 +1,12 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
+import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton";
 import { SettingsRow } from "../../components/settings/SettingsRow";
 import { SettingsSelect } from "../../components/settings/SettingsSelect";
 import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
 import { useLocale, useTranslation } from "../../i18n";
 import { CHECK_INTERVAL_HOURS } from "./storage";
-import { getUpdateState, setAutoCheck, setAutoUpdate, setCheckInterval, setReminderMode, subscribeToUpdate } from "./updaterController";
+import { getUpdateState, installUpdate, setAutoCheck, setAutoUpdate, setCheckInterval, setReminderMode, subscribeToUpdate } from "./updaterController";
 import { UpdateChannelRow } from "./UpdateChannelRow";
 import { UpdatePanel } from "./UpdatePanel";
 
@@ -42,6 +43,13 @@ export function UpdateSettingsSection() {
       </span>
     )}>
       <div className="about-update"><UpdatePanel /></div>
+      {state.backupFailed !== null && state.backupFailed === state.nextVersion && (stage === "ready" || stage === "available") && (
+        <SettingsRow title={t.settings.backup.updates.installAnyway} description={t.settings.backup.updates.installAnywayHint} control={
+          <SettingsLinkButton onClick={() => void installUpdate(state.nextVersion, state.channel, { skipBackup: true })}>
+            {t.settings.backup.updates.installAnywayAction}
+          </SettingsLinkButton>
+        } />
+      )}
       {stage !== "disabled" && <>
         <UpdateChannelRow channel={state.channel} disabled={["checking", "downloading", "installing", "done"].includes(stage)} />
         <SettingsToggleRow title={text.autoCheck} description={text.autoCheckHint} checked={autoCheck} onChange={setAutoCheck} />

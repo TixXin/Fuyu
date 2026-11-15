@@ -134,3 +134,98 @@ fn probe_this_computer() {
     println!("batteries: {:?}", crate::win32::devnode::bluetooth_batteries());
     println!("power: {:?}", crate::win32::power::power_source());
 }
+
+mod peripherals {
+    use super::super::{
+        peripherals::{kind_from_appearance, kind_from_minor_type, Peripheral, PeripheralKind, PeripheralTracker, QUIET_RECONNECT_POLLS},
+        tracker::DeviceAlert,
+    };
+
+    fn mouse(battery: Option<u8>) -> Peripheral {
+        Peripheral { device: "m".into(), name: "Magic Mouse".into(), kind: PeripheralKind::Mouse, battery }
+    }
+
+    fn connected(battery: u8) -> DeviceAlert {
+        DeviceAlert::PeripheralConnected { name: "Magic Mouse".into(), device: PeripheralKind::Mouse, battery }
+    }
+
+    fn low(battery: u8) -> DeviceAlert {
+        DeviceAlert::BatteryLow { name: "Magic Mouse".into(), battery }
+    }
+
+    #[test]
+    fn appearance_and_minor_type_pick_out_mice_keyboards_and_trackpads() {
+        assert_eq!(kind_from_appearance(0x03C2), Some(PeripheralKind::Mouse));
+        assert_eq!(kind_from_appearance(0x03C1), Some(PeripheralKind::Keyboard));
+        assert_eq!(kind_from_appearance(0x03C0), None);
+        assert_eq!(kind_from_appearance(0x03C4), None);
+        assert_eq!(kind_from_appearance(0x0941), None);
+        assert_eq!(kind_from_minor_type("Trackpad"), Some(PeripheralKind::Trackpad));
+        assert_eq!(kind_from_minor_type("Keyboard"), Some(PeripheralKind::Keyboard));
+        assert_eq!(kind_from_minor_type("Mouse"), Some(PeripheralKind::Mouse));
+        assert_eq!(kind_from_minor_type("Headphones"), None);
+    }
+
+    #[test]
+    fn devices_there_at_the_start_are_quiet_but_new_ones_say_their_battery() {
+        let mut tracker = PeripheralTracker::default();
+        assert!(tracker.update(vec![mouse(Some(80))]).is_empty());
+        assert!(tracker.update(vec![mouse(Some(80))]).is_empty());
+        let mut tracker = PeripheralTracker::default();
+        assert!(tracker.update(Vec::new()).is_empty());
+        assert_eq!(tracker.update(vec![mouse(Some(80))]), vec![connected(80)]);
+        assert!(tracker.update(vec![mouse(Some(80))]).is_empty());
+    }
+
+    #[test]
+    fn a_device_without_a_battery_level_is_never_announced() {
+        let mut tracker = PeripheralTracker::default();
+        tracker.update(Vec::new());
+        for _ in 0..10 {
+            assert!(tracker.update(vec![mouse(None)]).is_empty());
+        }
+    }
+
+    #[test]
+    fn a_late_battery_level_is_waited_for_a_little() {
+        let mut tracker = PeripheralTracker::default();
+        tracker.update(Vec::new());
+        assert!(tracker.update(vec![mouse(None)]).is_empty());
+        assert_eq!(tracker.update(vec![mouse(Some(60))]), vec![connected(60)]);
+    }
+
+    #[test]
+    fn low_battery_warns_once_at_each_level_and_again_after_charging() {
+        let mut tracker = PeripheralTracker::default();
+        tracker.update(Vec::new());
+        assert_eq!(tracker.update(vec![mouse(Some(40))]), vec![connected(40)]);
+        assert_eq!(tracker.update(vec![mouse(Some(19))]), vec![low(19)]);
+        assert!(tracker.update(vec![mouse(Some(18))]).is_empty());
+        assert_eq!(tracker.update(vec![mouse(Some(9))]), vec![low(9)]);
+        assert!(tracker.update(vec![mouse(Some(5))]).is_empty());
+        assert!(tracker.update(vec![mouse(Some(90))]).is_empty());
+        assert_eq!(tracker.update(vec![mouse(Some(15))]), vec![low(15)]);
+    }
+
+    #[test]
+    fn connecting_already_low_does_not_warn_twice() {
+        let mut tracker = PeripheralTracker::default();
+        tracker.update(Vec::new());
+        assert_eq!(tracker.update(vec![mouse(Some(15))]), vec![connected(15)]);
+        assert!(tracker.update(vec![mouse(Some(14))]).is_empty());
+    }
+
+    #[test]
+    fn a_short_sleep_and_wake_is_not_a_new_connection() {
+        let mut tracker = PeripheralTracker::default();
+        tracker.update(Vec::new());
+        assert_eq!(tracker.update(vec![mouse(Some(70))]), vec![connected(70)]);
+        assert!(tracker.update(Vec::new()).is_empty());
+        assert!(tracker.update(vec![mouse(Some(70))]).is_empty());
+        assert!(tracker.update(Vec::new()).is_empty());
+        for _ in 0..QUIET_RECONNECT_POLLS {
+            tracker.update(Vec::new());
+        }
+        assert_eq!(tracker.update(vec![mouse(Some(70))]), vec![connected(70)]);
+    }
+}

@@ -16,6 +16,9 @@ export type SettingsExpandText = {
   holdAgentHint: string;
   holdMusic: string;
   holdMusicHint: string;
+  holdMusicElsewhere: string;
+  holdMessages: string;
+  holdMessagesHint: string;
   revealOnMessage: string;
   tuckedHover: string;
   tuckedHoverReveal: string;
@@ -57,6 +60,9 @@ export const zhCN: SettingsExpandText = {
   holdAgentHint: "有会话在等你审批或回答时，一直留在屏幕上。",
   holdMusic: "音乐播放中不收起",
   holdMusicHint: "播放音乐时一直留在屏幕上。暂停或停止后，重新从头计时。",
+  holdMusicElsewhere: "播放音乐时岛一直留在屏幕上。和「行为 → 贴边隐藏」里的是同一个开关，打开了自动收起才起作用。",
+  holdMessages: "有未读消息时不收起",
+  holdMessagesHint: "微信、QQ 有没看的消息，或来了新邮件、还没在消息页看过时，一直留在屏幕上。没打开的消息来源不算。",
   revealOnMessage: "有新消息时露出",
   tuckedHover: "鼠标移到隐藏的岛上",
   tuckedHoverReveal: "只露出岛屿",
@@ -98,6 +104,9 @@ export const en: SettingsExpandText = {
   holdAgentHint: "While a session waits for your approval or answer, the island stays on screen.",
   holdMusic: "Stay out while music plays",
   holdMusicHint: "While music plays, the island stays on screen. Paused or stopped, the idle time starts again.",
+  holdMusicElsewhere: "While music plays, the island stays on screen. It is the same switch as in Behavior → Tuck to edge, and works only when auto tuck is on.",
+  holdMessages: "Stay out while messages are unread",
+  holdMessagesHint: "While WeChat or QQ has unread messages, or new mail you haven't looked at on the messages page, it stays on screen. Sources you turned off don't count.",
   revealOnMessage: "Slide out for new messages",
   tuckedHover: "Pointer on a tucked island",
   tuckedHoverReveal: "Slides it out",
