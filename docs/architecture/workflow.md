@@ -50,6 +50,7 @@ land 会推送、开 PR 并开启自动合并，所以要写 `--yes` 才执行�
 
 - 想在本机先验一遍：`pnpm verify`（`pnpm check`，改到 `src-tauri/` 或 `plugins/` 时加 `cargo test`；同一棵代码树通过过就不重跑）。land 本身不跑这些，由 PR 上 CI 的 `check` 把关。
 - 多个会话共用一份代码：别的会话改到一半时，`pnpm check` 可能因为它的文件失败。先看失败是不是自己的文件；不是就等一会儿或问对方，不要去改别人的文件。
+- 回归页逐行比对 DOM 快照（`tests/regression/snapshots/`，2026-11-15 起，E36.2.2）：改界面的提交要把 `pnpm test:regression <页面名中的词> --update-snapshots` 更新后的快照一起带上，新加的回归页也要带上它的快照；漏了 CI 的 `regression` 会失败，挡住整批 land。更新前看一眼差异，只该有自己改的那几处。
 - 需要 release 可执行文件时另外跑 `pnpm build:exe`。
 
 `main` 只通过在 GitHub 上合入 PR 移动。`.githooks/pre-push` 拒绝直接推送 `main`；GitHub 的规则集也拒绝（管理员只能在 PR 上绕过），紧急时用 `gh pr merge --admin` 合 PR。`CLAUDE_CODE_MERGE_QUEUE_EMERGENCY_PUSH=1` 只放行本机钩子。
