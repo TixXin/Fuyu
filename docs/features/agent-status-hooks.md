@@ -1,6 +1,6 @@
 # AI Agent Status Hooks
 
-Fuyu can mirror Codex, Claude Code, WorkBuddy, Antigravity, DeepSeek Harness, Qoder, CodeBuddy Code, Qwen Code, TRAE and TRAE CN task activity on the collapsed island status light (opencode has no status light; its sessions only count on the Agent page, see [opencode](#opencode)):
+Fuyu can mirror Codex, Claude Code, WorkBuddy, Antigravity, DeepSeek Harness, Qoder, CodeBuddy Code, Qwen Code, TRAE, TRAE CN, ZCode and Kimi Code task activity on the collapsed island status light (opencode has no status light; its sessions only count on the Agent page, see [opencode](#opencode)):
 
 - running task: blue
 - completed, idle, or no task: green
@@ -31,7 +31,7 @@ It then updates:
 %USERPROFILE%\.claude\settings.json
 ```
 
-When WorkBuddy is installed (`%USERPROFILE%\.workbuddy` or `%USERPROFILE%\.workbuddy-ai` exists), it also updates `settings.json` in each of them; see [WorkBuddy](#workbuddy). When Qoder, CodeBuddy Code or Qwen Code is installed, it also updates their `settings.json`; see [Qoder, CodeBuddy Code and Qwen Code](#qoder-codebuddy-code-and-qwen-code). When TRAE or TRAE CN is installed, it writes `~/.trae/hooks.json` or `~/.trae-cn/hooks.json`; see [TRAE and TRAE CN](#trae-and-trae-cn). When Antigravity is installed, it also writes `%USERPROFILE%\.gemini\config\hooks.json`; see [Antigravity](#antigravity). When DeepSeek Harness is installed, it writes `fuyu-dsh-hooks.json` next to the scripts and tells you what to add to DSH's profile; see [DeepSeek Harness](#deepseek-harness). When opencode is installed, it writes a plugin for opencode 1.x into opencode's config folder; see [opencode](#opencode).
+When WorkBuddy is installed (`%USERPROFILE%\.workbuddy` or `%USERPROFILE%\.workbuddy-ai` exists), it also updates `settings.json` in each of them; see [WorkBuddy](#workbuddy). When Qoder, CodeBuddy Code or Qwen Code is installed, it also updates their `settings.json`; see [Qoder, CodeBuddy Code and Qwen Code](#qoder-codebuddy-code-and-qwen-code). When TRAE or TRAE CN is installed, it writes `~/.trae/hooks.json` or `~/.trae-cn/hooks.json`; see [TRAE and TRAE CN](#trae-and-trae-cn). When ZCode or Kimi Code is installed, it updates `~/.zcode/cli/config.json` or `~/.kimi-code/config.toml`; see [ZCode](#zcode) and [Kimi Code](#kimi-code). When Antigravity is installed, it also writes `%USERPROFILE%\.gemini\config\hooks.json`; see [Antigravity](#antigravity). When DeepSeek Harness is installed, it writes `fuyu-dsh-hooks.json` next to the scripts and tells you what to add to DSH's profile; see [DeepSeek Harness](#deepseek-harness). When opencode is installed, it writes a plugin for opencode 1.x into opencode's config folder; see [opencode](#opencode).
 
 The status light card in Settings has one row per agent with hooks, showing whether its hooks are current. An agent that is not on this computer (`absent`) gets no row and never counts as outdated. When the app moves to its new name (FocuSD Island → Fuyu), it reinstalls the hooks of every agent that had them, remote ones included.
 
@@ -107,7 +107,7 @@ Each session on the Agent page can show where it runs, as the program's own icon
 
 ## Session List Settings
 
-**Settings → AI Agent** also sets, in `fuyu-settings`: how far back the list goes (`agentSessionHours`: 1, 2 (default), 6 or 24 hours, passed to `list_agent_sessions` as `windowHours`); which agents are shown (**显示哪些 Agent**: one switch with its icon for each of Codex, Claude Code, WorkBuddy, Antigravity, DeepSeek Harness, opencode, Qoder, CodeBuddy, Qwen Code, TRAE and TRAE CN; stored as `agentHiddenProviders`, the ids of the hidden agents, so an agent added later shows by default; the older `agentShowClaudeCode` / `agentShowCodex` settings are carried over; hidden agents also leave the island's running count); only sessions in progress (`agentHideFinished`); and, per card, the running time (`agentShowElapsed`) and the model (`agentShowModel`).
+**Settings → AI Agent** also sets, in `fuyu-settings`: how far back the list goes (`agentSessionHours`: 1, 2 (default), 6 or 24 hours, passed to `list_agent_sessions` as `windowHours`); which agents are shown (**显示哪些 Agent**: one switch with its icon for each of Codex, Claude Code, WorkBuddy, Antigravity, DeepSeek Harness, opencode, Qoder, CodeBuddy, Qwen Code, TRAE, TRAE CN, ZCode and Kimi Code; stored as `agentHiddenProviders`, the ids of the hidden agents, so an agent added later shows by default; the older `agentShowClaudeCode` / `agentShowCodex` settings are carried over; hidden agents also leave the island's running count); only sessions in progress (`agentHideFinished`); and, per card, the running time (`agentShowElapsed`) and the model (`agentShowModel`).
 
 **Running time** counts from the newest typed prompt: Claude Code's last real `user` record, Codex's last `user_message` / `task_started` (`turnStartedAt` in each summary). A session in progress shows "已运行 3 分 20 秒", ticking every second in its own leaf component; a finished one shows "用时 …" up to its last write. When a long turn pushes the prompt out of the 256 KiB tail read, the start found earlier is kept; if it was never seen, no time is shown.
 
@@ -158,6 +158,8 @@ What gets installed is the extension as it is in `packages/vscode-extension/` (`
 | Qoder | `AGENTS.md` in `~/.qoder` and `~/.qoder-cn` |
 | CodeBuddy Code | `~/.codebuddy/CODEBUDDY.md` |
 | Qwen Code | `~/.qwen/QWEN.md` |
+| ZCode | `~/.zcode/AGENTS.md` |
+| Kimi Code | `$KIMI_CODE_HOME/AGENTS.md` (default `~/.kimi-code`) |
 
 The rest of each file is kept. A file that is a symlink is written through to its target; when several agents point at the same file it gets one section; a dangling link is reported as an error on the settings page and left alone. Switching the marker off removes the section. Switching it on or off, and **安装/修复**, delete the rules file earlier versions wrote (`~/.claude/rules/fuyu-reply-marker.md`). Each agent's reader looks for the character at the end of the last reply: Claude Code, Codex and WorkBuddy in their transcripts, Antigravity in the transcript its hooks point to, DSH in the `turnOutline` response, opencode in the database. Windows needs Developer Mode to create symlinks; following one has not been tested there.
 
@@ -315,6 +317,26 @@ TRAE IDE's international and Chinese editions are two agents with the same icon:
 - **Clicking a session** brings up the TRAE or TRAE CN window.
 - **Two things to check in TRAE's settings**: if Hooks run "in the sandbox", the scripts may be unable to write to the island's data folder, so switch to running them locally (the default is not known yet); and if "import Claude Code hooks" is on, the hooks the island installed for Claude Code also run in TRAE and its sessions show up as Claude Code, so turn that switch off.
 - Not done: reply marker (the path of TRAE's personal rules file is not documented), usage, SSH, cc-connect.
+
+## ZCode
+
+Zhipu's ZCode (desktop app and `zcode` CLI) is listed with its own icon (task B53, issue #529). Its session database uses opencode 1.x's tables, so the island reads it with the opencode reader. Not yet run with the island (#179).
+
+- **Sessions**: `~/.zcode/cli/db/db.sqlite` (or `ZCODE_SESSION_DB_PATH`), opened read-only; title, folder, model, latest prompt and reply, current tool, to-dos and context tokens. Deleted sessions, subagents and workflow subtasks are skipped.
+- **Hooks**: **安装/修复** writes `hooks.events` in `~/.zcode/cli/config.json` (Claude Code's grouped format) and turns `hooks.enabled` on, when `~/.zcode` exists: `UserPromptSubmit` and `PreToolUse` mark the turn running, `Stop` marks it completed, `PermissionRequest` saves the input (waiting on you) and runs the approval script. ZCode reads the hooks when a session starts, so open a new session after installing. Turning hooks off in ZCode's settings shows the hooks as needing repair.
+- **Approving on the island**: `/zcode/permission-request`, answered in Claude Code's `hookSpecificOutput.decision` format.
+- Not done: quit detection, usage, SSH.
+
+## Kimi Code
+
+Moonshot's Kimi Code CLI (the TypeScript `kimi`, data in `~/.kimi-code` or `KIMI_CODE_HOME`) is listed with its own icon (task B52, issue #528). Not yet run with the island (#179).
+
+- **Sessions**: `sessions/<workspace>/<session>/state.json` for the title, rename, latest prompt and folder (archived and child sessions are skipped), and `agents/main/wire.jsonl` for whether a turn is running, the reply, model and current tool.
+- **Hooks**: **安装/修复** appends a marked `[[hooks]]` block to `config.toml`: `UserPromptSubmit` marks the turn running, `Stop` and `Interrupt` mark it completed, `StopFailure` failed, and `PermissionRequest` saves the input (waiting on you). Each entry has only `event`, `command` and `timeout`, since any other field makes Kimi reject the whole file. If `hooks` is an inline array, or the file cannot be read, nothing is written and an error is shown. Open a new session after installing.
+- **No approving on the island**: `PermissionRequest` cannot answer, and `PreToolUse` fires for every tool call before Kimi's own permission check and only accepts deny. When a session waits on you, answer it in the terminal.
+- **Usage**: the existing Kimi usage ring (API key in settings).
+- Not read: the old Python `kimi-cli` (`~/.kimi`), and the runtime inside the Kimi desktop app.
+- Not done: quit detection, SSH, cc-connect.
 
 ## Other Agents
 

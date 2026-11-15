@@ -1,6 +1,6 @@
 # 各家 AI 代理的接入现状
 
-岛接了十一家 AI 代理（harness）：Claude Code、Codex、WorkBuddy（国内版和 WorkBuddy AI）、Antigravity、DeepSeek Harness（DSH）、opencode，钩子照抄 Claude Code 的三家 Qoder、CodeBuddy Code、Qwen Code（B48），以及 TRAE、TRAE CN（B29）。后五家各有一节在文末。这张表记每家有哪些形态、数据在哪，以及每项功能做到哪一步。改了哪家的哪一项，就在同一个提交里改这里。接入新的一家或给已有功能扩一家，按 `.claude/skills/fuyu-agent-harness/SKILL.md` 的清单走。
+岛接了十三家 AI 代理（harness）：Claude Code、Codex、WorkBuddy（国内版和 WorkBuddy AI）、Antigravity、DeepSeek Harness（DSH）、opencode，钩子照抄 Claude Code 的三家 Qoder、CodeBuddy Code、Qwen Code（B48），TRAE、TRAE CN（B29），ZCode（B53）和 Kimi Code（B52）。后七家各有一节在文末。这张表记每家有哪些形态、数据在哪，以及每项功能做到哪一步。改了哪家的哪一项，就在同一个提交里改这里。接入新的一家或给已有功能扩一家，按 `.claude/skills/fuyu-agent-harness/SKILL.md` 的清单走。
 
 核对日期：2026-11-15（按 `main` 上的代码）。各家的调研和来源见 [agent-harnesses.md](../../research/agent-harnesses.md)，用户可见的行为见 [agent-status-hooks.md](../../features/agent-status-hooks.md)。标「未实测」的项都列在实测清单 #179 里。
 
@@ -96,3 +96,44 @@ TRAE IDE 的国际版和 CN 版按用户的决定分成两家：`trae`（显示�
 | 点会话跳过去 | ◐ 到 TRAE / TRAE CN 窗口，到不了具体会话 |
 | 判断会话已退出 | ✗ 没有 SessionEnd，靠 24 小时清理和运行中超时变完成 |
 | 用量环、SSH 远程、cc-connect | ✗ / — / — |
+
+## ZCode（B53）
+
+智谱 ZCode（桌面版和 `zcode` CLI），id `zcode`。代码在 `zcode.rs`。按 ZCode 的源码和文档写，没在真机上跑过（#179）。
+
+没走 Claude Code 兼容层：钩子在 `~/.zcode/cli/config.json` 的 `hooks.events` 下，会话在 sqlite 里。会话库就是 opencode 第一版的表，所以直接复用 `opencode.rs` 的读取器，只换 provider；为此读取器多了几条按列是否存在才生效的规则（跳过已删除的会话和 `*_child` 子任务、`title_source = default` 的占位标题当没有标题、多认 `modelId`、缓存按库路径分开），对 opencode 没影响。钩子是 Claude Code 的分组格式，安装和检查复用 `install_claude_code_hook_events`、`hook_entries_state`。
+
+| 层 | ZCode |
+|---|---|
+| 配置 | `~/.zcode/cli/config.json`；`~/.zcode` 在才装；装时把 `hooks.enabled` 设成 true（用户关掉后钩子状态显示要修复），别的字段不动；改了钩子要新开 ZCode 会话才生效 |
+| 钩子 | UserPromptSubmit、PreToolUse 亮灯，Stop 记完成，PermissionRequest 存进 `agent-notifications` 并走岛上审批 |
+| 会话 | `~/.zcode/cli/db/db.sqlite`（`ZCODE_SESSION_DB_PATH` 优先，只认绝对路径），只读；标题、目录、模型、最近提问和回复、当前工具、待办、上下文 token 都有 |
+| 状态灯 | ✓ `agent-zcode-running.flag` |
+| 等你 | PermissionRequest |
+| 岛上审批 | ✓ `/zcode/permission-request`，回 Claude Code 的 `hookSpecificOutput.decision.behavior` |
+| 回复标记 | `~/.zcode/AGENTS.md` |
+| 点会话跳过去 | ◐ 通用的终端窗口匹配；桌面版的进程名没核实 |
+| 判断会话已退出 | ✗ |
+| 用量环、SSH 远程、cc-connect | ✗ / ✗（有 Linux CLI，能做）/ — |
+
+## Kimi Code（B52）
+
+月之暗面的 Kimi Code CLI（TypeScript 新版 `MoonshotAI/kimi-code`，命令 `kimi`），id `kimiCode`。代码在 `kimi_code.rs`（会话）和 `kimi_hooks.rs`（TOML 钩子）。按源码 2.6.x 写，没在真机上跑过（#179）。
+
+没走 Claude Code 兼容层：钩子是 TOML 的扁平 `[[hooks]]`，会话是 `state.json` 加 `wire.jsonl`。
+
+| 层 | Kimi Code |
+|---|---|
+| 配置 | `~/.kimi-code/config.toml`（`KIMI_CODE_HOME` 优先，要绝对路径）；目录在才装；末尾一段 `# BEGIN/END Fuyu Agent Status Hooks (Kimi Code)` 包住的 `[[hooks]]`，每条只写 `event`、`command`、`timeout`（多写字段 Kimi 整个配置加载失败）；用户把 `hooks` 写成顶层行内数组时报错不改；文件存在但读不出时报错不写；改完要开新会话才生效 |
+| 钩子 | UserPromptSubmit 亮灯，Stop、Interrupt 记完成，StopFailure 记失败，PermissionRequest 存输入 |
+| 会话 | 扫 `sessions/<工作区>/<会话>/state.json`（旧格式在 `session-meta/state.json`），`session_index.jsonl` 补充；标题、改名、最近提问、目录来自 `state.json`，已归档和子会话不列；进行中、回复、模型、当前工具看 `agents/main/wire.jsonl` |
+| 状态灯 | ✓ `agent-kimiCode-running.flag` |
+| 等你 | PermissionRequest（只通知） |
+| 岛上审批 | ✗ PermissionRequest 不能回结果；能挡的 PreToolUse 在权限检查之前、每次工具调用都触发且只认 deny，挂它会让自动放行的调用也要在岛上点 |
+| 回复标记 | `~/.kimi-code/AGENTS.md` |
+| 点会话跳过去 | ◐ 通用的终端窗口匹配 |
+| 判断会话已退出 | ✗ 靠运行中超时变完成 |
+| 用量环 | ✓ 复用已有的 Kimi 用量（`/coding/v1/usages`，设置里填 API key），不读 CLI 的登录凭据 |
+| SSH 远程、cc-connect | ✗（有 Linux CLI，能做）/ ✗（cc-connect 支持 Kimi，岛这边没加） |
+
+不接的：旧版 Python `kimi-cli`（`~/.kimi/`，已归档，新版第一次启动会迁移）；Kimi 桌面版内嵌的运行时（它的 `config.toml` 由桌面写、会话索引在桌面自己的 sqlite 里，核实不了桌面会不会覆盖配置、内嵌运行时会不会跑外部钩子）。
