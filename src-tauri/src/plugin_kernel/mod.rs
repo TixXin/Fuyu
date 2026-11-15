@@ -3,7 +3,7 @@ pub(crate) mod protocol;
 
 use std::{path::PathBuf, sync::Mutex, sync::OnceLock};
 
-use plugin_base::{find_node, node::describe_failure, Event, HostSpec, HostState, NodeSearch, Supervisor, Timing, MINIMUM_NODE};
+use plugin_base::{node_for_host, official_download, ChosenNode, Event, HostSpec, HostState, NodeSearch, NodeSource, Progress, Supervisor, Timing, MINIMUM_NODE};
 use serde::Serialize;
 use tauri::AppHandle;
 
@@ -13,6 +13,7 @@ const RELEASE_ORIGINS: [&str; 3] = ["tauri://localhost", "http://tauri.localhost
 
 static SUPERVISOR: OnceLock<Mutex<Option<Supervisor>>> = OnceLock::new();
 static PLUGINS_DIR: OnceLock<PathBuf> = OnceLock::new();
+static STOPPING: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
 fn enabled(development: bool, switch: Option<&str>) -> bool {
     development && switch == Some("1")
@@ -66,18 +67,64 @@ fn report(event: Event) {
     }
 }
 
+fn progress_reporter() -> impl FnMut(Progress) {
+    let mut last: Option<(String, u64)> = None;
+    move |progress: Progress| {
+        let step = progress.total.map(|total| (progress.downloaded * 10 / total.max(1)).min(10)).unwrap_or(progress.downloaded >> 24);
+        if last.as_ref().is_some_and(|(url, seen)| url == progress.url && *seen == step) {
+            return;
+        }
+        last = Some((progress.url.to_owned(), step));
+        match progress.total {
+            Some(total) => eprintln!("[plugins-v3] downloading Node from {}: {} of {} MB", progress.url, progress.downloaded >> 20, total >> 20),
+            None => eprintln!("[plugins-v3] downloading Node from {}: {} MB", progress.url, progress.downloaded >> 20),
+        }
+    }
+}
+
+fn choose_node(data_dir: &std::path::Path) -> Result<ChosenNode, String> {
+    let download = official_download(crate::system::updater::get_updater_proxy());
+    let chosen = node_for_host(&NodeSearch::from_env(), MINIMUM_NODE, data_dir, download, &mut progress_reporter())?;
+    let source = match chosen.source {
+        NodeSource::System => "found on this computer",
+        NodeSource::Downloaded => "downloaded by Fuyu",
+    };
+    eprintln!("[plugins-v3] using Node {} ({source}) at {}", chosen.version, chosen.path.display());
+    Ok(chosen)
+}
+
+fn start(home: PathBuf, dir: PathBuf, origins: Vec<String>) -> Result<(), String> {
+    let node = choose_node(&home)?;
+    let spec = HostSpec { program: node.path, args: host_args(dir, &origins), env: Vec::new(), current_dir: None };
+    let supervisor = Supervisor::start(spec, containment::shared(), Timing::default(), report)?;
+    let mut slot = SUPERVISOR.get_or_init(Mutex::default).lock().map_err(|_| "the plugin host lock is poisoned".to_string())?;
+    if STOPPING.load(std::sync::atomic::Ordering::SeqCst) {
+        drop(slot);
+        supervisor.stop();
+        return Ok(());
+    }
+    *slot = Some(supervisor);
+    Ok(())
+}
+
 pub(crate) fn init(app: &AppHandle) -> Result<(), String> {
     if !enabled(cfg!(debug_assertions), std::env::var(SWITCH).ok().as_deref()) {
         return Ok(());
     }
-    let node = find_node(&NodeSearch::from_env(), MINIMUM_NODE).map_err(|tried| describe_failure(&tried, MINIMUM_NODE))?;
-    eprintln!("[plugins-v3] using Node {} at {}", node.version, node.path.display());
+    let home = crate::home_dir::fuyu_home(tauri::Manager::path(app)).map_err(|error| error.to_string())?;
     let dir = plugins_dir(app)?;
     let _ = PLUGINS_DIR.set(dir.clone());
+    let _ = SUPERVISOR.get_or_init(Mutex::default);
     let dev_url = app.config().build.dev_url.as_ref().map(ToString::to_string);
-    let spec = HostSpec { program: node.path, args: host_args(dir, &window_origins(dev_url.as_deref())), env: Vec::new(), current_dir: None };
-    let supervisor = Supervisor::start(spec, containment::shared(), Timing::default(), report)?;
-    *SUPERVISOR.get_or_init(Mutex::default).lock().map_err(|_| "the plugin host lock is poisoned".to_string())? = Some(supervisor);
+    let origins = window_origins(dev_url.as_deref());
+    std::thread::Builder::new()
+        .name("plugin-host-start".into())
+        .spawn(move || {
+            if let Err(error) = start(home, dir, origins) {
+                eprintln!("[plugins-v3] the plugin host did not start: {error}");
+            }
+        })
+        .map_err(|error| format!("could not start the plugin host thread: {error}"))?;
     Ok(())
 }
 
@@ -90,9 +137,9 @@ pub(crate) struct HostConnection {
     generation: Option<u32>,
 }
 
-fn connection_from(state: Option<&HostState>) -> HostConnection {
+fn connection_from(enabled: bool, state: Option<&HostState>) -> HostConnection {
     match state {
-        None => HostConnection::default(),
+        None => HostConnection { enabled, ..HostConnection::default() },
         Some(HostState::Ready { generation, ready, .. }) => HostConnection {
             enabled: true,
             port: ready["windows"]["port"].as_u64(),
@@ -105,8 +152,9 @@ fn connection_from(state: Option<&HostState>) -> HostConnection {
 
 #[tauri::command]
 pub(crate) fn get_plugin_host_connection() -> HostConnection {
-    let state = SUPERVISOR.get().and_then(|slot| slot.lock().ok().and_then(|supervisor| supervisor.as_ref().map(Supervisor::state)));
-    connection_from(state.as_ref())
+    let Some(slot) = SUPERVISOR.get() else { return HostConnection::default() };
+    let state = slot.lock().ok().and_then(|supervisor| supervisor.as_ref().map(Supervisor::state));
+    connection_from(true, state.as_ref())
 }
 
 pub(crate) fn respond(request: &tauri::http::Request<Vec<u8>>) -> tauri::http::Response<Vec<u8>> {
@@ -123,6 +171,7 @@ macro_rules! tauri_commands {
 pub(crate) use tauri_commands;
 
 pub(crate) fn shutdown() {
+    STOPPING.store(true, std::sync::atomic::Ordering::SeqCst);
     let supervisor = SUPERVISOR.get().and_then(|slot| slot.lock().ok()?.take());
     if let Some(supervisor) = supervisor {
         supervisor.stop();
