@@ -10,7 +10,6 @@ import { writeTargets } from "./shellWrites.mjs";
 
 const FILE_TOOLS = ["Write", "Edit", "MultiEdit", "NotebookEdit"];
 const SHELL_TOOLS = ["Bash", "PowerShell"];
-const SHELL_WRITE = /\bsed\s+-i|>|\btee\b|Set-Content|Add-Content|Out-File|\bmv\b|\bcp\b|Move-Item|Copy-Item/;
 const INTERPRETERS = new Set(["node", "bun", "deno", "bash", "sh", "zsh", "pwsh", "powershell", "python", "python3"]);
 const DRY_RUN = new Set(["--check", "--test", "--help", "-h"]);
 const parsed = new WeakMap();
@@ -88,13 +87,7 @@ export function touches(rule, input, root, exists = existsSync) {
     const created = Boolean(when.created) && input.tool_name === "Write" && when.created.test(path) && !exists(resolve(root, file));
     return covers(when, path) || created ? path : null;
   }
-  if (!inShell) return null;
-  if (when.shell === "mention") {
-    const command = String(args.command ?? "").replaceAll("\\", "/");
-    if (!SHELL_WRITE.test(command)) return null;
-    return when.paths.find((entry) => command.includes(entry)) ?? null;
-  }
-  return shell(input, root).written.find((path) => covers(when, path)) ?? null;
+  return inShell ? (shell(input, root).written.find((path) => covers(when, path)) ?? null) : null;
 }
 
 function message(blocked, agent) {

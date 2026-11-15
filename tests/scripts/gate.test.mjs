@@ -89,6 +89,15 @@ test("writes under src/ and src-tauri/ hit their rows; build output and files ou
   assert.equal(touches(rule("fuyu-skill-writing"), edit(".claude/skills/fuyu-task/SKILL.md", "Write"), ROOT), ".claude/skills/fuyu-task/SKILL.md");
 });
 
+test("the harness row sees inline writes to a wiring file and ignores commands that only name one", () => {
+  const python = "python3 - <<'EOF'\np = \"src-tauri/src/agent_status/mod.rs\"\ns = open(p).read()\nopen(p, \"w\").write(s)\nEOF";
+  assert.equal(touchesWiring(shell(python), ROOT), "src-tauri/src/agent_status/mod.rs");
+  assert.equal(touchesWiring(shell("cat > src-tauri/src/agent_status/hooks/fuyu-agent-status.sh <<'EOF'\nx\nEOF"), ROOT), "src-tauri/src/agent_status/hooks/fuyu-agent-status.sh");
+  assert.equal(touchesWiring(shell("pnpm task:claim B46 --as x --scope src-tauri/src/agent_status/session_scan.rs 2>&1 | tail -5"), ROOT), null);
+  assert.equal(touchesWiring(shell("ls src/features/agent-status/status.ts 2>&1; git log --oneline -3 -- src/features/agent-status/status.ts > /tmp/log.txt"), ROOT), null);
+  assert.equal(touchesWiring(shell("cp src/features/agent-status/status.ts /tmp/status.ts"), ROOT), null);
+});
+
 test("shell writes are found by where they write: redirects, heredocs, tee, sed -i, perl -i, mv and cp", () => {
   assert.deepEqual(targets("cat > src/x.ts <<'EOF'\nconst a = () => 1 > 2;\nEOF"), inRepo("src/x.ts"));
   assert.deepEqual(targets("printf 'x' >> src/x.ts; echo hi | tee -a src/log.txt"), inRepo("src/x.ts", "src/log.txt"));
