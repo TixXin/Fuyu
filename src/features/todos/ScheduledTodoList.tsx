@@ -1,14 +1,18 @@
 import { Trash2 } from "lucide-react";
 import { useTranslation } from "../../i18n";
+import { TodoTagMenu } from "./island/TodoTagMenu";
+import type { TodoTags } from "./tags";
 import type { ScheduledTodo } from "./types";
 import "./ScheduledTodoList.css";
 
 export function ScheduledTodoList({
   todos,
   onDelete,
+  onTag,
 }: {
   todos: ScheduledTodo[];
   onDelete: (id: string) => void;
+  onTag: (id: string, tags: TodoTags) => void;
 }) {
   const t = useTranslation();
 
@@ -32,6 +36,7 @@ export function ScheduledTodoList({
             {items.map((todo) => (
               <div key={todo.id} className="scheduled-list__item" role="listitem">
                 <span>{todo.project && <span className="todo-project-tag">{todo.project}</span>}{todo.title}</span>
+                <TodoTagMenu todo={todo} onTag={(tags) => onTag(todo.id, tags)} />
                 <button
                   type="button"
                   aria-label={t.notebook.deleteScheduled(todo.title)}

@@ -48,6 +48,7 @@ export function TodoIslandPage(props: TodoPageProps) {
           onCreateProject={props.canCreateProject ? props.onCreateProject : undefined}
           onToggleTodo={props.onToggleTodo}
           onUpdateTodo={props.onUpdateTodo}
+          onTagTodo={props.onTagTodo}
           onStartTodo={props.onStartTodo}
           onDeleteTodo={props.onDeleteTodo}
           onReorderTodo={props.onReorderTodo}
@@ -63,7 +64,7 @@ export function TodoIslandPage(props: TodoPageProps) {
           onChange={(event) => props.onDailyNoteChange(event.currentTarget.value)}
         />
       )}
-      {pageMode === "upcoming" && <ScheduledTodoList todos={props.scheduledTodos} onDelete={props.onDeleteScheduledTodo} />}
+      {pageMode === "upcoming" && <ScheduledTodoList todos={props.scheduledTodos} onDelete={props.onDeleteScheduledTodo} onTag={props.onTagScheduledTodo} />}
       {pageMode === "archive" && <TodoIslandArchive archives={props.archives} onSelect={props.onSelectArchive} />}
       <TodoDataNotice />
     </section>

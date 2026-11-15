@@ -33,7 +33,7 @@ export function useTodos({
   const [currentTodoDate, setCurrentTodoDate] =
     useState<string>(loadCurrentTodoDate);
   const { archives, setArchives, upsertArchive } = useTodoArchives();
-  const { scheduledTodos, setScheduledTodos, scheduleTodo, deleteScheduledTodo } =
+  const { scheduledTodos, setScheduledTodos, scheduleTodo, deleteScheduledTodo, tagScheduledTodo } =
     useScheduledTodos(currentTodoDate, setTodos);
   const editProjects = useTodoProjectSync({
     projects, onProjectsChange, currentDate: currentTodoDate, todos, setTodos, scheduledTodos, setScheduledTodos, archives, setArchives,
@@ -182,8 +182,10 @@ export function useTodos({
       onCreateProject: createProject,
       onShowUpcoming: showUpcoming,
       onDeleteScheduledTodo: deleteScheduledTodo,
+      onTagScheduledTodo: tagScheduledTodo,
       onToggleTodo: list.toggleTodo,
       onUpdateTodo: list.updateTodoTitle,
+      onTagTodo: list.tagTodo,
       onStartTodo: list.startTodo,
       onDeleteTodo: list.deleteTodo,
       onReorderTodo: list.reorderTodo,

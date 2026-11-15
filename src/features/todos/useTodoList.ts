@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState, type SetStateAction } from "
 import { createTodoId, loadActiveTodoId, loadTodos, saveActiveTodoId, saveTodos } from "./storage";
 import { adoptActiveTodo, isInProgress, latestStartedId, toggleStarted, withoutStart } from "./activeTodos";
 import { splitProjectPrefix } from "./project";
+import { withTags, type TodoTags } from "./tags";
 import type { TodoItem } from "./types";
 import { useTodoFileField } from "./useTodoFileField";
 
@@ -42,6 +43,10 @@ export function useTodoList(onStartTodo: () => void) {
         todo.id === id ? withoutStart({ ...todo, completed: !todo.completed }) : todo,
       ),
     );
+  }, []);
+
+  const tagTodo = useCallback((id: string, tags: TodoTags) => {
+    setTodos((currentTodos) => currentTodos.map((todo) => (todo.id === id ? withTags(todo, tags) : todo)));
   }, []);
 
   const updateTodoTitle = useCallback((id: string, title: string) => {
@@ -120,6 +125,7 @@ export function useTodoList(onStartTodo: () => void) {
     addTodo,
     toggleTodo,
     updateTodoTitle,
+    tagTodo,
     startTodo,
     deleteTodo,
     reorderTodo,

@@ -1,4 +1,9 @@
+import type { TodoTags } from "./tags";
+
 export type TodoProject = { id: string; name: string };
+
+export type TodoPriority = "high" | "medium" | "low";
+export type TodoColor = "red" | "orange" | "yellow" | "green" | "blue" | "purple";
 
 export type TodoPageMode = "today" | "daily" | "archive" | "review" | "upcoming";
 
@@ -9,6 +14,8 @@ export type TodoItem = {
   createdAt: number;
   project?: string;
   startedAt?: number;
+  priority?: TodoPriority;
+  color?: TodoColor;
 };
 
 export type ScheduledTodo = {
@@ -17,6 +24,8 @@ export type ScheduledTodo = {
   date: string;
   createdAt: number;
   project?: string;
+  priority?: TodoPriority;
+  color?: TodoColor;
 };
 
 export type TodoArchive = {
@@ -53,8 +62,10 @@ export type TodoPageProps = {
   onCreateProject: (name: string) => string | undefined;
   onShowUpcoming: () => void;
   onDeleteScheduledTodo: (id: string) => void;
+  onTagScheduledTodo: (id: string, tags: TodoTags) => void;
   onToggleTodo: (id: string) => void;
   onUpdateTodo: (id: string, title: string) => void;
+  onTagTodo: (id: string, tags: TodoTags) => void;
   onStartTodo: (id: string) => void;
   onDeleteTodo: (id: string) => void;
   onReorderTodo: (sourceId: string, targetId: string) => void;
