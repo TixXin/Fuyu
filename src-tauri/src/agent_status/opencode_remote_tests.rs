@@ -1,3 +1,5 @@
+#![cfg_attr(not(unix), allow(dead_code))]
+
 use super::*;
 use rusqlite::{params, Connection};
 use serde_json::json;
