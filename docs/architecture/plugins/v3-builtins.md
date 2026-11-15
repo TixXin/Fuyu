@@ -60,7 +60,7 @@ Rust 拉宿主时传 `--builtins`：开发版和 `build:exe` 是 `<仓库>/src/f
 ## 内置插件的宿主部分怎么写
 
 - 放在 `src/features/<功能>/host/`，入口是清单里的 `host`。可以写 `.mjs`（配 `.d.mts`）或 `.ts`；可以 import 同一个功能里的纯函数（计时器 import `../timers.ts`），不复制。不能 import 浏览器的东西和 `@tauri-apps/api`（宿主是 Node）。
-- 用 `@fuyu/plugin-base`（以及以后的 `fuyu-plugin`）时由宿主提供同一份内核，打包时留在外面；别的依赖（`@fuyu/plugin-services` 等）打进去。插件不直接 import `cordis`。
+- 宿主共享的模块由宿主提供同一份内核，打包时留在外面：名单是 `@fuyu/plugin-base/protocol` 的 `HOST_SHARED_MODULES`，宿主的 `shareModules` 和打包脚本都读它，现在是 `@fuyu/plugin-base`、`fuyu-plugin`（E36.3.16，两个都指向宿主的内核）和 `@fuyu/plugin-base/services`（E36.3.17，指向宿主的 `services.mjs`，`defineService` 在这里）；浮屿用 `--api` 还能再追加名字。只认这几个名字本身，它们的子路径（如 `@fuyu/plugin-base/protocol`）和别的依赖（`@fuyu/plugin-services` 等）都打进去。插件不直接 import `cordis`。
 - 数据写到 `ctx.dataDir`（见下），不要用 `ctx.baseUrl` 拼路径。
 - 不在运行时按 `import.meta.url` 找别的文件（打包后只剩一个文件，构建会检查并报错）。
 
@@ -71,10 +71,10 @@ node scripts/plugins-v3/build-builtins.mjs          # 输出到 src-tauri/target
 node scripts/plugins-v3/build-builtins.mjs --minify --out <目录> --source <清单目录>
 ```
 
-- 用 Vite 自带的 esbuild（和 `bundle-host.mjs` 同一个），每个内置插件的宿主入口连同它 import 的 `.ts` 打成一个 `.mjs`：ESM、`platform: node`、目标 Node 22.15、带 `createRequire` 的 banner，`@fuyu/plugin-base`、`fuyu-plugin` 留在外面。为什么要打包：`engines` 是 `>=22.15`，Node 22.15–22.17 不会自己去掉类型，加载不了 `.ts`。
+- 用 Vite 自带的 esbuild（和 `bundle-host.mjs` 同一个），每个内置插件的宿主入口连同它 import 的 `.ts` 打成一个 `.mjs`：ESM、`platform: node`、目标 Node 22.15、带 `createRequire` 的 banner，只有 `HOST_SHARED_MODULES` 里的名字留在外面。用一个按名字精确匹配的 esbuild 插件做，不用 `external`：esbuild 的 `external` 写了包名就连它的子路径一起留在外面，而宿主只认名字本身，子路径留在外面运行时会找不到。为什么要打包：`engines` 是 `>=22.15`，Node 22.15–22.17 不会自己去掉类型，加载不了 `.ts`。
 - 先写到旁边的临时目录，再换掉旧的输出目录（几个会话同时 `pnpm build` 时不会读到写了一半的目录）。
 - 接进了 `pnpm build`（`tsc && vite build && node scripts/plugins-v3/build-builtins.mjs`）。计时器一个插件约 11 KB、0.15 秒。
-- 测试 `tests/scripts/plugins-v3-build-builtins.test.mjs`：产物里没有 `.ts` 的 import；用 `--no-experimental-strip-types`（相当于不会去类型的 Node）跑宿主，带打包产物时计时器 `running`，带源码时 `failed` 并写明是 `.ts`。
+- 测试 `tests/scripts/plugins-v3-build-builtins.test.mjs`：产物里没有 `.ts` 的 import；用 `--no-experimental-strip-types`（相当于不会去类型的 Node）跑宿主，带打包产物时计时器 `running`，带源码时 `failed` 并写明是 `.ts`；一个 import 了全部共享名字和 `@fuyu/plugin-base/protocol` 的内置插件，打包后留在外面的正好是 `HOST_SHARED_MODULES`，从仓库外的目录跑起来是 `running`。
 
 ## 开发版的热重载
 

@@ -16,10 +16,6 @@ export function isUpdaterConfigured() {
   return invoke<boolean>("updater_configured");
 }
 
-export function getUpdaterProxy() {
-  return invoke<string | null>("get_updater_proxy");
-}
-
 export type UpdateInfo = { version: string; body: string | null };
 
 export type UpdateSnapshot = {
@@ -56,8 +52,8 @@ export type DownloadEvent =
   | { event: "Progress"; data: { chunkLength: number } }
   | { event: "Finished" };
 
-export function checkUpdate(channel: UpdateChannel, proxy: string | null) {
-  return invoke<UpdateInfo | null>("updater_check", { channel, proxy });
+export function checkUpdate(channel: UpdateChannel) {
+  return invoke<UpdateInfo | null>("updater_check", { channel });
 }
 
 export function downloadAndInstallUpdate(expectedVersion: string, expectedChannel: UpdateChannel) {

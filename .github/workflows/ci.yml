@@ -2,15 +2,15 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, 'try/**']
   pull_request:
   merge_group:
 
-# Pull requests only need their newest push checked. Every commit on main gets its own run that
-# is never cancelled, so a failure is pinned to the commit that caused it.
+# Pull requests and try/ branches (pnpm mq:try) only need their newest push checked. Every commit
+# on main gets its own run that is never cancelled, so a failure is pinned to the commit that caused it.
 concurrency:
-  group: ci-${{ github.ref }}-${{ github.event_name == 'push' && github.sha || 'pr' }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  group: ci-${{ github.ref }}-${{ github.ref == 'refs/heads/main' && github.sha || 'latest' }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 # The jobs run side by side; `check` gathers them, because the main ruleset requires a check named `check`.
 jobs:

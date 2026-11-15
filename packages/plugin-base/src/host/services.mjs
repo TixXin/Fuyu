@@ -1,6 +1,6 @@
 import { SERVICE_NAME, SERVICE_TIMEOUT_MS } from "../protocol.mjs";
+import { MEMBER_NAME } from "../services.mjs";
 import { pluginId } from "./clients.mjs";
-const MEMBER = /^[a-z][A-Za-z0-9]{0,63}$/;
 
 export function serviceError(code, message, data) {
   return Object.assign(new Error(message), { code, ...(data === undefined ? {} : { data }) });
@@ -169,7 +169,7 @@ export class Services {
     if (method === "service.call") return this.callFromWindow(params, window);
     if (!params || typeof params !== "object") throw serviceError("bad-params", `${method} needs { service, event }`);
     checkName(params.service);
-    if (typeof params.event !== "string" || !MEMBER.test(params.event)) throw serviceError("bad-params", `${method} needs the name of an event`);
+    if (typeof params.event !== "string" || !MEMBER_NAME.test(params.event)) throw serviceError("bad-params", `${method} needs the name of an event`);
     const key = eventKey(params.service, params.event);
     if (method === "service.off") {
       const wanted = this.interest.get(key);

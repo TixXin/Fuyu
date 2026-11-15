@@ -43,6 +43,7 @@
     "mq:land": "node scripts/mq/mq.mjs land",
     "mq:wait": "node scripts/mq/mq.mjs wait",
     "mq:sync": "node scripts/mq/mq.mjs sync",
+    "mq:try": "node scripts/mq/mq.mjs try",
     "mq:pending": "node scripts/mq/mq.mjs pending",
     "mq:commit-part": "node scripts/mq/mq.mjs commit-part"
   },

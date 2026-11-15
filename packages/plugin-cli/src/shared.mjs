@@ -1,8 +1,8 @@
-import { SHARED_MODULES } from "@fuyu/plugin-base/protocol";
+import { HOST_SHARED_MODULES, SHARED_MODULES } from "@fuyu/plugin-base/protocol";
 
 export const DEFAULT_SHARED_MODULES = Object.freeze({ ...SHARED_MODULES });
 
-export const HOST_EXTERNALS = Object.freeze(["fuyu-plugin", "@fuyu/plugin-base"]);
+export const HOST_EXTERNALS = Object.freeze([...HOST_SHARED_MODULES]);
 
 export const APP_MODULES = Object.freeze(["react", "react-dom", "fuyu-plugin", "@fuyu/plugin-base"]);
 

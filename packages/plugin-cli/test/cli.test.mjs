@@ -61,12 +61,32 @@ test("check passes hello, and reports what the market would refuse", async () =>
   assert.ok(result.errors.some((issue) => issue.code === "experimental"));
   const lax = await check(dir);
   assert.ok(lax.errors.some((issue) => issue.code === "review:obfuscation"), JSON.stringify(lax.errors));
-  assert.ok(lax.errors.some((issue) => issue.code === "review:manifest"));
+  assert.ok(!lax.errors.some((issue) => issue.code === "review:manifest"), JSON.stringify(lax.errors));
   assert.ok(lax.warnings.some((issue) => issue.code === "undeclared-domain"));
   assert.ok(lax.warnings.some((issue) => issue.code === "review:sensitive"));
   const json = capture(dir);
   assert.equal(await run(["check", "--json"], json.io), 1);
   assert.equal(JSON.parse(json.stdout()).ok, false);
+});
+
+const experimental = () => copyFixture("hello", (root) => editJson(join(root, "package.json"), (pkg) => (pkg.fuyu.experimental = ["timers/v1"])));
+
+test("check without --market lets a plugin under development use experimental interfaces", async () => {
+  const dir = experimental();
+  const result = await check(dir);
+  assert.deepEqual(result.errors, []);
+  assert.equal(result.ok, true);
+  const out = capture(dir);
+  assert.equal(await run(["check"], out.io), 0, out.stderr());
+});
+
+test("check --market still refuses experimental interfaces, from the manifest and from the review", async () => {
+  const out = capture(experimental());
+  assert.equal(await run(["check", "--market", "--json"], out.io), 1);
+  const { ok, errors } = JSON.parse(out.stdout());
+  assert.equal(ok, false);
+  assert.ok(errors.some((issue) => issue.code === "experimental"), JSON.stringify(errors));
+  assert.ok(errors.some((issue) => issue.code === "review:manifest" && issue.message.includes("fuyu.experimental")), JSON.stringify(errors));
 });
 
 test("review prints Markdown or JSON and exits 1 only on red", async () => {

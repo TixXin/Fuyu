@@ -1,129 +1,33 @@
 import type { ReactNode } from "react";
-import { CircleArrowUp, Inbox } from "lucide-react";
-import type { MediaState } from "../../features/media/api";
-import { MessageSourceIcon } from "../../features/messages/MessageSourceIcon";
-import { MusicWaveButton } from "../../features/media/MusicWaveButton";
-import type { DeviceUse } from "../../features/device-use/api";
 import { DeviceUseIndicator } from "../../features/device-use/DeviceUseIndicator";
-import type { MessageSource } from "../../features/messages/messagePreview";
-import type { MailController } from "../../features/messages/mail/MailPanel";
-import type { Translations } from "../../i18n";
-import { openSettingsWindow } from "../settings/api";
-import type { CollapsedSlots, IslandPage } from "./types";
+import {
+  MailItem,
+  MusicItem,
+  SessionCountItem,
+  ShelfItem,
+  StatusLightItem,
+  UpdateItem,
+  type CollapsedBarContext,
+} from "./slots/collapsed";
 
 export type CollapsedBarItem = { id: string; node: ReactNode; group?: "gauges" };
 
-type CollapsedBarItemsInput = {
-  t: Translations;
-  qqMail: MailController;
-  updateVersion: string | null;
-  statusLight: ReactNode;
+type CollapsedBarItemsInput = CollapsedBarContext & {
   pluginStatus: readonly { id: string; node: ReactNode }[];
-  deviceUse: DeviceUse;
-  shelfCount: number | null;
-  showMusic: boolean;
-  mediaState: MediaState;
-  agentSessionCount: number | null;
-  slots: CollapsedSlots;
-  onOpenPage: (page: IslandPage) => void;
-  onOpenMessages: (source: MessageSource) => void;
 };
 
-export function collapsedBarItems({
-  t,
-  statusLight,
-  qqMail,
-  updateVersion,
-  pluginStatus,
-  deviceUse,
-  shelfCount,
-  showMusic,
-  mediaState,
-  agentSessionCount,
-  slots,
-  onOpenPage,
-  onOpenMessages,
-}: CollapsedBarItemsInput): CollapsedBarItem[] {
-  const items: CollapsedBarItem[] = [{ id: "status-light", node: statusLight }];
-  if (qqMail.preview !== null) {
-    items.push({
-      id: "mail",
-      node: (
-        <button className="island-message-button island-message-button--compact qq-mail-badge" type="button" aria-label={t.messages.newMailLabel} onClick={() => onOpenMessages("qqMail")}>
-          <MessageSourceIcon source="qqMail" size={16} account={qqMail.previewAccount} />
-          <span className="island-message-button__dot" aria-hidden="true" />
-        </button>
-      ),
-    });
-  }
-  if (updateVersion) {
-    items.push({
-      id: "update",
-      node: (
-        <button
-          className="island-message-button island-message-button--compact island-update-badge"
-          type="button"
-          aria-label={t.settings.project.update.islandReminder(updateVersion)}
-          onClick={(event) => {
-            event.stopPropagation();
-            openSettingsWindow("updates");
-          }}
-        >
-          <CircleArrowUp size={16} strokeWidth={1.5} absoluteStrokeWidth aria-hidden="true" />
-          <span className="island-message-button__dot island-update-badge__dot" aria-hidden="true" />
-        </button>
-      ),
-    });
-  }
+export function collapsedBarItems({ pluginStatus, ...context }: CollapsedBarItemsInput): CollapsedBarItem[] {
+  const { qqMail, updateVersion, deviceUse, shelfCount, showMusic, agentSessionCount, slots } = context;
+  const items: CollapsedBarItem[] = [{ id: "status-light", node: <StatusLightItem {...context} /> }];
+  if (qqMail.preview !== null) items.push({ id: "mail", node: <MailItem {...context} /> });
+  if (updateVersion) items.push({ id: "update", node: <UpdateItem {...context} /> });
   items.push(...pluginStatus);
   items.push({ id: "device-use", node: <DeviceUseIndicator deviceUse={deviceUse} /> });
-  if (shelfCount !== null && shelfCount > 0) {
-    items.push({
-      id: "shelf",
-      node: (
-        <button className="island-shelf-count" type="button" aria-label={t.island.shelfCount(shelfCount)} onClick={() => onOpenPage("shelf")}>
-          <Inbox size={14} strokeWidth={1.5} absoluteStrokeWidth aria-hidden="true" />
-          <span>{shelfCount}</span>
-        </button>
-      ),
-    });
-  }
-  if (showMusic) {
-    items.push({
-      id: "music",
-      node: (
-        <MusicWaveButton
-          isAvailable={mediaState.available || mediaState.audioActive}
-          isPlaying={mediaState.playbackStatus === "playing"}
-          audioPeak={mediaState.audioPeak}
-          label={t.island.openMusic}
-          onClick={() => onOpenPage("music")}
-        />
-      ),
-    });
-  }
+  if (shelfCount !== null && shelfCount > 0) items.push({ id: "shelf", node: <ShelfItem {...context} /> });
+  if (showMusic) items.push({ id: "music", node: <MusicItem {...context} /> });
   for (const gauge of slots.gauges ?? []) items.push({ ...gauge, group: "gauges" });
-  if (agentSessionCount !== null) {
-    if (slots.agentCount) {
-      items.push({ id: "session-count", node: slots.agentCount });
-    } else if (agentSessionCount > 0) {
-      items.push({
-        id: "session-count",
-        node: (
-          <button
-            className="island-agent-count"
-            type="button"
-            aria-label={t.agent.sessions.activeCount(agentSessionCount)}
-            onClick={(event) => {
-              event.stopPropagation();
-              onOpenPage("agents");
-            }}
-          >
-            {agentSessionCount}
-          </button>
-        ),
-      });
-    }
+  if (agentSessionCount !== null && (slots.agentCount || agentSessionCount > 0)) {
+    items.push({ id: "session-count", node: <SessionCountItem {...context} /> });
   }
   return items;
 }

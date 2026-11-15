@@ -6,9 +6,9 @@ export function conflictedFiles(output) {
   return [...new Set((end < 0 ? lines : lines.slice(0, end)).map((line) => line.trim()).filter(Boolean))];
 }
 
-export function mergeTree(ours, theirs, base = null) {
+export function mergeTree(ours, theirs, base = null, cwd = process.cwd()) {
   const args = ["merge-tree", "--write-tree", "--name-only", ...(base ? [`--merge-base=${base}`] : []), ours, theirs];
-  const result = tryGit(args);
+  const result = tryGit(args, cwd);
   if (result.ok) return { tree: result.out.split("\n")[0], conflicts: [] };
   return { tree: null, conflicts: conflictedFiles(result.out) };
 }

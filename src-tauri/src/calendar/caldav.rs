@@ -5,7 +5,7 @@ use chrono::{DateTime, Utc};
 use quick_xml::{events::Event, Reader};
 use reqwest::{Method, Url};
 
-use crate::system::updater::get_updater_proxy;
+use crate::system::updater::reqwest_proxy;
 
 const MAX_RESPONSE_BYTES: usize = 8 * 1024 * 1024;
 const MAX_CALENDARS: usize = 20;
@@ -94,8 +94,8 @@ fn client() -> Result<reqwest::Client, UserError> {
         .timeout(Duration::from_secs(15))
         .redirect(reqwest::redirect::Policy::none())
         .user_agent(concat!("Fuyu/", env!("CARGO_PKG_VERSION")));
-    if let Some(proxy) = get_updater_proxy() {
-        builder = builder.proxy(reqwest::Proxy::all(&proxy).map_err(|error| UserError::new("net.proxy", format!("Invalid proxy {proxy}.")).arg("proxy", proxy.as_str()).detail(error))?);
+    if let Some(proxy) = reqwest_proxy()? {
+        builder = builder.proxy(proxy);
     }
     builder.build().map_err(|error| super::http_error("http.client", "Could not set up the connection.", error))
 }

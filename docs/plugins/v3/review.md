@@ -68,23 +68,19 @@
 
 ## 提交前先自查
 
-作者提交前就能看到自己落在哪一档。命令行做完后是：
+作者提交前就能看到自己落在哪一档，用命令行 `fuyu-plugin`（怎么运行见[命令行](cli.md#怎么运行)）：
 
 ```bash
-fuyu-plugin review <旧提交> <新提交>
+fuyu-plugin review <上一个上架的提交> HEAD
 ```
 
-命令行还在做（[#483](https://github.com/TixXin/fuyu/issues/483)），参数以[命令行](cli.md)为准。现在可以在浮屿仓库（[`TixXin/fuyu`](https://github.com/TixXin/fuyu)）的根目录直接跑分析器，比较两个版本的源码目录。它只用 Node 自带的模块（要 Node 22.15 或更新），不用先装依赖：
+- 两边可以是 git 提交（提交号、标签）或文件夹；第一次上架没有旧版本，旧的一边写 `-`。
+- 报告和市场贴进 PR 的是同一个分析器、同一种格式，列出命中的每一条检查和文件、行号。
+- 红档时退出码是 1，绿档和黄档是 0。其余选项见[命令行](cli.md#review)。
 
-```bash
-node packages/plugin-review/src/cli.mjs <旧版本目录> <新版本目录>
-```
+只想看这一个版本有没有会被拦的东西，跑 `fuyu-plugin check --market`：它试构建一次，把红档的项当错误、对作者有用的黄档项当告警报出来（见[命令行](cli.md#check)）。
 
-- 第一次上架没有旧版本，旧版本目录写 `-`。
-- `--old-built <目录>`、`--new-built <目录>`：把两个版本的构建产物也一起扫。
-- `--json <文件>`、`--markdown <文件>`：把报告写到文件；`--format json` 让标准输出也是 JSON（默认 Markdown）。
-- 退出码：0 是绿档或黄档，1 是红档，2 是参数或读取出错。
-- 报告列出命中的每一条检查和文件、行号。Markdown 版和市场贴进 PR 的是同一种格式。
+不装命令行也能在浮屿仓库（[`TixXin/fuyu`](https://github.com/TixXin/fuyu)）的根目录直接跑分析器，比较两个源码文件夹，只要 Node 22.15 或更新：`node packages/plugin-review/src/cli.mjs <旧文件夹 | -> <新文件夹>`。
 
 ## 怎样更快通过
 

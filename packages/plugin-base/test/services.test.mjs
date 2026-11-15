@@ -1,12 +1,17 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { once } from "node:events";
+import { readFileSync } from "node:fs";
+import { createRequire } from "node:module";
 import { createInterface } from "node:readline";
 import { fileURLToPath } from "node:url";
 import { after, test } from "node:test";
 import { startHost } from "@fuyu/plugin-base/host";
-import { SERVICE_NAME, SERVICE_TIMEOUT_MS } from "@fuyu/plugin-base/protocol";
-import { DEFAULT_TIMEOUT_MS, SERVICE_NAME as DEFINED_NAME, defineService } from "@fuyu/plugin-services";
+import { SERVICE_NAME as PROTOCOL_NAME } from "@fuyu/plugin-base/protocol";
+import * as base from "@fuyu/plugin-base/services";
+import { SERVICE_NAME as MANIFEST_NAME } from "@fuyu/plugin-manifest";
+import * as compat from "@fuyu/plugin-services";
+import { defineService } from "@fuyu/plugin-services";
 import { config, sleep, until, workspace } from "./workspace.mjs";
 
 const cleanup = [];
@@ -51,9 +56,24 @@ function serviceHooks(ctx) {
     .reduce((total, [, hooks]) => total + hooks.length, 0);
 }
 
-test("the service package checks names and timeouts the way the host does", () => {
-  assert.equal(DEFINED_NAME.source, SERVICE_NAME.source);
-  assert.equal(DEFAULT_TIMEOUT_MS, SERVICE_TIMEOUT_MS);
+test("plugin-services hands out plugin-base's defineService, and the service name rule exists once", () => {
+  for (const name of ["defineService", "isServiceDefinition", "SERVICE_NAME", "MEMBER_NAME", "DEFAULT_TIMEOUT_MS"]) assert.equal(compat[name], base[name], name);
+  assert.equal(base.SERVICE_NAME, MANIFEST_NAME);
+  assert.equal(PROTOCOL_NAME, MANIFEST_NAME);
+});
+
+test("@fuyu/plugin-base/services pulls in neither Cordis nor Node modules, so window code can use it", () => {
+  const seen = new Set();
+  const visit = (file) => {
+    if (seen.has(file)) return;
+    seen.add(file);
+    for (const [, spec] of readFileSync(file, "utf8").matchAll(/^(?:import|export)\b[^"']*?from\s+["']([^"']+)["']/gm)) {
+      assert.ok(!spec.startsWith("node:") && !/^(cordis|@cordisjs\/)/.test(spec), `${file} imports ${spec}`);
+      visit(createRequire(file).resolve(spec));
+    }
+  };
+  visit(createRequire(import.meta.url).resolve("@fuyu/plugin-base/services"));
+  assert.deepEqual([...seen].map((file) => file.split(/[\\/]/).slice(-2).join("/")), ["src/services.mjs", "src/protocol.mjs", "src/names.mjs"]);
 });
 
 test("a plugin provides a declared service and another calls it and hears its events", async () => {

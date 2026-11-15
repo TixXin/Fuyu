@@ -2,7 +2,7 @@ export type SettingsOverviewText = {
   greeting: Record<"morning" | "noon" | "afternoon" | "evening" | "night", string>;
   summary: (count: number) => string;
   summaryNone: string;
-  demo: Record<"todos" | "calendar" | "music" | "translation" | "clipboard" | "shelf" | "screenshot" | "agents" | "messages", string>;
+  demo: Record<"todos" | "calendar" | "music" | "translation" | "clipboard" | "shelf" | "screenshot" | "voiceInput" | "agents" | "messages", string>;
   featuresOn: (on: number, all: number) => string;
   basicsTitle: string;
   tone: string;
@@ -11,7 +11,7 @@ export type SettingsOverviewText = {
   featuresTitle: string;
   featuresFooter: string;
   open: string;
-  features: Record<"todos" | "calendar" | "music" | "translation" | "clipboard" | "shelf" | "screenshot" | "agents" | "messages", string>;
+  features: Record<"todos" | "calendar" | "music" | "translation" | "clipboard" | "shelf" | "screenshot" | "voiceInput" | "agents" | "messages", string>;
   messagesAction: string;
   nextTitle: string;
   look: string;
@@ -37,6 +37,7 @@ export const zhCN: SettingsOverviewText = {
     clipboard: "已复制 · 投喂给 AI 的提示词",
     shelf: "「最终版_真·最终版」等 3 个文件",
     screenshot: "截图已复制 · 有图有真相",
+    voiceInput: "正在听 · 「提醒我周五交周报」",
     agents: "Claude Code 交卷了 · 等你点头",
     messages: "饭搭子：奶茶到了，爱你老己",
   },
@@ -56,6 +57,7 @@ export const zhCN: SettingsOverviewText = {
     clipboard: "记住复制过的文字和图片，随时再贴",
     shelf: "把文件拖到岛上先放着，用时再拖走",
     screenshot: "框选截图，标注、贴到屏幕上或识别文字",
+    voiceInput: "按快捷键说话，本机转成文字，存成待办或笔记",
     agents: "Claude Code、Codex 在干什么、在等你，岛上一眼看到",
     messages: "QQ、微信和邮箱的新消息在岛上提醒",
   },
@@ -84,6 +86,7 @@ export const en: SettingsOverviewText = {
     clipboard: "Copied · the prompt that finally worked",
     shelf: "final_FINAL_v7.pptx and 2 more",
     screenshot: "Screenshot copied · receipts secured",
+    voiceInput: "Listening · “remind me about the Friday report”",
     agents: "Claude Code cooked · needs your OK",
     messages: "Sam: boba's here, come touch grass",
   },
@@ -103,6 +106,7 @@ export const en: SettingsOverviewText = {
     clipboard: "Keep what you copied, text and images, to paste again",
     shelf: "Drop files on the island and drag them out later",
     screenshot: "Capture a region, mark it up, pin it or read its text",
+    voiceInput: "Press a shortcut and speak; it becomes text on this computer, saved as a to-do or note",
     agents: "See at a glance what Claude Code and Codex are doing and when they need you",
     messages: "New QQ, WeChat and mail messages show on the island",
   },

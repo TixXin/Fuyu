@@ -56,7 +56,7 @@
 | `repository` | 是 | 源码仓库。认 `owner/repo`、`github:owner/repo`、`https://github.com/owner/repo`、`git+https://…`、`{ "url": "…" }` 这些写法。上架市场的要在 GitHub 上 |
 | `engines.fuyu` | 是 | 兼容的浮屿版本范围，npm 的写法（`>=0.4.0`、`^0.4.0`、`0.4.x`……）。不满足的浮屿不装它；旧版浮屿会拿到它能用的最新版本 |
 | `description`、`author`、`homepage`、`bugs`、`funding`、`keywords` | 否 | 市场详情页：作者、主页、报告问题、赞助作者的链接；`keywords` 用于搜索 |
-| `files` | 否 | 哪些文件进包；`package.json`、README、CHANGELOG、LICENSE 总会带上 |
+| `files` | 否 | 除构建产物外还有哪些文件进包，不写时带 `assets/`；README、CHANGELOG、LICENSE、NOTICE 和清单引用的图标、截图总会带上（见[命令行](cli.md#哪些文件进包)） |
 
 `scripts`、`dependencies`、`exports` 这些 npm 认识的字段照常写；npm 也不认识的顶层字段给告警。
 
@@ -125,7 +125,7 @@ fuyu-signature.json   签名，可选，见下文
 ```
 
 - **不带 `node_modules`。** 依赖在构建时打进 `dist/`，浮屿不在用户电脑上跑 `npm install`。
-- **界面部分不打进 React。** 所有插件共用浮屿提供的一份：`fuyu-plugin build` 把对 `react`、`react/jsx-runtime` 的引用改写成浮屿提供的转接模块。共享模块的完整名单等命令行做完后补进[命令行](cli.md)。样式由打包器打进 JS。
+- **界面部分不打进 React。** 所有插件共用浮屿提供的一份：`fuyu-plugin build` 把对 `react`、`react/jsx-runtime` 的引用改写成浮屿提供的转接模块。名单和改写方式见[命令行](cli.md#build)。样式由打包器打进 JS。
 - **同样的文件永远打出逐字节相同的包**：文件按路径排序，时间戳固定，文本文件统一成 `\n` 换行。所以同一份源码在不同电脑上打出的包摘要相同。
 
 ### 包里不能有的
@@ -151,7 +151,7 @@ fuyu-signature.json   签名，可选，见下文
 - **市场签名**：市场构建出包后签。
 - **作者签名**：手动分发的包可以由作者签。安装时浮屿显示是谁签的，并记下这把密钥；没有签名的照实写「没有签名」。
 
-签名签的是包的摘要（按每个文件的路径和内容算），所以加签不改变包的内容。上架市场时作者签的是**提交号**，不是包，见[市场规则](market-rules.md#作者签名)。第 2 版的作者签名密钥可以直接用来签。签名用的命令等命令行做完后补进[命令行](cli.md)。
+签名签的是包的摘要（按每个文件的路径和内容算），所以加签不改变包的内容。上架市场时作者签的是**提交号**，不是包，见[市场规则](market-rules.md#作者签名)。第 2 版的作者签名密钥可以直接用来签。签名用的命令见[命令行](cli.md#sign)。
 
 ## 三种装法
 

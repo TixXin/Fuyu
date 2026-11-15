@@ -4,6 +4,10 @@ import { build } from "./build.mjs";
 import { BuildError } from "./errors.mjs";
 import { createScratch, snapshotDirectory } from "./sources.mjs";
 
+function isExperimental(finding) {
+  return finding.check === "manifest" && finding.file === "package.json" && finding.message.includes("fuyu.experimental");
+}
+
 function fromFinding(finding) {
   return {
     code: `review:${finding.check}`,
@@ -15,6 +19,7 @@ function fromFinding(finding) {
 
 export async function check(dir, options = {}) {
   const root = resolve(dir);
+  const allowExperimental = options.allowExperimental ?? true;
   const errors = [];
   const warnings = [];
   const scratch = createScratch("fuyu-plugin-check-");
@@ -36,7 +41,7 @@ export async function check(dir, options = {}) {
     const undeclared = new Set(report.summary.network.undeclared);
     const findings = report.findings.filter((finding) => {
       if (finding.check === "release" || finding.check === "nodeApis") return false;
-      if (finding.check === "manifest") return finding.tier === "red";
+      if (finding.check === "manifest") return finding.tier === "red" && !(allowExperimental && isExperimental(finding));
       if (finding.check === "network") return undeclared.has(finding.detail) && !domains.has(finding.detail);
       return !(finding.check === "dependencies" && listed.has(finding.detail));
     });

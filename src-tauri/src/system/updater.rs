@@ -1,4 +1,5 @@
-use tauri::AppHandle;
+use crate::user_error::UserError;
+use tauri::{AppHandle, Url};
 #[cfg(windows)]
 use windows::Win32::System::Registry::HKEY_CURRENT_USER;
 
@@ -24,8 +25,7 @@ pub(super) fn normalize_proxy(raw: &str) -> String {
     }
 }
 
-#[tauri::command]
-pub fn get_updater_proxy() -> Option<String> {
+pub(crate) fn get_updater_proxy() -> Option<String> {
     for key in ["HTTPS_PROXY", "https_proxy", "HTTP_PROXY", "http_proxy"] {
         if let Ok(value) = std::env::var(key) {
             let value = value.trim();
@@ -36,6 +36,30 @@ pub fn get_updater_proxy() -> Option<String> {
     }
 
     system_proxy()
+}
+
+pub(crate) fn proxy_url() -> Result<Option<Url>, UserError> {
+    proxy_url_from(get_updater_proxy())
+}
+
+pub(crate) fn reqwest_proxy() -> Result<Option<reqwest::Proxy>, UserError> {
+    reqwest_proxy_from(get_updater_proxy())
+}
+
+fn proxy_url_from(proxy: Option<String>) -> Result<Option<Url>, UserError> {
+    proxy
+        .map(|proxy| Url::parse(&proxy).map_err(invalid_proxy))
+        .transpose()
+}
+
+fn reqwest_proxy_from(proxy: Option<String>) -> Result<Option<reqwest::Proxy>, UserError> {
+    proxy
+        .map(|proxy| reqwest::Proxy::all(&proxy).map_err(|error| invalid_proxy(error.without_url())))
+        .transpose()
+}
+
+fn invalid_proxy(error: impl std::fmt::Display) -> UserError {
+    UserError::new("net.proxy", "The proxy address is not valid.").detail(error)
 }
 
 #[cfg(windows)]
@@ -76,7 +100,35 @@ pub fn updater_configured(app: AppHandle) -> bool {
 
 #[cfg(test)]
 mod tests {
+    use super::{proxy_url_from, reqwest_proxy_from};
+    use crate::user_error::UserError;
     use serde_json::{json, Value};
+
+    const BROKEN_PROXY: &str = "http://fuyu-user:fuyu-secret-pass@[proxy.example";
+
+    fn assert_hides_the_proxy(error: UserError) {
+        assert_eq!(error.code(), "net.proxy");
+        let shown = format!("{} {error}", serde_json::to_string(&error).expect("UserError serializes"));
+        for part in ["fuyu-secret-pass", "fuyu-user", "proxy.example"] {
+            assert!(!shown.contains(part), "{shown}");
+        }
+    }
+
+    #[test]
+    fn a_broken_proxy_is_reported_without_its_address() {
+        assert_hides_the_proxy(proxy_url_from(Some(BROKEN_PROXY.into())).expect_err("broken proxy"));
+        assert_hides_the_proxy(reqwest_proxy_from(Some(BROKEN_PROXY.into())).expect_err("broken proxy"));
+    }
+
+    #[test]
+    fn a_working_proxy_is_used_and_no_proxy_means_direct() {
+        let proxy = "http://fuyu-user:fuyu-secret-pass@127.0.0.1:7890".to_string();
+        let url = proxy_url_from(Some(proxy.clone())).expect("valid proxy").expect("proxy is set");
+        assert_eq!(url.password(), Some("fuyu-secret-pass"));
+        assert!(reqwest_proxy_from(Some(proxy)).expect("valid proxy").is_some());
+        assert!(proxy_url_from(None).expect("no proxy").is_none());
+        assert!(reqwest_proxy_from(None).expect("no proxy").is_none());
+    }
 
     fn shipped_updater_config() -> Value {
         let config: Value = serde_json::from_str(include_str!("../../tauri.conf.json"))

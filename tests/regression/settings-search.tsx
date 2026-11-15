@@ -29,6 +29,7 @@ if (query.get("state") === "on") {
   const allOn = Object.fromEntries(Object.entries(DEFAULT_SETTINGS).map(([key, value]) => [key, typeof value === "boolean" ? true : value]));
   localStorage.setItem("fuyu-settings", JSON.stringify(allOn));
   localStorage.setItem("fuyu-agent-push", JSON.stringify({ enabled: true }));
+  localStorage.setItem("fuyu-voice-input", JSON.stringify({ enabled: true }));
   localStorage.setItem("fuyu-agent-approval", JSON.stringify({ onIsland: true, whenInFront: true }));
   localStorage.setItem("fuyu-agent-sounds", JSON.stringify({ enabled: true, quietHours: { enabled: true, start: "22:00", end: "08:00" } }));
 }

@@ -127,8 +127,7 @@ pub(crate) fn client(user_agent: &str, total: Duration) -> Result<reqwest::Clien
         .read_timeout(READ_TIMEOUT)
         .timeout(total)
         .user_agent(user_agent);
-    if let Some(proxy) = super::updater::get_updater_proxy() {
-        let proxy = reqwest::Proxy::all(&proxy).map_err(|error| format!("Invalid proxy {proxy}: {error}"))?;
+    if let Some(proxy) = super::updater::reqwest_proxy().map_err(|error| error.to_string())? {
         builder = builder.proxy(proxy);
     }
     builder.build().map_err(|error| format!("Could not create the HTTP client: {error}"))

@@ -85,6 +85,34 @@ importers:
 
   packages/create-fuyu-plugin: {}
 
+  packages/create-plugin:
+    dependencies:
+      '@fuyu/plugin-manifest':
+        specifier: workspace:*
+        version: link:../plugin-manifest
+    devDependencies:
+      '@fuyu/plugin-base':
+        specifier: workspace:*
+        version: link:../plugin-base
+      '@fuyu/plugin-cli':
+        specifier: workspace:*
+        version: link:../plugin-cli
+      '@fuyu/plugin-services':
+        specifier: workspace:*
+        version: link:../plugin-services
+      '@types/react':
+        specifier: ^19.1.8
+        version: 19.2.17
+      eslint:
+        specifier: ^10.14.0
+        version: 10.14.0
+      typescript:
+        specifier: ~5.8.3
+        version: 5.8.3
+      typescript-eslint:
+        specifier: ^8.72.1
+        version: 8.72.1(eslint@10.14.0)(typescript@5.8.3)
+
   packages/fuyu-plugin: {}
 
   packages/plugin-base:

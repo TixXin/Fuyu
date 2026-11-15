@@ -3,8 +3,8 @@ import { mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { test } from "node:test";
 import { readPackage, validateManifest } from "@fuyu/plugin-manifest";
-import { SHARED_MODULES } from "@fuyu/plugin-base/protocol";
-import { BuildError, DEFAULT_SHARED_MODULES, INSTALLED_PACKAGE_DEPTH, VERSION, build, pack, sharedPath } from "../src/index.mjs";
+import { HOST_SHARED_MODULES, SHARED_MODULES } from "@fuyu/plugin-base/protocol";
+import { BuildError, DEFAULT_SHARED_MODULES, HOST_EXTERNALS, INSTALLED_PACKAGE_DEPTH, VERSION, build, pack, sharedPath } from "../src/index.mjs";
 import { copyFixture, editJson, tempDir, writeFiles } from "./helpers.mjs";
 
 const read = (dir, path) => readFileSync(join(dir, path), "utf8");
@@ -79,6 +79,27 @@ test("npm dependencies are bundled into the host part, and CommonJS requires get
   assert.deepEqual(result.nodeApis, ["module", "os", "path"]);
   assert.equal(result.manifest.dependencies, undefined);
   assert.equal(result.manifest.scripts, undefined);
+});
+
+test("the host part leaves out only the modules the host shares, by exact name; their subpaths are bundled", async () => {
+  assert.deepEqual(HOST_EXTERNALS, HOST_SHARED_MODULES);
+  const dir = copyFixture("hello", (root) => {
+    writeFiles(root, {
+      "node_modules/@fuyu/plugin-base/package.json": '{ "name": "@fuyu/plugin-base", "type": "module", "exports": { ".": "./index.js", "./protocol": "./protocol.js" } }\n',
+      "node_modules/@fuyu/plugin-base/index.js": "export class Service {}\n",
+      "node_modules/@fuyu/plugin-base/protocol.js": 'export const MARKER = "bundled protocol";\n',
+      "src/host.ts": `${read(root, "src/host.ts")}\nimport { MARKER } from "@fuyu/plugin-base/protocol";\nimport { host } from "fuyu-plugin";\nexport const marker = [MARKER, host];\n`,
+    });
+  });
+  const result = await build(dir);
+  const host = read(result.outDir, "dist/host.js");
+  assert.match(host, /^import \{ Service \} from "@fuyu\/plugin-base";$/m);
+  assert.match(host, /^import \{ host \} from "fuyu-plugin";$/m);
+  assert.doesNotMatch(host, /from "@fuyu\/plugin-base\/protocol"/);
+  assert.match(host, /node_modules\/@fuyu\/plugin-base\/protocol\.js/);
+  assert.match(host, /"bundled protocol"/);
+  assert.doesNotMatch(host, /class Service/);
+  assert.deepEqual(result.nodeApis, ["os"]);
 });
 
 test("the shared module list comes from @fuyu/plugin-base/protocol, and the list and relative paths are parameters", async () => {

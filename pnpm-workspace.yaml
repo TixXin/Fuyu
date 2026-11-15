@@ -1,6 +1,7 @@
 packages:
   - packages/fuyu-plugin
   - packages/create-fuyu-plugin
+  - packages/create-plugin
   - packages/plugin-base
   - packages/plugin-cli
   - packages/plugin-manifest

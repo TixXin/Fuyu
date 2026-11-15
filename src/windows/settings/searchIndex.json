@@ -2032,19 +2032,6 @@
     {
       "page": "voiceInput",
       "zh-CN": {
-        "group": "语音输入",
-        "title": "启用语音输入",
-        "description": "按快捷键说话，识别结果显示在岛上，改好后存成待办、追加到每日笔记或复制。"
-      },
-      "en": {
-        "group": "Voice input",
-        "title": "Turn on voice input",
-        "description": "Press the shortcut and speak; the text shows on the island, where you can fix it and save it as a todo, add it to the daily note or copy it."
-      }
-    },
-    {
-      "page": "voiceInput",
-      "zh-CN": {
         "group": "语音模型",
         "title": "SenseVoice-Small 模型和识别组件",
         "description": "还没下载，用之前要在这里下载约 1 MB"

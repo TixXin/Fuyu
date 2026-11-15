@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use super::matching::{clean_title, fold};
-use crate::system::updater::get_updater_proxy;
+use crate::system::updater::reqwest_proxy;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct FoundLyrics {
@@ -87,8 +87,8 @@ pub(super) fn browser_client() -> Result<reqwest::Client, String> {
     let mut builder = reqwest::Client::builder()
         .timeout(Duration::from_secs(8))
         .user_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36");
-    if let Some(proxy) = get_updater_proxy() {
-        builder = builder.proxy(reqwest::Proxy::all(&proxy).map_err(|error| format!("Invalid proxy {proxy}: {error}"))?);
+    if let Some(proxy) = reqwest_proxy().map_err(|error| error.to_string())? {
+        builder = builder.proxy(proxy);
     }
     builder.build().map_err(|error| format!("Could not create the HTTP client: {error}"))
 }

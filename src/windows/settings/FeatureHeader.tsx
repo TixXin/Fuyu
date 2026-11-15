@@ -3,7 +3,7 @@ import { useTranslation } from "../../i18n";
 import { CATEGORY_ICONS } from "./SettingsSidebar";
 import "./FeatureHeader.css";
 
-export type HeaderFeature = "todos" | "calendar" | "music" | "translation" | "clipboard" | "shelf" | "screenshot" | "agents" | "messages";
+export type HeaderFeature = "todos" | "calendar" | "music" | "translation" | "clipboard" | "shelf" | "screenshot" | "voiceInput" | "agents" | "messages";
 
 export function FeatureHeader({
   feature,

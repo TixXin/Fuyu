@@ -88,7 +88,7 @@
 | 改版本号、起草发布说明 | `pnpm release:version <版本号>`（四处版本号一起改，不要手动改） |
 | 发布 | `pnpm release`（流程见 `docs/features/updater.md`） |
 | 查 GitHub issue | `pnpm issue <编号…>`（正文、全部回复和对应的任务）；不带编号是列表 `pnpm issue [--untracked] [--all\|--closed] [--limit N]`（列表，每行带对应任务和状态，`--untracked` 只列还没建任务的）；都能加 `--json`（`scripts/issues/`，走 `gh`） |
-| 合入 main | `pnpm mq:pending`（本地还没推的提交，到没到该提 PR 的时候）；`pnpm mq:land --yes --body <中文 PR 正文文件>`（先把 `origin/main` merge 进来，推到 `land/…` 分支、开 PR 并开启自动合并，正文格式见 workflow.md「PR 的标题和正文」），再后台 `pnpm mq:wait` 等合入并把本地 `main` 跟上；只想先合入几个独立的提交用 `pnpm mq:land --yes --only <提交号…>`（单独的 PR，不碰工作区，见 workflow.md）；手动跟上 `pnpm mq:sync`（都在 `scripts/mq/`） |
+| 合入 main | `pnpm mq:pending`（本地还没推的提交，到没到该提 PR 的时候）；`pnpm mq:land --yes --body <中文 PR 正文文件>`（先把 `origin/main` merge 进来，推到 `land/…` 分支、开 PR 并开启自动合并，正文格式见 workflow.md「PR 的标题和正文」），再后台 `pnpm mq:wait` 等合入并把本地 `main` 跟上；先合入前面做完的提交用 `pnpm mq:land --yes --upto <提交号>`（提交号不变；`--only` 让本地 main 分叉，只留给紧急修复）；land 一大批前可 `pnpm mq:try` 先跑 CI；手动跟上 `pnpm mq:sync`（都在 `scripts/mq/`，见 workflow.md） |
 | 同一个文件里只提交自己的改动 | `pnpm mq:commit-part --list <文件>`（列出每一处和编号）；`pnpm mq:commit-part -m "<标题>" --take <文件>:<编号,…> [-- <整个文件…>]`（另有 `--match`、`--as`、`--dry-run`，见 workflow.md「同一个文件里只提交自己的改动」） |
 | 进度汇总 | `pnpm progress [--no-github] [--json]`（一屏：进行中的任务和负责的会话、没提交的文件、没推的提交和落后多少、开着的 PR、任务已完成而 issue 还开着的） |
 
@@ -136,6 +136,7 @@
 
 ## 通用开发约定
 
+- 和用户说话用中文：回复、计划、总结、提问、按钮和会话标题都是；提交标题和 PR 标题照旧用英文。
 - 优先复用现有组件、类型、工具函数和 CSS class；不为小改动引入新的抽象层。
 - 前端状态继续用 `localStorage` 持久化，除非需求明确要求迁移到文件、数据库或云同步。
 - 新增 Tauri 命令时，同步更新 Rust handler、前端类型化封装和必要的权限配置（细则见子目录规则）。

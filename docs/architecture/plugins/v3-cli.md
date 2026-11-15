@@ -49,7 +49,7 @@ node packages/plugin-cli/bin/fuyu-plugin.mjs <命令> [插件文件夹] [选项]
 
 用 esbuild（锁在 `0.28.1`，和仓库里 Vite 用的同一版）：
 
-**宿主部分**：Node、ESM、目标 `node22`，npm 依赖都打进去。`fuyu-plugin`、`@fuyu/plugin-base` 和它们的子路径留作外部，由宿主的解析钩子指到内核那一份。Node 内置模块留作外部；从 esbuild 的 metafile 里取出宿主产物引用的内置模块（去掉 `node:`，只留第一段，`fs/promises` 记成 `fs`，和审核分析器一样），排好序写进 `fuyu.nodeApis`。打进去的 CommonJS 依赖里有 `require()` 时，产物开头加两行用 `node:module` 的 `createRequire` 造一个 `require`，`nodeApis` 里随之多一个 `module`。
+**宿主部分**：Node、ESM、目标 `node22`，npm 依赖都打进去。留作外部的只有宿主共享的模块，名单读 `@fuyu/plugin-base/protocol` 的 `HOST_SHARED_MODULES`（现在是 `@fuyu/plugin-base`、`fuyu-plugin`），由宿主的解析钩子指到内核那一份。按名字精确匹配（esbuild 的 onResolve 插件，不用 `external`：`external` 写了包名，子路径也会一起留在外面）：宿主只共享不带子路径的包，`@fuyu/plugin-base/protocol` 这类子路径照常打进包里，否则运行时找不到模块。内置插件的构建（`scripts/plugins-v3/build-builtins.mjs`）用的是同一份名单和同一种匹配。Node 内置模块留作外部；从 esbuild 的 metafile 里取出宿主产物引用的内置模块（去掉 `node:`，只留第一段，`fs/promises` 记成 `fs`，和审核分析器一样），排好序写进 `fuyu.nodeApis`。打进去的 CommonJS 依赖里有 `require()` 时，产物开头加两行用 `node:module` 的 `createRequire` 造一个 `require`，`nodeApis` 里随之多一个 `module`。
 
 **界面部分**：浏览器、ESM、目标 `es2022`，`process.env.NODE_ENV` 定成 `"production"`，JSX 用自动运行时。
 
@@ -86,7 +86,7 @@ JSON 对象，只认下面这些键，别的报错。市场构建时由市场给
 |---|---|---|
 | `shared` | `@fuyu/plugin-base/protocol` 的 `SHARED_MODULES` | 共享模块名单：模块名对应协议根下的路径 |
 | `packageDepth` | 不写 | 不写或 `false` 时共享模块写根路径 `/__shared/…`；`true` 按已安装包的 3 层写相对路径；非负整数按给的层数（包根在协议根下面几层）写相对路径 |
-| `hostExternal` | `["fuyu-plugin", "@fuyu/plugin-base"]` | 宿主部分留作外部的包（含子路径） |
+| `hostExternal` | `@fuyu/plugin-base/protocol` 的 `HOST_SHARED_MODULES` | 宿主部分留作外部的模块，按名字精确匹配，子路径不算 |
 | `appModules` | `["react", "react-dom", "fuyu-plugin", "@fuyu/plugin-base"]` | 界面部分不许自己打进去的包 |
 | `nodeTarget`、`browserTarget` | `node22`、`es2022` | esbuild 的目标 |
 
@@ -101,7 +101,7 @@ JSON 对象，只认下面这些键，别的报错。市场构建时由市场给
 不运行插件，把市场会拦的东西提前报出来：
 
 1. 构建到临时文件夹：清单校验（`stage: "source"`）、入口、文件挑选、esbuild、声明对照，失败的都算错误。
-2. 对源码和产物跑审核分析器（和首次上架一样的单版本扫描），红档的（混淆、可执行程序、原生扩展、实验接口）算错误；黄档里对作者有用的（敏感调用、没声明的域名、有依赖却没有锁文件、依赖的安装脚本、新的脚本和二进制文件）算告警。首次上架才有意义的项（「首次上架」、逐个列出锁文件里的包、全部的 Node 模块和清单字段都算「新增」）不报。
+2. 对源码和产物跑审核分析器（和首次上架一样的单版本扫描），红档的（混淆、可执行程序、原生扩展）算错误，实验接口只在加 `--market` 时算错误；黄档里对作者有用的（敏感调用、没声明的域名、有依赖却没有锁文件、依赖的安装脚本、新的脚本和二进制文件）算告警。首次上架才有意义的项（「首次上架」、逐个列出锁文件里的包、全部的 Node 模块和清单字段都算「新增」）不报。
 
 `--market` 按市场的规则查（不许 `fuyu.experimental`）；`--json` 输出 `{ ok, errors, warnings }`。有错误时退出码 1。
 

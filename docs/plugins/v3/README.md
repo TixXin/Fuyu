@@ -20,7 +20,7 @@
 | [审核看什么](review.md) | 绿、黄、红三档各自的条件，维护者批准，冷静期，提交前自查 | 已定，跟着审核分析器 |
 | [清单和安装包](package.md) | `package.json` 的字段、`.fuyu` 包里有什么、有哪些限制、三种装法 | 已定，实验 |
 | [发布](publish.md) | 第一次上架和以后每个版本怎么提交 | 提纲，等命令行和市场 CI |
-| [命令行](cli.md) | `fuyu-plugin` 2.0 的命令 | 提纲，等命令行 |
+| [命令行](cli.md) | `fuyu-plugin` 2.0：源码怎么放、构建、打包、检查、比较版本、签名 | 已写，实验 |
 | [从第 2 版迁移](migrate-from-v2.md) | 第 2 版的插件要改什么 | 提纲 |
 
 还没有的：概念和教程、每个服务和插槽的参考（从类型声明生成）、脚手架 `create-fuyu-plugin` 的第 3 版模板、开发模式（从文件夹加载、改了代码自动重载）。它们要等服务和插槽的接口在第 3、4 阶段定下来再写。
@@ -31,8 +31,8 @@
 |---|---|
 | 读规则，照格式写清单 | 能 |
 | 用审核分析器看自己的两个版本落在哪一档 | 能，在浮屿仓库里跑，见[审核看什么](review.md#提交前先自查) |
-| 命令行 `fuyu-plugin` 2.0（`build`、`pack`、`review`、签名） | 在做（[#483](https://github.com/TixXin/fuyu/issues/483)） |
-| 脚手架的第 3 版模板 | 等命令行（[#485](https://github.com/TixXin/fuyu/issues/485)） |
+| 命令行 `fuyu-plugin` 2.0（`build`、`pack`、`check`、`review`、签名） | 能，还没发到 npm，在浮屿仓库里跑，见[命令行](cli.md#怎么运行) |
+| 脚手架的第 3 版模板 | 还没有（[#485](https://github.com/TixXin/fuyu/issues/485)） |
 | 向市场提交第 3 版插件 | 还不行，市场 CI 在做（[#484](https://github.com/TixXin/fuyu/issues/484)） |
 | 在浮屿里安装 `.fuyu`、开发模式 | 还不行，要等第 2–4 阶段做完 |
 

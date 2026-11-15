@@ -57,8 +57,23 @@ async function run(options, label) {
 
 const outputOf = (result) => result.outputFiles.find((file) => !file.path.endsWith(".css"));
 
+function exactly(names) {
+  return new RegExp(`^(?:${names.map((name) => name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})$`);
+}
+
+function hostSharedPlugin(names) {
+  const filter = exactly(names);
+  return {
+    name: "fuyu-host-shared",
+    setup(build) {
+      build.onResolve({ filter }, (args) => ({ path: args.path, external: true }));
+    },
+  };
+}
+
 export async function bundleHost({ dir, entry, output, external, target = "node22" }) {
-  const options = { ...common(dir, target), platform: "node", entryPoints: [entry], outfile: join(dir, output), external: external.flatMap((name) => [name, `${name}/*`]) };
+  const plugins = external.length ? [hostSharedPlugin(external)] : [];
+  const options = { ...common(dir, target), platform: "node", entryPoints: [entry], outfile: join(dir, output), plugins };
   let { result, warnings } = await run(options, output);
   const imports = () => Object.entries(result.metafile.outputs).find(([path]) => path.endsWith(".js"))?.[1].imports ?? [];
   const usesRequire = imports().some((item) => item.external && REQUIRE_KINDS.has(item.kind));

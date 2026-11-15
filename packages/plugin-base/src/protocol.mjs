@@ -1,3 +1,5 @@
+export { SERVICE_NAME } from "@fuyu/plugin-manifest/names";
+
 export const HOST_PROTOCOL = 2;
 export const WINDOW_PROTOCOL = 1;
 
@@ -11,7 +13,6 @@ export const CLOSE = {
 
 export const SERVICE_CALLS = ["service.call", "service.on", "service.off"];
 
-export const SERVICE_NAME = /^[a-z][a-z0-9-]*(\.[a-z][a-z0-9-]*)*\/v[1-9][0-9]{0,3}$/;
 
 export const SERVICE_TIMEOUT_MS = 30_000;
 
@@ -34,6 +35,8 @@ export const SHARED_MODULES = {
   react: "__shared/react.js",
   "react/jsx-runtime": "__shared/react-jsx-runtime.js",
 };
+
+export const HOST_SHARED_MODULES = ["@fuyu/plugin-base", "fuyu-plugin", "@fuyu/plugin-base/services"];
 
 export const SLOTS = {
   "island.page/v1": { kind: "list", perPlugin: 2, meta: ["icon", "shortcutOrder", "headerDot", "enabled", "fallback"] },

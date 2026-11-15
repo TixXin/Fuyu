@@ -1,7 +1,7 @@
 import { isNativeError } from "../../i18n/nativeError.ts";
 import { isTauri } from "@tauri-apps/api/core";
 import {
-  checkUpdate, downloadAndInstallUpdate, downloadUpdate, getAppVersion, getNativeUpdateState, isNetworkMetered, getUpdaterProxy,
+  checkUpdate, downloadAndInstallUpdate, downloadUpdate, getAppVersion, getNativeUpdateState, isNetworkMetered,
   isUpdaterConfigured, listenUpdateState, notifyUpdate, type UpdateSnapshot,
 } from "./api";
 import { backupBeforeUpdate } from "../settings-backup/api";
@@ -30,7 +30,6 @@ let state: UpdateState = {
   notificationUnavailable: false, commandError: null, backupFailed: null,
 };
 const listeners = new Set<() => void>();
-let proxy: string | null = null;
 let ready: Promise<void> | null = null;
 let commandRunning = false;
 let disposed = false;
@@ -84,7 +83,6 @@ async function loadBuildInfo() {
     const [version, configured] = await Promise.all([getAppVersion(), isUpdaterConfigured()]);
     setState({ version, channel: loadUpdateChannel(version), stage: configured ? state.stage : "disabled" });
     if (!configured) return;
-    proxy = await getUpdaterProxy().catch(() => null);
     const unlisten = await listenUpdateState(applyUpdateSnapshot);
     if (disposed) { unlisten(); return; }
     stopNativeListener = unlisten;
@@ -124,7 +122,7 @@ export async function checkForUpdate(requestedChannel?: UpdateChannel) {
   let success = false;
   let failure: unknown = null;
   try {
-    await checkUpdate(channel, proxy);
+    await checkUpdate(channel);
     success = true;
   } catch (error) { failure = error; }
   try { applyUpdateSnapshot(await getNativeUpdateState()); }

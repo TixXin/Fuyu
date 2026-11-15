@@ -194,16 +194,26 @@ test("unconfigured builds cannot check and channel defaults retain beta opt-in",
 
 test("failed channel switch preserves stored channel", async () => {
   const channels = [];
-  const native = runtime({ check: async ({ channel, proxy }) => {
-    assert.equal(proxy, "http://localhost:7890"); channels.push(channel);
+  const native = runtime({ check: async ({ channel }) => {
+    channels.push(channel);
     if (channel === "beta") throw "offline";
     return null;
   } });
-  const app = await native.controller({ proxy: "http://localhost:7890" });
+  const app = await native.controller();
   await app.checkForUpdate();
   await app.setUpdateChannel("beta");
   assert.equal(app.getUpdateState().channel, "stable");
   assert.deepEqual(channels, ["stable", "beta"]);
+});
+
+test("update checks leave the proxy to Rust", async () => {
+  const native = runtime();
+  const app = await native.controller();
+  await app.checkForUpdate();
+  const checks = native.calls.filter((c) => c.command === "updater_check");
+  assert.equal(checks.length, 1);
+  assert.deepEqual({ ...checks[0].args }, { channel: "stable" });
+  assert.equal(native.calls.some((c) => c.command === "get_updater_proxy"), false);
 });
 
 test("new installs check every hour and download updates in the background by default", () => {

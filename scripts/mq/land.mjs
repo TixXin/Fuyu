@@ -4,6 +4,7 @@ import { machineName } from "../machine-name.mjs";
 import { github as realGitHub, landBranchName, prText } from "./github.mjs";
 import { mergeTree } from "./mergeTree.mjs";
 import { pickOnto } from "./pick.mjs";
+import { uptoRev } from "./upto.mjs";
 import { INTEGRATION_BRANCH, git, tryGit } from "./settings.mjs";
 import { landBusyNote, takeLandLock } from "./landLock.mjs";
 import { lockfileChanged } from "./sync.mjs";
@@ -27,17 +28,24 @@ function reinstallIfNeeded(before) {
   if (result.status !== 0) console.error("[land] pnpm install 失败，推送前的检查可能因为依赖不对而失败。");
 }
 
-function sameChangeOn(base, sha) {
-  const left = tryGit(["rev-list", "--no-merges", "--cherry-pick", "--right-only", `${base}...${sha}`]);
-  return left.ok && !left.out.split("\n").includes(sha);
+function patchIds(range) {
+  const log = spawnSync("git", ["log", "--no-merges", "-p", "--no-color", "--no-ext-diff", ...range], { maxBuffer: 1 << 30 });
+  if (log.status !== 0) return new Map();
+  const ids = spawnSync("git", ["patch-id", "--stable"], { input: log.stdout, encoding: "utf8", maxBuffer: 1 << 26 });
+  return new Map(ids.stdout.split("\n").filter(Boolean).map((line) => line.split(" ").reverse()));
 }
 
 export function pendingCommits(base = `origin/${INTEGRATION_BRANCH}`, head = "HEAD") {
   const out = tryGit(["log", "--reverse", "--no-merges", "--format=%H%x1f%s%x1f%ct%x1f%b%x1e", `${base}..${head}`]).out;
-  return out.split("\x1e").map((entry) => entry.trim()).filter(Boolean).map((entry) => {
+  const commits = out.split("\x1e").map((entry) => entry.trim()).filter(Boolean).map((entry) => {
     const [sha, subject = "", time = "0", body = ""] = entry.split("\x1f");
     return { sha, subject: subject.trim(), at: Number(time) * 1000, body };
-  }).filter(({ sha }) => !sameChangeOn(base, sha)).map(({ subject, at, body }) => ({ subject, at, body }));
+  });
+  if (!commits.length) return [];
+  const fork = tryGit(["rev-parse", "--verify", "--quiet", `${commits[0].sha}^`]);
+  const landed = new Set(patchIds([fork.ok && fork.out ? `${fork.out}..${base}` : base]).values());
+  const mine = landed.size ? patchIds([`${base}..${head}`]) : new Map();
+  return commits.filter(({ sha }) => !landed.has(mine.get(sha))).map(({ subject, at, body }) => ({ subject, at, body }));
 }
 
 function mergeOutsideWorkTree(upstream) {
@@ -109,9 +117,20 @@ function pickOnly(only) {
   return { rev: tip, suffix: `-only-${picked[0].slice(0, 7)}` };
 }
 
+function pickUpto(name) {
+  git(["fetch", "origin", INTEGRATION_BRANCH, "--quiet"]);
+  const { rev, sha, carried, error } = uptoRev(name);
+  if (error) {
+    console.error(`[land] ${error}`);
+    return null;
+  }
+  console.log(`[land] 带上本地 ${INTEGRATION_BRANCH} 到 ${sha.slice(0, 8)} 为止的 ${carried} 个提交，提交号不变（${rev.slice(0, 8)}），工作区和本地 ${INTEGRATION_BRANCH} 都没动。`);
+  return { rev, suffix: `-upto-${sha.slice(0, 7)}` };
+}
+
 export async function land(options = {}) {
-  const { github = realGitHub, wait = false, waitOptions = {}, only = null, lock = takeLandLock } = options;
-  if (only) return finish(await landOnce(options), { wait, github, waitOptions });
+  const { github = realGitHub, wait = false, waitOptions = {}, only = null, upto = null, lock = takeLandLock } = options;
+  if (only || upto) return finish(await landOnce(options), { wait, github, waitOptions });
   const held = lock();
   if (!held.ok) {
     console.log(landBusyNote(held.holder));
@@ -133,7 +152,7 @@ function finish({ code, pr }, { wait, github, waitOptions }) {
 
 async function landOnce(options) {
   const fail = { code: 1 };
-  const { github = realGitHub, host = machineName(), wait = false, bodyFile = null, title = null, only = null } = options;
+  const { github = realGitHub, host = machineName(), wait = false, bodyFile = null, title = null, only = null, upto = null } = options;
   const branch = tryGit(["rev-parse", "--abbrev-ref", "HEAD"]).out.trim();
   const refusal = landRefusal(branch);
   if (refusal) {
@@ -147,8 +166,8 @@ async function landOnce(options) {
   }
   const note = uncommittedNote(tryGit(["status", "--porcelain"]).out.split("\n"));
   if (note) console.log(`[land] ${note}`);
-  const chosen = only ? pickOnly(only) : null;
-  if (only && !chosen) return fail;
+  const chosen = only ? pickOnly(only) : upto ? pickUpto(upto) : null;
+  if ((only || upto) && !chosen) return fail;
   const rev = chosen ? chosen.rev : mergeMain();
   if (!rev) return fail;
   const commits = pendingCommits(undefined, rev);

@@ -68,7 +68,7 @@ GitHub 的 `github.com` 在国内经常连不上（`api.github.com` 往往还能
 - **多端点**：`tauri.conf.json` 里配了 GitHub 直连和两个公共加速前缀，插件会按顺序尝试，任一成功即返回。面板失败时会显示「原因：…」方便判断是网络问题还是清单缺失。
 - **安装包换源**（D57）：清单里的安装包地址只有一个（默认 GitHub 直连）。下载失败时（连不上、超时、返回错误状态或签名对不上），`system/update_channel.rs` 把地址套上和清单端点相同的两个前缀（`system/download_mirrors.rs` 的 `MIRROR_PREFIXES`，有测试保证和 `tauri.conf.json` 一致）依次重下，顺序是「直连 → ghfast.top → gh-proxy.com」。三个源下回来的都是同一个文件，都用内置公钥验同一份 minisign 签名，换源不放松校验。每个源连接超时 10 秒、30 秒没收到数据算卡住（`configure_client` 设到 updater 插件的 HTTP 客户端上），整次下载上限仍是 10 分钟。正在用 / 最后成功的源写进更新状态快照的 `downloadSource`（`"GitHub"`、`"ghfast.top"`、`"gh-proxy.com"`），关于页的更新面板在下载中、待安装、安装中和装完时显示「本次下载源」。
 - **InfLink-rs 和插件市场**：网易云插件 InfLink-rs 的一键安装（`lyrics/inflink.rs`，D53）和插件市场的索引、插件包、主题与点赞数据（`plugin_host/market.rs`）用同一个换源工具：GitHub 地址（`github.com`、`raw.githubusercontent.com` 等）按同样顺序重试，sha256 / 签名校验不变，镜像返回的文件对不上就换下一个源。`api.github.com` 不走前缀（公共前缀不代理它），InfLink-rs 查最新版本失败时直接报「连不上 GitHub（api.github.com）」。
-- **系统代理**：前端启动时调用 `get_updater_proxy`（`src-tauri/src/system/updater.rs`），依次读 `HTTPS_PROXY` / `HTTP_PROXY` 环境变量和 Windows 系统代理（`Internet Settings\ProxyServer`），把结果传给 `check()` / `downloadAndInstall()`。开了 Clash 之类的系统代理时，更新自动走代理。
+- **系统代理**：`updater_check` 每次检查时在 Rust 里读代理（`src-tauri/src/system/updater.rs` 的 `get_updater_proxy`），依次读 `HTTPS_PROXY` / `HTTP_PROXY` 环境变量和 Windows 系统代理（`Internet Settings\ProxyServer`），设到这次检查上，下载和安装沿用。开了 Clash 之类的系统代理时，更新自动走代理。代理地址里可能写着账号密码，所以只在 Rust 里用，不交给窗口（E36.3.13，2026-11-15 起；之前前端启动时取一次再传回 `updater_check`）；地址解析不了时报 `net.proxy`，错误里也不带地址。歌词、日历、cc-connect 和换源下载用同一个代理（`reqwest_proxy()`），报错方式一样。
 
 清单同时提供 `windows-x86_64-nsis` 与 `windows-x86_64-msi`，客户端按当前安装格式选择对应包；通用 `windows-x86_64` 入口保留为 NSIS 回退。
 

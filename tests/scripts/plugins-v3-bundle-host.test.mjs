@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createInterface } from "node:readline";
 import { after, before, test } from "node:test";
+import { HOST_SHARED_MODULES } from "@fuyu/plugin-base/protocol";
 import { bundleHost } from "../../scripts/plugins-v3/bundle-host.mjs";
 import { PLUGINS, config, workspace } from "../../packages/plugin-base/test/workspace.mjs";
 
@@ -71,7 +72,7 @@ function launch(entries, files = {}) {
 }
 
 test("the host bundles into one folder of ES modules with the createRequire banner", () => {
-  assert.deepEqual(built.files.filter((name) => !name.startsWith("chunk-")), ["client-only.mjs", "hmr.mjs", "index.mjs", "main.mjs", "plugins-file.mjs"]);
+  assert.deepEqual(built.files.filter((name) => !name.startsWith("chunk-")), ["client-only.mjs", "hmr.mjs", "index.mjs", "main.mjs", "plugins-file.mjs", "services.mjs"]);
   assert.ok(built.files.every((name) => name.endsWith(".mjs")));
   for (const name of built.files) assert.match(readFileSync(join(built.outDir, name), "utf8"), /^import \{ createRequire as __fuyuCreateRequire \}/);
   assert.ok(built.bytes > 100_000 && built.bytes < 3_000_000, `${built.bytes} bytes`);
@@ -93,6 +94,25 @@ test("the bundled host runs outside the repository without eval, loads plugins t
   assert.equal((await next((message) => message.id === 1)).result.echo, "hi");
   send({ id: 2, method: "stop" });
   assert.equal((await next((message) => message.id === 2)).result, true);
+  assert.equal(await exited, 0);
+});
+
+test("the bundled host gives plugins every module it shares, and defineService from @fuyu/plugin-base/services", async () => {
+  const imports = HOST_SHARED_MODULES.map((name, index) => `import * as shared${index} from ${JSON.stringify(name)};`).join("\n");
+  const source = `${imports}
+import { defineService } from "@fuyu/plugin-base/services";
+export const name = "shared";
+export function apply() {
+  const empty = [${HOST_SHARED_MODULES.map((_, index) => `shared${index}`).join(", ")}].findIndex((module) => Object.keys(module).length === 0);
+  if (empty >= 0) throw new Error("shared module " + empty + " is empty");
+  if (defineService("demo.shared/v1", { methods: { ping: true } }).version !== 1) throw new Error("defineService is wrong");
+}
+`;
+  const { next, send, exited } = launch([{ id: "shared", name: "./shared.mjs" }], { "shared.mjs": source });
+  const ready = await next((message) => message.method === "ready");
+  assert.deepEqual(ready.params.plugins.map((entry) => [entry.id, entry.state, entry.error ?? null]), [["shared", "running", null]]);
+  send({ id: 1, method: "stop" });
+  assert.equal((await next((message) => message.id === 1)).result, true);
   assert.equal(await exited, 0);
 });
 

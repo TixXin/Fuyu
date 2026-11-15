@@ -5,6 +5,7 @@ import Fs from "@cordisjs/fs";
 import NodeFs from "@cordisjs/fs-node";
 import Loader from "@cordisjs/loader";
 import { Context } from "cordis";
+import { HOST_SHARED_MODULES } from "../protocol.mjs";
 import { builtinMounts, readBuiltins } from "./builtins.mjs";
 import { Clients } from "./clients.mjs";
 import { DATA_DIR, installDataDir } from "./data.mjs";
@@ -20,6 +21,7 @@ import { INTERNAL, pluginStatus, trackImportErrors, watchStatus } from "./status
 import { Usage } from "./usage.mjs";
 
 const API = new URL("../index.mjs", import.meta.url).href;
+const SHARED_FILES = { "@fuyu/plugin-base/services": new URL("../services.mjs", import.meta.url).href };
 export const PLUGINS_FILE = new URL("./plugins-file.mjs", import.meta.url).href;
 export const HMR = import.meta.resolve("@cordisjs/hmr");
 const REREAD_AFTER_MS = [50, 400];
@@ -62,7 +64,7 @@ export async function startHost({ dir, config = "plugins.yml", builtins = null, 
   const startedAt = Date.now();
   const catalog = builtins ? readBuiltins(builtins) : null;
   const gate = new Gate({ safe, limit: faultLimit, internal: INTERNAL });
-  shareModules(Object.fromEntries(["@fuyu/plugin-base", ...apiNames].map((name) => [name, API])));
+  shareModules(Object.fromEntries([...HOST_SHARED_MODULES, ...apiNames].map((name) => [name, Object.hasOwn(SHARED_FILES, name) ? SHARED_FILES[name] : API])));
   const ctx = new Context();
   const logs = recordLogs(ctx, onLog);
   ctx.baseUrl = pathToFileURL(dir.endsWith(sep) ? dir : dir + sep).href;

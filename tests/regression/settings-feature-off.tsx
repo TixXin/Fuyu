@@ -22,6 +22,7 @@ for (const key of Object.keys(localStorage).filter((key) => key.startsWith("fuyu
 localStorage.setItem(LOCALE_STORAGE_KEY, "zh-CN");
 localStorage.setItem("fuyu-save-directory", "");
 localStorage.setItem("fuyu-qq-notification-access-requested", "true");
+localStorage.setItem("fuyu-voice-input", JSON.stringify({ enabled: true }));
 const FLAGS = ["todoEnabled", "calendarEnabled", "musicEnabled", "translationEnabled", "shelfEnabled", "screenshotEnabled", "agentStatusEnabled"] as const;
 localStorage.setItem("fuyu-settings", JSON.stringify({ ...DEFAULT_SETTINGS, ...Object.fromEntries(FLAGS.map((flag) => [flag, true])) }));
 
@@ -69,7 +70,7 @@ try {
     }
   }
   check(withSwitch.length === 0, `No feature page has an on/off switch in its header${withSwitch.length ? ` (${withSwitch.join(", ")})` : ""}`);
-  for (const page of ["todos", "calendar", "music", "translation", "clipboard", "shelf", "screenshot", "agents"] as const) {
+  for (const page of ["todos", "calendar", "music", "translation", "clipboard", "shelf", "screenshot", "voiceInput", "agents"] as const) {
     await openPage(page);
     check(document.querySelector(".feature-header") && !document.querySelector(".feature-header--off"), `The ${page} page starts with its feature header`);
   }
@@ -100,6 +101,11 @@ try {
 
   await type("");
   await openPage("overview");
+  await click(overviewSwitch("voiceInput"));
+  const voice = () => JSON.parse(localStorage.getItem("fuyu-voice-input") ?? "{}") as Record<string, unknown>;
+  check(voice().enabled === false && typeof voice().shortcut === "string" && !listed().includes("voiceInput"), "Voice input keeps its own setting: turning it off in the overview keeps its shortcut and leaves it out of the sidebar");
+  await click(overviewSwitch("voiceInput"));
+  check(voice().enabled === true && listed().includes("voiceInput"), "Turning voice input back on lists it again");
   await click(overviewSwitch("agents"));
   await click(overviewSwitch("todos"));
   check(stored().agentStatusEnabled === true && stored().todoEnabled === true && listed().includes("agents") && listed().includes("todos"), "Turning them back on lists them again");

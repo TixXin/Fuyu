@@ -7,9 +7,11 @@ import { dirname, join } from "node:path";
 import { createInterface } from "node:readline";
 import { fileURLToPath } from "node:url";
 import { after, before, test } from "node:test";
+import { HOST_SHARED_MODULES } from "@fuyu/plugin-base/protocol";
 import { DEFAULT_SOURCE, buildBuiltins } from "../../scripts/plugins-v3/build-builtins.mjs";
 
 const MAIN = fileURLToPath(new URL("../../packages/plugin-base/src/host/main.mjs", import.meta.url));
+const IN_REPO = fileURLToPath(new URL("../../node_modules/.cache/", import.meta.url));
 const NO_TYPE_STRIPPING = ["--no-experimental-strip-types", "--disallow-code-generation-from-strings"];
 const folders = [];
 const children = [];
@@ -86,8 +88,9 @@ const OFFICIAL = {
   fuyu: { manifest: 1, displayName: { "zh-CN": "翻页", en: "Pager" }, description: { "zh-CN": "翻页", en: "Pager" }, icon: "icon.svg", categories: ["utilities"], host: "host.mjs" },
 };
 
-function sourceFolder(files) {
-  const root = mkdtempSync(join(tmpdir(), "fuyu-builtins-src-"));
+function sourceFolder(files, parent = tmpdir()) {
+  mkdirSync(parent, { recursive: true });
+  const root = mkdtempSync(join(parent, "fuyu-builtins-src-"));
   folders.push(root);
   for (const [name, text] of Object.entries(files)) {
     mkdirSync(dirname(join(root, name)), { recursive: true });
@@ -112,4 +115,24 @@ test("a built-in plugin described by its package.json is built too, and the copi
   assert.equal(pager.source, "builtin");
   writeFileSync(join(source, "pager", "package.json"), JSON.stringify({ ...OFFICIAL, fuyu: { ...OFFICIAL.fuyu, client: { island: "host.mjs" } } }));
   await assert.rejects(buildBuiltins({ source, outDir: `${source}-out` }), /window code/);
+});
+
+test("only the modules the host shares stay outside a built-in plugin; its subpaths are bundled and load", async () => {
+  const imports = HOST_SHARED_MODULES.map((name, index) => `import * as shared${index} from ${JSON.stringify(name)};`).join("\n");
+  const source = sourceFolder(
+    {
+      "builtins.json": JSON.stringify({ format: 1, plugins: [{ id: "pager", root: "pager" }] }),
+      "pager/package.json": JSON.stringify(OFFICIAL),
+      "pager/host.mjs": `${imports}\nimport { HOST_PROTOCOL } from "@fuyu/plugin-base/protocol";\nexport const name = "pager";\nexport function apply() {\n  console.error(HOST_PROTOCOL, ${HOST_SHARED_MODULES.map((_, index) => `typeof shared${index}`).join(", ")});\n}\n`,
+    },
+    IN_REPO,
+  );
+  const out = await buildBuiltins({ source, outDir: join(mkdtempSync(join(tmpdir(), "fuyu-builtins-out-")), "builtins") });
+  folders.push(dirname(out.outDir));
+  assert.deepEqual(out.external, [...HOST_SHARED_MODULES].sort());
+  const text = readFileSync(join(out.outDir, "pager", "host.mjs"), "utf8");
+  assert.doesNotMatch(text, /@fuyu\/plugin-base\/protocol/);
+  const { ready, stderr } = await readyFrom(out.outDir);
+  const pager = ready.plugins.find((plugin) => plugin.id === "pager");
+  assert.equal(pager.state, "running", `${pager.error ?? ""}\n${stderr()}`);
 });

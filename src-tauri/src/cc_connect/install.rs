@@ -10,7 +10,7 @@ use serde::Deserialize;
 use sha2::{Digest, Sha256};
 
 use super::locate::{EXE_NAME, FOLDER};
-use crate::system::updater::get_updater_proxy;
+use crate::system::updater::reqwest_proxy;
 
 const LATEST: &str = "https://api.github.com/repos/chenhg5/cc-connect/releases/latest";
 const DOWNLOADS: &str = "https://github.com/chenhg5/cc-connect/releases/download/";
@@ -69,8 +69,8 @@ fn client() -> Result<reqwest::Client, UserError> {
     let mut builder = reqwest::Client::builder()
         .timeout(TIMEOUT)
         .user_agent(concat!("Fuyu/", env!("CARGO_PKG_VERSION")));
-    if let Some(proxy) = get_updater_proxy() {
-        builder = builder.proxy(reqwest::Proxy::all(&proxy).map_err(|error| UserError::new("net.proxy", format!("Invalid proxy {proxy}.")).arg("proxy", proxy.as_str()).detail(error))?);
+    if let Some(proxy) = reqwest_proxy()? {
+        builder = builder.proxy(proxy);
     }
     builder.build().map_err(|error| UserError::new("http.client", "Could not set up the connection.").detail(error))
 }

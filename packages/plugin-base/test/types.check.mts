@@ -89,3 +89,8 @@ void proxy.get(typedEcho).on("said", (data) => data.at.toFixed());
 const callName: ServiceCallName = SERVICE_CALLS[0];
 const defaultTimeout: 30000 = SERVICE_TIMEOUT_MS;
 void [typedReply, counted, version, windowReply, callName, defaultTimeout];
+
+import { defineService as defineFromBase } from "@fuyu/plugin-base/services";
+const pingV1 = defineFromBase<{ ping(): { ok: boolean } }>("demo.ping/v1", { methods: { ping: true } });
+const pinged: Promise<{ ok: boolean }> = pluginCtx.services.get(pingV1).ping();
+void pinged;

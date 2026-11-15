@@ -10,6 +10,10 @@
       "types": "./src/index.d.mts",
       "default": "./src/index.mjs"
     },
+    "./names": {
+      "types": "./src/names.d.mts",
+      "default": "./src/names.mjs"
+    },
     "./package.json": "./package.json"
   },
   "engines": {
