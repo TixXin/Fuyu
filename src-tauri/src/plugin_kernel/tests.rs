@@ -6,7 +6,7 @@ use std::{
 use plugin_base::{find_node, Event, HostSpec, HostState, NodeSearch, Supervisor, Timing, MINIMUM_NODE};
 use serde_json::Value;
 
-use super::{containment, safe_mode::{self, Cause, Tracker}, enabled, host_args, host_env, host_files, host_script, memory_of, window_origins, HostMode, MEMORY_MEASURE};
+use super::{containment, safe_mode::{self, Cause, Tracker}, enabled, host_args, host_env, host_files, host_origins, host_script, memory_of, window_origins, HostMode, MEMORY_MEASURE};
 
 #[test]
 fn on_windows_the_host_gets_a_smaller_threadpool_unless_the_user_already_chose_one() {
@@ -39,6 +39,16 @@ fn windows_from_the_release_build_and_the_dev_server_may_connect() {
     assert_eq!(text.iter().filter(|arg| *arg == "--origin").count(), 4);
     assert!(text.windows(2).any(|pair| pair == ["--origin", "http://localhost:1420"]));
     assert_eq!(text[0], "--disallow-code-generation-from-strings");
+}
+
+#[test]
+fn a_release_host_does_not_accept_the_dev_server_origin() {
+    let dev_url = Some("http://localhost:1420/");
+    let release = host_origins(false, dev_url);
+    assert_eq!(release, window_origins(None));
+    let args = host_args("/data".into(), &host_files(None, true), &release, &HostMode::default());
+    assert!(!args.iter().any(|arg| arg.to_string_lossy().contains("localhost:1420")), "{args:?}");
+    assert_eq!(host_origins(true, dev_url).last().map(String::as_str), Some("http://localhost:1420"));
 }
 
 fn mode(development: bool, variable: Option<&str>) -> HostMode {

@@ -54,6 +54,10 @@ fn window_origins(dev_url: Option<&str>) -> Vec<String> {
     origins
 }
 
+fn host_origins(development: bool, dev_url: Option<&str>) -> Vec<String> {
+    window_origins(dev_url.filter(|_| development))
+}
+
 const SAFE_SWITCH: &str = "FUYU_PLUGINS_V3_SAFE";
 
 #[derive(Debug, Clone, Default, PartialEq)]
@@ -220,7 +224,7 @@ pub(crate) fn init(app: &AppHandle) -> Result<(), String> {
     let _ = PLUGINS_DIR.set(dir.clone());
     let _ = SUPERVISOR.get_or_init(Mutex::default);
     let dev_url = app.config().build.dev_url.as_ref().map(ToString::to_string);
-    let origins = window_origins(dev_url.as_deref());
+    let origins = host_origins(cfg!(debug_assertions), dev_url.as_deref());
     let files = host_files(tauri::Manager::path(app).resource_dir().ok().as_deref(), cfg!(debug_assertions));
     eprintln!("[plugins-v3] host script {}", files.script.display());
     let shift = crate::platform::input::is_shift_key_down();
