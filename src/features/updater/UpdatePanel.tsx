@@ -6,6 +6,7 @@ import { useDevBuild } from "../../lib/platform";
 import { ProjectLink } from "./ProjectLink";
 import { websitePage } from "./projectLinks";
 import { UpdateNotes } from "./UpdateNotes";
+import { useDownloadSource } from "./useDownloadSource";
 import {
   checkForUpdate,
   checkOnFirstVisit,
@@ -47,6 +48,8 @@ export function UpdatePanel() {
     getUpdateState,
   );
 
+  const downloadSource = useDownloadSource();
+
   useEffect(() => {
     void checkOnFirstVisit();
   }, []);
@@ -81,6 +84,7 @@ export function UpdatePanel() {
   else if (stage === "error") { headline = hero.error; sub = detail ? text.errorDetail(detail) : text.error; }
 
   const offersUpdate = stage === "available" || stage === "ready";
+  const showsSource = downloadSource !== null && (stage === "downloading" || stage === "ready" || stage === "installing" || stage === "done");
 
   return (
     <div className={`update-status update-status--${TONES[stage]}`}>
@@ -89,6 +93,7 @@ export function UpdatePanel() {
         <div className="update-status__copy" role={stage === "error" ? "alert" : "status"}>
           <strong>{headline}</strong>
           {sub ? <span>{sub}</span> : null}
+          {showsSource ? <span>{text.downloadSource(downloadSource)}</span> : null}
         </div>
         <div className="update-status__actions">
           {offersUpdate ? (
