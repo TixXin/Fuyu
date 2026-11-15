@@ -23,6 +23,8 @@
     "check:colors": "node scripts/check-colors.mjs",
     "check:tasks": "node scripts/tasks/tasks.mjs check",
     "tasks": "node scripts/tasks/tasks.mjs",
+    "issue": "node scripts/issues/issues.mjs",
+    "issues": "node scripts/issues/issues.mjs",
     "task:claim": "node scripts/tasks/tasks.mjs claim",
     "tasks:plugin": "node scripts/tasks/install-island-plugin.mjs",
     "verify": "node scripts/land-check.mjs",
