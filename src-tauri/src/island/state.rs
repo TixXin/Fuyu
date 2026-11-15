@@ -238,6 +238,9 @@ pub(super) fn read_window_state() -> IslandWindowState {
 }
 
 pub(crate) fn record_dragged_position(position: PhysicalPosition<i32>) {
+    if cfg!(target_os = "macos") {
+        return;
+    }
     mutate_window_state(|state| {
         if state.is_dragging && !state.is_tucked {
             state.custom_position = Some(IslandPosition::at(position.x, position.y));

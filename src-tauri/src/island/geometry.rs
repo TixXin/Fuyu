@@ -64,6 +64,9 @@ pub(crate) fn apply_stage_geometry(
         || state.custom_position.is_some_and(super::bottom_edge::is_bottom);
 
     resize_stage(window, LogicalSize::new(STAGE_WINDOW_WIDTH, stage_height), anchored_below)?;
+    if state.is_dragging {
+        return Ok(());
+    }
 
     let current_monitor = window
         .current_monitor()
@@ -93,11 +96,7 @@ pub(crate) fn apply_stage_geometry(
         -((COLLAPSED_ISLAND_HEIGHT * state.collapsed_scale - TUCKED_VISIBLE_EDGE_HEIGHT).max(0.0)
             * scale)
             .round() as i32;
-    let top_inset = if cfg!(target_os = "macos") && !state.under_menu_bar {
-        0
-    } else {
-        work_area_top_inset(monitor_position.y, screen::monitor_work_top(&monitor))
-    };
+    let top_inset = super::top_edge::top_edge(&monitor, state.under_menu_bar).y - monitor_position.y;
     let centered_x = crate::dev_lane::stage_x(
         (monitor_position.x, monitor_position.y + top_inset, monitor_size.width as i32),
         (physical_width, (stage_height * scale).round() as i32),
@@ -114,14 +113,14 @@ pub(crate) fn apply_stage_geometry(
     let side = positioned_state.custom_position.and_then(super::side::stored_side);
     let bottom = positioned_state.custom_position.filter(|position| super::bottom_edge::is_bottom(*position));
     let (x, y) = match (side, bottom) {
-        (Some((edge, along)), _) if !state.is_dragging => {
+        (Some((edge, along)), _) => {
             let mut sided = positioned_state;
             sided.attached_edge = Some(edge);
             super::edge::set_attached(window, Some(edge));
             let work = screen::monitor_work_rect(&monitor);
             super::side::stage_position(edge, along, work, physical_width, super::side::island_height(sided, scale))
         }
-        (_, Some(position)) if !state.is_dragging => {
+        (_, Some(position)) => {
             super::edge::set_attached(window, Some(Edge::Bottom));
             let tuck_depth = if state.is_tucked { -tucked_top_offset } else { 0 };
             let work = screen::monitor_work_rect(&monitor);
@@ -129,9 +128,7 @@ pub(crate) fn apply_stage_geometry(
         }
         _ => {
             positioned_state.custom_position = shown_custom_position(positioned_state, normal_y);
-            if !state.is_dragging {
-                super::top_edge::sync_from_stage(window, positioned_state, monitor_position.y + top_inset);
-            }
+            super::top_edge::sync_from_stage(window, positioned_state, monitor_position.y + top_inset);
             resolve_stage_position(positioned_state, centered_x, normal_y, tucked_y)
         }
     };
