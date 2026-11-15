@@ -16,17 +16,20 @@
 | 8 | **宿主的标准输出只给协议用**：插件和内核打印的东西一律到标准错误 | 一行不是 JSON 的输出就会让对方读错 |
 | 9 | **协议有版本号**：宿主在 `ready` 里报 `protocol`，不兼容的改动升版本，两边都认识的才继续 | 宿主和 Rust 以后会分开更新（决定 16 之后 Node 是用户电脑上的） |
 
-## Rust 和宿主之间（协议 1）
+## Rust 和宿主之间（协议 2）
 
-标准输入输出上的 JSON-RPC 2.0，一行一条消息（UTF-8，`\n` 结尾）。Rust 写宿主的标准输入、读它的标准输出；宿主的标准错误由 Rust 逐行转发到日志。实现：Rust 一侧在 `src-tauri/crates/plugin-base`（`rpc.rs`、`supervisor.rs`），宿主一侧在 `packages/plugin-base/src/host`（`rpc.mjs`、`main.mjs`）。
+标准输入输出上的 JSON-RPC 2.0，一行一条消息（UTF-8，`\n` 结尾）。Rust 写宿主的标准输入、读它的标准输出；宿主的标准错误由 Rust 逐行转发到日志。实现：Rust 一侧在 `src-tauri/crates/plugin-base`（`rpc.rs`、`serve.rs`、`registry.rs`、`supervisor.rs`），宿主一侧在 `packages/plugin-base/src/host`（`rpc.mjs`、`rust.mjs`、`main.mjs`）。
+
+协议 2（2026-11-15 起，E36.3.3）在协议 1 上加了：宿主调 Rust 的方法、Rust 推事件给宿主、流式片段和取消。Rust 只认 2：`ready` 里的 `protocol` 不是 2 或没写，这次启动算失败，原因写明双方的版本（「the plugin host speaks protocol X, but Fuyu only speaks protocol 2」），照常按退避重启。
 
 ### 宿主发给 Rust 的通知
 
 | 方法 | 参数 | 什么时候 |
 |---|---|---|
-| `ready` | `{ protocol, pid, node, plugins, safe, windows: { port, token } }`，`plugins` 是每个插件的状态，`safe` 是安全模式（`null`、`third-party` 或 `minimal`），`windows` 是给窗口连的本机 WebSocket（见下一节） | 内核和配置里的插件都加载完（成功或失败都算） |
+| `ready` | `{ protocol, pid, node, plugins, safe, windows: { port, token } }`，`protocol` 是 `2`，`plugins` 是每个插件的状态，`safe` 是安全模式（`null`、`third-party` 或 `minimal`），`windows` 是给窗口连的本机 WebSocket（见下一节） | 内核和配置里的插件都加载完（成功或失败都算） |
 | `log` | `{ at, type, name, text }`，只有 `error` 和 `warn` | 内核记了错误或警告，例如插件启动失败 |
 | `fatal` | `{ message }` | 内核本身起不来；发完宿主以退出码 1 退出 |
+| `cancel` | `{ id }` | 宿主不再等它发出的第 `id` 个调用（插件停用、宿主这边超时）。还没开始的不跑；正在跑的处理函数用 `call.cancelled()` 能看到，结果丢掉、不回答 |
 
 ### Rust 发给宿主的请求
 
@@ -35,6 +38,54 @@
 | `ping` | 任意 | `{ at, echo }`。Rust 每秒发一次，2 秒没回答就当宿主卡死 |
 | `status` | 无 | 每个插件的状态，格式见下面「插件状态」 |
 | `stop` | 无 | `true`，然后停掉所有插件（每个清理都执行）再退出 |
+
+### Rust 发给宿主的通知
+
+| 方法 | 参数 | 说明 |
+|---|---|---|
+| `event` | `{ name, data }` | Rust 推给宿主的事件（`Supervisor::emit`）。插件用 `ctx.rust.on(名字, 监听器)` 收，挂在插件自己的 ctx 上，停用时自动撤掉；宿主没在跑时 `emit` 返回 `peer-gone` |
+| `progress` | `{ id, data }` | 宿主发出的第 `id` 个调用的流式片段（见下面「流式」） |
+
+### 宿主发给 Rust 的请求
+
+宿主里的插件用 `ctx.rust.call(方法, 参数, { timeoutMs?, onProgress? })`（`Context` 上的 `rust`，类型 `RustApi`）。方法名是点分的小驼峰（`app.version`），参数是一个 JSON 值，没有就是 `null`。
+
+Rust 的方法是标了 `#[plugin_base::host_service("<方法>")]` 的领域函数，`Serve::registered()` 读出全部（宏的写法见 [v3-services.md](v3-services.md)「Rust 那条路」，E36.3.4）。现在有：
+
+| 方法 | 参数 | 回答 |
+|---|---|---|
+| `app.version` | 无 | `{ version, platform }` |
+| `app.echo` | `{ value }` | `{ echo: value }` |
+| `app.platformSupport` | 无 | `{ os, unsupported, devBuild }`，和 Tauri 命令 `get_platform_support` 同一个函数 |
+
+上表只列宿主自带的 `app.*`，全部方法以 `@fuyu/plugin-services` 的 `RUST_METHODS` 为准；方法和它们参数、回答的 TypeScript 类型由 Rust 生成在同一个包的 `RustMethods`。
+
+Rust 怎么跑：
+- 每个请求交给登记的处理函数，在工作线程里跑（默认 4 个线程，排队的最多 256 个，加上正在跑的一共 260 个，再多立刻回 `busy`）。宿主的读线程不跑处理函数，所以心跳不受影响。
+- 每个方法有自己的超时（默认 30 秒），从 Rust 收到请求算起，排队的时间也算。超时回 `timeout`，`data` 是 `{ method, timeoutMs }`；之后处理函数的结果丢掉。
+- 处理函数 panic 只让这一个调用失败，回 `panic`，`message` 写明方法名和 panic 的内容；工作线程照常接下一个。
+- 宿主退出或卡死被换掉时：这一代宿主的调用全部标成取消，排队的不再跑，正在跑的结果丢掉；工作线程跑完手上的就退出，不卡 supervisor。
+- 写宿主的标准输入在单独的写线程里排队，宿主卡死、管道写满时只卡这个线程，不拿着锁卡住心跳。
+- 边界规则 5：处理函数里不能同步等宿主，在工作线程里调 `Rpc::call` 直接返回 `WouldWait` 错误。
+
+错误一律是 `{ code, message, data? }`，`code` 是字符串，和 [v3-services.md](v3-services.md)「错误」一致（内置插件把 Rust 的方法包成服务时原样传出）：
+
+| `code` | 什么时候 |
+|---|---|
+| `no-method` | Rust 没有登记这个方法 |
+| `bad-params` | 参数不对：不是 JSON 对象，或某个字段的类型不对（`data` 是 `{ method, field }`） |
+| `bad-result` | 处理函数的返回值编不成 JSON |
+| `timeout` | Rust 一侧超时（见上）；宿主一侧也有超时（默认 120 秒，`timeoutMs` 只能改短），`message` 是「<方法> got no answer in <毫秒> ms」 |
+| `busy` | 正在跑和排队的已经满了（见上） |
+| `panic` | 处理函数 panic |
+| `failed` | 处理函数要的状态 Rust 没给（例如没有 `AppHandle`），或工作线程起不来 |
+| `peer-gone` | 宿主一侧：Rust 那头的管道断了，或宿主不是 Rust 拉起的（没有通道） |
+| `inactive` | 宿主一侧：发起调用的插件停用了，调用立刻失败，同时给 Rust 发 `cancel` |
+| 处理函数自己的码 | 如翻译的 `no-secret`，原样传出 |
+
+### 流式
+
+会分几次给结果的方法，处理函数调 `call.progress(片段)`，Rust 发通知 `progress { id, data }`，最后照常回答。宿主把片段交给 `onProgress`。调用已经取消或回答后不再发 `progress`。形状和 [v3-services.md](v3-services.md)「流式」一致：一个 id、多条片段、最后一个结果。
 
 ### 插件状态
 

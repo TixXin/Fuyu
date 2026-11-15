@@ -81,9 +81,11 @@ const typedReply: Promise<{ text: string }> = pluginCtx.services.get(typedEcho).
 const counted: Promise<{ n: number }> = pluginCtx.services.get(typedEcho).count();
 // @ts-expect-error echo needs its text
 void pluginCtx.services.get(typedEcho).echo({});
+const version: Promise<{ version: string }> = pluginCtx.rust.call<{ version: string }>("app.version", null, { timeoutMs: 1000 });
+void pluginCtx.rust.on("media", (data) => data);
 const proxy = createServiceProxy((method, params, options) => connection.call(method, params, options));
 const windowReply: Promise<{ text: string }> = proxy.get(typedEcho).echo({ text: "hi" });
 void proxy.get(typedEcho).on("said", (data) => data.at.toFixed());
 const callName: ServiceCallName = SERVICE_CALLS[0];
 const defaultTimeout: 30000 = SERVICE_TIMEOUT_MS;
-void [typedReply, counted, windowReply, callName, defaultTimeout];
+void [typedReply, counted, version, windowReply, callName, defaultTimeout];
