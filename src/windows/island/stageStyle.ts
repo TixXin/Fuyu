@@ -1,8 +1,7 @@
 import type { CSSProperties } from "react";
 import { hexToRgba } from "../../features/appearance/settings";
 import type { IslandSettings } from "../../features/appearance/types";
-import { inkOn } from "../../utils/color";
-import { accentVariables } from "../../features/appearance/themeMode";
+import { accentVariables, inkVariables } from "../../features/appearance/themeMode";
 import type { IslandMode } from "./types";
 
 export function getIslandStageStyle(
@@ -36,7 +35,7 @@ export function getIslandStageStyle(
     ...accentVariables(accent),
     "--island-pulse-brightness": `${settings.pulseBrightness}%`,
     "--island-background-color": settings.islandBackgroundColor,
-    "--island-ink-rgb": inkOn(settings.islandBackgroundColor),
+    ...inkVariables(settings),
     "--glass-intensity": glassStrength,
     "--glass-mask-opacity": glassMaskOpacity,
     "--glass-soft-alpha": 0.045 + glassStrength * 0.045,

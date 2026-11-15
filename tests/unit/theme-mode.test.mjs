@@ -6,7 +6,7 @@ import { parseTheme } from "../../src/features/appearance/theme.ts";
 import { isLightIsland } from "../../src/utils/color.ts";
 
 test("the island uses the dark or light set, or the system's (C31, C33.3)", () => {
-  const tuned = withThemeColors(DEFAULT_SETTINGS, "dark", { islandBackgroundColor: "#102030", taskTextColor: "#ffffff", pulseColor: "#00ff88" });
+  const tuned = withThemeColors(DEFAULT_SETTINGS, "dark", { islandBackgroundColor: "#102030", taskTextColor: "#ffffff", pulseColor: "#00ff88", inkColor: "" });
   assert.equal(resolveThemeColors({ ...tuned, themeMode: "dark" }, false).islandBackgroundColor, "#102030");
   assert.equal(resolveThemeColors({ ...tuned, themeMode: "light" }, true).islandBackgroundColor, THEME_COLORS.light.islandBackgroundColor);
   assert.equal(resolveThemeColors({ ...tuned, themeMode: "system" }, true).islandBackgroundColor, "#102030");
@@ -20,7 +20,7 @@ test("settings from before the two sets keep their colours, in the set they look
   assert.equal(DEFAULT_SETTINGS.themeMode, "dark");
   const darkPick = normalizeSettings({ opacity: 95, islandBackgroundColor: "#336699", taskTextColor: "#ffcc00", pulseColor: "#ff00ff" });
   assert.equal(darkPick.themeMode, "dark");
-  assert.deepEqual(themeColors(darkPick, "dark"), { islandBackgroundColor: "#336699", taskTextColor: "#ffcc00", pulseColor: "#ff00ff" });
+  assert.deepEqual(themeColors(darkPick, "dark"), { islandBackgroundColor: "#336699", taskTextColor: "#ffcc00", pulseColor: "#ff00ff", inkColor: "" });
   assert.deepEqual(themeColors(darkPick, "light"), THEME_COLORS.light);
   assert.equal(resolveThemeColors(darkPick, true).islandBackgroundColor, "#336699", "nothing looks different after the upgrade");
   const lightPick = normalizeSettings({ islandBackgroundColor: "#fafafa", taskTextColor: "#111111", pulseColor: "#3ae489" });

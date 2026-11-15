@@ -1,0 +1,42 @@
+.builtin-theme-art {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  overflow: hidden;
+  background: linear-gradient(115deg, var(--builtin-desk-a, #2b4a7a) 0 50%, var(--builtin-desk-b, #c9d6e8) 50% 100%);
+  border-radius: var(--radius-sm);
+}
+
+.builtin-theme-art__island {
+  width: 96px;
+  height: 44px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 6px;
+  padding: 7px 10px;
+  background: var(--builtin-fill);
+  border-radius: 12px;
+  box-shadow: inset 0 0 0 1px rgba(var(--builtin-ink), 0.1), 0 3px 10px rgba(0, 0, 0, 0.18);
+}
+
+.builtin-theme-art__island i {
+  width: 5px;
+  height: 5px;
+  background: var(--builtin-dot);
+  border-radius: var(--radius-circle);
+}
+
+.builtin-theme-art__island b {
+  height: 3px;
+  background: rgba(var(--builtin-ink), 0.6);
+  border-radius: 2px;
+}
+
+.builtin-theme-art__island b:last-child {
+  width: 60%;
+  background: rgba(var(--builtin-ink), 0.32);
+}

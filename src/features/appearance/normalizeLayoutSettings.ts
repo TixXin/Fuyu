@@ -82,6 +82,7 @@ export function normalizeLayoutSettings(settings: LegacyIslandSettings | null | 
       settings?.islandBackgroundColor,
       LEGACY_FALLBACKS.islandBackgroundColor,
     ),
+    inkColor: getColorSetting(settings?.inkColor, ""),
     ...normalizeThemeSets(settings),
     collapsedDark: typeof settings?.collapsedDark === "boolean" ? settings.collapsedDark : LEGACY_FALLBACKS.collapsedDark,
     panelDark: typeof settings?.panelDark === "boolean" ? settings.panelDark : DEFAULT_SETTINGS.panelDark,
@@ -109,6 +110,6 @@ function normalizeThemeSets(settings: LegacyIslandSettings | null | undefined) {
         getColorSetting(merged[key], THEME_COLORS[tone][name]),
       ]),
     ),
-  ) as Pick<IslandSettings, "darkBackgroundColor" | "darkTextColor" | "darkPulseColor" | "lightBackgroundColor" | "lightTextColor" | "lightPulseColor">;
+  ) as Pick<IslandSettings, "darkBackgroundColor" | "darkTextColor" | "darkPulseColor" | "lightBackgroundColor" | "lightTextColor" | "lightPulseColor" | "darkInkColor" | "lightInkColor">;
   return { themeMode: oneOf(THEME_MODES, merged.themeMode, DEFAULT_SETTINGS.themeMode), ...sets };
 }

@@ -51,6 +51,9 @@ export type IslandSettings = CalendarSettingValues & {
   lightBackgroundColor: string;
   lightTextColor: string;
   lightPulseColor: string;
+  darkInkColor: string;
+  lightInkColor: string;
+  inkColor: string;
   collapsedDark: boolean;
   panelDark: boolean;
   windowsDark: boolean;
@@ -97,6 +100,7 @@ export type IslandSettings = CalendarSettingValues & {
   autoTuckHoldTodo: boolean;
   autoTuckHoldAgent: boolean;
   autoTuckHoldMusic: boolean;
+  autoTuckHoldMessages: boolean;
   autoTuckRetract: boolean;
   autoTuckRetractDelayMs: number;
   revealOnMessage: boolean;

@@ -5,6 +5,7 @@ import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton
 import { SettingsRow } from "../../components/settings/SettingsRow";
 import { SettingsSliderRow } from "../../components/settings/SettingsSliderRow";
 import { useTranslation } from "../../i18n";
+import { InkColorRows } from "./InkColorRows";
 import { DEFAULT_SETTINGS } from "./settings";
 import type { ThemeTone } from "./themeMode";
 import type { IslandSettings } from "./types";
@@ -61,6 +62,7 @@ export function ColorSettingsSection({
           />
         ))}
       </div>
+      <InkColorRows settings={settings} onSettingsChange={onSettingsChange} />
       <SettingsSliderRow
         title={text.pulseBrightness}
         value={settings.pulseBrightness}
