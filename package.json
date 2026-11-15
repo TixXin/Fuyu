@@ -36,7 +36,7 @@
     "lab": "node scripts/island-lab/server.mjs",
     "settings:index": "node scripts/settings-search-index.mjs",
     "check:tests-types": "tsc -p tests/tsconfig.json",
-    "lint": "eslint src",
+    "lint": "eslint src packages/plugin-base/src/host",
     "check": "tsc && pnpm run check:tests-types && pnpm run check:packages-types && pnpm run lint && pnpm run check:size && pnpm run check:colors && pnpm run check:secrets && pnpm run check:rust-types && pnpm run check:tasks && pnpm run test",
     "check:packages-types": "tsc -p packages/tsconfig.json",
     "readme:assets": "node scripts/readme/assets.mjs",
