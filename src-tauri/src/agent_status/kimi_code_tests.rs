@@ -1,6 +1,6 @@
 use super::*;
 use crate::agent_status::hooks_state::HookInstallState;
-use crate::agent_status::kimi_hooks::{block_state, hook_block, with_block};
+use crate::agent_status::kimi_hooks::{block_state, hook_block, install_into, with_block};
 use serde_json::json;
 
 const META: &str = r#"{"type":"metadata","protocol_version":"1.5","min_protocol_version":"1.5","created_at":1763182800000}"#;
@@ -178,4 +178,20 @@ fn installing_keeps_the_rest_of_config_toml() {
 
     assert!(with_block("hooks = []\n", &block).is_err());
     assert!(with_block("[tables]\nhooks = 1\n", &block).is_ok());
+}
+
+#[test]
+fn installing_never_overwrites_a_config_it_cannot_read() {
+    let home = temp_home("unreadable");
+    let block = hook_block(Path::new("/data/fuyu-agent-running.sh"), Path::new("/data/fuyu-agent-status.sh"));
+    let path = home.join("config.toml");
+    let bytes = b"default_model = \"\xff\xfe\"\n";
+    fs::write(&path, bytes).unwrap();
+    assert!(install_into(&home, &block).is_err());
+    assert_eq!(fs::read(&path).unwrap(), bytes);
+
+    fs::remove_file(&path).unwrap();
+    install_into(&home, &block).unwrap();
+    assert_eq!(fs::read_to_string(&path).unwrap(), format!("{block}\n"));
+    let _ = fs::remove_dir_all(&home);
 }

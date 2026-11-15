@@ -63,9 +63,17 @@ pub(super) fn install(env: &HookEnv) -> Result<(), String> {
     if !dir.is_dir() {
         return Ok(());
     }
+    install_into(&dir, &hook_block(env.running_script, env.status_script))
+}
+
+pub(super) fn install_into(dir: &Path, block: &str) -> Result<(), String> {
     let path = dir.join(CONFIG_FILE);
-    let content = fs::read_to_string(&path).unwrap_or_default();
-    let next = with_block(&content, &hook_block(env.running_script, env.status_script))?;
+    let content = match fs::read_to_string(&path) {
+        Ok(content) => content,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => String::new(),
+        Err(error) => return Err(format!("Failed to read Kimi Code config.toml: {error}")),
+    };
+    let next = with_block(&content, block)?;
     if next != content {
         write_text_file(&path, &next)?;
     }
