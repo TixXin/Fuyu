@@ -7,6 +7,7 @@ export type SettingsOverviewText = {
   basicsTitle: string;
   tone: string;
   toneHint: string;
+  launchDevOff: string;
   featuresTitle: string;
   featuresFooter: string;
   open: string;
@@ -43,6 +44,7 @@ export const zhCN: SettingsOverviewText = {
   basicsTitle: "常用",
   tone: "深色或浅色",
   toneHint: "跟随系统时，系统切换深浅色，岛也跟着换。",
+  launchDevOff: "开发版不改这项，请在正式版里设置",
   featuresTitle: "功能",
   featuresFooter: "关掉的功能会从岛上和左边菜单里藏起来，后台也停下；已有数据都保留，随时可以再打开。",
   open: "设置",
@@ -89,6 +91,7 @@ export const en: SettingsOverviewText = {
   basicsTitle: "Common",
   tone: "Dark or light",
   toneHint: "With System, the island switches when your system does.",
+  launchDevOff: "Dev build: set this in the installed app",
   featuresTitle: "Features",
   featuresFooter: "A feature that is off hides from the island and the menu on the left and stops working in the background. Its data is kept, so you can turn it back on any time.",
   open: "Settings",
@@ -106,7 +109,7 @@ export const en: SettingsOverviewText = {
   messagesAction: "Choose sources",
   nextTitle: "Next",
   look: "Adjust how the island looks",
-  lookHint: "Size, what the collapsed island shows, distance from the top.",
+  lookHint: "Size, the collapsed view and distance from the top.",
   themes: "Try another theme",
   themesHint: "Pick colours and styles others made in the theme market.",
   shortcuts: "See all shortcuts",

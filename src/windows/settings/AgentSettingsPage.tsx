@@ -9,7 +9,7 @@ import { AGENT_PROVIDER_LABELS } from "../../features/agent-status/status";
 import "../../features/agent-status/AgentHooksSettingsSection.css";
 import type { AgentLightStyle, AgentTitleMode, IslandSettings } from "../../features/appearance/types";
 import { useTranslation } from "../../i18n";
-import { ModuleSwitchSection } from "./ModuleSwitchSection";
+import { FeatureHeader } from "./FeatureHeader";
 
 const SHOWN_PROVIDERS = Object.keys(AGENT_PROVIDER_LABELS) as SessionProvider[];
 
@@ -26,11 +26,7 @@ export function AgentSettingsPage({
 
   return (
     <>
-      <ModuleSwitchSection
-        label={t.settings.modules.agents}
-        checked={settings.agentStatusEnabled}
-        onChange={(agentStatusEnabled) => onSettingsChange({ ...settings, agentStatusEnabled })}
-      />
+      <FeatureHeader feature="agents" />
       <AgentHooksNotice onOpenConnect={onOpenConnect} />
       <SettingsGroup title={t.settings.agent.sessionTitleSection}>
         <SettingsToggleRow

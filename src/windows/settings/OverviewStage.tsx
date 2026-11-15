@@ -13,7 +13,7 @@ export type StageFeature = SettingsFeature | "messages";
 
 const CYCLE_MS = 2_800;
 
-export function OverviewStage({ settings, spot, playing }: { settings: IslandSettings; spot: StageFeature | null; playing: readonly StageFeature[] }) {
+export function OverviewStage({ settings, spot, playing, onCount }: { settings: IslandSettings; spot: StageFeature | null; playing: readonly StageFeature[]; onCount: number }) {
   const t = useTranslation();
   const text = t.settings.overview;
   const systemDark = useSystemDark();
@@ -47,7 +47,7 @@ export function OverviewStage({ settings, spot, playing }: { settings: IslandSet
       </div>
       <div className="overview-stage__copy">
         <strong>{text.greeting[dayPeriod(new Date().getHours())]}</strong>
-        <span>{playing.length > 0 ? text.summary(playing.length) : text.summaryNone}</span>
+        <span>{onCount > 0 ? text.summary(onCount) : text.summaryNone}</span>
       </div>
     </section>
   );

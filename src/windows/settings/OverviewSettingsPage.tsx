@@ -42,7 +42,8 @@ export function OverviewSettingsPage({
   const devBuild = useDevBuild();
   const offered = SETTINGS_FEATURES.filter((feature) => isCategoryAvailable(FEATURE_PAGES[feature][0], unsupported));
 
-  const playing: StageFeature[] = [...offered.filter((feature) => features[feature].on), "messages"];
+  const switchedOn = offered.filter((feature) => features[feature].on);
+  const playing: StageFeature[] = [...switchedOn, "messages"];
   const watch = (feature: StageFeature) => ({
     onMouseEnter: () => setSpot(feature),
     onMouseLeave: () => setSpot(null),
@@ -58,7 +59,7 @@ export function OverviewSettingsPage({
 
   return (
     <div className="settings-overview" data-search="off">
-      <OverviewStage settings={settings} spot={spot} playing={playing} />
+      <OverviewStage settings={settings} spot={spot} playing={playing} onCount={switchedOn.length} />
 
       <section className="settings-group">
         <div className="settings-group__header">
@@ -85,9 +86,10 @@ export function OverviewSettingsPage({
               }}
             />
           </div>
-          <div className="settings-overview__tile">
+          <div className="settings-overview__tile" title={devBuild ? t.settings.devBuild.launchAtStartupOff : undefined}>
             <label className="settings-overview__tile-label" htmlFor={launchId}><Power size={15} strokeWidth={1.9} aria-hidden="true" />{isMacOS ? t.settings.layout.launchAtStartupMac : t.settings.layout.launchAtStartup}</label>
             <SettingsSwitch id={launchId} checked={launchAtStartup} disabled={devBuild} onChange={updateLaunchAtStartup} />
+            {devBuild && <span className="settings-overview__tile-note">{text.launchDevOff}</span>}
           </div>
         </div>
       </section>
@@ -95,7 +97,7 @@ export function OverviewSettingsPage({
       <section className="settings-group">
         <div className="settings-group__header">
           <h2 className="settings-group__title">{text.featuresTitle}</h2>
-          <span className="settings-overview__count">{text.featuresOn(playing.length, offered.length + 1)}</span>
+          <span className="settings-overview__count">{text.featuresOn(switchedOn.length, offered.length)}</span>
         </div>
         <ul className="settings-overview__features">
           {offered.map((feature) => (
@@ -166,7 +168,7 @@ function MessagesCard({ watch, onOpen }: { watch: Watch; onOpen: () => void }) {
         <span className="settings-overview__feature-name">{t.settings.categories.messages}</span>
         <span className="settings-overview__feature-hint">{t.settings.overview.features.messages}</span>
       </span>
-      <span className="settings-overview__feature-side">
+      <span className="settings-overview__feature-side settings-overview__feature-side--end">
         <OpenLink label={t.settings.overview.messagesAction} onClick={onOpen} />
       </span>
     </li>
