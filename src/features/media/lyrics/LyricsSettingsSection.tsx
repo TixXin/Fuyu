@@ -7,7 +7,7 @@ import { SettingsSliderRow } from "../../../components/settings/SettingsSliderRo
 import { SettingsToggleRow } from "../../../components/settings/SettingsToggleRow";
 import { SettingsChoice } from "../../../components/settings/SettingsChoice";
 import { InflinkRow } from "./InflinkRow";
-import type { LyricsIslandPriority } from "./lyricsSettings";
+import type { LyricsIntro, LyricsIslandPriority } from "./lyricsSettings";
 import type { IslandSettings } from "../../appearance/types";
 import "./LyricsSettingsSection.css";
 
@@ -47,6 +47,21 @@ export function LyricsSettingsSection({
                 ariaLabel={text.priority}
                 options={[{ value: "lyrics", label: text.priorityLyrics }, { value: "agent", label: text.priorityAgent }]}
                 onChange={(lyricsIslandPriority) => onSettingsChange({ ...settings, lyricsIslandPriority })}
+              />
+            }
+          />
+        )}
+        {settings.lyricsOnIsland && (
+          <SettingsRow
+            indent
+            title={text.intro}
+            description={text.introHint}
+            control={
+              <SettingsChoice<LyricsIntro>
+                value={settings.lyricsIntro}
+                ariaLabel={text.intro}
+                options={[{ value: "todo", label: text.introTodo }, { value: "song", label: text.introSong }, { value: "note", label: text.introNote }]}
+                onChange={(lyricsIntro) => onSettingsChange({ ...settings, lyricsIntro })}
               />
             }
           />

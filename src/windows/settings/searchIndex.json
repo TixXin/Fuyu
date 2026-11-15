@@ -1007,6 +1007,29 @@
       }
     },
     {
+      "page": "music",
+      "zh-CN": {
+        "group": "歌词",
+        "title": "前奏时显示",
+        "description": "第一句歌词开始之前，收起的岛和音乐页显示什么。第一句开始时切到歌词。",
+        "options": [
+          "待办",
+          "歌名",
+          "音符"
+        ]
+      },
+      "en": {
+        "group": "Lyrics",
+        "title": "Before the first line",
+        "description": "What the collapsed island and the music page show before the first line starts. The lyrics take over when it does.",
+        "options": [
+          "Todo",
+          "Title",
+          "Note"
+        ]
+      }
+    },
+    {
       "page": "musicLyrics",
       "zh-CN": {
         "group": "歌词",

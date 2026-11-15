@@ -8,6 +8,7 @@ export type LyricsSettingValues = {
   lyricsOffsetMs: number;
   lyricsOnIsland: boolean;
   lyricsIslandPriority: LyricsIslandPriority;
+  lyricsIntro: LyricsIntro;
   lyricsKaraoke: boolean;
   lyricsKaraokeFallback: LyricsKaraokeFallback;
   lyricsKaraokeFill: LyricsKaraokeFill;
@@ -24,6 +25,7 @@ export type LyricsKaraokeColor = "ink" | "accent" | "custom";
 export const LYRICS_KARAOKE_DIM = { min: 15, max: 80, default: 45 } as const;
 
 export type LyricsIslandPriority = "lyrics" | "agent";
+export type LyricsIntro = "todo" | "song" | "note";
 
 export function chineseLyricsByDefault(languages: readonly (string | undefined)[]): boolean {
   return languages.some((language) => typeof language === "string" && /^zh(-|_|$)/i.test(language));
@@ -41,6 +43,7 @@ export const DEFAULT_LYRICS_SETTINGS: LyricsSettingValues = {
   lyricsOffsetMs: 0,
   lyricsOnIsland: true,
   lyricsIslandPriority: "lyrics",
+  lyricsIntro: "todo",
   lyricsKaraoke: true,
   lyricsKaraokeFallback: "line",
   lyricsKaraokeFill: "smooth",
@@ -59,6 +62,7 @@ export function normalizeLyricsSettings(saved: Partial<Record<keyof LyricsSettin
     lyricsChinese: typeof saved?.lyricsChinese === "boolean" ? saved.lyricsChinese : DEFAULT_LYRICS_SETTINGS.lyricsChinese,
     lyricsOnIsland: saved?.lyricsOnIsland === true,
     lyricsIslandPriority: saved?.lyricsIslandPriority === "agent" ? "agent" : "lyrics",
+    lyricsIntro: saved?.lyricsIntro === "song" || saved?.lyricsIntro === "note" ? saved.lyricsIntro : "todo",
     lyricsKaraoke: saved?.lyricsKaraoke !== false,
     lyricsKaraokeFallback: saved?.lyricsKaraokeFallback === "none" ? "none" : "line",
     lyricsKaraokeFill: saved?.lyricsKaraokeFill === "word" ? "word" : "smooth",
