@@ -16,6 +16,7 @@ pub enum Agent {
     Trae,
     TraeCn,
     Zcode,
+    Mimo,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
@@ -28,7 +29,7 @@ pub enum Kind {
 pub(super) const QUESTION_PATH: &str = "/claude/ask-user-question";
 pub(super) const ACTIVITY_PATH: &str = "/claude/activity";
 
-const AGENTS: [Agent; 12] = [
+const AGENTS: [Agent; 13] = [
     Agent::ClaudeCode,
     Agent::Codex,
     Agent::Workbuddy,
@@ -41,6 +42,7 @@ const AGENTS: [Agent; 12] = [
     Agent::Trae,
     Agent::TraeCn,
     Agent::Zcode,
+    Agent::Mimo,
 ];
 
 pub(super) fn route(path: &str) -> Option<(Agent, Kind)> {
@@ -62,6 +64,7 @@ impl Agent {
             Self::Antigravity => "/antigravity/pre-tool-use",
             Self::Dsh => "/dsh/pre-tool-use",
             Self::Opencode => "/opencode/permission",
+            Self::Mimo => "/mimo/permission",
             Self::Qoder => "/qoder/permission-request",
             Self::Zcode => "/zcode/permission-request",
             Self::Codebuddy => "/codebuddy/permission-request",
@@ -79,6 +82,7 @@ impl Agent {
             Self::Antigravity => "antigravity",
             Self::Dsh => "dsh",
             Self::Opencode => "opencode",
+            Self::Mimo => "mimo",
             Self::Qoder => "qoder",
             Self::Zcode => "zcode",
             Self::Codebuddy => "codebuddy",
@@ -122,7 +126,7 @@ impl HookInput {
     pub(super) fn parse_for(agent: Agent, body: &[u8]) -> Result<Self, &'static str> {
         match agent {
             Agent::Antigravity => {}
-            Agent::Opencode => return super::opencode::plugin_input(body),
+            Agent::Opencode | Agent::Mimo => return super::opencode::plugin_input(body),
             _ => return Self::parse(body),
         }
         let input: Value = serde_json::from_slice(body).map_err(|_| "The body is not JSON.")?;
@@ -260,7 +264,7 @@ pub(super) fn permission_response(
             }
             json!({ "hookSpecificOutput": output }).to_string()
         }
-        Agent::Opencode => super::opencode::plugin_response(decision, message),
+        Agent::Opencode | Agent::Mimo => super::opencode::plugin_response(decision, message),
     }
 }
 

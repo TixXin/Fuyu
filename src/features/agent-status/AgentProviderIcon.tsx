@@ -4,6 +4,7 @@ import codebuddyIcon from "../../assets/brands/codebuddy.svg";
 import codexIcon from "../../assets/brands/codex.webp";
 import dshIcon from "../../assets/brands/dsh.png";
 import kimiCodeIcon from "../../assets/brands/kimi-code.png";
+import mimoIcon from "../../assets/brands/mimo.png";
 import opencodeIcon from "../../assets/brands/opencode.png";
 import qoderIcon from "../../assets/brands/qoder.png";
 import qwenIcon from "../../assets/brands/qwen.png";
@@ -27,6 +28,7 @@ const PROVIDER_ICONS: Record<SessionProvider, string> = {
   traeCn: traeIcon,
   zcode: zcodeIcon,
   kimiCode: kimiCodeIcon,
+  mimo: mimoIcon,
 };
 
 export function AgentProviderIcon({ provider, size = 16 }: { provider: SessionProvider; size?: number }) {

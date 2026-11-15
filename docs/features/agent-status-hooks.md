@@ -107,7 +107,7 @@ Each session on the Agent page can show where it runs, as the program's own icon
 
 ## Session List Settings
 
-**Settings → AI Agent** also sets, in `fuyu-settings`: how far back the list goes (`agentSessionHours`: 1, 2 (default), 6 or 24 hours, passed to `list_agent_sessions` as `windowHours`); which agents are shown (**显示哪些 Agent**: one switch with its icon for each of Codex, Claude Code, WorkBuddy, Antigravity, DeepSeek Harness, opencode, Qoder, CodeBuddy, Qwen Code, TRAE, TRAE CN, ZCode and Kimi Code; stored as `agentHiddenProviders`, the ids of the hidden agents, so an agent added later shows by default; the older `agentShowClaudeCode` / `agentShowCodex` settings are carried over; hidden agents also leave the island's running count); only sessions in progress (`agentHideFinished`); and, per card, the running time (`agentShowElapsed`) and the model (`agentShowModel`).
+**Settings → AI Agent** also sets, in `fuyu-settings`: how far back the list goes (`agentSessionHours`: 1, 2 (default), 6 or 24 hours, passed to `list_agent_sessions` as `windowHours`); which agents are shown (**显示哪些 Agent**: one switch with its icon for each of Codex, Claude Code, WorkBuddy, Antigravity, DeepSeek Harness, opencode, Qoder, CodeBuddy, Qwen Code, TRAE, TRAE CN, ZCode, Kimi Code and MiMo Code; stored as `agentHiddenProviders`, the ids of the hidden agents, so an agent added later shows by default; the older `agentShowClaudeCode` / `agentShowCodex` settings are carried over; hidden agents also leave the island's running count); only sessions in progress (`agentHideFinished`); and, per card, the running time (`agentShowElapsed`) and the model (`agentShowModel`).
 
 **Running time** counts from the newest typed prompt: Claude Code's last real `user` record, Codex's last `user_message` / `task_started` (`turnStartedAt` in each summary). A session in progress shows "已运行 3 分 20 秒", ticking every second in its own leaf component; a finished one shows "用时 …" up to its last write. When a long turn pushes the prompt out of the 256 KiB tail read, the start found earlier is kept; if it was never seen, no time is shown.
 
@@ -160,6 +160,7 @@ What gets installed is the extension as it is in `packages/vscode-extension/` (`
 | Qwen Code | `~/.qwen/QWEN.md` |
 | ZCode | `~/.zcode/AGENTS.md` |
 | Kimi Code | `$KIMI_CODE_HOME/AGENTS.md` (default `~/.kimi-code`) |
+| MiMo Code | `~/.config/mimocode/AGENTS.md` (or `$MIMOCODE_HOME/config`) |
 
 The rest of each file is kept. A file that is a symlink is written through to its target; when several agents point at the same file it gets one section; a dangling link is reported as an error on the settings page and left alone. Switching the marker off removes the section. Switching it on or off, and **安装/修复**, delete the rules file earlier versions wrote (`~/.claude/rules/fuyu-reply-marker.md`). Each agent's reader looks for the character at the end of the last reply: Claude Code, Codex and WorkBuddy in their transcripts, Antigravity in the transcript its hooks point to, DSH in the `turnOutline` response, opencode in the database. Windows needs Developer Mode to create symlinks; following one has not been tested there.
 
@@ -291,6 +292,14 @@ opencode sessions are listed on the Agent page with opencode's icon (task B30, i
 - **Waiting on you and approvals** (1.x, through a plugin; B34): 1.x has no background service, so **安装/修复** writes `fuyu-island.js` into `plugin/` of opencode's config folder (`$XDG_CONFIG_HOME/opencode`, default `~/.config/opencode`), with the island's data folder written in, when opencode is installed. Its status (absent, not installed, outdated, current) is reported with the other agents' hooks, but opencode has no row in the status light card, so an outdated plugin is not pointed out. The 1.19.5 plugin types declare `permission.ask`, but opencode never calls it, so the plugin listens to `event`: on `permission.asked` it writes `agent-notifications/opencode-plugin-<request id>.json` (`{"hook_event_name":"PermissionRequest","session_id":…}`, as other agents' waiting files) and posts the request, with its `cwd`, to the approval endpoint's `/opencode/permission` (port and token from `agent-approval.json` in the island's data folder). The island answers `{"reply":"once"|"always"|"reject","message"?}`, or `{}` for **Terminal**, a timeout or approvals off; the plugin passes the reply to opencode through its own `client`. opencode's own prompt still shows and whoever answers first wins: on `permission.replied`, `session.idle` or `session.error` the plugin drops its request and deletes the waiting file, and the card closes. The default export carries both `server` (1.x) and an empty `setup`, since 2.x scans the same folder; whether 2.x loads it quietly is not yet checked. Checked with opencode 1.19.5 against a fake endpoint (allow, deny with a reason, answering in opencode first), not yet with the island.
 - **Clicking a session** brings up the OpenCode desktop window when it runs, otherwise looks for a terminal by folder and title. It cannot open a specific session.
 - Not done: waiting and approvals for `opencode --standalone` (2.x: its private server's password is only in the child process's `OPENCODE_PASSWORD` and its address only on the pipe to the TUI, and it writes no `service.json`; a 2.x server plugin would be the way, if ever), answering questions, usage (only OpenCode Go subscriptions have quota windows), SSH, cc-connect.
+
+## MiMo Code
+
+Xiaomi's MiMo Code is a fork of opencode, so the island reads it the same way as opencode 1.x (task B54, issue #530). Not yet run with the island (#179).
+
+- **Sessions**: `~/.local/share/mimocode/mimocode.db` (`MIMOCODE_DB`, or `data/` under `MIMOCODE_HOME`), opened read-only; only the main agent's messages count when the table records which agent wrote them. The same folders are used on Windows and macOS.
+- **Waiting on you and approvals**: **安装/修复** writes the opencode plugin into `~/.config/mimocode/plugin/fuyu-island.js`, posting to `/mimo/permission` and writing `agent-notifications/mimo-plugin-<id>.json`. No status light row, as for opencode.
+- Not read: databases of other release channels (`mimocode-<channel>.db`).
 
 ## Qoder, CodeBuddy Code and Qwen Code
 

@@ -1,6 +1,6 @@
 import type { MessageSource } from "../../features/messages/messagePreview";
 import type { PlatformFeature } from "../../lib/platform.ts";
-import { BUILTIN_PAGES, pageSlot, type HeaderDotPage } from "./slots/pageSlot.ts";
+import { pageSlot, type HeaderDotPage } from "./slots/pageSlot.ts";
 import type { BuiltinPage, IslandPage, PluginPageId } from "./types";
 
 export type { HeaderDotPage };
@@ -37,9 +37,13 @@ const SOURCE_ORDER: MessageSource[] = ["qq", "wechat", "qqMail"];
 const byShortcut = <Item extends { shortcutOrder?: number }>(items: readonly Item[]) =>
   [...items].sort((a, b) => (a.shortcutOrder ?? Number.MAX_SAFE_INTEGER) - (b.shortcutOrder ?? Number.MAX_SAFE_INTEGER));
 
-const isHeaderDot = (page: (typeof BUILTIN_PAGES)[number]): page is Extract<(typeof BUILTIN_PAGES)[number], { headerDot: true }> => page.headerDot === true;
+type PageSwitch = { enabled?: (features: IslandFeatures) => boolean };
 
-export const HEADER_DOT_PAGES: readonly HeaderDotPage[] = byShortcut(BUILTIN_PAGES.filter(isHeaderDot)).map((page) => page.id);
+const itemEnabled = (item: PageSwitch, features: IslandFeatures) => item.enabled === undefined || item.enabled(features) === true;
+
+export function headerDotPages<Item extends PageSwitch & { headerDot?: boolean; shortcutOrder?: number }>(items: readonly Item[], features: IslandFeatures): Item[] {
+  return byShortcut(items.filter((item) => item.headerDot === true && itemEnabled(item, features)));
+}
 
 const pageItem = (page: IslandPage) => pageSlot.items().find((item) => item.id === page);
 
@@ -57,7 +61,7 @@ function shortcutOrder(features: IslandFeatures): IslandPage[] {
 export function isPageEnabled(page: IslandPage, features: IslandFeatures): boolean {
   if (isPluginPage(page)) return features.pluginPages?.includes(page) ?? false;
   const item = pageItem(page);
-  return item !== undefined && (item.enabled === undefined || item.enabled(features) === true);
+  return item !== undefined && itemEnabled(item, features);
 }
 
 export function resolveIslandPage(page: IslandPage, features: IslandFeatures): IslandPage | null {

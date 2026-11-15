@@ -129,10 +129,13 @@ test("Alt+number follows the header from left to right and skips modules that ar
 });
 
 test("page shortcuts go through every page in the header's order, plugin pages before the bell", async () => {
-  const { pageShortcutOrder, cycleShortcutPage, HEADER_DOT_PAGES } = await import("../../src/windows/island/features.ts");
+  const { pageShortcutOrder, cycleShortcutPage, headerDotPages } = await import("../../src/windows/island/features.ts");
+  const { pageSlot } = await import("../../src/windows/island/slots/pageSlot.ts");
   const every = { agents: true, todo: true, calendar: true, music: true, clipboard: true, shelf: true, screenshots: true, timer: true, qq: true, wechat: false, qqMail: false, translation: true, pluginPages: ["plugin:a", "plugin:b"] };
-  assert.deepEqual(pageShortcutOrder(every), ["agents", ...HEADER_DOT_PAGES, "plugin:a", "plugin:b", "qq", "translation"]);
-  assert.deepEqual([...HEADER_DOT_PAGES], ["todo", "music", "calendar", "clipboard", "shelf", "screenshots", "timer"]);
+  const dots = (features) => headerDotPages(pageSlot.items(), features).map((item) => item.id);
+  assert.deepEqual(pageShortcutOrder(every), ["agents", ...dots(every), "plugin:a", "plugin:b", "qq", "translation"]);
+  assert.deepEqual(dots(every), ["todo", "music", "calendar", "clipboard", "shelf", "screenshots", "timer"]);
+  assert.deepEqual(dots({ ...every, music: false, timer: false }), ["todo", "calendar", "clipboard", "shelf", "screenshots"]);
   assert.equal(cycleShortcutPage(every, "music", 1), "calendar");
   assert.equal(cycleShortcutPage(every, "screenshots", 1), "timer");
   assert.equal(cycleShortcutPage(every, "timer", 1), "plugin:a");

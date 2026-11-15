@@ -196,7 +196,7 @@ fn session_rows(conn: &Connection, table: &str, columns: &HashSet<String>, since
     let archived = if columns.contains("time_archived") { "time_archived IS NULL" } else { "1" };
     let deleted = if columns.contains("time_deleted") { "time_deleted IS NULL" } else { "1" };
     let child = if columns.contains("task_type") { "coalesce(task_type, '') NOT LIKE '%child'" } else { "1" };
-    let title = if columns.contains("title_source") { "CASE WHEN title_source = 'default' THEN NULL ELSE title END" } else { "title" };
+    let title = if columns.contains("title_source") { "CASE WHEN title_source IN ('default', 'fallback') THEN NULL ELSE title END" } else { "title" };
     let sql = format!(
         "SELECT id, {title}, directory, {model}, time_updated, {busy}, {idle}, {outcome}, {agent} FROM {table} \
          WHERE {parent} AND {archived} AND {deleted} AND {child} \
@@ -245,9 +245,10 @@ fn read_v2(conn: &Connection, columns: &HashSet<String>, since: i64) -> rusqlite
 fn read_v1(conn: &Connection, columns: &HashSet<String>, since: i64) -> rusqlite::Result<Vec<Stored>> {
     let has_parts = columns_exist(conn, "part")?;
     let has_todos = columns_exist(conn, "todo")?;
+    let main_only = self::columns(conn, "message")?.is_some_and(|columns| columns.contains("agent_id"));
     let mut out = Vec::new();
     for row in session_rows(conn, "session", columns, since)? {
-        let mut messages = v1_messages(conn, &row.id, has_parts)?;
+        let mut messages = v1_messages(conn, &row.id, has_parts, main_only)?;
         if has_todos {
             messages.todos = v1_todos(conn, &row.id)?;
         }
@@ -396,10 +397,11 @@ fn v1_todos(conn: &Connection, session: &str) -> rusqlite::Result<Option<TodoPro
     Ok(unfinished(todo_items(&Value::Array(todos))))
 }
 
-fn v1_messages(conn: &Connection, session: &str, has_parts: bool) -> rusqlite::Result<Turn> {
-    let mut statement = conn.prepare(
-        "SELECT id, data, time_created FROM message WHERE session_id = ?1 ORDER BY time_created DESC, id DESC LIMIT ?2",
-    )?;
+fn v1_messages(conn: &Connection, session: &str, has_parts: bool, main_only: bool) -> rusqlite::Result<Turn> {
+    let agent = if main_only { "AND coalesce(agent_id, 'main') = 'main'" } else { "" };
+    let mut statement = conn.prepare(&format!(
+        "SELECT id, data, time_created FROM message WHERE session_id = ?1 {agent} ORDER BY time_created DESC, id DESC LIMIT ?2",
+    ))?;
     let recent = statement
         .query_map(params![session, RECENT_MESSAGES], |row| {
             Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?, row.get::<_, i64>(2)?))

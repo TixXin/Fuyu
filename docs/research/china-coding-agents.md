@@ -435,7 +435,7 @@ cc-connect：
 | 家 | 本地形态 | 会话可读 | 钩子 | 热度（2026-11-15） | 难度 |
 |---|---|---|---|---|---|
 | 智谱 ZCode | 桌面（Electron，Win/mac/Linux）+ 终端 CLI/TUI，开源 | 能：`~/.zcode/cli/db/db.sqlite`（SQLite） | 有。写在用户级 `~/.zcode/cli/config.json`，外层格式是 ZCode 自己的；事件名和 stdin/stdout 字段兼容 Claude Code；PreToolUse 和 PermissionRequest 都能回 allow/deny | GitHub 8.7k star；媒体报道用户破 100 万 | **低–中** |
-| 小米 MiMo Code | 终端 CLI，Win/mac/Linux，开源，是 opencode 的分支 | 能：数据目录里的 SQLite（`~/.local/share/mimocode/`；mac 在 `~/Library/Application Support/mimocode/`；Win 在 `%LOCALAPPDATA%\mimocode\`） | 有。插件格式和 opencode 一样（`tool.execute.before`、`permission.ask`） | GitHub 13.8k star | **低**（复用 opencode 适配） |
+| 小米 MiMo Code | 终端 CLI，Win/mac/Linux，开源，是 opencode 的分支 | 能：数据目录里的 SQLite（`~/.local/share/mimocode/`，Windows、macOS 上也是这个位置；B54 按源码核实） | 有。插件格式和 opencode 一样（`tool.execute.before`、`permission.ask`） | GitHub 13.8k star | **低**（复用 opencode 适配） |
 | MiniMax Code（原 MiniMax Agent 桌面版） | 桌面（mac/Win）+ `mcode` CLI（mac/Linux/WSL/Win），CLI 开源 | 能读，但格式未核实：数据根 `~/.minimax`，源码里有 SQLite 持久化模块 | 有，但只能放在插件里；能读 Claude Code 格式的插件；PreToolUse 和 PermissionRequest 能回 allow/deny | GitHub 2.2k star；npm 周下载 1.78 万 | **中** |
 | 华为 码道 CLI（CodeArts Agent CLI） | 终端 TUI/CLI，Win/mac/Linux；另有 IDE 形态 | 未核实 | 有。JS/TS 插件，事件和 opencode 一致（`tool.execute.before`、`permission.ask` 能回 allow/deny/ask），放在 `~/.codeartsdoer/plugin` | 未核实 | **低–中**（复用 opencode 适配，路径要核实） |
 | 百度 文心快码 Comate | IDE 插件、Comate AI IDE、Zulu CLI（`@comate/zulu`，偏无头）、`comatecli` 交互终端 | 大概能：`~/.comate-engine/store/chat_session_*` | 未查到 | 报道称服务开发者超过 1000 万（整体口径）；CLI 周下载很低（zulu 727，comatecli 89） | **高**（只能列会话，做不了审批） |
@@ -475,8 +475,8 @@ cc-connect：
 
 ##### 2. 小米 MiMo Code
 - **形态**：终端原生，MIT 开源，在 opencode 上二次开发（[腾讯新闻](https://news.qq.com/rain/a/20260612A02E2J00)、[掘金](https://juejin.cn/post/7697664935023968306)）。有 macOS/Linux 的 curl 安装和 Windows 的 PowerShell 安装（[README](https://github.com/XiaomiMiMo/MiMo-Code)）。
-- **会话**：data 目录 `~/.local/share/mimocode/` 放 SQLite 数据库、凭据、记忆和日志；mac 是 `~/Library/Application Support/mimocode/`，Windows 是 `%LOCALAPPDATA%\mimocode\`，`MIMOCODE_HOME` 可以覆盖。配置在 `~/.config/mimocode/mimocode.jsonc`（同一份 README）。
-- **钩子**：仓库里有 `packages/plugin/src/index.ts`、`tool.execute.before`、`permission.ask`（[packages/plugin](https://github.com/XiaomiMiMo/MiMo-Code/tree/main/packages/plugin)），和 opencode 的插件机制一样。插件放在哪个目录、事件签名有没有改，**未核实**。
+- **会话**：data 目录 `~/.local/share/mimocode/` 放 SQLite 数据库、凭据、记忆和日志，`MIMOCODE_HOME` 可以覆盖。（2026-11-15 更正：早先写的 mac `~/Library/Application Support/mimocode/`、Windows `%LOCALAPPDATA%\mimocode\` 不对，`xdg-basedir` 不分平台，Windows、macOS 上也是 `~/.local/share/mimocode/` 和 `~/.config/mimocode/`；B54 按源码核实。）配置在 `~/.config/mimocode/mimocode.jsonc`（同一份 README）。
+- **钩子**：仓库里有 `packages/plugin/src/index.ts`、`tool.execute.before`、`permission.ask`（[packages/plugin](https://github.com/XiaomiMiMo/MiMo-Code/tree/main/packages/plugin)），和 opencode 的插件机制一样。插件放在 `~/.config/mimocode/plugin/`，事件和 opencode 一致（B54 按源码核实）。
 - **热度**：13,787 star，2026-11-13 还有推送（GitHub API）。
 - **难度：低。** 照搬岛的 opencode 插件和读库逻辑，改目录名和包名就行。
 

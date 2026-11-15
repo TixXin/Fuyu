@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>会话层级预览</title>
+<style>
+:root {
+  --bg: #1e1e1e;
+  --panel: #262626;
+  --row-hover: #333;
+  --row-active: #3a3a3a;
+  --text: #e8e8e8;
+  --muted: #9a9a9a;
+  --faint: #6b6b6b;
+  --line: #3d3d3d;
+  --accent: #d97757;
+  --run: #5aa9e6;
+  --wait: #e6a23c;
+  --done: #6cbf7f;
+  --bad: #e5636b;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.5 -apple-system, BlinkMacSystemFont, "PingFang SC", "Segoe UI", sans-serif; }
+header { padding: 28px 32px 8px; max-width: 1240px; margin: 0 auto; }
+h1 { font-size: 22px; margin: 0 0 6px; }
+header p { margin: 0; color: var(--muted); }
+.toolbar { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+button { background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; font: inherit; cursor: pointer; }
+button:hover { background: var(--row-hover); }
+main { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 24px; padding: 16px 32px 40px; max-width: 1240px; margin: 0 auto; }
+.col h2 { font-size: 15px; margin: 0 0 4px; }
+.col .sub { color: var(--muted); font-size: 13px; margin: 0 0 12px; min-height: 40px; }
+.tag { display: inline-block; font-size: 12px; padding: 1px 8px; border-radius: 10px; margin-left: 6px; vertical-align: 1px; }
+.tag.bad { background: color-mix(in srgb, var(--bad) 20%, transparent); color: var(--bad); }
+.tag.good { background: color-mix(in srgb, var(--done) 20%, transparent); color: var(--done); }
+.sidebar { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 10px 8px; height: 640px; overflow: auto; }
+.section-title { color: var(--faint); font-size: 12px; padding: 8px 10px 4px; }
+.row { display: flex; align-items: center; gap: 6px; padding: 6px 8px; border-radius: 8px; cursor: default; white-space: nowrap; overflow: hidden; }
+.row:hover { background: var(--row-hover); }
+.row.top { font-weight: 600; }
+.row .chev { width: 16px; flex: none; color: var(--muted); text-align: center; cursor: pointer; transition: transform .15s; user-select: none; }
+.row .chev.closed { transform: rotate(-90deg); }
+.row .chev.none { visibility: hidden; }
+.row .icon { flex: none; color: var(--muted); font-size: 12px; width: 18px; text-align: center; }
+.row .title { overflow: hidden; text-overflow: ellipsis; flex: 1; min-width: 0; }
+.row .count { color: var(--faint); font-size: 12px; font-weight: 400; }
+.dot { width: 7px; height: 7px; border-radius: 50%; flex: none; }
+.dot.run { background: var(--run); box-shadow: 0 0 0 3px color-mix(in srgb, var(--run) 25%, transparent); }
+.dot.wait { background: var(--wait); }
+.dot.idle { background: transparent; border: 1px solid var(--faint); }
+.children { margin-left: 15px; border-left: 1px solid var(--line); padding-left: 4px; }
+.children.hidden { display: none; }
+.lvl3 { color: var(--muted); }
+.lvl3 .title::after { content: "  收不起来"; color: var(--bad); font-size: 11px; }
+.legend { max-width: 1240px; margin: 0 auto; padding: 0 32px 48px; display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 24px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; }
+.card h3 { margin: 0 0 10px; font-size: 14px; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+td, th { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { color: var(--muted); font-weight: 500; }
+code { background: #2f2f2f; padding: 1px 5px; border-radius: 4px; font-size: 12px; }
+ul { margin: 0; padding-left: 18px; }
+li { margin: 4px 0; }
+.keys { display: flex; gap: 14px; color: var(--muted); font-size: 12px; margin-top: 10px; flex-wrap: wrap; }
+.keys span { display: inline-flex; align-items: center; gap: 6px; }
+@media (max-width: 600px) { header, main, .legend { padding-left: 16px; padding-right: 16px; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>会话层级预览</h1>
+  <p>左边是现在的样子（三层），右边是建议的样子（主会话都在顶层，只留两层）。点每行前面的箭头可以折叠和展开。会话名都是示例。</p>
+  <div class="toolbar">
+    <button data-act="collapse">全部折叠</button>
+    <button data-act="expand">全部展开</button>
+  </div>
+  <div class="keys">
+    <span><i class="dot run"></i>在跑</span>
+    <span><i class="dot wait"></i>等你</span>
+    <span><i class="dot idle"></i>空闲</span>
+  </div>
+</header>
+
+<main>
+  <section class="col">
+    <h2>现在：三层<span class="tag bad">第三层收不起来</span></h2>
+    <p class="sub">总控开主 agent，主 agent 再派子会话。只有最上面一层能折叠，主 agent 下面的子会话一直摊开；名字格式也不统一。</p>
+    <div class="sidebar" id="now"></div>
+  </section>
+  <section class="col">
+    <h2>建议：两层<span class="tag good">每个主会话都能折叠</span></h2>
+    <p class="sub">5～10 个「◆」主会话都在顶层，由你自己开、长期存在；主会话直接派任务会话，任务会话做完就归档。</p>
+    <div class="sidebar" id="next"></div>
+  </section>
+</main>
+
+<div class="legend">
+  <div class="card">
+    <h3>命名</h3>
+    <table>
+      <tr><th>角色</th><th>标题格式</th><th>例子</th></tr>
+      <tr><td>主会话</td><td>「◆ &lt;领域&gt;」</td><td>◆ 总控、◆ 插件平台</td></tr>
+      <tr><td>任务会话</td><td>「&lt;任务编号&gt; &lt;一句话&gt;」</td><td>C72 待办颜色和优先级</td></tr>
+      <tr><td>等你挑方案</td><td>「预览：…」「调研：…」</td><td>预览：岛的三种形态</td></tr>
+      <tr><td>排查</td><td>「排查：&lt;现象&gt;」</td><td>排查：Mac 更新后卡在重启</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h3>规则</h3>
+    <ul>
+      <li>主会话只聊天、规划、派会话、检查、合入，不写代码。</li>
+      <li>主会话不再开「任务主 agent」，自己直接派任务会话，所以只有两层。</li>
+      <li>总控有新需求时发消息转给对应的主会话，不自己开会话。</li>
+      <li>任务会话收口时归档；主会话聊得太长就新开一个同名的，旧的归档。</li>
+      <li>只读的调研优先用后台子代理做，不进侧边栏。</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+const now = [
+  { t: "Issue triage and routing", s: "run", c: [
+    { t: "消息与小功能主 agent：未读、待办优先级、提醒、语音", s: "idle", c: [
+      { t: "C72：待办颜色和优先级，高优先级到期提醒（#323）", s: "wait" },
+      { t: "C80：语音输入实现（本机 SenseVoice，#335）", s: "idle" },
+      { t: "C78：休息提醒（久坐、护眼，#333）", s: "idle" },
+      { t: "C80 语音输入调研 + C67 文件搜索调研（只写文档）", s: "idle" }
+    ] },
+    { t: "岛外观与形态主 agent：形态、预览、透明、磨砂", s: "idle", c: [
+      { t: "C87 液态玻璃重做：调研和预览页", s: "wait" },
+      { t: "C76 悬停预览层：交互方案和预览页", s: "wait" },
+      { t: "C65 岛的三种形态：预览页", s: "wait" }
+    ] },
+    { t: "排查：Mac 更新后一直卡在「小岛正在重启」", s: "idle", c: [
+      { t: "更新安装出错时关于页误写「检查更新失败」", s: "idle" }
+    ] },
+    { t: "README 修改与多语言版本（#222、#238）", s: "idle" },
+    { t: "C68 跨设备同步调研主 agent（WebDAV 等）", s: "idle" }
+  ] },
+  { t: "issue 处理", s: "idle", c: [
+    { t: "Agent 适配主 agent：规划并分派各家 harness 适配", s: "run", c: [
+      { t: "B29 豆包接入：先调研可接的形态", s: "idle" },
+      { t: "Kimi Code CLI 接入岛的 Agent 页", s: "run" },
+      { t: "doubao", s: "run" }
+    ] }
+  ] },
+  { t: "插件平台第 3 版基线和可行性验证", s: "run", c: [
+    { t: "插件 v3 第 3 阶段地基主 agent：服务、Rust 标记、宿主样板", s: "run", c: [
+      { t: "E36.3.18 翻译入口和 ctx.rust 的权限", s: "run" },
+      { t: "E36.3.19 正式版不认开发来源", s: "idle" }
+    ] },
+    { t: "插件 v3 第 2 阶段主 agent：规划并分派插槽化", s: "idle", c: [
+      { t: "v3-slot-header", s: "run" },
+      { t: "E36.2.7 刘海提醒插槽", s: "idle" }
+    ] }
+  ] }
+];
+
+const next = [
+  { t: "◆ 总控", s: "run", c: [] , note: "只转需求、合入、拦发版" },
+  { t: "◆ 插件平台", s: "run", c: [
+    { t: "E36.3.18 翻译入口和 ctx.rust 的权限", s: "run" },
+    { t: "E36.3.19 正式版不认开发来源", s: "idle" },
+    { t: "E36.2.6 头部按钮走插槽", s: "run" },
+    { t: "E36.2.7 刘海提醒插槽", s: "idle" }
+  ] },
+  { t: "◆ Agent 页", s: "run", c: [
+    { t: "B52 接入 Kimi Code CLI", s: "run" },
+    { t: "B53 接入智谱 ZCode", s: "run" },
+    { t: "调研：豆包可接的形态", s: "wait" }
+  ] },
+  { t: "◆ 消息与小功能", s: "idle", c: [
+    { t: "C72 待办颜色和优先级", s: "wait" },
+    { t: "C80 本机语音输入", s: "idle" },
+    { t: "C78 休息提醒", s: "idle" }
+  ] },
+  { t: "◆ 岛外观", s: "idle", c: [
+    { t: "预览：液态玻璃重做", s: "wait" },
+    { t: "预览：悬停预览层", s: "wait" },
+    { t: "预览：岛的三种形态", s: "wait" }
+  ] },
+  { t: "◆ Mac 适配", s: "idle", c: [
+    { t: "排查：Mac 更新后卡在重启", s: "idle" }
+  ] },
+  { t: "◆ 同步", s: "idle", c: [
+    { t: "调研：跨设备同步（WebDAV 等）", s: "wait" }
+  ] },
+  { t: "◆ 发版与流程", s: "idle", c: [
+    { t: "README 多语言版本", s: "idle" }
+  ] }
+];
+
+function render(list, depth, flatTop) {
+  const box = document.createElement("div");
+  for (const item of list) {
+    const row = document.createElement("div");
+    const hasKids = item.c && item.c.length;
+    const collapsible = hasKids && depth === 0;
+    row.className = "row" + (depth === 0 ? " top" : "") + (depth >= 2 && !flatTop ? " lvl3" : "");
+    const chev = document.createElement("span");
+    chev.className = "chev" + (collapsible ? "" : " none");
+    chev.textContent = "▾";
+    const dot = document.createElement("i");
+    dot.className = "dot " + item.s;
+    const title = document.createElement("span");
+    title.className = "title";
+    title.textContent = item.t;
+    row.append(chev, dot, title);
+    if (hasKids) {
+      const count = document.createElement("span");
+      count.className = "count";
+      count.textContent = item.c.length;
+      row.append(count);
+    }
+    if (item.note) {
+      const note = document.createElement("span");
+      note.className = "count";
+      note.textContent = item.note;
+      row.append(note);
+    }
+    box.append(row);
+    if (hasKids) {
+      const kids = render(item.c, depth + 1, flatTop);
+      kids.classList.add("children");
+      box.append(kids);
+      if (collapsible) chev.addEventListener("click", () => {
+        kids.classList.toggle("hidden");
+        chev.classList.toggle("closed");
+      });
+    }
+  }
+  return box;
+}
+
+document.getElementById("now").append(render(now, 0, false));
+document.getElementById("next").append(render(next, 0, true));
+
+document.querySelectorAll("[data-act]").forEach((button) => button.addEventListener("click", () => {
+  const close = button.dataset.act === "collapse";
+  document.querySelectorAll(".row.top .chev:not(.none)").forEach((chev) => {
+    chev.classList.toggle("closed", close);
+    chev.parentElement.nextElementSibling.classList.toggle("hidden", close);
+  });
+}));
+</script>
+</body>
+</html>

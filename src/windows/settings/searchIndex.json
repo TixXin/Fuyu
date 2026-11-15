@@ -2341,6 +2341,17 @@
       }
     },
     {
+      "page": "agents",
+      "zh-CN": {
+        "group": "显示哪些 Agent",
+        "title": "MiMo Code"
+      },
+      "en": {
+        "group": "Agents shown",
+        "title": "MiMo Code"
+      }
+    },
+    {
       "page": "agentSessions",
       "zh-CN": {
         "group": "会话列表",
