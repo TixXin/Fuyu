@@ -54,6 +54,8 @@ test("pack refuses forbidden paths and files", () => {
     ["dist/addon.node", "native"],
     ["bin/tool.exe", "executable"],
     ["lib/libx.dylib", "executable"],
+    ["dist/engine.wasm", "executable"],
+    ["lib/tool.JAR", "executable"],
   ];
   for (const [path, code] of cases) rejects(() => packFiles([...goodFiles(), { path, data: Buffer.from("x") }]), code);
   rejects(() => packFiles([...goodFiles(), { path: "readme.md", data: Buffer.from("x") }]), "duplicate");
@@ -66,12 +68,16 @@ test("pack and read find executables by their header whatever the name", () => {
   pe.write("MZ", 0, "latin1");
   pe.writeUInt32LE(64, 0x3c);
   pe.write("PE\0\0", 64, "latin1");
-  const headers = [pe, Buffer.from([0x7f, 0x45, 0x4c, 0x46, 2, 1, 1]), Buffer.from([0xcf, 0xfa, 0xed, 0xfe, 7, 0, 0, 1]), Buffer.from([0xca, 0xfe, 0xba, 0xbe, 0, 0, 0, 2])];
+  const wasm = Buffer.from([0x00, 0x61, 0x73, 0x6d, 1, 0, 0, 0]);
+  const jar = createZip([{ path: "META-INF/MANIFEST.MF", data: Buffer.from("Manifest-Version: 1.0\n") }]);
+  const headers = [pe, Buffer.from([0x7f, 0x45, 0x4c, 0x46, 2, 1, 1]), Buffer.from([0xcf, 0xfa, 0xed, 0xfe, 7, 0, 0, 1]), Buffer.from([0xca, 0xfe, 0xba, 0xbe, 0, 0, 0, 2]), wasm, jar];
   for (const data of headers) {
     rejects(() => packFiles([...goodFiles(), { path: "assets/sound.mp3", data }]), "executable");
     rejects(() => readPackage(rawZip([manifestFile, { path: "assets/sound.mp3", data }])), "executable");
   }
   assert.doesNotThrow(() => packFiles([...goodFiles(), { path: "notes.txt", data: Buffer.from("MZ is a text that starts like a PE") }]));
+  const plainZip = createZip([{ path: "data.json", data: Buffer.from("{}") }]);
+  assert.doesNotThrow(() => packFiles([...goodFiles(), { path: "assets/data.zip", data: plainZip }]));
 });
 
 test("the package size limit is 20 MB by default and configurable", () => {
