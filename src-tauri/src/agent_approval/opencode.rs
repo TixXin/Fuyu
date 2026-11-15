@@ -14,7 +14,7 @@ use std::{
 use base64::Engine;
 use serde_json::{json, Map, Value};
 
-use super::decision::{Agent, Decision};
+use super::decision::{Agent, Decision, HookInput};
 use super::external::{self, ExternalRequest};
 
 const USERNAME: &str = "opencode";
@@ -196,6 +196,42 @@ fn permission(value: &Value) -> Option<Permission> {
         metadata: value["metadata"].as_object().cloned().unwrap_or_default(),
         message: text("message"),
     })
+}
+
+pub(super) fn plugin_input(body: &[u8]) -> Result<HookInput, &'static str> {
+    let value: Value = serde_json::from_slice(body).map_err(|_| "The body is not JSON.")?;
+    let text = |key: &str| value[key].as_str().filter(|text| !text.is_empty()).map(str::to_string);
+    let request = Permission {
+        id: text("id").ok_or("No id.")?,
+        session_id: text("sessionID").ok_or("No sessionID.")?,
+        action: text("permission").unwrap_or_default(),
+        resources: value["patterns"].as_array().into_iter().flatten().filter_map(Value::as_str).map(str::to_string).collect(),
+        metadata: value["metadata"].as_object().cloned().unwrap_or_default(),
+        message: text("message"),
+    };
+    let (tool_name, tool_input) = tool_call(&request);
+    Ok(HookInput {
+        session_id: request.session_id,
+        cwd: text("cwd"),
+        tool_name,
+        tool_input,
+        permission_suggestions: None,
+        agent_id: None,
+        remote_host: None,
+    })
+}
+
+pub(super) fn plugin_response(decision: Option<Decision>, message: Option<&str>) -> String {
+    match decision {
+        Some(Decision::Allow) => json!({ "reply": "once" }).to_string(),
+        Some(Decision::AllowAlways) => json!({ "reply": "always" }).to_string(),
+        Some(Decision::Deny) => json!({
+            "reply": "reject",
+            "message": message.map(str::trim).filter(|text| !text.is_empty()).unwrap_or(DEFAULT_DENY_MESSAGE),
+        })
+        .to_string(),
+        None | Some(Decision::Terminal | Decision::Answer) => "{}".to_string(),
+    }
 }
 
 pub(crate) fn reply(endpoint: &Endpoint, session_id: &str, request_id: &str, decision: Decision, message: Option<&str>) -> Result<(), String> {
