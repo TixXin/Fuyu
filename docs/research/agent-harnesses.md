@@ -1,5 +1,7 @@
 # 接入更多 AI 代理：Antigravity、WorkBuddy、DeepSeek Harness、opencode
 
+> 2026-11-15 追加豆包（issue #312，任务 B29），见下面「豆包」一节，结论在那一节开头。
+
 > 2026-11-14 追加 opencode（issue #349，任务 B30），见下面「opencode」一节，结论在那一节开头。
 
 > 日期：2026-11-13。问题：Agent 页的会话列表能不能接入 Antigravity、WorkBuddy、DeepSeek Harness，本地和 SSH 都行不行，用量环能不能扩到这三家（issue #155）。范围：三家的官方文档、GitHub 仓库和 issue、社区文章；Atoll（macOS 刘海岛）读 Antigravity 额度的源码；本机 `~/.workbuddy`（WorkBuddy 5.3.8 留下的 17 个会话文件）。本机没装 Antigravity 和 DeepSeek Harness，zcm6 上三家都没装，所以只有 WorkBuddy 5.3.8 的会话格式是看过真实文件的，其余按文档。相关任务：B23（B23.1 本文，B23.2 WorkBuddy，B23.3 Antigravity）。
@@ -189,6 +191,88 @@ opencode 现在有两条线同时在发：**2.x**（2.0 在 2026-10 初发布，
 - 2.x 的 `session.directory` 在 Windows 上是正斜杠，比较路径前先规范化。
 - `service.json` 里有密码，岛只在内存里用，不写日志、不推送到手机。
 
+## 豆包（2026-11-15 追加）
+
+> 日期：2026-11-15。问题：Agent 页能不能接入「豆包」（issue #312），豆包旗下哪种形态能当 harness 接：豆包桌面版、TRAE / TRAE CN（IDE）、TRAE CLI，以及其他字节系的编程代理；每种的会话、三态、钩子、等你和审批、用量、Windows 和 macOS 的差别。范围：本机 `/Applications/Doubao.app`（2.24.10，App Store 版）的安装包结构；TRAE 官方文档 docs.trae.ai（钩子两页）和 docs.trae.cn（TRAE CLI 2.0 各页）；GitHub 上读写 TRAE 数据的第三方项目（deja-vu、CodeIsland、perch、tokscale）；8 月下旬字节整合 TRAE 的报道。本机没装 TRAE 和 TRAE CLI，除豆包桌面版的安装包外都**按文档和第三方源码，未实测**。相关任务：B29。
+
+### 结论
+
+先理清名字：2026-08-24 字节把 TRAE 和扣子并入豆包，**TRAE IDE 和 TRAE CLI 继续作为编程产品、纳入豆包品牌**，另出了办公代理「豆包工作」（来源 43）。所以用户说的「支持豆包」，能落地的是豆包旗下的编程代理 TRAE，豆包聊天客户端本身不是编程代理。
+
+| 形态 | 谁能用 | 会话能不能读 | 运行中 / 完成 | 等你 | 在岛上审批 | 用量 | 判断 |
+|---|---|---|---|---|---|---|---|
+| 豆包桌面版（聊天客户端） | 所有人 | ✗ 对话存在云端；本地只有浏览器缓存，且 macOS 的 App Store 版在沙盒容器里，外部进程读不了 | ✗ | ✗ | ✗ | ✗ | 不接 |
+| 豆包工作（办公代理客户端） | 所有人 | 未核实，没找到本地数据的说明 | 未核实 | 未核实 | 未核实 | 未核实 | 不接，不是编程代理 |
+| **TRAE / TRAE CN（IDE，含 SOLO、Agent 模式）** | 所有人，个人免费版也有 | ◐ 本地会话库是 SQLCipher 加密的，读不了；会话只能**从钩子攒出来**（和岛上 Antigravity 的做法一样），装钩子之前的会话看不到 | ✓ 钩子 | ✓ `Notification` 的 `permission_prompt` | ✓ `PreToolUse` 能挂起、回 `allow` / `deny` / `ask` | ✗ 只有账号级用量，走官方接口 | **推荐接** |
+| TRAE CLI 2.0（`traecli`） | **只有 TRAE 企业版旗舰版** | ✓ Codex 格式的 rollout JSONL | ✓ | ✓ 钩子（Codex 格式，未核实） | 未核实 | 未核实 | 第二步再做，能复用 Codex 的解析 |
+| TRAE CLI 1.x（内部叫 CoCo） | 已进入弱维护 | ✓ `events.jsonl` | ◐ | ✗ 未调研 | ✗ 未调研 | ✗ | 不接 |
+| trae-agent（字节开源的 Python 研究项目） | 所有人 | ◐ 只有跑完写到工作目录的轨迹 JSON | ✗ 没有钩子 | ✗ | ✗ | ✗ | 不接 |
+
+**推荐：接 TRAE IDE（国际版和 TRAE CN 一起），用钩子。** 理由：用户群最可能在用的是免费的 TRAE / TRAE CN；它的钩子是 Claude Code 格式的六个事件，岛的钩子脚本和审批流程基本能直接复用；会话列表靠钩子存下的输入拼出来，Antigravity 已经是这么做的（`agent-antigravity/`），有现成的路子。名字在岛上显示为「TRAE」，用 TRAE 的图标；要不要在名字里带「豆包」由用户定。
+
+能做到的：
+
+| 功能 | 预计 | 说明 |
+|---|---|---|
+| 会话列表、品牌图标 | ◐ | 从钩子攒：`SessionStart` 建会话，`session_id` 做键，`cwd` / `workspace_roots` 做目录。只有装钩子之后、且钩子在跑的会话 |
+| 标题、最近提问和回复 | ◐ | 钩子输入没有 `transcript_path`，没有会话文件可读；标题用第一次 `UserPromptSubmit` 的 `prompt` 截断，最近回复用 `Stop` 的 `last_assistant_message`。TRAE CN 另有 `~/.trae-cn/memory/projects/**/session_memory_*.jsonl`，第一条记录的 `intent` 可当标题（perch 这样做，来源 48；只读结构，未实测） |
+| 运行中 / 完成 | ✓ | `UserPromptSubmit`、`PreToolUse`、`PostToolUse` 记运行中，`Stop` 或 `Notification` 的 `idle_prompt` 记完成 |
+| 「等你」 | ✓ | `Notification` 的 `notification_type` 为 `permission_prompt`、`ask_user_question`、`document_review`、`browser_interaction` 时。注意 `Notification` 是异步的，输出被忽略 |
+| 在岛上审批 | ✓ | `PreToolUse` 挂起等岛的结果，回 `hookSpecificOutput.permissionDecision`；`timeout` 默认 30 秒、可在 `hooks.json` 里调。限制：TRAE 的工具在「手动确认」模式时，回 `allow` 也还要用户在 TRAE 里点（文档原话的意思），所以岛上只能可靠地「拒绝」，「允许」只在 TRAE 设成自动执行时生效 |
+| 当前工具、待办、模型、权限模式、上下文 token | ◐ / ✗ | 当前工具从 `PreToolUse` 的 `tool_name`（`RunCommand`、`Edit` 等）拿；钩子里没有模型、权限模式、待办和 token |
+| 判断会话已退出 | ◐ | 只能看 TRAE 进程在不在（macOS `Trae.app` / `Trae CN.app`，CN 的 bundle id 是 `cn.trae.app`，来源 47），分不清单个会话 |
+| 点会话跳过去 | ◐ | 只到 TRAE 窗口，没找到打开指定会话的链接 |
+| 回复标记 | ◐ 未核实 | 个人规则文件，第三方文章说是 `~/.trae/user_rules.md`（来源 51），官方没写路径；CN 版是不是 `~/.trae-cn/` 未核实。`Stop` 的 `last_assistant_message` 能拿到回复正文，标记能认 |
+| 用量环 | ✗ | 本地没有额度文件；tokscale 是登录后调官方接口同步（来源 49）。和其他几家一样等插件平台第 3 版（#170） |
+| SSH 远程 | — | IDE 没有 Linux 无头形态；它自己的 SSH 远程开发是 IDE 连服务器，钩子在本机跑（未核实） |
+| cc-connect | ✗ 未调研 | |
+
+工作量估计：和 Antigravity 那次差不多，**约 1.5–2 天**。新模块 `trae.rs`（钩子安装、从钩子存下的输入拼会话、等你）、`HARNESSES` 和前端 `AGENTS` 各一行、品牌图标、`hooks/` 三份脚本加 `trae` 分支、审批 `Agent` 枚举加一项和答复格式（`hookSpecificOutput.permissionDecision`，和 Claude Code 基本一样）、单元测试、文档。真机实测要用户装 TRAE 或 TRAE CN 后做，本机 Mac 现在没装。
+
+要用户定的：
+
+1. 接 TRAE IDE（推荐），还是等 TRAE CLI，或两个都要？TRAE CLI 2.0 只给企业旗舰版，个人用户用不到。
+2. 国际版 TRAE 和 TRAE CN 算一家显示，还是分成两家（两个开关、两个名字）？推荐算一家，会话卡片上标国际版 / CN。
+3. 「允许」受 TRAE 自身确认模式限制，岛上审批先只做「拒绝 / 交回 TRAE」，还是照样给「允许」按钮、在说明里写明限制？
+4. 名字显示「TRAE」还是「豆包 TRAE」？
+
+### 豆包桌面版（本机看过安装包）
+
+- `Doubao.app` 2.24.10，bundle id `com.bot.neotix.doubao`，App Store 版（带 `_MASReceipt`），开了 App 沙盒和应用组 `96L78H6LMH.group.com.bot.neotix.doubao`。界面是自带的 Chromium（`Doubao Browser.app`，内核 147）加载 doubao.com 的网页，注册了 `doubao://` 协议；另带 `mcp-helper`、`command_helper`，说明能在本机跑 MCP 和命令，但这些是聊天里的工具，不是写会话文件的编程代理。
+- 数据不在任务里写的 `~/Library/Application Support/Doubao`，而在沙盒容器 `~/Library/Containers/com.bot.neotix.doubao/Data/` 和组容器 `~/Library/Group Containers/96L78H6LMH.com.bot.neotix.doubao/`。在本机终端里 `ls` 这两处都报 `Operation not permitted`：macOS 的「App 数据」保护不让别的应用读沙盒容器，岛来读也一样会被拦，除非用户给岛「完全磁盘访问权限」。官网下载的非 App Store 版放哪未核实。
+- 对话存在云端（登录豆包账号后多端同步），本地只有浏览器缓存（LevelDB / IndexedDB 一类），没有可解析的会话格式，没有钩子、审批和用量接口。**结论：不接**。能做的最多是「豆包在运行」这种进程级提示，没有意义。
+- Windows 版未看，按同样的结构推断也是 Chromium 外壳 + 云端对话，未核实。
+
+### TRAE / TRAE CN（IDE）
+
+- **形态**：国际版 TRAE（trae.ai）和国内版 TRAE CN（trae.cn），VS Code 分支。2026 年 TraeWork 和 TraeCode 合并成新 TRAE，有 Agent 模式和 IDE 模式，桌面、网页、手机三端（来源 44）。网页和手机上发起的任务跑在云端，岛看不到。
+- **会话存储**：现在的版本把对话存在用户数据目录下的 `ModularData/ai-agent/database.db`，SQLCipher 加密；老版本存在 `User/globalStorage/state.vscdb`、`workspaceStorage/*/state.vscdb` 的 `ItemTable`，键 `memento/icube-ai-agent-storage[-<user-id>]`，里面有 `sessionId`、`title`、`createdAt`、`updatedAt`、`messages`，新版本里已经没有对话（来源 45）。用户数据目录按 VS Code 分支的习惯是 macOS `~/Library/Application Support/Trae`（或 `Trae CN`）、Windows `%APPDATA%\Trae`（或 `Trae CN`），未核实。**结论：本地会话读不了，只能靠钩子。**
+- **钩子**（来源 42，官方文档）：
+  - 配置：全局 `~/.trae/hooks.json`（Windows `%userprofile%/.trae/hooks.json`），项目 `<项目>/.trae/hooks.json`；TRAE CN 用 `~/.trae-cn/hooks.json`（来源 47，CodeIsland 实测）。顶层 `"version": 1`，`hooks.<事件名>` 下是带 `matcher` 的组，组里 `command`、`timeout`（秒，默认 30）；`Stop` 的组另有 `loop_limit`。
+  - 六个事件：`SessionStart`（`source` 只有 `startup`）、`UserPromptSubmit`（`prompt`）、`PreToolUse`（`tool_use_id`、`tool_name`、`llm_tool_name`、`tool_input`）、`PostToolUse`（多 `tool_response`）、`Stop`（`stop_hook_active`、`loop_count`、`last_assistant_message`）、`Notification`（`notification_type`、`message`、`tool_use_id`）。驼峰写法的旧事件名不触发（来源 47）。没有 `SessionEnd`、`PermissionRequest`、子代理事件。
+  - 公共输入：`session_id`、`cwd`、`hook_event_name`、`workspace_roots`；**没有 `transcript_path`**。CodeIsland 实测还带 `agent_id`、`agent_type`，主会话也带（CN 版主代理见过 `solo_agent`）。环境变量 `TRAE_PROJECT_DIR`，兼容 `CLAUDE_PROJECT_DIR`。
+  - 输出：退出码 0 解析 stdout 的 JSON，2 是阻断（`PreToolUse` 时等于 `deny`），其他忽略；`PreToolUse` 回 `hookSpecificOutput.permissionDecision` = `allow` / `deny` / `ask`、`permissionDecisionReason`、`updatedInput`。多个钩子并行时按 `deny` > `ask` > `allow` 取。工具本身是手动确认模式时，`allow` 不跳过确认。
+  - 执行环境：macOS / Linux 用 bash，Windows 用 PowerShell。**钩子默认可能在沙箱里跑**（设置 → Hooks 的执行方式有「沙箱中运行」和「本地自动运行」两种），沙箱里的文件访问受限，岛的钩子要写岛的数据目录，可能要用户切到「本地自动运行」，未核实默认值。
+  - 启用：在设置 → Hooks 里新建时要点过安全提示才启用；岛直接写 `hooks.json` 后 TRAE 认不认、要不要用户再点一次，未核实（CodeIsland 是直接写文件的）。
+  - **和 Claude Code 钩子的关系**：TRAE 能「导入 Claude Code 的钩子」（设置里的开关，读 `~/.claude/settings.json` 和项目的 `.claude/settings*.json`）。用户打开这个开关时，岛装给 Claude Code 的钩子会在 TRAE 里也跑起来，输入是 TRAE 的格式（没有 `transcript_path`），会被岛当成 Claude Code 会话。接入时钩子脚本要能认出是 TRAE（例如有 `workspace_roots` 或 `agent_type` 字段）再分家。
+- **用量**：账号级的请求次数 / 额度在官方后台，本地没有文件；tokscale 的 Trae 支持是登录后调官方接口同步成 `~/.config/tokscale/trae-cache/sessions/*.json`（来源 49）。
+- **跳转**：进程和窗口是 `Trae` / `Trae CN`；没有打开指定会话的链接（perch 也只能激活应用，来源 48）。
+- **Windows 和 macOS**：钩子格式一样，路径换成 `%userprofile%`，命令用 PowerShell 跑；其余未核实。
+
+### TRAE CLI
+
+- **2.0**（命令 `traecli`，第三方见到的别名 `traex`）：官方写明**仅 TRAE 企业版旗舰版客户可用**（来源 46）。macOS、Linux、Windows 都有（Windows 建议 WSL2，原生版首次启动要初始化沙箱），装法是 `install_v2.sh` / `install_v2.ps1`。配置 `~/.trae/traecli.toml`，键名是 Codex 的（`approval_policy`、`default_permissions`、`[mcp_servers.*]`、`[projects."<路径>"] trust_level`），`TRAE_HOME` 能改目录；支持 ACP 和 `traecli exec --json`。
+  - 会话：第三方见到的是 `~/.trae/cli/sessions/YYYY/MM/DD/rollout-<ts>-<uuid>.jsonl`、`archived_sessions/`、`history.jsonl`，**是闭源的 codex-rs 分支写的 Codex rollout**，记录类型 `session_meta`、`event_msg`、`response_item`、`turn_context`，`originator` 是 `codex-tui`；0.201.4 起多了 `item_completed`、`history_mutation`（来源 45）。TRAE 会把运行时注入的内容写成 `role=user` 的 `response_item`，不能直接当用户提问。官方文档写的配置目录 `~/.trae` 和第三方见到的 `~/.trae/cli` 对不上，未核实。
+  - 钩子：`~/.trae/cli/hooks.json`，Codex 格式，项目目录要先「信任」钩子才生效（来源 45、46）。
+  - 判断：能复用岛的 Codex 解析，会话列表、三态、等你预计都能做，还能做 SSH 远程。但只有企业旗舰版能用，受众小，放第二步。
+- **1.x**（内部叫 CoCo，已弱维护，启动 2.0 时会提示迁移）：会话在 macOS `~/Library/Caches/coco/sessions/<id>/events.jsonl`、Linux `~/.cache/coco/sessions/`，字段 `message.message.{role, content}`、`created_at`，真实提问带 `extra.is_original_user_input: true`（来源 45）。不接。
+
+### 其他字节系
+
+- **trae-agent**（GitHub `bytedance/trae-agent`）：开源的 Python 研究型代理，命令也叫 `trae-cli`，和上面的 TRAE CLI 不是一个东西；只把轨迹写成 JSON（`--trajectory-file`），钩子还只是提案（来源 50）。不接。
+- **豆包工作**：办公代理，有自己的桌面客户端，和飞书打通，Mac 上能控制电脑；没找到本地数据的说明，未核实。不是编程代理，不接。
+- **用豆包模型跑别家代理**：火山方舟的编程套餐让 Claude Code、Codex 等用豆包模型，这种情况岛已经按 Claude Code / Codex 显示，不用另接。
+
 ## 来源
 
 1. Antigravity Hooks 文档：https://antigravity.google/docs/hooks/
@@ -232,3 +316,13 @@ opencode 现在有两条线同时在发：**2.x**（2.0 在 2026-10 初发布，
 39. `packages/core/src/config/plugin/instruction.ts`（v2.3.0）：https://github.com/anomalyco/opencode/blob/d432a06b9c07bab0be4e8d642173b1cb14137f11/packages/core/src/config/plugin/instruction.ts
 40. cc-connect README（查询日期 2026-11-14）：https://github.com/chenhg5/cc-connect
 41. opencode 发布记录（v2.3.0 2026-11-13，v1.19.5 2026-10-28，查询日期 2026-11-14）：https://github.com/anomalyco/opencode/releases
+42. TRAE 钩子配置参考、用钩子自动化（查询日期 2026-11-15）：https://docs.trae.ai/ide/hook-configuration-reference ，https://docs.trae.ai/ide/automate-actions-with-hooks
+43. TRAE、扣子并入豆包（21 财经，2026-08-25）：https://m.21jingji.com/article/20260825/herald/959868d794e53db709962399c070a072.html
+44. TraeWork 和 TraeCode 合并为新 TRAE：https://docs.trae.ai/ide/traework-to-traecode-data-migration
+45. deja-vu #4680（TRAE CLI 2.0 的 rollout、1.x 的 CoCo 会话、IDE 会话库加密）：https://github.com/vshulcz/deja-vu/issues/4680
+46. TRAE CLI 2.0 文档（概述、快速开始、升级、权限与沙箱、配置文件、环境变量，查询日期 2026-11-15）：https://docs.trae.cn/cli_about-trae-code-cli-2 ，https://docs.trae.cn/cli_get-started-with-trae-cli-2 ，https://docs.trae.cn/cli_upgrade-trae-cli ，https://docs.trae.cn/cli_config-file
+47. CodeIsland #341（TRAE CN 钩子路径、事件名、`agent_id`、bundle id）：https://github.com/wxtsky/CodeIsland/pull/341
+48. perch #1（从 TRAE CN 钩子和 memory 文件拼会话）：https://github.com/sbwkl/perch/pull/1
+49. tokscale README（Trae 用量同步）：https://github.com/junhoyeo/tokscale
+50. trae-agent 仓库与钩子提案 #397：https://github.com/bytedance/trae-agent ，https://github.com/bytedance/trae-agent/issues/397
+51. TRAE CN 个人规则 `user_rules.md`（第三方文章，路径未经官方核实）：https://gitcode.csdn.net/6aa0de041a35784c84208747.html
