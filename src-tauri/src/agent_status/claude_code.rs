@@ -33,6 +33,17 @@ pub(super) const HARNESS: Harness = Harness {
     }),
 };
 
+pub(super) fn config_dir(home_dir: &Path) -> PathBuf {
+    std::env::var_os("CLAUDE_CONFIG_DIR")
+        .map(PathBuf::from)
+        .filter(|dir| dir.is_absolute())
+        .unwrap_or_else(|| home_dir.join(".claude"))
+}
+
+pub(super) fn prompt_files(home_dir: &Path) -> Vec<PathBuf> {
+    vec![config_dir(home_dir).join("CLAUDE.md")]
+}
+
 fn settings_path(home_dir: &Path) -> PathBuf {
     home_dir.join(".claude").join("settings.json")
 }

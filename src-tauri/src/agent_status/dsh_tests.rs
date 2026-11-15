@@ -35,6 +35,10 @@ fn reads_a_known_checkpoint() {
     assert_eq!(summary.last_message.as_deref(), Some("Looking at it."));
     assert_eq!(summary.turn_started_at, Some(1000));
     assert_eq!(summary.context_tokens, Some(4200));
+    let mut marked = fixture();
+    marked["record"]["rows"]["turnOutline"]["val"]["turns"][0]["response"] = json!("Which **branch**?\n\n↩");
+    let (summary, _) = parse_checkpoint(&marked, ID, 1100).unwrap();
+    assert_eq!((summary.reply_marker, summary.reply_asks, summary.last_message.as_deref()), (Some("yourTurn"), true, Some("Which branch?")));
 }
 
 #[test]

@@ -8,9 +8,8 @@ use super::claude_hooks::{
 use super::codex_hooks::{agent_running_command_with, agent_status_command};
 use super::harness::{Harness, HookEnv, Hooks, StatusLight};
 use super::hooks_state::{hook_entries_state, HookInstallState};
-use super::reply_text::{asks_user, plain_reply};
-use super::sessions::{SessionTail, TurnState, LAST_MESSAGE_MAX_CHARS};
-use super::title::{display_title, prompt_title, shorten, tag_content};
+use super::sessions::{SessionTail, TurnState};
+use super::title::{display_title, prompt_title, tag_content};
 use super::tool_call::codex_tool_call;
 use super::{write_text_file, AGENT_APPROVAL_SCRIPT_FILE_NAME, AGENT_RUNNING_NOTIFICATION_ARG};
 
@@ -71,9 +70,7 @@ pub(super) fn parse_tail(tail: &str) -> SessionTail {
         }
         if result.last_message.is_none() && kind == "message" && record["role"] == "assistant" {
             if let Some(reply) = output_text(&record["content"]) {
-                let plain = plain_reply(&reply);
-                result.reply_asks = asks_user(&plain);
-                result.last_message = shorten(&plain, LAST_MESSAGE_MAX_CHARS);
+                result.take_reply(&reply);
             }
         }
         if result.current_tool.is_none() && result.last_prompt.is_none() {
@@ -120,6 +117,14 @@ fn output_text(content: &Value) -> Option<String> {
 
 pub(super) fn app_running() -> bool {
     crate::platform::process::running_executable(&[EXE]).is_some()
+}
+
+pub(super) fn prompt_files(home_dir: &Path) -> Vec<std::path::PathBuf> {
+    let dir = std::env::var_os("WORKBUDDY_CONFIG_DIR")
+        .map(std::path::PathBuf::from)
+        .filter(|dir| dir.is_absolute())
+        .unwrap_or_else(|| home_dir.join(DIR));
+    vec![dir.join("CODEBUDDY.md")]
 }
 
 fn settings_path(home_dir: &Path) -> std::path::PathBuf {
@@ -207,6 +212,9 @@ mod tests {
         assert_eq!(parsed.last_message.as_deref(), Some("我看看这张图片。"));
         assert_eq!(parsed.state, TurnState::Done);
         assert_eq!(parsed.current_tool, None);
+        let marked = SAYS.replace("我看看这张图片。", "要用哪张图？\\n\\n↩");
+        let parsed = tail(&[PROMPT, &marked]);
+        assert_eq!((parsed.reply_marker, parsed.reply_asks, parsed.last_message.as_deref()), (Some("yourTurn"), true, Some("要用哪张图？")));
     }
 
     #[test]

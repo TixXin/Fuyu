@@ -162,7 +162,9 @@ export type SettingsAgentText = {
   replyMarker: {
     title: string;
     toggle: string;
-    hint: (path: string) => string;
+    hint: string;
+    linked: (target: string) => string;
+    noFiles: string;
     outdated: string;
     preview: string;
   };
@@ -347,8 +349,10 @@ export const zhCN: SettingsAgentText = {
   replyMarker: {
     title: "回复状态标记",
     toggle: "让 Claude 在回复末尾标出在等什么（推荐打开）",
-    hint: (path) => `打开后，会新建 Claude Code 的用户级规则文件 ${path}（每个会话都会读它，不改你的 CLAUDE.md），让 Claude Code 每次回复的最后一行写一个符号：↩ 等你回复、⋯ 在等它自己启动的后台任务、✓ 做完了。岛屿据此区分“等你回复”和“做完了”：Agent 页、会话环，以及提醒和音效（等你回复按“等你确认或回答”弹出、用提问音效；等后台任务时不弹不响）。这一行会出现在终端的回复里。SSH 远程页里打开的电脑也会写同一个文件。只对之后开始的会话生效；关掉时删除这个文件。`,
-    outdated: "说明是旧版本，或者还在旧位置 CLAUDE.md 里；关掉再打开即可更新并移到规则文件。",
+    hint: "打开后，会在各家 AI 代理的全局提示词文件末尾追加一段说明（Claude Code 的 CLAUDE.md，Codex、opencode 和 DeepSeek Harness 的 AGENTS.md，Antigravity 的 GEMINI.md，WorkBuddy 的 CODEBUDDY.md；只动这一段，文件其他内容不动），让它每次回复的最后一行写一个符号：↩ 等你回复、⋯ 在等它自己启动的后台任务、✓ 做完了。岛屿据此区分“等你回复”和“做完了”：Agent 页、会话环，以及提醒和音效（等你回复按“等你确认或回答”弹出、用提问音效；等后台任务时不弹不响）。这一行会出现在回复里。文件是软链时写在它指向的文件里，几家指向同一份文件时只写一段。SSH 远程页里打开的电脑也会写上。只对之后开始的会话生效；关掉时删掉这一段。本机写到的文件：",
+    linked: (target) => `软链，写在 ${target}`,
+    noFiles: "本机没有找到这几家 AI 代理。",
+    outdated: "说明是旧版本，或者还在旧的规则文件 rules/fuyu-reply-marker.md 里，或者有一家还没写上；关掉再打开，或点上面的“安装/修复”即可更新。",
     preview: "查看将写入的内容",
   },
   editorExtension: {
@@ -532,8 +536,10 @@ export const en: SettingsAgentText = {
   replyMarker: {
     title: "Reply status marker",
     toggle: "Have Claude mark what it waits for at the end of each reply (recommended)",
-    hint: (path) => `When on, the island creates a Claude Code user rule, ${path}, which every session reads (your CLAUDE.md stays untouched), asking Claude Code to end every reply with one symbol on its own line: ↩ your turn, ⋯ waiting on a background task it started, ✓ done. The island uses it to tell "your turn" from "done": on the Agent page, the session ring, and in alerts and sounds (your turn pops up as waiting for you, with the question sound; waiting on a background task neither pops up nor sounds). The line shows in the terminal's replies. Computers switched on under SSH remote get the same file. It applies to sessions started from then on; switching off deletes the file.`,
-    outdated: "The instruction is an older version, or still in CLAUDE.md where older versions put it; switch off and on again to update it and move it to the rules file.",
+    hint: "When on, the island appends a section to the end of each AI agent's global prompt file (CLAUDE.md for Claude Code, AGENTS.md for Codex, opencode and DeepSeek Harness, GEMINI.md for Antigravity, CODEBUDDY.md for WorkBuddy; only that section changes, the rest of the file stays as it is), asking the agent to end every reply with one symbol on its own line: ↩ your turn, ⋯ waiting on a background task it started, ✓ done. The island uses it to tell \"your turn\" from \"done\": on the Agent page, the session ring, and in alerts and sounds (your turn pops up as waiting for you, with the question sound; waiting on a background task neither pops up nor sounds). The line shows in the replies. When a file is a link, the section goes into the file it points to, and agents sharing one file get one section. Computers switched on under SSH remote get it too. It applies to sessions started from then on; switching off removes the section. Files on this computer:",
+    linked: (target) => `a link; written in ${target}`,
+    noFiles: "None of these AI agents was found on this computer.",
+    outdated: "The instruction is an older version, still in the old rules file rules/fuyu-reply-marker.md, or missing for one of the agents; switch off and on again, or click Install/repair above, to update it.",
     preview: "See what will be written",
   },
   editorExtension: {

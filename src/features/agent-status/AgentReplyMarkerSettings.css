@@ -20,3 +20,13 @@
   font-size: 11.5px;
   line-height: 1.5;
 }
+
+.agent-reply-marker__files {
+  margin: var(--space-sm) 0 0;
+  padding-left: 18px;
+  overflow-wrap: anywhere;
+}
+
+.agent-reply-marker__file--error {
+  color: var(--color-danger);
+}

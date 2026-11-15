@@ -270,6 +270,7 @@ fn install_agent_status_hooks_now(app: &AppHandle) -> Result<AgentHooksInstallRe
         (hooks.install)(&env)?;
     }
     let dsh_bridge = dsh_hooks::bridge_lines(&env);
+    reply_marker::repair();
 
     Ok(AgentHooksInstallResult {
         scripts_dir: app_dir.to_string_lossy().to_string(),

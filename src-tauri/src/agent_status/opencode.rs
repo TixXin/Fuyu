@@ -13,8 +13,9 @@ use serde_json::Value;
 use super::harness::{Harness, ScanRoots};
 use super::markers::AGENT_RUNNING_STALE_AFTER_MS;
 use super::session_scan::pick_title;
-use super::sessions::{session_phase, AgentSessionSummary, TurnState, LAST_MESSAGE_MAX_CHARS};
-use super::title::{display_title, folder_title, prompt_title, shorten};
+use super::reply_text::reply_ending;
+use super::sessions::{session_phase, AgentSessionSummary, TurnState};
+use super::title::{display_title, folder_title, prompt_title};
 use super::window_focus::app_name;
 use crate::platform;
 
@@ -100,6 +101,10 @@ fn with_suffix(path: &Path, suffix: &str) -> PathBuf {
 
 pub(super) fn data_dir(home_dir: &Path, env: impl Fn(&str) -> Option<OsString>) -> PathBuf {
     xdg_dir(home_dir, &env, "XDG_DATA_HOME", &[".local", "share"]).join("opencode")
+}
+
+pub(super) fn prompt_files(home_dir: &Path) -> Vec<PathBuf> {
+    vec![xdg_dir(home_dir, &|name: &str| std::env::var_os(name), "XDG_CONFIG_HOME", &[".config"]).join("opencode").join("AGENTS.md")]
 }
 
 fn xdg_dir(home_dir: &Path, env: &impl Fn(&str) -> Option<OsString>, name: &str, fallback: &[&str]) -> PathBuf {
@@ -396,6 +401,7 @@ fn summary(row: &SessionRow, turn: &Turn, updated: i64) -> AgentSessionSummary {
         cwd.as_deref().and_then(folder_title),
     );
     let model = row.model.as_deref().map(json);
+    let reply = turn.reply.as_deref().map(reply_ending).unwrap_or_default();
     AgentSessionSummary {
         provider: PROVIDER,
         session_id: row.id.clone(),
@@ -405,9 +411,9 @@ fn summary(row: &SessionRow, turn: &Turn, updated: i64) -> AgentSessionSummary {
         model: model.as_ref().and_then(|model| text(&model["id"]).or_else(|| text(&model["modelID"]))).or_else(|| turn.model.clone()),
         effort: model.as_ref().and_then(|model| text(&model["variant"])),
         phase: "completed",
-        last_message: turn.reply.as_deref().and_then(|reply| shorten(reply, LAST_MESSAGE_MAX_CHARS)),
-        reply_marker: None,
-        reply_asks: false,
+        last_message: reply.message,
+        reply_marker: reply.marker,
+        reply_asks: reply.asks,
         updated_at: updated,
         host: None,
         turn_started_at: turn.prompt_at,

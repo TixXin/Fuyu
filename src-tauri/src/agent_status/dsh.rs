@@ -12,9 +12,10 @@ use serde_json::Value;
 use super::harness::{Harness, Hooks, RemoteFiles, ScanRoots, StatusLight};
 use super::markers::AGENT_RUNNING_STALE_AFTER_MS;
 use super::session_scan::pick_title;
-use super::sessions::{session_phase, AgentSessionSummary, TurnState, LAST_MESSAGE_MAX_CHARS};
+use super::reply_text::reply_ending;
+use super::sessions::{session_phase, AgentSessionSummary, TurnState};
 use super::snapshot::system_time_to_unix_millis;
-use super::title::{display_title, folder_title, prompt_title, shorten};
+use super::title::{display_title, folder_title, prompt_title};
 use super::window_focus::app_name;
 use crate::platform;
 
@@ -132,6 +133,10 @@ fn roots(home_dir: &Path, var: impl Fn(&str) -> Option<OsString>) -> Vec<PathBuf
     roots
 }
 
+pub(super) fn prompt_files(home_dir: &Path) -> Vec<PathBuf> {
+    homes(home_dir).into_iter().map(|home| home.join("AGENTS.md")).collect()
+}
+
 pub(super) fn homes(home_dir: &Path) -> Vec<PathBuf> {
     roots(home_dir, |name| std::env::var_os(name))
 }
@@ -245,6 +250,7 @@ fn parse_checkpoint(value: &Value, id: &str, at: i64) -> Parsed {
     let agent_title = row(rows, "title", &[1]).and_then(Value::as_str).and_then(display_title);
     let (title, title_source) = pick_title(None, agent_title, first_prompt, cwd.as_deref().and_then(folder_title));
     let model = row(rows, "modelSelection", &[2]).map(|selection| &selection["lastUsed"]);
+    let reply = turn.and_then(|turn| turn["response"].as_str()).map(reply_ending).unwrap_or_default();
     let summary = AgentSessionSummary {
         provider: PROVIDER,
         session_id: id.to_string(),
@@ -254,9 +260,9 @@ fn parse_checkpoint(value: &Value, id: &str, at: i64) -> Parsed {
         model: model.and_then(|model| text(&model["model"])),
         effort: model.and_then(|model| text(&model["reasoningEffort"])),
         phase: "completed",
-        last_message: turn.and_then(|turn| turn["response"].as_str()).and_then(|reply| shorten(reply, LAST_MESSAGE_MAX_CHARS)),
-        reply_marker: None,
-        reply_asks: false,
+        last_message: reply.message,
+        reply_marker: reply.marker,
+        reply_asks: reply.asks,
         updated_at: at,
         host: None,
         turn_started_at: metadata["lastPromptAt"].as_i64(),

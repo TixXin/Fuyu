@@ -99,6 +99,10 @@ fn reads_a_running_v2_session_with_its_reply_in_parts() {
     assert_eq!(row.summary.last_message.as_deref(), Some("Looking at the session cookie."));
     assert_eq!(row.summary.turn_started_at, Some(NOW - 49_999));
     assert_eq!(row.summary.updated_at, NOW - 10_000);
+    conn.execute("UPDATE session_part SET data = ?1", params![json!({"type": "text", "text": "Fixed the cookie.\n✓"}).to_string()]).unwrap();
+    let again = read_database(&path, NOW - 3_600_000).unwrap();
+    let row = &again[0];
+    assert_eq!((row.summary.reply_marker, row.summary.last_message.as_deref()), (Some("done"), Some("Fixed the cookie.")));
 }
 
 #[test]

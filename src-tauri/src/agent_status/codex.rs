@@ -36,6 +36,10 @@ pub(super) const HARNESS: Harness = Harness {
     }),
 };
 
+pub(super) fn prompt_files(home_dir: &Path) -> Vec<PathBuf> {
+    vec![super::codex_usage::codex_home(home_dir).join("AGENTS.md")]
+}
+
 fn config_path(home_dir: &Path) -> PathBuf {
     home_dir.join(".codex").join("config.toml")
 }

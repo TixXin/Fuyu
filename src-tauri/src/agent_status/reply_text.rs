@@ -1,3 +1,61 @@
+use super::sessions::LAST_MESSAGE_MAX_CHARS;
+use super::title::shorten;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum ReplyMarker {
+    YourTurn,
+    Background,
+    Done,
+}
+
+impl ReplyMarker {
+    pub(super) fn name(self) -> &'static str {
+        match self {
+            Self::YourTurn => "yourTurn",
+            Self::Background => "background",
+            Self::Done => "done",
+        }
+    }
+
+    fn from_symbol(symbol: &str) -> Option<Self> {
+        match symbol.trim_end_matches('\u{FE0E}').trim_end_matches('\u{FE0F}') {
+            "↩" => Some(Self::YourTurn),
+            "⋯" => Some(Self::Background),
+            "✓" => Some(Self::Done),
+            _ => None,
+        }
+    }
+}
+
+pub(super) fn split_reply(text: &str) -> (Option<ReplyMarker>, &str) {
+    let trimmed = text.trim_end();
+    let (rest, last) = match trimmed.rfind('\n') {
+        Some(index) => (&trimmed[..index], &trimmed[index + 1..]),
+        None => ("", trimmed),
+    };
+    match ReplyMarker::from_symbol(last.trim()) {
+        Some(marker) => (Some(marker), rest.trim_end()),
+        None => (None, text),
+    }
+}
+
+#[derive(Debug, Default, PartialEq, Eq)]
+pub(super) struct ReplyEnding {
+    pub(super) marker: Option<&'static str>,
+    pub(super) asks: bool,
+    pub(super) message: Option<String>,
+}
+
+pub(super) fn reply_ending(text: &str) -> ReplyEnding {
+    let (marker, reply) = split_reply(text);
+    let plain = plain_reply(reply);
+    ReplyEnding {
+        marker: marker.map(ReplyMarker::name),
+        asks: asks_user(&plain),
+        message: shorten(&plain, LAST_MESSAGE_MAX_CHARS),
+    }
+}
+
 pub(super) fn plain_reply(markdown: &str) -> String {
     markdown
         .lines()
@@ -114,7 +172,26 @@ fn link(text: &str) -> Option<(&str, &str)> {
 
 #[cfg(test)]
 mod tests {
-    use super::plain_reply;
+    use super::*;
+
+    #[test]
+    fn the_last_line_alone_is_the_marker() {
+        assert_eq!(split_reply("Which one?\n\n↩"), (Some(ReplyMarker::YourTurn), "Which one?"));
+        assert_eq!(split_reply("Started the build.\r\n⋯\r\n"), (Some(ReplyMarker::Background), "Started the build."));
+        assert_eq!(split_reply("Done.\n  ✓\u{FE0E} "), (Some(ReplyMarker::Done), "Done."));
+        assert_eq!(split_reply("✓"), (Some(ReplyMarker::Done), ""));
+        assert_eq!(split_reply("Tests ✓"), (None, "Tests ✓"));
+        assert_eq!(split_reply("↩\nmore text"), (None, "↩\nmore text"));
+        assert_eq!(split_reply("`↩`"), (None, "`↩`"));
+    }
+
+    #[test]
+    fn a_reply_ending_drops_the_marker_line_from_the_message() {
+        let ending = reply_ending("**改好了**，要合入吗？\n\n↩\n");
+        assert_eq!(ending, ReplyEnding { marker: Some("yourTurn"), asks: true, message: Some("改好了，要合入吗？".into()) });
+        assert_eq!(reply_ending("Done.").marker, None);
+        assert_eq!(reply_ending("✓").message, None);
+    }
 
     #[test]
     fn markdown_marks_come_out_and_the_words_stay() {
@@ -127,7 +204,6 @@ mod tests {
 
     #[test]
     fn a_reply_ending_in_a_question_hands_the_turn_back() {
-        use super::asks_user;
         let asks = |reply: &str| asks_user(&plain_reply(reply));
         assert!(asks("改好了。\n\n要按这个方案做吗？"));
         assert!(asks("Done.\n\nShould I land it?"));
