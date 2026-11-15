@@ -6,6 +6,7 @@ case "${1:-codex}" in
   zcode) route=zcode/permission-request ;;
   codebuddy) route=codebuddy/permission-request ;;
   qwen) route=qwen/permission-request ;;
+  copilot) route=copilot/permission-request ;;
   trae) route=trae/pre-tool-use ;;
   traeCn) route=traeCn/pre-tool-use ;;
   antigravity) route=antigravity/pre-tool-use ;;

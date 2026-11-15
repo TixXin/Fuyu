@@ -2,6 +2,8 @@ import antigravityIcon from "../../assets/brands/antigravity.png";
 import claudeCodeIcon from "../../assets/brands/claude-code.png";
 import codebuddyIcon from "../../assets/brands/codebuddy.svg";
 import codexIcon from "../../assets/brands/codex.webp";
+import copilotIcon from "../../assets/brands/copilot.png";
+import droidIcon from "../../assets/brands/droid.png";
 import dshIcon from "../../assets/brands/dsh.png";
 import kimiCodeIcon from "../../assets/brands/kimi-code.png";
 import mimoIcon from "../../assets/brands/mimo.png";
@@ -31,6 +33,8 @@ const PROVIDER_ICONS: Record<SessionProvider, string> = {
   kimiCode: kimiCodeIcon,
   mimo: mimoIcon,
   grok: grokIcon,
+  copilot: copilotIcon,
+  droid: droidIcon,
 };
 
 export function AgentProviderIcon({ provider, size = 16 }: { provider: SessionProvider; size?: number }) {

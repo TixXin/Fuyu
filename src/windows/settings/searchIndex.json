@@ -2363,6 +2363,28 @@
       }
     },
     {
+      "page": "agents",
+      "zh-CN": {
+        "group": "显示哪些 Agent",
+        "title": "GitHub Copilot CLI"
+      },
+      "en": {
+        "group": "Agents shown",
+        "title": "GitHub Copilot CLI"
+      }
+    },
+    {
+      "page": "agents",
+      "zh-CN": {
+        "group": "显示哪些 Agent",
+        "title": "Droid"
+      },
+      "en": {
+        "group": "Agents shown",
+        "title": "Droid"
+      }
+    },
+    {
       "page": "agentSessions",
       "zh-CN": {
         "group": "会话列表",
@@ -3091,6 +3113,28 @@
       "en": {
         "group": "AI Agent status light",
         "title": "Grok CLI"
+      }
+    },
+    {
+      "page": "agentConnect",
+      "zh-CN": {
+        "group": "AI Agent 状态灯",
+        "title": "GitHub Copilot CLI"
+      },
+      "en": {
+        "group": "AI Agent status light",
+        "title": "GitHub Copilot CLI"
+      }
+    },
+    {
+      "page": "agentConnect",
+      "zh-CN": {
+        "group": "AI Agent 状态灯",
+        "title": "Droid"
+      },
+      "en": {
+        "group": "AI Agent status light",
+        "title": "Droid"
       }
     },
     {

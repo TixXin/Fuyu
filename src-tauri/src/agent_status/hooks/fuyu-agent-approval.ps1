@@ -6,6 +6,7 @@ $routes = @{
     zcode = 'zcode/permission-request'
     codebuddy = 'codebuddy/permission-request'
     qwen = 'qwen/permission-request'
+    copilot = 'copilot/permission-request'
     trae = 'trae/pre-tool-use'
     traeCn = 'traeCn/pre-tool-use'
     antigravity = 'antigravity/pre-tool-use'
