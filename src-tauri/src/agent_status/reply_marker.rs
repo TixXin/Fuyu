@@ -45,6 +45,7 @@ pub(super) fn block() -> String {
     format!("{BLOCK_START}\n{BLOCK_BODY}\n{BLOCK_END}")
 }
 
+#[cfg(test)]
 pub(super) fn rules_file() -> String {
     format!("{}\n", block())
 }

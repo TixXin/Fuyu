@@ -130,4 +130,7 @@
 - [ ] CentOS 7：DSH 和 Claude Code 的会话同时能拉回来，没有「Unexpected line in the reply」
 - [ ] Antigravity CLI（glibc 够新的服务器，如 Ubuntu 22.04）：远程「安装/修复」后远端 `~/.gemini/config/hooks.json` 多了 `fuyu` 组、用户自己的组还在；`agy` 开会话时远端 `~/.fuyu/agent-antigravity/` 出现 `running-<id>.json`，岛上亮运行中，结束后变完成；钩子输入是多行 JSON 时 conversationId 也能读出来
 - [ ] 记下 `agy` 最低要求的 glibc（`objdump -T ~/.local/bin/agy | grep -o 'GLIBC_[0-9.]*' | sort -V | tail -1`）；CentOS 7 上试 musl 包
-- [ ] 回复标记：远程现在还写 `~/.claude/rules/fuyu-reply-marker.md`，B35 改完后按上面「回复标记」一节在远端再测
+- [ ] 回复标记（B35）：打开后远端 `~/.claude/CLAUDE.md`、`~/.codex/AGENTS.md`、有 `~/.gemini/antigravity-cli` 时的 `~/.gemini/GEMINI.md`、`~/.dsh/AGENTS.md` 末尾各有且只有一段，用户原有内容保留；关掉后删干净；旧的 `~/.claude/rules/fuyu-reply-marker.md` 被删
+- [ ] 回复标记：远端 `CLAUDE.md` 是指向别处的软链时改的是目标、软链还在；两家指向同一个文件时只有一段；悬空软链不改，设置页这台主机下面报「is a link to …, which does not exist」
+- [ ] 回复标记：`$CLAUDE_CONFIG_DIR`、`$CODEX_HOME`、`$DSH_HOME` 写在 `~/.bashrc` 非交互式提前 return 之前时改的是它们指的目录
+- [ ] 远程「安装/修复」：远端只有旧 rules 文件时，修复后各家提示词文件补上段落、旧文件删掉；远端从没开过回复标记时什么都不写
