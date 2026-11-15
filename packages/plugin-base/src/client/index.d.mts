@@ -98,8 +98,23 @@ export interface ClientLoader {
   stop(): Promise<unknown>;
 }
 
+export interface PluginMessage {
+  plugin: string;
+  topic: string;
+  data: unknown;
+}
+
+export interface Bridge {
+  call(plugin: string, method: string, params?: unknown): Promise<unknown>;
+  subscribe(listener: (message: PluginMessage) => void): () => void;
+  deliver(message: PluginMessage): void;
+}
+
+export function createBridge(call: (method: string, params?: unknown) => Promise<unknown>): Bridge;
+
 export function createLoader(options: {
   registry: SlotRegistry;
+  bridge?: Bridge;
   base: string;
   importModule?: (url: string) => Promise<any>;
   checkFile?: (url: string) => Promise<void>;
