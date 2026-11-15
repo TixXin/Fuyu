@@ -1,5 +1,6 @@
 pub(crate) mod accent_color;
 mod command_flags;
+pub(crate) mod download_mirrors;
 pub(crate) mod fullscreen;
 #[cfg_attr(target_os = "macos", path = "network_cost_macos.rs")]
 pub(crate) mod network_cost;

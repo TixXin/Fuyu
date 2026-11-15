@@ -232,7 +232,7 @@ pub async fn get_inflink_state(check_latest: bool) -> Result<InflinkState, Strin
 }
 
 #[tauri::command]
-pub async fn install_inflink() -> Result<InflinkState, String> {
+pub async fn install_inflink() -> Result<InflinkState, crate::user_error::UserError> {
     inflink::install().await
 }
 

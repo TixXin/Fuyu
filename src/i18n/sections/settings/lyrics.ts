@@ -38,6 +38,8 @@ export type SettingsLyricsText = {
     updateAvailable: (installed: string, latest: string) => string;
     restart: (version: string) => string;
     failed: (error: string) => string;
+    manual: (folder: string) => string;
+    releasePage: string;
   };
   karaoke: {
     title: string;
@@ -111,6 +113,8 @@ export const zhCN: SettingsLyricsText = {
     updateAvailable: (installed, latest) => `已安装 v${installed}，有新版本 v${latest}。`,
     restart: (version) => `已安装 v${version}，重启网易云后生效。`,
     failed: (error) => `安装失败：${error}`,
+    manual: (folder) => `也可以手动安装：打开 Release 页，下载 .plugin 文件，放进 ${folder}，再重启网易云。`,
+    releasePage: "Release 页",
   },
   karaoke: {
     title: "岛上的歌词样式",
@@ -184,6 +188,8 @@ export const en: SettingsLyricsText = {
     updateAvailable: (installed, latest) => `v${installed} is installed; v${latest} is out.`,
     restart: (version) => `v${version} is installed. Restart NetEase Cloud Music to use it.`,
     failed: (error) => `Install failed: ${error}`,
+    manual: (folder) => `To install by hand: open the Releases page, download the .plugin file, put it in ${folder}, then restart NetEase Cloud Music.`,
+    releasePage: "Releases",
   },
   karaoke: {
     title: "Lyrics on the island",
