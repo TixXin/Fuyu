@@ -28,17 +28,24 @@ function reinstallIfNeeded(before) {
   if (result.status !== 0) console.error("[land] pnpm install 失败，推送前的检查可能因为依赖不对而失败。");
 }
 
-function sameChangeOn(base, sha) {
-  const left = tryGit(["rev-list", "--no-merges", "--cherry-pick", "--right-only", `${base}...${sha}`]);
-  return left.ok && !left.out.split("\n").includes(sha);
+function patchIds(range) {
+  const log = spawnSync("git", ["log", "--no-merges", "-p", "--no-color", "--no-ext-diff", ...range], { maxBuffer: 1 << 30 });
+  if (log.status !== 0) return new Map();
+  const ids = spawnSync("git", ["patch-id", "--stable"], { input: log.stdout, encoding: "utf8", maxBuffer: 1 << 26 });
+  return new Map(ids.stdout.split("\n").filter(Boolean).map((line) => line.split(" ").reverse()));
 }
 
 export function pendingCommits(base = `origin/${INTEGRATION_BRANCH}`, head = "HEAD") {
   const out = tryGit(["log", "--reverse", "--no-merges", "--format=%H%x1f%s%x1f%ct%x1f%b%x1e", `${base}..${head}`]).out;
-  return out.split("\x1e").map((entry) => entry.trim()).filter(Boolean).map((entry) => {
+  const commits = out.split("\x1e").map((entry) => entry.trim()).filter(Boolean).map((entry) => {
     const [sha, subject = "", time = "0", body = ""] = entry.split("\x1f");
     return { sha, subject: subject.trim(), at: Number(time) * 1000, body };
-  }).filter(({ sha }) => !sameChangeOn(base, sha)).map(({ subject, at, body }) => ({ subject, at, body }));
+  });
+  if (!commits.length) return [];
+  const fork = tryGit(["rev-parse", "--verify", "--quiet", `${commits[0].sha}^`]);
+  const landed = new Set(patchIds([fork.ok && fork.out ? `${fork.out}..${base}` : base]).values());
+  const mine = landed.size ? patchIds([`${base}..${head}`]) : new Map();
+  return commits.filter(({ sha }) => !landed.has(mine.get(sha))).map(({ subject, at, body }) => ({ subject, at, body }));
 }
 
 function mergeOutsideWorkTree(upstream) {
