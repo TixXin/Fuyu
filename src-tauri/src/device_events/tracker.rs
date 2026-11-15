@@ -2,6 +2,8 @@ use std::collections::HashMap;
 
 use serde::Serialize;
 
+use super::peripherals::PeripheralKind;
+
 const LOW_BATTERY: [u8; 2] = [20, 10];
 const RECHARGED: u8 = 30;
 pub(crate) const BATTERY_WAIT_POLLS: u32 = 3;
@@ -46,6 +48,8 @@ pub(crate) enum DeviceAlert {
     AudioConnected { name: String, device: AudioKind, battery: Option<u8> },
     #[serde(rename_all = "camelCase")]
     AudioDisconnected { name: String, device: AudioKind },
+    #[serde(rename_all = "camelCase")]
+    PeripheralConnected { name: String, device: PeripheralKind, battery: u8 },
     #[serde(rename_all = "camelCase")]
     BatteryLow { name: String, battery: u8 },
     #[serde(rename_all = "camelCase")]
@@ -120,11 +124,7 @@ impl OutputTracker {
             }
             checked.push(&output.device);
             let Some(&battery) = batteries.get(&output.device) else { continue };
-            let warned = self.warned.get(&output.device).copied().unwrap_or(u8::MAX);
-            if battery >= RECHARGED {
-                self.warned.remove(&output.device);
-            } else if let Some(level) = LOW_BATTERY.iter().copied().filter(|&level| battery <= level && level < warned).min() {
-                self.warned.insert(output.device.clone(), level);
+            if warn_low(&mut self.warned, &output.device, battery) {
                 alerts.push(DeviceAlert::BatteryLow { name: output.name.clone(), battery });
             }
         }
@@ -132,13 +132,29 @@ impl OutputTracker {
     }
 
     fn note_level(&mut self, output: &Output, batteries: &HashMap<String, u8>) {
-        if let Some(level) = batteries
-            .get(&output.device)
-            .and_then(|&battery| LOW_BATTERY.iter().copied().filter(|&level| battery <= level).min())
-        {
-            self.warned.insert(output.device.clone(), level);
+        if let Some(&battery) = batteries.get(&output.device) {
+            note_low(&mut self.warned, &output.device, battery);
         }
     }
+}
+
+pub(super) fn note_low(warned: &mut HashMap<String, u8>, device: &str, battery: u8) {
+    if let Some(level) = LOW_BATTERY.iter().copied().filter(|&level| battery <= level).min() {
+        warned.insert(device.to_string(), level);
+    }
+}
+
+pub(super) fn warn_low(warned: &mut HashMap<String, u8>, device: &str, battery: u8) -> bool {
+    let before = warned.get(device).copied().unwrap_or(u8::MAX);
+    if battery >= RECHARGED {
+        warned.remove(device);
+        return false;
+    }
+    let Some(level) = LOW_BATTERY.iter().copied().filter(|&level| battery <= level && level < before).min() else {
+        return false;
+    };
+    warned.insert(device.to_string(), level);
+    true
 }
 
 #[derive(Debug, Default)]

@@ -1,6 +1,9 @@
-import { BatteryCharging, BatteryLow, Headphones, Speaker, Unplug, type LucideIcon } from "lucide-react";
+import { BatteryCharging, BatteryLow, Headphones, Keyboard, Mouse, Speaker, Touchpad, Unplug, type LucideIcon } from "lucide-react";
 import type { useTranslation } from "../../i18n";
-import type { DeviceAlert } from "./api";
+import type { DeviceAlert, PeripheralKind } from "./api";
+
+const PERIPHERAL_ICONS: Record<PeripheralKind, LucideIcon> = { mouse: Mouse, keyboard: Keyboard, trackpad: Touchpad };
+const LOW_BATTERY = 20;
 
 export type DeviceAlertText = ReturnType<typeof useTranslation>["island"]["deviceAlert"];
 
@@ -14,6 +17,11 @@ export function deviceAlertLook(alert: DeviceAlert, text: DeviceAlertText) {
       Icon = alert.device === "speaker" ? Speaker : Headphones;
       message = alert.kind === "audioConnected" ? text.connected(alert.name) : text.disconnected(alert.name);
       tone = alert.kind === "audioConnected" ? "on" : "off";
+      break;
+    case "peripheralConnected":
+      Icon = PERIPHERAL_ICONS[alert.device];
+      message = text.connected(alert.name);
+      tone = alert.battery <= LOW_BATTERY ? "warn" : "on";
       break;
     case "batteryLow":
       Icon = BatteryLow;
