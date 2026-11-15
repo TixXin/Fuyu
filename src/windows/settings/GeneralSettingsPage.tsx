@@ -13,6 +13,9 @@ function moveTodoFolder(from: string, to: string) {
 import type { IslandSettings } from "../../features/appearance/types";
 import { requestIslandPositionReset } from "./storage";
 import { useLaunchAtStartup } from "./useLaunchAtStartup";
+import { useTrayIconVisible } from "./useTrayIconVisible";
+import { QuitIslandRow } from "./QuitIslandRow";
+import { SettingsGroup } from "../../components/settings/SettingsGroup";
 
 export function GeneralSettingsPage({
   locale,
@@ -26,13 +29,16 @@ export function GeneralSettingsPage({
   onSettingsChange: (settings: IslandSettings) => void;
 }) {
   const [launchAtStartup, updateLaunchAtStartup] = useLaunchAtStartup();
+  const [trayIconVisible, updateTrayIconVisible] = useTrayIconVisible();
 
   return (
     <>
       <BehaviorSettingsSection
         launchAtStartup={launchAtStartup}
+        trayIconVisible={trayIconVisible}
         locale={locale}
         onLaunchAtStartupChange={updateLaunchAtStartup}
+        onTrayIconVisibleChange={updateTrayIconVisible}
         onLocaleChange={onLocaleChange}
       />
       <PositionSettingsSection
@@ -42,6 +48,9 @@ export function GeneralSettingsPage({
       />
       <SystemPermissionsSection />
       <DataSettingsSection onMoved={moveTodoFolder} />
+      <SettingsGroup>
+        <QuitIslandRow />
+      </SettingsGroup>
     </>
   );
 }

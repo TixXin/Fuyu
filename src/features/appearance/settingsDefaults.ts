@@ -32,7 +32,7 @@ export const DEFAULT_SETTINGS: IslandSettings = {
   agentSessionGroup: "computer",
   agentArchiveMotion: "slide",
   agentCardEffects: "off",
-  agentSessionHours: 2,
+  agentSessionHours: 24,
   agentHiddenProviders: [],
   agentHideFinished: false,
   agentHideClosed: true,

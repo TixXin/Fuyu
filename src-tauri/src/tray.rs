@@ -64,7 +64,7 @@ pub(crate) fn tooltip(language: TrayLanguage, development: bool) -> &'static str
     }
 }
 
-const TRAY_ID: &str = "main";
+pub(crate) const TRAY_ID: &str = "main";
 
 struct TrayMenu {
     toggle: MenuItem<Wry>,
@@ -170,6 +170,7 @@ pub(crate) fn build_tray(app: &App) -> tauri::Result<()> {
     }
 
     tray.build(app)?;
+    crate::tray_visibility::apply_saved(app.handle());
     Ok(())
 }
 

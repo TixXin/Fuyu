@@ -59,6 +59,18 @@
 - 复用第一部分的"吸附边"状态，`Edge` 加 `Taskbar`；`fuyu-position` 的 `edge` 多一个 `taskbar` 值。
 - 先做验证页：在几种任务栏设置下（图标居中 / 靠左、自动隐藏、125% / 150% 缩放、副屏）截图记录，结果写进 `docs/investigations/taskbar-dock.md`，再决定是否从"实验"转正。
 
+## 三、底边（C54.3，2026-11-15）
+
+交互见 [design/island.md](../design/island.md)「底边吸附」。实现：
+
+- `Edge` 加 `Bottom`，`fuyu-position` 存 `{ x, y, edge: "bottom" }`，`y` 只用来找是哪块屏幕，每次按那块屏幕工作区的下沿重算（`bottom_edge.rs` 的 `stage_y`）；舞台窗口高度变了（面板高度、展开缩放）立刻改大小，不等收起后再缩，免得下沿错开。
+- 岛在舞台里的位置由 `geometry.rs` 的 `island_top_in_stage` 统一算：贴底时在舞台底部，其余在顶部。点击区域（`cursor_on_island`）、`island_rect`、Alt 改尺寸（`modifier.rs`）都用它；贴底时把坐标上下翻过来再套原来的判断，改高度时往上拖是变高。
+- 拖动：贴底的岛拖动期间保持贴底的造型，松手时 `side.rs` 的 `snap_after_drag` 依次看左右侧、底边（`bottom_edge::snap`，岛的下沿在工作区下沿 16px 以内或更低就吸住，两屏上下相接的边不吸）、离开底边（`bottom_edge::leave`，舞台移到岛的位置，岛留在原地）、顶边。
+- 设置 → 位置「吸附到」选底边时调 `set_island_edge`（只接受 `bottom`，C54.1 第 3 步再加左右），选顶边就是「回到默认位置」。
+- 多显示器跟随（`follow.rs`）贴底时不清掉位置，改成目标屏幕下边正中的位置并发 `island-position-changed`。
+- 前端：`IslandBottomEdge.css` 按 `:root[data-island-edge="bottom"]` 把舞台的岛放到底部、贴底一侧直边、`::before` / `::after` 的反向圆弧上下翻转、两层内容贴下沿、新消息横幅放到岛上方；Alt 提示线在 `IslandResizeHints.css` 里翻到上边。
+- 给 C54.1 第 3 步留的口子：吸附边都走 `edge::set_attached` 和 `data-island-edge`，侧边要的竖向岛只要在 `island_top_in_stage` / `island_left_in_stage` 和 `set_island_edge` 里加分支。
+
 ## 顺序
 
 先做 C54.1（左右侧），它把"吸附边"这一层抽出来；再做 C54.2（任务栏），复用这一层。两部分的交互定下来之后，各自搬进 design/island.md 的新小节"侧边吸附"和"任务栏模式"。

@@ -335,3 +335,22 @@ fn stored_position_without_an_edge_reads_as_before() {
     assert_eq!(side.edge, Some(Edge::Left));
     assert_eq!(side.along, Some(0.25));
 }
+
+#[test]
+fn a_bottom_docked_island_sits_at_the_bottom_of_its_stage() {
+    let mut docked = state(IslandMode::Collapsed, 1.0, DEFAULT_EXPANDED_ISLAND_HEIGHT);
+    docked.attached_edge = Some(Edge::Bottom);
+    let (width, height) = (COLLAPSED_ISLAND_WIDTH, COLLAPSED_ISLAND_HEIGHT);
+    let left = (STAGE_WINDOW_WIDTH - width) / 2.0;
+    let rect = island_rect(100.0, 500.0, STAGE_WINDOW_WIDTH, 460.0, docked);
+    assert_eq!(rect.top, 500.0 + 460.0 - height);
+    assert_eq!(island_top_in_stage(None, 460.0, height), 0.0);
+
+    let on = |x: f64, y: f64| cursor_on_island(0.0, 0.0, STAGE_WINDOW_WIDTH, 460.0, x, y, docked);
+    assert!(on(left + width / 2.0, 459.0));
+    assert!(on(left + 0.5, 459.5));
+    assert!(on(left + width - 0.5, 459.5));
+    assert!(!on(left + 0.5, 460.0 - height + 0.5));
+    assert!(on(left + width / 2.0, 460.0 - height + 0.5));
+    assert!(!on(left + width / 2.0, 10.0));
+}

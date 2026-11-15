@@ -7,7 +7,7 @@ export type IslandPosition = {
   along?: number;
 };
 
-const ISLAND_EDGES: readonly IslandEdge[] = ["top", "left", "right"];
+const ISLAND_EDGES: readonly IslandEdge[] = ["top", "left", "right", "bottom"];
 
 export const ISLAND_POSITION_STORAGE_KEY = "fuyu-position";
 

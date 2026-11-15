@@ -119,7 +119,7 @@ impl IslandWindowState {
     }
 
     pub(super) fn side(self) -> Option<Edge> {
-        self.attached_edge.filter(|edge| *edge != Edge::Top)
+        self.attached_edge.filter(|edge| matches!(edge, Edge::Left | Edge::Right))
     }
 
     fn is_side_handle(self) -> bool {
@@ -158,6 +158,7 @@ pub(crate) enum Edge {
     Top,
     Left,
     Right,
+    Bottom,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]

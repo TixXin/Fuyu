@@ -52,11 +52,12 @@ fn volume() -> f32 {
 }
 
 fn from_fuyu(info: &Map<String, Value>) -> bool {
-    let own = std::process::id();
+    let Ok(own) = i32::try_from(std::process::id()) else { return false };
+    let own = crate::macos::apps::responsible_pid(own);
     info.get("processIdentifier")
         .and_then(Value::as_i64)
         .and_then(|pid| i32::try_from(pid).ok())
-        .is_some_and(|pid| u32::try_from(crate::macos::apps::responsible_pid(pid)).ok() == Some(own))
+        .is_some_and(|pid| crate::macos::apps::responsible_pid(pid) == own)
 }
 
 fn from_snapshot(snapshot: &Snapshot) -> MediaState {

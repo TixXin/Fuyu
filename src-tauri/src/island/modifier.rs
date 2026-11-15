@@ -8,8 +8,8 @@ use tauri::{Emitter, WebviewWindow};
 use windows::Win32::Foundation::HWND;
 
 use super::{
-    geometry::STAGE_WINDOW_WIDTH,
-    state::{read_window_state, IslandMode},
+    geometry::{island_top_in_stage, STAGE_WINDOW_WIDTH},
+    state::{read_window_state, Edge, IslandMode},
 };
 use crate::win32;
 
@@ -72,25 +72,29 @@ fn target_for(side: i8, bottom: bool) -> ModifierTarget {
     }
 }
 
-fn edges_under_cursor(hwnd: HWND) -> Option<(i8, bool, f64)> {
+fn edges_under_cursor(hwnd: HWND) -> Option<(i8, bool, f64, bool)> {
     let window_rect = win32::window::window_rect(hwnd)?;
     let cursor = win32::window::cursor_position()?;
     let state = read_window_state();
     let window_width = (window_rect.right - window_rect.left).max(1) as f64;
     let per_px = window_width / STAGE_WINDOW_WIDTH * state.active_scale();
+    let flipped = state.attached_edge == Some(Edge::Bottom);
     if state.side().is_some() {
-        return Some((0, false, per_px));
+        return Some((0, false, per_px, flipped));
     }
     let (width, height) = state.base_size();
     let left = (window_width - width * per_px) / 2.0;
+    let window_height = (window_rect.bottom - window_rect.top).max(1) as f64;
+    let top = island_top_in_stage(state.attached_edge, window_height, height * per_px);
     let x = ((cursor.x - window_rect.left) as f64 - left) / per_px;
-    let y = (cursor.y - window_rect.top) as f64 / per_px;
+    let from_top = ((cursor.y - window_rect.top) as f64 - top) / per_px;
+    let y = if flipped { height - from_top } else { from_top };
     let (side, bottom) = match state.mode {
         IslandMode::Expanded if !PANEL_RESIZABLE.load(Ordering::SeqCst) => (0, false),
         IslandMode::Expanded => edges_at(x, y, width, height, state.bottom_corner_radius()),
         IslandMode::Collapsed => (edges_at(x, y, width, height, 0.0).0, false),
     };
-    Some((side, bottom, per_px))
+    Some((side, bottom, per_px, flipped))
 }
 
 #[tauri::command]
@@ -102,7 +106,7 @@ pub(super) fn target(hwnd: HWND) -> ModifierTarget {
     if read_window_state().is_tucked {
         return ModifierTarget::None;
     }
-    edges_under_cursor(hwnd).map_or(ModifierTarget::Move, |(side, bottom, _)| target_for(side, bottom))
+    edges_under_cursor(hwnd).map_or(ModifierTarget::Move, |(side, bottom, _, _)| target_for(side, bottom))
 }
 
 pub(super) fn is_resizing() -> bool {
@@ -131,7 +135,7 @@ pub(super) fn start_resize(window: &WebviewWindow) -> bool {
         return false;
     }
     let collapsed = matches!(state.mode, IslandMode::Collapsed);
-    let Some((side, bottom, per_px)) = edges_under_cursor(hwnd) else {
+    let Some((side, bottom, per_px, flipped)) = edges_under_cursor(hwnd) else {
         return false;
     };
     if side == 0 && !bottom {
@@ -148,7 +152,8 @@ pub(super) fn start_resize(window: &WebviewWindow) -> bool {
         let delta = || {
             let cursor = win32::window::cursor_position().unwrap_or(start);
             let width = f64::from(side) * 2.0 * f64::from(cursor.x - start.x) / per_px;
-            let height = if bottom { f64::from(cursor.y - start.y) / per_px } else { 0.0 };
+            let pulled = if flipped { start.y - cursor.y } else { cursor.y - start.y };
+            let height = if bottom { f64::from(pulled) / per_px } else { 0.0 };
             (width.round(), height.round())
         };
         while win32::input::is_left_button_down() {

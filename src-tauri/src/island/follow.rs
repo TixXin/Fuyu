@@ -2,8 +2,10 @@ use std::{thread, time::Duration};
 use tauri::{Emitter, WebviewWindow};
 
 use super::{
+    bottom_edge,
     geometry::{apply_stage_geometry, monitor_at},
-    state::{mutate_window_state, read_window_state, IslandMode, IslandWindowState, MonitorFollow},
+    state::{mutate_window_state, read_window_state, Edge, IslandMode, IslandWindowState, MonitorFollow},
+    ISLAND_POSITION_CHANGED_EVENT,
 };
 use crate::win32;
 
@@ -77,15 +79,25 @@ fn island_bounds(window: &WebviewWindow) -> Option<(i32, i32, i32, i32)> {
 }
 
 fn move_to(window: &WebviewWindow, point: (i32, i32)) {
+    let placed = (read_window_state().attached_edge == Some(Edge::Bottom))
+        .then(|| monitor_at(window, point).ok().flatten())
+        .flatten()
+        .map(|monitor| bottom_edge::placed_on(&monitor));
     let mut had_dragged_position = false;
     let state = mutate_window_state(|state| {
         had_dragged_position = state.custom_position.is_some();
-        state.custom_position = None;
+        state.custom_position = placed;
         state.followed_monitor = Some(point);
         *state
     });
-    if had_dragged_position {
-        let _ = window.emit(ISLAND_POSITION_CLEARED_EVENT, ());
+    match placed {
+        Some(position) => {
+            let _ = window.emit(ISLAND_POSITION_CHANGED_EVENT, position);
+        }
+        None if had_dragged_position => {
+            let _ = window.emit(ISLAND_POSITION_CLEARED_EVENT, ());
+        }
+        None => {}
     }
     if let Err(error) = apply_stage_geometry(window, state, false) {
         eprintln!("Failed to move the island to another monitor: {error}");

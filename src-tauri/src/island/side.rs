@@ -1,5 +1,6 @@
 use tauri::{Monitor, PhysicalPosition, WebviewWindow};
 
+use super::bottom_edge;
 use super::edge;
 use super::geometry::{island_rect, monitor_for_island_position, SIDE_HANDLE_HEIGHT, STAGE_WINDOW_WIDTH};
 use super::screen;
@@ -11,7 +12,7 @@ const SNAP_DISTANCE: f64 = 16.0;
 pub(super) type Rect = (i32, i32, i32, i32);
 
 pub(super) fn stored_side(position: IslandPosition) -> Option<(Edge, f64)> {
-    let edge = position.edge.filter(|edge| *edge != Edge::Top)?;
+    let edge = position.edge.filter(|edge| matches!(edge, Edge::Left | Edge::Right))?;
     Some((edge, position.along.unwrap_or(0.5).clamp(0.0, 1.0)))
 }
 
@@ -51,13 +52,14 @@ pub(super) fn along_for(island_top: f64, (_, work_top, _, work_height): Rect, ha
 
 pub(super) fn is_outer(edge: Edge, (left, top, width, height): Rect, monitors: &[Rect]) -> bool {
     !monitors.iter().any(|&(other_left, other_top, other_width, other_height)| {
-        let overlaps = other_top < top + height && other_top + other_height > top;
-        overlaps
-            && match edge {
-                Edge::Left => other_left + other_width == left,
-                Edge::Right => other_left == left + width,
-                Edge::Top => false,
-            }
+        let beside = other_top < top + height && other_top + other_height > top;
+        let below = other_left < left + width && other_left + other_width > left;
+        match edge {
+            Edge::Left => beside && other_left + other_width == left,
+            Edge::Right => beside && other_left == left + width,
+            Edge::Bottom => below && other_top == top + height,
+            Edge::Top => false,
+        }
     })
 }
 
@@ -72,7 +74,7 @@ pub(super) fn near_side(island_left: f64, island_width: f64, (work_left, _, work
     }
 }
 
-fn full_rect(monitor: &Monitor) -> Rect {
+pub(super) fn full_rect(monitor: &Monitor) -> Rect {
     let (origin, size) = (screen::monitor_origin(monitor), screen::monitor_size(monitor));
     (origin.x, origin.y, size.width as i32, size.height as i32)
 }
@@ -83,7 +85,16 @@ pub(super) fn snap_after_drag(window: &WebviewWindow, position: IslandPosition, 
             return snapped;
         }
     }
-    let position = if state.side().is_some() { leave_side(window, position, state) } else { position };
+    if let Some(snapped) = bottom_edge::snap(window, position, state) {
+        return snapped;
+    }
+    let position = if state.attached_edge == Some(Edge::Bottom) {
+        bottom_edge::leave(window, position, state)
+    } else if state.side().is_some() {
+        leave_side(window, position, state)
+    } else {
+        position
+    };
     top_edge::snap_to_top(window, position)
 }
 
@@ -94,7 +105,7 @@ fn snap_to_side(window: &WebviewWindow, position: IslandPosition, state: IslandW
     let monitor = monitor_for_island_position(window, position).ok().flatten()?;
     let scale = screen::monitor_scale(&monitor);
     let stage_width = STAGE_WINDOW_WIDTH * scale;
-    let rect = island_rect(position.x as f64, position.y as f64, stage_width, state);
+    let rect = island_rect(position.x as f64, position.y as f64, stage_width, bottom_edge::window_height(window), state);
     let work = screen::monitor_work_rect(&monitor);
     let edge = near_side(rect.left, rect.width, work, SNAP_DISTANCE * scale)?;
     let monitors: Vec<Rect> = window.available_monitors().ok()?.iter().map(full_rect).collect();
@@ -118,7 +129,7 @@ fn snap_to_side(window: &WebviewWindow, position: IslandPosition, state: IslandW
 fn leave_side(window: &WebviewWindow, position: IslandPosition, state: IslandWindowState) -> IslandPosition {
     let scale = screen::window_scale(window).unwrap_or(1.0);
     let stage_width = STAGE_WINDOW_WIDTH * scale;
-    let rect = island_rect(position.x as f64, position.y as f64, stage_width, state);
+    let rect = island_rect(position.x as f64, position.y as f64, stage_width, bottom_edge::window_height(window), state);
     let x = (rect.left + rect.width / 2.0 - stage_width / 2.0).round() as i32;
     edge::set_attached(window, None);
     if x != position.x {
@@ -155,6 +166,10 @@ mod tests {
         assert!(is_outer(Edge::Right, main, &[main, left]));
         assert!(is_outer(Edge::Left, main, &[main, above]));
         assert!(!is_outer(Edge::Right, left, &[main, left]));
+        let below = (480, 1080, 1920, 1080);
+        assert!(!is_outer(Edge::Bottom, main, &[main, below]));
+        assert!(is_outer(Edge::Bottom, below, &[main, below]));
+        assert!(is_outer(Edge::Bottom, main, &[main, left, above]));
     }
 
     #[test]

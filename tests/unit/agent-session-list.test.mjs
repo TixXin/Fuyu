@@ -101,7 +101,7 @@ test("Agent page rows and the Agent settings", async () => {
   assert.equal(DEFAULT_SETTINGS.agentHideClosed, true);
   assert.equal(normalizeSettings({}).agentHideClosed, true);
   assert.equal(normalizeSettings({ agentHideClosed: false }).agentHideClosed, false);
-  assert.equal(DEFAULT_SETTINGS.agentSessionHours, 2);
+  assert.equal(DEFAULT_SETTINGS.agentSessionHours, 24);
 });
 
 test("plugins rename an agent's effort for display only", () => {
