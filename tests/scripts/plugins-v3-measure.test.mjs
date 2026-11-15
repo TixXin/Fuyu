@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
 import { measureRestart, measureStartup, nextTick, pluginsYml, soak } from "../../scripts/plugins-v3/measure-host.mjs";
+import { fit, parseCsv, trend } from "../../scripts/plugins-v3/measure-trend.mjs";
 import { CSV_HEADER, csvRow, median, parseBytes, parseFootprint, parseLinuxStatus, toMB } from "../../scripts/plugins-v3/measure-memory.mjs";
 
 test("memory readings are parsed from footprint, PowerShell and /proc", () => {
@@ -26,7 +27,29 @@ test("medians, megabytes and CSV rows come out as the report expects", () => {
 
 test("the configuration lists one empty plugin per slot and can disable some", () => {
   assert.equal(pluginsYml(0), "[]\n");
+  assert.equal(pluginsYml(0, new Set(), 1), "- id: busy-0\n  name: ./plugins/busy-0.mjs\n");
   assert.equal(pluginsYml(2, new Set([1])), "- id: empty-0\n  name: ./plugins/empty-0.mjs\n- id: empty-1\n  name: ./plugins/empty-1.mjs\n  disabled: true\n");
+});
+
+test("the trend of a soak skips the warm-up and fits a line through the rest", () => {
+  assert.equal(fit([[0, 1], [1, 3], [2, 5]]), 2);
+  assert.equal(fit([[0, 1]]), null);
+  let csv = CSV_HEADER;
+  for (let minute = 0; minute <= 240; minute += 1) {
+    const mb = minute < 10 ? 20 + minute : 30 + (minute % 2) * 0.2;
+    csv += csvRow({ at: minute * 60000, elapsedS: minute * 60, bytes: minute === 100 ? null : mb * 1048576, pingMs: minute === 50 ? 7 : 1, pid: 1, restarts: 0 });
+  }
+  const rows = parseCsv(csv);
+  assert.equal(rows.length, 241);
+  const result = trend(rows);
+  assert.equal(result.samples, 240);
+  assert.equal(result.missing, 1);
+  assert.equal(result.hours, 4);
+  assert.equal(result.minMB, 30);
+  assert.equal(result.maxMB, 30.2);
+  assert.ok(Math.abs(result.slopeMBPerHour) < 0.05, JSON.stringify(result));
+  assert.equal(result.maxPingMs, 7);
+  assert.equal(result.restarts, 0);
 });
 
 test("a supervisor that polls notices an exit at its next tick, and at once without polling", () => {
@@ -51,6 +74,9 @@ test("startup, restart and soak each run against the real host", async () => {
     assert.equal(rows[0], CSV_HEADER.trim());
     assert.ok(rows.length >= 3, rows.join("\n"));
     assert.match(rows[1], /^\d{4}-\d\d-\d\dT[^,]+,0,[\d.]+,\d+,\d+,0$/);
+    const busy = await soak({ count: 0, busy: 1, minutes: 0.05, everyS: 1, churnS: 0, out, node: process.execPath });
+    assert.equal(busy.restarts, 0);
+    assert.ok(busy.busyTicks[0] >= 1, JSON.stringify(busy));
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
