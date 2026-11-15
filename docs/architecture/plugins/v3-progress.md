@@ -8,6 +8,8 @@
 
 - 第 1 阶段（E36.1，#291）2026-11-15 完成：两个系统的测量和真岛验收都过了，细节在归档的任务文件里。
 - 第 2 阶段由主 agent 会话「E36.2 插槽化主 agent」统筹，分步计划见 [v3-phase2-plan.md](v3-phase2-plan.md)，子任务 E36.2.1–E36.2.11（#424–#434）。做子任务的会话先读那份计划。
+- 同时并行两条地基（2026-11-15 起，经理会话统筹，三个主 agent 各管一条）：第 3 阶段地基（服务、宿主调 Rust、Rust 标记、宿主样板、密钥不经 JS），计划见 [v3-phase3-foundation-plan.md](v3-phase3-foundation-plan.md)，子任务 E36.3.1–E36.3.15；第 5 阶段地基（清单和 `.fuyu` 包、市场索引、审核、命令行、市场 CI、脚手架、作者文档），计划见 [v3-phase5-foundation-plan.md](v3-phase5-foundation-plan.md)，子任务 E36.5.1–E36.5.7。两个阶段的其余部分仍等第 2 阶段。
+- **第 3 版默认打开之前必须完成**：E36.3.15（#514）把宿主和内置插件带进安装包。现在开发版和 `build:exe` 都从仓库目录加载宿主，正式安装包里没有宿主。
 - 自己试第 3 版：`node scripts/plugins-v3/install-demo.mjs` 装演示插件，再用 `FUYU_PLUGINS_V3=1 pnpm tauri dev` 启动，展开岛屿后最上面有一行插件的问候和每秒加一的计数。
 - 包和目录的名字定在 [流程](v3-workflow.md)「代码放哪」：Cordis 在 `vendor/cordis/`，基座的 TS 包是 `packages/plugin-base`，Rust 部分是 `src-tauri/crates/plugin-base`。
 
@@ -150,6 +152,8 @@ Windows 的测法：同上面 Windows 的构建和身份；`Process.Start` 拉�
 | 日期 | 改了什么 | 为什么 | 谁定的 |
 |---|---|---|---|
 | 2026-11-15 | 第 5 阶段的细则（审核三档、冷静期 3 天、作者必须签提交号、官方插件靠受保护的 `main`、市场仓库加规则集、索引 7 天过期、撤销两级和单独的撤销密钥、第三方名 `@<所有者>/<名字>`、手动安装默认关、基座 MIT、市场客户端做成宿主内置插件）定了，见方案「第 5 阶段开头定下的细则」；第 5 阶段里不依赖界面的地基先开工，见 [v3-phase5-foundation-plan.md](v3-phase5-foundation-plan.md) | 经理和三个主 agent 并行 | 用户（都按推荐） |
+| 2026-11-15 | 第 3 阶段地基的取舍：宿主调 Rust 的通道和标记宏自己写，不换 rutis；TS 类型用 `ts-rs`；窗口的 `invoke` 第 3 阶段不生成封装；设置里不再显示本机接口令牌的明文，只能由 Rust 复制；三处明文回 JS 的修复（本机接口令牌、日历链接、更新代理）和防复发的检查在地基里做；安装确认如实写宿主插件能读凭据管理器。见 [rutis-revisit.md](../../research/rutis-revisit.md)、[v3-secrets.md](v3-secrets.md) | 第 3 阶段地基第一波的结论 | 用户（都按推荐） |
+| 2026-11-15 | 插件相关的会话（主 agent 和子会话）推理强度都用 xhigh | 用户定 | 用户 |
 | 2026-11-15 | Windows 的内存验收改按私有工作集量，基线按同样口径重量；Rust 在 Windows 上拉起宿主时设 `UV_THREADPOOL_SIZE=2` | 宿主私有内存 64 MB 里约 32 MB 是线程池只提交、没用到的栈。两样都做：口径和 macOS 一致，私有内存也从 64 降到 48 MB | 用户 |
 | 2026-11-14 | 第 0 阶段的临时项目不建 GitHub 仓库，放本机 | 用户定 | 用户 |
 | 2026-11-14 | 宿主用 Node，不用 Bun | 第 0 阶段实测：Bun 跑不了 Cordis 的热重载，装在别处的插件拿不到同一份内核 | 用户 |
