@@ -27,6 +27,9 @@ pub(super) const EXPANDED_ISLAND_WIDTH: f64 = 560.0;
 pub(super) const SIDE_HANDLE_WIDTH: f64 = 12.0;
 pub(super) const SIDE_HANDLE_HEIGHT: f64 = 72.0;
 pub(super) const SIDE_HANDLE_RADIUS: f64 = 6.0;
+pub(super) const SIDE_COLUMN_WIDTH: f64 = 44.0;
+pub(super) const SIDE_COLUMN_MIN_HEIGHT: f64 = 48.0;
+pub(super) const SIDE_COLUMN_MAX_HEIGHT: f64 = 300.0;
 
 pub(super) fn max_expanded_width(scale: f64) -> f64 {
     ((STAGE_WINDOW_WIDTH - 4.0) / scale).floor().max(EXPANDED_ISLAND_WIDTH)
@@ -114,10 +117,9 @@ pub(crate) fn apply_stage_geometry(
         (Some((edge, along)), _) if !state.is_dragging => {
             let mut sided = positioned_state;
             sided.attached_edge = Some(edge);
-            let (handle, island) = super::side::heights(sided, scale);
             super::edge::set_attached(window, Some(edge));
             let work = screen::monitor_work_rect(&monitor);
-            super::side::stage_position(edge, along, work, physical_width, handle, island)
+            super::side::stage_position(edge, along, work, physical_width, super::side::island_height(sided, scale))
         }
         (_, Some(position)) if !state.is_dragging => {
             super::edge::set_attached(window, Some(Edge::Bottom));

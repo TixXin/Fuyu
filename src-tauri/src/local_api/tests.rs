@@ -128,6 +128,8 @@ fn dev_island_routes_need_no_write_permission() {
     assert_eq!(route("POST", "/v1/dev/island/action", br#"{"action":"collapse"}"#).expect("action").method, "devIsland.action");
     assert_eq!(route("PUT", "/v1/dev/island/notch", br#"{"width":208,"height":37.5}"#).expect("notch").params["width"], 208);
     assert_eq!(route("DELETE", "/v1/dev/island/notch", b"").expect("clear").params, serde_json::Value::Null);
+    assert_eq!(route("PUT", "/v1/dev/island/edge", br#"{"edge":"left"}"#).expect("edge").method, "devIsland.edge");
+    assert_eq!(route("POST", "/v1/dev/island/edge", b"{}").map_err(|error| error.status), Err(405));
     assert_eq!(route("GET", "/v1/dev/island/emit", b"").map_err(|error| error.status), Err(405));
     assert_eq!(route("POST", "/v1/dev/island/emit", b"[]").map_err(|error| error.status), Err(400));
 }
