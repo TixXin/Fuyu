@@ -224,8 +224,8 @@ Rust 每次拉起宿主（包括自动重启）都重新决定带不带 `--safe`
 |---|---|---|---|---|---|
 | `island.page/v1` | 展开页 | list | 2 | 不限，页头圆点另有上限 | `icon`、`shortcutOrder`（Alt+数字的顺序）、`headerDot`（在页头出圆点）、`enabled(features)`、`fallback(features)`（这页关掉时回退到哪页） |
 | `island.header/v1` | 页头右侧的按钮 | list | 1 | 不限 | `enabled(features)` |
-| `island.collapsed/v1` | 收起条 | list | 2 | 不限，用户的「收起条布局」照旧覆盖 | `group`（`gauges`）、`width`、`hideable` |
-| `island.collapsed-center/v1` | 收起条的中心图案 | single | 1 | 1 | `width` |
+| `island.collapsed/v1` | 收起条 | list | 2 | 不限，用户的「收起条布局」照旧覆盖 | `group`（`gauges`：相邻的合进一个量表框，侧栏也显示）、`width`（收起条要加的宽度）、`hideable`（用户在布局里藏起来后整项撤掉，也不算宽度）、`shown(context)`（现在出不出现，不写就一直出现） |
+| `island.collapsed-center/v1` | 收起条的中心图案 | single | 1 | 1 | `width`、`shown(context)` |
 | `island.alert/v1` | 刘海提醒 | list | 1 | 窗口只显示排在最前、`active(sources)` 为真的一项 | `active(sources)`、`trailing`（右半边的组件） |
 | `island.dev/v1` | 第 1 阶段的开发插槽 | list | 1 | 3 | 无 |
 | `settings.category/v1` | 设置窗口的分类 | list | 2 | 不限 | `group`（侧栏分组）、`icon`、`tabs`（子页）、`available(...)`（平台是否支持）、`feature`（所属功能开关）、`aliases`（合并进来的旧分类名） |
