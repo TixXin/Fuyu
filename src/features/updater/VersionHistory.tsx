@@ -87,10 +87,10 @@ function ReleaseItem({ group, current, open, onToggle, notes, selected, onSelect
   );
 }
 
-export function VersionHistory() {
+export function VersionHistory({ releases = BUNDLED_RELEASES }: { releases?: readonly BundledRelease[] }) {
   const text = useTranslation().settings.versionHistory;
   const current = useSyncExternalStore(subscribeToUpdate, () => getUpdateState().version);
-  const groups = useMemo(() => releaseGroups(BUNDLED_RELEASES, current), [current]);
+  const groups = useMemo(() => releaseGroups(releases, current), [releases, current]);
   const [openBase, setOpenBase] = useState<string | null>(null);
   const [selection, setSelection] = useState<Record<string, string>>({});
   const [notes, setNotes] = useState<Notes>({});
@@ -100,7 +100,7 @@ export function VersionHistory() {
 
   useEffect(() => {
     if (!selected || selected in notes) return;
-    const release = BUNDLED_RELEASES.find((entry) => entry.version === selected);
+    const release = releases.find((entry) => entry.version === selected);
     if (!release) return;
     let alive = true;
     release.load().then(
@@ -108,7 +108,7 @@ export function VersionHistory() {
       () => { if (alive) setNotes((previous) => ({ ...previous, [selected]: null })); },
     );
     return () => { alive = false; };
-  }, [selected, notes]);
+  }, [selected, notes, releases]);
 
   if (groups.length === 0) return null;
   const visible = showAll ? groups : groups.slice(0, RECENT_COUNT);
