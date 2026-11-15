@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>iOS 毛玻璃预览（壁纸取样）</title>
+<!--
+  Standalone preview for issue #286 / C87 follow-up, no build step. Open in Edge or Chrome.
+  Idea: the island cannot see the desktop (DWM materials cover the whole 820x460 stage), but it can draw the
+  wallpaper slice that sits behind it and frost that in CSS, the way Windows 11 Mica is "blurred wallpaper".
+  Because the backdrop is our own element, edge refraction could use plain `filter`, not backdrop-filter,
+  in theory (not working yet in this page, see the research doc). Load your own wallpaper with the button, or ?wall=<file:///...jpg>.
+  Research: docs/research/ios-style-glass.md (community products), docs/research/liquid-glass.md (feasibility).
+-->
+<style>
+  :root { color-scheme: dark; --accent: #74d6ff; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 24px 32px 56px; background: #111214; color: #e8e8ea; font: 14px/1.6 "Segoe UI", "PingFang SC", "Microsoft YaHei UI", sans-serif; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  h2 { font-size: 16px; margin: 24px 0 6px; }
+  p.note { color: #9a9aa0; margin: 0 0 10px; max-width: 1060px; }
+  ul.points { color: #c8c8cc; max-width: 1060px; padding-left: 20px; }
+  code { background: #232428; padding: 1px 6px; border-radius: 4px; }
+  .controls { display: flex; flex-wrap: wrap; gap: 10px 24px; align-items: center; background: #1b1c1f; padding: 12px 16px; border-radius: 10px; margin: 10px 0 0; max-width: 1060px; }
+  .group { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .group > span { color: #9a9aa0; margin-right: 2px; }
+  button.seg, label.seg { background: #2a2b30; color: #ddd; border: 1px solid #3a3b40; border-radius: 6px; padding: 2px 10px; font: inherit; cursor: pointer; }
+  button.seg.on { background: #3b4d74; border-color: #5a7ab8; color: #fff; }
+  input[type=range] { width: 110px; }
+  input[type=color] { width: 28px; height: 22px; border: 0; padding: 0; background: none; }
+  output { display: inline-block; min-width: 34px; color: #9a9aa0; font-variant-numeric: tabular-nums; }
+
+  .stage { position: relative; width: 1060px; max-width: 100%; height: 420px; border-radius: 12px; overflow: hidden; user-select: none; margin-top: 12px; background: #000; }
+  .wall { position: absolute; inset: 0; background-size: cover; background-position: center; }
+  .blocker { position: absolute; left: 0; right: 0; top: 0; height: 300px; background: #f4f5f8; display: none; }
+  .blocker .bar { height: 30px; background: #e3e5ea; }
+  .blocker .ln { height: 9px; margin: 14px 30px; border-radius: 4px; background: #c9ccd4; }
+  .stage.blocked .blocker { display: block; }
+
+  .island { position: absolute; left: 360px; top: 14px; width: 340px; height: 38px; border-radius: 19px; overflow: hidden; cursor: grab; isolation: isolate;
+    box-shadow: 0 10px 34px rgba(0,0,0,.28), 0 1px 3px rgba(0,0,0,.18);
+    transition: width .52s var(--spring), height .52s var(--spring), border-radius .52s var(--spring);
+    --spring: linear(0, 0.009, 0.035 2.1%, 0.141 4.4%, 0.723 12.9%, 0.938 16.7%, 1.017 19.4%, 1.077 22.4%, 1.093 25.6%, 1.084 28.6%, 1.035 37.6%, 1.007 46.5%, 0.997 58.5%, 1);
+    color: #fff; }
+  .island.light { color: #111; }
+  .island.expanded { width: 560px; height: 220px; border-radius: 30px; }
+  .island.dragging { cursor: grabbing; transition: none; }
+  .island > * { position: absolute; pointer-events: none; }
+  .frostbox { inset: -40px; }
+  .frost { inset: 0; background-repeat: no-repeat; filter: blur(var(--blur)) saturate(var(--sat)); }
+  .base { inset: 0; background: rgba(22,22,26,var(--base)); }
+  .island.light .base { background: rgba(250,250,252,var(--base)); }
+  .color { inset: 0; opacity: var(--color); }
+  .color.solid { background: var(--tint); mix-blend-mode: color; }
+  .island.light .color.solid { mix-blend-mode: multiply; }
+  .blob { position: absolute; width: 70%; height: 160%; border-radius: 50%; filter: blur(26px); opacity: .9; will-change: transform; animation: drift var(--dur) ease-in-out infinite alternate; }
+  .color:not(.flow) .blob { display: none; }
+  .color.flow { mix-blend-mode: soft-light; }
+  .island.dark .color.flow { mix-blend-mode: screen; }
+  @keyframes drift { 0% { transform: translate(-30%, -20%) scale(1); } 50% { transform: translate(40%, 10%) scale(1.25); } 100% { transform: translate(90%, -10%) scale(.9); } }
+  .paused .blob { animation-play-state: paused; }
+  @media (prefers-reduced-motion: reduce) { .blob { animation-play-state: paused; } .island { transition: none; } }
+  .noise { inset: 0; opacity: var(--noise); mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+  .spec { inset: 0; mix-blend-mode: plus-lighter; opacity: 0; transition: opacity .25s;
+    background: radial-gradient(160px 120px at var(--mx, 30%) var(--my, 0%), rgba(255,255,255,.32), transparent 70%); }
+  .island.spec-on:hover .spec { opacity: 1; }
+  .rim { inset: 0; border-radius: inherit; padding: 1px; opacity: 0;
+    background: linear-gradient(var(--rim-angle, 135deg), rgba(255,255,255,.85), rgba(255,255,255,.12) 28%, rgba(255,255,255,0) 50%, rgba(255,255,255,.1) 72%, rgba(255,255,255,.55));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; }
+  .island.rim-on .rim { opacity: 1; }
+  .inner { inset: 0; border-radius: inherit; box-shadow: inset 0 1px 0 rgba(255,255,255,.22), inset 0 -10px 18px -12px rgba(0,0,0,.35); }
+  .island.light .inner { box-shadow: inset 0 1px 0 rgba(255,255,255,.7), inset 0 -10px 18px -12px rgba(0,0,0,.12); }
+
+  .content { inset: 0; display: flex; align-items: center; gap: 10px; padding: 0 16px; font-size: 13px; font-weight: 600; letter-spacing: .01em; }
+  .content .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+  .content .sub { font-weight: 500; opacity: .72; }
+  .content .grow { flex: 1; }
+  .exp { inset: 0; padding: 20px 24px; display: none; grid-template-columns: 112px 1fr; gap: 18px; }
+  .island.expanded .content { display: none; }
+  .island.expanded .exp { display: grid; }
+  .cover { width: 112px; height: 112px; border-radius: 16px; background: linear-gradient(135deg, #ff8a5c, #ff4f8b 55%, #7a5cff); box-shadow: 0 6px 18px rgba(0,0,0,.25); }
+  .exp h3 { margin: 4px 0 0; font-size: 18px; }
+  .exp .sub { opacity: .72; font-size: 13px; font-weight: 500; }
+  .bar2 { height: 5px; border-radius: 3px; background: currentColor; opacity: .2; margin: 18px 0 4px; position: relative; }
+  .bar2::after { content: ""; position: absolute; inset: 0 62% 0 0; border-radius: 3px; background: currentColor; opacity: 3; }
+  .times { display: flex; justify-content: space-between; font-size: 11px; opacity: .6; font-variant-numeric: tabular-nums; }
+  .btns { display: flex; gap: 28px; justify-content: center; margin-top: 10px; font-size: 20px; }
+  .todo { grid-column: 1 / -1; display: flex; gap: 8px; font-size: 12px; }
+  .chip { padding: 3px 10px; border-radius: 999px; background: rgba(255,255,255,.14); font-weight: 600; }
+  .island.light .chip { background: rgba(0,0,0,.07); }
+  .hint { position: absolute; right: 12px; bottom: 10px; font-size: 12px; color: #fff; background: rgba(0,0,0,.45); padding: 3px 10px; border-radius: 8px; pointer-events: none; }
+</style>
+</head>
+<body>
+<h1>iOS 毛玻璃预览：在岛上画「它背后那块壁纸」</h1>
+<p class="note">岛拿不到桌面（DWM 材质按整个 820×460 的透明舞台画，见 <code>docs/research/liquid-glass.md</code>），但能拿到<b>壁纸</b>。把岛正后方那一块壁纸取出来，在岛自己的像素里模糊、提饱和、着色、加噪点，就是 Windows 11 的 Mica 和 iOS 的 Material 的做法，只不过尺寸只有岛那么大、形状跟着岛变。背景是我们自己的元素，理论上 iOS 26 的边缘折射也能用普通 <code>filter</code> 做（不再依赖 backdrop-filter），但本页在 Chromium 里没调通，先不放，见调研文档「未解决」。<b>拖动岛</b>看玻璃里的画面跟着位置变；点岛展开 / 收起。</p>
+
+<div class="controls">
+  <div class="group"><span>预设</span>
+    <button class="seg" data-preset="clear">iOS 26 透明</button>
+    <button class="seg" data-preset="tinted">iOS 26 着色</button>
+    <button class="seg on" data-preset="flow">毛玻璃 + 流动彩色</button>
+    <button class="seg" data-preset="material">iOS 18 毛玻璃</button>
+    <button class="seg" data-preset="mica">Win11 Mica</button>
+  </div>
+  <div class="group"><span>壁纸</span>
+    <button class="seg on" data-wall="0">海</button>
+    <button class="seg" data-wall="1">霓虹格子</button>
+    <button class="seg" data-wall="2">晚霞</button>
+    <label class="seg">用我的壁纸…<input id="file" type="file" accept="image/*" hidden /></label>
+  </div>
+</div>
+<div class="controls">
+  <div class="group"><span>岛</span><button class="seg" id="tglExpand">展开</button>
+    <button class="seg on" data-scheme="dark">深色</button><button class="seg" data-scheme="light">浅色</button></div>
+  <div class="group"><span>底板颜色</span>
+    <button class="seg" data-color="none">无</button>
+    <button class="seg" data-color="accent">主题色</button>
+    <button class="seg" data-color="custom">自定义</button><input id="customColor" type="color" value="#ff6fa8" />
+    <button class="seg on" data-color="flow">流动彩色</button>
+  </div>
+  <div class="group"><span>开关</span>
+    <button class="seg on" data-toggle="rim-on">边缘高光</button>
+    <button class="seg on" data-toggle="spec-on">镜面高光</button>
+    <button class="seg" id="tglPause">暂停流动</button>
+    <button class="seg" id="tglBlock">后面有窗口挡着</button>
+  </div>
+</div>
+<div class="controls" id="sliders"></div>
+
+<div class="stage" id="stage">
+  <div class="wall" id="wall"></div>
+  <div class="blocker"><div class="bar"></div><div class="ln" style="width:60%"></div><div class="ln" style="width:80%"></div><div class="ln" style="width:45%"></div><div class="ln" style="width:70%"></div></div>
+  <div class="island dark rim-on spec-on" id="isl">
+    <div class="frostbox" id="frostbox"><div class="frost" id="frost"></div></div>
+    <div class="base"></div>
+    <div class="color flow" id="color">
+      <div class="blob" style="left:-20%;top:-30%;background:#ff5f9e;--dur:9s"></div>
+      <div class="blob" style="left:10%;top:-40%;background:#6f7bff;--dur:12s;animation-delay:-4s"></div>
+      <div class="blob" style="left:40%;top:-20%;background:#2fd6c3;--dur:14s;animation-delay:-7s"></div>
+      <div class="blob" style="left:-10%;top:-10%;background:#ffb547;--dur:11s;animation-delay:-2s"></div>
+    </div>
+    <div class="noise"></div>
+    <div class="spec"></div>
+    <div class="inner"></div>
+    <div class="rim"></div>
+    <div class="content"><span class="dot"></span><span>晴天</span><span class="sub">周杰伦</span><span class="grow"></span><span class="sub">待办 3</span><span>10:24</span></div>
+    <div class="exp">
+      <div class="cover"></div>
+      <div><div class="sub">正在播放</div><h3>晴天</h3><div class="sub">周杰伦 · 叶惠美</div>
+        <div class="bar2"></div><div class="times"><span>1:42</span><span>4:29</span></div>
+        <div class="btns"><span>⏮</span><span>⏸</span><span>⏭</span></div></div>
+    </div>
+  </div>
+  <div class="hint" id="hint">拖动岛 · 点击展开</div>
+</div>
+
+
+<h2>和现在、和 C87 第 2 波的区别</h2>
+<ul class="points">
+  <li><b>现在的液态玻璃</b>：半透明着色底，背后的桌面清楚地透过来，没有模糊（issue #286 原话「太简单」）。</li>
+  <li><b>C87 第 2 波</b>（TixXin 那边在做）：流动彩色 + 高光 + 形变，都画在岛自己身上，和背后无关。本页的「底板颜色 → 流动彩色」就是它，可以直接叠在毛玻璃上。</li>
+  <li><b>本页多出来的一层</b>：岛背后那块壁纸的毛玻璃，加上 iOS 式的边缘亮线和跟鼠标的高光。只读一张壁纸图（缩小后几百 KB），岛不动时整层是静止的、不重绘；拖动、贴边滑动时才重画。</li>
+  <li><b>局限</b>（点「后面有窗口挡着」看）：岛背后被最大化窗口挡住时，玻璃里仍是壁纸，不是那个窗口。Windows 11 的 Mica 也是这样，系统自己的标题栏一直这么用，看着是「带壁纸色调的磨砂材质」而不是错误。想要真透出，仍要 C89 / C90 的原生实验。</li>
+</ul>
+
+<script>
+const WALLS = [
+  null,
+  "repeating-linear-gradient(90deg, rgba(0,0,0,.55) 0 2px, transparent 2px 46px), repeating-linear-gradient(0deg, rgba(0,0,0,.55) 0 2px, transparent 2px 46px), radial-gradient(30% 50% at 20% 30%, #ff2fb0, transparent 70%), radial-gradient(30% 50% at 55% 20%, #ffd23f, transparent 70%), radial-gradient(40% 60% at 85% 60%, #2ff3ff, transparent 70%), linear-gradient(160deg, #1a0f3a, #050510)",
+  "radial-gradient(18% 26% at 70% 62%, #fff4c2, #ffb15c 40%, transparent 70%), linear-gradient(180deg, #2b3a8f 0%, #a54a9b 38%, #ff7a59 62%, #ffc56b 74%, #3a2b4a 75%, #1b1530 100%)",
+];
+const DEFAULT_WALL = new URLSearchParams(location.search).get("wall")
+  || "https://images.unsplash.com/photo-1505142468610-359e7d316be0?w=1600&q=70";
+const SLIDERS = [
+  ["blur", "模糊", 0, 60, "px"], ["sat", "饱和度", 100, 250, "%"], ["base", "底色浓度", 0, 90, "%"],
+  ["color", "色彩浓度", 0, 90, "%"], ["noise", "噪点", 0, 12, "%"], ["speed", "流动速度", 0, 200, "%"],
+];
+const PRESETS = {
+  clear:    { blur: 4,  sat: 190, base: 8,  color: 0,  noise: 0, color_mode: "none" },
+  tinted:   { blur: 12, sat: 180, base: 28, color: 45, noise: 0, color_mode: "accent" },
+  flow:     { blur: 22, sat: 180, base: 38, color: 55, noise: 3, color_mode: "flow" },
+  material: { blur: 30, sat: 180, base: 52, color: 0,   noise: 3, color_mode: "none" },
+  mica:     { blur: 60, sat: 130, base: 72, color: 0,   noise: 2, color_mode: "none" },
+};
+const $ = (id) => document.getElementById(id);
+const stage = $("stage"), wall = $("wall"), isl = $("isl"), frost = $("frost"), color = $("color");
+const state = { blur: 22, sat: 180, base: 38, color: 55, noise: 3, speed: 100, x: 360, y: 14, wallCss: "" };
+
+function setWall(css) { state.wallCss = css; wall.style.backgroundImage = css; frost.style.backgroundImage = css; place(); }
+function setWallUrl(url) { setWall(`url("${url}")`); }
+
+function place() {
+  isl.style.left = state.x + "px"; isl.style.top = state.y + "px";
+  const sw = stage.clientWidth, sh = stage.clientHeight;
+  frost.style.backgroundSize = WALLS.some((w) => w && state.wallCss === w) ? `${sw}px ${sh}px` : coverSize(sw, sh);
+  frost.style.backgroundPosition = `${-state.x + 40}px ${-state.y + 40}px`;
+}
+let natural = null;
+function coverSize(sw, sh) {
+  if (!natural) return `${sw}px ${sh}px`;
+  const k = Math.max(sw / natural.w, sh / natural.h);
+  return `${natural.w * k}px ${natural.h * k}px`;
+}
+function measure(url) { const img = new Image(); img.onload = () => { natural = { w: img.naturalWidth, h: img.naturalHeight }; place(); }; img.src = url; }
+
+function apply() {
+  isl.style.setProperty("--blur", state.blur + "px");
+  isl.style.setProperty("--sat", state.sat / 100);
+  isl.style.setProperty("--base", state.base / 100);
+  isl.style.setProperty("--color", state.color / 100);
+  isl.style.setProperty("--noise", state.noise / 100);
+  color.querySelectorAll(".blob").forEach((b, i) => { const base = [9, 12, 14, 11][i]; b.style.setProperty("--dur", state.speed ? (base * 100 / state.speed) + "s" : "1000s"); });
+  color.classList.toggle("paused-speed", !state.speed);
+  isl.classList.toggle("paused", !state.speed || pausedByUser);
+  document.querySelectorAll("#sliders input").forEach((el) => { el.value = state[el.name]; el.nextElementSibling.value = state[el.name] + el.dataset.unit; });
+}
+
+
+let pausedByUser = false;
+function toggleExpand() {
+  isl.classList.toggle("expanded");
+  $("tglExpand").classList.toggle("on", isl.classList.contains("expanded"));
+  const maxX = stage.clientWidth - (isl.classList.contains("expanded") ? 560 : 340);
+  if (state.x > maxX) { state.x = Math.max(0, maxX); place(); }
+}
+
+let drag = null;
+isl.addEventListener("pointerdown", (e) => { drag = { sx: e.clientX, sy: e.clientY, x: state.x, y: state.y, moved: false }; isl.setPointerCapture(e.pointerId); });
+isl.addEventListener("pointermove", (e) => {
+  const r = isl.getBoundingClientRect();
+  isl.style.setProperty("--mx", (e.clientX - r.left) + "px"); isl.style.setProperty("--my", (e.clientY - r.top) + "px");
+  isl.style.setProperty("--rim-angle", (135 + (e.clientX - r.left - r.width / 2) / r.width * 60) + "deg");
+  if (!drag) return;
+  const dx = e.clientX - drag.sx, dy = e.clientY - drag.sy;
+  if (!drag.moved && Math.hypot(dx, dy) < 4) return;
+  drag.moved = true; isl.classList.add("dragging");
+  state.x = Math.max(0, Math.min(stage.clientWidth - isl.offsetWidth, drag.x + dx));
+  state.y = Math.max(0, Math.min(stage.clientHeight - isl.offsetHeight, drag.y + dy));
+  place();
+});
+isl.addEventListener("pointerup", () => { if (drag && !drag.moved) toggleExpand(); isl.classList.remove("dragging"); drag = null; $("hint").style.display = "none"; });
+
+function segGroup(attr, fn) {
+  document.querySelectorAll(`[data-${attr}]`).forEach((b) => b.addEventListener("click", () => {
+    document.querySelectorAll(`[data-${attr}]`).forEach((o) => o.classList.toggle("on", o === b)); fn(b.dataset[attr]);
+  }));
+}
+function setColorMode(mode) {
+  color.className = "color" + (mode === "flow" ? " flow" : mode === "none" ? "" : " solid");
+  color.style.display = mode === "none" ? "none" : "";
+  isl.style.setProperty("--tint", mode === "custom" ? $("customColor").value : "var(--accent)");
+  document.querySelectorAll("[data-color]").forEach((o) => o.classList.toggle("on", o.dataset.color === mode));
+}
+segGroup("preset", (p) => { const v = PRESETS[p]; Object.assign(state, v); setColorMode(v.color_mode); apply(); });
+segGroup("wall", (i) => { if (i === "0") { natural = null; measure(DEFAULT_WALL); setWallUrl(DEFAULT_WALL); } else setWall(WALLS[i]); });
+segGroup("scheme", (s) => { isl.classList.toggle("dark", s === "dark"); isl.classList.toggle("light", s === "light"); });
+segGroup("color", setColorMode);
+$("customColor").addEventListener("input", () => setColorMode("custom"));
+document.querySelectorAll("[data-toggle]").forEach((b) => b.addEventListener("click", () => { b.classList.toggle("on"); isl.classList.toggle(b.dataset.toggle); }));
+$("tglExpand").addEventListener("click", toggleExpand);
+$("tglPause").addEventListener("click", (e) => { pausedByUser = !pausedByUser; e.target.classList.toggle("on", pausedByUser); apply(); });
+$("tglBlock").addEventListener("click", (e) => { stage.classList.toggle("blocked"); e.target.classList.toggle("on"); });
+$("file").addEventListener("change", (e) => { const f = e.target.files[0]; if (!f) return; const url = URL.createObjectURL(f); natural = null; measure(url); setWallUrl(url); document.querySelectorAll("[data-wall]").forEach((o) => o.classList.remove("on")); });
+
+$("sliders").innerHTML = SLIDERS.map(([k, label, min, max, unit]) =>
+  `<div class="group"><span>${label}</span><input type="range" name="${k}" min="${min}" max="${max}" data-unit="${unit}" /><output></output></div>`).join("");
+document.querySelectorAll("#sliders input").forEach((el) => el.addEventListener("input", () => { state[el.name] = +el.value; apply(); }));
+
+measure(DEFAULT_WALL); setWallUrl(DEFAULT_WALL); apply();
+</script>
+</body>
+</html>
