@@ -181,11 +181,15 @@ fn connection_from(enabled: bool, state: Option<&HostState>) -> HostConnection {
     }
 }
 
-#[tauri::command]
-pub(crate) fn get_plugin_host_connection() -> HostConnection {
-    let Some(slot) = SUPERVISOR.get() else { return HostConnection::default() };
+fn connection_now(switched_on: bool, slot: Option<&Mutex<Option<Supervisor>>>) -> HostConnection {
+    let Some(slot) = slot else { return connection_from(switched_on, None) };
     let state = slot.lock().ok().and_then(|supervisor| supervisor.as_ref().map(Supervisor::state));
     connection_from(true, state.as_ref())
+}
+
+#[tauri::command]
+pub(crate) fn get_plugin_host_connection() -> HostConnection {
+    connection_now(enabled(cfg!(debug_assertions), std::env::var(SWITCH).ok().as_deref()), SUPERVISOR.get())
 }
 
 pub(crate) fn respond(request: &tauri::http::Request<Vec<u8>>) -> tauri::http::Response<Vec<u8>> {
