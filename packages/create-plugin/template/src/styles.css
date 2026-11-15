@@ -1,0 +1,77 @@
+.{{css}} {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  padding: 8px;
+  font-family: var(--fuyu-plugin-font);
+  font-size: 13px;
+  color: var(--fuyu-plugin-text);
+}
+
+.{{css}}__title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.{{css}}__button {
+  align-self: flex-start;
+  max-width: 100%;
+  padding: 4px 12px;
+  border: none;
+  border-radius: var(--fuyu-plugin-radius);
+  font: inherit;
+  color: var(--fuyu-plugin-on-accent);
+  background: var(--fuyu-plugin-accent);
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.{{css}}__button:disabled {
+  color: var(--fuyu-plugin-text-muted);
+  background: var(--fuyu-plugin-surface);
+  cursor: default;
+}
+
+.{{css}}__list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.{{css}}__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 8px;
+  border-radius: var(--fuyu-plugin-radius);
+  background: var(--fuyu-plugin-surface);
+}
+
+.{{css}}__row:hover {
+  background: var(--fuyu-plugin-surface-hover);
+}
+
+.{{css}}__label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--fuyu-plugin-text-secondary);
+}
+
+.{{css}}__time {
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.{{css}}__note {
+  margin: 0;
+  color: var(--fuyu-plugin-text-muted);
+}

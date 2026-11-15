@@ -1,0 +1,31 @@
+# create-fuyu-plugin 2.0 (in development)
+
+Creates a TypeScript plugin for [Fuyu](https://github.com/TixXin/fuyu)'s plugin platform v3:
+
+```sh
+npm create fuyu-plugin@latest [folder] -- --owner <github-user> --name <name>
+```
+
+The project has a host part that uses the timer service `timers/v1`, an island page (`island.page/v1`)
+and a settings section (`settings.section/v1`), with `tsconfig.json` and ESLint rules that stop raw
+`setTimeout` / `setInterval`, `addEventListener` and injected styles. Every interface it uses is listed
+in `fuyu.experimental`, so it loads only from a development folder until the interfaces are settled.
+
+## Names
+
+| | Now | On npm |
+|---|---|---|
+| This package | `@fuyu/create-plugin` (private, `packages/create-plugin`) | `create-fuyu-plugin` 2.0, so `npm create fuyu-plugin@latest` gives v3 |
+| The command line it sets up | `@fuyu/plugin-cli` | `fuyu-plugin` 2.0 |
+| Plugin platform v2 | `create-fuyu-plugin` 0.x (`packages/create-fuyu-plugin`) | stays at 0.x, no longer updated |
+
+Until those are published, run it from a checkout of this repository. The project's `devDependencies`
+link `@fuyu/plugin-base`, `@fuyu/plugin-services` and `@fuyu/plugin-cli` from that checkout (`file:`):
+
+```sh
+node packages/create-plugin/bin/create-fuyu-plugin.mjs ~/my-plugin --owner you --name my-plugin
+```
+
+`--fuyu <folder>` links from another checkout. `--help` lists the other options.
+
+Design and the command line: [docs/architecture/plugins/v3-cli.md](https://github.com/TixXin/fuyu/blob/main/docs/architecture/plugins/v3-cli.md).
