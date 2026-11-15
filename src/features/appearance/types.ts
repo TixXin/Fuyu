@@ -1,4 +1,5 @@
 import type { CalendarSettingValues } from "../calendar/calendarSettings";
+import type { GlassSettingValues } from "./glassSettings";
 import type { LyricsIntro, LyricsIslandPriority, LyricsKaraokeColor, LyricsKaraokeFallback, LyricsKaraokeFill } from "../media/lyrics/lyricsSettings";
 import type { TodoProject } from "../todos/types";
 
@@ -14,6 +15,7 @@ export type ThemeMode = "dark" | "light" | "system";
 export type AccentMode = "default" | "windows" | "pick";
 export type IslandMonitor = "primary" | "cursor" | "foreground";
 export type MenuBarPlacement = "notch" | "below";
+export type IslandForm = "top" | "pill" | "notch";
 export type ExpandTrigger = "click" | "hover";
 export type MinimizeAction = "tray" | "tuck";
 export type TuckedHoverAction = "reveal" | "expand";
@@ -29,7 +31,7 @@ export type AgentAlertStarted = "everyTurn" | "newSession" | "off";
 export type IslandMotion = "spring" | "smooth" | "fast" | "bouncy" | "none";
 export type ShelfDoubleClick = "open" | "reveal";
 
-export type IslandSettings = CalendarSettingValues & {
+export type IslandSettings = CalendarSettingValues & GlassSettingValues & {
   topEdgeLayoutVersion: 1;
   appearanceMode: AppearanceMode;
   fontFamily: IslandFont;
@@ -40,6 +42,7 @@ export type IslandSettings = CalendarSettingValues & {
   marginY: number;
   islandMonitor: IslandMonitor;
   menuBarPlacement: MenuBarPlacement;
+  islandForm: IslandForm;
   topFilletRadius: number;
   islandCornerRadius: number;
   islandCornerShape: IslandCornerShape;

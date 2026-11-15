@@ -1,5 +1,6 @@
 import { DEFAULT_LYRICS_SETTINGS } from "../media/lyrics/lyricsSettings.ts";
 import { DEFAULT_CALENDAR_SETTINGS } from "../calendar/calendarSettings.ts";
+import { DEFAULT_GLASS_SETTINGS } from "./glassSettings.ts";
 import { DEFAULT_PAGE_DIGIT_MODIFIERS, DEFAULT_PAGE_NEXT_SHORTCUT, DEFAULT_PAGE_PREVIOUS_SHORTCUT } from "./pageShortcuts.ts";
 import {
   DEFAULT_AUTO_TUCK_RETRACT_DELAY_MS, DEFAULT_HOVER_COLLAPSE_DELAY_MS,
@@ -19,6 +20,7 @@ export const DEFAULT_SETTINGS: IslandSettings = {
   marginY: 0,
   islandMonitor: "primary",
   menuBarPlacement: "notch",
+  islandForm: "top",
   topFilletRadius: 8,
   islandCornerRadius: DEFAULT_ISLAND_CORNER_RADIUS,
   islandCornerShape: "squircle",
@@ -119,6 +121,7 @@ export const DEFAULT_SETTINGS: IslandSettings = {
   deviceAlerts: true,
   ...DEFAULT_LYRICS_SETTINGS,
   ...DEFAULT_CALENDAR_SETTINGS,
+  ...DEFAULT_GLASS_SETTINGS,
   mailEnabled: true,
   gameDoNotDisturb: !isMacOS,
   gameAutoTuck: isMacOS,
