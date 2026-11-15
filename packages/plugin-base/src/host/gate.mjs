@@ -1,3 +1,5 @@
+import { SOURCE } from "./sources.mjs";
+
 export const KINDS = ["essential", "builtin", "third-party"];
 export const SAFE_MODES = { "third-party": ["essential", "builtin"], minimal: ["essential"] };
 export const FAULT_LIMIT = { errors: 5, windowMs: 60_000 };
@@ -33,6 +35,8 @@ export class Gate {
   verdict(entry) {
     const { id, name } = entry.options;
     if (this.internal.has(name)) return null;
+    const rejected = entry.options[SOURCE]?.rejected;
+    if (rejected) return { state: "failed", reason: rejected.reason, blocked: { by: "manifest", errors: rejected.errors } };
     const blocked = this.blocked.get(id);
     if (blocked) return blocked;
     if (this.safe && !SAFE_MODES[this.safe].includes(kindOf(entry.options))) {

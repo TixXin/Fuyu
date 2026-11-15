@@ -1,4 +1,5 @@
 import type { Context } from "cordis";
+import type { ManifestIssue, ValidateManifestOptions } from "@fuyu/plugin-manifest";
 
 export interface LogEntry {
   at: number;
@@ -32,10 +33,14 @@ export interface PluginStatus {
   waitingFor?: string[];
   error?: string;
   reason?: string;
-  blocked?: { by: "errors"; errors: number; windowMs: number } | { by: "safe-mode"; mode: SafeMode };
+  blocked?: { by: "errors"; errors: number; windowMs: number } | { by: "safe-mode"; mode: SafeMode } | { by: "manifest"; errors: ManifestIssue[] };
   lastError?: { at: number; text: string };
   usage?: PluginUsage;
+  source?: PluginSource;
+  undeclared?: { provides?: string[]; client?: string[]; slots?: string[] };
 }
+
+export type PluginSource = "builtin" | "market" | "manual" | "dev" | "file";
 
 export interface HostInfo {
   pid: number;
@@ -142,6 +147,7 @@ export interface HostOptions {
   config?: string;
   builtins?: string | null;
   dataDir?: string | null;
+  appVersion?: string | null;
   apiNames?: string[];
   watch?: boolean;
   dev?: boolean;
@@ -196,11 +202,32 @@ export interface WindowSocketOptions {
 export function openWindowSocket(options: WindowSocketOptions): Promise<WindowSocket>;
 export function watchStatus(ctx: Context, logs: LogEntry[], onChange: (status: PluginStatus[]) => void, options?: { delayMs?: number; tickMs?: number }): () => void;
 
+export interface PluginWindowFile {
+  window: string;
+  file: string;
+}
+
+export interface DeclaredUse {
+  provides: string[];
+  client: string[];
+  slots: string[];
+}
+
 export interface BuiltinPlugin {
   id: string;
   kind: Exclude<PluginKind, "third-party">;
   root: string;
-  host: string;
+  host: string | null;
+  clients: PluginWindowFile[];
+  declared: DeclaredUse | null;
+}
+
+export interface PluginPackage {
+  package: string;
+  version: string;
+  host: string | null;
+  clients: PluginWindowFile[];
+  declared: DeclaredUse;
 }
 
 export interface BuiltinCatalog {
@@ -214,3 +241,8 @@ export const BUILTIN_PREFIX: "builtin";
 export function readBuiltins(dir: string): BuiltinCatalog;
 export const DATA_DIR: "data";
 export function dataDirOf(root: string, id: string): string;
+export const PACKAGES_DIR: "packages";
+export const DEV_PREFIX: "dev";
+export const INSTALLED_SOURCES: readonly ["market", "manual"];
+export const SOURCES: readonly ["market", "manual", "dev"];
+export function readManifest(root: string, options: ValidateManifestOptions): PluginPackage;

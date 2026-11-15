@@ -1,4 +1,5 @@
 import { kindOf } from "./gate.mjs";
+import { SOURCE } from "./sources.mjs";
 
 const STATES = ["pending", "loading", "running", "failed", "stopped", "unloading"];
 const IMPORT_ERROR = Symbol("plugin-base.importError");
@@ -61,23 +62,39 @@ function describe(entry, logs, gate) {
 
 export const INTERNAL = new Set([new URL("./plugins-file.mjs", import.meta.url).href, import.meta.resolve("@cordisjs/hmr")]);
 
-export function pluginStatus(ctx, logs = [], { gate, usage } = {}) {
+function undeclaredOf(entry, services, clients) {
+  const declared = entry.options[SOURCE]?.declared;
+  if (!declared) return null;
+  const { id } = entry.options;
+  const found = {
+    provides: services.filter((service) => service.plugin === id && !declared.provides.includes(service.name)).map((service) => service.name),
+    client: [...new Set(clients.filter((client) => client.plugin === id && !declared.client.includes(client.window)).map((client) => client.window))],
+  };
+  const listed = Object.entries(found).filter(([, names]) => names.length > 0);
+  return listed.length ? Object.fromEntries(listed) : null;
+}
+
+export function pluginStatus(ctx, logs = [], { gate, usage, services, clients } = {}) {
   const report = usage?.();
+  const provided = services?.() ?? [];
+  const windows = clients?.() ?? [];
   return [...ctx.loader.entries()]
     .map((entry) => ({ internal: INTERNAL.has(entry.options.name), entry, status: describe(entry, logs, gate) }))
     .filter(({ internal, status }) => !internal || status.state !== "running")
     .map(({ internal, entry, status }) => {
       if (internal) return status;
-      const extra = { kind: kindOf(entry.options) };
+      const extra = { kind: kindOf(entry.options), source: entry.options[SOURCE]?.source ?? "file" };
       if (report) extra.usage = report(status.id);
       const last = gate?.report(status.id).last;
       if (last) extra.lastError = last;
+      const undeclared = undeclaredOf(entry, provided, windows);
+      if (undeclared) extra.undeclared = undeclared;
       return { ...status, ...extra };
     });
 }
 
-export function watchStatus(ctx, logs, onChange, { delayMs = 20, tickMs = 0, gate, usage } = {}) {
-  const read = () => pluginStatus(ctx, logs, { gate, usage });
+export function watchStatus(ctx, logs, onChange, { delayMs = 20, tickMs = 0, gate, usage, services, clients, subscribe } = {}) {
+  const read = () => pluginStatus(ctx, logs, { gate, usage, services, clients });
   let last = JSON.stringify(read());
   let timer = null;
   const check = () => {
@@ -91,7 +108,7 @@ export function watchStatus(ctx, logs, onChange, { delayMs = 20, tickMs = 0, gat
   const schedule = () => {
     timer ??= setTimeout(check, delayMs);
   };
-  const off = [ctx.on("internal/status", schedule), ctx.on("internal/plugin", schedule), ctx.on("loader/entry-init", schedule), ctx.on("plugin-base/gate", schedule)];
+  const off = [ctx.on("internal/status", schedule), ctx.on("internal/plugin", schedule), ctx.on("loader/entry-init", schedule), ctx.on("plugin-base/gate", schedule), ...(subscribe?.(schedule) ?? [])];
   const tick = tickMs > 0 ? setInterval(schedule, tickMs) : null;
   tick?.unref?.();
   return () => {

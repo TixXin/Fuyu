@@ -3,7 +3,7 @@ import { spawn } from "node:child_process";
 import { once } from "node:events";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { createInterface } from "node:readline";
 import { fileURLToPath } from "node:url";
 import { after, before, test } from "node:test";
@@ -72,4 +72,42 @@ test("the built plugins load on a Node that cannot strip types, where the source
   const failed = fromSource.ready.plugins.find((plugin) => plugin.id === "timer");
   assert.equal(failed.state, "failed");
   assert.match(fromSource.stderr() + failed.error, /\.ts/);
+});
+
+const OFFICIAL = {
+  name: "@fuyu/pager",
+  version: "1.0.0",
+  type: "module",
+  license: "MIT",
+  repository: "github:TixXin/fuyu",
+  engines: { fuyu: ">=0.5.0" },
+  fuyu: { manifest: 1, displayName: { "zh-CN": "翻页", en: "Pager" }, description: { "zh-CN": "翻页", en: "Pager" }, icon: "icon.svg", categories: ["utilities"], host: "host.mjs" },
+};
+
+function sourceFolder(files) {
+  const root = mkdtempSync(join(tmpdir(), "fuyu-builtins-src-"));
+  folders.push(root);
+  for (const [name, text] of Object.entries(files)) {
+    mkdirSync(dirname(join(root, name)), { recursive: true });
+    writeFileSync(join(root, name), text);
+  }
+  return root;
+}
+
+test("a built-in plugin described by its package.json is built too, and the copied manifest names the built file", async () => {
+  const source = sourceFolder({
+    "builtins.json": JSON.stringify({ format: 1, plugins: [{ id: "pager", root: "pager" }] }),
+    "pager/package.json": JSON.stringify(OFFICIAL),
+    "pager/host.mjs": 'import { greeting } from "./greeting.ts";\nexport const name = "pager";\nexport function apply() {\n  console.error(greeting);\n}\n',
+    "pager/greeting.ts": 'export const greeting: string = "pager says hi";\n',
+  });
+  const out = await buildBuiltins({ source, outDir: `${source}-out` });
+  folders.push(out.outDir);
+  assert.equal(JSON.parse(readFileSync(join(out.outDir, "pager", "package.json"), "utf8")).fuyu.host, "host.mjs");
+  const { ready, stderr } = await readyFrom(out.outDir);
+  const pager = ready.plugins.find((plugin) => plugin.id === "pager");
+  assert.equal(pager.state, "running", stderr());
+  assert.equal(pager.source, "builtin");
+  writeFileSync(join(source, "pager", "package.json"), JSON.stringify({ ...OFFICIAL, fuyu: { ...OFFICIAL.fuyu, client: { island: "host.mjs" } } }));
+  await assert.rejects(buildBuiltins({ source, outDir: `${source}-out` }), /window code/);
 });

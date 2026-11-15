@@ -14,6 +14,7 @@ const ENTRIES = [
   { out: "main", in: "./src/host/main.mjs" },
   { out: "index", in: "./src/index.mjs" },
   { out: "plugins-file", in: "./src/host/plugins-file.mjs" },
+  { out: "client-only", in: "./src/host/client-only.mjs" },
   { out: "hmr", in: "@cordisjs/hmr" },
 ];
 

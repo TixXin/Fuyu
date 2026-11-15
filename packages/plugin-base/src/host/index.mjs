@@ -7,3 +7,4 @@ export { SERVICE_CALLS, SERVICE_NAME, SERVICE_TIMEOUT_MS, serviceError } from ".
 export { RUST_TIMEOUT_MS, RustBridge, rustError } from "./rust.mjs";
 export { BUILTINS_FILE, BUILTINS_FORMAT, BUILTIN_PREFIX, readBuiltins } from "./builtins.mjs";
 export { DATA_DIR, dataDirOf } from "./data.mjs";
+export { DEV_PREFIX, INSTALLED_SOURCES, PACKAGES_DIR, SOURCES, readManifest } from "./sources.mjs";

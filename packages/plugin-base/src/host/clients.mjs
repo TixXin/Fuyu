@@ -43,6 +43,37 @@ export class Clients extends Service {
     this.handlers = new Map();
     this.messages = new Set();
     this.next = 0;
+    this.sources = () => [];
+    this.declaredKey = "[]";
+  }
+
+  useSources(sources) {
+    this.sources = sources;
+    return this.ctx.on("internal/status", () => this.recheck());
+  }
+
+  recheck() {
+    const key = JSON.stringify(this.declared().map(({ id, path, version }) => [id, path, version]));
+    if (key === this.declaredKey) return;
+    this.declaredKey = key;
+    this.changed();
+  }
+
+  declared() {
+    return this.sources()
+      .filter((source) => source.active)
+      .flatMap(({ id, clients }) =>
+        clients.flatMap(({ window, file }) => {
+          const path = this.locate(file);
+          let stat;
+          try {
+            stat = statSync(file);
+          } catch {
+            return [];
+          }
+          return path ? [{ id: `${id}#${window}`, plugin: id, window, path, version: `${stat.size}-${Math.round(stat.mtimeMs)}` }] : [];
+        }),
+      );
   }
 
   handle(method, handler) {
@@ -94,11 +125,17 @@ export class Clients extends Service {
       const path = within(dir, file);
       if (path) return `${prefix}/${path}`;
     }
-    return within(this.root, file);
+    const path = within(this.root, file);
+    if (path) return path;
+    for (const { prefix, dir } of this.sources()) {
+      const inner = prefix && within(dir, file);
+      if (inner) return `${prefix}/${inner}`;
+    }
+    return null;
   }
 
   list(window) {
-    return [...this.entries.values()].filter((entry) => !window || entry.window === window);
+    return [...this.entries.values(), ...this.declared()].filter((entry) => !window || entry.window === window);
   }
 
   watch(listener) {
