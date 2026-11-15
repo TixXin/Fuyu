@@ -2352,6 +2352,17 @@
       }
     },
     {
+      "page": "agents",
+      "zh-CN": {
+        "group": "显示哪些 Agent",
+        "title": "Grok CLI"
+      },
+      "en": {
+        "group": "Agents shown",
+        "title": "Grok CLI"
+      }
+    },
+    {
       "page": "agentSessions",
       "zh-CN": {
         "group": "会话列表",
@@ -3069,6 +3080,17 @@
       "en": {
         "group": "AI Agent status light",
         "title": "Kimi Code"
+      }
+    },
+    {
+      "page": "agentConnect",
+      "zh-CN": {
+        "group": "AI Agent 状态灯",
+        "title": "Grok CLI"
+      },
+      "en": {
+        "group": "AI Agent status light",
+        "title": "Grok CLI"
       }
     },
     {

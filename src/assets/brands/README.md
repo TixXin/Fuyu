@@ -34,6 +34,7 @@
 | `trae.png` | [TRAE](https://www.trae.ai/) / [TRAE CN](https://www.trae.cn/) | 官网图标（[国际版](https://lf16-web-neutral.traecdn.ai/obj/trae-ai-static/trae_website/favicon.png)和[国内版](https://lf-cdn.trae.com.cn/obj/trae-com-cn/trae_website_prod_cn/favicon.png)是同一张，48×48），TRAE 和 TRAE CN 共用，2026-11-15 取得 |
 | `zcode.png` | [ZCode](https://zcode.z.ai/) | 开源仓库 [zai-org/ZCode](https://github.com/zai-org/ZCode) 里桌面版的应用图标 `packages/desktop/build/icon.png`（1024×1024，缩成 48×48），2026-11-15 取得 |
 | `mimo.png` | [MiMo Code](https://mimo.xiaomi.com/mimocode) | 官网图标 [mimo.ico](https://cdn.cnbj1.fds.api.mi-img.com/aife/mimo-blog-fe/doc_build/mimo.ico)（Xiaomi MiMo 字样，32×32，转成 PNG，没有放大），2026-11-15 取得 |
+| `grok.png` | [Grok CLI](https://x.ai/cli) | grok.com 的站点图标 [android-chrome-192x192.png](https://grok.com/images/android-chrome-192x192.png)（192×192，缩成 48×48），2026-11-15 取得 |
 | `kimi-code.png` | [Kimi Code](https://github.com/MoonshotAI/kimi-code)（MIT） | 仓库里 VS Code 扩展的图标 `apps/vscode/resources/kimi-icon-storefront.png`（128×128），2026-11-15 取得 |
 
-QQ、微信、QQ 邮箱的品牌标识及相关权利归腾讯及对应权利人所有；网易邮箱标识归网易所有，Gmail、Antigravity 标识归 Google 所有，Outlook 标识归 Microsoft 所有；Claude 标识归 Anthropic 所有，OpenAI 标识归 OpenAI 所有，WorkBuddy、CodeBuddy 标识归腾讯所有，Qoder、Qwen 标识归阿里巴巴所有，TRAE 标识归字节跳动所有，DeepSeek 标识归杭州深度求索所有，opencode 标识归 opencode 项目所有，ZCode 标识归北京智谱华章科技所有，MiMo 标识归小米所有，Kimi 标识归北京月之暗面科技所有。图标随应用打包，不在运行时请求远程图片。
+QQ、微信、QQ 邮箱的品牌标识及相关权利归腾讯及对应权利人所有；网易邮箱标识归网易所有，Gmail、Antigravity 标识归 Google 所有，Outlook 标识归 Microsoft 所有；Claude 标识归 Anthropic 所有，OpenAI 标识归 OpenAI 所有，WorkBuddy、CodeBuddy 标识归腾讯所有，Qoder、Qwen 标识归阿里巴巴所有，TRAE 标识归字节跳动所有，DeepSeek 标识归杭州深度求索所有，opencode 标识归 opencode 项目所有，ZCode 标识归北京智谱华章科技所有，MiMo 标识归小米所有，Kimi 标识归北京月之暗面科技所有，Grok 标识归 xAI 所有。图标随应用打包，不在运行时请求远程图片。

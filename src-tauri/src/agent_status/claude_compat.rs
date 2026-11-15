@@ -46,7 +46,6 @@ pub(crate) enum Reply {
     PreToolUse(&'static str),
     #[expect(dead_code)]
     Behavior,
-    #[cfg_attr(not(test), expect(dead_code))]
     None,
 }
 
@@ -68,7 +67,7 @@ pub(super) struct Compat {
     pub(super) aliases: &'static [(&'static str, &'static str)],
 }
 
-const SPECS: [&Compat; 3] = [&super::qoder::SPEC, &super::codebuddy::SPEC, &super::qwen::SPEC];
+const SPECS: [&Compat; 4] = [&super::qoder::SPEC, &super::codebuddy::SPEC, &super::qwen::SPEC, &super::grok::SPEC];
 
 fn spec(provider: &str) -> Option<&'static Compat> {
     SPECS.into_iter().find(|spec| spec.provider == provider)
@@ -158,15 +157,18 @@ pub(super) fn hook_entries(spec: &Compat, env: &HookEnv) -> Vec<(&'static str, V
 }
 
 pub(super) fn hooks_state(spec: &Compat, env: &HookEnv) -> HookInstallState {
+    hooks_state_with(spec, env, &hook_entries(spec, env))
+}
+
+pub(super) fn hooks_state_with(spec: &Compat, env: &HookEnv, entries: &[(&'static str, Value)]) -> HookInstallState {
     let homes = present_homes(spec, env.home_dir);
     if homes.is_empty() {
         return HookInstallState::Absent;
     }
-    let entries = hook_entries(spec, env);
     let states: Vec<_> = homes
         .iter()
         .map(|home| match read_settings(&home.join(spec.hooks_file)) {
-            Some(config) => hook_entries_state(&config["hooks"], &entries),
+            Some(config) => hook_entries_state(&config["hooks"], entries),
             None => HookInstallState::NotInstalled,
         })
         .collect();
@@ -185,8 +187,12 @@ fn read_settings(path: &Path) -> Option<Value> {
 }
 
 pub(super) fn install_hooks(spec: &Compat, env: &HookEnv) -> Result<(), String> {
+    install_hooks_with(spec, env, &hook_entries(spec, env))
+}
+
+pub(super) fn install_hooks_with(spec: &Compat, env: &HookEnv, entries: &[(&'static str, Value)]) -> Result<(), String> {
     for home in present_homes(spec, env.home_dir) {
-        install_into(spec, &home, hook_entries(spec, env))?;
+        install_into(spec, &home, entries.to_vec())?;
     }
     Ok(())
 }
