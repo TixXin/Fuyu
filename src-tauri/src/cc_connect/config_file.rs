@@ -1,11 +1,10 @@
 use super::agents;
 use crate::user_error::UserError;
 use std::collections::BTreeMap;
+#[cfg(windows)]
+use std::path::PathBuf;
 #[cfg(any(windows, test))]
-use std::{
-    fs,
-    path::{Path, PathBuf},
-};
+use std::{fs, path::Path};
 
 pub(super) const FILE_NAME: &str = "config.toml";
 pub(super) const PLATFORMS: [&str; 3] = ["telegram", "discord", "feishu"];
@@ -20,7 +19,7 @@ pub(super) struct NewProject<'a> {
     pub(super) proxy: Option<&'a str>,
 }
 
-#[cfg(any(windows, test))]
+#[cfg(windows)]
 pub(super) fn config_path(data_dir: &Path) -> PathBuf {
     data_dir.join(FILE_NAME)
 }
