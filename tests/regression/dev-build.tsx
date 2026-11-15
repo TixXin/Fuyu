@@ -58,7 +58,7 @@ try {
     );
     createRoot(document.getElementById("rows")!).render(
       <StrictMode><I18nProvider>
-        <BehaviorSettingsSection launchAtStartup={false} locale="zh-CN" onLaunchAtStartupChange={(enabled) => startupWrites.push(enabled)} onLocaleChange={() => {}} />
+        <BehaviorSettingsSection launchAtStartup={false} trayIconVisible locale="zh-CN" onLaunchAtStartupChange={(enabled) => startupWrites.push(enabled)} onTrayIconVisibleChange={() => {}} onLocaleChange={() => {}} />
         <UpdatePanel />
         <div id="bar" style={{ position: "relative", height: 40 }}><DevBar /></div>
       </I18nProvider></StrictMode>,
