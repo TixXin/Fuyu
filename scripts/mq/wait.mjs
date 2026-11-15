@@ -1,4 +1,5 @@
 import { thisMachine } from "../machine-name.mjs";
+import { mergedReminder } from "../tasks/taskIssues.mjs";
 import { failedChecks, github as realGitHub, landBranchName } from "./github.mjs";
 import { INTEGRATION_BRANCH, tryGit } from "./settings.mjs";
 import { sync } from "./sync.mjs";
@@ -8,9 +9,11 @@ const TIMEOUT_MS = 90 * 60_000;
 
 const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-async function afterMerge() {
+async function afterMerge(oid) {
   tryGit(["fetch", "origin", INTEGRATION_BRANCH, "--quiet"]);
   sync();
+  const root = tryGit(["rev-parse", "--show-toplevel"]).out.trim();
+  for (const line of await mergedReminder(root, oid)) console.log(line.startsWith(" ") ? line : `[wait] ${line}`);
 }
 
 export async function waitFor(number, options = {}) {
