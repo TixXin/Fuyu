@@ -133,7 +133,7 @@ mod tests {
             ["codex", "claudeCode", "workbuddy", "antigravity", "dsh"]
         );
         assert_eq!(with_hooks().map(|(id, _)| id).collect::<Vec<_>>(), ["codex", "claudeCode", "workbuddy", "antigravity", "dsh"]);
-        assert_eq!(remote_ids(), ["codex", "claudeCode", "dsh"]);
+        assert_eq!(remote_ids(), ["codex", "claudeCode", "antigravity", "dsh"]);
     }
 
     #[test]
