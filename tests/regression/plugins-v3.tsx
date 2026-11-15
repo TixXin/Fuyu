@@ -30,6 +30,7 @@ mockIPC((command) => {
 });
 
 const { SettingsSidebar } = await import("../../src/windows/settings/SettingsSidebar");
+await import("../../src/windows/settings/slots/categories");
 const { PluginsV3SettingsPage } = await import("../../src/windows/settings/PluginsV3SettingsPage");
 
 const text = TRANSLATIONS[locale].settings.pluginsV3;

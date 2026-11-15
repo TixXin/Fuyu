@@ -1,37 +1,14 @@
 import { useCallback, useEffect, useState } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { AppearanceSettingsPage } from "./AppearanceSettingsPage";
-import { BehaviorSettingsPage } from "./BehaviorSettingsPage";
-import { ThemeSettingsPage } from "./ThemeSettingsPage";
-import { ThemeMarketPage } from "../../features/theme-market/ThemeMarketPage";
-import { buildTheme } from "../../features/appearance/theme";
-import { DEFAULT_SETTINGS_CATEGORY, FEATURE_PAGES, SETTINGS_FEATURES, isCategoryAvailable, type SettingsCategory } from "./categories";
+import { DEFAULT_SETTINGS_CATEGORY, featureOf, isCategoryAvailable, settingsCategoryFor, type SettingsCategory } from "./categories";
 import { FeatureOffPage } from "./FeatureOffPage";
 import { isMacOS, useUnsupportedFeatures } from "../../lib/platform";
 import { useMacWindowKeys } from "./useMacWindowKeys";
-import { GeneralSettingsPage } from "./GeneralSettingsPage";
-import { OverviewSettingsPage } from "./OverviewSettingsPage";
 import { useFeatureSwitches } from "./useFeatureSwitches";
-import { AgentSettingsPage } from "./AgentSettingsPage";
-import { AgentAlertsSettingsPage } from "./AgentAlertsSettingsPage";
-import { AgentSessionsSettingsPage } from "./AgentSessionsSettingsPage";
-import { AgentConnectSettingsPage } from "./AgentConnectSettingsPage";
-import { AgentRemoteHostsSettings } from "../../features/agent-status/AgentRemoteHostsSettings";
-import { AgentApprovalSettings } from "../../features/agent-status/approvals/AgentApprovalSettings";
-import { SoundSettingsSection } from "../../features/agent-status/sounds/SoundSettingsSection";
-import { ClipboardSettingsPage } from "./ClipboardSettingsPage";
 import { LayoutEditor } from "./LayoutEditor";
-import { MusicSettingsPage } from "./MusicSettingsPage";
-import { CalendarSettingsPage } from "./CalendarSettingsPage";
-import { ShelfSettingsPage } from "./ShelfSettingsPage";
-import { ScreenshotSettingsPage } from "./ScreenshotSettingsPage";
-import { ShortcutsSettingsPage } from "./ShortcutsSettingsPage";
-import { MessagesSettingsPage } from "./MessagesSettingsPage";
+import "./slots/categories";
 import { SETTINGS_FOCUS_STORAGE_KEY, takeFocusRequest } from "./storage";
 import { showSettingsWindow } from "./api";
-import { TodosSettingsPage } from "./TodosSettingsPage";
-import { TranslationSettingsPage } from "./TranslationSettingsPage";
-import { VoiceInputSettingsPage } from "./VoiceInputSettingsPage";
 import { DEFAULT_SETTINGS, isSameSettings, withLayoutFrom, withThemeFrom } from "../../features/appearance/settings";
 import { STORAGE_KEY, loadSettings, saveSettings } from "../../features/appearance/storage";
 import { useWindowAccent } from "../../features/appearance/useWindowAccent";
@@ -41,16 +18,14 @@ import { useSettingPresets } from "../../features/appearance/useSettingPresets";
 import { useQQNotifications } from "../../features/messages/qq-notifications/QQNotifications";
 import { useWeChatReminders } from "../../features/messages/wechat/WeChatReminders";
 import { useSaveDirectorySetting } from "../../features/todos/useSaveDirectorySetting";
-import { AboutSettingsPage } from "./AboutSettingsPage";
-import { PluginsSettingsPage } from "./PluginsSettingsPage";
-import { PluginsV3SettingsPage } from "./PluginsV3SettingsPage";
 import { usePluginsV3Enabled } from "./usePluginHostStatus";
-import { PluginMarketSection } from "../../features/plugins/PluginMarketSection";
 import { useMarketInstallRequest } from "../../features/plugins/market-link/useMarketInstallRequest";
 import { useLocale, useTranslation } from "../../i18n";
 import { activeTone } from "../../features/appearance/themeMode";
 import { useSystemDark } from "../../features/appearance/useResolvedTheme";
 import { IconButtonTooltip } from "../../components/IconButtonTooltip";
+import { SlotView } from "../../features/plugin-kernel/SlotView";
+import { categorySlot } from "./slots/categorySlot";
 import "./SettingsWindow.css";
 
 const SETTINGS_DARK_FILL = "#131417";
@@ -72,7 +47,7 @@ export function SettingsWindow() {
   const category = isCategoryAvailable(chosenCategory, unsupported, isMacOS, pluginsV3) ? chosenCategory : DEFAULT_SETTINGS_CATEGORY;
   const highlightSaveDirectory = saveDirectory.highlight;
   const features = useFeatureSwitches(settings, setSettings);
-  const offFeature = features.hiddenPages.has(category) ? SETTINGS_FEATURES.find((feature) => FEATURE_PAGES[feature].includes(category)) : undefined;
+  const offFeature = features.hiddenPages.has(category) ? featureOf(category) : undefined;
   const page = offFeature ? null : category;
 
   const focusSavePath = useCallback(() => {
@@ -82,14 +57,8 @@ export function SettingsWindow() {
   const focusRequestedSection = useCallback(() => {
     const section = takeFocusRequest();
     if (section === "savePath") focusSavePath();
-    if (section === "translation") setCategory("translation");
-    if (section === "music") setCategory("music");
-    if (section === "calendar") setCategory("calendar");
-    if (section === "mail") setCategory("messages");
-    if (section === "updates") setCategory("about");
-    if (section === "agentConnect") setCategory("agentConnect");
-    if (section === "general") setCategory("general");
-    if (section === "voiceInput") setCategory("voiceInput");
+    const target = section && settingsCategoryFor(section);
+    if (target) setCategory(target);
   }, [focusSavePath]);
 
   useEffect(() => {
@@ -184,68 +153,28 @@ export function SettingsWindow() {
         }
       >
         {offFeature && <FeatureOffPage feature={offFeature} onOpenOverview={() => changeCategory("overview")} />}
-        {page === "overview" && (
-          <OverviewSettingsPage
-            settings={settings}
-            locale={locale}
-            features={features.switches}
-            unsupported={unsupported}
-            onLocaleChange={setLocale}
-            onSettingsChange={setSettings}
-            onOpenPage={changeCategory}
-          />
-        )}
-        {page === "general" && (
-          <GeneralSettingsPage
-            locale={locale}
-            settings={settings}
-            onLocaleChange={setLocale}
-            onSettingsChange={setSettings}
-          />
-        )}
-        {(page === "behavior" || page === "behaviorTuck" || page === "behaviorAlerts") && (
-          <BehaviorSettingsPage tab={page} settings={settings} onSettingsChange={setSettings} onOpenPageKeys={() => setCategory("shortcutsIsland")} />
-        )}
-        {page === "appearance" && <AppearanceSettingsPage settings={settings} onSettingsChange={setSettings} />}
-        {page === "theme" && <ThemeSettingsPage settings={settings} presets={presets} onSettingsChange={setSettings} />}
-        {page === "themeMarket" && (
-          <ThemeMarketPage
-            settings={settings}
-            onSettingsChange={setSettings}
-            onSave={(theme, look) => void presets.onImportPreset(JSON.stringify(buildTheme(theme.name[locale], look, new Date())))}
-          />
-        )}
-        {(page === "shortcuts" || page === "shortcutsIsland") && <ShortcutsSettingsPage tab={page} settings={settings} onSettingsChange={setSettings} onOpenPage={changeCategory} />}
-        {page === "todos" && (
-          <TodosSettingsPage
-            settings={settings}
-            saveDirectory={saveDirectory}
-            onSettingsChange={setSettings}
-          />
-        )}
-        {page === "messages" && (
-          <MessagesSettingsPage settings={settings} qqNotifications={qqNotifications} wechatReminders={wechatReminders} unsupported={unsupported} onSettingsChange={setSettings} />
-        )}
-        {page === "translation" && <TranslationSettingsPage settings={settings} onSettingsChange={setSettings} onOpenShortcuts={openShortcuts} />}
-        {(page === "clipboard" || page === "clipboardHistory" || page === "clipboardSnippets" || page === "clipboardData") && <ClipboardSettingsPage tab={page} settings={settings} onOpenShortcuts={openShortcuts} />}
-        {(page === "music" || page === "musicLyrics" || page === "musicLyricsStyle") && <MusicSettingsPage tab={page} settings={settings} onSettingsChange={setSettings} />}
-        {page === "shelf" && <ShelfSettingsPage settings={settings} onSettingsChange={setSettings} />}
-        {(page === "screenshot" || page === "screenshotRecord") && <ScreenshotSettingsPage tab={page} settings={settings} onSettingsChange={setSettings} onOpenShortcuts={openShortcuts} />}
-        {page === "voiceInput" && <VoiceInputSettingsPage settings={settings} />}
-        {page === "calendar" && <CalendarSettingsPage settings={settings} onSettingsChange={setSettings} />}
-        {page === "agents" && <AgentSettingsPage settings={settings} onSettingsChange={setSettings} onOpenConnect={() => setCategory("agentConnect")} />}
-        {page === "agentRemote" && <AgentRemoteHostsSettings />}
-        {page === "agentSessions" && <AgentSessionsSettingsPage settings={settings} onSettingsChange={setSettings} />}
-        {page === "agentAlerts" && <AgentAlertsSettingsPage settings={settings} onSettingsChange={setSettings} />}
-        {page === "sounds" && <SoundSettingsSection />}
-        {page === "agentApprovals" && <AgentApprovalSettings />}
-        {page === "agentConnect" && <AgentConnectSettingsPage />}
-        {(page === "plugins" || page === "pluginsPages" || page === "pluginsUpdates" || page === "pluginsDev") && <PluginsSettingsPage tab={page} settings={settings} managedPluginId={managedPluginId} onOpenShortcuts={openShortcuts} />}
-        {page === "pluginsV3" && <PluginsV3SettingsPage />}
-        {page === "market" && (
-          <PluginMarketSection onManage={managePlugin} requestedId={marketRequest.requestedId} onDismissRequest={marketRequest.dismiss} />
-        )}
-        {page === "about" && <AboutSettingsPage onSettingsChange={setSettings} />}
+        <SlotView
+          slot={categorySlot}
+          props={{
+            settings,
+            locale,
+            unsupported,
+            features: features.switches,
+            presets,
+            saveDirectory,
+            qqNotifications,
+            wechatReminders,
+            managedPluginId,
+            marketRequest,
+            onLocaleChange: setLocale,
+            onSettingsChange: setSettings,
+            onOpenPage: changeCategory,
+            onShowPage: setCategory,
+            onOpenShortcuts: openShortcuts,
+            onManagePlugin: managePlugin,
+          }}
+          select={(items) => items.filter((item) => item.id === page)}
+        />
       </LayoutEditor>
     </main>
   );

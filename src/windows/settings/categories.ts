@@ -1,80 +1,31 @@
 import type { PlatformFeature } from "../../lib/platform.ts";
 import { normalizeSearchText, searchWords } from "./settingsSearch.ts";
+import { BUILTIN_CATEGORIES, categorySlot, type SettingsCategory, type SettingsEntry, type SettingsFeature, type SettingsGroup, type TabbedCategory } from "./slots/categorySlot.ts";
 
-export const SETTINGS_CATEGORIES = [
-  "overview",
-  "general",
-  "behavior",
-  "behaviorTuck",
-  "behaviorAlerts",
-  "appearance",
-  "theme",
-  "themeMarket",
-  "shortcuts",
-  "shortcutsIsland",
-  "todos",
-  "calendar",
-  "music",
-  "musicLyrics",
-  "musicLyricsStyle",
-  "translation",
-  "clipboard",
-  "clipboardHistory",
-  "clipboardSnippets",
-  "clipboardData",
-  "shelf",
-  "screenshot",
-  "screenshotRecord",
-  "voiceInput",
-  "messages",
-  "agents",
-  "agentSessions",
-  "agentAlerts",
-  "sounds",
-  "agentApprovals",
-  "agentConnect",
-  "agentRemote",
-  "plugins",
-  "pluginsPages",
-  "pluginsUpdates",
-  "pluginsDev",
-  "pluginsV3",
-  "market",
-  "about",
-] as const;
+export type { SettingsCategory, SettingsEntry, SettingsFeature, SettingsGroup, TabbedCategory };
 
-export type SettingsCategory = (typeof SETTINGS_CATEGORIES)[number];
+type Category = ReturnType<typeof categorySlot.items>[number];
+type Categories = readonly Category[];
 
-export type SettingsGroup = "basics" | "features" | "agents" | "extensions";
-
-export const SETTINGS_GROUPS: readonly { label: SettingsGroup | null; categories: readonly SettingsCategory[] }[] = [
-  { label: null, categories: ["overview"] },
-  { label: "basics", categories: ["general", "behavior", "appearance", "shortcuts"] },
-  { label: "features", categories: ["todos", "calendar", "music", "translation", "clipboard", "shelf", "screenshot", "voiceInput", "messages"] },
-  { label: null, categories: ["agents"] },
-  { label: "extensions", categories: ["plugins", "pluginsV3", "market"] },
-  { label: null, categories: ["about"] },
-];
+export interface SettingsGroupRow {
+  label: SettingsGroup | null;
+  categories: SettingsCategory[];
+}
 
 export const DEFAULT_SETTINGS_CATEGORY: SettingsCategory = "overview";
 
-export type SettingsEntry = "behavior" | "appearance" | "shortcuts" | "music" | "clipboard" | "screenshot" | "plugins" | "agents";
+const registered = (): Categories => categorySlot.items();
+const idOf = (item: Category) => item.id as SettingsCategory;
+const find = (category: string) => registered().find((item) => item.id === category);
+const entryIn = (category: SettingsCategory, items: Categories) => items.find((item) => item.tabs?.includes(category));
 
-export const SETTINGS_TABS: Readonly<Record<SettingsEntry, readonly TabbedCategory[]>> = {
-  behavior: ["behavior", "behaviorTuck", "behaviorAlerts"],
-  appearance: ["theme", "appearance", "themeMarket"],
-  shortcuts: ["shortcuts", "shortcutsIsland"],
-  music: ["music", "musicLyrics", "musicLyricsStyle"],
-  clipboard: ["clipboard", "clipboardHistory", "clipboardSnippets", "clipboardData"],
-  screenshot: ["screenshot", "screenshotRecord"],
-  plugins: ["plugins", "pluginsPages", "pluginsUpdates", "pluginsDev"],
-  agents: ["agents", "agentSessions", "agentAlerts", "sounds", "agentApprovals", "agentConnect", "agentRemote"],
-};
-
-export type TabbedCategory = "plugins" | "pluginsPages" | "pluginsUpdates" | "pluginsDev" | "music" | "musicLyrics" | "musicLyricsStyle" | "clipboard" | "clipboardHistory" | "clipboardSnippets" | "clipboardData" | "screenshot" | "screenshotRecord" | "behavior" | "behaviorTuck" | "behaviorAlerts" | "shortcuts" | "shortcutsIsland" | "theme" | "appearance" | "themeMarket" | "agents" | "agentSessions" | "agentAlerts" | "sounds" | "agentApprovals" | "agentConnect" | "agentRemote";
+export function settingsCategories(items = registered()): SettingsCategory[] {
+  return items.map(idOf);
+}
 
 export function entryOf(category: SettingsCategory): SettingsEntry | null {
-  return (Object.keys(SETTINGS_TABS) as SettingsEntry[]).find((entry) => (SETTINGS_TABS[entry] as readonly SettingsCategory[]).includes(category)) ?? null;
+  const entry = entryIn(category, registered());
+  return entry ? (entry.id as SettingsEntry) : null;
 }
 
 export function sidebarItemOf(category: SettingsCategory): SettingsCategory {
@@ -82,72 +33,62 @@ export function sidebarItemOf(category: SettingsCategory): SettingsCategory {
 }
 
 export function isEntry(item: SettingsCategory): item is SettingsEntry {
-  return item in SETTINGS_TABS;
+  return find(item)?.tabs !== undefined;
+}
+
+export function entryTabs(entry: SettingsEntry): readonly TabbedCategory[] {
+  return (find(entry)?.tabs ?? []) as readonly TabbedCategory[];
 }
 
 export function entryPages(item: SettingsCategory): readonly SettingsCategory[] {
-  return isEntry(item) ? SETTINGS_TABS[item] : [item];
+  return isEntry(item) ? entryTabs(item) : [item];
 }
 
-export const SETTINGS_FEATURES = ["todos", "calendar", "music", "translation", "clipboard", "shelf", "screenshot", "voiceInput", "agents"] as const;
-
-export type SettingsFeature = (typeof SETTINGS_FEATURES)[number];
-
-export const FEATURE_PAGES: Readonly<Record<SettingsFeature, readonly SettingsCategory[]>> = {
-  todos: ["todos"],
-  calendar: ["calendar"],
-  music: ["music", "musicLyrics", "musicLyricsStyle"],
-  translation: ["translation"],
-  clipboard: ["clipboard", "clipboardHistory", "clipboardSnippets", "clipboardData"],
-  shelf: ["shelf"],
-  screenshot: ["screenshot", "screenshotRecord"],
-  voiceInput: ["voiceInput"],
-  agents: ["agents", "agentSessions", "agentAlerts", "sounds", "agentApprovals", "agentConnect", "agentRemote"],
-};
-
-export function pagesOfFeaturesOff(on: Readonly<Record<SettingsFeature, boolean>>): ReadonlySet<SettingsCategory> {
-  return new Set(SETTINGS_FEATURES.filter((feature) => !on[feature]).flatMap((feature) => FEATURE_PAGES[feature]));
+export function settingsGroups(items = registered()): SettingsGroupRow[] {
+  const groups: SettingsGroupRow[] = [];
+  for (const item of items) {
+    const id = idOf(item);
+    const entry = entryIn(id, items);
+    if (entry && entry.id !== id) continue;
+    const label = item.group ?? null;
+    const last = groups[groups.length - 1];
+    const group = label === null ? (last?.label === null ? last : undefined) : groups.find((other) => other.label === label);
+    if (group) group.categories.push(id);
+    else groups.push({ label, categories: [id] });
+  }
+  return groups;
 }
 
-const PAGE_FEATURES: Partial<Record<SettingsCategory, PlatformFeature>> = {
-  music: "music",
-  musicLyrics: "music",
-  musicLyricsStyle: "music",
-  translation: "translation",
-  clipboard: "clipboard",
-  clipboardHistory: "clipboard",
-  clipboardSnippets: "clipboard",
-  clipboardData: "clipboard",
-  screenshot: "screenshot",
-  screenshotRecord: "screenshot",
-  agentConnect: "agentConnect",
-  agentRemote: "agentRemote",
-};
+export function featureOf(category: SettingsCategory): SettingsFeature | undefined {
+  return find(category)?.feature as SettingsFeature | undefined;
+}
+
+export function pagesOfFeaturesOff(on: Readonly<Record<SettingsFeature, boolean>>, items = registered()): ReadonlySet<SettingsCategory> {
+  const off = (feature: string | undefined) => feature !== undefined && feature in on && !on[feature as SettingsFeature];
+  return new Set(items.filter((item) => off(item.feature)).map(idOf));
+}
 
 export function isCategoryAvailable(category: SettingsCategory, unsupported: ReadonlySet<PlatformFeature>, mac = false, pluginsV3 = false): boolean {
-  if (mac && category === "screenshotRecord") return false;
-  if (category === "pluginsV3") return pluginsV3;
-  const feature = PAGE_FEATURES[category];
-  return feature === undefined || !unsupported.has(feature);
+  return find(category)?.available?.({ unsupported, mac, pluginsV3 }) ?? true;
 }
 
-const MERGED_CATEGORIES: Readonly<Record<string, SettingsCategory>> = {
-  qq: "messages",
-  wechat: "messages",
-  mail: "messages",
-  updates: "about",
-};
-
 export function searchCategories(query: string, describe: (category: SettingsCategory) => string): SettingsCategory[] {
+  const categories = settingsCategories();
   const words = searchWords(query);
-  if (words.length === 0) return [...SETTINGS_CATEGORIES];
-  return SETTINGS_CATEGORIES.filter((category) => {
+  if (words.length === 0) return categories;
+  return categories.filter((category) => {
     const text = normalizeSearchText(describe(category));
     return words.every((word) => text.includes(word));
   });
 }
 
 export function settingsCategoryFor(name: string): SettingsCategory | null {
-  if ((SETTINGS_CATEGORIES as readonly string[]).includes(name)) return name as SettingsCategory;
-  return MERGED_CATEGORIES[name] ?? null;
+  const item = find(name) ?? registered().find((other) => other.aliases?.includes(name));
+  return item ? idOf(item) : null;
 }
+
+export const SETTINGS_FEATURES: readonly SettingsFeature[] = [...new Set(BUILTIN_CATEGORIES.flatMap((item) => ("feature" in item ? [item.feature] : [])))];
+
+const builtinPages = (feature: SettingsFeature): readonly SettingsCategory[] => BUILTIN_CATEGORIES.filter((item) => "feature" in item && item.feature === feature).map((item) => item.id);
+
+export const FEATURE_PAGES = Object.fromEntries(SETTINGS_FEATURES.map((feature) => [feature, builtinPages(feature)])) as Readonly<Record<SettingsFeature, readonly SettingsCategory[]>>;

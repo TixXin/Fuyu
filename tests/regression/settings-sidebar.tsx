@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import "../../src/styles/tokens.css";
 import { I18nProvider, LOCALE_STORAGE_KEY } from "../../src/i18n";
 import { SettingsSidebar } from "../../src/windows/settings/SettingsSidebar";
+import "../../src/windows/settings/slots/categories";
 import { FEATURE_PAGES, settingsCategoryFor, type SettingsCategory } from "../../src/windows/settings/categories";
 
 const savedLocale = localStorage.getItem(LOCALE_STORAGE_KEY);

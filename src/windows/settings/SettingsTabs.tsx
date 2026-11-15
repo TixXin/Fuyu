@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "../../i18n";
 import { isMacOS, useUnsupportedFeatures } from "../../lib/platform";
-import { entryOf, isCategoryAvailable, SETTINGS_TABS, type SettingsCategory, type TabbedCategory } from "./categories";
+import { entryOf, entryTabs, isCategoryAvailable, type SettingsCategory, type TabbedCategory } from "./categories";
 import "./SettingsTabs.css";
 
 export function SettingsTabs({ category, onCategoryChange }: { category: SettingsCategory; onCategoryChange: (category: SettingsCategory) => void }) {
@@ -37,7 +37,7 @@ export function SettingsTabs({ category, onCategoryChange }: { category: Setting
   }, [category]);
 
   if (!entry) return null;
-  const tabs = SETTINGS_TABS[entry].filter((tab) => isCategoryAvailable(tab, unsupported, isMacOS));
+  const tabs = entryTabs(entry).filter((tab) => isCategoryAvailable(tab, unsupported, isMacOS));
   const move = (from: TabbedCategory, step: number) => {
     const next = tabs[(tabs.indexOf(from) + step + tabs.length) % tabs.length];
     onCategoryChange(next);
