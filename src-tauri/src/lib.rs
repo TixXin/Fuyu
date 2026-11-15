@@ -100,6 +100,9 @@ pub fn run() {
         .register_asynchronous_uri_scheme_protocol(clipboard_history::image_protocol::SCHEME, |_context, request, responder| {
             tauri::async_runtime::spawn_blocking(move || responder.respond(clipboard_history::image_protocol::respond(&request)));
         })
+        .register_asynchronous_uri_scheme_protocol(plugin_kernel::protocol::SCHEME, |_context, request, responder| {
+            tauri::async_runtime::spawn_blocking(move || responder.respond(plugin_kernel::respond(&request)));
+        })
         .on_window_event(|window, event| {
             if window.label() == translation::WINDOW_LABEL
                 || window.label() == clipboard_history::POPUP_WINDOW_LABEL
@@ -228,6 +231,7 @@ pub fn run() {
             coexist;
             local_api;
             plugin_host;
+            plugin_kernel;
             mail;
             wechat_reminders;
             qq_notifications;

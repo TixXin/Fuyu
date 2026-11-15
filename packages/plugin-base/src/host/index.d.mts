@@ -17,6 +17,14 @@ export interface PluginStatus {
   error?: string;
 }
 
+export interface ClientEntry {
+  id: string;
+  plugin: string;
+  window: string;
+  path: string;
+  version: string;
+}
+
 export interface HostOptions {
   dir: string;
   config?: string;
@@ -30,6 +38,8 @@ export interface Host {
   logs: LogEntry[];
   status(): PluginStatus[];
   watchStatus(onChange: (status: PluginStatus[]) => void): () => void;
+  clients(window?: string): ClientEntry[];
+  watchClients(onChange: (clients: ClientEntry[]) => void): () => void;
   settle(): Promise<unknown>;
   stop(): Promise<void>;
 }

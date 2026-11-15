@@ -54,7 +54,7 @@
 | 关卡 | 做法 |
 |---|---|
 | 地址 | 只监听回环地址 |
-| 令牌 | 宿主每次启动用 `crypto.randomBytes(32)` 生成，只经它和 Rust 之间的私有管道（`ready` 通知）交出去，不写文件、不进命令行参数和环境变量、不进日志。窗口向 Rust 要（第 6 步加命令） |
+| 令牌 | 宿主每次启动用 `crypto.randomBytes(32)` 生成，只经它和 Rust 之间的私有管道（`ready` 通知）交出去，不写文件、不进命令行参数和环境变量、不进日志。窗口用 Tauri 命令 `get_plugin_host_connection` 向 Rust 要（宿主就绪前返回空，窗口过一会儿再要） |
 | 来源 | 握手时核对 `Origin` 头，不在名单里的直接回 HTTP 403，不升级成 WebSocket。名单由 Rust 用 `--origin` 传给宿主：`tauri://localhost`（macOS）、`http://tauri.localhost`、`https://tauri.localhost`（Windows），开发版再加 `devUrl` 的来源（`http://localhost:1420`）。不传时宿主用前三个 |
 | 打招呼 | 连上后 2 秒内要发 `hello`，带令牌和协议版本；令牌用定长比较 |
 
@@ -67,8 +67,8 @@
 | 方向 | 消息 | 说明 |
 |---|---|---|
 | 窗口 → 宿主 | `{ type: "hello", token, protocol, window }` | 第一条。`window` 是窗口的 label |
-| 宿主 → 窗口 | `{ type: "welcome", protocol, seq, snapshot }` | 回答 `hello`。`snapshot` 是当前的全部状态（现在是 `{ plugins }`），`seq` 是最后一个事件的序号 |
-| 宿主 → 窗口 | `{ type: "event", seq, name, data }` | 增量。`seq` 每个事件加 1，所有窗口共用一个序列。现在有 `plugins`（插件状态变了，带完整的列表） |
+| 宿主 → 窗口 | `{ type: "welcome", protocol, seq, snapshot }` | 回答 `hello`。`snapshot` 是当前的全部状态（现在是 `{ plugins, clients }`），`seq` 是最后一个事件的序号 |
+| 宿主 → 窗口 | `{ type: "event", seq, name, data }` | 增量。`seq` 每个事件加 1，所有窗口共用一个序列。现在有 `plugins`（插件状态变了，带完整的列表）和 `clients`（插件登记的界面文件变了，带完整的列表：`{ id, plugin, window, path, version }`） |
 | 窗口 → 宿主 | `{ type: "snapshot" }` | 窗口发现序号跳了（中间丢了事件），要一份新的快照，不带着缺口往下走 |
 | 宿主 → 窗口 | `{ type: "snapshot", seq, snapshot }` | 回答上一条 |
 | 窗口 → 宿主 | `{ type: "call", id, method, params }` | 调用。现在有 `status` |
@@ -79,6 +79,10 @@
 - 连接断了（宿主重启、崩溃、被换掉），窗口里等着的调用立刻以 `peer-gone` 失败。
 - 窗口每次重连前都重新向 Rust 要端口和令牌：宿主重启后两样都会变。重连的间隔是 0、0.1、0.25、0.5、1、2 秒，之后一直 2 秒；连上并拿到快照后重新从 0 算。
 - 重连后拿到的是一份新的快照（`welcome`），窗口用它替换手里的全部状态，不和旧的合并。
+
+### 插件的界面文件
+
+插件的宿主部分用 `ctx.clients.add(<窗口名>, <文件的 URL>)` 登记它在某个窗口里的界面代码（插件停用时自动撤掉）。宿主把文件换成插件目录下的相对路径，路径解析成真实路径后不在插件目录里的拒绝（插件启动失败），版本是文件的大小加修改时间。窗口按 `fuyu-plugin://localhost/<路径>?v=<版本>` 加载：先用 `HEAD` 确认文件在、类型是 JavaScript，再 `import()`；版本变了就换地址重新加载，旧的先撤掉。插件的界面代码默认导出一个插件（函数，或带 `apply` 的对象），用 `ctx.slots.add(<插槽名>, { id, order, component })` 往插槽里放组件，插件停用时这些也自动撤掉。插件代码里对 `react`、`react/jsx-runtime` 的引用要改写成 `../__shared/react.js` 这样的相对路径（第 0 阶段两个系统都验证过），由程序自带的转接模块提供同一份 React。
 
 ## 改这一页
 

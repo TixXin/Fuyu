@@ -56,13 +56,14 @@ try {
   await host.settle();
   windows = await openWindowSocket({
     origins: values.origin.length ? values.origin : WINDOW_ORIGINS,
-    snapshot: () => ({ plugins: host.status() }),
+    snapshot: () => ({ plugins: host.status(), clients: host.clients() }),
     onCall: (method) => {
       if (method === "status") return host.status();
       throw Object.assign(new Error(`no method ${method}`), { code: "no-method" });
     },
   });
   host.watchStatus((plugins) => windows.publish("plugins", plugins));
+  host.watchClients((clients) => windows.publish("clients", clients));
   rpc.notify("ready", {
     protocol: HOST_PROTOCOL,
     pid: process.pid,

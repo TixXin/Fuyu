@@ -172,3 +172,4 @@
 - 待办只剩岛屿画法（C28，2026-11-10 起）：`fuyu-settings` 去掉 `todoStyle`（"paper" | "island"）和 `todoBackgroundColor`，旧数据里的这两个字段读取时忽略，不迁移；归档的「卡片 / 时间线」布局本来就没存，一并去掉。
 
 总览见 [overview.md](overview.md)。
+- 插件平台第 3 版的宿主（2026-11-15 起，E36.1，开发中）：只在开发版设了 `FUYU_PLUGINS_V3=1` 时启动，正式版里没有。Tauri 命令 `get_plugin_host_connection`（无参数，返回 `{ enabled, port, token, generation }`；没启用时 `enabled` 是 `false`，宿主还没就绪时 `port`、`token` 是 `null`），窗口拿它连宿主的本机 WebSocket，协议见 [v3-boundary.md](plugins/v3-boundary.md)。自定义协议 `fuyu-plugin`：`fuyu-plugin://localhost/<路径>`（Windows 上是 `http://fuyu-plugin.localhost/<路径>`）返回数据目录 `plugins-v3/` 下的插件文件（按扩展名回类型，带 `Access-Control-Allow-Origin: *`，支持 `HEAD`，不出这个目录，找不到时 404）；`__shared/react.js`、`__shared/react-jsx-runtime.js` 是程序自带的 React 转接模块。宿主没启动时一律 404。
