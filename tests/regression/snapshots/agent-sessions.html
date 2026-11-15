@@ -78,65 +78,76 @@
           </div>
         </span>
       </div>
-      <ul class="agent-sessions__list agent-sessions__list--archivable" style="--agent-age-width: 35px">
+      <ul class="agent-sessions__list agent-sessions__list--archivable agent-sessions__list--menu" style="--agent-age-width: 35px">
         <li data-session-key="claudeCode:a">
-          <button class="agent-session agent-session--running agent-session--light-working agent-session--full" type="button">
-            <span aria-label="运行中" class="agent-session__dot" role="img" title="运行中"></span>
-            <span class="agent-session__main">
-              <span class="agent-session__heading">
-                <span class="agent-session__title">
-                  <span class="agent-session__project">
-                    fly-island
+          <span class="island-hover-card__anchor agent-session__hover">
+            <button class="agent-session agent-session--running agent-session--light-working agent-session--full" type="button">
+              <span aria-label="运行中" class="agent-session__dot" role="img" title="运行中"></span>
+              <span class="agent-session__main">
+                <span class="agent-session__heading">
+                  <span class="agent-session__title">
+                    <span class="agent-session__project">
+                      fly-island
+                      ·
+                    </span>
+                    设置界面完善思路
+                  </span>
+                  <span class="agent-session__pill" title="Opus 5.5 · Xhigh · 自动">
+                    <span class="agent-session__pill-model">
+                      Opus 5.5
+                    </span>
+                    <span class="agent-session__pill-effort">
+                      XH
+                    </span>
+                    <span class="agent-session__pill-mode agent-session__pill-mode--auto">
+                      自动
+                    </span>
+                  </span>
+                  <span class="agent-session__meta">
+                    <span class="agent-session__elapsed">
+                      已运行 3 分 26 秒
+                    </span>
                     ·
+                    2 个子 Agent
                   </span>
-                  设置界面完善思路
-                </span>
-                <span class="agent-session__pill" title="Opus 5.5 · Xhigh · 自动">
-                  <span class="agent-session__pill-model">
-                    Opus 5.5
+                  <span class="agent-session__host" title="在 Orca 里运行">
+                    <span class="agent-session__host-name">
+                      Orca
+                    </span>
                   </span>
-                  <span class="agent-session__pill-effort">
-                    XH
-                  </span>
-                  <span class="agent-session__pill-mode agent-session__pill-mode--auto">
-                    自动
+                  <span class="agent-session__agent">
+                    <img alt="" aria-hidden="true" class="agent-provider-icon agent-provider-icon--claudeCode" draggable="false" height="14" src="/src/assets/brands/claude-code.png" width="14">
+                    <img alt="在 Orca 里运行" class="agent-session__host-badge" draggable="false" height="10" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2016%2016%22%3E%3Crect%20width%3D%2216%22%20height%3D%2216%22%20rx%3D%223%22%20fill%3D%22%232b2f3a%22%2F%3E%3Cpath%20d%3D%22M4%205l3%203-3%203M8.5%2011H12%22%20stroke%3D%22%237ee787%22%20stroke-width%3D%221.6%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22%2F%3E%3C%2Fsvg%3E" title="在 Orca 里运行" width="10">
                   </span>
                 </span>
-                <span class="agent-session__meta">
-                  <span class="agent-session__elapsed">
-                    已运行 3 分 25 秒
+                <span class="agent-session__prompt">
+                  你：把 Agent 页的右侧胶囊和用量行排一下
+                </span>
+                <span class="agent-session__tool" title="正在调用 Bash: cd /Users/tixxin/Desktop/projects/Fuyu &amp;&amp; node scripts/run-regression.mjs agent-sessions">
+                  <span class="agent-session__tool-name">
+                    Bash
                   </span>
-                  ·
-                  2 个子 Agent
-                </span>
-                <span class="agent-session__host" title="在 Orca 里运行">
-                  <span class="agent-session__host-name">
-                    Orca
-                  </span>
-                </span>
-                <span class="agent-session__agent">
-                  <img alt="" aria-hidden="true" class="agent-provider-icon agent-provider-icon--claudeCode" draggable="false" height="14" src="/src/assets/brands/claude-code.png" width="14">
-                  <img alt="在 Orca 里运行" class="agent-session__host-badge" draggable="false" height="10" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2016%2016%22%3E%3Crect%20width%3D%2216%22%20height%3D%2216%22%20rx%3D%223%22%20fill%3D%22%232b2f3a%22%2F%3E%3Cpath%20d%3D%22M4%205l3%203-3%203M8.5%2011H12%22%20stroke%3D%22%237ee787%22%20stroke-width%3D%221.6%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22%2F%3E%3C%2Fsvg%3E" title="在 Orca 里运行" width="10">
-                </span>
-              </span>
-              <span class="agent-session__prompt">
-                你：把 Agent 页的右侧胶囊和用量行排一下
-              </span>
-              <span class="agent-session__tool" title="正在调用 Bash: cd /Users/tixxin/Desktop/projects/Fuyu &amp;&amp; node scripts/run-regression.mjs agent-sessions">
-                <span class="agent-session__tool-name">
-                  Bash
-                </span>
-                <span class="agent-session__tool-detail">
-                  <span class="agent-session__tool-head">
-                    cd /Users/tixxin/Desktop/projects/Fuyu &amp;&amp; node scripts
-                  </span>
-                  <span class="agent-session__tool-tail">
-                    /run-regression.mjs agent-sessions
+                  <span class="agent-session__tool-detail">
+                    <span class="agent-session__tool-head">
+                      cd /Users/tixxin/Desktop/projects/Fuyu &amp;&amp; node scripts
+                    </span>
+                    <span class="agent-session__tool-tail">
+                      /run-regression.mjs agent-sessions
+                    </span>
                   </span>
                 </span>
               </span>
-            </span>
-          </button>
+            </button>
+          </span>
+          <span class="agent-session__more">
+            <button aria-expanded="false" aria-haspopup="menu" aria-label="「设置界面完善思路」的更多操作" class="island-list-icon-button" title="「设置界面完善思路」的更多操作" type="button">
+              <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="12" cy="12" r="1"></circle>
+                <circle cx="19" cy="12" r="1"></circle>
+                <circle cx="5" cy="12" r="1"></circle>
+              </svg>
+            </button>
+          </span>
           <button aria-label="归档「设置界面完善思路」" class="agent-session__archive" title="归档「设置界面完善思路」" type="button">
             <svg aria-hidden="true" class="lucide lucide-archive" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg">
               <rect height="5" rx="1" width="20" x="2" y="3"></rect>
@@ -146,47 +157,58 @@
           </button>
         </li>
         <li data-session-key="codex:b">
-          <button class="agent-session agent-session--waiting agent-session--light-needs agent-session--full" type="button">
-            <span aria-label="等你确认" class="agent-session__dot" role="img" title="等你确认"></span>
-            <span class="agent-session__main">
-              <span class="agent-session__heading">
-                <span class="agent-session__title">
-                  <span class="agent-session__project">
-                    MioPicFlow
-                    ·
+          <span class="island-hover-card__anchor agent-session__hover">
+            <button class="agent-session agent-session--waiting agent-session--light-needs agent-session--full" type="button">
+              <span aria-label="等你确认" class="agent-session__dot" role="img" title="等你确认"></span>
+              <span class="agent-session__main">
+                <span class="agent-session__heading">
+                  <span class="agent-session__title">
+                    <span class="agent-session__project">
+                      MioPicFlow
+                      ·
+                    </span>
+                    恢复 Windows 发布机环境，顺便把代理配置也整理一遍
                   </span>
-                  恢复 Windows 发布机环境，顺便把代理配置也整理一遍
-                </span>
-                <span class="agent-session__pill" title="gpt-6-astra · High">
-                  <span class="agent-session__pill-model">
-                    gpt-6-astra
+                  <span class="agent-session__pill" title="gpt-6-astra · High">
+                    <span class="agent-session__pill-model">
+                      gpt-6-astra
+                    </span>
+                    <span class="agent-session__pill-effort">
+                      H
+                    </span>
                   </span>
-                  <span class="agent-session__pill-effort">
-                    H
+                  <span class="agent-session__meta">
+                    等待确认
+                  </span>
+                  <span class="agent-session__host" title="在 Codex 里运行">
+                    <span class="agent-session__host-name">
+                      Codex
+                    </span>
+                  </span>
+                  <span class="agent-session__agent">
+                    <img alt="" aria-hidden="true" class="agent-provider-icon agent-provider-icon--codex" draggable="false" height="14" src="/src/assets/brands/codex.webp" width="14">
                   </span>
                 </span>
-                <span class="agent-session__meta">
-                  等待确认
+                <span class="agent-session__prompt">
+                  你：恢复发布机环境
                 </span>
-                <span class="agent-session__host" title="在 Codex 里运行">
-                  <span class="agent-session__host-name">
-                    Codex
-                  </span>
-                </span>
-                <span class="agent-session__agent">
-                  <img alt="" aria-hidden="true" class="agent-provider-icon agent-provider-icon--codex" draggable="false" height="14" src="/src/assets/brands/codex.webp" width="14">
+                <span class="agent-session__message agent-session__message--one-line">
+                  关闭系统代理后国内网站立即恢复，说明问题集中在 Clash 的代理链路。
                 </span>
               </span>
-              <span class="agent-session__prompt">
-                你：恢复发布机环境
-              </span>
-              <span class="agent-session__message agent-session__message--one-line">
-                关闭系统代理后国内网站立即恢复，说明问题集中在 Clash 的代理链路。
-              </span>
-            </span>
-          </button>
+            </button>
+          </span>
           <span class="agent-session__age">
             14 分
+          </span>
+          <span class="agent-session__more">
+            <button aria-expanded="false" aria-haspopup="menu" aria-label="「恢复 Windows 发布机环境，顺便把代理配置也整理一遍」的更多操作" class="island-list-icon-button" title="「恢复 Windows 发布机环境，顺便把代理配置也整理一遍」的更多操作" type="button">
+              <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="12" cy="12" r="1"></circle>
+                <circle cx="19" cy="12" r="1"></circle>
+                <circle cx="5" cy="12" r="1"></circle>
+              </svg>
+            </button>
           </span>
           <button aria-label="归档「恢复 Windows 发布机环境，顺便把代理配置也整理一遍」" class="agent-session__archive" title="归档「恢复 Windows 发布机环境，顺便把代理配置也整理一遍」" type="button">
             <svg aria-hidden="true" class="lucide lucide-archive" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg">
@@ -197,30 +219,41 @@
           </button>
         </li>
         <li data-session-key="claudeCode:c">
-          <button class="agent-session agent-session--completed agent-session--light-done agent-session--compact" type="button">
-            <span aria-label="已完成" class="agent-session__dot" role="img" title="已完成"></span>
-            <span class="agent-session__main">
-              <span class="agent-session__heading">
-                <span class="agent-session__title">
-                  <span class="agent-session__project">
-                    TixXinBlog
-                    ·
+          <span class="island-hover-card__anchor agent-session__hover">
+            <button class="agent-session agent-session--completed agent-session--light-done agent-session--compact" type="button">
+              <span aria-label="已完成" class="agent-session__dot" role="img" title="已完成"></span>
+              <span class="agent-session__main">
+                <span class="agent-session__heading">
+                  <span class="agent-session__title">
+                    <span class="agent-session__project">
+                      TixXinBlog
+                      ·
+                    </span>
+                    Nexus 紧凑视口密度变量
                   </span>
-                  Nexus 紧凑视口密度变量
-                </span>
-                <span class="agent-session__meta">
-                  <span class="agent-session__elapsed">
-                    用时 4 分 12 秒
+                  <span class="agent-session__meta">
+                    <span class="agent-session__elapsed">
+                      用时 4 分 12 秒
+                    </span>
                   </span>
-                </span>
-                <span class="agent-session__agent">
-                  <img alt="" aria-hidden="true" class="agent-provider-icon agent-provider-icon--claudeCode" draggable="false" height="14" src="/src/assets/brands/claude-code.png" width="14">
+                  <span class="agent-session__agent">
+                    <img alt="" aria-hidden="true" class="agent-provider-icon agent-provider-icon--claudeCode" draggable="false" height="14" src="/src/assets/brands/claude-code.png" width="14">
+                  </span>
                 </span>
               </span>
-            </span>
-          </button>
+            </button>
+          </span>
           <span class="agent-session__age">
             1 小时
+          </span>
+          <span class="agent-session__more">
+            <button aria-expanded="false" aria-haspopup="menu" aria-label="「Nexus 紧凑视口密度变量」的更多操作" class="island-list-icon-button" title="「Nexus 紧凑视口密度变量」的更多操作" type="button">
+              <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="12" cy="12" r="1"></circle>
+                <circle cx="19" cy="12" r="1"></circle>
+                <circle cx="5" cy="12" r="1"></circle>
+              </svg>
+            </button>
           </span>
           <button aria-label="归档「Nexus 紧凑视口密度变量」" class="agent-session__archive" title="归档「Nexus 紧凑视口密度变量」" type="button">
             <svg aria-hidden="true" class="lucide lucide-archive" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg">
