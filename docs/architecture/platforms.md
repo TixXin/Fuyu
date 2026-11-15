@@ -26,13 +26,15 @@ macOS 的计划和决定见 [macos-port-plan.md](macos-port-plan.md)，各功能
 | 功能 | 模块 | Windows | macOS | macOS 的做法与权限 | 子任务 | 最后验证（macOS） |
 |---|---|---|---|---|---|---|
 | 悬浮岛窗口（折叠、展开、贴边收起） | `island` | 已支持 | 开发中 | NSPanel（`tauri-nspanel`）+ Accessory；无需权限。展开后鼠标停在面板上时让面板成为 key window（非激活面板，不激活浮屿），网页才收得到鼠标移动、内部元素有 hover 样式；移开时交还给原来的前台应用（`island/focus_macos.rs`） | G1.3 | — |
+| 岛吸附到屏幕下边（C54.3） | `island/bottom_edge.rs` | 已支持 | 已支持 | 按工作区下沿：Windows 上任务栏在下边时贴任务栏上沿，macOS 上贴 Dock 上沿（Dock 自动隐藏时贴屏幕下沿）；面板往上展开、贴边收起往下缩；刘海模式只在顶边。多显示器跟随和 Alt 改尺寸只在 Windows（和顶边一样） | C54.3 | 未实测（2026-11-15） |
+| 岛吸附到左右侧（竖向岛，C54.1） | `island/side.rs` | 已支持 | 已支持 | 吸在侧边立成 44px 宽的竖向岛，闲置收成 12×72 把手，横版面板从侧边滑出，文字类提示走连着岛的气泡；拖动时离边 16px 内显示吸附提示线。macOS 2026-11-15 起打开（以前 Mac 上不吸侧边）；多显示器跟随只在 Windows；侧边面板不能 Alt 改尺寸 | C54.1 | 未实测（2026-11-15） |
 | 游戏模式（前台全屏时勿扰、贴边） | `system::fullscreen` | 已支持 | 开发中 | CoreGraphics 窗口列表：最前面的普通窗口盖住整块显示器；无需权限。Mac 上默认贴边开、勿扰关（M6） | G1.3 | — |
 | 新手引导 | `onboarding_window` | 已支持 | 开发中 | 透明遮罩铺满岛所在的整块屏幕（岛默认压在菜单栏上）；「最小化全部窗口」改为隐藏其他应用，关掉时全部显示回来；无需权限 | G1.3 | — |
 | 设置窗口 | `settings_window` | 已支持 | 开发中 | 普通窗口：系统红绿灯（Overlay 标题栏、隐藏标题），侧栏用系统的 Sidebar 半透明材质；⌘W 关闭、⌘M 最小化、⌘F 搜索设置；快捷键显示 ⌘⌥⇧⌃，文案按 Mac 用词（登录时打开、菜单栏、访达）；无需权限 | G1.4 | — |
 | 家目录与数据位置 | `home_dir` | 已支持 | 已支持 | 默认 `~/.fuyu`，`FUYU_HOME` 和指针文件同 Windows；应用数据目录 `~/Library/Application Support/com.tixxin.fuyu`；锁文件的电脑名取 `scutil --get ComputerName`；位置写在 data-storage.md 和 contracts.md | G1.4 | macOS 27.2，2026-11-13（单元测试） |
 | 从岛上打开 QQ / 微信 | `messenger_activation` | 已支持 | 未开始 | `NSWorkspace` 打开应用 | G1.10 | — |
 | 通知诊断 | `notification_diagnostics` | 已支持 | 不支持 | 读不到系统通知，Mac 上隐藏 | G1.2 | — |
-| 托盘 / 菜单栏图标 | `tray.rs` | 已支持 | 已支持 | Tauri tray + 模板图：`tray_mark.rs` 按 `mark.svg` 的胶囊在代码里画单色图（圆点和短横挖空），系统按菜单栏深浅自动着色 | G1.4 | macOS 27.2，2026-11-13 |
+| 托盘 / 菜单栏图标 | `tray.rs` | 已支持 | 已支持 | Tauri tray + 模板图：`tray_mark.rs` 按 `mark.svg` 的胶囊在代码里画单色图（圆点和短横挖空），系统按菜单栏深浅自动着色；设置 → 通用可以隐藏图标（C82，`TrayIcon::set_visible`，存 `tray-icon.json`）。隐藏后再次打开浮屿会显示岛并打开设置的通用页：Windows 走 single-instance 回调，macOS 从「应用程序」/ 启动台 / Spotlight 再打开走 `RunEvent::Reopen`（LaunchServices 不起第二个进程，single-instance 一般不触发）；设置里有「退出岛屿」 | G1.4 | macOS 27.2，2026-11-13 |
 | 开机自启 | `system` | 已支持 | 开发中 | `SMAppService.mainApp`（`macos/login_item.rs`）；只有打包后的 `.app` 能注册，调试版读到的总是关；系统要求批准时打开「登录项」设置，开关退回 | G1.4 | — |
 | 凭据存储 | `mail`、`rename_migration` | 已支持 | 已支持 | Keychain：`keyring` 的 v1 在 Mac 上自动用 apple-native 后端，代码不用改；条目名和 Windows 相同；不弹授权框 | G1.4 | macOS 27.2，2026-11-13 |
 | 跟随系统的强调色 | `system::accent_color` | 已支持 | 开发中 | `NSColor.controlAccentColor` 转成 sRGB（`macos/appearance.rs`）；设置里这一项在 Mac 上叫「跟随系统」。打开设置窗口时读一次，系统里改了不会立刻跟上 | G1.6 | — |
