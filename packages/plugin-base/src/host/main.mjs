@@ -1,8 +1,9 @@
 import { parseArgs } from "node:util";
+import { HOST_PROTOCOL, WINDOW_ORIGINS } from "../protocol.mjs";
 import { startHost } from "./kernel.mjs";
 import { connect } from "./rpc.mjs";
+import { openWindowSocket } from "./sockets.mjs";
 
-const PROTOCOL = 1;
 const FORWARDED_LOGS = new Set(["error", "warn"]);
 
 const write = process.stdout.write.bind(process.stdout);
@@ -14,15 +15,18 @@ const { values } = parseArgs({
     config: { type: "string", default: "plugins.yml" },
     watch: { type: "boolean", default: false },
     api: { type: "string", multiple: true, default: [] },
+    origin: { type: "string", multiple: true, default: [] },
   },
 });
 
 let host = null;
+let windows = null;
 let stopping = null;
 
 function stop(code) {
   stopping ??= (async () => {
     try {
+      await windows?.close();
       await host?.stop();
     } finally {
       process.exit(code);
@@ -50,7 +54,22 @@ try {
     },
   });
   await host.settle();
-  rpc.notify("ready", { protocol: PROTOCOL, pid: process.pid, node: process.versions.node, plugins: host.status() });
+  windows = await openWindowSocket({
+    origins: values.origin.length ? values.origin : WINDOW_ORIGINS,
+    snapshot: () => ({ plugins: host.status() }),
+    onCall: (method) => {
+      if (method === "status") return host.status();
+      throw Object.assign(new Error(`no method ${method}`), { code: "no-method" });
+    },
+  });
+  host.watchStatus((plugins) => windows.publish("plugins", plugins));
+  rpc.notify("ready", {
+    protocol: HOST_PROTOCOL,
+    pid: process.pid,
+    node: process.versions.node,
+    plugins: host.status(),
+    windows: { port: windows.port, token: windows.token },
+  });
 } catch (error) {
   rpc.notify("fatal", { message: String(error?.stack ?? error) });
   await stop(1);

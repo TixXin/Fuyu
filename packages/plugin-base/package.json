@@ -14,6 +14,14 @@
       "types": "./src/host/index.d.mts",
       "default": "./src/host/index.mjs"
     },
+    "./client": {
+      "types": "./src/client/index.d.mts",
+      "default": "./src/client/index.mjs"
+    },
+    "./protocol": {
+      "types": "./src/protocol.d.mts",
+      "default": "./src/protocol.mjs"
+    },
     "./package.json": "./package.json"
   },
   "engines": {
@@ -25,7 +33,8 @@
     "@cordisjs/hmr": "workspace:*",
     "@cordisjs/include": "workspace:*",
     "@cordisjs/loader": "workspace:*",
-    "cordis": "workspace:*"
+    "cordis": "workspace:*",
+    "ws": "^8.23.0"
   },
   "scripts": {
     "test": "node --test \"test/**/*.test.mjs\""

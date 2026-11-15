@@ -33,3 +33,24 @@ export function pluginStatus(ctx, logs = []) {
     .filter(({ internal, status }) => !internal || status.state !== "running")
     .map(({ status }) => status);
 }
+
+export function watchStatus(ctx, logs, onChange, delayMs = 20) {
+  let last = JSON.stringify(pluginStatus(ctx, logs));
+  let timer = null;
+  const check = () => {
+    timer = null;
+    const status = pluginStatus(ctx, logs);
+    const text = JSON.stringify(status);
+    if (text === last) return;
+    last = text;
+    onChange(status);
+  };
+  const schedule = () => {
+    timer ??= setTimeout(check, delayMs);
+  };
+  const off = [ctx.on("internal/status", schedule), ctx.on("internal/plugin", schedule), ctx.on("loader/entry-init", schedule)];
+  return () => {
+    clearTimeout(timer);
+    off.forEach((dispose) => dispose());
+  };
+}

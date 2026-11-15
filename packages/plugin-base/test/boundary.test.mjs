@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 import { test } from "node:test";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
-const ALLOWED = [/^node:/, /^cordis$/, /^@cordisjs\//, /^\.\.?\//, /^@fuyu\/plugin-base(\/|$)/];
+const ALLOWED = [/^node:/, /^cordis$/, /^@cordisjs\//, /^ws$/, /^\.\.?\//, /^@fuyu\/plugin-base(\/|$)/];
 
 function files(dir) {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
@@ -15,7 +15,7 @@ function files(dir) {
   });
 }
 
-test("the base imports nothing but Node, the vendored kernel and itself", () => {
+test("the base imports nothing but Node, the vendored kernel, ws and itself", () => {
   const strays = [];
   for (const file of files(join(root, "src"))) {
     const text = readFileSync(file, "utf8");

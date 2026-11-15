@@ -6,7 +6,7 @@ import Loader from "@cordisjs/loader";
 import { Context } from "cordis";
 import { recordLogs } from "./logs.mjs";
 import { shareModules } from "./share.mjs";
-import { pluginStatus } from "./status.mjs";
+import { pluginStatus, watchStatus } from "./status.mjs";
 
 const API = new URL("../index.mjs", import.meta.url).href;
 export const INCLUDE = import.meta.resolve("@cordisjs/include");
@@ -43,6 +43,7 @@ export async function startHost({ dir, config = "plugins.yml", apiNames = [], wa
     ctx,
     logs,
     status: () => pluginStatus(ctx, logs),
+    watchStatus: (onChange) => watchStatus(ctx, logs, onChange),
     settle: () => Promise.all(ctx.loader.getTasks()),
     stop: () => ctx.fiber.dispose(),
   };

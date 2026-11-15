@@ -29,6 +29,7 @@ export interface Host {
   ctx: Context;
   logs: LogEntry[];
   status(): PluginStatus[];
+  watchStatus(onChange: (status: PluginStatus[]) => void): () => void;
   settle(): Promise<unknown>;
   stop(): Promise<void>;
 }
@@ -36,3 +37,22 @@ export interface Host {
 export function startHost(options: HostOptions): Promise<Host>;
 export function pluginStatus(ctx: Context, logs?: LogEntry[]): PluginStatus[];
 export function shareModules(entries: Record<string, string>): void;
+
+export interface WindowSocket {
+  port: number;
+  token: string;
+  publish(name: string, data: unknown): void;
+  windows(): string[];
+  close(): Promise<void>;
+}
+
+export interface WindowSocketOptions {
+  origins: readonly string[];
+  snapshot: () => unknown;
+  onCall: (method: string, params: unknown, window: string) => unknown;
+  helloWithinMs?: number;
+  host?: string;
+}
+
+export function openWindowSocket(options: WindowSocketOptions): Promise<WindowSocket>;
+export function watchStatus(ctx: Context, logs: LogEntry[], onChange: (status: PluginStatus[]) => void, delayMs?: number): () => void;

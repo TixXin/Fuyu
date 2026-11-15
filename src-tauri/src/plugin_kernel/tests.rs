@@ -6,7 +6,7 @@ use std::{
 use plugin_base::{find_node, Event, HostSpec, HostState, NodeSearch, Supervisor, Timing, MINIMUM_NODE};
 use serde_json::Value;
 
-use super::{containment, enabled, host_script};
+use super::{containment, enabled, host_args, host_script, window_origins};
 
 #[test]
 fn the_host_only_starts_in_a_development_build_with_the_switch_on() {
@@ -19,6 +19,17 @@ fn the_host_only_starts_in_a_development_build_with_the_switch_on() {
 #[test]
 fn the_development_host_script_is_the_one_in_the_repository() {
     assert!(host_script().is_file(), "{}", host_script().display());
+}
+
+#[test]
+fn windows_from_the_release_build_and_the_dev_server_may_connect() {
+    assert_eq!(window_origins(None), ["tauri://localhost", "http://tauri.localhost", "https://tauri.localhost"]);
+    assert_eq!(window_origins(Some("http://localhost:1420/")).last().map(String::as_str), Some("http://localhost:1420"));
+    let args = host_args("/data".into(), &window_origins(Some("http://localhost:1420")));
+    let text: Vec<String> = args.iter().map(|arg| arg.to_string_lossy().into_owned()).collect();
+    assert_eq!(text.iter().filter(|arg| *arg == "--origin").count(), 4);
+    assert!(text.windows(2).any(|pair| pair == ["--origin", "http://localhost:1420"]));
+    assert_eq!(text[0], "--disallow-code-generation-from-strings");
 }
 
 fn wait_for(states: &mpsc::Receiver<HostState>, ready: bool) -> HostState {
@@ -59,6 +70,8 @@ fn the_real_host_starts_under_the_supervisor_reports_its_plugins_and_comes_back_
     assert_eq!(ready["protocol"], 1);
     assert_eq!(ready["plugins"][0]["id"], "hello");
     assert_eq!(ready["plugins"][0]["state"], "running");
+    assert!(ready["windows"]["port"].as_u64().is_some_and(|port| port > 0));
+    assert_eq!(ready["windows"]["token"].as_str().map(str::len), Some(64));
     let status = supervisor.call("status", Value::Null, Duration::from_secs(5)).unwrap();
     assert_eq!(status[0]["state"], "running");
 
