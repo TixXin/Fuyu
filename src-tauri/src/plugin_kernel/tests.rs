@@ -6,7 +6,7 @@ use std::{
 use plugin_base::{find_node, Event, HostSpec, HostState, NodeSearch, Supervisor, Timing, MINIMUM_NODE};
 use serde_json::Value;
 
-use super::{containment, safe_mode::{self, Cause, Tracker}, enabled, host_args, host_env, host_script, memory_of, window_origins, HostMode, MEMORY_MEASURE};
+use super::{containment, safe_mode::{self, Cause, Tracker}, enabled, host_args, host_env, host_files, host_script, memory_of, window_origins, HostMode, MEMORY_MEASURE};
 
 #[test]
 fn on_windows_the_host_gets_a_smaller_threadpool_unless_the_user_already_chose_one() {
@@ -18,11 +18,11 @@ fn on_windows_the_host_gets_a_smaller_threadpool_unless_the_user_already_chose_o
 }
 
 #[test]
-fn the_host_only_starts_in_a_development_build_with_the_switch_on() {
-    assert!(enabled(true, Some("1")));
-    assert!(!enabled(true, None));
-    assert!(!enabled(true, Some("0")));
-    assert!(!enabled(false, Some("1")));
+fn the_host_only_starts_when_the_switch_is_exactly_1() {
+    assert!(enabled(Some("1")));
+    for off in [None, Some(""), Some("0"), Some("true"), Some(" 1"), Some("yes")] {
+        assert!(!enabled(off), "{off:?}");
+    }
 }
 
 #[test]
@@ -34,7 +34,7 @@ fn the_development_host_script_is_the_one_in_the_repository() {
 fn windows_from_the_release_build_and_the_dev_server_may_connect() {
     assert_eq!(window_origins(None), ["tauri://localhost", "http://tauri.localhost", "https://tauri.localhost"]);
     assert_eq!(window_origins(Some("http://localhost:1420/")).last().map(String::as_str), Some("http://localhost:1420"));
-    let args = host_args("/data".into(), &window_origins(Some("http://localhost:1420")), &HostMode::default());
+    let args = host_args("/data".into(), &host_files(None, true), &window_origins(Some("http://localhost:1420")), &HostMode::default());
     let text: Vec<String> = args.iter().map(|arg| arg.to_string_lossy().into_owned()).collect();
     assert_eq!(text.iter().filter(|arg| *arg == "--origin").count(), 4);
     assert!(text.windows(2).any(|pair| pair == ["--origin", "http://localhost:1420"]));
@@ -46,7 +46,7 @@ fn mode(development: bool, variable: Option<&str>) -> HostMode {
 }
 
 fn args_for(mode: &HostMode) -> Vec<String> {
-    host_args("/data".into(), &[], mode).iter().map(|arg| arg.to_string_lossy().into_owned()).collect()
+    host_args("/data".into(), &host_files(None, true), &[], mode).iter().map(|arg| arg.to_string_lossy().into_owned()).collect()
 }
 
 #[test]
@@ -74,6 +74,23 @@ fn the_host_gets_the_built_in_plugin_list_and_the_app_version() {
     assert!(builtins.join("builtins.json").is_file(), "{}", builtins.display());
     assert!(args.windows(2).any(|pair| pair == ["--app-version", env!("CARGO_PKG_VERSION")]), "{args:?}");
     assert!(args.iter().position(|arg| arg == "--app-version") > args.iter().position(|arg| arg.ends_with("main.mjs")), "--app-version is the host's own flag, after the script");
+}
+
+#[test]
+fn a_release_build_runs_the_bundled_host_and_falls_back_to_the_repository() {
+    let resources = scratch("bundled-resources");
+    let repository = host_files(None, false);
+    assert_eq!(repository.script, host_script());
+    assert_eq!(host_files(Some(&resources), false), repository, "no bundled host: the repository's");
+    std::fs::create_dir_all(resources.join("plugins-v3/host")).unwrap();
+    std::fs::write(resources.join("plugins-v3/host/main.mjs"), "").unwrap();
+    let bundled = host_files(Some(&resources), false);
+    assert_eq!(bundled.script, resources.join("plugins-v3/host/main.mjs"));
+    assert_eq!(bundled.builtins, resources.join("plugins-v3/builtins"), "the built bundle, never the TypeScript sources");
+    assert_eq!(host_files(Some(&resources), true), repository, "a development build keeps hot reloading the sources");
+    let args = host_args("/data".into(), &bundled, &[], &HostMode::default());
+    assert!(args.windows(2).any(|pair| pair[0] == "--builtins" && std::path::Path::new(&pair[1]) == resources.join("plugins-v3/builtins")));
+    let _ = std::fs::remove_dir_all(&resources);
 }
 
 fn wait_for(states: &mpsc::Receiver<HostState>, ready: bool) -> HostState {

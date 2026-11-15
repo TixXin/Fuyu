@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { downloadCiBuild, signUpdate, startCiBuild } from "./ci-build.mjs";
 import { msiNames, msiVersion } from "./msi-version.mjs";
+import { prepareReleaseResources, releaseResources } from "../plugins-v3/release-resources.mjs";
 
 export const WINDOWS_WORKFLOW = "release-windows.yml";
 
@@ -17,7 +18,7 @@ export function windowsOverlay(config, version) {
   const wix = msiVersion(version);
   return {
     plugins: { updater: { pubkey } },
-    bundle: { createUpdaterArtifacts: false, ...(wix ? { windows: { wix: { version: wix } } } : {}) },
+    bundle: { createUpdaterArtifacts: false, resources: releaseResources(), ...(wix ? { windows: { wix: { version: wix } } } : {}) },
   };
 }
 
@@ -71,6 +72,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     if (command === "config") {
       const config = JSON.parse(readFileSync("src-tauri/tauri.conf.json", "utf8"));
       writeFileSync("src-tauri/tauri.release.conf.json", `${JSON.stringify(windowsOverlay(config, version), null, 2)}\n`);
+      await prepareReleaseResources();
     } else if (command === "collect") {
       collect(version);
     } else {

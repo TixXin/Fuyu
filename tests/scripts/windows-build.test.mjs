@@ -4,13 +4,14 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 import { windowsArtifact, windowsFiles, windowsOverlay } from "../../scripts/release/windows-build.mjs";
+import { RELEASE_RESOURCES } from "../../scripts/plugins-v3/release-resources.mjs";
 
 const config = (version, pubkey = "PUBKEY") => ({ version, plugins: { updater: { pubkey } } });
 
 test("the CI build ships the shipped public key and makes no updater signatures", () => {
   assert.deepEqual(windowsOverlay(config("0.3.9"), "0.3.9"), {
     plugins: { updater: { pubkey: "PUBKEY" } },
-    bundle: { createUpdaterArtifacts: false },
+    bundle: { createUpdaterArtifacts: false, resources: { ...RELEASE_RESOURCES } },
   });
 });
 

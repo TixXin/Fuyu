@@ -11,7 +11,7 @@
 - 同时并行两条地基（2026-11-15 起，经理会话统筹，三个主 agent 各管一条）：第 3 阶段地基（服务、宿主调 Rust、Rust 标记、宿主样板、密钥不经 JS），计划见 [v3-phase3-foundation-plan.md](v3-phase3-foundation-plan.md)，子任务 E36.3.1–E36.3.15；第 5 阶段地基（清单和 `.fuyu` 包、市场索引、审核、命令行、市场 CI、脚手架、作者文档），计划见 [v3-phase5-foundation-plan.md](v3-phase5-foundation-plan.md)，子任务 E36.5.1–E36.5.7。两个阶段的其余部分仍等第 2 阶段。
 - **第 3 版默认打开之前必须完成**：E36.3.15（#514）把宿主和内置插件带进安装包。现在开发版和 `build:exe` 都从仓库目录加载宿主，正式安装包里没有宿主。
 - **发版和默认打开之前必须完成**：E36.3.18（安全）。E36.3.8 的 4744a73a 让宿主的翻译入口收调用方给的地址，`custom` 引擎会把用户的密钥发过去；同时 `ctx.rust` 对所有来源的插件都开放。修法：`ctx.rust` 只给内置插件（方案本来就是「内置的经管道调 Rust」），翻译入口不收地址，`custom` 引擎暂不开放；默认打开前 `custom` 引擎要改成由 Rust 读用户设置里的地址再开放。
-- 自己试第 3 版：`node scripts/plugins-v3/install-demo.mjs` 装演示插件，再用 `FUYU_PLUGINS_V3=1 pnpm tauri dev` 启动，展开岛屿后最上面有一行插件的问候和每秒加一的计数。
+- 自己试第 3 版：`node scripts/plugins-v3/install-demo.mjs` 装演示插件，再用 `FUYU_PLUGINS_V3=1 pnpm tauri dev` 启动，展开岛屿后最上面有一行插件的问候和每秒加一的计数。正式版和 `pnpm build:exe` 打出的程序也认这个环境变量（E36.3.15）：正式版用安装包里的宿主，`build:exe` 用仓库里的。
 - 包和目录的名字定在 [流程](v3-workflow.md)「代码放哪」：Cordis 在 `vendor/cordis/`，基座的 TS 包是 `packages/plugin-base`，Rust 部分是 `src-tauri/crates/plugin-base`。
 
 ## 谁能改哪一节
