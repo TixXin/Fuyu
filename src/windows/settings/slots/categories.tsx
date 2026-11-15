@@ -1,4 +1,4 @@
-import { createElement, type ComponentProps, type ComponentType, type Dispatch, type SetStateAction } from "react";
+import type { ComponentProps, ComponentType, Dispatch, SetStateAction } from "react";
 import { AppearanceSettingsPage } from "../AppearanceSettingsPage";
 import { BehaviorSettingsPage } from "../BehaviorSettingsPage";
 import { ThemeSettingsPage } from "../ThemeSettingsPage";
@@ -39,7 +39,6 @@ import type { PlatformFeature } from "../../../lib/platform";
 import { BUILTIN_CATEGORIES, categorySlot, type SettingsCategory } from "./categorySlot";
 
 export interface SettingsPageProps {
-  page: SettingsCategory;
   settings: IslandSettings;
   locale: LocaleCode;
   unsupported: ReadonlySet<PlatformFeature>;
@@ -60,29 +59,35 @@ export interface SettingsPageProps {
 
 type Page = ComponentType<SettingsPageProps>;
 
-function BehaviorPage({ page, settings, onSettingsChange, onShowPage }: SettingsPageProps) {
-  return <BehaviorSettingsPage tab={page as ComponentProps<typeof BehaviorSettingsPage>["tab"]} settings={settings} onSettingsChange={onSettingsChange} onOpenPageKeys={() => onShowPage("shortcutsIsland")} />;
-}
+const behavior = (tab: ComponentProps<typeof BehaviorSettingsPage>["tab"]): Page =>
+  function BehaviorPage({ settings, onSettingsChange, onShowPage }) {
+    return <BehaviorSettingsPage tab={tab} settings={settings} onSettingsChange={onSettingsChange} onOpenPageKeys={() => onShowPage("shortcutsIsland")} />;
+  };
 
-function ShortcutsPage({ page, settings, onSettingsChange, onOpenPage }: SettingsPageProps) {
-  return <ShortcutsSettingsPage tab={page as ComponentProps<typeof ShortcutsSettingsPage>["tab"]} settings={settings} onSettingsChange={onSettingsChange} onOpenPage={onOpenPage} />;
-}
+const shortcuts = (tab: ComponentProps<typeof ShortcutsSettingsPage>["tab"]): Page =>
+  function ShortcutsPage({ settings, onSettingsChange, onOpenPage }) {
+    return <ShortcutsSettingsPage tab={tab} settings={settings} onSettingsChange={onSettingsChange} onOpenPage={onOpenPage} />;
+  };
 
-function ClipboardPage({ page, settings, onOpenShortcuts }: SettingsPageProps) {
-  return <ClipboardSettingsPage tab={page as ComponentProps<typeof ClipboardSettingsPage>["tab"]} settings={settings} onOpenShortcuts={onOpenShortcuts} />;
-}
+const clipboard = (tab: ComponentProps<typeof ClipboardSettingsPage>["tab"]): Page =>
+  function ClipboardPage({ settings, onOpenShortcuts }) {
+    return <ClipboardSettingsPage tab={tab} settings={settings} onOpenShortcuts={onOpenShortcuts} />;
+  };
 
-function MusicPage({ page, settings, onSettingsChange }: SettingsPageProps) {
-  return <MusicSettingsPage tab={page as ComponentProps<typeof MusicSettingsPage>["tab"]} settings={settings} onSettingsChange={onSettingsChange} />;
-}
+const music = (tab: ComponentProps<typeof MusicSettingsPage>["tab"]): Page =>
+  function MusicPage({ settings, onSettingsChange }) {
+    return <MusicSettingsPage tab={tab} settings={settings} onSettingsChange={onSettingsChange} />;
+  };
 
-function ScreenshotPage({ page, settings, onSettingsChange, onOpenShortcuts }: SettingsPageProps) {
-  return <ScreenshotSettingsPage tab={page as ComponentProps<typeof ScreenshotSettingsPage>["tab"]} settings={settings} onSettingsChange={onSettingsChange} onOpenShortcuts={onOpenShortcuts} />;
-}
+const screenshot = (tab: ComponentProps<typeof ScreenshotSettingsPage>["tab"]): Page =>
+  function ScreenshotPage({ settings, onSettingsChange, onOpenShortcuts }) {
+    return <ScreenshotSettingsPage tab={tab} settings={settings} onSettingsChange={onSettingsChange} onOpenShortcuts={onOpenShortcuts} />;
+  };
 
-function PluginsPage({ page, settings, managedPluginId, onOpenShortcuts }: SettingsPageProps) {
-  return <PluginsSettingsPage tab={page as ComponentProps<typeof PluginsSettingsPage>["tab"]} settings={settings} managedPluginId={managedPluginId} onOpenShortcuts={onOpenShortcuts} />;
-}
+const plugins = (tab: ComponentProps<typeof PluginsSettingsPage>["tab"]): Page =>
+  function PluginsPage({ settings, managedPluginId, onOpenShortcuts }) {
+    return <PluginsSettingsPage tab={tab} settings={settings} managedPluginId={managedPluginId} onOpenShortcuts={onOpenShortcuts} />;
+  };
 
 const PAGES: Record<SettingsCategory, Page> = {
   overview: ({ settings, locale, features, unsupported, onLocaleChange, onSettingsChange, onOpenPage }) => (
@@ -104,9 +109,9 @@ const PAGES: Record<SettingsCategory, Page> = {
       onSettingsChange={onSettingsChange}
     />
   ),
-  behavior: BehaviorPage,
-  behaviorTuck: BehaviorPage,
-  behaviorAlerts: BehaviorPage,
+  behavior: behavior("behavior"),
+  behaviorTuck: behavior("behaviorTuck"),
+  behaviorAlerts: behavior("behaviorAlerts"),
   appearance: ({ settings, onSettingsChange }) => <AppearanceSettingsPage settings={settings} onSettingsChange={onSettingsChange} />,
   theme: ({ settings, presets, onSettingsChange }) => <ThemeSettingsPage settings={settings} presets={presets} onSettingsChange={onSettingsChange} />,
   themeMarket: ({ settings, locale, presets, onSettingsChange }) => (
@@ -116,8 +121,8 @@ const PAGES: Record<SettingsCategory, Page> = {
       onSave={(theme, look) => void presets.onImportPreset(JSON.stringify(buildTheme(theme.name[locale], look, new Date())))}
     />
   ),
-  shortcuts: ShortcutsPage,
-  shortcutsIsland: ShortcutsPage,
+  shortcuts: shortcuts("shortcuts"),
+  shortcutsIsland: shortcuts("shortcutsIsland"),
   todos: ({ settings, saveDirectory, onSettingsChange }) => (
     <TodosSettingsPage
       settings={settings}
@@ -126,17 +131,17 @@ const PAGES: Record<SettingsCategory, Page> = {
     />
   ),
   calendar: ({ settings, onSettingsChange }) => <CalendarSettingsPage settings={settings} onSettingsChange={onSettingsChange} />,
-  music: MusicPage,
-  musicLyrics: MusicPage,
-  musicLyricsStyle: MusicPage,
+  music: music("music"),
+  musicLyrics: music("musicLyrics"),
+  musicLyricsStyle: music("musicLyricsStyle"),
   translation: ({ settings, onSettingsChange, onOpenShortcuts }) => <TranslationSettingsPage settings={settings} onSettingsChange={onSettingsChange} onOpenShortcuts={onOpenShortcuts} />,
-  clipboard: ClipboardPage,
-  clipboardHistory: ClipboardPage,
-  clipboardSnippets: ClipboardPage,
-  clipboardData: ClipboardPage,
+  clipboard: clipboard("clipboard"),
+  clipboardHistory: clipboard("clipboardHistory"),
+  clipboardSnippets: clipboard("clipboardSnippets"),
+  clipboardData: clipboard("clipboardData"),
   shelf: ({ settings, onSettingsChange }) => <ShelfSettingsPage settings={settings} onSettingsChange={onSettingsChange} />,
-  screenshot: ScreenshotPage,
-  screenshotRecord: ScreenshotPage,
+  screenshot: screenshot("screenshot"),
+  screenshotRecord: screenshot("screenshotRecord"),
   voiceInput: ({ settings }) => <VoiceInputSettingsPage settings={settings} />,
   messages: ({ settings, qqNotifications, wechatReminders, unsupported, onSettingsChange }) => (
     <MessagesSettingsPage settings={settings} qqNotifications={qqNotifications} wechatReminders={wechatReminders} unsupported={unsupported} onSettingsChange={onSettingsChange} />
@@ -148,10 +153,10 @@ const PAGES: Record<SettingsCategory, Page> = {
   agentApprovals: () => <AgentApprovalSettings />,
   agentConnect: () => <AgentConnectSettingsPage />,
   agentRemote: () => <AgentRemoteHostsSettings />,
-  plugins: PluginsPage,
-  pluginsPages: PluginsPage,
-  pluginsUpdates: PluginsPage,
-  pluginsDev: PluginsPage,
+  plugins: plugins("plugins"),
+  pluginsPages: plugins("pluginsPages"),
+  pluginsUpdates: plugins("pluginsUpdates"),
+  pluginsDev: plugins("pluginsDev"),
   pluginsV3: () => <PluginsV3SettingsPage />,
   market: ({ marketRequest, onManagePlugin }) => (
     <PluginMarketSection onManage={onManagePlugin} requestedId={marketRequest.requestedId} onDismissRequest={marketRequest.dismiss} />
@@ -159,8 +164,4 @@ const PAGES: Record<SettingsCategory, Page> = {
   about: ({ onSettingsChange }) => <AboutSettingsPage onSettingsChange={onSettingsChange} />,
 };
 
-function EntryPage(props: SettingsPageProps) {
-  return createElement(PAGES[props.page], props);
-}
-
-for (const category of BUILTIN_CATEGORIES) categorySlot.add({ ...category, component: "tabs" in category ? EntryPage : PAGES[category.id] });
+for (const category of BUILTIN_CATEGORIES) categorySlot.add({ ...category, component: PAGES[category.id] });

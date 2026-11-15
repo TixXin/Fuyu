@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { DEFAULT_SETTINGS_CATEGORY, FEATURE_PAGES, SETTINGS_FEATURES, isCategoryAvailable, sidebarItemOf, type SettingsCategory } from "./categories";
+import { DEFAULT_SETTINGS_CATEGORY, featureOf, isCategoryAvailable, settingsCategoryFor, type SettingsCategory } from "./categories";
 import { FeatureOffPage } from "./FeatureOffPage";
 import { isMacOS, useUnsupportedFeatures } from "../../lib/platform";
 import { useMacWindowKeys } from "./useMacWindowKeys";
@@ -47,7 +47,7 @@ export function SettingsWindow() {
   const category = isCategoryAvailable(chosenCategory, unsupported, isMacOS, pluginsV3) ? chosenCategory : DEFAULT_SETTINGS_CATEGORY;
   const highlightSaveDirectory = saveDirectory.highlight;
   const features = useFeatureSwitches(settings, setSettings);
-  const offFeature = features.hiddenPages.has(category) ? SETTINGS_FEATURES.find((feature) => FEATURE_PAGES[feature].includes(category)) : undefined;
+  const offFeature = features.hiddenPages.has(category) ? featureOf(category) : undefined;
   const page = offFeature ? null : category;
 
   const focusSavePath = useCallback(() => {
@@ -57,14 +57,8 @@ export function SettingsWindow() {
   const focusRequestedSection = useCallback(() => {
     const section = takeFocusRequest();
     if (section === "savePath") focusSavePath();
-    if (section === "translation") setCategory("translation");
-    if (section === "music") setCategory("music");
-    if (section === "calendar") setCategory("calendar");
-    if (section === "mail") setCategory("messages");
-    if (section === "updates") setCategory("about");
-    if (section === "agentConnect") setCategory("agentConnect");
-    if (section === "general") setCategory("general");
-    if (section === "voiceInput") setCategory("voiceInput");
+    const target = section && settingsCategoryFor(section);
+    if (target) setCategory(target);
   }, [focusSavePath]);
 
   useEffect(() => {
@@ -162,7 +156,6 @@ export function SettingsWindow() {
         <SlotView
           slot={categorySlot}
           props={{
-            page: category,
             settings,
             locale,
             unsupported,
@@ -180,7 +173,7 @@ export function SettingsWindow() {
             onOpenShortcuts: openShortcuts,
             onManagePlugin: managePlugin,
           }}
-          select={(items) => (page ? items.filter((item) => item.id === sidebarItemOf(page)) : [])}
+          select={(items) => items.filter((item) => item.id === page)}
         />
       </LayoutEditor>
     </main>

@@ -2,10 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import { Blocks, Bot, ChevronRight, Plus, LayoutGrid, Search, Settings2, X, type LucideIcon } from "lucide-react";
 import { LOCALE_CODES, useLocale, useTranslation } from "../../i18n";
 import { isMacOS, useUnsupportedFeatures } from "../../lib/platform";
-import { entryOf, entryPages, isCategoryAvailable, isEntry, SETTINGS_GROUPS, searchCategories, sidebarItemOf, type SettingsCategory, type SettingsGroup, type TabbedCategory } from "./categories";
+import { useSlotEntries } from "../../features/plugin-kernel/useSlotEntries";
+import { entryOf, entryPages, isCategoryAvailable, isEntry, searchCategories, settingsGroups, sidebarItemOf, type SettingsCategory, type SettingsGroup, type TabbedCategory } from "./categories";
 import searchIndex from "./searchIndex.json";
 import { isTitleHit, MAX_HITS_PER_PAGE, searchSettingsRows, type SettingsRowHit, type SettingsSearchEntry } from "./settingsSearch";
-import { BUILTIN_CATEGORIES } from "./slots/categorySlot";
+import { BUILTIN_CATEGORIES, categorySlot } from "./slots/categorySlot";
 import { usePluginsV3Enabled } from "./usePluginHostStatus";
 import "./SettingsSidebar.css";
 
@@ -37,6 +38,8 @@ export function SettingsSidebar({
   const { locale } = useLocale();
   const unsupported = useUnsupportedFeatures();
   const pluginsV3 = usePluginsV3Enabled();
+  const slotItems = useSlotEntries(categorySlot);
+  const groups = settingsGroups(slotItems);
   const text = t.settings.categories;
   const [query, setQuery] = useState("");
   const [folded, setFolded] = useState<ReadonlySet<SettingsGroup>>(() => new Set());
@@ -45,7 +48,7 @@ export function SettingsSidebar({
     if (!next.delete(group)) next.add(group);
     setFolded(next);
   };
-  const groupOf = (item: SettingsCategory) => SETTINGS_GROUPS.find((group) => group.categories.includes(sidebarItemOf(item)))?.label;
+  const groupOf = (item: SettingsCategory) => groups.find((group) => group.categories.includes(sidebarItemOf(item)))?.label;
   const itemLabel = (item: SettingsCategory) => (isEntry(item) ? text.entries[item] : text[item]);
   const pageLabel = (page: SettingsCategory) => (entryOf(page) ? text.tabs[page as TabbedCategory] : text[page]);
   const describe = (item: SettingsCategory) => {
@@ -106,7 +109,7 @@ export function SettingsSidebar({
   };
 
   const item = (entry: SettingsCategory, nested = false) => {
-    const Icon = CATEGORY_ICONS[entry];
+    const Icon = slotItems.find((other) => other.id === entry)?.icon;
     const isActive = entry === current;
     return (
       <li key={entry}>
@@ -117,7 +120,7 @@ export function SettingsSidebar({
           data-category={entry}
           onClick={() => openItem(entry)}
         >
-          <Icon size={16} strokeWidth={2} aria-hidden="true" />
+          {Icon && <Icon size={16} strokeWidth={2} aria-hidden="true" />}
           <span>{itemLabel(entry)}</span>
         </button>
         {searching && itemHits(entry)}
@@ -125,8 +128,8 @@ export function SettingsSidebar({
     );
   };
 
-  const lastGroup = SETTINGS_GROUPS.length - 1;
-  const footer = SETTINGS_GROUPS[lastGroup].label === null ? SETTINGS_GROUPS[lastGroup].categories.filter(shown) : [];
+  const lastGroup = groups.length - 1;
+  const footer = groups[lastGroup].label === null ? groups[lastGroup].categories.filter(shown) : [];
   const moreFeatures = (
     <li key="more">
       <button className="settings-sidebar__item settings-sidebar__item--nested settings-sidebar__more" type="button" onClick={() => onCategoryChange("overview")}>
@@ -194,7 +197,7 @@ export function SettingsSidebar({
         )}
       </div>
       <div className="settings-sidebar__list" ref={listRef}>
-        {SETTINGS_GROUPS.map(({ label, categories }, index) => {
+        {groups.map(({ label, categories }, index) => {
           if (label !== null) return group(label, categories);
           if (index === lastGroup) return null;
           const items = categories.filter(shown);

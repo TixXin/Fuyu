@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import "./settingsCategorySlot.mjs";
 import { isCategoryAvailable } from "../../src/windows/settings/categories.ts";
 
 test("the plugin platform v3 page shows only when Rust reports the host switched on", () => {

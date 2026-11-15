@@ -1,10 +1,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { DEFAULT_SETTINGS_CATEGORY, FEATURE_PAGES, SETTINGS_CATEGORIES, SETTINGS_GROUPS, entryOf, entryPages, isCategoryAvailable, pagesOfFeaturesOff, searchCategories, sidebarItemOf } from "../../src/windows/settings/categories.ts";
+import "./settingsCategorySlot.mjs";
+import { DEFAULT_SETTINGS_CATEGORY, FEATURE_PAGES, entryOf, entryPages, isCategoryAvailable, pagesOfFeaturesOff, searchCategories, settingsCategories, settingsCategoryFor, settingsGroups, sidebarItemOf } from "../../src/windows/settings/categories.ts";
+import { categorySlot } from "../../src/windows/settings/slots/categorySlot.ts";
 import { shortcutLabel } from "../../src/features/clipboard/shortcut.ts";
 import { isTitleHit, normalizeSearchText, searchSettingsRows, searchWords } from "../../src/windows/settings/settingsSearch.ts";
 import { mergeStates, pairLocales } from "../../scripts/settings-search-index.mjs";
 
+const SETTINGS_CATEGORIES = settingsCategories();
+const SETTINGS_GROUPS = settingsGroups();
 const LOCALES = ["zh-CN", "en"];
 const row = (page, zh, en) => ({ page, "zh-CN": zh, en });
 const ENTRIES = [
@@ -96,4 +100,28 @@ test("Appearance and AI Agent are one sidebar item each, with their pages as tab
   assert.equal(new Set(listed).size, listed.length);
   const reachable = new Set(listed.flatMap((item) => entryPages(item)));
   assert.deepEqual([...reachable].sort(), [...SETTINGS_CATEGORIES].sort());
+});
+
+test("a category added to settings.category/v1 brings its own group, tabs, switch, availability and old names", () => {
+  const removers = [
+    categorySlot.add({ id: "demoTools", group: "extensions", tabs: ["demoTools", "demoToolsMore"], feature: "demo", aliases: ["demo-old"], component: () => null }, "demo"),
+    categorySlot.add({ id: "demoToolsMore", feature: "demo", available: ({ mac }) => !mac, component: () => null }, "demo"),
+  ];
+  try {
+    const groups = settingsGroups();
+    assert.equal(groups.find((group) => group.label === "extensions").categories.at(-1), "demoTools");
+    assert.deepEqual(groups.at(-1), { label: null, categories: ["about"] });
+    assert.deepEqual(entryPages("demoTools"), ["demoTools", "demoToolsMore"]);
+    assert.equal(sidebarItemOf("demoToolsMore"), "demoTools");
+    assert.equal(isCategoryAvailable("demoToolsMore", new Set(), true), false);
+    assert.equal(isCategoryAvailable("demoToolsMore", new Set(), false), true);
+    const allOn = Object.fromEntries(Object.keys(FEATURE_PAGES).map((feature) => [feature, true]));
+    assert.equal(pagesOfFeaturesOff(allOn).size, 0);
+    assert.deepEqual([...pagesOfFeaturesOff({ ...allOn, demo: false })].sort(), ["demoTools", "demoToolsMore"]);
+    assert.equal(settingsCategoryFor("demo-old"), "demoTools");
+  } finally {
+    for (const remove of removers) remove();
+  }
+  assert.ok(!settingsCategories().includes("demoTools"));
+  assert.equal(settingsCategoryFor("demo-old"), null);
 });
