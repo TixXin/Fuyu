@@ -1517,6 +1517,90 @@
       }
     },
     {
+      "page": "clipboard",
+      "zh-CN": {
+        "group": "链接书签",
+        "title": "复制链接时在岛上提示",
+        "description": "在任何地方复制了网址，收起的岛上弹一条，点书签按钮就存进剪贴板页的「书签」。 书签显示网站图标要打开「读取链接标题和图标」。"
+      },
+      "en": {
+        "group": "Link bookmarks",
+        "title": "Offer to bookmark copied links",
+        "description": "When you copy a web address anywhere, the collapsed island shows it; the bookmark button keeps it under Bookmarks on the clipboard page. Site icons on bookmarks need “Read link titles and icons”."
+      }
+    },
+    {
+      "page": "clipboard",
+      "zh-CN": {
+        "group": "链接书签",
+        "title": "识别哪些链接",
+        "options": [
+          "所有网址",
+          "只认 http(s):// 开头的"
+        ]
+      },
+      "en": {
+        "group": "Link bookmarks",
+        "title": "Which links",
+        "options": [
+          "Any web address",
+          "Only http(s)://"
+        ]
+      }
+    },
+    {
+      "page": "clipboard",
+      "zh-CN": {
+        "group": "链接书签",
+        "title": "这些网站不提示",
+        "description": "填域名，用逗号、空格或换行分开；子域名一起算，例如 google.com 也包括 mail.google.com。"
+      },
+      "en": {
+        "group": "Link bookmarks",
+        "title": "Never for these sites",
+        "description": "Domains, separated by commas, spaces or new lines. Subdomains count too: google.com covers mail.google.com."
+      }
+    },
+    {
+      "page": "clipboard",
+      "zh-CN": {
+        "group": "链接书签",
+        "title": "只提示这些网站",
+        "description": "留空就是所有网站。"
+      },
+      "en": {
+        "group": "Link bookmarks",
+        "title": "Only for these sites",
+        "description": "Leave empty for every site."
+      }
+    },
+    {
+      "page": "clipboard",
+      "zh-CN": {
+        "group": "链接书签",
+        "title": "导出书签",
+        "description": "写成「下载」文件夹里的一个 JSON 文件。"
+      },
+      "en": {
+        "group": "Link bookmarks",
+        "title": "Export bookmarks",
+        "description": "Writes a JSON file to your Downloads folder."
+      }
+    },
+    {
+      "page": "clipboard",
+      "zh-CN": {
+        "group": "链接书签",
+        "title": "导入书签",
+        "description": "读浮屿导出的 JSON，或每行一个网址的文本文件；已有的网址跳过。"
+      },
+      "en": {
+        "group": "Link bookmarks",
+        "title": "Import bookmarks",
+        "description": "Reads a JSON file exported by Fuyu, or a text file with one address per line. Addresses you already have are skipped."
+      }
+    },
+    {
       "page": "clipboardHistory",
       "zh-CN": {
         "group": "剪贴板历史",

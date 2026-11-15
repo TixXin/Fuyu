@@ -9,6 +9,8 @@ pub(crate) mod drag;
 #[cfg_attr(target_os = "macos", path = "hotkey_macos.rs")]
 mod hotkey;
 mod link_guard;
+pub(crate) mod links;
+mod links_transfer;
 mod link_preview;
 mod file_image;
 pub(crate) mod image_protocol;
@@ -681,6 +683,13 @@ macro_rules! tauri_commands {
             crate::clipboard_history::actions::convert_chinese_text,
             crate::clipboard_history::actions::read_clipboard_image_qr,
             crate::clipboard_history::actions::get_clipboard_link_preview,
+            crate::clipboard_history::links::get_clipboard_links,
+            crate::clipboard_history::links::add_clipboard_link,
+            crate::clipboard_history::links::remove_clipboard_link,
+            crate::clipboard_history::links::move_clipboard_link,
+            crate::clipboard_history::links::set_clipboard_link_settings,
+            crate::clipboard_history::links::export_clipboard_links,
+            crate::clipboard_history::links::import_clipboard_links,
         ] $($rest)*)
     };
 }

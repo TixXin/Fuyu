@@ -1,8 +1,8 @@
-import { Braces, Check, Copy, FileImage, ImageIcon, Link2, Pencil, ScanText, Sparkles, SquareTerminal, Star, Trash2, WandSparkles, X } from "lucide-react";
+import { BookmarkPlus, Braces, Check, Copy, FileImage, ImageIcon, Link2, Pencil, ScanText, Sparkles, SquareTerminal, Star, Trash2, WandSparkles, X } from "lucide-react";
 import { RowMenu, type RowMenuItem } from "../../components/list/RowMenu";
 import { formatAgo } from "../../components/list/formatAgo";
 import { useTranslation } from "../../i18n";
-import type { ClipboardCopyAs, ClipboardHistoryItem } from "./api";
+import type { ClipboardCopyAs, ClipboardHistoryItem, ClipboardLink } from "./api";
 import { ClipboardEntryIcon } from "./ClipboardEntryIcon";
 import { contentKind, linkLabel } from "./contentKind";
 import { fileFolder, fileImageLabel, sourceName } from "./fileEntry";
@@ -29,6 +29,8 @@ export function ClipboardHistoryItemRow({
   onDelete,
   onTag,
   onTools,
+  bookmarks,
+  onBookmark,
 }: {
   item: ClipboardHistoryItem;
   now: number;
@@ -49,6 +51,8 @@ export function ClipboardHistoryItemRow({
   onDelete: (id: string) => void;
   onTag?: (tag: string) => void;
   onTools?: (page: "transforms" | "ai") => void;
+  bookmarks?: readonly ClipboardLink[];
+  onBookmark?: (url: string) => void;
 }) {
   const t = useTranslation();
   const text = t.clipboard;
@@ -67,6 +71,8 @@ export function ClipboardHistoryItemRow({
     item.note,
   ].filter((part): part is string => Boolean(part));
 
+  const linkUrl = kind?.kind === "link" ? kind.url.href : null;
+  const linkSaved = linkUrl !== null && (bookmarks?.some((link) => link.url === linkUrl) ?? false);
   const menu: RowMenuItem[] = [
     { key: "note", label: text.noteAction, icon: <Pencil size={14} strokeWidth={2} />, onSelect: () => onStartEditNote(item) },
     ...(item.kind === "text" && onTools
@@ -81,6 +87,9 @@ export function ClipboardHistoryItemRow({
           { key: "path", label: text.copyPath, icon: <SquareTerminal size={14} strokeWidth={2} />, onSelect: () => onCopy(item.id, "path") },
           ...(item.ocrText ? [{ key: "text", label: text.copyOcrText, icon: <ScanText size={14} strokeWidth={2} />, onSelect: () => onCopy(item.id, "text") }] : []),
         ]
+      : []),
+    ...(linkUrl && onBookmark
+      ? [{ key: "bookmark", label: linkSaved ? text.links.bookmarked : text.links.bookmark, icon: <BookmarkPlus size={14} strokeWidth={2} />, disabled: linkSaved, onSelect: () => onBookmark(linkUrl) }]
       : []),
     {
       key: "delete",

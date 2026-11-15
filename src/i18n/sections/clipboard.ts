@@ -1,12 +1,14 @@
 import * as actions from "./clipboardActions.ts";
 import * as manage from "./clipboardManage.ts";
 import * as notice from "./clipboardNotice.ts";
+import * as links from "./clipboardLinks.ts";
 
 export type ClipboardText = {
   title: string;
   window: { title: string; pin: string; unpin: string; close: string };
   manage: manage.ClipboardManageText;
   notice: notice.ClipboardNoticeText;
+  links: links.ClipboardLinksText;
   favoriteCount: (count: number) => string;
   expandShortcut: string;
   clear: string;
@@ -94,6 +96,7 @@ export const zhCN: ClipboardText = {
   window: { title: "浮屿 - 剪贴板", pin: "固定窗口（失焦不隐藏，粘贴后不关闭）", unpin: "取消固定", close: "关闭" },
   manage: manage.zhCN,
   notice: notice.zhCN,
+  links: links.zhCN,
   favoriteCount: (count) => `${count} 条收藏`,
   expandShortcut: "打开剪贴板的快捷键",
   clear: "清空",
@@ -181,6 +184,7 @@ export const en: ClipboardText = {
   window: { title: "Fuyu - Clipboard", pin: "Pin the window (stays open on blur and after pasting)", unpin: "Unpin", close: "Close" },
   manage: manage.en,
   notice: notice.en,
+  links: links.en,
   favoriteCount: (count) => (count === 1 ? "1 favorite" : `${count} favorites`),
   expandShortcut: "Shortcut that opens the clipboard",
   clear: "Clear",

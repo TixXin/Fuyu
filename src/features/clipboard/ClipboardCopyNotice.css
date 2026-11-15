@@ -57,3 +57,7 @@
 .clipboard-copy-notice__icon {
   flex: none;
 }
+
+.clipboard-copy-notice__action:disabled {
+  cursor: default;
+}
