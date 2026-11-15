@@ -1,5 +1,7 @@
 use std::{fs, path::Path};
 
+use super::harness;
+
 use super::snapshot::{
     current_unix_millis, system_time_to_unix_millis, AgentStatusSnapshot, AgentTaskStatus,
 };
@@ -26,26 +28,20 @@ pub(super) const AGENT_RUNNING_STALE_AFTER_MS: i64 = 10 * 60 * 1000;
 pub(super) fn apply_agent_running_markers(app_dir: &Path, snapshot: &mut AgentStatusSnapshot) {
     let now = current_unix_millis();
 
-    if let Some(marker_status) = active_agent_running_marker_status(
-        app_dir,
-        &snapshot.codex,
-        CODEX_RUNNING_MARKER_FILE_NAME,
-        CODEX_RUNNING_HOLD_FILE_NAME,
-        now,
-    ) {
-        snapshot.codex.phase = marker_status.phase;
-        snapshot.codex.updated_at = marker_status.updated_at;
-    }
-
-    if let Some(marker_status) = active_agent_running_marker_status(
-        app_dir,
-        &snapshot.claude_code,
-        CLAUDE_CODE_RUNNING_MARKER_FILE_NAME,
-        CLAUDE_CODE_RUNNING_HOLD_FILE_NAME,
-        now,
-    ) {
-        snapshot.claude_code.phase = marker_status.phase;
-        snapshot.claude_code.updated_at = marker_status.updated_at;
+    for (id, light) in harness::with_status_light() {
+        let Some(status) = snapshot.agents.get_mut(id) else {
+            continue;
+        };
+        if let Some(marker_status) = active_agent_running_marker_status(
+            app_dir,
+            status,
+            light.running_marker,
+            light.running_hold,
+            now,
+        ) {
+            status.phase = marker_status.phase;
+            status.updated_at = marker_status.updated_at;
+        }
     }
 }
 

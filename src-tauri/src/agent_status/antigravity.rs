@@ -6,6 +6,7 @@ use std::{
 
 use serde_json::{json, Value};
 
+use super::harness::{Harness, HookCheck, HookEnv, Hooks, ScanRoots};
 use super::markers::AGENT_RUNNING_STALE_AFTER_MS;
 use super::session_scan::pick_title;
 use super::sessions::{session_phase, AgentSessionSummary, TurnState};
@@ -19,6 +20,19 @@ const SAVED_DIR: &str = "agent-antigravity";
 const DATA_DIRS: [&str; 3] = ["antigravity", "antigravity-ide", "antigravity-cli"];
 const HOOK_NAME: &str = "fuyu";
 const MAX_AGE_MS: i64 = 24 * 60 * 60 * 1000;
+
+pub(super) const HARNESS: Harness = Harness {
+    id: PROVIDER,
+    hooks: Some(Hooks {
+        install: |env: &HookEnv| install_hooks(env.home_dir, env.running_script),
+        check: HookCheck::Present(has_hooks),
+    }),
+    status_light: None,
+    sessions: Some(|roots: &ScanRoots, now, window_ms| {
+        roots.local_app_dir.map(|app_dir| sessions(app_dir, now, window_ms)).unwrap_or_default()
+    }),
+    remote: None,
+};
 
 struct Saved {
     at: i64,

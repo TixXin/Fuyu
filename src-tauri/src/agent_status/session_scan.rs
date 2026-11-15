@@ -18,7 +18,8 @@ use super::sessions::{
 };
 use super::snapshot::{current_unix_millis, system_time_to_unix_millis};
 use super::title::{codex_thread_name, folder_title, user_prompt_in_record};
-use super::{antigravity, dsh, workbuddy};
+use super::harness::{self, ScanRoots};
+use super::workbuddy;
 
 pub(super) const ACTIVE_WINDOW_MS: i64 = 2 * 60 * 60 * 1000;
 const MAX_SESSIONS: usize = 12;
@@ -96,10 +97,8 @@ fn scan(
         }
     }
     cache.forget_missing(home_dir, &sessions);
-    if let Some(app_dir) = app_dir {
-        sessions.extend(antigravity::sessions(app_dir, now, window_ms));
-        sessions.extend(dsh::sessions(home_dir, now, window_ms));
-    }
+    let roots = ScanRoots { home_dir, local_app_dir: app_dir };
+    sessions.extend(harness::extra_sessions(&roots, now, window_ms));
 
     let is_active = |phase: &str| matches!(phase, "running" | "waiting");
     sessions.sort_by_key(|session| (!is_active(session.phase), -session.updated_at));

@@ -3,6 +3,7 @@ use std::{fs, path::Path};
 use serde_json::{json, Value};
 
 use super::claude_hooks::install_claude_code_hook_events;
+use super::harness::{Harness, HookCheck, HookEnv, Hooks};
 use super::reply_text::{asks_user, plain_reply};
 use super::sessions::{SessionTail, TurnState, LAST_MESSAGE_MAX_CHARS};
 use super::title::{display_title, prompt_title, shorten, tag_content};
@@ -14,6 +15,17 @@ pub(super) const DIR: &str = ".workbuddy";
 pub(super) const APP: &str = "workbuddy";
 const EXE: &str = "WorkBuddy.exe";
 const INTERRUPTED: &str = "Interrupted by user";
+
+pub(super) const HARNESS: Harness = Harness {
+    id: PROVIDER,
+    hooks: Some(Hooks {
+        install: |env: &HookEnv| install_hooks(env.home_dir, env.running_script),
+        check: HookCheck::Present(has_hooks),
+    }),
+    status_light: None,
+    sessions: None,
+    remote: None,
+};
 
 pub(super) fn user_query(line: &str) -> Option<String> {
     if !line.contains("<user_query>") {

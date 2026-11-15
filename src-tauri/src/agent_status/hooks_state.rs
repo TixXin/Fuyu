@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::{collections::BTreeMap, path::Path};
 
 use serde::Serialize;
 use serde_json::Value;
@@ -18,8 +18,8 @@ pub(super) enum HookInstallState {
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AgentHooksState {
-    pub(super) codex: HookInstallState,
-    pub(super) claude_code: HookInstallState,
+    #[serde(flatten)]
+    pub(super) agents: BTreeMap<&'static str, HookInstallState>,
     pub(super) scripts_outdated: bool,
 }
 
