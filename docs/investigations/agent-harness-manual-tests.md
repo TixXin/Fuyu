@@ -1,6 +1,6 @@
 # Agent 适配真机实测清单
 
-#179（协作者 ShengLin1001 提的）和 2026-11-15 这一轮 Agent 适配（B26、B27、B28、B30、B32、B33、B44，以及 B29、B34–B37、B46、B48、B49）里只写了代码和单元测试、没在真机上跑过的项目，合成这一份，按要在哪台机器上测分组。任务是 B47。
+#179（协作者 ShengLin1001 提的）和 2026-11-15 这一轮 Agent 适配（B26、B27、B28、B30、B32、B33、B44，以及 B29、B34–B37、B46、B48、B49、B52、B53）里只写了代码和单元测试、没在真机上跑过的项目，合成这一份，按要在哪台机器上测分组。任务是 B47。
 
 怎么用：
 - 测过一项就勾掉，后面写日期、版本和结果；测出问题另开 issue，链接写在那一项后面。
@@ -95,6 +95,26 @@
 - [ ] 打开 TRAE 的「导入 Claude Code 钩子」，看会不会多出一条 Claude Code 会话（B29）
 - [ ] 核对钩子输入的字段名：`session_id`、`cwd`、`workspace_roots`、`prompt`、`tool_name`、`tool_input.command`、`last_assistant_message`、`notification_type`（只看字段名，不抄内容）（B29）
 
+### ZCode（B53，本机没装，装上后测）
+
+- [ ] 「安装/修复」后状态灯卡片里出现「ZCode」、状态已安装；`~/.zcode/cli/config.json` 里 `hooks.enabled` 是 true，`hooks.events` 下有 UserPromptSubmit、PreToolUse、Stop、PermissionRequest（两组），原有内容不动；ZCode 自己的设置 → Hooks 页能看到这几条（B53）
+- [ ] 新开会话问一句：Agent 页列出来，标题对（ZCode 生成标题前显示第一句提问），目录、模型、最近提问和回复都有；跑命令时转圈并显示当前工具；回复完变完成（B53）
+- [ ] 子代理、工作流子任务不单独列出；在 ZCode 里删掉的会话从列表消失（B53）
+- [ ] 跑一条要授权的命令：岛上出卡片，允许 / 拒绝后 ZCode 照做，「交回」回到 ZCode 里问（B53）
+- [ ] 打开回复标记：`~/.zcode/AGENTS.md` 末尾多一段，新回复的末行能认出来（B53）
+- [ ] 点会话：CLI 切到所在终端；桌面版记下进程名和能不能切过去（B53）
+- [ ] 对一遍会话库的字段名：助手消息的模型是 `modelId` 还是 `modelID`，`part` 里工具的 `tool`、`state.status`（只看字段名，不抄内容）（B53）
+
+### Kimi Code（B52，本机没装 CLI，装上后测）
+
+- [ ] 装 `kimi`、登录后「安装/修复」：`~/.kimi-code/config.toml` 末尾多一段岛的 `[[hooks]]`，**`kimi` 还能正常启动**（多写字段会让整个配置加载失败），状态灯卡片里 Kimi Code 显示已安装（B52）
+- [ ] 开新会话问一句：Agent 页出现会话，标题、目录、最近提问对；跑的时候是进行中、有当前工具，跑完变完成并显示最近回复和模型（B52）
+- [ ] 跑一条要批准的命令：岛上显示「等你」，点进去跳到终端；在终端批准后「等你」消失（B52）
+- [ ] 按 Esc 打断时变完成，出错（例如断网）时变失败（B52）
+- [ ] `/rename` 改名后标题跟着变；归档的会话不再出现（B52）
+- [ ] 打开回复标记：`~/.kimi-code/AGENTS.md` 末尾有岛的那段，回复末行能认出来（B52）
+- [ ] 设 `KIMI_CODE_HOME` 到别处再测一遍「安装/修复」和开会话（B52）
+
 ### Codex 和 Claude 桌面 App（B46）
 
 - [ ] 开一个 Codex 会话（CLI 或 Codex Desktop）：Agent 页列出来，标题是 Codex 起的名字（`threads.name` / `session_index.jsonl`），模型、档位对（B46）
@@ -183,6 +203,14 @@
 ### TRAE、TRAE CN（B29）
 
 - [ ] 同 Mac 一节的「安装/修复」、问一句、跑命令三项，走 `.cmd` 脚本（B29）
+
+### ZCode（B53）
+
+- [ ] 同 Mac 一节的「安装/修复」、开会话、授权三项，走 `.cmd` 脚本；记下 ZCode 在 Windows 上用哪个 shell 跑 `type: "command"` 的钩子（B53）
+
+### Kimi Code（B52）
+
+- [ ] 同 Mac 一节的「安装/修复」、开会话、等你、打断四项，钩子经 cmd.exe 跑 `.cmd` / `.ps1`（B52）
 
 ## Linux 服务器（SSH 远程，B26）
 
