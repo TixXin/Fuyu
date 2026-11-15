@@ -2319,6 +2319,28 @@
       }
     },
     {
+      "page": "agents",
+      "zh-CN": {
+        "group": "显示哪些 Agent",
+        "title": "ZCode"
+      },
+      "en": {
+        "group": "Agents shown",
+        "title": "ZCode"
+      }
+    },
+    {
+      "page": "agents",
+      "zh-CN": {
+        "group": "显示哪些 Agent",
+        "title": "Kimi Code"
+      },
+      "en": {
+        "group": "Agents shown",
+        "title": "Kimi Code"
+      }
+    },
+    {
       "page": "agentSessions",
       "zh-CN": {
         "group": "会话列表",
@@ -3014,6 +3036,28 @@
       "en": {
         "group": "AI Agent status light",
         "title": "TRAE CN"
+      }
+    },
+    {
+      "page": "agentConnect",
+      "zh-CN": {
+        "group": "AI Agent 状态灯",
+        "title": "ZCode"
+      },
+      "en": {
+        "group": "AI Agent status light",
+        "title": "ZCode"
+      }
+    },
+    {
+      "page": "agentConnect",
+      "zh-CN": {
+        "group": "AI Agent 状态灯",
+        "title": "Kimi Code"
+      },
+      "en": {
+        "group": "AI Agent status light",
+        "title": "Kimi Code"
       }
     },
     {

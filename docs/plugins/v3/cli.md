@@ -25,7 +25,7 @@ node packages/plugin-cli/bin/fuyu-plugin.mjs <命令> [插件文件夹] [选项]
 
 **退出码**：0 完成；1 有错误（`review` 是红档时也是 1）；2 参数不对。错误和告警写到标准错误，结果写到标准输出。
 
-还没有的：`publish`（打标签、签名、开市场 PR，等市场 CI [#484](https://github.com/TixXin/fuyu/issues/484)）、`dev`（开发模式从文件夹加载、改了自动重载）、换密钥。
+还没有的：`publish`（一条命令签名并开市场 PR；现在按[发布](publish.md)手动开 PR）、`dev`（开发模式从文件夹加载、改了自动重载）、换密钥。
 
 ## 源码怎么放
 
@@ -202,7 +202,7 @@ fuyu-plugin sign [文件夹] [--commit <提交>] [--repository <地址>] [--key 
 }
 ```
 
-`--out <文件>` 另外写一份。这些内容怎么放进市场的提交文件，等市场 CI 定下后写进[发布](publish.md)。
+`--out <文件>` 另外写一份。其中 `version`、`repository`、`commit`、`authorSignature` 四项照抄进市场提交文件 `versions` 的新一行，第一次提交时 `authorKeys` 写 `keygen` 打印的公钥，见[发布](publish.md#提交文件)。
 
 给手动分发的包加作者签名：
 
@@ -229,6 +229,6 @@ const { ok, errors, warnings } = await check("path/to/plugin", { allowExperiment
 ## 待补
 
 - 发到 npm 后的包名、安装方式。
-- `publish`：打标签、签名、开市场 PR，提交文件的格式等市场 CI（[#484](https://github.com/TixXin/fuyu/issues/484)）定下。
+- `publish`：一条命令完成签名、改提交文件、开市场 PR。
 - `dev`：接上正在运行的浮屿，从文件夹加载、改了自动重载、看占用。
 - 换密钥：用旧密钥给新密钥签证明（第 2 版是 `keys rotate`）。

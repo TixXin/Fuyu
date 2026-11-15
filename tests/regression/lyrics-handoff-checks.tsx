@@ -2,6 +2,7 @@ import { act, StrictMode, useState, type CSSProperties } from "react";
 import type { Root } from "react-dom/client";
 import { I18nProvider } from "../../src/i18n";
 import { IslandShell } from "../../src/windows/island/IslandShell";
+import "../../src/windows/island/slots/pages";
 import type { MediaState } from "../../src/features/media/api";
 import type { CurrentLyric } from "../../src/features/media/lyrics/useCurrentLyric";
 import type { MessagePreview } from "../../src/features/messages/messagePreview";
@@ -36,7 +37,7 @@ function Stage({ media }: { media: MediaState }) {
     <IslandShell deviceUse={{ camera: [], microphone: [] }} meeting={meeting} qqNotifications={QQ} wechatReminders={WECHAT} qqMail={MAIL} pluginNotifications={PLUGINS} preview={preview}
       mode="collapsed" page="todo" isTucked={false} isDetached showTitle={false} showCollapsedText collapsedTaskTitle="剩余3个待办" collapsedTodoCount={null}
       agentSession={null} lyricLine={lyric} activeAgentSessionCount={0} appearanceMode="classic" nativeGlassState="disabled" agentVisualState="idle" agentStatusLabel=""
-      mediaState={media} features={{ todo: true, music: true, clipboard: false, shelf: false, qq: true, wechat: true, qqMail: true, agents: true, translation: false }}
+      mediaState={media} features={{ todo: true, music: true, clipboard: false, shelf: false, qq: true, wechat: true, qqMail: true, agents: true, translation: false, calendar: false, screenshots: false, timer: false }}
       shelfCount={null} onOpenPage={() => {}} onOpenMessages={() => {}} onPageChange={() => {}} onWindowDragStart={() => {}} onCollapse={() => {}}
       onResetPosition={() => {}} minimizesToTray onMinimize={() => {}} onOpenSettings={() => {}} onOpenTranslator={() => {}} translationPeek={null} onOpenTranslationPeek={() => {}}
       onTuck={() => {}} onReveal={() => {}} pageDigitModifiers="Alt" hoverSwitchPage={false} hoverSwitchDelayMs={0}>

@@ -26,6 +26,9 @@ $dir = $entry.InstallLocation.Trim('"')
 $exe = Join-Path $dir "fuyu.exe"
 if (-not (Test-Path $exe)) { Fail "No fuyu.exe in $dir" }
 Write-Host "Installed $($entry.DisplayVersion) to $dir"
+foreach ($file in @("plugins-v3\host\main.mjs", "plugins-v3\builtins\builtins.json")) {
+  if (-not (Test-Path (Join-Path $dir $file))) { Fail "No $file in $dir" }
+}
 
 $data = Join-Path $env:USERPROFILE ".fuyu"
 foreach ($old in @($data, (Join-Path $env:APPDATA "com.tixxin.fuyu"))) {

@@ -3,10 +3,12 @@ import claudeCodeIcon from "../../assets/brands/claude-code.png";
 import codebuddyIcon from "../../assets/brands/codebuddy.svg";
 import codexIcon from "../../assets/brands/codex.webp";
 import dshIcon from "../../assets/brands/dsh.png";
+import kimiCodeIcon from "../../assets/brands/kimi-code.png";
 import opencodeIcon from "../../assets/brands/opencode.png";
 import qoderIcon from "../../assets/brands/qoder.png";
 import qwenIcon from "../../assets/brands/qwen.png";
 import traeIcon from "../../assets/brands/trae.png";
+import zcodeIcon from "../../assets/brands/zcode.png";
 import workbuddyIcon from "../../assets/brands/workbuddy.svg";
 import type { SessionProvider } from "./api";
 import "./AgentProviderIcon.css";
@@ -23,6 +25,8 @@ const PROVIDER_ICONS: Record<SessionProvider, string> = {
   qwen: qwenIcon,
   trae: traeIcon,
   traeCn: traeIcon,
+  zcode: zcodeIcon,
+  kimiCode: kimiCodeIcon,
 };
 
 export function AgentProviderIcon({ provider, size = 16 }: { provider: SessionProvider; size?: number }) {

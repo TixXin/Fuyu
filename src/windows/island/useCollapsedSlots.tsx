@@ -3,7 +3,6 @@ import {
   AGENT_ICON_PET_HEIGHT,
   CENTER_PATTERN_PLUGIN_ID,
   CenterPattern,
-  CollapsedCenter,
   MARK_HEIGHT,
   MARK_WIDTH,
   PetSprite,
@@ -11,23 +10,23 @@ import {
   centerHeight,
   centerPatternChoice,
   centerPatternSize,
-  centerWidth,
   usePageHidden,
   usePetMood,
   usePetSheet,
   type AgentActivity,
 } from "../../features/center-pattern";
-import { CLAUDE_USAGE_GAUGE_WIDTH, shownUsageProviders, usageItemId } from "../../features/claude-usage/usageRing";
 import { useBuiltinPlugin } from "../../features/plugins/useBuiltinPlugin";
 import type { AgentSessionSummary } from "../../features/agent-status/api";
 import { SESSION_RING_STYLES, SessionRing, type SessionRingStyle } from "../../features/session-ring/SessionRing";
 import { sessionRingCounts } from "../../features/session-ring/ringCounts";
 import { isCollapsedItemHidden } from "../../features/appearance/collapsedItems";
 import { useCollapsedPlacements } from "../../features/appearance/useCollapsedPlacements";
+import { SlotView } from "../../features/plugin-kernel/SlotView";
+import { useSlotEntries } from "../../features/plugin-kernel/useSlotEntries";
 import { TIMER_PLUGIN_ID, useTimers } from "../../features/timer/store";
-import { hasChip, TimerChip, TIMER_CHIP_WIDTH } from "../../features/timer/TimerChip";
+import { hasChip } from "../../features/timer/TimerChip";
 import type { CollapsedSlots } from "./types";
-import { UsageGaugeSlot } from "./slots/collapsed";
+import { collapsedCenterSlot, collapsedGaugeSlot, slotWidth, type CollapsedCenterContext, type CollapsedGaugeContext } from "./slots/collapsed";
 
 const EMPTY: CollapsedSlots = {};
 const CLAUDE_USAGE_PLUGIN_ID = "focusd.claude-usage";
@@ -50,16 +49,11 @@ export function useCollapsedSlots({ paused, agents, sessions, unseen, agentsOn, 
   const usage = useBuiltinPlugin(CLAUDE_USAGE_PLUGIN_ID);
   const sessionRing = useBuiltinPlugin(SESSION_RING_PLUGIN_ID);
   const timerPlugin = useBuiltinPlugin(TIMER_PLUGIN_ID);
-  const timers = useTimers().timers;
+  const timerRunning = hasChip(useTimers().timers);
   const showRemaining = usage.settings.show === "remaining";
   const ringStyle = SESSION_RING_STYLES.find((known) => known === sessionRing.settings.style) ?? ("grid" satisfies SessionRingStyle);
   const ringCount = sessionRing.settings.showCount !== false;
   const { placements } = useCollapsedPlacements();
-  const providers = useMemo(
-    () => shownUsageProviders(usage.settings).filter((provider) => !isCollapsedItemHidden(placements, usageItemId(provider))),
-    [usage.settings, placements],
-  );
-  const timerShown = timerPlugin.enabled && hasChip(timers) && !isCollapsedItemHidden(placements, "timer");
   const lightShown = markLight && !isCollapsedItemHidden(placements, "status-light");
   const mood = usePetMood(agents, center.enabled || lightShown);
   const choice = useMemo(() => centerPatternChoice(center.settings), [center.settings]);
@@ -67,15 +61,30 @@ export function useCollapsedSlots({ paused, agents, sessions, unseen, agentsOn, 
   const sheet = usePetSheet(center.enabled ? choice.petId : null, center);
   const hidden = usePageHidden();
   const still = paused || hidden;
+  const entries = useSlotEntries(collapsedGaugeSlot);
+  const [centerEntry] = useSlotEntries(collapsedCenterSlot);
+  const gaugeContext = useMemo<CollapsedGaugeContext>(
+    () => ({ paused: still, usage: { enabled: usage.enabled, settings: usage.settings, showRemaining }, timer: { enabled: timerPlugin.enabled, running: timerRunning } }),
+    [still, usage.enabled, usage.settings, showRemaining, timerPlugin.enabled, timerRunning],
+  );
+  const gauges = useMemo(
+    () => entries.filter((entry) => entry.group === "gauges" && !(entry.hideable && isCollapsedItemHidden(placements, entry.id)) && (entry.shown?.(gaugeContext) ?? true)),
+    [entries, placements, gaugeContext],
+  );
+  const centerContext = useMemo<CollapsedCenterContext>(
+    () => ({ enabled: center.enabled, choice, sheet, mood, paused: still, size }),
+    [center.enabled, choice, sheet, mood, still, size],
+  );
   return useMemo(() => {
     const slots: CollapsedSlots = {};
+    if (centerEntry && (centerEntry.shown?.(centerContext) ?? true)) {
+      slots.center = <SlotView slot={collapsedCenterSlot} props={centerContext} />;
+      slots.centerWidth = slotWidth(centerEntry.width, centerContext);
+    }
     if (center.enabled) {
       const pet = typeof sheet === "string" ? sheet : null;
-      slots.center = <CollapsedCenter choice={choice} sheet={sheet} mood={mood} paused={still} size={size} />;
-      const mark = choice.pattern === "mark";
-      slots.centerWidth = centerWidth(pet ? "pet" : choice.pattern === "pet" ? "eyes" : choice.pattern, size);
       if (pet) slots.agentIcon = <PetSprite src={pet} mood={mood} paused={still} height={AGENT_ICON_PET_HEIGHT} />;
-      else if (mark && !lightShown) {
+      else if (choice.pattern === "mark" && !lightShown) {
         slots.agentIcon = <CenterPattern pattern="mark" mood={mood} paused={still} height={centerHeight("mark", size)} />;
         slots.agentIconWidth = agentIconMarkExtraWidth(size);
       }
@@ -88,18 +97,15 @@ export function useCollapsedSlots({ paused, agents, sessions, unseen, agentsOn, 
         );
       }
     }
-    if (usage.enabled && providers.length > 0) {
-      slots.gauges = providers.map((provider) => ({ id: usageItemId(provider), node: <UsageGaugeSlot key={provider.id} providers={[provider]} showRemaining={showRemaining} /> }));
-      slots.sideWidth = providers.length * CLAUDE_USAGE_GAUGE_WIDTH;
+    if (gauges.length > 0) {
+      slots.gauges = gauges.map(({ id }) => ({
+        id,
+        node: <SlotView key={id} slot={collapsedGaugeSlot} props={gaugeContext} select={(items) => items.filter((item) => item.id === id)} />,
+      }));
     }
-    if (timerShown) {
-      slots.gauges = [...(slots.gauges ?? []), { id: "timer", node: <TimerChip key="timer" paused={still} /> }];
-      slots.sideWidth = (slots.sideWidth ?? 0) + TIMER_CHIP_WIDTH;
-    }
-    if (lightShown) {
-      slots.statusLight = <CenterPattern pattern="mark" mood={mood} paused={still} height={MARK_HEIGHT} />;
-      slots.sideWidth = (slots.sideWidth ?? 0) + MARK_LIGHT_EXTRA_WIDTH;
-    }
+    const sideWidth = gauges.reduce((sum, entry) => sum + slotWidth(entry.width, gaugeContext), lightShown ? MARK_LIGHT_EXTRA_WIDTH : 0);
+    if (sideWidth > 0) slots.sideWidth = sideWidth;
+    if (lightShown) slots.statusLight = <CenterPattern pattern="mark" mood={mood} paused={still} height={MARK_HEIGHT} />;
     return Object.keys(slots).length === 0 ? EMPTY : slots;
-  }, [center.enabled, usage.enabled, providers, showRemaining, sessionRing.enabled, timerShown, ringStyle, ringCount, agentsOn, sessions, unseen, onOpenAgents, choice, size, sheet, mood, still, lightShown]);
+  }, [centerEntry, centerContext, center.enabled, gauges, gaugeContext, sessionRing.enabled, ringStyle, ringCount, agentsOn, sessions, unseen, onOpenAgents, choice, size, sheet, mood, still, lightShown]);
 }

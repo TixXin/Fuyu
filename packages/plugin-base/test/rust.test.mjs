@@ -1,10 +1,11 @@
 import assert from "node:assert/strict";
+import { join } from "node:path";
 import { createInterface } from "node:readline";
 import { PassThrough } from "node:stream";
 import { after, test } from "node:test";
 import { startHost } from "@fuyu/plugin-base/host";
 import { connect } from "../src/host/rpc.mjs";
-import { config, sleep, until, workspace } from "./workspace.mjs";
+import { builtinFiles, config, sleep, until, workspace } from "./workspace.mjs";
 
 const cleanup = [];
 after(async () => {
@@ -46,16 +47,26 @@ const METHODS = {
   },
 };
 
-async function host(rust = fakeRust(METHODS)) {
-  const space = workspace({ "plugins.yml": config([]) });
-  const started = await startHost({ dir: space.dir, rpc: rust.rpc });
+const BUILTIN = builtinFiles([{ id: "probe", kind: "builtin", file: "host.mjs" }], {
+  "host.mjs": `export const name = "probe";\nexport function apply(ctx) {\n  globalThis.builtinProbe = ctx;\n}\n`,
+});
+
+async function startWithBuiltin(rpc, files = {}, dir = ".") {
+  globalThis.builtinProbe = null;
+  const space = workspace({ "plugins.yml": config([]), ...BUILTIN, ...files });
+  const started = await startHost({ dir: join(space.dir, dir), builtins: join(space.dir, "builtins"), rpc });
   cleanup.push(space.remove, () => started.stop());
   await started.settle();
-  return { started, rust };
+  assert.ok(globalThis.builtinProbe, "the built-in probe plugin started");
+  return started;
+}
+
+async function host(rust = fakeRust(METHODS)) {
+  return { started: await startWithBuiltin(rust.rpc), rust };
 }
 
 async function plugin(started, name, apply) {
-  const fiber = started.ctx.plugin({ name, apply });
+  const fiber = globalThis.builtinProbe.plugin({ name, apply });
   await fiber;
   return fiber;
 }
@@ -136,10 +147,68 @@ test("a call times out naming the method and how long it waited, and when Rust g
 });
 
 test("without Rust, ctx.rust.call fails with peer-gone instead of hanging", async () => {
-  const space = workspace({ "plugins.yml": config([]) });
-  const started = await startHost({ dir: space.dir });
-  cleanup.push(space.remove, () => started.stop());
+  const started = await startWithBuiltin(null);
   let caller;
   await plugin(started, "caller", (ctx) => void (caller = ctx.rust));
   await assert.rejects(caller.call("app.echo"), { code: "peer-gone" });
+});
+
+function manifest(name) {
+  return JSON.stringify({
+    name,
+    version: "1.0.0",
+    type: "module",
+    license: "MIT",
+    repository: "github:ann/plugin",
+    engines: { fuyu: ">=0.5.0" },
+    fuyu: { manifest: 1, displayName: { "zh-CN": "示例", en: "Example" }, description: { "zh-CN": "示例插件", en: "An example plugin" }, icon: "icon.png", categories: ["utilities"], host: "host.mjs" },
+  });
+}
+
+const ASKS = (who) => `export const name = ${JSON.stringify(who)};
+export async function apply(ctx) {
+  const tried = { call: await ctx.rust.call("app.echo", { from: ${JSON.stringify(who)} }).then(() => "answered", (error) => [error.code, error.data]) };
+  try {
+    ctx.rust.on("clipboard.changed", () => {});
+    tried.on = "listening";
+  } catch (error) {
+    tried.on = error.code;
+  }
+  globalThis.rustAsks[${JSON.stringify(who)}] = tried;
+}
+`;
+
+test("only built-in plugins call Rust: market, hand-installed, development and loose plugins get forbidden", async () => {
+  globalThis.rustAsks = {};
+  const rust = fakeRust(METHODS);
+  const started = await startWithBuiltin(
+    rust.rpc,
+    {
+      "data/plugins.yml": ['- id: "@ann/market"\n  source: market\n', '- id: "@ann/manual"\n  source: manual\n', "- id: lab\n  source: dev\n  path: ../app/lab\n", "- id: loose\n  name: ./loose.mjs\n"].join(""),
+      "data/packages/@ann/market/package.json": manifest("@ann/market"),
+      "data/packages/@ann/market/host.mjs": ASKS("market"),
+      "data/packages/@ann/manual/package.json": manifest("@ann/manual"),
+      "data/packages/@ann/manual/host.mjs": ASKS("manual"),
+      "app/lab/package.json": manifest("@ann/lab"),
+      "app/lab/host.mjs": ASKS("dev"),
+      "data/loose.mjs": ASKS("loose"),
+    },
+    "data",
+  );
+  assert.ok(await until(() => Object.keys(globalThis.rustAsks).length === 4), JSON.stringify(started.status()));
+  assert.deepEqual(globalThis.rustAsks, {
+    market: { call: ["forbidden", { plugin: "@ann/market", source: "market" }], on: "forbidden" },
+    manual: { call: ["forbidden", { plugin: "@ann/manual", source: "manual" }], on: "forbidden" },
+    dev: { call: ["forbidden", { plugin: "lab", source: "dev" }], on: "forbidden" },
+    loose: { call: ["forbidden", { plugin: "loose", source: null }], on: "forbidden" },
+  });
+  let fromRoot;
+  await started.ctx.plugin({ name: "root-level", apply: (ctx) => void (fromRoot = ctx.rust) });
+  await assert.rejects(fromRoot.call("app.echo"), { code: "forbidden", data: { plugin: null, source: null } });
+  assert.throws(() => started.ctx.rust.on("clipboard.changed", () => {}), { code: "forbidden" });
+  assert.equal(rustHooks(started.ctx), 0);
+  let builtin;
+  await plugin(started, "inside-builtin", (ctx) => void (builtin = ctx.rust));
+  assert.deepEqual(await builtin.call("app.echo", { from: "builtin" }), { echo: { from: "builtin" } });
+  assert.deepEqual(rust.seen.filter((message) => message.method === "app.echo").map((message) => message.params), [{ from: "builtin" }]);
 });

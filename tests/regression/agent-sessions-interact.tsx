@@ -50,6 +50,7 @@ function check(condition: unknown, label: string) {
   messages.push(`PASS ${label}`);
 }
 const wait = (ms: number) => act(async () => { await new Promise((resolve) => setTimeout(resolve, ms)); });
+const settle = async (done: () => boolean, ms = 2000) => { for (let spent = 0; !done() && spent < ms; spent += 50) await wait(50); };
 const archived: string[] = [];
 let removed: AgentSessionSummary | null = null;
 const removal: SessionRemoval = { remove: (session) => { archived.push(session.sessionId); }, removed, undo: () => { removed = null; } };
@@ -173,8 +174,9 @@ async function runChecks() {
     await press(rows[1], "Backspace");
     check(archived[archived.length - 1] === "b", "Backspace 也归档");
     rows[2].focus();
-    await wait(200);
-    check(getComputedStyle(items()[2].querySelector(".agent-session__more")!).opacity === "1", "键盘选中时「⋯」出现");
+    const moreShown = () => getComputedStyle(items()[2].querySelector(".agent-session__more")!).opacity === "1";
+    await settle(moreShown);
+    check(moreShown(), "键盘选中时「⋯」出现");
 
     await render("list", { withRemoval: false });
     await wait(20);

@@ -1,6 +1,9 @@
 import { PEER_GONE, RpcError } from "./rpc.mjs";
+import { SOURCE } from "./sources.mjs";
 
 export const RUST_TIMEOUT_MS = 120_000;
+const FORBIDDEN = "forbidden";
+const RUST_SOURCE = "builtin";
 const NAME = /^[a-z][A-Za-z0-9-]*(\.[a-z][A-Za-z0-9-]*)*$/;
 const eventKey = (name) => `rust:${name}`;
 
@@ -10,6 +13,30 @@ export function rustError(code, message, data) {
 
 function checkName(kind, name) {
   if (typeof name !== "string" || !NAME.test(name)) throw rustError("bad-params", `${String(name)} is not the name of a Rust ${kind}`);
+}
+
+function entryOf(ctx) {
+  let fiber = ctx?.fiber;
+  while (fiber) {
+    if (fiber.entry) return fiber.entry;
+    const next = fiber.parent?.fiber;
+    if (!next || next === fiber) return null;
+    fiber = next;
+  }
+  return null;
+}
+
+function rustCaller(ctx) {
+  const entry = entryOf(ctx);
+  const source = entry?.options?.[SOURCE]?.source ?? null;
+  return { plugin: entry?.options?.id ?? null, source, allowed: source === RUST_SOURCE };
+}
+
+function checkCaller(ctx, what) {
+  const caller = rustCaller(ctx);
+  if (caller.allowed) return;
+  const who = caller.plugin ? `${caller.plugin} (${caller.source ?? "no source"})` : "code outside any plugin";
+  throw rustError(FORBIDDEN, `${what}: only built-in plugins call Rust directly; ${who} goes through services instead`, { plugin: caller.plugin, source: caller.source });
 }
 
 export class RustBridge {
@@ -44,6 +71,7 @@ export class RustBridge {
 
   call(ctx, method, params, options = {}) {
     try {
+      checkCaller(ctx, `ctx.rust.call(${String(method)})`);
       checkName("method", method);
     } catch (error) {
       return Promise.reject(error);
@@ -56,6 +84,7 @@ export class RustBridge {
   }
 
   on(ctx, event, listener) {
+    checkCaller(ctx, `ctx.rust.on(${String(event)})`);
     checkName("event", event);
     if (typeof listener !== "function") throw rustError("bad-params", `ctx.rust.on(${event}) needs a listener`);
     return ctx.on(eventKey(event), listener);

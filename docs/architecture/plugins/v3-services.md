@@ -132,7 +132,7 @@ export async function apply(ctx) {
 
 ### Rust 那条路
 
-- **宿主调 Rust**：不是服务，是 E36.3.3 的 `ctx.rust.call(方法, 参数)`。内置插件把它包成服务（`translator/v1` 的实现里调 `ctx.rust.call("translator.translate", …)`），使用者看到的仍然是服务。
+- **宿主调 Rust**：不是服务，是 E36.3.3 的 `ctx.rust.call(方法, 参数)`，**只有内置插件能用**，别的插件回 `forbidden`（E36.3.18，见 [v3-boundary.md](v3-boundary.md)「宿主发给 Rust 的请求」）。内置插件把它包成服务（`translator/v1` 的实现里调 `ctx.rust.call("translator.translate", …)`），第三方插件和窗口用的是服务。
 - **Rust 一侧怎么提供方法**（E36.3.4）：在领域的自由函数上标 `#[plugin_base::host_service("translator.translate")]`，同步或 `async` 都行，可以和 `#[tauri::command]` 叠在同一个函数上（原函数原样保留，Tauri 那边照旧）。例子是 `src-tauri/src/platform_support.rs` 的 `get_platform_support`（`app.platformSupport`）和 `src-tauri/src/plugin_kernel/methods.rs`。
 
   ```rust
@@ -198,7 +198,7 @@ export async function apply(ctx) {
 | 服务 | 方法 | 事件 | 说明 |
 |---|---|---|---|
 | `timers/v1` | `list`、`start`、`pause`、`resume`、`extend`、`remove`、`dismissRinging` | `changed`（全部计时器和宿主当前时间）、`due`（到点的那个） | 计时规则用 `src/features/timer/timers.ts` 的纯函数（E36.3.5）。`Timer` 的形状和 `timers.ts` 一致；类型包不能 import `src/`，E36.3.5 加一条类型测试核对两边相同。超过 12 个回 `limit`，找不到 id 回 `not-found` |
-| `translator/v1` | `translate`（60 秒）、`rewrite`（120 秒，流式，片段 `{ piece }`）、`engines` | 无 | **接口里没有密钥**：没有存、取密钥的方法，`engines` 只回每个引擎 `hasSecret` 的布尔值；保存密钥照旧走窗口的 `invoke("save_translation_secret")`（只进不出），翻译时 Rust 自己读（E36.3.7、E36.3.8）。`engine` 可选，不传用设置里的。没配密钥回 `no-secret` |
+| `translator/v1` | `translate`（60 秒）、`rewrite`（120 秒，流式，片段 `{ piece }`）、`engines` | 无 | **接口里没有密钥**：没有存、取密钥的方法，`engines` 只回每个引擎 `hasSecret` 的布尔值；保存密钥照旧走窗口的 `invoke("save_translation_secret")`（只进不出），翻译时 Rust 自己读（E36.3.7、E36.3.8）。`engine` 可选，只收 `{ engine, model }`，多给的字段回 `bad-params`；不传时现在用 DeepSeek（设置里选的引擎存在窗口里，宿主还读不到）。**自定义接口暂不开放**（E36.3.18）：它的地址只存在窗口的设置里，经服务传地址就等于让调用方决定 Rust 把密钥发到哪里（[v3-secrets.md](v3-secrets.md) 原则 7），所以 Rust 给宿主的入口没有地址参数，`engine: "custom"` 回 `bad-params`（`data.reason` 是 `translation.customUnavailable`），等自定义地址存进 Rust 后再开放。没配密钥回 `no-secret` |
 
 ## 代码在哪
 

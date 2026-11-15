@@ -1,6 +1,6 @@
 import type { AgentProvider, SessionProvider } from "./api";
 
-const VERBATIM_EFFORT = ["workbuddy", "antigravity", "dsh", "opencode", "qoder", "codebuddy", "qwen", "trae", "traeCn"] as const;
+const VERBATIM_EFFORT = ["workbuddy", "antigravity", "dsh", "opencode", "qoder", "codebuddy", "qwen", "trae", "traeCn", "zcode", "kimiCode"] as const;
 
 function isVerbatim(provider: SessionProvider): provider is (typeof VERBATIM_EFFORT)[number] {
   return VERBATIM_EFFORT.some((known) => known === provider);

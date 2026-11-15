@@ -1,11 +1,19 @@
 use reqwest::Url;
+use serde::Serialize;
 use std::time::Duration;
 
 use super::provider::{completions_url, find_provider, parse_completion, resolve_model, Provider};
 use super::{read_secret, stream};
 use crate::user_error::UserError;
 
-pub(super) type Pieces<'a> = &'a (dyn Fn(String) + Send + Sync);
+pub(super) type Pieces<'a> = &'a (dyn Fn(String) -> bool + Send + Sync);
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+#[cfg_attr(test, derive(ts_rs::TS))]
+pub(crate) struct Translated {
+    pub(super) text: String,
+    pub(super) engine: &'static str,
+}
 
 pub(super) async fn complete(
     instruction: &str,
@@ -14,7 +22,7 @@ pub(super) async fn complete(
     base_url: Option<&str>,
     model: Option<&str>,
     on_chunk: Option<Pieces<'_>>,
-) -> Result<String, UserError> {
+) -> Result<Translated, UserError> {
     let provider = find_provider(provider)?;
     let endpoint = completions_url(provider, base_url)?;
     let model = resolve_model(provider, model)?;
@@ -31,7 +39,7 @@ pub(super) async fn request(
     instruction: &str,
     text: &str,
     on_chunk: Option<Pieces<'_>>,
-) -> Result<String, UserError> {
+) -> Result<Translated, UserError> {
     let name = provider.name;
     let client = reqwest::Client::builder()
         .timeout(Duration::from_secs(30))
@@ -59,12 +67,14 @@ pub(super) async fn request(
             .arg("status", status));
     }
     let streamed = response.headers().get(reqwest::header::CONTENT_TYPE).and_then(|value| value.to_str().ok()).is_some_and(|kind| kind.starts_with("text/event-stream"));
-    if let (Some(on_chunk), true) = (on_chunk, streamed) {
-        return stream::read(response, provider, on_chunk).await;
-    }
-    let result: serde_json::Value = response
-        .json()
-        .await
-        .map_err(|error| UserError::new("net.unreadable", format!("Could not read {name}'s answer.")).arg("service", name).detail(error))?;
-    parse_completion(provider, &result)
+    let text = if let (Some(on_chunk), true) = (on_chunk, streamed) {
+        stream::read(response, provider, on_chunk).await?
+    } else {
+        let result: serde_json::Value = response
+            .json()
+            .await
+            .map_err(|error| UserError::new("net.unreadable", format!("Could not read {name}'s answer.")).arg("service", name).detail(error))?;
+        parse_completion(provider, &result)?
+    };
+    Ok(Translated { text, engine: provider.id })
 }

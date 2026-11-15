@@ -15,6 +15,7 @@ pub enum Agent {
     Qwen,
     Trae,
     TraeCn,
+    Zcode,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
@@ -27,7 +28,7 @@ pub enum Kind {
 pub(super) const QUESTION_PATH: &str = "/claude/ask-user-question";
 pub(super) const ACTIVITY_PATH: &str = "/claude/activity";
 
-const AGENTS: [Agent; 11] = [
+const AGENTS: [Agent; 12] = [
     Agent::ClaudeCode,
     Agent::Codex,
     Agent::Workbuddy,
@@ -39,6 +40,7 @@ const AGENTS: [Agent; 11] = [
     Agent::Qwen,
     Agent::Trae,
     Agent::TraeCn,
+    Agent::Zcode,
 ];
 
 pub(super) fn route(path: &str) -> Option<(Agent, Kind)> {
@@ -61,6 +63,7 @@ impl Agent {
             Self::Dsh => "/dsh/pre-tool-use",
             Self::Opencode => "/opencode/permission",
             Self::Qoder => "/qoder/permission-request",
+            Self::Zcode => "/zcode/permission-request",
             Self::Codebuddy => "/codebuddy/permission-request",
             Self::Qwen => "/qwen/permission-request",
             Self::Trae => "/trae/pre-tool-use",
@@ -77,6 +80,7 @@ impl Agent {
             Self::Dsh => "dsh",
             Self::Opencode => "opencode",
             Self::Qoder => "qoder",
+            Self::Zcode => "zcode",
             Self::Codebuddy => "codebuddy",
             Self::Qwen => "qwen",
             Self::Trae => "trae",
@@ -223,7 +227,7 @@ pub(super) fn permission_response(
 ) -> String {
     let reason = || message.map(str::trim).filter(|text| !text.is_empty()).unwrap_or(DEFAULT_DENY_MESSAGE);
     match agent {
-        Agent::ClaudeCode | Agent::Codex | Agent::Workbuddy | Agent::Qoder | Agent::Codebuddy | Agent::Qwen => {
+        Agent::ClaudeCode | Agent::Codex | Agent::Workbuddy | Agent::Qoder | Agent::Codebuddy | Agent::Qwen | Agent::Zcode => {
             hook_response(decision, message, suggestions)
         }
         Agent::Antigravity => match decision {

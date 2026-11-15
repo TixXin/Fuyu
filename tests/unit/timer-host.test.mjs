@@ -78,7 +78,7 @@ test("the timer plugin provides timers/v1 and rings a countdown when it is due",
   const host = await open(dir);
   assert.equal(timerStatus(host).state, "running");
   assert.equal(timerStatus(host).kind, "builtin");
-  assert.deepEqual(host.services().map((service) => [service.name, service.plugin]), [["timers/v1", "timer"]]);
+  assert.deepEqual(host.services().filter((service) => service.plugin === "timer").map((service) => [service.name, service.plugin]), [["timers/v1", "timer"]]);
   const win = window(host);
   const { timer } = await win.call("start", { kind: "countdown", durationMs: 1000 });
   assert.equal(timer.kind, "countdown");
@@ -148,7 +148,7 @@ test("when the plugin stops it leaves no timers, listeners or open files", async
   assert.equal(timerStatus(host).state, "disabled");
   assert.equal(timerStatus(host).usage.timers, 0);
   assert.equal(host.timers().timer, undefined);
-  assert.deepEqual(host.services(), []);
+  assert.deepEqual(host.services().filter((service) => service.plugin === "timer"), []);
   assert.equal(host.status().find((plugin) => plugin.id === "timer-listener").state, "waiting");
   assert.equal(serviceHooks(host), 0);
   assert.equal(liveTimers(host), 0);

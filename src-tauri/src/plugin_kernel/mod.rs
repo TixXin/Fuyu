@@ -18,8 +18,8 @@ static PLUGINS_DIR: OnceLock<PathBuf> = OnceLock::new();
 static TRACKER: OnceLock<Mutex<safe_mode::Tracker>> = OnceLock::new();
 static STOPPING: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
-fn enabled(development: bool, switch: Option<&str>) -> bool {
-    development && switch == Some("1")
+fn enabled(switch: Option<&str>) -> bool {
+    switch == Some("1")
 }
 
 fn host_script() -> PathBuf {
@@ -30,12 +30,32 @@ fn builtins_dir() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../src/features")
 }
 
+const BUNDLED_HOST: &str = "plugins-v3/host/main.mjs";
+const BUNDLED_BUILTINS: &str = "plugins-v3/builtins";
+
+#[derive(Debug, Clone, PartialEq)]
+struct HostFiles {
+    script: PathBuf,
+    builtins: PathBuf,
+}
+
+fn host_files(resources: Option<&std::path::Path>, development: bool) -> HostFiles {
+    match resources.filter(|_| !development) {
+        Some(dir) if dir.join(BUNDLED_HOST).is_file() => HostFiles { script: dir.join(BUNDLED_HOST), builtins: dir.join(BUNDLED_BUILTINS) },
+        _ => HostFiles { script: host_script(), builtins: builtins_dir() },
+    }
+}
+
 fn window_origins(dev_url: Option<&str>) -> Vec<String> {
     let mut origins: Vec<String> = RELEASE_ORIGINS.iter().map(|origin| (*origin).to_owned()).collect();
     if let Some(url) = dev_url.and_then(|url| url.split_once("://").map(|(scheme, rest)| format!("{scheme}://{}", rest.split('/').next().unwrap_or(rest)))) {
         origins.push(url);
     }
     origins
+}
+
+fn host_origins(development: bool, dev_url: Option<&str>) -> Vec<String> {
+    window_origins(dev_url.filter(|_| development))
 }
 
 const SAFE_SWITCH: &str = "FUYU_PLUGINS_V3_SAFE";
@@ -46,17 +66,17 @@ struct HostMode {
     safe: Option<String>,
 }
 
-fn host_args(dir: PathBuf, origins: &[String], mode: &HostMode) -> Vec<std::ffi::OsString> {
+fn host_args(dir: PathBuf, files: &HostFiles, origins: &[String], mode: &HostMode) -> Vec<std::ffi::OsString> {
     let mut args: Vec<std::ffi::OsString> = vec!["--disallow-code-generation-from-strings".into()];
     if mode.development {
         args.push("--expose-internals".into());
     }
     args.extend([
-        host_script().into(),
+        files.script.clone().into(),
         "--dir".into(),
         dir.into(),
         "--builtins".into(),
-        builtins_dir().into(),
+        files.builtins.clone().into(),
         "--app-version".into(),
         env!("CARGO_PKG_VERSION").into(),
         "--watch".into(),
@@ -143,7 +163,7 @@ fn tracker() -> Option<std::sync::MutexGuard<'static, safe_mode::Tracker>> {
     TRACKER.get()?.lock().ok()
 }
 
-fn spec_for(node: PathBuf, dir: PathBuf, origins: Vec<String>, development: bool) -> impl FnMut(u32) -> HostSpec + Send + 'static {
+fn spec_for(node: PathBuf, dir: PathBuf, files: HostFiles, origins: Vec<String>, development: bool) -> impl FnMut(u32) -> HostSpec + Send + 'static {
     let env = host_env(cfg!(windows), std::env::var(THREADPOOL).ok().as_deref());
     move |generation| {
         let safe = tracker().and_then(|mut tracker| tracker.starting(generation));
@@ -151,7 +171,7 @@ fn spec_for(node: PathBuf, dir: PathBuf, origins: Vec<String>, development: bool
             eprintln!("[plugins-v3] safe mode: {} ({:?}, {} failed starts)", safe.mode, safe.cause, safe.failures);
         }
         let mode = HostMode { development, safe: safe.map(|safe| safe.mode) };
-        HostSpec { program: node.clone(), args: host_args(dir.clone(), &origins, &mode), env: env.clone(), current_dir: None }
+        HostSpec { program: node.clone(), args: host_args(dir.clone(), &files, &origins, &mode), env: env.clone(), current_dir: None }
     }
 }
 
@@ -175,10 +195,10 @@ fn track(event: &Event) {
     }
 }
 
-fn start(home: PathBuf, dir: PathBuf, origins: Vec<String>, development: bool, serve: plugin_base::Serve) -> Result<(), String> {
+fn start(home: PathBuf, dir: PathBuf, files: HostFiles, origins: Vec<String>, development: bool, serve: plugin_base::Serve) -> Result<(), String> {
     let serve = std::sync::Arc::new(serve);
     let node = choose_node(&home)?;
-    let supervisor = Supervisor::start_serving(spec_for(node.path, dir, origins, development), containment::shared(), Timing::default(), Some(serve), |event| {
+    let supervisor = Supervisor::start_serving(spec_for(node.path, dir, files, origins, development), containment::shared(), Timing::default(), Some(serve), |event| {
         track(&event);
         report(event);
     })?;
@@ -193,22 +213,27 @@ fn start(home: PathBuf, dir: PathBuf, origins: Vec<String>, development: bool, s
 }
 
 pub(crate) fn init(app: &AppHandle) -> Result<(), String> {
-    if !enabled(cfg!(debug_assertions), std::env::var(SWITCH).ok().as_deref()) {
+    if !enabled(std::env::var(SWITCH).ok().as_deref()) {
         return Ok(());
+    }
+    if !cfg!(debug_assertions) {
+        eprintln!("[plugins-v3] release build: starting the plugin host because {SWITCH}=1");
     }
     let home = crate::home_dir::fuyu_home(tauri::Manager::path(app)).map_err(|error| error.to_string())?;
     let dir = plugins_dir(app)?;
     let _ = PLUGINS_DIR.set(dir.clone());
     let _ = SUPERVISOR.get_or_init(Mutex::default);
     let dev_url = app.config().build.dev_url.as_ref().map(ToString::to_string);
-    let origins = window_origins(dev_url.as_deref());
+    let origins = host_origins(cfg!(debug_assertions), dev_url.as_deref());
+    let files = host_files(tauri::Manager::path(app).resource_dir().ok().as_deref(), cfg!(debug_assertions));
+    eprintln!("[plugins-v3] host script {}", files.script.display());
     let shift = crate::platform::input::is_shift_key_down();
     let serve = methods::table(app)?;
     let _ = TRACKER.set(Mutex::new(safe_mode::Tracker::new(Some(&dir), std::env::var(SAFE_SWITCH).ok(), shift)));
     std::thread::Builder::new()
         .name("plugin-host-start".into())
         .spawn(move || {
-            if let Err(error) = start(home, dir, origins, cfg!(debug_assertions), serve) {
+            if let Err(error) = start(home, dir, files, origins, cfg!(debug_assertions), serve) {
                 eprintln!("[plugins-v3] the plugin host did not start: {error}");
             }
         })
@@ -248,7 +273,7 @@ fn connection_now(switched_on: bool, slot: Option<&Mutex<Option<Supervisor>>>) -
 
 #[tauri::command]
 pub(crate) fn get_plugin_host_connection() -> HostConnection {
-    let connection = connection_now(enabled(cfg!(debug_assertions), std::env::var(SWITCH).ok().as_deref()), SUPERVISOR.get());
+    let connection = connection_now(enabled(std::env::var(SWITCH).ok().as_deref()), SUPERVISOR.get());
     HostConnection { safe_mode: tracker().and_then(|tracker| tracker.current()), ..connection }
 }
 

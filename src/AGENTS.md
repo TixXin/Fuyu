@@ -59,6 +59,7 @@ features/<领域>/
 ├── storage.ts                     # 本领域的 localStorage key 与 load / save / normalize
 ├── types.ts                       # 本领域共享类型（类型较少时可省略，直接写在使用处）
 ├── <纯逻辑>.ts                     # 可单测的纯函数，例如 markdown.ts、shortcut.ts
+├── host/                          # 内置插件的宿主部分（插件平台第 3 版，跑在 Node 里）：入口登记在 src/features/builtins.json；可以 import 本领域的纯函数，不能 import 浏览器的东西和 @tauri-apps/api，数据写 ctx.dataDir；规则见 docs/architecture/plugins/v3-builtins.md「内置插件的宿主部分怎么写」
 └── <Name>.css                     # 与组件同名的样式文件
 ```
 

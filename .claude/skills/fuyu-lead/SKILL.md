@@ -3,11 +3,11 @@ name: fuyu-lead
 description: >
   ALWAYS invoke BEFORE acting as a lead ("主 agent") session in the Fuyu repo: opening a lead
   session for a multi-part piece of work, planning it and showing the plan, dispatching
-  sub-sessions with start_session, reviewing and landing what they did, including dispatching
-  just one more session when this session has already dispatched one. Do NOT dispatch a second
+  sub-sessions with start_session, reviewing, landing and archiving what they did, including
+  dispatching just one more session when this session has already dispatched one. Do NOT dispatch a second
   session without loading this skill first. Do NOT invoke for a single change one session can
   finish, or for doing one task yourself (fuyu-task).
-  触发：开个主 agent、主会话、让主 agent 派子会话、并行处理、统筹、拆开并行做、再派一个、
+  触发：开个主 agent、主会话、让主 agent 派子会话、并行处理、统筹、拆开并行做、再派一个、收口、归档做完的子会话、
   /fuyu-lead <主题>。
 ---
 
@@ -38,7 +38,7 @@ description: >
    计划在会话里讲给用户听，同时存一份文件，派出去的子会话也能读到。然后用 `wrap_up` 问「按这个计划开始派会话吗？」，停下来等用户回答。
 3. **用户同意后**：新任务先 `gh issue create`，再 `pnpm tasks add … --issue`，调好依赖，按阶段派子会话（每个都用 `use_worktree: false`）。必须串行的，等前一阶段完成后再派下一阶段。**同时最多 2 个要编译（cargo、tauri build、回归页）的子会话**，其余的排在后面一波；全机器同时改代码的会话控制在 6 个左右（先看 ListAgents 里有多少在干活），只读代码、写文档、做调研的不算。整批 `pnpm mq:land` 由主 agent 发起，子会话不各自 land（workflow.md「Rust 构建」里的排队规则，issue #448）。
 4. **每个子会话的简报开头写**：先加载 `fuyu-task` 并照它做。后面只写这次特有的：认领哪个任务、会话名、`--scope`、怎样算做完、跑哪些验证、由主 agent 整批 land。通用的约束不再抄进简报，抄的每次都会漏几条。
-5. **收口**：子会话的汇报不算数，主 agent 要看它的 diff 和提交，再 `pnpm tasks dirty` 看它有没有留下没提交的文件；更新现状文档；PR 合入后给每个子会话发消息，让它回复并关闭自己的 issue（`fuyu-task` 第 9 步在等这条通知），再用 `pnpm issue` 核对相关 issue 都已回复并关闭，漏的补上；最后向用户汇报每个任务的结果、提交、PR，以及还剩什么。用户问进度时先跑 `pnpm progress`，再用 ListAgents 补会话状态：脚本看不到会话是不是还活着。
+5. **收口**：子会话的汇报不算数，主 agent 要看它的 diff 和提交，再 `pnpm tasks dirty` 看它有没有留下没提交的文件；更新现状文档；PR 合入后给每个子会话发消息，让它回复并关闭自己的 issue（`fuyu-task` 第 9 步在等这条通知），再用 `pnpm issue` 核对相关 issue 都已回复并关闭，漏的补上；然后归档做完的子会话：任务已进 `0-archive/`、issue 已关、提交在 `origin/main` 上、`pnpm tasks dirty` 里没有它的文件，四条都满足才归档（`archive_session`）。归档不用再问用户（用户定的），能撤销，也不丢文件：子会话不开 worktree。等用户挑方案的（预览页、设计稿）和工具说还有后台工作的先留着。主 agent 不归档自己，归档会直接结束对话，留给开它的会话。最后向用户汇报每个任务的结果、提交、PR、归档了哪些会话，以及还剩什么。用户问进度时先跑 `pnpm progress`，再用 ListAgents 补会话状态：脚本看不到会话是不是还活着。
 
 ## 3. 用户怎么快速用
 

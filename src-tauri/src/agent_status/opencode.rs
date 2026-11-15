@@ -52,7 +52,7 @@ pub(super) struct Stored {
 type Stamp = (u64, Option<std::time::SystemTime>, u64, Option<std::time::SystemTime>);
 type Cached = (PathBuf, Stamp, i64, Vec<Stored>);
 
-static CACHE: Mutex<Option<Cached>> = Mutex::new(None);
+static CACHE: Mutex<Vec<Cached>> = Mutex::new(Vec::new());
 
 pub(super) fn running_app() -> Option<String> {
     platform::process::running_executable(&DESKTOP_EXES).map(|exe| app_name(&exe))
@@ -69,18 +69,19 @@ fn sessions(home_dir: &Path, now: i64, window_ms: i64) -> Vec<AgentSessionSummar
     finish(stored, service, now)
 }
 
-fn cached_rows(db: &Path, since: i64) -> Vec<Stored> {
+pub(super) fn cached_rows(db: &Path, since: i64) -> Vec<Stored> {
     let Some(stamp) = stamp(db) else {
         return Vec::new();
     };
     let mut cache = CACHE.lock().unwrap_or_else(PoisonError::into_inner);
-    if let Some((path, known, known_since, rows)) = cache.as_ref() {
-        if path == db && *known == stamp && *known_since <= since {
+    if let Some((_, known, known_since, rows)) = cache.iter().find(|(path, ..)| path == db) {
+        if *known == stamp && *known_since <= since {
             return rows.iter().filter(|row| row.summary.updated_at >= since).cloned().collect();
         }
     }
     let rows = read_database(db, since).unwrap_or_default();
-    *cache = Some((db.to_path_buf(), stamp, since, rows.clone()));
+    cache.retain(|(path, ..)| path != db);
+    cache.push((db.to_path_buf(), stamp, since, rows.clone()));
     rows
 }
 
@@ -193,9 +194,12 @@ fn session_rows(conn: &Connection, table: &str, columns: &HashSet<String>, since
     let idle = column(columns, "time_idle");
     let parent = if columns.contains("parent_id") { "parent_id IS NULL" } else { "1" };
     let archived = if columns.contains("time_archived") { "time_archived IS NULL" } else { "1" };
+    let deleted = if columns.contains("time_deleted") { "time_deleted IS NULL" } else { "1" };
+    let child = if columns.contains("task_type") { "coalesce(task_type, '') NOT LIKE '%child'" } else { "1" };
+    let title = if columns.contains("title_source") { "CASE WHEN title_source = 'default' THEN NULL ELSE title END" } else { "title" };
     let sql = format!(
-        "SELECT id, title, directory, {model}, time_updated, {busy}, {idle}, {outcome}, {agent} FROM {table} \
-         WHERE {parent} AND {archived} \
+        "SELECT id, {title}, directory, {model}, time_updated, {busy}, {idle}, {outcome}, {agent} FROM {table} \
+         WHERE {parent} AND {archived} AND {deleted} AND {child} \
          AND max(time_updated, coalesce({busy}, 0), coalesce({idle}, 0)) >= ?1",
         model = column(columns, "model"),
         outcome = column(columns, "idle_outcome"),
@@ -418,7 +422,7 @@ fn v1_messages(conn: &Connection, session: &str, has_parts: bool) -> rusqlite::R
                     state = Some(assistant_state(&data));
                 }
                 if turn.model.is_none() {
-                    turn.model = text(&data["modelID"]);
+                    turn.model = text(&data["modelID"]).or_else(|| text(&data["modelId"]));
                 }
                 if turn.reply.is_none() {
                     turn.reply = v1_text(&parts);

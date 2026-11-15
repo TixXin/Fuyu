@@ -6,7 +6,7 @@ use std::{
 use plugin_base::{find_node, Event, HostSpec, HostState, NodeSearch, Supervisor, Timing, MINIMUM_NODE};
 use serde_json::Value;
 
-use super::{containment, safe_mode::{self, Cause, Tracker}, enabled, host_args, host_env, host_script, memory_of, window_origins, HostMode, MEMORY_MEASURE};
+use super::{containment, safe_mode::{self, Cause, Tracker}, enabled, host_args, host_env, host_files, host_origins, host_script, memory_of, window_origins, HostMode, MEMORY_MEASURE};
 
 #[test]
 fn on_windows_the_host_gets_a_smaller_threadpool_unless_the_user_already_chose_one() {
@@ -18,11 +18,11 @@ fn on_windows_the_host_gets_a_smaller_threadpool_unless_the_user_already_chose_o
 }
 
 #[test]
-fn the_host_only_starts_in_a_development_build_with_the_switch_on() {
-    assert!(enabled(true, Some("1")));
-    assert!(!enabled(true, None));
-    assert!(!enabled(true, Some("0")));
-    assert!(!enabled(false, Some("1")));
+fn the_host_only_starts_when_the_switch_is_exactly_1() {
+    assert!(enabled(Some("1")));
+    for off in [None, Some(""), Some("0"), Some("true"), Some(" 1"), Some("yes")] {
+        assert!(!enabled(off), "{off:?}");
+    }
 }
 
 #[test]
@@ -34,11 +34,21 @@ fn the_development_host_script_is_the_one_in_the_repository() {
 fn windows_from_the_release_build_and_the_dev_server_may_connect() {
     assert_eq!(window_origins(None), ["tauri://localhost", "http://tauri.localhost", "https://tauri.localhost"]);
     assert_eq!(window_origins(Some("http://localhost:1420/")).last().map(String::as_str), Some("http://localhost:1420"));
-    let args = host_args("/data".into(), &window_origins(Some("http://localhost:1420")), &HostMode::default());
+    let args = host_args("/data".into(), &host_files(None, true), &window_origins(Some("http://localhost:1420")), &HostMode::default());
     let text: Vec<String> = args.iter().map(|arg| arg.to_string_lossy().into_owned()).collect();
     assert_eq!(text.iter().filter(|arg| *arg == "--origin").count(), 4);
     assert!(text.windows(2).any(|pair| pair == ["--origin", "http://localhost:1420"]));
     assert_eq!(text[0], "--disallow-code-generation-from-strings");
+}
+
+#[test]
+fn a_release_host_does_not_accept_the_dev_server_origin() {
+    let dev_url = Some("http://localhost:1420/");
+    let release = host_origins(false, dev_url);
+    assert_eq!(release, window_origins(None));
+    let args = host_args("/data".into(), &host_files(None, true), &release, &HostMode::default());
+    assert!(!args.iter().any(|arg| arg.to_string_lossy().contains("localhost:1420")), "{args:?}");
+    assert_eq!(host_origins(true, dev_url).last().map(String::as_str), Some("http://localhost:1420"));
 }
 
 fn mode(development: bool, variable: Option<&str>) -> HostMode {
@@ -46,7 +56,7 @@ fn mode(development: bool, variable: Option<&str>) -> HostMode {
 }
 
 fn args_for(mode: &HostMode) -> Vec<String> {
-    host_args("/data".into(), &[], mode).iter().map(|arg| arg.to_string_lossy().into_owned()).collect()
+    host_args("/data".into(), &host_files(None, true), &[], mode).iter().map(|arg| arg.to_string_lossy().into_owned()).collect()
 }
 
 #[test]
@@ -76,6 +86,23 @@ fn the_host_gets_the_built_in_plugin_list_and_the_app_version() {
     assert!(args.iter().position(|arg| arg == "--app-version") > args.iter().position(|arg| arg.ends_with("main.mjs")), "--app-version is the host's own flag, after the script");
 }
 
+#[test]
+fn a_release_build_runs_the_bundled_host_and_falls_back_to_the_repository() {
+    let resources = scratch("bundled-resources");
+    let repository = host_files(None, false);
+    assert_eq!(repository.script, host_script());
+    assert_eq!(host_files(Some(&resources), false), repository, "no bundled host: the repository's");
+    std::fs::create_dir_all(resources.join("plugins-v3/host")).unwrap();
+    std::fs::write(resources.join("plugins-v3/host/main.mjs"), "").unwrap();
+    let bundled = host_files(Some(&resources), false);
+    assert_eq!(bundled.script, resources.join("plugins-v3/host/main.mjs"));
+    assert_eq!(bundled.builtins, resources.join("plugins-v3/builtins"), "the built bundle, never the TypeScript sources");
+    assert_eq!(host_files(Some(&resources), true), repository, "a development build keeps hot reloading the sources");
+    let args = host_args("/data".into(), &bundled, &[], &HostMode::default());
+    assert!(args.windows(2).any(|pair| pair[0] == "--builtins" && std::path::Path::new(&pair[1]) == resources.join("plugins-v3/builtins")));
+    let _ = std::fs::remove_dir_all(&resources);
+}
+
 fn wait_for(states: &mpsc::Receiver<HostState>, ready: bool) -> HostState {
     let deadline = Instant::now() + Duration::from_secs(60);
     loop {
@@ -94,11 +121,14 @@ fn the_real_host_starts_under_the_supervisor_reports_its_plugins_and_comes_back_
     let dir = std::env::temp_dir().join(format!("fuyu-plugin-kernel-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     std::fs::write(dir.join("hello.mjs"), "export const name = \"hello\";\nexport function apply(ctx) {\n  ctx.effect(() => {\n    const timer = setInterval(() => {}, 1000);\n    return () => clearInterval(timer);\n  });\n}\n").unwrap();
-    std::fs::write(dir.join("asks.mjs"), "import { writeFileSync } from \"node:fs\";\nexport const name = \"asks\";\nexport async function apply(ctx) {\n  const version = await ctx.rust.call(\"app.version\");\n  const echo = await ctx.rust.call(\"app.echo\", { value: [1] });\n  const platform = await ctx.rust.call(\"app.platformSupport\");\n  const missing = await ctx.rust.call(\"app.nope\").catch((error) => error.code);\n  writeFileSync(new URL(\"./asked.json\", import.meta.url), JSON.stringify({ version, echo, missing, platform: platform.os }));\n}\n").unwrap();
-    std::fs::write(dir.join("plugins.yml"), "- id: hello\n  name: ./hello.mjs\n- id: asks\n  name: ./asks.mjs\n").unwrap();
+    std::fs::create_dir_all(dir.join("builtins/asks")).unwrap();
+    std::fs::write(dir.join("builtins/builtins.json"), r#"{ "format": 1, "plugins": [{ "id": "asks", "kind": "builtin", "root": "asks", "host": "host.mjs" }] }"#).unwrap();
+    std::fs::write(dir.join("builtins/asks/host.mjs"), "import { writeFileSync } from \"node:fs\";\nexport const name = \"asks\";\nexport async function apply(ctx) {\n  const version = await ctx.rust.call(\"app.version\");\n  const echo = await ctx.rust.call(\"app.echo\", { value: [1] });\n  const platform = await ctx.rust.call(\"app.platformSupport\");\n  const missing = await ctx.rust.call(\"app.nope\").catch((error) => error.code);\n  writeFileSync(new URL(\"../../asked.json\", import.meta.url), JSON.stringify({ version, echo, missing, platform: platform.os }));\n}\n").unwrap();
+    std::fs::write(dir.join("pokes.mjs"), "import { writeFileSync } from \"node:fs\";\nexport const name = \"pokes\";\nexport async function apply(ctx) {\n  const code = await ctx.rust.call(\"app.version\").then(() => \"answered\", (error) => error.code);\n  writeFileSync(new URL(\"./poked.json\", import.meta.url), JSON.stringify({ code }));\n}\n").unwrap();
+    std::fs::write(dir.join("plugins.yml"), "- id: hello\n  name: ./hello.mjs\n- id: pokes\n  name: ./pokes.mjs\n").unwrap();
     let spec = HostSpec {
         program: node.path,
-        args: vec!["--disallow-code-generation-from-strings".into(), host_script().into(), "--dir".into(), dir.clone().into()],
+        args: vec!["--disallow-code-generation-from-strings".into(), host_script().into(), "--dir".into(), dir.clone().into(), "--builtins".into(), dir.join("builtins").into()],
         env: Vec::new(),
         current_dir: None,
     };
@@ -115,18 +145,20 @@ fn the_real_host_starts_under_the_supervisor_reports_its_plugins_and_comes_back_
 
     let HostState::Ready { pid, ready, .. } = wait_for(&states, true) else { unreachable!() };
     assert_eq!(ready["protocol"], 2);
-    assert_eq!(ready["plugins"][0]["id"], "hello");
-    assert_eq!(ready["plugins"][0]["state"], "running");
+    let hello = ready["plugins"].as_array().and_then(|plugins| plugins.iter().find(|plugin| plugin["id"] == "hello")).cloned().unwrap_or_default();
+    assert_eq!(hello["state"], "running", "{ready}");
     assert!(ready["windows"]["port"].as_u64().is_some_and(|port| port > 0));
     assert_eq!(ready["windows"]["token"].as_str().map(str::len), Some(64));
     let status = supervisor.call("status", Value::Null, Duration::from_secs(5)).unwrap();
-    assert_eq!(status[0]["state"], "running");
+    assert!(status.as_array().is_some_and(|plugins| plugins.iter().any(|plugin| plugin["id"] == "hello" && plugin["state"] == "running")), "{status}");
     let deadline = Instant::now() + Duration::from_secs(10);
-    while !dir.join("asked.json").exists() && Instant::now() < deadline {
+    while !(dir.join("asked.json").exists() && dir.join("poked.json").exists()) && Instant::now() < deadline {
         std::thread::sleep(Duration::from_millis(20));
     }
     let asked: Value = serde_json::from_str(&std::fs::read_to_string(dir.join("asked.json")).unwrap()).unwrap();
     assert_eq!(asked, serde_json::json!({ "version": { "version": env!("CARGO_PKG_VERSION"), "platform": std::env::consts::OS }, "echo": { "echo": [1] }, "missing": "no-method", "platform": if cfg!(target_os = "macos") { "macos" } else { "windows" } }));
+    let poked: Value = serde_json::from_str(&std::fs::read_to_string(dir.join("poked.json")).unwrap()).unwrap();
+    assert_eq!(poked, serde_json::json!({ "code": "forbidden" }));
 
     let killed = Instant::now();
     #[cfg(unix)]

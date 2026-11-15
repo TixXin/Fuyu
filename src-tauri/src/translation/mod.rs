@@ -7,13 +7,17 @@ mod request;
 pub(crate) mod rewrite;
 mod stream;
 mod selection;
+#[cfg(test)]
+mod tests;
 
 use crate::user_error::{credential, UserError};
 use crate::clipboard_history::parse_shortcut_binding;
 use arboard::Clipboard;
 use keyring::{Entry, Error as KeyringError};
-use provider::{find_provider, Provider};
-use request::complete;
+use plugin_base::host_service;
+use provider::{find_provider, providers, Provider};
+use request::{complete, Translated};
+use serde::Serialize;
 use std::{
     sync::{
         atomic::{AtomicBool, Ordering},
@@ -150,6 +154,33 @@ pub fn has_translation_secret(provider: Option<String>) -> Result<bool, UserErro
     Ok(read_secret(find_provider(provider.as_deref())?)?.is_some())
 }
 
+#[derive(Debug, Clone, PartialEq, Serialize)]
+#[cfg_attr(test, derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct EngineSecret {
+    engine: &'static str,
+    has_secret: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+#[cfg_attr(test, derive(ts_rs::TS))]
+pub(crate) struct TranslatorEngines {
+    engines: Vec<EngineSecret>,
+}
+
+#[host_service("translator.engines")]
+fn engines() -> Result<TranslatorEngines, UserError> {
+    engines_with(|provider| read_secret(provider).map(|secret| secret.is_some()))
+}
+
+fn engines_with(has_secret: impl Fn(&Provider) -> Result<bool, UserError>) -> Result<TranslatorEngines, UserError> {
+    let engines = providers()
+        .iter()
+        .map(|provider| Ok(EngineSecret { engine: provider.id, has_secret: has_secret(provider)? }))
+        .collect::<Result<_, UserError>>()?;
+    Ok(TranslatorEngines { engines })
+}
+
 #[tauri::command]
 pub fn save_translation_secret(secret: String, provider: Option<String>) -> Result<(), UserError> {
     let provider = find_provider(provider.as_deref())?;
@@ -176,7 +207,22 @@ pub async fn translate_text(
     base_url: Option<String>,
     model: Option<String>,
 ) -> Result<String, UserError> {
-    translate(text, direction, provider, base_url, model).await
+    translate(text, direction, provider, base_url, model).await.map(|translated| translated.text)
+}
+
+pub(super) fn host_provider(provider: Option<String>) -> Result<Option<String>, UserError> {
+    let found = find_provider(provider.as_deref())?;
+    if found.needs_address() {
+        let name = found.name;
+        return Err(UserError::new("translation.customUnavailable", format!("{name} is only available in the translation window for now.")).arg("service", name));
+    }
+    Ok(provider)
+}
+
+#[host_service("translator.translate", timeout_ms = 60_000)]
+async fn translate_for_host(text: String, direction: String, provider: Option<String>, model: Option<String>) -> Result<Translated, UserError> {
+    let provider = host_provider(provider)?;
+    translate(text, direction, provider, None, model).await
 }
 
 pub(crate) async fn translate(
@@ -185,7 +231,7 @@ pub(crate) async fn translate(
     provider: Option<String>,
     base_url: Option<String>,
     model: Option<String>,
-) -> Result<String, UserError> {
+) -> Result<Translated, UserError> {
     let text = text.trim();
     if text.is_empty() {
         return Err(UserError::new("translation.empty", "Enter the text to translate."));

@@ -10,7 +10,7 @@ import { useAudible } from "../../features/media/useAudible";
 import type { CurrentLyric } from "../../features/media/lyrics/useCurrentLyric";
 import { KaraokeText } from "../../features/media/lyrics/KaraokeText";
 import { CollapsedMessageContent } from "../../features/messages/CollapsedMessageContent";
-import { collapsedBarItems, type CollapsedBarItem } from "./collapsedBarItems";
+import { useCollapsedBarItems, type CollapsedBarItem } from "./collapsedBarItems";
 import type { DeviceUse } from "../../features/device-use/api";
 import type { LevelChange } from "../../features/system-levels/api";
 import { LevelPopup } from "../../features/system-levels/LevelPopup";
@@ -154,14 +154,13 @@ export function IslandCollapsedBar({
     && !(showCollapsedText && (showTitle || agentSession !== null || lyric !== null || collapsedTaskTitle !== null || collapsedTodoCount !== null));
   const pluginStatus = usePluginStatusItems(pluginViews, onOpenPluginPage);
   const { placements: saved } = useCollapsedPlacements();
-  const items = collapsedBarItems({
+  const items = useCollapsedBarItems({
     t,
     statusLight: slots.statusLight
       ? <span className="island__mark-light" {...{ [OPENS_BAR]: "" }}>{slots.statusLight}</span>
       : <span className={pulseClassName} {...{ [OPENS_BAR]: "" }} />,
     qqMail,
     updateVersion,
-    pluginStatus: showCollapsedText && !preview && !notice && !translationPeek && !levelPopup && !deviceAlert && !quotaAlert ? pluginStatus : [],
     deviceUse,
     shelfCount,
     showMusic: showMusic && audible,
@@ -170,7 +169,7 @@ export function IslandCollapsedBar({
     slots,
     onOpenPage,
     onOpenMessages,
-  });
+  }, showCollapsedText && !preview && !notice && !translationPeek && !levelPopup && !deviceAlert && !quotaAlert ? pluginStatus : []);
   const offered = items.map(({ id }) => id);
   const placements = arrangeCollapsedItems(offered, saved);
   const byId = new Map(items.map((item) => [item.id, item]));

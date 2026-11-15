@@ -50,6 +50,8 @@
 
 宿主里的插件用 `ctx.rust.call(方法, 参数, { timeoutMs?, onProgress? })`（`Context` 上的 `rust`，类型 `RustApi`）。方法名是点分的小驼峰（`app.version`），参数是一个 JSON 值，没有就是 `null`。
 
+**只有内置插件能用 `ctx.rust`**（2026-11-15 起，E36.3.18）：`call` 和 `on` 先沿插件的上下文找到它在宿主里的加载项，看宿主加载它时记下的来源（`sources.mjs` 的 `SOURCE`，插件自己报的不算），是 `builtin` 才放行。市场、手动安装、开发文件夹的插件，`plugins.yml` 里直接写文件的插件，以及不属于任何加载项的代码，一律回 `forbidden`（`data` 是 `{ plugin, source }`），它们经内置插件提供的服务用 Rust 的能力。同一个进程里没有真正的隔离，这是减损，不是沙箱（见 [v3-secrets.md](v3-secrets.md)）。
+
 Rust 的方法是标了 `#[plugin_base::host_service("<方法>")]` 的领域函数，`Serve::registered()` 读出全部（宏的写法见 [v3-services.md](v3-services.md)「Rust 那条路」，E36.3.4）。现在有：
 
 | 方法 | 参数 | 回答 |
@@ -81,6 +83,7 @@ Rust 怎么跑：
 | `failed` | 处理函数要的状态 Rust 没给（例如没有 `AppHandle`），或工作线程起不来 |
 | `peer-gone` | 宿主一侧：Rust 那头的管道断了，或宿主不是 Rust 拉起的（没有通道） |
 | `inactive` | 宿主一侧：发起调用的插件停用了，调用立刻失败，同时给 Rust 发 `cancel` |
+| `forbidden` | 宿主一侧：调用的插件不是内置插件（见上），不发给 Rust；`ctx.rust.on` 同样抛这个码 |
 | 处理函数自己的码 | 如翻译的 `no-secret`，原样传出 |
 
 ### 流式
@@ -92,13 +95,16 @@ Rust 怎么跑：
 `status` 的回答、`ready` 的 `plugins`、给窗口的快照和 `plugins` 事件里，每个插件都是同一个格式（协议 1 里加的字段都是可选的，旧的读法不受影响）：
 
 ```
-{ id, name, state, kind, waitingFor?, error?, reason?, lastError?, usage }
+{ id, name, state, kind, source, waitingFor?, error?, reason?, blocked?, undeclared?, lastError?, usage }
 ```
 
 | 字段 | 意思 |
 |---|---|
 | `state` | `running`、`waiting`（`waitingFor` 列出在等的服务）、`failed`（`error` 是原因）、`disabled`（`plugins.yml` 里关了）、`auto-disabled`（反复出错被宿主停了，`reason` 写明）、`safe-mode`（被安全模式拦下，`reason` 写明）、`loading`、`stopped`、`unloading` 之一 |
-| `kind` | `essential`、`builtin`、`third-party`，来自 `plugins.yml` 条目的 `kind` 字段，没写或写错都算 `third-party` |
+| `kind` | `essential`、`builtin`、`third-party`。只由内置插件清单给（2026-11-15 起，E36.3.6，见 [v3-builtins.md](v3-builtins.md)）：清单里的插件取清单写的值，其余插件一律是 `third-party`，`plugins.yml` 条目里写的 `kind` 不算数 |
+| `source` | 插件从哪来（2026-11-15 起，E36.3.9）：`builtin`（内置插件清单）、`market`、`manual`（已安装的包）、`dev`（开发文件夹）、`file`（直接写模块的条目），见 [v3-sources.md](v3-sources.md) |
+| `blocked` | 清单没通过、包没装这类原因拒绝加载时才有：`{ by, errors }`，`state` 是 `failed`（E36.3.9，见 [v3-sources.md](v3-sources.md)「拒绝加载」） |
+| `undeclared` | 插件实际做了、清单里没写的事，键名就是该补的清单字段（`provides`、`client`、`slots`）；都对得上时没有这个字段，只标记不拦（E36.3.9，见 [v3-sources.md](v3-sources.md)「声明和实际」） |
 | `lastError` | `{ at, text }`，这个插件最近一次出错（只在出过错时有） |
 | `usage` | `{ cpuMs, calls, applyMs, timers, listeners, services, clients, errors }`，见下 |
 
@@ -224,8 +230,8 @@ Rust 每次拉起宿主（包括自动重启）都重新决定带不带 `--safe`
 |---|---|---|---|---|---|
 | `island.page/v1` | 展开页 | list | 2 | 不限，页头圆点另有上限 | `icon`、`shortcutOrder`（Alt+数字的顺序）、`headerDot`（在页头出圆点）、`enabled(features)`、`fallback(features)`（这页关掉时回退到哪页） |
 | `island.header/v1` | 页头右侧的按钮 | list | 1 | 不限 | `enabled(features)` |
-| `island.collapsed/v1` | 收起条 | list | 2 | 不限，用户的「收起条布局」照旧覆盖 | `group`（`gauges`）、`width`、`hideable` |
-| `island.collapsed-center/v1` | 收起条的中心图案 | single | 1 | 1 | `width` |
+| `island.collapsed/v1` | 收起条 | list | 2 | 不限，用户的「收起条布局」照旧覆盖 | `group`（`gauges`：相邻的合进一个量表框，侧栏也显示）、`width`（收起条要加的宽度）、`hideable`（用户在布局里藏起来后整项撤掉，也不算宽度）、`shown(context)`（现在出不出现，不写就一直出现） |
+| `island.collapsed-center/v1` | 收起条的中心图案 | single | 1 | 1 | `width`、`shown(context)` |
 | `island.alert/v1` | 刘海提醒 | list | 1 | 窗口只显示排在最前、`active(sources)` 为真的一项 | `active(sources)`、`trailing`（右半边的组件） |
 | `island.dev/v1` | 第 1 阶段的开发插槽 | list | 1 | 3 | 无 |
 | `settings.category/v1` | 设置窗口的分类 | list | 2 | 不限 | `group`（侧栏分组）、`icon`、`tabs`（子页）、`available(...)`（平台是否支持）、`feature`（所属功能开关）、`aliases`（合并进来的旧分类名） |

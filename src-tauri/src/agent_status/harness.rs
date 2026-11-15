@@ -3,7 +3,7 @@ use std::path::Path;
 use super::hooks_state::HookInstallState;
 use super::sessions::AgentSessionSummary;
 use super::notifications::{is_waiting, saved_notifications, NOTIFICATIONS_DIR};
-use super::{antigravity, claude_code, codebuddy, codex, dsh, opencode, qoder, qwen, trae, workbuddy};
+use super::{antigravity, claude_code, codebuddy, codex, dsh, kimi_code, opencode, qoder, qwen, trae, workbuddy, zcode};
 
 pub(super) const HARNESSES: &[Harness] = &[
     codex::HARNESS,
@@ -17,6 +17,8 @@ pub(super) const HARNESSES: &[Harness] = &[
     qwen::HARNESS,
     trae::HARNESS,
     trae::CN_HARNESS,
+    zcode::HARNESS,
+    kimi_code::HARNESS,
 ];
 
 pub(super) struct Harness {
@@ -135,11 +137,11 @@ mod tests {
         assert_eq!(ids.len(), HARNESSES.len());
         assert_eq!(
             with_status_light().map(|(id, _)| id).collect::<Vec<_>>(),
-            ["codex", "claudeCode", "workbuddy", "antigravity", "dsh", "qoder", "codebuddy", "qwen", "trae", "traeCn"]
+            ["codex", "claudeCode", "workbuddy", "antigravity", "dsh", "qoder", "codebuddy", "qwen", "trae", "traeCn", "zcode", "kimiCode"]
         );
         assert_eq!(
             with_hooks().map(|(id, _)| id).collect::<Vec<_>>(),
-            ["codex", "claudeCode", "workbuddy", "antigravity", "dsh", "opencode", "qoder", "codebuddy", "qwen", "trae", "traeCn"]
+            ["codex", "claudeCode", "workbuddy", "antigravity", "dsh", "opencode", "qoder", "codebuddy", "qwen", "trae", "traeCn", "zcode", "kimiCode"]
         );
         assert_eq!(remote_ids(), ["codex", "claudeCode", "antigravity", "dsh", "opencode"]);
     }

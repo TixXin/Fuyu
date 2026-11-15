@@ -7,9 +7,8 @@ export type Direction = "auto" | "zh-en" | "en-zh";
 export type RewriteTask = "summarize" | "polish" | "grammar" | "translate" | "custom";
 
 export type EngineChoice = {
-  engine: TranslationEngine;
-  baseUrl: string | null;
-  model: string | null;
+  engine: Exclude<TranslationEngine, "custom">;
+  model?: string | null;
 };
 
 export type TranslatorErrorCode = "no-secret" | "engine-failed" | "empty-text";

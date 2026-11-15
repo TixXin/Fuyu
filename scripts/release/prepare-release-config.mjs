@@ -1,4 +1,5 @@
 import { readFileSync, writeFileSync } from "node:fs";
+import { prepareReleaseResources, releaseResources } from "../plugins-v3/release-resources.mjs";
 
 const TARGET = "src-tauri/tauri.release.conf.json";
 
@@ -30,6 +31,7 @@ const overlay = {
   },
   bundle: {
     createUpdaterArtifacts: true,
+    resources: releaseResources(),
   },
 };
 
@@ -52,6 +54,7 @@ if (version) {
   overlay.version = version;
 }
 
+await prepareReleaseResources();
 writeFileSync(TARGET, `${JSON.stringify(overlay, null, 2)}\n`);
 console.log(`Wrote ${TARGET} for v${version ?? base.version}`);
 if (!endpoints.length) {

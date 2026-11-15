@@ -3,6 +3,7 @@ case "${1:-codex}" in
   codex) route=codex/permission-request ;;
   workbuddy) route=workbuddy/permission-request ;;
   qoder) route=qoder/permission-request ;;
+  zcode) route=zcode/permission-request ;;
   codebuddy) route=codebuddy/permission-request ;;
   qwen) route=qwen/permission-request ;;
   trae) route=trae/pre-tool-use ;;

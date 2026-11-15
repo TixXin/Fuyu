@@ -102,22 +102,23 @@ node scripts/plugins-v3/bundle-host.mjs --minify --out <目录>
 - 大小（2026-11-14 的代码）：6 个文件 776 KB，压缩后 351 KB，121 个源文件。比第 0 阶段量的 215 KB 大，主要是 `include.mjs` 带的 YAML 解析和新加的窗口连接。
 - 测试 `tests/scripts/plugins-v3-bundle-host.test.mjs`（`pnpm test` 会跑）：打到系统临时目录（仓库外面，没有 `node_modules` 可借），用 `node --disallow-code-generation-from-strings` 跑起来，插件 `import "@fuyu/plugin-base"` 后能注册服务、另一个插件能用它，发出 `ready`、回答 `ping`、`stop` 后退出码 0；坏插件报 `log` 并标 `failed`，宿主不倒。
 
-### 让正式构建带上它（方案，这一步没改构建流程）
+### 让正式构建带上它（E36.3.15，#514）
 
 查过的事实：
 
 - `tauri-build` 在**每次** cargo 构建的 `build.rs` 里都会把 `bundle.resources` 拷到目标目录（`tauri-build-2.7.4/src/lib.rs` 的 `copy_resources`），路径不存在就报 `ResourcePathNotFound`，构建失败。也就是说，往 `tauri.conf.json` 里直接加这一项，所有人的 `cargo test`、`pnpm tauri dev`、`pnpm build:exe` 在没先跑打包脚本时都会失败。所以**不加在 `tauri.conf.json` 里**。
 - `bundle.resources` 的映射写法可以写目录，会递归拷贝（`tauri-utils` 的 `ResourcePaths::from_map`，`allow_walk`）。macOS 的 `tauri.macos.conf.json` 已经有一个 `resources` 映射，`--config` 叠加时 JSON 对象按键合并，不会冲掉它。
-- 发版的三条构建路径：本机 Windows `release.mjs` 的 `buildLocally`（`--config src-tauri/tauri.release.conf.json`，由 `prepare-release-config.mjs` 生成）；CI 的 `release-windows.yml`（同一个 `tauri.release.conf.json`）；CI 的 `release-macos.yml`（`--config src-tauri/tauri.bundle-macos.conf.json` 加一段内联 JSON，不用 release 叠加文件）。
+- 给用户的安装包有三条构建路径：本机 Windows `release.mjs` 的 `buildLocally`（叠加文件由 `prepare-release-config.mjs` 生成）；CI 的 `release-windows.yml`（叠加文件由 `windows-build.mjs config` 的 `windowsOverlay()` 生成，**不走** `prepare-release-config.mjs`）；CI 的 `release-macos.yml`（`tauri.bundle-macos.conf.json` 加内联 JSON）。Mac 包只从 CI 出，`pnpm release` 和 `release:prebuild` 都是触发这个工作流。
+- `tauri.bundle-macos.conf.json` 也被 Mac 的 `pnpm build:exe`（`build-app-macos.mjs`）用，所以资源不能加在这个文件里。
 
-建议的改法（宿主要随正式版发布时做，和 Rust 那边找资源目录的代码放在同一个提交）：
+做法：
 
-1. `prepare-release-config.mjs` 生成的叠加文件里加 `bundle.resources: { "target/plugins-v3/host": "plugins-v3/host" }`，并在写文件前调用 `bundleHost()`（或在 `release.mjs` 的 `buildLocally` 和 `release-windows.yml` 里先跑 `node scripts/plugins-v3/bundle-host.mjs`）。
-2. `tauri.bundle-macos.conf.json` 加同样的 `resources` 项（它只在 Mac 打包时用，和 `MediaRemoteAdapter.framework` 一样指向 `target/` 下预先生成的东西）；`build-app-macos.mjs` 和 `release-macos.yml` 在 `pnpm tauri build` 之前跑打包脚本，照 `scripts/macos/mediaremote-adapter.mjs` 的做法。
-3. Rust 找宿主脚本：正式版用 `app.path().resource_dir()?.join("plugins-v3/host/main.mjs")`；开发版（`cfg!(debug_assertions)` 或资源不存在时）退回仓库里的 `packages/plugin-base/src/host/main.mjs`。`pnpm build:exe` 不带叠加文件，产物在仓库里，也走仓库路径，所以不受影响。
-4. 发版的冒烟测试（`scripts/release/smoke-test.*`）加一条：安装包里有 `plugins-v3/host/main.mjs`。
-
-实测：用 `--config '{"bundle":{"resources":{"target/plugins-v3/host":"plugins-v3/host"}}}'` 叠加，结果见下一节。
+1. **一份资源映射**：`scripts/plugins-v3/release-resources.mjs` 导出 `RELEASE_RESOURCES`（`target/plugins-v3/host` → `plugins-v3/host`，`target/plugins-v3/builtins` → `plugins-v3/builtins`）、安装包里必须有的文件 `SHIPPED_FILES`，和 `prepareReleaseResources()`（打宿主、打内置插件；内置插件虽然打安装包前自动跑的 `pnpm build` 也会生成，这里先打一次，不靠那个顺序）。直接运行就是准备，加 `--overlay` 打印叠加用的 JSON。
+2. **Windows 两处都从它读**：`prepare-release-config.mjs` 和 `windowsOverlay()` 的 `bundle.resources` 都是 `releaseResources()`，写完叠加文件后跑 `prepareReleaseResources()`。
+3. **Mac**：`release-macos.yml` 在 Build 前跑 `node scripts/plugins-v3/release-resources.mjs`，Build 多一个 `--config "$(node … --overlay)"`。`tauri.bundle-macos.conf.json` 和 `build-app-macos.mjs` 不动。
+4. **Rust**：`plugin_kernel` 的 `host_files()`：正式版（非 `debug_assertions`）的资源目录里有 `plugins-v3/host/main.mjs` 时，宿主用它、`--builtins` 用 `plugins-v3/builtins`（打好的单个 `.mjs`，Node 22.15 就能加载；源码里的内置插件 import `.ts`，要 22.18）；否则退回仓库的 `packages/plugin-base/src/host/main.mjs` 和 `src/features`。开发版一直走仓库路径（热重载）；`pnpm build:exe` 的资源目录里没有宿主，也走仓库路径。启动时打一行 `[plugins-v3] host script <路径>`。
+6. **开关**：`plugin_kernel` 的 `enabled()` 原来要求调试版（fad39df2），正式版设了 `FUYU_PLUGINS_V3=1` 也不起宿主，安装包没法验收。现在开发版和正式版都只认 `FUYU_PLUGINS_V3=1`（只有正好是 `1` 才算），默认照旧关；正式版起宿主时日志写 `[plugins-v3] release build: starting the plugin host because FUYU_PLUGINS_V3=1`，参数里没有 `--dev`、`--expose-internals`，不热重载（`--watch` 只重读 `plugins.yml`）。设置窗口的插件页和岛上的插槽都看 Rust 返回的 `enabled`，跟着同一个开关。第 3 阶段地基主 agent 和经理 2026-11-15 定。
+5. **守住**：`tests/scripts/plugins-v3-release-resources.test.mjs` 检查 Windows 两处叠加一致、Mac 工作流先准备再叠加、`tauri*.conf.json` 和 `build:exe` 的脚本里没有这份资源；冒烟测试检查 `SHIPPED_FILES`（Windows 是 `smoke-test.ps1`，Mac 是 `release-macos.yml` 的 Check 一步）。
 
 ### 叠加资源的实测
 

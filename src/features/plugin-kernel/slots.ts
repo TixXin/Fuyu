@@ -45,10 +45,12 @@ export interface IslandCollapsedMeta<Context = unknown> {
   group?: "gauges";
   width?: SlotWidth<Context>;
   hideable?: boolean;
+  shown?: (context: Context) => boolean;
 }
 
 export interface IslandCollapsedCenterMeta<Context = unknown> {
   width?: SlotWidth<Context>;
+  shown?: (context: Context) => boolean;
 }
 
 export interface IslandAlertMeta<Sources = unknown> {
