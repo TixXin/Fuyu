@@ -8,8 +8,14 @@ pub(super) fn is_empty() -> bool {
     pasteboard::types().is_empty()
 }
 
+pub(super) fn is_remote() -> bool {
+    pasteboard::types().iter().any(|kind| pasteboard::is_remote_type(kind))
+}
+
 pub(super) fn source_app_path() -> Option<String> {
-    apps::frontmost_path()
+    pasteboard::source_bundle_id()
+        .and_then(|id| apps::path_for_bundle_id(&id))
+        .or_else(apps::frontmost_path)
 }
 
 pub(super) fn recognize_text(width: u32, height: u32, rgba: &[u8]) -> Option<String> {

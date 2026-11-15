@@ -32,6 +32,9 @@ export function ClipboardRecordSettings({ clipboardSettings, onChange }: {
       <SettingsToggleRow title={text.captureFiles} description={isMacOS ? text.captureFilesHintMac : text.captureFilesHint} checked={clipboardSettings.captureFiles} onChange={(captureFiles) => onChange({ captureFiles })} />
       <SettingsToggleRow title={text.captureHtml} description={isMacOS ? text.captureHtmlHintMac : text.captureHtmlHint} checked={clipboardSettings.captureHtml} onChange={(captureHtml) => onChange({ captureHtml })} />
       <SettingsToggleRow title={text.skipSensitive} description={isMacOS ? text.skipSensitiveHintMac : text.skipSensitiveHint} checked={clipboardSettings.skipSensitive} onChange={(skipSensitive) => onChange({ skipSensitive })} />
+      {isMacOS && (
+        <SettingsToggleRow title={privacy.recordRemote} description={privacy.recordRemoteHint} checked={clipboardSettings.recordRemote} onChange={(recordRemote) => onChange({ recordRemote })} />
+      )}
       <SettingsToggleRow title={privacy.forgetCleared} description={privacy.forgetClearedHint} checked={clipboardSettings.forgetCleared} onChange={(forgetCleared) => onChange({ forgetCleared })} />
       <SettingsRow
         title={text.secrets}

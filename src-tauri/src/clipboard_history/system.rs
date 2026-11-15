@@ -8,6 +8,10 @@ pub(super) fn is_empty() -> bool {
     win32::clipboard::is_empty()
 }
 
+pub(super) fn is_remote() -> bool {
+    false
+}
+
 pub(super) fn source_app_path() -> Option<String> {
     let window = win32::clipboard::owner_window().unwrap_or_else(win32::window::foreground_window);
     win32::process::image_path(win32::process::window_process_id(window))

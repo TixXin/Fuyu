@@ -249,7 +249,11 @@ impl ClipboardHistoryService {
             return;
         }
 
-        let source = source_app();
+        let remote = super::system::is_remote();
+        if remote && !settings.privacy.record_remote() {
+            return;
+        }
+        let source = if remote { Some(super::privacy::other_device_source()) } else { source_app() };
         if source.as_ref().is_some_and(|source| is_excluded(&settings.excluded_apps, &source.path)) {
             return;
         }

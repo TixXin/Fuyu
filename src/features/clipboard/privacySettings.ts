@@ -8,6 +8,7 @@ export const DEFAULT_CLIPBOARD_PRIVACY: ClipboardPrivacySettings = {
   forgetCleared: true,
   secretExpiryMinutes: 0,
   maxTextKb: 1024,
+  recordRemote: true,
 };
 
 const oneOf = (choices: readonly number[], value: unknown, fallback: number) =>
@@ -18,5 +19,6 @@ export function normalizeClipboardPrivacy(settings: Partial<ClipboardPrivacySett
     forgetCleared: settings.forgetCleared !== false,
     secretExpiryMinutes: oneOf(CLIPBOARD_SECRET_EXPIRY_MINUTES, settings.secretExpiryMinutes, DEFAULT_CLIPBOARD_PRIVACY.secretExpiryMinutes),
     maxTextKb: oneOf(CLIPBOARD_TEXT_LIMITS_KB, settings.maxTextKb, DEFAULT_CLIPBOARD_PRIVACY.maxTextKb),
+    recordRemote: settings.recordRemote !== false,
   };
 }

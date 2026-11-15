@@ -38,6 +38,7 @@ export type ClipboardPrivacySettings = {
   forgetCleared: boolean;
   secretExpiryMinutes: number;
   maxTextKb: number;
+  recordRemote: boolean;
 };
 
 export type ClipboardAiPrompt = { id: string; title: string; prompt: string };

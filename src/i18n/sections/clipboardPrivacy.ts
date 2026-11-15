@@ -8,6 +8,9 @@ export type ClipboardPrivacyText = {
   maxTextHint: string;
   maxTextOption: (kb: number) => string;
   truncated: string;
+  recordRemote: string;
+  recordRemoteHint: string;
+  otherDevice: string;
 };
 
 const zhDuration = (minutes: number) => {
@@ -37,6 +40,9 @@ export const zhCN: ClipboardPrivacyText = {
   maxTextHint: "超过的只记前面一段并标「已截断」，贴回去的不是完整原文；格式（HTML）超过上限时不记。",
   maxTextOption: (kb) => (kb === 0 ? "不限" : size(kb)),
   truncated: "已截断",
+  recordRemote: "记录其他设备复制的内容",
+  recordRemoteHint: "iPhone、iPad 或另一台 Mac 经接力（通用剪贴板）传来的内容；来源显示为「其他设备」。",
+  otherDevice: "其他设备",
 };
 
 export const en: ClipboardPrivacyText = {
@@ -49,4 +55,7 @@ export const en: ClipboardPrivacyText = {
   maxTextHint: "Longer text keeps only its beginning and is marked “Truncated”, so pasting it back is not the full original; formatting (HTML) over the limit is dropped.",
   maxTextOption: (kb) => (kb === 0 ? "No limit" : size(kb)),
   truncated: "Truncated",
+  recordRemote: "Record content copied on other devices",
+  recordRemoteHint: "Content from an iPhone, iPad or another Mac via Handoff (Universal Clipboard); its source shows as “Other device”.",
+  otherDevice: "Other device",
 };
