@@ -1,34 +1,57 @@
-.agent-usage {
+.agent-usage-table {
   flex: none;
-  height: 22px;
   margin: 0 6px 6px;
-  display: flex;
+  display: grid;
+  grid-template-columns: var(--agent-usage-columns);
+  column-gap: 14px;
+  row-gap: 6px;
+}
+
+.island-hover-card__anchor.agent-usage__hover {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: subgrid;
+  min-width: 0;
+}
+
+.agent-usage {
+  grid-column: 1 / -1;
+  height: 22px;
+  display: grid;
+  grid-template-columns: subgrid;
   align-items: center;
-  gap: 8px;
+  min-width: 0;
   overflow: hidden;
-  color: var(--text-3);
-  font-size: 12px;
-  font-weight: 600;
+  color: var(--text-2);
+  font-size: 13px;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
-.agent-usage--stale {
-  opacity: 0.6;
+.agent-usage > .agent-provider-icon {
+  grid-column: 1;
 }
 
 .agent-usage__window {
   display: inline-flex;
   align-items: baseline;
-  gap: 4px;
+  gap: 5px;
+  min-width: 0;
+}
+
+.agent-usage__label {
+  color: var(--text-2);
 }
 
 .agent-usage__value {
+  min-width: 3ch;
+  color: var(--text-1);
   font-weight: 600;
+  text-align: right;
 }
 
 .agent-usage__value--low {
-  color: var(--color-agent-idle);
+  color: var(--mint-text, var(--color-agent-idle));
 }
 
 .agent-usage__value--medium {
@@ -39,27 +62,31 @@
   color: var(--color-warning);
 }
 
-.agent-usage__divider {
-  width: 1px;
-  height: 11px;
-  flex: none;
-  background: rgba(var(--agent-ink), 0.18);
+.island-light .agent-usage__value--medium {
+  color: var(--agent-usage-medium, rgb(184, 92, 0));
+}
+
+.island-light .agent-usage__value--high {
+  color: var(--error-text, rgb(192, 40, 63));
 }
 
 .agent-usage__reset {
   min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
   overflow: hidden;
+  color: var(--text-2);
+  font-size: 12px;
   text-overflow: ellipsis;
-  color: var(--text-3);
-  font-weight: 400;
 }
 
-.island-hover-card__anchor.agent-usage__hover {
-  display: flex;
-  min-width: 0;
+.agent-usage__reset > svg {
+  flex: none;
 }
 
-.agent-usage__hover > .agent-usage {
-  flex: 1 1 auto;
-  min-width: 0;
+.agent-usage__stale {
+  display: inline-flex;
+  color: var(--warning-text, var(--color-warning));
 }
