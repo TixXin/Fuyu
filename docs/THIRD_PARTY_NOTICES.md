@@ -49,8 +49,8 @@ The code in `gate.rs` was rewritten in Rust and changed (address cache, restorin
 
 - Used in: screen recording to GIF (`src-tauri/src/recording/gif.rs`), linked as the Rust library `gifski` from crates.io, unmodified.
 - 用于：录屏出 GIF（`src-tauri/src/recording/gif.rs`），以 crates.io 上的 Rust 库 `gifski` 原样链接。
-- License: AGPL-3.0-or-later. Fuyu is GPL-3.0-or-later; GPLv3 section 13 allows the two to be combined, and the gifski part stays under the AGPL. Source: https://github.com/ImageOptim/gifski
-- 许可证：AGPL-3.0-or-later。浮屿是 GPL-3.0-or-later，按 GPLv3 第 13 条可以合在一起发布，gifski 那部分仍按 AGPL。源码：https://github.com/ImageOptim/gifski
+- License: AGPL-3.0-or-later. Fuyu is AGPL-3.0-only, which this license allows. Source: https://github.com/ImageOptim/gifski
+- 许可证：AGPL-3.0-or-later。浮屿是 AGPL-3.0-only，和它兼容。源码：https://github.com/ImageOptim/gifski
 
 ## Kaushan Script (Pablo Impallari)
 

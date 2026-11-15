@@ -20,7 +20,7 @@
     <a href="https://github.com/TixXin/fuyu/releases/latest"><img alt="Version" src="https://img.shields.io/github/v/release/TixXin/fuyu?label=version&style=flat-square&labelColor=1b1f24&color=3d444d"></a>
     <img alt="Platform" src="https://img.shields.io/badge/platform-Windows%2010%20%2F%2011%20%7C%20macOS%2015%2B-3d444d?style=flat-square&labelColor=1b1f24">
     <img alt="Tauri" src="https://img.shields.io/badge/Tauri-2-3d444d?style=flat-square&labelColor=1b1f24">
-    <a href="../../LICENSE"><img alt="License" src="https://img.shields.io/badge/license-GPL--3.0-3d444d?style=flat-square&labelColor=1b1f24"></a>
+    <a href="../../LICENSE"><img alt="License" src="https://img.shields.io/badge/license-AGPL--3.0-3d444d?style=flat-square&labelColor=1b1f24"></a>
     <a href="https://github.com/TixXin/fuyu/stargazers"><img alt="Stars" src="https://img.shields.io/github/stars/TixXin/fuyu?style=flat-square&label=stars&labelColor=1b1f24&color=3d444d"></a>
   </p>
 
@@ -216,7 +216,7 @@ Fuyu мы делаем все вместе, и для вас здесь тоже
 
 ## Лицензия
 
-[GPL-3.0](../../LICENSE). Авторы плагинов могут выбирать собственную лицензию. Сторонние зависимости и встроенные ресурсы распространяются под своими лицензиями: их происхождение и уведомления — в [уведомлениях о сторонних компонентах](../THIRD_PARTY_NOTICES.md), а встроенные шрифты — в [заметках о шрифтах](../../src/assets/fonts/README.md).
+[AGPL-3.0](../../LICENSE). Авторы плагинов могут выбирать собственную лицензию. Сторонние зависимости и встроенные ресурсы распространяются под своими лицензиями: их происхождение и уведомления — в [уведомлениях о сторонних компонентах](../THIRD_PARTY_NOTICES.md), а встроенные шрифты — в [заметках о шрифтах](../../src/assets/fonts/README.md).
 
 > [!NOTE]
 > Проект совместно поддерживают [TixXin](https://github.com/TixXin) и [ShengLin1001](https://github.com/ShengLin1001); в ноябре 2026 года он был переименован из fly-island в Fuyu. Автор оригинала, [flyl1u](https://github.com/flyl1u/fly-island), предпочитает простой и минималистичный динамический остров. Чтобы дать острову больше возможностей и позволить большему числу людей добавлять на него свои самодельные функции, этот проект пошёл своим путём, развивается сообществом и обзавёлся маркетплейсом плагинов. Мы рады pull request'ам (см. [как помочь проекту](../../CONTRIBUTING.md)), а также вашим компонентам в [маркетплейсе плагинов](https://github.com/TixXin/fuyu-plugins) или собственным плагинам, установленным локально (см. [документацию по плагинам](../plugins/README.md)).

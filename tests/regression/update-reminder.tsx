@@ -114,7 +114,7 @@ async function runChecks() {
       "关于页横幅是海面上的小岛，岛上直接写更新状态，不再另有状态胶囊");
     await update(() => heroIsland.click());
     check(heroIsland.textContent === "谢谢你，赛博养岛人" && document.querySelector("#settings .about-hero--greeting"), "点小岛，它会打个招呼");
-    check(document.querySelector("#settings .about-colophon")?.textContent === "浮屿 v0.3.3 · 以 GPL-3.0 开源 · 用 Tauri 和 React 构建" && document.querySelector("#settings .about-danger .settings-row"),
+    check(document.querySelector("#settings .about-colophon")?.textContent === "浮屿 v0.3.3 · 以 AGPL-3.0 开源 · 用 Tauri 和 React 构建" && document.querySelector("#settings .about-danger .settings-row"),
       "关于页最下面是落款，重置与退出是单独的危险区");
     const version = getUpdateState().nextVersion;
     await update(() => skipVersion(version));
