@@ -1,15 +1,14 @@
 import type { ReactNode } from "react";
-import { Bell, Bot, CalendarDays, ClipboardList, Inbox, Languages, ListTodo, Minus, Music, RotateCcw, Scissors, Images, Settings, Timer, type LucideIcon } from "lucide-react";
+import { Bot, CalendarDays, ClipboardList, Inbox, ListTodo, Music, Images, Timer, type LucideIcon } from "lucide-react";
 import type { AgentVisualState } from "../../features/agent-status/status";
 import type { MessageSource } from "../../features/messages/messagePreview";
-import { useUpdateReminder } from "../../features/updater/useBackgroundUpdateCheck";
+import { SlotView } from "../../features/plugin-kernel/SlotView";
 import { useTranslation } from "../../i18n";
-import { HEADER_DOT_PAGES, isPageEnabled, pageShortcutLabel, type HeaderDotPage, type IslandFeatures } from "./features";
+import { HEADER_DOT_PAGES, type HeaderDotPage, type IslandFeatures } from "./features";
+import { headerSlot, withShortcut, type IslandHeaderContext } from "./slots/header";
 import type { IslandPage } from "./types";
 import { usePageHoverSwitch } from "./usePageHoverSwitch";
 import "./IslandHeader.css";
-import { isMacOS } from "../../lib/platform";
-import { shortcutLabel } from "../../features/clipboard/shortcut";
 
 const PAGE_ICONS: Record<HeaderDotPage, LucideIcon> = {
   todo: ListTodo,
@@ -71,13 +70,21 @@ export function IslandHeader({
   pageActions,
 }: IslandHeaderProps) {
   const t = useTranslation();
-  const updateVersion = useUpdateReminder();
   const hoverSwitch = usePageHoverSwitch(hoverSwitchPage, hoverSwitchDelayMs, page, onPageChange);
-  const settingsLabel = updateVersion ? t.settings.project.update.islandReminder(updateVersion) : t.settings.title;
-  const messageBadgeLabel = t.messages.badge(qqNotificationCount, wechatPending);
-  const withShortcut = (label: string, target: IslandPage) => {
-    const shortcut = pageShortcutLabel(features, target, pageDigitModifiers);
-    return shortcut ? `${label} (${shortcutLabel(shortcut)})` : label;
+  const buttons: IslandHeaderContext = {
+    page,
+    features,
+    isDetached,
+    qqNotificationCount,
+    wechatPending,
+    onOpenSettings,
+    onOpenMessages,
+    onOpenTranslator,
+    onScreenshot,
+    onResetPosition,
+    minimizesToTray,
+    onMinimize,
+    pageDigitModifiers,
   };
   const pageLabel = (target: HeaderDotPage) => ({
     todo: t.island.todoList,
@@ -101,7 +108,7 @@ export function IslandHeader({
           <button
             className={`island__agent-button${page === "agents" ? " island__agent-button--active" : ""}`}
             type="button"
-            aria-label={withShortcut(`${agentStatusLabel} · ${t.agent.sessions.open}`, "agents")}
+            aria-label={withShortcut(buttons, `${agentStatusLabel} · ${t.agent.sessions.open}`, "agents")}
             aria-pressed={page === "agents"}
             {...hoverSwitch("agents")}
             onClick={(event) => {
@@ -131,7 +138,7 @@ export function IslandHeader({
               key={target}
               className={`dot-button dot-button--${target}${page === target ? " dot-button--active" : ""}`}
               type="button"
-              aria-label={withShortcut(pageLabel(target), target)}
+              aria-label={withShortcut(buttons, pageLabel(target), target)}
               aria-pressed={page === target}
               {...hoverSwitch(target)}
               onClick={(event) => {
@@ -158,73 +165,7 @@ export function IslandHeader({
 
       <div className="window-actions">
         {pageActions}
-        <button
-          className="icon-button island-settings-button"
-          type="button"
-          aria-label={settingsLabel}
-          onClick={(event) => {
-            event.stopPropagation();
-            onOpenSettings(updateVersion ? "updates" : undefined);
-          }}
-        >
-          <Settings size={16} strokeWidth={1.5} absoluteStrokeWidth aria-hidden="true" />
-          {updateVersion && <span className="island-settings-button__dot" aria-hidden="true" />}
-        </button>
-        {isPageEnabled("qq", features) && <button className={`icon-button island-message-button${page === "qq" ? " island-message-button--active" : ""}`} type="button" aria-label={withShortcut(t.messages.label(messageBadgeLabel), "qq")} aria-pressed={page === "qq"} onClick={() => onOpenMessages(wechatPending ? "wechat" : "qq")}>
-          <Bell size={16} strokeWidth={1.5} absoluteStrokeWidth />
-          {(qqNotificationCount > 0 || wechatPending) && <span className="island-message-button__dot" aria-hidden="true" />}
-        </button>}
-        {onOpenTranslator && (
-          <button
-            className={`icon-button island-translate-button${page === "translation" ? " island-translate-button--active" : ""}`}
-            type="button"
-            aria-label={features.translation ? withShortcut(t.translator.title, "translation") : t.translator.title}
-            aria-pressed={features.translation ? page === "translation" : undefined}
-            onClick={(event) => {
-              event.stopPropagation();
-              onOpenTranslator();
-            }}
-          >
-            <Languages size={16} strokeWidth={1.5} absoluteStrokeWidth aria-hidden="true" />
-          </button>
-        )}
-        {onScreenshot && (
-          <button
-            className="icon-button island-screenshot-button"
-            type="button"
-            aria-label={t.island.screenshot}
-            onClick={(event) => {
-              event.stopPropagation();
-              onScreenshot();
-            }}
-          >
-            <Scissors size={16} strokeWidth={1.5} absoluteStrokeWidth aria-hidden="true" />
-          </button>
-        )}
-        <button
-          className={`icon-button island-reset-button${
-            isDetached ? " island-reset-button--available" : ""
-          }`}
-          type="button"
-          aria-label={t.island.resetPositionLabel}
-          onClick={(event) => {
-            event.stopPropagation();
-            onResetPosition();
-          }}
-        >
-          <RotateCcw size={16} strokeWidth={1.5} absoluteStrokeWidth aria-hidden="true" />
-        </button>
-        <button
-          className="icon-button"
-          type="button"
-          aria-label={minimizesToTray ? (isMacOS ? t.island.minimizeToMenuBar : t.island.minimizeToTray) : t.island.tuckToTop}
-          onClick={(event) => {
-            event.stopPropagation();
-            onMinimize();
-          }}
-        >
-          <Minus size={16} strokeWidth={1.5} absoluteStrokeWidth />
-        </button>
+        <SlotView slot={headerSlot} props={buttons} select={(items) => items.filter((item) => item.enabled?.(buttons) ?? true)} />
       </div>
     </header>
   );
