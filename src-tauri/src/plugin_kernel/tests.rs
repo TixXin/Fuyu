@@ -67,6 +67,15 @@ fn safe_mode_is_passed_on_only_when_it_names_a_known_mode() {
     }
 }
 
+#[test]
+fn the_host_gets_the_built_in_plugin_list_and_the_app_version() {
+    let args = args_for(&HostMode::default());
+    let builtins = args.windows(2).find(|pair| pair[0] == "--builtins").map(|pair| std::path::PathBuf::from(&pair[1])).expect("--builtins is passed");
+    assert!(builtins.join("builtins.json").is_file(), "{}", builtins.display());
+    assert!(args.windows(2).any(|pair| pair == ["--app-version", env!("CARGO_PKG_VERSION")]), "{args:?}");
+    assert!(args.iter().position(|arg| arg == "--app-version") > args.iter().position(|arg| arg.ends_with("main.mjs")), "--app-version is the host's own flag, after the script");
+}
+
 fn wait_for(states: &mpsc::Receiver<HostState>, ready: bool) -> HostState {
     let deadline = Instant::now() + Duration::from_secs(60);
     loop {

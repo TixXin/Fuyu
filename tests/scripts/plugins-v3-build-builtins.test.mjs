@@ -39,14 +39,16 @@ function readyFrom(builtins) {
   const child = spawn(process.execPath, [...NO_TYPE_STRIPPING, MAIN, "--dir", data, "--builtins", builtins], { stdio: ["pipe", "pipe", "pipe"] });
   children.push(child);
   let stderr = "";
+  const logs = [];
   child.stderr.on("data", (chunk) => (stderr += chunk));
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => reject(new Error(`no ready in 15 s; stderr: ${stderr}`)), 15000);
     createInterface({ input: child.stdout }).on("line", (line) => {
       const message = JSON.parse(line);
+      if (message.method === "log") logs.push(message.params);
       if (message.method !== "ready") return;
       clearTimeout(timer);
-      resolve({ ready: message.params, stderr: () => stderr });
+      resolve({ ready: message.params, stderr: () => stderr, explain: (plugin) => JSON.stringify({ plugin, logs, stderr }, null, 2) });
     });
   });
 }
@@ -66,7 +68,7 @@ test("each built-in plugin's host part is one .mjs file at the path the copied l
 test("the built plugins load on a Node that cannot strip types, where the sources cannot", async () => {
   const fromBuild = await readyFrom(built.outDir);
   const timer = fromBuild.ready.plugins.find((plugin) => plugin.id === "timer");
-  assert.equal(timer.state, "running", fromBuild.stderr());
+  assert.equal(timer.state, "running", fromBuild.explain(timer));
   assert.equal(timer.kind, "builtin");
   const fromSource = await readyFrom(DEFAULT_SOURCE);
   const failed = fromSource.ready.plugins.find((plugin) => plugin.id === "timer");

@@ -3,6 +3,7 @@ import { ChevronDown, ChevronRight, Plus, Sun } from "lucide-react";
 import { useTranslation } from "../../../i18n";
 import { TodoDatePicker } from "../TodoDatePicker";
 import { isInProgress } from "../activeTodos";
+import type { TodoTags } from "../tags";
 import type { TodoItem } from "../types";
 import { useTodoNotebookEditing } from "../useTodoNotebookEditing";
 import { groupByProject, projectsOf } from "../project";
@@ -26,6 +27,7 @@ export function TodoIslandTasks({
   onCreateProject,
   onToggleTodo,
   onUpdateTodo,
+  onTagTodo,
   onStartTodo,
   onDeleteTodo,
   onReorderTodo,
@@ -45,6 +47,7 @@ export function TodoIslandTasks({
   onCreateProject?: (name: string) => string | undefined;
   onToggleTodo: (id: string) => void;
   onUpdateTodo: (id: string, title: string) => void;
+  onTagTodo: (id: string, tags: TodoTags) => void;
   onStartTodo: (id: string) => void;
   onDeleteTodo: (id: string) => void;
   onReorderTodo: (sourceId: string, targetId: string) => void;
@@ -88,6 +91,7 @@ export function TodoIslandTasks({
       onToggle={onToggleTodo}
       onStart={onStartTodo}
       onDelete={onDeleteTodo}
+      onTag={onTagTodo}
       onDragStart={editing.startTodoDrag}
       onDragMove={editing.moveTodoDrag}
       onDragEnd={editing.finishTodoDrag}

@@ -1,3 +1,5 @@
+import type { TodoColor, TodoPriority } from "../../features/todos/types";
+
 export type TodoIslandText = {
   tabsLabel: string;
   today: string;
@@ -28,6 +30,14 @@ export type TodoIslandText = {
   newProjectPlaceholder: string;
   addToProject: (project: string) => string;
   projectCount: (project: string, open: number) => string;
+  tags: {
+    menu: (title: string) => string;
+    priority: Record<TodoPriority, string>;
+    noPriority: string;
+    color: Record<TodoColor, string>;
+    noColor: string;
+    dueTitle: string;
+  };
 };
 
 export const zhCN: TodoIslandText = {
@@ -66,6 +76,14 @@ export const zhCN: TodoIslandText = {
   newProjectPlaceholder: "项目名，回车保存",
   addToProject: (project) => `新待办加到「${project}」`,
   projectCount: (project, open) => `${project}，${open} 件未完成`,
+  tags: {
+    menu: (title) => `「${title}」的优先级和颜色`,
+    priority: { high: "高优先级", medium: "中优先级", low: "低优先级" },
+    noPriority: "不设优先级",
+    color: { red: "红色", orange: "橙色", yellow: "黄色", green: "绿色", blue: "蓝色", purple: "紫色" },
+    noColor: "不设颜色",
+    dueTitle: "高优先级待办今天到期",
+  },
 };
 
 export const en: TodoIslandText = {
@@ -104,4 +122,12 @@ export const en: TodoIslandText = {
   newProjectPlaceholder: "Project name, Enter to save",
   addToProject: (project) => `New tasks go to ${project}`,
   projectCount: (project, open) => `${project}, ${open} open`,
+  tags: {
+    menu: (title) => `Priority and color of ${title}`,
+    priority: { high: "High priority", medium: "Medium priority", low: "Low priority" },
+    noPriority: "No priority",
+    color: { red: "Red", orange: "Orange", yellow: "Yellow", green: "Green", blue: "Blue", purple: "Purple" },
+    noColor: "No color",
+    dueTitle: "High-priority task due today",
+  },
 };

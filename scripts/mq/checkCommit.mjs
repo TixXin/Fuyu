@@ -20,7 +20,7 @@ export function commitBlock({ indexFile, branch, inSequence, env }) {
 
 function realDir(dir) {
   try {
-    return realpathSync(dir);
+    return realpathSync.native(dir);
   } catch {
     return path.resolve(dir);
   }
@@ -28,7 +28,7 @@ function realDir(dir) {
 
 export function customIndexNote({ indexFile, gitDir, branch, inSequence }) {
   if (!indexFile || branch !== INTEGRATION_BRANCH || inSequence) return null;
-  if (realDir(path.dirname(path.resolve(indexFile))) === realDir(gitDir)) return null;
+  if (path.relative(realDir(path.dirname(path.resolve(indexFile))), realDir(gitDir)) === "") return null;
   return [
     "",
     "提醒：这次提交用了自定义的 GIT_INDEX_FILE（没有拦）。",

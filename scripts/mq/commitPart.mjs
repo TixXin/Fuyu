@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { existsSync, lstatSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, lstatSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { SEQUENCES } from "./checkCommit.mjs";
@@ -80,15 +80,26 @@ export function parseArgs(argv) {
   return { request };
 }
 
+function canonical(dir) {
+  try {
+    return realpathSync.native(dir);
+  } catch {
+    return dir;
+  }
+}
+
 function openRepo() {
   const here = { top: process.cwd() };
   const top = run(here, ["rev-parse", "--show-toplevel"]);
-  return { top, gitDir: run(here, ["rev-parse", "--absolute-git-dir"]), cwd: process.cwd() };
+  return { top, gitDir: run(here, ["rev-parse", "--absolute-git-dir"]), prefix: run(here, ["rev-parse", "--show-prefix"]), cwd: canonical(process.cwd()) };
 }
 
-function inRepo(repo, file) {
-  const relative = path.relative(repo.top, path.resolve(repo.cwd, file)).split(path.sep).join("/");
-  if (!relative || relative.startsWith("..")) throw new Refusal(`${file} 不在这个仓库里。`);
+export function repoPath({ cwd, prefix }, file) {
+  const absolute = path.resolve(cwd, file);
+  const settled = path.isAbsolute(file) ? path.join(canonical(path.dirname(absolute)), path.basename(absolute)) : absolute;
+  const fromCwd = path.relative(cwd, settled);
+  const relative = path.isAbsolute(fromCwd) ? ".." : path.posix.normalize(`${prefix}${fromCwd.split(path.sep).join("/")}`);
+  if (!fromCwd || relative === "." || relative === ".." || relative.startsWith("../")) throw new Refusal(`${file} 不在这个仓库里。`);
   return relative;
 }
 
@@ -241,7 +252,7 @@ function prepareMessage(repo, request, scratch) {
   }
   const file = path.join(scratch, "COMMIT_EDITMSG");
   writeFileSync(file, `${pieces.map((piece) => piece.trim()).join("\n\n")}\n`);
-  const hook = tryRun(repo, ["hook", "run", "--ignore-missing", "commit-msg", "--", file]);
+  const hook = tryRun(repo, ["hook", "run", "--ignore-missing", "commit-msg", "--", file.split(path.sep).join("/")]);
   if (!hook.ok) throw new Refusal(`commit-msg 钩子没有通过，没有提交：\n${hook.out}`);
   const text = run(repo, ["stripspace"], { input: readFileSync(file) });
   if (!text) throw new Refusal("提交说明是空的。");
@@ -263,15 +274,15 @@ function alignIndex(repo, files) {
 function list(repo, files) {
   if (!files.length) throw new Refusal("--list 后面要写文件。");
   const head = run(repo, ["rev-parse", "HEAD"]);
-  const names = files.map((file) => inRepo(repo, file));
+  const names = files.map((file) => repoPath(repo, file));
   for (const file of names) console.log(listing(file, workState(repo, head, file).hunks).join("\n"));
   console.log(`\n只带其中几处：pnpm mq:commit-part -m "<标题>" --take ${names[0]}:<编号,编号…>`);
   return 0;
 }
 
 function planOf(repo, request) {
-  const parts = request.parts.map((entry) => ({ ...entry, file: inRepo(repo, entry.file) }));
-  const whole = [...new Set(request.whole.map((file) => inRepo(repo, file)))];
+  const parts = request.parts.map((entry) => ({ ...entry, file: repoPath(repo, entry.file) }));
+  const whole = [...new Set(request.whole.map((file) => repoPath(repo, file)))];
   for (const entry of parts) {
     if (whole.includes(entry.file)) throw new Refusal(`${entry.file} 既写在 -- 后面又只带一部分，选一种。`);
     if (entry.prepared !== null && (entry.ids.length || entry.patterns.length)) throw new Refusal(`${entry.file} 既用了 --as 又用了 --take / --match，选一种。`);

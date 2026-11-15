@@ -16,7 +16,7 @@ function Page() {
     todos: [{ id: "a", title: "写周报", completed: false, createdAt: 0 }], dailyNote: "", draft: "", activeTodoId: null, currentDate: TODAY, pageMode: "today",
     archives: [], selectedArchive: null, saveState: "idle", enableTodoReorder: false, scrollStartRows: 5, draftDate, scheduledTodos: [],
     onDraftChange: noop, onDraftDateChange: (date) => { picked.push(date); setDraftDate(date); }, onAddTodo: noop, projects: [], canCreateProject: false,
-    onCreateProject: () => undefined, onShowUpcoming: noop, onDeleteScheduledTodo: noop, onToggleTodo: noop, onUpdateTodo: noop, onStartTodo: noop,
+    onCreateProject: () => undefined, onShowUpcoming: noop, onDeleteScheduledTodo: noop, onTagScheduledTodo: noop, onToggleTodo: noop, onUpdateTodo: noop, onTagTodo: noop, onStartTodo: noop,
     onDeleteTodo: noop, onReorderTodo: noop, onSaveToday: noop, onShowArchive: noop, onShowDaily: noop, onShowToday: noop, onDailyNoteChange: noop, onSelectArchive: noop,
   };
   return <div style={{ height: "100%" }}><TodoIslandPage {...props} /></div>;

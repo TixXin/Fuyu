@@ -6,7 +6,7 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { commitBlock, customIndexNote } from "../../scripts/mq/checkCommit.mjs";
-import { commitPart, parseArgs } from "../../scripts/mq/commitPart.mjs";
+import { commitPart, parseArgs, repoPath } from "../../scripts/mq/commitPart.mjs";
 import { applyHunks, buildHunks, parseRanges, splitLines, strayLines } from "../../scripts/mq/hunks.mjs";
 
 const COMMIT_MSG_HOOK = fileURLToPath(new URL("../../.githooks/commit-msg", import.meta.url));
@@ -105,6 +105,17 @@ test("arguments: every way of naming what is mine, and the shapes that are refus
   assert.match(parseArgs(["--as", "a.ts"]).error, /<文件>=<准备好的文件>/);
   assert.match(parseArgs(["-m"]).error, /后面要写内容/);
   assert.match(parseArgs(["--amend"]).error, /不认识参数 --amend/);
+});
+
+test("paths are taken relative to where the command runs plus git's own prefix, so the spelling of the repo root never matters", () => {
+  const at = { cwd: path.resolve("/SHORT~1/repo/sub"), prefix: "sub/" };
+  assert.equal(repoPath(at, "a.txt"), "sub/a.txt");
+  assert.equal(repoPath(at, "./x/../y.txt"), "sub/y.txt");
+  assert.equal(repoPath(at, path.join("..", "docs", "b.md")), "docs/b.md");
+  assert.equal(repoPath({ ...at, prefix: "" }, path.join("docs", "b.md")), "docs/b.md");
+  assert.equal(repoPath(at, path.resolve("/SHORT~1/repo/sub/deep/c.txt")), "sub/deep/c.txt");
+  assert.equal(repoPath({ ...at, prefix: "" }, "..still-inside.txt"), "..still-inside.txt");
+  for (const outside of [path.join("..", "..", "elsewhere.txt"), ".", path.resolve("/other/place.txt")]) assert.throws(() => repoPath(at, outside), /不在这个仓库里/, outside);
 });
 
 test("one file edited by two sessions: only my hunk is committed, the work tree and what others staged stay as they were", () => inTempRepo((root) => {

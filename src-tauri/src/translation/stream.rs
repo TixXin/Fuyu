@@ -1,6 +1,5 @@
-use tauri::ipc::Channel;
-
 use super::provider::Provider;
+use super::request::Pieces;
 use crate::user_error::UserError;
 
 #[derive(Debug, PartialEq, Eq)]
@@ -28,7 +27,7 @@ pub(super) fn parse_line(line: &str) -> Event {
     }
 }
 
-pub(super) async fn read(mut response: reqwest::Response, provider: &Provider, on_chunk: &Channel<String>) -> Result<String, UserError> {
+pub(super) async fn read(mut response: reqwest::Response, provider: &Provider, on_chunk: Pieces<'_>) -> Result<String, UserError> {
     let name = provider.name;
     let unreadable = |error: reqwest::Error| UserError::new("net.unreadable", format!("Could not read {name}'s answer.")).arg("service", name).detail(error);
     let mut pending: Vec<u8> = Vec::new();
@@ -39,7 +38,7 @@ pub(super) async fn read(mut response: reqwest::Response, provider: &Provider, o
             let line: Vec<u8> = pending.drain(..=end).collect();
             match parse_line(&String::from_utf8_lossy(&line)) {
                 Event::Text(text) => {
-                    let _ = on_chunk.send(text.clone());
+                    on_chunk(text.clone());
                     output.push_str(&text);
                 }
                 Event::Done => break 'body,

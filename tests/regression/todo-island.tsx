@@ -20,6 +20,7 @@ const ARCHIVES: TodoArchive[] = [
   { date: "2026-10-30", todos: [], dailyNote: "休息", savedAt: 0, savedToDisk: true },
 ];
 const calls: string[] = [];
+const tagSpy = (name: string) => (id: string, tags: object) => { calls.push(`${name}:${id}:${JSON.stringify(tags)}`); };
 const spy = (name: string) => (...args: unknown[]) => { calls.push([name, ...args.filter((arg) => typeof arg !== "object")].join(":")); };
 
 function props(pageMode: TodoPageMode, extra: Partial<Props> = {}): Props {
@@ -29,7 +30,7 @@ function props(pageMode: TodoPageMode, extra: Partial<Props> = {}): Props {
     enableTodoReorder: true, scrollStartRows: 5, draftDate: null,
     scheduledTodos: [{ id: "s", title: "牙医复诊", date: "2026-11-12", createdAt: 0 }],
     onDraftChange: spy("draft"), onDraftDateChange: spy("date"), onAddTodo: spy("add"), projects: [], canCreateProject: true, onCreateProject: (name: string) => { spy("createProject")(name); return undefined; }, onShowUpcoming: spy("upcoming"),
-    onDeleteScheduledTodo: spy("deleteScheduled"), onToggleTodo: spy("toggle"), onUpdateTodo: spy("update"), onStartTodo: spy("start"),
+    onDeleteScheduledTodo: spy("deleteScheduled"), onTagScheduledTodo: tagSpy("tagScheduled"), onToggleTodo: spy("toggle"), onUpdateTodo: spy("update"), onTagTodo: tagSpy("tag"), onStartTodo: spy("start"),
     onDeleteTodo: spy("delete"), onReorderTodo: spy("reorder"), onSaveToday: spy("save"), onShowArchive: spy("archive"),
     onShowDaily: spy("daily"), onShowToday: spy("today"), onDailyNoteChange: spy("note"),
     onSelectArchive: spy("select"),
@@ -50,6 +51,14 @@ const FRAMES: { id: string; caption: string; props: Props; light?: boolean; tall
   ] }) },
   { id: "multi", caption: "同时进行两件（C62）", props: props("today", { activeTodoId: "m2", todos: [
     { ...todo("m1", "等回复"), startedAt: 1 }, { ...todo("m2", "写测试"), startedAt: 2 }, todo("m3", "买菜"),
+  ] }) },
+  { id: "tags", caption: "优先级和颜色（C72）", props: props("today", { activeTodoId: null, todos: [
+    { ...todo("t1", "交报销单"), priority: "high", color: "red" }, { ...todo("t2", "订会议室"), priority: "medium" },
+    { ...todo("t3", "看论文"), color: "blue" }, todo("t4", "买菜"),
+  ] }) },
+  { id: "tags-light", caption: "优先级和颜色：浅色岛", light: true, props: props("upcoming", { scheduledTodos: [
+    { id: "s1", title: "牙医复诊", date: "2026-11-12", createdAt: 0, priority: "high", color: "green" },
+    { id: "s2", title: "交房租", date: "2026-11-15", createdAt: 0, priority: "low", color: "yellow" },
   ] }) },
   { id: "light", caption: "浅色岛屿底色", props: props("today", { saveState: "needs-path", draftDate: "2026-11-10" }), light: true, tall: true },
 ];
@@ -95,7 +104,8 @@ try {
   const rows = $$("today", ".todo-list [data-todo-id]");
   check(rows.length === 3, "每个待办一行，带 data-todo-id（插件菜单和拖动用）");
   check(Math.abs(rows[0].getBoundingClientRect().height + 2 - TODO_ROW_HEIGHT) < 1, "一行加间距正好是岛屿按行长高的 34px");
-  check(Math.abs(rows[1].getBoundingClientRect().height - rows[0].getBoundingClientRect().height - 19) < 1, "两行标题多 19px，和岛屿增高的行高一致");
+  const extraLines = Math.round(rows[1].querySelector<HTMLElement>(".todo-island-row__title")!.offsetHeight / 19) - 1;
+  check(extraLines > 0 && Math.abs(rows[1].getBoundingClientRect().height - rows[0].getBoundingClientRect().height - 19 * extraLines) < 1, "标题每多一行多 19px，和岛屿增高的行高一致");
   check(rows[0].classList.contains("todo-island-row--active") && $("today", ".todo-island-row__stop")?.textContent === "进行中结束", "进行中的待办有强调条和结束按钮");
   check(getComputedStyle(rows[2].querySelector(".todo-island-row__title")!).textDecorationLine === "line-through", "已完成的划掉");
   const multi = $$("multi", ".todo-list [data-todo-id]");
@@ -159,6 +169,27 @@ try {
   check($("empty", ".todo-island__empty")?.textContent === "今天还很轻在上面输入一件事，回车添加", "空列表有说明");
   check(($("daily", ".todo-island__note") as HTMLTextAreaElement).value === "上午评审，下午写测试。", "笔记页");
   check($("upcoming", ".scheduled-list__item")?.textContent === "牙医复诊", "已安排页沿用分日期的列表");
+
+  const tagRows = $$("tags", ".todo-list [data-todo-id]");
+  const marks = (row: HTMLElement) => [...row.querySelectorAll(".todo-tag-dot, .todo-tag-flag")].map((mark) => mark.getAttribute("data-color") ?? mark.getAttribute("class")?.match(/--(\w+)/)?.[1] ?? "plain").join(",");
+  check(tagRows.map(marks).join("|") === "red,high|medium|blue|plain", "行上显示颜色点和优先级旗子，没设的只有一面隐藏的旗子");
+  check(tagRows[0].dataset.priority === "high" && !tagRows[3].dataset.priority, "行上带 data-priority");
+  check(getComputedStyle(tagRows[3].querySelector(".todo-tag-button")!).opacity === "0" && getComputedStyle(tagRows[0].querySelector(".todo-tag-button")!).opacity === "1", "没设标签的按钮平时隐藏，设了的一直显示");
+  check(getComputedStyle(tagRows[0].querySelector(".todo-tag-dot")!).backgroundColor !== getComputedStyle(tagRows[2].querySelector(".todo-tag-dot")!).backgroundColor, "不同颜色的点颜色不同");
+  check(tagRows.every((row) => row.offsetHeight === 32), "加了标签按钮，一行仍是 32px");
+  await click(tagRows[3].querySelector<HTMLElement>(".todo-tag-button"));
+  check([...document.querySelectorAll(".row-menu__item")].map((item) => item.textContent).join("|") === "高优先级|中优先级|低优先级|红色|橙色|黄色|绿色|蓝色|紫色", "菜单列出三档优先级和六种颜色");
+  await click(menuItem("高优先级"));
+  check(calls.includes('tag:t4:{"priority":"high"}'), "选优先级只改优先级");
+  await click(tagRows[0].querySelector<HTMLElement>(".todo-tag-button"));
+  check(menuItem("红色")?.hasAttribute("disabled") && menuItem("不设颜色") && menuItem("不设优先级"), "已选的那项不能再点，设了的可以清掉");
+  await click(menuItem("不设颜色"));
+  check(calls.includes("tag:t1:{}"), "清掉颜色");
+  const scheduled = $$("tags-light", ".scheduled-list__item");
+  check(scheduled.map(marks).join("|") === "green,high|yellow,low" && scheduled.every((item) => getComputedStyle(item.querySelector(".todo-tag-button")!).opacity === "1"), "已安排的待办也显示颜色和优先级");
+  await click(scheduled[1].querySelector<HTMLElement>(".todo-tag-button"));
+  await click(menuItem("紫色"));
+  check(calls.includes('tagScheduled:s2:{"color":"purple"}'), "已安排的待办也能改标签");
 
   const days = $$("archive", ".todo-island__archive-day");
   check($$("archive", ".todo-island__section-label").map((label) => label.textContent).join("|") === "2026年11月|2026年10月", "归档按月分组，新的在上");
