@@ -7,7 +7,7 @@
   "scripts": {
     "prepare": "node scripts/install-git-hooks.mjs",
     "dev": "vite",
-    "build:exe": "node scripts/heavy/heavy.mjs --label build:exe -- node scripts/build-exe.mjs",
+    "build:exe": "node scripts/heavy/heavy.mjs --label build:exe --lane target:release -- node scripts/build-exe.mjs",
     "heavy": "node scripts/heavy/heavy.mjs",
     "prune:target": "node scripts/prune-build-cache.mjs",
     "build": "tsc && vite build && node scripts/plugins-v3/build-builtins.mjs",
@@ -28,7 +28,7 @@
     "issue": "node scripts/issues/issues.mjs",
     "task:claim": "node scripts/tasks/tasks.mjs claim",
     "tasks:plugin": "node scripts/tasks/install-island-plugin.mjs",
-    "verify": "node scripts/heavy/heavy.mjs --label verify -- node scripts/land-check.mjs",
+    "verify": "node scripts/heavy/heavy.mjs --label verify --lane target:agents -- node scripts/land-check.mjs",
     "test:regression": "node scripts/heavy/heavy.mjs --label test:regression -- node scripts/run-regression.mjs",
     "lab": "node scripts/island-lab/server.mjs",
     "settings:index": "node scripts/settings-search-index.mjs",
