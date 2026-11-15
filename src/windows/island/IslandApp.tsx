@@ -64,6 +64,7 @@ import { useFirstRunGuide } from "./useFirstRunGuide";
 import { useSettingsFileSync } from "../../features/settings-backup/useSettingsFileSync";
 import { useOnboardingDemo, withDemoMedia } from "./useOnboardingDemo";
 import { useIslandLyrics } from "./useIslandLyrics";
+import { coverAccentVariables, useCoverColor } from "../../features/media/useCoverColor";
 import { useIslandFirstHints } from "./useIslandFirstHints";
 import { FirstHintActions, FirstHintNotice } from "../../features/first-hints/FirstHintNotice";
 import { useIslandSide } from "./useIslandSide";
@@ -216,14 +217,17 @@ export function IslandApp() {
   const expandedIslandHeight = (resizingHeight && !popup ? settings.maxPanelHeight : pageIslandHeight) + notchExpandedExtra(notch, settings.expandedScale, popup);
   const look = useMemo(() => (mode !== "collapsed" ? surfaceThemeColors(settings, "panel") : notch ? notchLook(settings) : surfaceThemeColors(settings, "collapsed")), [mode, notch, settings]);
   const accent = useAccentColor(settings);
+  const coverOn = settings.musicEnabled && settings.lyricsCoverColor;
+  const coverColor = useCoverColor(media.mediaState.thumbnail, coverOn);
   const devicePixelRatio = useDevicePixelRatio();
   const reducedMotion = useReducedMotion();
   const stageStyle = useMemo(
     () => ({
       ...getIslandStageStyle(look, mode, collapsedIslandWidth, expandedIslandHeight, expandedIslandWidth, accent, devicePixelRatio),
       ...islandMotionVariables(settings.islandMotion, mode === "collapsed" ? "close" : "open", reducedMotion),
+      ...(coverOn ? coverAccentVariables(coverColor, look.islandBackgroundColor, accent) : {}),
     }),
-    [collapsedIslandWidth, expandedIslandHeight, expandedIslandWidth, mode, look, accent, devicePixelRatio, settings.islandMotion, reducedMotion],
+    [collapsedIslandWidth, expandedIslandHeight, expandedIslandWidth, mode, look, accent, devicePixelRatio, settings.islandMotion, reducedMotion, coverOn, coverColor],
   );
 
   const { fileShelf, isShelfDropping } = useIslandShelf(settings, navigation);
@@ -284,7 +288,7 @@ export function IslandApp() {
   );
 
   return (
-    <main className={`stage stage--font-${settings.fontFamily}${isLightIsland(look.islandBackgroundColor) ? " island-light" : ""}`} style={stageStyle}>
+    <main className={`stage stage--font-${settings.fontFamily}${isLightIsland(look.islandBackgroundColor) ? " island-light" : ""}${coverOn ? " cover-color" : ""}`} style={stageStyle}>
       <IslandShell
         qqMail={qqMail}
         qqNotifications={qqNotifications}

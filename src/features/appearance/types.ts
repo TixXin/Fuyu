@@ -145,6 +145,7 @@ export type IslandSettings = CalendarSettingValues & {
   lyricsKaraokeDim: number;
   lyricsKaraokeGlow: boolean;
   lyricsKaraokeFollow: boolean;
+  lyricsCoverColor: boolean;
   mailEnabled: boolean;
   agentTitleEnabled: boolean;
   agentTitleMode: AgentTitleMode;

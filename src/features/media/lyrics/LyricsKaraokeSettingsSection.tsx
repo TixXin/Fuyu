@@ -46,6 +46,7 @@ export function LyricsKaraokeSettingsSection({ settings, onSettingsChange }: { s
         <KaraokePreview settings={settings} line={text.previewLine} />
       </SettingsRow>
       <SettingsToggleRow title={text.enabled} description={text.enabledHint} checked={on} onChange={(lyricsKaraoke) => set({ lyricsKaraoke })} />
+      <SettingsToggleRow title={text.coverColor} description={text.coverColorHint} checked={settings.lyricsCoverColor} onChange={(lyricsCoverColor) => set({ lyricsCoverColor })} />
       {on && (
         <>
           <SettingsRow

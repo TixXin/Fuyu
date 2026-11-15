@@ -17,6 +17,7 @@ export type LyricsSettingValues = {
   lyricsKaraokeDim: number;
   lyricsKaraokeGlow: boolean;
   lyricsKaraokeFollow: boolean;
+  lyricsCoverColor: boolean;
 };
 
 export type LyricsKaraokeFallback = "line" | "none";
@@ -52,6 +53,7 @@ export const DEFAULT_LYRICS_SETTINGS: LyricsSettingValues = {
   lyricsKaraokeDim: LYRICS_KARAOKE_DIM.default,
   lyricsKaraokeGlow: false,
   lyricsKaraokeFollow: true,
+  lyricsCoverColor: false,
 };
 
 export function normalizeLyricsSettings(saved: Partial<Record<keyof LyricsSettingValues, unknown>> | null | undefined): LyricsSettingValues {
@@ -73,6 +75,7 @@ export function normalizeLyricsSettings(saved: Partial<Record<keyof LyricsSettin
       : LYRICS_KARAOKE_DIM.default,
     lyricsKaraokeGlow: saved?.lyricsKaraokeGlow === true,
     lyricsKaraokeFollow: saved?.lyricsKaraokeFollow !== false,
+    lyricsCoverColor: saved?.lyricsCoverColor === true,
     lyricsOffsetMs: typeof offset === "number" && Number.isFinite(offset) ? Math.round(Math.min(3000, Math.max(-3000, offset)) / 100) * 100 : 0,
   };
 }
@@ -80,7 +83,8 @@ export function normalizeLyricsSettings(saved: Partial<Record<keyof LyricsSettin
 export type KaraokeLook = { fill: LyricsKaraokeFill; lit: string; dim: string; glow: boolean; follow: boolean };
 
 export function karaokeLook(settings: LyricsSettingValues, ink = "var(--task-text-color, #fff)"): KaraokeLook {
-  const lit = settings.lyricsKaraokeColor === "accent" ? "var(--color-accent, #74d6ff)" : settings.lyricsKaraokeColor === "custom" ? settings.lyricsKaraokeCustomColor : ink;
+  const chosen = settings.lyricsKaraokeColor === "accent" ? "var(--color-accent, #74d6ff)" : settings.lyricsKaraokeColor === "custom" ? settings.lyricsKaraokeCustomColor : ink;
+  const lit = settings.lyricsCoverColor ? `var(--cover-accent, ${chosen})` : chosen;
   return {
     fill: settings.lyricsKaraokeFill,
     lit,
