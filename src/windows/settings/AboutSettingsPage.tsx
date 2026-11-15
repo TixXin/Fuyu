@@ -16,11 +16,29 @@ import { QuitIslandRow } from "./QuitIslandRow";
 
 const CONFIRM_TIMEOUT_MS = 4_000;
 
-export function AboutSettingsPage({ onSettingsChange }: { onSettingsChange: (settings: IslandSettings) => void }) {
-  const t = useTranslation();
-  const text = t.settings.project;
+type AboutSectionProps = { onSettingsChange: (settings: IslandSettings) => void };
+
+function HistorySection() {
+  return <VersionHistory />;
+}
+
+function HelpSection() {
+  const text = useTranslation().settings.project;
+  return (
+    <SettingsGroup title={text.helpTitle}>
+      <SettingsRow
+        title={text.guide}
+        description={text.guideHint}
+        control={<SettingsLinkButton onClick={openOnboardingWindow}>{text.guideAction}</SettingsLinkButton>}
+      />
+      <UpdateDiagnosticsRow />
+    </SettingsGroup>
+  );
+}
+
+function SystemSection({ onSettingsChange }: AboutSectionProps) {
+  const text = useTranslation().settings.project;
   const [confirming, setConfirming] = useState(false);
-  const version = useSyncExternalStore(subscribeToUpdate, () => getUpdateState().version);
 
   useEffect(() => {
     if (!confirming) return;
@@ -29,46 +47,48 @@ export function AboutSettingsPage({ onSettingsChange }: { onSettingsChange: (set
   }, [confirming]);
 
   return (
+    <div className="about-danger">
+      <SettingsGroup title={text.systemTitle}>
+        <SettingsRow
+          title={text.resetAll}
+          description={text.resetAllHint}
+          control={
+            confirming ? (
+              <>
+                <SettingsLinkButton onClick={() => setConfirming(false)}>{text.resetAllCancel}</SettingsLinkButton>
+                <SettingsLinkButton
+                  tone="danger"
+                  onClick={() => {
+                    setConfirming(false);
+                    onSettingsChange(DEFAULT_SETTINGS);
+                  }}
+                >
+                  {text.resetAllConfirm}
+                </SettingsLinkButton>
+              </>
+            ) : (
+              <SettingsLinkButton tone="danger" onClick={() => setConfirming(true)}>{text.resetAllAction}</SettingsLinkButton>
+            )
+          }
+        />
+        <QuitIslandRow />
+      </SettingsGroup>
+    </div>
+  );
+}
+
+export function AboutSettingsPage(props: AboutSectionProps) {
+  const text = useTranslation().settings.project;
+  const version = useSyncExternalStore(subscribeToUpdate, () => getUpdateState().version);
+
+  return (
     <>
       <AboutHero />
       <UpdateSettingsSection />
-      <VersionHistory />
+      <HistorySection />
       <ProjectLinksSection />
-      <SettingsGroup title={text.helpTitle}>
-        <SettingsRow
-          title={text.guide}
-          description={text.guideHint}
-          control={<SettingsLinkButton onClick={openOnboardingWindow}>{text.guideAction}</SettingsLinkButton>}
-        />
-        <UpdateDiagnosticsRow />
-      </SettingsGroup>
-      <div className="about-danger">
-        <SettingsGroup title={text.systemTitle}>
-          <SettingsRow
-            title={text.resetAll}
-            description={text.resetAllHint}
-            control={
-              confirming ? (
-                <>
-                  <SettingsLinkButton onClick={() => setConfirming(false)}>{text.resetAllCancel}</SettingsLinkButton>
-                  <SettingsLinkButton
-                    tone="danger"
-                    onClick={() => {
-                      setConfirming(false);
-                      onSettingsChange(DEFAULT_SETTINGS);
-                    }}
-                  >
-                    {text.resetAllConfirm}
-                  </SettingsLinkButton>
-                </>
-              ) : (
-                <SettingsLinkButton tone="danger" onClick={() => setConfirming(true)}>{text.resetAllAction}</SettingsLinkButton>
-              )
-            }
-          />
-          <QuitIslandRow />
-        </SettingsGroup>
-      </div>
+      <HelpSection />
+      <SystemSection {...props} />
       <p className="about-colophon">{text.colophon(version)}</p>
     </>
   );

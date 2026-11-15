@@ -5,27 +5,36 @@ import { SavePathSettingsSection } from "../../features/todos/SavePathSettingsSe
 import type { useSaveDirectorySetting } from "../../features/todos/useSaveDirectorySetting";
 import { FeatureHeader } from "./FeatureHeader";
 
-export function TodosSettingsPage({
-  settings,
-  saveDirectory,
-  onSettingsChange,
-}: {
+type TodosSectionProps = {
   settings: IslandSettings;
   saveDirectory: ReturnType<typeof useSaveDirectorySetting>;
   onSettingsChange: (settings: IslandSettings) => void;
-}) {
+};
+
+function ProjectsSection({ settings }: TodosSectionProps) {
+  return <TodoProjectsSection projects={settings.todoProjects} />;
+}
+
+function SavePathSection({ saveDirectory }: TodosSectionProps) {
+  return (
+    <SavePathSettingsSection
+      saveDirectoryDraft={saveDirectory.saveDirectoryDraft}
+      savePathState={saveDirectory.savePathState}
+      highlightSavePath={saveDirectory.highlightSavePath}
+      onSaveDirectoryDraftChange={saveDirectory.onSaveDirectoryDraftChange}
+      onSaveDirectory={saveDirectory.onSaveDirectory}
+    />
+  );
+}
+
+export function TodosSettingsPage(props: TodosSectionProps) {
+  const { settings, onSettingsChange } = props;
   return (
     <>
       <FeatureHeader feature="todos" />
       <TodoSettingsSection settings={settings} onSettingsChange={onSettingsChange} />
-      <TodoProjectsSection projects={settings.todoProjects} />
-      <SavePathSettingsSection
-        saveDirectoryDraft={saveDirectory.saveDirectoryDraft}
-        savePathState={saveDirectory.savePathState}
-        highlightSavePath={saveDirectory.highlightSavePath}
-        onSaveDirectoryDraftChange={saveDirectory.onSaveDirectoryDraftChange}
-        onSaveDirectory={saveDirectory.onSaveDirectory}
-      />
+      <ProjectsSection {...props} />
+      <SavePathSection {...props} />
     </>
   );
 }

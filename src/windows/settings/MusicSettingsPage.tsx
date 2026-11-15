@@ -9,41 +9,59 @@ import { LyricsKaraokeSettingsSection } from "../../features/media/lyrics/Lyrics
 import { useTranslation } from "../../i18n";
 import { FeatureHeader } from "./FeatureHeader";
 
-export function MusicSettingsPage({
-  tab,
-  settings,
-  onSettingsChange,
-}: {
-  tab: "music" | "musicLyrics" | "musicLyricsStyle";
+type MusicSectionProps = {
   settings: IslandSettings;
   onSettingsChange: (settings: IslandSettings) => void;
-}) {
+};
+
+function IslandLyricsSection({ settings, onSettingsChange }: MusicSectionProps) {
+  return <LyricsSettingsSection part="island" settings={settings} onSettingsChange={onSettingsChange} />;
+}
+
+function TuckSection({ settings, onSettingsChange }: MusicSectionProps) {
   const t = useTranslation().settings;
-  const text = t.lyrics;
-  if (tab === "musicLyrics") return <LyricsSettingsSection part="sources" settings={settings} onSettingsChange={onSettingsChange} />;
-  if (tab === "musicLyricsStyle") {
-    return settings.lyricsOnIsland ? (
-      <LyricsKaraokeSettingsSection settings={settings} onSettingsChange={onSettingsChange} />
-    ) : (
-      <SettingsGroup title={text.karaoke.title}>
-        <SettingsRow searchable={false} title={text.onIsland} description={text.styleNeedsIsland} />
-      </SettingsGroup>
-    );
-  }
+  return (
+    <SettingsGroup title={t.expand.tuckTitle}>
+      <SettingsToggleRow
+        title={t.expand.holdMusic}
+        description={t.expand.holdMusicElsewhere}
+        checked={settings.autoTuckHoldMusic}
+        onChange={(autoTuckHoldMusic) => onSettingsChange({ ...settings, autoTuckHoldMusic })}
+      />
+    </SettingsGroup>
+  );
+}
+
+function LyricsSourcesSection({ settings, onSettingsChange }: MusicSectionProps) {
+  return <LyricsSettingsSection part="sources" settings={settings} onSettingsChange={onSettingsChange} />;
+}
+
+function KaraokeSection({ settings, onSettingsChange }: MusicSectionProps) {
+  const text = useTranslation().settings.lyrics;
+  return settings.lyricsOnIsland ? (
+    <LyricsKaraokeSettingsSection settings={settings} onSettingsChange={onSettingsChange} />
+  ) : (
+    <SettingsGroup title={text.karaoke.title}>
+      <SettingsRow searchable={false} title={text.onIsland} description={text.styleNeedsIsland} />
+    </SettingsGroup>
+  );
+}
+
+export function MusicSettingsPage({
+  tab,
+  ...props
+}: MusicSectionProps & {
+  tab: "music" | "musicLyrics" | "musicLyricsStyle";
+}) {
+  if (tab === "musicLyrics") return <LyricsSourcesSection {...props} />;
+  if (tab === "musicLyricsStyle") return <KaraokeSection {...props} />;
   return (
     <>
       <FeatureHeader feature="music" />
       <MusicBarSettingsSection />
-      <LyricsSettingsSection part="island" settings={settings} onSettingsChange={onSettingsChange} />
+      <IslandLyricsSection {...props} />
       <MusicSourceSettingsSection />
-      <SettingsGroup title={t.expand.tuckTitle}>
-        <SettingsToggleRow
-          title={t.expand.holdMusic}
-          description={t.expand.holdMusicElsewhere}
-          checked={settings.autoTuckHoldMusic}
-          onChange={(autoTuckHoldMusic) => onSettingsChange({ ...settings, autoTuckHoldMusic })}
-        />
-      </SettingsGroup>
+      <TuckSection {...props} />
     </>
   );
 }

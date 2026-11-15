@@ -17,40 +17,59 @@ import { useTrayIconVisible } from "./useTrayIconVisible";
 import { QuitIslandRow } from "./QuitIslandRow";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 
-export function GeneralSettingsPage({
-  locale,
-  settings,
-  onLocaleChange,
-  onSettingsChange,
-}: {
+type GeneralSectionProps = {
   locale: LocaleCode;
   settings: IslandSettings;
   onLocaleChange: (locale: LocaleCode) => void;
   onSettingsChange: (settings: IslandSettings) => void;
-}) {
+};
+
+function StartupSection({ locale, onLocaleChange }: GeneralSectionProps) {
   const [launchAtStartup, updateLaunchAtStartup] = useLaunchAtStartup();
   const [trayIconVisible, updateTrayIconVisible] = useTrayIconVisible();
 
   return (
+    <BehaviorSettingsSection
+      launchAtStartup={launchAtStartup}
+      trayIconVisible={trayIconVisible}
+      locale={locale}
+      onLaunchAtStartupChange={updateLaunchAtStartup}
+      onTrayIconVisibleChange={updateTrayIconVisible}
+      onLocaleChange={onLocaleChange}
+    />
+  );
+}
+
+function PositionSection({ settings, onSettingsChange }: GeneralSectionProps) {
+  return (
+    <PositionSettingsSection
+      settings={settings}
+      onSettingsChange={onSettingsChange}
+      onResetPosition={requestIslandPositionReset}
+    />
+  );
+}
+
+function DataSection() {
+  return <DataSettingsSection onMoved={moveTodoFolder} />;
+}
+
+function QuitSection() {
+  return (
+    <SettingsGroup>
+      <QuitIslandRow />
+    </SettingsGroup>
+  );
+}
+
+export function GeneralSettingsPage(props: GeneralSectionProps) {
+  return (
     <>
-      <BehaviorSettingsSection
-        launchAtStartup={launchAtStartup}
-        trayIconVisible={trayIconVisible}
-        locale={locale}
-        onLaunchAtStartupChange={updateLaunchAtStartup}
-        onTrayIconVisibleChange={updateTrayIconVisible}
-        onLocaleChange={onLocaleChange}
-      />
-      <PositionSettingsSection
-        settings={settings}
-        onSettingsChange={onSettingsChange}
-        onResetPosition={requestIslandPositionReset}
-      />
+      <StartupSection {...props} />
+      <PositionSection {...props} />
       <SystemPermissionsSection />
-      <DataSettingsSection onMoved={moveTodoFolder} />
-      <SettingsGroup>
-        <QuitIslandRow />
-      </SettingsGroup>
+      <DataSection />
+      <QuitSection />
     </>
   );
 }

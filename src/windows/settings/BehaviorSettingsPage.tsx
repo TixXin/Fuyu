@@ -9,18 +9,33 @@ import { SettingsRow } from "../../components/settings/SettingsRow";
 import { useTranslation } from "../../i18n";
 import { SystemAlertsGroup } from "./SystemAlertsGroup";
 
-export function BehaviorSettingsPage({
-  tab,
-  settings,
-  onSettingsChange,
-  onOpenPageKeys,
-}: {
-  tab: "behavior" | "behaviorTuck" | "behaviorAlerts";
+type BehaviorSectionProps = {
   settings: IslandSettings;
   onSettingsChange: (settings: IslandSettings) => void;
   onOpenPageKeys: () => void;
-}) {
+};
+
+function PageKeysSection({ onOpenPageKeys }: BehaviorSectionProps) {
   const text = useTranslation().settings.expand;
+  return (
+    <SettingsGroup>
+      <SettingsRow
+        searchable={false}
+        title={text.pageKeys}
+        description={text.pageKeysHint}
+        control={<SettingsLinkButton onClick={onOpenPageKeys}>{text.pageKeysOpen}</SettingsLinkButton>}
+      />
+    </SettingsGroup>
+  );
+}
+
+export function BehaviorSettingsPage({
+  tab,
+  ...props
+}: BehaviorSectionProps & {
+  tab: "behavior" | "behaviorTuck" | "behaviorAlerts";
+}) {
+  const { settings, onSettingsChange } = props;
   if (tab === "behaviorAlerts") {
     return (
       <>
@@ -40,14 +55,7 @@ export function BehaviorSettingsPage({
   return (
     <>
       <ExpandSettingsSection settings={settings} onSettingsChange={onSettingsChange} />
-      <SettingsGroup>
-        <SettingsRow
-          searchable={false}
-          title={text.pageKeys}
-          description={text.pageKeysHint}
-          control={<SettingsLinkButton onClick={onOpenPageKeys}>{text.pageKeysOpen}</SettingsLinkButton>}
-        />
-      </SettingsGroup>
+      <PageKeysSection {...props} />
     </>
   );
 }

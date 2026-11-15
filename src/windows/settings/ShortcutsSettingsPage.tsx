@@ -1,15 +1,19 @@
-import type { ReactNode } from "react";
+import type { Dispatch, ReactNode, SetStateAction } from "react";
 import { PageShortcutSection } from "../../features/appearance/PageShortcutSection";
 import type { IslandSettings } from "../../features/appearance/types";
 import { APPROVAL_HOTKEYS, type AgentApprovalDecision } from "../../features/agent-status/approvals/api";
+import type { ClipboardHistorySettings } from "../../features/clipboard/api";
 import { useClipboardSettings } from "../../features/clipboard/useClipboardSettings";
 import { PluginShortcutSection } from "../../features/plugins/PluginShortcutSection";
+import type { ScreenshotSettings } from "../../features/screenshot/settings";
+import type { TranslationSettings } from "../../features/translation/storage";
 import { useTranslationSettings } from "../../features/translation/useTranslationSettings";
+import type { VoiceInputSettings } from "../../features/voice-input/settings";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton";
 import { SettingsRow } from "../../components/settings/SettingsRow";
 import { ShortcutKeys } from "../../components/controls/ShortcutKeys";
-import { useTranslation } from "../../i18n";
+import { useTranslation, type Translations } from "../../i18n";
 import { isMacOS } from "../../lib/platform";
 import type { SettingsCategory } from "./categories";
 import { ShortcutFinder } from "./ShortcutFinder";
@@ -22,6 +26,22 @@ import { useShortcutOwners } from "./useShortcutOwners";
 import "./ShortcutsSettingsPage.css";
 import { shortcutLabel } from "../../features/clipboard/shortcut";
 
+type ShortcutsSectionProps = {
+  settings: IslandSettings;
+  onSettingsChange: (settings: IslandSettings) => void;
+  onOpenPage: (page: SettingsCategory) => void;
+  takenBy: ReturnType<typeof useShortcutOwners>["takenBy"];
+  refreshPlugins: () => void;
+  clipboard: ClipboardHistorySettings;
+  onClipboardChange: (settings: ClipboardHistorySettings) => Promise<void>;
+  translation: TranslationSettings;
+  onTranslationChange: Dispatch<SetStateAction<TranslationSettings>>;
+  screenshot: ScreenshotSettings;
+  onScreenshotChange: Dispatch<SetStateAction<ScreenshotSettings>>;
+  voice: VoiceInputSettings;
+  onVoiceChange: ReturnType<typeof useVoiceInputSettings>[1];
+};
+
 function ReferenceSection({ title, rows, footer, action }: { title: string; rows: [string, string][]; footer?: string; action?: ReactNode }) {
   return (
     <SettingsGroup title={title} footer={footer} action={action}>
@@ -30,6 +50,105 @@ function ReferenceSection({ title, rows, footer, action }: { title: string; rows
       ))}
     </SettingsGroup>
   );
+}
+
+function approvalLabel(t: Translations, action: AgentApprovalDecision) {
+  const approvalLabels: Partial<Record<AgentApprovalDecision, string>> = { allow: t.agent.approval.allow, deny: t.agent.approval.deny, terminal: t.agent.approval.terminal };
+  return approvalLabels[action] ?? action;
+}
+
+function pageLink(t: Translations, onOpenPage: (page: SettingsCategory) => void, page: SettingsCategory) {
+  return <SettingsLinkButton onClick={() => onOpenPage(page)}>{t.settings.shortcuts.openFeaturePage}</SettingsLinkButton>;
+}
+
+function PageKeysSection({ settings, onSettingsChange, takenBy }: ShortcutsSectionProps) {
+  return <PageShortcutSection settings={settings} onSettingsChange={onSettingsChange} takenBy={takenBy} />;
+}
+
+function ReferenceSheetSection({ settings, onOpenPage }: ShortcutsSectionProps) {
+  const t = useTranslation();
+  const text = t.settings.shortcuts;
+  return (
+    <div className="shortcut-sheet">
+      <ReferenceSection
+        title={text.islandTitle}
+        rows={[[text.collapse, "Esc"], [text.moveIsland, isMacOS ? text.altDragMac : text.altDrag], [isMacOS ? text.resizePanelMac : text.resizePanel, isMacOS ? text.altDragEdgeMac : text.altDragEdge]]}
+      />
+      {settings.translationEnabled && (
+        <ReferenceSection
+          title={text.inputTitle}
+          rows={[[text.translate, "Enter"], [text.newLine, "Shift + Enter"], [text.pasteClipboard, "Tab"]]}
+        />
+      )}
+      <ReferenceSection
+        title={text.approvalTitle}
+        rows={APPROVAL_HOTKEYS.map(({ action, shortcut }) => [approvalLabel(t, action), shortcutLabel(shortcut)])}
+        footer={text.approvalHint}
+        action={pageLink(t, onOpenPage, "agentApprovals")}
+      />
+    </div>
+  );
+}
+
+function TranslationSection({ settings, onSettingsChange, onOpenPage, takenBy, translation, onTranslationChange }: ShortcutsSectionProps) {
+  const t = useTranslation();
+  return (
+    <TranslationShortcutGroup
+      title={t.settings.categories.translation}
+      action={pageLink(t, onOpenPage, "translation")}
+      enabled={settings.translationEnabled}
+      translation={translation}
+      onTranslationChange={onTranslationChange}
+      takenBy={takenBy}
+      onTurnOn={() => onSettingsChange({ ...settings, translationEnabled: true })}
+    />
+  );
+}
+
+function ClipboardSection({ onOpenPage, takenBy, clipboard, onClipboardChange }: ShortcutsSectionProps) {
+  const t = useTranslation();
+  return (
+    <ClipboardShortcutGroup
+      title={t.settings.categories.clipboard}
+      action={pageLink(t, onOpenPage, "clipboard")}
+      clipboard={clipboard}
+      onClipboardChange={onClipboardChange}
+      takenBy={takenBy}
+      onTurnOn={() => onClipboardChange({ ...clipboard, enabled: true })}
+    />
+  );
+}
+
+function ScreenshotSection({ settings, onSettingsChange, onOpenPage, takenBy, screenshot, onScreenshotChange }: ShortcutsSectionProps) {
+  const t = useTranslation();
+  return (
+    <ScreenshotShortcutGroup
+      title={t.settings.categories.screenshot}
+      action={pageLink(t, onOpenPage, "screenshot")}
+      enabled={settings.screenshotEnabled}
+      screenshot={screenshot}
+      onScreenshotChange={onScreenshotChange}
+      takenBy={takenBy}
+      onTurnOn={() => onSettingsChange({ ...settings, screenshotEnabled: true })}
+    />
+  );
+}
+
+function VoiceInputSection({ onOpenPage, takenBy, voice, onVoiceChange }: ShortcutsSectionProps) {
+  const t = useTranslation();
+  return (
+    <VoiceInputShortcutGroup
+      action={pageLink(t, onOpenPage, "voiceInput")}
+      settings={voice}
+      onSettingsChange={onVoiceChange}
+      takenBy={(shortcut) => takenBy(shortcut, "voiceInput")}
+    />
+  );
+}
+
+function PluginsSection({ onOpenPage, takenBy, refreshPlugins }: ShortcutsSectionProps) {
+  const t = useTranslation();
+  return <PluginShortcutSection takenBy={takenBy} onChanged={refreshPlugins} action={pageLink(t, onOpenPage, "plugins")} />;
 }
 
 export function ShortcutsSettingsPage({
@@ -50,39 +169,26 @@ export function ShortcutsSettingsPage({
   const [screenshotSettings, setScreenshotSettings] = useScreenshotSettings();
   const [voiceSettings, setVoiceSettings] = useVoiceInputSettings();
   const { owners, takenBy, refreshPlugins } = useShortcutOwners({ settings, clipboard: clipboardSettings, translation: translationSettings, screenshot: screenshotSettings, voice: voiceSettings });
-  const pageLink = (page: SettingsCategory) => <SettingsLinkButton onClick={() => onOpenPage(page)}>{text.openFeaturePage}</SettingsLinkButton>;
 
-  const approvalLabels: Partial<Record<AgentApprovalDecision, string>> = { allow: t.agent.approval.allow, deny: t.agent.approval.deny, terminal: t.agent.approval.terminal };
-  const approvalLabel = (action: AgentApprovalDecision) => approvalLabels[action] ?? action;
   const approvalOwners: ShortcutOwner[] = APPROVAL_HOTKEYS.map(({ action, shortcut }) => ({
-    id: `approval:${action}`, label: `${text.approvalTitle} · ${approvalLabel(action)}`, shortcut, home: "agentApprovals",
+    id: `approval:${action}`, label: `${text.approvalTitle} · ${approvalLabel(t, action)}`, shortcut, home: "agentApprovals",
   }));
 
   const finder = <ShortcutFinder owners={[...owners, ...approvalOwners]} onOpenPage={onOpenPage} />;
+  const props = {
+    settings, onSettingsChange, onOpenPage, takenBy, refreshPlugins,
+    clipboard: clipboardSettings, onClipboardChange: updateClipboardSettings,
+    translation: translationSettings, onTranslationChange: setTranslationSettings,
+    screenshot: screenshotSettings, onScreenshotChange: setScreenshotSettings,
+    voice: voiceSettings, onVoiceChange: setVoiceSettings,
+  };
 
   if (tab === "shortcutsIsland") {
     return (
       <>
         {finder}
-      <PageShortcutSection settings={settings} onSettingsChange={onSettingsChange} takenBy={takenBy} />
-        <div className="shortcut-sheet">
-          <ReferenceSection
-            title={text.islandTitle}
-            rows={[[text.collapse, "Esc"], [text.moveIsland, isMacOS ? text.altDragMac : text.altDrag], [isMacOS ? text.resizePanelMac : text.resizePanel, isMacOS ? text.altDragEdgeMac : text.altDragEdge]]}
-          />
-          {settings.translationEnabled && (
-            <ReferenceSection
-              title={text.inputTitle}
-              rows={[[text.translate, "Enter"], [text.newLine, "Shift + Enter"], [text.pasteClipboard, "Tab"]]}
-            />
-          )}
-          <ReferenceSection
-            title={text.approvalTitle}
-            rows={APPROVAL_HOTKEYS.map(({ action, shortcut }) => [approvalLabel(action), shortcutLabel(shortcut)])}
-            footer={text.approvalHint}
-            action={pageLink("agentApprovals")}
-          />
-        </div>
+        <PageKeysSection {...props} />
+        <ReferenceSheetSection {...props} />
       </>
     );
   }
@@ -90,39 +196,11 @@ export function ShortcutsSettingsPage({
   return (
     <>
       {finder}
-      <TranslationShortcutGroup
-        title={t.settings.categories.translation}
-        action={pageLink("translation")}
-        enabled={settings.translationEnabled}
-        translation={translationSettings}
-        onTranslationChange={setTranslationSettings}
-        takenBy={takenBy}
-        onTurnOn={() => onSettingsChange({ ...settings, translationEnabled: true })}
-      />
-      <ClipboardShortcutGroup
-        title={t.settings.categories.clipboard}
-        action={pageLink("clipboard")}
-        clipboard={clipboardSettings}
-        onClipboardChange={updateClipboardSettings}
-        takenBy={takenBy}
-        onTurnOn={() => updateClipboardSettings({ ...clipboardSettings, enabled: true })}
-      />
-      <ScreenshotShortcutGroup
-        title={t.settings.categories.screenshot}
-        action={pageLink("screenshot")}
-        enabled={settings.screenshotEnabled}
-        screenshot={screenshotSettings}
-        onScreenshotChange={setScreenshotSettings}
-        takenBy={takenBy}
-        onTurnOn={() => onSettingsChange({ ...settings, screenshotEnabled: true })}
-      />
-      <VoiceInputShortcutGroup
-        action={pageLink("voiceInput")}
-        settings={voiceSettings}
-        onSettingsChange={setVoiceSettings}
-        takenBy={(shortcut) => takenBy(shortcut, "voiceInput")}
-      />
-      <PluginShortcutSection takenBy={takenBy} onChanged={refreshPlugins} action={pageLink("plugins")} />
+      <TranslationSection {...props} />
+      <ClipboardSection {...props} />
+      <ScreenshotSection {...props} />
+      <VoiceInputSection {...props} />
+      <PluginsSection {...props} />
     </>
   );
 }

@@ -5,21 +5,27 @@ import { SizeSettingsSection } from "../../features/appearance/LayoutSettingsSec
 import type { IslandSettings } from "../../features/appearance/types";
 import { requestPanelPreview } from "./storage";
 
-export function AppearanceSettingsPage({
-  settings,
-  onSettingsChange,
-}: {
+type AppearanceSectionProps = {
   settings: IslandSettings;
   onSettingsChange: (settings: IslandSettings) => void;
-}) {
+};
+
+function SizeSection({ settings, onSettingsChange }: AppearanceSectionProps) {
+  return (
+    <SizeSettingsSection
+      settings={settings}
+      onSettingsChange={onSettingsChange}
+      onPreviewIsland={(expanded) => requestPanelPreview(expanded ? "expanded" : "collapsed")}
+    />
+  );
+}
+
+export function AppearanceSettingsPage(props: AppearanceSectionProps) {
+  const { settings, onSettingsChange } = props;
   return (
     <>
       <IslandPreview settings={settings} />
-      <SizeSettingsSection
-        settings={settings}
-        onSettingsChange={onSettingsChange}
-        onPreviewIsland={(expanded) => requestPanelPreview(expanded ? "expanded" : "collapsed")}
-      />
+      <SizeSection {...props} />
       <DisplaySettingsSection settings={settings} onSettingsChange={onSettingsChange} />
       <CollapsedItemsSection />
     </>

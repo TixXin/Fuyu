@@ -3,11 +3,15 @@ import { AgentHooksSettingsSection } from "../../features/agent-status/AgentHook
 import { AgentReplyMarkerSettings } from "../../features/agent-status/AgentReplyMarkerSettings";
 import { useAgentStatusSettings } from "../../features/agent-status/useAgentStatusSettings";
 
-export function AgentConnectSettingsPage() {
+function HooksSection() {
   const agentStatus = useAgentStatusSettings();
+  return <AgentHooksSettingsSection {...agentStatus} />;
+}
+
+export function AgentConnectSettingsPage() {
   return (
     <>
-      <AgentHooksSettingsSection {...agentStatus} />
+      <HooksSection />
       <AgentReplyMarkerSettings />
       <AgentEditorExtensionSettings />
     </>

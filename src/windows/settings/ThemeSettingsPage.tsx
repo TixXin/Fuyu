@@ -12,6 +12,60 @@ import type { IslandSettings } from "../../features/appearance/types";
 import type { useSettingPresets } from "../../features/appearance/useSettingPresets";
 import { requestPanelPreview } from "./storage";
 
+type ThemeSectionProps = {
+  settings: IslandSettings;
+  presets: ReturnType<typeof useSettingPresets>;
+  onSettingsChange: (settings: IslandSettings) => void;
+  tone: ThemeTone;
+  shown: IslandSettings;
+  onEditingChange: (tone: ThemeTone | null) => void;
+};
+
+function BuiltinSection({ settings, onSettingsChange, onEditingChange: setEditing }: ThemeSectionProps) {
+  return (
+    <BuiltinThemesSection
+      settings={settings}
+      onApply={(next) => {
+        setEditing(null);
+        onSettingsChange(next);
+      }}
+    />
+  );
+}
+
+function ColorsSection({ settings, onSettingsChange, tone, shown, onEditingChange: setEditing }: ThemeSectionProps) {
+  return (
+    <ColorSettingsSection
+      settings={shown}
+      editing={tone}
+      onEditingChange={setEditing}
+      onResetSet={() => onSettingsChange(withThemeColors(settings, tone, THEME_COLORS[tone]))}
+      onSettingsChange={(next) => onSettingsChange(withThemeColors(next, tone, {
+        islandBackgroundColor: next.islandBackgroundColor,
+        taskTextColor: next.taskTextColor,
+        pulseColor: next.pulseColor,
+        inkColor: next.inkColor,
+      }))}
+    />
+  );
+}
+
+function StyleSection({ settings, onSettingsChange }: ThemeSectionProps) {
+  return (
+    <StyleSettingsSection settings={settings} onSettingsChange={onSettingsChange}>
+      <CornerSettingsRows
+        settings={settings}
+        onSettingsChange={onSettingsChange}
+        onPreviewIsland={(expanded) => requestPanelPreview(expanded ? "expanded" : "collapsed")}
+      />
+    </StyleSettingsSection>
+  );
+}
+
+function PresetsSection({ presets }: ThemeSectionProps) {
+  return <PresetSettingsSection {...presets} />;
+}
+
 export function ThemeSettingsPage({
   settings,
   presets,
@@ -25,37 +79,15 @@ export function ThemeSettingsPage({
   const [editing, setEditing] = useState<ThemeTone | null>(null);
   const tone = editing ?? activeTone(settings.themeMode, systemDark);
   const shown = resolveThemeColors(settings, systemDark, tone);
+  const props = { settings, presets, onSettingsChange, tone, shown, onEditingChange: setEditing };
   return (
     <>
       <IslandPreview settings={shown} />
       <ThemeModeSection settings={settings} onEditingChange={setEditing} onSettingsChange={onSettingsChange} />
-      <BuiltinThemesSection
-        settings={settings}
-        onApply={(next) => {
-          setEditing(null);
-          onSettingsChange(next);
-        }}
-      />
-      <ColorSettingsSection
-        settings={shown}
-        editing={tone}
-        onEditingChange={setEditing}
-        onResetSet={() => onSettingsChange(withThemeColors(settings, tone, THEME_COLORS[tone]))}
-        onSettingsChange={(next) => onSettingsChange(withThemeColors(next, tone, {
-          islandBackgroundColor: next.islandBackgroundColor,
-          taskTextColor: next.taskTextColor,
-          pulseColor: next.pulseColor,
-          inkColor: next.inkColor,
-        }))}
-      />
-      <StyleSettingsSection settings={settings} onSettingsChange={onSettingsChange}>
-        <CornerSettingsRows
-          settings={settings}
-          onSettingsChange={onSettingsChange}
-          onPreviewIsland={(expanded) => requestPanelPreview(expanded ? "expanded" : "collapsed")}
-        />
-      </StyleSettingsSection>
-      <PresetSettingsSection {...presets} />
+      <BuiltinSection {...props} />
+      <ColorsSection {...props} />
+      <StyleSection {...props} />
+      <PresetsSection {...props} />
     </>
   );
 }

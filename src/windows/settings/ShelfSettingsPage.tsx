@@ -8,13 +8,45 @@ import type { IslandSettings, ShelfDoubleClick } from "../../features/appearance
 import { useTranslation } from "../../i18n";
 import { FeatureHeader } from "./FeatureHeader";
 
-export function ShelfSettingsPage({
-  settings,
-  onSettingsChange,
-}: {
+type ShelfSectionProps = {
   settings: IslandSettings;
   onSettingsChange: (settings: IslandSettings) => void;
-}) {
+};
+
+function BehaviorSection({ settings, onSettingsChange }: ShelfSectionProps) {
+  const t = useTranslation();
+  const labels = t.settings.fileShelf;
+  const update = (patch: Partial<IslandSettings>) => onSettingsChange({ ...settings, ...patch });
+  const doubleClickOptions = [
+    { value: "open", label: labels.doubleClickOpen },
+    { value: "reveal", label: labels.doubleClickReveal },
+  ] as const;
+
+  return (
+    <SettingsGroup title={labels.title}>
+      <SettingsToggleRow
+        title={labels.expandOnDrop}
+        description={settings.shelfExpandOnDrop ? undefined : labels.expandOnDropHint}
+        checked={settings.shelfExpandOnDrop}
+        onChange={(shelfExpandOnDrop) => update({ shelfExpandOnDrop })}
+      />
+      <SettingsRow
+        title={labels.doubleClick}
+        control={
+          <SettingsSelect<ShelfDoubleClick>
+            value={settings.shelfDoubleClick}
+            options={doubleClickOptions}
+            ariaLabel={labels.doubleClick}
+            onChange={(shelfDoubleClick) => update({ shelfDoubleClick })}
+          />
+        }
+      />
+      <SettingsToggleRow title={labels.showCount} checked={settings.shelfShowCount} onChange={(shelfShowCount) => update({ shelfShowCount })} />
+    </SettingsGroup>
+  );
+}
+
+function CleanupSection({ settings, onSettingsChange }: ShelfSectionProps) {
   const t = useTranslation();
   const labels = t.settings.fileShelf;
   const update = (patch: Partial<IslandSettings>) => onSettingsChange({ ...settings, ...patch });
@@ -22,60 +54,43 @@ export function ShelfSettingsPage({
     value: String(days),
     label: days === 0 ? labels.cleanupNever : labels.cleanupDays(days),
   }));
-  const doubleClickOptions = [
-    { value: "open", label: labels.doubleClickOpen },
-    { value: "reveal", label: labels.doubleClickReveal },
-  ] as const;
 
+  return (
+    <SettingsGroup title={labels.cleanupTitle} footer={labels.cleanupHint}>
+      <SettingsRow
+        title={labels.autoCleanup}
+        control={
+          <SettingsSelect
+            value={String(settings.shelfAutoCleanupDays)}
+            options={cleanupOptions}
+            ariaLabel={labels.autoCleanup}
+            onChange={(days) => update({ shelfAutoCleanupDays: Number(days) })}
+          />
+        }
+      />
+      <SettingsToggleRow title={labels.removeMissing} checked={settings.shelfRemoveMissing} onChange={(shelfRemoveMissing) => update({ shelfRemoveMissing })} />
+      <SettingsToggleRow
+        title={labels.removeAfterDragOut}
+        checked={settings.shelfRemoveAfterDragOut}
+        onChange={(shelfRemoveAfterDragOut) => update({ shelfRemoveAfterDragOut })}
+      />
+      <SettingsNumberRow
+        title={labels.maxItems}
+        value={settings.shelfMaxItems}
+        min={MIN_SHELF_ITEMS}
+        max={MAX_SHELF_ITEMS}
+        onChange={(shelfMaxItems) => update({ shelfMaxItems })}
+      />
+    </SettingsGroup>
+  );
+}
+
+export function ShelfSettingsPage(props: ShelfSectionProps) {
   return (
     <>
       <FeatureHeader feature="shelf" />
-      <SettingsGroup title={labels.title}>
-        <SettingsToggleRow
-          title={labels.expandOnDrop}
-          description={settings.shelfExpandOnDrop ? undefined : labels.expandOnDropHint}
-          checked={settings.shelfExpandOnDrop}
-          onChange={(shelfExpandOnDrop) => update({ shelfExpandOnDrop })}
-        />
-        <SettingsRow
-          title={labels.doubleClick}
-          control={
-            <SettingsSelect<ShelfDoubleClick>
-              value={settings.shelfDoubleClick}
-              options={doubleClickOptions}
-              ariaLabel={labels.doubleClick}
-              onChange={(shelfDoubleClick) => update({ shelfDoubleClick })}
-            />
-          }
-        />
-        <SettingsToggleRow title={labels.showCount} checked={settings.shelfShowCount} onChange={(shelfShowCount) => update({ shelfShowCount })} />
-      </SettingsGroup>
-      <SettingsGroup title={labels.cleanupTitle} footer={labels.cleanupHint}>
-        <SettingsRow
-          title={labels.autoCleanup}
-          control={
-            <SettingsSelect
-              value={String(settings.shelfAutoCleanupDays)}
-              options={cleanupOptions}
-              ariaLabel={labels.autoCleanup}
-              onChange={(days) => update({ shelfAutoCleanupDays: Number(days) })}
-            />
-          }
-        />
-        <SettingsToggleRow title={labels.removeMissing} checked={settings.shelfRemoveMissing} onChange={(shelfRemoveMissing) => update({ shelfRemoveMissing })} />
-        <SettingsToggleRow
-          title={labels.removeAfterDragOut}
-          checked={settings.shelfRemoveAfterDragOut}
-          onChange={(shelfRemoveAfterDragOut) => update({ shelfRemoveAfterDragOut })}
-        />
-        <SettingsNumberRow
-          title={labels.maxItems}
-          value={settings.shelfMaxItems}
-          min={MIN_SHELF_ITEMS}
-          max={MAX_SHELF_ITEMS}
-          onChange={(shelfMaxItems) => update({ shelfMaxItems })}
-        />
-      </SettingsGroup>
+      <BehaviorSection {...props} />
+      <CleanupSection {...props} />
     </>
   );
 }
