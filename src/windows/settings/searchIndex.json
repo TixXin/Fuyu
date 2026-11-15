@@ -16,6 +16,19 @@
       "page": "general",
       "zh-CN": {
         "group": "启动与语言",
+        "title": "在托盘显示图标",
+        "description": "图标隐藏后，从开始菜单或桌面快捷方式再次打开浮屿，会弹出这一页。"
+      },
+      "en": {
+        "group": "Startup and language",
+        "title": "Show icon in the system tray",
+        "description": "While the icon is hidden, opening Fuyu again from the Start menu or a desktop shortcut brings up this page."
+      }
+    },
+    {
+      "page": "general",
+      "zh-CN": {
+        "group": "启动与语言",
         "title": "界面语言"
       },
       "en": {
@@ -87,6 +100,19 @@
       "en": {
         "group": "Data",
         "title": "Restore from file"
+      }
+    },
+    {
+      "page": "general",
+      "zh-CN": {
+        "group": "",
+        "title": "退出岛屿",
+        "description": "和托盘菜单里的「退出」一样；要再打开，从开始菜单或桌面快捷方式启动。"
+      },
+      "en": {
+        "group": "",
+        "title": "Quit the island",
+        "description": "Same as Quit in the tray menu; start it again from the Start menu or a desktop shortcut."
       }
     },
     {

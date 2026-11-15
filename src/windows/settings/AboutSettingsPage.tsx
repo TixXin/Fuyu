@@ -10,9 +10,8 @@ import { UpdateDiagnosticsRow } from "../../features/updater/UpdateDiagnosticsRo
 import { getUpdateState, subscribeToUpdate } from "../../features/updater/updaterController";
 import { UpdateSettingsSection } from "../../features/updater/UpdateSettingsSection";
 import { useTranslation } from "../../i18n";
-import { isMacOS } from "../../lib/platform";
 import { openOnboardingWindow } from "../onboarding/api";
-import { quitIsland } from "./api";
+import { QuitIslandRow } from "./QuitIslandRow";
 
 const CONFIRM_TIMEOUT_MS = 4_000;
 
@@ -65,15 +64,7 @@ export function AboutSettingsPage({ onSettingsChange }: { onSettingsChange: (set
               )
             }
           />
-          <SettingsRow
-            title={text.quit}
-            description={isMacOS ? text.quitHintMac : text.quitHint}
-            control={
-              <SettingsLinkButton tone="danger" onClick={() => void quitIsland().catch((error) => console.error("Failed to quit the island", error))}>
-                {text.quitAction}
-              </SettingsLinkButton>
-            }
-          />
+          <QuitIslandRow />
         </SettingsGroup>
       </div>
       <p className="about-colophon">{text.colophon(version)}</p>

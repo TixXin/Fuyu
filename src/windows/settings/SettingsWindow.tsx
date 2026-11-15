@@ -84,6 +84,7 @@ export function SettingsWindow() {
     if (section === "mail") setCategory("messages");
     if (section === "updates") setCategory("about");
     if (section === "agentConnect") setCategory("agentConnect");
+    if (section === "general") setCategory("general");
   }, [focusSavePath]);
 
   useEffect(() => {

@@ -46,6 +46,7 @@ mod translation;
 mod tray;
 #[cfg(target_os = "macos")]
 mod tray_mark;
+mod tray_visibility;
 mod user_error;
 #[cfg_attr(target_os = "macos", path = "wechat_reminders/macos.rs")]
 mod wechat_reminders;
@@ -89,9 +90,11 @@ pub fn run() {
     let builder = builder.plugin(tauri_nspanel::init());
     let result = builder
         .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
-            let _ = island::show_island(app);
             if let Some(link) = plugin_host::find_link(&args) {
+                let _ = island::show_island(app);
                 plugin_host::open_link(app, link, false);
+            } else {
+                tray_visibility::reopen(app);
             }
         }))
         .plugin(tauri_plugin_dialog::init())
@@ -266,7 +269,8 @@ pub fn run() {
             cc_connect;
             pets;
             platform_support;
-            tray
+            tray;
+            tray_visibility
         ))
         .build(context)
         .map(|app| {
@@ -279,6 +283,8 @@ pub fn run() {
                 }
                 #[cfg(target_os = "macos")]
                 tauri::RunEvent::Opened { urls } => plugin_host::open_opened_links(_app, &urls),
+                #[cfg(target_os = "macos")]
+                tauri::RunEvent::Reopen { .. } => tray_visibility::reopen(_app),
                 _ => {}
             })
         });
