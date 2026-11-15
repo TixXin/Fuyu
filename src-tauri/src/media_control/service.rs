@@ -5,6 +5,7 @@ use windows::Win32::UI::Input::KeyboardAndMouse::{
 
 use super::audio::{read_system_audio_peak, set_master_volume, AUDIO_ACTIVE_THRESHOLD};
 use super::session::*;
+use super::timeline_clock;
 pub(crate) use super::state::{AudioLevel, MediaCommand, MediaState};
 
 pub(crate) fn get_state(target: Option<String>) -> Result<MediaState, String> {
@@ -76,6 +77,7 @@ pub(crate) fn seek(position_ms: i64, target: Option<String>) -> Result<MediaStat
             .TryChangePlaybackPositionAsync(ticks)
             .map_err(|error| media_error("Failed to request the seek", error))?;
         if pollster::block_on(operation).unwrap_or(false) {
+            timeline_clock::seeked(session_id(&session).as_deref(), position_ms.max(0), current_unix_millis());
             thread::sleep(Duration::from_millis(40));
             read_media_state_from_manager(&manager, target.as_deref())
         } else {
