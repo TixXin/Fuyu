@@ -4,7 +4,7 @@ import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
-import { createZip, packDirectory, packFiles, packageDigest, packageFileName, readPackage } from "@fuyu/plugin-manifest";
+import { createZip, executableKind, packDirectory, packFiles, packageDigest, packageFileName, readPackage } from "@fuyu/plugin-manifest";
 import { samplePackage } from "./fixtures.mjs";
 
 const manifestFile = { path: "package.json", data: Buffer.from(JSON.stringify(samplePackage(), null, 2)) };
@@ -56,6 +56,7 @@ test("pack refuses forbidden paths and files", () => {
     ["lib/libx.dylib", "executable"],
     ["dist/engine.wasm", "executable"],
     ["lib/tool.JAR", "executable"],
+    ["lib/Main.class", "executable"],
   ];
   for (const [path, code] of cases) rejects(() => packFiles([...goodFiles(), { path, data: Buffer.from("x") }]), code);
   rejects(() => packFiles([...goodFiles(), { path: "readme.md", data: Buffer.from("x") }]), "duplicate");
@@ -63,20 +64,30 @@ test("pack refuses forbidden paths and files", () => {
   rejects(() => packFiles([{ path: "package.json", data: Buffer.from("{oops") }]), "manifest");
 });
 
-test("pack and read find executables by their header whatever the name", () => {
+test("pack and read find executables and compiled code by their header whatever the name", () => {
   const pe = Buffer.alloc(128);
   pe.write("MZ", 0, "latin1");
   pe.writeUInt32LE(64, 0x3c);
   pe.write("PE\0\0", 64, "latin1");
-  const wasm = Buffer.from([0x00, 0x61, 0x73, 0x6d, 1, 0, 0, 0]);
-  const jar = createZip([{ path: "META-INF/MANIFEST.MF", data: Buffer.from("Manifest-Version: 1.0\n") }]);
-  const headers = [pe, Buffer.from([0x7f, 0x45, 0x4c, 0x46, 2, 1, 1]), Buffer.from([0xcf, 0xfa, 0xed, 0xfe, 7, 0, 0, 1]), Buffer.from([0xca, 0xfe, 0xba, 0xbe, 0, 0, 0, 2]), wasm, jar];
-  for (const data of headers) {
+  const cases = [
+    [pe, "PE"],
+    [Buffer.from("MZ"), "PE"],
+    [Buffer.from([0x7f, 0x45, 0x4c, 0x46, 2, 1, 1]), "ELF"],
+    [Buffer.from([0xcf, 0xfa, 0xed, 0xfe, 7, 0, 0, 1]), "Mach-O"],
+    [Buffer.from([0xca, 0xfe, 0xba, 0xbe, 0, 0, 0, 2]), "Mach-O"],
+    [Buffer.from([0xca, 0xfe, 0xba, 0xbe, 0, 0, 0, 0x41]), "Java class"],
+    [Buffer.from([0x00, 0x61, 0x73, 0x6d, 1, 0, 0, 0]), "WebAssembly"],
+    [createZip([{ path: "META-INF/MANIFEST.MF", data: Buffer.from("Manifest-Version: 1.0\n") }]), "Java archive"],
+    [createZip([{ path: "com/example/Main.class", data: Buffer.from([0xca, 0xfe, 0xba, 0xbe]) }]), "Java archive"],
+  ];
+  for (const [data, kind] of cases) {
+    assert.equal(executableKind(data), kind);
     rejects(() => packFiles([...goodFiles(), { path: "assets/sound.mp3", data }]), "executable");
     rejects(() => readPackage(rawZip([manifestFile, { path: "assets/sound.mp3", data }])), "executable");
   }
-  assert.doesNotThrow(() => packFiles([...goodFiles(), { path: "notes.txt", data: Buffer.from("MZ is a text that starts like a PE") }]));
+  assert.equal(executableKind(Buffer.from("Mz is not MZ")), null);
   const plainZip = createZip([{ path: "data.json", data: Buffer.from("{}") }]);
+  assert.equal(executableKind(plainZip), null);
   assert.doesNotThrow(() => packFiles([...goodFiles(), { path: "assets/data.zip", data: plainZip }]));
 });
 
