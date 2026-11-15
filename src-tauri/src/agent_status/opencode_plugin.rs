@@ -99,7 +99,7 @@ mod tests {
         assert!(text.contains("export default { id: \"fuyu-island\", server, setup"));
         assert_eq!(state_with(&env, &vars), HookInstallState::Current);
 
-        fs::write(&path, text.replace('\n', "\r\n")).unwrap();
+        fs::write(&path, text.replace("\r\n", "\n").replace('\n', "\r\n")).unwrap();
         assert_eq!(state_with(&env, &vars), HookInstallState::Current);
         fs::write(&path, "export default {}").unwrap();
         assert_eq!(state_with(&env, &vars), HookInstallState::Outdated);
