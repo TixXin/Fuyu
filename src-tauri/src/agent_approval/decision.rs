@@ -9,6 +9,7 @@ pub enum Agent {
     Workbuddy,
     Antigravity,
     Dsh,
+    Opencode,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
@@ -41,6 +42,7 @@ impl Agent {
             Self::Workbuddy => "/workbuddy/permission-request",
             Self::Antigravity => "/antigravity/pre-tool-use",
             Self::Dsh => "/dsh/pre-tool-use",
+            Self::Opencode => "/opencode/permission",
         }
     }
 
@@ -51,6 +53,7 @@ impl Agent {
             Self::Workbuddy => "workbuddy",
             Self::Antigravity => "antigravity",
             Self::Dsh => "dsh",
+            Self::Opencode => "opencode",
         }
     }
 
@@ -209,6 +212,7 @@ pub(super) fn permission_response(
             .to_string(),
             _ => "{}".to_string(),
         },
+        Agent::Opencode => "{}".to_string(),
     }
 }
 

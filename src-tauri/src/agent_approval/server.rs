@@ -62,6 +62,36 @@ impl Shared {
         settled
     }
 
+    pub fn offer(&self, agent: Agent, input: HookInput) -> Option<ApprovalRequest> {
+        if !self.enabled.load(Ordering::Relaxed) || self.queue().is_shutting_down() {
+            return None;
+        }
+        let (request, shown) = self.queue().push(agent, Kind::Permission, input, unix_millis());
+        if shown {
+            (self.notify)(ApprovalEvent::Requested(request.clone()));
+        }
+        Some(request)
+    }
+
+    pub fn wait_for(&self, id: u64) -> (Option<Outcome>, CloseReason) {
+        wait(self, None, id, Instant::now() + self.wait_limit)
+    }
+
+    pub fn close_elsewhere(&self, id: u64) {
+        if self.queue().mark_elsewhere(id) {
+            self.changed.notify_all();
+        }
+    }
+
+    pub fn close(&self, id: u64, reason: CloseReason) {
+        let next = self.queue().remove(id);
+        self.changed.notify_all();
+        (self.notify)(ApprovalEvent::Closed { id, reason });
+        if let Some(next) = next {
+            (self.notify)(ApprovalEvent::Requested(next));
+        }
+    }
+
     pub fn shut_down(&self) {
         self.queue().shut_down();
         self.changed.notify_all();
@@ -189,14 +219,8 @@ fn answer(shared: &Shared, stream: &TcpStream, port: u16, token: &str) -> Result
     if shown {
         (shared.notify)(ApprovalEvent::Requested(request.clone()));
     }
-    let (outcome, reason) = wait(shared, stream, request.id, Instant::now() + shared.wait_limit);
-
-    let next = shared.queue().remove(request.id);
-    shared.changed.notify_all();
-    (shared.notify)(ApprovalEvent::Closed { id: request.id, reason });
-    if let Some(next) = next {
-        (shared.notify)(ApprovalEvent::Requested(next));
-    }
+    let (outcome, reason) = wait(shared, Some(stream), request.id, Instant::now() + shared.wait_limit);
+    shared.close(request.id, reason);
     if reason == CloseReason::Disconnected {
         return Ok(None);
     }
@@ -213,7 +237,7 @@ fn answer(shared: &Shared, stream: &TcpStream, port: u16, token: &str) -> Result
     }))
 }
 
-fn wait(shared: &Shared, stream: &TcpStream, id: u64, deadline: Instant) -> (Option<Outcome>, CloseReason) {
+fn wait(shared: &Shared, stream: Option<&TcpStream>, id: u64, deadline: Instant) -> (Option<Outcome>, CloseReason) {
     loop {
         {
             let queue = shared.queue();
@@ -236,7 +260,7 @@ fn wait(shared: &Shared, stream: &TcpStream, id: u64, deadline: Instant) -> (Opt
                 .wait_timeout(queue, POLL_INTERVAL.min(deadline - now))
                 .unwrap_or_else(PoisonError::into_inner);
         }
-        if hung_up(stream) {
+        if stream.is_some_and(hung_up) {
             return (None, CloseReason::Disconnected);
         }
     }

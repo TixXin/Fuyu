@@ -104,6 +104,11 @@ impl Queue {
         settled
     }
 
+    pub fn mark_elsewhere(&mut self, id: u64) -> bool {
+        let entry = self.entries.iter_mut().find(|entry| entry.request.id == id && entry.outcome.is_none());
+        entry.map(|entry| entry.elsewhere = true).is_some()
+    }
+
     pub fn answered_elsewhere(&self, id: u64) -> bool {
         self.entries.iter().any(|entry| entry.request.id == id && entry.elsewhere)
     }

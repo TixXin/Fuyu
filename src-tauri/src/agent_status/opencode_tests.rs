@@ -211,12 +211,6 @@ fn finds_the_database_and_service_file() {
     assert_eq!(database_path(home, named), Some(home.join(".local/share/opencode/opencode-canary.db")));
     let memory = |name: &str| (name == "OPENCODE_DB").then(|| OsString::from(":memory:"));
     assert_eq!(database_path(home, memory), None);
-    let missing = std::env::temp_dir().join(format!("fuyu-opencode-nohome-{}", std::process::id()));
-    assert_eq!(service_state(&missing, none), Service::Unknown);
-    let state = |name: &str| (name == "XDG_STATE_HOME").then(|| missing.clone().into_os_string());
-    fs::create_dir_all(missing.join("opencode")).unwrap();
-    fs::write(missing.join("opencode/service.json"), json!({"id": "s", "pid": u32::MAX - 7}).to_string()).unwrap();
-    assert_eq!(service_state(home, state), Service::Gone);
 }
 
 #[test]

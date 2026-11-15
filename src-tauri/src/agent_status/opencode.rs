@@ -37,12 +37,7 @@ const DESKTOP_EXES: [&str; 2] = ["OpenCode.exe", "OpenCode"];
 const UNTITLED: [&str; 2] = ["New session - ", "Child session - "];
 const RECENT_MESSAGES: i64 = 40;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(super) enum Service {
-    Unknown,
-    Running,
-    Gone,
-}
+use crate::agent_approval::OpencodeService as Service;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Stored {
@@ -67,7 +62,7 @@ fn sessions(home_dir: &Path, now: i64, window_ms: i64) -> Vec<AgentSessionSummar
     };
     let since = now - window_ms;
     let stored = cached_rows(&db, since);
-    let service = service_state(home_dir, env);
+    let service = crate::agent_approval::opencode_service_state(home_dir, env);
     finish(stored, service, now)
 }
 
@@ -107,10 +102,6 @@ pub(super) fn data_dir(home_dir: &Path, env: impl Fn(&str) -> Option<OsString>) 
     xdg_dir(home_dir, &env, "XDG_DATA_HOME", &[".local", "share"]).join("opencode")
 }
 
-fn state_dir(home_dir: &Path, env: impl Fn(&str) -> Option<OsString>) -> PathBuf {
-    xdg_dir(home_dir, &env, "XDG_STATE_HOME", &[".local", "state"]).join("opencode")
-}
-
 fn xdg_dir(home_dir: &Path, env: &impl Fn(&str) -> Option<OsString>, name: &str, fallback: &[&str]) -> PathBuf {
     env(name)
         .map(PathBuf::from)
@@ -128,22 +119,6 @@ pub(super) fn database_path(home_dir: &Path, env: impl Fn(&str) -> Option<OsStri
         }
         None => Some(data.join("opencode.db")),
     }
-}
-
-pub(super) fn service_state(home_dir: &Path, env: impl Fn(&str) -> Option<OsString>) -> Service {
-    let file = state_dir(home_dir, env).join("service.json");
-    let Some(pid) = fs::read_to_string(file)
-        .ok()
-        .and_then(|text| serde_json::from_str::<Value>(&text).ok())
-        .and_then(|info| info["pid"].as_u64())
-        .and_then(|pid| u32::try_from(pid).ok())
-    else {
-        return Service::Unknown;
-    };
-    let alive = platform::process::image_path(pid)
-        .and_then(|exe| Path::new(&exe).file_name().map(|name| name.to_string_lossy().to_lowercase()))
-        .is_some_and(|name| name.contains("opencode"));
-    if alive { Service::Running } else { Service::Gone }
 }
 
 pub(super) fn finish(stored: Vec<Stored>, service: Service, now: i64) -> Vec<AgentSessionSummary> {
