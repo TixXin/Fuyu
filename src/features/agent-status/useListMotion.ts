@@ -14,7 +14,7 @@ export const MOTION_ARCHIVING = "archiving";
 export const MOTION_PULSE = "agent-motion-pulse";
 export const MOTION_GHOST = "agent-motion-ghost";
 
-export type MotionEntry = { key: string; light?: SessionLight };
+export type MotionEntry = { key: string; light?: SessionLight; open?: number };
 
 type Box = { top: number; left: number; width: number; height: number };
 type Snapshot = { order: string; boxes: Map<string, Box>; ghosts: Array<{ node: HTMLElement; box: Box }> };
@@ -144,7 +144,7 @@ export function useListMotion(
   enabled: boolean,
   returning: string | null,
 ) {
-  const order = `${layout}\n${entries.map((entry) => entry.key).join("\n")}`;
+  const order = `${layout}\n${entries.map((entry) => (entry.open ? `${entry.key}\u0000${entry.open}` : entry.key)).join("\n")}`;
   const lights = entries.map((entry) => `${entry.key}=${entry.light ?? ""}`).join("\n");
   const settled = useRef<{ order: string; layout: string } | null>(null);
   const shot = useRef<Snapshot | null>(null);

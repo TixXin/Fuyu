@@ -2054,6 +2054,19 @@
     {
       "page": "messages",
       "zh-CN": {
+        "group": "QQ 通知",
+        "title": "看过后从岛上去掉",
+        "description": "QQ 被切到前台、或在岛上点开 QQ 后，去掉在那之前到的消息；之后到的留着。"
+      },
+      "en": {
+        "group": "QQ notifications",
+        "title": "Remove once seen",
+        "description": "When QQ comes to the front or you open it from the island, messages that arrived before then are removed; later ones stay."
+      }
+    },
+    {
+      "page": "messages",
+      "zh-CN": {
         "group": "微信提醒",
         "title": "接收微信提醒",
         "description": "已连接"
@@ -2062,6 +2075,19 @@
         "group": "WeChat reminders",
         "title": "Receive WeChat reminders",
         "description": "Connected"
+      }
+    },
+    {
+      "page": "messages",
+      "zh-CN": {
+        "group": "微信提醒",
+        "title": "看过后从岛上去掉",
+        "description": "微信被切到前台、或在岛上点开微信后，去掉在那之前到的提醒；之后到的留着。"
+      },
+      "en": {
+        "group": "WeChat reminders",
+        "title": "Remove once seen",
+        "description": "When WeChat comes to the front or you open it from the island, reminders that arrived before then are removed; later ones stay."
       }
     },
     {

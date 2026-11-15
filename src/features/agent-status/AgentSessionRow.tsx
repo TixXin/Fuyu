@@ -30,6 +30,7 @@ export function AgentSessionRow({
   showModel,
   showActivity,
   unseen,
+  subagents,
   onOpen,
 }: {
   session: AgentSessionSummary;
@@ -47,6 +48,7 @@ export function AgentSessionRow({
   showModel: boolean;
   showActivity: boolean;
   unseen?: UnseenSessions;
+  subagents?: ReactNode;
   onOpen: () => void;
 }) {
   const t = useTranslation();
@@ -67,7 +69,7 @@ export function AgentSessionRow({
   const status = [
     showPhase && phaseLabel,
     elapsed && <SessionElapsed key="elapsed" session={session} />,
-    active && session.subagents ? t.agent.sessions.subagents(session.subagents) : null,
+    active && session.subagents && !subagents ? t.agent.sessions.subagents(session.subagents) : null,
     session.todos && (
       <span key="todos" className="agent-session__todos" title={session.todos.current ? t.agent.sessions.todosCurrent(session.todos.current) : undefined}>
         {t.agent.sessions.todos(session.todos.done, session.todos.total)}
@@ -117,6 +119,7 @@ export function AgentSessionRow({
           )}
         </span>
       </button>
+      {subagents}
       {ageInSlot && <span className="agent-session__age">{age}</span>}
       {archive}
     </li>

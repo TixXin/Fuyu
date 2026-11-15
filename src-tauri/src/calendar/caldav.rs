@@ -10,6 +10,8 @@ use crate::system::updater::get_updater_proxy;
 const MAX_RESPONSE_BYTES: usize = 8 * 1024 * 1024;
 const MAX_CALENDARS: usize = 20;
 const MAX_REDIRECTS: usize = 5;
+const MAX_ITEMS: usize = 1000;
+const MULTIGET_BATCH: usize = 100;
 
 #[derive(Debug, Default, PartialEq, Eq)]
 pub(super) struct DavResponse {
@@ -282,11 +284,57 @@ pub(super) async fn calendars<T: Transport>(transport: &T, base: &Url) -> Result
     found.iter().filter(|response| response.is_calendar).take(MAX_CALENDARS).map(|response| join(&listed.url, &response.href)).collect()
 }
 
+const PROPFIND_ITEMS: &str = r#"<?xml version="1.0" encoding="utf-8"?>
+<d:propfind xmlns:d="DAV:"><d:prop><d:getetag/><d:resourcetype/></d:prop></d:propfind>"#;
+
+fn escape_xml(text: &str) -> String {
+    text.replace('&', "&amp;").replace('<', "&lt;").replace('>', "&gt;")
+}
+
+pub(super) fn calendar_multiget(hrefs: &[String]) -> String {
+    let hrefs: String = hrefs.iter().map(|href| format!("<d:href>{}</d:href>", escape_xml(href))).collect();
+    format!(
+        r#"<?xml version="1.0" encoding="utf-8"?>
+<c:calendar-multiget xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:caldav"><d:prop><d:getetag/><c:calendar-data/></d:prop>{hrefs}</c:calendar-multiget>"#
+    )
+}
+
+async fn item_hrefs<T: Transport>(transport: &T, calendar: &Url) -> Result<Vec<String>, UserError> {
+    let listed = dav(transport, "PROPFIND", calendar, "1", PROPFIND_ITEMS).await?;
+    let mut items = Vec::new();
+    for response in parse_multistatus(&listed.body).into_iter().filter(|response| !response.is_calendar) {
+        let url = join(&listed.url, &response.href)?;
+        if url.path() != calendar.path() && url.path() != listed.url.path() && !url.path().ends_with('/') {
+            items.push(response.href);
+        }
+    }
+    items.truncate(MAX_ITEMS);
+    Ok(items)
+}
+
+async fn read_items<T: Transport>(transport: &T, calendar: &Url) -> Result<Vec<String>, UserError> {
+    let items = item_hrefs(transport, calendar).await?;
+    let mut texts = Vec::new();
+    for batch in items.chunks(MULTIGET_BATCH) {
+        let answer = dav(transport, "REPORT", calendar, "1", &calendar_multiget(batch)).await?;
+        texts.extend(parse_multistatus(&answer.body).into_iter().flat_map(|response| response.calendar_data));
+    }
+    Ok(texts)
+}
+
+async fn calendar_events<T: Transport>(transport: &T, calendar: &Url, from: DateTime<Utc>, to: DateTime<Utc>) -> Result<Vec<String>, UserError> {
+    let answer = follow(transport, "REPORT", calendar, "1", &calendar_query(from, to)).await?;
+    if matches!(answer.status, 401 | 403) || (200..300).contains(&answer.status) {
+        return Ok(parse_multistatus(&checked(answer)?.body).into_iter().flat_map(|response| response.calendar_data).collect());
+    }
+    let refused = checked(answer).err();
+    read_items(transport, calendar).await.map_err(|error| refused.unwrap_or(error))
+}
+
 pub(super) async fn events<T: Transport>(transport: &T, base: &Url, from: DateTime<Utc>, to: DateTime<Utc>) -> Result<Vec<String>, UserError> {
     let mut texts = Vec::new();
     for calendar in calendars(transport, base).await? {
-        let answer = dav(transport, "REPORT", &calendar, "1", &calendar_query(from, to)).await?;
-        texts.extend(parse_multistatus(&answer.body).into_iter().flat_map(|response| response.calendar_data));
+        texts.extend(calendar_events(transport, &calendar, from, to).await?);
     }
     Ok(texts)
 }

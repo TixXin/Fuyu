@@ -48,6 +48,10 @@ export function setWeChatHideTaskbarButton(enabled: boolean) {
   return invoke<ReminderSnapshot>("set_wechat_hide_taskbar_button", { enabled });
 }
 
+export function setWeChatAutoClear(enabled: boolean) {
+  return invoke<ReminderSnapshot>("set_wechat_auto_clear", { enabled });
+}
+
 export function clearWeChatReminders() {
   return invoke<ReminderSnapshot>("clear_wechat_reminders");
 }

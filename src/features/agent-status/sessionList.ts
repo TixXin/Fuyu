@@ -17,7 +17,26 @@ export function sameAgentSessions(a: AgentSessionSummary[], b: AgentSessionSumma
         session.host?.name === other.host?.name &&
         session.currentTool?.name === other.currentTool?.name &&
         session.currentTool?.detail === other.currentTool?.detail &&
+        sameSubagents(session.subagentList, other.subagentList) &&
         Math.floor(session.updatedAt / 60_000) === Math.floor(other.updatedAt / 60_000)
+      );
+    })
+  );
+}
+
+function sameSubagents(a: AgentSessionSummary["subagentList"], b: AgentSessionSummary["subagentList"]) {
+  const left = a ?? [];
+  const right = b ?? [];
+  return (
+    left.length === right.length &&
+    left.every((agent, index) => {
+      const other = right[index];
+      return (
+        agent.id === other.id &&
+        agent.description === other.description &&
+        agent.startedAt === other.startedAt &&
+        agent.currentTool?.name === other.currentTool?.name &&
+        agent.currentTool?.detail === other.currentTool?.detail
       );
     })
   );

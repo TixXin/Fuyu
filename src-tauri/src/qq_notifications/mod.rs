@@ -83,6 +83,43 @@ struct MonitorState {
     snapshot: NotificationSnapshot,
     generation: u64,
     buffer: NotificationBuffer,
+    auto_clear: bool,
+}
+
+impl MonitorState {
+    fn forget_seen(&mut self, at: i64) -> bool {
+        if !self.snapshot.enabled || !self.auto_clear {
+            return false;
+        }
+        let before = self.buffer.items.len();
+        self.buffer.items.retain(|item| item.created_at > at);
+        if self.buffer.items.len() == before {
+            return false;
+        }
+        self.snapshot.items = self.buffer.items.clone();
+        self.snapshot.revision += 1;
+        true
+    }
+}
+
+fn now_ms() -> i64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|time| time.as_millis() as i64)
+        .unwrap_or_default()
+}
+
+fn forget_seen(service: &NotificationService, at: i64) {
+    let snapshot = {
+        let Ok(mut state) = service.state.lock() else {
+            return;
+        };
+        if !state.forget_seen(at) {
+            return;
+        }
+        state.snapshot.clone()
+    };
+    publish(service, snapshot, None);
 }
 
 struct NotificationService {
@@ -166,6 +203,13 @@ pub fn set_qq_notifications_enabled(enabled: bool) -> Result<NotificationSnapsho
     publish(service, snapshot.clone(), None);
     let _ = service.wake.try_send(());
     Ok(snapshot)
+}
+
+#[tauri::command]
+pub fn set_qq_auto_clear(enabled: bool) -> Result<NotificationSnapshot, String> {
+    let mut state = service()?.state.lock().map_err(|_| "QQ 通知状态不可用。")?;
+    state.auto_clear = enabled;
+    Ok(state.snapshot.clone())
 }
 
 #[tauri::command]
@@ -260,9 +304,14 @@ fn publish(
 
 #[tauri::command]
 pub async fn open_qq() -> Result<(), String> {
+    let asked_at = now_ms();
     tauri::async_runtime::spawn_blocking(|| activate_existing_qq(&qq_executable()?))
         .await
-        .map_err(|error| format!("打开 QQ 的线程失败：{error}"))?
+        .map_err(|error| format!("打开 QQ 的线程失败：{error}"))??;
+    if let Ok(service) = service() {
+        forget_seen(service, asked_at);
+    }
+    Ok(())
 }
 
 macro_rules! tauri_commands {
@@ -274,6 +323,7 @@ macro_rules! tauri_commands {
             crate::qq_notifications::open_qq_notification_settings,
             crate::qq_notifications::clear_qq_notifications,
             crate::qq_notifications::open_qq,
+            crate::qq_notifications::set_qq_auto_clear,
         ] $($rest)*)
     };
 }

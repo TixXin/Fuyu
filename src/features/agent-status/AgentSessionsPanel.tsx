@@ -25,6 +25,7 @@ import { AgentApprovalCard } from "./approvals/AgentApprovalCard";
 import { AgentQuestionCard } from "./approvals/AgentQuestionCard";
 import type { AgentApprovals } from "./approvals/useAgentApprovals";
 import { AgentSessionRow } from "./AgentSessionRow";
+import { AgentSubagents, listedSubagents } from "./AgentSubagents";
 import "./AgentSessionsPanel.css";
 
 const NOT_FOUND_NOTICE_MS = 3000;
@@ -71,6 +72,7 @@ export function AgentSessionsPanel({
   const [now, setNow] = useState(() => Date.now());
   const effortLabels = useEffortLabels();
   const [notFoundId, setNotFoundId] = useState<string | null>(null);
+  const [openSubagents, setOpenSubagents] = useState<ReadonlySet<string>>(() => new Set());
   const extensionHint = useEditorExtensionHint();
   const list = useScrollFade<HTMLUListElement>(sessions);
   const motion = useArchiveMotion(list.element, removal, archiveMotion);
@@ -82,7 +84,11 @@ export function AgentSessionsPanel({
     list.element,
     arranged.flatMap(({ key, heading, sessions: members }) => [
       ...(heading ? [{ key: `group:${key}` }] : []),
-      ...members.map((session) => ({ key: sessionKey(session), light: sessionLight(session) })),
+      ...members.map((session) => ({
+        key: sessionKey(session),
+        light: sessionLight(session),
+        open: view === "list" && openSubagents.has(sessionKey(session)) ? listedSubagents(session).length : 0,
+      })),
     ]),
     view,
     !reveal && !approvals?.current,
@@ -103,6 +109,14 @@ export function AgentSessionsPanel({
   }, [measure, cardKey]);
 
   useEffect(() => {
+    setOpenSubagents((current) => {
+      const running = new Set(listed.filter((session) => listedSubagents(session).length > 0).map(sessionKey));
+      const kept = [...current].filter((key) => running.has(key));
+      return kept.length === current.size ? current : new Set(kept);
+    });
+  }, [listed]);
+
+  useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), AGE_REFRESH_MS);
     return () => window.clearInterval(timer);
   }, []);
@@ -112,6 +126,13 @@ export function AgentSessionsPanel({
     const timer = window.setTimeout(() => setNotFoundId(null), NOT_FOUND_NOTICE_MS);
     return () => window.clearTimeout(timer);
   }, [notFoundId]);
+
+  const toggleSubagents = (key: string) =>
+    setOpenSubagents((current) => {
+      const next = new Set(current);
+      if (!next.delete(key)) next.add(key);
+      return next;
+    });
 
   const focus = (session: AgentSessionSummary) => {
     setNotFoundId(null);
@@ -230,6 +251,11 @@ export function AgentSessionsPanel({
               showModel={showModel}
               showActivity={showActivity}
               unseen={unseen}
+              subagents={
+                !reveal && listedSubagents(session).length > 0 ? (
+                  <AgentSubagents session={session} open={openSubagents.has(key)} onToggle={() => toggleSubagents(key)} />
+                ) : undefined
+              }
               onOpen={() => focus(session)}
             />
           );

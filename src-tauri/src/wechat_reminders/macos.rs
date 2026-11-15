@@ -4,11 +4,15 @@ mod plugin_view;
 use serde::Serialize;
 use std::{
     sync::{Arc, Mutex, OnceLock},
-    time::{SystemTime, UNIX_EPOCH},
+    thread,
+    time::{Duration, SystemTime, UNIX_EPOCH},
 };
 use tauri::{AppHandle, Emitter, Manager};
 
-use crate::macos::dock_badges::{self, Badge};
+use crate::macos::{
+    apps,
+    dock_badges::{self, Badge},
+};
 
 pub(crate) use plugin_view::plugin_messages;
 
@@ -65,6 +69,19 @@ impl Default for ReminderSnapshot {
 struct ReminderState {
     snapshot: ReminderSnapshot,
     unread: u32,
+    auto_clear: bool,
+}
+
+impl ReminderState {
+    fn forget_before(&mut self, at: u64) -> bool {
+        let before = self.snapshot.items.len();
+        self.snapshot.items.retain(|item| item.at > at);
+        self.snapshot.items.len() != before
+    }
+
+    fn forget_seen(&mut self, at: u64) -> bool {
+        self.snapshot.enabled && self.auto_clear && self.forget_before(at)
+    }
 }
 
 struct ReminderService {
@@ -98,10 +115,16 @@ fn apply(state: &mut ReminderState, reading: Badge, now: u64) -> bool {
             state.snapshot.status = "permissionRequired";
             state.snapshot.pending = false;
         }
-        Badge::NotInDock | Badge::Label(None) => {
+        Badge::NotInDock => {
             state.snapshot.status = "listening";
             state.snapshot.pending = false;
             state.unread = 0;
+        }
+        Badge::Label(None) => {
+            state.snapshot.status = "listening";
+            state.snapshot.pending = false;
+            state.unread = 0;
+            state.forget_seen(now);
         }
         Badge::Label(Some(label)) => {
             let unread = dock_badges::unread(&label);
@@ -122,9 +145,34 @@ fn apply(state: &mut ReminderState, reading: Badge, now: u64) -> bool {
     changed
 }
 
+fn in_front() -> bool {
+    let Some(front) = apps::frontmost_path() else { return false };
+    apps::path_for_bundle_id(BUNDLE_ID).is_some_and(|path| path.trim_end_matches('/') == front.trim_end_matches('/'))
+}
+
+fn watch_front(service: Arc<ReminderService>) -> Result<(), String> {
+    thread::Builder::new()
+        .name("wechat-seen".into())
+        .spawn(move || {
+            let mut was_front = false;
+            loop {
+                let watching = service.state.lock().is_ok_and(|state| state.snapshot.enabled && state.auto_clear);
+                let front = watching && in_front();
+                if front && !was_front {
+                    let _ = update(|state| state.forget_seen(now_ms()));
+                }
+                was_front = front;
+                thread::sleep(Duration::from_secs(1));
+            }
+        })
+        .map(|_| ())
+        .map_err(|error| error.to_string())
+}
+
 pub fn init(app: &AppHandle) -> Result<(), String> {
     let service = Arc::new(ReminderService { app: app.clone(), state: Mutex::new(ReminderState::default()) });
     SERVICE.set(service.clone()).map_err(|_| "The WeChat reminder service is already running.".to_string())?;
+    watch_front(service.clone())?;
     let wanted = service.clone();
     dock_badges::watch(
         "wechat-reminders",
@@ -176,7 +224,7 @@ pub fn set_wechat_reminders_enabled(enabled: bool) -> Result<ReminderSnapshot, S
         if state.snapshot.enabled == enabled {
             return false;
         }
-        *state = ReminderState::default();
+        *state = ReminderState { auto_clear: state.auto_clear, ..ReminderState::default() };
         state.snapshot.enabled = enabled;
         state.snapshot.status = if enabled { "waiting" } else { "disabled" };
         true
@@ -196,6 +244,14 @@ pub fn set_wechat_hide_taskbar_button(enabled: bool) -> Result<ReminderSnapshot,
 }
 
 #[tauri::command]
+pub fn set_wechat_auto_clear(enabled: bool) -> Result<ReminderSnapshot, String> {
+    update(|state| {
+        state.auto_clear = enabled;
+        false
+    })
+}
+
+#[tauri::command]
 pub fn clear_wechat_reminders() -> Result<ReminderSnapshot, String> {
     update(|state| {
         let had = !state.snapshot.items.is_empty();
@@ -210,7 +266,9 @@ pub async fn open_wechat(chat: Option<String>) -> Result<(), String> {
     if !crate::macos::accessibility::is_trusted() {
         let _ = dock_badges::open_accessibility_settings();
     }
-    tauri::async_runtime::spawn_blocking(|| dock_badges::open_app(BUNDLE_ID)).await.map_err(|error| error.to_string())?
+    let asked_at = now_ms();
+    tauri::async_runtime::spawn_blocking(|| dock_badges::open_app(BUNDLE_ID)).await.map_err(|error| error.to_string())??;
+    update(|state| state.forget_seen(asked_at)).map(|_| ())
 }
 
 pub(crate) fn shutdown() {}
@@ -223,6 +281,7 @@ macro_rules! tauri_commands {
             crate::wechat_reminders::set_wechat_expose_ui,
             crate::wechat_reminders::set_wechat_hide_taskbar_button,
             crate::wechat_reminders::clear_wechat_reminders,
+            crate::wechat_reminders::set_wechat_auto_clear,
         ] $($rest)*)
     };
 }
@@ -255,5 +314,24 @@ mod tests {
         assert!(apply(&mut state, Badge::NotAllowed, 50));
         assert_eq!(state.snapshot.status, "permissionRequired");
         assert!(!apply(&mut state, Badge::NotAllowed, 60));
+    }
+
+    #[test]
+    fn a_cleared_badge_forgets_only_what_arrived_before_it_when_auto_clear_is_on() {
+        let mut state = enabled();
+        assert!(apply(&mut state, Badge::Label(Some("1".into())), 10));
+        assert!(apply(&mut state, Badge::Label(None), 20));
+        assert_eq!(state.snapshot.items.len(), 1, "nothing is forgotten while auto clear is off");
+        state.auto_clear = true;
+        assert!(apply(&mut state, Badge::Label(Some("2".into())), 30));
+        assert!(apply(&mut state, Badge::NotInDock, 40));
+        assert_eq!(state.snapshot.items.len(), 2, "WeChat quitting is not a sign of reading");
+        assert!(apply(&mut state, Badge::Label(Some("1".into())), 50));
+        assert!(apply(&mut state, Badge::Label(None), 45));
+        let left: Vec<_> = state.snapshot.items.iter().map(|item| item.at).collect();
+        assert_eq!(left, [50], "a message that arrived after the badge cleared stays");
+        assert!(!state.forget_seen(49));
+        assert!(state.forget_seen(50));
+        assert!(state.snapshot.items.is_empty());
     }
 }

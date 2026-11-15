@@ -34,6 +34,10 @@ pub(crate) fn is_v_key_down() -> bool {
     CGEventSource::key_state(CGEventSourceStateID::CombinedSessionState, KEY_V)
 }
 
+pub(crate) fn is_shift_key_down() -> bool {
+    CGEventSource::flags_state(CGEventSourceStateID::CombinedSessionState).contains(CGEventFlags::MaskShift)
+}
+
 pub(crate) fn is_command_key_down() -> bool {
     CGEventSource::flags_state(CGEventSourceStateID::CombinedSessionState).contains(CGEventFlags::MaskCommand)
 }

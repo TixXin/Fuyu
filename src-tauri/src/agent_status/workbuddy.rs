@@ -1,4 +1,7 @@
-use std::{fs, path::Path};
+use std::{
+    fs,
+    path::{Path, PathBuf},
+};
 
 use serde_json::{json, Value};
 
@@ -15,12 +18,11 @@ use super::tool_call::codex_tool_call;
 use super::{write_text_file, AGENT_APPROVAL_SCRIPT_FILE_NAME, AGENT_RUNNING_NOTIFICATION_ARG};
 
 pub(super) const PROVIDER: &str = "workbuddy";
-pub(super) const DIR: &str = ".workbuddy";
-pub(super) const APP: &str = "workbuddy";
+const DIRS: [&str; 2] = [".workbuddy", ".workbuddy-ai"];
 #[cfg(not(target_os = "macos"))]
-const EXE: &str = "WorkBuddy.exe";
+const EXES: [&str; 2] = ["WorkBuddy.exe", "WorkBuddyAI.exe"];
 #[cfg(target_os = "macos")]
-const BUNDLE_ID: &str = "com.workbuddy.workbuddy-ai";
+const BUNDLES: [(&str, &str); 1] = [("com.workbuddy.workbuddy-ai", "workbuddy ai")];
 const INTERRUPTED: &str = "Interrupted by user";
 
 pub(super) const HARNESS: Harness = Harness {
@@ -126,26 +128,37 @@ fn output_text(content: &Value) -> Option<String> {
     (!parts.is_empty()).then(|| parts.join("\n"))
 }
 
-#[cfg(not(target_os = "macos"))]
+pub(super) fn data_dirs(home_dir: &Path) -> Vec<PathBuf> {
+    DIRS.iter().map(|dir| home_dir.join(dir)).collect()
+}
+
+fn installed_dirs(home_dir: &Path) -> Vec<PathBuf> {
+    data_dirs(home_dir).into_iter().filter(|dir| dir.is_dir()).collect()
+}
+
 pub(super) fn app_running() -> bool {
-    crate::platform::process::running_executable(&[EXE]).is_some()
+    running_app().is_some()
+}
+
+#[cfg(not(target_os = "macos"))]
+pub(super) fn running_app() -> Option<String> {
+    let path = crate::platform::process::running_executable(&EXES)?;
+    Path::new(&path).file_stem().map(|stem| stem.to_string_lossy().to_lowercase())
 }
 
 #[cfg(target_os = "macos")]
-pub(super) fn app_running() -> bool {
-    crate::platform::process::app_bundle_running(BUNDLE_ID)
+pub(super) fn running_app() -> Option<String> {
+    BUNDLES
+        .iter()
+        .find(|(bundle_id, _)| crate::platform::process::app_bundle_running(bundle_id))
+        .map(|(_, app)| app.to_string())
 }
 
-pub(super) fn prompt_files(home_dir: &Path) -> Vec<std::path::PathBuf> {
-    let dir = std::env::var_os("WORKBUDDY_CONFIG_DIR")
-        .map(std::path::PathBuf::from)
-        .filter(|dir| dir.is_absolute())
-        .unwrap_or_else(|| home_dir.join(DIR));
-    vec![dir.join("CODEBUDDY.md")]
-}
-
-fn settings_path(home_dir: &Path) -> std::path::PathBuf {
-    home_dir.join(DIR).join("settings.json")
+pub(super) fn prompt_files(home_dir: &Path) -> Vec<PathBuf> {
+    match std::env::var_os("WORKBUDDY_CONFIG_DIR").map(PathBuf::from).filter(|dir| dir.is_absolute()) {
+        Some(dir) => vec![dir.join("CODEBUDDY.md")],
+        None => data_dirs(home_dir).into_iter().map(|dir| dir.join("CODEBUDDY.md")).collect(),
+    }
 }
 
 pub(super) fn hook_entries(env: &HookEnv) -> Vec<(&'static str, Value)> {
@@ -163,23 +176,28 @@ pub(super) fn hook_entries(env: &HookEnv) -> Vec<(&'static str, Value)> {
 }
 
 fn hooks_state(env: &HookEnv) -> HookInstallState {
-    if !env.home_dir.join(DIR).is_dir() {
-        return HookInstallState::Absent;
-    }
-    let Some(config) = fs::read_to_string(settings_path(env.home_dir))
-        .ok()
-        .and_then(|text| serde_json::from_str::<Value>(&text).ok())
-    else {
-        return HookInstallState::NotInstalled;
-    };
-    hook_entries_state(&config["hooks"], &hook_entries(env))
+    let entries = hook_entries(env);
+    let states: Vec<HookInstallState> = installed_dirs(env.home_dir)
+        .iter()
+        .map(|dir| {
+            fs::read_to_string(dir.join("settings.json"))
+                .ok()
+                .and_then(|text| serde_json::from_str::<Value>(&text).ok())
+                .map_or(HookInstallState::NotInstalled, |config| hook_entries_state(&config["hooks"], &entries))
+        })
+        .collect();
+    [HookInstallState::NotInstalled, HookInstallState::Outdated, HookInstallState::Current]
+        .into_iter()
+        .find(|state| states.contains(state))
+        .unwrap_or(HookInstallState::Absent)
 }
 
 pub(super) fn install_hooks(env: &HookEnv) -> Result<(), String> {
-    if !env.home_dir.join(DIR).is_dir() {
-        return Ok(());
-    }
-    let path = settings_path(env.home_dir);
+    installed_dirs(env.home_dir).iter().try_for_each(|dir| install_hooks_in(env, dir))
+}
+
+fn install_hooks_in(env: &HookEnv, dir: &Path) -> Result<(), String> {
+    let path = dir.join("settings.json");
     let mut config = match fs::read_to_string(&path) {
         Ok(content) if !content.trim().is_empty() => serde_json::from_str::<Value>(&content)
             .map_err(|error| format!("Failed to parse WorkBuddy settings.json: {error}"))?,
@@ -279,12 +297,12 @@ mod tests {
         let status = home.join(".fuyu").join(crate::agent_status::AGENT_STATUS_SCRIPT_FILE_NAME);
         let env = HookEnv { home_dir: &home, running_script: &running, status_script: &status };
         install_hooks(&env).unwrap();
-        assert!(!home.join(DIR).exists());
+        assert!(data_dirs(&home).iter().all(|dir| !dir.exists()));
         assert_eq!(hooks_state(&env), HookInstallState::Absent);
 
-        fs::create_dir_all(home.join(DIR)).unwrap();
+        fs::create_dir_all(home.join(".workbuddy")).unwrap();
         assert_eq!(hooks_state(&env), HookInstallState::NotInstalled);
-        let settings = settings_path(&home);
+        let settings = home.join(".workbuddy").join("settings.json");
         fs::write(&settings, r#"{"sandbox":{"on":true},"hooks":{"Stop":[{"hooks":[{"type":"command","command":"mine"}]}]}}"#).unwrap();
         install_hooks(&env).unwrap();
         install_hooks(&env).unwrap();
@@ -307,6 +325,22 @@ mod tests {
         stale["hooks"]["Stop"].as_array_mut().unwrap().pop();
         fs::write(&settings, stale.to_string()).unwrap();
         assert_eq!(hooks_state(&env), HookInstallState::Outdated);
+
+        fs::create_dir_all(home.join(".workbuddy-ai")).unwrap();
+        assert_eq!(hooks_state(&env), HookInstallState::NotInstalled);
+        install_hooks(&env).unwrap();
+        assert_eq!(hooks_state(&env), HookInstallState::Current);
+        let ai: Value = serde_json::from_str(&fs::read_to_string(home.join(".workbuddy-ai").join("settings.json")).unwrap()).unwrap();
+        assert_eq!(ai["hooks"]["PermissionRequest"].as_array().unwrap().len(), 2);
         fs::remove_dir_all(&home).unwrap();
+    }
+
+    #[test]
+    fn the_reply_marker_goes_to_both_editions() {
+        let home = Path::new("/home/u");
+        let files = prompt_files(home);
+        if std::env::var_os("WORKBUDDY_CONFIG_DIR").is_none() {
+            assert_eq!(files, [home.join(".workbuddy").join("CODEBUDDY.md"), home.join(".workbuddy-ai").join("CODEBUDDY.md")]);
+        }
     }
 }

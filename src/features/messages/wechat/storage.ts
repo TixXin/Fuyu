@@ -27,3 +27,13 @@ export function isWeChatRemindersEnabled() {
 export function saveWeChatRemindersEnabled(enabled: boolean) {
   window.localStorage.setItem(ENABLED_KEY, String(enabled));
 }
+
+export const AUTO_CLEAR_KEY = "fuyu-wechat-auto-clear";
+
+export function isWeChatAutoClearEnabled() {
+  return window.localStorage.getItem(AUTO_CLEAR_KEY) !== "false";
+}
+
+export function saveWeChatAutoClearEnabled(enabled: boolean) {
+  window.localStorage.setItem(AUTO_CLEAR_KEY, String(enabled));
+}

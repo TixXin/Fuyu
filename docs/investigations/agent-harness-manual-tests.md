@@ -1,6 +1,6 @@
 # Agent 适配真机实测清单
 
-#179（协作者 ShengLin1001 提的）和 2026-11-15 这一轮 Agent 适配（B26、B27、B28、B30、B32、B33、B44）里只写了代码和单元测试、没在真机上跑过的项目，合成这一份，按要在哪台机器上测分组。任务是 B47。
+#179（协作者 ShengLin1001 提的）和 2026-11-15 这一轮 Agent 适配（B26、B27、B28、B30、B32、B33、B44，以及 B34–B37、B46）里只写了代码和单元测试、没在真机上跑过的项目，合成这一份，按要在哪台机器上测分组。任务是 B47。
 
 怎么用：
 - 测过一项就勾掉，后面写日期、版本和结果；测出问题另开 issue，链接写在那一项后面。
@@ -61,11 +61,20 @@
 
 ### WorkBuddy
 
-- [ ] macOS 上开着时会话正常，关掉后变「已退出」（B37，做完后测）
+- [ ] macOS 上开着时会话正常，关掉后变「已退出」（B37）。按 bundle id 认应用已单独测过（2026-11-15，WorkBuddy AI 5.8.4：没开 false、开着 true、退出后约 30 秒变 false）；岛上整条链路没测，这台 Mac 的 WorkBuddy AI 会话在 `~/.workbuddy-ai/projects`，岛能列出来以后再测
 
 ### opencode（本机没装，装上后测）
 
 - [ ] 同下面 Windows 一节的 1、3、4（B30）
+- [ ] 同下面 Windows 一节 opencode 1.x 插件的各项，Windows 专有的那项除外（B34）
+
+### Codex 和 Claude 桌面 App（B46）
+
+- [ ] 开一个 Codex 会话（CLI 或 Codex Desktop）：Agent 页列出来，标题是 Codex 起的名字（`threads.name` / `session_index.jsonl`），模型、档位对（B46）
+- [ ] 接着聊一个前几天开的 Codex 会话（rollout 在三天前的日期目录里）：Agent 页能列出来（B46）
+- [ ] 归档的 Codex 会话、子代理和 guardian 线程不出现在列表里（B46）
+- [ ] Codex 关着时岛不在 `~/.codex/thread_history_1.sqlite` 旁边建 `-shm` / `-wal`；Codex 开着时岛读库不卡，Codex 不报库被锁（B46）
+- [ ] Claude 桌面 App 的 Code 页开一个会话：Agent 页只出现一条，标题和 App 侧栏一致；在 App 里改名后岛上的标题跟着变（B46）
 
 ## Windows
 
@@ -121,6 +130,23 @@
 - [ ] 同时开正式版和开发版岛：一边点允许，另一边卡片关掉，opencode 只收到一次回复
 - [ ] 服务默认端口 28894，`service.json` 在 `%USERPROFILE%\.local\state\opencode`
 - [ ] 会话卡片：plan agent 显示「计划」；跑命令时显示 `bash` 和命令；待办进度；上下文 token；2.x 和 1.x 各一次（B44）
+
+### opencode 1.x 插件（B34）
+
+插件已在 Mac 上用 opencode 1.19.5（隔离的 XDG 目录、假的模型和假的审批接口）跑通允许、拒绝带理由、TUI 先回；下面是要用真岛、真 TUI 再测的。
+
+- [ ] 装了 opencode 1.19.x 的机器点「安装/修复」：opencode 配置目录下出现 `plugin/fuyu-island.js`（设了 `XDG_CONFIG_HOME` 时在那下面），里面的岛数据目录是这台机器的；没装 opencode 的机器不建目录（B34）
+- [ ] 1.x TUI 跑要授权的命令：岛上 2 秒内变「等你」；TUI 里允许后变回运行中，`agent-notifications/opencode-plugin-*.json` 删掉（B34）
+- [ ] 1.x 开「在岛上审批」：岛上弹卡片显示命令；允许后 TUI 弹框消失、命令执行；拒绝写理由，opencode 收到理由；「交回终端」后 TUI 仍可回答（B34）
+- [ ] 1.x 在 TUI 里先回答：岛上卡片自己关掉（B34）
+- [ ] 1.x 的 `opencode serve` 加网页端：同样能等你和审批（插件跑在服务进程里）（B34）
+- [ ] opencode 2.x 装着这个插件不报错（2.x 也扫 `plugin/`，按源码会当成什么都不做的插件加载）；报错的话要改成只在 1.x 时安装（B34）
+- [ ] Windows：插件写进 `%USERPROFILE%\.config\opencode\plugin\`，岛数据目录里的反斜杠在 JS 里转义正确（B34）
+
+### Codex 和 Claude 桌面 App（B46）
+
+- [ ] Claude 桌面 App 当前版本的 Code 页：`%APPDATA%\Claude\claude-code-sessions\<组织>\<账号>\local_<id>.json` 的 `cliSessionId` 在 `~/.claude/projects` 里有没有对应的 jsonl（#180 里 6–7 月的旧会话对不上；Mac 当前版本 84/84 对得上）。对得上就照 Mac 一节核对标题；对不上记下正文在哪。代码按 `%USERPROFILE%\AppData\Roaming\Claude` 找，`APPDATA` 改过位置的机器读不到（B46）
+- [ ] Codex（Store 版 `OpenAI.Codex`）：同 Mac 一节 Codex 的几项（B46）
 
 ## Linux 服务器（SSH 远程，B26）
 

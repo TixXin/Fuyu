@@ -41,6 +41,10 @@ export function openQQNotificationSettings(access: boolean) {
   return invoke("open_qq_notification_settings", { access });
 }
 
+export function setQQAutoClear(enabled: boolean) {
+  return invoke<QQNotificationSnapshot>("set_qq_auto_clear", { enabled });
+}
+
 export function clearQQNotifications() {
   return invoke<QQNotificationSnapshot>("clear_qq_notifications");
 }

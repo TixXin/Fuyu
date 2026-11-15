@@ -159,3 +159,43 @@ fn redirects_keep_the_method_and_never_leave_the_host() {
     let answer = run(follow(&looping, "PROPFIND", &url("https://a.example.com/l"), "0", "")).unwrap();
     assert_eq!((answer.status, looping.sent().len()), (302, MAX_REDIRECTS + 1));
 }
+
+const ITEMS: &str = r#"<d:multistatus xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:caldav">
+<d:response><d:href>/dav/u_abc/work/</d:href><d:propstat><d:prop><d:resourcetype><d:collection/><c:calendar/></d:resourcetype></d:prop></d:propstat></d:response>
+<d:response><d:href>/dav/u_abc/work/a&amp;1.ics</d:href><d:propstat><d:prop><d:getetag>"1"</d:getetag><d:resourcetype/></d:prop></d:propstat></d:response>
+<d:response><d:href>/dav/u_abc/work/b.ics</d:href><d:propstat><d:prop><d:getetag>"2"</d:getetag><d:resourcetype/></d:prop></d:propstat></d:response>
+</d:multistatus>"#;
+
+#[test]
+fn a_refused_calendar_query_falls_back_to_listing_and_multiget() {
+    let calendar = "https://calendar.dingtalk.com/dav/u_abc/work/";
+    let mock = Mock::default().on("PROPFIND", calendar, 207, ITEMS).on("REPORT", calendar, 400, "");
+    let (from, to) = window();
+    let error = run(calendar_events(&mock, &url(calendar), from, to)).unwrap_err();
+    assert!(error.to_string().contains("400"));
+    assert_eq!(mock.sent(), [format!("REPORT {calendar} 1"), format!("PROPFIND {calendar} 1"), format!("REPORT {calendar} 1")]);
+
+    struct Picky(Mock);
+    impl Transport for Picky {
+        async fn send(&self, method: &str, url: &Url, depth: &str, body: &str) -> Result<Reply, UserError> {
+            if method == "REPORT" && body.contains("calendar-multiget") {
+                assert!(body.contains("<d:href>/dav/u_abc/work/a&amp;1.ics</d:href><d:href>/dav/u_abc/work/b.ics</d:href>"));
+                self.0.sent.borrow_mut().push("MULTIGET".into());
+                return Ok(Reply { status: 207, location: None, body: EVENTS.into() });
+            }
+            self.0.send(method, url, depth, body).await
+        }
+    }
+    let picky = Picky(Mock::default().on("PROPFIND", calendar, 207, ITEMS).on("REPORT", calendar, 400, ""));
+    assert_eq!(run(calendar_events(&picky, &url(calendar), from, to)).unwrap(), ["BEGIN:VCALENDAR"]);
+    assert_eq!(picky.0.sent().last().map(String::as_str), Some("MULTIGET"));
+}
+
+#[test]
+fn a_wrong_password_on_the_query_is_not_retried() {
+    let calendar = "https://dav.example.com/cal/";
+    let mock = Mock::default().on("REPORT", calendar, 401, "");
+    let (from, to) = window();
+    assert_eq!(run(calendar_events(&mock, &url(calendar), from, to)).unwrap_err().code(), "calendar.login");
+    assert_eq!(mock.sent().len(), 1);
+}

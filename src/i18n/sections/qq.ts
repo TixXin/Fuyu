@@ -16,6 +16,9 @@ export type QqText = {
   refresh: string;
   clear: string;
   list: string;
+  autoClear: string;
+  autoClearDescription: string;
+  autoClearDescriptionMac: string;
   status: {
     disabled: string;
     waiting: string;
@@ -46,6 +49,9 @@ export const zhCN: QqText = {
   refresh: "刷新 QQ 通知状态",
   clear: "清空岛内 QQ 通知",
   list: "最近收到的 QQ 通知",
+  autoClear: "看过后从岛上去掉",
+  autoClearDescription: "QQ 被切到前台、或在岛上点开 QQ 后，去掉在那之前到的消息；之后到的留着。",
+  autoClearDescriptionMac: "QQ 被切到前台、程序坞上的未读角标消失、或在岛上点开 QQ 后，去掉在那之前到的消息；之后到的留着。",
   status: {
     disabled: "已暂停",
     waiting: "连接中",
@@ -76,6 +82,9 @@ export const en: QqText = {
   refresh: "Refresh QQ notifications",
   clear: "Clear QQ notifications in the island",
   list: "Recently received QQ notifications",
+  autoClear: "Remove once seen",
+  autoClearDescription: "When QQ comes to the front or you open it from the island, messages that arrived before then are removed; later ones stay.",
+  autoClearDescriptionMac: "When QQ comes to the front, its unread badge in the Dock disappears, or you open it from the island, messages that arrived before then are removed; later ones stay.",
   status: {
     disabled: "Paused",
     waiting: "Connecting",

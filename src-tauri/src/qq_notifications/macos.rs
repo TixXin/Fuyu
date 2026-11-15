@@ -4,12 +4,13 @@ mod plugin_view;
 use serde::Serialize;
 use std::{
     sync::{Arc, Mutex, OnceLock},
-    time::{SystemTime, UNIX_EPOCH},
+    thread,
+    time::{Duration, SystemTime, UNIX_EPOCH},
 };
 use tauri::{AppHandle, Emitter, Manager};
 
 use crate::macos::{
-    accessibility,
+    accessibility, apps,
     dock_badges::{self, Badge},
 };
 
@@ -60,6 +61,19 @@ impl Default for NotificationSnapshot {
 struct NotificationState {
     snapshot: NotificationSnapshot,
     unread: u32,
+    auto_clear: bool,
+}
+
+impl NotificationState {
+    fn forget_before(&mut self, at: i64) -> bool {
+        let before = self.snapshot.items.len();
+        self.snapshot.items.retain(|item| item.created_at > at);
+        self.snapshot.items.len() != before
+    }
+
+    fn forget_seen(&mut self, at: i64) -> bool {
+        self.snapshot.enabled && self.auto_clear && self.forget_before(at)
+    }
 }
 
 struct NotificationService {
@@ -99,9 +113,14 @@ fn apply(state: &mut NotificationState, reading: Badge, now: i64) -> Option<Opti
     let mut newest = None;
     match reading {
         Badge::NotAllowed => state.snapshot.status = NotificationStatus::PermissionRequired,
-        Badge::NotInDock | Badge::Label(None) => {
+        Badge::NotInDock => {
             state.snapshot.status = NotificationStatus::Listening;
             state.unread = 0;
+        }
+        Badge::Label(None) => {
+            state.snapshot.status = NotificationStatus::Listening;
+            state.unread = 0;
+            state.forget_seen(now);
         }
         Badge::Label(Some(label)) => {
             let unread = dock_badges::unread(&label);
@@ -122,9 +141,34 @@ fn apply(state: &mut NotificationState, reading: Badge, now: i64) -> Option<Opti
     Some(newest)
 }
 
+fn in_front() -> bool {
+    let Some(front) = apps::frontmost_path() else { return false };
+    apps::path_for_bundle_id(BUNDLE_ID).is_some_and(|path| path.trim_end_matches('/') == front.trim_end_matches('/'))
+}
+
+fn watch_front(service: Arc<NotificationService>) -> Result<(), String> {
+    thread::Builder::new()
+        .name("qq-seen".into())
+        .spawn(move || {
+            let mut was_front = false;
+            loop {
+                let watching = service.state.lock().is_ok_and(|state| state.snapshot.enabled && state.auto_clear);
+                let front = watching && in_front();
+                if front && !was_front {
+                    let _ = update(|state| state.forget_seen(now_ms()));
+                }
+                was_front = front;
+                thread::sleep(Duration::from_secs(1));
+            }
+        })
+        .map(|_| ())
+        .map_err(|error| error.to_string())
+}
+
 pub fn init(app: &AppHandle) -> Result<(), String> {
     let service = Arc::new(NotificationService { app: app.clone(), state: Mutex::new(NotificationState::default()) });
     SERVICE.set(service.clone()).map_err(|_| "The QQ reminder service is already running.".to_string())?;
+    watch_front(service.clone())?;
     let wanted = service.clone();
     dock_badges::watch(
         "qq-reminders",
@@ -177,10 +221,18 @@ pub fn set_qq_notifications_enabled(enabled: bool) -> Result<NotificationSnapsho
         if state.snapshot.enabled == enabled {
             return false;
         }
-        *state = NotificationState::default();
+        *state = NotificationState { auto_clear: state.auto_clear, ..NotificationState::default() };
         state.snapshot.enabled = enabled;
         state.snapshot.status = if enabled { NotificationStatus::Waiting } else { NotificationStatus::Disabled };
         true
+    })
+}
+
+#[tauri::command]
+pub fn set_qq_auto_clear(enabled: bool) -> Result<NotificationSnapshot, String> {
+    update(|state| {
+        state.auto_clear = enabled;
+        false
     })
 }
 
@@ -210,7 +262,9 @@ pub fn open_qq_notification_settings(access: bool) -> Result<(), String> {
 
 #[tauri::command]
 pub async fn open_qq() -> Result<(), String> {
-    tauri::async_runtime::spawn_blocking(|| dock_badges::open_app(BUNDLE_ID)).await.map_err(|error| error.to_string())?
+    let asked_at = now_ms();
+    tauri::async_runtime::spawn_blocking(|| dock_badges::open_app(BUNDLE_ID)).await.map_err(|error| error.to_string())??;
+    update(|state| state.forget_seen(asked_at)).map(|_| ())
 }
 
 macro_rules! tauri_commands {
@@ -222,6 +276,7 @@ macro_rules! tauri_commands {
             crate::qq_notifications::open_qq_notification_settings,
             crate::qq_notifications::clear_qq_notifications,
             crate::qq_notifications::open_qq,
+            crate::qq_notifications::set_qq_auto_clear,
         ] $($rest)*)
     };
 }
@@ -242,5 +297,21 @@ mod tests {
         assert_eq!(apply(&mut state, Badge::Label(None), 7), None, "a cleared badge changes nothing that is shown");
         assert!(apply(&mut state, Badge::NotAllowed, 8).is_some());
         assert_eq!(state.snapshot.status, NotificationStatus::PermissionRequired);
+    }
+
+    #[test]
+    fn a_cleared_badge_forgets_only_what_arrived_before_it_when_auto_clear_is_on() {
+        let mut state = NotificationState::default();
+        state.snapshot.enabled = true;
+        state.auto_clear = true;
+        assert!(apply(&mut state, Badge::Label(Some("1".into())), 10).is_some());
+        assert_eq!(apply(&mut state, Badge::NotInDock, 20), None, "QQ quitting is not a sign of reading");
+        assert!(apply(&mut state, Badge::Label(Some("2".into())), 30).is_some());
+        assert_eq!(apply(&mut state, Badge::Label(None), 25), Some(None));
+        let left: Vec<_> = state.snapshot.items.iter().map(|item| item.created_at).collect();
+        assert_eq!(left, [30], "a message that arrived after the badge cleared stays");
+        state.auto_clear = false;
+        assert!(!state.forget_seen(40));
+        assert_eq!(state.snapshot.items.len(), 1);
     }
 }

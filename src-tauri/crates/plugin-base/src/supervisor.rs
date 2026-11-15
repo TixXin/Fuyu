@@ -149,6 +149,15 @@ pub struct Supervisor {
 
 impl Supervisor {
     pub fn start(spec: HostSpec, containment: Arc<dyn Containment>, timing: Timing, on_event: impl Fn(Event) + Send + Sync + 'static) -> Result<Self, String> {
+        Self::start_with(move |_| spec.clone(), containment, timing, on_event)
+    }
+
+    pub fn start_with(
+        spec_for: impl FnMut(u32) -> HostSpec + Send + 'static,
+        containment: Arc<dyn Containment>,
+        timing: Timing,
+        on_event: impl Fn(Event) + Send + Sync + 'static,
+    ) -> Result<Self, String> {
         let inner = Arc::new(Inner {
             state: Mutex::new(HostState::Starting { generation: 1 }),
             rpc: Mutex::new(None),
@@ -159,7 +168,7 @@ impl Supervisor {
         let running = inner.clone();
         let worker = thread::Builder::new()
             .name("plugin-host-supervisor".into())
-            .spawn(move || supervise(&running, &spec, containment.as_ref(), timing))
+            .spawn(move || supervise(&running, spec_for, containment.as_ref(), timing))
             .map_err(|error| format!("could not start the plugin host supervisor: {error}"))?;
         Ok(Self { inner, worker: Mutex::new(Some(worker)) })
     }
@@ -331,14 +340,15 @@ fn shut(running: &mut Running, grace: Duration, polite: bool) {
     let _ = running.child.wait();
 }
 
-fn supervise(inner: &Arc<Inner>, spec: &HostSpec, containment: &dyn Containment, timing: Timing) {
+fn supervise(inner: &Arc<Inner>, mut spec_for: impl FnMut(u32) -> HostSpec, containment: &dyn Containment, timing: Timing) {
     let mut failures = 0u32;
     let mut generation = 0u32;
     while !inner.stopping() {
         generation += 1;
         inner.take_restart();
+        let spec = spec_for(generation);
         inner.set(HostState::Starting { generation });
-        let outcome = launch(inner, spec, containment).and_then(|mut running| match wait_ready(inner, &mut running, &timing) {
+        let outcome = launch(inner, &spec, containment).and_then(|mut running| match wait_ready(inner, &mut running, &timing) {
             Ok(ready) => Ok((running, ready)),
             Err(reason) => {
                 shut(&mut running, Duration::from_millis(200), false);

@@ -15,6 +15,8 @@ export type SettingsPluginsV3Text = {
   uptime: string;
   safeMode: string;
   safeModes: { "third-party": string; minimal: string };
+  safeCauses: { variable: string; shift: string; failures: (count: number) => string };
+  leaveSafeMode: string;
   devMode: string;
   plugins: string;
   empty: string;
@@ -57,6 +59,12 @@ export const zhCN: SettingsPluginsV3Text = {
   uptime: "已运行",
   safeMode: "安全模式",
   safeModes: { "third-party": "只停第三方插件", minimal: "只留最小的一组内置插件" },
+  safeCauses: {
+    variable: "由环境变量 FUYU_PLUGINS_V3_SAFE 打开，去掉这个变量后重启浮屿才会退出。",
+    shift: "启动时按住了 Shift。只管这一次运行，下次正常启动就退出。",
+    failures: (count) => `宿主连续 ${count} 次没能跑满 60 秒。在安全模式下跑满 60 秒后清零，下次启动照常。`,
+  },
+  leaveSafeMode: "退出安全模式",
   devMode: "开发模式（热重载）",
   plugins: "插件",
   empty: "plugins.yml 里还没有插件。",
@@ -109,6 +117,12 @@ export const en: SettingsPluginsV3Text = {
   uptime: "Up for",
   safeMode: "Safe mode",
   safeModes: { "third-party": "Third-party plugins off", minimal: "Minimal built-ins only" },
+  safeCauses: {
+    variable: "Turned on by the FUYU_PLUGINS_V3_SAFE environment variable. Remove it and restart Fuyu to leave.",
+    shift: "Shift was held at startup. It lasts for this run only.",
+    failures: (count) => `The host failed to stay up for 60 seconds ${count} times in a row. The count clears after a minute in safe mode, and the next start is normal.`,
+  },
+  leaveSafeMode: "Leave safe mode",
   devMode: "Dev mode (hot reload)",
   plugins: "Plugins",
   empty: "No plugins in plugins.yml yet.",
