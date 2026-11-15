@@ -141,6 +141,12 @@ Windows 的测法：同上面 Windows 的构建和身份；`Process.Start` 拉�
 | 2 | 同上 | macOS | | |
 | 2 | E36.2.3：不设 `FUYU_PLUGINS_V3` 时岛和以前一样；设好 `FUYU_PLUGINS_V3=1` 后展开岛屿，演示插件那一行照常出现在最上面，深色、浅色岛都看得清，`plugins.yml` 写成 `[]` 后撤掉、改回去又出现 | Windows | | |
 | 2 | 同上 | macOS | | |
+| 3 | E36.3.11：设置 → 插件 → 本地接口，令牌一行只有圆点和「复制」，没有「显示」；点复制后能粘贴出令牌，Win+V 的剪贴板历史和浮屿自己的剪贴板历史里都没有这一条 | Windows | | |
+| 3 | 同上（看浮屿自己的剪贴板历史里没有这一条） | macOS | | |
+| 3 | E36.3.13：开系统代理（Clash 之类）后，设置 → 关于「检查更新」照常拿到新版本，下载、安装也走代理；设 `HTTPS_PROXY=http://user:pass@127.0.0.1:7890` 启动岛，检查更新照常；设一个解析不了的 `HTTPS_PROXY`（例如 `http://u:p@[bad`），检查更新、日历、歌词都报「代理地址无效」，界面和错误详情里没有账号、密码和地址 | Windows | | |
+| 3 | E36.3.15（下次发版后）：CI 打的安装包装好后，安装目录里有 `plugins-v3/host/main.mjs` 和 `plugins-v3/builtins/builtins.json`；设 `FUYU_PLUGINS_V3=1` 启动，插件页宿主「已连接」，`timer`、`translation` 是运行中，装一个第三方插件也是运行中；仓库不在这台电脑上也能跑 | Windows | | |
+| 3 | E36.3.15（下次发版后）：电脑上没有合适的 Node 时（`PATH` 里去掉 Node），装好的 app 设 `FUYU_PLUGINS_V3=1` 启动，会把 Node 下载到数据目录的 `runtime/` 并起宿主，插件页宿主「已连接」 | Windows | | |
+| 3 | 同上，用 CI 签名公证的 Fuyu.app | macOS | | |
 
 ## 等你定的事
 
