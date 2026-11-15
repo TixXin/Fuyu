@@ -1482,6 +1482,19 @@
     {
       "page": "clipboard",
       "zh-CN": {
+        "group": "打开方式",
+        "title": "岛上的复制卡片",
+        "description": "在剪贴板窗口或岛上的剪贴板页复制一条后，浮屿顶部显示刚复制的内容。自动粘贴时不显示。鼠标停在上面时不会收起。"
+      },
+      "en": {
+        "group": "Opening",
+        "title": "Copy card on the island",
+        "description": "After you copy an entry from the clipboard window or the island's clipboard page, the island shows what was copied. Not shown when it is pasted for you. It stays while the pointer is on it."
+      }
+    },
+    {
+      "page": "clipboard",
+      "zh-CN": {
         "group": "快捷键",
         "title": "用 Win+V 打开",
         "description": "按 Win+V 打开岛屿的剪贴板，代替系统自带的剪贴板历史；关掉后 Win+V 还给系统。"

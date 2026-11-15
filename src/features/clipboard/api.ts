@@ -30,6 +30,7 @@ export type ClipboardHistorySettings = {
   popupPinned?: boolean;
   popupPinX?: number | null;
   popupPinY?: number | null;
+  copyCardSeconds?: number;
 };
 
 export type ClipboardAiPrompt = { id: string; title: string; prompt: string };
@@ -92,6 +93,9 @@ export type ClipboardSnippet = { id: string; title: string; text: string };
 export const CLIPBOARD_HISTORY_CHANGED_EVENT = "clipboard-history-changed";
 export const CLIPBOARD_HISTORY_SHORTCUT_EVENT = "clipboard-history-shortcut";
 export const CLIPBOARD_SHORTCUT_STATUS_EVENT = "clipboard-history-shortcut-status";
+export const CLIPBOARD_ITEM_COPIED_EVENT = "clipboard-item-copied";
+
+export type ClipboardCopiedNotice = { item: ClipboardHistoryItem; seconds: number };
 
 export function getClipboardHistory() {
   return invoke<ClipboardHistorySnapshot>("get_clipboard_history");
@@ -245,6 +249,10 @@ export function clearClipboardHistory() {
 
 export function listenClipboardHistoryChanged(handler: () => void) {
   return listen(CLIPBOARD_HISTORY_CHANGED_EVENT, handler);
+}
+
+export function listenClipboardItemCopied(handler: (notice: ClipboardCopiedNotice) => void) {
+  return listen<ClipboardCopiedNotice>(CLIPBOARD_ITEM_COPIED_EVENT, ({ payload }) => handler(payload));
 }
 
 export function listenClipboardHistoryShortcut(handler: () => void) {

@@ -53,6 +53,9 @@ export type SettingsClipboardText = {
   hideFromCaptureHint: string;
   linkPreview: string;
   linkPreviewHint: string;
+  copyCard: string;
+  copyCardHint: string;
+  copyCardOption: (seconds: number) => string;
   localApiRead: string;
   localApiReadHint: string;
   transfer: {
@@ -155,6 +158,9 @@ export const zhCN: SettingsClipboardText = {
   hideFromCaptureHint: "开会共享屏幕、录屏、用别的软件截图时，剪贴板窗口显示为空白，不露出历史；浮屿自己的截图照样截得到它。",
   linkPreview: "读取链接标题和图标",
   linkPreviewHint: "列表里的网址显示网站图标，宽版里再显示网页标题。会访问那个网址，默认关。",
+  copyCard: "岛上的复制卡片",
+  copyCardHint: "在剪贴板窗口或岛上的剪贴板页复制一条后，浮屿顶部显示刚复制的内容。自动粘贴时不显示。鼠标停在上面时不会收起。",
+  copyCardOption: (seconds) => (seconds === 0 ? "不显示" : `显示 ${seconds} 秒`),
   localApiRead: "允许本地接口读取历史",
   localApiReadHint: "开了以后，AI 工具可以通过本地接口 GET /v1/clipboard 读取最近的文字记录（打码的仍是打码）。默认关。",
   transfer: {
@@ -257,6 +263,9 @@ export const en: SettingsClipboardText = {
   hideFromCaptureHint: "Screen sharing, recordings and other apps' screenshots show the clipboard window as blank; Fuyu's own screenshots still include it.",
   linkPreview: "Read link titles and icons",
   linkPreviewHint: "Copied links show the site's icon in the list, and the page title in the wide window. This visits the address; off by default.",
+  copyCard: "Copy card on the island",
+  copyCardHint: "After you copy an entry from the clipboard window or the island's clipboard page, the island shows what was copied. Not shown when it is pasted for you. It stays while the pointer is on it.",
+  copyCardOption: (seconds) => (seconds === 0 ? "Don't show" : `Show for ${seconds} s`),
   localApiRead: "Let the local API read the history",
   localApiReadHint: "AI tools can read recent text entries with GET /v1/clipboard on the local API (masked keys stay masked). Off by default.",
   transfer: {

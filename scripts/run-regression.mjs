@@ -44,6 +44,7 @@ export const PAGES = [
   "screenshot-overlay.html",
   "screenshot-pin.html",
   "screenshot-card.html",
+  "clipboard-notice.html",
   "screenshot-history.html",
   "screenshot-measure.html",
   "screenshot-record.html",

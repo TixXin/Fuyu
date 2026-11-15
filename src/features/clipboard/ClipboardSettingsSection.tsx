@@ -2,10 +2,12 @@ import type { ReactNode } from "react";
 import { SettingsChoice } from "../../components/settings/SettingsChoice";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsRow } from "../../components/settings/SettingsRow";
+import { SettingsSelect } from "../../components/settings/SettingsSelect";
 import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
 import { useTranslation } from "../../i18n";
 import { isMacOS } from "../../lib/platform";
 import type { ClipboardHistorySettings, ClipboardOpenIn, ClipboardPopupLayout, ClipboardPopupPosition } from "./api";
+import { CLIPBOARD_CARD_SECONDS } from "./settings";
 
 export function ClipboardSettingsSection({ clipboardSettings, onClipboardSettingsChange, shortcuts, children }: {
   clipboardSettings: ClipboardHistorySettings;
@@ -116,6 +118,18 @@ export function ClipboardSettingsSection({ clipboardSettings, onClipboardSetting
             onChange={(linkPreview) => change({ linkPreview })}
           />
         )}
+        <SettingsRow
+          title={text.copyCard}
+          description={text.copyCardHint}
+          control={
+            <SettingsSelect
+              value={String(clipboardSettings.copyCardSeconds ?? 3)}
+              options={CLIPBOARD_CARD_SECONDS.map((seconds) => ({ value: String(seconds), label: text.copyCardOption(seconds) }))}
+              ariaLabel={text.copyCard}
+              onChange={(seconds) => change({ copyCardSeconds: Number(seconds) })}
+            />
+          }
+        />
         {children}
       </SettingsGroup>
       {shortcuts}
