@@ -1,54 +1,15 @@
 import { useEffect, useRef, useState } from "react";
-import { Bell, Blocks, Brush, Bot, CalendarDays, ChevronRight, Compass, FlaskConical, Plus, ClipboardList, Crop, Inbox, Info, Keyboard, Languages, LayoutGrid, LayoutTemplate, ListTodo, MousePointerClick, MessageCircle, MessagesSquare, Mic, Music, Palette, Plug, Puzzle, Search, Server, Settings2, ShieldCheck, Store, SlidersHorizontal, Volume2, X, type LucideIcon } from "lucide-react";
+import { Blocks, Bot, ChevronRight, Plus, LayoutGrid, Search, Settings2, X, type LucideIcon } from "lucide-react";
 import { LOCALE_CODES, useLocale, useTranslation } from "../../i18n";
 import { isMacOS, useUnsupportedFeatures } from "../../lib/platform";
 import { entryOf, entryPages, isCategoryAvailable, isEntry, SETTINGS_GROUPS, searchCategories, sidebarItemOf, type SettingsCategory, type SettingsGroup, type TabbedCategory } from "./categories";
 import searchIndex from "./searchIndex.json";
 import { isTitleHit, MAX_HITS_PER_PAGE, searchSettingsRows, type SettingsRowHit, type SettingsSearchEntry } from "./settingsSearch";
+import { BUILTIN_CATEGORIES } from "./slots/categorySlot";
 import { usePluginsV3Enabled } from "./usePluginHostStatus";
 import "./SettingsSidebar.css";
 
-export const CATEGORY_ICONS: Record<SettingsCategory, LucideIcon> = {
-  overview: Compass,
-  general: SlidersHorizontal,
-  behavior: MousePointerClick,
-  behaviorTuck: MousePointerClick,
-  behaviorAlerts: MousePointerClick,
-  appearance: LayoutTemplate,
-  theme: Palette,
-  themeMarket: Brush,
-  shortcuts: Keyboard,
-  shortcutsIsland: Keyboard,
-  messages: MessageCircle,
-  todos: ListTodo,
-  calendar: CalendarDays,
-  music: Music,
-  musicLyrics: Music,
-  musicLyricsStyle: Music,
-  clipboard: ClipboardList,
-  clipboardHistory: ClipboardList,
-  clipboardSnippets: ClipboardList,
-  clipboardData: ClipboardList,
-  translation: Languages,
-  shelf: Inbox,
-  screenshot: Crop,
-  voiceInput: Mic,
-  screenshotRecord: Crop,
-  agents: Bot,
-  agentSessions: MessagesSquare,
-  agentRemote: Server,
-  agentAlerts: Bell,
-  sounds: Volume2,
-  agentApprovals: ShieldCheck,
-  agentConnect: Plug,
-  plugins: Puzzle,
-  pluginsPages: Puzzle,
-  pluginsUpdates: Puzzle,
-  pluginsDev: Puzzle,
-  pluginsV3: FlaskConical,
-  market: Store,
-  about: Info,
-};
+export const CATEGORY_ICONS = Object.fromEntries(BUILTIN_CATEGORIES.map((item) => [item.id, item.icon])) as Record<SettingsCategory, LucideIcon>;
 
 const SEARCH_ENTRIES = searchIndex.entries as SettingsSearchEntry[];
 
