@@ -9,3 +9,7 @@ export declare const CLOSE: {
 };
 export declare const WINDOW_ORIGINS: readonly string[];
 export declare const SLOT_THEME: readonly string[];
+export declare const SHARED_MODULES: {
+  readonly react: "__shared/react.js";
+  readonly "react/jsx-runtime": "__shared/react-jsx-runtime.js";
+};

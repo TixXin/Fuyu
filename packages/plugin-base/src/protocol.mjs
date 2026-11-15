@@ -23,3 +23,8 @@ export const SLOT_THEME = [
   "--fuyu-plugin-font",
   "--fuyu-plugin-radius",
 ];
+
+export const SHARED_MODULES = {
+  react: "__shared/react.js",
+  "react/jsx-runtime": "__shared/react-jsx-runtime.js",
+};
