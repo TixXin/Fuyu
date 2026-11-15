@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import test from "node:test";
 import { gate, SKILL, touchesWiring } from "../../scripts/agent-harness-gate.mjs";
 
-const ROOT = join("C:", "repo");
+const ROOT = resolve("/", "repo");
 const edit = (file, tool = "Edit") => ({ tool_name: tool, tool_input: { file_path: file } });
 const shell = (command) => ({ tool_name: "Bash", tool_input: { command } });
 
@@ -13,7 +13,7 @@ test("edits to the per-agent lists and new agent modules count as wiring; other 
   assert.equal(touchesWiring(edit("src-tauri/src/agent_status/kimi.rs", "Write"), ROOT, () => false), "src-tauri/src/agent_status/kimi.rs");
   assert.equal(touchesWiring(edit("src-tauri/src/agent_status/title.rs", "Write"), ROOT, () => true), null);
   assert.equal(touchesWiring(edit("src/features/todo/TodoList.tsx"), ROOT), null);
-  assert.equal(touchesWiring(edit(join("C:", "elsewhere", "src", "features", "agent-status", "status.ts")), ROOT), null);
+  assert.equal(touchesWiring(edit(resolve("/", "elsewhere", "src", "features", "agent-status", "status.ts")), ROOT), null);
 });
 
 test("shell commands count only when they write to a wiring file", () => {

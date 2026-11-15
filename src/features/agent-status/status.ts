@@ -34,7 +34,7 @@ export function listAgentStatuses(snapshot: AgentStatusSnapshot): AgentStatusEnt
       key: provider,
       label: AGENT_PROVIDER_LABELS[provider],
       provider,
-      status: snapshot[provider],
+      status: snapshot[provider] ?? DEFAULT_AGENT_TASK_STATUS,
     })),
     ...(snapshot.others ?? []).map((other) => ({ key: other.id, label: other.name, provider: null, status: other })),
   ];
@@ -68,10 +68,11 @@ export type AgentHooksNotice = "update" | "install";
 
 export function getAgentHooksNotice(state: AgentHooksState | null): AgentHooksNotice | null {
   if (!state) return null;
-  if (state.scriptsOutdated || AGENT_PROVIDERS.some((provider) => state[provider] === "outdated")) {
+  const present = AGENT_PROVIDERS.filter((provider) => state[provider] !== undefined && state[provider] !== "absent");
+  if (state.scriptsOutdated || present.some((provider) => state[provider] === "outdated")) {
     return "update";
   }
-  return AGENT_PROVIDERS.every((provider) => state[provider] === "notInstalled") ? "install" : null;
+  return present.length > 0 && present.every((provider) => state[provider] === "notInstalled") ? "install" : null;
 }
 
 export function getAgentStatusLabel(snapshot: AgentStatusSnapshot, t: Translations, activeSessions = 0) {

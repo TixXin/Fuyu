@@ -80,7 +80,7 @@ export function AgentSettingsPage({
             title={
               <span className="agent-settings-provider">
                 <AgentProviderIcon provider={provider} />
-                {t.settings.agent.showProvider(AGENT_PROVIDER_LABELS[provider])}
+                {AGENT_PROVIDER_LABELS[provider]}
               </span>
             }
             checked={!settings.agentHiddenProviders.includes(provider)}

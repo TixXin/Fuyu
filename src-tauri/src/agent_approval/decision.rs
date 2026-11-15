@@ -6,6 +6,10 @@ use serde_json::{json, Map, Value};
 pub enum Agent {
     ClaudeCode,
     Codex,
+    Workbuddy,
+    Antigravity,
+    Dsh,
+    Opencode,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
@@ -18,7 +22,7 @@ pub enum Kind {
 pub(super) const QUESTION_PATH: &str = "/claude/ask-user-question";
 pub(super) const ACTIVITY_PATH: &str = "/claude/activity";
 
-const AGENTS: [Agent; 2] = [Agent::ClaudeCode, Agent::Codex];
+const AGENTS: [Agent; 5] = [Agent::ClaudeCode, Agent::Codex, Agent::Workbuddy, Agent::Antigravity, Agent::Dsh];
 
 pub(super) fn route(path: &str) -> Option<(Agent, Kind)> {
     if path == QUESTION_PATH {
@@ -35,7 +39,26 @@ impl Agent {
         match self {
             Self::ClaudeCode => "/claude/permission-request",
             Self::Codex => "/codex/permission-request",
+            Self::Workbuddy => "/workbuddy/permission-request",
+            Self::Antigravity => "/antigravity/pre-tool-use",
+            Self::Dsh => "/dsh/pre-tool-use",
+            Self::Opencode => "/opencode/permission",
         }
+    }
+
+    pub(super) fn id(self) -> &'static str {
+        match self {
+            Self::ClaudeCode => "claudeCode",
+            Self::Codex => "codex",
+            Self::Workbuddy => "workbuddy",
+            Self::Antigravity => "antigravity",
+            Self::Dsh => "dsh",
+            Self::Opencode => "opencode",
+        }
+    }
+
+    pub(super) fn lacks_waiting_event(self) -> bool {
+        matches!(self, Self::Antigravity | Self::Dsh)
     }
 }
 
@@ -61,6 +84,25 @@ impl HookInput {
             tool_input: input["tool_input"].clone(),
             permission_suggestions: Some(input["permission_suggestions"].clone()).filter(|value| !value.is_null()),
             agent_id: text("agent_id"),
+            remote_host: None,
+        })
+    }
+
+    pub(super) fn parse_for(agent: Agent, body: &[u8]) -> Result<Self, &'static str> {
+        if agent != Agent::Antigravity {
+            return Self::parse(body);
+        }
+        let input: Value = serde_json::from_slice(body).map_err(|_| "The body is not JSON.")?;
+        let cwd = text_field(&input, "cwd").or_else(|| {
+            input["workspacePaths"].as_array().and_then(|paths| paths.iter().find_map(|path| path.as_str().map(str::to_string)))
+        });
+        Ok(Self {
+            session_id: text_field(&input, "conversationId").ok_or("No conversationId.")?,
+            cwd,
+            tool_name: text_field(&input["toolCall"], "name").ok_or("No toolCall.name.")?,
+            tool_input: input["toolCall"]["args"].clone(),
+            permission_suggestions: None,
+            agent_id: None,
             remote_host: None,
         })
     }
@@ -142,6 +184,36 @@ pub(super) fn hook_response(decision: Option<Decision>, message: Option<&str>, s
         }),
     };
     json!({ "hookSpecificOutput": { "hookEventName": "PermissionRequest", "decision": decision } }).to_string()
+}
+
+pub(super) fn permission_response(
+    agent: Agent,
+    decision: Option<Decision>,
+    message: Option<&str>,
+    suggestions: Option<&Value>,
+) -> String {
+    let reason = || message.map(str::trim).filter(|text| !text.is_empty()).unwrap_or(DEFAULT_DENY_MESSAGE);
+    match agent {
+        Agent::ClaudeCode | Agent::Codex | Agent::Workbuddy => hook_response(decision, message, suggestions),
+        Agent::Antigravity => match decision {
+            None | Some(Decision::Answer) => "{}".to_string(),
+            Some(Decision::Allow | Decision::AllowAlways) => json!({ "decision": "allow" }).to_string(),
+            Some(Decision::Deny) => json!({ "decision": "deny", "reason": reason() }).to_string(),
+            Some(Decision::Terminal) => json!({ "decision": "ask" }).to_string(),
+        },
+        Agent::Dsh => match decision {
+            Some(Decision::Deny) => json!({
+                "hookSpecificOutput": {
+                    "hookEventName": "PreToolUse",
+                    "permissionDecision": "deny",
+                    "permissionDecisionReason": reason(),
+                }
+            })
+            .to_string(),
+            _ => "{}".to_string(),
+        },
+        Agent::Opencode => "{}".to_string(),
+    }
 }
 
 pub(super) fn question_response(answers: Option<&Answers>, tool_input: &Value) -> String {

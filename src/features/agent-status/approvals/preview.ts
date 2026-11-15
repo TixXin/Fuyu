@@ -27,7 +27,7 @@ function commandText(value: unknown): string | null {
 export function approvalPreview(toolInput: unknown): ApprovalPreview {
   const input = record(toolInput);
   const note = text(input.description);
-  const command = commandText(input.command) ?? commandText(input.cmd);
+  const command = commandText(input.command) ?? commandText(input.cmd) ?? commandText(input.CommandLine);
   if (command) return { kind: "command", text: command, note };
   for (const key of FILE_KEYS) {
     const file = text(input[key]);

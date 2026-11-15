@@ -1,10 +1,13 @@
 mod config;
 mod decision;
+mod external;
 mod http;
+mod opencode;
 mod queue;
 mod server;
 #[cfg(test)]
 mod tests;
+mod waiting;
 
 use std::{
     path::PathBuf,
@@ -17,6 +20,7 @@ use std::{
 use tauri::{AppHandle, Emitter, Manager};
 
 pub(crate) use decision::Agent;
+pub(crate) use opencode::{service_state as opencode_service_state, ServiceState as OpencodeService};
 use decision::{Answers, Decision};
 pub(crate) use queue::ApprovalRequest;
 use queue::{CloseReason, Outcome};
@@ -62,13 +66,27 @@ pub fn init(app: &AppHandle) -> Result<(), String> {
         changed = true;
     }
     let emitter = app.clone();
+    let app_dir = path.parent().map(PathBuf::from);
     let notify: server::Notify = Arc::new(move |event| {
         let _ = match event {
-            ApprovalEvent::Requested(request) => emitter.emit(REQUESTED_EVENT, request),
-            ApprovalEvent::Closed { id, reason } => emitter.emit(CLOSED_EVENT, ClosedPayload { id, reason }),
+            ApprovalEvent::Requested(request) => {
+                if let Some(dir) = &app_dir {
+                    waiting::note(dir, &request);
+                }
+                emitter.emit(REQUESTED_EVENT, request)
+            }
+            ApprovalEvent::Closed { id, reason } => {
+                if let Some(dir) = &app_dir {
+                    waiting::clear(dir, id);
+                }
+                emitter.emit(CLOSED_EVENT, ClosedPayload { id, reason })
+            }
         };
     });
     let shared = server::new_shared(WAIT_LIMIT, notify);
+    if let (Ok(agent_dir), Ok(home_dir)) = (crate::home_dir::agent_home(app.path()), crate::system::windows_home_dir()) {
+        opencode::watch(agent_dir, home_dir);
+    }
     let stays_quiet = crate::dev_lane::lane().is_none() && crate::coexist::yielding();
     let own = if stays_quiet { None } else { Some(server::serve(&shared, saved.port, true, &saved.token)?) };
     if let Some(port) = own.as_ref().map(server::Listener::port).filter(|port| *port != saved.port) {

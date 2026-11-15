@@ -1,4 +1,4 @@
-import { useCallback, useState, type PointerEvent as ReactPointerEvent } from "react";
+import { useCallback, useEffect, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { GripVertical, Trash2 } from "lucide-react";
 import { useTranslation } from "../../i18n";
 import type { MediaState } from "./api";
@@ -19,6 +19,24 @@ export function MusicSourceList({
   const t = useTranslation();
   const [draggedSourceId, setDraggedSourceId] = useState<string | null>(null);
   const [dragOverSourceId, setDragOverSourceId] = useState<string | null>(null);
+
+  const [liveRemoved, setLiveRemoved] = useState(false);
+
+  useEffect(() => {
+    if (!liveRemoved) {
+      return;
+    }
+    const timer = window.setTimeout(() => setLiveRemoved(false), 4000);
+    return () => window.clearTimeout(timer);
+  }, [liveRemoved]);
+
+  const removeSource = useCallback(
+    (sourceId: string, live: boolean) => {
+      onRemoveSource(sourceId);
+      setLiveRemoved(live);
+    },
+    [onRemoveSource],
+  );
 
   const getSourceIdAtPoint = useCallback((clientX: number, clientY: number) => {
     const element = document.elementFromPoint(clientX, clientY);
@@ -133,19 +151,22 @@ export function MusicSourceList({
                 <span className="music-source-label">
                   {source.label}
                 </span>
-                {!live && (
-                  <button
-                    className="music-source-remove"
-                    type="button"
-                    aria-label={t.music.removeSource}
-                    onClick={() => onRemoveSource(source.id)}
-                  >
-                    <Trash2 size={14} strokeWidth={2.2} />
-                  </button>
-                )}
+                <button
+                  className="music-source-remove"
+                  type="button"
+                  aria-label={t.music.removeSource}
+                  onClick={() => removeSource(source.id, Boolean(live))}
+                >
+                  <Trash2 size={14} strokeWidth={2.2} />
+                </button>
               </div>
             );
           })}
+        </div>
+      )}
+      {liveRemoved && (
+        <div className="music-source-note" role="status">
+          {t.music.removeLiveSourceNote}
         </div>
       )}
     </>

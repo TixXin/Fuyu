@@ -5,7 +5,7 @@ use std::{
 
 use super::codex_hooks::install_codex_status_hooks;
 use super::codex_version::codex_runs_async_hooks;
-use super::harness::{Harness, HookCheck, HookEnv, Hooks, RemoteFiles, StatusLight};
+use super::harness::{Harness, HookEnv, Hooks, RemoteFiles, StatusLight};
 use super::hooks_state::{codex_hooks_state, HookInstallState};
 use super::markers::{
     CODEX_RUNNING_HOLD_FILE_NAME, CODEX_RUNNING_MARKER_FILE_NAME, CODEX_SAVED_INPUT_FILE_NAMES,
@@ -17,7 +17,7 @@ pub(super) const HARNESS: Harness = Harness {
     id: PROVIDER,
     hooks: Some(Hooks {
         install,
-        check: HookCheck::State(hooks_state),
+        check: hooks_state,
     }),
     status_light: Some(StatusLight {
         running_marker: CODEX_RUNNING_MARKER_FILE_NAME,
@@ -32,6 +32,7 @@ pub(super) const HARNESS: Harness = Harness {
         ],
         session_dirs: &[".codex/sessions/"],
         files: &[".codex/session_index.jsonl"],
+        checkpoint_dirs: &[],
     }),
 };
 

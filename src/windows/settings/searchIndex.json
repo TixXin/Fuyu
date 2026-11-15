@@ -1971,55 +1971,66 @@
       "page": "agents",
       "zh-CN": {
         "group": "显示哪些 Agent",
-        "title": "显示 Codex 会话"
+        "title": "Codex"
       },
       "en": {
         "group": "Agents shown",
-        "title": "Show Codex sessions"
+        "title": "Codex"
       }
     },
     {
       "page": "agents",
       "zh-CN": {
         "group": "显示哪些 Agent",
-        "title": "显示 Claude Code 会话"
+        "title": "Claude Code"
       },
       "en": {
         "group": "Agents shown",
-        "title": "Show Claude Code sessions"
+        "title": "Claude Code"
       }
     },
     {
       "page": "agents",
       "zh-CN": {
         "group": "显示哪些 Agent",
-        "title": "显示 WorkBuddy 会话"
+        "title": "WorkBuddy"
       },
       "en": {
         "group": "Agents shown",
-        "title": "Show WorkBuddy sessions"
+        "title": "WorkBuddy"
       }
     },
     {
       "page": "agents",
       "zh-CN": {
         "group": "显示哪些 Agent",
-        "title": "显示 Antigravity 会话"
+        "title": "Antigravity"
       },
       "en": {
         "group": "Agents shown",
-        "title": "Show Antigravity sessions"
+        "title": "Antigravity"
       }
     },
     {
       "page": "agents",
       "zh-CN": {
         "group": "显示哪些 Agent",
-        "title": "显示 DeepSeek Harness 会话"
+        "title": "DeepSeek Harness"
       },
       "en": {
         "group": "Agents shown",
-        "title": "Show DeepSeek Harness sessions"
+        "title": "DeepSeek Harness"
+      }
+    },
+    {
+      "page": "agents",
+      "zh-CN": {
+        "group": "显示哪些 Agent",
+        "title": "opencode"
+      },
+      "en": {
+        "group": "Agents shown",
+        "title": "opencode"
       }
     },
     {
@@ -2630,6 +2641,39 @@
       "en": {
         "group": "AI Agent status light",
         "title": "Claude Code"
+      }
+    },
+    {
+      "page": "agentConnect",
+      "zh-CN": {
+        "group": "AI Agent 状态灯",
+        "title": "WorkBuddy"
+      },
+      "en": {
+        "group": "AI Agent status light",
+        "title": "WorkBuddy"
+      }
+    },
+    {
+      "page": "agentConnect",
+      "zh-CN": {
+        "group": "AI Agent 状态灯",
+        "title": "Antigravity"
+      },
+      "en": {
+        "group": "AI Agent status light",
+        "title": "Antigravity"
+      }
+    },
+    {
+      "page": "agentConnect",
+      "zh-CN": {
+        "group": "AI Agent 状态灯",
+        "title": "DeepSeek Harness"
+      },
+      "en": {
+        "group": "AI Agent status light",
+        "title": "DeepSeek Harness"
       }
     },
     {

@@ -46,7 +46,10 @@ mod wezterm;
 mod window_focus;
 mod workbuddy;
 mod antigravity;
+mod antigravity_remote;
 mod dsh;
+mod dsh_hooks;
+mod opencode;
 
 use serde::Serialize;
 use serde_json::{json, Value};
@@ -55,8 +58,8 @@ use tauri::{AppHandle, Emitter, Manager};
 
 use crate::system::windows_home_dir;
 
-use harness::{HookCheck, HookEnv};
-use hooks_state::{script_outdated, AgentHooksState, HookInstallState};
+use harness::HookEnv;
+use hooks_state::{script_outdated, AgentHooksState};
 use markers::{apply_agent_running_markers, remove_agent_marker_files, remove_legacy_hook_inputs};
 use snapshot::{
     agent_status_snapshot_from_persisted, current_unix_millis, default_agent_phase,
@@ -120,6 +123,7 @@ pub struct AgentHooksInstallResult {
     pub(super) status_path: String,
     pub(super) installed_at: i64,
     pub(super) remotes: Vec<remote_setup::RemoteResult>,
+    pub(super) dsh_bridge: Option<String>,
 }
 
 #[tauri::command]
@@ -265,6 +269,7 @@ fn install_agent_status_hooks_now(app: &AppHandle) -> Result<AgentHooksInstallRe
     for (_, hooks) in harness::with_hooks() {
         (hooks.install)(&env)?;
     }
+    let dsh_bridge = dsh_hooks::bridge_lines(&env);
 
     Ok(AgentHooksInstallResult {
         scripts_dir: app_dir.to_string_lossy().to_string(),
@@ -278,6 +283,7 @@ fn install_agent_status_hooks_now(app: &AppHandle) -> Result<AgentHooksInstallRe
             remove_legacy_hook_scripts(&app_dir);
             remotes
         },
+        dsh_bridge,
     })
 }
 
@@ -294,7 +300,7 @@ pub(crate) fn reinstall_hooks_after_rename(app: &AppHandle) -> Result<bool, Stri
     let app_dir = crate::home_dir::fuyu_home(app.path())
         .map_err(|error| format!("Failed to resolve app data directory: {error}"))?;
     let state = read_agent_hooks_state(&app_dir)?;
-    let installed = |id: &str| state.agents.get(id).is_some_and(|hooks| *hooks != HookInstallState::NotInstalled);
+    let installed = |id: &str| state.agents.get(id).is_some_and(|hooks| hooks.is_installed());
     if !state.agents.keys().any(|id| installed(id)) {
         return Ok(false);
     }
@@ -308,11 +314,7 @@ pub(crate) fn reinstall_hooks_after_rename(app: &AppHandle) -> Result<bool, Stri
         status_script: &status_script_path,
     };
     for (id, hooks) in harness::with_hooks() {
-        let present = match hooks.check {
-            HookCheck::State(_) => installed(id),
-            HookCheck::Present(has_hooks) => has_hooks(&home_dir),
-        };
-        if present {
+        if installed(id) {
             (hooks.install)(&env)?;
         }
     }
@@ -544,13 +546,9 @@ fn read_agent_hooks_state(app_dir: &Path) -> Result<AgentHooksState, String> {
         running_script: &running_script_path,
         status_script: &status_script_path,
     };
-    let agents: std::collections::BTreeMap<_, _> = harness::with_hooks()
-        .filter_map(|(id, hooks)| match hooks.check {
-            HookCheck::State(state) => Some((id, state(&env))),
-            HookCheck::Present(_) => None,
-        })
-        .collect();
-    let hooks_installed = agents.values().any(|state| *state != HookInstallState::NotInstalled);
+    let agents: std::collections::BTreeMap<_, _> =
+        harness::with_hooks().map(|(id, hooks)| (id, (hooks.check)(&env))).collect();
+    let hooks_installed = agents.values().any(|state| state.is_installed());
     let scripts_outdated = script_outdated(
         read(&app_dir.join(AGENT_RUNNING_SCRIPT_FILE_NAME)).as_deref(),
         AGENT_RUNNING_SCRIPT,

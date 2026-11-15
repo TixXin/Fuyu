@@ -10,7 +10,7 @@ use std::{
 };
 
 use super::{
-    decision::{hook_response, question_response, route, Activity, Agent, Decision, HookInput, Kind, ACTIVITY_PATH},
+    decision::{permission_response, question_response, route, Activity, Agent, Decision, HookInput, Kind, ACTIVITY_PATH},
     http::{check_access, read_request, write_response, HttpError},
     queue::{ApprovalRequest, CloseReason, Outcome, Queue},
 };
@@ -60,6 +60,36 @@ impl Shared {
             self.changed.notify_all();
         }
         settled
+    }
+
+    pub fn offer(&self, agent: Agent, input: HookInput) -> Option<ApprovalRequest> {
+        if !self.enabled.load(Ordering::Relaxed) || self.queue().is_shutting_down() {
+            return None;
+        }
+        let (request, shown) = self.queue().push(agent, Kind::Permission, input, unix_millis());
+        if shown {
+            (self.notify)(ApprovalEvent::Requested(request.clone()));
+        }
+        Some(request)
+    }
+
+    pub fn wait_for(&self, id: u64) -> (Option<Outcome>, CloseReason) {
+        wait(self, None, id, Instant::now() + self.wait_limit)
+    }
+
+    pub fn close_elsewhere(&self, id: u64) {
+        if self.queue().mark_elsewhere(id) {
+            self.changed.notify_all();
+        }
+    }
+
+    pub fn close(&self, id: u64, reason: CloseReason) {
+        let next = self.queue().remove(id);
+        self.changed.notify_all();
+        (self.notify)(ApprovalEvent::Closed { id, reason });
+        if let Some(next) = next {
+            (self.notify)(ApprovalEvent::Requested(next));
+        }
     }
 
     pub fn shut_down(&self) {
@@ -171,7 +201,7 @@ fn answer(shared: &Shared, stream: &TcpStream, port: u16, token: &str) -> Result
         }
         return Ok(Some("{}".to_string()));
     };
-    let mut input = HookInput::parse(&request.body).map_err(|message| HttpError { status: 400, message })?;
+    let mut input = HookInput::parse_for(agent, &request.body).map_err(|message| HttpError { status: 400, message })?;
     input.remote_host = remote_host;
 
     let question_elsewhere = match kind {
@@ -189,14 +219,8 @@ fn answer(shared: &Shared, stream: &TcpStream, port: u16, token: &str) -> Result
     if shown {
         (shared.notify)(ApprovalEvent::Requested(request.clone()));
     }
-    let (outcome, reason) = wait(shared, stream, request.id, Instant::now() + shared.wait_limit);
-
-    let next = shared.queue().remove(request.id);
-    shared.changed.notify_all();
-    (shared.notify)(ApprovalEvent::Closed { id: request.id, reason });
-    if let Some(next) = next {
-        (shared.notify)(ApprovalEvent::Requested(next));
-    }
+    let (outcome, reason) = wait(shared, Some(stream), request.id, Instant::now() + shared.wait_limit);
+    shared.close(request.id, reason);
     if reason == CloseReason::Disconnected {
         return Ok(None);
     }
@@ -204,7 +228,7 @@ fn answer(shared: &Shared, stream: &TcpStream, port: u16, token: &str) -> Result
     Ok(Some(match kind {
         Kind::Permission => {
             let message = outcome.as_ref().and_then(|outcome| outcome.message.as_deref());
-            hook_response(decision, message, suggestions.as_ref())
+            permission_response(agent, decision, message, suggestions.as_ref())
         }
         Kind::Question => {
             let answers = outcome.as_ref().filter(|_| decision == Some(Decision::Answer)).and_then(|outcome| outcome.answers.as_ref());
@@ -213,7 +237,7 @@ fn answer(shared: &Shared, stream: &TcpStream, port: u16, token: &str) -> Result
     }))
 }
 
-fn wait(shared: &Shared, stream: &TcpStream, id: u64, deadline: Instant) -> (Option<Outcome>, CloseReason) {
+fn wait(shared: &Shared, stream: Option<&TcpStream>, id: u64, deadline: Instant) -> (Option<Outcome>, CloseReason) {
     loop {
         {
             let queue = shared.queue();
@@ -236,7 +260,7 @@ fn wait(shared: &Shared, stream: &TcpStream, id: u64, deadline: Instant) -> (Opt
                 .wait_timeout(queue, POLL_INTERVAL.min(deadline - now))
                 .unwrap_or_else(PoisonError::into_inner);
         }
-        if hung_up(stream) {
+        if stream.is_some_and(hung_up) {
             return (None, CloseReason::Disconnected);
         }
     }

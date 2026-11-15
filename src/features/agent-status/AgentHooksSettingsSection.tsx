@@ -38,6 +38,13 @@ export function AgentHooksSettingsSection({ agentStatus, clearingAgentProvider, 
     <span className="agent-hooks-message">
       {text.scriptsDir} <code>{agentHooksInstallResult.scriptsDir}</code>
       <RemoteResultLines results={agentHooksInstallResult.remotes} />
+      {agentHooksInstallResult.dshBridge && (
+        <span>
+          <br />
+          {text.dshBridge}
+          <code className="agent-hooks-snippet">{agentHooksInstallResult.dshBridge}</code>
+        </span>
+      )}
     </span>
   ) : undefined;
 
@@ -52,7 +59,9 @@ export function AgentHooksSettingsSection({ agentStatus, clearingAgentProvider, 
       footer={footer}
     >
       <SettingsRow title={text.currentStatus} control={<span className="agent-hooks-value">{getAgentStatusLabel(agentStatus, t)}</span>} />
-      {listAgentStatuses(agentStatus).map(({ key, label, provider, status }) => {
+      {listAgentStatuses(agentStatus)
+        .filter(({ provider, status }) => !provider || status.phase !== "idle" || agentHooksState?.[provider] !== "absent")
+        .map(({ key, label, provider, status }) => {
         const attention = isAgentAttentionPhase(status.phase);
         return (
           <SettingsRow

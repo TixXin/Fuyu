@@ -123,7 +123,7 @@ pub(super) fn write_script(path: &str, text: &str) -> Result<String, String> {
     ))
 }
 
-fn edit(target: &SshTarget, path: &str, change: &dyn Fn(&str) -> Result<String, String>) -> Result<(), String> {
+pub(super) fn edit(target: &SshTarget, path: &str, change: &dyn Fn(&str) -> Result<String, String>) -> Result<(), String> {
     let text = run_ssh(target, &format!("cat \"$HOME/{path}\" 2>/dev/null; exit 0\n"))?;
     let text = String::from_utf8(text).map_err(|_| format!("~/{path} is not UTF-8"))?;
     let next = change(&text)?;
@@ -152,7 +152,12 @@ fn for_each_remote(app_dir: &Path, job: &(dyn Fn(&str, &SshTarget) -> Result<(),
 pub(super) fn install_hooks(app_dir: &Path) -> Vec<RemoteResult> {
     for_each_remote(app_dir, &|host, target| {
         let approval = RemoteApproval::of(host);
-        edit(target, SETTINGS_PATH, &|text| with_remote_hooks(text, approval.as_ref()))
+        let claude = edit(target, SETTINGS_PATH, &|text| with_remote_hooks(text, approval.as_ref()));
+        match (claude, super::antigravity_remote::install(target)) {
+            (Err(claude), Err(antigravity)) => Err(format!("{claude}; Antigravity: {antigravity}")),
+            (Err(error), Ok(())) => Err(error),
+            (Ok(()), result) => result.map_err(|error| format!("Antigravity: {error}")),
+        }
     })
 }
 

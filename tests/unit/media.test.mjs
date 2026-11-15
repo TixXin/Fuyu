@@ -45,10 +45,12 @@ test("stored music source priority drops invalid and duplicate entries", () => {
     { id: "cloudmusic", label: "网易云音乐" },
   ];
   withStorage([[MUSIC_SOURCE_PRIORITY_STORAGE_KEY, JSON.stringify(stored)]], () => {
-    assert.deepEqual(loadMusicSourcePriority(), [
+    const loaded = loadMusicSourcePriority();
+    assert.deepEqual(loaded.map(({ id, label }) => ({ id, label })), [
       { id: "spotify", label: "Spotify" },
       { id: "cloudmusic", label: "网易云音乐" },
     ]);
+    assert.ok(loaded.every(source => Math.abs(source.lastSeen - Date.now()) < 5000));
   });
 });
 

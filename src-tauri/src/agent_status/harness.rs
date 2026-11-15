@@ -2,30 +2,17 @@ use std::path::Path;
 
 use super::hooks_state::HookInstallState;
 use super::sessions::AgentSessionSummary;
-use super::{antigravity, claude_code, codex, dsh, workbuddy};
+use super::notifications::{is_waiting, saved_notifications, NOTIFICATIONS_DIR};
+use super::{antigravity, claude_code, codex, dsh, opencode, workbuddy};
 
 pub(super) const HARNESSES: &[Harness] = &[
     codex::HARNESS,
     claude_code::HARNESS,
     workbuddy::HARNESS,
     antigravity::HARNESS,
-    DSH,
+    dsh::HARNESS,
+    opencode::HARNESS,
 ];
-
-const DSH: Harness = Harness {
-    id: dsh::PROVIDER,
-    hooks: None,
-    status_light: None,
-    sessions: Some(dsh_sessions),
-    remote: None,
-};
-
-fn dsh_sessions(roots: &ScanRoots, now: i64, window_ms: i64) -> Vec<AgentSessionSummary> {
-    if roots.local_app_dir.is_none() {
-        return Vec::new();
-    }
-    dsh::sessions(roots.home_dir, now, window_ms)
-}
 
 pub(super) struct Harness {
     pub(super) id: &'static str,
@@ -50,12 +37,7 @@ pub(super) struct HookEnv<'a> {
 
 pub(super) struct Hooks {
     pub(super) install: fn(&HookEnv) -> Result<(), String>,
-    pub(super) check: HookCheck,
-}
-
-pub(super) enum HookCheck {
-    State(fn(&HookEnv) -> HookInstallState),
-    Present(fn(&Path) -> bool),
+    pub(super) check: fn(&HookEnv) -> HookInstallState,
 }
 
 pub(super) struct StatusLight {
@@ -68,6 +50,7 @@ pub(super) struct RemoteFiles {
     pub(super) find: &'static [&'static str],
     pub(super) session_dirs: &'static [&'static str],
     pub(super) files: &'static [&'static str],
+    pub(super) checkpoint_dirs: &'static [&'static str],
 }
 
 pub(super) fn with_status_light() -> impl Iterator<Item = (&'static str, &'static StatusLight)> {
@@ -108,14 +91,27 @@ pub(super) fn is_mirrored_file(remote: &str) -> bool {
     with_remote().any(|(_, files)| {
         files.files.contains(&remote)
             || (files.session_dirs.iter().any(|dir| remote.starts_with(dir)) && remote.ends_with(".jsonl"))
+            || files.checkpoint_dirs.iter().any(|dir| {
+                remote.strip_prefix(dir).is_some_and(|name| name.ends_with(".json") && !name.contains('/'))
+            })
     })
 }
 
 pub(super) fn extra_sessions(roots: &ScanRoots, now: i64, window_ms: i64) -> Vec<AgentSessionSummary> {
+    let waiting = roots
+        .local_app_dir
+        .map(|app_dir| saved_notifications(&app_dir.join(NOTIFICATIONS_DIR), now, false).waiting)
+        .unwrap_or_default();
     HARNESSES
         .iter()
         .filter_map(|harness| harness.sessions)
         .flat_map(|read| read(roots, now, window_ms))
+        .map(|mut summary| {
+            if summary.phase == "running" && is_waiting(&waiting, &summary.session_id, summary.updated_at) {
+                summary.phase = "waiting";
+            }
+            summary
+        })
         .collect()
 }
 
@@ -132,8 +128,12 @@ mod tests {
         ids.sort_unstable();
         ids.dedup();
         assert_eq!(ids.len(), HARNESSES.len());
-        assert_eq!(with_status_light().map(|(id, _)| id).collect::<Vec<_>>(), ["codex", "claudeCode"]);
-        assert_eq!(remote_ids(), ["codex", "claudeCode"]);
+        assert_eq!(
+            with_status_light().map(|(id, _)| id).collect::<Vec<_>>(),
+            ["codex", "claudeCode", "workbuddy", "antigravity", "dsh"]
+        );
+        assert_eq!(with_hooks().map(|(id, _)| id).collect::<Vec<_>>(), ["codex", "claudeCode", "workbuddy", "antigravity", "dsh"]);
+        assert_eq!(remote_ids(), ["codex", "claudeCode", "antigravity", "dsh"]);
     }
 
     #[test]
@@ -180,5 +180,8 @@ mod tests {
         assert!(is_mirrored_file(".codex/session_index.jsonl"));
         assert!(!is_mirrored_file(".claude/projects/p/a.json"));
         assert!(!is_mirrored_file(".workbuddy/projects/p/a.jsonl"));
+        assert!(is_mirrored_file(".dsh/storages/session_projcache/sessions/s.json"));
+        assert!(!is_mirrored_file(".dsh/storages/session_projcache/sessions/s.jsonl"));
+        assert!(!is_mirrored_file(".dsh/storages/session_projcache/sessions/p/s.json"));
     }
 }

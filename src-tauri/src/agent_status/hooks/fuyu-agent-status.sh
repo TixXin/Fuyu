@@ -4,11 +4,8 @@ phase=$2
 task=$(printf '%s' "${3:-}" | tr -cd 'A-Za-z0-9_.:-')
 minimum_visible_ms=800
 
-case "$provider" in
-  codex) other=claudeCode ;;
-  claudeCode) other=codex ;;
-  *) exit 2 ;;
-esac
+providers="codex claudeCode workbuddy antigravity dsh"
+case " $providers " in *" $provider "*) ;; *) exit 2 ;; esac
 case "$phase" in idle|running|completed|failed) ;; *) exit 2 ;; esac
 
 status=${FOCUSD_AGENT_STATUS_PATH:-$(cd "$(dirname "$0")" && pwd)/agent-status.json}
@@ -54,20 +51,24 @@ else
 fi
 
 idle='{"phase":"idle","updatedAt":0}'
-kept=$idle
-if [ -f "$status" ]; then
-  kept=$(/usr/bin/plutil -extract "$other" json -o - "$status" 2>/dev/null)
-  case "$kept" in "{"*"}") ;; *) kept=$idle ;; esac
-fi
 if [ -n "$task" ]; then
   next="{\"phase\":\"$phase\",\"updatedAt\":$now,\"taskId\":\"$task\"}"
 else
   next="{\"phase\":\"$phase\",\"updatedAt\":$now}"
 fi
-if [ "$provider" = codex ]; then
-  json="{\"codex\":$next,\"claudeCode\":$kept,\"updatedAt\":$now}"
-else
-  json="{\"codex\":$kept,\"claudeCode\":$next,\"updatedAt\":$now}"
-fi
+json="{"
+for name in $providers; do
+  if [ "$name" = "$provider" ]; then
+    entry=$next
+  else
+    entry=$idle
+    if [ -f "$status" ]; then
+      entry=$(/usr/bin/plutil -extract "$name" json -o - "$status" 2>/dev/null)
+      case "$entry" in "{"*"}") ;; *) entry=$idle ;; esac
+    fi
+  fi
+  json="$json\"$name\":$entry,"
+done
+json="$json\"updatedAt\":$now}"
 printf '%s\n' "$json" > "$status.tmp" && mv -f "$status.tmp" "$status"
 exit 0

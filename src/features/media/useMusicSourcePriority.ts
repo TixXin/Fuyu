@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import type { MediaState } from "./api";
+import { syncMusicSources } from "./sourcePriority";
 import { MUSIC_SOURCE_PRIORITY_STORAGE_KEY, loadMusicSourcePriority, saveMusicSourcePriority, type KnownMediaSource } from "./storage";
 
 export function useMusicSourcePriority(sessions: MediaState["sessions"]) {
@@ -45,19 +46,10 @@ export function useMusicSourcePriority(sessions: MediaState["sessions"]) {
   }, []);
 
   useEffect(() => {
-    if (sessions.length === 0) {
-      return;
-    }
-
-    setMusicSourcePriority((current) => {
-      const known = new Set(current.map((source) => source.id));
-      const additions = sessions
-        .filter((session) => !known.has(session.id))
-        .map((session) => ({ id: session.id, label: session.label }));
-
-      return additions.length > 0 ? [...current, ...additions] : current;
-    });
-  }, [sessions]);
+    setMusicSourcePriority((current) =>
+      syncMusicSources(current, sessions, Date.now()),
+    );
+  }, [sessions, musicSourcePriority]);
 
   useEffect(() => {
     saveMusicSourcePriority(musicSourcePriority);

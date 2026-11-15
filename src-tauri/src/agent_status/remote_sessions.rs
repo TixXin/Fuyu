@@ -225,8 +225,11 @@ fn apply(root: &Path, host: &str, replies: Vec<Reply>) -> (HashMap<String, Mirro
             }
             Reply::Changed { path, file, head, tail } => {
                 let Some(target) = mirror_path(root, &path) else { continue };
-                let whole = file.size <= TAIL_BYTES;
-                let head = if whole {
+                let checkpoint = path.ends_with(".json") && tail.len() as u64 == file.size;
+                let whole = checkpoint || file.size <= TAIL_BYTES;
+                let head = if checkpoint {
+                    Vec::new()
+                } else if whole {
                     first_lines(&tail)
                 } else if head.is_empty() {
                     previous.remove(&path).map(|known| known.head).unwrap_or_default()
@@ -299,6 +302,26 @@ mod tests {
         assert_eq!(mirror_path(root, ".claude/projects/../../evil.jsonl"), None);
         assert_eq!(mirror_path(root, "/etc/passwd"), None);
         assert_eq!(mirror_path(root, ".claude/settings.json"), None);
+    }
+
+    #[test]
+    fn a_whole_checkpoint_is_mirrored_as_is() {
+        let root = std::env::temp_dir().join(format!("fuyu-remote-checkpoint-{}", std::process::id()));
+        let path = ".dsh-home/storages/session_projcache/sessions/s.json".to_string();
+        assert!(mirror_path(&root, &path).is_some());
+        assert_eq!(mirror_path(&root, ".dsh/storages/session_projcache/sessions/x/s.json"), None);
+        assert_eq!(mirror_path(&root, ".dsh/sessions/p/s/session.v4.jsonl.zstd"), None);
+        let body = vec![b'x'; usize::try_from(TAIL_BYTES).unwrap() + 5];
+        let changed = Reply::Changed {
+            path: path.clone(),
+            file: RemoteFile { size: body.len() as u64, mtime: 1_700_000_000 },
+            head: Vec::new(),
+            tail: body.clone(),
+        };
+        let (files, _) = apply(&root, "test-host-checkpoint", vec![changed]);
+        assert_eq!(fs::read(root.join(&path)).unwrap(), body);
+        assert!(files[&path].head.is_empty());
+        let _ = fs::remove_dir_all(&root);
     }
 
     #[test]

@@ -1,14 +1,12 @@
 #!/bin/sh
 provider=$1
 case "$provider" in
-  codex|claudeCode)
-    marker="agent-$provider-running.flag"
-    hold="agent-$provider-running-hold.flag"
-    ;;
-  workbuddy) [ "$2" = notification ] || exit 2 ;;
-  antigravity) [ "$2" = running ] || [ "$2" = stop ] || exit 2 ;;
+  codex|claudeCode|workbuddy|dsh) ;;
+  antigravity) case "$2" in start|running|stop) ;; *) exit 2 ;; esac ;;
   *) exit 2 ;;
 esac
+marker="agent-$provider-running.flag"
+hold="agent-$provider-running-hold.flag"
 
 dir=${FOCUSD_AGENT_STATUS_DIR:-$(cd "$(dirname "$0")" && pwd)}
 mkdir -p "$dir" 2>/dev/null
@@ -19,7 +17,12 @@ mode=marker
 if [ "$provider" = antigravity ]; then
   saved_dir="$dir/agent-antigravity"
   saved_name=$2
+  [ "$2" = start ] && saved_name=running
   mode=notification
+  if [ "$2" = running ]; then
+    : > "$dir/$marker"
+    rm -f "$dir/$hold"
+  fi
 elif [ "$2" = notification ]; then
   mode=notification
 elif [ "$2" = session ]; then

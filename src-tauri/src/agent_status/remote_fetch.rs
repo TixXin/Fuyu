@@ -18,10 +18,12 @@ use crate::system::CREATE_NO_WINDOW;
 pub(super) const TAIL_BYTES: u64 = 256 * 1024;
 const HEAD_LINES: u32 = 40;
 const HEAD_MAX_BYTES: u64 = 1024 * 1024;
+const WHOLE_MAX_BYTES: u64 = 512 * 1024;
 
 const SCRIPT: &str = r#"exec 2>/dev/null
 umask 077
 T=__TAIL__
+TAB=$(printf '\t')
 cd "$HOME" || exit 3
 PF=__PORT_FILE__
 OPF=__LEGACY_PORT_FILE__
@@ -30,15 +32,22 @@ MINE=
 trap 'for f in "$PF" "$OPF"; do [ -n "$MINE" ] && [ "$(cat "$f" 2>/dev/null)" = "$MINE" ] && rm -f "$f"; done' EXIT
 trap 'exit' HUP INT TERM PIPE
 send() {
+  n=${2:-$1}
   set -- "$1" $(stat -c '%s %Y' "$1" 2>/dev/null)
   [ -n "$3" ] || return 0
-  if printf '%s\n' "$KNOWN" | grep -qxF "$2 $3 $1"; then printf 'S %s\n' "$1"; return 0; fi
-  if [ "$2" -le "$T" ]; then printf 'F %s %s 0 %s %s\n' "$2" "$3" "$2" "$1"; head -c "$2" "$1"; return 0; fi
+  if printf '%s\n' "$KNOWN" | grep -qxF "$2 $3 $n"; then printf 'S %s\n' "$n"; return 0; fi
+  case "$n" in *.json)
+    [ "$2" -le __WHOLE_MAX__ ] || return 0
+    printf 'F %s %s 0 %s %s\n' "$2" "$3" "$2" "$n"
+    { head -c "$2" "$1"; dd if=/dev/zero bs="$2" count=1; } | head -c "$2"
+    return 0 ;;
+  esac
+  if [ "$2" -le "$T" ]; then printf 'F %s %s 0 %s %s\n' "$2" "$3" "$2" "$n"; head -c "$2" "$1"; return 0; fi
   h=0
-  if ! printf '%s\n' "$KNOWN" | cut -d' ' -f3- | grep -qxF "$1"; then
+  if ! printf '%s\n' "$KNOWN" | cut -d' ' -f3- | grep -qxF "$n"; then
     h=$(( $(head -c __HEAD_MAX__ "$1" | head -n __HEAD_LINES__ | wc -c) ))
   fi
-  printf 'F %s %s %s %s %s\n' "$2" "$3" "$h" "$T" "$1"
+  printf 'F %s %s %s %s %s\n' "$2" "$3" "$h" "$T" "$n"
   [ "$h" -gt 0 ] && head -c __HEAD_MAX__ "$1" | head -n __HEAD_LINES__
   tail -c "$T" "$1"
 }
@@ -47,7 +56,9 @@ fetch() {
 __FIND_SESSIONS__
   find .fuyu/agent-notifications .focusd-island/agent-notifications -maxdepth 1 -type f -name '*.json' -mmin +1440 -delete 2>/dev/null
   find .fuyu/agent-notifications .focusd-island/agent-notifications -maxdepth 1 -type f -name '*.json' -mmin -"$W" 2>/dev/null
-} | while IFS= read -r f; do send "$f"; done
+} | while IFS= read -r f; do
+  case "$f" in *"$TAB"*) send "${f%%"$TAB"*}" "${f#*"$TAB"}" ;; *) send "$f" ;; esac
+done
 if [ -d .claude/sessions ]; then
   echo R
   mid=$(cat /etc/machine-id 2>/dev/null)
@@ -109,6 +120,7 @@ fn session_script() -> String {
         .replace("__TAIL__", &TAIL_BYTES.to_string())
         .replace("__HEAD_MAX__", &HEAD_MAX_BYTES.to_string())
         .replace("__HEAD_LINES__", &HEAD_LINES.to_string())
+        .replace("__WHOLE_MAX__", &WHOLE_MAX_BYTES.to_string())
         .replace("__LEGACY_PORT_FILE__", LEGACY_APPROVAL_PORT_FILE)
         .replace("__PORT_FILE__", APPROVAL_PORT_FILE)
 }
@@ -349,7 +361,8 @@ pub(super) fn read_reply(reader: &mut impl BufRead) -> Result<Vec<Reply>, String
         let mut number = || parts.next().and_then(|part| part.parse::<u64>().ok()).ok_or("Malformed file line");
         let (size, mtime, head_len, tail_len) = (number()?, number()?, number()?, number()?);
         let path = parts.next().filter(|path| !path.is_empty()).ok_or("File line without a path")?;
-        if head_len > HEAD_MAX_BYTES || tail_len > TAIL_BYTES {
+        let whole = head_len == 0 && tail_len == size && path.ends_with(".json");
+        if head_len > HEAD_MAX_BYTES || tail_len > if whole { WHOLE_MAX_BYTES } else { TAIL_BYTES } {
             return Err("File excerpt too large".into());
         }
         let mut head = vec![0; usize::try_from(head_len).map_err(|_| "File too large")?];
@@ -386,6 +399,20 @@ mod tests {
         );
         let Reply::Changed { head, tail, .. } = &replies[2] else { panic!("changed") };
         assert_eq!((head.as_slice(), tail.as_slice()), (&b"h\n\n"[..], &b"tail"[..]));
+    }
+
+    #[test]
+    fn a_checkpoint_comes_whole_up_to_its_own_limit() {
+        let size = TAIL_BYTES + 10;
+        let mut bytes = format!("F {size} 1 0 {size} .dsh/storages/session_projcache/sessions/a.json\n").into_bytes();
+        bytes.extend(std::iter::repeat_n(b' ', usize::try_from(size).unwrap()));
+        bytes.extend_from_slice(b"E\n");
+        let replies = read_reply(&mut bytes.as_slice()).unwrap();
+        assert!(matches!(&replies[0], Reply::Changed { tail, .. } if tail.len() as u64 == size));
+        let line = format!("F {size} 1 0 {size} .codex/sessions/r.jsonl\n");
+        assert!(read_reply(&mut line.as_bytes()).is_err());
+        let line = format!("F {} 1 0 {} .dsh/a.json\nE\n", WHOLE_MAX_BYTES + 1, WHOLE_MAX_BYTES + 1);
+        assert!(read_reply(&mut line.as_bytes()).is_err());
     }
 
     #[test]

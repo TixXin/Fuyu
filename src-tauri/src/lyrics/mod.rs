@@ -1,3 +1,4 @@
+mod amll;
 mod found;
 mod inflink;
 mod krc;
@@ -6,6 +7,7 @@ mod local;
 mod lrclib;
 mod matching;
 mod netease;
+mod ttml;
 
 use std::{
     fs,
@@ -201,8 +203,8 @@ pub async fn get_lyrics(app: AppHandle, query: LyricsQuery) -> Result<Option<Lyr
         let found = tauri::async_runtime::spawn_blocking(move || local::find(Path::new(&folder), &title, &artist))
             .await
             .map_err(|error| format!("Failed to join the lyrics folder search: {error}"))?;
-        if let Some(lrc) = found {
-            return Ok(Some(for_display("local", FoundLyrics { lrc, translation: None }, &query.title, &query.artist)));
+        if let Some(found) = found {
+            return Ok(Some(for_display("local", found, &query.title, &query.artist)));
         }
     }
     if !query.online {
