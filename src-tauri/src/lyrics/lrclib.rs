@@ -3,7 +3,7 @@ use std::time::Duration;
 use serde::Deserialize;
 
 use super::matching::{clean_title, close_duration, named_in_simplified, same_artist, traditional_chars};
-use crate::system::updater::get_updater_proxy;
+use crate::system::updater::reqwest_proxy;
 
 const BASE: &str = "https://lrclib.net/api";
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(8);
@@ -42,8 +42,7 @@ fn is_traditional(lyrics: &str) -> bool {
 
 fn client() -> Result<reqwest::Client, String> {
     let mut builder = reqwest::Client::builder().timeout(REQUEST_TIMEOUT).user_agent(USER_AGENT);
-    if let Some(proxy) = get_updater_proxy() {
-        let proxy = reqwest::Proxy::all(&proxy).map_err(|error| format!("Invalid proxy {proxy}: {error}"))?;
+    if let Some(proxy) = reqwest_proxy().map_err(|error| error.to_string())? {
         builder = builder.proxy(proxy);
     }
     builder.build().map_err(|error| format!("Could not create the HTTP client: {error}"))

@@ -63,14 +63,13 @@ export function runtime({ check = async () => null, install = async () => {}, no
     }
     throw new Error(`Unexpected command ${command}`);
   };
-  async function controller({ configured = true, version = "0.3.5", proxy = null, query = null } = {}) {
+  async function controller({ configured = true, version = "0.3.5", query = null } = {}) {
     const exports = {};
     const handlers = new Map();
     const mocks = {
       "@tauri-apps/api/app": { getVersion: async () => version },
       "@tauri-apps/api/core": { Channel: class {}, isTauri: () => true, invoke: async (command, args) => {
         if (command === "updater_configured") return configured;
-        if (command === "get_updater_proxy") return proxy;
         if (command === "updater_state" && query) return query({ ...snapshot });
         return native(command, args);
       } },

@@ -68,7 +68,7 @@ fn configured_endpoints(app: &AppHandle) -> Result<Vec<Url>, String> {
         .map_err(|error| error.to_string())
 }
 
-async fn check(app: &AppHandle, channel: &str, proxy: Option<String>) -> Result<Option<Update>, String> {
+async fn check(app: &AppHandle, channel: &str) -> Result<Option<Update>, String> {
     let endpoints = channel_endpoints(&configured_endpoints(app)?, channel)?;
     let mut builder = app
         .updater_builder()
@@ -76,26 +76,22 @@ async fn check(app: &AppHandle, channel: &str, proxy: Option<String>) -> Result<
         .map_err(|error| error.to_string())?
         .timeout(CHECK_TIMEOUT)
         .configure_client(|client| client.connect_timeout(CONNECT_TIMEOUT).read_timeout(READ_TIMEOUT));
-    if let Some(proxy) = proxy {
-        builder = builder.proxy(Url::parse(&proxy).map_err(|error| error.to_string())?);
+    if let Some(proxy) = super::updater::proxy_url().map_err(|error| error.to_string())? {
+        builder = builder.proxy(proxy);
     }
     builder.build().map_err(|error| error.to_string())?
         .check().await.map_err(|error| error.to_string())
 }
 
 #[tauri::command]
-pub async fn updater_check(
-    app: AppHandle,
-    channel: String,
-    proxy: Option<String>,
-) -> Result<Option<UpdateInfo>, UserError> {
+pub async fn updater_check(app: AppHandle, channel: String) -> Result<Option<UpdateInfo>, UserError> {
     if channel != "stable" && channel != "beta" {
         return Err(format!("Unknown update channel: {channel}").into());
     }
     change(&app, |runtime| runtime.begin_check(&channel))?;
     let task_app = app.clone();
     let result = tauri::async_runtime::spawn(async move {
-        match check(&task_app, &channel, proxy).await {
+        match check(&task_app, &channel).await {
             Ok(found) => {
                 let info = found.as_ref().map(|update| UpdateInfo {
                     version: update.version.clone(),

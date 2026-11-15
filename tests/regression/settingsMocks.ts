@@ -87,7 +87,6 @@ mockIPC((command, payload) => {
     case "has_translation_secret": return args.provider === "deepseek";
     case "set_translation_shortcut": return args.shortcut;
     case "updater_configured": return true;
-    case "get_updater_proxy": return null;
     case "plugin:app|version": return demoUpdate ? DEMO_CURRENT_VERSION : "0.0.0-test";
     case "updater_state":
     case "updater_check":
