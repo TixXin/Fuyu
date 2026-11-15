@@ -50,7 +50,7 @@ export const CAPTURE = `(async () => {
     .replace(/\\b1[6-9]\\d{8}(?:\\d{3})?\\b/g, "<ts>")
     .replace(/blob:[^\\s"')]+/g, "blob:<url>");
   const unstableStyle = /^(transition|animation|will-change)(-|$)|^--wave-/;
-  const LIVE_TEXT = [".timer-panel__time"];
+  const LIVE_TEXT = [".timer-panel__time", ".agent-session__elapsed"];
   const anchored = (el) => ["dialog", "menu", "tooltip", "listbox"].includes(el.getAttribute("role"));
   const anchoredStyle = (value) => value.split("; ").map((d) => /^(left|top|right|bottom):\\s*-?[\\d.]+px$/.test(d) ? d.replace(/-?[\\d.]+px$/, "#px") : d).join("; ");
   const cleanStyle = (value) => value.split(";").map((d) => d.trim()).filter((d) => d && !unstableStyle.test(d.split(":")[0].trim())).join("; ");
