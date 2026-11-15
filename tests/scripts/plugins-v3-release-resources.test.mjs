@@ -4,7 +4,7 @@ import test from "node:test";
 import { RELEASE_RESOURCES, resourcesOverlay, SHIPPED_FILES } from "../../scripts/plugins-v3/release-resources.mjs";
 import { windowsOverlay } from "../../scripts/release/windows-build.mjs";
 
-const read = (path) => readFileSync(path, "utf8");
+const read = (path) => readFileSync(path, "utf8").replace(/\r\n/g, "\n");
 const MODULE = "scripts/plugins-v3/release-resources.mjs";
 
 test("the host and the built-in plugins land side by side under plugins-v3", () => {
