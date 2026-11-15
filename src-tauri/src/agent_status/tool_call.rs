@@ -55,6 +55,27 @@ pub(super) fn codex_tool_call(payload: &Value) -> Option<ToolCall> {
     Some(ToolCall { name, detail: detail.and_then(|text| shorten(&text, DETAIL_MAX_CHARS)) })
 }
 
+pub(super) fn antigravity_tool_call(call: &Value) -> Option<ToolCall> {
+    let name = tool_name(call["name"].as_str()?)?;
+    let args = &call["args"];
+    let path = ["AbsolutePath", "Path", "TargetFile"].iter().find_map(|key| args[*key].as_str()).map(file_name);
+    let detail = args["CommandLine"].as_str().map(str::to_string).or(path).or_else(|| args["query"].as_str().map(str::to_string));
+    Some(ToolCall { name, detail: detail.and_then(|text| shorten(&text, DETAIL_MAX_CHARS)) })
+}
+
+pub(super) fn opencode_tool_call(tool: &Value) -> Option<ToolCall> {
+    let name = tool_name(tool["name"].as_str().or_else(|| tool["tool"].as_str())?)?;
+    let input = &tool["state"]["input"];
+    let text = |key: &str| input[key].as_str().map(str::to_string);
+    let detail = text("command")
+        .or_else(|| text("filePath").map(|path| file_name(&path)))
+        .or_else(|| text("pattern"))
+        .or_else(|| text("url"))
+        .or_else(|| text("description"))
+        .or_else(|| text("query"));
+    Some(ToolCall { name, detail: detail.and_then(|text| shorten(&text, DETAIL_MAX_CHARS)) })
+}
+
 fn tool_name(raw: &str) -> Option<String> {
     let name = raw.rsplit("__").next().unwrap_or(raw).trim();
     (!name.is_empty()).then(|| name.to_string())

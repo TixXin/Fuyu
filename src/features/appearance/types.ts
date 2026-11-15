@@ -127,6 +127,7 @@ export type IslandSettings = CalendarSettingValues & {
   shelfMaxItems: number;
   shelfDoubleClick: ShelfDoubleClick;
   shelfShowCount: boolean;
+  sideMusicCover: boolean;
   deviceUseIndicator: boolean;
   levelPopup: boolean;
   deviceAlerts: boolean;

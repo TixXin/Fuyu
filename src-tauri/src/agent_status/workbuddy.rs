@@ -10,6 +10,7 @@ use super::harness::{Harness, HookEnv, Hooks, StatusLight};
 use super::hooks_state::{hook_entries_state, HookInstallState};
 use super::sessions::{SessionTail, TurnState};
 use super::title::{display_title, prompt_title, tag_content};
+use super::todo_list::{todo_write_call, unfinished};
 use super::tool_call::codex_tool_call;
 use super::{write_text_file, AGENT_APPROVAL_SCRIPT_FILE_NAME, AGENT_RUNNING_NOTIFICATION_ARG};
 
@@ -54,6 +55,7 @@ fn query_in(record: &Value) -> Option<String> {
 
 pub(super) fn parse_tail(tail: &str) -> SessionTail {
     let mut result = SessionTail::default();
+    let mut todos_seen = false;
     for record in tail.lines().rev().filter_map(|line| serde_json::from_str::<Value>(line).ok()) {
         let kind = record["type"].as_str().unwrap_or_default();
         if result.session_id.is_none() {
@@ -75,6 +77,12 @@ pub(super) fn parse_tail(tail: &str) -> SessionTail {
         }
         if result.current_tool.is_none() && result.last_prompt.is_none() {
             result.current_tool = codex_tool_call(&record);
+        }
+        if !todos_seen {
+            if let Some(list) = todo_write_call(&record) {
+                todos_seen = true;
+                result.todos = unfinished(Some(list));
+            }
         }
         if result.state == TurnState::Unknown {
             result.state = turn_state(kind, &record);
@@ -224,6 +232,20 @@ mod tests {
         assert_eq!(calling.current_tool.map(|tool| (tool.name, tool.detail)), Some(("Bash".into(), Some("ls -la".into()))));
         assert_eq!(tail(&[PROMPT, CALLS, RESULT]).state, TurnState::Working);
         assert_eq!(tail(&[PROMPT]).state, TurnState::Working);
+    }
+
+    #[test]
+    fn the_latest_todo_write_shows_unfinished_steps() {
+        let todos = |steps: &str| {
+            json!({ "type": "function_call", "name": "TodoWrite", "callId": "TodoWrite_0", "arguments": json!({ "todos": serde_json::from_str::<Value>(steps).unwrap() }).to_string(), "sessionId": "s1" }).to_string()
+        };
+        let older = todos(r#"[{"content":"Read","status":"in_progress"}]"#);
+        let newer = todos(r#"[{"content":"Read","status":"completed"},{"content":"Fix","activeForm":"Fixing","status":"in_progress"}]"#);
+        let parsed = tail(&[PROMPT, &older, &newer, CALLS]);
+        let list = parsed.todos.unwrap();
+        assert_eq!((list.done, list.total, list.current.as_deref()), (1, 2, Some("Fixing")));
+        let finished = todos(r#"[{"content":"Read","status":"completed"}]"#);
+        assert_eq!(tail(&[PROMPT, &newer, &finished]).todos, None);
     }
 
     #[test]

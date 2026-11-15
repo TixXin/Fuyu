@@ -23,6 +23,7 @@ export type IslandText = {
   timer: string;
   calendar: string;
   shelfCount: (count: number) => string;
+  sideMore: (count: number) => string;
   deviceInUse: Record<"camera" | "microphone", (apps: string) => string>;
   deviceAppSeparator: string;
   levelPopup: { volume: (percent: number) => string; brightness: (percent: number) => string; muted: string; mutedShort: string };
@@ -69,6 +70,7 @@ export const zhCN: IslandText = {
   timer: "计时器",
   calendar: "日历",
   shelfCount: (count) => `文件中转里有 ${count} 个文件`,
+  sideMore: (count) => `还有 ${count} 项，展开查看`,
   deviceInUse: {
     camera: (apps) => (apps ? `${apps} 正在使用摄像头，点击打开隐私设置` : "摄像头正在使用，点击打开隐私设置"),
     microphone: (apps) => (apps ? `${apps} 正在使用麦克风，点击打开隐私设置` : "麦克风正在使用，点击打开隐私设置"),
@@ -118,6 +120,7 @@ export const en: IslandText = {
   timer: "Timer",
   calendar: "Calendar",
   shelfCount: (count) => (count === 1 ? "1 file on the shelf" : `${count} files on the shelf`),
+  sideMore: (count) => `${count} more, open the island to see them`,
   deviceInUse: {
     camera: (apps) => (apps ? `${apps} using the camera; click for privacy settings` : "Camera in use; click for privacy settings"),
     microphone: (apps) => (apps ? `${apps} using the microphone; click for privacy settings` : "Microphone in use; click for privacy settings"),

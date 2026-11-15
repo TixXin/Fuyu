@@ -4,7 +4,7 @@ use super::edge;
 use super::geometry::{apply_stage_geometry, island_rect, monitor_at, STAGE_WINDOW_HEIGHT, STAGE_WINDOW_WIDTH};
 use super::screen;
 use super::side::{full_rect, is_outer, Rect};
-use super::state::{mutate_window_state, Edge, IslandPosition, IslandWindowState};
+use super::state::{mutate_window_state, read_window_state, Edge, IslandPosition, IslandWindowState};
 
 const SNAP_DISTANCE: f64 = 16.0;
 
@@ -71,11 +71,19 @@ pub(super) fn leave(window: &WebviewWindow, position: IslandPosition, state: Isl
     IslandPosition::at(position.x, y)
 }
 
+#[cfg(debug_assertions)]
+pub(crate) fn dock_to(app: &AppHandle, edge: &str) -> Result<(), String> {
+    match edge {
+        "top" => super::reset_island_position(app.clone()),
+        "bottom" => set_island_edge(app.clone(), Edge::Bottom),
+        "left" => set_island_edge(app.clone(), Edge::Left),
+        "right" => set_island_edge(app.clone(), Edge::Right),
+        _ => Err(format!("Unknown island edge: {edge}")),
+    }
+}
+
 #[tauri::command]
 pub fn set_island_edge(app: AppHandle, edge: Edge) -> Result<(), String> {
-    if edge != Edge::Bottom {
-        return Err(format!("Unsupported island edge: {edge:?}"));
-    }
     let window = super::main_window(&app)?;
     let current = window.current_monitor().map_err(|error| error.to_string())?;
     let monitor = match current {
@@ -85,7 +93,12 @@ pub fn set_island_edge(app: AppHandle, edge: Edge) -> Result<(), String> {
             .map_err(|error| error.to_string())?
             .ok_or_else(|| "No monitor is available for island positioning.".to_string())?,
     };
-    let position = placed_on(&monitor);
+    let position = match edge {
+        Edge::Bottom => placed_on(&monitor),
+        Edge::Left | Edge::Right => super::side::placed_on(&window, &monitor, edge, 0.5, read_window_state())
+            .ok_or_else(|| "This side of the screen touches another monitor.".to_string())?,
+        Edge::Top => return Err(format!("Unsupported island edge: {edge:?}")),
+    };
     let state = mutate_window_state(|state| {
         state.custom_position = Some(position);
         state.out_at_top = false;

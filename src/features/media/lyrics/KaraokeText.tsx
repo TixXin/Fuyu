@@ -7,8 +7,10 @@ const FOLLOW_MARGIN_PX = 24;
 
 type Follow = { delayMs: number; durationMs: number; shift: number };
 
-export function KaraokeText({ words, positionMs, playing, look }: { words: LyricWord[]; positionMs: number; playing: boolean; look: KaraokeLook }) {
-  const [start] = useState(positionMs);
+type KaraokeTextProps = { words: LyricWord[]; positionMs: number; sampledAt?: number; playing: boolean; look: KaraokeLook };
+
+export function KaraokeText({ words, positionMs, sampledAt, playing, look }: KaraokeTextProps) {
+  const [start] = useState(() => (playing && sampledAt !== undefined ? positionMs + Math.max(0, Date.now() - sampledAt) : positionMs));
   const box = useRef<HTMLSpanElement>(null);
   const [follow, setFollow] = useState<Follow | null>(null);
 

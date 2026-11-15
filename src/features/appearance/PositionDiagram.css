@@ -128,3 +128,35 @@
 .position-diagram--bottom .position-diagram__island {
   border-radius: 4px 4px 0 0;
 }
+
+.position-diagram--left .position-diagram__screen,
+.position-diagram--right .position-diagram__screen {
+  align-items: center;
+}
+
+.position-diagram--left .position-diagram__screen {
+  justify-content: flex-start;
+}
+
+.position-diagram--right .position-diagram__screen {
+  justify-content: flex-end;
+}
+
+.position-diagram--left .position-diagram__island,
+.position-diagram--right .position-diagram__island {
+  width: 8px;
+  height: 24px;
+}
+
+.position-diagram--left .position-diagram__island {
+  border-radius: 0 4px 4px 0;
+}
+
+.position-diagram--right .position-diagram__island {
+  border-radius: 4px 0 0 4px;
+}
+
+.position-diagram--left .position-diagram__island::after,
+.position-diagram--right .position-diagram__island::after {
+  left: 2.5px;
+}

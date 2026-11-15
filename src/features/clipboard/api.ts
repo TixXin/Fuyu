@@ -1,7 +1,7 @@
 import { convertFileSrc, invoke } from "@tauri-apps/api/core";
 import { emitTo, listen } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { revealItemInDir } from "@tauri-apps/plugin-opener";
+import { openUrl, revealItemInDir } from "@tauri-apps/plugin-opener";
 
 export type ClipboardHistorySettings = {
   enabled: boolean;
@@ -30,6 +30,7 @@ export type ClipboardHistorySettings = {
   popupPinned?: boolean;
   popupPinX?: number | null;
   popupPinY?: number | null;
+  copyCardSeconds?: number;
 };
 
 export type ClipboardAiPrompt = { id: string; title: string; prompt: string };
@@ -92,6 +93,15 @@ export type ClipboardSnippet = { id: string; title: string; text: string };
 export const CLIPBOARD_HISTORY_CHANGED_EVENT = "clipboard-history-changed";
 export const CLIPBOARD_HISTORY_SHORTCUT_EVENT = "clipboard-history-shortcut";
 export const CLIPBOARD_SHORTCUT_STATUS_EVENT = "clipboard-history-shortcut-status";
+export const CLIPBOARD_ITEM_COPIED_EVENT = "clipboard-item-copied";
+
+export type ClipboardCopiedNotice = { item: ClipboardHistoryItem; seconds: number; origin?: "history" | "capture" };
+
+export const CLIPBOARD_LINKS_CHANGED_EVENT = "clipboard-links-changed";
+export type ClipboardLinkMatching = "any" | "web";
+export type ClipboardLinkSettings = { notice: boolean; matching: ClipboardLinkMatching; blockedSites: string[]; onlySites: string[] };
+export type ClipboardLink = { id: string; url: string; title: string; addedAt: number };
+export type ClipboardLinks = { version: number; settings: ClipboardLinkSettings; links: ClipboardLink[] };
 
 export function getClipboardHistory() {
   return invoke<ClipboardHistorySnapshot>("get_clipboard_history");
@@ -245,6 +255,46 @@ export function clearClipboardHistory() {
 
 export function listenClipboardHistoryChanged(handler: () => void) {
   return listen(CLIPBOARD_HISTORY_CHANGED_EVENT, handler);
+}
+
+export function listenClipboardItemCopied(handler: (notice: ClipboardCopiedNotice) => void) {
+  return listen<ClipboardCopiedNotice>(CLIPBOARD_ITEM_COPIED_EVENT, ({ payload }) => handler(payload));
+}
+
+export function getClipboardLinks() {
+  return invoke<ClipboardLinks>("get_clipboard_links");
+}
+
+export function addClipboardLink(url: string, title?: string) {
+  return invoke<ClipboardLinks>("add_clipboard_link", { url, title: title ?? null });
+}
+
+export function removeClipboardLink(id: string) {
+  return invoke<ClipboardLinks>("remove_clipboard_link", { id });
+}
+
+export function moveClipboardLink(id: string, to: number) {
+  return invoke<ClipboardLinks>("move_clipboard_link", { id, to });
+}
+
+export function setClipboardLinkSettings(settings: ClipboardLinkSettings) {
+  return invoke<ClipboardLinks>("set_clipboard_link_settings", { settings });
+}
+
+export function exportClipboardLinks() {
+  return invoke<string>("export_clipboard_links");
+}
+
+export function importClipboardLinks(content: string) {
+  return invoke<number>("import_clipboard_links", { content });
+}
+
+export function openClipboardLink(url: string) {
+  return openUrl(url);
+}
+
+export function listenClipboardLinksChanged(handler: (links: ClipboardLinks) => void) {
+  return listen<ClipboardLinks>(CLIPBOARD_LINKS_CHANGED_EVENT, ({ payload }) => handler(payload));
 }
 
 export function listenClipboardHistoryShortcut(handler: () => void) {

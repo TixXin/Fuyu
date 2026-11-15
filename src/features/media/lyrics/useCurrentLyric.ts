@@ -15,6 +15,7 @@ export type CurrentLyric = {
 export type KaraokeLine = {
   words: LyricWord[];
   positionMs: number;
+  sampledAt: number;
   clock: string;
   look: KaraokeLook;
 };
@@ -46,13 +47,13 @@ export function useCurrentLyric(lines: LyricLine[] | null, mediaState: MediaStat
   }, [on, nextAt, position]);
 
   const longest = useMemo(() => (lines ? longestLyric(lines) : ""), [lines]);
-  if (!at || !lines) return NONE;
-  if (at.index < 0) return { ...NONE, longest, intro: true };
+  if (!lines || (!at && !ended)) return NONE;
+  if (!at || at.index < 0 || !at.text) return { ...NONE, longest, intro: true };
   const words = karaoke && at.index >= 0 && at.text ? karaokeWords(lines[at.index], at.nextAt, karaoke.even) : undefined;
   return {
     text: at.text,
     index: at.index,
     longest,
-    ...(words && { karaoke: { words, positionMs: position, clock: `${mediaState.updatedAt}:${offsetMs}`, look: karaoke!.look } }),
+    ...(words && { karaoke: { words, positionMs: position, sampledAt: now, clock: `${mediaState.updatedAt}:${offsetMs}`, look: karaoke!.look } }),
   };
 }

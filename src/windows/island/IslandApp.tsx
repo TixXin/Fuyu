@@ -12,6 +12,8 @@ import { useScreenshotText } from "../../features/screenshot/useScreenshotText";
 import { useScreenshotCard } from "../../features/screenshot/useScreenshotCard";
 import { ScreenshotNotice, ScreenshotNoticeActions } from "../../features/screenshot/ScreenshotNotice";
 import { useScreenshotNotice } from "../../features/screenshot/useScreenshotNotice";
+import { ClipboardCopyNotice, ClipboardCopyNoticeActions } from "../../features/clipboard/ClipboardCopyNotice";
+import { useClipboardCopyCard } from "../../features/clipboard/useClipboardCopyCard";
 import { RecordingNotice, RecordingNoticeActions } from "../../features/screenshot/RecordingNotice";
 import { useRecording } from "../../features/screenshot/useRecording";
 import { TimerNotice, TimerNoticeActions } from "../../features/timer/TimerNotice";
@@ -118,6 +120,7 @@ export function IslandApp() {
   const screenshot = useIslandScreenshot(settings.screenshotEnabled, collapseIsland);
   const screenshotCard = useScreenshotCard(screenshot.settings.cardSeconds);
   const screenshotNotice = useScreenshotNotice(screenshotCard, agentSessions);
+  const copyCard = useClipboardCopyCard(!game.quiet);
   const recording = useRecording();
   const translationPeek = useQuickTranslation(settings.translationEnabled) ?? screenshotText;
   const firstHints = useIslandFirstHints({
@@ -157,7 +160,7 @@ export function IslandApp() {
     hasMessagePreview: showsMessage,
     hasPermissionPrompt: permissionPrompts.current !== null || screenshotCard.current !== null,
     hasTranslationPeek: Boolean(translationPeek),
-    holdTuck: side !== null || holdsTuck(settings, {
+    holdTuck: holdsTuck(settings, {
       todoInProgress: activeTodoId !== null && todos.some((todo) => todo.id === activeTodoId && !todo.completed),
       agentWaiting: agentSessions.some((session) => session.phase === "waiting"),
       musicPlaying: media.mediaState.playbackStatus === "playing",
@@ -250,7 +253,7 @@ export function IslandApp() {
   });
 
   useNotchDropSync(notch !== null && mode === "collapsed" && !isTucked && hasNotchDrop({
-    preview: banner.barPreview, notice: recording.shown || ringing.length > 0 || (screenshotNotice.taken ?? firstHints.current), translationPeek,
+    preview: banner.barPreview, notice: recording.shown || ringing.length > 0 || (screenshotNotice.taken ?? copyCard.current ?? firstHints.current), translationPeek,
   }));
   useDevIslandActions({ openPage: openEnabledPage, collapse: collapseIsland, tuck: tuckIsland, reveal: revealIsland });
   const hoverTucked = useIslandHover({
@@ -304,7 +307,7 @@ export function IslandApp() {
         nativeGlassState={nativeGlassState}
         isTucked={isTucked}
         isDetached={isPositionDetached || settings.marginY > 0}
-        side={side}
+        side={side} sideCover={settings.sideMusicCover}
         showTitle={settings.showTitle}
         showCollapsedText={barText}
         collapsedTaskTitle={collapsedTaskTitle}
@@ -345,6 +348,8 @@ export function IslandApp() {
           ? { content: <TimerNotice ringing={ringing} />, actions: <TimerNoticeActions /> }
           : screenshotNotice.taken
           ? { content: <ScreenshotNotice key={screenshotNotice.taken.path} notice={screenshotNotice} />, actions: <ScreenshotNoticeActions notice={screenshotNotice} /> }
+          : copyCard.current
+          ? { content: <ClipboardCopyNotice key={copyCard.current.key} card={copyCard} />, actions: <ClipboardCopyNoticeActions card={copyCard} /> }
           : firstHints.current
             ? { content: <FirstHintNotice key={firstHints.current} hints={firstHints} />, actions: <FirstHintActions hints={firstHints} onConnectTools={() => openSettingsWindow("agentConnect")} /> }
             : null}

@@ -49,6 +49,19 @@ pub(super) fn codex_plan(payload: &Value) -> Option<TodoProgress> {
     progress(plan.iter().filter_map(|step| Some((step["step"].as_str()?, None, step["status"].as_str().unwrap_or_default()))))
 }
 
+pub(super) fn todo_items(todos: &Value) -> Option<TodoProgress> {
+    progress(todos.as_array()?.iter().filter_map(|todo| {
+        Some((todo["content"].as_str()?, todo["activeForm"].as_str(), todo["status"].as_str().unwrap_or_default()))
+    }))
+}
+
+pub(super) fn todo_write_call(record: &Value) -> Option<TodoProgress> {
+    if record["type"] != "function_call" || record["name"] != "TodoWrite" {
+        return None;
+    }
+    todo_items(&serde_json::from_str::<Value>(record["arguments"].as_str()?).ok()?["todos"])
+}
+
 pub(super) fn unfinished(list: Option<TodoProgress>) -> Option<TodoProgress> {
     list.filter(|list| list.done < list.total)
 }

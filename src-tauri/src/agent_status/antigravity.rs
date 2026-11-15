@@ -11,11 +11,12 @@ use super::codex_hooks::{agent_running_command_with, agent_status_command};
 use super::harness::{Harness, HookEnv, Hooks, StatusLight};
 use super::hooks_state::HookInstallState;
 use super::markers::AGENT_RUNNING_STALE_AFTER_MS;
-use super::reply_text::{reply_ending, ReplyEnding};
+use super::reply_text::reply_ending;
 use super::session_scan::{pick_title, read_tail};
 use super::sessions::{session_phase, AgentSessionSummary, TurnState};
 use super::snapshot::system_time_to_unix_millis;
 use super::title::{folder_title, prompt_title};
+use super::tool_call::{antigravity_tool_call, ToolCall};
 use super::{write_text_file, AGENT_APPROVAL_SCRIPT_FILE_NAME};
 
 pub(super) const PROVIDER: &str = "antigravity";
@@ -25,6 +26,7 @@ const DATA_DIRS: [&str; 3] = ["antigravity", "antigravity-ide", "antigravity-cli
 const HOOK_NAME: &str = "fuyu";
 const APPROVED_TOOLS: &str = "run_command";
 const MAX_AGE_MS: i64 = 24 * 60 * 60 * 1000;
+const EFFORTS: [&str; 6] = ["minimal", "low", "medium", "high", "xhigh", "max"];
 
 pub(super) const HARNESS: Harness = Harness {
     id: PROVIDER,
@@ -106,15 +108,17 @@ fn summary(session_id: String, saved: &Saved, now: i64) -> AgentSessionSummary {
     let prompt = input["lastUserInput"].as_str().and_then(prompt_title);
     let (title, title_source) = pick_title(None, None, prompt.clone(), cwd.as_deref().and_then(folder_title));
     let state = if saved.running { TurnState::Working } else { TurnState::Done };
-    let reply = transcript_reply(input);
+    let transcript = transcript(input);
+    let reply = transcript.as_deref().and_then(last_reply).map(|reply| reply_ending(&reply)).unwrap_or_default();
+    let (model, effort) = text(&input["modelName"]).map(|name| model_and_effort(&name)).unzip();
     AgentSessionSummary {
         provider: PROVIDER,
         session_id,
         cwd,
         title,
         title_source,
-        model: text(&input["modelName"]),
-        effort: None,
+        model,
+        effort: effort.flatten(),
         phase: session_phase(state, now - saved.at, AGENT_RUNNING_STALE_AFTER_MS),
         last_message: reply.message,
         reply_marker: reply.marker,
@@ -123,7 +127,7 @@ fn summary(session_id: String, saved: &Saved, now: i64) -> AgentSessionSummary {
         host: None,
         turn_started_at: None,
         last_prompt: prompt,
-        current_tool: None,
+        current_tool: transcript.as_deref().filter(|_| saved.running).and_then(running_tool),
         permission_mode: None,
         subagents: 0,
         background_tasks: 0,
@@ -131,20 +135,57 @@ fn summary(session_id: String, saved: &Saved, now: i64) -> AgentSessionSummary {
         todos: None,
         closed: false,
         remote_host: None,
-        context_tokens: None,
+        context_tokens: transcript.as_deref().and_then(context_tokens),
     }
 }
 
-fn transcript_reply(input: &Value) -> ReplyEnding {
-    text(&input["transcriptPath"])
-        .and_then(|path| read_tail(Path::new(&path)))
-        .and_then(|tail| last_reply(&tail))
-        .map(|reply| reply_ending(&reply))
-        .unwrap_or_default()
+fn transcript(input: &Value) -> Option<String> {
+    text(&input["transcriptPath"]).and_then(|path| read_tail(Path::new(&path)))
+}
+
+fn model_and_effort(name: &str) -> (String, Option<String>) {
+    let effort = |level: &str| EFFORTS.contains(&level.to_ascii_lowercase().as_str()).then(|| level.to_ascii_lowercase());
+    if let Some((model, level)) = name.strip_suffix(')').and_then(|rest| rest.rsplit_once(" (")) {
+        if let Some(level) = effort(level) {
+            return (model.trim().to_string(), Some(level));
+        }
+    }
+    match name.rsplit_once('-') {
+        Some((model, level)) if !name.contains(' ') => match effort(level) {
+            Some(level) => (model.to_string(), Some(level)),
+            None => (name.to_string(), None),
+        },
+        _ => (name.to_string(), None),
+    }
+}
+
+fn records(tail: &str) -> impl Iterator<Item = Value> + '_ {
+    tail.lines().rev().filter_map(|line| serde_json::from_str::<Value>(line).ok())
+}
+
+fn running_tool(tail: &str) -> Option<ToolCall> {
+    for record in records(tail) {
+        match record["type"].as_str() {
+            Some("USER_INPUT") => return None,
+            Some("PLANNER_RESPONSE") => {
+                if let Some(call) = record["tool_calls"].as_array().and_then(|calls| calls.last()) {
+                    return antigravity_tool_call(call);
+                }
+            }
+            _ => {}
+        }
+    }
+    None
+}
+
+fn context_tokens(tail: &str) -> Option<u64> {
+    let usage = records(tail).find(|record| record["type"] == "PLANNER_RESPONSE" && record["input_tokens"].is_u64())?;
+    let total: u64 = ["input_tokens", "cache_read_tokens", "output_tokens"].iter().filter_map(|key| usage[*key].as_u64()).sum();
+    (total > 0).then_some(total)
 }
 
 fn last_reply(tail: &str) -> Option<String> {
-    for record in tail.lines().rev().filter_map(|line| serde_json::from_str::<Value>(line).ok()) {
+    for record in records(tail) {
         match record["type"].as_str() {
             Some("USER_INPUT") => return None,
             Some("PLANNER_RESPONSE") if record["content"].as_str().is_some_and(|content| !content.trim().is_empty()) => {
@@ -302,6 +343,26 @@ mod tests {
         assert_eq!((listed[0].reply_marker, listed[0].last_message.as_deref()), (Some("done"), Some("Fixed the login page.")));
         assert_eq!(last_reply(&[lines[0].clone(), lines[1].clone(), line("USER_INPUT", "again")].join("\n")), None);
         fs::remove_dir_all(&app_dir).unwrap();
+    }
+
+    #[test]
+    fn splits_the_thinking_level_off_the_model_and_reads_the_running_tool() {
+        let split = |name: &str| model_and_effort(name);
+        assert_eq!(split("gemini-3.8-flash-high"), ("gemini-3.8-flash".into(), Some("high".into())));
+        assert_eq!(split("Gemini 3.8 Flash (Medium)"), ("Gemini 3.8 Flash".into(), Some("medium".into())));
+        assert_eq!(split("Gemini 3.8 Flash"), ("Gemini 3.8 Flash".into(), None));
+        assert_eq!(split("claude-opus-5-5"), ("claude-opus-5-5".into(), None));
+        let call = |name: &str, args: Value| json!({ "type": "PLANNER_RESPONSE", "input_tokens": 3000, "cache_read_tokens": 15000,
+            "output_tokens": 500, "tool_calls": [{ "name": name, "args": args }] }).to_string();
+        let user = json!({ "type": "USER_INPUT", "content": "go" }).to_string();
+        let generic = json!({ "type": "GENERIC", "status": "RUNNING" }).to_string();
+        let tail = [user.clone(), call("view_file", json!({ "AbsolutePath": "/w/src/main.rs" })), call("run_command", json!({ "CommandLine": "cargo test" })), generic].join("\n");
+        let tool = running_tool(&tail).unwrap();
+        assert_eq!((tool.name.as_str(), tool.detail.as_deref()), ("run_command", Some("cargo test")));
+        assert_eq!(context_tokens(&tail), Some(18_500));
+        assert_eq!(running_tool(&[call("read_file", json!({ "Path": "a.rs" })), user].join("\n")), None);
+        let read = running_tool(&call("read_file", json!({ "Path": "C:\\w\\a.rs" }))).unwrap();
+        assert_eq!(read.detail.as_deref(), Some("a.rs"));
     }
 
     #[test]

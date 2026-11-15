@@ -5,8 +5,10 @@ import type { ClipboardCopyAs, ClipboardHistorySnapshot } from "./api";
 import { ClipboardActionPanel } from "./ClipboardActionPanel";
 import { ClipboardFilters } from "./ClipboardFilters";
 import { ClipboardHistoryItemRow } from "./ClipboardHistoryItemRow";
+import { ClipboardLinksPanel } from "./ClipboardLinksPanel";
 import { ClipboardPanelHeader } from "./ClipboardPanelHeader";
 import { useClipboardConfirmations } from "./useClipboardConfirmations";
+import { useClipboardLinks } from "./useClipboardLinks";
 import { topTags, useClipboardHistoryList } from "./useClipboardHistoryList";
 import { useClipboardNoteEditor } from "./useClipboardNoteEditor";
 import "../../components/list/IslandList.css";
@@ -39,8 +41,9 @@ export function ClipboardHistoryPanel({
   const [now, setNow] = useState(() => Date.now());
   const [menuItemId, setMenuItemId] = useState<string | null>(null);
   const [tools, setTools] = useState<Tools | null>(null);
-  const [extraOpen, setExtraOpen] = useState(false);
-  const showExtra = extraOpen && extraView !== undefined;
+  const [extra, setExtra] = useState<"screenshots" | "links" | null>(null);
+  const links = useClipboardLinks();
+  const showExtra = extra === "links" || (extra === "screenshots" && extraView !== undefined);
   const { query, setQuery, clipboardView, setClipboardView, favoriteItems, filteredItems, itemElementsRef } = useClipboardHistoryList(snapshot.items);
   const { confirmDeleteId, isConfirmingClear, dismissConfirmations, handleDeleteItem, handleClear } = useClipboardConfirmations(snapshot.items, onDeleteItem, onClear);
   const {
@@ -64,7 +67,7 @@ export function ClipboardHistoryPanel({
   }, []);
 
   const showTag = (tag: string) => {
-    setExtraOpen(false);
+    setExtra(null);
     setClipboardView("all");
     setQuery(query.trim().toLowerCase() === `#${tag.toLowerCase()}` ? "" : `#${tag}`);
   };
@@ -86,9 +89,12 @@ export function ClipboardHistoryPanel({
         tags={tags}
         itemCount={snapshot.items.length}
         isConfirmingClear={isConfirmingClear}
-        extra={extraView && { label: extraView.label, pressed: showExtra, onSelect: () => setExtraOpen(true) }}
+        extras={[
+          ...(extraView ? [{ key: "screenshots", label: extraView.label, pressed: showExtra && extra === "screenshots", onSelect: () => setExtra("screenshots") }] : []),
+          { key: "links", label: t.clipboard.links.chip, pressed: extra === "links", onSelect: () => setExtra("links") },
+        ]}
         onViewChange={(view) => {
-          setExtraOpen(false);
+          setExtra(null);
           setClipboardView(view);
           if (query.trim().startsWith("#")) setQuery("");
         }}
@@ -97,8 +103,10 @@ export function ClipboardHistoryPanel({
       />
       {!showExtra && <ClipboardFilters query={query} shortcut={openShortcutLabel(snapshot.settings)} onQueryChange={setQuery} />}
 
-      {showExtra ? (
-        extraView.content
+      {extra === "links" ? (
+        <ClipboardLinksPanel state={links} icons={snapshot.settings.linkPreview === true} />
+      ) : showExtra ? (
+        extraView?.content
       ) : empty ? (
         <div className="island-list-empty">
           <span className="island-list-empty__icon" aria-hidden="true"><ClipboardList size={22} strokeWidth={1.8} /></span>
@@ -136,6 +144,8 @@ export function ClipboardHistoryPanel({
               onDelete={handleDeleteItem}
               onTag={showTag}
               onTools={(page) => setTools({ id: item.id, page })}
+              bookmarks={links.links.links}
+              onBookmark={(url) => void links.add(url)}
             />
           ))}
         </div>

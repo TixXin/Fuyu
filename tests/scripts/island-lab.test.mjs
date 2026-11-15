@@ -7,6 +7,8 @@ import { agentStatus, permissionRequest, qqMessage, questionRequest, wechatMessa
 test("the lab forwards only its own routes to the island", () => {
   assert.deepEqual(forwardTarget("island/emit", "POST"), { kind: "local", path: "/v1/dev/island/emit" });
   assert.deepEqual(forwardTarget("island/notch", "DELETE"), { kind: "local", path: "/v1/dev/island/notch" });
+  assert.deepEqual(forwardTarget("island/edge", "PUT"), { kind: "local", path: "/v1/dev/island/edge" });
+  assert.equal(forwardTarget("island/edge", "DELETE"), null);
   assert.deepEqual(forwardTarget("agent-status/lab", "PUT"), { kind: "local", path: "/v1/agent-status/lab" });
   assert.deepEqual(forwardTarget("approval/question", "POST"), { kind: "approval", path: "/claude/ask-user-question" });
   assert.equal(forwardTarget("island/emit", "GET"), null);

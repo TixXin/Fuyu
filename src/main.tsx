@@ -1,5 +1,5 @@
 import "./lib/copyRenamedKeys";
-import { markMounted } from "./devReload";
+import { devRootOptions, markMounted } from "./devReload";
 import { blockBrowserDefaults } from "./lib/browserDefaults";
 import { isMacOS } from "./lib/platform";
 import React, { type ReactNode } from "react";
@@ -84,7 +84,7 @@ async function loadWindow(): Promise<ReactNode> {
 }
 
 void Promise.all([loadWindow(), loadSettingsFile()]).then(([content]) => {
-  ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
+  ReactDOM.createRoot(document.getElementById("root") as HTMLElement, devRootOptions).render(
     <React.StrictMode>
       <I18nProvider>{content}</I18nProvider>
     </React.StrictMode>,

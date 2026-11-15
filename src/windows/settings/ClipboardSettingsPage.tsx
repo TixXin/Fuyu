@@ -1,5 +1,6 @@
 import type { IslandSettings } from "../../features/appearance/types";
 import { ClipboardAiPromptSettings } from "../../features/clipboard/ClipboardAiPromptSettings";
+import { ClipboardLinkSettings } from "../../features/clipboard/ClipboardLinkSettings";
 import { ClipboardRecordSettings } from "../../features/clipboard/ClipboardRecordSettings";
 import { ClipboardSettingsSection } from "../../features/clipboard/ClipboardSettingsSection";
 import { ClipboardSnippetSettings } from "../../features/clipboard/ClipboardSnippetSettings";
@@ -61,6 +62,7 @@ export function ClipboardSettingsPage({ tab, settings, onOpenShortcuts }: {
           />
         }
       />
+      <ClipboardLinkSettings iconsOn={clipboardSettings.linkPreview === true} />
     </>
   );
 }

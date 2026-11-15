@@ -210,3 +210,19 @@ export const ISLAND_BANNER_HOVER_CHANGED_EVENT = "island-banner-hover-changed";
 export function listenIslandBannerHover(handler: (inside: boolean) => void): Promise<UnlistenFn> {
   return listen<boolean>(ISLAND_BANNER_HOVER_CHANGED_EVENT, ({ payload }) => handler(payload));
 }
+
+export const ISLAND_DRAG_EDGE_HINT_EVENT = "island-drag-edge-hint";
+
+export type DragEdgeHint = { edge: IslandEdge; offset: number };
+
+export function setIslandSideColumn(height: number) {
+  return invoke<void>("set_island_side_column", { height });
+}
+
+export function setIslandSideBubbleRect(rect: IslandBannerRect | null) {
+  return invoke<void>("set_island_side_bubble_rect", { rect });
+}
+
+export function listenIslandDragEdgeHint(handler: (hint: DragEdgeHint | null) => void): Promise<UnlistenFn> {
+  return listen<DragEdgeHint | null>(ISLAND_DRAG_EDGE_HINT_EVENT, ({ payload }) => handler(payload));
+}
