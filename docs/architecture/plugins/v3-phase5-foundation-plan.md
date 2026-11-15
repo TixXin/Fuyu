@@ -209,5 +209,5 @@
 - `fuyu-plugin check` 对 `slots`、`provides`、`replaces` 现在只检查是不是字符串列表，不对照名单。以后要提示不存在的插槽名或服务名时：插槽读 protocol 里的 `SLOTS`（E36.2.3，PR #519），服务读 `@fuyu/plugin-services` 的 `SERVICES`。`SERVICES` 由 B 在 E36.3.8 之后加，不进 E36.3.2 这一批（2026-11-15 和经理定的）。
 - 宿主部分的外部模块（2026-11-15 和 B 定的）：
   - 现状：`fuyu-plugin build` 把 `HOST_EXTERNALS` 展开成 `name` 和 `name/*`，`@fuyu/plugin-base` 的子路径全留在外面，可宿主只共享不带子路径的那个，运行时找不到模块。内置插件也有同一个问题，由 E36.3.16 修。
-  - 改法：E36.3.16 在 protocol 导出宿主共享名单，`fuyu-plugin` 也在名单里，由宿主默认共享。合入后让 E36.5.4 改成只认这份名单里的确切模块名，同时改 v3-cli.md 和 `docs/plugins/v3/cli.md` 的 `hostExternal`。
+  - 改法：E36.3.16（c1c36a31）在 protocol 导出 `HOST_SHARED_MODULES`（`@fuyu/plugin-base`、`fuyu-plugin`），由宿主默认共享。命令行已跟上（780e7530）：按名字精确匹配，名单外的包括子路径都打进包里；v3-cli.md 和 `docs/plugins/v3/cli.md` 一起改了。
 - `defineService` 和服务名规则由 E36.3.17 挪到 `@fuyu/plugin-base/services`（同意，2026-11-15）。这个子路径要进宿主共享名单。服务名的正则建议放在 plugin-manifest，因为 plugin-base 依赖它，反过来引用会成环。E36.5.6 的脚手架开工时如果它已合入，就从新位置拿。
