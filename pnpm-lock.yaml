@@ -114,6 +114,24 @@ importers:
         specifier: ^8.23.0
         version: 8.23.0
 
+  packages/plugin-cli:
+    dependencies:
+      '@fuyu/plugin-base':
+        specifier: workspace:*
+        version: link:../plugin-base
+      '@fuyu/plugin-manifest':
+        specifier: workspace:*
+        version: link:../plugin-manifest
+      '@fuyu/plugin-market':
+        specifier: workspace:*
+        version: link:../plugin-market
+      '@fuyu/plugin-review':
+        specifier: workspace:*
+        version: link:../plugin-review
+      esbuild:
+        specifier: 0.28.1
+        version: 0.28.1
+
   packages/plugin-manifest: {}
 
   packages/plugin-market: {}
