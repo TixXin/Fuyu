@@ -8,6 +8,34 @@ export type SettingsAppearanceText = {
   liquidGlass: string;
   glassStrength: string;
   styleTitle: string;
+  glass: {
+    title: string;
+    reset: string;
+    style: string;
+    styles: { static: string; flow: string; aurora: string; shader: string };
+    shaderHint: string;
+    colorSource: string;
+    colorSources: { accent: string; cover: string; custom: string };
+    coverHint: string;
+    color: (index: number) => string;
+    colorStrength: string;
+    flowSpeed: string;
+    still: string;
+    blobScale: string;
+    flowWhen: string;
+    flowWhens: { always: string; expanded: string };
+    pauseHint: string;
+    rim: string;
+    rimWidth: string;
+    sheen: string;
+    specular: string;
+    specularHint: string;
+    morph: string;
+    morphs: { smooth: string; soft: string; liquid: string };
+    contrastGuard: string;
+    contrastGuardHint: string;
+    contrastGuardOff: string;
+  };
   preview: {
     label: string;
     collapsed: string;
@@ -30,6 +58,34 @@ export const zhCN: SettingsAppearanceText = {
   liquidGlass: "液态玻璃",
   glassStrength: "玻璃强度",
   styleTitle: "质感与形状",
+  glass: {
+    title: "液态玻璃",
+    reset: "恢复液态玻璃默认",
+    style: "风格",
+    styles: { static: "静态", flow: "慢流动", aurora: "极光", shader: "着色器（实验）" },
+    shaderHint: "用 WebGL 画流体，效果最细，但显卡一直在工作；不支持时自动换回慢流动。",
+    colorSource: "颜色来源",
+    colorSources: { accent: "主题色", cover: "跟封面", custom: "自定义" },
+    coverHint: "放歌时跟着封面换色，没在放时用主题色。",
+    color: (index) => `颜色 ${index}`,
+    colorStrength: "色彩浓度",
+    flowSpeed: "流动速度",
+    still: "静止",
+    blobScale: "色块大小",
+    flowWhen: "折叠时流动",
+    flowWhens: { always: "一直", expanded: "只在展开时" },
+    pauseHint: "收到边缘、游戏免打扰、隐藏和系统减少动态效果时一律停下。",
+    rim: "油膜边",
+    rimWidth: "边宽",
+    sheen: "扫光",
+    specular: "镜面高光",
+    specularHint: "高光跟着鼠标走。",
+    morph: "展开收起",
+    morphs: { smooth: "平滑", soft: "轻弹", liquid: "液体" },
+    contrastGuard: "文字保护",
+    contrastGuardHint: "自动压暗或提亮色块，让文字始终看得清。",
+    contrastGuardOff: "关掉后，颜色亮的地方文字可能看不清。",
+  },
   preview: {
     label: "按当前设置画出的岛屿",
     collapsed: "折叠",
@@ -52,6 +108,34 @@ export const en: SettingsAppearanceText = {
   liquidGlass: "Liquid glass",
   glassStrength: "Glass strength",
   styleTitle: "Look and shape",
+  glass: {
+    title: "Liquid glass",
+    reset: "Restore liquid glass defaults",
+    style: "Style",
+    styles: { static: "Still", flow: "Slow flow", aurora: "Aurora", shader: "Shader (experimental)" },
+    shaderHint: "Draws a fluid with WebGL. Finest detail, but keeps the GPU busy; falls back to slow flow when unsupported.",
+    colorSource: "Colours from",
+    colorSources: { accent: "Accent", cover: "Album art", custom: "Custom" },
+    coverHint: "Follows the album art while music plays, the accent colour otherwise.",
+    color: (index) => `Colour ${index}`,
+    colorStrength: "Colour strength",
+    flowSpeed: "Flow speed",
+    still: "Still",
+    blobScale: "Blob size",
+    flowWhen: "Flow when collapsed",
+    flowWhens: { always: "Always", expanded: "Only expanded" },
+    pauseHint: "Always stops when tucked, in game mode, hidden, or when the system reduces motion.",
+    rim: "Oil-film rim",
+    rimWidth: "Rim width",
+    sheen: "Sheen",
+    specular: "Specular highlight",
+    specularHint: "The highlight follows the pointer.",
+    morph: "Expand and collapse",
+    morphs: { smooth: "Smooth", soft: "Soft bounce", liquid: "Liquid" },
+    contrastGuard: "Keep text readable",
+    contrastGuardHint: "Darkens or lightens the colours so text always stays readable.",
+    contrastGuardOff: "With this off, text may be hard to read over bright colours.",
+  },
   preview: {
     label: "The island with the current settings",
     collapsed: "Collapsed",

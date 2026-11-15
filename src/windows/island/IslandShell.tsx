@@ -29,6 +29,7 @@ import { usePageFadeIn } from "./usePageFadeIn";
 import { DevWatermark } from "../../components/DevWatermark";
 import "./IslandShell.css";
 import { IslandGlassLayer } from "./IslandGlassLayer";
+import type { IslandGlassView } from "./useIslandGlass";
 import { IslandResizeHints } from "./IslandResizeHints";
 import { IslandSideHandle } from "./IslandSideHandle";
 import { IslandSideColumn, useSideColumnRows } from "./IslandSideColumn";
@@ -50,6 +51,7 @@ type IslandShellProps = {
   resizeLabel?: string | null;
   appearanceMode: AppearanceMode;
   nativeGlassState: NativeGlassState;
+  glass?: IslandGlassView;
   isTucked: boolean;
   isDetached: boolean;
   side?: IslandSide | null;
@@ -111,6 +113,7 @@ export function IslandShell({
   resizeLabel = null,
   appearanceMode,
   nativeGlassState,
+  glass,
   isTucked,
   isDetached,
   side = null,
@@ -162,7 +165,7 @@ export function IslandShell({
   const notch = useIslandNotch();
   const isExpanded = mode === "expanded";
   const isLiquidGlass = appearanceMode === "liquidGlass";
-  const { handleGlassPointerMove, resetGlassPointer } = useGlassPointer(isLiquidGlass);
+  const { handleGlassPointerMove, resetGlassPointer } = useGlassPointer(isLiquidGlass && glass?.specular !== false);
   const isPreparing = useIslandPreparing(isExpanded);
   const contentRef = usePageFadeIn<HTMLDivElement>(page, mode);
   const qqNotificationCount = qqNotifications.snapshot.items.length;
@@ -195,6 +198,7 @@ export function IslandShell({
     side ? `island--side island--side-${side}` : "",
     popup ? "island--popup" : "",
     isLiquidGlass ? `island--glass-${nativeGlassState}` : "",
+    isLiquidGlass && glass ? glass.className : "",
     showTitle ? "" : "island--title-hidden",
   ]
     .filter(Boolean)
@@ -230,7 +234,7 @@ export function IslandShell({
       }}
     >
       <div className="island__surface">
-        {isLiquidGlass && <IslandGlassLayer />}
+        {isLiquidGlass && <IslandGlassLayer glass={glass} />}
         {side && (
           <IslandSideHandle
             label={collapsedLabel}

@@ -49,6 +49,7 @@ export const PAGES = [
   "tucked-hover.html",
   "update-reminder.html?test=1",
   "version-history.html",
+  "liquid-glass.html?test=1",
   "list-pages.html?test=1",
   "clipboard-popup.html?test=1",
   "clipboard-preview.html?test=1",

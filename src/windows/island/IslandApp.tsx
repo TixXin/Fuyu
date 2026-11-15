@@ -52,6 +52,7 @@ import { useResolvedTheme } from "../../features/appearance/useResolvedTheme";
 import { surfaceThemeColors } from "../../features/appearance/themeMode";
 import { islandMotionVariables } from "../../features/appearance/islandMotion";
 import { useReducedMotion } from "../../features/center-pattern/useReducedMotion";
+import { useIslandGlass } from "./useIslandGlass";
 import { useAccentColor } from "../../features/appearance/useAccentColor";
 import { isLightIsland } from "../../utils/color";
 import { MessageBanner } from "../../features/messages/banner/MessageBanner";
@@ -214,16 +215,19 @@ export function IslandApp() {
   const look = useMemo(() => (mode !== "collapsed" ? surfaceThemeColors(settings, "panel") : notch ? notchLook(settings) : surfaceThemeColors(settings, "collapsed")), [mode, notch, settings]);
   const accent = useAccentColor(settings);
   const coverOn = settings.musicEnabled && settings.lyricsCoverColor;
-  const coverColor = useCoverColor(media.mediaState.thumbnail, coverOn);
+  const glassCover = settings.appearanceMode === "liquidGlass" && settings.musicEnabled && settings.glassColorSource === "cover";
+  const coverColor = useCoverColor(media.mediaState.thumbnail, coverOn || glassCover);
   const devicePixelRatio = useDevicePixelRatio();
   const reducedMotion = useReducedMotion();
+  const { glass, glassStyle } = useIslandGlass({ settings, background: look.islandBackgroundColor, accent, cover: glassCover && media.mediaState.playbackStatus === "playing" ? coverColor : null, mode, isTucked, quiet: game.quiet, reducedMotion });
   const stageStyle = useMemo(
     () => ({
       ...getIslandStageStyle(look, mode, collapsedIslandWidth, expandedIslandHeight, expandedIslandWidth, accent, devicePixelRatio),
       ...islandMotionVariables(settings.islandMotion, mode === "collapsed" ? "close" : "open", reducedMotion),
       ...(coverOn ? coverAccentVariables(coverColor, look.islandBackgroundColor, accent) : {}),
+      ...glassStyle,
     }),
-    [collapsedIslandWidth, expandedIslandHeight, expandedIslandWidth, mode, look, accent, devicePixelRatio, settings.islandMotion, reducedMotion, coverOn, coverColor],
+    [collapsedIslandWidth, expandedIslandHeight, expandedIslandWidth, mode, look, accent, devicePixelRatio, settings.islandMotion, reducedMotion, coverOn, coverColor, glassStyle],
   );
 
   const { fileShelf, isShelfDropping } = useIslandShelf(settings, navigation);
@@ -300,6 +304,7 @@ export function IslandApp() {
         resizeLabel={resizing === "collapsed" ? `${collapsedIslandWidth} px` : resizing ? `${expandedIslandWidth} × ${settings.maxPanelHeight}` : null}
         appearanceMode={settings.appearanceMode}
         nativeGlassState={nativeGlassState}
+        glass={glass}
         isTucked={isTucked}
         isDetached={isPositionDetached || settings.marginY > 0}
         side={side} sideCover={settings.sideMusicCover}

@@ -672,6 +672,214 @@
       }
     },
     {
+      "page": "theme",
+      "zh-CN": {
+        "group": "液态玻璃",
+        "title": "风格"
+      },
+      "en": {
+        "group": "Liquid glass",
+        "title": "Style"
+      }
+    },
+    {
+      "page": "theme",
+      "zh-CN": {
+        "group": "液态玻璃",
+        "title": "玻璃强度"
+      },
+      "en": {
+        "group": "Liquid glass",
+        "title": "Glass strength"
+      }
+    },
+    {
+      "page": "theme",
+      "zh-CN": {
+        "group": "液态玻璃",
+        "title": "颜色来源",
+        "options": [
+          "主题色",
+          "跟封面",
+          "自定义"
+        ]
+      },
+      "en": {
+        "group": "Liquid glass",
+        "title": "Colours from",
+        "options": [
+          "Accent",
+          "Album art",
+          "Custom"
+        ]
+      }
+    },
+    {
+      "page": "theme",
+      "zh-CN": {
+        "group": "液态玻璃",
+        "title": "颜色 1"
+      },
+      "en": {
+        "group": "Liquid glass",
+        "title": "Colour 1"
+      }
+    },
+    {
+      "page": "theme",
+      "zh-CN": {
+        "group": "液态玻璃",
+        "title": "颜色 2"
+      },
+      "en": {
+        "group": "Liquid glass",
+        "title": "Colour 2"
+      }
+    },
+    {
+      "page": "theme",
+      "zh-CN": {
+        "group": "液态玻璃",
+        "title": "颜色 3"
+      },
+      "en": {
+        "group": "Liquid glass",
+        "title": "Colour 3"
+      }
+    },
+    {
+      "page": "theme",
+      "zh-CN": {
+        "group": "液态玻璃",
+        "title": "色彩浓度"
+      },
+      "en": {
+        "group": "Liquid glass",
+        "title": "Colour strength"
+      }
+    },
+    {
+      "page": "theme",
+      "zh-CN": {
+        "group": "液态玻璃",
+        "title": "流动速度"
+      },
+      "en": {
+        "group": "Liquid glass",
+        "title": "Flow speed"
+      }
+    },
+    {
+      "page": "theme",
+      "zh-CN": {
+        "group": "液态玻璃",
+        "title": "色块大小"
+      },
+      "en": {
+        "group": "Liquid glass",
+        "title": "Blob size"
+      }
+    },
+    {
+      "page": "theme",
+      "zh-CN": {
+        "group": "液态玻璃",
+        "title": "折叠时流动",
+        "options": [
+          "一直",
+          "只在展开时"
+        ]
+      },
+      "en": {
+        "group": "Liquid glass",
+        "title": "Flow when collapsed",
+        "options": [
+          "Always",
+          "Only expanded"
+        ]
+      }
+    },
+    {
+      "page": "theme",
+      "zh-CN": {
+        "group": "液态玻璃",
+        "title": "油膜边"
+      },
+      "en": {
+        "group": "Liquid glass",
+        "title": "Oil-film rim"
+      }
+    },
+    {
+      "page": "theme",
+      "zh-CN": {
+        "group": "液态玻璃",
+        "title": "边宽"
+      },
+      "en": {
+        "group": "Liquid glass",
+        "title": "Rim width"
+      }
+    },
+    {
+      "page": "theme",
+      "zh-CN": {
+        "group": "液态玻璃",
+        "title": "扫光"
+      },
+      "en": {
+        "group": "Liquid glass",
+        "title": "Sheen"
+      }
+    },
+    {
+      "page": "theme",
+      "zh-CN": {
+        "group": "液态玻璃",
+        "title": "镜面高光",
+        "description": "高光跟着鼠标走。"
+      },
+      "en": {
+        "group": "Liquid glass",
+        "title": "Specular highlight",
+        "description": "The highlight follows the pointer."
+      }
+    },
+    {
+      "page": "theme",
+      "zh-CN": {
+        "group": "液态玻璃",
+        "title": "展开收起",
+        "options": [
+          "平滑",
+          "轻弹",
+          "液体"
+        ]
+      },
+      "en": {
+        "group": "Liquid glass",
+        "title": "Expand and collapse",
+        "options": [
+          "Smooth",
+          "Soft bounce",
+          "Liquid"
+        ]
+      }
+    },
+    {
+      "page": "theme",
+      "zh-CN": {
+        "group": "液态玻璃",
+        "title": "文字保护",
+        "description": "自动压暗或提亮色块，让文字始终看得清。"
+      },
+      "en": {
+        "group": "Liquid glass",
+        "title": "Keep text readable",
+        "description": "Darkens or lightens the colours so text always stays readable."
+      }
+    },
+    {
       "page": "appearance",
       "zh-CN": {
         "group": "折叠岛屿",

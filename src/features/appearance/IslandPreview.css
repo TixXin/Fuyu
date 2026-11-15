@@ -146,3 +146,81 @@
   min-height: 72px;
   padding-bottom: 0;
 }
+
+.island-preview__island--glass {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.island-preview__flow,
+.island-preview__rim {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  corner-shape: var(--preview-corner-shape, round);
+  pointer-events: none;
+}
+
+.island-preview__flow {
+  overflow: hidden;
+  opacity: calc((0.4 + var(--preview-glass) * 0.35) * min(1, var(--glass-color-strength, 0.7) / 0.7));
+}
+
+.island-preview__flow i {
+  position: absolute;
+  width: calc(90% * var(--glass-blob-scale, 1));
+  aspect-ratio: 1;
+  border-radius: 50%;
+  animation: islandPreviewBlobA var(--glass-flow-duration, 23s) ease-in-out infinite alternate;
+  animation-name: var(--preview-blob, islandPreviewBlobA);
+}
+
+.island-preview__flow i:nth-child(1) {
+  left: -25%;
+  top: -60%;
+  background: radial-gradient(closest-side, var(--glass-c1), transparent);
+}
+
+.island-preview__flow i:nth-child(2) {
+  left: 35%;
+  top: -40%;
+  background: radial-gradient(closest-side, var(--glass-c2), transparent);
+  --preview-blob: islandPreviewBlobB;
+}
+
+.island-preview__flow i:nth-child(3) {
+  left: 5%;
+  top: 10%;
+  background: radial-gradient(closest-side, var(--glass-c3), transparent);
+  animation-duration: calc(var(--glass-flow-duration, 23s) * 1.17);
+}
+
+@keyframes islandPreviewBlobA {
+  to { transform: translate(40%, 30%) scale(1.25); }
+}
+
+@keyframes islandPreviewBlobB {
+  to { transform: translate(-45%, 25%) scale(0.85); }
+}
+
+.island-preview--glass-paused .island-preview__flow i {
+  animation-play-state: paused;
+}
+
+.island-preview__rim {
+  z-index: 0;
+  padding: var(--glass-rim-width, 1.5px);
+  background: conic-gradient(from 200deg, var(--glass-c1), var(--glass-c2), rgba(var(--overlay-rgb, 255, 255, 255), 0.6), var(--glass-c3), var(--glass-c1));
+  opacity: 0.8;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .island-preview__flow i {
+    animation-play-state: paused;
+  }
+}
