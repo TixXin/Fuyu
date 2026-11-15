@@ -1,7 +1,6 @@
 mod agent_approval;
 mod agent_status;
 mod calendar;
-#[cfg_attr(not(windows), path = "cc_connect/unsupported.rs")]
 mod cc_connect;
 mod claude_usage;
 mod clipboard_history;
@@ -153,6 +152,7 @@ pub fn run() {
             #[cfg(target_os = "macos")]
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);
             tray::build_tray(app)?;
+            plugin_kernel::builtins::init(app.handle());
             coexist::init(app.handle());
             if let Err(error) = clipboard_history::init(app.handle()) {
                 eprintln!("failed to initialize clipboard history: {error}");

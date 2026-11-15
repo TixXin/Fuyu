@@ -82,6 +82,13 @@ export type ErrorCode =
   | "ccConnect.host"
   | "ccConnect.remoteNotFound"
   | "ccConnect.remoteFailed"
+  | "ccConnect.remoteSystem"
+  | "ccConnect.remoteInstall"
+  | "ccConnect.remoteFeishu"
+  | "ccConnect.remoteChanged"
+  | "ccConnect.remoteWrite"
+  | "ccConnect.remoteNoConfig"
+  | "ccConnect.remoteStopped"
   | "ccConnect.stdin"
   | "ccConnect.timeout"
   | "ccConnect.failed"
@@ -132,6 +139,9 @@ export type ErrorCode =
   | "translation.urlFull"
   | "translation.urlCredentials"
   | "translation.urlScheme"
+  | "pluginsV3.builtinUnknown"
+  | "pluginsV3.builtinEssential"
+  | "pluginsV3.builtinSave"
   | "translation.urlQuery"
   | "translation.modelLong"
   | "translation.noModel"
@@ -314,6 +324,13 @@ export const zhCN: ErrorsText = {
     "ccConnect.host": ({ host }) => `「${host}」不是 SSH 主机名。`,
     "ccConnect.remoteNotFound": ({ host }) => `${host} 上找不到 cc-connect 程序，请在 cc-connect 插件里选这台电脑、填写它的路径。`,
     "ccConnect.remoteFailed": ({ host }) => `没能经 SSH 用上 ${host} 的 cc-connect。`,
+    "ccConnect.remoteSystem": ({ system }) => `cc-connect 没有给 ${system} 的程序。`,
+    "ccConnect.remoteInstall": ({ host }) => `没能在 ${host} 上装好 cc-connect。`,
+    "ccConnect.remoteFeishu": "另一台电脑上的飞书机器人要扫码建。",
+    "ccConnect.remoteChanged": ({ host }) => `${host} 上的 cc-connect 配置刚被改过，请再试一次。`,
+    "ccConnect.remoteWrite": ({ host }) => `没能写好 ${host} 上的 cc-connect 配置，已经还原。`,
+    "ccConnect.remoteNoConfig": ({ host }) => `${host} 上的 cc-connect 还没有项目。`,
+    "ccConnect.remoteStopped": ({ host }) => `${host} 上的 cc-connect 刚启动就停了。`,
     "ccConnect.stdin": "无法把内容交给 cc-connect。",
     "ccConnect.timeout": "cc-connect 10 秒没有回应。",
     "ccConnect.failed": "cc-connect 出错。",
@@ -364,6 +381,9 @@ export const zhCN: ErrorsText = {
     "translation.urlFull": "接口地址无效，请填写完整的 https:// 地址。",
     "translation.urlCredentials": "接口地址中不能包含用户名或密码，密钥请填在密钥栏。",
     "translation.urlScheme": "接口地址必须使用 https（本机地址可用 http）。",
+    "pluginsV3.builtinUnknown": ({ id }) => `没有叫 ${id} 的内置插件。`,
+    "pluginsV3.builtinEssential": ({ id }) => `${id} 是浮屿必需的，不能关掉。`,
+    "pluginsV3.builtinSave": ({ id }) => `没能保存 ${id} 的开关。`,
     "translation.urlQuery": "接口地址不能带查询参数。",
     "translation.modelLong": "模型名称过长。",
     "translation.noModel": ({ service }) => `请先在翻译设置中填写${service}的模型名称。`,
@@ -543,6 +563,13 @@ export const en: ErrorsText = {
     "ccConnect.host": ({ host }) => `"${host}" is not an SSH host name.`,
     "ccConnect.remoteNotFound": ({ host }) => `cc-connect was not found on ${host}; pick that computer on the cc-connect plugin page and fill in its path.`,
     "ccConnect.remoteFailed": ({ host }) => `cc-connect on ${host} could not be used over SSH.`,
+    "ccConnect.remoteSystem": ({ system }) => `cc-connect has no build for ${system}.`,
+    "ccConnect.remoteInstall": ({ host }) => `cc-connect could not be installed on ${host}.`,
+    "ccConnect.remoteFeishu": "A Feishu bot on another computer is set up by scanning its code.",
+    "ccConnect.remoteChanged": ({ host }) => `cc-connect's settings on ${host} changed meanwhile; try again.`,
+    "ccConnect.remoteWrite": ({ host }) => `cc-connect's settings on ${host} could not be written; they were put back.`,
+    "ccConnect.remoteNoConfig": ({ host }) => `cc-connect on ${host} has no projects yet.`,
+    "ccConnect.remoteStopped": ({ host }) => `cc-connect on ${host} stopped right after starting.`,
     "ccConnect.stdin": "Could not hand the text to cc-connect.",
     "ccConnect.timeout": "cc-connect did not answer within 10 seconds.",
     "ccConnect.failed": "cc-connect failed.",
@@ -593,6 +620,9 @@ export const en: ErrorsText = {
     "translation.urlFull": "The service address is not valid; fill in the whole https:// address.",
     "translation.urlCredentials": "The service address cannot hold a user name or password; put the key in the key field.",
     "translation.urlScheme": "The service address must use https (http only for this computer).",
+    "pluginsV3.builtinUnknown": ({ id }) => `There is no built-in plugin ${id}.`,
+    "pluginsV3.builtinEssential": ({ id }) => `${id} is essential to Fuyu and cannot be switched off.`,
+    "pluginsV3.builtinSave": ({ id }) => `Could not save the switch for ${id}.`,
     "translation.urlQuery": "The service address cannot have query parameters.",
     "translation.modelLong": "The model name is too long.",
     "translation.noModel": ({ service }) => `Fill in the model name for ${service} in the translation settings first.`,

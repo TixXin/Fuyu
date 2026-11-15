@@ -277,6 +277,7 @@ fn parse_checkpoint(value: &Value, id: &str, at: i64) -> Parsed {
         todos: row(rows, "todos", &[2]).and_then(|todos| unfinished(todo_items(todos))),
         closed: false,
         remote_host: None,
+        parent_id: None,
         context_tokens: row(rows, "contextPressure", &[4, 5]).and_then(|pressure| pressure["surfaceTokens"].as_u64()),
     };
     Some((summary, state))

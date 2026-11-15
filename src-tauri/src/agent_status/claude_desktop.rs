@@ -22,6 +22,9 @@ pub(super) struct DesktopSession {
     pub(super) user_titled: bool,
     pub(super) model: Option<String>,
     pub(super) effort: Option<String>,
+    pub(super) local_id: Option<String>,
+    pub(super) spawned_from: Option<String>,
+    pub(super) parent_id: Option<String>,
 }
 
 type DesktopCache = HashMap<PathBuf, (SystemTime, Option<DesktopSession>)>;
@@ -39,12 +42,28 @@ pub(super) fn app_dir(home_dir: &Path) -> PathBuf {
     base.join("Claude")
 }
 
+fn session_roots(home_dir: &Path) -> Vec<PathBuf> {
+    let mut roots = vec![app_dir(home_dir).join(SESSIONS_DIR)];
+    if cfg!(windows) || cfg!(test) {
+        let packages = fs::read_dir(home_dir.join("AppData").join("Local").join("Packages"));
+        roots.extend(
+            packages
+                .into_iter()
+                .flatten()
+                .flatten()
+                .map(|entry| entry.path())
+                .filter(|path| path.file_name().is_some_and(|name| name.to_string_lossy().starts_with("Claude_")))
+                .map(|package| package.join("LocalCache").join("Roaming").join("Claude").join(SESSIONS_DIR)),
+        );
+    }
+    roots
+}
+
 pub(super) fn sessions(home_dir: &Path, since: i64) -> HashMap<String, DesktopSession> {
-    let root = app_dir(home_dir).join(SESSIONS_DIR);
     let mut found = HashMap::new();
     let mut cache = CACHE.lock().unwrap_or_else(PoisonError::into_inner);
     let cache = cache.get_or_insert_with(HashMap::new);
-    for path in session_files(&root) {
+    for path in session_roots(home_dir).iter().flat_map(|root| session_files(root)) {
         let Some(modified) = fs::metadata(&path).ok().and_then(|meta| meta.modified().ok()) else {
             continue;
         };
@@ -64,7 +83,23 @@ pub(super) fn sessions(home_dir: &Path, since: i64) -> HashMap<String, DesktopSe
         }
     }
     cache.retain(|path, _| path.is_file());
+    link_parents(&mut found);
     found
+}
+
+fn link_parents(found: &mut HashMap<String, DesktopSession>) {
+    let by_local: HashMap<String, String> = found
+        .values()
+        .filter_map(|session| Some((session.local_id.clone()?, session.cli_session_id.clone())))
+        .collect();
+    for session in found.values_mut() {
+        session.parent_id = session
+            .spawned_from
+            .as_ref()
+            .and_then(|parent| by_local.get(parent))
+            .filter(|parent| **parent != session.cli_session_id)
+            .cloned();
+    }
 }
 
 fn session_files(root: &Path) -> Vec<PathBuf> {
@@ -93,6 +128,13 @@ pub(super) fn parse(text: &str) -> Option<DesktopSession> {
         user_titled: record["titleSource"] == "user",
         model: string("model"),
         effort: string("effort"),
+        local_id: string("sessionId"),
+        spawned_from: record["spawnedFrom"]["sessionId"]
+            .as_str()
+            .map(str::trim)
+            .filter(|value| !value.is_empty())
+            .map(str::to_string),
+        parent_id: None,
     })
 }
 
@@ -106,6 +148,7 @@ pub(super) fn merge(summary: &mut AgentSessionSummary, desktop: Option<&DesktopS
     }
     summary.model = summary.model.take().or_else(|| desktop.model.clone());
     summary.effort = summary.effort.take().or_else(|| desktop.effort.clone());
+    summary.parent_id = desktop.parent_id.clone();
 }
 
 #[cfg(test)]
@@ -154,6 +197,7 @@ mod tests {
             closed: false,
             context_tokens: None,
             remote_host: None,
+            parent_id: None,
         };
         let mut session = parse(SAMPLE).unwrap();
         session.user_titled = true;
@@ -162,6 +206,34 @@ mod tests {
         assert_eq!(summary.title_source, Some(TITLE_FROM_RENAME));
         assert_eq!(summary.model.as_deref(), Some("claude-sonnet-5-5"));
         assert_eq!(summary.effort.as_deref(), Some("medium"));
+        assert_eq!(summary.parent_id, None);
+    }
+
+    #[test]
+    fn links_spawned_sessions_to_parent() {
+        let record = |local: &str, cli: &str, parent: Option<&str>| {
+            let spawned = parent.map_or(String::new(), |parent| {
+                format!(r#","spawnedFrom":{{"sessionId":"{parent}","taskId":"task_1","sideSession":true}}"#)
+            });
+            parse(&format!(r#"{{"sessionId":"{local}","cliSessionId":"{cli}","title":"t"{spawned}}}"#)).unwrap()
+        };
+        let mut found: HashMap<String, DesktopSession> = [
+            record("local_a", "cli-a", None),
+            record("local_b", "cli-b", Some("local_a")),
+            record("local_c", "cli-c", Some("local_b")),
+            record("local_d", "cli-d", Some("local_gone")),
+            record("local_e", "cli-e", Some("local_e")),
+        ]
+        .into_iter()
+        .map(|session| (session.cli_session_id.clone(), session))
+        .collect();
+        assert_eq!(found["cli-b"].spawned_from.as_deref(), Some("local_a"));
+        link_parents(&mut found);
+        assert_eq!(found["cli-a"].parent_id, None);
+        assert_eq!(found["cli-b"].parent_id.as_deref(), Some("cli-a"));
+        assert_eq!(found["cli-c"].parent_id.as_deref(), Some("cli-b"));
+        assert_eq!(found["cli-d"].parent_id, None);
+        assert_eq!(found["cli-e"].parent_id, None);
     }
 
     #[test]
@@ -171,9 +243,21 @@ mod tests {
         fs::create_dir_all(account.join("waiting-input")).unwrap();
         fs::write(account.join("local_1.json"), SAMPLE).unwrap();
         fs::write(account.join("scheduled-tasks.json"), "{}").unwrap();
+        fs::write(
+            account.join("local_2.json"),
+            r#"{"sessionId":"local_9c2e","cliSessionId":"0b1e-child","spawnedFrom":{"sessionId":"local_7a1d"},"startChain":{"depth":1}}"#,
+        )
+        .unwrap();
         let found = sessions(&home, 0);
-        assert_eq!(found.len(), 1);
+        assert_eq!(found.len(), 2);
         assert!(found.contains_key("ffd62372-e4a7"));
+        assert_eq!(found["0b1e-child"].parent_id.as_deref(), Some("ffd62372-e4a7"));
+        let msix = home.join("AppData/Local/Packages/Claude_pzs8sxrjxfjjc/LocalCache/Roaming/Claude");
+        let packaged = msix.join(SESSIONS_DIR).join("org").join("acct");
+        fs::create_dir_all(&packaged).unwrap();
+        fs::write(packaged.join("local_3.json"), r#"{"sessionId":"local_5d08","cliSessionId":"msix-cli","spawnedFrom":{"sessionId":"local_9c2e"}}"#).unwrap();
+        let found = sessions(&home, 0);
+        assert_eq!(found["msix-cli"].parent_id.as_deref(), Some("0b1e-child"));
         assert!(sessions(&home, i64::MAX).is_empty());
         let _ = fs::remove_dir_all(&home);
     }

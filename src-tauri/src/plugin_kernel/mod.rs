@@ -1,4 +1,6 @@
 mod bisect;
+pub(crate) mod builtins;
+mod builtins_file;
 mod containment;
 mod methods;
 pub(crate) mod protocol;
@@ -392,6 +394,8 @@ macro_rules! tauri_commands {
             crate::plugin_kernel::get_plugin_host_connection,
             crate::plugin_kernel::get_plugin_host_memory,
             crate::plugin_kernel::exit_plugin_safe_mode,
+            crate::plugin_kernel::builtins::get_builtin_plugins,
+            crate::plugin_kernel::builtins::set_builtin_plugin_enabled,
         ] $($rest)*)
     };
 }

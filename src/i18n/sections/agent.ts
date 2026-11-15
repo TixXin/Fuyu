@@ -30,6 +30,10 @@ export type AgentText = {
     subagents: (count: number) => string;
     subagentsShow: (count: number) => string;
     subagentsHide: (count: number) => string;
+    childSessions: (count: number) => string;
+    childSessionsShow: (count: number) => string;
+    childSessionsHide: (count: number) => string;
+    childSessionsAsk: (count: number) => string;
     subagentThinking: string;
     subagentBackground: string;
     todos: (done: number, total: number) => string;
@@ -144,6 +148,10 @@ export const zhCN: AgentText = {
     subagents: (count) => `${count} 个子 Agent`,
     subagentsShow: (count) => `展开 ${count} 个子 Agent`,
     subagentsHide: (count) => `收起 ${count} 个子 Agent`,
+    childSessions: (count) => `${count} 个子会话`,
+    childSessionsShow: (count) => `展开 ${count} 个子会话`,
+    childSessionsHide: (count) => `收起 ${count} 个子会话`,
+    childSessionsAsk: (count) => `${count} 个要你看`,
     subagentThinking: "思考中",
     subagentBackground: "后台",
     todos: (done, total) => `${done}/${total} 步`,
@@ -264,6 +272,10 @@ export const en: AgentText = {
     subagents: (count) => (count === 1 ? "1 subagent" : `${count} subagents`),
     subagentsShow: (count) => (count === 1 ? "Show 1 subagent" : `Show ${count} subagents`),
     subagentsHide: (count) => (count === 1 ? "Hide 1 subagent" : `Hide ${count} subagents`),
+    childSessions: (count) => (count === 1 ? "1 child session" : `${count} child sessions`),
+    childSessionsShow: (count) => (count === 1 ? "Show 1 child session" : `Show ${count} child sessions`),
+    childSessionsHide: (count) => (count === 1 ? "Hide 1 child session" : `Hide ${count} child sessions`),
+    childSessionsAsk: (count) => `${count} need you`,
     subagentThinking: "Thinking",
     subagentBackground: "Background",
     todos: (done, total) => `${done}/${total} steps`,

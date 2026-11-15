@@ -429,6 +429,7 @@ fn summary_from(
         closed: false,
         context_tokens: parsed.context_tokens,
         remote_host: None,
+        parent_id: None,
     }
 }
 

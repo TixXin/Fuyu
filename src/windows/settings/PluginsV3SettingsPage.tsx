@@ -5,7 +5,8 @@ import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsRow } from "../../components/settings/SettingsRow";
 import { useState } from "react";
 import { exitPluginSafeMode } from "../../features/plugin-kernel/api";
-import { usePluginHostStatus, type PluginHostConnector, type PluginHostView, type PluginStatusV3 } from "./usePluginHostStatus";
+import { BuiltinPluginsGroup } from "./BuiltinPluginsGroup";
+import { usePluginHostEnabled, usePluginHostStatus, type PluginHostConnector, type PluginHostView, type PluginStatusV3 } from "./usePluginHostStatus";
 import "./PluginsV3SettingsPage.css";
 
 const STATES: readonly PluginV3State[] = ["running", "waiting", "failed", "disabled", "auto-disabled", "safe-mode", "loading", "stopped", "unloading"];
@@ -107,8 +108,7 @@ export function PluginsV3View({ view, now = Date.now() }: { view: PluginHostView
   const measured = memory && host && memory.pid === host.pid ? memory : null;
   const open = connection === "open";
   return (
-    <div className="plugins-v3">
-      <SettingsFootnote text={text.preview} />
+    <>
       <SettingsGroup title={text.host}>
         <SettingsRow
           searchable={false}
@@ -141,11 +141,28 @@ export function PluginsV3View({ view, now = Date.now() }: { view: PluginHostView
           </div>
         )}
       </SettingsGroup>
-    </div>
+    </>
   );
 }
 
-export function PluginsV3SettingsPage({ connect }: { connect?: PluginHostConnector }) {
+function HostStatus({ connect }: { connect?: PluginHostConnector }) {
   const view = usePluginHostStatus(connect);
   return <PluginsV3View view={view} />;
+}
+
+export function PluginsV3SettingsPage({ connect }: { connect?: PluginHostConnector }) {
+  const text = useTranslation().settings.pluginsV3;
+  const hostEnabled = usePluginHostEnabled();
+  return (
+    <div className="plugins-v3">
+      <SettingsFootnote text={text.preview} />
+      <BuiltinPluginsGroup />
+      {hostEnabled === true ? <HostStatus connect={connect} /> : null}
+      {hostEnabled === false ? (
+        <SettingsGroup title={text.host}>
+          <SettingsRow searchable={false} title={<span className="plugins-v3__connection plugins-v3__connection--closed" data-connection="off">{text.hostOff}</span>} description={text.hostOffNote} />
+        </SettingsGroup>
+      ) : null}
+    </div>
+  );
 }

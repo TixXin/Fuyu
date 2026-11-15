@@ -1,6 +1,7 @@
 import type { ComponentType } from "react";
 import { BUILTIN, createSlots, SlotError, slotWindow, type SlotItem, type SlotRegistry, type SlotRule } from "@fuyu/plugin-base/client/slots";
 import { SLOTS, type SlotName } from "@fuyu/plugin-base/protocol";
+import { disabledBuiltinIds, subscribeBuiltinPlugins } from "./builtinSwitches.ts";
 
 export type { SlotName };
 export type SlotWindow = "island" | "settings";
@@ -84,6 +85,14 @@ const registries: Record<SlotWindow, SlotRegistry> = {
 
 export function windowSlots(window: SlotWindow): SlotRegistry {
   return registries[window];
+}
+
+export function followBuiltinSwitches(registry: SlotRegistry): () => void {
+  return subscribeBuiltinPlugins((plugins) => registry.setDisabledOwners(disabledBuiltinIds(plugins)));
+}
+
+if (typeof window !== "undefined") {
+  for (const registry of Object.values(registries)) followBuiltinSwitches(registry);
 }
 
 export function slotWindowOf(name: SlotName): SlotWindow {

@@ -1,4 +1,4 @@
-import type { ReactNode, Ref } from "react";
+import type { CSSProperties, ReactNode, Ref } from "react";
 import { useTranslation } from "../../i18n";
 import type { AgentHostDisplay } from "../appearance/types";
 import { AgentProviderIcon } from "./AgentProviderIcon";
@@ -34,6 +34,7 @@ export function AgentSessionRow({
   subagents,
   menu,
   hoverCard,
+  depth = 0,
   onOpen,
 }: {
   session: AgentSessionSummary;
@@ -54,6 +55,7 @@ export function AgentSessionRow({
   subagents?: ReactNode;
   menu?: ReactNode;
   hoverCard?: { suppressed: boolean };
+  depth?: number;
   onOpen: () => void;
 }) {
   const t = useTranslation();
@@ -125,7 +127,12 @@ export function AgentSessionRow({
     </button>
   );
   return (
-    <li ref={rowRef} data-session-key={sessionKey(session)}>
+    <li
+      ref={rowRef}
+      data-session-key={sessionKey(session)}
+      className={depth ? "agent-session-child" : undefined}
+      style={depth ? ({ "--child-depth": depth } as CSSProperties) : undefined}
+    >
       {hoverCard ? (
         <AgentSessionHoverCard session={session} title={project && project !== title ? `${project} · ${title}` : title} suppressed={hoverCard.suppressed}>
           {button}

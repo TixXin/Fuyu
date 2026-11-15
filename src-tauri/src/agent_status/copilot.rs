@@ -149,6 +149,7 @@ pub(super) fn summary(
         todos: None,
         closed,
         remote_host: None,
+        parent_id: None,
         context_tokens: tail.context_tokens,
     }
 }

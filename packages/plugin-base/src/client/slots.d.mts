@@ -29,6 +29,8 @@ export interface SlotRegistry {
   define(name: string, rule?: SlotRule): void;
   add(name: string, item: SlotItemInput, owner?: string, options?: SlotAddOptions): () => void;
   items(name: string, group?: string): SlotItem[];
+  setDisabledOwners(owners: Iterable<string>): void;
+  disabledOwners(): string[];
   names(): string[];
   rule(name: string): Required<Pick<SlotRule, "kind" | "max" | "perPlugin">> & SlotRule | undefined;
   subscribe(listener: (name: string) => void): () => void;

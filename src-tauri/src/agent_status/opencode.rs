@@ -518,6 +518,7 @@ fn summary(row: &SessionRow, turn: &Turn, updated: i64, state: TurnState) -> Age
         todos: turn.todos.clone(),
         closed: false,
         remote_host: None,
+        parent_id: None,
         context_tokens: turn.tokens,
     }
 }

@@ -1,7 +1,9 @@
-use base64::{engine::general_purpose::STANDARD, Engine};
 use serde::Serialize;
 
-use super::{chats, check_message, join_error};
+use super::{
+    agents, chats, check_message, config_file::NewProject, install, join_error, remote_install, remote_project, remote_run,
+    script::{base64_word, decode, find_exe, in_login_shell, sh_quote, NOT_FOUND},
+};
 use crate::agent_status::{remote_fetch::run_ssh, remote_hosts};
 use crate::user_error::UserError;
 
@@ -41,6 +43,86 @@ pub async fn send_cc_connect_remote_message(host: String, path: Option<String>, 
     .map_err(join_error)?
 }
 
+pub(super) async fn detect_agents(host: String) -> Result<Vec<agents::FoundAgent>, UserError> {
+    let target = target(&host, None)?;
+    tauri::async_runtime::spawn_blocking(move || {
+        let output = run_ssh(&target, &in_login_shell(&agents::remote_script())).map_err(|error| ssh_error(&host, error))?;
+        Ok(agents::parse_remote(&String::from_utf8_lossy(&output)))
+    })
+    .await
+    .map_err(join_error)?
+}
+
+#[tauri::command]
+pub async fn install_cc_connect_remote(host: String, path: Option<String>) -> Result<remote_install::RemoteInstall, UserError> {
+    let target = target(&host, path.as_deref())?;
+    let (probe_target, probe_host) = (target.clone(), host.clone());
+    let probe = tauri::async_runtime::spawn_blocking(move || {
+        run_ssh(&probe_target, &remote_install::probe_script(path.as_deref())).map_err(|error| ssh_error(&probe_host, error))
+    })
+    .await
+    .map_err(join_error)??;
+    let probe = remote_install::parse_probe(&String::from_utf8_lossy(&probe));
+    if let Some(already) = probe.already() {
+        return Ok(already);
+    }
+    let client = install::client()?;
+    let release = install::latest(&client).await?;
+    let name = remote_install::asset_name(&release.tag_name, &probe)?;
+    let package = install::download(&client, &release, &name).await?;
+    tauri::async_runtime::spawn_blocking(move || {
+        let program = remote_install::program_in(&package.bytes)?;
+        let output = run_ssh(&target, &remote_install::upload_script(&package, &program)).map_err(|error| ssh_error(&host, error))?;
+        remote_install::parse_upload(&host, &String::from_utf8_lossy(&output))
+    })
+    .await
+    .map_err(join_error)?
+}
+
+#[tauri::command]
+pub async fn add_cc_connect_remote_project(
+    host: String,
+    project: String,
+    agent: String,
+    work_dir: String,
+    platform: String,
+    token: String,
+    allow_from: String,
+) -> Result<(), UserError> {
+    let target = target(&host, None)?;
+    tauri::async_runtime::spawn_blocking(move || {
+        let new = NewProject {
+            name: project.trim(),
+            agent: &agent,
+            work_dir: work_dir.trim(),
+            platform: &platform,
+            token: token.trim(),
+            allow_from: allow_from.trim(),
+            proxy: None,
+        };
+        let output = run_ssh(&target, &remote_project::read_script(new.work_dir)).map_err(|error| ssh_error(&host, error).redact(new.token))?;
+        let seen = remote_project::parse_read(&String::from_utf8_lossy(&output));
+        let now = chrono::Local::now();
+        let block = remote_project::block_for(&seen, &new, &now.format("%Y-%m-%d").to_string())?;
+        let script = remote_project::write_script(&seen, new.name, &block, &now.format("%Y%m%d-%H%M%S").to_string());
+        let output = run_ssh(&target, &script).map_err(|error| ssh_error(&host, error).redact(new.token))?;
+        remote_project::parse_write(&host, &String::from_utf8_lossy(&output))
+    })
+    .await
+    .map_err(join_error)?
+}
+
+#[tauri::command]
+pub async fn restart_cc_connect_remote(host: String, path: Option<String>) -> Result<(), UserError> {
+    let target = target(&host, path.as_deref())?;
+    tauri::async_runtime::spawn_blocking(move || {
+        let output = run_ssh(&target, &remote_run::restart_script(path.as_deref())).map_err(|error| ssh_error(&host, error))?;
+        remote_run::parse_restart(&host, &String::from_utf8_lossy(&output))
+    })
+    .await
+    .map_err(join_error)?
+}
+
 fn target(host: &str, path: Option<&str>) -> Result<remote_hosts::SshTarget, UserError> {
     if !remote_hosts::is_valid_alias(host) {
         return Err(UserError::new("ccConnect.host", format!("\"{host}\" is not an SSH host name.")).arg("host", host));
@@ -56,29 +138,8 @@ fn ssh_error(host: &str, error: String) -> UserError {
     UserError::new("ccConnect.remoteFailed", format!("cc-connect on {host} could not be reached.")).arg("host", host).detail(error)
 }
 
-fn sh_quote(value: &str) -> String {
-    format!("'{}'", value.replace('\'', r"'\''"))
-}
-
-const NOT_FOUND: &str = "NOTFOUND";
-
-fn find_script(path: Option<&str>) -> String {
-    let mut script = format!("exe={}\n", sh_quote(path.unwrap_or_default().trim()));
-    script.push_str(
-        r#"case $exe in "~/"*) exe="$HOME/${exe#??}" ;; esac
-if [ -z "$exe" ]; then
-  pid=$(pgrep -u "$(id -u)" -x cc-connect 2>/dev/null | head -n 1)
-  [ -n "$pid" ] && exe=$(readlink "/proc/$pid/exe" 2>/dev/null)
-fi
-[ -n "$exe" ] || exe=$(bash -lc 'command -v cc-connect' 2>/dev/null </dev/null | tail -n 1)
-[ -x "$exe" ] || exe=
-"#,
-    );
-    script
-}
-
 fn status_script(path: Option<&str>) -> String {
-    let mut script = find_script(path);
+    let mut script = find_exe(path);
     script.push_str(&format!("max={MAX_FILE_BYTES}\n"));
     script.push_str(
         r#"printf 'X %s\n' "$exe"
@@ -95,12 +156,12 @@ exit 0
 }
 
 fn send_script(path: Option<&str>, project: &str, session_key: &str, text: &str) -> String {
-    let mut script = find_script(path);
+    let mut script = find_exe(path);
     script.push_str(&format!("[ -n \"$exe\" ] || {{ echo {NOT_FOUND}; exit 0; }}\n"));
     script.push_str("set --\ncommand -v timeout >/dev/null 2>&1 && set -- timeout 20\n");
     script.push_str(&format!(
         "printf '%s' {} | base64 -d | \"$@\" \"$exe\" send -p {} -s {} --stdin\n",
-        sh_quote(&STANDARD.encode(text)),
+        base64_word(text.as_bytes()),
         sh_quote(project),
         sh_quote(session_key),
     ));
@@ -108,7 +169,6 @@ fn send_script(path: Option<&str>, project: &str, session_key: &str, text: &str)
 }
 
 fn parse_status(output: &str) -> RemoteStatus {
-    let decode = |text: &str| STANDARD.decode(text.trim()).ok().map(|bytes| String::from_utf8_lossy(&bytes).into_owned());
     let (mut exe, mut running, mut config, mut files) = (None, false, None, Vec::new());
     for line in output.lines() {
         if let Some(path) = line.strip_prefix("X ") {
@@ -126,14 +186,8 @@ fn parse_status(output: &str) -> RemoteStatus {
 
 #[cfg(test)]
 mod tests {
-    use super::{parse_status, send_script, sh_quote, STANDARD};
-    use base64::Engine;
-
-    #[test]
-    fn words_are_quoted_for_sh() {
-        assert_eq!(sh_quote("a b"), "'a b'");
-        assert_eq!(sh_quote("it's $HOME"), r"'it'\''s $HOME'");
-    }
+    use super::{parse_status, send_script};
+    use base64::{engine::general_purpose::STANDARD, Engine};
 
     #[test]
     fn the_text_reaches_cc_connect_as_base64_and_never_as_shell() {
@@ -145,9 +199,7 @@ mod tests {
     }
 
     #[test]
-    fn a_home_path_is_expanded_there_and_only_names_and_types_of_the_config_come_back() {
-        let find = super::find_script(Some("~/bin/cc-connect"));
-        assert!(find.starts_with("exe='~/bin/cc-connect'\ncase $exe in \"~/\"*) exe=\"$HOME/${exe#??}\" ;; esac\n"));
+    fn only_names_and_types_of_the_config_come_back() {
         let status = super::status_script(None);
         assert!(status.contains("grep -E '^[[:space:]]*(\\[|name[[:space:]]*=|type[[:space:]]*=)' \"$d/config.toml\" | base64"));
     }

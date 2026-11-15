@@ -1,4 +1,6 @@
-use std::{collections::BTreeMap, fs, path::Path};
+use std::collections::BTreeMap;
+#[cfg(windows)]
+use std::{fs, path::Path};
 
 use serde::Serialize;
 use serde_json::Value;
@@ -60,6 +62,7 @@ pub(super) fn projects_from(files: impl IntoIterator<Item = (String, String)>, c
         .collect()
 }
 
+#[cfg(windows)]
 pub(super) fn read_projects(data_dir: &Path, config: Option<&str>) -> Vec<Project> {
     let files = fs::read_dir(data_dir.join("sessions")).into_iter().flatten().flatten().filter_map(|entry| {
         let name = entry.file_name().to_str()?.to_string();

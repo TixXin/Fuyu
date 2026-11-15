@@ -43,6 +43,7 @@ export function createSlots(definitions = {}) {
   const stacks = new Map();
   const views = new Map();
   const listeners = new Set();
+  let off = new Set();
   let seq = 0;
 
   const viewKey = (name, group) => (group === undefined ? name : `${name}\n${group}`);
@@ -52,6 +53,8 @@ export function createSlots(definitions = {}) {
     if (!views.has(key)) {
       const rule = rules.get(name);
       const all = [...(stacks.get(name)?.values() ?? [])]
+        .map((stack) => (off.size === 0 ? stack : stack.filter((entry) => !off.has(entry.owner))))
+        .filter((stack) => stack.length > 0)
         .map(present)
         .filter((entry) => group === undefined || entry[rule.groupBy] === group)
         .sort((a, b) => a.order - b.order || a.rank - b.rank)
@@ -112,6 +115,13 @@ export function createSlots(definitions = {}) {
       };
     },
     items: view,
+    setDisabledOwners(owners) {
+      const next = new Set(owners);
+      if (next.size === off.size && [...next].every((owner) => off.has(owner))) return;
+      off = next;
+      for (const name of rules.keys()) changed(name, null);
+    },
+    disabledOwners: () => [...off],
     names: () => [...rules.keys()],
     rule: (name) => rules.get(name),
     subscribe(listener) {

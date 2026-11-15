@@ -4,8 +4,39 @@ export type PluginV3Connection = "connecting" | "open" | "reconnecting" | "faile
 
 export type HostMemoryMeasureText = "private-working-set" | "phys-footprint" | "rss";
 
+export type BuiltinPluginName =
+  | "todos"
+  | "calendar"
+  | "music"
+  | "clipboard"
+  | "screenshot"
+  | "file-shelf"
+  | "translation"
+  | "voice-input"
+  | "timer"
+  | "agents"
+  | "session-ring"
+  | "claude-usage"
+  | "cc-connect"
+  | "ssh-tunnel"
+  | "local-api"
+  | "center-pattern"
+  | "messages"
+  | "device-events"
+  | "system-levels"
+  | "device-use"
+  | "theme-market"
+  | "updater";
+
 export type SettingsPluginsV3Text = {
   preview: string;
+  builtins: string;
+  builtinsNote: string;
+  builtinsLoading: string;
+  builtinNames: Record<BuiltinPluginName, string>;
+  essentialNote: string;
+  hostOff: string;
+  hostOffNote: string;
   host: string;
   connection: Record<PluginV3Connection, string>;
   hostDetail: (pid: number, node: string) => string;
@@ -39,7 +70,37 @@ export type SettingsPluginsV3Text = {
 };
 
 export const zhCN: SettingsPluginsV3Text = {
-  preview: "开发中：只在开发版设了 FUYU_PLUGINS_V3=1 时出现。",
+  preview: "开发中：开发版里总会出现，正式版要设了 FUYU_PLUGINS_V3=1 才出现。",
+  builtins: "内置插件",
+  builtinsNote: "开关存在数据目录的 plugins-v3/plugins.yml，宿主没开也生效。关掉的插件撤掉它的界面、停掉它的后台；功能迁成插件之前，关掉还看不出变化。",
+  builtinsLoading: "正在读取内置插件。",
+  builtinNames: {
+    todos: "待办",
+    calendar: "日历",
+    music: "音乐和歌词",
+    clipboard: "剪贴板",
+    screenshot: "截图和录屏",
+    "file-shelf": "文件中转",
+    translation: "快捷翻译",
+    "voice-input": "语音输入",
+    timer: "计时器",
+    agents: "AI 代理",
+    "session-ring": "会话环",
+    "claude-usage": "Claude 用量",
+    "cc-connect": "cc-connect 手机连接",
+    "ssh-tunnel": "SSH 代理隧道",
+    "local-api": "本机接口",
+    "center-pattern": "中心图案",
+    messages: "消息",
+    "device-events": "设备提示",
+    "system-levels": "音量和亮度提示",
+    "device-use": "摄像头和麦克风提示",
+    "theme-market": "主题市场",
+    updater: "自动更新",
+  },
+  essentialNote: "浮屿必需，不能关",
+  hostOff: "宿主没开",
+  hostOffNote: "设了 FUYU_PLUGINS_V3=1 才启动宿主；内置插件的开关照样生效。",
   host: "宿主",
   connection: {
     connecting: "正在连接",
@@ -97,7 +158,37 @@ export const zhCN: SettingsPluginsV3Text = {
 };
 
 export const en: SettingsPluginsV3Text = {
-  preview: "In development: shown only in a dev build started with FUYU_PLUGINS_V3=1.",
+  preview: "In development: always shown in a dev build; a release build shows it only with FUYU_PLUGINS_V3=1.",
+  builtins: "Built-in plugins",
+  builtinsNote: "Switches are saved in plugins-v3/plugins.yml in the data folder and work without the host. A plugin switched off loses its UI and its background work; until a feature becomes a plugin, switching it off changes nothing yet.",
+  builtinsLoading: "Reading the built-in plugins.",
+  builtinNames: {
+    todos: "To-dos",
+    calendar: "Calendar",
+    music: "Music and lyrics",
+    clipboard: "Clipboard",
+    screenshot: "Screenshots and recording",
+    "file-shelf": "File shelf",
+    translation: "Quick translation",
+    "voice-input": "Voice input",
+    timer: "Timer",
+    agents: "AI agents",
+    "session-ring": "Session ring",
+    "claude-usage": "Claude usage",
+    "cc-connect": "cc-connect phone link",
+    "ssh-tunnel": "SSH proxy tunnel",
+    "local-api": "Local API",
+    "center-pattern": "Center pattern",
+    messages: "Messages",
+    "device-events": "Device alerts",
+    "system-levels": "Volume and brightness",
+    "device-use": "Camera and mic in use",
+    "theme-market": "Theme market",
+    updater: "Updates",
+  },
+  essentialNote: "Fuyu needs it; always on",
+  hostOff: "Host not running",
+  hostOffNote: "The host starts only with FUYU_PLUGINS_V3=1. Built-in plugin switches work either way.",
   host: "Host",
   connection: {
     connecting: "Connecting",

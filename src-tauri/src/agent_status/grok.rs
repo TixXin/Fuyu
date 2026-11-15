@@ -184,6 +184,7 @@ fn read_session(dir: &Path, updated_at: i64) -> Option<(AgentSessionSummary, Tur
         closed: false,
         context_tokens: None,
         remote_host: None,
+        parent_id: None,
     };
     Some((summary, tail.state))
 }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { connectHost, type ConnectionState } from "@fuyu/plugin-base/client";
 import { getPluginHostConnection, getPluginHostMemory, type HostMemory, type HostSafeMode } from "../../features/plugin-kernel/api";
+import { loadDevBuild } from "../../lib/platform";
 
 export type PluginKindV3 = "essential" | "builtin" | "third-party";
 
@@ -68,27 +69,39 @@ async function target() {
 export const connectSettingsToHost: PluginHostConnector = (handlers) =>
   connectHost<PluginHostSnapshot>({ resolve: target, window: "settings", ...handlers });
 
-let enabled: Promise<boolean> | null = null;
+let hostEnabled: Promise<boolean> | null = null;
 
-export function loadPluginsV3Enabled(): Promise<boolean> {
-  enabled ??= getPluginHostConnection()
+export function loadPluginHostEnabled(): Promise<boolean> {
+  hostEnabled ??= getPluginHostConnection()
     .then((connection) => connection?.enabled === true)
     .catch(() => false);
-  return enabled;
+  return hostEnabled;
 }
 
-export function usePluginsV3Enabled(): boolean {
-  const [on, setOn] = useState(false);
+export function loadPluginsV3Enabled(): Promise<boolean> {
+  return Promise.all([loadPluginHostEnabled(), loadDevBuild()]).then(([host, dev]) => host || dev);
+}
+
+function useLoaded(load: () => Promise<boolean>): boolean | null {
+  const [on, setOn] = useState<boolean | null>(null);
   useEffect(() => {
     let live = true;
-    void loadPluginsV3Enabled().then((value) => {
+    void load().then((value) => {
       if (live) setOn(value);
     });
     return () => {
       live = false;
     };
-  }, []);
+  }, [load]);
   return on;
+}
+
+export function usePluginsV3Enabled(): boolean {
+  return useLoaded(loadPluginsV3Enabled) === true;
+}
+
+export function usePluginHostEnabled(): boolean | null {
+  return useLoaded(loadPluginHostEnabled);
 }
 
 const START: PluginHostView = { connection: "connecting", plugins: null, host: null, memory: null, safeMode: null };

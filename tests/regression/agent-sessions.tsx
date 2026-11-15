@@ -10,6 +10,7 @@ import { getAgentPageExpandedHeight } from "../../src/windows/island/layout";
 import { checkNarrow, renderShowcase } from "./agent-sessions-showcase";
 import { checkUsage } from "./agent-sessions-usage";
 import { checkSubagents } from "./agent-sessions-subagents";
+import { checkChildSessions } from "./agent-sessions-children";
 
 const ISLAND_CHROME_HEIGHT = 86;
 const fixture = document.getElementById("fixture")!;
@@ -269,6 +270,7 @@ async function runChecks() {
 
     await checkUsage({ root, fixture, sessions, check, chromeHeight: ISLAND_CHROME_HEIGHT });
     await checkSubagents({ root, fixture, sessions, check, chromeHeight: ISLAND_CHROME_HEIGHT });
+    await checkChildSessions({ root, fixture, sessions, check, chromeHeight: ISLAND_CHROME_HEIGHT });
     sizeFor(3);
     await render("both");
 

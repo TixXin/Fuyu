@@ -152,6 +152,7 @@ pub(super) fn summary(
         todos: tail.todos,
         closed: false,
         remote_host: None,
+        parent_id: None,
         context_tokens: None,
     }
 }
