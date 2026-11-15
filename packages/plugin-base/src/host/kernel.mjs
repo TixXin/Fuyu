@@ -78,7 +78,7 @@ export async function startHost({ dir, config = "plugins.yml", builtins = null, 
   await ctx.plugin(Clients, { root: dir, mounts: builtinMounts(catalog) });
   const services = new Services();
   services.install(ctx);
-  const rust = new RustBridge();
+  const rust = new RustBridge(usage);
   rust.install(ctx);
   if (rpc) rust.attach(rpc);
   await ctx.use(Loader);
@@ -91,7 +91,7 @@ export async function startHost({ dir, config = "plugins.yml", builtins = null, 
   }
   const id = await ctx.loader.create({ name: PLUGINS_FILE, config: { path: config, builtins: catalog?.plugins ?? [], dir, appVersion } });
   if (watch) await watchConfig(ctx, id);
-  const report = () => usage.report(ctx, timers.counts(), (plugin) => gate.report(plugin));
+  const report = () => usage.report(ctx, timers.counts(), (plugin) => gate.report(plugin), rust.counts());
   const extras = {
     gate,
     usage: report,
@@ -109,6 +109,7 @@ export async function startHost({ dir, config = "plugins.yml", builtins = null, 
     fault: (plugin, error) => gate.fault(plugin, error),
     clients: (window) => ctx.clients.list(window),
     timers: () => timers.counts(),
+    rustListeners: () => rust.counts(),
     watchClients: (onChange) => ctx.clients.watch(onChange),
     serviceHub: services,
     services: () => services.list(),

@@ -88,7 +88,7 @@ export class Usage {
     };
   }
 
-  counts(ctx, timers) {
+  counts(ctx, timers, listeners = {}) {
     const result = new Map();
     const of = (id) => {
       let entry = result.get(id);
@@ -96,6 +96,7 @@ export class Usage {
       return entry;
     };
     for (const [id, count] of Object.entries(timers)) of(id).timers = count;
+    for (const [id, count] of Object.entries(listeners)) of(id).listeners += count;
     for (const [name, hooks] of Object.entries(ctx.events._hooks)) {
       if (name.startsWith("internal/")) continue;
       for (const hook of hooks) {
@@ -111,8 +112,8 @@ export class Usage {
     return result;
   }
 
-  report(ctx, timers, faults) {
-    const counts = this.counts(ctx, timers);
+  report(ctx, timers, faults, listeners) {
+    const counts = this.counts(ctx, timers, listeners);
     return (id) => {
       const cpu = this.cpu.get(id);
       const fault = faults(id);

@@ -109,6 +109,7 @@ export function rustError(code: string, message: string, data?: unknown): Servic
 export class RustBridge {
   install(ctx: Context): () => void;
   attach(rpc: HostRpc): void;
+  counts(): Record<string, number>;
 }
 
 export interface HostOptions {
@@ -136,6 +137,7 @@ export interface Host {
   fault(plugin: string, error: unknown): boolean;
   clients(window?: string): ClientEntry[];
   timers(): Record<string, number>;
+  rustListeners(): Record<string, number>;
   watchClients(onChange: (clients: ClientEntry[]) => void): () => void;
   serviceHub: ServiceHub;
   services(): ServiceEntry[];

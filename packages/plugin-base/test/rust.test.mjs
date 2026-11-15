@@ -71,12 +71,6 @@ async function plugin(started, name, apply) {
   return fiber;
 }
 
-function rustHooks(ctx) {
-  return Object.entries(ctx.events._hooks)
-    .filter(([name]) => name.startsWith("rust:"))
-    .reduce((total, [, hooks]) => total + hooks.length, 0);
-}
-
 test("a plugin calls Rust and gets the answer or Rust's own error code", async () => {
   const { started } = await host();
   let rust;
@@ -105,17 +99,26 @@ test("progress from Rust reaches onProgress before the answer", async () => {
   assert.deepEqual(pieces, ["a", "b", "c"]);
 });
 
-test("Rust events reach the plugins listening, and stop when the plugin stops", async () => {
+test("Rust events reach the plugins listening, count as theirs, and stop when the plugin stops", async () => {
   const { started, rust } = await host();
   const heard = [];
-  const fiber = await plugin(started, "listener", (ctx) => void ctx.rust.on("clipboard.changed", (data) => heard.push(data)));
-  assert.equal(rustHooks(started.ctx), 1);
+  const fiber = await plugin(started, "listener", (ctx) => {
+    ctx.rust.on("clipboard.changed", () => {
+      throw new Error("listener broke");
+    });
+    ctx.rust.on("clipboard.changed", (data) => heard.push(data));
+  });
+  assert.deepEqual(started.rustListeners(), { probe: 2 });
+  assert.equal(started.status().find((plugin) => plugin.id === "probe").usage.listeners, 2);
   rust.emit("clipboard.changed", { text: "x" });
   rust.emit("other", 1);
   await until(() => heard.length === 1);
   assert.deepEqual(heard, [{ text: "x" }]);
+  const { usage } = started.status().find((plugin) => plugin.id === "probe");
+  assert.equal(usage.errors, 1);
+  assert.ok(usage.calls >= 2);
   await fiber.dispose();
-  assert.equal(rustHooks(started.ctx), 0);
+  assert.deepEqual(started.rustListeners(), {});
   rust.emit("clipboard.changed", { text: "y" });
   await sleep(20);
   assert.deepEqual(heard, [{ text: "x" }]);
@@ -174,12 +177,14 @@ export async function apply(ctx) {
   } catch (error) {
     tried.on = error.code;
   }
+  ctx.on("rust:clipboard.changed", (data) => globalThis.rustOverheard.push([${JSON.stringify(who)}, data]));
   globalThis.rustAsks[${JSON.stringify(who)}] = tried;
 }
 `;
 
 test("only built-in plugins call Rust: market, hand-installed, development and loose plugins get forbidden", async () => {
   globalThis.rustAsks = {};
+  globalThis.rustOverheard = [];
   const rust = fakeRust(METHODS);
   const started = await startWithBuiltin(
     rust.rpc,
@@ -206,9 +211,19 @@ test("only built-in plugins call Rust: market, hand-installed, development and l
   await started.ctx.plugin({ name: "root-level", apply: (ctx) => void (fromRoot = ctx.rust) });
   await assert.rejects(fromRoot.call("app.echo"), { code: "forbidden", data: { plugin: null, source: null } });
   assert.throws(() => started.ctx.rust.on("clipboard.changed", () => {}), { code: "forbidden" });
-  assert.equal(rustHooks(started.ctx), 0);
+  assert.deepEqual(started.rustListeners(), {});
   let builtin;
-  await plugin(started, "inside-builtin", (ctx) => void (builtin = ctx.rust));
+  const heard = [];
+  started.ctx.on("rust:clipboard.changed", (data) => globalThis.rustOverheard.push(["root", data]));
+  await plugin(started, "inside-builtin", (ctx) => {
+    builtin = ctx.rust;
+    ctx.rust.on("clipboard.changed", (data) => heard.push(data));
+  });
   assert.deepEqual(await builtin.call("app.echo", { from: "builtin" }), { echo: { from: "builtin" } });
   assert.deepEqual(rust.seen.filter((message) => message.method === "app.echo").map((message) => message.params), [{ from: "builtin" }]);
+  rust.emit("clipboard.changed", { text: "copied" });
+  assert.ok(await until(() => heard.length === 1));
+  await sleep(20);
+  assert.deepEqual(heard, [{ text: "copied" }]);
+  assert.deepEqual(globalThis.rustOverheard, []);
 });
