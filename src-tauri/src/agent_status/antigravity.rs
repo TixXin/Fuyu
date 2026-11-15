@@ -8,7 +8,7 @@ use serde_json::{json, Value};
 
 use super::claude_hooks::APPROVAL_HOOK_TIMEOUT_SECONDS;
 use super::codex_hooks::{agent_running_command_with, agent_status_command};
-use super::harness::{Harness, HookEnv, Hooks, ScanRoots, StatusLight};
+use super::harness::{Harness, HookEnv, Hooks, StatusLight};
 use super::hooks_state::HookInstallState;
 use super::markers::AGENT_RUNNING_STALE_AFTER_MS;
 use super::session_scan::pick_title;
@@ -36,10 +36,8 @@ pub(super) const HARNESS: Harness = Harness {
         running_hold: "agent-antigravity-running-hold.flag",
         saved_inputs: &[],
     }),
-    sessions: Some(|roots: &ScanRoots, now, window_ms| {
-        roots.local_app_dir.map(|app_dir| sessions(app_dir, now, window_ms)).unwrap_or_default()
-    }),
-    remote: None,
+    sessions: Some(super::antigravity_remote::read_sessions),
+    remote: Some(super::antigravity_remote::REMOTE_FILES),
 };
 
 struct Saved {
