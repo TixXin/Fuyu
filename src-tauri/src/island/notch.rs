@@ -88,22 +88,7 @@ pub fn get_island_notch() -> Option<Notch> {
 
 #[cfg(target_os = "macos")]
 pub(crate) fn start_notch_watch(window: WebviewWindow) {
-    use std::{thread, time::Duration};
-
-    thread::spawn(move || {
-        let mut last = crate::macos::notch::read_notches(&window);
-        loop {
-            thread::sleep(Duration::from_secs(2));
-            let notches = crate::macos::notch::read_notches(&window);
-            if notches == last {
-                continue;
-            }
-            last = notches;
-            if let Err(error) = super::apply_stage_geometry(&window, read_window_state(), false) {
-                eprintln!("Failed to refit the island to the notch: {error}");
-            }
-        }
-    });
+    super::screen_watch::start(window);
 }
 
 #[cfg(not(target_os = "macos"))]

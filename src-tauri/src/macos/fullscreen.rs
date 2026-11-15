@@ -64,8 +64,12 @@ fn front_window(own_pid: i64) -> Option<Area> {
     })
 }
 
+pub(crate) fn front_window_of_others() -> Option<Area> {
+    front_window(i64::from(std::process::id()))
+}
+
 pub(crate) fn fullscreen_display_in_front() -> Option<Area> {
-    let window = front_window(i64::from(std::process::id()))?;
+    let window = front_window_of_others()?;
     displays().into_iter().find(|&display| covers(window, display))
 }
 
