@@ -1,24 +1,16 @@
 import type { ReactNode } from "react";
-import { Bot, CalendarDays, ClipboardList, Inbox, ListTodo, Music, Images, Timer, type LucideIcon } from "lucide-react";
+import { Bot } from "lucide-react";
 import type { AgentVisualState } from "../../features/agent-status/status";
 import type { MessageSource } from "../../features/messages/messagePreview";
 import { SlotView } from "../../features/plugin-kernel/SlotView";
+import { useSlotEntries } from "../../features/plugin-kernel/useSlotEntries";
 import { useTranslation } from "../../i18n";
-import { HEADER_DOT_PAGES, type HeaderDotPage, type IslandFeatures } from "./features";
+import { headerDotPages, type HeaderDotPage, type IslandFeatures } from "./features";
 import { headerSlot, withShortcut, type IslandHeaderContext } from "./slots/header";
+import { pageSlot } from "./slots/pageSlot";
 import type { IslandPage } from "./types";
 import { usePageHoverSwitch } from "./usePageHoverSwitch";
 import "./IslandHeader.css";
-
-const PAGE_ICONS: Record<HeaderDotPage, LucideIcon> = {
-  todo: ListTodo,
-  music: Music,
-  calendar: CalendarDays,
-  clipboard: ClipboardList,
-  shelf: Inbox,
-  screenshots: Images,
-  timer: Timer,
-};
 
 type IslandHeaderProps = {
   page: IslandPage;
@@ -71,6 +63,8 @@ export function IslandHeader({
 }: IslandHeaderProps) {
   const t = useTranslation();
   const hoverSwitch = usePageHoverSwitch(hoverSwitchPage, hoverSwitchDelayMs, page, onPageChange);
+  const pages = useSlotEntries(pageSlot);
+  const dots = headerDotPages(pages, features);
   const buttons: IslandHeaderContext = {
     page,
     features,
@@ -131,8 +125,9 @@ export function IslandHeader({
       </div>
 
       <div className="editor-dots" aria-label={t.island.editor}>
-        {HEADER_DOT_PAGES.filter((target) => features[target]).map((target) => {
-          const Icon = PAGE_ICONS[target];
+        {dots.map((item) => {
+          const target = item.id as HeaderDotPage;
+          const Icon = item.icon;
           return (
             <button
               key={target}
@@ -146,7 +141,7 @@ export function IslandHeader({
                 onPageChange(target);
               }}
             >
-              <Icon size={15} strokeWidth={1.8} absoluteStrokeWidth aria-hidden="true" />
+              {Icon && <Icon size={15} strokeWidth={1.8} absoluteStrokeWidth aria-hidden="true" />}
             </button>
           );
         })}
