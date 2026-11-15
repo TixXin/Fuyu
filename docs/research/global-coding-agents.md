@@ -39,6 +39,8 @@
 3. 做不了「等你」或审批的几家（Goose、Crush、Aider、Gemini 只做通知）要不要接，还是先只记在这份文档里？
 4. Cursor 的会话要读 `state.vscdb`（体积可到几十 GB）吗？推荐只读 `ai-code-tracking.db` 和 `conversation-search.db`（小），不碰 `state.vscdb`。
 
+用户 2026-11-15 回复「可以按你推荐的来」：第一批 Grok、Copilot CLI、Droid，Cursor 排在第二批；每家单独写钩子、不改已有的 Claude Code 脚本；做不了等你或审批的几家先只记在这里；Cursor 只读两个小库、不碰 `state.vscdb`。
+
 ## 推荐接入顺序
 
 1. **先做横向的两件事**（约 1 天，不接新家就先做）：（a）给 `claude_compat.rs` 的声明加「回包格式」和「stdin 字段别名」两项，让 Grok、Droid、Copilot 能只填声明；（b）定好重复触发的去重规则。
