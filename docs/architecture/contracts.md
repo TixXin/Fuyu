@@ -20,7 +20,7 @@
 | `fuyu-todos-migrated-v1`（`{ at }`：待办已迁移到 `todos.json`；只是标记，是否迁移以 `todos.json` 里的 `migration.sourceHash` 为准） | `features/todos/storage.ts` |
 | `fuyu-save-directory` | `features/todos/storage.ts` |
 | `fuyu-last-saved-signature` | `features/todos/storage.ts` |
-| `fuyu-position`（`{ x, y }`；C54.1 起可选 `edge`：`"top" \| "left" \| "right"`，`along`：0–1 的沿边比例位置；旧数据没有这两项时按顶边规则读） | `windows/island/storage.ts` |
+| `fuyu-position`（`{ x, y }`；C54.1 起可选 `edge`：`"top" \| "left" \| "right"`，`along`：0–1 的沿边比例位置；C54.3 起 `edge` 多 `"bottom"`（不带 `along`，贴底时 `y` 只用来认屏幕，位置按那块屏幕工作区下沿重算；旧版岛读到 `bottom` 当作没有 `edge`）；2026-11-15 起 `along` 的含义从「把手顶边在 `工作区高 − 把手高` 里的比例」改成「岛中线在工作区高里的比例」，旧数据照读、不迁移；旧数据没有这两项时按顶边规则读） | `windows/island/storage.ts` |
 | `fuyu-music-sources` | `features/media/storage.ts`；`[{ id, label, lastSeen }]`，`lastSeen` 为毫秒时间戳（2026-11-15 起，C71；旧格式 `[{ id, label }]` 照常读，缺 `lastSeen` 的当作读取时间）。在线的播放器每小时最多刷新一次 `lastSeen`，不在线且 60 天没出现的在同步时清掉（`features/media/sourcePriority.ts`） |
 | `fuyu-settings-focus`（主窗口 → 设置窗口的跳转请求） | `windows/settings/storage.ts` |
 | `fuyu-settings-file-synced`（2026-11-12 起，D30.2：上次在 localStorage 和 `settings.json` 之间同步时设置的指纹，`settingsFile.ts` 的 `fingerprint`；不是设置，不进备份） | `features/settings-backup/storage.ts` |
@@ -67,10 +67,11 @@
 | 事件名 | 发送方 | 目标 |
 |---|---|---|
 | `island-position-changed` | `island/mod.rs` | 广播（通过主窗口对象调用 `emit`） |
-| `island-position-cleared`（无载荷：岛屿跟随鼠标或前台窗口换了显示器，拖动保存的位置作废，主窗口清掉 `fuyu-position`） | `island/follow.rs` | 主窗口 |
+| `island-position-cleared`（无载荷：岛屿跟随鼠标或前台窗口换了显示器，拖动保存的位置作废，主窗口清掉 `fuyu-position`；C54.3 起贴底、贴侧边的岛换屏不发它，改发 `island-position-changed`，带新屏幕上的位置和 `edge`） | `island/follow.rs` | 主窗口 |
 | `island-top-attachment-changed`（载荷为 `bool`：岛屿是否贴住所在显示器顶边；C54.1 起由 `island-edge-changed` 派生，保留给旧插件和旧代码） | `island/edge.rs`（常量在 `island/top_edge.rs`） | 广播（通过主窗口对象调用 `emit`） |
 | `island-notch-changed`（载荷为 `{ width, height } \| null`，单位是逻辑点：岛在贴合刘海时是刘海的宽高，不贴合时是 `null`；命令 `get_island_notch` 读当前值；只在 macOS 上会非空；前端用命令 `set_island_notch_drop`（`drop: bool`）告诉 Rust 折叠岛有没有往下多长一行，点击判定跟着加高；G1.11，2026-11-13） | `island/notch.rs` | 广播（通过主窗口对象调用 `emit`） |
-| `island-edge-changed`（载荷为 `"top" \| "left" \| "right" \| null`：岛屿吸在所在显示器的哪条边，`null` 是没吸住；命令 `get_island_edge` 读当前值；C54.1，2026-11-13） | `island/edge.rs` | 广播（通过主窗口对象调用 `emit`） |
+| `island-edge-changed`（载荷为 `"top" \| "left" \| "right" \| "bottom" \| null`：岛屿吸在所在显示器的哪条边，`null` 是没吸住；命令 `get_island_edge` 读当前值；C54.1，2026-11-13；`"bottom"` 是 C54.3 加的，贴底时 `island-top-attachment-changed` 为 `false`） | `island/edge.rs` | 广播（通过主窗口对象调用 `emit`） |
+| `island-drag-edge-hint`（载荷为 `{ edge: "top" \| "bottom" \| "left" \| "right", offset } \| null`：拖动岛时离哪条屏幕边 16px 以内、松手会吸上去，`offset` 是那条边在舞台窗口里的坐标（逻辑像素，左右边是 x，上下边是 y），离开范围或松手时为 `null`，只在变化时发；C54.1，2026-11-15） | `island/` | 主窗口 |
 | `island-reveal-requested`（无载荷：托盘「显示」时岛屿正贴边隐藏，主窗口把它滑出来；issue #37，2026-11-11） | `island/mod.rs` | 广播（通过主窗口对象调用 `emit`） |
 | `island-hover-changed`（载荷为 `bool`：光标是否在岛屿形状内，供悬停展开使用） | `island/passthrough.rs` | 广播（通过主窗口对象调用 `emit`） |
 | `island-banner-hover-changed`（载荷为 `bool`：光标是否在新消息横幅上；只在横幅用 `set_island_banner_rect` 交出矩形期间有意义，供横幅悬停暂停计时） | `island/passthrough.rs`（常量在 `island/banner_hit.rs`） | 广播（通过主窗口对象调用 `emit`） |
@@ -178,3 +179,5 @@
 
 总览见 [overview.md](overview.md)。
 - 插件平台第 3 版的宿主（2026-11-15 起，E36.1，开发中）：只在开发版设了 `FUYU_PLUGINS_V3=1` 时启动，正式版里没有。Tauri 命令 `get_plugin_host_connection`（无参数，返回 `{ enabled, port, token, generation }`；没启用时 `enabled` 是 `false`，宿主还没就绪时 `port`、`token` 是 `null`），窗口拿它连宿主的本机 WebSocket，协议见 [v3-boundary.md](plugins/v3-boundary.md)。自定义协议 `fuyu-plugin`：`fuyu-plugin://localhost/<路径>`（Windows 上是 `http://fuyu-plugin.localhost/<路径>`）返回数据目录 `plugins-v3/` 下的插件文件（按扩展名回类型，带 `Access-Control-Allow-Origin: *`，支持 `HEAD`，不出这个目录，找不到时 404）；`__shared/react.js`、`__shared/react-jsx-runtime.js` 是程序自带的 React 转接模块。宿主没启动时一律 404。
+- 岛的吸附边（C54.3、C54.1 第 3 步，2026-11-15）：新命令 `set_island_edge`（`edge`：`"bottom" \| "left" \| "right"`，放到当前屏幕下边正中或那一侧正中（`along: 0.5`）并发 `island-position-changed`；那一侧挨着别的屏幕时返回错误、不动；`"top"` 返回错误，回顶边用 `reset_island_position`），设置 → 位置「吸附到」用它；`set_island_side_column`（`height`：竖向岛的高度，逻辑像素、未乘缩放，夹在 48–300，原生按它摆舞台、算点击区域）；`set_island_side_bubble_rect`（`rect`：`{ x, y, width, height } \| null`，侧边气泡在舞台里的 CSS 像素矩形，和 `set_island_banner_rect` 分开存，命中时两者都算）。岛屿设置（`fuyu-settings`）多 `sideMusicCover`（布尔，默认 `false`，旧数据没有时按 `false`）。开发版实验台接口多 `PUT /v1/dev/island/edge`（`{ "edge": "top" \| "bottom" \| "left" \| "right" }`，方法名 `devIsland.edge`），正式版没有。
+- 托盘 / 菜单栏图标（C82，2026-11-15）：应用数据目录新文件 `tray-icon.json`（`{ "visible": bool }`；文件不存在、读不出或不是布尔值都按显示）；新命令 `get_tray_icon_visible`（返回布尔）、`set_tray_icon_visible`（`visible`，写文件并立即显示或隐藏图标）。`fuyu-settings-focus` 的 `section` 多 `"general"`：托盘隐藏时再次打开浮屿（Windows 的 single-instance、macOS 的 `RunEvent::Reopen`），Rust 经主窗口写这个 key 再打开设置窗口，停在通用页。
