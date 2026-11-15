@@ -8,6 +8,7 @@ import "./IslandNotch.css";
 
 export const NOTCH_WING = 56;
 export const MAX_NOTCH_WING = 100;
+export const SIMULATED_NOTCH_WIDTH = 240;
 
 let current: IslandNotch | null = null;
 const listeners = new Set<() => void>();
@@ -16,7 +17,7 @@ export function applyIslandNotch(notch: IslandNotch | null) {
   current = notch;
   const root = document.documentElement;
   if (notch) {
-    root.dataset.islandNotch = "on";
+    root.dataset.islandNotch = notch.simulated ? "simulated" : "on";
     root.style.setProperty("--island-notch-width", `${notch.width}px`);
     root.style.setProperty("--island-notch-height", `${notch.height}px`);
   } else {
@@ -56,7 +57,7 @@ export function notchFittedWidth(width: number, notch: IslandNotch | null, colla
   const gap = Math.ceil(notch.width / Math.max(collapsedScale, 0.01));
   const least = alerted ? ALERT_NOTCH_WING : NOTCH_WING;
   const wing = Math.min(MAX_NOTCH_WING, Math.max(least, NOTCH_WING + width - MIN_COLLAPSED_ISLAND_WIDTH));
-  return gap + 2 * wing;
+  return notch.simulated ? Math.max(SIMULATED_NOTCH_WIDTH, gap + 2 * wing) : gap + 2 * wing;
 }
 
 export const NOTCH_CONTENT_GAP = 8;
@@ -67,7 +68,7 @@ const NOTCH_HEADER_MARGIN = 16;
 const EXPANDED_SIDE_PADDING = 40;
 
 export function notchExpandedExtra(notch: IslandNotch | null, expandedScale: number, popup: boolean) {
-  if (!notch) return 0;
+  if (!notch || notch.simulated) return 0;
   const band = notch.height / Math.max(expandedScale, 0.01);
   return Math.max(0, Math.ceil(popup ? band + NOTCH_CONTENT_GAP - POPUP_TOP_PADDING : band - HEADER_BAND));
 }
@@ -75,7 +76,7 @@ export function notchExpandedExtra(notch: IslandNotch | null, expandedScale: num
 const NOTCH_POPUP_SIDE = 96;
 
 export function notchPanelWidth(width: number, notch: IslandNotch | null, expandedScale: number, popup: boolean) {
-  if (!notch) return width;
+  if (!notch || notch.simulated) return width;
   const gap = notch.width / Math.max(expandedScale, 0.01) + NOTCH_HEADER_MARGIN;
   return Math.max(width, Math.ceil(gap + 2 * (popup ? NOTCH_POPUP_SIDE : NOTCH_HEADER_SIDE) + EXPANDED_SIDE_PADDING));
 }

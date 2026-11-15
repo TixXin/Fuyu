@@ -882,6 +882,29 @@
     {
       "page": "appearance",
       "zh-CN": {
+        "group": "形态",
+        "title": "岛的形态",
+        "description": "药丸离顶 10px，带投影；刘海是顶部正中 240×32 的黑色刘海，折叠时两边放图标。",
+        "options": [
+          "贴顶",
+          "悬空药丸",
+          "刘海"
+        ]
+      },
+      "en": {
+        "group": "Form",
+        "title": "Island form",
+        "description": "The pill floats 10px below the top with a shadow; the notch is a 240×32 black notch at the top centre with icons on both sides when collapsed.",
+        "options": [
+          "Top",
+          "Floating pill",
+          "Notch"
+        ]
+      }
+    },
+    {
+      "page": "appearance",
+      "zh-CN": {
         "group": "折叠岛屿",
         "title": "折叠岛屿大小"
       },

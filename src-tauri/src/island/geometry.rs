@@ -96,7 +96,7 @@ pub(crate) fn apply_stage_geometry(
         -((COLLAPSED_ISLAND_HEIGHT * state.collapsed_scale - TUCKED_VISIBLE_EDGE_HEIGHT).max(0.0)
             * scale)
             .round() as i32;
-    let top_inset = super::top_edge::top_edge(&monitor, state.under_menu_bar).y - monitor_position.y;
+    let top_inset = super::top_edge::top_edge(&monitor, super::notch::under_menu_bar(window, &monitor, state)).y - monitor_position.y;
     let centered_x = crate::dev_lane::stage_x(
         (monitor_position.x, monitor_position.y + top_inset, monitor_size.width as i32),
         (physical_width, (stage_height * scale).round() as i32),
@@ -104,7 +104,11 @@ pub(crate) fn apply_stage_geometry(
     );
     let normal_y = monitor_position.y + top_inset + physical_top_offset;
     let notch = super::notch::settle(window, &monitor, state);
-    let tucked_y = if notch.is_some() { normal_y } else { monitor_position.y + top_inset + tucked_top_offset };
+    let tucked_y = match notch {
+        Some(notch) if notch.slides_to_tuck() => monitor_position.y + top_inset - (notch.tucked_depth() * scale).round() as i32,
+        Some(_) => normal_y,
+        None => monitor_position.y + top_inset + tucked_top_offset,
+    };
     let mut positioned_state = state;
     positioned_state.notch = notch;
     if !has_custom_monitor {

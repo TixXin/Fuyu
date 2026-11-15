@@ -8,6 +8,12 @@ export type SettingsLayoutText = {
   collapsedSizeTitle: string;
   expandedSizeTitle: string;
   cornersTitle: string;
+  formTitle: string;
+  form: string;
+  formOptions: Record<"top" | "pill" | "notch", string>;
+  formHint: string;
+  formHintMac: string;
+  formOffTopHint: string;
   opacity: string;
   marginY: string;
   topFilletRadius: string;
@@ -56,6 +62,12 @@ export const zhCN: SettingsLayoutText = {
   collapsedSizeTitle: "折叠岛屿",
   expandedSizeTitle: "展开面板",
   cornersTitle: "圆角",
+  formTitle: "形态",
+  form: "岛的形态",
+  formOptions: { top: "贴顶", pill: "悬空药丸", notch: "刘海" },
+  formHint: "药丸离顶 10px，带投影；刘海是顶部正中 240×32 的黑色刘海，折叠时两边放图标。",
+  formHintMac: "药丸从菜单栏下沿离开 10px；刘海在有刘海的屏幕上贴合刘海。有刘海时选贴顶或药丸，岛会让到菜单栏下面。",
+  formOffTopHint: "吸在底边或侧边时不生效，回到顶边后照这里的形态。",
   opacity: "不透明度",
   marginY: "顶部距离",
   topFilletRadius: "贴边圆角",
@@ -104,6 +116,12 @@ export const en: SettingsLayoutText = {
   collapsedSizeTitle: "Collapsed island",
   expandedSizeTitle: "Open panel",
   cornersTitle: "Corners",
+  formTitle: "Form",
+  form: "Island form",
+  formOptions: { top: "Top", pill: "Floating pill", notch: "Notch" },
+  formHint: "The pill floats 10px below the top with a shadow; the notch is a 240×32 black notch at the top centre with icons on both sides when collapsed.",
+  formHintMac: "The pill floats 10px below the menu bar; the notch hugs the camera notch on screens that have one. On a notched screen, Top and Pill move below the menu bar.",
+  formOffTopHint: "Has no effect while the island is docked to the bottom or a side; it applies again once back at the top.",
   opacity: "Opacity",
   marginY: "Top margin",
   topFilletRadius: "Docked corner radius",

@@ -101,6 +101,13 @@ async function runChecks() {
       }
     }
 
+    for (const notch of ["on", "simulated"]) {
+      document.documentElement.dataset.islandNotch = notch;
+      check(islands().every((island) => playState(island) === "paused"), `刘海形态（${notch}）下折叠岛的玻璃停下`);
+    }
+    delete document.documentElement.dataset.islandNotch;
+    check(islands().every((island) => playState(island) === "running"), "离开刘海形态后接着流动");
+
     await set({ tucked: true });
     check(islands().every((island) => island.classList.contains("island--glass-paused") && playState(island) === "paused"), "收到边缘时停下");
     await set({ tucked: false, quiet: true });

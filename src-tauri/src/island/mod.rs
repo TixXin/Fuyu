@@ -71,6 +71,8 @@ pub struct IslandLayout {
     under_menu_bar: bool,
     #[serde(default)]
     fit_notch: bool,
+    #[serde(default)]
+    animate: bool,
 }
 
 #[tauri::command]
@@ -84,7 +86,7 @@ pub fn set_island_layout(app: AppHandle, layout: IslandLayout) -> Result<(), Str
         state.fit_notch = layout.fit_notch;
         *state
     });
-    apply_stage_geometry(&window, state, false)
+    apply_stage_geometry(&window, state, layout.animate)
 }
 
 #[tauri::command]

@@ -5,6 +5,7 @@ import * as islandApi from "./api";
 import { clearIslandPosition } from "./storage";
 import { useIslandPosition } from "./useIslandPosition";
 import { useNativeLayout } from "./useNativeLayout";
+import { islandMarginY } from "./islandForm";
 import { useSettingsPositionReset } from "./useSettingsPositionReset";
 import { useClickFocus } from "./useClickFocus";
 import { useCollapseOnBlur } from "./useCollapseOnBlur";
@@ -60,7 +61,7 @@ export function useIslandWindow({
           mode: nextMode,
           collapsedScale: nextSettings.collapsedScale,
           expandedScale: nextSettings.expandedScale,
-          marginY: nextSettings.marginY,
+          marginY: islandMarginY(nextSettings),
           expandedHeight: nextExpandedHeight,
           expandedWidth: nextExpandedWidth,
           collapsedWidth: nextCollapsedWidth,
@@ -158,6 +159,7 @@ export function useIslandWindow({
     isTucked,
     mode,
     settings.marginY,
+    settings.islandForm,
     settings.appearanceMode,
     settings.glassIntensity,
     settings.islandBackgroundColor,

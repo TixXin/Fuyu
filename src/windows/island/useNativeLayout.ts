@@ -1,6 +1,12 @@
 import { useCallback, useEffect, useRef } from "react";
 import type { IslandSettings } from "../../features/appearance/types";
 import * as islandApi from "./api";
+import { islandFormLayout } from "./islandForm";
+import { useIslandForm } from "./useIslandForm";
+
+function formMotion(settings: IslandSettings) {
+  return settings.islandMotion !== "none" && !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
 
 export function useNativeLayout(settings: IslandSettings) {
   const layoutSync = useRef<{
@@ -14,15 +20,18 @@ export function useNativeLayout(settings: IslandSettings) {
     pending: settings,
     active: settings,
   });
+  const syncedForm = useRef(settings.islandForm);
+  useIslandForm(settings.islandForm);
 
   const syncNativeLayout = useCallback(async (nextSettings: IslandSettings) => {
+    const animate = syncedForm.current !== nextSettings.islandForm && formMotion(nextSettings);
+    syncedForm.current = nextSettings.islandForm;
     try {
       await islandApi.setIslandLayout({
         collapsedScale: nextSettings.collapsedScale,
         expandedScale: nextSettings.expandedScale,
-        marginY: nextSettings.marginY,
-        underMenuBar: nextSettings.menuBarPlacement === "below",
-        fitNotch: nextSettings.menuBarPlacement === "notch",
+        ...islandFormLayout(nextSettings),
+        animate,
       });
     } catch (error) {
       console.error("Failed to sync island layout", error);
@@ -73,7 +82,7 @@ export function useNativeLayout(settings: IslandSettings) {
   useEffect(() => {
     scheduleNativeLayout(settings);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [settings.marginY, settings.menuBarPlacement, scheduleNativeLayout]);
+  }, [settings.marginY, settings.menuBarPlacement, settings.islandForm, scheduleNativeLayout]);
 
   useEffect(() => {
     const syncState = layoutSync.current;

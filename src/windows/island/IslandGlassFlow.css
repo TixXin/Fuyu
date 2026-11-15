@@ -161,9 +161,9 @@
 .island--glass-paused .island__glass-flow i,
 .island--glass-paused .island__glass-sheen::before,
 .island--glass-paused .island__glass-rim,
-:root[data-island-notch="on"] .island--collapsed .island__glass-flow i,
-:root[data-island-notch="on"] .island--collapsed .island__glass-sheen::before,
-:root[data-island-notch="on"] .island--collapsed .island__glass-rim {
+:root[data-island-notch] .island--collapsed .island__glass-flow i,
+:root[data-island-notch] .island--collapsed .island__glass-sheen::before,
+:root[data-island-notch] .island--collapsed .island__glass-rim {
   animation-play-state: paused;
 }
 
