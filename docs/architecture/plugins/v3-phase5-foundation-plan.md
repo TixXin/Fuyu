@@ -206,8 +206,8 @@
 - 更新 `v3-progress.md`（这一节的地基做到哪）、`contracts.md`（`.fuyu` 后缀、`index.v3.json` / `revoked.v3.json` 的格式、清单格式）、方案里被细化的段落；
 - 核对 issue 都已回复并关闭；向用户和经理汇报提交、PR 和还剩什么。
 - 「编译过的代码」的判断（扩展名、`\0asm`、`CAFEBABE`、jar、PE / ELF / Mach-O）现在 `plugin-manifest`（6e011bb8）和 `plugin-review`（248ca98a）各抄一份，规则一致。要合成一份：`plugin-manifest` 导出判断函数，`plugin-review` 加 workspace 依赖引用它；要改锁文件，排在下一次有人动共用文件时一起做。
-- `fuyu-plugin check` 对 `slots`、`provides`、`replaces` 现在只检查是不是字符串列表，不对照名单。以后要提示不存在的插槽名或服务名时：插槽读 protocol 里的 `SLOTS`（E36.2.3，PR #519），服务读 `@fuyu/plugin-services` 的 `SERVICES`。`SERVICES` 由 B 在 E36.3.8 之后加，不进 E36.3.2 这一批（2026-11-15 和经理定的）。
+- `fuyu-plugin check` 对 `slots`、`provides`、`replaces` 现在只检查是不是字符串列表，不对照名单。以后要提示不存在的插槽名或服务名时：插槽读 protocol 里的 `SLOTS`（E36.2.3，PR #519），服务读 `@fuyu/plugin-services` 的 `SERVICES`。`SERVICES` 由 B 在 E36.3.8 之后加，不进 E36.3.2 这一批（2026-11-15 和经理定的）。服务名的写法另有一条可以先做：`provides` 的每一项用 `@fuyu/plugin-manifest/names` 的 `SERVICE_NAME` 核对，主入口也导出了它（E36.3.17）。
 - 宿主部分的外部模块（2026-11-15 和 B 定的）：
   - 现状：`fuyu-plugin build` 把 `HOST_EXTERNALS` 展开成 `name` 和 `name/*`，`@fuyu/plugin-base` 的子路径全留在外面，可宿主只共享不带子路径的那个，运行时找不到模块。内置插件也有同一个问题，由 E36.3.16 修。
   - 改法：E36.3.16（c1c36a31）在 protocol 导出 `HOST_SHARED_MODULES`（`@fuyu/plugin-base`、`fuyu-plugin`），由宿主默认共享。命令行已跟上（780e7530）：按名字精确匹配，名单外的包括子路径都打进包里；v3-cli.md 和 `docs/plugins/v3/cli.md` 一起改了。
-- `defineService` 和服务名规则由 E36.3.17 挪到 `@fuyu/plugin-base/services`（同意，2026-11-15）。这个子路径要进宿主共享名单。服务名的正则建议放在 plugin-manifest，因为 plugin-base 依赖它，反过来引用会成环。E36.5.6 的脚手架开工时如果它已合入，就从新位置拿。
+- `defineService` 和服务名规则已由 E36.3.17 挪走（0f4161dc、2051b1b3）：`defineService`、`isServiceDefinition` 等在 `@fuyu/plugin-base/services`，它进了 `HOST_SHARED_MODULES`，命令行按名字精确匹配，自动留在包外；`@fuyu/plugin-services` 转出同一个函数。服务名正则 `SERVICE_NAME` 只留一份，在 `@fuyu/plugin-manifest/names`。单开子路径是因为主入口用到 `node:crypto` 和 zlib，而 protocol 会进窗口。脚手架没用 `defineService`。
