@@ -79,6 +79,7 @@
 | 提交前总检查 | `pnpm check`（类型检查 + 回归页类型检查 + packages 类型检查 + lint + 行数检查 + 颜色检查 + 任务检查 + 单元测试） |
 | Rust 单元测试 | `cargo test --manifest-path src-tauri/Cargo.toml` |
 | 仅生成 release 可执行文件 | `pnpm build:exe`（写到 `src-tauri/target/release`，岛屿在运行也不用关；Mac 上打成 `Fuyu.app`） |
+| 重任务排队 | `pnpm heavy [--label <名字>] -- <命令…>`（全机器同时最多跑 `FUYU_HEAVY_SLOTS` 个，默认逻辑 CPU ÷ 5；`build:exe`、`verify`、`test:regression` 已自带，见 workflow.md「Rust 构建」） |
 | 清理 Rust 构建缓存 | `pnpm prune:target [--dry-run]`（删 `src-tauri/target` 里 3 天没用的增量缓存、本应用的旧产物和 lane 时期留下的预览目录；`pnpm verify` 跑完 `cargo test` 后自动跑） |
 | 完整打包 | `pnpm tauri build` |
 | 改版本号、起草发布说明 | `pnpm release:version <版本号>`（四处版本号一起改，不要手动改） |
@@ -169,7 +170,8 @@
   - **只提交自己的文件**：`git add <具体文件>` 或 `git commit -- <文件>`，不用 `git add -A` / `git add .`。两个会话不同时改一个文件：认领时写 `--scope`，开工前可以 `pnpm tasks conflicts`。
   - **攒着提 PR，不是一个小改动一个 PR**。下面任一条满足时 `pnpm mq:land --yes --body <文件>`，不用问用户：一个任务做完；本地没推的提交有 5 个以上或最早的超过 6 小时（`pnpm mq:pending` 会说）；另一台机器或协作者要用、要发版、或用户说「推一下」。顺手的小修复、文案、文档先攒着。PR 标题用英文，正文用中文写在文件里，一批几样东西时按功能分节（格式见 workflow.md「PR 的标题和正文」）。land 之后在后台 `pnpm mq:wait`，PR 合入才算完成，冲突或检查没过都不算。别人提的 PR 不走 land，按 workflow.md「外部 PR」合入。
   - `main` 只经 land 或在 GitHub 上合入 PR 移动，不手动推送。
-  - 代理的 Rust 构建用 `src-tauri/target/agents`，不要用用户 dev 的 `debug`；代理不跑 `pnpm tauri dev`，用户自己跑。
+  - 代理的 Rust 构建用共用的 `src-tauri/target/agents`，不要用用户 dev 的 `debug`，也不另开 `agents-<名字>` 目录、不在临时目录的仓库副本里编译；代理不跑 `pnpm tauri dev`，用户自己跑。
+  - **重任务排队**（2026-11-15 起，F40）：`cargo build/test/check/clippy`、`tauri build` 写成 `pnpm heavy -- <命令>`，全机器同时最多跑两个，其余的排队；`build:exe`、`verify`、`test:regression` 自带排队。PreToolUse 钩子（`scripts/heavy/gate.mjs`）会拦下没排队的。整批 `mq:land` 同一时间只跑一个，后来的会被告知提交会一起带上。主 agent 同时最多跑 2 个要编译的子会话。细则见 workflow.md「Rust 构建」。
 - 修改前先查看 `git status --short`，不要覆盖用户或别的会话已有的改动。
 - 不要使用 `git reset --hard`、`git checkout --` 等破坏性命令，除非用户明确要求。
 - 工作区里与当前任务无关的修改（多半是别的会话正在改的），保留它们，只提交本次任务相关的文件。
