@@ -6,6 +6,7 @@ import { commitPart } from "./commitPart.mjs";
 import { land, pendingCommits } from "./land.mjs";
 import { INTEGRATION_BRANCH, tryGit } from "./settings.mjs";
 import { sync } from "./sync.mjs";
+import { tryCi } from "./try.mjs";
 import { waitCommand } from "./wait.mjs";
 
 const BATCH_COMMITS = 5;
@@ -41,7 +42,7 @@ export function listOption(args, name) {
   return end < 0 ? rest : rest.slice(0, end);
 }
 
-const LAND_OPTIONS = ["--yes", "--wait", "--body", "--title", "--only"];
+const LAND_OPTIONS = ["--yes", "--wait", "--body", "--title", "--only", "--urgent", "--upto"];
 
 const HELP = [
   "用法：node scripts/mq/mq.mjs <命令> [参数]",
@@ -50,10 +51,12 @@ const HELP = [
   "  land --yes [参数]       把本地提交推到 land/ 分支、开 PR 并开启自动合并；不写 --yes 不会推",
   "      --body <文件>       中文 PR 正文",
   "      --title <标题>      英文 PR 标题，默认取第一个提交的标题",
-  "      --only <提交号…>    只带这几个提交，开单独的 PR",
+  "      --upto <提交号>     只带本地 main 上到这个提交为止的提交，提交号不变，开单独的 PR",
+  "      --only <提交号…> --urgent   紧急修复：只把这几个提交重新叠到 main 上；提交号会变，本地 main 之后要多合一次",
   "      --wait              在前台等到合入",
   "  wait [PR 号] [--update]  等 PR 合入，把本地 main 跟上；--update 在它落后时更新分支",
-  "  sync                    把 origin/main 合进本地 main",
+  "  sync                    把 origin/main 合进本地 main；挡路的没提交文件能三方合并就照样跟上",
+  "  try [--wait]            把本地 main（合上 origin/main）推到 try/ 分支只跑 CI，不开 PR，提前看 Windows 的结果",
   "  commit-part --list <文件…>   列出文件相对 HEAD 的每一处改动和编号",
   "  commit-part -m <标题> [-F <说明文件>] …   同一个文件里只提交自己的改动，不动工作区",
   "      --take <文件>:<编号,…>       只带这几处",
@@ -71,7 +74,12 @@ export function landRequest(args) {
   const unknown = args.find((arg) => arg.startsWith("-") && !LAND_OPTIONS.includes(arg));
   if (unknown) return { error: `land 不认识参数 ${unknown}。` };
   if (!args.includes("--yes")) return { error: "land 会推送并开 PR，确认要推就加上 --yes。" };
-  return { options: { wait: args.includes("--wait"), bodyFile: option(args, "--body"), title: option(args, "--title"), only: listOption(args, "--only") } };
+  const only = listOption(args, "--only");
+  const upto = option(args, "--upto");
+  if (only && !args.includes("--urgent")) return { error: "--only 把提交重新做一份，提交号变了，本地 main 之后合 origin/main 会冲突。先合入前面的提交用 --upto <提交号>；确实是紧急修复再加 --urgent。" };
+  if (only && upto !== null) return { error: "--only 和 --upto 只能用一个。" };
+  if (upto === "") return { error: "--upto 后面要写提交号。" };
+  return { options: { wait: args.includes("--wait"), bodyFile: option(args, "--body"), title: option(args, "--title"), only, upto } };
 }
 
 function landCommand(args) {
@@ -93,6 +101,7 @@ const COMMANDS = {
   "commit-part": commitPartCommand,
   wait: (args) => waitCommand(args),
   sync: () => sync(),
+  try: (args) => tryCi({ wait: args.includes("--wait") }),
   pending,
   "check-push": () => checkPush(),
   "check-commit": () => checkCommit(),

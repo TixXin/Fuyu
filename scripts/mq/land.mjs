@@ -4,6 +4,7 @@ import { machineName } from "../machine-name.mjs";
 import { github as realGitHub, landBranchName, prText } from "./github.mjs";
 import { mergeTree } from "./mergeTree.mjs";
 import { pickOnto } from "./pick.mjs";
+import { uptoRev } from "./upto.mjs";
 import { INTEGRATION_BRANCH, git, tryGit } from "./settings.mjs";
 import { landBusyNote, takeLandLock } from "./landLock.mjs";
 import { lockfileChanged } from "./sync.mjs";
@@ -109,9 +110,20 @@ function pickOnly(only) {
   return { rev: tip, suffix: `-only-${picked[0].slice(0, 7)}` };
 }
 
+function pickUpto(name) {
+  git(["fetch", "origin", INTEGRATION_BRANCH, "--quiet"]);
+  const { rev, sha, carried, error } = uptoRev(name);
+  if (error) {
+    console.error(`[land] ${error}`);
+    return null;
+  }
+  console.log(`[land] 带上本地 ${INTEGRATION_BRANCH} 到 ${sha.slice(0, 8)} 为止的 ${carried} 个提交，提交号不变（${rev.slice(0, 8)}），工作区和本地 ${INTEGRATION_BRANCH} 都没动。`);
+  return { rev, suffix: `-upto-${sha.slice(0, 7)}` };
+}
+
 export async function land(options = {}) {
-  const { github = realGitHub, wait = false, waitOptions = {}, only = null, lock = takeLandLock } = options;
-  if (only) return finish(await landOnce(options), { wait, github, waitOptions });
+  const { github = realGitHub, wait = false, waitOptions = {}, only = null, upto = null, lock = takeLandLock } = options;
+  if (only || upto) return finish(await landOnce(options), { wait, github, waitOptions });
   const held = lock();
   if (!held.ok) {
     console.log(landBusyNote(held.holder));
@@ -133,7 +145,7 @@ function finish({ code, pr }, { wait, github, waitOptions }) {
 
 async function landOnce(options) {
   const fail = { code: 1 };
-  const { github = realGitHub, host = machineName(), wait = false, bodyFile = null, title = null, only = null } = options;
+  const { github = realGitHub, host = machineName(), wait = false, bodyFile = null, title = null, only = null, upto = null } = options;
   const branch = tryGit(["rev-parse", "--abbrev-ref", "HEAD"]).out.trim();
   const refusal = landRefusal(branch);
   if (refusal) {
@@ -147,8 +159,8 @@ async function landOnce(options) {
   }
   const note = uncommittedNote(tryGit(["status", "--porcelain"]).out.split("\n"));
   if (note) console.log(`[land] ${note}`);
-  const chosen = only ? pickOnly(only) : null;
-  if (only && !chosen) return fail;
+  const chosen = only ? pickOnly(only) : upto ? pickUpto(upto) : null;
+  if ((only || upto) && !chosen) return fail;
   const rev = chosen ? chosen.rev : mergeMain();
   if (!rev) return fail;
   const commits = pendingCommits(undefined, rev);

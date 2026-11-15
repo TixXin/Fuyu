@@ -1,5 +1,6 @@
 import { spawnSync } from "node:child_process";
 import { INTEGRATION_BRANCH, LOCKFILES, mainCheckoutOf, tryGit } from "./settings.mjs";
+import { syncAround } from "./syncAround.mjs";
 
 const LOCK_RETRIES = 3;
 
@@ -35,6 +36,16 @@ function refreshDependencies(main, before, after) {
   if (result.status !== 0) console.error(`[sync] pnpm install failed in ${main}; run it there by hand.`);
 }
 
+function reportBlocked({ conflicts = [], blocked = [], moved = false }) {
+  if (moved) console.error(`[sync] ${INTEGRATION_BRANCH} moved while syncing (another commit); run pnpm mq:sync again.`);
+  if (conflicts.length) console.error(`[sync] local ${INTEGRATION_BRANCH} and origin/${INTEGRATION_BRANCH} changed the same lines in: ${conflicts.join(", ")}. Run git merge origin/${INTEGRATION_BRANCH} and resolve them.`);
+  if (blocked.length) {
+    console.error(`[sync] uncommitted changes in the main checkout are in the way; left untouched. pnpm tasks dirty shows whose they are:`);
+    for (const { file, why } of blocked) console.error(`  ${file}: ${why}`);
+  }
+  return 0;
+}
+
 function pause(ms) {
   Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
 }
@@ -65,9 +76,15 @@ export function sync(cwd = process.cwd()) {
     result = tryGit(["merge", "--no-edit", `origin/${INTEGRATION_BRANCH}`], main);
     if (!result.ok) tryGit(["merge", "--abort"], main);
   }
+  if (!result.ok && /would be overwritten by merge/i.test(result.out)) {
+    const around = syncAround(main, `origin/${INTEGRATION_BRANCH}`);
+    if (!around.ok) return reportBlocked(around);
+    if (around.kept.length) console.log(`[sync] merged around ${around.kept.length} uncommitted file(s), their edits kept on top: ${around.kept.join(", ")}`);
+    if (around.raced.length) console.error(`[sync] ${around.raced.join(", ")} changed while syncing; left as the other session wrote it. git diff shows origin's change undone there.`);
+    result = { ok: true, out: "" };
+  }
   if (!result.ok) {
-    if (/would be overwritten by merge/i.test(result.out)) console.error(`[sync] uncommitted changes in the main checkout are in the way; left untouched.\n${result.out.trim()}`);
-    else console.error(`[sync] could not bring ${INTEGRATION_BRANCH} up to origin; left untouched. Run git merge origin/${INTEGRATION_BRANCH} by hand.\n${result.out.trim()}`);
+    console.error(`[sync] could not bring ${INTEGRATION_BRANCH} up to origin; left untouched. Run git merge origin/${INTEGRATION_BRANCH} by hand.\n${result.out.trim()}`);
     return 0;
   }
   const after = tryGit(["rev-parse", "--short", "HEAD"], main).out.trim();

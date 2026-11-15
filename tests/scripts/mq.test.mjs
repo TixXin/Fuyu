@@ -334,8 +334,8 @@ test("land pushes only with --yes; no arguments, --help and unknown options show
   assert.deepEqual(landRequest([]), { help: true });
   assert.match(landRequest(["--body", "x.md"]).error, /--yes/);
   assert.match(landRequest(["--yes", "--dry-run"]).error, /--dry-run/);
-  assert.deepEqual(landRequest(["--yes", "--body", "x.md", "--only", "a1", "b2"]).options, { wait: false, bodyFile: "x.md", title: null, only: ["a1", "b2"] });
-  assert.deepEqual(landRequest(["--yes"]).options, { wait: false, bodyFile: null, title: null, only: null });
+  assert.deepEqual(landRequest(["--yes", "--body", "x.md", "--only", "a1", "b2", "--urgent"]).options, { wait: false, bodyFile: "x.md", title: null, only: ["a1", "b2"], upto: null });
+  assert.deepEqual(landRequest(["--yes"]).options, { wait: false, bodyFile: null, title: null, only: null, upto: null });
   for (const argv of [[], ["--help"], ["land"], ["land", "--help"], ["land", "--yes", "-h"], ["sync", "--help"]]) {
     let code;
     const said = await captured(async () => { code = await main(argv); });
