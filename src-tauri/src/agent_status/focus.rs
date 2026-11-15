@@ -143,7 +143,7 @@ pub(super) fn focus_session(
     let remembered_app = seen.as_ref().and_then(|seen| seen.host_exe.as_deref()).map(app_name);
     let prefer_app = if handle.is_some() { Some(orca::ORCA_APP.to_string()) } else { remembered_app }
         .or_else(|| match provider {
-            workbuddy::PROVIDER => Some(workbuddy::APP.to_string()),
+            workbuddy::PROVIDER => workbuddy::running_app(),
             antigravity::PROVIDER => Some(antigravity::APP.to_string()),
             dsh::PROVIDER => dsh::running_app(),
             opencode::PROVIDER => opencode::running_app(),
