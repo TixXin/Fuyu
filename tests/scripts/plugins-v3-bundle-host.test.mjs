@@ -8,22 +8,44 @@ import { after, before, test } from "node:test";
 import { bundleHost } from "../../scripts/plugins-v3/bundle-host.mjs";
 import { PLUGINS, config, workspace } from "../../packages/plugin-base/test/workspace.mjs";
 
-const cleanup = [];
+const children = [];
+const folders = [];
 let built;
 
 before(async () => {
   const outDir = join(mkdtempSync(join(tmpdir(), "fuyu-host-bundle-")), "host");
-  cleanup.push(() => rmSync(join(outDir, ".."), { recursive: true, force: true }));
+  folders.push(join(outDir, ".."));
   built = await bundleHost({ outDir });
 });
 
-after(() => cleanup.forEach((step) => step()));
+function stopChild(child) {
+  if (child.exitCode !== null || child.signalCode !== null) return Promise.resolve();
+  return new Promise((resolve) => {
+    const timer = setTimeout(resolve, 5000);
+    child.once("exit", () => (clearTimeout(timer), resolve()));
+    try {
+      child.kill();
+    } catch {
+      clearTimeout(timer);
+      resolve();
+    }
+  });
+}
+
+after(async () => {
+  await Promise.all(children.map(stopChild));
+  for (const folder of folders) {
+    try {
+      rmSync(folder, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+    } catch {}
+  }
+});
 
 function launch(entries) {
   const space = workspace({ ...PLUGINS, "plugins.yml": config(entries) });
-  cleanup.push(space.remove);
-  const child = spawn(process.execPath, ["--disallow-code-generation-from-strings", built.main, "--dir", space.dir], { cwd: space.dir, stdio: ["pipe", "pipe", "pipe"] });
-  cleanup.push(() => child.kill());
+  folders.push(space.dir);
+  const child = spawn(process.execPath, ["--disallow-code-generation-from-strings", built.main, "--dir", space.dir], { stdio: ["pipe", "pipe", "pipe"] });
+  children.push(child);
   let stderr = "";
   child.stderr.on("data", (chunk) => (stderr += chunk));
   const messages = [];
@@ -75,9 +97,11 @@ test("the bundled host runs outside the repository without eval, loads plugins t
 });
 
 test("the bundled host reports a broken plugin instead of dying", async () => {
-  const { next } = launch([{ id: "broken", name: "./broken.mjs" }]);
+  const { next, send, exited } = launch([{ id: "broken", name: "./broken.mjs" }]);
   const log = await next((message) => message.method === "log" && message.params.type === "error");
   assert.match(log.params.text, /broken on purpose/);
   const ready = await next((message) => message.method === "ready");
   assert.equal(ready.params.plugins[0].state, "failed");
+  send({ id: 1, method: "stop" });
+  assert.equal(await exited, 0);
 });
