@@ -162,8 +162,8 @@ fn track(event: &Event) {
     }
 }
 
-fn start(home: PathBuf, dir: PathBuf, origins: Vec<String>, development: bool, version: String) -> Result<(), String> {
-    let serve = std::sync::Arc::new(methods::table(version)?);
+fn start(home: PathBuf, dir: PathBuf, origins: Vec<String>, development: bool, serve: plugin_base::Serve) -> Result<(), String> {
+    let serve = std::sync::Arc::new(serve);
     let node = choose_node(&home)?;
     let supervisor = Supervisor::start_serving(spec_for(node.path, dir, origins, development), containment::shared(), Timing::default(), Some(serve), |event| {
         track(&event);
@@ -190,12 +190,12 @@ pub(crate) fn init(app: &AppHandle) -> Result<(), String> {
     let dev_url = app.config().build.dev_url.as_ref().map(ToString::to_string);
     let origins = window_origins(dev_url.as_deref());
     let shift = crate::platform::input::is_shift_key_down();
-    let version = app.package_info().version.to_string();
+    let serve = methods::table(app)?;
     let _ = TRACKER.set(Mutex::new(safe_mode::Tracker::new(Some(&dir), std::env::var(SAFE_SWITCH).ok(), shift)));
     std::thread::Builder::new()
         .name("plugin-host-start".into())
         .spawn(move || {
-            if let Err(error) = start(home, dir, origins, cfg!(debug_assertions), version) {
+            if let Err(error) = start(home, dir, origins, cfg!(debug_assertions), serve) {
                 eprintln!("[plugins-v3] the plugin host did not start: {error}");
             }
         })

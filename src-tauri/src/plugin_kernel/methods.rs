@@ -1,13 +1,38 @@
-use std::time::Duration;
+use plugin_base::{host_service, Serve};
+use serde::Serialize;
+use serde_json::Value;
+use tauri::AppHandle;
 
-use plugin_base::Serve;
-use serde_json::json;
+#[derive(Debug, Clone, PartialEq, Serialize)]
+#[cfg_attr(test, derive(ts_rs::TS))]
+pub(crate) struct AppVersion {
+    version: &'static str,
+    platform: &'static str,
+}
 
-const QUICK: Duration = Duration::from_secs(5);
+#[host_service("app.version")]
+fn app_version() -> AppVersion {
+    AppVersion { version: env!("CARGO_PKG_VERSION"), platform: std::env::consts::OS }
+}
 
-pub(crate) fn table(version: String) -> Result<Serve, String> {
-    let mut serve = Serve::new();
-    serve.add("app.version", QUICK, move |_, _| Ok(json!({ "version": version, "platform": std::env::consts::OS })))?;
-    serve.add("app.echo", QUICK, |params, _| Ok(json!({ "echo": params })))?;
+#[derive(Debug, Clone, PartialEq, Serialize)]
+#[cfg_attr(test, derive(ts_rs::TS))]
+pub(crate) struct AppEcho {
+    echo: Value,
+}
+
+#[host_service("app.echo")]
+fn app_echo(value: Value) -> AppEcho {
+    AppEcho { echo: value }
+}
+
+pub(crate) fn registered() -> Result<Serve, String> {
+    Serve::registered()
+}
+
+pub(crate) fn table(app: &AppHandle) -> Result<Serve, String> {
+    let mut serve = registered()?;
+    serve.manage(app.clone());
+    serve.block_on_with(|future| tauri::async_runtime::block_on(future));
     Ok(serve)
 }
