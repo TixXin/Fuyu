@@ -1,4 +1,4 @@
-import { defineService, timersV1, translatorV1, type ServiceClient, type ServiceImpl, type ServiceProvider, type Timer } from "../src/index.mjs";
+import { defineService, timersV1, translatorV1, type ServiceClient, type ServiceImpl, type ServiceProvider, type Timer } from "@fuyu/plugin-services";
 
 declare const timers: ServiceClient<typeof timersV1>;
 const listed: Promise<{ timers: Timer[]; at: number }> = timers.list();

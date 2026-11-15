@@ -5,7 +5,7 @@ import { createInterface } from "node:readline";
 import { fileURLToPath } from "node:url";
 import { after, test } from "node:test";
 import { startHost } from "@fuyu/plugin-base/host";
-import { defineService } from "../../plugin-services/src/index.mjs";
+import { defineService } from "@fuyu/plugin-services";
 import { config, sleep, until, workspace } from "./workspace.mjs";
 
 const cleanup = [];

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { defineService, isServiceDefinition, timersV1, translatorV1 } from "../src/index.mjs";
+import { defineService, isServiceDefinition, timersV1, translatorV1 } from "@fuyu/plugin-services";
 
 test("a service name carries its version, like a slot name", () => {
   const echo = defineService("demo.echo/v2", { methods: { echo: true } });

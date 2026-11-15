@@ -178,11 +178,13 @@ export async function apply(ctx) {
 
 ## 代码在哪
 
+包已接进 pnpm workspace（`pnpm-workspace.yaml`、根 `package.json` 的 `dependencies`、`packages/tsconfig.json`），测试按包名 `@fuyu/plugin-services` import；`plugin-base` 只有测试 import 它，源码不依赖。
+
 | 东西 | 位置 | 状态 |
 |---|---|---|
 | `defineService`、类型工具、`SERVICE_NAME` | `packages/plugin-services/src/define.mjs` / `.d.mts` | 这一轮 |
 | 内置服务的声明 | `packages/plugin-services/src/services/<名字>.mjs` / `.d.mts` | 这一轮：`timers`、`translator` |
-| 测试 | `packages/plugin-services/test/define.test.mjs`（已在 `pnpm test` 的范围里）、`types.check.mts`（进 `pnpm check:packages-types` 要改 `packages/tsconfig.json`，见下面第 5 条） | 这一轮 |
+| 测试 | `packages/plugin-services/test/define.test.mjs`（已在 `pnpm test` 的范围里）、`types.check.mts`（在 `pnpm check:packages-types` 里） | 这一轮 |
 | 宿主的服务表和窗口分发 | `packages/plugin-base/src/host/services.mjs`；`kernel.mjs` 装上访问器、`main.mjs` 的 `onCall`、快照和增量接上；测试 `packages/plugin-base/test/services.test.mjs` | 第二步，已做（Rust 来的 `service.call` 留给 E36.3.3，窗口来的 `progress` 留给 E36.3.8） |
 | 窗口的代理 | `packages/plugin-base/src/client/services.mjs` | E36.2.3 合入后 |
 | Rust 生成的类型 | `packages/plugin-services/src/generated/` | E36.3.4 |
@@ -197,4 +199,3 @@ export async function apply(ctx) {
 2. `packages/plugin-base/src/index.d.mts`：`Context` 上加 `services: { provide, get }`，类型引 `ServiceDefinition` 等。
 3. `v3-boundary.md`：「宿主和窗口之间」的消息表加上面三个调用、`service` 事件、快照的 `services` 和 `progress` 消息（`progress` 随 E36.3.8）；规则表不变。`contracts.md` 第 3 版那一条加一句：服务名带版本、只加不改，名单在 `@fuyu/plugin-services`。
 4. **`defineService` 放哪**（要主 agent 定）：现在在 `@fuyu/plugin-services`。它本身不含浮屿的业务，按「基座做成开源项目」应该属于 `@fuyu/plugin-base`（新的子路径 `./services`），`plugin-services` 只放浮屿的服务名单并转出它。挪过去要改 `plugin-base/package.json` 的 `exports`（公共文件），文件可以原样搬（`define.mjs` / `.d.mts` 不依赖别的东西）。
-5. **把包接进 workspace**（`pnpm-workspace.yaml`、`packages/tsconfig.json`、`pnpm-lock.yaml`、根 `package.json`，由第 5 阶段地基先做骨架，之后一次一个会话，经主 agent 和经理排时间）：workspace 加 `packages/plugin-services`；根 `package.json` 的 `dependencies` 加 `"@fuyu/plugin-services": "workspace:*"`（和 `@fuyu/plugin-base` 并排）；`packages/tsconfig.json` 的 `include` 加 `plugin-services/src/**/*.d.mts`、`plugin-services/test/types.check.mts`；锁文件 `pnpm install` 后多 8 行。2026-11-15 在本机这样接过一次，`pnpm check` 和 `pnpm build` 都通过，之后按主 agent 的要求撤回，没有提交。在那之前包的测试用相对路径 import，不靠 workspace 的链接。

@@ -24,6 +24,9 @@ importers:
       '@fuyu/plugin-base':
         specifier: workspace:*
         version: link:packages/plugin-base
+      '@fuyu/plugin-services':
+        specifier: workspace:*
+        version: link:packages/plugin-services
       '@tauri-apps/api':
         specifier: ^2.12.4
         version: 2.12.4
@@ -116,6 +119,8 @@ importers:
   packages/plugin-market: {}
 
   packages/plugin-review: {}
+
+  packages/plugin-services: {}
 
   vendor/cordis/core:
     dependencies:
