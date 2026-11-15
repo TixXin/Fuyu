@@ -27,7 +27,7 @@
 关于页「版本」组下面有一组「更新日志」，列出不比当前版本新的各个版本，点开一行看那一版的更新说明，跟随界面语言（只显示「更新内容」/ What's New，开头的「关于这个版本」和下载部分不显示）。比当前版本新的由上面的「版本」组检查和显示。
 
 - **说明从哪来**：构建时把仓库里的 `docs/releases/v*.md` 打包进前端（`features/updater/bundledReleases.ts`，`import.meta.glob` 原文导入，每份说明一个小文件，点开时才读），不联网，离线也能看；`docs/releases/README.md` 和草稿不算版本。所以发版时写好的说明随这一版一起装进去，以后改 GitHub Release 的正文不会反映到已安装的版本里。
-- **日期**：构建时由 Vite 插件 `scripts/vite/release-dates.mjs` 写进虚拟模块 `virtual:fuyu-release-dates`：有 `vX.Y.Z` 标签的用标签日期，没有的（比如正在构建、还没打标签的这一版）用说明文件加进仓库的日期；浅克隆或没有 git 时不显示日期。
+- **日期**：构建时由 Vite 插件 `scripts/vite/release-dates.mjs` 写进虚拟模块 `virtual:fuyu-release-dates`：有 `vX.Y.Z` 标签的用标签日期，没有的（比如正在构建、还没打标签的这一版）用说明文件加进仓库的日期；浅克隆或没有 git 时不显示日期，所以发版用的 `release-windows.yml`、`release-macos.yml` 的 checkout 带 `fetch-depth: 0`（拉全部历史和标签）；本机构建在主工作区里编，本来就有完整历史。
 - **测试版**：同一版本号的测试版收在正式版那一行里（「含 N 个测试版」），点开后上面一排按钮切换正式版和各测试版的说明；正式版还没发的测试版单独一行，标「测试版」。当前运行的版本标「当前」。先显示最近 5 个版本，「显示更早的 N 个版本」展开全部。
 - 排序和分组在 `features/updater/releaseHistory.ts`（单测 `tests/unit/release-history.test.mjs`），界面在 `VersionHistory.tsx`，回归页 `tests/regression/version-history.html`。
 - 注意：根目录如果有 `tsc -b` 留下的 `vite.config.js`，Vite 会用它而不是 `vite.config.ts`，插件不生效，打开关于页会报 `virtual:fuyu-release-dates` 找不到；删掉它（已在 `.gitignore` 里）。
