@@ -3,6 +3,13 @@ use std::path::Path;
 
 pub(super) const TITLE_MAX_CHARS: usize = 40;
 
+const INJECTED_TAGS: [&str; 3] = ["system-reminder", "side-sessions-event", "ci-monitor-event"];
+
+const BRIEF_HEADERS: [&str; 2] = [
+    "Background (from the session that started this one):",
+    "Task (from the session that started this one):",
+];
+
 pub(super) fn user_prompt_in_record(line: &str) -> Option<String> {
     if !line.contains("\"user\"") {
         return None;
@@ -11,7 +18,10 @@ pub(super) fn user_prompt_in_record(line: &str) -> Option<String> {
     if record["type"] != "user" || record["isMeta"] == Value::Bool(true) {
         return None;
     }
-    if record["origin"]["kind"] == "task-notification" {
+    if record["origin"]["kind"] == "task-notification"
+        || record["turnOrigin"] == "peer"
+        || record["isCompactSummary"] == Value::Bool(true)
+    {
         return None;
     }
     user_message_text(&record["message"]["content"]).and_then(|text| prompt_title(&text))
@@ -34,6 +44,7 @@ fn user_message_text(content: &Value) -> Option<String> {
         _ => return None,
     };
 
+    let text = without_brief_headers(&without_injected(&text));
     let trimmed = text.trim_start();
     if trimmed.starts_with("<command-name>") {
         return tag_content(trimmed, "command-args")
@@ -44,6 +55,38 @@ fn user_message_text(content: &Value) -> Option<String> {
         .iter()
         .any(|prefix| trimmed.starts_with(prefix));
     (!is_command_output).then_some(text)
+}
+
+fn without_injected(text: &str) -> String {
+    INJECTED_TAGS.iter().fold(text.to_string(), |text, tag| without_tag_spans(&text, tag))
+}
+
+fn without_tag_spans(text: &str, tag: &str) -> String {
+    let open = format!("<{tag}");
+    let close = format!("</{tag}>");
+    let mut result = String::with_capacity(text.len());
+    let mut rest = text;
+    while let Some(start) = rest.find(&open) {
+        let after = &rest[start + open.len()..];
+        if !after.starts_with(['>', ' ', '\n']) {
+            result.push_str(&rest[..start + open.len()]);
+            rest = after;
+            continue;
+        }
+        result.push_str(&rest[..start]);
+        result.push(' ');
+        rest = after.find(&close).map_or("", |end| &after[end + close.len()..]);
+    }
+    result.push_str(rest);
+    result
+}
+
+fn without_brief_headers(text: &str) -> String {
+    let mut rest = text.trim_start();
+    while let Some(header) = BRIEF_HEADERS.iter().find(|header| rest.starts_with(*header)) {
+        rest = rest[header.len()..].trim_start();
+    }
+    rest.to_string()
 }
 
 pub(super) fn tag_content<'a>(text: &'a str, tag: &str) -> Option<&'a str> {
@@ -168,3 +211,7 @@ pub(super) fn only_tab_titled(tabs: &[String], title: &str) -> Option<usize> {
     let (index, _) = matches.next()?;
     matches.next().is_none().then_some(index)
 }
+
+#[cfg(test)]
+#[path = "title_tests.rs"]
+mod tests;
