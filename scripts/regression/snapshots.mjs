@@ -21,8 +21,12 @@ export const FREEZE_CLOCK = `(() => {
   globalThis.Date = FrozenDate;
 })();`;
 
+export const SNAPSHOT_VIEWPORT = { width: 1280, height: 813 };
+
 export async function prepareSnapshotBrowser(session) {
   await session.send("Emulation.setTimezoneOverride", { timezoneId: SNAPSHOT_TIMEZONE });
+  await session.send("Emulation.setDeviceMetricsOverride", { ...SNAPSHOT_VIEWPORT, deviceScaleFactor: 1, mobile: false });
+  await session.send("Emulation.setScrollbarsHidden", { hidden: true });
   await session.send("Page.addScriptToEvaluateOnNewDocument", { source: FREEZE_CLOCK });
 }
 
@@ -47,6 +51,8 @@ export const CAPTURE = `(async () => {
     .replace(/blob:[^\\s"')]+/g, "blob:<url>");
   const unstableStyle = /^(transition|animation|will-change)(-|$)|^--wave-/;
   const LIVE_TEXT = [".timer-panel__time"];
+  const anchored = (el) => ["dialog", "menu", "tooltip", "listbox"].includes(el.getAttribute("role"));
+  const anchoredStyle = (value) => value.split("; ").map((d) => /^(left|top|right|bottom):\\s*-?[\\d.]+px$/.test(d) ? d.replace(/-?[\\d.]+px$/, "#px") : d).join("; ");
   const cleanStyle = (value) => value.split(";").map((d) => d.trim()).filter((d) => d && !unstableStyle.test(d.split(":")[0].trim())).join("; ");
   const escapeText = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   const escapeAttr = (s) => escapeText(s).replace(/"/g, "&quot;");
@@ -68,6 +74,7 @@ export const CAPTURE = `(async () => {
     const attrs = [...node.attributes].map((a) => {
       let value = volatile(stableId(a.value));
       if (a.name === "style") value = cleanStyle(value);
+      if (a.name === "style" && anchored(node)) value = anchoredStyle(value);
       if (a.name === "class") value = value.split(/\\s+/).filter(Boolean).join(" ");
       return [a.name, value];
     }).filter(([name, value]) => !(name === "style" && value === "")).sort((a, b) => a[0] < b[0] ? -1 : 1);
