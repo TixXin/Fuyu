@@ -1,3 +1,4 @@
+import { realpathSync } from "node:fs";
 import { sep } from "node:path";
 import { pathToFileURL } from "node:url";
 import Fs from "@cordisjs/fs";
@@ -7,8 +8,10 @@ import { Context } from "cordis";
 import { Clients } from "./clients.mjs";
 import { recordLogs } from "./logs.mjs";
 import { shareModules } from "./share.mjs";
+import { Gate } from "./gate.mjs";
 import { Timers } from "./timer.mjs";
-import { pluginStatus, watchStatus } from "./status.mjs";
+import { INTERNAL, pluginStatus, watchStatus } from "./status.mjs";
+import { Usage } from "./usage.mjs";
 
 const API = new URL("../index.mjs", import.meta.url).href;
 export const INCLUDE = import.meta.resolve("@cordisjs/include");
@@ -30,25 +33,41 @@ async function watchConfig(ctx, id) {
   await include.refresh();
 }
 
-export async function startHost({ dir, config = "plugins.yml", apiNames = [], watch = false, onLog } = {}) {
+function hostInfo(startedAt, safe, dev) {
+  const memory = process.memoryUsage();
+  const cpu = process.cpuUsage();
+  return { pid: process.pid, node: process.versions.node, startedAt, safe, dev, rssBytes: memory.rss, heapUsedBytes: memory.heapUsed, cpuMs: Math.round((cpu.user + cpu.system) / 1000) };
+}
+
+export async function startHost({ dir, config = "plugins.yml", apiNames = [], watch = false, dev = false, safe = null, faultLimit, onLog } = {}) {
   if (!dir) throw new Error("startHost needs the directory that holds the plugin configuration");
+  const startedAt = Date.now();
+  const gate = new Gate({ safe, limit: faultLimit, internal: INTERNAL });
   shareModules(Object.fromEntries(["@fuyu/plugin-base", ...apiNames].map((name) => [name, API])));
   const ctx = new Context();
   const logs = recordLogs(ctx, onLog);
   ctx.baseUrl = pathToFileURL(dir.endsWith(sep) ? dir : dir + sep).href;
   await ctx.use(Fs);
   await ctx.use(NodeFs);
-  const timers = new Timers();
+  const usage = new Usage((plugin, error) => gate.fault(plugin, error));
+  usage.install(ctx);
+  const timers = new Timers(usage);
   timers.install(ctx);
   await ctx.plugin(Clients, dir);
   await ctx.use(Loader);
+  gate.install(ctx);
+  if (dev) await ctx.loader.create({ name: HMR, config: { base: realpathSync(dir), watch: { enabled: true, debounce: 30 } } });
   const id = await ctx.loader.create({ name: INCLUDE, config: { path: config } });
   if (watch) await watchConfig(ctx, id);
+  const report = () => usage.report(ctx, timers.counts(), (plugin) => gate.report(plugin));
+  const extras = { gate, usage: report };
   return {
     ctx,
     logs,
-    status: () => pluginStatus(ctx, logs),
-    watchStatus: (onChange) => watchStatus(ctx, logs, onChange),
+    status: () => pluginStatus(ctx, logs, extras),
+    watchStatus: (onChange, tickMs = 0) => watchStatus(ctx, logs, onChange, { ...extras, tickMs }),
+    info: () => hostInfo(startedAt, safe, dev),
+    fault: (plugin, error) => gate.fault(plugin, error),
     clients: (window) => ctx.clients.list(window),
     timers: () => timers.counts(),
     watchClients: (onChange) => ctx.clients.watch(onChange),

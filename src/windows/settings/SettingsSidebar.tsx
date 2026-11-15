@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import { Bell, Blocks, Brush, Bot, CalendarDays, ChevronRight, Compass, Plus, ClipboardList, Crop, Inbox, Info, Keyboard, Languages, LayoutGrid, LayoutTemplate, ListTodo, MousePointerClick, MessageCircle, MessagesSquare, Music, Palette, Plug, Puzzle, Search, Server, Settings2, ShieldCheck, Store, SlidersHorizontal, Volume2, X, type LucideIcon } from "lucide-react";
+import { Bell, Blocks, Brush, Bot, CalendarDays, ChevronRight, Compass, FlaskConical, Plus, ClipboardList, Crop, Inbox, Info, Keyboard, Languages, LayoutGrid, LayoutTemplate, ListTodo, MousePointerClick, MessageCircle, MessagesSquare, Music, Palette, Plug, Puzzle, Search, Server, Settings2, ShieldCheck, Store, SlidersHorizontal, Volume2, X, type LucideIcon } from "lucide-react";
 import { LOCALE_CODES, useLocale, useTranslation } from "../../i18n";
 import { isMacOS, useUnsupportedFeatures } from "../../lib/platform";
 import { entryOf, entryPages, isCategoryAvailable, isEntry, SETTINGS_GROUPS, searchCategories, sidebarItemOf, type SettingsCategory, type SettingsGroup, type TabbedCategory } from "./categories";
 import searchIndex from "./searchIndex.json";
 import { isTitleHit, MAX_HITS_PER_PAGE, searchSettingsRows, type SettingsRowHit, type SettingsSearchEntry } from "./settingsSearch";
+import { usePluginsV3Enabled } from "./usePluginHostStatus";
 import "./SettingsSidebar.css";
 
 export const CATEGORY_ICONS: Record<SettingsCategory, LucideIcon> = {
@@ -43,6 +44,7 @@ export const CATEGORY_ICONS: Record<SettingsCategory, LucideIcon> = {
   pluginsPages: Puzzle,
   pluginsUpdates: Puzzle,
   pluginsDev: Puzzle,
+  pluginsV3: FlaskConical,
   market: Store,
   about: Info,
 };
@@ -72,6 +74,7 @@ export function SettingsSidebar({
   const t = useTranslation();
   const { locale } = useLocale();
   const unsupported = useUnsupportedFeatures();
+  const pluginsV3 = usePluginsV3Enabled();
   const text = t.settings.categories;
   const [query, setQuery] = useState("");
   const [folded, setFolded] = useState<ReadonlySet<SettingsGroup>>(() => new Set());
@@ -95,7 +98,7 @@ export function SettingsSidebar({
   const searching = query.trim() !== "";
   const matches = searchCategories(query, describe);
   const hits = onRowOpen && searching ? searchSettingsRows(query, SEARCH_ENTRIES, locale, LOCALE_CODES, describe) : [];
-  const available = (page: SettingsCategory) => isCategoryAvailable(page, unsupported, isMacOS);
+  const available = (page: SettingsCategory) => isCategoryAvailable(page, unsupported, isMacOS, pluginsV3);
   const pagesOf = (item: SettingsCategory) => entryPages(item).filter(available);
   const found = (page: SettingsCategory) => matches.includes(page) || hits.some((hit) => hit.page === page);
   const shown = (item: SettingsCategory) =>

@@ -24,7 +24,7 @@
 
 | 方法 | 参数 | 什么时候 |
 |---|---|---|
-| `ready` | `{ protocol, pid, node, plugins, windows: { port, token } }`，`plugins` 是每个插件的状态，`windows` 是给窗口连的本机 WebSocket（见下一节） | 内核和配置里的插件都加载完（成功或失败都算） |
+| `ready` | `{ protocol, pid, node, plugins, safe, windows: { port, token } }`，`plugins` 是每个插件的状态，`safe` 是安全模式（`null`、`third-party` 或 `minimal`），`windows` 是给窗口连的本机 WebSocket（见下一节） | 内核和配置里的插件都加载完（成功或失败都算） |
 | `log` | `{ at, type, name, text }`，只有 `error` 和 `warn` | 内核记了错误或警告，例如插件启动失败 |
 | `fatal` | `{ message }` | 内核本身起不来；发完宿主以退出码 1 退出 |
 
@@ -33,8 +33,58 @@
 | 方法 | 参数 | 回答 |
 |---|---|---|
 | `ping` | 任意 | `{ at, echo }`。Rust 每秒发一次，2 秒没回答就当宿主卡死 |
-| `status` | 无 | 每个插件的状态：`{ id, name, state, waitingFor?, error? }`，`state` 是 `running`、`waiting`、`failed`、`disabled`、`loading`、`stopped`、`unloading` 之一 |
+| `status` | 无 | 每个插件的状态，格式见下面「插件状态」 |
 | `stop` | 无 | `true`，然后停掉所有插件（每个清理都执行）再退出 |
+
+### 插件状态
+
+`status` 的回答、`ready` 的 `plugins`、给窗口的快照和 `plugins` 事件里，每个插件都是同一个格式（协议 1 里加的字段都是可选的，旧的读法不受影响）：
+
+```
+{ id, name, state, kind, waitingFor?, error?, reason?, lastError?, usage }
+```
+
+| 字段 | 意思 |
+|---|---|
+| `state` | `running`、`waiting`（`waitingFor` 列出在等的服务）、`failed`（`error` 是原因）、`disabled`（`plugins.yml` 里关了）、`auto-disabled`（反复出错被宿主停了，`reason` 写明）、`safe-mode`（被安全模式拦下，`reason` 写明）、`loading`、`stopped`、`unloading` 之一 |
+| `kind` | `essential`、`builtin`、`third-party`，来自 `plugins.yml` 条目的 `kind` 字段，没写或写错都算 `third-party` |
+| `lastError` | `{ at, text }`，这个插件最近一次出错（只在出过错时有） |
+| `usage` | `{ cpuMs, calls, applyMs, timers, listeners, services, clients, errors }`，见下 |
+
+`usage` 的每一项：
+
+| 项 | 怎么来的 | 准不准 |
+|---|---|---|
+| `cpuMs`、`calls` | 经内核登记的回调（`ctx.on` 的监听器、`ctx.setTimeout` / `ctx.setInterval` 的回调、`apply`）每次执行的同步部分计时，累加；嵌套时（一个插件的监听器里发事件、触发另一个插件的监听器）只算各自的那段 | **近似**：用的是墙上时间，不是线程 CPU 时间；`await` 之后的部分、插件自己建的定时器（`setTimeout` 而不是 `ctx.setTimeout`）、`ctx.effect` 里的代码都不算；死循环量不出来（宿主会被 Rust 的心跳判定卡死重启） |
+| `applyMs` | 最近一次 `apply` 的耗时；异步的 `apply` 算到它返回的 Promise 落定。还没跑过是 `null` | 准 |
+| `timers` | 还活着的受管定时器数 | 准 |
+| `listeners` | 它登记的事件监听器数（不含内核的 `internal/` 事件） | 准 |
+| `services` | 它提供的服务数 | 准，只数条目本身的 fiber，插件里再用 `ctx.plugin` 建的子插件提供的服务不算 |
+| `clients` | 它登记的界面文件数 | 准 |
+| `errors` | 这次宿主运行以来记到它名下的错误数：监听器、受管定时器、`apply` 里抛出的，以及按调用栈归到它的未捕获异常和没人接的 Promise 拒绝 | 归不到插件的不算 |
+
+### 反复出错自动停用
+
+同一个插件 **60 秒内出错 5 次**（`src/host/gate.mjs` 的 `FAULT_LIMIT`），宿主就停用它：撤掉它的全部副作用，状态变成 `auto-disabled`，`reason` 写明次数和最后一个错误。
+
+- **只在这次运行里有效**：不写回 `plugins.yml`（用的是加载器条目上的内存里的拦截，不是条目的 `disabled`），配置文件被改了重读也不会把它放出来；宿主重启（包括 Rust 因崩溃重启它）后照常加载。
+- 依赖它提供的服务的插件跟着回到 `waiting`。
+- 这是稳定性功能，不是安全措施：恶意插件可以不报错。
+
+### 安全模式
+
+宿主带 `--safe <档>` 启动时，按 `kind` 拦下插件，被拦下的状态是 `safe-mode`、`reason` 写明是哪一档：
+
+| 档 | 留下 |
+|---|---|
+| `third-party` | `essential` 和 `builtin` |
+| `minimal` | 只有 `essential` |
+
+开发版里由 Rust 读环境变量 `FUYU_PLUGINS_V3_SAFE`（值是上面两档之一）转成 `--safe`。值不认识时宿主照常加载全部插件，并在标准错误里说一句，不让宿主起不来。启动时按住 Shift、连续两次启动失败自动进入，留到后面做。
+
+### 开发模式
+
+宿主带 `--dev` 启动时（Node 还要带 `--expose-internals`），在插件目录上挂 Cordis 的热重载：改了插件的源码就换成新代码，同时监听 `plugins.yml`（等于 `--watch`）。正式版两样都不带。
 
 ### 宿主的生命周期
 
@@ -67,7 +117,7 @@
 | 方向 | 消息 | 说明 |
 |---|---|---|
 | 窗口 → 宿主 | `{ type: "hello", token, protocol, window }` | 第一条。`window` 是窗口的 label |
-| 宿主 → 窗口 | `{ type: "welcome", protocol, seq, snapshot }` | 回答 `hello`。`snapshot` 是当前的全部状态（现在是 `{ plugins, clients }`），`seq` 是最后一个事件的序号 |
+| 宿主 → 窗口 | `{ type: "welcome", protocol, seq, snapshot }` | 回答 `hello`。`snapshot` 是当前的全部状态（现在是 `{ plugins, clients, host }`，`host` 是 `{ pid, node, startedAt, safe, dev, rssBytes, heapUsedBytes, cpuMs }`，宿主进程自己的内存和累计 CPU），`seq` 是最后一个事件的序号 |
 | 宿主 → 窗口 | `{ type: "event", seq, name, data }` | 增量。`seq` 每个事件加 1，所有窗口共用一个序列。现在有 `plugins`（插件状态变了，带完整的列表）、`clients`（插件登记的界面文件变了，带完整的列表：`{ id, plugin, window, path, version }`）和 `plugin`（插件的宿主部分推给它窗口部分的消息：`{ plugin, topic, data }`） |
 | 窗口 → 宿主 | `{ type: "snapshot" }` | 窗口发现序号跳了（中间丢了事件），要一份新的快照，不带着缺口往下走 |
 | 宿主 → 窗口 | `{ type: "snapshot", seq, snapshot }` | 回答上一条 |
