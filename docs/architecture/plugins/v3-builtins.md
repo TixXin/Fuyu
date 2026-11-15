@@ -110,8 +110,8 @@ node scripts/plugins-v3/build-builtins.mjs --minify --out <目录> --source <清
 
 | 文件 | 改什么 | 谁 |
 |---|---|---|
-| `v3-boundary.md`「插件状态」 | `kind` 来自内置插件清单，不是 `plugins.yml` | 第 3 阶段主 agent（E36.2.3 合入后） |
-| `contracts.md` 第 3 版那一条 | 内置插件清单的位置和格式、`plugins.yml` 里内置插件只记 `disabled` / `config`、`data/<id>/` | 同上 |
-| `data-storage.md` | `plugins-v3/data/<插件 id>/` | 同上（C80 在改它） |
-| `src/AGENTS.md` | `features/<功能>/host/` 的规则（上面「宿主部分怎么写」）；`src/features/builtins.json` | 同上 |
+| `v3-boundary.md`「插件状态」 | `kind` 来自内置插件清单，不是 `plugins.yml`；E36.3.9 加的 `source`、`blocked`、`undeclared` | 已改（ce3ca4bb） |
+| `contracts.md` 第 3 版那一条 | 内置插件清单的位置和格式、`plugins.yml` 里内置插件只记 `disabled` / `config`、插件来源、`data/<id>/` | 已改（0f3c751c） |
+| `data-storage.md` | `plugins-v3/data/<插件 id>/`、`plugins-v3/packages/` | 已改（9cd2b6f7） |
+| `src/AGENTS.md` | `features/<功能>/host/` 的规则（上面「宿主部分怎么写」）；`src/features/builtins.json` | 已改（2c8d1937） |
 | lint | `host/` 里不能 import 浏览器的东西和 `@tauri-apps/api`（计划第 3 条） | 没做，另开任务 |
