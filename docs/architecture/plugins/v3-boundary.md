@@ -134,6 +134,25 @@
 
 插件的宿主部分用 `ctx.clients.add(<窗口名>, <文件的 URL>)` 登记它在某个窗口里的界面代码（插件停用时自动撤掉）。宿主把文件换成插件目录下的相对路径，路径解析成真实路径后不在插件目录里的拒绝（插件启动失败），版本是文件的大小加修改时间。窗口按 `fuyu-plugin://localhost/<路径>?v=<版本>` 加载：先用 `HEAD` 确认文件在、类型是 JavaScript，再 `import()`；版本变了就换地址重新加载，旧的先撤掉。插件的界面代码默认导出一个插件（函数，或带 `apply` 的对象），用 `ctx.slots.add(<插槽名>, { id, order, component })` 往插槽里放组件，插件停用时这些也自动撤掉。插件的两部分之间：宿主部分用 `ctx.clients.handle(<方法>, fn)` 登记给自己窗口调的方法、`ctx.clients.publish(<主题>, data)` 推消息；窗口部分用 `ctx.host.call(<方法>, params)` 调、`ctx.host.on(<主题>, fn)` 收。窗口部分只能调到、收到它自己那个插件的（按 `plugins.yml` 里的 id 对应），这些登记都跟着插件撤掉。示例在 `packages/plugin-base/examples/hello/`。插件代码里对 `react`、`react/jsx-runtime` 的引用要改写成 `../__shared/react.js` 这样的相对路径（第 0 阶段两个系统都验证过），由程序自带的转接模块提供同一份 React。
 
+### 插槽的主题变量
+
+插件的组件放进插槽后，颜色、字体、圆角用插槽给的 CSS 变量，不写死颜色，也不用岛内部的变量名（`--text-1` 这些以后会改）。每个插槽外面包一层 `<div class="plugin-slot" data-slot="<插槽名>">`（`display: contents`，不占布局），在这一层按当前的岛主题（深色、浅色）给出下面这些变量。名单在 `@fuyu/plugin-base/protocol` 的 `SLOT_THEME`，岛这边的取值在 `src/features/plugin-kernel/PluginSlot.css`，单元测试 `tests/unit/plugin-slot-theme.test.mjs` 核对两边一致、示例插件只用这些。
+
+| 变量 | 用途 | 现在对应岛的 |
+|---|---|---|
+| `--fuyu-plugin-text` | 正文 | `--text-1` |
+| `--fuyu-plugin-text-secondary` | 次要文字 | `--text-2` |
+| `--fuyu-plugin-text-muted` | 更淡的说明、计数 | `--text-3` |
+| `--fuyu-plugin-surface` | 卡片、行的底色 | `--color-white-a06` |
+| `--fuyu-plugin-surface-hover` | 悬停时的底色 | `--color-white-a10` |
+| `--fuyu-plugin-border` | 分隔线、边框 | `--color-white-a12` |
+| `--fuyu-plugin-accent` | 强调色、链接、按钮 | `--color-accent` |
+| `--fuyu-plugin-on-accent` | 强调色上的文字 | `--color-on-accent` |
+| `--fuyu-plugin-font` | 界面字体 | `--font-ui` |
+| `--fuyu-plugin-radius` | 圆角 | `--radius-md` |
+
+这组名字是给第三方的接口：只加不改，去掉或改名要升 `protocol`。岛这边换配色时只改右边的对应。为什么要有：第 1 阶段 Windows 的真岛验收发现示例插件用了岛上没定义的变量，一直落到白色的兜底值，浅色岛上几乎看不见（2026-11-15）。回归页 `tests/regression/plugin-slot.html` 在深色、浅色岛上各量一次示例那一行的对比度。
+
 ## 改这一页
 
 协议的改动和代码在同一个提交里改这一页。不兼容的改动升 `protocol`。

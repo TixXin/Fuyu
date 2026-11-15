@@ -2,10 +2,19 @@ import { useEffect, useState } from "react";
 import type { SlotRegistry } from "@fuyu/plugin-base/client";
 import { SlotItems } from "@fuyu/plugin-base/client/react";
 import { pluginRuntime } from "./runtime";
+import "./PluginSlot.css";
 
 interface PluginSlotProps {
   window: string;
   name: string;
+}
+
+export function PluginSlotItems({ registry, name }: { registry: SlotRegistry; name: string }) {
+  return (
+    <div className="plugin-slot" data-slot={name}>
+      <SlotItems registry={registry} name={name} />
+    </div>
+  );
 }
 
 export function PluginSlot({ window, name }: PluginSlotProps) {
@@ -20,5 +29,5 @@ export function PluginSlot({ window, name }: PluginSlotProps) {
     };
   }, [window]);
   if (!registry) return null;
-  return <SlotItems registry={registry} name={name} />;
+  return <PluginSlotItems registry={registry} name={name} />;
 }
