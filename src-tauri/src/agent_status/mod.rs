@@ -47,6 +47,7 @@ mod window_focus;
 mod workbuddy;
 mod antigravity;
 mod dsh;
+mod opencode;
 
 use serde::Serialize;
 use serde_json::{json, Value};

@@ -2,7 +2,7 @@ use std::path::Path;
 
 use super::hooks_state::HookInstallState;
 use super::sessions::AgentSessionSummary;
-use super::{antigravity, claude_code, codex, dsh, workbuddy};
+use super::{antigravity, claude_code, codex, dsh, opencode, workbuddy};
 
 pub(super) const HARNESSES: &[Harness] = &[
     codex::HARNESS,
@@ -10,6 +10,7 @@ pub(super) const HARNESSES: &[Harness] = &[
     workbuddy::HARNESS,
     antigravity::HARNESS,
     DSH,
+    opencode::HARNESS,
 ];
 
 const DSH: Harness = Harness {
