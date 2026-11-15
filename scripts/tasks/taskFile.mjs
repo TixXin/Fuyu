@@ -110,9 +110,9 @@ export function unclaimed(task, status) {
   return { ...task, fields: { ...fields, status } };
 }
 
-export function claimState({ fields }, { owner = "", host = "" } = {}) {
+export function claimState({ fields }, { owner = "", host = "", aliases = [] } = {}) {
   if (fields.status !== "进行中" || !fields.owner) return "free";
-  if (!fields.host || fields.host !== host) return "theirs";
+  if (!fields.host || ![host, ...aliases].includes(fields.host)) return "theirs";
   return !owner || owner === fields.owner ? "mine" : "theirs";
 }
 
