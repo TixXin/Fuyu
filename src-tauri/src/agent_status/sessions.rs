@@ -41,6 +41,8 @@ pub struct AgentSessionSummary {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(super) remote_host: Option<String>,
     pub(super) context_tokens: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(super) parent_id: Option<String>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]

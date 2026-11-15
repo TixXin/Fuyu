@@ -135,6 +135,7 @@ fn summary(session_id: String, saved: &Saved, now: i64) -> AgentSessionSummary {
         todos: None,
         closed: false,
         remote_host: None,
+        parent_id: None,
         context_tokens: transcript.as_deref().and_then(context_tokens),
     }
 }

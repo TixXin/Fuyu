@@ -264,6 +264,7 @@ fn summary(edition: &Edition, session_id: String, saved: &[Saved], now: i64) -> 
         todos: None,
         closed: false,
         remote_host: None,
+        parent_id: None,
         context_tokens: None,
     }
 }

@@ -71,6 +71,7 @@ export type AgentSessionSummary = {
   contextTokens?: number | null;
   todos?: AgentTodoProgress | null;
   closed?: boolean;
+  parentId?: string;
 };
 
 export type AgentSubagent = {

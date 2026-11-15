@@ -338,6 +338,7 @@ fn read_session(spec: &Compat, path: &Path, modified: i64) -> Option<(AgentSessi
         closed: false,
         context_tokens: parsed.context_tokens,
         remote_host: None,
+        parent_id: None,
     };
     Some((summary, state))
 }

@@ -1,0 +1,30 @@
+.agent-session-children__ask {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 4px;
+  color: var(--text-2);
+}
+
+.agent-session-children__ask-dot {
+  width: 6px;
+  height: 6px;
+  flex: none;
+  border-radius: var(--radius-pill);
+  background: rgba(var(--agent-ink), 0.85);
+}
+
+.agent-session-children__ask--needs .agent-session-children__ask-dot,
+.agent-session-children__ask--failed .agent-session-children__ask-dot {
+  background: var(--color-light-needs);
+}
+
+.agent-session-children__ask--yourTurn .agent-session-children__ask-dot {
+  background: var(--color-light-your-turn);
+}
+
+.agent-sessions__list > li.agent-session-child {
+  margin-left: calc(var(--child-depth, 1) * 14px + 9px);
+  padding-left: 6px;
+  border-left: 1px solid rgba(var(--agent-ink), 0.14);
+}

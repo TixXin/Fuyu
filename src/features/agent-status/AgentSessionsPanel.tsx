@@ -29,9 +29,12 @@ import { AgentSessionRowMenu } from "./AgentSessionRowMenu";
 import { AgentSessionHoverCard } from "./AgentSessionHoverCard";
 import { useSessionKeyboard } from "./useSessionKeyboard";
 import { AgentSubagents, listedSubagents } from "./AgentSubagents";
+import { AgentSessionChildren } from "./AgentSessionChildren";
+import { nestSessions, type NestedSessions } from "./sessionChildren";
 import "./AgentSessionsPanel.css";
 
 const NOT_FOUND_NOTICE_MS = 3000;
+const MAX_CHILD_DEPTH = 3;
 const AGE_REFRESH_MS = 30_000;
 
 export function AgentSessionsPanel({
@@ -78,10 +81,14 @@ export function AgentSessionsPanel({
   const [rowNotice, setRowNotice] = useState<{ key: string; text: string } | null>(null);
   const [menuKey, setMenuKey] = useState<string | null>(null);
   const [openSubagents, setOpenSubagents] = useState<ReadonlySet<string>>(() => new Set());
+  const [openChildren, setOpenChildren] = useState<ReadonlySet<string>>(() => new Set());
   const extensionHint = useEditorExtensionHint();
   const list = useScrollFade<HTMLUListElement>(sessions);
   const motion = useArchiveMotion(list.element, removal, archiveMotion);
-  const arranged = arrangeSessions(sessions, sort, group).map((entry, _, groups) => ({
+  const nested: NestedSessions = view === "list" && !reveal ? nestSessions(sessions) : { roots: sessions, children: new Map() };
+  const childDepth = new Map([...nested.children.values()].flat().map((child) => [sessionKey(child.session), child.depth]));
+  const shownChildren = (key: string) => (openChildren.has(key) ? nested.children.get(key) ?? [] : []);
+  const arranged = arrangeSessions(nested.roots, sort, group).map((entry, _, groups) => ({
     ...entry,
     heading: !reveal && (group === "project" || (group === "computer" && (groups.length > 1 || entry.host !== null))),
   }));
@@ -89,7 +96,7 @@ export function AgentSessionsPanel({
     list.element,
     arranged.flatMap(({ key, heading, sessions: members }) => [
       ...(heading ? [{ key: `group:${key}` }] : []),
-      ...members.map((session) => ({
+      ...members.flatMap((root) => [root, ...shownChildren(sessionKey(root)).map((child) => child.session)]).map((session) => ({
         key: sessionKey(session),
         light: sessionLight(session),
         open: view === "list" && openSubagents.has(sessionKey(session)) ? listedSubagents(session).length : 0,
@@ -138,12 +145,12 @@ export function AgentSessionsPanel({
     return () => window.clearTimeout(timer);
   }, [notFoundId]);
 
-  const toggleSubagents = (key: string) =>
-    setOpenSubagents((current) => {
-      const next = new Set(current);
-      if (!next.delete(key)) next.add(key);
-      return next;
-    });
+  const flip = (key: string) => (current: ReadonlySet<string>) => {
+    const next = new Set(current);
+    if (!next.delete(key)) next.add(key);
+    return next;
+  };
+  const toggleSubagents = (key: string) => setOpenSubagents(flip(key));
 
   const keyboard = useSessionKeyboard(
     removal && !reveal
@@ -221,7 +228,8 @@ export function AgentSessionsPanel({
                 : host ?? t.agent.sessions.thisComputer}
             </li>
           ) : null,
-          ...members.map((session) => {
+          ...members.flatMap((root) => [root, ...shownChildren(sessionKey(root)).map((child) => child.session)]).map((session) => {
+          const depth = Math.min(childDepth.get(sessionKey(session)) ?? 0, MAX_CHILD_DEPTH);
           const project = sessionProject(session.cwd);
           const title = session.title ?? project ?? AGENT_PROVIDER_LABELS[session.provider];
           const model = modelLabel(session.model, shownEffort(session.provider, session.effort, effortLabels));
@@ -294,10 +302,23 @@ export function AgentSessionsPanel({
               showActivity={showActivity}
               unseen={unseen}
               subagents={
-                !reveal && listedSubagents(session).length > 0 ? (
-                  <AgentSubagents session={session} open={openSubagents.has(key)} onToggle={() => toggleSubagents(key)} />
-                ) : undefined
+                reveal || (listedSubagents(session).length === 0 && !nested.children.has(key)) ? undefined : (
+                  <>
+                    {listedSubagents(session).length > 0 && (
+                      <AgentSubagents session={session} open={openSubagents.has(key)} onToggle={() => toggleSubagents(key)} />
+                    )}
+                    {nested.children.has(key) && (
+                      <AgentSessionChildren
+                        sessions={nested.children.get(key) ?? []}
+                        open={openChildren.has(key)}
+                        unseen={unseen?.keys}
+                        onToggle={() => setOpenChildren(flip(key))}
+                      />
+                    )}
+                  </>
+                )
               }
+              depth={depth}
               menu={menu}
               hoverCard={reveal ? undefined : { suppressed: hoverSuppressed }}
               onOpen={() => focus(session)}

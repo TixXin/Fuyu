@@ -98,6 +98,7 @@ fn summary_from(thread: &Thread, tail: SessionTail) -> AgentSessionSummary {
         closed: false,
         context_tokens: None,
         remote_host: None,
+        parent_id: None,
     }
 }
 

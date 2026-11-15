@@ -141,6 +141,7 @@ pub(super) fn summary(session_id: String, state: &Value, mut tail: SessionTail, 
         todos: None,
         closed: false,
         remote_host: None,
+        parent_id: None,
         context_tokens: tail.context_tokens,
     }
 }
