@@ -55,6 +55,10 @@ const PROVIDERS: &[Provider] = &[
 
 pub(super) const DEFAULT_PROVIDER_ID: &str = "deepseek";
 
+pub(super) fn providers() -> &'static [Provider] {
+    PROVIDERS
+}
+
 const MAX_BASE_URL_LENGTH: usize = 500;
 const MAX_MODEL_LENGTH: usize = 200;
 

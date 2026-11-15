@@ -1,6 +1,8 @@
+use plugin_base::{host_service, Call};
+use serde_json::json;
 use tauri::ipc::Channel;
 
-use super::request::{complete, Pieces};
+use super::request::{complete, Pieces, Translated};
 use super::MAX_CHARACTERS;
 use crate::user_error::UserError;
 
@@ -18,7 +20,22 @@ pub async fn rewrite_text(
 ) -> Result<String, UserError> {
     let send = |piece: String| {
         let _ = on_chunk.send(piece);
+        true
     };
+    rewrite(text, task, prompt, provider, base_url, model, &send).await.map(|translated| translated.text)
+}
+
+#[host_service("translator.rewrite", timeout_ms = 120_000)]
+async fn rewrite_for_host(
+    text: String,
+    task: String,
+    prompt: Option<String>,
+    provider: Option<String>,
+    base_url: Option<String>,
+    model: Option<String>,
+    call: &Call,
+) -> Result<Translated, UserError> {
+    let send = |piece: String| call.progress(json!({ "piece": piece }));
     rewrite(text, task, prompt, provider, base_url, model, &send).await
 }
 
@@ -30,7 +47,7 @@ pub(crate) async fn rewrite(
     base_url: Option<String>,
     model: Option<String>,
     on_piece: Pieces<'_>,
-) -> Result<String, UserError> {
+) -> Result<Translated, UserError> {
     let text = text.trim();
     if text.is_empty() {
         return Err(UserError::new("translation.empty", "Enter the text to translate."));

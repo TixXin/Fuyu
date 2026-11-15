@@ -1,6 +1,7 @@
 {
   "format": 1,
   "plugins": [
-    { "id": "timer", "kind": "builtin", "root": "timer", "host": "host/index.mjs" }
+    { "id": "timer", "kind": "builtin", "root": "timer", "host": "host/index.mjs" },
+    { "id": "translation", "kind": "builtin", "root": "translation", "host": "host/index.mjs" }
   ]
 }

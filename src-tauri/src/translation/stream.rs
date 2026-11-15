@@ -38,8 +38,10 @@ pub(super) async fn read(mut response: reqwest::Response, provider: &Provider, o
             let line: Vec<u8> = pending.drain(..=end).collect();
             match parse_line(&String::from_utf8_lossy(&line)) {
                 Event::Text(text) => {
-                    on_chunk(text.clone());
                     output.push_str(&text);
+                    if !on_chunk(text) {
+                        break 'body;
+                    }
                 }
                 Event::Done => break 'body,
                 Event::CutOff => {

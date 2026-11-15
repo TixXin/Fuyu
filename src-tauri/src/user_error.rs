@@ -60,6 +60,24 @@ impl fmt::Display for UserError {
     }
 }
 
+impl plugin_base::ServiceFailure for UserError {
+    fn into_serve_error(self) -> plugin_base::ServeError {
+        let mut data = Map::new();
+        if !self.args.is_empty() {
+            data.insert("args".to_string(), Value::Object(self.args));
+        }
+        if let Some(detail) = self.detail {
+            data.insert("detail".to_string(), Value::String(detail));
+        }
+        let error = plugin_base::ServeError::new(self.code, self.message);
+        if data.is_empty() {
+            error
+        } else {
+            error.with_data(Value::Object(data))
+        }
+    }
+}
+
 impl From<String> for UserError {
     fn from(message: String) -> Self {
         Self::new("plain", message)
