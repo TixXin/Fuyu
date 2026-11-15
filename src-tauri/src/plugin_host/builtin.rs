@@ -199,7 +199,7 @@ const SESSION_RING_MANIFEST: &str = r#"{
         "key": "style",
         "type": "select",
         "title": { "zh-CN": "样式", "en": "Style" },
-        "default": "ring",
+        "default": "grid",
         "options": [
           { "value": "grid", "title": { "zh-CN": "像素格", "en": "Pixel grid" } },
           { "value": "ring", "title": { "zh-CN": "分段环", "en": "Segmented ring" } },
