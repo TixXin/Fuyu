@@ -81,15 +81,17 @@ test("the translation plugin provides translator/v1 and hands the engine choice 
   assert.equal(status.kind, "builtin");
   assert.ok(host.services().some((service) => service.name === "translator/v1"));
   assert.deepEqual(await translator.translate({ text: "你好", direction: "auto" }), { text: "Hello", engine: "deepseek" });
-  const custom = { engine: "custom", baseUrl: "http://127.0.0.1:8080", model: "local" };
-  assert.deepEqual(await translator.translate({ text: "你好", direction: "zh-en", engine: custom }), { text: "Hello", engine: "custom" });
+  assert.deepEqual(await translator.translate({ text: "你好", direction: "zh-en", engine: { engine: "openai", model: "gpt" } }), { text: "Hello", engine: "openai" });
+  for (const engine of [{ engine: "custom", baseUrl: "http://127.0.0.1:8080" }, { engine: "deepseek", baseUrl: "http://127.0.0.1:8080" }, { engine: "openai", baseUrl: null }, { engine: "openai", model: "gpt", secret: "x" }]) {
+    await assert.rejects(translator.translate({ text: "你好", direction: "zh-en", engine }), { code: "bad-params" });
+  }
   assert.deepEqual(await host.serviceHub.windowCall("service.call", { service: "translator/v1", method: "translate", params: { text: "hi", direction: "en-zh" } }, "main"), {
     text: "Hello",
     engine: "deepseek",
   });
   assert.deepEqual(rust.asked("translator.translate"), [
     { text: "你好", direction: "auto" },
-    { text: "你好", direction: "zh-en", provider: "custom", baseUrl: "http://127.0.0.1:8080", model: "local" },
+    { text: "你好", direction: "zh-en", provider: "openai", model: "gpt" },
     { text: "hi", direction: "en-zh" },
   ]);
 });
@@ -107,10 +109,10 @@ test("rewrite passes on the pieces Rust streams and nothing else", async () => {
   const result = await translator.rewrite({ text: "hey all", task: "polish" }, { onProgress: (chunk) => pieces.push(chunk) });
   assert.deepEqual(result, { text: "Dear team", engine: "deepseek" });
   assert.deepEqual(pieces, [{ piece: "Dear " }, { piece: "team" }]);
-  await translator.rewrite({ text: "hey all", task: "custom", prompt: "formal", engine: { engine: "openai", baseUrl: null, model: "gpt" } });
+  await translator.rewrite({ text: "hey all", task: "custom", prompt: "formal", engine: { engine: "openai", model: "gpt" } });
   assert.deepEqual(rust.asked("translator.rewrite"), [
     { text: "hey all", task: "polish", prompt: null },
-    { text: "hey all", task: "custom", prompt: "formal", provider: "openai", baseUrl: null, model: "gpt" },
+    { text: "hey all", task: "custom", prompt: "formal", provider: "openai", model: "gpt" },
   ]);
 });
 
@@ -121,6 +123,7 @@ test("Rust's error codes become translator/v1 codes and keep the original in dat
     refused: ["translation.status", { args: { service: "DeepSeek", status: 401 } }],
     offline: ["net.unreachable", { args: { service: "DeepSeek" }, detail: "connection refused" }],
     long: ["translation.tooLong", { args: { max: 5000 } }],
+    custom: ["translation.customUnavailable"],
     shape: ["bad-params"],
     crash: ["panic"],
   };
@@ -136,11 +139,12 @@ test("Rust's error codes become translator/v1 codes and keep the original in dat
   assert.deepEqual(await failed("refused"), { code: "engine-failed", data: { reason: "translation.status", args: { service: "DeepSeek", status: 401 } } });
   assert.deepEqual(await failed("offline"), { code: "engine-failed", data: { reason: "net.unreachable", args: { service: "DeepSeek" }, detail: "connection refused" } });
   assert.deepEqual(await failed("long"), { code: "bad-params", data: { reason: "translation.tooLong", args: { max: 5000 } } });
+  assert.deepEqual(await failed("custom"), { code: "bad-params", data: { reason: "translation.customUnavailable" } });
   assert.deepEqual(await failed("shape"), { code: "bad-params", data: { reason: "bad-params" } });
   assert.deepEqual(await failed("crash"), { code: "failed", data: { reason: "panic" } });
   await assert.rejects(translator.translate({ text: "x", direction: "auto", engine: "deepseek" }), { code: "bad-params" });
   await assert.rejects(translator.translate(null), { code: "bad-params" });
-  assert.equal(rust.asked("translator.translate").length, 7);
+  assert.equal(rust.asked("translator.translate").length, 8);
 });
 
 test("the error mapping covers each kind of Rust code", () => {
@@ -149,6 +153,7 @@ test("the error mapping covers each kind of Rust code", () => {
   assert.equal(serviceCode("inactive"), "peer-gone");
   assert.equal(serviceCode("translation.provider"), "bad-params");
   assert.equal(serviceCode("translation.urlScheme"), "bad-params");
+  assert.equal(serviceCode("translation.customUnavailable"), "bad-params");
   assert.equal(serviceCode("translation.cutOff"), "engine-failed");
   assert.equal(serviceCode("credential.read"), "engine-failed");
   assert.equal(serviceCode("no-method"), "failed");

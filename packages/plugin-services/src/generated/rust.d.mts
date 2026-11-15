@@ -17,8 +17,8 @@ export type RustMethods = {
   "app.platformSupport": { params: Record<string, never> | null; result: PlatformSupport };
   "app.version": { params: Record<string, never> | null; result: AppVersion };
   "translator.engines": { params: Record<string, never> | null; result: TranslatorEngines };
-  "translator.rewrite": { params: { text: string; task: string; prompt?: string | null; provider?: string | null; baseUrl?: string | null; model?: string | null }; result: Translated };
-  "translator.translate": { params: { text: string; direction: string; provider?: string | null; baseUrl?: string | null; model?: string | null }; result: Translated };
+  "translator.rewrite": { params: { text: string; task: string; prompt?: string | null; provider?: string | null; model?: string | null }; result: Translated };
+  "translator.translate": { params: { text: string; direction: string; provider?: string | null; model?: string | null }; result: Translated };
 };
 
 export declare const RUST_METHODS: readonly ["app.echo", "app.platformSupport", "app.version", "translator.engines", "translator.rewrite", "translator.translate"];

@@ -59,6 +59,12 @@ pub(super) fn providers() -> &'static [Provider] {
     PROVIDERS
 }
 
+impl Provider {
+    pub(super) fn needs_address(&self) -> bool {
+        self.base_url.is_none()
+    }
+}
+
 const MAX_BASE_URL_LENGTH: usize = 500;
 const MAX_MODEL_LENGTH: usize = 200;
 

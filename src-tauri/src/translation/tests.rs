@@ -2,12 +2,14 @@ use super::provider::find_provider;
 use super::request::{request, Translated};
 use super::{engines_with, EngineSecret, TranslatorEngines};
 use crate::user_error::UserError;
-use plugin_base::ServiceFailure;
+use plugin_base::{Rpc, Serve, ServiceFailure};
 use reqwest::Url;
+use serde_json::{json, Value};
 use std::io::{BufRead, BufReader, Read, Write};
 use std::net::TcpListener;
-use std::sync::{mpsc, Mutex};
+use std::sync::{mpsc, Arc, Mutex};
 use std::thread;
+use std::time::Duration;
 
 const SECRET: &str = "sk-fuyu-test-0123456789abcdef";
 
@@ -149,4 +151,58 @@ fn the_translator_methods_are_registered_for_the_host() {
     for name in ["translator.engines", "translator.rewrite", "translator.translate"] {
         assert!(serve.names().contains(&name), "{name} is missing from {:?}", serve.names());
     }
+}
+
+struct Host {
+    to_rust: std::io::PipeWriter,
+    from_rust: mpsc::Receiver<Value>,
+    _rpc: Rpc,
+}
+
+impl Host {
+    fn start() -> Self {
+        let mut serve = Serve::registered().unwrap();
+        serve.block_on_with(|future| tauri::async_runtime::block_on(future));
+        let (host_reads, rust_writes) = std::io::pipe().unwrap();
+        let (rust_reads, to_rust) = std::io::pipe().unwrap();
+        let rpc = Rpc::start_serving(rust_reads, rust_writes, Some(Arc::new(serve)), |_, _| {}, |_| {});
+        let (sender, from_rust) = mpsc::channel();
+        thread::spawn(move || {
+            for line in BufReader::new(host_reads).lines().map_while(Result::ok) {
+                let _ = sender.send(serde_json::from_str(&line).unwrap());
+            }
+        });
+        Self { to_rust, from_rust, _rpc: rpc }
+    }
+
+    fn error(&mut self, method: &str, params: Value) -> Value {
+        writeln!(self.to_rust, "{}", json!({ "jsonrpc": "2.0", "id": 1, "method": method, "params": params })).unwrap();
+        loop {
+            let message = self.from_rust.recv_timeout(Duration::from_secs(10)).unwrap();
+            if message["id"] == 1 {
+                return message["error"].clone();
+            }
+        }
+    }
+}
+
+#[test]
+fn the_host_cannot_choose_where_a_secret_goes() {
+    let (endpoint, seen) = engine("200 OK", "application/json", r#"{"choices":[{"message":{"content":"hi"},"finish_reason":"stop"}]}"#);
+    let mut host = Host::start();
+    let address = endpoint.as_str().trim_end_matches("/chat/completions").to_string();
+    for (method, params) in [
+        ("translator.translate", json!({ "text": "hello", "direction": "auto", "provider": "custom", "baseUrl": address, "model": "m" })),
+        ("translator.rewrite", json!({ "text": "hello", "task": "polish", "provider": "custom", "baseUrl": address, "model": "m" })),
+    ] {
+        let error = host.error(method, params);
+        assert_eq!(error["code"], "translation.customUnavailable", "{method}: {error}");
+        assert_eq!(error["data"], json!({ "args": { "service": "自定义接口" } }));
+        assert!(!error.to_string().contains(&address) && !error.to_string().contains(SECRET), "{error}");
+    }
+    assert!(seen.recv_timeout(Duration::from_millis(300)).is_err(), "the engine at the caller's address was reached");
+    let (declarations, _) = plugin_base::ts::typescript(&plugin_base::ts::described());
+    let entries: Vec<&str> = declarations.lines().filter(|line| line.trim_start().starts_with("\"translator.")).collect();
+    assert_eq!(entries.len(), 3, "{declarations}");
+    assert!(entries.iter().all(|line| !line.contains("baseUrl")), "{entries:?}");
 }

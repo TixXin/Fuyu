@@ -4,7 +4,8 @@ export const name = "translation";
 
 const PASSED = new Set(["bad-params", "timeout", "peer-gone"]);
 const RENAMED = { inactive: "peer-gone", "translation.noKey": "no-secret", "translation.empty": "empty-text" };
-const CALLER_MISTAKES = /^translation\.(tooLong|direction|provider|url[A-Za-z]*|modelLong|noModel)$/;
+const CALLER_MISTAKES = /^translation\.(tooLong|direction|provider|customUnavailable|url[A-Za-z]*|modelLong|noModel)$/;
+const ENGINE_FIELDS = new Set(["engine", "model"]);
 
 const isObject = (value) => typeof value === "object" && value !== null && !Array.isArray(value);
 
@@ -32,8 +33,9 @@ function engineOf(method, params) {
   if (!isObject(params)) throw translatorError("bad-params", `translator/v1 ${method} needs an object with the text`);
   const { engine } = params;
   if (engine === undefined || engine === null) return {};
-  if (!isObject(engine)) throw translatorError("bad-params", `translator/v1 ${method}: engine must be { engine, baseUrl, model }`);
-  return { provider: engine.engine ?? null, baseUrl: engine.baseUrl ?? null, model: engine.model ?? null };
+  const extra = isObject(engine) ? Object.keys(engine).filter((key) => !ENGINE_FIELDS.has(key)) : [];
+  if (!isObject(engine) || extra.length) throw translatorError("bad-params", `translator/v1 ${method}: engine must be { engine, model }${extra.length ? `, not ${extra.join(", ")}` : ""}`);
+  return { provider: engine.engine ?? null, model: engine.model ?? null };
 }
 
 const translated = (result) => ({ text: result?.text, engine: result?.engine });
