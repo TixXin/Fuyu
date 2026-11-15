@@ -1,19 +1,24 @@
-import { DeviceAlertLeading, DeviceAlertTrailing, LevelAlertLeading, LevelAlertTrailing, QuotaAlertLeading, QuotaAlertTrailing, type NotchAlertSources } from "./slots/alerts";
+import { SlotView } from "../../features/plugin-kernel/SlotView";
+import type { IslandAlertMeta, SlotEntry } from "../../features/plugin-kernel/slots";
+import { alertSlot, type NotchAlertSources } from "./slots/alerts";
 
 export type { NotchAlertSources };
 
-export function hasNotchAlert({ deviceAlert, quotaAlert, levelPopup }: NotchAlertSources) {
-  return Boolean(deviceAlert || quotaAlert || levelPopup);
+type AlertEntry = SlotEntry<NotchAlertSources, IslandAlertMeta<NotchAlertSources>>;
+
+function firstActive(items: readonly AlertEntry[], sources: NotchAlertSources): AlertEntry[] {
+  const item = items.find((entry) => entry.active(sources));
+  return item ? [item] : [];
+}
+
+export function hasNotchAlert(sources: NotchAlertSources) {
+  return alertSlot.items().some((item) => item.active(sources));
 }
 
 export function NotchAlertLeading(sources: NotchAlertSources) {
-  if (sources.deviceAlert) return <DeviceAlertLeading {...sources} />;
-  if (sources.quotaAlert) return <QuotaAlertLeading {...sources} />;
-  return <LevelAlertLeading {...sources} />;
+  return <SlotView slot={alertSlot} props={sources} select={(items) => firstActive(items, sources)} />;
 }
 
 export function NotchAlertTrailing(sources: NotchAlertSources) {
-  if (sources.deviceAlert) return <DeviceAlertTrailing {...sources} />;
-  if (sources.quotaAlert) return <QuotaAlertTrailing {...sources} />;
-  return <LevelAlertTrailing {...sources} />;
+  return <SlotView slot={alertSlot} props={sources} select={(items) => firstActive(items, sources).flatMap((item) => (item.trailing ? [{ ...item, component: item.trailing }] : []))} />;
 }
