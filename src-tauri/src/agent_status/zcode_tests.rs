@@ -109,8 +109,9 @@ fn finds_the_database_by_env_or_default() {
     let home = Path::new("/home/dev");
     let none = |_: &str| None;
     assert_eq!(database_path(home, none), home.join(".zcode/cli/db/db.sqlite"));
-    let custom = |_: &str| Some(std::ffi::OsString::from("/data/z.sqlite"));
-    assert_eq!(database_path(home, custom), PathBuf::from("/data/z.sqlite"));
+    let absolute = std::env::temp_dir().join("z.sqlite");
+    let custom = |_: &str| Some(absolute.clone().into_os_string());
+    assert_eq!(database_path(home, custom), absolute);
     let relative = |_: &str| Some(std::ffi::OsString::from("z.sqlite"));
     assert_eq!(database_path(home, relative), home.join(".zcode/cli/db/db.sqlite"));
 }
