@@ -12,7 +12,7 @@ export const MAX_UNPACKED_BYTES = 100 * 1024 * 1024;
 export const MAX_FILES = 5000;
 export const MANIFEST_FILE = "package.json";
 export const TEXT_EXTENSIONS = [".js", ".mjs", ".cjs", ".json", ".css", ".html", ".htm", ".md", ".txt", ".svg", ".map", ".yml", ".yaml", ".xml", ".csv"];
-export const BLOCKED_EXTENSIONS = [".node", ".exe", ".dll", ".sys", ".scr", ".com", ".msi", ".so", ".dylib", ".bin", ".elf", ".app", ".appimage", ".deb", ".rpm", ".pkg", ".dmg"];
+export const BLOCKED_EXTENSIONS = [".node", ".exe", ".dll", ".sys", ".scr", ".com", ".msi", ".so", ".dylib", ".bin", ".elf", ".app", ".appimage", ".deb", ".rpm", ".pkg", ".dmg", ".wasm", ".jar"];
 
 const extensionOf = (path) => {
   const base = path.slice(path.lastIndexOf("/") + 1).toLowerCase();
@@ -54,6 +54,8 @@ export function executableKind(data) {
   if (data.length >= 4 && data.readUInt32BE(0) === 0x7f454c46) return "ELF";
   if (data.length >= 4 && MACHO.has(data.readUInt32BE(0))) return "Mach-O";
   if (isPortableExecutable(data)) return "PE";
+  if (data.length >= 4 && data.readUInt32BE(0) === 0x0061736d) return "WebAssembly";
+  if (data.length >= 4 && data.readUInt32BE(0) === 0x504b0304 && data.includes("META-INF/MANIFEST.MF")) return "Java archive";
   return null;
 }
 

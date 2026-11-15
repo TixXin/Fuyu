@@ -85,7 +85,7 @@ const { ok, errors, warnings, manifest, app } = validateManifest(pkg, options);
 | 绝对路径、盘符、`\`、空段、`.`、`..`、控制字符 | `path` |
 | 任何一级目录叫 `node_modules`（大小写不敏感） | `node-modules` |
 | `.node` 原生扩展 | `native` |
-| 可执行程序：按文件头认 PE（`MZ` 加 `PE\0\0`）、ELF、Mach-O（含 fat）；按扩展名认 `.exe .dll .sys .scr .com .msi .so .dylib .bin .elf .app .appimage .deb .rpm .pkg .dmg` | `executable` |
+| 可执行程序和编译过的代码（和 `.node` 一样没法从源码审核，审核分析器 `@fuyu/plugin-review` 也判红）：按文件头认 PE（`MZ` 加 `PE\0\0`）、ELF、Mach-O（含 fat，`CAFEBABE` 也挡住 Java 的 `.class`）、WebAssembly（`\0asm`）、Java 包（zip 头加 `META-INF/MANIFEST.MF`）；按扩展名认 `.exe .dll .sys .scr .com .msi .so .dylib .bin .elf .app .appimage .deb .rpm .pkg .dmg .wasm .jar` | `executable` |
 | 同一路径出现两次（按 NFC 和大小写折叠后比较，防止在不区分大小写的文件系统上互相覆盖） | `duplicate` |
 | 顶层没有 `package.json`，或它不是 JSON | `manifest` |
 | 包超过 20 MB（`maxPackageBytes`） | `too-large` |
