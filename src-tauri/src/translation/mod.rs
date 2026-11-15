@@ -68,13 +68,16 @@ pub fn toggle_translation_window(app: AppHandle) -> Result<(), String> {
         .get_webview_window(WINDOW_LABEL)
         .ok_or_else(|| "Translation window was not found.".to_string())?;
     if window.is_visible().map_err(|error| error.to_string())? {
-        return window.hide().map_err(|error| error.to_string());
+        window.hide().map_err(|error| error.to_string())?;
+        crate::webview_memory::hidden(&window);
+        return Ok(());
     }
 
     if !HAS_POSITIONED_WINDOW.load(Ordering::Relaxed) {
         placement::place(&window)?;
         HAS_POSITIONED_WINDOW.store(true, Ordering::Relaxed);
     }
+    crate::webview_memory::showing(&window);
     window.show().map_err(|error| error.to_string())?;
     focus_translation_window(&app, &window)?;
     let _ = app.emit(TRANSLATION_WINDOW_OPENED_EVENT, ());
@@ -114,10 +117,12 @@ pub fn present_translation_window(app: AppHandle) -> Result<(), String> {
 
 #[tauri::command]
 pub fn hide_translation_window(app: AppHandle) -> Result<(), String> {
-    app.get_webview_window(WINDOW_LABEL)
-        .ok_or_else(|| "Translation window was not found.".to_string())?
-        .hide()
-        .map_err(|error| error.to_string())
+    let window = app
+        .get_webview_window(WINDOW_LABEL)
+        .ok_or_else(|| "Translation window was not found.".to_string())?;
+    window.hide().map_err(|error| error.to_string())?;
+    crate::webview_memory::hidden(&window);
+    Ok(())
 }
 
 #[tauri::command]

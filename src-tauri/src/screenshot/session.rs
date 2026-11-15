@@ -109,6 +109,11 @@ fn open(app: &AppHandle, mode: Mode) -> Result<(), String> {
     let frames: Vec<Frame> = monitors.iter().enumerate().map(|(index, monitor)| grabbed(index, super::capture::planned(monitor))).collect();
     place_windows(app, &monitors)?;
     hold_overlays(app, true);
+    for (name, window) in app.webview_windows() {
+        if name.starts_with(WINDOW_PREFIX) {
+            crate::webview_memory::showing(&window);
+        }
+    }
 
     let id = NEXT_ID.fetch_add(1, Ordering::SeqCst);
     *session() = Some(Session { id, mode, frames, pointer_label: label(pointer_index), targets: Vec::new(), captured: false, shown: Vec::new() });
@@ -189,6 +194,7 @@ fn finish_capture(app: &AppHandle, id: u64, grabs: Vec<Option<super::capture::Gr
     for label in &failed {
         if let Some(window) = app.get_webview_window(label) {
             let _ = window.hide();
+            crate::webview_memory::hidden(&window);
         }
     }
     hold_overlays(app, false);
@@ -266,6 +272,7 @@ fn overlay_window(app: &AppHandle, label: &str) -> Result<WebviewWindow, String>
         .build()
         .map_err(|error| error.to_string())?;
     super::capture::prepare_overlay(app, &window);
+    crate::webview_memory::hidden(&window);
     Ok(window)
 }
 
@@ -399,6 +406,7 @@ pub(crate) fn end(app: &AppHandle) {
     for (name, window) in app.webview_windows() {
         if name.starts_with(WINDOW_PREFIX) {
             let _ = window.hide();
+            crate::webview_memory::hidden(&window);
             let _ = app.emit_to(name.as_str(), ENDED_EVENT, ());
         }
     }

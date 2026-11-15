@@ -68,6 +68,7 @@ pub(super) fn toggle(app: &AppHandle, settings: &ClipboardHistorySettings) -> Re
     }
     let _ = window.emit_to(WINDOW_LABEL, OPENED_EVENT, ());
     let _ = window.emit_to(crate::onboarding_window::WINDOW_LABEL, OPENED_EVENT, ());
+    crate::webview_memory::showing(&window);
     window.show().map_err(|error| error.to_string())?;
     let _ = window.set_focus();
     if let Ok(hwnd) = window.hwnd() {
@@ -78,7 +79,10 @@ pub(super) fn toggle(app: &AppHandle, settings: &ClipboardHistorySettings) -> Re
 
 pub(super) fn hide(app: &AppHandle) -> Result<(), String> {
     super::preview_window::hide(app, false);
-    popup_window(app)?.hide().map_err(|error| error.to_string())
+    let window = popup_window(app)?;
+    window.hide().map_err(|error| error.to_string())?;
+    crate::webview_memory::hidden(&window);
+    Ok(())
 }
 
 pub(super) fn refocus(app: &AppHandle) -> Result<(), String> {
