@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value};
 
+use crate::agent_status::{compat_input, compat_reply, Reply};
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub enum Agent {
@@ -109,9 +111,13 @@ pub(super) struct HookInput {
 }
 
 impl HookInput {
+    #[cfg(test)]
     pub(super) fn parse(body: &[u8]) -> Result<Self, &'static str> {
-        let input: Value = serde_json::from_slice(body).map_err(|_| "The body is not JSON.")?;
-        let text = |key: &str| text_field(&input, key);
+        Self::from_value(&serde_json::from_slice(body).map_err(|_| "The body is not JSON.")?)
+    }
+
+    fn from_value(input: &Value) -> Result<Self, &'static str> {
+        let text = |key: &str| text_field(input, key);
         Ok(Self {
             session_id: text("session_id").ok_or("No session_id.")?,
             cwd: text("cwd"),
@@ -127,7 +133,11 @@ impl HookInput {
         match agent {
             Agent::Antigravity => {}
             Agent::Opencode | Agent::Mimo => return super::opencode::plugin_input(body),
-            _ => return Self::parse(body),
+            _ => {
+                let mut input: Value = serde_json::from_slice(body).map_err(|_| "The body is not JSON.")?;
+                compat_input(agent.id(), &mut input);
+                return Self::from_value(&input);
+            }
         }
         let input: Value = serde_json::from_slice(body).map_err(|_| "The body is not JSON.")?;
         let cwd = text_field(&input, "cwd").or_else(|| {
@@ -230,6 +240,14 @@ pub(super) fn permission_response(
     suggestions: Option<&Value>,
 ) -> String {
     let reason = || message.map(str::trim).filter(|text| !text.is_empty()).unwrap_or(DEFAULT_DENY_MESSAGE);
+    if let Some(reply) = compat_reply(agent.id()) {
+        return match reply {
+            Reply::PermissionRequest => hook_response(decision, message, suggestions),
+            Reply::PreToolUse(_) => pre_tool_use_response(decision, reason()),
+            Reply::Behavior => behavior_response(decision, reason()),
+            Reply::None => "{}".to_string(),
+        };
+    }
     match agent {
         Agent::ClaudeCode | Agent::Codex | Agent::Workbuddy | Agent::Qoder | Agent::Codebuddy | Agent::Qwen | Agent::Zcode => {
             hook_response(decision, message, suggestions)
@@ -251,20 +269,30 @@ pub(super) fn permission_response(
             .to_string(),
             _ => "{}".to_string(),
         },
-        Agent::Trae | Agent::TraeCn => {
-            let (decision, reason) = match decision {
-                Some(Decision::Allow | Decision::AllowAlways) => ("allow", None),
-                Some(Decision::Deny) => ("deny", Some(reason())),
-                Some(Decision::Terminal) => ("ask", None),
-                None | Some(Decision::Answer) => return "{}".to_string(),
-            };
-            let mut output = json!({ "hookEventName": "PreToolUse", "permissionDecision": decision });
-            if let Some(reason) = reason {
-                output["permissionDecisionReason"] = json!(reason);
-            }
-            json!({ "hookSpecificOutput": output }).to_string()
-        }
+        Agent::Trae | Agent::TraeCn => pre_tool_use_response(decision, reason()),
         Agent::Opencode | Agent::Mimo => super::opencode::plugin_response(decision, message),
+    }
+}
+
+pub(super) fn pre_tool_use_response(decision: Option<Decision>, reason: &str) -> String {
+    let (decision, reason) = match decision {
+        Some(Decision::Allow | Decision::AllowAlways) => ("allow", None),
+        Some(Decision::Deny) => ("deny", Some(reason)),
+        Some(Decision::Terminal) => ("ask", None),
+        None | Some(Decision::Answer) => return "{}".to_string(),
+    };
+    let mut output = json!({ "hookEventName": "PreToolUse", "permissionDecision": decision });
+    if let Some(reason) = reason {
+        output["permissionDecisionReason"] = json!(reason);
+    }
+    json!({ "hookSpecificOutput": output }).to_string()
+}
+
+pub(super) fn behavior_response(decision: Option<Decision>, reason: &str) -> String {
+    match decision {
+        Some(Decision::Allow | Decision::AllowAlways) => json!({ "behavior": "allow" }).to_string(),
+        Some(Decision::Deny) => json!({ "behavior": "deny", "message": reason, "interrupt": false }).to_string(),
+        None | Some(Decision::Terminal | Decision::Answer) => "{}".to_string(),
     }
 }
 

@@ -60,6 +60,8 @@ mod qwen;
 mod trae;
 mod zcode;
 mod kimi_code;
+mod copilot;
+mod droid;
 mod kimi_hooks;
 mod mimo;
 
@@ -73,6 +75,7 @@ use crate::system::windows_home_dir;
 use harness::HookEnv;
 use hooks_state::{script_outdated, AgentHooksState};
 use markers::{apply_agent_running_markers, remove_agent_marker_files, remove_legacy_hook_inputs};
+pub(crate) use claude_compat::{claimed_elsewhere, compat_input, compat_reply, Reply};
 use snapshot::{
     agent_status_snapshot_from_persisted, current_unix_millis, default_agent_phase,
     default_agent_status_snapshot, default_persisted_agent_status, AgentStatusSnapshot,

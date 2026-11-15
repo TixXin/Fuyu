@@ -156,7 +156,7 @@ fn installs_hooks_into_every_present_home() {
     install_hooks(&qoder::SPEC, &env).unwrap();
     assert_eq!(hooks_state(&qoder::SPEC, &env), HookInstallState::Current);
 
-    let config = read_settings(&home.join(".qoder")).unwrap();
+    let config = read_settings(&home.join(".qoder").join("settings.json")).unwrap();
     assert_eq!(config["model"], "auto");
     assert_eq!(config["hooks"]["Stop"][0]["hooks"][0]["command"], "mine");
     let command = |entry: &Value| entry["hooks"][0]["command"].as_str().unwrap().to_string();
@@ -166,7 +166,7 @@ fn installs_hooks_into_every_present_home() {
     assert!(command(&permission[1]).contains("qoder permission"));
     assert_eq!(permission[1]["hooks"][0]["timeout"], APPROVAL_HOOK_TIMEOUT_SECONDS);
     assert!(command(&config["hooks"]["StopFailure"][0]).contains("qoder failed"));
-    assert!(read_settings(&home.join(".qoder-cn")).unwrap()["hooks"]["UserPromptSubmit"].is_array());
+    assert!(read_settings(&home.join(".qoder-cn").join("settings.json")).unwrap()["hooks"]["UserPromptSubmit"].is_array());
 
     let mut stale = config.clone();
     stale["hooks"]["StopFailure"] = json!([]);
@@ -182,7 +182,7 @@ fn codebuddy_waits_on_the_permission_prompt_notification() {
     let env = HookEnv { home_dir: &home, running_script: &running, status_script: &status };
     fs::create_dir_all(home.join(".codebuddy")).unwrap();
     install_hooks(&codebuddy::SPEC, &env).unwrap();
-    let config = read_settings(&home.join(".codebuddy")).unwrap();
+    let config = read_settings(&home.join(".codebuddy").join("settings.json")).unwrap();
     let notification = &config["hooks"]["Notification"][0];
     assert_eq!(notification["matcher"], "permission_prompt");
     assert!(notification["hooks"][0]["command"].as_str().unwrap().contains("codebuddy notification"));
@@ -201,4 +201,62 @@ fn prompt_files_follow_each_home() {
     );
     assert_eq!(prompt_files(&qwen::SPEC, home), [home.join(".qwen").join("QWEN.md")]);
     assert_eq!(prompt_files(&codebuddy::SPEC, home), [home.join(".codebuddy").join("CODEBUDDY.md")]);
+}
+
+const OTHER: Compat = Compat {
+    provider: "other",
+    label: "Other",
+    homes: &[Home { dir: ".other", env: "FUYU_TEST_OTHER_HOME" }],
+    chats: None,
+    records: Records::Claude,
+    prompt_file: "AGENTS.md",
+    waiting: Waiting::PermissionPrompt,
+    hooks_file: "hooks/fuyu-island.json",
+    reply: Reply::PreToolUse("Bash"),
+    aliases: &[("sessionId", "session_id"), ("conversation_id", "session_id")],
+};
+
+#[test]
+fn renames_declared_stdin_fields_without_overwriting() {
+    let mut camel = json!({ "sessionId": "s1", "toolName": "Bash" });
+    alias_input(&OTHER, &mut camel);
+    assert_eq!(camel["session_id"], "s1");
+    let mut both = json!({ "session_id": "kept", "conversation_id": "c1" });
+    alias_input(&OTHER, &mut both);
+    assert_eq!(both["session_id"], "kept");
+}
+
+#[test]
+fn claims_payloads_by_their_keys_or_transcript() {
+    let home = std::env::temp_dir().join("fuyu-compat-claims");
+    let mine = json!({ "session_id": "s", "transcript_path": home.join(".other/sessions/s/updates.jsonl").to_string_lossy() });
+    let claude = json!({ "session_id": "s", "transcript_path": home.join(".claude/projects/p/s.jsonl").to_string_lossy() });
+    assert!(claims(&OTHER, &mine, Some(&home)));
+    assert!(!claims(&OTHER, &claude, Some(&home)));
+    assert!(claims(&OTHER, &json!({ "sessionId": "s", "session_id": "s" }), None));
+    assert!(!claims(&OTHER, &json!({ "session_id": "s" }), None));
+    let claude_body = claude.to_string();
+    assert_eq!(claimed_elsewhere(claude_body.as_bytes(), Some(&home)), None);
+}
+
+#[test]
+fn hooks_follow_the_declared_file_and_reply() {
+    let home = temp_home("declared");
+    let running = home.join(".fuyu").join(AGENT_RUNNING_SCRIPT_FILE_NAME);
+    let status = home.join(".fuyu").join(AGENT_STATUS_SCRIPT_FILE_NAME);
+    let env = HookEnv { home_dir: &home, running_script: &running, status_script: &status };
+    let entries = hook_entries(&OTHER, &env);
+    assert!(entries.iter().all(|(event, _)| *event != "PermissionRequest"));
+    let approval = entries.iter().find(|(event, entry)| *event == "PreToolUse" && entry["matcher"] == "Bash").unwrap();
+    assert!(approval.1["hooks"][0]["command"].as_str().unwrap().contains("other permission"));
+    let none = Compat { reply: Reply::None, ..OTHER };
+    assert!(hook_entries(&none, &env).iter().all(|(_, entry)| !entry["hooks"][0]["command"].as_str().unwrap_or_default().contains("permission")));
+
+    fs::create_dir_all(home.join(".other")).unwrap();
+    assert_eq!(hooks_state(&OTHER, &env), HookInstallState::NotInstalled);
+    install_hooks(&OTHER, &env).unwrap();
+    assert_eq!(hooks_state(&OTHER, &env), HookInstallState::Current);
+    assert!(home.join(".other/hooks/fuyu-island.json").is_file());
+    assert!(!home.join(".other/settings.json").exists());
+    fs::remove_dir_all(&home).unwrap();
 }

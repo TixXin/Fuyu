@@ -600,3 +600,18 @@ fn agents_without_a_waiting_event_get_a_waiting_note_while_the_island_asks() {
     assert_eq!(std::fs::read_dir(&notes).unwrap().count(), 0);
     std::fs::remove_dir_all(&dir).unwrap();
 }
+
+#[test]
+fn declared_reply_formats() {
+    use super::decision::{behavior_response, pre_tool_use_response};
+    let pre = |decision| serde_json::from_str::<Value>(&pre_tool_use_response(decision, "不行")).unwrap();
+    assert_eq!(pre(Some(Decision::Allow))["hookSpecificOutput"]["permissionDecision"], "allow");
+    assert_eq!(pre(Some(Decision::Deny))["hookSpecificOutput"]["permissionDecisionReason"], "不行");
+    assert_eq!(pre(Some(Decision::Terminal))["hookSpecificOutput"]["permissionDecision"], "ask");
+    assert_eq!(pre_tool_use_response(None, "x"), "{}");
+    let behavior = |decision| serde_json::from_str::<Value>(&behavior_response(decision, "不行")).unwrap();
+    assert_eq!(behavior(Some(Decision::AllowAlways)), json!({ "behavior": "allow" }));
+    assert_eq!(behavior(Some(Decision::Deny)), json!({ "behavior": "deny", "message": "不行", "interrupt": false }));
+    assert_eq!(behavior_response(Some(Decision::Terminal), "x"), "{}");
+}
+
