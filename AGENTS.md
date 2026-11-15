@@ -71,6 +71,7 @@
 | 前端静态检查 | `pnpm lint`（ESLint，配置见 `eslint.config.js`） |
 | 文件行数检查 | `pnpm check:size` |
 | 深色专用颜色检查 | `pnpm check:colors`（CSS 里写死的颜色要写成 `var(--变量, 原值)`；存量记在 `scripts/color-literal-allowlist.json`，只减不增，规则见 `src/AGENTS.md`） |
+| 密钥字段检查 | `pnpm check:secrets`（Rust 里带 `Serialize`、字段名像密钥、类型是字符串的字段要登记在 `scripts/secret-fields-allowlist.json` 并写理由，规则见 `src-tauri/AGENTS.md`） |
 | 回归页类型检查 | `pnpm check:tests-types`（`tests/tsconfig.json`，检查 `tests/regression/*.tsx`） |
 | 浏览器回归页 | `pnpm test:regression [页面名中的词]`（自带 Vite，用无头 Chrome / Edge 跑 `tests/regression/` 下全部回归页并汇总结果，约 20 秒；每页检查通过后再把页面切成浅色岛，文字对比度低于 3:1 就算失败；Mac 上找 /Applications 里的 Chrome、Edge 或 Chromium，都没有时设 `CHROME_PATH`） |
 | 岛屿实验台 | `pnpm lab`（打开 http://127.0.0.1:5199/，点按钮让正在跑的 `pnpm tauri dev` 的岛弹消息、展开收起、模拟刘海、发起 Agent 审批；不用开本地接口，见 `docs/features/island-lab.md`） |
