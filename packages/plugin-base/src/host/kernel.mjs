@@ -1,22 +1,25 @@
 import { realpathSync } from "node:fs";
-import { sep } from "node:path";
+import { join, sep } from "node:path";
 import { pathToFileURL } from "node:url";
 import Fs from "@cordisjs/fs";
 import NodeFs from "@cordisjs/fs-node";
 import Loader from "@cordisjs/loader";
 import { Context } from "cordis";
+import { builtinEntries, builtinMounts, readBuiltins } from "./builtins.mjs";
 import { Clients } from "./clients.mjs";
+import { DATA_DIR, installDataDir } from "./data.mjs";
+import { DEV_WATCHED, watchBuiltins } from "./reload.mjs";
 import { Services } from "./services.mjs";
 import { recordLogs } from "./logs.mjs";
 import { RustBridge } from "./rust.mjs";
 import { shareModules } from "./share.mjs";
 import { Gate } from "./gate.mjs";
 import { Timers } from "./timer.mjs";
-import { INTERNAL, pluginStatus, watchStatus } from "./status.mjs";
+import { INTERNAL, pluginStatus, trackImportErrors, watchStatus } from "./status.mjs";
 import { Usage } from "./usage.mjs";
 
 const API = new URL("../index.mjs", import.meta.url).href;
-export const INCLUDE = import.meta.resolve("@cordisjs/include");
+export const PLUGINS_FILE = new URL("./plugins-file.mjs", import.meta.url).href;
 export const HMR = import.meta.resolve("@cordisjs/hmr");
 const REREAD_AFTER_MS = [50, 400];
 
@@ -41,9 +44,10 @@ function hostInfo(startedAt, safe, dev) {
   return { pid: process.pid, node: process.versions.node, startedAt, safe, dev, rssBytes: memory.rss, heapUsedBytes: memory.heapUsed, cpuMs: Math.round((cpu.user + cpu.system) / 1000) };
 }
 
-export async function startHost({ dir, config = "plugins.yml", apiNames = [], watch = false, dev = false, safe = null, faultLimit, onLog, rpc = null } = {}) {
+export async function startHost({ dir, config = "plugins.yml", builtins = null, dataDir = null, apiNames = [], watch = false, dev = false, safe = null, faultLimit, onLog, rpc = null } = {}) {
   if (!dir) throw new Error("startHost needs the directory that holds the plugin configuration");
   const startedAt = Date.now();
+  const catalog = builtins ? readBuiltins(builtins) : null;
   const gate = new Gate({ safe, limit: faultLimit, internal: INTERNAL });
   shareModules(Object.fromEntries(["@fuyu/plugin-base", ...apiNames].map((name) => [name, API])));
   const ctx = new Context();
@@ -55,16 +59,21 @@ export async function startHost({ dir, config = "plugins.yml", apiNames = [], wa
   usage.install(ctx);
   const timers = new Timers(usage);
   timers.install(ctx);
-  await ctx.plugin(Clients, dir);
+  installDataDir(ctx, dataDir ?? join(dir, DATA_DIR));
+  await ctx.plugin(Clients, { root: dir, mounts: builtinMounts(catalog) });
   const services = new Services();
   services.install(ctx);
   const rust = new RustBridge();
   rust.install(ctx);
   if (rpc) rust.attach(rpc);
   await ctx.use(Loader);
+  trackImportErrors(ctx);
   gate.install(ctx);
-  if (dev) await ctx.loader.create({ name: HMR, config: { base: realpathSync(dir), watch: { enabled: true, debounce: 30 } } });
-  const id = await ctx.loader.create({ name: INCLUDE, config: { path: config } });
+  if (dev) {
+    await ctx.loader.create({ name: HMR, config: { base: realpathSync(dir), watch: { enabled: true, debounce: 30, files: DEV_WATCHED } } });
+    watchBuiltins(ctx, catalog);
+  }
+  const id = await ctx.loader.create({ name: PLUGINS_FILE, config: { path: config, builtins: builtinEntries(catalog) } });
   if (watch) await watchConfig(ctx, id);
   const report = () => usage.report(ctx, timers.counts(), (plugin) => gate.report(plugin));
   const extras = { gate, usage: report };
@@ -74,6 +83,7 @@ export async function startHost({ dir, config = "plugins.yml", apiNames = [], wa
     status: () => pluginStatus(ctx, logs, extras),
     watchStatus: (onChange, tickMs = 0) => watchStatus(ctx, logs, onChange, { ...extras, tickMs }),
     info: () => hostInfo(startedAt, safe, dev),
+    builtins: () => catalog?.plugins.map(({ id, kind }) => ({ id, kind })) ?? [],
     fault: (plugin, error) => gate.fault(plugin, error),
     clients: (window) => ctx.clients.list(window),
     timers: () => timers.counts(),

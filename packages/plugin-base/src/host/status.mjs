@@ -1,6 +1,22 @@
 import { kindOf } from "./gate.mjs";
 
 const STATES = ["pending", "loading", "running", "failed", "stopped", "unloading"];
+const IMPORT_ERROR = Symbol("plugin-base.importError");
+
+export function trackImportErrors(ctx) {
+  return ctx.on("loader/entry-init", (entry) => {
+    const load = entry._import;
+    const report = entry._reportImport;
+    entry._import = function () {
+      this[IMPORT_ERROR] = undefined;
+      return load.call(this);
+    };
+    entry._reportImport = function (error) {
+      this[IMPORT_ERROR] = error ?? new Error("the plugin did not load");
+      return report.call(this, error);
+    };
+  });
+}
 
 function waitingFor(fiber) {
   const missing = [];
@@ -31,9 +47,10 @@ function describe(entry, logs, gate) {
   const verdict = gate?.verdict(entry);
   if (verdict && !fiber?.uid) return { id, name, state: verdict.state, reason: verdict.reason, blocked: verdict.blocked };
   if (!fiber) {
+    if (entry._initTask) return { id, name, state: "loading" };
+    if (entry[IMPORT_ERROR]) return { id, name, state: "failed", error: String(entry[IMPORT_ERROR]?.stack ?? entry[IMPORT_ERROR]) };
     const file = name.replace(/^\.\//, "");
     const failure = [...logs].reverse().find((log) => log.type === "error" && log.text.includes(file));
-    if (entry._initTask) return { id, name, state: "loading" };
     return { id, name, state: "failed", error: failure?.text ?? "the plugin did not load" };
   }
   const state = STATES[fiber.state] ?? "pending";
@@ -42,7 +59,7 @@ function describe(entry, logs, gate) {
   return { id, name, state };
 }
 
-export const INTERNAL = new Set([import.meta.resolve("@cordisjs/include"), import.meta.resolve("@cordisjs/hmr")]);
+export const INTERNAL = new Set([new URL("./plugins-file.mjs", import.meta.url).href, import.meta.resolve("@cordisjs/hmr")]);
 
 export function pluginStatus(ctx, logs = [], { gate, usage } = {}) {
   const report = usage?.();

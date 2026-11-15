@@ -140,6 +140,8 @@ export class RustBridge {
 export interface HostOptions {
   dir: string;
   config?: string;
+  builtins?: string | null;
+  dataDir?: string | null;
   apiNames?: string[];
   watch?: boolean;
   dev?: boolean;
@@ -155,6 +157,7 @@ export interface Host {
   status(): PluginStatus[];
   watchStatus(onChange: (status: PluginStatus[]) => void, tickMs?: number): () => void;
   info(): HostInfo;
+  builtins(): { id: string; kind: Exclude<PluginKind, "third-party"> }[];
   fault(plugin: string, error: unknown): boolean;
   clients(window?: string): ClientEntry[];
   timers(): Record<string, number>;
@@ -192,3 +195,22 @@ export interface WindowSocketOptions {
 
 export function openWindowSocket(options: WindowSocketOptions): Promise<WindowSocket>;
 export function watchStatus(ctx: Context, logs: LogEntry[], onChange: (status: PluginStatus[]) => void, options?: { delayMs?: number; tickMs?: number }): () => void;
+
+export interface BuiltinPlugin {
+  id: string;
+  kind: Exclude<PluginKind, "third-party">;
+  root: string;
+  host: string;
+}
+
+export interface BuiltinCatalog {
+  dir: string;
+  plugins: BuiltinPlugin[];
+}
+
+export const BUILTINS_FILE: "builtins.json";
+export const BUILTINS_FORMAT: 1;
+export const BUILTIN_PREFIX: "builtin";
+export function readBuiltins(dir: string): BuiltinCatalog;
+export const DATA_DIR: "data";
+export function dataDirOf(root: string, id: string): string;

@@ -27,10 +27,17 @@ export function pluginId(ctx) {
   return ctx.fiber.name;
 }
 
+function within(dir, file) {
+  const path = relative(dir, file).split(sep).join("/");
+  return !path || path.startsWith("../") || path === ".." || /^[a-zA-Z]:/.test(path) ? null : path;
+}
+
 export class Clients extends Service {
-  constructor(ctx, root) {
+  constructor(ctx, options) {
     super(ctx, "clients");
+    const { root, mounts = [] } = typeof options === "string" ? { root: options } : options;
     this.root = realpathSync(root);
+    this.mounts = mounts.map(({ prefix, dir }) => ({ prefix, dir: real(dir) }));
     this.entries = new Map();
     this.listeners = new Set();
     this.handlers = new Map();
@@ -67,10 +74,8 @@ export class Clients extends Service {
   add(window, url) {
     if (!WINDOW.test(window)) throw new TypeError(`${window} is not a window name`);
     const file = real(fileURLToPath(url));
-    const path = relative(this.root, file).split(sep).join("/");
-    if (!path || path.startsWith("../") || path === ".." || /^[a-zA-Z]:/.test(path)) {
-      throw new Error(`the window code at ${file} must be inside the plugin folder ${this.root}`);
-    }
+    const path = this.locate(file);
+    if (!path) throw new Error(`the window code at ${file} must be inside the plugin folder ${this.root}`);
     const stat = statSync(file);
     const plugin = pluginId(this.ctx);
     const id = `${plugin}#${++this.next}`;
@@ -82,6 +87,14 @@ export class Clients extends Service {
         this.changed();
       };
     }, "ctx.clients.add()");
+  }
+
+  locate(file) {
+    for (const { prefix, dir } of this.mounts) {
+      const path = within(dir, file);
+      if (path) return `${prefix}/${path}`;
+    }
+    return within(this.root, file);
   }
 
   list(window) {

@@ -18,6 +18,7 @@ const { values } = parseArgs({
   options: {
     dir: { type: "string" },
     config: { type: "string", default: "plugins.yml" },
+    builtins: { type: "string" },
     watch: { type: "boolean", default: false },
     dev: { type: "boolean", default: false },
     safe: { type: "string" },
@@ -69,6 +70,7 @@ try {
   host = await startHost({
     dir: values.dir,
     config: values.config,
+    builtins: values.builtins ?? null,
     watch: values.watch || values.dev,
     dev: values.dev,
     safe,

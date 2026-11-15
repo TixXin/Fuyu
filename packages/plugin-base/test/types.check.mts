@@ -1,5 +1,5 @@
 import { Context, Service } from "@fuyu/plugin-base";
-import { SERVICE_CALLS, serviceError, startHost, type Host, type PluginStatus, type ServiceEntry, type ServicesApi } from "@fuyu/plugin-base/host";
+import { SERVICE_CALLS, dataDirOf, readBuiltins, serviceError, startHost, type BuiltinCatalog, type Host, type PluginStatus, type ServiceEntry, type ServicesApi } from "@fuyu/plugin-base/host";
 
 class Counter extends Service {
   value = 0;
@@ -47,3 +47,10 @@ const code: 4401 = CLOSE.badToken;
 void connection;
 void code;
 void WINDOW_ORIGINS;
+
+const withBuiltins: Host = await startHost({ dir: "/tmp", builtins: "/app/builtins", dataDir: "/tmp/data" });
+const builtinKinds: ("essential" | "builtin")[] = withBuiltins.builtins().map((entry) => entry.kind);
+const catalog: BuiltinCatalog = readBuiltins("/app/builtins");
+const folder: string = dataDirOf("/tmp/data", catalog.plugins[0]?.id ?? "timer");
+void builtinKinds;
+void folder;

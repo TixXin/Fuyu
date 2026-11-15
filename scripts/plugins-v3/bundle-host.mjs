@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { existsSync, readFileSync, readdirSync, rmSync, statSync } from "node:fs";
 import { createRequire } from "node:module";
-import { join, relative, resolve } from "node:path";
+import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 
@@ -13,17 +13,16 @@ export const DEFAULT_OUT = join(ROOT, "src-tauri", "target", "plugins-v3", "host
 const ENTRIES = [
   { out: "main", in: "./src/host/main.mjs" },
   { out: "index", in: "./src/index.mjs" },
-  { out: "include", in: "@cordisjs/include" },
+  { out: "plugins-file", in: "./src/host/plugins-file.mjs" },
   { out: "hmr", in: "@cordisjs/hmr" },
 ];
 
 const REWRITES = [
-  [/import\.meta\.resolve\("@cordisjs\/include"\)/g, 'new URL("./include.mjs", import.meta.url).href'],
   [/import\.meta\.resolve\("@cordisjs\/hmr"\)/g, 'new URL("./hmr.mjs", import.meta.url).href'],
   [/new URL\("\.\.\/index\.mjs", import\.meta\.url\)/g, 'new URL("./index.mjs", import.meta.url)'],
 ];
 
-const BANNER = "import { createRequire as __fuyuCreateRequire } from 'node:module'; const require = __fuyuCreateRequire(import.meta.url);";
+export const BANNER = "import { createRequire as __fuyuCreateRequire } from 'node:module'; const require = __fuyuCreateRequire(import.meta.url);";
 const BARE_RESOLVE = /import\.meta\.resolve\(\s*["'][^."'/][^"']*["']/;
 const RELATIVE_URL = /new URL\(\s*["'](\.{1,2}\/[^"']*)["']\s*,\s*import\.meta\.url/g;
 
@@ -43,6 +42,16 @@ const rewriteHostUrls = {
     });
   },
 };
+
+export function checkRuntimeFiles(outDir, files, hint) {
+  for (const name of files) {
+    const file = join(outDir, name);
+    const text = readFileSync(file, "utf8");
+    const missing = [...text.matchAll(RELATIVE_URL)].map((match) => match[1]).filter((target) => !existsSync(join(dirname(file), target)));
+    const bare = BARE_RESOLVE.exec(text)?.[0];
+    if (bare || missing.length) throw new Error(`${name} looks for ${bare ?? missing.join(", ")} at run time, which is not in the bundle; ${hint}`);
+  }
+}
 
 export async function bundleHost({ outDir = DEFAULT_OUT, minify = false } = {}) {
   const esbuild = loadEsbuild();
@@ -67,14 +76,7 @@ export async function bundleHost({ outDir = DEFAULT_OUT, minify = false } = {}) 
     logLevel: "warning",
   });
   const files = readdirSync(outDir).sort();
-  for (const name of files) {
-    const text = readFileSync(join(outDir, name), "utf8");
-    const missing = [...text.matchAll(RELATIVE_URL)].map((match) => match[1]).filter((target) => !existsSync(join(outDir, target)));
-    const bare = BARE_RESOLVE.exec(text)?.[0];
-    if (bare || missing.length) {
-      throw new Error(`${name} looks for ${bare ?? missing.join(", ")} at run time, which is not in the bundle; add it to ENTRIES and REWRITES in scripts/plugins-v3/bundle-host.mjs`);
-    }
-  }
+  checkRuntimeFiles(outDir, files, "add it to ENTRIES and REWRITES in scripts/plugins-v3/bundle-host.mjs");
   const bytes = files.reduce((sum, name) => sum + statSync(join(outDir, name)).size, 0);
   return { outDir, main: join(outDir, "main.mjs"), files, bytes, inputs: Object.keys(result.metafile.inputs).length };
 }

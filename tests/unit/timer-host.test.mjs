@@ -2,11 +2,12 @@ import assert from "node:assert/strict";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { after, test } from "node:test";
 import { startHost } from "@fuyu/plugin-base/host";
 import { elapsedOf, remainingOf } from "../../src/features/timer/timers.ts";
 
-const PLUGIN = new URL("../../src/features/timer/host/index.mjs", import.meta.url).href;
+const BUILTINS = fileURLToPath(new URL("../../src/features/", import.meta.url));
 const SERVICES = import.meta.resolve("@fuyu/plugin-services");
 const MINUTE = 60_000;
 
@@ -36,10 +37,10 @@ const dataFile = (dir) => join(dir, "data", "timer", "timers.json");
 const readData = (dir) => JSON.parse(readFileSync(dataFile(dir), "utf8"));
 
 async function open(dir, { listener = false, disabled = false } = {}) {
-  const entries = [`- id: timer\n  name: ${JSON.stringify(PLUGIN)}\n  kind: builtin\n${disabled ? "  disabled: true\n" : ""}`];
+  const entries = disabled ? ["- id: timer\n  disabled: true\n"] : [];
   if (listener) entries.push("- id: timer-listener\n  name: ./listener.mjs\n");
-  writeFileSync(join(dir, "plugins.yml"), entries.join(""));
-  const host = await startHost({ dir });
+  writeFileSync(join(dir, "plugins.yml"), entries.length ? entries.join("") : "[]\n");
+  const host = await startHost({ dir, builtins: BUILTINS });
   cleanup.push(() => host.stop());
   await host.settle();
   return host;

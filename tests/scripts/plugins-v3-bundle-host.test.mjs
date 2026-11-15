@@ -71,7 +71,7 @@ function launch(entries) {
 }
 
 test("the host bundles into one folder of ES modules with the createRequire banner", () => {
-  assert.deepEqual(built.files.filter((name) => !name.startsWith("chunk-")), ["hmr.mjs", "include.mjs", "index.mjs", "main.mjs"]);
+  assert.deepEqual(built.files.filter((name) => !name.startsWith("chunk-")), ["hmr.mjs", "index.mjs", "main.mjs", "plugins-file.mjs"]);
   assert.ok(built.files.every((name) => name.endsWith(".mjs")));
   for (const name of built.files) assert.match(readFileSync(join(built.outDir, name), "utf8"), /^import \{ createRequire as __fuyuCreateRequire \}/);
   assert.ok(built.bytes > 100_000 && built.bytes < 3_000_000, `${built.bytes} bytes`);
