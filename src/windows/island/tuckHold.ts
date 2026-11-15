@@ -28,6 +28,10 @@ export function nextMailBaselines(previous: MailBaselines, boxes: readonly MailC
   return next;
 }
 
+export function mailSeen(view: { messagesOpen: boolean; previewSource: string | null }): boolean {
+  return view.messagesOpen;
+}
+
 export function sameBaselines(a: MailBaselines, b: MailBaselines): boolean {
   const keys = Object.keys(a);
   return keys.length === Object.keys(b).length && keys.every((key) => a[key] === b[key]);

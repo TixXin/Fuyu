@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import type { IslandSettings } from "../../features/appearance/types";
 import type { TodoItem } from "../../features/todos/types";
-import { hasNewUnreadMail, hasUnreadMessages, holdsTuck, nextMailBaselines, sameBaselines, type MailBaselines } from "./tuckHold";
+import { hasNewUnreadMail, hasUnreadMessages, holdsTuck, mailSeen, nextMailBaselines, sameBaselines, type MailBaselines } from "./tuckHold";
 import type { useIslandNotices } from "./useIslandNotices";
 
 type Notices = Pick<ReturnType<typeof useIslandNotices>, "qqNotifications" | "wechatReminders" | "qqMail" | "preview">;
@@ -16,7 +16,7 @@ export function useTuckHold(settings: IslandSettings, { todos, activeTodoId, age
 }): boolean {
   const { qqNotifications: qq, wechatReminders: wechat, qqMail: mail, preview } = notices;
   const [mailBaselines, setMailBaselines] = useState<MailBaselines>({});
-  const baselines = nextMailBaselines(mailBaselines, mail.mailboxes, messagesOpen || preview?.source === "qqMail");
+  const baselines = nextMailBaselines(mailBaselines, mail.mailboxes, mailSeen({ messagesOpen, previewSource: preview?.source ?? null }));
   if (!sameBaselines(baselines, mailBaselines)) setMailBaselines(baselines);
   const messagesUnread = hasUnreadMessages({
     qq: { enabled: qq.snapshot.enabled, count: qq.snapshot.items.length },

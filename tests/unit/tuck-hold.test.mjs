@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { hasNewUnreadMail, hasUnreadMessages, holdsTuck, nextMailBaselines } from "../../src/windows/island/tuckHold.ts";
+import { hasNewUnreadMail, hasUnreadMessages, holdsTuck, mailSeen, nextMailBaselines } from "../../src/windows/island/tuckHold.ts";
 import { normalizeSettings } from "../../src/features/appearance/settings.ts";
 
 const idle = { todoInProgress: false, agentWaiting: false, musicPlaying: false, messagesUnread: false };
@@ -50,7 +50,10 @@ test("mail counts only unread that arrived since the messages were last seen", (
   baselines = nextMailBaselines(baselines, box(121), false);
   assert.equal(hasNewUnreadMail(baselines, box(121)), true, "a new mail holds");
   assert.equal(hasNewUnreadMail(baselines, box(121, false)), false, "a turned-off mailbox does not hold");
-  baselines = nextMailBaselines(baselines, box(121), true);
+  assert.equal(mailSeen({ messagesOpen: false, previewSource: "qqMail" }), false, "a mail preview on the island is not seeing it");
+  baselines = nextMailBaselines(baselines, box(121), mailSeen({ messagesOpen: false, previewSource: "qqMail" }));
+  assert.equal(hasNewUnreadMail(baselines, box(121)), true, "so the new mail still holds after its preview");
+  baselines = nextMailBaselines(baselines, box(121), mailSeen({ messagesOpen: true, previewSource: null }));
   assert.equal(hasNewUnreadMail(baselines, box(121)), false, "once seen, it lets go");
   baselines = nextMailBaselines(baselines, box(100), false);
   baselines = nextMailBaselines(baselines, box(101), false);

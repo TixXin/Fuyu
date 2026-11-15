@@ -264,12 +264,12 @@
       "zh-CN": {
         "group": "贴边隐藏",
         "title": "有未读消息时不收起",
-        "description": "微信、QQ 有没看的消息，或来了新邮件、还没在岛上看过时，一直留在屏幕上。没打开的消息来源不算。"
+        "description": "微信、QQ 有没看的消息，或来了新邮件、还没在消息页看过时，一直留在屏幕上。没打开的消息来源不算。"
       },
       "en": {
         "group": "Tuck to edge",
         "title": "Stay out while messages are unread",
-        "description": "While WeChat or QQ has unread messages, or new mail you haven't looked at on the island, it stays on screen. Sources you turned off don't count."
+        "description": "While WeChat or QQ has unread messages, or new mail you haven't looked at on the messages page, it stays on screen. Sources you turned off don't count."
       }
     },
     {
