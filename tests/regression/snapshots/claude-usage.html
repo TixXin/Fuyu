@@ -1,0 +1,321 @@
+<body class="">
+  <div id="fixture">
+    <div class="stage" style="--collapsed-island-width: 310px">
+      <section aria-label="待办：剩余3个待办" class="island island--collapsed island--todo island--appearance-classic island--detached island--title-hidden">
+        <div class="island__surface">
+          <div aria-hidden="false" class="island__collapsed">
+            <span class="island__pulse island__pulse--agent-idle" data-opens-bar=""></span>
+            <button aria-controls="island-panel" aria-expanded="false" aria-label="待办：剩余3个待办，点击展开" class="island__open-button" data-tooltip="" type="button">
+              <span aria-atomic="true" aria-live="polite" class="island__summary" data-direction="restore" role="status">
+                <span class="island__summary-layer">
+                  <span class="island__summary-row">
+                    <span class="island__active-task">
+                      剩余3个待办
+                    </span>
+                  </span>
+                </span>
+              </span>
+            </button>
+            <div class="island__gauge-slot">
+              <span class="island-hover-card__anchor">
+                <button aria-label="用量：Claude Code; 暂无 Claude 用量（需要本机的 magpie 网关、claude-hud 的用量快照，或在插件设置里打开「直接向 Anthropic 查询」）。点击刷新" class="claude-usage-gauge" data-provider="claudeCode" type="button">
+                  <span aria-label="用量：Claude Code; 暂无 Claude 用量（需要本机的 magpie 网关、claude-hud 的用量快照，或在插件设置里打开「直接向 Anthropic 查询」）。点击刷新" class="mini-ring" role="img" style="--mini-ring-size: 24px">
+                    <svg aria-hidden="true" height="24" viewBox="0 0 24 24" width="24">
+                      <g transform="rotate(-90 12 12)">
+                        <circle class="mini-ring__track" cx="12" cy="12" r="10.75" stroke-width="2.5" style="stroke: rgba(var(--island-ink-rgb, 241, 240, 246), 0.12)"></circle>
+                        <circle class="mini-ring__track" cx="12" cy="12" r="6.75" stroke-width="2.5" style="stroke: rgba(var(--island-ink-rgb, 241, 240, 246), 0.12)"></circle>
+                      </g>
+                    </svg>
+                  </span>
+                </button>
+              </span>
+            </div>
+            <button aria-label="收起岛屿" class="island__quiet-button" data-tooltip="" type="button"></button>
+          </div>
+          <div aria-hidden="true" class="island__expanded" id="island-panel" inert="">
+            <header class="island__header">
+              <div class="island__header-start">
+                <div class="island__title">
+                  <svg aria-label="AI Agent 空闲或已完成" class="lucide lucide-bot island__agent-status-icon island__agent-status-icon--idle" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.25" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 8V4H8"></path>
+                    <rect height="12" rx="2" width="16" x="4" y="8"></rect>
+                    <path d="M2 14h2"></path>
+                    <path d="M20 14h2"></path>
+                    <path d="M15 13v2"></path>
+                    <path d="M9 13v2"></path>
+                  </svg>
+                </div>
+                <div aria-label="岛屿编辑" class="editor-dots">
+                  <button aria-label="任务清单 (Alt+1)" aria-pressed="true" class="dot-button dot-button--todo dot-button--active" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-list-todo" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.8800000000000003" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M13 5h8"></path>
+                      <path d="M13 12h8"></path>
+                      <path d="M13 19h8"></path>
+                      <path d="m3 17 2 2 4-4"></path>
+                      <rect height="6" rx="1" width="6" x="3" y="4"></rect>
+                    </svg>
+                  </button>
+                  <button aria-label="剪贴板历史 (Alt+2)" aria-pressed="false" class="dot-button dot-button--clipboard" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-clipboard-list" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.8800000000000003" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg">
+                      <rect height="4" rx="1" ry="1" width="8" x="8" y="2"></rect>
+                      <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                      <path d="M12 11h4"></path>
+                      <path d="M12 16h4"></path>
+                      <path d="M8 11h.01"></path>
+                      <path d="M8 16h.01"></path>
+                    </svg>
+                  </button>
+                  <button aria-label="文件中转 (Alt+3)" aria-pressed="false" class="dot-button dot-button--shelf" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-inbox" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.8800000000000003" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg">
+                      <polyline points="22 12 16 12 14 15 10 15 8 12 2 12"></polyline>
+                      <path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <button aria-label="收起岛屿" class="island__collapse-target" data-tooltip="" data-window-drag="false" type="button"></button>
+              <div class="window-actions">
+                <button aria-label="设置" class="icon-button island-settings-button" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.25" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                </button>
+                <button aria-label="快捷翻译" class="icon-button island-translate-button" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-languages" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.25" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg">
+                    <path d="m5 8 6 6"></path>
+                    <path d="m4 14 6-6 2-3"></path>
+                    <path d="M2 5h12"></path>
+                    <path d="M7 2h1"></path>
+                    <path d="m22 22-5-10-5 10"></path>
+                    <path d="M14 18h6"></path>
+                  </svg>
+                </button>
+                <button aria-label="回到主屏顶部居中" class="icon-button island-reset-button island-reset-button--available" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-rotate-ccw" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.25" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                    <path d="M3 3v5h5"></path>
+                  </svg>
+                </button>
+                <button aria-label="最小化到托盘" class="icon-button" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-minus" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.25" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M5 12h14"></path>
+                  </svg>
+                </button>
+              </div>
+            </header>
+            <div class="island__content">
+              <span>
+                待办清单
+              </span>
+            </div>
+          </div>
+        </div>
+        <div aria-hidden="true" class="island-resize-hints">
+          <div class="island-resize-lines">
+            <span class="island-resize-hint island-resize-hint--left"></span>
+            <span class="island-resize-hint island-resize-hint--right"></span>
+          </div>
+        </div>
+      </section>
+    </div>
+    <div class="stage stage--all" style="--collapsed-island-width: 400px">
+      <section aria-label="待办：剩余3个待办" class="island island--collapsed island--todo island--appearance-classic island--detached island--title-hidden">
+        <div class="island__surface">
+          <div aria-hidden="false" class="island__collapsed">
+            <span class="island__pulse island__pulse--agent-idle" data-opens-bar=""></span>
+            <button aria-controls="island-panel" aria-expanded="false" aria-label="待办：剩余3个待办，点击展开" class="island__open-button" data-tooltip="" type="button">
+              <span aria-atomic="true" aria-live="polite" class="island__summary" data-direction="restore" role="status">
+                <span class="island__summary-layer">
+                  <span class="island__summary-row">
+                    <span class="island__active-task">
+                      剩余3个待办
+                    </span>
+                  </span>
+                </span>
+              </span>
+            </button>
+            <div class="island__gauge-slot">
+              <span class="island-hover-card__anchor">
+                <button aria-label="用量：Claude Code; 5 小时 42% · 2 小时 13 分后重置; 7 天 76% · 3 天 4 小时后重置; 2 分钟前更新 · 来自 claude-hud。点击刷新" class="claude-usage-gauge" data-provider="claudeCode" type="button">
+                  <span aria-label="用量：Claude Code; 5 小时 42% · 2 小时 13 分后重置; 7 天 76% · 3 天 4 小时后重置; 2 分钟前更新 · 来自 claude-hud。点击刷新" class="mini-ring" role="img" style="--mini-ring-size: 24px">
+                    <svg aria-hidden="true" height="24" viewBox="0 0 24 24" width="24">
+                      <g transform="rotate(-90 12 12)">
+                        <circle class="mini-ring__track" cx="12" cy="12" r="10.75" stroke-width="2.5" style="stroke: rgba(var(--island-ink-rgb, 241, 240, 246), 0.12)"></circle>
+                        <circle class="mini-ring__arc" cx="12" cy="12" r="10.75" stroke-dasharray="25.86858166191583 67.54424205218055" stroke-dashoffset="-1.25" stroke-width="2.5" style="stroke: var(--usage-claude)"></circle>
+                        <circle class="mini-ring__track" cx="12" cy="12" r="6.75" stroke-width="2.5" style="stroke: rgba(var(--island-ink-rgb, 241, 240, 246), 0.12)"></circle>
+                        <circle class="mini-ring__arc" cx="12" cy="12" r="6.75" stroke-dasharray="29.732740625831276 42.411500823462205" stroke-dashoffset="-1.25" stroke-width="2.5" style="stroke: var(--usage-warn)"></circle>
+                      </g>
+                    </svg>
+                  </span>
+                </button>
+              </span>
+              <span class="island-hover-card__anchor">
+                <button aria-label="用量：Codex · Plus; 5 小时 18% · 3 小时 20 分后重置; 7 天 40% · 3 天 11 小时后重置; 2 分钟前更新 · 来自 Codex 会话记录。点击刷新" class="claude-usage-gauge" data-provider="codex" type="button">
+                  <span aria-label="用量：Codex · Plus; 5 小时 18% · 3 小时 20 分后重置; 7 天 40% · 3 天 11 小时后重置; 2 分钟前更新 · 来自 Codex 会话记录。点击刷新" class="mini-ring" role="img" style="--mini-ring-size: 24px">
+                    <svg aria-hidden="true" height="24" viewBox="0 0 24 24" width="24">
+                      <g transform="rotate(-90 12 12)">
+                        <circle class="mini-ring__track" cx="12" cy="12" r="10.75" stroke-width="2.5" style="stroke: rgba(var(--island-ink-rgb, 241, 240, 246), 0.12)"></circle>
+                        <circle class="mini-ring__arc" cx="12" cy="12" r="10.75" stroke-dasharray="9.657963569392498 67.54424205218055" stroke-dashoffset="-1.25" stroke-width="2.5" style="stroke: var(--usage-codex)"></circle>
+                        <circle class="mini-ring__track" cx="12" cy="12" r="6.75" stroke-width="2.5" style="stroke: rgba(var(--island-ink-rgb, 241, 240, 246), 0.12)"></circle>
+                        <circle class="mini-ring__arc" cx="12" cy="12" r="6.75" stroke-dasharray="14.464600329384883 42.411500823462205" stroke-dashoffset="-1.25" stroke-width="2.5" style="stroke: var(--usage-codex)"></circle>
+                      </g>
+                    </svg>
+                  </span>
+                </button>
+              </span>
+              <span class="island-hover-card__anchor">
+                <button aria-label="用量：GLM · GLM Coding Pro; 5 小时 35% · 1 小时 31 分后重置; 7 天 52% · 2 天 18 小时后重置; MCP 本月 8%; 2 分钟前更新 · 来自智谱开放平台。点击刷新" class="claude-usage-gauge" data-provider="glm" type="button">
+                  <span aria-label="用量：GLM · GLM Coding Pro; 5 小时 35% · 1 小时 31 分后重置; 7 天 52% · 2 天 18 小时后重置; MCP 本月 8%; 2 分钟前更新 · 来自智谱开放平台。点击刷新" class="mini-ring" role="img" style="--mini-ring-size: 24px">
+                    <svg aria-hidden="true" height="24" viewBox="0 0 24 24" width="24">
+                      <g transform="rotate(-90 12 12)">
+                        <circle class="mini-ring__track" cx="12" cy="12" r="10.75" stroke-width="2.5" style="stroke: rgba(var(--island-ink-rgb, 241, 240, 246), 0.12)"></circle>
+                        <circle class="mini-ring__arc" cx="12" cy="12" r="10.75" stroke-dasharray="21.140484718263192 67.54424205218055" stroke-dashoffset="-1.25" stroke-width="2.5" style="stroke: var(--usage-glm)"></circle>
+                        <circle class="mini-ring__track" cx="12" cy="12" r="6.75" stroke-width="2.5" style="stroke: rgba(var(--island-ink-rgb, 241, 240, 246), 0.12)"></circle>
+                        <circle class="mini-ring__arc" cx="12" cy="12" r="6.75" stroke-dasharray="19.553980428200347 42.411500823462205" stroke-dashoffset="-1.25" stroke-width="2.5" style="stroke: var(--usage-glm)"></circle>
+                      </g>
+                    </svg>
+                  </span>
+                </button>
+              </span>
+              <span class="island-hover-card__anchor">
+                <button aria-label="用量：Kimi; 5 小时 60% · 45 分后重置; 本月 30% · 13 天 21 小时后重置; 2 分钟前更新 · 来自 Kimi。点击刷新" class="claude-usage-gauge" data-provider="kimi" type="button">
+                  <span aria-label="用量：Kimi; 5 小时 60% · 45 分后重置; 本月 30% · 13 天 21 小时后重置; 2 分钟前更新 · 来自 Kimi。点击刷新" class="mini-ring" role="img" style="--mini-ring-size: 24px">
+                    <svg aria-hidden="true" height="24" viewBox="0 0 24 24" width="24">
+                      <g transform="rotate(-90 12 12)">
+                        <circle class="mini-ring__track" cx="12" cy="12" r="10.75" stroke-width="2.5" style="stroke: rgba(var(--island-ink-rgb, 241, 240, 246), 0.12)"></circle>
+                        <circle class="mini-ring__arc" cx="12" cy="12" r="10.75" stroke-dasharray="38.026545231308326 67.54424205218055" stroke-dashoffset="-1.25" stroke-width="2.5" style="stroke: var(--usage-kimi)"></circle>
+                        <circle class="mini-ring__track" cx="12" cy="12" r="6.75" stroke-width="2.5" style="stroke: rgba(var(--island-ink-rgb, 241, 240, 246), 0.12)"></circle>
+                        <circle class="mini-ring__arc" cx="12" cy="12" r="6.75" stroke-dasharray="10.223450247038661 42.411500823462205" stroke-dashoffset="-1.25" stroke-width="2.5" style="stroke: var(--usage-kimi)"></circle>
+                      </g>
+                    </svg>
+                  </span>
+                </button>
+              </span>
+            </div>
+            <button aria-label="收起岛屿" class="island__quiet-button" data-tooltip="" type="button"></button>
+          </div>
+          <div aria-hidden="true" class="island__expanded" id="island-panel" inert="">
+            <header class="island__header">
+              <div class="island__header-start">
+                <div class="island__title">
+                  <svg aria-label="AI Agent 空闲或已完成" class="lucide lucide-bot island__agent-status-icon island__agent-status-icon--idle" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.25" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 8V4H8"></path>
+                    <rect height="12" rx="2" width="16" x="4" y="8"></rect>
+                    <path d="M2 14h2"></path>
+                    <path d="M20 14h2"></path>
+                    <path d="M15 13v2"></path>
+                    <path d="M9 13v2"></path>
+                  </svg>
+                </div>
+                <div aria-label="岛屿编辑" class="editor-dots">
+                  <button aria-label="任务清单 (Alt+1)" aria-pressed="true" class="dot-button dot-button--todo dot-button--active" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-list-todo" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.8800000000000003" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M13 5h8"></path>
+                      <path d="M13 12h8"></path>
+                      <path d="M13 19h8"></path>
+                      <path d="m3 17 2 2 4-4"></path>
+                      <rect height="6" rx="1" width="6" x="3" y="4"></rect>
+                    </svg>
+                  </button>
+                  <button aria-label="剪贴板历史 (Alt+2)" aria-pressed="false" class="dot-button dot-button--clipboard" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-clipboard-list" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.8800000000000003" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg">
+                      <rect height="4" rx="1" ry="1" width="8" x="8" y="2"></rect>
+                      <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                      <path d="M12 11h4"></path>
+                      <path d="M12 16h4"></path>
+                      <path d="M8 11h.01"></path>
+                      <path d="M8 16h.01"></path>
+                    </svg>
+                  </button>
+                  <button aria-label="文件中转 (Alt+3)" aria-pressed="false" class="dot-button dot-button--shelf" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-inbox" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.8800000000000003" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg">
+                      <polyline points="22 12 16 12 14 15 10 15 8 12 2 12"></polyline>
+                      <path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <button aria-label="收起岛屿" class="island__collapse-target" data-tooltip="" data-window-drag="false" type="button"></button>
+              <div class="window-actions">
+                <button aria-label="设置" class="icon-button island-settings-button" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.25" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                </button>
+                <button aria-label="快捷翻译" class="icon-button island-translate-button" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-languages" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.25" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg">
+                    <path d="m5 8 6 6"></path>
+                    <path d="m4 14 6-6 2-3"></path>
+                    <path d="M2 5h12"></path>
+                    <path d="M7 2h1"></path>
+                    <path d="m22 22-5-10-5 10"></path>
+                    <path d="M14 18h6"></path>
+                  </svg>
+                </button>
+                <button aria-label="回到主屏顶部居中" class="icon-button island-reset-button island-reset-button--available" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-rotate-ccw" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.25" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                    <path d="M3 3v5h5"></path>
+                  </svg>
+                </button>
+                <button aria-label="最小化到托盘" class="icon-button" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-minus" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.25" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M5 12h14"></path>
+                  </svg>
+                </button>
+              </div>
+            </header>
+            <div class="island__content">
+              <span>
+                待办清单
+              </span>
+            </div>
+          </div>
+        </div>
+        <div aria-hidden="true" class="island-resize-hints">
+          <div class="island-resize-lines">
+            <span class="island-resize-hint island-resize-hint--left"></span>
+            <span class="island-resize-hint island-resize-hint--right"></span>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+  <div id="plan-keys">
+    <section class="settings-section plugins-panel">
+      <div class="settings-section__header">
+        <span>
+          API Key
+        </span>
+      </div>
+      <p class="settings-section__hint">
+        GLM 填智谱开放平台（open.bigmodel.cn）的 API Key，Kimi 填 Kimi Code 控制台的 API Key。保存在 Windows 凭据管理器里，不写进设置文件，页面也不会再显示它。
+      </p>
+      <div class="plugin-setting" data-plan-key="glm">
+        <label class="plugin-setting__row">
+          <span>
+            GLM API Key
+          </span>
+          <input aria-label="GLM API Key" autocomplete="off" class="plugin-setting__input" placeholder="粘贴 API Key" spellcheck="false" type="password" value="">
+        </label>
+        <div class="plan-key__actions">
+          <p class="plan-key__status settings-section__hint">
+            未保存
+          </p>
+          <div class="plugin-card__actions">
+            <button class="plugin-card__button" disabled="" type="button">
+              <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="12" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" viewBox="0 0 24 24" width="12" xmlns="http://www.w3.org/2000/svg">
+                <path d="M20 6 9 17l-5-5"></path>
+              </svg>
+              <span>
+                保存
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</body>

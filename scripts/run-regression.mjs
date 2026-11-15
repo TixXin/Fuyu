@@ -4,7 +4,8 @@ import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { auditLight, MIN_CONTRAST } from "./regression-contrast.mjs";
+import { auditLight, MIN_CONTRAST, SKIPPED_PAGES, pageName } from "./regression-contrast.mjs";
+import { captureSnapshot, compareSnapshot, prepareSnapshotBrowser } from "./regression/snapshots.mjs";
 
 export const PAGES = [
   "agent-alert-card.html",
@@ -217,21 +218,45 @@ export async function withRegressionBrowser(root, firstPage, use) {
 
 async function main() {
   const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-  const filters = process.argv.slice(2);
+  const args = process.argv.slice(2);
+  const update = args.includes("--update-snapshots");
+  const filters = args.filter((arg) => !arg.startsWith("--"));
   const pages = PAGES.filter((page) => filters.length === 0 || filters.some((word) => page.includes(word)));
   if (pages.length === 0) throw new Error(`No regression page matches ${filters.join(", ")}.`);
   let failed = 0;
   const contrastAllowlist = JSON.parse(readFileSync(path.join(root, "tests/regression/contrast-allowlist.json"), "utf8")).pages;
+  const snapshotTally = { same: 0, created: 0, updated: 0, removed: 0 };
+  let darkActual = null;
+  const snapshot = async (session, page, variant) => {
+    const actual = await captureSnapshot(session);
+    if (variant === "dark") darkActual = actual;
+    const outcome = compareSnapshot(root, page, variant, actual, update, darkActual);
+    if (outcome.status in snapshotTally) {
+      snapshotTally[outcome.status] += 1;
+      if (outcome.status !== "same") console.log(`    snapshot ${outcome.status}: ${outcome.label}`);
+      return true;
+    }
+    if (outcome.status === "missing") console.log(`✗ ${page}  no snapshot ${outcome.label}; run pnpm test:regression --update-snapshots`);
+    else {
+      console.log(`✗ ${page}  ${variant} DOM differs from ${outcome.label} (${outcome.diff.changes} changed lines; pnpm test:regression --update-snapshots if intended)`);
+      for (const line of outcome.diff.text.split("\n")) console.log(`    ${line}`);
+    }
+    return false;
+  };
   await withRegressionBrowser(root, pages[0], async ({ session, base }) => {
+    await prepareSnapshotBrowser(session);
     for (const page of pages) {
       const started = Date.now();
       const { outcome, state, errors } = await runPage(session, base + page);
       const seconds = ((Date.now() - started) / 1000).toFixed(1);
       console.log(`${outcome === "passed" ? "✓" : "✗"} ${page}  ${outcome}, ${passedChecks(state.text ?? "")} checks, ${seconds}s`);
       if (outcome === "passed") {
+        let pagePassed = await snapshot(session, page, "dark");
         const findings = await auditLight(session, page, contrastAllowlist);
+        if (!SKIPPED_PAGES.includes(pageName(page))) pagePassed = await snapshot(session, page, "light") && pagePassed;
+        if (findings.length > 0) pagePassed = false;
+        if (!pagePassed) failed += 1;
         if (findings.length > 0) {
-          failed += 1;
           console.log(`✗ ${page}  light island: ${findings.length} text(s) under ${MIN_CONTRAST}:1`);
           for (const { key, ratio, text, color, background } of findings.slice(0, 8)) console.log(`    ${ratio} ${key} "${text}" ${color} on ${background}`);
         }
@@ -243,6 +268,8 @@ async function main() {
       }
     }
   });
+  const { same, created, updated, removed } = snapshotTally;
+  console.log(`Snapshots: ${same} unchanged${created + updated + removed ? `, ${created} created, ${updated} updated, ${removed} removed` : ""}.`);
   console.log(failed === 0 ? `All ${pages.length} regression pages passed.` : `${failed} of ${pages.length} regression pages did not pass.`);
   return failed === 0 ? 0 : 1;
 }

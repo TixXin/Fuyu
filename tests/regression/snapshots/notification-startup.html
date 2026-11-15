@@ -1,0 +1,42 @@
+<body>
+  <h1>
+    消息接收启动回归检查
+  </h1>
+  <p>
+    使用真实 React Hook 和 Tauri 官方 IPC mock，不读取本机消息或修改 Windows。
+  </p>
+  <div id="fixture">
+    <div class="qq-panel__controls">
+      <div class="qq-panel__control-row">
+        <label class="qq-panel__toggle">
+          <span>
+            QQ 消息
+          </span>
+          <span aria-label="需要通知权限" class="message-status" data-state="permissionRequired" role="status"></span>
+          <input aria-label="接收 QQ 消息" role="switch" type="checkbox">
+        </label>
+        <div class="qq-panel__actions">
+          <button aria-label="允许 QQ 通知访问" class="message-action" type="button">
+            <svg aria-hidden="true" class="lucide lucide-key-round" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg">
+              <path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"></path>
+              <circle cx="16.5" cy="7.5" fill="currentColor" r=".5"></circle>
+            </svg>
+            授权
+          </button>
+        </div>
+      </div>
+      <p class="qq-panel__error" role="alert">
+        需要通知权限
+      </p>
+    </div>
+    <div class="qq-panel__controls">
+      <label class="qq-panel__toggle">
+        <span>
+          微信提醒
+        </span>
+        <span aria-label="已连接" class="message-status" data-state="listening" role="status"></span>
+        <input aria-label="接收微信提醒" role="switch" type="checkbox">
+      </label>
+    </div>
+  </div>
+</body>
