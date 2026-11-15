@@ -7,6 +7,7 @@ const ENTER_MS = 200;
 const LEAVE_MS = 180;
 const PULSE_FALLBACK_MS = 1000;
 const EASING = "cubic-bezier(0.2, 0.7, 0.3, 1)";
+const SHIFT = "translateY(-6px)";
 const CALLING: ReadonlySet<string> = new Set<SessionLight>(["needs", "yourTurn"]);
 
 export const MOTION_ARCHIVING = "archiving";
@@ -64,8 +65,8 @@ function enter(row: HTMLElement) {
     row,
     row.animate(
       [
-        { opacity: 0, clipPath: "inset(0 0 100% 0)" },
-        { opacity: 1, clipPath: "inset(0 0 0 0)" },
+        { opacity: 0, transform: SHIFT },
+        { opacity: 1, transform: "none" },
       ],
       { duration: ENTER_MS, easing: EASING },
     ),
@@ -92,8 +93,8 @@ function leave(list: HTMLElement, node: HTMLElement, box: Box) {
   void node
     .animate(
       [
-        { opacity: 1, clipPath: "inset(0 0 0 0)" },
-        { opacity: 0, clipPath: "inset(0 0 100% 0)" },
+        { opacity: 1, transform: "none" },
+        { opacity: 0, transform: SHIFT },
       ],
       { duration: LEAVE_MS, easing: EASING, fill: "forwards" },
     )
