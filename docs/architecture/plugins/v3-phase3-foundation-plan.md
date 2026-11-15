@@ -44,6 +44,8 @@
 | **E36.3.6** | **内置插件怎么带上、怎么加载、怎么关**（宿主一侧）。应用自带一份内置插件清单（随安装包，不在数据目录），宿主把它和数据目录的 `plugins.yml` 合起来：内置的默认开、`kind` 由清单定（不由用户写的条目定），`plugins.yml` 只记开关和配置；内置插件宿主部分的写法和打包（TS 写在 `src/features/<功能>/host/`，构建时打成宿主能直接加载的 `.mjs`，开发版直接从源码目录加载、能热重载）；Rust 拉宿主时多传内置目录。界面的开关等插槽 | `packages/plugin-base/src/host/kernel.mjs`、`packages/plugin-base/src/host/builtins.mjs`（新）、宿主的测试、`scripts/plugins-v3/build-builtins.mjs`（新）、`src-tauri/src/plugin_kernel/`（只加一个参数，**排在 E36.3.3 之后**） | E36.3.2 | **编译中**：Rust 只改一处参数 | 关掉一个内置插件后它的服务、定时器、监听器、界面文件全撤；用户写的条目不能把第三方插件冒充成 `builtin`；正式构建的产物里有内置插件，`pnpm build` 不变慢太多（记前后时间） | `pnpm check` + `pnpm build` + `pnpm heavy -- cargo test …` + `pnpm build:exe` |
 | **E36.3.7** | **密钥不经 JS：摸底和设计**。列出全部碰密码、令牌、密钥的命令和存储：谁写、谁读、有没有命令把明文交给窗口（以后也就是交给宿主）；按方案「密码、令牌这类数据不回到 JS」出设计：只进不出的写入、只回「有没有」、要给用户看的（例如本机接口令牌、手机推送的配对码）改成 Rust 直接放剪贴板或系统对话框、用的地方都在 Rust；第 2 版插件的密钥存储第 6 阶段随第 2 版删，不改。每个要改的领域列成后续子任务（先不建） | `docs/architecture/plugins/v3-secrets.md`（新） | 无 | 不编译 | 表里每一行写明命令名、文件、现在的去向、要不要改、怎么改；交主 agent 审，后续子任务的拆法写进去 | 仅文档 |
 | **E36.3.8** | **翻译的宿主样板**。内置插件 `translation` 的宿主部分：`translator/v1` 服务（翻译、改写，带流式），经 E36.3.4 的宏把 `translate_text` / `rewrite_text` 的领域函数接到宿主；密钥照旧只在 Rust，服务的接口里没有密钥。窗口一侧不改（照旧 `invoke`），界面接入等插槽 | `src/features/translation/host/`（新）、`src-tauri/src/translation/`（只加标记、把命令函数拆成「命令 + 领域函数」时只做搬迁，搬迁和改写分开提交）、生成的类型、对应测试 | E36.3.4、E36.3.6、E36.3.7 | **编译重**：碰 `src-tauri/src/` 主 crate | 宿主插件调 `translator.translate` 拿到结果和流式片段；关掉翻译插件后没有后台；窗口里现在的翻译照常（回归页 `translation*` 照过）；密钥不出现在任何宿主可见的返回值里（测试断言） | Rust 一套 + `pnpm check` + `pnpm build` + `pnpm test:regression translation` |
+| **E36.3.9** | **第 5 阶段要的宿主一侧（加载来源和清单核对）**，来自第 5 阶段地基的 R1、R2、R4、R6（经理 2026-11-15 转来）。`plugins.yml` 条目分三种来源：内置、已安装的包、开发文件夹；按插件目录的 `package.json` 里 `fuyu.host` / `fuyu.client` 加载，用第 5 阶段的 `@fuyu/plugin-manifest` 校验；来源是市场或手动安装、清单写了 `experimental` 的拒绝加载（开发和内置放行）；加载时核对声明和实际（注册了没声明的插槽、服务），插件状态加一个字段；`protocol` 导出共享模块名单和转接文件的相对路径（`react`、`react/jsx-runtime`）。**E36.5.4 前先交 R2 这一项**（小，单独一个提交） | `packages/plugin-base/src/host/`（`kernel.mjs`、`builtins.mjs`、`gate.mjs`、`status.mjs`）、宿主的测试、`protocol.mjs` / `.d.mts`（排在 E36.2.3 之后；`client/shims` 归第 2 阶段，动之前先跟它说） | E36.3.6；`@fuyu/plugin-manifest`（第 5 阶段）；R2 只等 E36.2.3 | 不编译 | 三种来源各有测试；带 `experimental` 的市场插件状态是 `failed` 并写明原因；声明和实际不符时状态里有标记；`protocol` 的名单和 `client/shims` 一致（测试核对） | `pnpm check` + `pnpm build` |
+| **E36.3.10** | **二分排查和 `fuyu-plugin` 别名**（第 5 阶段地基的 R3、R5）。浮屿拉宿主时传 `--api fuyu-plugin`；宿主加「这次运行停用这几个第三方插件」的入口（和自动停用一样只在内存里，经协议 2 由 Rust 调）；Rust 一侧记二分进度的文件（类似 `safe-mode.json`） | `packages/plugin-base/src/host/gate.mjs`、`main.mjs`、宿主的测试、`src-tauri/src/plugin_kernel/`（排在 E36.3.3、E36.3.6 之后） | E36.3.3 | **编译中** | 停用名单生效、重启宿主后不留；进度文件写读有测试；用 `fuyu-plugin` 包名 import 的插件拿到同一份内核 | Rust 一套 + `pnpm check` |
 
 ### 先后和并行
 
@@ -55,6 +57,7 @@
 第二波：E36.3.3 通道（编译 1）   E36.3.5 计时器样板（不编译）   E36.3.2 收尾（宿主分发）
 第三波：E36.3.4 宏（编译 1，接 E36.3.3 的同一个会话） E36.3.6 内置插件加载（编译 1，Rust 部分排在 E36.3.3 之后）
 第四波：E36.3.8 翻译样板（编译 1）
+之后：E36.3.9（R2 那一项等 E36.2.3 合入就做，其余等第 5 阶段的清单包）、E36.3.10（编译 1）
 ```
 
 - **编译名额**：任何时候这条线最多占 2 个，多数时候 1 个。第一波不占；第二波 1 个；第三波 2 个（E36.3.6 的 Rust 只改一个参数，可以等 E36.3.4 空档时再编）；第四波 1 个。第 2 阶段同时在编时，经理分配，排不上的往后挪，先做 TS 和设计。
@@ -90,6 +93,10 @@
 5. 插槽规则本身（名字、种类、上限）地基**没有要改的**。
 
 **第 2 阶段主 agent 的答复（2026-11-15，经理转达）：全部同意，没有冲突。** ① `client/services.mjs` 由地基写，排在 E36.2.3 合入之后；E36.2.3 会改 `client/index.mjs`、`client/index.d.mts`，地基合入前先 sync，只加自己那一行导出。② E36.2.3 不动窗口协议，`WINDOW_PROTOCOL` 保持 1。③ E36.2.3 的注册接口带 `owner` 参数，默认 `builtin`。
+
+- E36.3.9、E36.3.10 是 2026-11-15 经理转来第 5 阶段地基的要求后加的，issue 和任务到开工时再建。
+- `pnpm-workspace.yaml`、`packages/tsconfig.json`、`pnpm-lock.yaml` 由第 5 阶段地基先做骨架提交；之后地基的会话要动这三个文件，先问经理，和第 5 阶段错开。
+- R7（市场客户端放哪）：同意第 5 阶段的建议，做成宿主里的内置插件（服务 `market/v1`），信任根（公钥）编进 Rust、启动时交给宿主；写进 `v3-services.md` 的服务清单，最终由用户和第 5 阶段的问题一起定。
 
 ## 要开的 issue
 
