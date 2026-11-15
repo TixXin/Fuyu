@@ -25,7 +25,7 @@ export function parseLinuxStatus(text) {
 
 export const MEMORY_KIND = {
   darwin: "phys_footprint",
-  win32: "private",
+  win32: "private-working-set",
   linux: "rss",
 };
 
@@ -35,7 +35,7 @@ export async function readMemory(pid, platform = process.platform) {
     return parseFootprint(stdout);
   }
   if (platform === "win32") {
-    const { stdout } = await run("powershell.exe", ["-NoProfile", "-NonInteractive", "-Command", `(Get-Process -Id ${pid}).PrivateMemorySize64`], { windowsHide: true });
+    const { stdout } = await run("powershell.exe", ["-NoProfile", "-NonInteractive", "-Command", `(Get-CimInstance Win32_PerfRawData_PerfProc_Process -Filter "IDProcess=${pid}").WorkingSetPrivate`], { windowsHide: true });
     return parseBytes(stdout);
   }
   if (platform === "linux") return parseLinuxStatus(await readFile(`/proc/${pid}/status`, "utf8"));

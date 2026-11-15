@@ -6,7 +6,16 @@ use std::{
 use plugin_base::{find_node, Event, HostSpec, HostState, NodeSearch, Supervisor, Timing, MINIMUM_NODE};
 use serde_json::Value;
 
-use super::{containment, enabled, host_args, host_script, window_origins, HostMode};
+use super::{containment, enabled, host_args, host_env, host_script, window_origins, HostMode};
+
+#[test]
+fn on_windows_the_host_gets_a_smaller_threadpool_unless_the_user_already_chose_one() {
+    let env = host_env(true, None);
+    assert_eq!(env.len(), 1);
+    assert_eq!((env[0].0.to_str(), env[0].1.to_str()), (Some("UV_THREADPOOL_SIZE"), Some("2")));
+    assert!(host_env(true, Some("8")).is_empty(), "an explicit size from the environment is passed through unchanged");
+    assert!(host_env(false, None).is_empty(), "other systems do not commit thread stacks up front");
+}
 
 #[test]
 fn the_host_only_starts_in_a_development_build_with_the_switch_on() {
@@ -113,11 +122,13 @@ fn the_real_host_starts_under_the_supervisor_reports_its_plugins_and_comes_back_
 }
 
 mod protocol_and_command {
+    use std::sync::Mutex;
+
     use plugin_base::HostState;
     use serde_json::json;
     use tauri::http::{Method, Request, StatusCode};
 
-    use super::super::{connection_from, protocol};
+    use super::super::{connection_from, connection_now, protocol};
 
     fn get(root: Option<&std::path::Path>, path: &str, method: Method) -> tauri::http::Response<Vec<u8>> {
         let request = Request::builder().method(method).uri(format!("fuyu-plugin://localhost{path}")).body(Vec::new()).unwrap();
@@ -168,5 +179,14 @@ mod protocol_and_command {
         assert!(starting.enabled && starting.port.is_none() && starting.token.is_none());
         let ready = connection_from(true, Some(&HostState::Ready { generation: 3, pid: 9, ready: json!({ "windows": { "port": 51234, "token": "abc" } }) }));
         assert_eq!((ready.port, ready.token.as_deref(), ready.generation), (Some(51234), Some("abc"), Some(3)));
+    }
+
+    #[test]
+    fn a_window_that_asks_before_the_kernel_is_set_up_is_told_to_wait_not_that_it_is_off() {
+        let early = connection_now(true, None);
+        assert!(early.enabled && early.port.is_none(), "the island window can load before setup reaches the plugin kernel");
+        assert!(!connection_now(false, None).enabled);
+        let empty = Mutex::new(None);
+        assert!(connection_now(true, Some(&empty)).enabled);
     }
 }
