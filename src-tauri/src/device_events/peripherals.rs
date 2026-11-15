@@ -12,6 +12,7 @@ pub(crate) const QUIET_RECONNECT_POLLS: u64 = 40;
 pub(crate) enum PeripheralKind {
     Mouse,
     Keyboard,
+    #[cfg_attr(not(target_os = "macos"), allow(dead_code))]
     Trackpad,
 }
 
