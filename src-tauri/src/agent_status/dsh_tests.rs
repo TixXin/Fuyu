@@ -93,7 +93,7 @@ fn lists_logged_sessions_once_from_the_newest_store() {
     std::thread::sleep(std::time::Duration::from_millis(20));
     write(&isolated, ID, "new", true);
     write(&shared, "session-deleted", "gone", false);
-    let listed = sessions_in(roots(&home, no_env), now(), 60_000);
+    let listed = sessions_in(roots(&home, no_env), now(), 60_000, true);
     assert_eq!(listed.len(), 1);
     assert_eq!(listed[0].title.as_deref(), Some("new"));
     assert_eq!(listed[0].phase, "running");
@@ -123,7 +123,7 @@ fn reads_homes_named_by_the_environment_like_dsh_does() {
     });
     assert_eq!(&both[..2], &[expected, next]);
     write(&custom, ID, "moved", true);
-    let listed = sessions_in(roots(&home, |name: &str| (name == "DSH_HOME").then(|| OsString::from(&absolute))), now(), 60_000);
+    let listed = sessions_in(roots(&home, |name: &str| (name == "DSH_HOME").then(|| OsString::from(&absolute))), now(), 60_000, true);
     assert_eq!(listed.len(), 1);
     assert_eq!(listed[0].title.as_deref(), Some("moved"));
     fs::remove_dir_all(&home).unwrap();
@@ -154,7 +154,32 @@ fn follows_data_directories_chosen_inside_third_party_clients() {
     let found = roots(&home, no_env);
     assert!(!found.contains(&stable) && !found.iter().any(|root| root.ends_with("relative")));
     write(&next, ID, "from next", true);
-    let listed = sessions_in(roots(&home, no_env), now(), 60_000);
+    let listed = sessions_in(roots(&home, no_env), now(), 60_000, true);
     assert_eq!(listed[0].title.as_deref(), Some("from next"));
     fs::remove_dir_all(&home).unwrap();
+}
+
+#[test]
+fn a_mirrored_home_reads_the_pulled_checkpoints_without_logs_or_local_folders() {
+    let mirror = temp_home("mirror");
+    write(&mirror.join(".dsh-home"), ID, "remote", false);
+    write(&mirror.join(".dsh"), "session-other", "plain", false);
+    let roots = ScanRoots { home_dir: &mirror, local_app_dir: None };
+    let mut listed = read_sessions(&roots, now(), 60_000);
+    listed.sort_by(|a, b| a.title.cmp(&b.title));
+    assert_eq!(listed.len(), 2);
+    assert_eq!(listed[0].title.as_deref(), Some("plain"));
+    assert_eq!(listed[1].title.as_deref(), Some("remote"));
+    assert_eq!(listed[1].phase, "running");
+    fs::remove_dir_all(&mirror).unwrap();
+}
+
+#[test]
+fn the_remote_lines_pull_checkpoints_into_the_mirrored_homes() {
+    let remote = HARNESS.remote.as_ref().unwrap();
+    let lines = remote.find.join("\n");
+    assert!(lines.contains("dshc .dsh .dsh\n") && lines.contains("dshc \"$DSH_HOME\" .dsh-home"));
+    for home in MIRRORED_HOMES {
+        assert!(remote.checkpoint_dirs.contains(&format!("{home}/storages/session_projcache/sessions/").as_str()));
+    }
 }

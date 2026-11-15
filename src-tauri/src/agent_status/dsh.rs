@@ -9,6 +9,7 @@ use std::{
 
 use serde_json::Value;
 
+use super::harness::{Harness, Hooks, RemoteFiles, ScanRoots, StatusLight};
 use super::markers::AGENT_RUNNING_STALE_AFTER_MS;
 use super::session_scan::pick_title;
 use super::sessions::{session_phase, AgentSessionSummary, TurnState, LAST_MESSAGE_MAX_CHARS};
@@ -43,6 +44,41 @@ const CHOSEN_HOMES: [(&str, &str, &str); 5] = [
     ("DSH Desktop/data-directory", "state.json", "activeHome"),
 ];
 const MAX_POINTER_BYTES: u64 = 64 * 1024;
+const MIRRORED_HOMES: [&str; 3] = [".dsh", ".dsh-beta", ".dsh-home"];
+
+pub(super) const HARNESS: Harness = Harness {
+    id: PROVIDER,
+    hooks: Some(Hooks { install: super::dsh_hooks::install_hooks, check: super::dsh_hooks::hooks_state }),
+    status_light: Some(StatusLight {
+        running_marker: "agent-dsh-running.flag",
+        running_hold: "agent-dsh-running-hold.flag",
+        saved_inputs: &[],
+    }),
+    sessions: Some(read_sessions),
+    remote: Some(RemoteFiles {
+        find: &[
+            "dshc() { find \"$1/storages/session_projcache/sessions\" -maxdepth 1 -type f -name '*.json' -mmin -\"$W\" 2>/dev/null | while IFS= read -r f; do i=${f##*/}; i=${i%.json}; for l in \"$1\"/sessions/*/\"$i\"/session.v[34].jsonl.zstd; do [ -f \"$l\" ] && { printf '%s\\t%s\\n' \"$f\" \"$2/storages/session_projcache/sessions/${f##*/}\"; break; }; done; done; }",
+            "dshc .dsh .dsh",
+            "dshc .dsh-beta .dsh-beta",
+            "case \"$DSH_HOME\" in /*) [ \"$DSH_HOME\" = \"$HOME/.dsh\" ] || [ \"$DSH_HOME\" = \"$HOME/.dsh-beta\" ] || dshc \"$DSH_HOME\" .dsh-home ;; esac",
+        ],
+        session_dirs: &[],
+        files: &[],
+        checkpoint_dirs: &[
+            ".dsh/storages/session_projcache/sessions/",
+            ".dsh-beta/storages/session_projcache/sessions/",
+            ".dsh-home/storages/session_projcache/sessions/",
+        ],
+    }),
+};
+
+fn read_sessions(roots: &ScanRoots, now: i64, window_ms: i64) -> Vec<AgentSessionSummary> {
+    if roots.local_app_dir.is_some() {
+        return sessions(roots.home_dir, now, window_ms);
+    }
+    let mirrored = MIRRORED_HOMES.iter().map(|home| roots.home_dir.join(home)).collect();
+    sessions_in(mirrored, now, window_ms, false)
+}
 
 fn app_data(home_dir: &Path) -> PathBuf {
     if cfg!(windows) {
@@ -96,11 +132,15 @@ fn roots(home_dir: &Path, var: impl Fn(&str) -> Option<OsString>) -> Vec<PathBuf
     roots
 }
 
-pub(super) fn sessions(home_dir: &Path, now: i64, window_ms: i64) -> Vec<AgentSessionSummary> {
-    sessions_in(roots(home_dir, |name| std::env::var_os(name)), now, window_ms)
+pub(super) fn homes(home_dir: &Path) -> Vec<PathBuf> {
+    roots(home_dir, |name| std::env::var_os(name))
 }
 
-fn sessions_in(roots: Vec<PathBuf>, now: i64, window_ms: i64) -> Vec<AgentSessionSummary> {
+pub(super) fn sessions(home_dir: &Path, now: i64, window_ms: i64) -> Vec<AgentSessionSummary> {
+    sessions_in(homes(home_dir), now, window_ms, true)
+}
+
+fn sessions_in(roots: Vec<PathBuf>, now: i64, window_ms: i64, check_logs: bool) -> Vec<AgentSessionSummary> {
     let mut newest: HashMap<String, (AgentSessionSummary, TurnState)> = HashMap::new();
     for root in roots {
         let dir = root.join("storages").join("session_projcache").join("sessions");
@@ -117,7 +157,7 @@ fn sessions_in(roots: Vec<PathBuf>, now: i64, window_ms: i64) -> Vec<AgentSessio
             else {
                 continue;
             };
-            if now - at > window_ms || newest.get(id).is_some_and(|(known, _)| known.updated_at >= at) || !has_log(&root, id) {
+            if now - at > window_ms || newest.get(id).is_some_and(|(known, _)| known.updated_at >= at) || (check_logs && !has_log(&root, id)) {
                 continue;
             }
             if let Some(parsed) = checkpoint(&path, id, at) {
