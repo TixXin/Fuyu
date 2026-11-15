@@ -91,7 +91,7 @@
 
 | 模块 | 用到的 Windows API | Mac 上的处理（第 0 步） | 正式实现的子任务 |
 |---|---|---|---|
-| `island`（focus、follow、glass、modifier、outside_click、passthrough） | 窗口、前台、按键与鼠标状态、窗口区域 | 这几个子模块暂不支持；`mod.rs` 的 Alt / 左键判断换实现（Mac 上为 false）；几何、状态、贴边照常编译 | G1.3 |
+| `island`（focus、follow、glass、modifier、outside_click、passthrough） | 窗口、前台、按键与鼠标状态、窗口区域 | 这几个子模块暂不支持（follow 已由 G1.24 做了 Mac 版，取点在 `follow_point_macos.rs`）；`mod.rs` 的 Alt / 左键判断换实现（Mac 上为 false）；几何、状态、贴边照常编译 | G1.3 |
 | `onboarding_window` | 最小化全部窗口、光标位置、岛的窗口矩形 | 换实现（G1.3 已做）：隐藏其他应用、Tauri 的光标位置和窗口矩形 | G1.3 |
 | `system`：`startup`、`network_cost` | 注册表（reg.exe）、WinRT 网络计费 | 自启换实现（G1.4 已做：`SMAppService`）；网络计费换实现（G1.6 已做：`network_cost_macos.rs`，平台层 `macos/network.rs`） | G1.4、G1.6 |
 | `system`：`accent_color`、`fullscreen`、`updater`、`update_notifications`、`settings_backup` | 注册表、前台全屏、系统代理、Toast、下载文件夹 | 换实现：强调色读系统强调色（G1.6，`macos/appearance.rs`）、全屏 false、只读环境变量代理、不弹系统通知、诊断报 `sw_vers` 版本、下载文件夹 `~/Downloads` | G1.4、G1.6 |
@@ -135,6 +135,8 @@ Mac 上跳过的测试（依赖 Windows 路径、程序或 API，标了 `#[cfg(w
 | 2026-11-13 | G1.6 强调色、网络计费、授权状态 | （本次提交） | 「跟随系统」强调色读 `NSColor.controlAccentColor`；更新的「按流量计费」读 Network.framework 的 `nw_path_is_expensive` / `is_constrained`；设置 → 通用里新增「系统权限」，显示辅助功能、屏幕录制是否已允许，没允许的能一键打开系统设置 | Mac：clippy、`cargo test`、`pnpm test`、设置回归页、`pnpm build`、`pnpm build:exe`；本机实测强调色 `#007aff`、Wi-Fi 不计费；Windows：交叉 clippy 通过 |
 | 2026-11-13 | G1.6 截图与识字 | 48d26bb8、75bbc594、77efc7e6（搬迁），（本次提交） | 截图的剪贴板、快捷键类型、平台调用先搬到可替换的文件（Windows 零行为变化）；Mac 上截屏（ScreenCaptureKit）、选区窗口（NSPanel）、复制 / 保存 / 贴图 / 拖出 / 长截图 / 历史、窗口吸附、快捷键；识字（Vision）同时给截图和剪贴板图片用 | Mac：`cargo clippy --all-targets -D warnings`、`cargo test`（519 过）；Vision 识别 README 截图实测中英文都对、词框位置对；截屏在没授权的终端里返回失败、不崩；Windows：交叉 `clippy --target x86_64-pc-windows-gnu --all-targets` 通过 |
 | 2026-11-13 | G1.11 刘海形态 | （本次提交） | 读刘海几何（`macos/notch.rs`）；菜单栏选项新增「贴合刘海」并设为默认；折叠态纯黑、高度等于刘海、中间让开刘海分成左右两翼；贴边收起时缩进刘海、窗口不动；每 2 秒检查一次屏幕变化 | Mac：clippy、`cargo test`、`pnpm check`、`pnpm build`、回归页；没在真机上看效果（见待人工验收） |
+| 2026-11-15 | G1.23 拖动与贴顶 | 48ac0bdf | 拖动中 `apply_stage_geometry` 只改大小不摆位置（两个平台），Mac 上不记 `WindowEvent::Moved` 的物理像素，Retina 屏拖动中不再跳；顶边抽成 `top_edge::TopEdge`，`geometry.rs`、`snap_to_top`、`drag_hint.rs` 共用，压菜单栏时吸到屏幕上沿；只在 Mac：默认位置所在屏上拖回顶部正中 ±40pt 清掉自定义位置、发 `island-position-cleared`，有刘海时回刘海 | Mac：`cargo test`、clippy、`pnpm build:exe`；Windows：交叉 clippy；没在真机上拖（见待人工验收） |
+| 2026-11-15 | G1.24 多显示器跟随与屏幕变化 | c612de0a | 「显示在：跟随鼠标 / 跟随前台窗口」Mac 上生效（光标、最前面的别家窗口，坐标走 `island::screen`）；贴底、贴侧边换屏保持边和比例；屏幕监听（`island/screen_watch.rs`）从只比较刘海改成比较全部屏幕的 frame、visibleFrame、缩放和刘海，插拔显示器、改分辨率、Dock 换位置或自动隐藏后 2 秒内重摆 | Mac：`cargo test`、clippy、`pnpm build:exe`；Windows：交叉 clippy；本机只有一块屏，多屏、插拔没在真机上看 |
 | 2026-11-13 | G1.2（Rust 部分） | （本次提交） | Windows 依赖只在 Windows 上编译；`macos/` 平台层与 `platform.rs`；Mac 上暂不支持的模块用 unsupported 空实现；CI 加 `rust-macos`；迁移表 | Mac：`cargo clippy --all-targets -D warnings`、`cargo test`（421 过）、`pnpm dev:lane` 起窗口；Windows：在 Mac 上交叉 `clippy --target x86_64-pc-windows-gnu --all-targets` 通过，测试看 CI |
 
 ## 待人工验收
@@ -143,6 +145,9 @@ Mac 上跳过的测试（依赖 Windows 路径、程序或 API，标了 `#[cfg(w
 
 - 刘海（G1.11）：有刘海的 MacBook 上，菜单栏选「压在菜单栏上（有刘海时贴合刘海）」时折叠的岛是纯黑的，中间正好让开摄像头，左右两翼的图标和文字都没被挡；岛的高度和刘海一样、上缘两侧的弧度接得上；贴边收起后整块缩进刘海里看不见，鼠标移到刘海上能弹出来；展开后照常用主题颜色，页面标签栏、Agent 提醒卡片和消息卡片的第一行都在刘海下面；改成「放在菜单栏下面」或拖走、调上边距后回到原来的样子；接外接屏、合盖时外接屏上照常顶部正中，开盖后回到刘海（屏幕变化最多 2 秒内跟上）
 
+- 岛的拖动与贴顶（G1.23）：Retina 屏上拖岛 5 秒中途不跳；「压在菜单栏上」时拖回顶部正中回到默认位置（有刘海时回刘海），重启后仍是默认位置；偏离正中 40pt 以上时贴屏幕最上沿、位置记住；离菜单栏下沿 20pt 以外松手不吸；「放在菜单栏下面」时贴菜单栏下沿；两种设置下顶边提示线 = 松手后吸到的位置；副屏顶部正中松手只记住位置、不回主屏。问题和清单见 [macos-island-docking.md](../investigations/macos-island-docking.md)
+- 多显示器跟随与屏幕变化（G1.24，要外接屏）：「跟随鼠标」「跟随前台窗口」换屏（点岛和设置窗口不触发，展开和拖动中不换）；贴底、贴侧边的岛换屏后贴同一条边；两块屏缩放不同、外接屏在上方或左边时也对；岛在外接屏上时拔掉回内屏、插回回原位；Dock 换到左右或自动隐藏、改分辨率、合盖开盖后 2 秒内回到正确位置；菜单栏自动隐藏时「放在菜单栏下面」跟着调
+- 贴底、贴侧边（C54.3、C54.1）在 Mac 上：贴底时和 Dock（含自动隐藏时鼠标移到下沿）谁挡谁；台前调度开着时左侧竖向岛和应用缩略图条；全屏应用、切换 Space、Mission Control 下贴底和贴侧边的岛
 - 全屏应用、多桌面、Mission Control 下岛的表现（G1.3）
 - 音量提示：按键盘音量键、静音，收起的岛上出现音量提示；换输出设备（耳机、AirPods）后还能跟上（G1.6）
 - 设备插拔与电源：连上、断开蓝牙耳机（AirPods 等）时岛上有提醒，电量低于 20% / 10% 时提醒一次；插上 USB 耳麦有提醒；MacBook 插拔充电线有提醒并显示电量（G1.6）

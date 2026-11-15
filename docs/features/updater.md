@@ -160,7 +160,7 @@ Mac 上的 `~/.tauri/fuyu/release.json` 不写 `passwordFile`，改写 `keychain
    - 把刚发布的 `fuyu.exe` 复制到主工作区的 `src-tauri/target/release`（和 `pnpm build:exe` 一样：正在运行的旧 exe 先改名挪开，等它的构建锁）；不改桌面快捷方式，设了 `FUYU_SYNC_SHORTCUT=1` 才改。本机跑的就是用户拿到的那一份，不用再花几分钟重编；复制失败只打印提示，不影响发布；
    - 刷新 beta 通道的清单；
    - 用 `gh` 读回两个通道的 `latest.json`（直接用 curl 访问下载地址，GitHub 有时返回 504），确认正式版两个通道都是新版本，测试版只有 beta 通道是新版本、稳定通道不是。GitHub 切换 Latest 可能要几秒，读不对时隔 5 秒重试，最多 4 次，还不对就报错并指向下面的「撤回有问题的版本」；
-   - 找出这次发布的提交范围里完成的任务（任务文件的 `issue` 字段和「提交」列表），在对应的 GitHub issue 下留言「已随 vX.Y.Z 发布」，附 Release 地址和任务文档。每个 issue 每个版本只留一次（留言里有标记），所以重跑不会重复。不想留言时加 `--no-issue-comments`。
+   - 找出这次发布的提交范围里完成的任务（任务文件的 `issue` 字段和「提交」列表），在对应的 GitHub issue 下留言「已随 vX.Y.Z 发布」，附 Release 地址和任务文档。每个 issue 每个版本只留一次（留言里有标记），所以重跑不会重复。留言之后，如果这个 issue 关联的任务都已完成（或不做）而 issue 还开着，就把它关掉：issue 本该在合入时由做事的会话关闭，这一步收掉漏关的。不想留言时加 `--no-issue-comments`。
 
    只出包不上传用 `pnpm release --no-upload`；安装包走镜像分发用 `pnpm release --base-url "https://..."`。
 

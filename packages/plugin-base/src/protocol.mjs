@@ -10,3 +10,16 @@ export const CLOSE = {
 };
 
 export const WINDOW_ORIGINS = ["tauri://localhost", "http://tauri.localhost", "https://tauri.localhost"];
+
+export const SLOT_THEME = [
+  "--fuyu-plugin-text",
+  "--fuyu-plugin-text-secondary",
+  "--fuyu-plugin-text-muted",
+  "--fuyu-plugin-surface",
+  "--fuyu-plugin-surface-hover",
+  "--fuyu-plugin-border",
+  "--fuyu-plugin-accent",
+  "--fuyu-plugin-on-accent",
+  "--fuyu-plugin-font",
+  "--fuyu-plugin-radius",
+];

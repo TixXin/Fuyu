@@ -6,10 +6,10 @@ const style = {
   gap: 8,
   margin: "4px 8px",
   padding: "4px 8px",
-  borderRadius: 8,
+  borderRadius: "var(--fuyu-plugin-radius)",
   font: "12px ui-monospace, monospace",
-  color: "var(--island-text-secondary, rgba(255, 255, 255, 0.7))",
-  background: "var(--island-surface-subtle, rgba(255, 255, 255, 0.06))",
+  color: "var(--fuyu-plugin-text-secondary)",
+  background: "var(--fuyu-plugin-surface)",
 };
 
 export default function apply(ctx) {
