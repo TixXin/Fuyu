@@ -72,6 +72,7 @@ export function TuckSettingsSection({
             <SettingsToggleRow indent title={expand.holdTodo} description={expand.holdTodoHint} checked={settings.autoTuckHoldTodo} onChange={(autoTuckHoldTodo) => update({ autoTuckHoldTodo })} />
             <SettingsToggleRow indent title={expand.holdAgent} description={expand.holdAgentHint} checked={settings.autoTuckHoldAgent} onChange={(autoTuckHoldAgent) => update({ autoTuckHoldAgent })} />
             <SettingsToggleRow indent title={expand.holdMusic} description={expand.holdMusicHint} checked={settings.autoTuckHoldMusic} onChange={(autoTuckHoldMusic) => update({ autoTuckHoldMusic })} />
+            <SettingsToggleRow indent title={expand.holdMessages} description={expand.holdMessagesHint} checked={settings.autoTuckHoldMessages} onChange={(autoTuckHoldMessages) => update({ autoTuckHoldMessages })} />
             <SettingsToggleRow
               indent
               title={layout.autoTuckRetract}

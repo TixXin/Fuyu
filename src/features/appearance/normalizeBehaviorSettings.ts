@@ -37,6 +37,7 @@ export function normalizeBehaviorSettings(settings: LegacyIslandSettings | null 
     autoTuckHoldTodo: settings?.autoTuckHoldTodo !== false,
     autoTuckHoldAgent: settings?.autoTuckHoldAgent !== false,
     autoTuckHoldMusic: settings?.autoTuckHoldMusic === true,
+    autoTuckHoldMessages: settings?.autoTuckHoldMessages !== false,
     autoTuckRetract: settings?.autoTuckRetract !== false,
     autoTuckRetractDelayMs: typeof settings?.autoTuckRetractDelayMs === "number" && Number.isFinite(settings.autoTuckRetractDelayMs)
       ? clamp(Math.round(settings.autoTuckRetractDelayMs), MIN_AUTO_TUCK_RETRACT_DELAY_MS, MAX_AUTO_TUCK_RETRACT_DELAY_MS)

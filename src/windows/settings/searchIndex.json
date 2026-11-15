@@ -263,6 +263,19 @@
       "page": "behaviorTuck",
       "zh-CN": {
         "group": "贴边隐藏",
+        "title": "有未读消息时不收起",
+        "description": "微信、QQ 或邮箱有没看的消息时，一直留在屏幕上。没打开的消息来源不算。"
+      },
+      "en": {
+        "group": "Tuck to edge",
+        "title": "Stay out while messages are unread",
+        "description": "While WeChat, QQ or mail has messages you haven't read, the island stays on screen. Sources you turned off don't count."
+      }
+    },
+    {
+      "page": "behaviorTuck",
+      "zh-CN": {
+        "group": "贴边隐藏",
         "title": "鼠标移开后再次隐藏"
       },
       "en": {
@@ -1098,6 +1111,19 @@
           "Title",
           "Note"
         ]
+      }
+    },
+    {
+      "page": "music",
+      "zh-CN": {
+        "group": "贴边隐藏",
+        "title": "音乐播放中不收起",
+        "description": "播放音乐时岛一直留在屏幕上。和「行为 → 贴边隐藏」里的是同一个开关，打开了自动收起才起作用。"
+      },
+      "en": {
+        "group": "Tuck to edge",
+        "title": "Stay out while music plays",
+        "description": "While music plays, the island stays on screen. It is the same switch as in Behavior → Tuck to edge, and works only when auto tuck is on."
       }
     },
     {
