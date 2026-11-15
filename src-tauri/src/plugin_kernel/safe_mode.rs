@@ -8,6 +8,9 @@ use serde::{Deserialize, Serialize};
 pub(super) const FILE: &str = "safe-mode.json";
 pub(super) const MODES: [&str; 2] = ["third-party", "minimal"];
 pub(super) const HEALTHY_AFTER: Duration = Duration::from_secs(60);
+const CLOCK_GAP: Duration = Duration::from_secs(5);
+const ASKED_TO_RESTART: &str = "asked to restart";
+const HEARTBEAT: &str = "heartbeat";
 const THIRD_PARTY_AFTER: u32 = 2;
 const MINIMAL_AFTER: u32 = 4;
 
@@ -57,7 +60,7 @@ pub(super) struct Tracker {
     variable: Option<String>,
     shift: bool,
     failures: u32,
-    started: Option<(u32, Instant)>,
+    started: Option<(u32, Instant, SystemTime)>,
     current: Option<SafeMode>,
 }
 
@@ -69,7 +72,7 @@ impl Tracker {
     }
 
     pub(super) fn starting(&mut self, generation: u32) -> Option<SafeMode> {
-        self.started = Some((generation, Instant::now()));
+        self.started = Some((generation, Instant::now(), SystemTime::now()));
         self.current = choose(self.variable.as_deref(), self.shift, self.failures);
         self.current.clone()
     }
@@ -78,8 +81,14 @@ impl Tracker {
         self.current.clone()
     }
 
-    pub(super) fn went_down(&mut self, generation: u32) {
-        self.went_down_after(generation, self.ran_for(generation));
+    pub(super) fn went_down(&mut self, generation: u32, reason: &str) {
+        let ran = self.started.filter(|(started, ..)| *started == generation).map(|(_, at, wall)| (at.elapsed(), wall.elapsed().unwrap_or_default()));
+        let ran = match ran {
+            Some((ran, wall)) if counts_as_failure(reason, ran, wall) => Some(ran.max(wall)),
+            Some((ran, wall)) if ran.max(wall) >= HEALTHY_AFTER => Some(ran.max(wall)),
+            _ => None,
+        };
+        self.went_down_after(generation, ran);
     }
 
     pub(super) fn went_down_after(&mut self, generation: u32, ran: Option<Duration>) {
@@ -88,7 +97,7 @@ impl Tracker {
             Some(_) => self.set_failures(0),
             None => {}
         }
-        if self.started.is_some_and(|(started, _)| started == generation) {
+        if self.started.is_some_and(|(started, ..)| started == generation) {
             self.started = None;
         }
     }
@@ -110,7 +119,7 @@ impl Tracker {
     }
 
     fn ran_for(&self, generation: u32) -> Option<Duration> {
-        self.started.filter(|(started, _)| *started == generation).map(|(_, at)| at.elapsed())
+        self.started.filter(|(started, ..)| *started == generation).map(|(_, at, _)| at.elapsed())
     }
 
     fn set_failures(&mut self, failures: u32) {
@@ -125,6 +134,16 @@ impl Tracker {
             }
         }
     }
+}
+
+pub(super) fn counts_as_failure(reason: &str, ran: Duration, wall: Duration) -> bool {
+    if reason == ASKED_TO_RESTART {
+        return false;
+    }
+    if reason.contains(HEARTBEAT) && wall.saturating_sub(ran) > CLOCK_GAP {
+        return false;
+    }
+    ran.max(wall) < HEALTHY_AFTER
 }
 
 fn read(path: &Path) -> Option<Record> {
