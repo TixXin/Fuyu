@@ -70,7 +70,7 @@
 
 | 系统 | 机器 | 基线 | 第 1 阶段后 | 第 3 阶段后 | 第 5 阶段后 |
 |---|---|---|---|---|---|
-| Windows | tixxin-computer | 约 489 MB（2026-11-15，两次 669、671 MB 减去两个第 2 版插件，见下面的测法；2026-11-06 [idle-usage.md](../../investigations/idle-usage.md) 的旧数是约 330 MB，那次没有插件、默认设置） | 开着第 3 版比关着多一个 Node 宿主进程约 64 MB，**超过 40 MB 的验收线**（2026-11-15，`d1318d42` 加启动竞态的修复，关、开交替各 3 次，lane 37；关着 791.6 MB、开着 861.3 MB，都含两个第 2 版插件；见 [v3-kernel-measurements.md](../../investigations/v3-kernel-measurements.md)）。1 小时长跑（宿主带 1 个每秒干活的插件）：63.1–71.9 MB，前 50 分钟慢慢涨、最后 10 分钟停住，没看到明显回收，没有重启；不持续增长这次没验证 | | |
+| Windows | tixxin-computer | 约 489 MB（2026-11-15，两次 669、671 MB 减去两个第 2 版插件，见下面的测法；2026-11-06 [idle-usage.md](../../investigations/idle-usage.md) 的旧数是约 330 MB，那次没有插件、默认设置）。按私有工作集重量（2026-11-15，`39f2138d`，3 次）：Rust 主进程加 WebView2 约 **353 MB**（318.5–397.1），之后按这个比 | 开着第 3 版比关着多一个 Node 宿主进程，私有工作集 **25.2 MB**（25.0–25.8），在 40 MB 的验收线以内（2026-11-15，`39f2138d`，宿主的线程池在 Windows 上设成 2，关、开交替各 3 次，lane 37）。私有内存口径下宿主 47.8 MB（改线程池前约 64 MB，超线；那次的数据见 [v3-kernel-measurements.md](../../investigations/v3-kernel-measurements.md)）。1 小时长跑（改线程池前，私有内存口径，宿主带 1 个每秒干活的插件）：63.1–71.9 MB，前 50 分钟慢慢涨、最后 10 分钟停住，没看到明显回收，没有重启；不持续增长这次没验证 | | |
 | macOS | tixxindeair | 约 490 MB（2026-11-14，两次测量在 480–516 MB 之间） | 约 494 MB，开着第 3 版比关着多一个宿主进程 25 MB（2026-11-15，`4170b870`，关、开交替各 3 次；关着 476.5 MB、开着 493.7 MB；见 [v3-kernel-measurements.md](../../investigations/v3-kernel-measurements.md)）。1 小时长跑（宿主带 11 个插件，其中一个每秒干活）：26.5–37 MB 锯齿起伏、到顶会回收，没有持续增长，没有重启 | | |
 
 验收线：没装第三方插件时，比基线多不超过 40 MB；连跑 1 小时不持续增长（原来是 8 小时，用户 2026-11-15 改成 1 小时）。
@@ -88,7 +88,7 @@ Windows 的测法（之后每次都这样量）：
 
 - 构建：同 macOS（`pnpm tauri build --debug --no-bundle`，加 `CARGO_PROFILE_DEV_OPT_LEVEL=3`、`CARGO_PROFILE_DEV_DEBUG=0`、`CARGO_TARGET_DIR` 写绝对路径 `$PWD/src-tauri/target/agents`）。写成相对路径 `src-tauri/target/agents` 时 cargo 按 `src-tauri` 解析，产物会落进没被忽略的 `src-tauri/src-tauri/`（2026-11-15 第一次量时就是这样，量完删了）。量的是 `1cad1a01`。
 - 身份：`FOCUSD_DEV_LANE=36`，独立的数据目录，数据是正式数据的一份副本（第一次启动复制，41 秒）。副本里 QQ、微信、邮件、推送是关的，但**启用了几个第 2 版插件**：PowerShell 写的插件合计约 162 MB 私有内存，一个 Node 写的插件约 21 MB。开发版默认「正式版优先」，没有影响同时开着的正式版。
-- 统计：岛屿进程和它的全部子孙进程的私有内存（`PrivateMemorySize64`）之和。启动 20 秒后每 5 秒读一次，读 60 秒，取中位数，量两次。两次的合计是 671、669 MB（工作集 1230、1232 MB），其中 Rust 主进程 35–36 MB、WebView2 合计 453–454 MB、PowerShell 插件 162 MB（另有 `conhost` 3.5 MB）、Node 插件 21 MB。基线按不带插件算：Rust 主进程加 WebView2 约 **489 MB**。以后每次量都按同样的减法，或者先在副本里关掉插件再量（改了要在这里写明）。
+- 统计（2026-11-15 起）：岛屿进程和它的全部子孙进程的**私有工作集**（`Win32_PerfRawData_PerfProc_Process` 的 `WorkingSetPrivate`，任务管理器「内存」一栏）之和，和 macOS 的 `phys_footprint` 一样只算真正用到的页。私有内存（`PrivateMemorySize64`）会把只提交、没用到的线程栈也算进去（见 [v3-kernel-measurements.md](../../investigations/v3-kernel-measurements.md)「宿主为什么是 64 MB」），只作参考。下面这条是改口径前第一次量的做法：岛屿进程和它的全部子孙进程的私有内存（`PrivateMemorySize64`）之和。启动 20 秒后每 5 秒读一次，读 60 秒，取中位数，量两次。两次的合计是 671、669 MB（工作集 1230、1232 MB），其中 Rust 主进程 35–36 MB、WebView2 合计 453–454 MB、PowerShell 插件 162 MB（另有 `conhost` 3.5 MB）、Node 插件 21 MB。基线按不带插件算：Rust 主进程加 WebView2 约 **489 MB**。以后每次量都按同样的减法，或者先在副本里关掉插件再量（改了要在这里写明）。
 - 测量时本机有 D47 的内存采样（盯着正式版）和做测量的 Claude Code 会话在跑，正式版也开着。比 11-06 的 330 MB 多出的约 160 MB 没有拆开查，那次用的是默认设置、没有插件、0.3.x 早期的代码。
 
 ### 冷启动（从启动到岛屿能用）
@@ -134,7 +134,6 @@ Windows 的测法：同上面 Windows 的构建和身份；`Process.Start` 拉�
 | 提出 | 事项 | 影响 |
 |---|---|---|
 | 2026-11-14 | Mac 上现在用什么签名身份 | 决定什么时候能测公证。第 0 阶段没测 |
-| 2026-11-15 | Windows 上宿主的私有内存多约 64 MB，超过 40 MB 的验收线（macOS 是 25 MB）。查清了：约 32 MB 是 libuv 线程池 4 个线程的栈，只提交、没用到；按任务管理器显示的私有工作集算，宿主是 23.6 MB。要定的是：Windows 的验收改用私有工作集（基线按同样口径重量），还是 Rust 拉起宿主时把 `UV_THREADPOOL_SIZE` 设成 1 或 2（约 39 / 47 MB，插件的异步文件操作并发变少），或者两样都做 | 第 1 阶段在 Windows 上能不能算过。详见 [v3-kernel-measurements.md](../../investigations/v3-kernel-measurements.md)「宿主为什么是 64 MB」 |
 
 方案里留到实现时再定的细则（审核的快速通过规则、冷静期天数、手动安装默认开关、基座的名字和许可证）不在这里重复，到对应的阶段再提出来。
 
@@ -144,6 +143,7 @@ Windows 的测法：同上面 Windows 的构建和身份；`Process.Start` 拉�
 
 | 日期 | 改了什么 | 为什么 | 谁定的 |
 |---|---|---|---|
+| 2026-11-15 | Windows 的内存验收改按私有工作集量，基线按同样口径重量；Rust 在 Windows 上拉起宿主时设 `UV_THREADPOOL_SIZE=2` | 宿主私有内存 64 MB 里约 32 MB 是线程池只提交、没用到的栈。两样都做：口径和 macOS 一致，私有内存也从 64 降到 48 MB | 用户 |
 | 2026-11-14 | 第 0 阶段的临时项目不建 GitHub 仓库，放本机 | 用户定 | 用户 |
 | 2026-11-14 | 宿主用 Node，不用 Bun | 第 0 阶段实测：Bun 跑不了 Cordis 的热重载，装在别处的插件拿不到同一份内核 | 用户 |
 | 2026-11-14 | 方案加决定 16：安装包不带 Node，首次启动时先用用户电脑上的，没有或不能用才下载 | 带上 Node 后 Mac 的 dmg 从 13 MB 变成约 57 MB，更新包每次多约 42 MB | 用户 |
