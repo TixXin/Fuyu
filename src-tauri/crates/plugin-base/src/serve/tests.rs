@@ -199,15 +199,36 @@ fn a_handler_cannot_wait_for_the_host_it_is_answering() {
 
 #[test]
 fn when_the_host_goes_away_running_handlers_are_cancelled_and_nothing_hangs() {
-    let mut host = Host::start(table());
-    host.call(1, "test.slow", Value::Null);
-    host.call(2, "test.sleepy", json!({ "ms": 200 }));
-    thread::sleep(Duration::from_millis(20));
+    let (running, started_handlers) = mpsc::channel();
+    let (finished, cancelled) = mpsc::channel();
+    let running = Mutex::new(running);
+    let finished = Mutex::new(finished);
+    let mut serve = table();
+    serve
+        .add("test.until-cancelled", Duration::from_secs(30), move |_, call| {
+            let _ = running.lock().unwrap().send(());
+            let started = Instant::now();
+            while !call.cancelled() && started.elapsed() < Duration::from_secs(10) {
+                thread::sleep(Duration::from_millis(5));
+            }
+            let _ = finished.lock().unwrap().send(call.cancelled());
+            Ok(json!("late"))
+        })
+        .unwrap();
+    let mut host = Host::start(serve);
+    host.call(1, "test.until-cancelled", Value::Null);
+    host.call(2, "test.until-cancelled", Value::Null);
+    for _ in 0..2 {
+        started_handlers.recv_timeout(Duration::from_secs(10)).expect("both handlers started");
+    }
     let started = Instant::now();
     host.to_rust.take();
     while host.rpc.gone().is_none() {
-        assert!(started.elapsed() < Duration::from_secs(2), "the reader noticed");
+        assert!(started.elapsed() < Duration::from_secs(5), "the reader noticed");
         thread::sleep(Duration::from_millis(5));
+    }
+    for _ in 0..2 {
+        assert_eq!(cancelled.recv_timeout(Duration::from_secs(5)), Ok(true));
     }
     assert!(matches!(host.rpc.notify("event", Value::Null), Err(RpcError::PeerGone(_))));
     assert_eq!(host.quiet_for(Duration::from_millis(300)), None);
