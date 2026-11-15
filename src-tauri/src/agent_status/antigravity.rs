@@ -6,28 +6,36 @@ use std::{
 
 use serde_json::{json, Value};
 
-use super::harness::{Harness, HookCheck, HookEnv, Hooks, ScanRoots};
+use super::claude_hooks::APPROVAL_HOOK_TIMEOUT_SECONDS;
+use super::codex_hooks::{agent_running_command_with, agent_status_command};
+use super::harness::{Harness, HookEnv, Hooks, ScanRoots, StatusLight};
+use super::hooks_state::HookInstallState;
 use super::markers::AGENT_RUNNING_STALE_AFTER_MS;
 use super::session_scan::pick_title;
 use super::sessions::{session_phase, AgentSessionSummary, TurnState};
 use super::snapshot::system_time_to_unix_millis;
 use super::title::{folder_title, prompt_title};
-use super::write_text_file;
+use super::{write_text_file, AGENT_APPROVAL_SCRIPT_FILE_NAME};
 
 pub(super) const PROVIDER: &str = "antigravity";
 pub(super) const APP: &str = "antigravity";
 const SAVED_DIR: &str = "agent-antigravity";
 const DATA_DIRS: [&str; 3] = ["antigravity", "antigravity-ide", "antigravity-cli"];
 const HOOK_NAME: &str = "fuyu";
+const APPROVED_TOOLS: &str = "run_command";
 const MAX_AGE_MS: i64 = 24 * 60 * 60 * 1000;
 
 pub(super) const HARNESS: Harness = Harness {
     id: PROVIDER,
     hooks: Some(Hooks {
-        install: |env: &HookEnv| install_hooks(env.home_dir, env.running_script),
-        check: HookCheck::Present(has_hooks),
+        install: install_hooks,
+        check: hooks_state,
     }),
-    status_light: None,
+    status_light: Some(StatusLight {
+        running_marker: "agent-antigravity-running.flag",
+        running_hold: "agent-antigravity-running-hold.flag",
+        saved_inputs: &[],
+    }),
     sessions: Some(|roots: &ScanRoots, now, window_ms| {
         roots.local_app_dir.map(|app_dir| sessions(app_dir, now, window_ms)).unwrap_or_default()
     }),
@@ -135,16 +143,47 @@ fn hooks_path(home_dir: &Path) -> PathBuf {
     home_dir.join(".gemini").join("config").join("hooks.json")
 }
 
-pub(super) fn has_hooks(home_dir: &Path) -> bool {
-    fs::read_to_string(hooks_path(home_dir)).is_ok_and(|text| super::is_island_hook_text(&text))
+fn lives_here(home_dir: &Path) -> bool {
+    let gemini = home_dir.join(".gemini");
+    DATA_DIRS.iter().any(|dir| gemini.join(dir).is_dir())
 }
 
-pub(super) fn install_hooks(home_dir: &Path, running_script_path: &Path) -> Result<(), String> {
-    let gemini = home_dir.join(".gemini");
-    if !DATA_DIRS.iter().any(|dir| gemini.join(dir).is_dir()) {
+fn hook_group(env: &HookEnv) -> Value {
+    let handler = |command: String, timeout: i64| json!({ "type": "command", "command": command, "timeout": timeout });
+    let running = |phase: &str| handler(agent_running_command_with(env.running_script, PROVIDER, phase), 5);
+    let approval_script = env.status_script.with_file_name(AGENT_APPROVAL_SCRIPT_FILE_NAME);
+    json!({
+        "enabled": true,
+        "SessionStart": [running("start")],
+        "PreInvocation": [running("running")],
+        "PreToolUse": [{
+            "matcher": APPROVED_TOOLS,
+            "hooks": [handler(agent_status_command(&approval_script, PROVIDER, "permission"), APPROVAL_HOOK_TIMEOUT_SECONDS)],
+        }],
+        "Stop": [running("stop"), handler(agent_status_command(env.status_script, PROVIDER, "completed"), 10)],
+    })
+}
+
+fn read_config(path: &Path) -> Option<Value> {
+    fs::read_to_string(path).ok().and_then(|text| serde_json::from_str::<Value>(&text).ok())
+}
+
+fn hooks_state(env: &HookEnv) -> HookInstallState {
+    if !lives_here(env.home_dir) {
+        return HookInstallState::Absent;
+    }
+    match read_config(&hooks_path(env.home_dir)) {
+        Some(config) if config[HOOK_NAME] == hook_group(env) => HookInstallState::Current,
+        Some(config) if super::is_island_hook_text(&config.to_string()) => HookInstallState::Outdated,
+        _ => HookInstallState::NotInstalled,
+    }
+}
+
+pub(super) fn install_hooks(env: &HookEnv) -> Result<(), String> {
+    if !lives_here(env.home_dir) {
         return Ok(());
     }
-    let path = hooks_path(home_dir);
+    let path = hooks_path(env.home_dir);
     let mut config = match fs::read_to_string(&path) {
         Ok(content) if !content.trim().is_empty() => serde_json::from_str::<Value>(&content)
             .map_err(|error| format!("Failed to parse Antigravity hooks.json: {error}"))?,
@@ -153,22 +192,7 @@ pub(super) fn install_hooks(home_dir: &Path, running_script_path: &Path) -> Resu
     let root = config
         .as_object_mut()
         .ok_or_else(|| "Antigravity hooks.json must contain a JSON object.".to_string())?;
-    let handler = |phase: &str| {
-        json!([{
-            "type": "command",
-            "command": format!("\"{}\" {PROVIDER} {phase}", running_script_path.display()),
-            "timeout": 5
-        }])
-    };
-    root.insert(
-        HOOK_NAME.to_string(),
-        json!({
-            "enabled": true,
-            "SessionStart": handler("running"),
-            "PreInvocation": handler("running"),
-            "Stop": handler("stop"),
-        }),
-    );
+    root.insert(HOOK_NAME.to_string(), hook_group(env));
     if let Some(dir) = path.parent() {
         fs::create_dir_all(dir).map_err(|error| format!("Failed to create {}: {error}", dir.display()))?;
     }
@@ -230,24 +254,38 @@ mod tests {
     #[test]
     fn installs_its_own_hook_group_only_where_antigravity_lives() {
         let home = temp_dir("hooks");
-        let script = Path::new(r"C:\Users\a b\.fuyu\fuyu-agent-running.cmd");
-        install_hooks(&home, script).unwrap();
+        let running = home.join(".fuyu").join(crate::agent_status::AGENT_RUNNING_SCRIPT_FILE_NAME);
+        let status = home.join(".fuyu").join(crate::agent_status::AGENT_STATUS_SCRIPT_FILE_NAME);
+        let env = HookEnv { home_dir: &home, running_script: &running, status_script: &status };
+        install_hooks(&env).unwrap();
         assert!(!hooks_path(&home).exists());
+        assert_eq!(hooks_state(&env), HookInstallState::Absent);
 
         fs::create_dir_all(home.join(".gemini").join("antigravity-cli")).unwrap();
+        assert_eq!(hooks_state(&env), HookInstallState::NotInstalled);
         fs::create_dir_all(hooks_path(&home).parent().unwrap()).unwrap();
         fs::write(hooks_path(&home), r#"{"mine":{"enabled":true,"Stop":[{"type":"command","command":"x"}]}}"#).unwrap();
-        install_hooks(&home, script).unwrap();
-        install_hooks(&home, script).unwrap();
+        install_hooks(&env).unwrap();
+        install_hooks(&env).unwrap();
+        assert_eq!(hooks_state(&env), HookInstallState::Current);
         let config: Value = serde_json::from_str(&fs::read_to_string(hooks_path(&home)).unwrap()).unwrap();
         assert_eq!(config["mine"]["Stop"][0]["command"], "x");
-        assert_eq!(config[HOOK_NAME]["enabled"], true);
-        assert_eq!(
-            config[HOOK_NAME]["PreInvocation"][0]["command"],
-            r#""C:\Users\a b\.fuyu\fuyu-agent-running.cmd" antigravity running"#
-        );
-        assert_eq!(config[HOOK_NAME]["Stop"][0]["command"], r#""C:\Users\a b\.fuyu\fuyu-agent-running.cmd" antigravity stop"#);
-        assert!(has_hooks(&home));
+        let group = &config[HOOK_NAME];
+        assert_eq!(group["enabled"], true);
+        let command = |value: &Value| value["command"].as_str().unwrap().to_string();
+        assert!(command(&group["SessionStart"][0]).contains("antigravity start"));
+        assert!(command(&group["PreInvocation"][0]).contains("antigravity running"));
+        assert!(command(&group["Stop"][0]).contains("antigravity stop"));
+        assert!(command(&group["Stop"][1]).contains("fuyu-agent-status"));
+        assert_eq!(group["PreToolUse"][0]["matcher"], APPROVED_TOOLS);
+        let approval = &group["PreToolUse"][0]["hooks"][0];
+        assert!(command(approval).contains("fuyu-agent-approval") && command(approval).contains("antigravity permission"));
+        assert_eq!(approval["timeout"], APPROVAL_HOOK_TIMEOUT_SECONDS);
+
+        let mut stale = config.clone();
+        stale[HOOK_NAME]["PreToolUse"] = json!([]);
+        fs::write(hooks_path(&home), stale.to_string()).unwrap();
+        assert_eq!(hooks_state(&env), HookInstallState::Outdated);
         fs::remove_dir_all(&home).unwrap();
     }
 }

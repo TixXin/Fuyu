@@ -2646,6 +2646,39 @@
     {
       "page": "agentConnect",
       "zh-CN": {
+        "group": "AI Agent 状态灯",
+        "title": "WorkBuddy"
+      },
+      "en": {
+        "group": "AI Agent status light",
+        "title": "WorkBuddy"
+      }
+    },
+    {
+      "page": "agentConnect",
+      "zh-CN": {
+        "group": "AI Agent 状态灯",
+        "title": "Antigravity"
+      },
+      "en": {
+        "group": "AI Agent status light",
+        "title": "Antigravity"
+      }
+    },
+    {
+      "page": "agentConnect",
+      "zh-CN": {
+        "group": "AI Agent 状态灯",
+        "title": "DeepSeek Harness"
+      },
+      "en": {
+        "group": "AI Agent status light",
+        "title": "DeepSeek Harness"
+      }
+    },
+    {
+      "page": "agentConnect",
+      "zh-CN": {
         "group": "回复状态标记",
         "title": "让 Claude 在回复末尾标出在等什么（推荐打开）"
       },

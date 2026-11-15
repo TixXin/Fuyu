@@ -512,3 +512,63 @@ fn a_request_that_is_waiting_outlives_its_listener() {
     assert_eq!(status, 200);
     assert!(body.contains("allow"), "{body}");
 }
+
+#[test]
+fn new_agents_have_their_own_routes_and_answers() {
+    use super::decision::permission_response;
+    assert_eq!(route("/workbuddy/permission-request"), Some((Agent::Workbuddy, Kind::Permission)));
+    assert_eq!(route("/antigravity/pre-tool-use"), Some((Agent::Antigravity, Kind::Permission)));
+    assert_eq!(route("/dsh/pre-tool-use"), Some((Agent::Dsh, Kind::Permission)));
+    assert_eq!(serde_json::to_value(Agent::Workbuddy).unwrap(), json!("workbuddy"));
+    assert_eq!(serde_json::to_value(Agent::Dsh).unwrap(), json!("dsh"));
+
+    let workbuddy: Value = serde_json::from_str(&permission_response(Agent::Workbuddy, Some(Decision::Allow), None, None)).unwrap();
+    assert_eq!(workbuddy["hookSpecificOutput"]["decision"]["behavior"], "allow");
+
+    let ag = |decision| serde_json::from_str::<Value>(&permission_response(Agent::Antigravity, decision, Some(" 不行 "), None)).unwrap();
+    assert_eq!(ag(Some(Decision::Allow)), json!({ "decision": "allow" }));
+    assert_eq!(ag(Some(Decision::AllowAlways)), json!({ "decision": "allow" }));
+    assert_eq!(ag(Some(Decision::Deny)), json!({ "decision": "deny", "reason": "不行" }));
+    assert_eq!(ag(Some(Decision::Terminal)), json!({ "decision": "ask" }));
+    assert_eq!(ag(None), json!({}));
+
+    let dsh = |decision| permission_response(Agent::Dsh, decision, None, None);
+    let denied: Value = serde_json::from_str(&dsh(Some(Decision::Deny))).unwrap();
+    assert_eq!(denied["hookSpecificOutput"]["permissionDecision"], "deny");
+    assert_eq!(denied["hookSpecificOutput"]["permissionDecisionReason"], "Denied in Fuyu");
+    assert_eq!(dsh(Some(Decision::Allow)), "{}");
+    assert_eq!(dsh(Some(Decision::Terminal)), "{}");
+}
+
+#[test]
+fn antigravity_input_is_read_from_its_own_fields() {
+    let body = json!({
+        "conversationId": "c1", "cwd": "C:\\work", "workspacePaths": ["C:/work"],
+        "toolCall": { "name": "run_command", "args": { "CommandLine": "npm test" } }, "stepIdx": 3,
+    });
+    let input = HookInput::parse_for(Agent::Antigravity, body.to_string().as_bytes()).unwrap();
+    assert_eq!((input.session_id.as_str(), input.cwd.as_deref(), input.tool_name.as_str()), ("c1", Some("C:\\work"), "run_command"));
+    assert_eq!(input.tool_input, json!({ "CommandLine": "npm test" }));
+    let no_cwd = json!({ "conversationId": "c1", "workspacePaths": ["/w"], "toolCall": { "name": "run_command" } });
+    assert_eq!(HookInput::parse_for(Agent::Antigravity, no_cwd.to_string().as_bytes()).unwrap().cwd.as_deref(), Some("/w"));
+    assert!(HookInput::parse_for(Agent::Antigravity, b"{\"conversationId\":\"c1\"}").is_err());
+    assert_eq!(HookInput::parse_for(Agent::Dsh, hook_body("s", "shell").as_bytes()).unwrap().tool_name, "shell");
+}
+
+#[test]
+fn agents_without_a_waiting_event_get_a_waiting_note_while_the_island_asks() {
+    let dir = std::env::temp_dir().join(format!("fuyu-approval-waiting-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    let mut queue = Queue::default();
+    let (ag, _) = queue.push(Agent::Antigravity, Kind::Permission, HookInput::parse(hook_body("c1", "run_command").as_bytes()).unwrap(), 1);
+    let (cc, _) = queue.push(Agent::ClaudeCode, Kind::Permission, HookInput::parse(hook_body("s", "Bash").as_bytes()).unwrap(), 2);
+    super::waiting::note(&dir, &ag);
+    super::waiting::note(&dir, &cc);
+    let notes = dir.join("agent-notifications");
+    let saved: Value = serde_json::from_str(&std::fs::read_to_string(notes.join(format!("antigravity-approval-{}.json", ag.id))).unwrap()).unwrap();
+    assert_eq!(saved, json!({ "hook_event_name": "PermissionRequest", "session_id": "c1" }));
+    assert_eq!(std::fs::read_dir(&notes).unwrap().count(), 1);
+    super::waiting::clear(&dir, ag.id);
+    assert_eq!(std::fs::read_dir(&notes).unwrap().count(), 0);
+    std::fs::remove_dir_all(&dir).unwrap();
+}

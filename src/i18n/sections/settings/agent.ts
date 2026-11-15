@@ -179,6 +179,7 @@ export type SettingsAgentText = {
   hooksOutdated: string;
   hooksMissing: string;
   hooksDevBuild: string;
+  dshBridge: string;
   remoteResult: (host: string, error: string | null) => string;
 };
 
@@ -360,8 +361,9 @@ export const zhCN: SettingsAgentText = {
     noCli: "找不到命令行，先打开这个编辑器",
     done: (editor) => `已装进 ${editor}。已经打开的 ${editor} 窗口要重新加载（命令面板 → Reload Window）后才生效。`,
   },
-  hooksOutdated: "已安装的钩子是旧版本，“等待确认”状态等新功能不会生效。请点“安装/修复”，然后重启 Codex 和 Claude Code。",
-  hooksMissing: "还没有安装钩子。点“安装/修复”后重启 Codex 和 Claude Code，状态灯和会话标题才会工作。",
+  hooksOutdated: "已安装的钩子是旧版本，“等待确认”状态等新功能不会生效。请点“安装/修复”，然后重启正在用的 AI Agent。",
+  hooksMissing: "还没有安装钩子。点“安装/修复”后重启正在用的 AI Agent，状态灯和会话标题才会工作。",
+  dshBridge: "DeepSeek Harness 还没挂上钩子桥。把下面几行加到 DSH 配置目录 profiles 下的 cordis.patch.yml 末尾，重启 DSH 后再点一次“安装/修复”：",
   hooksDevBuild: "开发版只读正式版的 Agent 状态，钩子由正式版安装。要安装或修复钩子，在正式版的设置里点“安装/修复”。",
   remoteResult: (host, error) => (error ? `SSH 远程 ${host}：失败，${error}` : `SSH 远程 ${host}：已完成`),
 };
@@ -544,8 +546,9 @@ export const en: SettingsAgentText = {
     noCli: "Command line not found; open this editor first",
     done: (editor) => `Installed in ${editor}. ${editor} windows already open need a reload (Command Palette → Reload Window) first.`,
   },
-  hooksOutdated: "The installed hooks are from an older version, so newer features such as the waiting-for-you state won't work. Click Install/repair, then restart Codex and Claude Code.",
-  hooksMissing: "No hooks installed yet. Click Install/repair, then restart Codex and Claude Code, for the status light and session titles to work.",
+  hooksOutdated: "The installed hooks are from an older version, so newer features such as the waiting-for-you state won't work. Click Install/repair, then restart the AI agents you use.",
+  hooksMissing: "No hooks installed yet. Click Install/repair, then restart the AI agents you use, for the status light and session titles to work.",
+  dshBridge: "DeepSeek Harness has no hook bridge yet. Add these lines to the end of cordis.patch.yml under profiles in the DSH home, restart DSH, then click Install/repair again:",
   hooksDevBuild: "The development build only reads the installed Fuyu's agent status; the installed Fuyu sets up the hooks. To install or repair them, use Install/repair in its settings.",
   remoteResult: (host, error) => (error ? `SSH remote ${host}: failed, ${error}` : `SSH remote ${host}: done`),
 };

@@ -33,13 +33,14 @@ export type AgentHooksInstallResult = {
   statusPath: string;
   installedAt: number;
   remotes: RemoteResult[];
+  dshBridge?: string | null;
 };
 
 export type RemoteResult = { host: string; error: string | null };
 
-export type HookInstallState = "notInstalled" | "outdated" | "current";
+export type HookInstallState = "absent" | "notInstalled" | "outdated" | "current";
 
-export type AgentHooksState = Record<AgentProvider, HookInstallState> & {
+export type AgentHooksState = Partial<Record<AgentProvider, HookInstallState>> & {
   scriptsOutdated: boolean;
 };
 
@@ -80,6 +81,7 @@ export type ReplyMarkerState = {
   path: string;
   content: string;
   remotes: RemoteResult[];
+  dshBridge?: string | null;
 };
 
 export function getReplyMarkerState() {

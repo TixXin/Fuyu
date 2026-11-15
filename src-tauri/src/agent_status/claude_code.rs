@@ -4,7 +4,7 @@ use std::{
 };
 
 use super::claude_hooks::{install_claude_code_status_hooks, ApprovalHook};
-use super::harness::{Harness, HookCheck, HookEnv, Hooks, RemoteFiles, StatusLight};
+use super::harness::{Harness, HookEnv, Hooks, RemoteFiles, StatusLight};
 use super::hooks_state::{claude_code_hooks_state, HookInstallState};
 use super::markers::{
     CLAUDE_CODE_RUNNING_HOLD_FILE_NAME, CLAUDE_CODE_RUNNING_MARKER_FILE_NAME,
@@ -17,7 +17,7 @@ pub(super) const HARNESS: Harness = Harness {
     id: PROVIDER,
     hooks: Some(Hooks {
         install,
-        check: HookCheck::State(hooks_state),
+        check: hooks_state,
     }),
     status_light: Some(StatusLight {
         running_marker: CLAUDE_CODE_RUNNING_MARKER_FILE_NAME,
@@ -29,6 +29,7 @@ pub(super) const HARNESS: Harness = Harness {
         find: &["find .claude/projects -mindepth 2 -maxdepth 2 -type f -name '*.jsonl' -mmin -\"$W\" 2>/dev/null"],
         session_dirs: &[".claude/projects/"],
         files: &[],
+        checkpoint_dirs: &[],
     }),
 };
 

@@ -2,7 +2,8 @@ use std::path::Path;
 
 use super::hooks_state::HookInstallState;
 use super::sessions::AgentSessionSummary;
-use super::{antigravity, claude_code, codex, dsh, opencode, workbuddy};
+use super::notifications::{is_waiting, saved_notifications, NOTIFICATIONS_DIR};
+use super::{antigravity, claude_code, codex, dsh, dsh_hooks, opencode, workbuddy};
 
 pub(super) const HARNESSES: &[Harness] = &[
     codex::HARNESS,
@@ -15,8 +16,15 @@ pub(super) const HARNESSES: &[Harness] = &[
 
 const DSH: Harness = Harness {
     id: dsh::PROVIDER,
-    hooks: None,
-    status_light: None,
+    hooks: Some(Hooks {
+        install: dsh_hooks::install_hooks,
+        check: dsh_hooks::hooks_state,
+    }),
+    status_light: Some(StatusLight {
+        running_marker: "agent-dsh-running.flag",
+        running_hold: "agent-dsh-running-hold.flag",
+        saved_inputs: &[],
+    }),
     sessions: Some(dsh_sessions),
     remote: None,
 };
@@ -51,12 +59,7 @@ pub(super) struct HookEnv<'a> {
 
 pub(super) struct Hooks {
     pub(super) install: fn(&HookEnv) -> Result<(), String>,
-    pub(super) check: HookCheck,
-}
-
-pub(super) enum HookCheck {
-    State(fn(&HookEnv) -> HookInstallState),
-    Present(fn(&Path) -> bool),
+    pub(super) check: fn(&HookEnv) -> HookInstallState,
 }
 
 pub(super) struct StatusLight {
@@ -69,6 +72,7 @@ pub(super) struct RemoteFiles {
     pub(super) find: &'static [&'static str],
     pub(super) session_dirs: &'static [&'static str],
     pub(super) files: &'static [&'static str],
+    pub(super) checkpoint_dirs: &'static [&'static str],
 }
 
 pub(super) fn with_status_light() -> impl Iterator<Item = (&'static str, &'static StatusLight)> {
@@ -109,14 +113,25 @@ pub(super) fn is_mirrored_file(remote: &str) -> bool {
     with_remote().any(|(_, files)| {
         files.files.contains(&remote)
             || (files.session_dirs.iter().any(|dir| remote.starts_with(dir)) && remote.ends_with(".jsonl"))
+            || (files.checkpoint_dirs.iter().any(|dir| remote.starts_with(dir)) && remote.ends_with(".json"))
     })
 }
 
 pub(super) fn extra_sessions(roots: &ScanRoots, now: i64, window_ms: i64) -> Vec<AgentSessionSummary> {
+    let waiting = roots
+        .local_app_dir
+        .map(|app_dir| saved_notifications(&app_dir.join(NOTIFICATIONS_DIR), now, false).waiting)
+        .unwrap_or_default();
     HARNESSES
         .iter()
         .filter_map(|harness| harness.sessions)
         .flat_map(|read| read(roots, now, window_ms))
+        .map(|mut summary| {
+            if summary.phase == "running" && is_waiting(&waiting, &summary.session_id, summary.updated_at) {
+                summary.phase = "waiting";
+            }
+            summary
+        })
         .collect()
 }
 
@@ -133,7 +148,11 @@ mod tests {
         ids.sort_unstable();
         ids.dedup();
         assert_eq!(ids.len(), HARNESSES.len());
-        assert_eq!(with_status_light().map(|(id, _)| id).collect::<Vec<_>>(), ["codex", "claudeCode"]);
+        assert_eq!(
+            with_status_light().map(|(id, _)| id).collect::<Vec<_>>(),
+            ["codex", "claudeCode", "workbuddy", "antigravity", "dsh"]
+        );
+        assert_eq!(with_hooks().map(|(id, _)| id).collect::<Vec<_>>(), ["codex", "claudeCode", "workbuddy", "antigravity", "dsh"]);
         assert_eq!(remote_ids(), ["codex", "claudeCode"]);
     }
 

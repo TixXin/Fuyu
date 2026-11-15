@@ -12,6 +12,7 @@ test("a shell command shows the command and the agent's note", () => {
 
 test("a Codex command list is joined into one line", () => {
   assert.equal(approvalPreview({ command: ["git", "status", "--short"] }).text, "git status --short");
+  assert.equal(approvalPreview({ CommandLine: "npm test" }).text, "npm test");
 });
 
 test("file tools show the path, web tools the address", () => {

@@ -5,6 +5,7 @@ mod queue;
 mod server;
 #[cfg(test)]
 mod tests;
+mod waiting;
 
 use std::{
     path::PathBuf,
@@ -62,10 +63,21 @@ pub fn init(app: &AppHandle) -> Result<(), String> {
         changed = true;
     }
     let emitter = app.clone();
+    let app_dir = path.parent().map(PathBuf::from);
     let notify: server::Notify = Arc::new(move |event| {
         let _ = match event {
-            ApprovalEvent::Requested(request) => emitter.emit(REQUESTED_EVENT, request),
-            ApprovalEvent::Closed { id, reason } => emitter.emit(CLOSED_EVENT, ClosedPayload { id, reason }),
+            ApprovalEvent::Requested(request) => {
+                if let Some(dir) = &app_dir {
+                    waiting::note(dir, &request);
+                }
+                emitter.emit(REQUESTED_EVENT, request)
+            }
+            ApprovalEvent::Closed { id, reason } => {
+                if let Some(dir) = &app_dir {
+                    waiting::clear(dir, id);
+                }
+                emitter.emit(CLOSED_EVENT, ClosedPayload { id, reason })
+            }
         };
     });
     let shared = server::new_shared(WAIT_LIMIT, notify);

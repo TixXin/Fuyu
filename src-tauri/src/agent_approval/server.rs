@@ -10,7 +10,7 @@ use std::{
 };
 
 use super::{
-    decision::{hook_response, question_response, route, Activity, Agent, Decision, HookInput, Kind, ACTIVITY_PATH},
+    decision::{permission_response, question_response, route, Activity, Agent, Decision, HookInput, Kind, ACTIVITY_PATH},
     http::{check_access, read_request, write_response, HttpError},
     queue::{ApprovalRequest, CloseReason, Outcome, Queue},
 };
@@ -171,7 +171,7 @@ fn answer(shared: &Shared, stream: &TcpStream, port: u16, token: &str) -> Result
         }
         return Ok(Some("{}".to_string()));
     };
-    let mut input = HookInput::parse(&request.body).map_err(|message| HttpError { status: 400, message })?;
+    let mut input = HookInput::parse_for(agent, &request.body).map_err(|message| HttpError { status: 400, message })?;
     input.remote_host = remote_host;
 
     let question_elsewhere = match kind {
@@ -204,7 +204,7 @@ fn answer(shared: &Shared, stream: &TcpStream, port: u16, token: &str) -> Result
     Ok(Some(match kind {
         Kind::Permission => {
             let message = outcome.as_ref().and_then(|outcome| outcome.message.as_deref());
-            hook_response(decision, message, suggestions.as_ref())
+            permission_response(agent, decision, message, suggestions.as_ref())
         }
         Kind::Question => {
             let answers = outcome.as_ref().filter(|_| decision == Some(Decision::Answer)).and_then(|outcome| outcome.answers.as_ref());

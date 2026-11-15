@@ -3,9 +3,9 @@ type AgentInfo = { label: string; statusLight: boolean; remote: boolean };
 export const AGENTS = {
   codex: { label: "Codex", statusLight: true, remote: true },
   claudeCode: { label: "Claude Code", statusLight: true, remote: true },
-  workbuddy: { label: "WorkBuddy", statusLight: false, remote: false },
-  antigravity: { label: "Antigravity", statusLight: false, remote: false },
-  dsh: { label: "DeepSeek Harness", statusLight: false, remote: false },
+  workbuddy: { label: "WorkBuddy", statusLight: true, remote: false },
+  antigravity: { label: "Antigravity", statusLight: true, remote: false },
+  dsh: { label: "DeepSeek Harness", statusLight: true, remote: false },
   opencode: { label: "opencode", statusLight: false, remote: false },
 } as const satisfies Record<string, AgentInfo>;
 
