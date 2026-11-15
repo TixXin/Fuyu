@@ -5,7 +5,7 @@
 ## 结论
 
 - 已经有人做类似的事，但没有一个直接合用：[claude-code-markdown-preview](https://github.com/thiagovsk/claude-code-markdown-preview) 依赖 CDN、离线打不开，也不支持 Windows；[Report-Skill](https://github.com/TheoRata/Report-Skill) 的思路最对（代理照常写 Markdown，零依赖的 Node 脚本生成所有资源都内联的单个 HTML）；[spec-review](https://github.com/marcozanger/spec-review) 的逐节审阅、「复制反馈」很适合方案类文档。
-- 我们的做法：仓库里的 skill `doc-preview`（`.claude/skills/doc-preview/`，从仓库根执行 `node .claude/skills/doc-preview/preview.mjs <文件>`）。`preview.mjs` 把 Markdown 和内嵌的 marked（MIT，约 41 KB）、样式、脚本写成一个 HTML，放在临时目录，一个源文件一个页面，再用系统命令打开（仓库里这一份用的是 macOS 的 `open`）。不装依赖、不起服务、不用 CDN（只有文档里有 Mermaid 图时才从 CDN 加载画图库，离线时显示源码）。
+- 我们的做法：仓库里的 skill `doc-preview`（`.claude/skills/doc-preview/`，从仓库根执行 `node .claude/skills/doc-preview/preview.mjs <文件>`）。`preview.mjs` 把 Markdown 和内嵌的 marked（MIT，约 41 KB）、样式、脚本写成一个 HTML，放在临时目录，一个源文件一个页面，再用系统命令打开（macOS 用 `open`，Windows 用 `cmd /c start`，其余用 `xdg-open`）。不装依赖、不起服务、不用 CDN（只有文档里有 Mermaid 图时才从 CDN 加载画图库，离线时显示源码）。
 - 页面有：目录侧栏和当前位置高亮、深浅色、代码复制、front matter 表格、GitHub 风格的标题锚点（文档里写给 GitHub 的页内链接照样能跳）、`/docs/...` 这类仓库根路径的链接按 git 根目录解析、打印样式；以及学 spec-review 的「批注」和「复制反馈」：逐节写意见，一键整理成 Markdown 贴回对话。
 - 没做的：热重载（要常驻进程；现在是重新生成后点「重新载入」）、代码高亮。
 

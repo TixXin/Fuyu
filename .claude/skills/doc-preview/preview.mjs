@@ -99,7 +99,11 @@ function page({ title, source, markdown, meta, baseUrl, rootUrl }) {
 }
 
 function openInBrowser(file) {
-  const child = spawn("open", [file], { detached: true, stdio: "ignore" });
+  const [command, args] =
+    process.platform === "darwin" ? ["open", [file]]
+    : process.platform === "win32" ? ["cmd", ["/c", "start", "", file]]
+    : ["xdg-open", [file]];
+  const child = spawn(command, args, { detached: true, stdio: "ignore", windowsHide: true });
   child.on("error", (error) => console.error(`doc-preview: could not open the browser (${error.message}); open the file by hand.`));
   child.unref();
 }
