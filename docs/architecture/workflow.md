@@ -13,7 +13,7 @@
 
 ## 现在怎么做
 
-1. **所有会话都在主工作区、本地 `main` 上工作。** 用户的 `pnpm tauri dev` 也在这里，改动马上就能看到。不开 worktree，不切分支（切分支会冲掉别的会话正在改的文件）。
+1. **所有会话都在主工作区、本地 `main` 上工作。** 用户的 `pnpm tauri dev` 也在这里，改动马上就能看到。不开 worktree，不切分支（切分支会冲掉别的会话正在改的文件）。例外只有发版目录 `../Fuyu-release`：主仓库的一个 detached worktree，停在 `origin/main` 上，只用来改版本号和跑 `pnpm release`，这样本地 `main` 上没推的提交和别人没提交的文件都不挡发版、也不会混进去（2026-11-15 起，用户定）。
 2. **只提交自己的文件**：`git add <具体文件>` 或 `git commit -- <文件>`，不用 `git add -A` / `git add .`，别的会话还没提交的改动不要带上。`.githooks/pre-commit` 把关：在 `main` 上不带文件名的 `git commit`（含 `-a`）会被拒绝，合并、cherry-pick、rebase 过程中的提交除外；确实要提交整个暂存区时设 `FUYU_COMMIT_WHOLE_INDEX=1`。两个会话不要同时改同一个文件：认领任务时写 `--scope`，`pnpm tasks conflicts` 能查出和别人声明的范围重叠的文件。
 3. **攒着提 PR**，不是一个小改动一个 PR。下面任一条满足时 `pnpm mq:land --yes --body <文件>`，不用问用户：
    - 一个任务做完（`pnpm tasks done <编号> --commit "<提交标题>"`，和功能改动在同一个提交里）；
@@ -89,6 +89,15 @@ land 从 git 的 pre-push 钩子里跑检查，环境里带着 `GIT_DIR` 等变�
 - 认领后 24 小时任务文件没有新的交接或提交，就算失效（`pnpm tasks stale`），别人可以先发消息再 `--takeover` 接手。做得久的任务停下时 `pnpm tasks note` 留交接，也就续上了。
 - `pnpm tasks done <编号> --commit "<提交标题>"`：本地 `main` 上有别的会话的提交，所以要明确写这次功能提交的标题（或已有的提交号）。
 
+## 没提交的文件
+
+大家共用一个工作区，没提交的改动别人都看得到，也都会被它影响：本地 `main` 合不进 `origin/main` 上改了同一个文件的提交，会话和用户的 `pnpm tauri dev` 一直停在旧代码上；别人的检查跑的是混在一起的工作区，会因为你没提交的代码失败。2026-11-15 一天里工作区一度积了 129 个没提交的文件，本地 `main` 落后 `origin/main` 55 个提交（F41，issue #490）。所以：
+
+- **热点文件改完就提交**：`AGENTS.md`、`package.json`、`pnpm-lock.yaml`、`docs/architecture/` 下的 `platforms.md` / `contracts.md` / `data-storage.md` / `overview.md` / `workflow.md`、`src-tauri/Cargo.toml` / `Cargo.lock` / `src/lib.rs` / `capabilities/`、`src/windows/settings/searchIndex.json`、`src/i18n/types.ts`、两份行数和颜色白名单。这些几乎每个功能都会碰，挂着不提交最容易挡住本地 `main` 跟上。改完、能独立成立就单独提交（文档、登记一行命令、注册一个模块都算），不等整个功能做完；列表在 `scripts/tasks/taskDirty.mjs` 的 `HOT_FILES`。
+- **停下就收拾**：做完的提交；做不完的 `pnpm tasks note` 留交接，写清哪些没提交的文件是自己的。不要让改动挂在工作区里没有主人。
+- **暂存区是共用的**：只用 `git commit -- <文件>` 提交自己的文件；`git add` 了别人的文件、或别人暂存的文件被自己带进提交时，马上撤回（`git reset -q -- <文件>` 只动索引，不动工作区）。
+- **清点**：`pnpm tasks dirty` 把没提交的文件按进行中任务的 `--scope` 归组，单独列出热点文件、不在任何人认领范围里的、超过 3 小时没动的（`--quiet-hours <N>` 改）和已经暂存的；`--json` 给脚本用。总会话合入一批之后、或者本地 `main` 跟不上时跑一次，没有主人的去找对应的会话，找不到的问用户。
+
 ## 外部 PR
 
 别人提的 PR 不走 land：直接在那个 PR 上开启自动合并。
@@ -117,7 +126,7 @@ land 从 git 的 pre-push 钩子里跑检查，环境里带着 `GIT_DIR` 等变�
 - **全机器排队**（2026-11-15 起，F40）：同一台机器上同时最多跑 `FUYU_HEAVY_SLOTS` 个重任务（默认逻辑 CPU ÷ 5，10 核的 Mac 是 2 个），其余的排队，每 30 秒打印正在跑的是谁、自己排第几。`pnpm build:exe`、`pnpm verify`、`pnpm test:regression` 自动排队；别的重命令写成 `pnpm heavy [--label <名字>] -- <命令…>`，例如 `pnpm heavy -- cargo test --manifest-path src-tauri/Cargo.toml`。队列在 `~/.cache/fuyu-heavy/`，进程退出（包括被杀）后它占的位置会自动清掉。起因是 20 多个会话同时编译，负载到了 200 多（issue #448）。
 - **钩子**：`scripts/heavy/gate.mjs` 登记在 `.claude/settings.json`，拦下三种命令：没经过排队的 `cargo build/test/check/clippy/run` 和 `tauri build`；把 `CARGO_TARGET_DIR` 设成 `agents`、`debug`、`release` 以外的目录；`cd` 进临时目录里的仓库副本再编译（副本没有 `rust-toolchain.toml`，也用不上缓存，每份都从零编译）。别的会话没提交的改动让检查报错时，在主工作区照样跑，交接里写明哪些失败不是自己造成的。确实要绕过时，用户可以在会话环境里设 `FUYU_HEAVY_GATE=off`。
 - **整批 land 一次只跑一个**：`pnpm mq:land` 在 `.git/fuyu-land.lock` 里记下自己。已经有一个整批 land 在跑时，后来的直接退出（退出码 0），提示它开始前的提交会一起带上去；`--only` 不受影响。
-- **会话数**：每个主 agent 同时最多跑 2 个要编译的子会话；总会话盯着全机器正在干活的会话数，超过 6 个就让后面的排队（fuyu-lead skill 里也写了）。
+- **会话数**：每个主 agent 同时最多跑 2 个要编译的子会话；全机器同时改代码的会话控制在 6 个左右，超过就让后面的排队（调研、写文档、只读代码的不算；fuyu-lead skill 里也写了）。编译名额只有 2 个，写代码的会话再多也只是在排队，没提交的文件反而越积越多（F41）。
 - `land-check`、`pnpm verify`、`pnpm build:exe` 以「低于正常」优先级运行，cargo 并行数默认是逻辑 CPU 的一半（`scripts/build-load.mjs`）。Mac 上还用 `taskpolicy -b` 把它们放进后台档（只用能效核、磁盘读写让路），并行数等于能效核个数，编译变慢但前台不卡。环境里已设 `CARGO_BUILD_JOBS` 时以它为准。会话手动跑 `cargo test` / `clippy` 不经过这里，Mac 上用 `taskpolicy -b cargo test …` 跑。
 - Mac 上验证 Rust 改动：`cargo clippy --all-targets -- -D warnings` 和 `cargo test`，再交叉检查 Windows：`cargo clippy --all-targets --target x86_64-pc-windows-gnu -- -D warnings`。
 - Rust 版本固定在 `rust-toolchain.toml`，CI 的 `ci.yml` 写同一个版本，改时一起改。

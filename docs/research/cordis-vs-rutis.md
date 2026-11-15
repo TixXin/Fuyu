@@ -4,6 +4,8 @@
 
 ## 结论
 
+> 2026-11-15 第 3 阶段前回看：建议继续自己写 Rust ↔ 宿主那一段、不让 rutis 当外层（它的 Node 运行时写死 `@deepseek-ai/cordis`，`#[rutis::service]` 仍只能标 `impl` 块），TS 类型用 `ts-rs`。见 [rutis-revisit.md](rutis-revisit.md)。
+
 - **两者不是同一层的东西**。Cordis 是「一个进程里的插件框架」：JS 写的，插件之间直接拿到对方的对象。rutis 是「跨进程、跨语言的插件运行时」：Rust 写的内核，把 Cordis 的生命周期模型带到多个语言和多个进程。
 - **建议：维持决定 3，用 Cordis**，理由按分量排：
   1. **窗口里也需要一个内核**。界面插槽跑在 WebView 里，Cordis 能在浏览器里跑（Koishi 的控制台就是），宿主和窗口可以用同一套模型；rutis 没有给浏览器用的 SDK，用它的话窗口里还得另找一套，变成两套模型。

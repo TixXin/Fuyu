@@ -28,5 +28,8 @@
 | `antigravity.png` | [Google Antigravity](https://antigravity.google/) | [官网图标](https://antigravity.google/apple-touch-icon.png)，2026-11-13 取得 |
 | `dsh.png` | [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)（MIT） | 仓库里网页版的 [`apps/web/public/apple-touch-icon.png`](https://github.com/deepseek-ai/deepseek-harness/blob/master/apps/web/public/apple-touch-icon.png)（180×180，自带浅色底），2026-11-13 取得 |
 | `opencode.png` | [opencode](https://opencode.ai/)（MIT） | 仓库里网页版的 [`packages/ui/src/assets/favicon/apple-touch-icon-v3.png`](https://github.com/anomalyco/opencode/blob/d432a06b9c07bab0be4e8d642173b1cb14137f11/packages/ui/src/assets/favicon/apple-touch-icon-v3.png)（180×180，深色底），2026-11-15 取得 |
+| `qoder.png` | [Qoder](https://qoder.com/) | [官网 Apple Touch 图标](https://img.alicdn.com/imgextra/i4/O1CN01QkSxiCocd3D0prc8_!!6000000008124-2-tps-412-412.png)（412×412，缩到 180×180），2026-11-15 取得 |
+| `codebuddy.svg` | [CodeBuddy](https://www.codebuddy.ai/) | [官网图标](https://codebuddy-1328495429.cos.accelerate.myqcloud.com/web/ide/logo.svg)（codebuddy.cn 上是同一张），2026-11-15 取得 |
+| `qwen.png` | [Qwen Code](https://github.com/QwenLM/qwen-code)（Apache-2.0） | 官方文档站的 [`favicon.png`](https://qwenlm.github.io/qwen-code-docs/favicon.png)（512×512，缩到 180×180），2026-11-15 取得 |
 
-QQ、微信、QQ 邮箱的品牌标识及相关权利归腾讯及对应权利人所有；网易邮箱标识归网易所有，Gmail、Antigravity 标识归 Google 所有，Outlook 标识归 Microsoft 所有；Claude 标识归 Anthropic 所有，OpenAI 标识归 OpenAI 所有，WorkBuddy 标识归腾讯所有，DeepSeek 标识归杭州深度求索所有，opencode 标识归 opencode 项目所有。图标随应用打包，不在运行时请求远程图片。
+QQ、微信、QQ 邮箱的品牌标识及相关权利归腾讯及对应权利人所有；网易邮箱标识归网易所有，Gmail、Antigravity 标识归 Google 所有，Outlook 标识归 Microsoft 所有；Claude 标识归 Anthropic 所有，OpenAI 标识归 OpenAI 所有，WorkBuddy、CodeBuddy 标识归腾讯所有，Qoder、Qwen 标识归阿里巴巴所有，DeepSeek 标识归杭州深度求索所有，opencode 标识归 opencode 项目所有。图标随应用打包，不在运行时请求远程图片。

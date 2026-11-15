@@ -36,7 +36,7 @@ send() {
   set -- "$1" $(stat -c '%s %Y' "$1" 2>/dev/null)
   [ -n "$3" ] || return 0
   if printf '%s\n' "$KNOWN" | grep -qxF "$2 $3 $n"; then printf 'S %s\n' "$n"; return 0; fi
-  case "$n" in *.json)
+  case "$n" in *.json|*.db)
     [ "$2" -le __WHOLE_MAX__ ] || return 0
     printf 'F %s %s 0 %s %s\n' "$2" "$3" "$2" "$n"
     { head -c "$2" "$1"; dd if=/dev/zero bs="$2" count=1; } | head -c "$2"
@@ -97,6 +97,10 @@ done
 "#;
 const END_OF_KNOWN: &str = "FOCUSD_KNOWN";
 const READY: &[u8] = b"FOCUSD_READY";
+pub(super) fn is_whole_file(path: &str) -> bool {
+    path.ends_with(".json") || path.ends_with(".db")
+}
+
 pub(super) const APPROVAL_PORT_FILE: &str = ".fuyu/approval-port";
 const LEGACY_APPROVAL_PORT_FILE: &str = ".focusd-island/approval-port";
 
@@ -361,7 +365,7 @@ pub(super) fn read_reply(reader: &mut impl BufRead) -> Result<Vec<Reply>, String
         let mut number = || parts.next().and_then(|part| part.parse::<u64>().ok()).ok_or("Malformed file line");
         let (size, mtime, head_len, tail_len) = (number()?, number()?, number()?, number()?);
         let path = parts.next().filter(|path| !path.is_empty()).ok_or("File line without a path")?;
-        let whole = head_len == 0 && tail_len == size && path.ends_with(".json");
+        let whole = head_len == 0 && tail_len == size && is_whole_file(path);
         if head_len > HEAD_MAX_BYTES || tail_len > if whole { WHOLE_MAX_BYTES } else { TAIL_BYTES } {
             return Err("File excerpt too large".into());
         }

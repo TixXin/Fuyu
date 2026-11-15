@@ -1,5 +1,6 @@
 mod containment;
 pub(crate) mod protocol;
+mod safe_mode;
 
 use std::{path::PathBuf, sync::Mutex, sync::OnceLock};
 
@@ -13,6 +14,7 @@ const RELEASE_ORIGINS: [&str; 3] = ["tauri://localhost", "http://tauri.localhost
 
 static SUPERVISOR: OnceLock<Mutex<Option<Supervisor>>> = OnceLock::new();
 static PLUGINS_DIR: OnceLock<PathBuf> = OnceLock::new();
+static TRACKER: OnceLock<Mutex<safe_mode::Tracker>> = OnceLock::new();
 static STOPPING: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
 fn enabled(development: bool, switch: Option<&str>) -> bool {
@@ -32,19 +34,11 @@ fn window_origins(dev_url: Option<&str>) -> Vec<String> {
 }
 
 const SAFE_SWITCH: &str = "FUYU_PLUGINS_V3_SAFE";
-const SAFE_MODES: [&str; 2] = ["third-party", "minimal"];
 
 #[derive(Debug, Clone, Default, PartialEq)]
 struct HostMode {
     development: bool,
     safe: Option<String>,
-}
-
-impl HostMode {
-    fn from(development: bool, safe: Option<&str>) -> Self {
-        let safe = safe.map(str::trim).filter(|mode| SAFE_MODES.contains(mode)).map(str::to_owned);
-        Self { development, safe }
-    }
 }
 
 fn host_args(dir: PathBuf, origins: &[String], mode: &HostMode) -> Vec<std::ffi::OsString> {
@@ -131,13 +125,48 @@ fn choose_node(data_dir: &std::path::Path) -> Result<ChosenNode, String> {
     Ok(chosen)
 }
 
-fn start(home: PathBuf, dir: PathBuf, origins: Vec<String>, mode: HostMode) -> Result<(), String> {
-    let node = choose_node(&home)?;
-    if let Some(safe) = &mode.safe {
-        eprintln!("[plugins-v3] safe mode: {safe}");
+fn tracker() -> Option<std::sync::MutexGuard<'static, safe_mode::Tracker>> {
+    TRACKER.get()?.lock().ok()
+}
+
+fn spec_for(node: PathBuf, dir: PathBuf, origins: Vec<String>, development: bool) -> impl FnMut(u32) -> HostSpec + Send + 'static {
+    let env = host_env(cfg!(windows), std::env::var(THREADPOOL).ok().as_deref());
+    move |generation| {
+        let safe = tracker().and_then(|mut tracker| tracker.starting(generation));
+        if let Some(safe) = &safe {
+            eprintln!("[plugins-v3] safe mode: {} ({:?}, {} failed starts)", safe.mode, safe.cause, safe.failures);
+        }
+        let mode = HostMode { development, safe: safe.map(|safe| safe.mode) };
+        HostSpec { program: node.clone(), args: host_args(dir.clone(), &origins, &mode), env: env.clone(), current_dir: None }
     }
-    let spec = HostSpec { program: node.path, args: host_args(dir, &origins, &mode), env: host_env(cfg!(windows), std::env::var(THREADPOOL).ok().as_deref()), current_dir: None };
-    let supervisor = Supervisor::start(spec, containment::shared(), Timing::default(), report)?;
+}
+
+fn track(event: &Event) {
+    match event {
+        Event::State(HostState::Down { generation, reason, .. }) => {
+            if let Some(mut tracker) = tracker() {
+                tracker.went_down(*generation, reason);
+            }
+        }
+        Event::State(HostState::Ready { generation, .. }) => {
+            let generation = *generation;
+            let _ = std::thread::Builder::new().name("plugin-host-healthy".into()).spawn(move || {
+                std::thread::sleep(safe_mode::HEALTHY_AFTER);
+                if let Some(mut tracker) = tracker() {
+                    tracker.healthy(generation);
+                }
+            });
+        }
+        _ => {}
+    }
+}
+
+fn start(home: PathBuf, dir: PathBuf, origins: Vec<String>, development: bool) -> Result<(), String> {
+    let node = choose_node(&home)?;
+    let supervisor = Supervisor::start_with(spec_for(node.path, dir, origins, development), containment::shared(), Timing::default(), |event| {
+        track(&event);
+        report(event);
+    })?;
     let mut slot = SUPERVISOR.get_or_init(Mutex::default).lock().map_err(|_| "the plugin host lock is poisoned".to_string())?;
     if STOPPING.load(std::sync::atomic::Ordering::SeqCst) {
         drop(slot);
@@ -158,11 +187,12 @@ pub(crate) fn init(app: &AppHandle) -> Result<(), String> {
     let _ = SUPERVISOR.get_or_init(Mutex::default);
     let dev_url = app.config().build.dev_url.as_ref().map(ToString::to_string);
     let origins = window_origins(dev_url.as_deref());
-    let mode = HostMode::from(cfg!(debug_assertions), std::env::var(SAFE_SWITCH).ok().as_deref());
+    let shift = crate::platform::input::is_shift_key_down();
+    let _ = TRACKER.set(Mutex::new(safe_mode::Tracker::new(Some(&dir), std::env::var(SAFE_SWITCH).ok(), shift)));
     std::thread::Builder::new()
         .name("plugin-host-start".into())
         .spawn(move || {
-            if let Err(error) = start(home, dir, origins, mode) {
+            if let Err(error) = start(home, dir, origins, cfg!(debug_assertions)) {
                 eprintln!("[plugins-v3] the plugin host did not start: {error}");
             }
         })
@@ -177,6 +207,7 @@ pub(crate) struct HostConnection {
     port: Option<u64>,
     token: Option<String>,
     generation: Option<u32>,
+    safe_mode: Option<safe_mode::SafeMode>,
 }
 
 fn connection_from(enabled: bool, state: Option<&HostState>) -> HostConnection {
@@ -187,6 +218,7 @@ fn connection_from(enabled: bool, state: Option<&HostState>) -> HostConnection {
             port: ready["windows"]["port"].as_u64(),
             token: ready["windows"]["token"].as_str().map(str::to_owned),
             generation: Some(*generation),
+            safe_mode: None,
         },
         Some(_) => HostConnection { enabled: true, ..HostConnection::default() },
     }
@@ -200,7 +232,19 @@ fn connection_now(switched_on: bool, slot: Option<&Mutex<Option<Supervisor>>>) -
 
 #[tauri::command]
 pub(crate) fn get_plugin_host_connection() -> HostConnection {
-    connection_now(enabled(cfg!(debug_assertions), std::env::var(SWITCH).ok().as_deref()), SUPERVISOR.get())
+    let connection = connection_now(enabled(cfg!(debug_assertions), std::env::var(SWITCH).ok().as_deref()), SUPERVISOR.get());
+    HostConnection { safe_mode: tracker().and_then(|tracker| tracker.current()), ..connection }
+}
+
+#[tauri::command]
+pub(crate) fn exit_plugin_safe_mode() -> Result<bool, String> {
+    let left = tracker().is_some_and(|mut tracker| tracker.leave());
+    if left {
+        if let Some(supervisor) = SUPERVISOR.get().and_then(|slot| slot.lock().ok()).as_ref().and_then(|slot| slot.as_ref()) {
+            supervisor.restart();
+        }
+    }
+    Ok(left)
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
@@ -239,6 +283,7 @@ macro_rules! tauri_commands {
         $next!([$($done)*
             crate::plugin_kernel::get_plugin_host_connection,
             crate::plugin_kernel::get_plugin_host_memory,
+            crate::plugin_kernel::exit_plugin_safe_mode,
         ] $($rest)*)
     };
 }

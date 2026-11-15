@@ -6,6 +6,9 @@ if /I "%PROVIDER%"=="codex" goto known
 if /I "%PROVIDER%"=="claudeCode" goto known
 if /I "%PROVIDER%"=="workbuddy" goto known
 if /I "%PROVIDER%"=="dsh" goto known
+if /I "%PROVIDER%"=="qoder" goto known
+if /I "%PROVIDER%"=="codebuddy" goto known
+if /I "%PROVIDER%"=="qwen" goto known
 if /I "%PROVIDER%"=="antigravity" (
   if /I not "%~2"=="start" if /I not "%~2"=="running" if /I not "%~2"=="stop" exit /b 2
   goto known

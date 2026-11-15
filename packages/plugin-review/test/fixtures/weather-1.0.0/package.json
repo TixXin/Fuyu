@@ -1,0 +1,22 @@
+{
+  "name": "@someone/fuyu-weather",
+  "version": "1.0.0",
+  "type": "module",
+  "license": "MIT",
+  "repository": "github:someone/fuyu-weather",
+  "engines": { "fuyu": ">=0.4.0" },
+  "dependencies": {
+    "tiny-format": "^1.2.0"
+  },
+  "fuyu": {
+    "manifest": 1,
+    "displayName": { "zh-CN": "天气", "en": "Weather" },
+    "description": { "zh-CN": "岛上看天气", "en": "Weather on the island" },
+    "icon": "assets/icon.svg",
+    "categories": ["information"],
+    "host": "dist/host.js",
+    "provides": ["weather"],
+    "network": ["api.open-meteo.com"],
+    "experimental": []
+  }
+}

@@ -14,8 +14,9 @@ import { useWeChatReminders } from "../../src/features/messages/wechat/WeChatRem
 import { useMail } from "../../src/features/messages/mail/MailPanel";
 import type { MediaState } from "../../src/features/media/api";
 import type { PluginNotificationsController } from "../../src/features/plugins/usePluginNotifications";
-import { checkForUpdate, getUpdateState, reloadPreferences, setAutoCheck, setCheckInterval, setReminderMode, skipVersion } from "../../src/features/updater/updaterController";
+import { checkForUpdate, getUpdateState, installUpdate, reloadPreferences, setAutoCheck, setCheckInterval, setReminderMode, skipVersion } from "../../src/features/updater/updaterController";
 import { UPDATE_PREFERENCES_KEY } from "../../src/features/updater/storage";
+import { failNextUpdaterCall } from "./updateRuntimeMock";
 
 const automated = new URLSearchParams(location.search).has("test");
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: automated });
@@ -110,6 +111,16 @@ async function runChecks() {
     const saved = JSON.parse(localStorage.getItem(UPDATE_PREFERENCES_KEY) ?? "{}") as { checkIntervalHours?: number; reminderMode?: string };
     check(saved.checkIntervalHours === 24 && saved.reminderMode === "notification", "检查频率和提醒方式写进偏好");
     const heroIsland = document.querySelector<HTMLButtonElement>("#settings .about-hero__island")!;
+    const headline = () => document.querySelector("#settings .update-status__copy strong")?.textContent;
+    const statusButton = () => document.querySelector<HTMLButtonElement>("#settings .update-status__actions .update-status__button")?.textContent;
+    failNextUpdaterCall("install");
+    await update(() => installUpdate(undefined, undefined, { skipBackup: true }));
+    check(headline() === "安装更新失败" && heroIsland.textContent === "安装更新失败" && statusButton() === "重新检查",
+      "下载或安装出错时关于页和小岛写「安装更新失败」，按钮是「重新检查」");
+    failNextUpdaterCall("check");
+    await update(() => checkForUpdate());
+    check(headline() === "检查更新失败" && heroIsland.textContent === "检查更新失败" && statusButton() === "重试", "检查出错时仍写「检查更新失败」，按钮是「重试」");
+    await update(() => checkForUpdate());
     check(heroIsland.textContent === "有新版本 v0.3.4" && !document.querySelector("#settings .about-hero__status") && document.querySelector("#settings .about-hero__sea"),
       "关于页横幅是海面上的小岛，岛上直接写更新状态，不再另有状态胶囊");
     await update(() => heroIsland.click());

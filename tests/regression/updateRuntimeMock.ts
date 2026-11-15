@@ -5,8 +5,17 @@ import { DEMO_UPDATE, playDemoDownload } from "./updateDemo";
 
 let snapshot: UpdateSnapshot = {
   revision: 0, stage: "idle", channel: null, nextVersion: "", notes: "", downloaded: 0, total: 0,
-  detail: "", lastCheckedAt: null, lastAttemptAt: null, startedAt: Date.now(), checkFailures: 0,
+  detail: "", lastCheckedAt: null, lastAttemptAt: null, startedAt: Date.now(), checkFailures: 0, errorKind: null,
 };
+let failNext: "check" | "install" | null = null;
+export function failNextUpdaterCall(kind: "check" | "install") {
+  failNext = kind;
+}
+async function fail(kind: "check" | "install", detail: string) {
+  failNext = null;
+  await update({ stage: "error", detail, errorKind: kind, checkFailures: snapshot.checkFailures + (kind === "check" ? 1 : 0) });
+  throw new Error(detail);
+}
 async function update(patch: Partial<UpdateSnapshot>) {
   snapshot = { ...snapshot, ...patch, revision: snapshot.revision + 1 };
   await emit(UPDATE_STATE_EVENT, { ...snapshot });
@@ -24,14 +33,16 @@ export async function updateRuntimeMock(command: string, args: Record<string, un
   if (command === "updater_diagnostics") return { osVersion: "Windows build 26100.1", architecture: "x86_64" };
   if (command === "updater_check") {
     if (["checking", "downloading", "installing"].includes(snapshot.stage)) throw { code: "updater.busy", message: "busy" };
-    await update({ stage: "checking", lastAttemptAt: Date.now() });
+    await update({ stage: "checking", lastAttemptAt: Date.now(), detail: "", errorKind: null });
+    if (failNext === "check") return fail("check", "offline");
     await update({ stage: demo ? "available" : "latest", channel: args.channel === "beta" ? "beta" : "stable",
       nextVersion: demo ? DEMO_UPDATE.version : "", notes: demo ? DEMO_UPDATE.body ?? "" : "", lastCheckedAt: Date.now(), checkFailures: 0 });
     return demo ? DEMO_UPDATE : null;
   }
   if (command === "updater_install") {
     if (args.expectedVersion !== snapshot.nextVersion || args.expectedChannel !== snapshot.channel) throw { code: "updater.targetChanged", message: "target changed" };
-    await update({ stage: "downloading", downloaded: 0, total: 0 });
+    await update({ stage: "downloading", downloaded: 0, total: 0, detail: "", errorKind: null });
+    if (failNext === "install") return fail("install", "failed to unpack");
     await playDemoDownload({ onmessage: (event: DownloadEvent) => {
       if (event.event === "Started") void update({ total: event.data.contentLength ?? 0 });
       if (event.event === "Progress") void update({ downloaded: snapshot.downloaded + event.data.chunkLength });

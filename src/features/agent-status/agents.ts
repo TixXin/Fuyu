@@ -7,6 +7,9 @@ export const AGENTS = {
   antigravity: { label: "Antigravity", statusLight: true, remote: true },
   dsh: { label: "DeepSeek Harness", statusLight: true, remote: true },
   opencode: { label: "opencode", statusLight: false, remote: false },
+  qoder: { label: "Qoder", statusLight: true, remote: false },
+  codebuddy: { label: "CodeBuddy", statusLight: true, remote: false },
+  qwen: { label: "Qwen Code", statusLight: true, remote: false },
 } as const satisfies Record<string, AgentInfo>;
 
 export type SessionProvider = keyof typeof AGENTS;

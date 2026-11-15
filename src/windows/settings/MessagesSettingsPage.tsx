@@ -79,6 +79,15 @@ export function MessagesSettingsPage({
           checked={wechatReminders.snapshot.enabled}
           onChange={(enabled) => void wechatReminders.setEnabled(enabled)}
         />
+        {wechatReminders.snapshot.enabled && (
+          <SettingsToggleRow
+            title={t.wechat.autoClear}
+            description={isMacOS ? t.wechat.autoClearDescriptionMac : t.wechat.autoClearDescription}
+            checked={wechatReminders.autoClear}
+            indent
+            onChange={wechatReminders.setAutoClear}
+          />
+        )}
         {wechatReminders.snapshot.enabled && !isMacOS && (
           <SettingsToggleRow
             title={t.wechat.exposeUi}
@@ -109,7 +118,7 @@ function Problem({ error, hint }: { error: string | null | undefined; hint: stri
 
 function QQGroup({ controller, title, hint }: { controller: QQNotificationsController; title: string; hint: string }) {
   const t = useTranslation();
-  const { snapshot, busy, actionError, setEnabled, requestAccess, openSettings } = controller;
+  const { snapshot, busy, actionError, setEnabled, requestAccess, openSettings, autoClear, setAutoClear } = controller;
   const needsAccess = snapshot.enabled && (snapshot.status === "permissionRequired" || snapshot.status === "permissionDenied");
   const error = actionError || snapshot.error || (needsAccess ? (isMacOS ? t.qq.permissionRequiredMac : t.qq.status[snapshot.status]) : null);
 
@@ -120,6 +129,15 @@ function QQGroup({ controller, title, hint }: { controller: QQNotificationsContr
         description={snapshot.enabled ? t.qq.status[snapshot.status] : undefined}
         checked={snapshot.enabled}
         onChange={(enabled) => void setEnabled(enabled)} />
+      {snapshot.enabled && (
+        <SettingsToggleRow
+          title={t.qq.autoClear}
+          description={isMacOS ? t.qq.autoClearDescriptionMac : t.qq.autoClearDescription}
+          checked={autoClear}
+          indent
+          onChange={setAutoClear}
+        />
+      )}
       {needsAccess && (
         <SettingsRow
           title={t.qq.allowLabel}

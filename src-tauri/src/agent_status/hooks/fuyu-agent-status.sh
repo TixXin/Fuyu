@@ -4,7 +4,7 @@ phase=$2
 task=$(printf '%s' "${3:-}" | tr -cd 'A-Za-z0-9_.:-')
 minimum_visible_ms=800
 
-providers="codex claudeCode workbuddy antigravity dsh"
+providers="codex claudeCode workbuddy antigravity dsh qoder codebuddy qwen"
 case " $providers " in *" $provider "*) ;; *) exit 2 ;; esac
 case "$phase" in idle|running|completed|failed) ;; *) exit 2 ;; esac
 

@@ -33,6 +33,7 @@ mod session_memory;
 mod session_mode;
 mod session_process;
 mod session_records;
+mod subagents;
 mod snapshot;
 pub(crate) mod sound_packs;
 #[cfg(test)]
@@ -52,6 +53,10 @@ mod antigravity_remote;
 mod dsh;
 mod dsh_hooks;
 mod opencode;
+mod claude_compat;
+mod qoder;
+mod codebuddy;
+mod qwen;
 
 use serde::Serialize;
 use serde_json::{json, Value};
@@ -334,7 +339,7 @@ pub(crate) fn reinstall_hooks_after_rename(app: &AppHandle) -> Result<bool, Stri
 pub async fn list_agent_sessions(
     app: AppHandle,
     window_hours: Option<u32>,
-) -> Result<Vec<sessions::AgentSessionSummary>, String> {
+) -> Result<Vec<subagents::ListedSession>, String> {
     let window_ms = window_hours
         .map(|hours| i64::from(hours.clamp(1, 24)) * 60 * 60 * 1000)
         .unwrap_or(session_scan::ACTIVE_WINDOW_MS);
@@ -350,7 +355,7 @@ pub async fn list_agent_sessions(
             sessions.extend(remote_sessions::sessions(&app_dir, window_ms));
             let is_active = |phase: &str| matches!(phase, "running" | "waiting");
             sessions.sort_by_key(|session| (!is_active(session.phase), -session.updated_at));
-            sessions
+            subagents::with_subagents(&home_dir, sessions, snapshot::current_unix_millis())
         })
     })
     .await

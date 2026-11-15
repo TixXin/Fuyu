@@ -22,6 +22,13 @@ pub(super) enum Stage {
     Error,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub(super) enum ErrorKind {
+    Check,
+    Install,
+}
+
 #[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateSnapshot {
@@ -38,6 +45,7 @@ pub struct UpdateSnapshot {
     pub started_at: i64,
     pub check_failures: u32,
     pub download_source: Option<String>,
+    pub(super) error_kind: Option<ErrorKind>,
 }
 
 pub(super) struct Runtime<T> {
@@ -65,6 +73,7 @@ impl<T> Runtime<T> {
                 started_at: now(),
                 check_failures: 0,
                 download_source: None,
+                error_kind: None,
             },
             pending: None,
             pending_channel: None,
@@ -89,6 +98,7 @@ impl<T> Runtime<T> {
         self.checking_channel = Some(channel.to_owned());
         self.snapshot.last_attempt_at = Some(now());
         self.snapshot.detail.clear();
+        self.snapshot.error_kind = None;
         Ok(())
     }
 
@@ -123,6 +133,7 @@ impl<T> Runtime<T> {
     pub fn fail(&mut self, error: &str, check: bool) {
         self.snapshot.stage = Stage::Error;
         self.snapshot.detail = error.chars().take(240).collect();
+        self.snapshot.error_kind = Some(if check { ErrorKind::Check } else { ErrorKind::Install });
         if check {
             self.checking_channel = None;
             self.snapshot.check_failures = self.snapshot.check_failures.saturating_add(1);
@@ -149,6 +160,7 @@ impl<T> Runtime<T> {
         self.snapshot.downloaded = 0;
         self.snapshot.total = 0;
         self.snapshot.detail.clear();
+        self.snapshot.error_kind = None;
         Ok(update)
     }
 
@@ -176,6 +188,7 @@ impl<T> Runtime<T> {
             self.snapshot.total = 0;
         }
         self.snapshot.detail.clear();
+        self.snapshot.error_kind = None;
         Ok((update, bytes))
     }
 }
@@ -245,6 +258,7 @@ mod tests {
         let last_success = runtime.snapshot.last_checked_at;
         runtime.begin_check("beta").unwrap();
         runtime.fail("offline", true);
+        assert_eq!(runtime.snapshot.error_kind, Some(ErrorKind::Check));
         assert_eq!(runtime.snapshot.last_checked_at, last_success);
         assert_eq!(runtime.snapshot.next_version, "1.2.0");
         assert_eq!(runtime.snapshot.check_failures, 1);
@@ -264,7 +278,9 @@ mod tests {
         runtime.fail("download failed", false);
         assert_eq!(runtime.snapshot.check_failures, 0);
         assert_eq!(runtime.snapshot.stage, Stage::Error);
+        assert_eq!(runtime.snapshot.error_kind, Some(ErrorKind::Install));
         runtime.begin_check("stable").unwrap();
+        assert_eq!(runtime.snapshot.error_kind, None);
     }
 
     #[test]
@@ -325,5 +341,10 @@ mod tests {
         assert!(value["lastCheckedAt"].is_null());
         assert_eq!(value["checkFailures"], 0);
         assert!(value["downloadSource"].is_null());
+        assert!(value["errorKind"].is_null());
+        let mut runtime = available();
+        runtime.begin_install(None, None).unwrap();
+        runtime.fail("failed to unpack", false);
+        assert_eq!(serde_json::to_value(runtime.snapshot).unwrap()["errorKind"], "install");
     }
 }

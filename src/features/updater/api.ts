@@ -36,6 +36,7 @@ export type UpdateSnapshot = {
   startedAt: number;
   checkFailures: number;
   downloadSource?: string | null;
+  errorKind?: "check" | "install" | null;
 };
 
 export const UPDATE_STATE_EVENT = "updater-state-changed";

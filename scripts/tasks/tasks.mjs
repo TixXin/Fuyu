@@ -7,6 +7,7 @@ import {
   CLOSED_STATUSES, OPEN_STATUSES, addLine, claimState, claimText, claimed, filesInScope, formatTask, isTaskId,
   scopeOverlap, splitList, unclaimed,
 } from "./taskFile.mjs";
+import { dirtyLines, dirtyReport, readDirty } from "./taskDirty.mjs";
 import { hostReminders, landingProblems } from "./taskLanding.mjs";
 import {
   checkTasks, findTask, git, load, machineName, nowText, readAll, readGroups, save, staleOf, taskOnMain, taskPath, todayText, tryGit,
@@ -239,6 +240,12 @@ async function main(argv) {
     }
     case "conflicts":
       return conflicts(root);
+    case "dirty": {
+      const report = dirtyReport(readDirty(root), readAll(root), { quietHours: Number(options["quiet-hours"]) || undefined });
+      if (options.json) console.log(JSON.stringify(report, null, 2));
+      else console.log(dirtyLines(report).join("\n"));
+      return 0;
+    }
     case "check": {
       const problems = checkTasks(root);
       for (const problem of problems) console.error(problem);

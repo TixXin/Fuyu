@@ -26,7 +26,8 @@
 
 - 每个窗口在模块加载时**同步**建一个注册表（`windowSlots("island")`、`windowSlots("settings")`），插槽定义一次性写好。内置功能的注册是同步的副作用 import（例如 `IslandPages.tsx` 顶上 `import "./slots/pages"`），首帧就有全部内置项，和现在一样。
 - 宿主是否启用、有没有连上，只决定**第三方**项会不会进来：`runtime.ts` 改成往这个已有的注册表里加，不再自己建。`FUYU_PLUGINS_V3` 没开时代码路径和现在一样，只多了一次同步建表。
-- 内置项的 `owner` 固定为 `builtin`，第三方按 `plugins.yml` 的 id。
+- 注册接口带 `owner` 参数，内置项默认 `builtin`，第三方按 `plugins.yml` 的 id；不写死，第 3 阶段内置功能变成插件后改传内置插件的 id（`timer`、`translation`），关掉插件就能撤掉它的界面（和第 3 阶段地基计划对过，2026-11-15）。
+- 窗口协议第 2 阶段不动。第 3 阶段地基在窗口协议里加 `service.call`、`service.on`（只加不升 `WINDOW_PROTOCOL`），窗口一侧调服务的代理 `packages/plugin-base/src/client/services.mjs` 在 E36.2.3 合入后由地基那边写（新文件加 `client/index.mjs`、`index.d.mts` 各一行导出）。
 - **冷启动不能变慢**：`createSlots` 现在和 `Slots` 服务放在一个文件里，会把 Cordis 带进首屏。第 1 步把它拆成不 import Cordis 的纯模块（例如 `@fuyu/plugin-base/client/slots` 子路径），宿主连接、加载器、Cordis 仍在 `runtime.ts` 里按需 `import()`。第 1 步前后量一次首屏 JS 体积（`pnpm build` 的产物）和冷启动，记进任务文件。
 - 内置组件现在就是静态 import 的，搬进注册模块后仍是静态 import，不改成懒加载（那是行为变化，留到第 3 阶段）。
 
@@ -79,7 +80,11 @@
 
 | 编号 | 内容 | scope | 做完的标志 |
 |---|---|---|---|
-| E36.2.3 | **插槽核心**：`createSlots` 拆成不 import Cordis 的纯模块并补规则（名字必须带 `/vN`、按 `category` 分组的列表、`replaces` 列表、builtin 拥有者、元数据透传）；每个窗口同步建的注册表 `windowSlots()`；全部插槽定义；内置用的渲染组件（不加包裹层、每项错误边界）和类型化的 `defineSlot<Props, Meta>`；`runtime.ts` 改成往已有注册表里加；契约登记 | `packages/plugin-base/src/client/`、`packages/plugin-base/package.json`、`packages/plugin-base/test/slots.test.mjs`、`src/features/plugin-kernel/`、`docs/architecture/plugins/v3-boundary.md`、`docs/architecture/contracts.md`、`tests/unit/plugin-slot-theme.test.mjs` | 包里的测试覆盖每条规则；岛的首屏 JS 不含 Cordis（构建产物里查得到）、体积和冷启动前后对比记进任务；`plugin-slot` 回归页照过；第 1 阶段演示插件照常出现 |
+| E36.2.3 | **插槽核心**：`createSlots` 拆成不 import Cordis 的纯模块并补规则（名字必须带 `/vN`、按 `category` 分组的列表、`replaces` 列表、builtin 拥有者、元数据透传）；每个窗口同步建的注册表 `windowSlots()`；全部插槽定义；内置用的渲染组件（不加包裹层、每项错误边界）和类型化的 `defineSlot<Props, Meta>`；`runtime.ts` 改成往已有注册表里加；契约登记 | `packages/plugin-base/src/client/`、`packages/plugin-base/package.json`、`packages/plugin-base/src/protocol.mjs`、`protocol.d.mts`（只加插槽名单和规则常量 `SLOTS`，纯数据，给第 5 阶段的 `fuyu-plugin build` / `check` 离线检查用；组件和元数据的类型仍在 `src/features/plugin-kernel/`）、`packages/plugin-base/src/index.d.mts`（只改 `ctx.slots`，第 3 阶段地基之后在这里加 `ctx.services` / `ctx.rust`）、`packages/plugin-base/test/slots.test.mjs`、`src/features/plugin-kernel/`、`docs/architecture/plugins/v3-boundary.md`、`docs/architecture/contracts.md`、`tests/unit/plugin-slot-theme.test.mjs` | 包里的测试覆盖每条规则；岛的首屏 JS 不含 Cordis（构建产物里查得到）、体积和冷启动前后对比记进任务；`plugin-slot` 回归页照过；第 1 阶段演示插件照常出现 |
+
+- E36.2.3 开工先 `pnpm mq:sync` 拿最新的 main：第 3 阶段地基的 E36.3.3 会把 `protocol.mjs` / `.d.mts` 的 `HOST_PROTOCOL` 改成 2，那一行别改回去；E36.2.3 只在同文件里加 `SLOTS`（2026-11-15 经理转告）。
+
+- 派子会话一律用 `effort: xhigh`（2026-11-15 用户：「关于插件的会话模型强度都改为 xhigh」，经理转告）。
 
 ### 阶段 C：按界面并行（E36.2.3 合入后再派；同时最多 2 个会话，F40 起重命令一律 `pnpm heavy` 排队，整批 land 同一时间只跑一个）
 

@@ -3,13 +3,17 @@ use std::mem::size_of;
 use windows::Win32::UI::{
     Input::KeyboardAndMouse::{
         keybd_event, GetAsyncKeyState, SendInput, INPUT, INPUT_0, INPUT_MOUSE, KEYBD_EVENT_FLAGS, KEYEVENTF_KEYUP,
-        MOUSEEVENTF_WHEEL, MOUSEINPUT, VIRTUAL_KEY, VK_CONTROL, VK_ESCAPE, VK_LBUTTON, VK_MENU, VK_RBUTTON, VK_RETURN,
+        MOUSEEVENTF_WHEEL, MOUSEINPUT, VIRTUAL_KEY, VK_CONTROL, VK_ESCAPE, VK_LBUTTON, VK_MENU, VK_RBUTTON, VK_RETURN, VK_SHIFT,
     },
     WindowsAndMessaging::SetCursorPos,
 };
 
 pub(crate) fn is_alt_key_down() -> bool {
     is_key_down(VK_MENU)
+}
+
+pub(crate) fn is_shift_key_down() -> bool {
+    is_key_down(VK_SHIFT)
 }
 
 pub(crate) fn is_left_button_down() -> bool {

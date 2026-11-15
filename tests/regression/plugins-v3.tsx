@@ -18,9 +18,13 @@ Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true, isTauri: true });
 const MB = 1024 * 1024;
 let memoryReply: { pid: number; bytes: number; measure: "private-working-set" | "phys-footprint" } | null = { pid: 4242, bytes: 25.2 * MB, measure: "private-working-set" };
 
+let safeReply: { mode: "third-party" | "minimal"; cause: "variable" | "shift" | "failures"; failures: number } | null = { mode: "third-party", cause: "failures", failures: 2 };
+let leaveCalls = 0;
+
 mockIPC((command) => {
   if (command === "get_plugin_host_memory") return memoryReply;
-  if (command === "get_plugin_host_connection") return { enabled: true, port: 1, token: "t", generation: 1 };
+  if (command === "exit_plugin_safe_mode") return (leaveCalls += 1, true);
+  if (command === "get_plugin_host_connection") return { enabled: true, port: 1, token: "t", generation: 1, safeMode: safeReply };
   if (command === "get_platform_support") return { os: "windows", unsupported: [], devBuild: true };
   return null;
 });
@@ -93,6 +97,12 @@ try {
   check(memoryValue()?.textContent === "25.2 MB" && memoryValue()?.dataset.measure === "private-working-set" && !page.textContent?.includes("42.0 MB"), "Memory is the private working set Fuyu reads from the host process, not the host's own resident size");
   check(page.textContent?.includes(text.memoryTitles["private-working-set"]) && page.textContent?.includes(text.memoryNotes["private-working-set"]), "and the label says which measure it is");
   check(page.textContent?.includes(text.safeModes["third-party"]) && page.textContent?.includes(text.devMode), "Safe mode and dev mode are shown when the host runs in them");
+  const leaveButton = () => page.querySelector<HTMLButtonElement>(".plugins-v3__leave");
+  check(page.textContent?.includes(text.safeCauses.failures(2)), "The safe mode row says it came from two failed starts in a row");
+  check(leaveButton()?.textContent === text.leaveSafeMode, "and offers to leave safe mode");
+  await act(async () => leaveButton()!.click());
+  await settle();
+  check(leaveCalls === 1 && leaveButton()?.disabled, "Leaving asks Fuyu once and the button waits for the host to restart");
 
   check(stateText("counter") === text.states.running && card("counter")!.textContent!.includes("12.5 ms"), "A running plugin shows its state and CPU");
   const counterUsage = [...card("counter")!.querySelectorAll("dd")].map((value) => value.textContent);
@@ -110,13 +120,17 @@ try {
   await send((given) => given.onEvent("plugins", PLUGINS.map((plugin) => (plugin.id === "counter" ? { ...plugin, usage: usage({ cpuMs: 20, timers: 1 }) } : plugin))));
   check(card("counter")!.textContent!.includes("20.0 ms"), "A plugins event updates the numbers in place");
   memoryReply = null;
+  safeReply = { mode: "third-party", cause: "shift", failures: 0 };
   await send((given) => given.onEvent("host", { ...HOST, pid: 4343, rssBytes: 50 * MB }));
   await settle();
   check(memoryValue()?.textContent === "50.0 MB" && memoryValue()?.dataset.measure === "rss" && page.textContent?.includes(text.memoryTitles.rss), "When Fuyu cannot read a host's memory the page falls back to the host's own number and labels it as the working set");
+  check(page.textContent?.includes(text.safeCauses.shift) && leaveButton() && !leaveButton()!.disabled, "A host started with Shift held says so, and the new host can be taken out of safe mode again");
+  safeReply = { mode: "third-party", cause: "variable", failures: 0 };
   memoryReply = { pid: 4242, bytes: 30 * MB, measure: "phys-footprint" };
   await send((given) => given.onEvent("host", HOST));
   await settle();
   check(memoryValue()?.textContent === "30.0 MB" && page.textContent?.includes(text.memoryTitles["phys-footprint"]), "On macOS the label names phys_footprint");
+  check(page.textContent?.includes(text.safeCauses.variable) && !leaveButton(), "Safe mode from the environment variable names it and has no button, since only removing the variable ends it");
 
   await send((given) => given.onState("reconnecting"));
   check(page.querySelector("[data-connection='reconnecting']")?.textContent === text.connection.reconnecting, "When the host restarts the page says it is reconnecting");

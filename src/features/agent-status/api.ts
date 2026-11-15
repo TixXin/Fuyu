@@ -61,6 +61,7 @@ export type AgentSessionSummary = {
   currentTool?: AgentToolCall | null;
   permissionMode?: AgentPermissionMode | null;
   subagents?: number;
+  subagentList?: AgentSubagent[];
   replyMarker?: ReplyMarker | null;
   replyAsks?: boolean;
   backgroundTasks?: number;
@@ -69,6 +70,17 @@ export type AgentSessionSummary = {
   contextTokens?: number | null;
   todos?: AgentTodoProgress | null;
   closed?: boolean;
+};
+
+export type AgentSubagent = {
+  id: string;
+  description: string | null;
+  agentType: string | null;
+  currentTool: AgentToolCall | null;
+  startedAt: number | null;
+  updatedAt: number;
+  background: boolean;
+  depth: number;
 };
 
 export type AgentTodoProgress = { done: number; total: number; current: string | null };

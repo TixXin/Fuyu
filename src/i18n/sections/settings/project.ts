@@ -19,6 +19,7 @@ export type SettingsProjectText = {
     installing: string;
     done: string;
     error: string;
+    installError: string;
     greet: string;
     greetings: readonly string[];
   };
@@ -145,6 +146,7 @@ export const zhCN: SettingsProjectText = {
     installing: "正在安装",
     done: "更新完成，重启后生效",
     error: "检查更新失败",
+    installError: "安装更新失败",
     greet: "和小岛打个招呼",
     greetings: ["谢谢你，赛博养岛人", "辛苦了，爱你老己，明天见", "有脑洞就去社区许愿，包的", "再戳，我可要红温了"],
   },
@@ -272,6 +274,7 @@ export const en: SettingsProjectText = {
     installing: "Installing",
     done: "Updated, restart to finish",
     error: "Update check failed",
+    installError: "Update install failed",
     greet: "Say hello to the island",
     greetings: ["Thanks for having me. Big W.", "You locked in today. Now rest.", "Got ideas? Drop them our way", "Poke again and I lose aura"],
   },

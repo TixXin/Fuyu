@@ -36,7 +36,7 @@
 
 ## 读取
 
-- 只取今天零点到后天零点（本机时间）之间的日程。CalDAV 用 `REPORT calendar-query` 按这个时间段查；ICS 链接整份下载后在本地筛。
+- 只取今天零点到后天零点（本机时间）之间的日程。CalDAV 用 `REPORT calendar-query` 按这个时间段查；服务器拒绝这个查询时（钉钉 0.3.9 上报过 400），改用 Thunderbird 的读法：`PROPFIND` Depth 1 列出日历里的条目（最多 1000 个），每 100 个用一次 `calendar-multiget` 读回来，再在本地筛时间段；ICS 链接整份下载后在本地筛。
 - iCalendar 解析在 `ics.rs`，只读标题、时间、地点、说明和 URL。时区按 `TZID` 识别：IANA 名称（包括写在路径末尾的）、Outlook 常用的 Windows 名称（如 `China Standard Time`），都不是时按本机时区；没有时区的时间按本机时间；只有日期的是全天日程。
 - 重复日程用 `rrule` 展开，最多看 500 次。`UNTIL` 由岛屿自己处理（各家写的时区不统一，`rrule` 会拒绝），`EXDATE` 排除的不显示，`RECURRENCE-ID` 改期的那次用改过的时间，`STATUS:CANCELLED` 的不显示。
 - 同一个日程出现在两个日历里（共享日历、加了两次）只显示一次。

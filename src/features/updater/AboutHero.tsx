@@ -20,7 +20,7 @@ function heroStatus(state: UpdateState, text: ReturnType<typeof useTranslation>[
     case "ready": return [text.ready(state.nextVersion), "new"];
     case "installing": return [text.installing, "busy"];
     case "done": return [text.done, "ok"];
-    case "error": return [text.error, "error"];
+    case "error": return [state.errorKind === "install" ? text.installError : text.error, "error"];
   }
 }
 

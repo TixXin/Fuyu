@@ -16,3 +16,13 @@ export function hasRequestedQQNotificationAccess() {
 export function markQQNotificationAccessRequested() {
   window.localStorage.setItem(ACCESS_REQUESTED_KEY, "true");
 }
+
+export const AUTO_CLEAR_KEY = "fuyu-qq-auto-clear";
+
+export function isQQAutoClearEnabled() {
+  return window.localStorage.getItem(AUTO_CLEAR_KEY) !== "false";
+}
+
+export function saveQQAutoClearEnabled(enabled: boolean) {
+  window.localStorage.setItem(AUTO_CLEAR_KEY, String(enabled));
+}

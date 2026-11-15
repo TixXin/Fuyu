@@ -6,6 +6,7 @@
 
 - `pnpm tasks next`：现在能认领的任务，按优先级排好；也列出认领已失效、可以接手的。
 - `pnpm tasks show <编号>`：一项的全文，连同父任务、子任务、依赖、依赖它的任务和正文里链接的文件。
+- `pnpm tasks dirty`：工作区里没提交的文件按认领范围归到各任务，单独列出热点文件、没人认领的、几小时没动的和已经暂存的。
 - `pnpm tasks`：完整看板。最上面是「需要你」（只有用户本人能做的，和等用户确认的），然后按分组列出没结束的任务，子任务缩进在父任务下面，标出负责人、失效的认领、在等哪个依赖、issue 和有没有交接。`--all` 连归档一起列，`--json` 给岛上的任务看板插件读。
 
 ## 目录
@@ -78,8 +79,8 @@
 1. **挑**：`pnpm tasks next`，再 `pnpm tasks show <编号>` 读全文。
 2. **认领**：`pnpm task:claim <编号> --as <会话名> --scope <要改的目录/,文件>`。会话名用 ListAgents 里自己的名字，必须写。它先 `git fetch origin main`，本地或 `origin/main` 上已经有人认领就拒绝；否则写上会话名和机器名，在本地提交（只含任务文件），随下一批 PR 推上去（见 [workflow.md](/docs/architecture/workflow.md)）。会话名和机器名都对上才算「你的」，另一台机器上同名的会话不算（#153）。`--no-commit` 只改文件不提交。任务带 `issue` 时，**认领后、动手前先在 issue 下回复**：谁接手、核实的结果、打算怎么改，附任务文档链接（用户 2026-11-14 定，命令会提醒）。
 3. **新任务先提 issue**（见下文「自己新建的任务」），拿到编号后再建。马上要做：`pnpm tasks add <编号> --title .. --issue <N> --claim --as <会话名> --scope ..`，新建和认领在一个提交里。只是记下来以后做：`pnpm tasks add <编号> --title .. --issue <N>`，和别的改动一起提交。
-4. **做的过程中**：开发中途和 land 前跑 `pnpm tasks conflicts`，看和 main、和别人声明的范围有没有冲突。
-5. **停下来**：`pnpm tasks note <编号> "<进度和下一步>"`，随下一次提交带上。不打算做完了：`pnpm tasks release <编号> --reason ".."`，放回待做并留交接。
+4. **做的过程中**：开发中途和 land 前跑 `pnpm tasks conflicts`，看和 main、和别人声明的范围有没有冲突。大家都会改的热点文件（`platforms.md`、`contracts.md`、`Cargo.toml`、`lib.rs`、`searchIndex.json` 等，列表见 workflow.md「没提交的文件」）改完就单独提交，不等整个任务做完。
+5. **停下来**：`pnpm tasks note <编号> "<进度和下一步>"`，写清哪些没提交的文件是自己的，随下一次提交带上。不打算做完了：`pnpm tasks release <编号> --reason ".."`，放回待做并留交接。
 6. **做完**：`pnpm tasks done <编号> --commit "<功能提交的标题>"`（可以写多个，也可以写已有的提交号），和功能改动放在同一个提交里。本地 `main` 上有别的会话的提交，所以 `--commit` 必须写。父任务在最后一个子任务结束后 `done`。
 7. **不做**：`pnpm tasks drop <编号> --reason ".."`。
 8. **失效的认领**：`pnpm tasks` / `pnpm tasks stale` 标出认领后 24 小时任务文件没有新的交接或提交的认领（做得久的任务停下时 `tasks note` 留交接，也就续上了）。接手前给原会话发一条消息说明，不必等回复，`pnpm task:claim <编号> --takeover`。

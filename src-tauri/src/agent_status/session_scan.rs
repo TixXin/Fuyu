@@ -86,9 +86,9 @@ fn scan(
             }
             let asked_user = is_waiting(waiting, &summary.session_id, summary.updated_at);
             summary.closed = has_ended(app_dir, &summary.session_id).unwrap_or_else(|| match summary.provider {
-                "claudeCode" => left_registry(&home_dir.join(".claude"), &summary, now, &mut live_claude),
+                "claudeCode" => left_registry(&[home_dir.join(".claude")], &summary, now, &mut live_claude),
                 workbuddy::PROVIDER => {
-                    left_registry(&home_dir.join(workbuddy::DIR), &summary, now, &mut live_workbuddy)
+                    left_registry(&workbuddy::data_dirs(home_dir), &summary, now, &mut live_workbuddy)
                         && !*workbuddy_running.get_or_insert_with(workbuddy::app_running)
                 }
                 _ => false,
@@ -173,16 +173,16 @@ fn has_ended(app_dir: Option<&Path>, session_id: &str) -> Option<bool> {
 }
 
 fn left_registry(
-    agent_dir: &Path,
+    agent_dirs: &[PathBuf],
     summary: &AgentSessionSummary,
     now: i64,
     live: &mut Option<HashSet<String>>,
 ) -> bool {
-    let registry = agent_dir.join("sessions");
+    let registries: Vec<PathBuf> = agent_dirs.iter().map(|dir| dir.join("sessions")).collect();
     now - summary.updated_at > REGISTRY_GRACE_MS
-        && (live.is_some() || registry.is_dir())
+        && (live.is_some() || registries.iter().any(|registry| registry.is_dir()))
         && !live
-            .get_or_insert_with(|| running_sessions_in(&registry).into_keys().collect())
+            .get_or_insert_with(|| registries.iter().flat_map(|registry| running_sessions_in(registry).into_keys()).collect())
             .contains(&summary.session_id)
 }
 
@@ -216,7 +216,7 @@ fn recent_session_files(home_dir: &Path, now: i64, window_ms: i64, threads: &[Th
         }
     }
 
-    for project in read_dir_paths(&home_dir.join(workbuddy::DIR).join("projects")) {
+    for project in workbuddy::data_dirs(home_dir).iter().flat_map(|dir| read_dir_paths(&dir.join("projects"))) {
         for path in read_dir_paths(&project) {
             if path.extension().is_some_and(|extension| extension == "jsonl") {
                 push_recent(workbuddy::PROVIDER, path);

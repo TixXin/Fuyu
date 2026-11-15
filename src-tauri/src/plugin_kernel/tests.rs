@@ -6,7 +6,7 @@ use std::{
 use plugin_base::{find_node, Event, HostSpec, HostState, NodeSearch, Supervisor, Timing, MINIMUM_NODE};
 use serde_json::Value;
 
-use super::{containment, enabled, host_args, host_env, host_script, memory_of, window_origins, HostMode, MEMORY_MEASURE};
+use super::{containment, safe_mode::{self, Cause, Tracker}, enabled, host_args, host_env, host_script, memory_of, window_origins, HostMode, MEMORY_MEASURE};
 
 #[test]
 fn on_windows_the_host_gets_a_smaller_threadpool_unless_the_user_already_chose_one() {
@@ -41,25 +41,29 @@ fn windows_from_the_release_build_and_the_dev_server_may_connect() {
     assert_eq!(text[0], "--disallow-code-generation-from-strings");
 }
 
+fn mode(development: bool, variable: Option<&str>) -> HostMode {
+    HostMode { development, safe: safe_mode::choose(variable, false, 0).map(|safe| safe.mode) }
+}
+
 fn args_for(mode: &HostMode) -> Vec<String> {
     host_args("/data".into(), &[], mode).iter().map(|arg| arg.to_string_lossy().into_owned()).collect()
 }
 
 #[test]
 fn a_development_host_hot_reloads_and_a_release_host_never_does() {
-    let release = args_for(&HostMode::from(false, None));
+    let release = args_for(&mode(false, None));
     assert!(!release.iter().any(|arg| arg == "--dev" || arg == "--expose-internals"), "{release:?}");
-    let development = args_for(&HostMode::from(true, None));
+    let development = args_for(&mode(true, None));
     assert_eq!(&development[..2], ["--disallow-code-generation-from-strings", "--expose-internals"], "Node flags come before the script");
     assert!(development.iter().position(|arg| arg == "--dev") > development.iter().position(|arg| arg.ends_with("main.mjs")), "--dev is the host's own flag, after the script");
 }
 
 #[test]
 fn safe_mode_is_passed_on_only_when_it_names_a_known_mode() {
-    assert!(args_for(&HostMode::from(true, Some("third-party"))).windows(2).any(|pair| pair == ["--safe", "third-party"]));
-    assert!(args_for(&HostMode::from(true, Some(" minimal "))).windows(2).any(|pair| pair == ["--safe", "minimal"]));
+    assert!(args_for(&mode(true, Some("third-party"))).windows(2).any(|pair| pair == ["--safe", "third-party"]));
+    assert!(args_for(&mode(true, Some(" minimal "))).windows(2).any(|pair| pair == ["--safe", "minimal"]));
     for odd in ["", "everything", "1"] {
-        assert!(!args_for(&HostMode::from(true, Some(odd))).iter().any(|arg| arg == "--safe"), "{odd}");
+        assert!(!args_for(&mode(true, Some(odd))).iter().any(|arg| arg == "--safe"), "{odd}");
     }
 }
 
@@ -199,4 +203,110 @@ fn the_plugin_page_gets_the_hosts_private_memory_only_while_it_runs() {
     assert_eq!(memory, Some(serde_json::json!({ "pid": 7, "bytes": 7168, "measure": MEMORY_MEASURE })));
     assert_eq!(MEMORY_MEASURE, if cfg!(windows) { "private-working-set" } else { "phys-footprint" });
     assert!(crate::platform::private_memory::private_bytes(std::process::id()).is_some());
+}
+
+#[test]
+fn safe_mode_comes_from_the_variable_then_repeated_failures_then_shift() {
+    let pick = |variable, shift, failures| safe_mode::choose(variable, shift, failures).map(|safe| (safe.mode, safe.cause));
+    assert_eq!(pick(None, false, 0), None);
+    assert_eq!(pick(None, false, 1), None);
+    assert_eq!(pick(None, true, 0), Some(("third-party".into(), Cause::Shift)));
+    assert_eq!(pick(None, false, 2), Some(("third-party".into(), Cause::Failures)));
+    assert_eq!(pick(None, true, 4), Some(("minimal".into(), Cause::Failures)));
+    assert_eq!(pick(Some("minimal"), true, 9), Some(("minimal".into(), Cause::Variable)));
+    assert_eq!(pick(Some("third-party"), false, 9), Some(("third-party".into(), Cause::Variable)));
+    assert_eq!(pick(Some("bogus"), false, 2), Some(("third-party".into(), Cause::Failures)));
+}
+
+fn scratch(name: &str) -> std::path::PathBuf {
+    let dir = std::env::temp_dir().join(format!("fuyu-safe-mode-{name}-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).unwrap();
+    dir
+}
+
+#[test]
+fn two_starts_that_fail_early_put_the_next_start_in_safe_mode_and_the_count_survives_a_relaunch() {
+    let dir = scratch("count");
+    let mut tracker = Tracker::new(Some(&dir), None, false);
+    assert_eq!(tracker.starting(1), None);
+    tracker.went_down_after(1, Some(Duration::from_secs(3)));
+    assert_eq!(tracker.starting(2), None);
+    tracker.went_down_after(2, Some(Duration::from_secs(59)));
+    let safe = tracker.starting(3).unwrap();
+    assert_eq!((safe.mode.as_str(), safe.cause, safe.failures), ("third-party", Cause::Failures, 2));
+    let saved: serde_json::Value = serde_json::from_slice(&std::fs::read(dir.join(safe_mode::FILE)).unwrap()).unwrap();
+    assert_eq!(saved["failures"], 2);
+    assert!(saved["updatedAt"].as_u64().unwrap() > 0);
+
+    let mut relaunched = Tracker::new(Some(&dir), None, false);
+    assert_eq!(relaunched.starting(1).map(|safe| safe.failures), Some(2), "a new run picks the count up from the file");
+    relaunched.went_down_after(1, Some(Duration::from_secs(1)));
+    relaunched.went_down_after(2, Some(Duration::from_secs(1)));
+    assert_eq!(relaunched.starting(3).map(|safe| safe.mode), Some("minimal".into()), "still failing in safe mode goes down to the minimal set");
+    relaunched.went_down_after(3, Some(Duration::from_secs(61)));
+    assert_eq!(relaunched.starting(4), None, "a start that ran a full minute clears the count");
+    let saved: serde_json::Value = serde_json::from_slice(&std::fs::read(dir.join(safe_mode::FILE)).unwrap()).unwrap();
+    assert_eq!(saved["failures"], 0);
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn a_down_for_a_start_that_is_not_the_current_one_is_not_counted() {
+    let mut tracker = Tracker::new(None, None, false);
+    tracker.starting(5);
+    tracker.went_down(4, "the plugin host exited (exit status: 1)");
+    tracker.went_down(5, "the plugin host exited (exit status: 1)");
+    tracker.went_down(5, "the plugin host exited (exit status: 1)");
+    assert_eq!(tracker.starting(6), None, "only the first down of start 5 counts, and one failure is not enough");
+}
+
+#[test]
+fn shift_holds_only_this_run_and_leaving_safe_mode_clears_shift_and_failures_but_not_the_variable() {
+    let dir = scratch("leave");
+    let mut held = Tracker::new(Some(&dir), None, true);
+    assert_eq!(held.starting(1).map(|safe| safe.cause), Some(Cause::Shift));
+    assert!(!dir.join(safe_mode::FILE).exists(), "holding Shift is not written down");
+    assert!(held.leave());
+    held.went_down(1, "asked to restart");
+    assert_eq!(held.starting(2), None, "the restart after leaving is a normal start and its down is not a failure");
+    assert_eq!(Tracker::new(Some(&dir), None, false).starting(1), None, "the next launch without Shift is normal");
+
+    let mut failing = Tracker::new(Some(&dir), None, false);
+    failing.starting(1);
+    failing.went_down_after(1, Some(Duration::from_secs(1)));
+    failing.starting(2);
+    failing.went_down_after(2, Some(Duration::from_secs(1)));
+    assert!(failing.starting(3).is_some());
+    assert!(failing.leave());
+    assert_eq!(failing.starting(4), None);
+    assert_eq!(Tracker::new(Some(&dir), None, false).starting(1), None, "leaving clears the saved count too");
+
+    let mut variable = Tracker::new(Some(&dir), Some("third-party".into()), false);
+    assert_eq!(variable.starting(1).map(|safe| safe.cause), Some(Cause::Variable));
+    assert!(!variable.leave(), "safe mode from the variable stays until the variable is removed");
+    assert!(variable.starting(2).is_some());
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn restarts_that_were_asked_for_and_heartbeats_missed_across_sleep_are_not_failures() {
+    let second = Duration::from_secs(1);
+    assert!(safe_mode::counts_as_failure("the plugin host exited (exit status: 1)", 3 * second, 3 * second));
+    assert!(safe_mode::counts_as_failure("the plugin host was not ready in 60000 ms", 59 * second, 59 * second));
+    assert!(safe_mode::counts_as_failure("the plugin host did not answer a heartbeat in 2000 ms", 10 * second, 11 * second), "a host that hangs while the computer is awake counts");
+    assert!(!safe_mode::counts_as_failure("asked to restart", second, second), "restarting from the plugin page is not a failure");
+    assert!(!safe_mode::counts_as_failure("the plugin host did not answer a heartbeat in 2000 ms", 10 * second, 40 * second), "the wall clock ran ahead of the monotonic one: the computer slept, so the missed heartbeat does not count");
+    assert!(!safe_mode::counts_as_failure("the plugin host did not answer a heartbeat in 2000 ms", 70 * second, 70 * second), "a host that ran a full minute is healthy however it went down");
+
+    let mut tracker = Tracker::new(None, None, false);
+    for generation in 1..=3 {
+        tracker.starting(generation);
+        tracker.went_down(generation, "asked to restart");
+    }
+    assert_eq!(tracker.starting(4), None, "restarts on request never add up to safe mode");
+    tracker.went_down(4, "the plugin host exited (exit status: 1)");
+    tracker.starting(5);
+    tracker.went_down(5, "the plugin host exited (exit status: 1)");
+    assert_eq!(tracker.starting(6).map(|safe| safe.cause), Some(Cause::Failures));
 }

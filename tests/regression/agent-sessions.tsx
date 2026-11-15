@@ -9,6 +9,7 @@ import type { AgentSessionSummary } from "../../src/features/agent-status/api";
 import { getAgentPageExpandedHeight } from "../../src/windows/island/layout";
 import { checkNarrow, renderShowcase } from "./agent-sessions-showcase";
 import { checkUsage } from "./agent-sessions-usage";
+import { checkSubagents } from "./agent-sessions-subagents";
 
 const ISLAND_CHROME_HEIGHT = 86;
 const fixture = document.getElementById("fixture")!;
@@ -267,6 +268,7 @@ async function runChecks() {
     check(!document.querySelector(".agent-session__prompt") && !document.querySelector(".agent-session__tool") && rows()[0].querySelector(".agent-session__message"), "关掉后只显示回复");
 
     await checkUsage({ root, fixture, sessions, check, chromeHeight: ISLAND_CHROME_HEIGHT });
+    await checkSubagents({ root, fixture, sessions, check, chromeHeight: ISLAND_CHROME_HEIGHT });
     sizeFor(3);
     await render("both");
 
