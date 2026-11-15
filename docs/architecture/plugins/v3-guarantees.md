@@ -23,9 +23,9 @@
 | # | 承诺 | 测试 | 状态 |
 |---|---|---|---|
 | 6 | 同一个服务的第二个提供者启动失败，状态是 `failed`，错误里写明服务名；第一个提供者不受影响 | `guarantees-more.test.mjs` › a second provider of the same service fails without touching the first, and its error names the service | 守住 |
-| 7 | 冲突的错误里写明**已经提供这个服务的是哪个插件**（`plugins.yml` 里的 id） | `guarantees-more.test.mjs` › the status of a conflicting provider names the plugin that already provides the service | **做不到** |
+| 7 | 冲突的错误里写明**已经提供这个服务的是哪个插件**（`plugins.yml` 里的 id） | `guarantees-more.test.mjs` › the status of a conflicting provider names the plugin that already provides the service | 守住 |
 
-第 7 条的现象：Cordis 的错误是 `service "svc" has been registered at <P>`，`<P>` 是第一个提供者的类名或 `name` 导出，不是它在 `plugins.yml` 里的 id；两个插件的类名一样时根本分不出来。失败的那一个（谁）能从状态的 `id` 看出来，冲突的对象（和谁）看不出来。建议的改法：`src/host/status.mjs` 给失败的条目补一个 `conflictsWith`：从 `ctx.reflect.store` 里找到那个服务的 `impl`，用 `impl.ctx.fiber` 对回加载器的条目，取它的 `id`。方案「错误信息写明双方」要的就是这个。
+第 7 条：冲突时，失败的那个插件的错误前面加一句「这个服务已经由插件 `<id>`（`<plugins.yml` 里的 name>）提供」，按提供者 fiber 的 `provisions` 对回加载器的条目（`src/host/status.mjs`）。
 
 ## 清理和回滚
 
@@ -36,10 +36,10 @@
 | 10 | 插件的异步 `apply`（返回 Promise）失败：同样是 `failed`，`await` 之前登记的副作用和监听器都撤掉 | `guarantees-more.test.mjs` › a plugin whose async apply rejects is failed, and its effects and listeners are undone | 守住 |
 | 11 | 插件文件不存在：状态是 `failed`，错误里有文件名，不会悄悄不加载 | `guarantees.test.mjs` › a plugin whose file is missing is reported as failed, not left silent | 守住 |
 | 12 | 包在 `ctx.effect` 里的定时器、用 `ctx.on` 登记的监听器，在插件停用后不再触发 | `guarantees-more.test.mjs` › timers in an effect and event listeners never fire after the plugin is disabled | 守住 |
-| 13 | 内核给插件**受管定时器**（`ctx.setTimeout`、`ctx.setInterval`），插件停用时自动清掉 | `guarantees-more.test.mjs` › the kernel gives plugins managed timers that stop with them | **做不到** |
+| 13 | 内核给插件**受管定时器**（`ctx.setTimeout`、`ctx.setInterval`），插件停用时自动清掉 | `guarantees-more.test.mjs` › the kernel gives plugins managed timers that stop with them | 守住 |
 | 14 | 宿主的 `stop` 让每个插件的清理都执行，使用者先于提供者 | `guarantees-more.test.mjs` › stopping the host runs the cleanup of every plugin, dependents first；`host-flags.test.mjs` › the host runs with code generation from strings disallowed, as the release host does | 守住 |
 
-第 13 条的现象：`vendor/cordis` 的核心里没有定时器服务（Cordis 的定时器是单独的插件，没有拷进 `vendor/`），插件只能自己把定时器包在 `ctx.effect` 里（第 12 条证明这种写法可靠）。方案「资源监控和出错处理」要求插件用内核的受管定时器，好给每个插件计 CPU、数资源。建议的改法：`plugin-base` 加一个很小的定时器服务（`setTimeout` / `setInterval` / `sleep`，内部用 `ctx.effect`），在 `startHost` 里挂上；资源数统计做的时候一起加。
+第 13 条：`plugin-base` 在根上下文挂了 `ctx.setTimeout`、`ctx.setInterval`、`ctx.sleep`（`src/host/timer.mjs`），插件不用声明依赖就能用；内部用 `ctx.effect`，插件停用时清掉，停用时还在 `sleep` 的会以 `inactive` 拒绝；每个插件还活着的定时器数由宿主的 `timers()` 给出，留给第 8 步的资源统计。
 
 ## 配置
 
@@ -62,13 +62,13 @@
 | # | 承诺 | 测试 | 状态 |
 |---|---|---|---|
 | 19 | 插件启动失败等内核的错误和警告，宿主经管道的 `log` 通知交给 Rust | `main.test.mjs` › the host passes on errors from the kernel, such as a plugin that failed | 守住 |
-| 20 | 插件的监听器抛错，不影响同一事件的其他插件的监听器 | `guarantees-errors.test.mjs` › a listener that throws does not stop other plugins' listeners for the same event | **做不到** |
-| 21 | 插件里没人接的 Promise 拒绝不会让宿主退出 | `guarantees-errors.test.mjs` › a stray promise rejection in a plugin does not take the host down | **做不到** |
-| 22 | 插件定时器回调里没人接的异常不会让宿主退出 | `guarantees-errors.test.mjs` › an uncaught throw in a plugin's timer does not take the host down | **做不到** |
+| 20 | 插件的监听器抛错，不影响同一事件的其他插件的监听器 | `guarantees-errors.test.mjs` › a listener that throws does not stop other plugins' listeners for the same event | 守住 |
+| 21 | 插件里没人接的 Promise 拒绝不会让宿主退出 | `guarantees-errors.test.mjs` › a stray promise rejection in a plugin does not take the host down | 守住 |
+| 22 | 插件定时器回调里没人接的异常不会让宿主退出 | `guarantees-errors.test.mjs` › an uncaught throw in a plugin's timer does not take the host down | 守住 |
 
-第 20 条的现象：Cordis 的 `emit` 用普通循环调监听器，第一个抛错的监听器之后的都不执行，错误抛给发事件的那一方（可能是另一个插件，也可能是宿主自己）。建议的改法：宿主给事件分发包一层，逐个 `try/catch`，错误按监听器所属的插件记成 `error` 日志；或者在 `vendor/cordis` 的 `emit` 里打这个补丁（记进 `vendor/README.md`）。
+第 20 条：`vendor/cordis` 的 `emit` 打了补丁，逐个 `try/catch`，错误记到监听器所属插件的日志里（`internal/` 开头的内核事件照旧抛出），见 `vendor/README.md`。
 
-第 21、22 条的现象：`main.mjs` 没有 `uncaughtException` / `unhandledRejection` 的处理，Node 按默认行为以退出码 1 退出，Rust 的看管把整个宿主连同所有插件重启（约 0.3 秒，插件内存里的状态全丢）。一个插件的一处疏忽就让所有插件重启一遍。建议的改法：`main.mjs` 加这两个处理，按错误栈里的文件地址归到插件（方案「出错处理」写的就是这个），记成 `error` 日志并经 `log` 通知交给 Rust，宿主不退出；同一个插件短时间内反复出错时停用它，在状态里写明原因。归不到插件的（内核自己的错）照旧退出，让 Rust 重启。
+第 21、22 条：`main.mjs` 接住 `uncaughtException` 和 `unhandledRejection`，按错误栈里的文件地址归到插件（`src/host/blame.mjs`），记成 `error` 日志并经 `log` 通知交给 Rust（带 `plugin` 字段），宿主不退出。归不到任何插件的错误（内核自己的）照旧退出，让 Rust 重启宿主。同一个插件短时间内反复出错时停用它，放在第 8 步（出错处理和安全模式）。
 
 ## 宿主进程和管道
 
@@ -95,6 +95,7 @@
 | 36 | 反复失败时重启的间隔从立刻开始翻倍，到上限为止 | `tests/supervisor.rs` › a_host_that_keeps_failing_waits_longer_each_time；`supervisor.rs` › the_first_restart_is_immediate_then_the_wait_doubles_up_to_the_cap | 守住 |
 | 37 | 一直不就绪的宿主过了期限就放弃这一次 | `tests/supervisor.rs` › a_host_that_is_never_ready_is_given_up_on_after_the_deadline | 守住 |
 | 38 | 停止时先请宿主自己停，之后的调用都失败 | `tests/supervisor.rs` › stopping_asks_the_host_to_stop_and_calls_fail_afterwards | 守住 |
+| 39 | 宿主一退出就被发现，不等下一次心跳（管道一断就唤醒看管线程） | `tests/supervisor.rs` › a_host_that_dies_is_noticed_without_waiting_for_the_next_heartbeat | 守住 |
 
 ## 窗口
 

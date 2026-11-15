@@ -7,6 +7,7 @@ import { Context } from "cordis";
 import { Clients } from "./clients.mjs";
 import { recordLogs } from "./logs.mjs";
 import { shareModules } from "./share.mjs";
+import { Timers } from "./timer.mjs";
 import { pluginStatus, watchStatus } from "./status.mjs";
 
 const API = new URL("../index.mjs", import.meta.url).href;
@@ -37,6 +38,8 @@ export async function startHost({ dir, config = "plugins.yml", apiNames = [], wa
   ctx.baseUrl = pathToFileURL(dir.endsWith(sep) ? dir : dir + sep).href;
   await ctx.use(Fs);
   await ctx.use(NodeFs);
+  const timers = new Timers();
+  timers.install(ctx);
   await ctx.plugin(Clients, dir);
   await ctx.use(Loader);
   const id = await ctx.loader.create({ name: INCLUDE, config: { path: config } });
@@ -47,6 +50,7 @@ export async function startHost({ dir, config = "plugins.yml", apiNames = [], wa
     status: () => pluginStatus(ctx, logs),
     watchStatus: (onChange) => watchStatus(ctx, logs, onChange),
     clients: (window) => ctx.clients.list(window),
+    timers: () => timers.counts(),
     watchClients: (onChange) => ctx.clients.watch(onChange),
     settle: () => Promise.all(ctx.loader.getTasks()),
     stop: () => ctx.fiber.dispose(),

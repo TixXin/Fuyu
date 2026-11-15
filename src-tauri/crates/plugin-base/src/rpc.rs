@@ -53,6 +53,15 @@ pub struct Rpc {
 
 impl Rpc {
     pub fn start(reader: impl Read + Send + 'static, writer: impl Write + Send + 'static, on_notification: impl Fn(&str, Value) + Send + 'static) -> Self {
+        Self::start_watched(reader, writer, on_notification, |_| {})
+    }
+
+    pub fn start_watched(
+        reader: impl Read + Send + 'static,
+        writer: impl Write + Send + 'static,
+        on_notification: impl Fn(&str, Value) + Send + 'static,
+        on_gone: impl FnOnce(&str) + Send + 'static,
+    ) -> Self {
         let shared = Arc::new(Shared {
             writer: Mutex::new(Some(Box::new(writer))),
             waiting: Mutex::new(HashMap::new()),
@@ -62,7 +71,8 @@ impl Rpc {
         let reading = shared.clone();
         let spawned = thread::Builder::new().name("plugin-host-rpc".into()).spawn(move || {
             let reason = read(reader, &reading, &on_notification);
-            close(&reading, reason);
+            close(&reading, reason.clone());
+            on_gone(&reason);
         });
         if let Err(error) = spawned {
             close(&shared, format!("could not start the reader: {error}"));

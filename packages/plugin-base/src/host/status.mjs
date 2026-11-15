@@ -9,6 +9,19 @@ function waitingFor(fiber) {
   return missing;
 }
 
+function providerOf(ctx, impl) {
+  return [...ctx.loader.entries()].find((entry) => entry.innerFiber?.provisions?.has(impl) || entry.outerFiber?.provisions?.has(impl)) ?? null;
+}
+
+function explain(entry, error) {
+  const text = String(error?.stack ?? error ?? "");
+  const service = /service "([^"]+)" has been registered/.exec(text)?.[1];
+  if (!service) return text;
+  const impl = entry.ctx.reflect._getImpl(service, false);
+  const owner = impl && providerOf(entry.ctx, impl);
+  return owner ? `the service "${service}" is already provided by the plugin "${owner.options.id}" (${owner.options.name})\n${text}` : text;
+}
+
 function describe(entry, logs) {
   const { id, name } = entry.options;
   const fiber = entry.innerFiber ?? entry.outerFiber;
@@ -20,7 +33,7 @@ function describe(entry, logs) {
     return { id, name, state: "failed", error: failure?.text ?? "the plugin did not load" };
   }
   const state = STATES[fiber.state] ?? "pending";
-  if (state === "failed") return { id, name, state, error: String(fiber._error?.stack ?? fiber._error ?? "") };
+  if (state === "failed") return { id, name, state, error: explain(entry, fiber._error) };
   if (state === "pending") return { id, name, state: "waiting", waitingFor: waitingFor(fiber) };
   return { id, name, state };
 }

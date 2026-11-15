@@ -1,5 +1,6 @@
 import { parseArgs } from "node:util";
 import { HOST_PROTOCOL, WINDOW_ORIGINS } from "../protocol.mjs";
+import { blame } from "./blame.mjs";
 import { startHost } from "./kernel.mjs";
 import { connect } from "./rpc.mjs";
 import { openWindowSocket } from "./sockets.mjs";
@@ -36,6 +37,17 @@ function stop(code) {
 }
 
 const rpc = connect({ input: process.stdin, write, onClose: () => stop(0) });
+
+function stray(kind, error) {
+  const plugin = host ? blame(host.ctx, error) : null;
+  const entry = { at: Date.now(), type: "error", name: plugin ?? "host", plugin, text: `${kind} ${plugin ? `in plugin ${plugin}` : "outside any plugin"}: ${String(error?.stack ?? error)}` };
+  host?.logs.push(entry);
+  rpc.notify("log", entry);
+  if (!plugin) void stop(1);
+}
+
+process.on("uncaughtException", (error) => stray("uncaught exception", error));
+process.on("unhandledRejection", (reason) => stray("unhandled rejection", reason));
 rpc.handle("ping", (params) => ({ at: Date.now(), echo: params ?? null }));
 rpc.handle("status", () => host?.status() ?? []);
 rpc.handle("stop", () => {
