@@ -93,6 +93,7 @@ fn answer(app: &AppHandle, request: &mut Request, token: &str, port: u16) -> Res
         }
         "agentStatus.clear" => crate::agent_status::clear_external_status(LAB_OWNER, &call.params).map_err(to_api_error),
         dev_island::NOTCH => dev_island::set_notch(app, &call.params),
+        dev_island::EDGE => dev_island::set_edge(app, &call.params),
         _ => bridge::dispatch(app, call),
     }
 }

@@ -5,10 +5,11 @@ pub(crate) mod bottom_edge;
 pub(crate) mod focus;
 #[cfg_attr(not(windows), path = "follow_unsupported.rs")]
 mod follow;
+mod drag_hint;
 mod edge;
 mod geometry;
 pub(crate) mod notch;
-mod side;
+pub(crate) mod side;
 #[cfg_attr(not(windows), path = "glass_unsupported.rs")]
 mod glass;
 #[cfg_attr(not(windows), path = "modifier_unsupported.rs")]
@@ -243,9 +244,12 @@ fn drag_island(window: WebviewWindow, current_state: IslandWindowState) -> Resul
     }
 
     thread::spawn(move || {
+        let mut hints = drag_hint::DragHints::new();
         while left_button_down() {
+            hints.poll(&window);
             thread::sleep(Duration::from_millis(8));
         }
+        hints.finish(&window);
         thread::sleep(Duration::from_millis(8));
 
         let final_position = screen::window_position(&window).ok().map(|position| {
@@ -352,6 +356,8 @@ macro_rules! tauri_commands {
             crate::island::get_island_top_attachment,
             crate::island::get_island_edge,
             crate::island::bottom_edge::set_island_edge,
+            crate::island::side::set_island_side_column,
+            crate::island::banner_hit::set_island_side_bubble_rect,
             crate::island::notch::get_island_notch,
             crate::island::notch::set_island_notch_drop,
             crate::island::show_ready_island,

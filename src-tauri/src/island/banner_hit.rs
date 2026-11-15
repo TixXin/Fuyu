@@ -24,12 +24,19 @@ impl BannerRect {
 }
 
 static BANNER_RECT: Mutex<Option<BannerRect>> = Mutex::new(None);
+static SIDE_BUBBLE_RECT: Mutex<Option<BannerRect>> = Mutex::new(None);
 
 #[tauri::command]
 pub fn set_island_banner_rect(rect: Option<BannerRect>) {
     *BANNER_RECT.lock().unwrap_or_else(PoisonError::into_inner) = rect.filter(|rect| rect.is_usable());
 }
 
+#[tauri::command]
+pub fn set_island_side_bubble_rect(rect: Option<BannerRect>) {
+    *SIDE_BUBBLE_RECT.lock().unwrap_or_else(PoisonError::into_inner) = rect.filter(|rect| rect.is_usable());
+}
+
 pub(super) fn banner_rect() -> Option<BannerRect> {
-    *BANNER_RECT.lock().unwrap_or_else(PoisonError::into_inner)
+    let side_bubble = *SIDE_BUBBLE_RECT.lock().unwrap_or_else(PoisonError::into_inner);
+    side_bubble.or(*BANNER_RECT.lock().unwrap_or_else(PoisonError::into_inner))
 }

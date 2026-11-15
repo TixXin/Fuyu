@@ -3,6 +3,7 @@ use tauri::{Emitter, WebviewWindow};
 
 use super::{
     bottom_edge,
+    side,
     geometry::{apply_stage_geometry, monitor_at},
     state::{mutate_window_state, read_window_state, Edge, IslandMode, IslandWindowState, MonitorFollow},
     ISLAND_POSITION_CHANGED_EVENT,
@@ -79,10 +80,13 @@ fn island_bounds(window: &WebviewWindow) -> Option<(i32, i32, i32, i32)> {
 }
 
 fn move_to(window: &WebviewWindow, point: (i32, i32)) {
-    let placed = (read_window_state().attached_edge == Some(Edge::Bottom))
-        .then(|| monitor_at(window, point).ok().flatten())
-        .flatten()
-        .map(|monitor| bottom_edge::placed_on(&monitor));
+    let current = read_window_state();
+    let along = current.custom_position.and_then(side::stored_side).map_or(0.5, |(_, along)| along);
+    let placed = monitor_at(window, point).ok().flatten().and_then(|monitor| match current.attached_edge {
+        Some(Edge::Bottom) => Some(bottom_edge::placed_on(&monitor)),
+        Some(edge @ (Edge::Left | Edge::Right)) => side::placed_on(window, &monitor, edge, along, current),
+        _ => None,
+    });
     let mut had_dragged_position = false;
     let state = mutate_window_state(|state| {
         had_dragged_position = state.custom_position.is_some();

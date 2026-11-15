@@ -2,12 +2,15 @@ use tauri::{Monitor, PhysicalPosition, WebviewWindow};
 
 use super::bottom_edge;
 use super::edge;
-use super::geometry::{island_rect, monitor_for_island_position, SIDE_HANDLE_HEIGHT, STAGE_WINDOW_WIDTH};
+use super::geometry::{
+    apply_stage_geometry, island_rect, monitor_for_island_position, SIDE_COLUMN_MAX_HEIGHT, SIDE_COLUMN_MIN_HEIGHT,
+    STAGE_WINDOW_WIDTH,
+};
 use super::screen;
-use super::state::{Edge, IslandMode, IslandPosition, IslandWindowState};
+use super::state::{mutate_window_state, read_window_state, Edge, IslandMode, IslandPosition, IslandWindowState};
 use super::top_edge;
 
-const SNAP_DISTANCE: f64 = 16.0;
+pub(super) const SNAP_DISTANCE: f64 = 16.0;
 
 pub(super) type Rect = (i32, i32, i32, i32);
 
@@ -21,33 +24,59 @@ pub(super) fn stage_position(
     along: f64,
     (work_left, work_top, work_width, work_height): Rect,
     stage_width: i32,
-    handle_height: f64,
     island_height: f64,
 ) -> (i32, i32) {
     let x = match edge {
         Edge::Right => work_left + work_width - stage_width,
         _ => work_left,
     };
-    let anchor = work_top as f64 + along * (work_height as f64 - handle_height).max(0.0);
+    let top = work_top as f64 + along * work_height as f64 - island_height / 2.0;
     let lowest = (work_top + work_height) as f64 - island_height;
-    (x, anchor.min(lowest).max(work_top as f64).round() as i32)
+    (x, top.min(lowest).max(work_top as f64).round() as i32)
 }
 
-pub(super) fn heights(state: IslandWindowState, scale: f64) -> (f64, f64) {
-    let handle = SIDE_HANDLE_HEIGHT * state.collapsed_scale * scale;
-    let island = match state.mode {
-        IslandMode::Collapsed => handle,
-        IslandMode::Expanded => state.expanded_height * state.expanded_scale * scale,
-    };
-    (handle, island)
+pub(super) fn island_height(state: IslandWindowState, scale: f64) -> f64 {
+    state.base_size().1 * state.active_scale() * scale
 }
 
-pub(super) fn along_for(island_top: f64, (_, work_top, _, work_height): Rect, handle_height: f64) -> f64 {
-    let range = work_height as f64 - handle_height;
-    if range <= 0.0 {
-        return 0.0;
+pub(super) fn along_for(island_center: f64, (_, work_top, _, work_height): Rect) -> f64 {
+    if work_height <= 0 {
+        return 0.5;
     }
-    ((island_top - work_top as f64) / range).clamp(0.0, 1.0)
+    ((island_center - work_top as f64) / work_height as f64).clamp(0.0, 1.0)
+}
+
+pub(super) fn placed_on(window: &WebviewWindow, monitor: &Monitor, edge: Edge, along: f64, state: IslandWindowState) -> Option<IslandPosition> {
+    let monitors: Vec<Rect> = window.available_monitors().ok()?.iter().map(full_rect).collect();
+    if !is_outer(edge, full_rect(monitor), &monitors) {
+        return None;
+    }
+    let scale = screen::monitor_scale(monitor);
+    let mut placed = state;
+    placed.attached_edge = Some(edge);
+    let stage_width = (STAGE_WINDOW_WIDTH * scale).round() as i32;
+    let (x, y) = stage_position(edge, along, screen::monitor_work_rect(monitor), stage_width, island_height(placed, scale));
+    Some(IslandPosition { x, y, edge: Some(edge), along: Some(along) })
+}
+
+#[tauri::command]
+pub fn set_island_side_column(app: tauri::AppHandle, height: f64) -> Result<(), String> {
+    if !height.is_finite() {
+        return Ok(());
+    }
+    let height = height.clamp(SIDE_COLUMN_MIN_HEIGHT, SIDE_COLUMN_MAX_HEIGHT);
+    let previous = read_window_state();
+    if (previous.side_column_height - height).abs() < 0.5 {
+        return Ok(());
+    }
+    let state = mutate_window_state(|state| {
+        state.side_column_height = height;
+        *state
+    });
+    if state.side().is_none() || state.is_dragging {
+        return Ok(());
+    }
+    apply_stage_geometry(&super::main_window(&app)?, state, false)
 }
 
 pub(super) fn is_outer(edge: Edge, (left, top, width, height): Rect, monitors: &[Rect]) -> bool {
@@ -99,9 +128,6 @@ pub(super) fn snap_after_drag(window: &WebviewWindow, position: IslandPosition, 
 }
 
 fn snap_to_side(window: &WebviewWindow, position: IslandPosition, state: IslandWindowState) -> Option<IslandPosition> {
-    if cfg!(target_os = "macos") {
-        return None;
-    }
     let monitor = monitor_for_island_position(window, position).ok().flatten()?;
     let scale = screen::monitor_scale(&monitor);
     let stage_width = STAGE_WINDOW_WIDTH * scale;
@@ -115,9 +141,8 @@ fn snap_to_side(window: &WebviewWindow, position: IslandPosition, state: IslandW
 
     let mut placed = state;
     placed.attached_edge = Some(edge);
-    let (handle, island) = heights(placed, scale);
-    let along = along_for(rect.top, work, handle);
-    let (x, y) = stage_position(edge, along, work, stage_width.round() as i32, handle, island);
+    let along = along_for(rect.top + rect.height / 2.0, work);
+    let (x, y) = stage_position(edge, along, work, stage_width.round() as i32, island_height(placed, scale));
     if let Err(error) = screen::set_window_position(window, PhysicalPosition::new(x, y)) {
         eprintln!("Failed to snap island to the side: {error}");
         return None;
@@ -173,14 +198,30 @@ mod tests {
     }
 
     #[test]
-    fn the_handle_keeps_its_place_along_the_side_and_the_panel_stays_on_screen() {
-        assert_eq!(stage_position(Edge::Left, 0.0, WORK, 820, 72.0, 72.0), (0, 0));
-        assert_eq!(stage_position(Edge::Right, 1.0, WORK, 820, 72.0, 72.0), (1100, 968));
-        assert_eq!(stage_position(Edge::Right, 1.0, WORK, 820, 72.0, 490.0), (1100, 550));
-        assert_eq!(stage_position(Edge::Left, 0.5, (0, 48, 1920, 1032), 820, 72.0, 72.0), (0, 528));
-        assert_eq!(along_for(484.0, WORK, 72.0), 0.5);
-        assert_eq!(along_for(-20.0, WORK, 72.0), 0.0);
-        assert_eq!(along_for(2000.0, WORK, 72.0), 1.0);
+    fn the_column_panel_and_handle_share_a_center_line_and_stay_on_screen() {
+        assert_eq!(stage_position(Edge::Left, 0.0, WORK, 820, 120.0), (0, 0));
+        assert_eq!(stage_position(Edge::Right, 1.0, WORK, 820, 120.0), (1100, 920));
+        assert_eq!(stage_position(Edge::Left, 0.5, WORK, 820, 120.0), (0, 460));
+        assert_eq!(stage_position(Edge::Left, 0.5, WORK, 820, 400.0), (0, 320));
+        assert_eq!(stage_position(Edge::Left, 0.5, WORK, 820, 72.0), (0, 484));
+        assert_eq!(stage_position(Edge::Right, 0.9, WORK, 820, 400.0), (1100, 640));
+        assert_eq!(stage_position(Edge::Left, 0.5, (0, 48, 1920, 1032), 820, 72.0), (0, 528));
+        assert_eq!(along_for(520.0, WORK), 0.5);
+        assert_eq!(along_for(-20.0, WORK), 0.0);
+        assert_eq!(along_for(2000.0, WORK), 1.0);
+        assert_eq!(along_for(10.0, (0, 0, 0, 0)), 0.5);
+    }
+
+    #[test]
+    fn a_collapsed_side_island_is_a_column_and_tucks_into_the_handle() {
+        let mut state = IslandWindowState { attached_edge: Some(Edge::Left), side_column_height: 152.0, ..Default::default() };
+        assert_eq!(state.base_size(), (44.0, 152.0));
+        assert_eq!(state.bottom_corner_radius(), 22.0);
+        state.is_tucked = true;
+        assert_eq!(state.base_size(), (12.0, 72.0));
+        state.is_tucked = false;
+        state.mode = IslandMode::Expanded;
+        assert_eq!(state.base_size(), (state.expanded_width, state.expanded_height));
     }
 
     #[test]
