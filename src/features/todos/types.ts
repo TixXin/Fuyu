@@ -16,6 +16,8 @@ export type TodoItem = {
   startedAt?: number;
   priority?: TodoPriority;
   color?: TodoColor;
+  updatedAt?: string;
+  deviceId?: string;
 };
 
 export type ScheduledTodo = {
@@ -26,6 +28,8 @@ export type ScheduledTodo = {
   project?: string;
   priority?: TodoPriority;
   color?: TodoColor;
+  updatedAt?: string;
+  deviceId?: string;
 };
 
 export type TodoArchive = {
@@ -35,6 +39,7 @@ export type TodoArchive = {
   savedAt: number;
   savedToDisk: boolean;
   filePath?: string;
+  updatedAt?: string;
 };
 
 export type SaveState = "idle" | "saving" | "saved" | "needs-path" | "error";
