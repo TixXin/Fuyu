@@ -153,6 +153,7 @@ pub fn run() {
             #[cfg(target_os = "macos")]
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);
             tray::build_tray(app)?;
+            plugin_kernel::builtins::init(app.handle());
             coexist::init(app.handle());
             if let Err(error) = clipboard_history::init(app.handle()) {
                 eprintln!("failed to initialize clipboard history: {error}");
