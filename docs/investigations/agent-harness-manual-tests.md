@@ -163,3 +163,6 @@
 - [ ] Antigravity CLI 远程审批（B36）：岛上打开审批，远程「安装/修复」后远端 `~/.gemini/config/hooks.json` 的 `fuyu` 组多了 `PreToolUse`（matcher `run_command`）；`agy` 跑命令时岛上出卡片、标着这台主机，命令行对；允许后命令执行、拒绝后 `agy` 显示拒绝理由、「终端」让 `agy` 自己问
 - [ ] 远程审批：岛关掉或这台主机在岛上关掉（`~/.fuyu/approval-port` 不在）时 `agy` 跑命令不卡、照它自己的设置走；卡片等到超时（约 145 秒）也是交回给它
 - [ ] 远程审批：岛上审批关掉时卡片不出现，`agy` 照常问自己的
+- [ ] opencode 远程会话（B36）：服务器上 `opencode`（1.x 和 2.x 各一次）开会话，岛上这台主机下面出现 opencode 会话，标题、目录、最近提问、回复、模型对；运行中 / 完成 / 出错和本机一致；跑命令时显示命令
+- [ ] 远端只有 `python3` 没有 `sqlite3`（Ubuntu 默认）时也能列出；两个都没有时不列、不报错；`~/.fuyu/opencode-recent.db` 在 512 KB 以内（会话很多、工具输出很大时看一下大小）
+- [ ] opencode 不动时远端不重复抽取（`~/.fuyu/opencode-recent.db` 的修改时间不变）；`$XDG_DATA_HOME`、`$OPENCODE_DB` 写在 `~/.bashrc` 非交互式提前 return 之前时读的是它们指的库

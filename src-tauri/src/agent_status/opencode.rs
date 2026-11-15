@@ -27,13 +27,11 @@ pub(super) const HARNESS: Harness = Harness {
     id: PROVIDER,
     hooks: Some(plugin::HOOKS),
     status_light: None,
-    sessions: Some(|roots: &ScanRoots, now, window_ms| {
-        if roots.local_app_dir.is_none() {
-            return Vec::new();
-        }
-        sessions(roots.home_dir, now, window_ms)
+    sessions: Some(|roots: &ScanRoots, now, window_ms| match roots.local_app_dir {
+        Some(_) => sessions(roots.home_dir, now, window_ms),
+        None => remote::read_sessions(roots, now, window_ms),
     }),
-    remote: None,
+    remote: Some(remote::REMOTE_FILES),
 };
 
 const DESKTOP_EXES: [&str; 2] = ["OpenCode.exe", "OpenCode"];
@@ -525,6 +523,9 @@ fn json(text: &str) -> Value {
 fn text(value: &Value) -> Option<String> {
     value.as_str().map(str::trim).filter(|text| !text.is_empty()).map(str::to_string)
 }
+
+#[path = "opencode_remote.rs"]
+mod remote;
 
 #[cfg(test)]
 #[path = "opencode_tests.rs"]
