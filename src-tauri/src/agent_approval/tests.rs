@@ -527,6 +527,11 @@ fn new_agents_have_their_own_routes_and_answers() {
     assert_eq!(route("/zcode/permission-request"), Some((Agent::Zcode, Kind::Permission)));
     assert_eq!(serde_json::to_value(Agent::Zcode).unwrap(), json!("zcode"));
     assert!(!Agent::Zcode.lacks_waiting_event());
+    assert_eq!(route("/mimo/permission"), Some((Agent::Mimo, Kind::Permission)));
+    assert_eq!(serde_json::to_value(Agent::Mimo).unwrap(), json!("mimo"));
+    assert!(!Agent::Mimo.lacks_waiting_event());
+    let mimo: Value = serde_json::from_str(&permission_response(Agent::Mimo, Some(Decision::Allow), None, None)).unwrap();
+    assert_eq!(mimo["reply"], "once");
     let zcode: Value = serde_json::from_str(&permission_response(Agent::Zcode, Some(Decision::Deny), Some("不行"), None)).unwrap();
     assert_eq!(zcode["hookSpecificOutput"]["decision"]["behavior"], "deny");
     for (agent, id) in [(Agent::Trae, "trae"), (Agent::TraeCn, "traeCn")] {

@@ -6,7 +6,7 @@ use std::{
 
 use serde::Serialize;
 
-use super::{antigravity, claude_code, codebuddy, codex, dsh, kimi_code, opencode, qoder, qwen, trae, workbuddy, zcode};
+use super::{antigravity, claude_code, codebuddy, codex, dsh, kimi_code, mimo, opencode, qoder, qwen, trae, workbuddy, zcode};
 
 const BLOCK_START: &str = "<!-- fuyu: reply marker v5 -->";
 pub(super) const BLOCK_START_PREFIX: &str = "<!-- fuyu: reply marker";
@@ -43,6 +43,7 @@ pub(super) const PROMPT_FILES: &[(&str, PromptFiles)] = &[
     (trae::TRAE_CN.provider, trae::prompt_files),
     (zcode::PROVIDER, zcode::prompt_files),
     (kimi_code::PROVIDER, kimi_code::prompt_files),
+    (mimo::PROVIDER, mimo::prompt_files),
 ];
 
 pub(super) const RULES_FILE: &str = "rules/fuyu-reply-marker.md";
