@@ -1,0 +1,21 @@
+{
+  "name": "@fuyu/plugin-manifest",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Plugin platform v3: the plugin manifest, its validation and the .fuyu package format",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.mts",
+      "default": "./src/index.mjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "engines": {
+    "node": ">=22.15"
+  },
+  "scripts": {
+    "test": "node --test \"test/**/*.test.mjs\""
+  }
+}
