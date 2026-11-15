@@ -62,7 +62,7 @@ try {
   check(groupRows().map((row) => row.dataset.group).join() === "basics,features,extensions"
     && groupRows().every((row) => row.getAttribute("aria-expanded") === "true"),
     "Every group is a row that folds, and all start unfolded");
-  check(listed().join() === "overview,general,behavior,appearance,shortcuts,todos,calendar,music,translation,clipboard,shelf,screenshot,messages,agents,plugins,market,about",
+  check(listed().join() === "overview,general,behavior,appearance,shortcuts,todos,calendar,music,translation,clipboard,shelf,screenshot,voiceInput,messages,agents,plugins,market,about",
     "Every sidebar item is listed at first: the overview on top, Appearance and AI Agent once each, and no Plugins (v3) while its switch is off");
   check(host.querySelector(".settings-sidebar__footer [data-category='about']"), "About is pinned below the page list");
   check(element(".settings-sidebar__item--active").dataset.category === "general", "The open page is marked");
