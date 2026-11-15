@@ -203,6 +203,33 @@ pub(crate) fn get_plugin_host_connection() -> HostConnection {
     connection_now(enabled(cfg!(debug_assertions), std::env::var(SWITCH).ok().as_deref()), SUPERVISOR.get())
 }
 
+#[derive(Debug, Clone, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct HostMemory {
+    pid: u32,
+    bytes: u64,
+    measure: &'static str,
+}
+
+const MEMORY_MEASURE: &str = if cfg!(windows) { "private-working-set" } else { "phys-footprint" };
+
+fn host_pid(slot: Option<&Mutex<Option<Supervisor>>>) -> Option<u32> {
+    match slot?.lock().ok()?.as_ref()?.state() {
+        HostState::Ready { pid, .. } => Some(pid),
+        _ => None,
+    }
+}
+
+fn memory_of(pid: Option<u32>, read: impl Fn(u32) -> Option<u64>) -> Option<HostMemory> {
+    let pid = pid?;
+    read(pid).map(|bytes| HostMemory { pid, bytes, measure: MEMORY_MEASURE })
+}
+
+#[tauri::command]
+pub(crate) fn get_plugin_host_memory() -> Option<HostMemory> {
+    memory_of(host_pid(SUPERVISOR.get()), crate::platform::private_memory::private_bytes)
+}
+
 pub(crate) fn respond(request: &tauri::http::Request<Vec<u8>>) -> tauri::http::Response<Vec<u8>> {
     protocol::respond(PLUGINS_DIR.get().map(PathBuf::as_path), request)
 }
@@ -211,6 +238,7 @@ macro_rules! tauri_commands {
     ($next:ident [$($done:tt)*] $($rest:tt)*) => {
         $next!([$($done)*
             crate::plugin_kernel::get_plugin_host_connection,
+            crate::plugin_kernel::get_plugin_host_memory,
         ] $($rest)*)
     };
 }

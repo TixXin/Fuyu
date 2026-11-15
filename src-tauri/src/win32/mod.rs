@@ -25,6 +25,7 @@ pub(crate) mod ocr;
 pub(crate) mod ole;
 pub(crate) mod plugin_window;
 pub(crate) mod power;
+pub(crate) mod private_memory;
 pub(crate) mod process;
 pub(crate) mod process_env;
 pub(crate) mod process_memory;
