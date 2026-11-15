@@ -25,7 +25,7 @@ pub(super) const PROVIDER: &str = "opencode";
 
 pub(super) const HARNESS: Harness = Harness {
     id: PROVIDER,
-    hooks: None,
+    hooks: Some(plugin::HOOKS),
     status_light: None,
     sessions: Some(|roots: &ScanRoots, now, window_ms| {
         if roots.local_app_dir.is_none() {
@@ -107,8 +107,12 @@ pub(super) fn data_dir(home_dir: &Path, env: impl Fn(&str) -> Option<OsString>) 
     xdg_dir(home_dir, &env, "XDG_DATA_HOME", &[".local", "share"]).join("opencode")
 }
 
+pub(super) fn config_dir(home_dir: &Path, env: impl Fn(&str) -> Option<OsString>) -> PathBuf {
+    xdg_dir(home_dir, &env, "XDG_CONFIG_HOME", &[".config"]).join("opencode")
+}
+
 pub(super) fn prompt_files(home_dir: &Path) -> Vec<PathBuf> {
-    vec![xdg_dir(home_dir, &|name: &str| std::env::var_os(name), "XDG_CONFIG_HOME", &[".config"]).join("opencode").join("AGENTS.md")]
+    vec![config_dir(home_dir, |name: &str| std::env::var_os(name)).join("AGENTS.md")]
 }
 
 fn xdg_dir(home_dir: &Path, env: &impl Fn(&str) -> Option<OsString>, name: &str, fallback: &[&str]) -> PathBuf {
@@ -525,3 +529,6 @@ fn text(value: &Value) -> Option<String> {
 #[cfg(test)]
 #[path = "opencode_tests.rs"]
 mod tests;
+
+#[path = "opencode_plugin.rs"]
+mod plugin;
