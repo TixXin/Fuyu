@@ -182,7 +182,7 @@ function dirtyLine(dirty) {
 function commitLines(commits, now) {
   const parts = [`没推的提交 ${commits.unpushed.length} 个`];
   if (commits.unpushed.length) {
-    parts[0] += `，最早的 ${ago(commits.oldestAt, now)}，${commits.due ? "该提 PR 了（pnpm mq:land --yes --body <文件>）" : "还不用提 PR"}`;
+    parts[0] += `，最早的 ${ago(commits.oldestAt, now)}，${commits.due ? "该提 PR 了（pnpm mq:land）" : "还不用提 PR"}`;
   }
   if (commits.inPr.length) parts.push(`另有 ${commits.inPr.map(({ number, count }) => `${count} 个在 #${number} 里`).join("、")}等合入`);
   if (commits.fetchFailed) parts.push("取不到 origin/main，按上次取到的算");
