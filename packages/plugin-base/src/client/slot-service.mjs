@@ -8,6 +8,6 @@ export class Slots extends Service {
 
   add(name, item) {
     const owner = this.ctx.fiber.name;
-    return this.ctx.effect(() => this.registry.add(name, item, owner), `ctx.slots.add(${name})`);
+    return this.ctx.effect(() => this.registry.add(name, item, owner, { external: true }), `ctx.slots.add(${name})`);
   }
 }

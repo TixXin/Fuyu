@@ -6,6 +6,8 @@ export const HOST_EXTERNALS = Object.freeze(["fuyu-plugin", "@fuyu/plugin-base"]
 
 export const APP_MODULES = Object.freeze(["react", "react-dom", "fuyu-plugin", "@fuyu/plugin-base"]);
 
+export const INSTALLED_PACKAGE_DEPTH = 3;
+
 export const isPackageOrSubpath = (specifier, name) => specifier === name || specifier.startsWith(`${name}/`);
 
 export function sharedPath(output, target, packageDepth = null) {

@@ -6,7 +6,7 @@ import { compareDeclarations } from "./declarations.mjs";
 import { planEntries } from "./entries.mjs";
 import { BuildError } from "./errors.mjs";
 import { selectFiles } from "./files.mjs";
-import { APP_MODULES, DEFAULT_SHARED_MODULES, HOST_EXTERNALS } from "./shared.mjs";
+import { APP_MODULES, DEFAULT_SHARED_MODULES, HOST_EXTERNALS, INSTALLED_PACKAGE_DEPTH } from "./shared.mjs";
 
 export const VERSION = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")).version;
 export const DEFAULT_OUT_DIR = join("build", "package");
@@ -15,9 +15,15 @@ export const BUILD_ONLY_FIELDS = [
   "bundleDependencies", "bundledDependencies", "overrides", "workspaces", "packageManager", "devEngines",
 ];
 
+function packageDepthOf(depth) {
+  if (depth === undefined || depth === null || depth === false) return null;
+  if (depth === true) return INSTALLED_PACKAGE_DEPTH;
+  if (Number.isInteger(depth) && depth >= 0) return depth;
+  throw new BuildError(`packageDepth must be true or a whole number of folders, got ${JSON.stringify(depth)}`);
+}
+
 export function resolveBuildOptions(options = {}) {
-  const depth = options.packageDepth;
-  if (depth !== undefined && depth !== null && !(Number.isInteger(depth) && depth >= 0)) throw new BuildError(`packageDepth must be a whole number of folders, got ${JSON.stringify(depth)}`);
+  const packageDepth = packageDepthOf(options.packageDepth);
   return {
     appKey: options.appKey ?? "fuyu",
     official: options.official ?? false,
@@ -25,7 +31,7 @@ export function resolveBuildOptions(options = {}) {
     shared: options.shared ?? DEFAULT_SHARED_MODULES,
     hostExternal: options.hostExternal ?? HOST_EXTERNALS,
     appModules: options.appModules ?? APP_MODULES,
-    packageDepth: options.packageDepth ?? null,
+    packageDepth,
     nodeTarget: options.nodeTarget ?? "node22",
     browserTarget: options.browserTarget ?? "es2022",
   };
