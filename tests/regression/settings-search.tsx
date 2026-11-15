@@ -130,6 +130,8 @@ try {
     check(hits("agentSessions").includes("隐藏已退出的会话"), "English words find a setting in the Chinese interface, shown in Chinese");
     await type("外观");
     check(categories().includes("appearance"), "A page's name still finds the page");
+    for (let spent = 0; document.querySelector(".settings-row--found") && spent < 4000; spent += 50) await wait(50);
+    check(!document.querySelector(".settings-row--found"), "The found row's mark fades after a moment");
 
     results.textContent = `${messages.join("\n")}\nALL PASS`;
     document.documentElement.dataset.testResult = "passed";

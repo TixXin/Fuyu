@@ -110,6 +110,8 @@ export async function runLyricsHandoffChecks(root: Root, media: MediaState, chec
   check(!document.querySelector(".island-meeting") && lyricRow()?.textContent === "in yesterday", "会议提醒几秒后回到歌词");
   check(document.querySelector(".island-meeting-join"), "回到歌词时加入会议按钮仍可点");
   check(probe() === "重构歌词", "到提醒时间还在等你，再插话一次");
+  await waitFor(() => probe() === "", "再插话后让回", 6000);
+  check(probe() === "", "再插话也是几秒后让回");
   await act(async () => setLyric(null));
   check(document.querySelector(".island-meeting"), "没在放歌词时会议提醒照常一直显示");
   await act(async () => setMeeting(null));

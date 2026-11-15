@@ -84,6 +84,8 @@ function check(condition: unknown, label: string) {
 const $ = <T extends Element = HTMLElement>(selector: string, root: ParentNode = document) => root.querySelector<T>(selector);
 const $$ = <T extends Element = HTMLElement>(selector: string, root: ParentNode = document) => [...root.querySelectorAll<T>(selector)];
 const click = (element: Element | null | undefined) => act(async () => { (element as HTMLElement | null)?.click(); });
+const wait = (ms: number) => act(async () => { await new Promise((resolve) => setTimeout(resolve, ms)); });
+const settle = async (done: () => boolean, ms = 3000) => { for (let spent = 0; !done() && spent < ms; spent += 50) await wait(50); };
 const chip = (root: ParentNode, label: string) => $$("button.island-list-chip", root).find((button) => button.textContent === label);
 const menuItem = (label: string) => $$("button.row-menu__item").find((button) => button.textContent?.includes(label));
 const row = (root: ParentNode, id: string) => $(`[data-clipboard-id="${id}"], [data-shelf-id="${id}"]`, root) ?? $$(".island-list-row", root).find((item) => item.textContent?.includes(id));
@@ -136,6 +138,7 @@ async function runChecks() {
       await new Promise((resolve) => setTimeout(resolve, 300));
     });
     await type("kzz");
+    await settle(() => $$(".island-list-row", clip).length === 1);
     check($$(".island-list-row", clip).length === 1 && $$(".island-list-row", clip)[0].textContent?.includes("「扩展」组"), "拼音首字母 kzz 搜到「扩展」组");
     await type("/app:微信");
     check($$(".island-list-row", clip).length === 2, "/app:微信 只看微信复制的");
@@ -170,6 +173,8 @@ async function runChecks() {
     check($$(".island-list-row", shelfPage).length === 1, "「置顶」只列置顶的文件");
     const empty = document.getElementById("shelf-empty")!;
     check($(".island-list-empty strong", empty)?.textContent === "把文件拖到岛上暂存" && $(".island-list-empty small", empty), "空的时候是图标加两行说明");
+    await settle(() => !$(".island-list-row__meta--accent"));
+    check(!$(".island-list-row__meta--accent") && $(".island-list-row__meta", row(clip, "t2")!)?.textContent?.includes("Windows Terminal"), "「已复制」过一会儿变回来源和时间");
 
     results.textContent = `${messages.join("\n")}\n\n全部 ${messages.length} 项检查通过。`;
     results.dataset.result = "passed";

@@ -3,7 +3,7 @@ import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "no
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { compareSnapshot, lineDiff, settledSnapshot, snapshotFile, UNSETTLED_PAGES } from "../../scripts/regression/snapshots.mjs";
+import { compareSnapshot, lineDiff, settledSnapshot, snapshotFile } from "../../scripts/regression/snapshots.mjs";
 
 test("snapshot files are named after the page, light ones get a suffix", () => {
   assert.equal(snapshotFile("/r", "collapsed-slots.html?test=1", "dark"), path.join("/r", "tests/regression/snapshots/collapsed-slots.html"));
@@ -91,7 +91,7 @@ test("a capture that differs is taken once more after a wait, and passes when th
   }
 });
 
-test("updating refuses a page whose DOM is still changing, except the listed pages", async () => {
+test("updating refuses a page whose DOM is still changing", async () => {
   const root = mkdtempSync(path.join(tmpdir(), "fuyu-snap-"));
   try {
     const moving = captures("a\n", "b\n");
@@ -105,9 +105,6 @@ test("updating refuses a page whose DOM is still changing, except the listed pag
     const unchanged = captures("a\n");
     assert.equal((await settledSnapshot({ root, page: "u.html?test=1", variant: "dark", update: true, darkActual: null, ...unchanged })).status, "same");
     assert.deepEqual(unchanged.waits, []);
-    const listed = UNSETTLED_PAGES[0];
-    assert.equal((await settledSnapshot({ root, page: listed, variant: "dark", update: true, darkActual: null, ...captures("a\n", "b\n") })).status, "created");
-    assert.equal(readFileSync(snapshotFile(root, listed, "dark"), "utf8"), "a\n");
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
