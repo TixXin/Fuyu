@@ -88,7 +88,7 @@ try {
   check(search().value === "" && group("features").getAttribute("aria-expanded") === "false", "Escape clears the search; folded groups stay folded");
   await act(async () => { group("features").click(); });
   await act(async () => { group("basics").click(); });
-  check(listed().length === 17, "Unfolding shows the pages again");
+  check(listed().length === 18, "Unfolding shows the pages again");
   check(!host.querySelector(".settings-sidebar__more"), "With every feature on there is no link to turn more on");
 
   const off = new Set<SettingsCategory>([...FEATURE_PAGES.music, ...FEATURE_PAGES.agents]);
