@@ -61,7 +61,6 @@ export type SettingsAgentText = {
   remoteSave: string;
   remoteCancel: string;
   agentsSection: string;
-  showProvider: (name: string) => string;
   showAgentsHint: string;
   hideFinished: string;
   hideFinishedHint: string;
@@ -246,7 +245,6 @@ export const zhCN: SettingsAgentText = {
   remoteSave: "添加",
   remoteCancel: "取消",
   agentsSection: "显示哪些 Agent",
-  showProvider: (name) => `显示 ${name} 会话`,
   showAgentsHint: "关掉的 Agent 不出现在 Agent 页，也不算进岛上的运行数量。",
   hideFinished: "只显示进行中的会话",
   hideFinishedHint: "隐藏已完成和失败的会话，只留正在运行、等待确认和可能中断的。",
@@ -431,7 +429,6 @@ export const en: SettingsAgentText = {
   remoteSave: "Add",
   remoteCancel: "Cancel",
   agentsSection: "Agents shown",
-  showProvider: (name) => `Show ${name} sessions`,
   showAgentsHint: "Agents switched off are left out of the Agent page and the island's running count.",
   hideFinished: "Only sessions in progress",
   hideFinishedHint: "Hide finished and failed sessions; keep running, waiting and possibly stalled ones.",
