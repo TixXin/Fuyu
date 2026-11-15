@@ -89,6 +89,7 @@ type OnEvent = Arc<dyn Fn(Event) + Send + Sync>;
 struct Control {
     stop: bool,
     restart: bool,
+    poke: bool,
 }
 
 struct Inner {
@@ -116,12 +117,20 @@ impl Inner {
             if control.stop || control.restart {
                 return control.stop;
             }
+            if std::mem::take(&mut control.poke) {
+                return false;
+            }
             let left = deadline.saturating_duration_since(Instant::now());
             if left.is_zero() {
                 return false;
             }
             control = self.wake.wait_timeout(control, left).map(|(guard, _)| guard).unwrap_or_else(|poisoned| poisoned.into_inner().0);
         }
+    }
+
+    fn poke(&self) {
+        lock(&self.control).poke = true;
+        self.wake.notify_all();
     }
 
     fn stopping(&self) -> bool {
@@ -143,7 +152,7 @@ impl Supervisor {
         let inner = Arc::new(Inner {
             state: Mutex::new(HostState::Starting { generation: 1 }),
             rpc: Mutex::new(None),
-            control: Mutex::new(Control { stop: false, restart: false }),
+            control: Mutex::new(Control { stop: false, restart: false, poke: false }),
             wake: Condvar::new(),
             on_event: Arc::new(on_event),
         });
@@ -218,13 +227,23 @@ fn launch(inner: &Arc<Inner>, spec: &HostSpec, containment: &dyn Containment) ->
     };
     let (ready_tx, ready) = mpsc::channel();
     let events = inner.on_event.clone();
-    let rpc = Rpc::start(stdout, stdin, move |method, params| {
-        if method == "ready" {
-            let _ = ready_tx.send(params);
-        } else {
-            events(Event::Notification { method: method.to_owned(), params });
-        }
-    });
+    let watcher = Arc::downgrade(inner);
+    let rpc = Rpc::start_watched(
+        stdout,
+        stdin,
+        move |method, params| {
+            if method == "ready" {
+                let _ = ready_tx.send(params);
+            } else {
+                events(Event::Notification { method: method.to_owned(), params });
+            }
+        },
+        move |_| {
+            if let Some(inner) = watcher.upgrade() {
+                inner.poke();
+            }
+        },
+    );
     let events = inner.on_event.clone();
     let _ = thread::Builder::new().name("plugin-host-stderr".into()).spawn(move || {
         for line in BufReader::new(stderr).lines().map_while(Result::ok) {
@@ -239,6 +258,21 @@ fn exited(child: &mut Child) -> Option<String> {
         Ok(Some(status)) => Some(format!("the plugin host exited ({status})")),
         Ok(None) => None,
         Err(error) => Some(format!("could not check the plugin host: {error}")),
+    }
+}
+
+const EXIT_GRACE: Duration = Duration::from_millis(500);
+
+fn exit_reason(child: &mut Child, within: Duration) -> Option<String> {
+    let deadline = Instant::now() + within;
+    loop {
+        if let Some(reason) = exited(child) {
+            return Some(reason);
+        }
+        if Instant::now() >= deadline {
+            return None;
+        }
+        thread::sleep(Duration::from_millis(10));
     }
 }
 
@@ -276,7 +310,7 @@ fn watch(inner: &Inner, running: &mut Running, timing: &Timing) -> Option<String
         match running.rpc.call("ping", Value::Null, timing.ping_timeout) {
             Ok(_) => {}
             Err(RpcError::Timeout { .. }) => return Some(format!("the plugin host did not answer a heartbeat in {} ms", timing.ping_timeout.as_millis())),
-            Err(error) => return Some(exited(&mut running.child).unwrap_or_else(|| error.to_string())),
+            Err(error) => return Some(exit_reason(&mut running.child, EXIT_GRACE).unwrap_or_else(|| error.to_string())),
         }
     }
 }

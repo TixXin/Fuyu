@@ -39,6 +39,7 @@ export interface Host {
   status(): PluginStatus[];
   watchStatus(onChange: (status: PluginStatus[]) => void): () => void;
   clients(window?: string): ClientEntry[];
+  timers(): Record<string, number>;
   watchClients(onChange: (clients: ClientEntry[]) => void): () => void;
   settle(): Promise<unknown>;
   stop(): Promise<void>;

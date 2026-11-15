@@ -100,7 +100,7 @@ test("a second provider of the same service fails without touching the first, an
   await stop();
 });
 
-test("the status of a conflicting provider names the plugin that already provides the service", { todo: "Cordis names the first provider by its class or function name (<P>), not by its id in plugins.yml" }, async () => {
+test("the status of a conflicting provider names the plugin that already provides the service", async () => {
   const { status, stop } = await host(CONFLICT);
   const second = status().find((item) => item.id === "second");
   await stop();
@@ -149,7 +149,7 @@ test("timers in an effect and event listeners never fire after the plugin is dis
   await stop();
 });
 
-test("the kernel gives plugins managed timers that stop with them", { todo: "ctx.setTimeout / ctx.setInterval do not exist: core Cordis 4 has no timer service, plugins must wrap timers in ctx.effect" }, async () => {
+test("the kernel gives plugins managed timers that stop with them", async () => {
   const { stop } = await host([{ id: "managed", name: "./managed.mjs" }]);
   await stop();
   assert.equal(globalThis.managed, true);
