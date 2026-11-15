@@ -1,0 +1,13 @@
+.plugin-slot {
+  display: contents;
+  --fuyu-plugin-text: var(--text-1);
+  --fuyu-plugin-text-secondary: var(--text-2);
+  --fuyu-plugin-text-muted: var(--text-3);
+  --fuyu-plugin-surface: var(--color-white-a06);
+  --fuyu-plugin-surface-hover: var(--color-white-a10);
+  --fuyu-plugin-border: var(--color-white-a12);
+  --fuyu-plugin-accent: var(--color-accent);
+  --fuyu-plugin-on-accent: var(--color-on-accent);
+  --fuyu-plugin-font: var(--font-ui);
+  --fuyu-plugin-radius: var(--radius-md);
+}

@@ -1,0 +1,83 @@
+import { act, StrictMode, type CSSProperties } from "react";
+import { createRoot } from "react-dom/client";
+import "../../src/styles/tokens.css";
+import { createSlots } from "@fuyu/plugin-base/client";
+import { SLOT_THEME } from "@fuyu/plugin-base/protocol";
+import { PluginSlotItems } from "../../src/features/plugin-kernel/PluginSlot";
+
+Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
+
+const NAME = "island.dev/v1";
+const style: CSSProperties = {
+  display: "flex",
+  justifyContent: "space-between",
+  margin: "4px 8px",
+  padding: "4px 8px",
+  borderRadius: "var(--fuyu-plugin-radius)",
+  font: "12px ui-monospace, monospace",
+  color: "var(--fuyu-plugin-text-secondary)",
+  background: "var(--fuyu-plugin-surface)",
+};
+const Hello = () => (
+  <div className="demo" style={style}>
+    <span>hello island, from the plugin host (pid 4242)</span>
+    <span style={{ color: "var(--fuyu-plugin-text-muted)" }}>#12</span>
+  </div>
+);
+
+const messages: string[] = [];
+const check = (condition: unknown, message: string) => {
+  if (!condition) throw new Error(message);
+  messages.push(`PASS ${message}`);
+};
+const results = document.getElementById("results")!;
+const island = document.getElementById("island")!;
+
+const parse = (color: string) => {
+  const parts = color.match(/[\d.]+/g)?.map(Number) ?? [];
+  return { r: parts[0], g: parts[1], b: parts[2], a: parts.length > 3 ? parts[3] : 1 };
+};
+const lum = ({ r, g, b }: { r: number; g: number; b: number }) => {
+  const f = (v: number) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; };
+  return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
+};
+const over = (top: ReturnType<typeof parse>, bottom: { r: number; g: number; b: number }) => ({
+  r: top.r * top.a + bottom.r * (1 - top.a), g: top.g * top.a + bottom.g * (1 - top.a), b: top.b * top.a + bottom.b * (1 - top.a),
+});
+const contrast = (el: HTMLElement, base: { r: number; g: number; b: number }) => {
+  const cs = getComputedStyle(el);
+  const fill = over(parse(cs.backgroundColor), base);
+  const ink = over(parse(cs.color), fill);
+  const [hi, lo] = [lum(ink), lum(fill)].sort((a, b) => b - a);
+  return (hi + 0.05) / (lo + 0.05);
+};
+
+try {
+  const registry = createSlots({ [NAME]: { kind: "list", max: 3, perPlugin: 1 } });
+  registry.add(NAME, { id: "hello", component: Hello }, "hello");
+  await act(async () => {
+    createRoot(island).render(<StrictMode><PluginSlotItems registry={registry} name={NAME} /></StrictMode>);
+  });
+
+  const slot = island.querySelector<HTMLElement>(".plugin-slot")!;
+  const demo = island.querySelector<HTMLElement>(".demo")!;
+  check(slot && slot.dataset.slot === NAME, "The slot wraps its items in .plugin-slot with the slot name");
+  check(getComputedStyle(slot).display === "contents", "and the wrapper adds no box, so the island layout stays the same");
+  const missing = SLOT_THEME.filter((name) => getComputedStyle(slot).getPropertyValue(name).trim() === "");
+  check(missing.length === 0, `Every public theme variable is defined on the slot (${SLOT_THEME.length}); missing: ${missing.join(", ") || "none"}`);
+  const dark = contrast(demo, { r: 0, g: 0, b: 0 });
+  check(dark >= 4.5, `On the dark island the demo row reads at ${dark.toFixed(1)}:1`);
+
+  document.documentElement.classList.add("island-light");
+  island.style.background = "#f2f2f5";
+  const light = contrast(demo, { r: 242, g: 242, b: 245 });
+  check(light >= 4.5, `On the light island the same row reads at ${light.toFixed(1)}:1 (it was white on light grey before the theme variables)`);
+  document.documentElement.classList.remove("island-light");
+  island.style.background = "";
+
+  results.dataset.result = "passed";
+  results.textContent = [...messages, `ALL PASS (${messages.length})`].join("\n");
+} catch (error) {
+  results.dataset.result = "failed";
+  results.textContent = [...messages, `FAIL ${error instanceof Error ? error.message : String(error)}`].join("\n");
+}

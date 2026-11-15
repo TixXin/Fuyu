@@ -8,3 +8,4 @@ export declare const CLOSE: {
   readonly badProtocol: 4426;
 };
 export declare const WINDOW_ORIGINS: readonly string[];
+export declare const SLOT_THEME: readonly string[];
