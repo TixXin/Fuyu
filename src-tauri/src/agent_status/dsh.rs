@@ -16,6 +16,8 @@ use super::reply_text::reply_ending;
 use super::sessions::{session_phase, AgentSessionSummary, TurnState};
 use super::snapshot::system_time_to_unix_millis;
 use super::title::{display_title, folder_title, prompt_title};
+use super::todo_list::{todo_items, unfinished};
+use super::tool_call::ToolCall;
 use super::window_focus::app_name;
 use crate::platform;
 
@@ -249,7 +251,7 @@ fn parse_checkpoint(value: &Value, id: &str, at: i64) -> Parsed {
     let first_prompt = row(rows, "titleInput", &[1]).and_then(|input| input["first"]["text"].as_str()).and_then(prompt_title);
     let agent_title = row(rows, "title", &[1]).and_then(Value::as_str).and_then(display_title);
     let (title, title_source) = pick_title(None, agent_title, first_prompt, cwd.as_deref().and_then(folder_title));
-    let model = row(rows, "modelSelection", &[2]).map(|selection| &selection["lastUsed"]);
+    let model = row(rows, "modelSelection", &[2, 3]).map(|selection| &selection["lastUsed"]);
     let reply = turn.and_then(|turn| turn["response"].as_str()).map(reply_ending).unwrap_or_default();
     let summary = AgentSessionSummary {
         provider: PROVIDER,
@@ -267,17 +269,46 @@ fn parse_checkpoint(value: &Value, id: &str, at: i64) -> Parsed {
         host: None,
         turn_started_at: metadata["lastPromptAt"].as_i64(),
         last_prompt: turn.and_then(|turn| turn["prompt"].as_str()).and_then(prompt_title),
-        current_tool: None,
-        permission_mode: None,
+        current_tool: in_turn.then(|| current_tool(rows)).flatten(),
+        permission_mode: permission_mode(rows),
         subagents: 0,
         background_tasks: 0,
         compacting: false,
-        todos: None,
+        todos: row(rows, "todos", &[2]).and_then(|todos| unfinished(todo_items(todos))),
         closed: false,
         remote_host: None,
         context_tokens: row(rows, "contextPressure", &[4, 5]).and_then(|pressure| pressure["surfaceTokens"].as_u64()),
     };
     Some((summary, state))
+}
+
+fn current_tool(rows: &Value) -> Option<ToolCall> {
+    let calls = rows["contextTimeline"]["val"]["callNames"].as_object()?;
+    let (_, call) = calls.iter().filter(|(_, call)| call["name"].is_string()).max_by_key(|(_, call)| call["start"].as_i64())?;
+    Some(ToolCall { name: text(&call["name"])?, detail: None })
+}
+
+fn permission_mode(rows: &Value) -> Option<&'static str> {
+    if row(rows, "plan", &[3, 4]).is_some_and(|plan| plan["active"] == true) {
+        return Some("plan");
+    }
+    let permissions = row(rows, "permissions", &[2]).filter(|permissions| permissions.is_object());
+    let preset = permissions.and_then(|permissions| permissions["preset"].as_str());
+    let sandbox = permissions
+        .and_then(|permissions| permissions["sandbox"].as_str())
+        .or_else(|| row(rows, "sandboxMode", &[1]).and_then(Value::as_str));
+    let approval = permissions
+        .and_then(|permissions| permissions["approval"].as_str())
+        .or_else(|| row(rows, "approvalState", &[1]).and_then(|state| state["policy"].as_str()));
+    if preset.is_none() && sandbox.is_none() && approval.is_none() {
+        return None;
+    }
+    Some(match (preset, sandbox, approval) {
+        (Some("auto"), _, _) => "auto",
+        (Some("danger-full-access"), _, _) | (_, Some("danger-full-access"), Some("never")) => "bypass",
+        (_, _, Some("never")) => "auto",
+        _ => "default",
+    })
 }
 
 #[cfg(test)]
