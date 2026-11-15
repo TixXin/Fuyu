@@ -1,5 +1,5 @@
 import type { CalendarSettingValues } from "../calendar/calendarSettings";
-import type { LyricsIslandPriority, LyricsKaraokeColor, LyricsKaraokeFallback, LyricsKaraokeFill } from "../media/lyrics/lyricsSettings";
+import type { LyricsIntro, LyricsIslandPriority, LyricsKaraokeColor, LyricsKaraokeFallback, LyricsKaraokeFill } from "../media/lyrics/lyricsSettings";
 import type { TodoProject } from "../todos/types";
 
 export type TranslationTarget = "window" | "island";
@@ -136,6 +136,7 @@ export type IslandSettings = CalendarSettingValues & {
   lyricsOffsetMs: number;
   lyricsOnIsland: boolean;
   lyricsIslandPriority: LyricsIslandPriority;
+  lyricsIntro: LyricsIntro;
   lyricsKaraoke: boolean;
   lyricsKaraokeFallback: LyricsKaraokeFallback;
   lyricsKaraokeFill: LyricsKaraokeFill;

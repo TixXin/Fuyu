@@ -5,6 +5,7 @@ import { MediaWaveform } from "./MediaWaveform";
 import { MusicProgress } from "./MusicProgress";
 import { LyricsView } from "./lyrics/LyricsView";
 import type { LyricsSettings } from "./lyrics/useLyrics";
+import type { LyricsIntro } from "./lyrics/lyricsSettings";
 import { LyricsOffsetControl } from "./lyrics/LyricsOffsetControl";
 import { suggestsChineseSources } from "./lyrics/chineseHint";
 import { usePlayingLyrics, type PlayingLyrics } from "./lyrics/usePlayingLyrics";
@@ -32,7 +33,7 @@ export function MusicPlayerPanel({
   onPlayPause: () => void;
   onNext: () => void;
   onPrevious: () => void;
-  lyricsSettings?: LyricsSettings & { lyricsOffsetMs: number };
+  lyricsSettings?: LyricsSettings & { lyricsOffsetMs: number; lyricsIntro?: LyricsIntro };
   lyrics?: PlayingLyrics;
   onAlignLyrics?: (positionMs: number) => void;
 }) {
@@ -82,7 +83,7 @@ export function MusicPlayerPanel({
 
       <div className="music-player__stage">
         {lyrics ? (
-          <LyricsView lines={lyrics} mediaState={mediaState} offsetMs={offsetMs} onPickLine={estimate ? onAlignLyrics : undefined} />
+          <LyricsView lines={lyrics} mediaState={mediaState} offsetMs={offsetMs} intro={lyricsSettings.lyricsIntro} onPickLine={estimate ? onAlignLyrics : undefined} />
         ) : (
           <MediaWaveform playing={isPlaying || mediaState.audioActive} audioPeak={mediaState.audioPeak} />
         )}

@@ -44,6 +44,12 @@ export function keepIslandTimeline<T extends Timeline>(next: T, current: Timelin
   return { ...next, positionMs: current.positionMs, updatedAt: current.updatedAt, positionEstimate: current.positionEstimate };
 }
 
+export function holdIntentTimeline<T extends Timeline>(next: T, current: Timeline): T {
+  const same = next.title === current.title && next.artist === current.artist && next.sourceApp === current.sourceApp;
+  if (!same || !hasTimeline(next) || !hasTimeline(current) || current.positionEstimate) return next;
+  return { ...next, positionMs: current.positionMs, updatedAt: current.updatedAt };
+}
+
 export function alignClock(clock: TrackClock, positionMs: number, now: number): TrackClock {
   if (clock.key === null) return clock;
   return { ...clock, elapsedMs: Math.max(0, positionMs), runningSince: clock.runningSince === null ? null : now, fromStart: true };

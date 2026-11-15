@@ -6,6 +6,9 @@ import { I18nProvider } from "../../src/i18n";
 import type { MediaState } from "../../src/features/media/api";
 import { DEFAULT_MEDIA_STATE } from "../../src/features/media/mediaState";
 import { MusicPlayerPanel } from "../../src/features/media/MusicPlayerPanel";
+import { DEFAULT_SETTINGS } from "../../src/features/appearance/settingsDefaults";
+import type { LyricsIntro } from "../../src/features/media/lyrics/lyricsSettings";
+import { useIslandLyrics } from "../../src/windows/island/useIslandLyrics";
 
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
 const LRC = [
@@ -53,6 +56,19 @@ async function render(mediaState: MediaState, lyricsSettings: typeof ONLINE | un
   });
 }
 
+function IslandLine({ mediaState, intro }: { mediaState: MediaState; intro: LyricsIntro }) {
+  const settings = { ...DEFAULT_SETTINGS, musicEnabled: true, lyricsOnIsland: true, lyricsOnline: true, lyricsIntro: intro };
+  const { lyricLine } = useIslandLyrics(settings, mediaState, { page: "music", barShown: true });
+  return <span className="island-line" data-index={lyricLine?.index ?? ""}>{lyricLine?.text ?? "待办"}</span>;
+}
+
+async function renderIsland(mediaState: MediaState, intro: LyricsIntro) {
+  await act(async () => {
+    root.render(<StrictMode><I18nProvider><IslandLine mediaState={mediaState} intro={intro} /></I18nProvider></StrictMode>);
+    await new Promise((resolve) => setTimeout(resolve, 60));
+  });
+}
+
 function check(condition: unknown, label: string) {
   if (!condition) throw new Error(label);
   messages.push(`PASS ${label}`);
@@ -86,6 +102,21 @@ try {
   check(lines()[1] === "♪", "间奏的空行显示音符");
   await render(track("晴天", 500));
   check(lines().join("|") === "|♪|故事的小黄花", "前奏时中间显示音符，第一句在下面等着");
+  await render(track("晴天", 500), { ...ONLINE, lyricsIntro: "song" } as typeof ONLINE);
+  check(lines().join("|") === "|晴天 - 周杰伦|故事的小黄花", "前奏选「歌名」时音乐页中间显示歌名，第一句在下面等着");
+
+  const islandLine = () => document.querySelector<HTMLElement>(".island-line")!;
+  await renderIsland(track("晴天", 300, true), "todo");
+  check(islandLine().textContent === "待办", "前奏默认（待办）时收起的岛照常显示待办");
+  await renderIsland(track("晴天", 300, true), "song");
+  check(islandLine().textContent === "晴天 - 周杰伦", "前奏选「歌名」时收起的岛显示歌名 - 歌手");
+  await renderIsland(track("晴天", 300, true), "note");
+  check(islandLine().textContent === "♪" && islandLine().dataset.index === "-3", "前奏选「音符」时收起的岛显示音符");
+  await renderIsland(track("晴天", 600, true), "note");
+  await act(async () => { await new Promise((resolve) => setTimeout(resolve, 650)); });
+  check(islandLine().textContent === "故事的小黄花" && islandLine().dataset.index === "0", "到第一句时收起的岛切到歌词（换了 key，走淡入动画）");
+  await renderIsland(track("晴天", 300), "song");
+  check(islandLine().textContent === "待办", "暂停时前奏不显示歌名");
 
   await render(track("晴天", 6000), { ...ONLINE, lyricsOffsetMs: 2000 });
   check(lines()[1] === "故事的小黄花", "推后 2 秒时仍显示上一句");

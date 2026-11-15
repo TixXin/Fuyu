@@ -20,6 +20,11 @@ export type SettingsLyricsText = {
   priorityHint: string;
   priorityLyrics: string;
   priorityAgent: string;
+  intro: string;
+  introHint: string;
+  introTodo: string;
+  introSong: string;
+  introNote: string;
   inflink: {
     title: string;
     hint: string;
@@ -86,6 +91,11 @@ export const zhCN: SettingsLyricsText = {
   priorityHint: "歌词优先：Agent 开始新会话、跑完或出错时临时显示 4 秒，做到一半等你审批或回答时一直显示到你处理；没找到歌词的歌显示「歌名 - 歌手」。Agent 优先：有 Agent 在运行就显示它，空下来才显示歌词。",
   priorityLyrics: "歌词优先",
   priorityAgent: "Agent 优先",
+  intro: "前奏时显示",
+  introHint: "第一句歌词开始之前，收起的岛和音乐页显示什么。第一句开始时切到歌词。",
+  introTodo: "待办",
+  introSong: "歌名",
+  introNote: "音符",
   inflink: {
     title: "网易云精确同步（InfLink-rs）",
     hint: "网易云插件，让网易云把播放进度和歌曲 ID 告诉系统：音乐页有进度条，歌词按歌曲直接查、不会对不上。从 GitHub 下载，放进 BetterNCM 的插件文件夹。",
@@ -152,6 +162,11 @@ export const en: SettingsLyricsText = {
   priorityHint: "Lyrics first: an agent shows for 4 seconds when it starts a session, finishes or fails, and stays while it is stopped on an approval or question; a song without lyrics shows “title - artist”. Agent first: a running agent shows, and lyrics come back when it is idle.",
   priorityLyrics: "Lyrics first",
   priorityAgent: "Agent first",
+  intro: "Before the first line",
+  introHint: "What the collapsed island and the music page show before the first line starts. The lyrics take over when it does.",
+  introTodo: "Todo",
+  introSong: "Title",
+  introNote: "Note",
   inflink: {
     title: "Exact NetEase sync (InfLink-rs)",
     hint: "A NetEase Cloud Music plugin that tells Windows the playback position and song id: the music page gets a progress bar, and lyrics are looked up by song and stay in step. Downloaded from GitHub into BetterNCM's plugins folder.",

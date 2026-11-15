@@ -21,6 +21,7 @@ use windows::{
 
 use super::audio::{read_master_volume, read_system_audio_peak, AUDIO_ACTIVE_THRESHOLD};
 use super::service::*;
+use super::timeline_clock::{self, track_key, Published};
 pub(super) use super::state::{current_unix_millis, MediaSessionInfo};
 use crate::win32;
 
@@ -330,8 +331,10 @@ pub(super) fn read_media_state_from_manager(
         .and_then(|value| value.Value().ok())
         .unwrap_or(1.0);
 
-    let (position_ms, duration_ms) = read_timeline(&session, is_playing, playback_rate);
     let Metadata { title, artist, album, thumbnail, track_id } = read_metadata(&session, source_app.as_deref());
+    let (position_ms, duration_ms) = read_timeline(&session, is_playing, playback_rate, |duration_ms| {
+        (source_app.clone().unwrap_or_default(), track_key(title.as_deref(), artist.as_deref(), album.as_deref(), duration_ms))
+    });
 
     Ok(MediaState {
         available: true,
@@ -383,6 +386,7 @@ pub(super) fn read_timeline(
     session: &MediaSession,
     is_playing: bool,
     playback_rate: f64,
+    identify: impl FnOnce(i64) -> (String, String),
 ) -> (i64, i64) {
     let Ok(timeline) = session.GetTimelineProperties() else {
         return (0, 0);
@@ -391,27 +395,24 @@ pub(super) fn read_timeline(
     let start = timeline.StartTime().map(ticks_to_ms).unwrap_or(0);
     let end = timeline.EndTime().map(ticks_to_ms).unwrap_or(0);
     let position = timeline.Position().map(ticks_to_ms).unwrap_or(0);
-
     let duration = (end - start).max(0);
-    let mut elapsed = (position - start).clamp(0, duration);
-
-    if is_playing && duration > 0 {
-        if let Ok(last_updated) = timeline.LastUpdatedTime() {
-            let now_ticks =
-                current_unix_millis().saturating_mul(10_000) + WINDOWS_EPOCH_OFFSET_TICKS;
-            let since_update_ms = (now_ticks - last_updated.UniversalTime) / 10_000;
-            if since_update_ms > 0 {
-                let rate = if playback_rate > 0.0 {
-                    playback_rate
-                } else {
-                    1.0
-                };
-                let projected = elapsed + (since_update_ms as f64 * rate).round() as i64;
-                elapsed = projected.clamp(0, duration);
-            }
-        }
+    if duration == 0 {
+        return (0, 0);
     }
 
+    let updated_ms = timeline
+        .LastUpdatedTime()
+        .ok()
+        .map(|time| (time.UniversalTime - WINDOWS_EPOCH_OFFSET_TICKS) / 10_000)
+        .filter(|updated| *updated > 0);
+    let published = Published {
+        position_ms: (position - start).clamp(0, duration),
+        updated_ms,
+        rate: playback_rate,
+        duration_ms: duration,
+    };
+    let (session_key, track) = identify(duration);
+    let elapsed = timeline_clock::sample(&session_key, &track, published, is_playing, current_unix_millis());
     (elapsed, duration)
 }
 

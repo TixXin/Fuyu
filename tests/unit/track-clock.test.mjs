@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { advanceClock, alignClock, clockPosition, hasTimeline, keepIslandTimeline, NO_CLOCK, settleClockAt, startClockAt } from "../../src/features/media/trackClock.ts";
+import { advanceClock, alignClock, clockPosition, hasTimeline, holdIntentTimeline, keepIslandTimeline, NO_CLOCK, settleClockAt, startClockAt } from "../../src/features/media/trackClock.ts";
 
 test("players that report no position are timed by the island", () => {
   assert.equal(hasTimeline({ positionMs: 0, durationMs: 0 }), false);
@@ -71,4 +71,14 @@ test("a start announced while paused waits for play", () => {
   const clock = startClockAt(NO_CLOCK, "晴天", false, 5000, 5100);
   assert.equal(clockPosition(clock, 9000), 0);
   assert.equal(clockPosition(advanceClock(clock, "晴天", true, 9000), 10_000), 1000);
+});
+
+test("right after play or pause the island keeps its own position instead of the one read back", () => {
+  const current = { title: "晴天", artist: "周杰伦", sourceApp: "cloudmusic", positionMs: 61_000, durationMs: 269_000, updatedAt: 9000 };
+  const answer = { ...current, positionMs: 57_500, updatedAt: 9300 };
+  assert.equal(holdIntentTimeline(answer, current).positionMs, 61_000);
+  assert.equal(holdIntentTimeline(answer, current).updatedAt, 9000);
+  assert.equal(holdIntentTimeline({ ...answer, title: "七里香" }, current).positionMs, 57_500);
+  assert.equal(holdIntentTimeline(answer, { ...current, positionEstimate: "timed" }).positionMs, 57_500);
+  assert.equal(holdIntentTimeline({ ...answer, positionMs: 0, durationMs: 0 }, current).positionMs, 0);
 });
