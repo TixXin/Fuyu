@@ -1,16 +1,19 @@
 ---
 name: fuyu-lead
 description: >
-  This skill should be used in the Fuyu repo when the user wants a "lead" / "主 agent" session
-  to own a multi-part piece of work: plan it first, show the plan, and only after the user
-  approves dispatch parallel sub-sessions and review their results. Triggers: 开个主 agent、
-  主会话、让主 agent 派子会话、并行处理、统筹、拆开并行做、/fuyu-lead <主题>. Not for a single small
-  change that one session can finish.
+  ALWAYS invoke BEFORE acting as a lead ("主 agent") session in the Fuyu repo: opening a lead
+  session for a multi-part piece of work, planning it and showing the plan, dispatching
+  sub-sessions with start_session, reviewing and landing what they did, including dispatching
+  just one more session when this session has already dispatched one. Do NOT dispatch a second
+  session without loading this skill first. Do NOT invoke for a single change one session can
+  finish, or for doing one task yourself (fuyu-task).
+  触发：开个主 agent、主会话、让主 agent 派子会话、并行处理、统筹、拆开并行做、再派一个、
+  /fuyu-lead <主题>。
 ---
 
 # 主 agent 模式：先规划、等点头、再派子会话
 
-用户给一个主题（例如「agent 适配」「#349」「B25–B27」），由一个**主 agent 会话**统筹：先整理计划给用户看，用户同意后再派子会话并行做，最后检查结果、收口。2026-11-14 在 #349（DeepSeek Harness / opencode 适配）上第一次这样用，用户认可。
+用户给一个主题（例如「agent 适配」「#349」「B25–B27」），由一个**主 agent 会话**统筹：先整理计划给用户看，用户同意后再派子会话并行做，最后检查结果、收口。
 
 ## 1. 在当前会话里：开主 agent
 
@@ -34,8 +37,8 @@ description: >
 
    计划在会话里讲给用户听，同时存一份文件，派出去的子会话也能读到。然后用 `wrap_up` 问「按这个计划开始派会话吗？」，停下来等用户回答。
 3. **用户同意后**：新任务先 `gh issue create`，再 `pnpm tasks add … --issue`，调好依赖，按阶段派子会话（每个都用 `use_worktree: false`）。必须串行的，等前一阶段完成后再派下一阶段。**同时最多 2 个要编译（cargo、tauri build、回归页）的子会话**，其余的排在后面一波；全机器同时改代码的会话控制在 6 个左右（先看 ListAgents 里有多少在干活），只读代码、写文档、做调研的不算。整批 `pnpm mq:land` 由主 agent 发起，子会话不各自 land（workflow.md「Rust 构建」里的排队规则，issue #448）。
-4. **每个子会话的简报都要带上这些约束**：在主工作区、本地 `main` 上工作；不 stash / reset / checkout 别人的文件；只提交自己的文件（`git commit -- <文件>`）；`pnpm task:claim <编号> --as <会话名> --scope ..`，带 issue 的任务认领后先在 issue 下回复；Rust 构建用共用的 `src-tauri/target/agents`，不另开编译目录、不在临时目录的仓库副本里编译，`cargo` / `tauri build` 写成 `pnpm heavy -- <命令>` 排队（`build:exe`、`verify`、`test:regression` 自带排队），不跑 `pnpm tauri dev`；长命令放后台；热点文件（workflow.md「没提交的文件」）改完就单独提交，停下时 `pnpm tasks note` 写清哪些没提交的文件是自己的；做完 `pnpm tasks done`，按 workflow.md 攒批 `pnpm mq:land`；PR 合入后在 issue 下回复改了什么、列出提交，再 `gh issue close`（只留「接手」那一条就停下是常见的漏项）。本机测不了的（Windows 专有的部分、真机），列进实测清单。
-5. **收口**：子会话的汇报不算数，主 agent 要看它的 diff 和提交，再 `pnpm tasks dirty` 看它有没有留下没提交的文件；更新现状文档；用 `pnpm issue` 核对相关 issue 都已回复并关闭，漏的补上；最后向用户汇报每个任务的结果、提交、PR，以及还剩什么。
+4. **每个子会话的简报开头写**：先加载 `fuyu-task` 并照它做。后面只写这次特有的：认领哪个任务、会话名、`--scope`、怎样算做完、跑哪些验证、由主 agent 整批 land。通用的约束不再抄进简报，抄的每次都会漏几条。
+5. **收口**：子会话的汇报不算数，主 agent 要看它的 diff 和提交，再 `pnpm tasks dirty` 看它有没有留下没提交的文件；更新现状文档；PR 合入后给每个子会话发消息，让它回复并关闭自己的 issue（`fuyu-task` 第 9 步在等这条通知），再用 `pnpm issue` 核对相关 issue 都已回复并关闭，漏的补上；最后向用户汇报每个任务的结果、提交、PR，以及还剩什么。用户问进度时先跑 `pnpm progress`，再用 ListAgents 补会话状态：脚本看不到会话是不是还活着。
 
 ## 3. 用户怎么快速用
 
