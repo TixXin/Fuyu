@@ -156,7 +156,7 @@ export function IslandApp() {
     hasMessagePreview: showsMessage,
     hasPermissionPrompt: permissionPrompts.current !== null || screenshotCard.current !== null,
     hasTranslationPeek: Boolean(translationPeek),
-    holdTuck: useTuckHold(settings, { todos, activeTodoId, agentSessions, playing: media.mediaState.playbackStatus === "playing", notices }),
+    holdTuck: useTuckHold(settings, { todos, activeTodoId, agentSessions, playing: media.mediaState.playbackStatus === "playing", messagesOpen: mode === "expanded" && page === "qq", notices }),
   });
 
 

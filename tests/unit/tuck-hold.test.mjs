@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { hasUnreadMessages, holdsTuck } from "../../src/windows/island/tuckHold.ts";
+import { hasNewUnreadMail, hasUnreadMessages, holdsTuck, nextMailBaselines } from "../../src/windows/island/tuckHold.ts";
 import { normalizeSettings } from "../../src/features/appearance/settings.ts";
 
 const idle = { todoInProgress: false, agentWaiting: false, musicPlaying: false, messagesUnread: false };
@@ -33,10 +33,26 @@ test("unread messages keep the island out by default, and only while the switch 
 });
 
 test("WeChat, QQ and mail unread count only when that source is on", () => {
-  const none = { qq: { enabled: true, count: 0 }, wechat: { enabled: true, pending: false }, mail: { enabled: true, unread: 0 } };
+  const none = { qq: { enabled: true, count: 0 }, wechat: { enabled: true, pending: false }, mail: { enabled: true, newUnread: false } };
   assert.equal(hasUnreadMessages(none), false);
   assert.equal(hasUnreadMessages({ ...none, qq: { enabled: true, count: 2 } }), true);
   assert.equal(hasUnreadMessages({ ...none, wechat: { enabled: true, pending: true } }), true);
-  assert.equal(hasUnreadMessages({ ...none, mail: { enabled: true, unread: 5 } }), true);
-  assert.equal(hasUnreadMessages({ qq: { enabled: false, count: 2 }, wechat: { enabled: false, pending: true }, mail: { enabled: false, unread: 5 } }), false);
+  assert.equal(hasUnreadMessages({ ...none, mail: { enabled: true, newUnread: true } }), true);
+  assert.equal(hasUnreadMessages({ qq: { enabled: false, count: 2 }, wechat: { enabled: false, pending: true }, mail: { enabled: false, newUnread: true } }), false);
+});
+
+test("mail counts only unread that arrived since the messages were last seen", () => {
+  const box = (unreadCount, enabled = true) => [{ email: "me@example.com", enabled, unreadCount }];
+  let baselines = nextMailBaselines({}, box(null), false);
+  assert.equal(hasNewUnreadMail(baselines, box(null)), false);
+  baselines = nextMailBaselines(baselines, box(120), false);
+  assert.equal(hasNewUnreadMail(baselines, box(120)), false, "an inbox that always has unread mail does not hold");
+  baselines = nextMailBaselines(baselines, box(121), false);
+  assert.equal(hasNewUnreadMail(baselines, box(121)), true, "a new mail holds");
+  assert.equal(hasNewUnreadMail(baselines, box(121, false)), false, "a turned-off mailbox does not hold");
+  baselines = nextMailBaselines(baselines, box(121), true);
+  assert.equal(hasNewUnreadMail(baselines, box(121)), false, "once seen, it lets go");
+  baselines = nextMailBaselines(baselines, box(100), false);
+  baselines = nextMailBaselines(baselines, box(101), false);
+  assert.equal(hasNewUnreadMail(baselines, box(101)), true, "reading mail elsewhere lowers the baseline, so the next one still holds");
 });
