@@ -1,13 +1,4 @@
 use super::*;
-use crate::agent_status::snapshot::system_time_to_unix_millis;
-use std::{fs, path::PathBuf, process::Command, time::SystemTime};
-
-fn temp_home(name: &str) -> PathBuf {
-    let home = std::env::temp_dir().join(format!("fuyu-antigravity-remote-{name}-{}", std::process::id()));
-    let _ = fs::remove_dir_all(&home);
-    fs::create_dir_all(&home).unwrap();
-    home
-}
 
 #[test]
 fn the_remote_group_goes_in_once_beside_the_users_own() {
@@ -34,7 +25,11 @@ fn the_pulled_files_and_the_mirror_reader_agree() {
 #[cfg(unix)]
 #[test]
 fn the_saved_input_turns_into_a_remote_session() {
-    let home = temp_home("save");
+    use crate::agent_status::snapshot::system_time_to_unix_millis;
+    use std::{fs, process::Command, time::SystemTime};
+    let home = std::env::temp_dir().join(format!("fuyu-antigravity-remote-save-{}", std::process::id()));
+    let _ = fs::remove_dir_all(&home);
+    fs::create_dir_all(&home).unwrap();
     let run = |state: &str, input: &str| {
         let mut child = Command::new("sh")
             .arg("-c")
