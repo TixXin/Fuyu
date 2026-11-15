@@ -71,6 +71,15 @@ export async function checkPins(check: Check, calls: string[]) {
   check(keys.length === 22 && !keys.some((key) => ["E", "I", "N", "U"].includes(key)), "设固定键页列出 22 个字母，没有 E、I、N、U");
   await press($(".clipboard-panel input")!, { key: "b", code: "KeyB" });
   check(last().startsWith("ipc:set_clipboard_pin_key:") && last().includes("\"key\":\"B\"") && !$(".clipboard-panel"), "按一个字母就设好，面板关上");
+  const rowCount = $$(".clipboard-popup__item").length;
+  await press(input(), { key: "k", ctrlKey: true, metaKey: true });
+  const recent = $$(".clipboard-panel__action").find((button) => button.dataset.action === "delete-15m");
+  check(recent?.textContent?.includes("删除最近 15 分钟的记录") && recent.textContent.includes("3 条，收藏的不删") && $$(".clipboard-panel__action").some((button) => button.dataset.action === "delete-today"), "动作面板「记录」里有删除最近 15 分钟 / 1 小时 / 今天，写着会删几条");
+  await act(async () => recent!.click());
+  check(last() === "ipc:delete_clipboard_history_items:{\"ids\":[\"t1\",\"i1\",\"t3\"]}" && $$(".clipboard-popup__item").length === rowCount - 3, "删除最近 15 分钟：一次删掉这段时间复制的，收藏的不动");
+  check($(".clipboard-popup__undo"), "底栏可以撤销");
+  await press(input(), { key: "z", ctrlKey: true, metaKey: true });
+  check(last() === "ipc:restore_clipboard_history_items:{\"ids\":[\"t1\",\"i1\",\"t3\"]}" && $$(".clipboard-popup__item").length === rowCount, "Ctrl/⌘+Z 撤销，整批放回");
   await act(async () => {
     Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(input(), "会议");
     input().dispatchEvent(new Event("input", { bubbles: true }));

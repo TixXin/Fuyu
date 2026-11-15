@@ -10,6 +10,7 @@ import { ClipboardPopupList } from "./ClipboardPopupList";
 import { dayGroupStarts } from "./dayGroup";
 import { deletedLabel, withoutPending } from "./pendingItems";
 import { withListActions } from "./listActions";
+import { recentItems, type RecentRange } from "./recentRange";
 import { mergedText, popupActions } from "./popupActions";
 import { popupFilterLabel } from "./popupFilterLabel";
 import { filterPopupItems, nextPopupFilter, popupFilters, popupTags, type PopupFilter } from "./popupFilters";
@@ -101,7 +102,9 @@ export function ClipboardPopup({ items, snippets, openCount, wide, ownsWindow = 
   const groupStarts = useMemo(() => (wide && !onSnippets ? dayGroupStarts(shownItems.slice(pins.pinned).map((entry) => entry.copiedAt), now) : []), [wide, onSnippets, shownItems, pins.pinned, now]);
   const item = onSnippets ? undefined : shownItems[current];
   const isText = item?.kind === "text";
-  const actions = useMemo(() => withListActions(popupActions(item, capture, handlers, text.actions), item, t.clipboardList), [item, capture, handlers, text.actions, t.clipboardList]);
+  const { removeMany } = deletion;
+  const recent = useMemo(() => ({ count: (range: RecentRange) => recentItems(visible, range, now).length, remove: (range: RecentRange) => removeMany(recentItems(visible, range, Date.now())) }), [visible, now, removeMany]);
+  const actions = useMemo(() => withListActions(popupActions(item, capture, handlers, text.actions), item, t.clipboardList, recent), [item, capture, handlers, text.actions, t.clipboardList, recent]);
 
   useEffect(() => {
     if (pointerPickRef.current) {
