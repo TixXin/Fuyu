@@ -1,0 +1,1334 @@
+<body>
+  <div id="pages">
+    <div>
+      <p class="caption">
+        今天（进行中、两行、已完成）
+      </p>
+      <div class="frame frame--tall" id="frame-today" style="--island-ink-rgb: 241, 240, 246">
+        <div>
+          <div style="height: 100%">
+            <section aria-label="任务清单" class="todo-island todo-island--today">
+              <div class="todo-island__header">
+                <div aria-label="待办页面" class="island-list-chips todo-island__tabs" role="tablist">
+                  <button aria-label="今天, 2 个未完成" aria-pressed="true" aria-selected="true" class="island-list-chip todo-island__tab" role="tab" type="button">
+                    今天
+                    <span class="todo-island__tab-count">
+                      2
+                    </span>
+                  </button>
+                  <button aria-pressed="false" aria-selected="false" class="island-list-chip todo-island__tab" role="tab" type="button">
+                    笔记
+                  </button>
+                  <button aria-pressed="false" aria-selected="false" class="island-list-chip todo-island__tab" role="tab" type="button">
+                    已安排
+                    <span class="todo-island__tab-count">
+                      1
+                    </span>
+                  </button>
+                  <button aria-pressed="false" aria-selected="false" class="island-list-chip todo-island__tab" role="tab" type="button">
+                    归档
+                  </button>
+                </div>
+                <span aria-label="今天完成 1/3" class="todo-island__progress">
+                  <span aria-hidden="true" class="todo-island__progress-track">
+                    <span style="width: 33.3333%"></span>
+                  </span>
+                  <span aria-hidden="true">
+                    今天完成 1/3
+                  </span>
+                </span>
+                <button aria-expanded="false" aria-haspopup="menu" aria-label="更多操作" class="island-list-icon-button" title="更多操作" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="12" cy="12" r="1"></circle>
+                    <circle cx="19" cy="12" r="1"></circle>
+                    <circle cx="5" cy="12" r="1"></circle>
+                  </svg>
+                </button>
+              </div>
+              <form class="island-list-search todo-island__composer">
+                <svg aria-hidden="true" class="lucide lucide-plus" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.1" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M5 12h14"></path>
+                  <path d="M12 5v14"></path>
+                </svg>
+                <input aria-label="Add a task, press Enter to save" placeholder="添加待办，回车保存" title="开头写 #项目名 加空格，就归到这个项目，例如「#论文 写引言」；没有的项目会新建" value="">
+                <button aria-expanded="false" aria-haspopup="menu" aria-label="新待办加到「临时」" class="todo-date-picker__button todo-island__project-pick" title="新待办加到「临时」" type="button">
+                  临时
+                </button>
+                <span class="todo-date-picker">
+                  <button aria-expanded="false" aria-haspopup="dialog" aria-label="选择日期: 今天" class="todo-date-picker__button" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-calendar-days" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M8 2v4"></path>
+                      <path d="M16 2v4"></path>
+                      <rect height="18" rx="2" width="18" x="3" y="4"></rect>
+                      <path d="M3 10h18"></path>
+                      <path d="M8 14h.01"></path>
+                      <path d="M12 14h.01"></path>
+                      <path d="M16 14h.01"></path>
+                      <path d="M8 18h.01"></path>
+                      <path d="M12 18h.01"></path>
+                      <path d="M16 18h.01"></path>
+                    </svg>
+                    <span>
+                      今天
+                    </span>
+                  </button>
+                </span>
+              </form>
+              <div aria-label="按项目筛选" class="todo-project-filter" role="group">
+                <button aria-pressed="true" class="todo-project-filter__chip" type="button">
+                  全部
+                </button>
+                <button aria-pressed="false" class="todo-project-filter__chip" type="button">
+                  临时
+                </button>
+                <button aria-label="新建项目" class="todo-project-filter__chip todo-project-filter__add" title="新建项目" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-plus" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M5 12h14"></path>
+                    <path d="M12 5v14"></path>
+                  </svg>
+                </button>
+              </div>
+              <div class="todo-list todo-island__list" role="list">
+                <div class="todo-island-row todo-island-row--active" data-todo-id="a" role="listitem">
+                  <button aria-label="拖动排序：评审待办页的岛屿风格" class="todo-island-row__grip" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-grip-vertical" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5714285714285716" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="9" cy="12" r="1"></circle>
+                      <circle cx="9" cy="5" r="1"></circle>
+                      <circle cx="9" cy="19" r="1"></circle>
+                      <circle cx="15" cy="12" r="1"></circle>
+                      <circle cx="15" cy="5" r="1"></circle>
+                      <circle cx="15" cy="19" r="1"></circle>
+                    </svg>
+                  </button>
+                  <button aria-label="完成：评审待办页的岛屿风格" aria-pressed="false" class="todo-island-row__check" type="button"></button>
+                  <span class="todo-island-row__text">
+                    <button class="todo-island-row__title todo-island-row__title--editable" type="button">
+                      评审待办页的岛屿风格
+                    </button>
+                  </span>
+                  <span class="todo-island-row__actions">
+                    <button aria-label="结束：评审待办页的岛屿风格" class="todo-island-row__stop" type="button">
+                      <svg aria-hidden="true" class="lucide lucide-square" fill="currentColor" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="0" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg">
+                        <rect height="18" rx="2" width="18" x="3" y="3"></rect>
+                      </svg>
+                      <span class="todo-island-row__stop-state">
+                        进行中
+                      </span>
+                      <span class="todo-island-row__stop-action">
+                        结束
+                      </span>
+                    </button>
+                    <button aria-label="删除：评审待办页的岛屿风格" class="todo-island-row__action todo-island-row__action--delete" type="button">
+                      <svg aria-hidden="true" class="lucide lucide-trash2 lucide-trash-2" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5714285714285716" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M10 11v6"></path>
+                        <path d="M14 11v6"></path>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path>
+                        <path d="M3 6h18"></path>
+                        <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                      </svg>
+                    </button>
+                  </span>
+                </div>
+                <div class="todo-island-row" data-todo-id="b" role="listitem">
+                  <button aria-label="拖动排序：回复 issue #31：快捷翻译在多屏下的位置，顺便把复现步骤和日志整理进任务文档里" class="todo-island-row__grip" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-grip-vertical" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5714285714285716" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="9" cy="12" r="1"></circle>
+                      <circle cx="9" cy="5" r="1"></circle>
+                      <circle cx="9" cy="19" r="1"></circle>
+                      <circle cx="15" cy="12" r="1"></circle>
+                      <circle cx="15" cy="5" r="1"></circle>
+                      <circle cx="15" cy="19" r="1"></circle>
+                    </svg>
+                  </button>
+                  <button aria-label="完成：回复 issue #31：快捷翻译在多屏下的位置，顺便把复现步骤和日志整理进任务文档里" aria-pressed="false" class="todo-island-row__check" type="button"></button>
+                  <span class="todo-island-row__text">
+                    <button class="todo-island-row__title todo-island-row__title--editable" type="button">
+                      回复 issue #31：快捷翻译在多屏下的位置，顺便把复现步骤和日志整理进任务文档里
+                    </button>
+                  </span>
+                  <span class="todo-island-row__actions">
+                    <button aria-label="开始：回复 issue #31：快捷翻译在多屏下的位置，顺便把复现步骤和日志整理进任务文档里" class="todo-island-row__action" type="button">
+                      <svg aria-hidden="true" class="lucide lucide-play" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5714285714285716" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"></path>
+                      </svg>
+                    </button>
+                    <button aria-label="删除：回复 issue #31：快捷翻译在多屏下的位置，顺便把复现步骤和日志整理进任务文档里" class="todo-island-row__action todo-island-row__action--delete" type="button">
+                      <svg aria-hidden="true" class="lucide lucide-trash2 lucide-trash-2" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5714285714285716" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M10 11v6"></path>
+                        <path d="M14 11v6"></path>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path>
+                        <path d="M3 6h18"></path>
+                        <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                      </svg>
+                    </button>
+                  </span>
+                </div>
+                <div class="todo-island__done-fold" role="listitem">
+                  <button aria-expanded="true" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-chevron-down" fill="none" height="12" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="12" xmlns="http://www.w3.org/2000/svg">
+                      <path d="m6 9 6 6 6-6"></path>
+                    </svg>
+                    已完成 1
+                  </button>
+                </div>
+                <div class="todo-island-row todo-island-row--done" data-todo-id="c" role="listitem">
+                  <button aria-label="拖动排序：买咖啡豆" class="todo-island-row__grip" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-grip-vertical" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5714285714285716" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="9" cy="12" r="1"></circle>
+                      <circle cx="9" cy="5" r="1"></circle>
+                      <circle cx="9" cy="19" r="1"></circle>
+                      <circle cx="15" cy="12" r="1"></circle>
+                      <circle cx="15" cy="5" r="1"></circle>
+                      <circle cx="15" cy="19" r="1"></circle>
+                    </svg>
+                  </button>
+                  <button aria-label="标记未完成：买咖啡豆" aria-pressed="true" class="todo-island-row__check" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="12" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" viewBox="0 0 24 24" width="12" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M20 6 9 17l-5-5"></path>
+                    </svg>
+                  </button>
+                  <span class="todo-island-row__text">
+                    <button class="todo-island-row__title todo-island-row__title--editable" type="button">
+                      买咖啡豆
+                    </button>
+                  </span>
+                  <span class="todo-island-row__actions">
+                    <button aria-label="删除：买咖啡豆" class="todo-island-row__action todo-island-row__action--delete" type="button">
+                      <svg aria-hidden="true" class="lucide lucide-trash2 lucide-trash-2" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5714285714285716" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M10 11v6"></path>
+                        <path d="M14 11v6"></path>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path>
+                        <path d="M3 6h18"></path>
+                        <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                      </svg>
+                    </button>
+                  </span>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <p class="caption">
+        今天：空
+      </p>
+      <div class="frame" id="frame-empty" style="--island-ink-rgb: 241, 240, 246">
+        <div>
+          <div style="height: 100%">
+            <section aria-label="任务清单" class="todo-island todo-island--today">
+              <div class="todo-island__header">
+                <div aria-label="待办页面" class="island-list-chips todo-island__tabs" role="tablist">
+                  <button aria-label="今天, 0 个未完成" aria-pressed="true" aria-selected="true" class="island-list-chip todo-island__tab" role="tab" type="button">
+                    今天
+                  </button>
+                  <button aria-pressed="false" aria-selected="false" class="island-list-chip todo-island__tab" role="tab" type="button">
+                    笔记
+                  </button>
+                  <button aria-pressed="false" aria-selected="false" class="island-list-chip todo-island__tab" role="tab" type="button">
+                    已安排
+                    <span class="todo-island__tab-count">
+                      1
+                    </span>
+                  </button>
+                  <button aria-pressed="false" aria-selected="false" class="island-list-chip todo-island__tab" role="tab" type="button">
+                    归档
+                  </button>
+                </div>
+                <button aria-label="已保存" class="island-list-icon-button todo-island__save todo-island__save--saved" title="已保存" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M20 6 9 17l-5-5"></path>
+                  </svg>
+                </button>
+                <button aria-expanded="false" aria-haspopup="menu" aria-label="更多操作" class="island-list-icon-button" title="更多操作" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="12" cy="12" r="1"></circle>
+                    <circle cx="19" cy="12" r="1"></circle>
+                    <circle cx="5" cy="12" r="1"></circle>
+                  </svg>
+                </button>
+              </div>
+              <form class="island-list-search todo-island__composer">
+                <svg aria-hidden="true" class="lucide lucide-plus" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.1" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M5 12h14"></path>
+                  <path d="M12 5v14"></path>
+                </svg>
+                <input aria-label="Add a task, press Enter to save" placeholder="添加待办，回车保存" title="开头写 #项目名 加空格，就归到这个项目，例如「#论文 写引言」；没有的项目会新建" value="">
+                <button aria-expanded="false" aria-haspopup="menu" aria-label="新待办加到「临时」" class="todo-date-picker__button todo-island__project-pick" title="新待办加到「临时」" type="button">
+                  临时
+                </button>
+                <span class="todo-date-picker">
+                  <button aria-expanded="false" aria-haspopup="dialog" aria-label="选择日期: 今天" class="todo-date-picker__button" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-calendar-days" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M8 2v4"></path>
+                      <path d="M16 2v4"></path>
+                      <rect height="18" rx="2" width="18" x="3" y="4"></rect>
+                      <path d="M3 10h18"></path>
+                      <path d="M8 14h.01"></path>
+                      <path d="M12 14h.01"></path>
+                      <path d="M16 14h.01"></path>
+                      <path d="M8 18h.01"></path>
+                      <path d="M12 18h.01"></path>
+                      <path d="M16 18h.01"></path>
+                    </svg>
+                    <span>
+                      今天
+                    </span>
+                  </button>
+                </span>
+              </form>
+              <div aria-label="按项目筛选" class="todo-project-filter" role="group">
+                <button aria-pressed="true" class="todo-project-filter__chip" type="button">
+                  全部
+                </button>
+                <button aria-pressed="false" class="todo-project-filter__chip" type="button">
+                  临时
+                </button>
+                <button aria-label="新建项目" class="todo-project-filter__chip todo-project-filter__add" title="新建项目" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-plus" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M5 12h14"></path>
+                    <path d="M12 5v14"></path>
+                  </svg>
+                </button>
+              </div>
+              <div class="todo-list todo-island__list" role="list">
+                <div class="island-list-empty todo-island__empty">
+                  <span aria-hidden="true" class="island-list-empty__icon">
+                    <svg aria-hidden="true" class="lucide lucide-sun" fill="none" height="22" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" viewBox="0 0 24 24" width="22" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="12" cy="12" r="4"></circle>
+                      <path d="M12 2v2"></path>
+                      <path d="M12 20v2"></path>
+                      <path d="m4.93 4.93 1.41 1.41"></path>
+                      <path d="m17.66 17.66 1.41 1.41"></path>
+                      <path d="M2 12h2"></path>
+                      <path d="M20 12h2"></path>
+                      <path d="m6.34 17.66-1.41 1.41"></path>
+                      <path d="m19.07 4.93-1.41 1.41"></path>
+                    </svg>
+                  </span>
+                  <strong>
+                    今天还很轻
+                  </strong>
+                  <small>
+                    在上面输入一件事，回车添加
+                  </small>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <p class="caption">
+        笔记
+      </p>
+      <div class="frame" id="frame-daily" style="--island-ink-rgb: 241, 240, 246">
+        <div>
+          <div style="height: 100%">
+            <section aria-label="任务清单" class="todo-island todo-island--daily">
+              <div class="todo-island__header">
+                <div aria-label="待办页面" class="island-list-chips todo-island__tabs" role="tablist">
+                  <button aria-label="今天, 2 个未完成" aria-pressed="false" aria-selected="false" class="island-list-chip todo-island__tab" role="tab" type="button">
+                    今天
+                    <span class="todo-island__tab-count">
+                      2
+                    </span>
+                  </button>
+                  <button aria-pressed="true" aria-selected="true" class="island-list-chip todo-island__tab" role="tab" type="button">
+                    笔记
+                  </button>
+                  <button aria-pressed="false" aria-selected="false" class="island-list-chip todo-island__tab" role="tab" type="button">
+                    已安排
+                    <span class="todo-island__tab-count">
+                      1
+                    </span>
+                  </button>
+                  <button aria-pressed="false" aria-selected="false" class="island-list-chip todo-island__tab" role="tab" type="button">
+                    归档
+                  </button>
+                </div>
+              </div>
+              <textarea aria-label="Daily note" class="todo-island__note" placeholder="写点今天的笔记…" spellcheck="false">
+                上午评审，下午写测试。
+              </textarea>
+            </section>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <p class="caption">
+        已安排
+      </p>
+      <div class="frame" id="frame-upcoming" style="--island-ink-rgb: 241, 240, 246">
+        <div>
+          <div style="height: 100%">
+            <section aria-label="任务清单" class="todo-island todo-island--upcoming">
+              <div class="todo-island__header">
+                <div aria-label="待办页面" class="island-list-chips todo-island__tabs" role="tablist">
+                  <button aria-label="今天, 2 个未完成" aria-pressed="false" aria-selected="false" class="island-list-chip todo-island__tab" role="tab" type="button">
+                    今天
+                    <span class="todo-island__tab-count">
+                      2
+                    </span>
+                  </button>
+                  <button aria-pressed="false" aria-selected="false" class="island-list-chip todo-island__tab" role="tab" type="button">
+                    笔记
+                  </button>
+                  <button aria-pressed="true" aria-selected="true" class="island-list-chip todo-island__tab" role="tab" type="button">
+                    已安排
+                    <span class="todo-island__tab-count">
+                      1
+                    </span>
+                  </button>
+                  <button aria-pressed="false" aria-selected="false" class="island-list-chip todo-island__tab" role="tab" type="button">
+                    归档
+                  </button>
+                </div>
+              </div>
+              <div class="todo-list scheduled-list" role="list">
+                <div aria-label="11月12日周四" class="scheduled-list__group" role="group">
+                  <div class="scheduled-list__date">
+                    11月12日周四
+                  </div>
+                  <div class="scheduled-list__item" role="listitem">
+                    <span>
+                      牙医复诊
+                    </span>
+                    <button aria-label="Delete scheduled task: 牙医复诊" type="button">
+                      <svg aria-hidden="true" class="lucide lucide-trash2 lucide-trash-2" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M10 11v6"></path>
+                        <path d="M14 11v6"></path>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path>
+                        <path d="M3 6h18"></path>
+                        <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <p class="caption">
+        归档
+      </p>
+      <div class="frame" id="frame-archive" style="--island-ink-rgb: 241, 240, 246">
+        <div>
+          <div style="height: 100%">
+            <section aria-label="任务清单" class="todo-island todo-island--archive">
+              <div class="todo-island__header">
+                <div aria-label="待办页面" class="island-list-chips todo-island__tabs" role="tablist">
+                  <button aria-label="今天, 2 个未完成" aria-pressed="false" aria-selected="false" class="island-list-chip todo-island__tab" role="tab" type="button">
+                    今天
+                    <span class="todo-island__tab-count">
+                      2
+                    </span>
+                  </button>
+                  <button aria-pressed="false" aria-selected="false" class="island-list-chip todo-island__tab" role="tab" type="button">
+                    笔记
+                  </button>
+                  <button aria-pressed="false" aria-selected="false" class="island-list-chip todo-island__tab" role="tab" type="button">
+                    已安排
+                    <span class="todo-island__tab-count">
+                      1
+                    </span>
+                  </button>
+                  <button aria-pressed="true" aria-selected="true" class="island-list-chip todo-island__tab" role="tab" type="button">
+                    归档
+                  </button>
+                </div>
+              </div>
+              <div class="todo-island__archive" role="list">
+                <div aria-label="2026年11月" class="todo-island__archive-month" role="group">
+                  <div class="todo-island__section-label">
+                    2026年11月
+                  </div>
+                  <button class="todo-island__archive-day" role="listitem" type="button">
+                    <span aria-label="11/8 周日" class="todo-island__archive-date">
+                      <strong>
+                        8
+                      </strong>
+                      <small>
+                        周日
+                      </small>
+                    </span>
+                    <span class="todo-island__archive-text">
+                      <span class="todo-island__archive-preview">
+                        整理桌面
+                      </span>
+                      <span aria-label="完成 2/3" class="todo-island__archive-progress">
+                        <span class="todo-island__archive-bar">
+                          <span style="width: 66.6667%"></span>
+                        </span>
+                        2
+                        /
+                        3
+                      </span>
+                    </span>
+                    <svg aria-hidden="true" class="lucide lucide-chevron-right" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5714285714285716" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg">
+                      <path d="m9 18 6-6-6-6"></path>
+                    </svg>
+                  </button>
+                  <button class="todo-island__archive-day" role="listitem" type="button">
+                    <span aria-label="11/7 周六" class="todo-island__archive-date">
+                      <strong>
+                        7
+                      </strong>
+                      <small>
+                        周六
+                      </small>
+                    </span>
+                    <span class="todo-island__archive-text">
+                      <span class="todo-island__archive-preview">
+                        发版 0.3.3
+                      </span>
+                      <span aria-label="完成 1/1" class="todo-island__archive-progress">
+                        <span class="todo-island__archive-bar">
+                          <span style="width: 100%"></span>
+                        </span>
+                        1
+                        /
+                        1
+                      </span>
+                    </span>
+                    <svg aria-hidden="true" class="lucide lucide-chevron-right" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5714285714285716" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg">
+                      <path d="m9 18 6-6-6-6"></path>
+                    </svg>
+                  </button>
+                </div>
+                <div aria-label="2026年10月" class="todo-island__archive-month" role="group">
+                  <div class="todo-island__section-label">
+                    2026年10月
+                  </div>
+                  <button class="todo-island__archive-day" role="listitem" type="button">
+                    <span aria-label="10/30 周五" class="todo-island__archive-date">
+                      <strong>
+                        30
+                      </strong>
+                      <small>
+                        周五
+                      </small>
+                    </span>
+                    <span class="todo-island__archive-text">
+                      <span class="todo-island__archive-preview">
+                        这天没有记下待办
+                      </span>
+                    </span>
+                    <svg aria-hidden="true" class="lucide lucide-chevron-right" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5714285714285716" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg">
+                      <path d="m9 18 6-6-6-6"></path>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <p class="caption">
+        回看某一天
+      </p>
+      <div class="frame" id="frame-review" style="--island-ink-rgb: 241, 240, 246">
+        <div>
+          <div style="height: 100%">
+            <section aria-label="任务清单" class="todo-island todo-island--review">
+              <div class="todo-island__header">
+                <button aria-label="返回归档" aria-pressed="true" class="island-list-chip todo-island__back" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-chevron-left" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg">
+                    <path d="m15 18-6-6 6-6"></path>
+                  </svg>
+                  <span>
+                    2026-11-08
+                  </span>
+                </button>
+                <span aria-label="完成 2/3" class="todo-island__progress">
+                  <span aria-hidden="true" class="todo-island__progress-track">
+                    <span style="width: 66.6667%"></span>
+                  </span>
+                  <span aria-hidden="true">
+                    完成 2/3
+                  </span>
+                </span>
+              </div>
+              <div class="todo-list todo-island__list" role="list">
+                <div class="todo-island-row todo-island-row--done" data-todo-id="x" role="listitem">
+                  <button aria-label="标记未完成：写周报" aria-pressed="true" class="todo-island-row__check" disabled="" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="12" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" viewBox="0 0 24 24" width="12" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M20 6 9 17l-5-5"></path>
+                    </svg>
+                  </button>
+                  <span class="todo-island-row__text">
+                    <span class="todo-island-row__title">
+                      写周报
+                    </span>
+                  </span>
+                </div>
+                <div class="todo-island-row" data-todo-id="y" role="listitem">
+                  <button aria-label="完成：整理桌面" aria-pressed="false" class="todo-island-row__check" disabled="" type="button"></button>
+                  <span class="todo-island-row__text">
+                    <span class="todo-island-row__title">
+                      整理桌面
+                    </span>
+                  </span>
+                </div>
+                <div class="todo-island-row todo-island-row--done" data-todo-id="z" role="listitem">
+                  <button aria-label="标记未完成：跑步 5 公里" aria-pressed="true" class="todo-island-row__check" disabled="" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="12" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" viewBox="0 0 24 24" width="12" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M20 6 9 17l-5-5"></path>
+                    </svg>
+                  </button>
+                  <span class="todo-island-row__text">
+                    <span class="todo-island-row__title">
+                      跑步 5 公里
+                    </span>
+                  </span>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <p class="caption">
+        按项目分组（issue #44）
+      </p>
+      <div class="frame frame--tall" id="frame-projects" style="--island-ink-rgb: 241, 240, 246">
+        <div>
+          <div style="height: 100%">
+            <section aria-label="任务清单" class="todo-island todo-island--today">
+              <div class="todo-island__header">
+                <div aria-label="待办页面" class="island-list-chips todo-island__tabs" role="tablist">
+                  <button aria-label="今天, 4 个未完成" aria-pressed="true" aria-selected="true" class="island-list-chip todo-island__tab" role="tab" type="button">
+                    今天
+                    <span class="todo-island__tab-count">
+                      4
+                    </span>
+                  </button>
+                  <button aria-pressed="false" aria-selected="false" class="island-list-chip todo-island__tab" role="tab" type="button">
+                    笔记
+                  </button>
+                  <button aria-pressed="false" aria-selected="false" class="island-list-chip todo-island__tab" role="tab" type="button">
+                    已安排
+                    <span class="todo-island__tab-count">
+                      1
+                    </span>
+                  </button>
+                  <button aria-pressed="false" aria-selected="false" class="island-list-chip todo-island__tab" role="tab" type="button">
+                    归档
+                  </button>
+                </div>
+                <span aria-label="今天完成 1/5" class="todo-island__progress">
+                  <span aria-hidden="true" class="todo-island__progress-track">
+                    <span style="width: 20%"></span>
+                  </span>
+                  <span aria-hidden="true">
+                    今天完成 1/5
+                  </span>
+                </span>
+                <button aria-expanded="false" aria-haspopup="menu" aria-label="更多操作" class="island-list-icon-button" title="更多操作" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="12" cy="12" r="1"></circle>
+                    <circle cx="19" cy="12" r="1"></circle>
+                    <circle cx="5" cy="12" r="1"></circle>
+                  </svg>
+                </button>
+              </div>
+              <form class="island-list-search todo-island__composer">
+                <svg aria-hidden="true" class="lucide lucide-plus" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.1" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M5 12h14"></path>
+                  <path d="M12 5v14"></path>
+                </svg>
+                <input aria-label="Add a task, press Enter to save" placeholder="添加待办，回车保存" title="开头写 #项目名 加空格，就归到这个项目，例如「#论文 写引言」；没有的项目会新建" value="">
+                <button aria-expanded="false" aria-haspopup="menu" aria-label="新待办加到「临时」" class="todo-date-picker__button todo-island__project-pick" title="新待办加到「临时」" type="button">
+                  临时
+                </button>
+                <span class="todo-date-picker">
+                  <button aria-expanded="false" aria-haspopup="dialog" aria-label="选择日期: 今天" class="todo-date-picker__button" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-calendar-days" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M8 2v4"></path>
+                      <path d="M16 2v4"></path>
+                      <rect height="18" rx="2" width="18" x="3" y="4"></rect>
+                      <path d="M3 10h18"></path>
+                      <path d="M8 14h.01"></path>
+                      <path d="M12 14h.01"></path>
+                      <path d="M16 14h.01"></path>
+                      <path d="M8 18h.01"></path>
+                      <path d="M12 18h.01"></path>
+                      <path d="M16 18h.01"></path>
+                    </svg>
+                    <span>
+                      今天
+                    </span>
+                  </button>
+                </span>
+              </form>
+              <div aria-label="按项目筛选" class="todo-project-filter" role="group">
+                <button aria-pressed="true" class="todo-project-filter__chip" type="button">
+                  全部
+                </button>
+                <button aria-pressed="false" class="todo-project-filter__chip" type="button">
+                  临时
+                </button>
+                <button aria-pressed="false" class="todo-project-filter__chip" type="button">
+                  组会
+                </button>
+                <button aria-pressed="false" class="todo-project-filter__chip" type="button">
+                  论文
+                </button>
+                <button aria-pressed="false" class="todo-project-filter__chip" type="button">
+                  空项目
+                </button>
+                <button aria-label="新建项目" class="todo-project-filter__chip todo-project-filter__add" title="新建项目" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-plus" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M5 12h14"></path>
+                    <path d="M12 5v14"></path>
+                  </svg>
+                </button>
+              </div>
+              <div class="todo-list todo-island__list" role="list">
+                <div aria-label="组会，1 件未完成" class="todo-project-heading" role="listitem">
+                  <span class="todo-project-heading__name">
+                    组会
+                  </span>
+                  <span aria-hidden="true" class="todo-project-heading__count">
+                    1
+                  </span>
+                </div>
+                <div class="todo-island-row" data-todo-id="p3" role="listitem">
+                  <button aria-label="拖动排序：做 PPT" class="todo-island-row__grip" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-grip-vertical" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5714285714285716" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="9" cy="12" r="1"></circle>
+                      <circle cx="9" cy="5" r="1"></circle>
+                      <circle cx="9" cy="19" r="1"></circle>
+                      <circle cx="15" cy="12" r="1"></circle>
+                      <circle cx="15" cy="5" r="1"></circle>
+                      <circle cx="15" cy="19" r="1"></circle>
+                    </svg>
+                  </button>
+                  <button aria-label="完成：做 PPT" aria-pressed="false" class="todo-island-row__check" type="button"></button>
+                  <span class="todo-island-row__text">
+                    <button class="todo-island-row__title todo-island-row__title--editable" type="button">
+                      做 PPT
+                    </button>
+                  </span>
+                  <span class="todo-island-row__actions">
+                    <button aria-label="开始：做 PPT" class="todo-island-row__action" type="button">
+                      <svg aria-hidden="true" class="lucide lucide-play" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5714285714285716" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"></path>
+                      </svg>
+                    </button>
+                    <button aria-label="删除：做 PPT" class="todo-island-row__action todo-island-row__action--delete" type="button">
+                      <svg aria-hidden="true" class="lucide lucide-trash2 lucide-trash-2" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5714285714285716" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M10 11v6"></path>
+                        <path d="M14 11v6"></path>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path>
+                        <path d="M3 6h18"></path>
+                        <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                      </svg>
+                    </button>
+                  </span>
+                </div>
+                <div aria-label="论文，2 件未完成" class="todo-project-heading" role="listitem">
+                  <span class="todo-project-heading__name">
+                    论文
+                  </span>
+                  <span aria-hidden="true" class="todo-project-heading__count">
+                    2
+                  </span>
+                </div>
+                <div class="todo-island-row" data-todo-id="p1" role="listitem">
+                  <button aria-label="拖动排序：写引言" class="todo-island-row__grip" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-grip-vertical" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5714285714285716" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="9" cy="12" r="1"></circle>
+                      <circle cx="9" cy="5" r="1"></circle>
+                      <circle cx="9" cy="19" r="1"></circle>
+                      <circle cx="15" cy="12" r="1"></circle>
+                      <circle cx="15" cy="5" r="1"></circle>
+                      <circle cx="15" cy="19" r="1"></circle>
+                    </svg>
+                  </button>
+                  <button aria-label="完成：写引言" aria-pressed="false" class="todo-island-row__check" type="button"></button>
+                  <span class="todo-island-row__text">
+                    <button class="todo-island-row__title todo-island-row__title--editable" type="button">
+                      写引言
+                    </button>
+                  </span>
+                  <span class="todo-island-row__actions">
+                    <button aria-label="开始：写引言" class="todo-island-row__action" type="button">
+                      <svg aria-hidden="true" class="lucide lucide-play" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5714285714285716" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"></path>
+                      </svg>
+                    </button>
+                    <button aria-label="删除：写引言" class="todo-island-row__action todo-island-row__action--delete" type="button">
+                      <svg aria-hidden="true" class="lucide lucide-trash2 lucide-trash-2" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5714285714285716" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M10 11v6"></path>
+                        <path d="M14 11v6"></path>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path>
+                        <path d="M3 6h18"></path>
+                        <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                      </svg>
+                    </button>
+                  </span>
+                </div>
+                <div class="todo-island-row" data-todo-id="p4" role="listitem">
+                  <button aria-label="拖动排序：跑对比" class="todo-island-row__grip" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-grip-vertical" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5714285714285716" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="9" cy="12" r="1"></circle>
+                      <circle cx="9" cy="5" r="1"></circle>
+                      <circle cx="9" cy="19" r="1"></circle>
+                      <circle cx="15" cy="12" r="1"></circle>
+                      <circle cx="15" cy="5" r="1"></circle>
+                      <circle cx="15" cy="19" r="1"></circle>
+                    </svg>
+                  </button>
+                  <button aria-label="完成：跑对比" aria-pressed="false" class="todo-island-row__check" type="button"></button>
+                  <span class="todo-island-row__text">
+                    <button class="todo-island-row__title todo-island-row__title--editable" type="button">
+                      跑对比
+                    </button>
+                  </span>
+                  <span class="todo-island-row__actions">
+                    <button aria-label="开始：跑对比" class="todo-island-row__action" type="button">
+                      <svg aria-hidden="true" class="lucide lucide-play" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5714285714285716" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"></path>
+                      </svg>
+                    </button>
+                    <button aria-label="删除：跑对比" class="todo-island-row__action todo-island-row__action--delete" type="button">
+                      <svg aria-hidden="true" class="lucide lucide-trash2 lucide-trash-2" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5714285714285716" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M10 11v6"></path>
+                        <path d="M14 11v6"></path>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path>
+                        <path d="M3 6h18"></path>
+                        <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                      </svg>
+                    </button>
+                  </span>
+                </div>
+                <div aria-label="临时，1 件未完成" class="todo-project-heading" role="listitem">
+                  <span class="todo-project-heading__name">
+                    临时
+                  </span>
+                  <span aria-hidden="true" class="todo-project-heading__count">
+                    1
+                  </span>
+                </div>
+                <div class="todo-island-row" data-todo-id="p2" role="listitem">
+                  <button aria-label="拖动排序：买菜" class="todo-island-row__grip" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-grip-vertical" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5714285714285716" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="9" cy="12" r="1"></circle>
+                      <circle cx="9" cy="5" r="1"></circle>
+                      <circle cx="9" cy="19" r="1"></circle>
+                      <circle cx="15" cy="12" r="1"></circle>
+                      <circle cx="15" cy="5" r="1"></circle>
+                      <circle cx="15" cy="19" r="1"></circle>
+                    </svg>
+                  </button>
+                  <button aria-label="完成：买菜" aria-pressed="false" class="todo-island-row__check" type="button"></button>
+                  <span class="todo-island-row__text">
+                    <button class="todo-island-row__title todo-island-row__title--editable" type="button">
+                      买菜
+                    </button>
+                  </span>
+                  <span class="todo-island-row__actions">
+                    <button aria-label="开始：买菜" class="todo-island-row__action" type="button">
+                      <svg aria-hidden="true" class="lucide lucide-play" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5714285714285716" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"></path>
+                      </svg>
+                    </button>
+                    <button aria-label="删除：买菜" class="todo-island-row__action todo-island-row__action--delete" type="button">
+                      <svg aria-hidden="true" class="lucide lucide-trash2 lucide-trash-2" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5714285714285716" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M10 11v6"></path>
+                        <path d="M14 11v6"></path>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path>
+                        <path d="M3 6h18"></path>
+                        <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                      </svg>
+                    </button>
+                  </span>
+                </div>
+                <div class="todo-island__done-fold" role="listitem">
+                  <button aria-expanded="true" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-chevron-down" fill="none" height="12" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="12" xmlns="http://www.w3.org/2000/svg">
+                      <path d="m6 9 6 6 6-6"></path>
+                    </svg>
+                    已完成 1
+                  </button>
+                </div>
+                <div class="todo-island-row todo-island-row--done" data-todo-id="p5" role="listitem">
+                  <button aria-label="拖动排序：交初稿" class="todo-island-row__grip" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-grip-vertical" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5714285714285716" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="9" cy="12" r="1"></circle>
+                      <circle cx="9" cy="5" r="1"></circle>
+                      <circle cx="9" cy="19" r="1"></circle>
+                      <circle cx="15" cy="12" r="1"></circle>
+                      <circle cx="15" cy="5" r="1"></circle>
+                      <circle cx="15" cy="19" r="1"></circle>
+                    </svg>
+                  </button>
+                  <button aria-label="标记未完成：交初稿" aria-pressed="true" class="todo-island-row__check" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="12" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" viewBox="0 0 24 24" width="12" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M20 6 9 17l-5-5"></path>
+                    </svg>
+                  </button>
+                  <span class="todo-island-row__text">
+                    <button class="todo-island-row__title todo-island-row__title--editable" type="button">
+                      <span class="todo-project-tag">
+                        论文
+                      </span>
+                      交初稿
+                    </button>
+                  </span>
+                  <span class="todo-island-row__actions">
+                    <button aria-label="删除：交初稿" class="todo-island-row__action todo-island-row__action--delete" type="button">
+                      <svg aria-hidden="true" class="lucide lucide-trash2 lucide-trash-2" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5714285714285716" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M10 11v6"></path>
+                        <path d="M14 11v6"></path>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path>
+                        <path d="M3 6h18"></path>
+                        <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                      </svg>
+                    </button>
+                  </span>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <p class="caption">
+        同时进行两件（C62）
+      </p>
+      <div class="frame" id="frame-multi" style="--island-ink-rgb: 241, 240, 246">
+        <div>
+          <div style="height: 100%">
+            <section aria-label="任务清单" class="todo-island todo-island--today">
+              <div class="todo-island__header">
+                <div aria-label="待办页面" class="island-list-chips todo-island__tabs" role="tablist">
+                  <button aria-label="今天, 3 个未完成" aria-pressed="true" aria-selected="true" class="island-list-chip todo-island__tab" role="tab" type="button">
+                    今天
+                    <span class="todo-island__tab-count">
+                      3
+                    </span>
+                  </button>
+                  <button aria-pressed="false" aria-selected="false" class="island-list-chip todo-island__tab" role="tab" type="button">
+                    笔记
+                  </button>
+                  <button aria-pressed="false" aria-selected="false" class="island-list-chip todo-island__tab" role="tab" type="button">
+                    已安排
+                    <span class="todo-island__tab-count">
+                      1
+                    </span>
+                  </button>
+                  <button aria-pressed="false" aria-selected="false" class="island-list-chip todo-island__tab" role="tab" type="button">
+                    归档
+                  </button>
+                </div>
+                <span aria-label="今天完成 0/3" class="todo-island__progress">
+                  <span aria-hidden="true" class="todo-island__progress-track">
+                    <span style="width: 0%"></span>
+                  </span>
+                  <span aria-hidden="true">
+                    今天完成 0/3
+                  </span>
+                </span>
+                <button aria-expanded="false" aria-haspopup="menu" aria-label="更多操作" class="island-list-icon-button" title="更多操作" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="12" cy="12" r="1"></circle>
+                    <circle cx="19" cy="12" r="1"></circle>
+                    <circle cx="5" cy="12" r="1"></circle>
+                  </svg>
+                </button>
+              </div>
+              <form class="island-list-search todo-island__composer">
+                <svg aria-hidden="true" class="lucide lucide-plus" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.1" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M5 12h14"></path>
+                  <path d="M12 5v14"></path>
+                </svg>
+                <input aria-label="Add a task, press Enter to save" placeholder="添加待办，回车保存" title="开头写 #项目名 加空格，就归到这个项目，例如「#论文 写引言」；没有的项目会新建" value="">
+                <button aria-expanded="false" aria-haspopup="menu" aria-label="新待办加到「临时」" class="todo-date-picker__button todo-island__project-pick" title="新待办加到「临时」" type="button">
+                  临时
+                </button>
+                <span class="todo-date-picker">
+                  <button aria-expanded="false" aria-haspopup="dialog" aria-label="选择日期: 今天" class="todo-date-picker__button" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-calendar-days" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M8 2v4"></path>
+                      <path d="M16 2v4"></path>
+                      <rect height="18" rx="2" width="18" x="3" y="4"></rect>
+                      <path d="M3 10h18"></path>
+                      <path d="M8 14h.01"></path>
+                      <path d="M12 14h.01"></path>
+                      <path d="M16 14h.01"></path>
+                      <path d="M8 18h.01"></path>
+                      <path d="M12 18h.01"></path>
+                      <path d="M16 18h.01"></path>
+                    </svg>
+                    <span>
+                      今天
+                    </span>
+                  </button>
+                </span>
+              </form>
+              <div aria-label="按项目筛选" class="todo-project-filter" role="group">
+                <button aria-pressed="true" class="todo-project-filter__chip" type="button">
+                  全部
+                </button>
+                <button aria-pressed="false" class="todo-project-filter__chip" type="button">
+                  临时
+                </button>
+                <button aria-label="新建项目" class="todo-project-filter__chip todo-project-filter__add" title="新建项目" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-plus" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M5 12h14"></path>
+                    <path d="M12 5v14"></path>
+                  </svg>
+                </button>
+              </div>
+              <div class="todo-list todo-island__list" role="list">
+                <div class="todo-island-row todo-island-row--active" data-todo-id="m1" role="listitem">
+                  <button aria-label="拖动排序：等回复" class="todo-island-row__grip" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-grip-vertical" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5714285714285716" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="9" cy="12" r="1"></circle>
+                      <circle cx="9" cy="5" r="1"></circle>
+                      <circle cx="9" cy="19" r="1"></circle>
+                      <circle cx="15" cy="12" r="1"></circle>
+                      <circle cx="15" cy="5" r="1"></circle>
+                      <circle cx="15" cy="19" r="1"></circle>
+                    </svg>
+                  </button>
+                  <button aria-label="完成：等回复" aria-pressed="false" class="todo-island-row__check" type="button"></button>
+                  <span class="todo-island-row__text">
+                    <button class="todo-island-row__title todo-island-row__title--editable" type="button">
+                      等回复
+                    </button>
+                  </span>
+                  <span class="todo-island-row__actions">
+                    <button aria-label="结束：等回复" class="todo-island-row__stop" type="button">
+                      <svg aria-hidden="true" class="lucide lucide-square" fill="currentColor" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="0" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg">
+                        <rect height="18" rx="2" width="18" x="3" y="3"></rect>
+                      </svg>
+                      <span class="todo-island-row__stop-state">
+                        进行中
+                      </span>
+                      <span class="todo-island-row__stop-action">
+                        结束
+                      </span>
+                    </button>
+                    <button aria-label="删除：等回复" class="todo-island-row__action todo-island-row__action--delete" type="button">
+                      <svg aria-hidden="true" class="lucide lucide-trash2 lucide-trash-2" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5714285714285716" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M10 11v6"></path>
+                        <path d="M14 11v6"></path>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path>
+                        <path d="M3 6h18"></path>
+                        <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                      </svg>
+                    </button>
+                  </span>
+                </div>
+                <div class="todo-island-row todo-island-row--active" data-todo-id="m2" role="listitem">
+                  <button aria-label="拖动排序：写测试" class="todo-island-row__grip" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-grip-vertical" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5714285714285716" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="9" cy="12" r="1"></circle>
+                      <circle cx="9" cy="5" r="1"></circle>
+                      <circle cx="9" cy="19" r="1"></circle>
+                      <circle cx="15" cy="12" r="1"></circle>
+                      <circle cx="15" cy="5" r="1"></circle>
+                      <circle cx="15" cy="19" r="1"></circle>
+                    </svg>
+                  </button>
+                  <button aria-label="完成：写测试" aria-pressed="false" class="todo-island-row__check" type="button"></button>
+                  <span class="todo-island-row__text">
+                    <button class="todo-island-row__title todo-island-row__title--editable" type="button">
+                      写测试
+                    </button>
+                  </span>
+                  <span class="todo-island-row__actions">
+                    <button aria-label="结束：写测试" class="todo-island-row__stop" type="button">
+                      <svg aria-hidden="true" class="lucide lucide-square" fill="currentColor" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="0" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg">
+                        <rect height="18" rx="2" width="18" x="3" y="3"></rect>
+                      </svg>
+                      <span class="todo-island-row__stop-state">
+                        进行中
+                      </span>
+                      <span class="todo-island-row__stop-action">
+                        结束
+                      </span>
+                    </button>
+                    <button aria-label="删除：写测试" class="todo-island-row__action todo-island-row__action--delete" type="button">
+                      <svg aria-hidden="true" class="lucide lucide-trash2 lucide-trash-2" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5714285714285716" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M10 11v6"></path>
+                        <path d="M14 11v6"></path>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path>
+                        <path d="M3 6h18"></path>
+                        <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                      </svg>
+                    </button>
+                  </span>
+                </div>
+                <div class="todo-island-row" data-todo-id="m3" role="listitem">
+                  <button aria-label="拖动排序：买菜" class="todo-island-row__grip" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-grip-vertical" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5714285714285716" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="9" cy="12" r="1"></circle>
+                      <circle cx="9" cy="5" r="1"></circle>
+                      <circle cx="9" cy="19" r="1"></circle>
+                      <circle cx="15" cy="12" r="1"></circle>
+                      <circle cx="15" cy="5" r="1"></circle>
+                      <circle cx="15" cy="19" r="1"></circle>
+                    </svg>
+                  </button>
+                  <button aria-label="完成：买菜" aria-pressed="false" class="todo-island-row__check" type="button"></button>
+                  <span class="todo-island-row__text">
+                    <button class="todo-island-row__title todo-island-row__title--editable" type="button">
+                      买菜
+                    </button>
+                  </span>
+                  <span class="todo-island-row__actions">
+                    <button aria-label="开始：买菜" class="todo-island-row__action" type="button">
+                      <svg aria-hidden="true" class="lucide lucide-play" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5714285714285716" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"></path>
+                      </svg>
+                    </button>
+                    <button aria-label="删除：买菜" class="todo-island-row__action todo-island-row__action--delete" type="button">
+                      <svg aria-hidden="true" class="lucide lucide-trash2 lucide-trash-2" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5714285714285716" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M10 11v6"></path>
+                        <path d="M14 11v6"></path>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path>
+                        <path d="M3 6h18"></path>
+                        <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                      </svg>
+                    </button>
+                  </span>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <p class="caption">
+        浅色岛屿底色
+      </p>
+      <div class="frame frame--light frame--tall" id="frame-light" style="--island-ink-rgb: 28, 27, 31">
+        <div>
+          <div style="height: 100%">
+            <section aria-label="任务清单" class="todo-island todo-island--today">
+              <div class="todo-island__header">
+                <div aria-label="待办页面" class="island-list-chips todo-island__tabs" role="tablist">
+                  <button aria-label="今天, 2 个未完成" aria-pressed="true" aria-selected="true" class="island-list-chip todo-island__tab" role="tab" type="button">
+                    今天
+                    <span class="todo-island__tab-count">
+                      2
+                    </span>
+                  </button>
+                  <button aria-pressed="false" aria-selected="false" class="island-list-chip todo-island__tab" role="tab" type="button">
+                    笔记
+                  </button>
+                  <button aria-pressed="false" aria-selected="false" class="island-list-chip todo-island__tab" role="tab" type="button">
+                    已安排
+                    <span class="todo-island__tab-count">
+                      1
+                    </span>
+                  </button>
+                  <button aria-pressed="false" aria-selected="false" class="island-list-chip todo-island__tab" role="tab" type="button">
+                    归档
+                  </button>
+                </div>
+                <span aria-label="今天完成 1/3" class="todo-island__progress">
+                  <span aria-hidden="true" class="todo-island__progress-track">
+                    <span style="width: 33.3333%"></span>
+                  </span>
+                  <span aria-hidden="true">
+                    今天完成 1/3
+                  </span>
+                </span>
+                <button aria-label="还没设置保存位置，点这里去设置" class="island-list-icon-button todo-island__save todo-island__save--needs-path" title="还没设置保存位置，点这里去设置" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-circle-alert" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" x2="12" y1="8" y2="12"></line>
+                    <line x1="12" x2="12.01" y1="16" y2="16"></line>
+                  </svg>
+                </button>
+                <button aria-expanded="false" aria-haspopup="menu" aria-label="更多操作" class="island-list-icon-button" title="更多操作" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="12" cy="12" r="1"></circle>
+                    <circle cx="19" cy="12" r="1"></circle>
+                    <circle cx="5" cy="12" r="1"></circle>
+                  </svg>
+                </button>
+              </div>
+              <form class="island-list-search todo-island__composer">
+                <svg aria-hidden="true" class="lucide lucide-plus" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.1" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M5 12h14"></path>
+                  <path d="M12 5v14"></path>
+                </svg>
+                <input aria-label="Add a task, press Enter to save" placeholder="添加 2026-11-10 的待办" title="开头写 #项目名 加空格，就归到这个项目，例如「#论文 写引言」；没有的项目会新建" value="">
+                <button aria-expanded="false" aria-haspopup="menu" aria-label="新待办加到「临时」" class="todo-date-picker__button todo-island__project-pick" title="新待办加到「临时」" type="button">
+                  临时
+                </button>
+                <span class="todo-date-picker">
+                  <button aria-expanded="false" aria-haspopup="dialog" aria-label="选择日期: 明天" class="todo-date-picker__button todo-date-picker__button--later" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-calendar-days" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M8 2v4"></path>
+                      <path d="M16 2v4"></path>
+                      <rect height="18" rx="2" width="18" x="3" y="4"></rect>
+                      <path d="M3 10h18"></path>
+                      <path d="M8 14h.01"></path>
+                      <path d="M12 14h.01"></path>
+                      <path d="M16 14h.01"></path>
+                      <path d="M8 18h.01"></path>
+                      <path d="M12 18h.01"></path>
+                      <path d="M16 18h.01"></path>
+                    </svg>
+                    <span>
+                      明天
+                    </span>
+                  </button>
+                </span>
+              </form>
+              <div aria-label="按项目筛选" class="todo-project-filter" role="group">
+                <button aria-pressed="true" class="todo-project-filter__chip" type="button">
+                  全部
+                </button>
+                <button aria-pressed="false" class="todo-project-filter__chip" type="button">
+                  临时
+                </button>
+                <button aria-label="新建项目" class="todo-project-filter__chip todo-project-filter__add" title="新建项目" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-plus" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M5 12h14"></path>
+                    <path d="M12 5v14"></path>
+                  </svg>
+                </button>
+              </div>
+              <div class="todo-list todo-island__list" role="list">
+                <div class="todo-island-row todo-island-row--active" data-todo-id="a" role="listitem">
+                  <button aria-label="拖动排序：评审待办页的岛屿风格" class="todo-island-row__grip" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-grip-vertical" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5714285714285716" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="9" cy="12" r="1"></circle>
+                      <circle cx="9" cy="5" r="1"></circle>
+                      <circle cx="9" cy="19" r="1"></circle>
+                      <circle cx="15" cy="12" r="1"></circle>
+                      <circle cx="15" cy="5" r="1"></circle>
+                      <circle cx="15" cy="19" r="1"></circle>
+                    </svg>
+                  </button>
+                  <button aria-label="完成：评审待办页的岛屿风格" aria-pressed="false" class="todo-island-row__check" type="button"></button>
+                  <span class="todo-island-row__text">
+                    <button class="todo-island-row__title todo-island-row__title--editable" type="button">
+                      评审待办页的岛屿风格
+                    </button>
+                  </span>
+                  <span class="todo-island-row__actions">
+                    <button aria-label="结束：评审待办页的岛屿风格" class="todo-island-row__stop" type="button">
+                      <svg aria-hidden="true" class="lucide lucide-square" fill="currentColor" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="0" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg">
+                        <rect height="18" rx="2" width="18" x="3" y="3"></rect>
+                      </svg>
+                      <span class="todo-island-row__stop-state">
+                        进行中
+                      </span>
+                      <span class="todo-island-row__stop-action">
+                        结束
+                      </span>
+                    </button>
+                    <button aria-label="删除：评审待办页的岛屿风格" class="todo-island-row__action todo-island-row__action--delete" type="button">
+                      <svg aria-hidden="true" class="lucide lucide-trash2 lucide-trash-2" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5714285714285716" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M10 11v6"></path>
+                        <path d="M14 11v6"></path>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path>
+                        <path d="M3 6h18"></path>
+                        <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                      </svg>
+                    </button>
+                  </span>
+                </div>
+                <div class="todo-island-row" data-todo-id="b" role="listitem">
+                  <button aria-label="拖动排序：回复 issue #31：快捷翻译在多屏下的位置，顺便把复现步骤和日志整理进任务文档里" class="todo-island-row__grip" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-grip-vertical" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5714285714285716" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="9" cy="12" r="1"></circle>
+                      <circle cx="9" cy="5" r="1"></circle>
+                      <circle cx="9" cy="19" r="1"></circle>
+                      <circle cx="15" cy="12" r="1"></circle>
+                      <circle cx="15" cy="5" r="1"></circle>
+                      <circle cx="15" cy="19" r="1"></circle>
+                    </svg>
+                  </button>
+                  <button aria-label="完成：回复 issue #31：快捷翻译在多屏下的位置，顺便把复现步骤和日志整理进任务文档里" aria-pressed="false" class="todo-island-row__check" type="button"></button>
+                  <span class="todo-island-row__text">
+                    <button class="todo-island-row__title todo-island-row__title--editable" type="button">
+                      回复 issue #31：快捷翻译在多屏下的位置，顺便把复现步骤和日志整理进任务文档里
+                    </button>
+                  </span>
+                  <span class="todo-island-row__actions">
+                    <button aria-label="开始：回复 issue #31：快捷翻译在多屏下的位置，顺便把复现步骤和日志整理进任务文档里" class="todo-island-row__action" type="button">
+                      <svg aria-hidden="true" class="lucide lucide-play" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5714285714285716" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"></path>
+                      </svg>
+                    </button>
+                    <button aria-label="删除：回复 issue #31：快捷翻译在多屏下的位置，顺便把复现步骤和日志整理进任务文档里" class="todo-island-row__action todo-island-row__action--delete" type="button">
+                      <svg aria-hidden="true" class="lucide lucide-trash2 lucide-trash-2" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5714285714285716" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M10 11v6"></path>
+                        <path d="M14 11v6"></path>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path>
+                        <path d="M3 6h18"></path>
+                        <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                      </svg>
+                    </button>
+                  </span>
+                </div>
+                <div class="todo-island__done-fold" role="listitem">
+                  <button aria-expanded="true" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-chevron-down" fill="none" height="12" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="12" xmlns="http://www.w3.org/2000/svg">
+                      <path d="m6 9 6 6 6-6"></path>
+                    </svg>
+                    已完成 1
+                  </button>
+                </div>
+                <div class="todo-island-row todo-island-row--done" data-todo-id="c" role="listitem">
+                  <button aria-label="拖动排序：买咖啡豆" class="todo-island-row__grip" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-grip-vertical" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5714285714285716" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="9" cy="12" r="1"></circle>
+                      <circle cx="9" cy="5" r="1"></circle>
+                      <circle cx="9" cy="19" r="1"></circle>
+                      <circle cx="15" cy="12" r="1"></circle>
+                      <circle cx="15" cy="5" r="1"></circle>
+                      <circle cx="15" cy="19" r="1"></circle>
+                    </svg>
+                  </button>
+                  <button aria-label="标记未完成：买咖啡豆" aria-pressed="true" class="todo-island-row__check" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="12" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" viewBox="0 0 24 24" width="12" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M20 6 9 17l-5-5"></path>
+                    </svg>
+                  </button>
+                  <span class="todo-island-row__text">
+                    <button class="todo-island-row__title todo-island-row__title--editable" type="button">
+                      买咖啡豆
+                    </button>
+                  </span>
+                  <span class="todo-island-row__actions">
+                    <button aria-label="删除：买咖啡豆" class="todo-island-row__action todo-island-row__action--delete" type="button">
+                      <svg aria-hidden="true" class="lucide lucide-trash2 lucide-trash-2" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5714285714285716" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M10 11v6"></path>
+                        <path d="M14 11v6"></path>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path>
+                        <path d="M3 6h18"></path>
+                        <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                      </svg>
+                    </button>
+                  </span>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
