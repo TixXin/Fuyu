@@ -5,7 +5,8 @@ import { BehaviorSettingsPage } from "./BehaviorSettingsPage";
 import { ThemeSettingsPage } from "./ThemeSettingsPage";
 import { ThemeMarketPage } from "../../features/theme-market/ThemeMarketPage";
 import { buildTheme } from "../../features/appearance/theme";
-import { DEFAULT_SETTINGS_CATEGORY, isCategoryAvailable, type SettingsCategory } from "./categories";
+import { DEFAULT_SETTINGS_CATEGORY, FEATURE_PAGES, SETTINGS_FEATURES, isCategoryAvailable, type SettingsCategory } from "./categories";
+import { FeatureOffPage } from "./FeatureOffPage";
 import { isMacOS, useUnsupportedFeatures } from "../../lib/platform";
 import { useMacWindowKeys } from "./useMacWindowKeys";
 import { GeneralSettingsPage } from "./GeneralSettingsPage";
@@ -71,6 +72,8 @@ export function SettingsWindow() {
   const category = isCategoryAvailable(chosenCategory, unsupported, isMacOS, pluginsV3) ? chosenCategory : DEFAULT_SETTINGS_CATEGORY;
   const highlightSaveDirectory = saveDirectory.highlight;
   const features = useFeatureSwitches(settings, setSettings);
+  const offFeature = features.hiddenPages.has(category) ? SETTINGS_FEATURES.find((feature) => FEATURE_PAGES[feature].includes(category)) : undefined;
+  const page = offFeature ? null : category;
 
   const focusSavePath = useCallback(() => {
     setCategory("todos");
@@ -180,7 +183,8 @@ export function SettingsWindow() {
           : null
         }
       >
-        {category === "overview" && (
+        {offFeature && <FeatureOffPage feature={offFeature} onOpenOverview={() => changeCategory("overview")} />}
+        {page === "overview" && (
           <OverviewSettingsPage
             settings={settings}
             locale={locale}
@@ -191,7 +195,7 @@ export function SettingsWindow() {
             onOpenPage={changeCategory}
           />
         )}
-        {category === "general" && (
+        {page === "general" && (
           <GeneralSettingsPage
             locale={locale}
             settings={settings}
@@ -199,49 +203,49 @@ export function SettingsWindow() {
             onSettingsChange={setSettings}
           />
         )}
-        {(category === "behavior" || category === "behaviorTuck" || category === "behaviorAlerts") && (
-          <BehaviorSettingsPage tab={category} settings={settings} onSettingsChange={setSettings} onOpenPageKeys={() => setCategory("shortcutsIsland")} />
+        {(page === "behavior" || page === "behaviorTuck" || page === "behaviorAlerts") && (
+          <BehaviorSettingsPage tab={page} settings={settings} onSettingsChange={setSettings} onOpenPageKeys={() => setCategory("shortcutsIsland")} />
         )}
-        {category === "appearance" && <AppearanceSettingsPage settings={settings} onSettingsChange={setSettings} />}
-        {category === "theme" && <ThemeSettingsPage settings={settings} presets={presets} onSettingsChange={setSettings} />}
-        {category === "themeMarket" && (
+        {page === "appearance" && <AppearanceSettingsPage settings={settings} onSettingsChange={setSettings} />}
+        {page === "theme" && <ThemeSettingsPage settings={settings} presets={presets} onSettingsChange={setSettings} />}
+        {page === "themeMarket" && (
           <ThemeMarketPage
             settings={settings}
             onSettingsChange={setSettings}
             onSave={(theme, look) => void presets.onImportPreset(JSON.stringify(buildTheme(theme.name[locale], look, new Date())))}
           />
         )}
-        {(category === "shortcuts" || category === "shortcutsIsland") && <ShortcutsSettingsPage tab={category} settings={settings} onSettingsChange={setSettings} onOpenPage={changeCategory} />}
-        {category === "todos" && (
+        {(page === "shortcuts" || page === "shortcutsIsland") && <ShortcutsSettingsPage tab={page} settings={settings} onSettingsChange={setSettings} onOpenPage={changeCategory} />}
+        {page === "todos" && (
           <TodosSettingsPage
             settings={settings}
             saveDirectory={saveDirectory}
             onSettingsChange={setSettings}
           />
         )}
-        {category === "messages" && (
+        {page === "messages" && (
           <MessagesSettingsPage settings={settings} qqNotifications={qqNotifications} wechatReminders={wechatReminders} unsupported={unsupported} onSettingsChange={setSettings} />
         )}
-        {category === "translation" && <TranslationSettingsPage settings={settings} onSettingsChange={setSettings} onOpenShortcuts={openShortcuts} />}
-        {(category === "clipboard" || category === "clipboardHistory" || category === "clipboardSnippets" || category === "clipboardData") && <ClipboardSettingsPage tab={category} settings={settings} onOpenShortcuts={openShortcuts} />}
-        {(category === "music" || category === "musicLyrics" || category === "musicLyricsStyle") && <MusicSettingsPage tab={category} settings={settings} onSettingsChange={setSettings} />}
-        {category === "shelf" && <ShelfSettingsPage settings={settings} onSettingsChange={setSettings} />}
-        {(category === "screenshot" || category === "screenshotRecord") && <ScreenshotSettingsPage tab={category} settings={settings} onSettingsChange={setSettings} onOpenShortcuts={openShortcuts} />}
-        {category === "voiceInput" && <VoiceInputSettingsPage settings={settings} />}
-        {category === "calendar" && <CalendarSettingsPage settings={settings} onSettingsChange={setSettings} />}
-        {category === "agents" && <AgentSettingsPage settings={settings} onSettingsChange={setSettings} onOpenConnect={() => setCategory("agentConnect")} />}
-        {category === "agentRemote" && <AgentRemoteHostsSettings />}
-        {category === "agentSessions" && <AgentSessionsSettingsPage settings={settings} onSettingsChange={setSettings} />}
-        {category === "agentAlerts" && <AgentAlertsSettingsPage settings={settings} onSettingsChange={setSettings} />}
-        {category === "sounds" && <SoundSettingsSection />}
-        {category === "agentApprovals" && <AgentApprovalSettings />}
-        {category === "agentConnect" && <AgentConnectSettingsPage />}
-        {(category === "plugins" || category === "pluginsPages" || category === "pluginsUpdates" || category === "pluginsDev") && <PluginsSettingsPage tab={category} settings={settings} managedPluginId={managedPluginId} onOpenShortcuts={openShortcuts} />}
-        {category === "pluginsV3" && <PluginsV3SettingsPage />}
-        {category === "market" && (
+        {page === "translation" && <TranslationSettingsPage settings={settings} onSettingsChange={setSettings} onOpenShortcuts={openShortcuts} />}
+        {(page === "clipboard" || page === "clipboardHistory" || page === "clipboardSnippets" || page === "clipboardData") && <ClipboardSettingsPage tab={page} settings={settings} onOpenShortcuts={openShortcuts} />}
+        {(page === "music" || page === "musicLyrics" || page === "musicLyricsStyle") && <MusicSettingsPage tab={page} settings={settings} onSettingsChange={setSettings} />}
+        {page === "shelf" && <ShelfSettingsPage settings={settings} onSettingsChange={setSettings} />}
+        {(page === "screenshot" || page === "screenshotRecord") && <ScreenshotSettingsPage tab={page} settings={settings} onSettingsChange={setSettings} onOpenShortcuts={openShortcuts} />}
+        {page === "voiceInput" && <VoiceInputSettingsPage settings={settings} />}
+        {page === "calendar" && <CalendarSettingsPage settings={settings} onSettingsChange={setSettings} />}
+        {page === "agents" && <AgentSettingsPage settings={settings} onSettingsChange={setSettings} onOpenConnect={() => setCategory("agentConnect")} />}
+        {page === "agentRemote" && <AgentRemoteHostsSettings />}
+        {page === "agentSessions" && <AgentSessionsSettingsPage settings={settings} onSettingsChange={setSettings} />}
+        {page === "agentAlerts" && <AgentAlertsSettingsPage settings={settings} onSettingsChange={setSettings} />}
+        {page === "sounds" && <SoundSettingsSection />}
+        {page === "agentApprovals" && <AgentApprovalSettings />}
+        {page === "agentConnect" && <AgentConnectSettingsPage />}
+        {(page === "plugins" || page === "pluginsPages" || page === "pluginsUpdates" || page === "pluginsDev") && <PluginsSettingsPage tab={page} settings={settings} managedPluginId={managedPluginId} onOpenShortcuts={openShortcuts} />}
+        {page === "pluginsV3" && <PluginsV3SettingsPage />}
+        {page === "market" && (
           <PluginMarketSection onManage={managePlugin} requestedId={marketRequest.requestedId} onDismissRequest={marketRequest.dismiss} />
         )}
-        {category === "about" && <AboutSettingsPage onSettingsChange={setSettings} />}
+        {page === "about" && <AboutSettingsPage onSettingsChange={setSettings} />}
       </LayoutEditor>
     </main>
   );

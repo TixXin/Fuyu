@@ -41,19 +41,11 @@ export function ScreenshotSettingsPage({
     if (folder !== screenshot.saveFolder) setScreenshot({ ...screenshot, saveFolder: folder });
   };
 
-  const header = (
-    <FeatureHeader
-      feature="screenshot"
-      checked={settings.screenshotEnabled}
-      onChange={(screenshotEnabled) => onSettingsChange({ ...settings, screenshotEnabled })}
-    />
-  );
-  if (!settings.screenshotEnabled) return header;
   if (tab === "screenshotRecord" && !isMacOS) return <RecordSettingsGroup screenshot={screenshot} onChange={setScreenshot} />;
 
   return (
     <>
-      {header}
+      <FeatureHeader feature="screenshot" />
       <SettingsGroup title={text.shortcutsTitle} footer={isMacOS ? text.shortcutsHintMac : text.shortcutsHint} action={<AllShortcutsLink onOpen={onOpenShortcuts} />}>
         <ScreenshotShortcutRows
           settings={screenshot}

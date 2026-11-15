@@ -304,7 +304,11 @@ pub fn minimize_island(app: AppHandle) -> Result<(), String> {
 
 #[tauri::command]
 pub fn show_ready_island(app: AppHandle) -> Result<(), String> {
-    let window = main_window(&app)?;
+    show_ready_island_window(&app).inspect_err(|error| eprintln!("could not show the island at startup: {error}"))
+}
+
+fn show_ready_island_window(app: &AppHandle) -> Result<(), String> {
+    let window = main_window(app)?;
     apply_stage_geometry(&window, read_window_state(), false)?;
     focus::show_island_at_startup(&window)?;
     if read_window_state().is_tucked {

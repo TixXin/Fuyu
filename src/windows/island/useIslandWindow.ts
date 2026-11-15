@@ -10,6 +10,13 @@ import { useClickFocus } from "./useClickFocus";
 import { useCollapseOnBlur } from "./useCollapseOnBlur";
 import type { IslandMode, NativeGlassState } from "./types";
 
+const SHOW_RETRY_DELAYS_MS = [0, 300, 1000, 3000];
+const SYNC_WAIT_BEFORE_SHOW_MS = 1500;
+
+function wait(ms: number) {
+  return new Promise<void>((resolve) => setTimeout(resolve, ms));
+}
+
 type IslandWindowOptions = {
   mode: IslandMode;
   isTucked: boolean;
@@ -87,11 +94,18 @@ export function useIslandWindow({
 
     didShowInitialWindow.current = true;
 
-    try {
-      await islandApi.showReadyIsland();
-    } catch (error) {
-      console.error("Failed to show island", error);
+    for (const delay of SHOW_RETRY_DELAYS_MS) {
+      if (delay > 0) {
+        await wait(delay);
+      }
+      try {
+        await islandApi.showReadyIsland();
+        return;
+      } catch (error) {
+        console.error("Failed to show island", error);
+      }
     }
+    didShowInitialWindow.current = false;
   }, []);
 
   const minimizeIsland = useCallback(async () => {
@@ -125,14 +139,15 @@ export function useIslandWindow({
   }, []);
 
   useEffect(() => {
-    void syncNativeInteraction(
+    const synced = syncNativeInteraction(
       mode,
       settings,
       expandedIslandHeight,
       expandedIslandWidth,
       collapsedIslandWidth,
       isTucked,
-    ).finally(() => {
+    );
+    void Promise.race([synced, wait(SYNC_WAIT_BEFORE_SHOW_MS)]).finally(() => {
       void showReadyIsland();
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps

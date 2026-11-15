@@ -20,7 +20,7 @@
     <a href="https://github.com/TixXin/fuyu/releases/latest"><img alt="Version" src="https://img.shields.io/github/v/release/TixXin/fuyu?label=version&style=flat-square&labelColor=1b1f24&color=3d444d"></a>
     <img alt="Platform" src="https://img.shields.io/badge/platform-Windows%2010%20%2F%2011%20%7C%20macOS%2015%2B-3d444d?style=flat-square&labelColor=1b1f24">
     <img alt="Tauri" src="https://img.shields.io/badge/Tauri-2-3d444d?style=flat-square&labelColor=1b1f24">
-    <a href="../../LICENSE"><img alt="License" src="https://img.shields.io/badge/license-GPL--3.0-3d444d?style=flat-square&labelColor=1b1f24"></a>
+    <a href="../../LICENSE"><img alt="License" src="https://img.shields.io/badge/license-AGPL--3.0-3d444d?style=flat-square&labelColor=1b1f24"></a>
     <a href="https://github.com/TixXin/fuyu/stargazers"><img alt="Stars" src="https://img.shields.io/github/stars/TixXin/fuyu?style=flat-square&label=stars&labelColor=1b1f24&color=3d444d"></a>
   </p>
 
@@ -215,7 +215,7 @@ pnpm tauri build    # 打包安裝程式
 
 ## 授權條款
 
-[GPL-3.0](../../LICENSE)。外掛作者可以自行選擇授權條款。第三方相依套件和內建資源遵循各自的授權：來源和聲明請見[第三方聲明](../THIRD_PARTY_NOTICES.md)，內建字型請見[字型說明](../../src/assets/fonts/README.md)。
+[AGPL-3.0](../../LICENSE)。外掛作者可以自行選擇授權條款。第三方相依套件和內建資源遵循各自的授權：來源和聲明請見[第三方聲明](../THIRD_PARTY_NOTICES.md)，內建字型請見[字型說明](../../src/assets/fonts/README.md)。
 
 > [!NOTE]
 > 本專案由 [TixXin](https://github.com/TixXin) 和 [ShengLin1001](https://github.com/ShengLin1001) 共同維護，2026 年 11 月由 fly-island 更名為浮嶼。原作者 [flyl1u](https://github.com/flyl1u/fly-island) 偏好精簡的動態島介面；為了進一步豐富動態島的功能，讓更多使用者把自己 DIY 的功能放上島，本專案另闢一支，由大家共同維護，並發展出了外掛市集模式。歡迎大家提 PR 貢獻程式碼（請見[參與貢獻](../../CONTRIBUTING.md)），把自己的元件上傳到[外掛市集](https://github.com/TixXin/fuyu-plugins)，或者在本機安裝自己的外掛（請見[外掛文件](../plugins/README.md)）。

@@ -54,7 +54,15 @@ pub(crate) fn focus_island_for_shortcut(window: &WebviewWindow) {
 
 pub(crate) fn show_island_at_startup(window: &WebviewWindow) -> Result<(), String> {
     let island = window.hwnd().map_err(|error| error.to_string())?;
-    win32::window::show_without_activating(island);
+    let previous = win32::window::foreground_window();
+    window.show().map_err(|error| error.to_string())?;
+    if previous != island
+        && !previous.is_invalid()
+        && win32::window::foreground_window() == island
+        && win32::window::is_visible(previous)
+    {
+        win32::window::bring_to_foreground(previous);
+    }
     Ok(())
 }
 

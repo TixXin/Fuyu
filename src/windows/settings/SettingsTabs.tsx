@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "../../i18n";
 import { isMacOS, useUnsupportedFeatures } from "../../lib/platform";
 import { entryOf, isCategoryAvailable, SETTINGS_TABS, type SettingsCategory, type TabbedCategory } from "./categories";
@@ -7,6 +8,34 @@ export function SettingsTabs({ category, onCategoryChange }: { category: Setting
   const text = useTranslation().settings.categories;
   const unsupported = useUnsupportedFeatures();
   const entry = entryOf(category);
+  const bar = useRef<HTMLDivElement>(null);
+  const [edges, setEdges] = useState({ start: false, end: false });
+
+  useEffect(() => {
+    const node = bar.current;
+    if (!node) return;
+    const measure = () => {
+      const box = node.getBoundingClientRect();
+      const first = node.firstElementChild?.getBoundingClientRect();
+      const last = node.lastElementChild?.getBoundingClientRect();
+      const start = first ? first.left < box.left - 1 : false;
+      const end = last ? last.right > box.right + 1 : false;
+      setEdges((old) => (old.start === start && old.end === end ? old : { start, end }));
+    };
+    measure();
+    node.addEventListener("scroll", measure, { passive: true });
+    const observer = new ResizeObserver(measure);
+    observer.observe(node);
+    return () => {
+      node.removeEventListener("scroll", measure);
+      observer.disconnect();
+    };
+  }, [entry]);
+
+  useEffect(() => {
+    bar.current?.querySelector<HTMLElement>(".settings-tabs__tab--active")?.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }, [category]);
+
   if (!entry) return null;
   const tabs = SETTINGS_TABS[entry].filter((tab) => isCategoryAvailable(tab, unsupported, isMacOS));
   const move = (from: TabbedCategory, step: number) => {
@@ -15,7 +44,7 @@ export function SettingsTabs({ category, onCategoryChange }: { category: Setting
     requestAnimationFrame(() => document.querySelector<HTMLButtonElement>(`.settings-tabs__tab[data-tab='${next}']`)?.focus());
   };
   return (
-    <div className="settings-tabs" role="tablist" aria-label={text.entries[entry]} data-tauri-drag-region>
+    <div ref={bar} className="settings-tabs" data-fade-start={edges.start || undefined} data-fade-end={edges.end || undefined} role="tablist" aria-label={text.entries[entry]} data-tauri-drag-region>
       {tabs.map((tab) => {
         const active = tab === category;
         return (
