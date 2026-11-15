@@ -3,8 +3,11 @@ pub(crate) mod bottom_edge;
 #[cfg_attr(target_os = "macos", path = "focus_macos.rs")]
 #[cfg_attr(not(any(windows, target_os = "macos")), path = "focus_unsupported.rs")]
 pub(crate) mod focus;
-#[cfg_attr(not(windows), path = "follow_unsupported.rs")]
+#[cfg_attr(not(any(windows, target_os = "macos")), path = "follow_unsupported.rs")]
 mod follow;
+#[cfg(any(windows, target_os = "macos"))]
+#[cfg_attr(target_os = "macos", path = "follow_point_macos.rs")]
+mod follow_point;
 mod drag_hint;
 mod edge;
 mod geometry;
@@ -19,6 +22,8 @@ pub(crate) mod outside_click;
 #[cfg_attr(target_os = "macos", path = "passthrough_macos.rs")]
 pub(crate) mod passthrough;
 pub(crate) mod screen;
+#[cfg(target_os = "macos")]
+mod screen_watch;
 mod state;
 pub(crate) mod top_edge;
 

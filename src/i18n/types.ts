@@ -15,6 +15,8 @@ import type { MusicText } from "./sections/music";
 import type { CalendarText } from "./sections/calendar";
 import type { TodoText } from "./sections/todo";
 import type { ClipboardText } from "./sections/clipboard";
+import type { ClipboardListText } from "./sections/clipboardList";
+import type { ClipboardPrivacyText } from "./sections/clipboardPrivacy";
 import type { FileShelfText } from "./sections/fileShelf";
 import type { ScreenshotText } from "./sections/screenshot";
 import type { TimerText } from "./sections/timer";
@@ -53,6 +55,8 @@ export type Translations = {
   todo: TodoText;
 
   clipboard: ClipboardText;
+  clipboardList: ClipboardListText;
+  clipboardPrivacy: ClipboardPrivacyText;
 
   fileShelf: FileShelfText;
 

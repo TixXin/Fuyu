@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "../../i18n";
 import {
   addClipboardHistoryText, deleteClipboardItems, restoreClipboardItems, ignoreNextClipboardCopy, pasteClipboardText, pauseClipboardCapture, readClipboardImageQr,
-  resumeClipboardCapture, saveClipboardSnippet, setClipboardItemNote, type ClipboardCopyAs, type ClipboardHistoryItem,
+  resumeClipboardCapture, saveClipboardSnippet, setClipboardItemNote, setClipboardPinKey, type ClipboardCopyAs, type ClipboardHistoryItem,
 } from "./api";
 import type { PopupActionHandlers } from "./popupActions";
 import { usePendingDelete } from "./usePendingDelete";
@@ -61,5 +61,7 @@ export function usePopupHandlers({ onPaste, onToggleFavorite, onEdit }: {
   const saveNote = useCallback((id: string, note: string) => attempt("save a note", setClipboardItemNote(id, note)), [attempt]);
   const saveAsNew = useCallback((value: string) => attempt("save an edit", addClipboardHistoryText(value)), [attempt]);
 
-  return { handlers, notice, deletion, saveNote, saveAsNew, pasteText };
+  const setPinKey = useCallback((id: string, key: string | null) => attempt("set a pin key", setClipboardPinKey(id, key)), [attempt]);
+
+  return { handlers, notice, deletion, saveNote, saveAsNew, pasteText, setPinKey };
 }

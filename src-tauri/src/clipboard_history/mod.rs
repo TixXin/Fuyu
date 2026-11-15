@@ -16,11 +16,13 @@ mod file_image;
 pub(crate) mod image_protocol;
 #[cfg_attr(target_os = "macos", path = "listener_macos.rs")]
 mod listener;
+pub(crate) mod pins;
 mod plugin_view;
 #[cfg_attr(target_os = "macos", path = "popup_macos.rs")]
 mod popup;
 mod popup_place;
 pub(crate) mod preview_window;
+mod privacy;
 mod secrets;
 mod sequence;
 #[cfg(target_os = "macos")]
@@ -159,6 +161,10 @@ pub struct ClipboardHistorySettings {
     popup_pin_y: Option<i32>,
     #[serde(default = "default_copy_card_seconds")]
     copy_card_seconds: u32,
+    #[serde(default = "default_true")]
+    pin_favorites: bool,
+    #[serde(flatten, default)]
+    privacy: privacy::PrivacySettings,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -273,6 +279,8 @@ impl Default for ClipboardHistorySettings {
             popup_pin_x: None,
             popup_pin_y: None,
             copy_card_seconds: copy_notice::DEFAULT_CARD_SECONDS,
+            pin_favorites: true,
+            privacy: privacy::PrivacySettings::default(),
         }
     }
 }
@@ -284,6 +292,7 @@ impl ClipboardHistorySettings {
         self.copy_card_seconds = copy_notice::normalized_seconds(self.copy_card_seconds);
         self.excluded_apps = normalized_app_names(&self.excluded_apps);
         self.ai_prompts = normalized_ai_prompts(&self.ai_prompts);
+        self.privacy = self.privacy.normalized();
         self.shortcut = parse_shortcut_binding(&self.shortcut)
             .filter(|binding| binding.label != LEGACY_DEFAULT_SHORTCUT)
             .map_or_else(default_clipboard_shortcut, |binding| binding.label);
@@ -356,6 +365,12 @@ pub struct ClipboardHistoryItem {
     ocr_text: Option<String>,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     masked: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pin_key: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pin_order: Option<u32>,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    truncated: bool,
 }
 
 fn normalized_app_names(names: &[String]) -> Vec<String> {
@@ -623,6 +638,7 @@ pub fn init(app: &AppHandle) -> Result<(), String> {
     let _ = CLIPBOARD_HISTORY.set(service);
     service::fill_file_images(None);
     start_workers();
+    privacy::start_secret_sweeper();
     notify_clipboard_changed();
     Ok(())
 }
@@ -671,6 +687,8 @@ macro_rules! tauri_commands {
             crate::clipboard_history::restore_clipboard_history_item,
             crate::clipboard_history::deletion::delete_clipboard_history_items,
             crate::clipboard_history::deletion::restore_clipboard_history_items,
+            crate::clipboard_history::pins::set_clipboard_pin_key,
+            crate::clipboard_history::pins::set_clipboard_pin_order,
             crate::clipboard_history::expand::set_clipboard_popup_expanded,
             crate::clipboard_history::clear_clipboard_history,
             crate::clipboard_history::preview_window::show_clipboard_preview,

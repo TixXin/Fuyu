@@ -1,6 +1,7 @@
 import { clamp } from "../../utils/number.ts";
 import type { ClipboardHistorySettings, ClipboardHistorySnapshot } from "./api";
 import { DEFAULT_CLIPBOARD_SHORTCUT, normalizeClipboardShortcut } from "./shortcut.ts";
+import { DEFAULT_CLIPBOARD_PRIVACY, normalizeClipboardPrivacy } from "./privacySettings.ts";
 
 export const DEFAULT_CLIPBOARD_HISTORY: ClipboardHistorySnapshot = {
   settings: {
@@ -29,6 +30,8 @@ export const DEFAULT_CLIPBOARD_HISTORY: ClipboardHistorySnapshot = {
     aiPrompts: [],
     popupPinned: false,
     copyCardSeconds: 3,
+    pinFavorites: true,
+    ...DEFAULT_CLIPBOARD_PRIVACY,
   },
   items: [],
 };
@@ -74,6 +77,8 @@ export function normalizeClipboardSettings(
     flattenTerminalCommands: settings.flattenTerminalCommands === true,
     localApiRead: settings.localApiRead === true,
     popupPinned: settings.popupPinned === true,
+    pinFavorites: settings.pinFavorites !== false,
+    ...normalizeClipboardPrivacy(settings),
     copyCardSeconds: (CLIPBOARD_CARD_SECONDS as readonly unknown[]).includes(settings.copyCardSeconds) ? settings.copyCardSeconds : 3,
     aiPrompts: Array.isArray(settings.aiPrompts) ? settings.aiPrompts.filter((prompt) => prompt && typeof prompt.title === "string" && typeof prompt.prompt === "string") : [],
   };

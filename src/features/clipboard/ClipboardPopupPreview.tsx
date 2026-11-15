@@ -24,7 +24,7 @@ export function ClipboardPopupPreview({ entry, snippet, linkPreview = false, onP
     );
   }
   const item = entry as ClipboardHistoryItem;
-  const image = item.kind === "image" ? item.image : undefined;
+  const image = item.kind === "image" ? item.image : item.kind === "files" && item.files?.length === 1 ? item.fileImage : undefined;
   const fullText = item.masked ? item.preview : item.text ?? item.preview;
   const kind = contentKind(item);
   const kindName = kind ? t.clipboard.popup.actions.kinds[kind.kind] : null;
@@ -41,6 +41,7 @@ export function ClipboardPopupPreview({ entry, snippet, linkPreview = false, onP
       {image ? (
         <div className="clipboard-popup__pane-image">
           <ClipboardPreviewImage id={item.id} thumbnail={image.thumbnailDataUrl} />
+          {item.kind === "files" && <p className="clipboard-popup__pane-files">{item.files?.[0]}</p>}
           {item.ocrText && <p><b>{text.ocr}</b>{item.ocrText}</p>}
         </div>
       ) : kind ? (

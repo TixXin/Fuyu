@@ -11,10 +11,10 @@ export type PopupAction = {
   note?: string;
   icon: ActionIcon;
   run?: () => void;
-  next?: "transforms" | "note" | "ai";
+  next?: "transforms" | "note" | "ai" | "pinKey";
 };
 
-export type ActionIcon = "paste" | "plain" | "enter" | "edit" | "wand" | "file" | "image" | "qr" | "star" | "tag" | "snippet" | "trash" | "pause" | "play" | "skip" | "ai";
+export type ActionIcon = "paste" | "plain" | "enter" | "edit" | "wand" | "file" | "image" | "qr" | "star" | "tag" | "snippet" | "trash" | "pause" | "play" | "skip" | "ai" | "key" | "eraser";
 
 export type PopupActionHandlers = {
   paste: (id: string, options?: { plain?: boolean; enter?: boolean; copyAs?: ClipboardCopyAs }) => void;

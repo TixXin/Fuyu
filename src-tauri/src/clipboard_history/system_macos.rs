@@ -4,6 +4,10 @@ pub(super) fn is_marked_private() -> bool {
     pasteboard::types().iter().any(|kind| pasteboard::is_private_type(kind))
 }
 
+pub(super) fn is_empty() -> bool {
+    pasteboard::types().is_empty()
+}
+
 pub(super) fn source_app_path() -> Option<String> {
     apps::frontmost_path()
 }

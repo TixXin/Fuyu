@@ -52,6 +52,9 @@ export type AgentText = {
     extensionDismiss: string;
     yourTurn: string;
     compacting: string;
+    lights: Record<"needs" | "yourTurn" | "working" | "stale" | "done" | "failed", string>;
+    runsIn: (host: string) => string;
+    toolCall: (tool: string) => string;
   };
   usage: {
     label: string;
@@ -59,7 +62,9 @@ export type AgentText = {
     fiveHour: string;
     sevenDay: string;
     resetsIn: (parts: { days: number; hours: number; minutes: number }) => string;
+    resetShort: (parts: { days: number; hours: number; minutes: number }) => string;
     stale: string;
+    staleHint: (minutes: number) => string;
   };
   approval: {
     label: (tool: string) => string;
@@ -142,6 +147,9 @@ export const zhCN: AgentText = {
     extensionDismiss: "不再提示",
     yourTurn: "等你回复",
     compacting: "正在压缩上下文",
+    lights: { needs: "等你确认", yourTurn: "等你回复", working: "运行中", stale: "10 分钟没有动静", done: "已完成", failed: "出错了" },
+    runsIn: (host) => `在 ${host} 里运行`,
+    toolCall: (tool) => `正在调用 ${tool}`,
   },
   usage: {
     label: "Claude 用量",
@@ -150,7 +158,9 @@ export const zhCN: AgentText = {
     sevenDay: "7 天",
     resetsIn: ({ days, hours, minutes }) =>
       days > 0 ? `${days} 天 ${hours} 小时后重置` : hours > 0 ? `${hours} 小时 ${minutes} 分后重置` : `${minutes} 分后重置`,
+    resetShort: ({ days, hours, minutes }) => (days > 0 ? `${days}天${hours}小时` : hours > 0 ? `${hours}小时${minutes}分` : `${minutes}分钟`),
     stale: "可能已过时",
+    staleHint: (minutes) => `可能已过时：${minutes} 分钟前更新`,
   },
   approval: {
     label: (tool) => `请求使用 ${tool}`,
@@ -238,6 +248,9 @@ export const en: AgentText = {
     extensionDismiss: "Don't ask again",
     yourTurn: "Your turn",
     compacting: "Compacting context",
+    lights: { needs: "Waiting for your approval", yourTurn: "Waiting for your reply", working: "Running", stale: "No activity for 10 minutes", done: "Done", failed: "Failed" },
+    runsIn: (host) => `Running in ${host}`,
+    toolCall: (tool) => `Calling ${tool}`,
   },
   usage: {
     label: "Claude usage",
@@ -245,7 +258,9 @@ export const en: AgentText = {
     fiveHour: "5h",
     sevenDay: "7d",
     resetsIn: ({ days, hours, minutes }) => (days > 0 ? `resets in ${days}d${hours}h` : hours > 0 ? `resets in ${hours}h${minutes}m` : `resets in ${minutes}m`),
+    resetShort: ({ days, hours, minutes }) => (days > 0 ? `${days}d ${hours}h` : hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`),
     stale: "may be stale",
+    staleHint: (minutes) => `May be stale: updated ${minutes} min ago`,
   },
   approval: {
     label: (tool) => `Wants to use ${tool}`,

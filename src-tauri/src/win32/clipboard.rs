@@ -4,7 +4,7 @@ use windows::{
         Foundation::{HGLOBAL, HWND},
         System::{
             DataExchange::{
-                AddClipboardFormatListener, CloseClipboard, EmptyClipboard, GetClipboardData,
+                AddClipboardFormatListener, CloseClipboard, CountClipboardFormats, EmptyClipboard, GetClipboardData,
                 GetClipboardOwner,
                 IsClipboardFormatAvailable, OpenClipboard, RegisterClipboardFormatW,
                 RemoveClipboardFormatListener,
@@ -29,6 +29,10 @@ pub(crate) fn empty() -> Result<()> {
         CloseClipboard()?;
         emptied
     }
+}
+
+pub(crate) fn is_empty() -> bool {
+    unsafe { CountClipboardFormats() == 0 }
 }
 
 pub(crate) fn owner_window() -> Option<HWND> {

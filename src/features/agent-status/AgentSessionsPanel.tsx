@@ -4,6 +4,8 @@ import { ArchivedNotice } from "./ArchivedNotice";
 import { EditorExtensionHint } from "./EditorExtensionHint";
 import { useEditorExtensionHint } from "./useEditorExtensionHint";
 import { useArchiveMotion } from "./useArchiveMotion";
+import { useListMotion } from "./useListMotion";
+import { sessionLight } from "./sessionLight";
 import { useTranslation } from "../../i18n";
 import type { AgentArchiveMotion, AgentCardEffects, AgentHostDisplay, AgentSessionGroup, AgentSessionSort, AgentSessionView } from "../appearance/types";
 import { AgentSessionCard } from "./AgentSessionCard";
@@ -72,6 +74,20 @@ export function AgentSessionsPanel({
   const extensionHint = useEditorExtensionHint();
   const list = useScrollFade<HTMLUListElement>(sessions);
   const motion = useArchiveMotion(list.element, removal, archiveMotion);
+  const arranged = arrangeSessions(sessions, sort, group).map((entry, _, groups) => ({
+    ...entry,
+    heading: !reveal && (group === "project" || (group === "computer" && (groups.length > 1 || entry.host !== null))),
+  }));
+  useListMotion(
+    list.element,
+    arranged.flatMap(({ key, heading, sessions: members }) => [
+      ...(heading ? [{ key: `group:${key}` }] : []),
+      ...members.map((session) => ({ key: sessionKey(session), light: sessionLight(session) })),
+    ]),
+    view,
+    !reveal && !approvals?.current,
+    motion.returning,
+  );
   const cardRef = useRef<HTMLLIElement>(null);
   const measure = reveal?.measure;
   const cardKey = reveal?.key;
@@ -156,9 +172,9 @@ export function AgentSessionsPanel({
         data-fade-bottom={list.fade.bottom || undefined}
         onScroll={list.onScroll}
       >
-        {arrangeSessions(sessions, sort, group).flatMap(({ key: groupKey, host, project, sessions: members }, _, groups) => [
-          !reveal && (group === "project" || (group === "computer" && (groups.length > 1 || host !== null))) ? (
-            <li key={`group:${groupKey}`} className="agent-sessions__computer" aria-hidden="true">
+        {arranged.flatMap(({ key: groupKey, host, project, sessions: members, heading }) => [
+          heading ? (
+            <li key={`group:${groupKey}`} className="agent-sessions__computer" aria-hidden="true" data-session-key={`group:${groupKey}`}>
               {group === "project"
                 ? [project ?? t.agent.sessions.noProject, host].filter(Boolean).join(" · ")
                 : host ?? t.agent.sessions.thisComputer}

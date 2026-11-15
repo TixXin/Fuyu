@@ -10,6 +10,7 @@ import { SessionHostLabel } from "./SessionHostLabel";
 import { getAgentPhaseLabel } from "./status";
 import { asksUser, sessionKey } from "./unseen";
 import { sessionLight } from "./sessionLight";
+import { pillParts } from "./sessionPill";
 import type { UnseenSessions } from "./useUnseenSessions";
 import "./AgentSessionRow.css";
 
@@ -59,6 +60,10 @@ export function AgentSessionRow({
   const showPhase = session.compacting || yourTurn || (session.phase !== "running" && session.phase !== "completed");
   const elapsed = showElapsed && session.turnStartedAt !== null;
   const ageInSlot = Boolean(archive) && showAge;
+  const lightText = t.agent.sessions.lights[light];
+  const pill = pillParts(active && showModel ? model : null, session.model);
+  const pillMode = active ? mode : null;
+  const pillTitle = [model && active && showModel ? model : null, pillMode].filter(Boolean).join(" · ");
   const status = [
     showPhase && phaseLabel,
     elapsed && <SessionElapsed key="elapsed" session={session} />,
@@ -69,7 +74,6 @@ export function AgentSessionRow({
       </span>
     ),
     session.backgroundTasks ? t.agent.sessions.backgroundTasks(session.backgroundTasks) : null,
-    showAge && !ageInSlot && age,
   ]
     .filter(Boolean)
     .flatMap((part, index) => (index === 0 ? [part] : [" · ", part]));
@@ -80,29 +84,31 @@ export function AgentSessionRow({
         type="button"
         onClick={onOpen}
       >
-        <span className="agent-session__dot" aria-hidden="true" />
+        <span className="agent-session__dot" role="img" aria-label={lightText} title={lightText} />
         <span className="agent-session__main">
           <span className="agent-session__heading">
             <span className="agent-session__title">
               {project && project !== title ? <span className="agent-session__project">{project} · </span> : null}
               {title}
             </span>
-            {active && showModel && model && <span className="agent-session__model">{model}</span>}
-            {active && mode && (
-              <span className={`agent-session__mode agent-session__mode--${session.permissionMode}`}>
-                {mode}
+            {(pill.model || pill.effort || pillMode) && (
+              <span className="agent-session__pill" title={pillTitle}>
+                {pill.model && <span className="agent-session__pill-model">{pill.model}</span>}
+                {pill.effort && <span className="agent-session__pill-effort">{pill.effort}</span>}
+                {pillMode && <span className={`agent-session__pill-mode agent-session__pill-mode--${session.permissionMode}`}>{pillMode}</span>}
               </span>
             )}
             {notFound ? (
               <span className="agent-session__not-found" role="status">{notFound}</span>
             ) : (
-              <span className="agent-session__meta">{status}</span>
+              status.length > 0 && <span className="agent-session__meta">{status}</span>
             )}
-            {session.host && hostDisplay !== "off" && <SessionHostLabel host={session.host} display={hostDisplay} />}
-            {!session.host && hostDisplay === "icon" && (
-              <span className="agent-session__host agent-session__host--unknown" aria-hidden="true" />
-            )}
-            <AgentProviderIcon provider={session.provider} size={14} />
+            {session.host && (hostDisplay === "name" || hostDisplay === "both") && <SessionHostLabel host={session.host} display="name" />}
+            <span className="agent-session__agent">
+              <AgentProviderIcon provider={session.provider} size={14} />
+              {session.host && <SessionHostLabel host={session.host} display={hostDisplay} badge />}
+            </span>
+            {showAge && !ageInSlot && <span className="agent-session__time">{age}</span>}
           </span>
           {cardReply ? (
             <span className="agent-session__message agent-session__message--card">{cardReply}</span>

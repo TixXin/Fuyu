@@ -25,3 +25,9 @@ test("picking entries for a sequence adds them in order and a second pick takes 
   assert.deepEqual(toggleQueued(["a"], "b"), ["a", "b"]);
   assert.deepEqual(toggleQueued(["a", "b", "c"], "b"), ["a", "c"]);
 });
+
+test("digits start after the pinned rows", () => {
+  assert.deepEqual(popupIndexAfterKey("1", 0, 5, true, 2), { index: 2, paste: true });
+  assert.deepEqual(popupIndexAfterKey("3", 0, 5, true, 2), { index: 4, paste: true });
+  assert.equal(popupIndexAfterKey("4", 0, 5, true, 2), null);
+});

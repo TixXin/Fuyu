@@ -8,6 +8,7 @@ import { ClipboardPopup } from "../../src/features/clipboard/ClipboardPopup";
 import type { ClipboardHistoryItem, ClipboardSnippet } from "../../src/features/clipboard/api";
 import { checkSecondRound } from "./clipboard-popup-actions";
 import { checkManager, renderManageFrames } from "./clipboard-popup-manage";
+import { checkPins, renderPinFrame } from "./clipboard-popup-pins";
 
 const automated = new URLSearchParams(location.search).has("test");
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: automated });
@@ -89,6 +90,7 @@ for (const frame of FRAMES) {
 }
 
 await renderManageFrames(host, ITEMS, calls, automated);
+await renderPinFrame(host, ITEMS, calls, automated);
 
 const messages: string[] = [];
 function check(condition: unknown, label: string) {
@@ -219,6 +221,8 @@ async function runChecks() {
     check($$("light", ".clipboard-popup__delete").length === 1 && $("light", ".clipboard-popup__item--selected .clipboard-popup__delete"), "选中的那行有删除按钮");
     await act(async () => { $("light", ".clipboard-popup__delete")!.click(); });
     check(rows("light").length === ITEMS.length - 1 && $("light", ".clipboard-popup__undo"), "点删除按钮：这条消失，底栏可以撤销");
+
+    await checkPins(check, calls);
 
     results.textContent = `${messages.join("\n")}\n\n全部 ${messages.length} 项检查通过。`;
     results.dataset.result = "passed";

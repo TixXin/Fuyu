@@ -31,6 +31,13 @@ export type ClipboardHistorySettings = {
   popupPinX?: number | null;
   popupPinY?: number | null;
   copyCardSeconds?: number;
+  pinFavorites?: boolean;
+} & ClipboardPrivacySettings;
+
+export type ClipboardPrivacySettings = {
+  forgetCleared: boolean;
+  secretExpiryMinutes: number;
+  maxTextKb: number;
 };
 
 export type ClipboardAiPrompt = { id: string; title: string; prompt: string };
@@ -79,6 +86,9 @@ export type ClipboardHistoryItem = {
   tags?: string[];
   ocrText?: string;
   masked?: boolean;
+  pinKey?: string;
+  pinOrder?: number;
+  truncated?: boolean;
 };
 
 export type ClipboardHistorySnapshot = {
@@ -223,6 +233,14 @@ export function listenClipboardPopupBlur(handler: () => void) {
 
 export function toggleClipboardFavorite(id: string) {
   return invoke<ClipboardHistorySnapshot>("toggle_clipboard_history_favorite", { id });
+}
+
+export function setClipboardPinKey(id: string, key: string | null) {
+  return invoke<ClipboardHistorySnapshot>("set_clipboard_pin_key", { id, key });
+}
+
+export function setClipboardPinOrder(ids: readonly string[]) {
+  return invoke<ClipboardHistorySnapshot>("set_clipboard_pin_order", { ids });
 }
 
 export function setClipboardItemNote(id: string, note: string) {

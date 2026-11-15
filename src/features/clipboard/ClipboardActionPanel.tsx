@@ -1,24 +1,28 @@
 import { useMemo, useState, type KeyboardEvent } from "react";
 import {
-  ClipboardPaste, CornerDownLeft, FileText, ImageIcon, Pause, Pencil, Play, QrCode, Search, SkipForward, Sparkles, Star, Tag, TextQuote, Trash2, Type, WandSparkles,
+  ClipboardPaste, CornerDownLeft, Eraser, FileText, ImageIcon, Keyboard, Pause, Pencil, Play, QrCode, Search, SkipForward, Sparkles, Star, Tag, TextQuote, Trash2, Type, WandSparkles,
   type LucideIcon,
 } from "lucide-react";
 import { useTranslation } from "../../i18n";
 import type { ClipboardAiPrompt, ClipboardHistoryItem } from "./api";
 import { ClipboardAiList } from "./ClipboardAiList";
+import { ClipboardPinKeyPage } from "./ClipboardPinKeyPage";
+import { pinKeyFromCode } from "./pins";
 import { ClipboardTransformList } from "./ClipboardTransformList";
 import { filterActions, type ActionIcon, type PopupAction } from "./popupActions";
 import { isPrimaryKey } from "./shortcut";
 
 const ICONS: Record<ActionIcon, LucideIcon> = {
   paste: ClipboardPaste, plain: Type, enter: CornerDownLeft, edit: Pencil, wand: WandSparkles, file: FileText, image: ImageIcon,
-  qr: QrCode, ai: Sparkles, star: Star, tag: Tag, snippet: TextQuote, trash: Trash2, pause: Pause, play: Play, skip: SkipForward,
+  qr: QrCode, ai: Sparkles, star: Star, tag: Tag, snippet: TextQuote, trash: Trash2, pause: Pause, play: Play, skip: SkipForward, key: Keyboard, eraser: Eraser,
 };
 
-export type PanelPage = "actions" | "transforms" | "note" | "ai";
+export type PanelPage = "actions" | "transforms" | "note" | "ai" | "pinKey";
 
-export function ClipboardActionPanel({ item, actions, page, aiPrompts, copy = false, onPage, onClose, onPasteText, onSaveNote }: {
+export function ClipboardActionPanel({ item, items = [], actions, page, aiPrompts, copy = false, onPage, onClose, onPasteText, onSaveNote, onSetPinKey }: {
   item?: ClipboardHistoryItem;
+  items?: readonly ClipboardHistoryItem[];
+  onSetPinKey?: (id: string, key: string | null) => void;
   actions: readonly PopupAction[];
   page: PanelPage;
   onPage: (page: PanelPage) => void;
@@ -68,6 +72,13 @@ export function ClipboardActionPanel({ item, actions, page, aiPrompts, copy = fa
       back();
       return;
     }
+    if (page === "pinKey" && item && onSetPinKey) {
+      const key = event.key === "Backspace" || event.key === "Delete" ? null : pinKeyFromCode(event.nativeEvent.code);
+      if (key === null && event.key !== "Backspace" && event.key !== "Delete") return;
+      event.preventDefault();
+      setPinKey(key);
+      return;
+    }
     if (page !== "actions") return;
     if (event.key === "ArrowDown" || event.key === "ArrowUp") {
       event.preventDefault();
@@ -79,7 +90,13 @@ export function ClipboardActionPanel({ item, actions, page, aiPrompts, copy = fa
     }
   };
 
-  const title = page === "ai" ? text.aiTitle : page === "transforms" ? text.transformTitle : page === "note" ? text.note : text.panelTitle;
+  const setPinKey = (key: string | null) => {
+    if (!item || !onSetPinKey) return;
+    onSetPinKey(item.id, key);
+    onClose();
+  };
+
+  const title = page === "pinKey" ? t.clipboardList.pinKeyTitle : page === "ai" ? text.aiTitle : page === "transforms" ? text.transformTitle : page === "note" ? text.note : text.panelTitle;
   const preview = item ? (item.kind === "image" ? t.clipboard.imageLabel(item.image?.width ?? 0, item.image?.height ?? 0) : item.preview) : "";
 
   return (
@@ -122,6 +139,8 @@ export function ClipboardActionPanel({ item, actions, page, aiPrompts, copy = fa
           <ClipboardAiList item={item} prompts={aiPrompts} copy={copy} onPaste={(result) => { onClose(); onPasteText(result); }} />
         ) : page === "transforms" && item ? (
           <ClipboardTransformList item={item} query={query} copy={copy} onPaste={(result) => { onClose(); onPasteText(result); }} />
+        ) : page === "pinKey" && item ? (
+          <ClipboardPinKeyPage item={item} items={items} onSet={setPinKey} />
         ) : page === "actions" ? (
           <ul className="clipboard-panel__list" role="listbox" aria-label={text.panelTitle}>
             {shown.length === 0 && <li className="clipboard-panel__none">{text.noActions}</li>}

@@ -16,6 +16,8 @@ import * as music from "../sections/music.ts";
 import * as calendar from "../sections/calendar.ts";
 import * as todo from "../sections/todo.ts";
 import * as clipboard from "../sections/clipboard.ts";
+import * as clipboardList from "../sections/clipboardList.ts";
+import * as clipboardPrivacy from "../sections/clipboardPrivacy.ts";
 import * as fileShelf from "../sections/fileShelf.ts";
 import * as screenshot from "../sections/screenshot.ts";
 import * as timer from "../sections/timer.ts";
@@ -52,6 +54,8 @@ const en: Translations = {
   todo: todo.en,
 
   clipboard: clipboard.en,
+  clipboardList: clipboardList.en,
+  clipboardPrivacy: clipboardPrivacy.en,
 
   fileShelf: fileShelf.en,
   screenshot: screenshot.en,

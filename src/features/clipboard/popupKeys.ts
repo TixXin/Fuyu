@@ -2,10 +2,10 @@ export function toggleQueued(queue: readonly string[], id: string): string[] {
   return queue.includes(id) ? queue.filter((queued) => queued !== id) : [...queue, id];
 }
 
-export function popupIndexAfterKey(key: string, current: number, count: number, digitsPaste: boolean): { index: number; paste: boolean } | null {
+export function popupIndexAfterKey(key: string, current: number, count: number, digitsPaste: boolean, skip = 0): { index: number; paste: boolean } | null {
   if (count === 0) return null;
   if (digitsPaste && /^[1-9]$/.test(key)) {
-    const index = Number(key) - 1;
+    const index = skip + Number(key) - 1;
     return index < count ? { index, paste: true } : null;
   }
   switch (key) {

@@ -1,22 +1,22 @@
-import { AppWindow, Server, SquareCode, SquareTerminal } from "lucide-react";
+import { useTranslation } from "../../i18n";
 import type { AgentHostDisplay } from "../appearance/types";
 import type { SessionHost } from "./api";
 import { useHostIcon } from "./useHostIcon";
 
-const FALLBACK_ICONS = { terminal: SquareTerminal, editor: SquareCode, app: AppWindow, remote: Server } as const;
-
-export function SessionHostLabel({ host, display }: { host: SessionHost; display: AgentHostDisplay }) {
+export function SessionHostLabel({ host, display, badge = false }: { host: SessionHost; display: AgentHostDisplay; badge?: boolean }) {
+  const t = useTranslation();
   const icon = useHostIcon(display === "name" ? null : host.exe);
-  const Fallback = FALLBACK_ICONS[host.kind];
+  const label = t.agent.sessions.runsIn(host.name);
+  if (display === "off") return null;
+
+  if (badge) {
+    return display !== "name" && icon ? <img className="agent-session__host-badge" src={icon} alt={label} title={label} width={10} height={10} draggable={false} /> : null;
+  }
+  if (display === "icon" && !icon) return null;
 
   return (
-    <span className="agent-session__host">
-      {display !== "name" &&
-        (icon ? (
-          <img className="agent-session__host-icon" src={icon} alt="" width={13} height={13} />
-        ) : (
-          <Fallback className="agent-session__host-icon" size={13} strokeWidth={2} aria-hidden="true" />
-        ))}
+    <span className="agent-session__host" title={label}>
+      {display !== "name" && icon && <img className="agent-session__host-icon" src={icon} alt={label} width={13} height={13} />}
       {display !== "icon" && <span className="agent-session__host-name">{host.name}</span>}
     </span>
   );

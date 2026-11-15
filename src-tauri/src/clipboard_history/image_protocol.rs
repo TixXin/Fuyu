@@ -25,7 +25,30 @@ fn percent_decode(value: &str) -> Option<String> {
     String::from_utf8(out).ok()
 }
 
-fn original_path(id: &str) -> Option<String> {
+fn original_source(item: super::ClipboardHistoryItem) -> Option<(String, &'static str)> {
+    if let Some(image) = item.image {
+        return Some((image.original_path, "image/png"));
+    }
+    item.file_image.as_ref()?;
+    match item.files.as_deref() {
+        Some([path]) => Some((path.clone(), content_type(path)?)),
+        _ => None,
+    }
+}
+
+fn content_type(path: &str) -> Option<&'static str> {
+    let extension = std::path::Path::new(path).extension()?.to_str()?.to_ascii_lowercase();
+    Some(match extension.as_str() {
+        "png" => "image/png",
+        "jpg" | "jpeg" => "image/jpeg",
+        "gif" => "image/gif",
+        "webp" => "image/webp",
+        "bmp" => "image/bmp",
+        _ => return None,
+    })
+}
+
+fn original_path(id: &str) -> Option<(String, &'static str)> {
     super::service()
         .ok()?
         .snapshot()
@@ -33,7 +56,7 @@ fn original_path(id: &str) -> Option<String> {
         .items
         .into_iter()
         .find(|item| item.id == id)
-        .and_then(|item| item.image.map(|image| image.original_path))
+        .and_then(original_source)
 }
 
 fn status(code: StatusCode) -> Response<Vec<u8>> {
@@ -43,14 +66,14 @@ fn status(code: StatusCode) -> Response<Vec<u8>> {
 }
 
 pub(crate) fn respond(request: &Request<Vec<u8>>) -> Response<Vec<u8>> {
-    let Some(path) = item_id(request.uri().path()).and_then(|id| original_path(&id)) else {
+    let Some((path, kind)) = item_id(request.uri().path()).and_then(|id| original_path(&id)) else {
         return status(StatusCode::NOT_FOUND);
     };
     match std::fs::read(path) {
         Ok(bytes) => {
             let mut response = Response::new(bytes);
             let headers = response.headers_mut();
-            headers.insert(header::CONTENT_TYPE, header::HeaderValue::from_static("image/png"));
+            headers.insert(header::CONTENT_TYPE, header::HeaderValue::from_static(kind));
             headers.insert(header::CACHE_CONTROL, header::HeaderValue::from_static("private, max-age=86400, immutable"));
             response
         }
@@ -60,7 +83,7 @@ pub(crate) fn respond(request: &Request<Vec<u8>>) -> Response<Vec<u8>> {
 
 #[cfg(test)]
 mod tests {
-    use super::item_id;
+    use super::{content_type, item_id};
 
     #[test]
     fn the_path_is_one_history_id() {
@@ -70,5 +93,13 @@ mod tests {
         assert_eq!(item_id("/..%2Fsecret"), None);
         assert_eq!(item_id("/"), None);
         assert_eq!(item_id("/%zz"), None);
+    }
+
+    #[test]
+    fn copied_image_files_are_served_by_their_own_type() {
+        assert_eq!(content_type("/Users/a/PixPin_1.JPG"), Some("image/jpeg"));
+        assert_eq!(content_type("C:\\shots\\a.webp"), Some("image/webp"));
+        assert_eq!(content_type("/Users/a/notes.txt"), None);
+        assert_eq!(content_type("/Users/a/noext"), None);
     }
 }

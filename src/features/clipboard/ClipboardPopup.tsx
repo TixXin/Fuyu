@@ -1,14 +1,16 @@
-import { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Search } from "lucide-react";
 import { useTranslation } from "../../i18n";
-import { startClipboardDrag, type ClipboardAiPrompt, type ClipboardCaptureStatus, type ClipboardCopyAs, type ClipboardHistoryItem, type ClipboardPeek, type ClipboardSnippet } from "./api";
+import { type ClipboardAiPrompt, type ClipboardCaptureStatus, type ClipboardCopyAs, type ClipboardHistoryItem, type ClipboardPeek, type ClipboardSnippet } from "./api";
 import { ClipboardActionPanel, type PanelPage } from "./ClipboardActionPanel";
 import { ClipboardEditor } from "./ClipboardEditor";
 import { ClipboardPauseBar, ClipboardPopupFooter, pausedNow, type MergeSeparator } from "./ClipboardPopupFooter";
 import { ClipboardPopupPreview } from "./ClipboardPopupPreview";
-import { ClipboardPopupRow } from "./ClipboardPopupRow";
+import { ClipboardPopupList } from "./ClipboardPopupList";
 import { dayGroupStarts } from "./dayGroup";
 import { deletedLabel, withoutPending } from "./pendingItems";
+import { withListActions } from "./listActions";
+import { recentItems, type RecentRange } from "./recentRange";
 import { mergedText, popupActions } from "./popupActions";
 import { popupFilterLabel } from "./popupFilterLabel";
 import { filterPopupItems, nextPopupFilter, popupFilters, popupTags, type PopupFilter } from "./popupFilters";
@@ -16,6 +18,7 @@ import { popupIndexAfterKey, toggleQueued } from "./popupKeys";
 import { loadPinyin, parsePopupQuery } from "./popupQuery";
 import { isPrimaryKey } from "./shortcut";
 import { usePopupHandlers } from "./usePopupHandlers";
+import { usePopupPins } from "./usePopupPins";
 import { useSpacePeek } from "./useSpacePeek";
 import { useStrayKeys, type PopupKeyEvent } from "./useStrayKeys";
 import "./ClipboardPopup.css";
@@ -25,7 +28,7 @@ const CLOCK_MS = 30_000;
 
 type Mode = "list" | "panel" | "look" | "edit";
 
-export function ClipboardPopup({ items, snippets, openCount, wide, ownsWindow = false, capture, linkPreview = false, aiPrompts, onPaste, onPasteSnippet, onPasteSequence, onClose, onToggleFavorite, onPeek }: {
+export function ClipboardPopup({ items, snippets, openCount, wide, ownsWindow = false, capture, linkPreview = false, pinFavorites = false, aiPrompts, onPaste, onPasteSnippet, onPasteSequence, onClose, onToggleFavorite, onPeek }: {
   items: readonly ClipboardHistoryItem[];
   snippets: readonly ClipboardSnippet[];
   openCount: number;
@@ -33,6 +36,7 @@ export function ClipboardPopup({ items, snippets, openCount, wide, ownsWindow = 
   ownsWindow?: boolean;
   capture?: ClipboardCaptureStatus;
   linkPreview?: boolean;
+  pinFavorites?: boolean;
   aiPrompts?: readonly ClipboardAiPrompt[];
   onPaste: (id: string, plain: boolean, options?: { enter?: boolean; copyAs?: ClipboardCopyAs }) => void;
   onPasteSnippet: (id: string) => void;
@@ -45,7 +49,7 @@ export function ClipboardPopup({ items, snippets, openCount, wide, ownsWindow = 
   const text = t.clipboard.popup;
   const [filter, setFilter] = useState<PopupFilter>("all");
   const [query, setQuery] = useState("");
-  const [selected, setSelected] = useState(0);
+  const [selected, setSelected] = useState(-1);
   const [queue, setQueue] = useState<string[]>([]);
   const [separator, setSeparator] = useState<MergeSeparator>("newline");
   const [mode, setMode] = useState<Mode>("list");
@@ -56,14 +60,14 @@ export function ClipboardPopup({ items, snippets, openCount, wide, ownsWindow = 
   const listRef = useRef<HTMLUListElement | null>(null);
   const rootRef = useRef<HTMLElement | null>(null);
   const pointerPickRef = useRef(false);
-  const { handlers, notice, deletion, saveNote, saveAsNew, pasteText } = usePopupHandlers({ onPaste, onToggleFavorite, onEdit: () => setMode("edit") });
+  const { handlers, notice, deletion, saveNote, saveAsNew, pasteText, setPinKey } = usePopupHandlers({ onPaste, onToggleFavorite, onEdit: () => setMode("edit") });
   const { flush } = deletion;
 
   useEffect(() => {
     flush();
     setFilter("all");
     setQuery("");
-    setSelected(0);
+    setSelected(-1);
     setQueue([]);
     setMode("list");
     setNow(Date.now());
@@ -83,20 +87,24 @@ export function ClipboardPopup({ items, snippets, openCount, wide, ownsWindow = 
   const onSnippets = filter === "snippets";
   const parsed = useMemo(() => parsePopupQuery(query), [query]);
   const needle = query.trim().toLowerCase();
-  const shownItems = useMemo(
+  const filteredItems = useMemo(
     () => (onSnippets ? [] : filterPopupItems(visible, filter, parsed, now)),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [visible, filter, parsed, now, onSnippets, pinyinReady],
   );
+  const pins = usePopupPins({ items: filteredItems, all: visible, active: filter === "all" && query === "", enabled: pinFavorites, listRef, onPaste: (id, plain) => onPaste(id, plain), onSelect: setSelected });
+  const shownItems = pins.items;
   const shownSnippets = onSnippets && needle
     ? snippets.filter((snippet) => `${snippet.title}\n${snippet.text}`.toLowerCase().includes(needle))
     : snippets;
   const count = onSnippets ? shownSnippets.length : shownItems.length;
-  const current = Math.min(selected, Math.max(0, count - 1));
-  const groupStarts = useMemo(() => (wide && !onSnippets ? dayGroupStarts(shownItems.map((entry) => entry.copiedAt), now) : []), [wide, onSnippets, shownItems, now]);
+  const current = Math.min(selected < 0 ? pins.pinned : selected, Math.max(0, count - 1));
+  const groupStarts = useMemo(() => (wide && !onSnippets ? dayGroupStarts(shownItems.slice(pins.pinned).map((entry) => entry.copiedAt), now) : []), [wide, onSnippets, shownItems, pins.pinned, now]);
   const item = onSnippets ? undefined : shownItems[current];
   const isText = item?.kind === "text";
-  const actions = useMemo(() => popupActions(item, capture, handlers, text.actions), [item, capture, handlers, text.actions]);
+  const { removeMany } = deletion;
+  const recent = useMemo(() => ({ count: (range: RecentRange) => recentItems(visible, range, now).length, remove: (range: RecentRange) => removeMany(recentItems(visible, range, Date.now())) }), [visible, now, removeMany]);
+  const actions = useMemo(() => withListActions(popupActions(item, capture, handlers, text.actions), item, t.clipboardList, recent), [item, capture, handlers, text.actions, t.clipboardList, recent]);
 
   useEffect(() => {
     if (pointerPickRef.current) {
@@ -122,7 +130,7 @@ export function ClipboardPopup({ items, snippets, openCount, wide, ownsWindow = 
   };
   const chooseFilter = (next: PopupFilter) => {
     setFilter(next);
-    setSelected(0);
+    setSelected(-1);
     inputRef.current?.focus();
   };
   const pick = (index: number, plain: boolean, enter = false) => {
@@ -151,7 +159,7 @@ export function ClipboardPopup({ items, snippets, openCount, wide, ownsWindow = 
       onPeek(null);
       return;
     }
-    const prefetch = [shownItems[current - 1], shownItems[current + 1]].filter((entry) => entry?.kind === "image").map((entry) => entry.id);
+    const prefetch = [shownItems[current - 1], shownItems[current + 1]].filter((entry) => entry?.kind === "image" || (entry?.kind === "files" && entry.files?.length === 1 && Boolean(entry.fileImage))).map((entry) => entry.id);
     onPeek({ item: peekItem, holding: peekHolding, prefetch });
   }, [onPeek, peekItem, peekHolding, shownItems, current]);
 
@@ -174,6 +182,7 @@ export function ClipboardPopup({ items, snippets, openCount, wide, ownsWindow = 
       return;
     }
     const handled = () => event.preventDefault();
+    if (pins.handleKey(event, current)) return;
     if (key === "Escape") {
       handled();
       if (queue.length > 0) setQueue([]);
@@ -183,7 +192,7 @@ export function ClipboardPopup({ items, snippets, openCount, wide, ownsWindow = 
       chooseFilter(nextPopupFilter(filters, filter, event.shiftKey));
     } else if (ctrl && /^[1-9]$/.test(key)) {
       handled();
-      const index = Number(key) - 1;
+      const index = pins.pinned + Number(key) - 1;
       if (index >= count) return;
       setSelected(index);
       if (!wide && !onSnippets) setMode("look");
@@ -229,7 +238,7 @@ export function ClipboardPopup({ items, snippets, openCount, wide, ownsWindow = 
       handled();
       deletion.remove(item);
     } else {
-      const action = popupIndexAfterKey(key, current, count, query === "");
+      const action = popupIndexAfterKey(key, current, count, query === "", pins.pinned);
       if (!action) return;
       handled();
       if (action.paste) pick(action.index, false);
@@ -255,7 +264,7 @@ export function ClipboardPopup({ items, snippets, openCount, wide, ownsWindow = 
             aria-label={text.search}
             onChange={(event) => {
               setQuery(event.currentTarget.value);
-              setSelected(0);
+              setSelected(-1);
             }}
           />
         </label>
@@ -288,47 +297,32 @@ export function ClipboardPopup({ items, snippets, openCount, wide, ownsWindow = 
             )}
           </div>
         ) : (
-          <ul className="clipboard-popup__list" ref={listRef} role="listbox" aria-label={chipLabel(filter)}>
-            {onSnippets && <li className="clipboard-popup__section" role="presentation">{text.snippetsLabel}</li>}
-            {onSnippets
-              ? shownSnippets.map((snippet, index) => (
-                <ClipboardPopupRow
-                  key={snippet.id}
-                  index={index}
-                  now={now}
-                  selected={index === current}
-                  queued={0}
-                  snippet={snippet}
-                  onHover={() => selectByPointer(index)}
-                  onPick={() => onPasteSnippet(snippet.id)}
-                />
-              ))
-              : shownItems.map((entry, index) => (
-                <Fragment key={entry.id}>
-                {wide && groupStarts[index] && <li className="clipboard-popup__section" role="presentation">{text.dayGroups[groupStarts[index]]}</li>}
-                <ClipboardPopupRow
-                  index={index}
-                  now={now}
-                  selected={index === current}
-                  queued={queue.indexOf(entry.id) + 1}
-                  entry={entry}
-                  onHover={() => mode === "list" && selectByPointer(index)}
-                  onPick={(event) => {
-                    if (isPrimaryKey(event)) setQueue(toggleQueued(queue, entry.id));
-                    else onPaste(entry.id, event.shiftKey);
-                  }}
-                  onToggleFavorite={() => onToggleFavorite(entry.id)}
-                  onDelete={() => deletion.remove(entry)}
-                  onMenu={() => {
-                    setSelected(index);
-                    openPanel("actions");
-                  }}
-                  linkPreview={linkPreview}
-                  onDrag={() => void startClipboardDrag(entry.id).catch((error: unknown) => console.error("Failed to drag a clipboard entry", error))}
-                />
-                </Fragment>
-              ))}
-          </ul>
+          <ClipboardPopupList
+            listRef={listRef}
+            label={chipLabel(filter)}
+            snippetsLabel={onSnippets ? text.snippetsLabel : null}
+            snippets={onSnippets ? shownSnippets : null}
+            items={shownItems}
+            current={current}
+            now={now}
+            queue={queue}
+            dayGroups={wide ? groupStarts.map((start) => (start ? text.dayGroups[start] : null)) : []}
+            pins={pins}
+            linkPreview={linkPreview}
+            onHover={(index) => mode === "list" && selectByPointer(index)}
+            onHoverSnippet={selectByPointer}
+            onPasteSnippet={onPasteSnippet}
+            onPick={(entry, event) => {
+              if (isPrimaryKey(event)) setQueue(toggleQueued(queue, entry.id));
+              else onPaste(entry.id, event.shiftKey);
+            }}
+            onToggleFavorite={onToggleFavorite}
+            onDelete={deletion.remove}
+            onMenu={(index) => {
+              setSelected(index);
+              openPanel("actions");
+            }}
+          />
         )}
         {wide && (editing ? (
           <ClipboardEditor key={item.id} item={item} overlay={false} onPasteOnce={(value) => pasteText(value)} onSaveAsNew={(value) => { saveAsNew(value); backToList(); }} onCancel={backToList} />
@@ -354,6 +348,8 @@ export function ClipboardPopup({ items, snippets, openCount, wide, ownsWindow = 
             onClose={backToList}
             onPasteText={pasteText}
             onSaveNote={saveNote}
+            items={visible}
+            onSetPinKey={setPinKey}
             aiPrompts={aiPrompts}
           />
         )}

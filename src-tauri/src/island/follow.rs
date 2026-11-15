@@ -4,11 +4,12 @@ use tauri::{Emitter, WebviewWindow};
 use super::{
     bottom_edge,
     side,
+    follow_point::followed_point,
     geometry::{apply_stage_geometry, monitor_at},
-    state::{mutate_window_state, read_window_state, Edge, IslandMode, IslandWindowState, MonitorFollow},
+    screen,
+    state::{mutate_window_state, read_window_state, Edge, IslandMode, IslandWindowState},
     ISLAND_POSITION_CHANGED_EVENT,
 };
-use crate::win32;
 
 pub(crate) const ISLAND_POSITION_CLEARED_EVENT: &str = "island-position-cleared";
 
@@ -17,7 +18,7 @@ const SETTLE_POLLS: u32 = 2;
 
 pub(crate) fn start_monitor_follow_loop(window: WebviewWindow) {
     thread::spawn(move || {
-        let mut pending: Option<((i32, i32, i32, i32), u32)> = None;
+        let mut pending: Option<(Bounds, u32)> = None;
         loop {
             thread::sleep(POLL_INTERVAL);
             let state = read_window_state();
@@ -32,10 +33,7 @@ pub(crate) fn start_monitor_follow_loop(window: WebviewWindow) {
                 pending = None;
                 continue;
             }
-            let seen = match pending {
-                Some((known, polls)) if known == bounds => polls + 1,
-                _ => 1,
-            };
+            let seen = polls_on(pending, bounds);
             pending = Some((bounds, seen));
             if seen < SETTLE_POLLS || !may_move(state) {
                 continue;
@@ -46,20 +44,12 @@ pub(crate) fn start_monitor_follow_loop(window: WebviewWindow) {
     });
 }
 
-fn followed_point(window: &WebviewWindow, state: IslandWindowState) -> Option<(i32, i32)> {
-    match state.monitor_follow {
-        MonitorFollow::Primary => None,
-        MonitorFollow::Cursor => win32::window::cursor_position().map(|point| (point.x, point.y)),
-        MonitorFollow::Foreground => {
-            let foreground = win32::window::foreground_window();
-            let own = window.hwnd().is_ok_and(|island| island == foreground)
-                || win32::process::window_process_id(foreground) == std::process::id();
-            if own || foreground.is_invalid() {
-                return None;
-            }
-            let rect = win32::window::window_rect(foreground)?;
-            Some(((rect.left + rect.right) / 2, (rect.top + rect.bottom) / 2))
-        }
+type Bounds = (i32, i32, i32, i32);
+
+fn polls_on(pending: Option<(Bounds, u32)>, bounds: Bounds) -> u32 {
+    match pending {
+        Some((known, polls)) if known == bounds => polls + 1,
+        _ => 1,
     }
 }
 
@@ -67,15 +57,15 @@ pub(super) fn may_move(state: IslandWindowState) -> bool {
     matches!(state.mode, IslandMode::Collapsed) && !state.is_dragging
 }
 
-fn monitor_bounds(window: &WebviewWindow, point: (i32, i32)) -> Option<(i32, i32, i32, i32)> {
+fn monitor_bounds(window: &WebviewWindow, point: (i32, i32)) -> Option<Bounds> {
     let monitor = monitor_at(window, point).ok().flatten()?;
-    let (position, size) = (monitor.position(), monitor.size());
+    let (position, size) = (screen::monitor_origin(&monitor), screen::monitor_size(&monitor));
     Some((position.x, position.y, size.width as i32, size.height as i32))
 }
 
-fn island_bounds(window: &WebviewWindow) -> Option<(i32, i32, i32, i32)> {
-    let position = window.outer_position().ok()?;
-    let size = window.outer_size().ok()?;
+fn island_bounds(window: &WebviewWindow) -> Option<Bounds> {
+    let position = screen::window_position(window).ok()?;
+    let size = screen::window_size(window).ok()?;
     monitor_bounds(window, (position.x + size.width as i32 / 2, position.y + size.height as i32 / 2))
 }
 
@@ -105,5 +95,18 @@ fn move_to(window: &WebviewWindow, point: (i32, i32)) {
     }
     if let Err(error) = apply_stage_geometry(window, state, false) {
         eprintln!("Failed to move the island to another monitor: {error}");
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::polls_on;
+
+    #[test]
+    fn a_display_counts_only_while_the_point_stays_on_it() {
+        let external = (1710, -200, 2560, 1440);
+        assert_eq!(polls_on(None, external), 1);
+        assert_eq!(polls_on(Some((external, 1)), external), 2);
+        assert_eq!(polls_on(Some(((0, 0, 1710, 1107), 3)), external), 1);
     }
 }
