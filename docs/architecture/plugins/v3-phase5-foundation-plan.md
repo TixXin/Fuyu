@@ -205,3 +205,4 @@
 - 看每个子会话的提交和 diff，不只看汇报；
 - 更新 `v3-progress.md`（这一节的地基做到哪）、`contracts.md`（`.fuyu` 后缀、`index.v3.json` / `revoked.v3.json` 的格式、清单格式）、方案里被细化的段落；
 - 核对 issue 都已回复并关闭；向用户和经理汇报提交、PR 和还剩什么。
+- 「编译过的代码」的判断（扩展名、`\0asm`、`CAFEBABE`、jar、PE / ELF / Mach-O）现在 `plugin-manifest`（6e011bb8）和 `plugin-review`（248ca98a）各抄一份，规则一致。要合成一份：`plugin-manifest` 导出判断函数，`plugin-review` 加 workspace 依赖引用它；要改锁文件，排在下一次有人动共用文件时一起做。
