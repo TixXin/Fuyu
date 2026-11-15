@@ -8,6 +8,7 @@ if /I "%PROVIDER%"=="workbuddy" goto known
 if /I "%PROVIDER%"=="dsh" goto known
 if /I "%PROVIDER%"=="qoder" goto known
 if /I "%PROVIDER%"=="zcode" goto known
+if /I "%PROVIDER%"=="kimiCode" goto known
 if /I "%PROVIDER%"=="codebuddy" goto known
 if /I "%PROVIDER%"=="qwen" goto known
 if /I "%PROVIDER%"=="antigravity" (

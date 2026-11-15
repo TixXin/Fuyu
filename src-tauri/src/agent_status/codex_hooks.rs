@@ -107,7 +107,7 @@ pub(super) fn remove_managed_codex_hook_block(content: &str) -> String {
     remove_legacy_codex_focusd_hooks(&remove_hook_blocks(&current, legacy_begin, legacy_end))
 }
 
-fn remove_hook_blocks(content: &str, begin: &str, end_marker: &str) -> String {
+pub(super) fn remove_hook_blocks(content: &str, begin: &str, end_marker: &str) -> String {
     let mut remaining = content;
     let mut next_content = String::new();
 
