@@ -136,6 +136,35 @@ test("explicit rendered install target is retained when the background candidate
   assert.equal(app.getUpdateState().stage, "available");
 });
 
+test("installing backs up first and does not install when the backup fails", async () => {
+  let fail = true;
+  const native = runtime({
+    check: async () => ({ version: "0.3.6" }),
+    backup: async () => { if (fail) throw { code: "updateBackup.failed", message: "disk full" }; },
+  });
+  const app = await native.controller();
+  await app.checkForUpdate();
+  await app.installUpdate("0.3.6", "stable");
+  assert.equal(app.getUpdateState().commandError.code, "updateBackup.failed");
+  assert.equal(app.getUpdateState().backupFailed, "0.3.6");
+  assert.equal(native.calls.some((call) => call.command === "updater_install"), false);
+  fail = false;
+  await app.installUpdate("0.3.6", "stable");
+  const commands = native.calls.map((call) => call.command).filter((name) => name === "update_backup_create" || name === "updater_install");
+  assert.deepEqual(commands.slice(-2), ["update_backup_create", "updater_install"]);
+  assert.equal(app.getUpdateState().backupFailed, null);
+  assert.equal(app.getUpdateState().stage, "done");
+});
+
+test("installing anyway skips the backup", async () => {
+  const native = runtime({ check: async () => ({ version: "0.3.6" }), backup: async () => { throw "broken"; } });
+  const app = await native.controller();
+  await app.checkForUpdate();
+  await app.installUpdate("0.3.6", "stable", { skipBackup: true });
+  assert.equal(native.calls.some((call) => call.command === "update_backup_create"), false);
+  assert.equal(app.getUpdateState().stage, "done");
+});
+
 test("failed checks retain successful time and candidate, then clear errors on retry", async () => {
   let fail = false;
   const native = runtime({ check: async () => { if (fail) throw "offline"; return { version: "0.3.6", body: "notes" }; } });

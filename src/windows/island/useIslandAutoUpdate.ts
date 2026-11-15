@@ -27,6 +27,7 @@ export function useIslandAutoUpdate({ mode, sessions }: { mode: IslandMode; sess
     const tryInstall = async () => {
       const state = getUpdateState();
       if (running || state.stage !== "ready" || state.autoUpdate !== "install" || state.nextVersion === state.skippedVersion) return;
+      if (state.backupFailed === state.nextVersion) return;
       const { mode: islandMode, sessions: agentSessions } = latest.current;
       if (islandMode === "expanded" || agentSessions.some((session) => session.phase === "running" || session.phase === "waiting")) return;
       running = true;

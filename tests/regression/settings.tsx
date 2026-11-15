@@ -212,8 +212,10 @@ if (!automated) {
     await openPage("behaviorAlerts");
     check(texts(".settings-group__title") === "在小岛上提示" && texts(".settings-row__title") === "音量与亮度|耳机与充电|摄像头和麦克风使用提示", "Volume, headphones and camera alerts are one group on the System alerts tab");
     await openPage("general");
-    check(texts(".settings-group__title") === "启动与语言|位置|数据" && document.querySelector(".position-diagram__screen--active .position-diagram__island") && !texts(".settings-row__title").includes("最小化按钮")
-      && document.querySelectorAll(".settings-footnote__toggle").length === 3, "General is three groups: the position group draws the screens, data folder and backup are one group, long notes fold");
+    check(texts(".settings-group__title") === "启动与语言|位置|数据|升级前的备份" && document.querySelector(".position-diagram__screen--active .position-diagram__island") && !texts(".settings-row__title").includes("最小化按钮")
+      && document.querySelectorAll(".settings-footnote__toggle").length === 4, "General is four groups: the position group draws the screens, data folder and backup are one group, backups before updates follow, long notes fold");
+    check(texts(".settings-row__title").includes("0.3.9 → 0.4.0") && !document.querySelector(".settings-backup__status--error"),
+      "Backups made before updates are listed with their versions, and nothing asks to restore while the data reads fine");
 
     const storedSettings = () => JSON.parse(localStorage.getItem("fuyu-settings") ?? "{}") as { opacity?: number; carryOverIncompleteTodos?: boolean };
     check(!document.querySelector(".appearance-reset"), "Reset appearance is not offered outside the theme page");

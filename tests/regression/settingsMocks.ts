@@ -58,6 +58,11 @@ mockIPC((command, payload) => {
     case "set_reply_marker": replyMarkerCalls.push(replyMarkerOn = Boolean(args.enabled)); return replyMarker();
     case "get_launch_at_startup": return false;
     case "get_data_home": return { home: "C:\\Users\\demo\\.fuyu", defaultHome: "C:\\Users\\demo\\.fuyu", source: "default" };
+    case "update_backup_list": return {
+      backups: [{ id: "pre-update-0.3.9-20261115-100000", fromVersion: "0.3.9", toVersion: "0.4.0", createdAt: Date.UTC(2026, 10, 15, 2), size: 245760, files: 12, skipped: [] }],
+      brokenFiles: [],
+      pendingRestore: null,
+    };
     case "set_launch_at_startup": return null;
     case "get_default_todo_save_directory": return "";
     case "get_clipboard_history":

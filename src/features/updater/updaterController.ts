@@ -4,6 +4,7 @@ import {
   checkUpdate, downloadAndInstallUpdate, downloadUpdate, getAppVersion, getNativeUpdateState, isNetworkMetered, getUpdaterProxy,
   isUpdaterConfigured, listenUpdateState, notifyUpdate, type UpdateSnapshot,
 } from "./api";
+import { backupBeforeUpdate } from "../settings-backup/api";
 import { nextUpdateCheckAt } from "./checkSchedule";
 import {
   CHANNEL_KEY, UPDATE_PREFERENCES_KEY, loadUpdateChannel, loadUpdatePreferences,
@@ -19,13 +20,14 @@ export type UpdateState = Omit<UpdateSnapshot, "stage" | "channel"> & UpdatePref
   nextCheckAt: number | null;
   notificationUnavailable: boolean;
   commandError: unknown;
+  backupFailed: string | null;
 };
 
 let state: UpdateState = {
   ...loadUpdatePreferences(), revision: -1, stage: "idle", version: "", channel: "stable",
   nextVersion: "", notes: "", downloaded: 0, total: 0, detail: "",
   lastAttemptAt: null, startedAt: 0, checkFailures: 0, nextCheckAt: null,
-  notificationUnavailable: false, commandError: null,
+  notificationUnavailable: false, commandError: null, backupFailed: null,
 };
 const listeners = new Set<() => void>();
 let proxy: string | null = null;
@@ -200,13 +202,21 @@ export async function notifyAvailableUpdate(title: string, body: (version: strin
   else setState(saveUpdatePreferences({ notificationUnavailable: true }));
 }
 
-export async function installUpdate(expectedVersion?: string, expectedChannel?: UpdateChannel) {
+export async function installUpdate(expectedVersion?: string, expectedChannel?: UpdateChannel, options: { skipBackup?: boolean } = {}) {
   await initialize();
   if (!state.nextVersion || busy(state.stage) || commandRunning || state.stage === "done") return;
   commandRunning = true;
   const nextVersion = expectedVersion ?? state.nextVersion;
   const channel = expectedChannel ?? state.channel;
-  setState({ commandError: null });
+  setState({ commandError: null, backupFailed: null });
+  if (!options.skipBackup) {
+    try { await backupBeforeUpdate(nextVersion); }
+    catch (error) {
+      commandRunning = false;
+      setState({ commandError: error, backupFailed: nextVersion });
+      return;
+    }
+  }
   let failure: unknown = null;
   try { await downloadAndInstallUpdate(nextVersion, channel); }
   catch (error) { failure = error; }
