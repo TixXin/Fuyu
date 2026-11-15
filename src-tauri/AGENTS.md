@@ -71,6 +71,7 @@ src-tauri/src/
 `src-tauri/crates/` 放和 `src-tauri` 同在一个 Cargo 工作区（`src-tauri/Cargo.toml` 的 `[workspace]`，构建目录仍是 `src-tauri/target`）的独立 crate，`cargo test`、clippy 默认连它们一起跑：
 
 - `crates/plugin-base`：插件平台第 3 版基座的 Rust 部分（找 Node、和宿主之间的 JSON-RPC、看管宿主：就绪、心跳、退避重启、停止）。不能依赖 `src-tauri` 的任何模块，也不写 `unsafe`：作业对象和进程组由使用方经 `Containment` 提供（浮屿的在 `src/plugin_kernel/containment.rs`）。协议见 [v3-boundary.md](../docs/architecture/plugins/v3-boundary.md)。
+- `crates/plugin-base-macros`：过程宏 `#[host_service("<方法>")]`，经 `plugin_base::host_service` 使用，把领域函数登记成插件宿主能调的 Rust 方法；参数和返回值的类型要在测试构建里派生 `ts_rs::TS`，写法见 [v3-services.md](../docs/architecture/plugins/v3-services.md)「Rust 那条路」。
 - `crates/sherpa-runtime`：语音输入（C80）在运行时用 `libloading` 加载下载来的 sherpa-onnx 2.0.1 C API 动态库，只包了离线识别（SenseVoice）用到的几个函数和配置结构体（布局按 2.0.1 的 `c-api.h`，有测试核对大小和偏移）。这是 `win32/`、`macos/` 之外唯一允许 `unsafe` 的地方（2026-11-15 用户定），对外只暴露安全的 `Runtime` / `Recognizer`；升级 sherpa-onnx 版本时要同时改这里的结构体、`VERSION` 和 `voice_input/packs.rs` 的下载地址和 SHA-256。
 
 ## lib.rs 与模块组织
