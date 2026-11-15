@@ -82,7 +82,16 @@
 
 ## 代码放哪
 
-第 1 阶段开头定具体的名字，原则先定下来：
+原则如下；具体的名字第 1 阶段开头（2026-11-15）定了：
+
+| 东西 | 定下的位置和名字 |
+|---|---|
+| Cordis | `vendor/cordis/<包>/`：`core`（npm 名 `cordis`）、`loader`、`hmr`、`include`、`fs`、`fs-node`。拷的是 npm 上的构建产物，不用构建；`pnpm-workspace.yaml` 的 `overrides` 把全仓对这些包的引用都指到这里 |
+| 基座的 TS 包 | `packages/plugin-base`，npm 名 `@fuyu/plugin-base`（私有，不发布）。`.` 是插件用的接口，`./host` 是宿主。公开发布时再定正式的名字 |
+| 基座的 Rust 部分 | `src-tauri/crates/plugin-base`（crate 名 `plugin-base`）。`src-tauri/Cargo.toml` 加了 `[workspace]`，它是成员也是默认成员：工作区的根仍是 `src-tauri`，构建目录不变，`cargo test`、clippy 不加参数就连它一起跑。不依赖 `src-tauri` 的模块、不写 `unsafe`，作业对象和进程组经 `Containment` 由浮屿提供 |
+| 插件接口包 `fuyu-plugin` 2.0 | 第 5 阶段。第 1 阶段插件用 `@fuyu/plugin-base`；宿主把要共享的包名都指到同一份内核，所以以后加 `fuyu-plugin` 这个名字只是多登记一个别名 |
+
+原则：
 
 | 东西 | 位置 | 规则 |
 |---|---|---|

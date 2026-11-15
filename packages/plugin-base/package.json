@@ -1,0 +1,49 @@
+{
+  "name": "@fuyu/plugin-base",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Plugin platform v3 base: the kernel host, the plugin API and the protocol between host, Rust and windows",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.mts",
+      "default": "./src/index.mjs"
+    },
+    "./host": {
+      "types": "./src/host/index.d.mts",
+      "default": "./src/host/index.mjs"
+    },
+    "./client": {
+      "types": "./src/client/index.d.mts",
+      "default": "./src/client/index.mjs"
+    },
+    "./client/react": {
+      "types": "./src/client/react.d.mts",
+      "default": "./src/client/react.mjs"
+    },
+    "./protocol": {
+      "types": "./src/protocol.d.mts",
+      "default": "./src/protocol.mjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "engines": {
+    "node": ">=22.15"
+  },
+  "dependencies": {
+    "@cordisjs/fs": "workspace:*",
+    "@cordisjs/fs-node": "workspace:*",
+    "@cordisjs/hmr": "workspace:*",
+    "@cordisjs/include": "workspace:*",
+    "@cordisjs/loader": "workspace:*",
+    "cordis": "workspace:*",
+    "ws": "^8.23.0"
+  },
+  "scripts": {
+    "test": "node --test \"test/**/*.test.mjs\""
+  },
+  "peerDependencies": {
+    "react": "^19.0.0"
+  }
+}

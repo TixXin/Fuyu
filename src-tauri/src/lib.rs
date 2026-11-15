@@ -25,6 +25,7 @@ mod onboarding_window;
 mod pets;
 mod phone_push;
 mod plugin_host;
+mod plugin_kernel;
 mod mail;
 #[cfg_attr(target_os = "macos", path = "qq_notifications/macos.rs")]
 mod qq_notifications;
@@ -99,6 +100,9 @@ pub fn run() {
         .register_asynchronous_uri_scheme_protocol(clipboard_history::image_protocol::SCHEME, |_context, request, responder| {
             tauri::async_runtime::spawn_blocking(move || responder.respond(clipboard_history::image_protocol::respond(&request)));
         })
+        .register_asynchronous_uri_scheme_protocol(plugin_kernel::protocol::SCHEME, |_context, request, responder| {
+            tauri::async_runtime::spawn_blocking(move || responder.respond(plugin_kernel::respond(&request)));
+        })
         .on_window_event(|window, event| {
             if window.label() == translation::WINDOW_LABEL
                 || window.label() == clipboard_history::POPUP_WINDOW_LABEL
@@ -167,6 +171,9 @@ pub fn run() {
             if let Err(error) = plugin_host::init(app.handle()) {
                 eprintln!("failed to initialize plugins: {error}");
             }
+            if let Err(error) = plugin_kernel::init(app.handle()) {
+                eprintln!("failed to start the plugin platform v3 host: {error}");
+            }
             let args: Vec<String> = std::env::args().collect();
             if let Some(link) = plugin_host::find_link(&args) {
                 plugin_host::open_link(app.handle(), link, true);
@@ -224,6 +231,7 @@ pub fn run() {
             coexist;
             local_api;
             plugin_host;
+            plugin_kernel;
             mail;
             wechat_reminders;
             qq_notifications;
@@ -259,6 +267,7 @@ pub fn run() {
         .map(|app| {
             app.run(|_app, event| match event {
                 tauri::RunEvent::Exit => {
+                    plugin_kernel::shutdown();
                     agent_approval::shutdown();
                     home_dir::before_exit();
                     wechat_reminders::shutdown();

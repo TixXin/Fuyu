@@ -8,6 +8,7 @@ import type { SettingsThemeMarketText } from "./themeMarket";
 import type { SettingsResetAppearanceText } from "./resetAppearance";
 import type { SettingsWindowControlsText } from "./windowControls";
 import type { SettingsDevBuildText } from "./devBuild";
+import type { SettingsPluginsV3Text } from "./pluginsV3";
 import type { SettingsCategoriesText } from "./categories";
 import type { SettingsBehaviorText } from "./behavior";
 import type { SettingsTranslationText } from "./translation";
@@ -47,6 +48,7 @@ import * as themeMarket from "./themeMarket.ts";
 import * as resetAppearance from "./resetAppearance.ts";
 import * as windowControls from "./windowControls.ts";
 import * as devBuild from "./devBuild.ts";
+import * as pluginsV3 from "./pluginsV3.ts";
 import * as categories from "./categories.ts";
 import * as behavior from "./behavior.ts";
 import * as translation from "./translation.ts";
@@ -90,6 +92,7 @@ export type SettingsText = {
   resetAppearance: SettingsResetAppearanceText;
   windowControls: SettingsWindowControlsText;
   devBuild: SettingsDevBuildText;
+  pluginsV3: SettingsPluginsV3Text;
 
   categories: SettingsCategoriesText;
 
@@ -152,6 +155,7 @@ export const zhCN: SettingsText = {
   resetAppearance: resetAppearance.zhCN,
   windowControls: windowControls.zhCN,
   devBuild: devBuild.zhCN,
+  pluginsV3: pluginsV3.zhCN,
 
   categories: categories.zhCN,
 
@@ -214,6 +218,7 @@ export const en: SettingsText = {
   resetAppearance: resetAppearance.en,
   windowControls: windowControls.en,
   devBuild: devBuild.en,
+  pluginsV3: pluginsV3.en,
 
   categories: categories.en,
 

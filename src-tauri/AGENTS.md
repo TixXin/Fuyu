@@ -28,6 +28,7 @@ src-tauri/src/
 ├── recording/               # 录屏（C41.11）：命令、倒计时、暂停计时和浮屿窗口排除在录像外（control.rs，状态在 state.rs，发 recording-state / recording-finished 给岛），录制线程（session.rs：WGC 帧经有界队列交给编码线程，满了丢帧计数）、帧节奏（pacing.rs，静止 3 个间隔才补重复帧，暂停扣时长）、尺寸码率和文件名（format.rs）、声音（audio.rs 接采集、按视频时间轴放；mixer.rs 混成 48 kHz 立体声）、GIF（gif.rs：每 1/15 秒挑一帧读回内存交给 gifski 线程）；声音采集在 win32/audio_capture.rs，画面采集在 win32/graphics_capture.rs，编码写 MP4 在 win32/video_writer.rs
 ├── pets/                    # Codex Pets（petdex）：只读列出 ~/.codex/pets 与 <app data>/pets，校验后以 data URL 返回图集
 ├── local_api/               # 本地接口：127.0.0.1 HTTP（tiny_http）、鉴权与路由、转给 main 窗口的桥、local-api.json；由内置插件开关
+├── plugin_kernel/           # 插件平台第 3 版的宿主（E36.1，默认关）：开发版里设 FUYU_PLUGINS_V3=1 才启动；找 Node、在数据目录的 plugins-v3/ 下拉起 packages/plugin-base 的宿主，用 platform::job 管住它（containment.rs）。看管宿主的通用部分在 crates/plugin-base
 ├── plugin_host/             # 插件：清单校验、plugins.json、子进程监督与 stdio JSON-RPC、权限表、设置页、市场与签名、撤销名单（revocations.rs）、后台检查与自动更新（updates.rs）、自定义界面页面（webviews.rs）、插件自己的窗口（windows/，实验接口，E34）、内置插件（builtin.rs）、按需启动与资源（activation.rs、lifecycle.rs）、开发模式（dev.rs）、清单里的 Agent 强度名称（effort_labels.rs）
 ├── media_control/
 ├── calendar/                # 日历：CalDAV（caldav.rs）和 ICS 订阅链接，iCalendar 解析和重复日程展开（ics.rs，rrule），会议链接识别（meeting_link.rs），来源配置与凭据（sources.rs）
@@ -66,6 +67,10 @@ src-tauri/src/
                              # video_writer（Media Foundation Sink Writer：硬件 H.264 写 MP4，失败换软件；可带 AAC 声音）、
                              # audio_capture（WASAPI 录系统声音和麦克风，系统声音同时开一路静音播放流，防止没声音时断包）
 ```
+
+`src-tauri/crates/` 放和 `src-tauri` 同在一个 Cargo 工作区（`src-tauri/Cargo.toml` 的 `[workspace]`，构建目录仍是 `src-tauri/target`）的独立 crate，`cargo test`、clippy 默认连它们一起跑：
+
+- `crates/plugin-base`：插件平台第 3 版基座的 Rust 部分（找 Node、和宿主之间的 JSON-RPC、看管宿主：就绪、心跳、退避重启、停止）。不能依赖 `src-tauri` 的任何模块，也不写 `unsafe`：作业对象和进程组由使用方经 `Containment` 提供（浮屿的在 `src/plugin_kernel/containment.rs`）。协议见 [v3-boundary.md](../docs/architecture/plugins/v3-boundary.md)。
 
 ## lib.rs 与模块组织
 
