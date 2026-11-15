@@ -56,6 +56,8 @@ test("the host says it is ready with its plugins, and answers ping and status", 
   ]);
   const ready = await next((message) => message.method === "ready");
   assert.equal(ready.params.protocol, 1);
+  assert.ok(ready.params.windows.port > 0);
+  assert.match(ready.params.windows.token, /^[0-9a-f]{64}$/);
   assert.deepEqual(ready.params.plugins.map((entry) => entry.state), ["running", "running"]);
   send({ id: 1, method: "ping" });
   assert.ok((await next((message) => message.id === 1)).result.at > 0);
@@ -96,4 +98,41 @@ test("the host exits when asked to stop", async () => {
   send({ id: 9, method: "stop" });
   assert.equal((await next((message) => message.id === 9)).result, true);
   assert.equal(await exited, 0);
+});
+
+test("a window connected to the host hears about plugin changes as they happen", async () => {
+  const { default: WebSocket } = await import("ws");
+  const { connectHost } = await import("@fuyu/plugin-base/client");
+  const entries = [
+    { id: "counter", name: "./counter.mjs" },
+    { id: "user", name: "./user.mjs" },
+  ];
+  const space = workspace({ ...PLUGINS, "plugins.yml": config(entries) });
+  cleanup.push(space.remove);
+  const child = spawn(process.execPath, [MAIN, "--dir", space.dir, "--watch"], { stdio: ["pipe", "pipe", "inherit"] });
+  cleanup.push(() => child.kill());
+  const ready = await new Promise((resolve) => {
+    createInterface({ input: child.stdout }).on("line", (line) => {
+      const message = JSON.parse(line);
+      if (message.method === "ready") resolve(message.params);
+    });
+  });
+  const updates = [];
+  let snapshot = null;
+  const connection = connectHost({
+    resolve: async () => ready.windows,
+    window: "island",
+    open: (url) => new WebSocket(url, { origin: "tauri://localhost" }),
+    onSnapshot: (value) => (snapshot = value),
+    onEvent: (name, data) => name === "plugins" && updates.push(data),
+  });
+  const deadline = Date.now() + 5000;
+  while (connection.state !== "open" && Date.now() < deadline) await new Promise((resolve) => setTimeout(resolve, 10));
+  assert.deepEqual(snapshot.plugins.map((entry) => entry.state), ["running", "running"]);
+  space.write({ "plugins.yml": config([entries[0], { ...entries[1], disabled: true }]) });
+  while (!updates.some((list) => list.find((entry) => entry.id === "user")?.state === "disabled") && Date.now() < deadline + 5000) {
+    await new Promise((resolve) => setTimeout(resolve, 20));
+  }
+  assert.ok(updates.some((list) => list.find((entry) => entry.id === "user")?.state === "disabled"), JSON.stringify(updates));
+  connection.close();
 });
