@@ -1,5 +1,5 @@
 import { Context, Service } from "@fuyu/plugin-base";
-import { startHost, type Host, type PluginStatus } from "@fuyu/plugin-base/host";
+import { SERVICE_CALLS, serviceError, startHost, type Host, type PluginStatus, type ServiceEntry, type ServicesApi } from "@fuyu/plugin-base/host";
 
 class Counter extends Service {
   value = 0;
@@ -12,6 +12,28 @@ const host: Host = await startHost({ dir: "/tmp", watch: true, onLog: (entry) =>
 const states: PluginStatus["state"][] = host.status().map((entry) => entry.state);
 void Counter;
 void states;
+
+const offered: ServiceEntry[] = host.services();
+const stopWatching: () => void = host.watchServices((list) => list.map((entry) => entry.name.length));
+const detach: () => void = host.serviceHub.attachWindows({ connected: () => ["main"], publish: () => {} });
+void host.serviceHub.windowCall("service.call", { service: "timers/v1", method: "list" }, "main");
+// @ts-expect-error only the three service calls go to the hub
+void host.serviceHub.windowCall("plugin.call", {}, "main");
+const failed: string = serviceError("not-ready", "no provider").code;
+const known: boolean = SERVICE_CALLS.has("service.on");
+declare const services: ServicesApi;
+const echo = { name: "demo.echo/v1", methods: { echo: {} }, events: { said: {} } } as const;
+const handle = services.provide(echo, { echo: (params, caller) => ({ params, window: caller.window ?? null }) });
+const delivered: boolean = handle.emit("said", { at: 1 });
+const reply: Promise<unknown> = services.get(echo).echo({ text: "hi" });
+void services.get(echo).on("said", () => {});
+void offered;
+void stopWatching;
+void detach;
+void failed;
+void known;
+void delivered;
+void reply;
 
 import { connectHost, type HostConnection } from "@fuyu/plugin-base/client";
 import { CLOSE, WINDOW_ORIGINS } from "@fuyu/plugin-base/protocol";

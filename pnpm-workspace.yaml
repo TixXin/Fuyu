@@ -2,6 +2,10 @@ packages:
   - packages/fuyu-plugin
   - packages/create-fuyu-plugin
   - packages/plugin-base
+  - packages/plugin-manifest
+  - packages/plugin-market
+  - packages/plugin-review
+  - packages/plugin-services
   - vendor/cordis/*
 
 allowBuilds:

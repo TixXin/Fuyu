@@ -45,7 +45,7 @@ export function UpdatePanel() {
   const hero = t.settings.project.hero;
   const errorText = useErrorText();
   const { locale } = useLocale();
-  const { stage, version, channel, nextVersion, notes, downloaded, total, detail, skippedVersion, commandError, autoUpdate } = useSyncExternalStore(
+  const { stage, version, channel, nextVersion, notes, downloaded, total, detail, errorKind, skippedVersion, commandError, autoUpdate } = useSyncExternalStore(
     subscribeToUpdate,
     getUpdateState,
   );
@@ -57,6 +57,7 @@ export function UpdatePanel() {
   }, []);
 
   const restartStalled = useRestartStalled(stage);
+  const installFailed = stage === "error" && errorKind === "install";
 
   if (stage === "disabled") {
     return (
@@ -86,7 +87,7 @@ export function UpdatePanel() {
   else if (stage === "installing") { headline = text.installing; sub = `${step} · ${text.readyHint}`; }
   else if (stage === "done" && restartStalled) { headline = text.restartStalled; sub = text.restartStalledHint; }
   else if (stage === "done") { headline = text.done; sub = current; }
-  else if (stage === "error") { headline = hero.error; sub = detail ? text.errorDetail(detail) : text.error; }
+  else if (stage === "error") { headline = installFailed ? hero.installError : hero.error; sub = detail ? text.errorDetail(detail) : text.error; }
 
   const offersUpdate = stage === "available" || stage === "ready";
   const showsSource = downloadSource !== null && (stage === "downloading" || stage === "ready" || stage === "installing" || stage === "done");
@@ -113,7 +114,7 @@ export function UpdatePanel() {
             </>
           ) : stage === "idle" || stage === "latest" || stage === "error" || stage === "checking" ? (
             <button className="update-status__button" type="button" disabled={stage === "checking"} onClick={() => void checkForUpdate()}>
-              {stage === "error" ? text.retry : text.title}
+              {stage === "error" ? (installFailed ? text.recheck : text.retry) : text.title}
             </button>
           ) : restartStalled ? (
             <button className="update-status__button update-status__button--primary" type="button" onClick={() => void restartIsland().catch((error: unknown) => console.error(error))}>

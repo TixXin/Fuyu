@@ -255,9 +255,9 @@ fn two_starts_that_fail_early_put_the_next_start_in_safe_mode_and_the_count_surv
 fn a_down_for_a_start_that_is_not_the_current_one_is_not_counted() {
     let mut tracker = Tracker::new(None, None, false);
     tracker.starting(5);
-    tracker.went_down(4);
-    tracker.went_down(5);
-    tracker.went_down(5);
+    tracker.went_down(4, "the plugin host exited (exit status: 1)");
+    tracker.went_down(5, "the plugin host exited (exit status: 1)");
+    tracker.went_down(5, "the plugin host exited (exit status: 1)");
     assert_eq!(tracker.starting(6), None, "only the first down of start 5 counts, and one failure is not enough");
 }
 
@@ -268,7 +268,7 @@ fn shift_holds_only_this_run_and_leaving_safe_mode_clears_shift_and_failures_but
     assert_eq!(held.starting(1).map(|safe| safe.cause), Some(Cause::Shift));
     assert!(!dir.join(safe_mode::FILE).exists(), "holding Shift is not written down");
     assert!(held.leave());
-    held.went_down(1);
+    held.went_down(1, "asked to restart");
     assert_eq!(held.starting(2), None, "the restart after leaving is a normal start and its down is not a failure");
     assert_eq!(Tracker::new(Some(&dir), None, false).starting(1), None, "the next launch without Shift is normal");
 
@@ -287,4 +287,26 @@ fn shift_holds_only_this_run_and_leaving_safe_mode_clears_shift_and_failures_but
     assert!(!variable.leave(), "safe mode from the variable stays until the variable is removed");
     assert!(variable.starting(2).is_some());
     let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn restarts_that_were_asked_for_and_heartbeats_missed_across_sleep_are_not_failures() {
+    let second = Duration::from_secs(1);
+    assert!(safe_mode::counts_as_failure("the plugin host exited (exit status: 1)", 3 * second, 3 * second));
+    assert!(safe_mode::counts_as_failure("the plugin host was not ready in 60000 ms", 59 * second, 59 * second));
+    assert!(safe_mode::counts_as_failure("the plugin host did not answer a heartbeat in 2000 ms", 10 * second, 11 * second), "a host that hangs while the computer is awake counts");
+    assert!(!safe_mode::counts_as_failure("asked to restart", second, second), "restarting from the plugin page is not a failure");
+    assert!(!safe_mode::counts_as_failure("the plugin host did not answer a heartbeat in 2000 ms", 10 * second, 40 * second), "the wall clock ran ahead of the monotonic one: the computer slept, so the missed heartbeat does not count");
+    assert!(!safe_mode::counts_as_failure("the plugin host did not answer a heartbeat in 2000 ms", 70 * second, 70 * second), "a host that ran a full minute is healthy however it went down");
+
+    let mut tracker = Tracker::new(None, None, false);
+    for generation in 1..=3 {
+        tracker.starting(generation);
+        tracker.went_down(generation, "asked to restart");
+    }
+    assert_eq!(tracker.starting(4), None, "restarts on request never add up to safe mode");
+    tracker.went_down(4, "the plugin host exited (exit status: 1)");
+    tracker.starting(5);
+    tracker.went_down(5, "the plugin host exited (exit status: 1)");
+    assert_eq!(tracker.starting(6).map(|safe| safe.cause), Some(Cause::Failures));
 }

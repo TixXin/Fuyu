@@ -225,7 +225,7 @@ fn apply(root: &Path, host: &str, replies: Vec<Reply>) -> (HashMap<String, Mirro
             }
             Reply::Changed { path, file, head, tail } => {
                 let Some(target) = mirror_path(root, &path) else { continue };
-                let checkpoint = path.ends_with(".json") && tail.len() as u64 == file.size;
+                let checkpoint = super::remote_fetch::is_whole_file(&path) && tail.len() as u64 == file.size;
                 let whole = checkpoint || file.size <= TAIL_BYTES;
                 let head = if checkpoint {
                     Vec::new()

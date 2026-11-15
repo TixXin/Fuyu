@@ -80,7 +80,7 @@
 | `island-cursor-moved`（载荷 `{ x, y }`：光标在主窗口 CSS 像素中的位置，窗口外也有；只在 `set_island_cursor_tracking(true)` 后、光标移动时发，约 28 次/秒，供中心图案的眼睛跟随） | `island/passthrough.rs` | 广播（通过主窗口对象调用 `emit`） |
 | `foreground-fullscreen-changed`（载荷为 `{ active, onIslandMonitor }`：前台是否有全屏程序、是否占住岛所在的显示器，供游戏模式使用） | `system/fullscreen.rs` | 广播 |
 | `media-session-changed`（载荷为 `{ kind, at, sessionId }`：播放器换歌（`kind: "track"`，`at` 是新歌出声的 Unix 毫秒）或播放、暂停（`"playback"`，`at` 是事件发生时）；主窗口据此立刻读媒体状态，给不报进度的播放器按事件时间计时） | `media_control/events.rs` | 广播 |
-| `updater-state-changed`（载荷为更新状态快照 `{ revision, stage, channel, nextVersion, notes, downloaded, total, detail, lastCheckedAt, lastAttemptAt, startedAt, checkFailures, downloadSource }`，D16；`downloadSource` 是这次安装包的下载源 `"GitHub"` / `"ghfast.top"` / `"gh-proxy.com"` 或 `null`，D57 新增） | `system/update_runtime.rs` | 广播 |
+| `updater-state-changed`（载荷为更新状态快照 `{ revision, stage, channel, nextVersion, notes, downloaded, total, detail, lastCheckedAt, lastAttemptAt, startedAt, checkFailures, downloadSource, errorKind }`，D16；`downloadSource` 是这次安装包的下载源 `"GitHub"` / `"ghfast.top"` / `"gh-proxy.com"` 或 `null`，D57 新增；`errorKind` 是 `stage` 为 `"error"` 时出错的环节，`"check"`（检查）/ `"install"`（下载或安装）或 `null`，前端缺这个字段时按检查失败处理，G1.26 新增） | `system/update_runtime.rs` | 广播 |
 | `updater-open-settings`（无载荷：用户点了更新系统通知，D16） | `system/update_notifications.rs` | 主窗口 |
 | `clipboard-history-changed` | `clipboard_history/service.rs`（常量在 `mod.rs`） | 广播 |
 | `clipboard-history-shortcut` | `clipboard_history/service.rs`（常量在 `hotkey.rs`） | 广播 |

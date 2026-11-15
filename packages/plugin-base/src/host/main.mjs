@@ -4,6 +4,7 @@ import { blame } from "./blame.mjs";
 import { SAFE_MODES } from "./gate.mjs";
 import { startHost } from "./kernel.mjs";
 import { connect } from "./rpc.mjs";
+import { SERVICE_CALLS } from "./services.mjs";
 import { openWindowSocket } from "./sockets.mjs";
 
 const FORWARDED_LOGS = new Set(["error", "warn"]);
@@ -79,17 +80,20 @@ try {
   await host.settle();
   windows = await openWindowSocket({
     origins: values.origin.length ? values.origin : WINDOW_ORIGINS,
-    snapshot: () => ({ plugins: host.status(), clients: host.clients(), host: host.info() }),
+    snapshot: () => ({ plugins: host.status(), clients: host.clients(), services: host.services(), host: host.info() }),
     onCall: (method, params, window) => {
       if (method === "status") return host.status();
       if (method === "host") return host.info();
       if (method === "plugin.call") return host.ctx.clients.call(params?.plugin, params?.method, params?.params, window);
+      if (SERVICE_CALLS.has(method)) return host.serviceHub.windowCall(method, params, window);
       throw Object.assign(new Error(`no method ${method}`), { code: "no-method" });
     },
   });
   host.watchStatus((plugins) => windows.publish("plugins", plugins), USAGE_TICK_MS);
   setInterval(() => windows.publish("host", host.info()), HOST_TICK_MS).unref();
   host.watchClients((clients) => windows.publish("clients", clients));
+  host.watchServices((services) => windows.publish("services", services));
+  host.serviceHub.attachWindows({ connected: () => windows.windows(), publish: (name, data) => windows.publish(name, data) });
   host.ctx.clients.onMessage((message) => windows.publish("plugin", message));
   rpc.notify("ready", {
     protocol: HOST_PROTOCOL,

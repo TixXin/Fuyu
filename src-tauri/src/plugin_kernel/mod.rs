@@ -143,9 +143,9 @@ fn spec_for(node: PathBuf, dir: PathBuf, origins: Vec<String>, development: bool
 
 fn track(event: &Event) {
     match event {
-        Event::State(HostState::Down { generation, .. }) => {
+        Event::State(HostState::Down { generation, reason, .. }) => {
             if let Some(mut tracker) = tracker() {
-                tracker.went_down(*generation);
+                tracker.went_down(*generation, reason);
             }
         }
         Event::State(HostState::Ready { generation, .. }) => {
