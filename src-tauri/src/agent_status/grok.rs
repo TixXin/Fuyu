@@ -1,5 +1,5 @@
 use std::{
-    collections::HashMap,
+    collections::{HashMap, HashSet},
     fs,
     path::{Path, PathBuf},
     sync::{Mutex, PoisonError},
@@ -82,11 +82,16 @@ fn sessions(roots: &ScanRoots, now: i64, window_ms: i64) -> Vec<AgentSessionSumm
     if roots.local_app_dir.is_none() {
         return Vec::new();
     }
-    claude_compat::home_dirs(&SPEC, roots.home_dir)
+    let mut seen = HashSet::new();
+    let listed = claude_compat::home_dirs(&SPEC, roots.home_dir)
         .iter()
         .flat_map(|home| session_dirs(home))
-        .filter_map(|dir| cached_session(&dir, now, window_ms))
-        .collect()
+        .filter_map(|dir| cached_session(&dir, now, window_ms, &mut seen))
+        .collect();
+    if let Some(cache) = CACHE.lock().unwrap_or_else(PoisonError::into_inner).as_mut() {
+        cache.retain(|dir, _| seen.contains(dir));
+    }
+    listed
 }
 
 fn session_dirs(home: &Path) -> Vec<PathBuf> {
@@ -112,13 +117,14 @@ fn stamp_of(path: &Path) -> (u64, Option<SystemTime>) {
     fs::metadata(path).map(|meta| (meta.len(), meta.modified().ok())).unwrap_or((0, None))
 }
 
-fn cached_session(dir: &Path, now: i64, window_ms: i64) -> Option<AgentSessionSummary> {
+fn cached_session(dir: &Path, now: i64, window_ms: i64, seen: &mut HashSet<PathBuf>) -> Option<AgentSessionSummary> {
     let files = [dir.join("events.jsonl"), dir.join("chat_history.jsonl"), dir.join("summary.json")];
     let stamp: Stamp = [stamp_of(&files[0]), stamp_of(&files[1]), stamp_of(&files[2])];
     let updated_at = stamp.iter().filter_map(|(_, modified)| modified.and_then(system_time_to_unix_millis)).max()?;
     if now - updated_at > window_ms {
         return None;
     }
+    seen.insert(dir.to_path_buf());
     let mut cache = CACHE.lock().unwrap_or_else(PoisonError::into_inner);
     let cache = cache.get_or_insert_with(HashMap::new);
     if cache.get(dir).is_none_or(|cached| cached.stamp != stamp) {

@@ -106,6 +106,10 @@ fn lists_sessions_from_the_session_folders() {
     assert_eq!((session.title.as_deref(), session.cwd.as_deref()), (Some("登录修复"), Some("/work/shop")));
     assert_eq!((session.model.as_deref(), session.effort.as_deref(), session.phase), (Some("grok-build"), Some("high"), "completed"));
     assert_eq!((session.last_prompt.as_deref(), session.last_message.as_deref()), (Some("修一下登录"), Some("好了。")));
+    let cached = |path: &Path| CACHE.lock().unwrap().as_ref().is_some_and(|cache| cache.contains_key(path));
+    assert!(cached(&dir));
+    assert!(sessions(&roots, now + 2 * 60 * 60 * 1000, 60 * 60 * 1000).is_empty());
+    assert!(!cached(&dir));
     fs::remove_dir_all(&home).unwrap();
 }
 
