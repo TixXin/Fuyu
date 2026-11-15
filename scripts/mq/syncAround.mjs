@@ -23,6 +23,18 @@ function blob(cwd, rev, file) {
   return execFileSync("git", ["cat-file", "blob", `${rev}:${file}`], { cwd, maxBuffer: 256 * 1024 * 1024 });
 }
 
+const BIG = 256 * 1024 * 1024;
+
+function storedForm(cwd, file, content) {
+  const sha = execFileSync("git", ["hash-object", "-w", "--stdin", `--path=${file}`], { cwd, input: content, encoding: "utf8" }).trim();
+  return execFileSync("git", ["cat-file", "blob", sha], { cwd, maxBuffer: BIG });
+}
+
+function workTreeForm(cwd, file, content) {
+  const sha = execFileSync("git", ["hash-object", "-w", "--stdin", "--no-filters"], { cwd, input: content, encoding: "utf8" }).trim();
+  return execFileSync("git", ["cat-file", "--filters", `--path=${file}`, sha], { cwd, maxBuffer: BIG });
+}
+
 function mergeFile(current, base, theirs) {
   const dir = mkdtempSync(path.join(tmpdir(), "mq-sync-"));
   try {
@@ -43,7 +55,7 @@ function planFor(cwd, head, merged, file, entry) {
   const theirs = blob(cwd, merged, file);
   if (!base || !theirs || !existsSync(abs)) return { file, why: "一边新增或删除了它" };
   const current = readFileSync(abs);
-  const { text, clean } = mergeFile(current, base, theirs);
+  const { text, clean } = mergeFile(storedForm(cwd, file, current), base, theirs);
   return clean ? { file, abs, current, text } : { file, why: "没提交的改动和 origin/main 改了同一处" };
 }
 
@@ -66,7 +78,7 @@ function keepEdits(cwd, merged, plans) {
       raced.push(plan.file);
       continue;
     }
-    writeFileSync(plan.abs, plan.text);
+    writeFileSync(plan.abs, workTreeForm(cwd, plan.file, plan.text));
   }
   return raced;
 }

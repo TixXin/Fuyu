@@ -11,6 +11,7 @@ import { tryBranchName } from "../../scripts/mq/try.mjs";
 
 const git = (args, cwd) => execFileSync("git", ["-c", "user.email=t@t", "-c", "user.name=t", ...args], { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim();
 const lines = (n, change = {}) => Array.from({ length: n }, (_, i) => change[i] ?? `line ${i}`).join("\n") + "\n";
+const text = (dir, file) => readFileSync(path.join(dir, file), "utf8").replace(/\r\n/g, "\n");
 
 async function quietly(work) {
   const original = { log: console.log, error: console.error };
@@ -67,7 +68,7 @@ test("sync brings local main up even when another session's uncommitted file is 
   assert.match(said, /merged around 1 uncommitted file/);
   assert.equal(git(["rev-list", "--count", "HEAD..origin/main"], main), "0", "local main has everything from origin");
   assert.equal(git(["rev-list", "--count", "origin/main..HEAD", "--no-merges"], main), "1", "and keeps its own commit");
-  assert.equal(readFileSync(path.join(main, "f.txt"), "utf8"), lines(10, { 1: "origin changed line 1", 8: "another session is editing line 8" }));
+  assert.equal(text(main, "f.txt"), lines(10, { 1: "origin changed line 1", 8: "another session is editing line 8" }));
   assert.equal(git(["status", "--porcelain"], main), "M f.txt", "only the other session's edit is left uncommitted, g.txt is checked out");
   assert.match(git(["diff", "f.txt"], main), /\+another session is editing line 8/);
   assert.doesNotMatch(git(["diff", "f.txt"], main), /origin changed line 1/);
@@ -79,7 +80,7 @@ test("sync fast-forwards around an uncommitted file too, and stops without touch
   writeFileSync(path.join(main, "f.txt"), lines(10, { 6: "mine" }));
   await quietly(() => sync(main));
   assert.equal(git(["rev-parse", "HEAD"], main), git(["rev-parse", "origin/main"], main), "a plain fast-forward, no merge commit");
-  assert.equal(readFileSync(path.join(main, "f.txt"), "utf8"), lines(10, { 2: "origin", 6: "mine" }));
+  assert.equal(text(main, "f.txt"), lines(10, { 2: "origin", 6: "mine" }));
 
   commit(other, "f.txt", lines(10, { 2: "origin", 6: "origin again" }), "origin edits line 6");
   git(["push", "-q", "origin", "main"], other);
@@ -87,7 +88,7 @@ test("sync fast-forwards around an uncommitted file too, and stops without touch
   const said = await quietly(() => sync(main));
   assert.match(said, /f\.txt: 没提交的改动和 origin\/main 改了同一处/);
   assert.equal(git(["rev-parse", "HEAD"], main), before);
-  assert.equal(readFileSync(path.join(main, "f.txt"), "utf8"), lines(10, { 2: "origin", 6: "mine" }));
+  assert.equal(text(main, "f.txt"), lines(10, { 2: "origin", 6: "mine" }));
 }));
 
 test("land --upto carries local main up to a commit with the same commit ids, and leaves later commits and the work tree alone", () => inRepos(async ({ remote, main, other, commit }) => {
