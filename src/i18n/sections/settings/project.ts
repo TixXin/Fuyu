@@ -105,6 +105,7 @@ export type SettingsProjectText = {
     autoUpdateInstall: string;
     readyHint: string;
     readyIdleHint: string;
+    downloadSource: (source: string) => string;
     installNow: string;
     nextCheck: (time: string) => string;
     retryCheck: (time: string) => string;
@@ -228,6 +229,7 @@ export const zhCN: SettingsProjectText = {
     autoUpdateInstall: "自动下载，空闲时安装",
     readyHint: "安装时小岛会重启一次",
     readyIdleHint: "空闲时自动安装，也可以现在就装；安装时小岛会重启一次",
+    downloadSource: (source) => `本次下载源：${source}`,
     installNow: "立即安装",
     nextCheck: (time) => `下次检查：${time}`,
     retryCheck: (time) => `下次重试：${time}`,
@@ -351,6 +353,7 @@ export const en: SettingsProjectText = {
     autoUpdateInstall: "Download, install when idle",
     readyHint: "The island restarts once to install",
     readyIdleHint: "Installs when the computer is idle, or install now; the island restarts once",
+    downloadSource: (source) => `Downloaded from ${source}`,
     installNow: "Install now",
     nextCheck: (time) => `Next check: ${time}`,
     retryCheck: (time) => `Next retry: ${time}`,

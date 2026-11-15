@@ -22,6 +22,14 @@ export type ErrorCode =
   | "net.status"
   | "net.said"
   | "net.tooLarge"
+  | "download.unreachable"
+  | "download.timeout"
+  | "download.checksum"
+  | "download.failed"
+  | "inflink.releaseUnreachable"
+  | "inflink.releaseTimeout"
+  | "inflink.noBetterNcm"
+  | "inflink.write"
   | "bark.server"
   | "recording.busy"
   | "recording.idle"
@@ -230,6 +238,14 @@ export const zhCN: ErrorsText = {
     "net.status": ({ service, status }) => `${service} 返回 ${status}。`,
     "net.said": ({ service }) => `${service} 返回了错误。`,
     "net.tooLarge": ({ service }) => `${service} 的内容太大，已放弃。`,
+    "download.unreachable": ({ what, tried }) => `连不上 ${what} 的下载地址（试过 ${tried}）。`,
+    "download.timeout": ({ what, tried }) => `下载 ${what} 超时（试过 ${tried}）。`,
+    "download.checksum": ({ what, tried }) => `下载的 ${what} 没通过校验，没有使用（试过 ${tried}）。`,
+    "download.failed": ({ what, tried }) => `下载 ${what} 失败（试过 ${tried}）。`,
+    "inflink.releaseUnreachable": "连不上 GitHub（api.github.com），查不到 InfLink-rs 的最新版本。",
+    "inflink.releaseTimeout": "向 GitHub（api.github.com）查询 InfLink-rs 的最新版本超时。",
+    "inflink.noBetterNcm": "没找到 BetterNCM。先装 BetterNCM 并打开一次网易云，再试。",
+    "inflink.write": "没能把 InfLink-rs 放进 BetterNCM 的插件文件夹。",
     "bark.server": "Bark 服务器地址无效。",
     "recording.busy": "已经在录屏了。",
     "recording.idle": "现在没有在录屏。",
@@ -435,6 +451,14 @@ export const en: ErrorsText = {
     "net.status": ({ service, status }) => `${service} answered ${status}.`,
     "net.said": ({ service }) => `${service} answered with an error.`,
     "net.tooLarge": ({ service }) => `${service} sent more than expected; gave up.`,
+    "download.unreachable": ({ what, tried }) => `Could not reach any download source for ${what} (tried ${tried}).`,
+    "download.timeout": ({ what, tried }) => `Downloading ${what} timed out (tried ${tried}).`,
+    "download.checksum": ({ what, tried }) => `The downloaded ${what} failed verification and was not used (tried ${tried}).`,
+    "download.failed": ({ what, tried }) => `Downloading ${what} failed (tried ${tried}).`,
+    "inflink.releaseUnreachable": "Could not reach GitHub (api.github.com) to look up the latest InfLink-rs.",
+    "inflink.releaseTimeout": "Looking up the latest InfLink-rs on GitHub (api.github.com) timed out.",
+    "inflink.noBetterNcm": "BetterNCM was not found. Install it, open NetEase Cloud Music once, then try again.",
+    "inflink.write": "Could not put InfLink-rs into BetterNCM's plugins folder.",
     "bark.server": "The Bark server address is not valid.",
     "recording.busy": "A recording is already running.",
     "recording.idle": "Nothing is being recorded.",
