@@ -11,7 +11,7 @@ import { conflictedFiles } from "../../scripts/mq/mergeTree.mjs";
 import { batchAdvice, landRequest, listOption, main } from "../../scripts/mq/mq.mjs";
 import { failedChecks, landBranchName, prText } from "../../scripts/mq/github.mjs";
 import { queueOrder, updateBehind } from "../../scripts/mq/updateBehind.mjs";
-import { waitFor } from "../../scripts/mq/wait.mjs";
+import { latestLandPr, waitFor } from "../../scripts/mq/wait.mjs";
 import { lockfileChanged, removedDependencies } from "../../scripts/mq/sync.mjs";
 
 function withoutGitEnv(work) {
@@ -80,6 +80,16 @@ test("dependencies are reinstalled only for a lockfile change, and never over a 
   assert.equal(lockfileChanged(["src/a.ts", "pnpm-lock.yaml"]), true);
   assert.equal(lockfileChanged(["package.json"]), false);
   assert.deepEqual(removedDependencies(new Set(["a", "b"]), new Set(["a", "c"])), ["b"]);
+});
+
+test("without a PR number, wait takes the newest PR under this machine's name or one of its earlier names (F47)", () => {
+  const prs = new Map([["land/TixXin/new-name-main", { number: 7 }], ["land/TixXin/old-name-main", { number: 9 }]]);
+  const asked = [];
+  const gh = { login: () => "TixXin", findPr: (head, state) => (asked.push([head, state]), prs.get(head) ?? null) };
+  assert.deepEqual(latestLandPr(gh, { host: "new-name", aliases: ["old-name", "older"] }, "main"), { number: 9 });
+  assert.deepEqual(asked, [["land/TixXin/new-name-main", "all"], ["land/TixXin/old-name-main", "all"], ["land/TixXin/older-main", "all"]]);
+  assert.deepEqual(latestLandPr(gh, { host: "new-name" }, "main"), { number: 7 });
+  assert.equal(latestLandPr(gh, { host: "nobody", aliases: [] }, "main"), null);
 });
 
 test("the land branch is unique per account, machine and lane, and the PR text comes from the commits", () => {
