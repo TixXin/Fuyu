@@ -28,8 +28,7 @@ import { useIslandPreparing } from "./useIslandPreparing";
 import { usePageFadeIn } from "./usePageFadeIn";
 import { DevWatermark } from "../../components/DevWatermark";
 import "./IslandShell.css";
-import "./IslandGlass.css";
-import "./IslandGlassLight.css";
+import { IslandGlassLayer } from "./IslandGlassLayer";
 import { IslandResizeHints } from "./IslandResizeHints";
 import { IslandSideHandle } from "./IslandSideHandle";
 import { IslandSideColumn, useSideColumnRows } from "./IslandSideColumn";
@@ -231,12 +230,7 @@ export function IslandShell({
       }}
     >
       <div className="island__surface">
-        {isLiquidGlass && (
-          <div className="island__glass" aria-hidden="true">
-            <span className="island__glass-refraction" />
-            <span className="island__glass-highlight" />
-          </div>
-        )}
+        {isLiquidGlass && <IslandGlassLayer />}
         {side && (
           <IslandSideHandle
             label={collapsedLabel}
