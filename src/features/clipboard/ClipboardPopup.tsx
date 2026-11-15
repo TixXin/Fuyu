@@ -159,7 +159,7 @@ export function ClipboardPopup({ items, snippets, openCount, wide, ownsWindow = 
       onPeek(null);
       return;
     }
-    const prefetch = [shownItems[current - 1], shownItems[current + 1]].filter((entry) => entry?.kind === "image").map((entry) => entry.id);
+    const prefetch = [shownItems[current - 1], shownItems[current + 1]].filter((entry) => entry?.kind === "image" || (entry?.kind === "files" && entry.files?.length === 1 && Boolean(entry.fileImage))).map((entry) => entry.id);
     onPeek({ item: peekItem, holding: peekHolding, prefetch });
   }, [onPeek, peekItem, peekHolding, shownItems, current]);
 
