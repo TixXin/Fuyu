@@ -10,6 +10,10 @@
 - 岛屿的修法：对填的地址 PROPFIND 失败（非 401/403）或找不到日历线索时，改试 `/.well-known/caldav`；重定向自己跟（reqwest 跟 302 会把 PROPFIND 改成 GET），只跟同一主机的 https，最多 5 次。之后照旧 `current-user-principal` → `calendar-home-set` → 日历。
 - 没有钉钉账号，登录之后 `/dav/principals/` 返回什么、principal 和日历主目录的路径长什么样，都没有实测（未核实），单元测试用的是假设的路径。
 
+## 0.3.9 之后：日历返回 400（2026-11-15）
+
+带了上面修复的 0.3.9 上，群友添加钉钉日历改成报「日历返回 400」，说明发现那一步已经过了（405 没了），是后面某个请求被拒。最可能是读日程的 `REPORT calendar-query`（带时间段）：KDE Bug 447683 里 KOrganizer 连钉钉「能发现日历、读不到日程、也不报错」，它读日程用的就是 calendar-query；能用的 Thunderbird 先 `PROPFIND` Depth 1 拿条目，再用 `calendar-multiget` 读。所以岛屿在 calendar-query 失败（401、403 以外）时改走 PROPFIND + multiget。没有钉钉账号，没法确认 400 一定是这一步（未核实）；如果新版还报 400，要请用户给出完整报错。
+
 ## 详细
 
 不带账号的探测结果（2026-11-15）：
