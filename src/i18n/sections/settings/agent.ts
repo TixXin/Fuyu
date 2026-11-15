@@ -61,8 +61,7 @@ export type SettingsAgentText = {
   remoteSave: string;
   remoteCancel: string;
   agentsSection: string;
-  showClaudeCode: string;
-  showCodex: string;
+  showProvider: (name: string) => string;
   showAgentsHint: string;
   hideFinished: string;
   hideFinishedHint: string;
@@ -180,6 +179,7 @@ export type SettingsAgentText = {
   };
   hooksOutdated: string;
   hooksMissing: string;
+  hooksDevBuild: string;
   remoteResult: (host: string, error: string | null) => string;
 };
 
@@ -246,8 +246,7 @@ export const zhCN: SettingsAgentText = {
   remoteSave: "添加",
   remoteCancel: "取消",
   agentsSection: "显示哪些 Agent",
-  showClaudeCode: "显示 Claude Code 会话",
-  showCodex: "显示 Codex 会话",
+  showProvider: (name) => `显示 ${name} 会话`,
   showAgentsHint: "关掉的 Agent 不出现在 Agent 页，也不算进岛上的运行数量。",
   hideFinished: "只显示进行中的会话",
   hideFinishedHint: "隐藏已完成和失败的会话，只留正在运行、等待确认和可能中断的。",
@@ -365,6 +364,7 @@ export const zhCN: SettingsAgentText = {
   },
   hooksOutdated: "已安装的钩子是旧版本，“等待确认”状态等新功能不会生效。请点“安装/修复”，然后重启 Codex 和 Claude Code。",
   hooksMissing: "还没有安装钩子。点“安装/修复”后重启 Codex 和 Claude Code，状态灯和会话标题才会工作。",
+  hooksDevBuild: "开发版只读正式版的 Agent 状态，钩子由正式版安装。要安装或修复钩子，在正式版的设置里点“安装/修复”。",
   remoteResult: (host, error) => (error ? `SSH 远程 ${host}：失败，${error}` : `SSH 远程 ${host}：已完成`),
 };
 
@@ -431,8 +431,7 @@ export const en: SettingsAgentText = {
   remoteSave: "Add",
   remoteCancel: "Cancel",
   agentsSection: "Agents shown",
-  showClaudeCode: "Show Claude Code sessions",
-  showCodex: "Show Codex sessions",
+  showProvider: (name) => `Show ${name} sessions`,
   showAgentsHint: "Agents switched off are left out of the Agent page and the island's running count.",
   hideFinished: "Only sessions in progress",
   hideFinishedHint: "Hide finished and failed sessions; keep running, waiting and possibly stalled ones.",
@@ -550,5 +549,6 @@ export const en: SettingsAgentText = {
   },
   hooksOutdated: "The installed hooks are from an older version, so newer features such as the waiting-for-you state won't work. Click Install/repair, then restart Codex and Claude Code.",
   hooksMissing: "No hooks installed yet. Click Install/repair, then restart Codex and Claude Code, for the status light and session titles to work.",
+  hooksDevBuild: "The development build only reads the installed Fuyu's agent status; the installed Fuyu sets up the hooks. To install or repair them, use Install/repair in its settings.",
   remoteResult: (host, error) => (error ? `SSH remote ${host}: failed, ${error}` : `SSH remote ${host}: done`),
 };

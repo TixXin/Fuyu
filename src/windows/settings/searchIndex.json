@@ -1971,6 +1971,17 @@
       "page": "agents",
       "zh-CN": {
         "group": "显示哪些 Agent",
+        "title": "显示 Codex 会话"
+      },
+      "en": {
+        "group": "Agents shown",
+        "title": "Show Codex sessions"
+      }
+    },
+    {
+      "page": "agents",
+      "zh-CN": {
+        "group": "显示哪些 Agent",
         "title": "显示 Claude Code 会话"
       },
       "en": {
@@ -1982,11 +1993,33 @@
       "page": "agents",
       "zh-CN": {
         "group": "显示哪些 Agent",
-        "title": "显示 Codex 会话"
+        "title": "显示 WorkBuddy 会话"
       },
       "en": {
         "group": "Agents shown",
-        "title": "Show Codex sessions"
+        "title": "Show WorkBuddy sessions"
+      }
+    },
+    {
+      "page": "agents",
+      "zh-CN": {
+        "group": "显示哪些 Agent",
+        "title": "显示 Antigravity 会话"
+      },
+      "en": {
+        "group": "Agents shown",
+        "title": "Show Antigravity sessions"
+      }
+    },
+    {
+      "page": "agents",
+      "zh-CN": {
+        "group": "显示哪些 Agent",
+        "title": "显示 DeepSeek Harness 会话"
+      },
+      "en": {
+        "group": "Agents shown",
+        "title": "Show DeepSeek Harness sessions"
       }
     },
     {

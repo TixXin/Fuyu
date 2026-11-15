@@ -3,10 +3,15 @@ import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsRow } from "../../components/settings/SettingsRow";
 import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
 import { AgentHooksNotice } from "../../features/agent-status/AgentHooksNotice";
+import { AgentProviderIcon } from "../../features/agent-status/AgentProviderIcon";
+import type { SessionProvider } from "../../features/agent-status/api";
+import { AGENT_PROVIDER_LABELS } from "../../features/agent-status/status";
 import "../../features/agent-status/AgentHooksSettingsSection.css";
 import type { AgentLightStyle, AgentTitleMode, IslandSettings } from "../../features/appearance/types";
 import { useTranslation } from "../../i18n";
 import { ModuleSwitchSection } from "./ModuleSwitchSection";
+
+const SHOWN_PROVIDERS = Object.keys(AGENT_PROVIDER_LABELS) as SessionProvider[];
 
 export function AgentSettingsPage({
   settings,
@@ -69,16 +74,26 @@ export function AgentSettingsPage({
         />
       </SettingsGroup>
       <SettingsGroup title={t.settings.agent.agentsSection} footer={t.settings.agent.showAgentsHint}>
-        <SettingsToggleRow
-          title={t.settings.agent.showClaudeCode}
-          checked={settings.agentShowClaudeCode}
-          onChange={(agentShowClaudeCode) => onSettingsChange({ ...settings, agentShowClaudeCode })}
-        />
-        <SettingsToggleRow
-          title={t.settings.agent.showCodex}
-          checked={settings.agentShowCodex}
-          onChange={(agentShowCodex) => onSettingsChange({ ...settings, agentShowCodex })}
-        />
+        {SHOWN_PROVIDERS.map((provider) => (
+          <SettingsToggleRow
+            key={provider}
+            title={
+              <span className="agent-settings-provider">
+                <AgentProviderIcon provider={provider} />
+                {t.settings.agent.showProvider(AGENT_PROVIDER_LABELS[provider])}
+              </span>
+            }
+            checked={!settings.agentHiddenProviders.includes(provider)}
+            onChange={(shown) =>
+              onSettingsChange({
+                ...settings,
+                agentHiddenProviders: shown
+                  ? settings.agentHiddenProviders.filter((hidden) => hidden !== provider)
+                  : [...settings.agentHiddenProviders, provider],
+              })
+            }
+          />
+        ))}
       </SettingsGroup>
     </>
   );

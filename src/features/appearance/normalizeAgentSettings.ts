@@ -16,8 +16,7 @@ export function normalizeAgentSettings(settings: LegacyIslandSettings | null | u
     agentArchiveMotion: oneOf(AGENT_ARCHIVE_MOTIONS, settings?.agentArchiveMotion, DEFAULT_SETTINGS.agentArchiveMotion),
     agentCardEffects: oneOf(AGENT_CARD_EFFECTS, settings?.agentCardEffects, DEFAULT_SETTINGS.agentCardEffects),
     agentSessionHours: oneOf(AGENT_SESSION_HOURS, settings?.agentSessionHours, DEFAULT_SETTINGS.agentSessionHours),
-    agentShowClaudeCode: settings?.agentShowClaudeCode !== false,
-    agentShowCodex: settings?.agentShowCodex !== false,
+    agentHiddenProviders: normalizeHiddenProviders(settings),
     agentHideFinished: settings?.agentHideFinished === true,
     agentHideClosed: settings?.agentHideClosed !== false,
     agentShowElapsed: settings?.agentShowElapsed === true,
@@ -32,4 +31,15 @@ export function normalizeAgentSettings(settings: LegacyIslandSettings | null | u
     agentRemindSeconds: oneOf(AGENT_REMIND_SECONDS, settings?.agentRemindSeconds, LEGACY_FALLBACKS.agentRemindSeconds),
     agentQuotaAlertPercent: oneOf(AGENT_QUOTA_ALERT_PERCENTS, settings?.agentQuotaAlertPercent, DEFAULT_SETTINGS.agentQuotaAlertPercent),
   } satisfies Partial<IslandSettings>;
+}
+
+function normalizeHiddenProviders(settings: LegacyIslandSettings | null | undefined): string[] {
+  const saved = settings?.agentHiddenProviders;
+  if (Array.isArray(saved)) {
+    return [...new Set(saved.filter((provider): provider is string => typeof provider === "string" && provider.length > 0))];
+  }
+  return [
+    ...(settings?.agentShowClaudeCode === false ? ["claudeCode"] : []),
+    ...(settings?.agentShowCodex === false ? ["codex"] : []),
+  ];
 }

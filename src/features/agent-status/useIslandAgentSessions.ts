@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import type { IslandSettings } from "../appearance/types";
 import type { AgentSessionSummary, ExternalAgentStatus } from "./api";
 import { remoteSessions, withRemoteSessions } from "./remoteSessions";
-import { countActiveSessions, filterSessions, isActivePhase } from "./sessionList";
+import { countActiveSessions, isActivePhase } from "./sessionList";
 import { useAgentSessions } from "./useAgentSessions";
 import { useHiddenSessions } from "./useHiddenSessions";
 import { applySessionFilters } from "./sessionFilters";
@@ -13,7 +13,7 @@ const NO_DEMO: AgentSessionSummary[] = [];
 
 type AgentSessionSettings = Pick<
   IslandSettings,
-  "agentStatusEnabled" | "agentSessionHours" | "agentShowClaudeCode" | "agentShowCodex" | "agentHideFinished" | "agentHideClosed"
+  "agentStatusEnabled" | "agentSessionHours" | "agentHiddenProviders" | "agentHideFinished" | "agentHideClosed"
 >;
 
 export function useIslandAgentSessions(settings: AgentSessionSettings, others?: ExternalAgentStatus[], demo: AgentSessionSummary[] = NO_DEMO) {
@@ -27,10 +27,11 @@ export function useIslandAgentSessions(settings: AgentSessionSettings, others?: 
     [localAgentSessions, others, settings.agentStatusEnabled],
   );
   const [sessionFilters] = useSessionFilters();
-  const shownAgentSessions = useMemo(
-    () => applySessionFilters(filterSessions(allAgentSessions, { claudeCode: settings.agentShowClaudeCode, codex: settings.agentShowCodex }), sessionFilters),
-    [allAgentSessions, settings.agentShowClaudeCode, settings.agentShowCodex, sessionFilters],
-  );
+  const hiddenProviders = settings.agentHiddenProviders;
+  const shownAgentSessions = useMemo(() => {
+    const shown = hiddenProviders.length > 0 ? allAgentSessions.filter((session) => !hiddenProviders.includes(session.provider)) : allAgentSessions;
+    return applySessionFilters(shown, sessionFilters);
+  }, [allAgentSessions, hiddenProviders, sessionFilters]);
   const { visible: agentSessions, removal: agentRemoval } = useHiddenSessions(shownAgentSessions);
   const listedAgentSessions = useMemo(
     () =>

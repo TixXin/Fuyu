@@ -3,6 +3,7 @@ import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton";
 import { SettingsRow } from "../../components/settings/SettingsRow";
 import { useTranslation } from "../../i18n";
+import { useDevBuild } from "../../lib/platform";
 import type { AgentHooksInstallResult, AgentHooksState, AgentStatusSnapshot } from "./api";
 import { RemoteResultLines } from "./RemoteResultLines";
 import { getAgentHooksNotice, getAgentPhaseLabel, getAgentStatusLabel, isAgentAttentionPhase, listAgentStatuses, type AgentHooksInstallState } from "./status";
@@ -20,36 +21,38 @@ export function AgentHooksSettingsSection({ agentStatus, clearingAgentProvider, 
 }) {
   const t = useTranslation();
   const text = t.settings.agent;
+  const devBuild = useDevBuild();
   const hooksNotice = getAgentHooksNotice(agentHooksState);
   const installLabel = agentHooksInstallState === "installing" ? text.installing : agentHooksInstallState === "installed" ? text.installed : text.install;
 
-  const footer =
-    agentHooksInstallState === "error" ? (
-      <span className="agent-hooks-message agent-hooks-message--error" role="alert">{agentHooksInstallError}</span>
-    ) : hooksNotice ? (
-      <span className="agent-hooks-message agent-hooks-message--attention" role="status">
-        <CircleAlert size={13} strokeWidth={2.4} aria-hidden="true" />
-        {hooksNotice === "update" ? text.hooksOutdated : text.hooksMissing}
-      </span>
-    ) : agentHooksInstallState === "installed" && agentHooksInstallResult ? (
-      <span className="agent-hooks-message">
-        {text.scriptsDir} <code>{agentHooksInstallResult.scriptsDir}</code>
-        <RemoteResultLines results={agentHooksInstallResult.remotes} />
-      </span>
-    ) : undefined;
+  const footer = devBuild ? (
+    <span className="agent-hooks-message" role="status">{text.hooksDevBuild}</span>
+  ) : agentHooksInstallState === "error" ? (
+    <span className="agent-hooks-message agent-hooks-message--error" role="alert">{agentHooksInstallError}</span>
+  ) : hooksNotice ? (
+    <span className="agent-hooks-message agent-hooks-message--attention" role="status">
+      <CircleAlert size={13} strokeWidth={2.4} aria-hidden="true" />
+      {hooksNotice === "update" ? text.hooksOutdated : text.hooksMissing}
+    </span>
+  ) : agentHooksInstallState === "installed" && agentHooksInstallResult ? (
+    <span className="agent-hooks-message">
+      {text.scriptsDir} <code>{agentHooksInstallResult.scriptsDir}</code>
+      <RemoteResultLines results={agentHooksInstallResult.remotes} />
+    </span>
+  ) : undefined;
 
   return (
     <SettingsGroup
       title={text.title}
       action={
-        <SettingsLinkButton disabled={agentHooksInstallState === "installing"} onClick={onInstallAgentHooks}>
+        devBuild ? undefined : <SettingsLinkButton disabled={agentHooksInstallState === "installing"} onClick={onInstallAgentHooks}>
           {installLabel}
         </SettingsLinkButton>
       }
       footer={footer}
     >
       <SettingsRow title={text.currentStatus} control={<span className="agent-hooks-value">{getAgentStatusLabel(agentStatus, t)}</span>} />
-      {listAgentStatuses(agentStatus).map(({ key, label, status }) => {
+      {listAgentStatuses(agentStatus).map(({ key, label, provider, status }) => {
         const attention = isAgentAttentionPhase(status.phase);
         return (
           <SettingsRow
@@ -60,7 +63,7 @@ export function AgentHooksSettingsSection({ agentStatus, clearingAgentProvider, 
                 <span className={attention ? "agent-hooks-value agent-hooks-value--attention" : "agent-hooks-value"}>
                   {getAgentPhaseLabel(status.phase, t)}
                 </span>
-                {attention && (
+                {attention && !(devBuild && provider) && (
                   <SettingsLinkButton disabled={clearingAgentProvider === key} onClick={() => onClearAgentStatus(key)}>
                     {clearingAgentProvider === key ? text.clearing : text.clearStatus}
                   </SettingsLinkButton>
