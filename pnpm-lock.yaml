@@ -104,6 +104,9 @@ importers:
       '@cordisjs/loader':
         specifier: workspace:*
         version: link:../../vendor/cordis/loader
+      '@fuyu/plugin-manifest':
+        specifier: workspace:*
+        version: link:../plugin-manifest
       cordis:
         specifier: workspace:*
         version: link:../../vendor/cordis/core
