@@ -1,0 +1,161 @@
+use super::*;
+use std::cell::RefCell;
+use std::collections::HashMap;
+
+#[derive(Default)]
+struct Mock {
+    replies: HashMap<(String, String), Reply>,
+    sent: RefCell<Vec<String>>,
+}
+
+impl Mock {
+    fn on(mut self, method: &str, url: &str, status: u16, body: &str) -> Self {
+        self.replies.insert((method.into(), url.into()), Reply { status, location: None, body: body.into() });
+        self
+    }
+
+    fn redirect(mut self, method: &str, url: &str, status: u16, location: &str) -> Self {
+        self.replies.insert((method.into(), url.into()), Reply { status, location: Some(location.into()), body: String::new() });
+        self
+    }
+
+    fn sent(&self) -> Vec<String> {
+        self.sent.borrow().clone()
+    }
+}
+
+impl Transport for Mock {
+    async fn send(&self, method: &str, url: &Url, depth: &str, _body: &str) -> Result<Reply, UserError> {
+        self.sent.borrow_mut().push(format!("{method} {url} {depth}"));
+        Ok(self.replies.get(&(method.to_string(), url.to_string())).cloned().unwrap_or(Reply { status: 404, ..Reply::default() }))
+    }
+}
+
+fn principal(href: &str) -> String {
+    format!(r#"<d:multistatus xmlns:d="DAV:"><d:response><d:href>/</d:href><d:propstat><d:prop><d:current-user-principal><d:href>{href}</d:href></d:current-user-principal></d:prop></d:propstat></d:response></d:multistatus>"#)
+}
+
+fn home(href: &str) -> String {
+    format!(r#"<d:multistatus xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:caldav"><d:response><d:href>/p</d:href><d:propstat><d:prop><c:calendar-home-set><d:href>{href}</d:href></c:calendar-home-set></d:prop></d:propstat></d:response></d:multistatus>"#)
+}
+
+fn listing(home: &str, calendar: &str) -> String {
+    format!(
+        r#"<d:multistatus xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:caldav">
+<d:response><d:href>{home}</d:href><d:propstat><d:prop><d:resourcetype><d:collection/></d:resourcetype></d:prop></d:propstat></d:response>
+<d:response><d:href>{calendar}</d:href><d:propstat><d:prop><d:resourcetype><d:collection/><c:calendar/></d:resourcetype></d:prop></d:propstat></d:response>
+</d:multistatus>"#
+    )
+}
+
+const EVENTS: &str = r#"<d:multistatus xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:caldav"><d:response><d:href>/e.ics</d:href><d:propstat><d:prop><c:calendar-data>BEGIN:VCALENDAR</c:calendar-data></d:prop></d:propstat></d:response></d:multistatus>"#;
+
+fn url(text: &str) -> Url {
+    Url::parse(text).unwrap()
+}
+
+fn run<F: std::future::Future>(future: F) -> F::Output {
+    tauri::async_runtime::block_on(future)
+}
+
+fn window() -> (DateTime<Utc>, DateTime<Utc>) {
+    use chrono::TimeZone;
+    (Utc.with_ymd_and_hms(2026, 11, 1, 0, 0, 0).unwrap(), Utc.with_ymd_and_hms(2026, 12, 1, 0, 0, 0).unwrap())
+}
+
+#[test]
+fn dingtalk_root_refuses_propfind_so_the_well_known_redirect_is_followed() {
+    let host = "https://calendar.dingtalk.com";
+    let mock = Mock::default()
+        .on("PROPFIND", &format!("{host}/"), 405, "")
+        .redirect("PROPFIND", &format!("{host}/.well-known/caldav"), 302, "https://calendar.dingtalk.com/dav/principals/")
+        .on("PROPFIND", &format!("{host}/dav/principals/"), 207, &principal("/dav/users/u_abc"))
+        .on("PROPFIND", &format!("{host}/dav/users/u_abc"), 207, &home("/dav/u_abc/"))
+        .on("PROPFIND", &format!("{host}/dav/u_abc/"), 207, &listing("/dav/u_abc/", "/dav/u_abc/work/"))
+        .on("REPORT", &format!("{host}/dav/u_abc/work/"), 207, EVENTS);
+    let (from, to) = window();
+    let texts = run(events(&mock, &url(host), from, to)).unwrap();
+    assert_eq!(texts, ["BEGIN:VCALENDAR"]);
+    assert_eq!(
+        mock.sent(),
+        [
+            "PROPFIND https://calendar.dingtalk.com/ 0",
+            "PROPFIND https://calendar.dingtalk.com/.well-known/caldav 0",
+            "PROPFIND https://calendar.dingtalk.com/dav/principals/ 0",
+            "PROPFIND https://calendar.dingtalk.com/dav/users/u_abc 0",
+            "PROPFIND https://calendar.dingtalk.com/dav/u_abc/ 1",
+            "REPORT https://calendar.dingtalk.com/dav/u_abc/work/ 1",
+        ]
+    );
+}
+
+#[test]
+fn a_root_that_answers_is_used_without_trying_the_well_known_address() {
+    let mock = Mock::default()
+        .on("PROPFIND", "https://caldav.feishu.cn/", 207, &principal("/principals/u1/"))
+        .on("PROPFIND", "https://caldav.feishu.cn/principals/u1/", 207, &home("/calendars/u1/"))
+        .on("PROPFIND", "https://caldav.feishu.cn/calendars/u1/", 207, &listing("/calendars/u1/", "/calendars/u1/a/"));
+    let found = run(calendars(&mock, &url("https://caldav.feishu.cn"))).unwrap();
+    assert_eq!(found, [url("https://caldav.feishu.cn/calendars/u1/a/")]);
+    assert!(mock.sent().iter().all(|line| !line.contains(".well-known")));
+}
+
+#[test]
+fn a_calendar_address_is_used_as_it_is() {
+    let address = "https://dav.example.com/cal/me/work/";
+    let mock = Mock::default().on("PROPFIND", address, 207, &listing("/x/", address));
+    let found = run(calendars(&mock, &url(address))).unwrap();
+    assert_eq!(found, [url(address)]);
+    assert_eq!(mock.sent().len(), 1);
+}
+
+#[test]
+fn an_empty_root_answer_falls_back_to_the_well_known_address() {
+    let empty = r#"<d:multistatus xmlns:d="DAV:"><d:response><d:href>/</d:href><d:propstat><d:prop><d:resourcetype><d:collection/></d:resourcetype></d:prop></d:propstat></d:response></d:multistatus>"#;
+    let mock = Mock::default()
+        .on("PROPFIND", "https://cloud.example.com/", 207, empty)
+        .redirect("PROPFIND", "https://cloud.example.com/.well-known/caldav", 301, "/remote.php/dav/")
+        .on("PROPFIND", "https://cloud.example.com/remote.php/dav/", 207, &home("/remote.php/dav/calendars/me/"))
+        .on("PROPFIND", "https://cloud.example.com/remote.php/dav/calendars/me/", 207, &listing("/remote.php/dav/calendars/me/", "/remote.php/dav/calendars/me/personal/"));
+    let found = run(calendars(&mock, &url("https://cloud.example.com"))).unwrap();
+    assert_eq!(found, [url("https://cloud.example.com/remote.php/dav/calendars/me/personal/")]);
+}
+
+#[test]
+fn a_wrong_password_stops_before_the_well_known_address() {
+    let mock = Mock::default().on("PROPFIND", "https://dav.example.com/", 401, "");
+    let error = run(calendars(&mock, &url("https://dav.example.com/"))).unwrap_err();
+    assert_eq!(error.code(), "calendar.login");
+    assert_eq!(mock.sent().len(), 1);
+
+    let mock = Mock::default().on("PROPFIND", "https://calendar.dingtalk.com/", 405, "").redirect("PROPFIND", "https://calendar.dingtalk.com/.well-known/caldav", 302, "/dav/principals/").on("PROPFIND", "https://calendar.dingtalk.com/dav/principals/", 401, "");
+    assert_eq!(run(calendars(&mock, &url("https://calendar.dingtalk.com"))).unwrap_err().code(), "calendar.login");
+}
+
+#[test]
+fn when_nothing_works_the_typed_address_error_is_reported() {
+    let mock = Mock::default().on("PROPFIND", "https://dav.example.com/", 405, "");
+    let error = run(calendars(&mock, &url("https://dav.example.com/"))).unwrap_err();
+    assert_eq!(error.code(), "calendar.status");
+    assert!(error.to_string().contains("405"));
+    assert_eq!(mock.sent().len(), 2);
+}
+
+#[test]
+fn redirects_keep_the_method_and_never_leave_the_host() {
+    let mock = Mock::default().redirect("REPORT", "https://a.example.com/cal/", 308, "/cal2/").on("REPORT", "https://a.example.com/cal2/", 207, EVENTS);
+    let answer = run(dav(&mock, "REPORT", &url("https://a.example.com/cal/"), "1", "")).unwrap();
+    assert_eq!((answer.url.as_str(), answer.status), ("https://a.example.com/cal2/", 207));
+
+    let away = |location: &str| Reply { status: 302, location: Some(location.into()), body: String::new() };
+    let from = url("https://a.example.com/x");
+    assert_eq!(redirect_target(&from, &away("https://evil.example.net/x")), None);
+    assert_eq!(redirect_target(&from, &away("http://a.example.com/x")), None);
+    assert_eq!(redirect_target(&from, &away("https://a.example.com:8443/x")), None);
+    assert_eq!(redirect_target(&from, &Reply { status: 302, ..Reply::default() }), None);
+    assert_eq!(redirect_target(&from, &away("y/")), Some(url("https://a.example.com/y/")));
+
+    let looping = Mock::default().redirect("PROPFIND", "https://a.example.com/l", 302, "/l");
+    let answer = run(follow(&looping, "PROPFIND", &url("https://a.example.com/l"), "0", "")).unwrap();
+    assert_eq!((answer.status, looping.sent().len()), (302, MAX_REDIRECTS + 1));
+}
