@@ -1,0 +1,117 @@
+<body>
+  <main>
+    <div class="box" id="marks">
+      <span aria-hidden="true" class="dev-watermark dev-watermark--collapsed">
+        DEV
+      </span>
+      <span aria-hidden="true" class="dev-watermark dev-watermark--panel">
+        DEV
+      </span>
+    </div>
+    <div id="rows">
+      <section class="settings-group">
+        <div class="settings-group__header">
+          <h2 class="settings-group__title">
+            启动与语言
+          </h2>
+        </div>
+        <div class="settings-group__card">
+          <div class="settings-row">
+            <div class="settings-row__main">
+              <div class="settings-row__text">
+                <label class="settings-row__title" for="_id1_">
+                  开机自启动
+                </label>
+                <span class="settings-row__description">
+                  这是开发版，不改开机自启。请在安装的正式版里设置。
+                </span>
+              </div>
+              <div class="settings-row__control">
+                <span class="settings-switch">
+                  <input disabled="" id="_id1_" role="switch" type="checkbox">
+                  <span aria-hidden="true" class="settings-switch__track"></span>
+                </span>
+              </div>
+            </div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row__main">
+              <div class="settings-row__text">
+                <label class="settings-row__title" for="_id2_">
+                  在托盘显示图标
+                </label>
+              </div>
+              <div class="settings-row__control">
+                <span class="settings-switch">
+                  <input checked="" id="_id2_" role="switch" type="checkbox">
+                  <span aria-hidden="true" class="settings-switch__track"></span>
+                </span>
+              </div>
+            </div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row__main">
+              <div class="settings-row__text">
+                <span class="settings-row__title">
+                  界面语言
+                </span>
+              </div>
+              <div class="settings-row__control">
+                <div class="settings-select">
+                  <div class="select-control">
+                    <button aria-controls="_id3_" aria-expanded="false" aria-haspopup="listbox" aria-label="界面语言" class="select-control__trigger" role="combobox" type="button">
+                      <span>
+                        简体中文
+                      </span>
+                      <svg aria-hidden="true" class="lucide lucide-chevron-down select-control__chevron" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg">
+                        <path d="m6 9 6 6 6-6"></path>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <a class="project-link project-link--release" href="https://fuyu.ing/releases/" rel="noopener noreferrer" target="_blank">
+        <svg aria-hidden="true" class="lucide lucide-download project-link__icon" fill="none" height="18" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" viewBox="0 0 24 24" width="18" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 15V3"></path>
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <path d="m7 10 5 5 5-5"></path>
+        </svg>
+        <span class="project-link__copy">
+          <strong>
+            查看最新版本
+          </strong>
+          <span>
+            这是开发版，不检查也不安装更新。新版本请在安装的正式版里更新。
+          </span>
+        </span>
+        <svg aria-hidden="true" class="lucide lucide-external-link project-link__arrow" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg">
+          <path d="M15 3h6v6"></path>
+          <path d="M10 14 21 3"></path>
+          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+        </svg>
+      </a>
+      <div id="bar" style="position: relative; height: 40px">
+        <div class="dev-bar">
+          <span aria-hidden="true" class="dev-bar__mark">
+            DEV
+          </span>
+          <div aria-label="快捷键和提醒归谁" class="settings-choice" role="group">
+            <button aria-pressed="false" class="settings-choice__option" type="button">
+              正式版优先
+            </button>
+            <button aria-pressed="true" class="settings-choice__option settings-choice__option--active" type="button">
+              开发版优先
+            </button>
+          </div>
+          <span class="dev-bar__status" role="status">
+            正式版已让出，审批也到这里
+          </span>
+        </div>
+      </div>
+    </div>
+  </main>
+</body>
