@@ -27,7 +27,9 @@ test("a plugin does not start until the services it needs are provided, and says
   const probe = resetProbe();
   const { status, stop } = await host([{ id: "user", name: "./user.mjs" }]);
   assert.equal(probe.applied, 0);
-  assert.deepEqual(byId(status(), "user"), { id: "user", name: "./user.mjs", state: "waiting", waitingFor: ["counter"] });
+  const { usage, ...user } = byId(status(), "user");
+  assert.deepEqual(user, { id: "user", name: "./user.mjs", state: "waiting", kind: "third-party", waitingFor: ["counter"] });
+  assert.equal(usage.timers, 0);
   await stop();
 });
 

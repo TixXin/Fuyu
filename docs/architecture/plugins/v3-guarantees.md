@@ -65,10 +65,23 @@
 | 20 | 插件的监听器抛错，不影响同一事件的其他插件的监听器 | `guarantees-errors.test.mjs` › a listener that throws does not stop other plugins' listeners for the same event | 守住 |
 | 21 | 插件里没人接的 Promise 拒绝不会让宿主退出 | `guarantees-errors.test.mjs` › a stray promise rejection in a plugin does not take the host down | 守住 |
 | 22 | 插件定时器回调里没人接的异常不会让宿主退出 | `guarantees-errors.test.mjs` › an uncaught throw in a plugin's timer does not take the host down | 守住 |
+| 46 | 每个插件报出它的受管定时器、监听器、服务数，以及（近似的）CPU 和 `apply` 耗时 | `guarantees-health.test.mjs` › each plugin reports its timers, listeners, services, CPU and apply time；`main-health.test.mjs` › a window gets the host's own numbers and each plugin's usage in its snapshot | 守住 |
+| 47 | 同一个插件 60 秒内出错 5 次就被停用，状态是 `auto-disabled` 并写明原因，副作用都撤掉；不写回 `plugins.yml`，配置重读也不放出来，宿主重启后照常加载 | `guarantees-health.test.mjs` › a plugin that keeps failing is switched off for this run only, without touching plugins.yml | 守住 |
+| 48 | 出错分散在时间窗之外不会触发停用，错误数和最后一个错误照样记下 | `guarantees-health.test.mjs` › errors spread out beyond the window do not switch a plugin off | 守住 |
+| 49 | 在宿主进程里，按调用栈归到插件的没人接的 Promise 拒绝也计入出错次数，反复出现就停用这个插件，宿主不退出 | `main-health.test.mjs` › a plugin whose stray rejections keep coming is switched off and says why | 守住 |
 
 第 20 条：`vendor/cordis` 的 `emit` 打了补丁，逐个 `try/catch`，错误记到监听器所属插件的日志里（`internal/` 开头的内核事件照旧抛出），见 `vendor/README.md`。
 
-第 21、22 条：`main.mjs` 接住 `uncaughtException` 和 `unhandledRejection`，按错误栈里的文件地址归到插件（`src/host/blame.mjs`），记成 `error` 日志并经 `log` 通知交给 Rust（带 `plugin` 字段），宿主不退出。归不到任何插件的错误（内核自己的）照旧退出，让 Rust 重启宿主。同一个插件短时间内反复出错时停用它，放在第 8 步（出错处理和安全模式）。
+第 21、22 条：`main.mjs` 接住 `uncaughtException` 和 `unhandledRejection`，按错误栈里的文件地址归到插件（`src/host/blame.mjs`），记成 `error` 日志并经 `log` 通知交给 Rust（带 `plugin` 字段），宿主不退出。归不到任何插件的错误（内核自己的）照旧退出，让 Rust 重启宿主。同一个插件短时间内反复出错时停用它，见第 47–49 条，规则写在 [v3-boundary.md](v3-boundary.md)「反复出错自动停用」。
+
+## 安全模式和开发模式
+
+| # | 承诺 | 测试 | 状态 |
+|---|---|---|---|
+| 50 | 安全模式 `third-party` 只留 `essential` 和 `builtin` 插件，其余的状态是 `safe-mode` 并写明是哪一档，代码一行都不执行 | `guarantees-health.test.mjs` › safe mode third-party keeps built-in plugins and holds back the rest, saying why；`main-health.test.mjs` › the host started with --safe holds back third-party plugins and says so in ready | 守住 |
+| 51 | 安全模式 `minimal` 只留 `essential`；依赖被拦下的服务的插件是 `waiting` | `guarantees-health.test.mjs` › safe mode minimal keeps only essential plugins, and their users wait for what is held back | 守住 |
+| 52 | 宿主进程收到不认识的 `--safe` 值时照常加载全部插件，不起不来；`startHost` 直接拒绝不认识的值 | `main-health.test.mjs` › an unknown --safe value starts every plugin instead of failing the host；`guarantees-health.test.mjs` › an unknown safe mode is refused | 守住 |
+| 53 | 带 `--dev`（Node 带 `--expose-internals`）时，改了插件文件就换成新代码 | `main-health.test.mjs` › with --dev the host swaps in a plugin's new code when its file changes | 守住 |
 
 ## 宿主进程和管道
 

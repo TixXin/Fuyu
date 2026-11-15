@@ -10,7 +10,7 @@ export type SettingsCategoriesText = {
   keywords: Record<
     | "overview" | "general" | "pluginsPages" | "pluginsUpdates" | "pluginsDev" | "musicLyrics" | "musicLyricsStyle" | "clipboardHistory" | "clipboardSnippets" | "clipboardData" | "screenshotRecord" | "behavior" | "behaviorTuck" | "behaviorAlerts" | "shortcutsIsland" | "appearance" | "theme" | "themeMarket" | "shortcuts" | "todos" | "calendar" | "music" | "translation" | "clipboard"
     | "shelf" | "screenshot" | "messages" | "agents" | "agentSessions" | "agentRemote" | "agentAlerts" | "sounds" | "agentApprovals" | "agentConnect"
-    | "plugins" | "market" | "about",
+    | "plugins" | "pluginsV3" | "market" | "about",
     string
   >;
   entries: { behavior: string; appearance: string; shortcuts: string; music: string; clipboard: string; screenshot: string; plugins: string; agents: string };
@@ -57,6 +57,7 @@ export type SettingsCategoriesText = {
   agentApprovals: string;
   agentConnect: string;
   plugins: string;
+  pluginsV3: string;
   market: string;
   about: string;
 };
@@ -106,6 +107,7 @@ export const zhCN: SettingsCategoriesText = {
     agentApprovals: "批准 允许 拒绝 权限 提问 回答",
     agentConnect: "钩子 hook 安装 修复",
     plugins: "扩展 已安装 插件目录 开发者 更新 岛屿页面",
+    pluginsV3: "插件 第 3 版 内核 宿主 状态 占用 CPU 出错 停用 安全模式 开发中",
     market: "扩展 插件 下载 安装 搜索",
     about: "版本 更新 检查更新 测试版 通道 重置 退出 反馈 Star",
   },
@@ -182,6 +184,7 @@ export const zhCN: SettingsCategoriesText = {
   agentApprovals: "审批",
   agentConnect: "连接",
   plugins: "插件",
+  pluginsV3: "插件（第 3 版）",
   market: "插件市场",
   about: "关于",
 };
@@ -231,6 +234,7 @@ export const en: SettingsCategoriesText = {
     agentApprovals: "approve allow deny permission questions answer",
     agentConnect: "hooks install repair",
     plugins: "extensions installed folder developer updates island pages",
+    pluginsV3: "plugins v3 kernel host status usage cpu errors disabled safe mode preview",
     market: "extensions plugins download install browse",
     about: "version updates check beta channel reset quit feedback star",
   },
@@ -307,6 +311,7 @@ export const en: SettingsCategoriesText = {
   agentApprovals: "Approvals",
   agentConnect: "Connection",
   plugins: "Plugins",
+  pluginsV3: "Plugins (v3)",
   market: "Plugin market",
   about: "About",
 };

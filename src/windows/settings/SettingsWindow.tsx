@@ -41,6 +41,8 @@ import { useWeChatReminders } from "../../features/messages/wechat/WeChatReminde
 import { useSaveDirectorySetting } from "../../features/todos/useSaveDirectorySetting";
 import { AboutSettingsPage } from "./AboutSettingsPage";
 import { PluginsSettingsPage } from "./PluginsSettingsPage";
+import { PluginsV3SettingsPage } from "./PluginsV3SettingsPage";
+import { usePluginsV3Enabled } from "./usePluginHostStatus";
 import { PluginMarketSection } from "../../features/plugins/PluginMarketSection";
 import { useMarketInstallRequest } from "../../features/plugins/market-link/useMarketInstallRequest";
 import { useLocale, useTranslation } from "../../i18n";
@@ -64,7 +66,8 @@ export function SettingsWindow() {
   const saveDirectory = useSaveDirectorySetting();
   const [chosenCategory, setCategory] = useState<SettingsCategory>(DEFAULT_SETTINGS_CATEGORY);
   const unsupported = useUnsupportedFeatures();
-  const category = isCategoryAvailable(chosenCategory, unsupported, isMacOS) ? chosenCategory : DEFAULT_SETTINGS_CATEGORY;
+  const pluginsV3 = usePluginsV3Enabled();
+  const category = isCategoryAvailable(chosenCategory, unsupported, isMacOS, pluginsV3) ? chosenCategory : DEFAULT_SETTINGS_CATEGORY;
   const highlightSaveDirectory = saveDirectory.highlight;
   const features = useFeatureSwitches(settings, setSettings);
 
@@ -230,6 +233,7 @@ export function SettingsWindow() {
         {category === "agentApprovals" && <AgentApprovalSettings />}
         {category === "agentConnect" && <AgentConnectSettingsPage />}
         {(category === "plugins" || category === "pluginsPages" || category === "pluginsUpdates" || category === "pluginsDev") && <PluginsSettingsPage tab={category} settings={settings} managedPluginId={managedPluginId} onOpenShortcuts={openShortcuts} />}
+        {category === "pluginsV3" && <PluginsV3SettingsPage />}
         {category === "market" && (
           <PluginMarketSection onManage={managePlugin} requestedId={marketRequest.requestedId} onDismissRequest={marketRequest.dismiss} />
         )}

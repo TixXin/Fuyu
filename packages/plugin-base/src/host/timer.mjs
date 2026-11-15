@@ -1,6 +1,17 @@
+import { ownerOf } from "./owner.mjs";
+
+function owner(ctx) {
+  return ownerOf(ctx.fiber) ?? ctx.fiber.name;
+}
+
 export class Timers {
-  constructor() {
+  constructor(usage = null) {
     this.live = new Map();
+    this.usage = usage;
+  }
+
+  timed(owner, callback) {
+    return this.usage ? this.usage.wrap(owner, callback) : callback;
   }
 
   install(ctx) {
@@ -22,34 +33,36 @@ export class Timers {
   }
 
   setTimeout(ctx, callback, ms = 0, ...args) {
-    const owner = ctx.fiber.name;
+    const id = owner(ctx);
+    const run = this.timed(id, callback);
     const dispose = ctx.effect(() => {
       let done = false;
       const handle = setTimeout(() => {
         done = true;
-        this.track(owner, -1);
+        this.track(id, -1);
         void dispose();
-        callback(...args);
+        run(...args);
       }, ms);
-      this.track(owner, 1);
+      this.track(id, 1);
       return () => {
         if (done) return;
         done = true;
         clearTimeout(handle);
-        this.track(owner, -1);
+        this.track(id, -1);
       };
     }, "ctx.setTimeout()");
     return dispose;
   }
 
   setInterval(ctx, callback, ms, ...args) {
-    const owner = ctx.fiber.name;
+    const id = owner(ctx);
+    const run = this.timed(id, callback);
     return ctx.effect(() => {
-      const handle = setInterval(callback, ms, ...args);
-      this.track(owner, 1);
+      const handle = setInterval(run, ms, ...args);
+      this.track(id, 1);
       return () => {
         clearInterval(handle);
-        this.track(owner, -1);
+        this.track(id, -1);
       };
     }, "ctx.setInterval()");
   }

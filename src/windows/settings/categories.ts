@@ -37,6 +37,7 @@ export const SETTINGS_CATEGORIES = [
   "pluginsPages",
   "pluginsUpdates",
   "pluginsDev",
+  "pluginsV3",
   "market",
   "about",
 ] as const;
@@ -50,7 +51,7 @@ export const SETTINGS_GROUPS: readonly { label: SettingsGroup | null; categories
   { label: "basics", categories: ["general", "behavior", "appearance", "shortcuts"] },
   { label: "features", categories: ["todos", "calendar", "music", "translation", "clipboard", "shelf", "screenshot", "messages"] },
   { label: null, categories: ["agents"] },
-  { label: "extensions", categories: ["plugins", "market"] },
+  { label: "extensions", categories: ["plugins", "pluginsV3", "market"] },
   { label: null, categories: ["about"] },
 ];
 
@@ -121,8 +122,9 @@ const PAGE_FEATURES: Partial<Record<SettingsCategory, PlatformFeature>> = {
   agentRemote: "agentRemote",
 };
 
-export function isCategoryAvailable(category: SettingsCategory, unsupported: ReadonlySet<PlatformFeature>, mac = false): boolean {
+export function isCategoryAvailable(category: SettingsCategory, unsupported: ReadonlySet<PlatformFeature>, mac = false, pluginsV3 = false): boolean {
   if (mac && category === "screenshotRecord") return false;
+  if (category === "pluginsV3") return pluginsV3;
   const feature = PAGE_FEATURES[category];
   return feature === undefined || !unsupported.has(feature);
 }
