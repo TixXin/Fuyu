@@ -72,18 +72,19 @@
   .layer { position: absolute; inset: 0; border-radius: inherit; corner-shape: squircle; pointer-events: none; }
   .base { background: var(--base); }
   .flow { overflow: hidden; opacity: var(--flow-op); }
-  .flow i { position: absolute; width: 90%; aspect-ratio: 1; border-radius: 50%; will-change: transform; }
-  .flow i:nth-child(1) { left: -25%; top: -60%; background: radial-gradient(closest-side, var(--c1), transparent); animation: b1 19s ease-in-out infinite alternate; }
-  .flow i:nth-child(2) { left: 35%; top: -40%; background: radial-gradient(closest-side, var(--c2), transparent); animation: b2 23s ease-in-out infinite alternate; }
-  .flow i:nth-child(3) { left: 5%; top: 10%; background: radial-gradient(closest-side, var(--c3), transparent); animation: b3 27s ease-in-out infinite alternate; }
-  .flow i:nth-child(4) { left: 55%; top: 20%; background: radial-gradient(closest-side, var(--c1), transparent); opacity: .7; animation: b4 31s ease-in-out infinite alternate; }
+  .flow i { position: absolute; width: calc(90% * var(--bs, 1)); aspect-ratio: 1; border-radius: 50%; will-change: transform; }
+  .flow i:nth-child(1) { left: -25%; top: -60%; background: radial-gradient(closest-side, var(--c1), transparent); animation: b1 calc(19s / var(--spd, 1)) ease-in-out infinite alternate; }
+  .flow i:nth-child(2) { left: 35%; top: -40%; background: radial-gradient(closest-side, var(--c2), transparent); animation: b2 calc(23s / var(--spd, 1)) ease-in-out infinite alternate; }
+  .flow i:nth-child(3) { left: 5%; top: 10%; background: radial-gradient(closest-side, var(--c3), transparent); animation: b3 calc(27s / var(--spd, 1)) ease-in-out infinite alternate; }
+  .flow i:nth-child(4) { left: 55%; top: 20%; background: radial-gradient(closest-side, var(--c1), transparent); opacity: .7; animation: b4 calc(31s / var(--spd, 1)) ease-in-out infinite alternate; }
   @keyframes b1 { to { transform: translate(40%, 30%) scale(1.25); } }
   @keyframes b2 { to { transform: translate(-45%, 25%) scale(.85); } }
   @keyframes b3 { to { transform: translate(35%, -30%) scale(1.15); } }
   @keyframes b4 { to { transform: translate(-30%, -20%) scale(1.3); } }
-  .static .flow i { animation: none; }
+  .static .flow i, .island.still .flow i { animation-play-state: paused; }
+  .custom input[type=color] { width: 26px; height: 22px; border: none; padding: 0; background: none; cursor: pointer; }
   @property --ang { syntax: "<angle>"; inherits: true; initial-value: 0deg; }
-  .rim { padding: 1.5px; background: conic-gradient(from var(--ang), var(--r1), var(--r2), #fff8, var(--r3), var(--r1));
+  .rim { padding: var(--rimw, 1.5px); background: conic-gradient(from var(--ang), var(--r1), var(--r2), #fff8, var(--r3), var(--r1));
     -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude;
     opacity: var(--rim-op); animation: spin 9s linear infinite; }
   @keyframes spin { to { --ang: 360deg; } }
@@ -149,6 +150,19 @@
   <div class="group"><span>状态</span><button class="seg" data-st="run">正常</button><button class="seg" data-st="pause">贴边收起 / 游戏免打扰（暂停）</button><button class="seg" data-st="reduce">减少动态效果</button></div>
 </div>
 
+<div class="controls custom" id="customRow">
+  <div class="group"><span><b style="color:#fff">自定义（第 2 波设置项）</b></span></div>
+  <div class="group"><span>流动速度</span><input type="range" id="cu-spd" min="0" max="200" value="100" /><span id="cu-spd-v"></span></div>
+  <div class="group"><span>色彩浓度</span><input type="range" id="cu-str" min="0" max="100" value="70" /><span id="cu-str-v"></span></div>
+  <div class="group"><span>色块大小</span><input type="range" id="cu-bs" min="60" max="160" value="100" /><span id="cu-bs-v"></span></div>
+  <div class="group"><span>油膜边</span><button class="seg" data-cu="rim">开</button><input type="range" id="cu-rimw" min="1" max="3" step="0.5" value="1.5" style="width:70px" /><span id="cu-rimw-v"></span></div>
+  <div class="group"><span>扫光</span><button class="seg" data-cu="sheen">开</button></div>
+  <div class="group"><span>镜面高光</span><button class="seg" data-cu="spec">跟鼠标</button></div>
+  <div class="group"><span>展开收起</span><button class="seg" data-morph="smooth">平滑</button><button class="seg" data-morph="soft">轻弹</button><button class="seg" data-morph="liquid">液体</button></div>
+  <div class="group"><span>折叠岛</span><button class="seg" data-when="always">一直流动</button><button class="seg" data-when="expanded">只在展开时流动</button></div>
+  <div class="group"><span>自定义颜色</span><input type="color" id="cu-c1" value="#74d6ff" /><input type="color" id="cu-c2" value="#a78bfa" /><input type="color" id="cu-c3" value="#f472b6" /><button class="seg" data-cu="custom">用这三色</button></div>
+  <div class="group"><span>文字保护</span><button class="seg" data-cu="guard">自动压暗 / 提亮色块</button></div>
+</div>
 <div class="cost" id="cost"></div>
 
 <div class="stage" id="stage">
@@ -198,7 +212,14 @@
 <script>
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
-const state = { dir: "1", tier: "1B", isl: "dark", wall: "dark", bd: "real", st: "run", color: "#74d6ff", cover: null, intensity: 72, moving: false };
+const state = { dir: "1", tier: "1B", isl: "dark", wall: "dark", bd: "real", st: "run", color: "#74d6ff", cover: null, intensity: 72, moving: false,
+  cu: { spd: 100, str: 70, bs: 100, rim: false, rimw: 1.5, sheen: false, spec: false, morph: "smooth", when: "always", custom: false, guard: true } };
+const TIER_PRESET = {
+  "1A": { spd: 0, rim: false, sheen: false, spec: false, morph: "smooth" },
+  "1B": { spd: 100, rim: false, sheen: false, spec: false, morph: "smooth" },
+  "1C": { spd: 100, rim: true, sheen: true, spec: false, morph: "smooth" },
+  "1D": { spd: 100, rim: false, sheen: false, spec: false, morph: "smooth" },
+};
 const TIERS = {
   "1": [["1A", "1A 静态"], ["1B", "1B 慢流动"], ["1C", "1C 极光 + 油膜边"], ["1D", "1D 着色器"]],
   "2": [["2A", "2A 磨砂透出"], ["2B", "2B + 边缘折射"], ["2C", "2C + 高光与液体形变"]],
@@ -226,11 +247,13 @@ function rgbToHsl([r, g, b]) { r /= 255; g /= 255; b /= 255; const mx = Math.max
 function hslToHex(h, s, l) { h = ((h % 360) + 360) % 360; const c = (1 - Math.abs(2 * l - 1)) * s, x = c * (1 - Math.abs((h / 60) % 2 - 1)), m = l - c / 2;
   const [r, g, b] = h < 60 ? [c, x, 0] : h < 120 ? [x, c, 0] : h < 180 ? [0, c, x] : h < 240 ? [0, x, c] : h < 300 ? [x, 0, c] : [c, 0, x]; return rgbToHex([(r + m) * 255, (g + m) * 255, (b + m) * 255]); }
 function palette() {
+  if (state.cu.custom) return ["#cu-c1", "#cu-c2", "#cu-c3"].map(id => $(id).value);
   if (state.cover !== null) return COVERS[state.cover].pal;
   const [h, s, l] = rgbToHsl(hexToRgb(state.color));
   return [state.color, hslToHex(h + 48, Math.min(1, s * 1.05), l), hslToHex(h - 62, s * .95, Math.min(.7, l))];
 }
 function flowPalette(pal, light) {
+  if (!state.cu.guard) return pal;
   return pal.map(c => { const [h, s0, l0] = rgbToHsl(hexToRgb(c)); const s = Math.min(1, s0 * 1.1); let l = l0, out = hslToHex(h, s, l);
     if (light) { while (lum(out) < .62 && l < .97) { l += .01; out = hslToHex(h, s, l); } }
     else { while (lum(out) > .1 && l > .05) { l -= .01; out = hslToHex(h, s, l); } }
@@ -323,12 +346,13 @@ function drawGL(now) {
     gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT); gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4); });
 }
 
-function springEasing() {
-  const pts = []; const z = .52, w = 2 * Math.PI * 1.15;
+function springEasing(z = .52) {
+  const pts = []; const w = 2 * Math.PI * 1.15;
   for (let i = 0; i <= 40; i++) { const t = i / 40, wd = w * Math.sqrt(1 - z * z); const v = 1 - Math.exp(-z * w * t) * (Math.cos(wd * t) + (z * w / wd) * Math.sin(wd * t)); pts.push(v.toFixed(4)); }
   return `linear(${pts.join(",")})`;
 }
 const SPRING = springEasing();
+const SPRING_SOFT = springEasing(.75);
 
 function apply() {
   const t = state.tier, dir = state.dir, light = state.isl === "light", k = state.intensity / 100, pal = palette();
@@ -341,15 +365,21 @@ function apply() {
   $$(".swatch").forEach(b => b.classList.toggle("on", state.cover === null && b.dataset.color === state.color));
   $$(".cover").forEach(b => b.classList.toggle("on", String(state.cover) === b.dataset.cover));
   $("#moveBtn").classList.toggle("on", state.moving);
-  $("#colorGroup").style.display = $("#coverGroup").style.display = dir === "1" ? "" : "none";
+  $("#colorGroup").style.display = $("#coverGroup").style.display = $("#customRow").style.display = dir === "1" ? "" : "none";
+  const cu = state.cu;
+  $$("[data-cu]").forEach(b => b.classList.toggle("on", !!cu[b.dataset.cu]));
+  $$("[data-morph]").forEach(b => b.classList.toggle("on", b.dataset.morph === cu.morph));
+  $$("[data-when]").forEach(b => b.classList.toggle("on", b.dataset.when === cu.when));
+  ["spd", "str", "bs", "rimw"].forEach(n => { $("#cu-" + n).value = cu[n]; $("#cu-" + n + "-v").textContent = n === "rimw" ? cu[n] + "px" : cu[n] + "%"; });
   $("#backdropGroup").style.display = dir === "2" ? "" : "none";
   $("#intensityVal").textContent = state.intensity;
   $("#wall").className = "wall " + state.wall;
   const stage = $("#stage");
   stage.classList.toggle("light-island", light); stage.classList.toggle("moving", state.moving);
   stage.classList.toggle("paused", state.st !== "run");
-  stage.classList.toggle("static", t === "1A");
-  stage.classList.toggle("speclight", t === "2C" && state.st !== "reduce");
+  stage.classList.toggle("static", dir === "1" && cu.spd === 0);
+  stage.classList.toggle("speclight", (t === "2C" || (dir === "1" && cu.spec)) && state.st !== "reduce");
+  stage.style.setProperty("--spd", Math.max(cu.spd, 1) / 100); stage.style.setProperty("--bs", cu.bs / 100); stage.style.setProperty("--rimw", cu.rimw + "px");
   const [c] = COST[t]; const accent = state.cover !== null ? pal[0] : (light ? mix(state.color, "#0a3d62", .35) : state.color);
   const s = stage.style;
   const fp = flowPalette(pal, light);
@@ -359,8 +389,9 @@ function apply() {
   let base, flowOp = 0, rimOp = 0, sheen = "transparent";
   if (dir === "1") {
     base = light ? `rgba(248,248,251,${(.86 + k * .12).toFixed(2)})` : `rgba(12,12,16,${(.84 + k * .14).toFixed(2)})`;
-    flowOp = t === "1D" ? 1 : (light ? .45 + k * .35 : .35 + k * .35);
-    if (t === "1C") { rimOp = light ? .7 : .85; sheen = light ? "rgba(255,255,255,.55)" : "rgba(255,255,255,.18)"; }
+    flowOp = (t === "1D" ? 1 : (light ? .45 + k * .35 : .35 + k * .35)) * Math.min(1, cu.str / 70);
+    if (cu.rim) rimOp = light ? .7 : .85;
+    if (cu.sheen) sheen = light ? "rgba(255,255,255,.55)" : "rgba(255,255,255,.18)";
   } else {
     const a = state.bd === "real" ? (light ? .28 + k * .3 : .2 + k * .35) : (light ? .45 + k * .35 : .45 + k * .4);
     base = light ? `rgba(250,250,253,${a.toFixed(2)})` : `rgba(14,14,20,${a.toFixed(2)})`;
@@ -373,10 +404,12 @@ function apply() {
   $$(".island").forEach(isl => {
     $(".flow", isl).style.display = dir === "1" && t !== "1D" ? "" : "none";
     $("canvas.gl", isl).style.display = t === "1D" ? "" : "none";
-    $(".rim", isl).style.display = t === "1C" ? "" : "none";
-    $(".sheen", isl).style.display = t === "1C" ? "" : "none";
-    isl.style.setProperty("--ease", t === "2C" && state.st !== "reduce" ? SPRING : "cubic-bezier(0.16, 1, 0.3, 1)");
-    isl.style.setProperty("--dur", state.st === "reduce" ? "0ms" : t === "2C" ? "620ms" : "440ms");
+    $(".rim", isl).style.display = dir === "1" && cu.rim ? "" : "none";
+    $(".sheen", isl).style.display = dir === "1" && cu.sheen ? "" : "none";
+    isl.classList.toggle("still", dir === "1" && cu.when === "expanded" && isl.dataset.mode === "collapsed");
+    const m = dir === "2" ? (t === "2C" ? "liquid" : "smooth") : cu.morph;
+    isl.style.setProperty("--ease", state.st === "reduce" || m === "smooth" ? "cubic-bezier(0.16, 1, 0.3, 1)" : m === "soft" ? SPRING_SOFT : SPRING);
+    isl.style.setProperty("--dur", state.st === "reduce" ? "0ms" : m === "liquid" ? "620ms" : m === "soft" ? "520ms" : "440ms");
     setBackdrop(isl);
   });
   const lvl = COST[t]; const real = dir === "2" ? (state.bd === "real" ? "　<b>现在看到的是原生材质能拿到时的样子</b>，应用里 Windows 做不到。" : "　现在看到的是应用里透明窗口实际的样子：背后的桌面清楚地透过一层着色，没有模糊、没有折射。") : "";
@@ -411,7 +444,7 @@ function updateContrast(base, pal, flowOp, light) {
 let morphing = false;
 function morph() {
   const isl = $("#islA"); if (morphing) return; morphing = true; $("#stage").classList.add("morphing");
-  const go = mode => new Promise(res => { isl.dataset.morphing = "1"; setBackdrop(isl); isl.dataset.mode = mode;     const d = parseFloat(getComputedStyle(isl).getPropertyValue("--dur")) || 0; setTimeout(() => { delete isl.dataset.morphing; setBackdrop(isl); res(); }, d + 30); });
+  const go = mode => new Promise(res => { isl.dataset.morphing = "1"; setBackdrop(isl); isl.dataset.mode = mode; apply();    const d = parseFloat(getComputedStyle(isl).getPropertyValue("--dur")) || 0; setTimeout(() => { delete isl.dataset.morphing; setBackdrop(isl); res(); }, d + 30); });
   go("expanded").then(() => new Promise(r => setTimeout(r, 900))).then(() => go("collapsed")).then(() => { morphing = false; $("#stage").classList.remove("morphing"); });
 }
 
@@ -431,17 +464,22 @@ function loop(now) {
 document.addEventListener("click", e => {
   const b = e.target.closest("button"); if (!b) return; const d = b.dataset;
   if (d.dir) { state.dir = d.dir; state.tier = d.dir === "1" ? "1B" : "2C"; }
-  if (d.tier) state.tier = d.tier;
+  if (d.tier) { state.tier = d.tier; if (TIER_PRESET[d.tier]) Object.assign(state.cu, TIER_PRESET[d.tier]); }
+  if (d.cu) state.cu[d.cu] = !state.cu[d.cu];
+  if (d.morph) state.cu.morph = d.morph;
+  if (d.when) state.cu.when = d.when;
   if (d.isl) state.isl = d.isl;
   if (d.wall) state.wall = d.wall;
   if (d.bd) state.bd = d.bd;
   if (d.st) state.st = d.st;
-  if (d.color) { state.color = d.color; state.cover = null; }
-  if (d.cover !== undefined) state.cover = Number(d.cover);
+  if (d.color) { state.color = d.color; state.cover = null; state.cu.custom = false; }
+  if (d.cover !== undefined) { state.cover = Number(d.cover); state.cu.custom = false; }
   if (b.id === "moveBtn") state.moving = !state.moving;
   if (b.id === "morphBtn") { morph(); return; }
   apply();
 });
+["spd", "str", "bs", "rimw"].forEach(n => $("#cu-" + n).addEventListener("input", e => { state.cu[n] = Number(e.target.value); apply(); }));
+["#cu-c1", "#cu-c2", "#cu-c3"].forEach(id => $(id).addEventListener("input", () => { state.cu.custom = true; apply(); }));
 $("#intensity").addEventListener("input", e => { state.intensity = Number(e.target.value); apply(); });
 $("#stage").addEventListener("pointermove", onPointer);
 if (matchMedia("(prefers-reduced-motion: reduce)").matches) state.st = "reduce";

@@ -2,6 +2,32 @@
 
 > 日期：2026-11-15。问题：外观里的「液态玻璃」只是一块半透明着色底，怎么重做——走「流动彩色」还是「iOS 26 式玻璃」，原生材质（Windows Acrylic / Mica、Mac NSVisualEffectView）能不能给岛用，当初为什么关掉，CSS / SVG / WebGL 能做到哪、常驻占用多少。范围：本仓库 git 记录（`f1365ca7` 起）和上游 flyl1u/fly-island 的 v0.2.18 / v0.2.20 发布说明；window-vibrancy 0.6–0.8 的文档；Microsoft Learn（DWM、SetWindowDisplayAffinity）；Tauri issue；GitHub / 博客上的 Liquid Glass Web 复刻；Windows 灵动岛类开源项目（eIsland 等）。关键词：window-vibrancy acrylic lag、DWMWA_SYSTEMBACKDROP_TYPE layered region、liquid glass feDisplacementMap、apply_liquid_glass、eIsland。相关任务：C87（issue #286）。预览页：[liquid-glass-preview.html](../investigations/liquid-glass-preview.html)。
 
+## 用户决定（2026-11-15）
+
+「按推荐来，设置里要有丰富的外观配置选项，用户可以高度自定义。」即：做方向 1 流动彩色，默认 1B 慢流动，叠上方向 2 里不依赖背后内容的镜面高光、边缘亮线和展开收起形变；原生材质不在本任务里做。下面「要用户定的点」里其余几项都做成设置项，由用户自己调，默认值按推荐。
+
+### 第 2 波的设置项（草案，预览页「自定义」一行可以直接试）
+
+都放在「外观」里液态玻璃下面，随样式预设保存；`appearanceMode: "liquidGlass"` 和 `glassIntensity` 保持原样，旧数据没有新字段时按默认值读（字段名是草案，第 2 波的准备提交里定）。
+
+| 设置项 | 取值 | 默认 | 说明 |
+|---|---|---|---|
+| 风格 `glassStyle` | 静态 / 慢流动 / 极光 / 着色器（实验） | 慢流动 | 对应预览页 1A–1D；选一项会把下面几项设成那一档的组合，再单独改 |
+| 玻璃强度 `glassIntensity` | 25–100 | 72 | 已有，管底色不透明度 |
+| 颜色来源 `glassColorSource` | 主题色 / 跟封面 / 自定义 | 主题色 | 跟封面只在放歌时生效，没在放时回到主题色；换歌时过渡 |
+| 自定义颜色 `glassColors` | 3 个颜色 | 主题色派生 | 颜色来源为自定义时用 |
+| 色彩浓度 `glassColorStrength` | 0–100% | 70% | 色块不透明度 |
+| 流动速度 `glassFlowSpeed` | 0–200% | 100% | 0 等于静止 |
+| 色块大小 `glassBlobScale` | 60–160% | 100% | |
+| 折叠岛流动 `glassFlowWhen` | 一直 / 只在展开时 | 一直 | 可以再加「放歌或 Agent 运行时」，第 2 波看实现成本 |
+| 油膜边 `glassRim` + 边宽 | 开关，1–3px | 关，1.5px | 极光风格默认开 |
+| 扫光 `glassSheen` | 开关 | 关 | 极光风格默认开 |
+| 镜面高光 `glassSpecular` | 开关（跟鼠标） | 开 | 原来的 `useGlassPointer` 光斑换成它 |
+| 展开收起 `glassMorph` | 平滑 / 轻弹 / 液体 | 平滑 | 「减少动态效果」时一律平滑且无时长 |
+| 文字保护 `glassContrastGuard` | 开关 | 开 | 开着时按相对亮度压暗 / 提亮色块，保证文字 ≥ 3:1；关掉时设置里提示「文字可能看不清」，回归页按开着的状态测 |
+
+不做成设置的：暂停条件（贴边、游戏免打扰、隐藏、减少动态效果时一律停）；深浅岛各自的底色和文字色（跟着主题和 C33.9 的「岛上文字颜色」走）。设置页顶部已有的岛预览要能实时显示这些项；有一个「恢复液态玻璃默认」。
+
 ## 结论
 
 1. **当初关原生 acrylic 的原因找到了**：v0.2.2（`92dea57f`，2026-08-03）的代码注释写着——岛的窗口是一块 820×460 的透明舞台，岛本身小得多；Windows 11 的 DWM Acrylic 铺满整个 HWND，`SetWindowRgn` 裁不干净，**岛周围留下一大块模糊的矩形**。所以改成原生材质全关、只在岛元素上画 CSS。这条注释在 `d5b17c55`（去注释）时删掉了，git 说明里没写，这里补上。上游 v0.2.18 暂停液态玻璃、v0.2.20 又打开，两个发布说明都没写原因，改动只是设置里的开关，和原生材质无关。
