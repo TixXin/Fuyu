@@ -24,7 +24,7 @@ pub(super) const APP: &str = "antigravity";
 const SAVED_DIR: &str = "agent-antigravity";
 const DATA_DIRS: [&str; 3] = ["antigravity", "antigravity-ide", "antigravity-cli"];
 const HOOK_NAME: &str = "fuyu";
-const APPROVED_TOOLS: &str = "run_command";
+pub(super) const APPROVED_TOOLS: &str = "run_command";
 const MAX_AGE_MS: i64 = 24 * 60 * 60 * 1000;
 const EFFORTS: [&str; 6] = ["minimal", "low", "medium", "high", "xhigh", "max"];
 

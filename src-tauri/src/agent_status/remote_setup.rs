@@ -46,27 +46,29 @@ pub(super) struct RemoteApproval {
     pub(super) path: String,
     pub(super) question_path: String,
     pub(super) activity_path: String,
+    pub(super) antigravity_path: String,
 }
 
-fn path_of(url: Option<String>) -> Option<String> {
+pub(super) fn path_of(url: Option<String>) -> Option<String> {
     Some(url?.split_once("//")?.1.split_once('/')?.1.to_string())
 }
 
 impl RemoteApproval {
-    fn of(host: &str) -> Option<Self> {
+    pub(super) fn of(host: &str) -> Option<Self> {
         Some(Self {
             host: host.to_string(),
             path: path_of(agent_approval::hook_url(Agent::ClaudeCode))?,
             question_path: path_of(agent_approval::question_hook_url())?,
             activity_path: path_of(agent_approval::activity_hook_url())?,
+            antigravity_path: path_of(agent_approval::hook_url(Agent::Antigravity))?,
         })
     }
 
-    fn curl(&self, path: &str, marker: &str, wait: &str) -> String {
+    pub(super) fn curl(&self, path: &str, marker: &str, wait: &str, fallback: &str) -> String {
         let header = |text: String| format!(" -H '{text}'");
         format!(
             "read N P H K 2>/dev/null < \"$HOME/{APPROVAL_PORT_FILE}\" && [ \"$H\" = \"$(uname -n)\" ] && [ -n \"$K\" ] && \
-             curl -s --noproxy '*' {wait} -H \"Host: 127.0.0.1:$P\" -H \"Authorization: Bearer $K\"{}{}{} --data-binary @- \"http://127.0.0.1:$N/{path}\" || exit 1",
+             curl -s --noproxy '*' {wait} -H \"Host: 127.0.0.1:$P\" -H \"Authorization: Bearer $K\"{}{}{} --data-binary @- \"http://127.0.0.1:$N/{path}\" || {fallback}",
             header("Content-Type: application/json".into()),
             header(format!("X-Fuyu-Remote: {}", self.host)),
             header(format!("{APPROVAL_HOOK_MARKER_HEADER}: {AGENT_HOOK_SIGNATURE}{marker}")),
@@ -77,11 +79,11 @@ impl RemoteApproval {
         let waiting = format!("-f -m {}", APPROVAL_HOOK_TIMEOUT_SECONDS - 5);
         let hook = |command: String, timeout: i64| json!({ "hooks": [{ "type": "command", "command": command, "timeout": timeout }] });
         let mut entries = vec![
-            ("PermissionRequest", hook(self.curl(&self.path, "approval", &waiting), APPROVAL_HOOK_TIMEOUT_SECONDS)),
-            ("PreToolUse", hook(self.curl(&self.question_path, "question", &waiting), APPROVAL_HOOK_TIMEOUT_SECONDS)),
+            ("PermissionRequest", hook(self.curl(&self.path, "approval", &waiting, "exit 1"), APPROVAL_HOOK_TIMEOUT_SECONDS)),
+            ("PreToolUse", hook(self.curl(&self.question_path, "question", &waiting, "exit 1"), APPROVAL_HOOK_TIMEOUT_SECONDS)),
         ];
         entries[1].1["matcher"] = json!("AskUserQuestion");
-        let mut activity = hook(self.curl(&self.activity_path, "activity", "-o /dev/null --connect-timeout 1 -m 5"), 10);
+        let mut activity = hook(self.curl(&self.activity_path, "activity", "-o /dev/null --connect-timeout 1 -m 5", "exit 1"), 10);
         activity["hooks"][0]["async"] = json!(true);
         entries.extend(ACTIVITY_EVENTS.iter().map(|event| (*event, activity.clone())));
         entries
@@ -155,7 +157,7 @@ pub(super) fn install_hooks(app_dir: &Path) -> Vec<RemoteResult> {
     for_each_remote(app_dir, &|host, target| {
         let approval = RemoteApproval::of(host);
         let claude = edit(target, SETTINGS_PATH, &|text| with_remote_hooks(text, approval.as_ref()));
-        let antigravity = super::antigravity_remote::install(target).map_err(|error| format!("Antigravity: {error}"));
+        let antigravity = super::antigravity_remote::install(target, approval.as_ref()).map_err(|error| format!("Antigravity: {error}"));
         let marker = remote_reply_marker::sync(target, Change::Repair).map_err(|error| format!("Reply marker: {error}"));
         let errors: Vec<String> = [claude, antigravity, marker].into_iter().filter_map(Result::err).collect();
         if errors.is_empty() {
@@ -226,8 +228,9 @@ mod tests {
             path: "claude/permission-request".into(),
             question_path: String::new(),
             activity_path: String::new(),
+            antigravity_path: String::new(),
         };
-        let hook = format!("printf '{{}}' | ( {} ); echo \" exit=$?\"\n", approval.curl(&approval.path, "approval", "-f -m 20"));
+        let hook = format!("printf '{{}}' | ( {} ); echo \" exit=$?\"\n", approval.curl(&approval.path, "approval", "-f -m 20", "exit 1"));
         let port_file = format!("cat \"$HOME/{APPROVAL_PORT_FILE}\" 2>/dev/null; echo end\n");
         let run = |script: &str| String::from_utf8(run_ssh(&target, script).unwrap()).unwrap().trim().to_string();
 
@@ -261,6 +264,7 @@ mod tests {
             path: "claude/permission-request".into(),
             question_path: "claude/ask-user-question".into(),
             activity_path: "claude/activity".into(),
+            antigravity_path: "antigravity/pre-tool-use".into(),
         };
         let with = with_remote_hooks("{}", Some(&approval)).unwrap();
         assert_eq!(with_remote_hooks(&with, Some(&approval)).unwrap(), with);

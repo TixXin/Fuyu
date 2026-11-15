@@ -134,3 +134,6 @@
 - [ ] 回复标记：远端 `CLAUDE.md` 是指向别处的软链时改的是目标、软链还在；两家指向同一个文件时只有一段；悬空软链不改，设置页这台主机下面报「is a link to …, which does not exist」
 - [ ] 回复标记：`$CLAUDE_CONFIG_DIR`、`$CODEX_HOME`、`$DSH_HOME` 写在 `~/.bashrc` 非交互式提前 return 之前时改的是它们指的目录
 - [ ] 远程「安装/修复」：远端只有旧 rules 文件时，修复后各家提示词文件补上段落、旧文件删掉；远端从没开过回复标记时什么都不写
+- [ ] Antigravity CLI 远程审批（B36）：岛上打开审批，远程「安装/修复」后远端 `~/.gemini/config/hooks.json` 的 `fuyu` 组多了 `PreToolUse`（matcher `run_command`）；`agy` 跑命令时岛上出卡片、标着这台主机，命令行对；允许后命令执行、拒绝后 `agy` 显示拒绝理由、「终端」让 `agy` 自己问
+- [ ] 远程审批：岛关掉或这台主机在岛上关掉（`~/.fuyu/approval-port` 不在）时 `agy` 跑命令不卡、照它自己的设置走；卡片等到超时（约 145 秒）也是交回给它
+- [ ] 远程审批：岛上审批关掉时卡片不出现，`agy` 照常问自己的
