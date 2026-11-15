@@ -42,11 +42,25 @@ export function doneProblems(tasks, facts) {
   return problems;
 }
 
+export function tasksAt(root, rev, files) {
+  const tasks = [];
+  for (const file of files) {
+    const text = tryGit(["show", `${rev}:${file}`], root);
+    if (text === null) continue;
+    try {
+      tasks.push(parseTask(text));
+    } catch {
+      continue;
+    }
+  }
+  return tasks;
+}
+
 export function landingProblems(root) {
   const changedFiles = lines(tryGit(["diff", "--name-only", "origin/main...HEAD", "--", TASKS_DIR], root));
   if (changedFiles.length === 0) return [];
   const changed = new Set(changedFiles.map((file) => path.basename(file, ".md")));
-  return doneProblems(readAll(root), {
+  return doneProblems(tasksAt(root, "HEAD", changedFiles), {
     changed,
     landing: lines(tryGit(["log", "--format=%s", "origin/main..HEAD"], root)),
     history: lines(tryGit(["log", "--format=%s", "origin/main"], root)),
