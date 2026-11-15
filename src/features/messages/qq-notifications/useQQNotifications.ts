@@ -4,6 +4,7 @@ import { isTauri } from "@tauri-apps/api/core";
 import { nextQQPreview, type QQPreviewTiming } from "../qqNotificationTiming";
 import { clearQQNotifications, getQQNotificationState, launchQQ, listenQQNotificationsChanged, openQQNotificationSettings, requestQQNotificationAccess, setQQNotificationsEnabled, type QQNotificationSnapshot } from "./api";
 import { hasRequestedQQNotificationAccess, isQQNotificationsEnabled, markQQNotificationAccessRequested, saveQQNotificationsEnabled } from "./storage";
+import { useQQAutoClear } from "./useQQAutoClear";
 
 const EMPTY_SNAPSHOT: QQNotificationSnapshot = {
   revision: 0,
@@ -26,6 +27,7 @@ export function useQQNotifications(canPreview: boolean) {
   const revisionRef = useRef(-1);
   const timingRef = useRef<QQPreviewTiming | null>(null);
   const actionPending = useRef(false);
+  const autoClear = useQQAutoClear();
 
   useLayoutEffect(() => {
     canPreviewRef.current = canPreview;
@@ -143,7 +145,7 @@ export function useQQNotifications(canPreview: boolean) {
   const dismissPreview = useCallback(() => setPreviewWindow(null), []);
 
   return {
-    snapshot, busy, actionError, setEnabled, requestAccess, openSettings, refresh, clear, openQQ, dismissPreview,
+    snapshot, busy, actionError, setEnabled, requestAccess, openSettings, refresh, clear, openQQ, dismissPreview, ...autoClear,
     previewReceivedAt: canPreview ? previewWindow?.receivedAt ?? null : null,
     preview: canPreview && previewWindow
       ? snapshot.items.find((item) => item.id === previewWindow.id) ?? null

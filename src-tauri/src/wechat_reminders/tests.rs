@@ -81,6 +81,34 @@ fn disabling_clears_pending_state_and_rejects_old_listener_events() {
 }
 
 #[test]
+fn activating_wechat_forgets_only_what_arrived_before_it_when_auto_clear_is_on() {
+    let mut state = ReminderState::default();
+    state.set_enabled(true);
+    let generation = state.generation;
+    let message = |chat: &str, at| ChatMessage {
+        chat: chat.into(),
+        contact: chat.into(),
+        preview: "hi".into(),
+        unread: None,
+        at,
+    };
+    assert!(state.receive(generation, message("a", 1000)));
+    assert!(state.apply(generation, ReminderSignal::Activated, 2000));
+    assert_eq!(state.snapshot.items.len(), 1, "nothing is forgotten while auto clear is off");
+    state.auto_clear = true;
+    assert!(state.receive(generation, message("b", 3000)));
+    assert!(state.apply(generation, ReminderSignal::Activated, 2500));
+    let left: Vec<_> = state.snapshot.items.iter().map(|item| item.at).collect();
+    assert_eq!(left, [3000], "a message that arrived after the activation stays");
+    assert!(!state.apply(generation, ReminderSignal::ActivatedElsewhere, 4000));
+    assert_eq!(state.snapshot.items.len(), 1, "another app coming forward is not a sign of reading");
+    assert!(!state.forget_seen(2999));
+    assert!(state.forget_seen(3000));
+    assert!(state.snapshot.items.is_empty());
+    assert!(!state.forget_seen(5000));
+}
+
+#[test]
 fn redraws_and_window_creation_are_not_messages() {
     let mut state = ReminderState::default();
     state.set_enabled(true);

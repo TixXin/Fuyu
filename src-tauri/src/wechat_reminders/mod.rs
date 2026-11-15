@@ -88,6 +88,7 @@ impl Default for ReminderSnapshot {
 struct ReminderState {
     snapshot: ReminderSnapshot,
     generation: u64,
+    auto_clear: bool,
 }
 
 impl ReminderState {
@@ -141,8 +142,28 @@ impl ReminderState {
         }
         match signal {
             ReminderSignal::Attention => return self.remind(generation, now, None),
-            ReminderSignal::Activated if self.snapshot.pending => self.snapshot.pending = false,
+            ReminderSignal::Activated => {
+                let acknowledged = std::mem::replace(&mut self.snapshot.pending, false);
+                let forgot = self.auto_clear && self.forget_before(now);
+                if !acknowledged && !forgot {
+                    return false;
+                }
+            }
             _ => return false,
+        }
+        self.snapshot.revision += 1;
+        true
+    }
+
+    fn forget_before(&mut self, at: u64) -> bool {
+        let before = self.snapshot.items.len();
+        self.snapshot.items.retain(|item| item.at > at);
+        self.snapshot.items.len() != before
+    }
+
+    fn forget_seen(&mut self, at: u64) -> bool {
+        if !self.snapshot.enabled || !self.auto_clear || !self.forget_before(at) {
+            return false;
         }
         self.snapshot.revision += 1;
         true
@@ -306,6 +327,13 @@ pub fn set_wechat_hide_taskbar_button(enabled: bool) -> Result<ReminderSnapshot,
         let _ = service.wake.try_send(());
     }
     Ok(snapshot)
+}
+
+#[tauri::command]
+pub fn set_wechat_auto_clear(enabled: bool) -> Result<ReminderSnapshot, String> {
+    let mut state = service()?.state.lock().map_err(|_| "微信提醒状态不可用。")?;
+    state.auto_clear = enabled;
+    Ok(state.snapshot.clone())
 }
 
 #[tauri::command]
@@ -520,6 +548,7 @@ fn monitor(service: Arc<ReminderService>, receiver: mpsc::Receiver<()>) {
 
 #[tauri::command]
 pub async fn open_wechat(chat: Option<String>) -> Result<(), String> {
+    let asked_at = now_ms();
     tauri::async_runtime::spawn_blocking(move || {
         let executable = installed_executable()?;
         if activate_existing_wechat(&executable)? {
@@ -531,6 +560,9 @@ pub async fn open_wechat(chat: Option<String>) -> Result<(), String> {
                 if let Err(why) = opened {
                     eprintln!("WeChat reminders: could not open the chat ({why}); WeChat shows its last chat");
                 }
+            }
+            if let Ok(service) = service() {
+                update(service, |state| state.forget_seen(asked_at));
             }
             return Ok(());
         }
@@ -636,6 +668,7 @@ macro_rules! tauri_commands {
             crate::wechat_reminders::set_wechat_expose_ui,
             crate::wechat_reminders::set_wechat_hide_taskbar_button,
             crate::wechat_reminders::clear_wechat_reminders,
+            crate::wechat_reminders::set_wechat_auto_clear,
         ] $($rest)*)
     };
 }

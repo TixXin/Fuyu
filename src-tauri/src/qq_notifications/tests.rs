@@ -36,6 +36,29 @@ fn diagnostic_reports_never_include_chat_content() {
 }
 
 #[test]
+fn bringing_qq_forward_forgets_only_what_arrived_before_it() {
+    let item = |id: &str, created_at| QQNotification {
+        id: id.into(),
+        title: "QQ".into(),
+        body: String::new(),
+        created_at,
+    };
+    let mut state = MonitorState::default();
+    state.snapshot.enabled = true;
+    state.buffer.items = vec![item("b", 3000), item("a", 1000)];
+    state.snapshot.items = state.buffer.items.clone();
+    assert!(!state.forget_seen(2000), "nothing is forgotten while auto clear is off");
+    state.auto_clear = true;
+    assert!(state.forget_seen(2000));
+    let left: Vec<_> = state.snapshot.items.iter().map(|item| item.id.as_str()).collect();
+    assert_eq!(left, ["b"], "a notification that arrived after QQ came forward stays");
+    assert_eq!(state.buffer.items.len(), 1);
+    assert!(!state.forget_seen(2500));
+    state.snapshot.enabled = false;
+    assert!(!state.forget_seen(4000));
+}
+
+#[test]
 fn visible_qq_window_is_preferred_but_tray_hidden_main_can_be_reused() {
     let windows = [
         QQWindow {

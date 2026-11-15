@@ -17,7 +17,7 @@ use windows::{
 };
 
 use super::history::NotificationBuffer;
-use super::{publish, NotificationService, NotificationStatus, QQNotification};
+use super::{forget_seen, now_ms, publish, NotificationService, NotificationStatus, QQNotification};
 use crate::win32;
 
 const QQ_APP_ID: &str = "QQ";
@@ -48,6 +48,7 @@ pub(super) fn is_diagnostic(parts: &[String]) -> bool {
 pub(super) fn monitor(service: Arc<NotificationService>, receiver: mpsc::Receiver<()>) {
     let mut repair_generation = None;
     let mut repair_error = None;
+    let mut was_front = false;
     loop {
         let (enabled, generation) = match service.state.lock() {
             Ok(state) => (state.snapshot.enabled, state.generation),
@@ -118,12 +119,26 @@ pub(super) fn monitor(service: Arc<NotificationService>, receiver: mpsc::Receive
         if let Some((snapshot, newest)) = change {
             publish(&service, snapshot, newest);
         }
+        let front = qq_in_front();
+        if front && !was_front {
+            forget_seen(&service, now_ms());
+        }
+        was_front = front;
         if receiver.recv_timeout(Duration::from_secs(1))
             == Err(mpsc::RecvTimeoutError::Disconnected)
         {
             return;
         }
     }
+}
+
+fn qq_in_front() -> bool {
+    let process_id = win32::process::window_process_id(win32::window::foreground_window());
+    win32::process::image_path(process_id).is_some_and(|path| {
+        std::path::Path::new(&path)
+            .file_name()
+            .is_some_and(|name| name.eq_ignore_ascii_case("QQ.exe"))
+    })
 }
 
 fn qq_notification_setting() -> windows::core::Result<NotificationSetting> {

@@ -6,6 +6,7 @@ import {
   isWeChatExposeUiEnabled, isWeChatHideTaskbarButtonEnabled, isWeChatRemindersEnabled,
   saveWeChatExposeUiEnabled, saveWeChatHideTaskbarButtonEnabled, saveWeChatRemindersEnabled,
 } from "./storage";
+import { useWeChatAutoClear } from "./useWeChatAutoClear";
 
 const EMPTY_SNAPSHOT: ReminderSnapshot = {
   revision: 0, enabled: false, status: "disabled", pending: false,
@@ -28,6 +29,7 @@ export function useWeChatReminders(canPreview: boolean) {
   const attentionRef = useRef<number | null>(null);
   const messageAtRef = useRef<number | null>(null);
   const actionPending = useRef(false);
+  const autoClear = useWeChatAutoClear();
 
   useLayoutEffect(() => {
     canPreviewRef.current = canPreview;
@@ -138,7 +140,7 @@ export function useWeChatReminders(canPreview: boolean) {
 
   const showing = canPreview && snapshot.pending && previewReceivedAt !== null;
   return {
-    snapshot, busy, actionError, setEnabled, setExposeUi, setHideTaskbarButton, openWeChat, clear, dismissPreview,
+    snapshot, busy, actionError, setEnabled, setExposeUi, setHideTaskbarButton, openWeChat, clear, dismissPreview, ...autoClear,
     previewReceivedAt: showing ? previewReceivedAt : null,
     previewMessage: showing ? previewMessage : null,
   };
