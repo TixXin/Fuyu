@@ -1,9 +1,10 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
+import { join } from "node:path";
 import { createInterface } from "node:readline";
 import { fileURLToPath } from "node:url";
 import { after, test } from "node:test";
-import { PLUGINS, config, workspace } from "./workspace.mjs";
+import { PLUGINS, builtinFiles, config, workspace } from "./workspace.mjs";
 
 const MAIN = fileURLToPath(new URL("../src/host/main.mjs", import.meta.url));
 const cleanup = [];
@@ -19,7 +20,7 @@ export function apply() {
 };
 
 const ASKS = {
-  "asks.mjs": `export const name = "asks";
+  "host.mjs": `export const name = "asks";
 export async function apply(ctx) {
   ctx.rust.on("tick", (data) => void ctx.rust.call("test.heard", data));
   const pieces = [];
@@ -29,10 +30,11 @@ export async function apply(ctx) {
 `,
 };
 
-function launch(entries, files = PLUGINS) {
-  const space = workspace({ ...files, "plugins.yml": config(entries) });
+function launch(entries, files = PLUGINS, builtins = []) {
+  const space = workspace({ ...files, "plugins.yml": config(entries), ...(builtins.length ? builtinFiles(builtins, files) : {}) });
   cleanup.push(space.remove);
-  const child = spawn(process.execPath, ["--disallow-code-generation-from-strings", MAIN, "--dir", space.dir], { stdio: ["pipe", "pipe", "pipe"] });
+  const extra = builtins.length ? ["--builtins", join(space.dir, "builtins")] : [];
+  const child = spawn(process.execPath, ["--disallow-code-generation-from-strings", MAIN, "--dir", space.dir, ...extra], { stdio: ["pipe", "pipe", "pipe"] });
   cleanup.push(() => child.kill());
   const messages = [];
   const waiters = [];
@@ -76,8 +78,8 @@ test("the host says it is ready with its plugins, and answers ping and status", 
   assert.equal((await next((message) => message.id === 2)).result.length, 2);
 });
 
-test("a plugin calls Rust over stdin and stdout, sees progress, and hears Rust's events", async () => {
-  const { next, send } = launch([{ id: "asks", name: "./asks.mjs" }], ASKS);
+test("a built-in plugin calls Rust over stdin and stdout, sees progress, and hears Rust's events", async () => {
+  const { next, send } = launch([], ASKS, [{ id: "asks", kind: "builtin", file: "host.mjs" }]);
   const echo = await next((message) => message.method === "app.echo");
   assert.deepEqual(echo.params, { x: 1 });
   send({ method: "progress", params: { id: echo.id, data: "half" } });

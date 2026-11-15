@@ -23,8 +23,9 @@ declare module "cordis" {
      */
     services: ServicesApi;
     /**
-     * Calls into Fuyu's Rust side and hears its events (host only). Calls fail with `peer-gone` when Rust is not
-     * there and with `inactive` when this plugin stops; listeners go away with the plugin.
+     * Calls into Fuyu's Rust side and hears its events (host only, built-in plugins only: for any other plugin
+     * `call` and `on` fail with `forbidden`, and it uses services instead). Calls fail with `peer-gone` when Rust is
+     * not there and with `inactive` when this plugin stops; listeners go away with the plugin.
      */
     rust: RustApi;
     host: {

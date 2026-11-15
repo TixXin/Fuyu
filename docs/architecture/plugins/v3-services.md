@@ -132,7 +132,7 @@ export async function apply(ctx) {
 
 ### Rust 那条路
 
-- **宿主调 Rust**：不是服务，是 E36.3.3 的 `ctx.rust.call(方法, 参数)`。内置插件把它包成服务（`translator/v1` 的实现里调 `ctx.rust.call("translator.translate", …)`），使用者看到的仍然是服务。
+- **宿主调 Rust**：不是服务，是 E36.3.3 的 `ctx.rust.call(方法, 参数)`，**只有内置插件能用**，别的插件回 `forbidden`（E36.3.18，见 [v3-boundary.md](v3-boundary.md)「宿主发给 Rust 的请求」）。内置插件把它包成服务（`translator/v1` 的实现里调 `ctx.rust.call("translator.translate", …)`），第三方插件和窗口用的是服务。
 - **Rust 一侧怎么提供方法**（E36.3.4）：在领域的自由函数上标 `#[plugin_base::host_service("translator.translate")]`，同步或 `async` 都行，可以和 `#[tauri::command]` 叠在同一个函数上（原函数原样保留，Tauri 那边照旧）。例子是 `src-tauri/src/platform_support.rs` 的 `get_platform_support`（`app.platformSupport`）和 `src-tauri/src/plugin_kernel/methods.rs`。
 
   ```rust

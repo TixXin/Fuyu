@@ -50,6 +50,8 @@
 
 宿主里的插件用 `ctx.rust.call(方法, 参数, { timeoutMs?, onProgress? })`（`Context` 上的 `rust`，类型 `RustApi`）。方法名是点分的小驼峰（`app.version`），参数是一个 JSON 值，没有就是 `null`。
 
+**只有内置插件能用 `ctx.rust`**（2026-11-15 起，E36.3.18）：`call` 和 `on` 先沿插件的上下文找到它在宿主里的加载项，看宿主加载它时记下的来源（`sources.mjs` 的 `SOURCE`，插件自己报的不算），是 `builtin` 才放行。市场、手动安装、开发文件夹的插件，`plugins.yml` 里直接写文件的插件，以及不属于任何加载项的代码，一律回 `forbidden`（`data` 是 `{ plugin, source }`），它们经内置插件提供的服务用 Rust 的能力。同一个进程里没有真正的隔离，这是减损，不是沙箱（见 [v3-secrets.md](v3-secrets.md)）。
+
 Rust 的方法是标了 `#[plugin_base::host_service("<方法>")]` 的领域函数，`Serve::registered()` 读出全部（宏的写法见 [v3-services.md](v3-services.md)「Rust 那条路」，E36.3.4）。现在有：
 
 | 方法 | 参数 | 回答 |
@@ -81,6 +83,7 @@ Rust 怎么跑：
 | `failed` | 处理函数要的状态 Rust 没给（例如没有 `AppHandle`），或工作线程起不来 |
 | `peer-gone` | 宿主一侧：Rust 那头的管道断了，或宿主不是 Rust 拉起的（没有通道） |
 | `inactive` | 宿主一侧：发起调用的插件停用了，调用立刻失败，同时给 Rust 发 `cancel` |
+| `forbidden` | 宿主一侧：调用的插件不是内置插件（见上），不发给 Rust；`ctx.rust.on` 同样抛这个码 |
 | 处理函数自己的码 | 如翻译的 `no-secret`，原样传出 |
 
 ### 流式

@@ -121,11 +121,14 @@ fn the_real_host_starts_under_the_supervisor_reports_its_plugins_and_comes_back_
     let dir = std::env::temp_dir().join(format!("fuyu-plugin-kernel-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     std::fs::write(dir.join("hello.mjs"), "export const name = \"hello\";\nexport function apply(ctx) {\n  ctx.effect(() => {\n    const timer = setInterval(() => {}, 1000);\n    return () => clearInterval(timer);\n  });\n}\n").unwrap();
-    std::fs::write(dir.join("asks.mjs"), "import { writeFileSync } from \"node:fs\";\nexport const name = \"asks\";\nexport async function apply(ctx) {\n  const version = await ctx.rust.call(\"app.version\");\n  const echo = await ctx.rust.call(\"app.echo\", { value: [1] });\n  const platform = await ctx.rust.call(\"app.platformSupport\");\n  const missing = await ctx.rust.call(\"app.nope\").catch((error) => error.code);\n  writeFileSync(new URL(\"./asked.json\", import.meta.url), JSON.stringify({ version, echo, missing, platform: platform.os }));\n}\n").unwrap();
-    std::fs::write(dir.join("plugins.yml"), "- id: hello\n  name: ./hello.mjs\n- id: asks\n  name: ./asks.mjs\n").unwrap();
+    std::fs::create_dir_all(dir.join("builtins/asks")).unwrap();
+    std::fs::write(dir.join("builtins/builtins.json"), r#"{ "format": 1, "plugins": [{ "id": "asks", "kind": "builtin", "root": "asks", "host": "host.mjs" }] }"#).unwrap();
+    std::fs::write(dir.join("builtins/asks/host.mjs"), "import { writeFileSync } from \"node:fs\";\nexport const name = \"asks\";\nexport async function apply(ctx) {\n  const version = await ctx.rust.call(\"app.version\");\n  const echo = await ctx.rust.call(\"app.echo\", { value: [1] });\n  const platform = await ctx.rust.call(\"app.platformSupport\");\n  const missing = await ctx.rust.call(\"app.nope\").catch((error) => error.code);\n  writeFileSync(new URL(\"../../asked.json\", import.meta.url), JSON.stringify({ version, echo, missing, platform: platform.os }));\n}\n").unwrap();
+    std::fs::write(dir.join("pokes.mjs"), "import { writeFileSync } from \"node:fs\";\nexport const name = \"pokes\";\nexport async function apply(ctx) {\n  const code = await ctx.rust.call(\"app.version\").then(() => \"answered\", (error) => error.code);\n  writeFileSync(new URL(\"./poked.json\", import.meta.url), JSON.stringify({ code }));\n}\n").unwrap();
+    std::fs::write(dir.join("plugins.yml"), "- id: hello\n  name: ./hello.mjs\n- id: pokes\n  name: ./pokes.mjs\n").unwrap();
     let spec = HostSpec {
         program: node.path,
-        args: vec!["--disallow-code-generation-from-strings".into(), host_script().into(), "--dir".into(), dir.clone().into()],
+        args: vec!["--disallow-code-generation-from-strings".into(), host_script().into(), "--dir".into(), dir.clone().into(), "--builtins".into(), dir.join("builtins").into()],
         env: Vec::new(),
         current_dir: None,
     };
@@ -142,18 +145,20 @@ fn the_real_host_starts_under_the_supervisor_reports_its_plugins_and_comes_back_
 
     let HostState::Ready { pid, ready, .. } = wait_for(&states, true) else { unreachable!() };
     assert_eq!(ready["protocol"], 2);
-    assert_eq!(ready["plugins"][0]["id"], "hello");
-    assert_eq!(ready["plugins"][0]["state"], "running");
+    let hello = ready["plugins"].as_array().and_then(|plugins| plugins.iter().find(|plugin| plugin["id"] == "hello")).cloned().unwrap_or_default();
+    assert_eq!(hello["state"], "running", "{ready}");
     assert!(ready["windows"]["port"].as_u64().is_some_and(|port| port > 0));
     assert_eq!(ready["windows"]["token"].as_str().map(str::len), Some(64));
     let status = supervisor.call("status", Value::Null, Duration::from_secs(5)).unwrap();
-    assert_eq!(status[0]["state"], "running");
+    assert!(status.as_array().is_some_and(|plugins| plugins.iter().any(|plugin| plugin["id"] == "hello" && plugin["state"] == "running")), "{status}");
     let deadline = Instant::now() + Duration::from_secs(10);
-    while !dir.join("asked.json").exists() && Instant::now() < deadline {
+    while !(dir.join("asked.json").exists() && dir.join("poked.json").exists()) && Instant::now() < deadline {
         std::thread::sleep(Duration::from_millis(20));
     }
     let asked: Value = serde_json::from_str(&std::fs::read_to_string(dir.join("asked.json")).unwrap()).unwrap();
     assert_eq!(asked, serde_json::json!({ "version": { "version": env!("CARGO_PKG_VERSION"), "platform": std::env::consts::OS }, "echo": { "echo": [1] }, "missing": "no-method", "platform": if cfg!(target_os = "macos") { "macos" } else { "windows" } }));
+    let poked: Value = serde_json::from_str(&std::fs::read_to_string(dir.join("poked.json")).unwrap()).unwrap();
+    assert_eq!(poked, serde_json::json!({ "code": "forbidden" }));
 
     let killed = Instant::now();
     #[cfg(unix)]
