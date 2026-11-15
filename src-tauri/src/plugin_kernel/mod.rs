@@ -31,8 +31,35 @@ fn window_origins(dev_url: Option<&str>) -> Vec<String> {
     origins
 }
 
-fn host_args(dir: PathBuf, origins: &[String]) -> Vec<std::ffi::OsString> {
-    let mut args: Vec<std::ffi::OsString> = vec!["--disallow-code-generation-from-strings".into(), host_script().into(), "--dir".into(), dir.into(), "--watch".into()];
+const SAFE_SWITCH: &str = "FUYU_PLUGINS_V3_SAFE";
+const SAFE_MODES: [&str; 2] = ["third-party", "minimal"];
+
+#[derive(Debug, Clone, Default, PartialEq)]
+struct HostMode {
+    development: bool,
+    safe: Option<String>,
+}
+
+impl HostMode {
+    fn from(development: bool, safe: Option<&str>) -> Self {
+        let safe = safe.map(str::trim).filter(|mode| SAFE_MODES.contains(mode)).map(str::to_owned);
+        Self { development, safe }
+    }
+}
+
+fn host_args(dir: PathBuf, origins: &[String], mode: &HostMode) -> Vec<std::ffi::OsString> {
+    let mut args: Vec<std::ffi::OsString> = vec!["--disallow-code-generation-from-strings".into()];
+    if mode.development {
+        args.push("--expose-internals".into());
+    }
+    args.extend([host_script().into(), "--dir".into(), dir.into(), "--watch".into()]);
+    if mode.development {
+        args.push("--dev".into());
+    }
+    if let Some(safe) = &mode.safe {
+        args.push("--safe".into());
+        args.push(safe.into());
+    }
     for origin in origins {
         args.push("--origin".into());
         args.push(origin.into());
@@ -93,9 +120,12 @@ fn choose_node(data_dir: &std::path::Path) -> Result<ChosenNode, String> {
     Ok(chosen)
 }
 
-fn start(home: PathBuf, dir: PathBuf, origins: Vec<String>) -> Result<(), String> {
+fn start(home: PathBuf, dir: PathBuf, origins: Vec<String>, mode: HostMode) -> Result<(), String> {
     let node = choose_node(&home)?;
-    let spec = HostSpec { program: node.path, args: host_args(dir, &origins), env: Vec::new(), current_dir: None };
+    if let Some(safe) = &mode.safe {
+        eprintln!("[plugins-v3] safe mode: {safe}");
+    }
+    let spec = HostSpec { program: node.path, args: host_args(dir, &origins, &mode), env: Vec::new(), current_dir: None };
     let supervisor = Supervisor::start(spec, containment::shared(), Timing::default(), report)?;
     let mut slot = SUPERVISOR.get_or_init(Mutex::default).lock().map_err(|_| "the plugin host lock is poisoned".to_string())?;
     if STOPPING.load(std::sync::atomic::Ordering::SeqCst) {
@@ -117,10 +147,11 @@ pub(crate) fn init(app: &AppHandle) -> Result<(), String> {
     let _ = SUPERVISOR.get_or_init(Mutex::default);
     let dev_url = app.config().build.dev_url.as_ref().map(ToString::to_string);
     let origins = window_origins(dev_url.as_deref());
+    let mode = HostMode::from(cfg!(debug_assertions), std::env::var(SAFE_SWITCH).ok().as_deref());
     std::thread::Builder::new()
         .name("plugin-host-start".into())
         .spawn(move || {
-            if let Err(error) = start(home, dir, origins) {
+            if let Err(error) = start(home, dir, origins, mode) {
                 eprintln!("[plugins-v3] the plugin host did not start: {error}");
             }
         })
