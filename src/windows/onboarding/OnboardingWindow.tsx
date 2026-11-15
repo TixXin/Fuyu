@@ -18,6 +18,8 @@ import { NO_ANSWER, enabledModules, withModules, type OnboardingModule } from ".
 import { cardPlacement } from "./placement";
 import { neededPermissions, PermissionsAct } from "./PermissionsAct";
 import { PlayAct } from "./PlayAct";
+import { PushAct } from "./push/PushAct";
+import { PUSH_STEPS } from "./push/plan";
 import { ReleaseAct } from "./ReleaseAct";
 import { ShapeAct } from "./ShapeAct";
 import { Spotlight } from "./Spotlight";
@@ -28,7 +30,7 @@ import { useIslandSpot } from "./useIslandSpot";
 import "./OnboardingWindow.css";
 import { isMacOS } from "../../lib/platform";
 
-const ACTS = ["hello", "shape", "outfit", "play", "permissions", "release"] as const;
+const ACTS = ["hello", "shape", "outfit", "play", "permissions", "push", "release"] as const;
 type Act = (typeof ACTS)[number];
 
 let greeted = false;
@@ -73,11 +75,12 @@ export function OnboardingWindow() {
   const [clipboard, updateClipboard] = useClipboardSettings();
   const [launchAtStartup, updateLaunchAtStartup] = useLaunchAtStartup();
   const [index, setIndex] = useState(0);
+  const [pushStep, setPushStep] = useState(0);
   const [answer, setAnswer] = useState(NO_ANSWER);
   const light = activeTone(settings.themeMode, useSystemDark()) === "light";
   const modules = enabledModules(settings, clipboard.enabled);
   const permissionKinds = isMacOS ? neededPermissions(modules) : [];
-  const acts: readonly Act[] = ACTS.filter((name) => name !== "permissions" || permissionKinds.length > 0);
+  const acts: readonly Act[] = ACTS.filter((name) => (name !== "permissions" || permissionKinds.length > 0) && (name !== "push" || modules.has("agents")));
   const act = acts[Math.min(index, acts.length - 1)];
   const last = act === "release";
   const spot = useIslandSpot();
@@ -115,6 +118,8 @@ export function OnboardingWindow() {
     requestIslandWelcome("ready");
     closeGuide();
   };
+  const forward = () => (act === "push" && pushStep < PUSH_STEPS - 1 ? setPushStep(pushStep + 1) : setIndex(index + 1));
+  const backward = () => (act === "push" && pushStep > 0 ? setPushStep(pushStep - 1) : setIndex(index - 1));
   const leaveForSettings = (section?: SettingsFocusSection) => void settingsWindowOpening(section).then(finish);
   const cardStyle: CSSProperties = { left: placement.left, width: placement.width, top: placement.top, bottom: placement.bottom, maxHeight: placement.maxHeight };
 
@@ -149,6 +154,7 @@ export function OnboardingWindow() {
             />
           )}
           {act === "permissions" && <PermissionsAct kinds={permissionKinds} />}
+          {act === "push" && <PushAct step={pushStep} onSkip={() => setIndex(index + 1)} />}
           {act === "release" && (
             <ReleaseAct
               modules={modules}
@@ -161,8 +167,8 @@ export function OnboardingWindow() {
         <footer className="onboarding__footer">
           {last ? <span className="onboarding__esc">{text.escHint}</span> : <button className="onboarding__button onboarding__button--quiet" type="button" onClick={closeGuide}>{text.skip}</button>}
           <div className="onboarding__nav">
-            {index > 0 && <button className="onboarding__button" type="button" onClick={() => setIndex(index - 1)}>{text.back}</button>}
-            <button className="onboarding__button onboarding__button--primary" type="button" onClick={() => (last ? finish() : setIndex(index + 1))}>
+            {index > 0 && <button className="onboarding__button" type="button" onClick={backward}>{text.back}</button>}
+            <button className="onboarding__button onboarding__button--primary" type="button" onClick={() => (last ? finish() : forward())}>
               {last ? text.release.finish : text.next}
             </button>
           </div>

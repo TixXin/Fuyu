@@ -2,6 +2,7 @@ import { useState } from "react";
 import { BuiltinThemesSection } from "../../features/appearance/BuiltinThemesSection";
 import { ColorSettingsSection } from "../../features/appearance/ColorSettingsSection";
 import { IslandPreview } from "../../features/appearance/IslandPreview";
+import { GlassSettingsSection } from "../../features/appearance/GlassSettingsSection";
 import { CornerSettingsRows } from "../../features/appearance/LayoutSettingsSection";
 import { PresetSettingsSection } from "../../features/appearance/PresetSettingsSection";
 import { StyleSettingsSection } from "../../features/appearance/StyleSettingsSection";
@@ -64,6 +65,10 @@ function StyleSection({ settings, onSettingsChange }: ThemeSectionProps) {
   );
 }
 
+function GlassSection({ settings, onSettingsChange }: ThemeSectionProps) {
+  return <GlassSettingsSection settings={settings} onSettingsChange={onSettingsChange} />;
+}
+
 function PresetsSection({ presets }: ThemeSectionProps) {
   return <PresetSettingsSection {...presets} />;
 }
@@ -74,6 +79,7 @@ sections.add({ id: "theme.mode", category: "theme", order: 10, component: ThemeM
 sections.add({ id: "theme.builtin", category: "theme", order: 20, component: BuiltinSection });
 sections.add({ id: "theme.colors", category: "theme", order: 30, component: ColorsSection });
 sections.add({ id: "theme.style", category: "theme", order: 40, component: StyleSection });
+sections.add({ id: "theme.glass", category: "theme", order: 45, component: GlassSection });
 sections.add({ id: "theme.presets", category: "theme", order: 50, component: PresetsSection });
 
 export function ThemeSettingsPage({

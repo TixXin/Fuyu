@@ -42,6 +42,8 @@ const buttons = (row: HTMLElement) => [...row.querySelectorAll<HTMLButtonElement
 const click = async (button: HTMLButtonElement) => {
   await act(async () => { button.click(); await new Promise((resolve) => setTimeout(resolve, 20)); });
 };
+const wait = (ms: number) => act(async () => { await new Promise((resolve) => setTimeout(resolve, ms)); });
+const settle = async (done: () => boolean, ms = 3000) => { for (let spent = 0; !done() && spent < ms; spent += 50) await wait(50); };
 
 try {
   await act(async () => {
@@ -57,6 +59,9 @@ try {
   check(buttons(token)[0].textContent === "已复制", "The button says the secret was copied");
   await click(buttons(address)[0]);
   check(written.join("|") === "http://127.0.0.1:39271/v1" && calls.length === 1, "A plain item is still copied by the page");
+  const copyLabels = () => rows().map((row) => buttons(row).map((button) => button.textContent).join()).join("|");
+  await settle(() => copyLabels() === "复制|复制|");
+  check(copyLabels() === "复制|复制|", "Copied goes back to Copy after a moment");
   document.documentElement.dataset.testResult = "passed";
 } catch (error) {
   document.documentElement.dataset.testResult = "failed";

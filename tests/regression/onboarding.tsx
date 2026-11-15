@@ -104,7 +104,7 @@ if (!automated) {
     check(commands.some(({ command, args }) => command === "set_onboarding_card_rects" && Array.isArray(args.rects) && args.rects.length === 1),
       "The card's rectangle goes to the native side, so only the card takes the pointer");
     check(title() === "你好，这就是浮屿" && !button("上一步") && button("跳过"), "Act 1 says hello, with Skip and no Back");
-    check(document.querySelectorAll(".onboarding__dot").length === 5, "The progress shows five acts");
+    check(document.querySelectorAll(".onboarding__dot").length === 6, "The progress shows six acts, push included while AI Agent is on");
     await press("English");
     check(title() === "Hi, this is Fuyu", "Picking English switches the guide at once");
     await press("简体中文");
@@ -128,6 +128,7 @@ if (!automated) {
     await wait(20);
     check(stored().musicEnabled === true && stored().agentStatusEnabled === false && stored().todoEnabled === false && clipboard.enabled === false,
       "Answering Leisure keeps music and the shelf and takes the rest off");
+    check(document.querySelectorAll(".onboarding__dot").length === 5, "Without AI Agent there is no push act");
     check(removed() === "已卸下：待办、AI Agent、翻译、邮箱、剪贴板。点贴纸就能装回，以后在设置里也行。", "The card says what the answer took off");
     await act(async () => { persona(4).click(); });
     await wait(20);
@@ -166,6 +167,13 @@ if (!automated) {
     check(clipboard.winV === true, "Win+V is saved in the clipboard settings");
     await placeIsland(closed);
 
+    await press("下一步");
+    check(title() === "推送到手机" && document.querySelector(".push-act__step--active")?.textContent === "安装", "AI Agent being on adds the push act before the last one");
+    for (let step = 0; step < 4; step += 1) await press("下一步");
+    check(title() === "推送到手机" && document.querySelector(".push-act__step--active")?.textContent === "测试", "Next walks through the five push steps first");
+    await press("上一步");
+    check(document.querySelector(".push-act__step--active")?.textContent === "接机器人", "Back goes back one push step");
+    await press("下一步");
     await press("下一步");
     check(title() === "准备好了" && button("开始使用") && !button("跳过"), "The last act finishes instead of skipping");
     check(parseFloat(card().style.top) === closed.height + 28, "Back below the island after the practice");

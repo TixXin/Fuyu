@@ -170,7 +170,6 @@ export function compareSnapshot(root, page, variant, actual, update, darkActual 
 
 export const RECAPTURE_MS = 1000;
 export const UPDATE_RECHECK_MS = 1500;
-export const UNSETTLED_PAGES = ["list-pages.html", "music-lyrics.html", "plugin-info.html", "settings-search.html"];
 
 export async function settledSnapshot({ root, page, variant, update, darkActual, capture, sleep }) {
   const first = await capture();
@@ -182,7 +181,7 @@ export async function settledSnapshot({ root, page, variant, update, darkActual,
     const after = compareSnapshot(root, page, variant, second, false, darkActual);
     return { ...after, late: after.status === "same", actual: second };
   }
-  if (second !== first && !UNSETTLED_PAGES.includes(page.split("?")[0])) {
+  if (second !== first) {
     return { status: "unsettled", label: before.label, diff: lineDiff(first, second), actual: second };
   }
   return { ...compareSnapshot(root, page, variant, first, true, darkActual), actual: first };

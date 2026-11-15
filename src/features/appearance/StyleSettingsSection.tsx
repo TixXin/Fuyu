@@ -42,20 +42,6 @@ export function StyleSettingsSection({
           />
         }
       />
-      {settings.appearanceMode === "liquidGlass" && (
-        <SettingsSliderRow
-          title={text.glassStrength}
-          value={settings.glassIntensity}
-          min={25}
-          max={100}
-          step={1}
-          format={percent}
-          defaultValue={DEFAULT_SETTINGS.glassIntensity}
-          resetLabel={t.settings.layout.resetToDefault}
-          indent
-          onChange={(glassIntensity) => onSettingsChange({ ...settings, glassIntensity })}
-        />
-      )}
       <SettingsRow
         title={text.font}
         control={

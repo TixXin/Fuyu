@@ -27,7 +27,7 @@ localStorage.setItem("fuyu-save-directory", "");
 localStorage.setItem("fuyu-qq-notification-access-requested", "true");
 if (query.get("state") === "on") {
   const allOn = Object.fromEntries(Object.entries(DEFAULT_SETTINGS).map(([key, value]) => [key, typeof value === "boolean" ? true : value]));
-  localStorage.setItem("fuyu-settings", JSON.stringify(allOn));
+  localStorage.setItem("fuyu-settings", JSON.stringify({ ...allOn, appearanceMode: "liquidGlass", glassColorSource: "custom" }));
   localStorage.setItem("fuyu-agent-push", JSON.stringify({ enabled: true }));
   localStorage.setItem("fuyu-voice-input", JSON.stringify({ enabled: true }));
   localStorage.setItem("fuyu-agent-approval", JSON.stringify({ onIsland: true, whenInFront: true }));
@@ -130,6 +130,8 @@ try {
     check(hits("agentSessions").includes("隐藏已退出的会话"), "English words find a setting in the Chinese interface, shown in Chinese");
     await type("外观");
     check(categories().includes("appearance"), "A page's name still finds the page");
+    for (let spent = 0; document.querySelector(".settings-row--found") && spent < 4000; spent += 50) await wait(50);
+    check(!document.querySelector(".settings-row--found"), "The found row's mark fades after a moment");
 
     results.textContent = `${messages.join("\n")}\nALL PASS`;
     document.documentElement.dataset.testResult = "passed";

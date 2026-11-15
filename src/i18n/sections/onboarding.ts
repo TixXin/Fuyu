@@ -1,3 +1,5 @@
+import { en as pushEn, zhCN as pushZhCN, type OnboardingPushText } from "./onboarding-push.ts";
+
 export type OnboardingText = {
   windowTitle: string;
   stepOf: (step: number, total: number) => string;
@@ -53,6 +55,7 @@ export type OnboardingText = {
     allGranted: string;
     later: string;
   };
+  push: OnboardingPushText;
   release: {
     title: string;
     lead: string;
@@ -150,6 +153,7 @@ export const zhCN: OnboardingText = {
     allGranted: "都允许好了，你选的功能都能用。",
     later: "现在不开也行，以后在「设置 → 通用 → 系统权限」里也能开；没开的功能用到时会提醒你。",
   },
+  push: pushZhCN,
   release: {
     title: "准备好了",
     lead: "演示的内容会在引导结束时消失，岛会留在原地。",
@@ -250,6 +254,7 @@ export const en: OnboardingText = {
     allGranted: "All set: every feature you picked can work.",
     later: "You can also do this later in Settings > General > System permissions; a feature that needs one tells you when you use it.",
   },
+  push: pushEn,
   release: {
     title: "You're all set",
     lead: "The demo content goes away when the guide ends; the island stays where it is.",
