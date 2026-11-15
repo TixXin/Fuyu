@@ -12,6 +12,7 @@ export const AGENTS = {
   qwen: { label: "Qwen Code", statusLight: true, remote: false },
   trae: { label: "TRAE", statusLight: true, remote: false },
   traeCn: { label: "TRAE CN", statusLight: true, remote: false },
+  zcode: { label: "ZCode", statusLight: true, remote: false },
 } as const satisfies Record<string, AgentInfo>;
 
 export type SessionProvider = keyof typeof AGENTS;

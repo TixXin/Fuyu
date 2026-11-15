@@ -32,5 +32,6 @@
 | `codebuddy.svg` | [CodeBuddy](https://www.codebuddy.ai/) | [官网图标](https://codebuddy-1328495429.cos.accelerate.myqcloud.com/web/ide/logo.svg)（codebuddy.cn 上是同一张），2026-11-15 取得 |
 | `qwen.png` | [Qwen Code](https://github.com/QwenLM/qwen-code)（Apache-2.0） | 官方文档站的 [`favicon.png`](https://qwenlm.github.io/qwen-code-docs/favicon.png)（512×512，缩到 180×180），2026-11-15 取得 |
 | `trae.png` | [TRAE](https://www.trae.ai/) / [TRAE CN](https://www.trae.cn/) | 官网图标（[国际版](https://lf16-web-neutral.traecdn.ai/obj/trae-ai-static/trae_website/favicon.png)和[国内版](https://lf-cdn.trae.com.cn/obj/trae-com-cn/trae_website_prod_cn/favicon.png)是同一张，48×48），TRAE 和 TRAE CN 共用，2026-11-15 取得 |
+| `zcode.png` | [ZCode](https://zcode.z.ai/) | 开源仓库 [zai-org/ZCode](https://github.com/zai-org/ZCode) 里桌面版的应用图标 `packages/desktop/build/icon.png`（1024×1024，缩成 48×48），2026-11-15 取得 |
 
-QQ、微信、QQ 邮箱的品牌标识及相关权利归腾讯及对应权利人所有；网易邮箱标识归网易所有，Gmail、Antigravity 标识归 Google 所有，Outlook 标识归 Microsoft 所有；Claude 标识归 Anthropic 所有，OpenAI 标识归 OpenAI 所有，WorkBuddy、CodeBuddy 标识归腾讯所有，Qoder、Qwen 标识归阿里巴巴所有，TRAE 标识归字节跳动所有，DeepSeek 标识归杭州深度求索所有，opencode 标识归 opencode 项目所有。图标随应用打包，不在运行时请求远程图片。
+QQ、微信、QQ 邮箱的品牌标识及相关权利归腾讯及对应权利人所有；网易邮箱标识归网易所有，Gmail、Antigravity 标识归 Google 所有，Outlook 标识归 Microsoft 所有；Claude 标识归 Anthropic 所有，OpenAI 标识归 OpenAI 所有，WorkBuddy、CodeBuddy 标识归腾讯所有，Qoder、Qwen 标识归阿里巴巴所有，TRAE 标识归字节跳动所有，DeepSeek 标识归杭州深度求索所有，opencode 标识归 opencode 项目所有，ZCode 标识归北京智谱华章科技所有。图标随应用打包，不在运行时请求远程图片。

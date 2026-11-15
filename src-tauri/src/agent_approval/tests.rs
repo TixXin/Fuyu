@@ -524,6 +524,11 @@ fn new_agents_have_their_own_routes_and_answers() {
 
     let workbuddy: Value = serde_json::from_str(&permission_response(Agent::Workbuddy, Some(Decision::Allow), None, None)).unwrap();
     assert_eq!(workbuddy["hookSpecificOutput"]["decision"]["behavior"], "allow");
+    assert_eq!(route("/zcode/permission-request"), Some((Agent::Zcode, Kind::Permission)));
+    assert_eq!(serde_json::to_value(Agent::Zcode).unwrap(), json!("zcode"));
+    assert!(!Agent::Zcode.lacks_waiting_event());
+    let zcode: Value = serde_json::from_str(&permission_response(Agent::Zcode, Some(Decision::Deny), Some("不行"), None)).unwrap();
+    assert_eq!(zcode["hookSpecificOutput"]["decision"]["behavior"], "deny");
     for (agent, id) in [(Agent::Trae, "trae"), (Agent::TraeCn, "traeCn")] {
         assert_eq!(route(&format!("/{id}/pre-tool-use")), Some((agent, Kind::Permission)));
         assert_eq!(serde_json::to_value(agent).unwrap(), json!(id));

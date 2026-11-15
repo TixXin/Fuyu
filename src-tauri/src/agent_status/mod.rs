@@ -58,6 +58,7 @@ mod qoder;
 mod codebuddy;
 mod qwen;
 mod trae;
+mod zcode;
 
 use serde::Serialize;
 use serde_json::{json, Value};
