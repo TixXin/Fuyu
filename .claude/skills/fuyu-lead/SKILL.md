@@ -2,11 +2,11 @@
 name: fuyu-lead
 description: >
   ALWAYS invoke BEFORE acting as a 总控 or a 组长 (lead) session in the Fuyu repo: setting up a new
-  总控 session for a long-term area, opening a 组长 for a multi-part piece of work, planning it and
-  showing the plan, dispatching task sessions with start_session, reviewing, landing and archiving
-  what they did, including dispatching just one more session when this session has already
-  dispatched one. Do NOT dispatch a second session without loading this skill first. Do NOT invoke
-  for a single change one session can finish, or for doing one task yourself (fuyu-task).
+  总控 session for a long-term area, opening a 组长 for a piece of work or handing a task to one, planning
+  it and showing the plan, dispatching task sessions with start_session, reviewing, landing and
+  archiving what they did, including dispatching a single task session for one small task. Do NOT
+  dispatch a session without loading this skill first. Do NOT invoke for a change this session
+  makes itself, or for doing one task yourself (fuyu-task).
   触发：开个总控、新建总控、/fuyu-lead 总控 <领域>、开个组长、主 agent、主会话、派子会话、
   并行处理、统筹、拆开并行做、再派一个、收口、归档做完的子会话、/fuyu-lead <主题>。
 ---
@@ -16,8 +16,8 @@ description: >
 三种角色，结构和命名的来由见 `docs/research/session-hierarchy.md`「结构」「命名」：
 
 - **总控** `Fuyu-[总控] <领域>`：每个长期领域一个，在侧边栏顶层并置顶，由用户自己开，长期存在。只聊天、规划、派会话、检查，不写代码。`Fuyu-[总控] 全局` 另管整批合入、拦发版和跨领域协调，`Fuyu-[总控] issue 和 PR` 管分 issue 和外部 PR。
-- **组长** `[任务] <主题>`：总控为一件大事开的统筹会话，规划、派任务会话、收口，不写代码，做完就归档。
-- **任务会话** `[<任务编号>] <一句话>`，还没建任务的写 `[#<issue 号>]`；等用户挑方案或只查不改的写 `[预览]`、`[调研]`、`[排查]` 加主题。真正改代码的是它们。
+- **组长** `[任务] <主题>`：总控为一件事开的统筹会话，规划、派任务会话、收口，不写代码，做完就归档。
+- **任务会话** `[<任务编号>] <一句话>`，还没建任务的写 `[#<issue 号>]`；等用户挑方案或只查不改的写 `[预览]`、`[调研]`、`[排查]` 加主题。真正改代码的是它们；它们只由组长派，挂在组长下面（用户定的）。
 - 其他长期存在、要置顶的会话写 `Fuyu-[长期任务] <主题>`，例如 `Fuyu-[长期任务] 发版`。
 
 前缀一律用方括号，置顶的会话前面再加 `Fuyu-`（用户定的）。前缀里不加空格，也不加「 - 」：侧边栏窄，标题超出的部分会被截掉。
@@ -48,10 +48,11 @@ description: >
 2. 如果本会话是别的会话用 `start_session` 开的（会挂在开它的会话下面，那个会话归档时会把它一起带走），先 `detach_session`（`self`）拆到顶层。然后 `set_pinned` 把 `self` 置顶：置顶的会话不会被自动归档。不建分区、不把总控移进分区（用户定的）：移进分区会取消置顶。
 3. 读 `AGENTS.md`、`docs/tasks/README.md`、`docs/architecture/workflow.md` 和 `docs/research/session-hierarchy.md`，用 `pnpm tasks` 看这个领域有哪些进行中和待做的任务，再用一两句话告诉用户：已经就位，手上有哪些事，然后等用户吩咐。这一轮不改代码、不派会话。
 
-## 1. 总控接到一件事：直接派，还是开组长
+## 1. 总控接到一件事：交给组长
 
-- **一两个任务会话能做完的，总控直接派**：照第 2 节的第 3～5 步做（认领、派会话、收口），派出的会话挂在总控下面，只有两层。
-- **要分几批、派三个以上会话的，才开组长**。小事不开：每个组长都在侧边栏多占一行，还要人收口。开组长用 `start_session`：
+- **总控不直接派任务会话**（用户定的）：任务会话挂在总控下面，侧边栏里就分不出哪几个会话在做同一件事，置顶区也越堆越长。只有一个任务的小事也走组长。
+- **先看有没有能接的组长**：这个总控已经开着主题相近的组长，就 SendMessage 把新任务交给它；没有才新开。同一领域的零散小任务攒给一个组长，不各开一个：每个组长都在侧边栏占一行，还要人收口。
+- 开组长用 `start_session`：
   - `initiation: "user_asked"`，`context: "fresh"`，`use_worktree: false`（仓库规则：不开 worktree、不切分支）
   - `name` 用 `<主题>-lead`，`title` 用 `[任务] <主题>`
   - `background` 写清起因（issue、用户的原话、已经回复过什么、已经建了哪些任务），组长看不到总控的对话
@@ -59,7 +60,7 @@ description: >
 - **开完马上 `detach_session` 把组长拆到顶层**：不拆的话组长挂在总控下面，它派的任务会话就成了第三层，侧边栏只有顶层能折叠，第三层收不起来。拆完总控不再收到组长每轮结束的通知，所以要靠上一条写进简报的 SendMessage；组长不置顶，做完由总控按 id `archive_session`，它派的任务会话会一起归档。
 - 开完组长跟用户说一句：组长在整理计划，计划好了会在它的会话里等用户确认。
 
-## 2. 组长的简报（照这个写；总控直接派时从第 3 步做起）
+## 2. 组长的简报（照这个写）
 
 1. **第一轮只规划**：不改代码、不建 issue、不派会话。读 `AGENTS.md`、子目录的 `AGENTS.md`、`docs/tasks/README.md`、`docs/architecture/workflow.md`，主题相关的 skill（例如 agent 适配要先加载 `fuyu-agent-harness`）、现状文档，还有 `pnpm tasks show` / `gh issue view` 查到的相关任务和 issue。
 2. **计划要写清**：
@@ -76,4 +77,4 @@ description: >
 ## 3. 用户怎么快速用
 
 - 开一个总控：在侧边栏新建会话，第一句输入 `/fuyu-lead 总控 <领域>`，它按第 0 节就位。
-- 在总控里说「处理 <主题>」或输入 `/fuyu-lead <主题>`，总控按第 1 节决定直接派还是开组长。
+- 在总控里说「处理 <主题>」或输入 `/fuyu-lead <主题>`，总控按第 1 节交给已有的组长或新开一个。
