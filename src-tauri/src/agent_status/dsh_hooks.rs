@@ -21,14 +21,7 @@ fn hooks_file(env: &HookEnv) -> PathBuf {
 }
 
 fn installed_homes(home_dir: &Path) -> Vec<PathBuf> {
-    let from_env = std::env::var_os("DSH_HOME").map(PathBuf::from).filter(|home| home.is_absolute());
-    let mut homes: Vec<PathBuf> = Vec::new();
-    for home in from_env.into_iter().chain([home_dir.join(".dsh"), home_dir.join(".dsh-beta")]) {
-        if home.is_dir() && !homes.contains(&home) {
-            homes.push(home);
-        }
-    }
-    homes
+    dsh::homes(home_dir).into_iter().filter(|home| home.is_dir()).collect()
 }
 
 pub(super) fn hook_entries(env: &HookEnv) -> Vec<(&'static str, Value)> {

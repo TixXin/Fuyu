@@ -3,38 +3,16 @@ use std::path::Path;
 use super::hooks_state::HookInstallState;
 use super::sessions::AgentSessionSummary;
 use super::notifications::{is_waiting, saved_notifications, NOTIFICATIONS_DIR};
-use super::{antigravity, claude_code, codex, dsh, dsh_hooks, opencode, workbuddy};
+use super::{antigravity, claude_code, codex, dsh, opencode, workbuddy};
 
 pub(super) const HARNESSES: &[Harness] = &[
     codex::HARNESS,
     claude_code::HARNESS,
     workbuddy::HARNESS,
     antigravity::HARNESS,
-    DSH,
+    dsh::HARNESS,
     opencode::HARNESS,
 ];
-
-const DSH: Harness = Harness {
-    id: dsh::PROVIDER,
-    hooks: Some(Hooks {
-        install: dsh_hooks::install_hooks,
-        check: dsh_hooks::hooks_state,
-    }),
-    status_light: Some(StatusLight {
-        running_marker: "agent-dsh-running.flag",
-        running_hold: "agent-dsh-running-hold.flag",
-        saved_inputs: &[],
-    }),
-    sessions: Some(dsh_sessions),
-    remote: None,
-};
-
-fn dsh_sessions(roots: &ScanRoots, now: i64, window_ms: i64) -> Vec<AgentSessionSummary> {
-    if roots.local_app_dir.is_none() {
-        return Vec::new();
-    }
-    dsh::sessions(roots.home_dir, now, window_ms)
-}
 
 pub(super) struct Harness {
     pub(super) id: &'static str,
@@ -113,7 +91,9 @@ pub(super) fn is_mirrored_file(remote: &str) -> bool {
     with_remote().any(|(_, files)| {
         files.files.contains(&remote)
             || (files.session_dirs.iter().any(|dir| remote.starts_with(dir)) && remote.ends_with(".jsonl"))
-            || (files.checkpoint_dirs.iter().any(|dir| remote.starts_with(dir)) && remote.ends_with(".json"))
+            || files.checkpoint_dirs.iter().any(|dir| {
+                remote.strip_prefix(dir).is_some_and(|name| name.ends_with(".json") && !name.contains('/'))
+            })
     })
 }
 
@@ -153,7 +133,7 @@ mod tests {
             ["codex", "claudeCode", "workbuddy", "antigravity", "dsh"]
         );
         assert_eq!(with_hooks().map(|(id, _)| id).collect::<Vec<_>>(), ["codex", "claudeCode", "workbuddy", "antigravity", "dsh"]);
-        assert_eq!(remote_ids(), ["codex", "claudeCode"]);
+        assert_eq!(remote_ids(), ["codex", "claudeCode", "dsh"]);
     }
 
     #[test]
@@ -200,5 +180,8 @@ mod tests {
         assert!(is_mirrored_file(".codex/session_index.jsonl"));
         assert!(!is_mirrored_file(".claude/projects/p/a.json"));
         assert!(!is_mirrored_file(".workbuddy/projects/p/a.jsonl"));
+        assert!(is_mirrored_file(".dsh/storages/session_projcache/sessions/s.json"));
+        assert!(!is_mirrored_file(".dsh/storages/session_projcache/sessions/s.jsonl"));
+        assert!(!is_mirrored_file(".dsh/storages/session_projcache/sessions/p/s.json"));
     }
 }

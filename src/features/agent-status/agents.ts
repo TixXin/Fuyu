@@ -5,7 +5,7 @@ export const AGENTS = {
   claudeCode: { label: "Claude Code", statusLight: true, remote: true },
   workbuddy: { label: "WorkBuddy", statusLight: true, remote: false },
   antigravity: { label: "Antigravity", statusLight: true, remote: false },
-  dsh: { label: "DeepSeek Harness", statusLight: true, remote: false },
+  dsh: { label: "DeepSeek Harness", statusLight: true, remote: true },
   opencode: { label: "opencode", statusLight: false, remote: false },
 } as const satisfies Record<string, AgentInfo>;
 
