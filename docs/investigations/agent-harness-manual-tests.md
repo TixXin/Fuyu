@@ -1,6 +1,6 @@
 # Agent 适配真机实测清单
 
-#179（协作者 ShengLin1001 提的）和 2026-11-15 这一轮 Agent 适配（B26、B27、B28、B30、B32、B33、B44，以及 B29、B34–B37、B46、B48、B49、B52、B53）里只写了代码和单元测试、没在真机上跑过的项目，合成这一份，按要在哪台机器上测分组。任务是 B47。
+#179（协作者 ShengLin1001 提的）和 2026-11-15 这一轮 Agent 适配（B26、B27、B28、B30、B32、B33、B44，以及 B29、B34–B37、B46、B48、B49、B52–B54）里只写了代码和单元测试、没在真机上跑过的项目，合成这一份，按要在哪台机器上测分组。任务是 B47。
 
 怎么用：
 - 测过一项就勾掉，后面写日期、版本和结果；测出问题另开 issue，链接写在那一项后面。
@@ -115,6 +115,15 @@
 - [ ] 打开回复标记：`~/.kimi-code/AGENTS.md` 末尾有岛的那段，回复末行能认出来（B52）
 - [ ] 设 `KIMI_CODE_HOME` 到别处再测一遍「安装/修复」和开会话（B52）
 
+### MiMo Code（B54，本机没装，装上后测）
+
+- [ ] 「安装/修复」后钩子卡片里 MiMo Code 是已安装；`~/.config/mimocode/plugin/fuyu-island.js` 存在，路由是 `/mimo/permission`（B54）
+- [ ] 问一句：Agent 页出现会话，标题是 MiMo 生成的（生成前是第一句提问），目录、模型、最近提问和回复对；跑命令时转圈、显示当前工具，回复完变完成（B54）
+- [ ] 让它派一个子代理：会话的最近回复和状态跟主代理走，不被子代理的消息顶掉（B54）
+- [ ] 跑一条要授权的命令：岛上出卡片，允许 / 拒绝后 MiMo 照做，拒绝理由显示在 MiMo 里（B54）
+- [ ] 打开回复标记：`~/.config/mimocode/AGENTS.md` 末尾多一段（B54）
+- [ ] 对一遍会话库的字段名：助手消息的模型字段、主代理的 `message.agent_id` 是不是 `main`（只看字段名，不抄内容）（B54）
+
 ### Codex 和 Claude 桌面 App（B46）
 
 - [ ] 开一个 Codex 会话（CLI 或 Codex Desktop）：Agent 页列出来，标题是 Codex 起的名字（`threads.name` / `session_index.jsonl`），模型、档位对（B46）
@@ -211,6 +220,10 @@
 ### Kimi Code（B52）
 
 - [ ] 同 Mac 一节的「安装/修复」、开会话、等你、打断四项，钩子经 cmd.exe 跑 `.cmd` / `.ps1`（B52）
+
+### MiMo Code（B54）
+
+- [ ] 数据和配置目录是不是也在 `%USERPROFILE%\.local\share\mimocode`、`%USERPROFILE%\.config\mimocode`；再过一遍 Mac 一节的「安装/修复」、问一句、授权三项（B54）
 
 ## Linux 服务器（SSH 远程，B26）
 

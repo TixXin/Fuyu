@@ -1,6 +1,6 @@
 # 各家 AI 代理的接入现状
 
-岛接了十三家 AI 代理（harness）：Claude Code、Codex、WorkBuddy（国内版和 WorkBuddy AI）、Antigravity、DeepSeek Harness（DSH）、opencode，钩子照抄 Claude Code 的三家 Qoder、CodeBuddy Code、Qwen Code（B48），TRAE、TRAE CN（B29），ZCode（B53）和 Kimi Code（B52）。后七家各有一节在文末。这张表记每家有哪些形态、数据在哪，以及每项功能做到哪一步。改了哪家的哪一项，就在同一个提交里改这里。接入新的一家或给已有功能扩一家，按 `.claude/skills/fuyu-agent-harness/SKILL.md` 的清单走。
+岛接了十四家 AI 代理（harness）：Claude Code、Codex、WorkBuddy（国内版和 WorkBuddy AI）、Antigravity、DeepSeek Harness（DSH）、opencode，钩子照抄 Claude Code 的三家 Qoder、CodeBuddy Code、Qwen Code（B48），TRAE、TRAE CN（B29），ZCode（B53）、Kimi Code（B52）和 MiMo Code（B54）。后八家各有一节在文末。这张表记每家有哪些形态、数据在哪，以及每项功能做到哪一步。改了哪家的哪一项，就在同一个提交里改这里。接入新的一家或给已有功能扩一家，按 `.claude/skills/fuyu-agent-harness/SKILL.md` 的清单走。
 
 核对日期：2026-11-15（按 `main` 上的代码）。各家的调研和来源见 [agent-harnesses.md](../../research/agent-harnesses.md)，用户可见的行为见 [agent-status-hooks.md](../../features/agent-status-hooks.md)。标「未实测」的项都列在实测清单 #179 里。
 
@@ -137,3 +137,21 @@ TRAE IDE 的国际版和 CN 版按用户的决定分成两家：`trae`（显示�
 | SSH 远程、cc-connect | ✗（有 Linux CLI，能做）/ ✗（cc-connect 支持 Kimi，岛这边没加） |
 
 不接的：旧版 Python `kimi-cli`（`~/.kimi/`，已归档，新版第一次启动会迁移）；Kimi 桌面版内嵌的运行时（它的 `config.toml` 由桌面写、会话索引在桌面自己的 sqlite 里，核实不了桌面会不会覆盖配置、内嵌运行时会不会跑外部钩子）。
+
+## MiMo Code（B54）
+
+小米 MiMo Code（终端 CLI，opencode 的分支），id `mimo`。代码在 `mimo.rs`。按源码写，没在真机上跑过（#179）。
+
+照 opencode 1.x 的接法，两样都复用：会话用 `opencode.rs` 的读取器（`message` 表有 `agent_id` 列时只看主代理的消息，`title_source` 为 `fallback` 的占位标题当没有标题，对 opencode 没影响）；插件是岛的 opencode 插件复制一份，只换审批路由和通知文件名前缀。
+
+| 层 | MiMo Code |
+|---|---|
+| 目录 | 和 opencode 同一套规则，名字是 `mimocode`：数据 `~/.local/share/mimocode/`（`XDG_DATA_HOME`），配置 `~/.config/mimocode/`（`XDG_CONFIG_HOME`），设了 `MIMOCODE_HOME` 就用它下面的 `data/`、`config/`；Windows、macOS 上也是这两个位置 |
+| 会话 | `<数据>/mimocode.db`（`MIMOCODE_DB` 优先），opencode 1.x 的表，只读；非 latest / beta / prod 渠道的库（`mimocode-<渠道>.db`）不读 |
+| 插件 | `<配置>/plugin/fuyu-island.js`；配置或数据目录在才装 |
+| 状态灯 | ✗ 和 opencode 一样，三态从会话库读 |
+| 等你 | 插件收到 `permission.asked` 时写 `agent-notifications/mimo-plugin-<id>.json` |
+| 岛上审批 | ✓ `/mimo/permission`，回 `once` / `always` / `reject`；没有 opencode 2.x 那样的后台服务，不轮询 |
+| 回复标记 | `<配置>/AGENTS.md`（MiMo 也读 `~/.claude/CLAUDE.md`，标记一样，不冲突） |
+| 点会话跳过去 | ◐ 通用的终端窗口匹配 |
+| 判断会话已退出、用量环、SSH 远程、cc-connect | ✗ / ✗ / ✗（有 Linux CLI，能做）/ — |
