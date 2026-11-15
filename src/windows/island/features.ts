@@ -1,6 +1,9 @@
 import type { MessageSource } from "../../features/messages/messagePreview";
 import type { PlatformFeature } from "../../lib/platform.ts";
-import type { BuiltinPage, IslandPage, PluginPageId } from "./types";
+import { BUILTIN_PAGES, pageSlot, type HeaderDotPage } from "./slots/pageSlot.ts";
+import type { IslandPage, PluginPageId } from "./types";
+
+export type { HeaderDotPage };
 
 export type IslandFeatures = {
   todo: boolean;
@@ -41,27 +44,38 @@ export function isPluginPage(page: IslandPage): page is PluginPageId {
   return page.startsWith("plugin:");
 }
 
-const BUILTIN_PAGE_ORDER: BuiltinPage[] = ["todo", "calendar", "music", "clipboard", "shelf", "screenshots", "timer", "qq", "agents", "translation"];
 const SOURCE_ORDER: MessageSource[] = ["qq", "wechat", "qqMail"];
-export const HEADER_DOT_PAGES = ["todo", "music", "calendar", "clipboard", "shelf", "screenshots", "timer"] as const satisfies readonly BuiltinPage[];
-export type HeaderDotPage = (typeof HEADER_DOT_PAGES)[number];
+
+const byShortcut = <Item extends { shortcutOrder?: number }>(items: readonly Item[]) =>
+  [...items].sort((a, b) => (a.shortcutOrder ?? Number.MAX_SAFE_INTEGER) - (b.shortcutOrder ?? Number.MAX_SAFE_INTEGER));
+
+const isHeaderDot = (page: (typeof BUILTIN_PAGES)[number]): page is Extract<(typeof BUILTIN_PAGES)[number], { headerDot: true }> => page.headerDot === true;
+
+export const HEADER_DOT_PAGES: readonly HeaderDotPage[] = byShortcut(BUILTIN_PAGES.filter(isHeaderDot)).map((page) => page.id);
+
+const pageItem = (page: IslandPage) => pageSlot.items().find((item) => item.id === page);
 
 function pageOrder(features: IslandFeatures): IslandPage[] {
-  return [...BUILTIN_PAGE_ORDER, ...(features.pluginPages ?? [])];
+  return [...pageSlot.items().map((item) => item.id as IslandPage), ...(features.pluginPages ?? [])];
 }
 
 function shortcutOrder(features: IslandFeatures): IslandPage[] {
-  return ["agents", ...HEADER_DOT_PAGES, ...(features.pluginPages ?? []), "qq", "translation"];
+  const items = byShortcut(pageSlot.items());
+  const afterDots = items.reduce((end, item, index) => (item.headerDot ? index + 1 : end), 0);
+  const pages = items.map((item) => item.id as IslandPage);
+  return [...pages.slice(0, afterDots), ...(features.pluginPages ?? []), ...pages.slice(afterDots)];
 }
 
 export function isPageEnabled(page: IslandPage, features: IslandFeatures): boolean {
   if (isPluginPage(page)) return features.pluginPages?.includes(page) ?? false;
-  return page === "qq" ? features.qq || features.wechat || features.qqMail : features[page] === true;
+  const item = pageItem(page);
+  return item !== undefined && (item.enabled === undefined || item.enabled(features) === true);
 }
 
 export function resolveIslandPage(page: IslandPage, features: IslandFeatures): IslandPage | null {
   if (isPageEnabled(page, features)) return page;
-  if (page === "screenshots" && features.clipboardScreenshots) return "clipboard";
+  const fallback = pageItem(page)?.fallback?.(features);
+  if (fallback) return fallback;
   return pageOrder(features).find((candidate) => isPageEnabled(candidate, features)) ?? null;
 }
 

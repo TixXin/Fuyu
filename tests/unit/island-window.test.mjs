@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import "./islandPageSlot.mjs";
 import {
   MAX_COLLAPSED_ISLAND_WIDTH,
   MIN_COLLAPSED_ISLAND_WIDTH,

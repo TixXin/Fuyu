@@ -2,6 +2,7 @@ import { act, StrictMode, useState, type CSSProperties } from "react";
 import type { Root } from "react-dom/client";
 import { I18nProvider } from "../../src/i18n";
 import { IslandShell } from "../../src/windows/island/IslandShell";
+import "../../src/windows/island/slots/pages";
 import type { MediaState } from "../../src/features/media/api";
 import type { CurrentLyric } from "../../src/features/media/lyrics/useCurrentLyric";
 import type { MessagePreview } from "../../src/features/messages/messagePreview";
