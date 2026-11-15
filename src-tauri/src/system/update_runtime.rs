@@ -37,6 +37,7 @@ pub struct UpdateSnapshot {
     pub channel: Option<String>,
     pub started_at: i64,
     pub check_failures: u32,
+    pub download_source: Option<String>,
 }
 
 pub(super) struct Runtime<T> {
@@ -63,6 +64,7 @@ impl<T> Runtime<T> {
                 channel: None,
                 started_at: now(),
                 check_failures: 0,
+                download_source: None,
             },
             pending: None,
             pending_channel: None,
@@ -101,6 +103,7 @@ impl<T> Runtime<T> {
             self.pending = Some(update);
             if !same {
                 self.ready = None;
+                self.snapshot.download_source = None;
             }
             self.pending_channel.clone_from(&self.snapshot.channel);
             self.snapshot.next_version = version;
@@ -110,6 +113,7 @@ impl<T> Runtime<T> {
             self.pending = None;
             self.pending_channel = None;
             self.ready = None;
+            self.snapshot.download_source = None;
             self.snapshot.next_version.clear();
             self.snapshot.notes.clear();
             self.snapshot.stage = Stage::Latest;
@@ -320,5 +324,6 @@ mod tests {
         assert!(value["lastAttemptAt"].is_null());
         assert!(value["lastCheckedAt"].is_null());
         assert_eq!(value["checkFailures"], 0);
+        assert!(value["downloadSource"].is_null());
     }
 }
