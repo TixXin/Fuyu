@@ -32,6 +32,7 @@ export const PAGES = [
   "music-lyrics.html",
   "notification-startup.html",
   "onboarding.html?test=1",
+  "plugin-info.html",
   "plugin-menus.html",
   "plugin-views.html?test=1",
   "plugins-v3.html",

@@ -18,6 +18,7 @@ use super::{
 };
 
 #[derive(Debug, Clone, Serialize)]
+#[cfg_attr(test, derive(Default))]
 #[serde(rename_all = "camelCase")]
 pub struct PluginInfo {
     id: String,
@@ -67,6 +68,7 @@ pub struct PluginInfo {
 }
 
 #[derive(Debug, Clone, Serialize)]
+#[cfg_attr(test, derive(Default))]
 #[serde(rename_all = "camelCase")]
 pub struct PluginsSnapshot {
     allow_third_party: bool,
@@ -269,4 +271,32 @@ pub(super) fn snapshot() -> Result<PluginsSnapshot, String> {
         trusted_publishers: state.trusted_publishers.clone(),
         broken_state_backup: host.broken_state_backup.as_ref().map(|path| path.display().to_string()),
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{InfoItem, LocalizedText, PluginInfo, PluginsSnapshot};
+
+    #[test]
+    fn snapshot_never_carries_secret_info_values() {
+        let token = "f3a9c2e1d4b5a6978877665544332211f3a9c2e1d4b5a6978877665544332211";
+        let snapshot = PluginsSnapshot {
+            plugins: vec![PluginInfo {
+                id: "focusd.local-api".into(),
+                info: vec![
+                    InfoItem::new(LocalizedText::new("地址", "Address"), "http://127.0.0.1:39271/v1".into(), true, false),
+                    InfoItem::new(LocalizedText::new("访问令牌", "Access token"), token.into(), true, true),
+                ],
+                ..PluginInfo::default()
+            }],
+            ..PluginsSnapshot::default()
+        };
+        let json = serde_json::to_value(&snapshot).expect("serializes");
+        assert!(!json.to_string().contains(token));
+        let info = &json["plugins"][0]["info"];
+        assert_eq!(info[0]["value"], "http://127.0.0.1:39271/v1");
+        assert_eq!(info[1]["value"], "");
+        assert_eq!(info[1]["hasValue"], true);
+        assert_eq!(info[1]["secret"], true);
+    }
 }
