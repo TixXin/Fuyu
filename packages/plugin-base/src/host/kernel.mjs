@@ -4,6 +4,7 @@ import Fs from "@cordisjs/fs";
 import NodeFs from "@cordisjs/fs-node";
 import Loader from "@cordisjs/loader";
 import { Context } from "cordis";
+import { Clients } from "./clients.mjs";
 import { recordLogs } from "./logs.mjs";
 import { shareModules } from "./share.mjs";
 import { pluginStatus, watchStatus } from "./status.mjs";
@@ -36,6 +37,7 @@ export async function startHost({ dir, config = "plugins.yml", apiNames = [], wa
   ctx.baseUrl = pathToFileURL(dir.endsWith(sep) ? dir : dir + sep).href;
   await ctx.use(Fs);
   await ctx.use(NodeFs);
+  await ctx.plugin(Clients, dir);
   await ctx.use(Loader);
   const id = await ctx.loader.create({ name: INCLUDE, config: { path: config } });
   if (watch) await watchConfig(ctx, id);
@@ -44,6 +46,8 @@ export async function startHost({ dir, config = "plugins.yml", apiNames = [], wa
     logs,
     status: () => pluginStatus(ctx, logs),
     watchStatus: (onChange) => watchStatus(ctx, logs, onChange),
+    clients: (window) => ctx.clients.list(window),
+    watchClients: (onChange) => ctx.clients.watch(onChange),
     settle: () => Promise.all(ctx.loader.getTasks()),
     stop: () => ctx.fiber.dispose(),
   };

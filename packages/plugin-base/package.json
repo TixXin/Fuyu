@@ -18,6 +18,10 @@
       "types": "./src/client/index.d.mts",
       "default": "./src/client/index.mjs"
     },
+    "./client/react": {
+      "types": "./src/client/react.d.mts",
+      "default": "./src/client/react.mjs"
+    },
     "./protocol": {
       "types": "./src/protocol.d.mts",
       "default": "./src/protocol.mjs"
@@ -38,5 +42,8 @@
   },
   "scripts": {
     "test": "node --test \"test/**/*.test.mjs\""
+  },
+  "peerDependencies": {
+    "react": "^19.0.0"
   }
 }

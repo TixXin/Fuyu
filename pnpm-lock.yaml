@@ -21,6 +21,9 @@ importers:
 
   .:
     dependencies:
+      '@fuyu/plugin-base':
+        specifier: workspace:*
+        version: link:packages/plugin-base
       '@tauri-apps/api':
         specifier: ^2.12.4
         version: 2.12.4
@@ -101,6 +104,9 @@ importers:
       cordis:
         specifier: workspace:*
         version: link:../../vendor/cordis/core
+      react:
+        specifier: ^19.0.0
+        version: 19.2.7
       ws:
         specifier: ^8.23.0
         version: 8.23.0
