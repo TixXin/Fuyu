@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { PassThrough } from "node:stream";
 import { test } from "node:test";
-import { connect, PEER_GONE } from "../src/host/rpc.mjs";
+import { connect, PEER_GONE, RpcError } from "../src/host/rpc.mjs";
 
 function pair() {
   const a = new PassThrough();
@@ -20,6 +20,18 @@ test("a call gets the handler's result, and a thrown error comes back with its c
   assert.equal(await left.call("add", { a: 2, b: 3 }), 5);
   await assert.rejects(left.call("fail"), (error) => error.code === 7 && error.message === "nope" && error.data.why === "test");
   await assert.rejects(left.call("missing"), (error) => error.code === -32601);
+});
+
+test("a thrown RpcError keeps its string code, and other errors without a number get the generic one", async () => {
+  const { left, right } = pair();
+  right.handle("named", () => {
+    throw new RpcError("not-third-party", "no", { refused: [] });
+  });
+  right.handle("system", () => {
+    throw Object.assign(new Error("disk"), { code: "ENOENT" });
+  });
+  await assert.rejects(left.call("named"), (error) => error.code === "not-third-party" && error.data.refused.length === 0);
+  await assert.rejects(left.call("system"), (error) => error.code === -32000 && error.message === "disk");
 });
 
 test("when the other side goes away, every call waiting on it fails at once with the reason", async () => {

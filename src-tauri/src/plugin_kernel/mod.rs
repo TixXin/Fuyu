@@ -1,9 +1,14 @@
+mod bisect;
 mod containment;
 mod methods;
 pub(crate) mod protocol;
 mod safe_mode;
 
-use std::{path::PathBuf, sync::Mutex, sync::OnceLock};
+use std::{
+    path::PathBuf,
+    sync::{Arc, Mutex, OnceLock},
+    time::Duration,
+};
 
 use plugin_base::{node_for_host, official_download, ChosenNode, Event, HostSpec, HostState, NodeSearch, NodeSource, Progress, Supervisor, Timing, MINIMUM_NODE};
 use serde::Serialize;
@@ -13,7 +18,7 @@ const SWITCH: &str = "FUYU_PLUGINS_V3";
 const CONFIG: &str = "plugins.yml";
 const RELEASE_ORIGINS: [&str; 3] = ["tauri://localhost", "http://tauri.localhost", "https://tauri.localhost"];
 
-static SUPERVISOR: OnceLock<Mutex<Option<Supervisor>>> = OnceLock::new();
+static SUPERVISOR: OnceLock<Mutex<Option<Arc<Supervisor>>>> = OnceLock::new();
 static PLUGINS_DIR: OnceLock<PathBuf> = OnceLock::new();
 static TRACKER: OnceLock<Mutex<safe_mode::Tracker>> = OnceLock::new();
 static STOPPING: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
@@ -64,6 +69,7 @@ const SAFE_SWITCH: &str = "FUYU_PLUGINS_V3_SAFE";
 struct HostMode {
     development: bool,
     safe: Option<String>,
+    bisect: Vec<String>,
 }
 
 fn host_args(dir: PathBuf, files: &HostFiles, origins: &[String], mode: &HostMode) -> Vec<std::ffi::OsString> {
@@ -87,6 +93,9 @@ fn host_args(dir: PathBuf, files: &HostFiles, origins: &[String], mode: &HostMod
     if let Some(safe) = &mode.safe {
         args.push("--safe".into());
         args.push(safe.into());
+    }
+    for id in &mode.bisect {
+        args.push(format!("--bisect={id}").into());
     }
     for origin in origins {
         args.push("--origin".into());
@@ -170,7 +179,11 @@ fn spec_for(node: PathBuf, dir: PathBuf, files: HostFiles, origins: Vec<String>,
         if let Some(safe) = &safe {
             eprintln!("[plugins-v3] safe mode: {} ({:?}, {} failed starts)", safe.mode, safe.cause, safe.failures);
         }
-        let mode = HostMode { development, safe: safe.map(|safe| safe.mode) };
+        let off = bisect::off(&dir);
+        if !off.is_empty() {
+            eprintln!("[plugins-v3] bisect: switching off {}", off.join(", "));
+        }
+        let mode = HostMode { development, safe: safe.map(|safe| safe.mode), bisect: off };
         HostSpec { program: node.clone(), args: host_args(dir.clone(), &files, &origins, &mode), env: env.clone(), current_dir: None }
     }
 }
@@ -184,6 +197,7 @@ fn track(event: &Event) {
         }
         Event::State(HostState::Ready { generation, .. }) => {
             let generation = *generation;
+            let _ = std::thread::Builder::new().name("plugin-host-bisect".into()).spawn(move || resend_bisect(generation));
             let _ = std::thread::Builder::new().name("plugin-host-healthy".into()).spawn(move || {
                 std::thread::sleep(safe_mode::HEALTHY_AFTER);
                 if let Some(mut tracker) = tracker() {
@@ -193,6 +207,59 @@ fn track(event: &Event) {
         }
         _ => {}
     }
+}
+
+const BISECT_TIMEOUT: Duration = Duration::from_secs(5);
+const SLOT_WAIT: Duration = Duration::from_millis(50);
+const SLOT_TRIES: u32 = 100;
+
+fn supervisor() -> Option<Arc<Supervisor>> {
+    SUPERVISOR.get()?.lock().ok()?.clone()
+}
+
+fn ready_generation(supervisor: &Supervisor) -> Option<u32> {
+    match supervisor.state() {
+        HostState::Ready { generation, .. } => Some(generation),
+        _ => None,
+    }
+}
+
+fn resend_bisect(generation: u32) {
+    let Some(dir) = PLUGINS_DIR.get() else { return };
+    for _ in 0..SLOT_TRIES {
+        if STOPPING.load(std::sync::atomic::Ordering::SeqCst) {
+            return;
+        }
+        let Some(supervisor) = supervisor() else {
+            std::thread::sleep(SLOT_WAIT);
+            continue;
+        };
+        if ready_generation(&supervisor) != Some(generation) {
+            return;
+        }
+        if let Err(error) = supervisor.call(bisect::METHOD, bisect::params(&bisect::off(dir)), BISECT_TIMEOUT) {
+            eprintln!("[plugins-v3] could not hand the bisect list to the plugin host (#{generation}): {error}");
+        }
+        return;
+    }
+}
+
+fn send_bisect(params: serde_json::Value) -> Result<Option<serde_json::Value>, plugin_base::RpcError> {
+    match supervisor().filter(|supervisor| ready_generation(supervisor).is_some()) {
+        Some(supervisor) => supervisor.call(bisect::METHOD, params, BISECT_TIMEOUT).map(Some),
+        None => Ok(None),
+    }
+}
+
+#[expect(dead_code, reason = "E36.5.9 reads the bisect for its plugin page")]
+pub(crate) fn plugin_bisect() -> Option<bisect::Bisect> {
+    bisect::read(PLUGINS_DIR.get()?)
+}
+
+#[expect(dead_code, reason = "E36.5.9 calls it from its bisect commands")]
+pub(crate) fn set_plugin_bisect(next: Option<&bisect::Bisect>) -> Result<bisect::Applied, String> {
+    let dir = PLUGINS_DIR.get().ok_or("the plugin kernel is not running")?;
+    bisect::apply(dir, next, send_bisect)
 }
 
 fn start(home: PathBuf, dir: PathBuf, files: HostFiles, origins: Vec<String>, development: bool, serve: plugin_base::Serve) -> Result<(), String> {
@@ -208,7 +275,7 @@ fn start(home: PathBuf, dir: PathBuf, files: HostFiles, origins: Vec<String>, de
         supervisor.stop();
         return Ok(());
     }
-    *slot = Some(supervisor);
+    *slot = Some(Arc::new(supervisor));
     Ok(())
 }
 
@@ -265,9 +332,9 @@ fn connection_from(enabled: bool, state: Option<&HostState>) -> HostConnection {
     }
 }
 
-fn connection_now(switched_on: bool, slot: Option<&Mutex<Option<Supervisor>>>) -> HostConnection {
+fn connection_now(switched_on: bool, slot: Option<&Mutex<Option<Arc<Supervisor>>>>) -> HostConnection {
     let Some(slot) = slot else { return connection_from(switched_on, None) };
-    let state = slot.lock().ok().and_then(|supervisor| supervisor.as_ref().map(Supervisor::state));
+    let state = slot.lock().ok().and_then(|supervisor| supervisor.as_ref().map(|supervisor| supervisor.state()));
     connection_from(true, state.as_ref())
 }
 
@@ -281,7 +348,7 @@ pub(crate) fn get_plugin_host_connection() -> HostConnection {
 pub(crate) fn exit_plugin_safe_mode() -> Result<bool, String> {
     let left = tracker().is_some_and(|mut tracker| tracker.leave());
     if left {
-        if let Some(supervisor) = SUPERVISOR.get().and_then(|slot| slot.lock().ok()).as_ref().and_then(|slot| slot.as_ref()) {
+        if let Some(supervisor) = supervisor() {
             supervisor.restart();
         }
     }
@@ -298,7 +365,7 @@ pub(crate) struct HostMemory {
 
 const MEMORY_MEASURE: &str = if cfg!(windows) { "private-working-set" } else { "phys-footprint" };
 
-fn host_pid(slot: Option<&Mutex<Option<Supervisor>>>) -> Option<u32> {
+fn host_pid(slot: Option<&Mutex<Option<Arc<Supervisor>>>>) -> Option<u32> {
     match slot?.lock().ok()?.as_ref()?.state() {
         HostState::Ready { pid, .. } => Some(pid),
         _ => None,

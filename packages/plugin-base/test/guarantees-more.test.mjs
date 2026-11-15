@@ -181,3 +181,29 @@ test("stopping the host runs the cleanup of every plugin, dependents first", asy
   assert.deepEqual([...trace].sort(), ["stop a", "stop b", "stop c", "stop other"]);
   assert.ok(trace.indexOf("stop a") < trace.indexOf("stop b") && trace.indexOf("stop b") < trace.indexOf("stop c"), trace.join(", "));
 });
+
+test("a plugin that imports fuyu-plugin gets the same kernel as @fuyu/plugin-base, so its services reach the others", async () => {
+  const space = workspace({
+    "alias.mjs": `import * as alias from "fuyu-plugin";
+import * as base from "@fuyu/plugin-base";
+globalThis.sameKernel = alias.Service === base.Service && alias.Context === base.Context;
+export default class Aliased extends alias.Service {
+  constructor(ctx) {
+    super(ctx, "aliased");
+  }
+}
+`,
+    "uses.mjs": user("uses", ["aliased"]),
+    "plugins.yml": config([
+      { id: "alias", name: "./alias.mjs" },
+      { id: "uses", name: "./uses.mjs" },
+    ]),
+  });
+  cleanup.push(space.remove);
+  const host = await startHost({ dir: space.dir });
+  cleanup.push(() => host.stop());
+  await host.settle();
+  assert.equal(globalThis.sameKernel, true);
+  assert.deepEqual(host.status().map((entry) => [entry.id, entry.state]), [["alias", "running"], ["uses", "running"]]);
+  await host.stop();
+});

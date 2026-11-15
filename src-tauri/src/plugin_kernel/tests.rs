@@ -6,7 +6,7 @@ use std::{
 use plugin_base::{find_node, Event, HostSpec, HostState, NodeSearch, Supervisor, Timing, MINIMUM_NODE};
 use serde_json::Value;
 
-use super::{containment, safe_mode::{self, Cause, Tracker}, enabled, host_args, host_env, host_files, host_origins, host_script, memory_of, window_origins, HostMode, MEMORY_MEASURE};
+use super::{bisect, containment, safe_mode::{self, Cause, Tracker}, enabled, host_args, host_env, host_files, host_origins, host_script, memory_of, window_origins, HostFiles, HostMode, MEMORY_MEASURE};
 
 #[test]
 fn on_windows_the_host_gets_a_smaller_threadpool_unless_the_user_already_chose_one() {
@@ -52,7 +52,7 @@ fn a_release_host_does_not_accept_the_dev_server_origin() {
 }
 
 fn mode(development: bool, variable: Option<&str>) -> HostMode {
-    HostMode { development, safe: safe_mode::choose(variable, false, 0).map(|safe| safe.mode) }
+    HostMode { development, safe: safe_mode::choose(variable, false, 0).map(|safe| safe.mode), ..HostMode::default() }
 }
 
 fn args_for(mode: &HostMode) -> Vec<String> {
@@ -75,6 +75,15 @@ fn safe_mode_is_passed_on_only_when_it_names_a_known_mode() {
     for odd in ["", "everything", "1"] {
         assert!(!args_for(&mode(true, Some(odd))).iter().any(|arg| arg == "--safe"), "{odd}");
     }
+}
+
+#[test]
+fn the_bisect_list_goes_to_the_host_as_one_flag_per_plugin_after_the_script() {
+    assert!(!args_for(&HostMode::default()).iter().any(|arg| arg.starts_with("--bisect")));
+    let args = args_for(&HostMode { bisect: vec!["one".into(), "-dash".into()], ..HostMode::default() });
+    let flags: Vec<&String> = args.iter().filter(|arg| arg.starts_with("--bisect")).collect();
+    assert_eq!(flags, ["--bisect=one", "--bisect=-dash"], "the id rides in the same argument, so one starting with a dash is not read as a flag");
+    assert!(args.iter().position(|arg| arg == "--bisect=one") > args.iter().position(|arg| arg.ends_with("main.mjs")));
 }
 
 #[test]
@@ -172,6 +181,53 @@ fn the_real_host_starts_under_the_supervisor_reports_its_plugins_and_comes_back_
 
     supervisor.stop();
     assert_eq!(supervisor.state(), HostState::Stopped);
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+#[test]
+#[ignore = "needs `pnpm install` and Node 22.15 or newer; run with `cargo test -- --ignored plugin_kernel`"]
+fn the_real_host_takes_the_bisect_list_from_its_flags_then_from_rust() {
+    let node = find_node(&NodeSearch::from_env(), MINIMUM_NODE).expect("Node 22.15 or newer");
+    let dir = std::env::temp_dir().join(format!("fuyu-plugin-kernel-bisect-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(dir.join("builtins/inside")).unwrap();
+    let plain = "export const name = \"plain\";\nexport function apply() {}\n";
+    std::fs::write(dir.join("plain.mjs"), plain).unwrap();
+    std::fs::write(dir.join("builtins/inside/plain.mjs"), plain).unwrap();
+    std::fs::write(dir.join("builtins/builtins.json"), r#"{ "format": 1, "plugins": [{ "id": "inside", "kind": "builtin", "root": "inside", "host": "plain.mjs" }] }"#).unwrap();
+    std::fs::write(dir.join("plugins.yml"), "- id: one\n  name: ./plain.mjs\n- id: two\n  name: ./plain.mjs\n").unwrap();
+    let step = |off: &[&str]| bisect::Bisect { suspects: vec!["one".into(), "two".into()], off: off.iter().map(|id| (*id).to_owned()).collect(), step: 1, started_at: 1 };
+    bisect::write(&dir, &step(&["one", "inside"])).unwrap();
+    let files = HostFiles { script: host_script(), builtins: dir.join("builtins") };
+    let args = host_args(dir.clone(), &files, &[], &HostMode { bisect: bisect::off(&dir), ..HostMode::default() });
+    let spec = HostSpec { program: node.path, args, env: Vec::new(), current_dir: None };
+    let (tx, states) = mpsc::channel();
+    let tx = Mutex::new(tx);
+    let supervisor = Supervisor::start(spec, containment::shared(), Timing::default(), move |event| {
+        if let Event::State(state) = event {
+            let _ = tx.lock().map(|tx| tx.send(state));
+        }
+    })
+    .unwrap();
+    let states_of = |plugins: &Value| plugins.as_array().unwrap().iter().map(|plugin| (plugin["id"].as_str().unwrap().to_owned(), plugin["state"].as_str().unwrap().to_owned())).collect::<std::collections::BTreeMap<_, _>>();
+    let HostState::Ready { ready, .. } = wait_for(&states, true) else { unreachable!() };
+    let started = states_of(&ready["plugins"]);
+    assert_eq!((started["one"].as_str(), started["two"].as_str(), started["inside"].as_str()), ("bisect", "running", "running"), "{ready}");
+
+    let send = |params| supervisor.call(bisect::METHOD, params, Duration::from_secs(5)).map(Some);
+    assert!(bisect::apply(&dir, Some(&step(&["two"])), send).unwrap().now);
+    let deadline = Instant::now() + Duration::from_secs(5);
+    let mut now = states_of(&supervisor.call("status", Value::Null, Duration::from_secs(5)).unwrap());
+    while now["one"] != "running" && Instant::now() < deadline {
+        std::thread::sleep(Duration::from_millis(20));
+        now = states_of(&supervisor.call("status", Value::Null, Duration::from_secs(5)).unwrap());
+    }
+    assert_eq!((now["one"].as_str(), now["two"].as_str()), ("running", "bisect"));
+    let refused = bisect::apply(&dir, Some(&step(&["inside"])), send).unwrap_err();
+    assert!(refused.contains("inside is builtin"), "{refused}");
+    assert_eq!(bisect::off(&dir), ["two"], "a refused step leaves the file as it was");
+
+    supervisor.stop();
     let _ = std::fs::remove_dir_all(dir);
 }
 

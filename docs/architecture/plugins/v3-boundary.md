@@ -38,6 +38,9 @@
 | `ping` | 任意 | `{ at, echo }`。Rust 每秒发一次，2 秒没回答就当宿主卡死 |
 | `status` | 无 | 每个插件的状态，格式见下面「插件状态」 |
 | `stop` | 无 | `true`，然后停掉所有插件（每个清理都执行）再退出 |
+| `bisect` | `{ off: [插件 id…] }` | `{ off, unknown }`：整份换掉二分排查的停用名单（见下面「二分排查」），`unknown` 是名单里现在没有对应插件的 id。名单里有不是第三方的插件时报 `not-third-party`（`data` 是 `{ refused: [{ id, kind }] }`，`kind` 是 `essential`、`builtin` 或 `internal`），什么都不改；`off` 不是非空字符串的数组时报 `bad-params`；宿主还没加载完插件时报 `not-ready`。2026-11-15 起，E36.3.10 |
+
+宿主回答的错误码：JSON-RPC 自己的是数字（`-32601` 没有这个方法，`-32000` 其余），宿主自己抛的 `RpcError` 原样带字符串码（上面的 `not-third-party` 这些）。
 
 ### Rust 发给宿主的通知
 
@@ -100,7 +103,7 @@ Rust 怎么跑：
 
 | 字段 | 意思 |
 |---|---|
-| `state` | `running`、`waiting`（`waitingFor` 列出在等的服务）、`failed`（`error` 是原因）、`disabled`（`plugins.yml` 里关了）、`auto-disabled`（反复出错被宿主停了，`reason` 写明）、`safe-mode`（被安全模式拦下，`reason` 写明）、`loading`、`stopped`、`unloading` 之一 |
+| `state` | `running`、`waiting`（`waitingFor` 列出在等的服务）、`failed`（`error` 是原因）、`disabled`（`plugins.yml` 里关了）、`auto-disabled`（反复出错被宿主停了，`reason` 写明）、`safe-mode`（被安全模式拦下，`reason` 写明）、`bisect`（二分排查这一步把它停了，`blocked` 是 `{ by: "bisect" }`，`reason` 写明）、`loading`、`stopped`、`unloading` 之一 |
 | `kind` | `essential`、`builtin`、`third-party`。只由内置插件清单给（2026-11-15 起，E36.3.6，见 [v3-builtins.md](v3-builtins.md)）：清单里的插件取清单写的值，其余插件一律是 `third-party`，`plugins.yml` 条目里写的 `kind` 不算数 |
 | `source` | 插件从哪来（2026-11-15 起，E36.3.9）：`builtin`（内置插件清单）、`market`、`manual`（已安装的包）、`dev`（开发文件夹）、`file`（直接写模块的条目），见 [v3-sources.md](v3-sources.md) |
 | `blocked` | 清单没通过、包没装这类原因拒绝加载时才有：`{ by, errors }`，`state` 是 `failed`（E36.3.9，见 [v3-sources.md](v3-sources.md)「拒绝加载」） |
@@ -151,6 +154,16 @@ Rust 每次拉起宿主（包括自动重启）都重新决定带不带 `--safe`
 - 环境变量的值不认识时当作没设，宿主照常加载全部插件。
 - 窗口用 Tauri 命令 `get_plugin_host_connection` 的 `safeMode`（`{ mode, cause, failures }`，`cause` 是 `variable`、`shift` 或 `failures`；不在安全模式时是 `null`）知道是怎么进入的，`exit_plugin_safe_mode` 退出（返回 `false` 表示是环境变量打开的，没有退出）。
 
+### 二分排查
+
+帮用户找出是哪个第三方插件造成的问题：每一步停掉一部分第三方插件，看问题还在不在（2026-11-15 起，E36.3.10 做地基；挑哪一半、界面和 Tauri 命令是 E36.5.9）。
+
+- **名单在 Rust 一侧**：数据目录的 `plugins-v3/bisect.json`（`src-tauri/src/plugin_kernel/bisect.rs`），格式 `{ version, startedAt, updatedAt, step, suspects, off }`：`version` 现在是 `1`，两个时间是 Unix 毫秒，`step` 是走到第几步，`suspects` 是还有嫌疑的第三方插件，`off` 是这一步停掉的。文件坏了、`version` 不认识或有空 id，当作没在排查。
+- **宿主不记**（边界规则 7）：Rust 每次拉起宿主（包括崩溃后重启）都按文件把 `off` 作为启动参数带上（每个 id 一个 `--bisect=<id>`），名单里的插件从一开始就不加载；宿主就绪后 Rust 再用 `bisect` 请求发一次，补上启动期间文件变了的情况。不写回 `plugins.yml`。
+- **换一步**：Rust 先发 `bisect`，宿主收下了才写文件；宿主拒绝（`not-third-party`）时文件不动；宿主没在跑时只写文件，下次启动生效。宿主收到新名单后，新进名单的插件停下（撤掉全部副作用，依赖它的服务的插件回到 `waiting`），离开名单的重新启动。名单清空、文件删掉，排查就结束了。
+- **只停第三方插件**：`kind` 是 `third-party` 的才停（内置插件清单之外的都是，见上面「插件状态」）。`bisect` 请求里有内置插件就整个拒绝；启动参数里带了内置插件的 id 不报错，也不生效。
+- **和别的拦法叠在一起**时，状态按这个顺序取第一个：`plugins.yml` 的 `disabled` > 清单没通过（`failed`）> `auto-disabled` > `safe-mode` > `bisect`。插件离开二分排查的名单不会放出被别的原因拦下的插件。安全模式两档都停掉全部第三方插件，所以安全模式下名单照收、看不出效果，退出安全模式后按名单生效。
+
 ### 开发模式
 
 宿主带 `--dev` 启动时（Node 还要带 `--expose-internals`），在插件目录上挂 Cordis 的热重载：改了插件的源码就换成新代码，同时监听 `plugins.yml`（等于 `--watch`）。正式版两样都不带。
@@ -159,7 +172,7 @@ Rust 每次拉起宿主（包括自动重启）都重新决定带不带 `--safe`
 
 | 情况 | 怎么处理 |
 |---|---|
-| 启动 | Rust 找到 Node（决定 16），带 `--disallow-code-generation-from-strings` 拉起宿主，放进作业对象（Windows）或自己的进程组（macOS）。等 `ready` 最多 60 秒（新下载的 Node 第一次运行可能要几十秒，第 0 阶段实测） |
+| 启动 | Rust 找到 Node（决定 16），带 `--disallow-code-generation-from-strings` 拉起宿主（宿主自己的参数里有安全模式的 `--safe` 和二分排查的 `--bisect=<id>`，每次拉起都重新决定），放进作业对象（Windows）或自己的进程组（macOS）。等 `ready` 最多 60 秒（新下载的 Node 第一次运行可能要几十秒，第 0 阶段实测） |
 | 心跳 | 就绪后每秒一次 `ping`，2 秒没回答就当卡死 |
 | 退出或卡死 | 杀掉整个进程组，按退避重启：第一次立刻，之后 0.25、0.5、1 秒……最长 30 秒；连续正常运行满 60 秒后重新从「立刻」算 |
 | 浮屿退出 | Rust 发 `stop`，最多等 2 秒再杀。宿主读到标准输入关闭时也会自己停掉插件退出，作业对象 / 进程组兜底宿主卡死的情况 |
