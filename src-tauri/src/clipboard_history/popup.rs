@@ -129,7 +129,7 @@ fn take_target() -> Option<HWND> {
         .map(|value| HWND(value as *mut core::ffi::c_void))
 }
 
-pub(super) fn paste(app: &AppHandle, id: &str, options: PasteOptions) -> Result<(), String> {
+pub(super) fn paste(app: &AppHandle, id: &str, options: PasteOptions) -> Result<bool, String> {
     let service = service()?;
     let snapshot = service.snapshot()?;
     let settings = &snapshot.settings;
@@ -159,7 +159,7 @@ pub(super) fn paste(app: &AppHandle, id: &str, options: PasteOptions) -> Result<
         hide(app)?;
     }
     paste_into(target, settings.auto_paste, options.enter);
-    Ok(())
+    Ok(settings.auto_paste)
 }
 
 pub(super) fn paste_text(app: &AppHandle, text: &str, enter: bool) -> Result<(), String> {
