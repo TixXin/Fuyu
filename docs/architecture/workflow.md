@@ -86,6 +86,9 @@ pnpm mq:commit-part -m "<标题>" [-F <说明文件>]
 - 想在本机先验一遍：`pnpm verify`（`pnpm check`，改到 `src-tauri/` 或 `plugins/` 时加 `cargo test`；同一棵代码树通过过就不重跑）。land 本身不跑这些，由 PR 上 CI 的 `check` 把关。
 - 多个会话共用一份代码：别的会话改到一半时，`pnpm check` 可能因为它的文件失败。先看失败是不是自己的文件；不是就等一会儿或问对方，不要去改别人的文件。
 - 回归页逐行比对 DOM 快照（`tests/regression/snapshots/`，2026-11-15 起，E36.2.2）：改界面的提交要把 `pnpm test:regression <页面名中的词> --update-snapshots` 更新后的快照一起带上，新加的回归页也要带上它的快照；漏了 CI 的 `regression` 会失败，挡住整批 land。更新前看一眼差异，只该有自己改的那几处。
+  - 快照存的是页面稳下来之后的样子，所以回归页要等自己最后一步的动画、定时消失的提示都结束了再报通过（D73）。运行器有两道保险：比对不一致时等 1 秒重抓一次，一致就算通过，并打印 `snapshot settled late`，看到这一行要去修那一页；`--update-snapshots` 写入前隔 1.5 秒复抓，两次不一样就不写，报 `DOM is still changing`。`scripts/regression/snapshots.mjs` 的 `UNSETTLED_PAGES` 是还没修的 4 页，只减不增。
+- 回归页运行器退出时不留进程（D73）：无头 Chrome 用调试管道连接，运行器被杀掉（包括 `kill -9`、工具超时）它自己退出；Vite 在运行器进程里跑。被 `kill -9` 时只会留下临时目录 `fly-regression-*`，下次启动时删掉一天以前的。
+- Mac 上回归页在跑的那几分钟里，无头 Chrome 在系统里是 `com.google.Chrome` 的另一个实例，`open <文件>` 打开的页面有可能进了它而看不见（观察到过一次，没能复现）。碰到时等回归页跑完再 `open`；要彻底避开，设 `CHROME_PATH` 让回归页用另一个浏览器，例如 `/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge`。
 - 需要 release 可执行文件时另外跑 `pnpm build:exe`。
 
 `main` 只通过在 GitHub 上合入 PR 移动。`.githooks/pre-push` 拒绝直接推送 `main`；GitHub 的规则集也拒绝（管理员只能在 PR 上绕过），紧急时用 `gh pr merge --admin` 合 PR。`CLAUDE_CODE_MERGE_QUEUE_EMERGENCY_PUSH=1` 只放行本机钩子。
