@@ -398,7 +398,7 @@ fn v1_todos(conn: &Connection, session: &str) -> rusqlite::Result<Option<TodoPro
 }
 
 fn v1_messages(conn: &Connection, session: &str, has_parts: bool, main_only: bool) -> rusqlite::Result<Turn> {
-    let agent = if main_only { "AND agent_id = 'main'" } else { "" };
+    let agent = if main_only { "AND coalesce(agent_id, 'main') = 'main'" } else { "" };
     let mut statement = conn.prepare(&format!(
         "SELECT id, data, time_created FROM message WHERE session_id = ?1 {agent} ORDER BY time_created DESC, id DESC LIMIT ?2",
     ))?;

@@ -70,6 +70,30 @@ fn lists_mimo_sessions_with_only_the_main_agents_messages() {
 }
 
 #[test]
+fn messages_without_an_agent_id_count_as_the_main_agents() {
+    let dir = temp_dir("null-agent");
+    let db = dir.join("mimocode.db");
+    let conn = Connection::open(&db).unwrap();
+    conn.execute_batch(&SCHEMA.replace("agent_id text not null default 'main'", "agent_id text")).unwrap();
+    let now = now();
+    conn.execute(
+        "INSERT INTO session (id, project_id, slug, directory, title, title_source, version, time_created, time_updated)
+         VALUES ('s1', 'p', 'slug', '/Users/dev/shop', '旧会话', 'user', '1', ?1, ?1)",
+        [now - 5_000],
+    )
+    .unwrap();
+    message(&conn, "s1", "m1", "main", now - 5_000, json!({ "role": "user", "time": { "created": now - 5_000 } }), Some("看看日志"));
+    message(&conn, "s1", "m2", "main", now - 4_000, json!({ "role": "assistant", "modelID": "mimo-v2", "time": { "created": now - 4_000, "completed": now - 3_000 } }), Some("日志没问题。"));
+    conn.execute("UPDATE message SET agent_id = NULL", []).unwrap();
+
+    let session = sessions(&db, now, 60 * 60 * 1000).remove(0);
+    assert_eq!((session.phase, session.last_message.as_deref()), ("completed", Some("日志没问题。")));
+    assert_eq!((session.model.as_deref(), session.last_prompt.as_deref()), (Some("mimo-v2"), Some("看看日志")));
+    drop(conn);
+    fs::remove_dir_all(&dir).unwrap();
+}
+
+#[test]
 fn finds_its_directories_like_opencode_with_its_own_names() {
     let home = Path::new("/home/dev");
     let none = |_: &str| None;
