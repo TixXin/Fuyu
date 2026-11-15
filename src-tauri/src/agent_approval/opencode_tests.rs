@@ -197,3 +197,37 @@ fn dechunks_split_bodies() {
     assert_eq!((status, body.as_str()), (200, "{\"a\":1}"));
     assert!(parse_response(b"garbage").is_err());
 }
+
+#[test]
+fn reads_what_the_1x_plugin_sends_and_answers_in_its_words() {
+    use crate::agent_approval::decision::{permission_response, route, Kind};
+    assert_eq!(route("/opencode/permission"), Some((Agent::Opencode, Kind::Permission)));
+    let body = json!({
+        "id": "per_1",
+        "sessionID": "ses_1",
+        "permission": "bash",
+        "patterns": ["git push *"],
+        "metadata": { "command": "git push origin main" },
+        "always": ["git push *"],
+        "cwd": "/work/app",
+    });
+    let input = HookInput::parse_for(Agent::Opencode, body.to_string().as_bytes()).unwrap();
+    assert_eq!(input.session_id, "ses_1");
+    assert_eq!(input.cwd.as_deref(), Some("/work/app"));
+    assert_eq!(input.tool_name, "Bash");
+    assert_eq!(input.tool_input["command"], "git push origin main");
+    assert_eq!(input.permission_suggestions, None);
+
+    let edit = json!({ "id": "per_2", "sessionID": "ses_1", "permission": "edit", "patterns": ["src/a.ts"], "metadata": {} });
+    let input = HookInput::parse_for(Agent::Opencode, edit.to_string().as_bytes()).unwrap();
+    assert_eq!((input.tool_name.as_str(), input.tool_input["file_path"].as_str()), ("Edit", Some("src/a.ts")));
+    assert!(HookInput::parse_for(Agent::Opencode, br#"{"sessionID":"ses_1"}"#).is_err());
+
+    let answer = |decision, message| serde_json::from_str::<Value>(&permission_response(Agent::Opencode, decision, message, None)).unwrap();
+    assert_eq!(answer(Some(Decision::Allow), None), json!({ "reply": "once" }));
+    assert_eq!(answer(Some(Decision::AllowAlways), None), json!({ "reply": "always" }));
+    assert_eq!(answer(Some(Decision::Deny), Some(" not now ")), json!({ "reply": "reject", "message": "not now" }));
+    assert_eq!(answer(Some(Decision::Deny), None)["message"], "Denied in Fuyu");
+    assert_eq!(answer(Some(Decision::Terminal), None), json!({}));
+    assert_eq!(answer(None, None), json!({}));
+}
