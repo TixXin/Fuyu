@@ -92,7 +92,7 @@
 | 改版本号、起草发布说明 | `pnpm release:version <版本号>`（四处版本号一起改，不要手动改） |
 | 发布 | `pnpm release`（流程见 `docs/features/updater.md`） |
 | 查 GitHub issue | `pnpm issue [<编号…>]`（正文、回复和对应任务；不带编号是列表，参数见 workflow.md「任务认领」） |
-| 合入 main | `pnpm mq:pending`（该不该提 PR）、`pnpm mq:land --yes --body <中文 PR 正文文件>`（开 PR 合入）、`pnpm mq:wait`（后台等合入）、`pnpm mq:try`（先跑 CI）、`pnpm mq:sync`（跟上 `origin/main`）；用法和 `--upto` / `--only` 见 workflow.md「现在怎么做」 |
+| 合入 main | `pnpm mq:pending`（该不该提 PR）、`pnpm mq:land --yes --body <中文 PR 正文文件>`（开 PR 合入）、`pnpm mq:wait`（后台等合入）、`pnpm mq:try`（先跑 CI，`--clean` 删跑完的）、`pnpm mq:sync`（跟上 `origin/main`）；用法和 `--upto` / `--only` 见 workflow.md「现在怎么做」 |
 | 同一个文件里只提交自己的改动 | `pnpm mq:commit-part`（见 workflow.md「同一个文件里只提交自己的改动」） |
 | 进度汇总 | `pnpm progress [--no-github] [--json]`（一屏：进行中的任务和负责的会话、没提交的文件、没推的提交和落后多少、开着的 PR、任务已完成而 issue 还开着的） |
 

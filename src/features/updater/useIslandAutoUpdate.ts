@@ -1,15 +1,14 @@
 import { useEffect, useRef } from "react";
-import { getUserIdleSeconds, isSessionLocked } from "../../features/agent-status/push/api";
+import { getUserIdleSeconds, isSessionLocked } from "../agent-status/push/api";
 import {
   downloadInBackground, getUpdateState, installUpdate, subscribeToUpdate,
-} from "../../features/updater/updaterController";
+} from "./updaterController";
 import { getForegroundFullscreen } from "./api";
-import type { IslandMode } from "./types";
 
 const IDLE_SECONDS = 10 * 60;
 const IDLE_CHECK_MS = 30_000;
 
-export function useIslandAutoUpdate({ mode, agentsBusy }: { mode: IslandMode; agentsBusy: boolean }) {
+export function useIslandAutoUpdate({ mode, agentsBusy }: { mode: string; agentsBusy: boolean }) {
   const latest = useRef({ mode, agentsBusy });
   latest.current = { mode, agentsBusy };
 

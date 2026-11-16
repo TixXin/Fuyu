@@ -10,7 +10,6 @@ import { islandHost } from "./islandHost";
 import { useIslandSettings } from "../../lib/settings/useIslandSettings";
 import { useLegacySwitches } from "../../features/plugin-kernel/useLegacySwitches";
 import { IslandShell } from "./IslandShell";
-import { useBackgroundUpdateCheck } from "../../features/updater/useBackgroundUpdateCheck";
 import { useIslandWindow } from "./useIslandWindow";
 import { getExpandedIslandHeight } from "./expandedHeight";
 import { getIslandStageStyle } from "./stageStyle";
@@ -18,7 +17,6 @@ import { useDevicePixelRatio } from "./useDevicePixelRatio";
 import { useGameMode } from "./useGameMode";
 import { useIslandKeyboard } from "./useIslandKeyboard";
 import { useIslandFeatures } from "./useIslandFeatures";
-import { useIslandAutoUpdate } from "./useIslandAutoUpdate";
 import { useIslandNavigation } from "./useIslandNavigation";
 import { usePluginHostEvents } from "./usePluginHostEvents";
 import { usePluginKeybindings } from "./usePluginKeybindings";
@@ -62,9 +60,6 @@ import type { IslandPage } from "./types";
 const openTranslator = () => {
   runIslandAction("translation.open");
 };
-const openUpdateSettings = () => {
-  openSettingsWindow("updates");
-};
 
 export function IslandApp() {
   const t = useTranslation();
@@ -83,7 +78,6 @@ export function IslandApp() {
   const decor = useIslandDecor();
   const gauges = useCollapsedGauges(mode !== "collapsed" || isTucked || game.quiet);
   const collapsedSlots = useMemo(() => mergeIslandDecor([decor, gauges]), [decor, gauges]);
-  useBackgroundUpdateCheck(openUpdateSettings);
   usePluginHostEvents({ mode });
 
   const firstHints = useIslandFirstHints({
@@ -96,7 +90,6 @@ export function IslandApp() {
   const barText = settings.showCollapsedText && !notch;
   const { lines: contributedLines, alerts, popups, style, settled, hints, preview: contributedPreview } = useIslandContributed();
   usePluginKeybindings({ mode, page, hasActiveTodo: hints.has("todos.active") });
-  useIslandAutoUpdate({ mode, agentsBusy: hints.has("agents.busy") });
   const textWidth = useCollapsedWidth({
     barText,
     noticeText: firstHints.current ? t.island.firstHint[firstHints.current] : null,

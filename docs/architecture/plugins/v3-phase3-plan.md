@@ -284,6 +284,10 @@ E36.3.27 的回归页 `builtins-off` 默认只查「迁完了」的插件，即�
 | device-use | 调 `get_device_use` |
 | theme-market | 设置 → 主题市场 `.theme-market__grid`；调 `get_theme_market` |
 
+**消息插件的两个接法（2026-11-16，组长定，E36.3.44）**：
+- 第 2 版插件的岛上通知改走窗口服务：服务定义放 `src/lib/island-notices/`，不进公开包；messages 提供，`src/features/plugins/plugin/runners.tsx` 听 `plugin-notification` 后调它。这只是接线，不给插件作者加接口，第 6 阶段随第 2 版一起删。消息插件关着时，第 2 版插件的岛上通知不显示，插件页写明。messages 和 plugins 之间不再互相 import。
+- 邮箱、QQ、微信三个来源的开关存成 `plugins.yml` 里 `messages` 的 config `{mail, qq, wechat}`，不映射成整个插件的开关。迁移和旧位置的镜像写在 `messages/plugin/sourceSwitches.ts`，规则照 `legacySwitches.reconcile`。`LEGACY_SWITCHES` 先不扩成「字段 → config 键」，E36.3.50 收口时如果还有别的功能也要，再统一。
+
 **回归页查不到的残留（2026-11-16，E36.3.32 发现）**：两类东西不归哪个功能的插槽项，`builtins-off` 看不到，功能关掉后还在。
 - 设置 → 收起条项目里列出的各功能项目，例如「文件中转数量」、日历的倒计时：列表要按开关表的关掉名单过滤，所有功能共用一处，由 E36.3.50 收口时统一做。如果哪个功能任务顺手做了，在这里划掉。
 - 托盘卡片（C99.3）里的功能入口，例如「文件中转」「剪贴板」（E36.3.34 也报了：剪贴板关着时入口还显示，点了没反应）：托盘卡片是新窗口，要从开关表读关掉名单。由托盘卡片那边的任务做，组长已转告。

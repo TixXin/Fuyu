@@ -17,6 +17,7 @@ import { checkForUpdate, getUpdateState, installUpdate, reloadPreferences, setAu
 import { UPDATE_PREFERENCES_KEY } from "../../src/features/updater/storage";
 import { failNextUpdaterCall } from "./updateRuntimeMock";
 import { useFixtureLines } from "./islandLines";
+import { useUpdateContributions } from "../../src/features/updater/plugin/updateIsland";
 
 const automated = new URLSearchParams(location.search).has("test");
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: automated });
@@ -24,6 +25,7 @@ async function update(action: () => void | Promise<unknown>) {
   if (automated) await act(async () => { await action(); });
   else await action();
 }
+const openUpdates = () => {};
 const NO_PLUGIN_NOTIFICATIONS: PluginNotificationsController = { notification: null, dismiss: () => {}, runAction: () => {}, post: () => {} };
 
 const savedPreferences = localStorage.getItem(UPDATE_PREFERENCES_KEY);
@@ -38,6 +40,7 @@ function Island({ mode }: { mode: IslandMode }) {
   const qq = useQQNotifications(false);
   const wechat = useWeChatReminders(false);
   const qqMail = useMail(false);
+  useUpdateContributions(openUpdates);
   useFixtureLines({ messages: { qq: qq, wechat: wechat, mail: qqMail, plugin: NO_PLUGIN_NOTIFICATIONS, preview: null }, agents: null, status: { state: "idle", label: "AI Agent 空闲或已完成" }, todoTitle: "剩余3个待办" });
   return <div className="stage" style={{ "--collapsed-island-width": "300px", "--expanded-island-height": "220px", "--expanded-island-width": "460px" } as CSSProperties}>
     <IslandShell
