@@ -20,6 +20,7 @@ import { useQQNotifications } from "../../src/features/messages/qq-notifications
 import { useWeChatReminders } from "../../src/features/messages/wechat/WeChatReminders";
 import { useMail } from "../../src/features/messages/mail/MailPanel";
 import { useFixtureLines } from "./islandLines";
+import { animationsDone, until } from "./pollUntil";
 
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
 const automated = new URLSearchParams(location.search).has("test");
@@ -112,22 +113,24 @@ const anchor = () => button().parentElement!;
 const card = () => document.querySelector<HTMLElement>(".island-hover-card");
 const cardLines = () => [...card()!.querySelectorAll(".island-hover-card__line")].map((line) => line.textContent);
 const arcColors = () => [...button().querySelectorAll(".mini-ring__arc")].map((arc) => (arc as SVGElement).style.stroke);
-const wait = (ms: number) => act(async () => { await new Promise((resolve) => setTimeout(resolve, ms)); });
+const CARD_DELAY_MS = 200;
+const shownCard = () => until(() => card() && animationsDone(card()!) && card());
 const push = async (next: AgentUsage | null) => {
+  const shown = button().getAttribute("aria-label");
   current = next;
   await act(async () => button().click());
-  await wait(20);
+  await until(() => button().getAttribute("aria-label") !== shown);
 };
 const hover = async () => {
   await act(async () => { anchor().dispatchEvent(new PointerEvent("pointerover", { bubbles: true })); });
-  await wait(260);
+  await shownCard();
 };
 const leave = () => act(async () => { anchor().dispatchEvent(new PointerEvent("pointerout", { bubbles: true, relatedTarget: document.body })); });
 const results = document.getElementById("results")!;
 
 async function runChecks() {
   try {
-    await wait(50);
+    await until(() => button()?.querySelectorAll(".mini-ring__arc").length === 2);
     check(button() && button().nextElementSibling === null && anchor().parentElement?.classList.contains("island__gauge-slot"), "用量环在仪表槽位里，是一个按钮");
     check(!button().title && !button().querySelector("[title]"), "不用原生 title 提示");
     check(button().querySelectorAll(".mini-ring__track").length === 2, "同心双环：两条底轨");
@@ -145,10 +148,12 @@ async function runChecks() {
     check(dark.join("|") === "rgb(255, 178, 122)|rgba(241, 240, 246, 0.12)" && light.join("|") === "rgb(147, 64, 15)|rgba(24, 24, 30, 0.12)",
       `深色岛和浅色岛各用一套颜色，轨道跟着岛的深浅（${dark.join(" / ")}；${light.join(" / ")}）`);
 
+    const hoveredAt = performance.now();
     await act(async () => { anchor().dispatchEvent(new PointerEvent("pointerover", { bubbles: true })); });
-    await wait(100);
-    check(!card(), "停留不到 200ms 不出现卡片");
-    await wait(160);
+    await until(card);
+    const shownAfter = performance.now() - hoveredAt;
+    check(card() && shownAfter >= CARD_DELAY_MS - 20, `停留不到 200ms 不出现卡片（${Math.round(shownAfter)}ms 后出现）`);
+    await shownCard();
     const island = document.querySelector(".island")!.getBoundingClientRect();
     const box = card()!.getBoundingClientRect();
     check(card()!.closest(".stage") && !card()!.closest(".island"), "卡片画在舞台里、岛外面");
@@ -162,7 +167,7 @@ async function runChecks() {
     const ring = button().getBoundingClientRect();
     const pointerX = ring.left + ring.width / 2;
     await act(async () => { anchor().dispatchEvent(new PointerEvent("pointerover", { bubbles: true, clientX: pointerX, clientY: ring.top + ring.height / 2 })); });
-    await wait(260);
+    await shownCard();
     const placed = card()!.getBoundingClientRect();
     check(placed.right <= pointerX - 8 || placed.left >= pointerX + 22, `鼠标停在环上时，卡片避开指针（卡片 ${Math.round(placed.left)}–${Math.round(placed.right)}，指针 ${Math.round(pointerX)}）`);
     check(placed.top >= document.querySelector(".island")!.getBoundingClientRect().bottom, "避开指针时卡片仍在胶囊下方");
@@ -185,8 +190,7 @@ async function runChecks() {
 
     const before = { reads, refreshes };
     await act(async () => button().click());
-    await wait(20);
-    check(refreshes === before.refreshes + 1 && reads === before.reads + 1, "点击环先请求刷新，再重新读取用量");
+    check(await until(() => refreshes === before.refreshes + 1 && reads === before.reads + 1), "点击环先请求刷新，再重新读取用量");
     await act(async () => button().focus({ focusVisible: true } as FocusOptions));
     if (button().matches(":focus-visible")) check(card(), "键盘聚焦时也显示卡片");
     await act(async () => button().blur());
@@ -202,11 +206,10 @@ async function runChecks() {
     check(boxes.every((box, index) => box.right <= allIsland.right && (index === 0 || box.left >= boxes[index - 1].right)), "四个环都在胶囊里，互不重叠");
     check(planReads.includes("glm:false") && planReads.includes("kimi:false"), "GLM 和 Kimi 的环按各自的 provider 读用量");
     await act(async () => all[2].click());
-    await wait(20);
-    check(planReads.includes("glm:true"), "点击 GLM 的环会重新向 GLM 查询");
+    check(await until(() => planReads.includes("glm:true")), "点击 GLM 的环会重新向 GLM 查询");
     const glmAnchor = all[2].parentElement!;
     await act(async () => { glmAnchor.dispatchEvent(new PointerEvent("pointerover", { bubbles: true })); });
-    await wait(260);
+    await shownCard();
     check(cardLines().join(" / ") === "GLM · GLM Coding Pro / 5 小时 35% · 1 小时 31 分后重置 / 7 天 52% · 2 天 18 小时后重置 / MCP 本月 8% / 2 分钟前更新 · 来自智谱开放平台", `GLM 卡片：${cardLines().join(" / ")}`);
     await act(async () => { glmAnchor.dispatchEvent(new PointerEvent("pointerout", { bubbles: true, relatedTarget: document.body })); });
 
@@ -221,11 +224,11 @@ async function runChecks() {
       input.dispatchEvent(new Event("input", { bubbles: true }));
     });
     await act(async () => fields[0].querySelector("button")!.click());
-    await wait(20);
+    await until(() => hint() === "已保存");
     check(keyWrites.join() === "glm:sk-secret-123" && input.value === "" && hint() === "已保存" && buttons().join() === "保存,删除", "保存后清空输入框，显示已保存和删除按钮");
     check(!document.body.innerHTML.includes("sk-secret-123") && input.placeholder === "已保存，粘贴新的 Key 可替换", "保存后页面里不再有这个 Key");
     await act(async () => fields[0].querySelectorAll("button")[1].click());
-    await wait(20);
+    await until(() => hint() === "未保存");
     check(keyWrites[keyWrites.length - 1] === "glm:" && hint() === "未保存", "删除时传空 Key，回到未保存");
 
     results.textContent = `${messages.join("\n")}\n\n全部 ${messages.length} 项检查通过。`;
