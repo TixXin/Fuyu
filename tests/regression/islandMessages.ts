@@ -22,6 +22,7 @@ export type FixtureMessages = {
 export const NO_PLUGIN_NOTIFICATIONS: PluginNotificationsController = { notification: null, dismiss: () => {}, runAction: () => {}, post: () => {} };
 const ignoreOpen = () => {};
 const FLAGS = { showsMessage: false, hold: false, arrivalsHeight: null, maxPanelHeight: 490 };
+const NO_PAGES = { qq: false, wechat: false };
 
 export function useFixtureMessages(messages: FixtureMessages | null) {
   const state = messages && {
@@ -35,5 +36,5 @@ export function useFixtureMessages(messages: FixtureMessages | null) {
     panel: messages.panel ?? null,
     banner: messages.banner ?? null,
   };
-  useMessagesIsland(state, FLAGS);
+  useMessagesIsland(state, { ...FLAGS, pages: messages ? { qq: messages.qq.snapshot.enabled, wechat: messages.wechat.snapshot.enabled } : NO_PAGES });
 }

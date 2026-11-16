@@ -1,15 +1,12 @@
-import type { ComponentProps } from "react";
 import { defineSlot } from "../../plugin-kernel/slots";
 import { MessageBanner } from "../banner/MessageBanner";
+import { messagesIsland } from "./islandState";
 
-type OverlayContext = {
-  messageBanner: ComponentProps<typeof MessageBanner> | null;
-};
+const overlaySlot = defineSlot<object>("island.overlay/v1");
 
-const overlaySlot = defineSlot<OverlayContext>("island.overlay/v1");
-
-function BannerOverlay({ messageBanner }: OverlayContext) {
-  return messageBanner ? <MessageBanner {...messageBanner} /> : null;
+function BannerOverlay() {
+  const banner = messagesIsland.use()?.banner;
+  return banner ? <MessageBanner {...banner} /> : null;
 }
 
 overlaySlot.add({ id: "messages.banner", component: BannerOverlay });

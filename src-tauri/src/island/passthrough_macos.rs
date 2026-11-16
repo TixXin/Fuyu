@@ -2,7 +2,7 @@ use serde::Serialize;
 use std::{
     sync::atomic::{AtomicBool, Ordering},
     thread,
-    time::Duration,
+    time::{Duration, Instant},
 };
 use tauri::{Emitter, WebviewWindow};
 
@@ -20,6 +20,7 @@ const ISLAND_MOVE_ARMED_CHANGED_EVENT: &str = "island-move-armed-changed";
 const ISLAND_CURSOR_MOVED_EVENT: &str = "island-cursor-moved";
 const CURSOR_EVENT_EVERY_TICKS: u32 = 3;
 const TICK: Duration = Duration::from_millis(12);
+const MODIFIER_ARM_DELAY: Duration = Duration::from_millis(200);
 
 static CURSOR_TRACKING: AtomicBool = AtomicBool::new(false);
 
@@ -37,6 +38,22 @@ struct Pointer {
     height: f64,
     cursor_x: f64,
     cursor_y: f64,
+}
+
+#[derive(Debug, Default)]
+struct ModifierHold {
+    since: Option<Instant>,
+}
+
+impl ModifierHold {
+    fn update(&mut self, only_control: bool, now: Instant) -> bool {
+        if !only_control {
+            self.since = None;
+            return false;
+        }
+        let since = *self.since.get_or_insert(now);
+        now.saturating_duration_since(since) >= MODIFIER_ARM_DELAY
+    }
 }
 
 #[tauri::command]
@@ -94,6 +111,7 @@ pub(crate) fn start_cursor_passthrough_loop(window: WebviewWindow) {
         let mut was_on_banner = false;
         let mut was_held = false;
         let mut was_move_armed = false;
+        let mut modifier_hold = ModifierHold::default();
         let mut tick: u32 = 0;
         let mut last_cursor: Option<CursorPoint> = None;
 
@@ -117,7 +135,7 @@ pub(crate) fn start_cursor_passthrough_loop(window: WebviewWindow) {
                 let _ = window.emit(ISLAND_BANNER_HOVER_CHANGED_EVENT, is_on_banner);
             }
 
-            let modifier = input::is_control_key_down();
+            let modifier = modifier_hold.update(input::is_only_control_key_down(), Instant::now());
             let state = read_window_state();
             let move_armed = is_inside && modifier && !state.is_tucked;
             if move_armed != was_move_armed {
@@ -144,4 +162,31 @@ pub(crate) fn start_cursor_passthrough_loop(window: WebviewWindow) {
             thread::sleep(TICK);
         }
     });
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn modifier_arms_only_after_delay() {
+        let start = Instant::now();
+        let mut hold = ModifierHold::default();
+        assert!(!hold.update(true, start));
+        assert!(!hold.update(true, start + Duration::from_millis(150)));
+        assert!(hold.update(true, start + MODIFIER_ARM_DELAY));
+        assert!(hold.update(true, start + Duration::from_millis(500)));
+    }
+
+    #[test]
+    fn releasing_or_adding_keys_disarms_at_once() {
+        let start = Instant::now();
+        let mut hold = ModifierHold::default();
+        hold.update(true, start);
+        assert!(hold.update(true, start + Duration::from_millis(300)));
+        assert!(!hold.update(false, start + Duration::from_millis(310)));
+        assert!(!hold.update(true, start + Duration::from_millis(320)));
+        assert!(!hold.update(true, start + Duration::from_millis(500)));
+        assert!(hold.update(true, start + Duration::from_millis(520)));
+    }
 }
