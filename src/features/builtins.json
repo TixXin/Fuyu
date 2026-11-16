@@ -18,8 +18,8 @@
     { "id": "local-api", "kind": "builtin", "root": "local-api", "host": "host/index.mjs" },
     { "id": "center-pattern", "kind": "builtin", "root": "center-pattern", "host": "host/index.mjs" },
     { "id": "messages", "kind": "builtin", "root": "messages", "host": "host/index.mjs" },
-    { "id": "device-events", "kind": "builtin", "root": "device-events", "host": "host/index.mjs" },
-    { "id": "system-levels", "kind": "builtin", "root": "system-levels", "host": "host/index.mjs" },
+    { "id": "device-events", "kind": "builtin", "root": "device-events", "host": "host/index.mjs", "background": ["watcher"] },
+    { "id": "system-levels", "kind": "builtin", "root": "system-levels", "host": "host/index.mjs", "background": ["watcher"] },
     { "id": "device-use", "kind": "builtin", "root": "device-use", "host": "host/index.mjs", "background": [] },
     { "id": "theme-market", "kind": "builtin", "root": "theme-market", "host": "host/index.mjs", "background": [] },
     { "id": "updater", "kind": "essential", "root": "updater", "host": "host/index.mjs", "background": [] }

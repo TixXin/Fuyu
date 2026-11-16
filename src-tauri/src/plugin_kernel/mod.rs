@@ -9,6 +9,7 @@ mod node_status;
 pub(crate) mod protocol;
 mod safe_mode;
 mod v2_builtins;
+pub(crate) mod worker;
 
 use std::{
     path::PathBuf,

@@ -266,8 +266,6 @@ pub fn run() {
             island;
             todos;
             system;
-            system_levels;
-            device_events;
             agent_status;
             calendar;
             agent_approval;

@@ -108,7 +108,7 @@ fn the_charger_alerts_on_change_only() {
     assert_eq!(tracker.update(Some(true), Some(59)), Some(DeviceAlert::PowerConnected { battery: Some(59) }));
     assert_eq!(tracker.update(None, None), None);
     assert_eq!(tracker.update(Some(false), Some(80)), Some(DeviceAlert::PowerDisconnected { battery: Some(80) }));
-    tracker.reset();
+    let mut tracker = PowerTracker::default();
     assert_eq!(tracker.update(Some(true), None), None);
 }
 
@@ -228,4 +228,11 @@ mod peripherals {
         }
         assert_eq!(tracker.update(vec![mouse(Some(70))]), vec![connected(70)]);
     }
+}
+
+#[test]
+fn the_watcher_is_the_background_listed_for_device_events() {
+    let catalog = crate::plugin_kernel::builtins::catalog();
+    let plugin = catalog.iter().find(|plugin| plugin.id == super::PLUGIN_ID).expect("device-events is a built-in plugin");
+    assert_eq!(plugin.background.as_deref(), Some(&[super::WATCHER.to_owned()][..]));
 }

@@ -68,10 +68,6 @@ pub(crate) struct PeripheralTracker {
 }
 
 impl PeripheralTracker {
-    pub(crate) fn reset(&mut self) {
-        *self = Self::default();
-    }
-
     pub(crate) fn update(&mut self, peripherals: Vec<Peripheral>) -> Vec<DeviceAlert> {
         self.poll += 1;
         let first = !std::mem::replace(&mut self.started, true);
