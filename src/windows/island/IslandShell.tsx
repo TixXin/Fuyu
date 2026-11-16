@@ -64,7 +64,6 @@ type IslandShellProps = {
   minimizesToTray: boolean;
   onMinimize: () => void;
   onOpenTranslator: (() => void) | null;
-  onScreenshot?: (() => void) | null;
   notice?: { content: ReactNode; actions: ReactNode } | null;
   onOpenSettings: (section?: "updates") => void;
   onTuck: () => void;
@@ -114,7 +113,6 @@ export function IslandShell({
   minimizesToTray,
   onMinimize,
   onOpenTranslator,
-  onScreenshot,
   notice,
   onOpenSettings,
   onTuck,
@@ -262,7 +260,6 @@ export function IslandShell({
             onOpenSettings={onOpenSettings}
             onOpenMessages={onOpenMessages}
             onOpenTranslator={onOpenTranslator}
-            onScreenshot={onScreenshot}
             onResetPosition={onResetPosition}
             minimizesToTray={minimizesToTray}
             onMinimize={onMinimize}

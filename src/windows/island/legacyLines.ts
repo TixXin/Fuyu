@@ -10,16 +10,12 @@ type LegacyLineInput = {
   agentSession: AgentSession | null;
   interjecting: boolean;
   agentIconWidth: number;
-  screenshotPeek: string | null;
 };
 
 export function useLegacyLines(input: LegacyLineInput): CollapsedLineSources {
   const t = useTranslation();
-  const { agentSession, screenshotPeek } = input;
+  const { agentSession } = input;
   const list: IslandContribution[] = [];
-  if (screenshotPeek !== null) {
-    list.push({ kind: "line", item: "screenshot.text", priority: LINE_PRIORITY.screenshotPeek, always: true, bare: true, drop: true, action: "translation.open-peek", label: t.translator.peekLabel(screenshotPeek) });
-  }
   if (agentSession) {
     list.push({
       kind: "line",
@@ -34,5 +30,5 @@ export function useLegacyLines(input: LegacyLineInput): CollapsedLineSources {
     });
   }
   useIslandContributions("builtin", "legacy.lines", list);
-  return { agentSession, screenshotPeek };
+  return { agentSession };
 }

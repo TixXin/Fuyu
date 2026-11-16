@@ -4,7 +4,6 @@ import { defineSlot } from "../../../features/plugin-kernel/slots";
 
 export type CollapsedLineSources = {
   agentSession: AgentSession | null;
-  screenshotPeek: string | null;
 };
 
 export type CollapsedLineContext = CollapsedLineSources & {

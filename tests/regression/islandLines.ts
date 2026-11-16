@@ -78,6 +78,5 @@ export function useFixtureLines({ barText = true, agentSession = null, lyricLine
     agentSession,
     interjecting: false,
     agentIconWidth,
-    screenshotPeek: null,
   });
 }

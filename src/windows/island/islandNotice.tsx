@@ -3,8 +3,6 @@ import type { ClipboardCopyCardState } from "../../features/clipboard/useClipboa
 import { SlotView } from "../../features/plugin-kernel/SlotView";
 import { defineSlot, type IslandNoticeMeta } from "../../features/plugin-kernel/slots";
 import { useSlotEntries } from "../../features/plugin-kernel/useSlotEntries";
-import type { RecordingNoticeState } from "../../features/screenshot/useRecording";
-import type { ScreenshotNoticeState } from "../../features/screenshot/useScreenshotNotice";
 import { useIslandContributed } from "../../features/plugin-kernel/useIslandContributions";
 import { openSettingsWindow } from "../settings/api";
 import { FirstHintActions, FirstHintNotice } from "./first-hints/FirstHintNotice";
@@ -14,8 +12,6 @@ import "./slots/builtins";
 export type IslandNotice = { content: ReactNode; actions: ReactNode };
 
 type NoticeSources = {
-  recording: RecordingNoticeState;
-  screenshotNotice: ScreenshotNoticeState;
   copyCard: ClipboardCopyCardState;
   firstHints: FirstHintsController;
 };
