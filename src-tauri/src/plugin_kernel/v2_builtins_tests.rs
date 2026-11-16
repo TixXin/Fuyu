@@ -34,20 +34,20 @@ fn migrates_once_into_plugins_yml() {
     let file = home.join("plugins-v3").join("plugins.yml");
     std::fs::write(home.join(V2_STATE), json!({ "plugins": { "focusd.timer": { "enabled": false, "settings": { "sound": false } } } }).to_string()).unwrap();
     migrate(&home, &file);
-    assert_eq!(std::fs::read_to_string(&file).unwrap(), "- id: timer\n  disabled: true\n  config:\n    sound: false\n- id: claude-usage\n  disabled: true\n- id: cc-connect\n  disabled: true\n");
+    assert_eq!(std::fs::read_to_string(&file).unwrap(), "- id: timer\n  disabled: true\n  config:\n    sound: false\n- id: claude-usage\n  disabled: true\n- id: cc-connect\n  disabled: true\n- id: session-ring\n  disabled: true\n");
     std::fs::write(&file, "[]\n").unwrap();
     migrate(&home, &file);
     assert_eq!(std::fs::read_to_string(&file).unwrap(), "[]\n");
     let marker: Value = serde_json::from_str(&std::fs::read_to_string(home.join("plugins-v3").join(MARKER)).unwrap()).unwrap();
-    assert_eq!(marker, json!({ "format": 1, "migrated": ["focusd.cc-connect", "focusd.claude-usage", "focusd.timer"] }));
+    assert_eq!(marker, json!({ "format": 1, "migrated": ["focusd.cc-connect", "focusd.claude-usage", "focusd.session-ring", "focusd.timer"] }));
 }
 
 #[test]
-fn without_old_settings_only_the_usage_rings_and_cc_connect_start_off() {
+fn without_old_settings_only_the_usage_rings_cc_connect_and_the_session_ring_start_off() {
     let home = scratch("fresh");
     let file = home.join("plugins-v3").join("plugins.yml");
     migrate(&home, &file);
-    assert_eq!(std::fs::read_to_string(&file).unwrap(), "- id: claude-usage\n  disabled: true\n- id: cc-connect\n  disabled: true\n");
+    assert_eq!(std::fs::read_to_string(&file).unwrap(), "- id: claude-usage\n  disabled: true\n- id: cc-connect\n  disabled: true\n- id: session-ring\n  disabled: true\n");
     assert!(home.join("plugins-v3").join(MARKER).exists());
 }
 
@@ -88,4 +88,17 @@ fn cc_connect_carries_its_switch_program_and_runner() {
     let blank = grants_of(json!({ "focusd.cc-connect": { "enabled": false, "settings": { "path": "  ", "run": "yes" } } }));
     assert_eq!(plan(cc_connect(), &blank), Some(Plan { id: "cc-connect", disable: true, config: vec![] }));
     assert_eq!(plan(cc_connect(), &grants_of(json!({}))), Some(Plan { id: "cc-connect", disable: true, config: vec![] }));
+}
+
+fn session_ring() -> &'static Migration {
+    MIGRATIONS.iter().find(|migration| migration.v3 == "session-ring").unwrap()
+}
+
+#[test]
+fn the_session_ring_carries_its_switch_style_and_count() {
+    let on = grants_of(json!({ "focusd.session-ring": { "enabled": true, "settings": { "style": "signal", "showCount": false, "other": 1 } } }));
+    assert_eq!(plan(session_ring(), &on), Some(Plan { id: "session-ring", disable: false, config: vec![("style", json!("signal")), ("showCount", json!(false))] }));
+    let odd = grants_of(json!({ "focusd.session-ring": { "enabled": false, "settings": { "style": 3, "showCount": "no" } } }));
+    assert_eq!(plan(session_ring(), &odd), Some(Plan { id: "session-ring", disable: true, config: vec![] }));
+    assert_eq!(plan(session_ring(), &grants_of(json!({}))), Some(Plan { id: "session-ring", disable: true, config: vec![] }));
 }

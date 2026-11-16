@@ -4,7 +4,7 @@ export type AgentRemoteHosts = { hosts: Array<RemoteHostStatus>, };
 
 export type AgentReportEntry = { id: string, name: string, phase: string, updatedAt: number, };
 
-export type AgentSessionEntry = { key: string, provider: string, sessionId: string, title: string | null, cwd: string | null, phase: string, updatedAt: number, remoteHost: string | null, listed: boolean, unseen: boolean, };
+export type AgentSessionEntry = { key: string, provider: string, sessionId: string, title: string | null, cwd: string | null, phase: string, light: string, updatedAt: number, remoteHost: string | null, listed: boolean, unseen: boolean, };
 
 export type AgentSessions = { sessions: Array<AgentSessionEntry>, others: Array<AgentReportEntry>, };
 

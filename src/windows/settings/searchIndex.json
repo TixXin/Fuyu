@@ -2991,6 +2991,30 @@
       }
     },
     {
+      "page": "agents",
+      "zh-CN": {
+        "group": "会话环",
+        "title": "样式"
+      },
+      "en": {
+        "group": "Session ring",
+        "title": "Style"
+      }
+    },
+    {
+      "page": "agents",
+      "zh-CN": {
+        "group": "会话环",
+        "title": "显示会话数",
+        "description": "分段环中间和状态条前面的数字。关掉后只看颜色比例；像素格和信号格本来就不写数字。"
+      },
+      "en": {
+        "group": "Session ring",
+        "title": "Show the count",
+        "description": "The number in the segmented ring and before the state bar. Off, only the colours' shares show; the pixel grid and signal bars have no number anyway."
+      }
+    },
+    {
       "page": "agentSessions",
       "zh-CN": {
         "group": "会话列表",

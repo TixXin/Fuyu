@@ -2,7 +2,6 @@ import { useMemo, type CSSProperties } from "react";
 import { IslandHoverCard } from "../../components/IslandHoverCard";
 import { MiniRing } from "../../components/MiniRing";
 import { useTranslation } from "../../i18n";
-import type { AgentSessionSummary } from "../agent-status/api";
 import {
   SESSION_RING_STATES,
   sessionGridCells,
@@ -10,21 +9,20 @@ import {
   sessionRingSegments,
   sessionRingSummary,
   sessionSignal,
+  type RingSession,
   type SessionRingCounts,
 } from "./ringCounts.ts";
+import type { SessionRingStyle } from "./ringConfig.ts";
 import "./SessionRing.css";
 
 export const SESSION_RING_SIZE = 24;
 
-export const SESSION_RING_STYLES = ["grid", "ring", "bar", "signal"] as const;
-export type SessionRingStyle = (typeof SESSION_RING_STYLES)[number];
 
 const STATE_COLORS: Record<string, string> = Object.fromEntries(SESSION_RING_STATES.map(({ key, color }) => [key, color]));
 const colorOf = (state: string | undefined) => (state && STATE_COLORS[state] ? ({ "--cell-color": STATE_COLORS[state] } as CSSProperties) : undefined);
 
 type SessionRingProps = {
-  sessions: readonly AgentSessionSummary[];
-  unseen: ReadonlySet<string>;
+  sessions: readonly RingSession[];
   counts: SessionRingCounts;
   style: SessionRingStyle;
   showCount: boolean;
@@ -72,12 +70,12 @@ function SessionSignal({ counts }: { counts: SessionRingCounts }) {
   );
 }
 
-export function SessionRing({ sessions, unseen, counts, style, showCount, paused, onOpen }: SessionRingProps) {
+export function SessionRing({ sessions, counts, style, showCount, paused, onOpen }: SessionRingProps) {
   const t = useTranslation();
   const summary = sessionRingSummary(counts, t.sessionRing);
   const lines = useMemo(
-    () => sessionRingCardLines(sessions, unseen, t.sessionRing).map((text) => ({ text })),
-    [sessions, unseen, t.sessionRing],
+    () => sessionRingCardLines(sessions, t.sessionRing).map((text) => ({ text })),
+    [sessions, t.sessionRing],
   );
   return (
     <IslandHoverCard lines={lines}>

@@ -24,7 +24,7 @@ mockIPC((command, payload) => {
 }, { shouldMockEvents: true });
 mockWindows("main");
 
-const SESSION: AgentSessionEntry = { key: "claude:s1", provider: "claude", sessionId: "s1", cwd: "E:\\Projects\\demo", title: "demo", phase: "running", updatedAt: 0, remoteHost: null, listed: true, unseen: false };
+const SESSION: AgentSessionEntry = { key: "claude:s1", provider: "claude", sessionId: "s1", cwd: "E:\\Projects\\demo", title: "demo", phase: "running", light: "working", updatedAt: 0, remoteHost: null, listed: true, unseen: false };
 const REMOTE: AgentSessionEntry = { ...SESSION, key: "claude:r1", sessionId: "r1", remoteHost: "box" };
 let sessions: AgentSessionEntry[] = [SESSION, REMOTE];
 const focused: unknown[] = [];
