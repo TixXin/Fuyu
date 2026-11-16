@@ -85,6 +85,7 @@ let chosen: Result<ChosenNode, String> = node_for_host(
 - 想先知道要不要下载（决定岛上显示「正在准备」）：`plugin_base::installed_node(&data_dir, &official_download(proxy)?)`，不联网。
 - 失败的字符串里有找过的每个位置和每个下载地址的原因，直接进日志；岛上显示可重试的错误，重试就是再调一次（临时文件已经清掉了）。
 - 代理沿用更新器的设置（`get_updater_proxy`），和 cc-connect 的下载一致。
+- 浮屿里的接线（2026-11-16 起，E36.3.47）：`plugin_kernel/node_status.rs` 记找 Node 的状态，`checking` → `downloading`（`downloaded`、`total`，从上面的进度回调来）→ `ready`，或 `failed` 带上面那串原因。`get_plugin_host_connection` 的 `node` 把它交给窗口（宿主没开时是 `null`），设置的插件页在宿主没连上时每秒问一次，显示「正在下载 Node x / y MB」或「没能下载 Node」、原因和「重试」。失败后看管宿主的启动线程不退出，等 `retry_plugin_host_node` 再调一次 `node_for_host`（代理也重新读，期间改了系统代理会用上），不用重启浮屿；浮屿退出时这个线程跟着结束。岛上这次不显示。
 - 开发版和正式版的数据目录不同（开发版身份是 `com.tixxin.fuyu.lane-1`），各下各的。
 
 ## 正式版带上宿主脚本
