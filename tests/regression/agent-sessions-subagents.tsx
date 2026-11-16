@@ -3,7 +3,7 @@ import type { Root } from "react-dom/client";
 import { I18nProvider } from "../../src/i18n";
 import { AgentSessionsPanel } from "../../src/features/agent-status/AgentSessionsPanel";
 import type { AgentSessionSummary, AgentSubagent } from "../../src/features/agent-status/api";
-import { getAgentPageExpandedHeight } from "../../src/windows/island/layout";
+import { getAgentPageExpandedHeight } from "../../src/features/agent-status/islandLayout";
 
 type Context = { root: Root; fixture: HTMLElement; sessions: AgentSessionSummary[]; check: (condition: unknown, label: string) => void; chromeHeight: number };
 

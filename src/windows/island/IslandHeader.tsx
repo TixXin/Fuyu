@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import { Bot } from "lucide-react";
-import type { AgentVisualState } from "../../features/agent-status/status";
 import type { MessageSource } from "../../features/messages/messagePreview";
 import { SlotView } from "../../features/plugin-kernel/SlotView";
 import { useSlotEntries } from "../../features/plugin-kernel/useSlotEntries";
@@ -18,7 +17,7 @@ type IslandHeaderProps = {
   features: IslandFeatures;
   showTitle: boolean;
   isDetached: boolean;
-  agentVisualState: AgentVisualState;
+  agentVisualState: string;
   agentStatusLabel: string;
   qqNotificationCount: number;
   wechatPending: boolean;

@@ -88,10 +88,10 @@ function Fixture({ all = false }: { all?: boolean }) {
   const providers = all ? USAGE_PROVIDERS : USAGE_PROVIDERS.slice(0, 1);
   const sideWidth = providers.length * CLAUDE_USAGE_GAUGE_WIDTH;
   return <div className={`stage${all ? " stage--all" : ""}`} style={{ "--collapsed-island-width": `${280 + sideWidth}px` } as CSSProperties}>
-    <IslandShell lineSources={useFixtureLines({ todoTitle: "剩余3个待办" })} qqNotifications={qq} wechatReminders={wechat} qqMail={qqMail} pluginNotifications={NO_PLUGIN_NOTIFICATIONS} preview={preview}
+    <IslandShell lineSources={useFixtureLines({ status: { state: "idle", label: "AI Agent 空闲或已完成" }, todoTitle: "剩余3个待办" })} qqNotifications={qq} wechatReminders={wechat} qqMail={qqMail} pluginNotifications={NO_PLUGIN_NOTIFICATIONS} preview={preview}
       mode="collapsed" page="todo" isTucked={false} isDetached={true} showTitle={false}
       showCollapsedText={true} activeAgentSessionCount={0}
-      appearanceMode="classic" nativeGlassState="disabled" agentVisualState="idle" agentStatusLabel="AI Agent 空闲或已完成"
+      appearanceMode="classic" nativeGlassState="disabled"
       features={{ todo: true, music: false, clipboard: true, shelf: true, qq: false, wechat: false, qqMail: false, agents: false, translation: false, calendar: false, screenshots: false, timer: false }}
       shelfCount={null} collapsedSlots={{ gauges: providers.map((provider) => ({ id: `usage:${provider.id}`, node: <ClaudeUsageGauge key={provider.id} provider={provider} /> })), sideWidth }}
       onOpenPage={() => {}} onOpenMessages={() => {}}
