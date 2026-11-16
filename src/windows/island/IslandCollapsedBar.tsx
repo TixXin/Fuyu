@@ -1,8 +1,6 @@
 import { Fragment, type ReactNode } from "react";
 import type { QuotaAlert } from "../../features/agent-status/quotaAlerts";
 import type { AgentVisualState } from "../../features/agent-status/status";
-import type { MediaState } from "../../features/media/api";
-import { useAudible } from "../../features/media/useAudible";
 import { CollapsedMessageContent } from "../../features/messages/CollapsedMessageContent";
 import { useCollapsedBarItems, type CollapsedBarItem } from "./collapsedBarItems";
 import { messagePreviewText, type MessagePreview, type MessageSource } from "../../features/messages/messagePreview";
@@ -43,8 +41,6 @@ type IslandCollapsedBarProps = {
   collapsedLabel: string;
   lineSources: CollapsedLineSources;
   agentSessionCount: number | null;
-  mediaState: MediaState;
-  showMusic: boolean;
   shelfCount: number | null;
   quotaAlert?: QuotaAlert | null;
   agentVisualState: AgentVisualState;
@@ -92,8 +88,6 @@ export function IslandCollapsedBar({
   collapsedLabel,
   lineSources,
   agentSessionCount,
-  mediaState,
-  showMusic,
   shelfCount,
   quotaAlert = null,
   agentVisualState,
@@ -109,7 +103,6 @@ export function IslandCollapsedBar({
   const t = useTranslation();
   const notch = useIslandNotch();
   const updateVersion = useUpdateReminder();
-  const audible = useAudible(mediaState.audioActive);
   const { didDragRef, prepareWindowDrag, handleWindowDragMove, cancelWindowDrag } =
     useWindowDragGesture(isTucked, onWindowDragStart);
   const pulseClassName = [
@@ -140,8 +133,7 @@ export function IslandCollapsedBar({
     qqMail,
     updateVersion,
       shelfCount,
-    showMusic: showMusic && audible,
-    mediaState,
+    hints: contributed.hints,
     agentSessionCount,
     slots,
     onOpenPage,

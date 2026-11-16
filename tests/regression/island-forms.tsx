@@ -12,19 +12,11 @@ import type { PluginNotificationsController } from "../../src/features/plugins/u
 import { useQQNotifications } from "../../src/features/messages/qq-notifications/QQNotifications";
 import { useWeChatReminders } from "../../src/features/messages/wechat/WeChatReminders";
 import { useMail } from "../../src/features/messages/mail/MailPanel";
-import type { MediaState } from "../../src/features/media/api";
 import { useFixtureLines } from "./islandLines";
 
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
 const automated = new URLSearchParams(location.search).has("test");
 const NO_PLUGIN_NOTIFICATIONS: PluginNotificationsController = { notification: null, dismiss: () => {}, runAction: () => {}, post: () => {} };
-const UNAVAILABLE_MEDIA: MediaState = {
-  available: false, audioActive: false, audioPeak: 0, playbackStatus: "unavailable",
-  title: null, artist: null, album: null, thumbnail: null, positionMs: 0, durationMs: 0,
-  canSeek: false, canNext: false, canPrevious: false, shuffleActive: null, canShuffle: false,
-  repeatMode: "unknown", canRepeat: false, volume: -1, sourceApp: null, activeSessionId: null,
-  sessions: [], updatedAt: 0,
-};
 const SIMULATED: IslandNotch = { width: 72, height: 32, simulated: true };
 const REAL: IslandNotch = { width: 200, height: 32 };
 mockIPC((command) => {
@@ -47,7 +39,6 @@ function Fixture() {
       mode={state.expanded ? "expanded" : "collapsed"} page={state.popup ? "agents" : "todo"} popup={state.popup} isTucked={state.tucked} isDetached={islandFormLayout({ islandForm: state.form, marginY: 0, menuBarPlacement: "notch" }).marginY > 0} showTitle={false}
       showCollapsedText={!state.notch} activeAgentSessionCount={0}
       appearanceMode="classic" nativeGlassState="disabled" agentVisualState="idle" agentStatusLabel="AI Agent 空闲或已完成"
-      mediaState={UNAVAILABLE_MEDIA}
       features={{ todo: true, music: true, clipboard: true, shelf: true, qq: true, wechat: true, qqMail: true, agents: true, translation: true, calendar: true, screenshots: true } as never}
       shelfCount={null}
       onOpenPage={() => {}} onOpenMessages={() => {}}

@@ -1,18 +1,20 @@
 import { useTranslation } from "../../../i18n";
 import { defineSlot } from "../../plugin-kernel/slots";
-import type { MediaState } from "../api";
 import { MusicWaveButton } from "../MusicWaveButton";
+import { mediaIsland } from "./islandState";
 
 type SideContext = {
-  mediaState: MediaState;
-  showCover: boolean;
   onOpenPage: (page: "music") => void;
 };
 
 const sideSlot = defineSlot<SideContext>("island.side/v1");
 
-function MusicRow({ mediaState, showCover, onOpenPage }: SideContext) {
+function MusicRow({ onOpenPage }: SideContext) {
   const t = useTranslation();
+  const island = mediaIsland.use();
+  if (!island) return null;
+  const { mediaState } = island.media;
+  const showCover = island.sideCover;
   const playing = mediaState.playbackStatus === "playing";
   const cover = showCover ? mediaState.thumbnail : null;
   if (cover) {

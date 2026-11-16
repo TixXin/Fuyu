@@ -1,17 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { AgentSessionSummary } from "../../features/agent-status/api";
-import type { MediaState } from "../../features/media/api";
-import { DEFAULT_MEDIA_STATE } from "../../features/media/mediaState";
 import { useTranslation } from "../../i18n";
 import { ONBOARDING_DEMO_STORAGE_KEY, islandDemoUntil } from "../onboarding/storage";
 
 export type OnboardingDemo = {
   active: boolean;
-  mediaState: MediaState | null;
+  startedAt: number;
   sessions: AgentSessionSummary[];
 };
 
-const OFF: OnboardingDemo = { active: false, mediaState: null, sessions: [] };
+const OFF: OnboardingDemo = { active: false, startedAt: 0, sessions: [] };
 
 export function useOnboardingDemo(): OnboardingDemo {
   const text = useTranslation().onboarding.demo;
@@ -45,19 +43,7 @@ export function useOnboardingDemo(): OnboardingDemo {
     if (!active) return OFF;
     return {
       active,
-      mediaState: {
-        ...DEFAULT_MEDIA_STATE,
-        available: true,
-        audioActive: true,
-        audioPeak: 0.55,
-        playbackStatus: "playing",
-        title: text.song,
-        artist: text.artist,
-        positionMs: 42_000,
-        durationMs: 214_000,
-        sourceApp: text.source,
-        updatedAt: startedAt,
-      },
+      startedAt,
       sessions: [{
         provider: "claudeCode",
         sessionId: "fuyu-onboarding-demo",
@@ -74,9 +60,4 @@ export function useOnboardingDemo(): OnboardingDemo {
       }],
     };
   }, [active, startedAt, text]);
-}
-
-export function withDemoMedia<T extends { mediaState: MediaState }>(media: T, demo: OnboardingDemo): T {
-  if (!demo.mediaState || media.mediaState.playbackStatus === "playing") return media;
-  return { ...media, mediaState: demo.mediaState };
 }

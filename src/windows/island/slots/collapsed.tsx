@@ -1,6 +1,5 @@
 import type { ComponentProps, ReactNode } from "react";
 import type { CollapsedCenter } from "../../../features/center-pattern";
-import type { MediaState } from "../../../features/media/api";
 import type { MailController } from "../../../features/messages/mail/MailPanel";
 import type { MessageSource } from "../../../features/messages/messagePreview";
 import { defineSlot, type IslandCollapsedCenterMeta, type IslandCollapsedMeta, type SlotWidth } from "../../../features/plugin-kernel/slots";
@@ -15,8 +14,7 @@ export type CollapsedBarContext = {
   updateVersion: string | null;
   statusLight: ReactNode;
   shelfCount: number | null;
-  showMusic: boolean;
-  mediaState: MediaState;
+  hints: ReadonlySet<string>;
   agentSessionCount: number | null;
   slots: CollapsedSlots;
   onOpenPage: (page: IslandPage) => void;

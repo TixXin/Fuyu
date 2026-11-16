@@ -5,6 +5,7 @@ mod command_text;
 mod copy_notice;
 pub(crate) mod deletion;
 pub(crate) mod edit;
+pub(crate) mod edit_image;
 pub(crate) mod expand;
 pub(crate) mod drag;
 #[cfg_attr(target_os = "macos", path = "hotkey_macos.rs")]
@@ -719,6 +720,8 @@ macro_rules! tauri_commands {
             crate::clipboard_history::deletion::restore_clipboard_history_items,
             crate::clipboard_history::edit::edit_clipboard_history_text,
             crate::clipboard_history::edit::undo_clipboard_history_edit,
+            crate::clipboard_history::edit_image::save_clipboard_history_image,
+            crate::clipboard_history::edit_image::read_clipboard_history_image,
             crate::clipboard_history::pins::set_clipboard_pin_key,
             crate::clipboard_history::pins::set_clipboard_pin_order,
             crate::clipboard_history::expand::set_clipboard_popup_expanded,

@@ -4,7 +4,7 @@ use super::secrets::{looks_like_secret, mask};
 use super::store::{hash_bytes, preview_text};
 use super::{current_unix_millis, service, ClipboardHistoryItem, ClipboardHistoryItemKind, ClipboardHistorySnapshot, SecretHandling};
 
-const UNDO_WINDOW_MS: i64 = 10_000;
+pub(super) const UNDO_WINDOW_MS: i64 = 10_000;
 
 static LAST_EDIT: Mutex<Option<Edit>> = Mutex::new(None);
 
@@ -13,6 +13,20 @@ pub(super) struct Edit {
     before: ClipboardHistoryItem,
     hash: String,
     at: i64,
+}
+
+impl Edit {
+    pub(super) fn new(before: ClipboardHistoryItem, hash: String, at: i64) -> Self {
+        Self { before, hash, at }
+    }
+
+    pub(super) fn before(&self) -> &ClipboardHistoryItem {
+        &self.before
+    }
+}
+
+pub(super) fn remember(edit: Edit) {
+    *LAST_EDIT.lock().unwrap_or_else(PoisonError::into_inner) = Some(edit);
 }
 
 pub(super) fn text_hash(text: &str) -> String {
@@ -49,6 +63,8 @@ fn with_content_of(current: &ClipboardHistoryItem, before: &ClipboardHistoryItem
         masked: before.masked,
         truncated: before.truncated,
         edited_at: before.edited_at,
+        image: before.image.clone(),
+        ocr_text: before.ocr_text.clone(),
         ..current.clone()
     }
 }
@@ -59,12 +75,12 @@ pub(super) fn apply_edit(items: &mut [ClipboardHistoryItem], id: &str, text: &st
         return Ok(None);
     }
     let next = rewritten(item, text, secrets, limit, now)?;
-    let edit = Edit { before: item.clone(), hash: next.hash.clone(), at: now };
+    let edit = Edit::new(item.clone(), next.hash.clone(), now);
     *item = next;
     Ok(Some(edit))
 }
 
-pub(super) fn apply_undo(items: &mut [ClipboardHistoryItem], id: &str, edit: &Edit, now: i64) -> Result<(), String> {
+pub(super) fn apply_undo(items: &mut [ClipboardHistoryItem], id: &str, edit: &Edit, now: i64) -> Result<ClipboardHistoryItem, String> {
     if edit.before.id != id || now.saturating_sub(edit.at) > UNDO_WINDOW_MS {
         return Err("This edit can no longer be undone.".to_string());
     }
@@ -72,8 +88,9 @@ pub(super) fn apply_undo(items: &mut [ClipboardHistoryItem], id: &str, edit: &Ed
     if item.hash != edit.hash {
         return Err("This entry changed again, so the edit can no longer be undone.".to_string());
     }
+    let undone = item.clone();
     *item = with_content_of(item, &edit.before);
-    Ok(())
+    Ok(undone)
 }
 
 #[tauri::command]
@@ -87,7 +104,7 @@ pub fn edit_clipboard_history_text(id: String, text: String) -> Result<Clipboard
     service.persist_locked(&state)?;
     let snapshot = super::ClipboardHistoryService::snapshot_locked(&state);
     drop(state);
-    *LAST_EDIT.lock().unwrap_or_else(PoisonError::into_inner) = Some(edit);
+    remember(edit);
     service.emit_changed();
     Ok(snapshot)
 }
@@ -98,13 +115,16 @@ pub fn undo_clipboard_history_edit(id: String) -> Result<ClipboardHistorySnapsho
     let mut last = LAST_EDIT.lock().unwrap_or_else(PoisonError::into_inner);
     let edit = last.as_ref().ok_or_else(|| "There is no edit to undo.".to_string())?;
     let mut state = service.state.lock().map_err(|error| error.to_string())?;
-    apply_undo(&mut state.items, &id, edit, current_unix_millis())?;
+    let undone = apply_undo(&mut state.items, &id, edit, current_unix_millis())?;
     *last = None;
     drop(last);
     service.persist_locked(&state)?;
     let snapshot = super::ClipboardHistoryService::snapshot_locked(&state);
     drop(state);
     service.emit_changed();
+    if let Some(image) = undone.image {
+        super::edit_image::remove_if_unused(&image);
+    }
     Ok(snapshot)
 }
 

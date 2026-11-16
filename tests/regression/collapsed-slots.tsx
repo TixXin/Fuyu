@@ -15,7 +15,6 @@ import type { PluginStatusEntry } from "../../src/features/plugin-views/api";
 import { useQQNotifications } from "../../src/features/messages/qq-notifications/QQNotifications";
 import { useWeChatReminders } from "../../src/features/messages/wechat/WeChatReminders";
 import { useMail } from "../../src/features/messages/mail/MailPanel";
-import type { MediaState } from "../../src/features/media/api";
 import type { KaraokeLine } from "../../src/features/media/lyrics/useCurrentLyric";
 import { karaokeWords } from "../../src/features/media/lyrics/lrc";
 import { karaokeLook } from "../../src/features/media/lyrics/lyricsSettings";
@@ -24,13 +23,6 @@ import { useFixtureLines } from "./islandLines";
 
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
 const automated = new URLSearchParams(location.search).has("test");
-const UNAVAILABLE_MEDIA: MediaState = {
-  available: false, audioActive: false, audioPeak: 0, playbackStatus: "unavailable",
-  title: null, artist: null, album: null, thumbnail: null, positionMs: 0, durationMs: 0,
-  canSeek: false, canNext: false, canPrevious: false, shuffleActive: null, canShuffle: false,
-  repeatMode: "unknown", canRepeat: false, volume: -1, sourceApp: null, activeSessionId: null,
-  sessions: [], updatedAt: 0,
-};
 const keys = ["fuyu-qq-notifications-enabled", "fuyu-wechat-reminders-enabled", "fuyu-qq-mail-settings"];
 const originals = keys.map((key) => localStorage.getItem(key));
 keys.forEach((key) => localStorage.removeItem(key));
@@ -71,7 +63,6 @@ function Fixture() {
       showCollapsedText={true} activeAgentSessionCount={state.count}
      
       appearanceMode="classic" nativeGlassState="disabled" agentVisualState="idle" agentStatusLabel="AI Agent 空闲或已完成"
-      mediaState={UNAVAILABLE_MEDIA}
       features={{ todo: true, music: false, clipboard: true, shelf: true, qq: false, wechat: false, qqMail: false, agents: state.agents, translation: false, calendar: false, screenshots: false, timer: false }}
       shelfCount={null} collapsedSlots={state.slots}
       onOpenPage={(page) => { openedPage = page; }} onOpenMessages={() => {}}

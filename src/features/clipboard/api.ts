@@ -155,6 +155,11 @@ export function addClipboardHistoryText(text: string) {
 
 export const editClipboardHistoryText = (id: string, text: string) => invoke<ClipboardHistorySnapshot>("edit_clipboard_history_text", { id, text });
 export const undoClipboardHistoryEdit = (id: string) => invoke<ClipboardHistorySnapshot>("undo_clipboard_history_edit", { id });
+export const readClipboardHistoryImage = (id: string) => invoke<ArrayBuffer>("read_clipboard_history_image", { id });
+export const saveClipboardHistoryImage = (id: string, image: ImageData, mode: "replace" | "new") =>
+  invoke<ClipboardHistorySnapshot>("save_clipboard_history_image", new Uint8Array(image.data.buffer, image.data.byteOffset, image.data.byteLength), {
+    headers: { "x-id": id, "x-width": String(image.width), "x-height": String(image.height), "x-mode": mode },
+  });
 
 export function pauseClipboardCapture(minutes: number | null) {
   return invoke<ClipboardHistorySnapshot>("pause_clipboard_capture", { minutes });
@@ -356,8 +361,9 @@ export type ClipboardPreviewPayload = {
 export type ClipboardPeek = { item: ClipboardHistoryItem; holding: boolean; prefetch: string[]; stay?: boolean };
 export type ClipboardPreviewLayout = { side: ClipboardPreviewSide; size: ClipboardPreviewSize };
 
-export function clipboardImageUrl(id: string) {
-  return convertFileSrc(id, IMAGE_SCHEME);
+export function clipboardImageUrl(id: string, version?: string) {
+  const url = convertFileSrc(id, IMAGE_SCHEME);
+  return version ? `${url}?v=${encodeURIComponent(version.slice(0, 16))}` : url;
 }
 
 export function showClipboardPreview() {
@@ -380,9 +386,7 @@ export function listenClipboardPreviewOpened(handler: (side: ClipboardPreviewSid
   return listen<ClipboardPreviewSide>(OPENED_EVENT, ({ payload }) => handler(payload));
 }
 
-export function listenClipboardPreviewClosing(handler: () => void) {
-  return listen(CLOSING_EVENT, () => handler());
-}
+export const listenClipboardPreviewClosing = (handler: () => void) => listen(CLOSING_EVENT, () => handler());
 
 export const listenClipboardPreviewLayout = (handler: (layout: ClipboardPreviewLayout) => void) => listen<ClipboardPreviewLayout>(LAYOUT_EVENT, ({ payload }) => handler(payload));
 export const setClipboardPreviewSize = (size: ClipboardPreviewSizeRequest) => invoke<ClipboardPreviewLayout>("set_clipboard_preview_size", { size });

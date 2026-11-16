@@ -28,8 +28,7 @@ export async function checkEdit(check: Check, calls: string[], text: ClipboardHi
   const editing = (on: boolean, then = "refocus") => `set_clipboard_preview_editing:${JSON.stringify({ editing: on, then })}`;
 
   await send(image);
-  await editInPreview();
-  check(!editButton() && !textarea(), "图片没有编辑按钮，收到编辑命令也不进编辑");
+  check(!editButton() && $("#frame .clipboard-preview__icon[aria-label='编辑图片']"), "图片的编辑按钮写「编辑图片」，不是编辑文字");
 
   await send(text);
   let mark = calls.length;

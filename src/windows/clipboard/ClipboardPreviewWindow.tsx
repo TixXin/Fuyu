@@ -12,6 +12,7 @@ import { useWindowLight } from "../../lib/theme/useWindowLight";
 import { useWindowAccent } from "../../lib/theme/useWindowAccent";
 import { ClipboardPreviewBar } from "./ClipboardPreviewBar";
 import { ClipboardPreviewEdges } from "./ClipboardPreviewEdges";
+import { ClipboardImageEditor } from "./ClipboardImageEditor";
 import "../../features/clipboard/ClipboardPopup.css";
 import "./ClipboardPreviewWindow.css";
 
@@ -79,7 +80,7 @@ export function ClipboardPreviewWindow() {
   };
 
   const item = payload?.item;
-  const editable = item?.kind === "text";
+  const editable = item?.kind === "text" || (item?.kind === "image" && Boolean(item.image));
   useClipboardPreviewCommand((command) => {
     if (command.type === "edit" && editable) setEditing(true);
   });
@@ -97,8 +98,20 @@ export function ClipboardPreviewWindow() {
       onPointerLeave={() => report({ type: "pointer", inside: false })}
     >
       <section key={opened} className="clipboard-popup clipboard-preview" aria-label={t.clipboard.popup.preview.label}>
-        <ClipboardPreviewBar hint={hint} size={size} pinned={pinned} editing={editing} onEdit={editable ? () => setEditing(true) : undefined} onSize={changeSize} onTogglePin={togglePin} onClose={() => report({ type: "close" })} />
-        {item && editing && editable && <ClipboardPreviewEditor key={item.id} item={item} onDone={() => setEditing(false)} />}
+        <ClipboardPreviewBar
+          hint={hint}
+          size={size}
+          pinned={pinned}
+          editing={editing}
+          editLabel={item?.kind === "image" ? words.image.edit : undefined}
+          onEdit={editable ? () => setEditing(true) : undefined}
+          onSize={changeSize}
+          onTogglePin={togglePin}
+          onClose={() => report({ type: "close" })}
+        />
+        {item && editing && editable && (item.kind === "image"
+          ? <ClipboardImageEditor key={item.id} item={item} onDone={() => setEditing(false)} />
+          : <ClipboardPreviewEditor key={item.id} item={item} onDone={() => setEditing(false)} />)}
         {item && !(editing && editable) && (
           <div key={item.id} className="clipboard-preview__content">
             <ClipboardPopupPreview
