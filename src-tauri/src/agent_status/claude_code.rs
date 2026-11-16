@@ -54,6 +54,7 @@ fn install(env: &HookEnv) -> Result<(), String> {
         env.running_script,
         env.status_script,
         approval_hook().as_ref(),
+        crate::agent_approval::hook_endpoint_unknown(),
     )
 }
 

@@ -233,6 +233,10 @@ fn endpoint_for_hooks(own: Option<ApprovalEndpoint>, development: bool, release:
     release().map(|config| ApprovalEndpoint { port: config.port, token: config.token })
 }
 
+pub(crate) fn hook_endpoint_unknown() -> bool {
+    endpoint().is_some() && hook_endpoint().is_none()
+}
+
 pub(crate) fn hook_token() -> Option<String> {
     hook_endpoint().map(|endpoint| endpoint.token)
 }
