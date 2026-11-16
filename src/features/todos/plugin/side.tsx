@@ -1,17 +1,17 @@
 import { ListTodo } from "lucide-react";
 import { useTranslation } from "../../../i18n";
 import { defineSlot } from "../../plugin-kernel/slots";
+import { todoLine } from "./islandState";
 
 type SideContext = {
-  todoCount: number | null;
   onOpenPage: (page: "todo") => void;
 };
 
 const sideSlot = defineSlot<SideContext>("island.side/v1");
 
-function TodoRow({ todoCount, onOpenPage }: SideContext) {
+function TodoRow({ onOpenPage }: SideContext) {
   const t = useTranslation();
-  const count = todoCount ?? 0;
+  const count = todoLine.use().count ?? 0;
   return (
     <button
       type="button"

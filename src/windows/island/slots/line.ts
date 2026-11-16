@@ -1,13 +1,9 @@
 import type { ReactNode } from "react";
 import type { AgentSession } from "../../../features/agent-status/session";
-import type { CollapsedMeeting } from "../../../features/calendar/upcoming";
 import { defineSlot } from "../../../features/plugin-kernel/slots";
 
 export type CollapsedLineSources = {
   agentSession: AgentSession | null;
-  meeting: CollapsedMeeting | null;
-  todoTitle: string | null;
-  todoCount: number | null;
   screenshotPeek: string | null;
 };
 

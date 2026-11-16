@@ -1,6 +1,9 @@
 import { SlotView } from "../../features/plugin-kernel/SlotView";
 import { defineSlot } from "../../features/plugin-kernel/slots";
+import type { Dispatch, SetStateAction } from "react";
 import type { IslandSettings } from "../../lib/settings/types";
+import type { openSettingsWindow } from "../settings/api";
+import type { takeIslandClickFocus } from "./api";
 import type { IslandFeatures } from "./features";
 import type { IslandMode, IslandPage } from "./types";
 import { useTrayMenuOpenPage } from "./useTrayMenuOpenPage";
@@ -16,6 +19,9 @@ export type IslandRunnerProps = {
   accent: string | null;
   page: IslandPage;
   settings: IslandSettings;
+  setSettings: Dispatch<SetStateAction<IslandSettings>>;
+  openSettings: typeof openSettingsWindow;
+  takeClickFocus: typeof takeIslandClickFocus;
   features: IslandFeatures;
   openIslandPage: (page: IslandPage) => void;
   openEnabledPage: (page: IslandPage) => void;
