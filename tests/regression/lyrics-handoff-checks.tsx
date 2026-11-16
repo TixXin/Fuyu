@@ -13,6 +13,7 @@ import type { QQNotificationsController } from "../../src/features/messages/qq-n
 import type { WeChatRemindersController } from "../../src/features/messages/wechat/WeChatReminders";
 import type { MailController } from "../../src/features/messages/mail/MailPanel";
 import type { PluginNotificationsController } from "../../src/features/plugins/usePluginNotifications";
+import { useFixtureLines } from "./islandLines";
 
 type Check = (condition: unknown, label: string) => void;
 
@@ -34,12 +35,12 @@ function Stage({ media }: { media: MediaState }) {
   const [meeting, changeMeeting] = useState<CollapsedMeeting | null>(null);
   setPreview = changePreview; setLyric = changeLyric; setMeeting = changeMeeting;
   return <div className="stage" style={{ "--collapsed-island-width": "320px" } as CSSProperties}>
-    <IslandShell deviceUse={{ camera: [], microphone: [] }} meeting={meeting} qqNotifications={QQ} wechatReminders={WECHAT} qqMail={MAIL} pluginNotifications={PLUGINS} preview={preview}
-      mode="collapsed" page="todo" isTucked={false} isDetached showTitle={false} showCollapsedText collapsedTaskTitle="剩余3个待办" collapsedTodoCount={null}
-      agentSession={null} lyricLine={lyric} activeAgentSessionCount={0} appearanceMode="classic" nativeGlassState="disabled" agentVisualState="idle" agentStatusLabel=""
+    <IslandShell lineSources={useFixtureLines({ todoTitle: "剩余3个待办", lyricLine: lyric, meeting: meeting })} deviceUse={{ camera: [], microphone: [] }} qqNotifications={QQ} wechatReminders={WECHAT} qqMail={MAIL} pluginNotifications={PLUGINS} preview={preview}
+      mode="collapsed" page="todo" isTucked={false} isDetached showTitle={false} showCollapsedText
+      activeAgentSessionCount={0} appearanceMode="classic" nativeGlassState="disabled" agentVisualState="idle" agentStatusLabel=""
       mediaState={media} features={{ todo: true, music: true, clipboard: false, shelf: false, qq: true, wechat: true, qqMail: true, agents: true, translation: false, calendar: false, screenshots: false, timer: false }}
       shelfCount={null} onOpenPage={() => {}} onOpenMessages={() => {}} onPageChange={() => {}} onWindowDragStart={() => {}} onCollapse={() => {}}
-      onResetPosition={() => {}} minimizesToTray onMinimize={() => {}} onOpenSettings={() => {}} onOpenTranslator={() => {}} translationPeek={null} onOpenTranslationPeek={() => {}}
+      onResetPosition={() => {}} minimizesToTray onMinimize={() => {}} onOpenSettings={() => {}} onOpenTranslator={() => {}}
       onTuck={() => {}} onReveal={() => {}} pageDigitModifiers="Alt" hoverSwitchPage={false} hoverSwitchDelayMs={0}>
       <span>待办清单</span>
     </IslandShell>

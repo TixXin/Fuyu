@@ -5,6 +5,7 @@ import { Gauge, RotateCcw } from "lucide-react";
 import { useTranslation } from "../../../i18n";
 import { defineSlot, type IslandAlertMeta, type IslandCollapsedMeta, type IslandPageMeta } from "../../plugin-kernel/slots";
 import type { QuotaAlert } from "../quotaAlerts";
+import { QuotaAlertPopup } from "../QuotaAlertPopup";
 import { AgentSessionsPanel } from "../AgentSessionsPanel";
 import { islandPage } from "./page.ts";
 
@@ -101,4 +102,8 @@ function QuotaAlertTrailing({ quotaAlert }: AlertSources) {
   );
 }
 
-alertSlot.add({ id: "quota", order: 20, active: ({ quotaAlert }) => Boolean(quotaAlert), component: QuotaAlertLeading, trailing: QuotaAlertTrailing });
+function QuotaAlertBody({ quotaAlert }: AlertSources) {
+  return quotaAlert ? <QuotaAlertPopup alert={quotaAlert} /> : null;
+}
+
+alertSlot.add({ id: "quota", order: 20, component: QuotaAlertLeading, trailing: QuotaAlertTrailing, popup: QuotaAlertBody });

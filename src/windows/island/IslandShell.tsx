@@ -1,10 +1,7 @@
-import type { CollapsedMeeting } from "../../features/calendar/upcoming";
 import type { DeviceUse } from "../../features/device-use/api";
 import type { LevelChange } from "../../features/system-levels/api";
 import type { DeviceAlert } from "../../features/device-events/api";
 import type { CSSProperties, ReactNode } from "react";
-import type { AgentSession } from "../../features/agent-status/session";
-import type { CurrentLyric } from "../../features/media/lyrics/useCurrentLyric";
 import type { QuotaAlert } from "../../features/agent-status/quotaAlerts";
 import type { AgentVisualState } from "../../features/agent-status/status";
 import type { AppearanceMode } from "../../lib/settings/types";
@@ -15,6 +12,9 @@ import type { QQNotificationsController } from "../../features/messages/qq-notif
 import type { WeChatRemindersController } from "../../features/messages/wechat/WeChatReminders";
 import type { PluginNotificationsController } from "../../features/plugins/usePluginNotifications";
 import { useTranslation } from "../../i18n";
+import { labelLine, leadLine } from "../../features/plugin-kernel/islandContributions";
+import { useIslandContributed } from "../../features/plugin-kernel/useIslandContributions";
+import type { CollapsedLineSources } from "./slots/line";
 import { isPluginPage, type IslandFeatures } from "./features";
 import { IslandCollapsedBar } from "./IslandCollapsedBar";
 import { useIslandNotch } from "./notch";
@@ -33,7 +33,8 @@ import type { IslandGlassView } from "./useIslandGlass";
 import { IslandResizeHints } from "./IslandResizeHints";
 import { IslandSideHandle } from "./IslandSideHandle";
 import { IslandSideColumn, useSideColumnRows } from "./IslandSideColumn";
-import { IslandSideBubble, sideBubbleShown } from "./IslandSideBubble";
+import { IslandSideBubble } from "./IslandSideBubble";
+import { AlertPopup, useActiveAlert } from "./NotchAlert";
 import { IslandDragHint } from "./IslandDragHint";
 import { sideBubbleTop } from "./sideColumn";
 import type { IslandSide } from "./useIslandSide";
@@ -58,10 +59,7 @@ type IslandShellProps = {
   sideCover?: boolean;
   showTitle: boolean;
   showCollapsedText: boolean;
-  collapsedTaskTitle: string | null;
-  collapsedTodoCount: number | null;
-  agentSession: AgentSession | null;
-  lyricLine?: CurrentLyric | null;
+  lineSources: CollapsedLineSources;
   activeAgentSessionCount: number;
   mediaState: MediaState;
   agentVisualState: AgentVisualState;
@@ -72,7 +70,6 @@ type IslandShellProps = {
   levelPopup?: LevelChange | null;
   deviceAlert?: DeviceAlert | null;
   quotaAlert?: QuotaAlert | null;
-  meeting?: CollapsedMeeting | null;
   onOpenPage: (page: IslandPage) => void;
   onWindowDragStart: () => void;
   onCollapse: () => void;
@@ -81,9 +78,7 @@ type IslandShellProps = {
   onMinimize: () => void;
   onOpenTranslator: (() => void) | null;
   onScreenshot?: (() => void) | null;
-  translationPeek: string | null;
   notice?: { content: ReactNode; actions: ReactNode } | null;
-  onOpenTranslationPeek: () => void;
   onOpenSettings: (section?: "updates") => void;
   onTuck: () => void;
   onReveal: () => void;
@@ -120,10 +115,7 @@ export function IslandShell({
   sideCover = false,
   showTitle,
   showCollapsedText,
-  collapsedTaskTitle,
-  collapsedTodoCount,
-  agentSession,
-  lyricLine = null,
+  lineSources,
   activeAgentSessionCount,
   mediaState,
   agentVisualState,
@@ -134,7 +126,6 @@ export function IslandShell({
   levelPopup = null,
   deviceAlert = null,
   quotaAlert = null,
-  meeting = null,
   onOpenPage,
   onWindowDragStart,
   onCollapse,
@@ -143,9 +134,7 @@ export function IslandShell({
   onMinimize,
   onOpenTranslator,
   onScreenshot,
-  translationPeek,
   notice,
-  onOpenTranslationPeek,
   onOpenSettings,
   onTuck,
   onReveal,
@@ -176,7 +165,7 @@ export function IslandShell({
     agentSessionCount: features.agents ? activeAgentSessionCount : null,
     unreadCount,
     hasMail: qqMail.preview !== null,
-    todoCount: collapsedTodoCount,
+    todoCount: lineSources.todoCount,
     shelfCount,
     showMusic: features.music === true,
     showCover: sideCover,
@@ -186,7 +175,8 @@ export function IslandShell({
   }, onOpenPage, onOpenMessages);
   const sideHot = preview ? (preview.source === "qqMail" ? "mail" : "unread") : null;
   const sideHotIndex = sideLayout.shown.findIndex((row) => row.id === sideHot);
-  const sideBubble = side && !isExpanded && !isTucked && sideBubbleShown({ preview, deviceAlert, quotaAlert, levelPopup });
+  const activeAlert = useActiveAlert();
+  const sideBubble = side && !isExpanded && !isTucked && Boolean(preview || activeAlert);
   const className = [
     "island",
     `island--${mode}`,
@@ -203,17 +193,10 @@ export function IslandShell({
   ]
     .filter(Boolean)
     .join(" ");
-  const collapsedLabel = showCollapsedText
-    ? agentSession
-      ? t.island.agentSession(agentSession.label, agentSession.title)
-      : lyricLine?.text
-      ? (lyricLine.song ? t.island.nowPlaying : t.island.lyricLine)(lyricLine.text)
-      : collapsedTaskTitle
-      ? t.messages.collapsedTask(collapsedTaskTitle)
-      : collapsedTodoCount !== null
-        ? t.island.pendingTodos(collapsedTodoCount)
-        : t.island.appName
-    : t.island.appName;
+  const { lines } = useIslandContributed();
+  const collapsedLabel = (showCollapsedText ? labelLine(lines)?.label : null) ?? t.island.appName;
+  const lead = leadLine(lines);
+  const leadPage = (lead?.page ?? page) as IslandPage;
 
   return (
     <section
@@ -222,7 +205,7 @@ export function IslandShell({
       aria-label={collapsedLabel}
       onClick={(event) => {
         if (!isExpanded && event.target === event.currentTarget) {
-          onOpenPage(agentSession ? "agents" : lyricLine?.text ? "music" : page);
+          onOpenPage(leadPage);
         }
       }}
       onPointerMove={handleGlassPointerMove}
@@ -240,7 +223,7 @@ export function IslandShell({
             label={collapsedLabel}
             agentVisualState={agentVisualState}
             unreadCount={unreadCount}
-            onOpen={() => onOpenPage(agentSession ? "agents" : page)}
+            onOpen={() => onOpenPage(lead?.handle ? leadPage : page)}
             onWindowDragStart={onWindowDragStart}
           />
         )}
@@ -268,10 +251,7 @@ export function IslandShell({
           showTitle={showTitle}
           showCollapsedText={showCollapsedText}
           collapsedLabel={collapsedLabel}
-          collapsedTaskTitle={collapsedTaskTitle}
-          collapsedTodoCount={collapsedTodoCount}
-          agentSession={agentSession}
-          lyricLine={lyricLine}
+          lineSources={lineSources}
           agentSessionCount={features.agents ? activeAgentSessionCount : null}
           mediaState={mediaState}
           showMusic={features.music}
@@ -280,13 +260,10 @@ export function IslandShell({
           levelPopup={levelPopup}
           deviceAlert={deviceAlert}
           quotaAlert={quotaAlert}
-          meeting={meeting}
           agentVisualState={agentVisualState}
           onOpenPage={onOpenPage}
           onOpenMessages={onOpenMessages}
-          translationPeek={translationPeek}
           notice={notice}
-          onOpenTranslationPeek={onOpenTranslationPeek}
           onWindowDragStart={onWindowDragStart}
           onTuck={onTuck}
         />
@@ -331,9 +308,7 @@ export function IslandShell({
         <IslandSideBubble
           top={sideBubbleTop(sideLayout.height, sideHotIndex >= 0 ? sideLayout.offsets[sideHotIndex] + sideLayout.shown[sideHotIndex].height / 2 : null, 22)}
           preview={preview}
-          deviceAlert={deviceAlert}
-          quotaAlert={quotaAlert}
-          levelPopup={levelPopup}
+          alert={activeAlert && <AlertPopup alert={activeAlert} sources={{ deviceAlert, quotaAlert, levelPopup }} />}
           onOpenPreview={() => (preview && preview.source !== "plugin" ? onOpenMessages(preview.source) : onOpenPage(page))}
         />
       )}

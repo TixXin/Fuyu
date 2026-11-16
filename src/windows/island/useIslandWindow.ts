@@ -26,6 +26,7 @@ type IslandWindowOptions = {
   expandedIslandHeight: number;
   expandedIslandWidth: number;
   collapsedIslandWidth: number;
+  ready: boolean;
   onCollapse: () => void;
 };
 
@@ -37,6 +38,7 @@ export function useIslandWindow({
   expandedIslandHeight,
   expandedIslandWidth,
   collapsedIslandWidth,
+  ready,
   onCollapse,
 }: IslandWindowOptions) {
   const syncNativeLayout = useNativeLayout(settings);
@@ -140,6 +142,7 @@ export function useIslandWindow({
   }, []);
 
   useEffect(() => {
+    if (!ready) return;
     const synced = syncNativeInteraction(
       mode,
       settings,
@@ -153,6 +156,7 @@ export function useIslandWindow({
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
+    ready,
     expandedIslandHeight,
     expandedIslandWidth,
     collapsedIslandWidth,

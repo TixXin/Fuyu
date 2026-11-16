@@ -12,6 +12,7 @@ import { useQQNotifications } from "../../src/features/messages/qq-notifications
 import { useWeChatReminders } from "../../src/features/messages/wechat/WeChatReminders";
 import { useMail } from "../../src/features/messages/mail/MailPanel";
 import type { MediaState } from "../../src/features/media/api";
+import { useFixtureLines } from "./islandLines";
 
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
 const automated = new URLSearchParams(location.search).has("test");
@@ -48,16 +49,16 @@ function GlassIsland({ background, light }: { background: string; light: boolean
     ...glassStyle,
   } as CSSProperties;
   return <div className={`stage${light ? " island-light" : ""}`} data-tone={light ? "light" : "dark"} style={stageStyle}>
-    <IslandShell deviceUse={{ camera: [], microphone: [] }} qqNotifications={qq} wechatReminders={wechat} qqMail={qqMail} pluginNotifications={NO_PLUGIN_NOTIFICATIONS} preview={null}
+    <IslandShell lineSources={useFixtureLines({ todoTitle: "整理周报" })} deviceUse={{ camera: [], microphone: [] }} qqNotifications={qq} wechatReminders={wechat} qqMail={qqMail} pluginNotifications={NO_PLUGIN_NOTIFICATIONS} preview={null}
       mode={mode} page="todo" isTucked={false} isDetached={false} showTitle={false}
-      showCollapsedText collapsedTaskTitle="整理周报" collapsedTodoCount={null} agentSession={null} activeAgentSessionCount={0}
-      lyricLine={null} appearanceMode="liquidGlass" nativeGlassState="css-fallback" glass={glass} agentVisualState="idle" agentStatusLabel="AI Agent 空闲或已完成"
+      showCollapsedText activeAgentSessionCount={0}
+      appearanceMode="liquidGlass" nativeGlassState="css-fallback" glass={glass} agentVisualState="idle" agentStatusLabel="AI Agent 空闲或已完成"
       mediaState={UNAVAILABLE_MEDIA}
       features={{ todo: true, music: true, clipboard: true, shelf: true, qq: true, wechat: true, qqMail: true, agents: true, translation: true, calendar: true, screenshots: true } as never}
       shelfCount={null}
       onOpenPage={() => {}} onOpenMessages={() => {}}
       onPageChange={() => {}} onWindowDragStart={() => {}} onCollapse={() => {}}
-      onResetPosition={() => {}} minimizesToTray onMinimize={() => {}} onOpenSettings={() => {}} onOpenTranslator={() => {}} translationPeek={null} onOpenTranslationPeek={() => {}} onTuck={() => {}} onReveal={() => {}} pageDigitModifiers="Alt" hoverSwitchPage={false} hoverSwitchDelayMs={0}>
+      onResetPosition={() => {}} minimizesToTray onMinimize={() => {}} onOpenSettings={() => {}} onOpenTranslator={() => {}} onTuck={() => {}} onReveal={() => {}} pageDigitModifiers="Alt" hoverSwitchPage={false} hoverSwitchDelayMs={0}>
       <span>待办清单</span>
     </IslandShell>
   </div>;

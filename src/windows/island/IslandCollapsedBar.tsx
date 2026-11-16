@@ -1,25 +1,13 @@
 import { Fragment, type ReactNode } from "react";
-import { Bot, Music2 } from "lucide-react";
-import { AgentProviderIcon } from "../../features/agent-status/AgentProviderIcon";
 import type { QuotaAlert } from "../../features/agent-status/quotaAlerts";
-import { QuotaAlertPopup } from "../../features/agent-status/QuotaAlertPopup";
-import type { AgentSession } from "../../features/agent-status/session";
 import type { AgentVisualState } from "../../features/agent-status/status";
 import type { MediaState } from "../../features/media/api";
 import { useAudible } from "../../features/media/useAudible";
-import type { CurrentLyric } from "../../features/media/lyrics/useCurrentLyric";
-import { KaraokeText } from "../../features/media/lyrics/KaraokeText";
 import { CollapsedMessageContent } from "../../features/messages/CollapsedMessageContent";
 import { useCollapsedBarItems, type CollapsedBarItem } from "./collapsedBarItems";
 import type { DeviceUse } from "../../features/device-use/api";
 import type { LevelChange } from "../../features/system-levels/api";
-import { LevelPopup } from "../../features/system-levels/LevelPopup";
 import type { DeviceAlert } from "../../features/device-events/api";
-import { DeviceAlertPopup } from "../../features/device-events/DeviceAlertPopup";
-import { MeetingLine } from "../../features/calendar/MeetingLine";
-import { useMeetingBeat } from "../../features/calendar/useMeetingBeat";
-import { openMeetingLink } from "../../features/calendar/api";
-import type { CollapsedMeeting } from "../../features/calendar/upcoming";
 import { messagePreviewText, type MessagePreview, type MessageSource } from "../../features/messages/messagePreview";
 import type { MailController } from "../../features/messages/mail/MailPanel";
 import type { QQNotificationsController } from "../../features/messages/qq-notifications/QQNotifications";
@@ -32,10 +20,14 @@ import { useCollapsedPlacements } from "../../lib/settings/useCollapsedPlacement
 import type { PluginViewEntry } from "../../features/plugin-views/api";
 import { usePluginStatusItems } from "../../features/plugin-views/usePluginStatusItems";
 import { useTranslation } from "../../i18n";
+import { SlotView } from "../../features/plugin-kernel/SlotView";
+import { leadLine, shownLine, visibleLines } from "../../features/plugin-kernel/islandContributions";
+import { runIslandAction, useIslandContributed } from "../../features/plugin-kernel/useIslandContributions";
+import { lineSlot, type CollapsedLineContext, type CollapsedLineSources } from "./slots/line";
 import type { CollapsedSlots, IslandPage } from "./types";
 import { useWindowDragGesture } from "./useWindowDragGesture";
 import { hasNotchDrop, useIslandNotch } from "./notch";
-import { hasNotchAlert, NotchAlertLeading, NotchAlertTrailing } from "./NotchAlert";
+import { AlertPopup, NotchAlertLeading, NotchAlertTrailing, useActiveAlert } from "./NotchAlert";
 import { NotchMessageLeading, NotchMessageTrailing } from "./NotchMessage";
 import { DevWatermark } from "../../components/DevWatermark";
 import "./IslandCollapsedBar.css";
@@ -52,10 +44,7 @@ type IslandCollapsedBarProps = {
   showTitle: boolean;
   showCollapsedText: boolean;
   collapsedLabel: string;
-  collapsedTaskTitle: string | null;
-  collapsedTodoCount: number | null;
-  agentSession: AgentSession | null;
-  lyricLine: CurrentLyric | null;
+  lineSources: CollapsedLineSources;
   agentSessionCount: number | null;
   mediaState: MediaState;
   showMusic: boolean;
@@ -64,13 +53,10 @@ type IslandCollapsedBarProps = {
   levelPopup: LevelChange | null;
   deviceAlert: DeviceAlert | null;
   quotaAlert?: QuotaAlert | null;
-  meeting: CollapsedMeeting | null;
   agentVisualState: AgentVisualState;
   onOpenPage: (page: IslandPage) => void;
   onOpenMessages: (source: MessageSource) => void;
-  translationPeek: string | null;
   notice?: { content: ReactNode; actions: ReactNode } | null;
-  onOpenTranslationPeek: () => void;
   onWindowDragStart: () => void;
   onTuck: () => void;
   pluginViews?: readonly PluginViewEntry[];
@@ -110,10 +96,7 @@ export function IslandCollapsedBar({
   showTitle,
   showCollapsedText,
   collapsedLabel,
-  collapsedTaskTitle,
-  collapsedTodoCount,
-  agentSession,
-  lyricLine,
+  lineSources,
   agentSessionCount,
   mediaState,
   showMusic,
@@ -122,13 +105,10 @@ export function IslandCollapsedBar({
   levelPopup,
   deviceAlert,
   quotaAlert = null,
-  meeting,
   agentVisualState,
   onOpenPage,
   onOpenMessages,
-  translationPeek,
   notice = null,
-  onOpenTranslationPeek,
   onWindowDragStart,
   onTuck,
   pluginViews = NO_VIEWS,
@@ -145,13 +125,20 @@ export function IslandCollapsedBar({
     "island__pulse",
     `island__pulse--agent-${agentVisualState}`,
   ].join(" ");
-  const meetingBeat = useMeetingBeat(showCollapsedText && lyricLine ? meeting?.upcoming ?? null : null);
-  const meetingDue = showCollapsedText && meeting !== null;
-  const showMeeting = meetingDue && (lyricLine === null || meetingBeat);
-  const openTarget: IslandPage = showMeeting ? "calendar" : agentSession ? "agents" : lyricLine?.text ? "music" : page;
-  const lyric = !agentSession && lyricLine?.text ? lyricLine : null;
-  const showCenter = Boolean(slots.center) && !preview && !translationPeek && !notice
-    && !(showCollapsedText && (showTitle || agentSession !== null || lyric !== null || collapsedTaskTitle !== null || collapsedTodoCount !== null));
+  const contributed = useIslandContributed();
+  const activeAlert = useActiveAlert();
+  const alertSources = { deviceAlert, quotaAlert, levelPopup };
+  const lines = visibleLines(contributed.lines, showCollapsedText);
+  const line = shownLine(lines);
+  const peekLine = line?.drop ? line : null;
+  const openTarget = (line?.page ?? leadLine(contributed.lines)?.page ?? page) as IslandPage;
+  const openPeek = () => {
+    if (peekLine?.action) runIslandAction(peekLine.action);
+  };
+  const lineContext: CollapsedLineContext = { ...lineSources, showTitle, center: slots.center ?? null, agentIcon: slots.agentIcon ?? null };
+  const lineView = (id: string) => <SlotView key={id} slot={lineSlot} props={lineContext} select={(items) => items.filter((item) => item.id === id)} />;
+  const showCenter = Boolean(slots.center) && !preview && !peekLine && !notice
+    && !(showCollapsedText && (showTitle || lines.some((candidate) => candidate.reserve !== true && candidate.measure !== undefined)));
   const pluginStatus = usePluginStatusItems(pluginViews, onOpenPluginPage);
   const { placements: saved } = useCollapsedPlacements();
   const items = useCollapsedBarItems({
@@ -169,7 +156,7 @@ export function IslandCollapsedBar({
     slots,
     onOpenPage,
     onOpenMessages,
-  }, showCollapsedText && !preview && !notice && !translationPeek && !levelPopup && !deviceAlert && !quotaAlert ? pluginStatus : []);
+  }, showCollapsedText && !preview && !notice && !peekLine && !activeAlert ? pluginStatus : []);
   const offered = items.map(({ id }) => id);
   const placements = arrangeCollapsedItems(offered, saved);
   const byId = new Map(items.map((item) => [item.id, item]));
@@ -183,10 +170,10 @@ export function IslandCollapsedBar({
           type="button"
           aria-label={preview
             ? t.messages.openPreview(messagePreviewText(preview, t.messages), t.messages.sourceLabels[preview.source])
-            : translationPeek ? t.translator.peekLabel(translationPeek) : t.messages.expand(collapsedLabel)}
+            : peekLine ? peekLine.label : t.messages.expand(collapsedLabel)}
           data-tooltip=""
-          aria-expanded={preview || translationPeek ? undefined : isExpanded}
-          aria-controls={preview || translationPeek ? undefined : "island-panel"}
+          aria-expanded={preview || peekLine ? undefined : isExpanded}
+          aria-controls={preview || peekLine ? undefined : "island-panel"}
           onPointerDown={prepareWindowDrag}
           onPointerMove={handleWindowDragMove}
           onPointerUp={cancelWindowDrag}
@@ -208,8 +195,8 @@ export function IslandCollapsedBar({
                 void open.then((opened) => {
                   if (opened === false) onOpenMessages(source);
                 });
-              } else if (translationPeek) {
-                onOpenTranslationPeek();
+              } else if (peekLine) {
+                openPeek();
               } else {
                 onOpenPage(openTarget);
               }
@@ -217,72 +204,19 @@ export function IslandCollapsedBar({
           }}
         >
           <CollapsedMessageContent preview={preview} enabled={!isExpanded && !isTucked} bodyOnly={notch !== null}>
-            {notice ? notice.content : deviceAlert ? (
-              <DeviceAlertPopup alert={deviceAlert} />
-            ) : quotaAlert ? (
-              <QuotaAlertPopup alert={quotaAlert} />
-            ) : levelPopup ? (
-              <LevelPopup change={levelPopup} />
-            ) : translationPeek ? (
-              <span className="island__active-task" key={translationPeek}>{translationPeek}</span>
-            ) : showMeeting && meeting ? (
-              <MeetingLine meeting={meeting.upcoming} showTitle={meeting.showTitle} />
-            ) : <>
+            {notice ? notice.content : activeAlert ? (
+              <AlertPopup alert={activeAlert} sources={alertSources} />
+            ) : line?.bare ? lineView(line.item) : <>
             {showCollapsedText && showTitle && (
               <span className="island__brand">{t.island.appName}</span>
             )}
-            {showCollapsedText && agentSession && (
-              <span className="island__agent-session" key={`${agentSession.label}:${agentSession.title}`}>
-                {showTitle && <span className="island__agent-session-separator">·</span>}
-                {slots.agentIcon ?? (agentSession.provider ? (
-                  <AgentProviderIcon provider={agentSession.provider} size={16} />
-                ) : (
-                  <Bot className="island__agent-session-bot" size={16} strokeWidth={1.5} absoluteStrokeWidth aria-hidden="true" />
-                ))}
-                <span className="island__agent-session-title">{agentSession.title}</span>
-              </span>
-            )}
-            {showCollapsedText && lyric && (
-              <span className="island__agent-session island__lyric" key={`lyric:${lyric.index}`}>
-                {showTitle && <span className="island__agent-session-separator">·</span>}
-                <Music2 className="island__agent-session-bot" size={16} strokeWidth={1.5} absoluteStrokeWidth aria-hidden="true" />
-                <span className="island__agent-session-title" aria-label={lyric.karaoke ? lyric.text ?? undefined : undefined}>
-                  {lyric.karaoke ? (
-                    <KaraokeText key={lyric.karaoke.clock} words={lyric.karaoke.words} positionMs={lyric.karaoke.positionMs} sampledAt={lyric.karaoke.sampledAt} playing look={lyric.karaoke.look} />
-                  ) : lyric.text}
-                </span>
-              </span>
-            )}
-            {showCollapsedText && !agentSession && !lyric && collapsedTaskTitle && (
-              <span className="island__active-task" key={collapsedTaskTitle}>
-                {showTitle ? "· " : ""}
-                {collapsedTaskTitle}
-              </span>
-            )}
-            {showCollapsedText && !agentSession && !lyric && !collapsedTaskTitle && collapsedTodoCount !== null && (
-              <span className="island__todo-count">
-                {showTitle ? "· " : ""}
-                {slots.center && <span className="island__todo-center">{slots.center}</span>}
-                {t.island.pendingTodos(collapsedTodoCount)}
-              </span>
-            )}
+            {line && lineView(line.item)}
             </>}
           </CollapsedMessageContent>
           {showCenter && <span className="island__center-slot">{slots.center}</span>}
         </button>
         {notice && !preview && notice.actions}
-        {meetingDue && !preview && !notice && !deviceAlert && !quotaAlert && !levelPopup && !translationPeek && meeting?.upcoming.event.meetingLink && (
-          <button
-            className="island-meeting-join"
-            type="button"
-            onClick={(event) => {
-              event.stopPropagation();
-              void openMeetingLink(meeting.upcoming.event.meetingLink!).catch((error: unknown) => console.error("Failed to open the meeting link", error));
-            }}
-          >
-            {t.calendar.join}
-          </button>
-        )}
+        {!preview && !notice && !activeAlert && !peekLine && contributed.trails.map(lineView)}
         {preview?.source === "plugin" && pluginNotifications.notification && (
           <PluginNotificationActions actions={pluginNotifications.notification.actions} onAction={pluginNotifications.runAction} />
         )}
@@ -305,9 +239,8 @@ export function IslandCollapsedBar({
         )}
     </>
   );
-  const alert = { deviceAlert, quotaAlert, levelPopup };
-  const alerted = notch !== null && hasNotchAlert(alert);
-  const dropped = notch !== null && hasNotchDrop({ preview, notice, translationPeek });
+  const alerted = notch !== null && activeAlert !== null;
+  const dropped = notch !== null && hasNotchDrop({ preview, notice, translationPeek: peekLine });
   const messaged = notch !== null && !alerted && !notice && preview !== null;
   const wings = alerted ? "alert" : messaged ? `message:${preview?.source}:${preview?.receivedAt}` : dropped ? "dropped" : "idle";
 
@@ -318,7 +251,7 @@ export function IslandCollapsedBar({
       inert={isExpanded}
       onClick={(event) => {
         if (event.target === event.currentTarget || (event.target instanceof Element && event.target.hasAttribute(OPENS_BAR))) {
-          if (translationPeek && !preview) onOpenTranslationPeek();
+          if (peekLine && !preview) openPeek();
           else onOpenPage(openTarget);
         }
       }}
@@ -327,9 +260,9 @@ export function IslandCollapsedBar({
       {notch ? (
         <>
           <div className="island__notch-row">
-            <div key={`left:${wings}`} className="island__notch-wing island__notch-wing--left" {...{ [OPENS_BAR]: "" }}>{alerted ? <NotchAlertLeading {...alert} /> : messaged ? <NotchMessageLeading preview={preview} /> : left}</div>
+            <div key={`left:${wings}`} className="island__notch-wing island__notch-wing--left" {...{ [OPENS_BAR]: "" }}>{alerted && activeAlert ? <NotchAlertLeading alert={activeAlert} sources={alertSources} /> : messaged ? <NotchMessageLeading preview={preview} /> : left}</div>
             <span className="island__notch-gap" aria-hidden="true" {...{ [OPENS_BAR]: "" }} />
-            <div key={`right:${wings}`} className="island__notch-wing island__notch-wing--right" {...{ [OPENS_BAR]: "" }}>{alerted ? <NotchAlertTrailing {...alert} /> : messaged ? <NotchMessageTrailing preview={preview} /> : dropped ? right : <>{message}{right}</>}</div>
+            <div key={`right:${wings}`} className="island__notch-wing island__notch-wing--right" {...{ [OPENS_BAR]: "" }}>{alerted && activeAlert ? <NotchAlertTrailing alert={activeAlert} sources={alertSources} /> : messaged ? <NotchMessageTrailing preview={preview} /> : dropped ? right : <>{message}{right}</>}</div>
           </div>
           {dropped && <div className="island__notch-drop">{message}</div>}
         </>

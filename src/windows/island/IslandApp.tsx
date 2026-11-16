@@ -70,11 +70,16 @@ import { useIslandNotice } from "./islandNotice";
 import { useIslandVoiceInput } from "./useIslandVoiceInput";
 import { useIslandSide } from "./useIslandSide";
 import { IslandRunners } from "./IslandRunners";
-import { hasNotchAlert } from "./NotchAlert";
 import { islandMarginY } from "./islandForm";
 import { hasNotchDrop, notchExpandedExtra, notchFittedWidth, notchLook, notchPanelWidth, useIslandNotch, useNotchDropSync } from "./notch";
 import "./IslandApp.css";
 import { PluginSlot } from "../../features/plugin-kernel/PluginSlot";
+import { leadLine } from "../../features/plugin-kernel/islandContributions";
+import { useIslandAction, useIslandContributed, useSettleIslandContributions } from "../../features/plugin-kernel/useIslandContributions";
+import { useCollapsedWidth } from "./useCollapsedWidth";
+import { useLegacyAlerts } from "./legacyAlerts";
+import { useLegacyLines } from "./legacyLines";
+import type { IslandPage } from "./types";
 
 const NO_TODOS: TodoItem[] = [];
 
@@ -122,7 +127,8 @@ export function IslandApp() {
   const screenshotNotice = useScreenshotNotice(screenshotCard, agentSessions);
   const copyCard = useClipboardCopyCard(!game.quiet);
   const recording = useRecording();
-  const translationPeek = useQuickTranslation(settings.translationEnabled) ?? screenshotText;
+  const quickPeek = useQuickTranslation(settings.translationEnabled);
+  const translationPeek = quickPeek ?? screenshotText;
   const firstHints = useIslandFirstHints({
     mode,
     isTucked,
@@ -141,19 +147,33 @@ export function IslandApp() {
   });
   const agentSession = settings.agentTitleMode === "changes" || (currentLyric && settings.lyricsIslandPriority === "lyrics") ? agentInterjection : namedAgent;
   const lyricLine = agentSession ? null : currentLyric;
-  const { collapsedTaskTitle, collapsedTodoCount, collapsedIslandWidth: textWidth } =
-    useCollapsedTodo(
-      settings.todoEnabled ? todos : NO_TODOS,
-      settings.todoEnabled ? activeTodoId : null,
-      { ...settings, showCollapsedText: barText, ...(settings.todoEnabled ? {} : { showIdleTodoCount: false }) },
-      mode !== "collapsed" || isTucked || !barText || banner.hasLinePreview,
-      agentSession?.title ?? null,
-      collapsedSlots,
-      banner.hasLinePreview || translationPeek !== null,
-      lyricLine?.longest ?? null,
-      firstHints.current ? t.island.firstHint[firstHints.current] : null,
-    );
-  const collapsedIslandWidth = notchFittedWidth(textWidth, notch, settings.collapsedScale, hasNotchAlert({ deviceAlert: notices.deviceAlert, quotaAlert, levelPopup: notices.levelPopup }));
+  const { collapsedTaskTitle, collapsedTodoCount } = useCollapsedTodo(
+    settings.todoEnabled ? todos : NO_TODOS,
+    settings.todoEnabled ? activeTodoId : null,
+    settings.todoEnabled ? settings : { ...settings, showIdleTodoCount: false },
+    mode !== "collapsed" || isTucked || !barText || banner.hasLinePreview,
+  );
+  const timedTodos = useMemo(() => (settings.todoEnabled ? todoEvents(todos, Date.now(), t.island.todoList) : []), [settings.todoEnabled, t, todos]);
+  const calendar = useCalendar(settings.calendarEnabled, settings.calendarRemindMinutes, timedTodos);
+  const lineSources = useLegacyLines({
+    barText, agentSession, lyricLine, todoTitle: collapsedTaskTitle, todoCount: collapsedTodoCount,
+    interjecting: agentSession !== null && agentSession === agentInterjection,
+    agentIconWidth: collapsedSlots.agentIconWidth ?? 0,
+    lyricsFirst: settings.lyricsIslandPriority === "lyrics",
+    meeting: calendar.upcoming && settings.calendarEnabled ? { upcoming: calendar.upcoming, showTitle: settings.calendarShowTitle } : null,
+    translationPeek: quickPeek, screenshotPeek: quickPeek === null ? screenshotText : null,
+  });
+  useLegacyAlerts({ deviceAlert: notices.deviceAlert, quotaAlert, levelPopup: notices.levelPopup });
+  const { lines: contributedLines, alerts, settled } = useIslandContributed();
+  const textWidth = useCollapsedWidth({
+    barText,
+    noticeText: firstHints.current ? t.island.firstHint[firstHints.current] : null,
+    showTitle: settings.showTitle,
+    widthExtra: settings.collapsedWidthExtra,
+    peeking: banner.hasLinePreview || translationPeek !== null,
+    slots: collapsedSlots,
+  });
+  const collapsedIslandWidth = notchFittedWidth(textWidth, notch, settings.collapsedScale, alerts.size > 0);
   useIslandTucking({
     settings,
     navigation,
@@ -165,8 +185,6 @@ export function IslandApp() {
 
 
   const clipboard = useClipboardHistory(toggleClipboardHistory);
-  const timedTodos = useMemo(() => (settings.todoEnabled ? todoEvents(todos, Date.now(), t.island.todoList) : []), [settings.todoEnabled, t, todos]);
-  const calendar = useCalendar(settings.calendarEnabled, settings.calendarRemindMinutes, timedTodos);
   const { clipboardHistory } = clipboard;
 
   const { features, openEnabledPage } = useIslandFeatures({
@@ -248,6 +266,7 @@ export function IslandApp() {
     expandedIslandHeight,
     expandedIslandWidth,
     collapsedIslandWidth,
+    ready: settled,
     onCollapse: collapseIsland,
   });
 
@@ -261,7 +280,7 @@ export function IslandApp() {
     navigation,
     quiet: game.quiet,
     hasMessagePreview: showsMessage,
-    leadPage: agentSession ? "agents" : lyricLine ? "music" : null,
+    leadPage: (leadLine(contributedLines, { reserved: true })?.page ?? null) as IslandPage | null,
     openEnabledPage,
   });
 
@@ -282,6 +301,8 @@ export function IslandApp() {
   const { agentVisualState, agentStatusLabel } = useAgentIndicator(agentStatus, settings, activeAgentSessionCount, t);
 
   const { openTranslator, openTranslationPeek } = useIslandTranslation(features.translation, openIslandPage);
+  useIslandAction("translation.open-peek", openTranslationPeek);
+  useSettleIslandContributions();
 
   return (
     <main className={`stage stage--font-${settings.fontFamily}${isLightIsland(look.islandBackgroundColor) ? " island-light" : ""}${coverOn ? " cover-color" : ""}`} style={stageStyle}>
@@ -305,10 +326,7 @@ export function IslandApp() {
         side={side} sideCover={settings.sideMusicCover}
         showTitle={settings.showTitle}
         showCollapsedText={barText}
-        collapsedTaskTitle={collapsedTaskTitle}
-        collapsedTodoCount={collapsedTodoCount}
-        agentSession={agentSession}
-        lyricLine={lyricLine}
+        lineSources={lineSources}
         activeAgentSessionCount={activeAgentSessionCount}
         mediaState={media.mediaState}
         agentVisualState={agentVisualState}
@@ -319,7 +337,6 @@ export function IslandApp() {
         levelPopup={notices.levelPopup}
         deviceAlert={notices.deviceAlert}
         quotaAlert={quotaAlert}
-        meeting={calendar.upcoming && settings.calendarEnabled ? { upcoming: calendar.upcoming, showTitle: settings.calendarShowTitle } : null}
         onOpenPage={openEnabledPage}
         onWindowDragStart={startIslandDrag}
         onCollapse={collapseIsland}
@@ -328,8 +345,6 @@ export function IslandApp() {
         onMinimize={settings.minimizeAction === "tray" ? minimizeIsland : minimizeToEdge}
         onOpenTranslator={settings.translationEnabled && settings.translationTarget === "island" ? openTranslator : null}
         onScreenshot={screenshot.start}
-        translationPeek={translationPeek}
-        onOpenTranslationPeek={openTranslationPeek}
         onOpenSettings={openSettingsWindow}
         onTuck={tuckIsland}
         onReveal={hoverTucked}
