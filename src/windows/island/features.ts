@@ -1,11 +1,12 @@
-import type { MessageSource } from "../../features/messages/messagePreview";
 import type { PlatformFeature } from "../../lib/platform.ts";
 import { pageSlot } from "./slots/pageSlot.ts";
 import type { BuiltinPage, HeaderDotPage, IslandPage, PluginPageId } from "./types";
 
 export type { HeaderDotPage };
 
-export type IslandFeatures = Record<BuiltinPage | MessageSource, boolean> & {
+type MessageSwitch = "qq" | "wechat" | "qqMail";
+
+export type IslandFeatures = Record<BuiltinPage | MessageSwitch, boolean> & {
   clipboardScreenshots?: boolean;
   pluginPages?: readonly PluginPageId[];
 };
@@ -31,8 +32,6 @@ export function foldScreenshotsIntoClipboard(features: IslandFeatures): IslandFe
 export function isPluginPage(page: IslandPage): page is PluginPageId {
   return page.startsWith("plugin:");
 }
-
-const SOURCE_ORDER: MessageSource[] = ["qq", "wechat", "qqMail"];
 
 const byShortcut = <Item extends { shortcutOrder?: number }>(items: readonly Item[]) =>
   [...items].sort((a, b) => (a.shortcutOrder ?? Number.MAX_SAFE_INTEGER) - (b.shortcutOrder ?? Number.MAX_SAFE_INTEGER));
@@ -69,11 +68,6 @@ export function resolveIslandPage(page: IslandPage, features: IslandFeatures): I
   const fallback = pageItem(page)?.fallback?.(features);
   if (fallback) return fallback;
   return pageOrder(features).find((candidate) => isPageEnabled(candidate, features)) ?? null;
-}
-
-export function resolveMessageSource(source: MessageSource, features: IslandFeatures): MessageSource {
-  if (features[source]) return source;
-  return SOURCE_ORDER.find((candidate) => features[candidate]) ?? source;
 }
 
 export function pageShortcutOrder(features: IslandFeatures): IslandPage[] {

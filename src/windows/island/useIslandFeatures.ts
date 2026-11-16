@@ -1,43 +1,35 @@
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import type { IslandSettings } from "../../lib/settings/types";
-import type { MessageView } from "../../features/messages/Messages";
-import type { MailController } from "../../features/messages/mail/MailPanel";
 import { useUnsupportedFeatures } from "../../lib/platform";
-import { foldScreenshotsIntoClipboard, resolveIslandPage, resolveMessageSource, withoutUnsupported, type IslandFeatures } from "./features";
+import { foldScreenshotsIntoClipboard, resolveIslandPage, withoutUnsupported, type IslandFeatures } from "./features";
 import type { IslandPage, PluginPageId } from "./types";
 import { usePluginOpenView } from "./usePluginOpenView";
 import { useBuiltinEnabled } from "../../features/plugin-kernel/useBuiltinPlugins";
+import { useIslandContributed } from "../../features/plugin-kernel/useIslandContributions";
 
 const NO_PLUGIN_PAGES: readonly PluginPageId[] = [];
 
 type IslandFeatureOptions = {
   settings: IslandSettings;
-  qqEnabled: boolean;
-  wechatEnabled: boolean;
-  qqMail: MailController;
   page: IslandPage;
-  messageSource: MessageView;
   setPage: (page: IslandPage) => void;
-  setMessageSource: (source: MessageView) => void;
   openIslandPage: (page: IslandPage) => void;
   pluginPages?: readonly PluginPageId[];
 };
 
 export function useIslandFeatures({
   settings,
-  qqEnabled,
-  wechatEnabled,
-  qqMail,
   page,
-  messageSource,
   setPage,
-  setMessageSource,
   openIslandPage,
   pluginPages,
 }: IslandFeatureOptions) {
   const unsupported = useUnsupportedFeatures();
   const timer = useBuiltinEnabled("timer");
   const clipboardEnabled = useBuiltinEnabled("clipboard");
+  const { pages, settled } = useIslandContributed();
+  const qqEnabled = pages.qq === true;
+  const wechatEnabled = pages.wechat === true;
   const features = useMemo<IslandFeatures>(() => foldScreenshotsIntoClipboard(withoutUnsupported({
     todo: settings.todoEnabled,
     calendar: settings.calendarEnabled,
@@ -55,29 +47,10 @@ export function useIslandFeatures({
   }, unsupported)), [unsupported, timer, pluginPages, clipboardEnabled, qqEnabled, settings.agentStatusEnabled, settings.calendarEnabled, settings.mailEnabled, settings.musicEnabled, settings.screenshotEnabled, settings.shelfEnabled, settings.todoEnabled, settings.translationEnabled, settings.translationTarget, wechatEnabled]);
 
   useEffect(() => {
+    if (!settled) return;
     const next = resolveIslandPage(page, features);
     if (next && next !== page) setPage(next);
-  }, [features, page, setPage]);
-
-  useEffect(() => {
-    const next = resolveMessageSource(messageSource, features);
-    if (next !== messageSource) setMessageSource(next);
-  }, [features, messageSource, setMessageSource]);
-
-  const mailConfigured = qqMail.anyConfigured;
-  const mailReceiving = qqMail.anyReceiving;
-  const setMailReceiving = qqMail.setAllEnabled;
-  const mailSwitch = settings.mailEnabled;
-  const lastMailSwitchRef = useRef(mailSwitch);
-  useEffect(() => {
-    if (!mailConfigured) return;
-    if (!mailSwitch && mailReceiving) {
-      void setMailReceiving(false);
-    } else if (mailSwitch && !lastMailSwitchRef.current && !mailReceiving) {
-      void setMailReceiving(true);
-    }
-    lastMailSwitchRef.current = mailSwitch;
-  }, [mailConfigured, mailReceiving, mailSwitch, setMailReceiving]);
+  }, [features, page, setPage, settled]);
 
   const openEnabledPage = useCallback((target: IslandPage) => {
     const next = resolveIslandPage(target, features);
