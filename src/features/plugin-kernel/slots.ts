@@ -109,6 +109,7 @@ function startDiagnostics() {
   const internals = (window as unknown as { __TAURI_INTERNALS__?: IpcInternals }).__TAURI_INTERNALS__;
   if (!internals || typeof internals.invoke !== "function") return;
   const ledger = installIpcLedger(internals);
+  if (!ledger.recording) console.warn("Built-in plugin diagnostics cannot count commands and listeners here: invoke is read-only");
   void Promise.all([import("./diagnostics.ts"), import("./services.ts")])
     .then(([{ answerBuiltinDiagnostics }, { windowServices }]) => answerBuiltinDiagnostics(ledger, Object.values(registries), windowServices))
     .catch((error: unknown) => console.error("Could not start the built-in plugin diagnostics", error));
@@ -116,7 +117,13 @@ function startDiagnostics() {
 
 if (typeof window !== "undefined") {
   for (const registry of Object.values(registries)) followBuiltinSwitches(registry);
-  if (import.meta.env.DEV) startDiagnostics();
+  if (import.meta.env.DEV) {
+    try {
+      startDiagnostics();
+    } catch (error) {
+      console.error("Could not start the built-in plugin diagnostics", error);
+    }
+  }
 }
 
 export function slotWindowOf(name: SlotName): SlotWindow {
