@@ -1,10 +1,13 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { clearClipboardHistory, copyClipboardItem, deleteClipboardItem, getClipboardHistory, listenClipboardHistoryChanged, listenClipboardHistoryShortcut, setClipboardItemNote, toggleClipboardFavorite, type ClipboardCopyAs, type ClipboardHistorySnapshot } from "./api";
 import { DEFAULT_CLIPBOARD_HISTORY } from "./settings";
 
-export function useClipboardHistory(onShortcut: () => void) {
+const isHidden = () => document.visibilityState === "hidden";
+
+export function useClipboardHistory(onShortcut: () => void, { deferWhileHidden = false }: { deferWhileHidden?: boolean } = {}) {
   const [clipboardHistory, setClipboardHistory] =
     useState<ClipboardHistorySnapshot>(DEFAULT_CLIPBOARD_HISTORY);
+  const staleRef = useRef(false);
 
   const refreshClipboardHistory = useCallback(async () => {
     try {
@@ -14,6 +17,31 @@ export function useClipboardHistory(onShortcut: () => void) {
       console.error("Failed to read clipboard history", error);
     }
   }, []);
+
+  const reloadIfStale = useCallback(async (then: () => void) => {
+    if (!staleRef.current) {
+      then();
+      return;
+    }
+    staleRef.current = false;
+    try {
+      const snapshot = await getClipboardHistory();
+      setClipboardHistory(snapshot);
+    } catch (error) {
+      staleRef.current = true;
+      console.error("Failed to read clipboard history", error);
+    }
+    then();
+  }, []);
+
+  useEffect(() => {
+    if (!deferWhileHidden) return;
+    const sync = () => {
+      if (!isHidden() && staleRef.current) void reloadIfStale(() => {});
+    };
+    document.addEventListener("visibilitychange", sync);
+    return () => document.removeEventListener("visibilitychange", sync);
+  }, [deferWhileHidden, reloadIfStale]);
 
   const copyClipboardHistoryItem = useCallback(async (id: string, copyAs?: ClipboardCopyAs) => {
     try {
@@ -75,7 +103,8 @@ export function useClipboardHistory(onShortcut: () => void) {
     let unlistenShortcut: (() => void) | null = null;
 
     void listenClipboardHistoryChanged(() => {
-      void refreshClipboardHistory();
+      if (deferWhileHidden && isHidden()) staleRef.current = true;
+      else void refreshClipboardHistory();
     })
       .then((nextUnlisten) => {
         if (didCancel) {
@@ -113,6 +142,7 @@ export function useClipboardHistory(onShortcut: () => void) {
     clipboardHistory.settings.shortcutEnabled,
     refreshClipboardHistory,
     onShortcut,
+    deferWhileHidden,
   ]);
 
   return {
@@ -122,5 +152,6 @@ export function useClipboardHistory(onShortcut: () => void) {
     updateClipboardHistoryItemNote,
     deleteClipboardHistoryItem,
     clearClipboardHistoryItems,
+    reloadIfStale,
   };
 }

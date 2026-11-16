@@ -8,21 +8,25 @@ import {
 import { ClipboardTitleBar } from "./ClipboardTitleBar";
 import { useClipboardHistory } from "../../features/clipboard/useClipboardHistory";
 import { useWindowLight } from "../../lib/theme/useWindowLight";
-import { useWindowAccent } from "../../lib/theme/useWindowAccent";
+import { afterPaint } from "./afterPaint";
+import { reportClipboardPopupFirstFrame } from "./api";
+import { useClipboardAccent } from "./useClipboardAccent";
 import { IconButtonTooltip } from "../../components/IconButtonTooltip";
 import "./ClipboardWindow.css";
 
 const NO_SHORTCUT = () => {};
+const DEFER_WHILE_HIDDEN = { deferWhileHidden: true };
 const reportError = (action: string) => (error: unknown) => console.error(`Failed to ${action}`, error);
 
 export function ClipboardWindow() {
-  const { clipboardHistory, toggleClipboardHistoryFavorite } = useClipboardHistory(NO_SHORTCUT);
+  const { clipboardHistory, toggleClipboardHistoryFavorite, reloadIfStale } = useClipboardHistory(NO_SHORTCUT, DEFER_WHILE_HIDDEN);
   const [openCount, setOpenCount] = useState(0);
+  const openedAt = useRef<number | null>(null);
   const [expanded, setExpanded] = useState(false);
   const expandedRef = useRef(false);
   expandedRef.current = expanded;
   const light = useWindowLight();
-  useWindowAccent();
+  useClipboardAccent(openCount);
 
   const close = useCallback(() => {
     void hideClipboardPopup().catch((error: unknown) => console.error("Failed to hide the clipboard window", error));
@@ -32,9 +36,13 @@ export function ClipboardWindow() {
     let cancelled = false;
     const stops: (() => void)[] = [];
     const keep = (stop: () => void) => (cancelled ? stop() : stops.push(stop));
-    void listenClipboardPopupOpened(() => {
-      setOpenCount((count) => count + 1);
-      setExpanded(false);
+    void listenClipboardPopupOpened((trace) => {
+      const at = performance.now();
+      void reloadIfStale(() => {
+        openedAt.current = trace ? at : null;
+        setOpenCount((count) => count + 1);
+        setExpanded(false);
+      });
     }).then(keep);
     void listenClipboardPopupBlur(() => {
       if (expandedRef.current) return;
@@ -44,7 +52,17 @@ export function ClipboardWindow() {
       cancelled = true;
       stops.forEach((stop) => stop());
     };
-  }, [close]);
+  }, [close, reloadIfStale]);
+
+  useEffect(() => {
+    const at = openedAt.current;
+    if (at === null) return;
+    return afterPaint(() => {
+      if (openedAt.current !== at) return;
+      openedAt.current = null;
+      void reportClipboardPopupFirstFrame({ sinceOpenedMs: performance.now() - at }).catch(reportError("report the clipboard first frame"));
+    });
+  }, [openCount]);
 
   const pinned = clipboardHistory.settings.popupPinned === true;
   const linkPreview = clipboardHistory.settings.linkPreview === true;

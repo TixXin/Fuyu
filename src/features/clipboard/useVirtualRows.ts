@@ -1,9 +1,9 @@
 import { useCallback, useLayoutEffect, useState, type RefObject } from "react";
-import { visibleRows } from "./virtualRows";
+import { visibleRows, visibleSlots } from "./virtualRows";
 
 const OVERSCAN = 6;
 
-export function useVirtualRows(container: RefObject<HTMLElement | null>, count: number, rowHeight: number) {
+function useScrollView(container: RefObject<HTMLElement | null>) {
   const [view, setView] = useState({ top: 0, height: 600 });
 
   useLayoutEffect(() => {
@@ -20,6 +20,12 @@ export function useVirtualRows(container: RefObject<HTMLElement | null>, count: 
     };
   }, [container]);
 
+  return view;
+}
+
+export function useVirtualRows(container: RefObject<HTMLElement | null>, count: number, rowHeight: number) {
+  const view = useScrollView(container);
+
   const scrollToIndex = useCallback((index: number) => {
     const element = container.current;
     if (!element) return;
@@ -30,4 +36,20 @@ export function useVirtualRows(container: RefObject<HTMLElement | null>, count: 
 
   const { start, end } = visibleRows(count, rowHeight, view.top, view.height, OVERSCAN);
   return { start, end, before: start * rowHeight, after: (count - end) * rowHeight, scrollToIndex };
+}
+
+export function useVirtualSlots(container: RefObject<HTMLElement | null>, offsets: readonly number[], inset: number) {
+  const view = useScrollView(container);
+
+  const scrollToIndex = useCallback((index: number) => {
+    const element = container.current;
+    if (!element || index < 0 || index >= offsets.length - 1) return;
+    const top = index === 0 ? 0 : offsets[index] + inset;
+    const bottom = offsets[index + 1] + inset;
+    if (top < element.scrollTop) element.scrollTop = top;
+    else if (bottom > element.scrollTop + element.clientHeight) element.scrollTop = bottom - element.clientHeight;
+  }, [container, offsets, inset]);
+
+  const { start, end } = visibleSlots(offsets, Math.max(0, view.top - inset), view.height, OVERSCAN);
+  return { start, end, scrollToIndex };
 }
