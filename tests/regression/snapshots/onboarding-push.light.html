@@ -11,7 +11,7 @@
               Agent 做完或等你回复时，把消息推到手机，也能在手机上直接回它。经 cc-connect 接一个聊天机器人就行。
             </p>
           </div>
-          <ol aria-label="第 5 步，共 5 步：测试" class="push-act__steps">
+          <ol aria-label="第 4 步，共 5 步：接机器人" class="push-act__steps">
             <li class="push-act__step push-act__step--done">
               安装
             </li>
@@ -21,51 +21,69 @@
             <li class="push-act__step push-act__step--done">
               选平台
             </li>
-            <li class="push-act__step push-act__step--done">
+            <li aria-current="step" class="push-act__step push-act__step--active">
               接机器人
             </li>
-            <li aria-current="step" class="push-act__step push-act__step--active">
+            <li class="push-act__step">
               测试
             </li>
           </ol>
           <p class="push-act__lead">
-            在手机上给每个机器人发一句话，收到后这里会打勾，再发一条测试消息回手机。
+            每个项目接一个Telegram机器人。接好一个才写进配置，一个一个来。
           </p>
           <ul class="push-act__list">
-            <li class="push-act__row" data-project="local-claudecode">
-              <svg aria-hidden="true" class="lucide lucide-circle push-act__icon" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="12" cy="12" r="10"></circle>
-              </svg>
+            <li class="push-act__row push-act__row--connect" data-project="local-claudecode">
               <div class="push-act__main">
                 <span class="push-act__name">
                   local-claudecode
                 </span>
                 <span class="push-act__note">
-                  还没收到：在手机上给机器人发一句话
+                  本机 · Claude Code
                 </span>
               </div>
+              <span class="push-act__done">
+                <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M20 6 9 17l-5-5"></path>
+                </svg>
+                已接上
+              </span>
             </li>
-            <li class="push-act__row" data-project="my-codex">
-              <svg aria-hidden="true" class="lucide lucide-check push-act__ok" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg">
-                <path d="M20 6 9 17l-5-5"></path>
-              </svg>
+            <li class="push-act__row push-act__row--connect" data-project="my-codex">
               <div class="push-act__main">
                 <span class="push-act__name">
                   my-codex
                 </span>
                 <span class="push-act__note">
-                  已收到手机发来的消息
+                  本机 · Codex
                 </span>
               </div>
-              <button class="onboarding__button" type="button">
-                <svg aria-hidden="true" class="lucide lucide-send" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"></path>
-                  <path d="m21.854 2.147-10.94 10.939"></path>
+              <span class="push-act__done">
+                <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M20 6 9 17l-5-5"></path>
                 </svg>
-                发测试消息
-              </button>
+                已接上
+              </span>
+            </li>
+            <li class="push-act__row push-act__row--connect" data-project="devbox-claudecode">
+              <div class="push-act__main">
+                <span class="push-act__name">
+                  devbox-claudecode
+                </span>
+                <span class="push-act__note">
+                  devbox · Claude Code
+                </span>
+              </div>
+              <span class="push-act__done">
+                <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M20 6 9 17l-5-5"></path>
+                </svg>
+                已接上
+              </span>
             </li>
           </ul>
+          <button class="push-act__skip" type="button">
+            先不设置推送
+          </button>
         </section>
         <footer class="onboarding__footer">
           <div class="onboarding__nav">

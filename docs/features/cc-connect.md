@@ -37,7 +37,7 @@ cc-connect 另有 cursor、gemini、iflow、pi、devin 等适配器，岛不认�
 1. 远端先找已有的 cc-connect（设置里的路径、正在跑的进程、登录 shell 的 `PATH`、`~/.local/bin/cc-connect`），找到就直接返回 `installed: false`。
 2. 用 `uname -sm` 定包：Linux 或 Darwin，amd64 或 arm64，其他的报 `ccConnect.remoteSystem`。
 3. 岛在本机从 GitHub 下最新版的 `cc-connect-<版本>-<系统>-<架构>.tar.gz`，按 `checksums.txt` 校验 sha256，再核对包里只有一个名字以 `cc-connect` 开头的程序。
-4. 包以 base64 写进脚本的 heredoc 传上去，远端有 `sha256sum` 或 `shasum` 时再校验一次，解出程序写成 `~/.local/bin/cc-connect.part`，`chmod 755` 后改名为 `cc-connect`。
+4. 包以 base64 写进脚本传上去，每 1000 行一个 heredoc 追加到同一个文件再一起解码：bash 读一个大 heredoc 的耗时随长度平方增长，20 多 MB 的包放进一个 heredoc，在 CentOS 7 上要两个小时，分段后约一分钟。远端有 `sha256sum` 或 `shasum` 时再校验一次，解出程序写成 `~/.local/bin/cc-connect.part`，`chmod 755` 后改名为 `cc-connect`。
 
 ## 远程加项目（`add_cc_connect_remote_project`）
 
@@ -60,11 +60,21 @@ cc-connect 另有 cursor、gemini、iflow、pi、devin 等适配器，岛不认�
 
 岛退出时不结束远端的扫码：远端脚本结束时自己还原或保留配置。
 
+远端脚本开头都先 `case $- in *H*) set +H ;; esac`：有的服务器上 `sh -s` 开着历史展开，`*[!0-9]*` 这类写法会报 `event not found`，取消时 `kill` 那一行就不执行了。
+
+## 远程的代理
+
+远程电脑上不了外网时，cc-connect 连不上飞书和 Telegram。`feishu new` 和重启前都导出 `http_proxy`、`https_proxy`（大小写各一份）和 `no_proxy=localhost,127.0.0.1,::1`，代理地址按顺序取：
+
+1. SSH 代理隧道插件给这台电脑开着隧道时，用 `http://127.0.0.1:<远程端口>`（`ssh_tunnel::remote_proxy`）。
+2. 否则用那台电脑登录 shell 里的 `HTTPS_PROXY` / `https_proxy`。
+
+地址里只要有字母、数字和 `:/._@%-` 以外的字符就不用。引导「推送到手机」的安装一步给每台远程电脑一个隧道开关。
+
 ## 远程启动和重启（`restart_cc_connect_remote`）
 
-找不到程序报 `ccConnect.remoteNotFound`，没有配置文件报 `ccConnect.remoteNoConfig`。先 `pkill -x cc-connect`（只杀当前用户的，等最多 10 秒，再不走就 `-9`），然后在家目录用 `setsid nohup` 和登录 shell 在后台跑 `cc-connect --config ~/.cc-connect/config.toml`，输出写到 `~/.cc-connect/fuyu.log`。3 秒后还在跑就算成功，否则报 `ccConnect.remoteStopped`，把日志最后一行放进错误详情。
+找不到程序报 `ccConnect.remoteNotFound`，没有配置文件报 `ccConnect.remoteNoConfig`。先 `pkill -x cc-connect`（只杀当前用户的）。被杀的进程里有父进程不是 1 的（screen 里的循环、systemd 用户服务这类守护在管它），就等它们拉起新的 cc-connect，15 秒内出现新进程算成功，不自己再起一个；没有守护或 15 秒还没出现时，等旧进程最多 10 秒，再不走就 `-9`，然后在家目录用 `setsid nohup` 和登录 shell 在后台跑 `cc-connect --config ~/.cc-connect/config.toml`，输出写到 `~/.cc-connect/fuyu.log`。3 秒后还在跑就算成功，否则报 `ccConnect.remoteStopped`，把日志最后一行放进错误详情。
 
-用 systemd 等方式自己托管 cc-connect 的电脑，重启会和它们抢进程，这种情况下不要在岛上点重启。
 
 ## 命令和返回形状
 

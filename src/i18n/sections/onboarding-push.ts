@@ -16,7 +16,11 @@ export type OnboardingPushText = {
     installing: string;
     reading: string;
     macLocal: string;
-    remoteSoon: string;
+  };
+  tunnel: {
+    lead: string;
+    off: string;
+    port: (port: number) => string;
   };
   projects: {
     ask: string;
@@ -86,7 +90,11 @@ export const zhCN: OnboardingPushText = {
     installing: "正在安装…",
     reading: "正在读取…",
     macLocal: "Mac 本机暂不支持，可以给远程电脑配。",
-    remoteSoon: "远程电脑在引导里安装和建项目即将支持，现在可以先在那台电脑上自己装。",
+  },
+  tunnel: {
+    lead: "远程电脑上不了外网时，cc-connect 连不上飞书或 Telegram。打开 SSH 代理隧道，借这台电脑的网络（要这台电脑开着代理软件）：",
+    off: "不用，那台电脑自己能上网",
+    port: (port) => `远程端口 ${port}`,
   },
   projects: {
     ask: "给每台电脑上的每个 AI 代理各建一个 cc-connect 项目，一个项目接手机上的一个机器人。这样可以吗？",
@@ -161,7 +169,11 @@ export const en: OnboardingPushText = {
     installing: "Installing…",
     reading: "Reading…",
     macLocal: "Not supported on this Mac yet; you can set up remote computers.",
-    remoteSoon: "Installing and adding projects on remote computers from the guide is coming soon; install it there yourself for now.",
+  },
+  tunnel: {
+    lead: "If a remote computer can't reach the internet, cc-connect there can't reach Feishu or Telegram. Turn on the SSH proxy tunnel to lend it this computer's connection (a proxy app must be running here):",
+    off: "Off: that computer reaches the internet itself",
+    port: (port) => `Remote port ${port}`,
   },
   projects: {
     ask: "Make one cc-connect project for each AI agent on each computer? Each project gets its own bot on your phone.",

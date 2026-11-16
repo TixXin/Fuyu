@@ -55,6 +55,7 @@ fn running() -> Result<(), UserError> {
 #[tauri::command]
 pub async fn start_cc_connect_remote_feishu_setup(host: String, path: Option<String>, project: String, agent: String, work_dir: String) -> Result<(), UserError> {
     let target = remote::target(&host, path.as_deref())?;
+    let proxy = crate::ssh_tunnel::remote_proxy(&host);
     running()?;
     tauri::async_runtime::spawn_blocking(move || {
         let output = run_ssh(&target, &remote_project::read_script(work_dir.trim())).map_err(|error| remote::ssh_error(&host, error))?;
@@ -65,14 +66,14 @@ pub async fn start_cc_connect_remote_feishu_setup(host: String, path: Option<Str
         static RUNS: AtomicU64 = AtomicU64::new(1);
         let id = RUNS.fetch_add(1, Ordering::Relaxed);
         let stamp = format!("{}-{id}", now.format("%Y%m%d-%H%M%S"));
-        let script = scripts::run_script(path.as_deref(), &seen, name, &block, &stamp);
+        let script = scripts::run_script(path.as_deref(), proxy.as_deref(), &seen, name, &block, &stamp);
         let mut current = setup();
         if current.as_ref().is_some_and(|setup| setup.ended.is_none()) {
             return Err(UserError::new("ccConnect.feishuRunning", "A Feishu QR setup is already running."));
         }
         *current = Some(Setup { id, host: host.clone(), target: target.clone(), stamp, qr: None, output: Vec::new(), ended: None, done: false });
         drop(current);
-        thread::spawn(move || finish(id, &host, &target, path.as_deref(), run_ssh(&target, &script)));
+        thread::spawn(move || finish(id, &host, &target, (path.as_deref(), proxy.as_deref()), run_ssh(&target, &script)));
         thread::spawn(move || peek(id));
         Ok(())
     })
@@ -88,14 +89,14 @@ fn block_for(seen: &remote_project::Seen, name: &str, agent: &str, work_dir: &st
     Ok(config_file::project_block(&project, today))
 }
 
-fn finish(id: u64, host: &str, target: &SshTarget, path: Option<&str>, result: Result<Vec<u8>, String>) {
+fn finish(id: u64, host: &str, target: &SshTarget, (path, proxy): (Option<&str>, Option<&str>), result: Result<Vec<u8>, String>) {
     let finished = match result {
         Ok(output) => scripts::parse_run(host, &String::from_utf8_lossy(&output)),
         Err(error) => Finished::Failed(remote::ssh_error(host, error), Vec::new()),
     };
     let (ended, done, output) = match finished {
         Finished::Done(output) => {
-            let restarted = run_ssh(target, &remote_run::restart_script(path))
+            let restarted = run_ssh(target, &remote_run::restart_script(path, proxy))
                 .map_err(|error| remote::ssh_error(host, error))
                 .and_then(|output| remote_run::parse_restart(host, &String::from_utf8_lossy(&output)));
             (restarted, true, output)

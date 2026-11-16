@@ -16,6 +16,9 @@ Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: automated }
 const QR = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
 const commands: { command: string; args: Record<string, unknown> }[] = [];
 const plugin = { id: "focusd.cc-connect", builtin: true, enabled: false, status: "stopped", settings: {} as Record<string, unknown> };
+const tunnelPlugin = { id: "focusd.ssh-proxy-tunnel", builtin: true, enabled: false, status: "stopped", settings: {} as Record<string, unknown> };
+const tunnel = { host: "devbox", enabled: false, remotePort: null as number | null, state: "off", error: null };
+const remote = { exe: null as string | null, running: false, projects: [] as typeof local.projects };
 const local = {
   exe: null as string | null,
   exeSource: null as string | null,
@@ -30,23 +33,44 @@ const local = {
   projects: [] as { name: string; agent: string | null; chats: { key: string; platform: string; userName: string | null }[] }[],
 };
 let feishuStarted = 0;
+const feishuAt = (started: number) => Date.now() - started < 600
+  ? { running: true, qr: QR, url: "https://open.feishu.cn/x", done: false, allowFrom: null, error: null }
+  : { running: false, qr: null, url: null, done: true, allowFrom: "ou_1", error: null };
 mockIPC((command, payload) => {
   const args = (payload ?? {}) as Record<string, unknown>;
   commands.push({ command, args });
   switch (command) {
-    case "list_plugins": return { plugins: [plugin] };
+    case "list_plugins": return { plugins: [plugin, tunnelPlugin] };
     case "get_agent_remote_hosts": return [{ host: "devbox", fetchedAt: 1, error: null, fetching: false }];
     case "get_cc_connect_status": return local;
-    case "get_cc_connect_remote_status": return { exe: null, running: false, projects: [] };
+    case "get_cc_connect_remote_status": return remote;
+    case "detect_cc_connect_agents": return [{ agent: "claudecode", label: "Claude Code", path: "/usr/bin/claude" }];
+    case "install_cc_connect_remote":
+      remote.exe = "/home/me/.local/bin/cc-connect";
+      return { exe: remote.exe, installed: true, version: "cc-connect v1.5.0" };
+    case "add_cc_connect_remote_project":
+      remote.projects = [...remote.projects, { name: String(args.project), agent: String(args.agent), chats: [] }];
+      return null;
+    case "restart_cc_connect_remote": remote.running = true; return null;
+    case "get_ssh_tunnels": return [tunnel];
+    case "check_ssh_tunnel_port": return false;
+    case "set_ssh_tunnel":
+      Object.assign(tunnel, { enabled: Boolean(args.enabled), remotePort: args.remotePort ?? null, state: args.enabled ? "connected" : "off" });
+      return [tunnel];
     case "install_cc_connect":
       local.exe = "C:\\Users\\me\\Fuyu\\cc-connect\\cc-connect.exe";
       local.exeSource = "downloaded";
       return local.exe;
-    case "set_plugin_enabled": plugin.enabled = Boolean(args.enabled); plugin.status = "running"; return { plugins: [plugin] };
+    case "set_plugin_enabled": {
+      const changed = args.id === tunnelPlugin.id ? tunnelPlugin : plugin;
+      changed.enabled = Boolean(args.enabled);
+      changed.status = "running";
+      return { plugins: [plugin, tunnelPlugin] };
+    }
     case "set_plugin_setting":
       plugin.settings = { ...plugin.settings, [String(args.key)]: args.value };
       if (args.key === "run") local.running = true;
-      return { plugins: [plugin] };
+      return { plugins: [plugin, tunnelPlugin] };
     case "check_cc_connect_bot": return { name: "fuyu_bot", inviteUrl: null, senders: [{ id: "4242", name: "Me" }] };
     case "add_cc_connect_project":
       local.configProjects = [...local.configProjects, String(args.project)];
@@ -54,9 +78,7 @@ mockIPC((command, payload) => {
       return null;
     case "get_cc_connect_feishu_setup":
       feishuStarted ||= Date.now();
-      return Date.now() - feishuStarted < 600
-        ? { running: true, qr: QR, url: "https://open.feishu.cn/x", done: false, allowFrom: null, error: null }
-        : { running: false, qr: null, url: null, done: true, allowFrom: "ou_1", error: null };
+      return feishuAt(feishuStarted);
     case "send_cc_connect_message": return null;
     default: return null;
   }
@@ -124,8 +146,14 @@ if (!automated) {
     const localRow = rowOf('[data-target="local"]');
     const remoteRow = rowOf('[data-target="ssh:devbox"]');
     check(localRow?.textContent?.includes("本机") && localRow.textContent.includes("未安装"), "This computer is listed as not installed");
-    check(remoteRow?.textContent?.includes("devbox") && remoteRow.textContent.includes("即将支持") && !remoteRow.querySelector("button"),
-      "A remote computer is listed, without an install button until remote setup lands");
+    check(remoteRow?.textContent?.includes("devbox") && remoteRow.textContent.includes("未安装") && remoteRow.querySelector("button"), "A remote computer is listed with its own install button");
+    const tunnelSwitch = () => document.querySelector<HTMLInputElement>('[data-tunnel="devbox"] input[type="checkbox"]');
+    check(tunnelSwitch() && !tunnelSwitch()!.checked && rowOf('[data-tunnel="devbox"]')?.textContent?.includes("自己能上网"), "The install step asks whether the remote computer needs the SSH proxy tunnel");
+    await act(async () => { tunnelSwitch()!.click(); });
+    await wait(60);
+    const saved = called("set_ssh_tunnel")[0]?.args;
+    check(tunnelPlugin.enabled && saved?.host === "devbox" && saved.enabled === true && saved.remotePort === 37897, "Turning it on starts the tunnel plugin and opens port 37897 for that computer");
+    check(rowOf('[data-tunnel="devbox"]')?.textContent?.includes("37897"), "The row shows the tunnel's remote port");
     await press(localRow?.querySelector("button") ?? undefined, "安装");
     await wait(30);
     check(called("install_cc_connect").length === 1 && rowOf('[data-target="local"]')?.textContent?.includes("已安装"), "Install downloads cc-connect and the row turns installed");
@@ -191,6 +219,23 @@ if (!automated) {
     check(skipped === 1, "Skip leaves the act");
     await nav("next");
     check(fits(), "The test step fits a narrow card");
+
+    for (let at = 0; at < PUSH_STEPS - 1; at += 1) await nav("back");
+    await press(rowOf('[data-target="ssh:devbox"]')?.querySelector("button") ?? undefined, "install remote");
+    await wait(30);
+    check(called("install_cc_connect_remote")[0]?.args.host === "devbox" && rowOf('[data-target="ssh:devbox"]')?.textContent?.includes("已安装"), "Install puts cc-connect on the remote computer");
+    await nav("next");
+    check(names().map((input) => input.value).join(",") === "local-claudecode,my-codex,devbox-claudecode", "The remote computer gets a project only for the agent found there");
+    await nav("next");
+    await nav("next");
+    const devbox = () => rowOf('[data-project="devbox-claudecode"]')!;
+    await type(devbox().querySelector<HTMLInputElement>('input[type="password"]')!, "456:def");
+    await type(devbox().querySelector<HTMLInputElement>('input:not([type="password"])')!, "4242");
+    await press(devbox().querySelector<HTMLButtonElement>(".onboarding__button--primary") ?? undefined, "connect remote");
+    await wait(30);
+    const remoteAdded = called("add_cc_connect_remote_project")[0]?.args;
+    check(remoteAdded?.host === "devbox" && remoteAdded.platform === "telegram" && remoteAdded.workDir === "~" && remoteAdded.token === "456:def", "A remote Telegram project goes in the remote home folder");
+    check(called("restart_cc_connect_remote")[0]?.args.host === "devbox" && devbox().textContent?.includes("已接上"), "cc-connect there restarts and the row is connected");
     document.documentElement.dataset.testResult = "passed";
   } catch (error) {
     document.documentElement.dataset.testResult = "failed";
