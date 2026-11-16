@@ -16,7 +16,19 @@ const ipcImportRestriction = {
   ],
 };
 
-const hostFiles = ["src/features/*/host/**/*.{js,mjs,ts,mts}", "packages/plugin-base/src/host/**/*.{js,mjs,ts,mts}"];
+const ipcDynamicImport = {
+  selector: "ImportExpression[source.value=/^@tauri-apps\\u002Fapi\\u002F(core|event)$/]",
+  message: "不要用动态 import 绕过 api.ts 的 IPC 收口。",
+};
+
+const pluginSwitchDirs = ["src/features/plugin-kernel/**", "src/windows/settings/**", "src/windows/island/**"];
+
+const buildKindGate = {
+  selector: "MemberExpression[object.type='MetaProperty'][object.meta.name='import'][property.name='env']",
+  message: "插件平台和设置页显示与否只看 Rust 报告的开关（getPluginHostConnection().enabled），不看前端构建类型 import.meta.env。",
+};
+
+const hostFiles =["src/features/*/host/**/*.{js,mjs,ts,mts}", "packages/plugin-base/src/host/**/*.{js,mjs,ts,mts}"];
 
 const hostMessage = "宿主部分跑在 Node 里，不能依赖浏览器和 Tauri，见 docs/architecture/plugins/v3-builtins.md「内置插件的宿主部分怎么写」。";
 
@@ -62,13 +74,13 @@ export default tseslint.config(
       "react-hooks/rules-of-hooks": "error",
       "react-hooks/exhaustive-deps": "error",
       "no-restricted-imports": ["error", ipcImportRestriction],
-      "no-restricted-syntax": [
-        "error",
-        {
-          selector: "ImportExpression[source.value=/^@tauri-apps\\u002Fapi\\u002F(core|event)$/]",
-          message: "不要用动态 import 绕过 api.ts 的 IPC 收口。",
-        },
-      ],
+      "no-restricted-syntax": ["error", ipcDynamicImport],
+    },
+  },
+  {
+    files: pluginSwitchDirs.map((dir) => `${dir}/*.{ts,tsx}`),
+    rules: {
+      "no-restricted-syntax": ["error", ipcDynamicImport, buildKindGate],
     },
   },
   {
@@ -76,6 +88,12 @@ export default tseslint.config(
     rules: {
       "no-restricted-imports": "off",
       "no-restricted-syntax": "off",
+    },
+  },
+  {
+    files: pluginSwitchDirs.map((dir) => [`${dir}/*.ts`, "**/api.ts"]),
+    rules: {
+      "no-restricted-syntax": ["error", buildKindGate],
     },
   },
   {
