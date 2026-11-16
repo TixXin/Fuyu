@@ -1,4 +1,5 @@
 import { useCallback } from "react";
+import { useIslandContributed } from "../../features/plugin-kernel/useIslandContributions";
 import type { IslandSettings } from "../../lib/settings/types";
 import { useHoverExpand } from "./useHoverExpand";
 import { useHoverFocus } from "./useHoverFocus";
@@ -11,13 +12,13 @@ type IslandHoverOptions = {
   settings: IslandSettings;
   navigation: ReturnType<typeof useIslandNavigation>;
   quiet: boolean;
-  hasMessagePreview: boolean;
   leadPage: IslandPage | null;
   openEnabledPage: (page: IslandPage) => void;
 };
 
-export function useIslandHover({ settings, navigation, quiet, hasMessagePreview, leadPage, openEnabledPage }: IslandHoverOptions) {
+export function useIslandHover({ settings, navigation, quiet, leadPage, openEnabledPage }: IslandHoverOptions) {
   const { mode, page, isTucked, isPeeking, collapseIsland, revealIsland, peekIsland, retractsAfterPeek, resumePeek } = navigation;
+  const { reveal } = useIslandContributed();
   const openCurrentPage = useCallback(
     () => openEnabledPage(leadPage ?? page),
     [leadPage, openEnabledPage, page],
@@ -25,7 +26,7 @@ export function useIslandHover({ settings, navigation, quiet, hasMessagePreview,
   useHoverExpand({
     enabled: settings.expandTrigger === "hover" && !quiet,
     delayMs: settings.hoverExpandDelayMs,
-    paused: hasMessagePreview,
+    paused: reveal.pauseHover,
     collapseDelayMs: settings.hoverCollapseDelayMs,
     mode,
     isTucked: isTucked || isPeeking,

@@ -33,6 +33,7 @@ import type { IslandGlassView } from "./useIslandGlass";
 import { IslandResizeHints } from "./IslandResizeHints";
 import { IslandSideHandle } from "./IslandSideHandle";
 import { IslandSideColumn, useSideColumnRows } from "./IslandSideColumn";
+import { useLegacySide } from "./legacySide";
 import { IslandSideBubble } from "./IslandSideBubble";
 import { AlertPopup, useActiveAlert } from "./NotchAlert";
 import { IslandDragHint } from "./IslandDragHint";
@@ -160,19 +161,18 @@ export function IslandShell({
   const qqNotificationCount = qqNotifications.snapshot.items.length;
   const wechatPending = wechatReminders.snapshot.pending;
   const unreadCount = qqNotificationCount + Number(wechatPending);
-  const sideLayout = useSideColumnRows({
+  const sideSources = {
     agentVisualState,
     agentSessionCount: features.agents ? activeAgentSessionCount : null,
     unreadCount,
-    hasMail: qqMail.preview !== null,
     todoCount: lineSources.todoCount,
     shelfCount,
-    showMusic: features.music === true,
     showCover: sideCover,
     mediaState,
     deviceUse,
-    gauges: collapsedSlots?.gauges ?? [],
-  }, onOpenPage, onOpenMessages);
+  };
+  useLegacySide({ ...sideSources, hasMail: qqMail.preview !== null, showMusic: features.music === true });
+  const sideLayout = useSideColumnRows({ ...sideSources, onOpenPage, onOpenMessages }, collapsedSlots?.gauges ?? []);
   const sideHot = preview ? (preview.source === "qqMail" ? "mail" : "unread") : null;
   const sideHotIndex = sideLayout.shown.findIndex((row) => row.id === sideHot);
   const activeAlert = useActiveAlert();

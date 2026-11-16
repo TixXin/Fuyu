@@ -79,6 +79,7 @@ import { useIslandAction, useIslandContributed, useSettleIslandContributions } f
 import { useCollapsedWidth } from "./useCollapsedWidth";
 import { useLegacyAlerts } from "./legacyAlerts";
 import { useLegacyLines } from "./legacyLines";
+import { useLegacyStates } from "./legacyStates";
 import type { IslandPage } from "./types";
 
 const NO_TODOS: TodoItem[] = [];
@@ -134,10 +135,6 @@ export function IslandApp() {
     isTucked,
     quiet: game.quiet,
     demoActive: demo.active,
-    agentsOn: settings.agentStatusEnabled,
-    agentSessionCount: activeAgentSessionCount,
-    showsMessage,
-    busy: recording.shown || screenshotCard.current !== null || translationPeek !== null || permissionPrompts.current !== null,
   });
   const notch = useIslandNotch();
   const barText = settings.showCollapsedText && !notch;
@@ -174,14 +171,15 @@ export function IslandApp() {
     slots: collapsedSlots,
   });
   const collapsedIslandWidth = notchFittedWidth(textWidth, notch, settings.collapsedScale, alerts.size > 0);
-  useIslandTucking({
-    settings,
-    navigation,
-    hasMessagePreview: showsMessage,
-    hasPermissionPrompt: permissionPrompts.current !== null || screenshotCard.current !== null,
-    hasTranslationPeek: Boolean(translationPeek),
-    holdTuck: useTuckHold(settings, { todos, activeTodoId, agentSessions, playing: media.mediaState.playbackStatus === "playing", messagesOpen: mode === "expanded" && page === "qq", notices }),
+  useLegacyStates({
+    showsMessage,
+    prompting: permissionPrompts.current !== null || screenshotCard.current !== null,
+    peeking: Boolean(translationPeek),
+    recording: recording.shown,
+    hold: useTuckHold(settings, { todos, activeTodoId, agentSessions, playing: media.mediaState.playbackStatus === "playing", messagesOpen: mode === "expanded" && page === "qq", notices }),
+    agentsActive: settings.agentStatusEnabled && activeAgentSessionCount > 0,
   });
+  useIslandTucking({ settings, navigation });
 
 
   const clipboard = useClipboardHistory(toggleClipboardHistory);
@@ -279,7 +277,6 @@ export function IslandApp() {
     settings,
     navigation,
     quiet: game.quiet,
-    hasMessagePreview: showsMessage,
     leadPage: (leadLine(contributedLines, { reserved: true })?.page ?? null) as IslandPage | null,
     openEnabledPage,
   });

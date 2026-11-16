@@ -1,3 +1,4 @@
+import { useIslandContributed } from "../../features/plugin-kernel/useIslandContributions";
 import { useFirstHints } from "./first-hints/useFirstHints";
 import type { IslandMode } from "./types";
 
@@ -6,24 +7,17 @@ export function useIslandFirstHints({
   isTucked,
   quiet,
   demoActive,
-  agentsOn,
-  agentSessionCount,
-  showsMessage,
-  busy,
 }: {
   mode: IslandMode;
   isTucked: boolean;
   quiet: boolean;
   demoActive: boolean;
-  agentsOn: boolean;
-  agentSessionCount: number;
-  showsMessage: boolean;
-  busy: boolean;
 }) {
+  const { busy, hints } = useIslandContributed();
   return useFirstHints(
-    { agent: agentsOn && agentSessionCount > 0, message: showsMessage, tuck: isTucked },
+    { agent: hints.has("agent"), message: hints.has("message"), tuck: isTucked },
     {
-      canShow: mode === "collapsed" && !isTucked && !showsMessage && !busy,
+      canShow: mode === "collapsed" && !isTucked && !busy,
       paused: quiet || demoActive,
     },
   );

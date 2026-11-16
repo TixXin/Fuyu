@@ -29,6 +29,7 @@ export type IslandStatusContribution = { kind: "status"; state: string; label: s
 export type IslandPopupContribution = { kind: "popup"; page: string; height: number; open?: boolean };
 export type IslandStyleContribution = { kind: "style"; vars?: Readonly<Record<string, string>>; className?: string; tint?: string };
 export type IslandBusyContribution = { kind: "busy" };
+export type IslandHintContribution = { kind: "hint"; key: string };
 export type IslandPageContribution = { kind: "page"; page: string; enabled: boolean };
 
 export type IslandContribution =
@@ -44,6 +45,7 @@ export type IslandContribution =
   | IslandPopupContribution
   | IslandStyleContribution
   | IslandBusyContribution
+  | IslandHintContribution
   | IslandPageContribution;
 
 export type IslandContributed = {
@@ -59,6 +61,7 @@ export type IslandContributed = {
   popups: ReadonlyMap<string, IslandPopupContribution>;
   style: { vars: Readonly<Record<string, string>>; classNames: readonly string[]; tint: string | null };
   busy: boolean;
+  hints: ReadonlySet<string>;
   pages: Readonly<Record<string, boolean>>;
   settled: boolean;
 };
@@ -90,6 +93,7 @@ export function aggregateContributions(lists: readonly (readonly IslandContribut
   const lines: IslandLineContribution[] = [];
   const trails: string[] = [];
   const alerts = new Set<string>();
+  const hints = new Set<string>();
   const notices = new Map<string, IslandNoticeContribution>();
   const side = new Map<string, IslandSideContribution>();
   const popups = new Map<string, IslandPopupContribution>();
@@ -126,12 +130,13 @@ export function aggregateContributions(lists: readonly (readonly IslandContribut
           if (item.tint) tint ??= item.tint;
           break;
         case "busy": busy = true; break;
+        case "hint": hints.add(item.key); break;
         case "page": pages[item.page] = item.enabled; break;
       }
     }
   }
   lines.sort((a, b) => b.priority - a.priority);
-  return { lines, trails, alerts, notices, preview, reveal, hold, side, status, popups, style: { vars, classNames, tint }, busy, pages, settled };
+  return { lines, trails, alerts, notices, preview, reveal, hold, side, status, popups, style: { vars, classNames, tint }, busy, hints, pages, settled };
 }
 
 export function topLine(lines: readonly IslandLineContribution[]): IslandLineContribution | null {
