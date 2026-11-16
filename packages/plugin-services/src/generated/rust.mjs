@@ -4,6 +4,8 @@ export const RUST_METHODS = Object.freeze([
   "app.version",
   "calendar.events",
   "calendar.sources",
+  "fileShelf.add",
+  "fileShelf.list",
   "translator.engines",
   "translator.rewrite",
   "translator.translate",

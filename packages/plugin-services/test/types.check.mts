@@ -1,4 +1,4 @@
-import { RUST_METHODS, calendarV1, defineService, remindersV1, timersV1, translatorV1, type PlatformSupport, type RustMethods, type ServiceClient, type ServiceImpl, type ServiceProvider, type Timer } from "@fuyu/plugin-services";
+import { RUST_METHODS, calendarV1, defineService, fileShelfV1, remindersV1, timersV1, translatorV1, type PlatformSupport, type RustMethods, type ServiceClient, type ServiceImpl, type ServiceProvider, type Timer } from "@fuyu/plugin-services";
 
 declare const timers: ServiceClient<typeof timersV1>;
 const listed: Promise<{ timers: Timer[]; at: number }> = timers.list();
@@ -24,6 +24,12 @@ void calendar.events({ refresh: true }).then((result) => result.problems.map((pr
 // @ts-expect-error refresh is a boolean
 void calendar.events({ refresh: "yes" });
 void calendar.sources().then((result) => result.sources.map((source) => (source.kind === "caldav" ? source.host : source.name)));
+
+declare const shelf: ServiceClient<typeof fileShelfV1>;
+void shelf.list().then((result) => result.items.map((item) => (item.missing ? item.name : item.path)));
+void shelf.add({ paths: ["/tmp/shot.png"] }).then((result) => result.items.map((item) => item.addedAt + item.size));
+// @ts-expect-error add needs the paths
+void shelf.add({});
 
 declare const translator: ServiceClient<typeof translatorV1>;
 void translator.rewrite({ text: "hi", task: "polish" }, { onProgress: (chunk) => chunk.piece.length });

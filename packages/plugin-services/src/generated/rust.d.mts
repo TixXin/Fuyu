@@ -14,6 +14,10 @@ export type CalendarSources = { sources: Array<CalendarSourceInfo>, };
 
 export type EngineSecret = { engine: string, hasSecret: boolean, };
 
+export type FileShelfEntry = { missing: boolean, unreachable: boolean, id: string, path: string, name: string, isDir: boolean, size: number, addedAt: number, pinned: boolean, };
+
+export type FileShelfSnapshot = { items: Array<FileShelfEntry>, };
+
 export type JsonValue = number | string | boolean | Array<JsonValue> | { [key in string]: JsonValue } | null;
 
 export type PlatformSupport = { os: string, unsupported: Array<string>, devBuild: boolean, };
@@ -28,9 +32,11 @@ export type RustMethods = {
   "app.version": { params: Record<string, never> | null; result: AppVersion };
   "calendar.events": { params: { refresh?: boolean | null }; result: CalendarEvents };
   "calendar.sources": { params: Record<string, never> | null; result: CalendarSources };
+  "fileShelf.add": { params: { paths: Array<string> }; result: FileShelfSnapshot };
+  "fileShelf.list": { params: Record<string, never> | null; result: FileShelfSnapshot };
   "translator.engines": { params: Record<string, never> | null; result: TranslatorEngines };
   "translator.rewrite": { params: { text: string; task: string; prompt?: string | null; provider?: string | null; model?: string | null }; result: Translated };
   "translator.translate": { params: { text: string; direction: string; provider?: string | null; model?: string | null }; result: Translated };
 };
 
-export declare const RUST_METHODS: readonly ["app.echo", "app.platformSupport", "app.version", "calendar.events", "calendar.sources", "translator.engines", "translator.rewrite", "translator.translate"];
+export declare const RUST_METHODS: readonly ["app.echo", "app.platformSupport", "app.version", "calendar.events", "calendar.sources", "fileShelf.add", "fileShelf.list", "translator.engines", "translator.rewrite", "translator.translate"];

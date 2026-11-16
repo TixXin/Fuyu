@@ -179,3 +179,10 @@ fn saved_items_load_back_unchanged() {
 fn path_keys_ignore_case_and_slash_style() {
     assert_eq!(path_key(r"C:\Users\Me\File.TXT"), path_key("c:/users/me/file.txt"));
 }
+
+#[test]
+fn the_file_shelf_has_no_background_in_rust() {
+    let catalog = crate::plugin_kernel::builtins::catalog();
+    let shelf = catalog.iter().find(|plugin| plugin.id == super::PLUGIN_ID).expect("file-shelf is a built-in plugin");
+    assert_eq!(shelf.background.as_deref(), Some(&[][..]));
+}

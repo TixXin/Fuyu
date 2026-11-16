@@ -104,7 +104,7 @@
 | `plugin-keybinding`（载荷 `{ pluginId, command, when }`：插件命令的全局快捷键被按下，主窗口求值 `when` 后用 `run_plugin_command` 执行） | `plugin_host/keybindings.rs` | `main` |
 | `todos-changed`（载荷 `{ revision, data, fields, reason }`：插件或本地接口改了 `todos.json`，主窗口只采纳 `fields` 列出的字段） | `todos/service.rs` | `main` |
 | `plugin-permission-request`（载荷 `{ requestId, pluginId, pluginName, permission, timeoutMs }`：插件第一次使用敏感权限，主窗口显示确认，用 `answer_plugin_permission` 回复） | `plugin_host/sensitive.rs` | `main` |
-| `file-shelf-changed`（无载荷：插件改了文件中转列表，主窗口重新读取） | `file_shelf/plugin_view.rs` | `main` |
+| `file-shelf-changed`（无载荷：插件改了文件中转列表，主窗口重新读取；2026-11-15 起宿主的 `fileShelf.add` 也发，E36.3.32） | `file_shelf/plugin_view.rs`、`file_shelf/host.rs` | `main` |
 | `plugin-market-install-requested`（无载荷：官网的安装链接 `fuyu://market/install/<插件 id>` 在等着，设置窗口用 `take_market_install_request` 取走插件 id） | `plugin_host/market_link.rs` | `settings` |
 | `plugin-view-changed`（载荷 `{ kind: "view", pluginId, viewId, model }`：可见的插件页面有新模型；`{ kind: "status", pluginId, itemId, status }`：折叠条状态文字变了；`{ kind: "reset", pluginId, status }`：插件进程启动、停止或崩溃。每个页面或状态项每秒最多 10 次） | `plugin_host/views.rs` | `main` |
 | `voice-input-state`（语音输入，C80：`{ phase: "idle" }`、`{ phase: "recording", startedAtMs, limitSeconds }`、`{ phase: "transcribing" }`、`{ phase: "result", text }`（`text` 为空表示没听清）、`{ phase: "failed", error }`（`error` 是原生错误 `{ code, message, args?, detail? }`）） | `voice_input/session.rs` | 广播 |
@@ -221,6 +221,10 @@
   - `fuyu-settings` 的 `calendarEnabled` 和 `translationEnabled` 一样改成开关表里 `calendar` 的镜像（`LEGACY_SWITCHES` 多一行），读写和对账同上；第一次迁时存的是 `false` 就关掉 `calendar`。
   - 日历在 Rust 里没有后台：`builtins.json` 里 `calendar` 的 `background` 是 `[]`。关掉后岛不再调 `get_calendar_events`，日历页和设置 → 日历的分节撤掉；命令本身照旧在。
   - 新服务 `calendar/v1`（`@fuyu/plugin-services`）：方法 `events({ refresh? })`（60 秒），返回 `{ events, problems, fetchedAt, fromMs, toMs, sourceCount }`，`events` 和 `get_calendar_events` 的一样，`problems` 是 `[{ sourceId, reason, message }]`（`reason` 是原来的错误码）；`refresh` 不是布尔或多给字段回 `bad-params`；方法 `sources()` 返回 `{ sources: [{ id, kind, name, host }] }`（`kind` 是 `ics` / `caldav`，不带账号、地址和订阅链接）。宿主里由 Rust 方法 `calendar.events`（参数 `{ refresh? }`）、`calendar.sources` 提供，窗口里由 `src/features/calendar/plugin/services.ts` 提供；日历关掉时回 `not-ready`。
+- 内置插件迁移，文件中转（E36.3.32，2026-11-15 起）：
+  - `fuyu-settings` 的 `shelfEnabled` 和 `translationEnabled` 一样改成开关表里 `file-shelf` 的镜像（`LEGACY_SWITCHES` 多一行），读写和对账同上；第一次迁时存的是 `false` 就关掉 `file-shelf`。
+  - 文件中转在 Rust 里没有后台：`builtins.json` 里 `file-shelf` 的 `background` 是 `[]`。关掉后岛不再调 `get_file_shelf`、不听 `file-shelf-changed`，「文件中转」页、收起条上的数量和设置 → 文件中转撤掉；Tauri 命令本身照旧在。第 2 版插件的 `shelf.list`、`shelf.add`、`shelf.remove` 在文件中转关着时回 503「The file shelf is turned off.」。
+  - 新服务 `file-shelf/v1`（`@fuyu/plugin-services` 导出 `fileShelfV1`）：方法 `list()` 和 `add({ paths })`（`paths` 是 1–20 个绝对路径，别的形状回 `bad-params`；不存在或不是绝对路径的那几个跳过），都返回 `{ items }`，每项和 `get_file_shelf` 的一样（`{ id, path, name, isDir, size, addedAt, pinned, missing, unreachable }`）。宿主里由 Rust 方法 `fileShelf.list`、`fileShelf.add`（参数 `{ paths }`，加完给主窗口发 `file-shelf-changed`）提供，窗口里由 `src/features/file-shelf/plugin/services.ts` 提供；文件中转关掉时回 `not-ready`。
 - 翻译「自定义接口」的地址交给 Rust（E36.3.20，2026-11-15 起）：
   - 新 Tauri 命令 `save_translation_custom_address`（参数 `address`，去掉首尾空白后存进凭据 `com.tixxin.fuyu.translation` / 用户名 `custom-address`；空串是删掉；超过 500 字节回 `translation.urlLong`；不检查格式，用的时候才查），没有读回的命令。
   - 用 `useTranslationSettings` 的窗口在打开时交一次 `fuyu-translation-settings` 的 `customBaseUrl`，改了再交（停 0.4 秒），所以旧版本填过的地址不用重填；localStorage 里的值照旧，翻译窗口自己请求时还传它。

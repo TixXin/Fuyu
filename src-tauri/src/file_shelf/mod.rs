@@ -1,4 +1,5 @@
 mod availability;
+mod host;
 mod plugin_view;
 mod store;
 #[cfg(test)]
@@ -27,11 +28,14 @@ use thumbnail::Thumbnails;
 
 pub(crate) use plugin_view::{plugin_shelf_add, plugin_shelf_list, plugin_shelf_remove};
 
+pub(crate) const PLUGIN_ID: &str = "file-shelf";
+
 static FILE_SHELF: OnceLock<FileShelfService> = OnceLock::new();
 
 static NEXT_ID: AtomicU64 = AtomicU64::new(0);
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(test, derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct FileShelfItem {
     id: String,
@@ -40,14 +44,17 @@ pub struct FileShelfItem {
     #[serde(default)]
     is_dir: bool,
     #[serde(default)]
+    #[cfg_attr(test, ts(type = "number"))]
     size: u64,
     #[serde(default)]
+    #[cfg_attr(test, ts(type = "number"))]
     added_at: i64,
     #[serde(default)]
     pinned: bool,
 }
 
 #[derive(Debug, Clone, Serialize)]
+#[cfg_attr(test, derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct FileShelfEntry {
     #[serde(flatten)]
@@ -57,12 +64,14 @@ pub struct FileShelfEntry {
 }
 
 #[derive(Debug, Clone, Serialize)]
+#[cfg_attr(test, derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct FileShelfSnapshot {
     items: Vec<FileShelfEntry>,
 }
 
 struct FileShelfService {
+    app: AppHandle,
     path: PathBuf,
     items: Mutex<Vec<FileShelfItem>>,
     options: Mutex<FileShelfOptions>,
@@ -157,6 +166,7 @@ pub fn init(app: &AppHandle) -> Result<(), String> {
         .join(FILE_SHELF_FILE_NAME);
     let items = Mutex::new(load_items(&path));
     let _ = FILE_SHELF.set(FileShelfService {
+        app: app.clone(),
         path,
         items,
         options: Mutex::new(FileShelfOptions::default()),
@@ -215,13 +225,21 @@ pub async fn set_file_shelf_options(
     service.update(|items| items)
 }
 
-#[tauri::command]
-pub async fn add_file_shelf_paths(paths: Vec<String>) -> Result<FileShelfSnapshot, String> {
+pub(crate) fn is_enabled() -> bool {
+    crate::plugin_kernel::builtins::is_enabled(PLUGIN_ID)
+}
+
+fn add_paths(paths: &[String]) -> Result<FileShelfSnapshot, String> {
     let now = current_unix_millis();
     let added: Vec<FileShelfItem> = paths.iter().filter_map(|path| describe(path, now)).collect();
     let service = service()?;
     let max_items = service.options().max_items;
     service.update(|items| insert_items(items, added, max_items))
+}
+
+#[tauri::command]
+pub async fn add_file_shelf_paths(paths: Vec<String>) -> Result<FileShelfSnapshot, String> {
+    add_paths(&paths)
 }
 
 #[tauri::command]
