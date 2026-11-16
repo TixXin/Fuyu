@@ -1,10 +1,11 @@
-import { useMemo } from "react";
+import { useCallback, useMemo, type Dispatch, type SetStateAction } from "react";
 import { useTranslation } from "../../../i18n";
 import type { IslandSettings } from "../../../lib/settings/types";
-import type { IslandContribution } from "../../plugin-kernel/islandContributions";
+import { ISLAND_SIDE_ROW_HEIGHT, type IslandContribution } from "../../plugin-kernel/islandContributions";
+import { useIslandDecor } from "../../plugin-kernel/islandDecor";
 import type { IslandHost } from "../../plugin-kernel/islandHost";
 import { defineSlot } from "../../plugin-kernel/slots";
-import { useIslandContributions } from "../../plugin-kernel/useIslandContributions";
+import { useIslandContributed, useIslandContributions } from "../../plugin-kernel/useIslandContributions";
 import { useHostChangeEvent } from "../../plugins/useHostChangeEvent";
 import type { AgentSessionSummary } from "../api";
 import { AGENT_POPUP_LIST_SAVING, getAgentAlertExpandedHeight } from "../islandLayout";
@@ -14,7 +15,8 @@ import { useIslandAgentAlerts } from "../useIslandAgentAlerts";
 import { useIslandAgents } from "../useIslandAgents";
 import { useQuotaAlert } from "../useQuotaAlert";
 import { demoAgentSessions } from "./demo";
-import { agentPage, agentShell, quotaAlertState } from "./islandState";
+import { agentLineContribution, pickAgentSession } from "./agentLine";
+import { agentArrange, agentLine, agentPage, agentShell, quotaAlertState, type AgentArrange } from "./islandState";
 
 type RunnerProps = {
   mode: string;
@@ -22,6 +24,7 @@ type RunnerProps = {
   quiet: boolean;
   page: string;
   settings: IslandSettings;
+  setSettings: Dispatch<SetStateAction<IslandSettings>>;
   features: { agents: boolean };
   demo: { active: boolean; startedAt: number };
   openIslandPage: (page: "agents") => void;
@@ -32,7 +35,7 @@ type RunnerProps = {
 const NO_SESSIONS: AgentSessionSummary[] = [];
 const runnerSlot = defineSlot<RunnerProps>("island.runner/v1");
 
-function AgentRunner({ mode, isTucked, quiet, page, settings, features, demo, openIslandPage, collapseIsland, host }: RunnerProps) {
+function AgentRunner({ mode, isTucked, quiet, page, settings, setSettings, features, demo, openIslandPage, collapseIsland, host }: RunnerProps) {
   const t = useTranslation();
   const demoSessions = useMemo(() => (demo.active ? demoAgentSessions(t.onboarding.demo, demo.startedAt) : NO_SESSIONS), [demo.active, demo.startedAt, t]);
   const { agentStatus, agentSessions, listedAgentSessions, activeAgentSessionCount, unseenAgentSessions, agentRemoval, agentSession, agentInterjection, agentActivity, agentUsages } =
@@ -66,16 +69,26 @@ function AgentRunner({ mode, isTucked, quiet, page, settings, features, demo, op
     [listedAgentSessions, unseenAgentSessions, agentRemoval, agentUsages, alertedSession, approvals],
   ));
   quotaAlertState.useProvide(quotaAlert);
+  const arrangeChange = useCallback<AgentArrange["onChange"]>((patch) => setSettings((current) => ({ ...current, ...patch })), [setSettings]);
+  agentArrange.useProvide(useMemo(() => ({ sort: settings.agentSessionSort, group: settings.agentSessionGroup, onChange: arrangeChange }), [settings.agentSessionSort, settings.agentSessionGroup, arrangeChange]));
   agentShell.useProvide(useMemo(
     () => ({ sessions: agentSessions, listed: listedAgentSessions, unseenKeys: unseenAgentSessions.keys, activeCount: activeAgentSessionCount, named: agentSession, interjection: agentInterjection, activity: agentActivity }),
     [agentSessions, listedAgentSessions, unseenAgentSessions.keys, activeAgentSessionCount, agentSession, agentInterjection, agentActivity],
   ));
+  const { lines } = useIslandContributed();
+  const iconWidth = useIslandDecor().agentIconWidth ?? 0;
+  const lineSession = pickAgentSession(lines, settings.agentTitleMode, agentSession, agentInterjection);
+  agentLine.useProvide(lineSession);
+  const line = agentLineContribution(lineSession, lineSession !== null && lineSession === agentInterjection, iconWidth, lineSession ? t.island.agentSession(lineSession.label, lineSession.title) : "");
   const waiting = agentSessions.some((session) => session.phase === "waiting");
   const busy = agentSessions.some((session) => session.phase === "running" || session.phase === "waiting");
   const list: IslandContribution[] = [
     { kind: "status", state: agentVisualState, label: agentStatusLabel },
     { kind: "popup", page: "agents", height: agentCardHeight !== undefined ? getAgentAlertExpandedHeight(agentCardHeight) : undefined, saving: AGENT_POPUP_LIST_SAVING, open: alertPopup },
   ];
+  list.push({ kind: "side", item: "agent", height: ISLAND_SIDE_ROW_HEIGHT });
+  if (line) list.push(line);
+  if (features.agents) list.push({ kind: "hint", key: "agents.count" });
   if (quotaAlert) list.push({ kind: "alert", item: "quota" });
   if (settings.autoTuckHoldAgent && settings.agentStatusEnabled && waiting) list.push({ kind: "hold", reason: "agent-status.waiting" });
   if (settings.agentStatusEnabled && activeAgentSessionCount > 0) list.push({ kind: "hint", key: "agent" });

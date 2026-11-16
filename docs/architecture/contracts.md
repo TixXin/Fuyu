@@ -250,6 +250,12 @@
   - 关着时其余 Tauri 命令照旧在，读写的是存着的历史；第 2 版插件的 `clipboard.history` 和本地接口 `GET /v1/clipboard` 照旧回 409「Clipboard history is switched off.」，第 2 版的这条路保留到第 6 阶段。
   - 新 Tauri 命令 `get_clipboard_texts`（可选 `limit`：1–50，默认 20），返回 `{ items: [{ id, text, truncated, copiedAt, favorite }] }`：最近复制的文字记录，新的在前，不含图片和文件，打码的只给打码后的预览，超过 4000 字截断；剪贴板关着时报错。
   - 新服务 `clipboard/v1`（`@fuyu/plugin-services` 导出 `clipboardV1`）：方法 `history({ limit? })`，返回同上；`limit` 不是 1–50 的整数或多给字段回 `bad-params`。宿主里由 Rust 方法 `clipboard.history`（参数 `{ limit }`，剪贴板关着时回 `inactive`）提供，窗口里由 `src/features/clipboard/plugin/services.ts` 提供；剪贴板关掉时回 `not-ready`。
+- 内置插件迁移，待办（E36.3.38，2026-11-16 起）：
+  - `fuyu-settings` 的 `todoEnabled` 和 `translationEnabled` 一样改成开关表里 `todos` 的镜像（`LEGACY_SWITCHES` 多一行），读写和对账同上；第一次迁时存的是 `false` 就关掉 `todos`。
+  - 待办在 Rust 里没有后台：`builtins.json` 里 `todos` 的 `background` 是 `[]`。关掉后岛上的待办页、收起条上的待办标题和数量、侧栏的待办格、设置 → 待办都撤掉，岛默认打开下一个开着的页面；`todos.json`、Tauri 命令和同步照旧；本机接口和第 2 版插件的 `todos.*`、`note.*` 照旧可用（本机接口的约定是待办模块关掉时接口仍可用），只有待办这次运行在 `localStorage` 里（`todos.json` 用不了）时回 503，因为那时只有岛上的待办能答。
+  - 本机接口的 `todos.add` 和第 2 版插件的同名方法多了可选的 `project`（字符串，项目名，多于 20 个字截断；不是字符串回 400）。旧的调用方不传，行为不变。
+  - 本机接口转给岛的请求（`local-api-request`）改由本机接口自己的 runner 接，经 `todos/v1` 调待办；事件名和应答命令不变。
+  - 新服务 `todos/v1`（`@fuyu/plugin-services` 导出 `todosV1`）：方法 `list`、`days`、`add`、`update`、`remove`、`note`、`setNote`，形状同本机接口的 `todos.*`、`note.*`，事件 `changed`（`{ date }`）；错误码 `bad-params`、`not-found`、`unavailable`。宿主里由 Rust 方法 `todos.list`、`todos.days`、`todos.add`、`todos.update`、`todos.remove`、`todos.note`、`todos.setNote` 提供，窗口里由 `src/features/todos/plugin/services.ts` 提供；待办关掉时回 `not-ready`。
 - 翻译「自定义接口」的地址交给 Rust（E36.3.20，2026-11-15 起）：
   - 新 Tauri 命令 `save_translation_custom_address`（参数 `address`，去掉首尾空白后存进凭据 `com.tixxin.fuyu.translation` / 用户名 `custom-address`；空串是删掉；超过 500 字节回 `translation.urlLong`；不检查格式，用的时候才查），没有读回的命令。
   - 用 `useTranslationSettings` 的窗口在打开时交一次 `fuyu-translation-settings` 的 `customBaseUrl`，改了再交（停 0.4 秒），所以旧版本填过的地址不用重填；localStorage 里的值照旧，翻译窗口自己请求时还传它。

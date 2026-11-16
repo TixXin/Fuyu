@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
-import { listen } from "@tauri-apps/api/event";
+import { emit, listen } from "@tauri-apps/api/event";
 import type { ScheduledTodo, TodoArchive, TodoItem } from "./types";
 
 export type SaveTodoResult = {
@@ -83,4 +83,11 @@ export function getTodosState() {
 
 export function applyTodosChange(change: TodosChange) {
   return invoke<AppliedTodosChange>("apply_todos_change", { change });
+}
+
+const PLUGIN_HOST_EVENT = "plugin-host-event";
+export type TodoHostEventName = "todos.changed" | "note.changed";
+
+export function emitTodoHostEvent(name: TodoHostEventName, payload: Record<string, unknown>) {
+  return emit(PLUGIN_HOST_EVENT, { name, payload });
 }

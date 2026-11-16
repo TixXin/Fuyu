@@ -34,7 +34,6 @@ type IslandHeaderProps = {
   hoverSwitchPage: boolean;
   hoverSwitchDelayMs: number;
   pluginPageButtons?: ReactNode;
-  pageActions?: ReactNode;
 };
 
 export function IslandHeader({
@@ -58,7 +57,6 @@ export function IslandHeader({
   hoverSwitchPage,
   hoverSwitchDelayMs,
   pluginPageButtons,
-  pageActions,
 }: IslandHeaderProps) {
   const t = useTranslation();
   const { hints } = useIslandContributed();
@@ -161,7 +159,6 @@ export function IslandHeader({
       />
 
       <div className="window-actions">
-        {pageActions}
         <SlotView slot={headerSlot} props={buttons} select={(items) => items.filter((item) => item.enabled?.(buttons) ?? true)} />
       </div>
     </header>

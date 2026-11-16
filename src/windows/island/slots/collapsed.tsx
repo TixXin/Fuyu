@@ -15,7 +15,6 @@ export type CollapsedBarContext = {
   statusLight: ReactNode;
   shelfCount: number | null;
   hints: ReadonlySet<string>;
-  agentSessionCount: number | null;
   slots: CollapsedSlots;
   onOpenPage: (page: IslandPage) => void;
   onOpenMessages: (source: MessageSource) => void;

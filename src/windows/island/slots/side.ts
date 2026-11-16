@@ -3,7 +3,6 @@ import { defineSlot } from "../../../features/plugin-kernel/slots";
 import type { IslandPage } from "../types";
 
 export type SideRowSources = {
-  agentSessionCount: number | null;
   unreadCount: number;
   shelfCount: number | null;
 };

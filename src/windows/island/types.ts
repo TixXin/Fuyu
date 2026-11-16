@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import type { IslandDecor } from "../../features/plugin-kernel/islandDecor";
 
 export type IslandMode = "collapsed" | "expanded";
 
@@ -12,13 +13,6 @@ export type IslandPage = BuiltinPage | PluginPageId;
 
 export type NativeGlassState = "active" | "css-fallback" | "disabled";
 
-export type CollapsedSlots = {
-  center?: ReactNode;
-  agentIcon?: ReactNode;
+export type CollapsedSlots = IslandDecor & {
   gauges?: { id: string; node: ReactNode }[];
-  statusLight?: ReactNode;
-  agentCount?: ReactNode;
-  agentIconWidth?: number;
-  centerWidth?: number;
-  sideWidth?: number;
 };

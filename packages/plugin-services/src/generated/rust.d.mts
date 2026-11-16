@@ -46,9 +46,16 @@ export type RustMethods = {
   "media.playPause": { params: Record<string, never> | null; result: NowPlaying };
   "media.previous": { params: Record<string, never> | null; result: NowPlaying };
   "media.seek": { params: { positionMs: number }; result: NowPlaying };
+  "todos.add": { params: { title?: JsonValue | null; date?: JsonValue | null; project?: JsonValue | null }; result: JsonValue };
+  "todos.days": { params: { from?: JsonValue | null; to?: JsonValue | null }; result: JsonValue };
+  "todos.list": { params: { date?: JsonValue | null }; result: JsonValue };
+  "todos.note": { params: { date?: JsonValue | null }; result: JsonValue };
+  "todos.remove": { params: { id?: JsonValue | null }; result: JsonValue };
+  "todos.setNote": { params: { note?: JsonValue | null; append?: JsonValue | null }; result: JsonValue };
+  "todos.update": { params: { id?: JsonValue | null; title?: JsonValue | null; completed?: JsonValue | null }; result: JsonValue };
   "translator.engines": { params: Record<string, never> | null; result: TranslatorEngines };
   "translator.rewrite": { params: { text: string; task: string; prompt?: string | null; provider?: string | null; model?: string | null }; result: Translated };
   "translator.translate": { params: { text: string; direction: string; provider?: string | null; model?: string | null }; result: Translated };
 };
 
-export declare const RUST_METHODS: readonly ["app.echo", "app.platformSupport", "app.version", "calendar.events", "calendar.sources", "clipboard.history", "fileShelf.add", "fileShelf.list", "media.next", "media.nowPlaying", "media.playPause", "media.previous", "media.seek", "translator.engines", "translator.rewrite", "translator.translate"];
+export declare const RUST_METHODS: readonly ["app.echo", "app.platformSupport", "app.version", "calendar.events", "calendar.sources", "clipboard.history", "fileShelf.add", "fileShelf.list", "media.next", "media.nowPlaying", "media.playPause", "media.previous", "media.seek", "todos.add", "todos.days", "todos.list", "todos.note", "todos.remove", "todos.setNote", "todos.update", "translator.engines", "translator.rewrite", "translator.translate"];

@@ -3,6 +3,7 @@ import { settingsRunners } from "../../plugin-kernel/settingsSlots";
 import { onSectionFocus } from "../../../lib/settings/sectionFocus";
 import { useSaveDirectorySetting } from "../useSaveDirectorySetting";
 import { announceSaveDirectorySetting, holdSaveDirectorySetting } from "../saveDirectoryStore";
+import { OWNER } from "./owner.ts";
 
 function SaveDirectoryRunner() {
   const saveDirectory = useSaveDirectorySetting();
@@ -22,4 +23,4 @@ function SaveDirectoryRunner() {
   return null;
 }
 
-settingsRunners.add({ id: "todos.save-directory", component: SaveDirectoryRunner });
+settingsRunners.add({ id: "todos.save-directory", component: SaveDirectoryRunner }, OWNER);

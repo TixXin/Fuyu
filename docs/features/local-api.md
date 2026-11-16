@@ -43,7 +43,7 @@
 |---|---|---|---|
 | GET | `/v1/health` | — | `{ app, version, apiVersion, allowWrite }` |
 | GET | `/v1/todos` | — | `{ date, todos, scheduled, activeTodoId }` |
-| POST | `/v1/todos` | `{ "title": "...", "date"?: "YYYY-MM-DD" }` | 添加到今天列表的顶部；`date` 晚于今天时加入"以后"列表 |
+| POST | `/v1/todos` | `{ "title": "...", "date"?: "YYYY-MM-DD", "project"?: "..." }` | 添加到今天列表的顶部；`date` 晚于今天时加入"以后"列表；`project` 是项目名（2026-11-16 起，多于 20 个字截断） |
 | PATCH | `/v1/todos/{id}` | `{ "title"?: "...", "completed"?: true }` | 只修改给出的字段 |
 | DELETE | `/v1/todos/{id}` | — | 删除 |
 | GET | `/v1/note` | — | `{ date, note }` |
@@ -135,6 +135,6 @@ AI Agent 状态由 Rust 直接处理（`src-tauri/src/agent_status/external.rs`�
 1. Rust（`src-tauri/src/local_api/`）校验请求并转换成方法名，例如 `todos.add`。
 2. 岛屿刚启动、主窗口还没完成迁移时，待办请求最多等 10 秒。
 3. 待办在 `todos.json` 时，由 Rust 直接读写（`src-tauri/src/todos/calls.rs`，规则与 `src/features/todos/apiCommands.ts` 相同），再通知主窗口刷新界面。主窗口卡住或没有显示时也能正常读写。
-4. 只有迁移失败、这次运行仍在用 `localStorage` 时，才像以前一样通过事件 `local-api-request` 交给 `main` 窗口执行；窗口 5 秒内没有回应时返回 504。
+4. 只有迁移失败、这次运行仍在用 `localStorage` 时，才像以前一样通过事件 `local-api-request` 交给 `main` 窗口执行（2026-11-16 起由本机接口的 runner 接住，经窗口里的 `todos/v1` 服务交给待办，E36.3.38）；窗口 5 秒内没有回应时返回 504。
 
-界面会实时刷新，修改也会和手动操作一样被保存。待办模块在设置里被关闭时，接口仍然可用，数据照常保留。
+界面会实时刷新，修改也会和手动操作一样被保存。待办模块被关闭时（2026-11-16 起是在插件页关掉内置插件 `todos`，E36.3.38），待办在 `todos.json` 里的接口仍然可用，数据照常保留；只有上面第 4 步那种情况（这次运行在用 `localStorage`）会回 503，因为那时只有岛上的待办能答。

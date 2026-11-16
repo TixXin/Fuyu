@@ -3,10 +3,11 @@ import type { ReactNode } from "react";
 import type { Translations } from "../../../i18n";
 import { Gauge, RotateCcw } from "lucide-react";
 import { useTranslation } from "../../../i18n";
-import { defineSlot, type IslandAlertMeta, type IslandCollapsedMeta, type IslandPageMeta } from "../../plugin-kernel/slots";
+import { defineSlot, type IslandAlertMeta, type IslandCollapsedMeta, type IslandHeaderMeta, type IslandPageMeta } from "../../plugin-kernel/slots";
+import { AgentArrangeButton } from "../AgentArrangeButton";
 import { QuotaAlertPopup } from "../QuotaAlertPopup";
 import { AgentSessionsPanel } from "../AgentSessionsPanel";
-import { agentPage, quotaAlertState } from "./islandState";
+import { agentArrange, agentPage, agentShell, quotaAlertState } from "./islandState";
 import { islandPage } from "./page.ts";
 
 type Panel = ComponentProps<typeof AgentSessionsPanel>;
@@ -38,20 +39,21 @@ pageSlot.add({ ...islandPage, component: AgentsPage });
 
 type CollapsedContext = {
   t: Translations;
-  agentSessionCount: number | null;
+  hints: ReadonlySet<string>;
   slots: { agentCount?: ReactNode };
   onOpenPage: (page: "agents") => void;
 };
 
 const collapsedSlot = defineSlot<CollapsedContext, IslandCollapsedMeta<CollapsedContext>>("island.collapsed/v1");
 
-function SessionCountItem({ t, agentSessionCount, slots, onOpenPage }: CollapsedContext) {
+function SessionCountItem({ t, slots, onOpenPage }: CollapsedContext) {
+  const agentSessionCount = agentShell.use().activeCount;
   if (slots.agentCount) return slots.agentCount;
   return (
     <button
       className="island-agent-count"
       type="button"
-      aria-label={t.agent.sessions.activeCount(agentSessionCount ?? 0)}
+      aria-label={t.agent.sessions.activeCount(agentSessionCount)}
       onClick={(event) => {
         event.stopPropagation();
         onOpenPage("agents");
@@ -65,7 +67,7 @@ function SessionCountItem({ t, agentSessionCount, slots, onOpenPage }: Collapsed
 collapsedSlot.add({
   id: "session-count",
   order: 80,
-  shown: ({ agentSessionCount, slots }) => agentSessionCount !== null && (Boolean(slots.agentCount) || agentSessionCount > 0),
+  shown: ({ hints, slots }) => hints.has("agents.count") && (Boolean(slots.agentCount) || hints.has("agent")),
   component: SessionCountItem,
 });
 
@@ -104,3 +106,14 @@ function QuotaAlertBody() {
 }
 
 alertSlot.add({ id: "quota", order: 20, component: QuotaAlertLeading, trailing: QuotaAlertTrailing, popup: QuotaAlertBody });
+
+type HeaderContext = { page: string };
+
+const headerSlot = defineSlot<HeaderContext, IslandHeaderMeta<HeaderContext>>("island.header/v1");
+
+function ArrangeButton() {
+  const arrange = agentArrange.use();
+  return arrange && <AgentArrangeButton sort={arrange.sort} group={arrange.group} onChange={arrange.onChange} />;
+}
+
+headerSlot.add({ id: "agent-arrange", order: 0, enabled: ({ page }) => page === "agents", component: ArrangeButton });

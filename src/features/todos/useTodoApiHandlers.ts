@@ -18,7 +18,7 @@ export function useTodoApiHandlers({
 }: TodoApiState & {
   setTodos: Dispatch<SetStateAction<TodoItem[]>>;
   setDailyNote: Dispatch<SetStateAction<string>>;
-  scheduleTodo: (title: string, date: string) => ScheduledTodo;
+  scheduleTodo: (title: string, date: string, project?: string) => ScheduledTodo;
 }): TodoApiHandlers {
   const state = useMemo(
     () => ({ date, todos, scheduledTodos, activeTodoId, dailyNote, archives }),
@@ -49,7 +49,7 @@ export function useTodoApiHandlers({
               stateRef.current = { ...stateRef.current, dailyNote: change.dailyNote };
             }
             if (change?.schedule) {
-              const todo = scheduleTodo(change.schedule.title, change.schedule.date);
+              const todo = scheduleTodo(change.schedule.title, change.schedule.date, change.schedule.project);
               stateRef.current = {
                 ...stateRef.current,
                 scheduledTodos: [...stateRef.current.scheduledTodos, todo],

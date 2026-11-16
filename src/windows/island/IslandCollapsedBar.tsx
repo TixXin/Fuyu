@@ -16,7 +16,7 @@ import { useTranslation } from "../../i18n";
 import { SlotView } from "../../features/plugin-kernel/SlotView";
 import { leadLine, shownLine, visibleLines } from "../../features/plugin-kernel/islandContributions";
 import { runIslandAction, useIslandContributed } from "../../features/plugin-kernel/useIslandContributions";
-import { lineSlot, type CollapsedLineContext, type CollapsedLineSources } from "./slots/line";
+import { lineSlot, type CollapsedLineContext } from "./slots/line";
 import type { CollapsedSlots, IslandPage } from "./types";
 import { useWindowDragGesture } from "./useWindowDragGesture";
 import { hasNotchDrop, useIslandNotch } from "./notch";
@@ -37,8 +37,6 @@ type IslandCollapsedBarProps = {
   showTitle: boolean;
   showCollapsedText: boolean;
   collapsedLabel: string;
-  lineSources: CollapsedLineSources;
-  agentSessionCount: number | null;
   shelfCount: number | null;
   agentVisualState: string;
   onOpenPage: (page: IslandPage) => void;
@@ -84,8 +82,6 @@ export function IslandCollapsedBar({
   showTitle,
   showCollapsedText,
   collapsedLabel,
-  lineSources,
-  agentSessionCount,
   shelfCount,
   agentVisualState,
   onOpenPage,
@@ -116,7 +112,7 @@ export function IslandCollapsedBar({
   const openPeek = () => {
     if (peekLine?.action) runIslandAction(peekLine.action);
   };
-  const lineContext: CollapsedLineContext = { ...lineSources, showTitle, center: slots.center ?? null, agentIcon: slots.agentIcon ?? null };
+  const lineContext: CollapsedLineContext = { showTitle, center: slots.center ?? null, agentIcon: slots.agentIcon ?? null };
   const lineView = (id: string) => <SlotView key={id} slot={lineSlot} props={lineContext} select={(items) => items.filter((item) => item.id === id)} />;
   const showCenter = Boolean(slots.center) && !preview && !peekLine && !notice
     && !(showCollapsedText && (showTitle || lines.some((candidate) => candidate.reserve !== true && candidate.measure !== undefined)));
@@ -131,7 +127,6 @@ export function IslandCollapsedBar({
     updateVersion,
       shelfCount,
     hints: contributed.hints,
-    agentSessionCount,
     slots,
     onOpenPage,
     onOpenMessages,
@@ -204,7 +199,7 @@ export function IslandCollapsedBar({
   const right = (
     <>
         {renderZone(zone("right"))}
-        {agentSessionCount === null && (
+        {!contributed.hints.has("agents.count") && (
           <button
             className="island__quiet-button"
             type="button"
