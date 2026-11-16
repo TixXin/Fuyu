@@ -1,4 +1,4 @@
-import type { ShortcutOwner } from "./shortcutConflicts.ts";
+import type { ShortcutOwner } from "./conflicts.ts";
 
 export interface ShortcutOwnerReport {
   order: number;
@@ -42,4 +42,14 @@ export function subscribeShortcutOwners(listener: () => void): () => void {
 
 export function shortcutOwnerSnapshot(): ShortcutOwnerSnapshot {
   return snapshot;
+}
+
+let refresher: (() => void) | null = null;
+
+export function setShortcutOwnerRefresher(refresh: (() => void) | null) {
+  refresher = refresh;
+}
+
+export function refreshShortcutOwners() {
+  refresher?.();
 }

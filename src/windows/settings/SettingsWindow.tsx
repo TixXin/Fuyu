@@ -7,6 +7,7 @@ import { useMacWindowKeys } from "./useMacWindowKeys";
 import { useFeatureSwitches } from "./useFeatureSwitches";
 import { LayoutEditor } from "./LayoutEditor";
 import "./slots/categories";
+import "./slots/runners";
 import { SETTINGS_FOCUS_STORAGE_KEY, takeFocusRequest } from "./storage";
 import { showSettingsWindow } from "./api";
 import { DEFAULT_SETTINGS, isSameSettings, withLayoutFrom, withThemeFrom } from "../../lib/settings/settings";
@@ -23,8 +24,8 @@ import { useSystemDark } from "../../lib/theme/useResolvedTheme";
 import { IconButtonTooltip } from "../../components/IconButtonTooltip";
 import { SlotView } from "../../features/plugin-kernel/SlotView";
 import { categorySlot } from "./slots/categorySlot";
-import { runnerSlot } from "./slots/runnerSlot";
-import { focusSection } from "./sectionFocus";
+import { settingsRunners } from "../../features/plugin-kernel/settingsSlots";
+import { focusSection } from "../../lib/settings/sectionFocus";
 import "./SettingsWindow.css";
 
 const SETTINGS_DARK_FILL = "#131417";
@@ -136,7 +137,7 @@ export function SettingsWindow() {
   return (
     <main className={`settings-stage stage--font-${settings.fontFamily}${isMacOS ? " settings-stage--mac" : ""}${light ? " island-light settings-stage--light" : ""}`}>
       <IconButtonTooltip scope="body" />
-      <SlotView slot={runnerSlot} props={{ settings }} />
+      <SlotView slot={settingsRunners} props={{ settings }} />
       <LayoutEditor
         category={category}
         hidden={features.hiddenPages}

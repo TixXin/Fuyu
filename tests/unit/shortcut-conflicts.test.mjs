@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { findShortcutOwner, shortcutKey } from "../../src/windows/settings/shortcutConflicts.ts";
+import { findShortcutOwner, shortcutKey } from "../../src/lib/shortcut/conflicts.ts";
 
 const owners = [
   { id: "window", label: "打开快捷翻译", shortcut: "Ctrl+Alt+Space" },

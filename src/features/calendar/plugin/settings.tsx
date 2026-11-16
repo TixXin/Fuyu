@@ -1,4 +1,10 @@
-import { addSettingsCategory } from "../../../windows/settings/slots/categorySlot";
+import { addSettingsCategory } from "../../plugin-kernel/settingsCategories";
 import { CalendarSettingsPage } from "../CalendarSettingsPage";
+import type { IslandSettings } from "../../../lib/settings/types";
 
-addSettingsCategory("calendar", ({ settings, onSettingsChange }) => <CalendarSettingsPage settings={settings} onSettingsChange={onSettingsChange} />);
+type PageProps = {
+  settings: IslandSettings;
+  onSettingsChange(settings: IslandSettings): void;
+};
+
+addSettingsCategory("calendar", ({ settings, onSettingsChange }: PageProps) => <CalendarSettingsPage settings={settings} onSettingsChange={onSettingsChange} />);

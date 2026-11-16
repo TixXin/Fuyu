@@ -1,10 +1,18 @@
 import { useLayoutEffect, useMemo } from "react";
-import { runnerSlot } from "../../../windows/settings/slots/runnerSlot";
+import { settingsRunners } from "../../plugin-kernel/settingsSlots";
 import { useQQNotifications } from "../qq-notifications/QQNotifications";
 import { useWeChatReminders } from "../wechat/WeChatReminders";
 import { announceMessageControllers, holdMessageControllers } from "../settingsControllers";
-import { addSettingsCategory } from "../../../windows/settings/slots/categorySlot";
+import { addSettingsCategory } from "../../plugin-kernel/settingsCategories";
 import { MessagesSettingsPage } from "../MessagesSettingsPage";
+import type { IslandSettings } from "../../../lib/settings/types";
+import type { PlatformFeature } from "../../../lib/platform";
+
+type PageProps = {
+  settings: IslandSettings;
+  unsupported: ReadonlySet<PlatformFeature>;
+  onSettingsChange(settings: IslandSettings): void;
+};
 
 function MessagesRunner() {
   const qqNotifications = useQQNotifications(false);
@@ -22,6 +30,6 @@ function MessagesRunner() {
   return null;
 }
 
-runnerSlot.add({ id: "messages.controllers", component: MessagesRunner });
+settingsRunners.add({ id: "messages.controllers", component: MessagesRunner });
 
-addSettingsCategory("messages", ({ settings, unsupported, onSettingsChange }) => <MessagesSettingsPage settings={settings} unsupported={unsupported} onSettingsChange={onSettingsChange} />);
+addSettingsCategory("messages", ({ settings, unsupported, onSettingsChange }: PageProps) => <MessagesSettingsPage settings={settings} unsupported={unsupported} onSettingsChange={onSettingsChange} />);

@@ -1,4 +1,10 @@
-import { addSettingsCategory } from "../../../windows/settings/slots/categorySlot";
+import { addSettingsCategory } from "../../plugin-kernel/settingsCategories";
 import { ShelfSettingsPage } from "../ShelfSettingsPage";
+import type { IslandSettings } from "../../../lib/settings/types";
 
-addSettingsCategory("shelf", ({ settings, onSettingsChange }) => <ShelfSettingsPage settings={settings} onSettingsChange={onSettingsChange} />);
+type PageProps = {
+  settings: IslandSettings;
+  onSettingsChange(settings: IslandSettings): void;
+};
+
+addSettingsCategory("shelf", ({ settings, onSettingsChange }: PageProps) => <ShelfSettingsPage settings={settings} onSettingsChange={onSettingsChange} />);

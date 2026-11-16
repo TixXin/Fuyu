@@ -1,9 +1,14 @@
 import { useTranslation } from "../../../i18n";
-import { runnerSlot } from "../../../windows/settings/slots/runnerSlot";
-import { useReportShortcutOwners } from "../../../windows/settings/useReportShortcutOwners";
+import { settingsRunners } from "../../plugin-kernel/settingsSlots";
+import { useReportShortcutOwners } from "../../../lib/shortcut/useReportShortcutOwners";
 import { useVoiceInputSettings } from "../useVoiceInputSettings";
-import { addSettingsCategory } from "../../../windows/settings/slots/categorySlot";
+import { addSettingsCategory } from "../../plugin-kernel/settingsCategories";
 import { VoiceInputSettingsPage } from "../VoiceInputSettingsPage";
+import type { IslandSettings } from "../../../lib/settings/types";
+
+type PageProps = {
+  settings: IslandSettings;
+};
 
 function VoiceInputShortcutOwners() {
   const t = useTranslation();
@@ -14,6 +19,6 @@ function VoiceInputShortcutOwners() {
   return null;
 }
 
-runnerSlot.add({ id: "voice-input.shortcut-owners", component: VoiceInputShortcutOwners });
+settingsRunners.add({ id: "voice-input.shortcut-owners", component: VoiceInputShortcutOwners });
 
-addSettingsCategory("voiceInput", ({ settings }) => <VoiceInputSettingsPage settings={settings} />);
+addSettingsCategory("voiceInput", ({ settings }: PageProps) => <VoiceInputSettingsPage settings={settings} />);

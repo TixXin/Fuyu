@@ -6,9 +6,10 @@ import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
 import { MAX_SHELF_ITEMS, MIN_SHELF_ITEMS, SHELF_CLEANUP_DAYS } from "../../lib/settings/settings";
 import type { IslandSettings, ShelfDoubleClick } from "../../lib/settings/types";
 import { useTranslation } from "../../i18n";
-import { FeatureHeader } from "../../windows/settings/FeatureHeader";
+import { FeatureHeader } from "../../components/settings/FeatureHeader";
 import { SlotView } from "../plugin-kernel/SlotView";
-import { settingsSections } from "../../windows/settings/slots/sectionSlot";
+import { settingsSections } from "../plugin-kernel/settingsSlots";
+import { settingsCategoryIcon } from "../plugin-kernel/settingsCategories";
 
 type ShelfSectionProps = {
   settings: IslandSettings;
@@ -95,7 +96,7 @@ sections.add({ id: "shelf.cleanup", category: "shelf", order: 20, component: Cle
 export function ShelfSettingsPage(props: ShelfSectionProps) {
   return (
     <>
-      <FeatureHeader feature="shelf" />
+      <FeatureHeader feature="shelf" icon={settingsCategoryIcon("shelf")} />
       <SlotView slot={sections} group="shelf" props={props} />
     </>
   );

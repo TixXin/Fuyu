@@ -1,14 +1,21 @@
 import { useTranslation } from "../../../i18n";
-import { runnerSlot, type SettingsRunnerProps } from "../../../windows/settings/slots/runnerSlot";
-import { useReportShortcutOwners } from "../../../windows/settings/useReportShortcutOwners";
+import { settingsRunners, type SettingsRunnerProps } from "../../plugin-kernel/settingsSlots";
+import { useReportShortcutOwners } from "../../../lib/shortcut/useReportShortcutOwners";
 import { SHORTCUT_ACTIONS } from "../settings";
 import { useScreenshotSettings } from "../useScreenshotSettings";
 import type { ComponentProps, ComponentType } from "react";
-import { addSettingsCategory, type SettingsPageProps } from "../../../windows/settings/slots/categorySlot";
-import { FeaturePageLink } from "../../../windows/settings/FeaturePageLink";
-import { shortcutSections, type ShortcutsSectionProps } from "../../../windows/settings/slots/shortcutSlots";
+import { addSettingsCategory } from "../../plugin-kernel/settingsCategories";
+import { FeaturePageLink } from "../../../components/settings/FeaturePageLink";
+import { shortcutSections, type ShortcutsSectionProps } from "../../plugin-kernel/settingsSlots";
 import { ScreenshotSettingsPage } from "../ScreenshotSettingsPage";
 import { ScreenshotShortcutGroup } from "../ScreenshotShortcutGroup";
+import type { IslandSettings } from "../../../lib/settings/types";
+
+type PageProps = {
+  settings: IslandSettings;
+  onSettingsChange(settings: IslandSettings): void;
+  onOpenShortcuts(): void;
+};
 
 function ScreenshotShortcutOwners({ settings }: SettingsRunnerProps) {
   const t = useTranslation();
@@ -22,7 +29,7 @@ function ScreenshotShortcutOwners({ settings }: SettingsRunnerProps) {
   return null;
 }
 
-runnerSlot.add({ id: "screenshot.shortcut-owners", component: ScreenshotShortcutOwners });
+settingsRunners.add({ id: "screenshot.shortcut-owners", component: ScreenshotShortcutOwners });
 
 function ScreenshotShortcutsSection({ settings, onSettingsChange, onOpenPage, takenBy }: ShortcutsSectionProps) {
   const t = useTranslation();
@@ -42,7 +49,7 @@ function ScreenshotShortcutsSection({ settings, onSettingsChange, onOpenPage, ta
 
 shortcutSections.add({ id: "shortcuts.screenshot", category: "shortcuts", order: 30, component: ScreenshotShortcutsSection });
 
-const screenshotPage = (tab: ComponentProps<typeof ScreenshotSettingsPage>["tab"]): ComponentType<SettingsPageProps> =>
+const screenshotPage = (tab: ComponentProps<typeof ScreenshotSettingsPage>["tab"]): ComponentType<PageProps> =>
   function ScreenshotPage({ settings, onSettingsChange, onOpenShortcuts }) {
     return <ScreenshotSettingsPage tab={tab} settings={settings} onSettingsChange={onSettingsChange} onOpenShortcuts={onOpenShortcuts} />;
   };

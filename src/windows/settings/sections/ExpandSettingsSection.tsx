@@ -15,7 +15,7 @@ import {
   MIN_HOVER_EXPAND_DELAY_MS,
   MIN_HOVER_SWITCH_DELAY_MS,
 } from "../../../lib/settings/settings";
-import { IslandGlyph } from "./IslandGlyph";
+import { IslandGlyph } from "../../../components/settings/IslandGlyph";
 import { IslandMotionRow } from "./IslandMotionRow";
 import type { ExpandTrigger, IslandSettings } from "../../../lib/settings/types";
 

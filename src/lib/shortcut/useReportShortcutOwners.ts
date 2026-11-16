@@ -1,6 +1,6 @@
 import { useLayoutEffect } from "react";
-import type { ShortcutOwner } from "./shortcutConflicts";
-import { reportShortcutOwners } from "./shortcutOwnerStore";
+import type { ShortcutOwner } from "./conflicts";
+import { reportShortcutOwners } from "./ownerStore";
 
 export function useReportShortcutOwners(id: string, order: number, owners: readonly ShortcutOwner[], finderOnly = false) {
   const key = JSON.stringify(owners);

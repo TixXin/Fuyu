@@ -40,10 +40,13 @@
 | 原位置 | 现在的位置 |
 |---|---|
 | `windows/settings/` 的 `CalendarSettingsPage`、`MusicSettingsPage`、`TranslationSettingsPage`、`ClipboardSettingsPage`、`ShelfSettingsPage`、`ScreenshotSettingsPage`、`RecordSettingsGroup`、`VoiceInputSettingsPage`、`MessagesSettingsPage(.css)`、`Agent*SettingsPage` | 各自功能的根目录（`media`、`file-shelf`、`agent-status` 对应音乐、文件中转、Agent） |
-| `slots/categories.tsx` 里各功能的分类、`BehaviorSettingsPage` 的休息提醒分节 | 各功能的 `plugin/settings.tsx`（`addSettingsCategory`，顺序仍按 `categorySlot.ts` 的 `BUILTIN_CATEGORIES`）；窗口自己的页面留在 `categories.tsx` |
-| `ShortcutGroups.tsx` | `translation/TranslationShortcutGroup`、`clipboard/ClipboardShortcutGroup`、`screenshot/ScreenshotShortcutGroup`；共用的 `FeatureOffRow` → `windows/settings/ShortcutFeatureOffRow.tsx` |
-| `ShortcutsSettingsPage` 里各功能的快捷键分节、速查表的输入和审批两块 | 各功能的 `plugin/settings.tsx`（`slots/shortcutSlots.ts` 的 `shortcutSections`、`shortcutReferences`） |
-| `SettingsWindow.tsx` 的 `useQQNotifications`、`useWeChatReminders`、`useSaveDirectorySetting`，`useShortcutOwners` 里各功能的快捷键 | 插槽 `settings.runner/v1`：`messages`、`todos` 的 runner 经 `messages/settingsControllers.ts`、`todos/saveDirectoryStore.ts` 交给设置页；各功能的 runner 用 `useReportShortcutOwners` 报到 `windows/settings/shortcutOwnerStore.ts` |
+| `slots/categories.tsx` 里各功能的分类、`BehaviorSettingsPage` 的休息提醒分节 | 各功能的 `plugin/settings.tsx`（`addSettingsCategory`）；窗口自己的页面留在 `categories.tsx` |
+| `slots/categorySlot.ts` 的 `BUILTIN_CATEGORIES` 和分类类型、`slots/runnerSlot.ts`、`slots/shortcutSlots.ts`、`sectionSlot.ts` 的句柄 | `features/plugin-kernel/settingsCategories.ts`（加 `addSettingsCategory`、`settingsCategoryIcon`）、`features/plugin-kernel/settingsSlots.ts`（`settingsSections`、`settingsRunners`、`shortcutSections`、`shortcutReferences`）；`categorySlot.ts` 只留 `SettingsPageProps` 和窗口的句柄 |
+| `FeatureHeader(.css)`（改成传 `icon`）、`FeaturePageLink`、`ShortcutFeatureOffRow`、`ShortcutReferenceGroup`、`ShortcutsSettingsPage` 里的 `AllShortcutsLink`、`sections/IslandGlyph(.css)` | `components/settings/` |
+| `shortcutConflicts.ts`、`shortcutOwnerStore.ts`、`useReportShortcutOwners.ts`、`useShortcutOwners.ts`、`sectionFocus.ts` | `lib/shortcut/conflicts.ts`、`ownerStore.ts`、`useReportShortcutOwners.ts`、`useShortcutOwners.ts`，`lib/settings/sectionFocus.ts`；第 2 版插件的快捷键改由 `windows/settings/PluginShortcutOwners.tsx`（`slots/runners.ts` 登记）报上来 |
+| `ShortcutGroups.tsx` | `translation/TranslationShortcutGroup`、`clipboard/ClipboardShortcutGroup`、`screenshot/ScreenshotShortcutGroup`；共用的 `FeatureOffRow` → `components/settings/ShortcutFeatureOffRow.tsx` |
+| `ShortcutsSettingsPage` 里各功能的快捷键分节、速查表的输入和审批两块 | 各功能的 `plugin/settings.tsx`（`shortcutSections`、`shortcutReferences`） |
+| `SettingsWindow.tsx` 的 `useQQNotifications`、`useWeChatReminders`、`useSaveDirectorySetting`，`useShortcutOwners` 里各功能的快捷键 | 插槽 `settings.runner/v1`：`messages`、`todos` 的 runner 经 `messages/settingsControllers.ts`、`todos/saveDirectoryStore.ts` 交给设置页；各功能的 runner 用 `useReportShortcutOwners` 报到快捷键的登记表 |
 
 ### 插件平台第 3 版：共享代码上提（E36.3.24）
 

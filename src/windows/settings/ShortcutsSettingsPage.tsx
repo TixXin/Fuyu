@@ -1,17 +1,16 @@
 import { PageShortcutSection } from "./sections/PageShortcutSection";
 import type { IslandSettings } from "../../lib/settings/types";
 import { PluginShortcutSection } from "../../features/plugins/PluginShortcutSection";
-import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton";
 import { useTranslation } from "../../i18n";
 import { isMacOS } from "../../lib/platform";
 import type { SettingsCategory } from "./categories";
-import { FeaturePageLink } from "./FeaturePageLink";
+import { FeaturePageLink } from "../../components/settings/FeaturePageLink";
 import { ShortcutFinder } from "./ShortcutFinder";
-import { ShortcutReferenceGroup } from "./ShortcutReferenceGroup";
-import { useShortcutOwners } from "./useShortcutOwners";
+import { ShortcutReferenceGroup } from "../../components/settings/ShortcutReferenceGroup";
+import { useShortcutOwners } from "../../lib/shortcut/useShortcutOwners";
 import "./ShortcutsSettingsPage.css";
 import { SlotView } from "../../features/plugin-kernel/SlotView";
-import { shortcutReferences, shortcutSections, type ShortcutsSectionProps } from "./slots/shortcutSlots";
+import { shortcutReferences, shortcutSections, type ShortcutsSectionProps } from "../../features/plugin-kernel/settingsSlots";
 
 function PageKeysSection({ settings, onSettingsChange, takenBy }: ShortcutsSectionProps) {
   return <PageShortcutSection settings={settings} onSettingsChange={onSettingsChange} takenBy={takenBy} />;
@@ -65,9 +64,4 @@ export function ShortcutsSettingsPage({
       <SlotView slot={shortcutSections} group={tab} props={props} />
     </>
   );
-}
-
-export function AllShortcutsLink({ onOpen }: { onOpen: () => void }) {
-  const t = useTranslation();
-  return <SettingsLinkButton onClick={onOpen}>{t.settings.shortcuts.allShortcuts}</SettingsLinkButton>;
 }

@@ -7,9 +7,10 @@ import { MusicBarSettingsSection } from "./MusicBarSettingsSection";
 import { LyricsSettingsSection } from "./lyrics/LyricsSettingsSection";
 import { LyricsKaraokeSettingsSection } from "./lyrics/LyricsKaraokeSettingsSection";
 import { useTranslation } from "../../i18n";
-import { FeatureHeader } from "../../windows/settings/FeatureHeader";
+import { FeatureHeader } from "../../components/settings/FeatureHeader";
 import { SlotView } from "../plugin-kernel/SlotView";
-import { settingsSections } from "../../windows/settings/slots/sectionSlot";
+import { settingsSections } from "../plugin-kernel/settingsSlots";
+import { settingsCategoryIcon } from "../plugin-kernel/settingsCategories";
 
 type MusicSectionProps = {
   settings: IslandSettings;
@@ -63,7 +64,7 @@ sections.add({ id: "musicLyricsStyle.karaoke", category: "musicLyricsStyle", ord
 export function MusicSettingsPage({ tab, ...props }: MusicSectionProps & { tab: MusicTab }) {
   return (
     <>
-      {tab === "music" && <FeatureHeader feature="music" />}
+      {tab === "music" && <FeatureHeader feature="music" icon={settingsCategoryIcon("music")} />}
       <SlotView slot={sections} group={tab} props={props} />
     </>
   );

@@ -9,9 +9,10 @@ import { AGENT_PROVIDER_LABELS } from "./status";
 import "./AgentHooksSettingsSection.css";
 import type { AgentLightStyle, AgentTitleMode, IslandSettings } from "../../lib/settings/types";
 import { useTranslation } from "../../i18n";
-import { FeatureHeader } from "../../windows/settings/FeatureHeader";
+import { FeatureHeader } from "../../components/settings/FeatureHeader";
 import { SlotView } from "../plugin-kernel/SlotView";
-import { settingsSections } from "../../windows/settings/slots/sectionSlot";
+import { settingsSections } from "../plugin-kernel/settingsSlots";
+import { settingsCategoryIcon } from "../plugin-kernel/settingsCategories";
 
 const SHOWN_PROVIDERS = Object.keys(AGENT_PROVIDER_LABELS) as SessionProvider[];
 
@@ -107,7 +108,7 @@ sections.add({ id: "agents.providers", category: "agents", order: 30, component:
 export function AgentSettingsPage(props: AgentSectionProps) {
   return (
     <>
-      <FeatureHeader feature="agents" />
+      <FeatureHeader feature="agents" icon={settingsCategoryIcon("agents")} />
       <SlotView slot={sections} group="agents" props={props} />
     </>
   );

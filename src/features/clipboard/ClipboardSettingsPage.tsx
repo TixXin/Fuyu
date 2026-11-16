@@ -9,12 +9,13 @@ import { ClipboardTransferSettings } from "./ClipboardTransferSettings";
 import { openShortcutLabel } from "./shortcut";
 import { useClipboardSettings } from "./useClipboardSettings";
 import { useTranslation } from "../../i18n";
-import { FeatureHeader } from "../../windows/settings/FeatureHeader";
+import { FeatureHeader } from "../../components/settings/FeatureHeader";
 import { ClipboardShortcutGroup } from "./ClipboardShortcutGroup";
-import { AllShortcutsLink } from "../../windows/settings/ShortcutsSettingsPage";
-import { useShortcutOwners } from "../../windows/settings/useShortcutOwners";
+import { AllShortcutsLink } from "../../components/settings/AllShortcutsLink";
+import { useShortcutOwners } from "../../lib/shortcut/useShortcutOwners";
 import { SlotView } from "../plugin-kernel/SlotView";
-import { settingsSections } from "../../windows/settings/slots/sectionSlot";
+import { settingsSections } from "../plugin-kernel/settingsSlots";
+import { settingsCategoryIcon } from "../plugin-kernel/settingsCategories";
 
 type ClipboardSectionProps = {
   onOpenShortcuts: () => void;
@@ -81,6 +82,7 @@ export function ClipboardSettingsPage({ tab, settings, onOpenShortcuts }: {
       {tab === "clipboard" && (
         <FeatureHeader
           feature="clipboard"
+          icon={settingsCategoryIcon("clipboard")}
           status={openKeys ? t.settings.clipboard.headerShortcut(openKeys) : undefined}
         />
       )}

@@ -1,6 +1,6 @@
-import type { SettingsCategory } from "./categories";
+export type ShortcutOwner = { id: string; label: string; shortcut: string; home?: string };
 
-export type ShortcutOwner = { id: string; label: string; shortcut: string; home?: SettingsCategory };
+export type ShortcutTakenBy = (shortcut: string, selfId: string) => string | null;
 
 const MODIFIER_ALIASES: Record<string, string> = {
   control: "ctrl",

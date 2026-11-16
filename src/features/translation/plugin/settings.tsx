@@ -1,13 +1,20 @@
 import { useTranslation } from "../../../i18n";
-import { runnerSlot, type SettingsRunnerProps } from "../../../windows/settings/slots/runnerSlot";
-import { useReportShortcutOwners } from "../../../windows/settings/useReportShortcutOwners";
+import { settingsRunners, type SettingsRunnerProps } from "../../plugin-kernel/settingsSlots";
+import { useReportShortcutOwners } from "../../../lib/shortcut/useReportShortcutOwners";
 import { useTranslationSettings } from "../useTranslationSettings";
-import { addSettingsCategory } from "../../../windows/settings/slots/categorySlot";
-import { FeaturePageLink } from "../../../windows/settings/FeaturePageLink";
-import { ShortcutReferenceGroup } from "../../../windows/settings/ShortcutReferenceGroup";
-import { shortcutReferences, shortcutSections, type ShortcutsSectionProps } from "../../../windows/settings/slots/shortcutSlots";
+import { addSettingsCategory } from "../../plugin-kernel/settingsCategories";
+import { FeaturePageLink } from "../../../components/settings/FeaturePageLink";
+import { ShortcutReferenceGroup } from "../../../components/settings/ShortcutReferenceGroup";
+import { shortcutReferences, shortcutSections, type ShortcutsSectionProps } from "../../plugin-kernel/settingsSlots";
 import { TranslationSettingsPage } from "../TranslationSettingsPage";
 import { TranslationShortcutGroup } from "../TranslationShortcutGroup";
+import type { IslandSettings } from "../../../lib/settings/types";
+
+type PageProps = {
+  settings: IslandSettings;
+  onSettingsChange(settings: IslandSettings): void;
+  onOpenShortcuts(): void;
+};
 
 function TranslationShortcutOwners({ settings }: SettingsRunnerProps) {
   const t = useTranslation();
@@ -19,7 +26,7 @@ function TranslationShortcutOwners({ settings }: SettingsRunnerProps) {
   return null;
 }
 
-runnerSlot.add({ id: "translation.shortcut-owners", component: TranslationShortcutOwners });
+settingsRunners.add({ id: "translation.shortcut-owners", component: TranslationShortcutOwners });
 
 function TranslationShortcutsSection({ settings, onSettingsChange, onOpenPage, takenBy }: ShortcutsSectionProps) {
   const t = useTranslation();
@@ -46,4 +53,4 @@ function TranslationInputReference({ settings }: ShortcutsSectionProps) {
 shortcutSections.add({ id: "shortcuts.translation", category: "shortcuts", order: 10, component: TranslationShortcutsSection });
 shortcutReferences.add({ id: "shortcutsReference.input", category: "shortcutsReference", order: 20, component: TranslationInputReference });
 
-addSettingsCategory("translation", ({ settings, onSettingsChange, onOpenShortcuts }) => <TranslationSettingsPage settings={settings} onSettingsChange={onSettingsChange} onOpenShortcuts={onOpenShortcuts} />);
+addSettingsCategory("translation", ({ settings, onSettingsChange, onOpenShortcuts }: PageProps) => <TranslationSettingsPage settings={settings} onSettingsChange={onSettingsChange} onOpenShortcuts={onOpenShortcuts} />);

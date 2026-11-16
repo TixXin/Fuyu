@@ -1,9 +1,7 @@
-import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton";
-import { SettingsRow } from "../../components/settings/SettingsRow";
+import { SettingsLinkButton } from "./SettingsLinkButton";
+import { SettingsRow } from "./SettingsRow";
 import { useTranslation } from "../../i18n";
-import "./ShortcutsSettingsPage.css";
-
-export type TakenBy = (shortcut: string, selfId: string) => string | null;
+import "./ShortcutFeatureOffRow.css";
 
 export function FeatureOffRow({ feature, onTurnOn }: { feature: string; onTurnOn: () => void }) {
   const t = useTranslation();

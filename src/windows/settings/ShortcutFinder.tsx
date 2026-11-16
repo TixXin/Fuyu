@@ -7,7 +7,7 @@ import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton
 import { SettingsRow } from "../../components/settings/SettingsRow";
 import { useTranslation } from "../../i18n";
 import type { SettingsCategory } from "./categories";
-import { findShortcutOwnerRow, type ShortcutOwner } from "./shortcutConflicts";
+import { findShortcutOwnerRow, type ShortcutOwner } from "../../lib/shortcut/conflicts";
 
 export function ShortcutFinder({ owners, onOpenPage }: {
   owners: readonly ShortcutOwner[];
@@ -35,10 +35,11 @@ export function ShortcutFinder({ owners, onOpenPage }: {
     setPressed(shortcut);
   };
 
+  const home = owner?.home as SettingsCategory | undefined;
   const result = !pressed ? null : owner ? (
     <span className="shortcut-finder__result" role="status">
-      {text.finderUsed(shortcutLabel(pressed), owner.label, owner.home ? t.settings.categories[owner.home] : text.featureTitle)}
-      {owner.home ? <SettingsLinkButton onClick={() => owner.home && onOpenPage(owner.home)}>{text.finderOpen}</SettingsLinkButton> : null}
+      {text.finderUsed(shortcutLabel(pressed), owner.label, home ? t.settings.categories[home] : text.featureTitle)}
+      {home ? <SettingsLinkButton onClick={() => onOpenPage(home)}>{text.finderOpen}</SettingsLinkButton> : null}
     </span>
   ) : (
     <span className="shortcut-finder__result shortcut-finder__result--free" role="status">{text.finderFree(shortcutLabel(pressed))}</span>

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import { SettingsGroup } from "../../components/settings/SettingsGroup";
-import { SettingsRow } from "../../components/settings/SettingsRow";
+import { SettingsGroup } from "./SettingsGroup";
+import { SettingsRow } from "./SettingsRow";
 import { ShortcutKeys } from "../../components/controls/ShortcutKeys";
 
 export function ShortcutReferenceGroup({ title, rows, footer, action }: { title: string; rows: [string, string][]; footer?: string; action?: ReactNode }) {

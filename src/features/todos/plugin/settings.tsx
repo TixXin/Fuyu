@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect } from "react";
-import { runnerSlot } from "../../../windows/settings/slots/runnerSlot";
-import { onSectionFocus } from "../../../windows/settings/sectionFocus";
+import { settingsRunners } from "../../plugin-kernel/settingsSlots";
+import { onSectionFocus } from "../../../lib/settings/sectionFocus";
 import { useSaveDirectorySetting } from "../useSaveDirectorySetting";
 import { announceSaveDirectorySetting, holdSaveDirectorySetting } from "../saveDirectoryStore";
 
@@ -22,4 +22,4 @@ function SaveDirectoryRunner() {
   return null;
 }
 
-runnerSlot.add({ id: "todos.save-directory", component: SaveDirectoryRunner });
+settingsRunners.add({ id: "todos.save-directory", component: SaveDirectoryRunner });

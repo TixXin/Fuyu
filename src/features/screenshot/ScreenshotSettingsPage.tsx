@@ -11,11 +11,12 @@ import { RecordSettingsGroup } from "./RecordSettingsGroup";
 import { useScreenshotSettings } from "./useScreenshotSettings";
 import { useTranslation } from "../../i18n";
 import { isMacOS } from "../../lib/platform";
-import { FeatureHeader } from "../../windows/settings/FeatureHeader";
-import { AllShortcutsLink } from "../../windows/settings/ShortcutsSettingsPage";
-import { useShortcutOwners } from "../../windows/settings/useShortcutOwners";
+import { FeatureHeader } from "../../components/settings/FeatureHeader";
+import { AllShortcutsLink } from "../../components/settings/AllShortcutsLink";
+import { useShortcutOwners } from "../../lib/shortcut/useShortcutOwners";
 import { SlotView } from "../plugin-kernel/SlotView";
-import { settingsSections } from "../../windows/settings/slots/sectionSlot";
+import { settingsSections } from "../plugin-kernel/settingsSlots";
+import { settingsCategoryIcon } from "../plugin-kernel/settingsCategories";
 
 type ScreenshotSectionProps = {
   settings: IslandSettings;
@@ -147,7 +148,7 @@ export function ScreenshotSettingsPage({
 
   return (
     <>
-      {shown === "screenshot" && <FeatureHeader feature="screenshot" />}
+      {shown === "screenshot" && <FeatureHeader feature="screenshot" icon={settingsCategoryIcon("screenshot")} />}
       <SlotView slot={sections} group={shown} props={props} />
     </>
   );

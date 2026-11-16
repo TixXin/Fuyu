@@ -1,14 +1,20 @@
 import { useTranslation } from "../../../i18n";
-import { runnerSlot } from "../../../windows/settings/slots/runnerSlot";
-import { useReportShortcutOwners } from "../../../windows/settings/useReportShortcutOwners";
+import { settingsRunners } from "../../plugin-kernel/settingsSlots";
+import { useReportShortcutOwners } from "../../../lib/shortcut/useReportShortcutOwners";
 import { normalizeClipboardShortcut } from "../shortcut";
 import { useClipboardSettings } from "../useClipboardSettings";
 import type { ComponentProps, ComponentType } from "react";
-import { addSettingsCategory, type SettingsPageProps } from "../../../windows/settings/slots/categorySlot";
-import { FeaturePageLink } from "../../../windows/settings/FeaturePageLink";
-import { shortcutSections, type ShortcutsSectionProps } from "../../../windows/settings/slots/shortcutSlots";
+import { addSettingsCategory } from "../../plugin-kernel/settingsCategories";
+import { FeaturePageLink } from "../../../components/settings/FeaturePageLink";
+import { shortcutSections, type ShortcutsSectionProps } from "../../plugin-kernel/settingsSlots";
 import { ClipboardSettingsPage } from "../ClipboardSettingsPage";
 import { ClipboardShortcutGroup } from "../ClipboardShortcutGroup";
+import type { IslandSettings } from "../../../lib/settings/types";
+
+type PageProps = {
+  settings: IslandSettings;
+  onOpenShortcuts(): void;
+};
 
 function ClipboardShortcutOwners() {
   const t = useTranslation();
@@ -19,7 +25,7 @@ function ClipboardShortcutOwners() {
   return null;
 }
 
-runnerSlot.add({ id: "clipboard.shortcut-owners", component: ClipboardShortcutOwners });
+settingsRunners.add({ id: "clipboard.shortcut-owners", component: ClipboardShortcutOwners });
 
 function ClipboardShortcutsSection({ onOpenPage, takenBy }: ShortcutsSectionProps) {
   const t = useTranslation();
@@ -38,7 +44,7 @@ function ClipboardShortcutsSection({ onOpenPage, takenBy }: ShortcutsSectionProp
 
 shortcutSections.add({ id: "shortcuts.clipboard", category: "shortcuts", order: 20, component: ClipboardShortcutsSection });
 
-const clipboardPage = (tab: ComponentProps<typeof ClipboardSettingsPage>["tab"]): ComponentType<SettingsPageProps> =>
+const clipboardPage = (tab: ComponentProps<typeof ClipboardSettingsPage>["tab"]): ComponentType<PageProps> =>
   function ClipboardPage({ settings, onOpenShortcuts }) {
     return <ClipboardSettingsPage tab={tab} settings={settings} onOpenShortcuts={onOpenShortcuts} />;
   };

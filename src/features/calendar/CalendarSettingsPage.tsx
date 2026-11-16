@@ -6,9 +6,10 @@ import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
 import { CalendarSourcesSection } from "./CalendarSourcesSection";
 import { CALENDAR_REMIND_MINUTES, type CalendarRemindMinutes } from "./calendarSettings";
 import { useTranslation } from "../../i18n";
-import { FeatureHeader } from "../../windows/settings/FeatureHeader";
+import { FeatureHeader } from "../../components/settings/FeatureHeader";
 import { SlotView } from "../plugin-kernel/SlotView";
-import { settingsSections } from "../../windows/settings/slots/sectionSlot";
+import { settingsSections } from "../plugin-kernel/settingsSlots";
+import { settingsCategoryIcon } from "../plugin-kernel/settingsCategories";
 
 type CalendarSectionProps = {
   settings: IslandSettings;
@@ -54,7 +55,7 @@ sections.add({ id: "calendar.sources", category: "calendar", order: 20, componen
 export function CalendarSettingsPage(props: CalendarSectionProps) {
   return (
     <>
-      <FeatureHeader feature="calendar" />
+      <FeatureHeader feature="calendar" icon={settingsCategoryIcon("calendar")} />
       <SlotView slot={sections} group="calendar" props={props} />
     </>
   );

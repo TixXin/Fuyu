@@ -1,4 +1,4 @@
-import { settingsSections } from "../../../windows/settings/slots/sectionSlot";
+import { settingsSections } from "../../plugin-kernel/settingsSlots";
 import { BreakRemindersGroup } from "../BreakRemindersGroup";
 
 const sections = settingsSections<object, "behaviorAlerts">();

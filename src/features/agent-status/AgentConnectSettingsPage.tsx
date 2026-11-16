@@ -3,7 +3,7 @@ import { AgentHooksSettingsSection } from "./AgentHooksSettingsSection";
 import { AgentReplyMarkerSettings } from "./AgentReplyMarkerSettings";
 import { useAgentStatusSettings } from "./useAgentStatusSettings";
 import { SlotView } from "../plugin-kernel/SlotView";
-import { settingsSections } from "../../windows/settings/slots/sectionSlot";
+import { settingsSections } from "../plugin-kernel/settingsSlots";
 
 function HooksSection() {
   const agentStatus = useAgentStatusSettings();

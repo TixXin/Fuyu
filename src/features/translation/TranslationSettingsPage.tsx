@@ -4,17 +4,18 @@ import type { TranslationSettings } from "./storage";
 import { TranslationSettingsSection } from "./TranslationSettingsSection";
 import { useTranslationSettings } from "./useTranslationSettings";
 import { useTranslation } from "../../i18n";
-import { FeatureHeader } from "../../windows/settings/FeatureHeader";
+import { FeatureHeader } from "../../components/settings/FeatureHeader";
 import { TranslationShortcutGroup } from "./TranslationShortcutGroup";
-import { AllShortcutsLink } from "../../windows/settings/ShortcutsSettingsPage";
-import { useShortcutOwners } from "../../windows/settings/useShortcutOwners";
+import { AllShortcutsLink } from "../../components/settings/AllShortcutsLink";
+import { useShortcutOwners } from "../../lib/shortcut/useShortcutOwners";
 import { AppWindow } from "lucide-react";
 import { SettingsChoiceCards } from "../../components/settings/SettingsChoiceCards";
 import { SettingsFootnote } from "../../components/settings/SettingsFootnote";
-import { IslandGlyph } from "../../windows/settings/sections/IslandGlyph";
+import { IslandGlyph } from "../../components/settings/IslandGlyph";
 import { SettingsRow } from "../../components/settings/SettingsRow";
 import { SlotView } from "../plugin-kernel/SlotView";
-import { settingsSections } from "../../windows/settings/slots/sectionSlot";
+import { settingsSections } from "../plugin-kernel/settingsSlots";
+import { settingsCategoryIcon } from "../plugin-kernel/settingsCategories";
 
 type TranslationSectionProps = {
   settings: IslandSettings;
@@ -82,7 +83,7 @@ export function TranslationSettingsPage({
   const props = { settings, onSettingsChange, onOpenShortcuts, translation: translationSettings, onTranslationChange: setTranslationSettings, takenBy };
   return (
     <>
-      <FeatureHeader feature="translation" />
+      <FeatureHeader feature="translation" icon={settingsCategoryIcon("translation")} />
       <SlotView slot={sections} group="translation" props={props} />
     </>
   );

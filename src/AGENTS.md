@@ -11,7 +11,7 @@ src/
 │   ├── island/              # 主窗口：IslandApp（只做组装）、IslandShell、展开后的页面面板（IslandPages）、按职责的接线 hook（useIslandNotices / Todos / Tucking / Shelf / Hover、useAgentIndicator；新功能的接线加在这里，不加进 IslandApp）、窗口尺寸/拖拽/贴边 hook、自动化 hook；slots/ 是展开页、页头按钮、收起条、刘海提醒的插槽注册，新加一页或一个按钮在这里注册，不往列表里写死；first-hints/ 是岛上的「第一次」提示
 │   ├── clipboard/           # 剪贴板独立窗口（列表在 features/clipboard/ClipboardPopup.tsx，弹出、定位和粘贴在 src-tauri/src/clipboard_history/popup.rs）
 │   ├── screenshot/          # 截图的选区窗口（?window=screenshot，每个显示器一个）：冻结画面、选区拖动（useSelection.ts）、工具栏和放大镜
-│   ├── settings/            # 设置窗口；slots/ 是插槽句柄（categorySlot.ts 分类元数据和 addSettingsCategory，sectionSlot.ts 分节，shortcutSlots.ts 快捷键页的分节，runnerSlot.ts 不画界面的 settings.runner/v1）和窗口自己的页面（categories.tsx，并用 glob 收进各功能的 features/<领域>/plugin/settings.tsx）；功能的设置页、分节和快捷键冲突的上报（useReportShortcutOwners）写在功能里，不加进这里；sections/ 是设置页共用的分节组件（外观、行为、主题、预设、快捷键、待办、数据与备份、系统权限）
+│   ├── settings/            # 设置窗口；slots/ 是窗口这一侧的注册：categorySlot.ts（SettingsPageProps 和分类句柄）、categories.tsx（窗口自己的页面，并用 glob 收进各功能的 features/<领域>/plugin/settings.tsx）、runners.ts（窗口自己的 settings.runner/v1 项）；分类清单、句柄和快捷键页分节的类型在 features/plugin-kernel/（settingsCategories.ts、settingsSlots.ts），功能的设置页和注册写在功能里，不加进这里；sections/ 是设置页共用的分节组件（外观、行为、主题、预设、快捷键、待办、数据与备份、系统权限）
 │   ├── onboarding/          # 新手引导（?window=onboarding）：透明遮罩压暗屏幕、照亮真岛，旁边的卡片分五幕（语言、外观、功能、在真岛上练习、开机启动）；新装第一次启动时由 island/useFirstRunGuide.ts 打开，设置 → 关于里能再打开；引导开着时岛放演示内容（island/useOnboardingDemo.ts）
 │   └── translation/         # 快捷翻译窗口
 ├── features/                # 业务领域，每个领域自包含
@@ -71,7 +71,7 @@ main.tsx → windows/ → features/ → components/、lib/、utils/、i18n/、st
 
 - 只能向右（向下）依赖，下层不得 import 上层。`components/`、`utils/` 不得依赖任何 feature。
 - `utils/` 只放纯函数，不依赖 React、Tauri、DOM 和 `localStorage`。
-- feature 之间不直接 import：共享的类型、函数和样式上提到 `lib/`、`components/`、`utils/`，运行时要调别的功能走服务（插件平台第 3 版，见 `docs/architecture/plugins/v3-phase3-plan.md`「关键设计」第 4 条）。`tests/unit/feature-boundaries.test.mjs` 检查 feature 之间、以及 `lib/`、`components/`、`utils/` 到 feature 的 import，现有的记在 `scripts/feature-boundary-allowlist.json`，只减不增；去掉一条后把它从白名单删掉，测试会提醒。
+- feature 之间不直接 import：共享的类型、函数和样式上提到 `lib/`、`components/`、`utils/`，运行时要调别的功能走服务（插件平台第 3 版，见 `docs/architecture/plugins/v3-phase3-plan.md`「关键设计」第 4 条）。`tests/unit/feature-boundaries.test.mjs` 检查 feature 之间、`lib/`、`components/`、`utils/` 到 feature 的 import，以及 feature 到 `windows/` 的 import（这一条没有白名单），现有的记在 `scripts/feature-boundary-allowlist.json`，只减不增；去掉一条后把它从白名单删掉，测试会提醒。
 - `windows/` 负责组合 feature、处理窗口级状态（折叠/展开、尺寸、面板切换），不写领域逻辑。
 
 ## 边界收口

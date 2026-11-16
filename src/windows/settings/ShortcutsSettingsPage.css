@@ -40,10 +40,6 @@
   color: var(--color-text-muted);
 }
 
-.shortcut-empty {
-  color: var(--color-text-muted);
-}
-
 .shortcut-finder__result {
   display: inline-flex;
   flex-wrap: wrap;

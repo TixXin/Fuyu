@@ -1,23 +1,23 @@
-import type { ReactNode } from "react";
+import type { ComponentType, ReactNode } from "react";
 import { useTranslation } from "../../i18n";
-import { CATEGORY_ICONS } from "./SettingsSidebar";
 import "./FeatureHeader.css";
 
 export type HeaderFeature = "todos" | "calendar" | "music" | "translation" | "clipboard" | "shelf" | "screenshot" | "voiceInput" | "agents" | "messages";
 
 export function FeatureHeader({
   feature,
+  icon: Icon,
   status,
   aside,
   off = false,
 }: {
   feature: HeaderFeature;
+  icon: ComponentType<{ size?: number | string; strokeWidth?: number | string }>;
   status?: ReactNode;
   aside?: ReactNode;
   off?: boolean;
 }) {
   const settings = useTranslation().settings;
-  const Icon = CATEGORY_ICONS[feature];
 
   return (
     <section className="settings-group">

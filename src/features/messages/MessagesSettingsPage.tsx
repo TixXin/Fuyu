@@ -19,12 +19,13 @@ import { useMailAccounts } from "./mail/useMailAccounts";
 import type { QQNotificationsController } from "./qq-notifications/QQNotifications";
 import { useMessageControllers } from "./settingsControllers";
 import type { WeChatRemindersController } from "./wechat/WeChatReminders";
-import { IslandGlyph } from "../../windows/settings/sections/IslandGlyph";
+import { IslandGlyph } from "../../components/settings/IslandGlyph";
 import { useTranslation } from "../../i18n";
-import { FeatureHeader } from "../../windows/settings/FeatureHeader";
+import { FeatureHeader } from "../../components/settings/FeatureHeader";
 import "./MessagesSettingsPage.css";
 import { SlotView } from "../plugin-kernel/SlotView";
-import { settingsSections } from "../../windows/settings/slots/sectionSlot";
+import { settingsSections } from "../plugin-kernel/settingsSlots";
+import { settingsCategoryIcon } from "../plugin-kernel/settingsCategories";
 
 type MessagesSectionProps = {
   settings: IslandSettings;
@@ -138,7 +139,7 @@ export function MessagesSettingsPage(page: Omit<MessagesSectionProps, "qqNotific
 
   return (
     <>
-      <FeatureHeader feature="messages" aside={labels.sourcesOn(sourcesOn)} />
+      <FeatureHeader feature="messages" icon={settingsCategoryIcon("messages")} aside={labels.sourcesOn(sourcesOn)} />
       <SlotView slot={sections} group="messages" props={props} />
     </>
   );

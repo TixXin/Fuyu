@@ -3,9 +3,10 @@ import { TodoSettingsSection } from "./sections/TodoSettingsSection";
 import type { IslandSettings } from "../../lib/settings/types";
 import { SavePathSettingsSection } from "../../features/todos/SavePathSettingsSection";
 import { useSharedSaveDirectorySetting, type SaveDirectorySetting } from "../../features/todos/saveDirectoryStore";
-import { FeatureHeader } from "./FeatureHeader";
+import { FeatureHeader } from "../../components/settings/FeatureHeader";
 import { SlotView } from "../../features/plugin-kernel/SlotView";
 import { settingsSections } from "./slots/sectionSlot";
+import { settingsCategoryIcon } from "../../features/plugin-kernel/settingsCategories";
 
 type TodosSectionProps = {
   settings: IslandSettings;
@@ -41,7 +42,7 @@ export function TodosSettingsPage(page: Omit<TodosSectionProps, "saveDirectory">
   const props = { ...page, saveDirectory };
   return (
     <>
-      <FeatureHeader feature="todos" />
+      <FeatureHeader feature="todos" icon={settingsCategoryIcon("todos")} />
       <SlotView slot={sections} group="todos" props={props} />
     </>
   );

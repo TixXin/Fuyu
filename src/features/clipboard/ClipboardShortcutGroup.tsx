@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { useTranslation } from "../../i18n";
-import { FeatureOffRow, type TakenBy } from "../../windows/settings/ShortcutFeatureOffRow";
+import { FeatureOffRow } from "../../components/settings/ShortcutFeatureOffRow";
+import type { ShortcutTakenBy as TakenBy } from "../../lib/shortcut/conflicts";
 import type { ClipboardHistorySettings } from "./api";
 import { ClipboardShortcutRows } from "./ClipboardShortcutRows";
 

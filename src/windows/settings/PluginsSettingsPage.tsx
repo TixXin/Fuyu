@@ -4,8 +4,8 @@ import { PluginIslandPagesSection } from "../../features/plugin-views/PluginIsla
 import { PluginShortcutSection } from "../../features/plugins/PluginShortcutSection";
 import { PluginUpdatesTab } from "../../features/plugins/PluginUpdatesTab";
 import { PluginsSettingsSection } from "../../features/plugins/PluginsSettingsSection";
-import { AllShortcutsLink } from "./ShortcutsSettingsPage";
-import { useShortcutOwners } from "./useShortcutOwners";
+import { AllShortcutsLink } from "../../components/settings/AllShortcutsLink";
+import { useShortcutOwners } from "../../lib/shortcut/useShortcutOwners";
 import "./ShortcutsSettingsPage.css";
 
 export function PluginsSettingsPage({

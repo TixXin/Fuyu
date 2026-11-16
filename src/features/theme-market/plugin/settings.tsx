@@ -1,8 +1,17 @@
-import { addSettingsCategory } from "../../../windows/settings/slots/categorySlot";
+import { addSettingsCategory } from "../../plugin-kernel/settingsCategories";
 import { buildTheme } from "../../../lib/theme/theme";
 import { ThemeMarketPage } from "../ThemeMarketPage";
+import type { IslandSettings } from "../../../lib/settings/types";
+import type { LocaleCode } from "../../../i18n";
 
-addSettingsCategory("themeMarket", ({ settings, locale, presets, onSettingsChange }) => (
+type PageProps = {
+  settings: IslandSettings;
+  locale: LocaleCode;
+  presets: { onImportPreset(text: string): unknown };
+  onSettingsChange(settings: IslandSettings): void;
+};
+
+addSettingsCategory("themeMarket", ({ settings, locale, presets, onSettingsChange }: PageProps) => (
   <ThemeMarketPage
     settings={settings}
     onSettingsChange={onSettingsChange}
