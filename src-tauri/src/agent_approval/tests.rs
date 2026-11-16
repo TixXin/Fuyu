@@ -623,3 +623,32 @@ fn declared_reply_formats() {
     assert_eq!(behavior_response(Some(Decision::Terminal), "x"), "{}");
 }
 
+
+mod hook_endpoint {
+    use super::super::config::ApprovalConfig;
+    use super::super::{endpoint_for_hooks, ApprovalEndpoint};
+
+    fn own() -> Option<ApprovalEndpoint> {
+        Some(ApprovalEndpoint { port: 47831, token: "dev".into() })
+    }
+
+    fn release() -> Option<ApprovalConfig> {
+        Some(ApprovalConfig { port: 56439, token: "release".into() })
+    }
+
+    #[test]
+    fn the_installed_fuyu_writes_its_own_endpoint_into_hooks() {
+        assert_eq!(endpoint_for_hooks(own(), false, release), own());
+    }
+
+    #[test]
+    fn a_development_build_writes_the_installed_fuyus_endpoint_into_hooks() {
+        assert_eq!(endpoint_for_hooks(own(), true, release), Some(ApprovalEndpoint { port: 56439, token: "release".into() }));
+    }
+
+    #[test]
+    fn without_the_installed_fuyus_endpoint_a_development_build_writes_no_approval_hooks() {
+        assert_eq!(endpoint_for_hooks(own(), true, || None), None);
+        assert_eq!(endpoint_for_hooks(None, true, release), None);
+    }
+}

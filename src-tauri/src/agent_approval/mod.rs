@@ -44,6 +44,7 @@ struct Service {
 
 static SERVICE: OnceLock<Service> = OnceLock::new();
 
+#[cfg_attr(test, derive(Debug, PartialEq))]
 pub(crate) struct ApprovalEndpoint {
     pub port: u16,
     pub token: String,
@@ -219,20 +220,37 @@ pub(crate) fn endpoint() -> Option<ApprovalEndpoint> {
     SERVICE.get().map(|service| ApprovalEndpoint { port: service.port.load(Ordering::SeqCst), token: service.token.clone() })
 }
 
+fn hook_endpoint() -> Option<ApprovalEndpoint> {
+    let release = || crate::home_dir::real_home().and_then(|home| config::read_config(&home.join(config::CONFIG_FILE_NAME)));
+    endpoint_for_hooks(endpoint(), crate::dev_lane::lane().is_some(), release)
+}
+
+fn endpoint_for_hooks(own: Option<ApprovalEndpoint>, development: bool, release: impl FnOnce() -> Option<config::ApprovalConfig>) -> Option<ApprovalEndpoint> {
+    let own = own?;
+    if !development {
+        return Some(own);
+    }
+    release().map(|config| ApprovalEndpoint { port: config.port, token: config.token })
+}
+
+pub(crate) fn hook_token() -> Option<String> {
+    hook_endpoint().map(|endpoint| endpoint.token)
+}
+
 pub(crate) fn remote_hook_token(host: &str) -> Option<String> {
     SERVICE.get().map(|service| config::remote_token(&service.token, host))
 }
 
 pub(crate) fn hook_url(agent: Agent) -> Option<String> {
-    endpoint().map(|endpoint| format!("http://127.0.0.1:{}{}", endpoint.port, agent.path()))
+    hook_endpoint().map(|endpoint| format!("http://127.0.0.1:{}{}", endpoint.port, agent.path()))
 }
 
 pub(crate) fn question_hook_url() -> Option<String> {
-    endpoint().map(|endpoint| format!("http://127.0.0.1:{}{}", endpoint.port, decision::QUESTION_PATH))
+    hook_endpoint().map(|endpoint| format!("http://127.0.0.1:{}{}", endpoint.port, decision::QUESTION_PATH))
 }
 
 pub(crate) fn activity_hook_url() -> Option<String> {
-    endpoint().map(|endpoint| format!("http://127.0.0.1:{}{}", endpoint.port, decision::ACTIVITY_PATH))
+    hook_endpoint().map(|endpoint| format!("http://127.0.0.1:{}{}", endpoint.port, decision::ACTIVITY_PATH))
 }
 
 fn service() -> Result<&'static Service, String> {
