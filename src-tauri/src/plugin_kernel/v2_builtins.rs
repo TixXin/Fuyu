@@ -56,10 +56,18 @@ fn cc_connect_config(grant: &Grant) -> Vec<(&'static str, Value)> {
     path.into_iter().chain(run).collect()
 }
 
+fn session_ring_config(grant: &Grant) -> Vec<(&'static str, Value)> {
+    let settings = &grant.settings;
+    let style = settings.get("style").filter(|value| value.is_string()).map(|value| ("style", value.clone()));
+    let count = settings.get("showCount").filter(|value| value.is_boolean()).map(|value| ("showCount", value.clone()));
+    style.into_iter().chain(count).collect()
+}
+
 pub(crate) const MIGRATIONS: &[Migration] = &[
     Migration { v2: "focusd.timer", v3: "timer", config: timer_config, off_without_grant: false },
     Migration { v2: "focusd.claude-usage", v3: "claude-usage", config: claude_usage_config, off_without_grant: true },
     Migration { v2: "focusd.cc-connect", v3: "cc-connect", config: cc_connect_config, off_without_grant: true },
+    Migration { v2: "focusd.session-ring", v3: "session-ring", config: session_ring_config, off_without_grant: true },
 ];
 
 #[derive(Debug, Default, Serialize, Deserialize)]

@@ -18,6 +18,7 @@ pub(crate) struct AgentSessionEntry {
     title: Option<String>,
     cwd: Option<String>,
     phase: String,
+    light: String,
     #[cfg_attr(test, ts(type = "number"))]
     updated_at: i64,
     remote_host: Option<String>,
@@ -114,7 +115,25 @@ fn dirs() -> Result<(PathBuf, PathBuf), ServeError> {
     Ok((app_dir, agent_dir))
 }
 
+fn light(session: &AgentSessionSummary) -> &'static str {
+    match session.phase {
+        "waiting" => "needs",
+        "running" => "working",
+        "stale" => "stale",
+        "failed" => "failed",
+        _ => match session.reply_marker {
+            Some("yourTurn") => "yourTurn",
+            Some("background") => "working",
+            Some(_) => "done",
+            None if session.reply_asks => "yourTurn",
+            None if session.background_tasks > 0 => "working",
+            None => "done",
+        },
+    }
+}
+
 fn entry(session: AgentSessionSummary) -> AgentSessionEntry {
+    let light = light(&session).to_owned();
     AgentSessionEntry {
         key: format!("{}:{}", session.provider, session.session_id),
         provider: session.provider.to_owned(),
@@ -122,6 +141,7 @@ fn entry(session: AgentSessionSummary) -> AgentSessionEntry {
         title: session.title,
         cwd: session.cwd,
         phase: session.phase.to_owned(),
+        light,
         updated_at: session.updated_at,
         remote_host: session.remote_host,
         listed: !session.closed,
@@ -195,9 +215,8 @@ fn remote_hosts_for_host() -> Result<AgentRemoteHosts, ServeError> {
 mod tests {
     use super::*;
 
-    #[test]
-    fn a_session_entry_keeps_the_key_the_island_uses() {
-        let summary = AgentSessionSummary {
+    fn summary(phase: &'static str) -> AgentSessionSummary {
+        AgentSessionSummary {
             provider: "claudeCode",
             session_id: "abc".into(),
             cwd: None,
@@ -205,7 +224,7 @@ mod tests {
             title_source: None,
             model: None,
             effort: None,
-            phase: "running",
+            phase,
             last_message: None,
             reply_marker: None,
             reply_asks: false,
@@ -223,12 +242,30 @@ mod tests {
             remote_host: None,
             parent_id: None,
             context_tokens: None,
-        };
-        let entry = entry(summary);
+        }
+    }
+
+    #[test]
+    fn a_session_entry_keeps_the_key_the_island_uses() {
+        let entry = entry(summary("running"));
         assert_eq!(entry.key, "claudeCode:abc");
-        assert_eq!(entry.phase, "running");
+        assert_eq!((entry.phase.as_str(), entry.light.as_str()), ("running", "working"));
         assert!(!entry.listed);
         assert!(!entry.unseen);
+    }
+
+    #[test]
+    fn the_light_matches_the_agent_page() {
+        let lit = |phase, marker, asks, background| light(&AgentSessionSummary { reply_marker: marker, reply_asks: asks, background_tasks: background, ..summary(phase) });
+        assert_eq!(lit("waiting", None, false, 0), "needs");
+        assert_eq!(lit("failed", None, false, 0), "failed");
+        assert_eq!(lit("stale", None, false, 0), "stale");
+        assert_eq!(lit("running", Some("done"), false, 0), "working");
+        assert_eq!(lit("completed", None, true, 0), "yourTurn");
+        assert_eq!(lit("completed", Some("done"), true, 0), "done");
+        assert_eq!(lit("completed", Some("background"), false, 0), "working");
+        assert_eq!(lit("completed", None, false, 2), "working");
+        assert_eq!(lit("completed", None, false, 0), "done");
     }
 
     #[test]

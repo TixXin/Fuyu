@@ -2,6 +2,9 @@ import type { AgentSessionSummary, SessionProvider } from "./api";
 import { sessionLight, type SessionLight } from "./sessionLight.ts";
 import { sessionKey } from "./unseen.ts";
 import type { AgentSessionGroup, AgentSessionSort } from "./agentSettings";
+import { sessionProject } from "../../lib/agent-sessions/project.ts";
+
+export { sessionProject };
 
 const SHOWN_FIELDS = ["provider", "sessionId", "cwd", "title", "model", "effort", "phase", "lastMessage", "turnStartedAt", "lastPrompt", "permissionMode", "subagents", "replyMarker", "replyAsks", "backgroundTasks", "compacting", "closed", "contextTokens"] as const;
 
@@ -66,19 +69,6 @@ export function turnElapsedMs(session: AgentSessionSummary, now: number) {
 export function durationParts(ms: number) {
   const total = Math.floor(ms / 1000);
   return { hours: Math.floor(total / 3600), minutes: Math.floor((total % 3600) / 60), seconds: total % 60 };
-}
-
-export function sessionProject(cwd: string | null) {
-  if (!cwd) return null;
-  const parts = cwd.replace(/[\\/]+$/, "").split(/[\\/]/);
-  const last = parts[parts.length - 1] || null;
-  if (!last) return null;
-  const parent = parts[parts.length - 2] ?? "";
-  if (/^\d+$/.test(last) && /.-lanes$/.test(parent)) return parent.slice(0, -"-lanes".length);
-  const lane = /^(.+)-lane-\d+$/.exec(last);
-  if (lane) return lane[1];
-  if (parent === "worktrees" && parts[parts.length - 3] === ".claude" && parts[parts.length - 4]) return parts[parts.length - 4];
-  return last;
 }
 
 export function sessionAge(updatedAt: number, now: number) {
