@@ -100,7 +100,7 @@ export const zhCN: SettingsPluginsV3Text = {
   },
   essentialNote: "浮屿必需，不能关",
   hostOff: "宿主没开",
-  hostOffNote: "设了 FUYU_PLUGINS_V3=1 才启动宿主；内置插件的开关照样生效。",
+  hostOffNote: "正式版设了 FUYU_PLUGINS_V3=1 才启动宿主，开发版默认启动、设成 0 就关掉；内置插件的开关照样生效。",
   host: "宿主",
   connection: {
     connecting: "正在连接",
@@ -188,7 +188,7 @@ export const en: SettingsPluginsV3Text = {
   },
   essentialNote: "Fuyu needs it; always on",
   hostOff: "Host not running",
-  hostOffNote: "The host starts only with FUYU_PLUGINS_V3=1. Built-in plugin switches work either way.",
+  hostOffNote: "Release builds start the host only with FUYU_PLUGINS_V3=1; dev builds start it unless it is set to 0. Built-in plugin switches work either way.",
   host: "Host",
   connection: {
     connecting: "Connecting",
