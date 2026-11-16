@@ -33,5 +33,6 @@ export type SlotName =
   | "island.alert/v1"
   | "island.dev/v1"
   | "settings.category/v1"
-  | "settings.section/v1";
+  | "settings.section/v1"
+  | "settings.runner/v1";
 export declare const SLOTS: { readonly [Name in SlotName]: SlotDefinition };

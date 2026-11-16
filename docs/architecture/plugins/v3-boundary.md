@@ -249,6 +249,7 @@ Rust 每次拉起宿主（包括自动重启）都重新决定带不带 `--safe`
 | `island.dev/v1` | 第 1 阶段的开发插槽 | list | 1 | 3 | 无 |
 | `settings.category/v1` | 设置窗口的分类 | list | 2 | 不限 | `group`（侧栏分组）、`icon`、`tabs`（子页）、`available(...)`（平台是否支持）、`feature`（所属功能开关）、`aliases`（合并进来的旧分类名） |
 | `settings.section/v1` | 设置页里的分节 | list，按 `category` 分组 | 每个分类 4 | 不限 | `category` |
+| `settings.runner/v1` | 设置窗口里不画界面的组件：挂着就运行（接线 hook、给窗口报快捷键这类），卸下就停 | list | 1 | 不限 | 无 |
 
 | 规则 | 做法 |
 |---|---|
