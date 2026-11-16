@@ -113,12 +113,15 @@ impl ClipboardHistoryService {
         state.items.extend(added);
         state.items.sort_by_key(|item| std::cmp::Reverse(item.copied_at));
         let mut snippets = 0;
-        for snippet in file.snippets {
-            if !state.snippets.iter().any(|kept| kept.text() == snippet.text()) {
-                state.snippets.push(snippet);
-                snippets += 1;
+        let state_ref = &mut *state;
+        crate::sync::clock::with(|clock, wall| {
+            for snippet in file.snippets {
+                if !state_ref.snippets.iter().any(|kept| kept.text() == snippet.text()) {
+                    super::snippets::adopt(&mut state_ref.snippets, &mut state_ref.snippet_tombstones, snippet, clock, wall);
+                    snippets += 1;
+                }
             }
-        }
+        });
         self.enforce_limit_locked(&mut state);
         self.persist_locked(&state)?;
         drop(state);
