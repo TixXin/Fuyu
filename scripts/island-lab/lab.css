@@ -89,3 +89,9 @@ button:hover { border-color: var(--accent); color: var(--accent); }
 .log__line { padding: 4px 0; border-bottom: 1px solid var(--line); word-break: break-all; }
 .log__line--ok { color: var(--ok); }
 .log__line--error { color: var(--error); }
+
+.sweep { width: 100%; border-collapse: collapse; font-size: 12px; }
+.sweep th, .sweep td { padding: 4px 6px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+.sweep th { color: var(--muted); font-weight: 600; }
+.sweep tr[data-state="left"] td:nth-child(2) { color: var(--error); }
+.sweep tr[data-state="clean"] td:nth-child(2) { color: var(--ok); }

@@ -2,6 +2,8 @@ mod bisect;
 pub(crate) mod builtins;
 mod builtins_file;
 mod containment;
+#[cfg(debug_assertions)]
+pub(crate) mod diagnostics;
 mod methods;
 pub(crate) mod protocol;
 mod safe_mode;

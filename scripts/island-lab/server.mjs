@@ -1,4 +1,5 @@
-import { existsSync, readFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import http from "node:http";
 import os from "node:os";
 import path from "node:path";
@@ -15,6 +16,7 @@ const STATIC = {
   "/": ["index.html", "text/html; charset=utf-8"],
   "/lab.mjs": ["lab.mjs", "text/javascript; charset=utf-8"],
   "/actions.mjs": ["actions.mjs", "text/javascript; charset=utf-8"],
+  "/builtins.mjs": ["builtins.mjs", "text/javascript; charset=utf-8"],
   "/lab.css": ["lab.css", "text/css; charset=utf-8"],
 };
 
@@ -51,6 +53,10 @@ export function forwardTarget(route, method) {
   if (parts[0] === "island" && parts[1] === "edge" && parts.length === 2 && method === "PUT") {
     return { kind: "local", path: "/v1/dev/island/edge" };
   }
+  if (parts[0] === "builtins" && parts.length === 1 && method === "GET") return { kind: "local", path: "/v1/dev/builtins" };
+  if (parts[0] === "builtins" && parts.length === 2 && /^[a-z0-9][a-z0-9.-]{0,63}$/.test(parts[1]) && method === "PUT") {
+    return { kind: "local", path: `/v1/dev/builtins/${parts[1]}` };
+  }
   if (parts[0] === "agent-status" && parts.length === 2 && /^[a-z0-9-]{1,32}$/.test(parts[1]) && ["PUT", "DELETE"].includes(method)) {
     return { kind: "local", path: `/v1/agent-status/${parts[1]}` };
   }
@@ -59,6 +65,30 @@ export function forwardTarget(route, method) {
     return { kind: "approval", path: approvalPaths[parts[1]] };
   }
   return null;
+}
+
+export function threadCount(pid, platform = process.platform) {
+  if (!Number.isInteger(pid) || pid <= 0) return null;
+  try {
+    if (platform === "darwin") return execFileSync("ps", ["-M", "-p", String(pid)], { encoding: "utf8", timeout: 3000 }).trim().split("\n").length - 1;
+    if (platform === "win32") {
+      const text = execFileSync("powershell.exe", ["-NoProfile", "-Command", `(Get-Process -Id ${pid}).Threads.Count`], { encoding: "utf8", timeout: 5000 });
+      return Number.parseInt(text.trim(), 10) || null;
+    }
+    return readdirSync(`/proc/${pid}/task`).length;
+  } catch {
+    return null;
+  }
+}
+
+function withThreads(answer) {
+  try {
+    const body = JSON.parse(answer.text);
+    if (body?.ok && body.data) body.data.threads = threadCount(body.data.pid);
+    return { ...answer, text: JSON.stringify(body) };
+  } catch {
+    return answer;
+  }
 }
 
 function send(port, token, method, target, body, timeout) {
@@ -115,7 +145,8 @@ async function handle(request, response) {
   if (!config?.port || !config?.token) {
     return reply(response, 503, JSON.stringify({ ok: false, error: target.kind === "local" ? "找不到 island-lab.json：先跑 pnpm tauri dev。" : "找不到审批端口的配置：岛还没启动过？" }));
   }
-  const answer = await send(config.port, config.token, request.method ?? "POST", target.path, body, target.kind === "approval" ? APPROVAL_TIMEOUT_MS : 8000);
+  const sent = await send(config.port, config.token, request.method ?? "POST", target.path, body, target.kind === "approval" ? APPROVAL_TIMEOUT_MS : 8000);
+  const answer = target.path === "/v1/dev/builtins" ? withThreads(sent) : sent;
   reply(response, answer.status, answer.text || "{}");
 }
 
