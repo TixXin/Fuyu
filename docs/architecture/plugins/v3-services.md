@@ -159,7 +159,7 @@ export async function apply(ctx) {
   | 写法 | 宏做的事 |
   |---|---|
   | 普通参数 | 从调用的 JSON 对象里按 camelCase 名字取（`right_side` → `rightSide`），`Option` 的可以不传，多出的字段不管；类型不对回 `bad-params`，`message` 写明方法和字段，`data` 是 `{ method, field }`。参数必须是自己拥有的类型（`String` 而不是 `&str`） |
-  | `inject(app)` 列出的参数 | 不从 JSON 取，从 `Serve::manage` 放进去的状态里取一份克隆。浮屿放了 `AppHandle`；没放的类型回 `failed` 并写明缺哪个类型 |
+  | `inject(app)` 列出的参数 | 不从 JSON 取，从 `Serve::manage` 放进去的状态里取一份克隆。浮屿放了 `AppHandle`；没放的类型回 `failed` 并写明缺哪个类型。**浮屿里先不要 `inject(app)`**（2026-11-15，E36.3.30）：登记是静态的，链接器会把方法连同 `AppHandle` 一起留进 Rust 测试程序，链进 tauri 运行时以后，Windows 上没有 manifest 的测试程序起不来（`0xc0000139`，一个测试都不跑，Mac 上照常）。要数据目录用 `home_dir::current()` |
   | `call: &Call` 参数 | 这次调用本身：`call.progress(片段)` 推流式片段，`call.cancelled()` 看宿主是否已经不等了 |
   | 返回 `T` | `T` 编码成 JSON 回答；不能编码回 `bad-result`。不写返回值回 `null` |
   | 返回 `Result<T, E>` | `E` 要实现 `plugin_base::ServiceFailure`：`String`、`&str` 回 `failed`，`ServeError` 和自己实现了它的错误类型保留自己的码和 `data`（例如翻译的 `no-secret`）。`Result` 要写全两个类型参数，别名认不出来 |
