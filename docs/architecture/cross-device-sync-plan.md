@@ -177,3 +177,23 @@ C91.1 ──▶ C91.2 ┐
 - `fuyu-settings` 里另加的 `local`：`islandForm`（刘海形态只在 Mac 上有）、`gameDoNotDisturb` / `gameAutoTuck`（默认值按平台不同）、`hoverTakesKeyboard`（和快捷键一节放在一起）、`topEdgeLayoutVersion`（迁移标记）。
 - `firstMergeOnly` 的模块开关：`todoEnabled`、`musicEnabled`、`agentStatusEnabled`、`agentTitleEnabled`、`shelfEnabled`、`translationEnabled`、`screenshotEnabled`、`calendarEnabled`、`mailEnabled`、`deviceUseIndicator`、`levelPopup`、`deviceAlerts`。
 - 外观预设：`settings` 里只有标 `sync` 的字段参与比较和同步（应用预设本来只取主题那几项）。
+
+### 可选同步（用户定，2026-11-15）
+
+上面「拿不准标成 `local`」的几项改成**可以同步，默认关**，用户在「同步」设置页按组打开。用户原话：「改成跟着同步,当然了默认是关闭的,可以设置」。`fuyu-settings` 里另加的 `local`（`islandForm`、`gameDoNotDisturb` 等）和 `firstMergeOnly` 的模块开关不变。
+
+- 白名单加一种取值 `optional`，并加 `optionalGroups`（组名 → `key` 或 `key/字段` 的列表）。`optional` 和 `sync` 一样按条打时间（以后打开时已有时间可比），同步引擎在这一组没打开时把它当 `local`：不写进远端，也不并入远端的值。哪几组打开了是本机设置，不同步。
+- 分组：
+
+| 组 | 包含 |
+|---|---|
+| `translationProvider` | `fuyu-translation-settings` 的 `provider`、`models`、`customBaseUrl` |
+| `screenshotCapture` | `fuyu-screenshot-settings` 的 `printScreen`、`record` |
+| `agentSoundOutput` | `fuyu-agent-sounds` 的 `volume`、`pack` |
+| `agentPushDelivery` | `fuyu-agent-push` 的 `enabled`、`channel` |
+| `qqMail` | `fuyu-qq-mail-settings`（同步前确认里面没有密码或令牌，有就剔掉） |
+| `collapsedItems` | `fuyu-collapsed-items` |
+| `pluginPages` | `fuyu-plugin-pages` |
+| `updateChannel` | `fuyu-update-channel` |
+
+- 拆分：白名单、`settings_meta.rs` 的 `optional`、引擎按组过滤、本机配置和 `api.ts` 类型归 C92.1；设置页里每组一个开关（默认关，中英文说明各自为什么默认不同步）归 C92.2。
