@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { ClipboardHistoryItem } from "./api";
 import { loadPinyin, matchesPopupQuery, parsePopupQuery } from "./popupQuery";
+import { MOTION_EASE } from "../../lib/theme/motionTokens";
 
 export type ClipboardView = "all" | "favorites" | "images" | "files";
 
@@ -81,7 +82,7 @@ export function useClipboardHistoryList(items: ClipboardHistoryItem[]) {
         ],
         {
           duration: 280,
-          easing: "cubic-bezier(0.2, 0.8, 0.2, 1)",
+          easing: MOTION_EASE,
         },
       );
     });

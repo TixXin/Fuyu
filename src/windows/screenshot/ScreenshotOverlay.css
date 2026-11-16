@@ -24,7 +24,7 @@ body:has(.screenshot-overlay) {
   position: absolute;
   inset: 0;
   background: rgba(0, 0, 0, 0.42);
-  animation: screenshot-dim-in 120ms ease-out both;
+  animation: screenshot-dim-in var(--motion-fast) ease-out both;
 }
 
 @keyframes screenshot-dim-in {
