@@ -2,7 +2,7 @@
 
 起因：用户给了 CitePix 的托盘卡片截图，要求「参考这个重新设计任务栏图标的右键菜单，要适配 mac 和 win」。只借鉴版式（标题行 → 一排大按钮 → 图标行 → 状态行 → 底部开关和退出），不照抄它的功能和样子。
 
-组长：`[任务] 托盘菜单`。状态：**用户已同意，阶段 0（C99.1 预览页）进行中**（2026-11-15）。总 issue #627，C99.1–C99.3 对应 #628–#630。
+组长：`[任务] 托盘菜单`。状态：**用户挑定三版都要、设置里切换；阶段 1（C99.2、C99.3）进行中**（2026-11-15）。总 issue #627，C99.1–C99.3 对应 #628–#630。
 
 ## 现状
 
@@ -38,15 +38,30 @@
 
 - 任务 **C99.1** `[C99.1] 托盘卡片的预览页`，scope `docs/investigations/tray-menu-preview.html`。
 - 做完：上面三版 × 两平台 × 深浅色，中英文切换看溢出，能点开关和键盘 Tab 走一遍；每出一版就用 `open` 在系统浏览器打开。
-- 用户挑定后，组长把挑定的内容写回本文件和 `docs/design/island.md`（替换 F13 那条），再派阶段 1。
+- 用户挑定后写回本文件（见下一节）；`docs/design/island.md` 由 C99.3 改。
+
+### 用户挑定（2026-11-15）
+
+**三版都要，在设置里切换**（用户原话：「都要，可以设置」）。版式按预览页 `tray-menu-preview.html`（8990b1b3）的 A 入口型、B 状态型、C 精简型照做。
+
+- 设置 → 通用，紧挨「在托盘显示图标」：「托盘卡片样式」三选一（入口型 / 状态型 / 精简型，带小示意图），默认 **A 入口型**（组长定，贴近用户给的参考图）。托盘图标隐藏时这一项变灰。
+- 存在 localStorage `fuyu-tray-menu-layout`，值 `entry` / `status` / `compact`，读不到或值不认识时按 `entry`；加进设置备份的 `BACKUP_KEYS`，写进 `contracts.md`。卡片窗口和设置窗口同源，卡片每次打开时读一次，并监听 `storage` 事件。
+- 右键的原生精简菜单三版都一样（显示 / 隐藏岛屿、设置、退出）。
 
 ### 阶段 1：实现（2 个会话并行，都要编译，正好占满 2 个名额）
 
-先在本文件定接口（阶段 0 结束时组长写），两边按接口各做各的：
+两边按下面的接口各做各的；要改接口时先 SendMessage 告诉另一边和组长，再改本文件。
 
-- 命令：`tray_menu_state`（岛是否可见、剪贴板是否暂停、勿扰、各功能是否开启、版本、有无更新）、`tray_menu_action(action)`；事件 `tray-menu-state` 在状态变了时推（内容没变不发，D49）。
-- **C99.2 Rust**（`[C99.2] 托盘卡片的窗口和定位`）：scope `src-tauri/src/tray.rs`、`src-tauri/src/tray_menu/`（新目录：窗口创建、定位纯函数、命令、失焦关闭）、`src-tauri/src/macos/tray_panel.rs`（新）、`src-tauri/capabilities/`、`src-tauri/tauri.conf.json`（如需）、`docs/architecture/contracts.md`、`docs/architecture/platforms.md`。验证：`cargo test` + `pnpm build:exe`；Mac 上自己装出 `Fuyu.app` 点一下看位置。
-- **C99.3 前端**（`[C99.3] 托盘卡片的界面`）：scope `src/windows/tray-menu/`（新）、`src/main.tsx` 里加一个分支、`src/i18n/sections/trayMenu.ts`（新）和 i18n 的注册处、`tests/regression/tray-menu.*`。用 mock 接口先做，不等 Rust。验证：`pnpm check` + `pnpm build` + `pnpm test:regression tray-menu`。
+- **窗口**：label `tray-menu`、`?window=tray-menu`，`create: false`，Rust 第一次点图标时创建，透明、无边框、不进任务栏、置顶，初始宽 320 逻辑像素。
+- **尺寸**：三版高度不同，前端渲染完量卡片大小后调 `tray_menu_resize(width: f64, height: f64)`（逻辑像素），Rust 按当前锚点（图标矩形）重算位置再显示。打开顺序：Rust 定位并通知前端 → 前端刷新数据、量尺寸、调 resize → Rust 显示并给焦点。
+- **命令**：
+  - `tray_menu_state() -> TrayMenuState`：`islandVisible`、`clipboardPaused`、`translateEnabled`、`screenshotEnabled`、`version`、`updateAvailable`（新版本号或 null）、`platform`（`windows` / `macos`）、`shortcuts`（截图、翻译、剪贴板的快捷键显示文字）。
+  - `tray_menu_action(action: String, arg: Option<String>)`：`toggle_island`、`screenshot`、`translate`、`clipboard`、`toggle_clipboard_pause`、`open_page`（arg 是岛的页面：todo、notes、calendar、file-shelf、agent）、`open_settings`、`update`、`restart`、`quit`、`close`。执行完除了开关类都把卡片关掉。
+  - `tray_menu_resize(width, height)`，见上。
+- **事件**：`tray-menu-open`（Rust → 卡片，每次要弹出前发，卡片刷新数据并把焦点放到第一个按钮）、`tray-menu-state`（状态变了才推，内容没变不发，D49）。
+- **已经有现成读写的不经这两个命令**：游戏勿扰、开机自启这类本来就有命令或 localStorage 的设置，前端直接用现有的；B 版的正在放的歌、下一个会议、Agent 会话数，前端用现有的命令和事件取（媒体、日历、Agent 状态各自的 `api.ts`），缺什么告诉组长再定，不在 `tray_menu_state` 里重复一份。
+- **C99.2 Rust**（`[C99.2] 托盘卡片的窗口和定位`）：scope `src-tauri/src/tray.rs`、`src-tauri/src/tray_menu/`（新目录：窗口创建、定位纯函数和单测、命令、失焦关闭）、`src-tauri/src/macos/tray_panel.rs`（新）、`src-tauri/src/lib.rs`（注册）、`src-tauri/capabilities/`、`src-tauri/tauri.conf.json`（如需）、`docs/architecture/contracts.md`、`docs/architecture/platforms.md`、`AGENTS.md` 的窗口表。验证：`cargo test` + `pnpm build:exe`；Mac 上用打出的 `Fuyu.app` 点图标看位置。
+- **C99.3 前端**（`[C99.3] 托盘卡片的界面和设置项`）：scope `src/windows/tray-menu/`（新，含 `api.ts`）、`src/main.tsx` 里加一个分支、`src/i18n/sections/trayMenu.ts`（新）和 i18n 的注册处、设置 → 通用里的样式选择（`src/windows/settings/GeneralSettingsPage.tsx` 及它的子组件、设置的 i18n、`searchIndex.json`）、`BACKUP_KEYS`、`tests/regression/tray-menu.*`、`docs/design/island.md`（替换 F13 那条，写三版和默认）。用 mock 接口先做，不等 Rust。验证：`pnpm check` + `pnpm build` + `pnpm test:regression`。
 - 两个都做完后组长在 Mac 上实测一遍；**Windows 的实测**要用户在 Windows 机器上看（任务栏四个方向、多屏、溢出托盘），组长把要点列成清单。
 
 ### 阶段 2：收尾（可并进 C99.2，或单开一个小会话）
