@@ -27,8 +27,8 @@
   border-radius: var(--island-panel-radius, 10px);
   cursor: pointer;
   transition:
-    background 140ms ease,
-    border-color 140ms ease;
+    background var(--motion-base) var(--motion-ease),
+    border-color var(--motion-base) var(--motion-ease);
 }
 
 .agent-card--compact {

@@ -22,7 +22,7 @@
   inset: 0;
   background: var(--color-white-a16);
   border-radius: var(--radius-pill);
-  transition: background 140ms ease;
+  transition: background var(--motion-base) var(--motion-ease);
 }
 
 .settings-switch__track::after {
@@ -35,7 +35,7 @@
   background: var(--color-white);
   border-radius: var(--radius-pill);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
-  transition: transform 140ms ease;
+  transition: transform var(--motion-base) var(--motion-ease);
 }
 
 .settings-switch input:checked + .settings-switch__track {

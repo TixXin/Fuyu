@@ -18,7 +18,7 @@
   line-height: 22px;
   white-space: nowrap;
   cursor: pointer;
-  transition: background 140ms ease, color 140ms ease;
+  transition: background var(--motion-base) var(--motion-ease), color var(--motion-base) var(--motion-ease);
 }
 
 .plugin-status-chip__text {
@@ -114,7 +114,7 @@
   min-height: 1px;
   background: currentColor;
   border-radius: 1px;
-  transition: height 300ms ease;
+  transition: height var(--motion-medium) var(--motion-ease);
 }
 
 .plugin-status-chip__battery--neutral:nth-child(4n + 1) {

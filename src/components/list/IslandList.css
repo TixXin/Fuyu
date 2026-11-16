@@ -50,7 +50,7 @@
   border: 0;
   border-radius: var(--radius-pill);
   cursor: pointer;
-  transition: background 140ms ease, color 140ms ease;
+  transition: background var(--motion-base) var(--motion-ease), color var(--motion-base) var(--motion-ease);
 }
 
 .island-list-chip:hover {
@@ -81,7 +81,7 @@
   margin-right: 6px;
   color: var(--list-accent-text);
   font-size: 12px;
-  animation: islandListNotice 2.4s ease both;
+  animation: islandListNotice 2.4s var(--motion-ease) both;
 }
 
 @keyframes islandListNotice {
@@ -101,7 +101,7 @@
   border: 0;
   border-radius: var(--radius-md);
   cursor: pointer;
-  transition: background 140ms ease, color 140ms ease;
+  transition: background var(--motion-base) var(--motion-ease), color var(--motion-base) var(--motion-ease);
 }
 
 .island-list-icon-button:hover:not(:disabled),
@@ -193,7 +193,7 @@
   min-height: 46px;
   padding: 7px 8px;
   border-radius: 10px;
-  transition: background 140ms ease, box-shadow 140ms ease;
+  transition: background var(--motion-base) var(--motion-ease), box-shadow var(--motion-base) var(--motion-ease);
 }
 
 .island-list-row:hover,

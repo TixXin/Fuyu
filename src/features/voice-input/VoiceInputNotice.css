@@ -13,7 +13,7 @@
   height: 8px;
   background: var(--color-danger, #c75065);
   border-radius: 50%;
-  animation: voice-notice-pulse 1.2s ease-in-out infinite;
+  animation: voice-notice-pulse 1.2s var(--motion-ease-in-out) infinite;
 }
 
 .voice-notice__text {

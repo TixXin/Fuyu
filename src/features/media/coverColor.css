@@ -13,8 +13,8 @@
 .cover-color {
   --cover-accent: var(--cover-accent-dark);
   transition:
-    --cover-accent-dark 900ms ease,
-    --cover-accent-light 900ms ease;
+    --cover-accent-dark 900ms var(--motion-ease),
+    --cover-accent-light 900ms var(--motion-ease);
 }
 
 .island-light.cover-color,

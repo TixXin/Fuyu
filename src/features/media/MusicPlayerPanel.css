@@ -79,7 +79,7 @@
   align-items: center;
   gap: 4px;
   opacity: 0;
-  transition: opacity var(--motion-base) ease;
+  transition: opacity var(--motion-base) var(--motion-ease);
 }
 
 .music-player:hover .music-player__tune,
@@ -99,7 +99,7 @@
   border: 0;
   border-radius: var(--radius-pill);
   cursor: pointer;
-  transition: color 140ms ease, background 140ms ease;
+  transition: color var(--motion-base) var(--motion-ease), background var(--motion-base) var(--motion-ease);
 }
 
 .music-icon-button:hover {
@@ -215,7 +215,7 @@
   border: 0;
   border-radius: var(--radius-pill);
   cursor: pointer;
-  transition: color 140ms ease, background 140ms ease, opacity 140ms ease;
+  transition: color var(--motion-base) var(--motion-ease), background var(--motion-base) var(--motion-ease), opacity var(--motion-base) var(--motion-ease);
 }
 
 .music-control-button:hover:not(:disabled) {

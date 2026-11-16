@@ -63,7 +63,7 @@
   background: var(--plugin-status-tone);
   border-radius: inherit;
   transform-origin: left center;
-  transition: transform 300ms ease;
+  transition: transform var(--motion-medium) var(--motion-ease);
 }
 
 .plugin-status__caption {

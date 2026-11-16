@@ -413,7 +413,7 @@
 
 .clipboard-picture__full {
   opacity: 0;
-  transition: opacity var(--motion-base) ease-out;
+  transition: opacity var(--motion-base) var(--motion-ease);
 }
 
 .clipboard-picture--ready .clipboard-picture__full {

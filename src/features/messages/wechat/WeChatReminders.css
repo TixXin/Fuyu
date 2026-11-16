@@ -28,7 +28,7 @@
   font-size: 12px;
   white-space: nowrap;
   cursor: pointer;
-  transition: color 140ms ease, background 140ms ease;
+  transition: color var(--motion-base) var(--motion-ease), background var(--motion-base) var(--motion-ease);
 }
 
 .message-sources button:hover {

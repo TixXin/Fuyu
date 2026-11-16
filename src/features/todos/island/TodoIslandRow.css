@@ -16,7 +16,7 @@
   gap: 10px;
   padding: 6px 6px 7px 10px;
   border-radius: 10px;
-  transition: background 140ms ease, box-shadow 140ms ease, opacity 140ms ease;
+  transition: background var(--motion-base) var(--motion-ease), box-shadow var(--motion-base) var(--motion-ease), opacity var(--motion-base) var(--motion-ease);
 }
 
 .todo-island-row:hover,
@@ -69,7 +69,7 @@
   opacity: 0;
   cursor: grab;
   touch-action: none;
-  transition: opacity 140ms ease;
+  transition: opacity var(--motion-base) var(--motion-ease);
 }
 
 .todo-island-row:hover .todo-island-row__grip,
@@ -98,7 +98,7 @@
   border: 1.5px solid rgba(var(--todo-ink), 0.4);
   border-radius: var(--radius-circle);
   cursor: pointer;
-  transition: border-color 140ms ease, background 140ms ease;
+  transition: border-color var(--motion-base) var(--motion-ease), background var(--motion-base) var(--motion-ease);
 }
 
 .todo-island-row__check:hover:not(:disabled) {
@@ -181,7 +181,7 @@
   border-radius: 8px;
   opacity: 0;
   cursor: pointer;
-  transition: opacity 140ms ease, color 140ms ease, background 140ms ease;
+  transition: opacity var(--motion-base) var(--motion-ease), color var(--motion-base) var(--motion-ease), background var(--motion-base) var(--motion-ease);
 }
 
 .todo-island-row:hover .todo-island-row__action,
@@ -213,7 +213,7 @@
   font-weight: 600;
   white-space: nowrap;
   cursor: pointer;
-  transition: color 140ms ease, background 140ms ease;
+  transition: color var(--motion-base) var(--motion-ease), background var(--motion-base) var(--motion-ease);
 }
 
 .todo-island-row__stop-action,

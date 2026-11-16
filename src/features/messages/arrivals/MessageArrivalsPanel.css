@@ -86,7 +86,7 @@
 .message-arrivals__item {
   border-radius: var(--radius-xl);
   background: var(--color-white-a08);
-  animation: message-arrivals-in 220ms cubic-bezier(0.23, 1, 0.32, 1) both;
+  animation: message-arrivals-in var(--motion-medium) var(--motion-ease-out) both;
 }
 
 @keyframes message-arrivals-in {

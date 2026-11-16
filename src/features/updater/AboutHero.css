@@ -33,7 +33,7 @@
   background: var(--about-star);
   border-radius: var(--radius-circle);
   opacity: 0.5;
-  animation: about-hero-twinkle 3.6s ease-in-out infinite;
+  animation: about-hero-twinkle 3.6s var(--motion-ease-in-out) infinite;
 }
 
 .about-hero__scene > i:nth-child(1) { top: 16%; left: 46%; }
@@ -64,7 +64,7 @@
   border-radius: var(--radius-circle);
   opacity: 0.4;
   filter: blur(4px);
-  animation: about-hero-shadow 4.8s ease-in-out infinite;
+  animation: about-hero-shadow 4.8s var(--motion-ease-in-out) infinite;
 }
 
 .about-hero__sea::before {
@@ -80,7 +80,7 @@
 }
 
 .about-hero--greeting .about-hero__sea::before {
-  animation: about-hero-ripple 900ms ease-out;
+  animation: about-hero-ripple 900ms var(--motion-ease);
 }
 
 .about-hero__sea b {
@@ -88,7 +88,7 @@
   height: 2px;
   background: var(--color-white-a16);
   border-radius: var(--radius-pill);
-  animation: about-hero-drift 7s ease-in-out infinite;
+  animation: about-hero-drift 7s var(--motion-ease-in-out) infinite;
 }
 
 .about-hero__sea b:nth-child(1) { top: 14px; left: 8%; width: 46px; }
@@ -173,11 +173,11 @@
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
-  animation: about-hero-float 4.8s ease-in-out infinite;
+  animation: about-hero-float 4.8s var(--motion-ease-in-out) infinite;
 }
 
 .about-hero--greeting .about-hero__island {
-  animation: about-hero-hop 560ms cubic-bezier(0.3, 1.5, 0.5, 1), about-hero-float 4.8s ease-in-out 560ms infinite;
+  animation: about-hero-hop 560ms cubic-bezier(0.3, 1.5, 0.5, 1), about-hero-float 4.8s var(--motion-ease-in-out) 560ms infinite;
 }
 
 .about-hero__island:focus-visible {
@@ -212,7 +212,7 @@
 }
 
 .about-hero__island--busy i {
-  animation: about-hero-pulse 1s ease-in-out infinite;
+  animation: about-hero-pulse 1s var(--motion-ease-in-out) infinite;
 }
 
 .about-hero__island-text {
@@ -222,7 +222,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  animation: about-hero-line 280ms ease both;
+  animation: about-hero-line var(--motion-medium) var(--motion-ease) both;
 }
 
 .about-hero__island i:only-of-type + b,
@@ -240,7 +240,7 @@
   height: 10px;
   background: var(--about-island-bar, rgba(255, 255, 255, 0.7));
   border-radius: 2px;
-  animation: about-hero-bar 1.1s ease-in-out infinite;
+  animation: about-hero-bar 1.1s var(--motion-ease-in-out) infinite;
 }
 
 .about-hero__island b:nth-of-type(2) {
