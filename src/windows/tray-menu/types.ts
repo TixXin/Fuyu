@@ -10,6 +10,7 @@ export type TrayMenuShortcuts = {
 export type TrayCardData = {
   state: TrayMenuState;
   shortcuts: TrayMenuShortcuts;
+  off: ReadonlySet<string>;
   dnd: boolean;
   autostart: boolean;
   media: TrayMedia | null;
