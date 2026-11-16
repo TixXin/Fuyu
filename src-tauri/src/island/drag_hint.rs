@@ -6,7 +6,7 @@ use super::geometry::{island_rect, monitor_at, IslandOnScreen, STAGE_WINDOW_WIDT
 use super::screen;
 use super::side::{full_rect, is_outer, near_side, Rect, SNAP_DISTANCE};
 use super::state::{read_window_state, Edge, IslandMode, IslandWindowState};
-use super::top_edge::{top_edge, TopEdge};
+use super::top_edge::{monitor_below, top_edge, TopEdge};
 
 pub(crate) const DRAG_EDGE_HINT_EVENT: &str = "island-drag-edge-hint";
 
@@ -39,7 +39,8 @@ fn current(window: &WebviewWindow, state: IslandWindowState) -> Option<DragEdgeH
     let (width, height) = (f64::from(size.width), f64::from(size.height));
     let rect = island_rect(f64::from(position.x), f64::from(position.y), width, height, state);
     let center = ((rect.left + rect.width / 2.0).round() as i32, (rect.top + rect.height / 2.0).round() as i32);
-    let monitor = monitor_at(window, center).ok().flatten()?;
+    let below = || monitor_below(window, (f64::from(center.0), f64::from(center.1)));
+    let monitor = monitor_at(window, center).ok().flatten().or_else(below)?;
     let work = screen::monitor_work_rect(&monitor);
     let monitors: Vec<Rect> = window.available_monitors().ok()?.iter().map(full_rect).collect();
     let own = full_rect(&monitor);
@@ -121,9 +122,12 @@ mod tests {
         let all = |_: Edge| true;
         assert_eq!(hint_for(rect(800.0, 37.0, 300.0, 34.0), work, over, 16.0, true, all), Some(Edge::Top));
         assert_eq!(hint_for(rect(800.0, 60.0, 300.0, 34.0), work, over, 16.0, true, all), None);
+        assert_eq!(hint_for(rect(800.0, -80.0, 300.0, 34.0), work, over, 16.0, true, all), Some(Edge::Top));
         assert_eq!(offset_in_stage(Edge::Top, work, over, (500.0, 37.0), 1.0), -37.0);
         let under = TopEdge::new(0, 37, false);
         assert_eq!(hint_for(rect(800.0, 37.0, 300.0, 34.0), work, under, 16.0, true, all), Some(Edge::Top));
         assert_eq!(offset_in_stage(Edge::Top, work, under, (500.0, 37.0), 1.0), 0.0);
+        assert_eq!(hint_for(rect(800.0, 10.0, 300.0, 34.0), work, under, 16.0, true, all), Some(Edge::Top));
+        assert_eq!(offset_in_stage(Edge::Top, work, under, (500.0, 10.0), 1.0), 27.0);
     }
 }

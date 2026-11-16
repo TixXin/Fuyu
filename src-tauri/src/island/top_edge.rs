@@ -1,8 +1,10 @@
 use tauri::{Emitter, Monitor, PhysicalPosition, WebviewWindow};
 
 use super::edge;
-use super::geometry::{apply_stage_geometry, monitor_at, monitor_for_island_position, work_area_top_inset, STAGE_WINDOW_WIDTH};
-use super::side::full_rect;
+use super::geometry::{
+    apply_stage_geometry, monitor_at, monitor_for_island_position, work_area_top_inset, COLLAPSED_ISLAND_HEIGHT, STAGE_WINDOW_WIDTH,
+};
+use super::side::{full_rect, Rect};
 use super::screen;
 use super::state::{mutate_window_state, read_window_state, Edge, IslandPosition, IslandWindowState, MonitorFollow};
 
@@ -28,7 +30,7 @@ impl TopEdge {
     }
 
     pub(super) fn near(self, y: f64, snap: f64) -> bool {
-        y >= f64::from(self.y) - snap && y <= f64::from(self.reach) + snap
+        y <= f64::from(self.reach) + snap
     }
 }
 
@@ -38,6 +40,31 @@ pub(super) fn flush_with_screen(under_menu_bar: bool) -> bool {
 
 pub(super) fn top_edge(monitor: &Monitor, under_menu_bar: bool) -> TopEdge {
     TopEdge::new(screen::monitor_origin(monitor).y, screen::monitor_work_top(monitor), flush_with_screen(under_menu_bar))
+}
+
+pub(super) fn screen_below((x, y): (f64, f64), screens: &[Rect]) -> Option<usize> {
+    screens
+        .iter()
+        .enumerate()
+        .filter(|(_, &(left, top, width, _))| x >= f64::from(left) && x < f64::from(left + width) && y < f64::from(top))
+        .min_by_key(|(_, &(_, top, _, _))| top)
+        .map(|(index, _)| index)
+}
+
+pub(super) fn monitor_below(window: &WebviewWindow, point: (f64, f64)) -> Option<Monitor> {
+    let monitors = window.available_monitors().ok()?;
+    let screens: Vec<Rect> = monitors.iter().map(full_rect).collect();
+    let index = screen_below(point, &screens)?;
+    monitors.into_iter().nth(index)
+}
+
+fn monitor_for_drop(window: &WebviewWindow, position: IslandPosition) -> Option<Monitor> {
+    if let Ok(Some(monitor)) = monitor_for_island_position(window, position) {
+        return Some(monitor);
+    }
+    let scale = screen::window_scale(window).unwrap_or(1.0);
+    let centre = (f64::from(position.x) + STAGE_WINDOW_WIDTH * scale / 2.0, f64::from(position.y) + COLLAPSED_ISLAND_HEIGHT * scale / 2.0);
+    monitor_below(window, centre)
 }
 
 pub(crate) fn is_attached() -> bool {
@@ -52,7 +79,7 @@ pub(crate) fn sync_from_stage(window: &WebviewWindow, state: IslandWindowState, 
 }
 
 pub(crate) fn snap_to_top(window: &WebviewWindow, position: IslandPosition) -> IslandPosition {
-    let Ok(Some(monitor)) = monitor_for_island_position(window, position) else {
+    let Some(monitor) = monitor_for_drop(window, position) else {
         set_attached(window, false);
         return position;
     };
@@ -158,7 +185,6 @@ mod tests {
         assert_eq!(snapped_y(16, at(0), 16.0), 0);
         assert_eq!(snapped_y(-16, at(0), 16.0), 0);
         assert_eq!(snapped_y(17, at(0), 16.0), 17);
-        assert_eq!(snapped_y(-17, at(0), 16.0), -17);
         assert_eq!(snapped_y(-1070, at(-1080), 24.0), -1080);
         assert_eq!(snapped_y(60, at(48), 24.0), 48);
         assert_eq!(snapped_y(300, at(48), 24.0), 300);
@@ -183,7 +209,34 @@ mod tests {
         let under = TopEdge::new(0, 37, false);
         assert_eq!(snapped_y(37, under, 16.0), 37);
         assert_eq!(snapped_y(22, under, 16.0), 37);
-        assert_eq!(snapped_y(0, under, 16.0), 0);
+        assert_eq!(snapped_y(54, under, 16.0), 54);
+    }
+
+    #[test]
+    fn a_drop_anywhere_above_the_top_edge_snaps_back_to_it() {
+        let flat = TopEdge::new(0, 0, false);
+        assert_eq!(snapped_y(-17, flat, 16.0), 0);
+        assert_eq!(snapped_y(-400, flat, 16.0), 0);
+        let under = TopEdge::new(0, 37, false);
+        assert_eq!(snapped_y(0, under, 16.0), 37);
+        assert_eq!(snapped_y(-30, under, 16.0), 37);
+        assert_eq!(snapped_y(-30, TopEdge::new(0, 37, true), 16.0), 0);
+        assert_eq!(snapped_y(10, TopEdge::new(0, 48, false), 16.0), 48);
+        let upper = TopEdge::new(-1080, -1080, false);
+        assert_eq!(snapped_y(-1200, upper, 16.0), -1080);
+        assert_eq!(snapped_y(-1063, upper, 16.0), -1063);
+    }
+
+    #[test]
+    fn an_island_dropped_off_the_top_belongs_to_the_nearest_screen_under_it() {
+        let stacked: [Rect; 2] = [(0, 0, 1920, 1080), (0, -1080, 1920, 1080)];
+        assert_eq!(screen_below((960.0, -1200.0), &stacked), Some(1));
+        assert_eq!(screen_below((960.0, -20.0), &stacked), Some(0));
+        assert_eq!(screen_below((960.0, 500.0), &stacked), None);
+        let side_by_side: [Rect; 2] = [(0, 0, 1710, 1112), (1710, -200, 2560, 1440)];
+        assert_eq!(screen_below((800.0, -50.0), &side_by_side), Some(0));
+        assert_eq!(screen_below((2000.0, -250.0), &side_by_side), Some(1));
+        assert_eq!(screen_below((5000.0, -50.0), &side_by_side), None);
     }
 
     #[test]
