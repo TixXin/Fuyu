@@ -53,12 +53,29 @@ test("sound settings fall back field by field", () => {
   assert.equal(settings.quietHours.start, "22:00");
 });
 
-test("a fly-island manifest names the pack and its files", () => {
-  const plan = planSoundPack("folder", ["folder/done.wav", "folder/oops.wav", "folder/focusd-sound-pack.json"], [{
-    path: "folder/focusd-sound-pack.json",
+test("a fuyu manifest names the pack and its files", () => {
+  const plan = planSoundPack("folder", ["folder/done.wav", "folder/oops.wav", "folder/fuyu-sound-pack.json"], [{
+    path: "folder/fuyu-sound-pack.json",
     text: JSON.stringify({ name: "Chimes", author: "Ann", license: "CC0-1.0", sounds: { complete: "done.wav", "task.error": "oops.wav" } }),
   }]);
   assert.deepEqual(plan, { name: "Chimes", author: "Ann", license: "CC0-1.0", sounds: { complete: "folder/done.wav", error: "folder/oops.wav" } });
+});
+
+test("a pack with the old focusd manifest name still imports", () => {
+  const plan = planSoundPack("folder", ["folder/done.wav", "folder/focusd-sound-pack.json"], [{
+    path: "folder/focusd-sound-pack.json",
+    text: JSON.stringify({ name: "Old chimes", author: "Ann", sounds: { complete: "done.wav" } }),
+  }]);
+  assert.deepEqual(plan, { name: "Old chimes", author: "Ann", license: "", sounds: { complete: "folder/done.wav" } });
+});
+
+test("the fuyu manifest wins over the old name when both are there", () => {
+  const plan = planSoundPack("folder", ["folder/a.wav", "folder/b.wav"], [
+    { path: "folder/focusd-sound-pack.json", text: JSON.stringify({ name: "Old", sounds: { complete: "a.wav" } }) },
+    { path: "folder/fuyu-sound-pack.json", text: JSON.stringify({ name: "New", sounds: { complete: "b.wav" } }) },
+  ]);
+  assert.equal(plan.name, "New");
+  assert.equal(plan.sounds.complete, "folder/b.wav");
 });
 
 test("a CESP-style list maps categories, and approval doubles as question", () => {
