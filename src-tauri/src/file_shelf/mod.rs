@@ -18,7 +18,7 @@ use std::{
     },
     time::{SystemTime, UNIX_EPOCH},
 };
-use tauri::{AppHandle, Manager, WebviewWindow};
+use tauri::{AppHandle, Emitter, Manager, WebviewWindow};
 
 #[cfg(windows)]
 use crate::win32;
@@ -31,6 +31,14 @@ pub(crate) use plugin_view::{plugin_shelf_add, plugin_shelf_list, plugin_shelf_r
 pub(crate) const PLUGIN_ID: &str = "file-shelf";
 
 static FILE_SHELF: OnceLock<FileShelfService> = OnceLock::new();
+
+type Notify = Box<dyn Fn() + Send + Sync>;
+
+type Announce = Box<dyn Fn(usize) + Send + Sync>;
+
+static NOTIFY_ISLAND: OnceLock<Notify> = OnceLock::new();
+
+static ANNOUNCE_CHANGE: OnceLock<Announce> = OnceLock::new();
 
 static NEXT_ID: AtomicU64 = AtomicU64::new(0);
 
@@ -71,7 +79,6 @@ pub struct FileShelfSnapshot {
 }
 
 struct FileShelfService {
-    app: AppHandle,
     path: PathBuf,
     items: Mutex<Vec<FileShelfItem>>,
     options: Mutex<FileShelfOptions>,
@@ -109,7 +116,7 @@ impl FileShelfService {
         if next != *items {
             save_items(&self.path, &next)?;
             *items = next.clone();
-            crate::plugin_host::publish_event("shelf.changed", serde_json::json!({ "count": items.len() }));
+            announce_change(items.len());
         }
         drop(items);
         Ok(snapshot_of(&next, presence))
@@ -166,14 +173,32 @@ pub fn init(app: &AppHandle) -> Result<(), String> {
         .join(FILE_SHELF_FILE_NAME);
     let items = Mutex::new(load_items(&path));
     let _ = FILE_SHELF.set(FileShelfService {
-        app: app.clone(),
         path,
         items,
         options: Mutex::new(FileShelfOptions::default()),
         availability: Availability::default(),
         thumbnails: Thumbnails::default(),
     });
+    let _ = ANNOUNCE_CHANGE.set(Box::new(|count| {
+        crate::plugin_host::publish_event("shelf.changed", serde_json::json!({ "count": count }));
+    }));
+    let island = app.clone();
+    let _ = NOTIFY_ISLAND.set(Box::new(move || {
+        let _ = island.emit_to(crate::island::WINDOW_LABEL, plugin_view::CHANGED_EVENT, ());
+    }));
     Ok(())
+}
+
+fn announce_change(count: usize) {
+    if let Some(announce) = ANNOUNCE_CHANGE.get() {
+        announce(count);
+    }
+}
+
+fn notify_island() {
+    if let Some(notify) = NOTIFY_ISLAND.get() {
+        notify();
+    }
 }
 
 fn service() -> Result<&'static FileShelfService, String> {
