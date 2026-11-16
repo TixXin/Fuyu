@@ -4,16 +4,16 @@
 
 .agent-session__dot {
   transition:
-    background-color 240ms ease,
-    box-shadow 240ms ease;
+    background-color var(--motion-medium) ease,
+    box-shadow var(--motion-medium) ease;
 }
 
 .agent-card__bar {
-  transition: background-color 240ms ease;
+  transition: background-color var(--motion-medium) ease;
 }
 
 .agent-card__state {
-  transition: color 240ms ease;
+  transition: color var(--motion-medium) ease;
 }
 
 .agent-motion-ghost {

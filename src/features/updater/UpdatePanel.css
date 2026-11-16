@@ -192,7 +192,7 @@
 .update-notes__toggle svg {
   flex: none;
   color: var(--color-text-subtle);
-  transition: transform 160ms ease;
+  transition: transform var(--motion-base) ease;
 }
 
 .update-notes--open .update-notes__toggle svg {

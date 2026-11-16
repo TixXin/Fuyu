@@ -11,7 +11,7 @@
   box-shadow: inset 3px 0 0 var(--plugin-card-edge, transparent);
   animation: plugin-card-in 220ms ease backwards;
   animation-delay: calc(var(--plugin-card-index, 0) * 30ms);
-  transition: border-color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+  transition: border-color var(--motion-base) ease, transform var(--motion-base) ease, box-shadow var(--motion-base) ease;
 }
 
 .plugin-card:has(.plugin-card__permissions--open) {
