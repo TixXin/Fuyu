@@ -1,5 +1,11 @@
-use serde_json::Value;
+use serde_json::{Map, Value};
+use std::{
+    path::Path,
+    sync::{Mutex, MutexGuard, PoisonError},
+};
 use tauri::AppHandle;
+
+use crate::sync::{clock, settings_meta};
 
 pub(crate) const FILE_NAME: &str = "settings.json";
 const MAX_BYTES: usize = 4 * 1024 * 1024;
@@ -26,6 +32,40 @@ fn is_settings_file(text: &str) -> bool {
             .is_some_and(|keys| keys.iter().all(|(key, value)| key.starts_with("fuyu-") && value.is_string()))
 }
 
+fn keys_of(text: &str) -> Option<Map<String, Value>> {
+    match serde_json::from_str::<Value>(text).ok()? {
+        Value::Object(mut file) => match file.remove("keys")? {
+            Value::Object(keys) => Some(keys),
+            _ => None,
+        },
+        _ => None,
+    }
+}
+
+pub(crate) fn lock() -> MutexGuard<'static, ()> {
+    static WRITING: Mutex<()> = Mutex::new(());
+    WRITING.lock().unwrap_or_else(PoisonError::into_inner)
+}
+
+fn stamp_changes(path: &Path, new: &str) {
+    let Some(dir) = path.parent() else {
+        return;
+    };
+    let Some(new) = keys_of(new) else {
+        return;
+    };
+    let old = std::fs::read_to_string(path).ok().filter(|text| is_settings_file(text)).and_then(|text| keys_of(&text));
+    let meta_path = dir.join(settings_meta::FILE_NAME);
+    let meta = settings_meta::load(&meta_path);
+    clock::observe(settings_meta::all(&meta));
+    let next = clock::with(|clock, wall| settings_meta::restamp(settings_meta::whitelist(), old.as_ref(), &new, &meta, clock, wall));
+    if next != meta || !meta_path.exists() {
+        if let Err(error) = settings_meta::save(&meta_path, &next) {
+            eprintln!("could not save {}: {error}", meta_path.display());
+        }
+    }
+}
+
 #[tauri::command]
 pub async fn read_settings_file(app: AppHandle) -> Result<Option<String>, String> {
     let path = file_path(&app)?;
@@ -44,6 +84,8 @@ pub async fn write_settings_file(app: AppHandle, text: String) -> Result<(), Str
         if let Some(dir) = path.parent() {
             std::fs::create_dir_all(dir).map_err(|error| error.to_string())?;
         }
+        let _writing = lock();
+        stamp_changes(&path, &text);
         crate::fs_write::replace_file(&path, text.as_bytes()).map_err(|error| error.to_string())
     })
     .await

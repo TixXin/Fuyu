@@ -10,6 +10,7 @@ pub(crate) mod drag;
 mod hotkey;
 mod link_guard;
 pub(crate) mod links;
+mod links_order;
 mod links_transfer;
 mod link_preview;
 mod file_image;
@@ -436,6 +437,7 @@ struct ClipboardHistoryState {
     settings: ClipboardHistorySettings,
     items: Vec<ClipboardHistoryItem>,
     snippets: Vec<snippets::ClipboardSnippet>,
+    snippet_tombstones: Vec<crate::sync::Tombstone>,
     last_capture_hash: Option<String>,
     recently_deleted: deletion::Removed,
 }
@@ -630,6 +632,7 @@ pub fn init(app: &AppHandle) -> Result<(), String> {
             settings: persisted.settings.normalized(),
             items: persisted.items,
             snippets: persisted.snippets,
+            snippet_tombstones: persisted.snippet_tombstones,
             last_capture_hash: None,
             recently_deleted: Vec::new(),
         }),

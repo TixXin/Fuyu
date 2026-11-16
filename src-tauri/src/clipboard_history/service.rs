@@ -498,9 +498,11 @@ impl ClipboardHistoryService {
 
     pub(super) fn persist_locked(&self, state: &ClipboardHistoryState) -> Result<(), String> {
         let history = PersistedClipboardHistory {
+            version: super::store::HISTORY_VERSION,
             settings: state.settings.clone(),
             items: state.items.clone(),
             snippets: state.snippets.clone(),
+            snippet_tombstones: state.snippet_tombstones.clone(),
         };
         let content = serde_json::to_string_pretty(&history)
             .map_err(|error| format!("Failed to serialize clipboard history: {error}"))?;

@@ -11,12 +11,13 @@ use reqwest::Url;
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter};
 
-use super::current_unix_millis;
+use super::{current_unix_millis, links_order};
+use crate::sync::{clock, record, Clock, Hlc, Tombstone};
 use crate::user_error::UserError;
 
 pub(super) const FILE_NAME: &str = "clipboard-links.json";
 const CHANGED_EVENT: &str = "clipboard-links-changed";
-const VERSION: u32 = 1;
+const VERSION: u32 = 2;
 const MAX_LINKS: usize = 1_000;
 const MAX_SITES: usize = 100;
 const MAX_URL_CHARS: usize = 2_048;
@@ -32,6 +33,22 @@ pub struct ClipboardLink {
     pub(super) title: String,
     #[serde(default)]
     pub(super) added_at: i64,
+    #[serde(default)]
+    pub(super) sort_key: String,
+    #[serde(default, deserialize_with = "clock::lenient", skip_serializing_if = "Option::is_none")]
+    pub(super) updated_at: Option<Hlc>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(super) device_id: Option<String>,
+}
+
+impl ClipboardLink {
+    fn new(url: String, title: &str) -> Self {
+        Self { id: new_id(), url, title: clean_title(title), added_at: current_unix_millis(), sort_key: String::new(), updated_at: None, device_id: None }
+    }
+
+    fn bare(&self) -> Self {
+        Self { updated_at: None, device_id: None, ..self.clone() }
+    }
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
@@ -70,6 +87,8 @@ pub struct ClipboardLinks {
     pub(super) settings: ClipboardLinkSettings,
     #[serde(default)]
     pub(super) links: Vec<ClipboardLink>,
+    #[serde(default)]
+    pub(super) tombstones: Vec<Tombstone>,
 }
 
 fn default_true() -> bool {
@@ -91,7 +110,10 @@ fn store(app: &AppHandle) -> Result<&'static Store, String> {
     let dir = crate::home_dir::fuyu_home(tauri::Manager::path(app))
         .map_err(|error| format!("Failed to resolve app data directory: {error}"))?;
     let path = dir.join(FILE_NAME);
-    let state = Mutex::new(load(&path));
+    let mut links = load(&path);
+    clock::with(|clock, _| fill_missing(&mut links, clock.device()));
+    clock::observe(all_stamps(&links));
+    let state = Mutex::new(links);
     let _ = STORE.set(Store { path, state });
     STORE.get().ok_or_else(|| "The link bookmarks could not be loaded.".to_string())
 }
@@ -121,10 +143,57 @@ pub(super) fn normalized(mut links: ClipboardLinks) -> ClipboardLinks {
             continue;
         }
         let id = if link.id.trim().is_empty() || kept.iter().any(|kept| kept.id == link.id) { new_id() } else { link.id };
-        kept.push(ClipboardLink { id, url, title: clean_title(&link.title), added_at: link.added_at });
+        kept.push(ClipboardLink { id, url, title: clean_title(&link.title), ..link });
+    }
+    if !links_order::is_ordered(kept.iter().map(|link| link.sort_key.as_str())) {
+        let keys = links_order::keys_between(None, None, kept.len());
+        for (link, key) in kept.iter_mut().zip(keys) {
+            link.sort_key = key;
+        }
     }
     links.links = kept;
     links
+}
+
+pub(super) fn fill_missing(links: &mut ClipboardLinks, device: &str) {
+    for link in &mut links.links {
+        let added = u64::try_from(link.added_at).unwrap_or(0);
+        let stamp = link.updated_at.get_or_insert_with(|| Hlc::from_millis(added, device));
+        if link.device_id.is_none() {
+            link.device_id = Some(stamp.device.clone());
+        }
+    }
+}
+
+fn all_stamps(links: &ClipboardLinks) -> impl Iterator<Item = &Hlc> {
+    links.links.iter().filter_map(|link| link.updated_at.as_ref()).chain(links.tombstones.iter().map(|tombstone| &tombstone.deleted_at))
+}
+
+pub(super) fn restamp(old: &ClipboardLinks, mut new: ClipboardLinks, clock: &mut Clock, wall: u64) -> ClipboardLinks {
+    for link in &mut new.links {
+        match old.links.iter().find(|previous| previous.id == link.id) {
+            Some(previous) if previous.bare() == link.bare() => *link = previous.clone(),
+            _ => {
+                let stamp = clock.tick(wall);
+                link.device_id = Some(stamp.device.clone());
+                link.updated_at = Some(stamp);
+            }
+        }
+    }
+    let mut tombstones = old.tombstones.clone();
+    for link in &old.links {
+        if !new.links.iter().any(|kept| kept.id == link.id) {
+            record::bury(&mut tombstones, &link.id, clock.tick(wall));
+        }
+    }
+    for link in &new.links {
+        record::unbury(&mut tombstones, &link.id);
+    }
+    new.tombstones = tombstones;
+    if new != *old {
+        record::prune(&mut new.tombstones, wall);
+    }
+    new
 }
 
 pub(super) fn normalized_settings(settings: ClipboardLinkSettings) -> ClipboardLinkSettings {
@@ -181,6 +250,7 @@ where
     let mut state = store.state.lock().map_err(|error| error.to_string())?;
     let mut next = state.clone();
     change(&mut next)?;
+    let next = clock::with(|clock, wall| restamp(&state, next, clock, wall));
     save(&store.path, &next)?;
     *state = next.clone();
     drop(state);
@@ -189,22 +259,34 @@ where
 }
 
 pub(super) fn add_links(links: &mut ClipboardLinks, entries: impl IntoIterator<Item = (String, String)>) -> usize {
-    let mut added = 0;
+    let mut fresh: Vec<ClipboardLink> = Vec::new();
     for (url, title) in entries {
         let Some(url) = normalized_url(&url) else { continue };
-        if links.links.len() >= MAX_LINKS || links.links.iter().any(|link| link.url == url) {
+        if links.links.len() + fresh.len() >= MAX_LINKS || links.links.iter().chain(&fresh).any(|link| link.url == url) {
             continue;
         }
-        links.links.insert(added, ClipboardLink { id: new_id(), url, title: clean_title(&title), added_at: current_unix_millis() });
-        added += 1;
+        fresh.push(ClipboardLink::new(url, &title));
     }
+    let first = links.links.first().map(|link| link.sort_key.as_str());
+    let keys = links_order::keys_between(None, first, fresh.len());
+    for (link, key) in fresh.iter_mut().zip(keys) {
+        link.sort_key = key;
+    }
+    let added = fresh.len();
+    links.links.splice(0..0, fresh);
     added
 }
 
 pub(super) fn move_link(links: &mut ClipboardLinks, id: &str, to: usize) -> Result<(), UserError> {
     let from = links.links.iter().position(|link| link.id == id).ok_or_else(|| UserError::new("clipboard.linkMissing", "This bookmark was not found."))?;
-    let link = links.links.remove(from);
-    links.links.insert(to.min(links.links.len()), link);
+    let mut link = links.links.remove(from);
+    let to = to.min(links.links.len());
+    if to != from {
+        let before = to.checked_sub(1).and_then(|index| links.links.get(index)).map(|link| link.sort_key.as_str());
+        let after = links.links.get(to).map(|link| link.sort_key.as_str());
+        link.sort_key = links_order::key_between(before, after);
+    }
+    links.links.insert(to, link);
     Ok(())
 }
 

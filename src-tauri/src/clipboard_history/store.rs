@@ -7,6 +7,8 @@ use super::{ClipboardHistoryItem, ClipboardHistoryItemKind, ClipboardHistorySett
 
 pub(super) const HISTORY_FILE_NAME: &str = "clipboard-history.json";
 
+pub(super) const HISTORY_VERSION: u32 = 2;
+
 pub(super) const IMAGE_DIRECTORY_NAME: &str = "clipboard-images";
 
 pub(super) const MAX_IMAGE_PNG_BYTES: usize = 10 * 1024 * 1024;
@@ -16,10 +18,14 @@ const THUMBNAIL_MAX_SIDE: u32 = 128;
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub(super) struct PersistedClipboardHistory {
+    #[serde(default)]
+    pub(super) version: u32,
     pub(super) settings: ClipboardHistorySettings,
     pub(super) items: Vec<ClipboardHistoryItem>,
     #[serde(default)]
     pub(super) snippets: Vec<super::snippets::ClipboardSnippet>,
+    #[serde(default)]
+    pub(super) snippet_tombstones: Vec<crate::sync::Tombstone>,
 }
 
 pub(super) fn load_history(history_path: &Path) -> PersistedClipboardHistory {
@@ -35,6 +41,8 @@ pub(super) fn load_history(history_path: &Path) -> PersistedClipboardHistory {
                 ClipboardHistoryItemKind::Image => item.image.is_some(),
                 ClipboardHistoryItemKind::Files => item.files.as_ref().is_some_and(|files| !files.is_empty()),
             });
+            crate::sync::clock::with(|clock, _| super::snippets::fill_missing(&mut history.snippets, clock.device()));
+            crate::sync::clock::observe(super::snippets::all_stamps(&history.snippets, &history.snippet_tombstones));
             history
         })
         .unwrap_or_default()
