@@ -69,7 +69,7 @@ export interface IslandAlertMeta<Sources = unknown> {
 }
 
 export interface IslandNoticeMeta<Sources = unknown> {
-  active: (sources: Sources) => boolean;
+  active?: (sources: Sources) => boolean;
   actions: ComponentType<Sources>;
 }
 

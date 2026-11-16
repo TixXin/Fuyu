@@ -13,7 +13,6 @@ import { useScreenshotCard } from "../../features/screenshot/useScreenshotCard";
 import { useScreenshotNotice } from "../../features/screenshot/useScreenshotNotice";
 import { useClipboardCopyCard } from "../../features/clipboard/useClipboardCopyCard";
 import { useRecording } from "../../features/screenshot/useRecording";
-import { useIslandTimer } from "../../features/timer/useIslandTimer";
 import { useIslandSettings } from "../../lib/settings/useIslandSettings";
 import { useLegacySwitches } from "../../features/plugin-kernel/useLegacySwitches";
 import { useClipboardHistory } from "../../features/clipboard/useClipboardHistory";
@@ -201,7 +200,6 @@ export function IslandApp() {
     openIslandPage,
     pluginPages: pluginPages.pageIds,
   });
-  const { ringing } = useIslandTimer(features.timer === true, openEnabledPage);
   const { alertedSession, approvals: agentApprovals, agentCardHeight, alertPopup } = useIslandAgentAlerts({
     sessions: agentSessions,
     unseen: unseenAgentSessions.keys,
@@ -268,7 +266,7 @@ export function IslandApp() {
   });
 
   const voice = useIslandVoiceInput(addTodoOn, notebookProps);
-  const islandNotice = useIslandNotice({ recording, voice, ringing, screenshotNotice, copyCard, firstHints });
+  const islandNotice = useIslandNotice({ recording, voice, screenshotNotice, copyCard, firstHints });
   useNotchDropSync(notch !== null && mode === "collapsed" && !isTucked && hasNotchDrop({
     preview: banner.barPreview, notice: islandNotice !== null, translationPeek,
   }));
