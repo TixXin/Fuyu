@@ -3,6 +3,7 @@ import { useTranslation } from "../../../i18n";
 import { defineSlot, type IslandHeaderMeta, type IslandPageMeta } from "../../plugin-kernel/slots";
 import { TranslationPanel } from "../TranslationPanel";
 import { islandPage } from "./page.ts";
+import { OWNER } from "./owner.ts";
 
 type TranslationPageProps = { mode: string; onOpenSettings: (section: "translation") => void };
 
@@ -39,5 +40,5 @@ function TranslateButton({ page, features, withShortcut, onOpenTranslator }: Hea
   );
 }
 
-pageSlot.add({ ...islandPage, component: TranslationPage });
-headerSlot.add({ id: "translator", order: 30, enabled: ({ onOpenTranslator }) => Boolean(onOpenTranslator), component: TranslateButton });
+pageSlot.add({ ...islandPage, component: TranslationPage }, OWNER);
+headerSlot.add({ id: "translator", order: 30, enabled: ({ onOpenTranslator }) => Boolean(onOpenTranslator), component: TranslateButton }, OWNER);

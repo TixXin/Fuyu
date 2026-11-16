@@ -209,7 +209,7 @@ pub fn run() {
                 eprintln!("failed to initialize notification diagnostics: {error}");
             }
             #[cfg(target_os = "macos")]
-            for label in [clipboard_history::POPUP_WINDOW_LABEL, clipboard_history::preview_window::WINDOW_LABEL, translation::WINDOW_LABEL] {
+            for label in [clipboard_history::POPUP_WINDOW_LABEL, clipboard_history::preview_window::WINDOW_LABEL] {
                 if let Some(window) = app.get_webview_window(label) {
                     let made = if label == clipboard_history::preview_window::WINDOW_LABEL {
                         macos::island_panel::make_preview_panel(&window)

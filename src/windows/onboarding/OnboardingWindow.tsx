@@ -4,6 +4,7 @@ import { X } from "lucide-react";
 import { IconButtonTooltip } from "../../components/IconButtonTooltip";
 import { activeTone } from "../../lib/theme/themeMode";
 import { useIslandSettings } from "../../lib/settings/useIslandSettings";
+import { useLegacySwitches } from "../../features/plugin-kernel/useLegacySwitches";
 import { useSystemDark } from "../../lib/theme/useResolvedTheme";
 import { useWindowAccent } from "../../lib/theme/useWindowAccent";
 import { useClipboardSettings } from "../../features/clipboard/useClipboardSettings";
@@ -71,7 +72,7 @@ function useViewport() {
 export function OnboardingWindow() {
   const t = useTranslation();
   const text = t.onboarding;
-  const [settings, setSettings] = useIslandSettings();
+  const [settings, setSettings] = useLegacySwitches(useIslandSettings());
   const [clipboard, updateClipboard] = useClipboardSettings();
   const [launchAtStartup, updateLaunchAtStartup] = useLaunchAtStartup();
   const [index, setIndex] = useState(0);

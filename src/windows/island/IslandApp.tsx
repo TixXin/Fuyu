@@ -15,6 +15,7 @@ import { useClipboardCopyCard } from "../../features/clipboard/useClipboardCopyC
 import { useRecording } from "../../features/screenshot/useRecording";
 import { useIslandTimer } from "../../features/timer/useIslandTimer";
 import { useIslandSettings } from "../../lib/settings/useIslandSettings";
+import { useLegacySwitches } from "../../features/plugin-kernel/useLegacySwitches";
 import { useClipboardHistory } from "../../features/clipboard/useClipboardHistory";
 import { IslandShell } from "./IslandShell";
 import { useMediaState } from "../../features/media/useMediaState";
@@ -85,7 +86,7 @@ export function IslandApp() {
   const { mode, isTucked, page, setPage, collapseIsland, tuckIsland, revealIsland, minimizeToEdge, openIslandPage, toggleClipboardHistory } = navigation;
   const pluginPages = usePluginPages(page);
   const side = useIslandSide();
-  const [storedSettings, setSettings] = useIslandSettings();
+  const [storedSettings, setSettings] = useLegacySwitches(useIslandSettings(), { reconcile: true });
   const settings = useResolvedTheme(storedSettings);
   const game = useGameMode(settings, { mode, isTucked, collapseIsland, tuckIsland, revealIsland });
   const notices = useIslandNotices(settings, { mode, isTucked, quiet: game.quiet });

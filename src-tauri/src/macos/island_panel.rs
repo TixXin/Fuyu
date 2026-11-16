@@ -78,6 +78,10 @@ fn float_above_island(window: &WebviewWindow, panel: PanelHandle<tauri::Wry>) ->
         .map_err(|error| format!("Could not make {} a non-activating panel: {error:?}", window.label()))
 }
 
+pub(crate) fn forget_panel<R: tauri::Runtime>(app: &tauri::AppHandle<R>, label: &str) {
+    let _ = app.remove_webview_panel(label);
+}
+
 pub(crate) fn show_panel_without_key<R: tauri::Runtime>(app: &tauri::AppHandle<R>, label: &str) -> bool {
     let Ok(panel) = app.get_webview_panel(label) else {
         return false;

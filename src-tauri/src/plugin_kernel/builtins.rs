@@ -274,7 +274,6 @@ pub(crate) fn init(app: &AppHandle) {
     run_all(actions);
 }
 
-#[expect(dead_code, reason = "the built-in plugin tasks from E36.3.28 on register their background here")]
 pub(crate) fn register(plugin: &str, name: &str, background: Arc<dyn Background>) -> Result<(), String> {
     let action = {
         let mut slot = switches().lock().unwrap_or_else(PoisonError::into_inner);
@@ -287,7 +286,6 @@ pub(crate) fn register(plugin: &str, name: &str, background: Arc<dyn Background>
     Ok(())
 }
 
-#[expect(dead_code, reason = "the built-in plugin tasks from E36.3.28 on read their switch here")]
 pub(crate) fn is_enabled(id: &str) -> bool {
     switches().lock().unwrap_or_else(PoisonError::into_inner).table.enabled(id)
 }

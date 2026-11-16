@@ -1,0 +1,39 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import { reconcile, switchChanges, withSwitches } from "../../src/features/plugin-kernel/legacySwitches.ts";
+
+const list = (enabled) => [{ id: "translation", kind: "builtin", enabled, background: [] }];
+const fresh = new Set();
+const done = new Set(["translationEnabled"]);
+
+test("the island and settings read the switch table, and keep the stored value until it arrives", () => {
+  assert.equal(withSwitches({ translationEnabled: true }, list(false)).translationEnabled, false);
+  assert.equal(withSwitches({ translationEnabled: false }, null).translationEnabled, false);
+  const same = { translationEnabled: true };
+  assert.equal(withSwitches(same, list(true)), same);
+});
+
+test("writing a legacy field switches its built-in plugin", () => {
+  assert.deepEqual(switchChanges({ translationEnabled: true }, { translationEnabled: false }), [["translation", false]]);
+  assert.deepEqual(switchChanges({ translationEnabled: true }, { translationEnabled: true }), []);
+});
+
+test("an old setting that turned translation off is moved into plugins.yml once", () => {
+  const first = reconcile({ translationEnabled: false }, list(true), null, fresh);
+  assert.deepEqual(first.switch, [["translation", false]]);
+  assert.deepEqual(first.migrated, ["translationEnabled"]);
+  const on = reconcile({ translationEnabled: true }, list(true), null, fresh);
+  assert.deepEqual([on.switch, on.mirror, on.migrated], [[], {}, ["translationEnabled"]]);
+});
+
+test("after the move the switch wins at start and is mirrored into the stored settings", () => {
+  const result = reconcile({ translationEnabled: true }, list(false), null, done);
+  assert.deepEqual([result.switch, result.mirror, result.migrated], [[], { translationEnabled: false }, []]);
+});
+
+test("a stored value changed while running (restore, sync, another window) wins over the switch", () => {
+  const seen = { stored: { translationEnabled: true }, switched: { translationEnabled: true } };
+  assert.deepEqual(reconcile({ translationEnabled: false }, list(true), seen, done).switch, [["translation", false]]);
+  const flipped = reconcile({ translationEnabled: true }, list(false), seen, done);
+  assert.deepEqual([flipped.switch, flipped.mirror], [[], { translationEnabled: false }]);
+});
