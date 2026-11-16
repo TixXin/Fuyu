@@ -91,12 +91,12 @@ async function runChecks() {
     const meta = (row: HTMLElement) => row.querySelector(".agent-session__meta")?.textContent;
     const time = (row: HTMLElement) => row.querySelector(".agent-session__time")?.textContent;
     const dot = (row: HTMLElement) => getComputedStyle(row.querySelector(".agent-session__dot")!).backgroundColor;
-    check(meta(second) === "等待确认" && time(second) === "14 分" && dot(second) === "rgb(255, 69, 58)", "卡住等你的会话显示红色状态灯和状态文字，时间单独一列");
+    check(meta(second) === "等待确认" && time(second) === "14m" && dot(second) === "rgb(255, 69, 58)", "卡住等你的会话显示红色状态灯和状态文字，时间单独一列");
     const dotLabel = (row: HTMLElement) => row.querySelector(".agent-session__dot")!;
     check(dotLabel(first).getAttribute("aria-label") === "运行中" && dotLabel(first).getAttribute("title") === "运行中" && dotLabel(second).getAttribute("aria-label") === "等你确认"
       && dotLabel(third).getAttribute("aria-label") === "已完成" && dotLabel(first).getAttribute("role") === "img", "状态灯有悬停说明和读屏文字，说的是灯色的含义");
     check(dot(first) === "rgb(52, 199, 89)" && dot(third) === "rgb(142, 142, 147)", "在跑的会话绿色，做完的灰色");
-    check(meta(first)?.startsWith("已运行 3 分 2") && !meta(first)?.includes("<1m") && time(third) === "1 小时" && !meta(third)?.includes("1 小时"), "运行中的会话显示已运行多久，结束的在时间列显示多久前更新");
+    check(meta(first)?.startsWith("已运行 3 分 2") && !meta(first)?.includes("<1m") && time(third) === "1h" && !meta(third)?.includes("1h"), "运行中的会话显示已运行多久，结束的在时间列显示多久前更新");
     check(first.classList.contains("agent-session--full") && second.classList.contains("agent-session--full") && third.classList.contains("agent-session--compact"), "进行中的会话展开，已完成的折叠成一行");
     check(rows().every((row) => row.firstElementChild?.classList.contains("agent-session__dot") && row.querySelector(".agent-session__heading .agent-provider-icon") && row.querySelectorAll(".agent-session__dot").length === 1), "每行都以状态灯开头，图标都在标题行右侧");
     const title = second.querySelector<HTMLElement>(".agent-session__title")!;
@@ -145,7 +145,7 @@ async function runChecks() {
     const agedItem = rows()[2].closest("li")!;
     const age = agedItem.querySelector<HTMLElement>(".agent-session__age");
     const agedArchive = agedItem.querySelector<HTMLButtonElement>(".agent-session__archive")!;
-    check(age?.textContent === "1 小时" && !meta(rows()[2])?.includes("1 小时") && !rows()[0].closest("li")!.querySelector(".agent-session__age")
+    check(age?.textContent === "1h" && !meta(rows()[2])?.includes("1h") && !rows()[0].closest("li")!.querySelector(".agent-session__age")
       && getComputedStyle(agedArchive).opacity === "0" && getComputedStyle(age).opacity === "1"
       && Math.abs(age.getBoundingClientRect().right - agedArchive.querySelector("svg")!.getBoundingClientRect().right) < 1,
       "平时归档按钮的位置显示多久前更新，右边和归档图标对齐；运行中没有时间的行照常显示归档按钮");
@@ -212,7 +212,7 @@ async function runChecks() {
     check(badge(first) && !first.querySelector(".agent-session__host-name") && !second.querySelector(".agent-session__host") && !badge(second), "只显示图标时只有角标，取不到图标的什么都不显示");
     await render("icon", { showElapsed: false });
     const iconRight = (row: HTMLElement) => row.querySelector(".agent-provider-icon")!.getBoundingClientRect().right;
-    check(meta(first) === "2 个子 Agent" && time(first) === "<1m" && !third.querySelector(".agent-session__meta") && time(third) === "1 小时"
+    check(meta(first) === "2 个子 Agent" && time(first) === "1m" && !third.querySelector(".agent-session__meta") && time(third) === "1h"
       && Math.abs(iconRight(first) - iconRight(third)) < 0.5 && Math.abs(iconRight(first) - iconRight(second)) < 0.5, "时间长短不同、有无来源时，右侧图标仍在同一列");
     const dotGap = first.querySelector(".agent-session__dot")!.getBoundingClientRect().left - (fixture.getBoundingClientRect().left - 20);
     const timeBox = first.querySelector<HTMLElement>(".agent-session__time")!;
@@ -223,7 +223,7 @@ async function runChecks() {
     await render("off");
     check(!document.querySelector(".agent-session__host") && !document.querySelector(".agent-session__host-badge"), "设为不显示时隐藏来源");
     await render("both");
-    check(meta(third) === "用时 4 分 12 秒" && time(third) === "1 小时", "结束的会话显示这一轮用时");
+    check(meta(third) === "用时 4 分 12 秒" && time(third) === "1h", "结束的会话显示这一轮用时");
     check(!second.querySelector(".agent-session__elapsed"), "不知道这一轮何时开始时不显示时长");
     const before = first.querySelector(".agent-session__elapsed")?.textContent;
     await act(async () => { await new Promise((resolve) => setTimeout(resolve, 1100)); });

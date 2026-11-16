@@ -1,7 +1,6 @@
 import type { AgentSessionSummary, SessionProvider } from "./api";
 import { sessionLight, type SessionLight } from "./sessionLight.ts";
 import { sessionKey } from "./unseen.ts";
-import { formatAge, type AgeText } from "../../components/list/formatAgo.ts";
 import type { AgentSessionGroup, AgentSessionSort } from "./agentSettings";
 
 const SHOWN_FIELDS = ["provider", "sessionId", "cwd", "title", "model", "effort", "phase", "lastMessage", "turnStartedAt", "lastPrompt", "permissionMode", "subagents", "replyMarker", "replyAsks", "backgroundTasks", "compacting", "closed", "contextTokens"] as const;
@@ -82,8 +81,12 @@ export function sessionProject(cwd: string | null) {
   return last;
 }
 
-export function sessionAge(updatedAt: number, now: number, text: AgeText) {
-  return formatAge(Math.max(0, now - updatedAt), text);
+export function sessionAge(updatedAt: number, now: number) {
+  const minutes = Math.max(1, Math.floor((now - updatedAt) / 60_000));
+  if (minutes < 60) return `${minutes}m`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h`;
+  return `${Math.floor(hours / 24)}d`;
 }
 
 const charWidth = (char: string) => (/[\u2e80-\u9fff\uff00-\uffef]/.test(char) ? 12 : char === " " ? 3.5 : /[mwMW]/.test(char) ? 10 : 7);

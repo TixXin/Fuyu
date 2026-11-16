@@ -48,7 +48,7 @@ export function AgentSessionCard({
   const active = isActivePhase(session.phase);
   const light = sessionLight(session);
   const mode = active && session.permissionMode && session.permissionMode !== "default" ? text.permissionModes[session.permissionMode] : null;
-  const age = sessionAge(session.updatedAt, now, { justNow: text.justNow, ...text.age });
+  const age = sessionAge(session.updatedAt, now);
   const time = showElapsed && session.turnStartedAt !== null && session.phase === "running" ? <SessionElapsed session={session} /> : age;
   const state = session.compacting ? text.compacting : light === "yourTurn" ? text.yourTurn : getAgentPhaseLabel(session.phase, t);
 
