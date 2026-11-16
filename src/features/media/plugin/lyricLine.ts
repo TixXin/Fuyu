@@ -1,5 +1,5 @@
 import type { Translations } from "../../../i18n";
-import { LINE_PRIORITY, type IslandLineContribution } from "../../plugin-kernel/islandContributions";
+import { LINE_PRIORITY, type IslandLineContribution } from "../../plugin-kernel/islandContributions.ts";
 import type { CurrentLyric } from "../lyrics/useCurrentLyric";
 
 const ICON_TEXT = "MM";

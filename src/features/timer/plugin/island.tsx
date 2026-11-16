@@ -4,7 +4,7 @@ import { TimerNotice, TimerNoticeActions } from "../TimerNotice";
 import { TIMER_CHIP_WIDTH, TimerChip } from "../TimerChip";
 import { TimerPanel } from "../TimerPanel";
 import { islandPage } from "./page.ts";
-import { timerIsland } from "./islandState";
+import { TIMER_CHIP_HINT, timerIsland } from "./islandState";
 import { OWNER } from "./owner.ts";
 
 type TimerPageProps = { mode: string };
@@ -17,11 +17,11 @@ function TimerPage({ mode }: TimerPageProps) {
 
 pageSlot.add({ ...islandPage, component: TimerPage }, OWNER);
 
-type GaugeContext = { paused: boolean; timer: { enabled: boolean; running: boolean } };
+type GaugeContext = { paused: boolean; hints: ReadonlySet<string> };
 
 const gaugeSlot = defineSlot<GaugeContext, IslandCollapsedMeta<GaugeContext>>("island.collapsed/v1");
 
-gaugeSlot.add({ id: "timer", order: 70, group: "gauges", width: TIMER_CHIP_WIDTH, hideable: true, shown: ({ timer }) => timer.enabled && timer.running, component: TimerChip }, OWNER);
+gaugeSlot.add({ id: "timer", order: 70, group: "gauges", width: TIMER_CHIP_WIDTH, hideable: true, shown: ({ hints }) => hints.has(TIMER_CHIP_HINT), component: TimerChip }, OWNER);
 
 const noticeSlot = defineSlot<object, IslandNoticeMeta<object>>("island.notice/v1");
 

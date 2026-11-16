@@ -49,11 +49,10 @@ import { hasNotchDrop, notchExpandedExtra, notchFittedWidth, notchLook, notchPan
 import "./IslandApp.css";
 import { PluginSlot } from "../../features/plugin-kernel/PluginSlot";
 import { leadLine } from "../../features/plugin-kernel/islandContributions";
-import { runIslandAction, useIslandContributed, useSettleIslandContributions } from "../../features/plugin-kernel/useIslandContributions";
+import { runIslandAction, useIslandContributed, useIslandContributions, useSettleIslandContributions } from "../../features/plugin-kernel/useIslandContributions";
 import { useCollapsedWidth } from "./useCollapsedWidth";
 import { overlaySlot } from "./slots/overlay";
 import { SlotView } from "../../features/plugin-kernel/SlotView";
-import { useLegacyStates } from "./legacyStates";
 import type { IslandPage } from "./types";
 
 const openTranslator = () => {
@@ -98,7 +97,7 @@ export function IslandApp() {
     slots: collapsedSlots,
   });
   const collapsedIslandWidth = notchFittedWidth(textWidth, notch, settings.collapsedScale, alerts.size > 0);
-  useLegacyStates({ prompting: permissionPrompts.current !== null });
+  useIslandContributions("shell", "plugin-prompt", permissionPrompts.current ? [{ kind: "reveal", reveal: "always" }, { kind: "busy" }] : []);
   useIslandTucking({ settings, navigation });
 
 
