@@ -216,6 +216,10 @@
   - Tauri 命令 `set_translation_enabled` 删掉，翻译的快捷键和窗口由开关表起停：`builtins.json` 里 `translation` 的 `background` 是 `["shortcuts", "window"]`。
   - 窗口 `translation` 改成 `create: false`，插件开着时由 Rust 建，关掉时销毁；关着时 `toggle_translation_window` 等命令回「找不到翻译窗口」。
   - 关着时 `set_translation_shortcut`、`set_translation_selection_shortcut` 只记下键位，下次打开时用它注册。
+- 内置插件迁移，日历（E36.3.30，2026-11-15 起）：
+  - `fuyu-settings` 的 `calendarEnabled` 和 `translationEnabled` 一样改成开关表里 `calendar` 的镜像（`LEGACY_SWITCHES` 多一行），读写和对账同上；第一次迁时存的是 `false` 就关掉 `calendar`。
+  - 日历在 Rust 里没有后台：`builtins.json` 里 `calendar` 的 `background` 是 `[]`。关掉后岛不再调 `get_calendar_events`，日历页和设置 → 日历的分节撤掉；命令本身照旧在。
+  - 新服务 `calendar/v1`（`@fuyu/plugin-services`）：方法 `events({ refresh? })`（60 秒），返回 `{ events, problems, fetchedAt, fromMs, toMs, sourceCount }`，`events` 和 `get_calendar_events` 的一样，`problems` 是 `[{ sourceId, reason, message }]`（`reason` 是原来的错误码）；`refresh` 不是布尔或多给字段回 `bad-params`；方法 `sources()` 返回 `{ sources: [{ id, kind, name, host }] }`（`kind` 是 `ics` / `caldav`，不带账号、地址和订阅链接）。宿主里由 Rust 方法 `calendar.events`（参数 `{ refresh? }`）、`calendar.sources` 提供，窗口里由 `src/features/calendar/plugin/services.ts` 提供；日历关掉时回 `not-ready`。
 - 翻译「自定义接口」的地址交给 Rust（E36.3.20，2026-11-15 起）：
   - 新 Tauri 命令 `save_translation_custom_address`（参数 `address`，去掉首尾空白后存进凭据 `com.tixxin.fuyu.translation` / 用户名 `custom-address`；空串是删掉；超过 500 字节回 `translation.urlLong`；不检查格式，用的时候才查），没有读回的命令。
   - 用 `useTranslationSettings` 的窗口在打开时交一次 `fuyu-translation-settings` 的 `customBaseUrl`，改了再交（停 0.4 秒），所以旧版本填过的地址不用重填；localStorage 里的值照旧，翻译窗口自己请求时还传它。

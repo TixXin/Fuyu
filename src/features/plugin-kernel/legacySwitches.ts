@@ -3,6 +3,7 @@ import type { BuiltinPlugin } from "./api.ts";
 
 export const LEGACY_SWITCHES = {
   translationEnabled: "translation",
+  calendarEnabled: "calendar",
 } as const satisfies Partial<Record<keyof IslandSettings, string>>;
 
 export type LegacySwitch = keyof typeof LEGACY_SWITCHES;
