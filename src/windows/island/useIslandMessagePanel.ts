@@ -4,11 +4,10 @@ import type { MailMessage } from "../../features/messages/mail/api";
 import type { MessageSource } from "../../features/messages/messagePreview";
 import { runPluginNotificationAction } from "../../features/plugins/api";
 import type { useIslandNotices } from "./useIslandNotices";
-import type { IslandMode, IslandPage } from "./types";
 import { HOVER_HOLD_RETRY_MS } from "../../features/plugin-kernel/hoverHold";
 import { useHoverHold } from "../../features/plugin-kernel/useHoverHold";
 import { useOutsideClick } from "../../features/plugin-kernel/useOutsideClick";
-import { islandHost } from "./islandHost";
+import type { IslandHost } from "../../features/plugin-kernel/islandHost";
 
 export type PanelArrival = ArrivalMessage & { mail?: { message: MailMessage; account: string | null }; pluginId?: string };
 
@@ -18,14 +17,15 @@ type MessagePanelOptions = {
   enabled: boolean;
   durationMs: number;
   notices: PanelNotices;
-  mode: IslandMode;
-  page: IslandPage;
-  openIslandPage: (page: IslandPage) => void;
+  mode: string;
+  page: string;
+  openIslandPage: (page: "qq") => void;
   collapseIsland: () => void;
   onOpenMessages: (source: MessageSource) => void;
+  host: IslandHost;
 };
 
-export function useIslandMessagePanel({ enabled, durationMs, notices, mode, page, openIslandPage, collapseIsland, onOpenMessages }: MessagePanelOptions) {
+export function useIslandMessagePanel({ enabled, durationMs, notices, mode, page, openIslandPage, collapseIsland, onOpenMessages, host }: MessagePanelOptions) {
   const { preview, qqNotifications, wechatReminders, qqMail, pluginNotifications, setMessagePanelOpen } = notices;
   const [arrivals, setArrivals] = useState<PanelArrival[] | null>(null);
   const [height, setHeight] = useState(0);
@@ -33,7 +33,7 @@ export function useIslandMessagePanel({ enabled, durationMs, notices, mode, page
   const closeTimerRef = useRef<number | undefined>(undefined);
   const handledKeyRef = useRef<string | null>(null);
   const isOnMessages = mode === "expanded" && page === "qq";
-  const holdsOpen = useHoverHold(islandHost);
+  const holdsOpen = useHoverHold(host);
   const latest = useRef({ mode, isOnMessages, durationMs, collapseIsland, openIslandPage, holdsOpen });
   useLayoutEffect(() => {
     latest.current = { mode, isOnMessages, durationMs, collapseIsland, openIslandPage, holdsOpen };
@@ -108,7 +108,7 @@ export function useIslandMessagePanel({ enabled, durationMs, notices, mode, page
   }, [enabled, showing, close]);
   useEffect(() => () => window.clearTimeout(closeTimerRef.current), []);
 
-  useOutsideClick(showing && isOnMessages, close, islandHost);
+  useOutsideClick(showing && isOnMessages, close, host);
 
   const open = useCallback((message: PanelArrival) => {
     if (message.source === "plugin") {

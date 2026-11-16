@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useIslandNotices } from "./useIslandNotices";
 import { PluginPermissionPrompt } from "../../features/plugins/PluginPermissionPrompt";
+import { usePluginPermissionPrompts } from "../../features/plugins/usePluginPermissionPrompts";
 import { PluginContextMenus } from "../../features/plugins/PluginContextMenu";
 import { IslandPages } from "./IslandPages";
 import { useTranslation } from "../../i18n";
@@ -82,12 +83,13 @@ export function IslandApp() {
   const [storedSettings, setSettings] = useLegacySwitches(useIslandSettings(), { reconcile: true });
   const settings = useResolvedTheme(storedSettings);
   const game = useGameMode(settings, { mode, isTucked, collapseIsland, tuckIsland, revealIsland });
-  const notices = useIslandNotices(settings, { mode, isTucked, quiet: game.quiet });
-  const { qqNotifications, wechatReminders, qqMail, pluginNotifications, permissionPrompts, hasMessagePreview } = notices;
+  const notices = useIslandNotices({ mode, isTucked, quiet: game.quiet, revealOnMessage: settings.revealOnMessage });
+  const { qqNotifications, wechatReminders, qqMail, pluginNotifications, hasMessagePreview } = notices;
+  const permissionPrompts = usePluginPermissionPrompts();
   useFirstRunGuide(pluginNotifications);
   const demo = useOnboardingDemo();
   const { messageSource, setMessageSource, openMessages } = useMessageView(qqMail.closeReader, openIslandPage);
-  const banner = useIslandBanner({ messageNotice: settings.messageNotice, notices, mode, isTucked, quiet: game.quiet, onOpenMessages: openMessages });
+  const banner = useIslandBanner({ messageNotice: settings.messageNotice, notices, mode, isTucked, quiet: game.quiet, onOpenMessages: openMessages, host: islandHost });
   const showsMessage = hasMessagePreview || banner.showing;
   const decor = useIslandDecor();
   const gauges = useCollapsedGauges(mode !== "collapsed" || isTucked || game.quiet);
@@ -139,7 +141,7 @@ export function IslandApp() {
   const messagePanel = useIslandMessagePanel({
     enabled: settings.messageNotice === "panel" && !game.quiet,
     durationMs: settings.messagePanelSeconds * 1000,
-    notices, mode, page, openIslandPage, collapseIsland, onOpenMessages: openMessages,
+    notices, mode, page, openIslandPage, collapseIsland, onOpenMessages: openMessages, host: islandHost,
   });
   useLegacyPopups({ maxPanelHeight: settings.maxPanelHeight, arrivalsHeight: messagePanel.arrivals ? messagePanel.height : null });
   const { popup, expandedIslandWidth: popupWidth } = useIslandPopup(

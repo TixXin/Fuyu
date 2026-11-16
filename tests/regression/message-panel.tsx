@@ -7,6 +7,7 @@ import "../../src/windows/island/IslandApp";
 import { IslandShell } from "../../src/windows/island/IslandShell";
 import { useLatestMessagePreview } from "../../src/windows/island/useLatestMessagePreview";
 import { useIslandMessagePanel } from "../../src/windows/island/useIslandMessagePanel";
+import { islandHost } from "../../src/windows/island/islandHost";
 import { useIslandPopup } from "../../src/windows/island/useIslandPopup";
 import { getExpandedIslandHeight } from "../../src/windows/island/expandedHeight";
 import { messageArrivalsPanelHeight } from "../../src/windows/island/legacyPopups";
@@ -88,6 +89,7 @@ function Fixture() {
     notices: { preview, qqNotifications: qq, wechatReminders: wechat, qqMail, pluginNotifications: plugins, setMessagePanelOpen },
     mode, page, openIslandPage, collapseIsland,
     onOpenMessages: (source) => { openedSource = source; openIslandPage("qq"); },
+    host: islandHost,
   });
   const { popup, expandedIslandWidth } = useIslandPopup(mode, panel.arrivals !== null);
   const height = getExpandedIslandHeight({

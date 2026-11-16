@@ -7,6 +7,7 @@ import "../../src/windows/island/IslandApp";
 import { IslandShell } from "../../src/windows/island/IslandShell";
 import { useLatestMessagePreview } from "../../src/windows/island/useLatestMessagePreview";
 import { useIslandBanner } from "../../src/windows/island/useIslandBanner";
+import { islandHost } from "../../src/windows/island/islandHost";
 import { MessageBanner } from "../../src/features/messages/banner/MessageBanner";
 import { useQQNotifications } from "../../src/features/messages/qq-notifications/QQNotifications";
 import { useWeChatReminders } from "../../src/features/messages/wechat/WeChatReminders";
@@ -62,6 +63,7 @@ function Fixture() {
     notices: { preview, hasMessagePreview, qqNotifications: qq, wechatReminders: wechat, qqMail, pluginNotifications: plugins },
     mode: "collapsed", isTucked: false, quiet: false,
     onOpenMessages: (source) => { openedSource = source; },
+    host: islandHost,
   });
   useFixtureLines({ agents: null, status: { state: "idle", label: "AI Agent 空闲或已完成" }, todoTitle: "剩余3个待办" });
   return <div className="stage" style={{ "--collapsed-island-width": "300px" } as CSSProperties}>
