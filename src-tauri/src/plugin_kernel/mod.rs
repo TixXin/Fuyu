@@ -28,8 +28,12 @@ static PLUGINS_DIR: OnceLock<PathBuf> = OnceLock::new();
 static TRACKER: OnceLock<Mutex<safe_mode::Tracker>> = OnceLock::new();
 static STOPPING: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
-fn enabled(switch: Option<&str>) -> bool {
-    switch == Some("1")
+fn enabled(development: bool, switch: Option<&str>) -> bool {
+    if development {
+        switch != Some("0")
+    } else {
+        switch == Some("1")
+    }
 }
 
 fn host_script() -> PathBuf {
@@ -285,7 +289,7 @@ fn start(home: PathBuf, dir: PathBuf, files: HostFiles, origins: Vec<String>, de
 }
 
 pub(crate) fn init(app: &AppHandle) -> Result<(), String> {
-    if !enabled(std::env::var(SWITCH).ok().as_deref()) {
+    if !enabled(cfg!(debug_assertions), std::env::var(SWITCH).ok().as_deref()) {
         return Ok(());
     }
     if !cfg!(debug_assertions) {
@@ -345,7 +349,7 @@ fn connection_now(switched_on: bool, slot: Option<&Mutex<Option<Arc<Supervisor>>
 
 #[tauri::command]
 pub(crate) fn get_plugin_host_connection() -> HostConnection {
-    let connection = connection_now(enabled(std::env::var(SWITCH).ok().as_deref()), SUPERVISOR.get());
+    let connection = connection_now(enabled(cfg!(debug_assertions), std::env::var(SWITCH).ok().as_deref()), SUPERVISOR.get());
     HostConnection { safe_mode: tracker().and_then(|tracker| tracker.current()), ..connection }
 }
 

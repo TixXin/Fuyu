@@ -18,10 +18,18 @@ fn on_windows_the_host_gets_a_smaller_threadpool_unless_the_user_already_chose_o
 }
 
 #[test]
-fn the_host_only_starts_when_the_switch_is_exactly_1() {
-    assert!(enabled(Some("1")));
+fn a_development_build_starts_the_host_unless_the_switch_is_exactly_0() {
+    for on in [None, Some(""), Some("1"), Some("true"), Some(" 0")] {
+        assert!(enabled(true, on), "{on:?}");
+    }
+    assert!(!enabled(true, Some("0")));
+}
+
+#[test]
+fn a_release_build_starts_the_host_only_when_the_switch_is_exactly_1() {
+    assert!(enabled(false, Some("1")));
     for off in [None, Some(""), Some("0"), Some("true"), Some(" 1"), Some("yes")] {
-        assert!(!enabled(off), "{off:?}");
+        assert!(!enabled(false, off), "{off:?}");
     }
 }
 
