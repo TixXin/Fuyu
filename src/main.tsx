@@ -80,7 +80,7 @@ async function loadWindow(): Promise<ReactNode> {
     }
     default: {
       const [{ TodosGate }, { IslandApp }] = await Promise.all([
-        import("./windows/island/TodosGate"),
+        import("./features/todos/TodosGate"),
         import("./windows/island/IslandApp"),
       ]);
       return (

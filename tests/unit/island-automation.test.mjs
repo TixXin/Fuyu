@@ -4,10 +4,14 @@ import test from "node:test";
 import { runInNewContext } from "node:vm";
 import ts from "typescript";
 
-const source = ts.transpileModule(
-  readFileSync(new URL("../../src/windows/island/useIslandAutomation.ts", import.meta.url), "utf8"),
+const transpile = (path) => ts.transpileModule(
+  readFileSync(new URL(path, import.meta.url), "utf8"),
   { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } },
 ).outputText;
+const sources = {
+  automation: transpile("../../src/windows/island/useIslandAutomation.ts"),
+  rotation: transpile("../../src/features/todos/useTodoRotation.ts"),
+};
 
 function mount(name, initialArgs) {
   let args = initialArgs;
@@ -52,7 +56,7 @@ function mount(name, initialArgs) {
     },
   };
   const api = { listenIslandRevealRequested: () => Promise.resolve(() => {}) };
-  runInNewContext(source, { exports, require: (path) => (path === "./api" ? api : react), window: browserWindow, document });
+  runInNewContext(name === "useTodoRotation" ? sources.rotation : sources.automation, { exports, require: (path) => (path === "./api" ? api : react), window: browserWindow, document });
   function render(nextArgs = args) {
     args = nextArgs;
     do {

@@ -1,6 +1,8 @@
 import type { QuotaAlert } from "../../src/features/agent-status/quotaAlerts";
 import type { AgentSession } from "../../src/features/agent-status/session";
 import type { CollapsedMeeting } from "../../src/features/calendar/upcoming";
+import { meetingState } from "../../src/features/calendar/plugin/islandState";
+import { useMeetingContributions } from "../../src/features/calendar/plugin/meetingLines";
 import type { DeviceAlert } from "../../src/features/device-events/api";
 import { useMemo } from "react";
 import type { MediaState } from "../../src/features/media/api";
@@ -17,6 +19,8 @@ import type { IslandContribution } from "../../src/features/plugin-kernel/island
 import { useIslandContributions } from "../../src/features/plugin-kernel/useIslandContributions";
 import { useTranslation } from "../../src/i18n";
 import { levelState } from "../../src/features/system-levels/plugin/islandState";
+import { todoLine } from "../../src/features/todos/plugin/islandState";
+import { todoLineContributions } from "../../src/features/todos/plugin/todoLines";
 import { translationPeekState } from "../../src/features/translation/plugin/islandState";
 import { useLegacyAlerts } from "../../src/windows/island/legacyAlerts";
 import { useLegacyLines } from "../../src/windows/island/legacyLines";
@@ -62,14 +66,15 @@ export function useFixtureLines({ barText = true, agentSession = null, lyricLine
   if (media?.audioActive) mediaList.push({ kind: "hint", key: "media.audible" });
   if (media?.playbackStatus === "playing") mediaList.push({ kind: "hint", key: "media.playing" });
   useIslandContributions("builtin", "fixture.media", mediaList);
+  const todo = useMemo(() => ({ title: todoTitle, count: todoCount }), [todoTitle, todoCount]);
+  todoLine.useProvide(todo);
+  useIslandContributions("builtin", "fixture.todos", todoLineContributions(todo, t));
+  meetingState.useProvide(meeting);
+  useIslandContributions("calendar", "fixture.meeting", useMeetingContributions(meeting, barText));
   return useLegacyLines({
-    barText,
     agentSession,
     interjecting: false,
     agentIconWidth,
-    todoTitle,
-    todoCount,
-    meeting,
     screenshotPeek: null,
   });
 }

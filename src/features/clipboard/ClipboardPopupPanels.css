@@ -221,8 +221,8 @@
 }
 
 .clipboard-panel__action--selected {
-  background: rgba(var(--pop-accent), 0.18);
-  box-shadow: inset 0 0 0 1px rgba(var(--pop-accent), 0.35);
+  background: color-mix(in srgb, var(--pop-accent) 18%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--pop-accent) 35%, transparent);
 }
 
 .clipboard-panel__action--off {
@@ -334,7 +334,7 @@
   border: 0;
   border-radius: 10px;
   outline: none;
-  box-shadow: inset 0 0 0 1.5px rgba(var(--pop-accent), 0.6);
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--pop-accent) 60%, transparent);
   resize: none;
 }
 
@@ -360,8 +360,8 @@
 }
 
 .clipboard-editor__buttons .clipboard-editor__primary {
-  color: #1a0d14;
-  background: rgb(var(--pop-accent));
+  color: var(--color-on-accent, #06202c);
+  background: var(--pop-accent);
 }
 
 .clipboard-editor__buttons .clipboard-editor__primary kbd {
@@ -421,7 +421,7 @@
 }
 
 .clipboard-kind__format:hover {
-  background: rgba(var(--pop-accent), 0.15);
+  background: color-mix(in srgb, var(--pop-accent) 15%, transparent);
 }
 
 .clipboard-kind__format b {

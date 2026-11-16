@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { prepareTodoStore } from "../../features/todos/todoMigration";
+import { prepareTodoStore } from "./todoMigration";
 
 export function TodosGate({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);

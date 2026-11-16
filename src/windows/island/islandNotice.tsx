@@ -15,7 +15,6 @@ export type IslandNotice = { content: ReactNode; actions: ReactNode };
 
 type NoticeSources = {
   recording: RecordingNoticeState;
-  voice: IslandNotice | null;
   screenshotNotice: ScreenshotNoticeState;
   copyCard: ClipboardCopyCardState;
   firstHints: FirstHintsController;

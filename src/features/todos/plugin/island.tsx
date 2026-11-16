@@ -1,17 +1,18 @@
 import { defineSlot, type IslandPageMeta } from "../../plugin-kernel/slots";
 import { TodoIslandPage } from "../island/TodoIslandPage";
-import type { useTodos } from "../useTodos";
+import { todosIsland } from "./islandState";
 import { islandPage } from "./page.ts";
 
 type TodoPageProps = {
-  notebookProps: ReturnType<typeof useTodos>["notebookProps"];
   settings: { enableTodoReorder: boolean };
   todoScrollStartRows: number;
 };
 
 const pageSlot = defineSlot<TodoPageProps, IslandPageMeta<Readonly<Record<string, unknown>>>>("island.page/v1");
 
-function TodoPage({ notebookProps, settings, todoScrollStartRows }: TodoPageProps) {
+function TodoPage({ settings, todoScrollStartRows }: TodoPageProps) {
+  const notebookProps = todosIsland.use()?.notebookProps;
+  if (!notebookProps) return null;
   return (
     <TodoIslandPage
       {...notebookProps}

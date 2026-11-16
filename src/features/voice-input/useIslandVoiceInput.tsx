@@ -1,26 +1,24 @@
 import { useEffect, useMemo } from "react";
-import { openDevicePrivacySettings } from "../../features/device-use/api";
-import { configureVoiceInput } from "../../features/voice-input/api";
-import { appendToNote } from "../../features/voice-input/settings";
-import { useVoiceInput } from "../../features/voice-input/useVoiceInput";
-import { useVoiceInputSettings } from "../../features/voice-input/useVoiceInputSettings";
-import { VoiceInputNotice, VoiceInputNoticeActions, type VoiceDraftActions } from "../../features/voice-input/VoiceInputNotice";
+import { openDevicePrivacySettings } from "../device-use/api";
+import type { TodosIsland } from "../todos/plugin/islandState";
 import { useTranslation } from "../../i18n";
 import { getErrorMessage } from "../../utils/error";
-import { openSettingsWindow } from "../settings/api";
-import { takeIslandClickFocus } from "./api";
+import { configureVoiceInput } from "./api";
+import { appendToNote } from "./settings";
+import { useVoiceInput } from "./useVoiceInput";
+import { useVoiceInputSettings } from "./useVoiceInputSettings";
+import { VoiceInputNotice, VoiceInputNoticeActions, type VoiceDraftActions } from "./VoiceInputNotice";
 
-type Notebook = {
-  currentDate: string;
-  dailyNote: string;
-  onDailyNoteChange: (note: string) => void;
+type Host = {
+  openSettings: (section: "voiceInput") => void;
+  takeClickFocus: () => Promise<void>;
 };
 
 function logError(error: unknown) {
   console.error("Voice input failed", getErrorMessage(error));
 }
 
-export function useIslandVoiceInput(addTodoOn: (title: string, date: string) => void, notebook: Notebook) {
+export function useIslandVoiceInput(todos: TodosIsland | null, { openSettings, takeClickFocus }: Host) {
   const t = useTranslation().voiceInput;
   const [settings] = useVoiceInputSettings();
   const voice = useVoiceInput();
@@ -30,26 +28,29 @@ export function useIslandVoiceInput(addTodoOn: (title: string, date: string) => 
   }, [settings.enabled, settings.shortcut]);
 
   const { draft, notify } = voice;
-  const { currentDate, dailyNote, onDailyNoteChange } = notebook;
+  const addTodoOn = todos?.addTodoOn;
+  const currentDate = todos?.notebookProps.currentDate ?? "";
+  const dailyNote = todos?.notebookProps.dailyNote ?? "";
+  const onDailyNoteChange = todos?.notebookProps.onDailyNoteChange;
   const actions = useMemo<VoiceDraftActions>(() => ({
     saveTodo: () => {
       const title = draft.trim();
-      if (!title) return;
+      if (!title || !addTodoOn) return;
       addTodoOn(title, currentDate);
       notify(t.savedTodo);
     },
     saveNote: () => {
-      if (!draft.trim()) return;
+      if (!draft.trim() || !onDailyNoteChange) return;
       onDailyNoteChange(appendToNote(dailyNote, draft));
       notify(t.savedNote);
     },
     copy: () => {
       navigator.clipboard.writeText(draft).then(() => notify(t.copied)).catch(logError);
     },
-    openSettings: () => openSettingsWindow("voiceInput"),
+    openSettings: () => openSettings("voiceInput"),
     openPrivacy: () => { void openDevicePrivacySettings("microphone").catch(logError); },
-    requestFocus: () => { void takeIslandClickFocus().catch(logError); },
-  }), [addTodoOn, currentDate, dailyNote, draft, notify, onDailyNoteChange, t]);
+    requestFocus: () => { void takeClickFocus().catch(logError); },
+  }), [addTodoOn, currentDate, dailyNote, draft, notify, onDailyNoteChange, openSettings, t, takeClickFocus]);
 
   if (!voice.view) return null;
   return {

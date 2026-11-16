@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import type { IslandSettings } from "../../lib/settings/types";
-import type { TodoItem } from "../../features/todos/types";
-import { useTodoRotation } from "./useIslandAutomation";
+import type { TodoItem } from "./types";
+import { useTodoRotation } from "./useTodoRotation";
 
 export function useCollapsedTodo(
   todos: TodoItem[],

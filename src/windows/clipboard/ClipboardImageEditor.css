@@ -198,7 +198,3 @@
 .clipboard-image-editor .clipboard-editor__buttons {
   flex: none;
 }
-
-.clipboard-image-editor .clipboard-editor__buttons .clipboard-editor__primary {
-  background: var(--pop-accent);
-}

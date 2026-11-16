@@ -151,7 +151,6 @@ export function IslandShell({
     agentVisualState,
     agentSessionCount: features.agents ? activeAgentSessionCount : null,
     unreadCount,
-    todoCount: lineSources.todoCount,
     shelfCount,
     };
   useLegacySide({ ...sideSources, hasMail: qqMail.preview !== null });
