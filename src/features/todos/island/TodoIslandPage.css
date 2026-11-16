@@ -105,7 +105,7 @@
   height: 100%;
   background: var(--color-light-working);
   border-radius: inherit;
-  transition: width 240ms ease;
+  transition: width var(--motion-medium) ease;
 }
 
 .todo-island__save--saved {
