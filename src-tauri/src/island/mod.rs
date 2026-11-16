@@ -59,6 +59,13 @@ pub(crate) use follow::start_monitor_follow_loop;
 pub(crate) use notch::set_dev_notch;
 pub(crate) use notch::start_notch_watch;
 pub(crate) use passthrough::start_cursor_passthrough_loop;
+#[cfg(target_os = "macos")]
+pub(crate) use passthrough::hide_transient_hints;
+
+#[cfg(windows)]
+pub(crate) fn hide_transient_hints(_app: &AppHandle) -> bool {
+    false
+}
 pub(crate) use state::{record_dragged_position, IslandPosition, IslandWindowState};
 
 pub(crate) const WINDOW_LABEL: &str = "main";

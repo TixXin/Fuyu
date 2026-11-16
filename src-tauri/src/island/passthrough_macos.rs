@@ -4,7 +4,7 @@ use std::{
     thread,
     time::{Duration, Instant},
 };
-use tauri::{Emitter, WebviewWindow};
+use tauri::{AppHandle, Emitter, WebviewWindow};
 
 use super::{
     banner_hit::{banner_rect, ISLAND_BANNER_HOVER_CHANGED_EVENT},
@@ -18,11 +18,14 @@ const ISLAND_HOVER_CHANGED_EVENT: &str = "island-hover-changed";
 const ISLAND_HOLD_CHANGED_EVENT: &str = "island-hold-changed";
 const ISLAND_MOVE_ARMED_CHANGED_EVENT: &str = "island-move-armed-changed";
 const ISLAND_CURSOR_MOVED_EVENT: &str = "island-cursor-moved";
+const ISLAND_HIDE_HINTS_EVENT: &str = "island-hide-hints";
 const CURSOR_EVENT_EVERY_TICKS: u32 = 3;
 const TICK: Duration = Duration::from_millis(12);
 const MODIFIER_ARM_DELAY: Duration = Duration::from_millis(200);
 
 static CURSOR_TRACKING: AtomicBool = AtomicBool::new(false);
+static HIDE_REQUESTED: AtomicBool = AtomicBool::new(false);
+static HINTS_POSSIBLE: AtomicBool = AtomicBool::new(false);
 
 #[derive(Debug, Clone, Copy, PartialEq, Serialize)]
 struct CursorPoint {
@@ -43,12 +46,21 @@ struct Pointer {
 #[derive(Debug, Default)]
 struct ModifierHold {
     since: Option<Instant>,
+    blocked: bool,
 }
 
 impl ModifierHold {
+    fn block(&mut self) {
+        self.blocked = true;
+    }
+
     fn update(&mut self, only_control: bool, now: Instant) -> bool {
         if !only_control {
             self.since = None;
+            self.blocked = false;
+            return false;
+        }
+        if self.blocked {
             return false;
         }
         let since = *self.since.get_or_insert(now);
@@ -59,6 +71,15 @@ impl ModifierHold {
 #[tauri::command]
 pub fn set_island_cursor_tracking(enabled: bool) {
     CURSOR_TRACKING.store(enabled, Ordering::Relaxed);
+}
+
+pub(crate) fn hide_transient_hints(app: &AppHandle) -> bool {
+    HIDE_REQUESTED.store(true, Ordering::SeqCst);
+    let Ok(window) = super::main_window(app) else {
+        return false;
+    };
+    let _ = window.emit(ISLAND_HIDE_HINTS_EVENT, ());
+    HINTS_POSSIBLE.load(Ordering::SeqCst)
 }
 
 fn pointer(window: &WebviewWindow) -> Option<Pointer> {
@@ -135,6 +156,9 @@ pub(crate) fn start_cursor_passthrough_loop(window: WebviewWindow) {
                 let _ = window.emit(ISLAND_BANNER_HOVER_CHANGED_EVENT, is_on_banner);
             }
 
+            if HIDE_REQUESTED.swap(false, Ordering::SeqCst) {
+                modifier_hold.block();
+            }
             let modifier = modifier_hold.update(input::is_only_control_key_down(), Instant::now());
             let state = read_window_state();
             let move_armed = is_inside && modifier && !state.is_tucked;
@@ -147,6 +171,8 @@ pub(crate) fn start_cursor_passthrough_loop(window: WebviewWindow) {
                 was_held = held;
                 let _ = window.emit(ISLAND_HOLD_CHANGED_EVENT, held);
             }
+
+            HINTS_POSSIBLE.store(is_inside || was_held, Ordering::SeqCst);
 
             tick = tick.wrapping_add(1);
             if !CURSOR_TRACKING.load(Ordering::Relaxed) {
@@ -188,5 +214,19 @@ mod tests {
         assert!(!hold.update(true, start + Duration::from_millis(320)));
         assert!(!hold.update(true, start + Duration::from_millis(500)));
         assert!(hold.update(true, start + Duration::from_millis(520)));
+    }
+
+    #[test]
+    fn a_blocked_hold_waits_for_control_to_be_released() {
+        let start = Instant::now();
+        let mut hold = ModifierHold::default();
+        hold.update(true, start);
+        assert!(hold.update(true, start + Duration::from_millis(300)));
+        hold.block();
+        assert!(!hold.update(true, start + Duration::from_millis(310)));
+        assert!(!hold.update(true, start + Duration::from_millis(900)));
+        assert!(!hold.update(false, start + Duration::from_millis(910)));
+        hold.update(true, start + Duration::from_millis(920));
+        assert!(hold.update(true, start + Duration::from_millis(1120)));
     }
 }

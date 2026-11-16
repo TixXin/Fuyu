@@ -97,7 +97,8 @@ fn label(index: usize) -> String {
 
 fn open(app: &AppHandle, mode: Mode) -> Result<(), String> {
     super::capture::ensure_access()?;
-    if crate::clipboard_history::show_popup_in_screenshot(app) {
+    let hints_hidden = crate::island::hide_transient_hints(app);
+    if crate::clipboard_history::show_popup_in_screenshot(app) || hints_hidden {
         thread::sleep(CAPTURE_SETTLE);
     }
     let monitors = app.available_monitors().map_err(|error| error.to_string())?;
