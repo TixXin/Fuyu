@@ -58,7 +58,7 @@
 | 开发文件夹 | 任意位置 | 在数据目录 `plugins-v3/` 里时按相对路径；在外面时 `dev/<id>/<相对路径>` | 外面时 2 层起（`id` 是 `@作用域/名字` 时 3 层） |
 | 内置插件 | 内置插件清单的 `root` | `builtin/<id>/<相对路径>` | 2 |
 
-- 已安装的包在数据目录里，Rust 现在的 `fuyu-plugin` 协议就能提供，不用改。`dev/` 和 `builtin/` 两个前缀宿主已经按这个登记，Rust 一侧的映射还没做（开发文件夹要宿主把它的路径告诉 Rust，或 Rust 读 `plugins.yml`），等插槽接入时一起做。
+- 窗口能读什么由 Rust 的 `fuyu-plugin` 协议按白名单定（2026-11-15 起，E36.3.22，规则见 [v3-boundary.md](v3-boundary.md)「窗口能读的文件」）：已安装的包（`packages/`）不用登记；数据目录里的开发文件夹和直接写模块的插件，要宿主登记过界面文件，它所在的顶层目录才放行；`data/`、`plugins.yml*`、状态文件一律 404。`dev/` 和 `builtin/` 两个前缀宿主已经按这个登记，Rust 一侧的映射还没做，现在是 404；做的时候也走同一份白名单（宿主经协议 2 的 `clients` 通知已经把路径告诉 Rust，映射还要知道每个 id 对应的目录），等插槽接入时一起做。
 - E36.5.4 的 `fuyu-plugin build` 原来按「包根最多 2 层」算 `../../__shared/react.js`，已安装的包是 3 层，所以它已改成根路径 `/__shared/react.js`，和层数无关；根路径在 Mac 的 `fuyu-plugin://localhost/` 和 Windows 的 `http://fuyu-plugin.localhost/` 上能不能 import **必须真机验**（E36.3.9 的待人工验收）：它是第 5 阶段 `fuyu-plugin build` 默认值的前提，不通就得改回相对路径（已安装的包 `packageDepth` 是 3）。
 
 ## 还没做的

@@ -1,4 +1,5 @@
 mod availability;
+mod host;
 mod plugin_view;
 mod store;
 #[cfg(test)]
@@ -17,7 +18,7 @@ use std::{
     },
     time::{SystemTime, UNIX_EPOCH},
 };
-use tauri::{AppHandle, Manager, WebviewWindow};
+use tauri::{AppHandle, Emitter, Manager, WebviewWindow};
 
 #[cfg(windows)]
 use crate::win32;
@@ -27,11 +28,22 @@ use thumbnail::Thumbnails;
 
 pub(crate) use plugin_view::{plugin_shelf_add, plugin_shelf_list, plugin_shelf_remove};
 
+pub(crate) const PLUGIN_ID: &str = "file-shelf";
+
 static FILE_SHELF: OnceLock<FileShelfService> = OnceLock::new();
+
+type Notify = Box<dyn Fn() + Send + Sync>;
+
+type Announce = Box<dyn Fn(usize) + Send + Sync>;
+
+static NOTIFY_ISLAND: OnceLock<Notify> = OnceLock::new();
+
+static ANNOUNCE_CHANGE: OnceLock<Announce> = OnceLock::new();
 
 static NEXT_ID: AtomicU64 = AtomicU64::new(0);
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(test, derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct FileShelfItem {
     id: String,
@@ -40,14 +52,17 @@ pub struct FileShelfItem {
     #[serde(default)]
     is_dir: bool,
     #[serde(default)]
+    #[cfg_attr(test, ts(type = "number"))]
     size: u64,
     #[serde(default)]
+    #[cfg_attr(test, ts(type = "number"))]
     added_at: i64,
     #[serde(default)]
     pinned: bool,
 }
 
 #[derive(Debug, Clone, Serialize)]
+#[cfg_attr(test, derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct FileShelfEntry {
     #[serde(flatten)]
@@ -57,6 +72,7 @@ pub struct FileShelfEntry {
 }
 
 #[derive(Debug, Clone, Serialize)]
+#[cfg_attr(test, derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct FileShelfSnapshot {
     items: Vec<FileShelfEntry>,
@@ -100,7 +116,7 @@ impl FileShelfService {
         if next != *items {
             save_items(&self.path, &next)?;
             *items = next.clone();
-            crate::plugin_host::publish_event("shelf.changed", serde_json::json!({ "count": items.len() }));
+            announce_change(items.len());
         }
         drop(items);
         Ok(snapshot_of(&next, presence))
@@ -163,7 +179,26 @@ pub fn init(app: &AppHandle) -> Result<(), String> {
         availability: Availability::default(),
         thumbnails: Thumbnails::default(),
     });
+    let _ = ANNOUNCE_CHANGE.set(Box::new(|count| {
+        crate::plugin_host::publish_event("shelf.changed", serde_json::json!({ "count": count }));
+    }));
+    let island = app.clone();
+    let _ = NOTIFY_ISLAND.set(Box::new(move || {
+        let _ = island.emit_to(crate::island::WINDOW_LABEL, plugin_view::CHANGED_EVENT, ());
+    }));
     Ok(())
+}
+
+fn announce_change(count: usize) {
+    if let Some(announce) = ANNOUNCE_CHANGE.get() {
+        announce(count);
+    }
+}
+
+fn notify_island() {
+    if let Some(notify) = NOTIFY_ISLAND.get() {
+        notify();
+    }
 }
 
 fn service() -> Result<&'static FileShelfService, String> {
@@ -215,13 +250,21 @@ pub async fn set_file_shelf_options(
     service.update(|items| items)
 }
 
-#[tauri::command]
-pub async fn add_file_shelf_paths(paths: Vec<String>) -> Result<FileShelfSnapshot, String> {
+pub(crate) fn is_enabled() -> bool {
+    crate::plugin_kernel::builtins::is_enabled(PLUGIN_ID)
+}
+
+fn add_paths(paths: &[String]) -> Result<FileShelfSnapshot, String> {
     let now = current_unix_millis();
     let added: Vec<FileShelfItem> = paths.iter().filter_map(|path| describe(path, now)).collect();
     let service = service()?;
     let max_items = service.options().max_items;
     service.update(|items| insert_items(items, added, max_items))
+}
+
+#[tauri::command]
+pub async fn add_file_shelf_paths(paths: Vec<String>) -> Result<FileShelfSnapshot, String> {
+    add_paths(&paths)
 }
 
 #[tauri::command]

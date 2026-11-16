@@ -5,8 +5,8 @@ use objc2_core_graphics::{
     CGPreflightPostEventAccess, CGRequestPostEventAccess, CGScrollEventUnit, CGWarpMouseCursorPosition,
 };
 
-pub(crate) fn is_option_key_down() -> bool {
-    NSEvent::modifierFlags_class().contains(NSEventModifierFlags::Option)
+pub(crate) fn is_control_key_down() -> bool {
+    NSEvent::modifierFlags_class().contains(NSEventModifierFlags::Control)
 }
 
 pub(crate) fn is_left_button_down() -> bool {

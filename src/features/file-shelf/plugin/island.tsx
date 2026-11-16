@@ -4,6 +4,7 @@ import { defineSlot, type IslandCollapsedMeta, type IslandPageMeta } from "../..
 import { FileShelfPanel } from "../FileShelfPanel";
 import type { useFileShelf } from "../useFileShelf";
 import { islandPage } from "./page.ts";
+import { OWNER } from "./owner.ts";
 
 type ShelfPageProps = {
   fileShelf: ReturnType<typeof useFileShelf>;
@@ -17,7 +18,7 @@ function ShelfPage({ fileShelf, isShelfDropping, settings }: ShelfPageProps) {
   return <FileShelfPanel shelf={fileShelf} isDropTarget={isShelfDropping} revealOnDoubleClick={settings.shelfDoubleClick === "reveal"} />;
 }
 
-pageSlot.add({ ...islandPage, component: ShelfPage });
+pageSlot.add({ ...islandPage, component: ShelfPage }, OWNER);
 
 type CollapsedContext = {
   t: Translations;
@@ -36,4 +37,4 @@ function ShelfItem({ t, shelfCount, onOpenPage }: CollapsedContext) {
   );
 }
 
-collapsedSlot.add({ id: "shelf", order: 50, shown: ({ shelfCount }) => shelfCount !== null && shelfCount > 0, component: ShelfItem });
+collapsedSlot.add({ id: "shelf", order: 50, shown: ({ shelfCount }) => shelfCount !== null && shelfCount > 0, component: ShelfItem }, OWNER);

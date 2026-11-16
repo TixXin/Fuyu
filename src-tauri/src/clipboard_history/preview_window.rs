@@ -1,22 +1,29 @@
 use std::{
-    sync::atomic::{AtomicU64, Ordering},
+    sync::{
+        atomic::{AtomicU64, Ordering},
+        Mutex, PoisonError,
+    },
     thread,
     time::Duration,
 };
 
-use serde::Serialize;
-use tauri::{AppHandle, Emitter, Manager, PhysicalPosition, PhysicalSize, Position, Size, WebviewWindow};
+use serde::{Deserialize, Serialize};
+use tauri::{AppHandle, Emitter, Manager, PhysicalPosition, PhysicalSize, WebviewWindow};
 
 use super::popup_place::WINDOW_LABEL as POPUP_LABEL;
+use super::preview_size::{self, Edge, PreviewSize, SizeRequest};
+use crate::island::screen;
 
 pub(crate) const WINDOW_LABEL: &str = "clipboard-preview";
 const OPENED_EVENT: &str = "clipboard-preview-opened";
 const CLOSING_EVENT: &str = "clipboard-preview-closing";
-const WIDTH: f64 = 420.0;
+const LAYOUT_EVENT: &str = "clipboard-preview-layout";
 const GAP: f64 = 8.0;
 const EXIT: Duration = Duration::from_millis(150);
 
 static GENERATION: AtomicU64 = AtomicU64::new(0);
+static RESTORE: Mutex<Option<PreviewSize>> = Mutex::new(None);
+static DRAG: Mutex<Option<Drag>> = Mutex::new(None);
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "lowercase")]
@@ -31,6 +38,34 @@ pub(super) struct Rect {
     pub(super) top: i32,
     pub(super) right: i32,
     pub(super) bottom: i32,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct Layout {
+    side: Side,
+    size: PreviewSize,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub(crate) enum DragPhase {
+    Start,
+    Move,
+    End,
+}
+
+#[derive(Debug, Clone, Copy)]
+struct Drag {
+    start: Rect,
+    area: Rect,
+    scale: f64,
+}
+
+struct Screen {
+    anchor: Rect,
+    area: Rect,
+    scale: f64,
 }
 
 pub(super) fn place_beside(anchor: Rect, size: (i32, i32), area: Rect, gap: i32) -> (i32, i32, Side) {
@@ -55,45 +90,79 @@ fn preview_window(app: &AppHandle) -> Result<WebviewWindow, String> {
         .ok_or_else(|| "The clipboard preview window is missing.".to_string())
 }
 
+fn popup_window(app: &AppHandle) -> Result<WebviewWindow, String> {
+    app.get_webview_window(POPUP_LABEL)
+        .ok_or_else(|| "The clipboard window is missing.".to_string())
+}
+
+fn window_rect(window: &WebviewWindow) -> Result<Rect, String> {
+    let position = screen::window_position(window)?;
+    let size = screen::window_size(window)?;
+    Ok(Rect { left: position.x, top: position.y, right: position.x + size.width as i32, bottom: position.y + size.height as i32 })
+}
+
+fn popup_screen(app: &AppHandle) -> Result<Screen, String> {
+    let popup = popup_window(app)?;
+    let anchor = window_rect(&popup)?;
+    let monitor = popup.current_monitor().ok().flatten();
+    let scale = monitor.as_ref().map(screen::monitor_scale).unwrap_or(1.0);
+    let area = monitor.map_or(Rect { left: i32::MIN / 2, top: i32::MIN / 2, right: i32::MAX / 2, bottom: i32::MAX / 2 }, |monitor| {
+        let (left, top, width, height) = screen::monitor_work_rect(&monitor);
+        Rect { left, top, right: left + width, bottom: top + height }
+    });
+    Ok(Screen { anchor, area, scale })
+}
+
+fn preview_settings() -> preview_size::PreviewSettings {
+    super::service()
+        .and_then(|service| service.snapshot())
+        .map(|snapshot| snapshot.settings.preview)
+        .unwrap_or_default()
+}
+
+fn set_bounds(window: &WebviewWindow, rect: Rect) {
+    let width = (rect.right - rect.left).max(1) as u32;
+    let height = (rect.bottom - rect.top).max(1) as u32;
+    let _ = screen::set_window_size(window, PhysicalSize::new(width, height));
+    let _ = screen::set_window_position(window, PhysicalPosition::new(rect.left, rect.top));
+}
+
+fn arrange(app: &AppHandle, preview: &WebviewWindow) -> Result<Layout, String> {
+    let settings = preview_settings();
+    let screen = popup_screen(app)?;
+    let gap = (GAP * screen.scale).round() as i32;
+    let (rect, side) = preview_size::frame(settings.size(), settings.custom(), screen.anchor, screen.area, screen.scale, gap);
+    set_bounds(preview, rect);
+    let layout = Layout { side, size: settings.size() };
+    let _ = preview.emit_to(WINDOW_LABEL, LAYOUT_EVENT, layout);
+    Ok(layout)
+}
+
 fn show(app: &AppHandle) -> Result<Side, String> {
     GENERATION.fetch_add(1, Ordering::SeqCst);
-    let popup = app
-        .get_webview_window(POPUP_LABEL)
-        .ok_or_else(|| "The clipboard window is missing.".to_string())?;
     let preview = preview_window(app)?;
-    let position = popup.outer_position().map_err(|error| error.to_string())?;
-    let size = popup.outer_size().map_err(|error| error.to_string())?;
-    let anchor = Rect {
-        left: position.x,
-        top: position.y,
-        right: position.x + size.width as i32,
-        bottom: position.y + size.height as i32,
-    };
-    let monitor = popup.current_monitor().ok().flatten();
-    let scale = monitor.as_ref().map(|monitor| monitor.scale_factor()).unwrap_or(1.0);
-    let area = monitor.map_or(Rect { left: i32::MIN / 2, top: i32::MIN / 2, right: i32::MAX / 2, bottom: i32::MAX / 2 }, |monitor| {
-        let work = monitor.work_area();
-        Rect {
-            left: work.position.x,
-            top: work.position.y,
-            right: work.position.x + work.size.width as i32,
-            bottom: work.position.y + work.size.height as i32,
-        }
-    });
-    let width = (WIDTH * scale).round() as i32;
-    let height = size.height as i32;
-    let (x, y, side) = place_beside(anchor, (width, height), area, (GAP * scale).round() as i32);
     let hidden = super::service()
         .and_then(|service| service.snapshot())
         .map(|snapshot| snapshot.settings.hide_from_capture)
         .unwrap_or(true);
     let _ = preview.set_content_protected(hidden);
-    let _ = preview.set_size(Size::Physical(PhysicalSize::new(width.max(1) as u32, height.max(1) as u32)));
-    let _ = preview.set_position(Position::Physical(PhysicalPosition::new(x, y)));
+    let layout = arrange(app, &preview)?;
     show_without_focus(&preview)?;
-    let _ = preview.emit_to(WINDOW_LABEL, OPENED_EVENT, side);
-    Ok(side)
+    keep_below_popup(app, &preview);
+    let _ = preview.emit_to(WINDOW_LABEL, OPENED_EVENT, layout.side);
+    Ok(layout.side)
 }
+
+#[cfg(windows)]
+fn keep_below_popup(app: &AppHandle, preview: &WebviewWindow) {
+    let (Ok(popup), Ok(below)) = (popup_window(app), preview.hwnd()) else { return };
+    if let Ok(above) = popup.hwnd() {
+        crate::win32::window::place_below(below, above);
+    }
+}
+
+#[cfg(not(windows))]
+fn keep_below_popup(_app: &AppHandle, _preview: &WebviewWindow) {}
 
 #[cfg(windows)]
 fn show_without_focus(window: &WebviewWindow) -> Result<(), String> {
@@ -103,11 +172,18 @@ fn show_without_focus(window: &WebviewWindow) -> Result<(), String> {
 }
 
 #[cfg(target_os = "macos")]
+const MAC_LEVELS_ABOVE_MENU_BAR: i64 = 3;
+
+#[cfg(target_os = "macos")]
 fn show_without_focus(window: &WebviewWindow) -> Result<(), String> {
     let app = window.app_handle().clone();
     let fallback = window.clone();
     window
         .run_on_main_thread(move || {
+            use tauri_nspanel::{ManagerExt, PanelLevel};
+            if let Ok(panel) = app.get_webview_panel(WINDOW_LABEL) {
+                panel.set_level(PanelLevel::MainMenu.value() + MAC_LEVELS_ABOVE_MENU_BAR);
+            }
             if !crate::macos::island_panel::show_panel_without_key(&app, WINDOW_LABEL) {
                 let _ = fallback.show();
             }
@@ -154,6 +230,63 @@ pub(crate) fn hide(app: &AppHandle, animate: bool) {
     });
 }
 
+fn restore_size(settings: &preview_size::PreviewSettings) -> PreviewSize {
+    let remembered = *RESTORE.lock().unwrap_or_else(PoisonError::into_inner);
+    remembered.unwrap_or(if settings.custom().is_some() { PreviewSize::Custom } else { PreviewSize::Standard })
+}
+
+fn save_preview(change: impl FnOnce(&mut preview_size::PreviewSettings)) -> Result<(), String> {
+    let service = super::service()?;
+    let mut settings = service.snapshot()?.settings;
+    let current = settings.preview.size();
+    change(&mut settings.preview);
+    if current != PreviewSize::Full && settings.preview.size() != current {
+        *RESTORE.lock().unwrap_or_else(PoisonError::into_inner) = Some(current);
+    }
+    service.set_settings(settings).map(|_| ())
+}
+
+fn rearrange(app: &AppHandle) -> Result<Layout, String> {
+    let preview = preview_window(app)?;
+    if !preview.is_visible().unwrap_or(false) {
+        let settings = preview_settings();
+        return Ok(Layout { side: Side::Right, size: settings.size() });
+    }
+    arrange(app, &preview)
+}
+
+fn resize(app: &AppHandle, edge: Edge, delta: (f64, f64), phase: DragPhase) -> Result<(), String> {
+    let preview = preview_window(app)?;
+    let mut slot = DRAG.lock().unwrap_or_else(PoisonError::into_inner);
+    if phase == DragPhase::Start {
+        let screen = popup_screen(app)?;
+        *slot = Some(Drag { start: window_rect(&preview)?, area: screen.area, scale: screen.scale });
+    }
+    let Some(drag) = *slot else { return Ok(()) };
+    let scaled = |value: f64| (value * drag.scale).round() as i32;
+    let min = (scaled(preview_size::MIN_WIDTH), scaled(preview_size::MIN_HEIGHT));
+    let rect = preview_size::resized(drag.start, edge, (scaled(delta.0), scaled(delta.1)), min, drag.area);
+    set_bounds(&preview, rect);
+    if phase != DragPhase::End {
+        return Ok(());
+    }
+    *slot = None;
+    drop(slot);
+    let logical = |value: i32| (f64::from(value) / drag.scale).round() as u32;
+    save_preview(|settings| settings.set_custom(logical(rect.right - rect.left), logical(rect.bottom - rect.top)))?;
+    rearrange(app).map(|_| ())
+}
+
+fn has_pointer(app: &AppHandle) -> bool {
+    let Ok(preview) = preview_window(app) else { return false };
+    if !preview.is_visible().unwrap_or(false) {
+        return false;
+    }
+    let (Ok(rect), Some((x, y))) = (window_rect(&preview), screen::cursor_position()) else { return false };
+    let (x, y) = (x.round() as i32, y.round() as i32);
+    x >= rect.left && x < rect.right && y >= rect.top && y < rect.bottom
+}
+
 #[tauri::command]
 pub async fn show_clipboard_preview(app: AppHandle) -> Result<Side, String> {
     show(&app)
@@ -163,6 +296,24 @@ pub async fn show_clipboard_preview(app: AppHandle) -> Result<Side, String> {
 pub async fn hide_clipboard_preview(app: AppHandle) -> Result<(), String> {
     hide(&app, true);
     Ok(())
+}
+
+#[tauri::command]
+pub async fn set_clipboard_preview_size(app: AppHandle, size: SizeRequest) -> Result<Layout, String> {
+    let settings = preview_settings();
+    let next = preview_size::requested(settings.size(), size, restore_size(&settings));
+    save_preview(|settings| settings.set_size(next))?;
+    rearrange(&app)
+}
+
+#[tauri::command]
+pub async fn resize_clipboard_preview(app: AppHandle, edge: Edge, dx: f64, dy: f64, phase: DragPhase) -> Result<(), String> {
+    resize(&app, edge, (dx, dy), phase)
+}
+
+#[tauri::command]
+pub async fn clipboard_preview_has_pointer(app: AppHandle) -> bool {
+    has_pointer(&app)
 }
 
 #[cfg(test)]

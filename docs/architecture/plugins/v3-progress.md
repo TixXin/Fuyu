@@ -161,10 +161,18 @@ Windows 的测法：同上面 Windows 的构建和身份；`Process.Start` 拉�
 | 3 | 同上（不看 CRLF） | macOS | | |
 | 3 | E36.3.28（正式构建）：Ctrl+Alt+K 展开岛并打开计时器页；设置 → 快捷键 → 计时器改成别的组合、关掉、再打开都即时生效，被别的程序占用时有提示；插件页关掉计时器后按 Ctrl+Alt+K 没反应，计时器页、收起条小块、休息提醒都不见，打开后都回来；开发版和正式版同时开时正式版让出快捷键；设置 → 行为 → 系统提示里关掉「到点响一声」后到点不响；用旧版 `plugins.json`（`focusd.timer` 开着、声音关、快捷键改过）启动新版，`plugins.yml` 里出现 timer 的 config，开关和设置照旧，没开过 `focusd.timer` 的老用户升级后计时器默认开着；待办到期提醒照常弹在岛上，计时器关掉时不弹 | Windows | | |
 | 3 | E36.3.28：同上（快捷键在 `macos/hotkeys` 注册和撤销），另看没有辅助功能权限时的表现 | macOS | | |
+| 3 | E36.3.20：旧版本填过自定义翻译地址的，升级后打开翻译窗口或设置，凭据 `com.tixxin.fuyu.translation` 里出现 `custom-address`，值和设置里一样；开第 3 版宿主，用开发插件调 `translator/v1` 的 `translate({ engine: { engine: "custom" } })` 能翻译，改地址后不重启马上生效；清空地址后回 `no-address`，错误里没有地址和密钥；翻译窗口和剪贴板 AI 改写选自定义接口照常能用 | Windows | | |
+| 3 | 同上，另看第一次保存地址时钥匙串不弹确认框 | macOS | | |
 | 3 | E36.3.52：开发版不设 `FUYU_PLUGINS_V3`（PowerShell 里先 `Remove-Item Env:FUYU_PLUGINS_V3`）跑 `pnpm tauri dev`，设置 → 插件（第 3 版）宿主「已连接」；设 `FUYU_PLUGINS_V3=0` 再起，显示「宿主没开」和新的提示文字。`pnpm build:exe` 打出的是正式版，仍要 `=1` 才开 | Windows | | |
 | 3 | 同上 | macOS | | |
 | 3 | E36.3.29：插件页关掉翻译后，Ctrl+Shift+F、Ctrl+Alt+T 立刻失效，翻译窗口销毁，进程里少一个 translation-hotkeys 线程；再打开时快捷键是自己设的键位，窗口位置正常。翻译关着时重启，开机不注册快捷键、不建翻译窗口。旧版里关了快捷翻译的，升级后仍是关的，插件页和概览卡片一致。剪贴板的 AI 改写照常边出边显示，翻译关掉时提示「快捷翻译已关闭」。设了 `FUYU_WEBVIEW_LOW_MEMORY=1` 时，重建的翻译窗口照样进低内存 | Windows | | |
 | 3 | E36.3.29：同上前四项（快捷键是 ⌃⇧F、⌃⌥T）；重建的翻译窗口仍是不抢焦点的面板，全屏应用里也能弹出，反复开关十次不崩；翻译关着时，截图里点「翻译」没反应、不报错 | macOS | | |
+| 3 | E36.3.30：插件页关掉日历后，日历按钮和日历页、设置里的日历分类、收起态的倒计时都不见，打开后都回来；旧版里关了日历的，升级后仍是关的；设 `FUYU_PLUGINS_V3=1` 时 `calendar/v1` 返回的日程和日历页一致，来源里没有账号和链接，关掉日历时回 not-ready | Windows | | |
+| 3 | E36.3.30：同上，另看关掉再打开日历后节假日的「休 / 班」标记仍在 | macOS | | |
+| 3 | E36.3.22：`install-demo` 后开开发版，hello 演示照常出现；岛的开发者工具里 `fetch('http://fuyu-plugin.localhost/plugins.yml')`、`/data/…`、`/safe-mode.json` 都是 404，`/hello/island.js` 是 200；宿主重启后演示插件的界面照常加载 | Windows | | |
+| 3 | 同上，地址换成 `fuyu-plugin://localhost/…` | macOS | | |
+| 3 | E36.3.32：插件页关掉文件中转后，顶部按钮和页面、收起条和侧栏的数量、设置里的分类都消失，拖文件不再收进中转；再打开后都回来，列表还在。旧版里关了文件中转的，升级后仍是关的，插件页和概览卡片一致。设 `FUYU_PLUGINS_V3=1` 时经 `file-shelf/v1` 的 `add` 加文件，岛上马上多一项；`list` 和岛上一致；关掉后回 not-ready。关着时第 2 版插件的 `shelf.add` 回 503 | Windows | | |
+| 3 | E36.3.32：同上，另看关掉再打开后，从中转拖到 Finder 照常，拖出后按设置移除 | macOS | | |
 
 ## 等你定的事
 

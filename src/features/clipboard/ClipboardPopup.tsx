@@ -145,14 +145,14 @@ export function ClipboardPopup({ items, snippets, openCount, wide, ownsWindow = 
     const merged = mergedText(picked, separator);
     if (merged) pasteText(merged);
   };
-  const peek = useSpacePeek(() => setMode((current) => (current === "look" ? "list" : current)));
+  const peek = useSpacePeek(() => setMode((current) => (current === "look" ? "list" : current)), Boolean(onPeek));
   const { cancel: cancelPeek } = peek;
   useEffect(() => {
     if (mode !== "look") cancelPeek();
   }, [mode, cancelPeek]);
 
   const peekItem = mode === "look" ? item : undefined;
-  const peekHolding = peek.holding;
+  const { holding: peekHolding, visited: peekStay } = peek;
   useEffect(() => {
     if (!onPeek) return;
     if (!peekItem) {
@@ -160,8 +160,8 @@ export function ClipboardPopup({ items, snippets, openCount, wide, ownsWindow = 
       return;
     }
     const prefetch = [shownItems[current - 1], shownItems[current + 1]].filter((entry) => entry?.kind === "image" || (entry?.kind === "files" && entry.files?.length === 1 && Boolean(entry.fileImage))).map((entry) => entry.id);
-    onPeek({ item: peekItem, holding: peekHolding, prefetch });
-  }, [onPeek, peekItem, peekHolding, shownItems, current]);
+    onPeek({ item: peekItem, holding: peekHolding, prefetch, stay: peekStay });
+  }, [onPeek, peekItem, peekHolding, peekStay, shownItems, current]);
 
   const toggleRecord = () => (pausedNow(capture, now) ? handlers.resume() : handlers.pause(null));
 
@@ -169,15 +169,7 @@ export function ClipboardPopup({ items, snippets, openCount, wide, ownsWindow = 
     const key = event.key;
     const ctrl = isPrimaryKey(event) && !event.altKey;
     if (mode === "look") {
-      if (key === " " && event.repeat) {
-        event.preventDefault();
-        return;
-      }
-      if (key === "Escape" || key === " ") {
-        event.preventDefault();
-        setMode("list");
-        return;
-      }
+      if (peek.lookKey(event)) return event.preventDefault();
     } else if (mode !== "list") {
       return;
     }

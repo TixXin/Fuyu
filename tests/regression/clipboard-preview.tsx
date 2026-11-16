@@ -8,6 +8,7 @@ import { I18nProvider, LOCALE_STORAGE_KEY } from "../../src/i18n";
 import { ClipboardPreviewWindow } from "../../src/windows/clipboard/ClipboardPreviewWindow";
 import type { ClipboardHistoryItem } from "../../src/features/clipboard/api";
 import type { ClipboardPreviewPayload } from "../../src/features/clipboard/api";
+import { checkStay, pointer, renderStayFrame } from "./clipboard-preview-stay";
 
 const automated = new URLSearchParams(location.search).has("test");
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: automated });
@@ -15,9 +16,18 @@ localStorage.setItem(LOCALE_STORAGE_KEY, "zh-CN");
 const calls: string[] = [];
 mockIPC((command, args) => {
   calls.push(`${command}:${JSON.stringify(args ?? {})}`);
+  if (command === "clipboard_preview_has_pointer") return pointer.inside;
+  if (command === "set_clipboard_preview_size") return { side: "right", size: "standard" };
   return null;
 }, { shouldMockEvents: true });
 mockConvertFileSrc("windows");
+type Invoke = (command: string, args?: unknown, options?: unknown) => Promise<unknown>;
+const internals = (window as unknown as { __TAURI_INTERNALS__: { invoke: Invoke } }).__TAURI_INTERNALS__;
+const mockedInvoke = internals.invoke;
+internals.invoke = (command, args, options) => {
+  if (command === "plugin:event|emit_to") calls.push(`${command}:${JSON.stringify(args ?? {})}`);
+  return mockedInvoke(command, args, options);
+};
 
 const now = Date.now();
 const thumb = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Crect width='40' height='40' fill='%232a3350'/%3E%3C/svg%3E";
@@ -32,6 +42,7 @@ const root = createRoot(document.getElementById("frame")!);
 const render = () => root.render(<StrictMode><I18nProvider><ClipboardPreviewWindow /></I18nProvider></StrictMode>);
 if (automated) await act(async () => render());
 else render();
+await renderStayFrame(document.getElementById("popup")!, [TEXT, IMAGE]);
 
 const messages: string[] = [];
 function check(condition: unknown, label: string) {
@@ -47,6 +58,31 @@ const send = (item: ClipboardHistoryItem, extra: Partial<ClipboardPreviewPayload
   act(async () => { await emit("clipboard-preview-item", { item, holding: false, linkPreview: false, prefetch: [], ...extra }); });
 const open = (side: "left" | "right") => act(async () => { await emit("clipboard-preview-opened", side); });
 const windowClass = () => $(".clipboard-preview-window")?.className ?? "";
+const hint = () => $(".clipboard-preview__hint")?.textContent ?? "";
+const reports = () => calls.filter((call) => call.startsWith("plugin:event|emit_to") && call.includes("clipboard-preview-report"));
+const click = (element: HTMLElement | null) => act(async () => { element!.click(); });
+
+async function checkToolbar() {
+  const sizes = [...document.querySelectorAll<HTMLButtonElement>(".clipboard-preview__size")];
+  check(sizes.map((button) => button.textContent).join() === "标准,中等,全屏" && sizes[0].getAttribute("aria-pressed") === "true", "顶栏有标准、中等、全屏三档，标准是按下的");
+  await click(sizes[1]);
+  check(calls.includes(`set_clipboard_preview_size:${JSON.stringify({ size: "medium" })}`), "点「中等」让 Rust 换档");
+  await act(async () => { await emit("clipboard-preview-layout", { side: "right", size: "medium" }); });
+  check(sizes[1].getAttribute("aria-pressed") === "true" && windowClass().includes("--medium"), "Rust 换好档后按钮跟着变");
+  await act(async () => { $(".clipboard-preview__hint")!.dispatchEvent(new MouseEvent("dblclick", { bubbles: true })); });
+  check(calls.includes(`set_clipboard_preview_size:${JSON.stringify({ size: "toggle-full" })}`), "双击顶栏在全屏和上次大小之间切换");
+  check(document.querySelectorAll(".clipboard-preview__edge").length === 8, "四条边四个角都能拖着改大小");
+
+  const pin = $<HTMLButtonElement>(".clipboard-preview__icon")!;
+  await click(pin);
+  check(pin.getAttribute("aria-pressed") === "true" && hint().includes("Esc") && reports().some((call) => call.includes('"pinned":true')), "点图钉：钉住，告诉剪贴板窗口，提示改成「Esc 已钉住」");
+  await open("right");
+  check($<HTMLButtonElement>(".clipboard-preview__icon")!.getAttribute("aria-pressed") === "false", "重新打开预览时图钉复位");
+  await act(async () => { $(".clipboard-preview-window")!.dispatchEvent(new PointerEvent("pointerover", { bubbles: true })); });
+  check(reports().some((call) => call.includes('"inside":true')), "鼠标进预览告诉剪贴板窗口");
+  await click(document.querySelectorAll<HTMLButtonElement>(".clipboard-preview__icon")[1]);
+  check(reports().some((call) => call.includes('"type":"close"')), "点 × 让剪贴板窗口关预览");
+}
 
 async function runChecks() {
   try {
@@ -57,12 +93,14 @@ async function runChecks() {
     check(windowClass().includes("--right") && $(".clipboard-preview") !== before, "放在剪贴板窗口右边；每次打开换一个新面板，从头播放滑入");
     check(getComputedStyle($(".clipboard-preview")!).animationName.includes("clipboard-preview-slide"), "进场是 CSS 动画，不等动画帧回调：动画没跑时面板也照样看得见");
     check($(".clipboard-popup__pane-body")?.textContent === TEXT.text, "内容是这条的全文");
-    check($(".clipboard-preview__close")?.textContent?.includes("关闭"), "右上角写「空格 关闭」");
+    check(hint().includes("空格") && hint().includes("关闭"), "顶栏左边写「空格 关闭」");
 
     await send(IMAGE, { holding: true });
     const full = $<HTMLImageElement>(".clipboard-picture__full");
     check(full?.src === "http://fuyu-clip.localhost/i1" && full.decoding === "async" && $(".clipboard-picture__thumb"), "图片：先显示缩略图，原图按记录 id 直接读、后台解码");
-    check($(".clipboard-preview__close")?.textContent?.includes("松开关闭"), "按住空格时提示「松开关闭」");
+    check(hint().includes("松开关闭"), "按住空格时提示「松开关闭」");
+    await send(IMAGE, { holding: true, stay: true });
+    check(hint().includes("松开后保留"), "按住时鼠标进过预览：提示「松开后保留」");
     await act(async () => { full!.dispatchEvent(new Event("load")); });
     check($(".clipboard-picture--ready") && !$(".clipboard-picture__thumb"), "原图解码好后淡入，缩略图拿掉");
 
@@ -71,6 +109,8 @@ async function runChecks() {
     await open("left");
     check(windowClass().includes("--left") && !windowClass().includes("--out") && $(".clipboard-picture__full"), "右边放不下时放在左边；关到一半又打开时退场取消，内容还在");
 
+    await checkToolbar();
+    await checkStay(check, calls);
     results.textContent = `${messages.join("\n")}\n\n全部 ${messages.length} 项检查通过。`;
     results.dataset.result = "passed";
   } catch (error) {

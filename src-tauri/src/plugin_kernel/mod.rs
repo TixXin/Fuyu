@@ -275,6 +275,7 @@ fn start(home: PathBuf, dir: PathBuf, files: HostFiles, origins: Vec<String>, de
     let serve = std::sync::Arc::new(serve);
     let node = choose_node(&home)?;
     let supervisor = Supervisor::start_serving(spec_for(node.path, dir, files, origins, development), containment::shared(), Timing::default(), Some(serve), |event| {
+        protocol::observe(&event);
         track(&event);
         report(event);
     })?;

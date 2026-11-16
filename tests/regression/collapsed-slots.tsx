@@ -20,6 +20,7 @@ import type { KaraokeLine } from "../../src/features/media/lyrics/useCurrentLyri
 import { karaokeWords } from "../../src/features/media/lyrics/lrc";
 import { karaokeLook } from "../../src/features/media/lyrics/lyricsSettings";
 import { normalizeSettings } from "../../src/lib/settings/settings";
+import { useFixtureLines } from "./islandLines";
 
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
 const automated = new URLSearchParams(location.search).has("test");
@@ -65,17 +66,17 @@ function Fixture() {
   const qqMail = useMail(true);
   const preview = useLatestMessagePreview(qq, wechat, qqMail, NO_PLUGIN_NOTIFICATIONS);
   return <div className="stage" style={{ "--collapsed-island-width": "300px" } as CSSProperties}>
-    <IslandShell deviceUse={{ camera: [], microphone: [] }} qqNotifications={qq} wechatReminders={wechat} qqMail={qqMail} pluginNotifications={NO_PLUGIN_NOTIFICATIONS} preview={preview}
+    <IslandShell lineSources={useFixtureLines({ todoTitle: state.task, todoCount: state.todoCount ?? null, agentSession: state.agentTitle ? { provider: "codex", label: "Codex", title: state.agentTitle } : null, lyricLine: state.lyric ? { text: state.lyric, index: 3, longest: state.lyric, ...(state.karaoke && { karaoke: state.karaoke }) } : null })} deviceUse={{ camera: [], microphone: [] }} qqNotifications={qq} wechatReminders={wechat} qqMail={qqMail} pluginNotifications={NO_PLUGIN_NOTIFICATIONS} preview={preview}
       mode="collapsed" page="todo" isTucked={false} isDetached={true} showTitle={false}
-      showCollapsedText={true} collapsedTaskTitle={state.task} collapsedTodoCount={state.todoCount ?? null} agentSession={state.agentTitle ? { provider: "codex", label: "Codex", title: state.agentTitle } : null} activeAgentSessionCount={state.count}
-      lyricLine={state.lyric ? { text: state.lyric, index: 3, longest: state.lyric, ...(state.karaoke && { karaoke: state.karaoke }) } : null}
+      showCollapsedText={true} activeAgentSessionCount={state.count}
+     
       appearanceMode="classic" nativeGlassState="disabled" agentVisualState="idle" agentStatusLabel="AI Agent 空闲或已完成"
       mediaState={UNAVAILABLE_MEDIA}
       features={{ todo: true, music: false, clipboard: true, shelf: true, qq: false, wechat: false, qqMail: false, agents: state.agents, translation: false, calendar: false, screenshots: false, timer: false }}
       shelfCount={null} collapsedSlots={state.slots}
       onOpenPage={(page) => { openedPage = page; }} onOpenMessages={() => {}}
       onPageChange={() => {}} onWindowDragStart={() => {}} onCollapse={() => {}}
-      onResetPosition={() => {}} minimizesToTray onMinimize={() => {}} onOpenSettings={() => {}} onOpenTranslator={() => {}} translationPeek={null} onOpenTranslationPeek={() => {}} onTuck={() => {}} onReveal={() => {}} pageDigitModifiers="Alt" hoverSwitchPage={false} hoverSwitchDelayMs={0}>
+      onResetPosition={() => {}} minimizesToTray onMinimize={() => {}} onOpenSettings={() => {}} onOpenTranslator={() => {}} onTuck={() => {}} onReveal={() => {}} pageDigitModifiers="Alt" hoverSwitchPage={false} hoverSwitchDelayMs={0}>
       <span>待办清单</span>
     </IslandShell>
   </div>;

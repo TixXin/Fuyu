@@ -31,6 +31,7 @@ export function useNativeLayout(settings: IslandSettings) {
         collapsedScale: nextSettings.collapsedScale,
         expandedScale: nextSettings.expandedScale,
         ...islandFormLayout(nextSettings),
+        dragGrid: nextSettings.dragGrid,
         animate,
       });
     } catch (error) {
@@ -82,7 +83,7 @@ export function useNativeLayout(settings: IslandSettings) {
   useEffect(() => {
     scheduleNativeLayout(settings);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [settings.marginY, settings.menuBarPlacement, settings.islandForm, scheduleNativeLayout]);
+  }, [settings.marginY, settings.menuBarPlacement, settings.islandForm, settings.dragGrid, scheduleNativeLayout]);
 
   useEffect(() => {
     const syncState = layoutSync.current;

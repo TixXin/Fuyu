@@ -78,6 +78,26 @@ test("the host says it is ready with its plugins, and answers ping and status", 
   assert.equal((await next((message) => message.id === 2)).result.length, 2);
 });
 
+test("the host tells Rust which window code it registered before it says it is ready", async () => {
+  const files = {
+    "painter/host.mjs": `export const name = "painter";
+export const inject = ["clients"];
+export function apply(ctx) {
+  ctx.clients.add("island", new URL("./island.js", import.meta.url).href);
+  ctx.clients.add("settings", new URL("./island.js", import.meta.url).href);
+}
+`,
+    "painter/island.js": "export default () => {};\n",
+  };
+  const { next } = launch([{ id: "painter", name: "./painter/host.mjs" }], files);
+  const ready = next((message) => message.method === "ready");
+  const clients = next((message) => message.method === "clients");
+  assert.deepEqual((await ready).params.plugins.map((entry) => entry.state), ["running"]);
+  const before = await next((message) => message.method === "clients" || message.method === "ready", 0);
+  assert.equal(before.method, "clients", "the list reaches Rust before ready");
+  assert.deepEqual((await clients).params, { paths: ["painter/island.js"] });
+});
+
 test("a built-in plugin calls Rust over stdin and stdout, sees progress, and hears Rust's events", async () => {
   const { next, send } = launch([], ASKS, [{ id: "asks", kind: "builtin", file: "host.mjs" }]);
   const echo = await next((message) => message.method === "app.echo");

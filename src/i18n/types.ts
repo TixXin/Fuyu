@@ -25,6 +25,7 @@ import type { SettingsText } from "./sections/settings/index";
 import type { OnboardingText } from "./sections/onboarding";
 import type { ErrorsText } from "./sections/errors";
 import type { VoiceInputText } from "./sections/voiceInput";
+import type { TrayMenuText } from "./sections/trayMenu";
 
 export type LocaleCode = "zh-CN" | "en";
 
@@ -69,4 +70,5 @@ export type Translations = {
   onboarding: OnboardingText;
   errors: ErrorsText;
   voiceInput: VoiceInputText;
+  trayMenu: TrayMenuText;
 };

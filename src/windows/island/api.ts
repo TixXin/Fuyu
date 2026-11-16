@@ -91,7 +91,7 @@ export function listenIslandResize(handler: (delta: IslandResizeDelta) => void):
 
 export const ISLAND_POSITION_CHANGED_EVENT = "island-position-changed";
 
-export type IslandLayout = { collapsedScale: number; expandedScale: number; marginY: number; underMenuBar: boolean; fitNotch: boolean; animate?: boolean };
+export type IslandLayout = { collapsedScale: number; expandedScale: number; marginY: number; underMenuBar: boolean; fitNotch: boolean; animate?: boolean; dragGrid?: boolean };
 
 export type IslandInteraction = {
   mode: IslandMode;
@@ -225,4 +225,10 @@ export function setIslandSideBubbleRect(rect: IslandBannerRect | null) {
 
 export function listenIslandDragEdgeHint(handler: (hint: DragEdgeHint | null) => void): Promise<UnlistenFn> {
   return listen<DragEdgeHint | null>(ISLAND_DRAG_EDGE_HINT_EVENT, ({ payload }) => handler(payload));
+}
+
+export const TRAY_MENU_OPEN_PAGE_EVENT = "tray-menu-open-page";
+
+export function listenTrayMenuOpenPage(handler: (page: string) => void) {
+  return listen<string>(TRAY_MENU_OPEN_PAGE_EVENT, ({ payload }) => handler(payload));
 }

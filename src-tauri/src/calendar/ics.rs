@@ -8,11 +8,14 @@ use super::meeting_link::meeting_link;
 const MAX_OCCURRENCES: u16 = 500;
 
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
+#[cfg_attr(test, derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct CalendarEvent {
     pub(super) uid: String,
     pub(super) title: String,
+    #[cfg_attr(test, ts(type = "number"))]
     pub(super) start_ms: i64,
+    #[cfg_attr(test, ts(type = "number"))]
     pub(super) end_ms: i64,
     pub(super) all_day: bool,
     pub(super) location: Option<String>,

@@ -64,8 +64,8 @@ export interface IslandCollapsedCenterMeta<Context = unknown> {
 }
 
 export interface IslandAlertMeta<Sources = unknown> {
-  active: (sources: Sources) => boolean;
   trailing?: ComponentType<Sources>;
+  popup: ComponentType<Sources>;
 }
 
 export interface IslandNoticeMeta<Sources = unknown> {

@@ -29,6 +29,7 @@
 | `ready` | `{ protocol, pid, node, plugins, safe, windows: { port, token } }`，`protocol` 是 `2`，`plugins` 是每个插件的状态，`safe` 是安全模式（`null`、`third-party` 或 `minimal`），`windows` 是给窗口连的本机 WebSocket（见下一节） | 内核和配置里的插件都加载完（成功或失败都算） |
 | `log` | `{ at, type, name, text }`，只有 `error` 和 `warn` | 内核记了错误或警告，例如插件启动失败 |
 | `fatal` | `{ message }` | 内核本身起不来；发完宿主以退出码 1 退出 |
+| `clients` | `{ paths }`，去重后的界面文件路径（和窗口拿到的 `clients` 列表里的 `path` 相同） | `ready` 之前一次，之后界面登记每变一次就发一次，每次整份换掉。Rust 的 `fuyu-plugin` 协议按它决定窗口能读哪些文件（见下面的「窗口能读的文件」）。宿主重启、退出时 Rust 清空。2026-11-15 起，E36.3.22 |
 | `cancel` | `{ id }` | 宿主不再等它发出的第 `id` 个调用（插件停用、宿主这边超时）。还没开始的不跑；正在跑的处理函数用 `call.cancelled()` 能看到，结果丢掉、不回答 |
 
 ### Rust 发给宿主的请求
@@ -215,6 +216,8 @@ Rust 每次拉起宿主（包括自动重启）都重新决定带不带 `--safe`
 ### 插件的界面文件
 
 插件的宿主部分用 `ctx.clients.add(<窗口名>, <文件的 URL>)` 登记它在某个窗口里的界面代码（插件停用时自动撤掉）。宿主把文件换成插件目录下的相对路径，路径解析成真实路径后不在插件目录里的拒绝（插件启动失败），版本是文件的大小加修改时间。窗口按 `fuyu-plugin://localhost/<路径>?v=<版本>` 加载：先用 `HEAD` 确认文件在、类型是 JavaScript，再 `import()`；版本变了就换地址重新加载，旧的先撤掉。插件的界面代码默认导出一个插件（函数，或带 `apply` 的对象），用 `ctx.slots.add(<插槽名>, { id, order, component, ...元数据 })` 往插槽里放组件（插槽和规则见下面「插槽」），插件停用时这些也自动撤掉。插件的两部分之间：宿主部分用 `ctx.clients.handle(<方法>, fn)` 登记给自己窗口调的方法、`ctx.clients.publish(<主题>, data)` 推消息；窗口部分用 `ctx.host.call(<方法>, params)` 调、`ctx.host.on(<主题>, fn)` 收。窗口部分只能调到、收到它自己那个插件的（按 `plugins.yml` 里的 id 对应），这些登记都跟着插件撤掉。示例在 `packages/plugin-base/examples/hello/`。插件代码里对 `react`、`react/jsx-runtime` 的引用要改写成 `../__shared/react.js` 这样的相对路径（第 0 阶段两个系统都验证过），由程序自带的转接模块提供同一份 React。
+
+**窗口能读的文件**（2026-11-15 起，E36.3.22）：`fuyu-plugin://localhost/` 是白名单，不是整个数据目录。窗口只能读到：程序自带的 `__shared/` 转接模块；`packages/` 下已安装的包；宿主经 `clients` 通知登记过的界面文件所在的顶层目录（例如演示插件登记 `hello/island.js`，整个 `hello/` 都能读），登记的是数据目录根上的单个文件时只放行那一个。`data/`（每个插件的 `ctx.dataDir`）、`plugins.yml` 和它的备份、`safe-mode.json`、`bisect.json`，以及没登记的路径一律 404，就算宿主登记了也不给；`dev/`、`builtin/` 两个前缀的映射还没做，也是 404。路径按符号链接解析后再查一遍，链到 `data/` 或数据目录外面都拒绝。插件的界面部分要读自己的数据，用 `ctx.host.call` 让自己的宿主部分读，不直接读文件。回应头照旧是 `Access-Control-Allow-Origin: *`（评估见 [E36.3.22](../../tasks/0-archive/E/E36.3.22.md) 的备注）。
 
 ### 服务
 

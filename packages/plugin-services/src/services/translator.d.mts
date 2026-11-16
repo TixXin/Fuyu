@@ -7,11 +7,11 @@ export type Direction = "auto" | "zh-en" | "en-zh";
 export type RewriteTask = "summarize" | "polish" | "grammar" | "translate" | "custom";
 
 export type EngineChoice = {
-  engine: Exclude<TranslationEngine, "custom">;
+  engine: TranslationEngine;
   model?: string | null;
 };
 
-export type TranslatorErrorCode = "no-secret" | "engine-failed" | "empty-text";
+export type TranslatorErrorCode = "no-secret" | "no-address" | "engine-failed" | "empty-text";
 
 export type TranslatorMethods = {
   translate(params: { text: string; direction: Direction; engine?: EngineChoice }): { text: string; engine: TranslationEngine };

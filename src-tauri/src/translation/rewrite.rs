@@ -3,7 +3,7 @@ use serde_json::json;
 use tauri::ipc::Channel;
 
 use super::request::{complete, Pieces, Translated};
-use super::{host_provider, MAX_CHARACTERS};
+use super::MAX_CHARACTERS;
 use crate::user_error::UserError;
 
 const MAX_PROMPT_CHARACTERS: usize = 2_000;
@@ -27,7 +27,6 @@ pub async fn rewrite_text(
 
 #[host_service("translator.rewrite", timeout_ms = 120_000)]
 async fn rewrite_for_host(text: String, task: String, prompt: Option<String>, provider: Option<String>, model: Option<String>, call: &Call) -> Result<Translated, UserError> {
-    let provider = host_provider(provider)?;
     let send = |piece: String| call.progress(json!({ "piece": piece }));
     rewrite(text, task, prompt, provider, None, model, &send).await
 }

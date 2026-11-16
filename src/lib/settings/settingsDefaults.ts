@@ -29,6 +29,7 @@ export const DEFAULT_SETTINGS: IslandSettings = {
   maxPanelHeight: DEFAULT_MAX_PANEL_HEIGHT,
   panelWidth: DEFAULT_PANEL_WIDTH,
   collapsedWidthExtra: 0,
+  dragGrid: true,
   ...DEFAULT_AGENT_SETTINGS,
   taskTextColor: DEFAULT_TASK_TEXT_COLOR,
   pulseColor: "#3ae489",
