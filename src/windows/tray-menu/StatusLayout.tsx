@@ -1,6 +1,7 @@
 import { Coffee } from "lucide-react";
 import { useTranslation } from "../../i18n";
 import { AgentBlock } from "./AgentBlock";
+import { columns, shownFeatures } from "./builtinEntries";
 import { FeatureButton } from "./FeatureButton";
 import { IslandButton } from "./IslandButton";
 import { MediaBlock } from "./MediaBlock";
@@ -13,6 +14,7 @@ import type { TrayCardProps } from "./types";
 export function StatusLayout(props: TrayCardProps) {
   const text = useTranslation().trayMenu;
   const { data, handlers } = props;
+  const features = shownFeatures(data.off, ["screenshot", "translate"]);
   const calm = !data.media && !data.meeting && !data.agents;
   return (
     <>
@@ -31,10 +33,9 @@ export function StatusLayout(props: TrayCardProps) {
           </span>
         </div>
       ) : null}
-      <div className="tray-card__pills">
+      <div className="tray-card__pills" style={columns(features.length + 1)}>
         <IslandButton variant="pill" {...props} />
-        <FeatureButton feature="screenshot" variant="pill" showShortcut={false} {...props} />
-        <FeatureButton feature="translate" variant="pill" showShortcut={false} {...props} />
+        {features.map((feature) => <FeatureButton key={feature} feature={feature} variant="pill" showShortcut={false} {...props} />)}
       </div>
       <TrayCardFooter handlers={handlers} lead={<TraySwitch label={text.dnd} checked={data.dnd} onToggle={handlers.onDnd} />} />
     </>

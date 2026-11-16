@@ -44,20 +44,22 @@ async function renderFrames() {
 
 function checkFrames() {
   const lines = document.querySelectorAll("#lines .drag-grid__line");
-  check(lines.length === 4, "九宫格是横竖各两条线");
+  check(lines.length === 2, "只有横竖两条中线，把屏幕分成四格");
   const box = $("#lines")!.getBoundingClientRect();
-  const v1 = $("#lines .drag-grid__line--v1")!.getBoundingClientRect();
-  const h2 = $("#lines .drag-grid__line--h2")!.getBoundingClientRect();
-  check(Math.abs(v1.left - box.left - box.width / 3) < 1.5 && Math.abs(h2.top - box.top - (box.height * 2) / 3) < 1.5, "线在三分之一和三分之二处");
-  const style = getComputedStyle($("#lines .drag-grid__line--v1")!);
-  check(style.borderLeftStyle === "dashed" && style.borderLeftWidth === "1px", "线是 1px 虚线");
+  const v = $("#lines .drag-grid__line--v")!.getBoundingClientRect();
+  const h = $("#lines .drag-grid__line--h")!.getBoundingClientRect();
+  check(Math.abs(v.left + v.width / 2 - box.left - box.width / 2) < 1 && Math.abs(h.top + h.height / 2 - box.top - box.height / 2) < 1, "两条线在工作区正中");
+  check(v.width === 2 && h.height === 2, "线宽 2px");
+  const style = getComputedStyle($("#lines .drag-grid__line--v")!);
   const probe = document.createElement("span");
   probe.style.color = "var(--color-accent)";
   document.body.append(probe);
   const accent = getComputedStyle(probe).color;
   probe.remove();
-  check(style.borderLeftColor === accent, "线用主题色");
-  check(Number(style.opacity) < 1, "线是淡的");
+  check(style.backgroundImage.startsWith("repeating-linear-gradient") && style.backgroundImage.includes(accent), "主题色虚线");
+  check(Number(style.opacity) < 1, "平常的线比吸住的那段淡");
+  const snapStyle = getComputedStyle($("#top .drag-grid__snap--top")!);
+  check(snapStyle.backgroundColor === accent && Number(snapStyle.opacity) === 1 && $("#top .drag-grid__snap--top")!.getBoundingClientRect().width > 2, "吸住的那段是实心、更粗、不透明");
   check(getComputedStyle($("#lines .drag-grid")!).pointerEvents === "none", "网格不接鼠标");
   const snap = $("#top .drag-grid__snap--top")!.getBoundingClientRect();
   const topBox = $("#top")!.getBoundingClientRect();
@@ -98,5 +100,5 @@ async function runChecks() {
 if (automated) await runChecks();
 else {
   await renderFrames();
-  document.getElementById("results")!.textContent = "演示：拖动时的九宫格辅助线。加 ?test=1 运行检查。";
+  document.getElementById("results")!.textContent = "演示：拖动时的中线辅助线。加 ?test=1 运行检查。";
 }

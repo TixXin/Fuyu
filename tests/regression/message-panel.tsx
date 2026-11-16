@@ -9,6 +9,7 @@ import { useLatestMessagePreview } from "../../src/windows/island/useLatestMessa
 import { useIslandMessagePanel } from "../../src/windows/island/useIslandMessagePanel";
 import { useIslandPopup } from "../../src/windows/island/useIslandPopup";
 import { getExpandedIslandHeight } from "../../src/windows/island/expandedHeight";
+import { messageArrivalsPanelHeight } from "../../src/windows/island/legacyPopups";
 import type { IslandMode, IslandPage } from "../../src/windows/island/types";
 import { MessageArrivalsPanel } from "../../src/features/messages/arrivals/MessageArrivalsPanel";
 import { useQQNotifications } from "../../src/features/messages/qq-notifications/QQNotifications";
@@ -98,8 +99,8 @@ function Fixture() {
   });
   const { popup, expandedIslandWidth } = useIslandPopup(mode, panel.arrivals !== null);
   const height = getExpandedIslandHeight({
-    page, maxPanelHeight: 490,
-    messageArrivalsHeight: panel.arrivals ? panel.height : undefined,
+    maxPanelHeight: 490,
+    panel: page === "qq" && panel.arrivals ? { height: messageArrivalsPanelHeight(panel.height, 490) } : undefined,
     popup,
   });
   return <div className="stage" style={{ "--collapsed-island-width": "300px", "--expanded-island-height": `${height}px`, "--expanded-island-width": `${expandedIslandWidth}px` } as CSSProperties}>

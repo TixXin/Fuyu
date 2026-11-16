@@ -91,6 +91,7 @@ export function ClipboardPreviewWindow() {
           <div key={item.id} className="clipboard-preview__content">
             <ClipboardPopupPreview
               entry={item}
+              imageZoom
               linkPreview={payload.linkPreview}
               onPasteText={(value) => void pasteClipboardText(value).catch((error: unknown) => console.error("Failed to paste from the preview", error))}
             />

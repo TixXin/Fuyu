@@ -251,7 +251,7 @@
 
 .tray-card__pills {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(var(--tray-cols, 3), 1fr);
   gap: 6px;
 }
 
@@ -283,7 +283,7 @@
 
 .tray-card__compact-row {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(var(--tray-cols, 4), 1fr);
   gap: 6px;
 }
 

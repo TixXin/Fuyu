@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { disabledBuiltinIds } from "../../features/plugin-kernel/builtinSwitches";
+import { useBuiltinPlugins } from "../../features/plugin-kernel/useBuiltinPlugins";
 import { useSystemDark } from "../../lib/theme/useResolvedTheme";
 import { useWindowAccent } from "../../lib/theme/useWindowAccent";
+import { shownStatus } from "./builtinEntries";
 import { getTrayMenuState, listenTrayMenuOpen, listenTrayMenuState, trayMenuAction, type TrayMenuAction, type TrayMenuState } from "./api";
 import { TrayMenuCard } from "./TrayMenuCard";
 import { loadTrayMenuLayout } from "./storage";
@@ -25,6 +28,8 @@ export function TrayMenuWindow() {
   const { shortcuts, refresh: refreshShortcuts } = useTrayShortcuts();
   const { status, refresh, media, join } = useTrayMenuStatus();
   const statusLayout = layout === "status";
+  const plugins = useBuiltinPlugins();
+  const off = useMemo(() => new Set(disabledBuiltinIds(plugins)), [plugins]);
 
   useEffect(() => {
     if (statusLayout) void refresh();
@@ -83,10 +88,10 @@ export function TrayMenuWindow() {
   }), [join, media, toggleAutostart, toggleDnd]);
 
   if (!state) return null;
-  const live = statusLayout ? status : { media: null, meeting: null, agents: null, now: status.now };
+  const live = statusLayout ? shownStatus(status, off) : { media: null, meeting: null, agents: null, now: status.now };
   return (
     <div className="tray-menu-window">
-      <TrayMenuCard ref={cardRef} layout={layout} light={light} data={{ state, shortcuts, dnd, autostart, ...live }} handlers={handlers} />
+      <TrayMenuCard ref={cardRef} layout={layout} light={light} data={{ state, shortcuts, off, dnd, autostart, ...live }} handlers={handlers} />
     </div>
   );
 }

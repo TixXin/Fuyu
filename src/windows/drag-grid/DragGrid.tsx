@@ -1,7 +1,7 @@
 import type { DragGridState } from "./api";
 import "./DragGrid.css";
 
-const LINES = ["v1", "v2", "h1", "h2"] as const;
+const LINES = ["v", "h"] as const;
 
 export function DragGrid({ state }: { state: DragGridState }) {
   const className = state.visible ? "drag-grid drag-grid--visible" : "drag-grid";

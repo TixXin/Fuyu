@@ -42,12 +42,17 @@ mockIPC((command, args) => {
     case "media_play_pause": return { ...fx.mediaState, playbackStatus: "paused" };
     case "get_calendar_events": return { events: fx.events, problems: [], fetchedAt: fx.now, fromMs: 0, toMs: 0, sourceCount: 1 };
     case "list_agent_sessions": return fx.sessions;
+    case "get_builtin_plugins": return builtinList(new Set());
     default: return null;
   }
 }, { shouldMockEvents: true });
 
+function builtinList(off: ReadonlySet<string>) {
+  return ["todos", "calendar", "music", "clipboard", "screenshot", "file-shelf", "translation", "agents"].map((id) => ({ id, kind: "builtin", enabled: !off.has(id), background: [], config: {} }));
+}
+
 const noop: TrayCardHandlers = { onAction: () => {}, onDnd: () => {}, onAutostart: () => {}, onPlayPause: () => {}, onNext: () => {}, onJoin: () => {} };
-const galleryData: TrayCardData = { state: fx.state, shortcuts: fx.shortcuts, dnd: false, autostart: true, media: fx.media, meeting: fx.meeting, agents: fx.agents, now: fx.now };
+const galleryData: TrayCardData = { state: fx.state, shortcuts: fx.shortcuts, off: new Set(), dnd: false, autostart: true, media: fx.media, meeting: fx.meeting, agents: fx.agents, now: fx.now };
 
 function Gallery() {
   return (
@@ -170,6 +175,23 @@ async function runChecks() {
     await setLayout("entry");
     await openCard();
     await settle();
+
+    const tiles = () => $$(".tray-card__entry-main > button", card()).length;
+    const strip = () => $$(".tray-card__strip .tray-card__icon-button", card()).length;
+    check(tiles() === 4 && strip() === 5 && $$("[role=switch]", card()).length === 3, "功能都开着时入口齐全");
+    await act(async () => { await emit("builtin-plugins-changed", builtinList(new Set(["file-shelf", "translation", "clipboard", "music"]))); });
+    await settle();
+    check(tiles() === 2 && strip() === 4 && $$("[role=switch]", card()).length === 2, "关掉一个功能后入口消失：A 版藏掉文件中转、翻译、剪贴板和暂停记录");
+    await setLayout("status");
+    await settle();
+    check($$(".tray-card__pills > button", card()).length === 2 && !$(".tray-card__cover", card()), "关掉一个功能后入口消失：B 版藏掉翻译和音乐");
+    await setLayout("compact");
+    await settle();
+    check($$(".tray-card__compact-row > button", card()).length === 2 && $$("[role=switch]", card()).length === 0, "关掉一个功能后入口消失：C 版藏掉翻译、剪贴板和暂停记录");
+    await act(async () => { await emit("builtin-plugins-changed", builtinList(new Set())); });
+    await setLayout("entry");
+    await settle();
+    check(tiles() === 4 && strip() === 5, "重新打开功能后入口回来");
 
     restoreStorage();
     results.textContent = `${messages.join("\n")}\n\n全部 ${messages.length} 项检查通过。`;

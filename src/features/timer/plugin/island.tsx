@@ -1,11 +1,10 @@
 import { defineSlot, type IslandCollapsedMeta, type IslandNoticeMeta, type IslandPageMeta } from "../../plugin-kernel/slots";
 import { ReminderNotice, ReminderNoticeActions } from "../ReminderNotice";
 import { TimerNotice, TimerNoticeActions } from "../TimerNotice";
-import type { Timer } from "../timers";
-import type { ShownReminder } from "../useIslandReminder";
 import { TIMER_CHIP_WIDTH, TimerChip } from "../TimerChip";
 import { TimerPanel } from "../TimerPanel";
 import { islandPage } from "./page.ts";
+import { timerIsland } from "./islandState";
 import { OWNER } from "./owner.ts";
 
 type TimerPageProps = { mode: string };
@@ -24,21 +23,21 @@ const gaugeSlot = defineSlot<GaugeContext, IslandCollapsedMeta<GaugeContext>>("i
 
 gaugeSlot.add({ id: "timer", order: 70, group: "gauges", width: TIMER_CHIP_WIDTH, hideable: true, shown: ({ timer }) => timer.enabled && timer.running, component: TimerChip }, OWNER);
 
-type NoticeSources = { ringing: readonly Timer[]; reminder: ShownReminder | null };
+const noticeSlot = defineSlot<object, IslandNoticeMeta<object>>("island.notice/v1");
 
-const noticeSlot = defineSlot<NoticeSources, IslandNoticeMeta<NoticeSources>>("island.notice/v1");
-
-function RingingContent({ ringing }: NoticeSources) {
-  return <TimerNotice ringing={ringing} />;
+function RingingContent() {
+  return <TimerNotice ringing={timerIsland.use().ringing} />;
 }
 
-function ReminderContent({ reminder }: NoticeSources) {
+function ReminderContent() {
+  const { reminder } = timerIsland.use();
   return reminder && <ReminderNotice key={reminder.current.id} reminder={reminder} />;
 }
 
-function ReminderActions({ reminder }: NoticeSources) {
+function ReminderActions() {
+  const { reminder } = timerIsland.use();
   return reminder && <ReminderNoticeActions reminder={reminder} />;
 }
 
-noticeSlot.add({ id: "timer", order: 30, active: ({ ringing }) => ringing.length > 0, component: RingingContent, actions: TimerNoticeActions }, OWNER);
-noticeSlot.add({ id: "reminder", order: 60, active: ({ reminder }) => Boolean(reminder), component: ReminderContent, actions: ReminderActions }, OWNER);
+noticeSlot.add({ id: "timer", order: 30, component: RingingContent, actions: TimerNoticeActions }, OWNER);
+noticeSlot.add({ id: "reminder", order: 60, component: ReminderContent, actions: ReminderActions }, OWNER);

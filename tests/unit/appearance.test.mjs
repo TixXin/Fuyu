@@ -306,11 +306,10 @@ test("taking the appearance from other settings keeps todo and tuck behavior", (
 
 test("every page has the panel's height; only the cards that open by themselves fit their rows (C27)", async () => {
   const { getExpandedIslandHeight } = await import("../../src/windows/island/expandedHeight.ts");
-  for (const page of ["todo", "music", "clipboard", "agents", "calendar", "shelf", "qq", "plugin:a.b/c"]) {
-    assert.equal(getExpandedIslandHeight({ page, maxPanelHeight: 420 }), 420, page);
-  }
-  assert.ok(getExpandedIslandHeight({ page: "qq", maxPanelHeight: 420, messageArrivalsHeight: 100, popup: true }) < 200);
-  assert.ok(getExpandedIslandHeight({ page: "agents", maxPanelHeight: 420, agentAlertRowHeight: 60, popup: true }) < 200);
+  assert.equal(getExpandedIslandHeight({ maxPanelHeight: 420 }), 420);
+  assert.equal(getExpandedIslandHeight({ maxPanelHeight: 420, panel: { height: 180 } }), 180);
+  assert.ok(getExpandedIslandHeight({ maxPanelHeight: 420, panel: { height: 186 }, popup: true }) < 186);
+  assert.equal(getExpandedIslandHeight({ maxPanelHeight: 420, panel: { saving: 4 }, popup: true }), getExpandedIslandHeight({ maxPanelHeight: 420, popup: true }) - 4);
   assert.equal("clipboardVisibleRows" in normalizeSettings({ clipboardVisibleRows: 4 }), false);
 });
 

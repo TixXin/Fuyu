@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { meetingStartsIn, nextMeeting, trayAgents, trayMedia } from "../../src/windows/tray-menu/trayCard.ts";
 import { normalizeTrayMenuLayout } from "../../src/windows/tray-menu/storage.ts";
+import { entryShown, shownFeatures, shownStatus } from "../../src/windows/tray-menu/builtinEntries.ts";
 
 const NOW = Date.UTC(2026, 10, 15, 7, 0);
 const event = (uid, startMin, endMin, extra = {}) => ({
@@ -56,4 +57,16 @@ test("tray card page names map onto island pages and nothing else gets through",
   assert.equal(trayMenuIslandPage("settings"), null);
   assert.equal(trayMenuIslandPage("toString"), null);
   assert.equal(trayMenuIslandPage(3), null);
+});
+
+test("tray card entries follow the built-in plugin switches", () => {
+  const off = new Set(["translation", "todos", "music"]);
+  assert.equal(entryShown(off, "translate"), false);
+  assert.equal(entryShown(off, "notes"), false);
+  assert.equal(entryShown(off, "file-shelf"), true);
+  assert.deepEqual(shownFeatures(off, ["screenshot", "translate", "clipboard"]), ["screenshot", "clipboard"]);
+  const status = shownStatus({ media: { title: "x" }, meeting: { title: "m" }, agents: { total: 1 }, now: 1 }, off);
+  assert.equal(status.media, null);
+  assert.deepEqual(status.meeting, { title: "m" });
+  assert.equal(status.now, 1);
 });
