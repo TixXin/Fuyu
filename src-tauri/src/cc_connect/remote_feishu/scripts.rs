@@ -3,7 +3,7 @@ use base64::{engine::general_purpose::STANDARD, Engine};
 use crate::cc_connect::{
     config_file::FILE_NAME,
     remote_project::{self, Seen},
-    script::{decode, find_exe, sh_quote, NOT_FOUND},
+    script::{decode, find_exe, proxy_env, sh_quote, NOT_FOUND, NO_HISTORY},
 };
 use crate::user_error::UserError;
 
@@ -15,7 +15,7 @@ const PNG_END: &[u8] = b"IEND\xAE\x42\x60\x82";
 fn places(stamp: &str) -> String {
     let stamp = sh_quote(stamp);
     format!(
-        r#"c="$HOME/.cc-connect/{FILE_NAME}"
+        r#"{NO_HISTORY}c="$HOME/.cc-connect/{FILE_NAME}"
 b="$c.bak-fuyu-"{stamp}
 d="$HOME/.cc-connect/fuyu-feishu-"{stamp}
 put_back() {{
@@ -29,8 +29,9 @@ fn log_line() -> String {
     format!("[ -f \"$d/out.log\" ] && printf 'O %s\\n' \"$(tail -c {LOG_BYTES} \"$d/out.log\" | base64 | tr -d '\\n')\"\n")
 }
 
-pub(super) fn run_script(path: Option<&str>, seen: &Seen, name: &str, block: &str, stamp: &str) -> String {
+pub(super) fn run_script(path: Option<&str>, proxy: Option<&str>, seen: &Seen, name: &str, block: &str, stamp: &str) -> String {
     let mut script = find_exe(path);
+    script.push_str(&proxy_env(proxy));
     script.push_str(&format!("[ -n \"$exe\" ] || {{ echo {NOT_FOUND}; exit 0; }}\n"));
     script.push_str(&places(stamp));
     script.push_str(&format!(

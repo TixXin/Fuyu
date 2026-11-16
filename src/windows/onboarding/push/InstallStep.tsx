@@ -2,6 +2,7 @@ import { Check, Download, Monitor, Server } from "lucide-react";
 import { useState } from "react";
 import { useErrorText, useTranslation } from "../../../i18n";
 import type { TargetEntry } from "./plan";
+import { PushTunnels } from "./PushTunnels";
 import type { PushTargets } from "./usePushTargets";
 
 export function InstallStep({ targets }: { targets: PushTargets }) {
@@ -43,7 +44,6 @@ export function InstallStep({ targets }: { targets: PushTargets }) {
                     {state === null ? (error ? null : text.install.reading) : state.installed ? (state.running ? `${text.install.installed} · ${text.install.running}` : text.install.installed) : text.install.missing}
                   </span>
                 )}
-                {target.blocked === "remoteSoon" && state && !state.installed ? <span className="push-act__note">{text.install.remoteSoon}</span> : null}
                 {error ? <span className="push-act__error">{error}</span> : null}
               </div>
               {state?.installed ? (
@@ -58,6 +58,7 @@ export function InstallStep({ targets }: { targets: PushTargets }) {
           );
         })}
       </ul>
+      <PushTunnels hosts={targets.entries.flatMap(({ target }) => (target.remote && target.label ? [target.label] : []))} />
     </>
   );
 }
