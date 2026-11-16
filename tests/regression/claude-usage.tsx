@@ -96,7 +96,7 @@ function Fixture({ all = false }: { all?: boolean }) {
   const providers = all ? USAGE_PROVIDERS : USAGE_PROVIDERS.slice(0, 1);
   const sideWidth = providers.length * CLAUDE_USAGE_GAUGE_WIDTH;
   return <div className={`stage${all ? " stage--all" : ""}`} style={{ "--collapsed-island-width": `${280 + sideWidth}px` } as CSSProperties}>
-    <IslandShell lineSources={useFixtureLines({ todoTitle: "剩余3个待办" })} deviceUse={{ camera: [], microphone: [] }} qqNotifications={qq} wechatReminders={wechat} qqMail={qqMail} pluginNotifications={NO_PLUGIN_NOTIFICATIONS} preview={preview}
+    <IslandShell lineSources={useFixtureLines({ todoTitle: "剩余3个待办" })} qqNotifications={qq} wechatReminders={wechat} qqMail={qqMail} pluginNotifications={NO_PLUGIN_NOTIFICATIONS} preview={preview}
       mode="collapsed" page="todo" isTucked={false} isDetached={true} showTitle={false}
       showCollapsedText={true} activeAgentSessionCount={0}
       appearanceMode="classic" nativeGlassState="disabled" agentVisualState="idle" agentStatusLabel="AI Agent 空闲或已完成"

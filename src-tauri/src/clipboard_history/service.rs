@@ -331,6 +331,7 @@ impl ClipboardHistoryService {
             pin_key: None,
             pin_order: None,
             truncated: false,
+            edited_at: None,
         };
         let item = match capture {
             ClipboardCapture::Text { hash, text, preview, html } => {

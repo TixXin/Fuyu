@@ -78,7 +78,7 @@ function Island({ agents, count, list, report }: { agents: boolean; count: numbe
   const qqMail = useMail(true);
   const preview = useLatestMessagePreview(qq, wechat, qqMail, NO_PLUGIN_NOTIFICATIONS);
   return <div className="stage" style={{ "--collapsed-island-width": "300px", ...corners } as CSSProperties}>
-    <IslandShell lineSources={useFixtureLines({ todoTitle: "剩余3个待办" })} deviceUse={{ camera: [], microphone: [] }} qqNotifications={qq} wechatReminders={wechat} qqMail={qqMail} pluginNotifications={NO_PLUGIN_NOTIFICATIONS} preview={preview}
+    <IslandShell lineSources={useFixtureLines({ todoTitle: "剩余3个待办" })} qqNotifications={qq} wechatReminders={wechat} qqMail={qqMail} pluginNotifications={NO_PLUGIN_NOTIFICATIONS} preview={preview}
       mode="collapsed" page="todo" isTucked={false} isDetached={true} showTitle={false}
       showCollapsedText={true} activeAgentSessionCount={count}
       appearanceMode="classic" nativeGlassState="disabled" agentVisualState="idle" agentStatusLabel="AI Agent 空闲或已完成"

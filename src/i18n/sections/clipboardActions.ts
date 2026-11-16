@@ -63,7 +63,11 @@ export type ClipboardActionsText = {
   editTitle: string;
   editHint: string;
   pasteOnce: string;
+  saveInPlace: string;
   saveAsNew: string;
+  editSaved: string;
+  edited: string;
+  editInPreview: string;
   cancel: string;
   closePreview: string;
   releaseToClose: string;
@@ -154,10 +158,14 @@ export const zhCN: ClipboardActionsText = {
   resultNativeMac: "粘贴时由 macOS 转换",
   merge: "合并粘贴",
   mergeSeparator: { newline: "换行分隔", space: "空格分隔", comma: "逗号分隔" },
-  editTitle: "编辑后粘贴",
-  editHint: "原记录不变",
+  editTitle: "编辑这条",
+  editHint: "改这条后 6 秒内可以撤销",
   pasteOnce: "只粘贴这次",
-  saveAsNew: "另存为新记录",
+  saveInPlace: "改这条",
+  saveAsNew: "另存一条",
+  editSaved: "已改这条",
+  edited: "已编辑",
+  editInPreview: "编辑文字",
   cancel: "取消",
   closePreview: "关闭",
   releaseToClose: "松开关闭",
@@ -257,10 +265,14 @@ export const en: ClipboardActionsText = {
   resultNativeMac: "macOS converts it on paste",
   merge: "paste merged",
   mergeSeparator: { newline: "one per line", space: "with spaces", comma: "with commas" },
-  editTitle: "Edit, then paste",
-  editHint: "The entry stays as it was",
+  editTitle: "Edit entry",
+  editHint: "Updating can be undone for 6 seconds",
   pasteOnce: "Paste this once",
-  saveAsNew: "Save as a new entry",
+  saveInPlace: "Update",
+  saveAsNew: "Save as new",
+  editSaved: "Entry updated",
+  edited: "Edited",
+  editInPreview: "Edit text",
   cancel: "Cancel",
   closePreview: "Close",
   releaseToClose: "Release to close",

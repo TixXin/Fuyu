@@ -5,9 +5,6 @@ import type { MediaState } from "../../features/media/api";
 import { useAudible } from "../../features/media/useAudible";
 import { CollapsedMessageContent } from "../../features/messages/CollapsedMessageContent";
 import { useCollapsedBarItems, type CollapsedBarItem } from "./collapsedBarItems";
-import type { DeviceUse } from "../../features/device-use/api";
-import type { LevelChange } from "../../features/system-levels/api";
-import type { DeviceAlert } from "../../features/device-events/api";
 import { messagePreviewText, type MessagePreview, type MessageSource } from "../../features/messages/messagePreview";
 import type { MailController } from "../../features/messages/mail/MailPanel";
 import type { QQNotificationsController } from "../../features/messages/qq-notifications/QQNotifications";
@@ -49,9 +46,6 @@ type IslandCollapsedBarProps = {
   mediaState: MediaState;
   showMusic: boolean;
   shelfCount: number | null;
-  deviceUse: DeviceUse;
-  levelPopup: LevelChange | null;
-  deviceAlert: DeviceAlert | null;
   quotaAlert?: QuotaAlert | null;
   agentVisualState: AgentVisualState;
   onOpenPage: (page: IslandPage) => void;
@@ -101,9 +95,6 @@ export function IslandCollapsedBar({
   mediaState,
   showMusic,
   shelfCount,
-  deviceUse,
-  levelPopup,
-  deviceAlert,
   quotaAlert = null,
   agentVisualState,
   onOpenPage,
@@ -127,7 +118,7 @@ export function IslandCollapsedBar({
   ].join(" ");
   const contributed = useIslandContributed();
   const activeAlert = useActiveAlert();
-  const alertSources = { deviceAlert, quotaAlert, levelPopup };
+  const alertSources = { quotaAlert };
   const lines = visibleLines(contributed.lines, showCollapsedText);
   const line = shownLine(lines);
   const peekLine = line?.drop ? line : null;
@@ -148,8 +139,7 @@ export function IslandCollapsedBar({
       : <span className={pulseClassName} {...{ [OPENS_BAR]: "" }} />,
     qqMail,
     updateVersion,
-    deviceUse,
-    shelfCount,
+      shelfCount,
     showMusic: showMusic && audible,
     mediaState,
     agentSessionCount,

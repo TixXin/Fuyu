@@ -1,6 +1,6 @@
 use std::{
     sync::{
-        atomic::{AtomicU64, Ordering},
+        atomic::{AtomicBool, AtomicU64, Ordering},
         Mutex, PoisonError,
     },
     thread,
@@ -20,8 +20,10 @@ const CLOSING_EVENT: &str = "clipboard-preview-closing";
 const LAYOUT_EVENT: &str = "clipboard-preview-layout";
 const GAP: f64 = 8.0;
 const EXIT: Duration = Duration::from_millis(150);
+const BLUR_SETTLE: Duration = Duration::from_millis(120);
 
 static GENERATION: AtomicU64 = AtomicU64::new(0);
+static EDITING: AtomicBool = AtomicBool::new(false);
 static RESTORE: Mutex<Option<PreviewSize>> = Mutex::new(None);
 static DRAG: Mutex<Option<Drag>> = Mutex::new(None);
 
@@ -211,6 +213,9 @@ fn hide_now(window: &WebviewWindow) {
 pub(crate) fn hide(app: &AppHandle, animate: bool) {
     let generation = GENERATION.fetch_add(1, Ordering::SeqCst) + 1;
     let Ok(window) = preview_window(app) else { return };
+    if EDITING.swap(false, Ordering::SeqCst) {
+        take_keys(&window, false);
+    }
     if !window.is_visible().unwrap_or(false) {
         return;
     }
@@ -285,6 +290,78 @@ fn has_pointer(app: &AppHandle) -> bool {
     let (Ok(rect), Some((x, y))) = (window_rect(&preview), screen::cursor_position()) else { return false };
     let (x, y) = (x.round() as i32, y.round() as i32);
     x >= rect.left && x < rect.right && y >= rect.top && y < rect.bottom
+}
+
+pub(crate) fn editing() -> bool {
+    EDITING.load(Ordering::SeqCst)
+}
+
+#[cfg(windows)]
+fn take_keys(window: &WebviewWindow, on: bool) {
+    let _ = window.set_focusable(on);
+    if on {
+        if let Ok(hwnd) = window.hwnd() {
+            crate::win32::window::force_foreground(hwnd);
+        }
+    }
+}
+
+#[cfg(target_os = "macos")]
+fn take_keys(window: &WebviewWindow, on: bool) {
+    let target = window.clone();
+    let _ = window.run_on_main_thread(move || crate::macos::preview_panel::take_keys(&target, on));
+}
+
+#[cfg(not(any(windows, target_os = "macos")))]
+fn take_keys(window: &WebviewWindow, on: bool) {
+    let _ = window.set_focusable(on);
+    if on {
+        let _ = window.set_focus();
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub(crate) enum EditEnd {
+    #[default]
+    Refocus,
+    Leave,
+    Blur,
+}
+
+fn set_editing(app: &AppHandle, on: bool, then: EditEnd) -> Result<(), String> {
+    let preview = preview_window(app)?;
+    if on && !preview.is_visible().unwrap_or(false) {
+        return Err("The clipboard preview is not open.".to_string());
+    }
+    if EDITING.swap(on, Ordering::SeqCst) == on {
+        return Ok(());
+    }
+    if on {
+        take_keys(&preview, true);
+        return Ok(());
+    }
+    if then == EditEnd::Refocus {
+        super::refocus_popup(app);
+    }
+    take_keys(&preview, false);
+    keep_below_popup(app, &preview);
+    if then == EditEnd::Blur {
+        let app = app.clone();
+        thread::spawn(move || {
+            thread::sleep(BLUR_SETTLE);
+            let focused = popup_window(&app).ok().and_then(|popup| popup.is_focused().ok()).unwrap_or(false);
+            if !focused && !editing() {
+                let _ = super::hide_on_blur(&app);
+            }
+        });
+    }
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn set_clipboard_preview_editing(app: AppHandle, editing: bool, then: Option<EditEnd>) -> Result<(), String> {
+    set_editing(&app, editing, then.unwrap_or_default())
 }
 
 #[tauri::command]

@@ -31,13 +31,14 @@ export function ClipboardPauseBar({ capture, now, onResume }: { capture?: Clipbo
   );
 }
 
-export function ClipboardPopupFooter({ onSnippets, wide, queued, separator, onSeparator, deleted, onUndo, notice, capture, now, onToggleRecord }: {
+export function ClipboardPopupFooter({ onSnippets, wide, queued, separator, onSeparator, deleted, edited = false, onUndo, notice, capture, now, onToggleRecord }: {
   onSnippets: boolean;
   wide: boolean;
   queued: number;
   separator: MergeSeparator;
   onSeparator: (separator: MergeSeparator) => void;
   deleted: string | null;
+  edited?: boolean;
   onUndo: () => void;
   notice: string | null;
   capture?: ClipboardCaptureStatus;
@@ -66,10 +67,10 @@ export function ClipboardPopupFooter({ onSnippets, wide, queued, separator, onSe
       </footer>
     );
   }
-  if (deleted !== null) {
+  if (deleted !== null || edited) {
     return (
       <footer className="clipboard-popup__hint clipboard-popup__hint--toast" role="status">
-        <span className="clipboard-popup__toast-text">{text.deleted(deleted)}</span>
+        <span className="clipboard-popup__toast-text">{deleted !== null ? text.deleted(deleted) : text.editSaved}</span>
         <button type="button" tabIndex={-1} className="clipboard-popup__hint-end clipboard-popup__undo" onClick={onUndo}>
           <kbd>{PRIMARY_KEY} Z</kbd>{text.undo}
         </button>
