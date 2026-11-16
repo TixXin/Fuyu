@@ -9,9 +9,9 @@ export function ClipboardRowLead({ entry, kind, siteIcon }: { entry?: ClipboardH
   return (
     <span className="clipboard-popup__lead" aria-hidden="true">
       {image ? (
-        image.thumbnailDataUrl ? <img src={image.thumbnailDataUrl} alt="" /> : <ImageIcon size={15} strokeWidth={1.8} />
+        image.thumbnailDataUrl ? <img src={image.thumbnailDataUrl} alt="" decoding="async" /> : <ImageIcon size={15} strokeWidth={1.8} />
       ) : fileThumbnail ? (
-        <img src={fileThumbnail} alt="" />
+        <img src={fileThumbnail} alt="" decoding="async" />
       ) : kind?.kind === "color" ? (
         <span className="clipboard-popup__swatch" style={{ background: `rgba(${kind.color.r}, ${kind.color.g}, ${kind.color.b}, ${kind.color.a})` }} />
       ) : kind?.kind === "link" ? (
