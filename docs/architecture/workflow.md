@@ -210,7 +210,7 @@ Mac 和 Windows 各有一份本地 `main`，只通过 `origin/main` 看到对方
 | `publish` | `pnpm release` |
 
 - `pnpm build:exe` 会把正在运行的 exe 改名挪开再写新的，不用让用户关岛屿。
-- `pnpm prune:target` 删 3 天没用的增量缓存、本应用的旧产物，以及 lane 时期留下的 `lane-<N>`、`lane-build`；`verify` 跑完 `cargo test` 后会自动跑一次，`--dry-run` 只看能省多少。
+- `pnpm prune:target` 清 `src-tauri/target` 里的增量缓存和本应用自己的 crate（`fuyu`、`fuyu_lib` 和工作区成员）的旧编译结果，以及 lane 时期留下的 `lane-<N>`、`lane-build`；第三方依赖和交叉编译目录不动。每个 crate 留最新 3 份，其余满 3 天的删；一天内堆起来的也只留最新 8 份；磁盘剩不到 40 GB 时只留最新 3 份。1 小时内动过的一律不删，别的会话可能正在编。`pnpm heavy` 每跑完一个任务、`verify` 跑完 `cargo test` 后都会自动清一次，没删东西时不出声；`--dry-run` 只看能省多少。为什么这样定见 [rust-target-dir-growth.md](../research/rust-target-dir-growth.md)。
 - **全机器排队**（2026-11-15 起，F40）：同一台机器上同时最多跑 `FUYU_HEAVY_SLOTS` 个重任务（默认逻辑 CPU ÷ 5，10 核的 Mac 是 2 个），其余的排队，每 30 秒打印正在跑的是谁、自己排第几。`pnpm build:exe`、`pnpm verify`、`pnpm test:regression` 自动排队；别的重命令写成 `pnpm heavy [--label <名字>] -- <命令…>`，例如 `pnpm heavy -- cargo test --manifest-path src-tauri/Cargo.toml`。队列在 `~/.cache/fuyu-heavy/`，进程退出（包括被杀）后它占的位置会自动清掉。起因是 20 多个会话同时编译，负载到了 200 多（issue #448）。
 - **同一个构建目录一条道**（2026-11-15 起）：cargo 给每个构建目录加锁，两个任务编同一个目录时后一个只能干等，还白占一个名额。所以 heavy 按构建目录分道：同一道同时只跑一个，排在它后面的同道任务不挡别的道。`build:exe` 是 `target:release`，`verify` 是 `target:agents`；`pnpm heavy -- cargo …` 按 `--target-dir`、`CARGO_TARGET_DIR` 和 `--release` 自动认道（例如 agents 目录的 `cargo test` 是 `target:agents`），别的命令要分道时写 `--lane <名字>`。
 - **钩子**：`scripts/heavy/gate.mjs` 登记在 `.claude/settings.json`，拦下三种命令：没经过排队的 `cargo build/test/check/clippy/run` 和 `tauri build`；把 `CARGO_TARGET_DIR` 设成 `agents`、`debug`、`release` 以外的目录；`cd` 进临时目录里的仓库副本再编译（副本没有 `rust-toolchain.toml`，也用不上缓存，每份都从零编译）。别的会话没提交的改动让检查报错时，在主工作区照样跑，交接里写明哪些失败不是自己造成的。确实要绕过时，用户可以在会话环境里设 `FUYU_HEAVY_GATE=off`。
