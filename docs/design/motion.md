@@ -71,8 +71,10 @@
 
 系统开了「减少动画 / 减少动态效果」（`prefers-reduced-motion: reduce`）时：
 
-- **目标**（用户按默认值同意，2026-11-16）：保留短的淡入淡出（不超过 `--motion-base`），去掉位移、缩放和回弹。岛外壳开合换成不回弹的 ease-out、时长缩短；循环的状态动画停下或换成不动的样子（例如常亮的点代替呼吸）。
-- **现状**（读代码得出，2026-11-16，没在真机上开减少动画实测）：`src/styles/base.css` 把所有元素的 `transition-duration` 和 `transition-delay` 设成 `0s !important`，所以淡入淡出也没了，岛开合直接跳到终点；`src/lib/theme/islandMotion.ts` 里 `reducedMotion` 去掉回弹的分支因此不起作用。改成目标的是 D85.6。
+- **目标**（用户按默认值同意，2026-11-16）：保留淡入淡出（沿用元素自己的时长，档位内一般不超过 `--motion-base`），去掉位移、缩放和回弹。岛外壳开合换成不回弹的 ease-out、时长缩短；循环的状态动画停下或换成不动的样子（例如常亮的点代替呼吸）。
+- **做法**（D85.6，2026-11-16）：`src/styles/base.css` 在减少动画时把所有元素的 `transition-property` 收成 `opacity`、`visibility` 和颜色类属性，时长和延迟沿用元素自己写的；没写过渡的元素和 `transition: none` 仍然不动。不统一设时长，因为 CSS 取不到元素原来的时长，统一设成 160ms 会让所有没写过渡的元素也开始渐变。位移、缩放、尺寸的过渡一律去掉。（组长同意）
+- 岛外壳在 `src/windows/island/IslandShell.css` 的减少动画段里放行 `--island-shell-*`，时长由 `src/lib/theme/islandMotion.ts` 的减少动画分支给：所有预设换成 `--motion-ease-out` 那条曲线，展开不超过 `--motion-medium`、收起不超过 `--motion-base`，内容淡入不超过 `--motion-base`。设置里「开合动画」的预览（`IslandMotionRow.css`）同样放行，和真岛一致。
+- 别的元素要在减少动画下保留尺寸过渡（像岛外壳这样没有文字、又必须连续变化的），在自己的文件里写 `@media (prefers-reduced-motion: reduce)` 带 `!important` 的 `transition-property` 放行，`tests/unit/reduced-motion.test.mjs` 检查 base.css 和岛外壳这两处。
 - 新写的 `animation`：在同一个文件里加 `@media (prefers-reduced-motion: reduce)`，停掉或改成不动的形式（`src/AGENTS.md`，`tests/unit/reduced-motion.test.mjs` 检查）。
 - 适用：所有窗口。
 - 不适用：用户主动的跟手操作（拖动、滚动）本来就没有过渡；「开合动画」选「无动画」时外壳本来就直接跳。
