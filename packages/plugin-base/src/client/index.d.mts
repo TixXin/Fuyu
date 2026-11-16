@@ -34,6 +34,7 @@ export interface HostConnection {
 }
 
 export declare class HostCallError extends Error {
+  constructor(code: string, message: string, data?: unknown);
   code: string;
   data?: unknown;
 }
@@ -90,3 +91,4 @@ export function createLoader(options: {
   onStatus?: (status: Map<string, ClientStatus>) => void;
 }): ClientLoader;
 export { createServiceProxy, type ServiceCall, type ServiceEventMessage, type ServiceProxy } from "./services.mjs";
+export { createWindowServices, type WindowProvideOptions, type WindowServices } from "./window-services.mjs";
