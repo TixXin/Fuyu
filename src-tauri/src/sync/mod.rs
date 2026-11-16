@@ -1,6 +1,7 @@
 pub(crate) mod clock;
 pub(crate) mod device;
 pub(crate) mod record;
+pub(crate) mod settings_meta;
 #[cfg(test)]
 mod tests;
 

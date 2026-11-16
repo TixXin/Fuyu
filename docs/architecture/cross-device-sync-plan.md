@@ -147,3 +147,33 @@ C91.1 ──▶ C91.2 ┐
    照这个来吗？
 4. **同步频率**：本地改动 5 秒防抖后推送，每 5 分钟拉一次，启动时和打开同步页时各拉一次（坚果云的请求额度够用）。照这个来吗？
 5. **C96 局域网直连**：这一轮不派，等 Mac 签名（G1.12）之后再规划。同意吗？
+
+## 设置白名单（C91.3）
+
+> c91-3 写于 2026-11-15，抄自 `src-tauri/src/sync/settings_whitelist.json`（以那份为准）。给 C92.1 合并、C92.2 设置页用。`sync` 照常按时间合并；`firstMergeOnly` 只在这台第一次并入时从远端带过来，之后各台自己定；`byId` 按 `id` 逐条合并（有墓碑和顺序时间）；`local` 不出本机。白名单没列的设置一律 `local`，`tests/unit/sync-settings-whitelist.test.mjs` 要求新加的 key 和字段都列进去。
+
+| 整个 key | 取值 |
+|---|---|
+| sync | `fuyu-settings`（按字段，见下）、`fuyu-locale`、`fuyu-translation-settings`（按字段，见下）、`fuyu-qq-mail-remote-images`、`fuyu-plugin-market-favorites`、`fuyu-screenshot-annotation`、`fuyu-screenshot-settings`（按字段，见下）、`fuyu-agent-sounds`（按字段，见下）、`fuyu-agent-session-filters`、`fuyu-agent-approval`（按字段，见下）、`fuyu-agent-push`（按字段，见下）、`fuyu-lyrics-offsets` |
+| byId | `fuyu-setting-presets` |
+| local | `fuyu-music-sources`、`fuyu-qq-notifications-enabled`、`fuyu-wechat-reminders-enabled`、`fuyu-wechat-expose-ui`、`fuyu-wechat-hide-taskbar-button`、`fuyu-qq-mail-settings`、`fuyu-collapsed-items`、`fuyu-plugin-pages`、`fuyu-save-directory`、`fuyu-update-channel`、`fuyu-update-preferences` |
+
+| 对象设置 | sync | firstMergeOnly | byId | local |
+|---|---|---|---|---|
+| `fuyu-settings` | `appearanceMode`、`fontFamily`、`glassIntensity`、`opacity`、`topFilletRadius`、`islandCornerRadius`、`islandCornerShape`、`islandMotion`、`agentHostDisplay`、`agentSessionView`、`agentSessionSort`、`agentSessionGroup`、`agentArchiveMotion`、`agentCardEffects`、`agentSessionHours`、`agentHiddenProviders`、`agentHideFinished`、`agentHideClosed`、`agentShowElapsed`、`agentShowModel`、`agentShowActivity`、`agentShowUsage`、`agentAlertCompleted`、`agentAlertFailed`、`agentAlertWaiting`、`agentAlertStarted`、`agentAlertSeconds`、`agentRemindSeconds`、`agentQuotaAlertPercent`、`taskTextColor`、`pulseColor`、`pulseBrightness`、`islandBackgroundColor`、`collapsedDark`、`panelDark`、`accentMode`、`accentColor`、`themeMode`、`darkBackgroundColor`、`darkTextColor`、`darkPulseColor`、`lightBackgroundColor`、`lightTextColor`、`lightPulseColor`、`darkInkColor`、`lightInkColor`、`inkColor`、`showTitle`、`showCollapsedText`、`showIdleTodoCount`、`carryOverIncompleteTodos`、`enableTodoReorder`、`rotateTodos`、`todoRotationSeconds`、`autoTuck`、`autoTuckSeconds`、`autoTuckHoldTodo`、`autoTuckHoldAgent`、`autoTuckHoldMusic`、`autoTuckHoldMessages`、`autoTuckRetract`、`autoTuckRetractDelayMs`、`revealOnMessage`、`messageNotice`、`messagePanelSeconds`、`expandTrigger`、`hoverExpandDelayMs`、`hoverCollapseDelayMs`、`hoverSwitchPage`、`hoverSwitchDelayMs`、`minimizeAction`、`tuckedHoverAction`、`agentTitleMode`、`agentLightStyle`、`translationTarget`、`screenshotGuides`、`shelfExpandOnDrop`、`shelfAutoCleanupDays`、`shelfRemoveMissing`、`shelfRemoveAfterDragOut`、`shelfMaxItems`、`shelfDoubleClick`、`shelfShowCount`、`sideMusicCover`、`lyricsOnline`、`lyricsChinese`、`lyricsOffsetMs`、`lyricsOnIsland`、`lyricsIslandPriority`、`lyricsIntro`、`lyricsKaraoke`、`lyricsKaraokeFallback`、`lyricsKaraokeFill`、`lyricsKaraokeColor`、`lyricsKaraokeCustomColor`、`lyricsKaraokeDim`、`lyricsKaraokeGlow`、`lyricsKaraokeFollow`、`lyricsCoverColor`、`calendarRemindMinutes`、`calendarShowTitle`、`glassStyle`、`glassColorSource`、`glassColor1`、`glassColor2`、`glassColor3`、`glassColorStrength`、`glassFlowSpeed`、`glassBlobScale`、`glassFlowWhen`、`glassRim`、`glassRimWidth`、`glassSheen`、`glassSpecular`、`glassMorph`、`glassContrastGuard` | `todoEnabled`、`musicEnabled`、`agentStatusEnabled`、`agentTitleEnabled`、`shelfEnabled`、`translationEnabled`、`screenshotEnabled`、`deviceUseIndicator`、`levelPopup`、`deviceAlerts`、`calendarEnabled`、`mailEnabled` | `todoProjects` | `topEdgeLayoutVersion`、`collapsedScale`、`expandedScale`、`marginY`、`islandMonitor`、`menuBarPlacement`、`islandForm`、`maxPanelHeight`、`panelWidth`、`collapsedWidthExtra`、`windowsDark`、`pageDigitModifiers`、`pageNextShortcut`、`pagePreviousShortcut`、`lyricsFolder`、`gameDoNotDisturb`、`gameAutoTuck`、`hoverTakesKeyboard` |
+| `fuyu-translation-settings` | `direction`、`pasteClipboardOnOpen`、`autoTranslate` | — | — | `shortcut`、`selectionShortcut`、`provider`、`customBaseUrl`、`models` |
+| `fuyu-screenshot-settings` | `cardSeconds`、`historyDays` | — | — | `shortcuts`、`printScreen`、`saveFolder`、`record`、`version` |
+| `fuyu-agent-sounds` | `events`、`quietWhenInFront`、`quietHours` | `enabled` | — | `volume`、`pack` |
+| `fuyu-agent-approval` | `onIsland`、`whenInFront` | — | — | — |
+| `fuyu-agent-push` | `events`、`awayMinutes` | — | — | `enabled`、`server`、`channel`、`mutedHosts`、`ccConnect` |
+
+拿不准标成 `local` 的，以及和调研的表不一样的地方：
+
+- `fuyu-translation-settings` 的 `provider`、`models`、`customBaseUrl`：密钥各台单独填，自定义地址常是本机的服务（Ollama 之类），同步过去多半用不了。调研原写「除快捷键外都同步」。
+- `fuyu-screenshot-settings` 的 `printScreen`（接管 PrtSc 键，和键盘、平台有关）、`record`（系统声音、麦克风、帧率看机器）。
+- `fuyu-agent-sounds` 的 `volume`（看音箱）、`pack`（音效包可能是另一台没装的插件）；`enabled` 当作模块总开关，`firstMergeOnly`。
+- `fuyu-agent-push`：只同步 `events`、`awayMinutes`；`enabled`、`channel` 也是本机的（两台都开会推两遍）。
+- 调研里的「可选」（`fuyu-qq-mail-settings`、`fuyu-collapsed-items`、`fuyu-plugin-pages`、`fuyu-update-channel`）这一版都是 `local`：邮箱要各台登录，收起态和插件页里有插件、用量的 id，两台装的不一样。
+- `fuyu-settings` 里另加的 `local`：`islandForm`（刘海形态只在 Mac 上有）、`gameDoNotDisturb` / `gameAutoTuck`（默认值按平台不同）、`hoverTakesKeyboard`（和快捷键一节放在一起）、`topEdgeLayoutVersion`（迁移标记）。
+- `firstMergeOnly` 的模块开关：`todoEnabled`、`musicEnabled`、`agentStatusEnabled`、`agentTitleEnabled`、`shelfEnabled`、`translationEnabled`、`screenshotEnabled`、`calendarEnabled`、`mailEnabled`、`deviceUseIndicator`、`levelPopup`、`deviceAlerts`。
+- 外观预设：`settings` 里只有标 `sync` 的字段参与比较和同步（应用预设本来只取主题那几项）。
