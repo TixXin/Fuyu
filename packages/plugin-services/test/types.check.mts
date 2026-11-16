@@ -1,4 +1,4 @@
-import { RUST_METHODS, defineService, remindersV1, timersV1, translatorV1, type PlatformSupport, type RustMethods, type ServiceClient, type ServiceImpl, type ServiceProvider, type Timer } from "@fuyu/plugin-services";
+import { RUST_METHODS, calendarV1, defineService, remindersV1, timersV1, translatorV1, type PlatformSupport, type RustMethods, type ServiceClient, type ServiceImpl, type ServiceProvider, type Timer } from "@fuyu/plugin-services";
 
 declare const timers: ServiceClient<typeof timersV1>;
 const listed: Promise<{ timers: Timer[]; at: number }> = timers.list();
@@ -17,6 +17,12 @@ declare const reminders: ServiceClient<typeof remindersV1>;
 void reminders.push({ id: "due-1", source: "todos.due", icon: "flag", title: "Due today", detail: "Ship it" }).then((result) => result.shown);
 // @ts-expect-error a reminder needs an icon the island knows
 void reminders.push({ id: "x", source: "y", icon: "rocket", title: "z" });
+
+declare const calendar: ServiceClient<typeof calendarV1>;
+void calendar.events({}).then((result) => result.events.map((event) => event.meetingLink ?? event.title));
+void calendar.events({ refresh: true }).then((result) => result.problems.map((problem) => problem.reason));
+// @ts-expect-error refresh is a boolean
+void calendar.events({ refresh: "yes" });
 
 declare const translator: ServiceClient<typeof translatorV1>;
 void translator.rewrite({ text: "hi", task: "polish" }, { onProgress: (chunk) => chunk.piece.length });
