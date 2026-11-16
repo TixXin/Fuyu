@@ -31,10 +31,10 @@ const DIAGNOSTICS: [(&str, &str); 3] = [
         "Local channel test; this is not a chat message.",
     ),
     (
-        "Fuyu QQ notification diagnostic",
+        "FocuSD QQ notification diagnostic",
         "Local channel test; this is not a chat message.",
     ),
-    ("浮屿 QQ 通知诊断", "这是本机通道测试，不是聊天消息。"),
+    ("FocuSD QQ 通知诊断", "这是本机通道测试，不是聊天消息。"),
 ];
 
 pub(super) fn is_diagnostic(parts: &[String]) -> bool {
