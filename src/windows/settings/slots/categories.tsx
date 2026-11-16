@@ -26,9 +26,6 @@ import { TranslationSettingsPage } from "../TranslationSettingsPage";
 import { VoiceInputSettingsPage } from "../VoiceInputSettingsPage";
 import type { IslandSettings } from "../../../lib/settings/types";
 import type { useSettingPresets } from "../../../lib/settings/useSettingPresets";
-import type { QQNotificationsController } from "../../../features/messages/qq-notifications/QQNotifications";
-import type { WeChatRemindersController } from "../../../features/messages/wechat/WeChatReminders";
-import type { useSaveDirectorySetting } from "../../../features/todos/useSaveDirectorySetting";
 import { AboutSettingsPage } from "../AboutSettingsPage";
 import { PluginsSettingsPage } from "../PluginsSettingsPage";
 import { PluginsV3SettingsPage } from "../PluginsV3SettingsPage";
@@ -44,9 +41,6 @@ export interface SettingsPageProps {
   unsupported: ReadonlySet<PlatformFeature>;
   features: FeatureSwitches;
   presets: ReturnType<typeof useSettingPresets>;
-  saveDirectory: ReturnType<typeof useSaveDirectorySetting>;
-  qqNotifications: QQNotificationsController;
-  wechatReminders: WeChatRemindersController;
   managedPluginId: string | null;
   marketRequest: ReturnType<typeof useMarketInstallRequest>;
   onLocaleChange: (locale: LocaleCode) => void;
@@ -123,13 +117,7 @@ const PAGES: Record<SettingsCategory, Page> = {
   ),
   shortcuts: shortcuts("shortcuts"),
   shortcutsIsland: shortcuts("shortcutsIsland"),
-  todos: ({ settings, saveDirectory, onSettingsChange }) => (
-    <TodosSettingsPage
-      settings={settings}
-      saveDirectory={saveDirectory}
-      onSettingsChange={onSettingsChange}
-    />
-  ),
+  todos: ({ settings, onSettingsChange }) => <TodosSettingsPage settings={settings} onSettingsChange={onSettingsChange} />,
   calendar: ({ settings, onSettingsChange }) => <CalendarSettingsPage settings={settings} onSettingsChange={onSettingsChange} />,
   music: music("music"),
   musicLyrics: music("musicLyrics"),
@@ -143,9 +131,7 @@ const PAGES: Record<SettingsCategory, Page> = {
   screenshot: screenshot("screenshot"),
   screenshotRecord: screenshot("screenshotRecord"),
   voiceInput: ({ settings }) => <VoiceInputSettingsPage settings={settings} />,
-  messages: ({ settings, qqNotifications, wechatReminders, unsupported, onSettingsChange }) => (
-    <MessagesSettingsPage settings={settings} qqNotifications={qqNotifications} wechatReminders={wechatReminders} unsupported={unsupported} onSettingsChange={onSettingsChange} />
-  ),
+  messages: ({ settings, unsupported, onSettingsChange }) => <MessagesSettingsPage settings={settings} unsupported={unsupported} onSettingsChange={onSettingsChange} />,
   agents: ({ settings, onSettingsChange, onShowPage }) => <AgentSettingsPage settings={settings} onSettingsChange={onSettingsChange} onOpenConnect={() => onShowPage("agentConnect")} />,
   agentSessions: ({ settings, onSettingsChange }) => <AgentSessionsSettingsPage settings={settings} onSettingsChange={onSettingsChange} />,
   agentAlerts: ({ settings, onSettingsChange }) => <AgentAlertsSettingsPage settings={settings} onSettingsChange={onSettingsChange} />,

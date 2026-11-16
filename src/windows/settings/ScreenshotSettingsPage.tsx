@@ -5,12 +5,10 @@ import { SettingsRow } from "../../components/settings/SettingsRow";
 import { SettingsSelect } from "../../components/settings/SettingsSelect";
 import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
 import type { IslandSettings } from "../../lib/settings/types";
-import { useClipboardSettings } from "../../features/clipboard/useClipboardSettings";
 import { ScreenshotShortcutRows } from "../../features/screenshot/ScreenshotShortcutRows";
 import { CARD_SECONDS, HISTORY_DAYS, type CardSeconds, type HistoryDays, type ScreenshotSettings } from "../../features/screenshot/settings";
 import { RecordSettingsGroup } from "./RecordSettingsGroup";
 import { useScreenshotSettings } from "../../features/screenshot/useScreenshotSettings";
-import { useTranslationSettings } from "../../features/translation/useTranslationSettings";
 import { useTranslation } from "../../i18n";
 import { isMacOS } from "../../lib/platform";
 import { FeatureHeader } from "./FeatureHeader";
@@ -137,9 +135,7 @@ export function ScreenshotSettingsPage({
   onOpenShortcuts: () => void;
 }) {
   const [screenshot, setScreenshot] = useScreenshotSettings();
-  const [clipboard] = useClipboardSettings();
-  const [translation] = useTranslationSettings();
-  const { takenBy } = useShortcutOwners({ settings, clipboard, translation, screenshot });
+  const { takenBy } = useShortcutOwners(settings);
   const [folderDraft, setFolderDraft] = useState(screenshot.saveFolder);
   const saveFolder = () => {
     const folder = folderDraft.trim();

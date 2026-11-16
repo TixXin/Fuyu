@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import {
   DEFAULT_PAGE_NEXT_SHORTCUT,
   DEFAULT_PAGE_PREVIOUS_SHORTCUT,
@@ -6,28 +6,17 @@ import {
   normalizePageDigitModifiers,
 } from "../../lib/settings/pageShortcuts";
 import type { IslandSettings } from "../../lib/settings/types";
-import type { ClipboardHistorySettings } from "../../features/clipboard/api";
-import { normalizeClipboardShortcut } from "../../features/clipboard/shortcut";
 import { listPlugins } from "../../features/plugins/api";
 import { pluginShortcutRows, type PluginShortcutRow } from "../../features/plugins/pluginShortcuts";
-import { SHORTCUT_ACTIONS, type ScreenshotSettings } from "../../features/screenshot/settings";
-import { loadScreenshotSettings } from "../../features/screenshot/storage";
-import type { TranslationSettings } from "../../features/translation/storage";
-import type { VoiceInputSettings } from "../../features/voice-input/settings";
-import { loadVoiceInputSettings } from "../../features/voice-input/storage";
 import { useLocale, useTranslation } from "../../i18n";
 import { findShortcutOwner, type ShortcutOwner } from "./shortcutConflicts";
+import { shortcutOwnerSnapshot, subscribeShortcutOwners } from "./shortcutOwnerStore";
 
-export function useShortcutOwners({ settings, clipboard, translation, screenshot, voice }: {
-  settings: IslandSettings;
-  clipboard: ClipboardHistorySettings;
-  translation: TranslationSettings;
-  screenshot?: ScreenshotSettings;
-  voice?: VoiceInputSettings;
-}) {
+export function useShortcutOwners(settings: IslandSettings) {
   const t = useTranslation();
   const { locale } = useLocale();
   const [pluginRows, setPluginRows] = useState<PluginShortcutRow[]>([]);
+  const reported = useSyncExternalStore(subscribeShortcutOwners, shortcutOwnerSnapshot);
 
   const refreshPlugins = useCallback(() => {
     listPlugins()
@@ -41,24 +30,8 @@ export function useShortcutOwners({ settings, clipboard, translation, screenshot
   }, [refreshPlugins]);
 
   const digitModifiers = normalizePageDigitModifiers(settings.pageDigitModifiers);
-  const voiceInput = voice ?? loadVoiceInputSettings();
   const owners: ShortcutOwner[] = [
-    ...(settings.translationEnabled ? [
-      { id: "window", label: t.settings.shortcuts.openTranslation, shortcut: translation.shortcut, home: "translation" as const },
-      { id: "selection", label: t.settings.translation.selectionShortcut, shortcut: translation.selectionShortcut, home: "translation" as const },
-    ] : []),
-    ...(clipboard.enabled && clipboard.shortcutEnabled
-      ? [{ id: "clipboard", label: t.settings.clipboard.shortcut, shortcut: normalizeClipboardShortcut(clipboard.shortcut), home: "clipboard" as const }]
-      : []),
-    ...(settings.screenshotEnabled
-      ? SHORTCUT_ACTIONS.flatMap((action) => {
-        const shortcut = (screenshot ?? loadScreenshotSettings()).shortcuts[action];
-        return shortcut ? [{ id: `screenshot:${action}`, label: t.settings.screenshot.actions[action], shortcut, home: "screenshot" as const }] : [];
-      })
-      : []),
-    ...(voiceInput.enabled && voiceInput.shortcut
-      ? [{ id: "voiceInput", label: t.voiceInput.settings.shortcut, shortcut: voiceInput.shortcut, home: "voiceInput" as const }]
-      : []),
+    ...reported.owners,
     ...pluginRows.flatMap((row) => row.shortcut
       ? [{ id: row.key, label: `${row.title[locale]} · ${row.pluginName[locale]}`, shortcut: row.shortcut, home: "plugins" as const }]
       : []),
@@ -70,5 +43,5 @@ export function useShortcutOwners({ settings, clipboard, translation, screenshot
   ];
   const takenBy = (shortcut: string, selfId: string) => findShortcutOwner(shortcut, owners, selfId);
 
-  return { owners, takenBy, refreshPlugins };
+  return { owners, finderOnly: reported.finderOnly, takenBy, refreshPlugins };
 }

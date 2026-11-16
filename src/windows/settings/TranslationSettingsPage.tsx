@@ -1,6 +1,5 @@
 import type { Dispatch, SetStateAction } from "react";
 import type { IslandSettings, TranslationTarget } from "../../lib/settings/types";
-import { useClipboardSettings } from "../../features/clipboard/useClipboardSettings";
 import type { TranslationSettings } from "../../features/translation/storage";
 import { TranslationSettingsSection } from "../../features/translation/TranslationSettingsSection";
 import { useTranslationSettings } from "../../features/translation/useTranslationSettings";
@@ -79,8 +78,7 @@ export function TranslationSettingsPage({
   onOpenShortcuts: () => void;
 }) {
   const [translationSettings, setTranslationSettings] = useTranslationSettings();
-  const [clipboardSettings] = useClipboardSettings();
-  const { takenBy } = useShortcutOwners({ settings, clipboard: clipboardSettings, translation: translationSettings });
+  const { takenBy } = useShortcutOwners(settings);
   const props = { settings, onSettingsChange, onOpenShortcuts, translation: translationSettings, onTranslationChange: setTranslationSettings, takenBy };
   return (
     <>

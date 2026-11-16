@@ -17,6 +17,7 @@ import { MAX_MAIL_ACCOUNTS } from "../../features/messages/mail/mailAccounts";
 import { loadMailAccounts } from "../../features/messages/mail/storage";
 import { useMailAccounts } from "../../features/messages/mail/useMailAccounts";
 import type { QQNotificationsController } from "../../features/messages/qq-notifications/QQNotifications";
+import { useMessageControllers } from "../../features/messages/settingsControllers";
 import type { WeChatRemindersController } from "../../features/messages/wechat/WeChatReminders";
 import { IslandGlyph } from "./sections/IslandGlyph";
 import { useTranslation } from "../../i18n";
@@ -126,9 +127,12 @@ sections.add({ id: "messages.qq", category: "messages", order: 20, component: QQ
 sections.add({ id: "messages.wechat", category: "messages", order: 30, component: WeChatSection });
 sections.add({ id: "messages.mail", category: "messages", order: 40, component: MailGroups });
 
-export function MessagesSettingsPage(props: MessagesSectionProps) {
-  const { settings, qqNotifications, wechatReminders, unsupported } = props;
+export function MessagesSettingsPage(page: Omit<MessagesSectionProps, "qqNotifications" | "wechatReminders">) {
+  const controllers = useMessageControllers();
   const t = useTranslation();
+  if (!controllers) return null;
+  const props = { ...page, ...controllers };
+  const { settings, qqNotifications, wechatReminders, unsupported } = props;
   const labels = t.settings.messageSources;
   const sourcesOn = [!unsupported.has("qq") && qqNotifications.snapshot.enabled, !unsupported.has("wechat") && wechatReminders.snapshot.enabled, settings.mailEnabled].filter(Boolean).length;
 

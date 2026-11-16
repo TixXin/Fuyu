@@ -1,7 +1,8 @@
 import type { Dispatch, ReactNode, SetStateAction } from "react";
 import { PageShortcutSection } from "./sections/PageShortcutSection";
 import type { IslandSettings } from "../../lib/settings/types";
-import { APPROVAL_HOTKEYS, type AgentApprovalDecision } from "../../features/agent-status/approvals/api";
+import { APPROVAL_HOTKEYS } from "../../features/agent-status/approvals/api";
+import { approvalLabel } from "../../features/agent-status/approvals/approvalLabel";
 import type { ClipboardHistorySettings } from "../../features/clipboard/api";
 import { useClipboardSettings } from "../../features/clipboard/useClipboardSettings";
 import { PluginShortcutSection } from "../../features/plugins/PluginShortcutSection";
@@ -21,7 +22,6 @@ import { useScreenshotSettings } from "../../features/screenshot/useScreenshotSe
 import { VoiceInputShortcutGroup } from "../../features/voice-input/VoiceInputShortcutGroup";
 import { useVoiceInputSettings } from "../../features/voice-input/useVoiceInputSettings";
 import { ClipboardShortcutGroup, ScreenshotShortcutGroup, TranslationShortcutGroup } from "./ShortcutGroups";
-import type { ShortcutOwner } from "./shortcutConflicts";
 import { useShortcutOwners } from "./useShortcutOwners";
 import "./ShortcutsSettingsPage.css";
 import { shortcutLabel } from "../../lib/shortcut/shortcut";
@@ -52,11 +52,6 @@ function ReferenceSection({ title, rows, footer, action }: { title: string; rows
       ))}
     </SettingsGroup>
   );
-}
-
-function approvalLabel(t: Translations, action: AgentApprovalDecision) {
-  const approvalLabels: Partial<Record<AgentApprovalDecision, string>> = { allow: t.agent.approval.allow, deny: t.agent.approval.deny, terminal: t.agent.approval.terminal };
-  return approvalLabels[action] ?? action;
 }
 
 function pageLink(t: Translations, onOpenPage: (page: SettingsCategory) => void, page: SettingsCategory) {
@@ -176,17 +171,11 @@ export function ShortcutsSettingsPage({
   onSettingsChange: (settings: IslandSettings) => void;
   onOpenPage: (page: SettingsCategory) => void;
 }) {
-  const t = useTranslation();
-  const text = t.settings.shortcuts;
   const [clipboardSettings, updateClipboardSettings] = useClipboardSettings();
   const [translationSettings, setTranslationSettings] = useTranslationSettings();
   const [screenshotSettings, setScreenshotSettings] = useScreenshotSettings();
   const [voiceSettings, setVoiceSettings] = useVoiceInputSettings();
-  const { owners, takenBy, refreshPlugins } = useShortcutOwners({ settings, clipboard: clipboardSettings, translation: translationSettings, screenshot: screenshotSettings, voice: voiceSettings });
-
-  const approvalOwners: ShortcutOwner[] = APPROVAL_HOTKEYS.map(({ action, shortcut }) => ({
-    id: `approval:${action}`, label: `${text.approvalTitle} · ${approvalLabel(t, action)}`, shortcut, home: "agentApprovals",
-  }));
+  const { owners, finderOnly, takenBy, refreshPlugins } = useShortcutOwners(settings);
 
   const props = {
     settings, onSettingsChange, onOpenPage, takenBy, refreshPlugins,
@@ -198,7 +187,7 @@ export function ShortcutsSettingsPage({
 
   return (
     <>
-      <ShortcutFinder owners={[...owners, ...approvalOwners]} onOpenPage={onOpenPage} />
+      <ShortcutFinder owners={[...owners, ...finderOnly]} onOpenPage={onOpenPage} />
       <SlotView slot={sections} group={tab} props={props} />
     </>
   );

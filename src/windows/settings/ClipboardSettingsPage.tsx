@@ -8,7 +8,6 @@ import { ClipboardSnippetSettings } from "../../features/clipboard/ClipboardSnip
 import { ClipboardTransferSettings } from "../../features/clipboard/ClipboardTransferSettings";
 import { openShortcutLabel } from "../../features/clipboard/shortcut";
 import { useClipboardSettings } from "../../features/clipboard/useClipboardSettings";
-import { useTranslationSettings } from "../../features/translation/useTranslationSettings";
 import { useTranslation } from "../../i18n";
 import { FeatureHeader } from "./FeatureHeader";
 import { ClipboardShortcutGroup } from "./ShortcutGroups";
@@ -73,8 +72,7 @@ export function ClipboardSettingsPage({ tab, settings, onOpenShortcuts }: {
 }) {
   const t = useTranslation();
   const [clipboardSettings, updateClipboardSettings] = useClipboardSettings();
-  const [translationSettings] = useTranslationSettings();
-  const { takenBy } = useShortcutOwners({ settings, clipboard: clipboardSettings, translation: translationSettings });
+  const { takenBy } = useShortcutOwners(settings);
   const openKeys = openShortcutLabel(clipboardSettings);
   const props = { onOpenShortcuts, clipboardSettings, onClipboardSettingsChange: updateClipboardSettings, takenBy };
 
