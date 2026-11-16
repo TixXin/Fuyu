@@ -99,7 +99,7 @@ export function AgentSessionsPanel({
       ...members.flatMap((root) => [root, ...shownChildren(sessionKey(root)).map((child) => child.session)]).map((session) => ({
         key: sessionKey(session),
         light: sessionLight(session),
-        open: view === "list" && openSubagents.has(sessionKey(session)) ? listedSubagents(session).length : 0,
+        open: openSubagents.has(sessionKey(session)) ? listedSubagents(session).length : 0,
       })),
     ]),
     view,
@@ -254,6 +254,7 @@ export function AgentSessionsPanel({
             </button>
           );
           if (view !== "list") {
+            const subagents = !reveal && listedSubagents(session).length > 0;
             const card = (
               <AgentSessionCard
                 session={session}
@@ -268,6 +269,7 @@ export function AgentSessionsPanel({
                 notFound={notFound}
                 cardReply={reveal && !isActivePhase(session.phase) ? session.lastMessage : null}
                 effects={cardEffects}
+                subagentsListed={subagents}
                 onOpen={() => focus(session)}
               />
             );
@@ -278,6 +280,7 @@ export function AgentSessionsPanel({
                     {card}
                   </AgentSessionHoverCard>
                 )}
+                {subagents && <AgentSubagents session={session} open={openSubagents.has(key)} onToggle={() => toggleSubagents(key)} />}
                 {menu}
                 {archive}
               </li>
