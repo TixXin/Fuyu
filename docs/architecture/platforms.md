@@ -21,12 +21,12 @@ macOS 的计划和决定见 [macos-port-plan.md](macos-port-plan.md)，各功能
 
 ## 支持情况
 
-更新：2026-11-15（岛的拖动与贴顶、显示在哪块屏、屏幕变化重摆三行和底边、侧边的跟随说明按 G1.23、G1.24 改；AI 代理的几行按 B26–B33 改：WorkBuddy、Antigravity、DSH 的钩子和审批，DSH 的数据目录，SSH 远程，opencode；B34–B37、B46：opencode 1.x 插件、远程回复标记、远程 Antigravity 审批、WorkBuddy 在 Mac 上判断退出、Codex 的 sqlite 和 Claude 桌面 App 的会话；插件平台第 3 版一行补上第 1 阶段的真岛验收和第 2 阶段的插槽（E36.2））；2026-11-13（G1.2：Rust 端在 Mac 上能编译、clippy 与测试通过，`pnpm dev:lane` 能起窗口；功能都还没做，表里的 macOS 状态不变）。
+更新：2026-11-15（C98：Mac 上修饰键拖动改用 Control；岛的拖动与贴顶、显示在哪块屏、屏幕变化重摆三行和底边、侧边的跟随说明按 G1.23、G1.24 改；AI 代理的几行按 B26–B33 改：WorkBuddy、Antigravity、DSH 的钩子和审批，DSH 的数据目录，SSH 远程，opencode；B34–B37、B46：opencode 1.x 插件、远程回复标记、远程 Antigravity 审批、WorkBuddy 在 Mac 上判断退出、Codex 的 sqlite 和 Claude 桌面 App 的会话；插件平台第 3 版一行补上第 1 阶段的真岛验收和第 2 阶段的插槽（E36.2））；2026-11-13（G1.2：Rust 端在 Mac 上能编译、clippy 与测试通过，`pnpm dev:lane` 能起窗口；功能都还没做，表里的 macOS 状态不变）。
 
 | 功能 | 模块 | Windows | macOS | macOS 的做法与权限 | 子任务 | 最后验证（macOS） |
 |---|---|---|---|---|---|---|
 | 悬浮岛窗口（折叠、展开、贴边收起） | `island` | 已支持 | 开发中 | NSPanel（`tauri-nspanel`）+ Accessory；无需权限。展开后鼠标停在面板上时让面板成为 key window（非激活面板，不激活浮屿），网页才收得到鼠标移动、内部元素有 hover 样式；移开时交还给原来的前台应用（`island/focus_macos.rs`） | G1.3 | — |
-| 岛拖动与贴顶（G1.23） | `island/top_edge.rs`、`drag_hint.rs`、`state.rs` | 已支持 | 已支持 | 拖动中只改舞台大小、不摆位置，窗口由系统拖着走，松手后按 `island::screen` 写回逻辑点（Mac 上不再记 `WindowEvent::Moved` 的物理像素，以前 Retina 屏上拖动中会跳）。顶边由 `top_edge::TopEdge` 统一给出：Mac「压在菜单栏上」时吸到屏幕最上沿、拖到菜单栏下沿附近就算靠近，「放在菜单栏下面」和 Windows 是工作区上沿；吸附位置和提示线一致。只在 macOS：在默认位置所在的屏上拖回顶部正中（±40pt）清掉自定义位置、回到默认位置，有刘海时回到刘海形态 | G1.23 | 未实测（2026-11-15） |
+| 岛拖动与贴顶（G1.23） | `island/top_edge.rs`、`drag_hint.rs`、`state.rs` | 已支持 | 已支持 | 修饰键 + 拖动移动岛、按住修饰键时展开的面板不收起：Windows 是 Alt，Mac 是 ⌃ Control（C98，`macos::input::is_control_key_down`；Option 拖窗口会触发系统的左右平铺）。Mac 上 Ctrl + 点击是右键，开始拖动后前端吞掉紧跟的 `contextmenu`。拖动中只改舞台大小、不摆位置，窗口由系统拖着走，松手后按 `island::screen` 写回逻辑点（Mac 上不再记 `WindowEvent::Moved` 的物理像素，以前 Retina 屏上拖动中会跳）。顶边由 `top_edge::TopEdge` 统一给出：Mac「压在菜单栏上」时吸到屏幕最上沿、拖到菜单栏下沿附近就算靠近，「放在菜单栏下面」和 Windows 是工作区上沿；吸附位置和提示线一致。只在 macOS：在默认位置所在的屏上拖回顶部正中（±40pt）清掉自定义位置、回到默认位置，有刘海时回到刘海形态 | G1.23 | 未实测（2026-11-15） |
 | 岛显示在哪块屏（主屏 / 跟随鼠标 / 跟随前台窗口） | `island/follow.rs`、`follow_point.rs`、`follow_point_macos.rs` | 已支持 | 已支持 | 循环和换屏两边共用，取点按平台分开：跟随鼠标读 `NSEvent.mouseLocation`（`macos::input::cursor_point`），跟随前台窗口取 `CGWindowListCopyWindowInfo` 里最前面的别家普通窗口的中心（`macos::fullscreen::front_window_of_others`）；坐标按全局逻辑点（`island::screen`）。贴底、贴侧边换屏后保持原来的边和比例；无需权限 | G1.24 | 未实测（2026-11-15，开发机只有一块屏） |
 | 屏幕变化后重摆岛 | `island/screen_watch.rs` | 由跟随循环和系统兜底 | 已支持 | 每 2 秒比较一次全部屏幕的 frame、工作区（visibleFrame，含菜单栏、Dock）、缩放和刘海，有变化就重摆：插拔显示器、改分辨率、Dock 换位置或自动隐藏后跟上；保存的位置所在屏幕没了时回到主屏，屏幕回来后回原位（以前只比较刘海） | G1.24 | 未实测（2026-11-15） |
 | 岛吸附到屏幕下边（C54.3） | `island/bottom_edge.rs` | 已支持 | 已支持 | 按工作区下沿：Windows 上任务栏在下边时贴任务栏上沿，macOS 上贴 Dock 上沿（Dock 自动隐藏时贴屏幕下沿）；面板往上展开、贴边收起往下缩；刘海模式只在顶边。多显示器跟随两个平台都有，换屏后仍贴新屏的下边（macOS 2026-11-15 起，G1.24）；Alt 改尺寸只在 Windows | C54.3 | 未实测（2026-11-15） |

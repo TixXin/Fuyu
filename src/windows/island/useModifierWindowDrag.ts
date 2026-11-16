@@ -1,9 +1,18 @@
 import { useEffect, useRef } from "react";
+import { isMacOS } from "../../lib/platform";
 import * as islandApi from "./api";
 import "./ModifierWindowDrag.css";
 
 const MOVE_ARMED_CLASS = "island-move-armed";
 const DRAG_KIND_ATTRIBUTE = "islandDrag";
+
+function isDragModifierDown(event: PointerEvent) {
+  return isMacOS ? event.ctrlKey : event.altKey;
+}
+
+function isDragButton(event: PointerEvent) {
+  return event.button === 0 || (isMacOS && event.button === 2 && event.ctrlKey);
+}
 
 export function useModifierWindowDrag(onDragStart: () => void) {
   const isArmedRef = useRef(false);
@@ -44,17 +53,27 @@ export function useModifierWindowDrag(onDragStart: () => void) {
 
   useEffect(() => {
     let swallowNextClick = false;
+    let swallowNextContextMenu = false;
 
     const press = (event: PointerEvent) => {
       swallowNextClick = false;
-      if (event.button !== 0 || !(isArmedRef.current || event.altKey)) {
+      swallowNextContextMenu = false;
+      if (!isDragButton(event) || !(isArmedRef.current || isDragModifierDown(event))) {
         return;
       }
 
       event.preventDefault();
       event.stopPropagation();
       swallowNextClick = true;
+      swallowNextContextMenu = isMacOS;
       onDragStartRef.current();
+    };
+    const contextMenu = (event: MouseEvent) => {
+      if (swallowNextContextMenu) {
+        swallowNextContextMenu = false;
+        event.preventDefault();
+        event.stopPropagation();
+      }
     };
     const click = (event: MouseEvent) => {
       if (swallowNextClick && event.detail > 0) {
@@ -66,9 +85,11 @@ export function useModifierWindowDrag(onDragStart: () => void) {
 
     window.addEventListener("pointerdown", press, true);
     window.addEventListener("click", click, true);
+    window.addEventListener("contextmenu", contextMenu, true);
     return () => {
       window.removeEventListener("pointerdown", press, true);
       window.removeEventListener("click", click, true);
+      window.removeEventListener("contextmenu", contextMenu, true);
     };
   }, []);
 }

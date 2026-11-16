@@ -21,9 +21,9 @@ export type SettingsShortcutsText = {
   altDrag: string;
   altDragMac: string;
   resizePanel: string;
-  resizePanelMac: string;
+  holdPanelMac: string;
   altDragEdge: string;
-  altDragEdgeMac: string;
+  holdControlMac: string;
   inputTitle: string;
   translate: string;
   newLine: string;
@@ -63,11 +63,11 @@ export const zhCN: SettingsShortcutsText = {
   collapse: "收起展开的岛",
   moveIsland: "移动岛屿",
   altDrag: "Alt + 拖动",
-  altDragMac: "⌥ Option + 拖动",
+  altDragMac: "⌃ Control + 拖动",
   resizePanel: "调整面板宽高（按住 Alt 时面板不收起）",
-  resizePanelMac: "调整面板宽高（按住 Option 时面板不收起）",
+  holdPanelMac: "展开的面板不收起",
   altDragEdge: "Alt + 拖动面板边缘",
-  altDragEdgeMac: "⌥ Option + 拖动面板边缘",
+  holdControlMac: "按住 ⌃ Control",
   inputTitle: "翻译输入框",
   translate: "翻译",
   newLine: "换行",
@@ -107,11 +107,11 @@ export const en: SettingsShortcutsText = {
   collapse: "Collapse the expanded island",
   moveIsland: "Move the island",
   altDrag: "Alt + drag",
-  altDragMac: "⌥ Option + drag",
+  altDragMac: "⌃ Control + drag",
   resizePanel: "Resize the panel (it stays open while Alt is held)",
-  resizePanelMac: "Resize the panel (it stays open while Option is held)",
+  holdPanelMac: "Keep the open panel from closing",
   altDragEdge: "Alt + drag the panel's edge",
-  altDragEdgeMac: "⌥ Option + drag the panel's edge",
+  holdControlMac: "Hold ⌃ Control",
   inputTitle: "Translation input",
   translate: "Translate",
   newLine: "New line",

@@ -192,7 +192,7 @@ pub fn start_island_drag(app: AppHandle) -> Result<(), String> {
 pub fn start_island_modifier_drag(app: AppHandle) -> Result<(), String> {
     let window = main_window(&app)?;
 
-    if !alt_key_down() {
+    if !drag_modifier_down() {
         return Ok(());
     }
     if modifier::start_resize(&window) {
@@ -203,13 +203,13 @@ pub fn start_island_modifier_drag(app: AppHandle) -> Result<(), String> {
 }
 
 #[cfg(windows)]
-fn alt_key_down() -> bool {
+fn drag_modifier_down() -> bool {
     win32::input::is_alt_key_down()
 }
 
 #[cfg(target_os = "macos")]
-fn alt_key_down() -> bool {
-    crate::macos::input::is_option_key_down()
+fn drag_modifier_down() -> bool {
+    crate::macos::input::is_control_key_down()
 }
 
 #[cfg(windows)]

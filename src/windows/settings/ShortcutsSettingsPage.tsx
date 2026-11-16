@@ -22,7 +22,7 @@ function IslandReference() {
   return (
     <ShortcutReferenceGroup
       title={text.islandTitle}
-      rows={[[text.collapse, "Esc"], [text.moveIsland, isMacOS ? text.altDragMac : text.altDrag], [isMacOS ? text.resizePanelMac : text.resizePanel, isMacOS ? text.altDragEdgeMac : text.altDragEdge]]}
+      rows={[[text.collapse, "Esc"], [text.moveIsland, isMacOS ? text.altDragMac : text.altDrag], isMacOS ? [text.holdPanelMac, text.holdControlMac] : [text.resizePanel, text.altDragEdge]]}
     />
   );
 }
