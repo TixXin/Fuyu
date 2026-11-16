@@ -153,7 +153,7 @@
   align-items: center;
   gap: 12px;
   padding: 14px 32px 14px 14px;
-  transition: background 140ms ease, border-color 140ms ease, transform 160ms ease;
+  transition: background 140ms ease, border-color 140ms ease, transform var(--motion-base) ease;
 }
 
 .about-links .project-link:hover {

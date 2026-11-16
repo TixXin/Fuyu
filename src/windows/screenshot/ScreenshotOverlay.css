@@ -24,7 +24,7 @@ body:has(.screenshot-overlay) {
   position: absolute;
   inset: 0;
   background: rgba(0, 0, 0, 0.42);
-  animation: screenshot-dim-in var(--motion-fast) ease-out both;
+  animation: screenshot-dim-in var(--motion-fast) var(--motion-ease) both;
 }
 
 @keyframes screenshot-dim-in {
@@ -172,7 +172,7 @@ body:has(.screenshot-overlay) {
   border: 0;
   outline: 2px dashed var(--color-accent, #74d6ff);
   outline-offset: 2px;
-  animation: screenshot-long-pulse 1.6s ease-in-out infinite;
+  animation: screenshot-long-pulse 1.6s var(--motion-ease-in-out) infinite;
 }
 
 @keyframes screenshot-long-pulse {

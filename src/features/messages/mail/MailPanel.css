@@ -2,7 +2,7 @@
 .qq-mail-accounts { display: flex; align-items: center; gap: 4px; flex: 0 0 auto; min-width: 0; padding: 0 4px; }
 .qq-mail-accounts__tabs { display: flex; align-items: center; gap: 4px; flex: 0 1 auto; min-width: 0; overflow-x: auto; scrollbar-width: none; }
 .qq-mail-setup .message-action { margin-top: 4px; }
-.qq-mail-account { display: flex; align-items: center; gap: 7px; min-height: 22px; flex: 0 1 auto; min-width: 0; max-width: 220px; padding: 4px 8px; color: inherit; font: inherit; border: 0; border-radius: var(--radius-sm); background: transparent; cursor: pointer; transition: background 160ms; }
+.qq-mail-account { display: flex; align-items: center; gap: 7px; min-height: 22px; flex: 0 1 auto; min-width: 0; max-width: 220px; padding: 4px 8px; color: inherit; font: inherit; border: 0; border-radius: var(--radius-sm); background: transparent; cursor: pointer; transition: background var(--motion-base); }
 .qq-mail-account:hover:not(:disabled) { background: var(--color-white-a08); }
 .qq-mail-account[aria-selected="true"] { background: var(--color-white-a10); }
 .qq-mail-account[aria-selected="true"] .qq-mail-account__email { color: var(--color-page-text); }

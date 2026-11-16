@@ -1,7 +1,6 @@
 import { useLayoutEffect, useRef } from "react";
+import { MOTION_EASE_OUT, MOTION_MEDIUM_MS } from "../../lib/theme/motionTokens";
 import type { IslandMode, IslandPage } from "./types";
-
-const FADE_IN_DURATION_MS = 220;
 
 export function usePageFadeIn<T extends HTMLElement>(page: IslandPage, mode: IslandMode) {
   const contentRef = useRef<T>(null);
@@ -23,7 +22,7 @@ export function usePageFadeIn<T extends HTMLElement>(page: IslandPage, mode: Isl
 
     const animation = content.animate(
       [{ opacity: 0 }, { opacity: 1 }],
-      { duration: FADE_IN_DURATION_MS, easing: "cubic-bezier(0.16, 1, 0.3, 1)" },
+      { duration: MOTION_MEDIUM_MS, easing: MOTION_EASE_OUT },
     );
     return () => animation.cancel();
   }, [mode, page]);

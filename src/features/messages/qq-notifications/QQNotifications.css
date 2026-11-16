@@ -132,7 +132,7 @@
   border-radius: var(--radius-pill);
   background: var(--color-white-a08);
   cursor: pointer;
-  transition: background 160ms ease, border-color 160ms ease;
+  transition: background var(--motion-base) ease, border-color var(--motion-base) ease;
 }
 
 .qq-panel__toggle input::before {
@@ -144,7 +144,7 @@
   height: 10px;
   border-radius: var(--radius-circle);
   background: rgba(var(--overlay-rgb, 255, 255, 255), .7);
-  transition: transform 160ms ease;
+  transition: transform var(--motion-base) ease;
 }
 
 .qq-panel__toggle input:checked {

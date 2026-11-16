@@ -19,11 +19,11 @@ import { nextOpacity, nextScale } from "../../features/screenshot/pin";
 import { saveFolderOf } from "../../features/screenshot/settings";
 import { loadScreenshotSettings } from "../../features/screenshot/storage";
 import { useErrorText, useTranslation } from "../../i18n";
+import { MOTION_BASE_MS } from "../../lib/theme/motionTokens";
 import { getErrorMessage } from "../../utils/error";
 import "./PinWindow.css";
 
 const NOTICE_MS = 1600;
-const CLOSE_MS = 140;
 
 function usePinPicture() {
   const [info, setInfo] = useState<PinInfo | null>(null);
@@ -96,7 +96,7 @@ export function PinWindow() {
   const save = useCallback(() => savePin({ folder: saveFolderOf(loadScreenshotSettings()), folderName: t.saveFolderName }).then((path) => setNotice(t.saved(path)), report), [report, t]);
   const close = useCallback(() => {
     setClosing(true);
-    window.setTimeout(() => void closePin(), CLOSE_MS);
+    window.setTimeout(() => void closePin(), MOTION_BASE_MS);
   }, []);
   const zoom = useCallback((next: number, anchor = { x: 0.5, y: 0.5 }) => {
     setScale(next);

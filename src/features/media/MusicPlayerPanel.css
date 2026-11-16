@@ -79,7 +79,7 @@
   align-items: center;
   gap: 4px;
   opacity: 0;
-  transition: opacity 160ms ease;
+  transition: opacity var(--motion-base) ease;
 }
 
 .music-player:hover .music-player__tune,

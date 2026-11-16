@@ -42,7 +42,7 @@
 .play-act__task--done .play-act__star {
   color: #ffc53d;
   fill: #ffc53d;
-  animation: playStar 480ms cubic-bezier(0.2, 0.9, 0.3, 1.5);
+  animation: playStar var(--motion-slow) cubic-bezier(0.2, 0.9, 0.3, 1.5);
 }
 
 .play-act__task--done .play-act__task-text {
