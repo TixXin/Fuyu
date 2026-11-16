@@ -32,6 +32,13 @@ let snapshot: MailSnapshot = {
   })), lastSyncedAt: now, error: state === "auth" ? "授权码已失效，请重新连接。" : null,
 };
 
+let sources: Record<string, unknown> = { qq: true, wechat: true, mail: true };
+const plugins = () => [{ id: "messages", kind: "builtin", enabled: true, background: [], config: { ...sources } }];
+const wechatSnapshot = () => {
+  const on = sources.wechat === true;
+  return { revision: ++revision, enabled: on, status: !on ? "disabled" : state === "wechatError" ? "error" : "listening", pending: on && state !== "empty" && state !== "disconnected", lastAttentionAt: !on || state === "empty" || state === "disconnected" ? null : now - 120_000, error: on && state === "wechatError" ? "微信提醒连接失败，正在重试。" : null, message: null, items: [] };
+};
+
 mockIPC((command, payload) => {
   const args = (payload ?? {}) as Record<string, unknown>;
   calls.push({ command, args });
@@ -46,8 +53,13 @@ mockIPC((command, payload) => {
     case "mark_qq_mail_read": snapshot = { ...snapshot, revision: ++revision, unreadCount: Math.max(0, (snapshot.unreadCount ?? 0) - 1), items: snapshot.items.map(item => item.id === args.messageId ? { ...item, unread: false } : item) }; return snapshot;
     case "set_qq_mail_enabled": snapshot = { ...snapshot, revision: ++revision, enabled: Boolean(args.enabled), status: args.enabled ? "connected" : "paused" }; return snapshot;
     case "request_qq_notification_access": return "allowed";
-    case "set_qq_notifications_enabled": return { revision: ++revision, enabled: args.enabled, status: "listening", error: null, items: state === "empty" || state === "disconnected" ? [] : [{ id: "qq:1", title: "设计讨论组", body: "新版界面已准备好，方便时看一下。", createdAt: now - 30_000 }] };
-    case "set_wechat_reminders_enabled": return { revision: ++revision, enabled: args.enabled, status: !args.enabled ? "disabled" : state === "wechatError" ? "error" : "listening", pending: Boolean(args.enabled) && state !== "empty" && state !== "disconnected", lastAttentionAt: !args.enabled || state === "empty" || state === "disconnected" ? null : now - 120_000, error: args.enabled && state === "wechatError" ? "微信提醒连接失败，正在重试。" : null };
+    case "get_qq_notification_state": return { revision: ++revision, enabled: true, status: "listening", error: null, items: state === "empty" || state === "disconnected" ? [] : [{ id: "qq:1", title: "设计讨论组", body: "新版界面已准备好，方便时看一下。", createdAt: now - 30_000 }] };
+    case "set_wechat_expose_ui": case "set_wechat_hide_taskbar_button": return wechatSnapshot();
+    case "get_builtin_plugins": return plugins();
+    case "set_builtin_plugin_config":
+      sources = { ...sources, [String(args.key)]: args.value };
+      if (args.key === "wechat") void emit("wechat-reminder-changed", { snapshot: wechatSnapshot(), windowVisible: false });
+      return plugins();
     case "clear_wechat_reminders": return { revision: ++revision, enabled: true, status: "listening", pending: true, lastAttentionAt: now, error: null, message: null, items: [] };
     default: return null;
   }
@@ -71,6 +83,9 @@ const button = (label: string) => {
   return result[0];
 };
 const click = async (label: string) => { await act(async () => { button(label).click(); }); };
+const until = async (ready: () => boolean) => {
+  for (let tries = 0; tries < 40 && !ready(); tries += 1) await act(async () => { await new Promise(resolve => setTimeout(resolve, 50)); });
+};
 const type = async (field: HTMLInputElement | HTMLTextAreaElement, value: string) => {
   const setter = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(field), "value")!.set!;
   await act(async () => { setter.call(field, value); field.dispatchEvent(new Event("input", { bubbles: true })); });
@@ -106,8 +121,10 @@ try {
     await click("清空微信提醒");
     check(calls.some(call => call.command === "clear_wechat_reminders") && wechatRows().length === 0 && document.querySelector('.wechat-reminder-state--pending'), "清空后回到提醒状态");
     await click("接收微信提醒");
+    await until(() => button("接收微信提醒").getAttribute("aria-checked") === "false");
     check(document.querySelector('.qq-panel__empty')?.textContent?.includes("已暂停") && document.querySelector('button[aria-label="接收微信提醒"]')?.getAttribute("aria-checked") === "false", "暂停微信提醒后保持正确状态");
     await click("接收微信提醒");
+    await until(() => button("接收微信提醒").getAttribute("aria-checked") === "true");
     await click("QQ 通知");
     check(view! === "qq" && document.querySelector('[aria-label="QQ 最近通知"]'), "切回 QQ 显示自己的通知列表");
     await click("邮箱");

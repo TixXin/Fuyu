@@ -3,7 +3,7 @@ import { latestMessagePreview } from "../messagePreview";
 import type { MailController } from "../mail/MailPanel";
 import type { QQNotificationsController } from "../qq-notifications/QQNotifications";
 import type { WeChatRemindersController } from "../wechat/WeChatReminders";
-import type { PluginNotificationsController } from "../../plugins/usePluginNotifications";
+import type { PluginNotificationsController } from "./usePluginNotifications";
 import { useTranslation } from "../../../i18n";
 export function useLatestMessagePreview(
   qqNotifications: QQNotificationsController,

@@ -5,7 +5,7 @@ import "../../src/styles/tokens.css";
 import "../../src/windows/island/IslandApp";
 import { IslandShell } from "../../src/windows/island/IslandShell";
 import { useLatestMessagePreview } from "../../src/features/messages/island/useLatestMessagePreview";
-import type { PluginNotificationsController } from "../../src/features/plugins/usePluginNotifications";
+import type { PluginNotificationsController } from "../../src/features/messages/island/usePluginNotifications";
 
 const NO_PLUGIN_NOTIFICATIONS: PluginNotificationsController = { notification: null, dismiss: () => {}, runAction: () => {}, post: () => {} };
 import type { CollapsedSlots } from "../../src/windows/island/types";

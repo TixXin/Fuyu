@@ -15,7 +15,7 @@ use std::{
     cell::RefCell,
     path::Path,
     rc::Rc,
-    sync::{mpsc, Arc, Mutex, OnceLock},
+    sync::{Arc, Mutex, OnceLock},
     thread,
     time::{Duration, Instant, SystemTime, UNIX_EPOCH},
 };
@@ -24,6 +24,8 @@ use windows::Win32::Foundation::HWND;
 
 pub(crate) use plugin_view::plugin_messages;
 
+use crate::messages_plugin::{self, SourceWorker};
+use crate::plugin_kernel::worker::{Stop, Worker};
 use crate::win32;
 
 const EVENT_NAME: &str = "wechat-reminder-changed";
@@ -213,14 +215,12 @@ struct ReminderService {
     state: Mutex<ReminderState>,
     gate: Mutex<gate::Keeper>,
     button: Mutex<button::Keeper>,
-    wake: mpsc::SyncSender<()>,
 }
 
 pub fn init(app: &AppHandle) -> Result<(), String> {
     if SERVICE.get().is_some() {
         return Ok(());
     }
-    let (wake, receiver) = mpsc::sync_channel(1);
     let folder = crate::home_dir::fuyu_home(app.path())
         .unwrap_or_else(|_| std::env::temp_dir())
         .join("wechat-gate");
@@ -229,16 +229,22 @@ pub fn init(app: &AppHandle) -> Result<(), String> {
         state: Mutex::new(ReminderState::default()),
         gate: Mutex::new(gate::Keeper::new(folder)),
         button: Mutex::new(button::Keeper::default()),
-        wake,
     });
-    let worker = service.clone();
-    thread::Builder::new()
-        .name("wechat-reminders".into())
-        .spawn(move || monitor(worker, receiver))
-        .map_err(|error| format!("无法启动微信提醒监听：{error}"))?;
     SERVICE
-        .set(service)
-        .map_err(|_| "微信提醒服务已启动。".to_string())
+        .set(service.clone())
+        .map_err(|_| "微信提醒服务已启动。".to_string())?;
+    let listening = service.clone();
+    let worker = Worker::new("wechat-reminders", move |stop| monitor(listening.clone(), &stop));
+    let switched = service.clone();
+    let source = SourceWorker::new(messages_plugin::WECHAT, worker, move |enabled| set_enabled(&switched, enabled))
+        .after_stop(move || release(&service));
+    messages_plugin::register(messages_plugin::WECHAT, source);
+    Ok(())
+}
+
+fn release(service: &ReminderService) {
+    let _ = service.gate.lock().map(|mut gate| gate.off());
+    let _ = service.button.lock().map(|mut button| button.restore());
 }
 
 fn service() -> Result<&'static Arc<ReminderService>, String> {
@@ -278,19 +284,8 @@ pub(crate) fn diagnostic_state() -> Result<serde_json::Value, String> {
     }))
 }
 
-#[tauri::command]
-pub fn set_wechat_reminders_enabled(enabled: bool) -> Result<ReminderSnapshot, String> {
-    let service = service()?;
-    let (snapshot, changed) = {
-        let mut state = service.state.lock().map_err(|_| "微信提醒状态不可用。")?;
-        let changed = state.set_enabled(enabled);
-        (state.snapshot.clone(), changed)
-    };
-    if changed {
-        publish(service, snapshot.clone());
-        let _ = service.wake.try_send(());
-    }
-    Ok(snapshot)
+fn set_enabled(service: &ReminderService, enabled: bool) {
+    update(service, |state| state.set_enabled(enabled));
 }
 
 #[tauri::command]
@@ -309,7 +304,6 @@ pub fn set_wechat_expose_ui(enabled: bool) -> Result<ReminderSnapshot, String> {
     };
     if changed {
         publish(service, snapshot.clone());
-        let _ = service.wake.try_send(());
     }
     Ok(snapshot)
 }
@@ -324,7 +318,6 @@ pub fn set_wechat_hide_taskbar_button(enabled: bool) -> Result<ReminderSnapshot,
     };
     if changed {
         publish(service, snapshot.clone());
-        let _ = service.wake.try_send(());
     }
     Ok(snapshot)
 }
@@ -354,8 +347,7 @@ pub fn clear_wechat_reminders() -> Result<ReminderSnapshot, String> {
 
 pub(crate) fn shutdown() {
     if let Some(service) = SERVICE.get() {
-        let _ = service.gate.lock().map(|mut gate| gate.off());
-        let _ = service.button.lock().map(|mut button| button.restore());
+        release(service);
     }
 }
 
@@ -454,14 +446,14 @@ fn connection(service: &ReminderService, generation: u64, error: Option<String>)
     publish(service, snapshot);
 }
 
-fn monitor(service: Arc<ReminderService>, receiver: mpsc::Receiver<()>) {
+fn monitor(service: Arc<ReminderService>, stop: &Stop) {
     loop {
         let (enabled, generation) = match service.state.lock() {
             Ok(state) => (state.snapshot.enabled, state.generation),
             Err(_) => return,
         };
         if !enabled {
-            if receiver.recv().is_err() {
+            if stop.wait(Duration::from_secs(1)) {
                 return;
             }
             continue;
@@ -527,18 +519,14 @@ fn monitor(service: Arc<ReminderService>, receiver: mpsc::Receiver<()>) {
                         }
                         None => {}
                     }
-                    if receiver.recv_timeout(Duration::from_millis(50))
-                        == Err(mpsc::RecvTimeoutError::Disconnected)
-                    {
+                    if stop.wait(Duration::from_millis(50)) {
                         return;
                     }
                 }
             }
             Err(error) => {
                 connection(&service, generation, Some(error));
-                if receiver.recv_timeout(Duration::from_secs(5))
-                    == Err(mpsc::RecvTimeoutError::Disconnected)
-                {
+                if stop.wait(Duration::from_secs(5)) {
                     return;
                 }
             }
@@ -663,7 +651,6 @@ fn activate_existing_wechat(executable: &std::path::Path) -> Result<bool, String
 macro_rules! tauri_commands {
     ($next:ident [$($done:tt)*] $($rest:tt)*) => {
         $next!([$($done)*
-            crate::wechat_reminders::set_wechat_reminders_enabled,
             crate::wechat_reminders::open_wechat,
             crate::wechat_reminders::set_wechat_expose_ui,
             crate::wechat_reminders::set_wechat_hide_taskbar_button,

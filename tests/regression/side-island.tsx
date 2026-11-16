@@ -6,7 +6,7 @@ import "../../src/styles/tokens.css";
 import "../../src/windows/island/IslandApp";
 import "../../src/windows/island/topEdge";
 import { IslandShell } from "../../src/windows/island/IslandShell";
-import type { PluginNotificationsController } from "../../src/features/plugins/usePluginNotifications";
+import type { PluginNotificationsController } from "../../src/features/messages/island/usePluginNotifications";
 import { useQQNotifications } from "../../src/features/messages/qq-notifications/QQNotifications";
 import { useWeChatReminders } from "../../src/features/messages/wechat/WeChatReminders";
 import { useMail } from "../../src/features/messages/mail/MailPanel";

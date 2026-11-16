@@ -38,10 +38,10 @@ key 的前缀是 `fuyu-`。2026-11-10（D17 第 3 步）之前用旧前缀，前
 | `fuyu-first-hints`（岛上的「第一次」提示，只有主窗口读写：`{ dismissed: ("agent" \| "message" \| "tuck")[], shown: { [id]: 次数 }, lastShownAt }`（Unix 毫秒）；点了「知道了」或「连接更多工具」进 `dismissed`，显示满 3 次也不再出现，`lastShownAt` 在同一天时不再出新的；2026-11-13 起，C50） | `windows/island/first-hints/storage.ts` |
 | `fuyu-qq-mail-settings` | `features/messages/mail/storage.ts`（`{ accounts: [{ email, host, enabled }] }`，兼容读取旧的单账户 `{ email, enabled }`，解析在 `mailAccounts.ts`） |
 | `fuyu-qq-mail-remote-images` | `features/messages/mail/storage.ts` |
-| `fuyu-qq-notifications-enabled` | `features/messages/qq-notifications/storage.ts` |
+| `fuyu-qq-notifications-enabled`（2026-11-16 起是内置插件 `messages` 配置 `qq` 的镜像，E36.3.44） | `features/messages/qq-notifications/storage.ts` |
 | `fuyu-qq-notification-access-requested` | `features/messages/qq-notifications/storage.ts` |
 | `fuyu-qq-auto-clear` | `features/messages/qq-notifications/storage.ts`（缺省为开，`"false"` 为关） |
-| `fuyu-wechat-reminders-enabled` | `features/messages/wechat/storage.ts` |
+| `fuyu-wechat-reminders-enabled`（2026-11-16 起是内置插件 `messages` 配置 `wechat` 的镜像，E36.3.44） | `features/messages/wechat/storage.ts` |
 | `fuyu-wechat-expose-ui` | `features/messages/wechat/storage.ts` |
 | `fuyu-wechat-hide-taskbar-button` | `features/messages/wechat/storage.ts` |
 | `fuyu-wechat-auto-clear` | `features/messages/wechat/storage.ts`（缺省为开，`"false"` 为关） |
@@ -266,6 +266,12 @@ key 的前缀是 `fuyu-`。2026-11-10（D17 第 3 步）之前用旧前缀，前
   - Agent 关着时 Tauri 命令照旧在：`list_agent_sessions` 只列本机会话，不含远程电脑的；钩子照常写文件，审批请求因为端点没在听，Agent 按没装审批钩子处理。
   - 第 2 版插件的事件 `agentStatus.changed` 改由 Agent 自己的 runner 发（`plugin-host-event`，名字和载荷不变），Agent 关掉时不再发。
   - 新服务 `agents/v1`（`@fuyu/plugin-services` 导出 `agentsV1`）：方法 `sessions()` → `{ sessions: [{ key, provider, sessionId, title, cwd, phase, updatedAt, remoteHost, listed, unseen }], others: [{ id, name, phase, updatedAt }] }`；`usage()`（60 秒）→ `{ claude, codex }`，每项 `{ updatedAt, fiveHour, sevenDay, models, plan, source, error }` 或 `null`，`error` 是错误类别（如 `tokenExpired`）；`focus({ provider, sessionId?, cwd?, title? })` → `{ found }`，参数不是字符串或多给字段回 `bad-params`；`remoteHosts()` → `{ hosts: [{ host, fetchedAt, error, fetching, sessions, approvalError }] }`；事件 `changed`（`{ count }`，只有窗口那份发）。宿主里由 Rust 方法 `agents.sessions`、`agents.usage`、`agents.focus`、`agents.remoteHosts` 提供，Agent 关着时回 `inactive`；窗口里由 `src/features/agent-status/plugin/services.ts` 提供（只在岛窗口）；Agent 关掉时回 `not-ready`。
+- 内置插件迁移，消息（E36.3.44，2026-11-16 起）：
+  - 内置插件 `messages` 管邮箱、QQ、微信三个来源，默认开着；它是新开关，没有旧值要迁。三个来源的开关是它的配置：`plugins.yml` 里 `- id: messages` 的 `config` 下 `qq`、`wechat`、`mail`（布尔），经 `set_builtin_plugin_config` 写。
+  - 旧开关迁过来：配置里还没有某个来源时，主窗口用旧值写进去一次（`fuyu-qq-notifications-enabled`、`fuyu-wechat-reminders-enabled` 不是 `"false"` 就是开，`fuyu-settings` 的 `mailEnabled`）；新装的用户旧位置也没有值，写进默认值（三个都开），Rust 因此不会一直等着不开监听。之后以配置为准：QQ、微信的两个 key 改成配置的镜像，开关变了主窗口写回；旧位置的值在运行中被改了（恢复备份、引导页）而且和配置不同，以旧值为准写进配置。所以备份照常带上来源开关。`mailEnabled` 登记在 `LEGACY_SWITCHES`（`{ plugin: "messages", key: "mail" }`），和其他功能开关一样双向镜像。E36.3.50 去掉这些镜像。
+  - Tauri 命令 `set_qq_notifications_enabled`、`set_wechat_reminders_enabled` 删掉。QQ、微信的监听由开关表起停：`builtins.json` 里 `messages` 的 `background` 是 `["qq", "wechat", "mail"]`。`qq`、`wechat` 只在插件开着、配置里这个来源是 `true` 时起线程（Windows 是通知监听和托盘闪烁监听，Mac 是读 Dock 角标、看前台应用的一条线程），配置里还没有这个来源时不起；关掉时线程退出，微信收回暴露的界面和隐藏的任务栏按钮。以前它们开机就起、关不掉。`get_qq_notification_state` 和事件 `qq-notifications-changed`、`wechat-reminder-changed` 不变，快照里的 `enabled` 现在跟着配置走。
+  - `mail` 是各邮箱的同步线程：关掉插件、或配置里 `mail` 是 `false` 时全部停下；这时 `connect_qq_mail`、`set_qq_mail_enabled` 回新错误码 `mail.off`，不起新线程（配置里还没有 `mail` 时不拦）。打开时由岛按各邮箱自己的开关重新连上。
+  - 第 2 版插件的岛上通知（事件 `plugin-notification`、命令 `run_plugin_notification_action`，对插件作者的接口不变）改由消息显示：主窗口提供内部窗口服务 `island-notices/v1`（定义在 `src/lib/island-notices/service.ts`，不在公开的 `@fuyu/plugin-services` 里，owner `messages`）：方法 `notify(通知) → { shown }`，事件 `action`（`{ pluginId, action }`，用户点了通知上的按钮）。`src/features/plugins/plugin/runners.tsx` 只是接线：把事件转给服务，把 `action` 转成 `run_plugin_notification_action`。**行为变化**：消息插件关着时服务不在，第 2 版插件的岛上通知不显示（插件页「消息」一行写明了）。第 6 阶段随第 2 版一起删。
 - 翻译「自定义接口」的地址交给 Rust（E36.3.20，2026-11-15 起）：
   - 新 Tauri 命令 `save_translation_custom_address`（参数 `address`，去掉首尾空白后存进凭据 `com.tixxin.fuyu.translation` / 用户名 `custom-address`；空串是删掉；超过 500 字节回 `translation.urlLong`；不检查格式，用的时候才查），没有读回的命令。
   - 用 `useTranslationSettings` 的窗口在打开时交一次 `fuyu-translation-settings` 的 `customBaseUrl`，改了再交（停 0.4 秒），所以旧版本填过的地址不用重填；localStorage 里的值照旧，翻译窗口自己请求时还传它。

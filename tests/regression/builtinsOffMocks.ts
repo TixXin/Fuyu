@@ -51,8 +51,8 @@ mockIPC((command, payload) => {
     case "get_audio_level": return { active: false, peak: 0, updatedAt: 0 };
     case "get_foreground_fullscreen": return { active: false, onIslandMonitor: false };
     case "set_island_interaction": return "disabled";
-    case "set_qq_notifications_enabled": return { revision: ++revision, enabled: args.enabled, status: args.enabled ? "listening" : "disabled", items: [], error: null };
-    case "set_wechat_reminders_enabled": return { revision: ++revision, enabled: args.enabled, status: args.enabled ? "listening" : "disabled", pending: false, lastAttentionAt: null, error: null };
+    case "get_qq_notification_state": return { revision: ++revision, enabled: true, status: "listening", items: [], error: null };
+    case "set_wechat_expose_ui": case "set_wechat_hide_taskbar_button": return { revision: ++revision, enabled: true, status: "listening", pending: false, lastAttentionAt: null, error: null };
     case "get_qq_mail_state": return [];
     case "has_translation_secret": return false;
     case "set_translation_shortcut":

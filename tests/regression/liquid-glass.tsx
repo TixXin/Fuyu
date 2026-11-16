@@ -8,7 +8,7 @@ import { IslandShell } from "../../src/windows/island/IslandShell";
 import { useIslandGlass } from "../../src/windows/island/useIslandGlass";
 import { DEFAULT_SETTINGS } from "../../src/lib/settings/settingsDefaults";
 import type { IslandSettings } from "../../src/lib/settings/types";
-import type { PluginNotificationsController } from "../../src/features/plugins/usePluginNotifications";
+import type { PluginNotificationsController } from "../../src/features/messages/island/usePluginNotifications";
 import { useQQNotifications } from "../../src/features/messages/qq-notifications/QQNotifications";
 import { useWeChatReminders } from "../../src/features/messages/wechat/WeChatReminders";
 import { useMail } from "../../src/features/messages/mail/MailPanel";
