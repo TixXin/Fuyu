@@ -22,6 +22,19 @@ export function tooltipTarget(target: EventTarget | null): { element: HTMLElemen
   return text ? { element, text } : null;
 }
 
+function targetVisible(element: HTMLElement): boolean {
+  if (!element.isConnected) return false;
+  const rect = element.getBoundingClientRect();
+  if (rect.width === 0 || rect.height === 0) return false;
+  if (getComputedStyle(element).pointerEvents === "none") return false;
+  if (typeof element.checkVisibility === "function") return element.checkVisibility({ checkOpacity: true, checkVisibilityCSS: true });
+  for (let node: Element | null = element; node; node = node.parentElement) {
+    const style = getComputedStyle(node);
+    if (style.opacity === "0" || style.visibility === "hidden" || style.display === "none") return false;
+  }
+  return true;
+}
+
 export function IconButtonTooltip({ scope = ".island", delay = DELAY_MS }: { scope?: string; delay?: number }) {
   const [tip, setTip] = useState<Tip | null>(null);
   const [place, setPlace] = useState<{ left: number; top: number } | null>(null);
@@ -39,7 +52,10 @@ export function IconButtonTooltip({ scope = ".island", delay = DELAY_MS }: { sco
       if (found.element === pressedRef.current || found.element === currentRef.current) return;
       hide();
       currentRef.current = found.element;
-      timerRef.current = window.setTimeout(() => setTip({ ...found, pointerX: event.clientX }), delay);
+      timerRef.current = window.setTimeout(() => {
+        if (targetVisible(found.element)) setTip({ ...found, pointerX: event.clientX });
+        else currentRef.current = null;
+      }, delay);
     };
     const onOut = (event: PointerEvent) => {
       const from = event.target instanceof Element ? event.target.closest(TARGETS) : null;
@@ -58,6 +74,7 @@ export function IconButtonTooltip({ scope = ".island", delay = DELAY_MS }: { sco
       if (found) { window.clearTimeout(timerRef.current); currentRef.current = found.element; setTip({ ...found, pointerX: null }); }
     };
     const onKey = (event: KeyboardEvent) => { if (event.key === "Escape") hide(); };
+    const onVisibility = () => { if (document.visibilityState === "hidden") hide(); };
     document.addEventListener("pointerover", onOver);
     document.addEventListener("pointerout", onOut);
     document.addEventListener("pointerdown", onDown, true);
@@ -66,6 +83,7 @@ export function IconButtonTooltip({ scope = ".island", delay = DELAY_MS }: { sco
     document.addEventListener("scroll", hide, true);
     document.addEventListener("keydown", onKey);
     window.addEventListener("blur", hide);
+    document.addEventListener("visibilitychange", onVisibility);
     return () => {
       hide();
       document.removeEventListener("pointerover", onOver);
@@ -76,6 +94,7 @@ export function IconButtonTooltip({ scope = ".island", delay = DELAY_MS }: { sco
       document.removeEventListener("scroll", hide, true);
       document.removeEventListener("keydown", onKey);
       window.removeEventListener("blur", hide);
+      document.removeEventListener("visibilitychange", onVisibility);
     };
   }, [scope, delay]);
 
@@ -83,7 +102,7 @@ export function IconButtonTooltip({ scope = ".island", delay = DELAY_MS }: { sco
     const card = cardRef.current;
     if (!tip || !card) { setPlace(null); return; }
     const measure = () => {
-      if (!tip.element.isConnected) { currentRef.current = null; setTip(null); return; }
+      if (!targetVisible(tip.element)) { currentRef.current = null; setTip(null); return; }
       const rect = tip.element.getBoundingClientRect();
       const size = card.getBoundingClientRect();
       const bottom = tip.element.closest(scope)?.getBoundingClientRect().bottom ?? window.innerHeight;

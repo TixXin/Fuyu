@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="zh-CN">
+  <meta charset="UTF-8" />
+  <title>按钮提示随面板隐藏检查</title>
+  <style>
+    * { box-sizing: border-box; }
+    html body { height: auto; min-height: 100%; margin: 0; overflow: auto; background: #17191d; color: #eee; font: 14px "Segoe UI", "Microsoft YaHei", sans-serif; }
+    #page { width: 360px; margin: 24px; }
+    #page .island { display: flex; gap: 8px; padding: 12px; border-radius: 16px; background: #030303; }
+    #page button { width: 32px; height: 32px; border: 0; border-radius: 8px; background: #333; color: #eee; }
+    #results { max-width: 760px; margin: 24px; color: #ccc; font-size: 13px; line-height: 1.8; white-space: pre-wrap; }
+  </style>
+  <div id="page"></div>
+  <pre id="results" role="status">准备 按钮提示随面板隐藏检查…</pre>
+  <script type="module" src="./icon-tooltip-hidden.tsx"></script>
+</html>

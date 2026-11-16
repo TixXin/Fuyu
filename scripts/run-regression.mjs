@@ -37,6 +37,7 @@ export const PAGES = [
   "onboarding.html?test=1",
   "onboarding-push.html?test=1",
   "plugin-info.html",
+  "icon-tooltip-hidden.html",
   "plugin-menus.html",
   "plugin-views.html?test=1",
   "plugins-v3.html",
