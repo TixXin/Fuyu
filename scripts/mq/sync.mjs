@@ -1,8 +1,7 @@
 import { spawnSync } from "node:child_process";
+import { retryOnLock, waitForIndex } from "./indexLock.mjs";
 import { INTEGRATION_BRANCH, LOCKFILES, mainCheckoutOf, tryGit } from "./settings.mjs";
-import { syncAround } from "./syncAround.mjs";
-
-const LOCK_RETRIES = 3;
+import { changedBetween, dirtyEntries, syncAround } from "./syncAround.mjs";
 
 function dependencyNames(main, rev) {
   const raw = tryGit(["show", `${rev}:package.json`], main);
@@ -36,9 +35,11 @@ function refreshDependencies(main, before, after) {
   if (result.status !== 0) console.error(`[sync] pnpm install failed in ${main}; run it there by hand.`);
 }
 
-function reportBlocked({ conflicts = [], blocked = [], moved = false }) {
+function reportBlocked({ conflicts = [], blocked = [], moved = false, busy = null }) {
+  if (busy === "index.lock") console.error(`[sync] another git process kept index.lock the whole time; left untouched. Run pnpm mq:sync again later.`);
+  if (busy === "files") console.error(`[sync] uncommitted files changed while syncing; left untouched. Run pnpm mq:sync again.`);
   if (moved) console.error(`[sync] ${INTEGRATION_BRANCH} moved while syncing (another commit); run pnpm mq:sync again.`);
-  if (conflicts.length) console.error(`[sync] local ${INTEGRATION_BRANCH} and origin/${INTEGRATION_BRANCH} changed the same lines in: ${conflicts.join(", ")}. Run git merge origin/${INTEGRATION_BRANCH} and resolve them.`);
+  if (conflicts.length) console.error(`[sync] local ${INTEGRATION_BRANCH} and origin/${INTEGRATION_BRANCH} changed the same lines in: ${conflicts.join(", ")}. Resolve it with git merge origin/${INTEGRATION_BRANCH} only once git status shows no uncommitted tracked files; a plain git merge over other sessions' edits can wipe them (#688).`);
   if (blocked.length) {
     console.error(`[sync] uncommitted changes in the main checkout are in the way; left untouched. pnpm tasks dirty shows whose they are:`);
     for (const { file, why } of blocked) console.error(`  ${file}: ${why}`);
@@ -46,8 +47,20 @@ function reportBlocked({ conflicts = [], blocked = [], moved = false }) {
   return 0;
 }
 
-function pause(ms) {
-  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+function fastForwardIsSafe(main, upstream) {
+  const head = tryGit(["rev-parse", "HEAD"], main).out;
+  if (!tryGit(["merge-base", "--is-ancestor", head, upstream], main).ok) return false;
+  const dirty = dirtyEntries(main);
+  return !changedBetween(main, head, upstream).some((file) => dirty.has(file));
+}
+
+function bringUp(main, upstream) {
+  if (!waitForIndex(main)) return { ok: false, busy: "index.lock" };
+  if (fastForwardIsSafe(main, upstream)) {
+    const forward = retryOnLock(() => tryGit(["merge", "--ff-only", upstream], main));
+    if (forward.ok) return { ok: true, kept: [], raced: [] };
+  }
+  return syncAround(main, upstream);
 }
 
 export function sync(cwd = process.cwd()) {
@@ -65,27 +78,12 @@ export function sync(cwd = process.cwd()) {
   }
   const before = tryGit(["rev-parse", "--short", "HEAD"], main).out.trim();
   tryGit(["fetch", "origin", "--quiet"], main);
-  const forward = () => tryGit(["merge", "--ff-only", `origin/${INTEGRATION_BRANCH}`], main);
-  let result = forward();
-  for (let i = 0; i < LOCK_RETRIES && !result.ok && /index\.lock|Unable to create|another git process/i.test(result.out); i += 1) {
-    pause(400);
-    result = forward();
-  }
-  if (!result.ok && /Not possible to fast-forward|diverging|non-fast-forward/i.test(result.out)) {
-    console.log(`[sync] local ${INTEGRATION_BRANCH} has commits that are not on origin yet; merging origin/${INTEGRATION_BRANCH} into it`);
-    result = tryGit(["merge", "--no-edit", `origin/${INTEGRATION_BRANCH}`], main);
-    if (!result.ok) tryGit(["merge", "--abort"], main);
-  }
-  if (!result.ok && /would be overwritten by merge/i.test(result.out)) {
-    const around = syncAround(main, `origin/${INTEGRATION_BRANCH}`);
+  const upstream = `origin/${INTEGRATION_BRANCH}`;
+  if (!tryGit(["merge-base", "--is-ancestor", upstream, "HEAD"], main).ok) {
+    const around = bringUp(main, upstream);
     if (!around.ok) return reportBlocked(around);
     if (around.kept.length) console.log(`[sync] merged around ${around.kept.length} uncommitted file(s), their edits kept on top: ${around.kept.join(", ")}`);
     if (around.raced.length) console.error(`[sync] ${around.raced.join(", ")} changed while syncing; left as the other session wrote it. git diff shows origin's change undone there.`);
-    result = { ok: true, out: "" };
-  }
-  if (!result.ok) {
-    console.error(`[sync] could not bring ${INTEGRATION_BRANCH} up to origin; left untouched. Run git merge origin/${INTEGRATION_BRANCH} by hand.\n${result.out.trim()}`);
-    return 0;
   }
   const after = tryGit(["rev-parse", "--short", "HEAD"], main).out.trim();
   if (before === after) {
